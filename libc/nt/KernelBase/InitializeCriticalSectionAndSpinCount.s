@@ -1,0 +1,12 @@
+.include "o/libc/nt/codegen.inc"
+.imp	KernelBase,__imp_InitializeCriticalSectionAndSpinCount,InitializeCriticalSectionAndSpinCount,856
+
+	.text.windows
+InitializeCriticalSectionAndSpinCount:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	__imp_InitializeCriticalSectionAndSpinCount(%rip),%rax
+	jmp	__sysv2nt
+	.endfn	InitializeCriticalSectionAndSpinCount,globl
+	.previous

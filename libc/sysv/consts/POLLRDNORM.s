@@ -1,0 +1,2 @@
+.include "libc/sysv/consts/syscon.inc"
+.syscon poll POLLRDNORM 0x40 0x40 0x40 0x40 0x0100

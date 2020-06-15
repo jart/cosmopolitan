@@ -1,0 +1,34 @@
+#ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_PTY_H_
+#define COSMOPOLITAN_LIBC_SYSV_CONSTS_PTY_H_
+#include "libc/runtime/symbolic.h"
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+hidden extern const long TIOCPKT;
+hidden extern const long TIOCPKT_DATA;
+hidden extern const long TIOCPKT_DOSTOP;
+hidden extern const long TIOCPKT_FLUSHREAD;
+hidden extern const long TIOCPKT_FLUSHWRITE;
+hidden extern const long TIOCPKT_IOCTL;
+hidden extern const long TIOCPKT_NOSTOP;
+hidden extern const long TIOCPKT_START;
+hidden extern const long TIOCPKT_STOP;
+hidden extern const long TIOCSPTLCK;
+hidden extern const long PTMGET;
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+
+#define TIOCPKT            SYMBOLIC(TIOCPKT)
+#define TIOCSPTLCK         SYMBOLIC(TIOCSPTLCK)
+#define PTMGET             SYMBOLIC(PTMGET)
+#define TIOCPKT_DATA       LITERALLY(0b0000000000000000)
+#define TIOCPKT_DOSTOP     LITERALLY(0b0000000000000001)
+#define TIOCPKT_FLUSHREAD  LITERALLY(0b0000000000000010)
+#define TIOCPKT_FLUSHWRITE LITERALLY(0b0000000000000100)
+#define TIOCPKT_IOCTL      LITERALLY(0b0000000000001000)
+#define TIOCPKT_NOSTOP     LITERALLY(0b0000000000010000)
+#define TIOCPKT_START      LITERALLY(0b0000000000100000)
+#define TIOCPKT_STOP       LITERALLY(0b0000000001000000)
+
+#endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_PTY_H_ */

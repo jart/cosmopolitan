@@ -1,0 +1,232 @@
+This is a modern statically-linked GNU C2X toolchain.
+
+You have the freedom to obtain the original sources to these binaries,
+and build ones just like them, by visiting:
+
+   https://www.gnu.org/
+   https://github.com/richfelker/musl-cross-make
+
+The musl-cross-make tool also produces libraries and header files. We've
+only vendored the statically-linked executable files, since Cosmopolitan
+won't depend on GPL-licensed headers / runtime libraries.
+
+We haven't made any modifications to the original software. The versions
+we chose are documented in $PKG/LICENSE.txt. Here's our Musl
+build config for maximum transparency:
+
+commit 38e52db8358c043ae82b346a2e6e66bc86a53bc1
+Author: Rich Felker <dalias@aerifal.cx>
+Date:   Wed Dec 18 14:29:07 2019 -0500
+
+    switch linux kernel headers to 4.19.88 by default
+    
+    using slim headers-only version. this change is needed to support all
+    future versions of musl on 32-bit archs, since prior to 4.16 the
+    kernel headers had incompatibility with userspace time_t not matching
+    the kernel's old (32-bit) time_t. support for older headers will be
+    dropped entirely soon.
+
+TARGET = x86_64-linux-musl
+OUTPUT = /opt/cross9
+GCC_VER = 9.2.0
+export LANG=en_US.UTF-8
+export LC_CTYPE=en_US.UTF-8
+COMMON_CONFIG += CC="/opt/cross9/bin/x86_64-linux-musl-cc -static --static -g -Os -ftree-vectorize -fvect-cost-model=unlimited -mstringop-strategy=vector_loop -save-temps -fno-ident"
+COMMON_CONFIG += CXX="/opt/cross9/bin/x86_64-linux-musl-c++ -static --static -g -Os -ftree-vectorize -fvect-cost-model=unlimited -mstringop-strategy=vector_loop -save-temps -fno-ident"
+COMMON_CONFIG += LD="/opt/cross9/bin/x86_64-linux-musl-ld --build-id=none"
+COMMON_CONFIG += NM="/opt/cross9/bin/x86_64-linux-musl-nm"
+COMMON_CONFIG += LDFLAGS="-Wl,--build-id=none"
+COMMON_CONFIG += OBJCOPY="/opt/cross9/bin/x86_64-linux-musl-objcopy"
+COMMON_CONFIG += --disable-nls --disable-lto
+GCC_CONFIG += --enable-languages=c,c++
+GCC_CONFIG += --disable-multilib
+GCC_CONFIG += --with-gnu-as
+GCC_CONFIG += --with-gnu-ld
+GCC_CONFIG += --disable-multilib
+GCC_CONFIG += --enable-sjlj-exceptions
+GCC_CONFIG += --disable-threads
+GCC_CONFIG += --disable-tls
+COMMON_CONFIG += --with-debug-prefix-map=$(CURDIR)=
+
+#!/bin/sh
+set -e
+export LC_ALL=C
+export GUNZ="/bin/gzip --rsyncable -9 -c"
+BASE=/opt/cross9
+PKG=third_party/gcc
+VERS=9.2.0
+
+if [ ! -d $BASE ]; then
+  echo error: run make install >&2
+  exit 1
+fi
+
+if [ -d $BASE/$PKG ]; then
+  rm -rf $BASE/$PKG
+fi
+
+mkdir -p $BASE/$PKG/bin
+mkdir -p $BASE/$PKG/libexec/gcc/x86_64-linux-musl/$VERS
+mkdir -p $BASE/$PKG/x86_64-linux-musl/bin
+
+cp $BASE/bin/x86_64-linux-musl-gcov-dump              $BASE/$PKG/bin/x86_64-linux-musl-gcov-dump
+cp $BASE/bin/x86_64-linux-musl-cc                     $BASE/$PKG/bin/x86_64-linux-musl-gcc
+cp $BASE/bin/x86_64-linux-musl-addr2line              $BASE/$PKG/bin/x86_64-linux-musl-addr2line
+cp $BASE/bin/x86_64-linux-musl-ar                     $BASE/$PKG/bin/x86_64-linux-musl-ar
+cp $BASE/libexec/gcc/x86_64-linux-musl/9.2.0/cc1plus  $BASE/$PKG/libexec/gcc/x86_64-linux-musl/9.2.0/cc1plus
+cp $BASE/bin/x86_64-linux-musl-c++                    $BASE/$PKG/bin/x86_64-linux-musl-g++
+cp $BASE/libexec/gcc/x86_64-linux-musl/9.2.0/collect2 $BASE/$PKG/libexec/gcc/x86_64-linux-musl/9.2.0/collect2
+cp $BASE/bin/x86_64-linux-musl-gcc-nm                 $BASE/$PKG/bin/x86_64-linux-musl-gcc-nm
+cp $BASE/bin/x86_64-linux-musl-c++filt                $BASE/$PKG/bin/x86_64-linux-musl-c++filt
+cp $BASE/bin/x86_64-linux-musl-elfedit                $BASE/$PKG/bin/x86_64-linux-musl-elfedit
+cp $BASE/bin/x86_64-linux-musl-ld                     $BASE/$PKG/x86_64-linux-musl/bin/ld.bfd
+cp $BASE/bin/x86_64-linux-musl-size                   $BASE/$PKG/bin/x86_64-linux-musl-size
+cp $BASE/bin/x86_64-linux-musl-strings                $BASE/$PKG/bin/x86_64-linux-musl-strings
+cp $BASE/bin/x86_64-linux-musl-objcopy                $BASE/$PKG/bin/x86_64-linux-musl-objcopy
+cp $BASE/bin/x86_64-linux-musl-nm                     $BASE/$PKG/bin/x86_64-linux-musl-nm
+cp $BASE/libexec/gcc/x86_64-linux-musl/9.2.0/cc1      $BASE/$PKG/libexec/gcc/x86_64-linux-musl/9.2.0/cc1
+cp $BASE/bin/x86_64-linux-musl-readelf                $BASE/$PKG/bin/x86_64-linux-musl-readelf
+cp $BASE/bin/x86_64-linux-musl-objdump                $BASE/$PKG/bin/x86_64-linux-musl-objdump
+cp $BASE/bin/x86_64-linux-musl-gcc-ar                 $BASE/$PKG/bin/x86_64-linux-musl-gcc-ar
+cp $BASE/bin/x86_64-linux-musl-gcov                   $BASE/$PKG/bin/x86_64-linux-musl-gcov
+cp $BASE/bin/x86_64-linux-musl-ranlib                 $BASE/$PKG/bin/x86_64-linux-musl-ranlib
+cp $BASE/bin/x86_64-linux-musl-as                     $BASE/$PKG/bin/x86_64-linux-musl-as
+cp $BASE/bin/x86_64-linux-musl-gcc-ranlib             $BASE/$PKG/bin/x86_64-linux-musl-gcc-ranlib
+cp $BASE/bin/x86_64-linux-musl-cpp                    $BASE/$PKG/bin/x86_64-linux-musl-cpp
+cp $BASE/bin/x86_64-linux-musl-strip                  $BASE/$PKG/bin/x86_64-linux-musl-strip
+cp $BASE/bin/x86_64-linux-musl-gprof                  $BASE/$PKG/bin/x86_64-linux-musl-gprof
+cp $BASE/bin/x86_64-linux-musl-gcov-tool              $BASE/$PKG/bin/x86_64-linux-musl-gcov-tool
+
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-gcov-dump
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-gcc
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-addr2line
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-ar
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/libexec/gcc/x86_64-linux-musl/9.2.0/cc1plus
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-g++
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/libexec/gcc/x86_64-linux-musl/9.2.0/collect2
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-gcc-nm
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-c++filt
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-elfedit
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/x86_64-linux-musl/bin/ld.bfd
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-size
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-strings
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-objcopy
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-nm
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/libexec/gcc/x86_64-linux-musl/9.2.0/cc1
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-readelf
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-objdump
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-gcc-ar
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-gcov
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-ranlib
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-as
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-gcc-ranlib
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-cpp
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-strip
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-gprof
+$BASE/bin/x86_64-linux-musl-strip $BASE/$PKG/bin/x86_64-linux-musl-gcov-tool
+
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-gcov-dump              >$BASE/$PKG/bin/x86_64-linux-musl-gcov-dump.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-gcc                    >$BASE/$PKG/bin/x86_64-linux-musl-gcc.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-addr2line              >$BASE/$PKG/bin/x86_64-linux-musl-addr2line.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-ar                     >$BASE/$PKG/bin/x86_64-linux-musl-ar.gz
+$GUNZ $BASE/$PKG/libexec/gcc/x86_64-linux-musl/9.2.0/cc1plus  >$BASE/$PKG/libexec/gcc/x86_64-linux-musl/9.2.0/cc1plus.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-g++                    >$BASE/$PKG/bin/x86_64-linux-musl-g++.gz
+$GUNZ $BASE/$PKG/libexec/gcc/x86_64-linux-musl/9.2.0/collect2 >$BASE/$PKG/libexec/gcc/x86_64-linux-musl/9.2.0/collect2.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-gcc-nm                 >$BASE/$PKG/bin/x86_64-linux-musl-gcc-nm.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-c++filt                >$BASE/$PKG/bin/x86_64-linux-musl-c++filt.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-elfedit                >$BASE/$PKG/bin/x86_64-linux-musl-elfedit.gz
+$GUNZ $BASE/$PKG/x86_64-linux-musl/bin/ld.bfd                 >$BASE/$PKG/x86_64-linux-musl/bin/ld.bfd.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-size                   >$BASE/$PKG/bin/x86_64-linux-musl-size.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-strings                >$BASE/$PKG/bin/x86_64-linux-musl-strings.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-objcopy                >$BASE/$PKG/bin/x86_64-linux-musl-objcopy.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-nm                     >$BASE/$PKG/bin/x86_64-linux-musl-nm.gz
+$GUNZ $BASE/$PKG/libexec/gcc/x86_64-linux-musl/9.2.0/cc1      >$BASE/$PKG/libexec/gcc/x86_64-linux-musl/9.2.0/cc1.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-readelf                >$BASE/$PKG/bin/x86_64-linux-musl-readelf.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-objdump                >$BASE/$PKG/bin/x86_64-linux-musl-objdump.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-gcc-ar                 >$BASE/$PKG/bin/x86_64-linux-musl-gcc-ar.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-gcov                   >$BASE/$PKG/bin/x86_64-linux-musl-gcov.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-ranlib                 >$BASE/$PKG/bin/x86_64-linux-musl-ranlib.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-as                     >$BASE/$PKG/bin/x86_64-linux-musl-as.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-gcc-ranlib             >$BASE/$PKG/bin/x86_64-linux-musl-gcc-ranlib.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-cpp                    >$BASE/$PKG/bin/x86_64-linux-musl-cpp.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-strip                  >$BASE/$PKG/bin/x86_64-linux-musl-strip.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-gprof                  >$BASE/$PKG/bin/x86_64-linux-musl-gprof.gz
+$GUNZ $BASE/$PKG/bin/x86_64-linux-musl-gcov-tool              >$BASE/$PKG/bin/x86_64-linux-musl-gcov-tool.gz
+
+rm $BASE/$PKG/bin/x86_64-linux-musl-gcov-dump
+rm $BASE/$PKG/bin/x86_64-linux-musl-gcc
+rm $BASE/$PKG/bin/x86_64-linux-musl-addr2line
+rm $BASE/$PKG/bin/x86_64-linux-musl-ar
+rm $BASE/$PKG/libexec/gcc/x86_64-linux-musl/9.2.0/cc1plus
+rm $BASE/$PKG/bin/x86_64-linux-musl-g++
+rm $BASE/$PKG/libexec/gcc/x86_64-linux-musl/9.2.0/collect2
+rm $BASE/$PKG/bin/x86_64-linux-musl-gcc-nm
+rm $BASE/$PKG/bin/x86_64-linux-musl-c++filt
+rm $BASE/$PKG/bin/x86_64-linux-musl-elfedit
+rm $BASE/$PKG/x86_64-linux-musl/bin/ld.bfd
+rm $BASE/$PKG/bin/x86_64-linux-musl-size
+rm $BASE/$PKG/bin/x86_64-linux-musl-strings
+rm $BASE/$PKG/bin/x86_64-linux-musl-objcopy
+rm $BASE/$PKG/bin/x86_64-linux-musl-nm
+rm $BASE/$PKG/libexec/gcc/x86_64-linux-musl/9.2.0/cc1
+rm $BASE/$PKG/bin/x86_64-linux-musl-readelf
+rm $BASE/$PKG/bin/x86_64-linux-musl-objdump
+rm $BASE/$PKG/bin/x86_64-linux-musl-gcc-ar
+rm $BASE/$PKG/bin/x86_64-linux-musl-gcov
+rm $BASE/$PKG/bin/x86_64-linux-musl-ranlib
+rm $BASE/$PKG/bin/x86_64-linux-musl-as
+rm $BASE/$PKG/bin/x86_64-linux-musl-gcc-ranlib
+rm $BASE/$PKG/bin/x86_64-linux-musl-cpp
+rm $BASE/$PKG/bin/x86_64-linux-musl-strip
+rm $BASE/$PKG/bin/x86_64-linux-musl-gprof
+rm $BASE/$PKG/bin/x86_64-linux-musl-gcov-tool
+
+ln -s x86_64-linux-musl-gcc               $BASE/$PKG/bin/x86_64-linux-musl-cc
+ln -s x86_64-linux-musl-gcc               $BASE/$PKG/bin/x86_64-linux-musl-gcc-9.2.0
+ln -s ../../bin/x86_64-linux-musl-ar      $BASE/$PKG/x86_64-linux-musl/bin/ar
+ln -s x86_64-linux-musl-g++               $BASE/$PKG/bin/x86_64-linux-musl-c++
+ln -s ld.bfd                              $BASE/$PKG/x86_64-linux-musl/bin/ld
+ln -s ../x86_64-linux-musl/bin/ld.bfd     $BASE/$PKG/bin/x86_64-linux-musl-ld.bfd
+ln -s ../x86_64-linux-musl/bin/ld.bfd     $BASE/$PKG/bin/x86_64-linux-musl-ld
+ln -s ../../bin/x86_64-linux-musl-objcopy $BASE/$PKG/x86_64-linux-musl/bin/objcopy
+ln -s ../../bin/x86_64-linux-musl-nm      $BASE/$PKG/x86_64-linux-musl/bin/nm
+ln -s ../../bin/x86_64-linux-musl-readelf $BASE/$PKG/x86_64-linux-musl/bin/readelf
+ln -s ../../bin/x86_64-linux-musl-objdump $BASE/$PKG/x86_64-linux-musl/bin/objdump
+ln -s ../../bin/x86_64-linux-musl-ranlib  $BASE/$PKG/x86_64-linux-musl/bin/ranlib
+ln -s ../../bin/x86_64-linux-musl-as      $BASE/$PKG/x86_64-linux-musl/bin/as
+ln -s ../../bin/x86_64-linux-musl-strip   $BASE/$PKG/x86_64-linux-musl/bin/strip
+
+{
+  cat <<'EOF'
+This is a modern statically-linked GNU C2X toolchain.
+
+You have the freedom to obtain the original sources to these binaries,
+and build ones just like them, by visiting:
+
+   https://www.gnu.org/
+   https://github.com/richfelker/musl-cross-make
+
+The musl-cross-make tool also produces libraries and header files. We've
+only vendored the statically-linked executable files, since Cosmopolitan
+won't depend on GPL-licensed headers / runtime libraries.
+
+We haven't made any modifications to the original software. The versions
+we chose are documented in $PKG/LICENSE.txt. Here's our Musl
+build config for maximum transparency:
+
+EOF
+  git show --quiet
+  echo
+  cat config.mak
+  echo
+  cat bundle.sh
+} >$BASE/$PKG/README.cosmo
+
+{
+  for f in $(find . -iname \*copying\* -or -iname \*license\* | sort); do
+    printf '\n'
+    printf '%s\n' "$f"
+    printf '========================================================================\n'
+    cat "$f"
+  done
+} >$BASE/$PKG/LICENSE.txt

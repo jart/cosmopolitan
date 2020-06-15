@@ -1,0 +1,274 @@
+.Dd April 27, 2019
+.Dt "THIRD_PARTY_EDITLINE" 30 "Cosmopolitan Field Manual"
+.Os COSMOPOLITAN
+.Sh NAME
+.Nm "THIRD_PARTY_EDITLINE"
+.Nd command-line editing library with history
+.Sh SYNOPSIS
+.Pp
+.Sy #include "third_party/editline/editline.h"
+.Pp
+.Fn "char *readline" "const char *prompt"
+.Fn "void add_history"  "const char *line"
+.Fn "int read_history"  "const char *filename"
+.Fn "int write_history" "const char *filename"
+.Sh DESCRIPTION
+.Nm
+is a library that provides n line-editing interface with history.  It
+is intended to be functionally equivalent with the
+.Nm readline
+library provided by the Free Software Foundation, but much smaller.  The
+bulk of this manual page describes the basic user interface.  More APIs,
+both native and for
+.Nm readline
+compatibility ,
+are also available.  See the
+.Cm editline.h
+header file for details.
+.Pp
+The
+.Fn readline
+function displays the given
+.Fa prompt
+on stdout, waits for user input on stdin and then returns a line of text
+with the trailing newline removed.  The data is returned in a buffer
+allocated with
+.Xr malloc 3 ,
+so the space should be released with
+.Xr free 3
+when the calling program is done with it.
+.Pp
+Each line returned is automatically saved in the internal history list,
+unless it happens to be equal to the previous line.  This is
+configurable if you are building editline from source, i.e. if you would
+rather like to call
+.Fn add_history
+manually.
+.Pp
+The
+.Fn read_history
+and
+.Fn write_history
+functions can be used to load and store the history of your application.
+.Em Note:
+these APIs do not do any tilde or environment variable expansion of the
+given filename.
+.Ss User Interface
+A program that uses this library provides a simple emacs-like editing
+interface to its users.  A line may be edited before it is sent to the
+calling program by typing either control characters or escape sequences.
+A control character, shown as a caret followed by a letter, is typed by
+holding down the control key while the letter is typed.  For example,
+.Cm ^A
+is a control-A.  An escape sequence is entered by typing the escape key
+followed by one or more characters.  The escape key is abbreviated as
+.Cm ESC .
+Note that unlike control keys, case matters in escape sequences;
+.Cm ESC F
+is not the same as
+.Cm ESC f .
+.Pp
+An editing command may be typed anywhere on the line, not just at the
+beginning.  In addition, a return may also be typed anywhere on the
+line, not just at the end.
+.Pp
+Most editing commands may be given a repeat count,
+.Ar n ,
+where
+.Ar n
+is a number.  To enter a repeat count, type the escape key, the number,
+and then the command to execute.  For example,
+.Cm ESC 4 ^f
+moves forward four characters.  If a command may be given a repeat count
+then the text
+.Cm [n]
+is given at the end of its description.
+.Pp
+The following control characters are accepted:
+.Pp
+.Bl -tag -width "ESC DEL " -compact
+.It ^A
+Move to the beginning of the line
+.It ^B
+Move left (backwards) [n]
+.It ^D
+Delete character [n]
+.It ^E
+Move to end of line
+.It ^F
+Move right (forwards) [n]
+.It ^G
+Ring the bell
+.It ^H
+Delete character before cursor (backspace key) [n]
+.It ^I
+Complete filename (tab key); see below
+.It ^J
+Done with line (return key)
+.It ^K
+Kill to end of line (or column [n])
+.It ^L
+Redisplay line
+.It ^M
+Done with line (alternate return key)
+.It ^N
+Get next line from history [n]
+.It ^P
+Get previous line from history [n]
+.It ^R
+Search backward (forward if [n]) through history for text; prefixing the
+string with a caret (^) forces it to match only at the beginning of a
+history line
+.It ^T
+Transpose characters
+.It ^V
+Insert next character, even if it is an edit command
+.It ^W
+Wipe to the mark
+.It ^X^X
+Exchange current location and mark
+.It ^Y
+Yank back last killed text
+.It ^[
+Start an escape sequence (escape key)
+.It ^]c
+Move forward to next character
+.Cm c
+.It ^?
+Delete character before cursor (delete key) [n]
+.Ed
+.Pp
+The following escape sequences are provided:
+.Pp
+.Bl -tag -width "ESC DEL " -compact
+.It ESC ^H
+Delete previous word (backspace key) [n]
+.It ESC DEL
+Delete previous word (delete key) [n]
+.It ESC SP
+Set the mark (space key); see ^X^X and ^Y above
+.It ESC\ .
+Get the last (or [n]'th) word from previous line
+.It ESC\ ?
+Show possible completions; see below
+.It ESC <
+Move to start of history
+.It ESC >
+Move to end of history
+.It ESC b
+Move backward a word [n]
+.It ESC d
+Delete word under cursor [n]
+.It ESC f
+Move forward a word [n]
+.It ESC l
+Make word lowercase [n]
+.It ESC m
+Toggle if 8bit chars display normally or with an
+.Ar M-
+prefix
+.It ESC u
+Make word uppercase [n]
+.It ESC y
+Yank back last killed text
+.It ESC v
+Show library version
+.It ESC w
+Make area up to mark yankable
+.It ESC nn
+Set repeat count to the number nn
+.It ESC C
+Read from environment variable
+.Ar $C ,
+where
+.Ar C
+is an uppercase letter
+.El
+.Pp
+The
+.Nm
+library has a small macro facility.  If you type the escape key followed
+by an uppercase letter,
+.Ar C ,
+then the contents of the environment variable
+.Ar $C
+are read in as if you had typed them at the keyboard.  For example, if
+the variable
+.Ar $L
+contains the following:
+.Pp
+.Dl ^A^Kecho '^V^[[H^V^[[2J'^M
+.Pp
+Then typing
+.Cm ESC L
+will move to the beginning of the line, kill the entire line, enter the
+echo command needed to clear the terminal (if your terminal is like a
+VT-100), and send the line back to the shell.
+.Pp
+The
+.Nm
+library also does filename completion.  Suppose the root directory has
+the following files in it:
+.Pp
+.Dl bin	vmunix
+.Dl core	vmunix.old
+.Pp
+If you type
+.Cm rm /v
+and then the tab key,
+.Nm
+will then finish off as much of the name as possible by adding
+.Ar munix .
+Because the name is not unique, it will then beep.  If you type the
+escape key and a question mark, it will display the two choices.  If you
+then type a period and a tab, the library will finish off the filename
+for you:
+.Pp
+.Bd -ragged -offset indent
+rm /v[TAB]
+.Em munix
+\&.[TAB]
+.Em old
+.Ed
+.Pp
+The tab key is shown by [TAB] and the automatically-entered text
+is shown in italics, or underline.
+.Sh USAGE
+To include
+.Nm
+in your program, call it as you do any other function and link your
+program with
+.Ar -leditline .
+.Ss Example
+The following brief example lets you enter a line and edit it, then displays it.
+.Pp
+.Bd -literal -offset indent
+#include <stdio.h>
+#include <stdlib.h>
+#include <editline.h>
+
+int main(void)
+{
+	char *p;
+
+	while ((p = readline("CLI> "))) {
+	        puts(p);
+	        free(p);
+	}
+
+	return 0;
+}
+.El
+.Sh AUTHORS
+The original editline library was posted to comp.sources.unix newsgroup
+by created by Simmule R. Turner and Rich Salz in 1992.  It now exists in
+several forks: Debian, Minix, Heimdal, Festival speech tools, Mozilla,
+Google Gadgets for Linux, and many other places.  The original manual
+page was made by David W. Sanderson.
+.Pp
+This version was originally based on the Minix 2 sources, but has since
+evolved to include patches from all relevant forks.  It is currently
+maintained by Joachim Nilsson at GitHub,
+.Aq http://github.com/troglobit/editline
+.Sh BUGS
+Does not handle multiple lines well.

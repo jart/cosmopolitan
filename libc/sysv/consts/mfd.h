@@ -1,0 +1,16 @@
+#ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_MFD_H_
+#define COSMOPOLITAN_LIBC_SYSV_CONSTS_MFD_H_
+#include "libc/runtime/symbolic.h"
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+hidden extern const long MFD_CLOEXEC;
+hidden extern const long MFD_ALLOW_SEALING;
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+
+#define MFD_CLOEXEC       SYMBOLIC(MFD_CLOEXEC)
+#define MFD_ALLOW_SEALING SYMBOLIC(MFD_ALLOW_SEALING)
+
+#endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_MFD_H_ */

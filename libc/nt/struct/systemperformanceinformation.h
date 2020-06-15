@@ -1,0 +1,83 @@
+#ifndef COSMOPOLITAN_LIBC_NT_STRUCT_SYSTEMPERFORMANCEINFORMATION_H_
+#define COSMOPOLITAN_LIBC_NT_STRUCT_SYSTEMPERFORMANCEINFORMATION_H_
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+
+struct NtSystemPerformanceInformation {
+  int64_t IdleTime;
+  int64_t ReadTransferCount;
+  int64_t WriteTransferCount;
+  int64_t OtherTransferCount;
+  uint32_t ReadOperationCount;
+  uint32_t WriteOperationCount;
+  uint32_t OtherOperationCount;
+  uint32_t AvailablePages;
+  uint32_t TotalCommittedPages;
+  uint32_t TotalCommitLimit;
+  uint32_t PeakCommitment;
+  uint32_t PageFaults;
+  uint32_t WriteCopyFaults;
+  uint32_t TransitionFaults;
+  uint32_t CacheTransitionFaults;
+  uint32_t DemandZeroFaults;
+  uint32_t PagesRead;
+  uint32_t PageReadIos;
+  uint32_t CacheReads;
+  uint32_t CacheIos;
+  uint32_t PagefilePagesWritten;
+  uint32_t PagefilePageWriteIos;
+  uint32_t MappedFilePagesWritten;
+  uint32_t MappedFilePageWriteIos;
+  uint32_t PagedPoolUsage;
+  uint32_t NonPagedPoolUsage;
+  uint32_t PagedPoolAllocs;
+  uint32_t PagedPoolFrees;
+  uint32_t NonPagedPoolAllocs;
+  uint32_t NonPagedPoolFrees;
+  uint32_t TotalFreeSystemPtes;
+  uint32_t SystemCodePage;
+  uint32_t TotalSystemDriverPages;
+  uint32_t TotalSystemCodePages;
+  uint32_t SmallNonPagedLookasideListAllocateHits;
+  uint32_t SmallPagedLookasideListAllocateHits;
+  uint32_t Reserved3;
+  uint32_t MmSystemCachePage;
+  uint32_t PagedPoolPage;
+  uint32_t SystemDriverPage;
+  uint32_t FastReadNoWait;
+  uint32_t FastReadWait;
+  uint32_t FastReadResourceMiss;
+  uint32_t FastReadNotPossible;
+  uint32_t FastMdlReadNoWait;
+  uint32_t FastMdlReadWait;
+  uint32_t FastMdlReadResourceMiss;
+  uint32_t FastMdlReadNotPossible;
+  uint32_t MapDataNoWait;
+  uint32_t MapDataWait;
+  uint32_t MapDataNoWaitMiss;
+  uint32_t MapDataWaitMiss;
+  uint32_t PinMappedDataCount;
+  uint32_t PinReadNoWait;
+  uint32_t PinReadWait;
+  uint32_t PinReadNoWaitMiss;
+  uint32_t PinReadWaitMiss;
+  uint32_t CopyReadNoWait;
+  uint32_t CopyReadWait;
+  uint32_t CopyReadNoWaitMiss;
+  uint32_t CopyReadWaitMiss;
+  uint32_t MdlReadNoWait;
+  uint32_t MdlReadWait;
+  uint32_t MdlReadNoWaitMiss;
+  uint32_t MdlReadWaitMiss;
+  uint32_t ReadAheadIos;
+  uint32_t LazyWriteIos;
+  uint32_t LazyWritePages;
+  uint32_t DataFlushes;
+  uint32_t DataPages;
+  uint32_t ContextSwitches;
+  uint32_t FirstLevelTbFills;
+  uint32_t SecondLevelTbFills;
+  uint32_t SystemCalls;
+};
+
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_LIBC_NT_STRUCT_SYSTEMPERFORMANCEINFORMATION_H_ */

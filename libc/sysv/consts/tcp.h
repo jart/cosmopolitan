@@ -1,0 +1,70 @@
+#ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_TCP_H_
+#define COSMOPOLITAN_LIBC_SYSV_CONSTS_TCP_H_
+#include "libc/runtime/symbolic.h"
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+hidden extern const long TCP_CC_INFO;
+hidden extern const long TCP_CONGESTION;
+hidden extern const long TCP_COOKIE_TRANSACTIONS;
+hidden extern const long TCP_CORK;
+hidden extern const long TCP_DEFER_ACCEPT;
+hidden extern const long TCP_FASTOPEN;
+hidden extern const long TCP_INFO;
+hidden extern const long TCP_KEEPCNT;
+hidden extern const long TCP_KEEPIDLE;
+hidden extern const long TCP_KEEPINTVL;
+hidden extern const long TCP_LINGER2;
+hidden extern const long TCP_MAXSEG;
+hidden extern const long TCP_MD5SIG;
+hidden extern const long TCP_MD5SIG_MAXKEYLEN;
+hidden extern const long TCP_NODELAY;
+hidden extern const long TCP_NOTSENT_LOWAT;
+hidden extern const long TCP_QUEUE_SEQ;
+hidden extern const long TCP_QUICKACK;
+hidden extern const long TCP_REPAIR;
+hidden extern const long TCP_REPAIR_OPTIONS;
+hidden extern const long TCP_REPAIR_QUEUE;
+hidden extern const long TCP_SAVED_SYN;
+hidden extern const long TCP_SAVE_SYN;
+hidden extern const long TCP_SYNCNT;
+hidden extern const long TCP_THIN_DUPACK;
+hidden extern const long TCP_THIN_LINEAR_TIMEOUTS;
+hidden extern const long TCP_TIMESTAMP;
+hidden extern const long TCP_USER_TIMEOUT;
+hidden extern const long TCP_WINDOW_CLAMP;
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+
+#define TCP_CC_INFO SYMBOLIC(TCP_CC_INFO)
+#define TCP_CONGESTION SYMBOLIC(TCP_CONGESTION)
+#define TCP_COOKIE_TRANSACTIONS SYMBOLIC(TCP_COOKIE_TRANSACTIONS)
+#define TCP_CORK SYMBOLIC(TCP_CORK)
+#define TCP_DEFER_ACCEPT SYMBOLIC(TCP_DEFER_ACCEPT)
+#define TCP_FASTOPEN SYMBOLIC(TCP_FASTOPEN)
+#define TCP_INFO SYMBOLIC(TCP_INFO)
+#define TCP_KEEPCNT SYMBOLIC(TCP_KEEPCNT)
+#define TCP_KEEPIDLE SYMBOLIC(TCP_KEEPIDLE)
+#define TCP_KEEPINTVL SYMBOLIC(TCP_KEEPINTVL)
+#define TCP_LINGER2 SYMBOLIC(TCP_LINGER2)
+#define TCP_MAXSEG SYMBOLIC(TCP_MAXSEG)
+#define TCP_MD5SIG SYMBOLIC(TCP_MD5SIG)
+#define TCP_MD5SIG_MAXKEYLEN SYMBOLIC(TCP_MD5SIG_MAXKEYLEN)
+#define TCP_NODELAY LITERALLY(1)
+#define TCP_NOTSENT_LOWAT SYMBOLIC(TCP_NOTSENT_LOWAT)
+#define TCP_QUEUE_SEQ SYMBOLIC(TCP_QUEUE_SEQ)
+#define TCP_QUICKACK SYMBOLIC(TCP_QUICKACK)
+#define TCP_REPAIR SYMBOLIC(TCP_REPAIR)
+#define TCP_REPAIR_OPTIONS SYMBOLIC(TCP_REPAIR_OPTIONS)
+#define TCP_REPAIR_QUEUE SYMBOLIC(TCP_REPAIR_QUEUE)
+#define TCP_SAVED_SYN SYMBOLIC(TCP_SAVED_SYN)
+#define TCP_SAVE_SYN SYMBOLIC(TCP_SAVE_SYN)
+#define TCP_SYNCNT SYMBOLIC(TCP_SYNCNT)
+#define TCP_THIN_DUPACK SYMBOLIC(TCP_THIN_DUPACK)
+#define TCP_THIN_LINEAR_TIMEOUTS SYMBOLIC(TCP_THIN_LINEAR_TIMEOUTS)
+#define TCP_TIMESTAMP SYMBOLIC(TCP_TIMESTAMP)
+#define TCP_USER_TIMEOUT SYMBOLIC(TCP_USER_TIMEOUT)
+#define TCP_WINDOW_CLAMP SYMBOLIC(TCP_WINDOW_CLAMP)
+
+#endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_TCP_H_ */

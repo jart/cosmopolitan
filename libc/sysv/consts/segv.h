@@ -1,0 +1,16 @@
+#ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_SEGV_H_
+#define COSMOPOLITAN_LIBC_SYSV_CONSTS_SEGV_H_
+#include "libc/runtime/symbolic.h"
+
+#define SEGV_ACCERR SYMBOLIC(SEGV_ACCERR)
+#define SEGV_MAPERR SYMBOLIC(SEGV_MAPERR)
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+hidden extern const long SEGV_ACCERR;
+hidden extern const long SEGV_MAPERR;
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_SEGV_H_ */

@@ -1,0 +1,44 @@
+#ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_RLIMIT_H_
+#define COSMOPOLITAN_LIBC_SYSV_CONSTS_RLIMIT_H_
+#include "libc/runtime/symbolic.h"
+
+#define RLIMIT_AS SYMBOLIC(RLIMIT_AS)
+#define RLIMIT_CORE SYMBOLIC(RLIMIT_CORE)
+#define RLIMIT_CPU SYMBOLIC(RLIMIT_CPU)
+#define RLIMIT_DATA SYMBOLIC(RLIMIT_DATA)
+#define RLIMIT_FSIZE SYMBOLIC(RLIMIT_FSIZE)
+#define RLIMIT_LOCKS SYMBOLIC(RLIMIT_LOCKS)
+#define RLIMIT_MEMLOCK SYMBOLIC(RLIMIT_MEMLOCK)
+#define RLIMIT_MSGQUEUE SYMBOLIC(RLIMIT_MSGQUEUE)
+#define RLIMIT_NICE SYMBOLIC(RLIMIT_NICE)
+#define RLIMIT_NLIMITS SYMBOLIC(RLIMIT_NLIMITS)
+#define RLIMIT_NOFILE SYMBOLIC(RLIMIT_NOFILE)
+#define RLIMIT_NPROC SYMBOLIC(RLIMIT_NPROC)
+#define RLIMIT_RSS SYMBOLIC(RLIMIT_RSS)
+#define RLIMIT_RTPRIO SYMBOLIC(RLIMIT_RTPRIO)
+#define RLIMIT_SIGPENDING SYMBOLIC(RLIMIT_SIGPENDING)
+#define RLIMIT_STACK SYMBOLIC(RLIMIT_STACK)
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+hidden extern const long RLIMIT_AS;
+hidden extern const long RLIMIT_CORE;
+hidden extern const long RLIMIT_CPU;
+hidden extern const long RLIMIT_DATA;
+hidden extern const long RLIMIT_FSIZE;
+hidden extern const long RLIMIT_LOCKS;
+hidden extern const long RLIMIT_MEMLOCK;
+hidden extern const long RLIMIT_MSGQUEUE;
+hidden extern const long RLIMIT_NICE;
+hidden extern const long RLIMIT_NLIMITS;
+hidden extern const long RLIMIT_NOFILE;
+hidden extern const long RLIMIT_NPROC;
+hidden extern const long RLIMIT_RSS;
+hidden extern const long RLIMIT_RTPRIO;
+hidden extern const long RLIMIT_SIGPENDING;
+hidden extern const long RLIMIT_STACK;
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_RLIMIT_H_ */

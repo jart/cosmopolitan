@@ -1,0 +1,26 @@
+#ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_TCPOPT_H_
+#define COSMOPOLITAN_LIBC_SYSV_CONSTS_TCPOPT_H_
+#include "libc/runtime/symbolic.h"
+
+#define TCPOPT_EOL SYMBOLIC(TCPOPT_EOL)
+#define TCPOPT_MAXSEG SYMBOLIC(TCPOPT_MAXSEG)
+#define TCPOPT_NOP SYMBOLIC(TCPOPT_NOP)
+#define TCPOPT_SACK SYMBOLIC(TCPOPT_SACK)
+#define TCPOPT_SACK_PERMITTED SYMBOLIC(TCPOPT_SACK_PERMITTED)
+#define TCPOPT_TIMESTAMP SYMBOLIC(TCPOPT_TIMESTAMP)
+#define TCPOPT_WINDOW SYMBOLIC(TCPOPT_WINDOW)
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+hidden extern const long TCPOPT_EOL;
+hidden extern const long TCPOPT_MAXSEG;
+hidden extern const long TCPOPT_NOP;
+hidden extern const long TCPOPT_SACK;
+hidden extern const long TCPOPT_SACK_PERMITTED;
+hidden extern const long TCPOPT_TIMESTAMP;
+hidden extern const long TCPOPT_WINDOW;
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_TCPOPT_H_ */

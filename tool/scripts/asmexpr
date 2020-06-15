@@ -1,0 +1,230 @@
+#!/bin/sh
+#
+# OVERVIEW
+#
+#   Micro-experiment assembler.
+#
+# EXAMPLES
+#
+#     asmexpr 'mov $-4096,%rax' 'not %rax' 'bsr %rax,%rax'
+#     asmexpr 'mov $0,%ecx' 'vmovd %ecx,%xmm1' 'vpbroadcastb %xmm1,%ymm1' 'mov $0x20202032489001ff,%rax' 'vmovq %rax,%xmm0' 'vpcmpgtb %ymm1,%ymm0,%ymm2'
+
+c=/tmp/asmexpr.c
+s1=/tmp/asmexpr1.s
+s2=/tmp/asmexpr2.s
+s3=/tmp/asmexpr3.s
+x=/tmp/asmexpr.exe
+
+cat <<EOF >$s1
+	.comm	rsp,8
+	.globl	funk
+funk:	push	%rbp
+	mov	%rsp,%rbp
+	push	%rbx
+	push	%r12
+	push	%r13
+	push	%r14
+	push	%r15
+	mov	%rsp,rsp(%rip)
+	xor	%eax,%eax
+	xor	%ebx,%ebx
+	xor	%ecx,%ecx
+	xor	%edx,%edx
+	xor	%edi,%edi
+	xor	%esi,%esi
+	xor	%r8d,%r8d
+	xor	%r9d,%r9d
+	xor	%r10d,%r10d
+	xor	%r11d,%r11d
+	xor	%r12d,%r12d
+	xor	%r13d,%r13d
+	xor	%r14d,%r14d
+	xor	%r15d,%r15d
+	vzeroall
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+EOF
+
+cat <<EOF >$s2
+	.comm	a,8
+	.comm	b,8
+	.comm	c,8
+	.comm	x,8
+	.comm	y,8
+	.comm	z,8
+EOF
+for i; do
+  cat <<EOF >>$s2
+	$i
+EOF
+done
+
+cat <<EOF >$s3
+	.comm	rsp,8
+	.comm	regs,14*8
+	.comm	flags,4
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	cld
+	mov	rsp(%rip),%rsp
+	push	%rbx
+	lea	regs(%rip),%rbx
+	mov	%rax,0(%rbx)
+	pop	%rax
+	mov	%rax,8(%rbx)
+	mov	%rcx,16(%rbx)
+	mov	%rdx,24(%rbx)
+	mov	%rdi,32(%rbx)
+	mov	%rsi,40(%rbx)
+	mov	%r8,48(%rbx)
+	mov	%r9,56(%rbx)
+	mov	%r10,64(%rbx)
+	mov	%r11,72(%rbx)
+	mov	%r12,80(%rbx)
+	mov	%r13,88(%rbx)
+	mov	%r14,96(%rbx)
+	mov	%r15,104(%rbx)
+	vmovaps	%ymm0,0x0a0(%rbx)
+	vmovaps	%ymm1,0x0c0(%rbx)
+	vmovaps	%ymm2,0x0e0(%rbx)
+	vmovaps	%ymm3,0x100(%rbx)
+	vmovaps	%ymm4,0x120(%rbx)
+	vmovaps	%ymm5,0x140(%rbx)
+	vmovaps	%ymm6,0x160(%rbx)
+	vmovaps	%ymm7,0x180(%rbx)
+	vmovaps	%ymm8,0x1a0(%rbx)
+	vmovaps	%ymm9,0x1c0(%rbx)
+	vmovaps	%ymm10,0x1e0(%rbx)
+	vmovaps	%ymm11,0x200(%rbx)
+	vmovaps	%ymm12,0x220(%rbx)
+	vmovaps	%ymm13,0x240(%rbx)
+	vmovaps	%ymm14,0x260(%rbx)
+	vmovaps	%ymm15,0x280(%rbx)
+	pushf
+	pop	%rax
+	mov	%eax,flags(%rip)
+	pop	%r15
+	pop	%r14
+	pop	%r13
+	pop	%r12
+	pop	%rbx
+	pop	%rbp
+	vzeroupper
+	ret
+EOF
+
+cat <<EOF >$c
+#include <stdio.h>
+#include <string.h>
+
+struct GodHatesFlags {
+  unsigned c : 1;  /* bit  0: carry flag */
+  unsigned v : 1;  /* bit  1: V flag: was 8085 signed-number overflow */
+  unsigned p : 1;  /* bit  2: parity flag */
+  unsigned r : 1;  /* bit  3: always zero */
+  unsigned a : 1;  /* bit  4: auxiliary flag (nibble carry) */
+  unsigned k : 1;  /* bit  5: K is for Kompressor (K = V flag ⊕ sgn(result)) */
+  unsigned z : 1;  /* bit  6: zero flag */
+  unsigned s : 1;  /* bit  7: sign flag */
+  unsigned t : 1;  /* bit  8: it's a trap flag */
+  unsigned i : 1;  /* bit  9: interrupt enable flag */
+  unsigned d : 1;  /* bit 10: direction flag */
+  unsigned o : 1;  /* bit 11: overflow flag */
+  unsigned pl : 2; /* b12-13: i/o privilege level (80286+) */
+  unsigned nt : 1; /* bit 14: nested task flag (80286+) */
+  unsigned pc : 1; /* bit 15: oldskool flag */
+  unsigned blah : 16;
+  unsigned blah2 : 32;
+};
+
+char *DescribeFlags(struct GodHatesFlags flags) {
+  static char buf[256];
+  buf[0] = 0;
+  if (flags.c) strcat(buf, "CF ");
+  if (flags.p) strcat(buf, "PF ");
+  if (flags.a) strcat(buf, "AF ");
+  if (flags.z) strcat(buf, "ZF ");
+  if (flags.s) strcat(buf, "SF ");
+  if (flags.t) strcat(buf, "TF ");
+  if (flags.i) strcat(buf, "IF ");
+  if (flags.d) strcat(buf, "DF ");
+  if (flags.o) strcat(buf, "OF ");
+  strcat(buf, "IOPL-");
+  switch (flags.pl) {
+    case 0:
+      strcat(buf, "0");
+      break;
+    case 1:
+      strcat(buf, "1");
+      break;
+    case 2:
+      strcat(buf, "2");
+      break;
+    case 3:
+      strcat(buf, "3");
+      break;
+    default:
+      __builtin_unreachable();
+  }
+  strcat(buf, " ");
+  if (flags.nt) strcat(buf, "NT ");
+  if (flags.r || flags.k || flags.pc) {
+    strcat(buf, "[WOW: ");
+    if (flags.v) strcat(buf, "VF ");
+    if (flags.k) strcat(buf, "KF ");
+    if (flags.r) strcat(buf, "RF ");
+    if (flags.pc) strcat(buf, "PC ");
+    strcat(buf, "] ");
+  }
+  return &buf[0];
+}
+
+void funk();
+struct GodHatesFlags flags;
+struct {
+  long gen[14];
+  long __pad[6];
+  unsigned long ymms[16][4];
+} regs;
+static const char regnames[][4] = {"rax", "rbx", "rcx", "rdx", "rdi", "rsi", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"};
+int main() {
+  funk();
+  printf("flags %45s\n\n", DescribeFlags(flags));
+  for (unsigned i = 0; i < 14; ++i) {
+    if (regs.gen[i]) {
+      printf("%s    s   0x%08x         %20d\\n", regnames[i], (signed)(regs.gen[i]), (signed)(regs.gen[i]));
+      printf("       u   0x%08x         %20u\\n", (unsigned)(regs.gen[i]), (unsigned)(regs.gen[i]));
+      printf("       sll 0x%016llx %20lld\\n", (signed long long)(regs.gen[i]), (signed long long)(regs.gen[i]));
+      printf("       ull 0x%016llx %20llu\\n", (unsigned long long)(regs.gen[i]), (unsigned long long)(regs.gen[i]));
+      printf("\n");
+    }
+  }
+  for (unsigned i = 0; i < 16; ++i) {
+    if (regs.ymms[i][0] || regs.ymms[i][1] || regs.ymms[i][2] || regs.ymms[i][3]) {
+      printf("ymm%d%s    %016lx%016lx%016lx%016lx\\n", i, i < 10 ? " " : "", regs.ymms[i][3], regs.ymms[i][2], regs.ymms[i][1], regs.ymms[i][0]);
+    }
+  }
+  return 0;
+}
+EOF
+
+cc -c -g -o $c.o $c &&
+cc -c -g -o $s1.o $s1 &&
+cc -c -g -o $s2.o $s2 &&
+cc -c -g -o $s3.o $s3 &&
+cc -g -o $x $c $s1.o $s2.o $s3.o && {
+  echo
+  objdump -d $s2.o | sed 1,7d
+  echo
+  $x
+}
+
+exit

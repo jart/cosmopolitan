@@ -1,0 +1,44 @@
+#ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_MADV_H_
+#define COSMOPOLITAN_LIBC_SYSV_CONSTS_MADV_H_
+#include "libc/runtime/symbolic.h"
+
+#define MADV_DODUMP SYMBOLIC(MADV_DODUMP)
+#define MADV_DOFORK SYMBOLIC(MADV_DOFORK)
+#define MADV_DONTDUMP SYMBOLIC(MADV_DONTDUMP)
+#define MADV_DONTFORK SYMBOLIC(MADV_DONTFORK)
+#define MADV_DONTNEED SYMBOLIC(MADV_DONTNEED)
+#define MADV_FREE SYMBOLIC(MADV_FREE)
+#define MADV_HUGEPAGE SYMBOLIC(MADV_HUGEPAGE)
+#define MADV_HWPOISON SYMBOLIC(MADV_HWPOISON)
+#define MADV_MERGEABLE SYMBOLIC(MADV_MERGEABLE)
+#define MADV_NOHUGEPAGE SYMBOLIC(MADV_NOHUGEPAGE)
+#define MADV_NORMAL SYMBOLIC(MADV_NORMAL)
+#define MADV_RANDOM SYMBOLIC(MADV_RANDOM)
+#define MADV_REMOVE SYMBOLIC(MADV_REMOVE)
+#define MADV_SEQUENTIAL SYMBOLIC(MADV_SEQUENTIAL)
+#define MADV_UNMERGEABLE SYMBOLIC(MADV_UNMERGEABLE)
+#define MADV_WILLNEED SYMBOLIC(MADV_WILLNEED)
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+hidden extern const long MADV_DODUMP;
+hidden extern const long MADV_DOFORK;
+hidden extern const long MADV_DONTDUMP;
+hidden extern const long MADV_DONTFORK;
+hidden extern const long MADV_DONTNEED;
+hidden extern const long MADV_FREE;
+hidden extern const long MADV_HUGEPAGE;
+hidden extern const long MADV_HWPOISON;
+hidden extern const long MADV_MERGEABLE;
+hidden extern const long MADV_NOHUGEPAGE;
+hidden extern const long MADV_NORMAL;
+hidden extern const long MADV_RANDOM;
+hidden extern const long MADV_REMOVE;
+hidden extern const long MADV_SEQUENTIAL;
+hidden extern const long MADV_UNMERGEABLE;
+hidden extern const long MADV_WILLNEED;
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_MADV_H_ */

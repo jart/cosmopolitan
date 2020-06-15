@@ -1,0 +1,14 @@
+#ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_LIMITS_H_
+#define COSMOPOLITAN_LIBC_SYSV_CONSTS_LIMITS_H_
+#include "libc/runtime/symbolic.h"
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+hidden extern const long PIPE_BUF;
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+
+#define PIPE_BUF SYMBOLIC(PIPE_BUF)
+
+#endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_LIMITS_H_ */

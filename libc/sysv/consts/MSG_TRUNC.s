@@ -1,0 +1,2 @@
+.include "libc/sysv/consts/syscon.inc"
+.syscon msg MSG_TRUNC 0x20 0x10 0x10 0x10 0x0100

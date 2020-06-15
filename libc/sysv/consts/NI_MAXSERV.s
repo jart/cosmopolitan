@@ -1,0 +1,2 @@
+.include "libc/sysv/consts/syscon.inc"
+.syscon misc NI_MAXSERV 0x20 0x20 0x20 0x20 0x20

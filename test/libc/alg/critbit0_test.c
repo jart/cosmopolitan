@@ -1,0 +1,125 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│                                                                              │
+│ This program is free software; you can redistribute it and/or modify         │
+│ it under the terms of the GNU General Public License as published by         │
+│ the Free Software Foundation; version 2 of the License.                      │
+│                                                                              │
+│ This program is distributed in the hope that it will be useful, but          │
+│ WITHOUT ANY WARRANTY; without even the implied warranty of                   │
+│ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU             │
+│ General Public License for more details.                                     │
+│                                                                              │
+│ You should have received a copy of the GNU General Public License            │
+│ along with this program; if not, write to the Free Software                  │
+│ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
+│ 02110-1301 USA                                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/alg/alg.h"
+#include "libc/bits/bits.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
+#include "libc/testlib/testlib.h"
+
+struct Bog {
+  unsigned i;
+  unsigned n;
+  const char *p[];
+};
+
+static testonly nodiscard struct Bog *NewBog(unsigned n) {
+  struct Bog *res = malloc(sizeof(struct Bog) + sizeof(const char *) * n);
+  res->i = 0;
+  res->n = n;
+  return res;
+}
+static testonly void ClearBog(struct Bog *bog) { bog->i = 0; }
+static testonly void FreeBog(struct Bog **bog) { free(*bog), *bog = NULL; }
+
+static const char *const elems[] = {"a",   "aa",  "aaz", "abz",
+                                    "bba", "bbc", "bbd", NULL};
+
+testonly static void MakeTree(struct critbit0 *tree) {
+  memset(tree, 0, sizeof(*tree));
+  for (unsigned i = 0; elems[i]; ++i) {
+    ASSERT_EQ(true, critbit0_insert(tree, elems[i]));
+  }
+}
+
+TEST(critbit0, testContains) {
+  struct critbit0 tree[1];
+  MakeTree(tree);
+  for (unsigned i = 0; elems[i]; ++i) {
+    if (!critbit0_contains(tree, elems[i])) abort();
+  }
+  critbit0_clear(tree);
+}
+
+static const char *const elems2[] = {"a",  "aa",  "b",   "bb", "ab",
+                                     "ba", "aba", "bab", NULL};
+
+TEST(critbit0, testDelete) {
+  struct critbit0 tree = {0};
+  for (unsigned i = 1; elems2[i]; ++i) {
+    critbit0_clear(&tree);
+    for (unsigned j = 0; j < i; ++j) critbit0_insert(&tree, elems2[j]);
+    for (unsigned j = 0; j < i; ++j) {
+      if (!critbit0_contains(&tree, elems2[j])) abort();
+    }
+    for (unsigned j = 0; j < i; ++j) {
+      if (1 != critbit0_delete(&tree, elems2[j])) abort();
+    }
+    for (unsigned j = 0; j < i; ++j) {
+      if (critbit0_contains(&tree, elems2[j])) abort();
+    }
+  }
+  critbit0_clear(&tree);
+}
+
+static testonly intptr_t allprefixed_cb(const char *elem, void *arg) {
+  struct Bog *bog = arg;
+  ASSERT_LT(bog->i, bog->n);
+  bog->p[bog->i++] = elem;
+  return 0;
+}
+
+TEST(critbit0, testAllPrefixed) {
+  struct critbit0 tree[1];
+  MakeTree(tree);
+  struct Bog *a = NewBog(4);
+  ASSERT_EQ(0, critbit0_allprefixed(tree, "a", allprefixed_cb, a));
+  ASSERT_EQ(4, a->i);
+  ASSERT_STREQ("a", a->p[0]);
+  ASSERT_STREQ("aa", a->p[1]);
+  ASSERT_STREQ("aaz", a->p[2]);
+  ASSERT_STREQ("abz", a->p[3]);
+  ClearBog(a);
+  ASSERT_EQ(0, critbit0_allprefixed(tree, "aa", allprefixed_cb, a));
+  ASSERT_EQ(2, a->i);
+  ASSERT_STREQ("aa", a->p[0]);
+  ASSERT_STREQ("aaz", a->p[1]);
+  critbit0_clear(tree);
+  FreeBog(&a);
+}
+
+static testonly intptr_t allprefixed_cb_halt(const char *elem, void *arg) {
+  struct Bog *bog = arg;
+  ASSERT_LT(bog->i, bog->n);
+  bog->p[bog->i++] = elem;
+  return strcmp(elem, "aa") == 0 ? 123 : 0;
+}
+
+TEST(critbit0, testAllPrefixed_haltOnNonzero) {
+  struct critbit0 tree[1];
+  MakeTree(tree);
+  struct Bog *a = NewBog(4);
+  ASSERT_EQ(123, critbit0_allprefixed(tree, "a", allprefixed_cb_halt, a));
+  ASSERT_EQ(2, a->i);
+  ASSERT_STREQ("a", a->p[0]);
+  ASSERT_STREQ("aa", a->p[1]);
+  critbit0_clear(tree);
+  FreeBog(&a);
+}

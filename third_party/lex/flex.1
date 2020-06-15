@@ -1,0 +1,4438 @@
+.\"	$OpenBSD: flex.1,v 1.43 2015/09/21 10:03:46 jmc Exp $
+.\"
+.\" Copyright (c) 1990 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" This code is derived from software contributed to Berkeley by
+.\" Vern Paxson.
+.\"
+.\" The United States Government has rights in this work pursuant
+.\" to contract no. DE-AC03-76SF00098 between the United States
+.\" Department of Energy and the University of California.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\"
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" Neither the name of the University nor the names of its contributors
+.\" may be used to endorse or promote products derived from this software
+.\" without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+.\" PURPOSE.
+.\"
+.Dd $Mdocdate: September 21 2015 $
+.Dt FLEX 1
+.Os
+.Sh NAME
+.Nm flex ,
+.Nm flex++ ,
+.Nm lex
+.Nd fast lexical analyzer generator
+.Sh SYNOPSIS
+.Nm
+.Bk -words
+.Op Fl 78BbdFfhIiLlnpsTtVvw+?
+.Op Fl C Ns Op Cm aeFfmr
+.Op Fl Fl help
+.Op Fl Fl version
+.Op Fl o Ns Ar output
+.Op Fl P Ns Ar prefix
+.Op Fl S Ns Ar skeleton
+.Op Ar
+.Ek
+.Sh DESCRIPTION
+.Nm
+is a tool for generating
+.Em scanners :
+programs which recognize lexical patterns in text.
+.Nm
+reads the given input files, or its standard input if no file names are given,
+for a description of a scanner to generate.
+The description is in the form of pairs of regular expressions and C code,
+called
+.Em rules .
+.Nm
+generates as output a C source file,
+.Pa lex.yy.c ,
+which defines a routine
+.Fn yylex .
+This file is compiled and linked with the
+.Fl lfl
+library to produce an executable.
+When the executable is run, it analyzes its input for occurrences
+of the regular expressions.
+Whenever it finds one, it executes the corresponding C code.
+.Pp
+.Nm lex
+is a synonym for
+.Nm flex .
+.Nm flex++
+is a synonym for
+.Nm
+.Fl + .
+.Pp
+The manual includes both tutorial and reference sections:
+.Bl -ohang
+.It Sy Some Simple Examples
+.It Sy Format of the Input File
+.It Sy Patterns
+The extended regular expressions used by
+.Nm .
+.It Sy How the Input is Matched
+The rules for determining what has been matched.
+.It Sy Actions
+How to specify what to do when a pattern is matched.
+.It Sy The Generated Scanner
+Details regarding the scanner that
+.Nm
+produces;
+how to control the input source.
+.It Sy Start Conditions
+Introducing context into scanners, and managing
+.Qq mini-scanners .
+.It Sy Multiple Input Buffers
+How to manipulate multiple input sources;
+how to scan from strings instead of files.
+.It Sy End-of-File Rules
+Special rules for matching the end of the input.
+.It Sy Miscellaneous Macros
+A summary of macros available to the actions.
+.It Sy Values Available to the User
+A summary of values available to the actions.
+.It Sy Interfacing with Yacc
+Connecting flex scanners together with
+.Xr yacc 1
+parsers.
+.It Sy Options
+.Nm
+command-line options, and the
+.Dq %option
+directive.
+.It Sy Performance Considerations
+How to make scanners go as fast as possible.
+.It Sy Generating C++ Scanners
+The
+.Pq experimental
+facility for generating C++ scanner classes.
+.It Sy Incompatibilities with Lex and POSIX
+How
+.Nm
+differs from
+.At
+.Nm lex
+and the
+.Tn POSIX
+.Nm lex
+standard.
+.It Sy Files
+Files used by
+.Nm .
+.It Sy Diagnostics
+Those error messages produced by
+.Nm
+.Pq or scanners it generates
+whose meanings might not be apparent.
+.It Sy See Also
+Other documentation, related tools.
+.It Sy Authors
+Includes contact information.
+.It Sy Bugs
+Known problems with
+.Nm .
+.El
+.Sh SOME SIMPLE EXAMPLES
+First some simple examples to get the flavor of how one uses
+.Nm .
+The following
+.Nm
+input specifies a scanner which whenever it encounters the string
+.Qq username
+will replace it with the user's login name:
+.Bd -literal -offset indent
+%%
+username    printf("%s", getlogin());
+.Ed
+.Pp
+By default, any text not matched by a
+.Nm
+scanner is copied to the output, so the net effect of this scanner is
+to copy its input file to its output with each occurrence of
+.Qq username
+expanded.
+In this input, there is just one rule.
+.Qq username
+is the
+.Em pattern
+and the
+.Qq printf
+is the
+.Em action .
+The
+.Qq %%
+marks the beginning of the rules.
+.Pp
+Here's another simple example:
+.Bd -literal -offset indent
+%{
+int num_lines = 0, num_chars = 0;
+%}
+
+%%
+\en      ++num_lines; ++num_chars;
+\&.       ++num_chars;
+
+%%
+main()
+{
+	yylex();
+	printf("# of lines = %d, # of chars = %d\en",
+            num_lines, num_chars);
+}
+.Ed
+.Pp
+This scanner counts the number of characters and the number
+of lines in its input
+(it produces no output other than the final report on the counts).
+The first line declares two globals,
+.Qq num_lines
+and
+.Qq num_chars ,
+which are accessible both inside
+.Fn yylex
+and in the
+.Fn main
+routine declared after the second
+.Qq %% .
+There are two rules, one which matches a newline
+.Pq \&"\en\&"
+and increments both the line count and the character count,
+and one which matches any character other than a newline
+(indicated by the
+.Qq \&.
+regular expression).
+.Pp
+A somewhat more complicated example:
+.Bd -literal -offset indent
+/* scanner for a toy Pascal-like language */
+
+%{
+/* need this for the call to atof() below */
+#include <math.h>
+%}
+
+DIGIT    [0-9]
+ID       [a-z][a-z0-9]*
+
+%%
+
+{DIGIT}+ {
+        printf("An integer: %s (%d)\en", yytext,
+            atoi(yytext));
+}
+
+{DIGIT}+"."{DIGIT}* {
+        printf("A float: %s (%g)\en", yytext,
+            atof(yytext));
+}
+
+if|then|begin|end|procedure|function {
+        printf("A keyword: %s\en", yytext);
+}
+
+{ID}    printf("An identifier: %s\en", yytext);
+
+"+"|"-"|"*"|"/"   printf("An operator: %s\en", yytext);
+
+"{"[^}\en]*"}"     /* eat up one-line comments */
+
+[ \et\en]+          /* eat up whitespace */
+
+\&.       printf("Unrecognized character: %s\en", yytext);
+
+%%
+
+main(int argc, char *argv[])
+{
+        ++argv; --argc;  /* skip over program name */
+        if (argc > 0)
+                yyin = fopen(argv[0], "r");
+        else
+                yyin = stdin;
+
+        yylex();
+}
+.Ed
+.Pp
+This is the beginnings of a simple scanner for a language like Pascal.
+It identifies different types of
+.Em tokens
+and reports on what it has seen.
+.Pp
+The details of this example will be explained in the following sections.
+.Sh FORMAT OF THE INPUT FILE
+The
+.Nm
+input file consists of three sections, separated by a line with just
+.Qq %%
+in it:
+.Bd -unfilled -offset indent
+definitions
+%%
+rules
+%%
+user code
+.Ed
+.Pp
+The
+.Em definitions
+section contains declarations of simple
+.Em name
+definitions to simplify the scanner specification, and declarations of
+.Em start conditions ,
+which are explained in a later section.
+.Pp
+Name definitions have the form:
+.Pp
+.D1 name definition
+.Pp
+The
+.Qq name
+is a word beginning with a letter or an underscore
+.Pq Sq _
+followed by zero or more letters, digits,
+.Sq _ ,
+or
+.Sq -
+.Pq dash .
+The definition is taken to begin at the first non-whitespace character
+following the name and continuing to the end of the line.
+The definition can subsequently be referred to using
+.Qq {name} ,
+which will expand to
+.Qq (definition) .
+For example:
+.Bd -literal -offset indent
+DIGIT    [0-9]
+ID       [a-z][a-z0-9]*
+.Ed
+.Pp
+This defines
+.Qq DIGIT
+to be a regular expression which matches a single digit, and
+.Qq ID
+to be a regular expression which matches a letter
+followed by zero-or-more letters-or-digits.
+A subsequent reference to
+.Pp
+.Dl {DIGIT}+"."{DIGIT}*
+.Pp
+is identical to
+.Pp
+.Dl ([0-9])+"."([0-9])*
+.Pp
+and matches one-or-more digits followed by a
+.Sq .\&
+followed by zero-or-more digits.
+.Pp
+The
+.Em rules
+section of the
+.Nm
+input contains a series of rules of the form:
+.Pp
+.Dl pattern	action
+.Pp
+The pattern must be unindented and the action must begin
+on the same line.
+.Pp
+See below for a further description of patterns and actions.
+.Pp
+Finally, the user code section is simply copied to
+.Pa lex.yy.c
+verbatim.
+It is used for companion routines which call or are called by the scanner.
+The presence of this section is optional;
+if it is missing, the second
+.Qq %%
+in the input file may be skipped too.
+.Pp
+In the definitions and rules sections, any indented text or text enclosed in
+.Sq %{
+and
+.Sq %}
+is copied verbatim to the output
+.Pq with the %{}'s removed .
+The %{}'s must appear unindented on lines by themselves.
+.Pp
+In the rules section,
+any indented or %{} text appearing before the first rule may be used to
+declare variables which are local to the scanning routine and
+.Pq after the declarations
+code which is to be executed whenever the scanning routine is entered.
+Other indented or %{} text in the rule section is still copied to the output,
+but its meaning is not well-defined and it may well cause compile-time
+errors (this feature is present for
+.Tn POSIX
+compliance; see below for other such features).
+.Pp
+In the definitions section
+.Pq but not in the rules section ,
+an unindented comment
+(i.e., a line beginning with
+.Qq /* )
+is also copied verbatim to the output up to the next
+.Qq */ .
+.Sh PATTERNS
+The patterns in the input are written using an extended set of regular
+expressions.
+These are:
+.Bl -tag -width "XXXXXXXX"
+.It x
+Match the character
+.Sq x .
+.It .\&
+Any character
+.Pq byte
+except newline.
+.It [xyz]
+A
+.Qq character class ;
+in this case, the pattern matches either an
+.Sq x ,
+a
+.Sq y ,
+or a
+.Sq z .
+.It [abj-oZ]
+A
+.Qq character class
+with a range in it; matches an
+.Sq a ,
+a
+.Sq b ,
+any letter from
+.Sq j
+through
+.Sq o ,
+or a
+.Sq Z .
+.It [^A-Z]
+A
+.Qq negated character class ,
+i.e., any character but those in the class.
+In this case, any character EXCEPT an uppercase letter.
+.It [^A-Z\en]
+Any character EXCEPT an uppercase letter or a newline.
+.It r*
+Zero or more r's, where
+.Sq r
+is any regular expression.
+.It r+
+One or more r's.
+.It r?
+Zero or one r's (that is,
+.Qq an optional r ) .
+.It r{2,5}
+Anywhere from two to five r's.
+.It r{2,}
+Two or more r's.
+.It r{4}
+Exactly 4 r's.
+.It {name}
+The expansion of the
+.Qq name
+definition
+.Pq see above .
+.It \&"[xyz]\e\&"foo\&"
+The literal string: [xyz]"foo.
+.It \eX
+If
+.Sq X
+is an
+.Sq a ,
+.Sq b ,
+.Sq f ,
+.Sq n ,
+.Sq r ,
+.Sq t ,
+or
+.Sq v ,
+then the ANSI-C interpretation of
+.Sq \eX .
+Otherwise, a literal
+.Sq X
+(used to escape operators such as
+.Sq * ) .
+.It \e0
+A NUL character
+.Pq ASCII code 0 .
+.It \e123
+The character with octal value 123.
+.It \ex2a
+The character with hexadecimal value 2a.
+.It (r)
+Match an
+.Sq r ;
+parentheses are used to override precedence
+.Pq see below .
+.It rs
+The regular expression
+.Sq r
+followed by the regular expression
+.Sq s ;
+called
+.Qq concatenation .
+.It r|s
+Either an
+.Sq r
+or an
+.Sq s .
+.It r/s
+An
+.Sq r ,
+but only if it is followed by an
+.Sq s .
+The text matched by
+.Sq s
+is included when determining whether this rule is the
+.Qq longest match ,
+but is then returned to the input before the action is executed.
+So the action only sees the text matched by
+.Sq r .
+This type of pattern is called
+.Qq trailing context .
+(There are some combinations of r/s that
+.Nm
+cannot match correctly; see notes in the
+.Sx BUGS
+section below regarding
+.Qq dangerous trailing context . )
+.It ^r
+An
+.Sq r ,
+but only at the beginning of a line
+(i.e., just starting to scan, or right after a newline has been scanned).
+.It r$
+An
+.Sq r ,
+but only at the end of a line
+.Pq i.e., just before a newline .
+Equivalent to
+.Qq r/\en .
+.Pp
+Note that
+.Nm flex Ns 's
+notion of
+.Qq newline
+is exactly whatever the C compiler used to compile
+.Nm
+interprets
+.Sq \en
+as.
+.\" In particular, on some DOS systems you must either filter out \er's in the
+.\" input yourself, or explicitly use r/\er\en for
+.\" .Qq r$ .
+.It <s>r
+An
+.Sq r ,
+but only in start condition
+.Sq s
+.Pq see below for discussion of start conditions .
+.It <s1,s2,s3>r
+The same, but in any of start conditions s1, s2, or s3.
+.It <*>r
+An
+.Sq r
+in any start condition, even an exclusive one.
+.It <<EOF>>
+An end-of-file.
+.It <s1,s2><<EOF>>
+An end-of-file when in start condition s1 or s2.
+.El
+.Pp
+Note that inside of a character class, all regular expression operators
+lose their special meaning except escape
+.Pq Sq \e
+and the character class operators,
+.Sq - ,
+.Sq ]\& ,
+and, at the beginning of the class,
+.Sq ^ .
+.Pp
+The regular expressions listed above are grouped according to
+precedence, from highest precedence at the top to lowest at the bottom.
+Those grouped together have equal precedence.
+For example,
+.Pp
+.D1 foo|bar*
+.Pp
+is the same as
+.Pp
+.D1 (foo)|(ba(r*))
+.Pp
+since the
+.Sq *
+operator has higher precedence than concatenation,
+and concatenation higher than alternation
+.Pq Sq |\& .
+This pattern therefore matches
+.Em either
+the string
+.Qq foo
+.Em or
+the string
+.Qq ba
+followed by zero-or-more r's.
+To match
+.Qq foo
+or zero-or-more "bar"'s,
+use:
+.Pp
+.D1 foo|(bar)*
+.Pp
+and to match zero-or-more "foo"'s-or-"bar"'s:
+.Pp
+.D1 (foo|bar)*
+.Pp
+In addition to characters and ranges of characters, character classes
+can also contain character class
+.Em expressions .
+These are expressions enclosed inside
+.Sq [:
+and
+.Sq :]
+delimiters (which themselves must appear between the
+.Sq \&[
+and
+.Sq ]\&
+of the
+character class; other elements may occur inside the character class, too).
+The valid expressions are:
+.Bd -unfilled -offset indent
+[:alnum:] [:alpha:] [:blank:]
+[:cntrl:] [:digit:] [:graph:]
+[:lower:] [:print:] [:punct:]
+[:space:] [:upper:] [:xdigit:]
+.Ed
+.Pp
+These expressions all designate a set of characters equivalent to
+the corresponding standard C
+.Fn isXXX
+function.
+For example, [:alnum:] designates those characters for which
+.Xr isalnum 3
+returns true \- i.e., any alphabetic or numeric.
+Some systems don't provide
+.Xr isblank 3 ,
+so
+.Nm
+defines [:blank:] as a blank or a tab.
+.Pp
+For example, the following character classes are all equivalent:
+.Bd -unfilled -offset indent
+[[:alnum:]]
+[[:alpha:][:digit:]]
+[[:alpha:]0-9]
+[a-zA-Z0-9]
+.Ed
+.Pp
+If the scanner is case-insensitive (the
+.Fl i
+flag), then [:upper:] and [:lower:] are equivalent to [:alpha:].
+.Pp
+Some notes on patterns:
+.Bl -dash
+.It
+A negated character class such as the example
+.Qq [^A-Z]
+above will match a newline unless "\en"
+.Pq or an equivalent escape sequence
+is one of the characters explicitly present in the negated character class
+(e.g.,
+.Qq [^A-Z\en] ) .
+This is unlike how many other regular expression tools treat negated character
+classes, but unfortunately the inconsistency is historically entrenched.
+Matching newlines means that a pattern like
+.Qq [^"]*
+can match the entire input unless there's another quote in the input.
+.It
+A rule can have at most one instance of trailing context
+(the
+.Sq /
+operator or the
+.Sq $
+operator).
+The start condition,
+.Sq ^ ,
+and
+.Qq <<EOF>>
+patterns can only occur at the beginning of a pattern and, as well as with
+.Sq /
+and
+.Sq $ ,
+cannot be grouped inside parentheses.
+A
+.Sq ^
+which does not occur at the beginning of a rule or a
+.Sq $
+which does not occur at the end of a rule loses its special properties
+and is treated as a normal character.
+.It
+The following are illegal:
+.Bd -unfilled -offset indent
+foo/bar$
+<sc1>foo<sc2>bar
+.Ed
+.Pp
+Note that the first of these, can be written
+.Qq foo/bar\en .
+.It
+The following will result in
+.Sq $
+or
+.Sq ^
+being treated as a normal character:
+.Bd -unfilled -offset indent
+foo|(bar$)
+foo|^bar
+.Ed
+.Pp
+If what's wanted is a
+.Qq foo
+or a bar-followed-by-a-newline, the following could be used
+(the special
+.Sq |\&
+action is explained below):
+.Bd -unfilled -offset indent
+foo      |
+bar$     /* action goes here */
+.Ed
+.Pp
+A similar trick will work for matching a foo or a
+bar-at-the-beginning-of-a-line.
+.El
+.Sh HOW THE INPUT IS MATCHED
+When the generated scanner is run,
+it analyzes its input looking for strings which match any of its patterns.
+If it finds more than one match,
+it takes the one matching the most text
+(for trailing context rules, this includes the length of the trailing part,
+even though it will then be returned to the input).
+If it finds two or more matches of the same length,
+the rule listed first in the
+.Nm
+input file is chosen.
+.Pp
+Once the match is determined, the text corresponding to the match
+(called the
+.Em token )
+is made available in the global character pointer
+.Fa yytext ,
+and its length in the global integer
+.Fa yyleng .
+The
+.Em action
+corresponding to the matched pattern is then executed
+.Pq a more detailed description of actions follows ,
+and then the remaining input is scanned for another match.
+.Pp
+If no match is found, then the default rule is executed:
+the next character in the input is considered matched and
+copied to the standard output.
+Thus, the simplest legal
+.Nm
+input is:
+.Pp
+.D1 %%
+.Pp
+which generates a scanner that simply copies its input
+.Pq one character at a time
+to its output.
+.Pp
+Note that
+.Fa yytext
+can be defined in two different ways:
+either as a character pointer or as a character array.
+Which definition
+.Nm
+uses can be controlled by including one of the special directives
+.Dq %pointer
+or
+.Dq %array
+in the first
+.Pq definitions
+section of flex input.
+The default is
+.Dq %pointer ,
+unless the
+.Fl l
+.Nm lex
+compatibility option is used, in which case
+.Fa yytext
+will be an array.
+The advantage of using
+.Dq %pointer
+is substantially faster scanning and no buffer overflow when matching
+very large tokens
+.Pq unless not enough dynamic memory is available .
+The disadvantage is that actions are restricted in how they can modify
+.Fa yytext
+.Pq see the next section ,
+and calls to the
+.Fn unput
+function destroy the present contents of
+.Fa yytext ,
+which can be a considerable porting headache when moving between different
+.Nm lex
+versions.
+.Pp
+The advantage of
+.Dq %array
+is that
+.Fa yytext
+can be modified as much as wanted, and calls to
+.Fn unput
+do not destroy
+.Fa yytext
+.Pq see below .
+Furthermore, existing
+.Nm lex
+programs sometimes access
+.Fa yytext
+externally using declarations of the form:
+.Pp
+.D1 extern char yytext[];
+.Pp
+This definition is erroneous when used with
+.Dq %pointer ,
+but correct for
+.Dq %array .
+.Pp
+.Dq %array
+defines
+.Fa yytext
+to be an array of
+.Dv YYLMAX
+characters, which defaults to a fairly large value.
+The size can be changed by simply #define'ing
+.Dv YYLMAX
+to a different value in the first section of
+.Nm
+input.
+As mentioned above, with
+.Dq %pointer
+yytext grows dynamically to accommodate large tokens.
+While this means a
+.Dq %pointer
+scanner can accommodate very large tokens
+.Pq such as matching entire blocks of comments ,
+bear in mind that each time the scanner must resize
+.Fa yytext
+it also must rescan the entire token from the beginning, so matching such
+tokens can prove slow.
+.Fa yytext
+presently does not dynamically grow if a call to
+.Fn unput
+results in too much text being pushed back; instead, a run-time error results.
+.Pp
+Also note that
+.Dq %array
+cannot be used with C++ scanner classes
+.Pq the c++ option; see below .
+.Sh ACTIONS
+Each pattern in a rule has a corresponding action,
+which can be any arbitrary C statement.
+The pattern ends at the first non-escaped whitespace character;
+the remainder of the line is its action.
+If the action is empty,
+then when the pattern is matched the input token is simply discarded.
+For example, here is the specification for a program
+which deletes all occurrences of
+.Qq zap me
+from its input:
+.Bd -literal -offset indent
+%%
+"zap me"
+.Ed
+.Pp
+(It will copy all other characters in the input to the output since
+they will be matched by the default rule.)
+.Pp
+Here is a program which compresses multiple blanks and tabs down to
+a single blank, and throws away whitespace found at the end of a line:
+.Bd -literal -offset indent
+%%
+[ \et]+        putchar(' ');
+[ \et]+$       /* ignore this token */
+.Ed
+.Pp
+If the action contains a
+.Sq { ,
+then the action spans till the balancing
+.Sq }
+is found, and the action may cross multiple lines.
+.Nm
+knows about C strings and comments and won't be fooled by braces found
+within them, but also allows actions to begin with
+.Sq %{
+and will consider the action to be all the text up to the next
+.Sq %}
+.Pq regardless of ordinary braces inside the action .
+.Pp
+An action consisting solely of a vertical bar
+.Pq Sq |\&
+means
+.Qq same as the action for the next rule .
+See below for an illustration.
+.Pp
+Actions can include arbitrary C code,
+including return statements to return a value to whatever routine called
+.Fn yylex .
+Each time
+.Fn yylex
+is called, it continues processing tokens from where it last left off
+until it either reaches the end of the file or executes a return.
+.Pp
+Actions are free to modify
+.Fa yytext
+except for lengthening it
+(adding characters to its end \- these will overwrite later characters in the
+input stream).
+This, however, does not apply when using
+.Dq %array
+.Pq see above ;
+in that case,
+.Fa yytext
+may be freely modified in any way.
+.Pp
+Actions are free to modify
+.Fa yyleng
+except they should not do so if the action also includes use of
+.Fn yymore
+.Pq see below .
+.Pp
+There are a number of special directives which can be included within
+an action:
+.Bl -tag -width Ds
+.It ECHO
+Copies
+.Fa yytext
+to the scanner's output.
+.It BEGIN
+Followed by the name of a start condition, places the scanner in the
+corresponding start condition
+.Pq see below .
+.It REJECT
+Directs the scanner to proceed on to the
+.Qq second best
+rule which matched the input
+.Pq or a prefix of the input .
+The rule is chosen as described above in
+.Sx HOW THE INPUT IS MATCHED ,
+and
+.Fa yytext
+and
+.Fa yyleng
+set up appropriately.
+It may either be one which matched as much text
+as the originally chosen rule but came later in the
+.Nm
+input file, or one which matched less text.
+For example, the following will both count the
+words in the input and call the routine
+.Fn special
+whenever
+.Qq frob
+is seen:
+.Bd -literal -offset indent
+int word_count = 0;
+%%
+
+frob        special(); REJECT;
+[^ \et\en]+   ++word_count;
+.Ed
+.Pp
+Without the
+.Em REJECT ,
+any "frob"'s in the input would not be counted as words,
+since the scanner normally executes only one action per token.
+Multiple
+.Em REJECT Ns 's
+are allowed,
+each one finding the next best choice to the currently active rule.
+For example, when the following scanner scans the token
+.Qq abcd ,
+it will write
+.Qq abcdabcaba
+to the output:
+.Bd -literal -offset indent
+%%
+a        |
+ab       |
+abc      |
+abcd     ECHO; REJECT;
+\&.|\en     /* eat up any unmatched character */
+.Ed
+.Pp
+(The first three rules share the fourth's action since they use
+the special
+.Sq |\&
+action.)
+.Em REJECT
+is a particularly expensive feature in terms of scanner performance;
+if it is used in any of the scanner's actions it will slow down
+all of the scanner's matching.
+Furthermore,
+.Em REJECT
+cannot be used with the
+.Fl Cf
+or
+.Fl CF
+options
+.Pq see below .
+.Pp
+Note also that unlike the other special actions,
+.Em REJECT
+is a
+.Em branch ;
+code immediately following it in the action will not be executed.
+.It yymore()
+Tells the scanner that the next time it matches a rule, the corresponding
+token should be appended onto the current value of
+.Fa yytext
+rather than replacing it.
+For example, given the input
+.Qq mega-kludge
+the following will write
+.Qq mega-mega-kludge
+to the output:
+.Bd -literal -offset indent
+%%
+mega-    ECHO; yymore();
+kludge   ECHO;
+.Ed
+.Pp
+First
+.Qq mega-
+is matched and echoed to the output.
+Then
+.Qq kludge
+is matched, but the previous
+.Qq mega-
+is still hanging around at the beginning of
+.Fa yytext
+so the
+.Em ECHO
+for the
+.Qq kludge
+rule will actually write
+.Qq mega-kludge .
+.Pp
+Two notes regarding use of
+.Fn yymore :
+First,
+.Fn yymore
+depends on the value of
+.Fa yyleng
+correctly reflecting the size of the current token, so
+.Fa yyleng
+must not be modified when using
+.Fn yymore .
+Second, the presence of
+.Fn yymore
+in the scanner's action entails a minor performance penalty in the
+scanner's matching speed.
+.It yyless(n)
+Returns all but the first
+.Ar n
+characters of the current token back to the input stream, where they
+will be rescanned when the scanner looks for the next match.
+.Fa yytext
+and
+.Fa yyleng
+are adjusted appropriately (e.g.,
+.Fa yyleng
+will now be equal to
+.Ar n ) .
+For example, on the input
+.Qq foobar
+the following will write out
+.Qq foobarbar :
+.Bd -literal -offset indent
+%%
+foobar    ECHO; yyless(3);
+[a-z]+    ECHO;
+.Ed
+.Pp
+An argument of 0 to
+.Fa yyless
+will cause the entire current input string to be scanned again.
+Unless how the scanner will subsequently process its input has been changed
+(using
+.Em BEGIN ,
+for example),
+this will result in an endless loop.
+.Pp
+Note that
+.Fa yyless
+is a macro and can only be used in the
+.Nm
+input file, not from other source files.
+.It unput(c)
+Puts the character
+.Ar c
+back into the input stream.
+It will be the next character scanned.
+The following action will take the current token and cause it
+to be rescanned enclosed in parentheses.
+.Bd -literal -offset indent
+{
+        int i;
+        char *yycopy;
+
+        /* Copy yytext because unput() trashes yytext */
+        if ((yycopy = strdup(yytext)) == NULL)
+                err(1, NULL);
+        unput(')');
+        for (i = yyleng - 1; i >= 0; --i)
+                unput(yycopy[i]);
+        unput('(');
+        free(yycopy);
+}
+.Ed
+.Pp
+Note that since each
+.Fn unput
+puts the given character back at the beginning of the input stream,
+pushing back strings must be done back-to-front.
+.Pp
+An important potential problem when using
+.Fn unput
+is that if using
+.Dq %pointer
+.Pq the default ,
+a call to
+.Fn unput
+destroys the contents of
+.Fa yytext ,
+starting with its rightmost character and devouring one character to
+the left with each call.
+If the value of
+.Fa yytext
+should be preserved after a call to
+.Fn unput
+.Pq as in the above example ,
+it must either first be copied elsewhere, or the scanner must be built using
+.Dq %array
+instead (see
+.Sx HOW THE INPUT IS MATCHED ) .
+.Pp
+Finally, note that EOF cannot be put back
+to attempt to mark the input stream with an end-of-file.
+.It input()
+Reads the next character from the input stream.
+For example, the following is one way to eat up C comments:
+.Bd -literal -offset indent
+%%
+"/*" {
+        int c;
+
+        for (;;) {
+                while ((c = input()) != '*' && c != EOF)
+                        ; /* eat up text of comment */
+
+                if (c == '*') {
+                        while ((c = input()) == '*')
+                                ;
+                        if (c == '/')
+                                break; /* found the end */
+                }
+
+                if (c == EOF) {
+                        errx(1, "EOF in comment");
+                        break;
+                }
+        }
+}
+.Ed
+.Pp
+(Note that if the scanner is compiled using C++, then
+.Fn input
+is instead referred to as
+.Fn yyinput ,
+in order to avoid a name clash with the C++ stream by the name of input.)
+.It YY_FLUSH_BUFFER
+Flushes the scanner's internal buffer
+so that the next time the scanner attempts to match a token,
+it will first refill the buffer using
+.Dv YY_INPUT
+(see
+.Sx THE GENERATED SCANNER ,
+below).
+This action is a special case of the more general
+.Fn yy_flush_buffer
+function, described below in the section
+.Sx MULTIPLE INPUT BUFFERS .
+.It yyterminate()
+Can be used in lieu of a return statement in an action.
+It terminates the scanner and returns a 0 to the scanner's caller, indicating
+.Qq all done .
+By default,
+.Fn yyterminate
+is also called when an end-of-file is encountered.
+It is a macro and may be redefined.
+.El
+.Sh THE GENERATED SCANNER
+The output of
+.Nm
+is the file
+.Pa lex.yy.c ,
+which contains the scanning routine
+.Fn yylex ,
+a number of tables used by it for matching tokens,
+and a number of auxiliary routines and macros.
+By default,
+.Fn yylex
+is declared as follows:
+.Bd -unfilled -offset indent
+int yylex()
+{
+    ... various definitions and the actions in here ...
+}
+.Ed
+.Pp
+(If the environment supports function prototypes, then it will
+be "int yylex(void)".)
+This definition may be changed by defining the
+.Dv YY_DECL
+macro.
+For example:
+.Bd -literal -offset indent
+#define YY_DECL float lexscan(a, b) float a, b;
+.Ed
+.Pp
+would give the scanning routine the name
+.Em lexscan ,
+returning a float, and taking two floats as arguments.
+Note that if arguments are given to the scanning routine using a
+K&R-style/non-prototyped function declaration,
+the definition must be terminated with a semi-colon
+.Pq Sq ;\& .
+.Pp
+Whenever
+.Fn yylex
+is called, it scans tokens from the global input file
+.Pa yyin
+.Pq which defaults to stdin .
+It continues until it either reaches an end-of-file
+.Pq at which point it returns the value 0
+or one of its actions executes a
+.Em return
+statement.
+.Pp
+If the scanner reaches an end-of-file, subsequent calls are undefined
+unless either
+.Em yyin
+is pointed at a new input file
+.Pq in which case scanning continues from that file ,
+or
+.Fn yyrestart
+is called.
+.Fn yyrestart
+takes one argument, a
+.Fa FILE *
+pointer (which can be nil, if
+.Dv YY_INPUT
+has been set up to scan from a source other than
+.Em yyin ) ,
+and initializes
+.Em yyin
+for scanning from that file.
+Essentially there is no difference between just assigning
+.Em yyin
+to a new input file or using
+.Fn yyrestart
+to do so; the latter is available for compatibility with previous versions of
+.Nm ,
+and because it can be used to switch input files in the middle of scanning.
+It can also be used to throw away the current input buffer,
+by calling it with an argument of
+.Em yyin ;
+but better is to use
+.Dv YY_FLUSH_BUFFER
+.Pq see above .
+Note that
+.Fn yyrestart
+does not reset the start condition to
+.Em INITIAL
+(see
+.Sx START CONDITIONS ,
+below).
+.Pp
+If
+.Fn yylex
+stops scanning due to executing a
+.Em return
+statement in one of the actions, the scanner may then be called again and it
+will resume scanning where it left off.
+.Pp
+By default
+.Pq and for purposes of efficiency ,
+the scanner uses block-reads rather than simple
+.Xr getc 3
+calls to read characters from
+.Em yyin .
+The nature of how it gets its input can be controlled by defining the
+.Dv YY_INPUT
+macro.
+.Dv YY_INPUT Ns 's
+calling sequence is
+.Qq YY_INPUT(buf,result,max_size) .
+Its action is to place up to
+.Dv max_size
+characters in the character array
+.Em buf
+and return in the integer variable
+.Em result
+either the number of characters read or the constant
+.Dv YY_NULL
+(0 on
+.Ux
+systems)
+to indicate
+.Dv EOF .
+The default
+.Dv YY_INPUT
+reads from the global file-pointer
+.Qq yyin .
+.Pp
+A sample definition of
+.Dv YY_INPUT
+.Pq in the definitions section of the input file :
+.Bd -unfilled -offset indent
+%{
+#define YY_INPUT(buf,result,max_size) \e
+{ \e
+        int c = getchar(); \e
+        result = (c == EOF) ? YY_NULL : (buf[0] = c, 1); \e
+}
+%}
+.Ed
+.Pp
+This definition will change the input processing to occur
+one character at a time.
+.Pp
+When the scanner receives an end-of-file indication from
+.Dv YY_INPUT ,
+it then checks the
+.Fn yywrap
+function.
+If
+.Fn yywrap
+returns false
+.Pq zero ,
+then it is assumed that the function has gone ahead and set up
+.Em yyin
+to point to another input file, and scanning continues.
+If it returns true
+.Pq non-zero ,
+then the scanner terminates, returning 0 to its caller.
+Note that in either case, the start condition remains unchanged;
+it does not revert to
+.Em INITIAL .
+.Pp
+If you do not supply your own version of
+.Fn yywrap ,
+then you must either use
+.Dq %option noyywrap
+(in which case the scanner behaves as though
+.Fn yywrap
+returned 1), or you must link with
+.Fl lfl
+to obtain the default version of the routine, which always returns 1.
+.Pp
+Three routines are available for scanning from in-memory buffers rather
+than files:
+.Fn yy_scan_string ,
+.Fn yy_scan_bytes ,
+and
+.Fn yy_scan_buffer .
+See the discussion of them below in the section
+.Sx MULTIPLE INPUT BUFFERS .
+.Pp
+The scanner writes its
+.Em ECHO
+output to the
+.Em yyout
+global
+.Pq default, stdout ,
+which may be redefined by the user simply by assigning it to some other
+.Va FILE
+pointer.
+.Sh START CONDITIONS
+.Nm
+provides a mechanism for conditionally activating rules.
+Any rule whose pattern is prefixed with
+.Qq Aq sc
+will only be active when the scanner is in the start condition named
+.Qq sc .
+For example,
+.Bd -literal -offset indent
+<STRING>[^"]* { /* eat up the string body ... */
+        ...
+}
+.Ed
+.Pp
+will be active only when the scanner is in the
+.Qq STRING
+start condition, and
+.Bd -literal -offset indent
+<INITIAL,STRING,QUOTE>\e. { /* handle an escape ... */
+        ...
+}
+.Ed
+.Pp
+will be active only when the current start condition is either
+.Qq INITIAL ,
+.Qq STRING ,
+or
+.Qq QUOTE .
+.Pp
+Start conditions are declared in the definitions
+.Pq first
+section of the input using unindented lines beginning with either
+.Sq %s
+or
+.Sq %x
+followed by a list of names.
+The former declares
+.Em inclusive
+start conditions, the latter
+.Em exclusive
+start conditions.
+A start condition is activated using the
+.Em BEGIN
+action.
+Until the next
+.Em BEGIN
+action is executed, rules with the given start condition will be active and
+rules with other start conditions will be inactive.
+If the start condition is inclusive,
+then rules with no start conditions at all will also be active.
+If it is exclusive,
+then only rules qualified with the start condition will be active.
+A set of rules contingent on the same exclusive start condition
+describe a scanner which is independent of any of the other rules in the
+.Nm
+input.
+Because of this, exclusive start conditions make it easy to specify
+.Qq mini-scanners
+which scan portions of the input that are syntactically different
+from the rest
+.Pq e.g., comments .
+.Pp
+If the distinction between inclusive and exclusive start conditions
+is still a little vague, here's a simple example illustrating the
+connection between the two.
+The set of rules:
+.Bd -literal -offset indent
+%s example
+%%
+
+<example>foo   do_something();
+
+bar            something_else();
+.Ed
+.Pp
+is equivalent to
+.Bd -literal -offset indent
+%x example
+%%
+
+<example>foo   do_something();
+
+<INITIAL,example>bar    something_else();
+.Ed
+.Pp
+Without the
+.Aq INITIAL,example
+qualifier, the
+.Dq bar
+pattern in the second example wouldn't be active
+.Pq i.e., couldn't match
+when in start condition
+.Dq example .
+If we just used
+.Aq example
+to qualify
+.Dq bar ,
+though, then it would only be active in
+.Dq example
+and not in
+.Em INITIAL ,
+while in the first example it's active in both,
+because in the first example the
+.Dq example
+start condition is an inclusive
+.Pq Sq %s
+start condition.
+.Pp
+Also note that the special start-condition specifier
+.Sq Aq *
+matches every start condition.
+Thus, the above example could also have been written:
+.Bd -literal -offset indent
+%x example
+%%
+
+<example>foo   do_something();
+
+<*>bar         something_else();
+.Ed
+.Pp
+The default rule (to
+.Em ECHO
+any unmatched character) remains active in start conditions.
+It is equivalent to:
+.Bd -literal -offset indent
+<*>.|\en     ECHO;
+.Ed
+.Pp
+.Dq BEGIN(0)
+returns to the original state where only the rules with
+no start conditions are active.
+This state can also be referred to as the start-condition
+.Em INITIAL ,
+so
+.Dq BEGIN(INITIAL)
+is equivalent to
+.Dq BEGIN(0) .
+(The parentheses around the start condition name are not required but
+are considered good style.)
+.Pp
+.Em BEGIN
+actions can also be given as indented code at the beginning
+of the rules section.
+For example, the following will cause the scanner to enter the
+.Qq SPECIAL
+start condition whenever
+.Fn yylex
+is called and the global variable
+.Fa enter_special
+is true:
+.Bd -literal -offset indent
+int enter_special;
+
+%x SPECIAL
+%%
+        if (enter_special)
+                BEGIN(SPECIAL);
+
+<SPECIAL>blahblahblah
+\&...more rules follow...
+.Ed
+.Pp
+To illustrate the uses of start conditions,
+here is a scanner which provides two different interpretations
+of a string like
+.Qq 123.456 .
+By default it will treat it as three tokens: the integer
+.Qq 123 ,
+a dot
+.Pq Sq .\& ,
+and the integer
+.Qq 456 .
+But if the string is preceded earlier in the line by the string
+.Qq expect-floats
+it will treat it as a single token, the floating-point number 123.456:
+.Bd -literal -offset indent
+%{
+#include <math.h>
+%}
+%s expect
+
+%%
+expect-floats        BEGIN(expect);
+
+<expect>[0-9]+"."[0-9]+ {
+        printf("found a float, = %f\en",
+            atof(yytext));
+}
+<expect>\en {
+        /*
+         * That's the end of the line, so
+         * we need another "expect-number"
+         * before we'll recognize any more
+         * numbers.
+         */
+        BEGIN(INITIAL);
+}
+
+[0-9]+ {
+        printf("found an integer, = %d\en",
+            atoi(yytext));
+}
+
+"."     printf("found a dot\en");
+.Ed
+.Pp
+Here is a scanner which recognizes
+.Pq and discards
+C comments while maintaining a count of the current input line:
+.Bd -literal -offset indent
+%x comment
+%%
+int line_num = 1;
+
+"/*"                    BEGIN(comment);
+
+<comment>[^*\en]*        /* eat anything that's not a '*' */
+<comment>"*"+[^*/\en]*   /* eat up '*'s not followed by '/'s */
+<comment>\en             ++line_num;
+<comment>"*"+"/"        BEGIN(INITIAL);
+.Ed
+.Pp
+This scanner goes to a bit of trouble to match as much
+text as possible with each rule.
+In general, when attempting to write a high-speed scanner
+try to match as much as possible in each rule, as it's a big win.
+.Pp
+Note that start-condition names are really integer values and
+can be stored as such.
+Thus, the above could be extended in the following fashion:
+.Bd -literal -offset indent
+%x comment foo
+%%
+int line_num = 1;
+int comment_caller;
+
+"/*" {
+        comment_caller = INITIAL;
+        BEGIN(comment);
+}
+
+\&...
+
+<foo>"/*" {
+        comment_caller = foo;
+        BEGIN(comment);
+}
+
+<comment>[^*\en]*        /* eat anything that's not a '*' */
+<comment>"*"+[^*/\en]*   /* eat up '*'s not followed by '/'s */
+<comment>\en             ++line_num;
+<comment>"*"+"/"        BEGIN(comment_caller);
+.Ed
+.Pp
+Furthermore, the current start condition can be accessed by using
+the integer-valued
+.Dv YY_START
+macro.
+For example, the above assignments to
+.Em comment_caller
+could instead be written
+.Pp
+.Dl comment_caller = YY_START;
+.Pp
+Flex provides
+.Dv YYSTATE
+as an alias for
+.Dv YY_START
+(since that is what's used by
+.At
+.Nm lex ) .
+.Pp
+Note that start conditions do not have their own name-space;
+%s's and %x's declare names in the same fashion as #define's.
+.Pp
+Finally, here's an example of how to match C-style quoted strings using
+exclusive start conditions, including expanded escape sequences
+(but not including checking for a string that's too long):
+.Bd -literal -offset indent
+%x str
+
+%%
+#define MAX_STR_CONST 1024
+char string_buf[MAX_STR_CONST];
+char *string_buf_ptr;
+
+\e"      string_buf_ptr = string_buf; BEGIN(str);
+
+<str>\e" { /* saw closing quote - all done */
+        BEGIN(INITIAL);
+        *string_buf_ptr = '\e0';
+        /*
+         * return string constant token type and
+         * value to parser
+         */
+}
+
+<str>\en {
+        /* error - unterminated string constant */
+        /* generate error message */
+}
+
+<str>\e\e[0-7]{1,3} {
+        /* octal escape sequence */
+        int result;
+
+        (void) sscanf(yytext + 1, "%o", &result);
+
+        if (result > 0xff) {
+                /* error, constant is out-of-bounds */
+	} else
+	        *string_buf_ptr++ = result;
+}
+
+<str>\e\e[0-9]+ {
+        /*
+         * generate error - bad escape sequence; something
+         * like '\e48' or '\e0777777'
+         */
+}
+
+<str>\e\en  *string_buf_ptr++ = '\en';
+<str>\e\et  *string_buf_ptr++ = '\et';
+<str>\e\er  *string_buf_ptr++ = '\er';
+<str>\e\eb  *string_buf_ptr++ = '\eb';
+<str>\e\ef  *string_buf_ptr++ = '\ef';
+
+<str>\e\e(.|\en)  *string_buf_ptr++ = yytext[1];
+
+<str>[^\e\e\en\e"]+ {
+        char *yptr = yytext;
+
+        while (*yptr)
+                *string_buf_ptr++ = *yptr++;
+}
+.Ed
+.Pp
+Often, such as in some of the examples above,
+a whole bunch of rules are all preceded by the same start condition(s).
+.Nm
+makes this a little easier and cleaner by introducing a notion of
+start condition
+.Em scope .
+A start condition scope is begun with:
+.Pp
+.Dl <SCs>{
+.Pp
+where
+.Dq SCs
+is a list of one or more start conditions.
+Inside the start condition scope, every rule automatically has the prefix
+.Aq SCs
+applied to it, until a
+.Sq }
+which matches the initial
+.Sq { .
+So, for example,
+.Bd -literal -offset indent
+<ESC>{
+    "\e\en"   return '\en';
+    "\e\er"   return '\er';
+    "\e\ef"   return '\ef';
+    "\e\e0"   return '\e0';
+}
+.Ed
+.Pp
+is equivalent to:
+.Bd -literal -offset indent
+<ESC>"\e\en"  return '\en';
+<ESC>"\e\er"  return '\er';
+<ESC>"\e\ef"  return '\ef';
+<ESC>"\e\e0"  return '\e0';
+.Ed
+.Pp
+Start condition scopes may be nested.
+.Pp
+Three routines are available for manipulating stacks of start conditions:
+.Bl -tag -width Ds
+.It void yy_push_state(int new_state)
+Pushes the current start condition onto the top of the start condition
+stack and switches to
+.Fa new_state
+as though
+.Dq BEGIN new_state
+had been used
+.Pq recall that start condition names are also integers .
+.It void yy_pop_state()
+Pops the top of the stack and switches to it via
+.Em BEGIN .
+.It int yy_top_state()
+Returns the top of the stack without altering the stack's contents.
+.El
+.Pp
+The start condition stack grows dynamically and so has no built-in
+size limitation.
+If memory is exhausted, program execution aborts.
+.Pp
+To use start condition stacks, scanners must include a
+.Dq %option stack
+directive (see
+.Sx OPTIONS
+below).
+.Sh MULTIPLE INPUT BUFFERS
+Some scanners
+(such as those which support
+.Qq include
+files)
+require reading from several input streams.
+As
+.Nm
+scanners do a large amount of buffering, one cannot control
+where the next input will be read from by simply writing a
+.Dv YY_INPUT
+which is sensitive to the scanning context.
+.Dv YY_INPUT
+is only called when the scanner reaches the end of its buffer, which
+may be a long time after scanning a statement such as an
+.Qq include
+which requires switching the input source.
+.Pp
+To negotiate these sorts of problems,
+.Nm
+provides a mechanism for creating and switching between multiple
+input buffers.
+An input buffer is created by using:
+.Pp
+.D1 YY_BUFFER_STATE yy_create_buffer(FILE *file, int size)
+.Pp
+which takes a
+.Fa FILE
+pointer and a
+.Fa size
+and creates a buffer associated with the given file and large enough to hold
+.Fa size
+characters (when in doubt, use
+.Dv YY_BUF_SIZE
+for the size).
+It returns a
+.Dv YY_BUFFER_STATE
+handle, which may then be passed to other routines
+.Pq see below .
+The
+.Dv YY_BUFFER_STATE
+type is a pointer to an opaque
+.Dq struct yy_buffer_state
+structure, so
+.Dv YY_BUFFER_STATE
+variables may be safely initialized to
+.Dq ((YY_BUFFER_STATE) 0)
+if desired, and the opaque structure can also be referred to in order to
+correctly declare input buffers in source files other than that of scanners.
+Note that the
+.Fa FILE
+pointer in the call to
+.Fn yy_create_buffer
+is only used as the value of
+.Fa yyin
+seen by
+.Dv YY_INPUT ;
+if
+.Dv YY_INPUT
+is redefined so that it no longer uses
+.Fa yyin ,
+then a nil
+.Fa FILE
+pointer can safely be passed to
+.Fn yy_create_buffer .
+To select a particular buffer to scan:
+.Pp
+.D1 void yy_switch_to_buffer(YY_BUFFER_STATE new_buffer)
+.Pp
+It switches the scanner's input buffer so subsequent tokens will
+come from
+.Fa new_buffer .
+Note that
+.Fn yy_switch_to_buffer
+may be used by
+.Fn yywrap
+to set things up for continued scanning,
+instead of opening a new file and pointing
+.Fa yyin
+at it.
+Note also that switching input sources via either
+.Fn yy_switch_to_buffer
+or
+.Fn yywrap
+does not change the start condition.
+.Pp
+.D1 void yy_delete_buffer(YY_BUFFER_STATE buffer)
+.Pp
+is used to reclaim the storage associated with a buffer.
+.Pf ( Fa buffer
+can be nil, in which case the routine does nothing.)
+To clear the current contents of a buffer:
+.Pp
+.D1 void yy_flush_buffer(YY_BUFFER_STATE buffer)
+.Pp
+This function discards the buffer's contents,
+so the next time the scanner attempts to match a token from the buffer,
+it will first fill the buffer anew using
+.Dv YY_INPUT .
+.Pp
+.Fn yy_new_buffer
+is an alias for
+.Fn yy_create_buffer ,
+provided for compatibility with the C++ use of
+.Em new
+and
+.Em delete
+for creating and destroying dynamic objects.
+.Pp
+Finally, the
+.Dv YY_CURRENT_BUFFER
+macro returns a
+.Dv YY_BUFFER_STATE
+handle to the current buffer.
+.Pp
+Here is an example of using these features for writing a scanner
+which expands include files (the
+.Aq Aq EOF
+feature is discussed below):
+.Bd -literal -offset indent
+/*
+ * the "incl" state is used for picking up the name
+ * of an include file
+ */
+%x incl
+
+%{
+#define MAX_INCLUDE_DEPTH 10
+YY_BUFFER_STATE include_stack[MAX_INCLUDE_DEPTH];
+int include_stack_ptr = 0;
+%}
+
+%%
+include             BEGIN(incl);
+
+[a-z]+              ECHO;
+[^a-z\en]*\en?        ECHO;
+
+<incl>[ \et]*        /* eat the whitespace */
+<incl>[^ \et\en]+ {   /* got the include file name */
+        if (include_stack_ptr >= MAX_INCLUDE_DEPTH)
+                errx(1, "Includes nested too deeply");
+
+        include_stack[include_stack_ptr++] =
+            YY_CURRENT_BUFFER;
+
+        yyin = fopen(yytext, "r");
+
+        if (yyin == NULL)
+                err(1, NULL);
+
+        yy_switch_to_buffer(
+            yy_create_buffer(yyin, YY_BUF_SIZE));
+
+        BEGIN(INITIAL);
+}
+
+<<EOF>> {
+        if (--include_stack_ptr < 0)
+                yyterminate();
+        else {
+                yy_delete_buffer(YY_CURRENT_BUFFER);
+                yy_switch_to_buffer(
+                    include_stack[include_stack_ptr]);
+       }
+}
+.Ed
+.Pp
+Three routines are available for setting up input buffers for
+scanning in-memory strings instead of files.
+All of them create a new input buffer for scanning the string,
+and return a corresponding
+.Dv YY_BUFFER_STATE
+handle (which should be deleted afterwards using
+.Fn yy_delete_buffer ) .
+They also switch to the new buffer using
+.Fn yy_switch_to_buffer ,
+so the next call to
+.Fn yylex
+will start scanning the string.
+.Bl -tag -width Ds
+.It yy_scan_string(const char *str)
+Scans a NUL-terminated string.
+.It yy_scan_bytes(const char *bytes, int len)
+Scans
+.Fa len
+bytes
+.Pq including possibly NUL's
+starting at location
+.Fa bytes .
+.El
+.Pp
+Note that both of these functions create and scan a copy
+of the string or bytes.
+(This may be desirable, since
+.Fn yylex
+modifies the contents of the buffer it is scanning.)
+The copy can be avoided by using:
+.Bl -tag -width Ds
+.It yy_scan_buffer(char *base, yy_size_t size)
+Which scans the buffer starting at
+.Fa base ,
+consisting of
+.Fa size
+bytes, the last two bytes of which must be
+.Dv YY_END_OF_BUFFER_CHAR
+.Pq ASCII NUL .
+These last two bytes are not scanned; thus, scanning consists of
+base[0] through base[size-2], inclusive.
+.Pp
+If
+.Fa base
+is not set up in this manner
+(i.e., forget the final two
+.Dv YY_END_OF_BUFFER_CHAR
+bytes), then
+.Fn yy_scan_buffer
+returns a nil pointer instead of creating a new input buffer.
+.Pp
+The type
+.Fa yy_size_t
+is an integral type which can be cast to an integer expression
+reflecting the size of the buffer.
+.El
+.Sh END-OF-FILE RULES
+The special rule
+.Qq Aq Aq EOF
+indicates actions which are to be taken when an end-of-file is encountered and
+.Fn yywrap
+returns non-zero
+.Pq i.e., indicates no further files to process .
+The action must finish by doing one of four things:
+.Bl -dash
+.It
+Assigning
+.Em yyin
+to a new input file
+(in previous versions of
+.Nm ,
+after doing the assignment, it was necessary to call the special action
+.Dv YY_NEW_FILE ;
+this is no longer necessary).
+.It
+Executing a
+.Em return
+statement.
+.It
+Executing the special
+.Fn yyterminate
+action.
+.It
+Switching to a new buffer using
+.Fn yy_switch_to_buffer
+as shown in the example above.
+.El
+.Pp
+.Aq Aq EOF
+rules may not be used with other patterns;
+they may only be qualified with a list of start conditions.
+If an unqualified
+.Aq Aq EOF
+rule is given, it applies to all start conditions which do not already have
+.Aq Aq EOF
+actions.
+To specify an
+.Aq Aq EOF
+rule for only the initial start condition, use
+.Pp
+.Dl <INITIAL><<EOF>>
+.Pp
+These rules are useful for catching things like unclosed comments.
+An example:
+.Bd -literal -offset indent
+%x quote
+%%
+
+\&...other rules for dealing with quotes...
+
+<quote><<EOF>> {
+         error("unterminated quote");
+         yyterminate();
+}
+<<EOF>> {
+         if (*++filelist)
+                 yyin = fopen(*filelist, "r");
+         else
+                 yyterminate();
+}
+.Ed
+.Sh MISCELLANEOUS MACROS
+The macro
+.Dv YY_USER_ACTION
+can be defined to provide an action
+which is always executed prior to the matched rule's action.
+For example,
+it could be #define'd to call a routine to convert yytext to lower-case.
+When
+.Dv YY_USER_ACTION
+is invoked, the variable
+.Fa yy_act
+gives the number of the matched rule
+.Pq rules are numbered starting with 1 .
+For example, to profile how often each rule is matched,
+the following would do the trick:
+.Pp
+.Dl #define YY_USER_ACTION ++ctr[yy_act]
+.Pp
+where
+.Fa ctr
+is an array to hold the counts for the different rules.
+Note that the macro
+.Dv YY_NUM_RULES
+gives the total number of rules
+(including the default rule, even if
+.Fl s
+is used),
+so a correct declaration for
+.Fa ctr
+is:
+.Pp
+.Dl int ctr[YY_NUM_RULES];
+.Pp
+The macro
+.Dv YY_USER_INIT
+may be defined to provide an action which is always executed before
+the first scan
+.Pq and before the scanner's internal initializations are done .
+For example, it could be used to call a routine to read
+in a data table or open a logging file.
+.Pp
+The macro
+.Dv yy_set_interactive(is_interactive)
+can be used to control whether the current buffer is considered
+.Em interactive .
+An interactive buffer is processed more slowly,
+but must be used when the scanner's input source is indeed
+interactive to avoid problems due to waiting to fill buffers
+(see the discussion of the
+.Fl I
+flag below).
+A non-zero value in the macro invocation marks the buffer as interactive,
+a zero value as non-interactive.
+Note that use of this macro overrides
+.Dq %option always-interactive
+or
+.Dq %option never-interactive
+(see
+.Sx OPTIONS
+below).
+.Fn yy_set_interactive
+must be invoked prior to beginning to scan the buffer that is
+.Pq or is not
+to be considered interactive.
+.Pp
+The macro
+.Dv yy_set_bol(at_bol)
+can be used to control whether the current buffer's scanning
+context for the next token match is done as though at the
+beginning of a line.
+A non-zero macro argument makes rules anchored with
+.Sq ^
+active, while a zero argument makes
+.Sq ^
+rules inactive.
+.Pp
+The macro
+.Dv YY_AT_BOL
+returns true if the next token scanned from the current buffer will have
+.Sq ^
+rules active, false otherwise.
+.Pp
+In the generated scanner, the actions are all gathered in one large
+switch statement and separated using
+.Dv YY_BREAK ,
+which may be redefined.
+By default, it is simply a
+.Qq break ,
+to separate each rule's action from the following rules.
+Redefining
+.Dv YY_BREAK
+allows, for example, C++ users to
+.Dq #define YY_BREAK
+to do nothing
+(while being very careful that every rule ends with a
+.Qq break
+or a
+.Qq return ! )
+to avoid suffering from unreachable statement warnings where because a rule's
+action ends with
+.Dq return ,
+the
+.Dv YY_BREAK
+is inaccessible.
+.Sh VALUES AVAILABLE TO THE USER
+This section summarizes the various values available to the user
+in the rule actions.
+.Bl -tag -width Ds
+.It char *yytext
+Holds the text of the current token.
+It may be modified but not lengthened
+.Pq characters cannot be appended to the end .
+.Pp
+If the special directive
+.Dq %array
+appears in the first section of the scanner description, then
+.Fa yytext
+is instead declared
+.Dq char yytext[YYLMAX] ,
+where
+.Dv YYLMAX
+is a macro definition that can be redefined in the first section
+to change the default value
+.Pq generally 8KB .
+Using
+.Dq %array
+results in somewhat slower scanners, but the value of
+.Fa yytext
+becomes immune to calls to
+.Fn input
+and
+.Fn unput ,
+which potentially destroy its value when
+.Fa yytext
+is a character pointer.
+The opposite of
+.Dq %array
+is
+.Dq %pointer ,
+which is the default.
+.Pp
+.Dq %array
+cannot be used when generating C++ scanner classes
+(the
+.Fl +
+flag).
+.It int yyleng
+Holds the length of the current token.
+.It FILE *yyin
+Is the file which by default
+.Nm
+reads from.
+It may be redefined, but doing so only makes sense before
+scanning begins or after an
+.Dv EOF
+has been encountered.
+Changing it in the midst of scanning will have unexpected results since
+.Nm
+buffers its input; use
+.Fn yyrestart
+instead.
+Once scanning terminates because an end-of-file
+has been seen,
+.Fa yyin
+can be assigned as the new input file
+and the scanner can be called again to continue scanning.
+.It void yyrestart(FILE *new_file)
+May be called to point
+.Fa yyin
+at the new input file.
+The switch-over to the new file is immediate
+.Pq any previously buffered-up input is lost .
+Note that calling
+.Fn yyrestart
+with
+.Fa yyin
+as an argument thus throws away the current input buffer and continues
+scanning the same input file.
+.It FILE *yyout
+Is the file to which
+.Em ECHO
+actions are done.
+It can be reassigned by the user.
+.It YY_CURRENT_BUFFER
+Returns a
+.Dv YY_BUFFER_STATE
+handle to the current buffer.
+.It YY_START
+Returns an integer value corresponding to the current start condition.
+This value can subsequently be used with
+.Em BEGIN
+to return to that start condition.
+.El
+.Sh INTERFACING WITH YACC
+One of the main uses of
+.Nm
+is as a companion to the
+.Xr yacc 1
+parser-generator.
+yacc parsers expect to call a routine named
+.Fn yylex
+to find the next input token.
+The routine is supposed to return the type of the next token
+as well as putting any associated value in the global
+.Fa yylval ,
+which is defined externally,
+and can be a union or any other complex data structure.
+To use
+.Nm
+with yacc, one specifies the
+.Fl d
+option to yacc to instruct it to generate the file
+.Pa y.tab.h
+containing definitions of all the
+.Dq %tokens
+appearing in the yacc input.
+This file is then included in the
+.Nm
+scanner.
+For example, if one of the tokens is
+.Qq TOK_NUMBER ,
+part of the scanner might look like:
+.Bd -literal -offset indent
+%{
+#include "y.tab.h"
+%}
+
+%%
+
+[0-9]+        yylval = atoi(yytext); return TOK_NUMBER;
+.Ed
+.Sh OPTIONS
+.Nm
+has the following options:
+.Bl -tag -width Ds
+.It Fl 7
+Instructs
+.Nm
+to generate a 7-bit scanner, i.e., one which can only recognize 7-bit
+characters in its input.
+The advantage of using
+.Fl 7
+is that the scanner's tables can be up to half the size of those generated
+using the
+.Fl 8
+option
+.Pq see below .
+The disadvantage is that such scanners often hang
+or crash if their input contains an 8-bit character.
+.Pp
+Note, however, that unless generating a scanner using the
+.Fl Cf
+or
+.Fl CF
+table compression options, use of
+.Fl 7
+will save only a small amount of table space,
+and make the scanner considerably less portable.
+.Nm flex Ns 's
+default behavior is to generate an 8-bit scanner unless
+.Fl Cf
+or
+.Fl CF
+is specified, in which case
+.Nm
+defaults to generating 7-bit scanners unless it was
+configured to generate 8-bit scanners
+(as will often be the case with non-USA sites).
+It is possible tell whether
+.Nm
+generated a 7-bit or an 8-bit scanner by inspecting the flag summary in the
+.Fl v
+output as described below.
+.Pp
+Note that if
+.Fl Cfe
+or
+.Fl CFe
+are used
+(the table compression options, but also using equivalence classes as
+discussed below),
+.Nm
+still defaults to generating an 8-bit scanner,
+since usually with these compression options full 8-bit tables
+are not much more expensive than 7-bit tables.
+.It Fl 8
+Instructs
+.Nm
+to generate an 8-bit scanner, i.e., one which can recognize 8-bit
+characters.
+This flag is only needed for scanners generated using
+.Fl Cf
+or
+.Fl CF ,
+as otherwise
+.Nm
+defaults to generating an 8-bit scanner anyway.
+.Pp
+See the discussion of
+.Fl 7
+above for
+.Nm flex Ns 's
+default behavior and the tradeoffs between 7-bit and 8-bit scanners.
+.It Fl B
+Instructs
+.Nm
+to generate a
+.Em batch
+scanner, the opposite of
+.Em interactive
+scanners generated by
+.Fl I
+.Pq see below .
+In general,
+.Fl B
+is used when the scanner will never be used interactively,
+and you want to squeeze a little more performance out of it.
+If the aim is instead to squeeze out a lot more performance,
+use the
+.Fl Cf
+or
+.Fl CF
+options
+.Pq discussed below ,
+which turn on
+.Fl B
+automatically anyway.
+.It Fl b
+Generate backing-up information to
+.Pa lex.backup .
+This is a list of scanner states which require backing up
+and the input characters on which they do so.
+By adding rules one can remove backing-up states.
+If all backing-up states are eliminated and
+.Fl Cf
+or
+.Fl CF
+is used, the generated scanner will run faster (see the
+.Fl p
+flag).
+Only users who wish to squeeze every last cycle out of their
+scanners need worry about this option.
+(See the section on
+.Sx PERFORMANCE CONSIDERATIONS
+below.)
+.It Fl C Ns Op Cm aeFfmr
+Controls the degree of table compression and, more generally, trade-offs
+between small scanners and fast scanners.
+.Bl -tag -width Ds
+.It Fl Ca
+Instructs
+.Nm
+to trade off larger tables in the generated scanner for faster performance
+because the elements of the tables are better aligned for memory access
+and computation.
+On some
+.Tn RISC
+architectures, fetching and manipulating longwords is more efficient
+than with smaller-sized units such as shortwords.
+This option can double the size of the tables used by the scanner.
+.It Fl Ce
+Directs
+.Nm
+to construct
+.Em equivalence classes ,
+i.e., sets of characters which have identical lexical properties
+(for example, if the only appearance of digits in the
+.Nm
+input is in the character class
+.Qq [0-9]
+then the digits
+.Sq 0 ,
+.Sq 1 ,
+.Sq ... ,
+.Sq 9
+will all be put in the same equivalence class).
+Equivalence classes usually give dramatic reductions in the final
+table/object file sizes
+.Pq typically a factor of 2\-5
+and are pretty cheap performance-wise
+.Pq one array look-up per character scanned .
+.It Fl CF
+Specifies that the alternate fast scanner representation
+(described below under the
+.Fl F
+option)
+should be used.
+This option cannot be used with
+.Fl + .
+.It Fl Cf
+Specifies that the
+.Em full
+scanner tables should be generated \-
+.Nm
+should not compress the tables by taking advantage of
+similar transition functions for different states.
+.It Fl \&Cm
+Directs
+.Nm
+to construct
+.Em meta-equivalence classes ,
+which are sets of equivalence classes
+(or characters, if equivalence classes are not being used)
+that are commonly used together.
+Meta-equivalence classes are often a big win when using compressed tables,
+but they have a moderate performance impact
+(one or two
+.Qq if
+tests and one array look-up per character scanned).
+.It Fl Cr
+Causes the generated scanner to
+.Em bypass
+use of the standard I/O library
+.Pq stdio
+for input.
+Instead of calling
+.Xr fread 3
+or
+.Xr getc 3 ,
+the scanner will use the
+.Xr read 2
+system call,
+resulting in a performance gain which varies from system to system,
+but in general is probably negligible unless
+.Fl Cf
+or
+.Fl CF
+are being used.
+Using
+.Fl Cr
+can cause strange behavior if, for example, reading from
+.Fa yyin
+using stdio prior to calling the scanner
+(because the scanner will miss whatever text previous reads left
+in the stdio input buffer).
+.Pp
+.Fl Cr
+has no effect if
+.Dv YY_INPUT
+is defined
+(see
+.Sx THE GENERATED SCANNER
+above).
+.El
+.Pp
+A lone
+.Fl C
+specifies that the scanner tables should be compressed but neither
+equivalence classes nor meta-equivalence classes should be used.
+.Pp
+The options
+.Fl Cf
+or
+.Fl CF
+and
+.Fl \&Cm
+do not make sense together \- there is no opportunity for meta-equivalence
+classes if the table is not being compressed.
+Otherwise the options may be freely mixed, and are cumulative.
+.Pp
+The default setting is
+.Fl Cem
+which specifies that
+.Nm
+should generate equivalence classes and meta-equivalence classes.
+This setting provides the highest degree of table compression.
+It is possible to trade off faster-executing scanners at the cost of
+larger tables with the following generally being true:
+.Bd -unfilled -offset indent
+slowest & smallest
+      -Cem
+      -Cm
+      -Ce
+      -C
+      -C{f,F}e
+      -C{f,F}
+      -C{f,F}a
+fastest & largest
+.Ed
+.Pp
+Note that scanners with the smallest tables are usually generated and
+compiled the quickest,
+so during development the default is usually best,
+maximal compression.
+.Pp
+.Fl Cfe
+is often a good compromise between speed and size for production scanners.
+.It Fl d
+Makes the generated scanner run in debug mode.
+Whenever a pattern is recognized and the global
+.Fa yy_flex_debug
+is non-zero
+.Pq which is the default ,
+the scanner will write to stderr a line of the form:
+.Pp
+.D1 --accepting rule at line 53 ("the matched text")
+.Pp
+The line number refers to the location of the rule in the file
+defining the scanner
+(i.e., the file that was fed to
+.Nm ) .
+Messages are also generated when the scanner backs up,
+accepts the default rule,
+reaches the end of its input buffer
+(or encounters a NUL;
+at this point, the two look the same as far as the scanner's concerned),
+or reaches an end-of-file.
+.It Fl F
+Specifies that the fast scanner table representation should be used
+.Pq and stdio bypassed .
+This representation is about as fast as the full table representation
+.Pq Fl f ,
+and for some sets of patterns will be considerably smaller
+.Pq and for others, larger .
+In general, if the pattern set contains both
+.Qq keywords
+and a catch-all,
+.Qq identifier
+rule, such as in the set:
+.Bd -unfilled -offset indent
+"case"    return TOK_CASE;
+"switch"  return TOK_SWITCH;
+\&...
+"default" return TOK_DEFAULT;
+[a-z]+    return TOK_ID;
+.Ed
+.Pp
+then it's better to use the full table representation.
+If only the
+.Qq identifier
+rule is present and a hash table or some such is used to detect the keywords,
+it's better to use
+.Fl F .
+.Pp
+This option is equivalent to
+.Fl CFr
+.Pq see above .
+It cannot be used with
+.Fl + .
+.It Fl f
+Specifies
+.Em fast scanner .
+No table compression is done and stdio is bypassed.
+The result is large but fast.
+This option is equivalent to
+.Fl Cfr
+.Pq see above .
+.It Fl h
+Generates a help summary of
+.Nm flex Ns 's
+options to stdout and then exits.
+.Fl ?\&
+and
+.Fl Fl help
+are synonyms for
+.Fl h .
+.It Fl I
+Instructs
+.Nm
+to generate an
+.Em interactive
+scanner.
+An interactive scanner is one that only looks ahead to decide
+what token has been matched if it absolutely must.
+It turns out that always looking one extra character ahead,
+even if the scanner has already seen enough text
+to disambiguate the current token, is a bit faster than
+only looking ahead when necessary.
+But scanners that always look ahead give dreadful interactive performance;
+for example, when a user types a newline,
+it is not recognized as a newline token until they enter
+.Em another
+token, which often means typing in another whole line.
+.Pp
+.Nm
+scanners default to
+.Em interactive
+unless
+.Fl Cf
+or
+.Fl CF
+table-compression options are specified
+.Pq see above .
+That's because if high-performance is most important,
+one of these options should be used,
+so if they weren't,
+.Nm
+assumes it is preferable to trade off a bit of run-time performance for
+intuitive interactive behavior.
+Note also that
+.Fl I
+cannot be used in conjunction with
+.Fl Cf
+or
+.Fl CF .
+Thus, this option is not really needed; it is on by default for all those
+cases in which it is allowed.
+.Pp
+A scanner can be forced to not be interactive by using
+.Fl B
+.Pq see above .
+.It Fl i
+Instructs
+.Nm
+to generate a case-insensitive scanner.
+The case of letters given in the
+.Nm
+input patterns will be ignored,
+and tokens in the input will be matched regardless of case.
+The matched text given in
+.Fa yytext
+will have the preserved case
+.Pq i.e., it will not be folded .
+.It Fl L
+Instructs
+.Nm
+not to generate
+.Dq #line
+directives.
+Without this option,
+.Nm
+peppers the generated scanner with #line directives so error messages
+in the actions will be correctly located with respect to either the original
+.Nm
+input file
+(if the errors are due to code in the input file),
+or
+.Pa lex.yy.c
+(if the errors are
+.Nm flex Ns 's
+fault \- these sorts of errors should be reported to the email address
+given below).
+.It Fl l
+Turns on maximum compatibility with the original
+.At
+.Nm lex
+implementation.
+Note that this does not mean full compatibility.
+Use of this option costs a considerable amount of performance,
+and it cannot be used with the
+.Fl + , f , F , Cf ,
+or
+.Fl CF
+options.
+For details on the compatibilities it provides, see the section
+.Sx INCOMPATIBILITIES WITH LEX AND POSIX
+below.
+This option also results in the name
+.Dv YY_FLEX_LEX_COMPAT
+being #define'd in the generated scanner.
+.It Fl n
+Another do-nothing, deprecated option included only for
+.Tn POSIX
+compliance.
+.It Fl o Ns Ar output
+Directs
+.Nm
+to write the scanner to the file
+.Ar output
+instead of
+.Pa lex.yy.c .
+If
+.Fl o
+is combined with the
+.Fl t
+option, then the scanner is written to stdout but its
+.Dq #line
+directives
+(see the
+.Fl L
+option above)
+refer to the file
+.Ar output .
+.It Fl P Ns Ar prefix
+Changes the default
+.Qq yy
+prefix used by
+.Nm
+for all globally visible variable and function names to instead be
+.Ar prefix .
+For example,
+.Fl P Ns Ar foo
+changes the name of
+.Fa yytext
+to
+.Fa footext .
+It also changes the name of the default output file from
+.Pa lex.yy.c
+to
+.Pa lex.foo.c .
+Here are all of the names affected:
+.Bd -unfilled -offset indent
+yy_create_buffer
+yy_delete_buffer
+yy_flex_debug
+yy_init_buffer
+yy_flush_buffer
+yy_load_buffer_state
+yy_switch_to_buffer
+yyin
+yyleng
+yylex
+yylineno
+yyout
+yyrestart
+yytext
+yywrap
+.Ed
+.Pp
+(If using a C++ scanner, then only
+.Fa yywrap
+and
+.Fa yyFlexLexer
+are affected.)
+Within the scanner itself, it is still possible to refer to the global variables
+and functions using either version of their name; but externally, they
+have the modified name.
+.Pp
+This option allows multiple
+.Nm
+programs to be easily linked together into the same executable.
+Note, though, that using this option also renames
+.Fn yywrap ,
+so now either an
+.Pq appropriately named
+version of the routine for the scanner must be supplied, or
+.Dq %option noyywrap
+must be used, as linking with
+.Fl lfl
+no longer provides one by default.
+.It Fl p
+Generates a performance report to stderr.
+The report consists of comments regarding features of the
+.Nm
+input file which will cause a serious loss of performance in the resulting
+scanner.
+If the flag is specified twice,
+comments regarding features that lead to minor performance losses
+will also be reported>
+.Pp
+Note that the use of
+.Em REJECT ,
+.Dq %option yylineno ,
+and variable trailing context
+(see the
+.Sx BUGS
+section below)
+entails a substantial performance penalty; use of
+.Fn yymore ,
+the
+.Sq ^
+operator, and the
+.Fl I
+flag entail minor performance penalties.
+.It Fl S Ns Ar skeleton
+Overrides the default skeleton file from which
+.Nm
+constructs its scanners.
+This option is needed only for
+.Nm
+maintenance or development.
+.It Fl s
+Causes the default rule
+.Pq that unmatched scanner input is echoed to stdout
+to be suppressed.
+If the scanner encounters input that does not
+match any of its rules, it aborts with an error.
+This option is useful for finding holes in a scanner's rule set.
+.It Fl T
+Makes
+.Nm
+run in
+.Em trace
+mode.
+It will generate a lot of messages to stderr concerning
+the form of the input and the resultant non-deterministic and deterministic
+finite automata.
+This option is mostly for use in maintaining
+.Nm .
+.It Fl t
+Instructs
+.Nm
+to write the scanner it generates to standard output instead of
+.Pa lex.yy.c .
+.It Fl V
+Prints the version number to stdout and exits.
+.Fl Fl version
+is a synonym for
+.Fl V .
+.It Fl v
+Specifies that
+.Nm
+should write to stderr
+a summary of statistics regarding the scanner it generates.
+Most of the statistics are meaningless to the casual
+.Nm
+user, but the first line identifies the version of
+.Nm
+(same as reported by
+.Fl V ) ,
+and the next line the flags used when generating the scanner,
+including those that are on by default.
+.It Fl w
+Suppresses warning messages.
+.It Fl +
+Specifies that
+.Nm
+should generate a C++ scanner class.
+See the section on
+.Sx GENERATING C++ SCANNERS
+below for details.
+.El
+.Pp
+.Nm
+also provides a mechanism for controlling options within the
+scanner specification itself, rather than from the
+.Nm
+command line.
+This is done by including
+.Dq %option
+directives in the first section of the scanner specification.
+Multiple options can be specified with a single
+.Dq %option
+directive, and multiple directives in the first section of the
+.Nm
+input file.
+.Pp
+Most options are given simply as names, optionally preceded by the word
+.Qq no
+.Pq with no intervening whitespace
+to negate their meaning.
+A number are equivalent to
+.Nm
+flags or their negation:
+.Bd -unfilled -offset indent
+7bit            -7 option
+8bit            -8 option
+align           -Ca option
+backup          -b option
+batch           -B option
+c++             -+ option
+
+caseful or
+case-sensitive  opposite of -i (default)
+
+case-insensitive or
+caseless        -i option
+
+debug           -d option
+default         opposite of -s option
+ecs             -Ce option
+fast            -F option
+full            -f option
+interactive     -I option
+lex-compat      -l option
+meta-ecs        -Cm option
+perf-report     -p option
+read            -Cr option
+stdout          -t option
+verbose         -v option
+warn            opposite of -w option
+                (use "%option nowarn" for -w)
+
+array           equivalent to "%array"
+pointer         equivalent to "%pointer" (default)
+.Ed
+.Pp
+Some %option's provide features otherwise not available:
+.Bl -tag -width Ds
+.It always-interactive
+Instructs
+.Nm
+to generate a scanner which always considers its input
+.Qq interactive .
+Normally, on each new input file the scanner calls
+.Fn isatty
+in an attempt to determine whether the scanner's input source is interactive
+and thus should be read a character at a time.
+When this option is used, however, no such call is made.
+.It main
+Directs
+.Nm
+to provide a default
+.Fn main
+program for the scanner, which simply calls
+.Fn yylex .
+This option implies
+.Dq noyywrap
+.Pq see below .
+.It never-interactive
+Instructs
+.Nm
+to generate a scanner which never considers its input
+.Qq interactive
+(again, no call made to
+.Fn isatty ) .
+This is the opposite of
+.Dq always-interactive .
+.It stack
+Enables the use of start condition stacks
+(see
+.Sx START CONDITIONS
+above).
+.It stdinit
+If set (i.e.,
+.Dq %option stdinit ) ,
+initializes
+.Fa yyin
+and
+.Fa yyout
+to stdin and stdout, instead of the default of
+.Dq nil .
+Some existing
+.Nm lex
+programs depend on this behavior, even though it is not compliant with ANSI C,
+which does not require stdin and stdout to be compile-time constant.
+.It yylineno
+Directs
+.Nm
+to generate a scanner that maintains the number of the current line
+read from its input in the global variable
+.Fa yylineno .
+This option is implied by
+.Dq %option lex-compat .
+.It yywrap
+If unset (i.e.,
+.Dq %option noyywrap ) ,
+makes the scanner not call
+.Fn yywrap
+upon an end-of-file, but simply assume that there are no more files to scan
+(until the user points
+.Fa yyin
+at a new file and calls
+.Fn yylex
+again).
+.El
+.Pp
+.Nm
+scans rule actions to determine whether the
+.Em REJECT
+or
+.Fn yymore
+features are being used.
+The
+.Dq reject
+and
+.Dq yymore
+options are available to override its decision as to whether to use the
+options, either by setting them (e.g.,
+.Dq %option reject )
+to indicate the feature is indeed used,
+or unsetting them to indicate it actually is not used
+(e.g.,
+.Dq %option noyymore ) .
+.Pp
+Three options take string-delimited values, offset with
+.Sq = :
+.Pp
+.D1 %option outfile="ABC"
+.Pp
+is equivalent to
+.Fl o Ns Ar ABC ,
+and
+.Pp
+.D1 %option prefix="XYZ"
+.Pp
+is equivalent to
+.Fl P Ns Ar XYZ .
+Finally,
+.Pp
+.D1 %option yyclass="foo"
+.Pp
+only applies when generating a C++ scanner
+.Pf ( Fl +
+option).
+It informs
+.Nm
+that
+.Dq foo
+has been derived as a subclass of yyFlexLexer, so
+.Nm
+will place actions in the member function
+.Dq foo::yylex()
+instead of
+.Dq yyFlexLexer::yylex() .
+It also generates a
+.Dq yyFlexLexer::yylex()
+member function that emits a run-time error (by invoking
+.Dq yyFlexLexer::LexerError() )
+if called.
+See
+.Sx GENERATING C++ SCANNERS ,
+below, for additional information.
+.Pp
+A number of options are available for
+lint
+purists who want to suppress the appearance of unneeded routines
+in the generated scanner.
+Each of the following, if unset
+(e.g.,
+.Dq %option nounput ) ,
+results in the corresponding routine not appearing in the generated scanner:
+.Bd -unfilled -offset indent
+input, unput
+yy_push_state, yy_pop_state, yy_top_state
+yy_scan_buffer, yy_scan_bytes, yy_scan_string
+.Ed
+.Pp
+(though
+.Fn yy_push_state
+and friends won't appear anyway unless
+.Dq %option stack
+is being used).
+.Sh PERFORMANCE CONSIDERATIONS
+The main design goal of
+.Nm
+is that it generate high-performance scanners.
+It has been optimized for dealing well with large sets of rules.
+Aside from the effects on scanner speed of the table compression
+.Fl C
+options outlined above,
+there are a number of options/actions which degrade performance.
+These are, from most expensive to least:
+.Bd -unfilled -offset indent
+REJECT
+%option yylineno
+arbitrary trailing context
+
+pattern sets that require backing up
+%array
+%option interactive
+%option always-interactive
+
+\&'^' beginning-of-line operator
+yymore()
+.Ed
+.Pp
+with the first three all being quite expensive
+and the last two being quite cheap.
+Note also that
+.Fn unput
+is implemented as a routine call that potentially does quite a bit of work,
+while
+.Fn yyless
+is a quite-cheap macro; so if just putting back some excess text,
+use
+.Fn yyless .
+.Pp
+.Em REJECT
+should be avoided at all costs when performance is important.
+It is a particularly expensive option.
+.Pp
+Getting rid of backing up is messy and often may be an enormous
+amount of work for a complicated scanner.
+In principal, one begins by using the
+.Fl b
+flag to generate a
+.Pa lex.backup
+file.
+For example, on the input
+.Bd -literal -offset indent
+%%
+foo        return TOK_KEYWORD;
+foobar     return TOK_KEYWORD;
+.Ed
+.Pp
+the file looks like:
+.Bd -literal -offset indent
+State #6 is non-accepting -
+ associated rule line numbers:
+       2       3
+ out-transitions: [ o ]
+ jam-transitions: EOF [ \e001-n  p-\e177 ]
+
+State #8 is non-accepting -
+ associated rule line numbers:
+       3
+ out-transitions: [ a ]
+ jam-transitions: EOF [ \e001-`  b-\e177 ]
+
+State #9 is non-accepting -
+ associated rule line numbers:
+       3
+ out-transitions: [ r ]
+ jam-transitions: EOF [ \e001-q  s-\e177 ]
+
+Compressed tables always back up.
+.Ed
+.Pp
+The first few lines tell us that there's a scanner state in
+which it can make a transition on an
+.Sq o
+but not on any other character,
+and that in that state the currently scanned text does not match any rule.
+The state occurs when trying to match the rules found
+at lines 2 and 3 in the input file.
+If the scanner is in that state and then reads something other than an
+.Sq o ,
+it will have to back up to find a rule which is matched.
+With a bit of headscratching one can see that this must be the
+state it's in when it has seen
+.Sq fo .
+When this has happened, if anything other than another
+.Sq o
+is seen, the scanner will have to back up to simply match the
+.Sq f
+.Pq by the default rule .
+.Pp
+The comment regarding State #8 indicates there's a problem when
+.Qq foob
+has been scanned.
+Indeed, on any character other than an
+.Sq a ,
+the scanner will have to back up to accept
+.Qq foo .
+Similarly, the comment for State #9 concerns when
+.Qq fooba
+has been scanned and an
+.Sq r
+does not follow.
+.Pp
+The final comment reminds us that there's no point going to
+all the trouble of removing backing up from the rules unless we're using
+.Fl Cf
+or
+.Fl CF ,
+since there's no performance gain doing so with compressed scanners.
+.Pp
+The way to remove the backing up is to add
+.Qq error
+rules:
+.Bd -literal -offset indent
+%%
+foo    return TOK_KEYWORD;
+foobar return TOK_KEYWORD;
+
+fooba  |
+foob   |
+fo {
+        /* false alarm, not really a keyword */
+        return TOK_ID;
+}
+.Ed
+.Pp
+Eliminating backing up among a list of keywords can also be done using a
+.Qq catch-all
+rule:
+.Bd -literal -offset indent
+%%
+foo    return TOK_KEYWORD;
+foobar return TOK_KEYWORD;
+
+[a-z]+ return TOK_ID;
+.Ed
+.Pp
+This is usually the best solution when appropriate.
+.Pp
+Backing up messages tend to cascade.
+With a complicated set of rules it's not uncommon to get hundreds of messages.
+If one can decipher them, though,
+it often only takes a dozen or so rules to eliminate the backing up
+(though it's easy to make a mistake and have an error rule accidentally match
+a valid token; a possible future
+.Nm
+feature will be to automatically add rules to eliminate backing up).
+.Pp
+It's important to keep in mind that the benefits of eliminating
+backing up are gained only if
+.Em every
+instance of backing up is eliminated.
+Leaving just one gains nothing.
+.Pp
+.Em Variable
+trailing context
+(where both the leading and trailing parts do not have a fixed length)
+entails almost the same performance loss as
+.Em REJECT
+.Pq i.e., substantial .
+So when possible a rule like:
+.Bd -literal -offset indent
+%%
+mouse|rat/(cat|dog)   run();
+.Ed
+.Pp
+is better written:
+.Bd -literal -offset indent
+%%
+mouse/cat|dog         run();
+rat/cat|dog           run();
+.Ed
+.Pp
+or as
+.Bd -literal -offset indent
+%%
+mouse|rat/cat         run();
+mouse|rat/dog         run();
+.Ed
+.Pp
+Note that here the special
+.Sq |\&
+action does not provide any savings, and can even make things worse (see
+.Sx BUGS
+below).
+.Pp
+Another area where the user can increase a scanner's performance
+.Pq and one that's easier to implement
+arises from the fact that the longer the tokens matched,
+the faster the scanner will run.
+This is because with long tokens the processing of most input
+characters takes place in the
+.Pq short
+inner scanning loop, and does not often have to go through the additional work
+of setting up the scanning environment (e.g.,
+.Fa yytext )
+for the action.
+Recall the scanner for C comments:
+.Bd -literal -offset indent
+%x comment
+%%
+int line_num = 1;
+
+"/*"                    BEGIN(comment);
+
+<comment>[^*\en]*
+<comment>"*"+[^*/\en]*
+<comment>\en             ++line_num;
+<comment>"*"+"/"        BEGIN(INITIAL);
+.Ed
+.Pp
+This could be sped up by writing it as:
+.Bd -literal -offset indent
+%x comment
+%%
+int line_num = 1;
+
+"/*"                    BEGIN(comment);
+
+<comment>[^*\en]*
+<comment>[^*\en]*\en      ++line_num;
+<comment>"*"+[^*/\en]*
+<comment>"*"+[^*/\en]*\en ++line_num;
+<comment>"*"+"/"        BEGIN(INITIAL);
+.Ed
+.Pp
+Now instead of each newline requiring the processing of another action,
+recognizing the newlines is
+.Qq distributed
+over the other rules to keep the matched text as long as possible.
+Note that adding rules does
+.Em not
+slow down the scanner!
+The speed of the scanner is independent of the number of rules or
+(modulo the considerations given at the beginning of this section)
+how complicated the rules are with regard to operators such as
+.Sq *
+and
+.Sq |\& .
+.Pp
+A final example in speeding up a scanner:
+scan through a file containing identifiers and keywords, one per line
+and with no other extraneous characters, and recognize all the keywords.
+A natural first approach is:
+.Bd -literal -offset indent
+%%
+asm      |
+auto     |
+break    |
+\&... etc ...
+volatile |
+while    /* it's a keyword */
+
+\&.|\en     /* it's not a keyword */
+.Ed
+.Pp
+To eliminate the back-tracking, introduce a catch-all rule:
+.Bd -literal -offset indent
+%%
+asm      |
+auto     |
+break    |
+\&... etc ...
+volatile |
+while    /* it's a keyword */
+
+[a-z]+   |
+\&.|\en     /* it's not a keyword */
+.Ed
+.Pp
+Now, if it's guaranteed that there's exactly one word per line,
+then we can reduce the total number of matches by a half by
+merging in the recognition of newlines with that of the other tokens:
+.Bd -literal -offset indent
+%%
+asm\en      |
+auto\en     |
+break\en    |
+\&... etc ...
+volatile\en |
+while\en    /* it's a keyword */
+
+[a-z]+\en   |
+\&.|\en       /* it's not a keyword */
+.Ed
+.Pp
+One has to be careful here,
+as we have now reintroduced backing up into the scanner.
+In particular, while we know that there will never be any characters
+in the input stream other than letters or newlines,
+.Nm
+can't figure this out, and it will plan for possibly needing to back up
+when it has scanned a token like
+.Qq auto
+and then the next character is something other than a newline or a letter.
+Previously it would then just match the
+.Qq auto
+rule and be done, but now it has no
+.Qq auto
+rule, only an
+.Qq auto\en
+rule.
+To eliminate the possibility of backing up,
+we could either duplicate all rules but without final newlines or,
+since we never expect to encounter such an input and therefore don't
+how it's classified, we can introduce one more catch-all rule,
+this one which doesn't include a newline:
+.Bd -literal -offset indent
+%%
+asm\en      |
+auto\en     |
+break\en    |
+\&... etc ...
+volatile\en |
+while\en    /* it's a keyword */
+
+[a-z]+\en   |
+[a-z]+     |
+\&.|\en       /* it's not a keyword */
+.Ed
+.Pp
+Compiled with
+.Fl Cf ,
+this is about as fast as one can get a
+.Nm
+scanner to go for this particular problem.
+.Pp
+A final note:
+.Nm
+is slow when matching NUL's,
+particularly when a token contains multiple NUL's.
+It's best to write rules which match short
+amounts of text if it's anticipated that the text will often include NUL's.
+.Pp
+Another final note regarding performance: as mentioned above in the section
+.Sx HOW THE INPUT IS MATCHED ,
+dynamically resizing
+.Fa yytext
+to accommodate huge tokens is a slow process because it presently requires that
+the
+.Pq huge
+token be rescanned from the beginning.
+Thus if performance is vital, it is better to attempt to match
+.Qq large
+quantities of text but not
+.Qq huge
+quantities, where the cutoff between the two is at about 8K characters/token.
+.Sh GENERATING C++ SCANNERS
+.Nm
+provides two different ways to generate scanners for use with C++.
+The first way is to simply compile a scanner generated by
+.Nm
+using a C++ compiler instead of a C compiler.
+This should not generate any compilation errors
+(please report any found to the email address given in the
+.Sx AUTHORS
+section below).
+C++ code can then be used in rule actions instead of C code.
+Note that the default input source for scanners remains
+.Fa yyin ,
+and default echoing is still done to
+.Fa yyout .
+Both of these remain
+.Fa FILE *
+variables and not C++ streams.
+.Pp
+.Nm
+can also be used to generate a C++ scanner class, using the
+.Fl +
+option (or, equivalently,
+.Dq %option c++ ) ,
+which is automatically specified if the name of the flex executable ends in a
+.Sq + ,
+such as
+.Nm flex++ .
+When using this option,
+.Nm
+defaults to generating the scanner to the file
+.Pa lex.yy.cc
+instead of
+.Pa lex.yy.c .
+The generated scanner includes the header file
+.In g++/FlexLexer.h ,
+which defines the interface to two C++ classes.
+.Pp
+The first class,
+.Em FlexLexer ,
+provides an abstract base class defining the general scanner class interface.
+It provides the following member functions:
+.Bl -tag -width Ds
+.It const char* YYText()
+Returns the text of the most recently matched token, the equivalent of
+.Fa yytext .
+.It int YYLeng()
+Returns the length of the most recently matched token, the equivalent of
+.Fa yyleng .
+.It int lineno() const
+Returns the current input line number
+(see
+.Dq %option yylineno ) ,
+or 1 if
+.Dq %option yylineno
+was not used.
+.It void set_debug(int flag)
+Sets the debugging flag for the scanner, equivalent to assigning to
+.Fa yy_flex_debug
+(see the
+.Sx OPTIONS
+section above).
+Note that the scanner must be built using
+.Dq %option debug
+to include debugging information in it.
+.It int debug() const
+Returns the current setting of the debugging flag.
+.El
+.Pp
+Also provided are member functions equivalent to
+.Fn yy_switch_to_buffer ,
+.Fn yy_create_buffer
+(though the first argument is an
+.Fa std::istream*
+object pointer and not a
+.Fa FILE* ) ,
+.Fn yy_flush_buffer ,
+.Fn yy_delete_buffer ,
+and
+.Fn yyrestart
+(again, the first argument is an
+.Fa std::istream*
+object pointer).
+.Pp
+The second class defined in
+.In g++/FlexLexer.h
+is
+.Fa yyFlexLexer ,
+which is derived from
+.Fa FlexLexer .
+It defines the following additional member functions:
+.Bl -tag -width Ds
+.It "yyFlexLexer(std::istream* arg_yyin = 0, std::ostream* arg_yyout = 0)"
+Constructs a
+.Fa yyFlexLexer
+object using the given streams for input and output.
+If not specified, the streams default to
+.Fa cin
+and
+.Fa cout ,
+respectively.
+.It virtual int yylex()
+Performs the same role as
+.Fn yylex
+does for ordinary flex scanners: it scans the input stream, consuming
+tokens, until a rule's action returns a value.
+If subclass
+.Sq S
+is derived from
+.Fa yyFlexLexer ,
+in order to access the member functions and variables of
+.Sq S
+inside
+.Fn yylex ,
+use
+.Dq %option yyclass="S"
+to inform
+.Nm
+that the
+.Sq S
+subclass will be used instead of
+.Fa yyFlexLexer .
+In this case, rather than generating
+.Dq yyFlexLexer::yylex() ,
+.Nm
+generates
+.Dq S::yylex()
+(and also generates a dummy
+.Dq yyFlexLexer::yylex()
+that calls
+.Dq yyFlexLexer::LexerError()
+if called).
+.It "virtual void switch_streams(std::istream* new_in = 0, std::ostream* new_out = 0)"
+Reassigns
+.Fa yyin
+to
+.Fa new_in
+.Pq if non-nil
+and
+.Fa yyout
+to
+.Fa new_out
+.Pq ditto ,
+deleting the previous input buffer if
+.Fa yyin
+is reassigned.
+.It int yylex(std::istream* new_in, std::ostream* new_out = 0)
+First switches the input streams via
+.Dq switch_streams(new_in, new_out)
+and then returns the value of
+.Fn yylex .
+.El
+.Pp
+In addition,
+.Fa yyFlexLexer
+defines the following protected virtual functions which can be redefined
+in derived classes to tailor the scanner:
+.Bl -tag -width Ds
+.It virtual int LexerInput(char* buf, int max_size)
+Reads up to
+.Fa max_size
+characters into
+.Fa buf
+and returns the number of characters read.
+To indicate end-of-input, return 0 characters.
+Note that
+.Qq interactive
+scanners (see the
+.Fl B
+and
+.Fl I
+flags) define the macro
+.Dv YY_INTERACTIVE .
+If
+.Fn LexerInput
+has been redefined, and it's necessary to take different actions depending on
+whether or not the scanner might be scanning an interactive input source,
+it's possible to test for the presence of this name via
+.Dq #ifdef .
+.It virtual void LexerOutput(const char* buf, int size)
+Writes out
+.Fa size
+characters from the buffer
+.Fa buf ,
+which, while NUL-terminated, may also contain
+.Qq internal
+NUL's if the scanner's rules can match text with NUL's in them.
+.It virtual void LexerError(const char* msg)
+Reports a fatal error message.
+The default version of this function writes the message to the stream
+.Fa cerr
+and exits.
+.El
+.Pp
+Note that a
+.Fa yyFlexLexer
+object contains its entire scanning state.
+Thus such objects can be used to create reentrant scanners.
+Multiple instances of the same
+.Fa yyFlexLexer
+class can be instantiated, and multiple C++ scanner classes can be combined
+in the same program using the
+.Fl P
+option discussed above.
+.Pp
+Finally, note that the
+.Dq %array
+feature is not available to C++ scanner classes;
+.Dq %pointer
+must be used
+.Pq the default .
+.Pp
+Here is an example of a simple C++ scanner:
+.Bd -literal -offset indent
+// An example of using the flex C++ scanner class.
+
+%{
+#include <errno.h>
+int mylineno = 0;
+%}
+
+string  \e"[^\en"]+\e"
+
+ws      [ \et]+
+
+alpha   [A-Za-z]
+dig     [0-9]
+name    ({alpha}|{dig}|\e$)({alpha}|{dig}|[_.\e-/$])*
+num1    [-+]?{dig}+\e.?([eE][-+]?{dig}+)?
+num2    [-+]?{dig}*\e.{dig}+([eE][-+]?{dig}+)?
+number  {num1}|{num2}
+
+%%
+
+{ws}    /* skip blanks and tabs */
+
+"/*" {
+        int c;
+
+        while ((c = yyinput()) != 0) {
+                if(c == '\en')
+                    ++mylineno;
+                else if(c == '*') {
+                    if ((c = yyinput()) == '/')
+                        break;
+                    else
+                        unput(c);
+                }
+        }
+}
+
+{number}  cout << "number " << YYText() << '\en';
+
+\en        mylineno++;
+
+{name}    cout << "name " << YYText() << '\en';
+
+{string}  cout << "string " << YYText() << '\en';
+
+%%
+
+int main(int /* argc */, char** /* argv */)
+{
+	FlexLexer* lexer = new yyFlexLexer;
+	while(lexer->yylex() != 0)
+	    ;
+	return 0;
+}
+.Ed
+.Pp
+To create multiple
+.Pq different
+lexer classes, use the
+.Fl P
+flag
+(or the
+.Dq prefix=
+option)
+to rename each
+.Fa yyFlexLexer
+to some other
+.Fa xxFlexLexer .
+.In g++/FlexLexer.h
+can then be included in other sources once per lexer class, first renaming
+.Fa yyFlexLexer
+as follows:
+.Bd -literal -offset indent
+#undef yyFlexLexer
+#define yyFlexLexer xxFlexLexer
+#include <g++/FlexLexer.h>
+
+#undef yyFlexLexer
+#define yyFlexLexer zzFlexLexer
+#include <g++/FlexLexer.h>
+.Ed
+.Pp
+If, for example,
+.Dq %option prefix="xx"
+is used for one scanner and
+.Dq %option prefix="zz"
+is used for the other.
+.Pp
+.Sy IMPORTANT :
+the present form of the scanning class is experimental
+and may change considerably between major releases.
+.Sh INCOMPATIBILITIES WITH LEX AND POSIX
+.Nm
+is a rewrite of the
+.At
+.Nm lex
+tool
+(the two implementations do not share any code, though),
+with some extensions and incompatibilities, both of which are of concern
+to those who wish to write scanners acceptable to either implementation.
+.Nm
+is fully compliant with the
+.Tn POSIX
+.Nm lex
+specification, except that when using
+.Dq %pointer
+.Pq the default ,
+a call to
+.Fn unput
+destroys the contents of
+.Fa yytext ,
+which is counter to the
+.Tn POSIX
+specification.
+.Pp
+In this section we discuss all of the known areas of incompatibility between
+.Nm ,
+.At
+.Nm lex ,
+and the
+.Tn POSIX
+specification.
+.Pp
+.Nm flex Ns 's
+.Fl l
+option turns on maximum compatibility with the original
+.At
+.Nm lex
+implementation, at the cost of a major loss in the generated scanner's
+performance.
+We note below which incompatibilities can be overcome using the
+.Fl l
+option.
+.Pp
+.Nm
+is fully compatible with
+.Nm lex
+with the following exceptions:
+.Bl -dash
+.It
+The undocumented
+.Nm lex
+scanner internal variable
+.Fa yylineno
+is not supported unless
+.Fl l
+or
+.Dq %option yylineno
+is used.
+.Pp
+.Fa yylineno
+should be maintained on a per-buffer basis, rather than a per-scanner
+.Pq single global variable
+basis.
+.Pp
+.Fa yylineno
+is not part of the
+.Tn POSIX
+specification.
+.It
+The
+.Fn input
+routine is not redefinable, though it may be called to read characters
+following whatever has been matched by a rule.
+If
+.Fn input
+encounters an end-of-file, the normal
+.Fn yywrap
+processing is done.
+A
+.Dq real
+end-of-file is returned by
+.Fn input
+as
+.Dv EOF .
+.Pp
+Input is instead controlled by defining the
+.Dv YY_INPUT
+macro.
+.Pp
+The
+.Nm
+restriction that
+.Fn input
+cannot be redefined is in accordance with the
+.Tn POSIX
+specification, which simply does not specify any way of controlling the
+scanner's input other than by making an initial assignment to
+.Fa yyin .
+.It
+The
+.Fn unput
+routine is not redefinable.
+This restriction is in accordance with
+.Tn POSIX .
+.It
+.Nm
+scanners are not as reentrant as
+.Nm lex
+scanners.
+In particular, if a scanner is interactive and
+an interrupt handler long-jumps out of the scanner,
+and the scanner is subsequently called again,
+the following error message may be displayed:
+.Pp
+.D1 fatal flex scanner internal error--end of buffer missed
+.Pp
+To reenter the scanner, first use
+.Pp
+.Dl yyrestart(yyin);
+.Pp
+Note that this call will throw away any buffered input;
+usually this isn't a problem with an interactive scanner.
+.Pp
+Also note that flex C++ scanner classes are reentrant,
+so if using C++ is an option , they should be used instead.
+See
+.Sx GENERATING C++ SCANNERS
+above for details.
+.It
+.Fn output
+is not supported.
+Output from the
+.Em ECHO
+macro is done to the file-pointer
+.Fa yyout
+.Pq default stdout .
+.Pp
+.Fn output
+is not part of the
+.Tn POSIX
+specification.
+.It
+.Nm lex
+does not support exclusive start conditions
+.Pq %x ,
+though they are in the
+.Tn POSIX
+specification.
+.It
+When definitions are expanded,
+.Nm
+encloses them in parentheses.
+With
+.Nm lex ,
+the following:
+.Bd -literal -offset indent
+NAME    [A-Z][A-Z0-9]*
+%%
+foo{NAME}?      printf("Found it\en");
+%%
+.Ed
+.Pp
+will not match the string
+.Qq foo
+because when the macro is expanded the rule is equivalent to
+.Qq foo[A-Z][A-Z0-9]*?
+and the precedence is such that the
+.Sq ?\&
+is associated with
+.Qq [A-Z0-9]* .
+With
+.Nm ,
+the rule will be expanded to
+.Qq foo([A-Z][A-Z0-9]*)?
+and so the string
+.Qq foo
+will match.
+.Pp
+Note that if the definition begins with
+.Sq ^
+or ends with
+.Sq $
+then it is not expanded with parentheses, to allow these operators to appear in
+definitions without losing their special meanings.
+But the
+.Sq Aq s ,
+.Sq / ,
+and
+.Aq Aq EOF
+operators cannot be used in a
+.Nm
+definition.
+.Pp
+Using
+.Fl l
+results in the
+.Nm lex
+behavior of no parentheses around the definition.
+.Pp
+The
+.Tn POSIX
+specification is that the definition be enclosed in parentheses.
+.It
+Some implementations of
+.Nm lex
+allow a rule's action to begin on a separate line,
+if the rule's pattern has trailing whitespace:
+.Bd -literal -offset indent
+%%
+foo|bar<space here>
+  { foobar_action(); }
+.Ed
+.Pp
+.Nm
+does not support this feature.
+.It
+The
+.Nm lex
+.Sq %r
+.Pq generate a Ratfor scanner
+option is not supported.
+It is not part of the
+.Tn POSIX
+specification.
+.It
+After a call to
+.Fn unput ,
+.Fa yytext
+is undefined until the next token is matched,
+unless the scanner was built using
+.Dq %array .
+This is not the case with
+.Nm lex
+or the
+.Tn POSIX
+specification.
+The
+.Fl l
+option does away with this incompatibility.
+.It
+The precedence of the
+.Sq {}
+.Pq numeric range
+operator is different.
+.Nm lex
+interprets
+.Qq abc{1,3}
+as match one, two, or three occurrences of
+.Sq abc ,
+whereas
+.Nm
+interprets it as match
+.Sq ab
+followed by one, two, or three occurrences of
+.Sq c .
+The latter is in agreement with the
+.Tn POSIX
+specification.
+.It
+The precedence of the
+.Sq ^
+operator is different.
+.Nm lex
+interprets
+.Qq ^foo|bar
+as match either
+.Sq foo
+at the beginning of a line, or
+.Sq bar
+anywhere, whereas
+.Nm
+interprets it as match either
+.Sq foo
+or
+.Sq bar
+if they come at the beginning of a line.
+The latter is in agreement with the
+.Tn POSIX
+specification.
+.It
+The special table-size declarations such as
+.Sq %a
+supported by
+.Nm lex
+are not required by
+.Nm
+scanners;
+.Nm
+ignores them.
+.It
+The name
+.Dv FLEX_SCANNER
+is #define'd so scanners may be written for use with either
+.Nm
+or
+.Nm lex .
+Scanners also include
+.Dv YY_FLEX_MAJOR_VERSION
+and
+.Dv YY_FLEX_MINOR_VERSION
+indicating which version of
+.Nm
+generated the scanner
+(for example, for the 2.5 release, these defines would be 2 and 5,
+respectively).
+.El
+.Pp
+The following
+.Nm
+features are not included in
+.Nm lex
+or the
+.Tn POSIX
+specification:
+.Bd -unfilled -offset indent
+C++ scanners
+%option
+start condition scopes
+start condition stacks
+interactive/non-interactive scanners
+yy_scan_string() and friends
+yyterminate()
+yy_set_interactive()
+yy_set_bol()
+YY_AT_BOL()
+<<EOF>>
+<*>
+YY_DECL
+YY_START
+YY_USER_ACTION
+YY_USER_INIT
+#line directives
+%{}'s around actions
+multiple actions on a line
+.Ed
+.Pp
+plus almost all of the
+.Nm
+flags.
+The last feature in the list refers to the fact that with
+.Nm
+multiple actions can be placed on the same line,
+separated with semi-colons, while with
+.Nm lex ,
+the following
+.Pp
+.Dl foo    handle_foo(); ++num_foos_seen;
+.Pp
+is
+.Pq rather surprisingly
+truncated to
+.Pp
+.Dl foo    handle_foo();
+.Pp
+.Nm
+does not truncate the action.
+Actions that are not enclosed in braces
+are simply terminated at the end of the line.
+.Sh FILES
+.Bl -tag -width "<g++/FlexLexer.h>"
+.It Pa flex.skl
+Skeleton scanner.
+This file is only used when building flex, not when
+.Nm
+executes.
+.It Pa lex.backup
+Backing-up information for the
+.Fl b
+flag (called
+.Pa lex.bck
+on some systems).
+.It Pa lex.yy.c
+Generated scanner
+(called
+.Pa lexyy.c
+on some systems).
+.It Pa lex.yy.cc
+Generated C++ scanner class, when using
+.Fl + .
+.It In g++/FlexLexer.h
+Header file defining the C++ scanner base class,
+.Fa FlexLexer ,
+and its derived class,
+.Fa yyFlexLexer .
+.It Pa /usr/lib/libl.*
+.Nm
+libraries.
+The
+.Pa /usr/lib/libfl.*\&
+libraries are links to these.
+Scanners must be linked using either
+.Fl \&ll
+or
+.Fl lfl .
+.El
+.Sh EXIT STATUS
+.Ex -std flex
+.Sh DIAGNOSTICS
+.Bl -diag
+.It warning, rule cannot be matched
+Indicates that the given rule cannot be matched because it follows other rules
+that will always match the same text as it.
+For example, in the following
+.Dq foo
+cannot be matched because it comes after an identifier
+.Qq catch-all
+rule:
+.Bd -literal -offset indent
+[a-z]+    got_identifier();
+foo       got_foo();
+.Ed
+.Pp
+Using
+.Em REJECT
+in a scanner suppresses this warning.
+.It "warning, \-s option given but default rule can be matched"
+Means that it is possible
+.Pq perhaps only in a particular start condition
+that the default rule
+.Pq match any single character
+is the only one that will match a particular input.
+Since
+.Fl s
+was given, presumably this is not intended.
+.It reject_used_but_not_detected undefined
+.It yymore_used_but_not_detected undefined
+These errors can occur at compile time.
+They indicate that the scanner uses
+.Em REJECT
+or
+.Fn yymore
+but that
+.Nm
+failed to notice the fact, meaning that
+.Nm
+scanned the first two sections looking for occurrences of these actions
+and failed to find any, but somehow they snuck in
+.Pq via an #include file, for example .
+Use
+.Dq %option reject
+or
+.Dq %option yymore
+to indicate to
+.Nm
+that these features are really needed.
+.It flex scanner jammed
+A scanner compiled with
+.Fl s
+has encountered an input string which wasn't matched by any of its rules.
+This error can also occur due to internal problems.
+.It token too large, exceeds YYLMAX
+The scanner uses
+.Dq %array
+and one of its rules matched a string longer than the
+.Dv YYLMAX
+constant
+.Pq 8K bytes by default .
+The value can be increased by #define'ing
+.Dv YYLMAX
+in the definitions section of
+.Nm
+input.
+.It "scanner requires \-8 flag to use the character 'x'"
+The scanner specification includes recognizing the 8-bit character
+.Sq x
+and the
+.Fl 8
+flag was not specified, and defaulted to 7-bit because the
+.Fl Cf
+or
+.Fl CF
+table compression options were used.
+See the discussion of the
+.Fl 7
+flag for details.
+.It flex scanner push-back overflow
+unput() was used to push back so much text that the scanner's buffer
+could not hold both the pushed-back text and the current token in
+.Fa yytext .
+Ideally the scanner should dynamically resize the buffer in this case,
+but at present it does not.
+.It "input buffer overflow, can't enlarge buffer because scanner uses REJECT"
+The scanner was working on matching an extremely large token and needed
+to expand the input buffer.
+This doesn't work with scanners that use
+.Em REJECT .
+.It "fatal flex scanner internal error--end of buffer missed"
+This can occur in an scanner which is reentered after a long-jump
+has jumped out
+.Pq or over
+the scanner's activation frame.
+Before reentering the scanner, use:
+.Pp
+.Dl yyrestart(yyin);
+.Pp
+or, as noted above, switch to using the C++ scanner class.
+.It "too many start conditions in <> construct!"
+More start conditions than exist were listed in a <> construct
+(so at least one of them must have been listed twice).
+.El
+.Sh SEE ALSO
+.Xr awk 1 ,
+.Xr sed 1 ,
+.Xr yacc 1
+.Rs
+.%A John Levine
+.%A Tony Mason
+.%A Doug Brown
+.%B Lex & Yacc
+.%I O'Reilly and Associates
+.%N 2nd edition
+.Re
+.Rs
+.%A Alfred Aho
+.%A Ravi Sethi
+.%A Jeffrey Ullman
+.%B Compilers: Principles, Techniques and Tools
+.%I Addison-Wesley
+.%D 1986
+.%O "Describes the pattern-matching techniques used by flex (deterministic finite automata)"
+.Re
+.Sh STANDARDS
+The
+.Nm lex
+utility is compliant with the
+.St -p1003.1-2008
+specification,
+though its presence is optional.
+.Pp
+The flags
+.Op Fl 78BbCdFfhIiLloPpSsTVw+? ,
+.Op Fl -help ,
+and
+.Op Fl -version
+are extensions to that specification.
+.Pp
+See also the
+.Sx INCOMPATIBILITIES WITH LEX AND POSIX
+section, above.
+.Sh AUTHORS
+Vern Paxson, with the help of many ideas and much inspiration from
+Van Jacobson.
+Original version by Jef Poskanzer.
+The fast table representation is a partial implementation of a design done by
+Van Jacobson.
+The implementation was done by Kevin Gong and Vern Paxson.
+.Pp
+Thanks to the many
+.Nm
+beta-testers, feedbackers, and contributors, especially Francois Pinard,
+Casey Leedom,
+Robert Abramovitz,
+Stan Adermann, Terry Allen, David Barker-Plummer, John Basrai,
+Neal Becker, Nelson H.F. Beebe,
+.Mt benson@odi.com ,
+Karl Berry, Peter A. Bigot, Simon Blanchard,
+Keith Bostic, Frederic Brehm, Ian Brockbank, Kin Cho, Nick Christopher,
+Brian Clapper, J.T. Conklin,
+Jason Coughlin, Bill Cox, Nick Cropper, Dave Curtis, Scott David
+Daniels, Chris G. Demetriou, Theo de Raadt,
+Mike Donahue, Chuck Doucette, Tom Epperly, Leo Eskin,
+Chris Faylor, Chris Flatters, Jon Forrest, Jeffrey Friedl,
+Joe Gayda, Kaveh R. Ghazi, Wolfgang Glunz,
+Eric Goldman, Christopher M. Gould, Ulrich Grepel, Peer Griebel,
+Jan Hajic, Charles Hemphill, NORO Hideo,
+Jarkko Hietaniemi, Scott Hofmann,
+Jeff Honig, Dana Hudes, Eric Hughes, John Interrante,
+Ceriel Jacobs, Michal Jaegermann, Sakari Jalovaara, Jeffrey R. Jones,
+Henry Juengst, Klaus Kaempf, Jonathan I. Kamens, Terrence O Kane,
+Amir Katz,
+.Mt ken@ken.hilco.com ,
+Kevin B. Kenny,
+Steve Kirsch, Winfried Koenig, Marq Kole, Ronald Lamprecht,
+Greg Lee, Rohan Lenard, Craig Leres, John Levine, Steve Liddle,
+David Loffredo, Mike Long,
+Mohamed el Lozy, Brian Madsen, Malte, Joe Marshall,
+Bengt Martensson, Chris Metcalf,
+Luke Mewburn, Jim Meyering, R. Alexander Milowski, Erik Naggum,
+G.T. Nicol, Landon Noll, James Nordby, Marc Nozell,
+Richard Ohnemus, Karsten Pahnke,
+Sven Panne, Roland Pesch, Walter Pelissero, Gaumond Pierre,
+Esmond Pitt, Jef Poskanzer, Joe Rahmeh, Jarmo Raiha,
+Frederic Raimbault, Pat Rankin, Rick Richardson,
+Kevin Rodgers, Kai Uwe Rommel, Jim Roskind, Alberto Santini,
+Andreas Scherer, Darrell Schiebel, Raf Schietekat,
+Doug Schmidt, Philippe Schnoebelen, Andreas Schwab,
+Larry Schwimmer, Alex Siegel, Eckehard Stolz, Jan-Erik Strvmquist,
+Mike Stump, Paul Stuart, Dave Tallman, Ian Lance Taylor,
+Chris Thewalt, Richard M. Timoney, Jodi Tsai,
+Paul Tuinenga, Gary Weik, Frank Whaley, Gerhard Wilhelms, Kent Williams,
+Ken Yap, Ron Zellar, Nathan Zelle, David Zuhn,
+and those whose names have slipped my marginal mail-archiving skills
+but whose contributions are appreciated all the
+same.
+.Pp
+Thanks to Keith Bostic, Jon Forrest, Noah Friedman,
+John Gilmore, Craig Leres, John Levine, Bob Mulcahy, G.T.
+Nicol, Francois Pinard, Rich Salz, and Richard Stallman for help with various
+distribution headaches.
+.Pp
+Thanks to Esmond Pitt and Earle Horton for 8-bit character support;
+to Benson Margulies and Fred Burke for C++ support;
+to Kent Williams and Tom Epperly for C++ class support;
+to Ove Ewerlid for support of NUL's;
+and to Eric Hughes for support of multiple buffers.
+.Pp
+This work was primarily done when I was with the Real Time Systems Group
+at the Lawrence Berkeley Laboratory in Berkeley, CA.
+Many thanks to all there for the support I received.
+.Pp
+Send comments to
+.Aq Mt vern@ee.lbl.gov .
+.Sh BUGS
+Some trailing context patterns cannot be properly matched and generate
+warning messages
+.Pq "dangerous trailing context" .
+These are patterns where the ending of the first part of the rule
+matches the beginning of the second part, such as
+.Qq zx*/xy* ,
+where the
+.Sq x*
+matches the
+.Sq x
+at the beginning of the trailing context.
+(Note that the POSIX draft states that the text matched by such patterns
+is undefined.)
+.Pp
+For some trailing context rules, parts which are actually fixed-length are
+not recognized as such, leading to the above mentioned performance loss.
+In particular, parts using
+.Sq |\&
+or
+.Sq {n}
+(such as
+.Qq foo{3} )
+are always considered variable-length.
+.Pp
+Combining trailing context with the special
+.Sq |\&
+action can result in fixed trailing context being turned into
+the more expensive variable trailing context.
+For example, in the following:
+.Bd -literal -offset indent
+%%
+abc      |
+xyz/def
+.Ed
+.Pp
+Use of
+.Fn unput
+invalidates yytext and yyleng, unless the
+.Dq %array
+directive
+or the
+.Fl l
+option has been used.
+.Pp
+Pattern-matching of NUL's is substantially slower than matching other
+characters.
+.Pp
+Dynamic resizing of the input buffer is slow, as it entails rescanning
+all the text matched so far by the current
+.Pq generally huge
+token.
+.Pp
+Due to both buffering of input and read-ahead,
+it is not possible to intermix calls to
+.In stdio.h
+routines, such as, for example,
+.Fn getchar ,
+with
+.Nm
+rules and expect it to work.
+Call
+.Fn input
+instead.
+.Pp
+The total table entries listed by the
+.Fl v
+flag excludes the number of table entries needed to determine
+what rule has been matched.
+The number of entries is equal to the number of DFA states
+if the scanner does not use
+.Em REJECT ,
+and somewhat greater than the number of states if it does.
+.Pp
+.Em REJECT
+cannot be used with the
+.Fl f
+or
+.Fl F
+options.
+.Pp
+The
+.Nm
+internal algorithms need documentation.

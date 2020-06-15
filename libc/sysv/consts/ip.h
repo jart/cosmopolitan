@@ -1,0 +1,108 @@
+#ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_IP_H_
+#define COSMOPOLITAN_LIBC_SYSV_CONSTS_IP_H_
+#include "libc/runtime/symbolic.h"
+
+#define IP_ADD_MEMBERSHIP SYMBOLIC(IP_ADD_MEMBERSHIP)
+#define IP_ADD_SOURCE_MEMBERSHIP SYMBOLIC(IP_ADD_SOURCE_MEMBERSHIP)
+#define IP_BIND_ADDRESS_NO_PORT SYMBOLIC(IP_BIND_ADDRESS_NO_PORT)
+#define IP_BLOCK_SOURCE SYMBOLIC(IP_BLOCK_SOURCE)
+#define IP_CHECKSUM SYMBOLIC(IP_CHECKSUM)
+#define IP_DEFAULT_MULTICAST_LOOP SYMBOLIC(IP_DEFAULT_MULTICAST_LOOP)
+#define IP_DEFAULT_MULTICAST_TTL SYMBOLIC(IP_DEFAULT_MULTICAST_TTL)
+#define IP_DROP_MEMBERSHIP SYMBOLIC(IP_DROP_MEMBERSHIP)
+#define IP_DROP_SOURCE_MEMBERSHIP SYMBOLIC(IP_DROP_SOURCE_MEMBERSHIP)
+#define IP_FREEBIND SYMBOLIC(IP_FREEBIND)
+#define IP_HDRINCL SYMBOLIC(IP_HDRINCL)
+#define IP_IPSEC_POLICY SYMBOLIC(IP_IPSEC_POLICY)
+#define IP_MAX_MEMBERSHIPS SYMBOLIC(IP_MAX_MEMBERSHIPS)
+#define IP_MINTTL SYMBOLIC(IP_MINTTL)
+#define IP_MSFILTER SYMBOLIC(IP_MSFILTER)
+#define IP_MTU SYMBOLIC(IP_MTU)
+#define IP_MTU_DISCOVER SYMBOLIC(IP_MTU_DISCOVER)
+#define IP_MULTICAST_ALL SYMBOLIC(IP_MULTICAST_ALL)
+#define IP_MULTICAST_IF SYMBOLIC(IP_MULTICAST_IF)
+#define IP_MULTICAST_LOOP SYMBOLIC(IP_MULTICAST_LOOP)
+#define IP_MULTICAST_TTL SYMBOLIC(IP_MULTICAST_TTL)
+#define IP_NODEFRAG SYMBOLIC(IP_NODEFRAG)
+#define IP_OPTIONS SYMBOLIC(IP_OPTIONS)
+#define IP_ORIGDSTADDR SYMBOLIC(IP_ORIGDSTADDR)
+#define IP_PASSSEC SYMBOLIC(IP_PASSSEC)
+#define IP_PKTINFO SYMBOLIC(IP_PKTINFO)
+#define IP_PKTOPTIONS SYMBOLIC(IP_PKTOPTIONS)
+#define IP_PMTUDISC SYMBOLIC(IP_PMTUDISC)
+#define IP_PMTUDISC_DO SYMBOLIC(IP_PMTUDISC_DO)
+#define IP_PMTUDISC_DONT SYMBOLIC(IP_PMTUDISC_DONT)
+#define IP_PMTUDISC_INTERFACE SYMBOLIC(IP_PMTUDISC_INTERFACE)
+#define IP_PMTUDISC_OMIT SYMBOLIC(IP_PMTUDISC_OMIT)
+#define IP_PMTUDISC_PROBE SYMBOLIC(IP_PMTUDISC_PROBE)
+#define IP_PMTUDISC_WANT SYMBOLIC(IP_PMTUDISC_WANT)
+#define IP_RECVERR SYMBOLIC(IP_RECVERR)
+#define IP_RECVOPTS SYMBOLIC(IP_RECVOPTS)
+#define IP_RECVORIGDSTADDR SYMBOLIC(IP_RECVORIGDSTADDR)
+#define IP_RECVRETOPTS SYMBOLIC(IP_RECVRETOPTS)
+#define IP_RECVTOS SYMBOLIC(IP_RECVTOS)
+#define IP_RECVTTL SYMBOLIC(IP_RECVTTL)
+#define IP_RETOPTS SYMBOLIC(IP_RETOPTS)
+#define IP_ROUTER_ALERT SYMBOLIC(IP_ROUTER_ALERT)
+#define IP_TOS SYMBOLIC(IP_TOS)
+#define IP_TRANSPARENT SYMBOLIC(IP_TRANSPARENT)
+#define IP_TTL SYMBOLIC(IP_TTL)
+#define IP_UNBLOCK_SOURCE SYMBOLIC(IP_UNBLOCK_SOURCE)
+#define IP_UNICAST_IF SYMBOLIC(IP_UNICAST_IF)
+#define IP_XFRM_POLICY SYMBOLIC(IP_XFRM_POLICY)
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+hidden extern const long IP_ADD_MEMBERSHIP;
+hidden extern const long IP_ADD_SOURCE_MEMBERSHIP;
+hidden extern const long IP_BIND_ADDRESS_NO_PORT;
+hidden extern const long IP_BLOCK_SOURCE;
+hidden extern const long IP_CHECKSUM;
+hidden extern const long IP_DEFAULT_MULTICAST_LOOP;
+hidden extern const long IP_DEFAULT_MULTICAST_TTL;
+hidden extern const long IP_DROP_MEMBERSHIP;
+hidden extern const long IP_DROP_SOURCE_MEMBERSHIP;
+hidden extern const long IP_FREEBIND;
+hidden extern const long IP_HDRINCL;
+hidden extern const long IP_IPSEC_POLICY;
+hidden extern const long IP_MAX_MEMBERSHIPS;
+hidden extern const long IP_MINTTL;
+hidden extern const long IP_MSFILTER;
+hidden extern const long IP_MTU;
+hidden extern const long IP_MTU_DISCOVER;
+hidden extern const long IP_MULTICAST_ALL;
+hidden extern const long IP_MULTICAST_IF;
+hidden extern const long IP_MULTICAST_LOOP;
+hidden extern const long IP_MULTICAST_TTL;
+hidden extern const long IP_NODEFRAG;
+hidden extern const long IP_OPTIONS;
+hidden extern const long IP_ORIGDSTADDR;
+hidden extern const long IP_PASSSEC;
+hidden extern const long IP_PKTINFO;
+hidden extern const long IP_PKTOPTIONS;
+hidden extern const long IP_PMTUDISC;
+hidden extern const long IP_PMTUDISC_DO;
+hidden extern const long IP_PMTUDISC_DONT;
+hidden extern const long IP_PMTUDISC_INTERFACE;
+hidden extern const long IP_PMTUDISC_OMIT;
+hidden extern const long IP_PMTUDISC_PROBE;
+hidden extern const long IP_PMTUDISC_WANT;
+hidden extern const long IP_RECVERR;
+hidden extern const long IP_RECVOPTS;
+hidden extern const long IP_RECVORIGDSTADDR;
+hidden extern const long IP_RECVRETOPTS;
+hidden extern const long IP_RECVTOS;
+hidden extern const long IP_RECVTTL;
+hidden extern const long IP_RETOPTS;
+hidden extern const long IP_ROUTER_ALERT;
+hidden extern const long IP_TOS;
+hidden extern const long IP_TRANSPARENT;
+hidden extern const long IP_TTL;
+hidden extern const long IP_UNBLOCK_SOURCE;
+hidden extern const long IP_UNICAST_IF;
+hidden extern const long IP_XFRM_POLICY;
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_IP_H_ */

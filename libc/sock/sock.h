@@ -1,0 +1,99 @@
+#ifndef COSMOPOLITAN_LIBC_SOCK_SOCK_H_
+#define COSMOPOLITAN_LIBC_SOCK_SOCK_H_
+#include "libc/bits/bits.h"
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+/*───────────────────────────────────────────────────────────────────────────│─╗
+│ cosmopolitan § system api » berkeley sockets                             ─╬─│┼
+╚────────────────────────────────────────────────────────────────────────────│*/
+
+#define INET_ADDRSTRLEN 22
+
+#define NI_DGRAM   0x10
+#define NI_MAXSERV 0x20
+
+#define htons(u16) bswap_16(u16)
+#define ntohs(u16) bswap_16(u16)
+#define htonl(u32) bswap_32(u32)
+#define ntohl(u32) bswap_32(u32)
+
+struct iovec;
+struct sigset;
+struct timespec;
+struct timeval;
+struct addrinfo;
+
+struct in_addr { /* ARPA ABI */
+  /* e.g. 127|0<<8|0<<16|1<<24 or inet_pton(AF_INET, "127.0.0.1", &s_addr) */
+  uint32_t s_addr;
+};
+
+struct sockaddr {     /* Linux+NT ABI */
+  uint16_t sa_family; /* AF_XXX */
+  char sa_data[14];
+};
+
+struct sockaddr_in {   /* Linux+NT ABI */
+  uint16_t sin_family; /* AF_XXX */
+  uint16_t sin_port;   /* htons(XXX) i.e. big endian */
+  struct in_addr sin_addr;
+  uint8_t sin_zero[8];
+};
+
+struct pollfd {
+  int32_t fd;
+  int16_t events;
+  int16_t revents;
+};
+
+struct msghdr {            /* Linux+NT ABI */
+  void *msg_name;          /* optional address */
+  int32_t msg_namelen;     /* size of msg_name */
+  struct iovec *msg_iov;   /* scatter/gather array */
+  uint64_t msg_iovlen;     /* iovec count */
+  void *msg_control;       /* credentials and stuff */
+  uint64_t msg_controllen; /* size of msg_control */
+  uint32_t msg_flags;      /* MSG_XXX */
+};
+
+const char *inet_ntop(int, const void *, char *, uint32_t);
+int inet_pton(int af, const char *, void *);
+int parseport(const char *);
+
+int socket(int, int, int) nodiscard;
+int accept(int, void *, uint32_t *) paramsnonnull() nodiscard;
+int accept4(int, void *, uint32_t *, int) paramsnonnull() nodiscard;
+int bind(int, const void *, uint32_t) paramsnonnull();
+int connect(int, const void *, uint32_t) paramsnonnull();
+int socketconnect(const struct addrinfo *, int);
+int listen(int, int);
+int shutdown(int, int);
+int getsockname(int, void *, uint32_t *) paramsnonnull();
+int getpeername(int, void *, uint32_t *) paramsnonnull();
+ssize_t send(int, const void *, size_t, int) paramsnonnull();
+ssize_t recv(int, void *, size_t, int);
+ssize_t recvmsg(int, struct msghdr *, uint32_t) paramsnonnull();
+ssize_t recvfrom(int, void *, size_t, uint32_t, void *, uint32_t *);
+ssize_t sendmsg(int, const struct msghdr *, int) paramsnonnull();
+ssize_t readv(int, const struct iovec *, int);
+ssize_t writev(int, const struct iovec *, int);
+ssize_t sendfile(int, int, int64_t *, size_t);
+int getsockopt(int, int, int, void *, uint32_t *) paramsnonnull((5));
+int setsockopt(int, int, int, const void *, uint32_t) paramsnonnull();
+int socketpair(int, int, int, int64_t[2]) paramsnonnull();
+int poll(struct pollfd *, uint64_t, int32_t) paramsnonnull();
+int ppoll(struct pollfd *, uint64_t, const struct timespec *,
+          const struct sigset *) paramsnonnull((1, 4));
+ssize_t sendto(int, const void *, size_t, uint32_t, const void *, uint32_t)
+    paramsnonnull((2));
+
+typedef int64_t fd_set;
+#define FD_CLR(FD, SET)   btr(SET, FD)
+#define FD_ISSET(FD, SET) bt(SET, FD)
+#define FD_SET(FD, SET)   bts(SET, FD)
+#define FD_ZERO(SET)      *(SET) = 0
+int select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_LIBC_SOCK_SOCK_H_ */

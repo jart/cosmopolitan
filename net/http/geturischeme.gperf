@@ -1,0 +1,24 @@
+%{
+#include "libc/str/str.h"
+#include "net/http/uri.h"
+#define GPERF_DOWNCASE
+%}
+%compare-strncmp
+%ignore-case
+%language=ANSI-C
+%pic
+%readonly-tables
+%struct-type
+struct UriSchemeSlot { unsigned char name; unsigned char code; };
+%%
+http,kUriSchemeHttp
+https,kUriSchemeHttps
+file,kUriSchemeFile
+data,kUriSchemeData
+zip,kUriSchemeZip
+sip,kUriSchemeSip
+sips,kUriSchemeSips
+tel,kUriSchemeTel
+ssh,kUriSchemeSsh
+gs,kUriSchemeGs
+s3,kUriSchemeS3

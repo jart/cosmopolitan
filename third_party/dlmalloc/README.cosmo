@@ -1,0 +1,15 @@
+Numerous local changes were made while vendoring Doug Lee's original
+dlmalloc sources. Those changes basically boil down to:
+
+  1. Fewer #ifdefs
+  2. More modules (so linker can do a better job)
+  3. Delete code we don't need (cf. Knight Capital)
+  4. Readability / stylistic consistency
+
+Since we haven't made any genuine improvements to Doug Lee's legendary
+allocator, we feel this folder faithfully presents his intended work, in
+harmony with Cosmopolitan conventions.
+
+The only deleted code we're sure has compelling merit is the mspace
+functionality. If we ever need memory pools, they might be more
+appropriately vendored under //third_party/dlmalloc_mspace.

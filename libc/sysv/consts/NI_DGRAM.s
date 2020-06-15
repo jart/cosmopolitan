@@ -1,0 +1,2 @@
+.include "libc/sysv/consts/syscon.inc"
+.syscon misc NI_DGRAM 0x10 0x10 0x10 0x10 0x10

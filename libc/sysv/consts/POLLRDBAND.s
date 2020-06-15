@@ -1,0 +1,2 @@
+.include "libc/sysv/consts/syscon.inc"
+.syscon poll POLLRDBAND 0x80 0x80 0x80 0x80 0x0200

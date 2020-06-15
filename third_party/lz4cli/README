@@ -1,0 +1,232 @@
+LZ4(1)                Cosmopolitan User Commands               -*-text-*-
+
+𝐍𝐀𝐌𝐄
+       𝗹𝘇𝟰 - lz4, unlz4, lz4cat - Compress or decompress .lz4 files
+
+𝐒𝐘𝐍𝐎𝐏𝐒𝐈𝐒
+       𝗹𝘇𝟰 [O̲P̲T̲I̲O̲N̲S̲] [-|INPUT-FILE] O̲U̲T̲P̲U̲T̲-̲F̲I̲L̲E̲
+
+       𝘂𝗻𝗹𝘇𝟰 is equivalent to 𝗹𝘇𝟰 -𝗱
+
+       𝗹𝘇𝟰𝗰𝗮𝘁 is equivalent to 𝗹𝘇𝟰 -𝗱𝗰𝗳𝗺
+
+       When  writing scripts that need to decompress files, it is recom‐
+       mended to always use the name 𝗹𝘇𝟰 with appropriate arguments (𝗹𝘇𝟰
+       -𝗱 or 𝗹𝘇𝟰 -𝗱𝗰) instead of the names 𝘂𝗻𝗹𝘇𝟰 and 𝗹𝘇𝟰𝗰𝗮𝘁.
+
+𝐃𝐄𝐒𝐂𝐑𝐈𝐏𝐓𝐈𝐎𝐍
+       𝗹𝘇𝟰 is an extremely fast lossless compression algorithm, based on
+       𝗯𝘆𝘁𝗲-𝗮𝗹𝗶𝗴𝗻𝗲𝗱 𝐋𝐙𝟳𝟳 family of compression scheme. 𝗹𝘇𝟰  offers  com‐
+       pression  speeds  of  400  MB/s  per core, linearly scalable with
+       multi-core CPUs. It features  an  extremely  fast  decoder,  with
+       speed  in  multiple  GB/s  per core, typically reaching RAM speed
+       limit on multi-core systems. The native file format is  the  .𝗹𝘇𝟰
+       format.
+
+   𝐃𝗶𝗳𝗳𝗲𝗿𝗲𝗻𝗰𝗲 𝗯𝗲𝘁𝘄𝗲𝗲𝗻 𝗹𝘇𝟰 𝗮𝗻𝗱 𝗴𝘇𝗶𝗽
+       𝗹𝘇𝟰  supports  a command line syntax similar b̲u̲t̲ n̲o̲t̲ i̲d̲e̲n̲t̲i̲c̲a̲l̲ to
+       𝗴𝘇𝗶𝗽(𝟭). Differences are :
+
+       ·   𝗹𝘇𝟰 preserves original files
+
+       ·   𝗹𝘇𝟰 compresses a single file by default (see -𝗺 for  multiple
+           files)
+
+       ·   𝗹𝘇𝟰 𝗳𝗶𝗹𝗲𝟭 𝗳𝗶𝗹𝗲𝟮 means : compress file1 i̲n̲t̲o̲ file2
+
+       ·   𝗹𝘇𝟰  𝗳𝗶𝗹𝗲.𝗹𝘇𝟰  will default to decompression (use -𝘇 to force
+           compression)
+
+       ·   𝗹𝘇𝟰 shows real-time notification statistics  during  compres‐
+           sion  or  decompression  of  a single file (use -𝗾 to silence
+           them)
+
+       ·   If no destination name is provided, result is sent to  𝘀𝘁𝗱𝗼𝘂𝘁
+           e̲x̲c̲e̲p̲t̲ i̲f̲ s̲t̲d̲o̲u̲t̲ i̲s̲ t̲h̲e̲ c̲o̲n̲s̲o̲l̲e̲.
+
+       ·   If no destination name is provided, 𝗮𝗻𝗱 if 𝘀𝘁𝗱𝗼𝘂𝘁 is the con‐
+           sole, 𝗳𝗶𝗹𝗲 is compressed into 𝗳𝗶𝗹𝗲.𝗹𝘇𝟰.
+
+       ·   As a consequence of previous rules, note the following  exam‐
+           ple  :  𝗹𝘇𝟰 𝗳𝗶𝗹𝗲 | 𝗰𝗼𝗻𝘀𝘂𝗺𝗲𝗿 sends compressed data to 𝗰𝗼𝗻𝘀𝘂𝗺𝗲𝗿
+           through 𝘀𝘁𝗱𝗼𝘂𝘁, hence it does n̲o̲t̲ create 𝗳𝗶𝗹𝗲.𝗹𝘇𝟰.
+
+       ·   Another consequence of those rules is that to run  𝗹𝘇𝟰  under
+           𝗻𝗼𝗵𝘂𝗽,  you should provide a destination file: 𝗻𝗼𝗵𝘂𝗽 𝗹𝘇𝟰 𝗳𝗶𝗹𝗲
+           𝗳𝗶𝗹𝗲.𝗹𝘇𝟰, because 𝗻𝗼𝗵𝘂𝗽 writes the specified command´s output
+           to a file.
+
+
+
+       Default  behaviors  can  be modified by opt-in commands, detailed
+       below.
+
+       ·   𝗹𝘇𝟰 -𝗺 makes it possible to provide multiple input filenames,
+           which  will  be  compressed  into  files  using  suffix .𝗹𝘇𝟰.
+           Progress notifications are also disabled by default  (use  -𝘃
+           to  enable them). This mode has a behavior which more closely
+           mimics 𝗴𝘇𝗶𝗽 command line, with the main remaining  difference
+           being that source files are preserved by default.
+
+       ·   Similarly, 𝗹𝘇𝟰 -𝗺 -𝗱 can decompress multiple *.𝗹𝘇𝟰 files.
+
+       ·   It´s  possible  to opt-in to erase source files on successful
+           compression or decompression, using --𝗿𝗺 command.
+
+       ·   Consequently, 𝗹𝘇𝟰 -𝗺 --𝗿𝗺 behaves the same as 𝗴𝘇𝗶𝗽.
+
+
+
+   𝐂𝗼𝗻𝗰𝗮𝘁𝗲𝗻𝗮𝘁𝗶𝗼𝗻 𝗼𝗳 .𝗹𝘇𝟰 𝗳𝗶𝗹𝗲𝘀
+       It is possible to concatenate .𝗹𝘇𝟰 files as is. 𝗹𝘇𝟰  will  decom‐
+       press such files as if they were a single .𝗹𝘇𝟰 file. For example:
+
+
+
+           lz4 file1  > foo.lz4
+           lz4 file2 >> foo.lz4
+
+
+
+       Then 𝗹𝘇𝟰𝗰𝗮𝘁 𝗳𝗼𝗼.𝗹𝘇𝟰 is equivalent to 𝗰𝗮𝘁 𝗳𝗶𝗹𝗲𝟭 𝗳𝗶𝗹𝗲𝟮.
+
+𝐎𝐏𝐓𝐈𝐎𝐍𝐒
+   𝐒𝗵𝗼𝗿𝘁 𝗰𝗼𝗺𝗺𝗮𝗻𝗱𝘀 𝗰𝗼𝗻𝗰𝗮𝘁𝗲𝗻𝗮𝘁𝗶𝗼𝗻
+       In  some cases, some options can be expressed using short command
+       -𝘅 or long command --𝗹𝗼𝗻𝗴-𝘄𝗼𝗿𝗱. Short commands  can  be  concate‐
+       nated  together.  For  example,  -𝗱 -𝗰 is equivalent to -𝗱𝗰. Long
+       commands cannot be concatenated. They must be  clearly  separated
+       by a space.
+
+   𝐌𝘂𝗹𝘁𝗶𝗽𝗹𝗲 𝗰𝗼𝗺𝗺𝗮𝗻𝗱𝘀
+       When multiple contradictory commands are issued on a same command
+       line, only the latest one will be applied.
+
+   𝐎𝗽𝗲𝗿𝗮𝘁𝗶𝗼𝗻 𝗺𝗼𝗱𝗲
+       -𝘇 --𝗰𝗼𝗺𝗽𝗿𝗲𝘀𝘀
+              Compress. This is the default operation mode when no oper‐
+              ation mode option is specified, no other operation mode is
+              implied from the command name (for example, 𝘂𝗻𝗹𝘇𝟰  implies
+              --𝗱𝗲𝗰𝗼𝗺𝗽𝗿𝗲𝘀𝘀),  nor from the input file name (for example,
+              a file extension .𝗹𝘇𝟰 implies --𝗱𝗲𝗰𝗼𝗺𝗽𝗿𝗲𝘀𝘀 by default). -𝘇
+              can  also  be used to force compression of an already com‐
+              pressed .𝗹𝘇𝟰 file.
+
+       -𝗱 --𝗱𝗲𝗰𝗼𝗺𝗽𝗿𝗲𝘀𝘀 --𝘂𝗻𝗰𝗼𝗺𝗽𝗿𝗲𝘀𝘀
+              Decompress. --𝗱𝗲𝗰𝗼𝗺𝗽𝗿𝗲𝘀𝘀 is  also  the  default  operation
+              when the input filename has an .𝗹𝘇𝟰 extension.
+
+       -𝘁 --𝘁𝗲𝘀𝘁
+              Test  the  integrity  of compressed .𝗹𝘇𝟰 files. The decom‐
+              pressed data  is  discarded.  No  files  are  created  nor
+              removed.
+
+       -𝗯#    Benchmark mode, using # compression level.
+
+   𝐎𝗽𝗲𝗿𝗮𝘁𝗶𝗼𝗻 𝗺𝗼𝗱𝗶𝗳𝗶𝗲𝗿𝘀
+       -#     Compression  level,  with  # being any value from 1 to 12.
+              Higher values  trade  compression  speed  for  compression
+              ratio. Values above 12 are considered the same as 12. Rec‐
+              ommended values are 1 for fast compression (default),  and
+              9  for  high compression. Speed/compression trade-off will
+              vary depending on data to  compress.  Decompression  speed
+              remains fast at all settings.
+
+       -𝐃 𝗱𝗶𝗰𝘁𝗶𝗼𝗻𝗮𝗿𝘆𝐍𝗮𝗺𝗲
+              Compress, decompress or benchmark using dictionary d̲i̲c̲t̲i̲o̲‐̲
+              n̲a̲r̲y̲N̲a̲m̲e̲. Compression and decompression must use the  same
+              dictionary  to be compatible. Using a different dictionary
+              during decompression will either abort due  to  decompres‐
+              sion error, or generate a checksum error.
+
+       -𝗳 --[𝗻𝗼-]𝗳𝗼𝗿𝗰𝗲
+              This option has several effects:
+
+              If  the  target  file already exists, overwrite it without
+              prompting.
+
+              When used with --𝗱𝗲𝗰𝗼𝗺𝗽𝗿𝗲𝘀𝘀 and 𝗹𝘇𝟰 cannot  recognize  the
+              type  of  the  source  file, copy the source file as is to
+              standard output. This allows 𝗹𝘇𝟰𝗰𝗮𝘁  --𝗳𝗼𝗿𝗰𝗲  to  be  used
+              like  𝗰𝗮𝘁 (𝟭) for files that have not been compressed with
+              𝗹𝘇𝟰.
+
+       -𝗰 --𝘀𝘁𝗱𝗼𝘂𝘁 --𝘁𝗼-𝘀𝘁𝗱𝗼𝘂𝘁
+              Force write to standard output, even if it is the console.
+
+       -𝗺 --𝗺𝘂𝗹𝘁𝗶𝗽𝗹𝗲
+              Multiple  input  files.  Compressed  file  names  will  be
+              appended  a  .𝗹𝘇𝟰 suffix. This mode also reduces notifica‐
+              tion level. 𝗹𝘇𝟰 -𝗺 has a behavior equivalent  to  𝗴𝘇𝗶𝗽  -𝗸
+              (it preserves source files by default).
+
+       -𝗿     operate recursively on directories. This mode also sets -𝗺
+              (multiple input files).
+
+       -𝐁#    Block size [4-7](default : 7)
+              -𝐁𝟰= 64KB ; -𝐁𝟱= 256KB ; -𝐁𝟲= 1MB ; -𝐁𝟳= 4MB
+
+       -𝐁𝐃    Block Dependency  (improves  compression  ratio  on  small
+              blocks)
+
+       --𝗳𝗮𝘀𝘁[=#]
+              switch  to  ultra-fast  compression  levels.  If =# is not
+              present, it defaults to  𝟭.  The  higher  the  value,  the
+              faster the compression speed, at the cost of some compres‐
+              sion ratio. This setting overwrites compression  level  if
+              one  was set previously. Similarly, if a compression level
+              is set after --𝗳𝗮𝘀𝘁, it overrides it.
+
+       --[𝗻𝗼-]𝗳𝗿𝗮𝗺𝗲-𝗰𝗿𝗰
+              Select frame checksum (default:enabled)
+
+       --[𝗻𝗼-]𝗰𝗼𝗻𝘁𝗲𝗻𝘁-𝘀𝗶𝘇𝗲
+              Header includes original size (default:not present)
+              Note : this option can only be activated when the original
+              size  can  be  determined, hence for a file. It won´t work
+              with unknown source size, such as stdin or pipe.
+
+       --[𝗻𝗼-]𝘀𝗽𝗮𝗿𝘀𝗲
+              Sparse mode support (default:enabled on file, disabled  on
+              stdout)
+
+       -𝗹     Use Legacy format (typically for Linux Kernel compression)
+              Note : -𝗹 is not compatible with -𝗺 (--𝗺𝘂𝗹𝘁𝗶𝗽𝗹𝗲) nor -𝗿
+
+   𝐎𝘁𝗵𝗲𝗿 𝗼𝗽𝘁𝗶𝗼𝗻𝘀
+       -𝘃 --𝘃𝗲𝗿𝗯𝗼𝘀𝗲
+              Verbose mode
+
+       -𝗾 --𝗾𝘂𝗶𝗲𝘁
+              Suppress  warnings and real-time statistics; specify twice
+              to suppress errors too
+
+       -𝗵 -𝐇 --𝗵𝗲𝗹𝗽
+              Display help/long help and exit
+
+       -𝐕 --𝘃𝗲𝗿𝘀𝗶𝗼𝗻
+              Display Version number and exit
+
+       -𝗸 --𝗸𝗲𝗲𝗽
+              Preserve source files (default behavior)
+
+       --𝗿𝗺   Delete source files on successful  compression  or  decom‐
+              pression
+
+       --     Treat all subsequent arguments as files
+
+   𝐁𝗲𝗻𝗰𝗵𝗺𝗮𝗿𝗸 𝗺𝗼𝗱𝗲
+       -𝗯#    Benchmark file(s), using # compression level
+
+       -𝗲#    Benchmark  multiple  compression  levels,  from  b#  to e#
+              (included)
+
+       -𝗶#    Minimum evaluation time in seconds [1-9] (default : 3)
+
+𝐁𝐔𝐆𝐒
+       Report bugs at: https://github.com/lz4/lz4/issues
+
+𝐀𝐔𝐓𝐇𝐎𝐑
+       Yann Collet
+
+lz4 1.8.3                       September 2018                          LZ4(1)

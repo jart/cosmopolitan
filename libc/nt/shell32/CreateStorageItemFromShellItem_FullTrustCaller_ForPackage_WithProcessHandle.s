@@ -1,0 +1,2 @@
+.include "o/libc/nt/codegen.inc"
+.imp	shell32,__imp_CreateStorageItemFromShellItem_FullTrustCaller_ForPackage_WithProcessHandle,CreateStorageItemFromShellItem_FullTrustCaller_ForPackage_WithProcessHandle,929

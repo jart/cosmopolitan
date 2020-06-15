@@ -1,0 +1,3 @@
+#ifndef LIBC_ISYSTEM_STDBOOL_H_
+#define LIBC_ISYSTEM_STDBOOL_H_
+#endif

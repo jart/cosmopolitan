@@ -1,0 +1,23 @@
+LOCAL CHANGES
+
+  - Rewrite endian code so it's optimizable
+  - Add malloc() to functions w/ frames greater than PAGESIZE
+  - Removed undefined behavior
+  - Removed BMP [endian code made it 100x slower than PNG/JPEG]
+  - Removed PIC [never heard of it]
+  - Removed TGA [consider imaagemagick convert command]
+  - Removed PSD [consider imaagemagick convert command]
+  - Removed HDR [mine eyes and wikipedia agree stb gamma math is off]
+  - Patched PNG loading edge case
+  - Fixed code C standard says is undefined
+  - PNG now uses ultra-fast Chromium zlib w/ CLMUL crc32
+  - Removed unnecessary ifdefs
+  - Removed MSVC torture code
+
+SYNCHRONIZATION POINT
+
+  commit f67165c2bb2af3060ecae7d20d6f731173485ad0
+  Author: Sean Barrett <sean2@nothings.org>
+  Date:   Mon Oct 28 09:30:02 2019 -0700
+
+      Update README.md

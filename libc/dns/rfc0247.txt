@@ -1,0 +1,222 @@
+
+
+
+
+
+
+Network Working Group                        Peggy Karp
+Request for Comments:  #247                  MITRE
+NIC 7688                                     12 October 1971
+Categories:  Policy, Telnet
+Related:  #226, 236, 239, 233, 237
+Obsoletes:  #226
+
+                  Proferred Set of Standard Host Names
+
+   In RFC #226, BBN's TENEX list of Host names was set up as a strawman
+   set of standard Host names.  Comments received since then (an RFC
+   actually generated comments!!!) have influenced me to propose the
+   following general rules for forming Host names.
+
+   The Host names will be 8 characters in length.  The general form is
+
+                     <site>  '-'  <machine>
+
+   <site> will be at most 4 characters, formed as follows:
+
+        (a)  Use the keyword in the site name, if not more than
+             four characters, e.g., NASA Ames, Case Western
+             Reserve.                    ----  ----
+
+        (b)  Use the standard acronym, if not more than four
+             characters, e.g., UCLA, RADC, NBS.
+
+        (c)  If a standard abbreviation exists, use it, e.g., Ill.
+
+        (d)  If none of the above apply, use the first four letters
+             in the site name, e.g., Burr, Mitr, Harv.
+
+        (e)  If none of the above is acceptable to the site, the
+             technical liaison should select the site mnemonic.
+
+   <machine> will be at most 4 characters of the form <mfg. #>
+   <designator>.
+   Examples of mfg. # are:
+
+             IBM 360             2 digit model number
+             IBM 370             3 digit model number
+             PDP                 1 - 2 digit model number
+             Burroughs           4 digits
+             CDC                 4 digits
+             etc.
+
+
+
+
+
+
+
+                                                                [Page 1]
+
+RFC #247
+
+
+   <designator> will be used when more than one machine of the same
+   type is located at a site (e.g., 2 PDP-10s at MIT, at SRI, and
+   at BBN).
+
+   Limiting <machine> to 4 characters does not permit distinctions
+   to be made between machines with 4 digit mfg.  #s.  I expect
+   the situation will be handled in an ad hoc manner by the NIC if
+   it arises.
+
+   TIPs are identified as 'TIP' rather than by '316'.  If a Host
+   is not to be permanently addressable, the machine is identified
+   as 'TEST'.
+
+   A list of Host names, formed according to these rules, is
+   attached.  Alternate Host names should be provided, as
+   suggested by Jon Postel (RFC #236).  RFC's 206, 233, and
+   236 present lists with 4-character alternate names.  The
+   Technical Liaison should select the alternate name for his
+   site and communicate the selection to the NIC.
+
+
+   The preceding rules and the attached list of Host names are
+   subject to the approval of the NWG.  Hereafter, the list will
+   be generated and maintained by the NIC in cooperation with
+   the Technical Liaison at each site, as suggested in RFC #237.
+   Comments should be addressed to Dick Watson.
+
+
+
+
+
+
+
+         [ This RFC was put into machine readable form for entry ]
+
+         [ into the online RFC archives by BBN Corp. under the   ]
+
+         [ direction of Alex McKenzie.                   12/96   ]
+
+
+
+
+
+
+
+
+
+
+
+                                                                [Page 2]
+
+RFC #247
+Attachment 1
+
+          NETWORK ADDRESS                 STANDARD NAME
+          ---------------                 -------------
+                   1                      UCLA-7
+                  65                      UCLA-91
+                   2                      SRI-10NI
+                  66                      SRI-10AI
+                   3                      UCSB-75
+                   4                      UTAH-10
+                   5                      BBN-516
+                  69                      BBN-10A
+                 133                      BBN-10B
+                   6                      MIT-645
+                  70                      MIT-10DM
+                 134                      MIT-10AI
+                   7                      RAND-65
+                  71                      RAND-10
+                   8                      SDC-75
+                   9                      HARV-10
+                  73                      HARV-1
+                 137                      HARV-11
+                  10                      LL-67
+                  74                      LL-TX2
+                 138                      LL-TSP
+                  11                      SAIL-10
+                  12                      ILL-11
+                  76                      ILL-6500
+                  13                      CASE-10
+                  14                      CMU-10
+                  15                      BURR-6500
+                  79                      BURR-TEST
+                  16                      AMES-67
+                 144                      AMES-TIP
+                 145                      MITR-TIP
+                  18                      RADC-645
+                 146                      RADC-TIP
+                  19                      NBS-11
+                 147                      NBS-TIP
+                 148                      ETAC-TIP
+                  21                      TINK-418
+                  22                      MCCL-418
+                  23                      USC-44
+                 151                      USC-TIP
+                 152                      GWC-TIP
+                  25                      NCAR-7600
+                 153                      NCAR-TIP
+                 158                      BBNX-TEST
+
+
+
+                                                                [Page 3]
+
+RFC #247
+Attachment 2
+
+                  An Implementation Scheme
+
+If the standard Host names are formed according to the proposed
+rules, the following implementation scheme, suggested by Steve
+Crocker, can be used.
+
+        Map <site> into an 8-bit number, S and
+        map <machine> into an 8-bit number, M,
+        where
+                  S + M = Network Address.
+
+        S and M can be selected such that specification of <site>
+        alone could cause a default to the "primary" Host at
+        the site.  Note that this scheme depends on a unique
+        <site> designator for each IMP.
+
+Some examples:
+
+If the "primary" Host at UCLA is the 91, let
+        UCLA  -> S = X'41'
+           7  -> M = X'40'
+          91  -> M = X'00'
+then for
+        UCLA-7, S + M = X'01' = 1 base 10
+        UCLA-91,S + M = X'41' = 65 base 10
+
+and
+        UCLA alone = X'41' = 65 base 10
+
+If the primary Host at BBN is TENEX System A, let
+        BBN  ->  S = X'45'
+        516  ->  M = X'40'
+        10A  ->  M = X'00'
+        10B  ->  M = X'C0'
+then for
+        BBN-516, S + M = X'05' = 5 base 10
+        BBN-10A, S + M = X'45' = 69 base 10
+        BBN-10B, S + M = X'85' = 133 base 10
+
+and
+        BBN alone = X'45' = 69 base 10
+
+The primary Host for each IMP would be designated by the
+site and such information disseminated by the NIC.
+
+
+
+
+
+                                                                [Page 4]
+

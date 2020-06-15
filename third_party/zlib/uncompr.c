@@ -1,0 +1,91 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright 1995-2003,2010,2014,2016 Jean-loup Gailly and Mark Adler           │
+│ Use of this source code is governed by the BSD-style licenses that can       │
+│ be found in the third_party/zlib/LICENSE file.                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/zlib/zlib.h"
+
+asm(".ident\t\"\\n\\n\
+zlib (zlib License)\\n\
+Copyright 1995-2017 Jean-loup Gailly and Mark Adler\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+/**
+ * Decompresses the source buffer into the destination buffer.  *sourceLen is
+ * the byte length of the source buffer. Upon entry, *destLen is the total size
+ * of the destination buffer, which must be large enough to hold the entire
+ * uncompressed data. (The size of the uncompressed data must have been saved
+ * previously by the compressor and transmitted to the decompressor by some
+ * mechanism outside the scope of this compression library.) Upon exit,
+ * *destLen is the size of the decompressed data and *sourceLen is the number
+ * of source bytes consumed. Upon return, source + *sourceLen points to the
+ * first unused input byte.
+ *
+ * uncompress returns Z_OK if success, Z_MEM_ERROR if there was not enough
+ * memory, Z_BUF_ERROR if there was not enough room in the output buffer, or
+ * Z_DATA_ERROR if the input data was corrupted, including if the input data is
+ * an incomplete zlib stream.
+ */
+int uncompress2(Bytef *dest, uLongf *destLen, const Bytef *source,
+                uLong *sourceLen) {
+  z_stream stream;
+  int err;
+  const uInt max = (uInt)-1;
+  uLong len, left;
+  Byte buf[1]; /* for detection of incomplete stream when *destLen == 0 */
+
+  len = *sourceLen;
+  if (*destLen) {
+    left = *destLen;
+    *destLen = 0;
+  } else {
+    left = 1;
+    dest = buf;
+  }
+
+  stream.next_in = (const Bytef *)source;
+  stream.avail_in = 0;
+  stream.zalloc = (alloc_func)0;
+  stream.zfree = (free_func)0;
+  stream.opaque = (voidpf)0;
+
+  err = inflateInit(&stream);
+  if (err != Z_OK) return err;
+
+  stream.next_out = dest;
+  stream.avail_out = 0;
+
+  do {
+    if (stream.avail_out == 0) {
+      stream.avail_out = left > (uLong)max ? max : (uInt)left;
+      left -= stream.avail_out;
+    }
+    if (stream.avail_in == 0) {
+      stream.avail_in = len > (uLong)max ? max : (uInt)len;
+      len -= stream.avail_in;
+    }
+    err = inflate(&stream, Z_NO_FLUSH);
+  } while (err == Z_OK);
+
+  *sourceLen -= len + stream.avail_in;
+  if (dest != buf)
+    *destLen = stream.total_out;
+  else if (stream.total_out && err == Z_BUF_ERROR)
+    left = 1;
+
+  inflateEnd(&stream);
+  return err == Z_STREAM_END
+             ? Z_OK
+             : err == Z_NEED_DICT
+                   ? Z_DATA_ERROR
+                   : err == Z_BUF_ERROR && left + stream.avail_out
+                         ? Z_DATA_ERROR
+                         : err;
+}
+
+int uncompress(Bytef *dest, uLongf *destLen, const Bytef *source,
+               uLong sourceLen) {
+  return uncompress2(dest, destLen, source, &sourceLen);
+}

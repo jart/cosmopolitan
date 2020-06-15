@@ -1,0 +1,113 @@
+This is flex, the fast lexical analyzer generator.
+
+flex is a tool for generating scanners: programs which recognize
+lexical patterns in text.
+
+More information about flex as well as the latest official release of
+flex can be found at:
+
+http://flex.sourceforge.net/
+
+Bug reports should be submitted using the SourceForge Bug Tracker for
+flex at:
+
+http://sourceforge.net/tracker/?group_id=97492&atid=618177
+
+The flex codebase is kept in git at:
+
+https://github.com/westes/flex
+
+There are several mailing lists available as well:
+
+flex-announce@lists.sourceforge.net - where posts will be made
+announcing new releases of flex.
+
+flex-help@lists.sourceforge.net - where you can post questions about
+using flex
+
+flex-devel@lists.sourceforge.net - where you can discuss development of
+flex itself
+
+Find information on subscribing to the mailing lists at:
+
+http://sourceforge.net/mail/?group_id=97492
+
+The flex distribution contains the following files which may be of interest:
+
+README - This file.
+
+NEWS - current version number and list of user-visible changes.
+
+INSTALL - basic installation information.
+
+ABOUT-NLS - description of internationalization support in flex.
+
+COPYING - flex's copyright and license.
+
+doc/ - user documentation.
+
+examples/ - containing examples of some possible flex scanners and a
+few other things. See the file examples/README for more details.
+
+TODO - outstanding bug reports, desired features, etc.
+
+tests/ - regression tests. See TESTS/README for details.
+
+po/ - internationalization support files.
+
+You need the following tools to build flex from the maintainer's
+repository:
+
+compiler suite - flex is built with gcc
+bash, or a good Bourne-style shell
+m4 - m4 -p needs to work; GNU m4 and a few others are suitable
+GNU bison;  to generate parse.c from parse.y
+autoconf 2.69; for handling the build system
+automake 1.12.2; for Makefile generation
+gettext 0.18; fori18n support
+help2man 1.36; to generate the flex man page
+tar, gzip, etc.; for packaging of the source distribution
+GNU texinfo 498;  to build and test the flex manual
+GNU indent 2.8; for indenting the flex source the way we want it done
+
+Once you have all the necessary tools installed, life becomes
+simple. To prepare the flex tree for building, run the script:
+
+$ ./autogen.sh
+
+in the top level of the flex source tree.
+This script calls the various tools needed to get flex ready for the
+GNU-style configure script to be able to work.
+
+From this point on, building flex follows the usual configure, make,
+make install routine.
+
+This file is part of flex.
+
+This code is derived from software contributed to Berkeley by
+Vern Paxson.
+
+The United States Government has rights in this work pursuant
+to contract no. DE-AC03-76SF00098 between the United States
+Department of Energy and the University of California.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+
+Neither the name of the University nor the names of its contributors
+may be used to endorse or promote products derived from this software
+without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE.
+
+

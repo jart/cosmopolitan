@@ -1,0 +1,2 @@
+.include "libc/sysv/consts/syscon.inc"
+.syscon misc SOMAXCONN 0x80 0x80 0x80 0x80 0x7fffffff

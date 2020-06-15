@@ -1,0 +1,2 @@
+.include "libc/sysv/consts/syscon.inc"
+.syscon nd ND_RA_FLAG_MANAGED 0x80 0x80 0x80 0x80 0x80

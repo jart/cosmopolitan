@@ -1,0 +1,367 @@
+#ifndef COSMOPOLITAN_LIBC_NT_WINDOWS_H_
+#define COSMOPOLITAN_LIBC_NT_WINDOWS_H_
+#include "libc/nt/typedef/timerproc.h"
+#if 0
+/*                            ░░░░
+                       ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
+                      ▒▒▒▒░░░▒▒▒▒▒▒▓▓▓▓▓▓░
+                     ▒▒▒▒░░░▒▒▒▒▒▒▒▓▓▓▓▓▓  ▒▓░
+                     ▒▒▒░░░░▒▒▒▒▒▒▓▓▓▓▓▓   ▓▓▓▓▓▓▒        ▒▒▒▓▓█
+                    ▒▒▒▒░░░▒▒▒▒▒▒▒▓▓▓▓▓▓  ▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▓▓▓
+                   ░▒▒▒░░░░▒▒▒▒▒▒▓▓▓▓▓▓   █▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▓▓█
+                   ▒▒▒▒░░░▒▒▒▒▒▒▒▓▓▓▓▓░  ▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▓▓▓
+                  ▒▒▒▒░░░▒▒▒▒▒▒▒▓▓▓▓▓▓  ▒▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▓▓▒
+                  ▒▒▒▒▓▓      ▓▒▒▓▓▓▓   ▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▓▓█
+                                   ▒▓  ▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▓▓
+                  ░░░░░░░░░░░▒▒▒▒      ▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▓▓█
+                ▒▒░░░░░░░░░░▒▒▒▒▒▓▓▓     ▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▓▓▓
+               ░▒░░░░░░░░░░░▒▒▒▒▒▓▓   ▓░      ░▓███▓
+               ▒▒░░░░░░░░░░▒▒▒▒▒▓▓░  ▒▓▓▓▒▒▒         ░▒▒▒▓   ████████████
+              ▒▒░░░░░░░░░░░▒▒▒▒▒▓▓  ▒▓▓▓▓▒▒▒▒▒▒▒▒░░░▒▒▒▒▒░           ░███
+              ▒░░░░░░░░░░░▒▒▒▒▒▓▓   ▓▓▓▓▒▒▒▒▒▒▒▒░░░░▒▒▒▒▓            ███
+             ▒▒░░░░░░░░░░▒▒▒▒▒▒▓▓  ▒▓▓▓▒▒▒▒▒▒▒▒░░░░▒▒▒▒▒            ▓██
+             ▒░░░░░░░░░░░▒▒▒▒▒▓▓   ▓▓▓▓▒▒▒▒▒▒▒▒░░░▒▒▒▒▒▓           ▓██
+            ▒▒░░░▒▒▒░░░▒▒░▒▒▒▓▓▒  ▒▓▓▓▒▒▒▒▒▒▒▒░░░░▒▒▒▒▒           ███
+                            ░▒▓  ░▓▓▓▓▒▒▒▒▒▒▒▒░░░░▒▒▒▒▓          ▓██
+╔────────────────────────────────────────────────────────────────▀▀▀─────────│─╗
+│ cosmopolitan § new technology » windows                                  ─╬─│┼
+╚────────────────────────────────────────────────────────────────────────────│*/
+#endif
+
+#define NT_WM_NULL 0x0000
+#define NT_WM_CREATE 0x0001
+#define NT_WM_DESTROY 0x0002
+#define NT_WM_MOVE 0x0003
+#define NT_WM_SIZE 0x0005
+#define NT_WM_ACTIVATE 0x0006
+#define NT_WA_INACTIVE 0
+#define NT_WA_ACTIVE 1
+#define NT_WA_CLICKACTIVE 2
+#define NT_WM_SETFOCUS 0x0007
+#define NT_WM_KILLFOCUS 0x0008
+#define NT_WM_ENABLE 0x000A
+#define NT_WM_SETREDRAW 0x000B
+#define NT_WM_SETTEXT 0x000C
+#define NT_WM_GETTEXT 0x000D
+#define NT_WM_GETTEXTLENGTH 0x000E
+#define NT_WM_PAINT 0x000F
+#define NT_WM_CLOSE 0x0010
+#define NT_WM_QUIT 0x0012
+#define NT_WM_ERASEBKGND 0x0014
+#define NT_WM_SYSCOLORCHANGE 0x0015
+#define NT_WM_SHOWWINDOW 0x0018
+#define NT_WM_WININICHANGE 0x001A
+#define NT_WM_SETTINGCHANGE WM_WININICHANGE
+#define NT_WM_DEVMODECHANGE 0x001B
+#define NT_WM_ACTIVATEAPP 0x001C
+#define NT_WM_FONTCHANGE 0x001D
+#define NT_WM_TIMECHANGE 0x001E
+#define NT_WM_CANCELMODE 0x001F
+#define NT_WM_SETCURSOR 0x0020
+#define NT_WM_MOUSEACTIVATE 0x0021
+#define NT_WM_CHILDACTIVATE 0x0022
+#define NT_WM_QUEUESYNC 0x0023
+#define NT_WM_GETMINMAXINFO 0x0024
+
+#define NT_WS_OVERLAPPED 0x00000000
+#define NT_WS_POPUP 0x80000000
+#define NT_WS_CHILD 0x40000000
+#define NT_WS_MINIMIZE 0x20000000
+#define NT_WS_VISIBLE 0x10000000
+#define NT_WS_DISABLED 0x08000000
+#define NT_WS_CLIPSIBLINGS 0x04000000
+#define NT_WS_CLIPCHILDREN 0x02000000
+#define NT_WS_MAXIMIZE 0x01000000
+#define NT_WS_CAPTION 0x00C00000
+#define NT_WS_BORDER 0x00800000
+#define NT_WS_DLGFRAME 0x00400000
+#define NT_WS_VSCROLL 0x00200000
+#define NT_WS_HSCROLL 0x00100000
+#define NT_WS_SYSMENU 0x00080000
+#define NT_WS_THICKFRAME 0x00040000
+#define NT_WS_GROUP 0x00020000
+#define NT_WS_TABSTOP 0x00010000
+#define NT_WS_MINIMIZEBOX 0x00020000
+#define NT_WS_MAXIMIZEBOX 0x00010000
+#define NT_WS_TILED WS_OVERLAPPED
+#define NT_WS_ICONIC WS_MINIMIZE
+#define NT_WS_SIZEBOX WS_THICKFRAME
+#define NT_WS_TILEDWINDOW WS_OVERLAPPEDWINDOW
+#define NT_WS_OVERLAPPEDWINDOW                                                \
+  (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | \
+   WS_MAXIMIZEBOX)
+#define NT_WS_POPUPWINDOW (WS_POPUP | WS_BORDER | WS_SYSMENU)
+#define NT_WS_CHILDWINDOW (WS_CHILD)
+
+#define NT_WS_EX_DLGMODALFRAME 0x00000001
+#define NT_WS_EX_NOPARENTNOTIFY 0x00000004
+#define NT_WS_EX_TOPMOST 0x00000008
+#define NT_WS_EX_ACCEPTFILES 0x00000010
+#define NT_WS_EX_TRANSPARENT 0x00000020
+#define NT_WS_EX_MDICHILD 0x00000040
+#define NT_WS_EX_TOOLWINDOW 0x00000080
+#define NT_WS_EX_WINDOWEDGE 0x00000100
+#define NT_WS_EX_CLIENTEDGE 0x00000200
+#define NT_WS_EX_CONTEXTHELP 0x00000400
+#define NT_WS_EX_RIGHT 0x00001000
+#define NT_WS_EX_LEFT 0x00000000
+#define NT_WS_EX_RTLREADING 0x00002000
+#define NT_WS_EX_LTRREADING 0x00000000
+#define NT_WS_EX_LEFTSCROLLBAR 0x00004000
+#define NT_WS_EX_RIGHTSCROLLBAR 0x00000000
+#define NT_WS_EX_CONTROLPARENT 0x00010000
+#define NT_WS_EX_STATICEDGE 0x00020000
+#define NT_WS_EX_APPWINDOW 0x00040000
+#define NT_WS_EX_OVERLAPPEDWINDOW (WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE)
+#define NT_WS_EX_PALETTEWINDOW \
+  (WS_EX_WINDOWEDGE | WS_EX_TOOLWINDOW | WS_EX_TOPMOST)
+#define NT_WS_EX_LAYERED 0x00080000
+#define NT_WS_EX_NOINHERITLAYOUT 0x00100000
+#define NT_WS_EX_LAYOUTRTL 0x00400000
+#define NT_WS_EX_COMPOSITED 0x02000000
+#define NT_WS_EX_NOACTIVATE 0x08000000
+
+#define NT_CS_VREDRAW 0x0001
+#define NT_CS_HREDRAW 0x0002
+#define NT_CS_DBLCLKS 0x0008
+#define NT_CS_OWNDC 0x0020
+#define NT_CS_CLASSDC 0x0040
+#define NT_CS_PARENTDC 0x0080
+#define NT_CS_NOCLOSE 0x0200
+#define NT_CS_SAVEBITS 0x0800
+#define NT_CS_BYTEALIGNCLIENT 0x1000
+#define NT_CS_BYTEALIGNWINDOW 0x2000
+#define NT_CS_GLOBALCLASS 0x4000
+#define NT_CS_IME 0x00010000
+#define NT_CS_DROPSHADOW 0x00020000
+
+#define NT_SWP_NOSIZE 0x0001
+#define NT_SWP_NOMOVE 0x0002
+#define NT_SWP_NOZORDER 0x0004
+#define NT_SWP_NOREDRAW 0x0008
+#define NT_SWP_NOACTIVATE 0x0010
+#define NT_SWP_FRAMECHANGED 0x0020
+#define NT_SWP_SHOWWINDOW 0x0040
+#define NT_SWP_HIDEWINDOW 0x0080
+#define NT_SWP_NOCOPYBITS 0x0100
+#define NT_SWP_NOOWNERZORDER 0x0200
+#define NT_SWP_NOSENDCHANGING 0x0400
+#define NT_SWP_DRAWFRAME SWP_FRAMECHANGED
+#define NT_SWP_NOREPOSITION SWP_NOOWNERZORDER
+#define NT_SWP_DEFERERASE 0x2000
+#define NT_SWP_ASYNCWINDOWPOS 0x4000
+
+#define NT_RI_MOUSE_LEFT_BUTTON_DOWN 0x0001
+#define NT_RI_MOUSE_LEFT_BUTTON_UP 0x0002
+#define NT_RI_MOUSE_RIGHT_BUTTON_DOWN 0x0004
+#define NT_RI_MOUSE_RIGHT_BUTTON_UP 0x0008
+#define NT_RI_MOUSE_MIDDLE_BUTTON_DOWN 0x0010
+#define NT_RI_MOUSE_MIDDLE_BUTTON_UP 0x0020
+#define NT_RI_MOUSE_BUTTON_1_DOWN RI_MOUSE_LEFT_BUTTON_DOWN
+#define NT_RI_MOUSE_BUTTON_1_UP RI_MOUSE_LEFT_BUTTON_UP
+#define NT_RI_MOUSE_BUTTON_2_DOWN RI_MOUSE_RIGHT_BUTTON_DOWN
+#define NT_RI_MOUSE_BUTTON_2_UP RI_MOUSE_RIGHT_BUTTON_UP
+#define NT_RI_MOUSE_BUTTON_3_DOWN RI_MOUSE_MIDDLE_BUTTON_DOWN
+#define NT_RI_MOUSE_BUTTON_3_UP RI_MOUSE_MIDDLE_BUTTON_UP
+#define NT_RI_MOUSE_BUTTON_4_DOWN 0x0040
+#define NT_RI_MOUSE_BUTTON_4_UP 0x0080
+#define NT_RI_MOUSE_BUTTON_5_DOWN 0x0100
+#define NT_RI_MOUSE_BUTTON_5_UP 0x0200
+#define NT_RI_MOUSE_WHEEL 0x0400
+#define NT_MOUSE_MOVE_RELATIVE 0
+#define NT_MOUSE_MOVE_ABSOLUTE 1
+#define NT_MOUSE_VIRTUAL_DESKTOP 0x02
+#define NT_MOUSE_ATTRIBUTES_CHANGED 0x04
+
+#define NT_STATE_SYSTEM_UNAVAILABLE 0x00000001
+#define NT_STATE_SYSTEM_SELECTED 0x00000002
+#define NT_STATE_SYSTEM_FOCUSED 0x00000004
+#define NT_STATE_SYSTEM_PRESSED 0x00000008
+#define NT_STATE_SYSTEM_CHECKED 0x00000010
+#define NT_STATE_SYSTEM_MIXED 0x00000020
+#define NT_STATE_SYSTEM_INDETERMINATE STATE_SYSTEM_MIXED
+#define NT_STATE_SYSTEM_READONLY 0x00000040
+#define NT_STATE_SYSTEM_HOTTRACKED 0x00000080
+#define NT_STATE_SYSTEM_DEFAULT 0x00000100
+#define NT_STATE_SYSTEM_EXPANDED 0x00000200
+#define NT_STATE_SYSTEM_COLLAPSED 0x00000400
+#define NT_STATE_SYSTEM_BUSY 0x00000800
+#define NT_STATE_SYSTEM_FLOATING 0x00001000
+#define NT_STATE_SYSTEM_MARQUEED 0x00002000
+#define NT_STATE_SYSTEM_ANIMATED 0x00004000
+#define NT_STATE_SYSTEM_INVISIBLE 0x00008000
+#define NT_STATE_SYSTEM_OFFSCREEN 0x00010000
+#define NT_STATE_SYSTEM_SIZEABLE 0x00020000
+#define NT_STATE_SYSTEM_MOVEABLE 0x00040000
+#define NT_STATE_SYSTEM_SELFVOICING 0x00080000
+#define NT_STATE_SYSTEM_FOCUSABLE 0x00100000
+#define NT_STATE_SYSTEM_SELECTABLE 0x00200000
+#define NT_STATE_SYSTEM_LINKED 0x00400000
+#define NT_STATE_SYSTEM_TRAVERSED 0x00800000
+#define NT_STATE_SYSTEM_MULTISELECTABLE 0x01000000
+#define NT_STATE_SYSTEM_EXTSELECTABLE 0x02000000
+#define NT_STATE_SYSTEM_ALERT_LOW 0x04000000
+#define NT_STATE_SYSTEM_ALERT_MEDIUM 0x08000000
+#define NT_STATE_SYSTEM_ALERT_HIGH 0x10000000
+#define NT_STATE_SYSTEM_PROTECTED 0x20000000
+#define NT_STATE_SYSTEM_VALID 0x3FFFFFFF
+
+#define NT_IDH_NO_HELP 28440
+#define NT_IDH_MISSING_CONTEXT 28441
+#define NT_IDH_GENERIC_HELP_BUTTON 28442
+#define NT_IDH_OK 28443
+#define NT_IDH_CANCEL 28444
+#define NT_IDH_HELP 28445
+
+#define NT_SS_LEFT 0x00000000
+#define NT_SS_CENTER 0x00000001
+#define NT_SS_RIGHT 0x00000002
+#define NT_SS_ICON 0x00000003
+#define NT_SS_BLACKRECT 0x00000004
+#define NT_SS_GRAYRECT 0x00000005
+#define NT_SS_WHITERECT 0x00000006
+#define NT_SS_BLACKFRAME 0x00000007
+#define NT_SS_GRAYFRAME 0x00000008
+#define NT_SS_WHITEFRAME 0x00000009
+#define NT_SS_USERITEM 0x0000000A
+#define NT_SS_SIMPLE 0x0000000B
+#define NT_SS_LEFTNOWORDWRAP 0x0000000C
+#define NT_SS_OWNERDRAW 0x0000000D
+#define NT_SS_BITMAP 0x0000000E
+#define NT_SS_ENHMETAFILE 0x0000000F
+#define NT_SS_ETCHEDHORZ 0x00000010
+#define NT_SS_ETCHEDVERT 0x00000011
+#define NT_SS_ETCHEDFRAME 0x00000012
+#define NT_SS_TYPEMASK 0x0000001F
+#define NT_SS_REALSIZECONTROL 0x00000040
+#define NT_SS_NOPREFIX 0x00000080
+#define NT_SS_NOTIFY 0x00000100
+#define NT_SS_CENTERIMAGE 0x00000200
+#define NT_SS_RIGHTJUST 0x00000400
+#define NT_SS_REALSIZEIMAGE 0x00000800
+#define NT_SS_SUNKEN 0x00001000
+#define NT_SS_EDITCONTROL 0x00002000
+#define NT_SS_ENDELLIPSIS 0x00004000
+#define NT_SS_PATHELLIPSIS 0x00008000
+#define NT_SS_WORDELLIPSIS 0x0000C000
+#define NT_SS_ELLIPSISMASK 0x0000C000
+
+#define NT_BST_UNCHECKED 0x0000
+#define NT_BST_CHECKED 0x0001
+#define NT_BST_INDETERMINATE 0x0002
+#define NT_BST_PUSHED 0x0004
+#define NT_BST_FOCUS 0x0008
+
+#define NT_BS_PUSHBUTTON 0x00000000
+#define NT_BS_DEFPUSHBUTTON 0x00000001
+#define NT_BS_CHECKBOX 0x00000002
+#define NT_BS_AUTOCHECKBOX 0x00000003
+#define NT_BS_RADIOBUTTON 0x00000004
+#define NT_BS_3STATE 0x00000005
+#define NT_BS_AUTO3STATE 0x00000006
+#define NT_BS_GROUPBOX 0x00000007
+#define NT_BS_USERBUTTON 0x00000008
+#define NT_BS_AUTORADIOBUTTON 0x00000009
+#define NT_BS_PUSHBOX 0x0000000A
+#define NT_BS_OWNERDRAW 0x0000000B
+#define NT_BS_TYPEMASK 0x0000000F
+#define NT_BS_LEFTTEXT 0x00000020
+#define NT_BS_TEXT 0x00000000
+#define NT_BS_ICON 0x00000040
+#define NT_BS_BITMAP 0x00000080
+#define NT_BS_LEFT 0x00000100
+#define NT_BS_RIGHT 0x00000200
+#define NT_BS_CENTER 0x00000300
+#define NT_BS_TOP 0x00000400
+#define NT_BS_BOTTOM 0x00000800
+#define NT_BS_VCENTER 0x00000C00
+#define NT_BS_PUSHLIKE 0x00001000
+#define NT_BS_MULTILINE 0x00002000
+#define NT_BS_NOTIFY 0x00004000
+#define NT_BS_FLAT 0x00008000
+#define NT_BS_RIGHTBUTTON BS_LEFTTEXT
+
+#define NT_BN_CLICKED 0
+#define NT_BN_PAINT 1
+#define NT_BN_HILITE 2
+#define NT_BN_UNHILITE 3
+#define NT_BN_DISABLE 4
+#define NT_BN_DOUBLECLICKED 5
+#define NT_BN_PUSHED BN_HILITE
+#define NT_BN_UNPUSHED BN_UNHILITE
+#define NT_BN_DBLCLK BN_DOUBLECLICKED
+#define NT_BN_SETFOCUS 6
+#define NT_BN_KILLFOCUS 7
+
+#define NT_BM_GETCHECK 0x00F0
+#define NT_BM_SETCHECK 0x00F1
+#define NT_BM_GETSTATE 0x00F2
+#define NT_BM_SETSTATE 0x00F3
+#define NT_BM_SETSTYLE 0x00F4
+#define NT_BM_CLICK 0x00F5
+#define NT_BM_GETIMAGE 0x00F6
+#define NT_BM_SETIMAGE 0x00F7
+
+#define NT_GUI_CARETBLINKING 0x00000001
+#define NT_GUI_INMOVESIZE 0x00000002
+#define NT_GUI_INMENUMODE 0x00000004
+#define NT_GUI_SYSTEMMENUMODE 0x00000008
+#define NT_GUI_POPUPMENUMODE 0x00000010
+#define NT_GUI_16BITTASK 0x00000020
+
+#define NT_ALERT_SYSTEM_INFORMATIONAL 1
+#define NT_ALERT_SYSTEM_WARNING 2
+#define NT_ALERT_SYSTEM_ERROR 3
+#define NT_ALERT_SYSTEM_QUERY 4
+#define NT_ALERT_SYSTEM_CRITICAL 5
+
+#define NT_SOUND_SYSTEM_STARTUP 1
+#define NT_SOUND_SYSTEM_SHUTDOWN 2
+#define NT_SOUND_SYSTEM_BEEP 3
+#define NT_SOUND_SYSTEM_ERROR 4
+#define NT_SOUND_SYSTEM_QUESTION 5
+#define NT_SOUND_SYSTEM_WARNING 6
+#define NT_SOUND_SYSTEM_INFORMATION 7
+#define NT_SOUND_SYSTEM_MAXIMIZE 8
+#define NT_SOUND_SYSTEM_MINIMIZE 9
+#define NT_SOUND_SYSTEM_RESTOREUP 10
+#define NT_SOUND_SYSTEM_RESTOREDOWN 11
+#define NT_SOUND_SYSTEM_APPSTART 12
+#define NT_SOUND_SYSTEM_FAULT 13
+#define NT_SOUND_SYSTEM_APPEND 14
+#define NT_SOUND_SYSTEM_MENUCOMMAND 15
+#define NT_SOUND_SYSTEM_MENUPOPUP 16
+#define NT_CSOUND_SYSTEM 16
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+int64_t CreateWindowEx(uint32_t dwExStyle, const char16_t *lpClassName,
+                       const char16_t *lpWindowName, uint32_t dwStyle, int X,
+                       int Y, int nWidth, int nHeight, int64_t hWndParent,
+                       int64_t hMenu, int64_t hInstance, void *lpParam);
+int32_t CloseWindow(int64_t hWnd);
+int32_t DestroyWindow(int64_t hWnd);
+int32_t ShowWindow(int64_t hWnd, int nCmdShow);
+int32_t AnimateWindow(int64_t hWnd, uint32_t dwTime, uint32_t dwFlags);
+int64_t LoadIcon(int64_t hInstance, const char16_t *lpIconName);
+int32_t IsWindow(int64_t hWnd);
+int32_t IsMenu(int64_t hMenu);
+int32_t IsChild(int64_t hWndParent, int64_t hWnd);
+int32_t MoveWindow(int64_t hWnd, int X, int Y, int nWidth, int nHeight,
+                   bool32 bRepaint);
+int32_t BringWindowToTop(int64_t hWnd);
+int32_t IsWindowVisible(int64_t hWnd);
+int32_t IsZoomed(int64_t hWnd);
+int32_t SetWindowText(int64_t hWnd, const char16_t *lpString);
+int32_t GetWindowText(int64_t hWnd, char16_t *lpString, int nMaxCount);
+int32_t SetWindowPos(int64_t hWnd, int64_t hWndInsertAfter, int X, int Y,
+                     int cx, int cy, uint32_t uFlags);
+
+uintptr_t SetTimer(int64_t opt_hWnd, uintptr_t nIDEvent, uint32_t uElapseMs,
+                   NtTimerProc lpTimerFunc);
+int KillTimer(int64_t hWnd, uintptr_t uIDEvent);
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_LIBC_NT_WINDOWS_H_ */

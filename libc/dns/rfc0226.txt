@@ -1,0 +1,59 @@
+
+
+
+
+
+
+NETWORK WORKING GROUP                                   PEGGY KARP
+REQUEST FOR COMMENTS #226                               MITRE
+NIC #7625                                               20 SEPT 71
+CATEGORIES: D.3
+UPDATES: NONE
+OBSOLETES: NONE
+
+                   STANDARDIZATION OF HOST MNEUMONICS
+
+IN EACH TELNET IMPLEMENTATION, A LIST OF HOST NMEUMONICS IS PROVIDED
+FOR THE USER TO INDICATE THE SERVING HOST DESIRED.  CURRENTLY, EACH
+SITE EMPLOYS THEIR OWN SPECIAL LIST.  RATHER THAN REQUIRE THE USER TO
+BE COGNIZANT OF THE IDIOSYNCRASIES OF EACH LIST, ESPECIALLY WHEN
+CHAINED THROUGH SEVERAL HOSTS VIA TELNET, IT HAS BEEN RECOMMENDED THAT
+STANDARD HOST DESIGNATORS BE ADOPTED.
+
+THE FOLLOWING LIST OF SIX CHARACTER DESIGNATORS IS PROPOSED AS THE
+STANDARD LIST.  REGISTER ANY OBJECTIONS BY 3 OCTOBER TO P. KARP (703)
+893-3500 X2391, X2318. AN OFFICIAL POLICY AND IMPLEMENTATION DATE WILL
+BE SET ON 8 OCTOBER.
+
+THE LIST:
+            HOST #             DESIGNATOR
+              1                  UCLA
+             65                  UCLA36
+              2                  SRIARC
+             66                  SRIAI
+              3                  UCSB
+              4                  UTAH
+              6                  MULTCS
+             70                  MITDM
+              7                  RAND
+              8                  SDC
+              9                  HARV
+             10                  LNCTX2
+             74                  LNC360
+             11                  STAN
+             12                  ILL
+             69                  BBN
+            133                  BBNB
+            144                  AMES
+            145                  MITRE
+            158                  TIP
+
+       [ This RFC was put into machine readable form for entry ]
+       [ into the online RFC archives by BBN Corp. under the   ]
+       [ direction of Alex McKenzie.                   12/96   ]
+
+
+
+
+                                                                [Page 1]
+

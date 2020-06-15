@@ -1,0 +1,18 @@
+#ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_RUSAGE_H_
+#define COSMOPOLITAN_LIBC_SYSV_CONSTS_RUSAGE_H_
+#include "libc/runtime/symbolic.h"
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+hidden extern const long RUSAGE_CHILDREN;
+hidden extern const long RUSAGE_SELF;
+hidden extern const long RUSAGE_THREAD;
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+
+#define RUSAGE_SELF LITERALLY(0)
+#define RUSAGE_CHILDREN SYMBOLIC(RUSAGE_CHILDREN)
+#define RUSAGE_THREAD SYMBOLIC(RUSAGE_THREAD)
+
+#endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_RUSAGE_H_ */

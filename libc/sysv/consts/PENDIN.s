@@ -1,0 +1,2 @@
+.include "libc/sysv/consts/syscon.inc"
+.syscon termios PENDIN 0b0100000000000000 536870912 536870912 536870912 0b0100000000000000

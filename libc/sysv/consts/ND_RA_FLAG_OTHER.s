@@ -1,0 +1,2 @@
+.include "libc/sysv/consts/syscon.inc"
+.syscon nd ND_RA_FLAG_OTHER 0x40 0x40 0x40 0x40 0x40
