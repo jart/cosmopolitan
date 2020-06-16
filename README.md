@@ -34,11 +34,11 @@ We provide a script that makes it easy to start a new package:
 
     examples/package/new.sh com/github/user/project
     emacs com/github/user/project/program.c
-    make o//com/github/user/project/program.c
-    o//com/github/user/project/program.c
+    make o//com/github/user/project/program.com
+    o//com/github/user/project/program.com
 
 Please note GNU make is awesome. Little known fact: make is a functional
-programming language. We've improve upon it too see tool/build/package.c
+programming language. We improved upon it too! In [tool/build/package.c]
 which performs strict dependency checking, to correct Google's published
 mistakes c. 2006 which was when they switched from using a GNU Make repo
 in favor of an inhouse derivative called Blaze which does strictness too
@@ -244,5 +244,13 @@ please let us know so we can reach out and ask they consider a license.
       @             °→      ♠←       ←      2←      L←      ╲←      
     x←                                                              
 
-See also `build/dump -xd o/tiny/examples/life.com.dbg | less` assembly
-and our linker script [ape/ape.lds] which glues the binaries together.
+See also `build/objdump -xd o/tiny/examples/life.com.dbg | less` to view
+assembly and the linker glue in [ape/ape.lds] that makes it all possible
+
+
+[ape/ape.lds]: ape/ape.lds
+[examples/life.c]: examples/life.c
+[libc/sysv/consts.sh]: libc/sysv/consts.sh
+[libc/sysv/syscalls.sh]: libc/sysv/syscalls.sh
+[tool/build/package.c]: tool/build/package.c
+[tool/emacs/cosmo-stuff.el]: tool/emacs/cosmo-stuff.el

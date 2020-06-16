@@ -14,6 +14,10 @@
 #
 #   make o//examples/package
 #   o/examples/package/program.com
+#
+# AUTHORS
+#
+#   %AUTHOR%
 
 PKGS += EXAMPLES_PACKAGE
 
@@ -24,15 +28,15 @@ EXAMPLES_PACKAGE_FILES := $(wildcard examples/package/*)
 EXAMPLES_PACKAGE_SRCS = $(filter %.c,$(EXAMPLES_PACKAGE_FILES))
 EXAMPLES_PACKAGE_HDRS = $(filter %.h,$(EXAMPLES_PACKAGE_FILES))
 EXAMPLES_PACKAGE_COMS = $(EXAMPLES_PACKAGE_OBJS:%.o=%.com)
+EXAMPLES_PACKAGE_BINS =					\
+	$(EXAMPLES_PACKAGE_COMS)			\
+	$(EXAMPLES_PACKAGE_COMS:%=%.dbg)
 
 # Remaps source file names to object names.
 # Also asks a wildcard rule to automatically run tool/build/zipobj.c
 EXAMPLES_PACKAGE_OBJS =					\
 	$(EXAMPLES_PACKAGE_SRCS:%.c=o/$(MODE)/%.o)	\
 	$(EXAMPLES_PACKAGE_SRCS:%=o/$(MODE)/%.zip.o)
-EXAMPLES_PACKAGE_BINS =					\
-	$(EXAMPLES_PACKAGE_COMS)			\
-	$(EXAMPLES_PACKAGE_COMS:%=%.dbg)
 
 # Lists packages whose symbols are or may be directly referenced here.
 # Note that linking stubs is always a good idea due to synthetic code.
@@ -46,13 +50,7 @@ EXAMPLES_PACKAGE_DIRECTDEPS =				\
 EXAMPLES_PACKAGE_DEPS :=				\
 	$(call uniq,$(foreach x,$(EXAMPLES_PACKAGE_DIRECTDEPS),$($(x))))
 
-# Invalidates objects in this package when this makefile is edited
-$(EXAMPLES_PACKAGE_OBJS): examples/package/vizlib.mk
-
-# Asks packager to index symbols and validate their relationships.
-# @see tool/build/package.c
-# @see build/rules.mk
-o/$(MODE)/examples/package/build.pkg:			\
+$(EXAMPLES_PACKAGE_A).pkg:				\
 		$(EXAMPLES_PACKAGE_OBJS)		\
 		$(foreach x,$(EXAMPLES_PACKAGE_DIRECTDEPS),$($(x)_A).pkg)
 
@@ -60,15 +58,16 @@ o/$(MODE)/examples/package/build.pkg:			\
 # @see build/rules.mk for definition of rule that does .com.dbg -> .com
 o/$(MODE)/examples/package/%.com.dbg:			\
 		$(EXAMPLES_PACKAGE_DEPS)		\
-		o/$(MODE)/examples/package/package.pkg	\
 		o/$(MODE)/examples/package/%.o		\
 		$(CRT)					\
 		$(APE)
-	-@$(APELINK)
+	@$(APELINK)
 
-# Creates target that builds everything in this package and subpackages.
+# Invalidates objects in package when makefile is edited.
+$(EXAMPLES_PACKAGE_OBJS): examples/package/build.mk
+
+# Creates target building everything in package and subpackages.
 .PHONY: o/$(MODE)/examples/package
 o/$(MODE)/examples/package:				\
 		o/$(MODE)/examples/package/lib		\
-		$(EXAMPLES_PACKAGE_BINS)		\
-		$(EXAMPLES_PACKAGE_CHECKS)
+		$(EXAMPLES_PACKAGE_BINS)
