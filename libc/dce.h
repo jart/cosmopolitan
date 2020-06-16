@@ -24,7 +24,7 @@
 #define METAL   2
 #define WINDOWS 4
 #define XNU     8
-#define OPENBSD 16
+#define OPENBSD 16 /* 2019-12-11: new openbsd drm might thwart syscall */
 #define FREEBSD 32
 /* #define YOUR_CLOUD_PLATFORM_HERE 64  /\* jtunney@gmail.com *\/ */
 /* #define YOUR_CLOUD_PLATFORM_HERE 128 /\* jtunney@gmail.com *\/ */
