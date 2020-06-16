@@ -58,4 +58,4 @@ kToLower16:
 	.type	gperf_downcase,@object
 	.globl	gperf_downcase
 	gperf_downcase = kToLower
-	.yoink	__FILE__
+	.source	__FILE__

@@ -17,7 +17,8 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.inc"
+#include "libc/macros.h"
+.source	__FILE__
 
 /	Linux Signal Trampoline (HOLY CODE)
 	.align	16
@@ -26,4 +27,3 @@ __restore_rt:				# @see gdb/amd64-linux-tdep.c
 	syscall
 	.align	16
 	.endfn	__restore_rt,globl,hidden
-	.yoink	__FILE__

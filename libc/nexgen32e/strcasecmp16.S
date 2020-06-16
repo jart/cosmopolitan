@@ -69,4 +69,4 @@ strncasecmp16:
 4:	pop	%rbx
 	.leafepilogue
 	.endfn	strncasecmp16,globl
-	.yoink	__FILE__
+	.source	__FILE__

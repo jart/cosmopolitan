@@ -18,8 +18,8 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
+.source	__FILE__
 .testonly
-.yoink	__FILE__
 
 /	Empties L1 instruction cache.
 thrashcodecache:

@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 .text.unlikely
-.yoink	__FILE__
+.source	__FILE__
 
 /	Code-size saving thunk for CHECK_EQ() in NDEBUG mode.
 __check_fail_eq:

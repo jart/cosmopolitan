@@ -23,6 +23,7 @@
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
+#include "libc/str/tpdecode.h"
 #include "libc/sysv/errfuns.h"
 
 /**

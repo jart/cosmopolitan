@@ -23,11 +23,12 @@
 #include "libc/runtime/internal.h"
 #include "libc/str/appendchar.h"
 #include "libc/str/str.h"
+#include "libc/str/tpenc.h"
 
 /* TODO(jart): Make early-stage data structures happen. */
 #undef isspace
 #undef iswspace
-#define isspace(c) ((c) == ' ' || (c) == '\t' || (c) == '\n' || (c) == '\r')
+#define isspace(c)  ((c) == ' ' || (c) == '\t' || (c) == '\n' || (c) == '\r')
 #define iswspace(c) isspace(c)
 
 struct DosArgv {
@@ -37,14 +38,12 @@ struct DosArgv {
   wint_t wc;
 };
 
-static textwindows void decodedosargv(struct DosArgv *st) {
+static inline textwindows void decodedosargv(struct DosArgv *st) {
   st->s += getutf16(st->s, &st->wc);
 }
 
-static textwindows void appenddosargv(struct DosArgv *st, wint_t wc) {
-  if (st->p < st->pe) {
-    st->p += tpencode(st->p, st->pe - st->p, wc, false);
-  }
+static inline textwindows void appenddosargv(struct DosArgv *st, wint_t wc) {
+  AppendChar(&st->p, st->pe, wc);
 }
 
 /**

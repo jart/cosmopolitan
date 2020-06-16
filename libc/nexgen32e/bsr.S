@@ -40,4 +40,4 @@ bsr:	.leafprologue
 	bsr	%edi,%eax
 	.leafepilogue
 	.endfn	bsr,globl
-	.yoink	__FILE__
+	.source	__FILE__

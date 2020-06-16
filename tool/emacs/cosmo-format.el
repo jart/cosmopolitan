@@ -114,18 +114,15 @@
             (write-region nil nil tmp)
             (let ((buf (get-buffer-create "*clang-format*"))
                   (exe (cosmo--find-clang-format-bin)))
-              ;; (with-current-buffer buf
-              ;;   (set-process-sentinel
-              ;;    (call-process exe tmp t nil arg)
-              ;;    (lambda (_ _)
-              ;;      (display-buffer buf))))
               (with-current-buffer buf
                 (call-process exe tmp t nil arg))
               (replace-buffer-contents buf)
               (kill-buffer buf)
               (delete-file tmp nil))))))))
 
-(add-hook 'before-save-hook 'cosmo-format)
+;; Emacs 26.3+ needed for replace-buffer-contents; so worth it!!
+(unless (version-list-< (version-to-list emacs-version) '(26 3))
+  (add-hook 'before-save-hook 'cosmo-format))
 
 (provide 'cosmo-format)
 

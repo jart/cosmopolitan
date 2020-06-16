@@ -36,4 +36,4 @@ iswpunct:
 	sete	%al
 1:	.leafepilogue
 	.endfn	iswpunct,globl
-	.yoink	__FILE__
+	.source	__FILE__

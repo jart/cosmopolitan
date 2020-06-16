@@ -33,4 +33,4 @@ towupper:
 	andn	%edi,%edx,%eax
 1:	.leafepilogue
 	.endfn	towupper,globl
-	.yoink	__FILE__
+	.source	__FILE__

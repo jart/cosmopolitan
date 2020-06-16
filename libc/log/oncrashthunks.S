@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.yoink	__FILE__
+.source	__FILE__
 
 /	These function names make it a bit more obvious which signal
 /	caused the crash, particularly in the GDB GUI. They're coded

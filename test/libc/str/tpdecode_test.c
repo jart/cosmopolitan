@@ -25,6 +25,7 @@
 #include "libc/limits.h"
 #include "libc/runtime/gc.h"
 #include "libc/str/str.h"
+#include "libc/str/tpdecode.h"
 #include "libc/testlib/testlib.h"
 
 wint_t wc;

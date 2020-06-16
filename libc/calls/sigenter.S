@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/macros.h"
-.yoink	__FILE__
+.source	__FILE__
 
 /	System Five signal handler.
 /

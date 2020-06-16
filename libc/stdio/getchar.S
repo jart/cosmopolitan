@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.yoink	__FILE__
+.source	__FILE__
 
 /	Reads uint8_t from standard input.
 /	@return	%al has result w/ rest of %rax cleared

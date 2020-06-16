@@ -51,7 +51,7 @@ CP ?= /bin/cp -f
 RM ?= /bin/rm -f
 SED ?= /bin/sed
 MKDIR ?= /bin/mkdir -p
-TAGS ?= ctags
+TAGS ?= /usr/bin/ctags  # emacs source builds or something breaks it
 ARFLAGS = rcsD
 TAGSFLAGS ?= -e -a --if0=no --langmap=c:.c.h.i --line-directives=yes
 SILENT ?= 1
@@ -74,6 +74,7 @@ NM = o/third_party/gcc/bin/x86_64-linux-musl-nm
 GCC = o/third_party/gcc/bin/x86_64-linux-musl-gcc
 STRIP = o/third_party/gcc/bin/x86_64-linux-musl-strip
 OBJCOPY = o/third_party/gcc/bin/x86_64-linux-musl-objcopy
+OBJDUMP = o/third_party/gcc/bin/x86_64-linux-musl-objdump
 ADDR2LINE = o/third_party/gcc/bin/x86_64-linux-musl-addr2line
 
 COMMA := ,
@@ -87,6 +88,7 @@ BLAH1 := $(shell build/zipobj 2>/dev/null)
 BLAH2 := $(shell build/package 2>/dev/null)
 
 export ADDR2LINE
+export OBJDUMP
 export CCNAME
 export CCVERSION
 export CP

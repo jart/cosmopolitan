@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.yoink	__FILE__
+.source	__FILE__
 
 expm1:	ezlea	expm1l,ax
 	jmp	_d2ld2

@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.yoink	__FILE__
+.source	__FILE__
 
 logb:	push	%rbp
 	mov	%rsp,%rbp

@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.yoink	__FILE__
+.source	__FILE__
 
 __asan_addr_is_in_fake_stack:
 __asan_alloca_poison:

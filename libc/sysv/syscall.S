@@ -41,4 +41,4 @@ syscall:mov	%rdi,%rax
 	mov	8(%rsp),%r9
 	jmp	*systemfive(%rip)
 	.endfn	syscall,globl
-	.yoink	__FILE__
+	.source	__FILE__

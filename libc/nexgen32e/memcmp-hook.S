@@ -47,4 +47,4 @@ hook$memcmp:
 #endif /* TINY */
 	stosq
 	.init.end 300,_init_memcmp
-	.yoink	__FILE__
+	.source	__FILE__

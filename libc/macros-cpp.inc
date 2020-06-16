@@ -87,6 +87,17 @@
 	ret
 .endm
 
+/	Pulls source code file into ZIP portion of binary.
+/
+/	@param	symbol is quoted path relative to root e.g. __FILE__
+/	@see	see libc/zipos/zipcentraldir.S
+/	@see	see libc/integral/c.inc
+.macro	.source	symbol:req
+#ifndef	IM_FEELING_NAUGHTY
+	.yoink	"\symbol"
+#endif
+.endm
+
 /	Inserts profiling hook in prologue if cc wants it.
 /
 /	Cosmopolitan does this in a slightly different way from normal

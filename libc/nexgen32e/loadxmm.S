@@ -43,4 +43,4 @@ loadxmm:.leafprologue
 	movaps	0x70(%rdi),%xmm15
 	.leafepilogue
 	.endfn	loadxmm,globl,hidden
-	.yoink	__FILE__
+	.source	__FILE__

@@ -29,4 +29,4 @@ towlower:
 	movzbl	(%rcx,%rax),%eax
 1:	.leafepilogue
 	.endfn	towlower,globl
-	.yoink	__FILE__
+	.source	__FILE__

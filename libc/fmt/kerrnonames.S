@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/notice.inc"
 #include "libc/macros.h"
-.yoink	__FILE__
+.source	__FILE__
 
 /	Embeds ASCII names for errno constants into binary.
 /

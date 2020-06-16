@@ -30,4 +30,4 @@ __xlm:	.rept	XLM_SIZE
 	.endr
 	.endobj	__xlm,globl,hidden
 	.previous
-	.yoink	__FILE__
+	.source	__FILE__

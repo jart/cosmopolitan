@@ -1,0 +1,6 @@
+#!/bin/sh
+exec /usr/bin/grep      \
+     --exclude-dir=o    \
+     --exclude-dir=gcc  \
+     --exclude-dir=.git \
+     "$@"

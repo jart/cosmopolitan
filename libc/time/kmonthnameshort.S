@@ -7,7 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/macros.inc"
+#include "libc/macros.h"
 
 /	Type #1:
 /	  - Indexable C-String Array

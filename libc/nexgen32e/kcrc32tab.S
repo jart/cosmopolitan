@@ -39,4 +39,4 @@ kCrc32Tab:
 	call	crc32init
 	pop	%rsi
 	.init.end 300,_init_kCrc32Tab
-	.yoink	__FILE__
+	.source	__FILE__

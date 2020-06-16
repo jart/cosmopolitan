@@ -26,6 +26,8 @@
 #include "libc/nexgen32e/tinystrlen.h"
 #include "libc/str/internal.h"
 #include "libc/str/str.h"
+#include "libc/str/tpdecode.h"
+#include "libc/str/tpencode.h"
 #include "libc/unicode/unicode.h"
 
 forceinline unsigned long tpiencode(wint_t wc) {

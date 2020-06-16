@@ -40,4 +40,4 @@ cmpub:	.leafprologue
 .Lneg1:	.long	-1
 	.endobj	.Lneg1
 	.previous
-	.yoink	__FILE__
+	.source	__FILE__

@@ -22,7 +22,7 @@
 #include "libc/notice.inc"
 #include "libc/runtime/internal.h"
 .section .start,"ax",@progbits
-.yoink	__FILE__
+.source	__FILE__
 
 /	System Five userspace program entrypoint.
 /

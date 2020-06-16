@@ -38,4 +38,4 @@ rldecode:
 	jmp	0b
 2:	.leafepilogue
 	.endfn	rldecode,globl
-	.yoink	__FILE__
+	.source	__FILE__

@@ -98,4 +98,4 @@ ctypep:	pop	%rsi
 	and	%esi,%eax
 	ret
 	.endfn	ctypep
-	.yoink	__FILE__
+	.source	__FILE__

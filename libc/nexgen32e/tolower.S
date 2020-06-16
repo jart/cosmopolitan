@@ -28,4 +28,4 @@ tolower:.leafprologue
 	movzbl	(%rcx,%rax),%eax
 1:	.leafepilogue
 	.endfn	tolower,globl
-	.yoink	__FILE__
+	.source	__FILE__

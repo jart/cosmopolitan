@@ -22,7 +22,7 @@
 #include "libc/notice.inc"
 .real
 .code16 # ∩ .code32 ∩ .code64
-.yoink	__FILE__
+.source	__FILE__
 
 /	Clears display page.
 /

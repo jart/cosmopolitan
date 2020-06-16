@@ -76,4 +76,4 @@ htons:	movzwl	%di,%eax
 	.endfn	htole16,globl
 	.endfn	ntohs,globl
 	.endfn	bswap_16,globl
-	.yoink	__FILE__
+	.source	__FILE__

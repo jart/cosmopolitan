@@ -30,4 +30,4 @@ environ:.quad	0
 	.init.start 300,_init_environ
 	mov	%r14,environ(%rip)
 	.init.end 300,_init_environ
-	.yoink	__FILE__
+	.source	__FILE__

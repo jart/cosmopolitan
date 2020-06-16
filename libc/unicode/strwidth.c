@@ -22,6 +22,7 @@
 #include "libc/limits.h"
 #include "libc/str/internal.h"
 #include "libc/str/str.h"
+#include "libc/str/tpdecode.h"
 #include "libc/unicode/unicode.h"
 
 #define kOneTrueTabWidth 8

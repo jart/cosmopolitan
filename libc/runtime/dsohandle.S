@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 #include "libc/notice.inc"
-.yoink	__FILE__
+.source	__FILE__
 
 /	Uniquely identifies each artifact linked in an address space.
 __dso_handle:

@@ -28,5 +28,5 @@
 /	@param	rdx is number of bytes
 bcopy:	jmp	memmove
 	.endfn	bcopy,globl
-	.yoink	__FILE__
-	.yoink	__FILE__
+	.source	__FILE__
+	.source	__FILE__

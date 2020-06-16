@@ -17,9 +17,9 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.inc"
+#include "libc/macros.h"
 .real
-.yoink	__FILE__
+.source	__FILE__
 .code16 # ∩ .code32 ∩ .code64
 
 /	Function Profiling Hook.

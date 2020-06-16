@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/macros.h"
-.yoink	__FILE__
+.source	__FILE__
 
 /	Dispatches to fastest windex() implementation.
 	.initbss 300,_init_windex

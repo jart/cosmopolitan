@@ -26,6 +26,7 @@
 #include "libc/nexgen32e/hascharacter.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/str/tpdecode.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/errfuns.h"
 

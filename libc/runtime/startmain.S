@@ -26,7 +26,7 @@
 #include "libc/runtime/mappings.h"
 #include "libc/sysv/consts/prot.h"
 .text.startup
-.yoink	__FILE__
+.source	__FILE__
 
 /	Cosmopolitan process entrypoint.
 /

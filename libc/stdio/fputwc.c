@@ -22,6 +22,7 @@
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/str/tpencode.h"
 
 /**
  * Writes wide character to stream.
@@ -29,8 +30,8 @@
  * @return wc if written or -1 w/ errno
  */
 wint_t fputwc(wchar_t wc, FILE *f) {
+  unsigned i, len;
   char buf[MB_LEN_MAX];
-  unsigned len, i;
   if (wc != -1) {
     len = tpencode(buf, sizeof(buf), wc, false);
     for (i = 0; i < len; ++i) {

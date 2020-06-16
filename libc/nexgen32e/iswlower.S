@@ -31,4 +31,4 @@ iswlower:
 	movzbl	%al,%eax
 1:	.leafepilogue
 	.endfn	iswlower,globl
-	.yoink	__FILE__
+	.source	__FILE__

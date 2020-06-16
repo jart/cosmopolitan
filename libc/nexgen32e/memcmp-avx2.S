@@ -61,4 +61,4 @@ memcmp$avx2:
 8:	vxorps	%ymm0,%ymm0,%ymm0
 	.leafepilogue
 	.endfn	memcmp$avx2,globl,hidden
-	.yoink	__FILE__
+	.source	__FILE__

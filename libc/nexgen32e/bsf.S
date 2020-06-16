@@ -40,4 +40,4 @@ bsf:	.leafprologue
 	bsf	%edi,%eax
 	.leafepilogue
 	.endfn	bsf,globl
-	.yoink	__FILE__
+	.source	__FILE__

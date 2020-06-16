@@ -18,8 +18,8 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
+.source	__FILE__
 
 _start_xnu:
 	jmp	abort
 	.endfn	_start_xnu,weak
-	.yoink	__FILE__

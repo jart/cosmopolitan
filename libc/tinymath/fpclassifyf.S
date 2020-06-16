@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/macros.h"
-.yoink	__FILE__
+.source	__FILE__
 
 __fpclassifyf:
 	.leafprologue

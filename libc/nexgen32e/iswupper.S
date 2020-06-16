@@ -31,4 +31,4 @@ iswupper:
 	movzbl	%al,%eax
 1:	.leafepilogue
 	.endfn	iswupper,globl
-	.yoink	__FILE__
+	.source	__FILE__

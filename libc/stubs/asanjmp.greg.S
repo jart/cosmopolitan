@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 .privileged
-.yoink	__FILE__
+.source	__FILE__
 
 __asan_load1:
 	push	$1

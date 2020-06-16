@@ -17,8 +17,8 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.inc"
-.yoink	__FILE__
+#include "libc/macros.h"
+.source	__FILE__
 
 /	Global variable for last error.
 /

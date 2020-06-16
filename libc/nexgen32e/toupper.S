@@ -32,4 +32,4 @@ toupper:.leafprologue
 	andn	%edi,%eax,%eax			# TODO(jart): FIX
 1:	.leafepilogue
 	.endfn	toupper,globl
-	.yoink	__FILE__
+	.source	__FILE__

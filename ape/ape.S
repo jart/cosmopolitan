@@ -45,11 +45,10 @@
 #include "libc/nexgen32e/vidya.h"
 #include "libc/nt/pedef.h"
 #include "libc/sysv/consts/prot.h"
-.yoink	__FILE__
-.yoink	"NOTICE"
-.section .head,"ax",@progbits
 
-/	Common Sections.
+	.source	"NOTICE"
+	.source	"ape/ape.S"
+	.source	"ape/ape.lds"
 	.section .text,"ax",@progbits
 	.align	__SIZEOF_POINTER__
 	.previous
@@ -69,6 +68,7 @@ cstr:	.endobj	cstr,globl,hidden		# ←for gdb readibility
 	.section .sort.rodata.real.str1.1,"aMS",@progbits
 rlstr:	.endobj	rlstr,globl,hidden		# ←for gdb readibility
 	.previous
+	.section .head,"ax",@progbits
 
 /*	    ████████               ████████        ███████████
 	    ██░░░░▒▒██           ██░░░░▒▒██    ████░░░░░░░░░▒▒████

@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.inc"
+#include "libc/macros.h"
 
 feraiseexcept:
 	and	$0x3f,%edi
@@ -27,4 +27,4 @@ feraiseexcept:
 	xor	%eax,%eax
 	ret
 	.endfn	feraiseexcept,globl
-	.yoink	__FILE__
+	.source	__FILE__

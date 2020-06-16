@@ -35,4 +35,4 @@ isgraph:.leafprologue
 	and	%edx,%eax
 1:	.leafepilogue
 	.endfn	isgraph,globl
-	.yoink	__FILE__
+	.source	__FILE__

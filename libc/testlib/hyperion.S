@@ -18,8 +18,8 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
+.source	__FILE__
 .rodata
-.yoink	__FILE__
 
 /	Nontrivial NUL-terminated string test vector.
 	.align	1

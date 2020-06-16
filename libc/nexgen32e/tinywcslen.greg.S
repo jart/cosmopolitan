@@ -34,4 +34,4 @@ tinywcslen:
 	jmp	1b
 2:	.leafepilogue
 	.endfn	tinywcslen,globl
-	.yoink	__FILE__
+	.source	__FILE__

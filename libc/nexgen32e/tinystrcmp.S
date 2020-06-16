@@ -44,4 +44,4 @@ tinystrcmp:
 	pop	%rcx
 	.leafepilogue
 	.endfn	tinystrcmp,globl
-	.yoink	__FILE__
+	.source	__FILE__

@@ -41,4 +41,4 @@ bsrl:	.leafprologue
 	.leafepilogue
 	.endfn	bsrl,globl
 	.alias	bsrl,bsrll
-	.yoink	__FILE__
+	.source	__FILE__

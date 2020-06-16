@@ -45,4 +45,4 @@ ffsl:	.leafprologue
 	.leafepilogue
 	.endfn	ffsl,globl
 	.alias	ffsl,ffsll
-	.yoink	__FILE__
+	.source	__FILE__

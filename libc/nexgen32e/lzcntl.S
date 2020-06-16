@@ -44,4 +44,4 @@ lzcntl:	.leafprologue
 	sub	%ecx,%eax
 	.endfn	lzcntl,globl
 	.alias	lzcntl,lzcntll
-	.yoink	__FILE__
+	.source	__FILE__

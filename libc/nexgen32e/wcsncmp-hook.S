@@ -30,4 +30,4 @@ hook$wcsncmp:
 	ezlea	wcsncmp$k8,ax
 	stosq
 	.init.end 300,_init_wcsncmp
-	.yoink	__FILE__
+	.source	__FILE__

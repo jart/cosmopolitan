@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
+.source	__FILE__
 
 /	__cxxabiv1::__function_type_info (?)
 /	Because Clang in MODE=dbg doesn't respect -fno-rtti
@@ -25,4 +26,3 @@
 _ZTVN10__cxxabiv120__function_type_infoE:
 	.quad	0
 	.endobj	_ZTVN10__cxxabiv120__function_type_infoE,globl
-	.yoink	__FILE__

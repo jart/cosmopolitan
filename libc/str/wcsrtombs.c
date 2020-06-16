@@ -19,10 +19,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/conv/conv.h"
 #include "libc/str/str.h"
+#include "libc/str/tpencode.h"
 
 size_t wcsrtombs(char *dest, const wchar_t **src, size_t len, mbstate_t *ps) {
-  /* TODO(jart): broken broken broken insane api */
-  size_t i = 0;
+  /* TODO(jart): broken */
+  int64_t word;
+  size_t i, got;
+  i = 0;
   if (len) {
     for (;;) {
       if (!**src || len == 1) {

@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_STR_STRCMP8TO16I_H_
 #include "libc/conv/conv.h"
 #include "libc/str/str.h"
+#include "libc/str/tpdecode.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

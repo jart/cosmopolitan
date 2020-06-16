@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/macros.h"
-.yoink	__FILE__
+.source	__FILE__
 
 /	Creates file descriptors for IPC.
 /

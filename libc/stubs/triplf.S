@@ -20,7 +20,7 @@
 #include "ape/macros.h"
 #include "ape/config.h"
 .real
-.yoink	__FILE__
+.source	__FILE__
 .code16 # ∩ .code32 ∩ .code64
 
 /	Hoses interrupt descriptor table and triple-faults the system.

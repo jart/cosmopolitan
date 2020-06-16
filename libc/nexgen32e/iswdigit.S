@@ -31,4 +31,4 @@ iswdigit:
 	movzbl	%al,%eax
 1:	.leafepilogue
 	.endfn	iswdigit,globl
-	.yoink	__FILE__
+	.source	__FILE__

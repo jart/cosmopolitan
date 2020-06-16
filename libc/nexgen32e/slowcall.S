@@ -82,4 +82,4 @@ slowcall:
 	pop	%rbp
 	ret
 	.endfn	slowcall,globl
-	.yoink	__FILE__
+	.source	__FILE__

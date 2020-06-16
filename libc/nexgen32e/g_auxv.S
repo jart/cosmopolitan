@@ -28,4 +28,4 @@ g_auxv:	.quad	0
 	mov	%r15,%rax
 	stosq
 	.init.end 300,_init_g_auxv
-	.yoink	__FILE__
+	.source	__FILE__

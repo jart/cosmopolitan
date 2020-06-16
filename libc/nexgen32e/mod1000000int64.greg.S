@@ -33,4 +33,4 @@ mod1000000int64:
 	mov	%rdi,%rax
 	ret
 	.endfn	mod1000000int64,globl
-	.yoink	__FILE__
+	.source	__FILE__

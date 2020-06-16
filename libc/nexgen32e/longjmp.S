@@ -41,4 +41,4 @@ longjmp:mov	%esi,%eax
 	mov	48(%rdi),%r15
 	jmp	*56(%rdi)
 	.endfn	longjmp,globl
-	.yoink	__FILE__
+	.source	__FILE__

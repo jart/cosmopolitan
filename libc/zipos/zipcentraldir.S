@@ -49,10 +49,10 @@ __zip_end:
 	.weak	v_zip_commentsize
 	.previous
 
-	yoink	__zipos_close
-	yoink	__zipos_fstat
-	yoink	__zipos_open
-	yoink	__zipos_parseuri
-	yoink	__zipos_read
-	yoink	__zipos_stat
-	yoink	__FILE__
+	.yoink	__zipos_close
+	.yoink	__zipos_fstat
+	.yoink	__zipos_open
+	.yoink	__zipos_parseuri
+	.yoink	__zipos_read
+	.yoink	__zipos_stat
+	.source	__FILE__

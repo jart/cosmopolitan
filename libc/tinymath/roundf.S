@@ -20,7 +20,7 @@
 #include "libc/macros.h"
 #include "libc/bits/smmintrin.h"
 #include "libc/nexgen32e/x86feature.h"
-.yoink	__FILE__
+.source	__FILE__
 
 /	Rounds to nearest integer, away from zero.
 /

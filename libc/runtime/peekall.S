@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/relocations.h"
 #include "libc/macros.h"
-.yoink	__FILE__
+.source	__FILE__
 
 /	Loads all pages from program image into memory.
 peekall:.leafprologue

@@ -30,4 +30,4 @@ hextoint:
 	and	$15,%eax
 	.leafepilogue
 	.endfn	hextoint,globl
-	.yoink	__FILE__
+	.source	__FILE__

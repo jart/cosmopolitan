@@ -20,7 +20,7 @@
 #include "libc/macros.h"
 #include "libc/notice.inc"
 #include "libc/sysv/consts/auxv.h"
-.yoink	__FILE__
+.source	__FILE__
 
 /	Canary for -fstack-protector.
 /

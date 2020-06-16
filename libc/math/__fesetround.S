@@ -35,4 +35,4 @@ fesetround:
 	pop	%rcx
 	ret
 	.endfn	fesetround,globl,hidden
-	.yoink	__FILE__
+	.source	__FILE__

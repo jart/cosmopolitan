@@ -40,4 +40,4 @@ setjmp:	lea	8(%rsp),%rax
 	xor	%eax,%eax
 	ret
 	.endfn	setjmp,globl
-	.yoink	__FILE__
+	.source	__FILE__

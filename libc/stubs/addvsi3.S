@@ -20,7 +20,7 @@
 #include "libc/macros.h"
 .align	16
 .text.likely
-.yoink	__FILE__
+.source	__FILE__
 
 /	Returns 𝑥+𝑦, aborting on overflow.
 /

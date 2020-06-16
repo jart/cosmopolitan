@@ -60,4 +60,4 @@ memrchr:.leafprologue
 	lea	(%rdi,%rcx),%rax
 9:	.leafepilogue
 	.endfn	memrchr,globl
-	.yoink	__FILE__
+	.source	__FILE__

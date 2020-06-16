@@ -60,4 +60,4 @@ __sysv2nt:
 	.endfn	__sysv2nt10,globl,hidden
 	.endfn	__sysv2nt12,globl,hidden
 	.endfn	__sysv2nt14,globl,hidden
-	.yoink	__FILE__
+	.source	__FILE__

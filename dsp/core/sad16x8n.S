@@ -38,4 +38,4 @@ sad16x8n:
 	jnz	0b
 1:	.leafepilogue
 	.endfn	sad16x8n,globl,hidden
-	.yoink	__FILE__
+	.source	__FILE__

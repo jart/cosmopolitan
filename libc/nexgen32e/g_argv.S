@@ -29,4 +29,4 @@ g_argv:	.quad	0
 	mov	%r13,%rax
 	stosq
 	.init.end 300,_init_g_argv
-	.yoink	__FILE__
+	.source	__FILE__

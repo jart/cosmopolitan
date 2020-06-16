@@ -36,4 +36,4 @@ hook$strcmp16:
 	ezlea	strcmp16$k8,ax
 	stosq
 	.init.end 300,_init_strcmp16
-	.yoink	__FILE__
+	.source	__FILE__

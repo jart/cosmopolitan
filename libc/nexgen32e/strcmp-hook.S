@@ -46,4 +46,4 @@ hook$strcmp:
 #endif /* TINY */
 	stosq
 	.init.end 300,_init_strcmp
-	.yoink	__FILE__
+	.source	__FILE__

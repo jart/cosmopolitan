@@ -36,4 +36,4 @@ __atomic_is_lock_free:
 	cmovnz	%ecx,%eax
 	.leafepilogue
 	.endfn	__atomic_is_lock_free,globl,hidden
-	.yoink	__FILE__
+	.source	__FILE__

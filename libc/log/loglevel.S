@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/log.h"
 #include "libc/macros.h"
-.yoink	__FILE__
+.source	__FILE__
 
 	.bss
 	.align	4

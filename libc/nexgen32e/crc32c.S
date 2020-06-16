@@ -43,4 +43,4 @@ crc32c:	.quad	0
 #endif
 	stosq
 	.init.end 300,_init_crc32c
-	.yoink	__FILE__
+	.source	__FILE__

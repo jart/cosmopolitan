@@ -51,4 +51,4 @@ _memmove:
 	.leafepilogue
 	.endfn	_memmove,globl,hidden
 	.endfn	memmove,globl
-	.yoink	__FILE__
+	.source	__FILE__

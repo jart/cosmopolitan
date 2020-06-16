@@ -18,7 +18,8 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/internal.h"
-#include "libc/str/str.h"
+#include "libc/str/tpenc.h"
+#include "libc/str/tpencode.h"
 
 /**
  * Thompson-Pike Varint Encoder.
@@ -27,29 +28,27 @@
  * is only called for non-ASCII, or DCE'd entirely. In addition to that
  * this function makes a promise to not clobber any registers but %rax.
  *
- * @param buf is what ch gets encoded to
+ * @param p is what ch gets encoded to
  * @param size is the number of bytes available in buf
  * @param ch is a 32-bit integer
  * @param awesome mode enables numbers the IETF unilaterally banned
  * @return number of bytes written
  * @note this encoding was designed on a napkin in a new jersey diner
  */
-unsigned(tpencode)(char *buf, size_t size, wint_t ch, bool32 awesome) {
-  unsigned char *p = (unsigned char *)buf;
-  if ((0 <= ch && ch < 32) && awesome && size >= 2) {
+unsigned(tpencode)(char *p, size_t size, wint_t wc, bool32 awesome) {
+  int i, j;
+  unsigned long w;
+  if ((0 <= wc && wc < 32) && awesome && size >= 2) {
     p[0] = 0xc0;
-    p[1] = 0x80 | (unsigned char)ch;
+    p[1] = 0x80;
+    p[1] |= wc;
     return 2;
   }
-  struct TpEncode op = UseTpDecoderRing(ch);
-  size_t i = op.len;
-  if (op.len <= size) {
-    for (;;) {
-      p[--i] = (unsigned char)(0b10000000 | (ch & 0b00111111));
-      if (!i) break;
-      ch >>= 6;
-    }
-    p[0] = op.mark | (unsigned char)ch;
-  }
-  return op.len;
+  i = 0;
+  w = tpenc(wc);
+  do {
+    if (!size--) break;
+    p[i++] = w & 0xff;
+  } while (w >>= 8);
+  return i;
 }

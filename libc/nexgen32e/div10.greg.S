@@ -116,4 +116,4 @@ div10:	.leafprologue
 	pop	%rbx
 	.leafepilogue
 	.endfn	div10,globl,hidden
-	.yoink	__FILE__
+	.source	__FILE__

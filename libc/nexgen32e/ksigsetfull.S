@@ -39,4 +39,4 @@ kSigsetFull:
 	stosq
 	.endr
 	.init.end 300,_init_kSigsetFull
-	.yoink	__FILE__
+	.source	__FILE__

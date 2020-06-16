@@ -29,4 +29,4 @@ div1000000000int64:
 	jmp	tinydivsi
 	.globl	tinydivsi
 	.endfn	div1000000000int64,globl
-	.yoink	__FILE__
+	.source	__FILE__

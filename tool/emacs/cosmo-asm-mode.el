@@ -8,6 +8,7 @@
 ;; Reconfigures GNU Emacs syntax highlighting for GNU Assembler syntax.
 
 (require 'asm-mode)
+(require 'cosmo-cpp-constants)
 
 (defun cosmo-regexpify (x)
   (let ((join (lambda (sep lis)
@@ -144,6 +145,11 @@
      ;;
      ("^/.*$" . font-lock-comment-face)
 
+     ;; Preprocessor Constants
+     ;; TODO(jart): Why won't it work?? ;_;
+     (,(concat "\\b" (cosmo-regexpify cosmo-cpp-constants) "\\b") ;; regexp-opt
+      1 font-lock-constant-face)
+
      ;; Immediate Argument
      ;;
      ;;   - Valid
@@ -192,7 +198,7 @@
 
    cpp-font-lock-keywords
 
-   '(;; GNU-Style Assembler Comment (Ltd. 80x86 &c.)
+   `(;; GNU-Style Assembler Comment (Ltd. 80x86 &c.)
      ;;
      ;;   - Valid
      ;;
@@ -273,7 +279,7 @@
       (1 font-lock-constant-face)
       (2 font-lock-constant-face))
 
-     ;; Decimal Literal
+     ;; Bultin Constants
      ;;
      ;;   - Valid
      ;;

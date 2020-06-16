@@ -30,4 +30,4 @@ program_invocation_name:
 	mov	(%r13),%rax
 	stosq
 	.init.end 300,_init_program_invocation_name
-	.yoink	__FILE__
+	.source	__FILE__

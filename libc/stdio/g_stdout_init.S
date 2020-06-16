@@ -22,7 +22,7 @@
 #include "libc/calls/calls.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/macros.h"
-.yoink	__FILE__
+.source	__FILE__
 
 	.init.start 400,_init_g_stdout
 	lea	g_stdout(%rip),%rax

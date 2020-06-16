@@ -27,4 +27,4 @@
 crc32:	movslq	%edx,%rdx
 	jmp	crc32_z
 	.endfn	crc32,globl
-	.yoink	__FILE__
+	.source	__FILE__

@@ -7,7 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/macros.inc"
+#include "libc/macros.h"
 
 /	extern const char kMonthName[12][10];
 	.section .rodata,"aS",@progbits

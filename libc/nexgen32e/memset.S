@@ -24,7 +24,7 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nexgen32e/macros.h"
 #include "libc/macros.h"
-.yoink	__FILE__
+.source	__FILE__
 
 /	Sets memory.
 /

@@ -85,4 +85,4 @@ strcaseconv:
 	.endfn	strcaseconv
 	.endfn	strtolower,globl
 	.endfn	strtoupper,globl
-	.yoink	__FILE__
+	.source	__FILE__

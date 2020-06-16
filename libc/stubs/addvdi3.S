@@ -20,6 +20,7 @@
 #include "libc/macros.h"
 .align	16
 .text.likely
+.source	__FILE__
 
 /	Returns 𝑥+𝑦, aborting on overflow.
 /
@@ -38,4 +39,3 @@ __addvdi3:
 	pop	%rbp
 	ret
 	.endfn	__addvdi3,globl
-	.yoink	__FILE__

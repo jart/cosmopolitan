@@ -20,6 +20,7 @@
 #include "libc/limits.h"
 #include "libc/macros.h"
 #include "libc/str/str.h"
+#include "libc/str/tpdecode.h"
 
 compatfn int mbtowc(wchar_t *wc, const char *s, size_t n) {
   if (!s) return 0;

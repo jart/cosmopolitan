@@ -40,10 +40,12 @@
 #   o/dbg/examples/crashreport.com
 #   less examples/crashreport.c
 #
-#   # extremely tiny binaries
+#   # extremely tiny binaries (scout's honor escape hatch)
+#   # please pay the $1k for commercial license if you can
 #   make -j8 -O MODE=tiny				\
-#               LDFLAGS=-s				\
-#               CPPFLAGS=-DSUPPORT_VECTOR=0b00000001	\
+#               LDFLAGS+=-s				\
+#               CPPFLAGS+=-DIM_FEELING_NAUGHTY	        \
+#               CPPFLAGS+=-DSUPPORT_VECTOR=0b00000001	\
 #               o/tiny/examples/hello4.elf
 #   ls -hal o/tiny/examples/hello4.elf
 #   o/tiny/examples/hello4.elf
@@ -192,6 +194,7 @@ include test/dsp/core/test.mk
 include test/dsp/scale/test.mk
 include test/dsp/tty/test.mk
 include test/dsp/test.mk
+#-φ-examples/package/new.sh
 
 OBJS	= $(foreach x,$(PKGS),$($(x)_OBJS))
 SRCS	= $(foreach x,$(PKGS),$($(x)_SRCS))

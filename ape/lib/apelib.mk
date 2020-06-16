@@ -19,6 +19,8 @@ APE_LIB_A_OBJS =					\
 	$(APE_LIB_A_SRCS_S:%.S=o/$(MODE)/%.o)		\
 	$(APE_LIB_A_SRCS_C:%.c=o/$(MODE)/%.o)		\
 	$(APE_LIB_A_SRCS:%=o/$(MODE)/%.zip.o)		\
+	o/$(MODE)/ape/ape.lds.zip.o			\
+	o/$(MODE)/ape/ape.S.zip.o			\
 	o/$(MODE)/NOTICE.zip.o
 
 APE_LIB_A_CHECKS = $(APE_LIB_A_HDRS:%=o/$(MODE)/%.ok)

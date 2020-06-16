@@ -43,7 +43,7 @@
 /	@mode	long
 /	@asyncsignalsafe
 	.align	16
-	.yoink	__FILE__
+	.source	__FILE__
 memcpy:	mov	%rdi,%rax
 /	𝑠𝑙𝑖𝑑𝑒
 

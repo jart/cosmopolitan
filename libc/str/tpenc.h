@@ -4,19 +4,20 @@
 COSMOPOLITAN_C_START_
 
 uint64_t tpenc(int32_t) pureconst;
-uint64_t tpenc2(int32_t) pureconst;
 
-#define tpenc(CODE)                                                \
-  ({                                                               \
-    unsigned long Buf;                                             \
-    int Di, Code = (CODE);                                         \
-    if (0 <= Code && Code <= 127) {                                \
-      Buf = Code;                                                  \
-    } else {                                                       \
-      asm("call\ttpenc" : "=a"(Buf), "=D"(Di) : "1"(CODE) : "cc"); \
-    }                                                              \
-    Buf;                                                           \
+#ifndef __STRICT_ANSI__
+#define tpenc(CODE)                                                     \
+  ({                                                                    \
+    long Buf;                                                           \
+    int32_t Code = (CODE);                                              \
+    if (0 <= Code && Code <= 127) {                                     \
+      Buf = Code;                                                       \
+    } else {                                                            \
+      asm("call\ttpenc" : "=a"(Buf), "+D"(Code) : /* inputs */ : "cc"); \
+    }                                                                   \
+    Buf;                                                                \
   })
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

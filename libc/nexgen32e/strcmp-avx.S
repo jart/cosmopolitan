@@ -87,4 +87,4 @@ strncmp$avx:
 	sub	%ecx,%eax
 	jmp	5b
 	.endfn	strncmp$avx,globl,hidden
-	.yoink	__FILE__
+	.source	__FILE__

@@ -61,4 +61,4 @@ wmemrchr:
 	lea	(%rdi,%rcx,4),%rax
 9:	.leafepilogue
 	.endfn	wmemrchr,globl
-	.yoink	__FILE__
+	.source	__FILE__

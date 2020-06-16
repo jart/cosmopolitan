@@ -19,31 +19,42 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Raw Linux Assembly Binary Tutorial
+/	Tiny Raw Linux Binary Tutorial
 /	
 /	i.e. how to not use cosmopolitan runtimes at all
 /	     cosmopolitan basically abstracts this
 /	     except for all major platforms
 /	
-/	make o//examples/raw-linux-hello.elf
-/	o//examples/raw-linux-hello.elf		# about 6kb
+/	  make o//examples/raw-linux-hello.elf
+/	  o/examples/raw-linux-hello.elf # about 6kb
 /	
-/	Next consider doing it in C with fancy build tuning
+/	Next try C but with fancy build tuning
 /	
-/	make -j8 -O \
-/	  MODE=tiny \
-/	  LDFLAGS=-s \
-/	  CPPFLAGS=-DSUPPORT_VECTOR=0b00000001 \
-/	  o/tiny/examples/hello2.elf
-/	o/tiny/examples/hello2.elf		# about 8kb
+/	  make -j8 -O                             \
+/	    MODE=tiny                             \
+/	    LDFLAGS+=-s                           \
+/	    CPPFLAGS+=-DIM_FEELING_NAUGHTY        \
+/	    CPPFLAGS+=-DSUPPORT_VECTOR=0b00000001 \
+/	    o/tiny/examples/hello2.elf
+/	  o/tiny/examples/hello2.elf # about 8kb
 /
+/	@param	rsp is [n,argv₀..argvₙ₋₁,0,envp₀..,0,auxv₀..,0,..]
+/	@see	also glibc static binaries which start at 800kb!!!
+/	@see	also go where interfaces sadly disempower ld prune
+/	@see	also the stl where bad linkage is due to tech debt
+/	@see	libc/macros-cpp.inc forthe getstr macro definition
+/	@note	libc/elf/elf.lds can be tinier with page align off
+/	@note	gas is more powerful than nasm due to rms notation
 /	@noreturn
 _start:	mov	$12,%rdx			# arg no. 3 is length
 	getstr	"hello world\n",%rsi,%esi	# arg no. 2 is memory
 	mov	$1,%edi				# arg no. 1 is stdout
 	mov	$1,%eax				# write()
-	syscall					# see libc/sysv/syscalls.sh
+	syscall					# libc/sysv/syscalls.sh
 	mov	$0,%edi				# arg no. 1 is success status
 	mov	$0xE7,%eax			# exit_group()
-	syscall
+	syscall					# context switch
+0:	rep nop					# basic blockading
+	jmp	0b
 	.endfn	_start,globl
+	.source	__FILE__

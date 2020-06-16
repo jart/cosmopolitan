@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/macros.h"
 .real
-.yoink	__FILE__
+.source	__FILE__
 .code16 # ∩ .code32 ∩ .code64
 
 /	Linkable delegate for traditional Unix user process termination.

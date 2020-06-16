@@ -59,4 +59,4 @@ gclongjmp:
 	pop	%rdi
 	jmp	0b
 	.endfn	gclongjmp,globl
-	.yoink	__FILE__
+	.source	__FILE__

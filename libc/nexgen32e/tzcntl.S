@@ -43,4 +43,4 @@ tzcntl:	.leafprologue
 	.leafepilogue
 	.endfn	tzcntl,globl
 	.alias	tzcntl,tzcntll
-	.yoink	__FILE__
+	.source	__FILE__

@@ -30,4 +30,4 @@
 strcmp16:
 	jmp	*hook$strcmp16(%rip)
 	.endfn	strcmp16,globl
-	.yoink	__FILE__
+	.source	__FILE__

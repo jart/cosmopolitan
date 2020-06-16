@@ -32,4 +32,4 @@ clamp1:	.leafprologue
 .Lmax:	.rept	4
 	.float	0.99609375
 	.endr
-	.yoink	__FILE__
+	.source	__FILE__

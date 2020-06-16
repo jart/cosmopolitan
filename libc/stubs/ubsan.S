@@ -20,7 +20,7 @@
 #include "ape/macros.h"
 .real
 .code16 # ∩ .code32 ∩ .code64
-.yoink	__FILE__
+.source	__FILE__
 
 /**
  * @fileoverview Overridable stubs for synthetic sanitizer calls.

@@ -21,6 +21,7 @@
 #include "libc/bits/progn.h"
 #include "libc/bits/safemacros.h"
 #include "libc/str/str.h"
+#include "libc/str/tpencode.h"
 #include "libc/testlib/testlib.h"
 
 char buf[8];
@@ -36,9 +37,10 @@ TEST(tpencode, testSpace) {
 }
 
 TEST(tpencode, testGlyph) {
-  ASSERT_BINEQ(u"ΓåÆ", PROGN(ASSERT_EQ(3, tpencode(buf, 8, u'→', false)), buf));
-  ASSERT_BINEQ(u"ΓåÆ",
-               PROGN(ASSERT_EQ(3, (tpencode)(buf, 8, u'→', false)), buf));
+  ASSERT_EQ(3, tpencode(buf, 8, u'→', false));
+  ASSERT_BINEQ(u"ΓåÆ", buf);
+  ASSERT_EQ(3, (tpencode)(buf, 8, u'→', false));
+  ASSERT_BINEQ(u"ΓåÆ", buf);
 }
 
 TEST(tpencode, testMathematicalNotMuhPolicyDrivenBehavior_negativeOne) {

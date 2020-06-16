@@ -30,4 +30,4 @@
 strstr$sse42:
 	.strstr	.Lequalordered
 	.endfn	strstr$sse42,globl,hidden
-	.yoink	__FILE__
+	.source	__FILE__

@@ -17,8 +17,9 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.inc"
+#include "libc/macros.h"
 .real
+.source	__FILE__
 .code16 # ∩ .code32 ∩ .code64
 
 __unprovable:
@@ -28,4 +29,3 @@ __unprovable:
 	pop	%bp
 	ret
 	.endfn	__unprovable,globl,hidden
-	.yoink	__FILE__

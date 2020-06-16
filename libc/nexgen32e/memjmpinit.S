@@ -46,4 +46,4 @@ memjmpinit:
 	lodsq
 	ret
 	.endfn	memjmpinit,globl,hidden
-	.yoink	__FILE__
+	.source	__FILE__

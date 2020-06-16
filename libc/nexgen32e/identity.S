@@ -26,4 +26,4 @@ identity:
 	mov	%rdi,%rax
 	ret
 	.endfn	identity,globl
-	.yoink	__FILE__
+	.source	__FILE__

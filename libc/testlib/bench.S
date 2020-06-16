@@ -18,9 +18,8 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-
-	yoink	__FILE__
-	yoink	testlib_runallbenchmarks
+.yoink	testlib_runallbenchmarks
+.source	__FILE__
 
 /	Decentralized section for benchmark registration.
 /

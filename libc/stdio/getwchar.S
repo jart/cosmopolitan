@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.yoink	__FILE__
+.source	__FILE__
 
 /	Reads Thompson-Pike encoded varint from standard input.
 /	@return	%eax has result w/ rest of %rax cleared

@@ -68,9 +68,6 @@ void *isnotplaintext(const void *, size_t) nothrow nocallback nosideeffect;
 #define UTF16_MOAR        0b1101100000000000 /* 0xD800..0xDBFF */
 #define UTF16_CONT        0b1101110000000000 /* 0xDC00..0xDBFF */
 
-unsigned tpencode(char *buf, size_t size, wint_t c, bool32 awesome)
-    paramsnonnull() libcesque;
-int tpdecode(const char *s, wint_t *out) paramsnonnull((1)) libcesque;
 unsigned getutf16(const char16_t *p, wint_t *wc);
 int pututf16(char16_t *s, size_t size, wint_t wc, bool awesome);
 int iswalnum(wint_t);
@@ -532,45 +529,11 @@ extern int (*const hook$wcsncmp)(const wchar_t *, const wchar_t *, size_t);
              __builtin_strlen(s), _strlen(s))
 #endif /* C11+ */
 
-#define tpencode(BUF, SIZE, CH, AWESOME) __tpencode(BUF, SIZE, CH, AWESOME)
 #define pututf16(BUF, SIZE, CH, AWESOME) __pututf16(BUF, SIZE, CH, AWESOME)
 #define getutf16(BUF, CHPTR)             __getutf16(BUF, CHPTR)
-#define tpdecode(S, OUT)                 __tpdecode(S, OUT)
 size_t _strlen(const char *s) asm("strlen") strlenesque;
 char *_strchr(const char *, int) asm("strchr") strlenesque;
 void *_memchr(const void *, int, size_t) asm("memchr") strlenesque;
-forceinline unsigned __tpencode(char *s, size_t size, wint_t wc,
-                                bool32 awesome) {
-  unsigned char *p = (unsigned char *)s;
-  if (size >= 1 && (0x00 <= wc && wc <= 0x7f)) {
-    if (wc >= 32 || !awesome) {
-      p[0] = (unsigned char)wc;
-      return 1;
-    } else if (size >= 2) {
-      p[0] = 0xc0;
-      p[1] = 0x80 | (unsigned char)wc;
-      return 2;
-    }
-  }
-  unsigned ax;
-  asm("call\ttpencode"
-      : "=a"(ax), "=m"(*(char(*)[size])s)
-      : "D"(s), "S"(size), "d"(wc)
-      : "cc");
-  return ax;
-}
-forceinline int __tpdecode(const char *s, wint_t *out) {
-  if (0 <= *s && *s <= 0x7f) {
-    *out = *s;
-    return 1;
-  }
-  int ax;
-  asm("call\ttpdecode"
-      : "=a"(ax), "=m"(*(char(*)[6])s)
-      : "D"(s), "S"(out)
-      : "cc");
-  return ax;
-}
 forceinline int __pututf16(char16_t *s, size_t size, wint_t wc,
                            bool32 awesome) {
   if (size >= 1 && (0x00 <= wc && wc <= 0xD7FF)) {

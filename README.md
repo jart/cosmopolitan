@@ -24,6 +24,26 @@ without the costs and restrictions cross-platform distribution entails.
 That makes Cosmopolitan an excellent fit for writing small CLI programs
 that do things like heavyweight numerical computations as a subprocess.
 
+## Getting Started
+
+Just clone the repository and put your own folder in it. Please choose a
+name that's based on a .com or .org domain name registration you control
+which is scout's honor but might change to require TXT records in future
+
+We provide a script that makes it easy to start a new package:
+
+    examples/package/new.sh com/github/user/project
+    emacs com/github/user/project/program.c
+    make o//com/github/user/project/program.c
+    o//com/github/user/project/program.c
+
+Please note GNU make is awesome. Little known fact: make is a functional
+programming language. We've improve upon it too see tool/build/package.c
+which performs strict dependency checking, to correct Google's published
+mistakes c. 2006 which was when they switched from using a GNU Make repo
+in favor of an inhouse derivative called Blaze which does strictness too
+thereby allowing the repository to grow gracefully with any requirements
+
 ## Licensing
 
 Cosmopolitan is Free Software licensed under the GPLv2. The build config
@@ -41,6 +61,24 @@ you want your license to last 5 years, send $10,000 to the author above
 who is Justine Tunney <jtunney@gmail.com>. This README will be updated,
 if pricing and other details should change. Reach out for more details.
 
+## Integrated Development Environment
+
+Your Cosmopolitan IDE is based on Emacs. When used alongside `make tags`
+it can automate certain toilsome problems such as adding an include line
+by typing `C-c C-h` with the cursor over a symbol. Please install these:
+
+    sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+    sudo apt install gdb ragel ctags clang-format-10  # <-recommended
+    git clone git@github.com:jart/cosmopolitan.git && cd cosmopolitan
+    tool/scripts/install-emacs.sh    # recommended over apt
+    tool/scripts/configure-emacs.sh  # adds load statements
+    make tags                        # index all the symbol
+    emacs                            # for power and glory!
+
+See [tool/emacs/cosmo-stuff.el] for further details. Noting what enables
+the to work so well and fast is our break with tradition by using rooted
+quoted include statements while vendoring the transitive closure of deps
+
 ## Contributing
 
 We'd love to accept your patches! Before we can take them, we have to
@@ -49,3 +87,162 @@ jump through one legal hurdle. Please write an email to Justine Tunney
 any changes you contribute to Cosmopolitan. We need to do that in order
 to dual license Cosmopolitan. Otherwise we can't tax corporations that
 don't want to share their code with the community.
+
+## Volunteering
+
+We also need volunteers who can help us further stabilize System Five's
+application binary interface. See our ABI scripts [libc/sysv/consts.sh]
+and [libc/sysv/syscalls.sh]. Magic numbers are usually stabler than API
+interfaces cf. NPM but we should ideally have fewer of them, similar to
+how SI has sought to have fewer defining physics constants.
+
+## Specimen
+
+Cosmopolitan encodes binaries respecting the intersection of reasonable
+platform requirements. That's easy to accomplish w/ binary isomorphisms
+evidenced below by the RADIX256 disassembly below for [examples/life.c]
+which ld is configured to overlay pe/elf/macho/bourne/bootloader in 12k
+
+Please send feedback and concerns to <jtunney@gmail.com> since we would
+love to do an even better job. Please also report GPL abuse the address
+above as well. We believe this binary structure is novel, and therefore
+easily recognizable. So if some goofball isn't bundling the source code
+please let us know so we can reach out and ask they consider a license.
+
+    make -j10 -O MODE=tiny CPPFLAGS=-DIM_FEELING_NAUGHTY
+    o/tiny/tool/viz/bing.com <o/tiny/examples/life.com | 
+    o/tiny/tool/viz/fold.com
+
+    MZqFpD=‘◙  ► °       ☺ ◘@           JT                      p♂  
+    ▓@δ δ◄ÉÉδ♥R1╥╜  δ♣Θ⌐☼  ⁿ┐ p1╔·Ä╫ë╠√♫XΦ  ^üεh ▒♦╤εâΘ☺u∙╣ ☻┐ ♦Ä▐Ä╟
+    1÷1λ≤ñΩï@  ╣ ■≤ñ1φÄ▌Φ  Uëσ╣ 0╕ ☺Ä└1└1λ≤¬Ç·@t#Φ. ╕ ♦Ä└┐↑ 0÷1╔ë°Φ]
+     î╞â╞ Ot•Hu≈Ä╞δ∞ë♫@2ë▬B2Ω3E  ◙SR┤◘═‼r,ê╧Çτ⁇Çß└╨┴╨┴å═▲♠▼1÷Ä╞╛ 2ç≈
+    ÑÑÑÑÑñ▼ô½æ½Æ½X¬Æ[├ZÇ≥Ç1└═‼r≈δ┴S1█è▲♀29├w☻ë╪QP╗ ►î└)├üπλ☼╣♣ ╤δâΘ☺
+    u∙XYà█t♠9├w☻ë╪PQå═╨╔╨╔Ç╔☺1█┤☻═‼Y[r‼┤ 9├|♪A;♫♪2~♦1╔■╞[├P1└═‼Xδ╨  
+                                                                    
+                                                                  U¬
+    ‘◙#‘“◙o=“$(command -v “$0“)“◙set -- “$o“ “$@“◙if [ -d /Applicati
+    ons ]; then◙dd if=“$o“ of=“$o“ bs=8 skip=“     410“ count=“     
+     87“ conv=notrunc 2>/dev/null◙elif exec 7<> “$o“; then◙printf ‘╲
+    177ELF╲2╲1╲1╲011╲0╲0╲0╲0╲0╲0╲0╲0╲2╲0╲076╲0╲1╲0╲0╲0╲134╲022╲100╲0
+    00╲000╲000╲000╲000╲150╲012╲000╲000╲000╲000╲000╲000╲000╲000╲000╲0
+    00╲000╲000╲000╲000╲0╲0╲0╲0╲100╲0╲070╲0╲004╲000╲0╲0╲000╲000╲000╲0
+    00‘ >&7◙exec 7<&-◙fi◙exec “$@“◙R=$⁇◙if [ $R -eq 126 ] && [ “$(un
+    ame -m)“ != x86_64 ]; then◙if Q=“$(command -v qemu-x86_64)“; the
+    n◙exec “$Q“ “$@“◙else◙echo error: need qemu-x86_64 >&2◙fi◙fi◙exi
+    t $R◙αcτμαlly pδrταblε εxεcμταblε♪◙ error:  ♪◙ cpuid oldskool ds
+    knfo e820 nomem nolong hello◙ ♀  Cf☼▼D  8 ╕D      f☼▼D          
+    λλ   Ü☼ λλ   Æ☼ λλ   Ü╧ λλ   Æ╧ λλ   ¢» λλ   ô» ☻░¡←  ☺ ■OQΣ≡♦  
+      ►  0►  @► ►♣  =☻░¡+☼à↑♪  j ¥▓@☼ └âα■☼“└fΩW@  ÉÉÉÉUëσΦ§♪Φ↓ ┐• î
+    ♠▬2ú↑2Φ(☺┐EDΦÑ Φ╨♀Φ→☻Uëσ╣♦ ╛ 0¼ê┬¼ê╞à╥t♀QVë╫╛€DΦ○ ^YâΘ☺uσ]├Uëσë·
+    à╥t↑RV1╔▒♥☺╩¼^♀ÇεZ¼εâ┬☺âΘ☺y÷]├UëσΦ↕ Φ  Uëσ┐ 0╛♦ ΦÇ ΦÉ☺Uëσï╖☻0à÷u
+    ♦ï6 01└PV╕lDPVWV╕dDP_àλt♠^Φ♦ δ⌡]├UëσWVΦ♂ ^_à÷t♥Φ↨ ]├Uëσë■─>▬2Φ╕ 
+    î♠▬2ú↑2]├UëσSë√ç▐¼ç▐ä└t↑ë╟VP╕  δ◘XΦ.   δ♦XΦ( ^δ▀[]├ë±ë■1╥¼ê┬¼ê╞à
+    └t◄â┬♣┤@∞ α≤Ét∙âΘ☺uσ├PQRë≥â┬♣┤ ∞ αu♦≤Éδ≈ë°ë≥εZYX├UëσS┤╕░ Ä└ë°<♥t
+    ☻0φ1λj X═►┤☺░ ╡ ▒ ═►┤►░♥╖ │ ═►1└[]├Uëσâ∞►ûë∙ëμëτ¬ë╧j☺Zδ♫V¼ä└u√ë≥
+    ^)≥UëσSë╤ë·ÇΓ ÇμÇÇ┬áÇ╓☼╖ │á9·t)w↕¼<◙t↕<♪t↕¬░•¬âΘ☺uΦë°[]├☺▀δ≥ë°R1
+    ╥≈√)╫ZδμPQRVë▐P╕  δ◘XΦ♫   δ♦XΦ◘ ë╟^ZYXδ╞≈╥ë∙Çß ÇσÇç╧)±Q)∙ë■☺╬╕  
+    ▲•≤ñX├Uëσ╕ S1█═§r→ü√MPu¶╕☺S1█═§1█1╔╕•S│☺▒♥═§Φ╢◙UëσΦ↔ Φy☺┐ ►╛  Φz
+     r○Φ╟ Φ∞ Φ‘☻╕àDΦ♀■Uëσ£X% puMf£fXfë┴f╗    f1╪fPf¥f£fXf9┴t:f!╪fPf¥
+    f┐   Çfë°fG☼óf9°|∟fë°☼óf┐    f!·f9·u○1└]├╕uDδ◙╕ÉDδ♣╕oDδ Φú²Uëσfh
+    PAMSS┴∩♦Ä╟f1λf1█f╕ Φ  f╣↑   fïVⁿ═§r&f;Fⁿu à╔t♫â∙§r♠÷E¶☺u♥â╟↑fà█t
+    ♦9≈r╦ë°[╔├∙δ·Uëσ·☼☺▬¿D☼ └♀☺☼“└δ ╣  Äß$■☼“└fΩrH    √]├UëσSf╛ @  f
+    ╗  ► f╣↑   f┴ß○fâ╩ⁿfâ┬♦f9╤t♫dgfï♦▬dgfë♦‼δΘgfì∟‼┐  ╕ @Ä└ï♫@2ï▬B2à
+    λt+ë°S1█ΦS°[)╟Që┴┴ß○1÷&fï♦dgfë♥fâ├♦â╞♦âΘ♦uδYδ╤[]├·▲1└Ä└HÄ╪┐ ♣╛►♣
+    &è♣Pè♦P&╞♣ ╞♦λ&Ç=λXê♦X&ê♣▼u@╕☺ Φ, ░¡μdΦ% ░╨μdΦ% Σ`PΦ↑ ░╤μdΦ◄ X♀☻
+    μ`Φ○ ░«μdΦ☻ δúΣd¿☻u·├Σd¿☺t·├√├Uëσ▲╕ lÄ╪f╟♠ 0♥α♠ f╟♠  ♥╨♠ f╟♠ ►♥└
+    ♠ ╣ ☺f╕♥   1÷fë♦f♣ ►  â╞◘âΘ☺u∩▼f╟♠ 2 └♠ f╕ ≡♠ ☼“╪]├·☼☺▲02Φóλ☼ αf
+    ♪á☻  ☼“αf╣Ç  └☼2f♪☺☺  ☼0☼☺▬¿D☼ └f♪♥  Çfâα√☼“└Ω≥I( ╕0   Ä╪ÄαÄΦ1╥δ
+     HâΣ≡1φ1λΦ]•  ┐ ►  Φ{•  ┐ ►  ╛ ≡♠ ║ 2  Φ≡♣  ┐ùD  ï4% 0  Φ╠√λλ┐ 0
+      ╛♦   Φτ√λλΘΓ•  Hì§█•  Φλ•  Θ╤•  É☼▼D  ☺   ♣             @     
+      ►                      ►      ☺   ♠             @       ►     
+     ►               ►      Qσtd♠                                   
+            ►       ♦   ♦   P♂      P♂@     P♂►     ↑       ↑       
+    ◘       É☼▼Ç    ◘   ♦   ☺   OpenBSD     É☼▼Ç    PE  då☻ k↕d╲    
+        ≡ #☻♂☻♫☼            ╞¶        @      ►   ►  ♠       ♠       
+     @   ►      ♥  ☺  ►       ♥       ◘      ►          ►           
+    ä←  (                                                           
+                            ►   @                           .text   
+     ►   ►   ►   ►              `  p.data            ►              
+        └  └É☼▼Ç    ╧·φ■•  ☺♥   ☻   ♣   ÿ☻  ☺       ↓   H   __PAGEZE
+    RO                                                      ↓   ÿ   
+    __TEXT            @                             •   ♣   ☺       
+    __text          __TEXT           ►@      ►       ►  ♀           
+     ♦              ↓   Φ   __DATA            @                     
+     ►      •   ♥   ☻       __data          __DATA            @     
+     ►          ♀                           __bss           __DATA  
+             0@      ►          ♀           ☺               ←   ↑   
+    B)→☺&¿◘ºB)→☺&¿◘º♣   ╕   ♦   *             @                     
+                                                                    
+                                    S↕@                             
+            Éf.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä
+         f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f☼▼ä     
+    ZAR╕    Hà└t◙Hà└t♣Θ»♦  Θ@☻  UHë╤HëσAWIë≈AVA╛  @ AUIë²ATA╝  ► SHë
+    √Hâ∞↑Hâ{◘ ☼ä╕   ïS►Hë╪Hâ├↑λ╩t○Hâ{◘ uδδ♥Hë├L9#L☼C#Iü─λ☼  IüΣ ≡λλH
+    ïC◘H♥♥H% ≡λλI9─snIïU◘Hà╥t↓Aâ}►☺u♠Iâ┼↑δΩIïE H☺╨L9αrεIïE L9αw◄H☺╨L
+    9αv○Lìáλ☼  δ½Lë·Lë≈╛♥   HëM╚Φ6   LëΓHïM╚Iü╞ ►  Hâ╩♥Iü─ ►  Hë►δÇH
+    â├↑Θ=λλλHâ─↑[A╲A]A^A_]├I╣ ≡λλλλ♥ Ië╚╣‘   Hë°λ╬H╙Φ%λ☺  â■λu♣Hì♦┬├
+    Hì¶┬Hâ: u‼Iï H- ►  Ië Hâ╚♥Hë☻Hï☻âΘ○L!╚Hë┬δ╛U╣ 2  ║ ≡♠ ╛♥   HëσSH
+    ë√PΦÅλλλHâ ■☼☺;Z[]├1÷ë≡Hk└↑Hâ|•◘ t♦λ╞δεA╕☺   HìW↑A9≡r☺├UHëσATSLï
+    ◙HïZ◘Hë╤Dë└DïZ►DïR¶Aë─λ╚L;IΦt→☼►AΦLïa°HâΘ↑☼◄A↑Lëa(à└u▌δ♥DëαHk└↑A
+    λ└Hâ┬↑H☺°Lë◘HëX◘DëX►DëP¶A9≡rí[A╲]├1└├UëσSç█[fÉ╠·⌠δ²Uëσâ∞◘U^ì~°j◘
+    Y1└≤¬·☼☺^°☼♂δ≈Uëσ]├╞♣ª↔  ◘δ►HàλH☼Eτt•╞♣ö↔   Lc$$Lìl$◘NìtΣ↑╕“↕@ ┐
+    ► @ ╣P @ H)∙┴Θ♥≤H½1└â╔λLë≈≥H»IëλΘ╧   UHëσ┐ 0@ ╛°←@ ╣00@ HìA►Hë☺╟
+    A◘ ♥  SV÷•◘u<÷• u!÷•♦u◄Iâ⁇ t!j j☺╛ⁿ←@ δ*j“j♦╛☻∟@ δ▼j0j ╛∙←@ δ¶j*
+    j►╛λ←@ δ○jEj◘╛♦∟@ ╣q↓@ XH½XH☺╚H½W┐↑0@ Iâ╔λ╗(0@ H9▀s51╔1╥¼Ië└Aâα⌂
+    I╙αâ┴•L○┬ä└xδ¿@t○Lë╚H╙αH○┬Hë╨Hâ⁇ H☼E•H½δ╞_^[╔├╕*   ├HâΣ≡1φ╗  @ Φ
+    !λλλâ♪┴▼  ☺╕◘ @ ╣◘ @ H9┴t♀PQλ►YXHâ└◘δ∩ÉLëτLëεLë≥Φ╣λλλë╟Φ    UHëσ
+    ATAëⁿ1λPΦr   DëτΦö♠  1÷1╥UHëσAW╣00@ Ië╧Iï•IïO◘Hà╔t∟HâΘ↑Hë¶◘Hët◘◘
+    Hë|◘►IëO◘1└A_]├╣    Hà╔t≥PWVj!_j►^λ╤^_YHà└t▀I╟└ ♥  Ië•Jë♀ Lë┴δ┤U
+    HëσAVAUATHï5α←  Ië■Ië⌠j YH¡HÆH¡HùH¡Hà└t↑Mà÷δ♣L9≥u♫VQQλ╨YY^1└HëF°
+    âΘ☺u╘H¡Hà└t◄Mà÷t○PLëτΦfδ┐λ^δ╢A╲Mà÷u←╕► @ ╣► @ HâΦ◘H9╚|◘PQλ►YXδ∩A
+    ]A^]├╠U╣ ◘  1└HëσAWAVAUATSHü∞Hα  Hëà└▼λλHëà╚▼λλλ§C♂  Hâ─ à└uGHâ∞
+     H╟┴⌠λλλλ§“♂  Hâ─↑A╕♠   Lìì╨⌂λλj Hë┴║⌐→@ Hâ∞ λ§♪♂  XZ╣☺   λ§╨◙  
+    Hâ─ Hâ∞ j♦Xë♣»→  λ§╔◙  Ië─λ§╚◙  LëτHâ─ A╕ ☻  Hìì╨/λλ║λ⁇  Hì╡╤⁇λλ
+    Ië┼Φ╙☺  Aë─1└Hïì╨/λλH☺┴è◄ä╥t♪Ç·╲u♥╞☺/Hλ└δπA☼╖E f=λ╫w♪ëà╝▼λλ╕☺   
+    δ☼Hì╡╝▼λλLë∩Φ0♦  ë└Hìì╨⌂λλE1└1█H☺└Ië╦LìU╬A╛²⌂  IìT♣ Hì╡╝▼λλâ╜╝▼λ
+    λ ☼äÅ   Iλ└Iü°λ☺  w↕L9╤Hë╪H☼B┴Jëä┼╚▼λλDïì╝▼λλIc┴Aâ∙⌂v◘Dë╧ΦÉ♥  L9
+    ╤s♀Hλ┴êAλH┴Φ◘u∩☼╖☻f=λ╫w♪ëà╝▼λλ╕☺   δ◘Hë╫Φö♥  ë└H☺└H☺┬Eà╔u¼Hë╚L)╪
+    H=²⌂  I☼G╞╞ä♣╨⌂λλ ΘdλλλL9╤s♠╞☺ Hλ┴L)┘╕■⌂  Lì╡╨▼λλHü∙■⌂  Lì╜└▼λλH
+    ☼G╚Iü°λ☺  ╕λ☺  L☼G└Hâ∞ ╞ä♪╨⌂λλ LëΘLì¡╨/λλJ╟ä┼╨▼λλ    λ§↔○  Θtⁿλλ
+    Hë·Hï⁇☼╖•f=λ╫w◙ëB↑╕☺   δ○Hìr↑Φ▀☻  ë└H☺└H☺☻├Hë·Hc╞ë≈LïB►â■⌂v♣Φì☻ 
+     HïJ◘I9╚v►Hìq☺Hër◘ê☺H┴Φ◘uτ├UHì♦▬Ië╙Më┬HëσAWI┐ &  ☺   AVAUIë⌡ATS1
+    █Hâ∞8Hë}░Hì}░HëM¿Hëu╕HëE└Φbλλλâ}╚ t↔ïE╚à└t▬â° w╲I☼ú╟sVHì}░ΦAλλλδ
+    π1÷Hì}░Φ_λλλMà█t↨HïE╕Iλ╦L)ΦL9╪I☼G├A╞D♣  Mà╥☼äf☺  Iλ╩HïE¿I9┌L☼G╙J
+    ╟♦╨    ΘK☺  Hλ├L9╙s§HïE╕H;E└r☻1└HïU¿HëD┌°E1÷ïu╚à÷☼ä►☺  Eä÷u¶â■ w
+    ☼I☼ú≈☼âσ   Θ≈   â■“t○â■╲☼à╥   E1Σâ}╚╲u♫Hì}░Iλ─Φì■λλδ∞E1╔â}╚“u♫Hì
+    }░Φy■λλIλ┴δ∞LëαMà╔u↓Iλ╠IâⁿλtÅ╛╲   Hì}░ΦÇ■λλδτHâ°☺v∟╛╲   Hì}░HëEá
+    Φf■λλHïEáHâΦ☻δ▐AÇΣ☺t↨╛“   Hì}░ΦH■λλIλ╔☼ä@λλλAÇ■☺A╛♥   Iâ┘ Mìa☺M9
+    ⌠r¶╛“   Hì}░Iâ╞♥Φ▬■λλδτ1╥╣♥   Lë╚H≈±Hà╥A☼ö╞Θⁿ■λλHì}░Φ≥²λλHì}░Φ╛²
+    λλΘσ■λλ1÷Hì}░Φ┘²λλΘG■λλHâ─8ë╪[A╲A]A^A_]├╠Hì♣╪↓  ├☼┐└à└x←Ië╩☼♣H=☺
+    ≡λλs☺├≈╪ë♣║↓  jλX∙├ï♣⌂▬  δφH┴Φ0δ•H┴Φ ☼╖└f=λ☼sσIë╩☼♣r╙├Aë├┴Φ►%λ☼ 
+     A┴δ∟A┴π↑D○╪δ┌QRëλ1└âλ⌂v“☼╜╧║┐→@ ïLJ≥ë·┴∩♠ÇΓ⁇♀Ç◘╨H┴α◘■╔u∞◘ΦH○°ZY
+    ├U1└HëσWVSQRë┬ë├λ└☼╖¶Wë╤füß ⁿfü∙ ▄tΦfü∙ ╪t♦ë▬δ,☼╖♦Gë┴füß ⁿfü∙ ▄t
+    ♂╟♠²λ  â╚λδ☼┴Γ◙ìä☻ $áⁿë♠ìC☻ZY[^_]├f☼▼D  Éâ♪▄↑  ♦÷♣ë§  ♦t♪@☼╢╧λ§ì
+    ♣  δ°╠ï♣ö§  ☼♣·☼☺∟%Ü→@ ⌠δ²        f☼▼D  Énodll◙ KernelBase.dll ☺
+    └☺└☺└☺└☻α☻α☻α☻α☻α♥≡♥≡♥≡♥≡♥≡♦°♦°♦°♦°♦°♣ⁿ♣ⁿ♣ⁿ♣ⁿ♣ⁿ♣ⁿÉÉ☼▼D  ⁇♣ExitPr
+    ocess æ☺FreeEnvironmentStringsW ╜☺GetCommandLineW ‼☻GetEnvironme
+    ntStringsW  ╘☻GetStdHandle  ╫♣SetDefaultDllDirectories  ▼•WriteF
+    ile ░←          ░→  ►                       ☼▼@ °→      ♠←      
+     ←      2←      L←      ╲←      x←              É☼▼Ç    É╬ ☺&τ☺╬
+     ☺☺⌂╬ üÇÇ►f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼
+    ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä   
+      f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.
+    ☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä 
+        f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     
+    f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼
+    ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä   
+      f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.
+    ☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä 
+        f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     
+    f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼
+    ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä   
+      f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.
+    ☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä 
+        f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     
+    f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     f.☼▼ä     ☼▼@ 
+      @             °→      ♠←       ←      2←      L←      ╲←      
+    x←                                                              
+
+See also `build/dump -xd o/tiny/examples/life.com.dbg | less` assembly
+and our linker script [ape/ape.lds] which glues the binaries together.

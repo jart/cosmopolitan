@@ -36,4 +36,4 @@ fesetenv:
 	add	$40,%rsp
 	ret
 	.endfn	fesetenv,globl
-	.yoink	__FILE__
+	.source	__FILE__

@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 #include "libc/notice.inc"
-.yoink	__FILE__
+.source	__FILE__
 
 /	Allocates aligned memory.
 /

@@ -46,4 +46,4 @@ sgetc:	push	%bp
 	pop	%bp
 	ret
 	.endfn	sgetc,globl
-	.yoink	__FILE__
+	.source	__FILE__

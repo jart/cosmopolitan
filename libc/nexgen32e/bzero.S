@@ -32,4 +32,4 @@ bzero:	mov	%rsi,%rdx
 	xor	%esi,%esi
 	jmp	_memset
 	.endfn	bzero,globl
-	.yoink	__FILE__
+	.source	__FILE__

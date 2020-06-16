@@ -54,4 +54,4 @@ nt2sysv:push	%rbp
 	leave
 	ret
 	.endfn	nt2sysv,globl,hidden
-	.yoink	__FILE__
+	.source	__FILE__

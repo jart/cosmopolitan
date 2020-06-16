@@ -21,7 +21,7 @@
 #include "libc/runtime/internal.h"
 #include "libc/macros.h"
 .privileged
-.yoink	__FILE__
+.source	__FILE__
 
 /	Terminates process, ignoring destructors and atexit() handlers.
 /

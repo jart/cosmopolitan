@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.yoink	__FILE__
+.source	__FILE__
 
 /	vroundsd $_MM_FROUND_TO_NEG_INF|_MM_FROUND_NO_EXC,%xmm0,%xmm0,%xmm0
 

@@ -32,4 +32,4 @@ iswprint:
 	andl	$1,%eax
 1:	.leafepilogue
 	.endfn	iswprint,globl
-	.yoink	__FILE__
+	.source	__FILE__

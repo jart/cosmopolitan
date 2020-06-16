@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/str/str.h"
+#include "libc/str/tpdecode.h"
 #include "libc/str/tpdecodecb.h"
 
 forceinline int getbyte(void *arg, uint32_t i) {

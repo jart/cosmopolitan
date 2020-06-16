@@ -36,4 +36,4 @@ kSigsetEmpty:
 	.init.start 300,_init_kSigsetEmpty
 	add	$NSIG/8,%rdi
 	.init.end 300,_init_kSigsetEmpty
-	.yoink	__FILE__
+	.source	__FILE__

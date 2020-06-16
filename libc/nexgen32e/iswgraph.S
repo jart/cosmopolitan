@@ -35,4 +35,4 @@ iswgraph:
 	andl	%edx,%eax
 1:	.leafepilogue
 	.endfn	iswgraph,globl
-	.yoink	__FILE__
+	.source	__FILE__

@@ -23,7 +23,7 @@
 #include "libc/sysv/consts/nr.h"
 #include "libc/macros.h"
 .real
-.yoink	__FILE__
+.source	__FILE__
 
 /	Terminates program abnormally.
 /

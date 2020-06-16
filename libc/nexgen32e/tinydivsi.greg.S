@@ -35,4 +35,4 @@ tinydivsi:
 	sub	%rdi,%rax
 	.leafepilogue
 	.endfn	tinydivsi,globl
-	.yoink	__FILE__
+	.source	__FILE__

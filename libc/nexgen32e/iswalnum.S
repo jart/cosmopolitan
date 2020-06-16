@@ -30,4 +30,4 @@ iswalnum:
 	andl	$6,%eax
 1:	.leafepilogue
 	.endfn	iswalnum,globl
-	.yoink	__FILE__
+	.source	__FILE__

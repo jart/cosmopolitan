@@ -59,4 +59,4 @@ memcmp$sse2:
 7:	xor	%eax,%eax
 8:	.leafepilogue
 	.endfn	memcmp$sse2,globl,hidden
-	.yoink	__FILE__
+	.source	__FILE__

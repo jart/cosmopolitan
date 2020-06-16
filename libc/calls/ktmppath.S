@@ -40,4 +40,4 @@ kTmpPath:
 	call	__getntsyspath
 	.init.end 300,_init_kTmpPath
 
-	.yoink	__FILE__
+	.source	__FILE__

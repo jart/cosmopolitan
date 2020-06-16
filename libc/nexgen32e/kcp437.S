@@ -93,4 +93,4 @@ kCp437:
 .short	0x00b0,0x2219,0x00b7,0x221a,0x207f,0x00b2,0x25a0,0x03bb	#f8:°∙·√ⁿ²■λ
 .endobj	kCp437,globl
 .previous
-	.yoink	__FILE__
+	.source	__FILE__

@@ -31,4 +31,4 @@ hook$wcscmp:
 	stosq
 	.init.end 300,_init_wcscmp
 
-	.yoink	__FILE__
+	.source	__FILE__

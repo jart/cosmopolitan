@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/macros.h"
-.yoink	__FILE__
+.source	__FILE__
 
 /	Returns pointer to first instance of character.
 /

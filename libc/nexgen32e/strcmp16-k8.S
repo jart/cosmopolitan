@@ -63,4 +63,4 @@ strncmp16$k8:
 	pop	%rbx
 	.leafepilogue
 	.endfn	strncmp16$k8,globl,hidden
-	.yoink	__FILE__
+	.source	__FILE__

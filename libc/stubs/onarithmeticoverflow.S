@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 .text.unlikely
-.yoink	__FILE__
+.source	__FILE__
 
 /	Arithmetic overflow handler.
 /

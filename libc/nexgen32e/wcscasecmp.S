@@ -71,4 +71,4 @@ wcsncasecmp:
 	.leafepilogue
 	.endfn	wcsncasecmp,globl
 
-	.yoink	__FILE__
+	.source	__FILE__

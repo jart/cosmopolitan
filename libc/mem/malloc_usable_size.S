@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 #include "libc/notice.inc"
-.yoink	__FILE__
+.source	__FILE__
 
 /	Returns the number of bytes you can actually use in
 /	an allocated chunk, which may be more than you requested

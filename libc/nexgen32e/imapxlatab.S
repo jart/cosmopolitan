@@ -38,4 +38,4 @@ imapxlatab:
 	loop	1b
 	.leafepilogue
 	.endfn	imapxlatab,globl,hidden
-	.yoink	__FILE__
+	.source	__FILE__

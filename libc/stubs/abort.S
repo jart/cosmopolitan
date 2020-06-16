@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/macros.h"
 .real
+.source	__FILE__
 .code16 # ∩ .code32 ∩ .code64
 
 /	Most basic tier of program self-termination.
@@ -29,4 +30,3 @@ abort:	push	%bp
 	rlcall	panic
 	int3
 	.endfn	abort,weak,protected
-	.yoink	__FILE__

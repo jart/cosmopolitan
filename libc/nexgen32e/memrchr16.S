@@ -61,4 +61,4 @@ memrchr16:
 	lea	(%rdi,%rcx,2),%rax
 9:	.leafepilogue
 	.endfn	memrchr16,globl
-	.yoink	__FILE__
+	.source	__FILE__

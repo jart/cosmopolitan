@@ -20,7 +20,7 @@
 #include "ape/macros.h"
 #include "ape/notice.inc"
 .section .real,"ax",@progbits
-.yoink	__FILE__
+.source	__FILE__
 .code16
 
 /	Resets personal computer.

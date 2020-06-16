@@ -38,4 +38,4 @@ ispunct:.leafprologue
 	sete	%al
 1:	.leafepilogue
 	.endfn	ispunct,globl
-	.yoink	__FILE__
+	.source	__FILE__

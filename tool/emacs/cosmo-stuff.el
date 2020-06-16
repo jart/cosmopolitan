@@ -14,10 +14,11 @@
 (require 'asm-mode)
 (require 'cc-mode)
 (require 'fortran)
+(require 'cosmo-c-types)
+(require 'cosmo-c-keywords)
 (require 'cosmo-c-builtins)
 (require 'cosmo-c-constants)
-(require 'cosmo-c-keywords)
-(require 'cosmo-c-types)
+(require 'cosmo-cpp-constants)
 (require 'dired)
 (require 'javadown)
 (require 'ld-script)
@@ -693,6 +694,7 @@
   (font-lock-add-keywords
    nil `((,cosmo-c-keywords-regex . font-lock-keyword-face)
          (,cosmo-c-builtins-regex . font-lock-builtin-face)
+         (,cosmo-cpp-constants-regex . font-lock-constant-face)
          (,cosmo-c-constants-regex . font-lock-constant-face)
          (,cosmo-c-types-regex . font-lock-type-face))))
 

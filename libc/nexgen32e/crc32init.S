@@ -69,4 +69,4 @@ crc32init:
 	leave
 	ret
 	.endfn	crc32init,globl
-	.yoink	__FILE__
+	.source	__FILE__

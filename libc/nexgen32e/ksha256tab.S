@@ -30,4 +30,4 @@ kSha256Tab:
 	.long	0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
 	.endobj	kSha256Tab,globl,hidden
 	.previous
-	.yoink	__FILE__
+	.source	__FILE__

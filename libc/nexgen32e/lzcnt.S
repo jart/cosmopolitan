@@ -44,4 +44,4 @@ lzcnt:	.leafprologue
 	sub	%ecx,%eax
 	.leafepilogue
 	.endfn	lzcnt,globl
-	.yoink	__FILE__
+	.source	__FILE__

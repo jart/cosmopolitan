@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/macros.h"
 .real
-.yoink	__FILE__
+.source	__FILE__
 .code16 # ∩ .code32 ∩ .code64
 
 /	Thrice re-imagined Unix user process termination API stub.

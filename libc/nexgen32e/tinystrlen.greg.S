@@ -34,4 +34,4 @@ tinystrlen:
 	jmp	1b
 2:	.leafepilogue
 	.endfn	tinystrlen,globl
-	.yoink	__FILE__
+	.source	__FILE__

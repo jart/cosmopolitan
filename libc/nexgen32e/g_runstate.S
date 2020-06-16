@@ -20,4 +20,4 @@
 #include "libc/macros.h"
 
 	.comm	g_runstate,4
-	.yoink	__FILE__
+	.source	__FILE__

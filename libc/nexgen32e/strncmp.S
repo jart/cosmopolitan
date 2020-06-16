@@ -28,4 +28,4 @@
 /	@asyncsignalsafe
 strncmp:jmp	*hook$strncmp(%rip)
 	.endfn	strncmp,globl
-	.yoink	__FILE__
+	.source	__FILE__

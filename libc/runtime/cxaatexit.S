@@ -20,7 +20,7 @@
 #include "ape/relocations.h"
 #include "libc/macros.h"
 .section .text.exit,"ax",@progbits
-.yoink	__FILE__
+.source	__FILE__
 
 /	Delegates to __cxa_atexit().
 /

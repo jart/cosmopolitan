@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/limits.h"
 #include "libc/str/str.h"
+#include "libc/str/tpencode.h"
 
 size_t wcrtomb(char *s, wchar_t wc, mbstate_t *st) {
   if (!s) return 1;

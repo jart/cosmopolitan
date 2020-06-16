@@ -105,7 +105,7 @@
     strip input.com.dbg                     # remove all symbols
     strip -S input.com.dbg                  # remove debug info only
     make CPPFLAGS=-DNDEBUG                  # remove asserts (prod)
-    make CPPFLAGS=-DIM_FEELING_NAUGHTY      # remove legal notices
+    make CPPFLAGS=-DIM_FEELING_NAUGHTY      # remove legal embeddings
 
   The Makefile build is also configured to always produce a .map file
   when building each program, which provides further details.
@@ -333,9 +333,11 @@ SECTIONS {
 /*BEGIN: Read only data that needn't be mapped after initialization */
 
     /* Legal Notices */
+#ifndef IM_FEELING_NAUGHTY
     KEEP(*(.commentprologue))
     KEEP(*(.comment))
     KEEP(*(.commentepilogue))
+#endif
 
     /* Windows DLL Import Directory */
     KEEP(*(.idata.ro));
@@ -563,7 +565,7 @@ ZIPCONST(v_zip_commentsize, _edata - __zip_end - kZipCdirHdrMinSize);
   X = (X + (Y >> 010) & 0xFF) * PHI; \
   X = (X + (Y >> 020) & 0xFF) * PHI; \
   X = (X + (Y >> 030) & 0xFF) * PHI
-#define BOOP(X)        \
+#define CHURN(X)        \
   XORSHIFT(uuid1_, X); \
   KMH(uuid1_, X);      \
   XORSHIFT(uuid2_, X); \
@@ -572,68 +574,68 @@ ZIPCONST(v_zip_commentsize, _edata - __zip_end - kZipCdirHdrMinSize);
 HIDDEN(uuid1_ = 88172645463325252);
 HIDDEN(uuid2_ = 88172645463325252);
 
-BOOP(.Lape.bss.align);
-BOOP(.Lape.bss.filesz);
-BOOP(.Lape.bss.memsz);
-BOOP(.Lape.bss.offset);
-BOOP(.Lape.bss.paddr);
-BOOP(.Lape.data.align);
-BOOP(.Lape.data.filesz);
-BOOP(.Lape.data.memsz);
-BOOP(.Lape.data.offset);
-BOOP(.Lape.data.paddr);
-BOOP(.Lape.data.rva);
-BOOP(.Lape.data.vaddr);
-BOOP(.Lape.elf.entry);
-BOOP(.Lape.elf.phnum);
-BOOP(.Lape.elf.phoff);
-BOOP(.Lape.elf.shnum);
-BOOP(.Lape.elf.shoff);
-BOOP(.Lape.elf.shstrndx);
-BOOP(.Lape.macho.end);
-BOOP(.Lape.note);
-BOOP(.Lape.note.align);
-BOOP(.Lape.note.end);
-BOOP(.Lape.note.filesz);
-BOOP(.Lape.note.memsz);
-BOOP(.Lape.note.offset);
-BOOP(.Lape.note.paddr);
-BOOP(.Lape.note.vaddr);
-BOOP(.Lape.pe.offset);
-BOOP(.Lape.pe.optsz);
-BOOP(.Lape.pe.sections);
-BOOP(.Lape.pe.sections_end);
-BOOP(.Lape.pe.shnum);
-BOOP(.Lape.phdrs.end);
-BOOP(.Lape.ram.align);
-BOOP(.Lape.ram.filesz);
-BOOP(.Lape.ram.memsz);
-BOOP(.Lape.ram.offset);
-BOOP(.Lape.ram.paddr);
-BOOP(.Lape.ram.rva);
-BOOP(.Lape.ram.vaddr);
-BOOP(.Lape.rom.align);
-BOOP(.Lape.rom.filesz);
-BOOP(.Lape.rom.memsz);
-BOOP(.Lape.rom.offset);
-BOOP(.Lape.rom.paddr);
-BOOP(.Lape.rom.rva);
-BOOP(.Lape.rom.vaddr);
-BOOP(.Lape.text.align);
-BOOP(.Lape.text.filesz);
-BOOP(.Lape.text.memsz);
-BOOP(.Lape.text.offset);
-BOOP(.Lape.text.paddr);
-BOOP(.Lape.text.rva);
-BOOP(.Lape.text.vaddr);
-BOOP(ADDR(.bss));
-BOOP(WinMain);
-BOOP(_start);
-BOOP(ape.macho);
-BOOP(ape.mz);
-BOOP(ape.pe);
-BOOP(ape.phdrs);
-BOOP(v_ape_realsectors);
+CHURN(.Lape.bss.align);
+CHURN(.Lape.bss.filesz);
+CHURN(.Lape.bss.memsz);
+CHURN(.Lape.bss.offset);
+CHURN(.Lape.bss.paddr);
+CHURN(.Lape.data.align);
+CHURN(.Lape.data.filesz);
+CHURN(.Lape.data.memsz);
+CHURN(.Lape.data.offset);
+CHURN(.Lape.data.paddr);
+CHURN(.Lape.data.rva);
+CHURN(.Lape.data.vaddr);
+CHURN(.Lape.elf.entry);
+CHURN(.Lape.elf.phnum);
+CHURN(.Lape.elf.phoff);
+CHURN(.Lape.elf.shnum);
+CHURN(.Lape.elf.shoff);
+CHURN(.Lape.elf.shstrndx);
+CHURN(.Lape.macho.end);
+CHURN(.Lape.note);
+CHURN(.Lape.note.align);
+CHURN(.Lape.note.end);
+CHURN(.Lape.note.filesz);
+CHURN(.Lape.note.memsz);
+CHURN(.Lape.note.offset);
+CHURN(.Lape.note.paddr);
+CHURN(.Lape.note.vaddr);
+CHURN(.Lape.pe.offset);
+CHURN(.Lape.pe.optsz);
+CHURN(.Lape.pe.sections);
+CHURN(.Lape.pe.sections_end);
+CHURN(.Lape.pe.shnum);
+CHURN(.Lape.phdrs.end);
+CHURN(.Lape.ram.align);
+CHURN(.Lape.ram.filesz);
+CHURN(.Lape.ram.memsz);
+CHURN(.Lape.ram.offset);
+CHURN(.Lape.ram.paddr);
+CHURN(.Lape.ram.rva);
+CHURN(.Lape.ram.vaddr);
+CHURN(.Lape.rom.align);
+CHURN(.Lape.rom.filesz);
+CHURN(.Lape.rom.memsz);
+CHURN(.Lape.rom.offset);
+CHURN(.Lape.rom.paddr);
+CHURN(.Lape.rom.rva);
+CHURN(.Lape.rom.vaddr);
+CHURN(.Lape.text.align);
+CHURN(.Lape.text.filesz);
+CHURN(.Lape.text.memsz);
+CHURN(.Lape.text.offset);
+CHURN(.Lape.text.paddr);
+CHURN(.Lape.text.rva);
+CHURN(.Lape.text.vaddr);
+CHURN(ADDR(.bss));
+CHURN(WinMain);
+CHURN(_start);
+CHURN(ape.macho);
+CHURN(ape.mz);
+CHURN(ape.pe);
+CHURN(ape.phdrs);
+CHURN(v_ape_realsectors);
 
 ASSERT(ape.mz == IMAGE_BASE_VIRTUAL, "linker panic");
 ASSERT((DEFINED(__init_bss_end) ? __init_bss_end : 0) % __SIZEOF_POINTER__ == 0,

@@ -22,7 +22,7 @@
 #include "libc/sysv/consts/nr.h"
 #include "libc/macros.h"
 .text.startup
-.yoink	__FILE__
+.source	__FILE__
 
 /	Merges page table entries for pages with identical content.
 /

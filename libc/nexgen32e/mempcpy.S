@@ -30,4 +30,4 @@
 mempcpy:lea	(%rdi,%rdx),%rax
 	jmp	_memcpy
 	.endfn	mempcpy,globl
-	.yoink	__FILE__
+	.source	__FILE__

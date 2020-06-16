@@ -983,7 +983,7 @@ typedef uint64_t uintmax_t;
 
 /**
  * Pulls another module, by symbol, into linkage.
- * The nop itself is discarded by the linker.
+ * @note nop is discarded by ape/ape.lds
  */
 #define YOINK(SYMBOL)                                              \
   do {                                                             \
@@ -996,11 +996,30 @@ typedef uint64_t uintmax_t;
         : "X"(SYMBOL));                                            \
   } while (0)
 
+/**
+ * Pulls another module into linkage from top-level scope.
+ * @note nop is discarded by ape/ape.lds
+ */
 #define STATIC_YOINK(SYMBOLSTR) \
   asm(".pushsection .yoink\n\tnop\t\"" SYMBOLSTR "\"\n\t.popsection")
 
+/**
+ * Pulls source file into ZIP portion of binary.
+ * @see build/rules.mk which defines the wildcard build rule %.zip.o
+ */
+#ifndef IM_FEELING_NAUGHTY
+#define STATIC_YOINK_SOURCE(PATH) STATIC_YOINK(PATH)
+#else
+#define STATIC_YOINK_SOURCE(PATH)
+#endif
+
+/**
+ * Pulls source code of object being compiled.
+ * @note automates better compliance with spirit of gpl terms
+ * @note headers need to call STATIC_YOINK_SOURCE() manually
+ */
 #ifdef __SAUCE__
-STATIC_YOINK(__SAUCE__);
+STATIC_YOINK_SOURCE(__SAUCE__); /* see build/definitions.mk */
 #endif
 
 #ifndef __cplusplus

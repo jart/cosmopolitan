@@ -1,4 +1,4 @@
-.ident	"\n\
+.ident "\n\
 Cosmopolitan\n\
 Copyright 2020 Justine Alexandra Roberts Tunney\n\
 \n\

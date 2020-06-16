@@ -28,4 +28,4 @@
 /	@note	this stub is provided for abi compatibility
 wcsncmp:jmp	*hook$wcsncmp(%rip)
 	.endfn	wcsncmp,globl
-	.yoink	__FILE__
+	.source	__FILE__

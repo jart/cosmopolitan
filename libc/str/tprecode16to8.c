@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/conv/conv.h"
 #include "libc/str/str.h"
+#include "libc/str/tpencode.h"
 
 /**
  * Transcodes UTF-16 to UTF-8.

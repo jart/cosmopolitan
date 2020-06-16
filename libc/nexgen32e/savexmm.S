@@ -43,4 +43,4 @@ savexmm:.leafprologue
 	movaps	%xmm15,0x70(%rdi)
 	.leafepilogue
 	.endfn	savexmm,globl,hidden
-	.yoink	__FILE__
+	.source	__FILE__

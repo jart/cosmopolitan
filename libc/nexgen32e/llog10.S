@@ -64,4 +64,4 @@ llog10data:
 	.quad	100000000000000000
 	.endobj	llog10data
 	.previous
-	.yoink	__FILE__
+	.source	__FILE__

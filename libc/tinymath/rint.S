@@ -20,7 +20,7 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/bits/smmintrin.h"
 #include "libc/macros.h"
-.yoink	__FILE__
+.source	__FILE__
 
 tinymath_rint:
 #if !X86_NEED(SSE4_2)

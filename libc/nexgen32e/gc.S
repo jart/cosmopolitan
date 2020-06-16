@@ -88,4 +88,4 @@ __garbage:
 	stosq
 	pop	%rdi
 	.init.end 100,_init_garbage
-	.yoink	__FILE__
+	.source	__FILE__

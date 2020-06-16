@@ -47,4 +47,4 @@ explicit_bzero:
 	xorps	%xmm5,%xmm5
 	.leafepilogue
 	.endfn	explicit_bzero,globl
-	.yoink	__FILE__
+	.source	__FILE__

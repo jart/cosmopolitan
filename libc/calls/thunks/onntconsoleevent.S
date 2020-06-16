@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 .text.windows
-.yoink	__FILE__
+.source	__FILE__
 
 onntconsoleevent$nt:
 	ezlea	onntconsoleevent,ax

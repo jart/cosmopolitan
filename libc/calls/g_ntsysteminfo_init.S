@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.yoink	__FILE__
+.source	__FILE__
 
 	.init.start 400,_init_g_ntsysteminfo
 	ezlea	g_ntsysteminfo,cx

@@ -60,4 +60,4 @@ kCtype:	.rept	256
 	.init.start 300,_init_kCtype
 	call	rldecode
 	.init.end 300,_init_kCtype
-	.yoink	__FILE__
+	.source	__FILE__

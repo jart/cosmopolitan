@@ -47,4 +47,4 @@ memeqmask:
 1:	mov	%rdi,%rax
 	.leafepilogue
 	.endfn	memeqmask,globl
-	.yoink	__FILE__
+	.source	__FILE__

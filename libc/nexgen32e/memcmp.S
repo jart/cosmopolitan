@@ -28,7 +28,7 @@
 /	@asyncsignalsafe
 memcmp:	jmp	*hook$memcmp(%rip)
 	.endfn	memcmp,globl
-	.yoink	__FILE__
+	.source	__FILE__
 
 /*	cosmo memcmp() avx2 for #c per n where c ≈ 0.273ns
 	N                     x1            x8           x64	mBps

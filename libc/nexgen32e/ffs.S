@@ -44,4 +44,4 @@ ffs:	.leafprologue
 	inc	%eax
 	.leafepilogue
 	.endfn	ffs,globl
-	.yoink	__FILE__
+	.source	__FILE__

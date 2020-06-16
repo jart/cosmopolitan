@@ -23,6 +23,7 @@
 #include "libc/calls/internal.h"
 #include "libc/conv/conv.h"
 #include "libc/str/str.h"
+#include "libc/str/tpdecode.h"
 #include "libc/sysv/errfuns.h"
 
 /**

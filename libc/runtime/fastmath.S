@@ -20,7 +20,7 @@
 #include "libc/macros.h"
 #include "libc/notice.inc"
 .text.startup
-.yoink	__FILE__
+.source	__FILE__
 
 /	Intel Manual V.1 §10.2.3 - MXCSR Control and Status Register
 #define MXCSR_DE (1 << 1)	/* Denormal Flag */

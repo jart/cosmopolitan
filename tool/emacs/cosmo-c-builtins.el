@@ -1314,6 +1314,7 @@
            "EXPROPRIATE"
            "YOINK"
            "STATIC_YOINK"
+           "STATIC_YOINK_SOURCE"
            "STRINGIFY"
            "isconstant"
            "chooseexpr"

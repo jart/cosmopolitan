@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/str/str.h"
+#include "libc/str/tpdecode.h"
 #include "libc/testlib/testlib.h"
 
 TEST(getutf16, testNul) {

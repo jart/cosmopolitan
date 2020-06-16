@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 #include "libc/notice.inc"
-.yoink	__FILE__
+.source	__FILE__
 
 /	Resizes the space allocated for p to size n, only if this can be
 /	done without moving p (i.e., only if there is adjacent space

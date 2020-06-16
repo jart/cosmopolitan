@@ -183,4 +183,4 @@ strsak16:
 	add	%rcx,%rax
 	jmp	.Lword
 	.endfn	strsak16
-	.yoink	__FILE__
+	.source	__FILE__
