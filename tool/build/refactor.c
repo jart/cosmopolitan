@@ -38,6 +38,7 @@
  * @fileoverview Pretty fast substring refactor tool.
  */
 
+#if 0
 static const char kBefore[] = "\
 │ Copyright 2019 Justine Alexandra Roberts Tunney                              │\n\
 │                                                                              │\n\
@@ -52,7 +53,6 @@ static const char kBefore[] = "\
 │ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF      │\n\
 │ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.               │\n\
 ";
-
 const char kAfter[] = "\
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │\n\
 │                                                                              │\n\
@@ -70,6 +70,12 @@ const char kAfter[] = "\
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │\n\
 │ 02110-1301 USA                                                               │\n\
 ";
+#endif
+
+static const char kBefore[] = "\
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│";
+const char kAfter[] = "\
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│";
 
 void RefactorFile(const char *path) {
   int fd;

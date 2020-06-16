@@ -690,7 +690,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Cosmopolitan Extended Language Keyword Definitions
 
-(defun cosmo-keywords-hook ()
+(defun cosmo-c-keywords-hook ()
   (font-lock-add-keywords
    nil `((,cosmo-c-keywords-regex . font-lock-keyword-face)
          (,cosmo-c-builtins-regex . font-lock-builtin-face)
@@ -698,7 +698,12 @@
          (,cosmo-c-constants-regex . font-lock-constant-face)
          (,cosmo-c-types-regex . font-lock-type-face))))
 
-(add-hook 'c-mode-common-hook 'cosmo-keywords-hook)
+(defun cosmo-asm-keywords-hook ()
+  (font-lock-add-keywords
+   nil `((,cosmo-cpp-constants-regex . font-lock-constant-face))))
+
+(add-hook 'c-mode-common-hook 'cosmo-c-keywords-hook)
+(add-hook 'asm-mode-hook 'cosmo-asm-keywords-hook)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

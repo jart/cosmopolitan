@@ -145,11 +145,6 @@
      ;;
      ("^/.*$" . font-lock-comment-face)
 
-     ;; Preprocessor Constants
-     ;; TODO(jart): Why won't it work?? ;_;
-     (,(concat "\\b" (cosmo-regexpify cosmo-cpp-constants) "\\b") ;; regexp-opt
-      1 font-lock-constant-face)
-
      ;; Immediate Argument
      ;;
      ;;   - Valid

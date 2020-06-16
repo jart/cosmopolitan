@@ -5,7 +5,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § sse2                                                      ─╬─│┼
+│ cosmopolitan § it's a trap! » sse2                                       ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 typedef char __v16qi _Vector_size(16);
@@ -29,7 +29,7 @@ struct thatispacked mayalias __usi128ma {
 };
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § sse2 » memory ops                                         ─╬─│┼
+│ cosmopolitan § it's a trap! » sse2 » memory ops                          ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 #define _mm_loadu_si128(M128IP) ((struct __usi128ma *)(M128IP))->__v
@@ -71,7 +71,7 @@ struct thatispacked mayalias __usi128ma {
 #define _mm_load_si128(M128I)    (*(M128I))
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § sse2 » simd ops                                           ─╬─│┼
+│ cosmopolitan § it's a trap! » sse2 » simd ops                            ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 #define _mm_and_si128(M128I_0, M128I_1) \
@@ -160,7 +160,7 @@ struct thatispacked mayalias __usi128ma {
   ((__m128i)__builtin_ia32_psrldqi128((__v2di)(__m128i)(M128I), (int)(IMM)*8))
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § sse2 » scalar ops                                         ─╬─│┼
+│ cosmopolitan § it's a trap! » sse2 » scalar ops                          ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 #define _mm_sqrt_sd(M128D_0, M128D_1)                          \
@@ -208,7 +208,7 @@ struct thatispacked mayalias __usi128ma {
   __builtin_ia32_cmpunordsd((__v2df)(M128D_0), (__v2df)(M128D_1))
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § sse2 » miscellaneous                                      ─╬─│┼
+│ cosmopolitan § it's a trap! » sse2 » miscellaneous                       ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 #define _mm_pause() asm("rep nop")

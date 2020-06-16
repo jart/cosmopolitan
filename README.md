@@ -5,7 +5,7 @@ because it implements the subset of the C library, compiler runtimes and
 system call interfaces that've achieved near universal consensus amongst
 all major platforms, e.g. Linux/BSD/XNU/NT. Containerization is achieved
 by having binaries also be ZIP files. Modern static stock GNU toolchains
-are provided in a hermetic mono repo for maximum historical determinism.
+are provided in a hermetic mono repo for the best historical determinism
 
 Here's how you can get started by printing cat videos inside a terminal:
 
@@ -44,22 +44,29 @@ mistakes c. 2006 which was when they switched from using a GNU Make repo
 in favor of an inhouse derivative called Blaze which does strictness too
 thereby allowing the repository to grow gracefully with any requirements
 
-## Licensing
+## Performance
 
-Cosmopolitan is Free Software licensed under the GPLv2. The build config
-**will embed all linked sources inside your binaries** so the compliance
-is easy while facilitating trust and transparency similar to JavaScript.
-You can audit your source filesystem using ZIP GUIs e.g. WIN10, InfoZip.
+Your C Standard Library is designed to be competitive with glibc, which
+has historically been the best. Routines like [libc/nexgen32e/memcpy.S]
+are usually accompanied by microbenchmarks to demonstrate their merits.
 
-### Commercial Support
+Where GNU, LLVM and MSVC got lazy is intrinsics. Cosmopolitan does that
+better. Your [ansitrinsics library] makes a 10x speedup so much easier,
+using Intel's new instructions, in such a way that only allows Intel to
+leverage their patents which have knowable expiry; rather than compiler
+intrinsics API copyrights, which might never expire like Walt Disney IP
 
-If you want to be able to distribute binaries in binary form only, then
-please send $1,000 to jtunney@gmail.com on PayPal for a license lasting
-1 year. Please be sure to provide your contact information, and details
-on whether or not the license is for an individual or a corporation. If
-you want your license to last 5 years, send $10,000 to the author above
-who is Justine Tunney <jtunney@gmail.com>. This README will be updated,
-if pricing and other details should change. Reach out for more details.
+See [dsp/scale/cdecimate2xuint8x8.c] and [tool/viz/lib/ycbcr2rgb3.c] as
+an example, of how 4k video convolutions needed to print cat videos can
+be done from a single core without threads on a cheap computer, without
+sacrificing backwards compatibility due to excellent microarchitectural
+dispatch like [libc/nexgen32e/kcpuids.S], [libc/nexgen32e/x86feature.h]
+
+Furthermore Cosmopolitan provides you with Intel's official instruction
+length decoder Xed ravaged down to 3kb in size using Tim Patterson code
+stunts. So you can absolutely code high-performance lightweight fabless
+x86 microprocessors using any hobbyist board without royalties, because
+Xed tells us which parts of the encoding space now belong to the people
 
 ## Integrated Development Environment
 
@@ -75,39 +82,23 @@ by typing `C-c C-h` with the cursor over a symbol. Please install these:
     make tags                        # index all the symbol
     emacs                            # for power and glory!
 
-See [tool/emacs/cosmo-stuff.el] for further details. Noting what enables
-the to work so well and fast is our break with tradition by using rooted
-quoted include statements while vendoring the transitive closure of deps
-
-## Contributing
-
-We'd love to accept your patches! Before we can take them, we have to
-jump through one legal hurdle. Please write an email to Justine Tunney
-<jtunney@gmail.com> saying you agree to give her copyright ownership to
-any changes you contribute to Cosmopolitan. We need to do that in order
-to dual license Cosmopolitan. Otherwise we can't tax corporations that
-don't want to share their code with the community.
-
-## Volunteering
-
-We also need volunteers who can help us further stabilize System Five's
-application binary interface. See our ABI scripts [libc/sysv/consts.sh]
-and [libc/sysv/syscalls.sh]. Magic numbers are usually stabler than API
-interfaces cf. NPM but we should ideally have fewer of them, similar to
-how SI has sought to have fewer defining physics constants.
+See [tool/emacs/cosmo-stuff.el] for further details. Further note that
+this codebase might seem to have an usual number of include statements
+quoted and vendored code, but that's actually why the tools work since
+it gives them easy perfect knowledge of what exists, thus performance.
 
 ## Specimen
 
 Cosmopolitan encodes binaries respecting the intersection of reasonable
-platform requirements. That's easy to accomplish w/ binary isomorphisms
-evidenced below by the RADIX256 disassembly below for [examples/life.c]
-which ld is configured to overlay pe/elf/macho/bourne/bootloader in 12k
+platform requirements. RADIX-256 disassembly of [examples/life.c] below
+should explain how easy it is to do pe+sh+elf+macho+bootloader overlays
+enabling gnu ld.bfd to produce a simple portable 12kb .com program file
 
 Please send feedback and concerns to <jtunney@gmail.com> since we would
 love to do an even better job. Please also report GPL abuse the address
 above as well. We believe this binary structure is novel, and therefore
 easily recognizable. So if some goofball isn't bundling the source code
-please let us know so we can reach out and ask they consider a license.
+please let us know, so we can reach out and ask if they want a license.
 
     make -j10 -O MODE=tiny CPPFLAGS=-DIM_FEELING_NAUGHTY
     o/tiny/tool/viz/bing.com <o/tiny/examples/life.com | 
@@ -247,10 +238,47 @@ please let us know so we can reach out and ask they consider a license.
 See also `build/objdump -xd o/tiny/examples/life.com.dbg | less` to view
 assembly and the linker glue in [ape/ape.lds] that makes it all possible
 
+## Licensing
 
+Cosmopolitan is Free Software licensed under the GPLv2. The build config
+**will embed all linked sources inside your binaries** so the compliance
+is easy while facilitating trust and transparency similar to JavaScript.
+You can audit your source filesystem using ZIP GUIs e.g. Win10, InfoZip.
+
+### Commercial Support
+
+If you want to be able to distribute binaries in binary only form, then
+please send $1,000 to Justine Tunney <jtunney@gmail.com> on PayPal, for
+a license lasting 1 year. This README will be updated in the event that
+this needs to change. Feel free to reach if there's anything you need.
+
+## Contributing
+
+We'd love to accept your patches! Before we can take them, we have to
+jump through one legal hurdle. Please write an email to Justine Tunney
+<jtunney@gmail.com> saying you agree to give her copyright ownership to
+any changes you contribute to Cosmopolitan. We need to do that in order
+to dual license Cosmopolitan. Otherwise we can't create incentives that
+encourage corporations to share their source code with the community.
+
+## Volunteering
+
+We also need volunteers who can help us further stabilize System Five's
+application binary interface. See our ABI scripts [libc/sysv/consts.sh]
+and [libc/sysv/syscalls.sh]. Magic numbers are usually stabler than API
+interfaces cf. NPM but we should ideally have fewer of them, similar to
+how SI has sought to have fewer defining physics constants.
+
+
+[ansitrinsics library]: libc/intrin
 [ape/ape.lds]: ape/ape.lds
+[dsp/scale/cdecimate2xuint8x8.c]: dsp/scale/cdecimate2xuint8x8.c
 [examples/life.c]: examples/life.c
+[libc/nexgen32e/kcpuids.S]: libc/nexgen32e/kcpuids.S
+[libc/nexgen32e/memcpy.S]: libc/nexgen32e/memcpy.S
+[libc/nexgen32e/x86feature.h]: libc/nexgen32e/x86feature.h
 [libc/sysv/consts.sh]: libc/sysv/consts.sh
 [libc/sysv/syscalls.sh]: libc/sysv/syscalls.sh
 [tool/build/package.c]: tool/build/package.c
 [tool/emacs/cosmo-stuff.el]: tool/emacs/cosmo-stuff.el
+[tool/viz/lib/ycbcr2rgb3.c]: tool/viz/lib/ycbcr2rgb3.c

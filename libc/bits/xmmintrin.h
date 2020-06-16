@@ -39,7 +39,7 @@ typedef float __m128 _Vector_size(16) aligned(16) mayalias;
 typedef float __m128_u _Vector_size(16) aligned(1) mayalias;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § sse » simd ops                                            ─╬─│┼
+│ cosmopolitan § it's a trap! » sse » simd ops                             ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 #define _mm_add_ps(M128_0, M128_1) \
@@ -96,7 +96,7 @@ typedef float __m128_u _Vector_size(16) aligned(1) mayalias;
   __builtin_ia32_cmpunordps((__v4sf)(M128_0), (__v4sf)(M128_1))
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § sse » scalar ops                                          ─╬─│┼
+│ cosmopolitan § it's a trap! » sse » scalar ops                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 forceinline __m128 _mm_add_ss(__m128 m128_0, __m128 m128_1) {
@@ -153,7 +153,7 @@ forceinline __m128 _mm_div_ss(__m128 m128_0, __m128 m128_1) {
   __builtin_ia32_cmpunordss((__v4sf)(M128_0), (__v4sf)(M128_1))
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § sse » memory ops                                          ─╬─│┼
+│ cosmopolitan § it's a trap! » sse » memory ops                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 #define _mm_set1_ps(M128_0)    ((__m128)(__v4sf){M128_0, M128_0, M128_0, M128_0})
@@ -186,7 +186,7 @@ forceinline __m128 _mm_div_ss(__m128 m128_0, __m128 m128_1) {
 #endif
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § sse » cast ops                                            ─╬─│┼
+│ cosmopolitan § it's a trap! » sse » cast ops                             ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 #define _mm_cvtps_epi32(M128_0) \
@@ -201,7 +201,7 @@ forceinline __m128 _mm_div_ss(__m128 m128_0, __m128 m128_1) {
 #endif
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § sse » misc                                                ─╬─│┼
+│ cosmopolitan § it's a trap! » sse » misc                                 ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 #define _mm_getcsr()        (__builtin_ia32_stmxcsr())

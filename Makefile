@@ -189,12 +189,13 @@ include test/tool/build/test.mk
 include test/tool/viz/lib/test.mk
 include test/tool/viz/test.mk
 include test/tool/test.mk
-include test/test.mk
 include test/dsp/core/test.mk
 include test/dsp/scale/test.mk
 include test/dsp/tty/test.mk
 include test/dsp/test.mk
+include third_party/make/build.mk
 #-φ-examples/package/new.sh
+include test/test.mk
 
 OBJS	= $(foreach x,$(PKGS),$($(x)_OBJS))
 SRCS	= $(foreach x,$(PKGS),$($(x)_SRCS))
