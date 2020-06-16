@@ -250,7 +250,7 @@ You can audit your source filesystem using ZIP GUIs e.g. Win10, InfoZip.
 If you want to be able to distribute binaries in binary only form, then
 please send $1,000 to Justine Tunney <jtunney@gmail.com> on PayPal, for
 a license lasting 1 year. This README will be updated in the event that
-this needs to change. Feel free to reach if there's anything you need.
+this needs to change. Please reach out if there's anything you need.
 
 ## Contributing
 
@@ -269,7 +269,25 @@ and [libc/sysv/syscalls.sh]. Magic numbers are usually stabler than API
 interfaces cf. NPM but we should ideally have fewer of them, similar to
 how SI has sought to have fewer defining physics constants.
 
+## About
 
+Cosmopolitan mostly stands on the shoulders of giants and has few novel
+ideas, aside from taking care of low-level build system toil, so coding
+can become more beautifully pleasant.
+
+Cosmopolitan is maintained by Justine Tunney, who previously worked on
+projects like TensorFlow, [Operation Rosehub], [Nomulus], and Google's
+tape backups sre team. She's also helped radical activists by operating
+the [Occupy Wall Street] website. Justine Tunney currently isn't on the
+payroll of any company. She's been focusing on Cosmopolitan because she
+wants to give back to Free Software which helped her be successful. See
+her [LinkedIn] profile for further details on her professional history.
+
+
+[LinkedIn]: https://www.linkedin.com/in/jtunney
+[Nomulus]: https://github.com/google/nomulus
+[Occupy Wall Street]: https://www.newyorker.com/magazine/2011/11/28/pre-occupied
+[Operation Rosehub]: https://opensource.googleblog.com/2017/03/operation-rosehub.html
 [ansitrinsics library]: libc/intrin
 [ape/ape.lds]: ape/ape.lds
 [dsp/scale/cdecimate2xuint8x8.c]: dsp/scale/cdecimate2xuint8x8.c
