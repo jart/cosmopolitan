@@ -115,4 +115,6 @@ o/$(MODE)/examples/hellojs.com.dbg:			\
 	@$(APELINK)
 
 .PHONY: o/$(MODE)/examples
-o/$(MODE)/examples: $(EXAMPLES_BINS)
+o/$(MODE)/examples:					\
+		o/$(MODE)/examples/package		\
+		$(EXAMPLES_BINS)

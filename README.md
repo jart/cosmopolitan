@@ -83,7 +83,7 @@ by typing `C-c C-h` with the cursor over a symbol. Please install these:
     emacs                            # for power and glory!
 
 See [tool/emacs/cosmo-stuff.el] for further details. Further note that
-this codebase might seem to have an usual number of include statements
+this codebase might seem to have unusual numbers of include statements
 quoted and vendored code, but that's actually why the tools work since
 it gives them easy perfect knowledge of what exists, thus performance.
 

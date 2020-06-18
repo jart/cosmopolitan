@@ -193,7 +193,8 @@ include test/dsp/core/test.mk
 include test/dsp/scale/test.mk
 include test/dsp/tty/test.mk
 include test/dsp/test.mk
-include third_party/make/build.mk
+include examples/package/lib/build.mk
+include examples/package/build.mk
 #-φ-examples/package/new.sh
 include test/test.mk
 

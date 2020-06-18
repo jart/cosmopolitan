@@ -20,7 +20,7 @@
 # EXAMPLE
 #
 #   make o//examples/package/lib  # build library w/ sanity checks
-#   at t o//examples/package/lib/lib.a
+#   ar t o//examples/package/lib/lib.a
 #
 # AUTHORS
 #
@@ -28,19 +28,22 @@
 
 PKGS += EXAMPLES_PACKAGE_LIB
 
-# Declares build package.
-# Other packages may list this variable in their deps list.
-# Please note package relationships aren't allowed to be cyclic.
+# Declares package i.e. library w/ transitive dependencies.
+# We define packages as a thing that lumps similar sources.
+# It's needed, so linkage can have a higher level overview.
+# Mostly due to there being over 9,000 objects in the repo.
 EXAMPLES_PACKAGE_LIB =						\
 	$(EXAMPLES_PACKAGE_LIB_A_DEPS)				\
 	$(EXAMPLES_PACKAGE_LIB_A)
 
-# While build configs might seem somewhat complicated but rest
-# assured they're mostly maintainence free, thanks to wildcard
-EXAMPLES_PACKAGE_LIB_A_FILES := $(wildcard examples/package/lib/*)
-EXAMPLES_PACKAGE_LIB_ARTIFACTS += EXAMPLES_PACKAGE_LIB_A
-EXAMPLES_PACKAGE_LIB_A_HDRS = $(filter %.h,$(EXAMPLES_PACKAGE_LIB_A_FILES))
+# Declares library w/o transitive dependencies.
 EXAMPLES_PACKAGE_LIB_A = o/$(MODE)/examples/package/lib/lib.a
+EXAMPLES_PACKAGE_LIB_ARTIFACTS += EXAMPLES_PACKAGE_LIB_A
+
+# Build configs might seem somewhat complicated. Rest assured they're
+# mostly maintainence free. That's largely thanks to how we wildcard.
+EXAMPLES_PACKAGE_LIB_A_FILES := $(wildcard examples/package/lib/*)
+EXAMPLES_PACKAGE_LIB_A_HDRS = $(filter %.h,$(EXAMPLES_PACKAGE_LIB_A_FILES))
 
 # Define sets of source files without needing further iops.
 EXAMPLES_PACKAGE_LIB_A_SRCS_S =					\
@@ -57,6 +60,7 @@ EXAMPLES_PACKAGE_LIB_A_OBJS =					\
 	$(EXAMPLES_PACKAGE_LIB_A_SRCS_C:%.c=o/$(MODE)/%.o)	\
 	$(EXAMPLES_PACKAGE_LIB_A_SRCS:%=o/$(MODE)/%.zip.o)
 
+# Does the two most important things for C/C++ code sustainability.
 # 1. Guarantees each header builds, i.e. includes symbols it needs.
 # 2. Guarantees transitive closure of packages is directed acyclic.
 EXAMPLES_PACKAGE_LIB_A_CHECKS =					\
