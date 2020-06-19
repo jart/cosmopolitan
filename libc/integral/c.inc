@@ -1014,12 +1014,12 @@ typedef uint64_t uintmax_t;
 #endif
 
 /**
- * Pulls source code of object being compiled.
- * @note automates better compliance with spirit of gpl terms
- * @note headers need to call STATIC_YOINK_SOURCE() manually
+ * Pulls source of object being compiled into zip.
+ * @note automates compliance with gpl terms
+ * @see -DIM_FEELING_NAUGHTY
  */
-#ifdef __SAUCE__
-STATIC_YOINK_SOURCE(__SAUCE__); /* see build/definitions.mk */
+#ifdef __BASE_FILE__
+STATIC_YOINK_SOURCE(__BASE_FILE__);
 #endif
 
 #ifndef __cplusplus

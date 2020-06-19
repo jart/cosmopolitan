@@ -204,8 +204,7 @@ cc.flags =								\
 	$(DEFAULT_CCFLAGS)						\
 	$(CONFIG_CCFLAGS)						\
 	$(CCFLAGS)							\
-	$(OVERRIDE_CCFLAGS)						\
-	-D__SAUCE__=\"$<\"
+	$(OVERRIDE_CCFLAGS)
 
 o.flags =								\
 	$(DEFAULT_OFLAGS)						\
