@@ -21,8 +21,10 @@
 .source	__FILE__
 
 fputc_unlocked:
-	.leafprologue
-	.profilable		# so we can fix code supporting this abomination
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable		# note: no consensus for threads exists in abis
 	call	fputc
-	.leafepilogue
+	pop	%rbp
+	ret
 	.endfn	fputc_unlocked,globl

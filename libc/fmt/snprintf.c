@@ -25,7 +25,7 @@
  * @return number of bytes written, excluding the NUL terminator; or,
  *     if the output buffer wasn't passed, or was too short, then the
  *     number of characters that *would* have been written is returned
- * @see libc/fmt/fmt.h for documentation
+ * @see palandprintf() and printf() for detailed documentation
  */
 int(snprintf)(char* buf, size_t count, const char* fmt, ...) {
   int rc;

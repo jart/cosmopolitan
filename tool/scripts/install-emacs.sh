@@ -6,7 +6,7 @@ sudo apt build-dep emacs
 cd "$HOME"
 export CFLAGS="-O2"
 rm -rf emacs-26.3
-wget http://mirrors.kernel.org/gnu/emacs/emacs-26.3.tar.gz
+wget https://mirrors.kernel.org/gnu/emacs/emacs-26.3.tar.gz
 tar xf emacs-26.3.tar.gz
 cd emacs-26.3
 ./configure

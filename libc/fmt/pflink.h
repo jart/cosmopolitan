@@ -50,8 +50,18 @@
 #endif
 
 #if defined(__GNUC__) && __GNUC__ < 6
+/*
+ * Compilers don't understand the features we've added to the format
+ * string DSL, such as c string escaping, therefore we can't use it.
+ * Ideally compilers should grant us more flexibility to define DSLs
+ *
+ * The recommended approach to turning this back on is `CFLAGS=-std=c11`
+ * which puts the compiler in __STRICT_ANSI__ mode, which Cosmopolitan
+ * respects by disabling all the esoteric tuning in headers like this.
+ */
 #pragma GCC diagnostic ignored "-Wformat-security"
 #endif /* __GNUC__ + 0 < 6 */
+
 #else
 #define PFLINK(FMT) FMT
 #define SFLINK(FMT) FMT

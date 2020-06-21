@@ -40,7 +40,7 @@ static int vsnprintfputchar(unsigned char c, struct SprintfStr *str) {
 }
 
 /**
- * Formats string to buffer.
+ * Formats string to buffer w/ preexisting vararg state.
  *
  * @param buf stores output and a NUL-terminator is always written,
  *     provided buf!=NULL && size!=0
@@ -50,7 +50,7 @@ static int vsnprintfputchar(unsigned char c, struct SprintfStr *str) {
  *     number of characters that *would* have been written is returned
  * @throw EOVERFLOW when a formatted field exceeds its limit, which can
  *     be checked by setting errno to 0 before calling
- * @see libc/fmt/fmt.h for further documentation
+ * @see palandprintf() and printf() for detailed documentation
  */
 int(vsnprintf)(char *buf, size_t size, const char *fmt, va_list va) {
   struct SprintfStr str = {buf, 0, size};

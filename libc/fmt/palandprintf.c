@@ -56,7 +56,52 @@ static unsigned ppatoi(const char **str) {
 
 /**
  * Implements {,v}{,s{,n},{,{,x}as},f,d}printf state machine.
- * @see libc/stdio/printf.c for documentation
+ *
+ * Type Specifiers
+ *
+ *   - `%s`   char * (thompson-pike unicode)
+ *   - `%ls`  wchar_t * (32-bit unicode → thompson-pike unicode)
+ *   - `%hs`  char16_t * (16-bit unicode → thompson-pike unicode)
+ *   - `%b`   int (radix 2 binary)
+ *   - `%o`   int (radix 8 octal)
+ *   - `%d`   int (radix 10 decimal)
+ *   - `%x`   int (radix 16 hexadecimal)
+ *   - `%X`   int (radix 16 hexadecimal uppercase)
+ *   - `%u`   unsigned
+ *   - `%f`   double
+ *   - `%Lf`  long double
+ *   - `%p`   pointer (48-bit hexadecimal)
+ *
+ * Length Modifiers
+ *
+ *   - `%hhd` char (8-bit)
+ *   - `%hd`  short (16-bit)
+ *   - `%ld`  long (64-bit)
+ *   - `%lu`  unsigned long (64-bit)
+ *   - `%lx`  unsigned long (64-bit hexadecimal)
+ *   - `%jd`  intmax_t (128-bit)
+ *
+ * Width Modifiers
+ *
+ *   - `%08d` fixed columns w/ zero leftpadding
+ *   - `%8d`  fixed columns w/ space leftpadding
+ *   - `%*s`  variable column string (thompson-pike)
+ *   - `%.*s` variable column data (ignore nul terminator)
+ *
+ * Formatting Modifiers
+ *
+ *   - `%,d`  thousands separators
+ *   - `%'s`  escaped c string literal
+ *   - `%'c`  escaped c character literal
+ *   - `%`s`  escaped double quoted c string literal
+ *   - `%`c`  escaped double quoted c character literal
+ *   - `%+d`  plus leftpad if positive (aligns w/ negatives)
+ *   - `% d`  space leftpad if positive (aligns w/ negatives)
+ *   - `%#s`  datum (radix 256 null-terminated ibm cp437)
+ *   - `%#x`  int (radix 16 hexadecimal w/ 0x prefix if not zero)
+ *
+ * @note implementation detail of printf(), snprintf(), etc.
+ * @see printf() for wordier documentation
  */
 hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
   int (*out)(int, void *);

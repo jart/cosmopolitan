@@ -12,13 +12,13 @@ extern unsigned char g_stderrbuf[BUFSIZ];
 int fflushregister(FILE *) hidden;
 void fflushunregister(FILE *) hidden;
 
-int freadbuf(FILE *f) hidden;
-int fwritebuf(FILE *f) hidden;
-int fsreadbuf(FILE *f) hidden;
-int fswritebuf(FILE *f) hidden;
-long fseteof(FILE *f) hidden;
-long fseterrno(FILE *f) hidden;
-long fseterr(FILE *f, int err) hidden;
+int freadbuf(FILE *) hidden;
+int fwritebuf(FILE *) hidden;
+int fsreadbuf(FILE *) hidden;
+int fswritebuf(FILE *) hidden;
+long fseteof(FILE *) hidden;
+long fseterrno(FILE *) hidden;
+long fseterr(FILE *, int) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

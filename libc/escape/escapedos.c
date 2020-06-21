@@ -20,11 +20,6 @@
 #include "libc/escape/escape.h"
 #include "libc/str/str.h"
 
-asm(".ident\t\"\\n\\n\
-NSSM (Public Domain)\\n\
-Credit: Iain Patterson\n\
-http://iain.cx/\"");
-
 static textwindows bool shouldescapedos(const char16_t c) {
   if (c == u'"') return true;
   if (c == u'&') return true;
@@ -48,6 +43,7 @@ static textwindows bool shouldquotedos(const char16_t c) {
 
 /**
  * Escapes command so DOS can run it.
+ * @see Iain Patterson's NSSM for original code in public domain
  */
 textwindows bool escapedos(char16_t *buffer, unsigned buflen,
                            const char16_t *unquoted, unsigned len) {

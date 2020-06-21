@@ -7,20 +7,15 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § escaping                                                  ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-unsigned cescapec(int c);
-int escapec(char *buf, unsigned size, const char *unescaped, unsigned length)
+unsigned cescapec(int);
+int escapec(char *, unsigned, const char *, unsigned)
     paramsnonnull((3)) nothrow nocallback;
-int escapesh(char *buf, unsigned size, const char *unescaped, unsigned length)
-    paramsnonnull((3));
-bool escapedos(char16_t *buffer, unsigned buflen, const char16_t *unquoted,
-               unsigned len);
-int aescapec(char **escaped, const char *unescaped, unsigned length)
-    paramsnonnull();
-int aescapesh(char **escaped, const char *unescaped, unsigned length)
-    paramsnonnull();
-int aescape(char **escaped, size_t size, const char *unescaped, unsigned length,
-            int impl(char *escaped, unsigned size, const char *unescaped,
-                     unsigned length)) hidden;
+int escapesh(char *, unsigned, const char *, unsigned) paramsnonnull((3));
+bool escapedos(char16_t *, unsigned, const char16_t *, unsigned);
+int aescapec(char **, const char *, unsigned) paramsnonnull();
+int aescapesh(char **, const char *, unsigned) paramsnonnull();
+int aescape(char **, size_t, const char *, unsigned,
+            int (*)(char *, unsigned, const char *, unsigned)) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

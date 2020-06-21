@@ -44,7 +44,7 @@ size_t fread(void *buf, size_t stride, size_t count, FILE *f) {
       if (i % stride != 0) abort(); /* todo(jart) */
       return i / stride;
     }
-    p[i] = (unsigned char)c;
+    p[i] = c & 0xff;
   }
   return count;
 }

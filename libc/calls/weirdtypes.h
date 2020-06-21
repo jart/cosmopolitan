@@ -3,7 +3,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /**
- * @fileoverview Types for scoundrels.
+ * @fileoverview Types we'd prefer hadn't been invented.
  */
 
 #define blkcnt_t      int64_t

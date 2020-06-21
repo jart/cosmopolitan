@@ -49,7 +49,7 @@ aes_block_t unrijndael(uint32_t, aes_block_t, const struct Rijndael *);
 aligned(64) extern const uint8_t kAesSbox[256];
 aligned(64) extern const uint8_t kAesSboxInverse[256];
 
-aes_block_t InvMixColumns(aes_block_t x) hidden;
+aes_block_t InvMixColumns(aes_block_t) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

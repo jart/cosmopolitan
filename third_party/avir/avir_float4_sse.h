@@ -20,6 +20,7 @@
 #include "libc/bits/mmintrin.h"
 #include "libc/bits/xmmintrin.h"
 #include "libc/bits/xmmintrin.h"
+#include "libc/bits/xmmintrin.h"
 #include "libc/bits/emmintrin.h"
 
 namespace avir {

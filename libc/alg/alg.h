@@ -13,17 +13,14 @@ void *bsearch_r(const void *, const void *, size_t, size_t,
                 int cmp(const void *, const void *, void *), void *)
     paramsnonnull((1, 2, 5)) nothrow nosideeffect;
 void djbsort(size_t n, int32_t[n]);
-void qsort(void *items, size_t itemcount, size_t itemsize,
-           int cmp(const void *, const void *)) paramsnonnull();
-void qsort_r(void *items, size_t itemcount, size_t itemsize,
+void qsort(void *, size_t, size_t, int (*)(const void *, const void *))
+    paramsnonnull();
+void qsort_r(void *, size_t, size_t,
              int cmp(const void *, const void *, void *), void *arg)
     paramsnonnull((1, 4));
-int tarjan(uint32_t vertex_count, const uint32_t (*edges)[2],
-           uint32_t edge_count, uint32_t out_sorted[],
-           uint32_t out_opt_components[], uint32_t *out_opt_componentcount)
-    paramsnonnull((2, 4)) nocallback nothrow;
-void heapsortcar(int32_t (*A)[2], unsigned n)
-    paramsnonnull() nocallback nothrow;
+int tarjan(uint32_t, const uint32_t (*)[2], uint32_t, uint32_t[], uint32_t[],
+           uint32_t *) paramsnonnull((2, 4)) nocallback nothrow;
+void heapsortcar(int32_t (*)[2], unsigned) paramsnonnull() nocallback nothrow;
 
 void *memmem(const void *, size_t, const void *, size_t)
     paramsnonnull() nothrow nocallback nosideeffect;
@@ -56,16 +53,16 @@ struct critbit0 {
   size_t count;
 };
 
-bool critbit0_contains(struct critbit0 *t, const char *u) nothrow nosideeffect
+bool critbit0_contains(struct critbit0 *, const char *) nothrow nosideeffect
     paramsnonnull();
-bool critbit0_insert(struct critbit0 *t, const char *u) paramsnonnull();
-bool critbit0_delete(struct critbit0 *t, const char *u) nothrow paramsnonnull();
-void critbit0_clear(struct critbit0 *t) nothrow paramsnonnull();
-char *critbit0_get(struct critbit0 *t, const char *u);
-intptr_t critbit0_allprefixed(struct critbit0 *t, const char *prefix,
-                              intptr_t (*callback)(const char *elem, void *arg),
-                              void *arg) paramsnonnull((1, 2, 3)) nothrow;
-bool critbit0_emplace(struct critbit0 *t, char *u, size_t ulen) paramsnonnull();
+bool critbit0_insert(struct critbit0 *, const char *) paramsnonnull();
+bool critbit0_delete(struct critbit0 *, const char *) nothrow paramsnonnull();
+void critbit0_clear(struct critbit0 *) nothrow paramsnonnull();
+char *critbit0_get(struct critbit0 *, const char *);
+intptr_t critbit0_allprefixed(struct critbit0 *, const char *,
+                              intptr_t (*)(const char *, void *), void *)
+    paramsnonnull((1, 2, 3)) nothrow;
+bool critbit0_emplace(struct critbit0 *, char *, size_t) paramsnonnull();
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § algorithms » comparators                                  ─╬─│┼

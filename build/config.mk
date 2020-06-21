@@ -141,12 +141,37 @@ endif
 
 # ANSI Mode
 #
-# Folks who want it deserve to get it, good and hard.
+# These flags cause GCC to predefine __STRICT_ANSI__. Please be warned
+# that Cosmopolitan headers are written to comply with that request if
+# it's possible to do so. Consider the following example:
+#
+#   make -j12 -O o//tool/viz/printvideo.i
+#   clang-format-10 -i o//tool/viz/printvideo.i
+#   less o//tool/viz/printvideo.i
+#
+# You'll notice functions like memcpy(), ioctl(), etc. get expanded into
+# wild-eyed gnu-style performance hacks. You can turn it off as follows:
+#
+#   make -j12 -O MODE=ansi o/ansi/tool/viz/printvideo.i
+#   clang-format-10 -i o/ansi/tool/viz/printvideo.i
+#   less o/ansi/tool/viz/printvideo.i
+#
+# Here it becomes clear that ANSI mode can help you decouple your source
+# from Cosmopolitan, by turning it into plain ordinary textbook C code.
+#
+# Another potential use case is distributing code to folks using tools
+# such as MSVC or XCode. You can run your binary objects through a tool
+# like objconv to convert them to COFF or MachO. Then use ANSI mode to
+# rollup one header file that'll enable linkage with minimal issues.
+#
+# Lastly note that in some cases, such as gc(), there simply isn't any
+# ANSI workaround available. It's only in cases like that when we'll use
+# the __asm__() header workaround, rather than simply removing it. We do
+# however try to do that much less often than mainstream C libraries.
 
 ifeq ($(MODE), ansi)
 
-CONFIG_CCFLAGS +=		\
-	-std=c11		\
-	-Og
+CONFIG_CFLAGS += -std=c11
+CONFIG_CXXFLAGS += -std=c++11
 
 endif

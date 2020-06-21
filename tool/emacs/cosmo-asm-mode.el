@@ -337,4 +337,10 @@
   (add-hook 'asm-mode-hook 'cosmo-asm-supplemental-hook)
   (setq asm-font-lock-keywords cosmo-asm-font-lock-keywords))
 
+;; Make -*-unix-assembly-*- mode line work correctly.
+;; TODO(jart): Would be nice to use GitHub's name instead of changing asm-mode.
+(defun unix-assembly-mode ()
+  (interactive)
+  (asm-mode))
+
 (provide 'cosmo-asm-mode)

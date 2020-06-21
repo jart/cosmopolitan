@@ -28,8 +28,9 @@ int unlockpt(int);
 int posix_openpt(int) nodiscard;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § teletypewriter » optimizations                            ─╬─│┼
+│ cosmopolitan § teletypewriter » undiamonding                             ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 
 #define tcsetattr(FD, OPT, TIO) tcsetattr$dispatch(FD, OPT, TIO)
 forceinline int tcsetattr$dispatch(int fd, int opt, const struct termios *tio) {
@@ -44,6 +45,7 @@ forceinline int tcgetattr$dispatch(int fd, const struct termios *tio) {
   return ioctl(fd, TCGETS, (void *)tio);
 }
 
+#endif /* GNUC && !ANSI */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_TERMIOS_H_ */

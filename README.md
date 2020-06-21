@@ -18,17 +18,19 @@ Cosmopolitan provides a native development environment similar to those
 currently being offered by RedHat, Google, Apple, Microsoft, etc. We're
 different in two ways: (1) we're not a platform therefore we don't have
 any commercial interest in making our tooling work better on one rather
-than another; and (2) we're only focused on catering towards interfaces
-all platforms agree upon. Goal is software that stands the test of time
+than another; and (2) we cater primarily towards features having gained
+cross-platform agreement. Goal is software that stands the test of time
 without the costs and restrictions cross-platform distribution entails.
+
 That makes Cosmopolitan an excellent fit for writing small CLI programs
-that do things like heavyweight numerical computations as a subprocess.
+that do things like matrix multiplication relu stdio as a subprocess or
+perhaps a web server having the minimum surface area that you require.
 
 ## Getting Started
 
 Just clone the repository and put your own folder in it. Please choose a
 name that's based on a .com or .org domain name registration you control
-which is scout's honor but might change to require TXT records in future
+which is scout's honor but could change to verify TXT records in future.
 
 We provide a script that makes it easy to start a new package:
 
@@ -37,11 +39,11 @@ We provide a script that makes it easy to start a new package:
     make o//com/github/user/project/program.com
     o//com/github/user/project/program.com
 
-Please note GNU make is awesome. Little known fact: make is a functional
+Please note GNU Make is awesome. Little known fact: make is a functional
 programming language. We improved upon it too! In [tool/build/package.c]
 which performs strict dependency checking, to correct Google's published
 mistakes c. 2006 which was when they switched from using a GNU Make repo
-in favor of an inhouse derivative called Blaze which does strictness too
+in favor of an inhouse derivative called Blaze which does graph checking
 thereby allowing the repository to grow gracefully with any requirements
 
 ## Performance
@@ -66,18 +68,20 @@ Furthermore Cosmopolitan provides you with Intel's official instruction
 length decoder Xed ravaged down to 3kb in size using Tim Patterson code
 stunts. So you can absolutely code high-performance lightweight fabless
 x86 microprocessors using any hobbyist board without royalties, because
-Xed tells us which parts of the encoding space now belong to the people
+Xed tells us which parts of the encoding space now belong to the people.
+Please see [third_party/xed/x86ild.greg.c] to learn more.
 
 ## Integrated Development Environment
 
-Your Cosmopolitan IDE is based on Emacs. When used alongside `make tags`
-it can automate certain toilsome problems such as adding an include line
-by typing `C-c C-h` with the cursor over a symbol. Please install these:
+Your Cosmopolitan IDE is based on whichever editor you love most. Emacs
+configs are provided, showing how `make tags` can be used to automate
+certain toil, such as adding include lines by typing `C-c C-h` over a
+symbol. We recommend trying the following:
 
     sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
-    sudo apt install gdb ragel ctags clang-format-10  # <-recommended
+    sudo apt install gdb ragel ctags clang-format-10
     git clone git@github.com:jart/cosmopolitan.git && cd cosmopolitan
-    tool/scripts/install-emacs.sh    # recommended over apt
+    tool/scripts/install-emacs.sh    # Emacs 26.1 has a bug
     tool/scripts/configure-emacs.sh  # adds load statements
     make tags                        # index all the symbol
     emacs                            # for power and glory!
@@ -95,10 +99,9 @@ should explain how easy it is to do pe+sh+elf+macho+bootloader overlays
 enabling gnu ld.bfd to produce a simple portable 12kb .com program file
 
 Please send feedback and concerns to <jtunney@gmail.com> since we would
-love to do an even better job. Please also report GPL abuse the address
-above as well. We believe this binary structure is novel, and therefore
-easily recognizable. So if some goofball isn't bundling the source code
-please let us know, so we can reach out and ask if they want a license.
+love to do an even better job. Please also let us know if some goofball
+is distributing without bundling their source code, so we can reach out
+and ask if they would like to purchase a commercial license.
 
     make -j10 -O MODE=tiny CPPFLAGS=-DIM_FEELING_NAUGHTY
     o/tiny/tool/viz/bing.com <o/tiny/examples/life.com | 
@@ -244,6 +247,7 @@ Cosmopolitan is Free Software licensed under the GPLv2. The build config
 **will embed all linked sources inside your binaries** so the compliance
 is easy while facilitating trust and transparency similar to JavaScript.
 You can audit your source filesystem using ZIP GUIs e.g. Win10, InfoZip.
+That works easiest by changing the filename extension from .com to .zip.
 
 ### Commercial Support
 
@@ -276,9 +280,9 @@ ideas, aside from taking care of low-level build system toil, so coding
 can become more beautifully pleasant.
 
 Cosmopolitan is maintained by Justine Tunney, who previously worked on
-projects like TensorFlow, [Operation Rosehub], [Nomulus], and Google's
-tape backups sre team. She's also helped radical activists by operating
-the [Occupy Wall Street] website. Justine Tunney currently isn't on the
+projects like [TensorFlow], [Operation Rosehub], [Nomulus], and Google's
+tape backups SRE team. She's also helped activists by operating the
+[Occupy Wall Street] website. Justine Tunney currently isn't on the
 payroll of any company. She's been focusing on Cosmopolitan because she
 wants to give back to Free Software which helped her be successful. See
 her [LinkedIn] profile for further details on her professional history.
@@ -288,6 +292,7 @@ her [LinkedIn] profile for further details on her professional history.
 [Nomulus]: https://github.com/google/nomulus
 [Occupy Wall Street]: https://www.newyorker.com/magazine/2011/11/28/pre-occupied
 [Operation Rosehub]: https://opensource.googleblog.com/2017/03/operation-rosehub.html
+[TensorFlow]: https://github.com/tensorflow/tensorflow
 [ansitrinsics library]: libc/intrin
 [ape/ape.lds]: ape/ape.lds
 [dsp/scale/cdecimate2xuint8x8.c]: dsp/scale/cdecimate2xuint8x8.c
@@ -297,6 +302,7 @@ her [LinkedIn] profile for further details on her professional history.
 [libc/nexgen32e/x86feature.h]: libc/nexgen32e/x86feature.h
 [libc/sysv/consts.sh]: libc/sysv/consts.sh
 [libc/sysv/syscalls.sh]: libc/sysv/syscalls.sh
+[third_party/xed/x86ild.greg.c]: third_party/xed/x86ild.greg.c
 [tool/build/package.c]: tool/build/package.c
 [tool/emacs/cosmo-stuff.el]: tool/emacs/cosmo-stuff.el
 [tool/viz/lib/ycbcr2rgb3.c]: tool/viz/lib/ycbcr2rgb3.c

@@ -12,7 +12,7 @@ int ioctl(int, uint64_t, void *);
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § system calls » input output control » undiamonding        ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #include "libc/macros.h"
 #include "libc/sysv/consts/termios.h"
 
@@ -46,7 +46,7 @@ forceinline int ioctl$dispatch(int fd, uint64_t request, void *memory) {
   return ioctl$default(fd, request, memory);
 }
 
-#endif /* GNUC */
+#endif /* GNUC && !ANSI */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_IOCTL_H_ */

@@ -76,6 +76,7 @@ static textwindows noinline DIR *opendir$nt(const char *name) {
  *
  * @returns newly allocated DIR object, or NULL w/ errno
  * @errors ENOENT, ENOTDIR, EACCES, EMFILE, ENFILE, ENOMEM
+ * @see glob()
  */
 DIR *opendir(const char *name) {
   if (!IsWindows() && !IsXnu()) {

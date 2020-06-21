@@ -27,8 +27,8 @@
  *
  * It is demonstrated that our 3.5kb x86 parser supports all legal x86
  * instruction set architectures and addressing modes since the 1970's,
- * including the really complicated ones, e.g. avx512; or the unpopular
- * ones, e.g. amd 3dnow.
+ * including the really sophisticated ones, e.g. avx512, as well as the
+ * less popular ones, e.g. 3dnow.
  */
 
 TEST(x86ild, testSomeThingsNeverChange) {

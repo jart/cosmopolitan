@@ -59,6 +59,7 @@
  *   it implies the quoting modifier, wraps the value with {,u,L}['"]
  *   quotes, displays NULL as "NULL" rather than "(null)", etc.
  *
+ * @see palandprintf() for intuitive reference documentation
  * @see {,v}{,s{,n},{,{,x}as},f,d}printf
  */
 int(printf)(const char* fmt, ...) {

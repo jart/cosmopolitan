@@ -18,12 +18,10 @@ COSMOPOLITAN_C_START_
 
 struct MappedFile;
 
-Elf64_Ehdr *mapelfread(const char *filename, struct MappedFile *mf);
-char *getelfstringtable(const Elf64_Ehdr *elf, size_t mapsize);
-Elf64_Sym *getelfsymboltable(const Elf64_Ehdr *elf, size_t mapsize,
-                             Elf64_Xword *out_count);
-Elf64_Shdr *getelfsectionbyaddress(const Elf64_Ehdr *elf, size_t mapsize,
-                                   void *addr);
+Elf64_Ehdr *mapelfread(const char *, struct MappedFile *);
+char *getelfstringtable(const Elf64_Ehdr *, size_t);
+Elf64_Sym *getelfsymboltable(const Elf64_Ehdr *, size_t, Elf64_Xword *);
+Elf64_Shdr *getelfsectionbyaddress(const Elf64_Ehdr *, size_t, void *);
 
 forceinline void checkelfaddress(const Elf64_Ehdr *elf, size_t mapsize,
                                  intptr_t addr, size_t addrsize) {
@@ -66,8 +64,9 @@ static inline Elf64_Shdr *getelfsectionheaderaddress(const Elf64_Ehdr *elf,
 
 static inline void *getelfsectionaddress(const Elf64_Ehdr *elf, size_t mapsize,
                                          const Elf64_Shdr *shdr) {
-  intptr_t addr = (intptr_t)elf + (intptr_t)shdr->sh_offset;
-  intptr_t size = (intptr_t)shdr->sh_size;
+  intptr_t addr, size;
+  addr = (intptr_t)elf + (intptr_t)shdr->sh_offset;
+  size = (intptr_t)shdr->sh_size;
   checkelfaddress(elf, mapsize, addr, size);
   return (void *)addr;
 }
@@ -83,13 +82,16 @@ static inline void getelfvirtualaddressrange(const Elf64_Ehdr *elf,
                                              size_t elfsize,
                                              intptr_t *out_start,
                                              intptr_t *out_end) {
-  intptr_t start = INTPTR_MAX;
-  intptr_t end = 0;
-  for (unsigned i = 0; i < elf->e_phnum; ++i) {
-    Elf64_Phdr *phdr = getelfsegmentheaderaddress(elf, elfsize, i);
+  unsigned i;
+  Elf64_Phdr *phdr;
+  intptr_t start, end, pstart, pend;
+  start = INTPTR_MAX;
+  end = 0;
+  for (i = 0; i < elf->e_phnum; ++i) {
+    phdr = getelfsegmentheaderaddress(elf, elfsize, i);
     if (phdr->p_type != PT_LOAD) continue;
-    intptr_t pstart = phdr->p_vaddr;
-    intptr_t pend = phdr->p_vaddr + phdr->p_memsz;
+    pstart = phdr->p_vaddr;
+    pend = phdr->p_vaddr + phdr->p_memsz;
     if (pstart < start) start = pstart;
     if (pend > end) end = pend;
   }

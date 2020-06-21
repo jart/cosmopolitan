@@ -7,11 +7,10 @@ struct avir1 {
   void *p;
 };
 
-void avir1init(struct avir1 *self);
-void avir1free(struct avir1 *self);
-void avir1(struct avir1 *resizer, size_t dyn, size_t dxn, void *dst,
-           size_t dstsize, size_t syn, size_t sxn, size_t ssw, const void *src,
-           size_t srcsize);
+void avir1init(struct avir1 *);
+void avir1free(struct avir1 *);
+void avir1(struct avir1 *, size_t, size_t, void *, size_t, size_t, size_t,
+           size_t, const void *, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

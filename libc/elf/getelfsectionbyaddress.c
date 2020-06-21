@@ -23,9 +23,10 @@
 Elf64_Shdr *getelfsectionbyaddress(const Elf64_Ehdr *elf, size_t mapsize,
                                    void *addr) {
   Elf64_Half i;
+  Elf64_Shdr *shdr;
   if (elf) {
     for (i = elf->e_shnum; i > 0; --i) {
-      Elf64_Shdr *shdr = getelfsectionheaderaddress(elf, mapsize, i - 1);
+      shdr = getelfsectionheaderaddress(elf, mapsize, i - 1);
       if ((intptr_t)addr >= shdr->sh_addr &&
           (intptr_t)addr < shdr->sh_addr + shdr->sh_size) {
         return shdr;

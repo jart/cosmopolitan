@@ -34,6 +34,9 @@
  * 8-bit through 128-bit integers (with validation), floating point
  * numbers, etc. It can also be used to convert UTF-8 to UTF-16/32.
  *
+ *   - `%d`  parses integer
+ *   - `%ms` parses string allocating buffer assigning pointer
+ *
  * @param callback supplies UTF-8 characters using -1 sentinel
  * @param fmt is a computer program embedded inside a c string, written
  *     in a domain-specific programming language that, by design, lacks

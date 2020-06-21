@@ -1760,18 +1760,6 @@ syscon	misc	READ_POSITION				52			0			0			0			0
 syscon	misc	READ_REVERSE				15			0			0			0			0
 syscon	misc	READ_TOC				67			0			0			0			0
 
-syscon	glob	GLOB_NOCHECK				0x10			0x10			0x10			0x10			0			# unix consensus
-syscon	glob	GLOB_ABORTED				2			-2			-2			-2			0			# bsd consensus
-syscon	glob	GLOB_APPEND				0x20			1			1			1			0			# bsd consensus
-syscon	glob	GLOB_DOOFFS				8			2			2			2			0			# bsd consensus
-syscon	glob	GLOB_ERR				1			4			4			4			0			# bsd consensus
-syscon	glob	GLOB_MARK				2			8			8			8			0			# bsd consensus
-syscon	glob	GLOB_NOMATCH				3			-3			-3			-3			0			# bsd consensus
-syscon	glob	GLOB_NOSORT				4			0x20			0x20			0x20			0			# bsd consensus
-syscon	glob	GLOB_NOSPACE				1			-1			-1			-1			0			# bsd consensus
-syscon	glob	GLOB_NOSYS				4			-4			-4			-4			0			# bsd consensus
-syscon	glob	GLOB_NOESCAPE				0x40			0x2000			0x2000			0x1000			0
-
 #	getpriority() / setpriority() magnums (a.k.a. nice)
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			XENIX			Commentary

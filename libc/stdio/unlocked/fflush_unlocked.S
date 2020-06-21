@@ -21,8 +21,10 @@
 .source	__FILE__
 
 fflush_unlocked:
-	.leafprologue
-	.profilable		# so we can fix code supporting this abomination
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable		# note: no consensus for threads exists in abis
 	call	fflush
-	.leafepilogue
+	pop	%rbp
+	ret
 	.endfn	fflush_unlocked,globl

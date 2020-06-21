@@ -1229,7 +1229,7 @@ privileged static void xed_decode_instruction_length(
  *
  * @return d->decoded_length is byte length, or 1 w/ error code
  * @note binary footprint increases ~4kb if this is used
- * @see cf. biggest thing in tensorflow, gdb, clang, etc. binaries
+ * @see biggest code in gdb/clang/tensorflow binaries
  */
 privileged enum XedError xed_instruction_length_decode(
     struct XedDecodedInst *xedd, const uint8_t *itext, const size_t bytes) {

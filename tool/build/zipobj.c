@@ -62,6 +62,7 @@
 
 char *symbol_;
 char *outpath_;
+char *yoink_;
 
 const size_t kMinCompressSize = 32;
 const char kNoCompressExts[][8] = {".gz",  ".xz",  ".jpg",  ".png",
@@ -70,19 +71,23 @@ const char kNoCompressExts[][8] = {".gz",  ".xz",  ".jpg",  ".png",
 
 noreturn void PrintUsage(int rc, FILE *f) {
   fprintf(f, "%s%s%s\n", "Usage: ", program_invocation_name,
-          " [-o FILE] [-s SYMBOL] [FILE...]\n");
+          " [-o FILE] [-s SYMBOL] [-y YOINK] [FILE...]\n");
   exit(rc);
 }
 
 void GetOpts(int *argc, char ***argv) {
   int opt;
-  while ((opt = getopt(*argc, *argv, "?ho:s:")) != -1) {
+  yoink_ = "__zip_start";
+  while ((opt = getopt(*argc, *argv, "?ho:s:y:")) != -1) {
     switch (opt) {
       case 'o':
         outpath_ = optarg;
         break;
       case 's':
         symbol_ = optarg;
+        break;
+      case 'y':
+        yoink_ = optarg;
         break;
       case '?':
       case 'h':
@@ -273,8 +278,7 @@ void PullEndOfCentralDirectoryIntoLinkage(struct ElfWriter *elf) {
   elfwriter_align(elf, 1, 0);
   elfwriter_startsection(elf, ".yoink", SHT_PROGBITS,
                          SHF_ALLOC | SHF_EXECINSTR);
-  elfwriter_yoink(elf, "__zip_start");
-  elfwriter_yoink(elf, "__zip_end");
+  elfwriter_yoink(elf, yoink_);
   elfwriter_finishsection(elf);
 }
 

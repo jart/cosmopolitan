@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,14 +17,20 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.h"
-.source	__FILE__
+#include "libc/log/log.h"
+#include "libc/mem/mem.h"
+#include "libc/x/x.h"
 
-feof_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	feof
-	pop	%rbp
-	ret
-	.endfn	feof_unlocked,globl
+/**
+ * Allocates new copy of string, with byte limit.
+ *
+ * @param s is a NUL-terminated byte string
+ * @param n if less than strlen(s) will truncate the string
+ * @return new string or NULL w/ errno
+ * @error ENOMEM
+ */
+char *xstrndup(const char *s, size_t n) {
+  void *res = strndup(s, n);
+  if (!res) die();
+  return res;
+}

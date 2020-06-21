@@ -74,6 +74,8 @@ forceinline int emitquote(int out(int, void *), void *arg, unsigned flags,
  * This function is used by palandprintf() to implement the %s and %c
  * directives. The content outputted to the array is always UTF-8, but
  * the input may be UTF-16 or UTF-32.
+ *
+ * @see palandprintf()
  */
 int stoa(int out(int, void *), void *arg, void *data, unsigned long flags,
          unsigned long precision, unsigned long width, unsigned char signbit,

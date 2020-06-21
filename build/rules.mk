@@ -96,4 +96,3 @@ build/bootstrap/%.c.gz: %.rl
 %.svgz: %.rl
 	@$(RAGEL) -V -p $< | $(DOT) -Tsvg | $(GZ) $(ZFLAGS) >$@
 
-	$(LIBC__A_SRCS:%=o/$(MODE)/%.zip.o)	\

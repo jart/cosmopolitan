@@ -20,6 +20,12 @@
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
 
+/**
+ * Formats string to buffer that's hopefully large enough.
+ *
+ * @see palandprintf() and printf() for detailed documentation
+ * @see snprintf() for same w/ buf size param
+ */
 int(sprintf)(char *buf, const char *fmt, ...) {
   int rc;
   va_list va;

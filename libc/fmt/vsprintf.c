@@ -20,6 +20,12 @@
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
 
+/**
+ * Formats string to buffer hopefully large enough w/ vararg state.
+ *
+ * @see palandprintf() and printf() for detailed documentation
+ * @see vsnprintf() for modern alternative w/ buf size param
+ */
 int(vsprintf)(char *buf, const char *fmt, va_list va) {
   return (vsnprintf)(buf, INT_MAX, fmt, va);
 }

@@ -231,8 +231,9 @@ HTAGS:	o/$(MODE)/hdrs.txt $(HDRS)
 	@rm -f $@
 	@ACTION=TAGS TARGET=$@ build/do build/htags -L $< -o $@
 
-loc:;	find -name \*.h -or -name \*.c -or -name \*.S | \
-	$(XARGS) wc -l | grep total | awk '{print $$1}' | summy
+loc: o/$(MODE)/tool/build/summy.com
+	find -name \*.h -or -name \*.c -or -name \*.S | \
+	$(XARGS) wc -l | grep total | awk '{print $$1}' | $<
 
 # UNSPECIFIED PREREQUISITES TUTORIAL
 #

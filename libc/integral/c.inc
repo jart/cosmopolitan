@@ -1015,8 +1015,9 @@ typedef uint64_t uintmax_t;
 
 /**
  * Pulls source of object being compiled into zip.
- * @note automates compliance with gpl terms
- * @see -DIM_FEELING_NAUGHTY
+ * @note automates most compliance with gpl terms
+ * @see libc/zipos/zipcentraldir.S
+ * @see ape/ape.lds
  */
 #ifdef __BASE_FILE__
 STATIC_YOINK_SOURCE(__BASE_FILE__);

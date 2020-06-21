@@ -21,7 +21,7 @@
 #include "libc/fmt/vsscanf.h"
 
 /**
- * String decoder.
+ * Decodes string.
  *
  * @see libc/fmt/vcscanf.h (for docs and implementation)
  * @note to offer the best performance, we assume small codebases

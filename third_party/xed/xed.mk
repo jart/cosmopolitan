@@ -7,7 +7,7 @@
 #
 # DESCRIPTION
 #
-#   See test/libc/x86ild_test.c for more information.
+#   See test/libc/xed/x86ild_test.c for more information.
 
 PKGS += THIRD_PARTY_XED
 

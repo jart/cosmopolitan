@@ -37,6 +37,12 @@
 static const int kPow10[] = {1,      10,      100,      1000,      10000,
                              100000, 1000000, 10000000, 100000000, 1000000000};
 
+/**
+ * Formats floating point number.
+ *
+ * @see xdtoa() for higher precision at the cost of bloat
+ * @see palandprintf() which is intended caller
+ */
 int ftoa(int out(int, void *), void *arg, long double value, unsigned long prec,
          unsigned long width, unsigned long flags) {
   long whole, frac;

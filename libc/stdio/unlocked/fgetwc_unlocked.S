@@ -21,8 +21,10 @@
 .source	__FILE__
 
 fgetwc_unlocked:
-	.leafprologue
-	.profilable		# so we can fix code supporting this abomination
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable		# note: no consensus for threads exists in abis
 	call	fgetwc
-	.leafepilogue
+	pop	%rbp
+	ret
 	.endfn	fgetwc_unlocked,globl
