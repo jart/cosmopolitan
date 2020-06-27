@@ -39,6 +39,6 @@ ssize_t __zipos_read(struct ZiposHandle *h, const struct iovec *iov,
     b = min(iov[i].iov_len, h->size - y);
     memcpy(iov[i].iov_base, h->mem + y, b);
   }
-  if (opt_offset != -1) h->pos = y;
+  if (opt_offset == -1) h->pos = y;
   return y - x;
 }
