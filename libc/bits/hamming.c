@@ -19,6 +19,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 
-unsigned long(hamming)(unsigned long x, unsigned long y) {
+/**
+ * Counts number of different bits.
+ */
+unsigned long hamming(unsigned long x, unsigned long y) {
   return popcount(x ^ y);
 }

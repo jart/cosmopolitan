@@ -30,6 +30,12 @@
 
 wint_t wc;
 
+TEST(tpdecode, testEmptyString_consumesNulTerminator) {
+  wc = 123;
+  EXPECT_EQ(1, tpdecode("", &wc));
+  EXPECT_EQ(0, wc);
+}
+
 TEST(tpdecode, testGlyph) {
   EXPECT_EQ(u'→', PROGN(ASSERT_EQ(3, tpdecode("→", &wc)), wc));
   EXPECT_EQ(L'𐌰', PROGN(ASSERT_EQ(4, tpdecode("𐌰𐌱𐌲𐌳", &wc)), wc));

@@ -36,6 +36,7 @@ uint64_t bitreverse64(uint64_t) libcesque pureconst;
 unsigned long roundup2pow(unsigned long) libcesque pureconst;
 unsigned long roundup2log(unsigned long) libcesque pureconst;
 unsigned long rounddown2pow(unsigned long) libcesque pureconst;
+unsigned long hamming(unsigned long, unsigned long) pureconst;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § bits » no assembly required                               ─╬─│┼

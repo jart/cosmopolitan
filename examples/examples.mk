@@ -114,6 +114,18 @@ o/$(MODE)/examples/hellojs.com.dbg:			\
 		$(APE)
 	@$(APELINK)
 
+o/$(MODE)/examples/ispell.com.dbg:			\
+		$(EXAMPLES_DEPS)			\
+		o/$(MODE)/examples/ispell.o		\
+		o/$(MODE)/usr/share/dict/words.zip.o	\
+		o/$(MODE)/examples/examples.pkg		\
+		$(CRT)					\
+		$(APE)
+	@$(APELINK)
+
+o/$(MODE)/usr/share/dict/words: usr/share/dict/words.gz
+	$(GZ) $(ZFLAGS) <$< >$@
+
 .PHONY: o/$(MODE)/examples
 o/$(MODE)/examples:					\
 		o/$(MODE)/examples/package		\
