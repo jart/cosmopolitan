@@ -1029,5 +1029,3 @@ void *dlrealloc(void *oldmem, size_t bytes) {
   }
   return mem;
 }
-
-asm(".include \"third_party/dlmalloc/COPYING\"");

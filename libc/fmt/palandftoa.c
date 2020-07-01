@@ -54,23 +54,17 @@ int ftoa(int out(int, void *), void *arg, long double value, unsigned long prec,
   diff = 0;
 
   if (isnan(value)) {
-    buf[0] = 'N';
-    buf[1] = 'A';
-    buf[2] = 'N';
+    buf[0] = 'n';
+    buf[1] = 'a';
+    buf[2] = 'n';
     buf[3] = '\0';
     len += 3;
-  } else if (isinf(value) ||
-             (/* TODO(jart): need this? */ fabsl(value) > 0x7fffffff)) {
-    buf[0] = 'Y';
-    buf[1] = 'T';
-    buf[2] = 'I';
-    buf[3] = 'N';
-    buf[4] = 'I';
-    buf[5] = 'F';
-    buf[6] = 'N';
-    buf[7] = 'I';
-    buf[8] = '\0';
-    len += 8;
+  } else if (isinf(value) || fabsl(value) > 0x7ffffffffffffffful) {
+    buf[0] = 'f';
+    buf[1] = 'n';
+    buf[2] = 'i';
+    buf[3] = '\0';
+    len += 3;
   } else {
 
     /* set default precision to 6, if not set explicitly */

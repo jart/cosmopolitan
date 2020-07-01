@@ -45,9 +45,9 @@
   ({                                                  \
     int KillAx;                                       \
     unsigned char Cf;                                 \
-    asm volatile(CFLAG("clc\n\t"                      \
-                       "syscall")                     \
-                 : CF(Cf), "=a"(KillAx)               \
+    asm volatile(CFLAG_ASM("clc\n\t"                  \
+                           "syscall")                 \
+                 : CFLAG_CONSTRAINT(Cf), "=a"(KillAx) \
                  : "1"(__NR_kill), "D"(pid), "S"(sig) \
                  : "rcx", "r11", "cc", "memory");     \
     Cf ? -KillAx : KillAx;                            \

@@ -485,7 +485,6 @@ ape_disk:
 
 apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	"o=\"$(command -v \"$0\")\"\n"
-	.ascii	"set -- \"$o\" \"$@\"\n"
 	.ascii	"if [ -d /Applications ]; then\n"
 	.ascii	  "dd if=\"$o\""
 	.ascii	    " of=\"$o\""
@@ -521,14 +520,17 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	    "' >&7\n"
 	.ascii	  "exec 7<&-\n"
 	.ascii	"fi\n"
-	.ascii	"exec \"$@\"\n"			# etxtbsy tail recursion
+	.ascii	"exec \"$0\" \"$@\"\n"		# etxtbsy tail recursion
 	.ascii	"R=$?\n"			# architecture optimistic
+	.ascii	"\n"
 	.ascii	"if [ $R -eq 126 ] && [ \"$(uname -m)\" != x86_64 ]; then\n"
 	.ascii	  "if Q=\"$(command -v qemu-x86_64)\"; then\n"
-	.ascii	    "exec \"$Q\" \"$@\"\n"
+	.ascii	    "exec \"$Q\" \"$0\" \"$@\"\n"
 	.ascii	  "else\n"
 	.ascii	    "echo error: need qemu-x86_64 >&2\n"
 	.ascii	  "fi\n"
+	.ascii	"elif [ $R -eq 127 ]; then\n"	# means argv[0] was wrong
+	.ascii	"  exec \"$o\" \"$@\"\n"	# so do a path resolution
 	.ascii	"fi\n"
 	.ascii	"exit $R\n"
 	.endobj	apesh

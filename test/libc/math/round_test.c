@@ -33,10 +33,10 @@ TEST(round, test) {
 
 TEST(round, testCornerCases) {
   EXPECT_STREQ("-0", gc(xdtoa(round(-0.0))));
-  EXPECT_STREQ("NAN", gc(xdtoa(round(NAN))));
-  EXPECT_STREQ("-NAN", gc(xdtoa(round(-NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(round(INFINITY))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoa(round(-INFINITY))));
+  EXPECT_STREQ("nan", gc(xdtoa(round(NAN))));
+  EXPECT_STREQ("-nan", gc(xdtoa(round(-NAN))));
+  EXPECT_STREQ("inf", gc(xdtoa(round(INFINITY))));
+  EXPECT_STREQ("-inf", gc(xdtoa(round(-INFINITY))));
 }
 
 TEST(lround, test) {
@@ -60,10 +60,10 @@ TEST(roundf, test) {
 
 TEST(roundf, testCornerCases) {
   EXPECT_STREQ("-0", gc(xdtoa(roundf(-0.0))));
-  EXPECT_STREQ("NAN", gc(xdtoa(roundf(NAN))));
-  EXPECT_STREQ("-NAN", gc(xdtoa(roundf(-NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(roundf(INFINITY))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoa(roundf(-INFINITY))));
+  EXPECT_STREQ("nan", gc(xdtoa(roundf(NAN))));
+  EXPECT_STREQ("-nan", gc(xdtoa(roundf(-NAN))));
+  EXPECT_STREQ("inf", gc(xdtoa(roundf(INFINITY))));
+  EXPECT_STREQ("-inf", gc(xdtoa(roundf(-INFINITY))));
 }
 
 TEST(lroundf, test) {

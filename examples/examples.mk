@@ -124,7 +124,8 @@ o/$(MODE)/examples/ispell.com.dbg:			\
 	@$(APELINK)
 
 o/$(MODE)/usr/share/dict/words: usr/share/dict/words.gz
-	$(GZ) $(ZFLAGS) <$< >$@
+	@$(MKDIR) $(dir $@)
+	@$(GZ) $(ZFLAGS) <$< >$@
 
 .PHONY: o/$(MODE)/examples
 o/$(MODE)/examples:					\

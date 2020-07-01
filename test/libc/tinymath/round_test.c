@@ -38,10 +38,10 @@ TEST(round, test) {
 
 TEST(round, testCornerCases) {
   EXPECT_STREQ("-0", gc(xdtoa(tinymath_round(-0.0))));
-  EXPECT_STREQ("NAN", gc(xdtoa(tinymath_round(NAN))));
-  EXPECT_STREQ("-NAN", gc(xdtoa(tinymath_round(-NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(tinymath_round(INFINITY))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoa(tinymath_round(-INFINITY))));
+  EXPECT_STREQ("nan", gc(xdtoa(tinymath_round(NAN))));
+  EXPECT_STREQ("-nan", gc(xdtoa(tinymath_round(-NAN))));
+  EXPECT_STREQ("inf", gc(xdtoa(tinymath_round(INFINITY))));
+  EXPECT_STREQ("-inf", gc(xdtoa(tinymath_round(-INFINITY))));
 }
 
 TEST(lround, test) {
@@ -65,10 +65,10 @@ TEST(roundf, test) {
 
 TEST(roundf, testCornerCases) {
   EXPECT_STREQ("-0", gc(xdtoa(tinymath_roundf(-0.0))));
-  EXPECT_STREQ("NAN", gc(xdtoa(tinymath_roundf(NAN))));
-  EXPECT_STREQ("-NAN", gc(xdtoa(tinymath_roundf(-NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(tinymath_roundf(INFINITY))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoa(tinymath_roundf(-INFINITY))));
+  EXPECT_STREQ("nan", gc(xdtoa(tinymath_roundf(NAN))));
+  EXPECT_STREQ("-nan", gc(xdtoa(tinymath_roundf(-NAN))));
+  EXPECT_STREQ("inf", gc(xdtoa(tinymath_roundf(INFINITY))));
+  EXPECT_STREQ("-inf", gc(xdtoa(tinymath_roundf(-INFINITY))));
 }
 
 TEST(lroundf, test) {
@@ -103,18 +103,18 @@ TEST(roundf$k8, test) {
 
 TEST(round$k8, testCornerCases) {
   EXPECT_STREQ("-0", gc(xdtoa(tinymath_round$k8(-0.0))));
-  EXPECT_STREQ("NAN", gc(xdtoa(tinymath_round$k8(NAN))));
-  EXPECT_STREQ("-NAN", gc(xdtoa(tinymath_round$k8(-NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(tinymath_round$k8(INFINITY))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoa(tinymath_round$k8(-INFINITY))));
+  EXPECT_STREQ("nan", gc(xdtoa(tinymath_round$k8(NAN))));
+  EXPECT_STREQ("-nan", gc(xdtoa(tinymath_round$k8(-NAN))));
+  EXPECT_STREQ("inf", gc(xdtoa(tinymath_round$k8(INFINITY))));
+  EXPECT_STREQ("-inf", gc(xdtoa(tinymath_round$k8(-INFINITY))));
 }
 
 TEST(roundf$k8, testCornerCases) {
   EXPECT_STREQ("-0", gc(xdtoa(tinymath_roundf$k8(-0.0))));
-  EXPECT_STREQ("NAN", gc(xdtoa(tinymath_roundf$k8(NAN))));
-  EXPECT_STREQ("-NAN", gc(xdtoa(tinymath_roundf$k8(-NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(tinymath_roundf$k8(INFINITY))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoa(tinymath_roundf$k8(-INFINITY))));
+  EXPECT_STREQ("nan", gc(xdtoa(tinymath_roundf$k8(NAN))));
+  EXPECT_STREQ("-nan", gc(xdtoa(tinymath_roundf$k8(-NAN))));
+  EXPECT_STREQ("inf", gc(xdtoa(tinymath_roundf$k8(INFINITY))));
+  EXPECT_STREQ("-inf", gc(xdtoa(tinymath_roundf$k8(-INFINITY))));
 }
 
 #endif

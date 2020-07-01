@@ -31,6 +31,9 @@ static void onmemchunk(void *start, void *end, size_t used_bytes, void *arg) {
             (intptr_t)end - (intptr_t)start);
 }
 
+/**
+ * Prints memory mappings.
+ */
 void meminfo(FILE *f) {
   memsummary(f);
   (fprintf)(f, "%*s   %*s   %*s   %*s\n", POINTER_XDIGITS, "start",

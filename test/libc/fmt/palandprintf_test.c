@@ -434,7 +434,7 @@ TEST(sprintf, test_float) {
   EXPECT_STREQ("a0.5  ", Format("a%-5.1f", 0.5));
   EXPECT_STREQ("a0.5  end", Format("a%-5.1fend", 0.5));
   /* out of range in the moment, need to be fixed by someone */
-  EXPECT_STREQ("INFINITY", Format("%.1f", 1E20));
+  EXPECT_STREQ("inf", Format("%.1f", 1E20));
 }
 
 TEST(sprintf, test_types) {

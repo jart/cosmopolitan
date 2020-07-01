@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
+#include "libc/bits/popcnt.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/runtime/buffer.h"
@@ -54,9 +55,9 @@ void *balloc(struct GuardedBuffer *b, unsigned a, size_t n) {
   assert(a >= 1);
   assert(a <= kGuard);
   assert(kGuard < kGrain);
-  assert(popcount(a) == 1);
-  assert(popcount(kGuard) == 1);
-  assert(popcount(kGrain) == 1);
+  assert(popcnt(a) == 1);
+  assert(popcnt(kGuard) == 1);
+  assert(popcnt(kGrain) == 1);
   assert(n < 0x800000000000ul - kGrain - kGuard);
 
   if (n) {

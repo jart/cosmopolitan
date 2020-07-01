@@ -84,6 +84,7 @@ void RefactorFile(const char *path) {
   char *mem, *spot = NULL, *part1, *part2;
   CHECK_NE(-1, (fd = open(path, O_RDONLY)));
   CHECK_NE(-1, fstat(fd, &st));
+  len2 = 0;
   if ((len = st.st_size)) {
     CHECK_NE(MAP_FAILED,
              (mem = mmap(NULL, len, PROT_READ, MAP_PRIVATE, fd, 0)));

@@ -36,8 +36,8 @@ uint64_t rdrand(void) {
   for (;;) {
     for (i = 0; i < 10; ++i) {
       /* CF=1: Destination register valid. Quoth Intel DRNG-SIG 4.1.3 */
-      asm volatile(CFLAG("rdrand\t%1")
-                   : CF(cf), "=r"(res)
+      asm volatile(CFLAG_ASM("rdrand\t%1")
+                   : CFLAG_CONSTRAINT(cf), "=r"(res)
                    : /* no inputs */
                    : "cc");
       if (cf) return res;

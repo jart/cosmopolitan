@@ -83,3 +83,8 @@ TEST(strwidth, tab) {
 TEST(wcwidth, block) {
   EXPECT_EQ(1, wcwidth(u'▄'));
 }
+
+TEST(strwidth, testTextDelimitingControlCodes_dontHaveSubstance) {
+  EXPECT_EQ(0, strwidth("\0"));
+  EXPECT_EQ(0, strwidth("\1"));
+}

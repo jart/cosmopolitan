@@ -606,11 +606,7 @@
 #define printf out1fmt
 /* #define putc(c, file) outc(c, file) */
 /* #define putchar(c) out1c(c) */
-#define FILE struct output
-#undef fprintf
-#define fprintf   outfmt
-#define fputs     outstr
-#define fflush    flushout
+#define FILE      struct output
 #define fileno(f) ((f)->fd)
 /* #define ferror outerr */
 #define INITARGS(argv)

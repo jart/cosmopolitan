@@ -333,7 +333,7 @@ SECTIONS {
 /*BEGIN: Read only data that needn't be mapped after initialization */
 
     /* Legal Notices */
-#ifndef IM_FEELING_NAUGHTY
+#if !defined(IM_FEELING_NAUGHTY) || defined(EMBED_NOTICES)
     KEEP(*(.commentprologue))
     KEEP(*(.comment))
     KEEP(*(.commentepilogue))

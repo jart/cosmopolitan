@@ -16,7 +16,6 @@ extern const uint8_t kReverseBits[256];
 uint16_t bswap_16(uint16_t) pureconst;
 uint32_t bswap_32(uint32_t) pureconst;
 uint32_t bswap_64(uint32_t) pureconst;
-unsigned long popcount(unsigned long) pureconst;
 uint32_t gray(uint32_t) pureconst;
 uint32_t ungray(uint32_t) pureconst;
 unsigned bcdadd(unsigned, unsigned) pureconst;
@@ -87,36 +86,36 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
   })
 #endif
 
-#define WRITE16LE(P, V)             \
-  do {                              \
-    uint8_t *Ple = (P);             \
-    uint16_t Vle = (V);             \
-    Ple[0] = (uint8_t)(Vle >> 000); \
-    Ple[1] = (uint8_t)(Vle >> 010); \
+#define WRITE16LE(P, V)                  \
+  do {                                   \
+    uint8_t *Ple = (unsigned char *)(P); \
+    uint16_t Vle = (V);                  \
+    Ple[0] = (uint8_t)(Vle >> 000);      \
+    Ple[1] = (uint8_t)(Vle >> 010);      \
   } while (0)
 
-#define WRITE32LE(P, V)             \
-  do {                              \
-    uint8_t *Ple = (P);             \
-    uint32_t Vle = (V);             \
-    Ple[0] = (uint8_t)(Vle >> 000); \
-    Ple[1] = (uint8_t)(Vle >> 010); \
-    Ple[2] = (uint8_t)(Vle >> 020); \
-    Ple[3] = (uint8_t)(Vle >> 030); \
+#define WRITE32LE(P, V)                  \
+  do {                                   \
+    uint8_t *Ple = (unsigned char *)(P); \
+    uint32_t Vle = (V);                  \
+    Ple[0] = (uint8_t)(Vle >> 000);      \
+    Ple[1] = (uint8_t)(Vle >> 010);      \
+    Ple[2] = (uint8_t)(Vle >> 020);      \
+    Ple[3] = (uint8_t)(Vle >> 030);      \
   } while (0)
 
-#define WRITE64LE(P, V)             \
-  do {                              \
-    uint8_t *Ple = (P);             \
-    uint64_t Vle = (V);             \
-    Ple[0] = (uint8_t)(Vle >> 000); \
-    Ple[1] = (uint8_t)(Vle >> 010); \
-    Ple[2] = (uint8_t)(Vle >> 020); \
-    Ple[3] = (uint8_t)(Vle >> 030); \
-    Ple[4] = (uint8_t)(Vle >> 040); \
-    Ple[5] = (uint8_t)(Vle >> 050); \
-    Ple[6] = (uint8_t)(Vle >> 060); \
-    Ple[7] = (uint8_t)(Vle >> 070); \
+#define WRITE64LE(P, V)                  \
+  do {                                   \
+    uint8_t *Ple = (unsigned char *)(P); \
+    uint64_t Vle = (V);                  \
+    Ple[0] = (uint8_t)(Vle >> 000);      \
+    Ple[1] = (uint8_t)(Vle >> 010);      \
+    Ple[2] = (uint8_t)(Vle >> 020);      \
+    Ple[3] = (uint8_t)(Vle >> 030);      \
+    Ple[4] = (uint8_t)(Vle >> 040);      \
+    Ple[5] = (uint8_t)(Vle >> 050);      \
+    Ple[6] = (uint8_t)(Vle >> 060);      \
+    Ple[7] = (uint8_t)(Vle >> 070);      \
   } while (0)
 
 /* TODO(jart): these ones aren't coded correctly */
@@ -135,27 +134,27 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
  * @note we beseech clang devs for flag constraints
  */
 #ifdef __GCC_ASM_FLAG_OUTPUTS__ /* GCC6+ CLANG10+ */
-#define CF            "=@ccc"
-#define CFLAG(OP)     OP
-#define ZF            "=@ccz"
-#define ZFLAG(OP)     OP
-#define OF            "=@cco"
-#define OFLAG(OP)     OP
-#define SF            "=@ccs"
-#define SFLAG(SP)     SP
-#define ABOVEF        "=@cca" /* i.e. !ZF && !CF */
-#define ABOVEFLAG(OP) OP
+#define CFLAG_CONSTRAINT  "=@ccc"
+#define CFLAG_ASM(OP)     OP
+#define ZFLAG_CONSTRAINT  "=@ccz"
+#define ZFLAG_ASM(OP)     OP
+#define OFLAG_CONSTRAINT  "=@cco"
+#define OFLAG_ASM(OP)     OP
+#define SFLAG_CONSTRAINT  "=@ccs"
+#define SFLAG_ASM(SP)     SP
+#define ABOVE_CONSTRAINT  "=@cca" /* i.e. !ZF && !CF */
+#define ABOVEFLAG_ASM(OP) OP
 #else
-#define CF            "=q"
-#define CFLAG(OP)     OP "\n\tsetc\t%b0"
-#define ZF            "=q"
-#define ZFLAG(OP)     OP "\n\tsetz\t%b0"
-#define OF            "=q"
-#define OFLAG(OP)     OP "\n\tseto\t%b0"
-#define SF            "=q"
-#define SFLAG(SP)     OP "\n\tsets\t%b0"
-#define ABOVEF        "=@cca"
-#define ABOVEFLAG(OP) OP "\n\tseta\t%b0"
+#define CFLAG_CONSTRAINT  "=q"
+#define CFLAG_ASM(OP)     OP "\n\tsetc\t%b0"
+#define ZFLAG_CONSTRAINT  "=q"
+#define ZFLAG_ASM(OP)     OP "\n\tsetz\t%b0"
+#define OFLAG_CONSTRAINT  "=q"
+#define OFLAG_ASM(OP)     OP "\n\tseto\t%b0"
+#define SFLAG_CONSTRAINT  "=q"
+#define SFLAG_ASM(SP)     OP "\n\tsets\t%b0"
+#define ABOVE_CONSTRAINT  "=@cca"
+#define ABOVEFLAG_ASM(OP) OP "\n\tseta\t%b0"
 #endif
 
 /**
@@ -226,23 +225,32 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
  * @see Intel's Six Thousand Page Manual V.2A 3-113
  * @see bts(), btr(), btc()
  */
-#define bt(MEM, BIT)                                                          \
-  ({                                                                          \
-    bool OldBit;                                                              \
-    if (isconstant(BIT)) {                                                    \
-      asm(CFLAG("bt%z1\t%2,%1")                                               \
-          : CF(OldBit)                                                        \
-          : "m"((MEM)[(BIT) / (sizeof((MEM)[0]) * CHAR_BIT)]),                \
-            "J"((BIT) % (sizeof((MEM)[0]) * CHAR_BIT))                        \
-          : "cc");                                                            \
-    } else if (sizeof((MEM)[0]) == 2) {                                       \
-      asm(CFLAG("bt\t%w2,%1") : CF(OldBit) : "m"((MEM)[0]), "r"(BIT) : "cc"); \
-    } else if (sizeof((MEM)[0]) == 4) {                                       \
-      asm(CFLAG("bt\t%k2,%1") : CF(OldBit) : "m"((MEM)[0]), "r"(BIT) : "cc"); \
-    } else if (sizeof((MEM)[0]) == 8) {                                       \
-      asm(CFLAG("bt\t%q2,%1") : CF(OldBit) : "m"((MEM)[0]), "r"(BIT) : "cc"); \
-    }                                                                         \
-    OldBit;                                                                   \
+#define bt(MEM, BIT)                                           \
+  ({                                                           \
+    bool OldBit;                                               \
+    if (isconstant(BIT)) {                                     \
+      asm(CFLAG_ASM("bt%z1\t%2,%1")                            \
+          : CFLAG_CONSTRAINT(OldBit)                           \
+          : "m"((MEM)[(BIT) / (sizeof((MEM)[0]) * CHAR_BIT)]), \
+            "J"((BIT) % (sizeof((MEM)[0]) * CHAR_BIT))         \
+          : "cc");                                             \
+    } else if (sizeof((MEM)[0]) == 2) {                        \
+      asm(CFLAG_ASM("bt\t%w2,%1")                              \
+          : CFLAG_CONSTRAINT(OldBit)                           \
+          : "m"((MEM)[0]), "r"(BIT)                            \
+          : "cc");                                             \
+    } else if (sizeof((MEM)[0]) == 4) {                        \
+      asm(CFLAG_ASM("bt\t%k2,%1")                              \
+          : CFLAG_CONSTRAINT(OldBit)                           \
+          : "m"((MEM)[0]), "r"(BIT)                            \
+          : "cc");                                             \
+    } else if (sizeof((MEM)[0]) == 8) {                        \
+      asm(CFLAG_ASM("bt\t%q2,%1")                              \
+          : CFLAG_CONSTRAINT(OldBit)                           \
+          : "m"((MEM)[0]), "r"(BIT)                            \
+          : "cc");                                             \
+    }                                                          \
+    OldBit;                                                    \
   })
 
 #define bts(MEM, BIT)     __BitOp("bts", BIT, MEM) /** bit test and set */
@@ -285,27 +293,27 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
  * @return true if value was exchanged, otherwise false
  * @see lockcmpxchg()
  */
-#define cmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)      \
-  ({                                                        \
-    bool DidIt;                                             \
-    asm(ZFLAG("cmpxchg\t%3,%1")                             \
-        : ZF(DidIt), "+m"(*(IFTHING)), "+a"(*(ISEQUALTOME)) \
-        : "r"((typeof(*(IFTHING)))(REPLACEITWITHME))        \
-        : "cc");                                            \
-    DidIt;                                                  \
+#define cmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)                    \
+  ({                                                                      \
+    bool DidIt;                                                           \
+    asm(ZFLAG_ASM("cmpxchg\t%3,%1")                                       \
+        : ZFLAG_CONSTRAINT(DidIt), "+m"(*(IFTHING)), "+a"(*(ISEQUALTOME)) \
+        : "r"((typeof(*(IFTHING)))(REPLACEITWITHME))                      \
+        : "cc");                                                          \
+    DidIt;                                                                \
   })
 
-#define ezcmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)  \
-  ({                                                      \
-    bool DidIt;                                           \
-    autotype(IFTHING) IfThing = (IFTHING);                \
-    typeof(*IfThing) IsEqualToMe = (ISEQUALTOME);         \
-    typeof(*IfThing) ReplaceItWithMe = (REPLACEITWITHME); \
-    asm(ZFLAG("cmpxchg\t%3,%1")                           \
-        : ZF(DidIt), "+m"(*IfThing), "+a"(IsEqualToMe)    \
-        : "r"(ReplaceItWithMe)                            \
-        : "cc");                                          \
-    DidIt;                                                \
+#define ezcmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)             \
+  ({                                                                 \
+    bool DidIt;                                                      \
+    autotype(IFTHING) IfThing = (IFTHING);                           \
+    typeof(*IfThing) IsEqualToMe = (ISEQUALTOME);                    \
+    typeof(*IfThing) ReplaceItWithMe = (REPLACEITWITHME);            \
+    asm(ZFLAG_ASM("cmpxchg\t%3,%1")                                  \
+        : ZFLAG_CONSTRAINT(DidIt), "+m"(*IfThing), "+a"(IsEqualToMe) \
+        : "r"(ReplaceItWithMe)                                       \
+        : "cc");                                                     \
+    DidIt;                                                           \
   })
 
 /**
@@ -315,14 +323,14 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
  * @return true if value was exchanged, otherwise false
  * @see lockcmpxchg()
  */
-#define lockcmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)  \
-  ({                                                        \
-    bool DidIt;                                             \
-    asm(ZFLAG("lock cmpxchg\t%3,%1")                        \
-        : ZF(DidIt), "+m"(*(IFTHING)), "+a"(*(ISEQUALTOME)) \
-        : "r"((typeof(*(IFTHING)))(REPLACEITWITHME))        \
-        : "cc");                                            \
-    DidIt;                                                  \
+#define lockcmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)                \
+  ({                                                                      \
+    bool DidIt;                                                           \
+    asm(ZFLAG_ASM("lock cmpxchg\t%3,%1")                                  \
+        : ZFLAG_CONSTRAINT(DidIt), "+m"(*(IFTHING)), "+a"(*(ISEQUALTOME)) \
+        : "r"((typeof(*(IFTHING)))(REPLACEITWITHME))                      \
+        : "cc");                                                          \
+    DidIt;                                                                \
   })
 
 /**
@@ -431,19 +439,6 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
 ╚────────────────────────────────────────────────────────────────────────────│*/
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 
-#define popcount(X) (isconstant(X) ? __builtin_popcount(X) : __popcount(X))
-#define popcount$nehalem(X)                                    \
-  ({                                                           \
-    typeof(X) BitCount;                                        \
-    asm("popcnt\t%1,%0" : "=r,r"(BitCount) : "r,m"(X) : "cc"); \
-    BitCount;                                                  \
-  })
-#ifdef __POPCNT__
-#define __popcount(X) popcount$nehalem(X)
-#else
-#define __popcount(X) (popcount)(X)
-#endif
-
 #define bswap_16(U16)                                                         \
   (isconstant(U16) ? ((((U16)&0xff00) >> 010) | (((U16)&0x00ff) << 010)) : ({ \
     uint16_t Swapped16, Werd16 = (U16);                                       \
@@ -500,31 +495,32 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
     MEM;                                                       \
   })
 
-#define __BitOp(OP, BIT, MEM)                                              \
-  ({                                                                       \
-    bool OldBit;                                                           \
-    if (isconstant(BIT)) {                                                 \
-      asm(CFLAG(OP "%z1\t%2,%1")                                           \
-          : CF(OldBit), "+m"((MEM)[(BIT) / (sizeof((MEM)[0]) * CHAR_BIT)]) \
-          : "J"((BIT) % (sizeof((MEM)[0]) * CHAR_BIT))                     \
-          : "cc");                                                         \
-    } else if (sizeof((MEM)[0]) == 2) {                                    \
-      asm(CFLAG(OP "\t%w2,%1")                                             \
-          : CF(OldBit), "+m"((MEM)[0])                                     \
-          : "r"(BIT)                                                       \
-          : "cc");                                                         \
-    } else if (sizeof((MEM)[0]) == 4) {                                    \
-      asm(CFLAG(OP "\t%k2,%1")                                             \
-          : CF(OldBit), "+m"((MEM)[0])                                     \
-          : "r"(BIT)                                                       \
-          : "cc");                                                         \
-    } else if (sizeof((MEM)[0]) == 8) {                                    \
-      asm(CFLAG(OP "\t%q2,%1")                                             \
-          : CF(OldBit), "+m"((MEM)[0])                                     \
-          : "r"(BIT)                                                       \
-          : "cc");                                                         \
-    }                                                                      \
-    OldBit;                                                                \
+#define __BitOp(OP, BIT, MEM)                                  \
+  ({                                                           \
+    bool OldBit;                                               \
+    if (isconstant(BIT)) {                                     \
+      asm(CFLAG_ASM(OP "%z1\t%2,%1")                           \
+          : CFLAG_CONSTRAINT(OldBit),                          \
+            "+m"((MEM)[(BIT) / (sizeof((MEM)[0]) * CHAR_BIT)]) \
+          : "J"((BIT) % (sizeof((MEM)[0]) * CHAR_BIT))         \
+          : "cc");                                             \
+    } else if (sizeof((MEM)[0]) == 2) {                        \
+      asm(CFLAG_ASM(OP "\t%w2,%1")                             \
+          : CFLAG_CONSTRAINT(OldBit), "+m"((MEM)[0])           \
+          : "r"(BIT)                                           \
+          : "cc");                                             \
+    } else if (sizeof((MEM)[0]) == 4) {                        \
+      asm(CFLAG_ASM(OP "\t%k2,%1")                             \
+          : CFLAG_CONSTRAINT(OldBit), "+m"((MEM)[0])           \
+          : "r"(BIT)                                           \
+          : "cc");                                             \
+    } else if (sizeof((MEM)[0]) == 8) {                        \
+      asm(CFLAG_ASM(OP "\t%q2,%1")                             \
+          : CFLAG_CONSTRAINT(OldBit), "+m"((MEM)[0])           \
+          : "r"(BIT)                                           \
+          : "cc");                                             \
+    }                                                          \
+    OldBit;                                                    \
   })
 
 COSMOPOLITAN_C_END_

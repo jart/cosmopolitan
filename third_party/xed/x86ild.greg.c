@@ -21,6 +21,8 @@
 #include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "third_party/xed/avx.h"
+#include "third_party/xed/avx512.h"
 #include "third_party/xed/private.h"
 #include "third_party/xed/x86.h"
 
@@ -377,7 +379,7 @@ privileged static void xed_set_chip_modes(struct XedDecodedInst *d,
 }
 
 privileged static xed_bool_t xed3_mode_64b(struct XedDecodedInst *d) {
-  return d->operands.mode == 2;
+  return d->operands.mode == XED_MODE_LONG;
 }
 
 privileged static void xed_set_hint(char b, struct XedDecodedInst *d) {
@@ -610,10 +612,10 @@ out:
   d->operands.nseg_prefixes = nseg_prefixes;
   d->operands.nrexes = nrexes;
   if (rex) {
-    d->operands.rexw = (rex >> 3 & 1);
-    d->operands.rexr = (rex >> 2 & 1);
-    d->operands.rexx = (rex >> 1 & 1);
-    d->operands.rexb = (rex & 1);
+    d->operands.rexw = rex >> 3 & 1;
+    d->operands.rexr = rex >> 2 & 1;
+    d->operands.rexx = rex >> 1 & 1;
+    d->operands.rexb = rex & 1;
     d->operands.rex = 1;
   }
   if (d->operands.mode_first_prefix) {
@@ -773,7 +775,7 @@ privileged static void xed_evex_scanner(struct XedDecodedInst *d) {
       d->operands.rexrr = ~evex1.s.rr_inv & 1;
     }
     d->operands.map = evex1.s.map;
-    d->operands.rexw = evex2.s.rexw;
+    d->operands.rexw = evex2.s.rexw & 1;
     d->operands.vexdest3 = evex2.s.vexdest3;
     d->operands.vexdest210 = evex2.s.vexdest210;
     d->operands.ubit = evex2.s.ubit;
@@ -894,7 +896,7 @@ privileged static void xed_vex_c4_scanner(struct XedDecodedInst *d) {
     d->operands.rexr = ~c4byte1.s.r_inv & 1;
     d->operands.rexx = ~c4byte1.s.x_inv & 1;
     d->operands.rexb = (xed3_mode_64b(d) & ~c4byte1.s.b_inv) & 1;
-    d->operands.rexw = c4byte2.s.w;
+    d->operands.rexw = c4byte2.s.w & 1;
     d->operands.vexdest3 = c4byte2.s.v3;
     d->operands.vexdest210 = c4byte2.s.vvv210;
     d->operands.vl = c4byte2.s.l;
@@ -965,7 +967,7 @@ privileged static void xed_xop_scanner(struct XedDecodedInst *d) {
     d->operands.rexr = ~xop_byte1.s.r_inv & 1;
     d->operands.rexx = ~xop_byte1.s.x_inv & 1;
     d->operands.rexb = (xed3_mode_64b(d) & ~xop_byte1.s.b_inv) & 1;
-    d->operands.rexw = xop_byte2.s.w;
+    d->operands.rexw = xop_byte2.s.w & 1;
     d->operands.vexdest3 = xop_byte2.s.v3;
     d->operands.vexdest210 = xop_byte2.s.vvv210;
     d->operands.vl = xop_byte2.s.l;
@@ -1041,7 +1043,7 @@ privileged static void xed_modrm_scanner(struct XedDecodedInst *d) {
     length = d->decoded_length;
     if (length < d->operands.max_bytes) {
       b = xed_decoded_inst_get_byte(d, length);
-      d->operands.modrm_byte = b;
+      d->operands.modrm = b;
       d->operands.pos_modrm = length;
       d->decoded_length++;
       mod = xed_modrm_mod(b);
@@ -1072,9 +1074,7 @@ privileged static void xed_sib_scanner(struct XedDecodedInst *d) {
     if (length < d->operands.max_bytes) {
       b = xed_decoded_inst_get_byte(d, length);
       d->operands.pos_sib = length;
-      d->operands.sibscale = xed_sib_scale(b);
-      d->operands.sibindex = xed_sib_index(b);
-      d->operands.sibbase = xed_sib_base(b);
+      d->operands.sib = b;
       d->decoded_length++;
       if (xed_sib_base(b) == 5) {
         if (d->operands.mod == 0) {
@@ -1134,9 +1134,9 @@ privileged static void XED_LF_BRDISP32_BRDISP_WIDTH_CONST_l2(
 }
 
 privileged static void XED_LF_DISP_BUCKET_0_l1(struct XedDecodedInst *x) {
-  if (x->operands.mode <= 1) {
+  if (x->operands.mode <= XED_MODE_LEGACY) {
     XED_LF_BRDISPz_BRDISP_WIDTH_OSZ_NONTERM_EOSZ_l2(x);
-  } else if (x->operands.mode == 2) {
+  } else if (x->operands.mode == XED_MODE_LONG) {
     XED_LF_BRDISP32_BRDISP_WIDTH_CONST_l2(x);
   }
 }
@@ -1232,7 +1232,7 @@ privileged static void xed_decode_instruction_length(
  * @see biggest code in gdb/clang/tensorflow binaries
  */
 privileged enum XedError xed_instruction_length_decode(
-    struct XedDecodedInst *xedd, const uint8_t *itext, const size_t bytes) {
+    struct XedDecodedInst *xedd, const void *itext, size_t bytes) {
   xed_set_chip_modes(xedd, xedd->operands.chip);
   xedd->bytes = itext;
   xedd->operands.max_bytes = MIN(bytes, XED_MAX_INSTRUCTION_BYTES);

@@ -32,8 +32,8 @@ privileged int __mprotect(void *addr, uint64_t len, int prot) {
   int64_t rc;
   uint32_t oldprot;
   if (!IsWindows()) {
-    asm volatile(CFLAG("syscall")
-                 : CF(cf), "=a"(rc)
+    asm volatile(CFLAG_ASM("syscall")
+                 : CFLAG_CONSTRAINT(cf), "=a"(rc)
                  : "1"(__NR_mprotect), "D"(addr), "S"(len), "d"(prot)
                  : "rcx", "r11", "memory", "cc");
     if (cf) {

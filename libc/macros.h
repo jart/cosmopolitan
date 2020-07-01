@@ -20,7 +20,6 @@
 #define ABS(X)              ((X) >= 0 ? (X) : -(X))
 #define MIN(X, Y)           ((Y) > (X) ? (X) : (Y))
 #define MAX(X, Y)           ((Y) < (X) ? (X) : (Y))
-#define MOD(X, Y)           ((X) - (ABS(Y)) * ((X) / ABS(Y)))
 #define PASTE(A, B)         __PASTE(A, B)
 #define STRINGIFY(A)        __STRINGIFY(A)
 #define EQUIVALENT(X, Y)    (isconstant((X) == (Y)) && ((X) == (Y)))

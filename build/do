@@ -16,7 +16,7 @@
 MKDIR=${MKDIR:-$(command -v mkdir) -p} || exit
 
 # Ensure directory creation if -o PATH flag is passed.
-OUT=
+OUT="$TARGET"
 FIRST=1
 OUTARG=0
 for x; do

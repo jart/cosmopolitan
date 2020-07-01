@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/bits/popcnt.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
@@ -46,7 +47,7 @@ FILE *fmemopen(void *buf, size_t size, const char *mode) {
     return NULL;
   }
 
-  if (size && popcount(size) != 1) {
+  if (size && popcnt(size) != 1) {
     einval();
     return NULL;
   }

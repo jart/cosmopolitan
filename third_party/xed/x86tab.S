@@ -154,19 +154,19 @@ xed_has_disp_regular.rodata:
 	.endobj	xed_has_disp_regular.rodata
 
 xed_has_sib_table.rodata:
-	.byte	36,0x00			# 00─23 ∅─#
-	.byte	1,0x01			# 24─24 $
-	.byte	7,0x00			# 25─2b %─+
-	.byte	1,0x01			# 2c─2c ,
-	.byte	7,0x00			# 2d─33 ──3
-	.byte	1,0x01			# 34─34 4
-	.byte	15,0x00			# 35─43 5─C
-	.byte	1,0x01			# 44─44 D
-	.byte	7,0x00			# 45─4b E─K
-	.byte	1,0x01			# 4c─4c L
-	.byte	7,0x00			# 4d─53 M─S
-	.byte	1,0x01			# 54─54 T
-	.byte	11,0x00			# 55─5f U─_
+	.byte	36,FALSE		# 00─23 ∅─#
+	.byte	1,TRUE			# 24─24 $
+	.byte	7,FALSE			# 25─2b %─+
+	.byte	1,TRUE			# 2c─2c ,
+	.byte	7,FALSE			# 2d─33 ──3
+	.byte	1,TRUE			# 34─34 4
+	.byte	15,FALSE		# 35─43 5─C
+	.byte	1,TRUE			# 44─44 D
+	.byte	7,FALSE			# 45─4b E─K
+	.byte	1,TRUE			# 4c─4c L
+	.byte	7,FALSE			# 4d─53 M─S
+	.byte	1,TRUE			# 54─54 T
+	.byte	11,FALSE		# 55─5f U─_
 	.endobj	xed_has_sib_table.rodata
 
 xed_disp_bits_2d.rodata:

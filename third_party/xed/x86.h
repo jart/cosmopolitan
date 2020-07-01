@@ -313,12 +313,18 @@ struct XedChipFeatures {
 };
 
 struct XedOperands {
+  /* data structure optimized for gcc code size */
   uint8_t imm_width;
   uint8_t map;   /* enum XedIldMap */
   uint8_t error; /* enum XedError */
-  uint8_t mode;
-  uint8_t rexw;
-  uint8_t osz;
+  uint8_t mode;  /* real,legacy,long */
+  uint8_t modrm; /* selects address register */
+  uint8_t sib;   /* scaled index base x86_64 */
+  uint8_t rexw : 1;
+  uint8_t rexr : 1;
+  uint8_t rexx : 1;
+  uint8_t rexb : 1;
+  uint8_t osz; /* operand size override prefix */
   uint8_t max_bytes;
   uint8_t nominal_opcode;
   uint8_t out_of_bytes;
@@ -326,6 +332,7 @@ struct XedOperands {
   int64_t disp;
   uint64_t uimm0;
   enum XedChip chip;
+  uint8_t srm;
   uint8_t amd3dnow;
   uint8_t asz;
   uint8_t bcrc;
@@ -334,16 +341,11 @@ struct XedOperands {
   uint8_t ild_f2;
   uint8_t ild_f3;
   uint8_t lock;
-  uint8_t modep5;
-  uint8_t modep55c;
   uint8_t mode_first_prefix;
   uint8_t prefix66;
   uint8_t realmode;
   uint8_t rex;
-  uint8_t rexb;
-  uint8_t rexr;
   uint8_t rexrr;
-  uint8_t rexx;
   uint8_t ubit;
   uint8_t vexdest3;
   uint8_t vexdest4;
@@ -355,7 +357,6 @@ struct XedOperands {
   uint8_t llrc;
   uint8_t mod;
   uint8_t rep;
-  uint8_t sibscale;
   uint8_t vex_prefix;
   uint8_t vl;
   uint8_t hint;
@@ -363,15 +364,11 @@ struct XedOperands {
   uint8_t reg;
   uint8_t rm;
   uint8_t seg_ovd;
-  uint8_t sibbase;
-  uint8_t sibindex;
-  uint8_t srm;
   uint8_t vexdest210;
   uint8_t vexvalid;
   uint8_t esrc;
   uint8_t ild_seg;
   uint8_t imm1_bytes;
-  uint8_t modrm_byte;
   uint8_t nprefixes;
   uint8_t nrexes;
   uint8_t nseg_prefixes;
@@ -384,152 +381,10 @@ struct XedOperands {
   uint8_t uimm1;
 };
 
-struct XedInst {
-  uint8_t noperands;
-  uint8_t cpl;
-  uint8_t flag_complex;
-  uint8_t exceptions;
-  uint16_t flag_info_index;
-  uint16_t iform_enum;
-  uint16_t operand_base;
-  uint16_t attributes;
-};
-
-struct XedEncoderIforms {
-  unsigned x_MEMDISPv;
-  unsigned x_SIBBASE_ENCODE_SIB1;
-  unsigned x_VEX_MAP_ENC;
-  unsigned x_SIB_NT;
-  unsigned x_UIMM8_1;
-  unsigned x_SIBBASE_ENCODE;
-  unsigned x_VEX_ESCVL_ENC;
-  unsigned x_PREFIX_ENC;
-  unsigned x_VEXED_REX;
-  unsigned x_REMOVE_SEGMENT;
-  unsigned x_VSIB_ENC;
-  unsigned x_EVEX_REXB_ENC;
-  unsigned x_MODRM_RM_ENCODE_EA64_SIB0;
-  unsigned x_VEX_REXXB_ENC;
-  unsigned x_EVEX_REXRR_ENC;
-  unsigned x_AVX512_EVEX_BYTE3_ENC;
-  unsigned x_EVEX_REXW_VVVV_ENC;
-  unsigned x_VEX_REG_ENC;
-  unsigned x_SIMM8;
-  unsigned x_XOP_MAP_ENC;
-  unsigned x_MODRM_RM_ENCODE_EA32_SIB0;
-  unsigned x_UIMM8;
-  unsigned x_MODRM_RM_ENCODE_EA16_SIB0;
-  unsigned x_XOP_REXXB_ENC;
-  unsigned x_EVEX_MAP_ENC;
-  unsigned x_MEMDISP8;
-  unsigned x_MODRM_RM_ENCODE;
-  unsigned x_REX_PREFIX_ENC;
-  unsigned x_UIMM16;
-  unsigned x_VEX_TYPE_ENC;
-  unsigned x_EVEX_UPP_ENC;
-  unsigned x_VEX_REXR_ENC;
-  unsigned x_BRDISP32;
-  unsigned x_MEMDISP32;
-  unsigned x_MEMDISP16;
-  unsigned x_SIBINDEX_ENCODE;
-  unsigned x_SE_IMM8;
-  unsigned x_UIMM32;
-  unsigned x_SIMMz;
-  unsigned x_UIMMv;
-  unsigned x_EVEX_62_REXR_ENC;
-  unsigned x_DISP_NT;
-  unsigned x_MODRM_MOD_ENCODE;
-  unsigned x_MEMDISP;
-  unsigned x_VSIB_ENC_BASE;
-  unsigned x_BRDISP8;
-  unsigned x_BRDISPz;
-  unsigned x_EVEX_REXX_ENC;
-  unsigned x_XOP_TYPE_ENC;
-};
-
-struct XedEncoderVars {
-  struct XedEncoderIforms iforms;
-  unsigned short iform_index;
-  unsigned ilen;
-  unsigned olen;
-  unsigned bit_offset;
-};
-
 struct XedDecodedInst {
   struct XedOperands operands;
   unsigned char decoded_length;
   uint8_t *bytes;
-};
-
-union XedAvxC4Payload1 {
-  struct {
-    unsigned map : 5;
-    unsigned b_inv : 1;
-    unsigned x_inv : 1;
-    unsigned r_inv : 1;
-    unsigned pad : 24;
-  } s;
-  unsigned u32;
-};
-
-union XedAvxC4Payload2 {
-  struct {
-    unsigned pp : 2;
-    unsigned l : 1;
-    unsigned vvv210 : 3;
-    unsigned v3 : 1;
-    unsigned w : 1;
-    unsigned pad : 24;
-  } s;
-  unsigned u32;
-};
-
-union XedAvxC5Payload {
-  struct {
-    unsigned pp : 2;
-    unsigned l : 1;
-    unsigned vvv210 : 3;
-    unsigned v3 : 1;
-    unsigned r_inv : 1;
-    unsigned pad : 24;
-  } s;
-  unsigned u32;
-};
-
-union XedAvx512Payload1 {
-  struct {
-    unsigned map : 4;
-    unsigned rr_inv : 1;
-    unsigned b_inv : 1;
-    unsigned x_inv : 1;
-    unsigned r_inv : 1;
-    unsigned pad : 24;
-  } s;
-  unsigned u32;
-};
-
-union XedAvx512Payload2 {
-  struct {
-    unsigned pp : 2;
-    unsigned ubit : 1;
-    unsigned vexdest210 : 3;
-    unsigned vexdest3 : 1;
-    unsigned rexw : 1;
-    unsigned pad : 24;
-  } s;
-  unsigned u32;
-};
-
-union XedAvx512Payload3 {
-  struct {
-    unsigned mask : 3;
-    unsigned vexdest4p : 1;
-    unsigned bcrc : 1;
-    unsigned llrc : 2;
-    unsigned z : 1;
-    unsigned pad : 24;
-  } s;
-  unsigned u32;
 };
 
 forceinline unsigned char xed_decoded_inst_get_byte(
@@ -575,7 +430,7 @@ forceinline struct XedDecodedInst *xed_decoded_inst_zero_set_mode(
 extern const uint64_t xed_chip_features[XED_CHIP_LAST][3] hidden;
 
 enum XedError xed_instruction_length_decode(struct XedDecodedInst *,
-                                            const unsigned char *, size_t);
+                                            const void *, size_t);
 
 bool xed_isa_set_is_valid_for_chip(enum XedIsaSet, enum XedChip);
 bool xed_test_chip_features(struct XedChipFeatures *, enum XedIsaSet);

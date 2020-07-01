@@ -100,7 +100,7 @@ size_t internobj(struct Interner *t, const void *data, size_t size) {
   item = data;
   hash = max(1, KnuthMultiplicativeHash32(data, size));
   do {
-    /* it is written that triangle probe halts iff i<n/2 && popcount(n)==1 */
+    /* it is written that triangle probe halts iff i<n/2 && popcnt(n)==1 */
     i = (hash + step * (step + 1) / 2) & (it->n - 1);
     if (it->p[i].hash == hash && it->p[i].index + size <= it->pool.n &&
         memcmp(item, &it->pool.p[it->p[i].index], size) == 0) {

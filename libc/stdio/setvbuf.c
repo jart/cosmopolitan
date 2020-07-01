@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/bits/popcnt.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/errfuns.h"
 
@@ -31,7 +31,7 @@
  * @return 0 on success or -1 on error
  */
 int setvbuf(FILE *f, char *buf, int mode, size_t size) {
-  if (size && popcount(size) != 1) return einval();
+  if (size && popcnt(size) != 1) return einval();
   setbuffer(f, buf, size);
   f->bufmode = mode;
   return 0;

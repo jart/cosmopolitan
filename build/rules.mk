@@ -33,7 +33,7 @@ o/%.inc: %.h; @ACTION=PREPROCESS build/compile $(PREPROCESS) $(OUTPUT_OPTION) -D
 o/%.pkg:; @build/package $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) $(filter %.o,$^)
 o/%.h.ok: %.h; @ACTION=CHECK.h build/compile $(COMPILE.c) -x c -g0 -o $@ $<
 o/%.greg.o: %.greg.c; @ACTION=OBJECTIFY.greg build/compile $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
-o/%.zip.o: %; @build/zipobj $(OUTPUT_OPTION) $<
+o/%.zip.o: o/%; @build/zipobj $(OUTPUT_OPTION) $<
 
 o/$(MODE)/%.a:; @$(ARCHIVE) $@ $^
 o/$(MODE)/%.o: %.s; @TARGET=$@ build/assemble $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
@@ -95,4 +95,3 @@ build/bootstrap/%.c.gz: %.rl
 	@$(GZ) $(ZFLAGS) -f $(@:%.gz=%)
 %.svgz: %.rl
 	@$(RAGEL) -V -p $< | $(DOT) -Tsvg | $(GZ) $(ZFLAGS) >$@
-

@@ -264,6 +264,16 @@ _init_\name:
   .popsection
 .endm
 
+/	ICE Breakpoint.
+/	Modern gas forgot this but objdump knows
+/	@mode	long,legacy,real
+	.macro	icebp
+	.byte	0xF1
+	.endm
+	.macro	int1
+	icebp
+	.endm
+
 /	Sets breakpoint for software debugger.
 /	@mode	long,legacy,real
 .macro	.softicebp

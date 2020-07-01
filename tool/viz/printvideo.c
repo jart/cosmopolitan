@@ -177,6 +177,7 @@ mode.\n\
 #define CTRL(C)   ((C) ^ 0100)
 #define ALT(C)    ((033 << 010) | (C))
 #define ARGZ(...) ((char *const[]){__VA_ARGS__, NULL})
+#define MOD(X, Y) ((X) - (ABS(Y)) * ((X) / ABS(Y)))
 
 #define BALLOC(B, A, N, NAME)              \
   ({                                       \
@@ -509,8 +510,8 @@ static bool TrySpeaker(const char *prog, char *const *args) {
   int rc;
   int fds[3];
   fds[0] = -1;
-  fds[1] = STDERR_FILENO;
-  fds[2] = STDERR_FILENO;
+  fds[1] = fileno(g_logfile);
+  fds[2] = fileno(g_logfile);
   LOGF("spawning %s", prog);
   if ((rc = spawnve(0, fds, prog, args, environ)) != -1) {
     playpid_ = rc;
@@ -541,8 +542,8 @@ static bool OpenSpeaker(void) {
   if (!once) {
     once = true;
     i = 0;
-    if (sox_) tryspeakerfns_[i++] = TrySox;
     if (ffplay_) tryspeakerfns_[i++] = TryFfplay;
+    if (sox_) tryspeakerfns_[i++] = TrySox;
   }
   snprintf(fifopath_, sizeof(fifopath_), "%s%s.%d.%d.wav", kTmpPath,
            program_invocation_short_name, getpid(), count);

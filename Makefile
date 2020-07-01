@@ -212,7 +212,7 @@ depend:	o/$(MODE)/depend
 tags:	TAGS HTAGS
 
 o/$(MODE)/.x:
-	@mkdir -p $(dir $@) && touch $@
+	@$(MKDIR) $(dir $@) && touch $@
 
 o/$(MODE)/srcs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(SRCS),$(dir $(x))))
 	$(file >$@) $(foreach x,$(SRCS),$(file >>$@,$(x)))

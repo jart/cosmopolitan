@@ -41,14 +41,14 @@ bLoop:
     vbitmask_t r1;
     uint8_v v1, v2;
     const uint8_v kZero = {0};
-    asm(ZFLAG("vmovdqu\t%5,%2\n\t"     /* move because gcc problematic */
-              "vpcmpeqb\t%4,%2,%1\n\t" /* check for equality in p1 and p2 */
-              "vpcmpeqb\t%6,%2,%2\n\t" /* check for nul in p1 */
-              "vpandn\t%7,%1,%2\n\t"   /* most complicated bitwise not ever */
-              "vpor\t%2,%1,%1\n\t"     /* check for nul in p2 */
-              "pmovmskb\t%1,%3\n\t"    /* turn 256 bits into 32 bits */
-              "bsf\t%3,%3")            /* find stop byte */
-        : ZF(zf), "=x"(v1), "=x"(v2), "=r"(r1)
+    asm(ZFLAG_ASM("vmovdqu\t%5,%2\n\t"     /* move because gcc problematic */
+                  "vpcmpeqb\t%4,%2,%1\n\t" /* check for equality in p1 and p2 */
+                  "vpcmpeqb\t%6,%2,%2\n\t" /* check for nul in p1 */
+                  "vpandn\t%7,%1,%2\n\t" /* most complicated bitwise not ever */
+                  "vpor\t%2,%1,%1\n\t"   /* check for nul in p2 */
+                  "pmovmskb\t%1,%3\n\t"  /* turn 256 bits into 32 bits */
+                  "bsf\t%3,%3")          /* find stop byte */
+        : ZFLAG_CONSTRAINT(zf), "=x"(v1), "=x"(v2), "=r"(r1)
         : "m"(*(const uint8_v *)(p1 + i)), "m"(*(const uint8_v *)(p2 + i)),
           "x"(kZero), "m"(kVectorSize));
     if (zf) goto vLoop;

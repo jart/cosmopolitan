@@ -79,7 +79,7 @@ struct Edge {
 };
 
 struct Sources {
-  size_t i, n;      /* phase 1: hashmap: popcount(n)==1 if n */
+  size_t i, n;      /* phase 1: hashmap: popcnt(n)==1 if n */
   struct Source *p; /* phase 2: arraylist sorted by id */
 };
 

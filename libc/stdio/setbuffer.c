@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/bits/popcnt.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/errfuns.h"
@@ -26,7 +26,7 @@
  * Sets buffer on stdio stream.
  */
 void setbuffer(FILE *f, char *buf, size_t size) {
-  if (size && popcount(size) != 1) abort();
+  if (size && popcnt(size) != 1) abort();
   if (buf && f->buf != (unsigned char *)buf) {
     free_s(&f->buf);
     if (!size) size = BUFSIZ;

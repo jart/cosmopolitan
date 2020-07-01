@@ -145,6 +145,8 @@ int main(int argc, char *argv[]) {
   SHOWOP(error);
   SHOWOP(esrc);
   SHOWOP(first_f2f3);
+  SHOWOP(modrm);
+  SHOWOP(sib);
   SHOWOP(has_modrm);
   SHOWOP(has_sib);
   SHOWOP(hint);
@@ -162,9 +164,6 @@ int main(int argc, char *argv[]) {
   SHOWOP(mod);
   SHOWOP(mode);
   SHOWOP(mode_first_prefix);
-  SHOWOP(modep5);
-  SHOWOP(modep55c);
-  SHOWOP(modrm_byte);
   SHOWOP(nominal_opcode);
   SHOWOP(nprefixes);
   SHOWOP(nrexes);
@@ -189,9 +188,6 @@ int main(int argc, char *argv[]) {
   SHOWOP(rexx);
   SHOWOP(rm);
   SHOWOP(seg_ovd);
-  SHOWOP(sibbase);
-  SHOWOP(sibindex);
-  SHOWOP(sibscale);
   SHOWOP(srm);
   SHOWOP(ubit);
   SHOWOP(uimm0);

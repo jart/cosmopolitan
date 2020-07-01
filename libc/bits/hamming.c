@@ -17,11 +17,11 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/bits/popcnt.h"
 
 /**
  * Counts number of different bits.
  */
 unsigned long hamming(unsigned long x, unsigned long y) {
-  return popcount(x ^ y);
+  return popcnt(x ^ y);
 }
