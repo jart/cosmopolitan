@@ -1,3 +1,4 @@
+(require 'mog-mode)
 (require 'ld-script)
 (require 'optinfo-mode)
 (require 'protobuf-mode)
