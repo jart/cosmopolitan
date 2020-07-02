@@ -47,12 +47,12 @@ EXAMPLES_DIRECTDEPS =					\
 	LIBC_CONV					\
 	LIBC_FMT					\
 	LIBC_LOG					\
-	LIBC_MATH					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
 	LIBC_NT_KERNELBASE				\
 	LIBC_NT_NTDLL					\
 	LIBC_NT_USER32					\
+	LIBC_OHMYPLUS					\
 	LIBC_RAND					\
 	LIBC_RUNTIME					\
 	LIBC_SOCK					\
@@ -69,7 +69,6 @@ EXAMPLES_DIRECTDEPS =					\
 	THIRD_PARTY_COMPILER_RT				\
 	THIRD_PARTY_DLMALLOC				\
 	THIRD_PARTY_DTOA				\
-	THIRD_PARTY_DUKTAPE				\
 	THIRD_PARTY_GETOPT				\
 	THIRD_PARTY_MUSL				\
 	THIRD_PARTY_STB					\
@@ -82,6 +81,7 @@ EXAMPLES_DEPS :=					\
 
 o/$(MODE)/examples/examples.pkg:			\
 		$(EXAMPLES_OBJS)			\
+		$(THIRD_PARTY_DUKTAPE_A).pkg		\
 		$(foreach x,$(EXAMPLES_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/examples/unbourne.o:				\
@@ -98,6 +98,7 @@ o/$(MODE)/examples/%.com.dbg:				\
 
 o/$(MODE)/examples/%.elf:				\
 		$(EXAMPLES_DEPS)			\
+		$(THIRD_PARTY_DUKTAPE)			\
 		o/$(MODE)/examples/%.o			\
 		$(CRT)					\
 		$(ELF)
@@ -107,6 +108,7 @@ $(EXAMPLES_OBJS): examples/examples.mk
 
 o/$(MODE)/examples/hellojs.com.dbg:			\
 		$(EXAMPLES_DEPS)			\
+		$(THIRD_PARTY_DUKTAPE)			\
 		o/$(MODE)/examples/hellojs.o		\
 		o/$(MODE)/examples/hello.js.zip.o	\
 		o/$(MODE)/examples/examples.pkg		\

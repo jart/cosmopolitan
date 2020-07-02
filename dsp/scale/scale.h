@@ -15,34 +15,22 @@ void FreeSamplingSolution(struct SamplingSolution *);
 struct SamplingSolution *ComputeSamplingSolution(long, long, double, double,
                                                  double);
 
-void *Scale2xX(long ys, long xs, unsigned char[ys][xs], long, long);
-void *Scale2xY(long ys, long xs, unsigned char[ys][xs], long, long);
-void *Magikarp2xX(long ys, long xs, unsigned char[ys][xs], long, long);
-void *Magikarp2xY(long ys, long xs, unsigned char[ys][xs], long, long);
-void *Magkern2xX(long ys, long xs, unsigned char[ys][xs], long, long);
-void *Magkern2xY(long ys, long xs, unsigned char[ys][xs], long, long);
-void *MagikarpY(long dys, long dxs, unsigned char d[restrict dys][dxs],
-                long sys, long sxs, const unsigned char s[sys][sxs], long yn,
-                long xn, const signed char K[8]);
+void *Scale2xX(long, long, void *, long, long);
+void *Scale2xY(long, long, void *, long, long);
+void *Magikarp2xX(long, long, void *, long, long);
+void *Magikarp2xY(long, long, void *, long, long);
+void *Magkern2xX(long, long, void *, long, long);
+void *Magkern2xY(long, long, void *, long, long);
+void *MagikarpY(long, long, void *, long, long, const void *, long, long,
+                const signed char[8]);
 
-void *GyaradosUint8(long dyw, long dxw, unsigned char dst[dyw][dxw], long syw,
-                    long sxw, const unsigned char src[syw][sxw], long dyn,
-                    long dxn, long syn, long sxn, long lo, long hi,
-                    struct SamplingSolution *cy, struct SamplingSolution *cx,
-                    bool sharpen);
-void *EzGyarados(long dcw, long dyw, long dxw, unsigned char dst[dcw][dyw][dxw],
-                 long scw, long syw, long sxw,
-                 const unsigned char src[scw][syw][sxw], long c0, long cn,
-                 long dyn, long dxn, long syn, long sxn, double ry, double rx,
-                 double oy, double ox);
-
-void Decimate2xUint8x8(unsigned long n, unsigned char[n * 2],
-                       const signed char[static 8]);
-void *cDecimate2xUint8x8(unsigned long n, unsigned char[n * 2],
-                         const signed char[8]);
-
-void *transpose(long yn, long xn, const unsigned char[yn][xn]);
-extern void (*const transpose88b)(unsigned char[8][8]);
+void *GyaradosUint8(long, long, void *, long, long, const void *, long, long,
+                    long, long, long, long, struct SamplingSolution *,
+                    struct SamplingSolution *, bool);
+void *GyaradosInt16(long, void *, long, const void *, long, long,
+                    struct SamplingSolution *, bool);
+void *EzGyarados(long, long, long, void *, long, long, long, const void *, long,
+                 long, long, long, long, long, double, double, double, double);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

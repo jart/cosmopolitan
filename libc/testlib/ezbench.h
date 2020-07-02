@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_TESTLIB_EZBENCH_H_
 #include "libc/macros.h"
 #include "libc/testlib/bench.h"
+#include "libc/testlib/testlib.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 #define EZBENCH(INIT, EXPR) EZBENCH2(#EXPR, INIT, EXPR)

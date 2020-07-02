@@ -22,7 +22,6 @@
 #include "dsp/core/ituround.h"
 #include "dsp/core/q.h"
 #include "dsp/core/twixt8.h"
-#include "dsp/scale/scale.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"

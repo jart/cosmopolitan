@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*-mode:c++;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8-*-│
+│vi: set net ft=c++ ts=2 sts=2 sw=2 fenc=utf-8                              :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,24 +17,36 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "dsp/core/half.h"
+#ifndef COSMOPOLITAN_LIBC_OHMYPLUS_VECTOR_H_
+#define COSMOPOLITAN_LIBC_OHMYPLUS_VECTOR_H_
+extern "C" {
+void __vector_reserve(size_t, size_t, intptr_t **, size_t *);
+} /* extern c */
+namespace std {
 
-void *Scale2xX(long ys, long xs, unsigned char p[ys][xs], long yn, long xn) {
-  long y, x, w;
-  for (w = HALF(xn), y = 0; y < yn; ++y) {
-    for (x = 0; x < w; ++x) {
-      p[y][x] = p[y][x * 2];
-    }
-  }
-  return p;
-}
+template <class T>
+class vector {
+ public:
+  vector() : data_(NULL), size_(0), toto_(0) {}
+  vector(size_t n) : data_(NULL), size_(n), toto_(0) { VectorReserve(n); }
+  size_t size() const { return size_; }
+  size_t capacity() const { return toto_; }
+  T &front() { return data_[0]; }
+  T &back() { return data_[size_ - 1]; }
+  void clear() { size_ = 0; }
+  void reserve(size_t n) { VectorReserve(n); }
+  void resize(size_t n) { reserve((size_ = n)); }
+  bool empty() const { return !size_; }
+  T &operator[](size_t i) { return data_[i]; }
 
-void *Scale2xY(long ys, long xs, unsigned char p[ys][xs], long yn, long xn) {
-  long y, x, h;
-  for (h = HALF(yn), y = 0; y < h; ++y) {
-    for (x = 0; x < xn; ++x) {
-      p[y][x] = p[y * 2][x];
-    }
+ private:
+  T *data_;
+  size_t size_;
+  size_t toto_;
+  void VectorReserve(size_t n) {
+    __vector_reserve(n, sizeof(T), (intptr_t **)&data_, &toto_);
   }
-  return p;
-}
+};
+
+};     /* namespace std */
+#endif /* COSMOPOLITAN_LIBC_OHMYPLUS_VECTOR_H_ */

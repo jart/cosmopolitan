@@ -32,6 +32,7 @@ o/%.lds: %.lds; @ACTION=PREPROCESS build/compile $(PREPROCESS.lds) $(OUTPUT_OPTI
 o/%.inc: %.h; @ACTION=PREPROCESS build/compile $(PREPROCESS) $(OUTPUT_OPTION) -D__ASSEMBLER__ -P $<
 o/%.pkg:; @build/package $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) $(filter %.o,$^)
 o/%.h.ok: %.h; @ACTION=CHECK.h build/compile $(COMPILE.c) -x c -g0 -o $@ $<
+o/%.h.okk: %.h; @ACTION=CHECK.h build/compile $(COMPILE.cxx) -x c++ -g0 -o $@ $<
 o/%.greg.o: %.greg.c; @ACTION=OBJECTIFY.greg build/compile $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
 o/%.zip.o: o/%; @build/zipobj $(OUTPUT_OPTION) $<
 
@@ -60,6 +61,7 @@ o/$(MODE)/%.o: %.cc; @ACTION=OBJECTIFY.cxx build/compile $(OBJECTIFY.cxx) $(OUTP
 o/$(MODE)/%.o: o/$(MODE)/%.cc; @ACTION=OBJECTIFY.cxx build/compile $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.lds: %.lds; @ACTION=PREPROCESS build/compile $(PREPROCESS.lds) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.h.ok: %.h; @ACTION=CHECK.h build/compile $(COMPILE.c) -x c -g0 -o $@ $<
+o/$(MODE)/%.h.okk: %.h; @ACTION=CHECK.h build/compile $(COMPILE.cxx) -x c++ -g0 -o $@ $<
 o/$(MODE)/%.o: %.greg.c; @ACTION=OBJECTIFY.greg build/compile $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.greg.o: %.greg.c; @ACTION=OBJECTIFY.greg build/compile $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.ansi.o: %.ansi.c; @ACTION=OBJECTIFY.ansi build/compile $(OBJECTIFY.ansi.c) $(OUTPUT_OPTION) $<

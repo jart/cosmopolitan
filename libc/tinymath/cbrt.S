@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:asm; indent-tabs-mode:t; tab-width:8; coding:utf-8               -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,24 +17,13 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "dsp/core/half.h"
+#include "libc/macros.h"
 
-void *Scale2xX(long ys, long xs, unsigned char p[ys][xs], long yn, long xn) {
-  long y, x, w;
-  for (w = HALF(xn), y = 0; y < yn; ++y) {
-    for (x = 0; x < w; ++x) {
-      p[y][x] = p[y][x * 2];
-    }
-  }
-  return p;
-}
-
-void *Scale2xY(long ys, long xs, unsigned char p[ys][xs], long yn, long xn) {
-  long y, x, h;
-  for (h = HALF(yn), y = 0; y < h; ++y) {
-    for (x = 0; x < xn; ++x) {
-      p[y][x] = p[y * 2][x];
-    }
-  }
-  return p;
-}
+/	Returns cube root of 𝑥.
+/
+/	@param	%xmm0 holds binary64 number
+/	@return	%xmm0 holds binary64 result
+tinymath_cbrt:
+	jmp	__cbrt
+	.endfn	tinymath_cbrt,globl
+	.alias	tinymath_cbrt,cbrt

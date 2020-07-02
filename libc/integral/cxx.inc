@@ -1,6 +1,6 @@
-#define COSMOPOLITAN_CPP_START_ namespace cosmo {
-#define COSMOPOLITAN_CPP_END_   }
-#define COSMOPOLITAN_CPP_USING_ using namespace cosmo;
+#define COSMOPOLITAN_CXX_START_ namespace cosmo {
+#define COSMOPOLITAN_CXX_END_   }
+#define COSMOPOLITAN_CXX_USING_ using namespace cosmo;
 #define COSMOPOLITAN_C_START_   extern "C" {
 #define COSMOPOLITAN_C_END_     }
 

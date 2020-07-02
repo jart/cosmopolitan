@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:asm; indent-tabs-mode:t; tab-width:8; coding:utf-8               -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,24 +17,23 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "dsp/core/half.h"
+#include "libc/macros.h"
 
-void *Scale2xX(long ys, long xs, unsigned char p[ys][xs], long yn, long xn) {
-  long y, x, w;
-  for (w = HALF(xn), y = 0; y < yn; ++y) {
-    for (x = 0; x < w; ++x) {
-      p[y][x] = p[y][x * 2];
-    }
-  }
-  return p;
-}
-
-void *Scale2xY(long ys, long xs, unsigned char p[ys][xs], long yn, long xn) {
-  long y, x, h;
-  for (h = HALF(yn), y = 0; y < h; ++y) {
-    for (x = 0; x < xn; ++x) {
-      p[y][x] = p[y * 2][x];
-    }
-  }
-  return p;
-}
+/	Returns cube root of 𝑥.
+/
+/	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+/	@return	result of computation on FPU stack in %st
+tinymath_cbrtl:
+	pushq	%rbp
+	mov	%rsp,%rbp
+	sub	$16,%rsp
+	fldt	16(%rbp)
+	fstpl	-8(%rbp)
+	movsd	-8(%rbp),%xmm0
+	call	__cbrt
+	movsd	%xmm0,-8(%rbp)
+	fldl	-8(%rbp)
+	leave
+	ret
+	.endfn	tinymath_cbrtl,globl
+	.alias	tinymath_cbrtl,cbrtl

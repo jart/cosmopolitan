@@ -17,24 +17,12 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "dsp/core/half.h"
+#include "libc/bits/bits.h"
+#include "libc/mem/mem.h"
 
-void *Scale2xX(long ys, long xs, unsigned char p[ys][xs], long yn, long xn) {
-  long y, x, w;
-  for (w = HALF(xn), y = 0; y < yn; ++y) {
-    for (x = 0; x < w; ++x) {
-      p[y][x] = p[y][x * 2];
-    }
+void __vector_reserve(size_t n, size_t m, intptr_t **data, size_t *toto) {
+  if ((n = roundup2pow(n)) > *toto) {
+    *toto = n;
+    *data = realloc(*data, n * m);
   }
-  return p;
-}
-
-void *Scale2xY(long ys, long xs, unsigned char p[ys][xs], long yn, long xn) {
-  long y, x, h;
-  for (h = HALF(yn), y = 0; y < h; ++y) {
-    for (x = 0; x < xn; ++x) {
-      p[y][x] = p[y * 2][x];
-    }
-  }
-  return p;
 }

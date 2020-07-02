@@ -109,6 +109,7 @@ include libc/runtime/runtime.mk			# ├──systems
 include libc/unicode/unicode.mk			# │
 include third_party/dlmalloc/dlmalloc.mk	# │
 include libc/mem/mem.mk				# │
+include libc/ohmyplus/ohmyplus.mk		# │
 include libc/zipos/zipos.mk			# │
 include third_party/dtoa/dtoa.mk		# │
 include libc/time/time.mk			# │

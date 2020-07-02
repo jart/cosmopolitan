@@ -17,6 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "dsp/scale/cdecimate2xuint8x8.h"
 #include "dsp/scale/scale.h"
 #include "libc/fmt/bing.h"
 #include "libc/nexgen32e/x86feature.h"

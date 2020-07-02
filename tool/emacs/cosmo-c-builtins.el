@@ -1298,9 +1298,9 @@
         (cosmopolitan-builtin-defines
          '("__COSMOPOLITAN__"
            "__LINKER__"
-           "COSMOPOLITAN_CPP_START_"
-           "COSMOPOLITAN_CPP_END_"
-           "COSMOPOLITAN_CPP_USING_"
+           "COSMOPOLITAN_CXX_START_"
+           "COSMOPOLITAN_CXX_END_"
+           "COSMOPOLITAN_CXX_USING_"
            "COSMOPOLITAN_C_START_"
            "COSMOPOLITAN_C_END_"
            "MACHINE_CODE_ANALYSIS_BEGIN_"

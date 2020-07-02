@@ -11,9 +11,6 @@
  *
  * Optimized by Bruce D. Evans.
  */
-/* cbrt(x)
- * Return cube root of x
- */
 #include "libc/math.h"
 
 asm(".ident\t\"\\n\\n\
@@ -32,7 +29,10 @@ static const double P0 = 1.87595182427177009643, /* 0x3ffe03e6, 0x0f61e692 */
     P3 = -0.758397934778766047437,               /* 0xbfe844cb, 0xbee751d9 */
     P4 = 0.145996192886612446982;                /* 0x3fc2b000, 0xd4e4edd7 */
 
-double(cbrt)(double x) {
+/**
+ * Returns cube root of 𝑥.
+ */
+double __cbrt(double x) {
   union {
     double f;
     uint64_t i;

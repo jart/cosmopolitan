@@ -166,7 +166,9 @@ DEFAULT_CXXFLAGS =							\
 	-fno-rtti							\
 	-fno-exceptions							\
 	-fuse-cxa-atexit						\
-	-fno-threadsafe-statics
+	-fno-threadsafe-statics						\
+	-Wno-int-in-bool-context					\
+	-Wno-narrowing
 
 DEFAULT_ASFLAGS =							\
 	-W								\
@@ -278,6 +280,7 @@ PREPROCESS.flags = -E $(copt.flags) $(cc.flags) $(cpp.flags)
 PREPROCESS.lds.flags = -D__LINKER__ $(filter-out -g%,$(PREPROCESS.flags)) -P -xc
 
 COMPILE.c = $(CC) -S $(COMPILE.c.flags)
+COMPILE.cxx = $(CXX) -S $(COMPILE.cxx.flags)
 COMPILE.i = $(CC) -S $(COMPILE.i.flags)
 COMPILE.f = $(FC) -S $(COMPILE.f.flags)
 COMPILE.F = $(FC) -S $(COMPILE.F.flags)

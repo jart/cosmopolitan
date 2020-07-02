@@ -8,5 +8,8 @@ AlwaysBreakBeforeMultilineStrings: false
 AllowShortFunctionsOnASingleLine: false
 KeepEmptyLinesAtTheStartOfBlocks: true
 ---
+Language: Cpp
+AllowShortFunctionsOnASingleLine: true
+---
 Language: Proto
 ...

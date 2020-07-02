@@ -23,20 +23,26 @@ typedef struct TtyRgb (*rgb2ttyf_f)(__m128);
 typedef struct TtyRgb (*tty2rgb_f)(struct TtyRgb);
 typedef struct TtyRgb ttypalette_t[2][8];
 
+enum TtyQuantizationAlgorithm {
+  kTtyQuantAnsi,
+  kTtyQuantTrue,
+  kTtyQuantXterm256,
+};
+
+enum TtyBlocksSelection {
+  kTtyBlocksUnicode,
+  kTtyBlocksCp437,
+};
+
+enum TtyQuantizationChannels {
+  kTtyQuantGrayscale = 1,
+  kTtyQuantRgb = 3,
+};
+
 struct TtyQuant {
-  enum TtyQuantizationAlgorithm {
-    kTtyQuantAnsi,
-    kTtyQuantTrue,
-    kTtyQuantXterm256,
-  } alg;
-  enum TtyBlocksSelection {
-    kTtyBlocksUnicode,
-    kTtyBlocksCp437,
-  } blocks;
-  enum TtyQuantizationChannels {
-    kTtyQuantGrayscale = 1,
-    kTtyQuantRgb = 3,
-  } chans;
+  enum TtyQuantizationAlgorithm alg;
+  enum TtyBlocksSelection blocks;
+  enum TtyQuantizationChannels chans;
   unsigned min;
   unsigned max;
   setbg_f setbg;
