@@ -3,6 +3,8 @@
 /* PORTED TO TELETYPEWRITERS IN YEAR 2020 BY JUSTINE ALEXANDRA ROBERTS TUNNEY */
 /* TRADEMARKS ARE OWNED BY THEIR RESPECTIVE OWNERS LAWYERCATS LUV TAUTOLOGIES */
 /* https://bisqwit.iki.fi/jutut/kuvat/programming_examples/nesemu1/nesemu1.cc */
+#include "dsp/core/core.h"
+#include "dsp/core/illumination.h"
 #include "dsp/scale/scale.h"
 #include "dsp/tty/itoa8.h"
 #include "dsp/tty/quant.h"
@@ -35,12 +37,14 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
+#include "tool/viz/lib/knobs.h"
 
 #define DYN   240
 #define DXN   256
 #define FPS   60.0988
 #define HZ    1789773
 #define KEYHZ 20
+#define GAMMA 2.2
 
 #define CTRL(C) ((C) ^ 0100)
 #define ALT(C)  ((033 << 010) | (C))
@@ -52,8 +56,10 @@ typedef uint16_t u16;
 typedef uint8_t u8;
 typedef int8_t s8;
 
-static const struct itimerval kNesFps = {{0, 1. / FPS * 1e6},
-                                         {0, 1. / FPS * 1e6}};
+static const struct itimerval kNesFps = {
+    {0, 1. / FPS * 1e6},
+    {0, 1. / FPS * 1e6},
+};
 
 struct Frame {
   char *p, *w, *mem;
@@ -78,11 +84,12 @@ static bool exited_;
 static bool timeout_;
 static bool resized_;
 static size_t vtsize_;
+static bool artifacts_;
 static long tyn_, txn_;
 static const char* ffplay_;
 static struct Audio audio_;
 static struct TtyRgb* ttyrgb_;
-static struct Frame frames_[2];
+static struct Frame vf_[2];
 static unsigned char *R, *G, *B;
 static struct Action arrow_, button_;
 static struct SamplingSolution* asx_;
@@ -94,8 +101,61 @@ static int joy_current_[2] = {0, 0};
 static int joy_next_[2] = {0, 0};
 static int joypos_[2] = {0, 0};
 
-static int Clamp(int v) { return v > 255 ? 255 : v; }
-static float FixGamma(float f) { return f > 0 ? powf(f, 2.2f / 1.8f) : 0; }
+static int Clamp(int v) { return MAX(0, MIN(255, v)); }
+static double FixGamma(double x) { return tv2pcgamma(x, GAMMA); }
+
+void InitPalette(void) {
+  // The input value is a NES color index (with de-emphasis bits).
+  // See http://wiki.nesdev.com/w/index.php/NTSC_video for magic numbers
+  // We need RGB values. To produce a RGB value, we emulate the NTSC circuitry.
+  double A[3] = {-1.109, -.275, .947};
+  double B[3] = {1.709, -.636, .624};
+  double rgbc[3], lightbulb[3][3], rgbd65[3];
+  int o, u, r, c, b, p, y, i, l, q, e, p0, p1, pixel;
+  signed char volt[] = "\372\273\32\305\35\311I\330D\357\175\13D!}N";
+  GetChromaticAdaptationMatrix(lightbulb, kIlluminantC, kIlluminantD65);
+  for (o = 0; o < 3; ++o) {
+    for (p0 = 0; p0 < 512; ++p0) {
+      for (p1 = 0; p1 < 64; ++p1) {
+        for (u = 0; u < 3; ++u) {
+          // Calculate the luma and chroma by emulating the relevant circuits:
+          y = 0;
+          i = 0;
+          q = 0;
+          // 12 samples of NTSC signal constitute a color.
+          for (p = 0; p < 12; ++p) {
+            // Sample either the previous or the current pixel.
+            r = (p + o * 4) % 12;
+            // Decode the color index.
+            if (artifacts_) {
+              pixel = r < 8 - u * 2 ? p0 : p1;
+            } else {
+              pixel = p0;
+            }
+            c = pixel % 16;
+            l = c < 0xE ? pixel / 4 & 12 : 4;
+            e = p0 / 64;
+            // NES NTSC modulator
+            // square wave between up to four voltage levels
+            b = 40 + volt[(c > 12 * ((c + 8 + p) % 12 < 6)) +
+                          2 * !(0451326 >> p / 2 * 3 & e) + l];
+            // Ideal TV NTSC demodulator?
+            y += b;
+            i += b * round(cos(M_PI * p / 6) * 5909);
+            q += b * round(sin(M_PI * p / 6) * 5909);
+          }
+          // Converts YIQ to RGB
+          // Store color at subpixel precision
+          rgbc[u] = FixGamma(y / 1980. + i * A[u] / 9e6 + q * B[u] / 9e6);
+        }
+        matvmul3(rgbd65, lightbulb, rgbc);
+        for (u = 0; u < 3; ++u) {
+          palette_[o][p1][p0][u] = Clamp(rgbd65[u] * 255);
+        }
+      }
+    }
+  }
+}
 
 static void WriteStringNow(const char* s) {
   ttywrite(STDOUT_FILENO, s, strlen(s));
@@ -133,8 +193,8 @@ void GetTermSize(void) {
   vtsize_ = ((tyn_ * txn_ * strlen("\e[48;2;255;48;2;255m▄")) +
              (tyn_ * strlen("\e[0m\r\n")) + 128);
   frame_ = 0;
-  InitFrame(&frames_[0]);
-  InitFrame(&frames_[1]);
+  InitFrame(&vf_[0]);
+  InitFrame(&vf_[1]);
   WriteStringNow("\e[0m\e[H\e[J");
 }
 
@@ -203,6 +263,10 @@ void ReadKeyboard(void) {
         }
       }
       switch (ch) {
+        case '1':
+          artifacts_ = !artifacts_;
+          InitPalette();
+          break;
         case ' ':
           button_.code = 0b00100000;  // A
           button_.wait = KEYHZ;
@@ -261,22 +325,24 @@ void ReadKeyboard(void) {
   }
 }
 
+bool HasVideo(struct Frame* f) { return f->w < f->p; }
+bool HasPendingVideo(void) { return HasVideo(&vf_[0]) || HasVideo(&vf_[1]); }
+bool HasPendingAudio(void) { return playpid_ && audio_.i; }
+
 struct Frame* FlipFrameBuffer(void) {
   frame_ = !frame_;
-  return &frames_[frame_];
+  return &vf_[frame_];
 }
 
 void TransmitVideo(void) {
   ssize_t rc;
   struct Frame* f;
-  f = &frames_[frame_];
-  if (f->w >= f->p) f = FlipFrameBuffer();
-  if (f->w < f->p) {
-    if ((rc = write(STDOUT_FILENO, f->w, f->p - f->w)) != -1) {
-      f->w += rc;
-    } else {
-      SystemFailure();
-    }
+  f = &vf_[frame_];
+  if (!HasVideo(f)) f = FlipFrameBuffer();
+  if ((rc = write(STDOUT_FILENO, f->w, f->p - f->w)) != -1) {
+    f->w += rc;
+  } else {
+    SystemFailure();
   }
 }
 
@@ -316,15 +382,21 @@ void KeyCountdown(struct Action* a) {
   }
 }
 
+void DrainAndExit(void) {
+  while (HasPendingVideo()) TransmitVideo();
+  WriteStringNow("\r\n\e[0m\e[J");
+  exit(0);
+}
+
 void PollAndSynchronize(void) {
   struct pollfd fds[3];
-  fds[0].fd = STDIN_FILENO;
-  fds[0].events = POLLIN;
-  fds[1].fd = STDOUT_FILENO;
-  fds[1].events = POLLOUT;
-  fds[2].fd = playpid_ ? playfd_ : -1;
-  fds[2].events = POLLOUT;
   do {
+    fds[0].fd = STDIN_FILENO;
+    fds[0].events = POLLIN;
+    fds[1].fd = HasPendingVideo() ? STDOUT_FILENO : -1;
+    fds[1].events = POLLOUT;
+    fds[2].fd = HasPendingAudio() ? playfd_ : -1;
+    fds[2].events = POLLOUT;
     if (poll(fds, ARRAYLEN(fds), 1. / FPS * 1e3) != -1) {
       if (fds[0].revents & (POLLIN | POLLERR)) ReadKeyboard();
       if (fds[1].revents & (POLLOUT | POLLERR)) TransmitVideo();
@@ -333,8 +405,7 @@ void PollAndSynchronize(void) {
       SystemFailure();
     }
     if (exited_) {
-      WriteStringNow("\r\n\e[0m\e[J");
-      exit(0);
+      DrainAndExit();
     }
     if (resized_) {
       resized_ = false;
@@ -354,7 +425,7 @@ void Raster(void) {
   struct TtyRgb bg = {0x12, 0x34, 0x56, 0};
   struct TtyRgb fg = {0x12, 0x34, 0x56, 0};
   ScaleVideoFrameToTeletypewriter();
-  f = &frames_[!frame_];
+  f = &vf_[!frame_];
   f->p = f->w = f->mem;
   f->p = stpcpy(f->p, "\e[0m\e[H");
   f->p = ttyraster(f->p, ttyrgb_, tyn_, txn_, bg, fg);
@@ -368,52 +439,6 @@ void FlushScanline(unsigned py) {
       Raster();
     }
     timeout_ = false;
-  }
-}
-
-void InitPalette(void) {
-  // The input value is a NES color index (with de-emphasis bits).
-  // We need RGB values. To produce a RGB value, we emulate the NTSC circuitry.
-  // For most part, this process is described at:
-  //    http://wiki.nesdev.com/w/index.php/NTSC_video
-  // Incidentally, this code is shorter than a table of 64*8 RGB values.
-  signed char sa[] = "\372\273\32\305\35\311I\330D\357\175\13D!}N";
-  int o, u, r, c, b, p, y, i, l, q, e, p0, p1, pixel;
-  for (o = 0; o < 3; ++o) {
-    for (u = 0; u < 3; ++u) {
-      for (p0 = 0; p0 < 512; ++p0) {
-        for (p1 = 0; p1 < 64; ++p1) {
-          // Calculate the luma and chroma by emulating the relevant circuits:
-          y = 0;
-          i = 0;
-          q = 0;
-          // 12 samples of NTSC signal constitute a color.
-          for (p = 0; p < 12; ++p) {
-            // Sample either the previous or the current pixel.
-            r = (p + o * 4) % 12;
-            // Use pixel=p0 to disable artifacts.
-            // Decode the color index.
-            pixel = r < 8 - u * 2 ? p0 : p1;
-            c = pixel % 16;
-            l = c < 0xE ? pixel / 4 & 12 : 4;
-            e = p0 / 64;
-            // NES NTSC modulator
-            // square wave between up to four voltage levels
-            b = 40 + sa[(c > 12 * ((c + 8 + p) % 12 < 6)) +
-                        2 * !(0451326 >> p / 2 * 3 & e) + l];
-            // Ideal TV NTSC demodulator?
-            y += b;
-            i += b * round(cos(M_PI * p / 6) * 5909);
-            q += b * round(sin(M_PI * p / 6) * 5909);
-          }
-          // Converts YIQ to RGB
-          // Store color at subpixel precision
-          float A[3] = {-1.109, -.275, .947}, B[3] = {1.709, -.636, .624};
-          palette_[o][p1][p0][u] = Clamp(
-              255 * FixGamma(y / 1980.f + i * A[u] / 9e6f + q * B[u] / 9e6f));
-        }
-      }
-    }
   }
 }
 
