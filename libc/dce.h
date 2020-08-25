@@ -17,6 +17,7 @@
  * offer marginal improvements in terms of code size and performance, at
  * the cost of portability.
  */
+#define HOSTOS (hostos & SUPPORT_VECTOR)
 #ifndef SUPPORT_VECTOR
 #define SUPPORT_VECTOR 0b11111111
 #endif
@@ -93,13 +94,13 @@
   ((SUPPORT_VECTOR & (LINUX | METAL | XNU | OPENBSD | FREEBSD)) != 0)
 
 #ifndef __ASSEMBLER__
-#define IsLinux()   ((hostos & LINUX) == LINUX)
-#define IsMetal()   ((hostos & METAL) == METAL)
-#define IsWindows() ((hostos & WINDOWS) == WINDOWS)
-#define IsBsd()     ((hostos & (XNU | FREEBSD | OPENBSD)) != 0)
-#define IsXnu()     ((hostos & XNU) == XNU)
-#define IsFreebsd() ((hostos & FREEBSD) == FREEBSD)
-#define IsOpenbsd() ((hostos & OPENBSD) == OPENBSD)
+#define IsLinux()   ((HOSTOS & LINUX) == LINUX)
+#define IsMetal()   ((HOSTOS & METAL) == METAL)
+#define IsWindows() ((HOSTOS & WINDOWS) == WINDOWS)
+#define IsBsd()     ((HOSTOS & (XNU | FREEBSD | OPENBSD)) != 0)
+#define IsXnu()     ((HOSTOS & XNU) == XNU)
+#define IsFreebsd() ((HOSTOS & FREEBSD) == FREEBSD)
+#define IsOpenbsd() ((HOSTOS & OPENBSD) == OPENBSD)
 #else
 /* clang-format off */
 #define IsLinux() $LINUX,hostos(%rip)
@@ -115,8 +116,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define hostos (__hostos & SUPPORT_VECTOR)
-extern const int __hostos asm("hostos");
+extern const int hostos;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

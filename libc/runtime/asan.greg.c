@@ -19,31 +19,57 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
+
+struct SourceLocation {
+  const char *filename;
+  int line;
+  int column;
+};
+
+struct AccessInfo {
+  const uint8_t *addr;
+  const uint8_t *first_bad_addr;
+  size_t size;
+  bool iswrite;
+  unsigned long ip;
+};
+
+struct Global {
+  const uint8_t *addr;
+  size_t size;
+  size_t size_with_redzone;
+  const void *name;
+  const void *module_name;
+  unsigned long has_cxx_init;
+  struct kasan_source_location *location;
+  char *odr_indicator;
+};
 
 privileged void __asan_init(void) {
 }
 
-privileged void __asan_register_globals(uintptr_t a, uintptr_t b) {
+privileged void __asan_version_mismatch_check_v8(void) {
 }
 
-privileged void __asan_unregister_globals(uintptr_t a, uintptr_t b) {
+privileged void __asan_register_globals(struct Global globals[], int n) {
+}
+
+privileged void __asan_unregister_globals(struct Global globals[], int n) {
+}
+
+privileged void __asan_report_load_n(uint8_t *p, int n) {
+}
+
+privileged void __asan_report_store_n(uint8_t *p, int n) {
+  __asan_report_load_n(p, n);
 }
 
 privileged void __asan_loadN(uintptr_t ptr, size_t size) {
-  dprintf(STDERR_FILENO, "load %p %zu");
 }
 
 privileged void __asan_storeN(uintptr_t ptr, size_t size) {
-  dprintf(STDERR_FILENO, "store %p %zu");
-}
-
-privileged void __asan_report_load_n(uintptr_t ptr, size_t size) {
-  dprintf(STDERR_FILENO, "%s%zu%s%#p", "asan: load ", size, " bytes at ", ptr);
-}
-
-privileged void __asan_report_store_n(uintptr_t ptr, size_t size) {
-  dprintf(STDERR_FILENO, "%s%zu%s%#p", "asan: store ", size, " bytes at ", ptr);
 }
 
 privileged uintptr_t __asan_stack_malloc(size_t size, int classid) {
@@ -54,9 +80,7 @@ privileged void __asan_stack_free(uintptr_t ptr, size_t size, int classid) {
 }
 
 privileged void __asan_handle_no_return(void) {
-}
-
-privileged void __asan_version_mismatch_check_v8(void) {
+  DebugBreak();
 }
 
 privileged void __asan_alloca_poison(uintptr_t addr, uintptr_t size) {

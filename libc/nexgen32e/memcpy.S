@@ -46,17 +46,17 @@
 	.source	__FILE__
 memcpy:	mov	%rdi,%rax
 /	𝑠𝑙𝑖𝑑𝑒
+	.endfn	memcpy,globl
 
 /	Copies memory w/ minimal impact ABI.
 /
 /	@param	rdi is dest
 /	@param	rsi is src
 /	@param	rdx is number of bytes
-/	@clob	flags,xmm3
+/	@clob	flags,xmm3,xmm4
 /	@mode	long
 	.align	16
-_memcpy:.leafprologue
-	.profilable
+MemCpy:	.leafprologue
 	push	%rcx
 	mov	$.Lmemcpytab.ro.size,%ecx
 	cmp	%rcx,%rdx
@@ -65,27 +65,29 @@ _memcpy:.leafprologue
 .Lanchorpoint:
 .L32r:	cmp	$1024,%rdx
 	jae	.Lerms
-.L32:	mov	$32,%rcx
+.L32:	vmovdqu	-32(%rsi,%rdx),%ymm4
+	mov	$32,%rcx
 0:	add	$32,%rcx
 	vmovdqu	-64(%rsi,%rcx),%ymm3
 	vmovdqu	%ymm3,-64(%rdi,%rcx)
 	cmp	%rcx,%rdx
 	ja	0b
-	vmovdqu	-32(%rsi,%rdx),%ymm3
-	vmovdqu	%ymm3,-32(%rdi,%rdx)
-	vxorps	%ymm3,%ymm3,%ymm3
+	vmovdqu	%ymm4,-32(%rdi,%rdx)
+	vpxor	%ymm4,%ymm4,%ymm4
+	vpxor	%ymm3,%ymm3,%ymm3
 	jmp	.L0
 .L16r:	cmp	$1024,%rdx
 	jae	.Lerms
-.L16:	mov	$16,%rcx
+.L16:	movdqu	-16(%rsi,%rdx),%xmm4
+	mov	$16,%rcx
 0:	add	$16,%rcx
 	movdqu	-32(%rsi,%rcx),%xmm3
 	movdqu	%xmm3,-32(%rdi,%rcx)
 	cmp	%rcx,%rdx
 	ja	0b
-	movdqu	-16(%rsi,%rdx),%xmm3
-	movdqu	%xmm3,-16(%rdi,%rdx)
-	xorps	%xmm3,%xmm3
+	movdqu	%xmm4,-16(%rdi,%rdx)
+	pxor	%xmm4,%xmm4
+	pxor	%xmm3,%xmm3
 	jmp	.L0
 .L8:	push	%rbx
 	mov	(%rsi),%rcx
@@ -134,10 +136,9 @@ _memcpy:.leafprologue
 	sfence
 	movdqu	-16(%rsi,%rdx),%xmm3
 	movdqu	%xmm3,-16(%rdi,%rdx)
-	xorps	%xmm3,%xmm3
+	pxor	%xmm3,%xmm3
 	jmp	.L0
-	.endfn	_memcpy,globl,hidden
-	.endfn	memcpy,globl
+	.endfn	MemCpy,globl,hidden
 
 	.initro 300,_init_memcpy
 memcpytab.ro:

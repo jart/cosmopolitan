@@ -21,20 +21,10 @@
 #include "libc/conv/conv.h"
 #include "libc/testlib/testlib.h"
 
-/* todo(jart): work on this more */
-
-TEST(strtoimax, testZero) {
-  EXPECT_EQ(0, strtoimax("0", NULL, 0));
-}
-TEST(strtoimax, testDecimal) {
-  EXPECT_EQ(-123, strtoimax("-123", NULL, 0));
-}
-TEST(strtoimax, testHex) {
-  EXPECT_EQ(-255, strtoimax("-0xff", NULL, 0));
-}
-TEST(strtoimax, testOctal) {
-  EXPECT_EQ(-123, strtoimax("-0173", NULL, 0));
-}
+TEST(strtoimax, testZero) { EXPECT_EQ(0, strtoimax("0", NULL, 0)); }
+TEST(strtoimax, testDecimal) { EXPECT_EQ(-123, strtoimax("-123", NULL, 0)); }
+TEST(strtoimax, testHex) { EXPECT_EQ(-255, strtoimax("-0xff", NULL, 0)); }
+TEST(strtoimax, testOctal) { EXPECT_EQ(-123, strtoimax("-0173", NULL, 0)); }
 
 TEST(strtoimax, testLimits) {
   EXPECT_EQ(
@@ -49,4 +39,9 @@ TEST(strtoimax, testZeroExtend) {
   EXPECT_EQ(-1, strtoimax("-1", NULL, 0));
   EXPECT_EQ(0xffffffff, strtoimax("-1u", NULL, 0));
   EXPECT_EQ(0xffffffffffffffff, strtoimax("-1ul", NULL, 0));
+}
+
+TEST(strtoimax, testTwosBane) {
+  EXPECT_EQ(((uintmax_t)0x8000000000000000) << 64 | 0x0000000000000000,
+            strtoimax("0x80000000000000000000000000000000", NULL, 0));
 }

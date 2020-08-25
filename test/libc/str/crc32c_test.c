@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
@@ -40,9 +41,10 @@ TEST(crc32c, test) {
                                strlen(hyperion) - strlen(FANATICS)));
 }
 
-uint32_t crc32c$pure(uint32_t, const char *, size_t) hidden;
-uint32_t crc32c$sse42(uint32_t, const char *, size_t) hidden;
-FIXTURE(crc32c, pure) { *(void **)(&crc32c) = (void *)crc32c$pure; }
+FIXTURE(crc32c, pure) {
+  *(void **)(&crc32c) = (void *)crc32c$pure;
+}
+
 FIXTURE(crc32c, sse42) {
   if (X86_HAVE(SSE4_2)) {
     *(void **)(&crc32c) = (void *)crc32c$sse42;

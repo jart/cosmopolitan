@@ -41,7 +41,7 @@ testonly int ild(const char16_t *codez) {
   error = xed_instruction_length_decode(
       xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_LONG_64),
       gc(unbingx86op(codez)), strlen16(codez) + 16);
-  return error == XED_ERROR_NONE ? xedd.decoded_length : -error;
+  return error == XED_ERROR_NONE ? xedd.length : -error;
 }
 
 /**
@@ -53,7 +53,7 @@ testonly int ildreal(const char16_t *codez) {
   error = xed_instruction_length_decode(
       xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_REAL),
       gc(unbingx86op(codez)), strlen16(codez) + 16);
-  return error == XED_ERROR_NONE ? xedd.decoded_length : -error;
+  return error == XED_ERROR_NONE ? xedd.length : -error;
 }
 
 /**
@@ -65,5 +65,5 @@ testonly int ildlegacy(const char16_t *codez) {
   error = xed_instruction_length_decode(
       xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_LEGACY_32),
       gc(unbingx86op(codez)), strlen16(codez) + 16);
-  return error == XED_ERROR_NONE ? xedd.decoded_length : -error;
+  return error == XED_ERROR_NONE ? xedd.length : -error;
 }

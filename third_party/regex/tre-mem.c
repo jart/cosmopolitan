@@ -87,7 +87,6 @@ tre_mem_t tre_mem_new_impl(int provided, void *provided_block) {
 /* Frees the memory allocator and all memory allocated with it. */
 void tre_mem_destroy(tre_mem_t mem) {
   tre_list_t *tmp, *l = mem->blocks;
-
   while (l != NULL) {
     free(l->data), l->data = NULL;
     tmp = l->next;
@@ -101,11 +100,9 @@ void tre_mem_destroy(tre_mem_t mem) {
 void *tre_mem_alloc_impl(tre_mem_t mem, int provided, void *provided_block,
                          int zero, size_t size) {
   void *ptr;
-
   if (mem->failed) {
     return NULL;
   }
-
   if (mem->n < size) {
     /* We need more memory than is available in the current block.
        Allocate a new block. */
@@ -142,17 +139,13 @@ void *tre_mem_alloc_impl(tre_mem_t mem, int provided, void *provided_block,
       mem->n = block_size;
     }
   }
-
   /* Make sure the next pointer will be aligned. */
   size += ALIGN(mem->ptr + size, long);
-
   /* Allocate from current block. */
   ptr = mem->ptr;
   mem->ptr += size;
   mem->n -= size;
-
   /* Set to zero if needed. */
   if (zero) memset(ptr, 0, size);
-
   return ptr;
 }

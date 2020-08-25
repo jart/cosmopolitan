@@ -58,7 +58,7 @@ Contact: antirez@gmail.com\"\n\
 #define _GNU_SOURCE
 
 #include "libc/alg/alg.h"
-#include "libc/alg/arraylist.h"
+#include "libc/alg/arraylist2.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/termios.h"
 #include "libc/calls/weirdtypes.h"
@@ -879,7 +879,7 @@ struct abuf {
 };
 
 static void abAppend(struct abuf *ab, const char *s, int len) {
-  concat(ab, s, len);
+  CONCAT(&ab->p, &ab->i, &ab->n, s, len);
 }
 
 /* This function writes the whole screen using VT100 escape characters

@@ -86,7 +86,7 @@ TEST(strnlen, nulNotFound_ReturnsSize) {
   for (unsigned i = 0; i < ARRAYLEN(sizes); ++i) {
     char *buf = tmalloc(sizes[i]);
     memset(buf, ' ', sizes[i]);
-    ASSERT_EQ(sizes[i], strnlen(buf, sizes[i]));
+    ASSERT_EQ(sizes[i], strnlen(buf, sizes[i]), "%d", sizes[i]);
     tfree(buf);
   }
 }

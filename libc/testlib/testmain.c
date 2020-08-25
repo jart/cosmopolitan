@@ -74,6 +74,7 @@ testonly int main(int argc, char *argv[]) {
   showcrashreports();
   g_testlib_shoulddebugbreak = IsDebuggerPresent(false);
   getpid$sysv(); /* make strace easier to read */
+  testlib_clearxmmregisters();
   testlib_runalltests();
   if (!g_testlib_failed && runbenchmarks_ && weaken(testlib_runallbenchmarks)) {
     weaken(testlib_runallbenchmarks)();

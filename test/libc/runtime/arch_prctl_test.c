@@ -17,8 +17,9 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
+#include "libc/bits/segmentation.h"
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/testlib/testlib.h"
 
 TEST(arch_prctl, fs) {

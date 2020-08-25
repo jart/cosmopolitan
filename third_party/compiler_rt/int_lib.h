@@ -16,6 +16,7 @@
 
 #ifndef INT_LIB_H
 #define INT_LIB_H
+#define CRT_HAS_128BIT 1
 
 /* Assumption: lool univac arithmetic */
 /* Assumption: lool cray signed shift */
@@ -74,6 +75,7 @@ COMPILER_RT_ABI su_int __udivmodsi4(su_int a, su_int b, su_int* rem);
 COMPILER_RT_ABI du_int __udivmoddi4(du_int a, du_int b, du_int* rem);
 #ifdef CRT_HAS_128BIT
 COMPILER_RT_ABI si_int __clzti2(ti_int a);
+COMPILER_RT_ABI ti_int __divmodti4(ti_int a, ti_int b, tu_int *rem);
 COMPILER_RT_ABI tu_int __udivmodti4(tu_int a, tu_int b, tu_int* rem);
 #endif
 

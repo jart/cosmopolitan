@@ -1,2 +1,2 @@
 .include "libc/sysv/consts/syscon.inc"
-.syscon misc UTIME_NOW 0x3fffffff 0 -1 -2 0
+.syscon utime UTIME_NOW 0x3fffffff 0x3fffffff -1 -2 0x3fffffff

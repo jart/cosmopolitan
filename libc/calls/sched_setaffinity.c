@@ -30,10 +30,14 @@
 static textwindows noinline int sched_setaffinity$nt(int pid,
                                                      uint64_t bitsetsize,
                                                      const void *bitset) {
+  int rc;
+  uintptr_t mask;
+  int64_t handle;
   typeof(SetThreadAffinityMask) *SetAffinityMask = SetThreadAffinityMask;
-  uintptr_t mask = 0;
+  mask = 0;
   memcpy(&mask, bitset, min(bitsetsize, sizeof(uintptr_t)));
-  int64_t handle = 0;
+  handle = 0;
+  if (!pid) pid = GetCurrentThreadId();
   if (0 < pid && pid <= UINT32_MAX) {
     if (pid == GetCurrentProcessId()) {
       pid = GetCurrentProcess();
@@ -50,7 +54,7 @@ static textwindows noinline int sched_setaffinity$nt(int pid,
       }
     }
   }
-  int rc = SetAffinityMask(handle ? handle : pid, mask) ? 0 : winerr();
+  rc = SetAffinityMask(handle ? handle : pid, mask) ? 0 : winerr();
   if (handle) CloseHandle(handle);
   return rc;
 }
@@ -58,7 +62,7 @@ static textwindows noinline int sched_setaffinity$nt(int pid,
 /**
  * Asks kernel to only schedule process on particular CPUs.
  *
- * @param pid is the process or thread id
+ * @param pid is the process or thread id (or 0 for caller)
  * @param bitsetsize is byte length of bitset
  * @param bitset can be manipulated using bt(), bts(), etc.
  * @return 0 on success, or -1 w/ errno

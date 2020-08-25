@@ -24,13 +24,14 @@
 #include "libc/conv/conv.h"
 #include "libc/dce.h"
 #include "libc/log/log.h"
+#include "libc/nexgen32e/vendor.h"
 #include "libc/nt/struct/teb.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
 
-#define kBufSize 1024
+#define kBufSize    1024
 #define kProcStatus "/proc/self/status"
 alignas(16) static const char kGdbPid[] = "TracerPid:\t";
 
@@ -43,18 +44,20 @@ int IsDebuggerPresent(bool force) {
   ssize_t got;
   char buf[1024];
   res = 0;
-  if (force || isempty(getenv("HEISENDEBUG"))) {
-    if (IsWindows()) {
-      res = NtGetPeb()->BeingDebugged;
-    } else if (IsLinux()) {
-      if ((fd = openat$sysv(AT_FDCWD, kProcStatus, O_RDONLY, 0)) != -1) {
-        if ((got = read$sysv(fd, buf, sizeof(buf) - sizeof(kGdbPid))) != -1) {
-          buf[got] = '\0';
-          res = atoi(firstnonnull(strstr(buf, kGdbPid), kGdbPid) +
-                     strlen(kGdbPid));
-        }
-        close$sysv(fd);
+  if (!force) {
+    if (getenv("HEISENDEBUG")) return false;
+    if (IsGenuineCosmo()) return false;
+  }
+  if (IsWindows()) {
+    res = NtGetPeb()->BeingDebugged;
+  } else if (IsLinux()) {
+    if ((fd = openat$sysv(AT_FDCWD, kProcStatus, O_RDONLY, 0)) != -1) {
+      if ((got = read$sysv(fd, buf, sizeof(buf) - sizeof(kGdbPid))) != -1) {
+        buf[got] = '\0';
+        res =
+            atoi(firstnonnull(strstr(buf, kGdbPid), kGdbPid) + strlen(kGdbPid));
       }
+      close$sysv(fd);
     }
   }
   return res;

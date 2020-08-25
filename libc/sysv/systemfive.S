@@ -97,7 +97,10 @@ systemfive.linux:
 	test	%eax,%eax
 	js	systemfive.enosys
 	mov	%rcx,%r10
+	push	%rbp
+	mov	%rsp,%rbp
 	syscall
+	pop	%rbp
 	cmp	$-4095,%rax
 	jae	systemfive.error
 	ret
@@ -123,7 +126,10 @@ systemfive.bsd:
 	cmp	$0xfff,%ax
 	jae	systemfive.enosys
 	mov	%rcx,%r10
+	push	%rbp
+	mov	%rsp,%rbp
 	syscall
+	pop	%rbp
 	jc	systemfive.errno
 	ret
 systemfive.xnu:
@@ -160,52 +166,62 @@ systemfive.xnu:
 	push	%rbx
 	push	%rsi
 	testb	$XNU,(%rdi)			# @see libc/crt/crt.S
-	jnz	.Lsystemfive.init.xnu
+	jnz	systemfive.init.xnu
 	testb	$FREEBSD,(%rdi)			# @see libc/crt/crt.S
-	jnz	.Lsystemfive.init.freebsd
+	jnz	systemfive.init.freebsd
 	testb	$WINDOWS,(%rdi)			# @see libc/runtime/winmain.c
-	jnz	.Lsystemfive.init.windows
+	jnz	systemfive.init.windows
 	cmpq	$0,(%r15)			# OpenBSD doesn't have auxv
-	je	.Lsystemfive.init.openbsd
+	je	systemfive.init.openbsd
 /	default state is safe state
 /	𝑠𝑙𝑖𝑑𝑒
-.Lsystemfive.init.linux:
+systemfive.init.linux:
 	pushb	systemfive.linux-.Lanchorpoint
 	push	$LINUX
 	ezlea	syscon.linux,si
-	jmp	.Lsystemfive.init.os
-.Lsystemfive.init.windows:
+	jmp	systemfive.init.os
+systemfive.init.windows:
 	pushb	systemfive.enosys-.Lanchorpoint
 	push	$WINDOWS
 	ezlea	syscon.windows,si
-	jmp	.Lsystemfive.init.os
-.Lsystemfive.init.freebsd:
+	jmp	systemfive.init.os
+systemfive.init.freebsd:
 	pushb	systemfive.freebsd-.Lanchorpoint
 	push	$FREEBSD
 	ezlea	syscon.freebsd,si
-	jmp	.Lsystemfive.init.os
-.Lsystemfive.init.openbsd:
+	jmp	systemfive.init.os
+systemfive.init.openbsd:
 	pushb	systemfive.openbsd-.Lanchorpoint
 	push	$OPENBSD
 	ezlea	syscon.openbsd,si
-	jmp	.Lsystemfive.init.os
-.Lsystemfive.init.xnu:
+	jmp	systemfive.init.os
+systemfive.init.xnu:
 	pushb	systemfive.xnu-.Lanchorpoint
 	push	$XNU
 	ezlea	syscon.xnu,si
 /	𝑠𝑙𝑖𝑑𝑒
-.Lsystemfive.init.os:
+systemfive.init.os:
 	ezlea	.Lanchorpoint,cx
 	pop	%rax
 	stosq	#→ hostos
 	pop	%rax
 	add	%rcx,%rax
 	stosq	#→ systemfive
-.Lsystemfive.sleb128unpacker:
 	push	%rdi
-	ezlea	.Lsyscon.start,di
-	orq	$-1,%r9
-	ezlea	.Lsyscon.end,bx
+	ezlea	syscon.start,di
+	ezlea	syscon.end,bx
+	call	systemfive.sleb128unpacker
+	pop	%rdi
+/	𝑠𝑙𝑖𝑑𝑒
+systemfive.init.done:
+	pop	%rsi
+	pop	%rbx
+	.init.end 300,_init_systemfive,globl,hidden
+
+	.text.startup
+systemfive.sleb128unpacker:
+	.leafprologue
+	or	$-1,%r9
 2:	cmp	%rbx,%rdi
 	jnb	5f
 	xor	%ecx,%ecx
@@ -228,12 +244,8 @@ systemfive.xnu:
 	cmovne	(%rdi),%rax		# @see WinMain() for example
 	stosq
 	jmp	2b
-5:	pop	%rdi
-/	𝑠𝑙𝑖𝑑𝑒
-.Lsystemfive.init.done:
-	pop	%rsi
-	pop	%rbx
-	.init.end 300,_init_systemfive,globl,hidden
+5:	.leafepilogue
+	.previous
 
 /	Sections for varint encoded numbers.
 /
@@ -244,11 +256,11 @@ systemfive.xnu:
 /	@see libc/sysv/consts/syscon.h
 	.section .piro.bss.sort.syscon.1,"aw",@nobits
 	.align	8
-.Lsyscon.start:/*
+syscon.start:/*
 	...decentralized quadwords...
 	*/.previous
 	.section .piro.bss.sort.syscon.3,"aw",@nobits
-.Lsyscon.end:
+syscon.end:
 	.previous
 	.section .sort.rodata.syscon.linux.1,"a",@progbits
 	.align	1
@@ -275,10 +287,19 @@ syscon.openbsd:/*
 syscon.windows:/*
 	...decentralized leb128...
 	*/.previous
-	.type	.Lsyscon.start,@object
-	.type	.Lsyscon.end,@object
+
+	.type	syscon.start,@object
+	.type	syscon.end,@object
 	.type	syscon.linux,@object
 	.type	syscon.xnu,@object
 	.type	syscon.freebsd,@object
 	.type	syscon.openbsd,@object
 	.type	syscon.windows,@object
+
+	.globl	syscon.start
+	.globl	syscon.end
+	.globl	syscon.linux
+	.globl	syscon.xnu
+	.globl	syscon.freebsd
+	.globl	syscon.openbsd
+	.globl	syscon.windows

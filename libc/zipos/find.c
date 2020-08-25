@@ -25,15 +25,18 @@
 #include "libc/zip.h"
 #include "libc/zipos/zipos.h"
 
-ssize_t __zipos_find(const struct ZiposUri *name) {
+ssize_t __zipos_find(struct Zipos *zipos, const struct ZiposUri *name) {
   size_t i, cf;
-  assert(ZIP_CDIR_MAGIC(__zip_end) == kZipCdirHdrMagic);
-  for (i = 0, cf = ZIP_CDIR_OFFSET(__zip_end); i < ZIP_CDIR_RECORDS(__zip_end);
-       ++i, cf += ZIP_CFILE_HDRSIZE(&_base[0] + cf)) {
-    assert(ZIP_CFILE_MAGIC(&_base[0] + cf) == kZipCfileHdrMagic);
-    if (name->len == ZIP_CFILE_NAMESIZE(&_base[0] + cf) &&
-        memcmp(name->path, ZIP_CFILE_NAME(&_base[0] + cf), name->len) == 0) {
-      return cf;
+  if ((zipos = __zipos_get())) {
+    assert(ZIP_CDIR_MAGIC(zipos->cdir) == kZipCdirHdrMagic);
+    for (i = 0, cf = ZIP_CDIR_OFFSET(zipos->cdir);
+         i < ZIP_CDIR_RECORDS(zipos->cdir);
+         ++i, cf += ZIP_CFILE_HDRSIZE(zipos->map + cf)) {
+      assert(ZIP_CFILE_MAGIC(zipos->map + cf) == kZipCfileHdrMagic);
+      if (name->len == ZIP_CFILE_NAMESIZE(zipos->map + cf) &&
+          memcmp(name->path, ZIP_CFILE_NAME(zipos->map + cf), name->len) == 0) {
+        return cf;
+      }
     }
   }
   return -1;

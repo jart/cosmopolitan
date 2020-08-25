@@ -39,7 +39,7 @@ int main(int argc, char *argv[argc]) {
       errno = err;
       break;
     }
-    l = xedd.decoded_length;
+    l = xedd.length;
     if (l <= 0 || l > i) abort();
     for (j = 0; j < l; ++j) {
       if (fputhex(buf[j], stdout) == -1) {

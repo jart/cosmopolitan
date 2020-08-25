@@ -28,10 +28,12 @@
 /	@param	rdx is number of bytes
 /	@return	original rdi copied to rax
 /	@asyncsignalsafe
-memmove:mov	%rdi,%rax
+memmove:
+	mov	%rdi,%rax
 /	𝑠𝑙𝑖𝑑𝑒
+	.endfn	MemMove,globl,hidden
 
-_memmove:
+MemMove:
 	.leafprologue
 	.profilable
 	push	%rcx
@@ -49,6 +51,5 @@ _memmove:
 	pop	%rdi
 	pop	%rcx
 	.leafepilogue
-	.endfn	_memmove,globl,hidden
 	.endfn	memmove,globl
 	.source	__FILE__

@@ -20,6 +20,12 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-expm1:	ezlea	expm1l,ax
+/	Returns 𝑒^x-1.
+/
+/	@param	𝑥 is double scalar in low half of %xmm0
+/	@return	double scalar in low half of %xmm0
+tinymath_expm1:
+	ezlea	tinymath_expm1l,ax
 	jmp	_d2ld2
-	.endfn	expm1,globl
+	.endfn	tinymath_expm1,globl
+	.alias	tinymath_expm1,expm1

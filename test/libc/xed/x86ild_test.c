@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/gc.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "test/libc/xed/lib.h"
 #include "third_party/xed/x86.h"
@@ -94,6 +95,24 @@ TEST(x86ild, testAmd3dnow) {
       0, xed_instruction_length_decode(
              xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_LEGACY_32),
              gc(unbingx86op(u"☼☼╚ª")), 4));
-  ASSERT_EQ(true, xedd.operands.amd3dnow);
-  ASSERT_EQ(0xa6, xedd.operands.nominal_opcode);
+  ASSERT_EQ(true, (int)xedd.op.amd3dnow);
+  ASSERT_EQ(0xa6, xedd.op.opcode);
+}
+
+TEST(x86ild, testPopToMemory) {
+  ASSERT_EQ(3, ild(u"ÅF◘")); /* 8f 46 08 */
+}
+
+TEST(x86ild, testFinit) {
+  ASSERT_EQ(1, ild(u"¢█π")); /* 9B DB E3: fwait */
+  ASSERT_EQ(2, ild(u"█π"));  /* DB E3:    fninit */
+}
+
+BENCH(x86ild, bench) {
+  uint8_t *x = gc(unbingx86op(u"b▓m◘Pî±   ►"));
+  struct XedDecodedInst xedd;
+  EZBENCH2("x86ild", donothing,
+           xed_instruction_length_decode(
+               xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_LONG_64),
+               x, XED_MAX_INSTRUCTION_BYTES));
 }

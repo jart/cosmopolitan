@@ -71,25 +71,25 @@ static void cycle(size_t width, unsigned char *ar[], size_t n) {
 
 forceinline void shl(unsigned p[2], size_t n) {
   assert(n > 0);
-  if (n >= 8 * sizeof(unsigned)) {
-    n -= 8 * sizeof(unsigned);
+  if (n >= CHAR_BIT * sizeof(unsigned)) {
+    n -= CHAR_BIT * sizeof(unsigned);
     p[1] = p[0];
     p[0] = 0;
   }
   p[1] <<= n;
-  p[1] |= p[0] >> (sizeof(unsigned) * 8 - n);
+  p[1] |= p[0] >> (sizeof(unsigned) * CHAR_BIT - n);
   p[0] <<= n;
 }
 
 forceinline void shr(unsigned p[2], size_t n) {
   assert(n > 0);
-  if (n >= 8 * sizeof(unsigned)) {
-    n -= 8 * sizeof(unsigned);
+  if (n >= CHAR_BIT * sizeof(unsigned)) {
+    n -= CHAR_BIT * sizeof(unsigned);
     p[0] = p[1];
     p[1] = 0;
   }
   p[0] >>= n;
-  p[0] |= p[1] << (sizeof(unsigned) * 8 - n);
+  p[0] |= p[1] << (sizeof(unsigned) * CHAR_BIT - n);
   p[1] >>= n;
 }
 

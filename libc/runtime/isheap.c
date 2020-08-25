@@ -17,22 +17,20 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/mappings.h"
+#include "libc/runtime/memtrack.h"
+#include "libc/runtime/runtime.h"
 
 /**
- * Returns false if address can't be heap memory.
+ * Returns true if address isn't stack and was malloc'd or mmap'd.
+ *
+ * @assume stack addresses are always greater than heap addresses
+ * @assume stack memory isn't stored beneath %rsp (-mno-red-zone)
  */
 bool isheap(void *p) {
-  size_t i;
-  struct MemoryCoord c;
-  if (!(kStackBottom <= (intptr_t)p && (intptr_t)p < kStackCeiling)) {
-    c = ADDRSIZE_TO_COORD(p, FRAMESIZE);
-    if ((i = findmapping(c.x))) {
-      return ISOVERLAPPING(_mm.p[i - 1], c);
-    } else {
-      return false;
-    }
-  } else {
-    return false;
-  }
+  int x, i;
+  register intptr_t rsp asm("rsp");
+  if ((intptr_t)p >= rsp) return false;
+  x = (intptr_t)p >> 16;
+  i = FindMemoryInterval(&_mmi, x);
+  return i < _mmi.i && x >= _mmi.p[i].x && x <= _mmi.p[i].y;
 }

@@ -17,8 +17,11 @@ CONFIG_CCFLAGS +=		\
 	$(FTRACE)		\
 	-Og
 
+CONFIG_COPTS +=			\
+	-ftrapv
+
 TARGET_ARCH ?=			\
-	-msse3
+	-march=k8-sse3
 
 RAGELFLAGS ?= -G2
 
@@ -71,10 +74,7 @@ CONFIG_CPPFLAGS +=		\
 
 CONFIG_CCFLAGS +=		\
 	$(BACKTRACES)		\
-	-O3
-
-#TARGET_ARCH ?=			\
-	-msse3
+	-O2
 
 RAGELFLAGS = -G2
 
@@ -102,6 +102,12 @@ CONFIG_CCFLAGS +=		\
 CONFIG_COPTS +=			\
 	$(SECURITY_BLANKETS)	\
 	$(SANITIZER)
+
+CONFIG_COPTS +=			\
+	-ftrapv
+
+TARGET_ARCH ?=			\
+	-march=k8-sse3
 
 OVERRIDE_CCFLAGS +=		\
 	-fno-pie
@@ -135,7 +141,7 @@ CONFIG_CCFLAGS +=		\
 	-fno-align-loops
 
 TARGET_ARCH ?=			\
-	-msse3
+	-march=k8-sse3
 
 endif
 
@@ -172,6 +178,8 @@ endif
 ifeq ($(MODE), ansi)
 
 CONFIG_CFLAGS += -std=c11
+#CONFIG_CPPFLAGS += -ansi
 CONFIG_CXXFLAGS += -std=c++11
+TARGET_ARCH ?= -march=k8-sse3
 
 endif

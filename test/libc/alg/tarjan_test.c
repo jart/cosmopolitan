@@ -24,23 +24,22 @@
 STATIC_YOINK("realloc");
 
 TEST(tarjan, empty_doesNothing) {
-  uint32_t sorted_vertices[1] = {-1u};
-  uint32_t edges[][2] = {{0, 0}};
-  uint32_t vertex_count = 0;
-  uint32_t edge_count = 0;
+  int sorted_vertices[1] = {-1};
+  int edges[][2] = {{0, 0}};
+  int vertex_count = 0;
+  int edge_count = 0;
   tarjan(vertex_count, (void *)edges, edge_count, sorted_vertices, NULL, NULL);
-  ASSERT_EQ(-1u, sorted_vertices[0]);
+  ASSERT_EQ(-1, sorted_vertices[0]);
 }
 
 TEST(tarjan, topologicalSort_noCycles) {
   enum VertexIndex { A = 0, B = 1, C = 2, D = 3 };
   const char *const vertices[] = {[A] = "A", [B] = "B", [C] = "C", [D] = "D"};
-  uint32_t edges[][2] = {
-      {A /* depends on → */, B /* which must come before A */},
-      {A /* depends on → */, C /* which must come before A */},
-      {A /* depends on → */, D /* which must come before A */},
-      {B /* depends on → */, C /* which must come before B */},
-      {B /* depends on → */, D /* which must come before B */}};
+  int edges[][2] = {{A /* depends on → */, B /* which must come before A */},
+                    {A /* depends on → */, C /* which must come before A */},
+                    {A /* depends on → */, D /* which must come before A */},
+                    {B /* depends on → */, C /* which must come before B */},
+                    {B /* depends on → */, D /* which must come before B */}};
   /*
     $ tsort <<EOF
     B A
@@ -54,7 +53,7 @@ TEST(tarjan, topologicalSort_noCycles) {
     B
     A
   */
-  uint32_t sorted[4], components[4], componentcount;
+  int sorted[4], components[4], componentcount;
   ASSERT_EQ(0, tarjan(ARRAYLEN(vertices), (void *)edges, ARRAYLEN(edges),
                       sorted, components, &componentcount));
   EXPECT_EQ(C, sorted[0]);
@@ -73,12 +72,11 @@ TEST(tarjan, testOneBigCycle_isDetected_weDontCareAboutOrderInsideTheCycle) {
   const char *const vertices[] = {[A] = "A", [B] = "B", [C] = "C", [D] = "D"};
   /* ┌─────────┐
      └→A→B→C→D─┘ */
-  uint32_t edges[][2] = {
-      {A /* depends on → */, B /* which must come before A */},
-      {B /* depends on → */, C /* which must come before B */},
-      {C /* depends on → */, D /* which must come before C */},
-      {D /* depends on → */, A /* which must come before D */}};
-  uint32_t sorted[4], components[4], componentcount;
+  int edges[][2] = {{A /* depends on → */, B /* which must come before A */},
+                    {B /* depends on → */, C /* which must come before B */},
+                    {C /* depends on → */, D /* which must come before C */},
+                    {D /* depends on → */, A /* which must come before D */}};
+  int sorted[4], components[4], componentcount;
   ASSERT_EQ(0, tarjan(ARRAYLEN(vertices), (void *)edges, ARRAYLEN(edges),
                       sorted, components, &componentcount));
   ASSERT_EQ(1, componentcount);
@@ -104,15 +102,15 @@ TEST(tarjan, testHeaders) {
       [LIBC_MACROS] = "libc/macros.h",
       [LIBC_MACROS_CPP] = "libc/macros-cpp.inc",
   };
-  uint32_t edges[][2] = {
+  int edges[][2] = {
       {LIBC_STR_STR, LIBC_BITS_BITS},  {LIBC_STR_STR, LIBC_INTEGRAL},
       {LIBC_STR_STR, LIBC_KEYWORDS},   {LIBC_BITS_BITS, LIBC_DCE},
       {LIBC_BITS_BITS, LIBC_INTEGRAL}, {LIBC_BITS_BITS, LIBC_KEYWORDS},
       {LIBC_BITS_BITS, LIBC_MACROS},   {LIBC_MACROS, LIBC_MACROS_CPP},
   };
-  uint32_t sorted[ARRAYLEN(vertices)];
-  uint32_t components[ARRAYLEN(vertices)];
-  uint32_t componentcount;
+  int sorted[ARRAYLEN(vertices)];
+  int components[ARRAYLEN(vertices)];
+  int componentcount;
   ASSERT_EQ(0, tarjan(ARRAYLEN(vertices), (void *)edges, ARRAYLEN(edges),
                       sorted, components, &componentcount));
   ASSERT_EQ(ARRAYLEN(vertices), componentcount);

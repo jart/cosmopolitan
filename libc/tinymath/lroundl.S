@@ -34,7 +34,7 @@ tinymath_lroundl:
 	or	$0b00000100,%dh			# →-∞
 	mov	%dx,-4(%rbp)
 	fxam
-	fnstsw	%ax
+	fnstsw
 	fabs
 	test	$FPU_C1>>8,%ah
 	fadds	.Lhalf(%rip)

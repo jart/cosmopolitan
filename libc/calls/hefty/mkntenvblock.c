@@ -35,36 +35,32 @@
  * @return freshly allocated lpEnvironment or NULL w/ errno
  */
 textwindows char16_t *mkntenvblock(char *const envp[]) {
-  size_t block_i = 0;
-  size_t block_n = 0;
-  char16_t *block_p = NULL;
-  size_t i, j;
-  if (!(envp = sortenvp(envp))) goto error;
-  const char16_t kNul = u'\0';
-  for (i = 0; envp[i]; ++i) {
-    unsigned consumed;
-    for (j = 0;; j += consumed) {
-      wint_t wc;
-      char16_t cbuf[2];
-      consumed = abs(tpdecode(&envp[i][j], &wc));
-      if (CONCAT(&block_p, &block_i, &block_n, cbuf,
-                 abs(pututf16(cbuf, ARRAYLEN(cbuf), wc, false))) == -1) {
-        goto error;
+  wint_t wc;
+  size_t i, j, bi, bn;
+  char16_t *bp, cbuf[2];
+  unsigned consumed, produced;
+  bi = 0;
+  bn = 8;
+  bp = NULL;
+  if ((envp = sortenvp(envp)) && (bp = calloc(bn, sizeof(char16_t)))) {
+    for (i = 0; envp[i]; ++i) {
+      for (j = 0;; j += consumed) {
+        consumed = abs(tpdecode(&envp[i][j], &wc));
+        produced = abs(pututf16(cbuf, ARRAYLEN(cbuf), wc, false));
+        if (CONCAT(&bp, &bi, &bn, cbuf, produced) == -1) goto error;
+        if (!wc) break;
       }
-      if (!wc) break;
     }
+    ++bi;
+    if (bi > ENV_MAX) {
+      e2big();
+      goto error;
+    }
+    free(envp);
+    return bp;
   }
-  if (APPEND(&block_p, &block_i, &block_n, &kNul) == -1) {
-    goto error;
-  }
-  if (block_i > ENV_MAX) {
-    e2big();
-    goto error;
-  }
-  free(envp);
-  return block_p;
 error:
   free(envp);
-  free(block_p);
+  free(bp);
   return NULL;
 }

@@ -49,7 +49,7 @@ THIRD_PARTY_EDITLINE_BINS = $(foreach x,$(THIRD_PARTY_EDITLINE_ARTIFACTS),$($(x)
 THIRD_PARTY_EDITLINE_CHECKS = $(foreach x,$(THIRD_PARTY_EDITLINE_ARTIFACTS),$($(x)_CHECKS))
 THIRD_PARTY_EDITLINE_OBJS = $(foreach x,$(THIRD_PARTY_EDITLINE_ARTIFACTS),$($(x)_OBJS))
 THIRD_PARTY_EDITLINE_TESTS = $(foreach x,$(THIRD_PARTY_EDITLINE_ARTIFACTS),$($(x)_TESTS))
-$(THIRD_PARTY_EDITLINE_OBJS): $(BUILD_FILES) third_party/editline/editline.mk
+$(THIRD_PARTY_EDITLINE_OBJS): third_party/editline/editline.mk
 
 .PHONY: o/$(MODE)/third_party/editline
 o/$(MODE)/third_party/editline:					\

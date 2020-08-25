@@ -20,12 +20,14 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Sets current directory.
  * @asyncsignalsafe
  */
 int chdir(const char *path) {
+  if (!path) return efault();
   if (!IsWindows()) {
     return chdir$sysv(path);
   } else {

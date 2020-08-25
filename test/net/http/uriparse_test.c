@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/bits/initializer.h"
 #include "libc/errno.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"
@@ -69,7 +70,7 @@ static struct UriMem {
   struct UriKeyval params[4], queries[4];
 } urimem_;
 
-INITIALIZER(100, _init_uri, {
+static textstartup void init() {
   uri.segs.n = ARRAYLEN(urimem_.segs);
   uri.segs.p = urimem_.segs;
   uri.params.n = ARRAYLEN(urimem_.params);
@@ -78,7 +79,9 @@ INITIALIZER(100, _init_uri, {
   uri.queries.p = urimem_.queries;
   uri.paramsegs.n = ARRAYLEN(urimem_.paramsegs);
   uri.paramsegs.p = urimem_.paramsegs;
-})
+}
+
+const void *const g_name_ctor[] initarray = {init};
 
 TEST(uriparse, sipPstnUri) {
   EXPECT_NE(-1, URIPARSE("sip:+12125650666"));

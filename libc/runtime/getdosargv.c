@@ -17,6 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/pushpop.h"
 #include "libc/bits/safemacros.h"
@@ -38,11 +39,11 @@ struct DosArgv {
   wint_t wc;
 };
 
-static inline textwindows void decodedosargv(struct DosArgv *st) {
+static textwindows void decodedosargv(struct DosArgv *st) {
   st->s += getutf16(st->s, &st->wc);
 }
 
-static inline textwindows void appenddosargv(struct DosArgv *st, wint_t wc) {
+static textwindows void appenddosargv(struct DosArgv *st, wint_t wc) {
   AppendChar(&st->p, st->pe, wc);
 }
 

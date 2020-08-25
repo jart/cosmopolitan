@@ -18,7 +18,6 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/limits.h"
-#include "libc/stdio/fputc.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -35,7 +34,7 @@ wint_t fputwc(wchar_t wc, FILE *f) {
   if (wc != -1) {
     len = tpencode(buf, sizeof(buf), wc, false);
     for (i = 0; i < len; ++i) {
-      if (__fputc(buf[i], f) == -1) return -1;
+      if (fputc(buf[i], f) == -1) return -1;
     }
     return wc;
   } else {

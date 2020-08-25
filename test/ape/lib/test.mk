@@ -5,11 +5,13 @@ PKGS += TEST_APE_LIB
 
 TEST_APE_LIB_SRCS := $(wildcard test/ape/lib/*.c)
 TEST_APE_LIB_SRCS_TEST = $(filter %_test.c,$(TEST_APE_LIB_SRCS))
-TEST_APE_LIB_COMS = $(TEST_APE_LIB_OBJS:%.o=%.com)
 
 TEST_APE_LIB_OBJS =					\
 	$(TEST_APE_LIB_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_APE_LIB_SRCS:%.c=o/$(MODE)/%.o)
+
+TEST_APE_LIB_COMS =					\
+	$(TEST_APE_LIB_SRCS:%.c=o/$(MODE)/%.com)
 
 TEST_APE_LIB_BINS =					\
 	$(TEST_APE_LIB_COMS)				\

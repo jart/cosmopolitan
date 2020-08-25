@@ -17,8 +17,8 @@
 #ifndef LOGGABLELEVEL
 #ifndef NDEBUG
 #define LOGGABLELEVEL kLogDebug
-#elif IsTiny()
-#define LOGGABLELEVEL kLogFatal
+/* #elif IsTiny() */
+/* #define LOGGABLELEVEL kLogInfo */
 #else
 #define LOGGABLELEVEL kLogInfo
 #endif
@@ -37,15 +37,16 @@ extern FILE *g_logfile;
 void backtrace(FILE *) relegated;    /* shows fn backtrace and args */
 void perror(const char *) relegated; /* print the last system error */
 void die(void) relegated noreturn;   /* print backtrace and abort() */
-void meminfo(FILE *);                /* shows malloc statistics &c. */
-void memsummary(FILE *);             /* light version of same thing */
+void meminfo(int);                   /* shows malloc statistics &c. */
+void memsummary(int);                /* light version of same thing */
 uint16_t getttycols(uint16_t);
 int getttysize(int, struct winsize *) paramsnonnull();
 bool cancolor(void) nothrow nocallback;
 bool isterminalinarticulate(void) nosideeffect;
 char *commandvenv(const char *, const char *) nodiscard;
+const char *GetAddr2linePath(void);
+const char *GetGdbPath(void);
 
-void showmappings(FILE *);
 void showcrashreports(void);
 void callexitontermination(struct sigset *);
 bool32 IsDebuggerPresent(bool);

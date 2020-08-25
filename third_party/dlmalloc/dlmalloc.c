@@ -1,3 +1,4 @@
+#include "libc/bits/initializer.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sysinfo.h"
@@ -16,6 +17,8 @@
 #include "libc/sysv/errfuns.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 
+STATIC_YOINK("_init_dlmalloc");
+
 #define OOM_WARNING  "warning: running out of physical memory\n"
 #define is_global(M) ((M) == &_gm_)
 
@@ -32,7 +35,7 @@ struct malloc_state _gm_;
  * Note that contiguous allocations are what Doug Lea recommends.
  */
 static void *dlmalloc_requires_more_vespene_gas(size_t size) {
-  if (!IsTrustworthy()) {
+  if (0 && !IsTrustworthy()) {
     size_t need = mallinfo().arena + size;
     if (need > 8 * 1024 * 1024) {
       struct sysinfo info;
@@ -249,7 +252,7 @@ static mchunkptr mmap_resize(mstate m, mchunkptr oldp, size_t nb, int flags) {
 /**
  * Gets memory from system.
  */
-static void *sys_alloc(mstate m, size_t nb) {
+void *sys_alloc(mstate m, size_t nb) {
   char *tbase = CMFAIL;
   size_t tsize = 0;
   flag_t mmap_flag = 0;
@@ -379,8 +382,9 @@ static size_t dlmalloc_release_unused_segments(mstate m) {
         }
       }
     }
-    if (NO_SEGMENT_TRAVERSAL) /* scan only first segment */
+    if (NO_SEGMENT_TRAVERSAL) { /* scan only first segment */
       break;
+    }
     pred = sp;
     sp = next;
   }
@@ -444,56 +448,6 @@ static void post_fork_child(void) {
   INITIAL_LOCK(&(gm)->mutex);
 }
 #endif /* LOCK_AT_FORK */
-
-static noinline void dlmalloc_init(void) {
-#ifdef NEED_GLOBAL_LOCK_INIT
-  if (malloc_global_mutex_status <= 0) init_malloc_global_mutex();
-#endif
-  ACQUIRE_MALLOC_GLOBAL_LOCK();
-
-  if (mparams.magic == 0) {
-    size_t magic;
-    size_t psize = PAGESIZE;
-    size_t gsize = max(g_ntsysteminfo.dwAllocationGranularity, 64 * 1024);
-
-    /* Sanity-check configuration:
-       size_t must be unsigned and as wide as pointer type.
-       ints must be at least 4 bytes.
-       alignment must be at least 8.
-       Alignment, min chunk size, and page size must all be powers of 2.
-    */
-    if ((sizeof(size_t) != sizeof(char *)) || (SIZE_MAX < MIN_CHUNK_SIZE) ||
-        (sizeof(int) < 4) || (MALLOC_ALIGNMENT < (size_t)8U) ||
-        ((MALLOC_ALIGNMENT & (MALLOC_ALIGNMENT - SIZE_T_ONE)) != 0) ||
-        ((MCHUNK_SIZE & (MCHUNK_SIZE - SIZE_T_ONE)) != 0) ||
-        ((gsize & (gsize - SIZE_T_ONE)) != 0) ||
-        ((psize & (psize - SIZE_T_ONE)) != 0))
-      MALLOC_ABORT;
-    mparams.granularity = gsize;
-    mparams.page_size = psize;
-    mparams.mmap_threshold = DEFAULT_MMAP_THRESHOLD;
-    mparams.trim_threshold = DEFAULT_TRIM_THRESHOLD;
-    mparams.default_mflags =
-        USE_LOCK_BIT | USE_MMAP_BIT | USE_NONCONTIGUOUS_BIT;
-
-    /* Set up lock for main malloc area */
-    gm->mflags = mparams.default_mflags;
-    (void)INITIAL_LOCK(&gm->mutex);
-#if LOCK_AT_FORK
-    pthread_atfork(&pre_fork, &post_fork_parent, &post_fork_child);
-#endif
-
-    magic = kStartTsc;
-    magic |= (size_t)8U;  /* ensure nonzero */
-    magic &= ~(size_t)7U; /* improve chances of fault for bad values */
-    /* Until memory modes commonly available, use volatile-write */
-    (*(volatile size_t *)(&(mparams.magic))) = magic;
-  }
-
-  RELEASE_MALLOC_GLOBAL_LOCK();
-}
-
-INITIALIZER(800, _init_dlmalloc, { dlmalloc_init(); })
 
 /* ───────────────────────────── statistics ────────────────────────────── */
 
@@ -1028,4 +982,47 @@ void *dlrealloc(void *oldmem, size_t bytes) {
     }
   }
   return mem;
+}
+
+textstartup void dlmalloc_init(void) {
+#ifdef NEED_GLOBAL_LOCK_INIT
+  if (malloc_global_mutex_status <= 0) init_malloc_global_mutex();
+#endif
+  ACQUIRE_MALLOC_GLOBAL_LOCK();
+  if (mparams.magic == 0) {
+    size_t magic;
+    size_t psize = PAGESIZE;
+    size_t gsize = MAX(g_ntsysteminfo.dwAllocationGranularity, 64 * 1024);
+    /* Sanity-check configuration:
+       size_t must be unsigned and as wide as pointer type.
+       ints must be at least 4 bytes.
+       alignment must be at least 8.
+       Alignment, min chunk size, and page size must all be powers of 2.
+    */
+    if ((sizeof(size_t) != sizeof(char *)) || (SIZE_MAX < MIN_CHUNK_SIZE) ||
+        (sizeof(int) < 4) || (MALLOC_ALIGNMENT < (size_t)8U) ||
+        ((MALLOC_ALIGNMENT & (MALLOC_ALIGNMENT - SIZE_T_ONE)) != 0) ||
+        ((MCHUNK_SIZE & (MCHUNK_SIZE - SIZE_T_ONE)) != 0) ||
+        ((gsize & (gsize - SIZE_T_ONE)) != 0) ||
+        ((psize & (psize - SIZE_T_ONE)) != 0))
+      MALLOC_ABORT;
+    mparams.granularity = gsize;
+    mparams.page_size = psize;
+    mparams.mmap_threshold = DEFAULT_MMAP_THRESHOLD;
+    mparams.trim_threshold = DEFAULT_TRIM_THRESHOLD;
+    mparams.default_mflags =
+        USE_LOCK_BIT | USE_MMAP_BIT | USE_NONCONTIGUOUS_BIT;
+    /* Set up lock for main malloc area */
+    gm->mflags = mparams.default_mflags;
+    (void)INITIAL_LOCK(&gm->mutex);
+#if LOCK_AT_FORK
+    pthread_atfork(&pre_fork, &post_fork_parent, &post_fork_child);
+#endif
+    magic = kStartTsc;
+    magic |= (size_t)8U;  /* ensure nonzero */
+    magic &= ~(size_t)7U; /* improve chances of fault for bad values */
+    /* Until memory modes commonly available, use volatile-write */
+    (*(volatile size_t *)(&(mparams.magic))) = magic;
+  }
+  RELEASE_MALLOC_GLOBAL_LOCK();
 }

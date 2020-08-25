@@ -31,4 +31,6 @@
  * @param path is NUL-terminated UTF-8 path
  * @return pointer inside path or path itself
  */
-char *basename(const char *path) { return basename_n(path, strlen(path)); }
+textstartup char *basename(const char *path) {
+  return basename_n(path, strlen(path));
+}

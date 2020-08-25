@@ -17,10 +17,8 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/conv/sizemultiply.h"
 #include "libc/errno.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/fputc.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 
@@ -32,14 +30,15 @@
  * @return count on success, [0,count) on EOF, 0 on error or count==0
  */
 size_t fwrite(const void *data, size_t stride, size_t count, FILE *f) {
-  int rc;
-  size_t i, bytes;
-  const unsigned char *p = (const unsigned char *)data;
-  if (!sizemultiply(&bytes, stride, count)) return fseterr(f, EOVERFLOW);
-  for (i = 0; i < bytes; ++i) {
-    if ((rc = __fputc(p[i], f)) == -1) {
-      if (i % stride != 0) abort(); /* todo(jart) */
-      return i / stride;
+  size_t i, n;
+  const unsigned char *p;
+  for (n = stride * count, p = data, i = 0; i < n; ++i) {
+    if (fputc(p[i], f) == -1) {
+      if (!(i % stride)) {
+        return i / stride;
+      } else {
+        return fseterr(f, EOVERFLOW);
+      }
     }
   }
   return count;

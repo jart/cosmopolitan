@@ -2162,8 +2162,8 @@ imp	'GetFileMUIPath'					GetFileMUIPath						KernelBase	550
 imp	'GetFileNameFromBrowse'					GetFileNameFromBrowse					shell32		63
 imp	'GetFileSecurity'					GetFileSecurityW					KernelBase	551	5
 imp	'GetFileSecurityA'					GetFileSecurityA					advapi32	1326	5
-imp	'GetFileSize$nopenopenope'				GetFileSize						KernelBase	552
-imp	'GetFileSizeEx$nopenopenope'				GetFileSizeEx						KernelBase	553
+imp	'GetFileSize'						GetFileSize						KernelBase	552	m
+imp	'GetFileSizeEx'						GetFileSizeEx						KernelBase	553	m
 imp	'GetFileTime'						GetFileTime						KernelBase	554	4
 imp	'GetFileTitleA'						GetFileTitleA						comdlg32	111
 imp	'GetFileTitle'						GetFileTitleW						comdlg32	112

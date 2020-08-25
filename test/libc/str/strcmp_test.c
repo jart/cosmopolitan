@@ -551,7 +551,8 @@ void longstringislong_dupe(size_t size, char data[size], char dupe[size]) {
 BENCH(bench_00_strcmp, bench) {
   size_t size;
   char *dupe, *data;
-  size = ROUNDDOWN(getcachesize(kCpuCacheTypeData, 1) / 2, PAGESIZE);
+  size = ROUNDDOWN(MAX(FRAMESIZE, getcachesize(kCpuCacheTypeData, 1)) / 2,
+                   PAGESIZE);
   data = tgc(tmalloc(size));
   dupe = tgc(tmalloc(size));
   EZBENCH2("strcmp [identity]", longstringislong(size, data),
@@ -569,7 +570,8 @@ BENCH(bench_00_strcmp, bench) {
 BENCH(bench_01_strcasecmp, bench) {
   size_t size;
   char *dupe, *data;
-  size = ROUNDDOWN(getcachesize(kCpuCacheTypeData, 1) / 2, PAGESIZE);
+  size = ROUNDDOWN(MAX(FRAMESIZE, getcachesize(kCpuCacheTypeData, 1)) / 2,
+                   PAGESIZE);
   data = tgc(tmalloc(size));
   dupe = tgc(tmalloc(size));
   EZBENCH2("strcasecmp [identity]", longstringislong(size, data),

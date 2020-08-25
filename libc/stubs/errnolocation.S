@@ -24,7 +24,6 @@
 /	Returns address of errno variable.
 /	@note	this isn't a universal definition
 __errno_location:
-	.leafprologue
-	lea	errno(%rip),%rax
-	.leafepilogue
+	ezlea	errno,ax
+	ret
 	.endfn	__errno_location,globl,hidden

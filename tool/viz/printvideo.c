@@ -330,11 +330,11 @@ static void StrikeDownCrapware(int sig) {
 }
 
 static long AsMilliseconds(long double ts) {
-  return lrintl(ts * 1e3);
+  return rintl(ts * 1e3);
 }
 
 static long AsNanoseconds(long double ts) {
-  return lrintl(ts * 1e9);
+  return rintl(ts * 1e9);
 }
 
 static long double GetGraceTime(void) {
@@ -733,7 +733,7 @@ static void RenderIt(void) {
   if (ttymode_ && stats_) {
     bpc = bpf = p - vt;
     bpc /= wsize_.ws_row * wsize_.ws_col;
-    sprintf(status_[4], " %s/%s/%s %zu×%zu → %zu×%zu pixels ",
+    sprintf(status_[4], " %s/%s/%s %d×%d → %u×%u pixels ",
             kPrimaries[primaries_].name, DescribeSwing(swing_),
             kLightings[lighting_].name, plm_get_width(plm_),
             plm_get_height(plm_), g2_->xn, g2_->yn);
@@ -1069,7 +1069,7 @@ static void SetQuant(enum TtyQuantizationAlgorithm alg,
                      enum TtyQuantizationChannels chans,
                      enum TtyBlocksSelection blocks) {
   tuned_ = true;
-  ttyquantinit(alg, chans, blocks);
+  ttyquantsetup(alg, chans, blocks);
 }
 
 static void SetQuantizationAlgorithm(enum TtyQuantizationAlgorithm alg) {
@@ -1516,7 +1516,7 @@ static void PickDefaults(void) {
    * strcmp(nulltoempty(getenv("TERM")), "xterm-direct") == 0
    */
   if (strcmp(nulltoempty(getenv("TERM")), "xterm-kitty") == 0) {
-    ttyquantinit(kTtyQuantTrue, TTYQUANT()->chans, kTtyBlocksUnicode);
+    ttyquantsetup(kTtyQuantTrue, TTYQUANT()->chans, kTtyBlocksUnicode);
   }
 }
 

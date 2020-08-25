@@ -26,5 +26,5 @@
  * @asyncsignalsafe
  */
 int __zipos_fstat(const struct ZiposHandle *h, struct stat *st) {
-  return __zipos_stat_impl(h->cfile, st);
+  return __zipos_stat_impl(__zipos_get(), h->cfile, st);
 }

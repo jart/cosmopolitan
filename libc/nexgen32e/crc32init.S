@@ -50,7 +50,7 @@ crc32init:
 	dec	%eax
 	mov	%eax,(%rsp)
 	jnz	0b
-	movups	(%rsp),%xmm1
+	movdqu	(%rsp),%xmm1
 1:	mov	$8,%ecx
 	movdqa	%xmm1,%xmm3
 2:	movdqa	%xmm3,%xmm4

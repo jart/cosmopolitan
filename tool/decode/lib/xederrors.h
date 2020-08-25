@@ -4,7 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const struct IdName kXedErrorNames[];
+extern const struct IdName kXedErrorIdNames[];
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

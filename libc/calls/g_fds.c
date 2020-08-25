@@ -17,18 +17,19 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/bits/initializer.h"
 #include "libc/bits/pushpop.h"
 #include "libc/calls/internal.h"
-#include "libc/macros.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/fileno.h"
 
+STATIC_YOINK("_init_g_fds");
+
 struct Fds g_fds;
 
-INITIALIZER(300, _init_g_fds, {
+void InitializeFileDescriptors(void) {
   struct Fds *fds;
-  fds = VEIL("D", &g_fds);
+  fds = VEIL("r", &g_fds);
   pushmov(&fds->f, 3ul);
   pushmov(&fds->n, ARRAYLEN(fds->__init_p));
   fds->p = fds->__init_p;
@@ -40,4 +41,4 @@ INITIALIZER(300, _init_g_fds, {
       GetStdHandle(pushpop(kNtStdOutputHandle));
   fds->__init_p[STDERR_FILENO].handle =
       GetStdHandle(pushpop(kNtStdErrorHandle));
-})
+}

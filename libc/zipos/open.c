@@ -23,10 +23,10 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/conv/sizemultiply.h"
 #include "libc/dce.h"
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/rbx.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -83,37 +83,39 @@ static int __zipos_inflate_tiny(struct ZiposHandle *h, uint8_t *data,
   return undeflate(h->mem, h->size, data, size, &ds) != -1 ? 0 : eio();
 }
 
-static int __zipos_load(size_t cf, unsigned flags, int mode) {
+static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
+                        int mode) {
   int fd;
   size_t lf;
   struct ZiposHandle *h;
-  lf = ZIP_CFILE_OFFSET(&_base[0] + cf);
-  assert(ZIP_LFILE_MAGIC(&_base[0] + lf) == kZipLfileHdrMagic);
-  assert(ZIP_LFILE_COMPRESSIONMETHOD(&_base[0] + lf) == kZipCompressionNone ||
-         ZIP_LFILE_COMPRESSIONMETHOD(&_base[0] + lf) == kZipCompressionDeflate);
+  lf = ZIP_CFILE_OFFSET(zipos->map + cf);
+  assert(ZIP_LFILE_MAGIC(zipos->map + lf) == kZipLfileHdrMagic);
+  assert(ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf) == kZipCompressionNone ||
+         ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf) ==
+             kZipCompressionDeflate);
   if ((fd = createfd()) == -1) return -1;
   if (!(h = calloc(1, sizeof(*h)))) return -1;
   h->cfile = cf;
-  if ((h->size = ZIP_LFILE_UNCOMPRESSEDSIZE(&_base[0] + lf))) {
-    if (ZIP_LFILE_COMPRESSIONMETHOD(&_base[0] + lf)) {
-      assert(ZIP_LFILE_COMPRESSEDSIZE(&_base[0] + lf));
+  if ((h->size = ZIP_LFILE_UNCOMPRESSEDSIZE(zipos->map + lf))) {
+    if (ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf)) {
+      assert(ZIP_LFILE_COMPRESSEDSIZE(zipos->map + lf));
       h->mapsize = ROUNDUP(h->size + FRAMESIZE, FRAMESIZE);
       if ((h->map = mapanon(h->mapsize)) != MAP_FAILED) {
         h->mem = h->map + FRAMESIZE / 2;
         if ((IsTiny() ? __zipos_inflate_tiny : __zipos_inflate_fast)(
-                h, ZIP_LFILE_CONTENT(&_base[0] + lf),
-                ZIP_LFILE_COMPRESSEDSIZE(&_base[0] + lf)) == -1) {
+                h, ZIP_LFILE_CONTENT(zipos->map + lf),
+                ZIP_LFILE_COMPRESSEDSIZE(zipos->map + lf)) == -1) {
           fd = -1;
         }
       } else {
         fd = -1;
       }
     } else {
-      h->mem = ZIP_LFILE_CONTENT(&_base[0] + lf);
+      h->mem = ZIP_LFILE_CONTENT(zipos->map + lf);
     }
   }
   if (!IsTiny() && fd != -1 &&
-      crc32_z(0, h->mem, h->size) != ZIP_LFILE_CRC32(&_base[0] + lf)) {
+      crc32_z(0, h->mem, h->size) != ZIP_LFILE_CRC32(zipos->map + lf)) {
     fd = eio();
   }
   if (fd != -1) {
@@ -136,12 +138,17 @@ int __zipos_open(const struct ZiposUri *name, unsigned flags, int mode) {
   int fd;
   ssize_t cf;
   sigset_t oldmask;
+  struct Zipos *zipos;
   assert((flags & O_ACCMODE) == O_RDONLY);
   sigprocmask(SIG_BLOCK, &kSigsetFull, &oldmask);
-  if ((cf = __zipos_find(name)) != -1) {
-    fd = __zipos_load(cf, flags, mode);
+  if ((zipos = __zipos_get())) {
+    if ((cf = __zipos_find(zipos, name)) != -1) {
+      fd = __zipos_load(zipos, cf, flags, mode);
+    } else {
+      fd = enoent();
+    }
   } else {
-    fd = enoent();
+    fd = enoexec();
   }
   sigprocmask(SIG_SETMASK, &oldmask, NULL);
   return fd;

@@ -23,6 +23,7 @@
 #include "libc/log/check.h"
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/rbx.h"
 #include "libc/runtime/runtime.h"
@@ -50,6 +51,7 @@ TEST(undeflate, testEmbeddedPlaintextConstant) {
 TEST(undeflate, testStatCentralDirectory_notFound_noSysCalls) {
   uint64_t c;
   struct stat st;
+  stat("zip:doge.txt", &st); /* warmup */
   c = g_syscount;
   ASSERT_EQ(-1, stat("zip:doge.txt", &st));
   ASSERT_EQ(0, g_syscount - c);

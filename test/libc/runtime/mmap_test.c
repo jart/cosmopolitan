@@ -21,8 +21,9 @@
 #include "libc/bits/xchg.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"
-#include "libc/runtime/mappings.h"
+#include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -33,71 +34,17 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-unsigned m1;
-
-TEST(mmap, testMapUnmapAnonAnyAddr) {
-  void *p;
-  m1 = _mm.i;
-  EXPECT_NE(MAP_FAILED, (p = mmap(NULL, FRAMESIZE, PROT_READ | PROT_WRITE,
-                                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
-  EXPECT_EQ(m1 + 1, _mm.i);
-  EXPECT_NE(-1, munmap(p, FRAMESIZE));
-  EXPECT_EQ(m1 + 0, _mm.i);
-}
-
-TEST(mmap, testMunmapUnmapsMultiple) {
-  void *p1, *p2;
-  m1 = _mm.i;
-  EXPECT_NE(MAP_FAILED, (p1 = mmap(NULL, FRAMESIZE, PROT_READ | PROT_WRITE,
-                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
-  EXPECT_NE(MAP_FAILED, (p2 = mmap(NULL, FRAMESIZE, PROT_READ | PROT_WRITE,
-                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
-  if ((intptr_t)p1 > (intptr_t)p2) xchg(&p1, &p2);
-  EXPECT_EQ(m1 + 2, _mm.i);
-  EXPECT_NE(-1, munmap(p1, (intptr_t)p2 + (intptr_t)FRAMESIZE - (intptr_t)p1));
-  EXPECT_EQ(m1 + 0, _mm.i);
-}
-
-TEST(mmap, testPartialUnmapRight) {
-  if (1) return; /* naaah */
-  char *p;
-  m1 = _mm.i;
-  EXPECT_NE(MAP_FAILED, (p = mmap(NULL, FRAMESIZE * 2, PROT_READ | PROT_WRITE,
-                                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
-  EXPECT_EQ(m1 + 1, _mm.i);
-  EXPECT_NE(-1, munmap(p + FRAMESIZE, FRAMESIZE));
-  EXPECT_EQ(m1 + 1, _mm.i);
-  EXPECT_NE(-1, munmap(p, FRAMESIZE));
-  EXPECT_EQ(m1 + 0, _mm.i);
-}
-
-TEST(mmap, testPartialUnmapLeft) {
-  if (1) return; /* naaah */
-  char *p;
-  m1 = _mm.i;
-  EXPECT_NE(MAP_FAILED, (p = mmap(NULL, FRAMESIZE * 2, PROT_READ | PROT_WRITE,
-                                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
-  EXPECT_EQ(m1 + 1, _mm.i);
-  EXPECT_NE(-1, munmap(p, FRAMESIZE));
-  EXPECT_EQ(m1 + 1, _mm.i);
-  EXPECT_NE(-1, munmap(p + FRAMESIZE, FRAMESIZE));
-  EXPECT_EQ(m1 + 0, _mm.i);
-}
-
 TEST(mmap, testMapFile) {
   int fd;
   char *p;
   char path[PATH_MAX];
   sprintf(path, "%s%s.%d", kTmpPath, program_invocation_short_name, getpid());
-  m1 = _mm.i;
   ASSERT_NE(-1, (fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0644)));
   EXPECT_EQ(5, write(fd, "hello", 5));
   EXPECT_NE(-1, fdatasync(fd));
   EXPECT_NE(MAP_FAILED, (p = mmap(NULL, 5, PROT_READ, MAP_PRIVATE, fd, 0)));
-  EXPECT_EQ(m1 + 1, _mm.i);
   EXPECT_STREQ("hello", p);
   EXPECT_NE(-1, munmap(p, 5));
-  EXPECT_EQ(m1 + 0, _mm.i);
   EXPECT_NE(-1, close(fd));
   EXPECT_NE(-1, unlink(path));
 }
@@ -106,14 +53,12 @@ TEST(mmap, testMapFile_fdGetsClosed_makesNoDifference) {
   int fd;
   char *p, buf[16], path[PATH_MAX];
   sprintf(path, "%s%s.%d", kTmpPath, program_invocation_short_name, getpid());
-  m1 = _mm.i;
   ASSERT_NE(-1, (fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0644)));
   EXPECT_EQ(5, write(fd, "hello", 5));
   EXPECT_NE(-1, fdatasync(fd));
   EXPECT_NE(MAP_FAILED,
             (p = mmap(NULL, 5, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)));
   EXPECT_NE(-1, close(fd));
-  EXPECT_EQ(m1 + 1, _mm.i);
   EXPECT_STREQ("hello", p);
   p[1] = 'a';
   EXPECT_NE(-1, msync(p, PAGESIZE, MS_SYNC));
@@ -122,12 +67,11 @@ TEST(mmap, testMapFile_fdGetsClosed_makesNoDifference) {
   EXPECT_STREQN("hallo", buf, 5);
   EXPECT_NE(-1, close(fd));
   EXPECT_NE(-1, munmap(p, 5));
-  EXPECT_EQ(m1 + 0, _mm.i);
   EXPECT_NE(-1, unlink(path));
 }
 
 TEST(mmap, testMapFixed_destroysEverythingInItsPath) {
-  m1 = _mm.i;
+  unsigned m1 = _mmi.i;
   EXPECT_NE(MAP_FAILED, mmap((void *)(kFixedMappingsStart + FRAMESIZE * 0),
                              FRAMESIZE, PROT_READ | PROT_WRITE,
                              MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
@@ -137,10 +81,31 @@ TEST(mmap, testMapFixed_destroysEverythingInItsPath) {
   EXPECT_NE(MAP_FAILED, mmap((void *)(kFixedMappingsStart + FRAMESIZE * 2),
                              FRAMESIZE, PROT_READ | PROT_WRITE,
                              MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
-  ASSERT_EQ(m1 + 3, _mm.i);
   EXPECT_NE(MAP_FAILED, mmap((void *)(kFixedMappingsStart + FRAMESIZE * 0),
                              FRAMESIZE * 3, PROT_READ | PROT_WRITE,
                              MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
-  ASSERT_EQ(m1 + 1, _mm.i);
+  ASSERT_GT(_mmi.i, m1);
   EXPECT_NE(-1, munmap((void *)kFixedMappingsStart, FRAMESIZE * 3));
+  ASSERT_EQ(m1, _mmi.i);
+}
+
+TEST(isheap, nullPtr) {
+  ASSERT_FALSE(isheap(NULL));
+}
+
+TEST(isheap, stackMemory) {
+  int boop;
+  ASSERT_FALSE(isheap(&boop));
+}
+
+TEST(isheap, malloc) {
+  ASSERT_TRUE(isheap(gc(malloc(1))));
+}
+
+TEST(isheap, emptyMalloc) {
+  ASSERT_TRUE(isheap(gc(malloc(0))));
+}
+
+TEST(isheap, mallocOffset) {
+  ASSERT_TRUE(isheap((char *)gc(malloc(131072)) + 100000));
 }

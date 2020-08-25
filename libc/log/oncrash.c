@@ -17,6 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/ucontext.h"
@@ -27,10 +28,12 @@
 #include "libc/log/log.h"
 #include "libc/macros.h"
 #include "libc/runtime/internal.h"
+#include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sig.h"
 
 STATIC_YOINK("ftoa");
@@ -44,20 +47,23 @@ STATIC_YOINK("stoa");
 
 struct siginfo;
 
-aligned(1) const char kGregOrder[17] = {13, 11, 8, 14, 12, 9, 10, 15, 16,
-                                        0,  1,  2, 3,  4,  5, 6,  7};
+aligned(1) const char kGregOrder[17] = {
+    13, 11, 8, 14, 12, 9, 10, 15, 16, 0, 1, 2, 3, 4, 5, 6, 7,
+};
+
 aligned(1) const char kGregNames[17][4] = {
     "R8",  "R9",  "R10", "R11", "R12", "R13", "R14", "R15", "RDI",
-    "RSI", "RBP", "RBX", "RDX", "RAX", "RCX", "RSP", "RIP"};
-aligned(1) const char kGodHatesFlags[12][2] = {
-    "CF", "VF", "PF", "RF", "AF", "KF", "ZF", "SF", "TF", "IF", "DF", "OF"};
+    "RSI", "RBP", "RBX", "RDX", "RAX", "RCX", "RSP", "RIP",
+};
+
+aligned(1) const char kGodHatesFlags[12] = "CVPRAKZSTIDO";
 aligned(1) const char kCrashSigNames[8][5] = {"QUIT", "FPE",  "ILL", "SEGV",
                                               "TRAP", "ABRT", "BUS"};
 
 int kCrashSigs[8];
 struct sigaction g_oldcrashacts[8];
 
-relegated static const char *tinystrsignal(int sig) {
+relegated static const char *TinyStrSignal(int sig) {
   size_t i;
   for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
     if (kCrashSigs[i] && sig == kCrashSigs[i]) {
@@ -67,10 +73,10 @@ relegated static const char *tinystrsignal(int sig) {
   return "???";
 }
 
-relegated static void showfunctioncalls(FILE *f, ucontext_t *ctx) {
-  fputc('\n', f);
+relegated static void ShowFunctionCalls(FILE *f, ucontext_t *ctx) {
   struct StackFrame *bp;
   struct StackFrame goodframe;
+  fputc('\n', f);
   if (ctx && ctx->uc_mcontext.rip && ctx->uc_mcontext.rbp) {
     goodframe.next = (struct StackFrame *)ctx->uc_mcontext.rbp;
     goodframe.addr = ctx->uc_mcontext.rip;
@@ -79,20 +85,20 @@ relegated static void showfunctioncalls(FILE *f, ucontext_t *ctx) {
   }
 }
 
-relegated static void describecpuflags(FILE *f, unsigned efl) {
+relegated static void DescribeCpuFlags(FILE *f, unsigned efl) {
   size_t i;
   for (i = 0; i < ARRAYLEN(kGodHatesFlags); ++i) {
     if (efl & 1) {
       fputc(' ', f);
-      fputc(kGodHatesFlags[i][0], f);
-      fputc(kGodHatesFlags[i][1], f);
+      fputc(kGodHatesFlags[i], f);
+      fputc('F', f);
     }
     efl >>= 1;
   }
   (fprintf)(f, " %s%d\n", "IOPL", efl & 3);
 }
 
-relegated static void showgeneralregisters(FILE *f, ucontext_t *ctx) {
+relegated static void ShowGeneralRegisters(FILE *f, ucontext_t *ctx) {
   size_t i, j, k;
   long double st;
   fputc('\n', f);
@@ -112,10 +118,10 @@ relegated static void showgeneralregisters(FILE *f, ucontext_t *ctx) {
     }
   }
   fflush(stderr);
-  describecpuflags(f, ctx->uc_mcontext.gregs[REG_EFL]);
+  DescribeCpuFlags(f, ctx->uc_mcontext.gregs[REG_EFL]);
 }
 
-relegated static void showsseregisters(FILE *f, ucontext_t *ctx) {
+relegated static void ShowSseRegisters(FILE *f, ucontext_t *ctx) {
   size_t i;
   fputc('\n', f);
   for (i = 0; i < 8; ++i) {
@@ -126,42 +132,42 @@ relegated static void showsseregisters(FILE *f, ucontext_t *ctx) {
   }
 }
 
-relegated static void showmemorymappings(FILE *f) {
-  int c;
-  FILE *f2;
+relegated static void ShowMemoryMappings(int outfd) {
+  ssize_t rc;
+  int c, infd;
+  char buf[64];
   if (!IsTiny()) {
-    showmappings(f);
-    if (IsLinux()) {
-      if ((f2 = fopen("/proc/self/maps", "r"))) {
-        while ((c = fgetc(f2)) != -1) {
-          if (fputc(c, f) == -1) break;
-        }
+    PrintMemoryIntervals(outfd, &_mmi);
+    if ((infd = open("/proc/self/maps", O_RDONLY)) != -1) {
+      while ((rc = read(infd, buf, sizeof(buf))) > 0) {
+        write(outfd, buf, rc);
       }
-      fclose(f2);
     }
+    close(infd);
   }
 }
 
-relegated static void showcrashreport(int err, FILE *f, int sig,
+relegated static void ShowCrashReport(int err, FILE *f, int sig,
                                       ucontext_t *ctx) {
   struct utsname names;
   (fprintf)(f, VEIL("r", "\n%serror%s: Uncaught SIG%s\n  %s\n  %s\n"), RED2,
-            RESET, tinystrsignal(sig), getauxval(AT_EXECFN), strerror(err));
+            RESET, TinyStrSignal(sig), getauxval(AT_EXECFN), strerror(err));
   if (uname(&names) != -1) {
     (fprintf)(f, VEIL("r", "  %s %s %s %s\n"), names.sysname, names.nodename,
               names.release, names.version);
   }
-  showfunctioncalls(f, ctx);
+  ShowFunctionCalls(f, ctx);
   if (ctx) {
-    showgeneralregisters(f, ctx);
-    showsseregisters(f, ctx);
+    ShowGeneralRegisters(f, ctx);
+    ShowSseRegisters(f, ctx);
   }
   fputc('\n', f);
-  memsummary(f);
-  showmemorymappings(f);
+  fflush(f);
+  memsummary(fileno(f));
+  ShowMemoryMappings(fileno(f));
 }
 
-relegated static void restoredefaultcrashsignalhandlers(void) {
+relegated static void RestoreDefaultCrashSignalHandlers(void) {
   size_t i;
   sigset_t ss;
   sigemptyset(&ss);
@@ -200,7 +206,7 @@ relegated void oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
   } else if (isterminalinarticulate() || isrunningundermake()) {
     gdbpid = -1;
   } else {
-    restoredefaultcrashsignalhandlers();
+    RestoreDefaultCrashSignalHandlers();
     gdbpid =
         attachdebugger(((sig == SIGTRAP || sig == SIGQUIT) &&
                         (rip >= (intptr_t)&_base && rip < (intptr_t)&_etext))
@@ -208,7 +214,7 @@ relegated void oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
                            : 0);
   }
   if (gdbpid > 0 && (sig == SIGTRAP || sig == SIGQUIT)) return;
-  showcrashreport(err, stderr, sig, ctx);
+  ShowCrashReport(err, stderr, sig, ctx);
   quick_exit(128 + sig);
   unreachable;
 }

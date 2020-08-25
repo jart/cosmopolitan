@@ -42,7 +42,7 @@ testonly void testlib_showerror(const char *file, int line, const char *func,
           "\t%s%s\n"
           "\t%s%s\n",
           RED2, "error", UNBOLD, BLUE1, file, line, RESET, method, "in", func,
-          g_fixturename, code, "want", v1, symbol, " got", v2, SUBTLE,
+          g_fixturename, code, "need", v1, symbol, " got", v2, SUBTLE,
           strerror(errno), program_invocation_name, RESET);
   free_s(&v1);
   free_s(&v2);

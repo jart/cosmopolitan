@@ -151,9 +151,11 @@ if [ "${PLAT#*clang}" != "${PLAT}" ]; then
       FIRST=0
       continue
     fi
+    TRAPV= # clang handles -f{,no-}{trap,wrap}v weird
     # removes flags clang whines about
     case "$x" in
       -gstabs) ;;
+      -ftrapv) ;;
       -ffixed-*) ;;
       -fcall-saved*) ;;
       -fsignaling-nans) ;;
@@ -161,6 +163,7 @@ if [ "${PLAT#*clang}" != "${PLAT}" ]; then
       -fno-fp-int-builtin-inexact) ;;
       -Wno-unused-but-set-variable) ;;
       -Wunsafe-loop-optimizations) ;;
+      -mdispatch-scheduler) ;;
       -ftracer) ;;
       -frounding-math) ;;
       -fmerge-constants) ;;
@@ -189,6 +192,7 @@ if [ "${PLAT#*clang}" != "${PLAT}" ]; then
       -fschedule-insns) ;;
       -fno-semantic-interposition) ;;
       -mno-fentry) ;;
+      -f*shrink-wrap) ;;
       -f*schedule-insns2) ;;
       -fvect-cost-model=*) ;;
       -fsimd-cost-model=*) ;;
@@ -228,6 +232,7 @@ if [ "${PLAT#*clang}" != "${PLAT}" ]; then
         ;;
     esac
   done
+  set -- "$@" -fno-stack-protector
 else
   # removes flags only clang supports
   FIRST=1

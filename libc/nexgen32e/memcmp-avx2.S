@@ -28,6 +28,7 @@
 /	@note	AVX2 requires Haswell (2014+) or Excavator (2015+)
 /	@see	libc/nexgen32e/memcmp.S (for benchmarks)
 /	@asyncsignalsafe
+	.align	16
 memcmp$avx2:
 	.leafprologue
 	.profilable
@@ -58,7 +59,7 @@ memcmp$avx2:
 	jz	5b
 	jmp	8f
 7:	xor	%eax,%eax
-8:	vxorps	%ymm0,%ymm0,%ymm0
+8:	vpxor	%ymm0,%ymm0,%ymm0
 	.leafepilogue
 	.endfn	memcmp$avx2,globl,hidden
 	.source	__FILE__

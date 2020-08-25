@@ -19,8 +19,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
 #include "libc/assert.h"
-#include "libc/bits/safemacros.h"
 #include "libc/limits.h"
+#include "libc/macros.h"
 #include "libc/mem/mem.h"
 
 /**
@@ -33,79 +33,77 @@
  *     topological sorting as a byproduct.” ──D.E. Knuth
  */
 
-struct Vertex {
-  uint32_t Vi;
-  uint32_t Ei;
-  uint32_t index;
-  uint32_t lowlink;
-  bool onstack;
-  bool selfreferential;
-};
-
-struct TarjanStack {
-  size_t i;
-  size_t n;
-  uint32_t *p;
-};
-
 struct Tarjan {
-  uint32_t Vn;
-  uint32_t En;
-  struct Vertex *V;
-  const uint32_t (*E)[2];
-  uint32_t *R;
-  uint32_t *C;
-  uint32_t Ci;
-  uint32_t Ri;
-  uint32_t index;
-  struct TarjanStack S;
+  int Vn, En, Ci, Ri, *R, *C, index;
+  const int (*E)[2];
+  struct Vertex {
+    int Vi;
+    int Ei;
+    int index;
+    int lowlink;
+    bool onstack;
+    bool selfreferential;
+  } * V;
+  struct TarjanStack {
+    int i;
+    int n;
+    int *p;
+  } S;
 };
 
-static uint32_t TarjanPush(struct TarjanStack *st, uint32_t Vi) {
-  if (st->i < st->n || grow(&st->p, &st->n, sizeof(uint32_t), 0)) {
-    return (st->p[st->i++] = Vi);
-  } else {
-    return -1;
+static bool TarjanPush(struct Tarjan *t, int v) {
+  int *q;
+  assert(t->S.i >= 0);
+  assert(t->S.n >= 0);
+  assert(0 <= v && v < t->Vn);
+  if (t->S.i == t->S.n) {
+    if ((q = realloc(t->S.p, (t->S.n + (t->S.n >> 1) + 8) * sizeof(*t->S.p)))) {
+      t->S.p = q;
+    } else {
+      return false;
+    }
   }
+  t->S.p[t->S.i++] = v;
+  return true;
 }
 
-static uint32_t TarjanPop(struct TarjanStack *st) {
-  assert(st->i != 0);
-  return st->p[--st->i];
+static int TarjanPop(struct Tarjan *t) {
+  assert(t->S.i > 0);
+  return t->S.p[--t->S.i];
 }
 
-static int TarjanConnect(struct Tarjan **tj, uint32_t Vi) {
-  struct Vertex *v = &(*tj)->V[Vi];
-  v->index = (*tj)->index;
-  v->lowlink = (*tj)->index;
-  v->onstack = true;
-  (*tj)->index++;
-  if (TarjanPush(&(*tj)->S, Vi) == -1) return -1;
-  uint32_t fs = (*tj)->V[Vi].Ei;
+static bool TarjanConnect(struct Tarjan *t, int v) {
+  int fs, w, e;
+  assert(0 <= v && v < t->Vn);
+  t->V[v].index = t->index;
+  t->V[v].lowlink = t->index;
+  t->V[v].onstack = true;
+  t->index++;
+  if (!TarjanPush(t, v)) return false;
+  fs = t->V[v].Ei;
   if (fs != -1) {
-    for (uint32_t Ei = fs; Ei < (*tj)->En && Vi == (*tj)->E[Ei][0]; ++Ei) {
-      struct Vertex *w = &(*tj)->V[(*tj)->E[Ei][1]];
-      if (!w->index) {
-        if (TarjanConnect(tj, w->Vi) == -1) return -1;
-        v->lowlink = min(v->lowlink, w->lowlink);
-      } else if (w->onstack) {
-        v->lowlink = min(v->lowlink, w->index);
+    for (e = fs; e < t->En && v == t->E[e][0]; ++e) {
+      w = t->E[e][1];
+      if (!t->V[w].index) {
+        if (!TarjanConnect(t, t->V[w].Vi)) return false;
+        t->V[v].lowlink = MIN(t->V[v].lowlink, t->V[w].lowlink);
+      } else if (t->V[w].onstack) {
+        t->V[v].lowlink = MIN(t->V[v].lowlink, t->V[w].index);
       }
       if (w == v) {
-        w->selfreferential = true;
+        t->V[w].selfreferential = true;
       }
     }
   }
-  if (v->lowlink == v->index) {
-    struct Vertex *w;
+  if (t->V[v].lowlink == t->V[v].index) {
     do {
-      w = &(*tj)->V[TarjanPop(&(*tj)->S)];
-      w->onstack = false;
-      (*tj)->R[(*tj)->Ri++] = w->Vi;
+      w = TarjanPop(t);
+      t->V[w].onstack = false;
+      t->R[t->Ri++] = t->V[w].Vi;
     } while (w != v);
-    if ((*tj)->C) (*tj)->C[(*tj)->Ci++] = (*tj)->Ri;
+    if (t->C) t->C[t->Ci++] = t->Ri;
   }
-  return 0;
+  return true;
 }
 
 /**
@@ -133,51 +131,53 @@ static int TarjanConnect(struct Tarjan **tj, uint32_t Vi) {
  * @error ENOMEM
  * @note Tarjan's Algorithm is O(|V|+|E|)
  */
-int tarjan(uint32_t vertex_count, const uint32_t (*edges)[2],
-           uint32_t edge_count, uint32_t out_sorted[],
-           uint32_t out_opt_components[], uint32_t *out_opt_componentcount) {
-  assert(edge_count <= INT_MAX);
-  assert(vertex_count <= INT_MAX);
-  for (unsigned i = 0; i < edge_count; ++i) {
+int tarjan(int vertex_count, const int (*edges)[2], int edge_count,
+           int out_sorted[], int out_opt_components[],
+           int *out_opt_componentcount) {
+  int i, rc, v, e;
+  struct Tarjan *t;
+  assert(0 <= edge_count && edge_count <= INT_MAX);
+  assert(0 <= vertex_count && vertex_count <= INT_MAX);
+  for (i = 0; i < edge_count; ++i) {
     if (i) assert(edges[i - 1][0] <= edges[i][0]);
     assert(edges[i][0] < vertex_count);
     assert(edges[i][1] < vertex_count);
   }
-  int rc;
-  struct Tarjan *tj;
-  if ((tj = calloc(1, (sizeof(struct Tarjan) +
+  if (!(t = calloc(1, (sizeof(struct Tarjan) +
                        sizeof(struct Vertex) * vertex_count)))) {
-    tj->V = (struct Vertex *)((char *)tj + sizeof(struct Tarjan));
-    tj->Vn = vertex_count;
-    tj->E = edges;
-    tj->En = edge_count;
-    tj->R = out_sorted;
-    tj->C = out_opt_components;
-    tj->index = 1;
-    uint32_t Vi, Ei;
-    for (Vi = 0; Vi < tj->Vn; ++Vi) {
-      tj->V[Vi].Vi = Vi;
-      tj->V[Vi].Ei = -1u;
-    }
-    for (Ei = 0, Vi = -1u; Ei < tj->En; ++Ei) {
-      if (tj->E[Ei][0] == Vi) continue;
-      Vi = tj->E[Ei][0];
-      tj->V[Vi].Ei = Ei;
-    }
-    rc = 0;
-    for (Vi = 0; Vi < tj->Vn; ++Vi) {
-      if (!tj->V[Vi].index) {
-        if ((rc = TarjanConnect(&tj, Vi)) == -1) {
-          break;
-        }
+    return -1;
+  }
+  t->V = (struct Vertex *)((char *)t + sizeof(struct Tarjan));
+  t->Vn = vertex_count;
+  t->E = edges;
+  t->En = edge_count;
+  t->R = out_sorted;
+  t->C = out_opt_components;
+  t->index = 1;
+  for (v = 0; v < t->Vn; ++v) {
+    t->V[v].Vi = v;
+    t->V[v].Ei = -1;
+  }
+  for (e = 0, v = -1; e < t->En; ++e) {
+    if (t->E[e][0] == v) continue;
+    v = t->E[e][0];
+    t->V[v].Ei = e;
+  }
+  rc = 0;
+  for (v = 0; v < t->Vn; ++v) {
+    if (!t->V[v].index) {
+      if (!TarjanConnect(t, v)) {
+        free(t->S.p);
+        free(t);
+        return -1;
       }
     }
-    free(tj->S.p);
-    assert(tj->Ri == vertex_count);
-    if (out_opt_components) *out_opt_componentcount = tj->Ci;
-  } else {
-    rc = -1;
   }
-  free(tj);
+  if (out_opt_components) {
+    *out_opt_componentcount = t->Ci;
+  }
+  assert(t->Ri == vertex_count);
+  free(t->S.p);
+  free(t);
   return rc;
 }

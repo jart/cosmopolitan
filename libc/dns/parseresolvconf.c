@@ -56,9 +56,7 @@ int parseresolvconf(struct ResolvConf *resolv, struct FILE *f) {
     if ((directive = strtok_r(line, " \t\r\n\v", &tok)) &&
         (value = strtok_r(NULL, " \t\r\n\v", &tok))) {
       if ((strcmp(directive, "nameserver") == 0 &&
-           inet_pton(AF_INET, value, &nameserver.sin_addr.s_addr) == 1) ||
-          (strcmp(directive, "search") == 0 && strcmp(value, "local") == 0 &&
-           (nameserver.sin_addr.s_addr = htonl(INADDR_LOOPBACK)))) {
+           inet_pton(AF_INET, value, &nameserver.sin_addr.s_addr) == 1)) {
         if (append(&resolv->nameservers, &nameserver) != -1) ++rc;
       }
     }

@@ -19,18 +19,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/popcnt.h"
 
-static uint32_t popcnt32(uint32_t x) {
-  x -= (x >> 1) & 0x55555555;
-  x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
-  return (((x + (x >> 4)) & 0xF0F0F0F) * 0x1010101) >> 24;
-}
-
-unsigned long(popcnt)(unsigned long x) {
-  unsigned long r;
-  r = 0;
-  while (x) {
-    r += popcnt32(x);
-    x >>= 32;
-  }
-  return r;
+uint64_t(popcnt)(uint64_t x) {
+  uint32_t r;
+  x = x - ((x >> 1) & 0x5555555555555555);
+  x = ((x >> 2) & 0x3333333333333333) + (x & 0x3333333333333333);
+  x = (x + (x >> 4)) & 0x0f0f0f0f0f0f0f0f;
+  x = (x + (x >> 32)) & 0xffffffff;
+  x = x + (x >> 16);
+  x = (x + (x >> 8)) & 0x0000007f;
+  return x;
 }

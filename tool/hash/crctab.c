@@ -20,9 +20,9 @@
 #include "libc/bits/bits.h"
 #include "libc/conv/conv.h"
 #include "libc/macros.h"
+#include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
 
 /**
  * @fileoverview CRC Lookup Table Generator

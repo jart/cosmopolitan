@@ -29,9 +29,9 @@
 /	@return	unsigned char subtraction at stop index
 /	@asyncsignalsafe
 	.initbss 300,_init_memcmp
-hook$memcmp:
+__memcmp:
 	.quad	0
-	.endobj	hook$memcmp,globl,hidden
+	.endobj	__memcmp,globl,hidden
 	.previous
 
 	.init.start 300,_init_memcmp

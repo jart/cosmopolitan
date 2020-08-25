@@ -40,7 +40,22 @@
    [("comdat"
      ":req"
      ":vararg"
-     ["@" ("function"
+     ["@" (;; calculates offset relative to tls block end
+           ;; load: mov %fs:boop@tpoff,%eax
+           ;; addr: mov %fs:0,%rax
+           ;;       lea x1@tpoff(%rax),%rax
+           ;; addr: mov %fs:0,%rax
+           ;;       add $x1@tpoff,%rax
+           "tpoff"
+           ;; allocates TLS_index structure
+           ;; lea x@tlsgd(,%rbx,1),%rdi
+           ;; call __tls_get_addr@plt
+           "tlsgd"
+           "tlsld" 
+           "dtpmod"
+           "dtpoff"
+           "gottpoff"
+           "function"
            "object"
            "got"
            "size"
@@ -154,7 +169,7 @@
      ;;     * mov $'c,%eax
      ;;     * mov $'\n,%eax
      ;;
-     ("[ \t]\\$\\(\\(?:'\\(?:'\\|\\s\"\\|\\s\\.\\|.\\)\\|\\(?:0x[[:xdigit:]]+\\|0b[01]+\\|[1-9][0-9]*\\|0[0-7]*\\)\\(?:[fb]\\|u?l?l?\\)\\|[-*/&^|()%<>~+]\\|[_.[:alpha:]][-_.[:alnum:]]*\\)+\\)"
+     ("[ \t,]\\$\\(\\(?:'\\(?:'\\|\\s\"\\|\\s\\.\\|.\\)\\|\\(?:0x[[:xdigit:]]+\\|0b[01]+\\|[1-9][0-9]*\\|0[0-7]*\\)\\(?:[fb]\\|u?l?l?\\)\\|[-*/&^|()%<>~+]\\|[_.[:alpha:]][-_.[:alnum:]]*\\)+\\)"
       1 font-lock-constant-face)
 
      (cosmo-asm-doctag-keywords)
@@ -188,8 +203,7 @@
       1 font-lock-keyword-face)
 
      ;; it's complicated
-     (,asm-mode-gas-qualifiers-regexp
-      . font-lock-type-face))
+     (,asm-mode-gas-qualifiers-regexp . font-lock-type-face))
 
    cpp-font-lock-keywords
 

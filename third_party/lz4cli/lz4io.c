@@ -54,6 +54,7 @@
 #include "third_party/lz4cli/lz4hc.h"     /* still required for legacy format */
 #define LZ4F_STATIC_LINKING_ONLY
 #include "libc/runtime/runtime.h"
+#include "libc/bits/initializer.h"
 #include "third_party/lz4cli/lz4frame.h"
 
 

@@ -19,15 +19,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/itoa8.h"
 #include "libc/bits/bits.h"
+#include "libc/bits/initializer.h"
 #include "libc/str/str.h"
 
 struct Itoa8 kItoa8;
 
-static nooptimize textstartup void itoa8init(void) {
-  size_t i;
+static textstartup void itoa8_init(void) {
+  int i;
   uint8_t z;
   char p[4];
-  /*102*/
   for (i = 0; i < 256; ++i) {
     memset(p, 0, sizeof(p));
     if (i < 10) {
@@ -48,4 +48,4 @@ static nooptimize textstartup void itoa8init(void) {
   }
 }
 
-INITIALIZER(301, _init_itoa8, itoa8init());
+const void *const itoa8_init_ctor[] initarray = {itoa8_init};

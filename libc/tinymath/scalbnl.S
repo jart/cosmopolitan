@@ -20,21 +20,22 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_scalbnf:
+/	Returns 𝑥 × 𝑟ʸ where 𝑟 is radix of hardware architecture.
+/
+/	@param	𝑥 is long double passed on stack
+/	@param	𝑦 is exponent via %edi
+/	@see	FLT_RADIX
+tinymath_scalbnl:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
-	push	%rax
-	movss	%xmm0,-4(%rbp)
-	flds	-4(%rbp)
-	movl	%edi,-4(%rbp)
-	fildl	-4(%rbp)
-	fxch	%st(1)
+	fldt	16(%rsp)
+	push	%rdi
+	fildl	(%rsp)
+	fxch
 	fscale
 	fstp	%st(1)
-	fstps	-4(%rbp)
-	movss	-4(%rbp),%xmm0
 	leave
 	ret
-	.endfn	tinymath_scalbnf,globl
-	.alias	tinymath_scalbnf,scalbnf
+	.endfn	tinymath_scalbnl,globl
+	.alias	tinymath_scalbnl,scalbnl

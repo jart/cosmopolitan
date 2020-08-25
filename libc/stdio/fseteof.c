@@ -19,4 +19,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/internal.h"
 
-long fseteof(FILE *f) { return fseterr(f, -1); }
+long fseteof(FILE *f) {
+  return fseterr(f, -1);
+}

@@ -17,11 +17,19 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "dsp/core/twixt8.h"
+#include "dsp/scale/scale.h"
+#include "dsp/tty/quant.h"
+#include "dsp/tty/tty.h"
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/ioctl.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/winsize.h"
+#include "libc/conv/conv.h"
+#include "libc/dce.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -34,50 +42,127 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
+#include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/termios.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/stb/stb_image.h"
-
-#define LERP(X, Y, P) (((X) + (SAR((P) * ((Y) - (X)), 8))) & 0xff)
+#include "tool/viz/lib/graphic.h"
 
 static struct Flags {
   const char *out;
   bool subpixel;
+  bool unsharp;
+  bool dither;
+  bool ruler;
+  long half;
+  bool full;
+  long width;
+  long height;
+  enum TtyBlocksSelection blocks;
+  enum TtyQuantizationAlgorithm quant;
 } g_flags;
 
 static noreturn void PrintUsage(int rc, FILE *f) {
   fprintf(f, "Usage: %s%s", program_invocation_name, "\
  [FLAGS] [PATH]\n\
 \n\
-Flags:\n\
+FLAGS\n\
+\n\
   -o PATH    output path\n\
+  -w INT     manual width\n\
+  -w INT     manual height\n\
+  -4         unicode blocks\n\
+  -a         ansi color mode\n\
+  -t         true color mode\n\
+  -2         use half blocks\n\
+  -3         ibm cp437 blocks\n\
+  -f         display full size\n\
+  -s         unsharp sharpening\n\
+  -x         xterm256 color mode\n\
+  -d         hilbert curve dithering\n\
+  -r         display pixel ruler on sides\n\
   -p         convert to subpixel layout\n\
   -v         increases verbosity\n\
   -?         shows this information\n\
+\n\
+EXAMPLES\n\
+\n\
+  printimage.com -sxd lemurs.jpg  # 256-color dither unsharp\n\
+\n\
 \n");
   exit(rc);
 }
 
+static int ParseNumberOption(const char *arg) {
+  long x;
+  x = strtol(arg, NULL, 0);
+  if (!(1 <= x && x <= INT_MAX)) {
+    fprintf(stderr, "invalid flexidecimal: %s\n\n", arg);
+    exit(EXIT_FAILURE);
+  }
+  return x;
+}
+
 static void GetOpts(int *argc, char *argv[]) {
   int opt;
+  struct winsize ws;
+  g_flags.quant = kTtyQuantTrue;
+  g_flags.blocks = IsWindows() ? kTtyBlocksCp437 : kTtyBlocksUnicode;
   if (*argc == 2 &&
       (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-help") == 0)) {
     PrintUsage(EXIT_SUCCESS, stdout);
   }
-  while ((opt = getopt(*argc, argv, "?vpo:")) != -1) {
+  while ((opt = getopt(*argc, argv, "?vpfrtxads234o:w:h:")) != -1) {
     switch (opt) {
       case 'o':
         g_flags.out = optarg;
         break;
-      case 'v':
-        ++g_loglevel;
+      case 'd':
+        g_flags.dither = true;
+        break;
+      case 's':
+        g_flags.unsharp = true;
+        break;
+      case 'w':
+        g_flags.width = ParseNumberOption(optarg);
+        break;
+      case 'h':
+        g_flags.height = ParseNumberOption(optarg);
+        break;
+      case 'f':
+        g_flags.full = true;
+        break;
+      case '2':
+        g_flags.half = true;
+        break;
+      case 'r':
+        g_flags.ruler = true;
         break;
       case 'p':
         g_flags.subpixel = true;
+        break;
+      case 'a':
+        g_flags.quant = kTtyQuantAnsi;
+        break;
+      case 'x':
+        g_flags.quant = kTtyQuantXterm256;
+        break;
+      case 't':
+        g_flags.quant = kTtyQuantTrue;
+        break;
+      case '3':
+        g_flags.blocks = kTtyBlocksCp437;
+        break;
+      case '4':
+        g_flags.blocks = kTtyBlocksUnicode;
+        break;
+      case 'v':
+        ++g_loglevel;
         break;
       case '?':
         PrintUsage(EXIT_SUCCESS, stdout);
@@ -89,6 +174,16 @@ static void GetOpts(int *argc, char *argv[]) {
     if (!g_flags.out) g_flags.out = "-";
     argv[(*argc)++] = "-";
   }
+  if (!g_flags.full && (!g_flags.width || !g_flags.width)) {
+    ws.ws_col = 80;
+    ws.ws_row = 24;
+    if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) != -1 ||
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) != -1) {
+      g_flags.width = ws.ws_col * (1 + !g_flags.half);
+      g_flags.height = ws.ws_row * 2;
+    }
+  }
+  ttyquantsetup(g_flags.quant, kTtyQuantRgb, g_flags.blocks);
 }
 
 static unsigned char ChessBoard(unsigned y, unsigned x, unsigned char a,
@@ -102,15 +197,6 @@ static unsigned char AlphaBackground(unsigned y, unsigned x) {
 
 static unsigned char OutOfBoundsBackground(unsigned y, unsigned x) {
   return ChessBoard(y, x, 40, 80);
-}
-
-static unsigned char Opacify(long yn, long xn, const unsigned char P[yn][xn],
-                             const unsigned char A[yn][xn], long y, long x) {
-  if ((0 <= y && y < yn) && (0 <= x && x < xn)) {
-    return LERP(AlphaBackground(y, x), P[y][x], A[y][x]);
-  } else {
-    return OutOfBoundsBackground(y, x);
-  }
 }
 
 static void PrintRulerRight(long yn, long xn, long y, long x,
@@ -133,8 +219,8 @@ static void PrintRulerRight(long yn, long xn, long y, long x,
 }
 
 static void PrintImageImpl(long syn, long sxn, unsigned char RGB[3][syn][sxn],
-                           long y0, long yn, long x0, long xn, bool rule,
-                           long dy, long dx) {
+                           long y0, long yn, long x0, long xn, long dy,
+                           long dx) {
   long y, x;
   bool didhalfy, didfirstx;
   unsigned char a[3], b[3];
@@ -157,31 +243,56 @@ static void PrintImageImpl(long syn, long sxn, unsigned char RGB[3][syn][sxn],
              b[2], dy > 1 ? u'▄' : u'▐');
       didfirstx = true;
     }
-    if (rule) PrintRulerRight(yn, xn, y, x, &didhalfy);
+    if (g_flags.ruler) {
+      PrintRulerRight(yn, xn, y, x, &didhalfy);
+    }
   }
   printf("\e[0m\n");
 }
 
 static void PrintImage(long syn, long sxn, unsigned char RGB[3][syn][sxn],
-                       long y0, long yn, long x0, long xn, bool rule) {
-  PrintImageImpl(syn, sxn, RGB, y0, yn, x0, xn, rule, 2, 1);
+                       long y0, long yn, long x0, long xn) {
+  PrintImageImpl(syn, sxn, RGB, y0, yn, x0, xn, 2, 1);
 }
 
 static void PrintImageLR(long syn, long sxn, unsigned char RGB[3][syn][sxn],
-                         long y0, long yn, long x0, long xn, bool rule) {
-  PrintImageImpl(syn, sxn, RGB, y0, yn, x0, xn, rule, 1, 2);
+                         long y0, long yn, long x0, long xn) {
+  PrintImageImpl(syn, sxn, RGB, y0, yn, x0, xn, 1, 2);
 }
 
 static void *Deblinterlace(long dyn, long dxn, unsigned char dst[3][dyn][dxn],
-                           long syn, long sxn,
-                           const unsigned char src[syn][sxn][4], long y0,
+                           long syn, long sxn, long scn,
+                           const unsigned char src[syn][sxn][scn], long y0,
                            long yn, long x0, long xn) {
   long y, x;
+  unsigned char c;
   for (y = y0; y < yn; ++y) {
     for (x = x0; x < xn; ++x) {
-      dst[0][y][x] = src[y][x][0];
-      dst[1][y][x] = src[y][x][1];
-      dst[2][y][x] = src[y][x][2];
+      switch (scn) {
+        case 1:
+          c = src[y][x][0];
+          dst[0][y][x] = c;
+          dst[1][y][x] = c;
+          dst[2][y][x] = c;
+          break;
+        case 2:
+          c = twixt8(AlphaBackground(y, x), src[y][x][0], src[y][x][1]);
+          dst[0][y][x] = c;
+          dst[1][y][x] = c;
+          dst[2][y][x] = c;
+          break;
+        case 3:
+          dst[0][y][x] = src[y][x][0];
+          dst[1][y][x] = src[y][x][1];
+          dst[2][y][x] = src[y][x][2];
+          break;
+        case 4:
+          c = AlphaBackground(y, x);
+          dst[0][y][x] = twixt8(c, src[y][x][0], src[y][x][3]);
+          dst[1][y][x] = twixt8(c, src[y][x][1], src[y][x][3]);
+          dst[2][y][x] = twixt8(c, src[y][x][2], src[y][x][3]);
+          break;
+      }
     }
   }
   return dst;
@@ -209,32 +320,44 @@ static void *DeblinterlaceSubpixelBgr(long dyn, long dxn,
   return dst;
 }
 
-static void ProcessImage(long syn, long sxn, unsigned char RGB[syn][sxn][4],
-                         long cn) {
-  if (g_flags.subpixel) {
-    PrintImageLR(
-        syn, sxn * 3,
-        DeblinterlaceSubpixelBgr(
-            syn, sxn,
-            gc(memalign(32, sizeof(unsigned char) * syn * sxn * 3 * 3)), syn,
-            sxn, RGB, 0, syn, 0, sxn),
-        0, syn, 0, sxn * 3, true);
+static void PrintImageSerious(long yn, long xn, unsigned char RGB[3][yn][xn],
+                              struct TtyRgb TTY[yn][xn], char *vt) {
+  char *p;
+  long y, x;
+  struct TtyRgb bg = {0x12, 0x34, 0x56, 0};
+  struct TtyRgb fg = {0x12, 0x34, 0x56, 0};
+  if (g_flags.unsharp) unsharp(3, yn, xn, RGB, yn, xn);
+  if (g_flags.dither) dither(yn, xn, RGB, yn, xn);
+  for (y = 0; y < yn; ++y) {
+    for (x = 0; x < xn; ++x) {
+      TTY[y][x] = rgb2tty(RGB[0][y][x], RGB[1][y][x], RGB[2][y][x]);
+    }
+  }
+  p = ttyraster(vt, (void *)TTY, yn, xn, bg, fg);
+  p = stpcpy(p, "\r\e[0m");
+  ttywrite(STDOUT_FILENO, vt, p - vt);
+}
+
+static void ProcessImage(long yn, long xn, unsigned char RGB[3][yn][xn]) {
+  if (g_flags.half) {
+    if (g_flags.subpixel) {
+      PrintImageLR(yn, xn * 3, RGB, 0, yn, 0, xn * 3);
+    } else {
+      PrintImage(yn, xn, RGB, 0, yn, 0, xn);
+    }
   } else {
-    PrintImage(
-        syn, sxn,
-        Deblinterlace(syn, sxn,
-                      gc(memalign(32, sizeof(unsigned char) * syn * sxn * 3)),
-                      syn, sxn, RGB, 0, syn, 0, sxn),
-        0, syn, 0, sxn, true);
+    PrintImageSerious(
+        yn, xn, RGB, gc(memalign(32, sizeof(struct TtyRgb) * yn * xn)),
+        gc(memalign(32, ((yn * xn * strlen("\e[48;2;255;48;2;255m▄")) +
+                         (yn * strlen("\e[0m\r\n")) + 128))));
   }
 }
 
 void WithImageFile(const char *path,
-                   void fn(long syn, long sxn, unsigned char RGB[syn][sxn][4],
-                           long cn)) {
+                   void fn(long yn, long xn, unsigned char RGB[3][yn][xn])) {
   struct stat st;
-  void *map, *data;
-  int fd, yn, xn, cn;
+  void *map, *data, *data2;
+  int fd, yn, xn, cn, dyn, dxn;
   CHECK_NE(-1, (fd = open(path, O_RDONLY)), "%s", path);
   CHECK_NE(-1, fstat(fd, &st));
   CHECK_GT(st.st_size, 0);
@@ -243,17 +366,33 @@ void WithImageFile(const char *path,
   CHECK_NE(MAP_FAILED,
            (map = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0)));
   CHECK_NOTNULL(
-      (data = stbi_load_from_memory(map, st.st_size, &xn, &yn, &cn, 4)), "%s",
-      path);
+      (data = gc(stbi_load_from_memory(map, st.st_size, &xn, &yn, &cn, 0))),
+      "%s", path);
   CHECK_NE(-1, munmap(map, st.st_size));
   CHECK_NE(-1, close(fd));
-  fn(yn, xn, data, 4);
-  free(data);
+  if (g_flags.subpixel) {
+    data = DeblinterlaceSubpixelBgr(yn, xn, gc(memalign(32, yn * xn * 4 * 3)),
+                                    yn, xn, data, 0, yn, 0, xn);
+    xn *= 3;
+  } else {
+    data = Deblinterlace(yn, xn, gc(memalign(32, yn * xn * 4)), yn, xn, cn,
+                         data, 0, yn, 0, xn);
+    cn = 3;
+  }
+  if (g_flags.height && g_flags.width) {
+    dyn = g_flags.height;
+    dxn = g_flags.width;
+    data = EzGyarados(3, dyn, dxn, gc(memalign(32, dyn * dxn * 3)), cn, yn, xn,
+                      data, 0, cn, dyn, dxn, yn, xn, 0, 0, 0, 0);
+    yn = dyn;
+    xn = dxn;
+  }
+  fn(yn, xn, data);
 }
 
 int main(int argc, char *argv[]) {
   int i;
-  showcrashreports();
+  cancolor();
   GetOpts(&argc, argv);
   stbi_set_unpremultiply_on_load(true);
   for (i = optind; i < argc; ++i) {

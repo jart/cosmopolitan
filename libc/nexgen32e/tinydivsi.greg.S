@@ -21,17 +21,22 @@
 
 /	Support code for fast integer division by Si units.
 /
+/	Division by magnums is described in Hacker's Delight and is
+/	usually generated automatically by compilers, but sadly not
+/	when we optimize for size and idiv goes at least 10x slower
+/	so we do this which saves space while avoiding build tuning
+/
 /	@param	rdi is number to divide
 /	@param	cl is magnum #1
 /	@param	rdx is magnum #2
-/	@return	truncated numerator
+/	@return	quotient
 tinydivsi:
 	.leafprologue
 	mov	%rdi,%rax
 	imul	%rdx
 	mov	%rdx,%rax
 	sar	%cl,%rax
-	sar	$0x3f,%rdi
+	sar	$63,%rdi
 	sub	%rdi,%rax
 	.leafepilogue
 	.endfn	tinydivsi,globl

@@ -7,6 +7,8 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § runtime                                                   ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+struct SymbolTable;
+
 struct StackFrame {
   struct StackFrame *next;
   intptr_t addr;
@@ -14,31 +16,31 @@ struct StackFrame {
 
 typedef long jmp_buf[8] aligned(CACHELINE);
 
-extern int g_argc;                              /* CRT */
-extern char **g_argv;                           /* CRT */
-extern char **environ;                          /* CRT */
-extern unsigned long *g_auxv;                   /* CRT */
-extern jmp_buf g_winmain;                       /* CRT */
-extern char *program_invocation_name;           /* RII */
-extern char *program_invocation_short_name;     /* RII */
-extern uint64_t g_syscount;                     /* RII */
-extern const uint64_t kStartTsc;                /* RII */
-extern const char kTmpPath[];                   /* RII */
-extern const char kNtSystemDirectory[];         /* RII */
-extern const char kNtWindowsDirectory[];        /* RII */
-extern unsigned char _base[] aligned(PAGESIZE); /* αpε */
-extern char _ehead aligned(PAGESIZE);           /* αpε */
-extern char _ereal;                             /* αpε */
-extern char __privileged_start;                 /* αpε */
-extern char __test_start;                       /* αpε */
-extern char __ro;                               /* αpε */
-extern char _etext aligned(PAGESIZE);           /* αpε */
-extern char __piro_start;                       /* αpε */
-extern char _edata aligned(PAGESIZE);           /* αpε */
-extern char __piro_end;                         /* αpε */
-extern char _end aligned(PAGESIZE);             /* αpε */
-extern uint8_t __zip_start[];                   /* αpε */
-extern uint8_t __zip_end[];                     /* αpε */
+extern int g_argc;                               /* CRT */
+extern char **g_argv;                            /* CRT */
+extern char **environ;                           /* CRT */
+extern unsigned long *g_auxv;                    /* CRT */
+extern jmp_buf g_winmain;                        /* CRT */
+extern char *program_invocation_name;            /* RII */
+extern char *program_invocation_short_name;      /* RII */
+extern uint64_t g_syscount;                      /* RII */
+extern const uint64_t kStartTsc;                 /* RII */
+extern const char kTmpPath[];                    /* RII */
+extern const char kNtSystemDirectory[];          /* RII */
+extern const char kNtWindowsDirectory[];         /* RII */
+extern unsigned char _base[] aligned(PAGESIZE);  /* αpε */
+extern unsigned char _ehead[] aligned(PAGESIZE); /* αpε */
+extern unsigned char _etext[] aligned(PAGESIZE); /* αpε */
+extern unsigned char _edata[] aligned(PAGESIZE); /* αpε */
+extern unsigned char _end[] aligned(PAGESIZE);   /* αpε */
+extern unsigned char _ereal;                     /* αpε */
+extern unsigned char __privileged_start;         /* αpε */
+extern unsigned char __test_start;               /* αpε */
+extern unsigned char __ro;                       /* αpε */
+extern unsigned char *__relo_start[];            /* αpε */
+extern unsigned char *__relo_end[];              /* αpε */
+extern uint8_t __zip_start[];                    /* αpε */
+extern uint8_t __zip_end[];                      /* αpε */
 
 long missingno();
 void mcount(void);
@@ -70,6 +72,8 @@ void loadxmm(void *);
 void peekall(void);
 int issetugid(void);
 void weakfree(void *) libcesque;
+void __hook(void (*)(void), struct SymbolTable *);
+bool isheap(void *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § runtime » optimizations                                   ─╬─│┼

@@ -94,7 +94,7 @@ static void testmem_fini(void) {
   }
 }
 
-static void testmem_init(void) {
+static textstartup void testmem_init(void) {
   atexit(testmem_fini);
   g_testmem.p = g_testmem_scratch[0];
   g_testmem.n = ARRAYLEN(g_testmem_scratch[0]);

@@ -30,11 +30,12 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"
+#include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/ezmap.h"
 #include "libc/runtime/gc.h"
-#include "libc/runtime/mappings.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/knuthmultiplicativehash.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/map.h"
@@ -53,7 +54,7 @@
  * 50k+ lines of make code in ~80ms using one core and a meg of ram.
  */
 
-static const char *const kSourceExts[] = {".s", ".S", ".c", ".cc", ".cpp"};
+static const char kSourceExts[][5] = {".s", ".S", ".c", ".cc", ".cpp"};
 static alignas(16) const char kIncludePrefix[] = "include \"";
 
 static const char *const kModelessPackages[] = {
@@ -141,7 +142,9 @@ void Rehash(void) {
 
 uint32_t GetSourceId(const char *name, size_t len) {
   size_t i, step;
-  uint32_t hash = Hash(name, len);
+  uint32_t hash;
+  i = 0;
+  hash = Hash(name, len);
   if (sources.n) {
     step = 0;
     do {
@@ -162,7 +165,7 @@ uint32_t GetSourceId(const char *name, size_t len) {
     } while (sources.p[i].hash);
   }
   sources.p[i].hash = hash;
-  sources.p[i].name = concat(&strings, name, len);
+  sources.p[i].name = CONCAT(&strings.p, &strings.i, &strings.n, name, len);
   strings.p[strings.i++] = '\0';
   return (sources.p[i].id = g_sourceid++);
 }
@@ -248,7 +251,7 @@ const char *StripExt(const char *s) {
     __cxa_atexit(free_s, &p, NULL);
   }
   i = 0;
-  CONCAT(&p, &i, &n, s, strlen(s));
+  CONCAT(&p, &i, &n, s, strlen(s) + 1);
   dot = strrchr(p, '.');
   if (dot) *dot = '\0';
   return p;

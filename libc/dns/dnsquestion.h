@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_DNS_DNSQUESTION_H_
 #define COSMOPOLITAN_LIBC_DNS_DNSQUESTION_H_
+#ifndef __STRICT_ANSI__
 #include "libc/dns/dns.h"
 #include "libc/sysv/errfuns.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -29,4 +30,5 @@ forceinline int serializednsquestion(uint8_t *buf, size_t size,
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* !ANSI */
 #endif /* COSMOPOLITAN_LIBC_DNS_DNSQUESTION_H_ */

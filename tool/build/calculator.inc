@@ -37,6 +37,8 @@ M(2, g, "rem", Remainder, remainderl(x, y), "float remainder")
 
 M(0, i, "false", False, 0, "0")
 M(0, i, "true", True, 1, "1")
+M(0, i, "intmin", IntMin, INT128_MIN, "native integer minimum")
+M(0, i, "intmax", IntMax, INT128_MAX, "native integer maximum")
 M(0, f, "e", Euler, M_E, "𝑒")
 M(0, f, "pi", Fldpi, fldpi(), "π")
 M(0, f, "epsilon", Epsilon, EPSILON, "ɛ")
@@ -54,7 +56,7 @@ M(1, g, "exp2", Exp2, exp2l(x), "2ˣ")
 M(1, g, "exp10", Exp10, exp10l(x), "10ˣ")
 M(2, g, "ldexp", Ldexp, ldexpl(x, y), "𝑥×2ʸ")
 
-M(2, f, "log", Log, logl(x), "logₑ𝑥")
+M(1, f, "log", Log, logl(x), "logₑ𝑥")
 M(1, g, "log2", Log2, log2l(x), "log₂𝑥")
 M(1, g, "log10", Log10, log10l(x), "log₁₀𝑥")
 

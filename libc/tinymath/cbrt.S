@@ -1,4 +1,4 @@
-/*-*- mode:asm; indent-tabs-mode:t; tab-width:8; coding:utf-8               -*-│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
 │vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
@@ -27,3 +27,4 @@ tinymath_cbrt:
 	jmp	__cbrt
 	.endfn	tinymath_cbrt,globl
 	.alias	tinymath_cbrt,cbrt
+	.source	__FILE__

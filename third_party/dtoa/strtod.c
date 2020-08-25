@@ -85,7 +85,6 @@ enum
 	S7			/* _+#.#e+#	#S7 */
 };
 
-static	int	xcmp(char*, char*);
 static	int	fpcmp(char*, ulong*);
 static	void	frnorm(ulong*);
 static	void	divascii(char*, int*, int*, int*);

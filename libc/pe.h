@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_PE_H_
 #define COSMOPOLITAN_LIBC_PE_H_
+#ifndef __STRICT_ANSI__
 #include "libc/dce.h"
 #include "libc/nt/pedef.h"
 #include "libc/nt/struct/imagedosheader.h"
@@ -25,4 +26,5 @@ forceinline void *pecomputerva(struct NtImageDosHeader *mz, size_t mzsize,
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* !ANSI */
 #endif /* COSMOPOLITAN_LIBC_PE_H_ */

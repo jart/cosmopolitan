@@ -13,9 +13,6 @@ extern const bool kTrue;
 extern const bool kFalse;
 extern const uint8_t kReverseBits[256];
 
-uint16_t bswap_16(uint16_t) pureconst;
-uint32_t bswap_32(uint32_t) pureconst;
-uint32_t bswap_64(uint32_t) pureconst;
 uint32_t gray(uint32_t) pureconst;
 uint32_t ungray(uint32_t) pureconst;
 unsigned bcdadd(unsigned, unsigned) pureconst;
@@ -156,16 +153,6 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
 #define ABOVE_CONSTRAINT  "=@cca"
 #define ABOVEFLAG_ASM(OP) OP "\n\tseta\t%b0"
 #endif
-
-/**
- * Reads scalar from memory, offset by segment.
- *
- * @return *(MEM) relative to segment
- * @see arch_prctl()
- * @see pushpop()
- */
-#define fs(MEM) __peek("fs", MEM)
-#define gs(MEM) __peek("gs", MEM)
 
 /**
  * Reads scalar from memory w/ one operation.
@@ -374,60 +361,6 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
 #define invlpg(MEM) \
   asm volatile("invlpg\t(%0)" : /* no outputs */ : "r"(MEM) : "memory")
 
-/**
- * Teleports code fragment inside _init().
- */
-#define INITIALIZER(PRI, NAME, CODE)                               \
-  asm(".pushsection .init." #PRI "." #NAME ",\"ax\",@progbits\n\t" \
-      "call\t" #NAME "\n\t"                                        \
-      ".popsection");                                              \
-  textstartup optimizesize void NAME(char *rdi, const char *rsi) { \
-    CODE;                                                          \
-    asm volatile("" : /* no outputs */ : "D"(rdi), "S"(rsi));      \
-  }
-
-#ifndef __STRICT_ANSI__
-#if __PIC__ + __code_model_medium__ + __code_model_large__ + 0 > 1
-#define __EZLEA(SYMBOL) "lea\t" SYMBOL "(%%rip),%"
-#else
-#define __EZLEA(SYMBOL) "mov\t$" SYMBOL ",%k"
-#endif
-#define weaken(symbol) ((const typeof(&(symbol)))weakaddr(#symbol))
-#define strongaddr(symbolstr)                  \
-  ({                                           \
-    intptr_t waddr;                            \
-    asm(__EZLEA(symbolstr) "0" : "=r"(waddr)); \
-    waddr;                                     \
-  })
-#define weakaddr(symbolstr)                                               \
-  ({                                                                      \
-    intptr_t waddr;                                                       \
-    asm(".weak\t" symbolstr "\n\t" __EZLEA(symbolstr) "0" : "=r"(waddr)); \
-    waddr;                                                                \
-  })
-#else
-#define weaken(symbol)      symbol
-#define weakaddr(symbolstr) &(symbolstr)
-#endif
-
-#define slowcall(fn, arg1, arg2, arg3, arg4, arg5, arg6)                \
-  ({                                                                    \
-    void *ax;                                                           \
-    asm volatile("push\t%7\n\t"                                         \
-                 "push\t%6\n\t"                                         \
-                 "push\t%5\n\t"                                         \
-                 "push\t%4\n\t"                                         \
-                 "push\t%3\n\t"                                         \
-                 "push\t%2\n\t"                                         \
-                 "push\t%1\n\t"                                         \
-                 "call\tslowcall"                                       \
-                 : "=a"(ax)                                             \
-                 : "g"(fn), "g"(arg1), "g"(arg2), "g"(arg3), "g"(arg4), \
-                   "g"(arg5), "g"(arg6)                                 \
-                 : "memory");                                           \
-    ax;                                                                 \
-  })
-
 #define IsAddressCanonicalForm(P)                             \
   ({                                                          \
     intptr_t p2 = (intptr_t)(P);                              \
@@ -435,53 +368,8 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
   })
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § bits » optimizations                                      ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-
-#define bswap_16(U16)                                                         \
-  (isconstant(U16) ? ((((U16)&0xff00) >> 010) | (((U16)&0x00ff) << 010)) : ({ \
-    uint16_t Swapped16, Werd16 = (U16);                                       \
-    asm("xchg\t%b0,%h0" : "=Q"(Swapped16) : "0"(Werd16));                     \
-    Swapped16;                                                                \
-  }))
-
-#define bswap_32(U32)                                                 \
-  (isconstant(U32)                                                    \
-       ? ((((U32)&0xff000000) >> 030) | (((U32)&0x000000ff) << 030) | \
-          (((U32)&0x00ff0000) >> 010) | (((U32)&0x0000ff00) << 010))  \
-       : ({                                                           \
-           uint32_t Swapped32, Werd32 = (U32);                        \
-           asm("bswap\t%0" : "=r"(Swapped32) : "0"(Werd32));          \
-           Swapped32;                                                 \
-         }))
-
-#define bswap_64(U64)                                                    \
-  (isconstant(U64) ? ((((U64)&0xff00000000000000ul) >> 070) |            \
-                      (((U64)&0x00000000000000fful) << 070) |            \
-                      (((U64)&0x00ff000000000000ul) >> 050) |            \
-                      (((U64)&0x000000000000ff00ul) << 050) |            \
-                      (((U64)&0x0000ff0000000000ul) >> 030) |            \
-                      (((U64)&0x0000000000ff0000ul) << 030) |            \
-                      (((U64)&0x000000ff00000000ul) >> 010) |            \
-                      (((U64)&0x00000000ff000000ul) << 010))             \
-                   : ({                                                  \
-                       uint64_t Swapped64, Werd64 = (U64);               \
-                       asm("bswap\t%0" : "=r"(Swapped64) : "0"(Werd64)); \
-                       Swapped64;                                        \
-                     }))
-
-#endif /* defined(__GNUC__) && !defined(__STRICT_ANSI__) */
-/*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § bits » implementation details                             ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-
-#define __peek(SEGMENT, ADDRESS)                                  \
-  ({                                                              \
-    typeof(*(ADDRESS)) Pk;                                        \
-    asm("mov\t%%" SEGMENT ":%1,%0" : "=r"(Pk) : "m"(*(ADDRESS))); \
-    Pk;                                                           \
-  })
 
 #define __ArithmeticOp1(OP, MEM)                               \
   ({                                                           \

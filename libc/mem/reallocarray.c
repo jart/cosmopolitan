@@ -18,7 +18,6 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/conv/conv.h"
-#include "libc/conv/sizemultiply.h"
 #include "libc/mem/mem.h"
 
 /**
@@ -29,7 +28,5 @@
  * @return new address or NULL w/ errno and ptr is NOT free()'d
  */
 void *reallocarray(void *ptr, size_t nmemb, size_t itemsize) {
-  size_t newsize;
-  sizemultiply(&newsize, nmemb, itemsize); /* punts error */
-  return realloc(ptr, newsize);
+  return realloc(ptr, nmemb * itemsize);
 }

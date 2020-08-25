@@ -3,18 +3,25 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-unsigned bsf(unsigned) libcesque pureconst;
-unsigned bsfl(unsigned long) libcesque pureconst;
-unsigned bsfmax(uintmax_t) libcesque pureconst;
+/*
+ * BIT SCANNING 101
+ *                          ctz(𝑥)         31^clz(𝑥)   clz(𝑥)
+ *      uint32 𝑥   bsf(𝑥) tzcnt(𝑥)   ffs(𝑥)   bsr(𝑥) lzcnt(𝑥)
+ *    0x00000000      wut       32        0      wut       32
+ *    0x00000001        0        0        1        0       31
+ *    0x80000001        0        0        1       31        0
+ *    0x80000000       31       31       32       31        0
+ *    0x00000010        4        4        5        4       27
+ *    0x08000010        4        4        5       27        4
+ *    0x08000000       27       27       28       27        4
+ *    0xffffffff        0        0        1       31        0
+ */
 
-#define bsf(X)                                   \
-  ({                                             \
-    unsigned Res;                                \
-    typeof(X) Word;                              \
-    asm("bsf\t%1,%0" : "=r,r"(Word) : "r,m"(X)); \
-    Res = Word;                                  \
-    Res;                                         \
-  })
+#define bsf(u)   __builtin_ctz(u)
+#define bsfl(u)  __builtin_ctzl(u)
+#define bsfll(u) __builtin_ctzll(u)
+
+unsigned bsfmax(uintmax_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

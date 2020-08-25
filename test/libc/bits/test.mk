@@ -5,11 +5,13 @@ PKGS += TEST_LIBC_BITS
 
 TEST_LIBC_BITS_SRCS := $(wildcard test/libc/bits/*.c)
 TEST_LIBC_BITS_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_BITS_SRCS))
-TEST_LIBC_BITS_COMS = $(TEST_LIBC_BITS_OBJS:%.o=%.com)
 
 TEST_LIBC_BITS_OBJS =					\
 	$(TEST_LIBC_BITS_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_BITS_SRCS:%.c=o/$(MODE)/%.o)
+
+TEST_LIBC_BITS_COMS =					\
+	$(TEST_LIBC_BITS_SRCS:%.c=o/$(MODE)/%.com)
 
 TEST_LIBC_BITS_BINS =					\
 	$(TEST_LIBC_BITS_COMS)				\
@@ -26,7 +28,8 @@ TEST_LIBC_BITS_DIRECTDEPS =				\
 	LIBC_BITS					\
 	LIBC_NEXGEN32E					\
 	LIBC_STUBS					\
-	LIBC_TESTLIB
+	LIBC_TESTLIB					\
+	THIRD_PARTY_COMPILER_RT
 
 TEST_LIBC_BITS_DEPS :=					\
 	$(call uniq,$(foreach x,$(TEST_LIBC_BITS_DIRECTDEPS),$($(x))))

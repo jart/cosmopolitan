@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_ELF_H_
 #define COSMOPOLITAN_LIBC_ELF_H_
+#ifndef __STRICT_ANSI__
 #include "libc/bits/safemacros.h"
 #include "libc/elf/def.h"
 #include "libc/elf/struct/ehdr.h"
@@ -25,7 +26,7 @@ Elf64_Shdr *getelfsectionbyaddress(const Elf64_Ehdr *, size_t, void *);
 
 forceinline void checkelfaddress(const Elf64_Ehdr *elf, size_t mapsize,
                                  intptr_t addr, size_t addrsize) {
-#if !(TRUSTWORTHY + ELF_TRUSTWORTHY + 0)
+#if !(TRUSTWORTHY + ELF_TRUSTWORTHY + 0) || ELF_UNTRUSTWORTHY + 0
   if (addr < (intptr_t)elf || addr + addrsize > (intptr_t)elf + mapsize) {
     abort();
   }
@@ -119,4 +120,5 @@ static inline const char *getelfsectionname(const Elf64_Ehdr *elf,
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* !ANSI */
 #endif /* COSMOPOLITAN_LIBC_ELF_H_ */

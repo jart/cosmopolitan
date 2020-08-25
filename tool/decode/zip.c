@@ -24,6 +24,7 @@
 #include "libc/conv/conv.h"
 #include "libc/log/check.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/crc32.h"
 #include "libc/nt/struct/filetime.h"
 #include "libc/runtime/gc.h"
 #include "libc/stdio/stdio.h"
@@ -93,12 +94,12 @@ void showcompressmethod(uint16_t compressmethod) {
 
 void showextrantfs(uint8_t *ntfs) {
   struct timespec mtime, atime, ctime;
-  filetimetotimespec(
-      &mtime, (struct NtFileTime){read32le(ntfs + 8), read32le(ntfs + 12)});
-  filetimetotimespec(
-      &atime, (struct NtFileTime){read32le(ntfs + 16), read32le(ntfs + 20)});
-  filetimetotimespec(
-      &ctime, (struct NtFileTime){read32le(ntfs + 24), read32le(ntfs + 30)});
+  mtime = filetimetotimespec(
+      (struct NtFileTime){read32le(ntfs + 8), read32le(ntfs + 12)});
+  atime = filetimetotimespec(
+      (struct NtFileTime){read32le(ntfs + 16), read32le(ntfs + 20)});
+  ctime = filetimetotimespec(
+      (struct NtFileTime){read32le(ntfs + 24), read32le(ntfs + 30)});
   show(".long", gc(xasprintf("%d", read32le(ntfs))), "ntfs reserved");
   show(".short", gc(xasprintf("0x%04x", read16le(ntfs + 4))),
        "ntfs attribute tag value #1");
@@ -131,11 +132,11 @@ void showexternalattributes(uint8_t *cf) {
   uint32_t ea;
   ea = ZIP_CFILE_EXTERNALATTRIBUTES(cf);
   if (ZIP_CFILE_FILEATTRCOMPAT(cf) == kZipOsUnix) {
-    show(".short", recreateflags(kNtFileFlagNames, ea & 0xffff),
+    show(".short", RecreateFlags(kNtFileFlagNames, ea & 0xffff),
          "dos file flags");
     show(".short", format(b1, "%#o", ea >> 16), "st_mode");
   } else {
-    show(".long", recreateflags(kNtFileFlagNames, ea), "externalattributes");
+    show(".long", RecreateFlags(kNtFileFlagNames, ea), "externalattributes");
   }
 }
 
@@ -241,7 +242,7 @@ void showcentralfileheader(uint8_t *cf) {
               "bytes"));
   show(".short", format(b1, "%hu", ZIP_CFILE_DISK(cf)), "disk");
   show(".short",
-       recreateflags(kZipIattrNames, ZIP_CFILE_INTERNALATTRIBUTES(cf)),
+       RecreateFlags(kZipIattrNames, ZIP_CFILE_INTERNALATTRIBUTES(cf)),
        "internalattributes");
   showexternalattributes(cf);
   show(".long", format(b1, "%u", ZIP_CFILE_OFFSET(cf)), "lfile hdr offset");

@@ -1,5 +1,8 @@
 #ifndef COSMOPOLITAN_LIBC_CONV_CONV_H_
 #define COSMOPOLITAN_LIBC_CONV_CONV_H_
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/nt/struct/filetime.h"
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § conversion                                                ─╬─│┼
@@ -23,6 +26,7 @@ long labs(long) libcesque pureconst;
 long long llabs(long long) libcesque pureconst;
 char *ltpcpy(char *, long) paramsnonnull() libcesque nocallback;
 int llog10(unsigned long) libcesque pureconst;
+int unsleb128(const void *, size_t, int64_t *);
 int atoi(const char *) paramsnonnull() libcesque nosideeffect;
 long atol(const char *) paramsnonnull() libcesque nosideeffect;
 long long atoll(const char *) paramsnonnull() libcesque nosideeffect;
@@ -38,18 +42,12 @@ long wcstol(const wchar_t *, wchar_t **, int);
 long strtol(const char *, char **, int)
     paramsnonnull((1)) libcesque nosideeffect;
 
-intmax_t __imaxabs(intmax_t) asm("imaxabs") libcesque pureconst;
-#define imaxabs(x) __imaxabs(x)
-
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § conversion » time                                         ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-struct NtFileTime;
-struct timespec;
-struct timeval;
-
-void filetimetotimespec(struct timespec *, struct NtFileTime) paramsnonnull();
+struct timespec filetimetotimespec(struct NtFileTime);
+struct NtFileTime timespectofiletime(struct timespec);
 struct NtFileTime timetofiletime(int64_t) nothrow pureconst;
 int64_t filetimetotime(struct NtFileTime) nothrow pureconst;
 void filetimetotimeval(struct timeval *, struct NtFileTime) nothrow;
@@ -103,6 +101,11 @@ double RoundDecimalPlaces(double, double, double(double));
 #define ldiv(num, den)  ((ldiv_t){(num) / (den), (num) % (den)})
 #define lldiv(num, den) ((lldiv_t){(num) / (den), (num) % (den)})
 #endif
+
+#ifndef __STRICT_ANSI__
+intmax_t __imaxabs(intmax_t) asm("imaxabs") libcesque pureconst;
+#define imaxabs(x) __imaxabs(x)
+#endif /* !ANSI */
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

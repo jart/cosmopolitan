@@ -7,9 +7,10 @@ AlignConsecutiveDeclarations: false
 AlwaysBreakBeforeMultilineStrings: false
 AllowShortFunctionsOnASingleLine: false
 KeepEmptyLinesAtTheStartOfBlocks: true
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ---
 Language: Cpp
-AllowShortFunctionsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: false
 ---
 Language: Proto
 ...

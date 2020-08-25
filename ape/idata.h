@@ -32,39 +32,35 @@
 /	@see	libc/nt/master.sh
 /	@see	ape/ape.lds
 /	@see	winimp
-.macro	.imp	dll:req fn:req actual hint
+.macro	.imp	dll:req fn:req actual:req hint
 	.dll	\dll
-	.section .piro.data.sort.iat.2.\dll\().2.\fn,"aw",@progbits
+	.section .piro.data.sort.iat.2.\dll\().2.\actual,"aw",@progbits
 	.type	\fn,@object
 	.align	__SIZEOF_POINTER__
-\fn:	.quad	RVA((.L\dll\().\fn))
+\fn:	.quad	RVA((\dll\().\actual))
 	.size	\fn,.-\fn
 	.globl	\fn
 	.hidden	\fn
 	.previous
-	.section .idata.ro.ilt.\dll\().2.\fn,"a",@progbits
-.Lidata.ilt.\dll\().\fn:
-	.quad	RVA((.L\dll\().\fn))
-	.type	.Lidata.ilt..L\dll\().\fn,@object
-	.size	.Lidata.ilt..L\dll\().\fn,.-.Lidata.ilt.\dll\().\fn
+	.section .idata.ro.ilt.\dll\().2.\actual,"a",@progbits
+.Lidata.ilt.\dll\().\actual:
+	.quad	RVA((\dll\().\actual))
+	.type	.Lidata.ilt.\dll\().\actual,@object
+	.size	.Lidata.ilt.\dll\().\actual,.-.Lidata.ilt.\dll\().\actual
 	.previous
-	.section .idata.ro.hnt.\dll\().2.\fn,"a",@progbits
-.L\dll\().\fn:
+	.section .idata.ro.hnt.\dll\().2.\actual,"a",@progbits
+\dll\().\actual:
 	.ifnb	\hint			# hint i.e. guess function ordinal
 	.short	\hint
 	.else
 	.short	0
 	.endif
-	.ifnb	\actual			# name
 	.asciz	"\actual"
-	.else
-	.asciz	"\fn"
-	.endif
 	.align	2			# documented requirement
-/	.globl	.L\dll\().\fn
-/	.hidden	.L\dll\().\fn
-	.type	.L\dll\().\fn,@object
-	.size	.L\dll\().\fn,.-.L\dll\().\fn
+	.globl	\dll\().\actual
+	.hidden	\dll\().\actual
+	.type	\dll\().\actual,@object
+	.size	\dll\().\actual,.-\dll\().\actual
 	.previous
 .endm
 

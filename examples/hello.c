@@ -8,6 +8,7 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/errno.h"
+#include "libc/log/log.h"
 #include "libc/stdio/stdio.h"
 
 int main() {
@@ -19,5 +20,5 @@ int main() {
    * have that string consist solely of directives.
    */
   printf("%s\n", "hello world");
-  return errno;
+  return 0;
 }

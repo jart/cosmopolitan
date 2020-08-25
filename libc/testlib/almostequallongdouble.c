@@ -20,7 +20,7 @@
 #include "libc/math.h"
 #include "libc/testlib/testlib.h"
 
-#define EPSILON 0.0000000000001L
+#define EPSILON 0.00000001L
 
 testonly bool testlib_almostequallongdouble(long double x, long double y) {
   /* TODO(jart): This algorithm has to be binary. */

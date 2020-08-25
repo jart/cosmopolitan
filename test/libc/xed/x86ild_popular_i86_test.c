@@ -1416,7 +1416,7 @@ TEST(x86ild, test_415C) {
     ISA_SET: I86
     SHORT: pop r12
   */
-  EXPECT_EQ(2, ild(u"A╲"));
+  EXPECT_EQ(2, ild(u"A\\"));
 }
 
 TEST(x86ild, test_488B04C500000000) {

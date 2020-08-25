@@ -79,7 +79,7 @@ int fflush(FILE *f) {
   return res;
 }
 
-int fflushregister(FILE *f) {
+textstartup int _fflushregister(FILE *f) {
   size_t i;
   struct StdioFlush *sf;
   sf = &g_fflush;
@@ -98,7 +98,7 @@ int fflushregister(FILE *f) {
   return append(&sf->handles, &f);
 }
 
-void fflushunregister(FILE *f) {
+void _fflushunregister(FILE *f) {
   size_t i;
   struct StdioFlush *sf;
   sf = &g_fflush;

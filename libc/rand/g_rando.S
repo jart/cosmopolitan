@@ -18,15 +18,16 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-#include "libc/notice.inc"
-.source	__FILE__
 
 	.bss
 	.align	8
-g_rando:.quad	0
-	.endobj	g_rando,globl,hidden
+g_rando:
+	.quad	0
+	.endobj	g_rando,globl
 	.previous
 
 	.init.start 100,_init_g_rando
-	movq	$1,g_rando(%rip)
+	movb	$1,g_rando(%rip)
 	.init.end 100,_init_g_rando
+
+	.source	__FILE__

@@ -1,30 +1,14 @@
-/* clang-format off */
-/* ===-- udivti3.c - Implement __udivti3 -----------------------------------===
- *
- *                     The LLVM Compiler Infrastructure
- *
- * This file is dual licensed under the MIT and the University of Illinois Open
- * Source Licenses. See LICENSE.TXT for details.
- *
- * ===----------------------------------------------------------------------===
- *
- * This file implements __udivti3 for the compiler_rt library.
- *
- * ===----------------------------------------------------------------------===
- */
-
-STATIC_YOINK("huge_compiler_rt_license");
-
+#if 0
+/*─────────────────────────────────────────────────────────────────╗
+│ To the extent possible under law, Justine Tunney has waived      │
+│ all copyright and related or neighboring rights to division,     │
+│ as it is written in the following disclaimers:                   │
+│   • http://unlicense.org/                                        │
+│   • http://creativecommons.org/publicdomain/zero/1.0/            │
+╚─────────────────────────────────────────────────────────────────*/
+#endif
 #include "third_party/compiler_rt/int_lib.h"
 
-#ifdef CRT_HAS_128BIT
-
-/* Returns: a / b */
-
-COMPILER_RT_ABI tu_int
-__udivti3(tu_int a, tu_int b)
-{
-    return __udivmodti4(a, b, 0);
+COMPILER_RT_ABI tu_int __udivti3(tu_int a, tu_int b) {
+  return __udivmodti4(a, b, NULL);
 }
-
-#endif /* CRT_HAS_128BIT */

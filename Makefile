@@ -60,7 +60,7 @@
 #
 #   build/config.mk
 
-SHELL = dash
+SHELL  = /bin/sh
 HOSTS ?= freebsd openbsd alpine
 
 .SUFFIXES:
@@ -69,8 +69,7 @@ HOSTS ?= freebsd openbsd alpine
 .PHONY: all o bins check test depend tags
 
 all:	o
-o:	o/libc					\
-	o/$(MODE)/ape				\
+o:	o/$(MODE)/ape				\
 	o/$(MODE)/dsp				\
 	o/$(MODE)/net				\
 	o/$(MODE)/libc				\
@@ -81,6 +80,7 @@ o:	o/libc					\
 
 PKGS =
 
+-include ~/.cosmo.mk				#──No.1
 include build/functions.mk			#─┐
 include build/definitions.mk			# ├──meta
 include build/config.mk				# │
@@ -89,6 +89,7 @@ include build/online.mk				# │
 include libc/stubs/stubs.mk			#─┘
 include libc/nexgen32e/nexgen32e.mk		#─┐
 include libc/intrin/intrin.mk			# │
+include libc/linux/linux.mk			# │
 include libc/math/math.mk			# ├──metal
 include libc/tinymath/tinymath.mk		# │
 include third_party/compiler_rt/compiler_rt.mk	# │
@@ -106,6 +107,7 @@ include libc/fmt/fmt.mk				# │
 include libc/rand/rand.mk			#─┘
 include libc/calls/calls.mk			#─┐
 include libc/runtime/runtime.mk			# ├──systems
+include libc/crt/crt.mk				# │
 include libc/unicode/unicode.mk			# │
 include third_party/dlmalloc/dlmalloc.mk	# │
 include libc/mem/mem.mk				# │
@@ -140,9 +142,9 @@ include third_party/editline/editline.mk
 include third_party/duktape/duktape.mk
 include third_party/regex/regex.mk
 include third_party/avir/avir.mk
+include third_party/ctags/ctags.mk
 include third_party/third_party.mk
 include libc/testlib/testlib.mk
-include libc/crt/crt.mk
 include tool/viz/lib/vizlib.mk
 include examples/examples.mk
 include third_party/lex/lex.mk
@@ -150,6 +152,8 @@ include third_party/m4/m4.mk
 include third_party/lz4cli/lz4cli.mk
 include third_party/bzip2/bzip2.mk
 include tool/build/lib/buildlib.mk
+include tool/build/emucrt/emucrt.mk
+include tool/build/emubin/emubin.mk
 include tool/build/build.mk
 include tool/debug/debug.mk
 include tool/decode/lib/decodelib.mk
@@ -213,7 +217,7 @@ depend:	o/$(MODE)/depend
 tags:	TAGS HTAGS
 
 o/$(MODE)/.x:
-	@$(MKDIR) $(dir $@) && touch $@
+	@$(MKDIR) $(@D) && touch $@
 
 o/$(MODE)/srcs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(SRCS),$(dir $(x))))
 	$(file >$@) $(foreach x,$(SRCS),$(file >>$@,$(x)))
@@ -236,6 +240,71 @@ loc: o/$(MODE)/tool/build/summy.com
 	find -name \*.h -or -name \*.c -or -name \*.S | \
 	$(XARGS) wc -l | grep total | awk '{print $$1}' | $<
 
+COSMOPOLITAN_OBJECTS =		\
+	APE_LIB			\
+	LIBC			\
+	LIBC_ALG		\
+	LIBC_BITS		\
+	LIBC_CALLS		\
+	LIBC_CALLS_HEFTY	\
+	LIBC_CONV		\
+	LIBC_CRYPTO		\
+	LIBC_DNS		\
+	LIBC_FMT		\
+	LIBC_ELF		\
+	LIBC_LOG		\
+	LIBC_MEM		\
+	LIBC_NEXGEN32E		\
+	LIBC_NT			\
+	LIBC_OHMYPLUS		\
+	LIBC_RAND		\
+	LIBC_RUNTIME		\
+	LIBC_SOCK		\
+	LIBC_STDIO		\
+	LIBC_STR		\
+	LIBC_STUBS		\
+	LIBC_SYSV		\
+	LIBC_TIME		\
+	LIBC_TINYMATH		\
+	LIBC_UNICODE		\
+	LIBC_ZIPOS		\
+	THIRD_PARTY_DLMALLOC	\
+	THIRD_PARTY_DTOA	\
+	THIRD_PARTY_GETOPT	\
+	THIRD_PARTY_MUSL	\
+	THIRD_PARTY_REGEX
+
+COSMOPOLITAN_HEADERS =		\
+	LIBC			\
+	LIBC_CALLS		\
+	LIBC_CONV		\
+	LIBC_CRYPTO		\
+	LIBC_DNS		\
+	LIBC_FMT		\
+	LIBC_MEM		\
+	LIBC_RAND		\
+	LIBC_RUNTIME		\
+	LIBC_SOCK		\
+	LIBC_STDIO		\
+	LIBC_STR		\
+	LIBC_TIME		\
+	LIBC_UNICODE		\
+	LIBC_ZIPOS		\
+	LIBC_SYSV		\
+	LIBC_NT			\
+	THIRD_PARTY_DLMALLOC	\
+	THIRD_PARTY_DTOA	\
+	THIRD_PARTY_GETOPT	\
+	THIRD_PARTY_MUSL	\
+	THIRD_PARTY_REGEX
+
+o/$(MODE)/cosmopolitan.a: $(filter-out o/libc/stubs/exit11.o,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_OBJS)))
+o/$(MODE)/.cosmopolitan.h: $(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS))
+	build/rollup $^ >$@
+o/$(MODE)/cosmopolitan.h: o/$(MODE)/.cosmopolitan.h
+	build/compile $(PREPROCESS) -P $(OUTPUT_OPTION) $<
+	clang-format-10 -i $@
+
 # UNSPECIFIED PREREQUISITES TUTORIAL
 #
 # A build rule must exist for all files that make needs to consider in
@@ -255,11 +324,12 @@ loc: o/$(MODE)/tool/build/summy.com
 # never get executed since they're not members of the transitive closure
 # of `make all`. In that case the build config could be improved.
 %.mk:
+~/.cosmo.mk:
 $(SRCS):
 $(HDRS):
 .DEFAULT:
 	@echo >&2
-	@echo NOTE: deleting o/$(MODE)/depend due to unspecified prerequisite: $@ >&2
+	@echo NOTE: deleting o/$(MODE)/depend because of an unspecified prerequisite: $@ >&2
 	@echo >&2
 	rm -f o/$(MODE)/depend
 

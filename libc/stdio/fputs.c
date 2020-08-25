@@ -18,7 +18,6 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/stdio/fputc.h"
 #include "libc/stdio/stdio.h"
 
 /**
@@ -36,7 +35,7 @@ int fputs(const char *s, FILE *f) {
   unsigned char *p = (unsigned char *)s;
   int res = 0;
   while (*p) {
-    if (__fputc(*p++, f) == -1) {
+    if (fputc(*p++, f) == -1) {
       if (ferror(f) == EINTR) continue;
       if (feof(f)) errno = f->state = EPIPE;
       return -1;

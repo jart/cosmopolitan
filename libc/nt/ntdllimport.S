@@ -19,7 +19,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nt/enum/status.h"
 #include "libc/macros.h"
-.source	__FILE__
 
 /	@fileoverview NTDLL.DLL Non-Mandatory Importer
 /

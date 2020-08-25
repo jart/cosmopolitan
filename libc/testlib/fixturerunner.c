@@ -40,9 +40,9 @@ testonly void testlib_runfixtures(testfn_t *test_start, testfn_t *test_end,
   for (i = 0; i < count && !g_testlib_failed; ++i) {
     snprintf(g_fixturename, sizeof(g_fixturename), "%s_%s",
              fixture_start[i].group, fixture_start[i].name);
-    __piro(PROT_READ | PROT_WRITE);
+    _piro(PROT_READ | PROT_WRITE);
     fixture_start[i].fn();
-    __piro(PROT_READ);
+    _piro(PROT_READ);
     testlib_runtestcases(test_start, test_end, NULL);
   }
 }

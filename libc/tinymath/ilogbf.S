@@ -18,10 +18,25 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.source	__FILE__
 
+/	Returns log₂ₓ exponent part of float.
+/
+/	@param	𝑥 is float passed in %xmm0
+/	@return	result in %eax
+/	@note	needs sse3
 tinymath_ilogbf:
-	ezlea	tinymath_ilogbl,ax
-	jmp	_f2ld2
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	push	%rax
+	movss	%xmm0,(%rsp)
+	flds	(%rsp)
+	fxtract
+	fstp	%st
+	fisttpl	(%rsp)
+	mov	(%rsp),%eax
+	leave
+	ret
 	.endfn	tinymath_ilogbf,globl
 	.alias	tinymath_ilogbf,ilogbf
+	.source	__FILE__

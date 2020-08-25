@@ -30,6 +30,11 @@
  * libc/sysv/kErrnoNames.S needs updating.
  */
 
+TEST(strerror, e2big) {
+  if (IsTiny()) return;
+  EXPECT_STARTSWITH("E2BIG", strerror(E2BIG));
+}
+
 TEST(strerror, enosys) {
   if (IsTiny()) return;
   EXPECT_STARTSWITH("ENOSYS", strerror(ENOSYS));

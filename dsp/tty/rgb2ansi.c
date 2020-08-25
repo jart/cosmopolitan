@@ -20,6 +20,7 @@
 #include "dsp/core/core.h"
 #include "dsp/tty/quant.h"
 #include "libc/assert.h"
+#include "libc/bits/initializer.h"
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"
@@ -32,12 +33,8 @@
 #define SQR(X)       ((X) * (X))
 #define SUM(X, Y, Z) ((X) + (Y) + (Z))
 
-static const uint8_t kXtermCube[] = {0, 0137, 0207, 0257, 0327, 0377};
+const uint8_t kXtermCube[6] = {0, 0137, 0207, 0257, 0327, 0377};
 struct TtyRgb g_ansi2rgb_[256];
-static uint8_t g_quant[256];
-static uint8_t g_rindex[256];
-static uint8_t g_gindex[256];
-static uint8_t g_bindex[256];
 double g_xterm256_gamma;
 
 struct TtyRgb tty2rgb_(struct TtyRgb rgbxt) {
@@ -101,17 +98,10 @@ static int uncube(int x) {
   return x < 48 ? 0 : x < 115 ? 1 : (x - 35) / 40;
 }
 
-static optimizesize textstartup void xterm2rgbsetup_(void) {
+static textstartup void rgb2ansi_init(void) {
   uint8_t c, y;
   uint32_t i, j;
   memcpy(g_ansi2rgb_, &kCgaPalette, sizeof(kCgaPalette));
-  for (i = 0; i < 256; ++i) {
-    j = uncube(i);
-    g_quant[i] = kXtermCube[j];
-    g_rindex[i] = j * 36;
-    g_gindex[i] = j * 6;
-    g_bindex[i] = j + 16;
-  }
   for (i = 16; i < 232; ++i) {
     g_ansi2rgb_[i].r = kXtermCube[((i - 020) / 044) % 06];
     g_ansi2rgb_[i].g = kXtermCube[((i - 020) / 06) % 06];
@@ -126,4 +116,4 @@ static optimizesize textstartup void xterm2rgbsetup_(void) {
   }
 }
 
-INITIALIZER(301, _init_ansi2rgb, xterm2rgbsetup_());
+const void *const rgb2ansi_init_ctor[] initarray = {rgb2ansi_init};

@@ -31,6 +31,9 @@
 .macro	.text.startup
 	.section .text.startup,"ax",@progbits
 .endm
+.macro	.text.exit
+	.section .text.exit,"ax",@progbits
+.endm
 .macro	.firstclass
 	.section .text.hot,"ax",@progbits
 .endm
@@ -84,6 +87,14 @@
 .macro	.rodata.cst64
 	.section .rodata.cst64,"aM",@progbits,64
 	.align	64
+.endm
+.macro	.tdata
+	.section .tdata,"awT",@progbits
+	.align	4
+.endm
+.macro	.tbss
+	.section .tdata,"awT",@nobits
+	.align	4
 .endm
 
 /	Mergeable NUL-terminated UTF-8 string constant section.
@@ -175,11 +186,16 @@
  .endif
 .endm
 
+/	Custom emulator instruction for bottom stack frame.
+.macro	bofram	endfunc:req
+	.byte	0x0f,0x1f,0x45,\endfunc-.	# nopl disp8(%rbp)
+.endm
+
 /	Overrides LOOP instruction.
 /	With its mop-Fusion Mexican equivalent.
 /	Thus avoiding 3x legacy pipeline slowdown.
 .macro	loop	label:req
-	.byte	0x83,0xe9,0x01		# sub $1,%ecx
+	.byte	0x83,0xe9,0x01			# sub $1,%ecx
 	jnz	\label
 .endm
 

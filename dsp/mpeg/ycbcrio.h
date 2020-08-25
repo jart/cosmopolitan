@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_DSP_MPEG_YCBCRIO_H_
 #define COSMOPOLITAN_DSP_MPEG_YCBCRIO_H_
 #include "dsp/mpeg/mpeg.h"
-#include "libc/bits/bits.h"
+#include "libc/bits/bswap.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

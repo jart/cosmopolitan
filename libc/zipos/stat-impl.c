@@ -22,17 +22,23 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/runtime/rbx.h"
 #include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/zip.h"
 #include "libc/zipos/zipos.h"
 
-int __zipos_stat_impl(size_t cf, struct stat *st) {
-  memset(st, 0, sizeof(*st));
-  if (ZIP_CFILE_FILEATTRCOMPAT(&_base[0] + cf) == kZipOsUnix) {
-    st->st_mode = ZIP_CFILE_EXTERNALATTRIBUTES(&_base[0] + cf) >> 16;
+int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
+  if (zipos && st) {
+    memset(st, 0, sizeof(*st));
+    if (ZIP_CFILE_FILEATTRCOMPAT(zipos->map + cf) == kZipOsUnix) {
+      st->st_mode = ZIP_CFILE_EXTERNALATTRIBUTES(zipos->map + cf) >> 16;
+    } else {
+      st->st_mode = 0100644;
+    }
+    st->st_size = ZIP_CFILE_UNCOMPRESSEDSIZE(zipos->map + cf);
+    st->st_blocks =
+        roundup(ZIP_CFILE_COMPRESSEDSIZE(zipos->map + cf), 512) / 512;
+    return 0;
   } else {
-    st->st_mode = 0100644;
+    return einval();
   }
-  st->st_size = ZIP_CFILE_UNCOMPRESSEDSIZE(&_base[0] + cf);
-  st->st_blocks = roundup(ZIP_CFILE_COMPRESSEDSIZE(&_base[0] + cf), 512) / 512;
-  return 0;
 }

@@ -18,9 +18,33 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
+#include "ape/relocations.h"
+#include "libc/zip.h"
 
+/	ZIP Central Directory.
+	.section .piro.data.sort.zip.3,"a",@progbits
+	.hidden	__zip_start
+	.globl	__zip_start
+	.type	__zip_start,@object
+	.align	kZipCdirAlign
 __zip_start:
-	.endfn	__zip_start,weak
-
+	.previous/*
+	...
+	decentralized content
+	...
+	*/.section .piro.data.sort.zip.5,"a",@progbits
+	.align	kZipCdirAlign
 __zip_end:
-	.endfn	__zip_end,weak
+	.long	kZipCdirHdrMagic	# magic
+	.short	0			# disk
+	.short	0			# starting disk
+	.short	v_zip_records		# records on disk
+	.short	v_zip_records		# records
+	.long	v_zip_cdirsize		# size of central directory
+	.long	RVA(__zip_start)	# central directory offset
+	.short	v_zip_commentsize	# comment size
+	.endobj	__zip_end,globl,hidden
+	.weak	v_zip_records
+	.weak	v_zip_cdirsize
+	.weak	v_zip_commentsize
+	.previous

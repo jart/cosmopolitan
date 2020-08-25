@@ -3,6 +3,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+int faccessat$nt(int, const char *, int, uint32_t) hidden;
 int execve$nt(const char *, char *const[], char *const[]) hidden;
 int spawnve$nt(unsigned, int[3], const char *, char *const[],
                char *const[]) hidden;

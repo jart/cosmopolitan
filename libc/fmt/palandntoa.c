@@ -29,9 +29,11 @@
 #include "libc/fmt/paland.inc"
 #include "libc/fmt/palandprintf.h"
 
+uintmax_t __udivmodti4(uintmax_t, uintmax_t, uintmax_t *);
+
 static int ntoaformat(int out(int, void *), void *arg, char *buf, unsigned len,
                       bool negative, unsigned log2base, unsigned prec,
-                      unsigned width, unsigned flags) {
+                      unsigned width, unsigned char flags) {
   unsigned i, idx;
   idx = 0;
 
@@ -101,9 +103,10 @@ static int ntoaformat(int out(int, void *), void *arg, char *buf, unsigned len,
   return 0;
 }
 
-static int ntoa2(int out(int, void *), void *arg, uintmax_t value, bool neg,
-                 unsigned log2base, unsigned prec, unsigned width,
-                 unsigned flags, const char *alphabet) {
+int ntoa2(int out(int, void *), void *arg, uintmax_t value, bool neg,
+          unsigned log2base, unsigned prec, unsigned width, unsigned flags,
+          const char *alphabet) {
+  uintmax_t remainder;
   unsigned len, count, digit;
   char buf[PRINTF_NTOA_BUFFER_SIZE];
   len = 0;
@@ -112,12 +115,13 @@ static int ntoa2(int out(int, void *), void *arg, uintmax_t value, bool neg,
     count = 0;
     do {
       assert(len < PRINTF_NTOA_BUFFER_SIZE);
-      if (log2base) {
+      if (!log2base) {
+        value = __udivmodti4(value, 10, &remainder);
+        digit = remainder;
+      } else {
         digit = value;
         digit &= (1u << log2base) - 1;
         value >>= log2base;
-      } else {
-        value = div10(value, &digit);
       }
       if ((flags & FLAGS_GROUPING) && count == 3) {
         buf[len++] = ',';
@@ -132,12 +136,12 @@ static int ntoa2(int out(int, void *), void *arg, uintmax_t value, bool neg,
 }
 
 int ntoa(int out(int, void *), void *arg, va_list va, unsigned char signbit,
-         unsigned long log2base, unsigned long precision, unsigned long width,
-         unsigned long flags, const char *alphabet) {
-  bool negative;
+         unsigned long log2base, unsigned long prec, unsigned long width,
+         unsigned char flags, const char *lang) {
+  bool neg;
   uintmax_t value, sign;
 
-  /* ignore '0' flag when precision is given */
+  /* ignore '0' flag when prec is given */
   if (flags & FLAGS_PRECISION) {
     flags &= ~FLAGS_ZEROPAD;
   }
@@ -153,24 +157,22 @@ int ntoa(int out(int, void *), void *arg, va_list va, unsigned char signbit,
     value = va_arg(va, uint64_t);
   }
 
-  negative = false;
-  sign = (uintmax_t)1 << signbit;
-  if (value > (sign | (sign - 1))) erange();
+  neg = 0;
+  sign = 1;
+  sign <<= signbit;
+  value &= sign | (sign - 1);
   if (flags & FLAGS_ISSIGNED) {
     if (value != sign) {
       if (value & sign) {
         value = ~value + 1;
-        negative = true;
+        value &= sign | (sign - 1);
+        neg = 1;
       }
       value &= sign - 1;
+    } else {
+      neg = 1;
     }
-  } else {
-    value &= sign | (sign - 1);
   }
 
-  if (ntoa2(out, arg, value, negative, log2base, precision, width, flags,
-            alphabet) == -1) {
-    return -1;
-  }
-  return 0;
+  return ntoa2(out, arg, value, neg, log2base, prec, width, flags, lang);
 }

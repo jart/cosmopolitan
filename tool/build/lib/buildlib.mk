@@ -10,7 +10,10 @@ TOOL_BUILD_LIB_A_FILES := $(wildcard tool/build/lib/*)
 TOOL_BUILD_LIB_A_HDRS = $(filter %.h,$(TOOL_BUILD_LIB_A_FILES))
 TOOL_BUILD_LIB_A_SRCS_S = $(filter %.S,$(TOOL_BUILD_LIB_A_FILES))
 TOOL_BUILD_LIB_A_SRCS_C = $(filter %.c,$(TOOL_BUILD_LIB_A_FILES))
-TOOL_BUILD_LIB_A_CHECKS = $(TOOL_BUILD_LIB_A).pkg
+
+TOOL_BUILD_LIB_A_CHECKS =				\
+	$(TOOL_BUILD_LIB_A_HDRS:%=o/$(MODE)/%.ok)	\
+	$(TOOL_BUILD_LIB_A).pkg
 
 TOOL_BUILD_LIB_A_SRCS =					\
 	$(TOOL_BUILD_LIB_A_SRCS_S)			\
@@ -22,17 +25,30 @@ TOOL_BUILD_LIB_A_OBJS =					\
 	$(TOOL_BUILD_LIB_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
 TOOL_BUILD_LIB_A_DIRECTDEPS =				\
+	LIBC_ALG					\
+	LIBC_BITS					\
+	LIBC_CONV					\
 	LIBC_CALLS					\
 	LIBC_CALLS_HEFTY				\
+	LIBC_ELF					\
 	LIBC_FMT					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
 	LIBC_RUNTIME					\
 	LIBC_STUBS					\
+	LIBC_INTRIN					\
 	LIBC_SYSV					\
 	LIBC_SYSV_CALLS					\
+	LIBC_TIME					\
 	LIBC_LOG					\
-	LIBC_X
+	LIBC_STR					\
+	LIBC_SOCK					\
+	LIBC_UNICODE					\
+	LIBC_STDIO					\
+	LIBC_X						\
+	LIBC_TINYMATH					\
+	THIRD_PARTY_COMPILER_RT				\
+	THIRD_PARTY_XED
 
 TOOL_BUILD_LIB_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(TOOL_BUILD_LIB_A_DIRECTDEPS),$($(x))))

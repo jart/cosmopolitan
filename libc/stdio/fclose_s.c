@@ -18,7 +18,6 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/runtime/mappings.h"
 #include "libc/stdio/stdio.h"
 
 /**

@@ -6,6 +6,11 @@ COSMOPOLITAN_C_START_
 struct stat;
 struct iovec;
 
+struct Zipos {
+  uint8_t *map;
+  uint8_t *cdir;
+};
+
 struct ZiposUri {
   const char *path;
   size_t len;
@@ -22,13 +27,14 @@ struct ZiposHandle {
 
 extern const char kZiposSchemePrefix[4];
 
+struct Zipos *__zipos_get(void);
 ssize_t __zipos_parseuri(const char *, struct ZiposUri *);
-ssize_t __zipos_find(const struct ZiposUri *);
+ssize_t __zipos_find(struct Zipos *, const struct ZiposUri *);
 int __zipos_close(struct ZiposHandle *);
 int __zipos_open(const struct ZiposUri *, unsigned, int);
 int __zipos_stat(const struct ZiposUri *, struct stat *);
 int __zipos_fstat(const struct ZiposHandle *, struct stat *);
-int __zipos_stat_impl(size_t, struct stat *);
+int __zipos_stat_impl(struct Zipos *, size_t, struct stat *);
 ssize_t __zipos_read(struct ZiposHandle *, const struct iovec *, size_t,
                      ssize_t);
 ssize_t __zipos_write(struct ZiposHandle *, const struct iovec *, size_t,

@@ -99,115 +99,13 @@ privileged interruptfn void ftrace_hook(void) {
 }
 
 /**
- * Rewrites code in memory to log function calls.
- *
- * We do this by searching each function for the nop instruction
- * inserted by GCC when we use the -pg -mnop-mcount flags. There's no
- * risk of corrupting data since the linker scripts won't mix code and
- * data.
- *
- * Modules built with -O3 and without the profiling flags might have
- * these same nop instructions, but that shouldn't be problematic since
- * they're only there for the puposes of aligning jumps, and therefore
- * aren't actually executed. However codebases that use huge function
- * alignments with wide-nop slides could pose minor issues. Further note
- * that Cosmopolitan sources are almost never intentionally written to
- * use code alignment, since we've only seen a few cases where it helps.
- *
- * @see ape/ape.lds
- */
-privileged void ftrace_install(void) {
-  /* TODO(jart): Is -fschedule-insns2 so aggro that we need XED here? */
-  size_t i;
-  intptr_t addr;
-  sigset_t oldmask;
-  uint64_t code, mcode;
-  unsigned char *p, *pe;
-  const intptr_t kMcount = (intptr_t)&mcount;
-  const intptr_t kFtraceHook = (intptr_t)&ftrace_hook;
-  const intptr_t kProgramCodeStart = (intptr_t)&_ereal;
-  const intptr_t kPrivilegedStart = (intptr_t)&__privileged_start;
-  const bool kIsBinaryAligned = !(kPrivilegedStart & (PAGESIZE - 1));
-  g_buf[0] = '+';
-  g_buf[1] = ' ';
-  sigprocmask(SIG_BLOCK, &kSigsetFull, &oldmask);
-  if (__mprotect((void *)g_symbols->addr_base,
-                 kPrivilegedStart - g_symbols->addr_base,
-                 kIsBinaryAligned ? PROT_READ | PROT_WRITE
-                                  : PROT_READ | PROT_WRITE | PROT_EXEC) != -1) {
-    for (i = 0; i < g_symbols->count - 1; ++i) {
-      if (g_symbols->addr_base + g_symbols->symbols[i].addr_rva <
-          kProgramCodeStart) {
-        continue; /* skip over real mode symbols */
-      }
-      if (g_symbols->addr_base + g_symbols->symbols[i].addr_rva >=
-          kPrivilegedStart) {
-        break; /* stop before privileged symbols */
-      }
-      for (p = (unsigned char *)(g_symbols->addr_base +
-                                 g_symbols->symbols[i].addr_rva),
-          pe = (unsigned char *)(g_symbols->addr_base +
-                                 g_symbols->symbols[i + 1].addr_rva);
-           p < pe - 8; ++p) {
-        code = read64le(p);
-
-        /*
-         * Test for -mrecord-mcount (w/ -fpie or -fpic)
-         *
-         *   nopw 0x00(%rax,%rax,1)  ← morphed by package.com
-         *   call *mcount(%rip)      ← linked w/o -static
-         *   addr32 call mcount      ← relaxed w/ -static
-         *   addr32 call mcount      ← relaxed w/ -static
-         *
-         * Note that gcc refuses to insert the six byte nop.
-         */
-        if ((code & 0x0000FFFFFFFFFFFF) == 0x0000441F0F66 ||
-            (code & 0x0000FFFFFFFFFFFF) ==
-                ((((kMcount - ((intptr_t)&p[2] + 4)) << 16) | 0xE867) &
-                 0x0000FFFFFFFFFFFF) ||
-            (code & 0x0000FFFFFFFFFFFF) ==
-                ((((kMcount - ((intptr_t)&p[2] + 4)) << 16) | 0xFF15) &
-                 0x0000FFFFFFFFFFFF)) {
-          p[0] = 0x67;
-          p[1] = 0xE8;
-          addr = kFtraceHook - ((intptr_t)&p[2] + 4);
-          p[2] = addr >> 000;
-          p[3] = addr >> 010;
-          p[4] = addr >> 020;
-          p[5] = addr >> 030;
-          break;
-        }
-
-        /*
-         * Test for -mnop-mcount (w/ -fno-pie)
-         */
-        mcode = code & 0x000000FFFFFFFFFF;
-        if ((mcode == 0x00441F0F /*   nopl 0x00(%eax,%eax,1) [canonical] */) ||
-            (mcode == 0x00041F0F67 /* nopl (%eax,%eax,1)     [older gcc] */)) {
-          if (p[-1] != 0x66 /*        nopw 0x0(%rax,%rax,1)  [donotwant] */) {
-            p[0] = 0xE8 /* call Jvds */;
-            addr = kFtraceHook - ((intptr_t)&p[1] + 4);
-            p[1] = addr >> 000;
-            p[2] = addr >> 010;
-            p[3] = addr >> 020;
-            p[4] = addr >> 030;
-          }
-          break;
-        }
-      }
-    }
-    __mprotect((void *)g_symbols->addr_base,
-               kPrivilegedStart - g_symbols->addr_base, PROT_READ | PROT_EXEC);
-  }
-  sigprocmask(SIG_SETMASK, &oldmask, NULL);
-}
-
-/**
  * Installs plaintext function tracer. Do not call.
  * @see libc/runtime/_init.S for documentation
  */
 textstartup void ftrace_init(void) {
+  g_buf[0] = '+';
+  g_buf[1] = ' ';
   if ((g_symbols = opensymboltable(finddebugbinary()))) {
-    ftrace_install();
+    __hook(ftrace_hook, g_symbols);
   }
 }

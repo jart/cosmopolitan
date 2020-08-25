@@ -1,9 +1,10 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_IPCLASSIFY_H_
 #define COSMOPOLITAN_LIBC_SOCK_IPCLASSIFY_H_
+#ifndef __STRICT_ANSI__
 #include "libc/sock/sock.h"
-#include "libc/sysv/errfuns.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/inaddr.h"
+#include "libc/sysv/errfuns.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -65,4 +66,5 @@ forceinline bool ispublicip(int sin_family, void *sin_addr) {
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* !ANSI */
 #endif /* COSMOPOLITAN_LIBC_SOCK_IPCLASSIFY_H_ */

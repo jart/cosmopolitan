@@ -23,13 +23,13 @@
 COSMOPOLITAN_C_START_
 
 struct MappedFile {
-  int64_t fd;
+  int fd;
   void *addr;
   size_t size;
 };
 
-int mapfileread(const char *filename, struct MappedFile *mf) hidden;
-int unmapfile(struct MappedFile *mf) hidden;
+int mapfileread(const char *, struct MappedFile *) hidden;
+int unmapfile(struct MappedFile *) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

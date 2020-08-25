@@ -79,20 +79,6 @@ o/$(MODE)/tool/viz/lib/resizegraphic.o:			\
 			-DSTACK_FRAME_UNLIMITED		\
 			$(MATHEMATICAL)
 
-#o/$(MODE)/tool/viz/lib/scale.o				\
-o/$(MODE)/tool/viz/lib/writetoframebuffer.o		\
-o/$(MODE)/tool/viz/lib/interlace.o			\
-o/$(MODE)/tool/viz/lib/magicscale.o			\
-o/$(MODE)/tool/viz/lib/halfblit.o			\
-o/$(MODE)/tool/viz/lib/byte2float.o			\
-o/$(MODE)/tool/viz/lib/ycbcr2rgb2.o			\
-o/$(MODE)/tool/viz/lib/magickernel.o			\
-o/$(MODE)/tool/viz/lib/lolquist.o			\
-o/$(MODE)/tool/viz/lib/getxtermcodes.o			\
-o/$(MODE)/tool/viz/lib/unsharp.o			\
-o/$(MODE)/tool/viz/lib/gaussian.o:			\
-		CC = $(CLANG)
-
 o/$(MODE)/tool/viz/lib/printmatrix.o:			\
 		OVERRIDE_CFLAGS +=			\
 			$(IEEE_MATH)

@@ -28,9 +28,9 @@ tinymath_remainderl:
 	fldt	32(%rbp)
 	fldt	16(%rbp)
 1:	fprem1
-	fnstsw	%ax
+	fnstsw
 	test	$FPU_C2>>8,%ah
-	jne	1b
+	jnz	1b
 	fstp	%st(1)
 	pop	%rbp
 	ret

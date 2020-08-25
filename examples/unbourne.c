@@ -431,40 +431,40 @@
 /*
  * Evaluate a command.
  */
-#define ALIASCMD   (builtincmd + 3)
-#define BGCMD      (builtincmd + 4)
-#define BREAKCMD   (builtincmd + 5)
-#define CDCMD      (builtincmd + 6)
-#define COMMANDCMD (builtincmd + 8)
-#define DOTCMD     (builtincmd + 0)
-#define ECHOCMD    (builtincmd + 10)
-#define EVALCMD    (builtincmd + 11)
-#define EXECCMD    (builtincmd + 12)
-#define EXITCMD    (builtincmd + 13)
-#define EXPORTCMD  (builtincmd + 14)
-#define FALSECMD   (builtincmd + 15)
-#define FGCMD      (builtincmd + 16)
-#define GETOPTSCMD (builtincmd + 17)
-#define HASHCMD    (builtincmd + 18)
-#define JOBSCMD    (builtincmd + 19)
-#define KILLCMD    (builtincmd + 20)
-#define LOCALCMD   (builtincmd + 21)
-#define PRINTFCMD  (builtincmd + 22)
-#define PWDCMD     (builtincmd + 23)
-#define READCMD    (builtincmd + 24)
-#define RETURNCMD  (builtincmd + 26)
-#define SETCMD     (builtincmd + 27)
-#define SHIFTCMD   (builtincmd + 28)
-#define TESTCMD    (builtincmd + 2)
-#define TIMESCMD   (builtincmd + 30)
-#define TRAPCMD    (builtincmd + 31)
-#define TRUECMD    (builtincmd + 1)
-#define TYPECMD    (builtincmd + 33)
-#define ULIMITCMD  (builtincmd + 34)
-#define UMASKCMD   (builtincmd + 35)
-#define UNALIASCMD (builtincmd + 36)
-#define UNSETCMD   (builtincmd + 37)
-#define WAITCMD    (builtincmd + 38)
+#define ALIASCMD   (kBuiltinCmds + 3)
+#define BGCMD      (kBuiltinCmds + 4)
+#define BREAKCMD   (kBuiltinCmds + 5)
+#define CDCMD      (kBuiltinCmds + 6)
+#define COMMANDCMD (kBuiltinCmds + 8)
+#define DOTCMD     (kBuiltinCmds + 0)
+#define ECHOCMD    (kBuiltinCmds + 10)
+#define EVALCMD    (kBuiltinCmds + 11)
+#define EXECCMD    (kBuiltinCmds + 12)
+#define EXITCMD    (kBuiltinCmds + 13)
+#define EXPORTCMD  (kBuiltinCmds + 14)
+#define FALSECMD   (kBuiltinCmds + 15)
+#define FGCMD      (kBuiltinCmds + 16)
+#define GETOPTSCMD (kBuiltinCmds + 17)
+#define HASHCMD    (kBuiltinCmds + 18)
+#define JOBSCMD    (kBuiltinCmds + 19)
+#define KILLCMD    (kBuiltinCmds + 20)
+#define LOCALCMD   (kBuiltinCmds + 21)
+#define PRINTFCMD  (kBuiltinCmds + 22)
+#define PWDCMD     (kBuiltinCmds + 23)
+#define READCMD    (kBuiltinCmds + 24)
+#define RETURNCMD  (kBuiltinCmds + 26)
+#define SETCMD     (kBuiltinCmds + 27)
+#define SHIFTCMD   (kBuiltinCmds + 28)
+#define TESTCMD    (kBuiltinCmds + 2)
+#define TIMESCMD   (kBuiltinCmds + 30)
+#define TRAPCMD    (kBuiltinCmds + 31)
+#define TRUECMD    (kBuiltinCmds + 1)
+#define TYPECMD    (kBuiltinCmds + 33)
+#define ULIMITCMD  (kBuiltinCmds + 34)
+#define UMASKCMD   (kBuiltinCmds + 35)
+#define UNALIASCMD (kBuiltinCmds + 36)
+#define UNSETCMD   (kBuiltinCmds + 37)
+#define WAITCMD    (kBuiltinCmds + 38)
 
 #define BUILTIN_SPECIAL 0x1
 #define BUILTIN_REGULAR 0x2
@@ -620,12 +620,12 @@
 #define octtobin(c)     ((c) - '0')
 #define scopy(s1, s2)   ((void)strcpy(s2, s1))
 
-#define TRACE(param)
-/* #define TRACE(param)   \ */
-/*   do {                 \ */
-/*     printf("TRACE: "); \ */
-/*     printf param;      \ */
-/*   } while (0) */
+/* #define TRACE(param) */
+#define TRACE(param)   \
+  do {                 \
+    printf("TRACE: "); \
+    printf param;      \
+  } while (0)
 
 #define TRACEV(param)
 #define digit_val(c)  ((c) - '0')
@@ -1184,13 +1184,16 @@ static const char dolatstr[] = {CTLQUOTEMARK, CTLVAR, VSNORMAL, '@', '=', CTLQUO
 /* Some macros depend on the order, add new variables to the end. */
 static void changepath(const char *);
 static void getoptsreset(const char *);
-static struct Var varinit[] = {{0, VSTRFIXED | VTEXTFIXED, defifsvar, 0},
-                               {0, VSTRFIXED | VTEXTFIXED, defpathvar, changepath},
-                               {0, VSTRFIXED | VTEXTFIXED, "PS1=$ ", 0},
-                               {0, VSTRFIXED | VTEXTFIXED, "PS2=> ", 0},
-                               {0, VSTRFIXED | VTEXTFIXED, "PS4=+ ", 0},
-                               {0, VSTRFIXED | VTEXTFIXED, defoptindvar, getoptsreset},
-                               {0, VSTRFIXED | VTEXTFIXED, linenovar, 0}};
+
+static struct Var varinit[] = {
+    {0, VSTRFIXED | VTEXTFIXED, defifsvar, 0},
+    {0, VSTRFIXED | VTEXTFIXED, defpathvar, changepath},
+    {0, VSTRFIXED | VTEXTFIXED, "PS1=$ ", 0},
+    {0, VSTRFIXED | VTEXTFIXED, "PS2=> ", 0},
+    {0, VSTRFIXED | VTEXTFIXED, "PS4=+ ", 0},
+    {0, VSTRFIXED | VTEXTFIXED, defoptindvar, getoptsreset},
+    {0, VSTRFIXED | VTEXTFIXED, linenovar, 0},
+};
 
 static const char kPrec[ARITH_BINOP_MAX - ARITH_BINOP_MIN] = {
 #define ARITH_PRECEDENCE(OP, PREC) [OP - ARITH_BINOP_MIN] = PREC
@@ -1308,7 +1311,8 @@ static const char sqsyntax[] = {
     CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
     CCTL,      CCTL,  CCTL,  CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
     CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CCTL,  CWORD};
+    CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CCTL,  CWORD,
+};
 
 /* syntax table used when in arithmetic */
 static const char arisyntax[] = {
@@ -1331,7 +1335,8 @@ static const char arisyntax[] = {
     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD,
     CWORD, CBACK, CWORD, CWORD, CWORD, CBQUOTE, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD,
     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CENDVAR, CWORD, CWORD};
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CENDVAR, CWORD, CWORD,
+};
 
 /* character classification table */
 static const char is_type[] /* clang-format off */ = {
@@ -1405,20 +1410,47 @@ static int unaliascmd();
 static int unsetcmd();
 static int waitcmd();
 
-static const struct builtincmd builtincmd[] = {
-    {".", dotcmd, 3},           {":", truecmd, 3},          {"[", testcmd, 0},
-    {"alias", aliascmd, 6},     {"bg", bgcmd, 2},           {"break", breakcmd, 3},
-    {"cd", cdcmd, 2},           {"chdir", cdcmd, 0},        {"command", commandcmd, 2},
-    {"continue", breakcmd, 3},  {"echo", echocmd, 0},       {"eval", NULL, 3},
-    {"exec", execcmd, 3},       {"exit", exitcmd, 3},       {"export", exportcmd, 7},
-    {"false", falsecmd, 2},     {"fg", fgcmd, 2},           {"getopts", getoptscmd, 2},
-    {"hash", hashcmd, 2},       {"jobs", jobscmd, 2},       {"kill", killcmd, 2},
-    {"local", localcmd, 7},     {"printf", printfcmd, 0},   {"pwd", pwdcmd, 2},
-    {"read", readcmd, 2},       {"readonly", exportcmd, 7}, {"return", returncmd, 3},
-    {"set", setcmd, 3},         {"shift", shiftcmd, 3},     {"test", testcmd, 0},
-    {"times", timescmd, 3},     {"trap", trapcmd, 3},       {"true", truecmd, 2},
-    {"type", typecmd, 2},       {"ulimit", ulimitcmd, 2},   {"umask", umaskcmd, 2},
-    {"unalias", unaliascmd, 2}, {"unset", unsetcmd, 3},     {"wait", waitcmd, 2}};
+static const struct builtincmd kBuiltinCmds[] = {
+    {".", dotcmd, 3},            //
+    {":", truecmd, 3},           //
+    {"[", testcmd, 0},           //
+    {"alias", aliascmd, 6},      //
+    {"bg", bgcmd, 2},            //
+    {"break", breakcmd, 3},      //
+    {"cd", cdcmd, 2},            //
+    {"chdir", cdcmd, 0},         //
+    {"command", commandcmd, 2},  //
+    {"continue", breakcmd, 3},   //
+    {"echo", echocmd, 0},        //
+    {"eval", NULL, 3},           //
+    {"exec", execcmd, 3},        //
+    {"exit", exitcmd, 3},        //
+    {"export", exportcmd, 7},    //
+    {"false", falsecmd, 2},      //
+    {"fg", fgcmd, 2},            //
+    {"getopts", getoptscmd, 2},  //
+    {"hash", hashcmd, 2},        //
+    {"jobs", jobscmd, 2},        //
+    {"kill", killcmd, 2},        //
+    {"local", localcmd, 7},      //
+    {"printf", printfcmd, 0},    //
+    {"pwd", pwdcmd, 2},          //
+    {"read", readcmd, 2},        //
+    {"readonly", exportcmd, 7},  //
+    {"return", returncmd, 3},    //
+    {"set", setcmd, 3},          //
+    {"shift", shiftcmd, 3},      //
+    {"test", testcmd, 0},        //
+    {"times", timescmd, 3},      //
+    {"trap", trapcmd, 3},        //
+    {"true", truecmd, 2},        //
+    {"type", typecmd, 2},        //
+    {"ulimit", ulimitcmd, 2},    //
+    {"umask", umaskcmd, 2},      //
+    {"unalias", unaliascmd, 2},  //
+    {"unset", unsetcmd, 3},      //
+    {"wait", waitcmd, 2},        //
+};
 
 enum token {
   EOI,
@@ -2115,7 +2147,7 @@ static int olderf(const char *, const char *);
 static int64_t openhere(union node *);
 static int openredirect(union node *);
 static int options(int);
-static int padvance_magic(const char **path, const char *name, int magic);
+static int padvance_magic(const char **, const char *, int);
 static int patmatch(char *, const char *);
 static int peektoken(void);
 static int pgetc(void);
@@ -2882,7 +2914,7 @@ step6:
   goto docd;
 err:
   sh_error("can't cd to %s", dest);
-  /* NOTREACHED */
+  unreachable;
 out:
   if (flags & CD_PRINT) out1fmt(snlfmt, curdir);
   return 0;
@@ -3446,7 +3478,7 @@ static void evalbackcmd(union node *n, struct backcmd *result) {
     }
     ifsfree();
     evaltreenr(n, EV_EXIT);
-    /* NOTREACHED */
+    unreachable;
   }
   close(pip[1]);
   result->fd = pip[0];
@@ -3629,7 +3661,7 @@ static int evalcommand(union node *cmd, int flags) {
         break;
       }
       shellexec(argv, path, cmdentry.u.index);
-      /* NOTREACHED */
+      unreachable;
     case CMDBUILTIN:
       if (evalbltin(cmdentry.u.cmd, argc, argv, flags) &&
           !(exception == EXERROR && spclbltin <= 0)) {
@@ -3742,9 +3774,11 @@ funcdone:
  */
 static void prehash(union node *n) {
   struct cmdentry entry;
-  if (n->type == NCMD && n->ncmd.args)
-    if (goodname(n->ncmd.args->narg.text))
+  if (n->type == NCMD && n->ncmd.args) {
+    if (goodname(n->ncmd.args->narg.text)) {
       find_command(n->ncmd.args->narg.text, &entry, 0, pathval());
+    }
+  }
 }
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -4014,10 +4048,8 @@ static void readcmdfile(char *name) {
  * Search the table of builtin commands.
  */
 static struct builtincmd *find_builtin(const char *name) {
-  struct builtincmd *bp;
-  bp = bsearch(&name, builtincmd, sizeof(builtincmd) / sizeof(builtincmd[0]), sizeof(builtincmd[0]),
-               pstrcmp);
-  return bp;
+  return bsearch(&name, kBuiltinCmds, sizeof(kBuiltinCmds) / sizeof(kBuiltinCmds[0]),
+                 sizeof(kBuiltinCmds[0]), pstrcmp);
 }
 
 /*
@@ -4025,15 +4057,11 @@ static struct builtincmd *find_builtin(const char *name) {
  * change the shellexec routine as well.
  */
 static void find_command(char *name, struct cmdentry *entry, int act, const char *path) {
-  struct tblentry *cmdp;
-  int idx;
-  int prev;
   char *fullname;
   struct stat statb;
-  int e;
-  int updatetbl;
+  struct tblentry *cmdp;
   struct builtincmd *bcmd;
-  int len;
+  int e, bit, idx, prev, updatetbl, len;
   /* If name contains a slash, don't use PATH or hash table */
   if (strchr(name, '/') != NULL) {
     entry->u.index = -1;
@@ -4050,7 +4078,6 @@ static void find_command(char *name, struct cmdentry *entry, int act, const char
   if (!updatetbl) act |= DO_ALTPATH;
   /* If name is in the table, check answer will be ok */
   if ((cmdp = cmdlookup(name, 0)) != NULL) {
-    int bit;
     switch (cmdp->cmdtype) {
       default:
       case CMDNORMAL:
@@ -4067,9 +4094,10 @@ static void find_command(char *name, struct cmdentry *entry, int act, const char
       if (act & bit & DO_REGBLTIN) goto fail;
       updatetbl = 0;
       cmdp = NULL;
-    } else if (cmdp->rehash == 0)
+    } else if (cmdp->rehash == 0) {
       /* if not invalidated by cd, we're done */
       goto success;
+    }
   }
   /* If %builtin not in path, check for builtin next */
   bcmd = find_builtin(name);
@@ -4744,7 +4772,7 @@ static void expbackq(union node *cmd, int flag) {
     recordregion(startloc, dest - (char *)stackblock(), 0);
   }
   TRACE(("evalbackq: size=%d: \"%.*s\"\n", (dest - (char *)stackblock()) - startloc,
-         (dest - (char *)stackblock()) - startloc, stackblock() + startloc));
+         (dest - (char *)stackblock()) - startloc, (char *)stackblock() + startloc));
 out:
   argbackq = argbackq->next;
 }
@@ -4822,7 +4850,7 @@ static char *subevalvar(char *start, char *str, int strloc, int startloc, int va
       goto out;
     case VSQUESTION:
       varunset(start, str, startp, varflags);
-      /* NOTREACHED */
+      unreachable;
   }
   subtype -= VSTRIMRIGHT;
   rmesc = startp;
@@ -6450,7 +6478,7 @@ static void forkparent(struct job *jp, union node *n, int mode, int pid) {
     TRACE(("Fork failed, errno=%d", errno));
     if (jp) freejob(jp);
     sh_error("Cannot fork");
-    /* NOTREACHED */
+    unreachable;
   }
   TRACE(("In parent shell:  child = %d\n", pid));
   if (!jp) return;
@@ -6480,10 +6508,11 @@ static int forkshell(struct job *jp, union node *n, int mode) {
   int pid;
   TRACE(("forkshell(%%%d, %p, %d) called\n", jobno(jp), n, mode));
   pid = fork();
-  if (pid == 0)
+  if (pid == 0) {
     forkchild(jp, n, mode);
-  else
+  } else {
     forkparent(jp, n, mode, pid);
+  }
   return pid;
 }
 
@@ -6498,7 +6527,7 @@ static struct job *vforkexec(union node *n, char **argv, const char *path, int i
     forkchild(jp, n, FORK_FG);
     sigclearmask();
     shellexec(argv, path, idx);
-    /* NOTREACHED */
+    unreachable;
   }
   vforked = 0;
   sigclearmask();
@@ -7355,7 +7384,7 @@ static void setoption(int flag, int val) {
       return;
     }
   sh_error("Illegal option -%c", flag);
-  /* NOTREACHED */
+  unreachable;
 }
 
 /*
@@ -7799,7 +7828,7 @@ static union node *command(void) {
   switch (readtoken()) {
     default:
       synexpect(-1);
-      /* NOTREACHED */
+      unreachable;
     case TIF:
       n1 = (union node *)stalloc(sizeof(struct nif));
       n1->type = NIF;
@@ -9998,10 +10027,10 @@ static void initvar(void) {
     vp->next = *vpp;
     *vpp = vp;
   } while (++vp < end);
-  /*
-   * PS1 depends on uid
-   */
-  if (!geteuid()) vps1.text = "PS1=# ";
+  /* PS1 depends on uid */
+  if (!geteuid()) {
+    vps1.text = "PS1=# ";
+  }
 }
 
 /*
@@ -10749,7 +10778,7 @@ static int exitcmd(int argc, char **argv) {
   exraise(EXEXIT);
 }
 
-/*
+/**
  * Main routine.  We initialize things, parse the arguments, execute
  * profiles if we're a login shell, and then call cmdloop to execute
  * commands.  The setjmp call sets up the location to jump to when an

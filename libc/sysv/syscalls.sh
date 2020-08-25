@@ -184,8 +184,6 @@ scall	settimeofday		0x0044007a207a00a4	globl
 scall	mount			0x0015001520a700a5	globl
 scall	reboot			0x00370037203700a9	globl
 scall	quotactl		0x0094009420a500b3	globl
-scall	'utime$sysv'		0xffffffffffff0084	globl hidden
-scall	'utimes$sysv'		0x004c008a208a00eb	globl hidden
 scall	setfsuid		0xffffffffffff007a	globl
 scall	setfsgid		0xffffffffffff007b	globl
 scall	capget			0xffffffffffff007d	globl
@@ -282,7 +280,11 @@ scall	inotify_rm_watch	0xffffffffffff00ff	globl
 scall	'openat$sysv'		0x014101f321cf0101	globl hidden # Linux 2.6.16+ (c. 2007)
 scall	'mkdirat$sysv'		0x013e01f021db0102	globl hidden
 scall	'fchownat$sysv'		0x013b01eb21d40104	globl hidden # @asyncsignalsafe
-scall	futimesat		0xffff01eeffff0105	globl hidden # @asyncsignalsafe
+scall	'utime$sysv'		0xffffffffffff0084	globl hidden
+scall	'utimes$sysv'		0x004c008a208a00eb	globl hidden
+scall	'futimesat$sysv'	0xffff01eeffff0105	globl hidden # @asyncsignalsafe
+scall	'futimes$sysv'		0x004d00ce208bffff	globl hidden
+scall	'futimens$sysv'		0x00550222ffffffff	globl hidden
 scall	'__fstatat$sysv'	0x002a022821d60106	globl hidden # a.k.a. newfstatat(); FreeBSD 12+; needs stat2linux()
 scall	'unlinkat$sysv'		0x014501f721d80107	globl hidden
 scall	'renameat$sysv'		0x014301f521d10108	globl hidden
@@ -301,7 +303,7 @@ scall	move_pages		0xffffffffffff0117	globl        # NOTE: We view Red Hat versio
 #──────────────────────RHEL 5.0 LIMIT────────────────────────        # ←┬─ last gplv2 distro w/ sysv init was rhel5 c. 2007
 scall	'__preadv$sysv'		0x010b0121ffff0127	globl hidden #  ├─ cosmopolitan at minimum requires rhel5
 scall	'__pwritev$sysv'	0x010c0122ffff0128	globl hidden #  ├─ python modules need to work on this (pep513)
-scall	utimensat		0x00540223ffff0118	globl hidden #  └─ end of life 2020-11-30 (extended)
+scall	'__utimensat$sysv'	0x00540223ffff0118	globl hidden #  └─ end of life 2020-11-30 (extended)
 scall	'fallocate$sysv'	0xffffffffffff011d	globl hidden
 scall	'posix_fallocate$sysv'	0xffff0212ffffffff	globl hidden
 scall	'__accept4$sysv'	0x005d021dffff0120	globl hidden # Linux 2.6.28+
@@ -380,7 +382,6 @@ scall	getfh			0x00a100a120a1ffff	globl
 scall	chflags			0x002200222022ffff	globl
 scall	getfsstat		0x003e022d215bffff	globl
 scall	nfssvc			0x009b009b209bffff	globl
-scall	futimes			0x004d00ce208bffff	globl
 scall	adjtime			0x008c008c208cffff	globl
 scall	fchflags		0x002300232023ffff	globl
 scall	'__seteuid$bsd'		0x00b700b720b7ffff	globl hidden # wrapped via setreuid()
@@ -424,7 +425,6 @@ scall	auditon			0xffff01be215fffff	globl
 scall	msgsys			0xffff00aa20fcffff	globl
 scall	shmsys			0xffff00ab20fdffff	globl
 #─────────────────────FREEBSD & OPENBSD──────────────────────
-scall	futimens		0x00550222ffffffff	globl
 scall	fhstat			0x01260229ffffffff	globl
 scall	chflagsat		0x006b021cffffffff	globl
 scall	profil			0x002c002cffffffff	globl

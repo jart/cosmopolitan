@@ -1,13 +1,14 @@
 #ifndef COSMOPOLITAN_LIBC_TIME_TIME_H_
 #define COSMOPOLITAN_LIBC_TIME_TIME_H_
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct itimerval;
-struct timespec;
-struct timeval;
 struct timezone;
 struct tm;
+struct utimbuf;
 
 extern const char kWeekdayNameShort[7][4];
 extern const char kWeekdayName[7][10];
@@ -20,12 +21,12 @@ extern long CLOCKS_PER_SEC;
 int64_t clock(void);
 int64_t time(int64_t *);
 int gettimeofday(struct timeval *, struct timezone *);
-int clock_gettime(int, struct timespec *) paramsnonnull();
+int clock_gettime(int, struct timespec *);
 int clock_getres(int, struct timespec *);
 
 int sleep(uint32_t);
 int usleep(uint32_t);
-int nanosleep(const struct timespec *, struct timespec *) paramsnonnull((1));
+int nanosleep(const struct timespec *, struct timespec *);
 unsigned alarm(unsigned);
 int getitimer(int, struct itimerval *) paramsnonnull();
 int setitimer(int, const struct itimerval *, struct itimerval *)
@@ -51,7 +52,12 @@ char *asctime_r(const struct tm *, char * /*[64]*/);
 char *ctime(const int64_t *);
 char *ctime_r(const int64_t *, char * /*[64]*/);
 
-int utimes(const char *, const struct timeval *);
+int futimens(int, const struct timespec[2]);
+int utimensat(int, const char *, const struct timespec[2], int);
+int utimes(const char *, const struct timeval[2]);
+int utime(const char *, const struct utimbuf *);
+int futimes(int, const struct timeval[2]);
+int futimesat(int, const char *, const struct timeval[2]);
 
 long double dtime(int);
 long double dsleep(long double);

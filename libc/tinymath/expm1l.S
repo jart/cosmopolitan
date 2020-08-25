@@ -20,8 +20,12 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns exp(𝑥) - 1.
-expm1l:	push	%rbp
+/	Returns 𝑒^x-1.
+/
+/	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+/	@return	result of exponentiation on FPU stack in %st
+tinymath_expm1l:
+	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
@@ -41,7 +45,8 @@ expm1l:	push	%rbp
 	faddp	%st,%st(1)
 	pop	%rbp
 	ret
-	.endfn	expm1l,globl
+	.endfn	tinymath_expm1l,globl
+	.alias	tinymath_expm1l,expm1l
 
 	.rodata.cst4
 .Lone:	.float	1.0

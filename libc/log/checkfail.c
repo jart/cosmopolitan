@@ -25,6 +25,7 @@
 #include "libc/log/check.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
+#include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -51,7 +52,7 @@ relegated void __check_fail(const char *suffix, const char *opstr,
           "\tCHECK_%s(%s, %s);\n"
           "\t\t → %#lx (%s)\n"
           "\t\t%s %#lx (%s)\n",
-          sufbuf, wantstr, gotstr, got, gotstr, opstr, want, wantstr);
+          sufbuf, wantstr, gotstr, want, wantstr, opstr, got, gotstr);
 
   if (!isempty(fmt)) {
     fputc('\t', stderr);
@@ -70,7 +71,8 @@ relegated void __check_fail(const char *suffix, const char *opstr,
 
   if (!IsTiny() && lasterr == ENOMEM) {
     fprintf(stderr, "\n");
-    showmappings(stderr);
+    fflush(stderr);
+    PrintMemoryIntervals(fileno(stderr), &_mmi);
   }
 
   fflush(stderr);

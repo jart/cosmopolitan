@@ -23,6 +23,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/log/gdb.h"
 #include "libc/log/log.h"
+#include "libc/nexgen32e/vendor.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.h"
@@ -52,8 +53,8 @@ relegated int(attachdebugger)(intptr_t continuetoaddr) {
   struct StackFrame *bp;
   char pidstr[11], breakcmd[40];
   const char *se, *elf, *gdb, *rewind, *layout;
-  if (!((gdb = commandv(firstnonnull(getenv("GDB"), "gdb"))) &&
-        (ttyin = ttyout = open(_PATH_TTY, O_RDWR, 0)) != -1)) {
+  if (IsGenuineCosmo() || !(gdb = GetGdbPath()) ||
+      (ttyin = ttyout = open(_PATH_TTY, O_RDWR, 0)) == -1) {
     return -1;
   }
   snprintf(pidstr, sizeof(pidstr), "%u", getpid());

@@ -17,8 +17,13 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/str/tinymemccpy.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
+
+void *memccpy2(void *, const void *, int, size_t);
 
 TEST(memccpy, testStringCopy) {
   char buf[16];
@@ -34,4 +39,22 @@ TEST(memccpy, testOverflow) {
 TEST(memccpy, testZeroLength_doesNothing) {
   char buf[1];
   EXPECT_EQ(NULL, memccpy(buf, "hi", '\0', 0));
+}
+
+TEST(memccpy, memcpy) {
+  unsigned n, n2;
+  char *b1, *b2, *b3, *e1, *e2;
+  for (n = 0; n < 1026; ++n) {
+    b1 = tmalloc(n);
+    b2 = tmalloc(n);
+    b3 = tmalloc(n);
+    e1 = tinymemccpy(b2, b1, 31337, n);
+    e2 = memccpy(b3, b1, 31337, n);
+    n2 = e1 ? e1 - b1 : n;
+    ASSERT_EQ(e1, e2);
+    ASSERT_EQ(0, memcmp(b2, b3, n2));
+    tfree(b3);
+    tfree(b2);
+    tfree(b1);
+  }
 }

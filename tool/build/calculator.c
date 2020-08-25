@@ -18,6 +18,7 @@
 #include "libc/conv/itoa.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
+#include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"
 #include "libc/math.h"
@@ -30,6 +31,7 @@
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/tinymath/emodl.h"
+#include "libc/x/x.h"
 #include "third_party/dtoa/dtoa.h"
 #include "third_party/getopt/getopt.h"
 
@@ -112,6 +114,11 @@ enum Severity {
   kWarning,
 };
 
+enum Exception {
+  kUnderflow = 1,
+  kDivideError,
+};
+
 struct Bytes {
   size_t i, n;
   char *p;
@@ -139,8 +146,8 @@ struct Function {
   const char *doc;
 };
 
+jmp_buf thrower;
 const char *file;
-jmp_buf underflow;
 struct Bytes token;
 struct History history;
 struct Value stack[128];
@@ -200,6 +207,14 @@ void Log(enum Severity l, const char *fmt, ...) {
   if (interactive) ShowStack();
 }
 
+void __on_arithmetic_overflow(void) {
+  Warning("arithmetic overflow");
+}
+
+void OnDivideError(void) {
+  longjmp(thrower, kDivideError);
+}
+
 struct Value Push(struct Value x) {
   if (sp >= ARRAYLEN(stack)) Fatal("stack overflow");
   return (stack[sp++] = x);
@@ -209,7 +224,7 @@ struct Value Pop(void) {
   if (sp) {
     return stack[--sp];
   } else {
-    longjmp(underflow, 1);
+    longjmp(thrower, kUnderflow);
   }
 }
 
@@ -240,9 +255,38 @@ void Pushf(FLOAT f) {
 void OpDrop(void) {
   Pop();
 }
-
 void OpDup(void) {
   Push(Push(Pop()));
+}
+void OpExit(void) {
+  exit(Popi());
+}
+void OpSrand(void) {
+  srand(Popi());
+}
+void OpEmit(void) {
+  fputwc(Popi(), stdout);
+}
+void OpCr(void) {
+  Cr(stdout);
+}
+void OpPrint(void) {
+  printf("%s ", Repr(Pop()));
+}
+void OpComment(void) {
+  comment = true;
+}
+void Glue0f(FLOAT fn(void)) {
+  Pushf(fn());
+}
+void Glue0i(INT fn(void)) {
+  Pushi(fn());
+}
+void Glue1f(FLOAT fn(FLOAT)) {
+  Pushf(fn(Popf()));
+}
+void Glue1i(INT fn(INT)) {
+  Pushi(fn(Popi()));
 }
 
 void OpSwap(void) {
@@ -262,32 +306,12 @@ void OpOver(void) {
   Push(a);
 }
 
-void OpSrand(void) {
-  srand(Popi());
-}
-
 void OpKey(void) {
   wint_t c;
   ttyraw(kTtyCursor | kTtySigs | kTtyLfToCrLf);
   c = fgetwc(stdin);
   ttyraw(-1);
   if (c != -1) Pushi(c);
-}
-
-void OpEmit(void) {
-  fputwc(Popi(), stdout);
-}
-
-void OpCr(void) {
-  Cr(stdout);
-}
-
-void OpPrint(void) {
-  printf("%s ", Repr(Pop()));
-}
-
-void OpComment(void) {
-  comment = true;
 }
 
 void OpAssert(void) {
@@ -298,30 +322,11 @@ void OpExpect(void) {
   if (!Popi()) Warning("expect failed");
 }
 
-void OpExit(void) {
-  exit(Popi());
-}
-
 void OpMeminfo(void) {
   OpCr();
   OpCr();
-  meminfo(stdout);
-}
-
-void Glue0f(FLOAT fn(void)) {
-  Pushf(fn());
-}
-
-void Glue0i(INT fn(void)) {
-  Pushi(fn());
-}
-
-void Glue1f(FLOAT fn(FLOAT)) {
-  Pushf(fn(Popf()));
-}
-
-void Glue1i(INT fn(INT)) {
-  Pushi(fn(Popi()));
+  fflush(stdout);
+  meminfo(fileno(stdout));
 }
 
 void Glue2f(FLOAT fn(FLOAT, FLOAT)) {
@@ -438,18 +443,25 @@ bool ConsumeLiteral(const char *literal) {
 }
 
 void ConsumeToken(void) {
+  enum Exception ex;
   if (!token.i) return;
   token.p[token.i] = 0;
   token.i = 0;
   if (history.i) history.p[history.i - 1].i = 0;
   if (comment) return;
   if (startswith(token.p, "#!")) return;
-  if (!setjmp(underflow)) {
-    if (CallFunction(token.p)) return;
-    if (ConsumeLiteral(token.p)) return;
-    Warning("bad token: %s", token.p);
-  } else {
-    Warning("stack underflow");
+  switch (setjmp(thrower)) {
+    default:
+      if (CallFunction(token.p)) return;
+      if (ConsumeLiteral(token.p)) return;
+      Warning("bad token: %s", token.p);
+      break;
+    case kUnderflow:
+      Warning("stack underflow");
+      break;
+    case kDivideError:
+      Warning("divide error");
+      break;
   }
 }
 
@@ -549,16 +561,12 @@ void GotoStartOfLine(void) {
 
 void GotoEndOfLine(void) {
 }
-
 void GotoPrevLine(void) {
 }
-
 void GotoNextLine(void) {
 }
-
 void GotoPrevChar(void) {
 }
-
 void GotoNextChar(void) {
 }
 
@@ -694,7 +702,9 @@ void GetOpts(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
   int i, rc;
+  showcrashreports();
   GetOpts(argc, argv);
+  xsigaction(SIGFPE, OnDivideError, 0, 0, 0);
   if (optind == argc) {
     file = "/dev/stdin";
     StartInteractive();

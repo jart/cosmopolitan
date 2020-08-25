@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/bits/bswap.h"
 
 uint32_t(bitreverse32)(uint32_t x) {
   x = bswap_32(x);

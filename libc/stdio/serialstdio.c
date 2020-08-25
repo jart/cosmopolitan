@@ -32,7 +32,7 @@ static void fout(FILE *f) {
   f->beg = (f->beg + 1) & (f->size - 1);
 }
 
-static int serialstdio(FILE *f, unsigned char status, void action(FILE *f)) {
+static int serialstdio(FILE *f, unsigned char status, void action(FILE *)) {
   int block = 1;
   unsigned tally = 0;
   while (f->end != f->beg) {
@@ -47,5 +47,9 @@ static int serialstdio(FILE *f, unsigned char status, void action(FILE *f)) {
   return (int)tally;
 }
 
-int fsreadbuf(FILE *f) { return serialstdio(f, UART_TTYDA, fin); }
-int fswritebuf(FILE *f) { return serialstdio(f, UART_TTYTXR, fout); }
+int fsreadbuf(FILE *f) {
+  return serialstdio(f, UART_TTYDA, fin);
+}
+int fswritebuf(FILE *f) {
+  return serialstdio(f, UART_TTYTXR, fout);
+}

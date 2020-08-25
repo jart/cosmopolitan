@@ -20,6 +20,7 @@
 #include "libc/intrin/pmaddubsw.h"
 #include "libc/limits.h"
 #include "libc/macros.h"
+#include "libc/str/str.h"
 
 /**
  * Multiplies bytes and adds adjacent results w/ short saturation.
@@ -33,9 +34,8 @@
  * @note greatest simd op, like, ever
  * @mayalias
  */
-void(pmaddubsw)(short w[8], const unsigned char b[16],
-                const signed char c[16]) {
-  int i;
+void(pmaddubsw)(int16_t w[8], const uint8_t b[16], const int8_t c[16]) {
+  unsigned i;
   for (i = 0; i < 8; ++i) {
     w[i] = MIN(SHRT_MAX, MAX(SHRT_MIN, (c[i * 2 + 0] * b[i * 2 + 0] +
                                         c[i * 2 + 1] * b[i * 2 + 1])));

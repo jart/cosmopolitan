@@ -60,7 +60,7 @@ testonly void testlib_showerror_(int line, const char *wantcode,
             ", %s)\n"
             "\t\t%s %s %s\n"
             "\t\t%s %s\n",
-            gotcode, "want", FREED_want, testlib_showerror_symbol, " got",
+            gotcode, "need", FREED_want, testlib_showerror_symbol, " got",
             FREED_got);
   } else {
     fprintf(stderr,

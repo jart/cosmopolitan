@@ -27,14 +27,15 @@
 #include "libc/nt/runtime.h"
 #include "libc/str/str.h"
 
-static const char *geterrname(int code) {
+const char *geterrname(int code) {
   extern const char kErrnoNames[];
   const long *e;
-  const char *s;
-  size_t i;
-  for (i = 0, e = &E2BIG; e <= &EXFULL; ++e, ++i) {
-    if (code == *e && (s = indexdoublenulstring(&kErrnoNames[0], i))) {
-      return s;
+  size_t i, n;
+  e = &E2BIG;
+  n = &EXFULL + 1 - e;
+  for (i = 0; i < n; ++i) {
+    if (code == e[i]) {
+      return indexdoublenulstring(kErrnoNames, i);
     }
   }
   return NULL;
@@ -46,8 +47,13 @@ static const char *geterrname(int code) {
  */
 int strerror_r(int err, char *buf, size_t size) {
   const char *s;
-  s = (err == -1 || IsTiny()) ? "?" : firstnonnull(geterrname(err), "?");
+  if (err == -1 || IsTiny()) {
+    s = "?";
+  } else {
+    s = firstnonnull(geterrname(err), "?");
+  }
   if (!SupportsWindows()) {
+    DebugBreak();
     snprintf(buf, size, "E%s[%d]", s, err);
   } else {
     char16_t buf16[100];

@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"

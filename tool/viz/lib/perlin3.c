@@ -18,13 +18,16 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/bits/initializer.h"
 #include "libc/macros.h"
 #include "libc/math.h"
 #include "tool/viz/lib/graphic.h"
 
 static int perm[513];
 
-static double lerp(double t, double a, double b) { return a + t * (b - a); }
+static double lerp(double t, double a, double b) {
+  return a + t * (b - a);
+}
 
 static double fade(double t) {
   return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);

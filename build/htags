@@ -54,4 +54,17 @@ set -- --regex-c='/^[_[:alpha:]][_[:alnum:]]*[ *][ *]*\([_[:alpha:]][_[:alnum:]]
 #   extern int32_t (*const SetEvent)(int64_t hEvent) wincall;
 set -- --regex-c='/^extern [^(]*(\*const \([^)]*\))(/\1/b' "$@"
 
-exec ${TAGS:-ctags} -e --langmap=c:.c.h "$@"
+# ctags doesn't understand forward declarations, e.g.
+#   struct WorstSoftwareEver;
+set -- --regex-c='/^struct.*;$/uehocruehcroue/b' "$@"
+
+exec ${TAGS:-ctags}                                      \
+     -e                                                  \
+     --langmap=c:.c.h                                    \
+     --exclude=libc/nt/struct/imagefileheader.h          \
+     --exclude=libc/nt/struct/imageseparatedebugheader.h \
+     --exclude=libc/nt/struct/importobjectheader.h       \
+     --exclude=libc/nt/struct/nonpageddebuginfo.h        \
+     --exclude=libc/nt/struct/ansistring.h               \
+     --exclude=libc/nt/struct/filesegmentelement.h       \
+     "$@"

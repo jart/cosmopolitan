@@ -31,7 +31,7 @@
  * @param size is byte length of path
  * @return pointer inside path or path itself
  */
-char *basename_n(const char *path, size_t size) {
+textstartup char *basename_n(const char *path, size_t size) {
   size_t i, l;
   if (size) {
     if (isslash(path[size - 1])) {

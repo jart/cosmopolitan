@@ -29,4 +29,4 @@ abort:	push	%bp
 	mov	%sp,%bp
 	rlcall	panic
 	int3
-	.endfn	abort,weak,protected
+	.endfn	abort,weak

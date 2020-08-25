@@ -23,11 +23,11 @@
  * Hashes data with hardware acceleration at 10GBps.
  * @note needs Nehalem+ c. 2008 or Bulldozer+ c. 2011
  */
-uint32_t crc32c$sse42(uint32_t init, const void *data, size_t size) {
+uint32_t crc32c$sse42(uint32_t init, const void *data, size_t n) {
   const unsigned char *p = (const unsigned char *)data;
-  const unsigned char *pe = (const unsigned char *)data + size;
+  const unsigned char *pe = (const unsigned char *)data + n;
   uint32_t h = init ^ 0xffffffff;
-  if (size >= 16 + 8) {
+  if (n >= 16 + 8) {
     while ((uintptr_t)p & 7) asm("crc32b\t%1,%0" : "+r"(h) : "rm"(*p++));
     uint64_t hl = h;
     while (p < pe - 16ul) {

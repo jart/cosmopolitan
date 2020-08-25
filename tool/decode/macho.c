@@ -19,12 +19,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/safemacros.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/conv/conv.h"
 #include "libc/macho.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/calls/struct/stat.h"
-#include "libc/calls/calls.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
@@ -66,7 +66,7 @@ static void showmachoheader(void) {
   showinthex(macho->loadcount);
   showinthex(macho->loadsize);
   show(".long",
-       firstnonnull(recreateflags(kMachoFlagNames, macho->flags),
+       firstnonnull(RecreateFlags(kMachoFlagNames, macho->flags),
                     format(b1, "%#x", macho->flags)),
        "macho->flags");
   showinthex(macho->__reserved);
@@ -107,16 +107,16 @@ static void showmacholoadsegment(unsigned i, struct MachoLoadSegment *loadseg) {
   showint64hex(loadseg->offset);
   showint64hex(loadseg->filesz);
   show(".long",
-       firstnonnull(recreateflags(kMachoVmProtNames, loadseg->maxprot),
+       firstnonnull(RecreateFlags(kMachoVmProtNames, loadseg->maxprot),
                     format(b1, "%#x", loadseg->maxprot)),
        "loadseg->maxprot");
   show(".long",
-       firstnonnull(recreateflags(kMachoVmProtNames, loadseg->initprot),
+       firstnonnull(RecreateFlags(kMachoVmProtNames, loadseg->initprot),
                     format(b1, "%#x", loadseg->initprot)),
        "loadseg->initprot");
   showinthex(loadseg->sectioncount);
   show(".long",
-       firstnonnull(recreateflags(kMachoSegmentFlagNames, loadseg->flags),
+       firstnonnull(RecreateFlags(kMachoSegmentFlagNames, loadseg->flags),
                     format(b1, "%#x", loadseg->flags)),
        "loadseg->flags");
   for (unsigned j = 0; j < loadseg->sectioncount; ++j) {

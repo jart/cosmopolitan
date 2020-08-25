@@ -37,7 +37,7 @@ FILE *fdopen(int fd, const char *mode) {
     res->reader = freadbuf;
     res->writer = fwritebuf;
     if ((res->iomode & O_ACCMODE) != O_RDONLY) {
-      fflushregister(res);
+      _fflushregister(res);
     }
   }
   return res;

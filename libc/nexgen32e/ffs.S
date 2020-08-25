@@ -41,7 +41,7 @@ ffs:	.leafprologue
 	bsf	%edi,%eax
 	or	$-1,%edx
 	cmovz	%edx,%eax
-	inc	%eax
+	add	$1,%eax
 	.leafepilogue
 	.endfn	ffs,globl
 	.source	__FILE__

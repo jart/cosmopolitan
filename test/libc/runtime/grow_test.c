@@ -21,7 +21,6 @@
 #include "libc/limits.h"
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/mappings.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"

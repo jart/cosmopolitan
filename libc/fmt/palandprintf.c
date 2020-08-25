@@ -37,6 +37,7 @@
 └─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
+#include "libc/bits/weaken.h"
 #include "libc/conv/conv.h"
 #include "libc/escape/escape.h"
 #include "libc/fmt/fmt.h"
@@ -47,10 +48,12 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-static unsigned ppatoi(const char **str) {
-  unsigned i;
-  i = 0;
-  while (isdigit(**str)) i = i * 10u + (unsigned)(*((*str)++) - '0');
+static int ppatoi(const char **str) {
+  int i;
+  for (i = 0; '0' <= **str && **str <= '9'; ++*str) {
+    i *= 10;
+    i += **str - '0';
+  }
   return i;
 }
 
@@ -104,9 +107,14 @@ static unsigned ppatoi(const char **str) {
  * @see printf() for wordier documentation
  */
 hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
+  void *p;
+  char qchar;
+  long double ldbl;
+  wchar_t charbuf[3];
+  const char *alphabet;
   int (*out)(int, void *);
-  unsigned flags, width, precision;
-  int lasterr;
+  unsigned char signbit, log2base;
+  int w, rc, flags, width, lasterr, precision;
 
   lasterr = errno;
   out = fn ? fn : (int (*)(int, void *))missingno;
@@ -161,7 +169,7 @@ hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
     if (isdigit(*format)) {
       width = ppatoi(&format);
     } else if (*format == '*') {
-      const int w = va_arg(va, int);
+      w = va_arg(va, int);
       if (w < 0) {
         flags |= FLAGS_LEFT; /* reverse padding */
         width = -w;
@@ -179,14 +187,16 @@ hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
       if (isdigit(*format)) {
         precision = ppatoi(&format);
       } else if (*format == '*') {
-        const int prec = (int)va_arg(va, int);
-        precision = prec > 0 ? prec : 0;
+        precision = va_arg(va, int);
         format++;
       }
     }
+    if (precision < 0) {
+      precision = 0;
+    }
 
     /* evaluate length field */
-    unsigned char signbit = 31;
+    signbit = 31;
     switch (*format) {
       case 'j': /* intmax_t */
         format++;
@@ -196,8 +206,8 @@ hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
         if (format[1] == 'l') format++;
         /* fallthrough */
       case 't': /* ptrdiff_t */
-      case 'Z': /* size_t */
       case 'z': /* size_t */
+      case 'Z': /* size_t */
       case 'L': /* long double */
         format++;
         signbit = 63;
@@ -216,12 +226,9 @@ hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
     }
 
     /* evaluate specifier */
-    void *p;
-    const char *alphabet = "0123456789abcdef";
-    unsigned log2base = 0;
-    wchar_t charbuf[3];
-    int rc;
-    char qchar = '"';
+    alphabet = "0123456789abcdef";
+    log2base = 0;
+    qchar = '"';
     switch (*format++) {
       case 'p':
         flags |= FLAGS_ZEROPAD;
@@ -256,23 +263,21 @@ hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
       }
 
       case 'f':
-      case 'F': {
-        long double value;
+      case 'F':
         if (signbit == 63) {
-          value = va_arg(va, long double);
+          ldbl = va_arg(va, long double);
         } else {
-          value = va_arg(va, double);
+          ldbl = va_arg(va, double);
         }
-        if (weaken(ftoa)(out, arg, value, precision, width, flags) == -1) {
+        if (weaken(ftoa)(out, arg, ldbl, precision, width, flags) == -1) {
           return -1;
         }
         break;
-      }
 
       case 'c':
         qchar = '\'';
         p = charbuf;
-        charbuf[0] = (wchar_t)va_arg(va, int); /* @assume little endian */
+        charbuf[0] = va_arg(va, int);
         charbuf[1] = L'\0';
         goto showstr;
 

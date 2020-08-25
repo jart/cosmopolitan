@@ -61,21 +61,6 @@ TEST(wcwidth, testCjkWidesAndCombiningLowLines_widthIsNotLength) {
   /*────────────────────────────────────────────────────┴─*/
 }
 
-TEST(strwidth, testEmoji_cosmoHelpsYouBuildInclusiveProductsEasily) {
-  /*                                    ┌─If this line is solid your terminal
-                                        │ is respectful and inclusive towards
-                                        │ our friends w/ rich and interesting
-                                        │ backgrounds that aren't Anglo-Saxon
-                                        │
-                                        │ ┌─This line being solid, means your
-                                        │ │ terminal needs a patch to address
-                                        │ │ issues concerning racism
-                                        │ │
-  ──────────────────────────────────────┼─┼─*/
-  EXPECT_EQ(02, wcswidth(/**/ L"👦🏿" /*- │ - */));
-  /*────────────────────────────────────┼─┼─*/
-}
-
 TEST(strwidth, tab) {
   EXPECT_EQ(32, strwidth("mov    0x0(%rip),%rcx        \t"));
 }

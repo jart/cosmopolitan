@@ -20,7 +20,12 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-log1pl:	push	%rbp
+/	Returns log(𝟷+𝑥).
+/
+/	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+/	@return	result of exponentiation on FPU stack in %st
+tinymath_log1pl:
+	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
@@ -42,12 +47,11 @@ log1pl:	push	%rbp
 	fxch	%st(1)
 	fyl2x
 	jmp	0b
-	.endfn	log1pl,globl
+	.endfn	tinymath_log1pl,globl
+	.alias	tinymath_log1pl,log1pl
 
-	.section .rodata.cst16,"aM",@progbits,16
-	.align	16
+	.rodata.cst16
 .LC16:	.long	205731576
 	.long	2515933592
 	.long	16381
 	.long	0
-	.previous

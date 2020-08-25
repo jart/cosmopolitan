@@ -26,7 +26,7 @@ tinymath_truncl:
 	fldt	32(%rsp)
 	fnstcw	14(%rsp)
 	movzwl	14(%rsp),%eax
-	or	$12,%ah
+	or	$0b1100,%ah		# round to zero
 	mov	%ax,12(%rsp)
 	fldcw	12(%rsp)
 	frndint

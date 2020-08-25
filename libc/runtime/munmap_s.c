@@ -20,11 +20,10 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/pushpop.h"
 #include "libc/calls/calls.h"
-#include "libc/runtime/mappings.h"
 #include "libc/runtime/runtime.h"
 
 /**
- * Closes memory mapping, the Cosmopolitan way.
+ * Closes memory mapping.
  *
  * The caller's address holder is set to MAP_FAILED (-1) which is a
  * no-op for subsequent invocations.

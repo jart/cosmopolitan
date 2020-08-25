@@ -30,6 +30,7 @@ strtoupper:
 	mov	$'A-'a,%edx			# adding this uppers
 	mov	$'a|'z<<8,%ecx			# uint8_t range a..z
 	jmp	strcaseconv
+	.endfn	strtoupper,globl
 
 /	Mutates string to lowercase roman characters.
 /
@@ -40,6 +41,7 @@ strtolower:
 	mov	$'a-'A,%edx			# adding this lowers
 	mov	$'A|'Z<<8,%ecx			# uint8_t range A..Z
 /	𝑠𝑙𝑖𝑑𝑒
+	.endfn	strtolower,globl
 
 /	Support code for strtolower() and strtoupper().
 /
@@ -64,16 +66,29 @@ strcaseconv:
 	test	%al,%al				# is it NUL?
 	jz	3f
 	cmp	%cl,%al				# is it in range?
-	jb	1b
+	jb	0b
 	cmp	%ch,%al
-	ja	1b
+	ja	0b
 	add	%dl,-1(%rsi)
-	jmp	1b
+	jmp	0b
 .Lsse4:	movd	%ecx,%xmm1			# XMM1 = ['A,'Z,0,0,...]
 	movd	%edx,%xmm2			# XMM2 = ['a-'A,'a-'A,...]
 	pbroadcastb %xmm2
 	xor	%ecx,%ecx
 2:	movdqa	(%rsi,%rcx),%xmm3
+/	              ┌─0:index of the LEAST significant, set, bit is used
+/	              │   regardless of corresponding input element validity
+/	              │   intres2 is returned in least significant bits of xmm0
+/	              ├─1:index of the MOST significant, set, bit is used
+/	              │   regardless of corresponding input element validity
+/	              │   each bit of intres2 is expanded to byte/word
+/	              │┌─0:negation of intres1 is for all 16 (8) bits
+/	              │├─1:negation of intres1 is masked by reg/mem validity
+/	              ││┌─intres1 is negated (1’s complement)
+/	              │││┌─mode{equalany,ranges,equaleach,equalordered}
+/	              ││││ ┌─issigned
+/	              ││││ │┌─is16bit
+/	             u│││├┐││
 	pcmpistrm $0b01000100,%xmm3,%xmm1	# →XMM0 8-bit byte mask
 	pand	%xmm2,%xmm0			#  won't mask after NUL
 	paddb	%xmm0,%xmm3
@@ -83,6 +98,4 @@ strcaseconv:
 3:	mov	%rdi,%rax
 	.leafepilogue
 	.endfn	strcaseconv
-	.endfn	strtolower,globl
-	.endfn	strtoupper,globl
 	.source	__FILE__

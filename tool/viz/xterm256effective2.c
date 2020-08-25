@@ -70,11 +70,19 @@ void GetOpts(int *argc, char *argv[]) {
 }
 
 #define U256F1(X) ((float)((X)&0xffu) * 256.0f)
-#define F1U256(X) MAX(MIN(lrintl(roundl(256.0f * (X))), 255), 0)
+#define F1U256(X) MAX(MIN((int)rintl(roundl(256.0f * (X))), 255), 0)
 
-forceinline struct TtyRgb getquant(unsigned xt) { return g_ansi2rgb_[xt]; }
-forceinline unsigned dist(int x, int y) { return x - y; }
-forceinline unsigned sqr(int x) { return x * x; }
+forceinline struct TtyRgb getquant(unsigned xt) {
+  return g_ansi2rgb_[xt];
+}
+
+forceinline unsigned dist(int x, int y) {
+  return x - y;
+}
+
+forceinline unsigned sqr(int x) {
+  return x * x;
+}
 
 static unsigned rgb2hsl(unsigned rgba) {
   /* this is broken */

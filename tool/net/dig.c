@@ -48,21 +48,21 @@ void lookup(const char *name) {
               ? (const unsigned char *)&((struct sockaddr_in *)addr->ai_addr)
                     ->sin_addr
               : (const unsigned char *)"\0\0\0\0";
-      printf("%s = %s\n", "ai_flags",
-             recreateflags(kAddrInfoFlagNames, addr->ai_flags), addr->ai_flags);
-      printf("%s = %s (%d)\n", "ai_family",
+      printf("%-12s = %s\n", "ai_flags",
+             RecreateFlags(kAddrInfoFlagNames, addr->ai_flags), addr->ai_flags);
+      printf("%-12s = %s (%d)\n", "ai_family",
              findnamebyid(kAddressFamilyNames, addr->ai_family),
              addr->ai_family);
-      printf("%s = %s (%d)\n", "ai_socktype",
+      printf("%-12s = %s (%d)\n", "ai_socktype",
              findnamebyid(kSockTypeNames, addr->ai_socktype),
              addr->ai_socktype);
-      printf("%s = %s (%d)\n", "ai_protocol",
+      printf("%-12s = %s (%d)\n", "ai_protocol",
              findnamebyid(kProtocolNames, addr->ai_protocol),
              addr->ai_protocol);
-      printf("%s = %d\n", "ai_addrlen", addr->ai_addrlen);
-      printf("%s = %hhu.%hhu.%hhu.%hhu\n", "ai_addr", ip[0], ip[1], ip[2],
+      printf("%-12s = %d\n", "ai_addrlen", addr->ai_addrlen);
+      printf("%-12s = %hhu.%hhu.%hhu.%hhu\n", "ai_addr", ip[0], ip[1], ip[2],
              ip[3]);
-      printf("%s = %s\n", "ai_canonname", addr->ai_canonname);
+      printf("%-12s = %s\n", "ai_canonname", addr->ai_canonname);
     }
     freeaddrinfo(addrs);
   } else {
@@ -71,8 +71,8 @@ void lookup(const char *name) {
 }
 
 int main(int argc, char *argv[]) {
-  for (int i = 1; i < argc; ++i) {
-    lookup(argv[i]);
-  }
+  int i;
+  showcrashreports();
+  for (i = 1; i < argc; ++i) lookup(argv[i]);
   return 0;
 }

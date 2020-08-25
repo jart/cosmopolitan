@@ -5,12 +5,14 @@ PKGS += TEST_DSP_SCALE
 
 TEST_DSP_SCALE_SRCS := $(wildcard test/dsp/scale/*.c)
 TEST_DSP_SCALE_SRCS_TEST = $(filter %_test.c,$(TEST_DSP_SCALE_SRCS))
-TEST_DSP_SCALE_COMS = $(TEST_DSP_SCALE_OBJS:%.o=%.com)
 TEST_DSP_SCALE_BINS = $(TEST_DSP_SCALE_COMS) $(TEST_DSP_SCALE_COMS:%=%.dbg)
 
 TEST_DSP_SCALE_OBJS =					\
 	$(TEST_DSP_SCALE_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_DSP_SCALE_SRCS:%.c=o/$(MODE)/%.o)
+
+TEST_DSP_SCALE_COMS =					\
+	$(TEST_DSP_SCALE_SRCS:%.c=o/$(MODE)/%.com)
 
 TEST_DSP_SCALE_TESTS =					\
 	$(TEST_DSP_SCALE_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)

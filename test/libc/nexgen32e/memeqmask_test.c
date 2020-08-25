@@ -20,7 +20,6 @@
 #include "libc/bits/bits.h"
 #include "libc/runtime/buffer.h"
 #include "libc/runtime/gc.h"
-#include "libc/runtime/mappings.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"

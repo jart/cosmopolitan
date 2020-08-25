@@ -18,19 +18,24 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/macros.h"
 #include "libc/nt/files.h"
 #include "libc/nt/memory.h"
-#include "libc/runtime/mappings.h"
+#include "libc/runtime/memtrack.h"
 
 textwindows int msync$nt(void *addr, size_t size, int flags) {
-  size_t i, j;
-  struct MemoryCoord c;
+  int x, y, l, r, i;
   if (!FlushViewOfFile(addr, size)) return winerr();
-  j = findmapping(ADDR_TO_COORD(addr));
-  c = ADDRSIZE_TO_COORD(addr, size);
-  for (i = j; i; --i) {
-    if (!ISOVERLAPPING(_mm.p[i - 1], c)) break;
-    FlushFileBuffers(_mm.h[i - 1]);
+  x = (intptr_t)addr >> 16;
+  y = x + (ROUNDUP(size, 65536) >> 16) - 1;
+  l = FindMemoryInterval(&_mmi, x);
+  r = FindMemoryInterval(&_mmi, y);
+  if (l && x <= _mmi.p[l - 1].y) --l;
+  if (r && y <= _mmi.p[r - 1].y) --r;
+  if (l < _mmi.i) {
+    for (i = l; i <= r; --i) {
+      FlushFileBuffers(_mmi.h[i - 1]);
+    }
   }
   return 0;
 }

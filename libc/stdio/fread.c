@@ -18,7 +18,6 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/conv/conv.h"
-#include "libc/conv/sizemultiply.h"
 #include "libc/errno.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/internal.h"
@@ -34,17 +33,16 @@
  */
 size_t fread(void *buf, size_t stride, size_t count, FILE *f) {
   int c;
-  size_t i, bytes;
+  size_t i, n;
   unsigned char *p;
-  if (!sizemultiply(&bytes, stride, count)) {
-    return fseterr(f, EOVERFLOW);
-  }
-  for (p = buf, i = 0; i < bytes; ++i) {
-    if ((c = fgetc(f)) == -1) {
-      if (i % stride != 0) abort(); /* todo(jart) */
+  for (n = stride * count, p = buf, i = 0; i < n; ++i) {
+    if ((c = fgetc(f)) != -1) {
+      p[i] = c & 0xff;
+    } else if (!(i % stride)) {
       return i / stride;
+    } else {
+      return fseterr(f, EOVERFLOW);
     }
-    p[i] = c & 0xff;
   }
   return count;
 }

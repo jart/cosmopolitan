@@ -19,8 +19,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/lib/pc.h"
 #include "libc/macros.h"
-.source	__FILE__
 
+/	Rounds to nearest integer, away from zero.
+/
+/	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+/	@return	result of exponentiation on FPU stack in %st
 tinymath_roundl:
 	push	%rbp
 	mov	%rsp,%rbp
@@ -30,10 +33,10 @@ tinymath_roundl:
 	fnstcw	-8(%rbp)
 	movzwl	-8(%rbp),%edx
 	and	$0b11110011,%dh			# RC (Rounding Control)
-	or	$0b00000100,%dh			# →-∞
+	or	$0b00000100,%dh			# →-∞ a.k.a. floor()
 	mov	%dx,-4(%rbp)
-	fxam
-	fnstsw	%ax
+	fxam					# C1 is set to sign bit
+	fnstsw
 	fabs
 	test	$FPU_C1>>8,%ah
 	fadds	.Lhalf(%rip)
@@ -46,6 +49,7 @@ tinymath_roundl:
 	ret
 	.endfn	tinymath_roundl,globl
 	.alias	tinymath_roundl,roundl
+	.source	__FILE__
 
 	.rodata.cst4
 .Lhalf:	.float	.5

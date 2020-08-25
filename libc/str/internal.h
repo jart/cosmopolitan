@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #ifndef COSMOPOLITAN_LIBC_STR_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_STR_INTERNAL_H_
+#ifndef __STRICT_ANSI__
 #include "libc/str/str.h"
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -48,16 +49,13 @@ nodebuginfo forceinline bool32 iscont(wint_t c) {
   return (c & 0b11000000) == 0b10000000;
 }
 
-extern const uint32_t kCrc32Tab[256];
-
 char *strstr$sse42(const char *, const char *) strlenesque hidden;
 char16_t *strstr16$sse42(const char16_t *, const char16_t *) strlenesque hidden;
 void *memmem$sse42(const void *, size_t, const void *,
                    size_t) strlenesque hidden;
-uint32_t crc32c$sse42(uint32_t, const void *, size_t) strlenesque hidden;
-uint32_t crc32$pclmul(uint32_t, const void *, size_t) hidden;
 void sha256$x86(uint32_t[hasatleast 8], const uint8_t[hasatleast 64],
                 uint32_t) hidden;
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* !ANSI */
 #endif /* COSMOPOLITAN_LIBC_STR_INTERNAL_H_ */

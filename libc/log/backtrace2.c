@@ -19,13 +19,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
 #include "libc/alg/bisectcarleft.h"
-#include "libc/bits/bits.h"
 #include "libc/bits/safemacros.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/hefty/spawn.h"
 #include "libc/conv/conv.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
+#include "libc/log/log.h"
 #include "libc/nexgen32e/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.h"
@@ -36,7 +37,7 @@
 #define kBacktraceMaxFrames 128
 #define kBacktraceBufSize   ((kBacktraceMaxFrames - 1) * (16 + 1))
 
-static char *formataddress(FILE *f, const struct SymbolTable *st, intptr_t addr,
+static char *FormatAddress(FILE *f, const struct SymbolTable *st, intptr_t addr,
                            char *out, unsigned size, bool symbolic) {
   int64_t addend;
   const char *name;
@@ -54,7 +55,7 @@ static char *formataddress(FILE *f, const struct SymbolTable *st, intptr_t addr,
   return out;
 }
 
-static int printbacktraceusingsymbols(FILE *f, const struct StackFrame *bp,
+static int PrintBacktraceUsingSymbols(FILE *f, const struct StackFrame *bp,
                                       char buf[hasatleast kBacktraceBufSize]) {
   size_t gi;
   intptr_t addr;
@@ -62,17 +63,17 @@ static int printbacktraceusingsymbols(FILE *f, const struct StackFrame *bp,
   struct SymbolTable *symbols;
   const struct StackFrame *frame;
   if ((symbols = getsymboltable())) {
-    garbage = weaken(__garbage);
+    garbage = weaken(g_garbage);
     gi = garbage ? garbage->i : 0;
     for (frame = bp; frame; frame = frame->next) {
       addr = frame->addr;
-      if (addr == weakaddr("__gc")) {
+      if (addr == weakaddr("CollectGarbage")) {
         do {
           --gi;
-        } while ((addr = garbage->p[gi].ret) == weakaddr("__gc"));
+        } while ((addr = garbage->p[gi].ret) == weakaddr("CollectGarbage"));
       }
       fprintf(f, "%p %p %s\n", frame, addr,
-              formataddress(f, symbols, addr, buf, kBacktraceBufSize, true));
+              FormatAddress(f, symbols, addr, buf, kBacktraceBufSize, true));
     }
     return 0;
   } else {
@@ -80,7 +81,7 @@ static int printbacktraceusingsymbols(FILE *f, const struct StackFrame *bp,
   }
 }
 
-static int printbacktraceusingaddr2line(
+static int PrintBacktraceUsingAddr2line(
     FILE *f, const struct StackFrame *bp,
     char buf[hasatleast kBacktraceBufSize],
     char *argv[hasatleast kBacktraceMaxFrames]) {
@@ -90,10 +91,8 @@ static int printbacktraceusingaddr2line(
   int rc, pid, tubes[3];
   struct Garbages *garbage;
   const struct StackFrame *frame;
-  const char *addr2line, *debugbin, *p1, *p2, *p3;
-  if (!(debugbin = finddebugbinary()) ||
-      !(addr2line = emptytonull(firstnonnull(
-            getenv("ADDR2LINE"), firstnonnull(commandv("addr2line"), ""))))) {
+  const char *debugbin, *p1, *p2, *p3, *addr2line;
+  if (!(debugbin = finddebugbinary()) || !(addr2line = GetAddr2linePath())) {
     return -1;
   }
   i = 0;
@@ -102,14 +101,14 @@ static int printbacktraceusingaddr2line(
   argv[i++] = "-a"; /* filter out w/ shell script wrapper for old versions */
   argv[i++] = "-pCife";
   argv[i++] = debugbin;
-  garbage = weaken(__garbage);
+  garbage = weaken(g_garbage);
   gi = garbage ? garbage->i : 0;
   for (frame = bp; frame && i < kBacktraceMaxFrames - 1; frame = frame->next) {
     addr = frame->addr;
-    if (addr == weakaddr("__gc")) {
+    if (addr == weakaddr("CollectGarbage")) {
       do {
         --gi;
-      } while ((addr = garbage->p[gi].ret) == weakaddr("__gc"));
+      } while ((addr = garbage->p[gi].ret) == weakaddr("CollectGarbage"));
     }
     argv[i++] = &buf[j];
     j += snprintf(&buf[j], 17, "%#x", addr - 1) + 1;
@@ -118,7 +117,9 @@ static int printbacktraceusingaddr2line(
   tubes[0] = STDIN_FILENO;
   tubes[1] = -1;
   tubes[2] = STDERR_FILENO;
-  if ((pid = spawnve(0, tubes, addr2line, argv, environ)) == -1) return -1;
+  if ((pid = spawnve(0, tubes, addr2line, argv, environ)) == -1) {
+    return -1;
+  }
   while ((got = read(tubes[1], buf, kBacktraceBufSize)) > 0) {
     for (p1 = buf; got;) {
       /*
@@ -147,15 +148,15 @@ static int printbacktraceusingaddr2line(
   return 0;
 }
 
-static noinline int printbacktrace(FILE *f, const struct StackFrame *bp,
+static noinline int PrintBacktrace(FILE *f, const struct StackFrame *bp,
                                    char *argv[hasatleast kBacktraceMaxFrames],
                                    char buf[hasatleast kBacktraceBufSize]) {
   if (!IsTiny()) {
-    if (printbacktraceusingaddr2line(f, bp, buf, argv) != -1) {
+    if (PrintBacktraceUsingAddr2line(f, bp, buf, argv) != -1) {
       return 0;
     }
   }
-  return printbacktraceusingsymbols(f, bp, buf);
+  return PrintBacktraceUsingSymbols(f, bp, buf);
 }
 
 void showbacktrace(FILE *f, const struct StackFrame *bp) {
@@ -164,7 +165,7 @@ void showbacktrace(FILE *f, const struct StackFrame *bp) {
   char buf[kBacktraceBufSize];
   if (!noreentry) {
     noreentry = true;
-    printbacktrace(f, bp, argv, buf);
+    PrintBacktrace(f, bp, argv, buf);
     noreentry = 0;
   }
 }

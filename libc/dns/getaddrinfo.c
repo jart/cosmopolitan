@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.h"
+#include "libc/calls/calls.h"
 #include "libc/conv/conv.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/hoststxt.h"
@@ -25,12 +26,11 @@
 #include "libc/mem/mem.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
-#include "libc/calls/calls.h"
-#include "libc/sysv/errfuns.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ai.h"
 #include "libc/sysv/consts/eai.h"
 #include "libc/sysv/consts/inaddr.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Resolves address for internet name.
@@ -44,20 +44,15 @@
  */
 int getaddrinfo(const char *name, const char *service,
                 const struct addrinfo *hints, struct addrinfo **res) {
-  int port = 0;
+  int rc, port;
+  const char *canon;
   struct addrinfo *ai;
-  if ((!name && !service) || (service && (port = parseport(service)) == -1)) {
-    return EAI_NONAME;
-  }
-  if (!name && (hints->ai_flags & AI_CANONNAME) == AI_CANONNAME) {
-    return EAI_BADFLAGS;
-  }
-  if (!(ai = newaddrinfo(port))) {
-    return EAI_MEMORY;
-  }
-  if (service) {
-    ai->ai_addr4->sin_port = htons(port);
-  }
+  port = 0;
+  if (!name && !service) return EAI_NONAME;
+  if (service && (port = parseport(service)) == -1) return EAI_NONAME;
+  if (!name && (hints->ai_flags & AI_CANONNAME)) return EAI_BADFLAGS;
+  if (!(ai = newaddrinfo(port))) return EAI_MEMORY;
+  if (service) ai->ai_addr4->sin_port = htons(port);
   if (hints) {
     ai->ai_socktype = hints->ai_socktype;
     ai->ai_protocol = hints->ai_protocol;
@@ -69,7 +64,6 @@ int getaddrinfo(const char *name, const char *service,
             : INADDR_LOOPBACK;
     return 0;
   }
-  const char *canon;
   if (inet_pton(AF_INET, name, &ai->ai_addr4->sin_addr.s_addr) == 1) {
     *res = ai;
     return 0;
@@ -82,8 +76,8 @@ int getaddrinfo(const char *name, const char *service,
     *res = ai;
     return 0;
   } else {
-    int rc = resolvedns(getresolvconf(), AF_INET, name, ai->ai_addr,
-                        sizeof(ai->ai_addr4));
+    rc = resolvedns(getresolvconf(), AF_INET, name, ai->ai_addr,
+                    sizeof(ai->ai_addr4));
     if (rc > 0) {
       *res = ai;
       return 0;

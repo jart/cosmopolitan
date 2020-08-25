@@ -8,6 +8,7 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/calls/calls.h"
+#include "libc/calls/hefty/copyfile.h"
 #include "libc/calls/hefty/spawn.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/log/check.h"
@@ -87,7 +88,7 @@ int main(int argc, char *argv[]) {
   CHECK_NE(-1, close(fd));
 
   t1 = dtime(CLOCK_REALTIME);
-  CHECK_NE(-1, copyfile(core, core2, false));
+  CHECK_NE(-1, copyfile(core, core2, 0));
   t2 = dtime(CLOCK_REALTIME);
   printf("%.6Lf\n", t2 - t1);
 

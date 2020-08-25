@@ -65,8 +65,8 @@ kCpuids:.long	0,0,0,0				# EAX=0 (Basic Processor Info)
 2:	pop	%rax
 	test	%eax,%eax			# EAX = stacklist->pop()
 	jz	3f				# EAX ≠ 0 (EOL sentinel)
-	cmp	KCPUIDS(0H,EAX)(%r8),%eax	# EAX ≤ CPUID.0 max leaf
-	jle	1b				# CPUID too new to probe
+	cmp	KCPUIDS(0H,EAX)(%r8),%al	# EAX ≤ CPUID.0 max leaf
+	jbe	1b				# CPUID too new to probe
 	add	$4*4,%rdi
 	jmp	2b
 3:	nop

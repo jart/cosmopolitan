@@ -4,7 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 /* clang-format off */
 
-#define CONVROUND(X) ((int)lrint(X))
+#define CONVROUND(X) ((int)rint(X))
 
 #define CONVOLVE1X1(COEFFICIENT, DY, DX) (COEFFICIENT * (img[iy[y DY]][ix[x DX]]))
 #define CONVOLVE1X12(IMG, COEFFICIENT, DY, DX) (COEFFICIENT * IMG[iy[y DY]][ix[x DX]])

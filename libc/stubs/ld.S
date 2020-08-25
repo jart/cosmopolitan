@@ -34,15 +34,13 @@
 	__privileged_start = 0
 	__test_start = 0
 	__ro = 0
-	__piro_start = 0
+	__relo_start = 0
 	__relo_end = 0
-	__piro_end = 0
 
 	.globl	_base
 	.globl	ape.xlm
-	.globl	__piro_start
+	.globl	__relo_start
 	.globl	__relo_end
-	.globl	__piro_end
 	.globl	__privileged_start
 	.globl	__ro
 	.globl	__test_start
@@ -54,9 +52,8 @@
 
 	.weak	_base
 	.weak	ape.xlm
-	.weak	__piro_start
+	.weak	__relo_start
 	.weak	__relo_end
-	.weak	__piro_end
 	.weak	__privileged_start
 	.weak	__ro
 	.weak	__test_start

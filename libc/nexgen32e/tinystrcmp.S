@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Compares NUL-terminated strings w/o heavy-lifting.
+/	Compares strings w/ no-clobber greg abi.
 /
 /	@param	rdi is first non-null NUL-terminated string pointer
 /	@param	rsi is second non-null NUL-terminated string pointer
@@ -30,7 +30,11 @@ tinystrcmp:
 	.leafprologue
 	push	%rcx
 	push	%rdx
+	xor	%eax,%eax
+	xor	%edx,%edx
 	xor	%ecx,%ecx
+	cmp	%rdi,%rsi
+	je	1f
 0:	movzbl	(%rdi,%rcx,1),%eax
 	movzbl	(%rsi,%rcx,1),%edx
 	test	%al,%al

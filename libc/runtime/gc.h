@@ -21,7 +21,7 @@ struct StackFrame;
  * @warning do not return a gc()'d pointer
  * @warning do not realloc() with gc()'d pointer
  */
-#define gc(THING) defer(weakfree, (THING))
+#define gc(THING) defer((void *)weakfree, (void *)(THING))
 
 /**
  * Same as longjmp() but runs gc() / defer() destructors.
@@ -31,14 +31,14 @@ void gclongjmp(jmp_buf, int) nothrow noreturn paramsnonnull();
 /**
  * Calls FN(ARG) when function returns.
  */
-#define defer(FN, ARG)                            \
-  ({                                              \
-    autotype(ARG) Arg = (ARG);                    \
-    /* prevent weird opts like tail call */       \
-    asm volatile("" : "+g"(Arg) : : "memory");    \
-    __defer(__builtin_frame_address(0), FN, Arg); \
-    asm volatile("" : "+g"(Arg) : : "memory");    \
-    Arg;                                          \
+#define defer(FN, ARG)                                                 \
+  ({                                                                   \
+    autotype(ARG) Arg = (ARG);                                         \
+    /* prevent weird opts like tail call */                            \
+    asm volatile("" : "+g"(Arg) : : "memory");                         \
+    __defer((struct StackFrame *)__builtin_frame_address(0), FN, Arg); \
+    asm volatile("" : "+g"(Arg) : : "memory");                         \
+    Arg;                                                               \
   })
 
 void __defer(struct StackFrame *, void *, void *) hidden paramsnonnull((1, 2));

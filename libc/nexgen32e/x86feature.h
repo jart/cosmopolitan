@@ -72,6 +72,7 @@
 #define X86_INVPCID              1H,        EBX, 10, 0,                   _
 #define X86_INVTSC               80000007H, EDX,  8, _X86_CC_POPCNT,      _     /* i.e. not a K8 */
 #define X86_LA57                 7H,        ECX, 16, 0,                   _
+#define X86_LAHF_LM              80000001H, ECX,  0, 0,                   _
 #define X86_LM                   80000001H, EDX, 29, 0,                   _
 #define X86_MCA                  1H,        EDX, 14, 0,                   _
 #define X86_MCE                  1H,        EDX,  7, 0,                   _
@@ -153,7 +154,6 @@
 #define X86_FMA4           80000001H, ECX, 16, 0, _
 #define X86_FXSR_OPT       80000001H, EDX, 25, 0, _
 #define X86_IBS            80000001H, ECX, 10, 0, _
-#define X86_LAHF_LM        80000001H, ECX, 0, 0, _
 #define X86_LWP            80000001H, ECX, 15, 0, _
 #define X86_MISALIGNSSE    80000001H, ECX, 7, 0, _
 #define X86_MMXEXT         80000001H, EDX, 22, 0, _

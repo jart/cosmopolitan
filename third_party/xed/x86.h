@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_XED_X86_H_
 #define COSMOPOLITAN_THIRD_PARTY_XED_X86_H_
+#include "libc/bits/bits.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -27,15 +28,22 @@ COSMOPOLITAN_C_START_
 #define XED_MODE_LEGACY 1
 #define XED_MODE_LONG   2
 
+#define XED_SEG_CS 1
+#define XED_SEG_DS 2
+#define XED_SEG_ES 3
+#define XED_SEG_FS 4
+#define XED_SEG_GS 5
+#define XED_SEG_SS 6
+
 #define XED_HINT_NTAKEN 1
 #define XED_HINT_TAKEN  2
 #define XED_HINT_ALTER  3
 
 #define xed_modrm_mod(M)           (((M)&0xff) >> 6)
-#define xed_modrm_reg(M)           (((M) >> 3) & 7)
+#define xed_modrm_reg(M)           (((M)&0b00111000) >> 3)
 #define xed_modrm_rm(M)            ((M)&7)
 #define xed_sib_base(M)            ((M)&7)
-#define xed_sib_index(M)           (((M) >> 3) & 7)
+#define xed_sib_index(M)           (((M)&0b00111000) >> 3)
 #define xed_sib_scale(M)           (((M)&0xff) >> 6)
 #define xed_get_modrm_reg_field(M) (((M)&0x38) >> 3)
 
@@ -293,10 +301,10 @@ enum XedIsaSet {
 };
 
 enum XedIldMap {
-  XED_ILD_MAP0,
-  XED_ILD_MAP1,
-  XED_ILD_MAP2,
-  XED_ILD_MAP3,
+  XED_ILD_MAP0,  // 8086+  ...
+  XED_ILD_MAP1,  // 286+   0x0F,...
+  XED_ILD_MAP2,  // Core2+ 0x0F,0x38,...
+  XED_ILD_MAP3,  // Core2+ 0x0F,0x3A,...
   XED_ILD_MAP4,
   XED_ILD_MAP5,
   XED_ILD_MAP6,
@@ -312,89 +320,118 @@ struct XedChipFeatures {
   uint64_t f[3];
 };
 
-struct XedOperands {
-  /* data structure optimized for gcc code size */
-  uint8_t imm_width;
-  uint8_t map;   /* enum XedIldMap */
-  uint8_t error; /* enum XedError */
-  uint8_t mode;  /* real,legacy,long */
-  uint8_t modrm; /* selects address register */
-  uint8_t sib;   /* scaled index base x86_64 */
-  uint8_t rexw : 1;
-  uint8_t rexr : 1;
-  uint8_t rexx : 1;
-  uint8_t rexb : 1;
-  uint8_t osz; /* operand size override prefix */
+struct XedOperands { /*
+     ┌prefix66
+     │┌log₂𝑏
+     ││ ┌rexx
+     ││ │┌index
+     ││ ││  ┌mod
+     ││ ││  │ ┌rexb
+     ││ ││  │ │┌base
+     ││ ││  │ ││  ┌asz
+     ││ ││  │ ││  │┌rex         REGISTER
+     ││ ││  │ ││  ││┌rexb       DISPATCH
+     ││ ││  │ ││  │││┌srm       ENCODING
+     ││ ││  │ ││  ││││  ┌rexw
+     ││ ││  │ ││  ││││  │┌rex
+     ││ ││  │ ││  ││││  ││┌rexb
+     ││ ││  │ ││  ││││  │││┌rm
+     ││ ││  │ ││  ││││  ││││  ┌osz
+     ││ ││  │ ││  ││││  ││││  │┌rex
+     ││ ││  │ ││  ││││  ││││  ││┌rexr
+     ││ ││  │ ││  ││││  ││││  │││┌reg
+     ││2││  │2││  ││││  ││││  ││││
+     ││8││24│2││18││││12││││ 6││││ 0
+     │├┐│├─┐├┐│├─┐│││├─┐│││├─┐│││├─┐
+  0b00000000000000000000000000000000*/
+  uint32_t rde;
+  bool osz : 1;   // operand size override prefix
+  bool rexw : 1;  // rex.w or rex.wb or etc. 64-bit override
+  bool rexb : 1;  // rex.b or rex.wb or etc. see modrm table
+  bool rexr : 1;  // rex.r or rex.wr or etc. see modrm table
+  bool rex : 1;   // any rex prefix including rex
+  bool asz : 1;   // address size override
+  bool rexx : 1;  // rex.x or rex.wx or etc. see sib table
+  bool out_of_bytes : 1;
+  bool is_intel_specific : 1;
+  bool ild_f2 : 1;
+  bool ild_f3 : 1;
+  bool has_modrm : 1;
+  bool has_sib : 1;
+  bool prefix66 : 1;  // rexw except for xmm ops
+  bool realmode : 1;
+  bool amd3dnow : 1;
   uint8_t max_bytes;
-  uint8_t nominal_opcode;
-  uint8_t out_of_bytes;
-  uint8_t disp_width;
-  int64_t disp;
-  uint64_t uimm0;
-  enum XedChip chip;
-  uint8_t srm;
-  uint8_t amd3dnow;
-  uint8_t asz;
-  uint8_t bcrc;
-  uint8_t cldemote;
-  uint8_t has_sib;
-  uint8_t ild_f2;
-  uint8_t ild_f3;
-  uint8_t lock;
-  uint8_t mode_first_prefix;
-  uint8_t prefix66;
-  uint8_t realmode;
-  uint8_t rex;
-  uint8_t rexrr;
-  uint8_t ubit;
-  uint8_t vexdest3;
-  uint8_t vexdest4;
-  uint8_t wbnoinvd;
-  uint8_t zeroing;
-  uint8_t first_f2f3;
-  uint8_t has_modrm;
-  uint8_t last_f2f3;
-  uint8_t llrc;
-  uint8_t mod;
-  uint8_t rep;
-  uint8_t vex_prefix;
-  uint8_t vl;
-  uint8_t hint;
-  uint8_t mask;
-  uint8_t reg;
-  uint8_t rm;
-  uint8_t seg_ovd;
-  uint8_t vexdest210;
-  uint8_t vexvalid;
-  uint8_t esrc;
-  uint8_t ild_seg;
-  uint8_t imm1_bytes;
-  uint8_t nprefixes;
+  union {
+    uint8_t opcode;
+    uint8_t srm : 3;
+  };
+  union {
+    uint8_t sib;
+    struct {
+      uint8_t base : 3;
+      uint8_t index : 3;
+      uint8_t scale : 2;
+    };
+  };
+  union {
+    uint8_t modrm;  // selects address register
+    struct {
+      uint8_t rm : 3;
+      uint8_t reg : 3;
+      uint8_t mod : 2;
+    };
+  };
+  uint8_t map : 4;            // enum XedIldMap
+  uint8_t hint : 2;           // static branch prediction
+  uint8_t seg_ovd : 3;        // XED_SEG_xx
+  uint8_t first_f2f3 : 2;     // internal see rep, ild_f2, ild_f3
+  uint8_t last_f2f3 : 2;      // internal see rep, ild_f2, ild_f3
+  uint8_t error : 5;          // enum XedError
+  uint8_t mode : 3;           // real,legacy,long
+  uint8_t rep : 2;            // 0, 2 (0xf2 repnz), 3 (0xf3 rep/repe)
+  bool lock : 1;              // prefix
+  bool imm_signed : 1;        // internal
+  int64_t disp;               // displacement(%xxx) sign-extended
+  uint64_t uimm0;             // $immediate sign-extended
+  uint8_t uimm1;              // enter $x,$y
+  uint8_t disp_width;         // in bits
+  uint8_t imm_width;          // in bits
+  uint8_t ild_seg;            // internal see seg_ovd
+  uint8_t mode_first_prefix;  // see xed_set_chip_modes()
   uint8_t nrexes;
+  uint8_t nprefixes;
   uint8_t nseg_prefixes;
+  uint8_t ubit;        // vex
+  uint8_t vexvalid;    // vex
+  uint8_t vexdest3;    // vex
+  uint8_t vexdest4;    // vex
+  uint8_t vexdest210;  // vex
+  uint8_t vex_prefix;  // vex
+  uint8_t zeroing;     // evex
+  uint8_t bcrc;        // evex
+  uint8_t rexrr;       // evex
+  uint8_t llrc;        // evex
+  uint8_t vl;          // evex
+  uint8_t mask;        // evex
+  uint8_t imm1_bytes;  // evex
   uint8_t pos_disp;
   uint8_t pos_imm;
   uint8_t pos_imm1;
   uint8_t pos_modrm;
-  uint8_t pos_nominal_opcode;
+  uint8_t pos_opcode;
   uint8_t pos_sib;
-  uint8_t uimm1;
 };
 
 struct XedDecodedInst {
-  struct XedOperands operands;
-  unsigned char decoded_length;
-  uint8_t *bytes;
-};
-
-forceinline unsigned char xed_decoded_inst_get_byte(
-    const struct XedDecodedInst *p, long byte_index) {
-  return p->bytes[byte_index];
-}
+  struct XedOperands op;
+  uint8_t bytes[16];
+  unsigned char length;
+} aligned(16);
 
 forceinline void xed_operands_set_mode(struct XedOperands *p,
                                        enum XedMachineMode mmode) {
-  p->realmode = 0;
+  p->realmode = false;
   switch (mmode) {
     case XED_MACHINE_MODE_LONG_64:
       p->mode = 2;
@@ -404,7 +441,7 @@ forceinline void xed_operands_set_mode(struct XedOperands *p,
       p->mode = 1;
       break;
     case XED_MACHINE_MODE_REAL:
-      p->realmode = 1;
+      p->realmode = true;
       p->mode = 0;
       break;
     case XED_MACHINE_MODE_UNREAL:
@@ -420,21 +457,57 @@ forceinline void xed_operands_set_mode(struct XedOperands *p,
   }
 }
 
-forceinline struct XedDecodedInst *xed_decoded_inst_zero_set_mode(
-    struct XedDecodedInst *p, enum XedMachineMode mmode) {
-  memset(p, 0, sizeof(*p));
-  xed_operands_set_mode(&p->operands, mmode);
-  return p;
+forceinline void xed_set_chip_modes(struct XedDecodedInst *d,
+                                    enum XedChip chip) {
+  switch (chip) {
+    case XED_CHIP_INVALID:
+      break;
+    case XED_CHIP_I86:
+    case XED_CHIP_I86FP:
+    case XED_CHIP_I186:
+    case XED_CHIP_I186FP:
+    case XED_CHIP_I286REAL:
+    case XED_CHIP_I286:
+    case XED_CHIP_I2186FP:
+    case XED_CHIP_I386REAL:
+    case XED_CHIP_I386:
+    case XED_CHIP_I386FP:
+    case XED_CHIP_I486REAL:
+    case XED_CHIP_I486:
+    case XED_CHIP_QUARK:
+    case XED_CHIP_PENTIUM:
+    case XED_CHIP_PENTIUMREAL:
+    case XED_CHIP_PENTIUMMMX:
+    case XED_CHIP_PENTIUMMMXREAL:
+      d->op.mode_first_prefix = 1;
+      break;
+    default:
+      break;
+  }
+  switch (chip) {
+    case XED_CHIP_INVALID:
+    case XED_CHIP_ALL:
+    case XED_CHIP_AMD:
+      break;
+    default:
+      d->op.is_intel_specific = 1;
+      break;
+  }
 }
 
-extern const uint64_t xed_chip_features[XED_CHIP_LAST][3] hidden;
+extern const char kXedErrorNames[];
+extern const uint64_t xed_chip_features[XED_CHIP_LAST][3];
 
 enum XedError xed_instruction_length_decode(struct XedDecodedInst *,
                                             const void *, size_t);
+enum XedError __xed_instruction_length_decode(struct XedDecodedInst *,
+                                              const void *, size_t);
 
 bool xed_isa_set_is_valid_for_chip(enum XedIsaSet, enum XedChip);
 bool xed_test_chip_features(struct XedChipFeatures *, enum XedIsaSet);
 void xed_get_chip_features(struct XedChipFeatures *, enum XedChip);
+struct XedDecodedInst *xed_decoded_inst_zero_set_mode(struct XedDecodedInst *,
+                                                      enum XedMachineMode);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

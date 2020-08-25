@@ -32,7 +32,7 @@ static const struct TtyRgb kRed = {0xff, 0, 0, 196};
 char vtbuf[128];
 
 void ttyraster_true_setup(void) {
-  ttyquantinit(kTtyQuantTrue, kTtyQuantRgb, kTtyBlocksUnicode);
+  ttyquantsetup(kTtyQuantTrue, kTtyQuantRgb, kTtyBlocksUnicode);
 }
 
 void ttyraster2x2_true(void) {
@@ -51,7 +51,7 @@ TEST(ttyraster, testCorner) {
 }
 
 TEST(ttyraster, testFullBlock_favorsSpace) {
-  ttyquantinit(kTtyQuantTrue, kTtyQuantRgb, kTtyBlocksUnicode);
+  ttyquantsetup(kTtyQuantTrue, kTtyQuantRgb, kTtyBlocksUnicode);
   ttyraster(vtbuf,
             (struct TtyRgb *)(unsigned[2][2]){
                 {DARKRED, DARKRED},
@@ -62,7 +62,7 @@ TEST(ttyraster, testFullBlock_favorsSpace) {
 }
 
 TEST(ttyraster, testFullBlock_favorsUnicodeWhenCurrenttFgMatchesButNotBg) {
-  ttyquantinit(kTtyQuantTrue, kTtyQuantRgb, kTtyBlocksUnicode);
+  ttyquantsetup(kTtyQuantTrue, kTtyQuantRgb, kTtyBlocksUnicode);
   ttyraster(vtbuf,
             (struct TtyRgb *)(unsigned[2][4]){
                 {DARKRED, GRAY1, GRAY1, GRAY1},
@@ -73,7 +73,7 @@ TEST(ttyraster, testFullBlock_favorsUnicodeWhenCurrenttFgMatchesButNotBg) {
 }
 
 TEST(ttyraster, testFullBlock_forcesSwitchBackToSpaceForRuns) {
-  ttyquantinit(kTtyQuantTrue, kTtyQuantRgb, kTtyBlocksUnicode);
+  ttyquantsetup(kTtyQuantTrue, kTtyQuantRgb, kTtyBlocksUnicode);
   ttyraster(vtbuf,
             (struct TtyRgb *)(unsigned[2][8]){
                 {DARKRED, GRAY1, GRAY1, GRAY1, GRAY1, GRAY1, GRAY1, GRAY1},
@@ -86,7 +86,7 @@ TEST(ttyraster, testFullBlock_forcesSwitchBackToSpaceForRuns) {
 ////////////////////////////////////////////////////////////////////////////////
 
 TEST(ttyraster_cp437, testSide) {
-  ttyquantinit(kTtyQuantTrue, kTtyQuantRgb, kTtyBlocksCp437);
+  ttyquantsetup(kTtyQuantTrue, kTtyQuantRgb, kTtyBlocksCp437);
   ttyraster(vtbuf,
             (const struct TtyRgb *)(unsigned[2][2]){
                 {DARKRED, GRAY1},
@@ -99,7 +99,7 @@ TEST(ttyraster_cp437, testSide) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void ttyraster_xterm256_setup(void) {
-  ttyquantinit(kTtyQuantXterm256, kTtyQuantRgb, kTtyBlocksUnicode);
+  ttyquantsetup(kTtyQuantXterm256, kTtyQuantRgb, kTtyBlocksUnicode);
 }
 
 void ttyraster2x2_xterm256(void) {

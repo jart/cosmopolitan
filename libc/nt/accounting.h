@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_ACCOUNTING_H_
 #define COSMOPOLITAN_LIBC_NT_ACCOUNTING_H_
+#include "libc/nt/thunk/msabi.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 #if 0
@@ -64,6 +65,9 @@ int32_t SetProcessWorkingSetSizeEx(int64_t hProcess,
                                    uint64_t dwMaximumWorkingSetSize,
                                    uint32_t Flags);
 
+#if ShouldUseMsabiAttribute()
+#include "libc/nt/thunk/accounting.inc"
+#endif /* ShouldUseMsabiAttribute() */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_ACCOUNTING_H_ */

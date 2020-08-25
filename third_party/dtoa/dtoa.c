@@ -1,3 +1,4 @@
+#include "libc/bits/pushpop.h"
 #include "libc/calls/calls.h"
 #include "libc/limits.h"
 #include "libc/math.h"
@@ -294,8 +295,7 @@ extern void *REALLOC(void *, size_t);
 #define PRIVATE_MEM 2304
 #endif
 #define PRIVATE_mem ((PRIVATE_MEM + sizeof(double) - 1) / sizeof(double))
-static double private_mem[PRIVATE_mem], *pmem_next;
-INITIALIZER(300, _init_dtoa_pmem, { pmem_next = private_mem; });
+static double private_mem[PRIVATE_mem], *pmem_next = private_mem;
 #endif
 
 #undef IEEE_Arith
@@ -398,11 +398,10 @@ Exactly one of IEEE_8087, IEEE_MC68k, VAX, or IBM should be defined.
 #ifdef SET_INEXACT
 #define dtoa_divmax 27
 #else
-int dtoa_divmax; /* Permit experimenting: on some systems, 64-bit integer */
-                 /* division is slow enough that we may sometimes want to */
-                 /* avoid using it.   We assume (but do not check) that   */
-                 /* dtoa_divmax <= 27.*/
-INITIALIZER(300, _init_dtoa_divmax, { dtoa_divmax = 2; });
+int dtoa_divmax = 2; /* Permit experimenting: on some systems, 64-bit integer */
+                     /* division is slow enough that we may sometimes want to */
+                     /* avoid using it.   We assume (but do not check) that   */
+                     /* dtoa_divmax <= 27.*/
 #endif
 
 typedef struct BF96 { /* Normalized 96-bit software floating point numbers */

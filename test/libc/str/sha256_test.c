@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 
@@ -30,8 +31,16 @@ uint8_t *sha256(const char *s) {
   return hash;
 }
 
+TEST(sha256, testEmpty) {
+  EXPECT_BINEQ(
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      sha256(""));
+}
+
 TEST(sha256, test) {
-  EXPECT_BINEQ(u",≥M║_░ú♫&Φ;*┼╣Γ€←▬▲╲▼ºB^s♦3bôïÿ$", sha256("hello"));
+  EXPECT_BINEQ(u",≥M║_░ú♫&Φ;*┼╣Γ€←▬▲\\▼ºB^s♦3bôïÿ$", sha256("hello"));
+  EXPECT_BINEQ("2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b98",
+               sha256("hello"));
 }
 
 TEST(sha256, testNontrivialSize) {

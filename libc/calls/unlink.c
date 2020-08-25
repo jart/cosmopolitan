@@ -17,12 +17,12 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/nt/files.h"
 #include "libc/str/str.h"
-#include "libc/calls/internal.h"
-#include "libc/sysv/errfuns.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Deletes file.
@@ -36,7 +36,7 @@
  * @asyncsignalsafe
  */
 int unlink(const char *name) {
-  if (!name) return 0;
+  if (!name) return efault();
   if (!IsWindows()) {
     return unlinkat$sysv(AT_FDCWD, name, 0);
   } else {

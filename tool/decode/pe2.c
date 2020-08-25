@@ -48,8 +48,8 @@ static struct XedDecodedInst *ildreal(void *addr) {
   if (xed_instruction_length_decode(
           xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_REAL), addr,
           XED_MAX_INSTRUCTION_BYTES) != XED_ERROR_NONE ||
-      !xedd.decoded_length) {
-    xedd.decoded_length = 1;
+      !xedd.length) {
+    xedd.length = 1;
   }
   return &xedd;
 }
@@ -115,14 +115,14 @@ static void showdosstub(void) {
   pe = min(pe, p + mzsize - XED_MAX_INSTRUCTION_BYTES);
   while (p < pe) {
     struct XedDecodedInst *inst = ildreal(p);
-    if (p + inst->decoded_length > pe) break;
+    if (p + inst->length > pe) break;
     printf("\t.byte\t");
-    for (unsigned i = 0; i < inst->decoded_length; ++i) {
+    for (unsigned i = 0; i < inst->length; ++i) {
       if (i) printf(",");
-      printf("%#hhx", xed_decoded_inst_get_byte(inst, i));
+      printf("%#hhx", inst->bytes[i]);
     }
     printf("\n");
-    p += inst->decoded_length;
+    p += inst->length;
   }
   printf("\n");
 }
@@ -159,7 +159,7 @@ static void showpeoptionalheader(struct NtImageOptionalHeader *opt) {
                     format(b1, "%#hx", opt->Subsystem)),
        "opt->Subsystem");
   show(".short",
-       firstnonnull(recreateflags(kNtImageDllcharacteristicNames,
+       firstnonnull(RecreateFlags(kNtImageDllcharacteristicNames,
                                   opt->DllCharacteristics),
                     format(b1, "%#hx", opt->DllCharacteristics)),
        "opt->DllCharacteristics");
@@ -188,7 +188,7 @@ static void showpeheader(struct NtImageNtHeaders *pe) {
   showint(pe->FileHeader.NumberOfSymbols);
   showshort(pe->FileHeader.SizeOfOptionalHeader);
   show(".short",
-       firstnonnull(recreateflags(kNtImageCharacteristicNames,
+       firstnonnull(RecreateFlags(kNtImageCharacteristicNames,
                                   pe->FileHeader.Characteristics),
                     format(b1, "%#hx", pe->FileHeader.Characteristics)),
        "pe->FileHeader.Characteristics");

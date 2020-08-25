@@ -30,7 +30,7 @@
 TEST(fastdiv, test) {
   long x = 123000000321;
   EXPECT_EQ(123, div1000000000int64(x));
-  EXPECT_EQ(321, mod1000000000int64(x));
+  EXPECT_EQ(321, rem1000000000int64(x));
 }
 
 TEST(dsleep, test) {

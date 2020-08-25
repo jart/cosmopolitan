@@ -45,7 +45,6 @@
 #     ASFLAGS      assembler flags (don't use -Wa, frontend prefix)
 #     TARGET_ARCH  microarchitecture flags (e.g. -march=native)
 
-SHELL = /bin/sh
 DD ?= /bin/dd
 CP ?= /bin/cp -f
 RM ?= /bin/rm -f
@@ -53,15 +52,14 @@ SED ?= /bin/sed
 MKDIR ?= /bin/mkdir -p
 TAGS ?= /usr/bin/ctags  # emacs source builds or something breaks it
 ARFLAGS = rcsD
-TAGSFLAGS ?= -e -a --if0=no --langmap=c:.c.h.i --line-directives=yes
 SILENT ?= 1
-ZFLAGS ?= -4 --rsyncable
+ZFLAGS ?=
 XARGS ?= xargs -P4 -rs8000
 NICE ?= build/actuallynice
 RAGEL ?= ragel
 DOT ?= dot
 GZ ?= gzip
-CLANG = clang-11
+CLANG = clang-10
 FC = gfortran  #/opt/cross9f/bin/x86_64-linux-musl-gfortran
 
 # see build/compile, etc. which run third_party/gcc/unbundle.sh
@@ -108,8 +106,8 @@ FTRACE =								\
 	-pg
 
 SANITIZER =								\
-	-fsanitize=undefined						\
 	-fsanitize=leak							\
+	-fsanitize=undefined						\
 	-fsanitize=implicit-signed-integer-truncation			\
 	-fsanitize=implicit-integer-sign-change
 
@@ -139,6 +137,7 @@ DEFAULT_OFLAGS =							\
 	-gdescribe-dies
 
 DEFAULT_COPTS =								\
+	-mno-red-zone							\
 	-fno-math-errno							\
 	-fno-trapping-math						\
 	-fno-fp-int-builtin-inexact					\
@@ -149,8 +148,12 @@ DEFAULT_COPTS =								\
 	-fstrict-aliasing						\
 	-fstrict-overflow						\
 	-fno-omit-frame-pointer						\
-	-fno-optimize-sibling-calls					\
+	-fno-semantic-interposition					\
 	-mno-omit-leaf-frame-pointer
+
+MATHEMATICAL =								\
+	-O3								\
+	-fwrapv
 
 DEFAULT_CPPFLAGS =							\
 	-DIMAGE_BASE_VIRTUAL=$(IMAGE_BASE_VIRTUAL)			\
@@ -176,15 +179,14 @@ DEFAULT_ASFLAGS =							\
 	--noexecstack
 
 DEFAULT_LDFLAGS =							\
-	-h								\
 	-static								\
-	--relax								\
 	-nostdlib							\
 	-m elf_x86_64							\
 	--gc-sections							\
 	--build-id=none							\
 	--cref -Map=$@.map						\
 	--no-dynamic-linker						\
+	-z max-page-size=0x1000						\
 	-Ttext-segment=$(IMAGE_BASE_VIRTUAL)
 
 ASONLYFLAGS =								\
@@ -270,8 +272,8 @@ COMPILE.F.flags = $(cc.flags) $(cpp.flags) $(copt.flags) $(f.flags)
 COMPILE.i.flags = $(cc.flags) $(copt.flags) $(c.flags)
 COMPILE.ii.flags = $(cc.flags) $(copt.flags) $(cxx.flags)
 LINK.flags = $(DEFAULT_LDFLAGS) $(CONFIG_LDFLAGS) $(LDFLAGS)
-OBJECTIFY.c.flags = $(OBJECTIFY.S.flags) $(copt.flags) $(c.flags)
-OBJECTIFY.cxx.flags = $(OBJECTIFY.S.flags) $(copt.flags) $(cxx.flags)
+OBJECTIFY.c.flags = $(OBJECTIFY.S.flags) $(c.flags)
+OBJECTIFY.cxx.flags = $(OBJECTIFY.S.flags) $(cxx.flags)
 OBJECTIFY.s.flags = $(ASONLYFLAGS) $(s.flags)
 OBJECTIFY.S.flags = $(copt.flags) $(cc.flags) $(o.flags) $(cpp.flags) $(S.flags)
 OBJECTIFY.f.flags = $(copt.flags) $(cc.flags) $(o.flags) $(copt.flags) $(S.flags) $(f.flags)
@@ -339,7 +341,6 @@ OBJECTIFY.ncabi.c =							\
 	-fno-stack-protector						\
 	-fno-instrument-functions					\
 	-fno-optimize-sibling-calls					\
-	-mpreferred-stack-boundary=3					\
 	-fno-sanitize=all						\
 	-fcall-saved-rcx						\
 	-fcall-saved-rdx						\
@@ -352,10 +353,26 @@ OBJECTIFY.ncabi.c =							\
 	-c								\
 	-xc
 
-BUILD_SRCS =								\
-	build/definitions.mk						\
-	build/rules.mk							\
-	build/compile							\
-	build/link							\
-	build/lolsan							\
-	build/remote
+# Initializer ABI
+#
+# Doesn't clobber RDI and RSI.
+OBJECTIFY.initabi.c =							\
+	$(GCC)								\
+	$(OBJECTIFY.c.flags)						\
+	-mno-fentry							\
+	-fno-stack-protector						\
+	-fno-instrument-functions					\
+	-fno-optimize-sibling-calls					\
+	-fno-sanitize=all						\
+	-fcall-saved-rdi						\
+	-fcall-saved-rsi						\
+	-c
+
+TAGSFLAGS =								\
+	-e								\
+	-a								\
+	--if0=no							\
+	--langmap=c:.c.h.i						\
+	--line-directives=yes						\
+	--exclude=libc/nt/struct/imagefileheader.h			\
+	--exclude=libc/nt/struct/filesegmentelement.h

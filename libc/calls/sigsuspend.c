@@ -17,10 +17,10 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.h"
-#include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -31,6 +31,7 @@
  * @asyncsignalsafe
  */
 int sigsuspend(const sigset_t *mask) {
+  if (!mask) return efault();
   if (!IsWindows()) {
     return sigsuspend$sysv(mask, 8);
   } else {

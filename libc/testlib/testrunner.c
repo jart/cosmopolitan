@@ -17,8 +17,8 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
 #include "libc/bits/safemacros.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
 #include "libc/errno.h"
 #include "libc/nt/process.h"
@@ -70,6 +70,7 @@ testonly void testlib_runtestcases(testfn_t *start, testfn_t *end,
     SetLastError(0);
     getpid$sysv();
     if (warmup) warmup();
+    testlib_clearxmmregisters();
     (*fn)();
     getpid$sysv();
     if (weaken(TearDown)) weaken(TearDown)();

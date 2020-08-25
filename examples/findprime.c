@@ -28,6 +28,7 @@ static const char *magic_;
 void OnInterrupt(int sig) {
   showprogress_ = true;
 }
+
 void ShowProgress(uintmax_t i, uintmax_t j, uintmax_t n) {
   fprintf(stderr, "%s%,40jd%,40jd%,40jd\r\n", magic_, i, j, n);
   showprogress_ = false;

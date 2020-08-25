@@ -45,5 +45,6 @@
  * @see fchmod()
  */
 int chmod(const char *pathname, uint32_t mode) {
+  if (!pathname) return efault();
   return fchmodat$sysv(AT_FDCWD, pathname, mode, 0);
 }

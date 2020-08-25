@@ -32,6 +32,7 @@
 /	@noreturn
 _exit:	push	%bp
 	mov	%sp,%bp
+	.weak	_Exit
 	rlcall	_Exit
 	int3
-	.endfn	_exit,weak,protected
+	.endfn	_exit,weak

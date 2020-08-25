@@ -28,7 +28,7 @@
  * @note synchronization is performed to skip leading continuations;
  *     canonicalization and validation are performed to some extent
  */
-unsigned(getutf16)(const char16_t *p, wint_t *wc) {
+forcealignargpointer unsigned(getutf16)(const char16_t *p, wint_t *wc) {
   unsigned skip = 0;
   while ((p[skip] & UTF16_MASK) == UTF16_CONT) skip++;
   if ((p[skip] & UTF16_MASK) != UTF16_MOAR) {

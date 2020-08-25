@@ -26,7 +26,7 @@ tinymath_copysignl:
 	.profilable
 	fldt	32(%rbp)
 	fxam
-	fnstsw	%ax
+	fnstsw
 	fstp	%st
 	fldt	16(%rbp)
 	testb	$2,%ah

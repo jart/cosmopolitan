@@ -64,9 +64,10 @@ extern double g_xterm256_gamma;
 extern struct TtyRgb g_ansi2rgb_[256];
 extern struct TtyQuant g_ttyquant_;
 extern const uint8_t kXtermXlat[2][256];
+extern const uint8_t kXtermCube[6];
 
-void ttyquantinit(enum TtyQuantizationAlgorithm, enum TtyQuantizationChannels,
-                  enum TtyBlocksSelection);
+void ttyquantsetup(enum TtyQuantizationAlgorithm, enum TtyQuantizationChannels,
+                   enum TtyBlocksSelection);
 
 extern char *ttyraster(char *, const struct TtyRgb *, size_t, size_t,
                        struct TtyRgb, struct TtyRgb);

@@ -36,6 +36,7 @@
 /	@asyncsignalsafe
 memset:	mov	%rdi,%rax
 /	fallthrough
+	.endfn	memset,globl
 
 /	Sets memory w/ minimal-impact ABI.
 /
@@ -44,7 +45,7 @@ memset:	mov	%rdi,%rax
 /	@param	edx is the number of bytes to set
 /	@clob	flags,xmm3
 /	@mode	long
-_memset:.leafprologue
+MemSet:	.leafprologue
 	.profilable
 	push	%rbx
 	push	%rcx
@@ -64,7 +65,7 @@ _memset:.leafprologue
 	cmp	%rcx,%rdx
 	ja	1b
 	vmovdqu	%ymm3,-32(%rdi,%rdx)
-	vxorps	%ymm3,%ymm3,%ymm3
+	vpxor	%ymm3,%ymm3,%ymm3
 	jmp	.L0
 .L16r:	cmp	$1024,%rdx
 	jae	.Lerms
@@ -75,7 +76,7 @@ _memset:.leafprologue
 	cmp	%rcx,%rdx
 	ja	1b
 	movdqu	%xmm3,-16(%rdi,%rdx)
-	xorps	%xmm3,%xmm3
+	pxor	%xmm3,%xmm3
 .L0:	pop	%rcx
 	pop	%rbx
 	.leafepilogue
@@ -103,8 +104,7 @@ _memset:.leafprologue
 	pop	%rdi
 	pop	%rax
 	jmp	.L0
-	.endfn	_memset,globl,hidden
-	.endfn	memset,globl
+	.endfn	MemSet,globl,hidden
 
 	.initro 300,_init_memset
 memsettab.ro:

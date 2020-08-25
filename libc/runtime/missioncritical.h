@@ -1,9 +1,11 @@
 #ifndef COSMOPOLITAN_LIBC_INTERNAL_MISSIONCRITICAL_H_
 #define COSMOPOLITAN_LIBC_INTERNAL_MISSIONCRITICAL_H_
+#ifndef __STRICT_ANSI__
 #include "libc/bits/bits.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/nexgen32e/nexgen32e.h"
+#include "libc/nexgen32e/tinystrlen.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/version.h"
 #include "libc/nt/ntdll.h"
@@ -140,4 +142,5 @@ interruptfn void __print(const void *, size_t);
 #define RESTORE_RBX()      /* disabled for now b/c clang */
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* !ANSI */
 #endif /* COSMOPOLITAN_LIBC_INTERNAL_MISSIONCRITICAL_H_ */

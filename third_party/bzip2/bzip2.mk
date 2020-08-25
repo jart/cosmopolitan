@@ -27,9 +27,7 @@ o/$(MODE)/third_party/bzip2/µbunzip2.com.dbg:				\
 		$(APE)
 	@$(APELINK)
 
-$(THIRD_PARTY_BZIP2_OBJS):						\
-		$(BUILD_FILES)						\
-		third_party/bzip2/bzip2.mk
+$(THIRD_PARTY_BZIP2_OBJS): third_party/bzip2/bzip2.mk
 
 .PHONY: o/$(MODE)/third_party/bzip2
 o/$(MODE)/third_party/bzip2: $(THIRD_PARTY_BZIP2_BINS)

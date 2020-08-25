@@ -76,7 +76,7 @@ bool32 SetProcessPriorityBoost(int64_t hProcess, bool32 bDisablePriorityBoost);
 bool32 GetProcessPriorityBoost(int64_t hProcess, bool32 *pDisablePriorityBoost);
 
 #if ShouldUseMsabiAttribute()
-#include "libc/nt/thunk/msabi.h"
+#include "libc/nt/thunk/process.inc"
 #endif /* ShouldUseMsabiAttribute() */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

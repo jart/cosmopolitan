@@ -17,8 +17,6 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/str/str.h"
 
 #define N 32
 typedef uint8_t uint8_v _Vector_size(N);

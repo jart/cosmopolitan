@@ -21,45 +21,46 @@
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
+#include "libc/macros.h"
 #include "libc/nt/files.h"
 #include "libc/sysv/errfuns.h"
 
-#define DBUFSIZ 1460 /* tcp ethernet frame < -Wframe-larger-than=4096 */
-
-struct dfile {
+struct VdprintfState {
+  int n;
   int fd;
-  unsigned idx;
-  unsigned toto;
-  unsigned char buf[DBUFSIZ];
+  unsigned char buf[1024];
 };
 
-static int vdprintf_flush(struct dfile *df) {
-  ssize_t wrote;
-  do {
-    wrote = write(df->fd, &df->buf[0], df->idx);
-    if (wrote == -1) return -1;
-    df->toto += (unsigned)wrote;
-    df->idx -= (unsigned)wrote;
-    if (df->toto > INT_MAX) return eoverflow();
-  } while (df->idx);
+static int vdprintf_flush(struct VdprintfState *df, int n) {
+  int i, rc;
+  for (i = 0; i < n; i += rc) {
+    if ((rc = write(df->fd, df->buf + i, n - i)) == -1) {
+      return -1;
+    }
+  }
   return 0;
 }
 
-static int vdprintfputchar(unsigned char c, struct dfile *df) {
-  df->buf[df->idx++] = c;
-  if (df->idx == DBUFSIZ && vdprintf_flush(df) == -1) return -1;
-  return 0;
+static int vdprintfputchar(int c, struct VdprintfState *df) {
+  df->buf[df->n++ & (ARRAYLEN(df->buf) - 1)] = c & 0xff;
+  if ((df->n & (ARRAYLEN(df->buf) - 1))) {
+    return 0;
+  } else {
+    return vdprintf_flush(df, ARRAYLEN(df->buf));
+  }
 }
 
 /**
  * Formats string directly to system i/o device.
  */
 int(vdprintf)(int fd, const char *fmt, va_list va) {
-  struct dfile df;
+  struct VdprintfState df;
+  df.n = 0;
   df.fd = fd;
-  df.idx = 0;
-  df.toto = 0;
-  if (palandprintf(vdprintfputchar, &df, fmt, va) == -1) return -1;
-  if (df.idx && vdprintf_flush(&df) == -1) return -1;
-  return df.toto;
+  if (palandprintf(vdprintfputchar, &df, fmt, va) != -1 ||
+      vdprintf_flush(&df, df.n & (ARRAYLEN(df.buf) - 1)) != -1) {
+    return df.n;
+  } else {
+    return -1;
+  }
 }

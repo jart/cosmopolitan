@@ -82,8 +82,7 @@ const struct IdName kNtStartfFlagNames[] = {
 };
 
 void PrintStartupInfo(void) {
-  printf(
-      "\n\
+  printf("\n\
 ╔──────────────────────────────────────────────────────────────────────────────╗\n\
 │ new technology § startup info                                                │\n\
 ╚──────────────────────────────────────────────────────────────────────────────╝\n\
@@ -102,7 +101,7 @@ void PrintStartupInfo(void) {
   X("%u", dwYCountChars);
   X("%u", dwFillAttribute);
   printf("%s.%-22s: %s\n", "g_ntstartupinfo", "dwFlags",
-         recreateflags(kNtStartfFlagNames, g_ntstartupinfo.dwFlags));
+         RecreateFlags(kNtStartfFlagNames, g_ntstartupinfo.dwFlags));
   X("%hu", wShowWindow);
   X("%hu", cbReserved2);
   X("%s", lpReserved2);
@@ -113,8 +112,7 @@ void PrintStartupInfo(void) {
 }
 
 void PrintSystemInfo(void) {
-  printf(
-      "\n\
+  printf("\n\
 ╔──────────────────────────────────────────────────────────────────────────────╗\n\
 │ new technology § system info                                                 │\n\
 ╚──────────────────────────────────────────────────────────────────────────────╝\n\
@@ -145,8 +143,7 @@ const char *ft2str(enum NtFileType ft) {
 }
 
 void PrintStdioInfo(void) {
-  printf(
-      "\n\
+  printf("\n\
 ╔──────────────────────────────────────────────────────────────────────────────╗\n\
 │ new technology § stdio info                                                  │\n\
 ╚──────────────────────────────────────────────────────────────────────────────╝\n\
@@ -162,8 +159,7 @@ void PrintStdioInfo(void) {
 void PrintTeb(void) {
   GetCurrentProcessId();
   SetLastError(0x1234);
-  printf(
-      "\n\
+  printf("\n\
 ╔──────────────────────────────────────────────────────────────────────────────╗\n\
 │ new technology § teb?                                                        │\n\
 ╚──────────────────────────────────────────────────────────────────────────────╝\n\
@@ -188,8 +184,7 @@ void PrintTeb(void) {
 
 void PrintPeb(void) {
   struct NtPeb *peb = NtGetPeb();
-  printf(
-      "\n\
+  printf("\n\
 ╔──────────────────────────────────────────────────────────────────────────────╗\n\
 │ new technology § peb                                                         │\n\
 ╚──────────────────────────────────────────────────────────────────────────────╝\n\
@@ -347,8 +342,7 @@ void PrintPeb(void) {
 }
 
 void PrintPebLdr(void) {
-  printf(
-      "\n\
+  printf("\n\
 ╔──────────────────────────────────────────────────────────────────────────────╗\n\
 │ new technology § peb » ldr                                                   │\n\
 ╚──────────────────────────────────────────────────────────────────────────────╝\n\
@@ -372,8 +366,7 @@ void PrintPebLdr(void) {
 
 void PrintModulesLoadOrder(void) {
   {
-    printf(
-        "\n\
+    printf("\n\
 ╔──────────────────────────────────────────────────────────────────────────────╗\n\
 │ new technology § modules » load order                                        │\n\
 ╚──────────────────────────────────────────────────────────────────────────────╝\n\
@@ -447,8 +440,7 @@ void PrintModulesLoadOrder(void) {
 
 void PrintModulesMemoryOrder(void) {
   {
-    printf(
-        "\n\
+    printf("\n\
 ╔──────────────────────────────────────────────────────────────────────────────╗\n\
 │ new technology § modules » memory order                                      │\n\
 ╚──────────────────────────────────────────────────────────────────────────────╝\n\

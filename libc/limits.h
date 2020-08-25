@@ -86,6 +86,10 @@
   (((intmax_t)0x7fffffffffffffff) << 64 | (intmax_t)0xffffffffffffffff)
 #define UINTMAX_MAX \
   (((uintmax_t)0xffffffffffffffff) << 64 | (uintmax_t)0xffffffffffffffff)
+#define INT128_MIN  INTMAX_MIN
+#define INT128_MAX  INTMAX_MAX
+#define UINT128_MIN ((uintmax_t)0)
+#define UINT128_MAX UINTMAX_MAX
 #else
 #define INTMAX_MAX  __INT64_MAX__
 #define UINTMAX_MAX __UINT64_MAX__

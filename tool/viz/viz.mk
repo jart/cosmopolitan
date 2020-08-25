@@ -4,11 +4,13 @@
 PKGS += TOOL_VIZ
 
 TOOL_VIZ_SRCS := $(wildcard tool/viz/*.c)
-TOOL_VIZ_COMS = $(TOOL_VIZ_OBJS:%.o=%.com)
 
 TOOL_VIZ_OBJS =					\
 	$(TOOL_VIZ_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TOOL_VIZ_SRCS:%.c=o/$(MODE)/%.o)
+
+TOOL_VIZ_COMS =					\
+	$(TOOL_VIZ_SRCS:%.c=o/$(MODE)/%.com)
 
 TOOL_VIZ_BINS =					\
 	$(TOOL_VIZ_COMS)			\

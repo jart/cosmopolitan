@@ -1,6 +1,16 @@
 #ifndef COSMOPOLITAN_LIBC_NEXGEN32E_TINYSTRLEN_H_
 #define COSMOPOLITAN_LIBC_NEXGEN32E_TINYSTRLEN_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
+#if !defined(__GNUC__) || defined(__STRICT_ANSI__)
+
+int tinystrlen(const char *);
+int tinystrnlen(const char *, size_t);
+int tinystrlen16(const char16_t *);
+int tinystrnlen16(const char16_t *, size_t);
+int tinywcslen(const wchar_t *);
+int tinywcsnlen(const wchar_t *, size_t);
+
+#else
 
 forceinline int tinystrlen(const char *s) {
   unsigned ax;
@@ -40,5 +50,6 @@ forceinline int tinywcsnlen(const wchar_t *s, size_t n) {
   return ax;
 }
 
+#endif
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NEXGEN32E_TINYSTRLEN_H_ */

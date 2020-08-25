@@ -40,10 +40,10 @@ TEST(SUITE(sprintf), testCharacterCounting) {
 
 TEST(SUITE(snprintf), testTableFlip) {
   EXPECT_STREQ("Table flip          ", Format("%-20ls", L"Table flip"));
-  EXPECT_STREQ("(╯°□°)╯︵ ┻━┻       ", Format("%-20ls", L"(╯°□°)╯︵ ┻━┻"));
-  EXPECT_STREQ("(╯°□°)╯︵ ┻━┻       ", Format("%-20hs", u"(╯°□°)╯︵ ┻━┻"));
+  EXPECT_STREQ("(╯°□°)╯︵L┻━┻       ", Format("%-20ls", L"(╯°□°)╯︵L┻━┻"));
+  EXPECT_STREQ("(╯°□°)╯︵u┻━┻       ", Format("%-20hs", u"(╯°□°)╯︵u┻━┻"));
   EXPECT_STREQ("ちゃぶ台返し        ", Format("%-20ls", L"ちゃぶ台返し"));
-  EXPECT_STREQ("       (╯°□°)╯︵ ┻━┻", Format("%20ls", L"(╯°□°)╯︵ ┻━┻"));
+  EXPECT_STREQ("       (╯°□°)╯︵L┻━┻", Format("%20ls", L"(╯°□°)╯︵L┻━┻"));
   EXPECT_STREQ("        ちゃぶ台返し", Format("%20ls", L"ちゃぶ台返し"));
 }
 

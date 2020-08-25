@@ -59,7 +59,7 @@ int ftoa(int out(int, void *), void *arg, long double value, unsigned long prec,
     buf[2] = 'n';
     buf[3] = '\0';
     len += 3;
-  } else if (isinf(value) || fabsl(value) > 0x7ffffffffffffffful) {
+  } else if (isinf(value) || (value && ilogbl(fabsl(value)) > 63)) {
     buf[0] = 'f';
     buf[1] = 'n';
     buf[2] = 'i';
@@ -90,11 +90,11 @@ int ftoa(int out(int, void *), void *arg, long double value, unsigned long prec,
         ++whole;
       }
     } else if (diff < 0.5) {
-    } else if ((frac == 0U) || (frac & 1U)) {
+    } else if (!frac || (frac & 1)) {
       ++frac; /* if halfway, round up if odd OR if last digit is 0 */
     }
 
-    if (prec == 0U) {
+    if (!prec) {
       diff = fabsl(value) - whole;
       if ((!(diff < 0.5) || (diff > 0.5)) && (whole & 1)) {
         /* exactly 0.5 and ODD, then round up */
@@ -112,7 +112,7 @@ int ftoa(int out(int, void *), void *arg, long double value, unsigned long prec,
         }
       }
       /* add extra 0s */
-      while ((len < PRINTF_FTOA_BUFFER_SIZE) && (count-- > 0U)) {
+      while ((len < PRINTF_FTOA_BUFFER_SIZE) && (count-- > 0)) {
         buf[len++] = '0';
       }
       if (len < PRINTF_FTOA_BUFFER_SIZE) {

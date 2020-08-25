@@ -20,7 +20,13 @@
 #include "libc/alg/reverse.h"
 #include "libc/conv/conv.h"
 #include "libc/conv/itoa.h"
+#include "libc/limits.h"
 
+/**
+ * Converts unsigned 64-bit integer to string.
+ * @param a needs at least 21 bytes
+ * @return bytes written w/o nul
+ */
 noinline size_t uint64toarray_radix10(uint64_t i, char *a) {
   size_t j;
   j = 0;
@@ -33,10 +39,21 @@ noinline size_t uint64toarray_radix10(uint64_t i, char *a) {
   return j;
 }
 
+/**
+ * Converts signed 64-bit integer to string.
+ * @param a needs at least 21 bytes
+ * @return bytes written w/o nul
+ */
 size_t int64toarray_radix10(int64_t i, char *a) {
   if (i < 0) {
-    *a++ = '-';
-    i = -i;
+    if (i != INT64_MIN) {
+      *a++ = '-';
+      return 1 + uint64toarray_radix10(-i, a);
+    } else {
+      memcpy(a, "-9223372036854775808", 21);
+      return 20;
+    }
+  } else {
+    return uint64toarray_radix10(i, a);
   }
-  return uint64toarray_radix10(i, a);
 }

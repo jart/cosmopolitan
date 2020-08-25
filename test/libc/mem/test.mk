@@ -5,11 +5,13 @@ PKGS += TEST_LIBC_MEM
 
 TEST_LIBC_MEM_SRCS := $(wildcard test/libc/mem/*.c)
 TEST_LIBC_MEM_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_MEM_SRCS))
-TEST_LIBC_MEM_COMS = $(TEST_LIBC_MEM_OBJS:%.o=%.com)
 
 TEST_LIBC_MEM_OBJS =					\
 	$(TEST_LIBC_MEM_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_MEM_SRCS:%.c=o/$(MODE)/%.o)
+
+TEST_LIBC_MEM_COMS =					\
+	$(TEST_LIBC_MEM_SRCS:%.c=o/$(MODE)/%.com)
 
 TEST_LIBC_MEM_BINS =					\
 	$(TEST_LIBC_MEM_COMS)				\
@@ -22,7 +24,14 @@ TEST_LIBC_MEM_CHECKS =					\
 
 TEST_LIBC_MEM_DIRECTDEPS =				\
 	LIBC_MEM					\
+	LIBC_CALLS					\
 	LIBC_STUBS					\
+	LIBC_NEXGEN32E					\
+	LIBC_SYSV					\
+	LIBC_FMT					\
+	LIBC_RUNTIME					\
+	LIBC_STDIO					\
+	LIBC_RAND					\
 	LIBC_TESTLIB
 
 TEST_LIBC_MEM_DEPS :=					\

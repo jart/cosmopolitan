@@ -50,19 +50,22 @@ const struct AuxiliaryValue {
 };
 
 int main(int argc, char *argv[], char **envp) {
+  long key;
+  unsigned i;
+  unsigned long val;
+  char fmt[64], **env;
   printf("\nArguments:\n");
-  for (unsigned i = 0; i < argc; ++i) {
+  for (i = 0; i < argc; ++i) {
     printf(" ☼ %s\n", argv[i]);
   }
   printf("\nEnvironment:\n");
-  for (char **env = envp; *env; ++env) {
+  for (env = envp; *env; ++env) {
     printf(" ☼ %s\n", *env);
   }
   printf("\nAuxiliary Values:\n");
-  for (unsigned i = 0; i < ARRAYLEN(kAuxiliaryValues); ++i) {
-    long key = *kAuxiliaryValues[i].id;
-    unsigned long val = getauxval(key);
-    char fmt[64];
+  for (i = 0; i < ARRAYLEN(kAuxiliaryValues); ++i) {
+    key = *kAuxiliaryValues[i].id;
+    val = getauxval(key);
     printf(PROGN(stpcpy(stpcpy(stpcpy(fmt, "%16s[%p] = "),
                                kAuxiliaryValues[i].fmt),
                         "  # %s\n"),

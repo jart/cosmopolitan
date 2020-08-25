@@ -20,39 +20,22 @@
 #include "libc/macros.h"
 .source	__FILE__
 
+/	Projects into Rienmann sphere.
+/
+/	@param	z is complex long double passed on stack
+/	@note	needs sse3
 tinymath_cprojl:
 	.profilable
 	sub	$24,%rsp
 	fldt	32(%rsp)
-	fnstcw	14(%rsp)
-	movzwl	14(%rsp),%eax
-	orb	$12,%ah
-	movw	%ax,12(%rsp)
-	fldcw	12(%rsp)
-	fistpq	(%rsp)
-	fldcw	14(%rsp)
-	movq	(%rsp),%rsi
+	fisttpq	8(%rsp)
 	fldt	48(%rsp)
+	movq	8(%rsp),%rsi
 	mov	%rsi,%rax
-	fldcw	12(%rsp)
-	fistpq	(%rsp)
-	fldcw	14(%rsp)
-	movq	(%rsp),%rcx
+	fisttpq	8(%rsp)
+	mov	8(%rsp),%rcx
 	add	$24,%rsp
 	mov	%rcx,%rdx
 	ret
 	.endfn	tinymath_cprojl,globl
 	.alias	tinymath_cprojl,cprojl
-
-/	TODO(jart):
-/	sub	$24,%rsp
-/	fldt	32(%rsp)
-/	fisttpq	8(%rsp)
-/	fldt	48(%rsp)
-/	movq	8(%rsp),%rsi
-/	mov	%rsi,%rax
-/	fisttpq	8(%rsp)
-/	movq	8(%rsp),%rcx
-/	add	$24,%rsp
-/	mov	%rcx,%rdx
-/	ret

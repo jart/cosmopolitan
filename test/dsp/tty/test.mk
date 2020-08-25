@@ -5,12 +5,14 @@ PKGS += TEST_DSP_TTY
 
 TEST_DSP_TTY_SRCS := $(wildcard test/dsp/tty/*.c)
 TEST_DSP_TTY_SRCS_TEST = $(filter %_test.c,$(TEST_DSP_TTY_SRCS))
-TEST_DSP_TTY_COMS = $(TEST_DSP_TTY_OBJS:%.o=%.com)
 TEST_DSP_TTY_BINS = $(TEST_DSP_TTY_COMS) $(TEST_DSP_TTY_COMS:%=%.dbg)
 
 TEST_DSP_TTY_OBJS =					\
 	$(TEST_DSP_TTY_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_DSP_TTY_SRCS:%.c=o/$(MODE)/%.o)
+
+TEST_DSP_TTY_COMS =					\
+	$(TEST_DSP_TTY_SRCS:%.c=o/$(MODE)/%.com)
 
 TEST_DSP_TTY_TESTS =					\
 	$(TEST_DSP_TTY_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)

@@ -21,8 +21,7 @@ APE =	$(APE_DEPS)			\
 
 APELINK =				\
 	ACTION=LINK.ape 		\
-	$(MKDIR)			\
-	$(dir $@) &&			\
+	$(MKDIR) $(@D) &&		\
 	$(LINK)				\
 	$(LINKARGS)			\
 	$(OUTPUT_OPTION) &&		\
@@ -32,27 +31,12 @@ APELINK =				\
 	$(ZFLAGS)			\
 	-f $@.map
 
-APECOPY =				\
-	ACTION=OBJCOPY.ape		\
-	TARGET=$@			\
-	build/do			\
-	$(OBJCOPY)			\
-	-SO binary			\
-	$<				\
-	$@
-
-DEFAULT_COPTS += -mno-red-zone
-DEFAULT_LDFLAGS += -z max-page-size=0x1000
-
 APE_FILES := $(wildcard ape/*.*)
 APE_HDRS = $(filter %.h,$(APE_FILES))
 APE_SRCS = $(filter %.S,$(APE_FILES))
 APE_OBJS = $(APE_SRCS:%.S=o/$(MODE)/%.o)
 APE_DEPS = $(APE_LIB)
 APE_CHECKS = $(APE_HDRS:%=o/%.ok)
-
-o/%.com: o/%.com.dbg
-	@$(APECOPY)
 
 o/ape/idata.inc:			\
 		ape/idata.h		\

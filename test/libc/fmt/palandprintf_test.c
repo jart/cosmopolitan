@@ -27,12 +27,15 @@
 #include "libc/bits/progn.h"
 #include "libc/bits/pushpop.h"
 #include "libc/bits/safemacros.h"
+#include "libc/conv/itoa.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/limits.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"
 #include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -479,10 +482,8 @@ TEST(sprintf, test_types) {
 TEST(sprintf, testOverflow_truncationNotSaturation) {
   errno = 0;
   EXPECT_STREQ("13398", Format("%hu", 0x123456UL));
-  EXPECT_EQ(ERANGE, errno);
   errno = 0;
   EXPECT_STREQ("Test16 65535", Format("%s%hhi %hu", "Test", 10000, 0xFFFFFFFF));
-  EXPECT_EQ(ERANGE, errno);
 }
 
 TEST(sprintf, test_pointer) {
@@ -598,6 +599,10 @@ TEST(xasprintf, test) {
   free(pp);
 }
 
+TEST(xasprintf, nullPointer) {
+  ASSERT_STREQ("000000000000", gc(xasprintf("%p", NULL)));
+}
+
 TEST(xasprintf, pointer_doesntShowNonCanonicalZeroes) {
   ASSERT_STREQ("100000000010", gc(xasprintf("%p", 0x0000100000000010)));
   ASSERT_STREQ("0x100000000010", gc(xasprintf("%#p", 0x0000100000000010)));
@@ -608,6 +613,19 @@ TEST(xasprintf, nonCanonicalPointer_discardsHighBits_ratherThanSaturate) {
   ASSERT_STREQ("0x100000000010", gc(xasprintf("%#p", 0x1000100000000010)));
   ASSERT_STREQ("7fffffffffff", gc(xasprintf("%p", 0x7fffffffffff)));
   ASSERT_STREQ("0x7fffffffffff", gc(xasprintf("%#p", 0x7fffffffffff)));
+}
+
+TEST(xasprintf, hugeNtoa) {
+  ASSERT_STREQ(
+      "0b1111111111111111111111111111111111111111111111111111111111111111111111"
+      "1111111111111111111111111111111111111111111111111111111111",
+      gc(xasprintf("%#jb", UINT128_MAX)));
+}
+
+TEST(xasprintf, twosBane) {
+  ASSERT_STREQ("-2147483648", gc(xasprintf("%d", 0x80000000)));
+  ASSERT_STREQ("-9223372036854775808",
+               gc(xasprintf("%ld", 0x8000000000000000)));
 }
 
 TEST(snprintf, testFixedWidthString_wontOverrunInput) {
@@ -650,4 +668,18 @@ TEST(snprintf, testFixedWidthStringIsNull_wontLeakMemory) {
   EXPECT_EQ(4, snprintf(buf, N + 1, "%`#.*s", pushpop(N), pushpop(NULL)));
   EXPECT_BINEQ(u"NULL             ", buf);
   tfree(buf);
+}
+
+TEST(snprintf, twosBaneWithTypePromotion) {
+  int16_t x = 0x8000;
+  EXPECT_STREQ("-32768", Format("%hd", x));
+}
+
+BENCH(palandprintf, bench) {
+  EZBENCH2("snprintf %x", donothing, Format("%x", VEIL("r", INT_MIN)));
+  EZBENCH2("snprintf %d", donothing, Format("%d", VEIL("r", INT_MIN)));
+  EZBENCH2("snprintf %s", donothing, Format("%s", VEIL("r", "hi (╯°□°)╯")));
+  EZBENCH2("snprintf %hs", donothing, Format("%hs", VEIL("r", u"hi (╯°□°)╯")));
+  EZBENCH2("snprintf %ls", donothing, Format("%ls", VEIL("r", L"hi (╯°□°)╯")));
+  EZBENCH2("int64toarray", donothing, int64toarray_radix10(-3, buffer));
 }

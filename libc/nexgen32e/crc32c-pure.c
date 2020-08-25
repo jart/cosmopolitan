@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/internal.h"
+#include "libc/nexgen32e/crc32.h"
 
 /**
  * Computes Castagnoli CRC-32 on old computers.

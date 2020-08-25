@@ -22,16 +22,18 @@
 #include "libc/str/str.h"
 
 /**
- * Fills memory with random bytes.
+ * Fills memory with random bytes, e.g.
  *
- * @param seed can be rand64
- * @param reseed is number of bytes between seed() calls
- * @return buf
+ *   char buf[1024];
+ *   rngset(buf, sizeof(buf), rand64, -1);
+ *
+ * @param seed can be rand64() and is always called at least once
+ * @param reseed is bytes between seed() calls and -1 disables it
+ * @return original buf
  */
-void *rngset(void *buf, size_t size, uint64_t (*seed)(void), size_t reseed) {
+void *rngset(void *buf, size_t size, uint64_t seed(void), size_t reseed) {
   unsigned char *p;
   uint64_t i, x, state;
-  i = 0;
   p = buf;
   state = seed();
   for (i = 0; size - i >= sizeof(x); i += sizeof(x)) {

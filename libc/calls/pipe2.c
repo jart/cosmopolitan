@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Creates file-less file descriptors for interprocess communication.
@@ -29,6 +30,7 @@
  * @return 0 on success, or -1 w/ errno and pipefd isn't modified
  */
 int pipe2(int pipefd[hasatleast 2], int flags) {
+  if (!pipefd) return efault();
   if (!IsWindows()) {
     return pipe2$sysv(pipefd, flags);
   } else {

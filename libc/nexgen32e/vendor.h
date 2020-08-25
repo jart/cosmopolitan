@@ -9,6 +9,7 @@
  *   ╤        ╤
  *   GenuineIntel
  *   AuthenticAMD
+ *   GenuineCosmo
  *   NexGenDriven
  *   AMDisbetter!
  *   CentaurHauls
@@ -27,6 +28,7 @@
  *   └────┐   │
  *        G ⊕ t = 0x33 Intel
  *        A ⊕ A = 0x00 AMD
+ *        G ⊕ s = 0x34 Cosmopolitan
  *        N ⊕ v = 0x38 NexGen (Modern x86)
  *        A ⊕ e = 0x24 AMD (Rank & File)
  *        C ⊕ u = 0x36 Via (DBA Centaur)
@@ -53,10 +55,11 @@
  */
 #define IsAuthenticAMD() (_KCPUIDS_VENDOR() == 0x00)
 #define IsGenuineIntel() (_KCPUIDS_VENDOR() == 0x33)
+#define IsGenuineCosmo() (_KCPUIDS_VENDOR() == 0x34)
 
-#define _KCPUIDS_VENDOR()                              \
-  (((kCpuids[KCPUIDS_0][KCPUIDS_EBX] >> 000) & 0xff) ^ \
-   ((kCpuids[KCPUIDS_0][KCPUIDS_ECX] >> 010) & 0xff))
+#define _KCPUIDS_VENDOR()                               \
+  (((kCpuids[KCPUIDS_0H][KCPUIDS_EBX] >> 000) & 0xff) ^ \
+   ((kCpuids[KCPUIDS_0H][KCPUIDS_EDX] >> 010) & 0xff))
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NEXGEN32E_VENDOR_H_ */

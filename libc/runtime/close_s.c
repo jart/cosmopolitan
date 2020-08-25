@@ -19,18 +19,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
-#include "libc/runtime/mappings.h"
 #include "libc/runtime/runtime.h"
 
 /**
  * Closes file descriptor.
  *
- * The caller's variable is made -1. Note that close(-1) is a no-op.
+ * The caller's variable is made -1 so subsequent calls are no-ops.
  *
  * @return 0 on success, or -1 w/ errno
  * @asyncsignalsafe
  */
 int close_s(int *fdp) {
   int fd = -1;
-  return close(lockxchg(fdp, &fd));
+  if (lockxchg(fdp, &fd) == -1) return 0;
+  return close(fd);
 }

@@ -49,7 +49,7 @@ THIRD_PARTY_LINENOISE_BINS = $(foreach x,$(THIRD_PARTY_LINENOISE_ARTIFACTS),$($(
 THIRD_PARTY_LINENOISE_CHECKS = $(foreach x,$(THIRD_PARTY_LINENOISE_ARTIFACTS),$($(x)_CHECKS))
 THIRD_PARTY_LINENOISE_OBJS = $(foreach x,$(THIRD_PARTY_LINENOISE_ARTIFACTS),$($(x)_OBJS))
 THIRD_PARTY_LINENOISE_TESTS = $(foreach x,$(THIRD_PARTY_LINENOISE_ARTIFACTS),$($(x)_TESTS))
-$(THIRD_PARTY_LINENOISE_OBJS): $(BUILD_FILES) third_party/linenoise/linenoise.mk
+$(THIRD_PARTY_LINENOISE_OBJS): third_party/linenoise/linenoise.mk
 
 .PHONY: o/$(MODE)/third_party/linenoise
 o/$(MODE)/third_party/linenoise:				\

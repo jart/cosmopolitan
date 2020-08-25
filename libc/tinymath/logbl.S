@@ -18,9 +18,13 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.source	__FILE__
 
-logbl:	push	%rbp
+/	Returns log₂ₓ exponent part of long double.
+/
+/	@param	𝑥 is long double passed on stack
+/	@return	result in %st0
+tinymath_logbl:
+	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
@@ -28,4 +32,6 @@ logbl:	push	%rbp
 	fstp	%st
 	pop	%rbp
 	ret
-	.endfn	logbl,globl
+	.endfn	tinymath_logbl,globl
+	.alias	tinymath_logbl,logbl
+	.source	__FILE__

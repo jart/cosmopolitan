@@ -22,7 +22,7 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 
-void *__mapanon(size_t mapsize) {
+void *mapanon(size_t mapsize) {
   return mmap(NULL, mapsize, PROT_READ | PROT_WRITE,
               MAP_PRIVATE | MAP_NONBLOCK | MAP_ANONYMOUS, -1, 0);
 }

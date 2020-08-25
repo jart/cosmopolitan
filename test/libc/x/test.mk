@@ -5,11 +5,13 @@ PKGS += TEST_LIBC_X
 
 TEST_LIBC_X_SRCS := $(wildcard test/libc/x/*.c)
 TEST_LIBC_X_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_X_SRCS))
-TEST_LIBC_X_COMS = $(TEST_LIBC_X_OBJS:%.o=%.com)
 
 TEST_LIBC_X_OBJS =				\
 	$(TEST_LIBC_X_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_X_SRCS:%.c=o/$(MODE)/%.o)
+
+TEST_LIBC_X_COMS =				\
+	$(TEST_LIBC_X_SRCS:%.c=o/$(MODE)/%.com)
 
 TEST_LIBC_X_BINS =				\
 	$(TEST_LIBC_X_COMS)			\
@@ -29,7 +31,8 @@ TEST_LIBC_X_DIRECTDEPS =			\
 	LIBC_RUNTIME				\
 	LIBC_X					\
 	LIBC_STUBS				\
-	LIBC_TESTLIB
+	LIBC_TESTLIB				\
+	THIRD_PARTY_DTOA
 
 TEST_LIBC_X_DEPS :=				\
 	$(call uniq,$(foreach x,$(TEST_LIBC_X_DIRECTDEPS),$($(x))))

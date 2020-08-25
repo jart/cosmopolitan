@@ -23,7 +23,7 @@
 struct TtyRgb res;
 
 TEST(rgb2ansi, testDesaturatedPurple_isQuantizedBetterThanEuclideanDistance) {
-  ttyquantinit(kTtyQuantXterm256, kTtyQuantRgb, kTtyBlocksUnicode);
+  ttyquantsetup(kTtyQuantXterm256, kTtyQuantRgb, kTtyBlocksUnicode);
 
   /*
    * the challenge to the xterm256 palette is that it was likely

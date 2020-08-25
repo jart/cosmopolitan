@@ -26,7 +26,8 @@ FILE *stderr;
 hidden FILE g_stderr;
 hidden unsigned char g_stderr_buf[BUFSIZ] aligned(PAGESIZE);
 
-static textstartup void g_stderr_init() {
-  fflushregister(stderr);
+static textstartup void _init_g_stderr2() {
+  _fflushregister(stderr);
 }
-const void *const g_stderr_ctor[] initarray = {g_stderr_init};
+
+const void *const g_stderr_ctor[] initarray = {_init_g_stderr2};

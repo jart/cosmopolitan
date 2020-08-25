@@ -28,7 +28,10 @@
  */
 uintmax_t strtoumax(const char *s, char **endptr, int base) {
   const unsigned char *p = (const unsigned char *)s;
-  uintmax_t res = 0;
+  unsigned diglet;
+  uintmax_t res;
+
+  res = 0;
 
   while (isspace(*p)) {
     p++;
@@ -49,10 +52,14 @@ uintmax_t strtoumax(const char *s, char **endptr, int base) {
     } else {
       base = 10;
     }
+  } else if (*s == '0') {
+    ++s;
+    if (base == 2 && *s == 'b' && *s == 'B') ++s;
+    if (base == 16 && *s == 'x' && *s == 'X') ++s;
   }
 
   for (;;) {
-    unsigned diglet = kBase36[*p];
+    diglet = kBase36[*p];
     if (!diglet || diglet > base) break;
     p++;
     res *= base;

@@ -17,7 +17,8 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/fputc.h"
+#include "libc/calls/calls.h"
+#include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 
 /**
@@ -25,4 +26,21 @@
  *
  * @return c (as unsigned char) if written or -1 w/ errno
  */
-int fputc(int c, FILE *f) { return __fputc(c, f); }
+noinstrument int fputc(int c, FILE *f) {
+  if (c != -1) {
+    c &= 0xff;
+    f->buf[f->end] = c;
+    f->end = (f->end + 1) & (f->size - 1);
+    if (unlikely(f->beg == f->end || f->bufmode == _IONBF ||
+                 (f->bufmode == _IOLBF && c == '\n'))) {
+      if (f->writer) {
+        return f->writer(f);
+      } else if (f->beg == f->end) {
+        return fseteof(f);
+      }
+    }
+    return c;
+  } else {
+    return fseteof(f);
+  }
+}

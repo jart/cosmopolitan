@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
+.source	__FILE__
 
 /	Copies memory.
 /
@@ -27,7 +28,7 @@
 /	@param	rsi is src
 /	@param	rdx is number of bytes
 /	@return	original rdi + rdx copied to rax
-mempcpy:lea	(%rdi,%rdx),%rax
-	jmp	_memcpy
+mempcpy:
+	lea	(%rdi,%rdx),%rax
+	jmp	MemCpy
 	.endfn	mempcpy,globl
-	.source	__FILE__

@@ -17,17 +17,20 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/dce.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Moves file the Unix way.
+ *
  * @return 0 on success or -1 w/ errno
  * @asyncsignalsafe
  */
 int rename(const char *oldpathname, const char *newpathname) {
+  if (!oldpathname || !newpathname) return efault();
   if (!IsWindows()) {
     return renameat$sysv(AT_FDCWD, oldpathname, AT_FDCWD, newpathname);
   } else {

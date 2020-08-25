@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #ifndef COSMOPOLITAN_LIBC_DOSENVIRON_H_
 #define COSMOPOLITAN_LIBC_DOSENVIRON_H_
+#ifndef __STRICT_ANSI__
 #include "libc/bits/safemacros.h"
 #include "libc/str/appendchar.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -64,4 +65,5 @@ static inline int getdosenviron(const char16_t *env, char *buf, size_t size,
 }
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* !ANSI */
 #endif /* COSMOPOLITAN_LIBC_DOSENVIRON_H_ */

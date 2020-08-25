@@ -17,15 +17,16 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
-#include "libc/stdio/stdio.h"
 
 STATIC_YOINK("ntoa");
 
-void memsummary(FILE *f) {
-  struct mallinfo mi = mallinfo();
-  (fprintf)(f,
+void memsummary(int fd) {
+  struct mallinfo mi;
+  mi = mallinfo();
+  (dprintf)(fd,
             "arena\t\t%,-12zu\t# space allocated from system\n"
             "ordblks\t\t%,-12zu\t# number of free chunks\n"
             "hblkhd\t\t%,-12zu\t# space in mmapped regions\n"

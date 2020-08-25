@@ -469,15 +469,15 @@ typedef struct tre_backtrack_struct {
 } * tre_backtrack_t;
 
 #ifdef TRE_MBSTATE
-#define BT_STACK_MBSTATE_IN stack->item.mbstate = (mbstate)
+#define BT_STACK_MBSTATE_IN  stack->item.mbstate = (mbstate)
 #define BT_STACK_MBSTATE_OUT (mbstate) = stack->item.mbstate
 #else /* !TRE_MBSTATE */
 #define BT_STACK_MBSTATE_IN
 #define BT_STACK_MBSTATE_OUT
 #endif /* !TRE_MBSTATE */
 
-#define tre_bt_mem_new tre_mem_new
-#define tre_bt_mem_alloc tre_mem_alloc
+#define tre_bt_mem_new     tre_mem_new
+#define tre_bt_mem_alloc   tre_mem_alloc
 #define tre_bt_mem_destroy tre_mem_destroy
 
 #define BT_STACK_PUSH(_pos, _str_byte, _str_wide, _state, _state_id, _next_c, \
@@ -867,12 +867,15 @@ static void tre_fill_pmatch(size_t nmatch, regmatch_t pmatch[], int cflags,
   }
 }
 
-/*
-  Wrapper functions for POSIX compatible regexp matching.
-*/
-
-int regexec(const regex_t *restrict preg, const char *restrict string,
-            size_t nmatch, regmatch_t pmatch[restrict], int eflags) {
+/**
+ * Executes regular expression.
+ *
+ * @param preg is state object previously made by regcomp()
+ * @param eflags can have REG_NOTBOL, REG_NOTEOL
+ * @return 0 or REG_NOMATCH
+ */
+int regexec(const regex_t *preg, const char *string, size_t nmatch,
+            regmatch_t pmatch[nmatch], int eflags) {
   tre_tnfa_t *tnfa = (void *)preg->TRE_REGEX_T_FIELD;
   reg_errcode_t status;
   regoff_t *tags = NULL, eo;
@@ -881,7 +884,6 @@ int regexec(const regex_t *restrict preg, const char *restrict string,
     tags = malloc(sizeof(*tags) * tnfa->num_tags);
     if (tags == NULL) return REG_ESPACE;
   }
-
   /* Dispatch to the appropriate matcher. */
   if (tnfa->have_backrefs) {
     /* The regex has back references, use the backtracking matcher. */
@@ -890,7 +892,6 @@ int regexec(const regex_t *restrict preg, const char *restrict string,
     /* Exact matching, no back references, use the parallel matcher. */
     status = tre_tnfa_run_parallel(tnfa, string, tags, eflags, &eo);
   }
-
   if (status == REG_OK) /* A match was found, so fill the submatch registers. */
     tre_fill_pmatch(nmatch, pmatch, tnfa->cflags, tnfa, tags, eo);
   if (tags) free(tags), tags = NULL;

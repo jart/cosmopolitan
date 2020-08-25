@@ -62,7 +62,7 @@
 #endif
 
 #ifndef __BIGGEST_ALIGNMENT__
-#define __BIGGEST_ALIGNMENT__ 16 /* intrinsics practices need to change */
+#define __BIGGEST_ALIGNMENT__ 16
 #endif
 
 #define BIGPAGESIZE 0x200000

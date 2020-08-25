@@ -18,7 +18,6 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.source	__FILE__
 
 /	Thunks float(*fn)(float,float) -> long double fn.
 /
@@ -41,3 +40,4 @@ _f2ld2:	push	%rbp
 	leave
 	ret
 	.endfn	_f2ld2,globl,hidden
+	.source	__FILE__

@@ -39,12 +39,12 @@ explicit_bzero:
 	xor	%r9,%r9
 	xor	%r10,%r10
 	xor	%r11,%r11
-	xorps	%xmm0,%xmm0
-	xorps	%xmm1,%xmm1
-	xorps	%xmm2,%xmm2
-	xorps	%xmm3,%xmm3
-	xorps	%xmm4,%xmm4
-	xorps	%xmm5,%xmm5
+	pxor	%xmm0,%xmm0
+	pxor	%xmm1,%xmm1
+	pxor	%xmm2,%xmm2
+	pxor	%xmm3,%xmm3
+	pxor	%xmm4,%xmm4
+	pxor	%xmm5,%xmm5
 	.leafepilogue
 	.endfn	explicit_bzero,globl
 	.source	__FILE__

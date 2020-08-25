@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_RAND_RAND_H_
 #define COSMOPOLITAN_LIBC_RAND_RAND_H_
-#include "libc/ncabi.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -25,11 +24,6 @@ int devrand(void *, size_t);
 int64_t winrandish(void);
 uint64_t rdrand(void);
 float randf(void);
-
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-NCABI_DECLARE_0(NCABI_NOPRUNE, int, __rand, "rand")
-#define rand() __rand()
-#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

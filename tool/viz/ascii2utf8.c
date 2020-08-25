@@ -26,7 +26,7 @@
   Getting started:
 
     nroff -mandoc -rLL=72n -rLT=78n -Tutf8 <manpage.1 |
-      tool/viz/ascii2utf8.com
+      o/tool/viz/ascii2utf8.com
 
   ASCII Bold:
 

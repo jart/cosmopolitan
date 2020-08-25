@@ -19,7 +19,8 @@
    "__STDC_WANT_LIB_EXT1__"))
 
 (defconst cosmo-c-constants-limits
-  '("SIZEOF_SHORT"
+  '("IMAGE_BASE_VIRTUAL"
+    "SIZEOF_SHORT"
     "SIZEOF_INT"
     "SIZEOF_LONG"
     "SIZEOF_LONG_LONG"
@@ -45,6 +46,7 @@
     "INT16_MAX"
     "INT32_MAX"
     "INT64_MAX"
+    "INT128_MAX"
     "WINT_MAX"
     "WCHAR_MAX"
     "INTPTR_MAX"
@@ -61,6 +63,7 @@
     "INT16_MIN"
     "INT32_MIN"
     "INT64_MIN"
+    "INT128_MIN"
     "INTMAX_MIN"
     "INTPTR_MIN"
     "WINT_MIN"
@@ -76,6 +79,7 @@
     "UINT16_MAX"
     "UINT32_MAX"
     "UINT64_MAX"
+    "UINT128_MAX"
     "USHRT_MIN"
     "ULONG_MIN"
     "ULLONG_MIN"
@@ -84,6 +88,7 @@
     "UINT16_MIN"
     "UINT32_MIN"
     "UINT64_MIN"
+    "UINT128_MIN"
     "UINTMAX_MIN"
     "UINTPTR_MIN"
     "MB_CUR_MAX"

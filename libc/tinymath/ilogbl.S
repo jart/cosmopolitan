@@ -18,38 +18,24 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.source	__FILE__
 
+/	Returns log₂ₓ exponent part of long double.
+/
+/	@param	𝑥 is long double passed on stack
+/	@return	result in %eax
+/	@note	needs sse3
 tinymath_ilogbl:
+	push	%rbp
+	mov	%rsp,%rbp
 	.profilable
-	sub	$24,%rsp
-	fldt	32(%rsp)
-	fnstcw	14(%rsp)
-	movzwl	14(%rsp),%eax
-	orb	$12,%ah
-	movw	%ax,12(%rsp)
+	fldt	16(%rbp)
 	fxtract
 	fstp	%st
-	fldcw	12(%rsp)
-	fistpl	8(%rsp)
-	fldcw	14(%rsp)
-	movl	8(%rsp),%eax
-	add	$24,%rsp
+	push	%rax
+	fisttpl	(%rsp)
+	mov	(%rsp),%eax
+	leave
 	ret
 	.endfn	tinymath_ilogbl,globl
 	.alias	tinymath_ilogbl,ilogbl
-
-/*
-	TODO(jart)
-.globl	ilogbl
-.type	ilogbl,@function
-ilogbl:	sub	$24,%rsp
-	fldt	32(%rsp)
-	fxtract
-	fstp	%st
-	fisttpl	12(%rsp)
-	movl	12(%rsp),%eax
-	add	$24,%rsp
-	ret
-.size	ilogbl,.-ilogbl
-*/
+	.source	__FILE__

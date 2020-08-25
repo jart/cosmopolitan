@@ -41,6 +41,10 @@ $(LIBC_INTRIN_A).pkg:					\
 		$(LIBC_INTRIN_A_OBJS)			\
 		$(foreach x,$(LIBC_INTRIN_A_DIRECTDEPS),$($(x)_A).pkg)
 
+$(LIBC_INTRIN_A_OBJS):					\
+		OVERRIDE_CFLAGS +=			\
+			-fwrapv -O3
+
 LIBC_INTRIN_LIBS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)))
 LIBC_INTRIN_HDRS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_HDRS))
 LIBC_INTRIN_SRCS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_SRCS))

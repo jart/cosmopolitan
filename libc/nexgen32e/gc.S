@@ -33,9 +33,10 @@
 /	@param	rax,rdx,xmm0,xmm1,st0,st1 is return value
 /	@see	test/libc/runtime/gc_test.c
 /	<LIMBO>
-__gc:	decq	__garbage(%rip)
-	mov	__garbage(%rip),%r8
-	mov	__garbage+16(%rip),%r9
+CollectGarbage:
+	decq	g_garbage(%rip)
+	mov	g_garbage(%rip),%r8
+	mov	g_garbage+16(%rip),%r9
 	js	9f
 	shl	$5,%r8
 	lea	(%r9,%r8),%r8
@@ -45,28 +46,25 @@ __gc:	decq	__garbage(%rip)
 /	</LIMBO>
 	push	%rbp
 	mov	%rsp,%rbp
-	sub	$0x40,%rsp
+	sub	$0x20,%rsp
 	push	%rax
 	push	%rdx
-	fstpl	-0x40(%rbp)
-	fstpl	-0x30(%rbp)
 	movaps	%xmm0,-0x20(%rbp)
 	movaps	%xmm1,-0x10(%rbp)
 	call	*%r9
 	movaps	-0x10(%rbp),%xmm1
 	movaps	-0x20(%rbp),%xmm0
-	fldl	-0x30(%rbp)
-	fldl	-0x40(%rbp)
 	pop	%rdx
 	pop	%rax
 	leave
 	ret
 9:	call	abort
-	.endfn	__gc,globl,hidden
+	.endfn	CollectGarbage,globl,hidden
+	.source	__FILE__
 
 	.bss
 	.align	8
-__garbage:
+g_garbage:
 	.quad	0				# garbage.i
 	.quad	0				# garbage.n
 	.quad	0				# garbage.p
@@ -76,16 +74,10 @@ __garbage:
 	.quad	0				# garbage.p[𝑖].arg
 	.quad	0				# garbage.p[𝑖].ret
 	.endr
-	.endobj	__garbage,globl,hidden
+	.endobj	g_garbage,globl,hidden
 	.previous
 
 	.init.start 100,_init_garbage
-	push	%rdi
-	ezlea	__garbage+8,di
-	pushpop	INITIAL_CAPACITY,%rax
-	stosq
-	lea	8(%rdi),%rax
-	stosq
-	pop	%rdi
+	movb	$INITIAL_CAPACITY,g_garbage+8(%rip)
+	movl	$g_garbage+24,g_garbage+16(%rip)
 	.init.end 100,_init_garbage
-	.source	__FILE__

@@ -5,12 +5,14 @@ PKGS += TEST_LIBC_RAND
 
 TEST_LIBC_RAND_SRCS := $(wildcard test/libc/rand/*.c)
 TEST_LIBC_RAND_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_RAND_SRCS))
-TEST_LIBC_RAND_COMS = $(TEST_LIBC_RAND_OBJS:%.o=%.com)
 TEST_LIBC_RAND_BINS = $(TEST_LIBC_RAND_COMS) $(TEST_LIBC_RAND_COMS:%=%.dbg)
 
 TEST_LIBC_RAND_OBJS =					\
 	$(TEST_LIBC_RAND_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_RAND_SRCS:%.c=o/$(MODE)/%.o)
+
+TEST_LIBC_RAND_COMS =					\
+	$(TEST_LIBC_RAND_SRCS:%.c=o/$(MODE)/%.com)
 
 TEST_LIBC_RAND_TESTS = $(TEST_LIBC_RAND_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
 
@@ -45,9 +47,7 @@ o/$(MODE)/test/libc/rand/%.com.dbg:			\
 		$(APE)
 	@$(APELINK)
 
-$(TEST_LIBC_RAND_OBJS):					\
-		$(BUILD_FILES)				\
-		test/libc/rand/test.mk
+$(TEST_LIBC_RAND_OBJS): test/libc/rand/test.mk
 
 $(TEST_LIBC_RAND_OBJS):					\
 	DEFAULT_CCFLAGS +=				\

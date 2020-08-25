@@ -5,11 +5,13 @@ PKGS += TEST_LIBC_CONV
 
 TEST_LIBC_CONV_SRCS := $(wildcard test/libc/conv/*.c)
 TEST_LIBC_CONV_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_CONV_SRCS))
-TEST_LIBC_CONV_COMS = $(TEST_LIBC_CONV_OBJS:%.o=%.com)
 
 TEST_LIBC_CONV_OBJS =					\
 	$(TEST_LIBC_CONV_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_CONV_SRCS:%.c=o/$(MODE)/%.o)
+
+TEST_LIBC_CONV_COMS =					\
+	$(TEST_LIBC_CONV_SRCS:%.c=o/$(MODE)/%.com)
 
 TEST_LIBC_CONV_BINS =					\
 	$(TEST_LIBC_CONV_COMS)				\
@@ -43,9 +45,7 @@ o/$(MODE)/test/libc/conv/%.com.dbg:			\
 		$(APE)
 	@$(APELINK)
 
-$(TEST_LIBC_CONV_OBJS):					\
-		$(BUILD_FILES)				\
-		test/libc/conv/test.mk
+$(TEST_LIBC_CONV_OBJS): test/libc/conv/test.mk
 
 $(TEST_LIBC_CONV_OBJS):					\
 	DEFAULT_CCFLAGS +=				\

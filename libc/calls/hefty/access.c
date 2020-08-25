@@ -17,10 +17,11 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/dce.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Checks if effective user can access path in particular ways.
@@ -31,6 +32,7 @@
  * @asyncsignalsafe
  */
 int access(const char *path, int mode) {
+  if (!path) return efault();
   if (!IsWindows()) {
     return faccessat$sysv(AT_FDCWD, path, mode, 0);
   } else {

@@ -20,6 +20,12 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-exp2f:	ezlea	exp2f,ax
+/	Returns 2^𝑥.
+/
+/	@param	𝑥 is a float passed in the lower quarter of %xmm0
+/	@return	result in lower quarter of %xmm0
+tinymath_exp2f:
+	ezlea	tinymath_exp2l,ax
 	jmp	_f2ld2
-	.endfn	exp2f,globl
+	.endfn	tinymath_exp2f,globl
+	.alias	tinymath_exp2f,exp2f

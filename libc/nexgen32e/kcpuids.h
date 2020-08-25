@@ -8,7 +8,7 @@
 #define KCPUIDS_80000001H 4
 #define KCPUIDS_80000007H 5
 #define KCPUIDS_16H       6
-#define _KCPUIDS_LEN      7
+#define KCPUIDS_LEN       7
 #define KCPUIDS_6H        -1 /* TBD: Thermal and Power Management */
 #define KCPUIDS_DH        -1 /* TBD: Extended state features */
 #define KCPUIDS_80000008H -1 /* TBD: AMD Miscellaneous */
@@ -36,7 +36,7 @@ COSMOPOLITAN_C_START_
  * @note Protected with PIRO
  * @see X86_HAVE()
  */
-extern const unsigned kCpuids[_KCPUIDS_LEN][4];
+extern const unsigned kCpuids[KCPUIDS_LEN][4];
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

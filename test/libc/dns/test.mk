@@ -5,11 +5,13 @@ PKGS += TEST_LIBC_DNS
 
 TEST_LIBC_DNS_SRCS := $(wildcard test/libc/dns/*.c)
 TEST_LIBC_DNS_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_DNS_SRCS))
-TEST_LIBC_DNS_COMS = $(TEST_LIBC_DNS_OBJS:%.o=%.com)
 
 TEST_LIBC_DNS_OBJS =					\
 	$(TEST_LIBC_DNS_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_DNS_SRCS:%.c=o/$(MODE)/%.o)
+
+TEST_LIBC_DNS_COMS =					\
+	$(TEST_LIBC_DNS_SRCS:%.c=o/$(MODE)/%.com)
 
 TEST_LIBC_DNS_BINS =					\
 	$(TEST_LIBC_DNS_COMS)				\

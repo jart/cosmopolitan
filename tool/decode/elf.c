@@ -108,7 +108,7 @@ static void printelfsegmentheader(int i) {
        firstnonnull(findnamebyid(kElfSegmentTypeNames, phdr->p_type),
                     format(b1, "%#x", phdr->p_type)),
        "phdr->p_type");
-  show(".long", recreateflags(kElfSegmentFlagNames, phdr->p_flags),
+  show(".long", RecreateFlags(kElfSegmentFlagNames, phdr->p_flags),
        "phdr->p_flags");
   show(".quad", format(b1, "%#x", phdr->p_offset), "phdr->p_offset");
   show(".quad", format(b1, "%#x", phdr->p_vaddr), "phdr->p_vaddr");
@@ -140,7 +140,7 @@ static void printelfsectionheader(int i, char *shstrtab) {
        firstnonnull(findnamebyid(kElfSectionTypeNames, shdr->sh_type),
                     format(b1, "%d", shdr->sh_type)),
        "shdr->sh_type");
-  show(".long", recreateflags(kElfSectionFlagNames, shdr->sh_flags),
+  show(".long", RecreateFlags(kElfSectionFlagNames, shdr->sh_flags),
        "shdr->sh_flags");
   show(".quad", format(b1, "%#x", shdr->sh_addr), "shdr->sh_addr");
   show(".quad", format(b1, "%#x", shdr->sh_offset), "shdr->sh_offset");

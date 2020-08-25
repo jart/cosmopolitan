@@ -17,12 +17,12 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
-#include "libc/calls/struct/stat.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/errno.h"
 
 /**
- * Returns true if file exists and is a directory
+ * Returns true if file exists and is a directory.
  */
 bool isdirectory(const char *path) {
   struct stat st;

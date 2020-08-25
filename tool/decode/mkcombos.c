@@ -94,6 +94,7 @@ void GetOpts(int argc, char *argv[]) {
  *     e.g. A̸B̸C̸D̸                            41CCB8 42CCB8 43CCB8 44CCB8
  *
  * @see unicode.org/reports/tr11/#Definitions
+ * @see https://www.compart.com/en/unicode/category/Sk (Modifier Symbol)
  */
 int main(int argc, char *argv[]) {
   GetOpts(argc, argv);
@@ -109,7 +110,7 @@ int main(int argc, char *argv[]) {
     if (bit != 0x00AD &&
         ((0x1160 <= bit && bit <= 0x11FF) ||
          (strcmp(category, "Me") == 0 || strcmp(category, "Mn") == 0 ||
-          strcmp(category, "Cf") == 0 || strcmp(category, "Sk") == 0))) {
+          strcmp(category, "Cf") == 0))) {
       maxbit = max(bit, maxbit);
       CHECK(bitabuilder_setbit(bitset, bit));
     }

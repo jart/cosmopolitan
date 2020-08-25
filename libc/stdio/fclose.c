@@ -38,7 +38,7 @@
 int fclose(FILE *f) {
   int rc;
   if (!f) return 0; /* good java behavior; glibc crashes */
-  fflushunregister(f);
+  _fflushunregister(f);
   fflush(f);
   free_s(&f->buf);
   f->state = EOF;

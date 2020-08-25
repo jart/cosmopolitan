@@ -26,7 +26,7 @@
 /	@param	edx byte size
 /	@return	unsigned char subtraction at stop index
 /	@asyncsignalsafe
-memcmp:	jmp	*hook$memcmp(%rip)
+memcmp:	jmp	*__memcmp(%rip)
 	.endfn	memcmp,globl
 	.source	__FILE__
 

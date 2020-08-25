@@ -4,6 +4,7 @@
 #include "libc/nt/enum/memflags.h"
 #include "libc/nt/enum/offerpriority.h"
 #include "libc/nt/enum/pageflags.h"
+#include "libc/nt/thunk/msabi.h"
 #if 0
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
@@ -72,6 +73,9 @@ bool32 PrefetchVirtualMemory(int64_t hProcess, const uint32_t *NumberOfEntries,
 bool32 OfferVirtualMemory(void *inout_VirtualAddress, size_t Size,
                           enum NtOfferPriority Priority);
 
+#if ShouldUseMsabiAttribute()
+#include "libc/nt/thunk/memory.inc"
+#endif /* ShouldUseMsabiAttribute() */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_MEMORY_H_ */

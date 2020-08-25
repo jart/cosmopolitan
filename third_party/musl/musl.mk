@@ -48,7 +48,7 @@ THIRD_PARTY_MUSL_LIBS = $(foreach x,$(THIRD_PARTY_MUSL_ARTIFACTS),$($(x)))
 THIRD_PARTY_MUSL_SRCS = $(foreach x,$(THIRD_PARTY_MUSL_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_MUSL_CHECKS = $(foreach x,$(THIRD_PARTY_MUSL_ARTIFACTS),$($(x)_CHECKS))
 THIRD_PARTY_MUSL_OBJS = $(foreach x,$(THIRD_PARTY_MUSL_ARTIFACTS),$($(x)_OBJS))
-$(THIRD_PARTY_MUSL_OBJS): $(BUILD_FILES) third_party/musl/musl.mk
+$(THIRD_PARTY_MUSL_OBJS): third_party/musl/musl.mk
 
 .PHONY: o/$(MODE)/third_party/musl
 o/$(MODE)/third_party/musl: $(THIRD_PARTY_MUSL_CHECKS)

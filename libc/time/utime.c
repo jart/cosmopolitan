@@ -18,9 +18,9 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
-#include "libc/calls/struct/timeval.h"
+#include "libc/sysv/consts/at.h"
+#include "libc/time/struct/utimbuf.h"
 #include "libc/time/time.h"
-#include "libc/time/utime.h"
 
 /**
  * Changes last accessed/modified times on file.
@@ -29,11 +29,14 @@
  * @return 0 on success or -1 w/ errno
  */
 int utime(const char *path, const struct utimbuf *times) {
-  struct timeval tv[2];
-  memset(tv, 0, sizeof(tv));
+  struct timespec ts[2];
   if (times) {
-    tv[0].tv_sec = times->actime;
-    tv[1].tv_sec = times->modtime;
+    ts[0].tv_sec = times->actime;
+    ts[0].tv_nsec = 0;
+    ts[1].tv_sec = times->modtime;
+    ts[1].tv_nsec = 0;
+    return utimensat(AT_FDCWD, path, ts, 0);
+  } else {
+    return utimensat(AT_FDCWD, path, NULL, 0);
   }
-  return utimes(path, times ? tv : NULL);
 }

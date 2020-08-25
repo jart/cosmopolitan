@@ -30,6 +30,6 @@
 /	@see	memset(), explicit_bzero()
 bzero:	mov	%rsi,%rdx
 	xor	%esi,%esi
-	jmp	_memset
+	jmp	MemSet
 	.endfn	bzero,globl
 	.source	__FILE__

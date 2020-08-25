@@ -42,6 +42,7 @@
 
 static struct TtyRaw {
   bool setup;
+  bool hasold;
   bool noreentry;
   bool initialized;
   enum TtyRawFlags flags;
@@ -51,12 +52,15 @@ static struct TtyRaw {
 } g_ttyraw;
 
 static textstartup int ttyraw_setup(void) {
-  if (isatty(FD) &&
-      ttyconfig(FD, ttysetrawmode, g_ttyraw.flags, &g_ttyraw.old) != -1) {
-    return 0;
-  } else {
-    return -1;
+  struct termios *old;
+  if (isatty(FD)) {
+    old = !g_ttyraw.hasold ? &g_ttyraw.old : NULL;
+    if (ttyconfig(FD, ttysetrawmode, g_ttyraw.flags, old) != -1) {
+      g_ttyraw.hasold = true;
+      return 0;
+    }
   }
+  return -1;
 }
 
 static textstartup int ttyraw_enable(void) {

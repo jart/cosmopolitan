@@ -17,6 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/lib/pc.h"
 #include "libc/macros.h"
 .source	__FILE__
 
@@ -31,10 +32,22 @@ tinymath_sincosl:
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
-	fsincos
+0:	fsincos
+	fstsw
+	test	$FPU_C2>>8,%ah
+	jnz	1f
 	fstpt	(%rsi)
 	fstpt	(%rdi)
 	pop	%rbp
 	ret
+1:	fldpi
+	fadd	%st
+	fxch
+2:	fprem1
+	fnstsw
+	test	$FPU_C2>>8,%ah
+	jnz	2b
+	fstp	%st(1)
+	jmp	0b
 	.endfn	tinymath_sincosl,globl
 	.alias	tinymath_sincosl,sincosl

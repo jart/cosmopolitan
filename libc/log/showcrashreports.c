@@ -24,11 +24,15 @@
 #include "libc/dce.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
+#include "libc/log/ubsan.h"
 #include "libc/macros.h"
 #include "libc/nt/signals.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
+
+STATIC_YOINK("die");
+STATIC_YOINK("__ubsan_abort");
 
 extern const unsigned char kOncrashThunks[7][11];
 
@@ -49,11 +53,9 @@ extern const unsigned char kOncrashThunks[7][11];
  *
  * @see callexitontermination()
  */
-optimizesize void showcrashreports(void) {
+void showcrashreports(void) {
   size_t i;
   struct sigaction sa;
-  if (IsModeDbg()) STATIC_YOINK("__ubsan_abort");
-  if (!NoDebug()) STATIC_YOINK("die");
   /* <SYNC-LIST>: oncrashthunks.S */
   kCrashSigs[0] = SIGQUIT; /* ctrl+\ aka ctrl+break */
   kCrashSigs[1] = SIGFPE;  /* 1 / 0 */

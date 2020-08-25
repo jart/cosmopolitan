@@ -1,0 +1,102 @@
+#ifndef COSMOPOLITAN_TOOL_BUILD_LIB_SSE_H_
+#define COSMOPOLITAN_TOOL_BUILD_LIB_SSE_H_
+#include "tool/build/lib/machine.h"
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+enum OpSseKernel {
+  kOpSsePaddb,
+  kOpSsePaddw,
+  kOpSsePaddd,
+  kOpSsePaddq,
+  kOpSsePsubb,
+  kOpSsePsubw,
+  kOpSsePsubd,
+  kOpSsePsubq,
+  kOpSsePaddsb,
+  kOpSsePaddsw,
+  kOpSsePaddusb,
+  kOpSsePaddusw,
+  kOpSsePsubsb,
+  kOpSsePsubsw,
+  kOpSsePor,
+  kOpSsePxor,
+  kOpSsePand,
+  kOpSsePandn,
+  kOpSsePsubusb,
+  kOpSsePsubusw,
+  kOpSsePminub,
+  kOpSsePmaxub,
+  kOpSsePminsw,
+  kOpSsePmaxsw,
+  kOpSsePunpcklbw,
+  kOpSsePunpckhbw,
+  kOpSsePunpcklwd,
+  kOpSsePunpckldq,
+  kOpSsePunpckhwd,
+  kOpSsePunpckhdq,
+  kOpSsePunpcklqdq,
+  kOpSsePunpckhqdq,
+  kOpSsePacksswb,
+  kOpSsePackuswb,
+  kOpSsePackssdw,
+  kOpSsePcmpgtb,
+  kOpSsePcmpgtw,
+  kOpSsePcmpgtd,
+  kOpSsePcmpeqb,
+  kOpSsePcmpeqw,
+  kOpSsePcmpeqd,
+  kOpSsePsrawv,
+  kOpSsePsradv,
+  kOpSsePsrlwv,
+  kOpSsePsrldv,
+  kOpSsePsrlqv,
+  kOpSsePsllwv,
+  kOpSsePslldv,
+  kOpSsePsllqv,
+  kOpSsePavgb,
+  kOpSsePavgw,
+  kOpSsePmulhuw,
+  kOpSsePmulhw,
+  kOpSsePmuludq,
+  kOpSsePmaddwd,
+  kOpSsePmullw,
+  kOpSsePmulld,
+  kOpSsePsadbw,
+  kOpSsePshufb,
+  kOpSsePhaddw,
+  kOpSsePhaddd,
+  kOpSsePhaddsw,
+  kOpSsePmaddubsw,
+  kOpSsePhsubw,
+  kOpSsePhsubd,
+  kOpSsePhsubsw,
+  kOpSsePsignb,
+  kOpSsePsignw,
+  kOpSsePsignd,
+  kOpSsePmulhrsw,
+  kOpSsePabsb,
+  kOpSsePabsw,
+  kOpSsePabsd,
+};
+
+enum OpSseUdqIbKernel {
+  kOpSseUdqIbPsrlw,
+  kOpSseUdqIbPsraw,
+  kOpSseUdqIbPsllw,
+  kOpSseUdqIbPsrld,
+  kOpSseUdqIbPsrad,
+  kOpSseUdqIbPslld,
+  kOpSseUdqIbPsrlq,
+  kOpSseUdqIbPsrldq,
+  kOpSseUdqIbPsllq,
+  kOpSseUdqIbPslldq,
+};
+
+void OpSse(struct Machine *, enum OpSseKernel);
+void OpSseUdqIb(struct Machine *, enum OpSseUdqIbKernel);
+void OpSsePalignr(struct Machine *);
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_TOOL_BUILD_LIB_SSE_H_ */

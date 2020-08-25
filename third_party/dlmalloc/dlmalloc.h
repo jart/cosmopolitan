@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_MEM_DLMALLOC_H_
 #define COSMOPOLITAN_LIBC_MEM_DLMALLOC_H_
+#ifndef __STRICT_ANSI__
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
@@ -1255,4 +1256,5 @@ mchunkptr dlmalloc_try_realloc_chunk(mstate, mchunkptr, size_t, int) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* !ANSI */
 #endif /* COSMOPOLITAN_LIBC_MEM_DLMALLOC_H_ */

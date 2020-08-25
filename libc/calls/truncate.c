@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Reduces or extends underlying physical medium of file.
@@ -32,6 +33,7 @@
  * @error ENOENT
  */
 int truncate(const char *path, uint64_t length) {
+  if (!path) return efault();
   if (!IsWindows()) {
     return truncate$sysv(path, length);
   } else {

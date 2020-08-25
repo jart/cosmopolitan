@@ -37,6 +37,7 @@ o/%.greg.o: %.greg.c; @ACTION=OBJECTIFY.greg build/compile $(OBJECTIFY.greg.c) $
 o/%.zip.o: o/%; @build/zipobj $(OUTPUT_OPTION) $<
 
 o/$(MODE)/%.a:; @$(ARCHIVE) $@ $^
+o/$(MODE)/%: o/$(MODE)/%.dbg; @ACTION=OBJCOPY TARGET=$@ build/do $(OBJCOPY) -SO binary $< $@
 o/$(MODE)/%.o: %.s; @TARGET=$@ build/assemble $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.o: o/$(MODE)/%.s; @TARGET=$@ build/assemble $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.s: %.S; @ACTION=PREPROCESS build/compile $(PREPROCESS) $(OUTPUT_OPTION) $<
@@ -75,15 +76,15 @@ o/$(MODE)/%.runs: o/$(MODE)/%; @ACTION=CHECK.runs TARGET=$< build/runcom $< $(TE
 o/$(MODE)/%.pkg:; @build/package $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) $(filter %.o,$^)
 o/$(MODE)/%.zip.o: %; @build/zipobj $(OUTPUT_OPTION) $<
 
-o/$(MODE)/%-gcc.asm: %.c; @ACTION=COMPILE.c build/compile $(COMPILE.c) $(OUTPUT_OPTION) $<
+o/$(MODE)/%-gcc.asm: %.c; @ACTION=OBJECTIFY.c build/compile $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
 o/$(MODE)/%-clang.asm: CC = $(CLANG)
-o/$(MODE)/%-clang.asm: %.c; @ACTION=COMPILE.c build/compile $(COMPILE.c) $(OUTPUT_OPTION) $< || echo / need $(CLANG) >$@
-o/$(MODE)/%-gcc.asm: %.f; @ACTION=COMPILE.f build/compile $(COMPILE.f) $(OUTPUT_OPTION) $<
+o/$(MODE)/%-clang.asm: %.c; @ACTION=OBJECTIFY.c build/compile $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $< || echo / need $(CLANG) >$@
+o/$(MODE)/%-gcc.asm: %.f; @ACTION=OBJECTIFY.f build/compile $(OBJECTIFY.f) -S -g0 $(OUTPUT_OPTION) $<
 o/$(MODE)/%-clang.asm: CC = $(CLANG)
-o/$(MODE)/%-clang.asm: %.f; @ACTION=COMPILE.f build/compile $(COMPILE.f) $(OUTPUT_OPTION) $< || echo / need $(CLANG) >$@
-o/$(MODE)/%-gcc.asm: %.F; @ACTION=COMPILE.F build/compile $(COMPILE.F) $(OUTPUT_OPTION) $<
+o/$(MODE)/%-clang.asm: %.f; @ACTION=OBJECTIFY.f build/compile $(OBJECTIFY.f) -S -g0 $(OUTPUT_OPTION) $< || echo / need $(CLANG) >$@
+o/$(MODE)/%-gcc.asm: %.F; @ACTION=OBJECTIFY.F build/compile $(OBJECTIFY.F) -S -g0 $(OUTPUT_OPTION) $<
 o/$(MODE)/%-clang.asm: CC = $(CLANG)
-o/$(MODE)/%-clang.asm: %.F; @ACTION=COMPILE.F build/compile $(COMPILE.F) $(OUTPUT_OPTION) $< || echo / need $(CLANG) >$@
+o/$(MODE)/%-clang.asm: %.F; @ACTION=OBJECTIFY.F build/compile $(OBJECTIFY.F) -S -g0 $(OUTPUT_OPTION) $< || echo / need $(CLANG) >$@
 
 # ragel state machine compiler
 .PRECIOUS: build/bootstrap/%.c.gz

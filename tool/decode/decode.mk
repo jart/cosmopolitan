@@ -6,11 +6,13 @@ PKGS += TOOL_DECODE
 TOOL_DECODE_FILES := $(wildcard tool/decode/*)
 TOOL_DECODE_HDRS = $(filter %.h,$(TOOL_DECODE_FILES))
 TOOL_DECODE_SRCS = $(filter %.c,$(TOOL_DECODE_FILES))
-TOOL_DECODE_COMS = $(TOOL_DECODE_OBJS:%.o=%.com)
 
 TOOL_DECODE_OBJS =					\
 	$(TOOL_DECODE_SRCS:%=o/$(MODE)/%.zip.o)		\
 	$(TOOL_DECODE_SRCS:%.c=o/$(MODE)/%.o)
+
+TOOL_DECODE_COMS =					\
+	$(TOOL_DECODE_SRCS:%.c=o/$(MODE)/%.com)
 
 TOOL_DECODE_BINS =					\
 	$(TOOL_DECODE_COMS)				\
@@ -37,6 +39,7 @@ TOOL_DECODE_DIRECTDEPS =				\
 	LIBC_UNICODE					\
 	LIBC_X						\
 	TOOL_DECODE_LIB					\
+	THIRD_PARTY_DTOA				\
 	THIRD_PARTY_GETOPT				\
 	THIRD_PARTY_XED
 

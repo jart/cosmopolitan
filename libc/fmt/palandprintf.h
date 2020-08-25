@@ -1,5 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_FMT_PALANDPRINTF_H_
 #define COSMOPOLITAN_LIBC_FMT_PALANDPRINTF_H_
+
+#define PRINTF_NTOA_BUFFER_SIZE 144
+#define PRINTF_FTOA_BUFFER_SIZE 64
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -9,7 +13,7 @@ int ftoa(int(int, void *), void *, long double, unsigned long, unsigned long,
 int stoa(int(int, void *), void *, void *, unsigned long, unsigned long,
          unsigned long, unsigned char, unsigned char) hidden;
 int ntoa(int(int, void *), void *, va_list, unsigned char, unsigned long,
-         unsigned long, unsigned long, unsigned long, const char *) hidden;
+         unsigned long, unsigned long, unsigned char, const char *) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

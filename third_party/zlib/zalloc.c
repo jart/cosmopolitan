@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/bits/weaken.h"
 #include "libc/mem/mem.h"
 #include "third_party/zlib/zutil.h"
 
@@ -25,4 +25,6 @@ void *zcalloc(void *opaque, unsigned items, unsigned size) {
   return weaken(malloc)(items * size);
 }
 
-void zcfree(void *opaque, void *ptr) { weaken(free)(ptr); }
+void zcfree(void *opaque, void *ptr) {
+  weaken(free)(ptr);
+}

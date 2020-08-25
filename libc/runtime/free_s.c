@@ -19,7 +19,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/mappings.h"
 #include "libc/runtime/runtime.h"
 
 /**

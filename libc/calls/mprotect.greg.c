@@ -26,7 +26,14 @@
 #include "libc/nt/thunk/msabi.h"
 #include "libc/sysv/consts/nr.h"
 
-privileged int __mprotect(void *addr, uint64_t len, int prot) {
+/**
+ * Modifies restrictions on virtual memory address range.
+ *
+ * @param prot can have PROT_{NONE,READ,WRITE,EXEC,GROWSDOWN}
+ * @return 0 on success, or -1 w/ errno
+ * @see mmap()
+ */
+int mprotect(void *addr, uint64_t len, int prot) {
   extern __msabi typeof(VirtualProtect) *const __imp_VirtualProtect;
   bool cf;
   int64_t rc;

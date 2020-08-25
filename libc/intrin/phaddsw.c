@@ -30,7 +30,7 @@
  * @note goes fast w/ ssse3 (intel c. 2004, amd c. 2011)
  * @mayalias
  */
-void(phaddsw)(short a[8], const short b[8], const short c[8]) {
+void(phaddsw)(int16_t a[8], const int16_t b[8], const int16_t c[8]) {
   int i, t[8];
   t[0] = b[0] + b[1];
   t[1] = b[2] + b[3];

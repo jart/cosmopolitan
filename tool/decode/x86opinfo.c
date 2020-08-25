@@ -46,7 +46,7 @@ noreturn void ShowUsage(int rc, FILE *f) {
   size_t i;
   fputs("Usage: ", f);
   fputs(program_invocation_name, f);
-  fputs(" [-r] [-m MODE] HEX\n  MODE ∊ {", f);
+  fputs(" [-rl] [-m MODE] HEX\n  MODE ∊ {", f);
   fputs(kXedModeNames[0].name, f);
   for (i = 1; i < ARRAYLEN(kXedModeNames); ++i) {
     fputc(',', f);
@@ -71,10 +71,13 @@ void SetMachineMode(const char *s) {
 void GetOpts(int argc, char *argv[]) {
   int opt;
   g_mode = XED_MACHINE_MODE_LONG_64;
-  while ((opt = getopt(argc, argv, "?hrm:")) != -1) {
+  while ((opt = getopt(argc, argv, "?hrlm:")) != -1) {
     switch (opt) {
       case 'r':
         g_mode = XED_MACHINE_MODE_REAL;
+        break;
+      case 'l':
+        g_mode = XED_MACHINE_MODE_LEGACY_32;
         break;
       case 'm':
         SetMachineMode(optarg);
@@ -106,6 +109,12 @@ void ShowField(const char *name, uint64_t value) {
   }
 }
 
+void ShowField2(const char *name, uint64_t value, bool cond) {
+  if (value || cond) {
+    printf("/\t%-20s = %#lx\n", name, value);
+  }
+}
+
 void ShowOffset(const char *name, uint64_t off) {
   printf("/\t%-20s = %#lx\n", name, off);
 }
@@ -129,56 +138,20 @@ int main(int argc, char *argv[]) {
   if ((err = xed_instruction_length_decode(&g_xedd, buf, k)) !=
       XED_ERROR_NONE) {
     fputs("XED_ERROR_", stderr);
-    fputs(findnamebyid(kXedErrorNames, err), stderr);
+    fputs(findnamebyid(kXedErrorIdNames, err), stderr);
     fputc('\n', stderr);
     exit(EXIT_FAILURE);
   }
 
-#define SHOWOP(F) ShowField(#F, g_xedd.operands.F)
-  SHOWOP(amd3dnow);
-  SHOWOP(asz);
-  SHOWOP(bcrc);
-  SHOWOP(chip);
-  SHOWOP(cldemote);
-  SHOWOP(disp);
-  SHOWOP(disp_width);
+#define SHOWOP(F)     ShowField(#F, g_xedd.op.F)
+#define SHOWOP2(F, C) ShowField2(#F, g_xedd.op.F, C)
+
+  printf("/\t%-20s = %d\n", "length", g_xedd.length);
   SHOWOP(error);
-  SHOWOP(esrc);
-  SHOWOP(first_f2f3);
-  SHOWOP(modrm);
-  SHOWOP(sib);
-  SHOWOP(has_modrm);
-  SHOWOP(has_sib);
-  SHOWOP(hint);
-  SHOWOP(ild_f2);
-  SHOWOP(ild_f3);
-  SHOWOP(ild_seg);
-  SHOWOP(imm1_bytes);
-  SHOWOP(imm_width);
-  SHOWOP(last_f2f3);
-  SHOWOP(llrc);
+
   SHOWOP(lock);
-  SHOWOP(map);
-  SHOWOP(mask);
-  SHOWOP(max_bytes);
-  SHOWOP(mod);
-  SHOWOP(mode);
-  SHOWOP(mode_first_prefix);
-  SHOWOP(nominal_opcode);
-  SHOWOP(nprefixes);
-  SHOWOP(nrexes);
-  SHOWOP(nseg_prefixes);
   SHOWOP(osz);
-  SHOWOP(out_of_bytes);
-  SHOWOP(pos_disp);
-  SHOWOP(pos_imm);
-  SHOWOP(pos_imm1);
-  SHOWOP(pos_modrm);
-  SHOWOP(pos_nominal_opcode);
-  SHOWOP(pos_sib);
-  SHOWOP(prefix66);
-  SHOWOP(realmode);
-  SHOWOP(reg);
+  SHOWOP(asz);
   SHOWOP(rep);
   SHOWOP(rex);
   SHOWOP(rexb);
@@ -186,19 +159,70 @@ int main(int argc, char *argv[]) {
   SHOWOP(rexrr);
   SHOWOP(rexw);
   SHOWOP(rexx);
-  SHOWOP(rm);
+
+  SHOWOP(map);
+  SHOWOP(opcode);
+
+  if (g_xedd.op.has_modrm) {
+    printf("\n");
+    printf("/\t%-20s = 0b%02hhb  (%d)\n", "mod", g_xedd.op.mod, g_xedd.op.mod);
+    printf("/\t%-20s = 0b%03hhb (%d)\n", "reg", g_xedd.op.reg, g_xedd.op.reg);
+    printf("/\t%-20s = 0b%03hhb (%d)\n", "rm", g_xedd.op.rm, g_xedd.op.rm);
+    printf("\n");
+  }
+
+  if (g_xedd.op.has_sib) {
+    printf("/\t%-20s = 0b%02hhb  (%d)\n", "scale", xed_sib_scale(g_xedd.op.sib),
+           xed_sib_scale(g_xedd.op.sib));
+    printf("/\t%-20s = 0b%03hhb (%d)\n", "index", xed_sib_index(g_xedd.op.sib),
+           xed_sib_index(g_xedd.op.sib));
+    printf("/\t%-20s = 0b%03hhb (%d)\n", "base", xed_sib_base(g_xedd.op.sib),
+           xed_sib_base(g_xedd.op.sib));
+    printf("\n");
+  }
+
+  SHOWOP2(disp, !!g_xedd.op.pos_disp);
+  SHOWOP2(uimm0, !!g_xedd.op.pos_imm);
+  SHOWOP2(uimm1, !!g_xedd.op.pos_imm1);
+
+  SHOWOP(mode);
+  SHOWOP(amd3dnow);
+  SHOWOP(bcrc);
+  SHOWOP(disp_width);
+  SHOWOP(first_f2f3);
+  SHOWOP(hint);
+  SHOWOP(ild_f2);
+  SHOWOP(ild_f3);
+  SHOWOP(ild_seg);
+  SHOWOP(imm1_bytes);
+  SHOWOP(imm_width);
+  SHOWOP(imm_signed);
+  SHOWOP(last_f2f3);
+  SHOWOP(llrc);
+  SHOWOP(mask);
+  SHOWOP(prefix66);
+  SHOWOP(max_bytes);
+  SHOWOP(mode_first_prefix);
+  SHOWOP(nprefixes);
+  SHOWOP(nrexes);
+  SHOWOP(nseg_prefixes);
+  SHOWOP(out_of_bytes);
+  SHOWOP(pos_disp);
+  SHOWOP(pos_imm);
+  SHOWOP(pos_imm1);
+  SHOWOP(pos_modrm);
+  SHOWOP(pos_opcode);
+  SHOWOP(pos_sib);
+  SHOWOP(realmode);
   SHOWOP(seg_ovd);
   SHOWOP(srm);
   SHOWOP(ubit);
-  SHOWOP(uimm0);
-  SHOWOP(uimm1);
   SHOWOP(vex_prefix);
   SHOWOP(vexdest210);
   SHOWOP(vexdest3);
   SHOWOP(vexdest4);
   SHOWOP(vexvalid);
   SHOWOP(vl);
-  SHOWOP(wbnoinvd);
   SHOWOP(zeroing);
 
   return 0;

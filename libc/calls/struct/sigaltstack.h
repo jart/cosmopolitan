@@ -10,7 +10,5 @@ struct sigaltstack {
 
 typedef struct sigaltstack stack_t;
 
-static_assert(sizeof(stack_t) == 24);
-
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGALTSTACK_H_ */

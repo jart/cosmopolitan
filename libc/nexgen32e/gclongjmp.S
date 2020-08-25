@@ -33,8 +33,8 @@
 gclongjmp:
 	.leafprologue
 	.profilable
-	.weak	__garbage
-	lea	__garbage(%rip),%r12
+	.weak	g_garbage
+	lea	g_garbage(%rip),%r12
 	test	%r12,%r12
 	jnz	.L.unwind.destructors
 0:	jmp	longjmp

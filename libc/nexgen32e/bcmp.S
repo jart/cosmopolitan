@@ -28,6 +28,6 @@
 /	@param	esi second string
 /	@param	edx byte size
 /	@return	0 if equal or nonzero
-bcmp:	jmp	*hook$memcmp(%rip)
+bcmp:	jmp	*__memcmp(%rip)
 	.endfn	bcmp,globl
 	.source	__FILE__

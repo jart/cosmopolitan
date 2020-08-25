@@ -36,7 +36,7 @@
  * @see __addvsi3, __mulvsi3, etc.
  */
 
-bool overflowed_;
+volatile bool overflowed_;
 
 void __on_arithmetic_overflow(void) {
   overflowed_ = true;
@@ -174,6 +174,16 @@ TEST(__mulvdi3, standAndDeliver_aNegativeTimesANegativeEqualsAPositive) {
   EXPECT_FALSE(overflowed_);
 }
 
+TEST(__mulvdi3, testOverflow) {
+  volatile int64_t x;
+  x = 3037000500;
+  x *= 3037000499;
+  EXPECT_FALSE(overflowed_);
+  x = 3037000500;
+  x *= 3037000500;
+  EXPECT_TRUE(overflowed_);
+}
+
 /* 32-BIT SIGNED ADDITION */
 
 TEST(__addvsi3, testMin1) {
@@ -245,4 +255,100 @@ TEST(__subvdi3, testMin1) {
 TEST(__subvdi3, testMax1) {
   EXPECT_EQ(LONG_MAX - 1, VEIL("r", LONG_MAX) - 1);
   EXPECT_FALSE(overflowed_);
+}
+
+/* 128-BIT SIGNED ADDITION */
+
+TEST(__addvti3, testMath) {
+  volatile int128_t x;
+  x = 2;
+  x += 2;
+  EXPECT_EQ(4, x);
+  x = -2;
+  x += -2;
+  EXPECT_EQ(-4, x);
+  x = UINT64_MAX;
+  x += 1;
+  EXPECT_EQ((int128_t)UINT64_MAX + 1, x);
+  EXPECT_FALSE(overflowed_);
+}
+
+TEST(__addvti3, testOverflow) {
+  volatile int128_t x;
+  x = INT128_MAX;
+  x += 1;
+  EXPECT_TRUE(overflowed_);
+}
+
+/* 128-BIT SIGNED SUBTRACTION */
+
+TEST(__subvti3, testMath) {
+  volatile int128_t x;
+  x = -2;
+  x -= 2;
+  EXPECT_EQ(-4, x);
+  x = UINT64_MIN;
+  x -= 1;
+  EXPECT_EQ((int128_t)UINT64_MIN - 1, x);
+  EXPECT_FALSE(overflowed_);
+}
+
+TEST(__subvti3, testOverflow) {
+  volatile int128_t x;
+  x = INT128_MIN;
+  x -= 1;
+  EXPECT_TRUE(overflowed_);
+}
+
+/* 128-BIT SIGNED NEGATION */
+
+TEST(__negvti3, testMath) {
+  volatile int128_t x;
+  x = -2;
+  x = -x;
+  EXPECT_EQ(2, x);
+  EXPECT_FALSE(overflowed_);
+  x = INT128_MAX;
+  x = -x;
+  EXPECT_EQ(INT128_MIN + 1, x);
+  EXPECT_FALSE(overflowed_);
+  x = (uint128_t)0x8000000000000000 << 64 | 0x8000000000000000;
+  x = -x;
+  EXPECT_EQ((uint128_t)0x7fffffffffffffff << 64 | 0x8000000000000000, x);
+  EXPECT_FALSE(overflowed_);
+}
+
+TEST(__negvti3, testOverflow) {
+  volatile int128_t x;
+  x = INT128_MIN;
+  x = -x;
+  EXPECT_TRUE(overflowed_);
+}
+
+/* 128-BIT SIGNED MULTIPLICATION */
+
+TEST(__mulvti3, testMath) {
+  volatile int128_t x;
+  x = 7;
+  x *= 11;
+  EXPECT_EQ(77, x);
+  EXPECT_FALSE(overflowed_);
+  x = 0x1fffffffffffffff;
+  x *= 0x1fffffffffffffff;
+  EXPECT_EQ((uint128_t)0x3ffffffffffffff << 64 | 0xc000000000000001, x);
+  EXPECT_FALSE(overflowed_);
+  x = -0x1fffffffffffffff;
+  x *= 0x1fffffffffffffff;
+  EXPECT_EQ((uint128_t)0xfc00000000000000 << 64 | 0x3fffffffffffffff, x);
+  EXPECT_FALSE(overflowed_);
+}
+
+TEST(__mulvti3, testOverflow) {
+  volatile int128_t x;
+  x = 0xb504f333f9de5be0;
+  x *= 0xb504f333f9de6d28;
+  EXPECT_FALSE(overflowed_);
+  x = 0xb504f333f9de5be0;
+  x *= 0xb504f333f9de6d29;
+  EXPECT_TRUE(overflowed_);
 }

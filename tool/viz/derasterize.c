@@ -517,7 +517,7 @@ static void LoadFile(const char *path, size_t yn, size_t xn, void *rgb) {
   CHECK_NE(-1, fstat(fd, &st));
   CHECK_GT(st.st_size, 0);
   CHECK_LE(st.st_size, INT_MAX);
-  LOGIFNEG1(fadvise(fd, 0, 0, MADV_WILLNEED | MADV_SEQUENTIAL));
+  /* LOGIFNEG1(fadvise(fd, 0, 0, MADV_WILLNEED | MADV_SEQUENTIAL)); */
   CHECK_NE(MAP_FAILED,
            (map = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0)));
   CHECK_NOTNULL((data = stbi_load_from_memory(map, st.st_size, &gotx, &goty,

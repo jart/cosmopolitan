@@ -5,11 +5,13 @@ PKGS += TEST_LIBC_STR
 
 TEST_LIBC_STR_SRCS := $(wildcard test/libc/str/*.c)
 TEST_LIBC_STR_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_STR_SRCS))
-TEST_LIBC_STR_COMS = $(TEST_LIBC_STR_OBJS:%.o=%.com)
 
 TEST_LIBC_STR_OBJS =					\
 	$(TEST_LIBC_STR_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_STR_SRCS:%.c=o/$(MODE)/%.o)
+
+TEST_LIBC_STR_COMS =					\
+	$(TEST_LIBC_STR_SRCS:%.c=o/$(MODE)/%.com)
 
 TEST_LIBC_STR_BINS =					\
 	$(TEST_LIBC_STR_COMS)				\
@@ -38,6 +40,7 @@ TEST_LIBC_STR_DIRECTDEPS =				\
 	LIBC_LOG					\
 	LIBC_X						\
 	LIBC_ZIPOS					\
+	THIRD_PARTY_REGEX				\
 	THIRD_PARTY_ZLIB
 
 TEST_LIBC_STR_DEPS :=					\

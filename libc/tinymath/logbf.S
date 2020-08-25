@@ -18,18 +18,14 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.source	__FILE__
 
-logbf:	push	%rbp
-	mov	%rsp,%rbp
-	.profilable
-	push	%rax
-	movss	%xmm0,-4(%rbp)
-	flds	-4(%rbp)
-	fxtract
-	fstp	%st
-	fstps	-4(%rbp)
-	movss	-4(%rbp),%xmm0
-	leave
-	ret
-	.endfn	logbf,globl
+/	Returns log₂ₓ exponent part of float.
+/
+/	@param	𝑥 is float passed in %xmm0
+/	@return	result in %xmm0
+tinymath_logbf:
+	ezlea	tinymath_logbl,ax
+	jmp	_f2ld2
+	.endfn	tinymath_logbf,globl
+	.alias	tinymath_logbf,logbf
+	.source	__FILE__

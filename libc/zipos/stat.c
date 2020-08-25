@@ -28,9 +28,14 @@
  */
 int __zipos_stat(const struct ZiposUri *name, struct stat *st) {
   ssize_t cf;
-  if ((cf = __zipos_find(name)) != -1) {
-    return __zipos_stat_impl(cf, st);
+  struct Zipos *zipos;
+  if ((zipos = __zipos_get())) {
+    if ((cf = __zipos_find(zipos, name)) != -1) {
+      return __zipos_stat_impl(zipos, cf, st);
+    } else {
+      return enoent();
+    }
   } else {
-    return enoent();
+    return enoexec();
   }
 }

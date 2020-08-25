@@ -21,25 +21,29 @@
 #include "libc/testlib/testlib.h"
 
 #define T(NAME) NAME
-#define S(S) S
-#define C(C) C
+#define S(S)    S
+#define C(C)    C
 #include "test/libc/str/strrchr_test.inc"
 #undef C
 #undef S
 #undef T
 
-#define T(NAME) NAME##16
-#define S(S) u##S
-#define C(C) u##C
+#define T(NAME)      NAME##16
+#define S(S)         u##S
+#define C(C)         u##C
+#define strchr(x, y) strchr16(x, y)
 #include "test/libc/str/strrchr_test.inc"
+#undef strchr
 #undef C
 #undef S
 #undef T
 
-#define T(NAME) NAME##32
-#define S(S) L##S
-#define C(C) L##C
+#define T(NAME)      NAME##32
+#define S(S)         L##S
+#define C(C)         L##C
+#define strchr(x, y) wcschr(x, y)
 #include "test/libc/str/strrchr_test.inc"
+#undef strchr
 #undef C
 #undef S
 #undef T

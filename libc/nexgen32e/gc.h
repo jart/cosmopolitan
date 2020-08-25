@@ -15,9 +15,9 @@ struct Garbages {
   } * p;
 };
 
-hidden extern struct Garbages __garbage;
+hidden extern struct Garbages g_garbage;
 
-int64_t __gc(void) hidden;
+int64_t CollectGarbage(void) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

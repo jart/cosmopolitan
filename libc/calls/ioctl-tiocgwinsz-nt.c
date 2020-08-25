@@ -32,18 +32,17 @@ textwindows int ioctl$tiocgwinsz$nt(int fd, struct winsize *ws) {
   struct NtConsoleScreenBufferInfoEx sbinfo;
   if (!isfdkind(fd, kFdFile)) return ebadf();
   if (!GetConsoleMode(g_fds.p[fd].handle, &mode)) return enotty();
-  if (g_ntstartupinfo.dwFlags & kNtStartfUsecountchars) {
-    ws->ws_col = g_ntstartupinfo.dwXCountChars;
-    ws->ws_row = g_ntstartupinfo.dwYCountChars;
-    ws->ws_xpixel = 0;
-    ws->ws_ypixel = 0;
-    return 0;
-  }
   memset(&sbinfo, 0, sizeof(sbinfo));
   sbinfo.cbSize = sizeof(sbinfo);
   if (GetConsoleScreenBufferInfoEx(g_fds.p[fd].handle, &sbinfo)) {
-    ws->ws_col = sbinfo.srWindow.Right;
-    ws->ws_row = sbinfo.srWindow.Bottom;
+    ws->ws_col = sbinfo.srWindow.Right - sbinfo.srWindow.Left;
+    ws->ws_row = sbinfo.srWindow.Bottom - sbinfo.srWindow.Top;
+    ws->ws_xpixel = 0;
+    ws->ws_ypixel = 0;
+    return 0;
+  } else if (g_ntstartupinfo.dwFlags & kNtStartfUsecountchars) {
+    ws->ws_col = g_ntstartupinfo.dwXCountChars;
+    ws->ws_row = g_ntstartupinfo.dwYCountChars;
     ws->ws_xpixel = 0;
     ws->ws_ypixel = 0;
     return 0;

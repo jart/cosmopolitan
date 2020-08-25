@@ -36,17 +36,18 @@ LIBC_CALLS_HEFTY_A_CHECKS =				\
 
 LIBC_CALLS_HEFTY_A_DIRECTDEPS =				\
 	LIBC_ALG					\
+	LIBC_CALLS					\
 	LIBC_CONV					\
 	LIBC_FMT					\
 	LIBC_MEM					\
-	LIBC_STR					\
 	LIBC_NEXGEN32E					\
-	LIBC_RUNTIME					\
-	LIBC_CALLS					\
-	LIBC_STUBS					\
 	LIBC_NT_KERNELBASE				\
+	LIBC_RUNTIME					\
+	LIBC_STR					\
+	LIBC_STUBS					\
+	LIBC_SYSV					\
 	LIBC_SYSV_CALLS					\
-	LIBC_SYSV
+	LIBC_TIME
 
 LIBC_CALLS_HEFTY_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(LIBC_CALLS_HEFTY_A_DIRECTDEPS),$($(x))))

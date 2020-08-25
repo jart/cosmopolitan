@@ -2,9 +2,25 @@
 #define COSMOPOLITAN_LIBC_COMPLEX_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
+#if __STDC_VERSION__ + 0 >= 201112
 
 #define complex   _Complex
 #define imaginary _Imaginary
+
+double cabs(complex double);
+double carg(complex double);
+double cimag(complex double);
+double creal(complex double);
+
+float cabsf(complex float);
+float cargf(complex float);
+float cimagf(complex float);
+float crealf(complex float);
+
+long double cabsl(complex long double);
+long double cargl(complex long double);
+long double cimagl(complex long double);
+long double creall(complex long double);
 
 complex double cacos(complex double);
 complex double cacosh(complex double);
@@ -46,21 +62,6 @@ complex float csqrtf(complex float);
 complex float ctanf(complex float);
 complex float ctanhf(complex float);
 
-double cabs(complex double);
-double carg(complex double);
-double cimag(complex double);
-double creal(complex double);
-
-float cabsf(complex float);
-float cargf(complex float);
-float cimagf(complex float);
-float crealf(complex float);
-
-long double cabsl(complex long double);
-long double cargl(complex long double);
-long double cimagl(complex long double);
-long double creall(complex long double);
-
 complex long double cprojl(complex long double);
 complex long double csinhl(complex long double);
 complex long double csinl(complex long double);
@@ -81,6 +82,7 @@ complex long double clogl(complex long double);
 complex long double conjl(complex long double);
 complex long double cpowl(complex long double, complex long double);
 
+#endif /* C11 */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_COMPLEX_H_ */

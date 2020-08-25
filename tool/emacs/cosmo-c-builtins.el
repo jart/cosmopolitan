@@ -4,48 +4,9 @@
         (c11
          '("static_assert"))
 
-        (clang-builtin-defines
-         '("__llvm__"))
-
-        (gcc-cpp-412-builtin-defines
-         '("__cplusplus"
-           "__OBJC__"
-           "__ASSEMBLER__"
-           "__STRICT_ANSI__"
-           "__ELF__"
-           "__VERSION__"
-           "__OPTIMIZE__"
-           "__OPTIMIZE_SIZE__"
-           "__NO_INLINE__"
-           "__CHAR_UNSIGNED__"
-           "__WCHAR_UNSIGNED__"
-           "__REGISTER_PREFIX__"
-           "__USER_LABEL_PREFIX__"
-           "__SIZE_TYPE__"
-           "__PTRDIFF_TYPE__"
-           "__WCHAR_TYPE__"
-           "__WINT_TYPE__"
-           "__INTMAX_TYPE__"
-           "__DEPRECATED"
-           "__EXCEPTIONS"
-           "__USING_SJLJ_EXCEPTIONS__"
-           "__GXX_WEAK__"
-           "__NEXT_RUNTIME__"
-           "__LP64__"
-           "__SSP__"
-           "__SSP_ALL__"
-           "__unix__"
-           "__mips__"
-           "__vax__"
-           "__ns16000__"))
-
         (gcc-cpp-92-builtin-defines
          '("__VA_OPT__"
            "__COUNTER__"
-           "__GFORTRAN__"
-           "__GCC_ASM_FLAG_OUTPUTS__"
-           "__GNUC_GNU_INLINE__"
-           "__GNUC_STDC_INLINE__"
            "__SIG_ATOMIC_TYPE__"
            "__INT8_TYPE__"
            "__INT16_TYPE__"
@@ -83,25 +44,7 @@
            "__UINT64_C"
            "__INTMAX_C"
            "__UINTMAX_C"
-           "__BYTE_ORDER__"
-           "__ORDER_LITTLE_ENDIAN__"
-           "__ORDER_BIG_ENDIAN__"
-           "__ORDER_PDP_ENDIAN__"
-           "__FLOAT_WORD_ORDER__"
-           "__GXX_RTTI"
-           "__GXX_EXPERIMENTAL_CXX0X__"
-           "__SSP_STRONG__"
-           "__SSP_EXPLICIT__"
-           "__SANITIZE_ADDRESS__"
-           "__SANITIZE_THREAD__"
            "__TIMESTAMP__"
-           "__GCC_HAVE_SYNC_COMPARE_AND_SWAP_1"
-           "__GCC_HAVE_SYNC_COMPARE_AND_SWAP_2"
-           "__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4"
-           "__GCC_HAVE_SYNC_COMPARE_AND_SWAP_8"
-           "__GCC_HAVE_SYNC_COMPARE_AND_SWAP_16"
-           "__HAVE_SPECULATION_SAFE_VALUE"
-           "__GCC_HAVE_DWARF2_CFI_ASM"
            "__FP_FAST_FMA"
            "__FP_FAST_FMAF"
            "__FP_FAST_FMAL"
@@ -111,13 +54,7 @@
            "__FP_FAST_FMAF128"
            "__FP_FAST_FMAF32X"
            "__FP_FAST_FMAF64X"
-           "__FP_FAST_FMAF128X"
-           "__STDC_WANT_IEC_60559_TYPES_EXT__"
-           "__GCC_IEC_559"
-           "__SUPPORT_SNAN__"
-           "__GCC_IEC_559_COMPLEX"
-           "__NO_MATH_ERRNO__"
-           "__gnu__"))
+           "__FP_FAST_FMAF128X"))
 
         (gcc-builtin-types
          '("__builtin_va_list"))
@@ -285,8 +222,7 @@
            "__builtin_lrintl"
            "__builtin_memcpy"
            "__builtin_memset"
-
-))
+           "__builtin_strlen"))
 
         (gcc-builtin-functions-atomic
          '("__atomic_load_n"
@@ -1296,9 +1232,7 @@
            "__is_same"))
 
         (cosmopolitan-builtin-defines
-         '("__COSMOPOLITAN__"
-           "__LINKER__"
-           "COSMOPOLITAN_CXX_START_"
+         '("COSMOPOLITAN_CXX_START_"
            "COSMOPOLITAN_CXX_END_"
            "COSMOPOLITAN_CXX_USING_"
            "COSMOPOLITAN_C_START_"
@@ -1325,8 +1259,6 @@
 )
     (concat "\\_<"
             (regexp-opt (append c11
-                                clang-builtin-defines
-                                gcc-cpp-412-builtin-defines
                                 gcc-cpp-92-builtin-defines
                                 gcc-builtin-types
                                 gcc-builtin-functions

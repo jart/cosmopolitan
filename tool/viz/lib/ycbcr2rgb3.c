@@ -233,7 +233,7 @@ void YCbCr2Rgb(long yn, long xn, unsigned char RGB[restrict 3][yn][xn],
   short y, u, v, r, g, b, A, B, C;
   for (i = 0; i < yn; ++i) {
     for (j = 0; j < xn; ++j) {
-      y = Y[i][j];
+      y = T[Y[i][j]];
       u = Cb[i][j] - K[3][1];
       v = Cr[i][j] - K[3][1];
       r = y + QRS(M, v * K[0][0]);

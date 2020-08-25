@@ -33,17 +33,16 @@
 ╠──────────────────────────────────────────────────────▌▀▄─▐──▀▄─▐▄─▐▄▐▄─▐▄─▐▄─│
 │ αcτµαlly pδrταblε εxεcµταblε § post-initialization read-only                 │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
 #include "libc/bits/safemacros.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/dce.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/prot.h"
 
 #define getaddr(section) ((intptr_t)weakaddr(section))
 
-static textstartup void __piro_protect(intptr_t start, intptr_t end, int prot) {
+static textstartup void _piro_protect(intptr_t start, intptr_t end, int prot) {
   ssize_t len = end - start;
   if (len > 0 && start && start % PAGESIZE == 0 && len % PAGESIZE == 0) {
     if (mprotect((void *)(unsigned long)start, len, prot) == -1) abort();
@@ -62,10 +61,10 @@ static textstartup void __piro_protect(intptr_t start, intptr_t end, int prot) {
  * @see ape/ape.lds
  * @see libc/_start.S
  */
-textstartup void __piro(int prot) {
+textstartup void _piro(int prot) {
   if (getaddr("main") < getaddr("__test_start")) {
-    __piro_protect(getaddr("__test_start"), getaddr("__test_end"), PROT_NONE);
+    _piro_protect(getaddr("__test_start"), getaddr("__test_end"), PROT_NONE);
   }
-  __piro_protect(getaddr("__ro"), getaddr("_etext"), PROT_READ);
-  __piro_protect(getaddr("__piro_start"), getaddr("__piro_end"), prot);
+  _piro_protect(getaddr("__ro"), getaddr("_etext"), PROT_READ);
+  _piro_protect(getaddr("__piro_start"), getaddr("__piro_end"), prot);
 }

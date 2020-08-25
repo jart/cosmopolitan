@@ -4,11 +4,13 @@
 /* TRADEMARKS ARE OWNED BY THEIR RESPECTIVE OWNERS LAWYERCATS LUV TAUTOLOGIES */
 /* https://bisqwit.iki.fi/jutut/kuvat/programming_examples/nesemu1/nesemu1.cc */
 #include "dsp/core/core.h"
+#include "dsp/core/half.h"
 #include "dsp/core/illumination.h"
 #include "dsp/scale/scale.h"
 #include "dsp/tty/itoa8.h"
 #include "dsp/tty/quant.h"
 #include "dsp/tty/tty.h"
+#include "libc/alg/arraylist2.h"
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.h"
@@ -16,6 +18,7 @@
 #include "libc/calls/hefty/spawn.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/conv/conv.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/inttypes.h"
@@ -30,6 +33,8 @@
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/ex.h"
+#include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/o.h"
@@ -37,24 +42,77 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
+#include "libc/zip.h"
+#include "libc/zipos/zipos.h"
+#include "third_party/getopt/getopt.h"
 #include "tool/viz/lib/knobs.h"
 
-#define DYN   240
-#define DXN   256
-#define FPS   60.0988
-#define HZ    1789773
-#define KEYHZ 20
-#define GAMMA 2.2
+#define USAGE \
+  " [ROM] [FMV]\n\
+\n\
+SYNOPSIS\n\
+\n\
+  Emulates NES Video Games in Terminal\n\
+\n\
+FLAGS\n\
+\n\
+  -A      ansi color mode\n\
+  -t      normal color mode\n\
+  -x      xterm256 color mode\n\
+  -4      unicode character set\n\
+  -3      ibm cp437 character set\n\
+  -1      ntsc crt artifact emulation\n\
+  -h\n\
+  -?      shows this information\n\
+\n\
+KEYBOARD\n\
+\n\
+  We support Emacs / Mac OS X control key bindings. We also support\n\
+  Vim. We support arrow keys. We also support WASD QWERTY & Dvorak.\n\
+  The 'A' button is mapped to SPACE. The 'B' button is mapped to b.\n\
+  Lastly TAB is SELECT and ENTER is START.\n\
+\n\
+  Teletypewriters are naturally limited in terms of keyboard input.\n\
+  They don't exactly have n-key rollover. More like 1-key rollover.\n\
+\n\
+  Try tapping rather than holding keys. You can tune the activation\n\
+  duration by pressing '8' and '9'. You can also adjust the keyboard\n\
+  repeat delay in your operating system settings to make it shorter.\n\
+\n\
+  Ideally we should send patches to all the terms that introduces a\n\
+  new ANSI escape sequences for key down / key up events. It'd also\n\
+  be great to have inband audio with terminals too.\n\
+\n\
+GRAPHICS\n\
+\n\
+  The '1' key toggles CRT monitor artifact emulation, which can make\n\
+  some games like Zelda II look better. The '3' and '4' keys toggle\n\
+  the selection of UNICODE block characters.\n\
+\n\
+ZIP\n\
+\n\
+  This executable is also a ZIP archive. If you change the extension\n\
+  then you can modify its inner structure, to place roms inside it.\n\
+\n\
+AUTHORS\n\
+\n\
+  Joel Yliluoma <http://iki.fi/bisqwit/>\n\
+  Justine Tunney <jtunney@gmail.com/>\n\
+\n\
+\n"
 
+#define DYN     240
+#define DXN     256
+#define FPS     60.0988
+#define HZ      1789773
+#define GAMMA   2.2
 #define CTRL(C) ((C) ^ 0100)
 #define ALT(C)  ((033 << 010) | (C))
 
-static const char* inputfn;
-
-typedef uint32_t u32;
-typedef uint16_t u16;
-typedef uint8_t u8;
 typedef int8_t s8;
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
 
 static const struct itimerval kNesFps = {
     {0, 1. / FPS * 1e6},
@@ -75,9 +133,19 @@ struct Audio {
   int16_t p[FRAMESIZE];
 };
 
+struct Status {
+  int wait;
+  char text[80];
+};
+
+struct ZipGames {
+  size_t i, n;
+  char** p;
+};
+
 static int frame_;
+static int drain_;
 static int playfd_;
-static bool piped_;
 static int devnull_;
 static int playpid_;
 static bool exited_;
@@ -87,22 +155,32 @@ static size_t vtsize_;
 static bool artifacts_;
 static long tyn_, txn_;
 static const char* ffplay_;
-static struct Audio audio_;
-static struct TtyRgb* ttyrgb_;
 static struct Frame vf_[2];
+static struct Audio audio_;
+static const char* inputfn_;
+static struct Status status_;
+static struct TtyRgb* ttyrgb_;
 static unsigned char *R, *G, *B;
+static struct ZipGames zipgames_;
 static struct Action arrow_, button_;
 static struct SamplingSolution* asx_;
 static struct SamplingSolution* ssy_;
 static struct SamplingSolution* ssx_;
 static unsigned char pixels_[3][DYN][DXN];
 static unsigned char palette_[3][64][512][3];
-static int joy_current_[2] = {0, 0};
-static int joy_next_[2] = {0, 0};
-static int joypos_[2] = {0, 0};
+static int joy_current_[2], joy_next_[2], joypos_[2];
 
-static int Clamp(int v) { return MAX(0, MIN(255, v)); }
-static double FixGamma(double x) { return tv2pcgamma(x, GAMMA); }
+static int keyframes_ = 20;
+static enum TtyBlocksSelection blocks_ = kTtyBlocksUnicode;
+static enum TtyQuantizationAlgorithm quant_ = kTtyQuantTrue;
+
+static int Clamp(int v) {
+  return MAX(0, MIN(255, v));
+}
+
+static double FixGamma(double x) {
+  return tv2pcgamma(x, GAMMA);
+}
 
 void InitPalette(void) {
   // The input value is a NES color index (with de-emphasis bits).
@@ -110,7 +188,7 @@ void InitPalette(void) {
   // We need RGB values. To produce a RGB value, we emulate the NTSC circuitry.
   double A[3] = {-1.109, -.275, .947};
   double B[3] = {1.709, -.636, .624};
-  double rgbc[3], lightbulb[3][3], rgbd65[3];
+  double rgbc[3], lightbulb[3][3], rgbd65[3], sc[2];
   int o, u, r, c, b, p, y, i, l, q, e, p0, p1, pixel;
   signed char volt[] = "\372\273\32\305\35\311I\330D\357\175\13D!}N";
   GetChromaticAdaptationMatrix(lightbulb, kIlluminantC, kIlluminantD65);
@@ -119,9 +197,7 @@ void InitPalette(void) {
       for (p1 = 0; p1 < 64; ++p1) {
         for (u = 0; u < 3; ++u) {
           // Calculate the luma and chroma by emulating the relevant circuits:
-          y = 0;
-          i = 0;
-          q = 0;
+          y = i = q = 0;
           // 12 samples of NTSC signal constitute a color.
           for (p = 0; p < 12; ++p) {
             // Sample either the previous or the current pixel.
@@ -140,9 +216,10 @@ void InitPalette(void) {
             b = 40 + volt[(c > 12 * ((c + 8 + p) % 12 < 6)) +
                           2 * !(0451326 >> p / 2 * 3 & e) + l];
             // Ideal TV NTSC demodulator?
+            sincos(M_PI * p / 6, &sc[0], &sc[1]);
             y += b;
-            i += b * round(cos(M_PI * p / 6) * 5909);
-            q += b * round(sin(M_PI * p / 6) * 5909);
+            i += b * sc[1] * 5909;
+            q += b * sc[0] * 5909;
           }
           // Converts YIQ to RGB
           // Store color at subpixel precision
@@ -161,31 +238,62 @@ static void WriteStringNow(const char* s) {
   ttywrite(STDOUT_FILENO, s, strlen(s));
 }
 
-void CleanupTerminal(void) {
-  ttyraw((enum TtyRawFlags)(-1u));
-  ttyshowcursor(STDOUT_FILENO);
+void Exit(int rc) {
+  WriteStringNow("\r\n\e[0m\e[J");
+  if (rc && errno) {
+    fprintf(stderr, "%s%s\r\n", "error: ", strerror(errno));
+  }
+  exit(rc);
 }
 
-void OnTimer(void) { timeout_ = true; }
-void OnResize(void) { resized_ = true; }
-void OnCtrlC(void) { exited_ = true; }
-void OnSigChld(void) { piped_ = true, playpid_ = 0; }
+void Cleanup(void) {
+  ttyraw((enum TtyRawFlags)(-1u));
+  ttyshowcursor(STDOUT_FILENO);
+  if (playpid_) kill(playpid_, SIGTERM), sched_yield();
+}
+
+void OnTimer(void) {
+  timeout_ = true;  // also sends EINTR to poll()
+}
+
+void OnResize(void) {
+  resized_ = true;
+}
+
+void OnPiped(void) {
+  exited_ = true;
+}
+
+void OnCtrlC(void) {
+  drain_ = exited_ = true;
+}
+
+void OnSigChld(void) {
+  exited_ = true, playpid_ = 0;
+}
 
 void InitFrame(struct Frame* f) {
   f->p = f->w = f->mem = (char*)realloc(f->mem, vtsize_);
+}
+
+long ChopAxis(long dn, long sn) {
+  while (HALF(sn) > dn) {
+    sn = HALF(sn);
+  }
+  return sn;
 }
 
 void GetTermSize(void) {
   struct winsize wsize_;
   wsize_.ws_row = 25;
   wsize_.ws_col = 80;
-  getttysize(STDOUT_FILENO, &wsize_);
-  tyn_ = wsize_.ws_row * 2;
-  txn_ = wsize_.ws_col * 2;
+  getttysize(STDIN_FILENO, &wsize_);
   FreeSamplingSolution(ssy_);
   FreeSamplingSolution(ssx_);
-  ssy_ = ComputeSamplingSolution(tyn_, DYN, 0, 0, 2);
-  ssx_ = ComputeSamplingSolution(txn_, DXN, 0, 0, 0);
+  tyn_ = wsize_.ws_row * 2;
+  txn_ = wsize_.ws_col * 2;
+  ssy_ = ComputeSamplingSolution(tyn_, ChopAxis(tyn_, DYN), 0, 0, 2);
+  ssx_ = ComputeSamplingSolution(txn_, ChopAxis(txn_, DXN), 0, 0, 0);
   R = (unsigned char*)realloc(R, tyn_ * txn_);
   G = (unsigned char*)realloc(G, tyn_ * txn_);
   B = (unsigned char*)realloc(B, tyn_ * txn_);
@@ -216,20 +324,23 @@ bool TrySpeaker(const char* prog, char* const* args) {
 void IoInit(void) {
   GetTermSize();
   xsigaction(SIGINT, (void*)OnCtrlC, 0, 0, NULL);
+  xsigaction(SIGPIPE, (void*)OnPiped, 0, 0, NULL);
   xsigaction(SIGWINCH, (void*)OnResize, 0, 0, NULL);
   xsigaction(SIGALRM, (void*)OnTimer, 0, 0, NULL);
+  xsigaction(SIGCHLD, (void*)OnSigChld, 0, 0, NULL);
   setitimer(ITIMER_REAL, &kNesFps, NULL);
   ttyhidecursor(STDOUT_FILENO);
   ttyraw(kTtySigs);
-  ttyquantinit(kTtyQuantTrue, kTtyQuantRgb, kTtyBlocksUnicode);
-  atexit(CleanupTerminal);
+  ttyquantsetup(quant_, kTtyQuantRgb, blocks_);
+  atexit(Cleanup);
 }
 
-void SystemFailure(void) {
-  fputs("error: ", stderr);
-  fputs(strerror(errno), stderr);
-  fputc('\n', stderr);
-  exit(7);
+void SetStatus(const char* fmt, ...) {
+  va_list va;
+  va_start(va, fmt);
+  vsnprintf(status_.text, sizeof(status_.text), fmt, va);
+  va_end(va);
+  status_.wait = FPS / 2;
 }
 
 void ReadKeyboard(void) {
@@ -238,6 +349,7 @@ void ReadKeyboard(void) {
   ssize_t i, rc;
   memset(b, -1, sizeof(b));
   if ((rc = read(STDIN_FILENO, b, 16)) != -1) {
+    if (!rc) exited_ = true;
     for (i = 0; i < rc; ++i) {
       ch = b[i];
       if (b[i] == '\e') {
@@ -263,71 +375,105 @@ void ReadKeyboard(void) {
         }
       }
       switch (ch) {
-        case '1':
-          artifacts_ = !artifacts_;
-          InitPalette();
-          break;
         case ' ':
           button_.code = 0b00100000;  // A
-          button_.wait = KEYHZ;
+          button_.wait = keyframes_;
           break;
         case 'b':
           button_.code = 0b00010000;  // B
-          button_.wait = KEYHZ;
+          button_.wait = keyframes_;
           break;
         case '\r':                    // enter
           button_.code = 0b10000000;  // START
-          button_.wait = KEYHZ;
+          button_.wait = keyframes_;
           break;
         case '\t':                    // tab
           button_.code = 0b01000000;  // SELECT
-          button_.wait = KEYHZ;
+          button_.wait = keyframes_;
           break;
         case 'k':                    // vim
         case 'w':                    // wasd qwerty
         case ',':                    // wasd dvorak
         case CTRL('P'):              // emacs
           arrow_.code = 0b00000100;  // UP
-          arrow_.wait = KEYHZ;
+          arrow_.wait = keyframes_;
           break;
         case 'j':                    // vim
         case 's':                    // wasd qwerty
         case 'o':                    // wasd dvorak
         case CTRL('N'):              // emacs
           arrow_.code = 0b00001000;  // DOWN
-          arrow_.wait = KEYHZ;
+          arrow_.wait = keyframes_;
           break;
         case 'h':                    // vim
         case 'a':                    // wasd qwerty & dvorak
         case CTRL('B'):              // emacs
           arrow_.code = 0b00000010;  // LEFT
-          arrow_.wait = KEYHZ;
+          arrow_.wait = keyframes_;
           break;
         case 'l':                    // vim
         case 'd':                    // wasd qwerty
         case 'e':                    // wasd dvorak
         case CTRL('F'):              // emacs
           arrow_.code = 0b00000001;  // RIGHT
-          arrow_.wait = KEYHZ;
+          arrow_.wait = keyframes_;
+          break;
+        case 'A':  // ansi 4-bit color mode
+          quant_ = kTtyQuantAnsi;
+          ttyquantsetup(quant_, kTtyQuantRgb, blocks_);
+          SetStatus("ansi color");
           break;
         case 'x':  // xterm256 color mode
-          ttyquantinit(kTtyQuantXterm256, kTtyQuantRgb, kTtyBlocksUnicode);
+          quant_ = kTtyQuantXterm256;
+          ttyquantsetup(quant_, kTtyQuantRgb, blocks_);
+          SetStatus("xterm256 color");
           break;
         case 't':  // ansi 24bit color mode
-          ttyquantinit(kTtyQuantTrue, kTtyQuantRgb, kTtyBlocksUnicode);
+          quant_ = kTtyQuantTrue;
+          ttyquantsetup(quant_, kTtyQuantRgb, blocks_);
+          SetStatus("24-bit color");
+          break;
+        case '1':
+          artifacts_ = !artifacts_;
+          InitPalette();
+          SetStatus("artifacts %s", artifacts_ ? "on" : "off");
+          break;
+        case '3':  // oldskool ibm unicode rasterization
+          blocks_ = kTtyBlocksCp437;
+          ttyquantsetup(quant_, kTtyQuantRgb, blocks_);
+          SetStatus("IBM CP437");
+          break;
+        case '4':  // newskool unicode rasterization
+          blocks_ = kTtyBlocksUnicode;
+          ttyquantsetup(quant_, kTtyQuantRgb, blocks_);
+          SetStatus("UNICODE");
+          break;
+        case '8':
+          keyframes_ = MAX(1, keyframes_ - 1);
+          SetStatus("%d key frames", keyframes_);
+          break;
+        case '9':
+          keyframes_ = keyframes_ + 1;
+          SetStatus("%d key frames", keyframes_);
           break;
         default:
           break;
       }
     }
-  } else {
-    SystemFailure();
   }
 }
 
-bool HasVideo(struct Frame* f) { return f->w < f->p; }
-bool HasPendingVideo(void) { return HasVideo(&vf_[0]) || HasVideo(&vf_[1]); }
-bool HasPendingAudio(void) { return playpid_ && audio_.i; }
+bool HasVideo(struct Frame* f) {
+  return f->w < f->p;
+}
+
+bool HasPendingVideo(void) {
+  return HasVideo(&vf_[0]) || HasVideo(&vf_[1]);
+}
+
+bool HasPendingAudio(void) {
+  return playpid_ && audio_.i;
+}
 
 struct Frame* FlipFrameBuffer(void) {
   frame_ = !frame_;
@@ -341,8 +487,10 @@ void TransmitVideo(void) {
   if (!HasVideo(f)) f = FlipFrameBuffer();
   if ((rc = write(STDOUT_FILENO, f->w, f->p - f->w)) != -1) {
     f->w += rc;
-  } else {
-    SystemFailure();
+  } else if (errno == EPIPE) {
+    Exit(0);
+  } else if (errno != EINTR) {
+    Exit(1);
   }
 }
 
@@ -353,19 +501,36 @@ void TransmitAudio(void) {
     rc /= sizeof(short);
     memmove(audio_.p, audio_.p + rc, (audio_.i - rc) * sizeof(short));
     audio_.i -= rc;
-  } else {
-    SystemFailure();
+  } else if (errno == EPIPE) {
+    Exit(0);
+  } else if (errno != EINTR) {
+    Exit(1);
   }
 }
 
 void ScaleVideoFrameToTeletypewriter(void) {
-  long y, x;
-  GyaradosUint8(tyn_, txn_, R, DYN, DXN, pixels_[0], tyn_, txn_, DYN, DXN, 0,
-                255, ssy_, ssx_, true);
-  GyaradosUint8(tyn_, txn_, G, DYN, DXN, pixels_[1], tyn_, txn_, DYN, DXN, 0,
-                255, ssy_, ssx_, true);
-  GyaradosUint8(tyn_, txn_, B, DYN, DXN, pixels_[2], tyn_, txn_, DYN, DXN, 0,
-                255, ssy_, ssx_, true);
+  long y, x, yn, xn;
+  yn = DYN, xn = DXN;
+  while (HALF(yn) > tyn_ || HALF(xn) > txn_) {
+    if (HALF(xn) > txn_) {
+      Magikarp2xX(DYN, DXN, pixels_[0], yn, xn);
+      Magikarp2xX(DYN, DXN, pixels_[1], yn, xn);
+      Magikarp2xX(DYN, DXN, pixels_[2], yn, xn);
+      xn = HALF(xn);
+    }
+    if (HALF(yn) > tyn_) {
+      Magikarp2xY(DYN, DXN, pixels_[0], yn, xn);
+      Magikarp2xY(DYN, DXN, pixels_[1], yn, xn);
+      Magikarp2xY(DYN, DXN, pixels_[2], yn, xn);
+      yn = HALF(yn);
+    }
+  }
+  GyaradosUint8(tyn_, txn_, R, DYN, DXN, pixels_[0], tyn_, txn_, yn, xn, 0, 255,
+                ssy_, ssx_, true);
+  GyaradosUint8(tyn_, txn_, G, DYN, DXN, pixels_[1], tyn_, txn_, yn, xn, 0, 255,
+                ssy_, ssx_, true);
+  GyaradosUint8(tyn_, txn_, B, DYN, DXN, pixels_[2], tyn_, txn_, yn, xn, 0, 255,
+                ssy_, ssx_, true);
   for (y = 0; y < tyn_; ++y) {
     for (x = 0; x < txn_; ++x) {
       ttyrgb_[y * txn_ + x] =
@@ -382,15 +547,10 @@ void KeyCountdown(struct Action* a) {
   }
 }
 
-void DrainAndExit(void) {
-  while (HasPendingVideo()) TransmitVideo();
-  WriteStringNow("\r\n\e[0m\e[J");
-  exit(0);
-}
-
 void PollAndSynchronize(void) {
   struct pollfd fds[3];
   do {
+    errno = 0;
     fds[0].fd = STDIN_FILENO;
     fds[0].events = POLLIN;
     fds[1].fd = HasPendingVideo() ? STDOUT_FILENO : -1;
@@ -402,10 +562,15 @@ void PollAndSynchronize(void) {
       if (fds[1].revents & (POLLOUT | POLLERR)) TransmitVideo();
       if (fds[2].revents & (POLLOUT | POLLERR)) TransmitAudio();
     } else if (errno != EINTR) {
-      SystemFailure();
+      Exit(1);
     }
     if (exited_) {
-      DrainAndExit();
+      if (drain_) {
+        while (HasPendingVideo()) {
+          TransmitVideo();
+        }
+      }
+      Exit(0);
     }
     if (resized_) {
       resized_ = false;
@@ -429,6 +594,11 @@ void Raster(void) {
   f->p = f->w = f->mem;
   f->p = stpcpy(f->p, "\e[0m\e[H");
   f->p = ttyraster(f->p, ttyrgb_, tyn_, txn_, bg, fg);
+  if (status_.wait) {
+    status_.wait--;
+    f->p = stpcpy(f->p, "\e[0m\e[H");
+    f->p = stpcpy(f->p, status_.text);
+  }
   CHECK_LT(f->p - f->mem, vtsize_);
   PollAndSynchronize();
 }
@@ -443,13 +613,8 @@ void FlushScanline(unsigned py) {
 }
 
 static void PutPixel(unsigned px, unsigned py, unsigned pixel, int offset) {
-  static bool once;
-  static unsigned prev;
   unsigned rgb;
-  if (!once) {
-    InitPalette();
-    once = true;
-  }
+  static unsigned prev;
   pixels_[0][py][px] = palette_[offset][prev % 64][pixel][2];
   pixels_[1][py][px] = palette_[offset][prev % 64][pixel][1];
   pixels_[2][py][px] = palette_[offset][prev % 64][pixel][0];
@@ -491,8 +656,12 @@ struct RegBit {
     data = (data & ~(mask << bitno)) | ((nbits > 1 ? v & mask : !!v) << bitno);
     return *this;
   }
-  operator unsigned() const { return (data >> bitno) & mask; }
-  RegBit& operator++() { return *this = *this + 1; }
+  operator unsigned() const {
+    return (data >> bitno) & mask;
+  }
+  RegBit& operator++() {
+    return *this = *this + 1;
+  }
   unsigned operator++(int) {
     unsigned r = *this;
     ++*this;
@@ -602,8 +771,12 @@ bool intr = false;
 
 template <bool write>
 u8 MemAccess(u16 addr, u8 v = 0);
-u8 RB(u16 addr) { return MemAccess<0>(addr); }
-u8 WB(u16 addr, u8 v) { return MemAccess<1>(addr, v); }
+u8 RB(u16 addr) {
+  return MemAccess<0>(addr);
+}
+u8 WB(u16 addr, u8 v) {
+  return MemAccess<1>(addr, v);
+}
 void Tick();
 
 }  // namespace CPU
@@ -922,8 +1095,8 @@ void RenderPixel() {
 
 void ReadToolAssistedSpeedrunRobotKeys() {
   static FILE* fp;
-  if (!fp && !isempty(inputfn)) {
-    fp = fopen(inputfn, "rb");
+  if (!fp && !isempty(inputfn_)) {
+    fp = fopen(inputfn_, "rb");
   }
   if (fp) {
     static unsigned ctrlmask = 0;
@@ -1039,7 +1212,9 @@ bool ChannelsEnabled[5];
 bool PeriodicIRQ;
 bool DMC_IRQ;
 
-bool count(int& v, int reset) { return --v < 0 ? (v = reset), true : false; }
+bool count(int& v, int reset) {
+  return --v < 0 ? (v = reset), true : false;
+}
 
 struct channel {
   int length_counter, linear_counter, address, envelope;
@@ -1119,9 +1294,11 @@ struct channel {
             // Note: Re-entrant! But not recursive, because even
             // the shortest wave length is greater than the read time.
             // TODO: proper clock
-            if (ch.reg.WaveLength > 20)
-              for (unsigned t = 0; t < 3; ++t)
-                CPU::RB(u16(ch.address) | 0x8000);          // timing
+            if (ch.reg.WaveLength > 20) {
+              for (unsigned t = 0; t < 3; ++t) {
+                CPU::RB(u16(ch.address) | 0x8000);  // timing
+              }
+            }
             ch.hold = CPU::RB(u16(ch.address++) | 0x8000);  // Fetch byte
             ch.phase = 8;
             --ch.length_counter;
@@ -1357,13 +1534,19 @@ union { /* Status flags: */
   RegBit<7> N;  // negative
 } P;
 
-u16 wrap(u16 oldaddr, u16 newaddr) { return (oldaddr & 0xFF00) + u8(newaddr); }
+u16 wrap(u16 oldaddr, u16 newaddr) {
+  return (oldaddr & 0xFF00) + u8(newaddr);
+}
 void Misfire(u16 old, u16 addr) {
   u16 q = wrap(old, addr);
   if (q != addr) RB(q);
 }
-u8 Pop() { return RB(0x100 | u8(++S)); }
-void Push(u8 v) { WB(0x100 | u8(S--), v); }
+u8 Pop() {
+  return RB(0x100 | u8(++S));
+}
+void Push(u8 v) {
+  WB(0x100 | u8(S--), v);
+}
 
 template <u16 op>  // Execute a single CPU instruction, defined by opcode "op".
 void Ins() {  // With template magic, the compiler will literally synthesize
@@ -1503,47 +1686,59 @@ void Op() {
 
 }  // namespace CPU
 
-int main(int argc, char** argv) {
+char* GetLine(void) {
+  static char* line;
+  static size_t linesize;
+  if (getline(&line, &linesize, stdin) > 0) {
+    return chomp(line);
+  } else {
+    return NULL;
+  }
+}
+
+int PlayGame(const char* romfile, const char* opt_tasfile) {
   FILE* fp;
+  inputfn_ = opt_tasfile;
 
-  if (argc <= 1 || (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-?") == 0 ||
-                    strcmp(argv[1], "--help") == 0)) {
-    fprintf(stderr, "%s%s%s\n", "Usage: ", argv[0], " ROM [FMV]");
-    exit(1);
+  if (!(fp = fopen(romfile, "rb"))) {
+    fprintf(stderr, "%s%s\n", "failed to open: ", romfile);
+    return 2;
   }
-
-  // Open the ROM file specified on commandline
-  fp = fopen(argv[1], "rb");            /* your .nes file */
-  inputfn = argc >= 3 ? argv[2] : NULL; /* some tas thing */
-
-  if (!fp) {
-    fprintf(stderr, "%s%s\n", "not a nes rom file: ", argv[1]);
-    exit(2);
-  }
-
   if (!(fgetc(fp) == 'N' && fgetc(fp) == 'E' && fgetc(fp) == 'S' &&
         fgetc(fp) == CTRL('Z'))) {
-    fprintf(stderr, "%s%s\n", "not a nes rom file: ", argv[1]);
-    exit(3);
+    fprintf(stderr, "%s%s\n", "not a nes rom file: ", romfile);
+    return 3;
   }
+
+  InitPalette();
 
   // open speaker
   // todo: this needs plenty of work
   devnull_ = open("/dev/null", O_WRONLY);
-  ffplay_ = commandvenv("FFPLAY", "ffplay");
-  if (devnull_ != -1 && ffplay_) {
+  if ((ffplay_ = commandvenv("FFPLAY", "ffplay"))) {
     const char* args[] = {
         "ffplay", "-nodisp", "-loglevel", "quiet", "-fflags", "nobuffer", "-ac",
         "1",      "-ar",     "1789773",   "-f",    "s16le",   "pipe:",    NULL,
     };
     TrySpeaker(ffplay_, (char* const*)args);
+  } else {
+    fputs("\nWARNING\n\
+\n\
+  Need `ffplay` command to play audio\n\
+  Try `sudo apt install ffmpeg` on Linux\n\
+  You can specify it on `PATH` or in `FFPLAY`\n\
+\n\
+Press enter to continue without sound: ",
+          stdout);
+    fflush(stdout);
+    GetLine();
   }
 
   // Read the ROM file header
   u8 rom16count = fgetc(fp);
   u8 vrom8count = fgetc(fp);
   u8 ctrlbyte = fgetc(fp);
-  u8 mappernum = fgetc(fp) | (ctrlbyte >> 4);
+  u8 mappernum = fgetc(fp) | ctrlbyte >> 4;
 
   fgetc(fp);
   fgetc(fp);
@@ -1577,4 +1772,97 @@ int main(int argc, char** argv) {
 
   // Run the CPU until the program is killed.
   for (;;) CPU::Op();
+}
+
+noreturn void PrintUsage(int rc, FILE* f) {
+  fprintf(f, "%s%s%s", "Usage: ", program_invocation_name, USAGE);
+  exit(rc);
+}
+
+void GetOpts(int argc, char* argv[]) {
+  int opt;
+  while ((opt = getopt(argc, argv, "?hAxt134")) != -1) {
+    switch (opt) {
+      case 'A':
+        quant_ = kTtyQuantAnsi;
+        break;
+      case 'x':
+        quant_ = kTtyQuantXterm256;
+        break;
+      case 't':
+        quant_ = kTtyQuantTrue;
+        break;
+      case '1':
+        artifacts_ = !artifacts_;
+        break;
+      case '3':
+        blocks_ = kTtyBlocksCp437;
+        break;
+      case '4':
+        blocks_ = kTtyBlocksUnicode;
+        break;
+      case 'h':
+      case '?':
+        PrintUsage(EXIT_SUCCESS, stdout);
+      default:
+        PrintUsage(EX_USAGE, stderr);
+    }
+  }
+}
+
+size_t FindZipGames(void) {
+  char* name;
+  struct Zipos* zipos;
+  size_t i, cf, namesize;
+  if ((zipos = __zipos_get())) {
+    for (i = 0, cf = ZIP_CDIR_OFFSET(zipos->cdir);
+         i < ZIP_CDIR_RECORDS(zipos->cdir);
+         ++i, cf += ZIP_CFILE_HDRSIZE(zipos->map + cf)) {
+      if ((name = strndup(ZIP_CFILE_NAME(zipos->map + cf),
+                          ZIP_CFILE_NAMESIZE(zipos->map + cf))) &&
+          endswith(name, ".nes")) {
+        APPEND(&zipgames_.p, &zipgames_.i, &zipgames_.n, &name);
+      } else {
+        free(name);
+      }
+    }
+  }
+  return zipgames_.i;
+}
+
+int SelectGameFromZip(void) {
+  int i, rc;
+  char *line, *uri;
+  fputs("\nCOSMOPOLITAN NESEMU1\n\n", stdout);
+  for (i = 0; i < zipgames_.i; ++i) {
+    printf("  [%d] %s\n", i, zipgames_.p[i]);
+  }
+  fputs("\nPlease choose a game (or CTRL-C to quit) [default 0]: ", stdout);
+  fflush(stdout);
+  rc = 0;
+  if ((line = GetLine())) {
+    i = MAX(0, MIN(zipgames_.i - 1, atoi(line)));
+    uri = xasprintf("zip:%s", zipgames_.p[i]);
+    rc = PlayGame(uri, NULL);
+    free(uri);
+  } else {
+    fputs("\n", stdout);
+  }
+  return rc;
+}
+
+int main(int argc, char** argv) {
+  int rc;
+  GetOpts(argc, argv);
+  if (optind + 1 < argc) {
+    rc = PlayGame(argv[optind], argv[optind + 1]);
+  } else if (optind < argc) {
+    rc = PlayGame(argv[optind], NULL);
+  } else {
+    if (!FindZipGames()) {
+      PrintUsage(0, stderr);
+    }
+    rc = SelectGameFromZip();
+  }
+  return rc;
 }

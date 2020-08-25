@@ -31,7 +31,7 @@ static void sha256_transform(uint32_t state[hasatleast 8],
   size_t i;
   uint32_t a, b, c, d, e, f, g, h, t1, t2, m[64];
   for (i = 0; i < 16; ++i, data += 4) {
-    m[i] = data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
+    m[i] = (uint32_t)data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
   }
   for (; i < 64; ++i) {
     m[i] = SIG1(m[i - 2]) + m[i - 7] + SIG0(m[i - 15]) + m[i - 16];

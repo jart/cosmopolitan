@@ -59,7 +59,7 @@
 #include "third_party/regex/tre.inc"
 
 #define CHARCLASS_NAME_MAX 14
-#define RE_DUP_MAX 255
+#define RE_DUP_MAX         255
 
 /***********************************************************************
  from tre-compile.h
@@ -84,16 +84,16 @@ typedef struct {
 typedef enum { LITERAL, CATENATION, ITERATION, UNION } tre_ast_type_t;
 
 /* Special subtypes of TRE_LITERAL. */
-#define EMPTY -1     /* Empty leaf (denotes empty string). */
+#define EMPTY     -1 /* Empty leaf (denotes empty string). */
 #define ASSERTION -2 /* Assertion leaf. */
-#define TAG -3       /* Tag leaf. */
-#define BACKREF -4   /* Back reference leaf. */
+#define TAG       -3 /* Tag leaf. */
+#define BACKREF   -4 /* Back reference leaf. */
 
-#define IS_SPECIAL(x) ((x)->code_min < 0)
-#define IS_EMPTY(x) ((x)->code_min == EMPTY)
+#define IS_SPECIAL(x)   ((x)->code_min < 0)
+#define IS_EMPTY(x)     ((x)->code_min == EMPTY)
 #define IS_ASSERTION(x) ((x)->code_min == ASSERTION)
-#define IS_TAG(x) ((x)->code_min == TAG)
-#define IS_BACKREF(x) ((x)->code_min == BACKREF)
+#define IS_TAG(x)       ((x)->code_min == TAG)
+#define IS_BACKREF(x)   ((x)->code_min == BACKREF)
 
 /* A generic AST node.  All AST nodes consist of this node on the top
    level with `obj' pointing to the actual content. */
@@ -312,7 +312,9 @@ static void tre_stack_destroy(tre_stack_t *s) {
   free(s), s = NULL;
 }
 
-static int tre_stack_num_objects(tre_stack_t *s) { return s->ptr; }
+static int tre_stack_num_objects(tre_stack_t *s) {
+  return s->ptr;
+}
 
 static reg_errcode_t tre_stack_push(tre_stack_t *s,
                                     union tre_stack_item value) {
@@ -348,8 +350,10 @@ static reg_errcode_t tre_stack_push(tre_stack_t *s,
   }
 
 define_pushf(int, int) define_pushf(voidptr, void *)
-#define define_popf(typetag, type) \
-  declare_popf(typetag, type) { return s->stack[--s->ptr].typetag##_value; }
+#define define_popf(typetag, type)             \
+  declare_popf(typetag, type) {                \
+    return s->stack[--s->ptr].typetag##_value; \
+  }
 
     define_popf(int, int) define_popf(voidptr, void *)
 
@@ -383,19 +387,21 @@ define_pushf(int, int) define_pushf(voidptr, void *)
 static const struct {
   char c;
   const char *expansion;
-} tre_macros[] = {{'t', "\t"},
-                  {'n', "\n"},
-                  {'r', "\r"},
-                  {'f', "\f"},
-                  {'a', "\a"},
-                  {'e', "\033"},
-                  {'w', "[[:alnum:]_]"},
-                  {'W', "[^[:alnum:]_]"},
-                  {'s', "[[:space:]]"},
-                  {'S', "[^[:space:]]"},
-                  {'d', "[[:digit:]]"},
-                  {'D', "[^[:digit:]]"},
-                  {0, 0}};
+} tre_macros[] = {
+    {'t', "\t"},
+    {'n', "\n"},
+    {'r', "\r"},
+    {'f', "\f"},
+    {'a', "\a"},
+    {'e', "\033"},
+    {'w', "[[:alnum:]_]"},
+    {'W', "[^[:alnum:]_]"},
+    {'s', "[[:space:]]"},
+    {'S', "[^[:space:]]"},
+    {'d', "[[:digit:]]"},
+    {'D', "[^[:digit:]]"},
+    {0, 0},
+};
 
 /* Expands a macro delimited by `regex' and `regex_end' to `buf', which
    must have at least `len' items.  Sets buf[0] to zero if the there
@@ -510,11 +516,13 @@ static reg_errcode_t parse_bracket_terms(tre_parse_ctx_t *ctx, const char *s,
     }
     if (*s == '-' && s != start && s[1] != ']' &&
         /* extension: [a-z--@] is accepted as [a-z]|[--@] */
-        (s[1] != '-' || s[2] == ']'))
+        (s[1] != '-' || s[2] == ']')) {
       return REG_ERANGE;
-    if (*s == '[' && (s[1] == '.' || s[1] == '='))
+    }
+    if (*s == '[' && (s[1] == '.' || s[1] == '=')) {
       /* collating symbols and equivalence classes are not supported */
       return REG_ECOLLATE;
+    }
     if (*s == '[' && s[1] == ':') {
       char tmp[CHARCLASS_NAME_MAX + 1];
       s += 2;
@@ -539,7 +547,9 @@ static reg_errcode_t parse_bracket_terms(tre_parse_ctx_t *ctx, const char *s,
         max = wc;
         /* XXX - Should use collation order instead of
            encoding values in character ranges. */
-        if (len <= 0 || min > max) return REG_ERANGE;
+        if (len <= 0 || min > max) {
+          return REG_ERANGE;
+        }
         s += len;
       }
     }
@@ -1523,7 +1533,7 @@ static reg_errcode_t tre_add_tags(tre_mem_t mem, tre_stack_t *stack,
 typedef enum { COPY_RECURSE, COPY_SET_RESULT_PTR } tre_copyast_symbol_t;
 
 /* Flags for tre_copy_ast(). */
-#define COPY_REMOVE_TAGS 1
+#define COPY_REMOVE_TAGS        1
 #define COPY_MAXIMIZE_FIRST_TAG 2
 
 static reg_errcode_t tre_copy_ast(tre_mem_t mem, tre_stack_t *stack,
@@ -2374,7 +2384,21 @@ static reg_errcode_t tre_ast_to_tnfa(tre_ast_node_t *node,
     if (/*CONSTCOND*/ 1) goto error_exit; \
   } while (/*CONSTCOND*/ 0)
 
-int regcomp(regex_t *restrict preg, const char *restrict regex, int cflags) {
+/**
+ * Compiles regular expression, e.g.
+ *
+ *   regex_t rx;
+ *   EXPECT_EQ(REG_OK, regcomp(&rx, "^[A-Za-z\x7f-\uFFFF]{2}$", REG_EXTENDED));
+ *   EXPECT_EQ(REG_OK, regexec(&rx, "→A", 0, NULL, 0));
+ *   regfree(&rx);
+ *
+ * @param preg points to state, and needs regfree() afterwards
+ * @param regex is utf-8 regular expression string
+ * @param cflags can have REG_EXTENDED, REG_ICASE, REG_NEWLINE, REG_NOSUB
+ * @return REG_OK, REG_NOMATCH, REG_BADPAT, etc.
+ * @see regexec(), regfree(), regerror()
+ */
+int regcomp(regex_t *preg, const char *regex, int cflags) {
   tre_stack_t *stack;
   tre_ast_node_t *tree, *tmp_ast_l, *tmp_ast_r;
   tre_pos_and_tags_t *p;
@@ -2553,14 +2577,15 @@ error_exit:
   return errcode;
 }
 
+/**
+ * Frees any memory allocated by regcomp().
+ */
 void regfree(regex_t *preg) {
   tre_tnfa_t *tnfa;
   unsigned int i;
   tre_tnfa_transition_t *trans;
-
   tnfa = (void *)preg->TRE_REGEX_T_FIELD;
   if (!tnfa) return;
-
   for (i = 0; i < tnfa->num_transitions; i++)
     if (tnfa->transitions[i].state) {
       if (tnfa->transitions[i].tags)
@@ -2570,14 +2595,12 @@ void regfree(regex_t *preg) {
             tnfa->transitions[i].neg_classes = NULL;
     }
   if (tnfa->transitions) free(tnfa->transitions), tnfa->transitions = NULL;
-
   if (tnfa->initial) {
     for (trans = tnfa->initial; trans->state; trans++) {
       if (trans->tags) free(trans->tags), trans->tags = NULL;
     }
     free(tnfa->initial), tnfa->initial = NULL;
   }
-
   if (tnfa->submatch_data) {
     for (i = 0; i < tnfa->num_submatches; i++)
       if (tnfa->submatch_data[i].parents)
@@ -2585,7 +2608,6 @@ void regfree(regex_t *preg) {
             tnfa->submatch_data[i].parents = NULL;
     free(tnfa->submatch_data), tnfa->submatch_data = NULL;
   }
-
   if (tnfa->tag_directions)
     free(tnfa->tag_directions), tnfa->tag_directions = NULL;
   if (tnfa->firstpos_chars)

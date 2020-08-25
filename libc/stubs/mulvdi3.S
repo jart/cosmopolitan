@@ -18,9 +18,9 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.align	16
-.text.likely
 .source	__FILE__
+.privileged
+.alignfunc
 
 /	Returns 𝑥*𝑦, aborting on overflow.
 /
@@ -31,6 +31,11 @@
 __mulvdi3:
 	mov	%rdi,%rax
 	imul	%rsi
-	jc	__on_arithmetic_overflow
+	jc	1f
+	ret
+1:	push	%rbp
+	mov	%rsp,%rbp
+	call	__on_arithmetic_overflow
+	pop	%rbp
 	ret
 	.endfn	__mulvdi3,globl

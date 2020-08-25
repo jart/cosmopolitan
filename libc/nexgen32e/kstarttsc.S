@@ -34,4 +34,5 @@ kStartTsc:
 	xchg	%edx,%eax
 	stosl
 	.init.end 200,_init_kStartTsc
+
 	.source	__FILE__

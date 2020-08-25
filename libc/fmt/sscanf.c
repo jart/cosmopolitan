@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/fmt/vsscanf.h"
+#include "libc/fmt/fmt.h"
 
 /**
  * String decoder.
@@ -28,11 +28,7 @@ int(sscanf)(const char *str, const char *fmt, ...) {
   int rc;
   va_list va;
   va_start(va, fmt);
-  if (IsTiny()) {
-    rc = (vsscanf)(str, fmt, va);
-  } else {
-    rc = __vsscanf(str, fmt, va, __vcscanf);
-  }
+  rc = (vsscanf)(str, fmt, va);
   va_end(va);
   return rc;
 }

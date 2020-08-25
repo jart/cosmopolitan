@@ -39,8 +39,9 @@
  * @return short count excluding NUL on success, or -1 w/ errno
  * @error ENAMETOOLONG
  */
-textwindows int(mkntpath)(const char *path, unsigned flags,
-                          char16_t path16[hasatleast PATH_MAX - 16]) {
+forcealignargpointer textwindows int(mkntpath)(
+    const char *path, unsigned flags,
+    char16_t path16[hasatleast PATH_MAX - 16]) {
   /*
    * 1. Reserve +1 for NUL-terminator
    * 2. Reserve +1 for UTF-16 overflow

@@ -43,7 +43,7 @@ strncmp$avx:
 	cmp	%rsi,%rdi
 	je	1f
 	mov	$-16,%rcx
-	vxorps	%xmm0,%xmm0,%xmm0
+	vpxor	%xmm0,%xmm0,%xmm0
 	vpcmpeqd %xmm1,%xmm1,%xmm1
 3:	add	$16,%rcx
 4:	lea	16(%rcx),%rax

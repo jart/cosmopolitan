@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/bits/initializer.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
@@ -27,6 +28,7 @@
 #include "libc/time/time.h"
 
 static struct Now {
+  bool once;
   uint64_t k0;
   long double r0, cpn;
 } now_;
@@ -37,25 +39,7 @@ static struct Now {
  */
 long double (*nowl)(void);
 
-long double converttickstonanos(uint64_t ticks) {
-  return ticks * now_.cpn; /* pico scale */
-}
-
-long double converttickstoseconds(uint64_t ticks) {
-  return 1 / 1e9 * converttickstonanos(ticks);
-}
-
-static long double nowl$sys(void) {
-  return dtime(CLOCK_REALTIME);
-}
-
-static long double nowl$art(void) {
-  uint64_t ticks;
-  ticks = unsignedsubtract(rdtsc(), now_.k0);
-  return now_.r0 + converttickstoseconds(ticks);
-}
-
-static long double GetSample(void) {
+static long double GetTimeSample(void) {
   uint64_t tick1, tick2;
   long double time1, time2;
   sched_yield();
@@ -71,17 +55,41 @@ static long double MeasureNanosPerCycle(void) {
   int i;
   long double avg, samp;
   for (avg = 1.0L, i = 1; i < 5; ++i) {
-    samp = GetSample();
+    samp = GetTimeSample();
     avg += (samp - avg) / i;
   }
   return avg;
 }
 
-INITIALIZER(301, _init_time, {
+static void InitTime(void) {
+  now_.cpn = MeasureNanosPerCycle();
+  now_.r0 = dtime(CLOCK_REALTIME);
+  now_.k0 = rdtsc();
+  now_.once = true;
+}
+
+long double converttickstonanos(uint64_t ticks) {
+  if (!now_.once) InitTime();
+  return ticks * now_.cpn; /* pico scale */
+}
+
+long double converttickstoseconds(uint64_t ticks) {
+  return 1 / 1e9 * converttickstonanos(ticks);
+}
+
+long double nowl$sys(void) {
+  return dtime(CLOCK_REALTIME);
+}
+
+long double nowl$art(void) {
+  uint64_t ticks;
+  if (!now_.once) InitTime();
+  ticks = unsignedsubtract(rdtsc(), now_.k0);
+  return now_.r0 + converttickstoseconds(ticks);
+}
+
+INITIALIZER(301, _init_nowl, {
   if (X86_HAVE(INVTSC)) {
-    now_.cpn = MeasureNanosPerCycle();
-    now_.r0 = dtime(CLOCK_REALTIME);
-    now_.k0 = rdtsc();
     nowl = nowl$art;
   } else {
     nowl = nowl$sys;

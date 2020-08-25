@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
+.source	__FILE__
 
 /	Performs raw System Five system call.
 /
@@ -41,4 +42,3 @@ syscall:mov	%rdi,%rax
 	mov	8(%rsp),%r9
 	jmp	*systemfive(%rip)
 	.endfn	syscall,globl
-	.source	__FILE__

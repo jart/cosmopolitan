@@ -29,14 +29,14 @@ FILE *stdout;
 hidden FILE g_stdout;
 hidden unsigned char g_stdout_buf[BUFSIZ] aligned(PAGESIZE);
 
-static textstartup void g_stdout_init() {
+static textstartup void _init_g_stdout2() {
   struct FILE *sf;
   sf = stdout;
   asm("" : "+r"(sf));
   if (IsWindows() || ischardev(pushpop(sf->fd))) {
     sf->bufmode = _IOLBF;
   }
-  fflushregister(sf);
+  _fflushregister(sf);
 }
 
-const void *const g_stdout_ctor[] initarray = {g_stdout_init};
+const void *const g_stdout_ctor[] initarray = {_init_g_stdout2};

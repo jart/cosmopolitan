@@ -49,7 +49,7 @@ kPollNamesRo:
 	.previous
 
 /	Mapping of poll() flags to their string names.
-/	@see	recreateflags()
+/	@see	RecreateFlags()
 	.initbss 301,_init_kPollNames
 kPollNames:
 	.rept	.Lrows

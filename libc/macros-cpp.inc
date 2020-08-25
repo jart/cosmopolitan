@@ -24,6 +24,39 @@
 #define vzeroupper
 #endif
 
+/	Begins definition of frameless function that calls no functions.
+.macro	.leafprologue
+#if !(defined(TINY) && !defined(__PG__))
+	push	%rbp
+	mov	%rsp,%rbp
+#endif
+.endm
+
+/	Ends definition of frameless function that calls no functions.
+.macro	.leafepilogue
+#if !(defined(TINY) && !defined(__PG__))
+	pop	%rbp
+#endif
+	ret
+.endm
+
+/	Good alignment for functions where alignment actually helps.
+/	@note 16-byte
+.macro	.alignfunc
+#ifndef	__OPTIMIZE_SIZE__
+	.p2align 4
+#endif
+.endm
+
+/	Good alignment for loops where alignment actually helps.
+/	@note 16-byte if <10 padding otherwise 8-byte
+.macro	.alignloop
+#ifndef	__OPTIMIZE_SIZE__
+	.p2align 4,,10
+	.p2align 4
+#endif
+.endm
+
 /	Loads Effective Address
 /	Supporting security blankets
 .macro	plea	symbol:req reg64:req reg32:req
@@ -48,7 +81,7 @@
 /	Loads Effective Address
 /	Supporting security blankets
 .macro	ezlea	symbol:req reg:req
-#if	__PIC__ + __PIE__ + __code_model_medium__ + __code_model_large__ + 0 > 1
+#if	__pic__ + __pie__ + __code_model_medium__ + __code_model_large__ + 0 > 1
 /	lea	\symbol(%rip),%r\reg
 	mov	$\symbol,%e\reg
 #else
@@ -69,22 +102,6 @@
 .macro	.frame0
 	and	$-16,%rsp
 	xor	%ebp,%ebp
-.endm
-
-/	Begins definition of frameless function that calls no functions.
-.macro	.leafprologue
-#if !(defined(TINY) && !defined(__PG__))
-	push	%rbp
-	mov	%rsp,%rbp
-#endif
-.endm
-
-/	Ends definition of frameless function that calls no functions.
-.macro	.leafepilogue
-#if !(defined(TINY) && !defined(__PG__))
-	pop	%rbp
-#endif
-	ret
 .endm
 
 /	Pulls source code file into ZIP portion of binary.

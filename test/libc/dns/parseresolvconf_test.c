@@ -42,10 +42,9 @@ TEST(parseresolvconf, testEmpty) {
 }
 
 TEST(parseresolvconf, testCorrectlyTokenizes) {
-  const char kInput[] =
-      "# this is a comment\n"
-      "nameserver  203.0.113.2 \n"
-      " nameserver  203.0.113.1\n";
+  const char kInput[] = "# this is a comment\n"
+                        "nameserver  203.0.113.2 \n"
+                        " nameserver  203.0.113.1\n";
   struct ResolvConf *rv = calloc(1, sizeof(struct ResolvConf));
   FILE *f = fmemopen(NULL, BUFSIZ, "r+");
   ASSERT_EQ(strlen(kInput), fwrite(kInput, 1, strlen(kInput), f));
@@ -61,16 +60,13 @@ TEST(parseresolvconf, testCorrectlyTokenizes) {
   fclose(f);
 }
 
-TEST(parseresolvconf, testSearchLocal_setsLoopback) {
+TEST(parseresolvconf, testMulticastDnsThing_getsIgnored) {
   const char kInput[] = "search local # boop\n";
   struct ResolvConf *rv = calloc(1, sizeof(struct ResolvConf));
   FILE *f = fmemopen(NULL, BUFSIZ, "r+");
   ASSERT_EQ(strlen(kInput), fwrite(kInput, 1, strlen(kInput), f));
-  ASSERT_EQ(1, parseresolvconf(rv, f));
-  ASSERT_EQ(1, rv->nameservers.i);
-  EXPECT_EQ(AF_INET, rv->nameservers.p[0].sin_family);
-  EXPECT_EQ(DNS_PORT, ntohs(rv->nameservers.p[0].sin_port));
-  EXPECT_STREQ("127.0.0.1", FormatIp(&rv->nameservers.p[0]));
+  ASSERT_EQ(0, parseresolvconf(rv, f));
+  ASSERT_EQ(0, rv->nameservers.i);
   freeresolvconf(&rv);
   fclose(f);
 }

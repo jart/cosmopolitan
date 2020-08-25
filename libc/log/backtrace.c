@@ -20,6 +20,6 @@
 #include "libc/dce.h"
 #include "libc/log/log.h"
 
-relegated void backtrace(FILE *f) {
+void backtrace(FILE *f) {
   showbacktrace(f, __builtin_frame_address(0));
 }

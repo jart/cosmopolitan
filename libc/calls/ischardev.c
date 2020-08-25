@@ -28,7 +28,7 @@
 /**
  * Returns true if file descriptor is backed by character i/o.
  */
-bool32 ischardev(int fd) {
+textstartup bool32 ischardev(int fd) {
   int olderr;
   struct stat st;
   if (!IsWindows()) {

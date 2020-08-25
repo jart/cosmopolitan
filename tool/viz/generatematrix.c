@@ -42,8 +42,8 @@ typedef double (*round_f)(double);
 typedef unsigned long (*rand_f)(void);
 
 struct Range {
-  double a;
-  double b;
+  long double a;
+  long double b;
 };
 
 short xn_ = 8;
@@ -273,7 +273,8 @@ static void *SetRandom(long n, long p[n]) {
   return p;
 }
 
-static double ConvertRange(double x, double a, double b, double c, double d) {
+static long double ConvertRange(long double x, long double a, long double b,
+                                long double c, long double d) {
   return (d - c) / (b - a) * (x - a) + c;
 }
 

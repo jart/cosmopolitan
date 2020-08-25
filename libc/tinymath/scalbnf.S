@@ -20,16 +20,21 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_scalbnl:
+tinymath_scalbnf:
+	push	%rbp
+	mov	%rsp,%rbp
 	.profilable
-	sub	$24,%rsp
-	fldt	32(%rsp)
-	movl	%edi,12(%rsp)
-	fildl	12(%rsp)
+	push	%rax
+	movss	%xmm0,-4(%rbp)
+	flds	-4(%rbp)
+	movl	%edi,-4(%rbp)
+	fildl	-4(%rbp)
 	fxch	%st(1)
-	add	$24,%rsp
 	fscale
 	fstp	%st(1)
+	fstps	-4(%rbp)
+	movss	-4(%rbp),%xmm0
+	leave
 	ret
-	.endfn	tinymath_scalbnl,globl
-	.alias	tinymath_scalbnl,scalbnl
+	.endfn	tinymath_scalbnf,globl
+	.alias	tinymath_scalbnf,scalbnf

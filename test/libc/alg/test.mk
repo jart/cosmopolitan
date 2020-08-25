@@ -5,12 +5,17 @@ PKGS += TEST_LIBC_ALG
 
 TEST_LIBC_ALG_SRCS := $(wildcard test/libc/alg/*.c)
 TEST_LIBC_ALG_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_ALG_SRCS))
-TEST_LIBC_ALG_COMS = $(TEST_LIBC_ALG_OBJS:%.o=%.com)
-TEST_LIBC_ALG_BINS = $(TEST_LIBC_ALG_COMS) $(TEST_LIBC_ALG_COMS:%=%.dbg)
 
 TEST_LIBC_ALG_OBJS =					\
 	$(TEST_LIBC_ALG_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_ALG_SRCS:%.c=o/$(MODE)/%.o)
+
+TEST_LIBC_ALG_COMS =					\
+	$(TEST_LIBC_ALG_SRCS:%.c=o/$(MODE)/%.com)
+
+TEST_LIBC_ALG_BINS =					\
+	$(TEST_LIBC_ALG_COMS)				\
+	$(TEST_LIBC_ALG_COMS:%=%.dbg)
 
 TEST_LIBC_ALG_TESTS = $(TEST_LIBC_ALG_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
 
@@ -49,9 +54,7 @@ o/$(MODE)/test/libc/alg/%.com.dbg:			\
 		$(APE)
 	@$(APELINK)
 
-$(TEST_LIBC_ALG_OBJS):					\
-		$(BUILD_FILES)				\
-		test/libc/alg/test.mk
+$(TEST_LIBC_ALG_OBJS): test/libc/alg/test.mk
 
 $(TEST_LIBC_ALG_OBJS):					\
 	DEFAULT_CCFLAGS +=				\

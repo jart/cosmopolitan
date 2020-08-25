@@ -5,11 +5,13 @@ PKGS += TEST_LIBC_SOCK
 
 TEST_LIBC_SOCK_SRCS := $(wildcard test/libc/sock/*.c)
 TEST_LIBC_SOCK_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_SOCK_SRCS))
-TEST_LIBC_SOCK_COMS = $(TEST_LIBC_SOCK_OBJS:%.o=%.com)
 
 TEST_LIBC_SOCK_OBJS =						\
 	$(TEST_LIBC_SOCK_SRCS:%=o/$(MODE)/%.zip.o)		\
 	$(TEST_LIBC_SOCK_SRCS:%.c=o/$(MODE)/%.o)
+
+TEST_LIBC_SOCK_COMS =						\
+	$(TEST_LIBC_SOCK_SRCS:%.c=o/$(MODE)/%.com)
 
 TEST_LIBC_SOCK_BINS =						\
 	$(TEST_LIBC_SOCK_COMS)					\
@@ -51,9 +53,7 @@ o/$(MODE)/test/libc/sock/%.com.dbg:				\
 		$(APE)
 	@$(APELINK)
 
-$(TEST_LIBC_SOCK_OBJS):						\
-		$(BUILD_FILES)					\
-		test/libc/sock/test.mk
+$(TEST_LIBC_SOCK_OBJS): test/libc/sock/test.mk
 
 .PHONY: o/$(MODE)/test/libc/sock
 o/$(MODE)/test/libc/sock:					\

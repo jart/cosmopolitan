@@ -23,7 +23,9 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
+#undef strlen
 #undef replacestr
 #define replacestr replacestr16
 #define char char16_t
+#define strlen strlen16
 #include "libc/alg/replacestr.c"

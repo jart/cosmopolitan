@@ -18,12 +18,10 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.text.unlikely
+.privileged
 .source	__FILE__
 
 /	Arithmetic overflow handler.
-/
-/	@see	libc/testlib/arithmeticoverflowhook.S
 /	@see	-ftrapv
 __on_arithmetic_overflow:
 	push	%rbp

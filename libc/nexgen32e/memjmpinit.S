@@ -29,6 +29,7 @@
 /	@param	rdx is address of indirect branch
 /	@param	ecx is size of jump table
 memjmpinit:
+	.leafprologue
 	setnz	%r8b
 	shl	%r8b
 0:	xor	%eax,%eax
@@ -44,6 +45,6 @@ memjmpinit:
 	add	%rdx,%rax
 	stosq
 	lodsq
-	ret
+	.leafepilogue
 	.endfn	memjmpinit,globl,hidden
 	.source	__FILE__

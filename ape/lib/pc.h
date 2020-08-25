@@ -52,11 +52,13 @@
    SF: Stack Fault ────────────────┐││││││
    ES: Exception Summary Status ──┐│││││││
    C0-3: Condition Codes ──┬────┐ ││││││││
-   Top of Stack Pointer ─────┐  │ ││││││││
+   TOP of Stack Pointer ─────┐  │ ││││││││
    B: FPU Busy ───────────┐│ │  │ ││││││││
                           ││┌┴┐┌┼┐││││││││
                           │↓│ │↓↓↓││││││││*/
+#define FPU_IE 0b0000000000100000000000001
 #define FPU_ZE 0b0000000000100000000000100
+#define FPU_SF 0b0000000000000000001000000
 #define FPU_C0 0b0000000000000000100000000
 #define FPU_C1 0b0000000000000001000000000
 #define FPU_C2 0b0000000000000010000000000
@@ -151,6 +153,7 @@
 #define PAGE_V   /*                                    */ 0b000000001
 #define PAGE_RW  /*                                    */ 0b000000010
 #define PAGE_U   /*                                    */ 0b000000100
+#define PAGE_4KB /*                                    */ 0b010000000
 #define PAGE_2MB /*                                    */ 0b110000000
 #define PAGE_1GB /*                                    */ 0b110000000
 #define PAGE_TA  0b11111111111111111111111111111111111111000000000000

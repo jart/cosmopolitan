@@ -48,6 +48,7 @@ for x; do
 done
 
 set -- "$AR" "$ARFLAGS" "$OUT" "$@"
+printf %s\\n "$*" >"$OUT.cmd"
 
 OUTDIR="${OUT%/*}"
 if [ "$OUTDIR" != "$OUT" ] && [ ! -d "$OUTDIR" ]; then

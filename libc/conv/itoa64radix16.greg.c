@@ -22,11 +22,9 @@
 
 size_t uint64toarray_radix16(uint64_t i, char a[hasatleast 17]) {
   size_t j;
-  unsigned char d;
   j = 0;
   do {
-    d = i % 16;
-    a[j++] = d < 10 ? d + '0' : d + 'a';
+    a[j++] = "0123456789abcdef"[i % 16];
     i /= 16;
   } while (i > 0);
   a[j] = '\0';

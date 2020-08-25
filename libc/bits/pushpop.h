@@ -31,7 +31,7 @@
 #endif
 
 #if !defined(__GNUC__) || defined(__STRICT_ANSI__)
-#define pushmov(d, x) ((d) = (x))
+#define pushmov(d, x) (*(d) = (x))
 #else
 #define pushmov(d, x)                                                        \
   ({                                                                         \

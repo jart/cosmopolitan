@@ -17,13 +17,16 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/limits.h"
 #include "libc/str/str.h"
 
 /**
  * Copies string, returning pointer to where copying ended.
+ *
  * @see strcpy(), mempcpy()
  * @asyncsignalsafe
  */
 char *stpcpy(char *dst, const char *src) {
-  return (char *)mempcpy(dst, src, strlen(src) + 1) - 1;
+  dst = memccpy(dst, src, '\0', SIZE_MAX);
+  return dst - 1;
 }

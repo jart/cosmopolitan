@@ -19,6 +19,11 @@ COSMOPOLITAN_C_START_
     size_t SizE = sizeof(*Item);                                      \
     size_t Count = (COUNT);                                           \
     ssize_t Entry = -1;                                               \
+    /* NOTE: We use `<` to guarantee one additional slot */           \
+    /*       grow() will memset(0) extended memory, thus */           \
+    /*       you get a nul-terminator for free sometimes */           \
+    /*       the exception is if you list.i=0 and re-use */           \
+    /*       so you need concat(...); list.p[list.i++]=0 */           \
     if (*ListI + Count < *ListN || grow(ListP, ListN, SizE, Count)) { \
       memcpy(&(*ListP)[*ListI], Item, (SizE) * (Count));              \
       Entry = *ListI;                                                 \

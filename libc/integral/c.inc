@@ -123,7 +123,7 @@ typedef _Bool bool;
 #endif
 #endif
 
-#ifndef __cplusplus
+#if !defined(__cplusplus) && !defined(__STRICT_ANSI__)
 typedef __WCHAR_TYPE__ wchar_t;
 typedef __CHAR16_TYPE__ char16_t;
 typedef __CHAR32_TYPE__ char32_t;
@@ -205,7 +205,7 @@ typedef uint64_t uintmax_t;
 #define strlenesque libcesque nosideeffect paramsnonnull()
 #define vallocesque \
   libcesque nodiscard returnsaligned((PAGESIZE)) returnspointerwithnoaliases
-#define reallocesque libcesque nodiscard returnsaligned((__BIGGEST_ALIGNMENT__))
+#define reallocesque libcesque returnsaligned((__BIGGEST_ALIGNMENT__))
 #define mallocesque  reallocesque returnspointerwithnoaliases
 #define interruptfn  nocallersavedregisters forcealignargpointer
 
@@ -530,6 +530,8 @@ typedef uint64_t uintmax_t;
 
 /**
  * Asks compiler to not optimize function definition.
+ *
+ * @todo this is dangerous delete?
  */
 #ifndef nooptimize
 #ifndef __STRICT_ANSI__
@@ -547,6 +549,8 @@ typedef uint64_t uintmax_t;
  * Asks compiler to generate as little code as possible for function.
  *
  * This does the same thing as relegated, but without relocation.
+ *
+ * @todo this is dangerous delete?
  */
 #ifndef optimizesize
 #ifndef __STRICT_ANSI__
@@ -566,6 +570,8 @@ typedef uint64_t uintmax_t;
  * This keyword provides an alternative to build flag tuning, in cases
  * where the compiler is reluctant to vectorize mathematical code that's
  * written in standards-compliant C rather than GCC extensions.
+ *
+ * @todo this is dangerous delete?
  */
 #ifndef optimizespeed
 #if !defined(__STRICT_ANSI__) && \
@@ -602,7 +608,7 @@ typedef uint64_t uintmax_t;
 #endif
 
 /**
- * Associates debug info with caller of inline function.
+ * Associates debug information with call site.
  * @see nodebuginfo
  */
 #ifndef artificial
@@ -772,11 +778,11 @@ typedef uint64_t uintmax_t;
 #define /* TODO(jart): delete */ assume(x) __builtin_assume(x)
 #endif
 
-#ifndef /* TODO(jart): delete */ likely
+#ifndef likely
 #define likely(expr) __builtin_expect(!!(expr), 1)
 #endif
 
-#ifndef /* TODO(jart): delete */ unlikely
+#ifndef unlikely
 #define unlikely(expr) __builtin_expect(!!(expr), 0)
 #endif
 
@@ -804,8 +810,8 @@ typedef uint64_t uintmax_t;
 
 #ifndef __STRICT_ANSI__
 #define testonly    noinline _Section(".test")
-#define textstartup _Section(".text.startup")
-#define textexit    _Section(".text.exit")
+#define textstartup _Section(".text.startup") noinstrument
+#define textexit    _Section(".text.exit") noinstrument
 #define textreal    _Section(".text.real")
 #define textwindows _Section(".text.windows")
 #define antiquity   _Section(".text.antiquity")
@@ -860,6 +866,7 @@ typedef uint64_t uintmax_t;
 /**
  * Systemic suppressions.
  */
+#ifndef __STRICT_ANSI__
 #if defined(__GNUC__) || defined(__llvm__)
 #pragma GCC diagnostic ignored "-Wsign-compare"      /* lint needs to change  */
 #pragma GCC diagnostic ignored "-Wtype-limits"       /* makes macros unsafe  */
@@ -885,6 +892,9 @@ typedef uint64_t uintmax_t;
 #pragma GCC diagnostic ignored /* tidy */ "-Wunused-but-set-variable"
 #pragma GCC diagnostic ignored /* tidy */ "-Wunused-but-set-parameter"
 #endif /* GCC6+ */
+#if __GNUC__ + 0 >= 9
+#pragma GCC diagnostic ignored /* "always true" breaks dce */ "-Waddress"
+#endif /* GCC9+ */
 #endif /* !C++ */
 #endif /* GCC && !LLVM */
 #ifdef __llvm__
@@ -899,6 +909,7 @@ typedef uint64_t uintmax_t;
 #pragma clang diagnostic ignored \
     "-Wincompatible-pointer-types-discards-qualifiers"
 #endif /* !GCC && LLVM */
+#endif /* ANSI */
 
 /**
  * Elevate warnings of material consequence.
@@ -912,6 +923,7 @@ typedef uint64_t uintmax_t;
  * time, e.g. 1's complement, big endian, under 32bit word size, etc.
  */
 #ifndef __W__
+#ifndef __STRICT_ANSI__
 #if defined(__GNUC__) || defined(__llvm__)
 #pragma GCC diagnostic error "-Wpointer-arith"
 #pragma GCC diagnostic error "-Wnonnull"
@@ -939,7 +951,7 @@ typedef uint64_t uintmax_t;
 #pragma GCC diagnostic error "-Wredundant-decls"
 #if __GNUC__ >= 6
 #pragma GCC diagnostic error "-Wnonnull-compare"
-#ifndef /* we guarantee no stack overflow unless -D*/ STACK_FRAME_UNLIMITED
+#if !defined(MODE_DBG) && !defined(STACK_FRAME_UNLIMITED)
 #pragma GCC diagnostic error "-Wframe-larger-than=4096"
 #if __GNUC__ >= 9
 #pragma GCC diagnostic error "-Walloca-larger-than=1024"
@@ -953,6 +965,7 @@ typedef uint64_t uintmax_t;
 #ifdef __llvm__
 #pragma clang diagnostic error "-Wassume"
 #endif /* !GCC && LLVM */
+#endif /* ANSI */
 #endif /* -w */
 
 /**

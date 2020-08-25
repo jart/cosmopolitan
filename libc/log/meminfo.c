@@ -17,26 +17,25 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
-#include "libc/stdio/stdio.h"
 
 STATIC_YOINK("ntoa");
 STATIC_YOINK("stoa");
 
 static void onmemchunk(void *start, void *end, size_t used_bytes, void *arg) {
-  FILE *f = arg;
-  (fprintf)(f, "%p - %p : %08zx / %08lx\n", start, end, used_bytes,
+  (dprintf)(*(int *)arg, "%p - %p : %08zx / %08lx\n", start, end, used_bytes,
             (intptr_t)end - (intptr_t)start);
 }
 
 /**
  * Prints memory mappings.
  */
-void meminfo(FILE *f) {
-  memsummary(f);
-  (fprintf)(f, "%*s   %*s   %*s   %*s\n", POINTER_XDIGITS, "start",
+void meminfo(int fd) {
+  memsummary(fd);
+  (dprintf)(fd, "%*s   %*s   %*s   %*s\n", POINTER_XDIGITS, "start",
             POINTER_XDIGITS, "end", 8, "used", 8, "size");
-  malloc_inspect_all(onmemchunk, f);
+  malloc_inspect_all(onmemchunk, &fd);
 }

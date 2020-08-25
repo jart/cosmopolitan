@@ -30,16 +30,17 @@
  * @asyncsignalsafe
  */
 char *strtok_r(char *s, const char *sep, char **state) {
+  size_t leadingseps, tokenlen;
   if (!s) {
     s = *state;
     if (!s) {
       return NULL;
     }
   }
-  size_t leadingseps = strspn(s, sep);
+  leadingseps = strspn(s, sep);
   s += leadingseps;
   if (*s) {
-    size_t tokenlen = strcspn(s, sep);
+    tokenlen = strcspn(s, sep);
     if (s[tokenlen]) {
       s[tokenlen] = '\0';
       *state = &s[tokenlen + 1];

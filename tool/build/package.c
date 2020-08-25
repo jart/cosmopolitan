@@ -22,12 +22,11 @@
 #include "libc/alg/bisect.h"
 #include "libc/alg/bisectcarleft.h"
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
+#include "libc/bits/bswap.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/conv/conv.h"
-#include "libc/conv/sizemultiply.h"
 #include "libc/elf/def.h"
 #include "libc/elf/elf.h"
 #include "libc/elf/struct/rela.h"
@@ -143,7 +142,7 @@ struct Packages {
               size_t i, n;
               struct Op {
                 int32_t offset;
-                uint8_t decoded_length;
+                uint8_t length;
                 uint8_t pos_disp;
                 uint16_t __pad;
               } * p;
@@ -243,7 +242,7 @@ void GetOpts(struct Package *pkg, struct Packages *deps, int argc,
         exit(1);
     }
   }
-  CHECK_NE(-1, pkg->path);
+  CHECK_NE(-1, pkg->path, "no packages passed to package.com");
   CHECK_LT(optind, argc,
            "no objects passed to package.com; "
            "is your foo.mk $(FOO_OBJS) glob broken?");
@@ -290,17 +289,16 @@ void IndexSections(struct Object *obj) {
     }
     if (shdr->sh_flags & SHF_EXECINSTR) {
       CHECK_NOTNULL((code = getelfsectionaddress(obj->elf, obj->size, shdr)));
-      for (op.offset = 0; op.offset < shdr->sh_size;
-           op.offset += op.decoded_length) {
+      for (op.offset = 0; op.offset < shdr->sh_size; op.offset += op.length) {
         if (xed_instruction_length_decode(
                 xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_LONG_64),
                 &code[op.offset],
                 min(shdr->sh_size - op.offset, XED_MAX_INSTRUCTION_BYTES)) ==
             XED_ERROR_NONE) {
-          op.decoded_length = xedd.decoded_length;
-          op.pos_disp = xedd.operands.pos_disp;
+          op.length = xedd.length;
+          op.pos_disp = xedd.op.pos_disp;
         } else {
-          op.decoded_length = 1;
+          op.length = 1;
           op.pos_disp = 0;
         }
         CHECK_NE(-1, append(&sect.ops, &op));
@@ -484,11 +482,11 @@ void OptimizeRelocations(struct Package *pkg, struct Packages *deps,
           op = &obj->sections.p[shdr->sh_info].ops.p[bisectcarleft(
               (const int32_t(*)[2])obj->sections.p[shdr->sh_info].ops.p,
               obj->sections.p[shdr->sh_info].ops.i, rela->r_offset)];
-          CHECK_GT(op->decoded_length, 4);
+          CHECK_GT(op->length, 4);
           CHECK_GT(op->pos_disp, 0);
           rela->r_info = ELF64_R_INFO(ELF64_R_SYM(rela->r_info), R_X86_64_32S);
           rela->r_addend = -IMAGE_BASE_VIRTUAL + rela->r_addend +
-                           (op->decoded_length - op->pos_disp);
+                           (op->length - op->pos_disp);
           code[rela->r_offset - 1] = ChangeRipToRbx(code[rela->r_offset - 1]);
         }
 #endif
@@ -658,6 +656,7 @@ void Package(int argc, char *argv[], struct Package *pkg,
 int main(int argc, char *argv[]) {
   struct Package pkg;
   struct Packages deps;
+  showcrashreports();
   memset(&pkg, 0, sizeof(pkg));
   memset(&deps, 0, sizeof(deps));
   Package(argc, argv, &pkg, &deps);

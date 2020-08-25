@@ -7,11 +7,13 @@ TEST_LIBC_CALLS_SRCS :=					\
 	$(wildcard test/libc/calls/*.c)			\
 	$(wildcard test/libc/calls/hefty/*.c)
 TEST_LIBC_CALLS_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_CALLS_SRCS))
-TEST_LIBC_CALLS_COMS = $(TEST_LIBC_CALLS_OBJS:%.o=%.com)
 
 TEST_LIBC_CALLS_OBJS =					\
 	$(TEST_LIBC_CALLS_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_CALLS_SRCS:%.c=o/$(MODE)/%.o)
+
+TEST_LIBC_CALLS_COMS =					\
+	$(TEST_LIBC_CALLS_SRCS:%.c=o/$(MODE)/%.com)
 
 TEST_LIBC_CALLS_BINS =					\
 	$(TEST_LIBC_CALLS_COMS)				\

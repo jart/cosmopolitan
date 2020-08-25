@@ -1,12 +1,13 @@
 #ifndef COSMOPOLITAN_LIBC_STR_TINYSTRSTR_H_
 #define COSMOPOLITAN_LIBC_STR_TINYSTRSTR_H_
+#ifndef __STRICT_ANSI__
 #include "libc/str/str.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 forceinline void *tinymemmemi(const void *haystk, size_t haystksize,
                               const void *needle, size_t needlesize) {
-  const char *p = haystk;
-  const char *pe = p + haystksize;
+  const char *p = (const char *)haystk;
+  const char *pe = (const char *)haystk + haystksize;
   while (p < pe) {
     size_t i = 0;
     ++p;
@@ -21,4 +22,5 @@ forceinline void *tinymemmemi(const void *haystk, size_t haystksize,
 }
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* !ANSI */
 #endif /* COSMOPOLITAN_LIBC_STR_TINYMEMMEM_H_ */

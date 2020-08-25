@@ -17,16 +17,11 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/arraylist.h"
+#include "libc/alg/arraylist2.h"
 #include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "tool/decode/lib/flagger.h"
-
-struct FlagNameBuf {
-  size_t i, n;
-  char *p;
-};
 
 /**
  * Formats numeric flags integer as symbolic code.
@@ -35,28 +30,32 @@ struct FlagNameBuf {
  * @param id is the flags
  * @return NUL-terminated string that needs free()
  */
-nodiscard char *recreateflags(const struct IdName *names, unsigned long id) {
-  struct FlagNameBuf buf = {};
-  char extrabuf[20];
+nodiscard char *RecreateFlags(const struct IdName *names, unsigned long id) {
   bool first;
+  size_t bufi, bufn;
+  char *bufp, extrabuf[20];
+  bufi = 0;
+  bufn = 0;
+  bufp = NULL;
   first = true;
   for (; names->name; names++) {
     if ((id == 0 && names->id == 0) ||
         (id != 0 && names->id != 0 && (id & names->id) == names->id)) {
       id &= ~names->id;
       if (!first) {
-        append(&buf, "|");
+        APPEND(&bufp, &bufi, &bufn, "|");
       } else {
         first = false;
       }
-      concat(&buf, names->name, strlen(names->name));
+      CONCAT(&bufp, &bufi, &bufn, names->name, strlen(names->name));
     }
   }
   if (id) {
-    if (buf.i) append(&buf, "|");
-    concat(&buf, extrabuf, snprintf(extrabuf, sizeof(extrabuf), "%#x", id));
-  } else if (!buf.i) {
-    append(&buf, "0");
+    if (bufi) APPEND(&bufp, &bufi, &bufn, "|");
+    CONCAT(&bufp, &bufi, &bufn, extrabuf,
+           snprintf(extrabuf, sizeof(extrabuf), "%#x", id));
+  } else if (!bufi) {
+    APPEND(&bufp, &bufi, &bufn, "0");
   }
-  return buf.p;
+  return bufp;
 }

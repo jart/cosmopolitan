@@ -67,7 +67,7 @@ TEST(magikarp, testConvolve2) {
       cDecimate2xUint8x8(256,
                          tgc(tunbing(u" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼"
                                      u" !“#$%&‘()*+,-./0123456789:;<=>⁇"
-                                     u"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[╲]^_"
+                                     u"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
                                      u"`abcdefghijklmnopqrstuvwxyz{|}~⌂"
                                      u"ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥€ƒ"
                                      u"áíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐"

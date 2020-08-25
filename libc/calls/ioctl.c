@@ -17,6 +17,9 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#ifdef __STRICT_ANSI__
+#undef __STRICT_ANSI__
+#endif
 #include "libc/calls/ioctl.h"
 
 #define EQUAL(X, Y) ((X) == (Y))

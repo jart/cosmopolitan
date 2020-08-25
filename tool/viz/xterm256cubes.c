@@ -20,104 +20,16 @@
 #include "libc/assert.h"
 #include "libc/stdio/stdio.h"
 
-#define DueToGnomeTerminal        1
-#define DueToLiteralXterm         1
-#define DueToKittyWithPragmataPro 1
-
-#if 0
-static void rgb2hsv(T r, T g, T b, T *out_h, T *out_s, T *out_v) {
-  T c, h, s, v, min, max;
-  h = NAN;
-  s = 0;
-  v = 0;
-  min = MIN(MIN(r, g), b);
-  max = MAX(MAX(r, g), b);
-  if (max > C(0.0)) {
-    v = max;
-    c = max - min;
-    s = c / v;
-    if (c > C(0.00001)) {
-      if (r >= max) {
-        h = (g - b) / c;
-      } else if (g >= max) {
-        h = C(2.0) + (b - r) / c;
-      } else {
-        h = C(4.0) + (r - g) / c;
-      }
-      h *= C(60.0);
-      if (h < C(0.0)) {
-        h += C(360.0);
-      }
-    }
-  }
-  *out_h = h;
-  *out_s = s;
-  *out_v = v;
-}
-static void hsv2rgb(T h, T s, T v, T *out_r, T *out_g, T *out_b) {
-  long i;
-  T r, g, b, hh, p, q, t, ff;
-  if (s <= C(0.0)) {
-    r = v;
-    g = v;
-    b = v;
-  } else {
-    hh = h;
-    if (h >= C(360.0)) hh = 0;
-    hh /= C(60.0);
-    i = (long)hh;
-    ff = hh - i;
-    p = v * (C(1.0) - s);
-    q = v * (C(1.0) - (s * ff));
-    t = v * (C(1.0) - (s * (C(1.0) - ff)));
-    switch (i) {
-      case 0:
-        r = v;
-        g = t;
-        b = p;
-        break;
-      case 1:
-        r = q;
-        g = v;
-        b = p;
-        break;
-      case 2:
-        r = p;
-        g = v;
-        b = t;
-        break;
-      case 3:
-        r = p;
-        g = q;
-        b = v;
-        break;
-      case 4:
-        r = t;
-        g = p;
-        b = v;
-        break;
-      case 5:
-      default:
-        r = v;
-        g = p;
-        b = q;
-        break;
-    }
-  }
-  *out_r = r;
-  *out_g = g;
-  *out_b = b;
-}
-#endif
-
 #define DIST(X, Y)   ((X) - (Y))
 #define SQR(X)       ((X) * (X))
 #define SUM(X, Y, Z) ((X) + (Y) + (Z))
 
 static const uint8_t kXtermCube[] = {0, 0137, 0207, 0257, 0327, 0377};
+
 static int uncube(int x) {
   return x < 48 ? 0 : x < 115 ? 1 : (x - 35) / 40;
 }
+
 static int rgb2xterm256(int r, int g, int b) {
   unsigned av, ir, ig, ib, il, qr, qg, qb, ql;
   av = (r + g + b) / 3;

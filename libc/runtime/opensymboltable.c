@@ -21,6 +21,7 @@
 #include "libc/calls/calls.h"
 #include "libc/elf/def.h"
 #include "libc/elf/elf.h"
+#include "libc/runtime/carsort.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.h"
 #include "libc/sysv/consts/map.h"
@@ -32,18 +33,19 @@
  * @return object freeable with closesymboltable(), or NULL w/ errno
  */
 struct SymbolTable *opensymboltable(const char *filename) {
-  struct SymbolTable *t = MAP_FAILED;
-  const Elf64_Sym *symtab;
+  unsigned i, j;
+  struct SymbolTable *t;
+  const Elf64_Sym *symtab, *sym;
+  t = MAP_FAILED;
   if (filename && (t = mapanon(BIGPAGESIZE)) != MAP_FAILED &&
       mapelfread(filename, &t->mf) &&
       (t->name_base = getelfstringtable(t->elf, t->elfsize)) != NULL &&
       (symtab = getelfsymboltable(t->elf, t->elfsize, &t->count)) &&
       sizeof(struct SymbolTable) + sizeof(struct Symbol) * t->count <
           (t->scratch = BIGPAGESIZE)) {
-    unsigned j = 0;
     getelfvirtualaddressrange(t->elf, t->elfsize, &t->addr_base, &t->addr_end);
-    for (unsigned i = 0; i < t->count; ++i) {
-      const Elf64_Sym *sym = &symtab[i];
+    for (j = i = 0; i < t->count; ++i) {
+      sym = &symtab[i];
       if (iselfsymbolcontent(sym) &&
           (sym->st_value >= t->addr_base && sym->st_value <= t->addr_end)) {
         t->symbols[j].addr_rva = (unsigned)(sym->st_value - t->addr_base);
@@ -52,7 +54,7 @@ struct SymbolTable *opensymboltable(const char *filename) {
       }
     }
     t->count = j;
-    heapsortcar((int32_t(*)[2])t->symbols, t->count);
+    carsort1000(t->count, (void *)t->symbols);
   } else {
     closesymboltable(&t);
   }

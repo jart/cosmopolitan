@@ -13,7 +13,7 @@ nodiscard int mkostempsm(char *, int, unsigned, int);
 compatfn char *mktemp(char *);
 
 int mkostempsmi(char *, int, unsigned, uint64_t *, int,
-                int openit(const char *, int, ...)) hidden nodiscard;
+                int (*)(const char *, int, ...)) hidden nodiscard;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

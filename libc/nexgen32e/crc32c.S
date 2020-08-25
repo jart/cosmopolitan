@@ -36,11 +36,9 @@ crc32c:	.quad	0
 
 	.init.start 300,_init_crc32c
 	ezlea	crc32c$pure,ax
-#if !IsTiny()
 	ezlea	crc32c$sse42,cx
 	testb	X86_HAVE(SSE4_2)+kCpuids(%rip)
 	cmovnz	%rcx,%rax
-#endif
 	stosq
 	.init.end 300,_init_crc32c
 	.source	__FILE__

@@ -25,7 +25,7 @@
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"
-#include "libc/runtime/mappings.h"
+#include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/mremap.h"

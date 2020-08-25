@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_TESTLIB_H_
 #define COSMOPOLITAN_LIBC_TESTLIB_H_
-#include "libc/bits/bits.h"
+#include "libc/bits/weaken.h"
 #include "libc/runtime/gc.h"
 #include "libc/testlib/ugly.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -15,7 +15,7 @@ COSMOPOLITAN_C_START_
  * Test cases are guaranteed by the linker to be run in order, sorted by
  * the (SUITE, NAME) tuple passed here.
  */
-#define TEST(SUITE, NAME) __TEST_PROTOTYPE(SUITE, NAME, __TEST_ARRAY)
+#define TEST(SUITE, NAME) __TEST_PROTOTYPE(SUITE, NAME, __TEST_ARRAY, )
 
 /**
  * Declares function that globally modifies program state.
@@ -48,7 +48,7 @@ COSMOPOLITAN_C_START_
  */
 #define BENCH(SUITE, NAME)       \
   STATIC_YOINK("__bench_start"); \
-  __TEST_PROTOTYPE(SUITE, NAME, __BENCH_ARRAY)
+  __TEST_PROTOTYPE(SUITE, NAME, __BENCH_ARRAY, optimizespeed)
 
 #define ASSERT_GE(C, X) _TEST2("ASSERT_GE", C, >=, (X), #C, " ≥ ", #X, 1)
 #define ASSERT_GT(C, X) _TEST2("ASSERT_GT", C, >, (X), #C, " > ", #X, 1)
@@ -82,9 +82,11 @@ COSMOPOLITAN_C_START_
 #define ASSERT_EQ(WANT, GOT, ...)                                             \
   __TEST_EQ(assert, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, GOT, \
             __VA_ARGS__)
+
 #define EXPECT_EQ(WANT, GOT, ...)                                             \
   __TEST_EQ(expect, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, GOT, \
             __VA_ARGS__)
+
 #define __TEST_EQ(KIND, FILE, LINE, FUNC, WANTCODE, GOTCODE, WANT, GOT, ...) \
   ({                                                                         \
     autotype(GOT) Got = _I(GOT);                                             \
@@ -272,6 +274,7 @@ void *tunbing(const char16_t *)
 void *tunbinga(size_t, const char16_t *)
     paramsnonnull() returnsnonnull returnspointerwithnoaliases nodiscard
     attributeallocalign((1));
+void testlib_clearxmmregisters(void);
 
 #define tgc(TMEM)                            \
   ({                                         \
@@ -533,8 +536,8 @@ forceinline void assertStartsWith(FILIFU_ARGS size_t cw, const char *prefix,
   if (testlib_startswith(cw, s, prefix)) return;
   if (g_testlib_shoulddebugbreak) DebugBreak();
   testlib_showerror(file, line, func, "assertStartsWith", "≠", gotcode,
-                    testlib_formatstr(1, s, -1),
-                    testlib_formatstr(1, prefix, -1));
+                    testlib_formatstr(1, prefix, -1),
+                    testlib_formatstr(1, s, -1));
   testlib_onfail2(isfatal);
 }
 

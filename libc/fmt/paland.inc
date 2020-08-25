@@ -35,20 +35,6 @@ info@paland.com\"");
 #include "libc/str/internal.h"
 #include "libc/sysv/errfuns.h"
 
-/* 'ntoa' conversion buffer size, this must be big enough to hold one
-   converted numeric number including padded zeros (dynamically created
-   on stack) default: 64 byte */
-#ifndef PRINTF_NTOA_BUFFER_SIZE
-#define PRINTF_NTOA_BUFFER_SIZE 64
-#endif
-
-/* 'ftoa' conversion buffer size, this must be big enough to hold one
-   converted float number including padded zeros (dynamically created on
-   stack) default: 32 byte */
-#ifndef PRINTF_FTOA_BUFFER_SIZE
-#define PRINTF_FTOA_BUFFER_SIZE 64
-#endif
-
 #define FLAGS_ZEROPAD   (1U << 0U)
 #define FLAGS_LEFT      (1U << 1U)
 #define FLAGS_PLUS      (1U << 2U)

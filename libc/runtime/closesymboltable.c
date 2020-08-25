@@ -17,21 +17,23 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/runtime/ezmap.h"
 #include "libc/runtime/symbols.h"
-#include "libc/calls/calls.h"
 
 /**
  * Frees symbol table.
  * @return 0 on success or -1 on system error
  */
 int closesymboltable(struct SymbolTable **table) {
-  int rc = 0;
-  if (*table && (intptr_t)*table != (intptr_t)-1) {
-    struct SymbolTable *t = *table;
+  int rc;
+  struct SymbolTable *t;
+  rc = 0;
+  if (*table && *table != MAP_FAILED) {
+    t = *table;
     *table = NULL;
-    if (unmapfile(&t->mf) == -1) rc = -1;
-    if (munmap(t, t->scratch) == -1) rc = -1;
+    rc |= unmapfile(&t->mf);
+    rc |= munmap(t, t->scratch);
   }
   return rc;
 }

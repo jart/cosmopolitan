@@ -25,5 +25,10 @@
  * @param prefix is also NUL-terminated
  */
 bool(startswith)(const char *s, const char *prefix) {
-  return strncmp(s, prefix, strlen(prefix)) == 0;
+  if (s == prefix) return true;
+  for (;;) {
+    if (!*prefix) return true;
+    if (!*s) return false;
+    if (*s++ != *prefix++) return false;
+  }
 }

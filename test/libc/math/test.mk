@@ -5,11 +5,13 @@ PKGS += TEST_LIBC_MATH
 
 TEST_LIBC_MATH_SRCS := $(wildcard test/libc/math/*.c)
 TEST_LIBC_MATH_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_MATH_SRCS))
-TEST_LIBC_MATH_COMS = $(TEST_LIBC_MATH_OBJS:%.o=%.com)
 
 TEST_LIBC_MATH_OBJS =					\
 	$(TEST_LIBC_MATH_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_MATH_SRCS:%.c=o/$(MODE)/%.o)
+
+TEST_LIBC_MATH_COMS =					\
+	$(TEST_LIBC_MATH_SRCS:%.c=o/$(MODE)/%.com)
 
 TEST_LIBC_MATH_BINS =					\
 	$(TEST_LIBC_MATH_COMS)				\
@@ -23,7 +25,7 @@ TEST_LIBC_MATH_CHECKS =					\
 TEST_LIBC_MATH_DIRECTDEPS =				\
 	LIBC_CALLS_HEFTY				\
 	LIBC_FMT					\
-	LIBC_TINYMATH					\
+	LIBC_MATH					\
 	LIBC_MEM					\
 	LIBC_RUNTIME					\
 	LIBC_STUBS					\

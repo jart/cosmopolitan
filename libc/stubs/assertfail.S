@@ -28,6 +28,7 @@
 /	@mode	long,legacy,real
 /	@noreturn
 __assert_fail:
+	int3
 	push	%bp
 	mov	%sp,%bp
 	rlcall	panic

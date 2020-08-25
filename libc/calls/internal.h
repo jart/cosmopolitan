@@ -19,12 +19,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #ifndef COSMOPOLITAN_LIBC_CALLS_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_INTERNAL_H_
+#ifndef __STRICT_ANSI__
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/limits.h"
 #include "libc/macros.h"
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/struct/startupinfo.h"
+#include "libc/nt/struct/systeminfo.h"
 #include "libc/runtime/runtime.h"
 
 #define kSigactionMinRva 8 /* >SIG_{ERR,DFL,IGN,...} */
@@ -36,6 +38,7 @@ COSMOPOLITAN_C_START_
 
 struct NtContext;
 struct NtWin32FileAttributeData;
+struct ZiposHandle;
 struct __darwin_siginfo;
 struct __darwin_ucontext;
 struct itimerval;
@@ -45,7 +48,7 @@ struct sigset;
 struct sysinfo;
 struct timeval;
 struct timezone;
-struct ZiposHandle;
+struct utimbuf;
 
 struct IoctlPtmGet {
   int theduxfd;
@@ -62,7 +65,8 @@ struct IoctlPtmGet {
  * and helps us abstract peculiarities like close() vs. closesocket().
  */
 struct Fds {
-  size_t f, n;
+  size_t f;  // length
+  size_t n;  // capacity
   struct Fd {
     int64_t handle;
     int64_t extra;
@@ -132,6 +136,7 @@ i32 __dup3$sysv(i32, i32, i32) hidden;
 i32 __fstat$sysv(i32, struct stat *) hidden;
 i32 __fstatat$sysv(i32, const char *, struct stat *, i32) hidden;
 i32 __pipe2$sysv(i32[hasatleast 2], u32) hidden;
+i32 __utimensat$sysv(i32, const char *, const struct timespec *, i32) hidden;
 i32 chdir$sysv(const char *) hidden;
 i32 clock_gettime$sysv(i32, struct timespec *) hidden;
 i32 close$sysv(i32) hidden;
@@ -154,6 +159,8 @@ i32 fstat$sysv(i32, struct stat *) hidden;
 i32 fstatat$sysv(i32, const char *, struct stat *, i32) hidden;
 i32 fsync$sysv(i32) hidden;
 i32 ftruncate$sysv(i32, i64) hidden;
+i32 futimes$sysv(i32, const struct timeval *) hidden;
+i32 futimesat$sysv(i32, const char *, const struct timeval *) hidden;
 i32 getdents(i32, char *, u32) hidden;
 i32 getppid$sysv(void) hidden;
 i32 getpriority$sysv(i32, u32) hidden;
@@ -164,6 +171,7 @@ i32 ioctl$sysv(i32, u64, void *) hidden;
 i32 kill$sysv(i32, i32, i32) hidden;
 i32 linkat$sysv(i32, const char *, i32, const char *, i32) hidden;
 i32 lseek$sysv(i32, i64, i32) hidden;
+i32 lutimes$sysv(const char *, const struct timeval *) hidden;
 i32 madvise$sysv(void *, size_t, i32) hidden;
 i32 memfd_create$sysv(const char *, u32) hidden;
 i32 mkdirat$sysv(i32, const char *, u32) hidden;
@@ -194,6 +202,8 @@ i32 sysinfo$sysv(struct sysinfo *) hidden;
 i32 truncate$sysv(const char *, u64) hidden;
 i32 uname$sysv(char *) hidden;
 i32 unlinkat$sysv(i32, const char *, i32) hidden;
+i32 utime$sysv(const char *, const struct utimbuf *) hidden;
+i32 utimensat$sysv(i32, const char *, const struct timespec *, i32) hidden;
 i32 utimes$sysv(const char *, const struct timeval *) hidden;
 i32 wait4$sysv(i32, i32 *, i32, struct rusage *) hidden;
 i64 copy_file_range$sysv(i32, long *, i32, long *, u64, u32) hidden;
@@ -207,12 +217,12 @@ i64 sendfile$sysv(i32, i32, i64 *, u64) hidden;
 i64 splice$sysv(i32, i64 *, i32, i64 *, u64, u32) hidden;
 i64 vmsplice$sysv(i32, const struct iovec *, i64, u32) hidden;
 i64 write$sysv(i32, const void *, u64) hidden;
+int setresgid$sysv(uint32_t, uint32_t, uint32_t) hidden;
+int setresuid$sysv(uint32_t, uint32_t, uint32_t) hidden;
 u32 getgid$sysv(void) hidden;
 u32 getpid$sysv(void) hidden;
 u32 gettid$sysv(void) hidden;
 u32 getuid$sysv(void) hidden;
-int setresuid$sysv(uint32_t, uint32_t, uint32_t) hidden;
-int setresgid$sysv(uint32_t, uint32_t, uint32_t) hidden;
 void *mmap$sysv(void *, u64, u32, u32, i64, i64) hidden;
 void *mremap$sysv(void *, u64, u64, i32, void *) hidden;
 
@@ -223,13 +233,13 @@ void *mremap$sysv(void *, u64, u64, i32, void *) hidden;
 int __getpid(void) hidden;
 void __onfork(void) hidden;
 bool32 __sigenter(i32, struct siginfo *, struct ucontext *) hidden;
-i32 __mprotect(void *, u64, i32) privileged;
 i32 fixupnewfd$sysv(i32, i32) hidden;
 i32 tunefd$sysv(i32, i32, i32, i32) hidden;
 u32 fprot2nt(i32, i32) hidden;
 u32 prot2nt(i32, i32) privileged;
 void __restore_rt() hidden;
 void __sigenter$xnu(void *, i32, i32, void *, void *) hidden noreturn;
+int utimensat$xnu(int, const char *, const struct timespec *, int) hidden;
 void stat2linux(void *) hidden;
 void xnutrampoline(void *, i32, i32, const struct __darwin_siginfo *,
                    const struct __darwin_ucontext *) hidden noreturn;
@@ -271,6 +281,8 @@ int wait4$nt(int, int *, int, struct rusage *) hidden;
 i64 lseek$nt(int, i64, int) hidden;
 ssize_t read$nt(struct Fd *, const struct iovec *, size_t, ssize_t) hidden;
 ssize_t write$nt(struct Fd *, const struct iovec *, size_t, ssize_t) hidden;
+int utimensat$nt(int, const char *, const struct timespec *, int) hidden;
+int getrusage$nt(int, struct rusage *) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » windows nt » support                           ─╬─│┼
@@ -317,4 +329,5 @@ int __mkntpath(const char *, unsigned, char16_t[hasatleast PATH_MAX - 16])
 #undef u64
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* !ANSI */
 #endif /* COSMOPOLITAN_LIBC_CALLS_INTERNAL_H_ */

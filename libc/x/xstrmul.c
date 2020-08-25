@@ -17,7 +17,6 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/conv/sizemultiply.h"
 #include "libc/log/check.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"

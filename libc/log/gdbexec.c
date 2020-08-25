@@ -22,6 +22,7 @@
 #include "libc/calls/hefty/spawn.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/gdb.h"
+#include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.h"
 
@@ -34,9 +35,7 @@ int(gdbexec)(const char *cmd) {
   intptr_t continuetoaddr;
   const char *se, *elf, *gdb;
   char pidstr[11], breakcmd[40];
-  if (!(gdb = commandv(firstnonnull(getenv("GDB"), "gdb")))) {
-    return -1;
-  }
+  if (!(gdb = GetGdbPath())) return -1;
   snprintf(pidstr, sizeof(pidstr), "%u", getpid());
   if ((elf = finddebugbinary())) {
     se = "-se";

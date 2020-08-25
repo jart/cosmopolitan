@@ -252,6 +252,10 @@ long lround(double);
 long lroundf(float);
 long lroundl(long double);
 
+int ilogbf(float);
+int ilogb(double);
+int ilogbl(long double);
+
 long long llrint(double);
 long long llrintf(float);
 long long llrintl(long double);
@@ -295,13 +299,16 @@ int __fpclassifyl(long double);
 #define fldlg2() __X87_CONST(fldlg2, M_LOG10_2)
 #define fldln2() __X87_CONST(fldln2, M_LN2)
 #define fldl2e() __X87_CONST(fldl2e, M_LOG2E)
-#define __X87_CONST(OP, VALUE)      \
-  ({                                \
-    long double St0##OP;            \
-    asm(#OP : "=t"(St0##OP));       \
-    /* assume(st0##OP == VALUE); */ \
-    St0##OP;                        \
+#ifdef __x86__
+#define __X87_CONST(OP, VALUE) \
+  ({                           \
+    long double St0##OP;       \
+    asm(#OP : "=t"(St0##OP));  \
+    St0##OP;                   \
   })
+#else
+#define __X87_CONST(OP, VALUE) VALUE
+#endif
 
 #define fnstsw() __X87_FPU_STATUS("fnstsw")
 #define fstsw()  __X87_FPU_STATUS("fstsw")

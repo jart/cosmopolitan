@@ -1,7 +1,9 @@
+#include "libc/bits/initializer.h"
 #include "libc/calls/calls.h"
 #include "libc/macros.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/nexgen32e.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
@@ -871,9 +873,9 @@ const int32_t				offset;
 		*/
 		m1 = (rulep->r_mon + 9) % 12 + 1;
 		yy0 = (rulep->r_mon <= 2) ? (year - 1) : year;
-		yy1 = yy0 / 100;
-		yy2 = yy0 % 100;
-		dow = ((26 * m1 - 2) / 10 +
+		yy1 = div100int64(yy0);
+		yy2 = rem100int64(yy0);
+		dow = (div10int64(26 * m1 - 2) +
 			1 + yy2 + yy2 / 4 + yy1 / 4 - 2 * yy1) % 7;
 		if (dow < 0)
 			dow += DAYSPERWEEK;
@@ -1440,7 +1442,7 @@ pureconst static int
 leaps_thru_end_of(y)
 register const int	y;
 {
-	return (y >= 0) ? (y / 4 - y / 100 + y / 400) :
+	return (y >= 0) ? (y / 4 - div100int64(y) + y / 400) :
 		-(leaps_thru_end_of(-(y + 1)) + 1);
 }
 

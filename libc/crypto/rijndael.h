@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CRYPTO_RIJNDAEL_H_
 #define COSMOPOLITAN_LIBC_CRYPTO_RIJNDAEL_H_
+#ifndef __STRICT_ANSI__
 #include "libc/str/str.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -46,11 +47,12 @@ aes_block_t unrijndael(uint32_t, aes_block_t, const struct Rijndael *);
 │ cosmopolitan § cryptography » implementation details                     ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-aligned(64) extern const uint8_t kAesSbox[256];
-aligned(64) extern const uint8_t kAesSboxInverse[256];
+extern const uint8_t kAesSbox[256] aligned(64);
+extern const uint8_t kAesSboxInverse[256] aligned(64);
 
 aes_block_t InvMixColumns(aes_block_t) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* !ANSI */
 #endif /* COSMOPOLITAN_LIBC_CRYPTO_RIJNDAEL_H_ */

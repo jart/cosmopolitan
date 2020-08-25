@@ -32,6 +32,7 @@
 #include "dsp/mpeg/idct.h"
 #include "dsp/mpeg/mpeg.h"
 #include "dsp/mpeg/video.h"
+#include "libc/bits/initializer.h"
 #include "libc/conv/conv.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"
@@ -454,18 +455,6 @@ long plmpegdecode_latency_;
 
 static plm_vlc_t *PLM_VIDEO_MACROBLOCK_TYPE[4];
 static plm_vlc_t *PLM_VIDEO_DCT_SIZE[3];
-
-static textstartup void __init_mpeg1(void) {
-  PLM_VIDEO_MACROBLOCK_TYPE[0] = NULL;
-  PLM_VIDEO_MACROBLOCK_TYPE[1] = PLM_VIDEO_MACROBLOCK_TYPE_INTRA;
-  PLM_VIDEO_MACROBLOCK_TYPE[2] = PLM_VIDEO_MACROBLOCK_TYPE_PREDICTIVE,
-  PLM_VIDEO_MACROBLOCK_TYPE[3] = PLM_VIDEO_MACROBLOCK_TYPE_B;
-  PLM_VIDEO_DCT_SIZE[0] = PLM_VIDEO_DCT_SIZE_LUMINANCE;
-  PLM_VIDEO_DCT_SIZE[1] = PLM_VIDEO_DCT_SIZE_CHROMINANCE;
-  PLM_VIDEO_DCT_SIZE[2] = PLM_VIDEO_DCT_SIZE_CHROMINANCE;
-}
-
-INITIALIZER(300, _init_mpeg1, __init_mpeg1());
 
 #define plm_clamp(n) MIN(255, MAX(0, n))
 
@@ -1113,3 +1102,15 @@ plm_video_t *plm_video_create_with_buffer(plm_buffer_t *buffer,
   }
   return self;
 }
+
+static textstartup void plm_video_init(void) {
+  PLM_VIDEO_MACROBLOCK_TYPE[0] = NULL;
+  PLM_VIDEO_MACROBLOCK_TYPE[1] = PLM_VIDEO_MACROBLOCK_TYPE_INTRA;
+  PLM_VIDEO_MACROBLOCK_TYPE[2] = PLM_VIDEO_MACROBLOCK_TYPE_PREDICTIVE,
+  PLM_VIDEO_MACROBLOCK_TYPE[3] = PLM_VIDEO_MACROBLOCK_TYPE_B;
+  PLM_VIDEO_DCT_SIZE[0] = PLM_VIDEO_DCT_SIZE_LUMINANCE;
+  PLM_VIDEO_DCT_SIZE[1] = PLM_VIDEO_DCT_SIZE_CHROMINANCE;
+  PLM_VIDEO_DCT_SIZE[2] = PLM_VIDEO_DCT_SIZE_CHROMINANCE;
+}
+
+const void *const plm_video_init_ctor[] initarray = {plm_video_init};

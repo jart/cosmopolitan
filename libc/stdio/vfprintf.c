@@ -19,28 +19,23 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
-#include "libc/stdio/fputc.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/errfuns.h"
 
 struct state {
-  FILE *const f;
-  unsigned toto;
+  FILE *f;
+  int n;
 };
 
 static int vfprintfputchar(int c, struct state *st) {
-  if (st->toto <= INT_MAX) {
-    st->toto++;
-    return __fputc(c, st->f);
-  } else {
-    return eoverflow();
-  }
+  st->n++;
+  return fputc(c, st->f);
 }
 
 int(vfprintf)(FILE *f, const char *fmt, va_list va) {
   struct state st[1] = {{f, 0}};
   if (palandprintf(vfprintfputchar, st, fmt, va) != -1) {
-    return st->toto;
+    return st->n;
   } else {
     return -1;
   }

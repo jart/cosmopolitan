@@ -17,6 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/elf/def.h"
 #include "libc/elf/elf.h"
 #include "tool/decode/lib/elfidnames.h"
 

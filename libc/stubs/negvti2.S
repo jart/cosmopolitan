@@ -18,9 +18,9 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.align	16
-.text.likely
 .source	__FILE__
+.privileged
+.alignfunc
 
 /	Returns -𝑥, aborting on overflow.
 /
@@ -31,11 +31,14 @@ __negvti2:
 	mov	%rdi,%rax
 	mov	%rsi,%rdx
 	neg	%rax
+	not	%rdx
+	cmc
 	adc	$0,%rdx
-/	TODO(jart): Make sure this is correct.
-	jo	1f
-	neg	%rdx
 	jo	1f
 	ret
-1:	jmp	__on_arithmetic_overflow
+1:	push	%rbp
+	mov	%rsp,%rbp
+	call	__on_arithmetic_overflow
+	pop	%rbp
+	ret
 	.endfn	__negvti2,globl

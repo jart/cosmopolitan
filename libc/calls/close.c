@@ -17,10 +17,9 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/dce.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.h"
@@ -33,7 +32,7 @@
  */
 int close(int fd) {
   int rc;
-  if (fd == -1) return 0;
+  if (fd == -1) return einval();
   if (isfdkind(fd, kFdZip)) {
     rc = weaken(__zipos_close)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle);

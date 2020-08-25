@@ -35,23 +35,28 @@
  * @error ERANGE, EINVAL
  */
 char *(getcwd)(char *buf, size_t size) {
-  buf[0] = '\0';
-  if (!IsWindows()) {
-    int olderr = errno;
-    if (getcwd$sysv(buf, size) != NULL) {
-      return buf;
-    } else if (IsXnu() && errno == ENOSYS) {
-      if (size >= 2) {
-        buf[0] = '.'; /* XXX: could put forth more effort */
-        buf[1] = '\0';
-        errno = olderr;
+  if (buf) {
+    buf[0] = '\0';
+    if (!IsWindows()) {
+      int olderr = errno;
+      if (getcwd$sysv(buf, size) != NULL) {
         return buf;
-      } else {
-        erange();
+      } else if (IsXnu() && errno == ENOSYS) {
+        if (size >= 2) {
+          buf[0] = '.'; /* XXX: could put forth more effort */
+          buf[1] = '\0';
+          errno = olderr;
+          return buf;
+        } else {
+          erange();
+        }
       }
+      return NULL;
+    } else {
+      return getcwd$nt(buf, size);
     }
-    return NULL;
   } else {
-    return getcwd$nt(buf, size);
+    efault();
+    return NULL;
   }
 }

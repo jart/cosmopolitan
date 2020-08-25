@@ -38,9 +38,9 @@ c2rangr:push	%rbp
 	ret
 1:	fldpi
 	fadd	%st
-	fxch	%st(1)
+	fxch
 2:	fprem1
-	fnstsw	%ax
+	fnstsw
 	test	$FPU_C2>>8,%ah
 	jnz	2b
 	fstp	%st(1)

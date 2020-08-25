@@ -30,7 +30,6 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/runtime/gc.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
@@ -44,7 +43,7 @@
  * @see Magikarp
  */
 
-#define M      14
+#define M      15
 #define SQR(X) ((X) * (X))
 
 struct SamplingSolution {
@@ -148,9 +147,9 @@ static int Sharpen(int ax, int bx, int cx) {
 
 static void GyaradosImpl(long dyw, long dxw, int dst[dyw][dxw], long syw,
                          long sxw, const int src[syw][sxw], long dyn, long dxn,
-                         long syn, long sxn, int tmp0[restrict dyn][sxn],
-                         int tmp1[restrict dyn][sxn],
-                         int tmp2[restrict dyn][dxn], long yfn, long xfn,
+                         long syn, long sxn, short tmp0[restrict dyn][sxn],
+                         short tmp1[restrict dyn][sxn],
+                         short tmp2[restrict dyn][dxn], long yfn, long xfn,
                          const short fyi[dyn][yfn], const short fyw[dyn][yfn],
                          const short fxi[dxn][xfn], const short fxw[dxn][xfn],
                          bool sharpen) {
@@ -165,7 +164,6 @@ static void GyaradosImpl(long dyw, long dxw, int dst[dyw][dxw], long syw,
     }
   }
   for (dy = 0; dy < dyn; ++dy) {
-    /* TODO: pmulhrsw() would probably make this much faster */
     for (sx = 0; sx < sxn; ++sx) {
       tmp1[dy][sx] = sharpen ? Sharpen(tmp0[MIN(dyn - 1, MAX(0, dy - 1))][sx],
                                        tmp0[dy][sx],
@@ -218,9 +216,9 @@ void *Gyarados(long dyw, long dxw, int dst[dyw][dxw], long syw, long sxw,
       CHECK_LE(syn, 0x7fff);
       CHECK_LE(sxn, 0x7fff);
       GyaradosImpl(dyw, dxw, dst, syw, sxw, src, dyn, dxn, syn, sxn,
-                   gc(xmemalign(64, sizeof(int) * dyn * sxn)),
-                   gc(xmemalign(64, sizeof(int) * dyn * sxn)),
-                   gc(xmemalign(64, sizeof(int) * dyn * dxn)), cy->s, cx->s,
+                   gc(xmemalign(64, sizeof(short) * dyn * sxn)),
+                   gc(xmemalign(64, sizeof(short) * dyn * sxn)),
+                   gc(xmemalign(64, sizeof(short) * dyn * dxn)), cy->s, cx->s,
                    cy->indices, cy->weights, cx->indices, cx->weights, sharpen);
     } else {
       ZeroMatrix(dyw, dxw, dst, dyn, dxn);

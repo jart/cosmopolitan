@@ -8,11 +8,11 @@ int tpdecode(const char *, wint_t *) paramsnonnull((1)) libcesque;
 #ifndef __STRICT_ANSI__
 #define tpdecode(S, OUT) __tpdecode(S, OUT)
 forceinline int __tpdecode(const char *s, wint_t *out) {
+  int ax;
   if (0 <= *s && *s <= 0x7f) {
     *out = *s;
     return 1;
   }
-  int ax;
   asm("call\ttpdecode"
       : "=a"(ax), "=m"(*(char(*)[6])s)
       : "D"(s), "S"(out)

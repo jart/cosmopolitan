@@ -30,7 +30,9 @@
 #include "libc/log/log.h"
 #include "libc/macros.h"
 #include "libc/mem/alloca.h"
+#include "libc/nexgen32e/crc32.h"
 #include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/struct/imageauxsymbolex.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.h"
@@ -264,14 +266,20 @@ void EmitZip(struct ElfWriter *elf, const char *name, size_t namesize,
 void ProcessFile(struct ElfWriter *elf, const char *path) {
   int fd;
   void *map;
+  size_t pathlen;
   struct stat st;
+  pathlen = strlen(path);
   CHECK_NE(-1, (fd = open(path, O_RDONLY)));
   CHECK_NE(-1, fstat(fd, &st));
-  CHECK_NE(MAP_FAILED,
-           (map = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0)));
-  EmitZip(elf, path, strlen(path), map, &st);
+  if (st.st_size) {
+    CHECK_NE(MAP_FAILED,
+             (map = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0)));
+    CHECK_NE(-1, close(fd));
+  } else {
+    map = NULL;
+  }
+  EmitZip(elf, path, pathlen, map, &st);
   CHECK_NE(-1, munmap(map, st.st_size));
-  CHECK_NE(-1, close(fd));
 }
 
 void PullEndOfCentralDirectoryIntoLinkage(struct ElfWriter *elf) {

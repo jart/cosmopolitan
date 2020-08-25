@@ -18,9 +18,10 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/phaddw.h"
+#include "libc/str/str.h"
 
 /**
- * Adds adjacent signed 16-bit integers.
+ * Adds adjacent 16-bit integers.
  *
  * @param 𝑎 [w/o] receives reduced 𝑏 and 𝑐 concatenated
  * @param 𝑏 [r/o] supplies four pairs of shorts
@@ -28,8 +29,8 @@
  * @note goes fast w/ ssse3 (intel c. 2004, amd c. 2011)
  * @mayalias
  */
-void(phaddw)(short a[8], const short b[8], const short c[8]) {
-  short t[8];
+void(phaddw)(int16_t a[8], const int16_t b[8], const int16_t c[8]) {
+  int16_t t[8];
   t[0] = b[0] + b[1];
   t[1] = b[2] + b[3];
   t[2] = b[4] + b[5];

@@ -1,20 +1,21 @@
 #ifndef COSMOPOLITAN_LIBC_BITS_SAFEMACROS_H_
 #define COSMOPOLITAN_LIBC_BITS_SAFEMACROS_H_
+#ifndef __STRICT_ANSI__
 #include "libc/limits.h"
 #include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-long min(long x, long y);
-long max(long x, long y);
-long roundup(long w, long k);
-long rounddown(long w, long k);
-bool isempty(const char *s);
-const char *nulltoempty(const char *s);
-const char *emptytonull(const char *s);
-const char *firstnonnull(const char *a, const char *b);
-uint64_t(unsignedsubtract)(uint64_t x, uint64_t y) pureconst;
+long min(long, long);
+long max(long, long);
+long roundup(long, long);
+long rounddown(long, long);
+bool isempty(const char *);
+const char *nulltoempty(const char *);
+const char *emptytonull(const char *);
+const char *firstnonnull(const char *, const char *);
+uint64_t(unsignedsubtract)(uint64_t, uint64_t) pureconst;
 
 #if !defined(__STRICT_ANSI__) && defined(__GNUC__)
 
@@ -83,4 +84,5 @@ uint64_t(unsignedsubtract)(uint64_t x, uint64_t y) pureconst;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* !ANSI */
 #endif /* COSMOPOLITAN_LIBC_BITS_SAFEMACROS_H_ */

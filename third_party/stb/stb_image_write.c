@@ -126,6 +126,7 @@
 #include "libc/macros.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/nexgen32e.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/stb/stb_image_write.h"
@@ -722,10 +723,10 @@ static int stbi_write_jpg_core(stbi__write_context *s, int width, int height,
   quality = quality < 50 ? 5000 / quality : 200 - quality * 2;
 
   for (i = 0; i < 64; ++i) {
-    int uvti, yti = (YQT[i] * quality + 50) / 100;
+    int uvti, yti = div100int64((YQT[i] * quality + 50));
     YTable[stbiw__jpg_ZigZag[i]] =
         (unsigned char)(yti < 1 ? 1 : yti > 255 ? 255 : yti);
-    uvti = (UVQT[i] * quality + 50) / 100;
+    uvti = div100int64(UVQT[i] * quality + 50);
     UVTable[stbiw__jpg_ZigZag[i]] =
         (unsigned char)(uvti < 1 ? 1 : uvti > 255 ? 255 : uvti);
   }

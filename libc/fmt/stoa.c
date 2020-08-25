@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.h"
+#include "libc/bits/weaken.h"
 #include "libc/escape/escape.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/paland.inc"
@@ -176,6 +177,7 @@ int stoa(int out(int, void *), void *arg, void *data, unsigned long flags,
   if (w <= width && (flags & FLAGS_LEFT)) {
     if (spacepad(out, arg, width - w) == -1) return -1;
   }
+
   if (!(flags & FLAGS_NOQUOTE) && (flags & FLAGS_REPR)) {
     if (out(qchar, arg) == -1) return -1;
   }

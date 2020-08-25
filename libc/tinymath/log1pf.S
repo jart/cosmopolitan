@@ -20,7 +20,12 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-log1pf:	push	%rbp
+/	Returns log(𝟷+𝑥).
+/
+/	@param	𝑥 is float scalar in low quarter of %xmm0
+/	@return	float scalar in low quarter of %xmm0
+tinymath_log1pf:
+	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	push	%rax
@@ -46,12 +51,11 @@ log1pf:	push	%rbp
 	fxch	%st(1)
 	fyl2x
 	jmp	1b
-	.endfn	log1pf,globl
+	.endfn	tinymath_log1pf,globl
+	.alias	tinymath_log1pf,log1pf
 
-	.section .rodata.cst16,"aM",@progbits,16
-	.align	16
+	.rodata.cst16
 .LC16:	.long	205731576
 	.long	2515933592
 	.long	16381
 	.long	0
-	.previous

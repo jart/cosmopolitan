@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_CHECK_H_
 #define COSMOPOLITAN_LIBC_LOG_CHECK_H_
 #include "libc/dce.h"
+#include "libc/macros.h"
 
 /**
  * @fileoverview Modern assertions, courtesy of Elgoog.
@@ -19,12 +20,12 @@ COSMOPOLITAN_C_START_
 #define CHECK_NOTNULL(X, ...) __CHK(ne, !=, NULL, "NULL", X, #X, "" __VA_ARGS__)
 
 #define DCHECK(X, ...)       __DCHK(eq, ==, true, "true", !!(X), #X, "" __VA_ARGS__)
-#define DCHECK_EQ(Y, X, ...) __DCHK(eq, ==, Y, #X, X, #Y, "" __VA_ARGS__)
-#define DCHECK_NE(Y, X, ...) __DCHK(ne, !=, Y, #X, X, #Y, "" __VA_ARGS__)
-#define DCHECK_LE(Y, X, ...) __DCHK(le, <=, Y, #X, X, #Y, "" __VA_ARGS__)
-#define DCHECK_LT(Y, X, ...) __DCHK(lt, <, Y, #X, X, #Y, "" __VA_ARGS__)
-#define DCHECK_GE(Y, X, ...) __DCHK(ge, >=, Y, #X, X, #Y, "" __VA_ARGS__)
-#define DCHECK_GT(Y, X, ...) __DCHK(gt, >, Y, #X, X, #Y, "" __VA_ARGS__)
+#define DCHECK_EQ(Y, X, ...) __DCHK(eq, ==, Y, #Y, X, #X, "" __VA_ARGS__)
+#define DCHECK_NE(Y, X, ...) __DCHK(ne, !=, Y, #Y, X, #X, "" __VA_ARGS__)
+#define DCHECK_LE(Y, X, ...) __DCHK(le, <=, Y, #Y, X, #X, "" __VA_ARGS__)
+#define DCHECK_LT(Y, X, ...) __DCHK(lt, <, Y, #Y, X, #X, "" __VA_ARGS__)
+#define DCHECK_GE(Y, X, ...) __DCHK(ge, >=, Y, #Y, X, #X, "" __VA_ARGS__)
+#define DCHECK_GT(Y, X, ...) __DCHK(gt, >, Y, #Y, X, #X, "" __VA_ARGS__)
 #define DCHECK_NOTNULL(X, ...) \
   __DCHK(ne, !=, NULL, "NULL", X, #X, "" __VA_ARGS__)
 
@@ -48,8 +49,8 @@ COSMOPOLITAN_C_START_
 
 #define __CHK(SUFFIX, OP, WANT, WANTSTR, GOT, GOTSTR, ...)                   \
   do {                                                                       \
-    autotype(WANT) Want = (WANT);                                            \
     autotype(GOT) Got = (GOT);                                               \
+    autotype(WANT) Want = (WANT);                                            \
     if (!(Want OP Got)) {                                                    \
       if (!NoDebug()) {                                                      \
         __check_fail(#SUFFIX, #OP, (uint64_t)Want, (WANTSTR), (uint64_t)Got, \
@@ -64,9 +65,11 @@ COSMOPOLITAN_C_START_
 #ifdef NDEBUG
 #define __DCHK(SUFFIX, OP, WANT, WANTSTR, GOT, ...) \
   do {                                              \
-    autotype(WANT) Want = (WANT);                   \
     autotype(GOT) Got = (GOT);                      \
-    if (!(Want OP Got)) unreachable;                \
+    autotype(WANT) Want = (WANT);                   \
+    if (!(Want OP Got)) {                           \
+      unreachable;                                  \
+    }                                               \
   } while (0)
 #else
 #define __DCHK(SUFFIX, OP, WANT, WANTSTR, GOT, GOTSTR, ...) \

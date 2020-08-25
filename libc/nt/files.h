@@ -148,9 +148,9 @@ bool32 GetFileAttributesEx(
 uint32_t GetCompressedFileSize(const char16_t *lpFileName,
                                uint32_t *lpFileSizeHigh);
 bool32 SetFileAttributes(const char16_t *lpFileName, uint32_t dwFileAttributes);
-bool32 GetFileTime(int64_t hFile, struct NtFileTime *lpCreationFileTime,
-                   struct NtFileTime *lpLastAccessFileTime,
-                   struct NtFileTime *lpLastWriteFileTime);
+bool32 GetFileTime(int64_t hFile, struct NtFileTime *opt_lpCreationFileTime,
+                   struct NtFileTime *opt_lpLastAccessFileTime,
+                   struct NtFileTime *opt_lpLastWriteFileTime);
 bool32 SetFileTime(int64_t hFile,
                    const struct NtFileTime *opt_lpCreationFileTime,
                    const struct NtFileTime *opt_lpLastAccessFileTime,

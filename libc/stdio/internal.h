@@ -9,8 +9,8 @@ extern unsigned char g_stdinbuf[BUFSIZ];
 extern unsigned char g_stdoutbuf[BUFSIZ];
 extern unsigned char g_stderrbuf[BUFSIZ];
 
-int fflushregister(FILE *) hidden;
-void fflushunregister(FILE *) hidden;
+int _fflushregister(FILE *) hidden;
+void _fflushunregister(FILE *) hidden;
 
 int freadbuf(FILE *) hidden;
 int fwritebuf(FILE *) hidden;

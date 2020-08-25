@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #ifndef COSMOPOLITAN_LIBC_SOCK_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_SOCK_INTERNAL_H_
+#ifndef __STRICT_ANSI__
 #include "libc/bits/bits.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/sock.h"
@@ -145,4 +146,5 @@ forceinline void sockaddr2linux(void *saddr) {
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* !ANSI */
 #endif /* COSMOPOLITAN_LIBC_SOCK_INTERNAL_H_ */

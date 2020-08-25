@@ -30,4 +30,4 @@ panic:	push	%bp
 	cli
 1:	hlt
 	jmp	1b
-	.endfn	panic,weak,protected
+	.endfn	panic,weak

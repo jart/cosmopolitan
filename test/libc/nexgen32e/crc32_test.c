@@ -18,25 +18,40 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
+#include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/x86feature.h"
+#include "libc/str/knuthmultiplicativehash.h"
 #include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
-
-uint32_t crc32(uint32_t, const void *, int);
-uint32_t crc32$pclmul(uint32_t, const void *, size_t);
-uint32_t crc32$pclmul2(uint32_t, const void *, size_t);
+#include "third_party/zlib/zlib.h"
 
 TEST(crc32, testBigText) {
   size_t size;
+  void *hyperion;
   size = kHyperionSize;
-  EXPECT_EQ(0xe9ded8e6, crc32(0, kHyperion, size));
-  EXPECT_EQ(0xe9ded8e6, crc32_z(0, kHyperion, size));
+  hyperion = kHyperion;
+  EXPECT_EQ(0xe9ded8e6, crc32(0, hyperion, size));
+  EXPECT_EQ(0xe9ded8e6, crc32_z(0, hyperion, size));
   if (X86_HAVE(PCLMUL)) {
     size = ROUNDDOWN(size, 64);
-    EXPECT_EQ(0xc7adc04f, crc32(0, kHyperion, size));
-    EXPECT_EQ(0xc7adc04f, crc32_z(0, kHyperion, size));
+    EXPECT_EQ(0xc7adc04f, crc32(0, hyperion, size));
+    EXPECT_EQ(0xc7adc04f, crc32_z(0, hyperion, size));
     EXPECT_EQ(0xc7adc04f,
-              0xffffffffu ^ crc32$pclmul(0 ^ 0xffffffffu, kHyperion, size));
+              0xffffffffu ^ crc32$pclmul(0 ^ 0xffffffffu, hyperion, size));
   }
+}
+
+#define TESTSTR "libc/calls/typedef/sighandler_t.h"
+
+BENCH(crc32c, bench) {
+  EZBENCH2("crc32c", donothing,
+           EXPROPRIATE(crc32c(0, VEIL("r", TESTSTR), sizeof(TESTSTR) - 1)));
+}
+
+BENCH(KnuthMultiplicativeHash32, bench) {
+  EZBENCH2("KMP", donothing,
+           EXPROPRIATE(KnuthMultiplicativeHash32(VEIL("r", TESTSTR),
+                                                 sizeof(TESTSTR) - 1)));
 }

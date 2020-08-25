@@ -5,7 +5,6 @@ PKGS += TEST_LIBC_FMT
 
 TEST_LIBC_FMT_SRCS := $(wildcard test/libc/fmt/*.c)
 TEST_LIBC_FMT_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_FMT_SRCS))
-TEST_LIBC_FMT_COMS = $(TEST_LIBC_FMT_OBJS:%.o=%.com)
 TEST_LIBC_FMT_BINS = $(TEST_LIBC_FMT_COMS) $(TEST_LIBC_FMT_COMS:%=%.dbg)
 TEST_LIBC_FMT_TESTS = $(TEST_LIBC_FMT_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
 
@@ -13,11 +12,15 @@ TEST_LIBC_FMT_OBJS =					\
 	$(TEST_LIBC_FMT_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_FMT_SRCS:%.c=o/$(MODE)/%.o)
 
+TEST_LIBC_FMT_COMS =					\
+	$(TEST_LIBC_FMT_SRCS:%.c=o/$(MODE)/%.com)
+
 TEST_LIBC_FMT_CHECKS =					\
 	$(TEST_LIBC_FMT_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
 
 TEST_LIBC_FMT_DIRECTDEPS =				\
 	LIBC_CALLS_HEFTY				\
+	LIBC_CONV					\
 	LIBC_FMT					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
@@ -45,9 +48,7 @@ o/$(MODE)/test/libc/fmt/%.com.dbg:			\
 		$(APE)
 	@$(APELINK)
 
-$(TEST_LIBC_FMT_OBJS):					\
-		$(BUILD_FILES)				\
-		test/libc/fmt/test.mk
+$(TEST_LIBC_FMT_OBJS): test/libc/fmt/test.mk
 
 .PHONY: o/$(MODE)/test/libc/fmt
 o/$(MODE)/test/libc/fmt:				\

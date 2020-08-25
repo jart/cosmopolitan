@@ -27,21 +27,111 @@
 float tinymath_roundf$k8(float);
 double tinymath_round$k8(double);
 
-TEST(round, test) {
-  EXPECT_STREQ("-3", gc(xdtoa(tinymath_round(-2.5))));
-  EXPECT_STREQ("-2", gc(xdtoa(tinymath_round(-1.5))));
-  EXPECT_STREQ("-1", gc(xdtoa(tinymath_round(-.5))));
-  EXPECT_STREQ("1", gc(xdtoa(tinymath_round(.5))));
-  EXPECT_STREQ("2", gc(xdtoa(tinymath_round(1.5))));
-  EXPECT_STREQ("3", gc(xdtoa(tinymath_round(2.5))));
-}
-
 TEST(round, testCornerCases) {
   EXPECT_STREQ("-0", gc(xdtoa(tinymath_round(-0.0))));
   EXPECT_STREQ("nan", gc(xdtoa(tinymath_round(NAN))));
   EXPECT_STREQ("-nan", gc(xdtoa(tinymath_round(-NAN))));
   EXPECT_STREQ("inf", gc(xdtoa(tinymath_round(INFINITY))));
   EXPECT_STREQ("-inf", gc(xdtoa(tinymath_round(-INFINITY))));
+}
+
+TEST(round, test) {
+  EXPECT_STREQ("-3", gc(xdtoa(tinymath_round(-2.5))));
+  EXPECT_STREQ("-2", gc(xdtoa(tinymath_round(-1.5))));
+  EXPECT_STREQ("-1", gc(xdtoa(tinymath_round(-.5))));
+  EXPECT_STREQ("-0", gc(xdtoa(tinymath_round(-.4))));
+  EXPECT_STREQ("0", gc(xdtoa(tinymath_round(.4))));
+  EXPECT_STREQ("1", gc(xdtoa(tinymath_round(.5))));
+  EXPECT_STREQ("2", gc(xdtoa(tinymath_round(1.5))));
+  EXPECT_STREQ("3", gc(xdtoa(tinymath_round(2.5))));
+}
+
+TEST(roundf, test) {
+  EXPECT_STREQ("-3", gc(xdtoa(tinymath_roundf(-2.5))));
+  EXPECT_STREQ("-2", gc(xdtoa(tinymath_roundf(-1.5))));
+  EXPECT_STREQ("-1", gc(xdtoa(tinymath_roundf(-.5))));
+  EXPECT_STREQ("-0", gc(xdtoa(tinymath_roundf(-.4))));
+  EXPECT_STREQ("0", gc(xdtoa(tinymath_roundf(.4))));
+  EXPECT_STREQ("1", gc(xdtoa(tinymath_roundf(.5))));
+  EXPECT_STREQ("2", gc(xdtoa(tinymath_roundf(1.5))));
+  EXPECT_STREQ("3", gc(xdtoa(tinymath_roundf(2.5))));
+}
+
+TEST(roundl, test) {
+  EXPECT_STREQ("-3", gc(xdtoa(tinymath_roundl(-2.5))));
+  EXPECT_STREQ("-2", gc(xdtoa(tinymath_roundl(-1.5))));
+  EXPECT_STREQ("-1", gc(xdtoa(tinymath_roundl(-.5))));
+  EXPECT_STREQ("-0", gc(xdtoa(tinymath_roundl(-.4))));
+  EXPECT_STREQ("0", gc(xdtoa(tinymath_roundl(.4))));
+  EXPECT_STREQ("1", gc(xdtoa(tinymath_roundl(.5))));
+  EXPECT_STREQ("2", gc(xdtoa(tinymath_roundl(1.5))));
+  EXPECT_STREQ("3", gc(xdtoa(tinymath_roundl(2.5))));
+}
+
+TEST(nearbyint, test) {
+  EXPECT_STREQ("-2", gc(xdtoa(tinymath_nearbyint(-2.5))));
+  EXPECT_STREQ("-2", gc(xdtoa(tinymath_nearbyint(-1.5))));
+  EXPECT_STREQ("-0", gc(xdtoa(tinymath_nearbyint(-.5))));
+  EXPECT_STREQ("-0", gc(xdtoa(tinymath_nearbyint(-.4))));
+  EXPECT_STREQ("0", gc(xdtoa(tinymath_nearbyint(.4))));
+  EXPECT_STREQ("0", gc(xdtoa(tinymath_nearbyint(.5))));
+  EXPECT_STREQ("2", gc(xdtoa(tinymath_nearbyint(1.5))));
+  EXPECT_STREQ("2", gc(xdtoa(tinymath_nearbyint(2.5))));
+}
+
+TEST(nearbyintf, test) {
+  EXPECT_STREQ("-2", gc(xdtoa(tinymath_nearbyintf(-2.5))));
+  EXPECT_STREQ("-2", gc(xdtoa(tinymath_nearbyintf(-1.5))));
+  EXPECT_STREQ("-0", gc(xdtoa(tinymath_nearbyintf(-.5))));
+  EXPECT_STREQ("-0", gc(xdtoa(tinymath_nearbyintf(-.4))));
+  EXPECT_STREQ("0", gc(xdtoa(tinymath_nearbyintf(.4))));
+  EXPECT_STREQ("0", gc(xdtoa(tinymath_nearbyintf(.5))));
+  EXPECT_STREQ("2", gc(xdtoa(tinymath_nearbyintf(1.5))));
+  EXPECT_STREQ("2", gc(xdtoa(tinymath_nearbyintf(2.5))));
+}
+
+TEST(nearbyintl, test) {
+  EXPECT_STREQ("-2", gc(xdtoa(tinymath_nearbyintl(-2.5))));
+  EXPECT_STREQ("-2", gc(xdtoa(tinymath_nearbyintl(-1.5))));
+  EXPECT_STREQ("-0", gc(xdtoa(tinymath_nearbyintl(-.5))));
+  EXPECT_STREQ("-0", gc(xdtoa(tinymath_nearbyintl(-.4))));
+  EXPECT_STREQ("0", gc(xdtoa(tinymath_nearbyintl(.4))));
+  EXPECT_STREQ("0", gc(xdtoa(tinymath_nearbyintl(.5))));
+  EXPECT_STREQ("2", gc(xdtoa(tinymath_nearbyintl(1.5))));
+  EXPECT_STREQ("2", gc(xdtoa(tinymath_nearbyintl(2.5))));
+}
+
+TEST(rint, test) {
+  EXPECT_STREQ("-2", gc(xdtoa(tinymath_rint(-2.5))));
+  EXPECT_STREQ("-2", gc(xdtoa(tinymath_rint(-1.5))));
+  EXPECT_STREQ("-0", gc(xdtoa(tinymath_rint(-.5))));
+  EXPECT_STREQ("-0", gc(xdtoa(tinymath_rint(-.4))));
+  EXPECT_STREQ("0", gc(xdtoa(tinymath_rint(.4))));
+  EXPECT_STREQ("0", gc(xdtoa(tinymath_rint(.5))));
+  EXPECT_STREQ("2", gc(xdtoa(tinymath_rint(1.5))));
+  EXPECT_STREQ("2", gc(xdtoa(tinymath_rint(2.5))));
+}
+
+TEST(rintf, test) {
+  EXPECT_STREQ("-2", gc(xdtoa(tinymath_rintf(-2.5))));
+  EXPECT_STREQ("-2", gc(xdtoa(tinymath_rintf(-1.5))));
+  EXPECT_STREQ("-0", gc(xdtoa(tinymath_rintf(-.5))));
+  EXPECT_STREQ("-0", gc(xdtoa(tinymath_rintf(-.4))));
+  EXPECT_STREQ("0", gc(xdtoa(tinymath_rintf(.4))));
+  EXPECT_STREQ("0", gc(xdtoa(tinymath_rintf(.5))));
+  EXPECT_STREQ("2", gc(xdtoa(tinymath_rintf(1.5))));
+  EXPECT_STREQ("2", gc(xdtoa(tinymath_rintf(2.5))));
+}
+
+TEST(rintl, test) {
+  EXPECT_STREQ("-2", gc(xdtoa(tinymath_rintl(-2.5))));
+  EXPECT_STREQ("-2", gc(xdtoa(tinymath_rintl(-1.5))));
+  EXPECT_STREQ("-0", gc(xdtoa(tinymath_rintl(-.5))));
+  EXPECT_STREQ("-0", gc(xdtoa(tinymath_rintl(-.4))));
+  EXPECT_STREQ("0", gc(xdtoa(tinymath_rintl(.4))));
+  EXPECT_STREQ("0", gc(xdtoa(tinymath_rintl(.5))));
+  EXPECT_STREQ("2", gc(xdtoa(tinymath_rintl(1.5))));
+  EXPECT_STREQ("2", gc(xdtoa(tinymath_rintl(2.5))));
 }
 
 TEST(lround, test) {
@@ -52,15 +142,6 @@ TEST(lround, test) {
   EXPECT_EQ(1, tinymath_lround(.5));
   EXPECT_EQ(2, tinymath_lround(1.5));
   EXPECT_EQ(3, tinymath_lround(2.5));
-}
-
-TEST(roundf, test) {
-  EXPECT_STREQ("-3", gc(xdtoa(tinymath_roundf(-2.5))));
-  EXPECT_STREQ("-2", gc(xdtoa(tinymath_roundf(-1.5))));
-  EXPECT_STREQ("-1", gc(xdtoa(tinymath_roundf(-.5))));
-  EXPECT_STREQ("1", gc(xdtoa(tinymath_roundf(.5))));
-  EXPECT_STREQ("2", gc(xdtoa(tinymath_roundf(1.5))));
-  EXPECT_STREQ("3", gc(xdtoa(tinymath_roundf(2.5))));
 }
 
 TEST(roundf, testCornerCases) {

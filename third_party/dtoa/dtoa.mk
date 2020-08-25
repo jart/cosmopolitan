@@ -46,7 +46,6 @@ $(THIRD_PARTY_DTOA_A).pkg:				\
 
 $(THIRD_PARTY_DTOA_A_OBJS):				\
 	OVERRIDE_CFLAGS +=				\
-		-ansi					\
 		$(OLD_CODE)				\
 		$(IEEE_MATH)				\
 		-ffunction-sections			\

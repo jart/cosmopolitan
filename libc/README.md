@@ -48,7 +48,3 @@ OVERVIEW
   be compared to something more along the lines of, "the Russians
   just used a pencil to write in space", versus spending millions
   researching a pen like NASA.
-
-  One cost worth noting, concerning stateless API translation, is
-  file descriptors needed to change from `int` to `int64_t`, thus
-  requiring a certain degree of added care when porting software.

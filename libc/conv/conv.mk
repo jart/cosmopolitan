@@ -38,7 +38,8 @@ LIBC_CONV_A_DIRECTDEPS =			\
 	LIBC_STUBS				\
 	LIBC_NEXGEN32E				\
 	LIBC_TINYMATH				\
-	LIBC_SYSV
+	LIBC_SYSV				\
+	THIRD_PARTY_COMPILER_RT
 
 LIBC_CONV_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(LIBC_CONV_A_DIRECTDEPS),$($(x))))
@@ -51,12 +52,10 @@ $(LIBC_CONV_A).pkg:				\
 		$(LIBC_CONV_A_OBJS)		\
 		$(foreach x,$(LIBC_CONV_A_DIRECTDEPS),$($(x)_A).pkg)
 
-#o/$(MODE)/libc/conv/strtoimax.o: CC = clang-10
-#o/$(MODE)/libc/conv/strtoumax.o: CC = clang-10
-
-o/$(MODE)/libc/conv/itoa64radix10.o		\
+o/$(MODE)/libc/conv/itoa64radix10.greg.o	\
 o/$(MODE)/libc/conv/timetofiletime.o		\
 o/$(MODE)/libc/conv/filetimetotime.o		\
+o/$(MODE)/libc/conv/timespectofiletime.o	\
 o/$(MODE)/libc/conv/filetimetotimespec.o	\
 o/$(MODE)/libc/conv/filetimetotimeval.o:	\
 		OVERRIDE_COPTS +=		\

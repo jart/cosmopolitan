@@ -25,6 +25,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/runtime/getdosenviron.h"
 #include "libc/runtime/internal.h"
+#include "libc/runtime/missioncritical.h"
 
 static void LoadFasterAndPreventHijacking(void) {
   unsigned wrote;
@@ -34,14 +35,15 @@ static void LoadFasterAndPreventHijacking(void) {
   }
 }
 
-noreturn textwindows int WinMain(void *hInstance, void *hPrevInstance,
-                                 const char *lpCmdLine, int nCmdShow) {
+textwindows int WinMain(void *hInstance, void *hPrevInstance,
+                        const char *lpCmdLine, int nCmdShow) {
   int i, count;
   const char16_t *cmd16, *env16;
+  char *argarray[512], *envarray[512];
+  char argblock[ARG_MAX], envblock[ENV_MAX];
   long auxarray[][2] = {{pushpop(0L), pushpop(0L)}};
-  char envblock[ENV_MAX], *envarray[512], argblock[ARG_MAX], *argarray[512];
   LoadFasterAndPreventHijacking();
-  *(/*unconst*/ int *)&__hostos = pushpop(WINDOWS);
+  *(/*unconst*/ int *)&hostos = WINDOWS;
   cmd16 = GetCommandLine();
   env16 = GetEnvironmentStrings();
   count = getdosargv(cmd16, argblock, ARG_MAX, argarray, 512);
@@ -50,13 +52,5 @@ noreturn textwindows int WinMain(void *hInstance, void *hPrevInstance,
   }
   getdosenviron(env16, envblock, ENV_MAX, envarray, 512);
   FreeEnvironmentStrings(env16);
-  register int argc asm("r12") = count;
-  register char **argv asm("r13") = argarray;
-  register char **envp asm("r14") = envarray;
-  register long(*auxv)[2] asm("r15") = auxarray;
-  asm volatile("jmp\t__executive"
-               : /* no outputs */
-               : "r"(argc), "r"(argv), "r"(envp), "r"(auxv)
-               : "memory", "cc");
-  unreachable;
+  _executive(count, argarray, envarray, auxarray);
 }

@@ -13,8 +13,8 @@ COSMOPOLITAN_C_START_
 
 long sysconf(int);
 
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define sysconf(X) __sysconf(X)
-
 forceinline long __sysconf(int thing) {
   switch (thing) {
     case _SC_ARG_MAX:
@@ -31,6 +31,7 @@ forceinline long __sysconf(int thing) {
       return -1;
   }
 }
+#endif /* GNU && !ANSI */
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -20,13 +20,21 @@
 #include "libc/alg/reverse.h"
 #include "libc/conv/conv.h"
 #include "libc/conv/itoa.h"
+#include "libc/limits.h"
 
+uint128_t __udivmodti4(uint128_t, uint128_t, uint128_t *);
+
+/**
+ * Converts unsigned 128-bit integer to string.
+ * @param a needs at least 40 bytes
+ * @return bytes written w/o nul
+ */
 noinline size_t uint128toarray_radix10(uint128_t i, char *a) {
   size_t j;
-  unsigned rem;
+  uint128_t rem;
   j = 0;
   do {
-    i = div10(i, &rem);
+    i = __udivmodti4(i, 10, &rem);
     a[j++] = rem + '0';
   } while (i > 0);
   a[j] = '\0';
@@ -34,10 +42,21 @@ noinline size_t uint128toarray_radix10(uint128_t i, char *a) {
   return j;
 }
 
+/**
+ * Converts signed 128-bit integer to string.
+ * @param a needs at least 41 bytes
+ * @return bytes written w/o nul
+ */
 size_t int128toarray_radix10(int128_t i, char *a) {
   if (i < 0) {
-    *a++ = '-';
-    i = -i;
+    if (i != INT128_MIN) {
+      *a++ = '-';
+      return 1 + uint128toarray_radix10(-i, a);
+    } else {
+      memcpy(a, "-170141183460469231731687303715884105728", 41);
+      return 40;
+    }
+  } else {
+    return uint128toarray_radix10(i, a);
   }
-  return uint128toarray_radix10(i, a);
 }

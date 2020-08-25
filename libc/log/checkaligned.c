@@ -17,14 +17,19 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/stdio/stdio.h"
 
+STATIC_YOINK("ntoa");
+STATIC_YOINK("stoa");
+
 void __check_fail_aligned(unsigned bytes, uint64_t ptr) {
-  if (!IsTiny()) memsummary(stderr);
-  fprintf(stderr, "%s%d%s%#p\n", "error: pointer not ", bytes,
-          "-byte aligned: ", ptr);
+  fflush(stderr);
+  if (!IsTiny()) memsummary(fileno(stderr));
+  (dprintf)(fileno(stderr), "%s%d%s%#p\n", "error: pointer not ", bytes,
+            "-byte aligned: ", ptr);
   die();
 }

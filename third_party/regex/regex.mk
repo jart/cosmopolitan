@@ -39,17 +39,17 @@ $(THIRD_PARTY_REGEX_A).pkg:				\
 		$(foreach x,$(THIRD_PARTY_REGEX_A_DIRECTDEPS),$($(x)_A).pkg)
 
 THIRD_PARTY_REGEX_LIBS = $(foreach x,$(THIRD_PARTY_REGEX_ARTIFACTS),$($(x)))
+THIRD_PARTY_REGEX_HDRS = $(foreach x,$(THIRD_PARTY_REGEX_ARTIFACTS),$($(x)_HDRS))
 THIRD_PARTY_REGEX_SRCS = $(foreach x,$(THIRD_PARTY_REGEX_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_REGEX_CHECKS = $(foreach x,$(THIRD_PARTY_REGEX_ARTIFACTS),$($(x)_CHECKS))
 THIRD_PARTY_REGEX_OBJS = $(foreach x,$(THIRD_PARTY_REGEX_ARTIFACTS),$($(x)_OBJS))
 
-$(THIRD_PARTY_REGEX_OBJS): $(BUILD_FILES) third_party/regex/regex.mk
+$(THIRD_PARTY_REGEX_OBJS): third_party/regex/regex.mk
 
 o/$(MODE)/third_party/regex/regcomp.o			\
-o/$(MODE)/third_party/regex/regerror.o			\
 o/$(MODE)/third_party/regex/regexec.o			\
 o/$(MODE)/third_party/regex/tre-mem.o:			\
-		OVERRIDE_COPTS +=			\
+		OVERRIDE_CFLAGS +=			\
 			$(OLD_CODE)
 
 .PHONY: o/$(MODE)/third_party/regex

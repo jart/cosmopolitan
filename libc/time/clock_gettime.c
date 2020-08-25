@@ -44,7 +44,7 @@
  * @param clockid can be CLOCK_REALTIME, CLOCK_MONOTONIC, etc. noting
  *     that on Linux CLOCK_MONOTONIC is redefined to use the monotonic
  *     clock that's actually monotonic lool
- * @param out_ts is where the nanoseconds are stored
+ * @param out_ts is where the nanoseconds are stored if non-NULL
  * @return 0 on success or -1 w/ errno on error
  * @error ENOSYS if clockid isn't available; in which case this function
  *     guarantees an ordinary timestamp is still stored to out_ts; and
@@ -56,21 +56,28 @@ int clock_gettime(int clockid, struct timespec *out_ts) {
   /* TODO(jart): Just ignore O/S for MONOTONIC and measure RDTSC on start */
   if (!IsWindows()) {
     if (!IsXnu()) {
-      out_ts->tv_sec = 0;
-      out_ts->tv_nsec = 0;
+      if (out_ts) {
+        out_ts->tv_sec = 0;
+        out_ts->tv_nsec = 0;
+      }
       return clock_gettime$sysv(clockid, out_ts);
     } else {
+      int rc;
       static_assert(sizeof(struct timeval) == sizeof(struct timespec));
-      out_ts->tv_sec = 0;
-      out_ts->tv_nsec = 0;
-      int rc = gettimeofday$sysv((struct timeval *)out_ts, NULL);
-      out_ts->tv_nsec *= 1000;
+      if (out_ts) {
+        out_ts->tv_sec = 0;
+        out_ts->tv_nsec = 0;
+      }
+      rc = gettimeofday$sysv((struct timeval *)out_ts, NULL);
+      if (out_ts) {
+        out_ts->tv_nsec *= 1000;
+      }
       return rc;
     }
   } else {
     struct NtFileTime ft;
     GetSystemTimeAsFileTime(&ft);
-    filetimetotimespec(out_ts, ft);
+    *out_ts = filetimetotimespec(ft);
     return 0;
   }
 }

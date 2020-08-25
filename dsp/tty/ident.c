@@ -18,8 +18,8 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/tty.h"
-#include "libc/bits/bits.h"
 #include "libc/bits/safemacros.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/termios.h"
 #include "libc/fmt/fmt.h"

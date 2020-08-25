@@ -44,6 +44,7 @@
 #include "libc/nexgen32e/uart.h"
 #include "libc/nexgen32e/vidya.h"
 #include "libc/nt/pedef.h"
+#include "libc/nexgen32e/vidya.h"
 #include "libc/sysv/consts/prot.h"
 
 	.source	"NOTICE"
@@ -136,42 +137,23 @@ ape.mz:	.ascii	"MZ"			# Mark 'Zibo' Joseph Zbikowski
 	.short	0			# MZ: OEM information
 	.org	0x40-4			# MZ: bytes reserved for you
 	.long	RVA(ape.pe)		# PE: the new technology
-	.endobj	ape.mz,globl,hidden
+	.endfn	ape.mz,globl,hidden
 
 /	Disk Operating System Stub
 /	@noreturn
 	.org	0x40			# mz/elf header length
 stub:	mov	$0x40,%dl		# *literally* dos
 	jmp	1f			# good bios skips here
-1:	jmp	pc
+1:	jmp	pc			# thus avoiding heroics
 	nop				# system five bootpoint
-	.org	0x48,0x90		# ⌂ELF → JNLE 47
-	jmp	3f
-2:	push	%rdx			# don't move or shell script breaks
-	xor	%edx,%edx		# Z in MZ ate BIOS drive letter :(
-3:	.byte	0xbd,0,0		# mov $0x????0000,%[e]bp
-	jmp	pc
-	jmp	ape.hop			# already in userspace
+	.org	0x48,0x90		# note ⌂ELF means JG 47
+	jmp	3f			# MZ also means pop r10
+2:	sub	$8,%rsp			# a.k.a. dec %ax sub %sp
+	xor	%edx,%edx		# MZ ate BIOS drive code
+3:	.byte	0xbd,0,0		# a.k.a. mov imm,%bp
+	jmp	pc			# real mode, is real
+	jmp	_start			# surprise it's unix
 	.endfn	stub
-
-/	Mitigate incidental quotation marks.
-	.real
-ape.hop:pop	%rdx
-	push	%r10			# MZ → pop %r10 w/ NexGen32e
-	.weak	__imp_GetStartupInfoW
-	ezlea	__imp_GetStartupInfoW,ax
-	test	%rax,%rax
-	jz	0f
-	.weak	KernelBase.GetStartupInfo
-	test	%rax,%rax
-/	TODO(jart)
-/	cmpq	$RVA(KernelBase.GetStartupInfo),(%rax)
-	jz	0f
-	jmp	WinMain
-0:	.weak	_start
-	jmp	_start
-	.endfn	ape.hop
-	.previous
 
 /*─────────────────────────────────────────────────────────────────────────────╗
 │ αcτµαlly pδrταblε εxεcµταblε § ibm personal computer                         │
@@ -835,9 +817,9 @@ ape.pe:	.ascin	"PE",4
 	.short	v_ntsubsystem		# Subsystem: 0=Neutral,2=GUI,3=Console
 	.short	.LDLLEXE		# DllCharacteristics
 	.quad	0x0000000000100000	# StackReserve
-	.quad	0x0000000000030000	# StackCommit (64kb [goog] + arg + env)
+	.quad	0x0000000000100000	# StackCommit
 	.quad	0x0000000000080000	# HeapReserve
-	.quad	0x0000000000001000	# HeapCommit (we make our own heap)
+	.quad	0x0000000000001000	# HeapCommit
 	.long	0x00000000		# LoaderFlags
 	.long	16			# NumberOfDirectoryEntries
 	.long	0,0			# ExportsDirectory
@@ -1932,6 +1914,11 @@ __data_start:
 
 	.type	__piro_start,@object
 	.hidden	__piro_start
+
+	.type	__ubsan_data_start,@object
+	.type	__ubsan_data_end,@object
+	.type	__ubsan_types_start,@object
+	.type	__ubsan_types_end,@object
 
 .end
 

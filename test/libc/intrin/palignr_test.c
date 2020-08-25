@@ -17,71 +17,216 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/progn.h"
 #include "libc/intrin/palignr.h"
+#include "libc/rand/rand.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
-const int A[4] = {1, 2, 3, 4};
-const int B[4] = {5, 6, 7, 8};
-
 TEST(palignr, testLeftpad) {
+  const int A[4] = {1, 2, 3, 4};
+  const int B[4] = {5, 6, 7, 8};
   int C[4] = {0};
   palignr(C, B, A, 12);
-  EXPECT_EQ(4, C[0]);
-  EXPECT_EQ(5, C[1]);
-  EXPECT_EQ(6, C[2]);
-  EXPECT_EQ(7, C[3]);
+  ASSERT_EQ(4, C[0]);
+  ASSERT_EQ(5, C[1]);
+  ASSERT_EQ(6, C[2]);
+  ASSERT_EQ(7, C[3]);
+}
+
+TEST(palignr, testLeftpad_variableImmediate) {
+  const int A[4] = {1, 2, 3, 4};
+  const int B[4] = {5, 6, 7, 8};
+  int C[4] = {0};
+  palignr(C, B, A, VEIL("r", 12));
+  ASSERT_EQ(4, C[0]);
+  ASSERT_EQ(5, C[1]);
+  ASSERT_EQ(6, C[2]);
+  ASSERT_EQ(7, C[3]);
 }
 
 TEST(palignr, test0) {
+  const int A[4] = {1, 2, 3, 4};
+  const int B[4] = {5, 6, 7, 8};
   int C[4];
   palignr(C, B, A, 0);
-  EXPECT_EQ(1, C[0]);
-  EXPECT_EQ(2, C[1]);
-  EXPECT_EQ(3, C[2]);
-  EXPECT_EQ(4, C[3]);
+  ASSERT_EQ(1, C[0]);
+  ASSERT_EQ(2, C[1]);
+  ASSERT_EQ(3, C[2]);
+  ASSERT_EQ(4, C[3]);
 }
 
 TEST(palignr, test4) {
+  const int A[4] = {1, 2, 3, 4};
+  const int B[4] = {5, 6, 7, 8};
   int C[4];
   palignr(C, B, A, 4);
-  EXPECT_EQ(2, C[0]);
-  EXPECT_EQ(3, C[1]);
-  EXPECT_EQ(4, C[2]);
-  EXPECT_EQ(5, C[3]);
+  ASSERT_EQ(2, C[0]);
+  ASSERT_EQ(3, C[1]);
+  ASSERT_EQ(4, C[2]);
+  ASSERT_EQ(5, C[3]);
 }
 
 TEST(palignr, test12) {
+  const int A[4] = {1, 2, 3, 4};
+  const int B[4] = {5, 6, 7, 8};
   int C[4];
   palignr(C, B, A, 12);
-  EXPECT_EQ(4, C[0]);
-  EXPECT_EQ(5, C[1]);
-  EXPECT_EQ(6, C[2]);
-  EXPECT_EQ(7, C[3]);
+  ASSERT_EQ(4, C[0]);
+  ASSERT_EQ(5, C[1]);
+  ASSERT_EQ(6, C[2]);
+  ASSERT_EQ(7, C[3]);
 }
 
 TEST(palignr, test16) {
+  const int A[4] = {1, 2, 3, 4};
+  const int B[4] = {5, 6, 7, 8};
   int C[4];
   palignr(C, B, A, 16);
-  EXPECT_EQ(5, C[0]);
-  EXPECT_EQ(6, C[1]);
-  EXPECT_EQ(7, C[2]);
-  EXPECT_EQ(8, C[3]);
+  ASSERT_EQ(5, C[0]);
+  ASSERT_EQ(6, C[1]);
+  ASSERT_EQ(7, C[2]);
+  ASSERT_EQ(8, C[3]);
 }
 
 TEST(palignr, test20) {
+  const int A[4] = {1, 2, 3, 4};
+  const int B[4] = {5, 6, 7, 8};
   int C[4] = {-1, -1, -1, -1};
   palignr(C, B, A, 20);
-  EXPECT_EQ(6, C[0]);
-  EXPECT_EQ(7, C[1]);
-  EXPECT_EQ(8, C[2]);
-  EXPECT_EQ(0, C[3]);
+  ASSERT_EQ(6, C[0]);
+  ASSERT_EQ(7, C[1]);
+  ASSERT_EQ(8, C[2]);
+  ASSERT_EQ(0, C[3]);
 }
 
-TEST(palignr, test32) {
+TEST(palignrc, testLeftpad) {
+  const int A[4] = {1, 2, 3, 4};
+  const int B[4] = {5, 6, 7, 8};
+  int C[4] = {0};
+  (palignr)(C, B, A, 12);
+  ASSERT_EQ(4, C[0]);
+  ASSERT_EQ(5, C[1]);
+  ASSERT_EQ(6, C[2]);
+  ASSERT_EQ(7, C[3]);
+}
+
+TEST(palignrc, testLeftpad_variableImmediate) {
+  const int A[4] = {1, 2, 3, 4};
+  const int B[4] = {5, 6, 7, 8};
+  int C[4] = {0};
+  (palignr)(C, B, A, VEIL("r", 12));
+  ASSERT_EQ(4, C[0]);
+  ASSERT_EQ(5, C[1]);
+  ASSERT_EQ(6, C[2]);
+  ASSERT_EQ(7, C[3]);
+}
+
+TEST(palignrc, test0) {
+  const int A[4] = {1, 2, 3, 4};
+  const int B[4] = {5, 6, 7, 8};
+  int C[4];
+  (palignr)(C, B, A, 0);
+  ASSERT_EQ(1, C[0]);
+  ASSERT_EQ(2, C[1]);
+  ASSERT_EQ(3, C[2]);
+  ASSERT_EQ(4, C[3]);
+}
+
+TEST(palignrc, test4) {
+  const int A[4] = {1, 2, 3, 4};
+  const int B[4] = {5, 6, 7, 8};
+  int C[4];
+  (palignr)(C, B, A, 4);
+  ASSERT_EQ(2, C[0]);
+  ASSERT_EQ(3, C[1]);
+  ASSERT_EQ(4, C[2]);
+  ASSERT_EQ(5, C[3]);
+}
+
+TEST(palignrc, test12) {
+  const int A[4] = {1, 2, 3, 4};
+  const int B[4] = {5, 6, 7, 8};
+  int C[4];
+  (palignr)(C, B, A, 12);
+  ASSERT_EQ(4, C[0]);
+  ASSERT_EQ(5, C[1]);
+  ASSERT_EQ(6, C[2]);
+  ASSERT_EQ(7, C[3]);
+}
+
+TEST(palignrc, test16) {
+  const int A[4] = {1, 2, 3, 4};
+  const int B[4] = {5, 6, 7, 8};
+  int C[4];
+  (palignr)(C, B, A, 16);
+  ASSERT_EQ(5, C[0]);
+  ASSERT_EQ(6, C[1]);
+  ASSERT_EQ(7, C[2]);
+  ASSERT_EQ(8, C[3]);
+}
+
+TEST(palignrc, test20) {
+  const int A[4] = {1, 2, 3, 4};
+  const int B[4] = {5, 6, 7, 8};
+  int C[4] = {-1, -1, -1, -1};
+  (palignr)(C, B, A, 20);
+  ASSERT_EQ(6, C[0]);
+  ASSERT_EQ(7, C[1]);
+  ASSERT_EQ(8, C[2]);
+  ASSERT_EQ(0, C[3]);
+}
+
+TEST(palignr, test32orHigher_clearsOutput) {
+  const int A[4] = {1, 2, 3, 4};
+  const int B[4] = {5, 6, 7, 8};
   int C[4] = {-1, -1, -1, -1};
   palignr(C, B, A, 32);
-  EXPECT_EQ(0, C[0]);
-  EXPECT_EQ(0, C[1]);
-  EXPECT_EQ(0, C[2]);
-  EXPECT_EQ(0, C[3]);
+  ASSERT_EQ(0, C[0]);
+  ASSERT_EQ(0, C[1]);
+  ASSERT_EQ(0, C[2]);
+  ASSERT_EQ(0, C[3]);
+  C[0] = 43;
+  palignr(C, B, A, 123);
+  ASSERT_EQ(0, C[0]);
+  ASSERT_EQ(0, C[1]);
+  ASSERT_EQ(0, C[2]);
+  ASSERT_EQ(0, C[3]);
+}
+
+TEST(palignrv, test32orHigher_clearsOutput) {
+  const int A[4] = {1, 2, 3, 4};
+  const int B[4] = {5, 6, 7, 8};
+  int C[4] = {-1, -1, -1, -1};
+  palignr(C, B, A, VEIL("r", 32));
+  ASSERT_EQ(0, C[0]);
+  ASSERT_EQ(0, C[1]);
+  ASSERT_EQ(0, C[2]);
+  ASSERT_EQ(0, C[3]);
+  C[0] = 43;
+  palignr(C, B, A, VEIL("r", 123));
+  ASSERT_EQ(0, C[0]);
+  ASSERT_EQ(0, C[1]);
+  ASSERT_EQ(0, C[2]);
+  ASSERT_EQ(0, C[3]);
+}
+
+TEST(palignrc, test32orHigher_clearsOutput) {
+  const int A[4] = {1, 2, 3, 4};
+  const int B[4] = {5, 6, 7, 8};
+  int C[4] = {-1, -1, -1, -1};
+  (palignr)(C, B, A, 32);
+  ASSERT_EQ(0, C[0]);
+  ASSERT_EQ(0, C[1]);
+  ASSERT_EQ(0, C[2]);
+  ASSERT_EQ(0, C[3]);
+}
+
+BENCH(palignr, bench) {
+  volatile __intrin_xmm_t A;
+  volatile __intrin_xmm_t B;
+  EZBENCH2("palignr const 𝑖", donothing, PROGN(palignr(&A, &A, &B, 7)));
+  EZBENCH2("palignr var 𝑖", donothing,
+           PROGN(palignr(&A, &A, &B, VEIL("r", 7))));
+  EZBENCH2("palignr ansi", donothing, PROGN((palignr)(&A, &A, &B, 7)));
 }

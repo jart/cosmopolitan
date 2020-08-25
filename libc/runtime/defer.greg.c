@@ -53,10 +53,10 @@ void __defer(struct StackFrame *frame, void *fn, void *arg) {
   frame2 = __builtin_frame_address(0);
   assert(frame2->next == frame);
   assert(PointerNotOwnedByParentStackFrame(frame2, frame, arg));
-  if (append(&__garbage,
+  if (append(&g_garbage,
              (&(const struct Garbage){frame->next, (intptr_t)fn, (intptr_t)arg,
                                       frame->addr})) != -1) {
-    atomic_store(&frame->addr, (intptr_t)&__gc);
+    atomic_store(&frame->addr, (intptr_t)&CollectGarbage);
   } else {
     abort();
   }

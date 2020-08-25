@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/hefty/internal.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/sysv/consts/at.h"
@@ -33,12 +34,10 @@
  * @asyncsignalsafe
  */
 int faccessat(int dirfd, const char *path, int mode, uint32_t flags) {
+  if (!path) return efault();
   if (!IsWindows()) {
     return faccessat$sysv(dirfd, path, mode, flags);
   } else {
-    char16_t path16[PATH_MAX];
-    if (dirfd != AT_FDCWD || flags) return einval();
-    if (mkntpath(path, path16) == -1) return -1;
-    return ntaccesscheck(path16, mode);
+    return faccessat$nt(dirfd, path, mode, flags);
   }
 }

@@ -20,8 +20,12 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns 2^x.
-exp2l:	push	%rbp
+/	Returns 2^𝑥.
+/
+/	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+/	@return	result of exponentiation on FPU stack in %st
+tinymath_exp2l:
+	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
@@ -35,7 +39,8 @@ exp2l:	push	%rbp
 	fstp	%st(1)
 	pop	%rbp
 	ret
-	.endfn	exp2l,globl
+	.endfn	tinymath_exp2l,globl
+	.alias	tinymath_exp2l,exp2l
 
 	.rodata.cst4
 .Lone:	.float	1.0

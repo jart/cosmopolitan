@@ -63,9 +63,7 @@ o/$(MODE)/third_party/m4/m4.com.ok:			\
 	@ACTION=CMP TARGET=$@ build/do cmp -s $^
 	@ACTION=TOUCH TARGET=$@ build/do touch $@
 
-$(THIRD_PARTY_M4_OBJS):					\
-		$(BUILD_FILES)				\
-		third_party/m4/m4.mk
+$(THIRD_PARTY_M4_OBJS): third_party/m4/m4.mk
 
 .PHONY: o/$(MODE)/third_party/m4
 o/$(MODE)/third_party/m4: $(THIRD_PARTY_M4_CHECKS)

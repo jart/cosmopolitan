@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
 #include "libc/macros.h"
+#include "libc/nexgen32e/nexgen32e.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 #include "libc/tzfile.h"
@@ -100,7 +101,7 @@ static char *strftime_timefmt(char *pt, const char *ptlim, const char *format,
           ** something completely different.
           ** (ado, 5/24/93)
           */
-          pt = strftime_conv(pt, ptlim, (t->tm_year + TM_YEAR_BASE) / 100,
+          pt = strftime_conv(pt, ptlim, div100int64(t->tm_year + TM_YEAR_BASE),
                              "%02d");
           continue;
         case 'D':

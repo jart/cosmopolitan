@@ -18,10 +18,25 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.source	__FILE__
 
+/	Returns log₂ₓ exponent part of double.
+/
+/	@param	𝑥 is double passed in %xmm0
+/	@return	result in %eax
+/	@note	needs sse3
 tinymath_ilogb:
-	ezlea	tinymath_ilogbl,ax
-	jmp	_d2ld2
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	push	%rax
+	movsd	%xmm0,(%rsp)
+	fldl	(%rsp)
+	fxtract
+	fstp	%st
+	fisttpl	(%rsp)
+	mov	(%rsp),%eax
+	leave
+	ret
 	.endfn	tinymath_ilogb,globl
 	.alias	tinymath_ilogb,ilogb
+	.source	__FILE__

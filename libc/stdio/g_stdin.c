@@ -27,6 +27,7 @@ hidden FILE g_stdin;
 hidden unsigned char g_stdin_buf[BUFSIZ] aligned(PAGESIZE);
 
 static textstartup void g_stdin_init() {
-  fflushregister(stdin);
+  _fflushregister(stdin);
 }
+
 const void *const g_stdin_ctor[] initarray = {g_stdin_init};

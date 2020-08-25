@@ -51,7 +51,7 @@ THIRD_PARTY_F2C_SRCS = $(foreach x,$(THIRD_PARTY_F2C_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_F2C_HDRS = $(foreach x,$(THIRD_PARTY_F2C_ARTIFACTS),$($(x)_HDRS))
 THIRD_PARTY_F2C_CHECKS = $(foreach x,$(THIRD_PARTY_F2C_ARTIFACTS),$($(x)_CHECKS))
 THIRD_PARTY_F2C_OBJS = $(foreach x,$(THIRD_PARTY_F2C_ARTIFACTS),$($(x)_OBJS))
-$(THIRD_PARTY_F2C_OBJS): $(BUILD_FILES) third_party/f2c/f2c.mk
+$(THIRD_PARTY_F2C_OBJS): third_party/f2c/f2c.mk
 
 .PHONY: o/$(MODE)/third_party/f2c
 o/$(MODE)/third_party/f2c: $(THIRD_PARTY_F2C_CHECKS)

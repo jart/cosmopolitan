@@ -410,14 +410,20 @@ syscon	fcntl	F_GETPIPE_SZ				0x0408			0			0			0			0
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			XENIX			Commentary
 syscon	at	AT_FDCWD				-100			-2			-100			-100			-100			# faked nt
-syscon	at	AT_SYMLINK_FOLLOW			0x0400			0x40			0x0400			4			0
 syscon	at	AT_SYMLINK_NOFOLLOW			0x0100			0x20			0x0200			2			0			# TODO(jart): What should NT do?
 syscon	at	AT_REMOVEDIR				0x0200			0x80			0x0800			8			0x0200			# faked nt
 syscon	at	AT_EACCESS				0x0200			0x10			0x0100			1			0
+syscon	at	AT_SYMLINK_FOLLOW			0x0400			0x40			0x0400			4			0
 syscon	at	AT_EMPTY_PATH				0x1000			0			0			0			0			# linux 2.6.39+; see unlink, O_TMPFILE, etc.
 
 syscon	memfd	MFD_CLOEXEC				1			0			0			0			0
 syscon	memfd	MFD_ALLOW_SEALING			2			0			0			0			0
+
+#	utimensat()
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			XENIX			Commentary
+syscon	utime	UTIME_NOW				0x3fffffff		0x3fffffff		-1			-2			0x3fffffff		# polyfilled xnu/nt
+syscon	utime	UTIME_OMIT				0x3ffffffe		0x3ffffffe		-2			-1			0x3ffffffe		# polyfilled xnu/nt
 
 #	getauxval() keys
 #
@@ -2700,9 +2706,6 @@ syscon	misc	T_FMT_AMPM				0x02002b		4			4			3			0
 
 syscon	misc	UL_GETFSIZE				1			1			1			0			0
 syscon	misc	UL_SETFSIZE				2			2			2			0			0
-
-syscon	misc	UTIME_NOW				0x3fffffff		0			-1			-2			0
-syscon	misc	UTIME_OMIT				0x3ffffffe		0			-2			-1			0
 
 syscon	misc	XATTR_CREATE				1			2			0			0			0
 syscon	misc	XATTR_REPLACE				2			4			0			0			0

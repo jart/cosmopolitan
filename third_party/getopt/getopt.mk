@@ -50,7 +50,7 @@ THIRD_PARTY_GETOPT_SRCS = $(foreach x,$(THIRD_PARTY_GETOPT_ARTIFACTS),$($(x)_SRC
 THIRD_PARTY_GETOPT_HDRS = $(foreach x,$(THIRD_PARTY_GETOPT_ARTIFACTS),$($(x)_HDRS))
 THIRD_PARTY_GETOPT_CHECKS = $(foreach x,$(THIRD_PARTY_GETOPT_ARTIFACTS),$($(x)_CHECKS))
 THIRD_PARTY_GETOPT_OBJS = $(foreach x,$(THIRD_PARTY_GETOPT_ARTIFACTS),$($(x)_OBJS))
-$(THIRD_PARTY_GETOPT_OBJS): $(BUILD_FILES) third_party/getopt/getopt.mk
+$(THIRD_PARTY_GETOPT_OBJS): third_party/getopt/getopt.mk
 
 .PHONY: o/$(MODE)/third_party/getopt
 o/$(MODE)/third_party/getopt: $(THIRD_PARTY_GETOPT_CHECKS)

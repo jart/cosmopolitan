@@ -51,11 +51,13 @@ $(TEST_LIBC_XED_TESTLIB_A):					\
 PKGS += TEST_LIBC_XED
 
 TEST_LIBC_XED_SRCS = $(filter %_test.c,$(TEST_LIBC_XED_FILES))
-TEST_LIBC_XED_COMS = $(TEST_LIBC_XED_OBJS:%.o=%.com)
 
 TEST_LIBC_XED_OBJS =						\
 	$(TEST_LIBC_XED_SRCS:%=o/$(MODE)/%.zip.o)		\
 	$(TEST_LIBC_XED_SRCS:%.c=o/$(MODE)/%.o)
+
+TEST_LIBC_XED_COMS =						\
+	$(TEST_LIBC_XED_SRCS:%.c=o/$(MODE)/%.com)
 
 TEST_LIBC_XED_BINS =						\
 	$(TEST_LIBC_XED_COMS)					\

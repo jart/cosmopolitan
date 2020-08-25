@@ -20,7 +20,12 @@
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/sigaction-freebsd.h"
+#include "libc/calls/struct/sigaction-linux.h"
+#include "libc/calls/struct/sigaction-openbsd.h"
+#include "libc/calls/struct/sigaction-xnu.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/typedef/sigaction_f.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/limits.h"
@@ -32,51 +37,13 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
-struct siginfo;
-
 union metasigaction {
   struct sigaction cosmo;
-
-  struct sigaction$linux {
-    intptr_t sa_handler;
-    uint64_t sa_flags;
-    void (*sa_restorer)(void);
-    struct sigset$linux {
-      uint32_t sig[2];
-    } sa_mask;
-  } linux;
-
-  struct sigaction$freebsd {
-    intptr_t sa_handler;
-    uint32_t sa_flags;
-    struct sigset$freebsd {
-      uint32_t sig[4];
-    } sa_mask;
-  } freebsd;
-
-  struct sigaction$openbsd {
-    intptr_t sa_handler;
-    struct sigset$openbsd {
-      uint32_t sig[1];
-    } sa_mask;
-    int32_t sa_flags;
-  } openbsd;
-
-  struct sigaction$xnu_in {
-    intptr_t sa_handler;
-    void (*sa_restorer)(void *, int, int, const struct __darwin_siginfo *,
-                        const struct __darwin_ucontext *);
-    struct sigset$xnu {
-      uint32_t sig[1];
-    } sa_mask;
-    int32_t sa_flags;
-  } xnu_in;
-
-  struct sigaction$xnu_out {
-    intptr_t sa_handler;
-    struct sigset$xnu sa_mask;
-    int32_t sa_flags;
-  } xnu_out;
+  struct sigaction$linux linux;
+  struct sigaction$freebsd freebsd;
+  struct sigaction$openbsd openbsd;
+  struct sigaction$xnu_in xnu_in;
+  struct sigaction$xnu_out xnu_out;
 };
 
 #define SWITCHEROO(S1, S2, A, B, C, D)                     \
@@ -210,9 +177,8 @@ int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
   if (rc != -1) {
     if (oldact) {
       oldrva = g_sighandrvas[sig];
-      oldact->sa_sigaction = oldrva < kSigactionMinRva
-                                 ? (sigaction_f)(intptr_t)oldrva
-                                 : (sigaction_f)((uintptr_t)&_base + oldrva);
+      oldact->sa_sigaction = (sigaction_f)(
+          oldrva < kSigactionMinRva ? oldrva : (intptr_t)&_base + oldrva);
     }
     if (act) {
       g_sighandrvas[sig] = rva;

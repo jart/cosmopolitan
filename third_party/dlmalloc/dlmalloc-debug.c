@@ -1,7 +1,7 @@
 #include "third_party/dlmalloc/dlmalloc.h"
 
 /* Check properties of any chunk, whether free, inuse, mmapped etc  */
-static void do_check_any_chunk(mstate m, mchunkptr p) {
+forceinline void do_check_any_chunk(mstate m, mchunkptr p) {
   assert((is_aligned(chunk2mem(p))) || (p->head == FENCEPOST_HEAD));
   assert(ok_address(m, p));
 }

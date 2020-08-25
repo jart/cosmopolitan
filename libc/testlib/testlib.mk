@@ -43,6 +43,7 @@ LIBC_TESTLIB_A_SRCS_C =						\
 	libc/testlib/almostequallongdouble.c			\
 	libc/testlib/hexequals.c				\
 	libc/testlib/binequals.c				\
+	libc/testlib/clearxmmregisters.c			\
 	libc/testlib/formatbool.c				\
 	libc/testlib/formatrange.c				\
 	libc/testlib/globals.c					\

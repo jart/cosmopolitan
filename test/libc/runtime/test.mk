@@ -5,11 +5,13 @@ PKGS += TEST_LIBC_RUNTIME
 
 TEST_LIBC_RUNTIME_SRCS := $(wildcard test/libc/runtime/*.c)
 TEST_LIBC_RUNTIME_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_RUNTIME_SRCS))
-TEST_LIBC_RUNTIME_COMS = $(TEST_LIBC_RUNTIME_OBJS:%.o=%.com)
 
 TEST_LIBC_RUNTIME_OBJS =					\
 	$(TEST_LIBC_RUNTIME_SRCS:%=o/$(MODE)/%.zip.o)		\
 	$(TEST_LIBC_RUNTIME_SRCS:%.c=o/$(MODE)/%.o)
+
+TEST_LIBC_RUNTIME_COMS =					\
+	$(TEST_LIBC_RUNTIME_SRCS:%.c=o/$(MODE)/%.com)
 
 TEST_LIBC_RUNTIME_BINS =					\
 	$(TEST_LIBC_RUNTIME_COMS)				\
@@ -22,13 +24,16 @@ TEST_LIBC_RUNTIME_CHECKS =					\
 	$(TEST_LIBC_RUNTIME_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
 
 TEST_LIBC_RUNTIME_DIRECTDEPS =					\
+	LIBC_ALG						\
 	LIBC_CALLS						\
 	LIBC_CALLS_HEFTY					\
 	LIBC_FMT						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
+	LIBC_RAND						\
 	LIBC_RUNTIME						\
 	LIBC_STDIO						\
+	LIBC_LOG						\
 	LIBC_STR						\
 	LIBC_STUBS						\
 	LIBC_SYSV						\
@@ -60,6 +65,7 @@ o/$(MODE)/test/libc/runtime/getenv_test.com.runs:		\
 		o/$(MODE)/test/libc/runtime/getenv_test.com
 	@HELLO=THERE build/runit $@ $<
 
+o/$(MODE)/test/libc/runtime/fun_test.o				\
 o/$(MODE)/test/libc/runtime/itsatrap_test.o:			\
 		OVERRIDE_CFLAGS +=				\
 			-fno-sanitize=all			\

@@ -201,6 +201,7 @@
 
         (gnu
          '("__inline"
+           "__thread"
            "__alignof"
            "__typeof"
            "__restrict"

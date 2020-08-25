@@ -18,9 +18,9 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.align	16
-.text.likely
 .source	__FILE__
+.privileged
+.alignfunc
 
 /	Returns 𝑥-𝑦, aborting on overflow.
 /
@@ -30,8 +30,9 @@
 /	@see	-ftrapv
 __subvti3:
 	mov	%rdi,%rax
-	sub	%rsi,%rax
-	sbb	%rdi,%rdx
+	sub	%rdx,%rax
+	mov	%rsi,%rdx
+	sbb	%rcx,%rdx
 	jo	1f
 	ret
 1:	push	%rbp

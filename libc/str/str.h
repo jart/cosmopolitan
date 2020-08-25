@@ -14,7 +14,7 @@ extern const uint8_t kToLower[256];
 extern const uint8_t kToUpper[256];
 extern const uint16_t kToLower16[256];
 extern const uint8_t kBase36[256];
-extern const char16_t kCp437[256]; /** IBM Code Page 437 */
+extern const char16_t kCp437[256];
 
 int isascii(int);
 int isspace(int);
@@ -68,8 +68,8 @@ void *isnotplaintext(const void *, size_t) nothrow nocallback nosideeffect;
 #define UTF16_MOAR        0b1101100000000000 /* 0xD800..0xDBFF */
 #define UTF16_CONT        0b1101110000000000 /* 0xDC00..0xDBFF */
 
-unsigned getutf16(const char16_t *p, wint_t *wc);
-int pututf16(char16_t *s, size_t size, wint_t wc, bool awesome);
+unsigned getutf16(const char16_t *, wint_t *);
+int pututf16(char16_t *, size_t, wint_t, bool);
 int iswalnum(wint_t);
 int iswalpha(wint_t);
 int iswblank(wint_t);
@@ -105,6 +105,7 @@ void *memchr(const void *, int, size_t) strlenesque;
 char *strchrnul(const char *, int) strlenesque returnsnonnull;
 void *rawmemchr(const void *, int) strlenesque returnsnonnull;
 void bzero(void *, size_t) paramsnonnull() libcesque;
+void explicit_bzero(void *, size_t) paramsnonnull() libcesque;
 size_t strlen16(const char16_t *) strlenesque;
 size_t strnlen16(const char16_t *, size_t) strlenesque;
 size_t strnlen16_s(const char16_t *, size_t);
@@ -165,7 +166,6 @@ char *strcpy(char *, const char *) memcpyesque;
 char16_t *strcpy16(char16_t *, const char16_t *) memcpyesque;
 char *strncat(char *, const char *, size_t) memcpyesque;
 char *strncpy(char *, const char *, size_t) memcpyesque;
-char *_strncpy(char *, const char *, size_t) asm("strncpy") memcpyesque;
 char *strtok(char *, const char *) paramsnonnull((2)) libcesque;
 char *strtok_r(char *, const char *, char **) paramsnonnull((2, 3));
 uint16_t *strcpyzbw(uint16_t *, const char *) memcpyesque;
@@ -179,7 +179,6 @@ bool endswith16(const char16_t *, const char16_t *) strlenesque;
 bool wcsendswith(const wchar_t *, const wchar_t *) strlenesque;
 const char *indexdoublenulstring(const char *, unsigned) strlenesque;
 int getkvlin(const char *, const char *const[]);
-void crc32init(uint32_t[hasatleast 256], uint32_t);
 wchar_t *wmemset(wchar_t *, wchar_t, size_t) memcpyesque;
 char16_t *memset16(char16_t *, char16_t, size_t) memcpyesque;
 compatfn wchar_t *wmemcpy(wchar_t *, const wchar_t *, size_t) memcpyesque;
@@ -190,28 +189,14 @@ char *tinystrstr(const char *, const char *) strlenesque;
 char16_t *tinystrstr16(const char16_t *, const char16_t *) strlenesque;
 void *tinymemmem(const void *, size_t, const void *, size_t) strlenesque;
 
-void *memtolower(void *p, size_t n);
-char *strntolower(char *s, size_t n);
-char *strtolower(char *s) paramsnonnull();
-char *strntoupper(char *s, size_t n);
-char *strtoupper(char *s) paramsnonnull();
-char *chomp(char *line);
-char16_t *chomp16(char16_t *line);
-wchar_t *wchomp(wchar_t *line);
-
-/* gcc -Werror=stringop-truncation misunderstands strncpy() api */
-#define strncpy(DEST, SRC, N) _strncpy(DEST, SRC, N)
-
-#define explicit_bzero(STR, BYTES)                                          \
-  do {                                                                      \
-    void *Str;                                                              \
-    size_t Bytes;                                                           \
-    asm volatile("call\texplicit_bzero"                                     \
-                 : "=D"(Str), "=S"(Bytes)                                   \
-                 : "0"(STR), "1"(BYTES)                                     \
-                 : "rax", "rcx", "rdx", "r8", "r9", "r10", "r11", "memory", \
-                   "cc", "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5");   \
-  } while (0)
+void *memtolower(void *, size_t);
+char *strntolower(char *, size_t);
+char *strtolower(char *) paramsnonnull();
+char *strntoupper(char *, size_t);
+char *strtoupper(char *) paramsnonnull();
+char *chomp(char *);
+char16_t *chomp16(char16_t *);
+wchar_t *wchomp(wchar_t *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § strings » multibyte                                       ─╬─│┼
@@ -246,8 +231,8 @@ size_t strclen16(const char16_t *) nosideeffect;
 size_t strnclen16(const char16_t *, size_t) nosideeffect;
 
 typedef unsigned wctype_t;
-wctype_t wctype(const char *name) strlenesque;
-int iswctype(wint_t c, wctype_t type) pureconst;
+wctype_t wctype(const char *) strlenesque;
+int iswctype(wint_t, wctype_t) pureconst;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § strings » hashing                                         ─╬─│┼
@@ -261,9 +246,6 @@ struct Sha256Ctx {
   uint64_t bitlen;
   uint32_t state[8];
 };
-
-uint32_t crc32_z(uint32_t, const void *, size_t);
-extern uint32_t (*const crc32c)(uint32_t, const void *, size_t) paramsnonnull();
 
 void sha256_init(struct Sha256Ctx *);
 void sha256_update(struct Sha256Ctx *, const uint8_t *, size_t);
@@ -306,13 +288,6 @@ extern int (*const hook$wcsncmp)(const wchar_t *, const wchar_t *, size_t);
            : wcsstr, char16_t    \
            : strstr16, default   \
            : strstr)(haystack, needle)
-
-#define strchr(s, c)                                                           \
-  _Generic(*(s), wchar_t                                                       \
-           : wcschr, char16_t                                                  \
-           : strchr16, default                                                 \
-           : (isconstant(s) && isconstant(c) ? __builtin_strchr : _strchr))(s, \
-                                                                            c)
 
 #define strrchr(s, c)           \
   _Generic(*(s), wchar_t        \
@@ -419,10 +394,28 @@ extern int (*const hook$wcsncmp)(const wchar_t *, const wchar_t *, size_t);
 ╚────────────────────────────────────────────────────────────────────────────│*/
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 
+extern int (*const __memcmp)(const void *, const void *, size_t);
+#define memcmp(a, b, n) __memcmp(a, b, n)
+
+/* gcc -Werror=stringop-truncation misunderstands strncpy() api */
+char *_strncpy(char *, const char *, size_t) asm("strncpy") memcpyesque;
+#define strncpy(DEST, SRC, N) _strncpy(DEST, SRC, N)
+
+#define explicit_bzero(STR, BYTES)                                          \
+  do {                                                                      \
+    void *Str;                                                              \
+    size_t Bytes;                                                           \
+    asm volatile("call\texplicit_bzero"                                     \
+                 : "=D"(Str), "=S"(Bytes)                                   \
+                 : "0"(STR), "1"(BYTES)                                     \
+                 : "rax", "rcx", "rdx", "r8", "r9", "r10", "r11", "memory", \
+                   "cc", "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5");   \
+  } while (0)
+
 #ifdef UNBLOAT_STDARG
 #define __STR_XMM_CLOBBER
 #else
-#define __STR_XMM_CLOBBER "xmm3",
+#define __STR_XMM_CLOBBER "xmm3", "xmm4",
 #endif
 
 #define __memcpy_isgoodsize(SIZE)                              \
@@ -437,7 +430,7 @@ extern int (*const hook$wcsncmp)(const wchar_t *, const wchar_t *, size_t);
 
 #define memcpy(DEST, SRC, SIZE)                                  \
   (__memcpy_isgoodsize(SIZE) ? __builtin_memcpy(DEST, SRC, SIZE) \
-                             : __memcpy("_memcpy", DEST, SRC, SIZE))
+                             : __memcpy("MemCpy", DEST, SRC, SIZE))
 
 #define memset(DEST, BYTE, SIZE)                                  \
   (__memset_isgoodsize(SIZE) ? __builtin_memset(DEST, BYTE, SIZE) \
@@ -445,7 +438,8 @@ extern int (*const hook$wcsncmp)(const wchar_t *, const wchar_t *, size_t);
 
 #if defined(__STDC_HOSTED__) && (defined(__SSE2__) || defined(UNBLOAT_STDARG))
 
-#define memmove(DEST, SRC, SIZE) __memcpy("_memmove", (DEST), (SRC), (SIZE))
+#define memmove(DEST, SRC, SIZE) __memcpy("MemMove", (DEST), (SRC), (SIZE))
+
 #define __memcpy(FN, DEST, SRC, SIZE)                                      \
   ({                                                                       \
     void *DeSt = (DEST);                                                   \
@@ -457,16 +451,18 @@ extern int (*const hook$wcsncmp)(const wchar_t *, const wchar_t *, size_t);
         : __STR_XMM_CLOBBER "cc");                                         \
     DeSt;                                                                  \
   })
+
 #define mempcpy(DEST, SRC, SIZE)                          \
   ({                                                      \
     size_t SIze = (SIZE);                                 \
     (void *)((char *)memcpy((DEST), (SRC), SIze) + SIze); \
   })
+
 #define __memset(DEST, BYTE, SIZE)        \
   ({                                      \
     void *DeSt = (DEST);                  \
     size_t SiZe = (SIZE);                 \
-    asm("call\t_memset"                   \
+    asm("call\tMemSet"                    \
         : "=m"(*(char(*)[SiZe])(DeSt))    \
         : "D"(DeSt), "S"(BYTE), "d"(SiZe) \
         : __STR_XMM_CLOBBER "cc");        \
@@ -476,6 +472,7 @@ extern int (*const hook$wcsncmp)(const wchar_t *, const wchar_t *, size_t);
 #else /* hosted/sse2/unbloat */
 
 #define memmove(DEST, SRC, SIZE) __memcpy((DEST), (SRC), (SIZE))
+
 #define mempcpy(DEST, SRC, SIZE)                                           \
   ({                                                                       \
     void *Rdi, *Dest = (DEST);                                             \
@@ -488,6 +485,7 @@ extern int (*const hook$wcsncmp)(const wchar_t *, const wchar_t *, size_t);
         : "cc");                                                           \
     Rdi;                                                                   \
   })
+
 #define __memcpy(FN, DEST, SRC, SIZE)                                      \
   ({                                                                       \
     void *Rdi, *Dest = (DEST);                                             \
@@ -500,6 +498,7 @@ extern int (*const hook$wcsncmp)(const wchar_t *, const wchar_t *, size_t);
         : "cc");                                                           \
     Dest;                                                                  \
   })
+
 #define __memset(DEST, BYTE, SIZE)                           \
   ({                                                         \
     void *Rdi, *Dest = (DEST);                               \
@@ -532,8 +531,8 @@ extern int (*const hook$wcsncmp)(const wchar_t *, const wchar_t *, size_t);
 #define pututf16(BUF, SIZE, CH, AWESOME) __pututf16(BUF, SIZE, CH, AWESOME)
 #define getutf16(BUF, CHPTR)             __getutf16(BUF, CHPTR)
 size_t _strlen(const char *s) asm("strlen") strlenesque;
-char *_strchr(const char *, int) asm("strchr") strlenesque;
 void *_memchr(const void *, int, size_t) asm("memchr") strlenesque;
+
 forceinline int __pututf16(char16_t *s, size_t size, wint_t wc,
                            bool32 awesome) {
   if (size >= 1 && (0x00 <= wc && wc <= 0xD7FF)) {
@@ -548,97 +547,24 @@ forceinline int __pututf16(char16_t *s, size_t size, wint_t wc,
   }
   int ax;
   asm("call\tpututf16"
-      : "=a"(ax), "=m"(*(char16_t(*)[size])s)
+      : "=a"(ax), "=m"(*(char(*)[size])s)
       : "D"(s), "S"(size), "d"(wc)
       : "cc");
   return ax;
 }
+
 forceinline unsigned __getutf16(const char16_t *s, wint_t *wc) {
   if ((0x00 <= s[0] && s[0] <= 0xD7FF)) {
     *wc = s[0];
     return 1;
   }
   unsigned ax;
-  asm("call\tgetutf16" : "=a"(ax), "=m"(*wc) : "D"(s), "S"(wc), "m"(*s) : "cc");
+  asm("call\tgetutf16"
+      : "=a"(ax), "=m"(*wc)
+      : "D"(s), "S"(wc), "m"(*s), "m"(*(char(*)[4])s)
+      : "cc");
   return ax;
 }
-
-/*
- * GCC has builtins for these, that only do things for literals. They
- * also cause the compiler to whine in a kafkaesque way when flags like
- * -Werror=shadow and -Werror=implicit-function-declaration are passed.
- */
-#define isascii(c)  isascii_(c)
-#define isspace(c)  isspace_(c)
-#define isalpha(c)  isalpha_(c)
-#define isdigit(c)  isdigit_(c)
-#define isalnum(c)  isalnum_(c)
-#define isxdigit(c) isxdigit_(c)
-#define isprint(c)  isprint_(c)
-#define islower(c)  islower_(c)
-#define isupper(c)  isupper_(c)
-#define isblank(c)  isblank_(c)
-#define iscntrl(c)  iscntrl_(c)
-#define isgraph(c)  isgraph_(c)
-#define tolower(c)  tolower_(c)
-#define ispunct(c)  ispunct_(c)
-#define toupper(c)  toupper_(c)
-#define hextoint(c) hextoint_(c)
-#define DECLARE_CTYPE(NAME, EXPR)                     \
-  pureconst forceinline nodebuginfo int NAME(int i) { \
-    unsigned char c = (unsigned char)i;               \
-    return (EXPR);                                    \
-  }
-DECLARE_CTYPE(isascii_, 0 <= c && c <= 0x7f)
-DECLARE_CTYPE(isspace_, kCtype[c] & 0x01)
-DECLARE_CTYPE(isalpha_, kCtype[c] & 0x02)
-DECLARE_CTYPE(isdigit_, '0' <= c && c <= '9')
-DECLARE_CTYPE(isalnum_, kCtype[c] & 0x06)
-DECLARE_CTYPE(isxdigit_, kCtype[c] & 0x08)
-DECLARE_CTYPE(isprint_, kCtype[c] & 0x10)
-DECLARE_CTYPE(islower_, 'a' <= c && c <= 'z')
-DECLARE_CTYPE(isupper_, 'A' <= c && c <= 'Z')
-DECLARE_CTYPE(isblank_, kCtype[c] & 0x80)
-DECLARE_CTYPE(iscntrl_, !isprint_(c))
-DECLARE_CTYPE(isgraph_, isprint_(c) && (c) != ' ')
-DECLARE_CTYPE(tolower_, kToLower[c])
-DECLARE_CTYPE(ispunct_, isprint(c) && !(kCtype[c] & 0x07))
-DECLARE_CTYPE(toupper_, kToUpper[c])
-DECLARE_CTYPE(hextoint_, (c + 9 * (1 & (SAR(c, 6)))) & 0xf)
-#undef DECLARE_CTYPE
-#define iswalnum(c)  iswalnum_(c)
-#define iswalpha(c)  iswalpha_(c)
-#define iswblank(c)  iswblank_(c)
-#define iswcntrl(c)  iswcntrl_(c)
-#define iswdigit(c)  iswdigit_(c)
-#define iswgraph(c)  iswgraph_(c)
-#define iswlower(c)  iswlower_(c)
-#define iswspace(c)  iswspace_(c)
-#define iswupper(c)  iswupper_(c)
-#define iswxdigit(c) iswxdigit_(c)
-#define iswpunct(c)  iswpunct_(c)
-#define iswprint(c)  iswprint_(c)
-#define towlower(c)  towlower_(c)
-#define towupper(c)  towupper_(c)
-#define DECLARE_WCTYPE(R, NAME, T, EXPR) \
-  forceinline nodebuginfo R NAME(T c) {  \
-    return EXPR;                         \
-  }
-DECLARE_WCTYPE(int, iswalnum_, wint_t, isascii(c) ? isalnum(c) : c)
-DECLARE_WCTYPE(int, iswalpha_, wint_t, isascii(c) ? isalpha(c) : c)
-DECLARE_WCTYPE(int, iswblank_, wint_t, isascii(c) ? isblank(c) : c)
-DECLARE_WCTYPE(int, iswcntrl_, wint_t, isascii(c) ? iscntrl(c) : c)
-DECLARE_WCTYPE(int, iswdigit_, wint_t, isascii(c) ? isdigit(c) : c)
-DECLARE_WCTYPE(int, iswgraph_, wint_t, isascii(c) ? isgraph(c) : c)
-DECLARE_WCTYPE(int, iswlower_, wint_t, isascii(c) ? islower(c) : c)
-DECLARE_WCTYPE(int, iswspace_, wint_t, isascii(c) ? isspace(c) : c)
-DECLARE_WCTYPE(int, iswupper_, wint_t, isascii(c) ? isupper(c) : c)
-DECLARE_WCTYPE(int, iswxdigit_, wint_t, isascii(c) ? isxdigit(c) : c)
-DECLARE_WCTYPE(int, iswpunct_, wint_t, !isascii(c) || ispunct(c))
-DECLARE_WCTYPE(int, iswprint_, wint_t, !isascii(c) || isprint(c))
-DECLARE_WCTYPE(unsigned, towlower_, unsigned, isascii(c) ? tolower(c) : c)
-DECLARE_WCTYPE(unsigned, towupper_, unsigned, isascii(c) ? toupper(c) : c)
-#undef DECLARE_WCTYPE
 
 #endif /* __GNUC__ && !__STRICT_ANSI__ */
 COSMOPOLITAN_C_END_

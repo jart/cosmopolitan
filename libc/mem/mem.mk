@@ -25,6 +25,7 @@ LIBC_MEM_A_CHECKS =				\
 	$(LIBC_MEM_A_HDRS:%=o/$(MODE)/%.ok)
 
 LIBC_MEM_A_DIRECTDEPS =				\
+	LIBC_CONV				\
 	LIBC_STR				\
 	LIBC_FMT				\
 	LIBC_RAND				\

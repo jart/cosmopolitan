@@ -19,6 +19,7 @@
 (require 'cosmo-c-builtins)
 (require 'cosmo-c-constants)
 (require 'cosmo-cpp-constants)
+(require 'cosmo-platform-constants)
 (require 'dired)
 (require 'javadown)
 (require 'ld-script)
@@ -175,9 +176,13 @@
           ((file-exists-p (format "%s" buddy))
            (format (cosmo-join
                     " && "
-                    '("m=%s; make -j8 -O o/$m/%s.o MODE=$m SILENT=0"
-                      "objdump -wzCd o/$m/%s.o"
-                      "make -j8 -O MODE=$m %s"))
+                    '("m=%s; n=%s; make -j8 -O o/$m/%s.o MODE=$m SILENT=0"
+                      "make -j8 -O MODE=$m %s"
+                      ;; "bloat o/$m/%s.o | head"
+                      ;; "nm -C --size o/$m/%s.o | sort -r"
+                      "echo"
+                      "size -A o/$m/$n.o | grep '^[.T]' | grep -v 'debug\\|command.line\\|stack' | sort -rnk2"
+                      "objdump -wzCd o/$m/$n.o"))
                    mode name name buns))
           ((eq kind 'run)
            (format
@@ -196,6 +201,9 @@
              " && "
              `("m=%s; f=o/$m/%s.o"
                ,(concat "make -j8 -O $f MODE=$m SILENT=0")
+               ;; "nm -C --size $f | sort -r"
+               "echo"
+               "size -A $f | grep '^[.T]' | grep -v 'debug\\|command.line\\|stack' | sort -rnk2"
                "objdump -wzCd $f"))
             mode name)))))
 
@@ -205,6 +213,7 @@
          (root (locate-dominating-file this "Makefile")))
     (when root
       (let* ((mode (cosmo--make-mode arg))
+             (compilation-scroll-output nil)
              (default-directory root)
              (compile-command (cosmo--compile-command this root nil mode)))
         (compile compile-command)))))
@@ -416,10 +425,11 @@
 (defun cosmo-assembly (arg)
   (interactive "P")
   (setq arg (or arg 2))
+  ;; -ffast-math -funsafe-math-optimizations -fsched2-use-superblocks -fjump-tables
   (cond ((not (eq 0 (logand 8 arg)))
          (cosmo--assembly (setq arg (logand (lognot 8)))
-                          "SILENT=0 COPTS='-ffast-math -O3 -funsafe-math-optimizations -fsched2-use-superblocks'"))
-        (t (cosmo--assembly arg "SILENT=0 COPTS='-O3'"))))
+                          "SILENT=0 COPTS='-Os'"))
+        (t (cosmo--assembly arg "SILENT=0 COPTS='-Os' TARGET_ARCH='-march=znver2 -mdispatch-scheduler' CPPFLAGS='-DSTACK_FRAME_UNLIMITED'"))))
 
 (defun cosmo-assembly-native (arg)
   (interactive "P")
@@ -427,11 +437,11 @@
   (cond ((not (eq 0 (logand 8 arg)))
          (cosmo--assembly
           (setq arg (logand (lognot 8)))
-          "SILENT=0 CCFLAGS=--verbose COPTS='$(IEEE_MATH)' TARGET_ARCH='-march=znver2'"))
+          "SILENT=0 CCFLAGS=--verbose COPTS='$(IEEE_MATH)' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' TARGET_ARCH='-march=k8'"))   ;; znver2
         (t
          (cosmo--assembly
           arg
-          "SILENT=0 CCFLAGS=--verbose COPTS='$(MATHEMATICAL) -O3' TARGET_ARCH='-march=znver2'"))))
+          "SILENT=0 CCFLAGS=--verbose COPTS='$(MATHEMATICAL) -O3' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' TARGET_ARCH='-march=k8'"))))  ;; znver2
 
 (defun cosmo-assembly-icelake (arg)
   (interactive "P")
@@ -439,15 +449,15 @@
   (cond ((not (eq 0 (logand 8 arg)))
          (cosmo--assembly
           (setq arg (logand (lognot 8)))
-          "SILENT=0 CCFLAGS=--verbose COPTS='$(MATHEMATICAL) -O3' TARGET_ARCH='-march=icelake-client'"))
+          "SILENT=0 CCFLAGS=--verbose COPTS='$(MATHEMATICAL) -O3' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' TARGET_ARCH='-march=icelake-client'"))
         (t
          (cosmo--assembly
           arg
-          "SILENT=0 CCFLAGS=--verbose COPTS='$(MATHEMATICAL) -O3' TARGET_ARCH='-march=icelake-client'"))))
+          "SILENT=0 CCFLAGS=--verbose COPTS='$(MATHEMATICAL) -O3' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' TARGET_ARCH='-march=icelake-client'"))))
 
 (defun cosmo-assembly-balanced (arg)
   (interactive "P")
-  (cosmo--assembly (or arg 5) "CFLAGS='-O2 -ftrapv' SILENT=0"))
+  (cosmo--assembly (or arg 5) "CFLAGS='-O2 -ftrapv' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' SILENT=0"))
 
 (defun cosmo-mca (arg)
   (interactive "P")
@@ -532,12 +542,17 @@
 (defun cosmo-run (arg)
   (interactive "P")
   (let* ((this (or (buffer-file-name) dired-directory))
-         (root (or (locate-dominating-file this "Makefile") default-directory))
+         (proj (locate-dominating-file this "Makefile"))
+         (root (or proj default-directory))
          (file (file-relative-name this root)))
     (when root
       (let ((default-directory root))
         (save-buffer)
-        (cond ((memq major-mode '(c-mode c++-mode asm-mode fortran-mode))
+        (cond ((file-executable-p file)
+               (compile (if (cosmo-contains "/" file)
+                            file
+                          (format "./%s" file))))
+              ((memq major-mode '(c-mode c++-mode asm-mode fortran-mode))
                (let* ((mode (cosmo--make-mode arg))
                       (compile-command (cosmo--compile-command this root 'run mode)))
                  (compile compile-command)))
@@ -694,13 +709,15 @@
   (font-lock-add-keywords
    nil `((,cosmo-c-keywords-regex . font-lock-keyword-face)
          (,cosmo-c-builtins-regex . font-lock-builtin-face)
+         (,cosmo-platform-constants-regex . font-lock-builtin-face)
          (,cosmo-cpp-constants-regex . font-lock-constant-face)
          (,cosmo-c-constants-regex . font-lock-constant-face)
          (,cosmo-c-types-regex . font-lock-type-face))))
 
 (defun cosmo-asm-keywords-hook ()
   (font-lock-add-keywords
-   nil `((,cosmo-cpp-constants-regex . font-lock-constant-face))))
+   nil `((,cosmo-cpp-constants-regex . font-lock-constant-face)
+         (,cosmo-platform-constants-regex . font-lock-constant-face))))
 
 (add-hook 'c-mode-common-hook 'cosmo-c-keywords-hook)
 (add-hook 'asm-mode-hook 'cosmo-asm-keywords-hook)

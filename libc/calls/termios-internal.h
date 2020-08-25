@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_TERMIOS_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_TERMIOS_INTERNAL_H_
+#ifndef __STRICT_ANSI__
 #include "libc/bits/safemacros.h"
 #include "libc/str/str.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -26,4 +27,5 @@ void termios2linux(struct termios *, const union metatermios *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* !ANSI */
 #endif /* COSMOPOLITAN_LIBC_CALLS_TERMIOS_INTERNAL_H_ */

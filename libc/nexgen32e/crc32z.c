@@ -18,9 +18,8 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.h"
+#include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/str/internal.h"
-#include "libc/str/str.h"
 
 /**
  * Computes Phil Katz CRC-32 used by zip/zlib/gzip/etc.

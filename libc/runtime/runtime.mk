@@ -61,6 +61,8 @@ $(LIBC_RUNTIME_A).pkg:					\
 
 o/$(MODE)/libc/runtime/asan.greg.o			\
 o/$(MODE)/libc/runtime/shadowargs.o			\
+o/$(MODE)/libc/runtime/hook.greg.o			\
+o/$(MODE)/libc/runtime/ftrace.greg.o			\
 o/$(MODE)/libc/runtime/__stack_chk_fail.o		\
 o/$(MODE)/libc/runtime/__stack_chk_guard.o:		\
 		OVERRIDE_COPTS +=			\

@@ -20,7 +20,7 @@
 #include "third_party/xed/x86.h"
 #include "tool/decode/lib/idname.h"
 
-const struct IdName kXedErrorNames[] = {
+const struct IdName kXedErrorIdNames[] = {
     {XED_ERROR_NONE, "NONE"},
     {XED_ERROR_BUFFER_TOO_SHORT, "BUFFER_TOO_SHORT"},
     {XED_ERROR_GENERAL_ERROR, "GENERAL_ERROR"},

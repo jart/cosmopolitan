@@ -24,9 +24,11 @@
 /**
  * Converts Windows COBOL timestamp to UNIX epoch in nanoseconds.
  */
-void filetimetotimespec(struct timespec *ts, struct NtFileTime ft) {
-  uint64_t t = (uint64_t)ft.dwHighDateTime << 32 | ft.dwLowDateTime;
-  uint64_t x = t - MODERNITYSECONDS * HECTONANOSECONDS;
-  ts->tv_sec = x / HECTONANOSECONDS;
-  ts->tv_nsec = x % HECTONANOSECONDS * 100;
+struct timespec filetimetotimespec(struct NtFileTime ft) {
+  uint64_t x;
+  x = ft.dwHighDateTime;
+  x <<= 32;
+  x |= ft.dwLowDateTime;
+  x -= MODERNITYSECONDS;
+  return (struct timespec){x / HECTONANOSECONDS, x % HECTONANOSECONDS * 100};
 }

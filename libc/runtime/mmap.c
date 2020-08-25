@@ -24,22 +24,33 @@
 #include "libc/macros.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
-#include "libc/runtime/mappings.h"
+#include "libc/rand/rand.h"
+#include "libc/runtime/memtrack.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 
-#define VIP(X) (void *)(intptr_t)(X)
+#define IP(X)            (intptr_t)(X)
+#define VIP(X)           (void *)IP(X)
+#define COORD(a)         (int)(IP(a) >> 16)
+#define ADDR(c)          (void *)(IP(c) << 16)
+#define ALIGNED(p)       (!(IP(p) & (FRAMESIZE - 1)))
+#define CANONICAL(p)     (-0x800000000000 <= IP(p) && IP(p) <= 0x7fffffffffff)
+#define LAST_COORD(a, n) (COORD(a) + (ROUNDUP(n, FRAMESIZE) >> 16) - 1)
 
 struct DirectMap {
   void *addr;
   int64_t maphandle;
 };
 
-static textwindows struct DirectMap directmap$nt(void *addr, size_t size,
-                                                 unsigned prot, unsigned flags,
-                                                 int fd, int64_t off) {
-  struct DirectMap res;
+struct MemoryIntervals _mmi;
+
+static textwindows struct DirectMap DirectMapNt(void *addr, size_t size,
+                                                unsigned prot, unsigned flags,
+                                                int fd, int64_t off) {
+  struct DirectMap res; /* NT IS TORTURE */
   if ((res.maphandle = CreateFileMappingNuma(
            fd != -1 ? g_fds.p[fd].handle : kNtInvalidHandleValue,
            &kNtIsInheritable, prot2nt(prot, flags), size >> 32, size, NULL,
@@ -58,14 +69,40 @@ static textwindows struct DirectMap directmap$nt(void *addr, size_t size,
   return res;
 }
 
-static struct DirectMap directmap(void *addr, size_t size, unsigned prot,
+static struct DirectMap DirectMap(void *addr, size_t size, unsigned prot,
                                   unsigned flags, int fd, int64_t off) {
   if (!IsWindows()) {
     return (struct DirectMap){mmap$sysv(addr, size, prot, flags, fd, off),
                               kNtInvalidHandleValue};
   } else {
-    return directmap$nt(addr, size, prot, flags, fd, off);
+    return DirectMapNt(addr, size, prot, flags, fd, off);
   }
+}
+
+static int UntrackMemoryIntervals(void *addr, size_t size) {
+  return ReleaseMemoryIntervals(&_mmi, COORD(addr), LAST_COORD(addr, size),
+                                ReleaseMemoryNt);
+}
+
+/**
+ * Releases memory pages.
+ *
+ * @param addr is a pointer within any memory mapped region the process
+ *     has permission to control, such as address ranges returned by
+ *     mmap(), the program image itself, etc.
+ * @param size is the amount of memory to unmap, which needn't be a
+ *     multiple of FRAMESIZE, and may be a subset of that which was
+ *     mapped previously, and may punch holes in existing mappings,
+ *     but your mileage may vary on windows
+ * @return 0 on success, or -1 w/ errno
+ */
+int munmap(void *addr, size_t size) {
+  int rc;
+  if (!ALIGNED(addr) || !CANONICAL(addr) || !size) return einval();
+  size = ROUNDUP(size, FRAMESIZE);
+  if (UntrackMemoryIntervals(addr, size) == -1) return -1;
+  if (IsWindows()) return 0;
+  return munmap$sysv(addr, size);
 }
 
 /**
@@ -73,7 +110,7 @@ static struct DirectMap directmap(void *addr, size_t size, unsigned prot,
  *
  * @param addr optionally requests a particular virtual base address,
  *     which needs to be 64kb aligned if passed (for NT compatibility)
- * @param size should be >0 and multiple of PAGESIZE
+ * @param size must be >0 and needn't be a multiple of FRAMESIZE
  * @param prot can have PROT_READ, PROT_WRITE, PROT_EXEC, PROT_NONE, etc.
  * @param flags can have MAP_ANONYMOUS, MAP_SHARED, MAP_PRIVATE, etc.
  * @param fd is an open()'d file descriptor whose contents shall be
@@ -83,73 +120,48 @@ static struct DirectMap directmap(void *addr, size_t size, unsigned prot,
  * @return virtual base address of new mapping, or MAP_FAILED w/ errno
  */
 void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
-  size_t i;
-  intptr_t p;
+  int i;
+  long gap;
   struct DirectMap dm;
-  struct MemoryCoord c;
-  p = (intptr_t)addr;
-
-  assert(!(0 < p && p < 0x200000));
-  assert(-0x800000000000L <= p && p <= 0x7fffffffffffL);
-  assert((flags & MAP_PRIVATE) ^ (flags & MAP_SHARED));
-  assert((flags & MAP_ANONYMOUS) ^ (fd != -1));
-  assert(off % PAGESIZE == 0);
-  assert(size > 0);
-
-  if (!(IsWindows() && fd != -1)) {
-    size = ROUNDUP(size, FRAMESIZE);
-  }
-
+  if (!size) return VIP(einval());
+  if (!ALIGNED(off)) return VIP(einval());
+  if (!ALIGNED(addr)) return VIP(einval());
+  if (!CANONICAL(addr)) return VIP(einval());
+  if (!(!!(flags & MAP_ANONYMOUS) ^ (fd != -1))) return VIP(einval());
+  if (!(!!(flags & MAP_PRIVATE) ^ !!(flags & MAP_SHARED))) return VIP(einval());
+  if (!(IsWindows() && fd != -1)) size = ROUNDUP(size, FRAMESIZE);
   if (flags & MAP_FIXED) {
-    assert(addr != NULL);
-    assert((intptr_t)addr % FRAMESIZE == 0);
-  } else {
-    if (!addr) {
-      if (_mm.i) {
-        addr = COORD_TO_ADDR(_mm.p[_mm.i - 1].y + 1);
-        for (i = _mm.i; i; --i) {
-          if (_mm.p[i - 1].y + 1 + size / FRAMESIZE <=
-                  ADDR_TO_COORD(kMappingsStart + kMappingsSize) &&
-              _mm.p[i - 1].y + 1 >= ADDR_TO_COORD(kMappingsStart)) {
-            addr = COORD_TO_ADDR(_mm.p[i - 1].y + 1);
-            break;
-          }
+    if (UntrackMemoryIntervals(addr, size) == -1) {
+      return MAP_FAILED;
+    }
+  } else if (_mmi.i) {
+    if (0 && IsModeDbg()) {
+      addr = VIP(rand64() & 0x00007ffffffff000);
+    } else {
+      for (i = _mmi.i - 1; i > 0; --i) {
+        gap = _mmi.p[i].x - _mmi.p[i - 1].y - 1;
+        assert(gap > 0);
+        if (gap >= (ROUNDUP(size, FRAMESIZE) >> 16)) {
+          addr = ADDR(_mmi.p[i - 1].y + 1);
+          break;
         }
-      } else {
-        addr = VIP(kMappingsStart);
+      }
+      if (!addr) {
+        addr = ADDR(_mmi.p[_mmi.i - 1].y + 1);
       }
     }
-    addr = (void *)ROUNDDOWN((intptr_t)addr, FRAMESIZE);
-  }
-
-  if (_mm.i == MMAP_MAX) {
-    return VIP(enomem());
-  }
-
-  if (flags & MAP_FIXED) {
-    munmap(addr, size);
   } else {
-    c = ADDRSIZE_TO_COORD(addr, size);
-    if ((i = findmapping(c.y)) && ISOVERLAPPING(c, _mm.p[i - 1])) {
-      return VIP(einval());
-    }
+    addr = VIP(kMappingsStart);
   }
-
-  dm = directmap(addr, size, prot, flags | MAP_FIXED, fd, off);
-  if (dm.addr == MAP_FAILED) return MAP_FAILED;
-
-  i = findmapping(ADDR_TO_COORD(dm.addr));
-  if (i < _mm.i) {
-    memmove(&_mm.p[i + 1], &_mm.p[i],
-            (intptr_t)&_mm.p[_mm.i] - (intptr_t)&_mm.p[i]);
-    memmove(&_mm.h[i + 1], &_mm.h[i],
-            (intptr_t)&_mm.h[_mm.i] - (intptr_t)&_mm.h[i]);
+  assert((flags & MAP_FIXED) ||
+         (!isheap(addr) && !isheap((char *)addr + size - 1)));
+  dm = DirectMap(addr, size, prot, flags | MAP_FIXED, fd, off);
+  if (dm.addr == MAP_FAILED || dm.addr != addr) {
+    return MAP_FAILED;
   }
-
-  _mm.p[i] = ADDRSIZE_TO_COORD(dm.addr, size);
-  _mm.h[i] = dm.maphandle;
-  _mm.i++;
-
-  assert((intptr_t)dm.addr % __BIGGEST_ALIGNMENT__ == 0);
+  if (TrackMemoryInterval(&_mmi, COORD(dm.addr), LAST_COORD(dm.addr, size),
+                          dm.maphandle) == -1) {
+    _Exit(1);
+  }
   return dm.addr;
 }

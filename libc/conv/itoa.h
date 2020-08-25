@@ -23,13 +23,17 @@ COSMOPOLITAN_C_START_
 
 */
 
-size_t int128toarray_radix10(int128_t, char *);
-size_t uint128toarray_radix10(uint128_t, char *);
 size_t int64toarray_radix10(int64_t, char *);
 size_t uint64toarray_radix10(uint64_t, char *);
 size_t int64toarray(int64_t, char *, int);
 size_t uint64toarray(uint64_t, char *, int);
 size_t uint64toarray_radix16(uint64_t, char[hasatleast 17]);
+size_t uint64toarray_fixed16(uint64_t, char[hasatleast 17], uint8_t);
+
+#ifndef __STRICT_ANSI__
+size_t int128toarray_radix10(int128_t, char *);
+size_t uint128toarray_radix10(uint128_t, char *);
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nexgen32e/x86feature.h"
+#include "libc/nexgen32e/macros.h"
 #include "libc/macros.h"
 .source	__FILE__
 
@@ -32,6 +33,7 @@ strchrnul:
 	.profilable
 	or	$-1,%r9
 	jmp	0f
+	.endfn	strchrnul,globl
 
 /	Returns pointer to first instance of character, the BSD way.
 /
@@ -41,6 +43,7 @@ strchrnul:
 /	@note	this won't return NULL if search character is NUL
 index:	nop
 /	𝑠𝑙𝑖𝑑𝑒
+	.endfn	index,globl
 
 /	Returns pointer to first instance of character.
 /
@@ -56,6 +59,7 @@ strchr:	.leafprologue
 	or	$-1,%rsi
 	xor	%r8,%r8
 	jmp	strsak
+	.endfn	strchr,globl
 
 /	Returns pointer to first instance of character in range.
 /
@@ -65,6 +69,7 @@ strchr:	.leafprologue
 rawmemchr:
 	or	$-1,%rdx
 /	𝑠𝑙𝑖𝑑𝑒
+	.endfn	rawmemchr,globl
 
 /	Returns pointer to first instance of character in range.
 /
@@ -80,6 +85,7 @@ memchr:	.leafprologue
 	xor	%r8,%r8
 	xor	%r10,%r10
 	jmp	strsak
+	.endfn	memchr,globl
 
 /	Returns length of NUL-terminated string w/ security blankets.
 /
@@ -97,6 +103,7 @@ strnlen_s:
 	test	%rdi,%rdi
 	jnz	0f
 	.leafepilogue
+	.endfn	strnlen_s,globl
 
 /	Returns length of NUL-terminated string.
 /
@@ -105,6 +112,7 @@ strnlen_s:
 /	@asyncsignalsafe
 strlen:	or	$-1,%rsi
 /	𝑠𝑙𝑖𝑑𝑒
+	.endfn	strlen,globl
 
 /	Returns length of NUL-terminated memory, with limit.
 /
@@ -118,6 +126,7 @@ strnlen:.leafprologue
 0:	xor	%edx,%edx
 	mov	%rdi,%r8
 /	𝑠𝑙𝑖𝑑𝑒
+	.endfn	strnlen,globl
 
 /	Swiss army knife of string character scanning.
 /	Sixteen fast functions in one.
@@ -175,12 +184,8 @@ strsak:	lea	-1(%rdi),%rax
 2:	add	%rcx,%rax
 	jmp	.Lbyte
 #if !X86_NEED(AVX2)
-.Lsse2:	punpcklbw %xmm0,%xmm0
-	pshuflw	$0xe0,%xmm0,%xmm0
-	pshufd	$0x00,%xmm0,%xmm0
-	punpcklbw %xmm1,%xmm1
-	pshuflw	$0xe0,%xmm1,%xmm1
-	pshufd	$0x00,%xmm1,%xmm1
+.Lsse2:	pbroadcastb %xmm0
+	pbroadcastb %xmm1
 1:	add	$32,%rax
 	sub	$32,%rsi
 	jb	9b
@@ -203,14 +208,6 @@ strsak:	lea	-1(%rdi),%rax
 	jmp	2b
 #endif
 	.endfn	strsak,globl,hidden
-	.endfn	strnlen,globl
-	.endfn	strlen,globl
-	.endfn	strnlen_s,globl
-	.endfn	memchr,globl
-	.endfn	rawmemchr,globl
-	.endfn	strchr,globl
-	.endfn	index,globl
-	.endfn	strchrnul,globl
 
 /*	benchmarked on intel core i7-6700 @ 3.40GHz (skylake)
 	includes function call overhead (unless marked otherwise)

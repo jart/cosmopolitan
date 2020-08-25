@@ -9,7 +9,7 @@ typedef unsigned int xed_uint_t;
 typedef unsigned int xed_uint_t;
 typedef unsigned char xed_bits_t;
 typedef intptr_t xed_addr_t;
-typedef bool32 xed_bool_t;
+typedef bool xed_bool_t;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

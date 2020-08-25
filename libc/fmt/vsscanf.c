@@ -18,7 +18,24 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/fmt/vsscanf.h"
+#include "libc/fmt/fmt.h"
+
+struct StringScannerState {
+  const unsigned char *s;
+  size_t i;
+};
+
+static int vsscanfcb(void *arg) {
+  int res;
+  struct StringScannerState *state;
+  state = arg;
+  if ((res = state->s[state->i])) {
+    state->i++;
+  } else {
+    res = -1;
+  }
+  return res;
+}
 
 /**
  * Decodes string.
@@ -29,5 +46,6 @@
  *     a small code size penalty to using both
  */
 int(vsscanf)(const char *str, const char *fmt, va_list va) {
-  return __vsscanf(str, fmt, va, IsTiny() ? vcscanf : __vcscanf);
+  struct StringScannerState state = {(const unsigned char *)str, 0};
+  return vcscanf(vsscanfcb, &state, fmt, va);
 }

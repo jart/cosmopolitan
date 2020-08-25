@@ -25,6 +25,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/math.h"
 #include "libc/nexgen32e/nexgen32e.h"
@@ -75,6 +76,7 @@ void vflogf_onfail(FILE *f) {
 void(vflogf)(unsigned level, const char *file, int line, FILE *f,
              const char *fmt, va_list va) {
   static struct timespec ts;
+  bool flush;
   struct tm tm;
   long double t2;
   const char *prog;
@@ -85,7 +87,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   if (fileno(f) == -1) return;
   t2 = nowl();
   secs = t2;
-  nsec = mod1000000000int64(t2 * 1e9L);
+  nsec = rem1000000000int64(t2 * 1e9L);
   if (secs > ts.tv_sec) {
     localtime_r(&secs, &tm);
     strftime(timebuf, sizeof(timebuf), "%Y%m%dT%H%M%S", &tm);
@@ -93,23 +95,28 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
     timebufp = timebuf;
     zonebufp = zonebuf;
     dots = nsec;
+    flush = true;
   } else {
     timebufp = "---------------";
     zonebufp = "---";
     dots = nsec - ts.tv_nsec;
+    flush = true;
   }
   ts.tv_sec = secs;
   ts.tv_nsec = nsec;
   prog = basename(program_invocation_name);
   if (fprintf(f, "%c%s%s%06ld:%s:%d:%.*s:%d] ", loglevel2char(level), timebufp,
-              zonebufp, mod1000000int64(div1000int64(dots)), file, line,
+              zonebufp, rem1000000int64(div1000int64(dots)), file, line,
               strchrnul(prog, '.') - prog, prog, getpid()) <= 0) {
     vflogf_onfail(f);
   }
   (vfprintf)(f, fmt, va);
   va_end(va);
   fputc('\n', f);
+  if (flush) fflush(f);
   if (level == kLogFatal) {
+    startfatal(file, line);
+    fprintf(stderr, "fatal error see logfile\n");
     die();
     unreachable;
   }

@@ -17,7 +17,7 @@ PKGS += LIBC_STUBS
 
 LIBC_STUBS_ARTIFACTS += LIBC_STUBS_A
 LIBC_STUBS = $(LIBC_STUBS_A)
-LIBC_STUBS_A = o/libc/stubs/stubs.a
+LIBC_STUBS_A = o/$(MODE)/libc/stubs/stubs.a
 LIBC_STUBS_A_FILES := $(wildcard libc/stubs/*.S)
 
 LIBC_STUBS_A_HDRS =					\
@@ -28,7 +28,7 @@ LIBC_STUBS_A_SRCS =					\
 
 LIBC_STUBS_A_OBJS = 					\
 	$(LIBC_STUBS_A_SRCS:%=o/$(MODE)/%.zip.o)	\
-	$(LIBC_STUBS_A_SRCS:%.S=o/%.o)
+	$(LIBC_STUBS_A_SRCS:%.S=o/$(MODE)/%.o)
 
 LIBC_STUBS_A_CHECKS =					\
 	$(LIBC_STUBS_A).pkg				\
@@ -47,7 +47,7 @@ LIBC_STUBS_LIBS = $(foreach x,$(LIBC_STUBS_ARTIFACTS),$($(x)))
 LIBC_STUBS_SRCS = $(foreach x,$(LIBC_STUBS_ARTIFACTS),$($(x)_SRCS))
 LIBC_STUBS_CHECKS = $(foreach x,$(LIBC_STUBS_ARTIFACTS),$($(x)_CHECKS))
 LIBC_STUBS_OBJS = $(foreach x,$(LIBC_STUBS_ARTIFACTS),$($(x)_OBJS))
-$(LIBC_STUBS_OBJS): $(BUILD_FILES) libc/stubs/stubs.mk
 
-.PHONY:		o/libc/stubs
-o/libc/stubs:	$(LIBC_STUBS_CHECKS)
+.PHONY: o/$(MODE)/libc/stubs
+o/$(MODE)/libc/stubs:					\
+		$(LIBC_STUBS_CHECKS)

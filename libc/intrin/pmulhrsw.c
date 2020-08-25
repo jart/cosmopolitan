@@ -18,17 +18,19 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/pmulhrsw.h"
+#include "libc/str/str.h"
 
 /**
  * Multiplies Q15 numbers.
  *
+ * @note goes fast w/ ssse3 (intel c. 2004, amd c. 2011)
  * @note a.k.a. packed multiply high w/ round & scale
  * @see Q2F(15,𝑥), F2Q(15,𝑥)
  * @mayalias
  */
-void(pmulhrsw)(short a[8], const short b[8], const short c[8]) {
-  int i;
-  for (i = 0; i < 8; ++i) {
-    a[i] = (((b[i] * c[i]) >> 14) + 1) >> 1;
-  }
+void(pmulhrsw)(int16_t a[8], const int16_t b[8], const int16_t c[8]) {
+  unsigned i;
+  int16_t r[8];
+  for (i = 0; i < 8; ++i) r[i] = (((b[i] * c[i]) >> 14) + 1) >> 1;
+  memcpy(a, r, 16);
 }

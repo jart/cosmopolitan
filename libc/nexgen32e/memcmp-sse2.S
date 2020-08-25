@@ -44,7 +44,7 @@ memcmp$sse2:
 	movdqu	(%rsi,%rcx),%xmm1
 	pcmpeqb %xmm1,%xmm0
 	pmovmskb %xmm0,%eax
-	subl	$0xffff,%eax
+	sub	$0xffff,%eax
 	jz	1b
 	bsf	%eax,%eax
 	add	%rax,%rcx

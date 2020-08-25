@@ -10,17 +10,17 @@ COSMOPOLITAN_C_START_
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 typedef struct FILE {
-  uint8_t bufmode;               /* 0: _IOFBF, etc. (ignored if fd is -1) */
-  bool noclose;                  /* 1: for fake dup() */
-  uint32_t iomode;               /* 4: O_RDONLY, etc. (ignored if fd is -1) */
-  int32_t state;                 /* 8: 0=OK, -1=EOF, >0=errno */
-  int fd;                        /* 12: ≥0=fd, -1=closed|buffer */
-  uint32_t beg;                  /* 16 */
-  uint32_t end;                  /* 20 */
-  uint8_t *buf;                  /* 24 */
-  size_t size;                   /* 32 */
-  int (*reader)(struct FILE *f); /* 40 */
-  int (*writer)(struct FILE *f); /* 48 */
+  uint8_t bufmode;               // 0x00 _IOFBF, etc. (ignored if fd=-1)
+  bool noclose;                  // 0x01 for fake dup()
+  uint32_t iomode;               // 0x04 O_RDONLY, etc. (ignored if fd=-1)
+  int32_t state;                 // 0x08 0=OK, -1=EOF, >0=errno
+  int fd;                        // 0x0c ≥0=fd, -1=closed|buffer
+  uint32_t beg;                  // 0x10
+  uint32_t end;                  // 0x14
+  uint8_t *buf;                  // 0x18
+  size_t size;                   // 0x20
+  int (*reader)(struct FILE *);  // 0x28
+  int (*writer)(struct FILE *);  // 0x30
 } FILE;
 
 extern FILE *stdin;
@@ -35,7 +35,7 @@ int putc(int, FILE *) paramsnonnull();
 int fflush(FILE *);
 int fgetc(FILE *) paramsnonnull();
 int ungetc(int, FILE *) paramsnonnull();
-int fileno(FILE *) paramsnonnull();
+int fileno(FILE *) paramsnonnull() nosideeffect;
 int fputc(int, FILE *) paramsnonnull();
 int fputs(const char *, FILE *) paramsnonnull();
 int fputws(const wchar_t *, FILE *) paramsnonnull();

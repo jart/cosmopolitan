@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #ifndef COSMOPOLITAN_LIBC_STR_TPDECODECB_H_
 #define COSMOPOLITAN_LIBC_STR_TPDECODECB_H_
+#include "libc/nexgen32e/bsr.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /**
@@ -28,17 +29,16 @@
  */
 forceinline int tpdecodecb(wint_t *out, int first,
                            int get(void *arg, uint32_t i), void *arg) {
-  uint32_t wc, cb, need, msb, i = 1;
-  if ((wc = first) == -1) return -1;
-  while ((wc & 0b11000000) == 0b10000000) {
+  uint32_t wc, cb, need, msb, j, i = 1;
+  if (unlikely((wc = first) == -1)) return -1;
+  while (unlikely((wc & 0b11000000) == 0b10000000)) {
     if ((wc = get(arg, i++)) == -1) return -1;
   }
-  if ((wc & 0b10000000) == 0b10000000) {
-    asm("bsr\t%1,%0" : "=r"(msb) : "rm"(~wc & 0xff) : "cc");
-    if (!msb) msb = 1;
+  if (unlikely(!(0 <= wc && wc <= 0x7F))) {
+    msb = wc < 252 ? bsr(~wc & 0xff) : 1;
     need = 7 - msb;
     wc &= ((1u << msb) - 1) | 0b00000011;
-    for (uint32_t j = 1; j < need; ++j) {
+    for (j = 1; j < need; ++j) {
       if ((cb = get(arg, i++)) == -1) return -1;
       if ((cb & 0b11000000) == 0b10000000) {
         wc = wc << 6 | (cb & 0b00111111);
@@ -48,7 +48,7 @@ forceinline int tpdecodecb(wint_t *out, int first,
       }
     }
   }
-  if (out) *out = (wint_t)wc;
+  if (likely(out)) *out = (wint_t)wc;
   return i;
 }
 

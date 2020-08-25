@@ -12,10 +12,10 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § teletypewriter control                                    ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-int tcgetattr(int fd, struct termios *tio);
-int tcsetattr(int fd, int opt, const struct termios *tio);
-int tcsetpgrp(int fd, int32_t pgrp);
-int32_t tcgetpgrp(int fd);
+int tcgetattr(int, struct termios *);
+int tcsetattr(int, int, const struct termios *);
+int tcsetpgrp(int, int32_t);
+int32_t tcgetpgrp(int);
 
 int openpty(int *, int *, char *, const struct termios *,
             const struct winsize *) paramsnonnull((1, 2)) nodiscard;

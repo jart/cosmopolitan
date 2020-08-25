@@ -29,7 +29,10 @@ cmpsl:	.leafprologue
 	.profilable
 	xor	%eax,%eax
 	cmpsl
-	cmovl	.Lone(%rip),%eax
+/	mov	(%rdi),%edi
+/	mov	(%rsi),%esi
+/	cmp	%edi,%esi
+	setl	%al
 	cmovg	.Lneg1(%rip),%eax
 	.leafepilogue
 	.endfn	cmpsl,globl

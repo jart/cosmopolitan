@@ -73,7 +73,7 @@ forceinline void stat2linux_openbsd(union metastat *ms) {
  * Transcodes “The Dismal Data Structure” from BSD→Linux ABI.
  * @asyncsignalsafe
  */
-void stat2linux(void *ms) {
+textstartup void stat2linux(void *ms) {
   if (ms) {
     if (SupportsXnu() && IsXnu()) {
       stat2linux_xnu((union metastat *)ms);

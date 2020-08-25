@@ -19,7 +19,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
-#include "libc/runtime/mappings.h"
 
 /**
  * Deletes file, the Cosmopolitan way.

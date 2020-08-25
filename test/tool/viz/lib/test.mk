@@ -5,11 +5,13 @@ PKGS += TEST_TOOL_VIZ_LIB
 
 TEST_TOOL_VIZ_LIB_SRCS := $(wildcard test/tool/viz/lib/*.c)
 TEST_TOOL_VIZ_LIB_SRCS_TEST = $(filter %_test.c,$(TEST_TOOL_VIZ_LIB_SRCS))
-TEST_TOOL_VIZ_LIB_COMS = $(TEST_TOOL_VIZ_LIB_OBJS:%.o=%.com)
 
 TEST_TOOL_VIZ_LIB_OBJS =				\
 	$(TEST_TOOL_VIZ_LIB_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_TOOL_VIZ_LIB_SRCS:%.c=o/$(MODE)/%.o)
+
+TEST_TOOL_VIZ_LIB_COMS =				\
+	$(TEST_TOOL_VIZ_LIB_SRCS:%.c=o/$(MODE)/%.com)
 
 TEST_TOOL_VIZ_LIB_BINS =				\
 	$(TEST_TOOL_VIZ_LIB_COMS)			\

@@ -18,9 +18,8 @@ void qsort(void *, size_t, size_t, int (*)(const void *, const void *))
 void qsort_r(void *, size_t, size_t,
              int cmp(const void *, const void *, void *), void *arg)
     paramsnonnull((1, 4));
-int tarjan(uint32_t, const uint32_t (*)[2], uint32_t, uint32_t[], uint32_t[],
-           uint32_t *) paramsnonnull((2, 4)) nocallback nothrow;
-void heapsortcar(int32_t (*)[2], unsigned) paramsnonnull() nocallback nothrow;
+int tarjan(int, const int (*)[2], int, int[], int[], int *)
+    paramsnonnull((2, 4)) nocallback nothrow;
 
 void *memmem(const void *, size_t, const void *, size_t)
     paramsnonnull() nothrow nocallback nosideeffect;
