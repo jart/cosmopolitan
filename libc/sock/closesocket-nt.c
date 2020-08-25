@@ -26,7 +26,11 @@
 textwindows int closesocket$nt(int fd) {
   int rc;
   if (!isfdkind(fd, kFdSocket)) return ebadf();
-  rc = __closesocket$nt(g_fds.p[fd].handle) ? 0 : winsockerr();
+  if (__closesocket$nt(g_fds.p[fd].handle) != -1) {
+    rc = 0;
+  } else {
+    rc = winsockerr();
+  }
   removefd(fd);
   return rc;
 }
