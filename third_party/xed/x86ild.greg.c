@@ -517,17 +517,17 @@ privileged static int xed_consume_byte(struct XedDecodedInst *d) {
 }
 
 privileged static void xed_prefix_scanner(struct XedDecodedInst *d) {
+  xed_bits_t first_f2f3, last_f2f3;
   xed_bits_t b, max_bytes, length, nprefixes, nseg_prefixes, nrexes, rex;
   length = d->length;
   max_bytes = d->op.max_bytes;
-  rex = nrexes = nprefixes = nseg_prefixes = 0;
+  first_f2f3 = last_f2f3 = rex = nrexes = nprefixes = nseg_prefixes = 0;
   while (length < max_bytes) {
     b = d->bytes[length];
     if (xed_get_prefix_table_bit(b) == 0) goto out;
     switch (b) {
       case 0x66:
         d->op.osz = true;
-        d->op.prefix66 = true;
         rex = 0;
         break;
       case 0x67:
@@ -558,17 +558,17 @@ privileged static void xed_prefix_scanner(struct XedDecodedInst *d) {
         break;
       case 0xF3:
         d->op.ild_f3 = true;
-        d->op.last_f2f3 = 3;
-        if (!d->op.first_f2f3) {
-          d->op.first_f2f3 = 3;
+        last_f2f3 = 3;
+        if (!first_f2f3) {
+          first_f2f3 = 3;
         }
         rex = 0;
         break;
       case 0xF2:
         d->op.ild_f2 = true;
-        d->op.last_f2f3 = 2;
-        if (!d->op.first_f2f3) {
-          d->op.first_f2f3 = 2;
+        last_f2f3 = 2;
+        if (!first_f2f3) {
+          first_f2f3 = 2;
         }
         rex = 0;
         break;
@@ -597,9 +597,9 @@ out:
     d->op.rex = true;
   }
   if (d->op.mode_first_prefix) {
-    d->op.rep = d->op.first_f2f3;
+    d->op.rep = first_f2f3;
   } else {
-    d->op.rep = d->op.last_f2f3;
+    d->op.rep = last_f2f3;
   }
   switch (d->op.ild_seg) {
     case 0x2e:
@@ -752,8 +752,8 @@ privileged static void xed_evex_scanner(struct XedDecodedInst *d) {
       d->op.rexb = ~evex1.s.b_inv & 1;
       d->op.rexrr = ~evex1.s.rr_inv & 1;
     }
-    d->op.map = evex1.s.map;
     d->op.rexw = evex2.s.rexw & 1;
+    d->op.map = evex1.s.map;
     d->op.vexdest3 = evex2.s.vexdest3;
     d->op.vexdest210 = evex2.s.vexdest210;
     d->op.ubit = evex2.s.ubit;
@@ -1199,7 +1199,7 @@ privileged static void xed_encode_rde(struct XedDecodedInst *x) {
   /* fragile examples:        addb, cmpxchgb */
   /* fragile counterexamples: btc, bsr, etc. */
   const uint8_t kWordLog2[2][2][2] = {{{2, 3}, {1, 3}}, {{0, 0}, {0, 0}}};
-  x->op.rde = x->op.prefix66 << 30 |
+  x->op.rde = x->op.rep << 30 |
               kWordLog2[~x->op.opcode & 1][x->op.osz][x->op.rexw] << 28 |
               x->op.mod << 22 | x->op.rexw << 11 | x->op.osz << 5 |
               x->op.asz << 17 | (x->op.rexx << 3 | x->op.index) << 24 |

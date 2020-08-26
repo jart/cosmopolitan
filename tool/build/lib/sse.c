@@ -119,7 +119,7 @@ void OpSse(struct Machine *m, enum OpSseKernel kernel) {
   uint8_t *p;
   union MachineVector x, y, t;
   p = GetModrmRegisterXmmPointerRead16(m);
-  if (Prefix66(m->xedd)) {
+  if (Osz(m->xedd)) {
     memcpy(&y, p, 16);
   } else {
     memset(&t, 0, 16);
@@ -204,7 +204,7 @@ void OpSse(struct Machine *m, enum OpSseKernel kernel) {
     default:
       unreachable;
   }
-  if (Prefix66(m->xedd)) {
+  if (Osz(m->xedd)) {
     memcpy(XmmRexrReg(m), &x, 16);
   } else {
     memcpy(XmmRexrReg(m), &x, 8);
@@ -230,7 +230,7 @@ void OpSseUdqIb(struct Machine *m, enum OpSseUdqIbKernel kernel) {
     default:
       unreachable;
   }
-  if (Prefix66(m->xedd)) {
+  if (Osz(m->xedd)) {
     memcpy(XmmRexbRm(m), &x, 16);
   } else {
     memcpy(XmmRexbRm(m), &x, 8);
@@ -246,7 +246,7 @@ static void OpSsePalignrMmx(struct Machine *m) {
 }
 
 void OpSsePalignr(struct Machine *m) {
-  if (Prefix66(m->xedd)) {
+  if (Osz(m->xedd)) {
     palignr(XmmRexrReg(m), XmmRexrReg(m), GetModrmRegisterXmmPointerRead8(m),
             m->xedd->op.uimm0);
   } else {

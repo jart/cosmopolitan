@@ -148,7 +148,7 @@ float atanf(float);
 float atanhf(float);
 float cbrtf(float);
 float ceilf(float);
-float copysignf(float, float y);
+float copysignf(float, float);
 float cosf(float);
 float coshf(float);
 float dremf(float, float);

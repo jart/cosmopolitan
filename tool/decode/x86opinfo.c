@@ -189,7 +189,6 @@ int main(int argc, char *argv[]) {
   SHOWOP(amd3dnow);
   SHOWOP(bcrc);
   SHOWOP(disp_width);
-  SHOWOP(first_f2f3);
   SHOWOP(hint);
   SHOWOP(ild_f2);
   SHOWOP(ild_f3);
@@ -197,10 +196,8 @@ int main(int argc, char *argv[]) {
   SHOWOP(imm1_bytes);
   SHOWOP(imm_width);
   SHOWOP(imm_signed);
-  SHOWOP(last_f2f3);
   SHOWOP(llrc);
   SHOWOP(mask);
-  SHOWOP(prefix66);
   SHOWOP(max_bytes);
   SHOWOP(mode_first_prefix);
   SHOWOP(nprefixes);

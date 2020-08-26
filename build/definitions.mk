@@ -28,11 +28,8 @@
 #   Other flags will usually be the ones that provide us marginal gains
 #   in terms of performance and code size, but the world won't end when
 #   they aren't used. Flags that play a critical role in source working
-#   correctly will usually be specified on a target-by-target basis, in
+#   correctly will usually be specified on a object-by-object basis, in
 #   their respective packages.
-#
-#   NOTE might have gotten the per-target override flag flow wrong since
-#        flags defined that way might flow quadratically opposite blaze.
 #
 # VARIABLES
 #

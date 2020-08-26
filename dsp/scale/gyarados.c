@@ -43,7 +43,7 @@
  * @see Magikarp
  */
 
-#define M      15
+#define M      14
 #define SQR(X) ((X) * (X))
 
 struct SamplingSolution {

@@ -7,9 +7,9 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § characters » unicode                                      ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-extern const uint64_t kEastAsianWidth[];
+extern const uint8_t kEastAsianWidth[];
 extern const uint32_t kEastAsianWidthBits;
-extern const uint64_t kCombiningChars[];
+extern const uint8_t kCombiningChars[];
 extern const uint32_t kCombiningCharsBits;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗

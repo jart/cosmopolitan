@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_TOOL_BUILD_LIB_MACHINE_H_
 #define COSMOPOLITAN_TOOL_BUILD_LIB_MACHINE_H_
 #include "libc/elf/struct/ehdr.h"
+#include "libc/runtime/runtime.h"
 #include "third_party/xed/x86.h"
 #include "tool/build/lib/pml4t.h"
 

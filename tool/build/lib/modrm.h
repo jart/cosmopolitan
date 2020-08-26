@@ -27,7 +27,7 @@ COSMOPOLITAN_C_START_
 #define Rexb(x)             (((x)->op.rde & 000010000000) >> 21)
 #define Rex(x)              (((x)->op.rde & 000000000020) >> 4)
 #define Osz(x)              (((x)->op.rde & 000000000040) >> 5)
-#define Prefix66(x)         (((x)->op.rde & 010000000000) >> 30)
+#define Rep(x)              (((x)->op.rde & 030000000000) >> 30)
 #define ByteRexrReg(m)      m->beg[(m->xedd->op.rde & 00000000037) >> 0]
 #define ByteRexbRm(m)       m->beg[(m->xedd->op.rde & 00000003700) >> 6]
 #define ByteRexbSrm(m)      m->beg[(m->xedd->op.rde & 00000370000) >> 12]

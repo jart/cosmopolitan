@@ -241,9 +241,7 @@ static void OpVdqWpdCvtpd2dq(struct Machine *m) {
 }
 
 void OpCvt(struct Machine *m, unsigned long op) {
-  op |= m->xedd->op.rep;
-  op |= Prefix66(m->xedd);
-  switch (op) {
+  switch (op | Rep(m->xedd) | Osz(m->xedd)) {
     case kOpCvt0f2a + 0:
       OpVpsQpiCvtpi2ps(m);
       break;

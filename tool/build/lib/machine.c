@@ -329,7 +329,7 @@ static void OpLoop(struct Machine *m, bool cond) {
 
 static void OpXlat(struct Machine *m) {
   int64_t v;
-  uint8_t al, *p;
+  uint8_t al;
   v = Read64(m->bx) + Read8(m->ax);
   if (Asz(m->xedd)) v &= 0xffffffff;
   SetReadAddr(m, v, 1);
@@ -613,7 +613,7 @@ static uint8_t pmovmskb(uint64_t x) {
 
 static void OpPmovmskbGdqpNqUdq(struct Machine *m) {
   uint64_t bitmask;
-  if (Prefix66(m->xedd)) {
+  if (Osz(m->xedd)) {
     bitmask = pmovmskb(Read64(XmmRexbRm(m) + 8)) << 8 |
               pmovmskb(Read64(XmmRexbRm(m)));
   } else {
@@ -895,7 +895,7 @@ static void OpMaskMovDiXmmRegXmmRm(struct Machine *m) {
   uint64_t v;
   unsigned i, n;
   uint8_t *mem, b[16];
-  n = Prefix66(m->xedd) ? 16 : 8;
+  n = Osz(m->xedd) ? 16 : 8;
   v = GetSegment() + Read64(m->di);
   if (Asz(m->xedd)) v &= 0xffffffff;
   mem = BeginStore(m, v, n, p, b);
@@ -1011,7 +1011,7 @@ static void OpMovapdWpdVpd(struct Machine *m) {
 
 static void OpMovWpsVps(struct Machine *m) {
   uint8_t *p, *r;
-  switch (m->xedd->op.rep | Prefix66(m->xedd)) {
+  switch (Rep(m->xedd) | Osz(m->xedd)) {
     case 0:
       OpMovupsWpsVps(m);
       break;
@@ -1030,7 +1030,7 @@ static void OpMovWpsVps(struct Machine *m) {
 }
 
 static void OpMov0f28(struct Machine *m) {
-  if (!Prefix66(m->xedd)) {
+  if (!Osz(m->xedd)) {
     OpMovapsVpsWps(m);
   } else {
     OpMovapdVpdWpd(m);
@@ -1038,7 +1038,7 @@ static void OpMov0f28(struct Machine *m) {
 }
 
 static void OpMov0f6e(struct Machine *m) {
-  if (Prefix66(m->xedd)) {
+  if (Osz(m->xedd)) {
     if (Rexw(m->xedd)) {
       OpMovqVdqEqp(m);
     } else {
@@ -1054,7 +1054,7 @@ static void OpMov0f6e(struct Machine *m) {
 }
 
 static void OpMov0f6f(struct Machine *m) {
-  if (Prefix66(m->xedd)) {
+  if (Osz(m->xedd)) {
     OpMovdqaVdqWdq(m);
   } else if (m->xedd->op.ild_f3) {
     OpMovdquVdqWdq(m);
@@ -1064,7 +1064,7 @@ static void OpMov0f6f(struct Machine *m) {
 }
 
 static void OpMov0fE7(struct Machine *m) {
-  if (!Prefix66(m->xedd)) {
+  if (!Osz(m->xedd)) {
     OpMovntqMqPq(m);
   } else {
     OpMovntdqMdqVdq(m);
@@ -1074,7 +1074,7 @@ static void OpMov0fE7(struct Machine *m) {
 static void OpMov0f7e(struct Machine *m) {
   if (m->xedd->op.ild_f3) {
     OpMovqVqWq(m);
-  } else if (Prefix66(m->xedd)) {
+  } else if (Osz(m->xedd)) {
     if (Rexw(m->xedd)) {
       OpMovqEqpVdq(m);
     } else {
@@ -1092,7 +1092,7 @@ static void OpMov0f7e(struct Machine *m) {
 static void OpMov0f7f(struct Machine *m) {
   if (m->xedd->op.ild_f3) {
     OpMovdquWdqVdq(m);
-  } else if (Prefix66(m->xedd)) {
+  } else if (Osz(m->xedd)) {
     OpMovdqaWdqVdq(m);
   } else {
     OpMovqQqPq(m);
@@ -1101,7 +1101,7 @@ static void OpMov0f7f(struct Machine *m) {
 
 static void OpMov0f10(struct Machine *m) {
   uint8_t *p, *r;
-  switch (m->xedd->op.rep | Prefix66(m->xedd)) {
+  switch (Rep(m->xedd) | Osz(m->xedd)) {
     case 0:
       OpMovupsVpsWps(m);
       break;
@@ -1120,7 +1120,7 @@ static void OpMov0f10(struct Machine *m) {
 }
 
 static void OpMov0f29(struct Machine *m) {
-  if (!Prefix66(m->xedd)) {
+  if (!Osz(m->xedd)) {
     OpMovapsWpsVps(m);
   } else {
     OpMovapdWpdVpd(m);
@@ -1128,7 +1128,7 @@ static void OpMov0f29(struct Machine *m) {
 }
 
 static void OpMov0f2b(struct Machine *m) {
-  if (!Prefix66(m->xedd)) {
+  if (!Osz(m->xedd)) {
     OpMovntpsMpsVps(m);
   } else {
     OpMovntpdMpdVpd(m);
@@ -1136,7 +1136,7 @@ static void OpMov0f2b(struct Machine *m) {
 }
 
 static void OpMov0f12(struct Machine *m) {
-  switch (m->xedd->op.rep | Prefix66(m->xedd)) {
+  switch (Rep(m->xedd) | Osz(m->xedd)) {
     case 0:
       if (IsModrmRegister(m->xedd)) {
         OpMovhlpsVqUq(m);
@@ -1159,7 +1159,7 @@ static void OpMov0f12(struct Machine *m) {
 }
 
 static void OpMov0f13(struct Machine *m) {
-  if (Prefix66(m->xedd)) {
+  if (Osz(m->xedd)) {
     OpMovlpdMqVq(m);
   } else {
     OpMovlpsMqVq(m);
@@ -1167,7 +1167,7 @@ static void OpMov0f13(struct Machine *m) {
 }
 
 static void OpMov0f16(struct Machine *m) {
-  switch (m->xedd->op.rep | Prefix66(m->xedd)) {
+  switch (Rep(m->xedd) | Osz(m->xedd)) {
     case 0:
       if (IsModrmRegister(m->xedd)) {
         OpMovlhpsVqUq(m);
@@ -1188,7 +1188,7 @@ static void OpMov0f16(struct Machine *m) {
 }
 
 static void OpMov0f17(struct Machine *m) {
-  if (Prefix66(m->xedd)) {
+  if (Osz(m->xedd)) {
     OpMovhpdMqVq(m);
   } else {
     OpMovhpsMqVq(m);
@@ -1200,7 +1200,7 @@ static void OpMov0fD6(struct Machine *m) {
     OpMovq2dqVdqNq(m);
   } else if (m->xedd->op.ild_f2) {
     OpMovdq2qPqUq(m);
-  } else if (Prefix66(m->xedd)) {
+  } else if (Osz(m->xedd)) {
     OpMovqWqVq(m);
   } else {
     OpUd(m);
@@ -1211,7 +1211,7 @@ static void OpUnpcklpsd(struct Machine *m) {
   uint8_t *a, *b;
   a = XmmRexrReg(m);
   b = GetModrmRegisterXmmPointerRead8(m);
-  if (Prefix66(m->xedd)) {
+  if (Osz(m->xedd)) {
     memcpy(a + 8, b, 8);
   } else {
     memcpy(a + 4 * 3, b + 4, 4);
@@ -1224,7 +1224,7 @@ static void OpUnpckhpsd(struct Machine *m) {
   uint8_t *a, *b;
   a = XmmRexrReg(m);
   b = GetModrmRegisterXmmPointerRead16(m);
-  if (Prefix66(m->xedd)) {
+  if (Osz(m->xedd)) {
     memcpy(a + 0, b + 8, 8);
     memcpy(a + 8, b + 8, 8);
   } else {
@@ -1238,14 +1238,14 @@ static void OpUnpckhpsd(struct Machine *m) {
 static void OpPextrwGdqpUdqIb(struct Machine *m) {
   uint8_t i;
   i = m->xedd->op.uimm0;
-  i &= Prefix66(m->xedd) ? 7 : 3;
+  i &= Osz(m->xedd) ? 7 : 3;
   Write16(RegRexrReg(m), Read16(XmmRexbRm(m) + i * 2));
 }
 
 static void OpPinsrwVdqEwIb(struct Machine *m) {
   uint8_t i;
   i = m->xedd->op.uimm0;
-  i &= Prefix66(m->xedd) ? 7 : 3;
+  i &= Osz(m->xedd) ? 7 : 3;
   Write16(XmmRexrReg(m) + i * 2, Read16(GetModrmRegisterWordPointerRead2(m)));
 }
 
@@ -1253,7 +1253,7 @@ static void OpShuffle(struct Machine *m) {
   int16_t q16[4];
   int16_t x16[8];
   int32_t x32[4];
-  switch (m->xedd->op.rep | Prefix66(m->xedd)) {
+  switch (Rep(m->xedd) | Osz(m->xedd)) {
     case 0:
       memcpy(q16, GetModrmRegisterXmmPointerRead8(m), 8);
       (pshufw)(q16, q16, m->xedd->op.uimm0);
@@ -1282,7 +1282,7 @@ static void OpShuffle(struct Machine *m) {
 static void OpShufpsd(struct Machine *m) {
   float s[4];
   double d[2];
-  if (Prefix66(m->xedd)) {
+  if (Osz(m->xedd)) {
     memcpy(d, GetModrmRegisterXmmPointerRead16(m), 16);
     (shufpd)(d, d, m->xedd->op.uimm0);
     memcpy(XmmRexrReg(m), d, 16);
@@ -1297,7 +1297,7 @@ static void OpSqrtpsd(struct Machine *m) {
   long i;
   float_v xf;
   double_v xd;
-  switch (m->xedd->op.rep | Prefix66(m->xedd)) {
+  switch (Rep(m->xedd) | Osz(m->xedd)) {
     case 0:
       memcpy(&xf, GetModrmRegisterXmmPointerRead16(m), 16);
       for (i = 0; i < 4; ++i) xf[i] = sqrtf(xf[i]);
@@ -1375,13 +1375,13 @@ static void OpVpsdWpsd(struct Machine *m,
 static void OpVpsdWpsd66(struct Machine *m,
                          float_v opf(struct Machine *, float_v, float_v),
                          double_v opd(struct Machine *, double_v, double_v)) {
-  OpVpsdWpsd(m, opf, opd, !Prefix66(m->xedd), Prefix66(m->xedd));
+  OpVpsdWpsd(m, opf, opd, !Osz(m->xedd), Osz(m->xedd));
 }
 
 static void OpVpsdWpsd66f2(struct Machine *m,
                            float_v opf(struct Machine *, float_v, float_v),
                            double_v opd(struct Machine *, double_v, double_v)) {
-  OpVpsdWpsd(m, opf, opd, m->xedd->op.ild_f2, Prefix66(m->xedd));
+  OpVpsdWpsd(m, opf, opd, m->xedd->op.ild_f2, Osz(m->xedd));
 }
 
 static void OpVspsdWspsd(struct Machine *m,
@@ -1389,7 +1389,7 @@ static void OpVspsdWspsd(struct Machine *m,
                          double_v opd(struct Machine *, double_v, double_v)) {
   float_v xf, yf;
   double_v xd, yd;
-  switch (m->xedd->op.rep | Prefix66(m->xedd)) {
+  switch (Rep(m->xedd) | Osz(m->xedd)) {
     case 0:
       memcpy(&yf, GetModrmRegisterXmmPointerRead16(m), 16);
       memcpy(&xf, XmmRexrReg(m), 16);
@@ -1423,7 +1423,7 @@ static void OpComissVsWs(struct Machine *m) {
   float xf, yf;
   double xd, yd;
   uint8_t zf, cf, pf, ie;
-  if (!Prefix66(m->xedd)) {
+  if (!Osz(m->xedd)) {
     memcpy(&xf, XmmRexrReg(m), 4);
     memcpy(&yf, GetModrmRegisterXmmPointerRead4(m), 4);
     if (!isnan(xf) && !isnan(yf)) {
@@ -2366,6 +2366,7 @@ static void SaveStash(struct Machine *m) {
 }
 
 void ExecuteInstruction(struct Machine *m) {
+  uint8_t *p;
   m->ip += m->xedd->length;
   switch (m->xedd->op.map) {
     CASE(XED_ILD_MAP0, ExecuteInstructionMap0(m));

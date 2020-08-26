@@ -50,77 +50,103 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
   ((uint16_t)kReverseBits[(X)&0xff] << 010 | \
    kReverseBits[((uint16_t)(X) >> 010) & 0xff])
 
-#ifndef __GNUC__
-#define READ16LE(P) ((unsigned)(P)[1] << 010 | (unsigned)(P)[0])
-#define READ32LE(P)                                              \
-  ((unsigned long)(P)[3] << 030 | (unsigned long)(P)[2] << 020 | \
-   (unsigned long)(P)[1] << 010 | (unsigned long)(P)[0])
-#define READ64LE(P)                                                   \
-  ((unsigned long long)(P)[3] << 030 | (unsigned long)(P)[2] << 020 | \
-   (unsigned long long)(P)[1] << 010 | (unsigned long)(P)[0])
-#else
-#define READ16LE(P) read16le(P)
-#define READ32LE(P) read32le(P)
-#define READ64LE(P) read64le(P)
-#define read16le(P)                                       \
-  ({                                                      \
-    const unsigned char *Pu = (const unsigned char *)(P); \
-    (uint16_t) Pu[1] << 010 | (uint16_t)Pu[0];            \
+#define READ16LE(S)                             \
+  ((uint16_t)((unsigned char *)(S))[1] << 010 | \
+   (uint16_t)((unsigned char *)(S))[0] << 000)
+#define READ32LE(S)                             \
+  ((uint32_t)((unsigned char *)(S))[3] << 030 | \
+   (uint32_t)((unsigned char *)(S))[2] << 020 | \
+   (uint32_t)((unsigned char *)(S))[1] << 010 | \
+   (uint32_t)((unsigned char *)(S))[0] << 000)
+#define READ64LE(S)                             \
+  ((uint64_t)((unsigned char *)(S))[7] << 070 | \
+   (uint64_t)((unsigned char *)(S))[6] << 060 | \
+   (uint64_t)((unsigned char *)(S))[5] << 050 | \
+   (uint64_t)((unsigned char *)(S))[4] << 040 | \
+   (uint64_t)((unsigned char *)(S))[3] << 030 | \
+   (uint64_t)((unsigned char *)(S))[2] << 020 | \
+   (uint64_t)((unsigned char *)(S))[1] << 010 | \
+   (uint64_t)((unsigned char *)(S))[0] << 000)
+
+#define READ16BE(S)                             \
+  ((uint16_t)((unsigned char *)(S))[0] << 010 | \
+   (uint16_t)((unsigned char *)(S))[1] << 000)
+#define READ32BE(S)                             \
+  ((uint32_t)((unsigned char *)(S))[0] << 030 | \
+   (uint32_t)((unsigned char *)(S))[1] << 020 | \
+   (uint32_t)((unsigned char *)(S))[2] << 010 | \
+   (uint32_t)((unsigned char *)(S))[3] << 000)
+#define READ64BE(S)                             \
+  ((uint64_t)((unsigned char *)(S))[0] << 070 | \
+   (uint64_t)((unsigned char *)(S))[1] << 060 | \
+   (uint64_t)((unsigned char *)(S))[2] << 050 | \
+   (uint64_t)((unsigned char *)(S))[3] << 040 | \
+   (uint64_t)((unsigned char *)(S))[4] << 030 | \
+   (uint64_t)((unsigned char *)(S))[5] << 020 | \
+   (uint64_t)((unsigned char *)(S))[6] << 010 | \
+   (uint64_t)((unsigned char *)(S))[7] << 000)
+
+#define read16le(S)                            \
+  ({                                           \
+    unsigned char *Str = (unsigned char *)(S); \
+    READ16LE(Str);                             \
   })
-#define read32le(P)                                       \
-  ({                                                      \
-    const unsigned char *Pu = (const unsigned char *)(P); \
-    ((uint32_t)Pu[3] << 030 | (uint32_t)Pu[2] << 020 |    \
-     (uint32_t)Pu[1] << 010 | (uint32_t)Pu[0] << 000);    \
+#define read32le(S)                            \
+  ({                                           \
+    unsigned char *Str = (unsigned char *)(S); \
+    READ32LE(Str);                             \
   })
-#define read64le(P)                                       \
-  ({                                                      \
-    const unsigned char *Pu = (const unsigned char *)(P); \
-    ((uint64_t)Pu[7] << 070 | (uint64_t)Pu[6] << 060 |    \
-     (uint64_t)Pu[5] << 050 | (uint64_t)Pu[4] << 040 |    \
-     (uint64_t)Pu[3] << 030 | (uint64_t)Pu[2] << 020 |    \
-     (uint64_t)Pu[1] << 010 | (uint64_t)Pu[0] << 000);    \
+#define read64le(S)                            \
+  ({                                           \
+    unsigned char *Str = (unsigned char *)(S); \
+    READ64LE(Str);                             \
   })
-#endif
 
-#define WRITE16LE(P, V)                  \
-  do {                                   \
-    uint8_t *Ple = (unsigned char *)(P); \
-    uint16_t Vle = (V);                  \
-    Ple[0] = (uint8_t)(Vle >> 000);      \
-    Ple[1] = (uint8_t)(Vle >> 010);      \
+#define read16be(S)                            \
+  ({                                           \
+    unsigned char *Str = (unsigned char *)(S); \
+    READ16BE(Str);                             \
+  })
+#define read32be(S)                            \
+  ({                                           \
+    unsigned char *Str = (unsigned char *)(S); \
+    READ32BE(Str);                             \
+  })
+#define read64be(S)                            \
+  ({                                           \
+    unsigned char *Str = (unsigned char *)(S); \
+    READ64BE(Str);                             \
+  })
+
+#define WRITE16LE(P, V)             \
+  do {                              \
+    uint8_t *Ple = (uint8_t *)(P);  \
+    uint16_t Vle = (V);             \
+    Ple[0] = (uint8_t)(Vle >> 000); \
+    Ple[1] = (uint8_t)(Vle >> 010); \
   } while (0)
-
-#define WRITE32LE(P, V)                  \
-  do {                                   \
-    uint8_t *Ple = (unsigned char *)(P); \
-    uint32_t Vle = (V);                  \
-    Ple[0] = (uint8_t)(Vle >> 000);      \
-    Ple[1] = (uint8_t)(Vle >> 010);      \
-    Ple[2] = (uint8_t)(Vle >> 020);      \
-    Ple[3] = (uint8_t)(Vle >> 030);      \
+#define WRITE32LE(P, V)             \
+  do {                              \
+    uint8_t *Ple = (uint8_t *)(P);  \
+    uint32_t Vle = (V);             \
+    Ple[0] = (uint8_t)(Vle >> 000); \
+    Ple[1] = (uint8_t)(Vle >> 010); \
+    Ple[2] = (uint8_t)(Vle >> 020); \
+    Ple[3] = (uint8_t)(Vle >> 030); \
   } while (0)
-
-#define WRITE64LE(P, V)                  \
-  do {                                   \
-    uint8_t *Ple = (unsigned char *)(P); \
-    uint64_t Vle = (V);                  \
-    Ple[0] = (uint8_t)(Vle >> 000);      \
-    Ple[1] = (uint8_t)(Vle >> 010);      \
-    Ple[2] = (uint8_t)(Vle >> 020);      \
-    Ple[3] = (uint8_t)(Vle >> 030);      \
-    Ple[4] = (uint8_t)(Vle >> 040);      \
-    Ple[5] = (uint8_t)(Vle >> 050);      \
-    Ple[6] = (uint8_t)(Vle >> 060);      \
-    Ple[7] = (uint8_t)(Vle >> 070);      \
+#define WRITE64LE(P, V)             \
+  do {                              \
+    uint8_t *Ple = (uint8_t *)(P);  \
+    uint64_t Vle = (V);             \
+    Ple[0] = (uint8_t)(Vle >> 000); \
+    Ple[1] = (uint8_t)(Vle >> 010); \
+    Ple[2] = (uint8_t)(Vle >> 020); \
+    Ple[3] = (uint8_t)(Vle >> 030); \
+    Ple[4] = (uint8_t)(Vle >> 040); \
+    Ple[5] = (uint8_t)(Vle >> 050); \
+    Ple[6] = (uint8_t)(Vle >> 060); \
+    Ple[7] = (uint8_t)(Vle >> 070); \
   } while (0)
-
-/* TODO(jart): these ones aren't coded correctly */
-#define read128le(P) ((uint128_t)read64le((P) + 8) << 0100 | read64le(P))
-#define read16be(P)  ((uint16_t)(*(P) << 010) | (uint16_t)(*((P) + 1)))
-#define read32be(P)  ((uint32_t)read16be(P) << 020 | (uint32_t)read16be((P) + 2))
-#define read64be(P)  ((uint64_t)read32be(P) << 040 | read32be((P) + 4))
-#define read128be(P) ((uint128_t)read64be(P) << 0100 | read64be((P) + 8))
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § bits » some assembly required                             ─╬─│┼

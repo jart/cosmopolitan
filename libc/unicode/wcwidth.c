@@ -17,7 +17,6 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
 #include "libc/unicode/unicode.h"
 
 /**
@@ -28,10 +27,10 @@ int wcwidth(wchar_t ucs) {
   if (ucs < 32 || (ucs >= 0x7f && ucs < 0xa0)) {
     return -1;
   } else if (0 <= ucs && ucs < kCombiningCharsBits &&
-             bt(kCombiningChars, ucs)) {
+             !!(kCombiningChars[ucs >> 3] & (1 << (ucs & 7)))) {
     return 0;
   } else if (0 <= ucs && ucs < kEastAsianWidthBits) {
-    return 1 + bt(kEastAsianWidth, ucs);
+    return 1 + !!(kEastAsianWidth[ucs >> 3] & (1 << (ucs & 7)));
   } else {
     return 1;
   }

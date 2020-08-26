@@ -23,7 +23,16 @@
 #include "libc/macros.h"
 #include "libc/str/str.h"
 #include "tool/build/lib/dis.h"
+#include "tool/build/lib/endian.h"
 #include "tool/build/lib/modrm.h"
+
+#define SSTRCMP8(S1, S2)        \
+  ({                            \
+    uint64_t x, y;              \
+    x = READ64BE(S1);           \
+    y = READ64BE(S2);           \
+    x > y ? 1 : x < y ? -1 : 0; \
+  })
 
 static const char kScale[4][4] = {"", ",2", ",4", ",8"};
 static const char kSegName[8][3] = {"es", "cs", "ss", "ds", "fs", "gs"};
@@ -541,12 +550,14 @@ static const struct DisArg {
 };
 
 char *DisArg(struct DisBuilder b, char *p, const char *s) {
+  char key[8];
   int c, m, l, r;
   l = 0;
   r = ARRAYLEN(kDisArgs) - 1;
+  strncpy(key, s, 8);
   while (l <= r) {
     m = (l + r) >> 1;
-    c = strcmp(kDisArgs[m].s, s);
+    c = SSTRCMP8(kDisArgs[m].s, key);
     if (c < 0) {
       l = m + 1;
     } else if (c > 0) {

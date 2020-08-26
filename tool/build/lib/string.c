@@ -78,7 +78,7 @@ void OpString(struct Machine *m, int op) {
   lg2 = RegLog2(m->xedd);
   n = 1 << lg2;
   for (;;) {
-    if (m->xedd->op.rep && !Read64(m->cx)) break;
+    if (Rep(m->xedd) && !Read64(m->cx)) break;
     v = 0;
     *p = NULL;
     compare = false;
@@ -125,11 +125,11 @@ void OpString(struct Machine *m, int op) {
         abort();
     }
     EndStore(m, v, n, p, s[0]);
-    if (!m->xedd->op.rep) break;
+    if (!Rep(m->xedd)) break;
     Write64(m->cx, Read64(m->cx) - 1);
     if (compare) {
-      if (m->xedd->op.rep == 2 && GetFlag(m->flags, FLAGS_ZF)) break;
-      if (m->xedd->op.rep == 3 && !GetFlag(m->flags, FLAGS_ZF)) break;
+      if (Rep(m->xedd) == 2 && GetFlag(m->flags, FLAGS_ZF)) break;
+      if (Rep(m->xedd) == 3 && !GetFlag(m->flags, FLAGS_ZF)) break;
     }
   }
 }
@@ -211,7 +211,7 @@ void OpRepStosbEnhanced(struct Machine *m) {
 }
 
 void OpMovsb(struct Machine *m) {
-  if (m->xedd->op.rep && !GetFlag(m->flags, FLAGS_DF)) {
+  if (Rep(m->xedd) && !GetFlag(m->flags, FLAGS_DF)) {
     OpRepMovsbEnhanced(m);
   } else {
     OpString(m, STRING_MOVS);
@@ -219,7 +219,7 @@ void OpMovsb(struct Machine *m) {
 }
 
 void OpStosb(struct Machine *m) {
-  if (m->xedd->op.rep && !GetFlag(m->flags, FLAGS_DF)) {
+  if (Rep(m->xedd) && !GetFlag(m->flags, FLAGS_DF)) {
     OpRepStosbEnhanced(m);
   } else {
     OpString(m, STRING_STOS);

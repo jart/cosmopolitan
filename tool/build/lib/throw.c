@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/check.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "tool/build/lib/throw.h"
 
 static bool IsHaltingInitialized(struct Machine *m) {

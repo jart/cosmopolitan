@@ -45,7 +45,7 @@ static int IsRepOpcode(struct DisBuilder b) {
 
 static char *DisRepPrefix(struct DisBuilder b, char *p) {
   const char *s;
-  if (b.xedd->op.rep && b.xedd->op.map == XED_ILD_MAP0) {
+  if (Rep(b.xedd) && b.xedd->op.map == XED_ILD_MAP0) {
     switch (IsRepOpcode(b)) {
       case 0:
         break;
@@ -53,7 +53,7 @@ static char *DisRepPrefix(struct DisBuilder b, char *p) {
         p = stpcpy(p, "rep ");
         break;
       case 2:
-        p = stpcpy(p, b.xedd->op.rep == 2 ? "repnz " : "repz ");
+        p = stpcpy(p, Rep(b.xedd) == 2 ? "repnz " : "repz ");
         break;
       default:
         break;
@@ -135,7 +135,7 @@ static char *DisName(struct DisBuilder b, char *bp, const char *name,
       p = DisBranchTaken(b, p);
     }
     if (wantsuffixsd) {
-      if (b.xedd->op.prefix66) {
+      if (Osz(b.xedd)) {
         *p++ = 'd';
       } else {
         *p++ = 's';

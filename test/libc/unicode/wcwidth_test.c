@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/unicode/unicode.h"
 
@@ -72,4 +73,9 @@ TEST(wcwidth, block) {
 TEST(strwidth, testTextDelimitingControlCodes_dontHaveSubstance) {
   EXPECT_EQ(0, strwidth("\0"));
   EXPECT_EQ(0, strwidth("\1"));
+}
+
+BENCH(wcwidth, bench) {
+  volatile int x;
+  EZBENCH2("wcwidth", donothing, x = wcwidth(VEIL("r", u'→')));
 }

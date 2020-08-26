@@ -38,7 +38,7 @@ wmemrchr:
 	jz	5f
 	vmovd	%esi,%xmm0
 	vpbroadcastd %xmm0,%ymm0
-3:	vmovups	-32(%rdi,%rdx,4),%ymm1
+3:	vmovdqu	-32(%rdi,%rdx,4),%ymm1
 	vpcmpeqd %ymm1,%ymm0,%ymm1
 	vpmovmskb %ymm1,%eax
 	lzcnt	%eax,%eax

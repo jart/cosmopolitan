@@ -1,10 +1,5 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_XED_X86_H_
 #define COSMOPOLITAN_THIRD_PARTY_XED_X86_H_
-#include "libc/bits/bits.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
 /*           ▓▓▓▓▓▓▓▓▓▓▓▓▓                      ▄▄▄▄
              ▓▓▓▓▓▓▓▓▓▓▓▓▓     ▄▓▓▓▓▓▓▄      ▄▓▓▓▓▓▓▓▓            ▄▓▓▓▀
              ▓▓▓▓    ▓▓▓▓▓    ▓     ▓▓▓▓    ▓▓       ▓▓▓      ▄▓▓▓▓
@@ -46,6 +41,9 @@ COSMOPOLITAN_C_START_
 #define xed_sib_index(M)           (((M)&0b00111000) >> 3)
 #define xed_sib_scale(M)           (((M)&0xff) >> 6)
 #define xed_get_modrm_reg_field(M) (((M)&0x38) >> 3)
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
 
 enum XedMachineMode {
   XED_MACHINE_MODE_INVALID,
@@ -321,44 +319,44 @@ struct XedChipFeatures {
 };
 
 struct XedOperands { /*
-     ┌prefix66
-     │┌log₂𝑏
-     ││ ┌rexx
-     ││ │┌index
-     ││ ││  ┌mod
-     ││ ││  │ ┌rexb
-     ││ ││  │ │┌base
-     ││ ││  │ ││  ┌asz
-     ││ ││  │ ││  │┌rex         REGISTER
-     ││ ││  │ ││  ││┌rexb       DISPATCH
-     ││ ││  │ ││  │││┌srm       ENCODING
-     ││ ││  │ ││  ││││  ┌rexw
-     ││ ││  │ ││  ││││  │┌rex
-     ││ ││  │ ││  ││││  ││┌rexb
-     ││ ││  │ ││  ││││  │││┌rm
-     ││ ││  │ ││  ││││  ││││  ┌osz
-     ││ ││  │ ││  ││││  ││││  │┌rex
-     ││ ││  │ ││  ││││  ││││  ││┌rexr
-     ││ ││  │ ││  ││││  ││││  │││┌reg
-     ││2││  │2││  ││││  ││││  ││││
-     ││8││24│2││18││││12││││ 6││││ 0
-     │├┐│├─┐├┐│├─┐│││├─┐│││├─┐│││├─┐
+    ┌rep
+    │ ┌log₂𝑏
+    │ │ ┌rexx
+    │ │ │┌index
+    │ │ ││  ┌mod
+    │ │ ││  │ ┌rexb
+    │ │ ││  │ │┌base
+    │ │ ││  │ ││  ┌asz
+    │ │ ││  │ ││  │┌rex         REGISTER
+    │ │ ││  │ ││  ││┌rexb       DISPATCH
+    │ │ ││  │ ││  │││┌srm       ENCODING
+    │ │ ││  │ ││  ││││  ┌rexw
+    │ │ ││  │ ││  ││││  │┌rex
+    │ │ ││  │ ││  ││││  ││┌rexb
+    │ │ ││  │ ││  ││││  │││┌rm
+    │ │ ││  │ ││  ││││  ││││  ┌osz
+    │ │ ││  │ ││  ││││  ││││  │┌rex
+    │ │ ││  │ ││  ││││  ││││  ││┌rexr
+    │ │ ││  │ ││  ││││  ││││  │││┌reg
+    │ │2││  │2││  ││││  ││││  ││││
+    │ │8││24│2││18││││12││││ 6││││ 0
+    ├┐├┐│├─┐├┐│├─┐│││├─┐│││├─┐│││├─┐
   0b00000000000000000000000000000000*/
   uint32_t rde;
-  bool osz : 1;   // operand size override prefix
-  bool rexw : 1;  // rex.w or rex.wb or etc. 64-bit override
-  bool rexb : 1;  // rex.b or rex.wb or etc. see modrm table
-  bool rexr : 1;  // rex.r or rex.wr or etc. see modrm table
-  bool rex : 1;   // any rex prefix including rex
-  bool asz : 1;   // address size override
-  bool rexx : 1;  // rex.x or rex.wx or etc. see sib table
+  bool rexw : 1;   // rex.w or rex.wb or etc. 64-bit override
+  bool rexb : 1;   // rex.b or rex.wb or etc. see modrm table
+  bool rexr : 1;   // rex.r or rex.wr or etc. see modrm table
+  bool rex : 1;    // any rex prefix including rex
+  bool rexx : 1;   // rex.x or rex.wx or etc. see sib table
+  bool rexrr : 1;  // evex
+  bool asz : 1;    // address size override
+  bool osz : 1;    // operand size override prefix
   bool out_of_bytes : 1;
   bool is_intel_specific : 1;
   bool ild_f2 : 1;
   bool ild_f3 : 1;
   bool has_modrm : 1;
   bool has_sib : 1;
-  bool prefix66 : 1;  // rexw except for xmm ops
   bool realmode : 1;
   bool amd3dnow : 1;
   uint8_t max_bytes;
@@ -385,8 +383,6 @@ struct XedOperands { /*
   uint8_t map : 4;            // enum XedIldMap
   uint8_t hint : 2;           // static branch prediction
   uint8_t seg_ovd : 3;        // XED_SEG_xx
-  uint8_t first_f2f3 : 2;     // internal see rep, ild_f2, ild_f3
-  uint8_t last_f2f3 : 2;      // internal see rep, ild_f2, ild_f3
   uint8_t error : 5;          // enum XedError
   uint8_t mode : 3;           // real,legacy,long
   uint8_t rep : 2;            // 0, 2 (0xf2 repnz), 3 (0xf3 rep/repe)
@@ -410,7 +406,6 @@ struct XedOperands { /*
   uint8_t vex_prefix;  // vex
   uint8_t zeroing;     // evex
   uint8_t bcrc;        // evex
-  uint8_t rexrr;       // evex
   uint8_t llrc;        // evex
   uint8_t vl;          // evex
   uint8_t mask;        // evex
@@ -453,7 +448,7 @@ forceinline void xed_operands_set_mode(struct XedOperands *p,
       p->mode = 0;
       break;
     default:
-      abort();
+      unreachable;
   }
 }
 

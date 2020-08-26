@@ -38,7 +38,7 @@ memrchr:.leafprologue
 	jz	5f
 	vmovd	%esi,%xmm0
 	vpbroadcastb %xmm0,%ymm0
-3:	vmovups	-32(%rdi,%rdx),%ymm1
+3:	vmovdqu	-32(%rdi,%rdx),%ymm1
 	vpcmpeqb %ymm1,%ymm0,%ymm1
 	vpmovmskb %ymm1,%eax
 	lzcnt	%eax,%eax
