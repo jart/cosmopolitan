@@ -38,18 +38,18 @@ static const char kFpuName[][8][8] = {
 
 char *DisOpFpu0(struct XedDecodedInst *x, int group) {
   const char *s;
-  s = kFpuName[group][ModrmRm(x)];
+  s = kFpuName[group][ModrmRm(x->op.rde)];
   return *s ? s : UNKNOWN;
 }
 
 char *DisOpFpu1(struct XedDecodedInst *x, char *p, const char *extra) {
-  stpcpy(stpcpy(p, kFpuName[0][ModrmReg(x)]), extra);
+  stpcpy(stpcpy(p, kFpuName[0][ModrmReg(x->op.rde)]), extra);
   return p;
 }
 
 char *DisOp66(struct XedDecodedInst *x, char *p, const char *s, const char *a,
               const char *b) {
-  stpcpy(stpcpy(p, s), !Osz(x) ? a : b);
+  stpcpy(stpcpy(p, s), !Osz(x->op.rde) ? a : b);
   return p;
 }
 
@@ -76,11 +76,11 @@ char *DisOpNqIbUdqIb(struct XedDecodedInst *x, char *p, const char *s) {
 char *DisOpVpsWpsVssWssVpdWpdVsdWsd(struct XedDecodedInst *x, char *p,
                                     const char *s) {
   char *q = stpcpy(p, s);
-  if (x->op.ild_f3) {
+  if (Rep(x->op.rde) == 3) {
     stpcpy(q, "ss %Vss Wss");
-  } else if (x->op.ild_f2) {
+  } else if (Rep(x->op.rde) == 2) {
     stpcpy(q, "sd %Vsd Wsd");
-  } else if (Osz(x)) {
+  } else if (Osz(x->op.rde)) {
     stpcpy(q, "pd %Vpd Wpd");
   } else {
     stpcpy(q, "ps %Vps Wps");
@@ -265,53 +265,53 @@ const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
     RCASE(0xFC, "cld");
     RCASE(0xFD, "std");
     case 0x8F:
-      switch (ModrmReg(x)) {
+      switch (ModrmReg(x->op.rde)) {
         RCASE(0, "popWQ Evq");
         default:
           break;
       }
       break;
     case 0xD9:
-      switch (ModrmReg(x)) {
+      switch (ModrmReg(x->op.rde)) {
         RCASE(1, "fxch EST1");
         RCASE(3, "fstps Msr %st");
         case 0:
-          if (IsModrmRegister(x)) {
+          if (IsModrmRegister(x->op.rde)) {
             return "fld EST";
           } else {
             return "flds Msr";
           }
           break;
         case 2:
-          if (IsModrmRegister(x)) {
+          if (IsModrmRegister(x->op.rde)) {
             return "fnop";
           } else {
             return "fsts Msr %st";
           }
           break;
         case 4:
-          if (IsModrmRegister(x)) {
+          if (IsModrmRegister(x->op.rde)) {
             return DisOpFpu0(x, 1);
           } else {
             return "fldenv Me";
           }
           break;
         case 5:
-          if (IsModrmRegister(x)) {
+          if (IsModrmRegister(x->op.rde)) {
             return DisOpFpu0(x, 2);
           } else {
             return "fldcw Mw";
           }
           break;
         case 6:
-          if (IsModrmRegister(x)) {
+          if (IsModrmRegister(x->op.rde)) {
             return DisOpFpu0(x, 3);
           } else {
             return "fnstenv M";
           }
           break;
         case 7:
-          if (IsModrmRegister(x)) {
+          if (IsModrmRegister(x->op.rde)) {
             return DisOpFpu0(x, 4);
           } else {
             return "fnstcw Mw";
@@ -320,58 +320,58 @@ const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
       }
       break;
     case 0xDA:
-      switch (ModrmReg(x)) {
+      switch (ModrmReg(x->op.rde)) {
         case 0:
-          if (!IsModrmRegister(x)) {
+          if (!IsModrmRegister(x->op.rde)) {
             return "fiaddl Mdi";
           } else {
             return "fcmovb %st EST";
           }
           break;
         case 1:
-          if (!IsModrmRegister(x)) {
+          if (!IsModrmRegister(x->op.rde)) {
             return "fimull Mdi";
           } else {
             return "fcmove %st EST";
           }
           break;
         case 2:
-          if (!IsModrmRegister(x)) {
+          if (!IsModrmRegister(x->op.rde)) {
             return "ficoml Mdi";
           } else {
             return "fcmovbe %st EST";
           }
           break;
         case 3:
-          if (!IsModrmRegister(x)) {
+          if (!IsModrmRegister(x->op.rde)) {
             return "ficompl Mdi";
           } else {
             return "fcmovu %st EST";
           }
           break;
         case 4:
-          if (!IsModrmRegister(x)) {
+          if (!IsModrmRegister(x->op.rde)) {
             return "fisubl Mdi";
           } else {
             return "fisubr Mdi";
           }
           break;
         case 5:
-          if (!IsModrmRegister(x)) {
+          if (!IsModrmRegister(x->op.rde)) {
             return "fisubrl Mdi";
           } else {
             return "fucompp";
           }
           break;
         case 6:
-          if (!IsModrmRegister(x)) {
+          if (!IsModrmRegister(x->op.rde)) {
             return "fidivl Mdi";
           } else {
             return UNKNOWN;
           }
           break;
         case 7:
-          if (!IsModrmRegister(x)) {
+          if (!IsModrmRegister(x->op.rde)) {
             return "fidivrl Mdi";
           } else {
             return UNKNOWN;
@@ -380,30 +380,30 @@ const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
       }
       break;
     case 0xDB:
-      switch (ModrmReg(x)) {
+      switch (ModrmReg(x->op.rde)) {
         case 0:
-          if (!IsModrmRegister(x)) {
+          if (!IsModrmRegister(x->op.rde)) {
             return "fildl Mdi";
           } else {
             return "fcmovnb %st EST";
           }
           break;
         case 1:
-          if (!IsModrmRegister(x)) {
+          if (!IsModrmRegister(x->op.rde)) {
             return "fisttpl Mdi";
           } else {
             return "fcmovne %st EST";
           }
           break;
         case 2:
-          if (!IsModrmRegister(x)) {
+          if (!IsModrmRegister(x->op.rde)) {
             return "fistl Mdi";
           } else {
             return "fcmovnbe %st EST";
           }
           break;
         case 3:
-          if (!IsModrmRegister(x)) {
+          if (!IsModrmRegister(x->op.rde)) {
             return "fistpl Mdi";
           } else {
             return "fcmovnu %st EST";
@@ -412,21 +412,21 @@ const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
         case 4:
           return DisOpFpu0(x, 5);
         case 5:
-          if (!IsModrmRegister(x)) {
+          if (!IsModrmRegister(x->op.rde)) {
             return "fldt Mer";
           } else {
             return "fucomi %st EST";
           }
           break;
         case 6:
-          if (IsModrmRegister(x)) {
+          if (IsModrmRegister(x->op.rde)) {
             return "fcomi %st EST";
           } else {
             return UNKNOWN;
           }
           break;
         case 7:
-          if (!IsModrmRegister(x)) {
+          if (!IsModrmRegister(x->op.rde)) {
             return "fstpt Mer";
           } else {
             return UNKNOWN;
@@ -435,12 +435,12 @@ const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
       }
       break;
     case 0xD8:
-      return DisOpFpu1(x, p, !IsModrmRegister(x) ? "s Msr" : " EST1");
+      return DisOpFpu1(x, p, !IsModrmRegister(x->op.rde) ? "s Msr" : " EST1");
     case 0xDC:
-      if (!IsModrmRegister(x)) {
+      if (!IsModrmRegister(x->op.rde)) {
         return DisOpFpu1(x, p, "l Mdr");
       } else {
-        switch (ModrmReg(x)) {
+        switch (ModrmReg(x->op.rde)) {
           RCASE(0, "fadd EST %st");
           RCASE(1, "fmul EST %st");
           RCASE(2, "fcom %st EST");
@@ -453,8 +453,8 @@ const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
       }
       break;
     case 0xDD:
-      if (!IsModrmRegister(x)) {
-        switch (ModrmReg(x)) {
+      if (!IsModrmRegister(x->op.rde)) {
+        switch (ModrmReg(x->op.rde)) {
           RCASE(0, "fldl Mdr");
           RCASE(1, "fisttpll Mqi");
           RCASE(2, "fstl Mdr");
@@ -464,7 +464,7 @@ const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
           RCASE(7, "fnstsw Mst");
         }
       } else {
-        switch (ModrmReg(x)) {
+        switch (ModrmReg(x->op.rde)) {
           RCASE(0, "ffree EST");
           RCASE(1, "fxch EST");
           RCASE(2, "fst EST");
@@ -475,8 +475,8 @@ const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
       }
       break;
     case 0xDE:
-      if (!IsModrmRegister(x)) {
-        switch (ModrmReg(x)) {
+      if (!IsModrmRegister(x->op.rde)) {
+        switch (ModrmReg(x->op.rde)) {
           RCASE(0, "fiadds Mwi");
           RCASE(1, "fimuls Mwi");
           RCASE(2, "ficoms Mwi");
@@ -487,7 +487,7 @@ const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
           RCASE(7, "fidivrs Mwi");
         }
       } else {
-        switch (ModrmReg(x)) {
+        switch (ModrmReg(x->op.rde)) {
           RCASE(0, "faddp EST1");
           RCASE(1, "fmulp EST1");
           RCASE(2, "fcomp EST1");
@@ -500,8 +500,8 @@ const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
       }
       break;
     case 0xDF:
-      if (!IsModrmRegister(x)) {
-        switch (ModrmReg(x)) {
+      if (!IsModrmRegister(x->op.rde)) {
+        switch (ModrmReg(x->op.rde)) {
           RCASE(0, "filds Mwi");
           RCASE(1, "fisttps Mwi");
           RCASE(2, "fists Mwi");
@@ -512,7 +512,7 @@ const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
           RCASE(7, "fistpll Mqi");
         }
       } else {
-        switch (ModrmReg(x)) {
+        switch (ModrmReg(x->op.rde)) {
           RCASE(0, "ffreep EST");
           RCASE(1, "fxch");
           RCASE(2, "fstp EST");
@@ -524,7 +524,7 @@ const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
       }
       break;
     case 0xF6:
-      switch (ModrmReg(x)) {
+      switch (ModrmReg(x->op.rde)) {
         RCASE(0, "test Eb Ib");
         RCASE(1, "test Eb Ib");
         RCASE(2, "not Eb");
@@ -536,7 +536,7 @@ const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
       }
       break;
     case 0xF7:
-      switch (ModrmReg(x)) {
+      switch (ModrmReg(x->op.rde)) {
         RCASE(0, "test Evqp Ivds");
         RCASE(1, "test Evqp Ivds");
         RCASE(2, "not Evqp");
@@ -548,13 +548,13 @@ const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
       }
       break;
     case 0xFE:
-      switch (ModrmReg(x)) {
+      switch (ModrmReg(x->op.rde)) {
         RCASE(0, "inc Eb");
         RCASE(1, "dec Eb");
       }
       break;
     case 0xFF:
-      switch (ModrmReg(x)) {
+      switch (ModrmReg(x->op.rde)) {
         RCASE(0, "inc Evqp");
         RCASE(1, "dec Evqp");
         RCASE(2, "CALL Eq");
@@ -580,8 +580,8 @@ const char *DisSpecMap1(struct XedDecodedInst *x, char *p) {
     RCASE(0x28, "movapSD %Vps Wps");
     RCASE(0x29, "movapSD Wps %Vps");
     RCASE(0x2B, "movntpSD Mps %Vps");
-    RCASE(0x2E, Osz(x) ? "ucomisd %Vsd Wsd" : "ucomiss %Vss Wss");
-    RCASE(0x2F, Osz(x) ? "comisd %Vsd Wsd" : "comiss %Vss Wss");
+    RCASE(0x2E, Osz(x->op.rde) ? "ucomisd %Vsd Wsd" : "ucomiss %Vss Wss");
+    RCASE(0x2F, Osz(x->op.rde) ? "comisd %Vsd Wsd" : "comiss %Vss Wss");
     RCASE(0x31, "rdtsc");
     RCASE(0x40, "cmovo %Gvqp Evqp");
     RCASE(0x41, "cmovno %Gvqp Evqp");
@@ -693,7 +693,7 @@ const char *DisSpecMap1(struct XedDecodedInst *x, char *p) {
     RCASE(0xD3, DisOpPqQqVdqWdq(x, p, "psrlq"));
     RCASE(0xD4, DisOpPqQqVdqWdq(x, p, "paddq"));
     RCASE(0xD5, DisOpPqQqVdqWdq(x, p, "pmullw"));
-    RCASE(0xD7, Osz(x) ? "pmovmskb %Gdqp %Udq" : "pmovmskb %Gdqp %Nq");
+    RCASE(0xD7, Osz(x->op.rde) ? "pmovmskb %Gdqp %Udq" : "pmovmskb %Gdqp %Nq");
     RCASE(0xD8, DisOpPqQqVdqWdq(x, p, "psubusb"));
     RCASE(0xD9, DisOpPqQqVdqWdq(x, p, "psubusw"));
     RCASE(0xDA, DisOpPqQqVdqWdq(x, p, "pminub"));
@@ -708,7 +708,7 @@ const char *DisSpecMap1(struct XedDecodedInst *x, char *p) {
     RCASE(0xE3, DisOpPqQqVdqWdq(x, p, "pavgw"));
     RCASE(0xE4, DisOpPqQqVdqWdq(x, p, "pmulhuw"));
     RCASE(0xE5, DisOpPqQqVdqWdq(x, p, "pmulhw"));
-    RCASE(0xE7, Osz(x) ? "movntdq Mdq %Vdq" : "movntq Mq %Pq");
+    RCASE(0xE7, Osz(x->op.rde) ? "movntdq Mdq %Vdq" : "movntq Mq %Pq");
     RCASE(0xE8, DisOpPqQqVdqWdq(x, p, "psubsb"));
     RCASE(0xE9, DisOpPqQqVdqWdq(x, p, "psubsw"));
     RCASE(0xEA, DisOpPqQqVdqWdq(x, p, "pminsw"));
@@ -740,7 +740,7 @@ const char *DisSpecMap1(struct XedDecodedInst *x, char *p) {
       }
       break;
     case 0x70:
-      switch (Rep(x) | Osz(x)) {
+      switch (Rep(x->op.rde) | Osz(x->op.rde)) {
         RCASE(0, "pshufw %Pq Qq Ib");
         RCASE(1, "pshufd %Vdq Wdq Ib");
         RCASE(2, "pshuflw %Vdq Wdq Ib");
@@ -748,21 +748,21 @@ const char *DisSpecMap1(struct XedDecodedInst *x, char *p) {
       }
       break;
     case 0x71:
-      switch (ModrmReg(x)) {
+      switch (ModrmReg(x->op.rde)) {
         RCASE(2, DisOpNqIbUdqIb(x, p, "psrlw"));
         RCASE(4, DisOpNqIbUdqIb(x, p, "psraw"));
         RCASE(6, DisOpNqIbUdqIb(x, p, "psllw"));
       }
       break;
     case 0x72:
-      switch (ModrmReg(x)) {
+      switch (ModrmReg(x->op.rde)) {
         RCASE(2, DisOpNqIbUdqIb(x, p, "psrld"));
         RCASE(4, DisOpNqIbUdqIb(x, p, "psrad"));
         RCASE(6, DisOpNqIbUdqIb(x, p, "pslld"));
       }
       break;
     case 0x73:
-      switch (ModrmReg(x)) {
+      switch (ModrmReg(x->op.rde)) {
         RCASE(2, DisOpNqIbUdqIb(x, p, "psrlq"));
         RCASE(3, DisOpNqIbUdqIb(x, p, "psrldq"));
         RCASE(6, DisOpNqIbUdqIb(x, p, "psllq"));
@@ -770,7 +770,7 @@ const char *DisSpecMap1(struct XedDecodedInst *x, char *p) {
       }
       break;
     case 0xAE:
-      switch (ModrmReg(x)) {
+      switch (ModrmReg(x->op.rde)) {
         RCASE(0, "fxsave Mstx %st %st(1)");
         RCASE(1, "fxrstor Mstx %st %st(1)");
         RCASE(2, "ldmxcsr Md");
@@ -787,7 +787,7 @@ const char *DisSpecMap1(struct XedDecodedInst *x, char *p) {
       }
       break;
     case 0xBA:
-      switch (ModrmReg(x)) {
+      switch (ModrmReg(x->op.rde)) {
         RCASE(4, "btWLQ Evqp Ib");
         RCASE(5, "btsWLQ Evqp Ib");
         RCASE(6, "btrWLQ Evqp Ib");
@@ -795,36 +795,36 @@ const char *DisSpecMap1(struct XedDecodedInst *x, char *p) {
       }
       break;
     case 0x10:
-      if (x->op.ild_f3) {
+      if (Rep(x->op.rde) == 3) {
         return "movss %Vss Wss";
-      } else if (x->op.ild_f2) {
+      } else if (Rep(x->op.rde) == 2) {
         return "movsd %Vsd Wsd";
-      } else if (Osz(x)) {
+      } else if (Osz(x->op.rde)) {
         return "movupd %Vpd Wpd";
       } else {
         return "movups %Vps Wps";
       }
       break;
     case 0x11:
-      if (x->op.ild_f3) {
+      if (Rep(x->op.rde) == 3) {
         return "movss Wss %Vss";
-      } else if (x->op.ild_f2) {
+      } else if (Rep(x->op.rde) == 2) {
         return "movsd Wsd %Vsd";
-      } else if (Osz(x)) {
+      } else if (Osz(x->op.rde)) {
         return "movupd Wpd %Vpd";
       } else {
         return "movups Wps %Vps";
       }
       break;
     case 0xC4:
-      if (!Osz(x)) {
-        if (IsModrmRegister(x)) {
+      if (!Osz(x->op.rde)) {
+        if (IsModrmRegister(x->op.rde)) {
           return "pinsrw %Pq %Rdqp Ib";
         } else {
           return "pinsrw %Pq Mw Ib";
         }
       } else {
-        if (IsModrmRegister(x)) {
+        if (IsModrmRegister(x->op.rde)) {
           return "pinsrw %Vdq %Rdqp Ib";
         } else {
           return "pinsrw %Vdq Mw Ib";
@@ -832,39 +832,39 @@ const char *DisSpecMap1(struct XedDecodedInst *x, char *p) {
       }
       break;
     case 0xC5:
-      if (!Osz(x)) {
+      if (!Osz(x->op.rde)) {
         return "pextrw %Gdqp %Nq Ib";
       } else {
         return "pextrw %Gdqp %Udq Ib";
       }
       break;
     case 0xC6:
-      if (!Osz(x)) {
+      if (!Osz(x->op.rde)) {
         return "shufps %Vps Wps Ib";
       } else {
         return "shufpd %Vpd Wpd Ib";
       }
       break;
     case 0xC7:
-      if (Rexw(x)) {
+      if (Rexw(x->op.rde)) {
         return "cmpxchg16b Mdq";
       } else {
         return "cmpxchg8b Mq";
       }
       break;
     case 0xD6:
-      if (Osz(x)) {
+      if (Osz(x->op.rde)) {
         return "movq Wq %Vq";
-      } else if (x->op.ild_f3) {
+      } else if (Rep(x->op.rde) == 3) {
         return "movq2dq %Vdq %Nq";
-      } else if (x->op.ild_f2) {
+      } else if (Rep(x->op.rde) == 2) {
         return "movq2dq %Pq %Uq";
       }
       break;
     case 0x12:
-      switch (Rep(x) | Osz(x)) {
+      switch (Rep(x->op.rde) | Osz(x->op.rde)) {
         case 0:
-          if (IsModrmRegister(x)) {
+          if (IsModrmRegister(x->op.rde)) {
             return "movhlps %Vq %Uq";
           } else {
             return "movlps %Vq Mq";
@@ -881,16 +881,16 @@ const char *DisSpecMap1(struct XedDecodedInst *x, char *p) {
       }
       break;
     case 0x13:
-      if (Osz(x)) {
+      if (Osz(x->op.rde)) {
         return "movlpd Mq %Vq";
       } else {
         return "movlps Mq %Vq";
       }
       break;
     case 0x16:
-      switch (Rep(x) | Osz(x)) {
+      switch (Rep(x->op.rde) | Osz(x->op.rde)) {
         case 0:
-          if (IsModrmRegister(x)) {
+          if (IsModrmRegister(x->op.rde)) {
             return "movlhps %Vq %Uq";
           } else {
             return "movhps %Vq Mq";
@@ -905,85 +905,85 @@ const char *DisSpecMap1(struct XedDecodedInst *x, char *p) {
       }
       break;
     case 0x17:
-      if (Osz(x)) {
+      if (Osz(x->op.rde)) {
         return "movhpd Mq %Vq";
       } else {
         return "movhps Mq %Vq";
       }
       break;
     case 0x2A:
-      if (x->op.ild_f3) {
+      if (Rep(x->op.rde) == 3) {
         return "cvtsi2ss %Vss Edqp";
-      } else if (x->op.ild_f2) {
+      } else if (Rep(x->op.rde) == 2) {
         return "cvtsi2sd %Vsd Edqp";
-      } else if (Osz(x)) {
+      } else if (Osz(x->op.rde)) {
         return "cvtpi2pd %Vpd Qpi";
       } else {
         return "cvtpi2ps %Vps Qpi";
       }
       break;
     case 0x2C:
-      if (x->op.ild_f3) {
+      if (Rep(x->op.rde) == 3) {
         return "cvttss2si %Gdqp Wss";
-      } else if (x->op.ild_f2) {
+      } else if (Rep(x->op.rde) == 2) {
         return "cvttsd2si %Gdqp Wsd";
-      } else if (Osz(x)) {
+      } else if (Osz(x->op.rde)) {
         return "cvttpd2pi %Ppi Wpd";
       } else {
         return "cvttps2pi %Ppi Wpsq";
       }
       break;
     case 0x2D:
-      if (x->op.ild_f3) {
+      if (Rep(x->op.rde) == 3) {
         return "cvtss2si %Gdqp Wss";
-      } else if (x->op.ild_f2) {
+      } else if (Rep(x->op.rde) == 2) {
         return "cvtsd2si %Gdqp Wsd";
-      } else if (Osz(x)) {
+      } else if (Osz(x->op.rde)) {
         return "cvtpd2pi %Ppi Wpd";
       } else {
         return "cvtps2pi %Ppi Wpsq";
       }
       break;
     case 0x5a:
-      if (x->op.ild_f3) {
+      if (Rep(x->op.rde) == 3) {
         return "cvtss2sd %Vsd Wss";
-      } else if (x->op.ild_f2) {
+      } else if (Rep(x->op.rde) == 2) {
         return "cvtsd2ss %Vss Wsd";
-      } else if (Osz(x)) {
+      } else if (Osz(x->op.rde)) {
         return "cvtpd2ps %Vps Wpd";
       } else {
         return "cvtps2pd %Vpd Wps";
       }
       break;
     case 0x5b:
-      if (x->op.ild_f3) {
+      if (Rep(x->op.rde) == 3) {
         return "cvttps2dq %Vdq Wps";
-      } else if (Osz(x)) {
+      } else if (Osz(x->op.rde)) {
         return "cvtps2dq %Vdq Wps";
       } else {
         return "cvtdq2ps %Vps Wdq";
       }
       break;
     case 0x51:
-      if (x->op.ild_f3) {
+      if (Rep(x->op.rde) == 3) {
         return "sqrtss %Vss Wss";
-      } else if (x->op.ild_f2) {
+      } else if (Rep(x->op.rde) == 2) {
         return "sqrtsd %Vsd Wsd";
-      } else if (Osz(x)) {
+      } else if (Osz(x->op.rde)) {
         return "sqrtpd %Vpd Wpd";
       } else {
         return "sqrtps %Vps Wps";
       }
       break;
     case 0x6E:
-      if (Osz(x)) {
-        if (Rexw(x)) {
+      if (Osz(x->op.rde)) {
+        if (Rexw(x->op.rde)) {
           return "movq %Vdq Eqp";
         } else {
           return "movd %Vdq Ed";
         }
       } else {
-        if (Rexw(x)) {
+        if (Rexw(x->op.rde)) {
           return "movq %Pq Eqp";
         } else {
           return "movd %Pq Ed";
@@ -991,25 +991,25 @@ const char *DisSpecMap1(struct XedDecodedInst *x, char *p) {
       }
       break;
     case 0x6F:
-      if (x->op.ild_f3) {
+      if (Rep(x->op.rde) == 3) {
         return "movdqu %Vdq Wdq";
-      } else if (Osz(x)) {
+      } else if (Osz(x->op.rde)) {
         return "movdqa %Vdq Wdq";
       } else {
         return "movq %Pq Qq";
       }
       break;
     case 0x7E:
-      if (x->op.ild_f3) {
+      if (Rep(x->op.rde) == 3) {
         return "movq %Vq Wq";
-      } else if (Osz(x)) {
-        if (Rexw(x)) {
+      } else if (Osz(x->op.rde)) {
+        if (Rexw(x->op.rde)) {
           return "movq Eqp %Vdq";
         } else {
           return "movd Ed %Vdq";
         }
       } else {
-        if (Rexw(x)) {
+        if (Rexw(x->op.rde)) {
           return "movq Eqp %Pq";
         } else {
           return "movd Ed %Pq";
@@ -1017,20 +1017,20 @@ const char *DisSpecMap1(struct XedDecodedInst *x, char *p) {
       }
       break;
     case 0x7F:
-      if (x->op.ild_f3) {
+      if (Rep(x->op.rde) == 3) {
         return "movdqu Wdq %Vdq";
-      } else if (Osz(x)) {
+      } else if (Osz(x->op.rde)) {
         return "movdqa Wdq %Vdq";
       } else {
         return "movq Qq %Pq";
       }
       break;
     case 0xE6:
-      if (x->op.ild_f2) {
+      if (Rep(x->op.rde) == 2) {
         return "cvtpd2dq %Vdq Wpd";
-      } else if (Osz(x)) {
+      } else if (Osz(x->op.rde)) {
         return "cvttpd2dq %Vdq Wpd";
-      } else if (x->op.ild_f3) {
+      } else if (Rep(x->op.rde) == 3) {
         return "cvtdq2pd %Vpd Wdq";
       }
       break;

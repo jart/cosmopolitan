@@ -17,46 +17,39 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "dsp/tty/tty.h"
-#include "libc/alg/arraylist2.h"
-#include "libc/calls/calls.h"
-#include "libc/fmt/fmt.h"
+#include "libc/log/check.h"
 #include "libc/mem/mem.h"
-#include "libc/str/tpencode.h"
-#include "tool/build/lib/buffer.h"
+#include "libc/x/x.h"
+#include "tool/build/lib/fds.h"
 
-void AppendChar(struct Buffer *b, char c) {
-  APPEND(&b->p, &b->i, &b->n, &c);
+int MachineFdAdd(struct MachineFds *mf) {
+  int fd;
+  struct MachineFdClosed *closed;
+  if ((closed = mf->closed)) {
+    DCHECK_LT(closed->fd, mf->i);
+    fd = closed->fd;
+    mf->closed = closed->next;
+    free(closed);
+  } else {
+    DCHECK_LE(mf->i, mf->n);
+    if (mf->i == mf->n) {
+      if (!grow(&mf->p, &mf->n, sizeof(struct MachineFd), 0)) {
+        return -1;
+      }
+    }
+    fd = mf->i++;
+  }
+  return fd;
 }
 
-void AppendData(struct Buffer *b, char *data, size_t len) {
-  CONCAT(&b->p, &b->i, &b->n, data, len);
-}
-
-void AppendStr(struct Buffer *b, const char *s) {
-  AppendData(b, s, strlen(s));
-}
-
-void AppendWide(struct Buffer *b, wint_t wc) {
-  char cbuf[8];
-  AppendData(b, cbuf, tpencode(cbuf, 8, wc, false));
-}
-
-void AppendFmt(struct Buffer *b, const char *fmt, ...) {
-  int size;
-  char *tmp;
-  va_list va;
-  tmp = NULL;
-  va_start(va, fmt);
-  size = vasprintf(&tmp, fmt, va);
-  va_end(va);
-  if (size != -1) AppendData(b, tmp, size);
-  free(tmp);
-}
-
-/**
- * Writes buffer until completion, interrupt, or error occurs.
- */
-ssize_t WriteBuffer(struct Buffer *b, int fd) {
-  return ttywrite(fd, b->p, b->i);
+void MachineFdRemove(struct MachineFds *mf, int fd) {
+  struct MachineFdClosed *closed;
+  DCHECK_GE(fd, 0);
+  DCHECK_LT(fd, mf->i);
+  mf->p[fd].cb = NULL;
+  if ((closed = malloc(sizeof(struct MachineFdClosed)))) {
+    closed->fd = fd;
+    closed->next = mf->closed;
+    mf->closed = closed;
+  }
 }

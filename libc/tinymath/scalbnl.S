@@ -20,11 +20,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns 𝑥 × 𝑟ʸ where 𝑟 is radix of hardware architecture.
+/	Returns 𝑥 × 2ʸ.
 /
 /	@param	𝑥 is long double passed on stack
 /	@param	𝑦 is exponent via %edi
-/	@see	FLT_RADIX
 tinymath_scalbnl:
 	push	%rbp
 	mov	%rsp,%rbp

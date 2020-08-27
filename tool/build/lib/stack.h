@@ -11,8 +11,9 @@ uint16_t Pop16(struct Machine *, uint16_t);
 void OpCallJvds(struct Machine *);
 void OpRet(struct Machine *, uint16_t);
 void OpLeave(struct Machine *);
-void PushOsz(struct Machine *, uint64_t);
-void OpCallEq(struct Machine *);
+void PushOsz(struct Machine *, uint32_t, uint64_t);
+void OpCallEq(struct Machine *, uint32_t);
+void OpBofram(struct Machine *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

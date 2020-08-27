@@ -50,26 +50,6 @@ static long double OnFpuStackUnderflow(struct Machine *m) {
   return -NAN;
 }
 
-void FpuPush(struct Machine *m, long double x) {
-  if (FpuGetTag(m, -1) != kFpuTagEmpty) OnFpuStackOverflow(m);
-  m->fpu.sp -= 1;
-  *FpuSt(m, 0) = x;
-  FpuSetTag(m, 0, kFpuTagValid);
-}
-
-long double FpuPop(struct Machine *m) {
-  long double x;
-  if (FpuGetTag(m, 0) != kFpuTagEmpty) {
-    x = *FpuSt(m, 0);
-    FpuSetTag(m, 0, kFpuTagEmpty);
-    /* *FpuSt(m, 0) = -NAN; */
-  } else {
-    x = OnFpuStackUnderflow(m);
-  }
-  m->fpu.sp += 1;
-  return x;
-}
-
 static long double St(struct Machine *m, int i) {
   if (FpuGetTag(m, i) == kFpuTagEmpty) OnFpuStackUnderflow(m);
   return *FpuSt(m, i);
@@ -84,7 +64,7 @@ static long double St1(struct Machine *m) {
 }
 
 static long double StRm(struct Machine *m) {
-  return St(m, ModrmRm(m->xedd));
+  return St(m, ModrmRm(m->xedd->op.rde));
 }
 
 static void FpuClearRoundup(struct Machine *m) {
@@ -100,7 +80,7 @@ static void FpuSetSt0(struct Machine *m, long double x) {
 }
 
 static void FpuSetStRm(struct Machine *m, long double x) {
-  *FpuSt(m, ModrmRm(m->xedd)) = x;
+  *FpuSt(m, ModrmRm(m->xedd->op.rde)) = x;
 }
 
 static void FpuSetStPop(struct Machine *m, int i, long double x) {
@@ -109,7 +89,7 @@ static void FpuSetStPop(struct Machine *m, int i, long double x) {
 }
 
 static void FpuSetStRmPop(struct Machine *m, long double x) {
-  FpuSetStPop(m, ModrmRm(m->xedd), x);
+  FpuSetStPop(m, ModrmRm(m->xedd->op.rde), x);
 }
 
 static int16_t GetMemoryShort(struct Machine *m) {
@@ -414,11 +394,11 @@ static void OpFmulEstSt(struct Machine *m) {
 }
 
 static void OpFsubEstSt(struct Machine *m) {
-  FpuSetStRm(m, StRm(m) - St0(m));
+  FpuSetStRm(m, St0(m) - StRm(m));
 }
 
 static void OpFsubrEstSt(struct Machine *m) {
-  FpuSetStRm(m, St0(m) - StRm(m));
+  FpuSetStRm(m, StRm(m) - St0(m));
 }
 
 static void OpFdivEstSt(struct Machine *m) {
@@ -666,8 +646,7 @@ static void OpFstp(struct Machine *m) {
 }
 
 static void OpFxch(struct Machine *m) {
-  long double t;
-  t = StRm(m);
+  long double t = StRm(m);
   FpuSetStRm(m, St0(m));
   FpuSetSt0(m, t);
 }
@@ -686,7 +665,7 @@ static void OpFldl(struct Machine *m) {
 
 static void OpFldConstant(struct Machine *m) {
   long double x;
-  switch (ModrmRm(m->xedd)) {
+  switch (ModrmRm(m->xedd->op.rde)) {
     case 0:
       x = fld1();
       break;
@@ -769,7 +748,7 @@ static void OpFistps(struct Machine *m) {
   FpuPop(m);
 }
 
-void OpFcomi(struct Machine *m) {
+static void OpFcomi(struct Machine *m) {
   long double x, y;
   x = St0(m);
   y = StRm(m);
@@ -808,7 +787,7 @@ static void OpFucomip(struct Machine *m) {
 }
 
 static void OpFfree(struct Machine *m) {
-  FpuSetTag(m, ModrmRm(m->xedd), kFpuTagEmpty);
+  FpuSetTag(m, ModrmRm(m->xedd->op.rde), kFpuTagEmpty);
 }
 
 static void OpFfreep(struct Machine *m) {
@@ -890,6 +869,10 @@ static void OpFnclex(struct Machine *m) {
   m->fpu.bf = false;
 }
 
+static void OpFnop(struct Machine *m) {
+  /* do nothing */
+}
+
 void OpFinit(struct Machine *m) {
   m->fpu.cw = X87_NORMAL;
   m->fpu.sw = 0;
@@ -905,18 +888,59 @@ void OpFwait(struct Machine *m) {
   }
 }
 
-static void OpFnop(struct Machine *m) {
-  /* do nothing */
+long double *FpuSt(struct Machine *m, unsigned i) {
+  i += m->fpu.sp;
+  i &= 0b111;
+  return m->fpu.st + i;
+}
+
+int FpuGetTag(struct Machine *m, unsigned i) {
+  unsigned t;
+  t = m->fpu.tw;
+  i += m->fpu.sp;
+  i &= 0b111;
+  i *= 2;
+  t &= 0b11 << i;
+  t >>= i;
+  return t;
+}
+
+void FpuSetTag(struct Machine *m, unsigned i, unsigned t) {
+  i += m->fpu.sp;
+  t &= 0b11;
+  i &= 0b111;
+  i *= 2;
+  m->fpu.tw &= ~(0b11 << i);
+  m->fpu.tw |= t << i;
+}
+
+void FpuPush(struct Machine *m, long double x) {
+  if (FpuGetTag(m, -1) != kFpuTagEmpty) OnFpuStackOverflow(m);
+  m->fpu.sp -= 1;
+  *FpuSt(m, 0) = x;
+  FpuSetTag(m, 0, kFpuTagValid);
+}
+
+long double FpuPop(struct Machine *m) {
+  long double x;
+  if (FpuGetTag(m, 0) != kFpuTagEmpty) {
+    x = *FpuSt(m, 0);
+    FpuSetTag(m, 0, kFpuTagEmpty);
+  } else {
+    x = OnFpuStackUnderflow(m);
+  }
+  m->fpu.sp += 1;
+  return x;
 }
 
 void OpFpu(struct Machine *m) {
   unsigned op;
   bool ismemory;
   op = m->xedd->op.opcode & 0b111;
-  ismemory = ModrmMod(m->xedd) != 0b11;
+  ismemory = ModrmMod(m->xedd->op.rde) != 0b11;
   m->fpu.ip = m->ip - m->xedd->length;
   m->fpu.op = op << 8 | m->xedd->op.modrm;
-  m->fpu.dp = ismemory ? ComputeAddress(m) : 0;
+  m->fpu.dp = ismemory ? ComputeAddress(m, m->xedd->op.rde) : 0;
   switch (DISP(op, ismemory, m->xedd->op.reg)) {
     CASE(DISP(0xD8, FPUREG, 0), OpFaddStEst(m));
     CASE(DISP(0xD8, FPUREG, 1), OpFmulStEst(m));
@@ -1029,7 +1053,7 @@ void OpFpu(struct Machine *m) {
     CASE(DISP(0xDf, MEMORY, 5), OpFildll(m));
     CASE(DISP(0xDf, MEMORY, 7), OpFistpll(m));
     case DISP(0xD9, FPUREG, 4):
-      switch (ModrmRm(m->xedd)) {
+      switch (ModrmRm(m->xedd->op.rde)) {
         CASE(0, OpFchs(m));
         CASE(1, OpFabs(m));
         CASE(4, OpFtst(m));
@@ -1039,7 +1063,7 @@ void OpFpu(struct Machine *m) {
       }
       break;
     case DISP(0xD9, FPUREG, 6):
-      switch (ModrmRm(m->xedd)) {
+      switch (ModrmRm(m->xedd->op.rde)) {
         CASE(0, OpF2xm1(m));
         CASE(1, OpFyl2x(m));
         CASE(2, OpFptan(m));
@@ -1053,7 +1077,7 @@ void OpFpu(struct Machine *m) {
       }
       break;
     case DISP(0xD9, FPUREG, 7):
-      switch (ModrmRm(m->xedd)) {
+      switch (ModrmRm(m->xedd->op.rde)) {
         CASE(0, OpFprem(m));
         CASE(1, OpFyl2xp1(m));
         CASE(2, OpFsqrt(m));
@@ -1067,7 +1091,7 @@ void OpFpu(struct Machine *m) {
       }
       break;
     case DISP(0xDb, FPUREG, 4):
-      switch (ModrmRm(m->xedd)) {
+      switch (ModrmRm(m->xedd->op.rde)) {
         CASE(2, OpFnclex(m));
         CASE(3, OpFinit(m));
         default:

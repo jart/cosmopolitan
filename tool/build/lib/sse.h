@@ -93,9 +93,9 @@ enum OpSseUdqIbKernel {
   kOpSseUdqIbPslldq,
 };
 
-void OpSse(struct Machine *, enum OpSseKernel);
-void OpSseUdqIb(struct Machine *, enum OpSseUdqIbKernel);
-void OpSsePalignr(struct Machine *);
+void OpSse(struct Machine *, uint32_t, enum OpSseKernel);
+void OpSseUdqIb(struct Machine *, uint32_t, enum OpSseUdqIbKernel);
+void OpSsePalignr(struct Machine *, uint32_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

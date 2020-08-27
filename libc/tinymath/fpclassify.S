@@ -21,7 +21,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-__fpclassify:
+tinymath_fpclassify:
 	.leafprologue
 	movd	%xmm0,%rax
 	movd	%xmm0,%rdx
@@ -41,4 +41,5 @@ __fpclassify:
 	sal	$12,%rdx
 	sete	%al
 1:	.leafepilogue
-	.endfn	__fpclassify,globl
+	.endfn	tinymath_fpclassify,globl
+	.alias	tinymath_fpclassify,__fpclassify

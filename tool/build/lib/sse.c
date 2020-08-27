@@ -114,19 +114,19 @@ union MachineVector {
   uint64_t u64[2];
 };
 
-void OpSse(struct Machine *m, enum OpSseKernel kernel) {
+void OpSse(struct Machine *m, uint32_t rde, enum OpSseKernel kernel) {
   int i;
   uint8_t *p;
   union MachineVector x, y, t;
-  p = GetModrmRegisterXmmPointerRead16(m);
-  if (Osz(m->xedd)) {
+  p = GetModrmRegisterXmmPointerRead16(m, rde);
+  if (Osz(rde)) {
     memcpy(&y, p, 16);
   } else {
     memset(&t, 0, 16);
     memcpy(&t, p, 8);
     memcpy(&y, &t, 16);
   }
-  memcpy(&x, XmmRexrReg(m), 16);
+  memcpy(&x, XmmRexrReg(m, rde), 16);
   switch (kernel) {
     CASE(kOpSsePsubb, psubb(x.i8, x.i8, y.i8));
     CASE(kOpSsePaddb, paddb(x.i8, x.i8, y.i8));
@@ -204,18 +204,18 @@ void OpSse(struct Machine *m, enum OpSseKernel kernel) {
     default:
       unreachable;
   }
-  if (Osz(m->xedd)) {
-    memcpy(XmmRexrReg(m), &x, 16);
+  if (Osz(rde)) {
+    memcpy(XmmRexrReg(m, rde), &x, 16);
   } else {
-    memcpy(XmmRexrReg(m), &x, 8);
+    memcpy(XmmRexrReg(m, rde), &x, 8);
   }
 }
 
-void OpSseUdqIb(struct Machine *m, enum OpSseUdqIbKernel kernel) {
+void OpSseUdqIb(struct Machine *m, uint32_t rde, enum OpSseUdqIbKernel kernel) {
   uint8_t i;
   union MachineVector x;
   i = m->xedd->op.uimm0;
-  memcpy(&x, XmmRexbRm(m), 16);
+  memcpy(&x, XmmRexbRm(m, rde), 16);
   switch (kernel) {
     CASE(kOpSseUdqIbPsrlw, (psrlw)(x.u16, x.u16, i));
     CASE(kOpSseUdqIbPsraw, (psraw)(x.i16, x.i16, i));
@@ -230,26 +230,26 @@ void OpSseUdqIb(struct Machine *m, enum OpSseUdqIbKernel kernel) {
     default:
       unreachable;
   }
-  if (Osz(m->xedd)) {
-    memcpy(XmmRexbRm(m), &x, 16);
+  if (Osz(rde)) {
+    memcpy(XmmRexbRm(m, rde), &x, 16);
   } else {
-    memcpy(XmmRexbRm(m), &x, 8);
+    memcpy(XmmRexbRm(m, rde), &x, 8);
   }
 }
 
-static void OpSsePalignrMmx(struct Machine *m) {
+static void OpSsePalignrMmx(struct Machine *m, uint32_t rde) {
   char t[24];
-  memcpy(t, GetModrmRegisterXmmPointerRead8(m), 8);
-  memcpy(t + 8, XmmRexrReg(m), 8);
+  memcpy(t, GetModrmRegisterXmmPointerRead8(m, rde), 8);
+  memcpy(t + 8, XmmRexrReg(m, rde), 8);
   memset(t + 16, 0, 8);
-  memcpy(XmmRexrReg(m), t + MIN(m->xedd->op.uimm0, 16), 8);
+  memcpy(XmmRexrReg(m, rde), t + MIN(m->xedd->op.uimm0, 16), 8);
 }
 
-void OpSsePalignr(struct Machine *m) {
-  if (Osz(m->xedd)) {
-    palignr(XmmRexrReg(m), XmmRexrReg(m), GetModrmRegisterXmmPointerRead8(m),
-            m->xedd->op.uimm0);
+void OpSsePalignr(struct Machine *m, uint32_t rde) {
+  if (Osz(rde)) {
+    palignr(XmmRexrReg(m, rde), XmmRexrReg(m, rde),
+            GetModrmRegisterXmmPointerRead8(m, rde), m->xedd->op.uimm0);
   } else {
-    OpSsePalignrMmx(m);
+    OpSsePalignrMmx(m, rde);
   }
 }

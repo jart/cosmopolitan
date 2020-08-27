@@ -37,6 +37,7 @@ LIBC_RUNTIME_A_DIRECTDEPS =				\
 	LIBC_BITS					\
 	LIBC_CALLS					\
 	LIBC_CONV					\
+	LIBC_TINYMATH					\
 	LIBC_ELF					\
 	LIBC_FMT					\
 	LIBC_NEXGEN32E					\

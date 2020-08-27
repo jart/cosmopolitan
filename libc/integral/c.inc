@@ -318,6 +318,15 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
+#ifndef noclone
+#if !defined(__STRICT_ANSI__) && \
+    (__has_attribute(__noclone__) || __GNUC__ * 100 + __GNUC_MINOR__ >= 405)
+#define noclone __attribute__((__noclone__))
+#else
+#define noclone
+#endif
+#endif
+
 /**
  * Makes function behave as much like macro as possible, meaning:
  *

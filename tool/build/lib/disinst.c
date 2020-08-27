@@ -20,7 +20,6 @@
 #include "libc/log/check.h"
 #include "libc/nexgen32e/tinystrcmp.h"
 #include "libc/str/str.h"
-#include "tool/build/lib/case.h"
 #include "tool/build/lib/dis.h"
 #include "tool/build/lib/modrm.h"
 
@@ -29,15 +28,26 @@ static const char kAluOp[8][4] = {"add", "or",  "adc", "sbb",
 static const char kBitOp[8][4] = {"rol", "ror", "rcl", "rcr",
                                   "shl", "shr", "sal", "sar"};
 
+static bool IsProbablyByteOp(struct XedDecodedInst *x) {
+  return !(x->op.opcode & 1);
+}
+
 static int IsRepOpcode(struct DisBuilder b) {
   switch (b.xedd->op.opcode & ~1u) {
-    CASE(0x6C /*INS */, return 1);
-    CASE(0x6E /*OUTS*/, return 1);
-    CASE(0xA4 /*MOVS*/, return 1);
-    CASE(0xAA /*STOS*/, return 1);
-    CASE(0xAC /*LODS*/, return 1);
-    CASE(0xA6 /*CMPS*/, return 2);
-    CASE(0xAE /*SCAS*/, return 2);
+    case 0x6C: /* INS */
+      return 1;
+    case 0x6E: /* OUTS */
+      return 1;
+    case 0xA4: /* MOVS */
+      return 1;
+    case 0xAA: /* STOS */
+      return 1;
+    case 0xAC: /* LODS */
+      return 1;
+    case 0xA6: /* CMPS */
+      return 2;
+    case 0xAE: /* SCAS */
+      return 2;
     default:
       return 0;
   }
@@ -45,7 +55,7 @@ static int IsRepOpcode(struct DisBuilder b) {
 
 static char *DisRepPrefix(struct DisBuilder b, char *p) {
   const char *s;
-  if (Rep(b.xedd) && b.xedd->op.map == XED_ILD_MAP0) {
+  if (Rep(b.xedd->op.rde) && b.xedd->op.map == XED_ILD_MAP0) {
     switch (IsRepOpcode(b)) {
       case 0:
         break;
@@ -53,7 +63,7 @@ static char *DisRepPrefix(struct DisBuilder b, char *p) {
         p = stpcpy(p, "rep ");
         break;
       case 2:
-        p = stpcpy(p, Rep(b.xedd) == 2 ? "repnz " : "repz ");
+        p = stpcpy(p, Rep(b.xedd->op.rde) == 2 ? "repnz " : "repz ");
         break;
       default:
         break;
@@ -81,30 +91,30 @@ static char *DisName(struct DisBuilder b, char *bp, const char *name,
   if (b.xedd->op.lock) p = stpcpy(p, "lock ");
   p = DisRepPrefix(b, p);
   if (tinystrcmp(name, "BIT") == 0) {
-    p = stpcpy(p, kBitOp[ModrmReg(b.xedd)]);
+    p = stpcpy(p, kBitOp[ModrmReg(b.xedd->op.rde)]);
   } else if (tinystrcmp(name, "CALL") == 0) {
     p = stpcpy(p, "call");
   } else if (tinystrcmp(name, "JMP") == 0) {
     p = stpcpy(p, "jmp");
   } else if (tinystrcmp(name, "jcxz") == 0) {
-    p = stpcpy(p, Asz(b.xedd) ? "jecxz" : "jrcxz");
+    p = stpcpy(p, Asz(b.xedd->op.rde) ? "jecxz" : "jrcxz");
     p = DisBranchTaken(b, p);
   } else if (tinystrcmp(name, "loop") == 0) {
-    p = stpcpy(p, Asz(b.xedd) ? "loopl" : "loop");
+    p = stpcpy(p, Asz(b.xedd->op.rde) ? "loopl" : "loop");
     p = DisBranchTaken(b, p);
   } else if (tinystrcmp(name, "loope") == 0) {
-    p = stpcpy(p, Asz(b.xedd) ? "loopel" : "loope");
+    p = stpcpy(p, Asz(b.xedd->op.rde) ? "loopel" : "loope");
     p = DisBranchTaken(b, p);
   } else if (tinystrcmp(name, "loopne") == 0) {
-    p = stpcpy(p, Asz(b.xedd) ? "loopnel" : "loopne");
+    p = stpcpy(p, Asz(b.xedd->op.rde) ? "loopnel" : "loopne");
     p = DisBranchTaken(b, p);
   } else if (tinystrcmp(name, "cwtl") == 0) {
-    if (Osz(b.xedd)) name = "cbtw";
-    if (Rexw(b.xedd)) name = "cltq";
+    if (Osz(b.xedd->op.rde)) name = "cbtw";
+    if (Rexw(b.xedd->op.rde)) name = "cltq";
     p = stpcpy(p, name);
   } else if (tinystrcmp(name, "cltd") == 0) {
-    if (Osz(b.xedd)) name = "cwtd";
-    if (Rexw(b.xedd)) name = "cqto";
+    if (Osz(b.xedd->op.rde)) name = "cwtd";
+    if (Rexw(b.xedd->op.rde)) name = "cqto";
     p = stpcpy(p, name);
   } else {
     notbyte = false;
@@ -115,7 +125,7 @@ static char *DisName(struct DisBuilder b, char *bp, const char *name,
       *p++ = *np;
     }
     if (tinystrcmp(name, "ALU") == 0) {
-      p = stpcpy(p, kAluOp[ModrmReg(b.xedd)]);
+      p = stpcpy(p, kAluOp[ModrmReg(b.xedd->op.rde)]);
     } else if (tinystrcmp(np, "WLQ") == 0) {
       notbyte = true;
       wantsuffix = true;
@@ -130,21 +140,21 @@ static char *DisName(struct DisBuilder b, char *bp, const char *name,
       notbyte = true;
       wantsuffixsd = true;
     } else if (tinystrcmp(np, "ABS") == 0) {
-      if (Rexw(b.xedd)) p = stpcpy(p, "abs");
+      if (Rexw(b.xedd->op.rde)) p = stpcpy(p, "abs");
     } else if (tinystrcmp(np, "BT") == 0) {
       p = DisBranchTaken(b, p);
     }
     if (wantsuffixsd) {
-      if (Osz(b.xedd)) {
+      if (Osz(b.xedd->op.rde)) {
         *p++ = 'd';
       } else {
         *p++ = 's';
       }
     } else if (wantsuffix || (ambiguous && !startswith(name, "f") &&
                               !startswith(name, "set"))) {
-      if (Osz(b.xedd)) {
+      if (Osz(b.xedd->op.rde)) {
         *p++ = 'w';
-      } else if (Rexw(b.xedd)) {
+      } else if (Rexw(b.xedd->op.rde)) {
         *p++ = 'q';
       } else if (ambiguous && !notbyte && IsProbablyByteOp(b.xedd)) {
         *p++ = 'b';
@@ -169,11 +179,12 @@ char *DisInst(struct DisBuilder b, char *p, const char *spec) {
   char args[4][64];
   char *s, *name, *state;
   bool hasarg, hasmodrm, hasregister, hasmemory;
+  CHECK_EQ(0, (int)b.xedd->op.error);
   DCHECK_LT(strlen(spec), 128);
   hasarg = false;
   hasmodrm = b.xedd->op.has_modrm;
-  hasmemory = hasmodrm && !IsModrmRegister(b.xedd);
-  hasregister = hasmodrm && IsModrmRegister(b.xedd);
+  hasmemory = hasmodrm && !IsModrmRegister(b.xedd->op.rde);
+  hasregister = hasmodrm && IsModrmRegister(b.xedd->op.rde);
   name = strtok_r(strcpy(sbuf, spec), " ", &state);
   for (n = 0; (s = strtok_r(NULL, " ", &state)); ++n) {
     hasarg = true;

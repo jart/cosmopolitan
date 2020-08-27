@@ -134,6 +134,7 @@
            "textexit"
            "externinline"
            "noinline"
+           "noclone"
            "donothing"
            "byanymeansnecessary"
            "threadlocal"

@@ -129,7 +129,7 @@ void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   if (!CANONICAL(addr)) return VIP(einval());
   if (!(!!(flags & MAP_ANONYMOUS) ^ (fd != -1))) return VIP(einval());
   if (!(!!(flags & MAP_PRIVATE) ^ !!(flags & MAP_SHARED))) return VIP(einval());
-  if (!(IsWindows() && fd != -1)) size = ROUNDUP(size, FRAMESIZE);
+  if (fd != -1) size = ROUNDUP(size, FRAMESIZE);
   if (flags & MAP_FIXED) {
     if (UntrackMemoryIntervals(addr, size) == -1) {
       return MAP_FAILED;

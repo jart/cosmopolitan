@@ -13,9 +13,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-void OpString(struct Machine *, int);
-void OpMovsb(struct Machine *);
-void OpStosb(struct Machine *);
+void OpString(struct Machine *, uint32_t, int);
+void OpMovsb(struct Machine *, uint32_t);
+void OpStosb(struct Machine *, uint32_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

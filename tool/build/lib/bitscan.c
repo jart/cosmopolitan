@@ -22,14 +22,14 @@
 #include "tool/build/lib/machine.h"
 #include "tool/build/lib/modrm.h"
 
-uint64_t AluBsr(struct Machine *m, uint64_t _, uint64_t x) {
+uint64_t AluBsr(struct Machine *m, uint32_t rde, uint64_t _, uint64_t x) {
   unsigned i;
-  if (Rexw(m->xedd)) {
+  if (Rexw(rde)) {
     x &= 0xffffffffffffffff;
     m->flags = SetFlag(m->flags, FLAGS_ZF, !x);
     if (!x) return 0;
     return 63 ^ __builtin_clzll(x);
-  } else if (!Osz(m->xedd)) {
+  } else if (!Osz(rde)) {
     x &= 0xffffffff;
     m->flags = SetFlag(m->flags, FLAGS_ZF, !x);
     if (!x) return 0;
@@ -43,14 +43,14 @@ uint64_t AluBsr(struct Machine *m, uint64_t _, uint64_t x) {
   }
 }
 
-uint64_t AluBsf(struct Machine *m, uint64_t _, uint64_t x) {
+uint64_t AluBsf(struct Machine *m, uint32_t rde, uint64_t _, uint64_t x) {
   unsigned i;
-  if (Rexw(m->xedd)) {
+  if (Rexw(rde)) {
     x &= 0xffffffffffffffff;
     m->flags = SetFlag(m->flags, FLAGS_ZF, !x);
     if (!x) return 0;
     return __builtin_ctzll(x);
-  } else if (!Osz(m->xedd)) {
+  } else if (!Osz(rde)) {
     x &= 0xffffffff;
     m->flags = SetFlag(m->flags, FLAGS_ZF, !x);
     if (!x) return 0;
@@ -64,7 +64,7 @@ uint64_t AluBsf(struct Machine *m, uint64_t _, uint64_t x) {
   }
 }
 
-uint64_t AluPopcnt(struct Machine *m, uint64_t _, uint64_t x) {
+uint64_t AluPopcnt(struct Machine *m, uint32_t rde, uint64_t _, uint64_t x) {
   m->flags = SetFlag(m->flags, FLAGS_ZF, !x);
   m->flags = SetFlag(m->flags, FLAGS_CF, false);
   m->flags = SetFlag(m->flags, FLAGS_SF, false);

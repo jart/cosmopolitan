@@ -5,7 +5,7 @@ PKGS += TOOL_BUILD_EMUCRT
 
 TOOL_BUILD_EMUCRT =					\
 	o/$(MODE)/tool/build/emucrt/emucrt.o		\
-	tool/build/emucrt/emucrt.lds
+	o/$(MODE)/tool/build/emucrt/emucrt.lds
 
 .PHONY: o/$(MODE)/tool/build/emucrt
 o/$(MODE)/tool/build/emucrt:				\

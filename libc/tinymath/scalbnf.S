@@ -20,6 +20,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
+/	Returns 𝑥 × 2ʸ.
+/
+/	@param	𝑥 is float passed in %xmm0
+/	@param	𝑦 is exponent via %edi
 tinymath_scalbnf:
 	push	%rbp
 	mov	%rsp,%rbp

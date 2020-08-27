@@ -22,6 +22,11 @@
 #include "libc/macros.h"
 
 /	Self-bootstraps process upon existence before calling main.
+/
+/	@param	r12 is argc
+/	@param	r13 is argv
+/	@param	r14 is environ
+/	@param	r15 is auxv
 _spawn:	push	%rbp
 	mov	%rsp,%rbp
 

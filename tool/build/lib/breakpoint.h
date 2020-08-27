@@ -14,7 +14,8 @@ struct Breakpoints {
 };
 
 ssize_t IsAtBreakpoint(struct Breakpoints *, int64_t);
-ssize_t AddBreakpoint(struct Breakpoints *, struct Breakpoint *);
+ssize_t PushBreakpoint(struct Breakpoints *, struct Breakpoint *);
+void PopBreakpoint(struct Breakpoints *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

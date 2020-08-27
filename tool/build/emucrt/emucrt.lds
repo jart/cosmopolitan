@@ -22,7 +22,7 @@ ENTRY(_start)
 
 SECTIONS {
 
-  .text : {
+  .text IMAGE_BASE_VIRTUAL : {
     *(.start)
     KEEP(*(.initprologue))
     KEEP(*(SORT_BY_NAME(.init.*)))

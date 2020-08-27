@@ -21,7 +21,13 @@
 #include "libc/assert.h"
 #include "tool/build/lib/breakpoint.h"
 
-ssize_t AddBreakpoint(struct Breakpoints *bps, struct Breakpoint *b) {
+void PopBreakpoint(struct Breakpoints *bps) {
+  if (bps->i) {
+    --bps->i;
+  }
+}
+
+ssize_t PushBreakpoint(struct Breakpoints *bps, struct Breakpoint *b) {
   int i;
   for (i = 0; i < bps->i; ++i) {
     if (bps->p[i].disable) {

@@ -35,7 +35,7 @@
  *
  * @return 0 on success, or -1 w/ errno
  */
-int ttywrite(int fd, const void *data, size_t size) {
+ssize_t ttywrite(int fd, const void *data, size_t size) {
   char *p;
   ssize_t rc;
   size_t wrote, n;

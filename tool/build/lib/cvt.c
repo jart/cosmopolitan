@@ -26,287 +26,287 @@
 #include "tool/build/lib/modrm.h"
 #include "tool/build/lib/throw.h"
 
-static void OpGdqpWssCvttss2si(struct Machine *m) {
+static void OpGdqpWssCvttss2si(struct Machine *m, uint32_t rde) {
   float f;
   int64_t n;
-  memcpy(&f, GetModrmRegisterXmmPointerRead4(m), 4);
+  memcpy(&f, GetModrmRegisterXmmPointerRead4(m, rde), 4);
   n = f;
-  if (!Rexw(m->xedd)) n &= 0xffffffff;
-  Write64(RegRexrReg(m), n);
+  if (!Rexw(rde)) n &= 0xffffffff;
+  Write64(RegRexrReg(m, rde), n);
 }
 
-static void OpGdqpWsdCvttsd2si(struct Machine *m) {
+static void OpGdqpWsdCvttsd2si(struct Machine *m, uint32_t rde) {
   double d;
   int64_t n;
-  memcpy(&d, GetModrmRegisterXmmPointerRead8(m), 8);
+  memcpy(&d, GetModrmRegisterXmmPointerRead8(m, rde), 8);
   n = d;
-  if (!Rexw(m->xedd)) n &= 0xffffffff;
-  Write64(RegRexrReg(m), n);
+  if (!Rexw(rde)) n &= 0xffffffff;
+  Write64(RegRexrReg(m, rde), n);
 }
 
-static void OpGdqpWssCvtss2si(struct Machine *m) {
+static void OpGdqpWssCvtss2si(struct Machine *m, uint32_t rde) {
   float f;
   int64_t n;
-  memcpy(&f, GetModrmRegisterXmmPointerRead4(m), 4);
+  memcpy(&f, GetModrmRegisterXmmPointerRead4(m, rde), 4);
   n = rintf(f);
-  if (!Rexw(m->xedd)) n &= 0xffffffff;
-  Write64(RegRexrReg(m), n);
+  if (!Rexw(rde)) n &= 0xffffffff;
+  Write64(RegRexrReg(m, rde), n);
 }
 
-static void OpGdqpWsdCvtsd2si(struct Machine *m) {
+static void OpGdqpWsdCvtsd2si(struct Machine *m, uint32_t rde) {
   double d;
   int64_t n;
-  memcpy(&d, GetModrmRegisterXmmPointerRead8(m), 8);
+  memcpy(&d, GetModrmRegisterXmmPointerRead8(m, rde), 8);
   n = nearbyint(d);
-  if (!Rexw(m->xedd)) n &= 0xffffffff;
-  Write64(RegRexrReg(m), n);
+  if (!Rexw(rde)) n &= 0xffffffff;
+  Write64(RegRexrReg(m, rde), n);
 }
 
-static void OpVssEdqpCvtsi2ss(struct Machine *m) {
+static void OpVssEdqpCvtsi2ss(struct Machine *m, uint32_t rde) {
   float f;
   int64_t n;
   uint8_t *p;
-  if (Rexw(m->xedd)) {
-    n = (int64_t)Read64(GetModrmRegisterWordPointerRead8(m));
+  if (Rexw(rde)) {
+    n = (int64_t)Read64(GetModrmRegisterWordPointerRead8(m, rde));
   } else {
-    n = (int32_t)Read32(GetModrmRegisterWordPointerRead4(m));
+    n = (int32_t)Read32(GetModrmRegisterWordPointerRead4(m, rde));
   }
   f = n;
-  memcpy(XmmRexrReg(m), &f, 4);
+  memcpy(XmmRexrReg(m, rde), &f, 4);
 }
 
-static void OpVsdEdqpCvtsi2sd(struct Machine *m) {
+static void OpVsdEdqpCvtsi2sd(struct Machine *m, uint32_t rde) {
   double d;
   int64_t n;
   uint8_t *p;
-  if (Rexw(m->xedd)) {
-    n = (int64_t)Read64(GetModrmRegisterWordPointerRead8(m));
+  if (Rexw(rde)) {
+    n = (int64_t)Read64(GetModrmRegisterWordPointerRead8(m, rde));
   } else {
-    n = (int32_t)Read32(GetModrmRegisterWordPointerRead4(m));
+    n = (int32_t)Read32(GetModrmRegisterWordPointerRead4(m, rde));
   }
   d = n;
-  memcpy(XmmRexrReg(m), &d, 8);
+  memcpy(XmmRexrReg(m, rde), &d, 8);
 }
 
-static void OpVpsQpiCvtpi2ps(struct Machine *m) {
+static void OpVpsQpiCvtpi2ps(struct Machine *m, uint32_t rde) {
   uint8_t *p;
   float f[2];
   int32_t i[2];
-  p = GetModrmRegisterMmPointerRead8(m);
+  p = GetModrmRegisterMmPointerRead8(m, rde);
   i[0] = Read32(p + 0);
   i[1] = Read32(p + 4);
   f[0] = i[0];
   f[1] = i[1];
-  memcpy(XmmRexrReg(m), f, 8);
+  memcpy(XmmRexrReg(m, rde), f, 8);
 }
 
-static void OpVpdQpiCvtpi2pd(struct Machine *m) {
+static void OpVpdQpiCvtpi2pd(struct Machine *m, uint32_t rde) {
   uint8_t *p;
   double f[2];
   int32_t n[2];
-  p = GetModrmRegisterMmPointerRead8(m);
+  p = GetModrmRegisterMmPointerRead8(m, rde);
   n[0] = Read32(p + 0);
   n[1] = Read32(p + 4);
   f[0] = n[0];
   f[1] = n[1];
-  memcpy(XmmRexrReg(m), f, 16);
+  memcpy(XmmRexrReg(m, rde), f, 16);
 }
 
-static void OpPpiWpsqCvtps2pi(struct Machine *m) {
+static void OpPpiWpsqCvtps2pi(struct Machine *m, uint32_t rde) {
   float f[2];
   int32_t n[2];
-  memcpy(f, GetModrmRegisterXmmPointerRead8(m), 8);
+  memcpy(f, GetModrmRegisterXmmPointerRead8(m, rde), 8);
   n[0] = nearbyintf(f[0]);
   n[1] = nearbyintf(f[1]);
-  Write32(MmReg(m) + 0, n[0]);
-  Write32(MmReg(m) + 4, n[1]);
+  Write32(MmReg(m, rde) + 0, n[0]);
+  Write32(MmReg(m, rde) + 4, n[1]);
 }
 
-static void OpPpiWpsqCvttps2pi(struct Machine *m) {
+static void OpPpiWpsqCvttps2pi(struct Machine *m, uint32_t rde) {
   float f[2];
   int32_t n[2];
-  memcpy(&f, GetModrmRegisterXmmPointerRead8(m), 8);
+  memcpy(&f, GetModrmRegisterXmmPointerRead8(m, rde), 8);
   n[0] = f[0];
   n[1] = f[1];
-  Write32(MmReg(m) + 0, n[0]);
-  Write32(MmReg(m) + 4, n[1]);
+  Write32(MmReg(m, rde) + 0, n[0]);
+  Write32(MmReg(m, rde) + 4, n[1]);
 }
 
-static void OpPpiWpdCvtpd2pi(struct Machine *m) {
+static void OpPpiWpdCvtpd2pi(struct Machine *m, uint32_t rde) {
   double d[2];
   int32_t n[2];
-  memcpy(d, GetModrmRegisterXmmPointerRead16(m), 16);
+  memcpy(d, GetModrmRegisterXmmPointerRead16(m, rde), 16);
   n[0] = nearbyint(d[0]);
   n[1] = nearbyint(d[1]);
-  Write32(MmReg(m) + 0, n[0]);
-  Write32(MmReg(m) + 4, n[1]);
+  Write32(MmReg(m, rde) + 0, n[0]);
+  Write32(MmReg(m, rde) + 4, n[1]);
 }
 
-static void OpPpiWpdCvttpd2pi(struct Machine *m) {
+static void OpPpiWpdCvttpd2pi(struct Machine *m, uint32_t rde) {
   double d[2];
   int32_t n[2];
-  memcpy(&d, GetModrmRegisterXmmPointerRead16(m), 16);
+  memcpy(&d, GetModrmRegisterXmmPointerRead16(m, rde), 16);
   n[0] = d[0];
   n[1] = d[1];
-  Write32(MmReg(m) + 0, n[0]);
-  Write32(MmReg(m) + 4, n[1]);
+  Write32(MmReg(m, rde) + 0, n[0]);
+  Write32(MmReg(m, rde) + 4, n[1]);
 }
 
-static void OpVpdWpsCvtps2pd(struct Machine *m) {
+static void OpVpdWpsCvtps2pd(struct Machine *m, uint32_t rde) {
   float f[2];
   double d[2];
-  memcpy(f, GetModrmRegisterXmmPointerRead8(m), 8);
+  memcpy(f, GetModrmRegisterXmmPointerRead8(m, rde), 8);
   d[0] = f[0];
   d[1] = f[1];
-  memcpy(XmmRexrReg(m), d, 16);
+  memcpy(XmmRexrReg(m, rde), d, 16);
 }
 
-static void OpVpsWpdCvtpd2ps(struct Machine *m) {
+static void OpVpsWpdCvtpd2ps(struct Machine *m, uint32_t rde) {
   float f[2];
   double d[2];
-  memcpy(d, GetModrmRegisterXmmPointerRead16(m), 16);
+  memcpy(d, GetModrmRegisterXmmPointerRead16(m, rde), 16);
   f[0] = d[0];
   f[1] = d[1];
-  memcpy(XmmRexrReg(m), f, 8);
+  memcpy(XmmRexrReg(m, rde), f, 8);
 }
 
-static void OpVssWsdCvtsd2ss(struct Machine *m) {
+static void OpVssWsdCvtsd2ss(struct Machine *m, uint32_t rde) {
   float f;
   double d;
-  memcpy(&d, GetModrmRegisterXmmPointerRead8(m), 8);
+  memcpy(&d, GetModrmRegisterXmmPointerRead8(m, rde), 8);
   f = d;
-  memcpy(XmmRexrReg(m), &f, 4);
+  memcpy(XmmRexrReg(m, rde), &f, 4);
 }
 
-static void OpVsdWssCvtss2sd(struct Machine *m) {
+static void OpVsdWssCvtss2sd(struct Machine *m, uint32_t rde) {
   float f;
   double d;
-  memcpy(&f, GetModrmRegisterXmmPointerRead4(m), 4);
+  memcpy(&f, GetModrmRegisterXmmPointerRead4(m, rde), 4);
   d = f;
-  memcpy(XmmRexrReg(m), &d, 8);
+  memcpy(XmmRexrReg(m, rde), &d, 8);
 }
 
-static void OpVpsWdqCvtdq2ps(struct Machine *m) {
+static void OpVpsWdqCvtdq2ps(struct Machine *m, uint32_t rde) {
   unsigned i;
   float f[4];
   int32_t n[4];
-  memcpy(n, GetModrmRegisterXmmPointerRead16(m), 16);
+  memcpy(n, GetModrmRegisterXmmPointerRead16(m, rde), 16);
   for (i = 0; i < 4; ++i) f[i] = n[i];
-  memcpy(XmmRexrReg(m), f, 16);
+  memcpy(XmmRexrReg(m, rde), f, 16);
 }
 
-static void OpVpdWdqCvtdq2pd(struct Machine *m) {
+static void OpVpdWdqCvtdq2pd(struct Machine *m, uint32_t rde) {
   unsigned i;
   double d[2];
   int32_t n[2];
-  memcpy(n, GetModrmRegisterXmmPointerRead8(m), 8);
+  memcpy(n, GetModrmRegisterXmmPointerRead8(m, rde), 8);
   for (i = 0; i < 2; ++i) d[i] = n[i];
-  memcpy(XmmRexrReg(m), d, 16);
+  memcpy(XmmRexrReg(m, rde), d, 16);
 }
 
-static void OpVdqWpsCvttps2dq(struct Machine *m) {
+static void OpVdqWpsCvttps2dq(struct Machine *m, uint32_t rde) {
   unsigned i;
   float f[4];
   int32_t n[4];
-  memcpy(f, GetModrmRegisterXmmPointerRead16(m), 16);
+  memcpy(f, GetModrmRegisterXmmPointerRead16(m, rde), 16);
   for (i = 0; i < 4; ++i) n[i] = f[i];
-  memcpy(XmmRexrReg(m), n, 16);
+  memcpy(XmmRexrReg(m, rde), n, 16);
 }
 
-static void OpVdqWpsCvtps2dq(struct Machine *m) {
+static void OpVdqWpsCvtps2dq(struct Machine *m, uint32_t rde) {
   unsigned i;
   float f[4];
   int32_t n[4];
-  memcpy(f, GetModrmRegisterXmmPointerRead16(m), 16);
+  memcpy(f, GetModrmRegisterXmmPointerRead16(m, rde), 16);
   for (i = 0; i < 4; ++i) n[i] = nearbyintf(f[i]);
-  memcpy(XmmRexrReg(m), n, 16);
+  memcpy(XmmRexrReg(m, rde), n, 16);
 }
 
-static void OpVdqWpdCvttpd2dq(struct Machine *m) {
+static void OpVdqWpdCvttpd2dq(struct Machine *m, uint32_t rde) {
   unsigned i;
   double d[2];
   int32_t n[2];
-  memcpy(d, GetModrmRegisterXmmPointerRead16(m), 16);
+  memcpy(d, GetModrmRegisterXmmPointerRead16(m, rde), 16);
   for (i = 0; i < 2; ++i) n[i] = d[i];
-  memcpy(XmmRexrReg(m), n, 8);
+  memcpy(XmmRexrReg(m, rde), n, 8);
 }
 
-static void OpVdqWpdCvtpd2dq(struct Machine *m) {
+static void OpVdqWpdCvtpd2dq(struct Machine *m, uint32_t rde) {
   unsigned i;
   double d[2];
   int32_t n[2];
-  memcpy(d, GetModrmRegisterXmmPointerRead16(m), 16);
+  memcpy(d, GetModrmRegisterXmmPointerRead16(m, rde), 16);
   for (i = 0; i < 2; ++i) n[i] = nearbyintf(d[i]);
-  memcpy(XmmRexrReg(m), n, 8);
+  memcpy(XmmRexrReg(m, rde), n, 8);
 }
 
-void OpCvt(struct Machine *m, unsigned long op) {
-  switch (op | Rep(m->xedd) | Osz(m->xedd)) {
+void OpCvt(struct Machine *m, uint32_t rde, unsigned long op) {
+  switch (op | Rep(rde) | Osz(rde)) {
     case kOpCvt0f2a + 0:
-      OpVpsQpiCvtpi2ps(m);
+      OpVpsQpiCvtpi2ps(m, rde);
       break;
     case kOpCvt0f2a + 1:
-      OpVpdQpiCvtpi2pd(m);
+      OpVpdQpiCvtpi2pd(m, rde);
       break;
     case kOpCvt0f2a + 2:
-      OpVsdEdqpCvtsi2sd(m);
+      OpVsdEdqpCvtsi2sd(m, rde);
       break;
     case kOpCvt0f2a + 3:
-      OpVssEdqpCvtsi2ss(m);
+      OpVssEdqpCvtsi2ss(m, rde);
       break;
     case kOpCvtt0f2c + 0:
-      OpPpiWpsqCvttps2pi(m);
+      OpPpiWpsqCvttps2pi(m, rde);
       break;
     case kOpCvtt0f2c + 1:
-      OpPpiWpdCvttpd2pi(m);
+      OpPpiWpdCvttpd2pi(m, rde);
       break;
     case kOpCvtt0f2c + 2:
-      OpGdqpWsdCvttsd2si(m);
+      OpGdqpWsdCvttsd2si(m, rde);
       break;
     case kOpCvtt0f2c + 3:
-      OpGdqpWssCvttss2si(m);
+      OpGdqpWssCvttss2si(m, rde);
       break;
     case kOpCvt0f2d + 0:
-      OpPpiWpsqCvtps2pi(m);
+      OpPpiWpsqCvtps2pi(m, rde);
       break;
     case kOpCvt0f2d + 1:
-      OpPpiWpdCvtpd2pi(m);
+      OpPpiWpdCvtpd2pi(m, rde);
       break;
     case kOpCvt0f2d + 2:
-      OpGdqpWsdCvtsd2si(m);
+      OpGdqpWsdCvtsd2si(m, rde);
       break;
     case kOpCvt0f2d + 3:
-      OpGdqpWssCvtss2si(m);
+      OpGdqpWssCvtss2si(m, rde);
       break;
     case kOpCvt0f5a + 0:
-      OpVpdWpsCvtps2pd(m);
+      OpVpdWpsCvtps2pd(m, rde);
       break;
     case kOpCvt0f5a + 1:
-      OpVpsWpdCvtpd2ps(m);
+      OpVpsWpdCvtpd2ps(m, rde);
       break;
     case kOpCvt0f5a + 2:
-      OpVssWsdCvtsd2ss(m);
+      OpVssWsdCvtsd2ss(m, rde);
       break;
     case kOpCvt0f5a + 3:
-      OpVsdWssCvtss2sd(m);
+      OpVsdWssCvtss2sd(m, rde);
       break;
     case kOpCvt0f5b + 0:
-      OpVpsWdqCvtdq2ps(m);
+      OpVpsWdqCvtdq2ps(m, rde);
       break;
     case kOpCvt0f5b + 1:
-      OpVdqWpsCvtps2dq(m);
+      OpVdqWpsCvtps2dq(m, rde);
       break;
     case kOpCvt0f5b + 3:
-      OpVdqWpsCvttps2dq(m);
+      OpVdqWpsCvttps2dq(m, rde);
       break;
     case kOpCvt0fE6 + 1:
-      OpVdqWpdCvtpd2dq(m);
+      OpVdqWpdCvtpd2dq(m, rde);
       break;
     case kOpCvt0fE6 + 2:
-      OpVdqWpdCvttpd2dq(m);
+      OpVdqWpdCvttpd2dq(m, rde);
       break;
     case kOpCvt0fE6 + 3:
-      OpVpdWdqCvtdq2pd(m);
+      OpVpdWdqCvtdq2pd(m, rde);
       break;
     default:
       OpUd(m);

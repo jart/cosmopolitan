@@ -36,10 +36,9 @@ void SetUp(void) {
 TEST(bsr64, test) {
   bool zf;
   uint64_t i, w, x, a, b;
-  m->xedd->op.rde = REXW;
   for (i = 0; i < ARRAYLEN(kNumbers); ++i) {
     x = kNumbers[i];
-    a = AluBsr(m, 0, x);
+    a = AluBsr(m, REXW, 0, x);
     asm("bsrq\t%2,%0" : "=r"(b), "=@ccz"(zf) : "r"(x));
     ASSERT_EQ(zf, GetFlag(m->flags, FLAGS_ZF));
     if (!zf) ASSERT_EQ(a, b);
@@ -49,10 +48,9 @@ TEST(bsr64, test) {
 TEST(bsr32, test) {
   bool zf;
   uint32_t i, w, x, a, b;
-  m->xedd->op.rde = 0;
   for (i = 0; i < ARRAYLEN(kNumbers); ++i) {
     x = kNumbers[i];
-    a = AluBsr(m, 0, x);
+    a = AluBsr(m, 0, 0, x);
     asm("bsrl\t%2,%0" : "=r"(b), "=@ccz"(zf) : "r"(x));
     ASSERT_EQ(zf, GetFlag(m->flags, FLAGS_ZF));
     if (!zf) ASSERT_EQ(a, b);
@@ -62,10 +60,9 @@ TEST(bsr32, test) {
 TEST(bsr16, test) {
   bool zf;
   uint16_t i, w, x, a, b;
-  m->xedd->op.rde = OSZ;
   for (i = 0; i < ARRAYLEN(kNumbers); ++i) {
     x = kNumbers[i];
-    a = AluBsr(m, 0, x);
+    a = AluBsr(m, OSZ, 0, x);
     asm("bsrw\t%2,%0" : "=r"(b), "=@ccz"(zf) : "r"(x));
     ASSERT_EQ(zf, GetFlag(m->flags, FLAGS_ZF));
     if (!zf) ASSERT_EQ(a, b);
@@ -75,10 +72,9 @@ TEST(bsr16, test) {
 TEST(bsf64, test) {
   bool zf;
   uint64_t i, w, x, a, b;
-  m->xedd->op.rde = REXW;
   for (i = 0; i < ARRAYLEN(kNumbers); ++i) {
     x = kNumbers[i];
-    a = AluBsf(m, 0, x);
+    a = AluBsf(m, REXW, 0, x);
     asm("bsfq\t%2,%0" : "=r"(b), "=@ccz"(zf) : "r"(x));
     ASSERT_EQ(zf, GetFlag(m->flags, FLAGS_ZF));
     if (!zf) ASSERT_EQ(a, b);
@@ -88,10 +84,9 @@ TEST(bsf64, test) {
 TEST(bsf32, test) {
   bool zf;
   uint32_t i, w, x, a, b;
-  m->xedd->op.rde = 0;
   for (i = 0; i < ARRAYLEN(kNumbers); ++i) {
     x = kNumbers[i];
-    a = AluBsf(m, 0, x);
+    a = AluBsf(m, 0, 0, x);
     asm("bsfl\t%2,%0" : "=r"(b), "=@ccz"(zf) : "r"(x));
     ASSERT_EQ(zf, GetFlag(m->flags, FLAGS_ZF));
     if (!zf) ASSERT_EQ(a, b);
@@ -101,10 +96,9 @@ TEST(bsf32, test) {
 TEST(bsf16, test) {
   bool zf;
   uint16_t i, w, x, a, b;
-  m->xedd->op.rde = OSZ;
   for (i = 0; i < ARRAYLEN(kNumbers); ++i) {
     x = kNumbers[i];
-    a = AluBsf(m, 0, x);
+    a = AluBsf(m, OSZ, 0, x);
     asm("bsfw\t%2,%0" : "=r"(b), "=@ccz"(zf) : "r"(x));
     ASSERT_EQ(zf, GetFlag(m->flags, FLAGS_ZF));
     if (!zf) ASSERT_EQ(a, b, "%#lx", x);

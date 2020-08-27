@@ -15,32 +15,9 @@ void OpFinit(struct Machine *);
 void OpFwait(struct Machine *);
 void FpuPush(struct Machine *, long double);
 long double FpuPop(struct Machine *);
-
-forceinline long double *FpuSt(struct Machine *m, unsigned i) {
-  i += m->fpu.sp;
-  i &= 0b111;
-  return m->fpu.st + i;
-}
-
-forceinline int FpuGetTag(struct Machine *m, unsigned i) {
-  unsigned t;
-  t = m->fpu.tw;
-  i += m->fpu.sp;
-  i &= 0b111;
-  i *= 2;
-  t &= 0b11 << i;
-  t >>= i;
-  return t;
-}
-
-forceinline void FpuSetTag(struct Machine *m, unsigned i, unsigned t) {
-  i += m->fpu.sp;
-  t &= 0b11;
-  i &= 0b111;
-  i *= 2;
-  m->fpu.tw &= ~(0b11 << i);
-  m->fpu.tw |= t << i;
-}
+long double *FpuSt(struct Machine *, unsigned);
+int FpuGetTag(struct Machine *, unsigned);
+void FpuSetTag(struct Machine *, unsigned, unsigned);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

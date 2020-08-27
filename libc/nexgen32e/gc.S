@@ -49,11 +49,11 @@ CollectGarbage:
 	sub	$0x20,%rsp
 	push	%rax
 	push	%rdx
-	movaps	%xmm0,-0x20(%rbp)
-	movaps	%xmm1,-0x10(%rbp)
+	movdqa	%xmm0,-0x20(%rbp)
+	movdqa	%xmm1,-0x10(%rbp)
 	call	*%r9
-	movaps	-0x10(%rbp),%xmm1
-	movaps	-0x20(%rbp),%xmm0
+	movdqa	-0x10(%rbp),%xmm1
+	movdqa	-0x20(%rbp),%xmm0
 	pop	%rdx
 	pop	%rax
 	leave

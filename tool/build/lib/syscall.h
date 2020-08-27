@@ -4,8 +4,6 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-enum MachineStatus;
-
 void OpSyscall(struct Machine *);
 
 COSMOPOLITAN_C_END_

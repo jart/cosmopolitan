@@ -101,7 +101,9 @@ static relegated void ttyraw_onsig(int sig, struct siginfo *info,
     if (g_ttyraw.sigs[i] == sig) {
       if (g_ttyraw.next[i] != SIG_IGN) {
         if (g_ttyraw.next[i] != SIG_DFL) {
-          g_ttyraw.next[i](sig, info, ctx);
+          if (g_ttyraw.next[i]) {
+            g_ttyraw.next[i](sig, info, ctx);
+          }
         } else if (sig != SIGCONT) {
           _Exit(128 + sig);
         }

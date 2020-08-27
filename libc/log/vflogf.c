@@ -76,7 +76,6 @@ void vflogf_onfail(FILE *f) {
 void(vflogf)(unsigned level, const char *file, int line, FILE *f,
              const char *fmt, va_list va) {
   static struct timespec ts;
-  bool flush;
   struct tm tm;
   long double t2;
   const char *prog;
@@ -95,12 +94,10 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
     timebufp = timebuf;
     zonebufp = zonebuf;
     dots = nsec;
-    flush = true;
   } else {
     timebufp = "---------------";
     zonebufp = "---";
     dots = nsec - ts.tv_nsec;
-    flush = true;
   }
   ts.tv_sec = secs;
   ts.tv_nsec = nsec;
@@ -113,7 +110,6 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   (vfprintf)(f, fmt, va);
   va_end(va);
   fputc('\n', f);
-  if (flush) fflush(f);
   if (level == kLogFatal) {
     startfatal(file, line);
     fprintf(stderr, "fatal error see logfile\n");

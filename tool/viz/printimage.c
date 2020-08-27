@@ -17,6 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "dsp/core/half.h"
 #include "dsp/core/twixt8.h"
 #include "dsp/scale/scale.h"
 #include "dsp/tty/quant.h"
@@ -59,6 +60,7 @@ static struct Flags {
   bool unsharp;
   bool dither;
   bool ruler;
+  bool trailingnewline;
   long half;
   bool full;
   long width;
@@ -129,9 +131,11 @@ static void GetOpts(int *argc, char *argv[]) {
         g_flags.unsharp = true;
         break;
       case 'w':
+        g_flags.trailingnewline = true;
         g_flags.width = ParseNumberOption(optarg);
         break;
       case 'h':
+        g_flags.trailingnewline = true;
         g_flags.height = ParseNumberOption(optarg);
         break;
       case 'f':
@@ -202,19 +206,19 @@ static unsigned char OutOfBoundsBackground(unsigned y, unsigned x) {
 static void PrintRulerRight(long yn, long xn, long y, long x,
                             bool *inout_didhalfy) {
   if (y == 0) {
-    printf("\e[0m‾0");
+    printf("‾0");
   } else if (yn / 2 <= y && y <= yn / 2 + 1 && !*inout_didhalfy) {
-    printf("\e[0m‾%s%s", "yn/2", y % 2 ? "+1" : "");
+    printf("‾%s%s", "yn/2", y % 2 ? "+1" : "");
     *inout_didhalfy = true;
   } else if (y + 1 == yn / 2 && !*inout_didhalfy) {
-    printf("\e[0m⎯yn/2");
+    printf("⎯yn/2");
     *inout_didhalfy = true;
   } else if (y + 1 == yn) {
-    printf("\e[0m⎯yn");
+    printf("⎯yn");
   } else if (y + 2 == yn) {
-    printf("\e[0m_yn");
+    printf("_yn");
   } else if (!(y % 10)) {
-    printf("\e[0m‾%,u", y);
+    printf("‾%,u", y);
   }
 }
 
@@ -243,11 +247,12 @@ static void PrintImageImpl(long syn, long sxn, unsigned char RGB[3][syn][sxn],
              b[2], dy > 1 ? u'▄' : u'▐');
       didfirstx = true;
     }
+    printf("\e[0m");
     if (g_flags.ruler) {
       PrintRulerRight(yn, xn, y, x, &didhalfy);
     }
   }
-  printf("\e[0m\n");
+  printf("\n");
 }
 
 static void PrintImage(long syn, long sxn, unsigned char RGB[3][syn][sxn],
@@ -334,7 +339,9 @@ static void PrintImageSerious(long yn, long xn, unsigned char RGB[3][yn][xn],
     }
   }
   p = ttyraster(vt, (void *)TTY, yn, xn, bg, fg);
-  p = stpcpy(p, "\r\e[0m");
+  *p++ = '\r';
+  if (g_flags.trailingnewline) *p++ = '\n';
+  p = stpcpy(p, "\e[0m");
   ttywrite(STDOUT_FILENO, vt, p - vt);
 }
 

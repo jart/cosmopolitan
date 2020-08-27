@@ -76,12 +76,12 @@ void OpCallJvds(struct Machine *m) {
   OpCall(m, m->ip + m->xedd->op.disp);
 }
 
-void OpCallEq(struct Machine *m) {
+void OpCallEq(struct Machine *m, uint32_t rde) {
   void *p[2];
   uint8_t b[8];
-  OpCall(m, Read64(IsModrmRegister(m->xedd)
-                       ? RegRexbRm(m)
-                       : AccessRam(m, ComputeAddress(m), 8, p, b, true)));
+  OpCall(m, Read64(IsModrmRegister(rde)
+                       ? RegRexbRm(m, rde)
+                       : AccessRam(m, ComputeAddress(m, rde), 8, p, b, true)));
 }
 
 void OpLeave(struct Machine *m) {
@@ -93,10 +93,20 @@ void OpRet(struct Machine *m, uint16_t n) {
   m->ip = Pop64(m, n);
 }
 
-void PushOsz(struct Machine *m, uint64_t x) {
-  if (!Osz(m->xedd)) {
+void PushOsz(struct Machine *m, uint32_t rde, uint64_t x) {
+  if (!Osz(rde)) {
     Push64(m, x);
   } else {
     Push16(m, x);
+  }
+}
+
+void OpBofram(struct Machine *m) {
+  if (m->xedd->op.disp) {
+    m->bofram[0] = m->ip;
+    m->bofram[1] = m->ip + (m->xedd->op.disp & 0xff);
+  } else {
+    m->bofram[0] = 0;
+    m->bofram[1] = 0;
   }
 }

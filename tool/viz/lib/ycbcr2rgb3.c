@@ -49,7 +49,6 @@
 #include "third_party/avir/lanczos.h"
 #include "tool/viz/lib/graphic.h"
 #include "tool/viz/lib/knobs.h"
-#include "tool/viz/lib/scale.h"
 #include "tool/viz/lib/ycbcr.h"
 
 #define M        15

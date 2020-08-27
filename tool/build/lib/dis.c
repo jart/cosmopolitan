@@ -33,6 +33,7 @@
 #include "third_party/xed/x86.h"
 #include "tool/build/lib/case.h"
 #include "tool/build/lib/dis.h"
+#include "tool/build/lib/memory.h"
 #include "tool/build/lib/modrm.h"
 
 #define ADDRLEN 8

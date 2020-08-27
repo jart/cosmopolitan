@@ -7,11 +7,11 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/str/str.h"
 #include "libc/calls/calls.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 
-#define kMessage "hello world\r\n"
+#define kMessage "hello \e[1mworld\e[0m\r\n"
 
 int main() {
   /*

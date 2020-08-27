@@ -19,8 +19,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-	cmpxchg	%ecx,(%rdx)
-
 	.section .start,"ax",@progbits
 emucrt:	bofram	9f
 	movslq	(%rsp),%rdi			# argc

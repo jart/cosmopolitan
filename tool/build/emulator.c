@@ -21,6 +21,7 @@
 #include "libc/alg/arraylist2.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/ioctl.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/termios.h"
@@ -51,6 +52,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/unicode/unicode.h"
@@ -61,6 +63,7 @@
 #include "tool/build/lib/case.h"
 #include "tool/build/lib/dis.h"
 #include "tool/build/lib/endian.h"
+#include "tool/build/lib/fds.h"
 #include "tool/build/lib/flags.h"
 #include "tool/build/lib/fpu.h"
 #include "tool/build/lib/loader.h"
@@ -69,6 +72,7 @@
 #include "tool/build/lib/modrm.h"
 #include "tool/build/lib/panel.h"
 #include "tool/build/lib/pml4t.h"
+#include "tool/build/lib/pty.h"
 #include "tool/build/lib/stats.h"
 #include "tool/build/lib/throw.h"
 
@@ -103,6 +107,15 @@ PERFORMANCE\n\
 \n\
        1500 MIPS w/ NOP loop\n\
   Over 9000 MIPS w/ SIMD & Algorithms\n\
+\n\
+PROTIP\n\
+\n\
+  Fix SSH keyboard latency for debugger TUI in CONTINUE mode:\n\
+\n\
+    sudo sh -c 'echo -n 8192 >/proc/sys/net/core/rmem_default'\n\
+    sudo sh -c 'echo -n 8192 >/proc/sys/net/core/wmem_default'\n\
+\n\
+\n\
 \n"
 
 #define DUMPWIDTH 64
@@ -115,8 +128,9 @@ PERFORMANCE\n\
 #define FINISH   0x020
 #define FAILURE  0x040
 #define WINCHED  0x080
-#define CTRLC    0x100
+#define INT      0x100
 #define QUIT     0x200
+#define EXIT     0x400
 
 #define CTRL(C) ((C) ^ 0100)
 #define ALT(C)  (('\e' << 010) | (C))
@@ -131,6 +145,8 @@ struct Panels {
       struct Panel maps;
       struct Panel tracehr;
       struct Panel trace;
+      struct Panel terminalhr;
+      struct Panel terminal;
       struct Panel registers;
       struct Panel ssehr;
       struct Panel sse;
@@ -143,7 +159,7 @@ struct Panels {
       struct Panel stackhr;
       struct Panel stack;
     };
-    struct Panel p[18];
+    struct Panel p[20];
   };
 };
 
@@ -164,6 +180,7 @@ static bool colorize;
 static long codesize;
 static long ssewidth;
 static char *codepath;
+static void *onbusted;
 static unsigned focus;
 static unsigned opline;
 static bool printstats;
@@ -178,10 +195,14 @@ static int64_t writestart;
 static int64_t stackstart;
 static struct DisHigh high;
 static struct Machine m[2];
+static struct MachinePty *pty;
 static char logpath[PATH_MAX];
 static char systemfailure[128];
 static struct sigaction oldsig[4];
 static struct Breakpoints breakpoints;
+
+static void SetupDraw(void);
+static void Redraw(void);
 
 static uint64_t SignExtend(uint64_t x, uint8_t b) {
   uint64_t s;
@@ -252,13 +273,28 @@ static uint8_t CycleSseWidth(uint8_t w) {
   }
 }
 
-static int VirtualBing(int64_t v, int c) {
+static void OnBusted(void) {
+  LOGF("OnBusted");
+  CHECK(onbusted);
+  longjmp(onbusted, 1);
+}
+
+static int VirtualBing(int64_t v) {
+  int rc;
   uint8_t *p;
+  jmp_buf busted;
+  onbusted = busted;
   if ((p = FindReal(m, v))) {
-    return bing(p[0], 0);
+    if (!setjmp(busted)) {
+      rc = bing(p[0], 0);
+    } else {
+      rc = u'≀';
+    }
   } else {
-    return c;
+    rc = u'⋅';
   }
+  onbusted = NULL;
+  return rc;
 }
 
 static void ScrollOp(struct Panel *p, long op) {
@@ -283,29 +319,36 @@ static void GetTtySize(void) {
 static void TuiRejuvinate(void) {
   GetTtySize();
   ttyhidecursor(STDOUT_FILENO);
-  ttyraw(kTtySigs);
+  ttyraw(0);
+  xsigaction(SIGBUS, OnBusted, SA_NODEFER, 0, NULL);
 }
 
 static void OnCtrlC(void) {
-  action |= CTRLC;
+  LOGF("OnCtrlC");
+  action |= INT;
+}
+
+static void OnQ(void) {
+  LOGF("OnQ");
+  action |= INT;
+  breakpoints.i = 0;
 }
 
 static void OnWinch(void) {
+  LOGF("OnWinch");
   action |= WINCHED;
 }
 
-static void OnGdbHandoff(void) {
+static void OnCont(void) {
+  LOGF("OnCont");
   TuiRejuvinate();
-}
-
-static void OnUsr1(void) {
-  if (g_logfile) fflush(g_logfile);
+  SetupDraw();
+  Redraw();
 }
 
 static void TuiCleanup(void) {
   sigaction(SIGWINCH, oldsig + 0, NULL);
   sigaction(SIGCONT, oldsig + 2, NULL);
-  sigaction(SIGUSR1, oldsig + 3, NULL);
   ttyraw((enum TtyRawFlags)(-1u));
   ttyshowcursor(STDOUT_FILENO);
   CHECK_NE(-1, close(ttyfd));
@@ -329,7 +372,7 @@ static void ResolveBreakpoints(void) {
 
 static void BreakAtNextInstruction(void) {
   struct Breakpoint b = {.addr = m->ip + m->xedd->length, .oneshot = true};
-  AddBreakpoint(&breakpoints, &b);
+  PushBreakpoint(&breakpoints, &b);
 }
 
 static void LoadSyms(void) {
@@ -347,11 +390,21 @@ static void TuiSetup(void) {
     once = true;
   }
   CHECK_NE(-1, (ttyfd = open("/dev/tty", O_RDWR)));
-  xsigaction(SIGWINCH, (void *)OnWinch, 0, 0, oldsig + 0);
-  xsigaction(SIGCONT, (void *)OnGdbHandoff, 0, 0, oldsig + 2);
-  xsigaction(SIGUSR1, (void *)OnUsr1, 0, 0, oldsig + 3);
+  xsigaction(SIGWINCH, OnWinch, 0, 0, oldsig + 0);
+  xsigaction(SIGCONT, OnCont, SA_RESTART, 0, oldsig + 2);
   memcpy(&m[1], &m[0], sizeof(m[0]));
   TuiRejuvinate();
+}
+
+static void ExecSetup(void) {
+  static bool once;
+  if (!once) {
+    if (breakpoints.i) {
+      LoadSyms();
+      ResolveBreakpoints();
+    }
+    once = true;
+  }
 }
 
 static void AppendPanel(struct Panel *p, long line, const char *s) {
@@ -384,8 +437,8 @@ static int PickNumberOfXmmRegistersToShow(void) {
   }
 }
 
-static void StartDraw(void) {
-  int i, j, n, a, b, cpuy, ssey, dx[2], c2y[2], c3y[5];
+static void SetupDraw(void) {
+  int i, j, n, a, b, cpuy, ssey, dx[2], c2y[3], c3y[5];
 
   for (i = 0; i < ARRAYLEN(pan.p); ++i) {
     n = pan.p[i].bottom - pan.p[i].top;
@@ -404,9 +457,11 @@ static void StartDraw(void) {
   dx[1] = txn >= a + b ? txn - a : txn;
   dx[0] = txn >= a + b + b ? txn - a - b : dx[1];
 
-  a = tyn / 3;
+  a = 1 / 8. * tyn;
+  b = 3 / 8. * tyn;
   c2y[0] = a;
   c2y[1] = a * 2;
+  c2y[2] = a * 2 + b;
 
   a = (tyn - (cpuy + ssey) - 3) / 4;
   c3y[0] = cpuy;
@@ -422,7 +477,7 @@ static void StartDraw(void) {
   pan.disassembly.bottom = tyn;
   pan.disassembly.right = dx[0];
 
-  /* COLUMN #2: BREAKPOINTS, MEMORY MAPS, BACKTRACE */
+  /* COLUMN #2: BREAKPOINTS, MEMORY MAPS, BACKTRACE, TERMINAL */
 
   pan.breakpointshr.top = 0;
   pan.breakpointshr.left = dx[0];
@@ -451,8 +506,18 @@ static void StartDraw(void) {
 
   pan.trace.top = c2y[1] + 1;
   pan.trace.left = dx[0];
-  pan.trace.bottom = tyn;
+  pan.trace.bottom = c2y[2];
   pan.trace.right = dx[1] - 1;
+
+  pan.terminalhr.top = c2y[2];
+  pan.terminalhr.left = dx[0];
+  pan.terminalhr.bottom = c2y[2] + 1;
+  pan.terminalhr.right = dx[1] - 1;
+
+  pan.terminal.top = c2y[2] + 1;
+  pan.terminal.left = dx[0];
+  pan.terminal.bottom = tyn;
+  pan.terminal.right = dx[1] - 1;
 
   /* COLUMN #3: REGISTERS, VECTORS, CODE, MEMORY READS, MEMORY WRITES, STACK */
 
@@ -517,6 +582,14 @@ static void StartDraw(void) {
     pan.p[i].lines =
         xcalloc(pan.p[i].bottom - pan.p[i].top, sizeof(struct Buffer));
   }
+
+  if (pty->yn != pan.terminal.bottom - pan.terminal.top ||
+      pty->xn != pan.terminal.right - pan.terminal.left) {
+    LOGF("MachinePtyNew");
+    MachinePtyFree(pty);
+    pty = MachinePtyNew(pan.terminal.bottom - pan.terminal.top,
+                        pan.terminal.right - pan.terminal.left);
+  }
 }
 
 static long GetDisIndex(int64_t addr) {
@@ -538,6 +611,13 @@ static void DrawDisassembly(struct Panel *p) {
       AppendPanel(p, i, dis->ops.p[j].s);
       if (j == opline) AppendPanel(p, i, "\e[27m");
     }
+  }
+}
+
+static void DrawTerminal(struct Panel *p) {
+  long y, yn;
+  for (yn = MIN(pty->yn, p->bottom - p->top), y = 0; y < yn; ++y) {
+    MachinePtyAppendLine(pty, p->lines + y, y);
   }
 }
 
@@ -599,30 +679,14 @@ static void DrawHr(struct Panel *p, const char *s) {
 
 static void DrawCpu(struct Panel *p) {
   char buf[48];
-  DrawRegister(p, 0, 7);
-  DrawRegister(p, 0, 0);
-  DrawSt(p, 0, 0);
-  DrawRegister(p, 1, 6);
-  DrawRegister(p, 1, 3);
-  DrawSt(p, 1, 1);
-  DrawRegister(p, 2, 2);
-  DrawRegister(p, 2, 5);
-  DrawSt(p, 2, 2);
-  DrawRegister(p, 3, 1);
-  DrawRegister(p, 3, 4);
-  DrawSt(p, 3, 3);
-  DrawRegister(p, 4, 8);
-  DrawRegister(p, 4, 12);
-  DrawSt(p, 4, 4);
-  DrawRegister(p, 5, 9);
-  DrawRegister(p, 5, 13);
-  DrawSt(p, 5, 5);
-  DrawRegister(p, 6, 10);
-  DrawRegister(p, 6, 14);
-  DrawSt(p, 6, 6);
-  DrawRegister(p, 7, 11);
-  DrawRegister(p, 7, 15);
-  DrawSt(p, 7, 7);
+  DrawRegister(p, 0, 7), DrawRegister(p, 0, 0), DrawSt(p, 0, 0);
+  DrawRegister(p, 1, 6), DrawRegister(p, 1, 3), DrawSt(p, 1, 1);
+  DrawRegister(p, 2, 2), DrawRegister(p, 2, 5), DrawSt(p, 2, 2);
+  DrawRegister(p, 3, 1), DrawRegister(p, 3, 4), DrawSt(p, 3, 3);
+  DrawRegister(p, 4, 8), DrawRegister(p, 4, 12), DrawSt(p, 4, 4);
+  DrawRegister(p, 5, 9), DrawRegister(p, 5, 13), DrawSt(p, 5, 5);
+  DrawRegister(p, 6, 10), DrawRegister(p, 6, 14), DrawSt(p, 6, 6);
+  DrawRegister(p, 7, 11), DrawRegister(p, 7, 15), DrawSt(p, 7, 7);
   snprintf(buf, sizeof(buf), "RIP 0x%016x  FLG", m[0].ip);
   AppendPanel(p, 8, buf);
   DrawFlag(p, 8, "C", GetFlag(m[0].flags, FLAGS_CF),
@@ -766,7 +830,7 @@ static void DrawMemory(struct Panel *p, long beg, long a, long b) {
     AppendStr(&p->lines[i], buf);
     for (j = 0; j < DUMPWIDTH; ++j) {
       k = (beg + i) * DUMPWIDTH + j;
-      c = VirtualBing(k, L'⋅');
+      c = VirtualBing(k);
       changed = a <= k && k < b;
       if (changed && !high) {
         high = true;
@@ -800,7 +864,7 @@ static void DrawBreakpoints(struct Panel *p) {
   char buf[128];
   const char *name;
   long i, line, sym;
-  for (line = i = 0; i < breakpoints.i; ++i) {
+  for (line = 0, i = breakpoints.i; i--;) {
     if (breakpoints.p[i].disable) continue;
     addr = breakpoints.p[i].addr;
     sym = DisFindSym(dis, addr);
@@ -885,7 +949,14 @@ forceinline void CheckFramePointer(void) {
 }
 
 static void Redraw(void) {
+  int i, j;
+  for (i = 0; i < ARRAYLEN(pan.p); ++i) {
+    for (j = 0; j < pan.p[i].bottom - pan.p[i].top; ++j) {
+      pan.p[i].lines[j].i = 0;
+    }
+  }
   DrawDisassembly(&pan.disassembly);
+  DrawTerminal(&pan.terminal);
   DrawCpu(&pan.registers);
   DrawSse(&pan.sse);
   ScrollCode(&pan.code);
@@ -895,6 +966,7 @@ static void Redraw(void) {
   DrawHr(&pan.breakpointshr, "BREAKPOINTS");
   DrawHr(&pan.mapshr, "MAPS");
   DrawHr(&pan.tracehr, m->bofram[0] ? "PROTECTED FRAMES" : "FRAMES");
+  DrawHr(&pan.terminalhr, "TELETYPEWRITER");
   DrawHr(&pan.ssehr, "SSE");
   DrawHr(&pan.codehr, "CODE");
   DrawHr(&pan.readhr, "READ");
@@ -908,8 +980,34 @@ static void Redraw(void) {
   DrawMemory(&pan.writedata, writestart, m->writeaddr,
              m->writeaddr + m->writesize);
   DrawMemory(&pan.stack, stackstart, Read64(m->sp), Read64(m->sp) + 8);
-  CHECK_NE(-1, PrintPanels(ttyfd, ARRAYLEN(pan.p), pan.p, tyn, txn));
+  if (PrintPanels(ttyfd, ARRAYLEN(pan.p), pan.p, tyn, txn) == -1) {
+    LOGF("PrintPanels Interrupted");
+    CHECK_EQ(EINTR, errno);
+  }
 }
+
+static int OnPtyFdClose(int fd) {
+  return 0;
+}
+
+static ssize_t OnPtyFdRead(int fd, void *data, size_t size) {
+  return read(fd, data, size);
+}
+
+static ssize_t OnPtyFdWrite(int fd, const void *data, size_t size) {
+  if (tuimode) {
+    return MachinePtyWrite(pty, data, size);
+  } else {
+    MachinePtyWrite(pty, data, size);
+    return write(fd, data, size);
+  }
+}
+
+static const struct MachineFdCb kMachineFdCbPty = {
+    .close = OnPtyFdClose,
+    .read = OnPtyFdRead,
+    .write = OnPtyFdWrite,
+};
 
 static void LaunchDebuggerReactively(void) {
   LOGF("%s", systemfailure);
@@ -948,6 +1046,7 @@ static void OnSimdException(void) {
 }
 
 static void OnUndefinedInstruction(void) {
+  die();
   strcpy(systemfailure, "UNDEFINED INSTRUCTION");
   LaunchDebuggerReactively();
 }
@@ -966,6 +1065,11 @@ static void OnDivideError(void) {
 static void OnFpuException(void) {
   strcpy(systemfailure, "FPU EXCEPTION");
   LaunchDebuggerReactively();
+}
+
+static void OnExit(int rc) {
+  exitcode = rc;
+  action |= EXIT;
 }
 
 static void OnHalt(int interrupt) {
@@ -998,8 +1102,7 @@ static void OnHalt(int interrupt) {
     case kMachineExit:
     case kMachineHalt:
     default:
-      exitcode = interrupt;
-      action |= QUIT;
+      OnExit(interrupt);
       break;
   }
 }
@@ -1134,7 +1237,7 @@ static void ReadKeyboard(void) {
   if ((rc = read(ttyfd, b, 16)) != -1) {
     for (n = rc, i = 0; i < n; ++i) {
       switch (b[i++]) {
-        CASE('q', OnQuit());
+        CASE('q', OnQ());
         CASE('s', OnStep());
         CASE('n', OnNext());
         CASE('f', OnFinish());
@@ -1145,9 +1248,14 @@ static void ReadKeyboard(void) {
         CASE('w', OnSseWidth());
         CASE('u', OnUp());
         CASE('d', OnDown());
+        CASE('B', PopBreakpoint(&breakpoints));
         CASE('\t', OnTab());
         CASE('\r', OnEnter());
         CASE('\n', OnEnter());
+        CASE(CTRL('C'), OnCtrlC());
+        CASE(CTRL('D'), OnCtrlC());
+        CASE(CTRL('\\'), OnQuit());
+        CASE(CTRL('Z'), raise(SIGSTOP));
         CASE(CTRL('L'), OnFeed());
         CASE(CTRL('P'), OnUpArrow());
         CASE(CTRL('N'), OnDownArrow());
@@ -1215,8 +1323,13 @@ static void ReadKeyboard(void) {
           break;
       }
     }
+  } else if (errno == EINTR) {
+    LOGF("ReadKeyboard Interrupted");
+  } else if (errno == EAGAIN) {
+    poll((struct pollfd[]){{ttyfd, POLLIN}}, 1, -1);
   } else {
-    CHECK_EQ(EINTR, errno);
+    perror("ReadKeyboard");
+    exit(1);
   }
 }
 
@@ -1240,7 +1353,7 @@ static void HandleBreakpointFlag(const char *s) {
   } else {
     b.symbol = optarg;
   }
-  AddBreakpoint(&breakpoints, &b);
+  PushBreakpoint(&breakpoints, &b);
 }
 
 static noreturn void PrintUsage(int rc, FILE *f) {
@@ -1253,13 +1366,170 @@ static void LeaveScreen(void) {
   write(ttyfd, buf, sprintf(buf, "\e[%d;%dH\e[S\r\n", tyn - 1, txn - 1));
 }
 
+static void Exec(void) {
+  long op;
+  ssize_t bp;
+  int interrupt;
+  ExecSetup();
+  if (!(interrupt = setjmp(m->onhalt))) {
+    if ((bp = IsAtBreakpoint(&breakpoints, m->ip)) != -1) {
+      LOGF("BREAK %p", breakpoints.p[bp].addr);
+      tuimode = true;
+      LoadInstruction(m);
+      ExecuteInstruction(m);
+      CheckFramePointer();
+      ops++;
+    } else {
+      for (;;) {
+        LoadInstruction(m);
+        ExecuteInstruction(m);
+        CheckFramePointer();
+        ops++;
+        if (action || breakpoints.i) {
+          if (action & EXIT) {
+            LOGF("EXEC EXIT");
+            break;
+          }
+          if (action & INT) {
+            LOGF("EXEC INT");
+            if (react) {
+              LOGF("REACT");
+              action &= ~(INT | STEP | FINISH | NEXT);
+              tuimode = true;
+            }
+            break;
+          }
+          if ((bp = IsAtBreakpoint(&breakpoints, m->ip)) != -1) {
+            LOGF("BREAK %p", breakpoints.p[bp].addr);
+            tuimode = true;
+            break;
+          }
+        }
+      }
+    }
+  } else {
+    OnHalt(interrupt);
+  }
+}
+
+static void Tui(void) {
+  long op;
+  ssize_t bp;
+  int interrupt;
+  LOGF("TUI");
+  TuiSetup();
+  SetupDraw();
+  ScrollOp(&pan.disassembly, GetDisIndex(m->ip));
+  if (!(interrupt = setjmp(m->onhalt))) {
+    for (;;) {
+      if (!(action & FAILURE)) {
+        LoadInstruction(m);
+      } else {
+        m->xedd = m->icache;
+        m->xedd->length = 1;
+        m->xedd->bytes[0] = 0xCC;
+        m->xedd->op.opcode = 0xCC;
+      }
+      if (action & WINCHED) {
+        LOGF("WINCHED");
+        GetTtySize();
+        action &= ~WINCHED;
+      }
+      SetupDraw();
+      Redraw();
+      if (action & FAILURE) {
+        LOGF("TUI FAILURE");
+        PrintMessageBox(ttyfd, systemfailure, tyn, txn);
+        ReadKeyboard();
+      } else if (!IsExecuting() || HasPendingKeyboard()) {
+        ReadKeyboard();
+      }
+      if (action & INT) {
+        LOGF("TUI INT");
+        action &= ~INT;
+        if (action & (CONTINUE | NEXT | FINISH)) {
+          action &= ~(CONTINUE | NEXT | FINISH);
+        } else {
+          tuimode = false;
+          break;
+        }
+      }
+      if (action & EXIT) {
+        LeaveScreen();
+        LOGF("TUI EXIT");
+        break;
+      }
+      if (action & QUIT) {
+        LOGF("TUI QUIT");
+        action &= ~QUIT;
+        raise(SIGQUIT);
+        continue;
+      }
+      if (action & RESTART) {
+        LOGF("TUI RESTART");
+        break;
+      }
+      if (IsExecuting()) {
+        op = GetDisIndex(m->ip);
+        ScrollOp(&pan.disassembly, op);
+        VERBOSEF("%s", dis->ops.p[op].s);
+        memcpy(&m[1], &m[0], sizeof(m[0]));
+        if (!(action & CONTINUE)) {
+          action &= ~STEP;
+          if (action & NEXT) {
+            action &= ~NEXT;
+            if (IsCall()) {
+              BreakAtNextInstruction();
+              break;
+            }
+          }
+          if (action & FINISH) {
+            if (IsCall()) {
+              BreakAtNextInstruction();
+              break;
+            } else if (IsRet()) {
+              action &= ~FINISH;
+            }
+          }
+        }
+        if (!IsDebugBreak()) {
+          ExecuteInstruction(m);
+        } else {
+          m->ip += m->xedd->length;
+          action &= ~NEXT;
+          action &= ~FINISH;
+          action &= ~CONTINUE;
+        }
+        CheckFramePointer();
+        ops++;
+        if (!(action & CONTINUE)) {
+          ScrollOp(&pan.disassembly, GetDisIndex(m->ip));
+          if ((action & FINISH) && IsRet()) action &= ~FINISH;
+          if (((action & NEXT) && IsRet()) || (action & FINISH)) {
+            action &= ~NEXT;
+          }
+        }
+        if ((action & (FINISH | NEXT | CONTINUE)) &&
+            (bp = IsAtBreakpoint(&breakpoints, m->ip)) != -1) {
+          action &= ~(FINISH | NEXT | CONTINUE);
+          LOGF("BREAK %p", breakpoints.p[bp].addr);
+          break;
+        }
+      }
+    }
+  } else {
+    OnHalt(interrupt);
+    ScrollOp(&pan.disassembly, GetDisIndex(m->ip));
+  }
+  TuiCleanup();
+}
+
 static void GetOpts(int argc, char *argv[]) {
   int opt;
   stpcpy(stpcpy(stpcpy(logpath, kTmpPath), basename(argv[0])), ".log");
   while ((opt = getopt(argc, argv, "?hvtrsb:HL:")) != -1) {
     switch (opt) {
       case 't':
-        react = true;
         tuimode = true;
         break;
       case 'r':
@@ -1288,166 +1558,44 @@ static void GetOpts(int argc, char *argv[]) {
     }
   }
   g_logfile = fopen(logpath, "a");
+  setvbuf(g_logfile, xmalloc(PAGESIZE), _IOLBF, PAGESIZE);
 }
 
 int Emulator(int argc, char *argv[]) {
-  long op;
   void *code;
-  ssize_t bp;
-  int rc, fd, interrupt;
-
+  int rc, fd;
   codepath = argv[optind++];
-
+  pty = MachinePtyNew(20, 80);
+  InitMachine(m);
+  m->fds.p = xcalloc((m->fds.n = 8), sizeof(struct MachineFd));
 Restart:
   action = 0;
   LoadProgram(m, codepath, argv + optind, environ, elf);
-
-  if (!tuimode && breakpoints.i) {
-    LoadSyms();
-    ResolveBreakpoints();
-  }
-
-  while (!(action & QUIT)) {
+  m->fds.i = 3;
+  m->fds.p[0].fd = STDIN_FILENO;
+  m->fds.p[0].cb = &kMachineFdCbPty;
+  m->fds.p[1].fd = STDOUT_FILENO;
+  m->fds.p[1].cb = &kMachineFdCbPty;
+  m->fds.p[2].fd = STDERR_FILENO;
+  m->fds.p[2].cb = &kMachineFdCbPty;
+  while (!(action & EXIT)) {
     if (!tuimode) {
-      if (!(interrupt = setjmp(m->onhalt))) {
-        for (;;) {
-          if (action || breakpoints.i) {
-            if (action & QUIT) {
-              break;
-            }
-            if (action & CTRLC) {
-              if (react) {
-                LOGF("CTRLC EXEC REACT");
-                action &= ~(CTRLC | STEP | FINISH | NEXT);
-                tuimode = true;
-              } else {
-                LOGF("CTRLC EXEC");
-              }
-              break;
-            }
-            if ((bp = IsAtBreakpoint(&breakpoints, m->ip)) != -1) {
-              LOGF("BREAK %p", breakpoints.p[bp].addr);
-              tuimode = true;
-              break;
-            }
-          }
-          LoadInstruction(m);
-          ExecuteInstruction(m);
-          CheckFramePointer();
-          ops++;
-        }
-      } else {
-        OnHalt(interrupt);
-      }
+      Exec();
     } else {
-      LOGF("TUI");
-      TuiSetup();
-      StartDraw();
-      ScrollOp(&pan.disassembly, GetDisIndex(m->ip));
-      if (!(interrupt = setjmp(m->onhalt))) {
-        for (;;) {
-          if (!(action & FAILURE)) {
-            LoadInstruction(m);
-          } else {
-            m->xedd = m->icache;
-            m->xedd->length = 1;
-            m->xedd->bytes[0] = 0xCC;
-            m->xedd->op.opcode = 0xCC;
-          }
-          if (action & WINCHED) {
-            LOGF("WINCHED");
-            GetTtySize();
-            action &= ~WINCHED;
-          }
-          StartDraw();
-          Redraw();
-          if (action & FAILURE) {
-            LOGF("FAILURE");
-            PrintMessageBox(ttyfd, systemfailure, tyn, txn);
-            ReadKeyboard();
-          } else if (!IsExecuting() || HasPendingKeyboard()) {
-            ReadKeyboard();
-          }
-          if (action & CTRLC) {
-            LOGF("CTRLC TUI");
-            action |= QUIT;
-          }
-          if (action & QUIT) {
-            LeaveScreen();
-            LOGF("QUIT2");
-            break;
-          }
-          if (action & RESTART) {
-            LOGF("RESTART");
-            goto Restart;
-          }
-          if (action & CONTINUE) {
-            LOGF("CONTINUE");
-            action &= ~CONTINUE;
-            tuimode = false;
-            break;
-          }
-          if (IsExecuting()) {
-            op = GetDisIndex(m->ip);
-            ScrollOp(&pan.disassembly, op);
-            LOGF("%s", dis->ops.p[op].s);
-            memcpy(&m[1], &m[0], sizeof(m[0]));
-            action &= ~STEP;
-            if (action & NEXT) {
-              action &= ~NEXT;
-              if (IsCall()) {
-                BreakAtNextInstruction();
-                break;
-              }
-            }
-            if (action & FINISH) {
-              if (IsCall()) {
-                BreakAtNextInstruction();
-                break;
-              } else if (IsRet()) {
-                action &= ~FINISH;
-              }
-            }
-            if (!IsDebugBreak()) {
-              ExecuteInstruction(m);
-            } else {
-              m->ip += m->xedd->length;
-              action &= ~NEXT;
-              action &= ~FINISH;
-            }
-            CheckFramePointer();
-            ops++;
-            ScrollOp(&pan.disassembly, GetDisIndex(m->ip));
-            if ((action & FINISH) && IsRet()) action &= ~FINISH;
-            if (((action & NEXT) && IsRet()) || (action & FINISH)) {
-              action &= ~NEXT;
-            }
-            if ((action & (FINISH | NEXT)) &&
-                (bp = IsAtBreakpoint(&breakpoints, m->ip)) != -1) {
-              action &= ~(FINISH | NEXT);
-              LOGF("BREAK %p", breakpoints.p[bp].addr);
-              break;
-            }
-          }
-        }
-      } else {
-        OnHalt(interrupt);
-        ScrollOp(&pan.disassembly, GetDisIndex(m->ip));
-      }
-      TuiCleanup();
+      Tui();
+    }
+    if (action & RESTART) {
+      goto Restart;
     }
   }
-
   if (tuimode) {
     LeaveScreen();
   }
-
   if (printstats) {
     fprintf(stderr, "taken:  %,ld\n", taken);
     fprintf(stderr, "ntaken: %,ld\n", ntaken);
     fprintf(stderr, "ops:    %,ld\n", ops);
   }
-
   munmap(elf->ehdr, elf->size);
   DisFree(dis);
   return exitcode;
@@ -1462,8 +1610,7 @@ static void OnlyRunOnFirstCpu(void) {
 int main(int argc, char *argv[]) {
   int rc;
   ssewidth = 2; /* 16-bit is best bit */
-  showcrashreports();
-  xsigaction(SIGINT, (void *)OnCtrlC, 0, 0, NULL);
+  if (!NoDebug()) showcrashreports();
   // OnlyRunOnFirstCpu();
   if ((colorize = cancolor())) {
     high.keyword = 155;

@@ -17,13 +17,34 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/fileno.h"
 #include "tool/build/lib/ioports.h"
+
+static int OpE9Read(struct Machine *m) {
+  int fd;
+  uint8_t b;
+  fd = STDIN_FILENO;
+  if (fd >= m->fds.i) return -1;
+  if (!m->fds.p[fd].cb) return -1;
+  if (m->fds.p[fd].cb->read(m->fds.p[fd].fd, &b, 1) == 1) {
+    return b;
+  } else {
+    return -1;
+  }
+}
+
+static void OpE9Write(struct Machine *m, uint8_t b) {
+  int fd;
+  fd = STDOUT_FILENO;
+  if (fd >= m->fds.i) return;
+  if (!m->fds.p[fd].cb) return;
+  m->fds.p[fd].cb->write(m->fds.p[fd].fd, &b, 1);
+}
 
 uint64_t OpIn(struct Machine *m, uint16_t p) {
   switch (p) {
     case 0xE9:
-      return getc(stdin);
+      return OpE9Read(m);
     default:
       return -1;
   }
@@ -32,9 +53,7 @@ uint64_t OpIn(struct Machine *m, uint16_t p) {
 void OpOut(struct Machine *m, uint16_t p, uint32_t x) {
   switch (p) {
     case 0xE9:
-      do {
-        putc(x, stdout);
-      } while (x >> 8);
+      OpE9Write(m, x);
       break;
     default:
       break;

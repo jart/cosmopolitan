@@ -65,7 +65,7 @@ static void WriteInt(uint8_t p[8], uint64_t x, unsigned long w) {
   }
 }
 
-void OpString(struct Machine *m, int op) {
+void OpString(struct Machine *m, uint32_t rde, int op) {
   void *p[2];
   bool compare;
   int64_t sgn, v;
@@ -73,12 +73,12 @@ void OpString(struct Machine *m, int op) {
   unsigned n, lg2;
   uint64_t asz, seg;
   sgn = GetFlag(m->flags, FLAGS_DF) ? -1 : 1;
-  asz = Asz(m->xedd) ? 0xffffffff : 0xffffffffffffffff;
+  asz = Asz(rde) ? 0xffffffff : 0xffffffffffffffff;
   seg = GetSegment(m);
-  lg2 = RegLog2(m->xedd);
+  lg2 = RegLog2(rde);
   n = 1 << lg2;
   for (;;) {
-    if (Rep(m->xedd) && !Read64(m->cx)) break;
+    if (Rep(rde) && !Read64(m->cx)) break;
     v = 0;
     *p = NULL;
     compare = false;
@@ -125,16 +125,16 @@ void OpString(struct Machine *m, int op) {
         abort();
     }
     EndStore(m, v, n, p, s[0]);
-    if (!Rep(m->xedd)) break;
+    if (!Rep(rde)) break;
     Write64(m->cx, Read64(m->cx) - 1);
     if (compare) {
-      if (Rep(m->xedd) == 2 && GetFlag(m->flags, FLAGS_ZF)) break;
-      if (Rep(m->xedd) == 3 && !GetFlag(m->flags, FLAGS_ZF)) break;
+      if (Rep(rde) == 2 && GetFlag(m->flags, FLAGS_ZF)) break;
+      if (Rep(rde) == 3 && !GetFlag(m->flags, FLAGS_ZF)) break;
     }
   }
 }
 
-void OpRepMovsbEnhanced(struct Machine *m) {
+void OpRepMovsbEnhanced(struct Machine *m, uint32_t rde) {
   bool failed;
   uint8_t *direal, *sireal;
   unsigned diremain, siremain, i, n;
@@ -143,7 +143,7 @@ void OpRepMovsbEnhanced(struct Machine *m) {
   failed = false;
   failaddr = 0;
   seg = GetSegment(m);
-  asz = Asz(m->xedd) ? 0xffffffff : 0xffffffffffffffff;
+  asz = Asz(rde) ? 0xffffffff : 0xffffffffffffffff;
   divirtual = Read64(m->di) & asz;
   sivirtual = Read64(m->si) & asz;
   SetWriteAddr(m, (seg + divirtual) & asz, cx);
@@ -177,7 +177,7 @@ void OpRepMovsbEnhanced(struct Machine *m) {
   if (failed) ThrowSegmentationFault(m, failaddr);
 }
 
-void OpRepStosbEnhanced(struct Machine *m) {
+void OpRepStosbEnhanced(struct Machine *m, uint32_t rde) {
   bool failed;
   uint8_t *direal, al;
   unsigned diremain, i, n;
@@ -187,7 +187,7 @@ void OpRepStosbEnhanced(struct Machine *m) {
   failed = false;
   al = Read8(m->ax);
   seg = GetSegment(m);
-  asz = Asz(m->xedd) ? 0xffffffff : 0xffffffffffffffff;
+  asz = Asz(rde) ? 0xffffffff : 0xffffffffffffffff;
   divirtual = Read64(m->di) & asz;
   SetWriteAddr(m, (seg + divirtual) & asz, cx);
   do {
@@ -210,18 +210,18 @@ void OpRepStosbEnhanced(struct Machine *m) {
   if (failed) ThrowSegmentationFault(m, failaddr);
 }
 
-void OpMovsb(struct Machine *m) {
-  if (Rep(m->xedd) && !GetFlag(m->flags, FLAGS_DF)) {
-    OpRepMovsbEnhanced(m);
+void OpMovsb(struct Machine *m, uint32_t rde) {
+  if (Rep(rde) && !GetFlag(m->flags, FLAGS_DF)) {
+    OpRepMovsbEnhanced(m, rde);
   } else {
-    OpString(m, STRING_MOVS);
+    OpString(m, rde, STRING_MOVS);
   }
 }
 
-void OpStosb(struct Machine *m) {
-  if (Rep(m->xedd) && !GetFlag(m->flags, FLAGS_DF)) {
-    OpRepStosbEnhanced(m);
+void OpStosb(struct Machine *m, uint32_t rde) {
+  if (Rep(rde) && !GetFlag(m->flags, FLAGS_DF)) {
+    OpRepStosbEnhanced(m, rde);
   } else {
-    OpString(m, STRING_STOS);
+    OpString(m, rde, STRING_STOS);
   }
 }

@@ -19,12 +19,14 @@ TEST_LIBC_FMT_CHECKS =					\
 	$(TEST_LIBC_FMT_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
 
 TEST_LIBC_FMT_DIRECTDEPS =				\
+	LIBC_ALG					\
 	LIBC_CALLS_HEFTY				\
 	LIBC_CONV					\
 	LIBC_FMT					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
 	LIBC_RUNTIME					\
+	LIBC_STDIO					\
 	LIBC_STR					\
 	LIBC_STUBS					\
 	LIBC_SYSV					\

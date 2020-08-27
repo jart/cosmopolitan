@@ -5,11 +5,12 @@
 │ cosmopolitan § liblog                                                    ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#define kLogFatal 0u
-#define kLogError 1u
-#define kLogWarn  2u
-#define kLogInfo  3u
-#define kLogDebug 4u
+#define kLogFatal   0u
+#define kLogError   1u
+#define kLogWarn    2u
+#define kLogInfo    3u
+#define kLogVerbose 4u
+#define kLogDebug   5u
 
 /**
  * Log level for compile-time DCE.
@@ -20,7 +21,7 @@
 /* #elif IsTiny() */
 /* #define LOGGABLELEVEL kLogInfo */
 #else
-#define LOGGABLELEVEL kLogInfo
+#define LOGGABLELEVEL kLogVerbose
 #endif
 #endif
 
@@ -149,6 +150,13 @@ extern unsigned g_loglevel; /* log level for runtime check */
     }                                                                   \
   } while (0)
 
+#define VERBOSEF(FMT, ...)                                                  \
+  do {                                                                      \
+    if (LOGGABLE(kLogVerbose)) {                                            \
+      fverbosef(kLogVerbose, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
+    }                                                                       \
+  } while (0)
+
 #define VDEBUGF(FMT, VA)                                      \
   do {                                                        \
     if (LOGGABLE(kLogDebug)) {                                \
@@ -161,6 +169,13 @@ extern unsigned g_loglevel; /* log level for runtime check */
     if (LOGGABLE(kLogDebug)) {                                       \
       fdebugf(kLogDebug, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
     }                                                                \
+  } while (0)
+
+#define VFVERBOSEF(F, FMT, VA)                                 \
+  do {                                                         \
+    if (LOGGABLE(kLogVerbose)) {                               \
+      vfverbosef(kLogVerbose, __FILE__, __LINE__, F, FMT, VA); \
+    }                                                          \
   } while (0)
 
 #define VFDEBUGF(F, FMT, VA)                               \
@@ -203,6 +218,8 @@ void __logerrno(const char *, int, const char *) relegated;
 #define ATTRV paramsnonnull((5, 6))
 void flogf(ARGS, ...) ATTR libcesque;
 void vflogf(ARGS, va_list) ATTRV libcesque;
+void fverbosef(ARGS, ...) asm("flogf") ATTR relegated libcesque;
+void vfverbosef(ARGS, va_list) asm("vflogf") ATTRV relegated libcesque;
 void fdebugf(ARGS, ...) asm("flogf") ATTR relegated libcesque;
 void vfdebugf(ARGS, va_list) asm("vflogf") ATTRV relegated libcesque;
 void ffatalf(ARGS, ...) asm("flogf") ATTR relegated noreturn libcesque;

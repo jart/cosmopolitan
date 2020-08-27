@@ -48,7 +48,6 @@
 #include "third_party/stb/stb_image.h"
 #include "tool/viz/lib/bilinearscale.h"
 #include "tool/viz/lib/graphic.h"
-#include "tool/viz/lib/scale.h"
 
 #define LONG          long
 #define CHAR          char

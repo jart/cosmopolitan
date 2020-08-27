@@ -12,8 +12,6 @@
 #define ALU_CMP  7
 #define ALU_TEST 8
 #define ALU_FLIP 16
-#define ALU_XCHG 64
-#define ALU_BYTE 128
 
 #define BSU_ROL 0
 #define BSU_ROR 1
@@ -27,8 +25,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-typedef uint64_t (*aluop1_f)(struct Machine *, uint64_t);
-typedef uint64_t (*aluop2_f)(struct Machine *, uint64_t, uint64_t);
+typedef uint64_t (*aluop1_f)(struct Machine *, uint32_t, uint64_t);
+typedef uint64_t (*aluop2_f)(struct Machine *, uint32_t, uint64_t, uint64_t);
 
 int64_t Alu(int, int, uint64_t, uint64_t, uint32_t *);
 int64_t Bsu(int, int, uint64_t, uint64_t, uint32_t *);

@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) {
     fputs(" PROG [ARGS...]\n", stderr);
     return EX_USAGE;
   }
+  InitMachine(m);
   LoadProgram(m, argv[1], argv + 2, environ, &elf);
   if (!(rc = setjmp(m->onhalt))) {
     for (;;) {

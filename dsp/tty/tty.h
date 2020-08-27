@@ -39,7 +39,7 @@ int ttyrestorecursor(int);
 int ttyenablealtbuf(int);
 int ttydisablealtbuf(int);
 int ttysend(int, const char *);
-int ttywrite(int, const void *, size_t);
+ssize_t ttywrite(int, const void *, size_t);
 int ttysendtitle(int, const char *, const struct TtyIdent *);
 int ttyident(struct TtyIdent *, int, int);
 void ttyidentclear(struct TtyIdent *);

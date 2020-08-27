@@ -375,19 +375,16 @@ privileged static void XED_LF_SIMM8_IMM_WIDTH_CONST_l2(
 privileged static void XED_LF_UIMM16_IMM_WIDTH_CONST_l2(
     struct XedDecodedInst *x) {
   x->op.imm_width = 16;
-  x->op.imm_signed = false;
 }
 
 privileged static void XED_LF_SE_IMM8_IMM_WIDTH_CONST_l2(
     struct XedDecodedInst *x) {
   x->op.imm_width = 8;
-  x->op.imm_signed = false;
 }
 
 privileged static void XED_LF_UIMM32_IMM_WIDTH_CONST_l2(
     struct XedDecodedInst *x) {
   x->op.imm_width = 32;
-  x->op.imm_signed = false;
 }
 
 privileged static void xed_set_simmz_imm_width_eosz(
@@ -401,18 +398,15 @@ privileged static void xed_set_uimmv_imm_width_eosz(
     struct XedDecodedInst *x, const xed_bits_t eosz[2][2][3]) {
   x->op.imm_width =
       kXed.UIMMv_IMM_WIDTH[eosz[x->op.rexw][x->op.osz][x->op.mode]];
-  x->op.imm_signed = false;
 }
 
 privileged static void XED_LF_UIMM8_IMM_WIDTH_CONST_l2(
     struct XedDecodedInst *x) {
   x->op.imm_width = 8;
-  x->op.imm_signed = false;
 }
 
 privileged static void XED_LF_0_IMM_WIDTH_CONST_l2(struct XedDecodedInst *x) {
   x->op.imm_width = 0;
-  x->op.imm_signed = false;
 }
 
 privileged static void XED_LF_RESOLVE_BYREG_IMM_WIDTH_map0x0_op0xc7_l1(
@@ -1212,7 +1206,7 @@ privileged static void xed_encode_rde(struct XedDecodedInst *x) {
 /**
  * Clears instruction decoder state.
  */
-struct XedDecodedInst *xed_decoded_inst_zero_set_mode(
+privileged struct XedDecodedInst *xed_decoded_inst_zero_set_mode(
     struct XedDecodedInst *p, enum XedMachineMode mmode) {
   __builtin_memset(p, 0, sizeof(*p));
   xed_operands_set_mode(&p->op, mmode);

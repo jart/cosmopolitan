@@ -70,7 +70,7 @@ kCpuids:.long	0,0,0,0				# EAX=0 (Basic Processor Info)
 	add	$4*4,%rdi
 	jmp	2b
 3:	nop
-#if 0 && !X86_NEED(AVX2)
+#if !X86_NEED(AVX2)
 	testb	X86_HAVE(AVX)(%r8)
 	jz	5f
 	testb	X86_HAVE(OSXSAVE)(%r8)

@@ -21,7 +21,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-__fpclassifyl:
+tinymath_fpclassifyl:
 	push	%rbp
 	mov	%rsp,%rbp
 	mov	24(%rbp),%rax
@@ -50,4 +50,5 @@ __fpclassifyl:
 	and	$FP_NORMAL,%eax
 1:	pop	%rbp
 	ret
-	.endfn	__fpclassifyl,globl
+	.endfn	tinymath_fpclassifyl,globl
+	.alias	tinymath_fpclassifyl,__fpclassifyl

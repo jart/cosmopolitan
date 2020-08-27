@@ -493,16 +493,15 @@ forceinline void xed_set_chip_modes(struct XedDecodedInst *d,
 extern const char kXedErrorNames[];
 extern const uint64_t xed_chip_features[XED_CHIP_LAST][3];
 
+struct XedDecodedInst *xed_decoded_inst_zero_set_mode(struct XedDecodedInst *,
+                                                      enum XedMachineMode);
+
 enum XedError xed_instruction_length_decode(struct XedDecodedInst *,
                                             const void *, size_t);
-enum XedError __xed_instruction_length_decode(struct XedDecodedInst *,
-                                              const void *, size_t);
 
 bool xed_isa_set_is_valid_for_chip(enum XedIsaSet, enum XedChip);
 bool xed_test_chip_features(struct XedChipFeatures *, enum XedIsaSet);
 void xed_get_chip_features(struct XedChipFeatures *, enum XedChip);
-struct XedDecodedInst *xed_decoded_inst_zero_set_mode(struct XedDecodedInst *,
-                                                      enum XedMachineMode);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

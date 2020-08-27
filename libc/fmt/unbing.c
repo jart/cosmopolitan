@@ -18,41 +18,35 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
-#include "libc/fmt/bing.h"
-#include "libc/log/log.h"
+#include "libc/macros.h"
+#include "libc/nexgen32e/nexgen32e.h"
 #include "libc/str/str.h"
 
-#define ALTCOUNT 21
-
-static const struct Cp437Multimappings {
-  unsigned char b[ALTCOUNT];
-  char16_t c[ALTCOUNT];
-} kCp437iMultimappings = {
-#define ALT(I, C, B) .c[I] = C, .b[I] = B
-    ALT(0, u'\n', '\n'),
-    ALT(1, u'\r', '\r'),
-    ALT(2, u'?', '?'),    /* TRIGRAPH */
-    ALT(3, u'\'', '\''),  /* CHARACTER LITERAL */
-    ALT(4, u'\"', '\"'),  /* STRING LITERAL */
-    ALT(5, u'\\', '\\'),  /* ESCAPE LITERAL */
-    ALT(6, u'∅', '\0'),   /* EMPTY SET */
-    ALT(7, u'␀', '\0'),   /* SYMBOL FOR NULL [sic] */
-    ALT(7, 0x20A7, 0x9E), /* PESETA SIGN */
-    ALT(8, u'Π' /*  03A0: GREEK CAPITAL LETTER PI */, 0xE3),
-    ALT(9, u'∏' /*  220F: N-ARY PRODUCT */, 0xE3),
-    ALT(10, u'∑' /*  2211: N-ARY SUMMATION */, 0xE4),
-    ALT(11, u'µ' /*  03BC: MICRO SIGN */, 0xE6),
-    ALT(12, u'Ω' /*  2126: OHM SIGN */, 0xEA),
-    ALT(13, u'∂' /*  2202: PARTIAL DIFFERENTIAL */, 0xEB),
-    ALT(14, u'ε' /*  03D5: PHI SMALL (CLOSED FORM) */, 0xED),
-    ALT(15, u'ϕ' /*  03D5: PHI SMALL (CLOSED FORM) */, 0xED),
-    ALT(16, u'∈' /*  2208: ELEMENT-OF SIGN  */, 0xED),
-    ALT(17, u'∊' /*  220A: SMALL ELEMENT OF */, 0xEE),
-    ALT(18, u'∈' /*  03B5: ELEMENT-OF SIGN  */, 0xEE),
-    ALT(19, u'β' /*  03B2: GREEK SMALL BETA */, 0xE1),
-    ALT(20, u'ſ' /*  017F: LATIN SMALL LETTER LONG S */, 0xF4),
-#undef ALT
+static const int kCp437iMultimappings[] = {
+    u'\n' << 8 | '\n',   // NEWLINE
+    u'\r' << 8 | '\r',   // CARRIAGE RETURN
+    u'?' << 8 | '?',     // TRIGRAPH
+    u'\'' << 8 | '\'',   // CHARACTER LITERAL
+    u'\"' << 8 | '\"',   // STRING LITERAL
+    u'\\' << 8 | '\\',   // ESCAPE LITERAL
+    u'∅' << 8 | '\0',    // EMPTY SET
+    u'␀' << 8 | '\0',    // SYMBOL FOR NULL [sic]
+    0x20A7 << 8 | 0x9E,  // PESETA SIGN
+    u'Π' << 8 | 0xE3,    // GREEK CAPITAL LETTER PI
+    u'∏' << 8 | 0xE3,    // N-ARY PRODUCT
+    u'∑' << 8 | 0xE4,    // N-ARY SUMMATION
+    u'µ' << 8 | 0xE6,    // MICRO SIGN
+    u'Ω' << 8 | 0xEA,    // OHM SIGN
+    u'∂' << 8 | 0xEB,    // PARTIAL DIFFERENTIAL
+    u'ϕ' << 8 | 0xED,    // PHI SMALL (CLOSED FORM)
+    u'ε' << 8 | 0xEE,    // LATIN SMALL LETTER EPSILON
+    u'∊' << 8 | 0xEE,    // SMALL ELEMENT OF
+    u'∈' << 8 | 0xEE,    // ELEMENT-OF SIGN
+    u'β' << 8 | 0xE1,    // GREEK SMALL BETA
+    u'ſ' << 8 | 0xF4,    // LATIN SMALL LETTER LONG S
 };
+
+static int g_cp437i[256 + ARRAYLEN(kCp437iMultimappings)];
 
 /**
  * Turns CP437 unicode glyph into its binary representation.
@@ -62,15 +56,24 @@ static const struct Cp437Multimappings {
  * @see bing()
  */
 int unbing(int c) {
-  int i;
-  for (i = 0; i < 256; ++i) {
-    if (c == kCp437[i]) {
-      return i;
-    }
+  int i, m, l, r;
+  static bool once;
+  if (!once) {
+    for (i = 0; i < 256; ++i) g_cp437i[i] = kCp437[i] << 8 | i;
+    memcpy(g_cp437i + 256, kCp437iMultimappings, sizeof(kCp437iMultimappings));
+    insertionsort(ARRAYLEN(g_cp437i), g_cp437i);
+    once = true;
   }
-  for (i = 0; i < ALTCOUNT; ++i) {
-    if (c == kCp437iMultimappings.c[i]) {
-      return kCp437iMultimappings.b[i];
+  l = 0;
+  r = ARRAYLEN(g_cp437i) - 1;
+  while (l <= r) {
+    m = (l + r) >> 1;
+    if ((g_cp437i[m] >> 8) < c) {
+      l = m + 1;
+    } else if ((g_cp437i[m] >> 8) > c) {
+      r = m - 1;
+    } else {
+      return g_cp437i[m] & 0xff;
     }
   }
   return -1;

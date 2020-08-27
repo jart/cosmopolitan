@@ -25,6 +25,7 @@ TOOL_BUILD_LIB_A_OBJS =					\
 	$(TOOL_BUILD_LIB_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
 TOOL_BUILD_LIB_A_DIRECTDEPS =				\
+	DSP_TTY						\
 	LIBC_ALG					\
 	LIBC_BITS					\
 	LIBC_CONV					\

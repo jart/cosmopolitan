@@ -3,6 +3,7 @@
 #include "libc/elf/struct/ehdr.h"
 #include "libc/runtime/runtime.h"
 #include "third_party/xed/x86.h"
+#include "tool/build/lib/fds.h"
 #include "tool/build/lib/pml4t.h"
 
 #define kXmmIntegral 0
@@ -136,6 +137,7 @@ struct Machine {
   uint8_t stash[4096];
   uint8_t xmmtype[2][8];
   struct XedDecodedInst icache[512];
+  struct MachineFds fds;
 };
 
 void ResetCpu(struct Machine *);

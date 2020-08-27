@@ -355,14 +355,14 @@ TEST(punpckhwd, test) {
   uint16_t b[8] = {9, 10, 11, 12, 13, 14, 15, 16};
   uint16_t c[8];
   punpckhwd(c, a, b);
-  ASSERT_EQ(5, c[0]);
-  ASSERT_EQ(13, c[1]);
-  ASSERT_EQ(6, c[2]);
-  ASSERT_EQ(14, c[3]);
-  ASSERT_EQ(7, c[4]);
-  ASSERT_EQ(15, c[5]);
-  ASSERT_EQ(8, c[6]);
-  ASSERT_EQ(16, c[7]);
+  EXPECT_EQ(5, c[0]);
+  EXPECT_EQ(13, c[1]);
+  EXPECT_EQ(6, c[2]);
+  EXPECT_EQ(14, c[3]);
+  EXPECT_EQ(7, c[4]);
+  EXPECT_EQ(15, c[5]);
+  EXPECT_EQ(8, c[6]);
+  EXPECT_EQ(16, c[7]);
 }
 
 TEST(punpckhwd, pure) {
@@ -370,70 +370,70 @@ TEST(punpckhwd, pure) {
   uint16_t b[8] = {9, 10, 11, 12, 13, 14, 15, 16};
   uint16_t c[8];
   punpckhwd(c, a, b);
-  ASSERT_EQ(5, c[0]);
-  ASSERT_EQ(13, c[1]);
-  ASSERT_EQ(6, c[2]);
-  ASSERT_EQ(14, c[3]);
-  ASSERT_EQ(7, c[4]);
-  ASSERT_EQ(15, c[5]);
-  ASSERT_EQ(8, c[6]);
-  ASSERT_EQ(16, c[7]);
+  EXPECT_EQ(5, c[0]);
+  EXPECT_EQ(13, c[1]);
+  EXPECT_EQ(6, c[2]);
+  EXPECT_EQ(14, c[3]);
+  EXPECT_EQ(7, c[4]);
+  EXPECT_EQ(15, c[5]);
+  EXPECT_EQ(8, c[6]);
+  EXPECT_EQ(16, c[7]);
 }
 
 TEST(punpckhwd, testAlias) {
   uint16_t a[8] = {1, 02, 03, 04, 05, 06, 07, 8};
   uint16_t b[8] = {9, 10, 11, 12, 13, 14, 15, 16};
   punpckhwd(a, a, b);
-  ASSERT_EQ(5, a[0]);
-  ASSERT_EQ(13, a[1]);
-  ASSERT_EQ(6, a[2]);
-  ASSERT_EQ(14, a[3]);
-  ASSERT_EQ(7, a[4]);
-  ASSERT_EQ(15, a[5]);
-  ASSERT_EQ(8, a[6]);
-  ASSERT_EQ(16, a[7]);
+  EXPECT_EQ(5, a[0]);
+  EXPECT_EQ(13, a[1]);
+  EXPECT_EQ(6, a[2]);
+  EXPECT_EQ(14, a[3]);
+  EXPECT_EQ(7, a[4]);
+  EXPECT_EQ(15, a[5]);
+  EXPECT_EQ(8, a[6]);
+  EXPECT_EQ(16, a[7]);
 }
 
 TEST(punpckhwd, pureAlias) {
   uint16_t a[8] = {1, 02, 03, 04, 05, 06, 07, 8};
   uint16_t b[8] = {9, 10, 11, 12, 13, 14, 15, 16};
   (punpckhwd)(a, a, b);
-  ASSERT_EQ(5, a[0]);
-  ASSERT_EQ(13, a[1]);
-  ASSERT_EQ(6, a[2]);
-  ASSERT_EQ(14, a[3]);
-  ASSERT_EQ(7, a[4]);
-  ASSERT_EQ(15, a[5]);
-  ASSERT_EQ(8, a[6]);
-  ASSERT_EQ(16, a[7]);
+  EXPECT_EQ(5, a[0]);
+  EXPECT_EQ(13, a[1]);
+  EXPECT_EQ(6, a[2]);
+  EXPECT_EQ(14, a[3]);
+  EXPECT_EQ(7, a[4]);
+  EXPECT_EQ(15, a[5]);
+  EXPECT_EQ(8, a[6]);
+  EXPECT_EQ(16, a[7]);
 }
 
 TEST(punpckhwd, testAlias2) {
   uint16_t a[8] = {1, 02, 03, 04, 05, 06, 07, 8};
   uint16_t b[8] = {9, 10, 11, 12, 13, 14, 15, 16};
   punpckhwd(b, a, b);
-  ASSERT_EQ(5, b[0]);
-  ASSERT_EQ(13, b[1]);
-  ASSERT_EQ(6, b[2]);
-  ASSERT_EQ(14, b[3]);
-  ASSERT_EQ(7, b[4]);
-  ASSERT_EQ(15, b[5]);
-  ASSERT_EQ(8, b[6]);
-  ASSERT_EQ(16, b[7]);
+  EXPECT_EQ(5, b[0]);
+  EXPECT_EQ(13, b[1]);
+  EXPECT_EQ(6, b[2]);
+  EXPECT_EQ(14, b[3]);
+  EXPECT_EQ(7, b[4]);
+  EXPECT_EQ(15, b[5]);
+  EXPECT_EQ(8, b[6]);
+  EXPECT_EQ(16, b[7]);
 }
 
 TEST(punpckhwd, pureAlias2) {
   uint16_t a[8] = {1, 02, 03, 04, 05, 06, 07, 8};
   uint16_t b[8] = {9, 10, 11, 12, 13, 14, 15, 16};
   (punpckhwd)(b, a, b);
-  ASSERT_EQ(5, b[0]);
-  ASSERT_EQ(13, b[1]);
-  ASSERT_EQ(6, b[2]);
-  ASSERT_EQ(14, b[3]);
-  ASSERT_EQ(7, b[4]);
-  ASSERT_EQ(15, b[5]);
-  ASSERT_EQ(8, b[6]);
-  ASSERT_EQ(16, b[7]);
+  EXPECT_EQ(5, b[0]);
+  EXPECT_EQ(13, b[1]);
+  EXPECT_EQ(6, b[2]);
+  EXPECT_EQ(14, b[3]);
+  EXPECT_EQ(7, b[4]);
+  EXPECT_EQ(15, b[5]);
+  EXPECT_EQ(8, b[6]);
+  EXPECT_EQ(16, b[7]);
 }
 
 TEST(punpckhqdq, test) {
@@ -441,8 +441,8 @@ TEST(punpckhqdq, test) {
   uint64_t b[2] = {3, 4};
   uint64_t c[2];
   punpckhqdq(c, a, b);
-  ASSERT_EQ(2, c[0]);
-  ASSERT_EQ(4, c[1]);
+  EXPECT_EQ(2, c[0]);
+  EXPECT_EQ(4, c[1]);
 }
 
 TEST(punpckhqdq, pure) {
@@ -450,24 +450,24 @@ TEST(punpckhqdq, pure) {
   uint64_t b[2] = {3, 4};
   uint64_t c[2];
   (punpckhqdq)(c, a, b);
-  ASSERT_EQ(2, c[0]);
-  ASSERT_EQ(4, c[1]);
+  EXPECT_EQ(2, c[0]);
+  EXPECT_EQ(4, c[1]);
 }
 
 TEST(punpckhqdq, testAlias) {
   uint64_t a[2] = {1, 2};
   uint64_t b[2] = {3, 4};
   punpckhqdq(a, a, b);
-  ASSERT_EQ(2, a[0]);
-  ASSERT_EQ(4, a[1]);
+  EXPECT_EQ(2, a[0]);
+  EXPECT_EQ(4, a[1]);
 }
 
 TEST(punpckhqdq, pureAlias) {
   uint64_t a[2] = {1, 2};
   uint64_t b[2] = {3, 4};
   (punpckhqdq)(a, a, b);
-  ASSERT_EQ(2, a[0]);
-  ASSERT_EQ(4, a[1]);
+  EXPECT_EQ(2, a[0]);
+  EXPECT_EQ(4, a[1]);
 }
 
 TEST(punpckhdq, test) {
@@ -475,10 +475,10 @@ TEST(punpckhdq, test) {
   uint32_t b[4] = {5, 6, 7, 8};
   uint32_t c[4];
   punpckhdq(c, a, b);
-  ASSERT_EQ(3, c[0]);
-  ASSERT_EQ(7, c[1]);
-  ASSERT_EQ(4, c[2]);
-  ASSERT_EQ(8, c[3]);
+  EXPECT_EQ(3, c[0]);
+  EXPECT_EQ(7, c[1]);
+  EXPECT_EQ(4, c[2]);
+  EXPECT_EQ(8, c[3]);
 }
 
 TEST(punpckhdq, pure) {
@@ -486,50 +486,50 @@ TEST(punpckhdq, pure) {
   uint32_t b[4] = {5, 6, 7, 8};
   uint32_t c[4];
   punpckhdq(c, a, b);
-  ASSERT_EQ(3, c[0]);
-  ASSERT_EQ(7, c[1]);
-  ASSERT_EQ(4, c[2]);
-  ASSERT_EQ(8, c[3]);
+  EXPECT_EQ(3, c[0]);
+  EXPECT_EQ(7, c[1]);
+  EXPECT_EQ(4, c[2]);
+  EXPECT_EQ(8, c[3]);
 }
 
 TEST(punpckhdq, testAlias) {
   uint32_t a[4] = {1, 2, 3, 4};
   uint32_t b[4] = {5, 6, 7, 8};
   punpckhdq(a, a, b);
-  ASSERT_EQ(3, a[0]);
-  ASSERT_EQ(7, a[1]);
-  ASSERT_EQ(4, a[2]);
-  ASSERT_EQ(8, a[3]);
+  EXPECT_EQ(3, a[0]);
+  EXPECT_EQ(7, a[1]);
+  EXPECT_EQ(4, a[2]);
+  EXPECT_EQ(8, a[3]);
 }
 
 TEST(punpckhdq, pureAlias) {
   uint32_t a[4] = {1, 2, 3, 4};
   uint32_t b[4] = {5, 6, 7, 8};
   (punpckhdq)(a, a, b);
-  ASSERT_EQ(3, a[0]);
-  ASSERT_EQ(7, a[1]);
-  ASSERT_EQ(4, a[2]);
-  ASSERT_EQ(8, a[3]);
+  EXPECT_EQ(3, a[0]);
+  EXPECT_EQ(7, a[1]);
+  EXPECT_EQ(4, a[2]);
+  EXPECT_EQ(8, a[3]);
 }
 
 TEST(punpckhdq, testAlias2) {
   uint32_t a[4] = {1, 2, 3, 4};
   uint32_t b[4] = {5, 6, 7, 8};
   punpckhdq(b, a, b);
-  ASSERT_EQ(3, b[0]);
-  ASSERT_EQ(7, b[1]);
-  ASSERT_EQ(4, b[2]);
-  ASSERT_EQ(8, b[3]);
+  EXPECT_EQ(3, b[0]);
+  EXPECT_EQ(7, b[1]);
+  EXPECT_EQ(4, b[2]);
+  EXPECT_EQ(8, b[3]);
 }
 
 TEST(punpckhdq, pureAlias2) {
   uint32_t a[4] = {1, 2, 3, 4};
   uint32_t b[4] = {5, 6, 7, 8};
   (punpckhdq)(b, a, b);
-  ASSERT_EQ(3, b[0]);
-  ASSERT_EQ(7, b[1]);
-  ASSERT_EQ(4, b[2]);
-  ASSERT_EQ(8, b[3]);
+  EXPECT_EQ(3, b[0]);
+  EXPECT_EQ(7, b[1]);
+  EXPECT_EQ(4, b[2]);
+  EXPECT_EQ(8, b[3]);
 }
 
 TEST(punpckhwd, fuzz) {

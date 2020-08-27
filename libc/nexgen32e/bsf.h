@@ -17,11 +17,14 @@ COSMOPOLITAN_C_START_
  *    0xffffffff        0        0        1       31        0
  */
 
+int bsf(int);
+int bsfl(long);
+int bsfll(long long);
+int bsfmax(uintmax_t);
+
 #define bsf(u)   __builtin_ctz(u)
 #define bsfl(u)  __builtin_ctzl(u)
 #define bsfll(u) __builtin_ctzll(u)
-
-unsigned bsfmax(uintmax_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -17,19 +17,24 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
-#include "libc/nexgen32e/nexgen32e.h"
-#include "libc/nexgen32e/x86feature.h"
-
-void djbsort$avx2(int32_t *, long);
+#include "libc/nexgen32e/rdtsc.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/time/time.h"
+#include "tool/build/lib/endian.h"
+#include "tool/build/lib/time.h"
 
 /**
- * D.J. Bernstein's fast integer sorting algorithm.
+ * I am the timelorde.
  */
-void djbsort(size_t n, int32_t *a) {
-  if (X86_HAVE(AVX2)) {
-    djbsort$avx2(a, n);
-  } else {
-    insertionsort(n, a);
-  }
+void OpRdtsc(struct Machine *m) {
+  uint64_t c;
+#ifdef __x86_64__
+  c = rdtsc();
+#else
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  c = ts.tv_sec * 1000000000 + ts.tv_nsec;
+#endif
+  Write64(m->ax, (c >> 000) & 0xffffffff);
+  Write64(m->dx, (c >> 040) & 0xffffffff);
 }

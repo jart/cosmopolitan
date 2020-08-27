@@ -17,8 +17,10 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/macros.h"
 #include "libc/math.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "tool/build/lib/flags.h"
 #include "tool/build/lib/machine.h"
@@ -61,8 +63,25 @@ static void ResetSse(struct Machine *m) {
   memset(m->xmmtype, 0, sizeof(m->xmmtype));
 }
 
+static void ResetTlb(struct Machine *m) {
+  m->tlbindex = 0;
+  memset(m->tlb, 0, sizeof(m->tlb));
+}
+
+static void ResetMem(struct Machine *m) {
+  FreePml4t(m->cr3, -0x800000000000, 0x800000000000, free, munmap);
+}
+
 void ResetCpu(struct Machine *m) {
-  InitMachine(m);
+  m->codevirt = 0;
+  m->codereal = NULL;
+  m->faultaddr = 0;
+  m->stashsize = 0;
+  m->stashaddr = 0;
+  m->writeaddr = 0;
+  m->readaddr = 0;
+  m->writesize = 0;
+  m->readsize = 0;
   m->flags = SetFlag(m->flags, FLAGS_DF, false);
   m->flags = SetFlag(m->flags, FLAGS_CF, false);
   m->flags = SetFlag(m->flags, FLAGS_ZF, false);
@@ -73,6 +92,9 @@ void ResetCpu(struct Machine *m) {
   m->flags = SetFlag(m->flags, FLAGS_IOPL, 3);
   memset(m->reg, 0, sizeof(m->reg));
   memset(m->bofram, 0, sizeof(m->bofram));
+  memset(&m->freelist, 0, sizeof(m->freelist));
+  ResetTlb(m);
   ResetSse(m);
   ResetFpu(m);
+  ResetMem(m);
 }

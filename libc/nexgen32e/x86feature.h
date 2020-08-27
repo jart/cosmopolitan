@@ -17,8 +17,8 @@
 #define X86_AES                  1H,        ECX, 25, _X86_CC_AES,         _     /* westmere c. 2010 */
 #define X86_APIC                 1H,        EDX,  9, 0,                   _
 #define X86_ARCH_CAPABILITIES    7H,        EDX, 29, 0,                   _
-#define X86_AVX                  1H,        ECX, 28, _X86_CC_AVX,         AVX   /* sandybridge c. 2012 */
-#define X86_AVX2                 7H,        EBX,  5, _X86_CC_AVX2,        AVX   /* haswell c. 2013 */
+#define X86_AVX                  1H,        ECX, 28, _X86_CC_AVX,         _     /* sandybridge c. 2012 */
+#define X86_AVX2                 7H,        EBX,  5, _X86_CC_AVX2,        _     /* haswell c. 2013 */
 #define X86_AVX512BW             7H,        EBX, 30, 0,                   _
 #define X86_AVX512CD             7H,        EBX, 28, 0,                   _
 #define X86_AVX512DQ             7H,        EBX, 17, 0,                   _
@@ -246,17 +246,5 @@
 #endif
 
 #define _X86_HOOK__(X) X
-#define _X86_HOOK_AVX(X)    \
-  ({                        \
-    YOINK(_init_enableavx); \
-    X;                      \
-  })
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
-
-int _init_enableavx(void) pureconst;
-
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NEXGEN32E_X86FEATURE_H_ */

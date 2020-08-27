@@ -2611,7 +2611,7 @@ syscon	ioctl	FIONREAD				0x541b			0x4004667f		0x4004667f		0x4004667f		0x4004667f
 #syscon	ioctl	FIONWRITE				0x0			0x0			0x40046677		0x0			-1			# [FreeBSD Generalization] bytes queued in FD's output buffer (same as TIOCOUTQ for TTY FDs; see also SO_SNDBUF)
 #syscon	ioctl	FIONSPACE				0x0			0x0			0x40046676		0x0			-1			# [FreeBSD Generalization] capacity of FD's output buffer, e.g. equivalent to TIOCGSERIAL w/ UART
 syscon	ioctl	TIOCINQ					0x541b			0x4004667f		0x4004667f		0x4004667f		0x4004667f		# [Linuxism] same as FIONREAD
-syscon	ioctl	TIOCOUTQ				0x5411			0x40047473		0x40047473		0x40047473	       	-1			# bytes queued in TTY's output buffer
+#syscon	ioctl	TIOCOUTQ				0x5411			0x40047473		0x40047473		0x40047473	       	-1			# bytes queued in TTY's output buffer
 
 syscon	misc	FANOTIFY_METADATA_VERSION		3			0			0			0			0
 syscon	misc	FAPPEND					0x0400			8			8			8			0			# bsd consensus

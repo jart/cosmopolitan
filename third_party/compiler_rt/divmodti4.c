@@ -24,7 +24,7 @@ COMPILER_RT_ABI ti_int __divmodti4(ti_int a, ti_int b, tu_int *opt_out_rem) {
   tu_int r;
   ti_int sa, sb, sq, sr, x, y, q;
   k = sizeof(ti_int) * CHAR_BIT - 1;
-  if (b < 0 && a == ((ti_int)1 << k)) {
+  if (b == -1 && a == ((ti_int)1 << k)) {
     volatile int x = 0;
     x = 1 / x;  // raise(SIGFPE)
   }

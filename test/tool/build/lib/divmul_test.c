@@ -62,12 +62,11 @@ TEST(imul8, test) {
   int i, j;
   int16_t ax;
   bool cf, of;
-  m->xedd->op.rde = MOD(3) | RM(CX);
   for (i = 0; i < ARRAYLEN(A); ++i) {
     for (j = 0; j < ARRAYLEN(A); ++j) {
       Write8(m->ax, A[i]);
       Write8(m->cx, A[j]);
-      OpMulAxAlEbSigned(m);
+      OpMulAxAlEbSigned(m, MOD(3) | RM(CX));
       asm volatile("imulb\t%3"
                    : "=a"(ax), "=@ccc"(cf), "=@cco"(of)
                    : "q"(A[j]), "0"(A[i])
@@ -85,12 +84,11 @@ TEST(imul16, test) {
   int i, j;
   bool cf, of;
   uint16_t dx, ax;
-  m->xedd->op.rde = OSZ | MOD(3) | RM(CX);
   for (i = 0; i < ARRAYLEN(A); ++i) {
     for (j = 0; j < ARRAYLEN(A); ++j) {
       Write16(m->ax, A[i]);
       Write16(m->cx, A[j]);
-      OpMulRdxRaxEvqpSigned(m);
+      OpMulRdxRaxEvqpSigned(m, OSZ | MOD(3) | RM(CX));
       asm("imulw\t%4"
           : "=d"(dx), "=a"(ax), "=@ccc"(cf), "=@cco"(of)
           : "r"(A[j]), "1"(A[i])
@@ -110,12 +108,11 @@ TEST(imul32, test) {
   int i, j;
   bool cf, of;
   uint32_t dx, ax;
-  m->xedd->op.rde = MOD(3) | RM(CX);
   for (i = 0; i < ARRAYLEN(A); ++i) {
     for (j = 0; j < ARRAYLEN(A); ++j) {
       Write32(m->ax, A[i]);
       Write32(m->cx, A[j]);
-      OpMulRdxRaxEvqpSigned(m);
+      OpMulRdxRaxEvqpSigned(m, MOD(3) | RM(CX));
       asm("imull\t%4"
           : "=d"(dx), "=a"(ax), "=@ccc"(cf), "=@cco"(of)
           : "r"(A[j]), "1"(A[i])
@@ -135,12 +132,11 @@ TEST(imul64, test) {
   int i, j;
   bool cf, of;
   uint64_t dx, ax;
-  m->xedd->op.rde = REXW | MOD(3) | RM(CX);
   for (i = 0; i < ARRAYLEN(A); ++i) {
     for (j = 0; j < ARRAYLEN(A); ++j) {
       Write64(m->ax, A[i]);
       Write64(m->cx, A[j]);
-      OpMulRdxRaxEvqpSigned(m);
+      OpMulRdxRaxEvqpSigned(m, REXW | MOD(3) | RM(CX));
       asm("imulq\t%4"
           : "=d"(dx), "=a"(ax), "=@ccc"(cf), "=@cco"(of)
           : "r"(A[j]), "1"(A[i])
@@ -158,12 +154,11 @@ TEST(mul8, test) {
   int i, j;
   uint16_t ax;
   bool cf, of;
-  m->xedd->op.rde = MOD(3) | RM(CX);
   for (i = 0; i < ARRAYLEN(A); ++i) {
     for (j = 0; j < ARRAYLEN(A); ++j) {
       Write8(m->ax, A[i]);
       Write8(m->cx, A[j]);
-      OpMulAxAlEbUnsigned(m);
+      OpMulAxAlEbUnsigned(m, MOD(3) | RM(CX));
       asm volatile("mulb\t%3"
                    : "=a"(ax), "=@ccc"(cf), "=@cco"(of)
                    : "q"(A[j]), "0"(A[i])
@@ -181,12 +176,11 @@ TEST(mul16, test) {
   int i, j;
   bool cf, of;
   uint16_t dx, ax;
-  m->xedd->op.rde = OSZ | MOD(3) | RM(CX);
   for (i = 0; i < ARRAYLEN(A); ++i) {
     for (j = 0; j < ARRAYLEN(A); ++j) {
       Write16(m->ax, A[i]);
       Write16(m->cx, A[j]);
-      OpMulRdxRaxEvqpUnsigned(m);
+      OpMulRdxRaxEvqpUnsigned(m, OSZ | MOD(3) | RM(CX));
       asm("mulw\t%4"
           : "=d"(dx), "=a"(ax), "=@ccc"(cf), "=@cco"(of)
           : "r"(A[j]), "1"(A[i])
@@ -206,12 +200,11 @@ TEST(mul32, test) {
   int i, j;
   bool cf, of;
   uint32_t dx, ax;
-  m->xedd->op.rde = MOD(3) | RM(CX);
   for (i = 0; i < ARRAYLEN(A); ++i) {
     for (j = 0; j < ARRAYLEN(A); ++j) {
       Write32(m->ax, A[i]);
       Write32(m->cx, A[j]);
-      OpMulRdxRaxEvqpUnsigned(m);
+      OpMulRdxRaxEvqpUnsigned(m, MOD(3) | RM(CX));
       asm("mull\t%4"
           : "=d"(dx), "=a"(ax), "=@ccc"(cf), "=@cco"(of)
           : "r"(A[j]), "1"(A[i])
@@ -231,12 +224,11 @@ TEST(mul64, test) {
   int i, j;
   bool cf, of;
   uint64_t dx, ax;
-  m->xedd->op.rde = REXW | MOD(3) | RM(CX);
   for (i = 0; i < ARRAYLEN(A); ++i) {
     for (j = 0; j < ARRAYLEN(A); ++j) {
       Write64(m->ax, A[i]);
       Write64(m->cx, A[j]);
-      OpMulRdxRaxEvqpUnsigned(m);
+      OpMulRdxRaxEvqpUnsigned(m, REXW | MOD(3) | RM(CX));
       asm("mulq\t%4"
           : "=d"(dx), "=a"(ax), "=@ccc"(cf), "=@cco"(of)
           : "r"(A[j]), "1"(A[i])
@@ -255,7 +247,6 @@ TEST(idiv8, test) {
   bool gotthrow, gotsigfpe;
   int8_t i, j, k, w, x, a, b;
   int8_t quotient, remainder;
-  m->xedd->op.rde = MOD(3) | RM(CX);
   for (i = 0; i < ARRAYLEN(A); ++i) {
     for (j = 0; j < ARRAYLEN(A); ++j) {
       for (k = 0; k < ARRAYLEN(A); ++k) {
@@ -265,7 +256,7 @@ TEST(idiv8, test) {
         gotthrow = false;
         gotsigfpe = false;
         if (!setjmp(m->onhalt)) {
-          OpDivAlAhAxEbSigned(m);
+          OpDivAlAhAxEbSigned(m, MOD(3) | RM(CX));
         } else {
           gotthrow = true;
         }
@@ -295,7 +286,6 @@ TEST(idiv16, test) {
   bool gotthrow, gotsigfpe;
   int16_t i, j, k, w, x, a, b;
   int16_t quotient, remainder;
-  m->xedd->op.rde = OSZ | MOD(3) | RM(CX);
   for (i = 0; i < ARRAYLEN(A); ++i) {
     for (j = 0; j < ARRAYLEN(A); ++j) {
       for (k = 0; k < ARRAYLEN(A); ++k) {
@@ -304,7 +294,7 @@ TEST(idiv16, test) {
         memcpy(m->cx, &A[k], 2);
         if (!setjmp(m->onhalt)) {
           gotthrow = false;
-          OpDivRdxRaxEvqpSigned(m);
+          OpDivRdxRaxEvqpSigned(m, OSZ | MOD(3) | RM(CX));
         } else {
           gotthrow = true;
         }
@@ -333,7 +323,6 @@ TEST(idiv32, test) {
   bool gotthrow, gotsigfpe;
   int32_t i, j, k, w, x, a, b;
   int32_t quotient, remainder;
-  m->xedd->op.rde = MOD(3) | RM(CX);
   for (i = 0; i < ARRAYLEN(A); ++i) {
     for (j = 0; j < ARRAYLEN(A); ++j) {
       for (k = 0; k < ARRAYLEN(A); ++k) {
@@ -342,7 +331,7 @@ TEST(idiv32, test) {
         memcpy(m->cx, &A[k], 4);
         if (!setjmp(m->onhalt)) {
           gotthrow = false;
-          OpDivRdxRaxEvqpSigned(m);
+          OpDivRdxRaxEvqpSigned(m, MOD(3) | RM(CX));
         } else {
           gotthrow = true;
         }
@@ -373,7 +362,6 @@ TEST(idiv64, test) {
   bool gotthrow, gotsigfpe;
   int64_t i, j, k, w, x, a, b;
   int64_t quotient, remainder;
-  m->xedd->op.rde = REXW | MOD(3) | RM(CX);
   for (i = 0; i < ARRAYLEN(A); ++i) {
     for (j = 0; j < ARRAYLEN(A); ++j) {
       for (k = 0; k < ARRAYLEN(A); ++k) {
@@ -382,7 +370,7 @@ TEST(idiv64, test) {
         memcpy(m->cx, &A[k], 8);
         if (!setjmp(m->onhalt)) {
           gotthrow = false;
-          OpDivRdxRaxEvqpSigned(m);
+          OpDivRdxRaxEvqpSigned(m, REXW | MOD(3) | RM(CX));
         } else {
           gotthrow = true;
         }
@@ -411,7 +399,6 @@ TEST(div, test) {
   bool gotthrow, gotsigfpe;
   uint8_t i, j, k, w, x, a, b;
   uint8_t quotient, remainder;
-  m->xedd->op.rde = MOD(3) | RM(CX);
   for (i = 0; i < ARRAYLEN(A); ++i) {
     for (j = 0; j < ARRAYLEN(A); ++j) {
       for (k = 0; k < ARRAYLEN(A); ++k) {
@@ -421,7 +408,7 @@ TEST(div, test) {
         gotthrow = false;
         gotsigfpe = false;
         if (!setjmp(m->onhalt)) {
-          OpDivAlAhAxEbUnsigned(m);
+          OpDivAlAhAxEbUnsigned(m, MOD(3) | RM(CX));
         } else {
           gotthrow = true;
         }
@@ -451,7 +438,6 @@ TEST(div16, test) {
   bool gotthrow, gotsigfpe;
   uint16_t i, j, k, w, x, a, b;
   uint16_t quotient, remainder;
-  m->xedd->op.rde = OSZ | MOD(3) | RM(CX);
   for (i = 0; i < ARRAYLEN(A); ++i) {
     for (j = 0; j < ARRAYLEN(A); ++j) {
       for (k = 0; k < ARRAYLEN(A); ++k) {
@@ -460,7 +446,7 @@ TEST(div16, test) {
         memcpy(m->cx, &A[k], 2);
         if (!setjmp(m->onhalt)) {
           gotthrow = false;
-          OpDivRdxRaxEvqpUnsigned(m);
+          OpDivRdxRaxEvqpUnsigned(m, OSZ | MOD(3) | RM(CX));
         } else {
           gotthrow = true;
         }
@@ -489,7 +475,6 @@ TEST(div32, test) {
   bool gotthrow, gotsigfpe;
   uint32_t i, j, k, w, x, a, b;
   uint32_t quotient, remainder;
-  m->xedd->op.rde = MOD(3) | RM(CX);
   for (i = 0; i < ARRAYLEN(A); ++i) {
     for (j = 0; j < ARRAYLEN(A); ++j) {
       for (k = 0; k < ARRAYLEN(A); ++k) {
@@ -498,7 +483,7 @@ TEST(div32, test) {
         memcpy(m->cx, &A[k], 4);
         if (!setjmp(m->onhalt)) {
           gotthrow = false;
-          OpDivRdxRaxEvqpUnsigned(m);
+          OpDivRdxRaxEvqpUnsigned(m, MOD(3) | RM(CX));
         } else {
           gotthrow = true;
         }
@@ -529,7 +514,6 @@ TEST(div64, test) {
   bool gotthrow, gotsigfpe;
   uint64_t i, j, k, w, x, a, b;
   uint64_t quotient, remainder;
-  m->xedd->op.rde = REXW | MOD(3) | RM(CX);
   for (i = 0; i < ARRAYLEN(A); ++i) {
     for (j = 0; j < ARRAYLEN(A); ++j) {
       for (k = 0; k < ARRAYLEN(A); ++k) {
@@ -538,7 +522,7 @@ TEST(div64, test) {
         memcpy(m->cx, &A[k], 8);
         if (!setjmp(m->onhalt)) {
           gotthrow = false;
-          OpDivRdxRaxEvqpUnsigned(m);
+          OpDivRdxRaxEvqpUnsigned(m, REXW | MOD(3) | RM(CX));
         } else {
           gotthrow = true;
         }

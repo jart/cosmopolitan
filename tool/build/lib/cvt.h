@@ -11,7 +11,7 @@ COSMOPOLITAN_C_START_
 #define kOpCvt0f5b  16
 #define kOpCvt0fE6  20
 
-void OpCvt(struct Machine *, unsigned long);
+void OpCvt(struct Machine *, uint32_t, unsigned long);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

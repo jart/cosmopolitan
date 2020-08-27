@@ -46,6 +46,7 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/time/struct/timezone.h"
 #include "libc/time/time.h"
+#include "libc/x/x.h"
 #include "tool/build/lib/case.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/machine.h"
@@ -64,6 +65,12 @@
 #define PNN(x)        ResolveAddress(m, x)
 #define P(x)          ((x) ? PNN(x) : 0)
 #define ASSIGN(D, S)  memcpy(&D, &S, MIN(sizeof(S), sizeof(D)))
+
+static const struct MachineFdCb kMachineFdCbHost = {
+    .close = close,
+    .read = read,
+    .write = write,
+};
 
 static int XlatSignal(int sig) {
   switch (sig) {
@@ -188,9 +195,15 @@ static int XlatTcp(int x) {
   }
 }
 
-static int XlatAfd(int x) {
-  if (x == AT_FDCWD_LINUX) x = AT_FDCWD;
-  return x;
+static int XlatFd(struct Machine *m, int fd) {
+  if (!(0 <= fd && fd < m->fds.i)) return ebadf();
+  if (!m->fds.p[fd].cb) return ebadf();
+  return m->fds.p[fd].fd;
+}
+
+static int XlatAfd(struct Machine *m, int fd) {
+  if (fd == AT_FDCWD_LINUX) return AT_FDCWD;
+  return XlatFd(m, fd);
 }
 
 static int XlatAtf(int x) {
@@ -264,6 +277,7 @@ static int64_t OpMmap(struct Machine *m, int64_t virt, size_t size, int prot,
                       int flags, int fd, int64_t off) {
   void *real;
   flags = XlatMapFlags(flags);
+  if (fd != -1 && (fd = XlatFd(m, fd)) == -1) return -1;
   real = mmap(NULL, size, prot, flags & ~MAP_FIXED, fd, off);
   if (real == MAP_FAILED) return -1;
   if (!(flags & MAP_FIXED)) {
@@ -297,19 +311,70 @@ static void *GetDirectBuf(struct Machine *m, int64_t addr, size_t *size) {
   return page;
 }
 
+static int OpClose(struct Machine *m, int fd) {
+  int rc;
+  struct FdClosed *closed;
+  if (!(0 <= fd && fd < m->fds.i)) return ebadf();
+  if (!m->fds.p[fd].cb) return ebadf();
+  rc = m->fds.p[fd].cb->close(m->fds.p[fd].fd);
+  MachineFdRemove(&m->fds, fd);
+  return rc;
+}
+
+static int OpOpenat(struct Machine *m, int dirfd, int64_t path, int flags,
+                    int mode) {
+  int fd, i;
+  flags = XlatOpenFlags(flags);
+  if ((dirfd = XlatAfd(m, dirfd)) == -1) return -1;
+  if ((i = MachineFdAdd(&m->fds)) == -1) return -1;
+  if ((fd = openat(dirfd, LoadStr(m, path), flags, mode)) != -1) {
+    m->fds.p[i].cb = &kMachineFdCbHost;
+    m->fds.p[i].fd = fd;
+    fd = i;
+  } else {
+    MachineFdRemove(&m->fds, i);
+  }
+  return fd;
+}
+
+static int OpPipe(struct Machine *m, int64_t pipefds_addr) {
+  void *p[2];
+  uint8_t b[8];
+  int rc, i, j, *pipefds;
+  if ((i = MachineFdAdd(&m->fds)) == -1) return -1;
+  if ((j = MachineFdAdd(&m->fds)) == -1) return -1;
+  if ((rc = pipe((pipefds = BeginStoreNp(m, pipefds_addr, 8, p, b)))) != -1) {
+    EndStoreNp(m, pipefds_addr, 8, p, b);
+    m->fds.p[i].cb = &kMachineFdCbHost;
+    m->fds.p[i].fd = pipefds[0];
+    m->fds.p[j].cb = &kMachineFdCbHost;
+    m->fds.p[j].fd = pipefds[1];
+  } else {
+    MachineFdRemove(&m->fds, i);
+    MachineFdRemove(&m->fds, j);
+  }
+  return rc;
+}
+
 static ssize_t OpRead(struct Machine *m, int fd, int64_t addr, size_t size) {
   void *data;
   ssize_t rc;
+  if (!(0 <= fd && fd < m->fds.i) || !m->fds.p[fd].cb) return ebadf();
   if ((data = GetDirectBuf(m, addr, &size)) == MAP_FAILED) return efault();
-  if ((rc = read(fd, data, size)) != -1) SetWriteAddr(m, addr, rc);
+  if ((rc = m->fds.p[fd].cb->read(m->fds.p[fd].fd, data, size)) != -1) {
+    SetWriteAddr(m, addr, rc);
+  }
   return rc;
 }
 
 static ssize_t OpWrite(struct Machine *m, int fd, int64_t addr, size_t size) {
   void *data;
   ssize_t rc;
+  if (!(0 <= fd && fd < m->fds.i) || !m->fds.p[fd].cb) return ebadf();
   if ((data = GetDirectBuf(m, addr, &size)) == MAP_FAILED) return efault();
-  if ((rc = write(fd, data, size)) != -1) SetReadAddr(m, addr, size);
+  if ((rc = m->fds.p[fd].cb->write(m->fds.p[fd].fd, data, size)) != -1) {
+    SetReadAddr(m, addr, size);
+  }
   return rc;
 }
 
@@ -317,6 +382,7 @@ static ssize_t OpPread(struct Machine *m, int fd, int64_t addr, size_t size,
                        int64_t offset) {
   void *data;
   ssize_t rc;
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
   if ((data = GetDirectBuf(m, addr, &size)) == MAP_FAILED) return efault();
   if ((rc = pread(fd, data, size, offset)) != -1) SetWriteAddr(m, addr, rc);
   return rc;
@@ -326,9 +392,18 @@ static ssize_t OpPwrite(struct Machine *m, int fd, int64_t addr, size_t size,
                         int64_t offset) {
   void *data;
   ssize_t rc;
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
   if ((data = GetDirectBuf(m, addr, &size)) == MAP_FAILED) return efault();
   if ((rc = pwrite(fd, data, size, offset)) != -1) SetReadAddr(m, addr, size);
   return rc;
+}
+
+static int OpFaccessat(struct Machine *m, int dirfd, int64_t path, int mode,
+                       int flags) {
+  flags = XlatAtf(flags);
+  mode = XlatAccess(mode);
+  if ((dirfd = XlatAfd(m, dirfd)) == -1) return -1;
+  return faccessat(dirfd, LoadStr(m, path), mode, flags);
 }
 
 static int OpFstatat(struct Machine *m, int dirfd, int64_t path, int64_t st,
@@ -336,10 +411,12 @@ static int OpFstatat(struct Machine *m, int dirfd, int64_t path, int64_t st,
   int rc;
   void *stp[2];
   uint8_t *stbuf;
+  flags = XlatAtf(flags);
+  if ((dirfd = XlatAfd(m, dirfd)) == -1) return -1;
   if (!(stbuf = malloc(sizeof(struct stat)))) return enomem();
-  if ((rc = fstatat(XlatAfd(dirfd), LoadStr(m, path),
-                    BeginStoreNp(m, st, sizeof(stbuf), stp, stbuf),
-                    XlatAtf(flags))) != -1) {
+  if ((rc = fstatat(dirfd, LoadStr(m, path),
+                    BeginStoreNp(m, st, sizeof(stbuf), stp, stbuf), flags)) !=
+      -1) {
     EndStoreNp(m, st, sizeof(stbuf), stp, stbuf);
   }
   free(stbuf);
@@ -350,23 +427,13 @@ static int OpFstat(struct Machine *m, int fd, int64_t st) {
   int rc;
   void *stp[2];
   uint8_t *stbuf;
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
   if (!(stbuf = malloc(sizeof(struct stat)))) return enomem();
   if ((rc = fstat(fd, BeginStoreNp(m, st, sizeof(stbuf), stp, stbuf))) != -1) {
     EndStoreNp(m, st, sizeof(stbuf), stp, stbuf);
   }
   free(stbuf);
   return rc;
-}
-
-static int OpOpenat(struct Machine *m, int dirfd, int64_t path, int flags,
-                    int mode) {
-  return openat(XlatAfd(dirfd), LoadStr(m, path), XlatOpenFlags(flags), mode);
-}
-
-static int OpFaccessat(struct Machine *m, int dirfd, int64_t path, int mode,
-                       int flags) {
-  return faccessat(XlatAfd(dirfd), LoadStr(m, path), XlatAccess(mode),
-                   XlatAtf(flags));
 }
 
 static int OpChdir(struct Machine *m, int64_t path) {
@@ -449,16 +516,6 @@ static int OpSigaction(struct Machine *m, int sig, int64_t act, int64_t old) {
   return rc;
 }
 
-static int OpPipe(struct Machine *m, int64_t pipefds_addr) {
-  int rc;
-  void *p[2];
-  uint8_t b[8];
-  if ((rc = pipe(BeginStoreNp(m, pipefds_addr, 8, p, b))) != -1) {
-    EndStoreNp(m, pipefds_addr, 8, p, b);
-  }
-  return rc;
-}
-
 static int OpNanosleep(struct Machine *m, int64_t req, int64_t rem) {
   int rc;
   void *p[2];
@@ -536,7 +593,7 @@ void OpSyscall(struct Machine *m) {
     SYSCALL(0x000, OpRead(m, di, si, dx));
     SYSCALL(0x001, OpWrite(m, di, si, dx));
     SYSCALL(0x002, DoOpen(m, di, si, dx));
-    SYSCALL(0x003, close(di));
+    SYSCALL(0x003, OpClose(m, di));
     SYSCALL(0x004, DoStat(m, di, si));
     SYSCALL(0x005, OpFstat(m, di, si));
     SYSCALL(0x006, DoLstat(m, di, si));
@@ -624,16 +681,16 @@ void OpSyscall(struct Machine *m) {
     SYSCALL(0x0DD, fadvise(di, si, dx, r0));
     SYSCALL(0x0E4, OpClockGettime(m, di, si));
     SYSCALL(0x101, OpOpenat(m, di, si, dx, r0));
-    SYSCALL(0x102, mkdirat(XlatAfd(di), P(si), dx));
-    SYSCALL(0x104, fchownat(XlatAfd(di), P(si), dx, r0, XlatAtf(r8)));
-    SYSCALL(0x105, futimesat(XlatAfd(di), P(si), P(dx)));
+    SYSCALL(0x102, mkdirat(XlatAfd(m, di), P(si), dx));
+    SYSCALL(0x104, fchownat(XlatAfd(m, di), P(si), dx, r0, XlatAtf(r8)));
+    SYSCALL(0x105, futimesat(XlatAfd(m, di), P(si), P(dx)));
     SYSCALL(0x106, OpFstatat(m, di, si, dx, r0));
-    SYSCALL(0x107, unlinkat(XlatAfd(di), P(si), XlatAtf(dx)));
-    SYSCALL(0x108, renameat(XlatAfd(di), P(si), XlatAfd(dx), P(r0)));
+    SYSCALL(0x107, unlinkat(XlatAfd(m, di), P(si), XlatAtf(dx)));
+    SYSCALL(0x108, renameat(XlatAfd(m, di), P(si), XlatAfd(m, dx), P(r0)));
     SYSCALL(0x10D, OpFaccessat(m, di, si, dx, r0));
     SYSCALL(0x113, splice(di, P(si), dx, P(r0), r8, XlatAtf(r9)));
     SYSCALL(0x115, sync_file_range(di, si, dx, XlatAtf(r0)));
-    SYSCALL(0x118, utimensat(XlatAfd(di), P(si), P(dx), XlatAtf(r0)));
+    SYSCALL(0x118, utimensat(XlatAfd(m, di), P(si), P(dx), XlatAtf(r0)));
     SYSCALL(0x177, vmsplice(di, P(si), dx, r0));
     CASE(0xE7, HaltMachine(m, di | 0x100));
     default:

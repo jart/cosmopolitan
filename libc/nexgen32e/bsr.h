@@ -17,11 +17,14 @@ COSMOPOLITAN_C_START_
  *    0xffffffff        0        0        1       31        0
  */
 
-#define bsr(u)   ((sizeof(unsigned) * 8 - 1) ^ __builtin_clz(u))
-#define bsrl(u)  ((sizeof(unsigned long) * 8 - 1) ^ __builtin_clzl(u))
-#define bsrll(u) ((sizeof(unsigned long long) * 8 - 1) ^ __builtin_clzll(u))
+int bsr(int);
+int bsrl(long);
+int bsrll(long long);
+int bsrmax(uintmax_t);
 
-unsigned bsrmax(uintmax_t);
+#define bsr(u)   ((sizeof(int) * 8 - 1) ^ __builtin_clz(u))
+#define bsrl(u)  ((sizeof(long) * 8 - 1) ^ __builtin_clzl(u))
+#define bsrll(u) ((sizeof(long long) * 8 - 1) ^ __builtin_clzll(u))
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
