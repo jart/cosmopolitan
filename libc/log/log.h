@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_LOG_H_
 #define COSMOPOLITAN_LIBC_LOG_LOG_H_
-#include "libc/dce.h"
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § liblog                                                    ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/

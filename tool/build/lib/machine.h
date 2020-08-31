@@ -60,7 +60,7 @@ struct Machine {
   struct TlbEntry {
     int64_t v;
     void *r;
-  } tlb[4];
+  } tlb[16];
   uint8_t *veg[2 * 8];
   uint8_t *beg[2 * 2 * 8];
   struct MachineFpu {

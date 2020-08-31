@@ -29,7 +29,7 @@ tinymath_carg:
 	fldl	-16(%rbp)
 	movsd	%xmm1,-16(%rbp)
 	fldl	-16(%rbp)
-	fxch	%st(1)
+	fxch
 	fpatan
 	fstpl	-16(%rbp)
 	movsd	-16(%rbp),%xmm0

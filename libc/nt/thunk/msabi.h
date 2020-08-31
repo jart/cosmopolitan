@@ -9,7 +9,7 @@
  * generate code that calls MS ABI functions directly, without needing
  * to jump through the assembly thunks.
  */
-#if __GNUC__ * 100 + __GNUC_MINOR_ >= 408 || \
+#if __GNUC__ * 100 + __GNUC_MINOR__ >= 408 || \
     (__has_attribute(__ms_abi__) || defined(__llvm__))
 #define __msabi __attribute__((__ms_abi__))
 #endif

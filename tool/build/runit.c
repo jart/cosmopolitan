@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
+#include "libc/bits/bits.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/hefty/spawn.h"
@@ -273,7 +274,7 @@ int ReadResponse(void) {
     if (!n) break;
     do {
       CHECK_GE(n, 4 + 1);
-      CHECK_EQ(RUNITD_MAGIC, read32be(p));
+      CHECK_EQ(RUNITD_MAGIC, READ32BE(p));
       p += 4, n -= 4;
       cmd = *p++, n--;
       switch (cmd) {

@@ -364,6 +364,9 @@ struct XedOperands { /*
     uint8_t opcode;
     uint8_t srm : 3;
   };
+  uint8_t map : 4;   // enum XedIldMap
+  uint8_t rep : 2;   // 0, 2 (0xf2 repnz), 3 (0xf3 rep/repe)
+  uint8_t hint : 2;  // static branch prediction
   union {
     uint8_t sib;
     struct {
@@ -380,12 +383,9 @@ struct XedOperands { /*
       uint8_t mod : 2;
     };
   };
-  uint8_t map : 4;            // enum XedIldMap
-  uint8_t hint : 2;           // static branch prediction
   uint8_t seg_ovd : 3;        // XED_SEG_xx
   uint8_t error : 5;          // enum XedError
   uint8_t mode : 3;           // real,legacy,long
-  uint8_t rep : 2;            // 0, 2 (0xf2 repnz), 3 (0xf3 rep/repe)
   bool lock : 1;              // prefix
   bool imm_signed : 1;        // internal
   int64_t disp;               // displacement(%xxx) sign-extended

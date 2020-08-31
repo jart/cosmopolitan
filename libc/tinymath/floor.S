@@ -25,14 +25,14 @@
 tinymath_floor:
 	.leafprologue
 	.profilable
-	movsd	.LC6(%rip),%xmm1
-	movsd	.LC5(%rip),%xmm2
+	movsd	4f(%rip),%xmm1
+	movsd	3f(%rip),%xmm2
 	andpd	%xmm0,%xmm1
 	comisd	%xmm1,%xmm2
 	jbe	1f
 	cvttsd2siq %xmm0,%rax
 	pxor	%xmm1,%xmm1
-	movsd	.LC4(%rip),%xmm2
+	movsd	2f(%rip),%xmm2
 	cvtsi2sdq %rax,%xmm1
 	movapd	%xmm1,%xmm3
 	cmpnlesd %xmm0,%xmm3
@@ -45,13 +45,6 @@ tinymath_floor:
 	.alias	tinymath_floor,floor
 
 	.rodata.cst8
-.LC4:	.long	0
-	.long	1072693248
-.LC5:	.long	0
-	.long	1127219200
-
-	.rodata.cst16
-.LC6:	.long	4294967295
-	.long	2147483647
-	.long	0
-	.long	0
+2:	.double	1
+3:	.double	0x0010000000000000
+4:	.double	nan

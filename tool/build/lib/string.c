@@ -67,16 +67,14 @@ static void WriteInt(uint8_t p[8], uint64_t x, unsigned long w) {
 
 void OpString(struct Machine *m, uint32_t rde, int op) {
   void *p[2];
+  unsigned n;
+  uint64_t asz;
   bool compare;
   int64_t sgn, v;
   uint8_t s[3][8];
-  unsigned n, lg2;
-  uint64_t asz, seg;
   sgn = GetFlag(m->flags, FLAGS_DF) ? -1 : 1;
   asz = Asz(rde) ? 0xffffffff : 0xffffffffffffffff;
-  seg = GetSegment(m);
-  lg2 = RegLog2(rde);
-  n = 1 << lg2;
+  n = 1 << RegLog2(rde);
   for (;;) {
     if (Rep(rde) && !Read64(m->cx)) break;
     v = 0;
@@ -84,16 +82,18 @@ void OpString(struct Machine *m, uint32_t rde, int op) {
     compare = false;
     switch (op) {
       case STRING_CMPS:
-        Alu(lg2, ALU_SUB,
-            ReadInt(Load(m, (Read64(m->si) + seg) & asz, n, s[2]), lg2),
-            ReadInt(Load(m, Read64(m->di) & asz, n, s[1]), lg2), &m->flags);
+        Alu(RegLog2(rde), ALU_SUB,
+            ReadInt(Load(m, (Read64(m->si) + GetSegment(m)) & asz, n, s[2]),
+                    RegLog2(rde)),
+            ReadInt(Load(m, Read64(m->di) & asz, n, s[1]), RegLog2(rde)),
+            &m->flags);
         Write64(m->di, (Read64(m->di) + sgn * n) & asz);
         Write64(m->si, (Read64(m->si) + sgn * n) & asz);
         compare = true;
         break;
       case STRING_MOVS:
         memcpy(BeginStore(m, (v = Read64(m->di) & asz), n, p, s[0]),
-               Load(m, (Read64(m->si) + seg) & asz, n, s[1]), n);
+               Load(m, (Read64(m->si) + GetSegment(m)) & asz, n, s[1]), n);
         Write64(m->di, (Read64(m->di) + sgn * n) & asz);
         Write64(m->si, (Read64(m->si) + sgn * n) & asz);
         break;
@@ -102,23 +102,26 @@ void OpString(struct Machine *m, uint32_t rde, int op) {
         Write64(m->di, (Read64(m->di) + sgn * n) & asz);
         break;
       case STRING_LODS:
-        memcpy(m->ax, Load(m, (Read64(m->si) + seg) & asz, n, s[1]), n);
+        memcpy(m->ax, Load(m, (Read64(m->si) + GetSegment(m)) & asz, n, s[1]),
+               n);
         Write64(m->si, (Read64(m->si) + sgn * n) & asz);
         break;
       case STRING_SCAS:
-        Alu(lg2, ALU_SUB, ReadInt(Load(m, Read64(m->di) & asz, n, s[1]), lg2),
-            ReadInt(m->ax, lg2), &m->flags);
+        Alu(RegLog2(rde), ALU_SUB,
+            ReadInt(Load(m, Read64(m->di) & asz, n, s[1]), RegLog2(rde)),
+            ReadInt(m->ax, RegLog2(rde)), &m->flags);
         Write64(m->di, (Read64(m->di) + sgn * n) & asz);
         compare = true;
         break;
       case STRING_OUTS:
         OpOut(m, Read16(m->dx),
-              ReadInt(Load(m, (Read64(m->si) + seg) & asz, n, s[1]), lg2));
+              ReadInt(Load(m, (Read64(m->si) + GetSegment(m)) & asz, n, s[1]),
+                      RegLog2(rde)));
         Write64(m->si, (Read64(m->si) + sgn * n) & asz);
         break;
       case STRING_INS:
         WriteInt(BeginStore(m, (v = Read64(m->di) & asz), n, p, s[0]),
-                 OpIn(m, Read16(m->dx)), lg2);
+                 OpIn(m, Read16(m->dx)), RegLog2(rde));
         Write64(m->di, (Read64(m->di) + sgn * n) & asz);
         break;
       default:
@@ -138,19 +141,18 @@ void OpRepMovsbEnhanced(struct Machine *m, uint32_t rde) {
   bool failed;
   uint8_t *direal, *sireal;
   unsigned diremain, siremain, i, n;
-  uint64_t divirtual, sivirtual, diactual, siactual, failaddr, seg, asz, cx;
+  uint64_t divirtual, sivirtual, diactual, siactual, failaddr, asz, cx;
   if (!(cx = Read64(m->cx))) return;
   failed = false;
   failaddr = 0;
-  seg = GetSegment(m);
   asz = Asz(rde) ? 0xffffffff : 0xffffffffffffffff;
   divirtual = Read64(m->di) & asz;
   sivirtual = Read64(m->si) & asz;
-  SetWriteAddr(m, (seg + divirtual) & asz, cx);
-  SetReadAddr(m, (seg + sivirtual) & asz, cx);
+  SetWriteAddr(m, (GetSegment(m) + divirtual) & asz, cx);
+  SetReadAddr(m, (GetSegment(m) + sivirtual) & asz, cx);
   do {
-    diactual = (seg + divirtual) & asz;
-    siactual = (seg + sivirtual) & asz;
+    diactual = (GetSegment(m) + divirtual) & asz;
+    siactual = (GetSegment(m) + sivirtual) & asz;
     if (!(direal = FindReal(m, diactual))) {
       failaddr = diactual;
       failed = true;
@@ -181,17 +183,16 @@ void OpRepStosbEnhanced(struct Machine *m, uint32_t rde) {
   bool failed;
   uint8_t *direal, al;
   unsigned diremain, i, n;
-  uint64_t divirtual, diactual, failaddr, seg, asz, cx;
+  uint64_t divirtual, diactual, failaddr, asz, cx;
   if (!(cx = Read64(m->cx))) return;
   failaddr = 0;
   failed = false;
   al = Read8(m->ax);
-  seg = GetSegment(m);
   asz = Asz(rde) ? 0xffffffff : 0xffffffffffffffff;
   divirtual = Read64(m->di) & asz;
-  SetWriteAddr(m, (seg + divirtual) & asz, cx);
+  SetWriteAddr(m, (GetSegment(m) + divirtual) & asz, cx);
   do {
-    diactual = (seg + divirtual) & asz;
+    diactual = (GetSegment(m) + divirtual) & asz;
     if (!(direal = FindReal(m, diactual))) {
       failaddr = diactual;
       failed = true;

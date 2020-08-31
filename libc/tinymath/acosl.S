@@ -46,7 +46,7 @@ tinymath_acosl:
 	fsqrt
 	fabs				# needed in downward rounding mode
 #endif
-	fxch	%st(1)
+	fxch
 	fpatan
 	pop	%rbp
 	ret

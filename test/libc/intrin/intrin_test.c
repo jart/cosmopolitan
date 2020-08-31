@@ -97,8 +97,6 @@
 #include "libc/intrin/punpcklqdq.h"
 #include "libc/intrin/punpcklwd.h"
 #include "libc/intrin/pxor.h"
-#include "libc/intrin/shufpd.h"
-#include "libc/intrin/shufps.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/nexgen32e/kcpuids.h"
@@ -1670,50 +1668,6 @@ TEST(pshufhw, fuzz) {
     T(0b01100000);
     T(0b11000000);
     T(0b10000000);
-#undef T
-  }
-}
-
-TEST(shufps, fuzz) {
-  int i, j;
-  float x[4], a[4], b[4];
-  for (i = 0; i < 100; ++i) {
-    for (j = 0; j < 4; ++j) x[j] = Rando() % INT_MAX;
-#define T(IMM)                    \
-  shufps(a, x, IMM);              \
-  (shufps)(b, x, IMM);            \
-  ASSERT_EQ(0, memcmp(a, b, 16)); \
-  shufps(a, (void *)a, IMM);      \
-  (shufps)(b, (void *)b, IMM);    \
-  ASSERT_EQ(0, memcmp(a, b, 16))
-    T(0b00000011);
-    T(0b00000110);
-    T(0b00001100);
-    T(0b00011000);
-    T(0b00110000);
-    T(0b01100000);
-    T(0b11000000);
-    T(0b10000000);
-#undef T
-  }
-}
-
-TEST(shufpd, fuzz) {
-  int i, j;
-  double x[2], a[2], b[2];
-  for (i = 0; i < 100; ++i) {
-    for (j = 0; j < 2; ++j) x[j] = Rando() % INT_MAX;
-#define T(IMM)                    \
-  shufpd(a, x, IMM);              \
-  (shufpd)(b, x, IMM);            \
-  ASSERT_EQ(0, memcmp(a, b, 16)); \
-  shufpd(a, (void *)a, IMM);      \
-  (shufpd)(b, (void *)b, IMM);    \
-  ASSERT_EQ(0, memcmp(a, b, 16))
-    T(0b00000000);
-    T(0b00000001);
-    T(0b00000010);
-    T(0b00000011);
 #undef T
   }
 }

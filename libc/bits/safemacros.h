@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_BITS_SAFEMACROS_H_
 #define COSMOPOLITAN_LIBC_BITS_SAFEMACROS_H_
 #ifndef __STRICT_ANSI__
-#include "libc/limits.h"
 #include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)

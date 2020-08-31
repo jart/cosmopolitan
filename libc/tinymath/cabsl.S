@@ -27,7 +27,7 @@ tinymath_cabsl:
 	fldt	32(%rbp)
 	fldt	16(%rbp)
 	fmul	%st,%st
-	fxch	%st(1)
+	fxch
 	fmul	%st,%st
 	faddp	%st,%st(1)
 	fsqrt

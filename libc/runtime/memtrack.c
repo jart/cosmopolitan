@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/dce.h"
 #include "libc/macros.h"
 #include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"

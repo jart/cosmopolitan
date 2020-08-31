@@ -23,6 +23,7 @@
 #include "libc/conv/itoa.h"
 #include "libc/fmt/bing.h"
 #include "libc/fmt/fmt.h"
+#include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"

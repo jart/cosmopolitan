@@ -296,6 +296,7 @@
            "__params_nonnull__"
            "__weak__"
            "__vector_size__"
+           "__ms_abi__"
            "__mode__"))
 
         (clang

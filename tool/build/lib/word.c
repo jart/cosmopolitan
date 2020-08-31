@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,29 +17,48 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/math.h"
-#include "libc/macros.h"
-.source	__FILE__
+#include "tool/build/lib/endian.h"
+#include "tool/build/lib/memory.h"
+#include "tool/build/lib/word.h"
 
-tinymath_fpclassify:
-	.leafprologue
-	movd	%xmm0,%rax
-	movd	%xmm0,%rdx
-	shr	$52,%rax
-	mov	%eax,%ecx
-	and	$0x7ff,%ecx
-	jne	2f
-	add	%rdx,%rdx
-	cmp	$1,%rdx
-	sbb	%eax,%eax
-	add	$3,%eax
-	jmp	1f
-2:	mov	$FP_NORMAL,%eax
-	cmp	$0x7ff,%ecx
-	jne	1f
-	xor	%eax,%eax
-	sal	$12,%rdx
-	sete	%al
-1:	.leafepilogue
-	.endfn	tinymath_fpclassify,globl
-	.alias	tinymath_fpclassify,__fpclassify
+void SetMemoryShort(struct Machine *m, int64_t v, int16_t i) {
+  void *p[2];
+  uint8_t b[2];
+  Write16(BeginStore(m, v, 2, p, b), i);
+  EndStore(m, v, 2, p, b);
+}
+
+void SetMemoryInt(struct Machine *m, int64_t v, int32_t i) {
+  void *p[2];
+  uint8_t b[4];
+  Write32(BeginStore(m, v, 4, p, b), i);
+  EndStore(m, v, 4, p, b);
+}
+
+void SetMemoryLong(struct Machine *m, int64_t v, int64_t i) {
+  void *p[2];
+  uint8_t b[8];
+  Write64(BeginStore(m, v, 8, p, b), i);
+  EndStore(m, v, 8, p, b);
+}
+
+void SetMemoryFloat(struct Machine *m, int64_t v, float f) {
+  void *p[2];
+  uint8_t b[4];
+  memcpy(BeginStore(m, v, 4, p, b), &f, 4);
+  EndStore(m, v, 4, p, b);
+}
+
+void SetMemoryDouble(struct Machine *m, int64_t v, double f) {
+  void *p[2];
+  uint8_t b[8];
+  memcpy(BeginStore(m, v, 8, p, b), &f, 8);
+  EndStore(m, v, 8, p, b);
+}
+
+void SetMemoryLdbl(struct Machine *m, int64_t v, long double f) {
+  void *p[2];
+  uint8_t b[10];
+  memcpy(BeginStore(m, v, 10, p, b), &f, 10);
+  EndStore(m, v, 10, p, b);
+}

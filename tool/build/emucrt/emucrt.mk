@@ -9,4 +9,4 @@ TOOL_BUILD_EMUCRT =					\
 
 .PHONY: o/$(MODE)/tool/build/emucrt
 o/$(MODE)/tool/build/emucrt:				\
-		o/$(MODE)/tool/build/emucrt/emucrt.o
+		$(TOOL_BUILD_EMUCRT)

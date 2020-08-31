@@ -32,7 +32,7 @@ tinymath_exp2l:
 	fld	%st
 	frndint
 	fsubr	%st,%st(1)
-	fxch	%st(1)
+	fxch
 	f2xm1
 	fadds	.Lone(%rip)
 	fscale

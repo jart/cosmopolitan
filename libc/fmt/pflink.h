@@ -1,8 +1,8 @@
 #ifndef COSMOPOLITAN_LIBC_FMT_PFLINK_H_
 #define COSMOPOLITAN_LIBC_FMT_PFLINK_H_
-#include "libc/dce.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 #ifndef __STRICT_ANSI__
+#include "libc/dce.h"
 
 /**
  * @fileoverview builtin+preprocessor+linker tricks for printf/scanf.

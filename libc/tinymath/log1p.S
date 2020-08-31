@@ -34,12 +34,12 @@ tinymath_log1p:
 	fld	%st
 	fabs
 	fldt	.LC16(%rip)
-	fxch	%st(1)
+	fxch
 	fcomip	%st(1),%st
 	fstp	%st
 	jnb	1f
 	fldln2
-	fxch	%st(1)
+	fxch
 	fyl2xp1
 	fstpl	(%rsp)
 	vmovsd	(%rsp),%xmm0
@@ -48,7 +48,7 @@ tinymath_log1p:
 1:	fld1
 	faddp	%st,%st(1)
 	fldln2
-	fxch	%st(1)
+	fxch
 	fyl2x
 	fstpl	(%rsp)
 	vmovsd	(%rsp),%xmm0

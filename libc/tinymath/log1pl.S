@@ -32,19 +32,19 @@ tinymath_log1pl:
 	fld	%st
 	fabs
 	fldt	.LC16(%rip)
-	fxch	%st(1)
+	fxch
 	fcomip	%st(1),%st
 	fstp	%st
 	jnb	1f
 	fldln2
-	fxch	%st(1)
+	fxch
 	fyl2xp1
 0:	pop	%rbp
 	ret
 1:	fld1
 	faddp	%st,%st(1)
 	fldln2
-	fxch	%st(1)
+	fxch
 	fyl2x
 	jmp	0b
 	.endfn	tinymath_log1pl,globl

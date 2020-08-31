@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_RUNTIME_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_RUNTIME_H_
-#include "libc/dce.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗

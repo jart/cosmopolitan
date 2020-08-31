@@ -66,7 +66,7 @@
 #define P(x)          ((x) ? PNN(x) : 0)
 #define ASSIGN(D, S)  memcpy(&D, &S, MIN(sizeof(S), sizeof(D)))
 
-static const struct MachineFdCb kMachineFdCbHost = {
+const struct MachineFdCb kMachineFdCbHost = {
     .close = close,
     .read = read,
     .write = write,
@@ -282,7 +282,7 @@ static int64_t OpMmap(struct Machine *m, int64_t virt, size_t size, int prot,
   if (real == MAP_FAILED) return -1;
   if (!(flags & MAP_FIXED)) {
     if (0 <= virt && virt < 0x400000) virt = 0x400000;
-    if ((virt = FindPml4t(m->cr3, virt, size, MallocPage)) == -1) return -1;
+    if ((virt = FindPml4t(m->cr3, virt, size)) == -1) return -1;
   }
   CHECK_NE(-1, RegisterMemory(m, virt, real, size));
   return virt;

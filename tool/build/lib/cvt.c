@@ -26,6 +26,21 @@
 #include "tool/build/lib/modrm.h"
 #include "tool/build/lib/throw.h"
 
+static double SseRoundDouble(struct Machine *m, double x) {
+  switch (m->sse.rc) {
+    case 0:
+      return nearbyint(x);
+    case 1:
+      return floor(x);
+    case 2:
+      return ceil(x);
+    case 3:
+      return trunc(x);
+    default:
+      unreachable;
+  }
+}
+
 static void OpGdqpWssCvttss2si(struct Machine *m, uint32_t rde) {
   float f;
   int64_t n;
@@ -57,7 +72,7 @@ static void OpGdqpWsdCvtsd2si(struct Machine *m, uint32_t rde) {
   double d;
   int64_t n;
   memcpy(&d, GetModrmRegisterXmmPointerRead8(m, rde), 8);
-  n = nearbyint(d);
+  n = SseRoundDouble(m, d);
   if (!Rexw(rde)) n &= 0xffffffff;
   Write64(RegRexrReg(m, rde), n);
 }
@@ -113,11 +128,26 @@ static void OpVpdQpiCvtpi2pd(struct Machine *m, uint32_t rde) {
 }
 
 static void OpPpiWpsqCvtps2pi(struct Machine *m, uint32_t rde) {
+  unsigned i;
   float f[2];
   int32_t n[2];
   memcpy(f, GetModrmRegisterXmmPointerRead8(m, rde), 8);
-  n[0] = nearbyintf(f[0]);
-  n[1] = nearbyintf(f[1]);
+  switch (m->sse.rc) {
+    case 0:
+      for (i = 0; i < 2; ++i) n[i] = nearbyintf(f[i]);
+      break;
+    case 1:
+      for (i = 0; i < 2; ++i) n[i] = floorf(f[i]);
+      break;
+    case 2:
+      for (i = 0; i < 2; ++i) n[i] = ceilf(f[i]);
+      break;
+    case 3:
+      for (i = 0; i < 2; ++i) n[i] = truncf(f[i]);
+      break;
+    default:
+      unreachable;
+  }
   Write32(MmReg(m, rde) + 0, n[0]);
   Write32(MmReg(m, rde) + 4, n[1]);
 }
@@ -133,11 +163,11 @@ static void OpPpiWpsqCvttps2pi(struct Machine *m, uint32_t rde) {
 }
 
 static void OpPpiWpdCvtpd2pi(struct Machine *m, uint32_t rde) {
+  unsigned i;
   double d[2];
   int32_t n[2];
   memcpy(d, GetModrmRegisterXmmPointerRead16(m, rde), 16);
-  n[0] = nearbyint(d[0]);
-  n[1] = nearbyint(d[1]);
+  for (i = 0; i < 2; ++i) n[i] = SseRoundDouble(m, d[i]);
   Write32(MmReg(m, rde) + 0, n[0]);
   Write32(MmReg(m, rde) + 4, n[1]);
 }
@@ -218,7 +248,22 @@ static void OpVdqWpsCvtps2dq(struct Machine *m, uint32_t rde) {
   float f[4];
   int32_t n[4];
   memcpy(f, GetModrmRegisterXmmPointerRead16(m, rde), 16);
-  for (i = 0; i < 4; ++i) n[i] = nearbyintf(f[i]);
+  switch (m->sse.rc) {
+    case 0:
+      for (i = 0; i < 4; ++i) n[i] = nearbyintf(f[i]);
+      break;
+    case 1:
+      for (i = 0; i < 4; ++i) n[i] = floorf(f[i]);
+      break;
+    case 2:
+      for (i = 0; i < 4; ++i) n[i] = ceilf(f[i]);
+      break;
+    case 3:
+      for (i = 0; i < 4; ++i) n[i] = truncf(f[i]);
+      break;
+    default:
+      unreachable;
+  }
   memcpy(XmmRexrReg(m, rde), n, 16);
 }
 
@@ -236,7 +281,7 @@ static void OpVdqWpdCvtpd2dq(struct Machine *m, uint32_t rde) {
   double d[2];
   int32_t n[2];
   memcpy(d, GetModrmRegisterXmmPointerRead16(m, rde), 16);
-  for (i = 0; i < 2; ++i) n[i] = nearbyintf(d[i]);
+  for (i = 0; i < 2; ++i) n[i] = SseRoundDouble(m, d[i]);
   memcpy(XmmRexrReg(m, rde), n, 8);
 }
 

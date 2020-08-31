@@ -25,8 +25,8 @@
  * NexGen32e Arithmetic Unit.
  */
 int64_t Alu(int w, int h, uint64_t x, uint64_t y, uint32_t *flags) {
-  bool zf, sf, c, o, cf;
   uint64_t t, z, s, m, k;
+  bool cf, of, zf, sf, af, carry;
   assert(w < 4);
   k = 8;
   k <<= w;
@@ -35,9 +35,10 @@ int64_t Alu(int w, int h, uint64_t x, uint64_t y, uint32_t *flags) {
   m = s;
   m |= s - 1;
   t = x;
-  c = 0;
-  o = 0;
-  cf = GetFlag(*flags, FLAGS_CF);
+  cf = 0;
+  of = 0;
+  af = 0;
+  carry = GetFlag(*flags, FLAGS_CF);
   switch (h & 7) {
     case ALU_OR:
       z = x | y;
@@ -50,22 +51,26 @@ int64_t Alu(int w, int h, uint64_t x, uint64_t y, uint32_t *flags) {
       break;
     case ALU_CMP:
       h |= 8;
-      cf = 0;
+      carry = 0;
     case ALU_SBB:
-      t = (x & m) - cf;
-      c = (x & m) < (t & m);
+      t = (x & m) - carry;
+      cf = (x & m) < (t & m);
+      af = (x & 15) < (t & 15);
     case ALU_SUB:
       z = (t & m) - (y & m);
-      c |= (t & m) < (z & m);
-      o = !!((z ^ x) & (x ^ y) & s);
+      cf |= (t & m) < (z & m);
+      af |= (t & 15) < (z & 15);
+      of = !!((z ^ x) & (x ^ y) & s);
       break;
     case ALU_ADC:
-      t = (x & m) + cf;
-      c = (t & m) < (x & m);
+      t = (x & m) + carry;
+      cf = (t & m) < (x & m);
+      af = (t & 15) < (x & 15);
     case ALU_ADD:
       z = (t & m) + (y & m);
-      c |= (z & m) < (y & m);
-      o = !!((z ^ x) & (z ^ y) & s);
+      cf |= (z & m) < (y & m);
+      af |= (z & 15) < (y & 15);
+      of = !!((z ^ x) & (z ^ y) & s);
       break;
     default:
       unreachable;
@@ -73,8 +78,10 @@ int64_t Alu(int w, int h, uint64_t x, uint64_t y, uint32_t *flags) {
   z &= m;
   zf = !z;
   sf = !!(z & s);
-  *flags &= ~(1 << FLAGS_CF | 1 << FLAGS_ZF | 1 << FLAGS_SF | 1 << FLAGS_OF);
-  *flags |= c << FLAGS_CF | zf << FLAGS_ZF | sf << FLAGS_SF | o << FLAGS_OF;
+  *flags = (*flags & ~(1 << FLAGS_CF | 1 << FLAGS_ZF | 1 << FLAGS_SF |
+                       1 << FLAGS_OF | 1 << FLAGS_AF)) |
+           cf << FLAGS_CF | zf << FLAGS_ZF | sf << FLAGS_SF | of << FLAGS_OF |
+           af << FLAGS_AF;
   *flags = SetLazyParityByte(*flags, x);
   if (h & ALU_TEST) z = x;
   return z;

@@ -26,8 +26,15 @@
 #include "tool/build/lib/throw.h"
 
 static bool IsOpcodeEqual(uint8_t *a, uint8_t b[16], size_t size) {
-  if (likely(size)) {
-    return memcmp(a, b, size) == 0;
+  unsigned i;
+  if (size) {
+    i = 0;
+    do {
+      if (a[i] != b[i]) {
+        return false;
+      }
+    } while (++i < size);
+    return true;
   } else {
     return false;
   }

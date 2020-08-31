@@ -59,7 +59,7 @@ long double fyl2xp1(long double x, long double y) {
 }
 
 long double fscale(long double significand, long double exponent) {
-  return scalbnl(significand, exponent);
+  return scalbl(significand, exponent);
 }
 
 long double fprem(long double dividend, long double modulus, uint32_t *sw) {

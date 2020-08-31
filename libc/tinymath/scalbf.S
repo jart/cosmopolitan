@@ -20,21 +20,14 @@
 #include "libc/macros.h"
 .source	__FILE__
 
+/	Returns 𝑥 × 2ʸ.
+/
+/	@param	𝑥 is float passed in %xmm0
+/	@param	𝑦 is float passed in %xmm1, which is truncated
+/	@return	result in %xmm0
+/	@see	ldexpf()
 tinymath_scalbf:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable
-	push	%rax
-	movss	%xmm0,-4(%rbp)
-	flds	-4(%rbp)
-	movss	%xmm1,-4(%rbp)
-	flds	-4(%rbp)
-	fxch	%st(1)
-	fscale
-	fstp	%st(1)
-	fstps	-4(%rbp)
-	movss	-4(%rbp),%xmm0
-	leave
-	ret
+	cvttss2si %xmm1,%edi
+	jmp	tinymath_ldexpf
 	.endfn	tinymath_scalbf,globl
 	.alias	tinymath_scalbf,scalbf

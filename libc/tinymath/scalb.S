@@ -20,21 +20,14 @@
 #include "libc/macros.h"
 .source	__FILE__
 
+/	Returns 𝑥 × 2ʸ.
+/
+/	@param	𝑥 is double passed in %xmm0
+/	@param	𝑦 is double passed in %xmm1, which is truncated
+/	@return	result in %xmm0
+/	@see	ldexp()
 tinymath_scalb:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable
-	push	%rax
-	movsd	%xmm0,(%rsp)
-	fldl	(%rsp)
-	movsd	%xmm1,(%rsp)
-	fldl	(%rsp)
-	fxch	%st(1)
-	fscale
-	fstp	%st(1)
-	fstpl	(%rsp)
-	movsd	(%rsp),%xmm0
-	leave
-	ret
+	cvttsd2si %xmm1,%edi
+	jmp	tinymath_ldexp
 	.endfn	tinymath_scalb,globl
 	.alias	tinymath_scalb,scalb

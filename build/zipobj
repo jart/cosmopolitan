@@ -42,11 +42,7 @@ else
 fi
 
 if [ "$SILENT" = "0" ]; then
-  COLUMNS=${COLUMNS:-80}
-  COLUMNS=$((COLUMNS - 4))
-  printf "%s\n" "$*" |
-    /usr/bin/fold -s -w $COLUMNS |
-    $SED -e '1bb' -e 's/^/  /' -e ':b' -e '$b' -e 's/$/ \\/' >&2
+  printf "%s\n" "$*" >&2
 else
   printf "$LOGFMT" "${ACTION:-ZIPOBJ}" "$3" >&2
 fi

@@ -63,6 +63,8 @@ $(TOOL_BUILD_LIB_A).pkg:				\
 		$(TOOL_BUILD_LIB_A_OBJS)		\
 		$(foreach x,$(TOOL_BUILD_LIB_A_DIRECTDEPS),$($(x)_A).pkg)
 
+o/$(MODE)/tool/build/lib/fpu.o: OVERRIDE_CFLAGS += -ffast-math
+
 TOOL_BUILD_LIB_LIBS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)))
 TOOL_BUILD_LIB_SRCS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)_SRCS))
 TOOL_BUILD_LIB_HDRS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)_HDRS))

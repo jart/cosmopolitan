@@ -68,10 +68,6 @@ static void ResetTlb(struct Machine *m) {
   memset(m->tlb, 0, sizeof(m->tlb));
 }
 
-static void ResetMem(struct Machine *m) {
-  FreePml4t(m->cr3, -0x800000000000, 0x800000000000, free, munmap);
-}
-
 void ResetCpu(struct Machine *m) {
   m->codevirt = 0;
   m->codereal = NULL;
@@ -96,5 +92,4 @@ void ResetCpu(struct Machine *m) {
   ResetTlb(m);
   ResetSse(m);
   ResetFpu(m);
-  ResetMem(m);
 }

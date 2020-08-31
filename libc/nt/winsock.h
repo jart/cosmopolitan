@@ -45,15 +45,15 @@ COSMOPOLITAN_C_START_
 #endif
 
 #define kNtSioSocketCloseNotify 0x9800000Du
-#define kNtSioUdpConnreset 0x9800000Cu
-#define kNtSioUdpNetreset 0x9800000F
+#define kNtSioUdpConnreset      0x9800000Cu
+#define kNtSioUdpNetreset       0x9800000F
 
-#define kNtTfDisconnect 0x01
-#define kNtTfReuseSocket 0x02
-#define kNtTfWriteBehind 0x04
+#define kNtTfDisconnect       0x01
+#define kNtTfReuseSocket      0x02
+#define kNtTfWriteBehind      0x04
 #define kNtTfUseDefaultWorker 0x00
-#define kNtTfUseSystemThread 0x10
-#define kNtTfUseKernelApc 0x20
+#define kNtTfUseSystemThread  0x10
+#define kNtTfUseKernelApc     0x20
 
 struct sockaddr;
 struct sockaddr_in;
@@ -295,8 +295,8 @@ struct NtWsaCompletion {
  *       functions are declared within their respective wrappers.
  */
 
-nodiscard int32_t WSAStartup(uint16_t wVersionRequested,
-                             struct NtWsaData *lpWSAData) paramsnonnull();
+int32_t WSAStartup(uint16_t wVersionRequested, struct NtWsaData *lpWSAData)
+    paramsnonnull() nodiscard;
 
 int WSACleanup(void);
 int WSAGetLastError(void);
@@ -312,9 +312,9 @@ int __listen$nt(uint64_t, int);
 int __setsockopt$nt(uint64_t, int, int, const void *, int);
 int __shutdown$nt(uint64_t, int);
 
-nodiscard uint64_t WSASocket(int af, int type, int protocol,
-                             const struct NtWsaProtocolInfo *opt_lpProtocolInfo,
-                             const uint32_t opt_group, uint32_t dwFlags);
+uint64_t WSASocket(int af, int type, int protocol,
+                   const struct NtWsaProtocolInfo *opt_lpProtocolInfo,
+                   const uint32_t opt_group, uint32_t dwFlags) nodiscard;
 
 int WSAConnect(uint64_t s, const struct sockaddr *name, const int namelen,
                const struct iovec$nt *opt_lpCallerData,
@@ -340,11 +340,11 @@ bool32 WSAConnectByList(uint64_t s,
                         const struct timeval$nt *opt_timeout,
                         struct NtOverlapped *__Reserved) paramsnonnull((2));
 
-nodiscard int64_t WSAAccept(uint64_t s, struct sockaddr *out_addr,
-                            int32_t *opt_inout_addrlen,
-                            const NtConditionProc opt_lpfnCondition,
-                            const uint32_t *opt_dwCallbackData)
-    paramsnonnull((2));
+int64_t WSAAccept(uint64_t s, struct sockaddr *out_addr,
+                  int32_t *opt_inout_addrlen,
+                  const NtConditionProc opt_lpfnCondition,
+                  const uint32_t *opt_dwCallbackData)
+    paramsnonnull((2)) nodiscard;
 
 int WSASend(uint64_t s, const struct iovec$nt *lpBuffers,
             uint32_t dwBufferCount, uint32_t *opt_out_lpNumberOfBytesSent,
@@ -406,7 +406,7 @@ int WSANSPIoctl(int64_t hLookup, uint32_t dwControlCode,
                 const struct NtWsaCompletion *opt_lpCompletion)
     paramsnonnull((3, 5, 7));
 
-nodiscard int64_t WSACreateEvent(void);
+int64_t WSACreateEvent(void) nodiscard;
 bool32 WSACloseEvent(const int64_t hEvent);
 bool32 WSAResetEvent(const int64_t hEvent);
 bool32 WSASetEvent(const int64_t hEvent);

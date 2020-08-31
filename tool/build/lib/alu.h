@@ -11,7 +11,6 @@
 #define ALU_XOR  6
 #define ALU_CMP  7
 #define ALU_TEST 8
-#define ALU_FLIP 16
 
 #define BSU_ROL 0
 #define BSU_ROR 1

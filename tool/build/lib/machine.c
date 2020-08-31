@@ -59,14 +59,11 @@
 #define MUTATING      true
 #define READONLY      false
 #define UNCONDITIONAL true
-#define REG           ModrmReg(rde)
-#define UIMM0         m->xedd->op.uimm0
 #define BITS          (8 << RegLog2(rde))
 #define SIGN          (1ull << (BITS - 1))
 #define MASK          (SIGN | (SIGN - 1))
 #define SHIFTMASK     (BITS - 1)
 #define TEST          ALU_TEST | ALU_AND
-#define ZF            GetFlag(m->flags, FLAGS_ZF)
 
 typedef int int_v _Vector_size(16) aligned(16);
 typedef long long_v _Vector_size(16) aligned(16);
@@ -139,7 +136,7 @@ static void ImportFlags(struct Machine *m, uint64_t flags) {
   m->flags = SetLazyParityByte(m->flags, !((m->flags >> FLAGS_PF) & 1));
 }
 
-static uint64_t ReadMemory(uint32_t rde, uint8_t p[8]) {
+forceinline uint64_t ReadMemory(uint32_t rde, uint8_t p[8]) {
   if (Rexw(rde)) {
     return Read64(p);
   } else if (!Osz(rde)) {
@@ -149,7 +146,7 @@ static uint64_t ReadMemory(uint32_t rde, uint8_t p[8]) {
   }
 }
 
-static int64_t ReadMemorySigned(uint32_t rde, uint8_t p[8]) {
+forceinline int64_t ReadMemorySigned(uint32_t rde, uint8_t p[8]) {
   if (Rexw(rde)) {
     return (int64_t)Read64(p);
   } else if (!Osz(rde)) {
@@ -159,7 +156,7 @@ static int64_t ReadMemorySigned(uint32_t rde, uint8_t p[8]) {
   }
 }
 
-static void WriteRegister(uint32_t rde, uint8_t p[8], uint64_t x) {
+forceinline void WriteRegister(uint32_t rde, uint8_t p[8], uint64_t x) {
   if (Rexw(rde)) {
     Write64(p, x);
   } else if (!Osz(rde)) {
@@ -169,7 +166,7 @@ static void WriteRegister(uint32_t rde, uint8_t p[8], uint64_t x) {
   }
 }
 
-static void WriteMemory(uint32_t rde, uint8_t p[8], uint64_t x) {
+forceinline void WriteMemory(uint32_t rde, uint8_t p[8], uint64_t x) {
   if (Rexw(rde)) {
     Write64(p, x);
   } else if (!Osz(rde)) {
@@ -179,7 +176,7 @@ static void WriteMemory(uint32_t rde, uint8_t p[8], uint64_t x) {
   }
 }
 
-static void WriteRegisterOrMemory(uint32_t rde, uint8_t p[8], uint64_t x) {
+forceinline void WriteRegisterOrMemory(uint32_t rde, uint8_t p[8], uint64_t x) {
   if (IsModrmRegister(rde)) {
     WriteRegister(rde, p, x);
   } else {
@@ -925,11 +922,10 @@ static void OpMovlpdVqMq(struct Machine *m, uint32_t rde) {
 }
 
 static void OpMovddupVqWq(struct Machine *m, uint32_t rde) {
-  uint8_t *dst, *src;
-  dst = XmmRexrReg(m, rde);
+  uint8_t *src;
   src = GetModrmRegisterXmmPointerRead8(m, rde);
-  memcpy(dst + 0, src, 8);
-  memcpy(dst + 8, src, 8);
+  memcpy(XmmRexrReg(m, rde) + 0, src, 8);
+  memcpy(XmmRexrReg(m, rde) + 8, src, 8);
 }
 
 static void OpMovsldupVqWq(struct Machine *m, uint32_t rde) {
@@ -1285,17 +1281,21 @@ static void OpShuffle(struct Machine *m, uint32_t rde) {
   }
 }
 
+static void OpShufps(struct Machine *m, uint32_t rde) {
+  shufps((void *)XmmRexrReg(m, rde), (void *)XmmRexrReg(m, rde),
+         (void *)GetModrmRegisterXmmPointerRead16(m, rde), m->xedd->op.uimm0);
+}
+
+static void OpShufpd(struct Machine *m, uint32_t rde) {
+  shufpd((void *)XmmRexrReg(m, rde), (void *)XmmRexrReg(m, rde),
+         (void *)GetModrmRegisterXmmPointerRead16(m, rde), m->xedd->op.uimm0);
+}
+
 static void OpShufpsd(struct Machine *m, uint32_t rde) {
-  float s[4];
-  double d[2];
   if (Osz(rde)) {
-    memcpy(d, GetModrmRegisterXmmPointerRead16(m, rde), 16);
-    (shufpd)(d, d, m->xedd->op.uimm0);
-    memcpy(XmmRexrReg(m, rde), d, 16);
+    OpShufpd(m, rde);
   } else {
-    memcpy(s, GetModrmRegisterXmmPointerRead16(m, rde), 16);
-    (shufps)(s, s, m->xedd->op.uimm0);
-    memcpy(XmmRexrReg(m, rde), s, 16);
+    OpShufps(m, rde);
   }
 }
 
@@ -1698,136 +1698,82 @@ static void OpAddsubpsd(struct Machine *m, uint32_t rde) {
   OpVpsdWpsd66f2(m, rde, OpAddsubps, OpAddsubpd);
 }
 
-static void OpAluw(struct Machine *m, uint32_t rde,
-                   int64_t f(int, int, uint64_t, uint64_t, uint32_t *), int h) {
-  int64_t v;
-  void *p[2];
-  bool readonly;
-  uint64_t x, y, z;
-  uint8_t w, *a, *b, *c, split[8];
-  w = RegLog2(rde);
-  readonly = (h & ALU_TEST) || (h & 7) == ALU_CMP;
-  if (IsModrmRegister(rde)) {
-    v = 0;
-    a = RegRexbRm(m, rde);
-  } else {
-    v = ComputeAddress(m, rde);
-    if (h & ALU_FLIP) {
-      a = Load(m, v, 1 << w, split);
-    } else {
-      a = AccessRam(m, v, 1 << w, p, split, true);
-      if (readonly) {
-        SetReadAddr(m, v, 1);
-      } else {
-        SetWriteAddr(m, v, 1);
-      }
-    }
-  }
-  b = RegRexrReg(m, rde);
-  if (h & ALU_FLIP) {
-    c = b;
-    b = a;
-    a = c;
-  }
-  y = Read64(b);
-  x = Read64(a);
-  z = f(w, h, x, y, &m->flags);
-  if (!readonly) {
-    WriteRegisterOrMemory(rde, a, z);
-    EndStore(m, v, 1 << w, p, split);
-  }
+static void OpAlub(struct Machine *m, uint32_t rde, int h) {
+  uint8_t *a;
+  a = GetModrmRegisterBytePointerWrite(m, rde);
+  Write8(a, Alu(0, h, Read8(a), Read8(ByteRexrReg(m, rde)), &m->flags));
 }
 
-static void OpAlub(struct Machine *m, uint32_t rde,
-                   int64_t f(int, int, uint64_t, uint64_t, uint32_t *), int h) {
-  int64_t v;
-  bool readonly;
-  uint64_t x, y, z;
-  uint8_t *a, *b, *c;
-  readonly = (h & ALU_TEST) || (h & 7) == ALU_CMP;
-  if (!m->xedd->op.has_modrm || IsModrmRegister(rde)) {
-    a = ByteRexbRm(m, rde);
-  } else {
-    v = ComputeAddress(m, rde);
-    a = ResolveAddress(m, v);
-    if ((h & ALU_FLIP) || readonly) {
-      SetReadAddr(m, v, 1);
-    } else {
-      SetWriteAddr(m, v, 1);
-    }
-  }
-  b = ByteRexrReg(m, rde);
-  if (h & ALU_FLIP) {
-    c = b;
-    b = a;
-    a = c;
-  }
-  y = Read8(b);
-  x = Read8(a);
-  z = f(0, h, x, y, &m->flags);
-  if (!readonly) Write8(a, z);
+static void OpAlubRo(struct Machine *m, uint32_t rde, int h) {
+  Alu(0, h, Read8(GetModrmRegisterBytePointerWrite(m, rde)),
+      Read8(ByteRexrReg(m, rde)), &m->flags);
 }
 
-static void OpAluwi(struct Machine *m, uint32_t rde,
-                    int64_t f(int, int, uint64_t, uint64_t, uint32_t *), int h,
-                    uint64_t yimm) {
-  int64_t v;
-  void *p[2];
-  bool readonly;
-  uint64_t x, y, z;
-  uint8_t w, *a, *c, split[8];
-  w = RegLog2(rde);
-  readonly = (h & ALU_TEST) || (h & 7) == ALU_CMP;
-  if (!m->xedd->op.has_modrm || IsModrmRegister(rde)) {
-    v = 0;
-    a = RegRexbRm(m, rde);
-  } else {
-    v = ComputeAddress(m, rde);
-    a = AccessRam(m, v, 1 << w, p, split, true);
-    if (readonly) {
-      SetReadAddr(m, v, 1 << w);
-    } else {
-      SetWriteAddr(m, v, 1 << w);
-    }
-  }
-  y = yimm;
-  x = Read64(a);
-  z = f(w, h, x, y, &m->flags);
-  if (!readonly) {
-    WriteRegisterOrMemory(rde, a, z);
-    EndStore(m, v, 1 << w, p, split);
-  }
+static void OpAlubFlip(struct Machine *m, uint32_t rde, int h) {
+  Write8(ByteRexrReg(m, rde),
+         Alu(0, h, Read8(ByteRexrReg(m, rde)),
+             Read8(GetModrmRegisterBytePointerRead(m, rde)), &m->flags));
 }
 
-static void OpAlubi(struct Machine *m, uint32_t rde,
-                    int64_t f(int, int, uint64_t, uint64_t, uint32_t *), int h,
-                    uint64_t yimm) {
-  int64_t v;
-  bool readonly;
-  uint64_t x, y, z;
-  uint8_t *a, *b, *c;
-  readonly = (h & ALU_TEST) || (h & 7) == ALU_CMP;
-  if (!m->xedd->op.has_modrm || IsModrmRegister(rde)) {
-    a = ByteRexbRm(m, rde);
-  } else {
-    v = ComputeAddress(m, rde);
-    a = ResolveAddress(m, v);
-    if (readonly) {
-      SetReadAddr(m, v, 1);
-    } else {
-      SetWriteAddr(m, v, 1);
-    }
-  }
-  y = yimm;
-  b = NULL;
-  x = Read8(a);
-  z = f(0, h, x, y, &m->flags);
-  if (!readonly) Write8(a, z);
+static void OpAlubFlipRo(struct Machine *m, uint32_t rde, int h) {
+  Alu(0, h, Read8(ByteRexrReg(m, rde)),
+      Read8(GetModrmRegisterBytePointerRead(m, rde)), &m->flags);
 }
 
-static void OpBsuwi(struct Machine *m, uint32_t rde,
-                    int64_t f(int, int, uint64_t, uint64_t, uint32_t *), int h,
-                    uint64_t yimm) {
+static void OpAlubi(struct Machine *m, uint32_t rde, int h) {
+  uint8_t *a;
+  a = GetModrmRegisterBytePointerWrite(m, rde);
+  Write8(a, Alu(0, h, Read8(a), m->xedd->op.uimm0, &m->flags));
+}
+
+static void OpAlubiRo(struct Machine *m, uint32_t rde, int h) {
+  Alu(0, h, Read8(GetModrmRegisterBytePointerWrite(m, rde)), m->xedd->op.uimm0,
+      &m->flags);
+}
+
+static void OpAluw(struct Machine *m, uint32_t rde, int h) {
+  uint8_t *a;
+  a = GetModrmRegisterWordPointerWriteOszRexw(m, rde);
+  WriteRegisterOrMemory(rde, a,
+                        Alu(RegLog2(rde), h, ReadMemory(rde, a),
+                            Read64(RegRexrReg(m, rde)), &m->flags));
+}
+
+static void OpAluwRo(struct Machine *m, uint32_t rde, int h) {
+  Alu(RegLog2(rde), h,
+      ReadMemory(rde, GetModrmRegisterWordPointerWriteOszRexw(m, rde)),
+      Read64(RegRexrReg(m, rde)), &m->flags);
+}
+
+static void OpAluwFlip(struct Machine *m, uint32_t rde, int h) {
+  WriteRegister(
+      rde, RegRexrReg(m, rde),
+      Alu(RegLog2(rde), h, Read64(RegRexrReg(m, rde)),
+          ReadMemory(rde, GetModrmRegisterWordPointerReadOszRexw(m, rde)),
+          &m->flags));
+}
+
+static void OpAluwFlipRo(struct Machine *m, uint32_t rde, int h) {
+  Alu(RegLog2(rde), h, Read64(RegRexrReg(m, rde)),
+      ReadMemory(rde, GetModrmRegisterWordPointerReadOszRexw(m, rde)),
+      &m->flags);
+}
+
+static void OpAluwi(struct Machine *m, uint32_t rde, int h) {
+  uint8_t *a;
+  a = GetModrmRegisterWordPointerWriteOszRexw(m, rde);
+  WriteRegisterOrMemory(
+      rde, a,
+      Alu(RegLog2(rde), h, ReadMemory(rde, a), m->xedd->op.uimm0, &m->flags));
+}
+
+static void OpAluwiRo(struct Machine *m, uint32_t rde, int h) {
+  Alu(RegLog2(rde), h,
+      ReadMemory(rde, GetModrmRegisterWordPointerWriteOszRexw(m, rde)),
+      m->xedd->op.uimm0, &m->flags);
+}
+
+static void OpBsuwi(struct Machine *m, uint32_t rde, int h, uint64_t yimm) {
   int64_t v;
   void *p[2];
   uint8_t w, *a, split[8];
@@ -1839,204 +1785,419 @@ static void OpBsuwi(struct Machine *m, uint32_t rde,
     v = ComputeAddress(m, rde);
     a = BeginLoadStore(m, v, 1 << w, p, split);
   }
-  WriteRegisterOrMemory(rde, a, f(w, h, Read64(a), yimm, &m->flags));
+  WriteRegisterOrMemory(rde, a, Bsu(w, h, Read64(a), yimm, &m->flags));
   EndStore(m, v, 1 << w, p, split);
 }
 
-static void OpBsubi(struct Machine *m, uint32_t rde,
-                    int64_t f(int, int, uint64_t, uint64_t, uint32_t *), int h,
-                    uint64_t yimm) {
+static void OpBsubi(struct Machine *m, uint32_t rde, int h, uint64_t yimm) {
   uint8_t *a;
   a = GetModrmRegisterBytePointerWrite(m, rde);
-  Write8(a, f(0, h, Read8(a), yimm, &m->flags));
+  Write8(a, Bsu(0, h, Read8(a), yimm, &m->flags));
 }
 
-void ExecuteInstructionMap0(struct Machine *m, uint32_t rde) {
-  switch (m->xedd->op.opcode) {
-    CASE(/*0120 0x50*/ 0b01010000 ... 0x57, OpPushZvq(m, rde));
-    CASE(/*0130 0x58*/ 0b01011000 ... 0x5f, OpPopZvq(m, rde));
-    CASE(/*0143 0x63*/ 0b01100011, OpMovsxdGdqpEd(m, rde));
-    CASE(/*0150 0x68*/ 0b01101000, PushOsz(m, rde, m->xedd->op.uimm0));
-    CASE(/*0151 0x69*/ 0b01101001, OpImulGvqpEvqpImm(m, rde));
-    CASE(/*0152 0x6A*/ 0b01101010, PushOsz(m, rde, m->xedd->op.uimm0));
-    CASE(/*0153 0x6B*/ 0b01101011, OpImulGvqpEvqpImm(m, rde));
-    CASE(/*0154 0x6C*/ 0b01101100, OpString(m, rde, STRING_INS));
-    CASE(/*0155 0x6D*/ 0b01101101, OpString(m, rde, STRING_INS));
-    CASE(/*0156 0x6E*/ 0b01101110, OpString(m, rde, STRING_OUTS));
-    CASE(/*0157 0x6F*/ 0b01101111, OpString(m, rde, STRING_OUTS));
-    CASE(/*0160 0x70*/ 0b01110000, if (GetCond(m, 0x0)) OpJmp(m));
-    CASE(/*0161 0x71*/ 0b01110001, if (GetCond(m, 0x1)) OpJmp(m));
-    CASE(/*0162 0x72*/ 0b01110010, if (GetCond(m, 0x2)) OpJmp(m));
-    CASE(/*0163 0x73*/ 0b01110011, if (GetCond(m, 0x3)) OpJmp(m));
-    CASE(/*0164 0x74*/ 0b01110100, if (GetCond(m, 0x4)) OpJmp(m));
-    CASE(/*0165 0x75*/ 0b01110101, if (GetCond(m, 0x5)) OpJmp(m));
-    CASE(/*0166 0x76*/ 0b01110110, if (GetCond(m, 0x6)) OpJmp(m));
-    CASE(/*0167 0x77*/ 0b01110111, if (GetCond(m, 0x7)) OpJmp(m));
-    CASE(/*0170 0x78*/ 0b01111000, if (GetCond(m, 0x8)) OpJmp(m));
-    CASE(/*0171 0x79*/ 0b01111001, if (GetCond(m, 0x9)) OpJmp(m));
-    CASE(/*0172 0x7A*/ 0b01111010, if (GetCond(m, 0xa)) OpJmp(m));
-    CASE(/*0173 0x7B*/ 0b01111011, if (GetCond(m, 0xb)) OpJmp(m));
-    CASE(/*0174 0x7C*/ 0b01111100, if (GetCond(m, 0xc)) OpJmp(m));
-    CASE(/*0175 0x7D*/ 0b01111101, if (GetCond(m, 0xd)) OpJmp(m));
-    CASE(/*0176 0x7E*/ 0b01111110, if (GetCond(m, 0xe)) OpJmp(m));
-    CASE(/*0177 0x7F*/ 0b01111111, if (GetCond(m, 0xf)) OpJmp(m));
-    CASE(/*0200 0x80*/ 0b10000000, OpAlubi(m, rde, Alu, ModrmReg(rde), UIMM0));
-    CASE(/*0201 0x81*/ 0b10000001, OpAluwi(m, rde, Alu, ModrmReg(rde), UIMM0));
-    CASE(/*0202 0x82*/ 0b10000010, OpAlubi(m, rde, Alu, ModrmReg(rde), UIMM0));
-    CASE(/*0203 0x83*/ 0b10000011, OpAluwi(m, rde, Alu, ModrmReg(rde), UIMM0));
-    CASE(/*0204 0x84*/ 0b10000100, OpAlub(m, rde, Alu, TEST));
-    CASE(/*0205 0x85*/ 0b10000101, OpAluw(m, rde, Alu, TEST));
-    CASE(/*0206 0x86*/ 0b10000110, OpXchgGbEb(m, rde));
-    CASE(/*0207 0x87*/ 0b10000111, OpXchgGvqpEvqp(m, rde));
-    CASE(/*0210 0x88*/ 0b10001000, OpMovEbGb(m, rde));
-    CASE(/*0211 0x89*/ 0b10001001, OpMovEvqpGvqp(m, rde));
-    CASE(/*0212 0x8A*/ 0b10001010, OpMovGbEb(m, rde));
-    CASE(/*0213 0x8B*/ 0b10001011, OpMovGvqpEvqp(m, rde));
-    CASE(/*0214 0x8C*/ 0b10001100, OpMovEvqpSw(m));
-    CASE(/*0215 0x8D*/ 0b10001101, OpLeaGvqpM(m, rde));
-    CASE(/*0216 0x8E*/ 0b10001110, OpMovSwEvqp(m));
-    CASE(/*0217 0x8F*/ 0b10001111, OpPopEvq(m, rde));
-    CASE(/*0220 0x90*/ 0b10010000, OpNop(m, rde));
-    CASE(/*0221 0x91*/ 0b10010001 ... 0x97, OpXchgZvqp(m, rde));
-    CASE(/*0230 0x98*/ 0b10011000, OpConvert1(m, rde));
-    CASE(/*0231 0x99*/ 0b10011001, OpConvert2(m, rde));
-    CASE(/*0234 0x9C*/ 0b10011100, OpPushf(m, rde));
-    CASE(/*0235 0x9D*/ 0b10011101, OpPopf(m, rde));
-    CASE(/*0236 0x9E*/ 0b10011110, OpSahf(m));
-    CASE(/*0237 0x9F*/ 0b10011111, OpLahf(m));
-    CASE(/*0233 0x9b*/ 0b10011011, OpFwait(m));
-    CASE(/*0240 0xA0*/ 0b10100000, OpMovAlOb(m));
-    CASE(/*0241 0xA1*/ 0b10100001, OpMovRaxOvqp(m, rde));
-    CASE(/*0242 0xA2*/ 0b10100010, OpMovObAl(m));
-    CASE(/*0243 0xA3*/ 0b10100011, OpMovOvqpRax(m, rde));
-    CASE(/*0244 0xA4*/ 0b10100100, OpMovsb(m, rde));
-    CASE(/*0245 0xA5*/ 0b10100101, OpString(m, rde, STRING_MOVS));
-    CASE(/*0246 0xA6*/ 0b10100110, OpString(m, rde, STRING_CMPS));
-    CASE(/*0247 0xA7*/ 0b10100111, OpString(m, rde, STRING_CMPS));
-    CASE(/*0250 0xA8*/ 0b10101000, OpAlubi(m, rde, Alu, TEST, UIMM0));
-    CASE(/*0251 0xA9*/ 0b10101001, OpAluwi(m, rde, Alu, TEST, UIMM0));
-    CASE(/*0252 0xAA*/ 0b10101010, OpStosb(m, rde));
-    CASE(/*0253 0xAB*/ 0b10101011, OpString(m, rde, STRING_STOS));
-    CASE(/*0254 0xAC*/ 0b10101100, OpString(m, rde, STRING_LODS));
-    CASE(/*0255 0xAD*/ 0b10101101, OpString(m, rde, STRING_LODS));
-    CASE(/*0256 0xAE*/ 0b10101110, OpString(m, rde, STRING_SCAS));
-    CASE(/*0257 0xAF*/ 0b10101111, OpString(m, rde, STRING_SCAS));
-    CASE(/*0260 0xB0*/ 0b10110000 ... 0b10110111, OpMovZbIb(m, rde));
-    CASE(/*0270 0xB8*/ 0b10111000 ... 0b10111111, OpMovZvqpIvqp(m, rde));
-    CASE(/*0300 0xC0*/ 0b11000000, OpBsubi(m, rde, Bsu, ModrmReg(rde), UIMM0));
-    CASE(/*0301 0xC1*/ 0b11000001, OpBsuwi(m, rde, Bsu, ModrmReg(rde), UIMM0));
-    CASE(/*0302 0xC2*/ 0b11000010, OpRet(m, m->xedd->op.uimm0));
-    CASE(/*0303 0xC3*/ 0b11000011, OpRet(m, 0));
-    CASE(/*0306 0xC6*/ 0b11000110, OpMovEbIb(m, rde));
-    CASE(/*0307 0xC7*/ 0b11000111, OpMovEvqpIvds(m, rde));
-    CASE(/*0311 0xC9*/ 0b11001001, OpLeave(m));
-    CASE(/*0314 0xCC*/ 0b11001100, OpInterrupt(m, 3));
-    CASE(/*0315 0xCD*/ 0b11001101, OpInterrupt(m, m->xedd->op.uimm0));
-    CASE(/*0320 0xD0*/ 0b11010000, OpBsubi(m, rde, Bsu, ModrmReg(rde), 1));
-    CASE(/*0321 0xD1*/ 0b11010001, OpBsuwi(m, rde, Bsu, ModrmReg(rde), 1));
-    CASE(/*0322 0xD2*/ 0b11010010, OpBsubi(m, rde, Bsu, REG, m->cx[0]));
-    CASE(/*0323 0xD3*/ 0b11010011, OpBsuwi(m, rde, Bsu, REG, m->cx[0]));
-    CASE(/*0327 0xD7*/ 0b11010111, OpXlat(m, rde));
-    CASE(/*0340 0xE0*/ 0b11100000, OpLoop(m, rde, !ZF));
-    CASE(/*0341 0xE1*/ 0b11100001, OpLoop(m, rde, ZF));
-    CASE(/*0342 0xE2*/ 0b11100010, OpLoop(m, rde, 1));
-    CASE(/*0343 0xE3*/ 0b11100011, OpJcxz(m, rde));
-    CASE(/*0344 0xE4*/ 0b11100100, Write8(m->ax, OpIn(m, UIMM0)));
-    CASE(/*0345 0xE5*/ 0b11100101, Write32(m->ax, OpIn(m, UIMM0)));
-    CASE(/*0346 0xE6*/ 0b11100110, OpOut(m, UIMM0, Read8(m->ax)));
-    CASE(/*0347 0xE7*/ 0b11100111, OpOut(m, UIMM0, Read32(m->ax)));
-    CASE(/*0350 0xE8*/ 0b11101000, OpCallJvds(m));
-    CASE(/*0351 0xE9*/ 0b11101001, OpJmp(m));
-    CASE(/*0353 0xEB*/ 0b11101011, OpJmp(m));
-    CASE(/*0354 0xEC*/ 0b11101100, Write8(m->ax, OpIn(m, Read16(m->dx))));
-    CASE(/*0355 0xED*/ 0b11101101, Write32(m->ax, OpIn(m, Read16(m->dx))));
-    CASE(/*0356 0xEE*/ 0b11101110, OpOut(m, Read16(m->dx), Read8(m->ax)));
-    CASE(/*0357 0xEF*/ 0b11101111, OpOut(m, Read16(m->dx), Read32(m->ax)));
-    CASE(/*0361 0xF1*/ 0b11110001, OpInterrupt(m, 1));
-    CASE(/*0364 0xF4*/ 0b11110100, OpHlt(m));
-    CASE(/*0365 0xF5*/ 0b11110101, OpCmc(m));
-    CASE(/*0370 0xF8*/ 0b11111000, OpClc(m));
-    CASE(/*0371 0xF9*/ 0b11111001, OpStc(m));
-    CASE(/*0372 0xFA*/ 0b11111010, OpCli(m));
-    CASE(/*0373 0xFB*/ 0b11111011, OpSti(m));
-    CASE(/*0374 0xFC*/ 0b11111100, OpCld(m));
-    CASE(/*0375 0xFD*/ 0b11111101, OpStd(m));
-    case /*0004 0x04*/ 0b00000100:
-    case /*0014 0x0C*/ 0b00001100:
-    case /*0024 0x14*/ 0b00010100:
-    case /*0034 0x1C*/ 0b00011100:
-    case /*0044 0x24*/ 0b00100100:
-    case /*0054 0x2C*/ 0b00101100:
-    case /*0064 0x34*/ 0b00110100:
-    case /*0074 0x3C*/ 0b00111100:
-      OpAlubi(m, rde, Alu, (m->xedd->op.opcode & 070) >> 3, m->xedd->op.uimm0);
-      break;
-    case /*0005 0x05*/ 0b00000101:
-    case /*0015 0x0D*/ 0b00001101:
-    case /*0025 0x15*/ 0b00010101:
-    case /*0035 0x1D*/ 0b00011101:
-    case /*0045 0x25*/ 0b00100101:
-    case /*0055 0x2D*/ 0b00101101:
-    case /*0065 0x35*/ 0b00110101:
-    case /*0075 0x3D*/ 0b00111101:
-      OpAluwi(m, rde, Alu, (m->xedd->op.opcode & 070) >> 3, m->xedd->op.uimm0);
-      break;
-    case /*0000 0x00*/ 0b00000000:
-    case /*0002 0x02*/ 0b00000010:
-    case /*0010 0x08*/ 0b00001000:
-    case /*0012 0x0A*/ 0b00001010:
-    case /*0020 0x10*/ 0b00010000:
-    case /*0022 0x12*/ 0b00010010:
-    case /*0030 0x18*/ 0b00011000:
-    case /*0032 0x1A*/ 0b00011010:
-    case /*0040 0x20*/ 0b00100000:
-    case /*0042 0x22*/ 0b00100010:
-    case /*0050 0x28*/ 0b00101000:
-    case /*0052 0x2A*/ 0b00101010:
-    case /*0060 0x30*/ 0b00110000:
-    case /*0062 0x32*/ 0b00110010:
-    case /*0070 0x38*/ 0b00111000:
-    case /*0072 0x3A*/ 0b00111010:
-      OpAlub(m, rde, Alu,
-             ((m->xedd->op.opcode & 070) >> 3 |
-              (m->xedd->op.opcode & 0b010 ? ALU_FLIP : 0)));
-      break;
-    case /*0001 0x01*/ 0b00000001:
-    case /*0003 0x03*/ 0b00000011:
-    case /*0011 0x09*/ 0b00001001:
-    case /*0013 0x0B*/ 0b00001011:
-    case /*0021 0x11*/ 0b00010001:
-    case /*0023 0x13*/ 0b00010011:
-    case /*0031 0x19*/ 0b00011001:
-    case /*0033 0x1B*/ 0b00011011:
-    case /*0041 0x21*/ 0b00100001:
-    case /*0043 0x23*/ 0b00100011:
-    case /*0051 0x29*/ 0b00101001:
-    case /*0053 0x2B*/ 0b00101011:
-    case /*0061 0x31*/ 0b00110001:
-    case /*0063 0x33*/ 0b00110011:
-    case /*0071 0x39*/ 0b00111001:
-    case /*0073 0x3B*/ 0b00111011:
-      OpAluw(m, rde, Alu,
-             ((m->xedd->op.opcode & 070) >> 3 |
-              (m->xedd->op.opcode & 0b010 ? ALU_FLIP : 0)));
-      break;
-    case /*0330 0xD8*/ 0b11011000:
-    case /*0331 0xD9*/ 0b11011001:
-    case /*0332 0xDA*/ 0b11011010:
-    case /*0333 0xDB*/ 0b11011011:
-    case /*0334 0xDC*/ 0b11011100:
-    case /*0335 0xDD*/ 0b11011101:
-    case /*0336 0xDE*/ 0b11011110:
-    case /*0337 0xDF*/ 0b11011111:
+static void OpAluAlIb(struct Machine *m, int h) {
+  Write8(m->ax, Alu(0, h, Read8(m->ax), m->xedd->op.uimm0, &m->flags));
+}
+
+static void OpAluRaxIvds(struct Machine *m, uint32_t rde, int h) {
+  WriteRegister(rde, m->ax,
+                Alu(RegLog2(rde), h, ReadMemory(rde, m->ax), m->xedd->op.uimm0,
+                    &m->flags));
+}
+
+static void OpCmpAlIb(struct Machine *m) {
+  Alu(0, ALU_SUB, Read8(m->ax), m->xedd->op.uimm0, &m->flags);
+}
+
+static void OpCmpRaxIvds(struct Machine *m, uint32_t rde) {
+  Alu(RegLog2(rde), ALU_SUB, ReadMemory(rde, m->ax), m->xedd->op.uimm0,
+      &m->flags);
+}
+
+static void OpTestAlIb(struct Machine *m) {
+  Alu(0, ALU_AND, Read8(m->ax), m->xedd->op.uimm0, &m->flags);
+}
+
+static void OpTestRaxIvds(struct Machine *m, uint32_t rde) {
+  Alu(RegLog2(rde), ALU_AND, ReadMemory(rde, m->ax), m->xedd->op.uimm0,
+      &m->flags);
+}
+
+void ExecuteInstruction(struct Machine *m) {
+  uint32_t rde;
+  m->ip += m->xedd->length;
+  rde = m->xedd->op.rde;
+  switch (m->xedd->op.map << 8 | m->xedd->op.opcode) {
+    CASR(0x0B0 ... 0x0B7, OpMovZbIb(m, rde));
+    CASR(0x0B8 ... 0x0BF, OpMovZvqpIvqp(m, rde));
+    CASR(0x050 ... 0x057, OpPushZvq(m, rde));
+    CASR(0x058 ... 0x05F, OpPopZvq(m, rde));
+    CASR(0x091 ... 0x097, OpXchgZvqp(m, rde));
+    CASR(0x1C8 ... 0x1CF, OpBswapZvqp(m, rde));
+    CASR(0x000, OpAlub(m, rde, ALU_ADD));
+    CASE(0x001, OpAluw(m, rde, ALU_ADD));
+    CASR(0x002, OpAlubFlip(m, rde, ALU_ADD));
+    CASE(0x003, OpAluwFlip(m, rde, ALU_ADD));
+    CASR(0x004, OpAluAlIb(m, ALU_ADD));
+    CASR(0x005, OpAluRaxIvds(m, rde, ALU_ADD));
+    CASR(0x008, OpAlub(m, rde, ALU_OR));
+    CASE(0x009, OpAluw(m, rde, ALU_OR));
+    CASR(0x00A, OpAlubFlip(m, rde, ALU_OR));
+    CASE(0x00B, OpAluwFlip(m, rde, ALU_OR));
+    CASR(0x00C, OpAluAlIb(m, ALU_OR));
+    CASR(0x00D, OpAluRaxIvds(m, rde, ALU_OR));
+    CASR(0x010, OpAlub(m, rde, ALU_ADC));
+    CASE(0x011, OpAluw(m, rde, ALU_ADC));
+    CASR(0x012, OpAlubFlip(m, rde, ALU_ADC));
+    CASE(0x013, OpAluwFlip(m, rde, ALU_ADC));
+    CASR(0x014, OpAluAlIb(m, ALU_ADC));
+    CASR(0x015, OpAluRaxIvds(m, rde, ALU_ADC));
+    CASR(0x018, OpAlub(m, rde, ALU_SBB));
+    CASE(0x019, OpAluw(m, rde, ALU_SBB));
+    CASR(0x01A, OpAlubFlip(m, rde, ALU_SBB));
+    CASE(0x01B, OpAluwFlip(m, rde, ALU_SBB));
+    CASR(0x01C, OpAluAlIb(m, ALU_SBB));
+    CASR(0x01D, OpAluRaxIvds(m, rde, ALU_SBB));
+    CASR(0x020, OpAlub(m, rde, ALU_AND));
+    CASE(0x021, OpAluw(m, rde, ALU_AND));
+    CASR(0x022, OpAlubFlip(m, rde, ALU_AND));
+    CASE(0x023, OpAluwFlip(m, rde, ALU_AND));
+    CASR(0x024, OpAluAlIb(m, ALU_AND));
+    CASR(0x025, OpAluRaxIvds(m, rde, ALU_AND));
+    CASR(0x028, OpAlub(m, rde, ALU_SUB));
+    CASE(0x029, OpAluw(m, rde, ALU_SUB));
+    CASR(0x02A, OpAlubFlip(m, rde, ALU_SUB));
+    CASE(0x02B, OpAluwFlip(m, rde, ALU_SUB));
+    CASR(0x02C, OpAluAlIb(m, ALU_SUB));
+    CASR(0x02D, OpAluRaxIvds(m, rde, ALU_SUB));
+    CASR(0x030, OpAlub(m, rde, ALU_XOR));
+    CASE(0x031, OpAluw(m, rde, ALU_XOR));
+    CASR(0x032, OpAlubFlip(m, rde, ALU_XOR));
+    CASE(0x033, OpAluwFlip(m, rde, ALU_XOR));
+    CASR(0x034, OpAluAlIb(m, ALU_XOR));
+    CASR(0x035, OpAluRaxIvds(m, rde, ALU_XOR));
+    CASR(0x038, OpAlubRo(m, rde, ALU_CMP));
+    CASE(0x039, OpAluwRo(m, rde, ALU_CMP));
+    CASR(0x03A, OpAlubFlipRo(m, rde, ALU_CMP));
+    CASE(0x03B, OpAluwFlipRo(m, rde, ALU_CMP));
+    CASR(0x03C, OpCmpAlIb(m));
+    CASR(0x03D, OpCmpRaxIvds(m, rde));
+    CASE(0x063, OpMovsxdGdqpEd(m, rde));
+    CASE(0x068, PushOsz(m, rde, m->xedd->op.uimm0));
+    CASE(0x069, OpImulGvqpEvqpImm(m, rde));
+    CASE(0x06A, PushOsz(m, rde, m->xedd->op.uimm0));
+    CASE(0x06B, OpImulGvqpEvqpImm(m, rde));
+    CASE(0x06C, OpString(m, rde, STRING_INS));
+    CASE(0x06D, OpString(m, rde, STRING_INS));
+    CASE(0x06E, OpString(m, rde, STRING_OUTS));
+    CASE(0x06F, OpString(m, rde, STRING_OUTS));
+    CASR(0x070, if (GetCond(m, 0x0)) OpJmp(m));
+    CASR(0x071, if (GetCond(m, 0x1)) OpJmp(m));
+    CASR(0x072, if (GetCond(m, 0x2)) OpJmp(m));
+    CASR(0x073, if (GetCond(m, 0x3)) OpJmp(m));
+    CASR(0x074, if (GetCond(m, 0x4)) OpJmp(m));
+    CASR(0x075, if (GetCond(m, 0x5)) OpJmp(m));
+    CASR(0x076, if (GetCond(m, 0x6)) OpJmp(m));
+    CASR(0x077, if (GetCond(m, 0x7)) OpJmp(m));
+    CASR(0x078, if (GetCond(m, 0x8)) OpJmp(m));
+    CASR(0x079, if (GetCond(m, 0x9)) OpJmp(m));
+    CASR(0x07A, if (GetCond(m, 0xa)) OpJmp(m));
+    CASR(0x07B, if (GetCond(m, 0xb)) OpJmp(m));
+    CASR(0x07C, if (GetCond(m, 0xc)) OpJmp(m));
+    CASR(0x07D, if (GetCond(m, 0xd)) OpJmp(m));
+    CASR(0x07E, if (GetCond(m, 0xe)) OpJmp(m));
+    CASR(0x07F, if (GetCond(m, 0xf)) OpJmp(m));
+    CASR(0x080, OpAlubi(m, rde, ModrmReg(rde)));
+    CASE(0x081, OpAluwi(m, rde, ModrmReg(rde)));
+    CASR(0x082, OpAlubi(m, rde, ModrmReg(rde)));
+    CASE(0x083, OpAluwi(m, rde, ModrmReg(rde)));
+    CASR(0x084, OpAlubRo(m, rde, TEST));
+    CASE(0x085, OpAluwRo(m, rde, TEST));
+    CASE(0x086, OpXchgGbEb(m, rde));
+    CASE(0x087, OpXchgGvqpEvqp(m, rde));
+    CASE(0x088, OpMovEbGb(m, rde));
+    CASE(0x089, OpMovEvqpGvqp(m, rde));
+    CASE(0x08A, OpMovGbEb(m, rde));
+    CASE(0x08B, OpMovGvqpEvqp(m, rde));
+    CASE(0x08C, OpMovEvqpSw(m));
+    CASE(0x08D, OpLeaGvqpM(m, rde));
+    CASE(0x08E, OpMovSwEvqp(m));
+    CASE(0x08F, OpPopEvq(m, rde));
+    CASE(0x090, OpNop(m, rde));
+    CASE(0x098, OpConvert1(m, rde));
+    CASE(0x099, OpConvert2(m, rde));
+    CASE(0x09C, OpPushf(m, rde));
+    CASE(0x09D, OpPopf(m, rde));
+    CASE(0x09E, OpSahf(m));
+    CASE(0x09F, OpLahf(m));
+    CASE(0x09B, OpFwait(m));
+    CASE(0x0A0, OpMovAlOb(m));
+    CASE(0x0A1, OpMovRaxOvqp(m, rde));
+    CASE(0x0A2, OpMovObAl(m));
+    CASE(0x0A3, OpMovOvqpRax(m, rde));
+    CASE(0x0A4, OpMovsb(m, rde));
+    CASE(0x0A5, OpString(m, rde, STRING_MOVS));
+    CASE(0x0A6, OpString(m, rde, STRING_CMPS));
+    CASE(0x0A7, OpString(m, rde, STRING_CMPS));
+    CASE(0x0A8, OpTestAlIb(m));
+    CASE(0x0A9, OpTestRaxIvds(m, rde));
+    CASE(0x0AA, OpStosb(m, rde));
+    CASE(0x0AB, OpString(m, rde, STRING_STOS));
+    CASE(0x0AC, OpString(m, rde, STRING_LODS));
+    CASE(0x0AD, OpString(m, rde, STRING_LODS));
+    CASE(0x0AE, OpString(m, rde, STRING_SCAS));
+    CASE(0x0AF, OpString(m, rde, STRING_SCAS));
+    CASR(0x0C0, OpBsubi(m, rde, ModrmReg(rde), m->xedd->op.uimm0));
+    CASR(0x0C1, OpBsuwi(m, rde, ModrmReg(rde), m->xedd->op.uimm0));
+    CASE(0x0C2, OpRet(m, m->xedd->op.uimm0));
+    CASE(0x0C3, OpRet(m, 0));
+    CASE(0x0C6, OpMovEbIb(m, rde));
+    CASE(0x0C7, OpMovEvqpIvds(m, rde));
+    CASE(0x0C9, OpLeave(m));
+    CASE(0x0CC, OpInterrupt(m, 3));
+    CASE(0x0CD, OpInterrupt(m, m->xedd->op.uimm0));
+    CASR(0x0D0, OpBsubi(m, rde, ModrmReg(rde), 1));
+    CASR(0x0D1, OpBsuwi(m, rde, ModrmReg(rde), 1));
+    CASR(0x0D2, OpBsubi(m, rde, ModrmReg(rde), m->cx[0]));
+    CASR(0x0D3, OpBsuwi(m, rde, ModrmReg(rde), m->cx[0]));
+    CASE(0x0D7, OpXlat(m, rde));
+    CASE(0x0E0, OpLoop(m, rde, !GetFlag(m->flags, FLAGS_ZF)));
+    CASE(0x0E1, OpLoop(m, rde, GetFlag(m->flags, FLAGS_ZF)));
+    CASE(0x0E2, OpLoop(m, rde, 1));
+    CASE(0x0E3, OpJcxz(m, rde));
+    CASE(0x0E4, Write8(m->ax, OpIn(m, m->xedd->op.uimm0)));
+    CASE(0x0E5, Write32(m->ax, OpIn(m, m->xedd->op.uimm0)));
+    CASE(0x0E6, OpOut(m, m->xedd->op.uimm0, Read8(m->ax)));
+    CASE(0x0E7, OpOut(m, m->xedd->op.uimm0, Read32(m->ax)));
+    CASE(0x0E8, OpCallJvds(m));
+    CASE(0x0E9, OpJmp(m));
+    CASE(0x0EB, OpJmp(m));
+    CASE(0x0EC, Write8(m->ax, OpIn(m, Read16(m->dx))));
+    CASE(0x0ED, Write32(m->ax, OpIn(m, Read16(m->dx))));
+    CASE(0x0EE, OpOut(m, Read16(m->dx), Read8(m->ax)));
+    CASE(0x0EF, OpOut(m, Read16(m->dx), Read32(m->ax)));
+    CASE(0x0F1, OpInterrupt(m, 1));
+    CASE(0x0F4, OpHlt(m));
+    CASE(0x0F5, OpCmc(m));
+    CASE(0x0F8, OpClc(m));
+    CASE(0x0F9, OpStc(m));
+    CASE(0x0FA, OpCli(m));
+    CASE(0x0FB, OpSti(m));
+    CASE(0x0FC, OpCld(m));
+    CASE(0x0FD, OpStd(m));
+    CASE(0x105, OpSyscall(m));
+    CASE(0x110, OpMov0f10(m, rde));
+    CASE(0x111, OpMovWpsVps(m, rde));
+    CASE(0x112, OpMov0f12(m, rde));
+    CASE(0x113, OpMov0f13(m, rde));
+    CASE(0x114, OpUnpcklpsd(m, rde));
+    CASE(0x115, OpUnpckhpsd(m, rde));
+    CASE(0x116, OpMov0f16(m, rde));
+    CASE(0x117, OpMov0f17(m, rde));
+    CASE(0x128, OpMov0f28(m, rde));
+    CASE(0x129, OpMovWpsVps(m, rde));
+    CASE(0x12A, OpCvt(m, rde, kOpCvt0f2a));
+    CASE(0x12B, OpMov0f2b(m, rde));
+    CASE(0x12C, OpCvt(m, rde, kOpCvtt0f2c));
+    CASE(0x12D, OpCvt(m, rde, kOpCvt0f2d));
+    CASE(0x12E, OpComissVsWs(m, rde));
+    CASE(0x12F, OpComissVsWs(m, rde));
+    CASE(0x131, OpRdtsc(m));
+    CASE(0x140, if (GetCond(m, 0x0)) OpMovGvqpEvqp(m, rde));
+    CASE(0x141, if (GetCond(m, 0x1)) OpMovGvqpEvqp(m, rde));
+    CASE(0x142, if (GetCond(m, 0x2)) OpMovGvqpEvqp(m, rde));
+    CASE(0x143, if (GetCond(m, 0x3)) OpMovGvqpEvqp(m, rde));
+    CASE(0x144, if (GetCond(m, 0x4)) OpMovGvqpEvqp(m, rde));
+    CASE(0x145, if (GetCond(m, 0x5)) OpMovGvqpEvqp(m, rde));
+    CASE(0x146, if (GetCond(m, 0x6)) OpMovGvqpEvqp(m, rde));
+    CASE(0x147, if (GetCond(m, 0x7)) OpMovGvqpEvqp(m, rde));
+    CASE(0x148, if (GetCond(m, 0x8)) OpMovGvqpEvqp(m, rde));
+    CASE(0x149, if (GetCond(m, 0x9)) OpMovGvqpEvqp(m, rde));
+    CASE(0x14A, if (GetCond(m, 0xa)) OpMovGvqpEvqp(m, rde));
+    CASE(0x14B, if (GetCond(m, 0xb)) OpMovGvqpEvqp(m, rde));
+    CASE(0x14C, if (GetCond(m, 0xc)) OpMovGvqpEvqp(m, rde));
+    CASE(0x14D, if (GetCond(m, 0xd)) OpMovGvqpEvqp(m, rde));
+    CASE(0x14E, if (GetCond(m, 0xe)) OpMovGvqpEvqp(m, rde));
+    CASE(0x14F, if (GetCond(m, 0xf)) OpMovGvqpEvqp(m, rde));
+    CASE(0x151, OpSqrtpsd(m, rde));
+    CASE(0x152, OpRsqrtps(m, rde));
+    CASE(0x153, OpRcpps(m, rde));
+    CASE(0x154, OpAndpsd(m, rde));
+    CASE(0x155, OpAndnpsd(m, rde));
+    CASE(0x156, OpOrpsd(m, rde));
+    CASE(0x157, OpXorpsd(m, rde));
+    CASE(0x158, OpAddpsd(m, rde));
+    CASE(0x159, OpMulpsd(m, rde));
+    CASE(0x15A, OpCvt(m, rde, kOpCvt0f5a));
+    CASE(0x15B, OpCvt(m, rde, kOpCvt0f5b));
+    CASE(0x15C, OpSubpsd(m, rde));
+    CASE(0x15D, OpMinpsd(m, rde));
+    CASE(0x15E, OpDivpsd(m, rde));
+    CASE(0x15F, OpMaxpsd(m, rde));
+    CASR(0x160, OpSse(m, rde, kOpSsePunpcklbw));
+    CASR(0x161, OpSse(m, rde, kOpSsePunpcklwd));
+    CASR(0x162, OpSse(m, rde, kOpSsePunpckldq));
+    CASR(0x163, OpSse(m, rde, kOpSsePacksswb));
+    CASR(0x164, OpSse(m, rde, kOpSsePcmpgtb));
+    CASR(0x165, OpSse(m, rde, kOpSsePcmpgtw));
+    CASR(0x166, OpSse(m, rde, kOpSsePcmpgtd));
+    CASR(0x167, OpSse(m, rde, kOpSsePackuswb));
+    CASR(0x168, OpSse(m, rde, kOpSsePunpckhbw));
+    CASR(0x169, OpSse(m, rde, kOpSsePunpckhwd));
+    CASR(0x16A, OpSse(m, rde, kOpSsePunpckhdq));
+    CASR(0x16B, OpSse(m, rde, kOpSsePackssdw));
+    CASR(0x16C, OpSse(m, rde, kOpSsePunpcklqdq));
+    CASR(0x16D, OpSse(m, rde, kOpSsePunpckhqdq));
+    CASE(0x16E, OpMov0f6e(m, rde));
+    CASE(0x16F, OpMov0f6f(m, rde));
+    CASE(0x170, OpShuffle(m, rde));
+    CASR(0x174, OpSse(m, rde, kOpSsePcmpeqb));
+    CASR(0x175, OpSse(m, rde, kOpSsePcmpeqw));
+    CASR(0x176, OpSse(m, rde, kOpSsePcmpeqd));
+    CASE(0x17C, OpHaddpsd(m, rde));
+    CASE(0x17D, OpHsubpsd(m, rde));
+    CASE(0x17E, OpMov0f7e(m, rde));
+    CASE(0x17F, OpMov0f7f(m, rde));
+    CASE(0x180, if (GetCond(m, 0x0)) OpJmp(m));
+    CASE(0x181, if (GetCond(m, 0x1)) OpJmp(m));
+    CASE(0x182, if (GetCond(m, 0x2)) OpJmp(m));
+    CASE(0x183, if (GetCond(m, 0x3)) OpJmp(m));
+    CASE(0x184, if (GetCond(m, 0x4)) OpJmp(m));
+    CASE(0x185, if (GetCond(m, 0x5)) OpJmp(m));
+    CASE(0x186, if (GetCond(m, 0x6)) OpJmp(m));
+    CASE(0x187, if (GetCond(m, 0x7)) OpJmp(m));
+    CASE(0x188, if (GetCond(m, 0x8)) OpJmp(m));
+    CASE(0x189, if (GetCond(m, 0x9)) OpJmp(m));
+    CASE(0x18A, if (GetCond(m, 0xa)) OpJmp(m));
+    CASE(0x18B, if (GetCond(m, 0xb)) OpJmp(m));
+    CASE(0x18C, if (GetCond(m, 0xc)) OpJmp(m));
+    CASE(0x18D, if (GetCond(m, 0xd)) OpJmp(m));
+    CASE(0x18E, if (GetCond(m, 0xe)) OpJmp(m));
+    CASE(0x18F, if (GetCond(m, 0xf)) OpJmp(m));
+    CASE(0x190, OpEbSetCc(m, rde, GetCond(m, 0x0)));
+    CASE(0x191, OpEbSetCc(m, rde, GetCond(m, 0x1)));
+    CASE(0x192, OpEbSetCc(m, rde, GetCond(m, 0x2)));
+    CASE(0x193, OpEbSetCc(m, rde, GetCond(m, 0x3)));
+    CASE(0x194, OpEbSetCc(m, rde, GetCond(m, 0x4)));
+    CASE(0x195, OpEbSetCc(m, rde, GetCond(m, 0x5)));
+    CASE(0x196, OpEbSetCc(m, rde, GetCond(m, 0x6)));
+    CASE(0x197, OpEbSetCc(m, rde, GetCond(m, 0x7)));
+    CASE(0x198, OpEbSetCc(m, rde, GetCond(m, 0x8)));
+    CASE(0x199, OpEbSetCc(m, rde, GetCond(m, 0x9)));
+    CASE(0x19A, OpEbSetCc(m, rde, GetCond(m, 0xa)));
+    CASE(0x19B, OpEbSetCc(m, rde, GetCond(m, 0xb)));
+    CASE(0x19C, OpEbSetCc(m, rde, GetCond(m, 0xc)));
+    CASE(0x19D, OpEbSetCc(m, rde, GetCond(m, 0xd)));
+    CASE(0x19E, OpEbSetCc(m, rde, GetCond(m, 0xe)));
+    CASE(0x19F, OpEbSetCc(m, rde, GetCond(m, 0xf)));
+    CASE(0x1A0, OpPushFs(m));
+    CASE(0x1A1, OpPopFs(m));
+    CASE(0x1A2, OpCpuid(m));
+    CASE(0x1A3, OpBit(m, rde));
+    CASE(0x1A8, OpPushGs(m));
+    CASE(0x1A9, OpPopGs(m));
+    CASE(0x1AB, OpBit(m, rde));
+    CASE(0x1AF, OpImulGvqpEvqp(m, rde));
+    CASE(0x1B0, OpCmpxchgEbAlGb(m, rde));
+    CASE(0x1B1, OpCmpxchgEvqpRaxGvqp(m, rde));
+    CASE(0x1B3, OpBit(m, rde));
+    CASE(0x1B6, OpMovzbGvqpEb(m, rde));
+    CASE(0x1B7, OpMovzwGvqpEw(m, rde));
+    CASE(0x1BA, OpBit(m, rde));
+    CASE(0x1BB, OpBit(m, rde));
+    CASE(0x1BC, OpGvqpEvqp(m, rde, AluBsf, MUTATING));
+    CASE(0x1BD, OpGvqpEvqp(m, rde, AluBsr, MUTATING));
+    CASE(0x1BE, OpMovsbGvqpEb(m, rde));
+    CASE(0x1BF, OpMovswGvqpEw(m, rde));
+    CASE(0x1C0, OpXaddEbGb(m, rde));
+    CASE(0x1C1, OpXaddEvqpGvqp(m, rde));
+    CASE(0x1C2, OpCmppsd(m, rde));
+    CASE(0x1C3, OpMovntiMdqpGdqp(m, rde));
+    CASE(0x1C4, OpPinsrwVdqEwIb(m, rde));
+    CASE(0x1C5, OpPextrwGdqpUdqIb(m, rde));
+    CASE(0x1C6, OpShufpsd(m, rde));
+    CASE(0x1C7, OpCmpxchgDxAx(m, rde));
+    CASE(0x1D0, OpAddsubpsd(m, rde));
+    CASR(0x1D1, OpSse(m, rde, kOpSsePsrlwv));
+    CASR(0x1D2, OpSse(m, rde, kOpSsePsrldv));
+    CASR(0x1D3, OpSse(m, rde, kOpSsePsrlqv));
+    CASR(0x1D4, OpSse(m, rde, kOpSsePaddq));
+    CASR(0x1D5, OpSse(m, rde, kOpSsePmullw));
+    CASE(0x1D6, OpMov0fD6(m, rde));
+    CASE(0x1D7, OpPmovmskbGdqpNqUdq(m, rde));
+    CASR(0x1D8, OpSse(m, rde, kOpSsePsubusb));
+    CASR(0x1D9, OpSse(m, rde, kOpSsePsubusw));
+    CASR(0x1DA, OpSse(m, rde, kOpSsePminub));
+    CASR(0x1DB, OpSse(m, rde, kOpSsePand));
+    CASR(0x1DC, OpSse(m, rde, kOpSsePaddusb));
+    CASR(0x1DD, OpSse(m, rde, kOpSsePaddusw));
+    CASR(0x1DE, OpSse(m, rde, kOpSsePmaxub));
+    CASR(0x1DF, OpSse(m, rde, kOpSsePandn));
+    CASR(0x1E0, OpSse(m, rde, kOpSsePavgb));
+    CASR(0x1E1, OpSse(m, rde, kOpSsePsrawv));
+    CASR(0x1E2, OpSse(m, rde, kOpSsePsradv));
+    CASR(0x1E3, OpSse(m, rde, kOpSsePavgw));
+    CASR(0x1E4, OpSse(m, rde, kOpSsePmulhuw));
+    CASR(0x1E5, OpSse(m, rde, kOpSsePmulhw));
+    CASE(0x1E6, OpCvt(m, rde, kOpCvt0fE6));
+    CASE(0x1E7, OpMov0fE7(m, rde));
+    CASR(0x1E8, OpSse(m, rde, kOpSsePsubsb));
+    CASR(0x1E9, OpSse(m, rde, kOpSsePsubsw));
+    CASR(0x1EA, OpSse(m, rde, kOpSsePminsw));
+    CASR(0x1EB, OpSse(m, rde, kOpSsePor));
+    CASR(0x1EC, OpSse(m, rde, kOpSsePaddsb));
+    CASR(0x1ED, OpSse(m, rde, kOpSsePaddsw));
+    CASR(0x1EE, OpSse(m, rde, kOpSsePmaxsw));
+    CASR(0x1EF, OpSse(m, rde, kOpSsePxor));
+    CASE(0x1F0, OpLddquVdqMdq(m, rde));
+    CASR(0x1F1, OpSse(m, rde, kOpSsePsllwv));
+    CASR(0x1F2, OpSse(m, rde, kOpSsePslldv));
+    CASR(0x1F3, OpSse(m, rde, kOpSsePsllqv));
+    CASR(0x1F4, OpSse(m, rde, kOpSsePmuludq));
+    CASR(0x1F5, OpSse(m, rde, kOpSsePmaddwd));
+    CASR(0x1F6, OpSse(m, rde, kOpSsePsadbw));
+    CASE(0x1F7, OpMaskMovDiXmmRegXmmRm(m, rde));
+    CASR(0x1F8, OpSse(m, rde, kOpSsePsubb));
+    CASR(0x1F9, OpSse(m, rde, kOpSsePsubw));
+    CASR(0x1FA, OpSse(m, rde, kOpSsePsubd));
+    CASR(0x1FB, OpSse(m, rde, kOpSsePsubq));
+    CASR(0x1FC, OpSse(m, rde, kOpSsePaddb));
+    CASR(0x1FD, OpSse(m, rde, kOpSsePaddw));
+    CASR(0x1FE, OpSse(m, rde, kOpSsePaddd));
+    CASR(0x200, OpSse(m, rde, kOpSsePshufb));
+    CASR(0x201, OpSse(m, rde, kOpSsePhaddw));
+    CASR(0x202, OpSse(m, rde, kOpSsePhaddd));
+    CASR(0x203, OpSse(m, rde, kOpSsePhaddsw));
+    CASR(0x204, OpSse(m, rde, kOpSsePmaddubsw));
+    CASR(0x205, OpSse(m, rde, kOpSsePhsubw));
+    CASR(0x206, OpSse(m, rde, kOpSsePhsubd));
+    CASR(0x207, OpSse(m, rde, kOpSsePhsubsw));
+    CASR(0x208, OpSse(m, rde, kOpSsePsignb));
+    CASR(0x209, OpSse(m, rde, kOpSsePsignw));
+    CASR(0x20A, OpSse(m, rde, kOpSsePsignd));
+    CASR(0x20B, OpSse(m, rde, kOpSsePmulhrsw));
+    CASR(0x21C, OpSse(m, rde, kOpSsePabsb));
+    CASR(0x21D, OpSse(m, rde, kOpSsePabsw));
+    CASR(0x21E, OpSse(m, rde, kOpSsePabsd));
+    CASE(0x22A, OpMovntdqaVdqMdq(m, rde));
+    CASR(0x240, OpSse(m, rde, kOpSsePmulld));
+    CASE(0x30F, OpSsePalignr(m, rde));
+    case 0xD8:
+    case 0xD9:
+    case 0xDA:
+    case 0xDB:
+    case 0xDC:
+    case 0xDD:
+    case 0xDE:
+    case 0xDF:
       OpFpu(m);
       break;
-    case /*0366 0xF6*/ 0b11110110:
+    case 0xF6:
       switch (ModrmReg(rde)) {
-        CASE(0, OpAlubi(m, rde, Alu, TEST, UIMM0));
-        CASE(1, OpAlubi(m, rde, Alu, TEST, UIMM0));
-        CASE(2, OpEb(m, rde, AluNot));
-        CASE(3, OpEb(m, rde, AluNeg));
+        CASR(0, OpAlubiRo(m, rde, TEST));
+        CASR(1, OpAlubiRo(m, rde, TEST));
+        CASR(2, OpEb(m, rde, AluNot));
+        CASR(3, OpEb(m, rde, AluNeg));
         CASE(4, OpMulAxAlEbUnsigned(m, rde));
         CASE(5, OpMulAxAlEbSigned(m, rde));
         CASE(6, OpDivAlAhAxEbUnsigned(m, rde));
@@ -2045,10 +2206,10 @@ void ExecuteInstructionMap0(struct Machine *m, uint32_t rde) {
           unreachable;
       }
       break;
-    case /*0367 0xF7*/ 0b11110111:
+    case 0xF7:
       switch (ModrmReg(rde)) {
-        CASE(0, OpAluwi(m, rde, Alu, TEST, UIMM0));
-        CASE(1, OpAluwi(m, rde, Alu, TEST, UIMM0));
+        CASE(0, OpAluwiRo(m, rde, TEST));
+        CASE(1, OpAluwiRo(m, rde, TEST));
         CASE(2, OpEvqp(m, rde, AluNot));
         CASE(3, OpEvqp(m, rde, AluNeg));
         CASE(4, OpMulRdxRaxEvqpUnsigned(m, rde));
@@ -2059,7 +2220,7 @@ void ExecuteInstructionMap0(struct Machine *m, uint32_t rde) {
           unreachable;
       }
       break;
-    case /*0376 0xFE*/ 0b11111110:
+    case 0xFE:
       switch (ModrmReg(rde)) {
         CASE(0b000, OpEb(m, rde, AluInc));
         CASE(0b001, OpEb(m, rde, AluDec));
@@ -2067,7 +2228,7 @@ void ExecuteInstructionMap0(struct Machine *m, uint32_t rde) {
           OpUd(m);
       }
       break;
-    case /*0377 0xFF*/ 0b11111111:
+    case 0xFF:
       switch (ModrmReg(rde)) {
         CASE(0, OpEvqp(m, rde, AluInc));
         CASE(1, OpEvqp(m, rde, AluDec));
@@ -2078,211 +2239,24 @@ void ExecuteInstructionMap0(struct Machine *m, uint32_t rde) {
           OpUd(m);
       }
       break;
-    default:
-      OpUd(m);
-  }
-}
-
-void ExecuteInstructionMap1(struct Machine *m, uint32_t rde) {
-  switch (m->xedd->op.opcode) {
-    CASE(/*0005 0x05*/ 0b00000101, OpSyscall(m));
-    CASE(/*0020 0x10*/ 0b00010000, OpMov0f10(m, rde));
-    CASE(/*0021 0x11*/ 0b00010001, OpMovWpsVps(m, rde));
-    CASE(/*0022 0x12*/ 0b00010010, OpMov0f12(m, rde));
-    CASE(/*0023 0x13*/ 0b00010011, OpMov0f13(m, rde));
-    CASE(/*0024 0x14*/ 0b00010100, OpUnpcklpsd(m, rde));
-    CASE(/*0025 0x15*/ 0b00010101, OpUnpckhpsd(m, rde));
-    CASE(/*0026 0x16*/ 0b00010110, OpMov0f16(m, rde));
-    CASE(/*0027 0x17*/ 0b00010111, OpMov0f17(m, rde));
-    CASE(/*0050 0x28*/ 0b00101000, OpMov0f28(m, rde));
-    CASE(/*0051 0x29*/ 0b00101001, OpMovWpsVps(m, rde));
-    CASE(/*0052 0x2A*/ 0b00101010, OpCvt(m, rde, kOpCvt0f2a));
-    CASE(/*0053 0x2B*/ 0b00101011, OpMov0f2b(m, rde));
-    CASE(/*0054 0x2C*/ 0b00101100, OpCvt(m, rde, kOpCvtt0f2c));
-    CASE(/*0055 0x2D*/ 0b00101101, OpCvt(m, rde, kOpCvt0f2d));
-    CASE(/*0056 0x2E*/ 0b00101110, OpComissVsWs(m, rde));
-    CASE(/*0057 0x2F*/ 0b00101111, OpComissVsWs(m, rde));
-    CASE(/*0061 0x31*/ 0b00110001, OpRdtsc(m));
-    CASE(/*0100 0x40*/ 0b01000000, if (GetCond(m, 0x0)) OpMovGvqpEvqp(m, rde));
-    CASE(/*0101 0x41*/ 0b01000001, if (GetCond(m, 0x1)) OpMovGvqpEvqp(m, rde));
-    CASE(/*0102 0x42*/ 0b01000010, if (GetCond(m, 0x2)) OpMovGvqpEvqp(m, rde));
-    CASE(/*0103 0x43*/ 0b01000011, if (GetCond(m, 0x3)) OpMovGvqpEvqp(m, rde));
-    CASE(/*0104 0x44*/ 0b01000100, if (GetCond(m, 0x4)) OpMovGvqpEvqp(m, rde));
-    CASE(/*0105 0x45*/ 0b01000101, if (GetCond(m, 0x5)) OpMovGvqpEvqp(m, rde));
-    CASE(/*0106 0x46*/ 0b01000110, if (GetCond(m, 0x6)) OpMovGvqpEvqp(m, rde));
-    CASE(/*0107 0x47*/ 0b01000111, if (GetCond(m, 0x7)) OpMovGvqpEvqp(m, rde));
-    CASE(/*0110 0x48*/ 0b01001000, if (GetCond(m, 0x8)) OpMovGvqpEvqp(m, rde));
-    CASE(/*0111 0x49*/ 0b01001001, if (GetCond(m, 0x9)) OpMovGvqpEvqp(m, rde));
-    CASE(/*0112 0x4a*/ 0b01001010, if (GetCond(m, 0xa)) OpMovGvqpEvqp(m, rde));
-    CASE(/*0113 0x4b*/ 0b01001011, if (GetCond(m, 0xb)) OpMovGvqpEvqp(m, rde));
-    CASE(/*0114 0x4c*/ 0b01001100, if (GetCond(m, 0xc)) OpMovGvqpEvqp(m, rde));
-    CASE(/*0115 0x4d*/ 0b01001101, if (GetCond(m, 0xd)) OpMovGvqpEvqp(m, rde));
-    CASE(/*0116 0x4e*/ 0b01001110, if (GetCond(m, 0xe)) OpMovGvqpEvqp(m, rde));
-    CASE(/*0117 0x4f*/ 0b01001111, if (GetCond(m, 0xf)) OpMovGvqpEvqp(m, rde));
-    CASE(/*0121 0x51*/ 0b01010001, OpSqrtpsd(m, rde));
-    CASE(/*0122 0x52*/ 0b01010010, OpRsqrtps(m, rde));
-    CASE(/*0123 0x53*/ 0b01010011, OpRcpps(m, rde));
-    CASE(/*0124 0x54*/ 0b01010100, OpAndpsd(m, rde));
-    CASE(/*0125 0x55*/ 0b01010101, OpAndnpsd(m, rde));
-    CASE(/*0126 0x56*/ 0b01010110, OpOrpsd(m, rde));
-    CASE(/*0127 0x57*/ 0b01010111, OpXorpsd(m, rde));
-    CASE(/*0130 0x58*/ 0b01011000, OpAddpsd(m, rde));
-    CASE(/*0131 0x59*/ 0b01011001, OpMulpsd(m, rde));
-    CASE(/*0132 0x5A*/ 0b01011010, OpCvt(m, rde, kOpCvt0f5a));
-    CASE(/*0133 0x5B*/ 0b01011011, OpCvt(m, rde, kOpCvt0f5b));
-    CASE(/*0134 0x5C*/ 0b01011100, OpSubpsd(m, rde));
-    CASE(/*0135 0x5D*/ 0b01011101, OpMinpsd(m, rde));
-    CASE(/*0136 0x5E*/ 0b01011110, OpDivpsd(m, rde));
-    CASE(/*0137 0x5F*/ 0b01011111, OpMaxpsd(m, rde));
-    CASE(/*0140 0x60*/ 0b01100000, OpSse(m, rde, kOpSsePunpcklbw));
-    CASE(/*0141 0x61*/ 0b01100001, OpSse(m, rde, kOpSsePunpcklwd));
-    CASE(/*0142 0x62*/ 0b01100010, OpSse(m, rde, kOpSsePunpckldq));
-    CASE(/*0143 0x63*/ 0b01100011, OpSse(m, rde, kOpSsePacksswb));
-    CASE(/*0144 0x64*/ 0b01100100, OpSse(m, rde, kOpSsePcmpgtb));
-    CASE(/*0145 0x65*/ 0b01100101, OpSse(m, rde, kOpSsePcmpgtw));
-    CASE(/*0146 0x66*/ 0b01100110, OpSse(m, rde, kOpSsePcmpgtd));
-    CASE(/*0147 0x67*/ 0b01100111, OpSse(m, rde, kOpSsePackuswb));
-    CASE(/*0150 0x68*/ 0b01101000, OpSse(m, rde, kOpSsePunpckhbw));
-    CASE(/*0151 0x69*/ 0b01101001, OpSse(m, rde, kOpSsePunpckhwd));
-    CASE(/*0152 0x6A*/ 0b01101010, OpSse(m, rde, kOpSsePunpckhdq));
-    CASE(/*0153 0x6B*/ 0b01101011, OpSse(m, rde, kOpSsePackssdw));
-    CASE(/*0154 0x6C*/ 0b01101100, OpSse(m, rde, kOpSsePunpcklqdq));
-    CASE(/*0155 0x6D*/ 0b01101101, OpSse(m, rde, kOpSsePunpckhqdq));
-    CASE(/*0156 0x6E*/ 0b01101110, OpMov0f6e(m, rde));
-    CASE(/*0157 0x6F*/ 0b01101111, OpMov0f6f(m, rde));
-    CASE(/*0160 0x70*/ 0b01110000, OpShuffle(m, rde));
-    CASE(/*0164 0x74*/ 0b01110100, OpSse(m, rde, kOpSsePcmpeqb));
-    CASE(/*0165 0x75*/ 0b01110101, OpSse(m, rde, kOpSsePcmpeqw));
-    CASE(/*0166 0x76*/ 0b01110110, OpSse(m, rde, kOpSsePcmpeqd));
-    CASE(/*0174 0x7C*/ 0b01111100, OpHaddpsd(m, rde));
-    CASE(/*0175 0x7D*/ 0b01111101, OpHsubpsd(m, rde));
-    CASE(/*0176 0x7E*/ 0b01111110, OpMov0f7e(m, rde));
-    CASE(/*0177 0x7F*/ 0b01111111, OpMov0f7f(m, rde));
-    CASE(/*0200 0x80*/ 0b10000000, if (GetCond(m, 0x0)) OpJmp(m));
-    CASE(/*0201 0x81*/ 0b10000001, if (GetCond(m, 0x1)) OpJmp(m));
-    CASE(/*0202 0x82*/ 0b10000010, if (GetCond(m, 0x2)) OpJmp(m));
-    CASE(/*0203 0x83*/ 0b10000011, if (GetCond(m, 0x3)) OpJmp(m));
-    CASE(/*0204 0x84*/ 0b10000100, if (GetCond(m, 0x4)) OpJmp(m));
-    CASE(/*0205 0x85*/ 0b10000101, if (GetCond(m, 0x5)) OpJmp(m));
-    CASE(/*0206 0x86*/ 0b10000110, if (GetCond(m, 0x6)) OpJmp(m));
-    CASE(/*0207 0x87*/ 0b10000111, if (GetCond(m, 0x7)) OpJmp(m));
-    CASE(/*0210 0x88*/ 0b10001000, if (GetCond(m, 0x8)) OpJmp(m));
-    CASE(/*0211 0x89*/ 0b10001001, if (GetCond(m, 0x9)) OpJmp(m));
-    CASE(/*0212 0x8a*/ 0b10001010, if (GetCond(m, 0xa)) OpJmp(m));
-    CASE(/*0213 0x8b*/ 0b10001011, if (GetCond(m, 0xb)) OpJmp(m));
-    CASE(/*0214 0x8c*/ 0b10001100, if (GetCond(m, 0xc)) OpJmp(m));
-    CASE(/*0215 0x8d*/ 0b10001101, if (GetCond(m, 0xd)) OpJmp(m));
-    CASE(/*0216 0x8e*/ 0b10001110, if (GetCond(m, 0xe)) OpJmp(m));
-    CASE(/*0217 0x8f*/ 0b10001111, if (GetCond(m, 0xf)) OpJmp(m));
-    CASE(/*0220 0x90*/ 0b10010000, OpEbSetCc(m, rde, GetCond(m, 0x0)));
-    CASE(/*0221 0x91*/ 0b10010001, OpEbSetCc(m, rde, GetCond(m, 0x1)));
-    CASE(/*0222 0x92*/ 0b10010010, OpEbSetCc(m, rde, GetCond(m, 0x2)));
-    CASE(/*0223 0x93*/ 0b10010011, OpEbSetCc(m, rde, GetCond(m, 0x3)));
-    CASE(/*0224 0x94*/ 0b10010100, OpEbSetCc(m, rde, GetCond(m, 0x4)));
-    CASE(/*0225 0x95*/ 0b10010101, OpEbSetCc(m, rde, GetCond(m, 0x5)));
-    CASE(/*0226 0x96*/ 0b10010110, OpEbSetCc(m, rde, GetCond(m, 0x6)));
-    CASE(/*0227 0x97*/ 0b10010111, OpEbSetCc(m, rde, GetCond(m, 0x7)));
-    CASE(/*0230 0x98*/ 0b10011000, OpEbSetCc(m, rde, GetCond(m, 0x8)));
-    CASE(/*0231 0x99*/ 0b10011001, OpEbSetCc(m, rde, GetCond(m, 0x9)));
-    CASE(/*0232 0x9A*/ 0b10011010, OpEbSetCc(m, rde, GetCond(m, 0xa)));
-    CASE(/*0233 0x9B*/ 0b10011011, OpEbSetCc(m, rde, GetCond(m, 0xb)));
-    CASE(/*0234 0x9C*/ 0b10011100, OpEbSetCc(m, rde, GetCond(m, 0xc)));
-    CASE(/*0235 0x9D*/ 0b10011101, OpEbSetCc(m, rde, GetCond(m, 0xd)));
-    CASE(/*0236 0x9E*/ 0b10011110, OpEbSetCc(m, rde, GetCond(m, 0xe)));
-    CASE(/*0237 0x9F*/ 0b10011111, OpEbSetCc(m, rde, GetCond(m, 0xf)));
-    CASE(/*0240 0xA0*/ 0b10100000, OpPushFs(m));
-    CASE(/*0241 0xA1*/ 0b10100001, OpPopFs(m));
-    CASE(/*0242 0xA2*/ 0b10100010, OpCpuid(m));
-    CASE(/*0243 0xA3*/ 0b10100011, OpBit(m, rde));
-    CASE(/*0250 0xA8*/ 0b10101000, OpPushGs(m));
-    CASE(/*0251 0xA9*/ 0b10101001, OpPopGs(m));
-    CASE(/*0253 0xAB*/ 0b10101011, OpBit(m, rde));
-    CASE(/*0257 0xAF*/ 0b10101111, OpImulGvqpEvqp(m, rde));
-    CASE(/*0260 0xB0*/ 0b10110000, OpCmpxchgEbAlGb(m, rde));
-    CASE(/*0261 0xB1*/ 0b10110001, OpCmpxchgEvqpRaxGvqp(m, rde));
-    CASE(/*0263 0xB3*/ 0b10110011, OpBit(m, rde));
-    CASE(/*0266 0xB6*/ 0b10110110, OpMovzbGvqpEb(m, rde));
-    CASE(/*0267 0xB7*/ 0b10110111, OpMovzwGvqpEw(m, rde));
-    CASE(/*0272 0xBA*/ 0b10111010, OpBit(m, rde));
-    CASE(/*0273 0xBB*/ 0b10111011, OpBit(m, rde));
-    CASE(/*0274 0xBC*/ 0b10111100, OpGvqpEvqp(m, rde, AluBsf, MUTATING));
-    CASE(/*0275 0xBD*/ 0b10111101, OpGvqpEvqp(m, rde, AluBsr, MUTATING));
-    CASE(/*0276 0xBE*/ 0b10111110, OpMovsbGvqpEb(m, rde));
-    CASE(/*0277 0xBF*/ 0b10111111, OpMovswGvqpEw(m, rde));
-    CASE(/*0300 0xC0*/ 0b11000000, OpXaddEbGb(m, rde));
-    CASE(/*0301 0xC1*/ 0b11000001, OpXaddEvqpGvqp(m, rde));
-    CASE(/*0302 0xC2*/ 0b11000010, OpCmppsd(m, rde));
-    CASE(/*0303 0xC3*/ 0b11000011, OpMovntiMdqpGdqp(m, rde));
-    CASE(/*0304 0xC4*/ 0b11000100, OpPinsrwVdqEwIb(m, rde));
-    CASE(/*0305 0xC5*/ 0b11000101, OpPextrwGdqpUdqIb(m, rde));
-    CASE(/*0306 0xC6*/ 0b11000110, OpShufpsd(m, rde));
-    CASE(/*0307 0xC7*/ 0b11000111, OpCmpxchgDxAx(m, rde));
-    CASE(/*0310 0xC8*/ 0b11001000 ... 0b11001111, OpBswapZvqp(m, rde));
-    CASE(/*0320 0xD0*/ 0b11010000, OpAddsubpsd(m, rde));
-    CASE(/*0321 0xD1*/ 0b11010001, OpSse(m, rde, kOpSsePsrlwv));
-    CASE(/*0322 0xD2*/ 0b11010010, OpSse(m, rde, kOpSsePsrldv));
-    CASE(/*0323 0xD3*/ 0b11010011, OpSse(m, rde, kOpSsePsrlqv));
-    CASE(/*0324 0xD4*/ 0b11010100, OpSse(m, rde, kOpSsePaddq));
-    CASE(/*0325 0xD5*/ 0b11010101, OpSse(m, rde, kOpSsePmullw));
-    CASE(/*0326 0xD6*/ 0b11010110, OpMov0fD6(m, rde));
-    CASE(/*0327 0xD7*/ 0b11010111, OpPmovmskbGdqpNqUdq(m, rde));
-    CASE(/*0330 0xD8*/ 0b11011000, OpSse(m, rde, kOpSsePsubusb));
-    CASE(/*0331 0xD9*/ 0b11011001, OpSse(m, rde, kOpSsePsubusw));
-    CASE(/*0332 0xDA*/ 0b11011010, OpSse(m, rde, kOpSsePminub));
-    CASE(/*0333 0xDB*/ 0b11011011, OpSse(m, rde, kOpSsePand));
-    CASE(/*0334 0xDC*/ 0b11011100, OpSse(m, rde, kOpSsePaddusb));
-    CASE(/*0335 0xDD*/ 0b11011101, OpSse(m, rde, kOpSsePaddusw));
-    CASE(/*0336 0xDE*/ 0b11011110, OpSse(m, rde, kOpSsePmaxub));
-    CASE(/*0337 0xDF*/ 0b11011111, OpSse(m, rde, kOpSsePandn));
-    CASE(/*0340 0xE0*/ 0b11100000, OpSse(m, rde, kOpSsePavgb));
-    CASE(/*0341 0xE1*/ 0b11100001, OpSse(m, rde, kOpSsePsrawv));
-    CASE(/*0342 0xE2*/ 0b11100010, OpSse(m, rde, kOpSsePsradv));
-    CASE(/*0343 0xE3*/ 0b11100011, OpSse(m, rde, kOpSsePavgw));
-    CASE(/*0344 0xE4*/ 0b11100100, OpSse(m, rde, kOpSsePmulhuw));
-    CASE(/*0345 0xE5*/ 0b11100101, OpSse(m, rde, kOpSsePmulhw));
-    CASE(/*0346 0xE6*/ 0b11100110, OpCvt(m, rde, kOpCvt0fE6));
-    CASE(/*0347 0xE7*/ 0b11100111, OpMov0fE7(m, rde));
-    CASE(/*0350 0xE8*/ 0b11101000, OpSse(m, rde, kOpSsePsubsb));
-    CASE(/*0351 0xE9*/ 0b11101001, OpSse(m, rde, kOpSsePsubsw));
-    CASE(/*0352 0xEA*/ 0b11101010, OpSse(m, rde, kOpSsePminsw));
-    CASE(/*0353 0xEB*/ 0b11101011, OpSse(m, rde, kOpSsePor));
-    CASE(/*0354 0xEC*/ 0b11101100, OpSse(m, rde, kOpSsePaddsb));
-    CASE(/*0355 0xED*/ 0b11101101, OpSse(m, rde, kOpSsePaddsw));
-    CASE(/*0356 0xEE*/ 0b11101110, OpSse(m, rde, kOpSsePmaxsw));
-    CASE(/*0357 0xEF*/ 0b11101111, OpSse(m, rde, kOpSsePxor));
-    CASE(/*0360 0xF0*/ 0b11110000, OpLddquVdqMdq(m, rde));
-    CASE(/*0361 0xF1*/ 0b11110001, OpSse(m, rde, kOpSsePsllwv));
-    CASE(/*0362 0xF2*/ 0b11110010, OpSse(m, rde, kOpSsePslldv));
-    CASE(/*0363 0xF3*/ 0b11110011, OpSse(m, rde, kOpSsePsllqv));
-    CASE(/*0364 0xF4*/ 0b11110100, OpSse(m, rde, kOpSsePmuludq));
-    CASE(/*0365 0xF5*/ 0b11110101, OpSse(m, rde, kOpSsePmaddwd));
-    CASE(/*0366 0xF6*/ 0b11110110, OpSse(m, rde, kOpSsePsadbw));
-    CASE(/*0367 0xF7*/ 0b11110111, OpMaskMovDiXmmRegXmmRm(m, rde));
-    CASE(/*0370 0xF8*/ 0b11111000, OpSse(m, rde, kOpSsePsubb));
-    CASE(/*0371 0xF9*/ 0b11111001, OpSse(m, rde, kOpSsePsubw));
-    CASE(/*0372 0xFA*/ 0b11111010, OpSse(m, rde, kOpSsePsubd));
-    CASE(/*0373 0xFB*/ 0b11111011, OpSse(m, rde, kOpSsePsubq));
-    CASE(/*0374 0xFC*/ 0b11111100, OpSse(m, rde, kOpSsePaddb));
-    CASE(/*0375 0xFD*/ 0b11111101, OpSse(m, rde, kOpSsePaddw));
-    CASE(/*0376 0xFE*/ 0b11111110, OpSse(m, rde, kOpSsePaddd));
-    case /*0013 0x0B*/ 0b00001011:
-    case /*0271 0xB9*/ 0b10111001:
-    case /*0377 0xFF*/ 0b11111111:
+    case 0x10B:
+    case 0x1B9:
+    case 0x1FF:
       OpUd(m);
       break;
-    case /*0015 0x0D*/ 0b00001101:
-    case /*0030 0x18*/ 0b00011000:
-    case /*0031 0x19*/ 0b00011001:
-    case /*0032 0x1A*/ 0b00011010:
-    case /*0033 0x1B*/ 0b00011011:
-    case /*0034 0x1C*/ 0b00011100:
-    case /*0035 0x1D*/ 0b00011101:
+    case 0x10D:
+    case 0x118:
+    case 0x119:
+    case 0x11A:
+    case 0x11B:
+    case 0x11C:
+    case 0x11D:
       OpWutNopEv(m);
       break;
-    case /*0037 0x1F*/ 0b00011111:
+    case 0x11F:
       OpNopEv(m);
       break;
-    case /*0161 0x71*/ 0b01110001:
+    case 0x171:
       switch (ModrmReg(rde)) {
         CASE(2, OpSseUdqIb(m, rde, kOpSseUdqIbPsrlw));
         CASE(4, OpSseUdqIb(m, rde, kOpSseUdqIbPsraw));
@@ -2291,7 +2265,7 @@ void ExecuteInstructionMap1(struct Machine *m, uint32_t rde) {
           OpUd(m);
       }
       break;
-    case /*0162 0x72*/ 0b01110010:
+    case 0x172:
       switch (ModrmReg(rde)) {
         CASE(2, OpSseUdqIb(m, rde, kOpSseUdqIbPsrld));
         CASE(4, OpSseUdqIb(m, rde, kOpSseUdqIbPsrad));
@@ -2300,7 +2274,7 @@ void ExecuteInstructionMap1(struct Machine *m, uint32_t rde) {
           OpUd(m);
       }
       break;
-    case /*0163 0x73*/ 0b01110011:
+    case 0x173:
       switch (ModrmReg(rde)) {
         CASE(2, OpSseUdqIb(m, rde, kOpSseUdqIbPsrlq));
         CASE(3, OpSseUdqIb(m, rde, kOpSseUdqIbPsrldq));
@@ -2310,13 +2284,13 @@ void ExecuteInstructionMap1(struct Machine *m, uint32_t rde) {
           OpUd(m);
       }
       break;
-    case /*0244 0xA4*/ 0b10100100:
-    case /*0245 0xA5*/ 0b10100101:
-    case /*0254 0xAC*/ 0b10101100:
-    case /*0255 0xAD*/ 0b10101101:
+    case 0x1A4:
+    case 0x1A5:
+    case 0x1AC:
+    case 0x1AD:
       OpEvqpGvqp(m, rde, OpDoubleShift, MUTATING);
       break;
-    case /*0256 0xAE*/ 0b10101110:
+    case 0x1AE:
       switch (ModrmReg(rde)) {
         CASE(5, OpLfence(m));
         CASE(6, OpMfence(m));
@@ -2331,7 +2305,7 @@ void ExecuteInstructionMap1(struct Machine *m, uint32_t rde) {
           OpUd(m);
       }
       break;
-    case 0xB8:
+    case 0x1B8:
       if (Rep(rde) == 3) {
         OpGvqpEvqp(m, rde, AluPopcnt, MUTATING);
       } else {
@@ -2341,59 +2315,6 @@ void ExecuteInstructionMap1(struct Machine *m, uint32_t rde) {
     default:
       OpUd(m);
   }
-}
-
-void ExecuteInstructionMap2(struct Machine *m, uint32_t rde) {
-  switch (m->xedd->op.opcode) {
-    CASE(0x00, OpSse(m, rde, kOpSsePshufb));
-    CASE(0x01, OpSse(m, rde, kOpSsePhaddw));
-    CASE(0x02, OpSse(m, rde, kOpSsePhaddd));
-    CASE(0x03, OpSse(m, rde, kOpSsePhaddsw));
-    CASE(0x04, OpSse(m, rde, kOpSsePmaddubsw));
-    CASE(0x05, OpSse(m, rde, kOpSsePhsubw));
-    CASE(0x06, OpSse(m, rde, kOpSsePhsubd));
-    CASE(0x07, OpSse(m, rde, kOpSsePhsubsw));
-    CASE(0x08, OpSse(m, rde, kOpSsePsignb));
-    CASE(0x09, OpSse(m, rde, kOpSsePsignw));
-    CASE(0x0A, OpSse(m, rde, kOpSsePsignd));
-    CASE(0x0B, OpSse(m, rde, kOpSsePmulhrsw));
-    CASE(0x1C, OpSse(m, rde, kOpSsePabsb));
-    CASE(0x1D, OpSse(m, rde, kOpSsePabsw));
-    CASE(0x1E, OpSse(m, rde, kOpSsePabsd));
-    CASE(0x2A, OpMovntdqaVdqMdq(m, rde));
-    CASE(0x40, OpSse(m, rde, kOpSsePmulld));
-    default:
-      OpUd(m);
-  }
-}
-
-void ExecuteInstructionMap3(struct Machine *m, uint32_t rde) {
-  switch (m->xedd->op.opcode) {
-    CASE(0x0F, OpSsePalignr(m, rde));
-    default:
-      OpUd(m);
-  }
-}
-
-void ExecuteInstructionMapUndefined(struct Machine *m, uint32_t rde) {
-  OpUd(m);
-}
-
-static const map_f kExecuteInstructionMap[16] = {
-    ExecuteInstructionMap0,         ExecuteInstructionMap1,
-    ExecuteInstructionMap2,         ExecuteInstructionMap3,
-    ExecuteInstructionMapUndefined, ExecuteInstructionMapUndefined,
-    ExecuteInstructionMapUndefined, ExecuteInstructionMapUndefined,
-    ExecuteInstructionMapUndefined, ExecuteInstructionMapUndefined,
-    ExecuteInstructionMapUndefined, ExecuteInstructionMapUndefined,
-    ExecuteInstructionMapUndefined, ExecuteInstructionMapUndefined,
-    ExecuteInstructionMapUndefined, ExecuteInstructionMapUndefined,
-};
-
-void ExecuteInstruction(struct Machine *m) {
-  uint8_t *p;
-  m->ip += m->xedd->length;
-  kExecuteInstructionMap[m->xedd->op.map & 15](m, m->xedd->op.rde);
   if (m->stashaddr) {
     VirtualRecv(m, m->stashaddr, m->stash, m->stashsize);
     m->stashaddr = 0;

@@ -105,17 +105,15 @@ ARGUMENTS\n\
 \n\
 PERFORMANCE\n\
 \n\
-       1500 MIPS w/ NOP loop\n\
+       1000 MIPS w/ NOP loop\n\
   Over 9000 MIPS w/ SIMD & Algorithms\n\
 \n\
-PROTIP\n\
+COMPLETENESS\n\
 \n\
-  Fix SSH keyboard latency for debugger TUI in CONTINUE mode:\n\
-\n\
-    sudo sh -c 'echo -n 8192 >/proc/sys/net/core/rmem_default'\n\
-    sudo sh -c 'echo -n 8192 >/proc/sys/net/core/wmem_default'\n\
-\n\
-\n\
+  Long user mode is supported in addition to SSE3 and SSSE3.\n\
+  Integer ops are implemented rigorously with lots of tests.\n\
+  Floating point instructions are yolo, and tunable more so.\n\
+  Loading, virtual memory management, and syscall need work.\n\
 \n"
 
 #define DUMPWIDTH 64
@@ -274,7 +272,6 @@ static uint8_t CycleSseWidth(uint8_t w) {
 }
 
 static void OnBusted(void) {
-  LOGF("OnBusted");
   CHECK(onbusted);
   longjmp(onbusted, 1);
 }
@@ -621,15 +618,10 @@ static void DrawTerminal(struct Panel *p) {
   }
 }
 
-static void DrawFlag(struct Panel *p, long i, char *name, bool value,
-                     bool previous) {
-  AppendPanel(p, i, " ");
-  if (value) {
-    AppendPanel(p, i, name);
-  } else {
-    AppendPanel(p, i, " ");
-  }
-  AppendPanel(p, i, " ");
+static void DrawFlag(struct Panel *p, long i, char name, bool value) {
+  char str[] = "  ";
+  if (value) str[1] = name;
+  AppendPanel(p, i, str);
 }
 
 static void DrawRegister(struct Panel *p, long i, long r) {
@@ -649,13 +641,12 @@ static void DrawRegister(struct Panel *p, long i, long r) {
 
 static void DrawSt(struct Panel *p, long i, long r) {
   char buf[32];
+  long double value;
   bool isempty, changed;
-  long double value, previous;
   isempty = FpuGetTag(m, r) == kFpuTagEmpty;
   if (isempty) AppendPanel(p, i, "\e[2m");
-  value = *FpuSt(&m[0], r);
-  previous = *FpuSt(&m[1], r);
-  changed = value != previous;
+  value = m[0].fpu.st[(r + m[0].fpu.sp) & 0b111];
+  changed = value != m[1].fpu.st[(r + m[0].fpu.sp) & 0b111];
   if (!isempty && changed) AppendPanel(p, i, "\e[7m");
   snprintf(buf, sizeof(buf), "ST%d ", r);
   AppendPanel(p, i, buf);
@@ -689,20 +680,27 @@ static void DrawCpu(struct Panel *p) {
   DrawRegister(p, 7, 11), DrawRegister(p, 7, 15), DrawSt(p, 7, 7);
   snprintf(buf, sizeof(buf), "RIP 0x%016x  FLG", m[0].ip);
   AppendPanel(p, 8, buf);
-  DrawFlag(p, 8, "C", GetFlag(m[0].flags, FLAGS_CF),
-           GetFlag(m[1].flags, FLAGS_CF));
-  DrawFlag(p, 8, "Z", GetFlag(m[0].flags, FLAGS_ZF),
-           GetFlag(m[1].flags, FLAGS_ZF));
-  DrawFlag(p, 8, "S", GetFlag(m[0].flags, FLAGS_SF),
-           GetFlag(m[1].flags, FLAGS_SF));
-  DrawFlag(p, 8, "O", GetFlag(m[0].flags, FLAGS_OF),
-           GetFlag(m[1].flags, FLAGS_OF));
-  DrawFlag(p, 8, "P", GetFlag(m[0].flags, FLAGS_PF),
-           GetFlag(m[1].flags, FLAGS_PF));
-  DrawFlag(p, 8, "I", GetFlag(m[0].flags, FLAGS_IF),
-           GetFlag(m[1].flags, FLAGS_IF));
-  DrawFlag(p, 8, "D", GetFlag(m[0].flags, FLAGS_DF),
-           GetFlag(m[1].flags, FLAGS_DF));
+  DrawFlag(p, 8, 'C', GetFlag(m[0].flags, FLAGS_CF));
+  DrawFlag(p, 8, 'P', GetFlag(m[0].flags, FLAGS_PF));
+  DrawFlag(p, 8, 'A', GetFlag(m[0].flags, FLAGS_AF));
+  DrawFlag(p, 8, 'Z', GetFlag(m[0].flags, FLAGS_ZF));
+  DrawFlag(p, 8, 'S', GetFlag(m[0].flags, FLAGS_SF));
+  DrawFlag(p, 8, 'I', GetFlag(m[0].flags, FLAGS_IF));
+  DrawFlag(p, 8, 'D', GetFlag(m[0].flags, FLAGS_DF));
+  DrawFlag(p, 8, 'O', GetFlag(m[0].flags, FLAGS_OF));
+  AppendPanel(p, 8, "    ");
+  if (m->fpu.ie) AppendPanel(p, 8, " IE");
+  if (m->fpu.de) AppendPanel(p, 8, " DE");
+  if (m->fpu.ze) AppendPanel(p, 8, " ZE");
+  if (m->fpu.oe) AppendPanel(p, 8, " OE");
+  if (m->fpu.ue) AppendPanel(p, 8, " UE");
+  if (m->fpu.pe) AppendPanel(p, 8, " PE");
+  if (m->fpu.sf) AppendPanel(p, 8, " SF");
+  if (m->fpu.es) AppendPanel(p, 8, " ES");
+  if (m->fpu.c0) AppendPanel(p, 8, " C0");
+  if (m->fpu.c1) AppendPanel(p, 8, " C1");
+  if (m->fpu.c2) AppendPanel(p, 8, " C2");
+  if (m->fpu.bf) AppendPanel(p, 8, " BF");
 }
 
 static void DrawXmm(struct Panel *p, long i, long r) {

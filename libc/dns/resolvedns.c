@@ -17,6 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/dns/consts.h"
 #include "libc/dns/dns.h"
@@ -92,8 +93,8 @@ int resolvedns(const struct ResolvConf *resolvconf, int af, const char *name,
             }
             if (p + 2 + 2 + 4 + 2 < pe) {
               uint16_t rtype, rclass, rdlength;
-              rtype = read16be(p), p += 2;
-              rclass = read16be(p), p += 2;
+              rtype = READ16BE(p), p += 2;
+              rclass = READ16BE(p), p += 2;
               /* ttl */ p += 4;
               rdlength = read16be(p), p += 2;
               if (p + rdlength <= pe && rdlength == 4 &&

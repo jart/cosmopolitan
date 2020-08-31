@@ -18,20 +18,18 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/shufps.h"
+#include "libc/str/str.h"
 
 /**
  * Shuffles float vector.
  * @param 𝑚 needs to be a literal, constexpr, or embedding
  * @mayalias
  */
-void(shufps)(float b[4], const float a[4], uint8_t m) {
+void(shufps)(float c[4], const float b[4], const float a[4], uint8_t m) {
   float t[4];
-  t[0] = a[(m & 0b00000011) >> 0];
-  t[1] = a[(m & 0b00001100) >> 2];
+  t[0] = b[(m & 0b00000011) >> 0];
+  t[1] = b[(m & 0b00001100) >> 2];
   t[2] = a[(m & 0b00110000) >> 4];
   t[3] = a[(m & 0b11000000) >> 6];
-  b[0] = t[0];
-  b[1] = t[1];
-  b[2] = t[2];
-  b[3] = t[3];
+  memcpy(c, t, 16);
 }

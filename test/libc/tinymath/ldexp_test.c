@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,13 +17,25 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.h"
-.source	__FILE__
+#include "libc/math.h"
+#include "libc/runtime/gc.h"
+#include "libc/stdio/stdio.h"
+#include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
-tinymath_isunorderedf:
-	.leafprologue
-	.profilable
-	xor	%eax,%eax
-	.leafepilogue
-	.endfn	tinymath_isunorderedf,globl
-	.alias	tinymath_isunorderedf,isunorderedf
+TEST(ldexp, test) {
+  volatile int twopow = 5;
+  volatile double pi = 3.14;
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2f", ldexp(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2f", ldexpf(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2Lf", ldexpl(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2f", scalb(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2f", scalbf(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2Lf", scalbl(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2f", scalbn(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2f", scalbnf(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2Lf", scalbnl(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2f", scalbln(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2f", scalblnf(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2Lf", scalblnl(pi, twopow))));
+}

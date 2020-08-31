@@ -49,8 +49,8 @@ static void LoadElfLoadSegment(struct Machine *m, void *code, size_t codesize,
   vstart = ROUNDDOWN(phdr->p_vaddr, align);
   vbss = ROUNDUP(phdr->p_vaddr + phdr->p_filesz, align);
   vend = ROUNDUP(phdr->p_vaddr + phdr->p_memsz, align);
-  fstart = ROUNDDOWN(felf + phdr->p_offset, align);
-  fend = ROUNDUP(felf + phdr->p_offset + phdr->p_filesz, align);
+  fstart = felf + ROUNDDOWN(phdr->p_offset, align);
+  fend = felf + ROUNDUP(phdr->p_offset + phdr->p_filesz, align);
   bsssize = vend - vbss;
   CHECK_GE(vend, vstart);
   CHECK_GE(fend, fstart);
@@ -112,9 +112,11 @@ static void LoadBin(struct Machine *m, intptr_t base, const char *prog,
 void LoadProgram(struct Machine *m, const char *prog, char **args, char **vars,
                  struct Elf *elf) {
   int fd;
+  char *real;
+  ssize_t rc;
   struct stat st;
   void *code, *stack;
-  size_t codesize, stacksize;
+  size_t i, codesize, mappedsize, extrasize, stacksize;
   DCHECK_NOTNULL(prog);
   elf->prog = prog;
   if ((fd = open(prog, O_RDONLY)) == -1 ||
@@ -123,16 +125,30 @@ void LoadProgram(struct Machine *m, const char *prog, char **args, char **vars,
     fputs(": not found\n", stderr);
     exit(1);
   }
-  codesize = st.st_size;
   stacksize = STACKSIZE;
+  codesize = st.st_size;
+  mappedsize = ROUNDDOWN(codesize, FRAMESIZE);
+  extrasize = codesize - mappedsize;
   CHECK_NE(MAP_FAILED, (stack = mmap(NULL, stacksize, PROT_READ | PROT_WRITE,
                                      MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
-  CHECK_NE(MAP_FAILED, (code = mmap(NULL, codesize, PROT_READ | PROT_WRITE,
-                                    MAP_PRIVATE, fd, 0)));
+  code = real = (char *)0x0000400000000000;
+  if (mappedsize) {
+    CHECK_NE(MAP_FAILED, mmap(real, mappedsize, PROT_READ | PROT_WRITE,
+                              MAP_PRIVATE | MAP_FIXED, fd, 0));
+    real += mappedsize;
+  }
+  if (extrasize) {
+    CHECK_NE(MAP_FAILED,
+             mmap(real, ROUNDUP(extrasize, FRAMESIZE), PROT_READ | PROT_WRITE,
+                  MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, -1, 0));
+    for (i = 0; i < extrasize; i += (size_t)rc) {
+      CHECK_NE(-1, (rc = pread(fd, real + i, extrasize - i, mappedsize + i)));
+    }
+  }
   CHECK_NE(-1, close(fd));
   ResetCpu(m);
-  Write64(m->sp, 0x800000000000);
-  RegisterMemory(m, 0x800000000000 - stacksize, stack, stacksize);
+  Write64(m->sp, 0x0000800000000000);
+  RegisterMemory(m, 0x0000800000000000 - stacksize, stack, stacksize);
   LoadArgv(m, prog, args, vars);
   if (memcmp(code, "\177ELF", 4) == 0) {
     elf->ehdr = code;

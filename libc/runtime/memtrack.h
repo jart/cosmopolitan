@@ -4,7 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define kMappingsSize       0x100000000000 /* 16TB */
+#define kMappingsSize       0x0000100000000000 /* 16TB */
 #define kMappingsStart      (IsGenuineCosmo() ? 0x300000000000 : 0x200000000000)
 #define kFixedMappingsStart 0x0000100000000000
 #define kFixedMappingsSize  kMappingsSize

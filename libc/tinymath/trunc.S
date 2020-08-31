@@ -43,11 +43,5 @@ tinymath_trunc:
 	.alias	tinymath_trunc,trunc
 
 	.rodata.cst8
-2:	.long	0
-	.long	1127219200
-
-	.rodata.cst16
-3:	.long	4294967295
-	.long	2147483647
-	.long	0
-	.long	0
+2:	.double	0x0010000000000000
+3:	.double	nan

@@ -105,6 +105,7 @@
    "PAGESIZE"
    "FRAMESIZE"
    "BIGPAGESIZE"
+   "STACKSIZE"
    "ENV_MAX"
    "ARG_MAX"
    "CMD_MAX"

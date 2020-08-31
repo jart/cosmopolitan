@@ -40,6 +40,11 @@ TEST(strerror, enosys) {
   EXPECT_STARTSWITH("ENOSYS", strerror(ENOSYS));
 }
 
+TEST(strerror, einval) {
+  if (IsTiny()) return;
+  EXPECT_STARTSWITH("EINVAL", strerror(EINVAL));
+}
+
 TEST(strerror, symbolizingTheseNumbersAsErrorsIsHeresyInUnixStyle) {
   EXPECT_STARTSWITH("E?/err=0/errno:0/GetLastError:0", strerror(0));
   EXPECT_STARTSWITH("E?", strerror(-1));

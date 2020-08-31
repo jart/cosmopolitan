@@ -20,8 +20,11 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/ex.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/x/x.h"
 #include "tool/build/lib/loader.h"
 #include "tool/build/lib/machine.h"
+#include "tool/build/lib/syscall.h"
 
 struct Machine m[1];
 
@@ -38,6 +41,15 @@ int main(int argc, char *argv[]) {
   }
   InitMachine(m);
   LoadProgram(m, argv[1], argv + 2, environ, &elf);
+  m->fds.i = 3;
+  m->fds.n = 8;
+  m->fds.p = xcalloc(m->fds.n, sizeof(struct MachineFd));
+  m->fds.p[0].fd = STDIN_FILENO;
+  m->fds.p[0].cb = &kMachineFdCbHost;
+  m->fds.p[1].fd = STDOUT_FILENO;
+  m->fds.p[1].cb = &kMachineFdCbHost;
+  m->fds.p[2].fd = STDERR_FILENO;
+  m->fds.p[2].cb = &kMachineFdCbHost;
   if (!(rc = setjmp(m->onhalt))) {
     for (;;) {
       LoadInstruction(m);

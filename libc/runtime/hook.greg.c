@@ -17,6 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.h"
@@ -71,7 +72,7 @@ privileged void __hook(void ifunc(void), struct SymbolTable *symbols) {
           pe = (unsigned char *)(symbols->addr_base +
                                  symbols->symbols[i + 1].addr_rva);
            p < pe - 8; ++p) {
-        code = read64le(p);
+        code = READ64LE(p);
 
         /*
          * Test for -mrecord-mcount (w/ -fpie or -fpic)

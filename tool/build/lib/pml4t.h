@@ -13,7 +13,7 @@ typedef uint64_t pml4t_t[512] aligned(4096);
 int FreePml4t(pml4t_t, int64_t, uint64_t, void (*)(void *),
               int (*)(void *, size_t));
 int RegisterPml4t(pml4t_t, int64_t, int64_t, size_t, void *(*)(void));
-int64_t FindPml4t(pml4t_t, int64_t, uint64_t, void *(*)(void));
+int64_t FindPml4t(pml4t_t, uint64_t, uint64_t);
 char *FormatPml4t(pml4t_t) nodiscard;
 
 COSMOPOLITAN_C_END_

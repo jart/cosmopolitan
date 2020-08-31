@@ -20,6 +20,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
+/	Returns square root of 𝑥.
+/
+/	@param	𝑥 is an float passed in %xmm0
+/	@return	result in %xmm0
 tinymath_sqrtf:
 	.leafprologue
 	.profilable

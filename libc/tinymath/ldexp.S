@@ -20,21 +20,26 @@
 #include "libc/macros.h"
 .source	__FILE__
 
+/	Returns 𝑥 × 2ʸ.
+/
+/	@param	𝑥 is double passed in %xmm0
+/	@param	𝑦 is exponent via %edi
+/	@return	double in %xmm0
 tinymath_ldexp:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
-	push	%rax
-	movsd	%xmm0,-8(%rbp)
-	fldl	-8(%rbp)
-	mov	%edi,-8(%rbp)
-	fildl	-8(%rbp)
-	fxch	%st(1)
+	push	%rdi
+	fildl	(%rsp)
+	movsd	%xmm0,(%rsp)
+	fldl	(%rsp)
 	fscale
 	fstp	%st(1)
-	fstpl	-8(%rbp)
-	movsd	-8(%rbp),%xmm0
+	fstpl	(%rsp)
+	movsd	(%rsp),%xmm0
 	leave
 	ret
 	.endfn	tinymath_ldexp,globl
 	.alias	tinymath_ldexp,ldexp
+	.alias	tinymath_ldexp,scalbn
+	.alias	tinymath_ldexp,scalbln

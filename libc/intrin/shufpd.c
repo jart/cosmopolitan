@@ -18,16 +18,16 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/shufpd.h"
+#include "libc/str/str.h"
 
 /**
  * Shuffles double vector.
  * @param 𝑚 needs to be a literal, constexpr, or embedding
  * @mayalias
  */
-void(shufpd)(double b[2], const double a[2], uint8_t m) {
+void(shufpd)(double c[2], const double b[2], const double a[2], uint8_t m) {
   double t[2];
   t[0] = a[(m & 0b0000001) >> 0];
-  t[1] = a[(m & 0b0000010) >> 1];
-  b[0] = t[0];
-  b[1] = t[1];
+  t[1] = b[(m & 0b0000010) >> 1];
+  memcpy(c, t, 16);
 }

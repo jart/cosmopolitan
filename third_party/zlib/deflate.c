@@ -5,6 +5,7 @@
 │ Use of this source code is governed by the BSD-style licenses that can       │
 │ be found in the third_party/zlib/LICENSE file.                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/dce.h"
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
@@ -223,7 +224,7 @@ static inline Pos insert_string_sse(struct DeflateState *const s,
   Pos ret;
   unsigned *ip, val, h = 0;
   ip = (unsigned *)&s->window[str];
-  val = read32le(ip); /* XXX: val = *ip; */
+  val = READ32LE(ip); /* XXX: val = *ip; */
   if (s->level >= 6) val &= 0xFFFFFF;
   asm("crc32\t%1,%0" : "+r"(h) : "r"(val));
   ret = s->head[h & s->hash_mask];

@@ -28,7 +28,7 @@ tinymath_hypotl:
 	fldt	32(%rbp)
 	fldt	16(%rbp)
 	fmul	%st,%st
-	fxch	%st(1)
+	fxch
 	fmul	%st,%st
 	faddp
 	pop	%rbp

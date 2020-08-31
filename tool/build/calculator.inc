@@ -17,7 +17,7 @@ M(1, i, "!", LogicalNot, !x, "logical not")
 M(2, i, "||", LogicalOr, x || y, "logical or")
 M(2, i, "&&", LogicalAnd, x &&y, "logical and")
 
-M(2, g, "=", Equal1, x == y && fpclassify(x) == fpclassify(y), "equal to")
+M(2, g, "=", Equal1, x == y, "equal to")
 M(2, g, "!=", Notequal, x != y, "not equal to")
 M(2, g, "<", LessThan, x < y, "less than")
 M(2, g, ">", GreaterThan, x > y, "greater than")

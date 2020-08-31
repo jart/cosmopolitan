@@ -34,7 +34,7 @@ tinymath_sincos:
 	movsd	%xmm0,-8(%rbp)
 	fldl	-8(%rbp)
 	fsincos
-	fxch	%st(1)
+	fxch
 	fstpl	(%rdi)
 	fstpl	(%rsi)
 	leave

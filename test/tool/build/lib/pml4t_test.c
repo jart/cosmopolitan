@@ -120,8 +120,8 @@ TEST(pml4t, testOverlapsExistingRegistration_overwritesRegistration) {
 TEST(pml4t, testFindPml4t_holeTooSmall_skipsOver) {
   ASSERT_NE(-1, RegisterPml4t(cr3, 0x700000000, 0, 0x1000, NewPage));
   ASSERT_NE(-1, RegisterPml4t(cr3, 0x700005000, 0, 0x1000, NewPage));
-  ASSERT_EQ(0x700001000, FindPml4t(cr3, 0x700000000, 0x01000, NewPage));
-  ASSERT_EQ(0x700006000, FindPml4t(cr3, 0x700000000, 0x10000, NewPage));
+  ASSERT_EQ(0x700001000, FindPml4t(cr3, 0x700000000, 0x01000));
+  ASSERT_EQ(0x700006000, FindPml4t(cr3, 0x700000000, 0x10000));
 }
 
 TEST(pml4t, testFreePmlt) {

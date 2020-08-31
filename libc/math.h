@@ -80,11 +80,20 @@ typedef float float_t;
 typedef double double_t;
 #endif
 
-#define isinf(x)    __builtin_isinf(x)
-#define isnan(x)    __builtin_isnan(x)
-#define isfinite(x) __builtin_isfinite(x)
-#define isnormal(x) __builtin_isnormal(x)
-#define signbit(x)  __builtin_signbit(x)
+#define isinf(x)             __builtin_isinf(x)
+#define isnan(x)             __builtin_isnan(x)
+#define isfinite(x)          __builtin_isfinite(x)
+#define isnormal(x)          __builtin_isnormal(x)
+#define signbit(x)           __builtin_signbit(x)
+#define isgreater(x, y)      __builtin_isgreater(x, y)
+#define isgreaterequal(x, y) __builtin_isgreaterequal(x, y)
+#define isless(x, y)         __builtin_isless(x, y)
+#define islessequal(x, y)    __builtin_islessequal(x, y)
+#define islessgreater(x, y)  __builtin_islessgreater(x, y)
+#define isunordered(x, y)    __builtin_isunordered(x, y)
+
+#define fpclassify(x) \
+  __builtin_fpclassify(FP_NAN, FP_INFINITE, FP_NORMAL, FP_SUBNORMAL, FP_ZERO, x)
 
 double acos(double);
 double acosh(double);
@@ -275,13 +284,6 @@ long double remquol(long double, long double, int *);
 void sincos(double, double *, double *);
 void sincosf(float, float *, float *);
 void sincosl(long double, long double *, long double *);
-
-int __fpclassify(double);
-int __fpclassifyf(float);
-int __fpclassifyl(long double);
-#define fpclassify(X)               \
-  (sizeof(X) == 8 ? __fpclassify(X) \
-                  : sizeof(X) == 4 ? __fpclassifyf(X) : __fpclassifyl(X))
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § mathematics » x87                                         ─╬─│┼

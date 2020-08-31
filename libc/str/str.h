@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_STR_STR_H_
 #define COSMOPOLITAN_LIBC_STR_STR_H_
-#include "libc/bits/bits.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗

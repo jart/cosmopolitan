@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Returns log₂ₓ exponent part of long double.
+/	Returns log₂x exponent part of long double.
 /
 /	@param	𝑥 is long double passed on stack
 /	@return	result in %eax

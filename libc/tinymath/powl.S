@@ -39,7 +39,7 @@ tinymath_powl:
 	f2xm1
 	faddp
 	fscale
-	fxch	%st(1)
+	fxch
 	fstp	%st
 	pop	%rbp
 	ret

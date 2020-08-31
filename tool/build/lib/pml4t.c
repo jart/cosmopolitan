@@ -52,6 +52,40 @@ static uint64_t *GetPageTable(pml4t_t p, long i, void *NewPhysicalPage(void)) {
   return res;
 }
 
+static void PtFinder(uint64_t *a, uint64_t *b, uint64_t n, pml4t_t pd, int k) {
+  uint64_t e, c;
+  unsigned start;
+  for (start = (*b >> k) & 511; *b - *a < n && ((*b >> k) & 511) >= start;) {
+    e = pd[(*b >> k) & 511];
+    c = ROUNDUP(*b + 1, 1 << k);
+    if (!IsValidPage(e)) {
+      *b = c;
+    } else if (k && *b - *a + (c - *b) > n) {
+      PtFinder(a, b, n, UnmaskPageAddr(e), k - 9);
+    } else {
+      *a = *b = c;
+    }
+  }
+}
+
+/**
+ * Locates free memory range.
+ *
+ * @param h specifies signedness and around where to start searching
+ * @return virtual page address with size bytes free, or -1 w/ errno
+ */
+int64_t FindPml4t(pml4t_t pml4t, uint64_t h, uint64_t n) {
+  uint64_t a, b;
+  n = ROUNDUP(n, 4096) >> 12;
+  a = b = (h & 0x0000fffffffff000) >> 12;
+  if (!n || n > 0x10000000) return einval();
+  PtFinder(&a, &b, n, pml4t, 9 * 3);
+  if (b > 0x0000001000000000) return eoverflow();
+  if (h < 0x0000800000000000 && b > 0x0000000800000000) return eoverflow();
+  if (b - a < n) return enomem();
+  return a << 12;
+}
+
 /**
  * Maps virtual page region to system memory region.
  *
@@ -91,70 +125,6 @@ int RegisterPml4t(pml4t_t pml4t, int64_t v, int64_t r, size_t n,
       k = 0;
     }
     j = 0;
-  }
-  return enomem();
-}
-
-/**
- * Locates free memory range.
- *
- * @param hint specifies signedness and around where to start searching
- * @return virtual page address with size bytes free, or -1 w/ errno
- */
-int64_t FindPml4t(pml4t_t pml4t, int64_t hint, uint64_t size,
-                  void *NewPhysicalPage(void)) {
-  int64_t res;
-  unsigned short a[4], b[4];
-  uint64_t *pdpt, *pdt, *pd, have;
-  if (!size) return einval();
-  have = 0;
-  size = ROUNDUP(size, 4096) >> 12;
-  b[0] = a[0] = (hint >> 39) & 511;
-  b[1] = a[1] = (hint >> 30) & 511;
-  b[2] = a[2] = (hint >> 21) & 511;
-  a[3] = 0;
-  for (; b[0] < 512; ++b[0]) {
-    if (!(pdpt = GetPageTable(pml4t, b[0], NewPhysicalPage))) return -1;
-    for (; b[1] < 512; ++b[1]) {
-      if (!(pdt = GetPageTable(pdpt, b[1], NewPhysicalPage))) return -1;
-      for (; b[2] < 512; ++b[2]) {
-        if (!IsValidPage(pdt[b[2]])) {
-          if ((have += 512) >= size) {
-            return MakeAddress(a);
-          }
-        } else if (size < 0x200) {
-          pd = UnmaskPageAddr(pdt[b[2]]);
-          for (b[3] = 0; b[3] < 512; ++b[3]) {
-            if (!IsValidPage(pd[b[3]])) {
-              if ((have += 1) >= size) {
-                return MakeAddress(a);
-              }
-            } else {
-              have = 0;
-              a[0] = b[0];
-              a[1] = b[1];
-              a[2] = b[2];
-              a[3] = b[3];
-              if ((a[3] += 1) == 512) {
-                a[3] = 0;
-                if ((a[2] += 1) == 512) {
-                  a[2] = 0;
-                  if ((a[1] += 1) == 512) {
-                    a[1] = 0;
-                    a[0] += 1;
-                    if (a[0] == 256 || a[0] == 512) {
-                      return eoverflow();
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      a[2] = 0;
-    }
-    a[1] = 0;
   }
   return enomem();
 }

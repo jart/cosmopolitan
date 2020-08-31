@@ -51,5 +51,4 @@ tinymath_asinl:
 	.alias	tinymath_asinl,asinl
 
 	.rodata.cst4
-	.align	4
 .Lone:	.float	1.0
