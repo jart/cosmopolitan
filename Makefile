@@ -60,8 +60,9 @@
 #
 #   build/config.mk
 
-SHELL  = /bin/sh
-HOSTS ?= freebsd openbsd alpine
+SHELL   = /bin/sh
+HOSTS  ?= freebsd openbsd alpine
+SANITY := $(shell build/sanitycheck $$PPID)
 
 .SUFFIXES:
 .DELETE_ON_ERROR:

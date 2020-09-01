@@ -1,0 +1,57 @@
+#!/bin/sh
+#
+# OVERVIEW
+#
+#   System Sanity Check
+#
+# DESCRIPTION
+#
+#   This script is launched at the start of Makefile to detect if
+#   binfmt_misc was tuned to launch 'MZ' shell scripts under WINE
+
+if [ x`uname -s` != xLinux ]; then
+  cat <<'EOF' >&2
+
+ERROR
+
+  Want Linux Build Environment
+
+DETAILS
+
+  Cosmopolitan builds binaries that run on all major platforms.
+  You need to compile them on Linux, using any distro you like.
+  Consider setting up Alpine, Debian, or Ubuntu in a VMWare VM.
+
+EOF
+  kill $1
+  exit 1
+fi
+
+build/sanitycheck2
+if [ $? -ne 123 ]; then
+  cat <<'EOF' >&2
+
+ERROR
+
+  Thompson Shell Backwards Compatibility Issue Detected
+
+DETAILS
+
+  Actually Portable Executable assumes stock Linux configuration.
+  Normal behavior is non-ELF files with x bit are run by /bin/sh.
+  Linux lets people globally define arbitrary magic interpreters.
+  Your computer couldve been tuned to run MZ scripts inside WINE.
+  So if you use binfmt_misc you need to explicitly register this.
+
+WORKAROUND
+
+  sudo sh -c "echo ':APE:M::MZqFpD::/bin/sh:' >/proc/sys/fs/binfmt_misc/register"
+
+SEE ALSO
+
+  https://justine.storage.googleapis.com/ape.html
+
+EOF
+  kill $1
+  exit 1
+fi

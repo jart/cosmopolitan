@@ -110,21 +110,6 @@ static void showmzheader(void) {
 }
 
 static void showdosstub(void) {
-  unsigned char *p = (unsigned char *)mz + sizeof(struct NtImageDosHeader);
-  unsigned char *pe = (mz->e_lfanew ? p + mz->e_lfanew : p + mzsize);
-  pe = min(pe, p + mzsize - XED_MAX_INSTRUCTION_BYTES);
-  while (p < pe) {
-    struct XedDecodedInst *inst = ildreal(p);
-    if (p + inst->length > pe) break;
-    printf("\t.byte\t");
-    for (unsigned i = 0; i < inst->length; ++i) {
-      if (i) printf(",");
-      printf("%#hhx", inst->bytes[i]);
-    }
-    printf("\n");
-    p += inst->length;
-  }
-  printf("\n");
 }
 
 static void showpeoptionalheader(struct NtImageOptionalHeader *opt) {
