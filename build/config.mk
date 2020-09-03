@@ -17,9 +17,6 @@ CONFIG_CCFLAGS +=		\
 	$(FTRACE)		\
 	-Og
 
-CONFIG_COPTS +=			\
-	-ftrapv
-
 TARGET_ARCH ?=			\
 	-march=k8-sse3
 

@@ -20,16 +20,15 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-	.initbss 800,_init_memalign
-hook$memalign:
+	.initbss 202,_init_calloc
+hook$calloc:
 	.quad	0
-	.endobj	hook$memalign,globl,hidden
+	.endobj	hook$calloc,globl,hidden
 	.previous
 
-	.init.start 800,_init_memalign
-	ezlea	dlmemalign,ax
+	.init.start 202,_init_calloc
+	.hidden	dlcalloc
+	ezlea	dlcalloc,ax
 	stosq
 	yoink	free
-	.init.end 800,_init_memalign
-
-	.hidden	dlmemalign
+	.init.end 202,_init_calloc

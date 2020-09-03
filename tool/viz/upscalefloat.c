@@ -25,6 +25,7 @@
 #include "libc/macros.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/madv.h"

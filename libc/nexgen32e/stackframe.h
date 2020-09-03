@@ -1,0 +1,13 @@
+#ifndef COSMOPOLITAN_LIBC_NEXGEN32E_STACKFRAME_H_
+#define COSMOPOLITAN_LIBC_NEXGEN32E_STACKFRAME_H_
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+struct StackFrame {
+  struct StackFrame *next;
+  intptr_t addr;
+};
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_LIBC_NEXGEN32E_STACKFRAME_H_ */

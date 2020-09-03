@@ -17,10 +17,10 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/calls/hefty/mkvarargv.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
-#include "libc/calls/hefty/mkvarargv.h"
-#include "libc/calls/calls.h"
 
 /**
  * Executes program, with PATH search and current environment.
@@ -36,7 +36,8 @@
  */
 int execlp(const char *prog, const char *arg, ... /*, NULL*/) {
   char *exe;
-  if ((exe = commandv(prog))) {
+  char pathbuf[PATH_MAX];
+  if ((exe = commandv(prog, pathbuf))) {
     va_list va;
     void *argv;
     va_start(va, arg);

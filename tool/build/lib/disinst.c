@@ -175,8 +175,8 @@ static char *DisName(struct DisBuilder b, char *bp, const char *name,
  */
 char *DisInst(struct DisBuilder b, char *p, const char *spec) {
   long i, n;
-  char sbuf[128];
-  char args[4][64];
+  char sbuf[256];
+  char args[4][128];
   char *s, *name, *state;
   bool hasarg, hasmodrm, hasregister, hasmemory;
   CHECK_EQ(0, (int)b.xedd->op.error);
@@ -190,7 +190,7 @@ char *DisInst(struct DisBuilder b, char *p, const char *spec) {
     hasarg = true;
     hasregister |= *s == '%';
     hasmemory |= *s == 'O';
-    DisArg(b, args[n], s);
+    CHECK_LT(DisArg(b, args[n], s) - args[n], sizeof(args[n]));
   }
   if (g_dis_high) p = DisHigh(p, g_dis_high->keyword);
   p = DisName(b, p, name, hasarg && !hasregister && hasmemory);

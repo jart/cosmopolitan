@@ -276,10 +276,5 @@ if "$@"; then
   exit 0
 fi
 
-if [ "$TERM" = "dumb" ]; then
-  f='%s %s\r\n\r\n'
-else
-  f='\033[91m%s\033[39m \033[94m%s\033[39m\r\n\r\n'
-fi
-printf "$f" "$CCNAME $CCVERSION: compile $REASON:" "$*" >&2
+printf "$LOGFMT" "$CCNAME $CCVERSION: compile $REASON:" "$*" >&2
 exit 1

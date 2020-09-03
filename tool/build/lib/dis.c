@@ -173,7 +173,7 @@ void Dis(struct Dis *d, struct Machine *m, int64_t addr) {
   struct DisOp op;
   long i, j, n, si, max, toto, symbol;
   unique = 0;
-  max = 99999;
+  max = 999999;
   DisFreeOps(&d->ops);
   for (i = 0; i < max; ++i) {
     xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
@@ -224,10 +224,12 @@ void Dis(struct Dis *d, struct Machine *m, int64_t addr) {
       xed_instruction_length_decode(d->xedd, d->raw, n);
       DCHECK_GT(n, 0);
       p = DisLineCode((struct DisBuilder){d, d->xedd, addr}, d->buf);
+      CHECK_LT(p - d->buf, sizeof(d->buf));
       n = d->xedd->op.error ? 1 : d->xedd->length;
       DCHECK_GT(n, 0);
     } else {
       p = DisLineData((struct DisBuilder){d, d->xedd, addr}, d->buf, d->raw, n);
+      CHECK_LT(p - d->buf, sizeof(d->buf));
     }
     DCHECK_LT(p, d->buf + sizeof(d->buf));
     DCHECK_LT(strlen(d->buf), sizeof(d->buf));

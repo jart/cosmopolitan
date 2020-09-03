@@ -40,14 +40,3 @@
 malloc_usable_size:
 	jmp	*hook$malloc_usable_size(%rip)
 	.endfn	malloc_usable_size,globl
-
-	.initbss 800,_init_malloc_usable_size
-hook$malloc_usable_size:
-	.quad	0
-	.endobj	hook$malloc_usable_size,globl,hidden
-	.previous
-
-	.init.start 800,_init_malloc_usable_size
-	ezlea	dlmalloc_usable_size,ax
-	stosq
-	.init.end 800,_init_malloc_usable_size

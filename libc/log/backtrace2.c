@@ -26,6 +26,7 @@
 #include "libc/conv/conv.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
+#include "libc/log/backtrace.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/gc.h"
 #include "libc/runtime/runtime.h"
@@ -37,54 +38,7 @@
 #define kBacktraceMaxFrames 128
 #define kBacktraceBufSize   ((kBacktraceMaxFrames - 1) * (16 + 1))
 
-static char *FormatAddress(FILE *f, const struct SymbolTable *st, intptr_t addr,
-                           char *out, unsigned size, bool symbolic) {
-  int64_t addend;
-  const char *name;
-  const struct Symbol *symbol;
-  if (st->count && ((intptr_t)addr >= (intptr_t)&_base &&
-                    (intptr_t)addr <= (intptr_t)&_end && symbolic)) {
-    symbol = &st->symbols[bisectcarleft((const int32_t(*)[2])st->symbols,
-                                        st->count, addr - st->addr_base - 1)];
-    addend = addr - st->addr_base - symbol->addr_rva;
-    name = &st->name_base[symbol->name_rva];
-    snprintf(out, size, "%s%c%#x", name, addend >= 0 ? '+' : '-', abs(addend));
-  } else {
-    snprintf(out, size, "%p", addr);
-  }
-  return out;
-}
-
-static int PrintBacktraceUsingSymbols(FILE *f, const struct StackFrame *bp,
-                                      char buf[hasatleast kBacktraceBufSize]) {
-  size_t gi;
-  intptr_t addr;
-  struct Garbages *garbage;
-  struct SymbolTable *symbols;
-  const struct StackFrame *frame;
-  if ((symbols = getsymboltable())) {
-    garbage = weaken(g_garbage);
-    gi = garbage ? garbage->i : 0;
-    for (frame = bp; frame; frame = frame->next) {
-      addr = frame->addr;
-      if (addr == weakaddr("CollectGarbage")) {
-        do {
-          --gi;
-        } while ((addr = garbage->p[gi].ret) == weakaddr("CollectGarbage"));
-      }
-      fprintf(f, "%p %p %s\n", frame, addr,
-              FormatAddress(f, symbols, addr, buf, kBacktraceBufSize, true));
-    }
-    return 0;
-  } else {
-    return -1;
-  }
-}
-
-static int PrintBacktraceUsingAddr2line(
-    FILE *f, const struct StackFrame *bp,
-    char buf[hasatleast kBacktraceBufSize],
-    char *argv[hasatleast kBacktraceMaxFrames]) {
+static int PrintBacktraceUsingAddr2line(FILE *f, const struct StackFrame *bp) {
   ssize_t got;
   intptr_t addr;
   size_t i, j, gi;
@@ -92,6 +46,7 @@ static int PrintBacktraceUsingAddr2line(
   struct Garbages *garbage;
   const struct StackFrame *frame;
   const char *debugbin, *p1, *p2, *p3, *addr2line;
+  char buf[kBacktraceBufSize], *argv[kBacktraceMaxFrames];
   if (!(debugbin = finddebugbinary()) || !(addr2line = GetAddr2linePath())) {
     return -1;
   }
@@ -148,24 +103,20 @@ static int PrintBacktraceUsingAddr2line(
   return 0;
 }
 
-static noinline int PrintBacktrace(FILE *f, const struct StackFrame *bp,
-                                   char *argv[hasatleast kBacktraceMaxFrames],
-                                   char buf[hasatleast kBacktraceBufSize]) {
+static int PrintBacktrace(FILE *f, const struct StackFrame *bp) {
   if (!IsTiny()) {
-    if (PrintBacktraceUsingAddr2line(f, bp, buf, argv) != -1) {
+    if (PrintBacktraceUsingAddr2line(f, bp) != -1) {
       return 0;
     }
   }
-  return PrintBacktraceUsingSymbols(f, bp, buf);
+  return PrintBacktraceUsingSymbols(f, bp, getsymboltable());
 }
 
 void showbacktrace(FILE *f, const struct StackFrame *bp) {
   static bool noreentry;
-  char *argv[kBacktraceMaxFrames];
-  char buf[kBacktraceBufSize];
   if (!noreentry) {
     noreentry = true;
-    PrintBacktrace(f, bp, argv, buf);
+    PrintBacktrace(f, bp);
     noreentry = 0;
   }
 }

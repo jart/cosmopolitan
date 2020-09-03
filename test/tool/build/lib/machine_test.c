@@ -294,5 +294,5 @@ BENCH(machine, benchNop) {
 }
 
 TEST(machine, sizeIsReasonable) {
-  ASSERT_LE(sizeof(struct Machine), 65536);
+  ASSERT_LE(sizeof(struct Machine), 65536 * 2);
 }

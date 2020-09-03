@@ -20,15 +20,15 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-	.initbss 800,_init_calloc
-hook$calloc:
+	.initbss 202,_init_malloc
+hook$malloc:
 	.quad	0
-	.endobj	hook$calloc,globl,hidden
+	.endobj	hook$malloc,globl,hidden
 	.previous
 
-	.init.start 800,_init_calloc
-	.hidden	dlcalloc
-	ezlea	dlcalloc,ax
+	.init.start 202,_init_malloc
+	.hidden	dlmalloc
+	ezlea	dlmalloc,ax
 	stosq
 	yoink	free
-	.init.end 800,_init_calloc
+	.init.end 202,_init_malloc

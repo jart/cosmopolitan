@@ -29,7 +29,6 @@ COSMOPOLITAN_C_START_
 
 struct sigset;
 struct winsize;
-struct StackFrame;
 typedef struct FILE FILE;
 
 extern FILE *g_logfile;
@@ -51,7 +50,6 @@ void showcrashreports(void);
 void callexitontermination(struct sigset *);
 bool32 IsDebuggerPresent(bool);
 bool isrunningundermake(void);
-void showbacktrace(FILE *, const struct StackFrame *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § liblog » logging                                          ─╬─│┼

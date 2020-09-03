@@ -57,10 +57,7 @@ int(vdprintf)(int fd, const char *fmt, va_list va) {
   struct VdprintfState df;
   df.n = 0;
   df.fd = fd;
-  if (palandprintf(vdprintfputchar, &df, fmt, va) != -1 ||
-      vdprintf_flush(&df, df.n & (ARRAYLEN(df.buf) - 1)) != -1) {
-    return df.n;
-  } else {
-    return -1;
-  }
+  if (palandprintf(vdprintfputchar, &df, fmt, va) == -1) return -1;
+  if (vdprintf_flush(&df, df.n & (ARRAYLEN(df.buf) - 1)) == -1) return -1;
+  return df.n;
 }

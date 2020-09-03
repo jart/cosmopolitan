@@ -456,7 +456,7 @@ static void SetupDraw(void) {
 
   a = 1 / 8. * tyn;
   b = 3 / 8. * tyn;
-  c2y[0] = a;
+  c2y[0] = a * .7;
   c2y[1] = a * 2;
   c2y[2] = a * 2 + b;
 
@@ -1590,9 +1590,23 @@ Restart:
     LeaveScreen();
   }
   if (printstats) {
+    int i;
+    extern long opcount[256 * 4];
     fprintf(stderr, "taken:  %,ld\n", taken);
     fprintf(stderr, "ntaken: %,ld\n", ntaken);
     fprintf(stderr, "ops:    %,ld\n", ops);
+    for (i = 0x51; i < 0x58; ++i) opcount[0x50] += opcount[i];
+    for (i = 0x51; i < 0x58; ++i) opcount[i] = 0;
+    for (i = 0x59; i < 0x60; ++i) opcount[0x58] += opcount[i];
+    for (i = 0x59; i < 0x60; ++i) opcount[i] = 0;
+    for (i = 0x91; i < 0x98; ++i) opcount[0x90] += opcount[i];
+    for (i = 0x91; i < 0x98; ++i) opcount[i] = 0;
+    for (i = 0x71; i < 0x80; ++i) opcount[0x70] += opcount[i];
+    for (i = 0x71; i < 0x80; ++i) opcount[i] = 0;
+    for (i = 0; i < ARRAYLEN(opcount); ++i) {
+      if (!opcount[i]) continue;
+      fprintf(stderr, "0x%03x %ld\n", i, opcount[i]);
+    }
   }
   munmap(elf->ehdr, elf->size);
   DisFree(dis);

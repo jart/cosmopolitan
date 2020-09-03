@@ -19,7 +19,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/crypto/rijndael.h"
 #include "libc/dce.h"
+#include "libc/fmt/bing.h"
+#include "libc/runtime/internal.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/testlib/testlib.h"
 
 /**

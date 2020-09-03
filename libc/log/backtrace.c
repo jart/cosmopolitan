@@ -17,8 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/log/log.h"
+#include "libc/log/backtrace.h"
 
 void backtrace(FILE *f) {
   showbacktrace(f, __builtin_frame_address(0));

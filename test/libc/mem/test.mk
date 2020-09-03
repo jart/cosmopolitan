@@ -51,8 +51,8 @@ o/$(MODE)/test/libc/mem/%.com.dbg:			\
 	@$(APELINK)
 
 $(TEST_LIBC_MEM_OBJS):					\
-	DEFAULT_CCFLAGS +=				\
-		-fno-builtin
+		DEFAULT_CCFLAGS +=			\
+			-fno-builtin
 
 .PHONY: o/$(MODE)/test/libc/mem
 o/$(MODE)/test/libc/mem:				\

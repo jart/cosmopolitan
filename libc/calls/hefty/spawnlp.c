@@ -40,8 +40,9 @@ nodiscard int spawnlp(unsigned flags, int stdiofds[3], const char *prog,
   char *exe;
   va_list va;
   void *argv;
+  char pathbuf[PATH_MAX];
   pid = -1;
-  if ((exe = commandv(prog))) {
+  if ((exe = commandv(prog, pathbuf))) {
     va_start(va, arg);
     if ((argv = mkvarargv(arg, va))) {
       pid = spawnve(flags, stdiofds, exe, argv, environ);

@@ -488,8 +488,9 @@ static int ReadAll(int fd, void *data, size_t size) {
 static void LoadFileViaImageMagick(const char *path, unsigned yn, unsigned xn,
                                    unsigned char rgb[yn][YS][xn][XS][CN]) {
   const char *convert;
+  char pathbuf[PATH_MAX];
   int pid, ws, fds[3] = {STDIN_FILENO, -1, STDERR_FILENO};
-  if (!(convert = commandv("convert"))) {
+  if (!(convert = commandv("convert", pathbuf))) {
     fputs("error: `convert` command not found\n"
           "try: apt-get install imagemagick\n",
           stderr);

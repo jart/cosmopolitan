@@ -29,7 +29,7 @@
 static double SseRoundDouble(struct Machine *m, double x) {
   switch (m->sse.rc) {
     case 0:
-      return nearbyint(x);
+      return rint(x);
     case 1:
       return floor(x);
     case 2:
@@ -134,7 +134,7 @@ static void OpPpiWpsqCvtps2pi(struct Machine *m, uint32_t rde) {
   memcpy(f, GetModrmRegisterXmmPointerRead8(m, rde), 8);
   switch (m->sse.rc) {
     case 0:
-      for (i = 0; i < 2; ++i) n[i] = nearbyintf(f[i]);
+      for (i = 0; i < 2; ++i) n[i] = rintf(f[i]);
       break;
     case 1:
       for (i = 0; i < 2; ++i) n[i] = floorf(f[i]);
@@ -250,7 +250,7 @@ static void OpVdqWpsCvtps2dq(struct Machine *m, uint32_t rde) {
   memcpy(f, GetModrmRegisterXmmPointerRead16(m, rde), 16);
   switch (m->sse.rc) {
     case 0:
-      for (i = 0; i < 4; ++i) n[i] = nearbyintf(f[i]);
+      for (i = 0; i < 4; ++i) n[i] = rintf(f[i]);
       break;
     case 1:
       for (i = 0; i < 4; ++i) n[i] = floorf(f[i]);

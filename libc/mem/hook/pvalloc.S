@@ -20,15 +20,15 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-	.initbss 800,_init_realloc
-hook$realloc:
+	.initbss 202,_init_pvalloc
+hook$pvalloc:
 	.quad	0
-	.endobj	hook$realloc,globl,hidden
+	.endobj	hook$pvalloc,globl,hidden
 	.previous
 
-	.init.start 800,_init_realloc
-	.hidden	dlrealloc
-	ezlea	dlrealloc,ax
+	.init.start 202,_init_pvalloc
+	.hidden	dlpvalloc
+	ezlea	dlpvalloc,ax
 	stosq
 	yoink	free
-	.init.end 800,_init_realloc
+	.init.end 202,_init_pvalloc

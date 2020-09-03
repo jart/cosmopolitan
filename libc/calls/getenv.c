@@ -25,16 +25,22 @@
 /**
  * Returns value of environment variable, or NULL if not found.
  */
-char *getenv(const char *name) {
-  char **ep;
-  size_t i, namelen;
-  char *empty[1] = {0};
-  ep = environ;
-  if (!ep) ep = empty;
-  namelen = strlen(name);
-  for (i = 0; ep[i]; ++i) {
-    if (strncmp(ep[i], name, namelen) == 0 && ep[i][namelen] == '=') {
-      return &ep[i][namelen + 1];
+char *getenv(const char *s) {
+  char **p;
+  size_t i, j;
+  if ((p = environ)) {
+    for (i = 0; p[i]; ++i) {
+      for (j = 0;; ++j) {
+        if (!s[j]) {
+          if (p[i][j] == '=') {
+            return &p[i][j + 1];
+          }
+          break;
+        }
+        if (s[j] != p[i][j]) {
+          break;
+        }
+      }
     }
   }
   return NULL;

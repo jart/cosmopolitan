@@ -6,9 +6,7 @@ PKGS += LIBC_MATH
 LIBC_MATH_ARTIFACTS += LIBC_MATH_A
 LIBC_MATH = $(LIBC_MATH_A_DEPS) $(LIBC_MATH_A)
 LIBC_MATH_A = o/$(MODE)/libc/math/math.a
-LIBC_MATH_A_FILES :=					\
-	$(wildcard libc/math/*)				\
-	$(wildcard libc/math/delegates/*)
+LIBC_MATH_A_FILES := $(wildcard libc/math/*)
 LIBC_MATH_A_SRCS_A = $(filter %.s,$(LIBC_MATH_A_FILES))
 LIBC_MATH_A_SRCS_S = $(filter %.S,$(LIBC_MATH_A_FILES))
 LIBC_MATH_A_SRCS_C = $(filter %.c,$(LIBC_MATH_A_FILES))

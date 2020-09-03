@@ -60,13 +60,8 @@ $(LIBC_RUNTIME_A).pkg:					\
 		$(LIBC_RUNTIME_A_OBJS)			\
 		$(foreach x,$(LIBC_RUNTIME_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/libc/runtime/asan.greg.o			\
-o/$(MODE)/libc/runtime/shadowargs.o			\
-o/$(MODE)/libc/runtime/hook.greg.o			\
-o/$(MODE)/libc/runtime/ftrace.greg.o			\
-o/$(MODE)/libc/runtime/__stack_chk_fail.o		\
-o/$(MODE)/libc/runtime/__stack_chk_guard.o:		\
-		OVERRIDE_COPTS +=			\
+$(LIBC_RUNTIME_A_OBJS):					\
+		OVERRIDE_CFLAGS +=			\
 			$(NO_MAGIC)
 
 # @see ape/ape.s for tuning parameters that make this safe

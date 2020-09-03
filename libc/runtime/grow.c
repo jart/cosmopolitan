@@ -19,10 +19,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
 #include "libc/bits/weaken.h"
 #include "libc/conv/conv.h"
-#include "libc/conv/sizemultiply.h"
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -70,8 +68,9 @@ bool grow(void *pp, size_t *capacity, size_t itemsize, size_t extra) {
   p1 = isheap(*p) ? *p : NULL;
   p2 = NULL;
   n1 = *capacity;
-  n2 = (*p ? n1 + (n1 >> 1) : max(4, INITIAL_CAPACITY / itemsize)) + extra;
-  if (sizemultiply(&t1, n1, itemsize) && sizemultiply(&t2, n2, itemsize)) {
+  n2 = (*p ? n1 + (n1 >> 1) : MAX(4, INITIAL_CAPACITY / itemsize)) + extra;
+  if (!__builtin_mul_overflow(n1, itemsize, &t1) &&
+      !__builtin_mul_overflow(n2, itemsize, &t2)) {
     if (weaken(realloc) && (p2 = weaken(realloc)(p1, ROUNDUP(t2, 32)))) {
       if (!p1 && *p) memcpy(p2, *p, t1);
       memset((char *)p2 + t1, 0, t2 - t1);

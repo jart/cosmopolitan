@@ -20,6 +20,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
+/	Returns minimum of two long doubles.
+/
+/	@param	𝑥 is long double passed on stack in 16-bytes
+/	@param	𝑦 is also pushed on stack, in reverse order
+/	@return	result in %st0
 tinymath_fminl:
 	push	%rbp
 	mov	%rsp,%rbp

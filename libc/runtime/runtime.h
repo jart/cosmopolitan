@@ -6,13 +6,6 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § runtime                                                   ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-struct SymbolTable;
-
-struct StackFrame {
-  struct StackFrame *next;
-  intptr_t addr;
-};
-
 typedef long jmp_buf[8] aligned(CACHELINE);
 
 extern int g_argc;                               /* CRT */
@@ -71,8 +64,12 @@ void loadxmm(void *);
 void peekall(void);
 int issetugid(void);
 void weakfree(void *) libcesque;
-void __hook(void (*)(void), struct SymbolTable *);
 bool isheap(void *);
+void *mmap(void *, uint64_t, int32_t, int32_t, int32_t, int64_t);
+void *mremap(void *, uint64_t, uint64_t, int32_t, void *);
+int munmap(void *, uint64_t);
+int mprotect(void *, uint64_t, int) privileged;
+int msync(void *, size_t, int);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § runtime » optimizations                                   ─╬─│┼

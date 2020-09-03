@@ -72,30 +72,29 @@ TEST(mmap, testMapFile_fdGetsClosed_makesNoDifference) {
 
 TEST(mmap, testMapFixed_destroysEverythingInItsPath) {
   unsigned m1 = _mmi.i;
-  EXPECT_NE(MAP_FAILED, mmap((void *)(kFixedMappingsStart + FRAMESIZE * 0),
+  EXPECT_NE(MAP_FAILED, mmap((void *)(kFixedmapStart + FRAMESIZE * 0),
                              FRAMESIZE, PROT_READ | PROT_WRITE,
                              MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
-  EXPECT_NE(MAP_FAILED, mmap((void *)(kFixedMappingsStart + FRAMESIZE * 1),
+  EXPECT_NE(MAP_FAILED, mmap((void *)(kFixedmapStart + FRAMESIZE * 1),
                              FRAMESIZE, PROT_READ | PROT_WRITE,
                              MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
-  EXPECT_NE(MAP_FAILED, mmap((void *)(kFixedMappingsStart + FRAMESIZE * 2),
+  EXPECT_NE(MAP_FAILED, mmap((void *)(kFixedmapStart + FRAMESIZE * 2),
                              FRAMESIZE, PROT_READ | PROT_WRITE,
                              MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
-  EXPECT_NE(MAP_FAILED, mmap((void *)(kFixedMappingsStart + FRAMESIZE * 0),
+  EXPECT_NE(MAP_FAILED, mmap((void *)(kFixedmapStart + FRAMESIZE * 0),
                              FRAMESIZE * 3, PROT_READ | PROT_WRITE,
                              MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
   ASSERT_GT(_mmi.i, m1);
-  EXPECT_NE(-1, munmap((void *)kFixedMappingsStart, FRAMESIZE * 3));
+  EXPECT_NE(-1, munmap((void *)kFixedmapStart, FRAMESIZE * 3));
+#ifdef __SANITIZE_ADDRESS__
+  ASSERT_EQ(m1 + 1, _mmi.i);
+#else
   ASSERT_EQ(m1, _mmi.i);
+#endif
 }
 
 TEST(isheap, nullPtr) {
   ASSERT_FALSE(isheap(NULL));
-}
-
-TEST(isheap, stackMemory) {
-  int boop;
-  ASSERT_FALSE(isheap(&boop));
 }
 
 TEST(isheap, malloc) {

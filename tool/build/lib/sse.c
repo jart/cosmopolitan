@@ -117,14 +117,13 @@ union MachineVector {
 void OpSse(struct Machine *m, uint32_t rde, enum OpSseKernel kernel) {
   int i;
   uint8_t *p;
-  union MachineVector x, y, t;
+  union MachineVector x, y;
   p = GetModrmRegisterXmmPointerRead16(m, rde);
   if (Osz(rde)) {
     memcpy(&y, p, 16);
   } else {
-    memset(&t, 0, 16);
-    memcpy(&t, p, 8);
-    memcpy(&y, &t, 16);
+    memset(&y, 0, 16);
+    memcpy(&y, p, 8);
   }
   memcpy(&x, XmmRexrReg(m, rde), 16);
   switch (kernel) {

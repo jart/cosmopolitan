@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,19 +17,39 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.h"
-.source	__FILE__
+#include "libc/calls/internal.h"
+#include "libc/nt/memory.h"
+#include "libc/nt/runtime.h"
+#include "libc/runtime/directmap.h"
 
-	.initbss 800,_init_free
-hook$free:
-	.quad	0
-	.endobj	hook$free,globl,hidden
-	.previous
+static textwindows struct DirectMap DirectMapNt(void *addr, size_t size,
+                                                unsigned prot, unsigned flags,
+                                                int fd, int64_t off) {
+  struct DirectMap res;
+  if ((res.maphandle = CreateFileMappingNuma(
+           fd != -1 ? g_fds.p[fd].handle : kNtInvalidHandleValue,
+           &kNtIsInheritable, prot2nt(prot, flags), size >> 32, size, NULL,
+           kNtNumaNoPreferredNode))) {
+    if (!(res.addr = MapViewOfFileExNuma(res.maphandle, fprot2nt(prot, flags),
+                                         off >> 32, off, size, addr,
+                                         kNtNumaNoPreferredNode))) {
+      CloseHandle(res.maphandle);
+      res.maphandle = kNtInvalidHandleValue;
+      res.addr = (void *)(intptr_t)winerr();
+    }
+  } else {
+    res.maphandle = kNtInvalidHandleValue;
+    res.addr = (void *)(intptr_t)winerr();
+  }
+  return res;
+}
 
-	.init.start 800,_init_free
-	ezlea	dlfree,ax
-	stosq
-	yoink	realloc
-	.init.end 800,_init_free
-
-	.hidden	dlfree
+struct DirectMap DirectMap(void *addr, size_t size, unsigned prot,
+                           unsigned flags, int fd, int64_t off) {
+  if (!IsWindows()) {
+    return (struct DirectMap){mmap$sysv(addr, size, prot, flags, fd, off),
+                              kNtInvalidHandleValue};
+  } else {
+    return DirectMapNt(addr, size, prot, flags, fd, off);
+  }
+}

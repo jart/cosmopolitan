@@ -45,10 +45,11 @@
  */
 int parsehoststxt(struct HostsTxt *ht, FILE *f) {
   int rc = 0;
-  char stackline[128];
-  char *line = stackline;
-  size_t linecap = sizeof(stackline);
-  while ((getline(&line, &linecap, f)) != -1) {
+  char *line;
+  size_t linesize;
+  line = NULL;
+  linesize = 0;
+  while ((getline(&line, &linesize, f)) != -1) {
     struct HostsTxtEntry entry;
     char *addr, *name, *tok, *comment;
     if ((comment = strchr(line, '#'))) *comment = '\0';
@@ -64,6 +65,6 @@ int parsehoststxt(struct HostsTxt *ht, FILE *f) {
       }
     }
   }
-  free_s(&line);
+  free(line);
   return rc | ferror(f);
 }

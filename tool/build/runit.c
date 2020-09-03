@@ -106,9 +106,13 @@ static const struct addrinfo kResolvHints = {.ai_family = AF_INET,
                                              .ai_protocol = IPPROTO_TCP};
 
 int g_sock;
+char *g_prog;
+char *g_runitd;
 jmp_buf g_jmpbuf;
-uint16_t g_sshport, g_runitdport;
-char *g_prog, *g_runitd, *g_ssh, g_hostname[128];
+uint16_t g_sshport;
+uint16_t g_runitdport;
+char g_ssh[PATH_MAX];
+char g_hostname[128];
 
 forceinline pureconst size_t GreatestTwoDivisor(size_t x) {
   return x & (~x + 1);
@@ -389,7 +393,7 @@ int main(int argc, char *argv[]) {
     unreachable;
   }
   if (argc < 1 + 2) ShowUsage(stderr, EX_USAGE);
-  CHECK_NOTNULL((g_ssh = commandv(firstnonnull(getenv("SSH"), "ssh"))));
+  CHECK_NOTNULL(commandv(firstnonnull(getenv("SSH"), "ssh"), g_ssh));
   CheckExists((g_runitd = argv[1]));
   CheckExists((g_prog = argv[2]));
   if (argc == 1 + 2) return 0; /* hosts list empty */

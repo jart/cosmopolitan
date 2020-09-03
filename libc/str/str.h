@@ -440,6 +440,12 @@ char *_strncpy(char *, const char *, size_t) asm("strncpy") memcpyesque;
 
 #define memmove(DEST, SRC, SIZE) __memcpy("MemMove", (DEST), (SRC), (SIZE))
 
+#define mempcpy(DEST, SRC, SIZE)                          \
+  ({                                                      \
+    size_t SIze = (SIZE);                                 \
+    (void *)((char *)memcpy((DEST), (SRC), SIze) + SIze); \
+  })
+
 #define __memcpy(FN, DEST, SRC, SIZE)                                      \
   ({                                                                       \
     void *DeSt = (DEST);                                                   \
@@ -448,14 +454,8 @@ char *_strncpy(char *, const char *, size_t) asm("strncpy") memcpyesque;
     asm("call\t" FN                                                        \
         : "=m"(*(char(*)[SiZe])(DeSt))                                     \
         : "D"(DeSt), "S"(SrC), "d"(SiZe), "m"(*(const char(*)[SiZe])(SrC)) \
-        : __STR_XMM_CLOBBER "cc");                                         \
+        : __STR_XMM_CLOBBER "rcx", "cc");                                  \
     DeSt;                                                                  \
-  })
-
-#define mempcpy(DEST, SRC, SIZE)                          \
-  ({                                                      \
-    size_t SIze = (SIZE);                                 \
-    (void *)((char *)memcpy((DEST), (SRC), SIze) + SIze); \
   })
 
 #define __memset(DEST, BYTE, SIZE)        \
@@ -465,7 +465,7 @@ char *_strncpy(char *, const char *, size_t) asm("strncpy") memcpyesque;
     asm("call\tMemSet"                    \
         : "=m"(*(char(*)[SiZe])(DeSt))    \
         : "D"(DeSt), "S"(BYTE), "d"(SiZe) \
-        : __STR_XMM_CLOBBER "cc");        \
+        : __STR_XMM_CLOBBER "rcx", "cc"); \
     DeSt;                                 \
   })
 
@@ -506,7 +506,7 @@ char *_strncpy(char *, const char *, size_t) asm("strncpy") memcpyesque;
     size_t Rcx;                                              \
     asm("rep stosb"                                          \
         : "=D"(Rdi), "=c"(Rcx), "=m"(*(char(*)[SiZe])(Dest)) \
-        : "0"(Dest), "1"(SiZe), "S"(BYTE)                    \
+        : "0"(Dest), "1"(SiZe), "a"(BYTE)                    \
         : "cc");                                             \
     Dest;                                                    \
   })

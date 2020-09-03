@@ -8,7 +8,6 @@ LIBC_LOG = $(LIBC_LOG_A_DEPS) $(LIBC_LOG_A)
 LIBC_LOG_A = o/$(MODE)/libc/log/log.a
 LIBC_LOG_A_FILES :=					\
 	$(wildcard libc/log/thunks/*)			\
-	$(wildcard libc/log/elf/*)			\
 	$(wildcard libc/log/*)	
 LIBC_LOG_A_HDRS = $(filter %.h,$(LIBC_LOG_A_FILES))
 LIBC_LOG_A_SRCS_C = $(filter %.c,$(LIBC_LOG_A_FILES))
@@ -38,6 +37,7 @@ LIBC_LOG_A_DIRECTDEPS =					\
 	LIBC_TINYMATH					\
 	LIBC_NEXGEN32E					\
 	LIBC_NT_KERNELBASE				\
+	LIBC_MEM					\
 	LIBC_RAND					\
 	LIBC_RUNTIME					\
 	LIBC_STDIO					\
@@ -60,17 +60,10 @@ $(LIBC_LOG_A).pkg:					\
 		$(LIBC_LOG_A_OBJS)			\
 		$(foreach x,$(LIBC_LOG_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/libc/log/die.o				\
-o/$(MODE)/libc/log/perror.o				\
-o/$(MODE)/libc/log/ftrace.o				\
-o/$(MODE)/libc/log/ubsan.o				\
-o/$(MODE)/libc/log/symbols.o				\
-o/$(MODE)/libc/log/backtrace.o				\
-o/$(MODE)/libc/log/oncrash.o				\
-o/$(MODE)/libc/log/shadowargs.o				\
-o/$(MODE)/libc/log/thunks/__check_fail_ndebug.o:	\
-	OVERRIDE_COPTS +=				\
-		$(NO_MAGIC)
+$(LIBC_LOG_A_OBJS):					\
+		OVERRIDE_CFLAGS +=			\
+			$(NO_MAGIC)			\
+			-fwrapv
 
 LIBC_LOG_LIBS = $(foreach x,$(LIBC_LOG_ARTIFACTS),$($(x)))
 LIBC_LOG_SRCS = $(foreach x,$(LIBC_LOG_ARTIFACTS),$($(x)_SRCS))

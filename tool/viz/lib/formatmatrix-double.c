@@ -26,9 +26,9 @@
 #include "tool/viz/lib/formatstringtable.h"
 #include "tool/viz/lib/stringbuilder.h"
 
-static void *ConvertMatrixToStringTable(long yn, long xn, char *T[yn][xn],
-                                        const double M[yn][xn], double digs,
-                                        double rounder(double)) {
+void *ConvertMatrixToStringTable(long yn, long xn, char *T[yn][xn],
+                                 const double M[yn][xn], double digs,
+                                 double rounder(double)) {
   double f;
   long y, x;
   assert(yn && xn && !T[0][0]);

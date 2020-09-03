@@ -32,9 +32,10 @@ int main(int argc, char *argv[]) {
   int pid, wstatus;
   long double ts1, ts2;
   struct rusage rusage;
+  char pathbuf[PATH_MAX];
   memset(&rusage, -1, sizeof(rusage));
   CHECK_GT(argc, 1);
-  CHECK_NOTNULL((exe = commandv(argv[1])));
+  CHECK_NOTNULL((exe = commandv(argv[1], pathbuf)));
   ts1 = nowl();
   CHECK_NE(-1, (pid = spawnve(0, NULL, exe, &argv[1], environ)));
   CHECK_NE(-1, wait4(pid, &wstatus, 0, &rusage));

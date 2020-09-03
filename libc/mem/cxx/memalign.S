@@ -20,40 +20,35 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Frees memory the C++ way.
+/	Allocates aligned memory the C++ way.
 /
-/	@param	%rdi is pointer, or NULL for no-op
-/	@param	%rsi is ignored
+/	@param	%rdi is bytes to allocate
+/	@param	%rsi is byte alignment
 /	@param	%rdx is ignored
-_ZdlPvSt11align_val_tRKSt9nothrow_t:
+/	@return	new memory or NULL on OOM
+_ZnamSt11align_val_tRKSt9nothrow_t:
+/	operator new[](unsigned long, std::align_val_t, std::nothrow_t const&)
 	nop
-_ZdaPvSt11align_val_tRKSt9nothrow_t:
+/	𝑠𝑙𝑖𝑑𝑒
+	.endfn	_ZnamSt11align_val_tRKSt9nothrow_t,weak
+_ZnwmSt11align_val_tRKSt9nothrow_t:
+/	operator new(unsigned long, std::align_val_t, std::nothrow_t const&)
 	nop
-_ZdlPvRKSt9nothrow_t:
+/	𝑠𝑙𝑖𝑑𝑒
+	.endfn	_ZnwmSt11align_val_tRKSt9nothrow_t,weak
+_ZnwmSt11align_val_t:
+/	operator new(unsigned long, std::align_val_t)
 	nop
-_ZdaPvRKSt9nothrow_t:
-	nop
-_ZdlPvmSt11align_val_t:
-	nop
-_ZdaPvmSt11align_val_t:
-	nop
-_ZdlPvSt11align_val_t:
-	nop
-_ZdaPvSt11align_val_t:
-	nop
-_ZdaPvm:nop
-_ZdlPvm:nop
-_ZdaPv:	nop
-_ZdlPv:	jmp	*hook$free(%rip)
-	.endfn	_ZdlPv,globl,weak
-	.endfn	_ZdaPv,globl,weak
-	.endfn	_ZdaPvm,globl,weak
-	.endfn	_ZdlPvm,globl,weak
-	.endfn	_ZdaPvRKSt9nothrow_t,globl,weak
-	.endfn	_ZdlPvRKSt9nothrow_t,globl,weak
-	.endfn	_ZdaPvSt11align_val_t,globl,weak
-	.endfn	_ZdlPvSt11align_val_t,globl,weak
-	.endfn	_ZdaPvmSt11align_val_t,globl,weak
-	.endfn	_ZdlPvmSt11align_val_t,globl,weak
-	.endfn	_ZdlPvSt11align_val_tRKSt9nothrow_t,globl,weak
-	.endfn	_ZdaPvSt11align_val_tRKSt9nothrow_t,globl,weak
+/	𝑠𝑙𝑖𝑑𝑒
+	.endfn	_ZnwmSt11align_val_t,weak
+_ZnamSt11align_val_t:
+/	operator new[](unsigned long, std::align_val_t)
+	test	%rdi,%rdi
+	jnz	1f
+	mov	$1,%eax
+1:	mov	$__BIGGEST_ALIGNMENT__,%eax
+	cmp	%rax,%rsi
+	cmovb	%rax,%rsi
+	xchg	%rdi,%rsi
+	jmp	*hook$memalign(%rip)
+	.endfn	_ZnamSt11align_val_t,weak

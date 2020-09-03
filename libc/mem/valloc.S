@@ -21,24 +21,10 @@
 #include "libc/notice.inc"
 .source	__FILE__
 
-/	Equivalent to memalign(PAGESIZE, n).
+/	Equivalent to memalign(4096, n).
 /
 /	@param	rdi is number of bytes needed
 /	@return	rax is memory address, or NULL w/ errno
 /	@see	dlvalloc()
 valloc:	jmp	*hook$valloc(%rip)
 	.endfn	valloc,globl
-
-	.initbss 800,_init_valloc
-hook$valloc:
-	.quad	0
-	.endobj	hook$valloc,globl,hidden
-	.previous
-
-	.init.start 800,_init_valloc
-	.hidden	dlvalloc
-	ezlea	dlvalloc,ax
-	stosq
-	.init.end 800,_init_valloc
-
-	yoink	free

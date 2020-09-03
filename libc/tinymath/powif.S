@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,8 +17,15 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/tinymath/tinymath.h"
+#include "libc/macros.h"
 
-float powif(float a, int b) {
-  return tinymath_powl(a, b);
-}
+/	Returns 𝑥^𝑦.
+/
+/	@param	𝑥 is float scalar in low quarter of %xmm0
+/	@param	𝑦 is int passed in %edi
+/	@return	double scalar in low half of %xmm0
+tinymath_powif:
+	cvtsi2ss %edi,%xmm1
+	jmp	tinymath_pow
+	.endfn	tinymath_powif,globl
+	.alias	tinymath_powif,powif

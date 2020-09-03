@@ -53,9 +53,9 @@ $(LIBC_STDIO_A).pkg:					\
 		$(LIBC_STDIO_A_OBJS)			\
 		$(foreach x,$(LIBC_STDIO_A_DIRECTDEPS),$($(x)_A).pkg)
 
-#o/$(MODE)/libc/stdio/fputc.o:				\
+o/$(MODE)/libc/stdio/fputc.o:				\
 		OVERRIDE_CFLAGS +=			\
-			$(NO_MAGIC)
+			-O3
 
 LIBC_STDIO_LIBS = $(foreach x,$(LIBC_STDIO_ARTIFACTS),$($(x)))
 LIBC_STDIO_SRCS = $(foreach x,$(LIBC_STDIO_ARTIFACTS),$($(x)_SRCS))

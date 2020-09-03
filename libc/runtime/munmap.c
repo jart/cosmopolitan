@@ -17,83 +17,34 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/fileno.h"
+#include "libc/calls/internal.h"
+#include "libc/dce.h"
+#include "libc/macros.h"
+#include "libc/runtime/memtrack.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/errfuns.h"
 
-struct SourceLocation {
-  const char *filename;
-  int line;
-  int column;
-};
+#define IP(X)        (intptr_t)(X)
+#define ALIGNED(p)   (!(IP(p) & (FRAMESIZE - 1)))
+#define CANONICAL(p) (-0x800000000000 <= IP(p) && IP(p) <= 0x7fffffffffff)
 
-struct AccessInfo {
-  const uint8_t *addr;
-  const uint8_t *first_bad_addr;
-  size_t size;
-  bool iswrite;
-  unsigned long ip;
-};
-
-struct Global {
-  const uint8_t *addr;
-  size_t size;
-  size_t size_with_redzone;
-  const void *name;
-  const void *module_name;
-  unsigned long has_cxx_init;
-  struct kasan_source_location *location;
-  char *odr_indicator;
-};
-
-privileged void __asan_init(void) {
-}
-
-privileged void __asan_version_mismatch_check_v8(void) {
-}
-
-privileged void __asan_register_globals(struct Global globals[], int n) {
-}
-
-privileged void __asan_unregister_globals(struct Global globals[], int n) {
-}
-
-privileged void __asan_report_load_n(uint8_t *p, int n) {
-}
-
-privileged void __asan_report_store_n(uint8_t *p, int n) {
-  __asan_report_load_n(p, n);
-}
-
-privileged void __asan_loadN(uintptr_t ptr, size_t size) {
-}
-
-privileged void __asan_storeN(uintptr_t ptr, size_t size) {
-}
-
-privileged uintptr_t __asan_stack_malloc(size_t size, int classid) {
-  return 0;
-}
-
-privileged void __asan_stack_free(uintptr_t ptr, size_t size, int classid) {
-}
-
-privileged void __asan_handle_no_return(void) {
-  DebugBreak();
-}
-
-privileged void __asan_alloca_poison(uintptr_t addr, uintptr_t size) {
-}
-
-privileged void __asan_allocas_unpoison(uintptr_t top, uintptr_t bottom) {
-}
-
-privileged void *__asan_addr_is_in_fake_stack(void *fakestack, void *addr,
-                                              void **beg, void **end) {
-  return NULL;
-}
-
-privileged void *__asan_get_current_fake_stack(void) {
-  return NULL;
+/**
+ * Releases memory pages.
+ *
+ * @param addr is a pointer within any memory mapped region the process
+ *     has permission to control, such as address ranges returned by
+ *     mmap(), the program image itself, etc.
+ * @param size is the amount of memory to unmap, which needn't be a
+ *     multiple of FRAMESIZE, and may be a subset of that which was
+ *     mapped previously, and may punch holes in existing mappings,
+ *     but your mileage may vary on windows
+ * @return 0 on success, or -1 w/ errno
+ */
+int munmap(void *addr, size_t size) {
+  int rc;
+  if (!ALIGNED(addr) || !CANONICAL(addr) || !size) return einval();
+  size = ROUNDUP(size, FRAMESIZE);
+  if (UntrackMemoryIntervals(addr, size) == -1) return -1;
+  if (IsWindows()) return 0;
+  return munmap$sysv(addr, size);
 }

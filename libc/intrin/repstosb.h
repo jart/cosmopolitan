@@ -2,7 +2,7 @@
 #define COSMOPOLITAN_LIBC_INTRIN_REPSTOSB_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
-static void *repstosb(void *dest, unsigned char al, size_t cx) {
+forceinline void *repstosb(void *dest, unsigned char al, size_t cx) {
   unsigned char *di = (unsigned char *)dest;
   while (cx) *di++ = al, cx--;
   return di;

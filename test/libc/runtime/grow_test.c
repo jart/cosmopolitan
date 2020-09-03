@@ -47,16 +47,17 @@ TEST(grow, testStackMemory_convertsToDynamic) {
   int A[] = {1, 2, 3};
   int *p = A;
   size_t capacity = ARRAYLEN(A);
-  EXPECT_FALSE(isheap(p));
-  EXPECT_TRUE(grow(&p, &capacity, sizeof(int), 0));
-  EXPECT_TRUE(isheap(p));
-  EXPECT_GT(capacity, ARRAYLEN(A));
-  EXPECT_EQ(1, p[0]);
-  EXPECT_EQ(2, p[1]);
-  EXPECT_EQ(3, p[2]);
-  p[0] = 7;
-  EXPECT_EQ(1, A[0]);
-  free(p);
+  if (!isheap(p)) {
+    EXPECT_TRUE(grow(&p, &capacity, sizeof(int), 0));
+    EXPECT_TRUE(isheap(p));
+    EXPECT_GT(capacity, ARRAYLEN(A));
+    EXPECT_EQ(1, p[0]);
+    EXPECT_EQ(2, p[1]);
+    EXPECT_EQ(3, p[2]);
+    p[0] = 7;
+    EXPECT_EQ(1, A[0]);
+    free(p);
+  }
 }
 
 TEST(grow, testGrowth_clearsNewMemory) {
@@ -86,12 +87,13 @@ TEST(grow, testOverflow_returnsFalseAndDoesNotFree) {
   int A[] = {1, 2, 3};
   int *p = A;
   size_t capacity = ARRAYLEN(A);
-  EXPECT_FALSE(isheap(p));
-  EXPECT_FALSE(grow(&p, &capacity, pushpop(SIZE_MAX), 0));
-  EXPECT_FALSE(isheap(p));
-  EXPECT_EQ(capacity, ARRAYLEN(A));
-  EXPECT_EQ(1, p[0]);
-  EXPECT_EQ(2, p[1]);
-  EXPECT_EQ(3, p[2]);
-  free_s(&p);
+  if (!isheap(p)) {
+    EXPECT_FALSE(grow(&p, &capacity, pushpop(SIZE_MAX), 0));
+    EXPECT_FALSE(isheap(p));
+    EXPECT_EQ(capacity, ARRAYLEN(A));
+    EXPECT_EQ(1, p[0]);
+    EXPECT_EQ(2, p[1]);
+    EXPECT_EQ(3, p[2]);
+    free_s(&p);
+  }
 }

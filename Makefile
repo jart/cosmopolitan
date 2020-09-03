@@ -60,9 +60,10 @@
 #
 #   build/config.mk
 
-SHELL   = /bin/sh
-HOSTS  ?= freebsd openbsd alpine
-SANITY := $(shell build/sanitycheck $$PPID)
+SHELL         = /bin/sh
+HOSTS        ?= freebsd openbsd alpine
+SANITY       := $(shell build/sanitycheck $$PPID)
+GNUMAKEFLAGS += --output-sync
 
 .SUFFIXES:
 .DELETE_ON_ERROR:
@@ -156,7 +157,6 @@ include tool/build/lib/buildlib.mk
 include tool/build/emucrt/emucrt.mk
 include tool/build/emubin/emubin.mk
 include tool/build/build.mk
-include tool/debug/debug.mk
 include tool/decode/lib/decodelib.mk
 include tool/decode/decode.mk
 include tool/hash/hash.mk

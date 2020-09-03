@@ -24,17 +24,18 @@
 #include "libc/nexgen32e/tinystrcmp.h"
 #include "libc/str/str.h"
 
-static int sortenvpcb(const char **a, const char **b) { return strcmp(*a, *b); }
+static int CompareStrings(const char *l, const char *r) {
+  size_t i = 0;
+  while (l[i] == r[i] && r[i]) ++i;
+  return (l[i] & 0xff) - (r[i] & 0xff);
+}
 
-static void slowsort(char **a, int n) {
+static void SortStrings(char **a, size_t n) {
+  char *t;
   size_t i, j;
-  const char *t;
   for (i = 1; i < n; ++i) {
-    j = i;
-    t = a[i];
-    while (j > 0 && tinystrcmp(t, a[j - 1]) < 0) {
+    for (t = a[i], j = i; j > 0 && CompareStrings(t, a[j - 1]) < 0; --j) {
       a[j] = a[j - 1];
-      --j;
     }
     a[j] = t;
   }
@@ -52,17 +53,14 @@ static void slowsort(char **a, int n) {
  * @return newly allocated sorted copy of envp pointer array
  */
 hidden textwindows nodiscard char **sortenvp(char *const envp[]) {
-  size_t count = 0;
-  while (envp[count]) count++;
-  size_t bytesize = (count + 1) * sizeof(char *);
-  char **copy = malloc(bytesize);
-  if (copy) {
-    memcpy(copy, envp, bytesize);
-    if (IsTiny()) {
-      slowsort(copy, count);
-    } else {
-      qsort(copy, count, sizeof(char *), (void *)sortenvpcb);
-    }
+  char **copy;
+  size_t n, size;
+  n = 0;
+  while (envp[n]) n++;
+  size = (n + 1) * sizeof(char *);
+  if ((copy = malloc(size))) {
+    memcpy(copy, envp, size);
+    SortStrings(copy, n);
   }
   return copy;
 }

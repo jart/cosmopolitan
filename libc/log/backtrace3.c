@@ -17,59 +17,53 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "dsp/mpeg/ycbcrio.h"
+#include "libc/alg/bisectcarleft.h"
+#include "libc/bits/weaken.h"
 #include "libc/fmt/fmt.h"
-#include "libc/log/check.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
+#include "libc/log/backtrace.h"
+#include "libc/macros.h"
+#include "libc/nexgen32e/gc.h"
+#include "libc/nexgen32e/stackframe.h"
+#include "libc/runtime/symbols.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/ex.h"
-#include "libc/sysv/consts/exit.h"
-#include "third_party/getopt/getopt.h"
 
-#define USAGE \
-  " [FLAGS] [PATH...]\n\
-\n\
-Flags:\n\
-  -h         shows this information\n\
-\n"
-
-static char *inpath_;
-
-static void PrintUsage(int rc, FILE *f) {
-  fputs("Usage: ", f);
-  fputs(program_invocation_name, f);
-  fputs(USAGE, f);
-  exit(rc);
-}
-
-static void GetOpts(int *argc, char *argv[]) {
-  int opt;
-  while ((opt = getopt(*argc, argv, "?h")) != -1) {
-    switch (opt) {
-      case '?':
-      case 'h':
-        PrintUsage(EXIT_SUCCESS, stdout);
-      default:
-        PrintUsage(EX_USAGE, stderr);
-    }
+static char *FormatAddress(FILE *f, const struct SymbolTable *st, intptr_t addr,
+                           char *out, unsigned size, bool symbolic) {
+  int64_t addend;
+  const char *name;
+  const struct Symbol *symbol;
+  if (st->count && ((intptr_t)addr >= (intptr_t)&_base &&
+                    (intptr_t)addr <= (intptr_t)&_end && symbolic)) {
+    symbol = &st->symbols[bisectcarleft((const int32_t(*)[2])st->symbols,
+                                        st->count, addr - st->addr_base - 1)];
+    addend = addr - st->addr_base - symbol->addr_rva;
+    name = &st->name_base[symbol->name_rva];
+    snprintf(out, size, "%s%c%#x", name, addend >= 0 ? '+' : '-', ABS(addend));
+  } else {
+    snprintf(out, size, "%p", addr);
   }
+  return out;
 }
 
-static void ProcessFile(struct Ycbcrio *m) {
-  /* m->frame-> */
-}
-
-int main(int argc, char *argv[]) {
-  size_t i;
-  struct Ycbcrio *m;
-  GetOpts(&argc, argv);
-  for (i = optind; i < argc; ++i) {
-    inpath_ = argv[i];
-    m = YcbcrioOpen(inpath_, NULL);
-    ProcessFile(m);
-    YcbcrioClose(&m);
+int PrintBacktraceUsingSymbols(FILE *f, const struct StackFrame *bp,
+                               struct SymbolTable *symbols) {
+  size_t gi;
+  char buf[256];
+  intptr_t addr;
+  struct Garbages *garbage;
+  const struct StackFrame *frame;
+  if (!symbols) return -1;
+  garbage = weaken(g_garbage);
+  gi = garbage ? garbage->i : 0;
+  for (frame = bp; frame; frame = frame->next) {
+    addr = frame->addr;
+    if (addr == weakaddr("CollectGarbage")) {
+      do {
+        --gi;
+      } while ((addr = garbage->p[gi].ret) == weakaddr("CollectGarbage"));
+    }
+    fprintf(f, "%p %p %s\n", frame, addr,
+            FormatAddress(f, symbols, addr, buf, sizeof(buf), true));
   }
   return 0;
 }

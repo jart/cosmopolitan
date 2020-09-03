@@ -86,7 +86,7 @@ char *realpath(const char *, char *);
 char *replaceuser(const char *) nodiscard;
 char *slurp(const char *, size_t *) nodiscard;
 char *ttyname(int);
-const char *commandv(const char *);
+char *commandv(const char *, char[hasatleast PATH_MAX]);
 int access(const char *, int) nothrow;
 int arch_prctl();
 int chdir(const char *);
@@ -140,12 +140,8 @@ int mknodat(int, const char *, int32_t, uint64_t);
 int mlock(const void *, size_t);
 int mlock2(const void *, size_t, int);
 int mlockall(int);
-int mprotect(void *, uint64_t, int) privileged;
-int msync(void *, size_t, int);
 int munlock(const void *, size_t);
 int munlockall(void);
-int munmap(void *, uint64_t);
-int munmap_s(void *, uint64_t);
 int nice(int);
 int open(const char *, int, ...) nodiscard;
 int openanon(char *, unsigned) nodiscard;
@@ -229,8 +225,6 @@ uint32_t gettid(void) nosideeffect;
 uint32_t getuid(void) nosideeffect;
 uint32_t umask(int32_t);
 void *getprocaddressmodule(const char *, const char *);
-void *mmap(void *, uint64_t, int32_t, int32_t, int32_t, int64_t);
-void *mremap(void *, uint64_t, uint64_t, int32_t, void *);
 
 #define getcwd(BUF, SIZE)                                          \
   (isconstant(BUF) && (&(BUF)[0] == NULL) ? get_current_dir_name() \

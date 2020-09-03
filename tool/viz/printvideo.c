@@ -21,7 +21,6 @@
 #include "dsp/core/half.h"
 #include "dsp/core/illumination.h"
 #include "dsp/mpeg/mpeg.h"
-#include "dsp/mpeg/ycbcrio.h"
 #include "dsp/scale/scale.h"
 #include "dsp/tty/quant.h"
 #include "dsp/tty/tty.h"
@@ -772,21 +771,6 @@ static void RenderIt(void) {
   EndRender(p);
 }
 
-static noinline void SaveMpegFrame(plm_frame_t *pf) {
-  static long count;
-  struct Ycbcrio *m;
-  if (!count) {
-    if (!isdirectory("o/frames")) {
-      if (!isdirectory("o")) {
-        CHECK_NE(-1, mkdir("o", 0755));
-      }
-      CHECK_NE(-1, mkdir("o/frames", 0755));
-    }
-  }
-  m = YcbcrioOpen(gc(xasprintf("o/frames/%04ld.ycbcrio", (count++ % 100))), pf);
-  YcbcrioClose(&m);
-}
-
 static void RasterIt(void) {
   static bool once;
   static void *buf;
@@ -873,7 +857,6 @@ static void OnVideo(plm_t *mpeg, plm_frame_t *pf, void *user) {
   if (f2_->n) {
     WARNF("video frame dropped");
   } else {
-    /* if (pf3_) SaveMpegFrame(pf); */
     TranscodeVideo(pf);
     if (!f1_->n) {
       xchg(&f1_, &f2_);

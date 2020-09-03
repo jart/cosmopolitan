@@ -59,7 +59,7 @@
 #define MUTATING      true
 #define READONLY      false
 #define UNCONDITIONAL true
-#define BITS          (8 << RegLog2(rde))
+#define BITS          (8u << RegLog2(rde))
 #define SIGN          (1ull << (BITS - 1))
 #define MASK          (SIGN | (SIGN - 1))
 #define SHIFTMASK     (BITS - 1)
@@ -1330,8 +1330,8 @@ static void OpSqrtpsd(struct Machine *m, uint32_t rde) {
 }
 
 static void OpRsqrtps(struct Machine *m, uint32_t rde) {
-  unsigned i;
   float_v x;
+  unsigned i;
   if (Rep(rde) != 3) {
     memcpy(&x, GetModrmRegisterXmmPointerRead16(m, rde), 16);
     for (i = 0; i < 4; ++i) x[i] = 1.f / sqrtf(x[i]);
@@ -1344,8 +1344,8 @@ static void OpRsqrtps(struct Machine *m, uint32_t rde) {
 }
 
 static void OpRcpps(struct Machine *m, uint32_t rde) {
-  int i;
   float_v x;
+  unsigned i;
   if (Rep(rde) != 3) {
     memcpy(&x, GetModrmRegisterXmmPointerRead16(m, rde), 16);
     for (i = 0; i < 4; ++i) x[i] = 1.f / x[i];
@@ -1551,7 +1551,7 @@ static float_v OpAddsubps(struct Machine *m, float_v x, float_v y) {
 }
 
 static float_v OpMinps(struct Machine *m, float_v x, float_v y) {
-  int i;
+  unsigned i;
   for (i = 0; i < 4; ++i) {
     x[i] = MIN(x[i], y[i]);
   }
@@ -1559,7 +1559,7 @@ static float_v OpMinps(struct Machine *m, float_v x, float_v y) {
 }
 
 static double_v OpMinpd(struct Machine *m, double_v x, double_v y) {
-  int i;
+  unsigned i;
   for (i = 0; i < 4; ++i) {
     x[i] = MIN(x[i], y[i]);
   }
@@ -1567,7 +1567,7 @@ static double_v OpMinpd(struct Machine *m, double_v x, double_v y) {
 }
 
 static float_v OpMaxps(struct Machine *m, float_v x, float_v y) {
-  int i;
+  unsigned i;
   for (i = 0; i < 4; ++i) {
     x[i] = MAX(x[i], y[i]);
   }
@@ -1575,7 +1575,7 @@ static float_v OpMaxps(struct Machine *m, float_v x, float_v y) {
 }
 
 static double_v OpMaxpd(struct Machine *m, double_v x, double_v y) {
-  int i;
+  unsigned i;
   for (i = 0; i < 4; ++i) {
     x[i] = MAX(x[i], y[i]);
   }
@@ -1721,9 +1721,10 @@ static void OpAlubFlipRo(struct Machine *m, uint32_t rde, int h) {
 }
 
 static void OpAlubi(struct Machine *m, uint32_t rde, int h) {
-  uint8_t *a;
+  uint8_t *a, x;
   a = GetModrmRegisterBytePointerWrite(m, rde);
-  Write8(a, Alu(0, h, Read8(a), m->xedd->op.uimm0, &m->flags));
+  x = Alu(0, h, Read8(a), m->xedd->op.uimm0, &m->flags);
+  if (h != ALU_CMP) Write8(a, x);
 }
 
 static void OpAlubiRo(struct Machine *m, uint32_t rde, int h) {
@@ -1761,10 +1762,10 @@ static void OpAluwFlipRo(struct Machine *m, uint32_t rde, int h) {
 
 static void OpAluwi(struct Machine *m, uint32_t rde, int h) {
   uint8_t *a;
+  uint64_t x;
   a = GetModrmRegisterWordPointerWriteOszRexw(m, rde);
-  WriteRegisterOrMemory(
-      rde, a,
-      Alu(RegLog2(rde), h, ReadMemory(rde, a), m->xedd->op.uimm0, &m->flags));
+  x = Alu(RegLog2(rde), h, ReadMemory(rde, a), m->xedd->op.uimm0, &m->flags);
+  if (h != ALU_CMP) WriteRegisterOrMemory(rde, a, x);
 }
 
 static void OpAluwiRo(struct Machine *m, uint32_t rde, int h) {
@@ -1823,11 +1824,32 @@ static void OpTestRaxIvds(struct Machine *m, uint32_t rde) {
       &m->flags);
 }
 
+long opcount[256 * 4];
+
 void ExecuteInstruction(struct Machine *m) {
   uint32_t rde;
   m->ip += m->xedd->length;
   rde = m->xedd->op.rde;
+  opcount[m->xedd->op.map << 8 | m->xedd->op.opcode]++;
   switch (m->xedd->op.map << 8 | m->xedd->op.opcode) {
+    CASE(0x089, OpMovEvqpGvqp(m, rde));
+    CASE(0x083, OpAluwi(m, rde, ModrmReg(rde)));
+    CASR(0x070, if (GetCond(m, 0x0)) OpJmp(m));
+    CASR(0x071, if (GetCond(m, 0x1)) OpJmp(m));
+    CASR(0x072, if (GetCond(m, 0x2)) OpJmp(m));
+    CASR(0x073, if (GetCond(m, 0x3)) OpJmp(m));
+    CASR(0x074, if (GetCond(m, 0x4)) OpJmp(m));
+    CASR(0x075, if (GetCond(m, 0x5)) OpJmp(m));
+    CASR(0x076, if (GetCond(m, 0x6)) OpJmp(m));
+    CASR(0x077, if (GetCond(m, 0x7)) OpJmp(m));
+    CASR(0x078, if (GetCond(m, 0x8)) OpJmp(m));
+    CASR(0x079, if (GetCond(m, 0x9)) OpJmp(m));
+    CASR(0x07A, if (GetCond(m, 0xa)) OpJmp(m));
+    CASR(0x07B, if (GetCond(m, 0xb)) OpJmp(m));
+    CASR(0x07C, if (GetCond(m, 0xc)) OpJmp(m));
+    CASR(0x07D, if (GetCond(m, 0xd)) OpJmp(m));
+    CASR(0x07E, if (GetCond(m, 0xe)) OpJmp(m));
+    CASR(0x07F, if (GetCond(m, 0xf)) OpJmp(m));
     CASR(0x0B0 ... 0x0B7, OpMovZbIb(m, rde));
     CASR(0x0B8 ... 0x0BF, OpMovZvqpIvqp(m, rde));
     CASR(0x050 ... 0x057, OpPushZvq(m, rde));
@@ -1891,32 +1913,14 @@ void ExecuteInstruction(struct Machine *m) {
     CASE(0x06D, OpString(m, rde, STRING_INS));
     CASE(0x06E, OpString(m, rde, STRING_OUTS));
     CASE(0x06F, OpString(m, rde, STRING_OUTS));
-    CASR(0x070, if (GetCond(m, 0x0)) OpJmp(m));
-    CASR(0x071, if (GetCond(m, 0x1)) OpJmp(m));
-    CASR(0x072, if (GetCond(m, 0x2)) OpJmp(m));
-    CASR(0x073, if (GetCond(m, 0x3)) OpJmp(m));
-    CASR(0x074, if (GetCond(m, 0x4)) OpJmp(m));
-    CASR(0x075, if (GetCond(m, 0x5)) OpJmp(m));
-    CASR(0x076, if (GetCond(m, 0x6)) OpJmp(m));
-    CASR(0x077, if (GetCond(m, 0x7)) OpJmp(m));
-    CASR(0x078, if (GetCond(m, 0x8)) OpJmp(m));
-    CASR(0x079, if (GetCond(m, 0x9)) OpJmp(m));
-    CASR(0x07A, if (GetCond(m, 0xa)) OpJmp(m));
-    CASR(0x07B, if (GetCond(m, 0xb)) OpJmp(m));
-    CASR(0x07C, if (GetCond(m, 0xc)) OpJmp(m));
-    CASR(0x07D, if (GetCond(m, 0xd)) OpJmp(m));
-    CASR(0x07E, if (GetCond(m, 0xe)) OpJmp(m));
-    CASR(0x07F, if (GetCond(m, 0xf)) OpJmp(m));
     CASR(0x080, OpAlubi(m, rde, ModrmReg(rde)));
     CASE(0x081, OpAluwi(m, rde, ModrmReg(rde)));
     CASR(0x082, OpAlubi(m, rde, ModrmReg(rde)));
-    CASE(0x083, OpAluwi(m, rde, ModrmReg(rde)));
     CASR(0x084, OpAlubRo(m, rde, TEST));
     CASE(0x085, OpAluwRo(m, rde, TEST));
     CASE(0x086, OpXchgGbEb(m, rde));
     CASE(0x087, OpXchgGvqpEvqp(m, rde));
     CASE(0x088, OpMovEbGb(m, rde));
-    CASE(0x089, OpMovEvqpGvqp(m, rde));
     CASE(0x08A, OpMovGbEb(m, rde));
     CASE(0x08B, OpMovGvqpEvqp(m, rde));
     CASE(0x08C, OpMovEvqpSw(m));

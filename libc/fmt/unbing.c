@@ -56,14 +56,7 @@ static int g_cp437i[256 + ARRAYLEN(kCp437iMultimappings)];
  * @see bing()
  */
 int unbing(int c) {
-  int i, m, l, r;
-  static bool once;
-  if (!once) {
-    for (i = 0; i < 256; ++i) g_cp437i[i] = kCp437[i] << 8 | i;
-    memcpy(g_cp437i + 256, kCp437iMultimappings, sizeof(kCp437iMultimappings));
-    insertionsort(ARRAYLEN(g_cp437i), g_cp437i);
-    once = true;
-  }
+  int m, l, r;
   l = 0;
   r = ARRAYLEN(g_cp437i) - 1;
   while (l <= r) {
@@ -78,3 +71,12 @@ int unbing(int c) {
   }
   return -1;
 }
+
+static textstartup void g_cp437i_init() {
+  unsigned i;
+  for (i = 0; i < 256; ++i) g_cp437i[i] = kCp437[i] << 8 | i;
+  memcpy(g_cp437i + 256, kCp437iMultimappings, sizeof(kCp437iMultimappings));
+  djbsort(ARRAYLEN(g_cp437i), g_cp437i);
+}
+
+const void *const g_cp437i_ctor[] initarray = {g_cp437i_init};

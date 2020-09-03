@@ -53,6 +53,7 @@ struct SymbolTable *opensymboltable(const char *) nodiscard;
 int closesymboltable(struct SymbolTable **);
 const struct Symbol *bisectsymbol(struct SymbolTable *, intptr_t, int64_t *);
 const char *getsymbolname(struct SymbolTable *, const struct Symbol *);
+void __hook(void (*)(void), struct SymbolTable *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

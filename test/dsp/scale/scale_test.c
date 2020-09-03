@@ -79,8 +79,8 @@ prpppppppppppppoooooooonnnnnnnnnnnnnnnooooooooppppppppppppptp\
 pppppppppppppppppppoooooooooooooooooooooooppppppppppppppppppp";
 
 TEST(gyarados, testIdentityDifference) {
-  unsigned char A[1][32][62];
-  unsigned char B[1][32][62];
+  static unsigned char A[1][32][62];
+  static unsigned char B[1][32][62];
   memcpy(A, kDieWelle, sizeof(A));
   EzGyarados(1, 32, 61, B, 1, 32, 61, A, 0, 1, 32, 61, 32, 61, 1, 1, 0, 0);
   AbsoluteDifference(32, 62, B[0], 32, 62, B[0], 32, 62, A[0]);

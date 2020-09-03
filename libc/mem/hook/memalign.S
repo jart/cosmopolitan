@@ -20,35 +20,15 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-__asan_addr_is_in_fake_stack:
-__asan_alloca_poison:
-__asan_allocas_unpoison:
-__asan_get_current_fake_stack:
-__asan_handle_no_return:
-__asan_init:
-__asan_loadN:
-__asan_register_globals:
-__asan_report_load_n:
-__asan_report_store_n:
-__asan_stack_free:
-__asan_stack_malloc:
-__asan_storeN:
-__asan_unregister_globals:
-__asan_version_mismatch_check_v8:
-	xor	%eax,%eax
-	ret
-	.endfn	__asan_addr_is_in_fake_stack,globl,weak
-	.endfn	__asan_alloca_poison,globl,weak
-	.endfn	__asan_allocas_unpoison,globl,weak
-	.endfn	__asan_get_current_fake_stack,globl,weak
-	.endfn	__asan_handle_no_return,globl,weak
-	.endfn	__asan_init,globl,weak
-	.endfn	__asan_loadN,globl,weak
-	.endfn	__asan_register_globals,globl,weak
-	.endfn	__asan_report_load_n,globl,weak
-	.endfn	__asan_report_store_n,globl,weak
-	.endfn	__asan_stack_free,globl,weak
-	.endfn	__asan_stack_malloc,globl,weak
-	.endfn	__asan_storeN,globl,weak
-	.endfn	__asan_unregister_globals,globl,weak
-	.endfn	__asan_version_mismatch_check_v8,globl,weak
+	.initbss 202,_init_memalign
+hook$memalign:
+	.quad	0
+	.endobj	hook$memalign,globl,hidden
+	.previous
+
+	.init.start 202,_init_memalign
+	.hidden	dlmemalign
+	ezlea	dlmemalign,ax
+	stosq
+	yoink	free
+	.init.end 202,_init_memalign

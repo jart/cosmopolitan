@@ -28,13 +28,14 @@
  */
 nodiscard char *commandvenv(const char *var, const char *cmd) {
   const char *exepath;
+  char pathbuf[PATH_MAX];
   if ((exepath = getenv(var))) {
     if (!isempty(exepath) && access(exepath, X_OK) != -1) {
       return exepath;
     } else {
       return NULL;
     }
-  } else if ((exepath = commandv(cmd))) {
+  } else if ((exepath = commandv(cmd, pathbuf))) {
     return exepath;
   } else {
     return NULL;

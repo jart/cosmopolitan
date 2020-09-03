@@ -26,15 +26,24 @@
 /	@param	%rsi is ignored
 /	@return	new memory or NULL on OOM
 _ZnamRKSt9nothrow_t:
+/	operator new[](unsigned long, std::nothrow_t const&)
 	nop
+/	𝑠𝑙𝑖𝑑𝑒
+	.endfn	_ZnamRKSt9nothrow_t,weak
 _ZnwmRKSt9nothrow_t:
+/	operator new(unsigned long, std::nothrow_t const&)
 	nop
-_Znam:	nop
-_Znwm:	test	%rdi,%rdi
+/	𝑠𝑙𝑖𝑑𝑒
+	.endfn	_ZnwmRKSt9nothrow_t,weak
+_Znam:
+/	operator new[](unsigned long)
+	nop
+/	𝑠𝑙𝑖𝑑𝑒
+	.endfn	_Znam,weak
+_Znwm:
+/	operator new(unsigned long)
+	test	%rdi,%rdi
 	jne	1f
 	mov	$1,%edi
 1:	jmp	*hook$malloc(%rip)
-	.endfn	_Znwm,globl,weak
-	.endfn	_Znam,globl,weak
-	.endfn	_ZnwmRKSt9nothrow_t,globl,weak
-	.endfn	_ZnamRKSt9nothrow_t,globl,weak
+	.endfn	_Znwm,weak

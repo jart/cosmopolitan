@@ -27,6 +27,7 @@
 /	@param	rsi is src
 /	@param	rdx is number of bytes
 /	@return	original rdi copied to rax
+/	@clob	flags,rcx
 /	@asyncsignalsafe
 memmove:
 	mov	%rdi,%rax
@@ -36,7 +37,6 @@ memmove:
 MemMove:
 	.leafprologue
 	.profilable
-	push	%rcx
 	push	%rdi
 	push	%rsi
 	mov	%rdx,%rcx
@@ -49,7 +49,6 @@ MemMove:
 	cld
 	pop	%rsi
 	pop	%rdi
-	pop	%rcx
 	.leafepilogue
 	.endfn	memmove,globl
 	.source	__FILE__

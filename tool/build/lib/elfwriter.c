@@ -164,7 +164,7 @@ struct ElfWriter *elfwriter_open(const char *path, int mode) {
   CHECK_NE(-1, (elf->fd = open(elf->tmppath,
                                O_CREAT | O_TRUNC | O_RDWR | O_EXCL, mode)));
   CHECK_NE(-1, ftruncate(elf->fd, (elf->mapsize = FRAMESIZE)));
-  CHECK_NE(MAP_FAILED, (elf->map = mmap((void *)(intptr_t)kFixedMappingsStart,
+  CHECK_NE(MAP_FAILED, (elf->map = mmap((void *)(intptr_t)kFixedmapStart,
                                         elf->mapsize, PROT_READ | PROT_WRITE,
                                         MAP_SHARED | MAP_FIXED, elf->fd, 0)));
   elf->ehdr = memcpy(elf->map, &kObjHeader, (elf->wrote = sizeof(kObjHeader)));

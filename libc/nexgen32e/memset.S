@@ -43,12 +43,11 @@ memset:	mov	%rdi,%rax
 /	@param	rdi is dest
 /	@param	esi is the byte to set
 /	@param	edx is the number of bytes to set
-/	@clob	flags,xmm3
+/	@clob	flags,rcx,xmm3
 /	@mode	long
 MemSet:	.leafprologue
 	.profilable
 	push	%rbx
-	push	%rcx
 	movd	%esi,%xmm3
 	mov	$.Lmemsettab.ro.size,%ecx
 	cmp	%rcx,%rdx
@@ -77,8 +76,7 @@ MemSet:	.leafprologue
 	ja	1b
 	movdqu	%xmm3,-16(%rdi,%rdx)
 	pxor	%xmm3,%xmm3
-.L0:	pop	%rcx
-	pop	%rbx
+.L0:	pop	%rbx
 	.leafepilogue
 .L8:	movzbq	%sil,%rbx
 	mov	$0x0101010101010101,%rcx

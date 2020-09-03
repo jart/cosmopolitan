@@ -23,10 +23,12 @@
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
+#include "libc/log/backtrace.h"
 #include "libc/log/gdb.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"
+#include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
@@ -163,7 +165,6 @@ relegated static void ShowCrashReport(int err, FILE *f, int sig,
   }
   fputc('\n', f);
   fflush(f);
-  memsummary(fileno(f));
   ShowMemoryMappings(fileno(f));
 }
 

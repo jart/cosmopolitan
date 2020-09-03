@@ -21,6 +21,12 @@
 .privileged
 .source	__FILE__
 
+/	@fileoverview Address Sanitizer Thunks
+/
+/	This has tiny code size and reduces API surface area
+/	since ASAN has the same stylistic hugeness as UBSAN.
+/	We also guard all the functions, against reentrancy.
+
 __asan_load1:
 	push	$1
 	jmp	OnLoad
@@ -43,13 +49,11 @@ __asan_load16:
 	.endfn	__asan_load16,globl
 __asan_load32:
 	push	$32
-/	fallthrough
+/	𝑠𝑙𝑖𝑑𝑒
 	.endfn	__asan_load32,globl
 OnLoad:	pop	%rsi
-	.globl	__asan_loadN
-	.weak	__asan_loadN
 	ezlea	__asan_loadN,ax
-	jmp	OnAsan
+	jmp	__asan_report_noreentry
 	.endfn	OnStore
 
 __asan_store1:
@@ -74,13 +78,11 @@ __asan_store16:
 	.endfn	__asan_store16,globl
 __asan_store32:
 	push	$32
-/	fallthrough
+/	𝑠𝑙𝑖𝑑𝑒
 	.endfn	__asan_store32,globl
 OnStore:pop	%rsi
-	.globl	__asan_storeN
-	.weak	__asan_storeN
 	ezlea	__asan_storeN,ax
-	jmp	OnAsan
+	jmp	__asan_report_noreentry
 	.endfn	OnStore
 
 __asan_report_load1:
@@ -101,14 +103,12 @@ __asan_report_load8:
 	.endfn	__asan_report_load8,globl
 __asan_report_load16:
 	push	$16
-/	fallthrough
+/	𝑠𝑙𝑖𝑑𝑒
 	.endfn	__asan_report_load16,globl
 OnReportLoad:
 	pop	%rsi
-	.globl	__asan_report_load_n
-	.weak	__asan_report_load_n
 	ezlea	__asan_report_load_n,ax
-	jmp	OnAsan
+	jmp	__asan_report_noreentry
 	.endfn	OnReportLoad
 
 __asan_report_store1:
@@ -133,33 +133,31 @@ __asan_report_store16:
 	.endfn	__asan_report_store16,globl
 __asan_report_store32:
 	push	$32
-/	fallthrough
+/	𝑠𝑙𝑖𝑑𝑒
 	.endfn	__asan_report_store32,globl
 ReportStore:
 	pop	%rsi
-	.globl	__asan_report_store_n
-	.weak	__asan_report_store_n
 	ezlea	__asan_report_store_n,ax
-/	fallthrough
+/	𝑠𝑙𝑖𝑑𝑒
 	.endfn	ReportStore
 
-OnAsan:	test	%rax,%rax
-	jz	1f
-	jmp	*%rax
-1:	ret
-	.endfn	OnAsan
+__asan_report_noreentry:
+	push	%rbp
+	mov	%rsp,%rbp
+	cmpb	$0,noreentry(%rip)
+	jnz	2f
+	incb	noreentry(%rip)
+	call	*%rax
+	decb	noreentry(%rip)
+	pop	%rbp
+	ret
+2:	call	abort
+	.endfn	__asan_report_noreentry
 
 __asan_stack_free_0:
 	push	$0
-/	fallthrough
+	jmp	OnStackFree
 	.endfn	__asan_stack_free_0,globl
-OnStackFree:
-	pop	%rdx
-	.globl	__asan_stack_free
-	.weak	__asan_stack_free
-	ezlea	__asan_stack_free,ax
-	jmp	OnAsan
-	.endfn	OnStackFree
 __asan_stack_free_1:
 	push	$1
 	jmp	OnStackFree
@@ -198,20 +196,17 @@ __asan_stack_free_9:
 	.endfn	__asan_stack_free_9,globl
 __asan_stack_free_10:
 	push	$10
-	jmp	OnStackFree
+/	𝑠𝑙𝑖𝑑𝑒
 	.endfn	__asan_stack_free_10,globl
+OnStackFree:
+	pop	%rdx
+	jmp	__asan_stack_free
+	.endfn	OnStackFree
 
 __asan_stack_malloc_0:
 	push	$0
-/	fallthrough
+	jmp	OnStackMalloc
 	.endfn	__asan_stack_malloc_0,globl
-OnStackMalloc:
-	pop	%rsi
-	.globl	__asan_stack_malloc
-	.weak	__asan_stack_malloc
-	ezlea	__asan_stack_malloc,ax
-	jmp	OnAsan
-	.endfn	OnStackMalloc
 __asan_stack_malloc_1:
 	push	$1
 	jmp	OnStackMalloc
@@ -250,11 +245,54 @@ __asan_stack_malloc_9:
 	.endfn	__asan_stack_malloc_9,globl
 __asan_stack_malloc_10:
 	push	$10
-	jmp	OnStackMalloc
+/	𝑠𝑙𝑖𝑑𝑒
 	.endfn	__asan_stack_malloc_10,globl
+OnStackMalloc:
+	pop	%rsi
+	jmp	__asan_stack_malloc
+	.endfn	OnStackMalloc
+
+__asan_handle_no_return:
+	ret
+	.endfn	__asan_handle_no_return,globl
+
+__asan_before_dynamic_init:
+	ret
+	.endfn	__asan_before_dynamic_init,globl
+
+__asan_after_dynamic_init:
+	ret
+	.endfn	__asan_after_dynamic_init,globl
+
+__asan_unregister_globals:
+	ret
+	.endfn	__asan_unregister_globals,globl
+
+__asan_version_mismatch_check_v8:
+	ret
+	.endfn	__asan_version_mismatch_check_v8,globl
+
+/	Initializes Address Sanitizer runtime earlier if linked.
+	.init.start 301,_init_asan
+	push	%rdi
+	push	%rsi
+	mov	%r12,%rdi
+	mov	%r13,%rsi
+	mov	%r14,%rdx
+	mov	%r15,%rcx
+	call	__asan_init
+	pop	%rsi
+	pop	%rdi
+	.init.end 301,_init_asan
 
 	.rodata.cst4
 __asan_option_detect_stack_use_after_return:
 	.long	1
 	.endobj	__asan_option_detect_stack_use_after_return,globl
+	.previous
+
+	.bss
+noreentry:
+	.byte	0
+	.endobj	noreentry
 	.previous

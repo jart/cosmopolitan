@@ -35,17 +35,3 @@
 posix_memalign:
 	jmp	*hook$posix_memalign(%rip)
 	.endfn	posix_memalign,globl
-
-	.initbss 800,_init_posix_memalign
-hook$posix_memalign:
-	.quad	0
-	.endobj	hook$posix_memalign,globl,hidden
-	.previous
-
-	.init.start 800,_init_posix_memalign
-	.hidden	dlposix_memalign
-	ezlea	dlposix_memalign,ax
-	stosq
-	.init.end 800,_init_posix_memalign
-
-	yoink	free

@@ -23,6 +23,7 @@
 #include "libc/limits.h"
 #include "libc/macros.h"
 #include "libc/runtime/ring.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"

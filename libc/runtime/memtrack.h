@@ -1,13 +1,11 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
-#include "libc/nexgen32e/vendor.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define kMappingsSize       0x0000100000000000 /* 16TB */
-#define kMappingsStart      (IsGenuineCosmo() ? 0x300000000000 : 0x200000000000)
-#define kFixedMappingsStart 0x0000100000000000
-#define kFixedMappingsSize  kMappingsSize
+#define kAutomapStart  0x0000100000000000
+#define kAutomapSize   0x0000100000000000
+#define kFixedmapStart 0x0000200000000000
 
 struct MemoryIntervals {
   int i;
@@ -27,6 +25,7 @@ int TrackMemoryInterval(struct MemoryIntervals *, int, int, long);
 int ReleaseMemoryIntervals(struct MemoryIntervals *, int, int,
                            void (*)(struct MemoryIntervals *, int, int));
 void ReleaseMemoryNt(struct MemoryIntervals *, int, int);
+int UntrackMemoryIntervals(void *, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

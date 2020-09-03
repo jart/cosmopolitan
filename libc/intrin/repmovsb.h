@@ -2,7 +2,7 @@
 #define COSMOPOLITAN_LIBC_INTRIN_REPMOVSB_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
-static void repmovsb(void **dest, const void **src, size_t cx) {
+forceinline void repmovsb(void **dest, const void **src, size_t cx) {
   char *di = (char *)*dest;
   const char *si = (const char *)*src;
   while (cx) *di++ = *si++, cx--;

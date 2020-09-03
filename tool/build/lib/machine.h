@@ -136,7 +136,7 @@ struct Machine {
   int64_t faultaddr;
   uint8_t stash[4096];
   uint8_t xmmtype[2][8];
-  struct XedDecodedInst icache[512];
+  struct XedDecodedInst icache[1024];
   struct MachineFds fds;
 };
 

@@ -13,8 +13,7 @@ LIBC_INTRIN_A_SRCS = $(LIBC_INTRIN_A_SRCS_S) $(LIBC_INTRIN_A_SRCS_C)
 LIBC_INTRIN_A_CHECKS = $(LIBC_INTRIN_A).pkg
 
 LIBC_INTRIN_A_FILES :=					\
-	$(wildcard libc/intrin/*)			\
-	$(wildcard libc/intrin/delegates/*)
+	$(wildcard libc/intrin/*)
 
 LIBC_INTRIN_A_OBJS =					\
 	$(LIBC_INTRIN_A_SRCS:%=o/$(MODE)/%.zip.o)	\

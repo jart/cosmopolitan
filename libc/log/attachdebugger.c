@@ -23,6 +23,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/log/gdb.h"
 #include "libc/log/log.h"
+#include "libc/nexgen32e/stackframe.h"
 #include "libc/nexgen32e/vendor.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"

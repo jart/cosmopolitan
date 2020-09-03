@@ -22,24 +22,10 @@
 .source	__FILE__
 
 /	Equivalent to valloc(minimum-page-that-holds(n)), that is,
-/	round up n to nearest PAGESIZE.
+/	round up n to nearest pagesize.
 /
 /	@param	rdi is number of bytes needed
 /	@return	rax is memory address, or NULL w/ errno
 /	@see	dlpvalloc()
 pvalloc:jmp	*hook$pvalloc(%rip)
 	.endfn	pvalloc,globl
-
-	.initbss 800,_init_pvalloc
-hook$pvalloc:
-	.quad	0
-	.endobj	hook$pvalloc,globl,hidden
-	.previous
-
-	.init.start 800,_init_pvalloc
-	.hidden	dlpvalloc
-	ezlea	dlpvalloc,ax
-	stosq
-	.init.end 800,_init_pvalloc
-
-	yoink	free

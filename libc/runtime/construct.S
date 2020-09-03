@@ -40,6 +40,10 @@ _construct:
 	je	2f
 	push	%rax
 	push	%rcx
+	mov	%r12,%rdi
+	mov	%r13,%rsi
+	mov	%r14,%rdx
+	mov	%r15,%rcx
 	call	*(%rax)
 	pop	%rcx
 	pop	%rax

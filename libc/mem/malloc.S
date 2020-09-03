@@ -39,4 +39,3 @@
 /	@see	dlmalloc()
 malloc:	jmp	*hook$malloc(%rip)
 	.endfn	malloc,globl
-

@@ -3,7 +3,6 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/conv/conv.h"
-#include "libc/conv/sizemultiply.h"
 #include "libc/dce.h"
 #include "libc/limits.h"
 #include "libc/macros.h"
@@ -859,6 +858,22 @@ void dlfree(void *mem) {
 #if !FOOTERS
 #undef fm
 #endif /* FOOTERS */
+}
+
+/**
+ * Multiplies sizes w/ saturation and overflow detection.
+ *
+ * @param count may be 0 to for realloc() → free() behavior
+ * @param opt_out set to count*itemsize or SIZE_MAX on overflow
+ * @return true on success or false on overflow
+ */
+static bool sizemultiply(size_t *opt_out, size_t count, size_t itemsize) {
+  size_t result;
+  bool overflowed;
+  overflowed = __builtin_mul_overflow(count, itemsize, &result);
+  if (overflowed) result = SIZE_MAX;
+  if (opt_out) *opt_out = result;
+  return !overflowed;
 }
 
 void *dlcalloc(size_t n_elements, size_t elem_size) {

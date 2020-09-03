@@ -25,6 +25,7 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/macros.h"
+#include "libc/nexgen32e/stackframe.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thunk/msabi.h"

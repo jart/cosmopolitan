@@ -22,6 +22,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
+/	Rounds to nearest integer.
+/
+/	@param	is double passed in %xmm0
+/	@return	double in %xmm0
+/	@note	rounding behavior can be changed in mxcsr
 tinymath_rint:
 #if !X86_NEED(SSE4_2)
 	testb	X86_HAVE(SSE4_2)+kCpuids(%rip)

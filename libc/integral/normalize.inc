@@ -66,8 +66,8 @@
 #endif
 
 #define BIGPAGESIZE 0x200000
+#define STACKSIZE   0x20000
 #define FRAMESIZE   0x10000 /* 8086 */
-#define STACKSIZE   0x10000 /* goog */
 #define PAGESIZE    0x1000  /* i386+ */
 #define BUFSIZ      0x1000  /* best stdio default */
 #define CACHELINE   0x40    /* nexgen32e */

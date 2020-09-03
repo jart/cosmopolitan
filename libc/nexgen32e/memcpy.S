@@ -25,9 +25,8 @@
 	world's most popular function──one all programmers love.
 	
 	This implementation is the fastest and nearly the tiniest too.
-	It doesn't clobber general registers. It won't break down on old
-	computers or misaligned data. It's so easy that even a child
-	could use it──and they do.
+	It doesn't break when copying backwards or on misaligned data.
+	It's so easy that even a child could use it, and they do.
 */
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/macros.h"
@@ -53,11 +52,10 @@ memcpy:	mov	%rdi,%rax
 /	@param	rdi is dest
 /	@param	rsi is src
 /	@param	rdx is number of bytes
-/	@clob	flags,xmm3,xmm4
+/	@clob	flags,rcx,xmm3,xmm4
 /	@mode	long
 	.align	16
 MemCpy:	.leafprologue
-	push	%rcx
 	mov	$.Lmemcpytab.ro.size,%ecx
 	cmp	%rcx,%rdx
 	cmovb	%rdx,%rcx
@@ -95,8 +93,7 @@ MemCpy:	.leafprologue
 	mov	%rcx,(%rdi)
 	mov	%rbx,-8(%rdi,%rdx)
 1:	pop	%rbx
-.L0:	pop	%rcx
-	.leafepilogue
+.L0:	.leafepilogue
 .L4:	push	%rbx
 	mov	(%rsi),%ecx
 	mov	-4(%rsi,%rdx),%ebx

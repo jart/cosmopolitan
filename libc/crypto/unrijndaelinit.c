@@ -33,7 +33,7 @@ static void unrijndaelinit$westmere(struct Rijndael *ctx, uint32_t n,
     x = ctx->rk[i].xmm;
     asm("aesimc\t%1,%0" : "=x"(x) : "0"(x));
     ctx->rk[i].xmm = x;
-  } while (i++ < n);
+  } while (++i < n);
   XMM_DESTROY(x);
 }
 
@@ -49,7 +49,7 @@ static relegated noinline void unrijndaelinit$pure(struct Rijndael *ctx,
     x = ctx->rk[i].xmm;
     x = InvMixColumns(x);
     ctx->rk[i].xmm = x;
-  } while (i++ < n);
+  } while (++i < n);
   XMM_DESTROY(x);
 }
 

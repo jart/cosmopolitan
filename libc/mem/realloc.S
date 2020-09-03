@@ -55,5 +55,6 @@
 /	@note	realloc(p=0, n=0) → malloc(32)
 /	@note	realloc(p≠0, n=0) → free(p)
 /	@see	dlrealloc()
-realloc:jmp	*hook$realloc(%rip)
+realloc:
+	jmp	*hook$realloc(%rip)
 	.endfn	realloc,globl

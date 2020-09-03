@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,8 +17,18 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/tinymath/tinymath.h"
+#include "libc/macros.h"
+.source	__FILE__
 
-double(powi)(double a, int b) {
-  return tinymath_powl(a, b);
-}
+	.initbss 202,_init_valloc
+hook$valloc:
+	.quad	0
+	.endobj	hook$valloc,globl,hidden
+	.previous
+
+	.init.start 202,_init_valloc
+	.hidden	dlvalloc
+	ezlea	dlvalloc,ax
+	stosq
+	yoink	free
+	.init.end 202,_init_valloc

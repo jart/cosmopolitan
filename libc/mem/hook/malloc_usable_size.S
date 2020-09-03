@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,21 +17,17 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/bits/pushpop.h"
-#include "libc/calls/calls.h"
-#include "libc/runtime/runtime.h"
+#include "libc/macros.h"
+.source	__FILE__
 
-/**
- * Closes memory mapping.
- *
- * The caller's address holder is set to MAP_FAILED (-1) which is a
- * no-op for subsequent invocations.
- *
- * @return 0 on success, or -1 w/ errno
- */
-int munmap_s(void *addrp, uint64_t size) {
-  void **addrpp = (void **)addrp;
-  void *addr = (void *)pushpop(-1L);
-  return munmap(lockxchg(addrpp, &addr), size);
-}
+	.initbss 202,_init_malloc_usable_size
+hook$malloc_usable_size:
+	.quad	0
+	.endobj	hook$malloc_usable_size,globl,hidden
+	.previous
+
+	.init.start 202,_init_malloc_usable_size
+	.hidden	dlmalloc_usable_size
+	ezlea	dlmalloc_usable_size,ax
+	stosq
+	.init.end 202,_init_malloc_usable_size

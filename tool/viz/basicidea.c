@@ -218,11 +218,11 @@ static void ReadAll(int fd, void *buf, size_t n) {
 static void LoadImageOrDie(const char *path, size_t size, long yn, long xn,
                            unsigned char RGB[yn][xn][4]) {
   int pid, ws, fds[3];
-  const char *convert;
+  char *convert, pathbuf[PATH_MAX];
   if (isempty((convert = getenv("CONVERT"))) &&
       !(IsWindows() && access((convert = "\\msys64\\mingw64\\bin\\convert.exe"),
                               X_OK) != -1) &&
-      !(convert = commandv("convert"))) {
+      !(convert = commandv("convert", pathbuf))) {
     fputs("'convert' command not found\r\n"
           "please install imagemagick\r\n",
           stderr);

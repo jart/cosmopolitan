@@ -1,15 +1,15 @@
+#include "libc/bits/bits.h"
 #include "libc/mem/mem.h"
 #include "libc/sysv/errfuns.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 
 void* dlmemalign$impl(mstate m, size_t alignment, size_t bytes) {
   void* mem = 0;
-  if (alignment < MIN_CHUNK_SIZE) /* must be at least a minimum chunk size */
-    alignment = MIN_CHUNK_SIZE;
+  if (alignment < MIN_CHUNK_SIZE) { /* must be at least a minimum chunk size */
+    alignment = MIN_CHUNK_SIZE;     /* is 32 bytes on NexGen32e */
+  }
   if ((alignment & (alignment - SIZE_T_ONE)) != 0) { /* Ensure a power of 2 */
-    size_t a = MALLOC_ALIGNMENT << 1;
-    while (a < alignment) a <<= 1;
-    alignment = a;
+    alignment = roundup2pow(alignment);
   }
   if (bytes >= MAX_REQUEST - alignment) {
     if (m != 0) { /* Test isn't needed but avoids compiler warning */

@@ -336,6 +336,7 @@ typedef uint64_t uintmax_t;
  *   4. unprofilable
  *   5. unhookable
  *
+ * @note consider static or writing a macro
  * @see externinline
  */
 #ifndef forceinline

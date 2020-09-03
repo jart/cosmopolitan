@@ -18,18 +18,24 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.source	__FILE__
 
-	.initbss 800,_init_malloc
-hook$malloc:
-	.quad	0
-	.endobj	hook$malloc,globl,hidden
-	.previous
-
-	.init.start 800,_init_malloc
-	ezlea	dlmalloc,ax
-	stosq
-	yoink	free
-	.init.end 800,_init_malloc
-
-	.hidden	dlmalloc
+/	Returns 𝑥^𝑦.
+/
+/	@param	𝑥 is long double passed on stack
+/	@param	𝑦 is int passed in %edi
+/	@return	%st
+tinymath_powil:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	sub	$32,%rsp
+	mov	%edi,-4(%rbp)
+	fildl	-4(%rbp)
+	fstpt	(%rsp)
+	push	16+8(%rbp)
+	push	16+0(%rbp)
+	call	tinymath_powl
+	leave
+	ret
+	.endfn	tinymath_powil,globl
+	.alias	tinymath_powil,powil

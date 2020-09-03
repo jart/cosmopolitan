@@ -219,7 +219,7 @@ void LoadRelationships(int argc, char *argv[]) {
     }
     CHECK_NE(-1, fclose(finpaths));
   }
-  free_s(&line);
+  free(line);
 }
 
 void GetOpts(int argc, char *argv[]) {

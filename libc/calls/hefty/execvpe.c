@@ -17,8 +17,8 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/mem.h"
 #include "libc/calls/calls.h"
+#include "libc/mem/mem.h"
 
 /**
  * Executes program, with path environment search.
@@ -33,7 +33,8 @@
  */
 int execvpe(const char *prog, char *const argv[], char *const *envp) {
   char *exe;
-  if ((exe = commandv(prog))) {
+  char pathbuf[PATH_MAX];
+  if ((exe = commandv(prog, pathbuf))) {
     execve(exe, argv, envp);
   }
   return -1;

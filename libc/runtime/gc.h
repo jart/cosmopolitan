@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_GC_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_GC_H_
 #include "libc/calls/calls.h"
+#include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/runtime.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -12,8 +13,6 @@ COSMOPOLITAN_C_START_
  * {@code defer} keyword in Go. We harness the power of ROP for good
  * using very few lines of code.
  */
-
-struct StackFrame;
 
 /**
  * Releases resource when function returns.

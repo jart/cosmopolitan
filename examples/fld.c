@@ -7,6 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#include "libc/bits/bits.h"
 #include "libc/inttypes.h"
 #include "libc/literal.h"
 #include "libc/math.h"
@@ -34,7 +35,7 @@ void dobin(const char *op, long double x, FILE *f) {
   memcpy(buf, &x, sizeof(x));
   memcpy(&lo, &buf[0], sizeof(lo));
   memcpy(&hi, &buf[8], sizeof(hi));
-  fprintf(f, "/\t%016" PRIb16 "%064" PRIb64 " %-8s %19.19Lf\n", hi, lo, op, x);
+  fprintf(f, "/\t%016" PRIb16 "%064" PRIb64 " %-8s % 19.19Lf\n", hi, lo, op, x);
 }
 
 void dohex(const char *op, long double x, FILE *f) {
@@ -44,7 +45,7 @@ void dohex(const char *op, long double x, FILE *f) {
   memcpy(buf, &x, sizeof(x));
   memcpy(&lo, &buf[0], sizeof(lo));
   memcpy(&hi, &buf[8], sizeof(hi));
-  fprintf(f, "/\t%04" PRIx16 "%016" PRIx64 " %-8s %19.19Lf\n", hi, lo, op, x);
+  fprintf(f, "/\t%04" PRIx16 "%016" PRIx64 " %-8s % 19.19Lf\n", hi, lo, op, x);
 }
 
 #define DOBIN(OP)               \

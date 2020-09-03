@@ -235,7 +235,7 @@ static long double FpuDiv(struct Machine *m, long double x, long double y) {
 static long double FpuRound(struct Machine *m, long double x) {
   switch (m->fpu.rc) {
     case 0:
-      return nearbyintl(x);
+      return rintl(x);
     case 1:
       return floorl(x);
     case 2:

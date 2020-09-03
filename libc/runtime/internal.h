@@ -14,6 +14,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+hidden extern bool _mmap_asan_mode;
 hidden extern char **g_freebsdhint;
 hidden extern unsigned g_runstate;
 hidden extern void *g_stacktop;

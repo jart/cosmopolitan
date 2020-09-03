@@ -17,7 +17,6 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/pushpop.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/limits.h"
@@ -51,8 +50,14 @@ int mapfileread(const char *filename, struct MappedFile *mf) {
 int unmapfile(struct MappedFile *mf) {
   int rc;
   rc = 0;
-  rc |= munmap_s(&mf->addr, mf->size);
-  rc |= close_s(&mf->fd);
-  pushmov(&mf->size, 0);
+  if (mf->addr != MAP_FAILED) {
+    rc |= munmap(mf->addr, mf->size);
+    mf->addr = MAP_FAILED;
+  }
+  if (mf->fd != -1) {
+    rc |= close(mf->fd);
+    mf->fd = -1;
+  }
+  mf->size = 0;
   return rc;
 }
