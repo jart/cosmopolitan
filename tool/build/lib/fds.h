@@ -11,6 +11,7 @@ struct MachineFds {
       int (*close)(int);
       ssize_t (*read)(int, void *, size_t);
       ssize_t (*write)(int, const void *, size_t);
+      int (*ioctl)(int, uint64_t, void *);
     } * cb;
   } * p;
   struct MachineFdClosed {

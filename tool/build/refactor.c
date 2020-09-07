@@ -111,12 +111,12 @@ void RefactorFile(const char *path) {
 void RefactorDir(const char *dpath) {
   DIR *dir;
   struct dirent *ent;
-  char *path = gc(xmalloc(PATH_MAX));
+  char *path = gc(xmalloc(4096));
   CHECK_NOTNULL(dir = opendir(firstnonnull(dpath, ".")));
   while ((ent = readdir(dir))) {
     if (startswith(ent->d_name, ".")) continue;
     if (strcmp(ent->d_name, "o") == 0) continue;
-    snprintf(path, PATH_MAX, "%s%s%s", dpath ? dpath : "", dpath ? "/" : "",
+    snprintf(path, 4096, "%s%s%s", dpath ? dpath : "", dpath ? "/" : "",
              ent->d_name);
     if (isdirectory(path)) {
       RefactorDir(path);

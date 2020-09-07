@@ -17,17 +17,11 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/reverse.h"
 #include "libc/conv/conv.h"
+#include "libc/conv/itoa.h"
+#include "libc/macros.h"
+#include "libc/nexgen32e/bsr.h"
 
-size_t uint64toarray_radix16(uint64_t i, char a[hasatleast 17]) {
-  size_t j;
-  j = 0;
-  do {
-    a[j++] = "0123456789abcdef"[i % 16];
-    i /= 16;
-  } while (i > 0);
-  a[j] = '\0';
-  reverse(a, j);
-  return j;
+size_t uint64toarray_radix16(uint64_t x, char b[hasatleast 17]) {
+  return uint64toarray_fixed16(x, b, ROUNDUP(x ? bsrl(x) + 1 : 1, 4));
 }

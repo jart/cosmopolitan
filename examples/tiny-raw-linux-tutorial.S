@@ -58,3 +58,6 @@ _start:	mov	$12,%rdx			# arg no. 3 is length
 	jmp	0b
 	.endfn	_start,globl
 	.source	__FILE__
+
+	.rodata.cst4
+1:	.float	-1.5

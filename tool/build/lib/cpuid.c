@@ -20,7 +20,7 @@
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/machine.h"
 
-void OpCpuid(struct Machine *m) {
+void OpCpuid(struct Machine *m, uint32_t rde) {
   uint32_t ax, bx, cx, dx;
   ax = 0;
   bx = 0;

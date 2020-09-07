@@ -1,4 +1,5 @@
 #include "dsp/tty/tty.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -6,6 +7,7 @@
 #include "libc/math.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/time/time.h"
@@ -16,6 +18,7 @@
  */
 
 #define FRAMERATE 23.976
+#define WRITE(s)  write(STDOUT_FILENO, s, strlen(s))
 
 struct Sphere {
   double cx, cy, cz, r;
@@ -97,7 +100,7 @@ static void DrawSphere(double k, double ambient) {
       }
       switch (hit_result) {
         case 0:
-          fputs("\e[0m ", stdout);
+          WRITE("\e[0m ");
           continue;
         case 1:
           vec[0] = x - pos_.cx;
@@ -111,13 +114,12 @@ static void DrawSphere(double k, double ambient) {
           break;
       }
       Normalize(vec);
-      fputs(
+      WRITE(
           kShades[MIN(ARRAYLEN(kShades) - 1,
                       MAX(0, lround((1 - (pow(Dot(light_, vec), k) + ambient)) *
-                                    (ARRAYLEN(kShades) - 1))))],
-          stdout);
+                                    (ARRAYLEN(kShades) - 1))))]);
     }
-    fputs("\e[0m\n", stdout);
+    WRITE("\e[0m\n");
   }
   fflush(stdout);
 }
@@ -131,7 +133,7 @@ int main() {
       xsigaction(SIGINT, OnCtrlC, 0, 0, NULL);
       ang = 0;
       for (;;) {
-        printf("\e[H");
+        WRITE("\e[H");
         light_[1] = cos(ang * 2);
         light_[2] = cos(ang);
         light_[0] = sin(ang);

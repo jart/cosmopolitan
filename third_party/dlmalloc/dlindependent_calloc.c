@@ -164,7 +164,7 @@ static void **ialloc(mstate m, size_t n_elements, size_t *sizes, int opts,
 void **dlindependent_calloc(size_t n_elements, size_t elem_size,
                             void *chunks[]) {
   size_t sz = elem_size; /* serves as 1-element array */
-  return ialloc(gm, n_elements, &sz, 3, chunks);
+  return ialloc(g_dlmalloc, n_elements, &sz, 3, chunks);
 }
 
 /**
@@ -224,5 +224,5 @@ void **dlindependent_calloc(size_t n_elements, size_t elem_size,
  */
 void **dlindependent_comalloc(size_t n_elements, size_t sizes[],
                               void *chunks[]) {
-  return ialloc(gm, n_elements, sizes, 0, chunks);
+  return ialloc(g_dlmalloc, n_elements, sizes, 0, chunks);
 }

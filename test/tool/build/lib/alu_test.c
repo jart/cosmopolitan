@@ -18,13 +18,18 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bits/progn.h"
 #include "libc/limits.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "test/tool/build/lib/optest.h"
 #include "tool/build/lib/alu.h"
+#include "tool/build/lib/case.h"
 #include "tool/build/lib/flags.h"
+
+#define ALU_TEST 8
 
 #define NATIVE_ALU2(MODE, INSTRUCTION)                     \
   asm("pushf\n\t"                                          \
@@ -96,6 +101,15 @@ const char *const kAluNames[] = {
     [ALU_SBB] = "sbb", [ALU_AND] = "and", [ALU_SUB] = "sub",
     [ALU_XOR] = "xor", [ALU_CMP] = "cmp", [ALU_AND | ALU_TEST] = "test",
 };
+
+int64_t Alu(int w, int h, uint64_t x, uint64_t y, uint32_t *flags) {
+  if (h < ALU_CMP) {
+    return kAlu[h][w](x, y, flags);
+  } else {
+    kAlu[h & 7][w](x, y, flags);
+    return x;
+  }
+}
 
 int64_t RunOpTest(char w, int h, uint64_t x, uint64_t y, uint32_t *f) {
   return Alu(w, h, x, y, f);

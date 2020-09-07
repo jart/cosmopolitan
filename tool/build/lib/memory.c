@@ -105,8 +105,9 @@ void VirtualCopy(struct Machine *m, int64_t v, char *r, uint64_t n, bool d) {
   }
 }
 
-void VirtualSend(struct Machine *m, void *dst, int64_t src, uint64_t n) {
+void *VirtualSend(struct Machine *m, void *dst, int64_t src, uint64_t n) {
   VirtualCopy(m, src, dst, n, true);
+  return dst;
 }
 
 void VirtualRecv(struct Machine *m, int64_t dst, void *src, uint64_t n) {

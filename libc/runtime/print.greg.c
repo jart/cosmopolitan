@@ -49,9 +49,8 @@ static privileged void __print$nt(const void *data, size_t len) {
  * @clob nothing except flags
  * @see PRINT()
  */
-privileged interruptfn void __print(const void *data, size_t len) {
+privileged void __print(const void *data, size_t len) {
   int64_t ax, ordinal;
-  LOAD_DEFAULT_RBX();
   if (NT_HAVE_IMPORT(__imp_WriteFile)) {
     __print$nt(data, len);
   } else {
@@ -68,4 +67,10 @@ privileged interruptfn void __print(const void *data, size_t len) {
     }
   }
   RESTORE_RBX();
+}
+
+privileged void __print_string(const char *s) {
+  size_t n = 0;
+  while (s[n]) ++n;
+  __print(s, n);
 }

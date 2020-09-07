@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
+#include "libc/x/x.h"
 #include "tool/build/lib/buffer.h"
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/pml4t.h"
@@ -104,8 +105,7 @@ char *FormatPml4t(uint64_t pml4t[512]) {
     FormatEndPage(&pp, 0x800000000000);
   }
   if (pp.b.p) {
-    realloc(pp.b.p, pp.b.i + 1);
-    return pp.b.p;
+    return xrealloc(pp.b.p, pp.b.i + 1);
   } else {
     return strdup("");
   }

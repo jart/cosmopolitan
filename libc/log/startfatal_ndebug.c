@@ -17,10 +17,8 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/log/internal.h"
-#include "libc/runtime/runtime.h"
+#include "libc/runtime/missioncritical.h"
 #include "libc/stdio/stdio.h"
-#include "libc/calls/calls.h"
 
 /**
  * Prints initial part of fatal message.
@@ -31,7 +29,7 @@
 relegated void startfatal_ndebug(void) {
   fflush(stdout);
   fflush(stderr);
-  stderr->bufmode = _IOFBF;
-  fprintf(stderr, "%s%s%s:%s%s: ", RED, "error", BLUE1, program_invocation_name,
-          RESET);
+  __print_string("error:");
+  __print_string(program_invocation_name);
+  __print_string(": ");
 }

@@ -39,95 +39,84 @@ enum ParseHttpRequestState {
 };
 
 /**
- * Parses req line and headers of HTTP req.
- *
- * This parser is very lax. All decoding is ISO-8859-1. A 1mB upper
- * bound on memory is enforced.
+ * Parses HTTP request header.
  */
-int parsehttprequest(struct HttpRequest *req, FILE *f) {
-  enum ParseHttpRequestState state = METHOD;
-  int toto = 0;
-  clearhttprequest(req);
-  while (true) {
-    char ch;
-    {
-      int c = fgetc(f);
-      if (c == -1) {
-        if (toto && !ferror(f)) {
-          return ebadmsg(); /* RFC7230 § 3.4 */
-        }
-        return -1;
-      }
-      ch = (unsigned char)c;
-    }
-    if (++toto == UINT16_MAX) {
-      return ebadmsg(); /* RFC7230 § 3.2.5 */
-    }
-    switch (state) {
+int ParseHttpRequest(struct HttpRequest *req, const char *p, size_t n) {
+  int a, h, c, i, x;
+  enum ParseHttpRequestState t;
+  memset(req, 0, sizeof(*req));
+  a = h = 0;
+  t = METHOD;
+  if (n > SHRT_MAX - 1) n = SHRT_MAX - 1;
+  for (i = 0; i < n; ++i) {
+    c = p[i] & 0xFF;
+    switch (t) {
       case METHOD:
-        if (ch == '\r' || ch == '\n') break; /* RFC7230 § 3.5 */
-        if (ch == ' ') {
-          if (req->method.i == 0) return ebadmsg();
-          state = URI;
-        } else {
-          append(&req->method, &ch);
+        if (c == '\r' || c == '\n') break; /* RFC7230 § 3.5 */
+        if (c == ' ') {
+          if (!i) return ebadmsg();
+          if ((x = GetHttpMethod(p, i)) == -1) return ebadmsg();
+          req->method = x;
+          req->uri.a = i + 1;
+          t = URI;
         }
         break;
       case URI:
-        if (ch == ' ') {
-          if (req->uri.i == 0) return ebadmsg();
-          state = VERSION;
-        } else {
-          append(&req->uri, &ch);
+        if (c == ' ') {
+          req->uri.b = i;
+          req->version.a = i + 1;
+          if (req->uri.a == req->uri.b) return ebadmsg();
+          t = VERSION;
         }
         break;
       case VERSION:
-        if (ch == '\r' || ch == '\n') {
-          state = ch == '\r' ? CR1 : LF1;
-        } else {
-          append(&req->version, &ch);
+        if (c == '\r' || c == '\n') {
+          req->version.b = i;
+          t = c == '\r' ? CR1 : LF1;
         }
         break;
       case CR1:
-        if (ch != '\n') return ebadmsg();
-        state = LF1;
+        if (c != '\n') return ebadmsg();
+        t = LF1;
         break;
       case LF1:
-        if (ch == '\r') {
-          state = LF2;
+        if (c == '\r') {
+          t = LF2;
           break;
-        } else if (ch == '\n') {
+        } else if (c == '\n') {
           return 0;
-        } else if (ch == ' ' || ch == '\t') { /* line folding!!! */
-          return eprotonosupport();           /* RFC7230 § 3.2.4 */
+        } else if (c == ' ' || c == '\t') { /* line folding!!! */
+          return eprotonosupport();         /* RFC7230 § 3.2.4 */
         }
-        state = HKEY;
+        a = i;
+        t = HKEY;
         /* εpsilon transition */
       case HKEY:
-        if (ch == ':') state = HSEP;
-        ch = tolower(ch);
-        append(&req->scratch, &ch);
+        if (c == ':') {
+          h = GetHttpHeader(p + a, i - a);
+          t = HSEP;
+        }
         break;
       case HSEP:
-        if (ch == ' ' || ch == '\t') break;
-        state = HVAL;
+        if (c == ' ' || c == '\t') break;
+        a = i;
+        t = HVAL;
         /* εpsilon transition */
       case HVAL:
-        if (ch == '\r' || ch == '\n') {
-          state = ch == '\r' ? CR1 : LF1;
-          ch = '\0';
-        }
-        append(&req->scratch, &ch);
-        if (!ch) {
-          critbit0_insert(&req->headers, req->scratch.p);
-          req->scratch.i = 0;
+        if (c == '\r' || c == '\n') {
+          if (h != -1) {
+            req->headers[h].a = a;
+            req->headers[h].b = i;
+          }
+          t = c == '\r' ? CR1 : LF1;
         }
         break;
       case LF2:
-        if (ch == '\n') return 0;
+        if (c == '\n') return 0;
         return ebadmsg();
       default:
         unreachable;
     }
   }
+  return ebadmsg();
 }

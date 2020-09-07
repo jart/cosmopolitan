@@ -24,6 +24,10 @@ TEST(itoa64radix16, test) {
   char buf[21];
   EXPECT_EQ(5, uint64toarray_radix16(0x31337, buf));
   EXPECT_STREQ("31337", buf);
+  EXPECT_EQ(2, uint64toarray_radix16(0x13, buf));
+  EXPECT_STREQ("13", buf);
+  EXPECT_EQ(3, uint64toarray_radix16(0x113, buf));
+  EXPECT_STREQ("113", buf);
 }
 
 TEST(itoa64fixed16, test) {

@@ -11,8 +11,7 @@ struct Dis {
     size_t i, n;
     struct DisOp {
       int64_t addr;
-      int unique;
-      int size;
+      uint8_t size;
       bool active;
       char *s;
     } * p;
@@ -46,7 +45,6 @@ struct Dis {
     } * p;
   } edges;
   struct XedDecodedInst xedd[1];
-  uint8_t raw[512];
   char buf[512];
 };
 
@@ -66,8 +64,8 @@ struct DisHigh {
 
 extern struct DisHigh *g_dis_high;
 
+long Dis(struct Dis *, struct Machine *, int64_t, int);
 long DisFind(struct Dis *, int64_t);
-void Dis(struct Dis *, struct Machine *, int64_t);
 void DisFree(struct Dis *);
 void DisFreeOp(struct DisOp *);
 void DisFreeOps(struct DisOps *);
@@ -80,6 +78,7 @@ const char *DisSpec(struct XedDecodedInst *, char *);
 char *DisInst(struct DisBuilder, char *, const char *);
 char *DisArg(struct DisBuilder, char *, const char *);
 char *DisHigh(char *, int);
+const char *DisGetLine(struct Dis *, struct Machine *, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

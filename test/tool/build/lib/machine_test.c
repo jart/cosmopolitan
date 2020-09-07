@@ -106,6 +106,7 @@ struct Machine *m;
 void SetUp(void) {
   base = 0;
   m = NewMachine();
+  m->cr3 = MallocPage();
   realsize = 0x10000;
   real = tmemalign(PAGESIZE, ROUNDUP(realsize, PAGESIZE));
   RegisterMemory(m, base, real, realsize);
@@ -115,6 +116,7 @@ void SetUp(void) {
 
 void TearDown(void) {
   ResetRam(m);
+  free(m->cr3);
   tfree(real);
   free(m);
 }
@@ -294,5 +296,34 @@ BENCH(machine, benchNop) {
 }
 
 TEST(machine, sizeIsReasonable) {
-  ASSERT_LE(sizeof(struct Machine), 65536 * 2);
+  ASSERT_LE(sizeof(struct Machine), 65536 * 3);
+}
+
+TEST(x87, fprem1) {
+  // 1 rem -1.5
+  const uint8_t prog[] = {
+      0xd9, 0x05, 0x05, 0x00, 0x00, 0x00,  // flds
+      0xd9, 0xe8,                          // fld1
+      0xd9, 0xf8,                          // fprem
+      0xf4,                                // hlt
+      0x00, 0x00, 0xc0, 0xbf,              // .float -1.5
+  };
+  memcpy(real, prog, sizeof(prog));
+  ASSERT_EQ(kMachineHalt, ExecuteUntilHalt(m));
+  ASSERT_LDBL_EQ(1, FpuPop(m));
+}
+
+TEST(x87, fprem2) {
+  // 12300000000000000. rem .0000000000000123
+  const uint8_t prog[] = {
+      0xdd, 0x05, 0x11, 0x00, 0x00, 0x00,              // fldl
+      0xdd, 0x05, 0x03, 0x00, 0x00, 0x00,              // fldl
+      0xd9, 0xf8,                                      // fprem
+      0xf4,                                            // hlt
+      0x00, 0x60, 0x5e, 0x75, 0x64, 0xd9, 0x45, 0x43,  //
+      0x5b, 0x14, 0xea, 0x9d, 0x77, 0xb2, 0x0b, 0x3d,  //
+  };
+  memcpy(real, prog, sizeof(prog));
+  ASSERT_EQ(kMachineHalt, ExecuteUntilHalt(m));
+  ASSERT_LDBL_EQ(1.1766221079117338e-14, FpuPop(m));
 }

@@ -55,12 +55,15 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/unicode/unicode.h"
 #include "libc/x/x.h"
 #include "third_party/dtoa/dtoa.h"
 #include "third_party/getopt/getopt.h"
+#include "tool/build/lib/address.h"
 #include "tool/build/lib/breakpoint.h"
 #include "tool/build/lib/case.h"
+#include "tool/build/lib/cga.h"
 #include "tool/build/lib/dis.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/fds.h"
@@ -76,24 +79,23 @@
 #include "tool/build/lib/stats.h"
 #include "tool/build/lib/throw.h"
 
-STATIC_YOINK("die");
-
 #define USAGE \
-  " [-?Hhrstv] [ROM] [ARGS...]\n\
+  " [-?HhrRstv] [ROM] [ARGS...]\n\
 \n\
 DESCRIPTION\n\
 \n\
-  NexGen32e Userspace Emulator w/ Debugger\n\
+  x86 Visualizing Emulator\n\
 \n\
 FLAGS\n\
 \n\
   -h\n\
   -?        help\n\
   -v        verbosity\n\
+  -r        real mode\n\
   -s        statistics\n\
   -H        disable highlight\n\
   -t        tui debugger mode\n\
-  -r        reactive tui mode\n\
+  -R        reactive tui mode\n\
   -b ADDR   push a breakpoint\n\
   -L PATH   log file location\n\
 \n\
@@ -111,12 +113,14 @@ PERFORMANCE\n\
 COMPLETENESS\n\
 \n\
   Long user mode is supported in addition to SSE3 and SSSE3.\n\
+  Real mode and legacy mode are supported with limited APIs.\n\
   Integer ops are implemented rigorously with lots of tests.\n\
   Floating point instructions are yolo, and tunable more so.\n\
-  Loading, virtual memory management, and syscall need work.\n\
+  Loading, virtual memory management, and SYSCALL need work.\n\
 \n"
 
 #define DUMPWIDTH 64
+#define DISPWIDTH 80
 
 #define RESTART  0x001
 #define REDRAW   0x002
@@ -143,8 +147,8 @@ struct Panels {
       struct Panel maps;
       struct Panel tracehr;
       struct Panel trace;
-      struct Panel terminalhr;
-      struct Panel terminal;
+      struct Panel displayhr;
+      struct Panel display;
       struct Panel registers;
       struct Panel ssehr;
       struct Panel sse;
@@ -166,9 +170,14 @@ static const char kRegisterNames[16][4] = {
     "R8",  "R9",  "R10", "R11", "R12", "R13", "R14", "R15",
 };
 
+static const char kSegmentNames[16][4] = {
+    "ES", "CS", "SS", "DS", "FS", "GS",
+};
+
 static int tyn;
 static int txn;
 static int ttyfd;
+static bool vidya;
 static bool react;
 static bool ssehex;
 static int exitcode;
@@ -214,6 +223,10 @@ static uint64_t SignExtend(uint64_t x, uint8_t b) {
 
 static char *FormatDouble(char *b, double x) {
   return g_fmt(b, x);
+}
+
+static void SetCarry(bool cf) {
+  m->flags = SetFlag(m->flags, FLAGS_CF, cf);
 }
 
 static bool IsCall(void) {
@@ -268,6 +281,36 @@ static uint8_t CycleSseWidth(uint8_t w) {
       return 1;
     default:
       unreachable;
+  }
+}
+
+static int GetPointerWidth(void) {
+  return 2 << (m->mode & 3);
+}
+
+static int64_t GetIp(void) {
+  switch (GetPointerWidth()) {
+    case 8:
+      return m->ip;
+    case 4:
+      return Read64(m->cs) + (m->ip & 0xffff);
+    case 2:
+      return Read64(m->cs) + (m->ip & 0xffff);
+    default:
+      abort();
+  }
+}
+
+static int64_t GetSp(void) {
+  switch (GetPointerWidth()) {
+    case 8:
+      return Read64(m->sp);
+    case 4:
+      return Read64(m->ss) + Read32(m->sp);
+    case 2:
+      return Read64(m->ss) + Read16(m->sp);
+    default:
+      abort();
   }
 }
 
@@ -331,6 +374,10 @@ static void OnQ(void) {
   breakpoints.i = 0;
 }
 
+static void OnV(void) {
+  vidya = !vidya;
+}
+
 static void OnWinch(void) {
   LOGF("OnWinch");
   action |= WINCHED;
@@ -377,13 +424,13 @@ static void LoadSyms(void) {
   DisLoadElf(dis, elf);
 }
 
-static void TuiSetup(void) {
+void TuiSetup(void) {
   static bool once;
   if (!once) {
     LOGF("loaded program %s\n%s", codepath, gc(FormatPml4t(m->cr3)));
     LoadSyms();
     ResolveBreakpoints();
-    Dis(dis, m, elf->base);
+    Dis(dis, m, elf->base, 100);
     once = true;
   }
   CHECK_NE(-1, (ttyfd = open("/dev/tty", O_RDWR)));
@@ -414,9 +461,19 @@ static bool IsXmmNonZero(long start, long end) {
   long i, j;
   for (i = start; i < end; ++i) {
     for (j = 0; j < 16; ++j) {
-      if (m->xmm[i / 8][i % 8][j]) {
+      if (m->xmm[i][j]) {
         return true;
       }
+    }
+  }
+  return false;
+}
+
+static bool IsSegNonZero(void) {
+  unsigned i;
+  for (i = 0; i < 6; ++i) {
+    if (Read64(GetSegment(m, 0, i))) {
+      return true;
     }
   }
   return false;
@@ -446,11 +503,12 @@ static void SetupDraw(void) {
   }
 
   cpuy = 9;
+  if (IsSegNonZero()) cpuy += 2;
   ssey = PickNumberOfXmmRegistersToShow();
   if (ssey) ++ssey;
 
   a = 12 + 1 + DUMPWIDTH;
-  b = DUMPWIDTH;
+  b = DISPWIDTH;
   dx[1] = txn >= a + b ? txn - a : txn;
   dx[0] = txn >= a + b + b ? txn - a - b : dx[1];
 
@@ -459,6 +517,10 @@ static void SetupDraw(void) {
   c2y[0] = a * .7;
   c2y[1] = a * 2;
   c2y[2] = a * 2 + b;
+  if (tyn - c2y[2] > 26) {
+    c2y[1] -= tyn - c2y[2] - 26;
+    c2y[2] = tyn - 26;
+  }
 
   a = (tyn - (cpuy + ssey) - 3) / 4;
   c3y[0] = cpuy;
@@ -474,7 +536,7 @@ static void SetupDraw(void) {
   pan.disassembly.bottom = tyn;
   pan.disassembly.right = dx[0];
 
-  /* COLUMN #2: BREAKPOINTS, MEMORY MAPS, BACKTRACE, TERMINAL */
+  /* COLUMN #2: BREAKPOINTS, MEMORY MAPS, BACKTRACE, DISPLAY */
 
   pan.breakpointshr.top = 0;
   pan.breakpointshr.left = dx[0];
@@ -506,15 +568,15 @@ static void SetupDraw(void) {
   pan.trace.bottom = c2y[2];
   pan.trace.right = dx[1] - 1;
 
-  pan.terminalhr.top = c2y[2];
-  pan.terminalhr.left = dx[0];
-  pan.terminalhr.bottom = c2y[2] + 1;
-  pan.terminalhr.right = dx[1] - 1;
+  pan.displayhr.top = c2y[2];
+  pan.displayhr.left = dx[0];
+  pan.displayhr.bottom = c2y[2] + 1;
+  pan.displayhr.right = dx[1] - 1;
 
-  pan.terminal.top = c2y[2] + 1;
-  pan.terminal.left = dx[0];
-  pan.terminal.bottom = tyn;
-  pan.terminal.right = dx[1] - 1;
+  pan.display.top = c2y[2] + 1;
+  pan.display.left = dx[0];
+  pan.display.bottom = tyn;
+  pan.display.right = dx[1] - 1;
 
   /* COLUMN #3: REGISTERS, VECTORS, CODE, MEMORY READS, MEMORY WRITES, STACK */
 
@@ -580,20 +642,19 @@ static void SetupDraw(void) {
         xcalloc(pan.p[i].bottom - pan.p[i].top, sizeof(struct Buffer));
   }
 
-  if (pty->yn != pan.terminal.bottom - pan.terminal.top ||
-      pty->xn != pan.terminal.right - pan.terminal.left) {
-    LOGF("MachinePtyNew");
-    MachinePtyFree(pty);
-    pty = MachinePtyNew(pan.terminal.bottom - pan.terminal.top,
-                        pan.terminal.right - pan.terminal.left);
+  if (pty->yn != pan.display.bottom - pan.display.top ||
+      pty->xn != pan.display.right - pan.display.left) {
+    LOGF("MachinePtyResize");
+    MachinePtyResize(pty, pan.display.bottom - pan.display.top,
+                     pan.display.right - pan.display.left);
   }
 }
 
 static long GetDisIndex(int64_t addr) {
   long i;
-  if ((i = DisFind(dis, m->ip)) == -1) {
-    Dis(dis, m, m->ip);
-    CHECK_NE(-1, (i = DisFind(dis, m->ip)));
+  if ((i = DisFind(dis, GetIp())) == -1) {
+    Dis(dis, m, GetIp(), pan.disassembly.bottom - pan.disassembly.top * 2);
+    CHECK_NE(-1, (i = DisFind(dis, GetIp())));
   }
   while (i + 1 < dis->ops.i && !dis->ops.p[i].size) ++i;
   return i;
@@ -605,10 +666,22 @@ static void DrawDisassembly(struct Panel *p) {
     j = opstart + i;
     if (0 <= j && j < dis->ops.i) {
       if (j == opline) AppendPanel(p, i, "\e[7m");
-      AppendPanel(p, i, dis->ops.p[j].s);
+      AppendPanel(p, i, DisGetLine(dis, m, j));
       if (j == opline) AppendPanel(p, i, "\e[27m");
     }
   }
+}
+
+static void DrawHr(struct Panel *p, const char *s) {
+  long i, wp, ws, wl, wr;
+  if (p->bottom - p->top < 1) return;
+  wp = p->right - p->left;
+  ws = strlen(s);
+  wl = wp / 4 - ws / 2;
+  wr = wp - (wl + ws);
+  for (i = 0; i < wl; ++i) AppendWide(&p->lines[0], u'─');
+  AppendStr(&p->lines[0], s);
+  for (i = 0; i < wr; ++i) AppendWide(&p->lines[0], u'─');
 }
 
 static void DrawTerminal(struct Panel *p) {
@@ -618,8 +691,18 @@ static void DrawTerminal(struct Panel *p) {
   }
 }
 
+void DrawDisplay(struct Panel *p) {
+  if (vidya) {
+    DrawHr(&pan.displayhr, "COLOR GRAPHICS ADAPTER");
+    DrawCga(p, VirtualSend(m, gc(xmalloc(25 * 80 * 2)), 0xb8000, 25 * 80 * 2));
+  } else {
+    DrawHr(&pan.displayhr, "TELETYPEWRITER");
+    DrawTerminal(p);
+  }
+}
+
 static void DrawFlag(struct Panel *p, long i, char name, bool value) {
-  char str[] = "  ";
+  char str[3] = "  ";
   if (value) str[1] = name;
   AppendPanel(p, i, str);
 }
@@ -631,6 +714,21 @@ static void DrawRegister(struct Panel *p, long i, long r) {
   previous = Read64(m[1].reg[r]);
   if (value != previous) AppendPanel(p, i, "\e[7m");
   snprintf(buf, sizeof(buf), "%-3s", kRegisterNames[r]);
+  AppendPanel(p, i, buf);
+  AppendPanel(p, i, " ");
+  snprintf(buf, sizeof(buf), "0x%016lx", value);
+  AppendPanel(p, i, buf);
+  if (value != previous) AppendPanel(p, i, "\e[27m");
+  AppendPanel(p, i, "  ");
+}
+
+static void DrawSegment(struct Panel *p, long i, long r) {
+  char buf[32];
+  uint64_t value, previous;
+  value = Read64(GetSegment(m + 0, 0, r));
+  previous = Read64(GetSegment(m + 1, 0, r));
+  if (value != previous) AppendPanel(p, i, "\e[7m");
+  snprintf(buf, sizeof(buf), "%-3s", kSegmentNames[r]);
   AppendPanel(p, i, buf);
   AppendPanel(p, i, " ");
   snprintf(buf, sizeof(buf), "0x%016lx", value);
@@ -654,18 +752,6 @@ static void DrawSt(struct Panel *p, long i, long r) {
   if (changed) AppendPanel(p, i, "\e[27m");
   AppendPanel(p, i, "  ");
   if (isempty) AppendPanel(p, i, "\e[22m");
-}
-
-static void DrawHr(struct Panel *p, const char *s) {
-  long i, wp, ws, wl, wr;
-  if (p->bottom - p->top < 1) return;
-  wp = p->right - p->left;
-  ws = strlen(s);
-  wl = wp / 4 - ws / 2;
-  wr = wp - (wl + ws);
-  for (i = 0; i < wl; ++i) AppendWide(&p->lines[0], u'─');
-  AppendStr(&p->lines[0], s);
-  for (i = 0; i < wr; ++i) AppendWide(&p->lines[0], u'─');
 }
 
 static void DrawCpu(struct Panel *p) {
@@ -701,6 +787,8 @@ static void DrawCpu(struct Panel *p) {
   if (m->fpu.c1) AppendPanel(p, 8, " C1");
   if (m->fpu.c2) AppendPanel(p, 8, " C2");
   if (m->fpu.bf) AppendPanel(p, 8, " BF");
+  DrawSegment(p, 9, 4), DrawSegment(p, 9, 3), DrawSegment(p, 9, 1);
+  DrawSegment(p, 10, 5), DrawSegment(p, 10, 0), DrawSegment(p, 10, 2);
 }
 
 static void DrawXmm(struct Panel *p, long i, long r) {
@@ -713,8 +801,8 @@ static void DrawXmm(struct Panel *p, long i, long r) {
   uint8_t xmm[16];
   uint64_t ival, itmp;
   int cells, left, cellwidth, panwidth;
-  memcpy(xmm, m->xmm[r / 8][r % 8], sizeof(xmm));
-  changed = memcmp(xmm, m[1].xmm[r / 8][r % 8], sizeof(xmm)) != 0;
+  memcpy(xmm, m->xmm[r], sizeof(xmm));
+  changed = memcmp(xmm, m[1].xmm[r], sizeof(xmm)) != 0;
   if (changed) AppendPanel(p, i, "\e[7m");
   left = sprintf(buf, "XMM%-2d", r);
   AppendPanel(p, i, buf);
@@ -785,7 +873,7 @@ static void DrawSse(struct Panel *p) {
 static void ScrollCode(struct Panel *p) {
   long i, n;
   n = p->bottom - p->top;
-  i = m->ip / DUMPWIDTH;
+  i = GetIp() / DUMPWIDTH;
   if (!(memstart <= i && i < memstart + n)) {
     memstart = i;
   }
@@ -812,7 +900,7 @@ static void ScrollWriteData(struct Panel *p) {
 static void ScrollStack(struct Panel *p) {
   long i, n;
   n = p->bottom - p->top;
-  i = Read64(m->sp) / DUMPWIDTH;
+  i = GetSp() / DUMPWIDTH;
   if (!(stackstart <= i && i < stackstart + n)) {
     stackstart = i;
   }
@@ -877,6 +965,19 @@ static void DrawBreakpoints(struct Panel *p) {
   }
 }
 
+static int GetPreferredStackAlignmentMask(void) {
+  switch (m->mode & 3) {
+    case XED_MODE_LONG:
+      return 15;
+    case XED_MODE_LEGACY:
+      return 3;
+    case XED_MODE_REAL:
+      return 3;
+    default:
+      unreachable;
+  }
+}
+
 static void DrawTrace(struct Panel *p) {
   int i, n;
   long sym;
@@ -888,9 +989,10 @@ static void DrawTrace(struct Panel *p) {
   bp = Read64(m->bp);
   sp = Read64(m->sp);
   for (i = 0; i < p->bottom - p->top;) {
+    rp += Read64(m->cs);
     sym = DisFindSym(dis, rp);
     name = sym != -1 ? dis->syms.stab + dis->syms.p[sym].name : "UNKNOWN";
-    snprintf(line, sizeof(line), "%p %p %s", bp, rp, name);
+    snprintf(line, sizeof(line), "%p %p %s", Read64(m->ss) + bp, rp, name);
     AppendPanel(p, i, line);
     if (sym != -1 && rp != dis->syms.p[sym].addr) {
       snprintf(line, sizeof(line), "+%#lx", rp - dis->syms.p[sym].addr);
@@ -903,16 +1005,29 @@ static void DrawTrace(struct Panel *p) {
       snprintf(line, sizeof(line), " %,ld bytes", bp - sp);
       AppendPanel(p, i, line);
     }
-    if (bp & 15 && i) AppendPanel(p, i, " [MISALIGN]");
+    if (bp & GetPreferredStackAlignmentMask() && i) {
+      AppendPanel(p, i, " [MISALIGN]");
+    }
     ++i;
-    if ((bp & 0xfff) > 0xff0) break;
-    if (!(r = FindReal(m, bp))) {
+    if (((Read64(m->ss) + bp) & 0xfff) > 0xff0) break;
+    if (!(r = FindReal(m, Read64(m->ss) + bp))) {
       AppendPanel(p, i, "CORRUPT FRAME POINTER");
       break;
     }
     sp = bp;
-    bp = Read64(r + 0);
-    rp = Read64(r + 8);
+    switch (m->mode & 3) {
+      case XED_MODE_LONG:
+        bp = Read64(r + 0);
+        rp = Read64(r + 8);
+        break;
+      case XED_MODE_REAL:
+      case XED_MODE_LEGACY:
+        bp = Read32(r + 0);
+        rp = Read32(r + 4);
+        break;
+      default:
+        unreachable;
+    }
   }
 }
 
@@ -926,7 +1041,7 @@ static void CheckFramePointerImpl(void) {
   rp = m->ip;
   sp = Read64(m->sp);
   while (bp) {
-    if (!(r = FindReal(m, bp))) {
+    if (!(r = FindReal(m, Read64(m->ss) + bp))) {
       LOGF("corrupt frame: %p", bp);
       ThrowProtectionFault(m);
     }
@@ -954,7 +1069,7 @@ static void Redraw(void) {
     }
   }
   DrawDisassembly(&pan.disassembly);
-  DrawTerminal(&pan.terminal);
+  DrawDisplay(&pan.display);
   DrawCpu(&pan.registers);
   DrawSse(&pan.sse);
   ScrollCode(&pan.code);
@@ -964,7 +1079,6 @@ static void Redraw(void) {
   DrawHr(&pan.breakpointshr, "BREAKPOINTS");
   DrawHr(&pan.mapshr, "MAPS");
   DrawHr(&pan.tracehr, m->bofram[0] ? "PROTECTED FRAMES" : "FRAMES");
-  DrawHr(&pan.terminalhr, "TELETYPEWRITER");
   DrawHr(&pan.ssehr, "SSE");
   DrawHr(&pan.codehr, "CODE");
   DrawHr(&pan.readhr, "READ");
@@ -973,11 +1087,11 @@ static void Redraw(void) {
   DrawMaps(&pan.maps);
   DrawTrace(&pan.trace);
   DrawBreakpoints(&pan.breakpoints);
-  DrawMemory(&pan.code, memstart, m->ip, m->ip + m->xedd->length);
+  DrawMemory(&pan.code, memstart, GetIp(), GetIp() + m->xedd->length);
   DrawMemory(&pan.readdata, readstart, m->readaddr, m->readaddr + m->readsize);
   DrawMemory(&pan.writedata, writestart, m->writeaddr,
              m->writeaddr + m->writesize);
-  DrawMemory(&pan.stack, stackstart, Read64(m->sp), Read64(m->sp) + 8);
+  DrawMemory(&pan.stack, stackstart, GetSp(), GetSp() + GetPointerWidth());
   if (PrintPanels(ttyfd, ARRAYLEN(pan.p), pan.p, tyn, txn) == -1) {
     LOGF("PrintPanels Interrupted");
     CHECK_EQ(EINTR, errno);
@@ -1001,10 +1115,22 @@ static ssize_t OnPtyFdWrite(int fd, const void *data, size_t size) {
   }
 }
 
+static int OnPtyFdIoctl(int fd, uint64_t request, void *memory) {
+  if (request == TIOCGWINSZ) {
+    struct winsize *ws = memory;
+    ws->ws_row = pan.display.bottom - pan.display.top;
+    ws->ws_col = pan.display.right - pan.display.left;
+    return 0;
+  } else {
+    return einval();
+  }
+}
+
 static const struct MachineFdCb kMachineFdCbPty = {
     .close = OnPtyFdClose,
     .read = OnPtyFdRead,
     .write = OnPtyFdWrite,
+    .ioctl = OnPtyFdIoctl,
 };
 
 static void LaunchDebuggerReactively(void) {
@@ -1070,38 +1196,192 @@ static void OnExit(int rc) {
   action |= EXIT;
 }
 
-static void OnHalt(int interrupt) {
+static size_t GetLastIndex(size_t size, unsigned unit, int i, unsigned limit) {
+  unsigned q, r;
+  if (!size) return 0;
+  q = size / unit;
+  r = size % unit;
+  if (!r) --q;
+  q += i;
+  if (q > limit) q = limit;
+  return q;
+}
+
+static void OnDiskServiceReset(void) {
+  m->ax[1] = 0x00;
+  SetCarry(false);
+}
+
+static void OnDiskServiceBadCommand(void) {
+  m->ax[1] = 0x01;
+  SetCarry(true);
+}
+
+static void OnDiskServiceGetParams(void) {
+  size_t lastsector, lasttrack, lasthead;
+  lasthead = GetLastIndex(elf->mapsize, 512 * 63 * 1024, 0, 255);
+  lasttrack = GetLastIndex(elf->mapsize, 512 * 63, 0, 1023);
+  lastsector = GetLastIndex(elf->mapsize, 512, 1, 63);
+  m->dx[0] = 1;
+  m->dx[1] = lasthead;
+  m->cx[0] = lasttrack >> 8 << 6 | lastsector;
+  m->cx[1] = lasttrack;
+  m->ax[1] = 0;
+  Write64(m->es, 0);
+  Write16(m->di, 0);
+  SetCarry(false);
+}
+
+static void OnDiskServiceReadSectors(void) {
+  int64_t drive, head, track, sector, offset, size, addr;
+  drive = m->dx[0];
+  head = m->dx[1];
+  track = (m->cx[0] & 0b11000000) << 2 | m->cx[1];
+  sector = (m->cx[0] & 0b00111111) - 1;
+  offset = head * track * sector * 512;
+  size = m->ax[0] * 512;
+  offset = sector * 512 + track * 512 * 63 + head * 512 * 63 * 1024;
+  if (0 <= sector && offset + size <= elf->mapsize) {
+    addr = Read64(m->es) + Read16(m->bx);
+    if (addr + size <= 0xffff0 + 0xffff + 1) {
+      SetWriteAddr(m, addr, size);
+      VirtualRecv(m, addr, elf->map + offset, size);
+      m->ax[1] = 0x00;
+      SetCarry(false);
+    } else {
+      m->ax[0] = 0x00;
+      m->ax[1] = 0x02;
+      SetCarry(true);
+    }
+  } else {
+    m->ax[0] = 0x00;
+    m->ax[1] = 0x0d;
+    SetCarry(true);
+  }
+}
+
+static void OnDiskService(void) {
+  switch (m->ax[1]) {
+    case 0x00:
+      OnDiskServiceReset();
+      break;
+    case 0x02:
+      OnDiskServiceReadSectors();
+      break;
+    case 0x08:
+      OnDiskServiceGetParams();
+      break;
+    default:
+      OnDiskServiceBadCommand();
+      break;
+  }
+}
+
+static void OnVidyaServiceSetMode(void) {
+}
+
+static void OnVidyaServiceSetCursor(void) {
+}
+
+static void OnVidyaService(void) {
+  switch (m->ax[1]) {
+    case 0x00:
+      OnVidyaServiceSetMode();
+      break;
+    case 0x02:
+      OnVidyaServiceSetCursor();
+      break;
+    default:
+      break;
+  }
+}
+
+static void OnApmService(void) {
+  if (Read16(m->ax) == 0x5300 && Read16(m->bx) == 0x0000) {
+    Write16(m->bx, 'P' << 8 | 'M');
+    SetCarry(false);
+  } else if (Read16(m->ax) == 0x5301 && Read16(m->bx) == 0x0000) {
+    SetCarry(false);
+  } else if (Read16(m->ax) == 0x5307 && m->bx[0] == 1 && m->cx[0] == 3) {
+    LOGF("APM SHUTDOWN");
+    exit(0);
+  } else {
+    SetCarry(true);
+  }
+}
+
+static void OnE820(void) {
+  uint8_t p[20];
+  if (Read32(m->dx) == 0x534D4150 && Read32(m->cx) == 24) {
+    if (!Read32(m->bx)) {
+      Write64(p + 000, 0);
+      Write64(p + 010, BIGPAGESIZE);
+      Write32(p + 014, 1);
+      VirtualRecv(m, Read64(m->es) + Read16(m->di), p, sizeof(p));
+      Write32(m->cx, sizeof(p));
+      Write32(m->bx, 1);
+    } else {
+      Write32(m->bx, 0);
+      Write32(m->cx, 0);
+    }
+    Write32(m->ax, 0x534D4150);
+    SetCarry(false);
+  } else {
+    SetCarry(true);
+  }
+}
+
+static void OnInt15h(void) {
+  if (Read32(m->ax) == 0xE820) {
+    OnE820();
+  } else if (m->ax[1] == 0x53) {
+    OnApmService();
+  } else {
+    SetCarry(true);
+  }
+}
+
+static bool OnHalt(int interrupt) {
   switch (interrupt) {
     case 1:
     case 3:
       OnDebug();
-      break;
+      return false;
+    case 0x13:
+      OnDiskService();
+      return true;
+    case 0x10:
+      OnVidyaService();
+      return true;
+    case 0x15:
+      OnInt15h();
+      return true;
     case kMachineSegmentationFault:
       OnSegmentationFault();
-      break;
+      return false;
     case kMachineProtectionFault:
       OnProtectionFault();
-      break;
+      return false;
     case kMachineSimdException:
       OnSimdException();
-      break;
+      return false;
     case kMachineUndefinedInstruction:
       OnUndefinedInstruction();
-      break;
+      return false;
     case kMachineDecodeError:
       OnDecodeError();
-      break;
+      return false;
     case kMachineDivideError:
       OnDivideError();
-      break;
+      return false;
     case kMachineFpuException:
       OnFpuException();
-      break;
+      return false;
     case kMachineExit:
     case kMachineHalt:
     default:
       OnExit(interrupt);
-      break;
+      return false;
   }
 }
 
@@ -1236,6 +1516,7 @@ static void ReadKeyboard(void) {
     for (n = rc, i = 0; i < n; ++i) {
       switch (b[i++]) {
         CASE('q', OnQ());
+        CASE('v', OnV());
         CASE('s', OnStep());
         CASE('n', OnNext());
         CASE('f', OnFinish());
@@ -1370,7 +1651,8 @@ static void Exec(void) {
   int interrupt;
   ExecSetup();
   if (!(interrupt = setjmp(m->onhalt))) {
-    if ((bp = IsAtBreakpoint(&breakpoints, m->ip)) != -1) {
+    if (!(action & CONTINUE) &&
+        (bp = IsAtBreakpoint(&breakpoints, GetIp())) != -1) {
       LOGF("BREAK %p", breakpoints.p[bp].addr);
       tuimode = true;
       LoadInstruction(m);
@@ -1378,9 +1660,11 @@ static void Exec(void) {
       CheckFramePointer();
       ops++;
     } else {
+      action &= ~CONTINUE;
       for (;;) {
         LoadInstruction(m);
         ExecuteInstruction(m);
+      KeepGoing:
         CheckFramePointer();
         ops++;
         if (action || breakpoints.i) {
@@ -1397,7 +1681,7 @@ static void Exec(void) {
             }
             break;
           }
-          if ((bp = IsAtBreakpoint(&breakpoints, m->ip)) != -1) {
+          if ((bp = IsAtBreakpoint(&breakpoints, GetIp())) != -1) {
             LOGF("BREAK %p", breakpoints.p[bp].addr);
             tuimode = true;
             break;
@@ -1406,7 +1690,9 @@ static void Exec(void) {
       }
     }
   } else {
-    OnHalt(interrupt);
+    if (OnHalt(interrupt)) {
+      goto KeepGoing;
+    }
   }
 }
 
@@ -1423,7 +1709,7 @@ static void Tui(void) {
       if (!(action & FAILURE)) {
         LoadInstruction(m);
       } else {
-        m->xedd = m->icache;
+        m->xedd = (struct XedDecodedInst *)m->icache[0];
         m->xedd->length = 1;
         m->xedd->bytes[0] = 0xCC;
         m->xedd->op.opcode = 0xCC;
@@ -1449,6 +1735,7 @@ static void Tui(void) {
           action &= ~(CONTINUE | NEXT | FINISH);
         } else {
           tuimode = false;
+          action |= CONTINUE;
           break;
         }
       }
@@ -1470,7 +1757,7 @@ static void Tui(void) {
       if (IsExecuting()) {
         op = GetDisIndex(m->ip);
         ScrollOp(&pan.disassembly, op);
-        VERBOSEF("%s", dis->ops.p[op].s);
+        VERBOSEF("%s", DisGetLine(dis, m, op));
         memcpy(&m[1], &m[0], sizeof(m[0]));
         if (!(action & CONTINUE)) {
           action &= ~STEP;
@@ -1498,6 +1785,7 @@ static void Tui(void) {
           action &= ~FINISH;
           action &= ~CONTINUE;
         }
+      KeepGoing:
         CheckFramePointer();
         ops++;
         if (!(action & CONTINUE)) {
@@ -1516,7 +1804,9 @@ static void Tui(void) {
       }
     }
   } else {
-    OnHalt(interrupt);
+    if (OnHalt(interrupt)) {
+      goto KeepGoing;
+    }
     ScrollOp(&pan.disassembly, GetDisIndex(m->ip));
   }
   TuiCleanup();
@@ -1525,13 +1815,17 @@ static void Tui(void) {
 static void GetOpts(int argc, char *argv[]) {
   int opt;
   stpcpy(stpcpy(stpcpy(logpath, kTmpPath), basename(argv[0])), ".log");
-  while ((opt = getopt(argc, argv, "?hvtrsb:HL:")) != -1) {
+  while ((opt = getopt(argc, argv, "?hvtrRsb:HL:")) != -1) {
     switch (opt) {
       case 't':
         tuimode = true;
         break;
-      case 'r':
+      case 'R':
         react = true;
+        break;
+      case 'r':
+        m->mode = XED_MACHINE_MODE_REAL;
+        vidya = true;
         break;
       case 's':
         printstats = true;
@@ -1563,8 +1857,9 @@ int Emulator(int argc, char *argv[]) {
   void *code;
   int rc, fd;
   codepath = argv[optind++];
-  pty = MachinePtyNew(20, 80);
+  pty = MachinePtyNew();
   InitMachine(m);
+  m->cr3 = MallocPage();
   m->fds.p = xcalloc((m->fds.n = 8), sizeof(struct MachineFd));
 Restart:
   action = 0;
@@ -1590,23 +1885,9 @@ Restart:
     LeaveScreen();
   }
   if (printstats) {
-    int i;
-    extern long opcount[256 * 4];
     fprintf(stderr, "taken:  %,ld\n", taken);
     fprintf(stderr, "ntaken: %,ld\n", ntaken);
     fprintf(stderr, "ops:    %,ld\n", ops);
-    for (i = 0x51; i < 0x58; ++i) opcount[0x50] += opcount[i];
-    for (i = 0x51; i < 0x58; ++i) opcount[i] = 0;
-    for (i = 0x59; i < 0x60; ++i) opcount[0x58] += opcount[i];
-    for (i = 0x59; i < 0x60; ++i) opcount[i] = 0;
-    for (i = 0x91; i < 0x98; ++i) opcount[0x90] += opcount[i];
-    for (i = 0x91; i < 0x98; ++i) opcount[i] = 0;
-    for (i = 0x71; i < 0x80; ++i) opcount[0x70] += opcount[i];
-    for (i = 0x71; i < 0x80; ++i) opcount[i] = 0;
-    for (i = 0; i < ARRAYLEN(opcount); ++i) {
-      if (!opcount[i]) continue;
-      fprintf(stderr, "0x%03x %ld\n", i, opcount[i]);
-    }
   }
   munmap(elf->ehdr, elf->size);
   DisFree(dis);
@@ -1621,6 +1902,7 @@ static void OnlyRunOnFirstCpu(void) {
 
 int main(int argc, char *argv[]) {
   int rc;
+  m->mode = XED_MACHINE_MODE_LONG_64;
   ssewidth = 2; /* 16-bit is best bit */
   if (!NoDebug()) showcrashreports();
   // OnlyRunOnFirstCpu();

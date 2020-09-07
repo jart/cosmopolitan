@@ -29,7 +29,7 @@ void do_check_mmapped_chunk(mstate m, mchunkptr p) {
   assert((is_aligned(chunk2mem(p))) || (p->head == FENCEPOST_HEAD));
   assert(ok_address(m, p));
   assert(!is_small(sz));
-  assert((len & (mparams.page_size - SIZE_T_ONE)) == 0);
+  assert((len & (g_mparams.page_size - SIZE_T_ONE)) == 0);
   assert(chunk_plus_offset(p, sz)->head == FENCEPOST_HEAD);
   assert(chunk_plus_offset(p, sz + SIZE_T_SIZE)->head == 0);
 }
@@ -222,7 +222,7 @@ static size_t traverse_and_check(mstate m) {
   return sum;
 }
 
-/* Check all properties of malloc_state. */
+/* Check all properties of MallocState. */
 void do_check_malloc_state(mstate m) {
   bindex_t i;
   size_t total;

@@ -8,7 +8,7 @@
 COSMOPOLITAN_C_START_
 
 int spacepad(int(int, void *), void *, unsigned long) hidden;
-int ftoa(int(int, void *), void *, long double, unsigned long, unsigned long,
+int ftoa(int(int, void *), void *, long double, int, unsigned long,
          unsigned long) hidden;
 int stoa(int(int, void *), void *, void *, unsigned long, unsigned long,
          unsigned long, unsigned char, unsigned char) hidden;

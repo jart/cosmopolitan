@@ -57,3 +57,37 @@ TEST(memmove, overlappingDirect) {
     }
   }
 }
+
+char *MoveMemory(char *dst, const char *src, size_t n) {
+  size_t i;
+  for (i = 0; i < n; ++i) {
+    dst[i] = src[i];
+  }
+  return dst;
+}
+
+TEST(memmove, overlappingBackwards_isGenerallySafe) {
+  char buf[32];
+  strcpy(buf, "abcdefghijklmnopqrstuvwxyz");
+  ASSERT_STREQ("cdefghijklmnopqrstuvwxyzyz", MoveMemory(buf, buf + 2, 24));
+  strcpy(buf, "abcdefghijklmnopqrstuvwxyz");
+  ASSERT_STREQ("cdefghijklmnopqrstuvwxyzyz", memmove(buf, buf + 2, 24));
+  strcpy(buf, "abcdefghijklmnopqrstuvwxyz");
+  ASSERT_STREQ("cdefghijklmnopqrstuvwxyzyz", memcpy(buf, buf + 2, 24));
+}
+
+TEST(memmove, overlappingForwards_avoidsRunLengthDecodeBehavior) {
+  volatile char buf[32];
+  strcpy(buf, "abc");
+  MoveMemory(buf + 1, buf, 2);
+  ASSERT_STREQ("aaa", buf);
+  strcpy(buf, "abc");
+  (memmove)(buf + 1, buf, 2);
+  ASSERT_STREQ("aab", buf);
+  strcpy(buf, "abcdefghijklmnopqrstuvwxyz");
+  MoveMemory(buf + 2, buf, 24);
+  ASSERT_STREQ("ababababababababababababab", buf);
+  strcpy(buf, "abcdefghijklmnopqrstuvwxyz");
+  memmove(buf + 2, buf, 24);
+  ASSERT_STREQ("ababcdefghijklmnopqrstuvwx", buf);
+}

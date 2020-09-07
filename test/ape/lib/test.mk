@@ -29,6 +29,7 @@ TEST_APE_LIB_DIRECTDEPS =				\
 	LIBC_NEXGEN32E					\
 	LIBC_RUNTIME					\
 	LIBC_STR					\
+	LIBC_LOG					\
 	LIBC_STUBS					\
 	LIBC_TESTLIB					\
 	LIBC_X
@@ -48,6 +49,10 @@ o/$(MODE)/test/ape/lib/%.com.dbg:			\
 		$(CRT)					\
 		$(APE)
 	@$(APELINK)
+
+$(TEST_APE_LIB_OBJS):					\
+		OVERRIDE_CFLAGS +=			\
+			-fsanitize=address
 
 .PHONY: o/$(MODE)/test/ape/lib
 o/$(MODE)/test/ape/lib:	$(TEST_APE_LIB_BINS)		\

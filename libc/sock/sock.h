@@ -61,10 +61,10 @@ int inet_pton(int af, const char *, void *);
 int parseport(const char *);
 
 int socket(int, int, int) nodiscard;
-int accept(int, void *, uint32_t *) paramsnonnull() nodiscard;
-int accept4(int, void *, uint32_t *, int) paramsnonnull() nodiscard;
-int bind(int, const void *, uint32_t) paramsnonnull();
-int connect(int, const void *, uint32_t) paramsnonnull();
+int accept(int, void *, uint32_t *) nodiscard;
+int accept4(int, void *, uint32_t *, int) nodiscard;
+int bind(int, const void *, uint32_t);
+int connect(int, const void *, uint32_t);
 int socketconnect(const struct addrinfo *, int);
 int listen(int, int);
 int shutdown(int, int);
@@ -79,7 +79,7 @@ ssize_t readv(int, const struct iovec *, int);
 ssize_t writev(int, const struct iovec *, int);
 ssize_t sendfile(int, int, int64_t *, size_t);
 int getsockopt(int, int, int, void *, uint32_t *) paramsnonnull((5));
-int setsockopt(int, int, int, const void *, uint32_t) paramsnonnull();
+int setsockopt(int, int, int, const void *, uint32_t);
 int socketpair(int, int, int, int64_t[2]) paramsnonnull();
 int poll(struct pollfd *, uint64_t, int32_t) paramsnonnull();
 int ppoll(struct pollfd *, uint64_t, const struct timespec *,

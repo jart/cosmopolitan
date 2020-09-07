@@ -1,14 +1,12 @@
 #ifndef COSMOPOLITAN_LIBC_TIME_TIME_H_
 #define COSMOPOLITAN_LIBC_TIME_TIME_H_
+#include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/time/struct/timezone.h"
+#include "libc/time/struct/utimbuf.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-struct itimerval;
-struct timezone;
-struct tm;
-struct utimbuf;
 
 extern const char kWeekdayNameShort[7][4];
 extern const char kWeekdayName[7][10];
@@ -48,9 +46,9 @@ char *strptime(const char *, const char *, struct tm *);
 size_t strftime(char *, size_t, const char *, const struct tm *)
     strftimeesque(3);
 char *asctime(const struct tm *);
-char *asctime_r(const struct tm *, char * /*[64]*/);
 char *ctime(const int64_t *);
-char *ctime_r(const int64_t *, char * /*[64]*/);
+char *ctime_r(const int64_t *, char[hasatleast 64]);
+char *asctime_r(const struct tm *, char[hasatleast 64]);
 
 int futimens(int, const struct timespec[2]);
 int utimensat(int, const char *, const struct timespec[2], int);

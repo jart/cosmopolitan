@@ -16,7 +16,7 @@ int dlposix_memalign(void** pp, size_t alignment, size_t bytes) {
       return einval();
     } else if (bytes <= MAX_REQUEST - alignment) {
       if (alignment < MIN_CHUNK_SIZE) alignment = MIN_CHUNK_SIZE;
-      mem = dlmemalign$impl(gm, alignment, bytes);
+      mem = dlmemalign$impl(g_dlmalloc, alignment, bytes);
     }
   }
   if (mem == 0) {

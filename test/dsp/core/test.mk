@@ -47,6 +47,14 @@ o/$(MODE)/test/dsp/core/%.com.dbg:				\
 		$(APE)
 	@$(APELINK)
 
+$(TEST_DSP_CORE_OBJS):						\
+		OVERRIDE_CFLAGS +=				\
+			-fsanitize=address
+
+o/$(MODE)/test/dsp/core/getintegercoefficients8_test-gcc.asm:	\
+		OVERRIDE_CFLAGS +=				\
+			-fsanitize=address
+
 .PHONY: o/$(MODE)/test/dsp/core
 o/$(MODE)/test/dsp/core:					\
 		$(TEST_DSP_CORE_BINS)				\

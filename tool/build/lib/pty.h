@@ -40,8 +40,9 @@ struct MachinePty {
   } esc;
 };
 
-struct MachinePty *MachinePtyNew(unsigned, unsigned) nodiscard;
 void MachinePtyFree(struct MachinePty *);
+struct MachinePty *MachinePtyNew(void) nodiscard;
+void MachinePtyResize(struct MachinePty *, int, int);
 ssize_t MachinePtyWrite(struct MachinePty *, const void *, size_t);
 void MachinePtyAppendLine(struct MachinePty *, struct Buffer *, unsigned);
 

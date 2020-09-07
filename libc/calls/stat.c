@@ -28,6 +28,8 @@
 
 /**
  * Returns information about thing.
+ *
+ * @see S_ISDIR(st.st_mode), S_ISREG(), etc.
  * @asyncsignalsafe
  */
 int stat(const char *pathname, struct stat *st) {

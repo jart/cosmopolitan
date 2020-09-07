@@ -1313,6 +1313,18 @@ syscon	ex	EX_CONFIG				78			78			78			78			78			# unix consensus & force NT
 syscon	ex	EX__BASE				64			64			64			64			64			# unix consensus & force NT
 syscon	ex	EX__MAX					78			78			78			78			78			# unix consensus & force NT
 
+#	getdents() constants
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			XENIX			Commentary
+syscon	dt	DT_UNKNOWN				0			0			0			0			0			# consensus
+syscon	dt	DT_FIFO					1			1			1			1			1			# unix consensus & faked nt
+syscon	dt	DT_CHR					2			2			2			2			2			# unix consensus & faked nt
+syscon	dt	DT_DIR					4			4			4			4			4			# unix consensus & faked nt
+syscon	dt	DT_BLK					6			6			6			6			6			# unix consensus & faked nt
+syscon	dt	DT_REG					8			8			8			8			8			# unix consensus & faked nt
+syscon	dt	DT_LNK					10			10			10			10			10			# unix consensus & faked nt
+syscon	dt	DT_SOCK					12			12			12			12			12			# unix consensus & faked nt
+
 #	msync() flags
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			XENIX			Commentary
@@ -1382,6 +1394,10 @@ syscon	msg	MSG_SYN					0x0400			0			0			0			0
 
 syscon	sol	SOL_IP					0			0			0			0			0			# consensus
 syscon	sol	SOL_SOCKET				1			0xffff			0xffff			0xffff			0xffff			# bsd+nt consensus
+syscon	sol	SOL_TCP					6			6			6			6			6
+syscon	sol	SOL_UDP					17			17			17			17			17
+syscon	sol	SOL_IPV6				41			41			41			41			41
+syscon	sol	SOL_ICMPV6				58			58			58			58			0
 syscon	sol	SOL_AAL					265			0			0			0			0
 syscon	sol	SOL_ALG					279			0			0			0			0
 syscon	sol	SOL_ATM					264			0			0			0			0
@@ -1389,8 +1405,6 @@ syscon	sol	SOL_BLUETOOTH				274			0			0			0			0
 syscon	sol	SOL_CAIF				278			0			0			0			0
 syscon	sol	SOL_DCCP				269			0			0			0			0
 syscon	sol	SOL_DECNET				261			0			0			0			0
-syscon	sol	SOL_ICMPV6				58			0			0			0			0
-syscon	sol	SOL_IPV6				41			0			0			0			0
 syscon	sol	SOL_IRDA				266			0			0			0			0
 syscon	sol	SOL_IUCV				277			0			0			0			0
 syscon	sol	SOL_KCM					281			0			0			0			0
@@ -1404,9 +1418,7 @@ syscon	sol	SOL_PPPOL2TP				273			0			0			0			0
 syscon	sol	SOL_RAW					255			0			0			0			0
 syscon	sol	SOL_RDS					276			0			0			0			0
 syscon	sol	SOL_RXRPC				272			0			0			0			0
-syscon	sol	SOL_TCP					6			0			0			0			0
 syscon	sol	SOL_TIPC				271			0			0			0			0
-syscon	sol	SOL_UDP					17			0			0			0			0
 syscon	sol	SOL_X25					262			0			0			0			0
 
 syscon	in	IN_LOOPBACKNET				127			127			127			127			0			# unix consensus
@@ -1655,15 +1667,6 @@ syscon	misc	BLKRRPART				0x125f			0			0			0			0
 syscon	misc	BLKSECTGET				0x1267			0			0			0			0
 syscon	misc	BLKSECTSET				0x1266			0			0			0			0
 syscon	misc	BLKSSZGET				0x1268			0			0			0			0
-
-syscon	misc	DT_UNKNOWN				0			0			0			0			0			# consensus
-syscon	misc	DT_BLK					6			6			6			6			0			# unix consensus
-syscon	misc	DT_CHR					2			2			2			2			0			# unix consensus
-syscon	misc	DT_DIR					4			4			4			4			0			# unix consensus
-syscon	misc	DT_FIFO					1			1			1			1			0			# unix consensus
-syscon	misc	DT_LNK					10			10			10			10			0			# unix consensus
-syscon	misc	DT_REG					8			8			8			8			0			# unix consensus
-syscon	misc	DT_SOCK					12			12			12			12			0			# unix consensus
 
 syscon	misc	TH_FIN					1			1			1			1			1			# consensus
 syscon	misc	TH_SYN					2			2			2			2			2			# consensus

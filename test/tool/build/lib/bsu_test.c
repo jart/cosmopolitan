@@ -58,6 +58,105 @@
       abort();                                     \
   }
 
+int64_t Bsu(int w, int h, uint64_t x, uint64_t y, uint32_t *f) {
+  switch (h & 7) {
+    case BSU_SHR:
+      switch (w) {
+        case 0:
+          return Shr8(x, y, f);
+        case 1:
+          return Shr16(x, y, f);
+        case 2:
+          return Shr32(x, y, f);
+        case 3:
+          return Shr64(x, y, f);
+        default:
+          unreachable;
+      }
+    case BSU_SAL:
+    case BSU_SHL:
+      switch (w) {
+        case 0:
+          return Shl8(x, y, f);
+        case 1:
+          return Shl16(x, y, f);
+        case 2:
+          return Shl32(x, y, f);
+        case 3:
+          return Shl64(x, y, f);
+        default:
+          unreachable;
+      }
+    case BSU_SAR:
+      switch (w) {
+        case 0:
+          return Sar8(x, y, f);
+        case 1:
+          return Sar16(x, y, f);
+        case 2:
+          return Sar32(x, y, f);
+        case 3:
+          return Sar64(x, y, f);
+        default:
+          unreachable;
+      }
+    case BSU_ROL:
+      switch (w) {
+        case 0:
+          return Rol8(x, y, f);
+        case 1:
+          return Rol16(x, y, f);
+        case 2:
+          return Rol32(x, y, f);
+        case 3:
+          return Rol64(x, y, f);
+        default:
+          unreachable;
+      }
+    case BSU_ROR:
+      switch (w) {
+        case 0:
+          return Ror8(x, y, f);
+        case 1:
+          return Ror16(x, y, f);
+        case 2:
+          return Ror32(x, y, f);
+        case 3:
+          return Ror64(x, y, f);
+        default:
+          unreachable;
+      }
+    case BSU_RCR:
+      switch (w) {
+        case 0:
+          return Rcr8(x, y, f);
+        case 1:
+          return Rcr16(x, y, f);
+        case 2:
+          return Rcr32(x, y, f);
+        case 3:
+          return Rcr64(x, y, f);
+        default:
+          unreachable;
+      }
+    case BSU_RCL:
+      switch (w) {
+        case 0:
+          return Rcl8(x, y, f);
+        case 1:
+          return Rcl16(x, y, f);
+        case 2:
+          return Rcl32(x, y, f);
+        case 3:
+          return Rcl64(x, y, f);
+        default:
+          unreachable;
+      }
+    default:
+      unreachable;
+  }
+}
+
 int64_t RunGolden(char w, int h, uint64_t x, uint64_t y, uint32_t *f) {
   switch (h & 7) {
     case BSU_ROR:

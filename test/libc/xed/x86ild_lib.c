@@ -28,7 +28,7 @@
 
 testonly nodiscard uint8_t *unbingx86op(const char16_t *codez) {
   size_t len;
-  len = strlen(codez);
+  len = strlen16(codez);
   return unbingbuf(xmalloc(ROUNDUP(len, 16)), len, codez, 0x90);
 }
 

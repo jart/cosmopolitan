@@ -1,5 +1,5 @@
-#include "third_party/dlmalloc/dlmalloc.h"
 #include "libc/mem/mem.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 
 /**
  * Returns (by copy) a struct containing various summary statistics:
@@ -25,16 +25,16 @@
 struct mallinfo mallinfo(void) {
   struct mallinfo nm = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   ensure_initialization();
-  if (!PREACTION(gm)) {
-    check_malloc_state(gm);
-    if (is_initialized(gm)) {
+  if (!PREACTION(g_dlmalloc)) {
+    check_malloc_state(g_dlmalloc);
+    if (is_initialized(g_dlmalloc)) {
       size_t nfree = SIZE_T_ONE; /* top always free */
-      size_t mfree = gm->topsize + TOP_FOOT_SIZE;
+      size_t mfree = g_dlmalloc->topsize + TOP_FOOT_SIZE;
       size_t sum = mfree;
-      msegmentptr s = &gm->seg;
+      msegmentptr s = &g_dlmalloc->seg;
       while (s != 0) {
         mchunkptr q = align_as_chunk(s->base);
-        while (segment_holds(s, q) && q != gm->top &&
+        while (segment_holds(s, q) && q != g_dlmalloc->top &&
                q->head != FENCEPOST_HEAD) {
           size_t sz = chunksize(q);
           sum += sz;
@@ -48,13 +48,13 @@ struct mallinfo mallinfo(void) {
       }
       nm.arena = sum;
       nm.ordblks = nfree;
-      nm.hblkhd = gm->footprint - sum;
-      nm.usmblks = gm->max_footprint;
-      nm.uordblks = gm->footprint - mfree;
+      nm.hblkhd = g_dlmalloc->footprint - sum;
+      nm.usmblks = g_dlmalloc->max_footprint;
+      nm.uordblks = g_dlmalloc->footprint - mfree;
       nm.fordblks = mfree;
-      nm.keepcost = gm->topsize;
+      nm.keepcost = g_dlmalloc->topsize;
     }
-    POSTACTION(gm);
+    POSTACTION(g_dlmalloc);
   }
   return nm;
 }

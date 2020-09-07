@@ -26,7 +26,7 @@
 /
 /	@param	𝑥 is double scalar in low half of %xmm0
 /	@return	double scalar in low half of %xmm0
-/	@define	round(𝑥) = copysign(floor(fabs(𝑥)+.5),𝑥)
+/	@define	round(𝑥) = copysign(trunc(fabs(𝑥)+.5),𝑥)
 /		round(𝑥) = trunc(𝑥+copysign(.5,𝑥))
 tinymath_round:
 #if !X86_NEED(SSE4_2)

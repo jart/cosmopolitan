@@ -20,6 +20,7 @@ TOOL_NET_BINS =					\
 
 TOOL_NET_DIRECTDEPS =				\
 	LIBC_CALLS				\
+	LIBC_CONV				\
 	LIBC_DNS				\
 	LIBC_FMT				\
 	LIBC_LOG				\
@@ -30,8 +31,10 @@ TOOL_NET_DIRECTDEPS =				\
 	LIBC_STR				\
 	LIBC_STUBS				\
 	LIBC_SYSV				\
+	LIBC_TIME				\
 	LIBC_UNICODE				\
 	LIBC_X					\
+	NET_HTTP				\
 	THIRD_PARTY_GETOPT			\
 	TOOL_DECODE_LIB
 
@@ -50,9 +53,13 @@ o/$(MODE)/tool/net/%.com.dbg:			\
 		$(APE)
 	@$(APELINK)
 
-$(TOOL_NET_OBJS):				\
-		$(BUILD_FILES)			\
-		tool/net/net.mk
+ifeq (,$(MODE))
+$(TOOL_NET_A_OBJS):				\
+		OVERRIDE_CFLAGS +=		\
+			-fsanitize=address
+endif
 
 .PHONY: o/$(MODE)/tool/net
-o/$(MODE)/tool/net: $(TOOL_NET_BINS) $(TOOL_NET_CHECKS)
+o/$(MODE)/tool/net:				\
+		$(TOOL_NET_BINS)		\
+		$(TOOL_NET_CHECKS)

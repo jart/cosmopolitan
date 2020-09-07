@@ -23,16 +23,9 @@
 #define XED_MODE_LEGACY 1
 #define XED_MODE_LONG   2
 
-#define XED_SEG_CS 1
-#define XED_SEG_DS 2
-#define XED_SEG_ES 3
-#define XED_SEG_FS 4
-#define XED_SEG_GS 5
-#define XED_SEG_SS 6
-
-#define XED_HINT_NTAKEN 1
-#define XED_HINT_TAKEN  2
-#define XED_HINT_ALTER  3
+#define XED_HINT_NTAKEN 2
+#define XED_HINT_TAKEN  4
+#define XED_HINT_ALTER  6
 
 #define xed_modrm_mod(M)           (((M)&0xff) >> 6)
 #define xed_modrm_reg(M)           (((M)&0b00111000) >> 3)
@@ -46,15 +39,14 @@
 COSMOPOLITAN_C_START_
 
 enum XedMachineMode {
-  XED_MACHINE_MODE_INVALID,
-  XED_MACHINE_MODE_LONG_64,
-  XED_MACHINE_MODE_LONG_COMPAT_32,
-  XED_MACHINE_MODE_LONG_COMPAT_16,
-  XED_MACHINE_MODE_LEGACY_32,
-  XED_MACHINE_MODE_LEGACY_16,
-  XED_MACHINE_MODE_REAL,
-  XED_MACHINE_MODE_UNREAL,
-  XED_MACHINE_MODE_LAST
+  XED_MACHINE_MODE_REAL = XED_MODE_REAL,
+  XED_MACHINE_MODE_LEGACY_32 = XED_MODE_LEGACY,
+  XED_MACHINE_MODE_LONG_64 = XED_MODE_LONG,
+  XED_MACHINE_MODE_UNREAL = 1 << 2 | XED_MODE_REAL,
+  XED_MACHINE_MODE_LEGACY_16 = 2 << 2 | XED_MODE_REAL,
+  XED_MACHINE_MODE_LONG_COMPAT_16 = 3 << 2 | XED_MODE_REAL,
+  XED_MACHINE_MODE_LONG_COMPAT_32 = 4 << 2 | XED_MODE_LEGACY,
+  XED_MACHINE_MODE_LAST,
 };
 
 enum XedError {
@@ -319,54 +311,40 @@ struct XedChipFeatures {
 };
 
 struct XedOperands { /*
-    ┌rep
-    │ ┌log₂𝑏
-    │ │ ┌rexx
-    │ │ │┌index
-    │ │ ││  ┌mod
-    │ │ ││  │ ┌rexb
-    │ │ ││  │ │┌base
-    │ │ ││  │ ││  ┌asz
-    │ │ ││  │ ││  │┌rex         REGISTER
-    │ │ ││  │ ││  ││┌rexb       DISPATCH
-    │ │ ││  │ ││  │││┌srm       ENCODING
-    │ │ ││  │ ││  ││││  ┌rexw
-    │ │ ││  │ ││  ││││  │┌rex
-    │ │ ││  │ ││  ││││  ││┌rexb
-    │ │ ││  │ ││  ││││  │││┌rm
-    │ │ ││  │ ││  ││││  ││││  ┌osz
-    │ │ ││  │ ││  ││││  ││││  │┌rex
-    │ │ ││  │ ││  ││││  ││││  ││┌rexr
-    │ │ ││  │ ││  ││││  ││││  │││┌reg
-    │ │2││  │2││  ││││  ││││  ││││
-    │ │8││24│2││18││││12││││ 6││││ 0
-    ├┐├┐│├─┐├┐│├─┐│││├─┐│││├─┐│││├─┐
-  0b00000000000000000000000000000000*/
+  ┌rep
+  │ ┌log₂𝑏
+  │ │ ┌mode
+  │ │ │ ┌eamode
+  │ │ │ │ ┌mod
+  │ │ │ │ │
+  │ │ │ │ │  ┌sego
+  │ │ │ │ │  │
+  │ │ │ │ │  │   ┌rex         REGISTER
+  │ │ │ │ │  │   │┌rexb       DISPATCH
+  │ │ │ │ │  │   ││┌srm       ENCODING
+  │ │ │ │ │  │   │││  ┌rex
+  │ │ │ │ │  │   │││  │┌rexb
+  │ │ │ │ │  │   │││  ││┌rm
+  │ │ │ │ │  │   │││  │││  ┌rexw
+  │ │ │ │ │  │   │││  │││  │┌osz
+  │ │ │ │ │  │   │││  │││  ││┌rex
+  │ │ │ │ │  │   │││  │││  │││┌rexr
+  │ │ │ │ │  │   │││  │││  ││││┌reg
+  │3│2│2│2│2 │   │││  │││  │││││
+  │0│8│6│4│2 │18 │││12│││ 7│││││ 0
+  ├┐├┐├┐├┐├┐ ├─┐ ││├─┐││├─┐││││├─┐
+  00000000000000000000000000000000*/
   uint32_t rde;
-  bool rexw : 1;   // rex.w or rex.wb or etc. 64-bit override
-  bool rexb : 1;   // rex.b or rex.wb or etc. see modrm table
-  bool rexr : 1;   // rex.r or rex.wr or etc. see modrm table
-  bool rex : 1;    // any rex prefix including rex
-  bool rexx : 1;   // rex.x or rex.wx or etc. see sib table
-  bool rexrr : 1;  // evex
-  bool asz : 1;    // address size override
-  bool osz : 1;    // operand size override prefix
-  bool out_of_bytes : 1;
-  bool is_intel_specific : 1;
-  bool ild_f2 : 1;
-  bool ild_f3 : 1;
-  bool has_modrm : 1;
-  bool has_sib : 1;
-  bool realmode : 1;
-  bool amd3dnow : 1;
-  uint8_t max_bytes;
   union {
-    uint8_t opcode;
-    uint8_t srm : 3;
+    struct {
+      union {
+        uint8_t opcode;
+        uint8_t srm : 3;
+      };
+      uint8_t map : 4;  // enum XedIldMap
+    };
+    uint16_t dispatch;
   };
-  uint8_t map : 4;   // enum XedIldMap
-  uint8_t rep : 2;   // 0, 2 (0xf2 repnz), 3 (0xf3 rep/repe)
-  uint8_t hint : 2;  // static branch prediction
   union {
     uint8_t sib;
     struct {
@@ -375,6 +353,24 @@ struct XedOperands { /*
       uint8_t scale : 2;
     };
   };
+  bool osz : 1;    // operand size override prefix
+  bool rexw : 1;   // rex.w or rex.wb or etc. 64-bit override
+  bool rexb : 1;   // rex.b or rex.wb or etc. see modrm table
+  bool rexr : 1;   // rex.r or rex.wr or etc. see modrm table
+  bool rex : 1;    // any rex prefix including rex
+  bool rexx : 1;   // rex.x or rex.wx or etc. see sib table
+  bool rexrr : 1;  // evex
+  bool asz : 1;    // address size override
+  int64_t disp;    // displacement(%xxx) sign-extended
+  uint64_t uimm0;  // $immediate sign-extended
+  bool out_of_bytes : 1;
+  bool is_intel_specific : 1;
+  bool ild_f2 : 1;
+  bool ild_f3 : 1;
+  bool has_sib : 1;
+  bool realmode : 1;
+  bool amd3dnow : 1;
+  bool lock : 1;
   union {
     uint8_t modrm;  // selects address register
     struct {
@@ -383,17 +379,17 @@ struct XedOperands { /*
       uint8_t mod : 2;
     };
   };
+  uint8_t max_bytes;
+  uint8_t rep : 2;  // 0, 2 (0xf2 repnz), 3 (0xf3 rep/repe)
+  uint8_t has_modrm : 2;
+  bool imm_signed : 1;        // internal
   uint8_t seg_ovd : 3;        // XED_SEG_xx
   uint8_t error : 5;          // enum XedError
-  uint8_t mode : 3;           // real,legacy,long
-  bool lock : 1;              // prefix
-  bool imm_signed : 1;        // internal
-  int64_t disp;               // displacement(%xxx) sign-extended
-  uint64_t uimm0;             // $immediate sign-extended
+  uint8_t mode : 2;           // real,legacy,long
+  uint8_t hint : 3;           // static branch prediction
   uint8_t uimm1;              // enter $x,$y
   uint8_t disp_width;         // in bits
   uint8_t imm_width;          // in bits
-  uint8_t ild_seg;            // internal see seg_ovd
   uint8_t mode_first_prefix;  // see xed_set_chip_modes()
   uint8_t nrexes;
   uint8_t nprefixes;
@@ -419,36 +415,35 @@ struct XedOperands { /*
 };
 
 struct XedDecodedInst {
-  struct XedOperands op;
-  uint8_t bytes[16];
   unsigned char length;
-} aligned(16);
+  uint8_t bytes[15];
+  struct XedOperands op;
+};
 
 forceinline void xed_operands_set_mode(struct XedOperands *p,
                                        enum XedMachineMode mmode) {
   p->realmode = false;
   switch (mmode) {
+    default:
     case XED_MACHINE_MODE_LONG_64:
-      p->mode = 2;
+      p->mode = XED_MODE_LONG;
       return;
     case XED_MACHINE_MODE_LEGACY_32:
     case XED_MACHINE_MODE_LONG_COMPAT_32:
-      p->mode = 1;
+      p->mode = XED_MODE_LEGACY;
       break;
     case XED_MACHINE_MODE_REAL:
       p->realmode = true;
-      p->mode = 0;
+      p->mode = XED_MODE_REAL;
       break;
     case XED_MACHINE_MODE_UNREAL:
-      p->realmode = 1;
-      p->mode = 1;
+      p->realmode = true;
+      p->mode = XED_MODE_LEGACY;
       break;
     case XED_MACHINE_MODE_LEGACY_16:
     case XED_MACHINE_MODE_LONG_COMPAT_16:
-      p->mode = 0;
+      p->mode = XED_MODE_REAL;
       break;
-    default:
-      unreachable;
   }
 }
 

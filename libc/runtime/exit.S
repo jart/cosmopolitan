@@ -31,6 +31,7 @@ exit:	push	%rbp
 	push	%rdi
 	xor	%edi,%edi
 	call	__cxa_finalize
+	call	_destruct
 	pop	%rdi
 	pop	%rdi
 	call	_Exit

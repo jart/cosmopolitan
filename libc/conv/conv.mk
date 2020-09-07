@@ -58,8 +58,12 @@ o/$(MODE)/libc/conv/filetimetotime.o		\
 o/$(MODE)/libc/conv/timespectofiletime.o	\
 o/$(MODE)/libc/conv/filetimetotimespec.o	\
 o/$(MODE)/libc/conv/filetimetotimeval.o:	\
-		OVERRIDE_COPTS +=		\
+		OVERRIDE_CFLAGS +=		\
 			-O3
+
+$(LIBC_CONV_A_OBJS):				\
+		OVERRIDE_CFLAGS +=		\
+			$(NO_MAGIC)
 
 LIBC_CONV_LIBS = $(foreach x,$(LIBC_CONV_ARTIFACTS),$($(x)))
 LIBC_CONV_SRCS = $(foreach x,$(LIBC_CONV_ARTIFACTS),$($(x)_SRCS))

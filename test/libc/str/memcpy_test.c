@@ -81,3 +81,17 @@ TEST(memcpy, overlapping_isFineIfCopyingBackwards) {
     tfree(b1);
   }
 }
+
+TEST(stpcpy, test) {
+  volatile char *p;
+  volatile char b[16];
+  volatile const char *s1 = "hello";
+  volatile const char *s2 = "there";
+  p = b;
+  p = stpcpy(p, s1);
+  EXPECT_EQ((intptr_t)b + 5, (intptr_t)p);
+  EXPECT_STREQ("hello", b);
+  p = stpcpy(p, s2);
+  EXPECT_EQ((intptr_t)b + 10, (intptr_t)p);
+  EXPECT_STREQ("hellothere", b);
+}

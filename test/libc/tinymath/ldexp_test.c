@@ -39,3 +39,8 @@ TEST(ldexp, test) {
   ASSERT_STREQ("100.48", gc(xasprintf("%.2f", scalblnf(pi, twopow))));
   ASSERT_STREQ("100.48", gc(xasprintf("%.2Lf", scalblnl(pi, twopow))));
 }
+
+TEST(exp10, test) {
+  ASSERT_EQ(100, (int)exp10(2));
+  ASSERT_STREQ("100.000000", gc(xasprintf("%Lf", exp10l(2))));
+}

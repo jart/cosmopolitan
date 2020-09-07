@@ -4,7 +4,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-void OpRdtsc(struct Machine *);
+void OpPause(struct Machine *, uint32_t);
+void OpRdtsc(struct Machine *, uint32_t);
+void OpRdtscp(struct Machine *, uint32_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

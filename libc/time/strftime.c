@@ -31,29 +31,28 @@ strftime (BSD-3)\\n\
 Copyright 1989 The Regents of the University of California\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-static char *strftime_add(char *pt, const char *ptlim, const char *str) {
-  while (pt < ptlim && (*pt = *str++) != '\0') ++pt;
-  return pt;
+static char *strftime_add(char *p, const char *pe, const char *str) {
+  while (p < pe && (*p = *str++) != '\0') ++p;
+  return p;
 }
 
-static char *strftime_conv(char *pt, const char *ptlim, int n,
-                           const char *format) {
+static char *strftime_conv(char *p, const char *pe, int n, const char *format) {
   char buf[INT_STRLEN_MAXIMUM(int) + 1];
   (snprintf)(buf, sizeof(buf), format, n);
-  return strftime_add(pt, ptlim, buf);
+  return strftime_add(p, pe, buf);
 }
 
-static char *strftime_secs(char *pt, const char *ptlim, const struct tm *t) {
+static char *strftime_secs(char *p, const char *pe, const struct tm *t) {
   static char buf[INT_STRLEN_MAXIMUM(int) + 1];
   struct tm tmp;
   int64_t s;
   tmp = *t; /* Make a copy, mktime(3) modifies the tm struct. */
   s = mktime(&tmp);
   (snprintf)(buf, sizeof(buf), "%ld", s);
-  return strftime_add(pt, ptlim, buf);
+  return strftime_add(p, pe, buf);
 }
 
-static char *strftime_timefmt(char *pt, const char *ptlim, const char *format,
+static char *strftime_timefmt(char *p, const char *pe, const char *format,
                               const struct tm *t) {
   int i;
   long diff;
@@ -67,31 +66,31 @@ static char *strftime_timefmt(char *pt, const char *ptlim, const char *format,
           --format;
           break;
         case 'A':
-          pt = strftime_add(pt, ptlim,
-                            (t->tm_wday < 0 || t->tm_wday > 6)
-                                ? "?"
-                                : kWeekdayName[t->tm_wday]);
+          p = strftime_add(p, pe,
+                           (t->tm_wday < 0 || t->tm_wday > 6)
+                               ? "?"
+                               : kWeekdayName[t->tm_wday]);
           continue;
         case 'a':
-          pt = strftime_add(pt, ptlim,
-                            (t->tm_wday < 0 || t->tm_wday > 6)
-                                ? "?"
-                                : kWeekdayNameShort[t->tm_wday]);
+          p = strftime_add(p, pe,
+                           (t->tm_wday < 0 || t->tm_wday > 6)
+                               ? "?"
+                               : kWeekdayNameShort[t->tm_wday]);
           continue;
         case 'B':
-          pt = strftime_add(
-              pt, ptlim,
+          p = strftime_add(
+              p, pe,
               (t->tm_mon < 0 || t->tm_mon > 11) ? "?" : kMonthName[t->tm_mon]);
           continue;
         case 'b':
         case 'h':
-          pt = strftime_add(pt, ptlim,
-                            (t->tm_mon < 0 || t->tm_mon > 11)
-                                ? "?"
-                                : kMonthNameShort[t->tm_mon]);
+          p = strftime_add(p, pe,
+                           (t->tm_mon < 0 || t->tm_mon > 11)
+                               ? "?"
+                               : kMonthNameShort[t->tm_mon]);
           continue;
         case 'c':
-          pt = strftime_timefmt(pt, ptlim, "%D %X", t);
+          p = strftime_timefmt(p, pe, "%D %X", t);
           continue;
         case 'C':
           /*
@@ -101,11 +100,11 @@ static char *strftime_timefmt(char *pt, const char *ptlim, const char *format,
           ** something completely different.
           ** (ado, 5/24/93)
           */
-          pt = strftime_conv(pt, ptlim, div100int64(t->tm_year + TM_YEAR_BASE),
-                             "%02d");
+          p = strftime_conv(p, pe, div100int64(t->tm_year + TM_YEAR_BASE),
+                            "%02d");
           continue;
         case 'D':
-          pt = strftime_timefmt(pt, ptlim, "%m/%d/%y", t);
+          p = strftime_timefmt(p, pe, "%m/%d/%y", t);
           continue;
         case 'x':
           /*
@@ -125,10 +124,10 @@ static char *strftime_timefmt(char *pt, const char *ptlim, const char *format,
           ** ftp.uni-erlangen.de.
           ** (ado, 5/30/93)
           */
-          pt = strftime_timefmt(pt, ptlim, "%m/%d/%y", t);
+          p = strftime_timefmt(p, pe, "%m/%d/%y", t);
           continue;
         case 'd':
-          pt = strftime_conv(pt, ptlim, t->tm_mday, "%02d");
+          p = strftime_conv(p, pe, t->tm_mday, "%02d");
           continue;
         case 'E':
         case 'O':
@@ -145,17 +144,17 @@ static char *strftime_timefmt(char *pt, const char *ptlim, const char *format,
           */
           goto label;
         case 'e':
-          pt = strftime_conv(pt, ptlim, t->tm_mday, "%2d");
+          p = strftime_conv(p, pe, t->tm_mday, "%2d");
           continue;
         case 'H':
-          pt = strftime_conv(pt, ptlim, t->tm_hour, "%02d");
+          p = strftime_conv(p, pe, t->tm_hour, "%02d");
           continue;
         case 'I':
-          pt = strftime_conv(
-              pt, ptlim, (t->tm_hour % 12) ? (t->tm_hour % 12) : 12, "%02d");
+          p = strftime_conv(p, pe, (t->tm_hour % 12) ? (t->tm_hour % 12) : 12,
+                            "%02d");
           continue;
         case 'j':
-          pt = strftime_conv(pt, ptlim, t->tm_yday + 1, "%03d");
+          p = strftime_conv(p, pe, t->tm_yday + 1, "%03d");
           continue;
         case 'k':
           /*
@@ -168,14 +167,14 @@ static char *strftime_timefmt(char *pt, const char *ptlim, const char *format,
           ** "%l" have been swapped.
           ** (ado, 5/24/93)
           */
-          pt = strftime_conv(pt, ptlim, t->tm_hour, "%2d");
+          p = strftime_conv(p, pe, t->tm_hour, "%2d");
           continue;
 #ifdef KITCHEN_SINK
         case 'K':
           /*
           ** After all this time, still unclaimed!
           */
-          pt = strftime_add(pt, ptlim, "kitchen sink");
+          p = strftime_add(p, pe, "kitchen sink");
           continue;
 #endif /* defined KITCHEN_SINK */
         case 'l':
@@ -188,43 +187,42 @@ static char *strftime_timefmt(char *pt, const char *ptlim, const char *format,
           ** "%l" have been swapped.
           ** (ado, 5/24/93)
           */
-          pt = strftime_conv(pt, ptlim,
-                             (t->tm_hour % 12) ? (t->tm_hour % 12) : 12, "%2d");
+          p = strftime_conv(p, pe, (t->tm_hour % 12) ? (t->tm_hour % 12) : 12,
+                            "%2d");
           continue;
         case 'M':
-          pt = strftime_conv(pt, ptlim, t->tm_min, "%02d");
+          p = strftime_conv(p, pe, t->tm_min, "%02d");
           continue;
         case 'm':
-          pt = strftime_conv(pt, ptlim, t->tm_mon + 1, "%02d");
+          p = strftime_conv(p, pe, t->tm_mon + 1, "%02d");
           continue;
         case 'n':
-          pt = strftime_add(pt, ptlim, "\n");
+          p = strftime_add(p, pe, "\n");
           continue;
         case 'p':
-          pt = strftime_add(pt, ptlim, t->tm_hour >= 12 ? "PM" : "AM");
+          p = strftime_add(p, pe, t->tm_hour >= 12 ? "PM" : "AM");
           continue;
         case 'R':
-          pt = strftime_timefmt(pt, ptlim, "%H:%M", t);
+          p = strftime_timefmt(p, pe, "%H:%M", t);
           continue;
         case 'r':
-          pt = strftime_timefmt(pt, ptlim, "%I:%M:%S %p", t);
+          p = strftime_timefmt(p, pe, "%I:%M:%S %p", t);
           continue;
         case 'S':
-          pt = strftime_conv(pt, ptlim, t->tm_sec, "%02d");
+          p = strftime_conv(p, pe, t->tm_sec, "%02d");
           continue;
         case 's':
-          pt = strftime_secs(pt, ptlim, t);
+          p = strftime_secs(p, pe, t);
           continue;
         case 'T':
         case 'X':
-          pt = strftime_timefmt(pt, ptlim, "%H:%M:%S", t);
+          p = strftime_timefmt(p, pe, "%H:%M:%S", t);
           continue;
         case 't':
-          pt = strftime_add(pt, ptlim, "\t");
+          p = strftime_add(p, pe, "\t");
           continue;
         case 'U':
-          pt = strftime_conv(pt, ptlim, (t->tm_yday + 7 - t->tm_wday) / 7,
-                             "%02d");
+          p = strftime_conv(p, pe, (t->tm_yday + 7 - t->tm_wday) / 7, "%02d");
           continue;
         case 'u':
           /*
@@ -233,8 +231,7 @@ static char *strftime_timefmt(char *pt, const char *ptlim, const char *format,
           ** [1 (Monday) - 7]"
           ** (ado, 5/24/93)
           */
-          pt = strftime_conv(pt, ptlim, (t->tm_wday == 0) ? 7 : t->tm_wday,
-                             "%d");
+          p = strftime_conv(p, pe, (t->tm_wday == 0) ? 7 : t->tm_wday, "%d");
           continue;
         case 'V':
           /*
@@ -289,7 +286,7 @@ static char *strftime_timefmt(char *pt, const char *ptlim, const char *format,
             i = 53;
 #endif /* defined XPG4_1994_04_09 */
           }
-          pt = strftime_conv(pt, ptlim, i, "%02d");
+          p = strftime_conv(p, pe, i, "%02d");
           continue;
         case 'v':
           /*
@@ -297,32 +294,30 @@ static char *strftime_timefmt(char *pt, const char *ptlim, const char *format,
           ** "date as dd-bbb-YYYY"
           ** (ado, 5/24/93)
           */
-          pt = strftime_timefmt(pt, ptlim, "%e-%b-%Y", t);
+          p = strftime_timefmt(p, pe, "%e-%b-%Y", t);
           continue;
         case 'W':
-          pt = strftime_conv(
-              pt, ptlim,
-              (t->tm_yday + 7 - (t->tm_wday ? (t->tm_wday - 1) : 6)) / 7,
+          p = strftime_conv(
+              p, pe, (t->tm_yday + 7 - (t->tm_wday ? (t->tm_wday - 1) : 6)) / 7,
               "%02d");
           continue;
         case 'w':
-          pt = strftime_conv(pt, ptlim, t->tm_wday, "%d");
+          p = strftime_conv(p, pe, t->tm_wday, "%d");
           continue;
         case 'y':
-          pt = strftime_conv(pt, ptlim, (t->tm_year + TM_YEAR_BASE) % 100,
-                             "%02d");
+          p = strftime_conv(p, pe, (t->tm_year + TM_YEAR_BASE) % 100, "%02d");
           continue;
         case 'Y':
-          pt = strftime_conv(pt, ptlim, t->tm_year + TM_YEAR_BASE, "%04d");
+          p = strftime_conv(p, pe, t->tm_year + TM_YEAR_BASE, "%04d");
           continue;
         case 'Z':
           if (t->tm_zone) {
-            pt = strftime_add(pt, ptlim, t->tm_zone);
+            p = strftime_add(p, pe, t->tm_zone);
           } else {
             if (t->tm_isdst == 0 || t->tm_isdst == 1) {
-              pt = strftime_add(pt, ptlim, tzname[t->tm_isdst]);
+              p = strftime_add(p, pe, tzname[t->tm_isdst]);
             } else {
-              pt = strftime_add(pt, ptlim, "?");
+              p = strftime_add(p, pe, "?");
             }
           }
           continue;
@@ -350,10 +345,10 @@ static char *strftime_timefmt(char *pt, const char *ptlim, const char *format,
           } else {
             sign = "+";
           }
-          pt = strftime_add(pt, ptlim, sign);
+          p = strftime_add(p, pe, sign);
           diff /= SECSPERMIN;
           diff = (diff / MINSPERHOUR) * 100 + (diff % MINSPERHOUR);
-          pt = strftime_conv(pt, ptlim, diff, "%04d");
+          p = strftime_conv(p, pe, diff, "%04d");
           continue;
         case '%':
         /*
@@ -365,17 +360,33 @@ static char *strftime_timefmt(char *pt, const char *ptlim, const char *format,
           break;
       }
     }
-    if (pt == ptlim) break;
-    *pt++ = *format;
+    if (p >= pe) break;
+    *p++ = *format;
   }
-  return pt;
+  return p;
 }
 
-size_t strftime(char *s, size_t maxsize, const char *format,
-                const struct tm *t) {
+/**
+ * Converts time to string, e.g.
+ *
+ *   char b[64];
+ *   int64_t sec;
+ *   struct tm tm;
+ *   time(&sec);
+ *   localtime_r(&sec, &tm);
+ *   strftime(b, sizeof(b), "%Y-%m-%dT%H:%M:%S%z", &tm);       // ISO8601
+ *   strftime(b, sizeof(b), "%a, %d %b %Y %H:%M:%S %Z", &tm);  // RFC1123
+ *
+ * @return bytes copied excluding nul, or 0 on error
+ */
+size_t strftime(char *s, size_t size, const char *f, const struct tm *t) {
   char *p;
-  p = strftime_timefmt(s, s + maxsize, format, t);
-  if (p == s + maxsize) return 0;
-  *p = '\0';
-  return p - s;
+  p = strftime_timefmt(s, s + size, f, t);
+  if (p < s + size) {
+    *p = '\0';
+    return p - s;
+  } else {
+    s[size - 1] = '\0';
+    return 0;
+  }
 }

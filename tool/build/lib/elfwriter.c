@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/arraylist.h"
+#include "libc/alg/arraylist2.h"
 #include "libc/assert.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
@@ -48,7 +49,7 @@ static const Elf64_Ehdr kObjHeader = {
 static size_t AppendSection(struct ElfWriter *elf, const char *name,
                             int sh_type, int sh_flags) {
   ssize_t section =
-      append(elf->shdrs,
+      APPEND(&elf->shdrs->p, &elf->shdrs->i, &elf->shdrs->n,
              (&(Elf64_Shdr){.sh_type = sh_type,
                             .sh_flags = sh_flags,
                             .sh_entsize = elf->entsize,
@@ -72,12 +73,13 @@ static struct ElfWriterSymRef AppendSymbol(struct ElfWriter *elf,
                                            size_t st_size, size_t st_shndx,
                                            enum ElfWriterSymOrder slg) {
   ssize_t sym =
-      append(elf->syms[slg], (&(Elf64_Sym){.st_info = st_info,
-                                           .st_size = st_size,
-                                           .st_value = st_value,
-                                           .st_other = st_other,
-                                           .st_name = intern(elf->strtab, name),
-                                           .st_shndx = st_shndx}));
+      APPEND(&elf->syms[slg]->p, &elf->syms[slg]->i, &elf->syms[slg]->n,
+             (&(Elf64_Sym){.st_info = st_info,
+                           .st_size = st_size,
+                           .st_value = st_value,
+                           .st_other = st_other,
+                           .st_name = intern(elf->strtab, name),
+                           .st_shndx = st_shndx}));
   CHECK_NE(-1, sym);
   return (struct ElfWriterSymRef){.slg = slg, .sym = sym};
 }
@@ -147,7 +149,7 @@ static void FlushTables(struct ElfWriter *elf) {
   elf->ehdr->e_shstrndx = FlushStrtab(elf, ".shstrtab", elf->shstrtab);
   WriteRelaSections(elf, symtab);
   size = elf->shdrs->i * sizeof(elf->shdrs->p[0]);
-  elfwriter_align(elf, alignof(elf->shdrs->p[0]), sizeof(elf->shdrs->p[0]));
+  elfwriter_align(elf, alignof(Elf64_Shdr), sizeof(elf->shdrs->p[0]));
   elf->ehdr->e_shoff = elf->wrote;
   elf->ehdr->e_shnum = elf->shdrs->i;
   elf->shdrs->p[symtab].sh_info =
@@ -251,9 +253,9 @@ struct ElfWriterSymRef elfwriter_linksym(struct ElfWriter *elf,
 void elfwriter_appendrela(struct ElfWriter *elf, uint64_t r_offset,
                           struct ElfWriterSymRef symkey, uint32_t type,
                           int64_t r_addend) {
-  CHECK_NE(-1,
-           append(elf->relas, (&(struct ElfWriterRela){.type = type,
-                                                       .symkey = symkey,
-                                                       .offset = r_offset,
-                                                       .addend = r_addend})));
+  CHECK_NE(-1, APPEND(&elf->relas->p, &elf->relas->i, &elf->relas->n,
+                      (&(struct ElfWriterRela){.type = type,
+                                               .symkey = symkey,
+                                               .offset = r_offset,
+                                               .addend = r_addend})));
 }

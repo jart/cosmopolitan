@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -18,25 +18,26 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
+#include "libc/str/str.h"
+#include "tool/build/lib/buffer.h"
+#include "tool/build/lib/cga.h"
 
-/	Phil Katz CRC-32 Polynomial
-/	x^32+x^26+x^23+x^22+x^16+x^12+x^11+x^10+x^8+x^7+x^5+x^4+x^2+x+1
-/	0b100000100110000010001110110110111
-/	bitreverse32(0x104c11db7)
-#define kZipCrc32Polynomial 0xedb88320
+static const uint8_t kCgaToAnsi[] = {30, 34, 32, 36, 31, 35, 33, 37,
+                                     90, 94, 92, 96, 91, 95, 93, 97};
 
-	.initbss 300,_init_kCrc32Tab
-kCrc32Tab:
-	.rept	256
-	.long	0
-	.endr
-	.endobj	kCrc32Tab,globl,hidden
-	.previous
-
-	.init.start 300,_init_kCrc32Tab
-	push	%rsi
-	mov	$kZipCrc32Polynomial,%esi
-	call	crc32init
-	pop	%rsi
-	.init.end 300,_init_kCrc32Tab
-	.source	__FILE__
+void DrawCga(struct Panel *p, uint8_t v[25][80][2]) {
+  unsigned y, x, n, a;
+  n = MIN(25, p->bottom - p->top);
+  for (y = 0; y < n; ++y) {
+    a = -1;
+    for (x = 0; x < 80; ++x) {
+      if (v[y][x][1] != a) {
+        a = v[y][x][1];
+        AppendFmt(&p->lines[y], "\e[%d;%dm", kCgaToAnsi[a & 0x0F],
+                  kCgaToAnsi[(a & 0xF0) >> 4] + 10);
+      }
+      AppendWide(&p->lines[y], kCp437[v[y][x][0]]);
+    }
+    AppendStr(&p->lines[y], "\e[0m");
+  }
+}

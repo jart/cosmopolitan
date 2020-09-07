@@ -23,6 +23,7 @@
 #include "tool/build/lib/dis.h"
 #include "tool/build/lib/modrm.h"
 
+static const char kJcxz[3][6] = {"jcxz", "jecxz", "jrcxz"};
 static const char kAluOp[8][4] = {"add", "or",  "adc", "sbb",
                                   "and", "sub", "xor", "cmp"};
 static const char kBitOp[8][4] = {"rol", "ror", "rcl", "rcr",
@@ -33,7 +34,7 @@ static bool IsProbablyByteOp(struct XedDecodedInst *x) {
 }
 
 static int IsRepOpcode(struct DisBuilder b) {
-  switch (b.xedd->op.opcode & ~1u) {
+  switch (b.xedd->op.opcode & ~1) {
     case 0x6C: /* INS */
       return 1;
     case 0x6E: /* OUTS */
@@ -86,35 +87,36 @@ static char *DisBranchTaken(struct DisBuilder b, char *p) {
 static char *DisName(struct DisBuilder b, char *bp, const char *name,
                      bool ambiguous) {
   char *p, *np;
+  uint32_t rde;
   bool notbyte, notlong, wantsuffix, wantsuffixsd;
   p = bp;
+  rde = b.xedd->op.rde;
   if (b.xedd->op.lock) p = stpcpy(p, "lock ");
   p = DisRepPrefix(b, p);
   if (tinystrcmp(name, "BIT") == 0) {
-    p = stpcpy(p, kBitOp[ModrmReg(b.xedd->op.rde)]);
+    p = stpcpy(p, kBitOp[ModrmReg(rde)]);
   } else if (tinystrcmp(name, "CALL") == 0) {
     p = stpcpy(p, "call");
   } else if (tinystrcmp(name, "JMP") == 0) {
     p = stpcpy(p, "jmp");
   } else if (tinystrcmp(name, "jcxz") == 0) {
-    p = stpcpy(p, Asz(b.xedd->op.rde) ? "jecxz" : "jrcxz");
+    p = stpcpy(p, kJcxz[Eamode(rde)]);
     p = DisBranchTaken(b, p);
-  } else if (tinystrcmp(name, "loop") == 0) {
-    p = stpcpy(p, Asz(b.xedd->op.rde) ? "loopl" : "loop");
-    p = DisBranchTaken(b, p);
-  } else if (tinystrcmp(name, "loope") == 0) {
-    p = stpcpy(p, Asz(b.xedd->op.rde) ? "loopel" : "loope");
-    p = DisBranchTaken(b, p);
-  } else if (tinystrcmp(name, "loopne") == 0) {
-    p = stpcpy(p, Asz(b.xedd->op.rde) ? "loopnel" : "loopne");
+  } else if (tinystrcmp(name, "loop") == 0 || tinystrcmp(name, "loope") == 0 ||
+             tinystrcmp(name, "loopne") == 0) {
+    p = stpcpy(p, name);
+    if (Eamode(rde) != Mode(rde)) {
+      *p++ = "wl"[Eamode(rde)];
+      *p = '\0';
+    }
     p = DisBranchTaken(b, p);
   } else if (tinystrcmp(name, "cwtl") == 0) {
-    if (Osz(b.xedd->op.rde)) name = "cbtw";
-    if (Rexw(b.xedd->op.rde)) name = "cltq";
+    if (Osz(rde)) name = "cbtw";
+    if (Rexw(rde)) name = "cltq";
     p = stpcpy(p, name);
   } else if (tinystrcmp(name, "cltd") == 0) {
-    if (Osz(b.xedd->op.rde)) name = "cwtd";
-    if (Rexw(b.xedd->op.rde)) name = "cqto";
+    if (Osz(rde)) name = "cwtd";
+    if (Rexw(rde)) name = "cqto";
     p = stpcpy(p, name);
   } else {
     notbyte = false;
@@ -125,13 +127,13 @@ static char *DisName(struct DisBuilder b, char *bp, const char *name,
       *p++ = *np;
     }
     if (tinystrcmp(name, "ALU") == 0) {
-      p = stpcpy(p, kAluOp[ModrmReg(b.xedd->op.rde)]);
+      p = stpcpy(p, kAluOp[ModrmReg(rde)]);
     } else if (tinystrcmp(np, "WLQ") == 0) {
       notbyte = true;
       wantsuffix = true;
     } else if (tinystrcmp(np, "WQ") == 0) {
       notbyte = true;
-      notlong = true;
+      notlong = Eamode(rde) != XED_MODE_REAL;
       wantsuffix = true;
     } else if (tinystrcmp(np, "LQ") == 0 || tinystrcmp(np, "WL") == 0) {
       notbyte = true;
@@ -140,21 +142,23 @@ static char *DisName(struct DisBuilder b, char *bp, const char *name,
       notbyte = true;
       wantsuffixsd = true;
     } else if (tinystrcmp(np, "ABS") == 0) {
-      if (Rexw(b.xedd->op.rde)) p = stpcpy(p, "abs");
+      if (Rexw(rde)) p = stpcpy(p, "abs");
     } else if (tinystrcmp(np, "BT") == 0) {
       p = DisBranchTaken(b, p);
     }
     if (wantsuffixsd) {
-      if (Osz(b.xedd->op.rde)) {
+      if (Osz(rde)) {
         *p++ = 'd';
       } else {
         *p++ = 's';
       }
     } else if (wantsuffix || (ambiguous && !startswith(name, "f") &&
                               !startswith(name, "set"))) {
-      if (Osz(b.xedd->op.rde)) {
-        *p++ = 'w';
-      } else if (Rexw(b.xedd->op.rde)) {
+      if (Osz(rde)) {
+        if (Eamode(rde) != XED_MODE_REAL) {
+          *p++ = 'w';
+        }
+      } else if (Rexw(rde)) {
         *p++ = 'q';
       } else if (ambiguous && !notbyte && IsProbablyByteOp(b.xedd)) {
         *p++ = 'b';

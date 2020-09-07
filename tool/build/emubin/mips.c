@@ -28,7 +28,7 @@ static void Print(uint8_t c) {
 int main(int argc, char *argv[]) {
   int i;
 #ifdef DISINGENUOUS
-  for (i = 0; i < 100 * 1000 * 1000 / 3; ++i) asm("nop");
+  for (i = 0; i < 150 * 1000 * 1000 / 3; ++i) asm("nop");
 #else
   size_t size;
   struct MetalSha256Ctx ctx;

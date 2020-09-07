@@ -34,6 +34,8 @@
  * @return client fd which needs close(), or -1 w/ errno
  */
 int accept4(int fd, void *out_addr, uint32_t *inout_addrsize, int flags) {
+  if (!out_addr) return efault();
+  if (!inout_addrsize) return efault();
   if (!IsWindows()) {
     return accept4$sysv(fd, out_addr, inout_addrsize, flags);
   } else if (isfdkind(fd, kFdSocket)) {

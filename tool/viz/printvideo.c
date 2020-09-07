@@ -936,7 +936,7 @@ static FILE *OpenVideoHttp(void) {
                                      "Content-Length: 0\r\n"
                                      "User-Agent: printvideo/1.o\r\n"
                                      "\r\n"))));
-  CHECK_NE(-1, negotiatehttprequest(sock, req, &reqsize, resp, &respsize,
+  CHECK_NE(-1, NegotiateHttpRequest(sock, req, &reqsize, resp, &respsize,
                                     &resphdrsize, true, 2));
   CHECK_NOTNULL(strstr(resp, "200 OK"));
   CHECK_NOTNULL(strstr(resp, "Content-Type: video/mpeg"));

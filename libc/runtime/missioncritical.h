@@ -136,7 +136,8 @@
     }                                                                         \
   while (0)
 
-interruptfn void __print(const void *, size_t);
+void __print(const void *, size_t);
+void __print_string(const char *);
 
 #define LOAD_DEFAULT_RBX() /* disabled for now b/c clang */
 #define RESTORE_RBX()      /* disabled for now b/c clang */

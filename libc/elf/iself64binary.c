@@ -17,23 +17,11 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/testlib/testlib.h"
-#include "tool/build/lib/x87.h"
+#include "libc/elf/elf.h"
 
-TEST(x87, fprem) {
-  ASSERT_LDBL_EQ(1, fprem(1, -1.5, NULL));
-  ASSERT_LDBL_EQ(1.1766221079117338e-14L,
-                 fprem(12300000000000000.L, .0000000000000123L, NULL));
-}
-
-TEST(x87, fprem1) {
-  ASSERT_LDBL_EQ(-.5, fprem1(1, -1.5, NULL));
-  ASSERT_LDBL_EQ(-5.337789208826618e-16,
-                 fprem1(12300000000000000.L, .0000000000000123L, NULL));
-}
-
-TEST(x87, fpremFlags) {
-  uint32_t sw = 0xffff;
-  ASSERT_LDBL_EQ(1, fprem(1, -1.5, &sw));
-  ASSERT_EQ(0b1011100011111111, sw);
+bool iself64binary(const Elf64_Ehdr *elf, size_t mapsize) {
+  if (mapsize < sizeof(Elf64_Ehdr)) return false;
+  if (memcmp(elf->e_ident, ELFMAG, 4)) return false;
+  return (elf->e_ident[EI_CLASS] == ELFCLASSNONE ||
+          elf->e_ident[EI_CLASS] == ELFCLASS64);
 }

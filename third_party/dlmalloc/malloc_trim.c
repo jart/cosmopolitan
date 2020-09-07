@@ -23,9 +23,9 @@
 int malloc_trim(size_t pad) {
   int result = 0;
   ensure_initialization();
-  if (!PREACTION(gm)) {
-    result = dlmalloc_sys_trim(gm, pad);
-    POSTACTION(gm);
+  if (!PREACTION(g_dlmalloc)) {
+    result = dlmalloc_sys_trim(g_dlmalloc, pad);
+    POSTACTION(g_dlmalloc);
   }
   return result;
 }

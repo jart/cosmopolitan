@@ -165,83 +165,82 @@ long DisFind(struct Dis *d, int64_t addr) {
   return -1;
 }
 
-void Dis(struct Dis *d, struct Machine *m, int64_t addr) {
+static long DisOne(struct Dis *d, struct Machine *m, int64_t addr) {
+  void *r;
+  unsigned k;
+  uint8_t b[15];
+  struct DisOp op;
+  long i, n, symbol;
+  n = 15;
+  if ((symbol = DisFindSym(d, addr)) != -1) {
+    if (d->syms.p[symbol].addr <= addr &&
+        addr < d->syms.p[symbol].addr + d->syms.p[symbol].size) {
+      n = d->syms.p[symbol].size - (addr - d->syms.p[symbol].addr);
+    }
+    if (addr == d->syms.p[symbol].addr && d->syms.p[symbol].name) {
+      op.addr = addr;
+      op.size = 0;
+      op.active = true;
+      DisLabel((struct DisBuilder){d, d->xedd, addr}, d->buf,
+               d->syms.stab + d->syms.p[symbol].name);
+      if (!(op.s = strdup(d->buf))) return -1;
+      APPEND(&d->ops.p, &d->ops.i, &d->ops.n, &op);
+    }
+  }
+  n = MAX(1, MIN(15, n));
+  if (!(r = FindReal(m, addr))) return -1;
+  k = 0x1000 - (addr & 0xfff);
+  if (n <= k) {
+    memcpy(b, r, n);
+  } else {
+    memcpy(b, r, k);
+    if ((r = FindReal(m, addr + k))) {
+      memcpy(b + k, r, n - k);
+    } else {
+      n = k;
+    }
+  }
+  xed_decoded_inst_zero_set_mode(d->xedd, m->mode);
+  xed_instruction_length_decode(d->xedd, b, n);
+  n = d->xedd->op.error ? 1 : d->xedd->length;
+  op.addr = addr;
+  op.size = n;
+  op.active = true;
+  op.s = NULL;
+  APPEND(&d->ops.p, &d->ops.i, &d->ops.n, &op);
+  return n;
+}
+
+long Dis(struct Dis *d, struct Machine *m, int64_t addr, int lines) {
+  int64_t i, j, symbol;
+  DisFreeOps(&d->ops);
+  if ((symbol = DisFindSym(d, addr)) != -1 &&
+      (d->syms.p[symbol].addr < addr &&
+       addr < d->syms.p[symbol].addr + d->syms.p[symbol].size)) {
+    for (i = d->syms.p[symbol].addr; i < addr; i += j) {
+      if ((j = DisOne(d, m, i)) == -1) return -1;
+    }
+  }
+  for (i = 0; i < lines; ++i, addr += j) {
+    if ((j = DisOne(d, m, addr)) == -1) return -1;
+  }
+  return 0;
+}
+
+const char *DisGetLine(struct Dis *d, struct Machine *m, size_t i) {
   char *p;
   void *r[2];
-  bool iscode;
-  int64_t unique;
-  struct DisOp op;
-  long i, j, n, si, max, toto, symbol;
-  unique = 0;
-  max = 999999;
-  DisFreeOps(&d->ops);
-  for (i = 0; i < max; ++i) {
-    xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
-    if ((symbol = DisFindSym(d, addr)) != -1) {
-      iscode = true; /* d->syms.p[symbol].iscode; */
-      n = iscode ? CODELIM : DATALIM;
-      if (d->syms.p[symbol].size) {
-        n = MIN(n, d->syms.p[symbol].size);
-      } else if (symbol + 1 < d->syms.i &&
-                 d->syms.p[symbol + 1].addr > d->syms.p[symbol].addr) {
-        n = MIN(n, d->syms.p[symbol + 1].addr - d->syms.p[symbol].addr);
-      }
-      if (addr == d->syms.p[symbol].addr && d->syms.p[symbol].name) {
-        op.addr = addr;
-        op.unique = unique++;
-        op.size = 0;
-        op.active = true;
-        DisLabel((struct DisBuilder){d, d->xedd, addr}, d->buf,
-                 d->syms.stab + d->syms.p[symbol].name);
-        if (!(op.s = strdup(d->buf))) break;
-        APPEND(&d->ops.p, &d->ops.i, &d->ops.n, &op);
-      }
-    } else {
-      iscode = DisIsText(d, addr);
-      n = CODELIM;
-    }
-    DCHECK_GT(n, 0);
-    DCHECK_LE(n, ARRAYLEN(d->raw));
-    memset(r, 0, sizeof(r));
-    if (!(r[0] = FindReal(m, addr))) {
-      max = MIN(100, max);
-      n = MIN(DATALIM, 0x1000 - (addr & 0xfff));
-      DCHECK_GT(n, 0);
-      memset(d->raw, 0xCC, DATALIM);
-    } else if ((addr & 0xfff) + n <= 0x1000) {
-      memcpy(d->raw, r[0], n);
-    } else if ((r[1] = FindReal(m, ROUNDUP(addr, 0x1000)))) {
-      si = 0x1000 - (addr & 0xfff);
-      memcpy(d->raw, r[0], si);
-      memcpy(d->raw + si, r[1], n - si);
-    } else {
-      n = 0x1000 - (addr & 0xfff);
-      DCHECK_GT(n, 0);
-      memcpy(d->raw, r[0], n);
-    }
-    if (!NoDebug()) memset(d->buf, 0x55, sizeof(d->buf));
-    if (1 || iscode) {
-      xed_instruction_length_decode(d->xedd, d->raw, n);
-      DCHECK_GT(n, 0);
-      p = DisLineCode((struct DisBuilder){d, d->xedd, addr}, d->buf);
-      CHECK_LT(p - d->buf, sizeof(d->buf));
-      n = d->xedd->op.error ? 1 : d->xedd->length;
-      DCHECK_GT(n, 0);
-    } else {
-      p = DisLineData((struct DisBuilder){d, d->xedd, addr}, d->buf, d->raw, n);
-      CHECK_LT(p - d->buf, sizeof(d->buf));
-    }
-    DCHECK_LT(p, d->buf + sizeof(d->buf));
-    DCHECK_LT(strlen(d->buf), sizeof(d->buf));
-    op.addr = addr;
-    op.unique = unique++;
-    op.size = n;
-    op.active = true;
-    if (!(op.s = strdup(d->buf))) break;
-    APPEND(&d->ops.p, &d->ops.i, &d->ops.n, &op);
-    addr += n;
-    n = 0;
-  }
+  uint8_t b[15];
+  if (i >= d->ops.i) return "";
+  if (d->ops.p[i].s) return d->ops.p[i].s;
+  DCHECK_LE(d->ops.p[i].size, 15);
+  xed_decoded_inst_zero_set_mode(d->xedd, m->mode);
+  xed_instruction_length_decode(
+      d->xedd, AccessRam(m, d->ops.p[i].addr, d->ops.p[i].size, r, b, true),
+      d->ops.p[i].size);
+  p = DisLineCode((struct DisBuilder){d, d->xedd, d->ops.p[i].addr}, d->buf);
+  CHECK_LT(p - d->buf, sizeof(d->buf));
+  return d->buf;
 }
 
 void DisFreeOp(struct DisOp *o) {

@@ -192,7 +192,6 @@ int main(int argc, char *argv[]) {
   SHOWOP(hint);
   SHOWOP(ild_f2);
   SHOWOP(ild_f3);
-  SHOWOP(ild_seg);
   SHOWOP(imm1_bytes);
   SHOWOP(imm_width);
   SHOWOP(imm_signed);

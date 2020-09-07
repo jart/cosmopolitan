@@ -32,17 +32,18 @@
 
 static char __ubsan_buf[256];
 
-static const char kUbsanTypeCheckKinds[] = "load of\0"
-                                           "store to\0"
-                                           "reference binding to\0"
-                                           "member access within\0"
-                                           "member call on\0"
-                                           "constructor call on\0"
-                                           "downcast of\0"
-                                           "downcast of\0"
-                                           "upcast of\0"
-                                           "cast to virtual base of\0"
-                                           "\0";
+static const char kUbsanTypeCheckKinds[] = "\
+load of\0\
+store to\0\
+reference binding to\0\
+member access within\0\
+member call on\0\
+constructor call on\0\
+downcast of\0\
+downcast of\0\
+upcast of\0\
+cast to virtual base of\0\
+\0";
 
 void __ubsan_abort(const struct UbsanSourceLocation *loc,
                    const char *description) {

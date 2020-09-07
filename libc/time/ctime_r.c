@@ -20,7 +20,7 @@
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 
-char *ctime_r(const int64_t *timep, char *buf /*[64]*/) {
+char *ctime_r(const int64_t *timep, char buf[hasatleast 64]) {
   struct tm date[1];
   return asctime_r(localtime_r(timep, date), buf);
 }

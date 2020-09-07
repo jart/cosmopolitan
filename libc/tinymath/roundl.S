@@ -30,19 +30,17 @@ tinymath_roundl:
 	.profilable
 	push	%rax
 	fldt	16(%rbp)
+	fnstcw	-6(%rbp)
 	fnstcw	-8(%rbp)
-	movzwl	-8(%rbp),%edx
-	and	$0b11110011,%dh			# RC (Rounding Control)
-	or	$0b00000100,%dh			# →-∞ a.k.a. floor()
-	mov	%dx,-4(%rbp)
+	orb	$0b00001100,-7(%rbp)		# RC = →0
 	fxam					# C1 is set to sign bit
 	fnstsw
 	fabs
 	test	$FPU_C1>>8,%ah
 	fadds	.Lhalf(%rip)
-	fldcw	-4(%rbp)
-	frndint
 	fldcw	-8(%rbp)
+	frndint
+	fldcw	-6(%rbp)
 	je	1f
 	fchs
 1:	leave

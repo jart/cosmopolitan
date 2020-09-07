@@ -39,7 +39,7 @@ _start:	test	%rdi,%rdi
 	lea	8(%rsp),%rsi			# argv
 	lea	24(%rsp,%rbx,8),%rdx		# envp
 	.frame0
-	bofram	9f
+/	bofram	9f
 	.weak	idata.iat,idata.iatend
 	ezlea	missingno,ax			# make win32 imps noop
 	ezlea	idata.iat,di

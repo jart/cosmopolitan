@@ -26,6 +26,13 @@
 #include "tool/build/lib/modrm.h"
 #include "tool/build/lib/throw.h"
 
+#define kOpCvt0f2a  0
+#define kOpCvtt0f2c 4
+#define kOpCvt0f2d  8
+#define kOpCvt0f5a  12
+#define kOpCvt0f5b  16
+#define kOpCvt0fE6  20
+
 static double SseRoundDouble(struct Machine *m, double x) {
   switch (m->sse.rc) {
     case 0:
@@ -285,7 +292,7 @@ static void OpVdqWpdCvtpd2dq(struct Machine *m, uint32_t rde) {
   memcpy(XmmRexrReg(m, rde), n, 8);
 }
 
-void OpCvt(struct Machine *m, uint32_t rde, unsigned long op) {
+static void OpCvt(struct Machine *m, uint32_t rde, unsigned long op) {
   switch (op | Rep(rde) | Osz(rde)) {
     case kOpCvt0f2a + 0:
       OpVpsQpiCvtpi2ps(m, rde);
@@ -354,6 +361,30 @@ void OpCvt(struct Machine *m, uint32_t rde, unsigned long op) {
       OpVpdWdqCvtdq2pd(m, rde);
       break;
     default:
-      OpUd(m);
+      OpUd(m, rde);
   }
+}
+
+void OpCvt0f2a(struct Machine *m, uint32_t rde) {
+  OpCvt(m, rde, kOpCvt0f2a);
+}
+
+void OpCvtt0f2c(struct Machine *m, uint32_t rde) {
+  OpCvt(m, rde, kOpCvtt0f2c);
+}
+
+void OpCvt0f2d(struct Machine *m, uint32_t rde) {
+  OpCvt(m, rde, kOpCvt0f2d);
+}
+
+void OpCvt0f5a(struct Machine *m, uint32_t rde) {
+  OpCvt(m, rde, kOpCvt0f5a);
+}
+
+void OpCvt0f5b(struct Machine *m, uint32_t rde) {
+  OpCvt(m, rde, kOpCvt0f5b);
+}
+
+void OpCvt0fE6(struct Machine *m, uint32_t rde) {
+  OpCvt(m, rde, kOpCvt0fE6);
 }

@@ -14,7 +14,7 @@ forceinline void *repstosb(void *dest, unsigned char al, size_t cx) {
     void *Di = (DI);                                 \
     size_t Cx = (CX);                                \
     unsigned char Al = (AL);                         \
-    asm("rep stosb"                                  \
+    asm("rep stosb %b5,(%0)"                         \
         : "=D"(Di), "=c"(Cx), "=m"(*(char(*)[Cx])Di) \
         : "0"(Di), "1"(Cx), "a"(Al));                \
     Di;                                              \

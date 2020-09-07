@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/arraylist.h"
+#include "libc/alg/arraylist2.h"
 #include "libc/bits/safemacros.h"
 #include "libc/mem/mem.h"
 #include "libc/str/knuthmultiplicativehash.h"
@@ -92,12 +93,13 @@ size_t interncount(const struct Interner *t) {
  * @note use consistent size w/ non-string items
  */
 size_t internobj(struct Interner *t, const void *data, size_t size) {
-  struct InternerObject *it = (struct InternerObject *)t;
+  char *item;
   unsigned hash;
   size_t i, step;
-  unsigned char *item;
+  struct InternerObject *it;
   step = 0;
   item = data;
+  it = (struct InternerObject *)t;
   hash = max(1, KnuthMultiplicativeHash32(data, size));
   do {
     /* it is written that triangle probe halts iff i<n/2 && popcnt(n)==1 */
@@ -117,7 +119,8 @@ size_t internobj(struct Interner *t, const void *data, size_t size) {
     } while (it->p[i].hash);
   }
   it->p[i].hash = hash;
-  return (it->p[i].index = concat(&it->pool, item, size));
+  return (it->p[i].index =
+              CONCAT(&it->pool.p, &it->pool.i, &it->pool.n, item, size));
 }
 
 /**

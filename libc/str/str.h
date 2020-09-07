@@ -471,8 +471,6 @@ char *_strncpy(char *, const char *, size_t) asm("strncpy") memcpyesque;
 
 #else /* hosted/sse2/unbloat */
 
-#define memmove(DEST, SRC, SIZE) __memcpy((DEST), (SRC), (SIZE))
-
 #define mempcpy(DEST, SRC, SIZE)                                           \
   ({                                                                       \
     void *Rdi, *Dest = (DEST);                                             \
@@ -512,21 +510,6 @@ char *_strncpy(char *, const char *, size_t) asm("strncpy") memcpyesque;
   })
 
 #endif /* hosted/sse2/unbloat */
-
-#if __STDC_VERSION__ + 0 >= 201112
-#define strlen(s)                                         \
-  chooseexpr((typescompatible(typeof(s), const char[]) && \
-              isconstant(((const char *)(s))[0])),        \
-             sizeof(s) - 1,                               \
-             _Generic(*(s), wchar_t                       \
-                      : wcslen, char16_t                  \
-                      : strlen16, default                 \
-                      : _strlen)(s))
-#else
-#define strlen(s)                                                       \
-  chooseexpr(isconstant(s) && typescompatible(typeof(s), const char[]), \
-             __builtin_strlen(s), _strlen(s))
-#endif /* C11+ */
 
 #define pututf16(BUF, SIZE, CH, AWESOME) __pututf16(BUF, SIZE, CH, AWESOME)
 #define getutf16(BUF, CHPTR)             __getutf16(BUF, CHPTR)

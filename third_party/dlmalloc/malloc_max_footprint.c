@@ -1,5 +1,5 @@
-#include "third_party/dlmalloc/dlmalloc.h"
 #include "libc/mem/mem.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 
 /**
  * Returns the maximum number of bytes obtained from the system. This
@@ -11,4 +11,6 @@
  * defined, this function does not use them, so results might not be up
  * to date.
  */
-size_t malloc_max_footprint(void) { return gm->max_footprint; }
+size_t malloc_max_footprint(void) {
+  return g_dlmalloc->max_footprint;
+}

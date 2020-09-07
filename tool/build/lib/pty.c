@@ -31,18 +31,39 @@
 #include "libc/x/x.h"
 #include "tool/build/lib/pty.h"
 
-struct MachinePty *MachinePtyNew(unsigned yn, unsigned xn) {
-  struct MachinePty *pty;
-  DCHECK_GT(yn, 0);
-  DCHECK_GT(xn, 0);
-  pty = xcalloc(1, sizeof(struct MachinePty));
+struct MachinePty *MachinePtyNew(void) {
+  return xcalloc(1, sizeof(struct MachinePty));
+}
+
+void MachinePtyResize(struct MachinePty *pty, int yn, int xn) {
+  unsigned y, ym, xm, y0;
+  uint32_t *wcs, *fgs, *bgs, *prs;
+  if (yn <= 0 || xn <= 0) return;
+  wcs = xcalloc(yn * xn, 4);
+  fgs = xcalloc(yn * xn, 4);
+  bgs = xcalloc(yn * xn, 4);
+  prs = xcalloc(yn * xn, 4);
+  y0 = yn > pty->y + 1 ? 0 : pty->y + 1 - yn;
+  ym = MIN(yn, pty->yn) + y0;
+  xm = MIN(xn, pty->xn);
+  for (y = y0; y < ym; ++y) {
+    memcpy(wcs + y * xn, pty->wcs + y * pty->xn, xm * 4);
+    memcpy(fgs + y * xn, pty->fgs + y * pty->xn, xm * 4);
+    memcpy(bgs + y * xn, pty->bgs + y * pty->xn, xm * 4);
+    memcpy(prs + y * xn, pty->prs + y * pty->xn, xm * 4);
+  }
+  free(pty->wcs);
+  free(pty->fgs);
+  free(pty->bgs);
+  free(pty->prs);
+  pty->wcs = wcs;
+  pty->fgs = fgs;
+  pty->bgs = bgs;
+  pty->prs = prs;
+  pty->y = MIN(pty->y, yn - 1);
+  pty->x = MIN(pty->x, xn - 1);
   pty->yn = yn;
   pty->xn = xn;
-  pty->wcs = xcalloc(yn * xn, sizeof(pty->wcs[0]));
-  pty->fgs = xcalloc(yn * xn, sizeof(pty->fgs[0]));
-  pty->bgs = xcalloc(yn * xn, sizeof(pty->bgs[0]));
-  pty->prs = xcalloc(yn * xn, sizeof(pty->prs[0]));
-  return pty;
 }
 
 void MachinePtyFree(struct MachinePty *pty) {
@@ -234,7 +255,7 @@ static void MachinePtySelectGraphicsRendition(struct MachinePty *pty) {
                 t = kSgrFg;
                 break;
               case 39:
-                pty->pr &= kMachinePtyFg;
+                pty->pr &= ~kMachinePtyFg;
                 break;
               case 100 ... 107:
                 code[0] -= 100 - 40;
@@ -248,7 +269,7 @@ static void MachinePtySelectGraphicsRendition(struct MachinePty *pty) {
                 t = kSgrBg;
                 break;
               case 49:
-                pty->pr &= kMachinePtyBg;
+                pty->pr &= ~kMachinePtyBg;
                 break;
               default:
                 break;
@@ -368,6 +389,7 @@ static void MachinePtyEscAppend(struct MachinePty *pty, char c) {
 ssize_t MachinePtyWrite(struct MachinePty *pty, const void *data, size_t n) {
   int i;
   const uint8_t *p;
+  if (!pty->yn || !pty->xn) return 0;
   for (p = data, i = 0; i < n; ++i) {
     switch (pty->state) {
       case kMachinePtyAscii:
@@ -464,7 +486,7 @@ ssize_t MachinePtyWrite(struct MachinePty *pty, const void *data, size_t n) {
 void MachinePtyAppendLine(struct MachinePty *pty, struct Buffer *buf,
                           unsigned y) {
   uint32_t x, i, fg, bg, pr, wc, w;
-  CHECK_LT(y, pty->yn);
+  if (y >= pty->yn) return;
   for (fg = bg = pr = x = 0; x < pty->xn; x += w) {
     i = y * pty->xn + x;
     wc = pty->wcs[i];

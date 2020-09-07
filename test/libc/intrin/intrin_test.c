@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/progn.h"
+#include "libc/intrin/mpsadbw.h"
 #include "libc/intrin/pabsb.h"
 #include "libc/intrin/pabsd.h"
 #include "libc/intrin/pabsw.h"
@@ -1422,7 +1423,8 @@ TEST(pabsb, fuzz) {
     RngSet(x, sizeof(x));
     pabsb(a, x);
     (pabsb)(b, x);
-    ASSERT_EQ(0, memcmp(a, b, 16));
+    ASSERT_EQ(0, memcmp(a, b, 16), "%d\n\t%`#.16s\n\t%`#.16s\n\t%`#.16s", i, x,
+              a, b);
   }
 }
 
@@ -1972,6 +1974,21 @@ TEST(pmulhrsw, fuzz) {
     pmulhrsw(a, (void *)a, y);
     (pmulhrsw)(b, (void *)b, y);
     ASSERT_EQ(0, memcmp(a, b, 16));
+  }
+}
+
+TEST(mpsadbw, fuzz) {
+  int i, j;
+  uint16_t a[8], b[8];
+  uint8_t x[16], y[16];
+  for (i = 0; i < 100; ++i) {
+    RngSet(x, sizeof(x));
+    RngSet(y, sizeof(y));
+    for (j = 0; j < 8; ++j) {
+      mpsadbw(a, x, y, j);
+      (mpsadbw)(b, x, y, j);
+      ASSERT_EQ(0, memcmp(a, b, 16), "%d %d", i, j);
+    }
   }
 }
 

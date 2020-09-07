@@ -42,7 +42,7 @@ static pureconst long AsMilliseconds(long double ts) {
  * @param singleshot should be true w/ connection: close
  * @return 0 on success, or -1 w/ errno
  */
-int negotiatehttprequest(int sock, const char *req, uint32_t *inout_reqsize,
+int NegotiateHttpRequest(int sock, const char *req, uint32_t *inout_reqsize,
                          char *resp, uint32_t *inout_respsize,
                          uint32_t *out_resphdrsize, bool singleshot,
                          long double timeout) {

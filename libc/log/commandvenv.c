@@ -20,6 +20,7 @@
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/log/log.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/ok.h"
 
@@ -31,12 +32,12 @@ nodiscard char *commandvenv(const char *var, const char *cmd) {
   char pathbuf[PATH_MAX];
   if ((exepath = getenv(var))) {
     if (!isempty(exepath) && access(exepath, X_OK) != -1) {
-      return exepath;
+      return strdup(exepath);
     } else {
       return NULL;
     }
   } else if ((exepath = commandv(cmd, pathbuf))) {
-    return exepath;
+    return strdup(exepath);
   } else {
     return NULL;
   }

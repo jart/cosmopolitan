@@ -17,22 +17,14 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/reverse.h"
 #include "libc/assert.h"
 #include "libc/conv/itoa.h"
 
-size_t uint64toarray_fixed16(uint64_t i, char a[hasatleast 17], uint8_t b) {
-  size_t j;
-  assert(b <= 64);
-  assert(b % 4 == 0);
-  j = 0;
-  if (b) {
-    do {
-      a[j++] = "0123456789abcdef"[i & 15];
-      i >>= 4;
-    } while (b -= 4);
-  }
-  a[j] = '\0';
-  reverse(a, j);
-  return j;
+size_t uint64toarray_fixed16(uint64_t x, char b[hasatleast 17], uint8_t k) {
+  int i;
+  char *p;
+  assert(k <= 64 && !(k & 3));
+  for (p = b; k > 0;) *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
+  *p = '\0';
+  return p - b;
 }

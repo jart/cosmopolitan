@@ -41,7 +41,7 @@
  * @see ape/lib/vidya.h
  */
 #ifndef VIDYA_MODE
-#define VIDYA_MODE VIDYA_MODE_MDA
+#define VIDYA_MODE VIDYA_MODE_CGA
 #endif
 
 /* FPU Control Word (x87) Exception Masks

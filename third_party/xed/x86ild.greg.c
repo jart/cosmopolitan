@@ -18,7 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
+#include "libc/dce.h"
 #include "libc/macros.h"
+#include "libc/nexgen32e/bsr.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "third_party/xed/avx.h"
@@ -109,7 +111,7 @@ extern const uint8_t xed_disp_bits_2d[XED_ILD_MAP2][256] hidden;
 
 static const struct XedDenseMagnums {
   unsigned vex_prefix_recoding[4];
-  xed_bits_t eamode_table[2][3];
+  xed_bits_t eamode[2][3];
   xed_bits_t BRDISPz_BRDISP_WIDTH[4];
   xed_bits_t MEMDISPv_DISP_WIDTH[4];
   xed_bits_t SIMMz_IMM_WIDTH[4];
@@ -306,11 +308,13 @@ static const struct XedDenseMagnums {
             [1][1][2] = 0x3,
             [1][0][2] = 0x3,
         },
-    .eamode_table =
+    .eamode =
         {
+            [0][XED_MODE_REAL] = XED_MODE_REAL,
             [0][XED_MODE_LEGACY] = XED_MODE_LEGACY,
             [0][XED_MODE_LONG] = XED_MODE_LONG,
             [1][XED_MODE_REAL] = XED_MODE_LEGACY,
+            [1][XED_MODE_LEGACY] = XED_MODE_REAL,
             [1][XED_MODE_LONG] = XED_MODE_LEGACY,
         },
 };
@@ -511,8 +515,9 @@ privileged static int xed_consume_byte(struct XedDecodedInst *d) {
 }
 
 privileged static void xed_prefix_scanner(struct XedDecodedInst *d) {
-  xed_bits_t first_f2f3, last_f2f3;
+  xed_bits_t first_f2f3, last_f2f3, seg;
   xed_bits_t b, max_bytes, length, nprefixes, nseg_prefixes, nrexes, rex;
+  seg = 0;
   length = d->length;
   max_bytes = d->op.max_bytes;
   first_f2f3 = last_f2f3 = rex = nrexes = nprefixes = nseg_prefixes = 0;
@@ -534,15 +539,13 @@ privileged static void xed_prefix_scanner(struct XedDecodedInst *d) {
         /* fallthrough */
       case 0x26:
       case 0x36:
-        if (!xed3_mode_64b(d)) {
-          d->op.ild_seg = b;
-        }
+        if (!xed3_mode_64b(d)) seg = b;
         nseg_prefixes++;
         rex = 0;
         break;
       case 0x64:
       case 0x65:
-        d->op.ild_seg = b;
+        seg = b;
         nseg_prefixes++;
         rex = 0;
         break;
@@ -595,24 +598,24 @@ out:
   } else {
     d->op.rep = last_f2f3;
   }
-  switch (d->op.ild_seg) {
-    case 0x2e:
-      d->op.seg_ovd = 1;
+  switch (seg) {
+    case 0x26: /* ES */
+      d->op.seg_ovd = 0 + 1;
       break;
-    case 0x3e:
-      d->op.seg_ovd = 2;
+    case 0x2e: /* CS */
+      d->op.seg_ovd = 1 + 1;
       break;
-    case 0x26:
-      d->op.seg_ovd = 3;
+    case 0x36: /* SS */
+      d->op.seg_ovd = 2 + 1;
       break;
-    case 0x64:
-      d->op.seg_ovd = 4;
+    case 0x3e: /* DS */
+      d->op.seg_ovd = 3 + 1;
       break;
-    case 0x65:
-      d->op.seg_ovd = 5;
+    case 0x64: /* FS */
+      d->op.seg_ovd = 4 + 1;
       break;
-    case 0x36:
-      d->op.seg_ovd = 6;
+    case 0x65: /* GS */
+      d->op.seg_ovd = 5 + 1;
       break;
     default:
       break;
@@ -630,7 +633,7 @@ privileged static void xed_get_next_as_opcode(struct XedDecodedInst *d) {
     b = d->bytes[length];
     d->op.opcode = b;
     d->length++;
-    d->op.srm = xed_modrm_rm(b);
+    /* d->op.srm = xed_modrm_rm(b); */
   } else {
     xed_too_short(d);
   }
@@ -719,7 +722,7 @@ privileged static void xed_opcode_scanner(struct XedDecodedInst *d) {
       return;
     }
   }
-  d->op.srm = xed_modrm_rm(d->op.opcode);
+  /* d->op.srm = xed_modrm_rm(d->op.opcode); */
 }
 
 privileged static bool xed_is_bound_instruction(struct XedDecodedInst *d) {
@@ -784,12 +787,9 @@ privileged static void xed_evex_scanner(struct XedDecodedInst *d) {
 }
 
 privileged static void xed_evex_imm_scanner(struct XedDecodedInst *d) {
-  bool sex_imm;
   uint64_t uimm0;
-  unsigned pos_imm;
   uint8_t *itext, *imm_ptr;
   xed_bits_t length, imm_bytes, imm1_bytes, max_bytes;
-  pos_imm = 0;
   imm_ptr = 0;
   itext = d->bytes;
   xed_set_imm_bytes(d);
@@ -829,32 +829,35 @@ privileged static void xed_evex_imm_scanner(struct XedDecodedInst *d) {
       return;
     }
   }
-  pos_imm = d->op.pos_imm;
-  imm_ptr = itext + pos_imm;
-  sex_imm = d->op.imm_signed;
-  switch (imm_bytes) {
-    case 0:
-      uimm0 = 0;
-      break;
-    case 1:
-      uimm0 = *imm_ptr;
-      if (sex_imm) uimm0 = (int8_t)uimm0;
-      break;
-    case 2:
-      uimm0 = READ16LE(imm_ptr);
-      if (sex_imm) uimm0 = (int16_t)uimm0;
-      break;
-    case 4:
-      uimm0 = READ32LE(imm_ptr);
-      if (sex_imm) uimm0 = (int32_t)uimm0;
-      break;
-    case 8:
-      uimm0 = READ64LE(imm_ptr);
-      break;
-    default:
-      unreachable;
+  imm_ptr = itext + d->op.pos_imm;
+  if (imm_bytes) {
+    switch (d->op.imm_signed << 2 | bsr(imm_bytes)) {
+      case 0b000:
+        d->op.uimm0 = *imm_ptr;
+        break;
+      case 0b100:
+        d->op.uimm0 = (int8_t)*imm_ptr;
+        break;
+      case 0b001:
+        d->op.uimm0 = READ16LE(imm_ptr);
+        break;
+      case 0b101:
+        d->op.uimm0 = (int16_t)READ16LE(imm_ptr);
+        break;
+      case 0b010:
+        d->op.uimm0 = READ32LE(imm_ptr);
+        break;
+      case 0b110:
+        d->op.uimm0 = (int32_t)READ32LE(imm_ptr);
+        break;
+      case 0b011:
+      case 0b111:
+        d->op.uimm0 = READ64LE(imm_ptr);
+        break;
+      default:
+        break;
+    }
   }
-  d->op.uimm0 = uimm0;
 }
 
 privileged static void xed_vex_c4_scanner(struct XedDecodedInst *d) {
@@ -916,56 +919,6 @@ privileged static void xed_vex_c5_scanner(struct XedDecodedInst *d) {
   }
 }
 
-privileged static void xed_xop_scanner(struct XedDecodedInst *d) {
-  union XedAvxC4Payload1 xop_byte1;
-  union XedAvxC4Payload2 xop_byte2;
-  xed_bits_t map, max_bytes, length;
-  length = d->length;
-  max_bytes = d->op.max_bytes;
-  if (length + 1 < max_bytes) {
-    if (xed_modrm_reg(d->bytes[d->length + 1])) {
-      length++;
-    } else {
-      return; /* not xop it's pop evq lool */
-    }
-  } else {
-    xed_too_short(d);
-    return;
-  }
-  if (length + 2 < max_bytes) {
-    xop_byte1.u32 = d->bytes[length];
-    xop_byte2.u32 = d->bytes[length + 1];
-    map = xop_byte1.s.map;
-    if (map == 0x9) {
-      d->op.map = XED_ILD_MAP_XOP9;
-      d->op.imm_width = 0;
-    } else if (map == 0x8) {
-      d->op.map = XED_ILD_MAP_XOP8;
-      d->op.imm_width = xed_bytes2bits(1);
-    } else if (map == 0xA) {
-      d->op.map = XED_ILD_MAP_XOPA;
-      d->op.imm_width = xed_bytes2bits(4);
-    } else {
-      xed_bad_map(d);
-    }
-    d->op.rexr = ~xop_byte1.s.r_inv & 1;
-    d->op.rexx = ~xop_byte1.s.x_inv & 1;
-    d->op.rexb = (xed3_mode_64b(d) & ~xop_byte1.s.b_inv) & 1;
-    d->op.rexw = xop_byte2.s.w & 1;
-    d->op.vexdest3 = xop_byte2.s.v3;
-    d->op.vexdest210 = xop_byte2.s.vvv210;
-    d->op.vl = xop_byte2.s.l;
-    d->op.vex_prefix = kXed.vex_prefix_recoding[xop_byte2.s.pp];
-    d->op.vexvalid = 3;
-    length += 2;
-    d->length = length;
-    xed_evex_vex_opcode_scanner(d);
-  } else {
-    d->length = length;
-    xed_too_short(d);
-  }
-}
-
 privileged static void xed_vex_scanner(struct XedDecodedInst *d) {
   if (!d->op.out_of_bytes) {
     switch (d->bytes[d->length]) {
@@ -974,11 +927,6 @@ privileged static void xed_vex_scanner(struct XedDecodedInst *d) {
         break;
       case 0xC4:
         xed_vex_c4_scanner(d);
-        break;
-      case 0x8F:
-        if (!d->op.is_intel_specific) {
-          xed_xop_scanner(d);
-        }
         break;
       default:
         break;
@@ -1001,8 +949,11 @@ privileged static void xed_bad_ll_check(struct XedDecodedInst *d) {
 }
 
 privileged static void xed_set_has_modrm(struct XedDecodedInst *d) {
-  d->op.has_modrm =
-      d->op.map >= XED_ILD_MAP2 || xed_has_modrm_2d[d->op.map][d->op.opcode];
+  if (d->op.map < ARRAYLEN(xed_has_modrm_2d)) {
+    d->op.has_modrm = xed_has_modrm_2d[d->op.map][d->op.opcode];
+  } else {
+    d->op.has_modrm = 1;
+  }
 }
 
 privileged static void xed_modrm_scanner(struct XedDecodedInst *d) {
@@ -1026,7 +977,7 @@ privileged static void xed_modrm_scanner(struct XedDecodedInst *d) {
       if (has_modrm != XED_ILD_HASMODRM_IGNORE_MOD) {
         asz = d->op.asz;
         mode = d->op.mode;
-        eamode = kXed.eamode_table[asz][mode];
+        eamode = kXed.eamode[asz][mode];
         d->op.disp_width =
             xed_bytes2bits(xed_has_disp_regular[eamode][mod][rm]);
         d->op.has_sib = xed_has_sib_table[eamode][mod][rm];
@@ -1190,16 +1141,14 @@ privileged static void xed_decode_instruction_length(
 }
 
 privileged static void xed_encode_rde(struct XedDecodedInst *x) {
-  /* fragile examples:        addb, cmpxchgb */
-  /* fragile counterexamples: btc, bsr, etc. */
   const uint8_t kWordLog2[2][2][2] = {{{2, 3}, {1, 3}}, {{0, 0}, {0, 0}}};
-  x->op.rde = x->op.rep << 30 |
-              kWordLog2[~x->op.opcode & 1][x->op.osz][x->op.rexw] << 28 |
-              x->op.mod << 22 | x->op.rexw << 11 | x->op.osz << 5 |
-              x->op.asz << 17 | (x->op.rexx << 3 | x->op.index) << 24 |
-              (x->op.rexb << 3 | x->op.base) << 18 |
+  uint32_t osz = x->op.osz ^ x->op.realmode;
+  x->op.rde = kWordLog2[~x->op.opcode & 1][osz][x->op.rexw] << 28 |
+              x->op.mode << 26 | kXed.eamode[x->op.asz][x->op.mode] << 24 |
+              x->op.rep << 30 | x->op.mod << 22 | x->op.asz << 17 |
+              x->op.seg_ovd << 18 | x->op.rexw << 6 | osz << 5 |
               (x->op.rex << 4 | x->op.rexb << 3 | x->op.srm) << 12 |
-              (x->op.rex << 4 | x->op.rexb << 3 | x->op.rm) << 6 |
+              (x->op.rex << 4 | x->op.rexb << 3 | x->op.rm) << 7 |
               (x->op.rex << 4 | x->op.rexr << 3 | x->op.reg);
 }
 
@@ -1225,13 +1174,8 @@ privileged struct XedDecodedInst *xed_decoded_inst_zero_set_mode(
  */
 privileged enum XedError xed_instruction_length_decode(
     struct XedDecodedInst *xedd, const void *itext, size_t bytes) {
-  if (bytes >= 16) {
-    __builtin_memcpy(xedd->bytes, itext, 16);
-    xedd->op.max_bytes = XED_MAX_INSTRUCTION_BYTES;
-  } else {
-    __builtin_memcpy(xedd->bytes, itext, bytes);
-    xedd->op.max_bytes = bytes;
-  }
+  __builtin_memcpy(xedd->bytes, itext, MIN(15, bytes));
+  xedd->op.max_bytes = MIN(15, bytes);
   xed_decode_instruction_length(xedd);
   xed_encode_rde(xedd);
   if (!xedd->op.out_of_bytes) {

@@ -27,64 +27,6 @@
 /	since ASAN has the same stylistic hugeness as UBSAN.
 /	We also guard all the functions, against reentrancy.
 
-__asan_load1:
-	push	$1
-	jmp	OnLoad
-	.endfn	__asan_load1,globl
-__asan_load2:
-	push	$2
-	jmp	OnLoad
-	.endfn	__asan_load2,globl
-__asan_load4:
-	push	$4
-	jmp	OnLoad
-	.endfn	__asan_load4,globl
-__asan_load8:
-	push	$8
-	jmp	OnLoad
-	.endfn	__asan_load8,globl
-__asan_load16:
-	push	$16
-	jmp	OnLoad
-	.endfn	__asan_load16,globl
-__asan_load32:
-	push	$32
-/	𝑠𝑙𝑖𝑑𝑒
-	.endfn	__asan_load32,globl
-OnLoad:	pop	%rsi
-	ezlea	__asan_loadN,ax
-	jmp	__asan_report_noreentry
-	.endfn	OnStore
-
-__asan_store1:
-	push	$1
-	jmp	OnStore
-	.endfn	__asan_store1,globl
-__asan_store2:
-	push	$2
-	jmp	OnStore
-	.endfn	__asan_store2,globl
-__asan_store4:
-	push	$4
-	jmp	OnStore
-	.endfn	__asan_store4,globl
-__asan_store8:
-	push	$8
-	jmp	OnStore
-	.endfn	__asan_store8,globl
-__asan_store16:
-	push	$16
-	jmp	OnStore
-	.endfn	__asan_store16,globl
-__asan_store32:
-	push	$32
-/	𝑠𝑙𝑖𝑑𝑒
-	.endfn	__asan_store32,globl
-OnStore:pop	%rsi
-	ezlea	__asan_storeN,ax
-	jmp	__asan_report_noreentry
-	.endfn	OnStore
-
 __asan_report_load1:
 	push	$1
 	jmp	OnReportLoad
@@ -264,10 +206,6 @@ __asan_after_dynamic_init:
 	ret
 	.endfn	__asan_after_dynamic_init,globl
 
-__asan_unregister_globals:
-	ret
-	.endfn	__asan_unregister_globals,globl
-
 __asan_version_mismatch_check_v8:
 	ret
 	.endfn	__asan_version_mismatch_check_v8,globl
@@ -287,7 +225,7 @@ __asan_version_mismatch_check_v8:
 
 	.rodata.cst4
 __asan_option_detect_stack_use_after_return:
-	.long	1
+	.long	0
 	.endobj	__asan_option_detect_stack_use_after_return,globl
 	.previous
 

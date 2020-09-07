@@ -243,7 +243,7 @@ scall	lookup_dcookie		0xffffffffffff00d4	globl
 scall	epoll_create		0xffffffffffff00d5	globl
 scall	epoll_wait		0xffffffffffff00e8	globl
 scall	epoll_ctl		0xffffffffffff00e9	globl
-scall	getdents		0x00630110ffff004e	globl hidden
+scall	getdents		0x00630110ffff00d9	globl hidden # getdents64 on linux
 scall	set_tid_address		0xffffffffffff00da	globl
 scall	restart_syscall		0xffffffffffff00db	globl
 scall	semtimedop		0xffffffffffff00dc	globl

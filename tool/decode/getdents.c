@@ -17,17 +17,34 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
-#include "libc/runtime/runtime.h"
-#include "net/http/http.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/o.h"
 
-void freehttprequest(struct HttpRequest **req) {
-  if (*req) {
-    critbit0_clear(&(*req)->headers);
-    free_s(&(*req)->method.p);
-    free_s(&(*req)->scratch.p);
-    free_s(&(*req)->uri.p);
-    free_s(&(*req)->version.p);
-    free_s(req);
+int main(int argc, char *argv[]) {
+  char *p;
+  int i, j, rc, fd;
+  char16_t glyphs[17] = {0};
+  p = malloc(4096);
+  fd = open(".", O_RDONLY | O_DIRECTORY | O_CLOEXEC, 0);
+  if ((rc = getdents(fd, p, 4096)) != -1) {
+    for (i = 0; i < ROUNDUP(rc, 16); ++i) {
+      if (i % 16 == 0) printf("%08x  ", i);
+      if (i < rc) {
+        glyphs[i % 16] = kCp437[p[i] & 0xff];
+        printf("%02x ", p[i] & 0xff);
+      } else {
+        glyphs[i % 16] = u'\0';
+        printf("   ");
+      }
+      if (i % 8 == 7) printf(" ");
+      if (i % 16 == 15) printf("%hs\n", glyphs);
+    }
   }
+  close(fd);
+  free(p);
+  return 0;
 }

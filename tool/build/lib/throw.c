@@ -20,6 +20,7 @@
 #include "libc/log/check.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "tool/build/lib/address.h"
 #include "tool/build/lib/throw.h"
 
 static bool IsHaltingInitialized(struct Machine *m) {
@@ -39,7 +40,7 @@ void ThrowDivideError(struct Machine *m) {
 
 void ThrowSegmentationFault(struct Machine *m, int64_t va) {
   m->faultaddr = va;
-  if (m->xedd) m->ip -= m->xedd->length;
+  m->ip -= m->xedd->length;
   HaltMachine(m, kMachineSegmentationFault);
 }
 
@@ -47,15 +48,12 @@ void ThrowProtectionFault(struct Machine *m) {
   HaltMachine(m, kMachineProtectionFault);
 }
 
-void OpUd(struct Machine *m) {
+void OpUd(struct Machine *m, uint32_t rde) {
+  DebugBreak();
   m->ip -= m->xedd->length;
   HaltMachine(m, kMachineUndefinedInstruction);
 }
 
-void OpHlt(struct Machine *m) {
+void OpHlt(struct Machine *m, uint32_t rde) {
   HaltMachine(m, kMachineHalt);
-}
-
-void OpInterrupt(struct Machine *m, int i) {
-  HaltMachine(m, i);
 }

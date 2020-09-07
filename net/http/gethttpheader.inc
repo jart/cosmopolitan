@@ -1,5 +1,5 @@
-/* ANSI-C code produced by gperf version 3.0.4 */
-/* Command-line: gperf net/http/gethttpheader.gperf  */
+/* ANSI-C code produced by gperf version 3.1 */
+/* Command-line: gperf gethttpheader.gperf  */
 /* Computed positions: -k'1,9,$' */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
@@ -26,16 +26,16 @@
       && ('w' == 119) && ('x' == 120) && ('y' == 121) && ('z' == 122) \
       && ('{' == 123) && ('|' == 124) && ('}' == 125) && ('~' == 126))
 /* The character set is not based on ISO-646.  */
-#error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gnu-gperf@gnu.org>."
+#error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gperf@gnu.org>."
 #endif
 
-#line 1 "net/http/gethttpheader.gperf"
+#line 1 "gethttpheader.gperf"
 
 #include "libc/str/str.h"
 #include "net/http/http.h"
 #define GPERF_DOWNCASE
-#line 12 "net/http/gethttpheader.gperf"
-struct HttpHeaderSlot { unsigned char name; unsigned char code; };
+#line 12 "gethttpheader.gperf"
+struct HttpHeaderSlot { char *name; char code; };
 
 #define TOTAL_KEYWORDS 49
 #define MIN_WORD_LENGTH 3
@@ -72,7 +72,7 @@ static unsigned char gperf_downcase[256] =
 #ifndef GPERF_CASE_STRNCMP
 #define GPERF_CASE_STRNCMP 1
 static int
-gperf_case_strncmp (register const char *s1, register const char *s2, register unsigned int n)
+gperf_case_strncmp (register const char *s1, register const char *s2, register size_t n)
 {
   for (; n > 0;)
     {
@@ -97,7 +97,7 @@ inline
 #endif
 #endif
 static unsigned int
-hash (register const char *str, register unsigned int len)
+hash (register const char *str, register size_t len)
 {
   static const unsigned char asso_values[] =
     {
@@ -128,7 +128,7 @@ hash (register const char *str, register unsigned int len)
       73, 73, 73, 73, 73, 73, 73, 73, 73, 73,
       73, 73, 73, 73, 73, 73
     };
-  register int hval = len;
+  register unsigned int hval = len;
 
   switch (hval)
     {
@@ -149,248 +149,133 @@ hash (register const char *str, register unsigned int len)
   return hval + asso_values[(unsigned char)str[len - 1]];
 }
 
-struct stringpool_t
-  {
-    char stringpool_str5[sizeof("Close")];
-    char stringpool_str7[sizeof("Upgrade")];
-    char stringpool_str8[sizeof("Age")];
-    char stringpool_str9[sizeof("From")];
-    char stringpool_str10[sizeof("Range")];
-    char stringpool_str11[sizeof("Accept")];
-    char stringpool_str12[sizeof("Content-Type")];
-    char stringpool_str13[sizeof("If-Range")];
-    char stringpool_str15[sizeof("User-Agent")];
-    char stringpool_str16[sizeof("Content-Md5")];
-    char stringpool_str17[sizeof("Referer")];
-    char stringpool_str18[sizeof("Content-Range")];
-    char stringpool_str19[sizeof("Date")];
-    char stringpool_str20[sizeof("Connection")];
-    char stringpool_str21[sizeof("Retry-After")];
-    char stringpool_str22[sizeof("Chunked")];
-    char stringpool_str23[sizeof("Via")];
-    char stringpool_str24[sizeof("Host")];
-    char stringpool_str25[sizeof("Accept-Language")];
-    char stringpool_str26[sizeof("Public")];
-    char stringpool_str27[sizeof("If-Modified-Since")];
-    char stringpool_str28[sizeof("Authorization")];
-    char stringpool_str29[sizeof("If-Unmodified-Since")];
-    char stringpool_str30[sizeof("Allow")];
-    char stringpool_str31[sizeof("Pragma")];
-    char stringpool_str32[sizeof("Content-Base")];
-    char stringpool_str33[sizeof("If-Match")];
-    char stringpool_str34[sizeof("Vary")];
-    char stringpool_str35[sizeof("Keep-Alive")];
-    char stringpool_str36[sizeof("WWW-Authenticate")];
-    char stringpool_str37[sizeof("Expires")];
-    char stringpool_str38[sizeof("Proxy-Authenticate")];
-    char stringpool_str39[sizeof("Accept-Charset")];
-    char stringpool_str41[sizeof("Server")];
-    char stringpool_str43[sizeof("If-None-Match")];
-    char stringpool_str44[sizeof("Proxy-Authorization")];
-    char stringpool_str46[sizeof("Proxy-Connection")];
-    char stringpool_str48[sizeof("Location")];
-    char stringpool_str49[sizeof("Etag")];
-    char stringpool_str51[sizeof("Content-Language")];
-    char stringpool_str52[sizeof("Max-Forwards")];
-    char stringpool_str53[sizeof("Cache-Control")];
-    char stringpool_str56[sizeof("Content-Location")];
-    char stringpool_str61[sizeof("Content-Encoding")];
-    char stringpool_str62[sizeof("Transfer-Encoding")];
-    char stringpool_str68[sizeof("Last-Modified")];
-    char stringpool_str69[sizeof("Content-Length")];
-    char stringpool_str70[sizeof("Accept-Encoding")];
-    char stringpool_str72[sizeof("Warning")];
-  };
-static const struct stringpool_t stringpool_contents =
-  {
-    "Close",
-    "Upgrade",
-    "Age",
-    "From",
-    "Range",
-    "Accept",
-    "Content-Type",
-    "If-Range",
-    "User-Agent",
-    "Content-Md5",
-    "Referer",
-    "Content-Range",
-    "Date",
-    "Connection",
-    "Retry-After",
-    "Chunked",
-    "Via",
-    "Host",
-    "Accept-Language",
-    "Public",
-    "If-Modified-Since",
-    "Authorization",
-    "If-Unmodified-Since",
-    "Allow",
-    "Pragma",
-    "Content-Base",
-    "If-Match",
-    "Vary",
-    "Keep-Alive",
-    "WWW-Authenticate",
-    "Expires",
-    "Proxy-Authenticate",
-    "Accept-Charset",
-    "Server",
-    "If-None-Match",
-    "Proxy-Authorization",
-    "Proxy-Connection",
-    "Location",
-    "Etag",
-    "Content-Language",
-    "Max-Forwards",
-    "Cache-Control",
-    "Content-Location",
-    "Content-Encoding",
-    "Transfer-Encoding",
-    "Last-Modified",
-    "Content-Length",
-    "Accept-Encoding",
-    "Warning"
-  };
-#define stringpool ((const char *) &stringpool_contents)
-#ifdef __GNUC__
-__inline
-#if defined __GNUC_STDC_INLINE__ || defined __GNUC_GNU_INLINE__
-__attribute__ ((__gnu_inline__))
-#endif
-#endif
 const struct HttpHeaderSlot *
-in_word_set (register const char *str, register unsigned int len)
+LookupHttpHeader (register const char *str, register size_t len)
 {
   static const struct HttpHeaderSlot wordlist[] =
     {
-      {-1}, {-1}, {-1}, {-1}, {-1},
-#line 23 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str5,                kHttpClose               },
-      {-1},
-#line 52 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str7,              kHttpUpgrade             },
-#line 18 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str8,                  kHttpAge                 },
-#line 36 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str9,                 kHttpFrom                },
-#line 49 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str10,                kHttpRange               },
-#line 14 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str11,               kHttpAccept              },
-#line 32 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str12,         kHttpContentType         },
-#line 41 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str13,             kHttpIfRange             },
-      {-1},
-#line 53 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str15,           kHttpUserAgent           },
-#line 30 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str16,          kHttpContentMd5          },
-#line 50 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str17,              kHttpReferer             },
-#line 31 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str18,        kHttpContentRange        },
-#line 33 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str19,                 kHttpDate                },
-#line 24 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str20,           kHttpConnection          },
-#line 57 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str21,          kHttpRetryAfter          },
-#line 22 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str22,              kHttpChunked             },
-#line 54 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str23,                  kHttpVia                 },
-#line 37 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str24,                 kHttpHost                },
-#line 17 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str25,      kHttpAcceptLanguage      },
-#line 56 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str26,               kHttpPublic              },
-#line 39 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str27,    kHttpIfModifiedSince     },
-#line 20 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str28,        kHttpAuthorization       },
-#line 42 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str29,  kHttpIfUnmodifiedSince   },
-#line 19 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str30,                kHttpAllow               },
-#line 45 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str31,               kHttpPragma              },
-#line 25 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str32,         kHttpContentBase         },
-#line 38 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str33,             kHttpIfMatch             },
-#line 59 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str34,                 kHttpVary                },
-#line 43 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str35,           kHttpKeepAlive           },
-#line 61 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str36,     kHttpWwwAuthenticate     },
-#line 35 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str37,              kHttpExpires             },
-#line 46 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str38,   kHttpProxyAuthenticate   },
-#line 15 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str39,       kHttpAcceptCharset       },
-      {-1},
-#line 58 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str41,               kHttpServer              },
-      {-1},
-#line 40 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str43,        kHttpIfNoneMatch         },
-#line 47 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str44,  kHttpProxyAuthorization  },
-      {-1},
-#line 48 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str46,     kHttpProxyConnection     },
-      {-1},
-#line 55 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str48,             kHttpLocation            },
-#line 34 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str49,                 kHttpEtag                },
-      {-1},
-#line 27 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str51,     kHttpContentLanguage     },
-#line 44 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str52,         kHttpMaxForwards         },
-#line 21 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str53,        kHttpCacheControl        },
-      {-1}, {-1},
-#line 29 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str56,     kHttpContentLocation     },
-      {-1}, {-1}, {-1}, {-1},
-#line 26 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str61,     kHttpContentEncoding     },
-#line 51 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str62,    kHttpTransferEncoding    },
-      {-1}, {-1}, {-1}, {-1}, {-1},
-#line 62 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str68,        kHttpLastModified        },
-#line 28 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str69,       kHttpContentLength       },
-#line 16 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str70,      kHttpAcceptEncoding      },
-      {-1},
-#line 60 "net/http/gethttpheader.gperf"
-      {(int)(long)&((struct stringpool_t *)0)->stringpool_str72,              kHttpWarning             }
+      {""}, {""}, {""}, {""}, {""},
+#line 23 "gethttpheader.gperf"
+      {"Close",                kHttpClose},
+      {""},
+#line 52 "gethttpheader.gperf"
+      {"Upgrade",              kHttpUpgrade},
+#line 18 "gethttpheader.gperf"
+      {"Age",                  kHttpAge},
+#line 36 "gethttpheader.gperf"
+      {"From",                 kHttpFrom},
+#line 49 "gethttpheader.gperf"
+      {"Range",                kHttpRange},
+#line 14 "gethttpheader.gperf"
+      {"Accept",               kHttpAccept},
+#line 32 "gethttpheader.gperf"
+      {"Content-Type",         kHttpContentType},
+#line 41 "gethttpheader.gperf"
+      {"If-Range",             kHttpIfRange},
+      {""},
+#line 53 "gethttpheader.gperf"
+      {"User-Agent",           kHttpUserAgent},
+#line 30 "gethttpheader.gperf"
+      {"Content-Md5",          kHttpContentMd5},
+#line 50 "gethttpheader.gperf"
+      {"Referer",              kHttpReferer},
+#line 31 "gethttpheader.gperf"
+      {"Content-Range",        kHttpContentRange},
+#line 33 "gethttpheader.gperf"
+      {"Date",                 kHttpDate},
+#line 24 "gethttpheader.gperf"
+      {"Connection",           kHttpConnection},
+#line 57 "gethttpheader.gperf"
+      {"Retry-After",          kHttpRetryAfter},
+#line 22 "gethttpheader.gperf"
+      {"Chunked",              kHttpChunked},
+#line 54 "gethttpheader.gperf"
+      {"Via",                  kHttpVia},
+#line 37 "gethttpheader.gperf"
+      {"Host",                 kHttpHost},
+#line 17 "gethttpheader.gperf"
+      {"Accept-Language",      kHttpAcceptLanguage},
+#line 56 "gethttpheader.gperf"
+      {"Public",               kHttpPublic},
+#line 39 "gethttpheader.gperf"
+      {"If-Modified-Since",    kHttpIfModifiedSince},
+#line 20 "gethttpheader.gperf"
+      {"Authorization",        kHttpAuthorization},
+#line 42 "gethttpheader.gperf"
+      {"If-Unmodified-Since",  kHttpIfUnmodifiedSince},
+#line 19 "gethttpheader.gperf"
+      {"Allow",                kHttpAllow},
+#line 45 "gethttpheader.gperf"
+      {"Pragma",               kHttpPragma},
+#line 25 "gethttpheader.gperf"
+      {"Content-Base",         kHttpContentBase},
+#line 38 "gethttpheader.gperf"
+      {"If-Match",             kHttpIfMatch},
+#line 59 "gethttpheader.gperf"
+      {"Vary",                 kHttpVary},
+#line 43 "gethttpheader.gperf"
+      {"Keep-Alive",           kHttpKeepAlive},
+#line 61 "gethttpheader.gperf"
+      {"WWW-Authenticate",     kHttpWwwAuthenticate},
+#line 35 "gethttpheader.gperf"
+      {"Expires",              kHttpExpires},
+#line 46 "gethttpheader.gperf"
+      {"Proxy-Authenticate",   kHttpProxyAuthenticate},
+#line 15 "gethttpheader.gperf"
+      {"Accept-Charset",       kHttpAcceptCharset},
+      {""},
+#line 58 "gethttpheader.gperf"
+      {"Server",               kHttpServer},
+      {""},
+#line 40 "gethttpheader.gperf"
+      {"If-None-Match",        kHttpIfNoneMatch},
+#line 47 "gethttpheader.gperf"
+      {"Proxy-Authorization",  kHttpProxyAuthorization},
+      {""},
+#line 48 "gethttpheader.gperf"
+      {"Proxy-Connection",     kHttpProxyConnection},
+      {""},
+#line 55 "gethttpheader.gperf"
+      {"Location",             kHttpLocation},
+#line 34 "gethttpheader.gperf"
+      {"Etag",                 kHttpEtag},
+      {""},
+#line 27 "gethttpheader.gperf"
+      {"Content-Language",     kHttpContentLanguage},
+#line 44 "gethttpheader.gperf"
+      {"Max-Forwards",         kHttpMaxForwards},
+#line 21 "gethttpheader.gperf"
+      {"Cache-Control",        kHttpCacheControl},
+      {""}, {""},
+#line 29 "gethttpheader.gperf"
+      {"Content-Location",     kHttpContentLocation},
+      {""}, {""}, {""}, {""},
+#line 26 "gethttpheader.gperf"
+      {"Content-Encoding",     kHttpContentEncoding},
+#line 51 "gethttpheader.gperf"
+      {"Transfer-Encoding",    kHttpTransferEncoding},
+      {""}, {""}, {""}, {""}, {""},
+#line 62 "gethttpheader.gperf"
+      {"Last-Modified",        kHttpLastModified},
+#line 28 "gethttpheader.gperf"
+      {"Content-Length",       kHttpContentLength},
+#line 16 "gethttpheader.gperf"
+      {"Accept-Encoding",      kHttpAcceptEncoding},
+      {""},
+#line 60 "gethttpheader.gperf"
+      {"Warning",              kHttpWarning}
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
-      register int key = hash (str, len);
+      register unsigned int key = hash (str, len);
 
-      if (key <= MAX_HASH_VALUE && key >= 0)
+      if (key <= MAX_HASH_VALUE)
         {
-          register int o = wordlist[key].name;
-          if (o >= 0)
-            {
-              register const char *s = o + stringpool;
+          register const char *s = wordlist[key].name;
 
-              if ((((unsigned char)*str ^ (unsigned char)*s) & ~32) == 0 && !gperf_case_strncmp (str, s, len) && s[len] == '\0')
-                return &wordlist[key];
-            }
+          if ((((unsigned char)*str ^ (unsigned char)*s) & ~32) == 0 && !gperf_case_strncmp (str, s, len) && s[len] == '\0')
+            return &wordlist[key];
         }
     }
   return 0;

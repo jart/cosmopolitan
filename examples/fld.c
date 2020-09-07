@@ -35,7 +35,7 @@ void dobin(const char *op, long double x, FILE *f) {
   memcpy(buf, &x, sizeof(x));
   memcpy(&lo, &buf[0], sizeof(lo));
   memcpy(&hi, &buf[8], sizeof(hi));
-  fprintf(f, "/\t%016" PRIb16 "%064" PRIb64 " %-8s % 19.19Lf\n", hi, lo, op, x);
+  fprintf(f, "/\t%016" PRIb16 "%064" PRIb64 " %-8s % 17.14Lf\n", hi, lo, op, x);
 }
 
 void dohex(const char *op, long double x, FILE *f) {
@@ -45,7 +45,7 @@ void dohex(const char *op, long double x, FILE *f) {
   memcpy(buf, &x, sizeof(x));
   memcpy(&lo, &buf[0], sizeof(lo));
   memcpy(&hi, &buf[8], sizeof(hi));
-  fprintf(f, "/\t%04" PRIx16 "%016" PRIx64 " %-8s % 19.19Lf\n", hi, lo, op, x);
+  fprintf(f, "/\t%04" PRIx16 "%016" PRIx64 " %-8s % 17.14Lf\n", hi, lo, op, x);
 }
 
 #define DOBIN(OP)               \
@@ -65,7 +65,6 @@ int main(int argc, char *argv[]) {
   DOBIN(fldlg2);
   DOBIN(fldln2);
   DOBIN(fldl2e);
-  DOBIN(finit);
   fputc('\n', stdout);
   fputs(kHeaderHex, stdout);
   DOHEX(fldz);
@@ -75,7 +74,6 @@ int main(int argc, char *argv[]) {
   DOHEX(fldlg2);
   DOHEX(fldln2);
   DOHEX(fldl2e);
-  DOHEX(finit);
   return 0;
 }
 

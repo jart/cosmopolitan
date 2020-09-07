@@ -77,7 +77,7 @@ FLAGS\n\
 \n\
   -o PATH    output path\n\
   -w INT     manual width\n\
-  -w INT     manual height\n\
+  -h INT     manual height\n\
   -4         unicode blocks\n\
   -a         ansi color mode\n\
   -t         true color mode\n\

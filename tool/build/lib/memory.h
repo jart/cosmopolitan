@@ -4,8 +4,6 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define GetSegment(m) 0
-
 int RegisterMemory(struct Machine *, int64_t, void *, size_t);
 void *AccessRam(struct Machine *, int64_t, size_t, void *[2], uint8_t *, bool);
 void *BeginLoadStore(struct Machine *, int64_t, size_t, void *[2], uint8_t *);
@@ -24,8 +22,9 @@ void ResetRam(struct Machine *);
 void SetReadAddr(struct Machine *, int64_t, uint32_t);
 void SetWriteAddr(struct Machine *, int64_t, uint32_t);
 void VirtualRecv(struct Machine *, int64_t, void *, uint64_t);
-void VirtualSend(struct Machine *, void *, int64_t, uint64_t);
+void *VirtualSend(struct Machine *, void *, int64_t, uint64_t);
 void VirtualSet(struct Machine *, int64_t, char, uint64_t);
+void *RealAddress(struct Machine *, int64_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

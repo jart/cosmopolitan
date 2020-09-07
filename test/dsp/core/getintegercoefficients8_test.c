@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/core/core.h"
 #include "dsp/core/q.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
@@ -49,7 +50,8 @@ TEST(GetIntegerCoefficients8, testBt601Vectors) {
   for (i = 0; i < ARRAYLEN(V); ++i) {
     GetIntegerCoefficients8(got, V[i].r, V[i].m, V[i].L, V[i].H);
     EXPECT_EQ(0, memcmp(V[i].n, got, sizeof(got)),
-              "got={%ld,%ld,%ld,%ld,%ld,%ld}, want={%ld,%ld,%ld,%ld,%ld,%ld}",
+              "got={%ld,%ld,%ld,%ld,%ld,%ld}, want = { % ld, % ld, % ld, % ld, "
+              "% ld, % ld } ",
               got[0], got[1], got[2], got[3], got[4], got[5], V[i].n[0],
               V[i].n[1], V[i].n[2], V[i].n[3], V[i].n[4], V[i].n[5]);
   }

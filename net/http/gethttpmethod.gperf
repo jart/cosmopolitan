@@ -1,0 +1,36 @@
+%{
+#include "libc/str/str.h"
+#include "net/http/http.h"
+#define GPERF_DOWNCASE
+%}
+%compare-strncmp
+%ignore-case
+%language=ANSI-C
+%readonly-tables
+%struct-type
+%define lookup-function-name LookupHttpMethod
+struct HttpMethodSlot { char *name; char code; };
+%%
+DELETE,      kHttpDelete
+GET,         kHttpGet
+HEAD,        kHttpHead
+POST,        kHttpPost
+PUT,         kHttpPut
+CONNECT,     kHttpConnect
+OPTIONS,     kHttpOptions
+TRACE,       kHttpTrace
+COPY,        kHttpCopy
+CHECKOUT,    kHttpCheckout
+LOCK,        kHttpLock
+MERGE,       kHttpMerge
+MKACTIVITY,  kHttpMkactivity
+MKCOL,       kHttpMkcol
+MOVE,        kHttpMove
+NOTIFY,      kHttpNotify
+PATCH,       kHttpPatch
+PROPFIND,    kHttpPropfind
+PROPPATCH,   kHttpProppatch
+REPORT,      kHttpReport
+SUBSCRIBE,   kHttpSubscribe
+UNLOCK,      kHttpUnlock
+UNSUBSCRIBE, kHttpUnsubscribe

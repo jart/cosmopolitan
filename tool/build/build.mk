@@ -93,9 +93,16 @@ o/$(MODE)/tool/build/emulator.o:			\
 		OVERRIDE_COPTS +=			\
 			-fno-sanitize=pointer-overflow
 
-# $(TOOL_BUILD_OBJS):					\
-# 		OVERRIDE_CFLAGS +=			\
-# 			-fsanitize=address
+o/$(MODE)/tool/build/transpile16.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-ffixed-r8			\
+			-ffixed-r9			\
+			-ffixed-r10			\
+			-ffixed-r11			\
+			-ffixed-r12			\
+			-ffixed-r13			\
+			-ffixed-r14			\
+			-ffixed-r15
 
 .PHONY: o/$(MODE)/tool/build
 o/$(MODE)/tool/build:					\

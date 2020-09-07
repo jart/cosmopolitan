@@ -18,37 +18,104 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/check.h"
+#include "third_party/xed/x86.h"
+#include "tool/build/lib/address.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/machine.h"
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/modrm.h"
+#include "tool/build/lib/throw.h"
 
 /**
- * Computes virtual address based on modrm and sib bytes.
+ * Byte register offsets.
+ *
+ * for (i = 0; i < 2; ++i) {      // rex
+ *   for (j = 0; j < 2; ++j) {    // rexb, or rexr
+ *     for (k = 0; k < 8; ++k) {  // reg, rm, or srm
+ *       kByteReg[i << 4 | j << 3 | k] =
+ *           i ? (j << 3 | k) * 8 : (k & 0b11) * 8 + ((k & 0b100) >> 2);
+ *     }
+ *   }
+ * }
  */
+const uint8_t kByteReg[32] = {0x00, 0x08, 0x10, 0x18, 0x01, 0x09, 0x11, 0x19,
+                              0x00, 0x08, 0x10, 0x18, 0x01, 0x09, 0x11, 0x19,
+                              0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38,
+                              0x40, 0x48, 0x50, 0x58, 0x60, 0x68, 0x70, 0x78};
+
 int64_t ComputeAddress(const struct Machine *m, uint32_t rde) {
   uint64_t i;
-  DCHECK(m->xedd->op.has_modrm);
+  uint8_t *s;
   DCHECK(!IsModrmRegister(rde));
+  s = m->ds;
   i = m->xedd->op.disp;
-  if (!SibExists(rde)) {
-    if (IsRipRelative(rde)) {
-      i += m->ip;
+  if (Eamode(rde) != XED_MODE_REAL) {
+    if (!SibExists(rde)) {
+      if (IsRipRelative(rde)) {
+        if (Mode(rde) == XED_MODE_LONG) {
+          i += m->ip;
+        }
+      } else {
+        i += Read64(RegRexbRm(m, rde));
+        if (RexbRm(rde) == 4 || RexbRm(rde) == 5) {
+          s = m->ss;
+        }
+      }
     } else {
-      i += Read64(RegRexbRm(m, rde));
+      if (SibHasBase(m->xedd, rde)) {
+        i += Read64(RegRexbBase(m, rde));
+        if (RexbBase(m, rde) == 4 || RexbBase(m, rde) == 5) {
+          s = m->ss;
+        }
+      }
+      if (SibHasIndex(m->xedd)) {
+        i += Read64(RegRexxIndex(m)) << m->xedd->op.scale;
+      }
+    }
+    if (Eamode(rde) == XED_MODE_LEGACY) {
+      i &= 0xffffffff;
     }
   } else {
-    DCHECK(m->xedd->op.has_sib);
-    if (SibHasBase(rde)) {
-      i += Read64(RegRexbBase(m, rde));
+    switch (ModrmRm(rde)) {
+      case 0:
+        i += Read16(m->bx);
+        i += Read16(m->si);
+        break;
+      case 1:
+        i += Read16(m->bx);
+        i += Read16(m->di);
+        break;
+      case 2:
+        s = m->ss;
+        i += Read16(m->bp);
+        i += Read16(m->si);
+        break;
+      case 3:
+        s = m->ss;
+        i += Read16(m->bp);
+        i += Read16(m->di);
+        break;
+      case 4:
+        i += Read16(m->si);
+        break;
+      case 5:
+        i += Read16(m->di);
+        break;
+      case 6:
+        if (ModrmMod(rde)) {
+          s = m->ss;
+          i += Read16(m->bp);
+        }
+        break;
+      case 7:
+        i += Read16(m->bx);
+        break;
+      default:
+        unreachable;
     }
-    if (SibHasIndex(rde)) {
-      i += Read64(RegRexxIndex(m, rde)) << m->xedd->op.scale;
-    }
+    i &= 0xffff;
   }
-  i += GetSegment(m);
-  if (Asz(rde)) i &= 0xffffffff;
-  return i;
+  return AddSegment(m, rde, i, s);
 }
 
 void *ComputeReserveAddressRead(struct Machine *m, uint32_t rde, size_t n) {
@@ -60,6 +127,10 @@ void *ComputeReserveAddressRead(struct Machine *m, uint32_t rde, size_t n) {
 
 void *ComputeReserveAddressRead1(struct Machine *m, uint32_t rde) {
   return ComputeReserveAddressRead(m, rde, 1);
+}
+
+void *ComputeReserveAddressRead4(struct Machine *m, uint32_t rde) {
+  return ComputeReserveAddressRead(m, rde, 4);
 }
 
 void *ComputeReserveAddressRead8(struct Machine *m, uint32_t rde) {

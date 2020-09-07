@@ -20,11 +20,13 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
+#include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/sigaction-linux.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/calls/struct/winsize.h"
 #include "libc/errno.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -33,8 +35,12 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/o.h"
@@ -42,7 +48,10 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/so.h"
+#include "libc/sysv/consts/sock.h"
+#include "libc/sysv/consts/sol.h"
 #include "libc/sysv/consts/tcp.h"
+#include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/time/struct/timezone.h"
 #include "libc/time/time.h"
@@ -56,7 +65,8 @@
 #include "tool/build/lib/throw.h"
 #include "tool/build/lib/xlaterrno.h"
 
-#define AT_FDCWD_LINUX -100
+#define AT_FDCWD_LINUX   -100
+#define TIOCGWINSZ_LINUX 0x5413
 
 #define POINTER(x)    ((void *)(intptr_t)(x))
 #define UNPOINTER(x)  ((int64_t)(intptr_t)(x))
@@ -70,6 +80,7 @@ const struct MachineFdCb kMachineFdCbHost = {
     .close = close,
     .read = read,
     .write = write,
+    .ioctl = ioctl,
 };
 
 static int XlatSignal(int sig) {
@@ -107,7 +118,76 @@ static int XlatSignal(int sig) {
     XLAT(30, SIGPWR);
     XLAT(0x10, SIGSTKFLT);
     default:
-      return sig;
+      return einval();
+  }
+}
+
+static int XlatSig(int x) {
+  switch (x) {
+    XLAT(0, SIG_BLOCK);
+    XLAT(1, SIG_UNBLOCK);
+    XLAT(2, SIG_SETMASK);
+    default:
+      return einval();
+  }
+}
+
+static int XlatSocketFamily(int x) {
+  switch (x) {
+    XLAT(0, AF_INET);
+    XLAT(2, AF_INET);
+    default:
+      return epfnosupport();
+  }
+}
+
+static int XlatSocketType(int x) {
+  switch (x) {
+    XLAT(1, SOCK_STREAM);
+    XLAT(2, SOCK_DGRAM);
+    default:
+      return einval();
+  }
+}
+
+static int XlatSocketProtocol(int x) {
+  switch (x) {
+    XLAT(6, IPPROTO_TCP);
+    XLAT(17, IPPROTO_UDP);
+    default:
+      return einval();
+  }
+}
+
+static unsigned XlatSocketFlags(int flags) {
+  unsigned res = 0;
+  if (flags & 0x080000) res |= SOCK_CLOEXEC;
+  if (flags & 0x000800) res |= SOCK_NONBLOCK;
+  return res;
+}
+
+static int XlatSocketLevel(int x) {
+  switch (x) {
+    XLAT(0, SOL_IP);
+    XLAT(1, SOL_SOCKET);
+    XLAT(6, SOL_TCP);
+    XLAT(17, SOL_UDP);
+    default:
+      return einval();
+  }
+}
+
+static int XlatSocketOptname(int x) {
+  switch (x) {
+    XLAT(2, SO_REUSEADDR);
+    XLAT(15, SO_REUSEPORT);
+    XLAT(9, SO_KEEPALIVE);
+    XLAT(5, SO_DONTROUTE);
+    XLAT(7, SO_SNDBUF);
+    XLAT(8, SO_RCVBUF);
+    XLAT(13, SO_LINGER);
+    default:
+      return einval();
   }
 }
 
@@ -130,12 +210,12 @@ static int XlatAccess(int x) {
 
 static int XlatSigaction(int x) {
   unsigned res = 0;
+  if (x & 0x00000001) res |= SA_NOCLDSTOP;
+  if (x & 0x00000002) res |= SA_NOCLDWAIT;
+  if (x & 0x00000004) res |= SA_SIGINFO;
   if (x & 0x04000000) res |= SA_RESTORER;
   if (x & 0x08000000) res |= SA_ONSTACK;
   if (x & 0x10000000) res |= SA_RESTART;
-  if (x & 1) res |= SA_NOCLDSTOP;
-  if (x & 2) res |= SA_NOCLDWAIT;
-  if (x & 4) res |= SA_SIGINFO;
   if (x & 0x40000000) res |= SA_NODEFER;
   if (x & 0x40000000) res |= SA_NOMASK;
   if (x & 0x80000000) res |= SA_RESETHAND;
@@ -242,6 +322,26 @@ static unsigned XlatOpenFlags(unsigned flags) {
   return res;
 }
 
+static int XlatFcntlCmd(int cmd) {
+  switch (cmd) {
+    XLAT(1, F_GETFD);
+    XLAT(2, F_SETFD);
+    XLAT(3, F_GETFL);
+    XLAT(4, F_SETFL);
+    default:
+      return einval();
+  }
+}
+
+static int XlatFcntlArg(int arg) {
+  switch (arg) {
+    XLAT(0, 0);
+    XLAT(1, FD_CLOEXEC);
+    default:
+      return einval();
+  }
+}
+
 static struct sigaction *CoerceSigactionToCosmo(
     struct sigaction *dst, const struct sigaction$linux *src) {
   if (!src) return NULL;
@@ -311,6 +411,36 @@ static void *GetDirectBuf(struct Machine *m, int64_t addr, size_t *size) {
   return page;
 }
 
+static struct iovec *GetDirectIov(struct Machine *m, int64_t addr, int *len) {
+  int i;
+  size_t n, size;
+  struct iovec *iov;
+  if (!__builtin_mul_overflow(sizeof(*iov), *len, &n) && n <= 0x7ffff000) {
+    if ((iov = malloc(n))) {
+      VirtualSend(m, iov, addr, n);
+      SetReadAddr(m, addr, n);
+      for (i = 0; i < *len; ++i) {
+        size = iov[i].iov_len;
+        if ((iov[i].iov_base = GetDirectBuf(
+                 m, (int64_t)(intptr_t)iov[i].iov_base, &size)) == MAP_FAILED) {
+          free(iov);
+          return (struct iovec *)efault();
+        }
+        if (size < iov[i].iov_len) {
+          iov[i].iov_len = size;
+          *len = i + 1;
+          break;
+        }
+      }
+      return iov;
+    } else {
+      return (struct iovec *)-1;
+    }
+  } else {
+    return (struct iovec *)eoverflow();
+  }
+}
+
 static int OpClose(struct Machine *m, int fd) {
   int rc;
   struct FdClosed *closed;
@@ -356,6 +486,124 @@ static int OpPipe(struct Machine *m, int64_t pipefds_addr) {
   return rc;
 }
 
+static int OpDup(struct Machine *m, int fd) {
+  int i, rc;
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if ((i = MachineFdAdd(&m->fds)) == -1) return -1;
+  if ((rc = dup(fd)) != -1) {
+    m->fds.p[i].cb = &kMachineFdCbHost;
+    m->fds.p[i].fd = rc;
+    rc = i;
+  } else {
+    MachineFdRemove(&m->fds, i);
+  }
+  return rc;
+}
+
+static int OpDup2(struct Machine *m, int fd, int newfd) {
+  int i, rc;
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if ((0 <= newfd && newfd < m->fds.i)) {
+    if ((rc = dup2(fd, m->fds.p[newfd].fd)) != -1) {
+      m->fds.p[newfd].cb = &kMachineFdCbHost;
+      m->fds.p[newfd].fd = rc;
+      rc = newfd;
+    }
+  } else if ((i = MachineFdAdd(&m->fds)) != -1) {
+    if ((rc = dup(fd)) != -1) {
+      m->fds.p[i].cb = &kMachineFdCbHost;
+      m->fds.p[i].fd = rc;
+      rc = i;
+    }
+  } else {
+    rc = -1;
+  }
+  return rc;
+}
+
+static int OpSocket(struct Machine *m, int family, int type, int protocol) {
+  int i, fd;
+  if ((family = XlatSocketFamily(family)) == -1) return -1;
+  if ((type = XlatSocketType(type)) == -1) return -1;
+  if ((protocol = XlatSocketProtocol(protocol)) == -1) return -1;
+  if ((i = MachineFdAdd(&m->fds)) == -1) return -1;
+  if ((fd = socket(family, type, protocol)) != -1) {
+    m->fds.p[i].cb = &kMachineFdCbHost;
+    m->fds.p[i].fd = fd;
+    fd = i;
+  } else {
+    MachineFdRemove(&m->fds, i);
+  }
+  return fd;
+}
+
+static int OpAccept4(struct Machine *m, int fd, int64_t addraddr,
+                     int64_t addrsizeaddr, int flags) {
+  int i, rc;
+  void *addr;
+  uint8_t b[4];
+  uint32_t addrsize;
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  VirtualSend(m, b, addrsizeaddr, 4);
+  SetReadAddr(m, addrsizeaddr, 4);
+  addrsize = Read32(b);
+  if (!(addr = malloc(addrsize))) return -1;
+  if ((i = rc = MachineFdAdd(&m->fds)) != -1) {
+    if ((rc = accept4(fd, addr, &addrsize, XlatSocketFlags(flags))) != -1) {
+      Write32(b, addrsize);
+      VirtualRecv(m, addrsizeaddr, b, 4);
+      VirtualRecv(m, addraddr, addr, addrsize);
+      SetWriteAddr(m, addraddr, addrsize);
+      m->fds.p[i].cb = &kMachineFdCbHost;
+      m->fds.p[i].fd = rc;
+      rc = i;
+    } else {
+      MachineFdRemove(&m->fds, i);
+    }
+  }
+  free(addr);
+  return rc;
+}
+
+static int OpConnectBind(struct Machine *m, int fd, intptr_t addraddr,
+                         uint32_t addrsize,
+                         int impl(int, const void *, uint32_t)) {
+  int rc;
+  void *addr;
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if (!(addr = malloc(addrsize))) return -1;
+  VirtualSend(m, addr, addraddr, addrsize);
+  SetReadAddr(m, addraddr, addrsize);
+  rc = impl(fd, addr, addrsize);
+  free(addr);
+  return rc;
+}
+
+static int OpBind(struct Machine *m, int fd, intptr_t addraddr,
+                  uint32_t addrsize) {
+  return OpConnectBind(m, fd, addraddr, addrsize, bind);
+}
+
+static int OpConnect(struct Machine *m, int fd, int64_t addraddr,
+                     uint32_t addrsize) {
+  return OpConnectBind(m, fd, addraddr, addrsize, connect);
+}
+
+static int OpSetsockopt(struct Machine *m, int fd, int level, int optname,
+                        int64_t optvaladdr, uint32_t optvalsize) {
+  int rc;
+  void *optval;
+  if ((level = XlatSocketLevel(level)) == -1) return -1;
+  if ((optname = XlatSocketOptname(optname)) == -1) return -1;
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if (!(optval = malloc(optvalsize))) return -1;
+  VirtualSend(m, optval, optvaladdr, optvalsize);
+  SetReadAddr(m, optvaladdr, optvalsize);
+  rc = setsockopt(fd, level, optname, optval, optvalsize);
+  free(optval);
+  return rc;
+}
+
 static ssize_t OpRead(struct Machine *m, int fd, int64_t addr, size_t size) {
   void *data;
   ssize_t rc;
@@ -378,6 +626,22 @@ static ssize_t OpWrite(struct Machine *m, int fd, int64_t addr, size_t size) {
   return rc;
 }
 
+static int OpIoctl(struct Machine *m, int fd, uint64_t request,
+                   int64_t memaddr) {
+  int rc;
+  struct winsize ws;
+  if (!(0 <= fd && fd < m->fds.i) || !m->fds.p[fd].cb) return ebadf();
+  switch (request) {
+    case TIOCGWINSZ_LINUX:
+      rc = (m->fds.p[fd].cb->ioctl)(m->fds.p[fd].fd, TIOCGWINSZ, &ws);
+      VirtualRecv(m, memaddr, &ws, sizeof(ws));
+      SetWriteAddr(m, memaddr, sizeof(ws));
+      return rc;
+    default:
+      return einval();
+  }
+}
+
 static ssize_t OpPread(struct Machine *m, int fd, int64_t addr, size_t size,
                        int64_t offset) {
   void *data;
@@ -396,6 +660,37 @@ static ssize_t OpPwrite(struct Machine *m, int fd, int64_t addr, size_t size,
   if ((data = GetDirectBuf(m, addr, &size)) == MAP_FAILED) return efault();
   if ((rc = pwrite(fd, data, size, offset)) != -1) SetReadAddr(m, addr, size);
   return rc;
+}
+
+static ssize_t OpReadv(struct Machine *m, int fd, int64_t iovaddr, int iovlen) {
+  ssize_t rc;
+  struct iovec *iov;
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if ((iov = GetDirectIov(m, iovaddr, &iovlen)) == MAP_FAILED) return -1;
+  rc = readv(fd, iov, iovlen);
+  free(iov);
+  return rc;
+}
+
+static ssize_t OpWritev(struct Machine *m, int fd, int64_t iovaddr,
+                        int iovlen) {
+  ssize_t rc;
+  struct iovec *iov;
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if ((iov = GetDirectIov(m, iovaddr, &iovlen)) == MAP_FAILED) return -1;
+  rc = writev(fd, iov, iovlen);
+  free(iov);
+  return rc;
+}
+
+static int64_t OpLseek(struct Machine *m, int fd, int64_t offset, int whence) {
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  return lseek(fd, offset, whence);
+}
+
+static ssize_t OpFtruncate(struct Machine *m, int fd, int64_t size) {
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  return ftruncate(fd, size);
 }
 
 static int OpFaccessat(struct Machine *m, int dirfd, int64_t path, int mode,
@@ -434,6 +729,38 @@ static int OpFstat(struct Machine *m, int fd, int64_t st) {
   }
   free(stbuf);
   return rc;
+}
+
+static int OpListen(struct Machine *m, int fd, int backlog) {
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  return listen(fd, backlog);
+}
+
+static int OpShutdown(struct Machine *m, int fd, int how) {
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  return shutdown(fd, how);
+}
+
+static int OpFsync(struct Machine *m, int fd) {
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  return fsync(fd);
+}
+
+static int OpFdatasync(struct Machine *m, int fd) {
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  return fdatasync(fd);
+}
+
+static int OpFchmod(struct Machine *m, int fd, uint32_t mode) {
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  return fchmod(fd, mode);
+}
+
+static int OpFcntl(struct Machine *m, int fd, int cmd, int arg) {
+  if ((cmd = XlatFcntlCmd(cmd)) == -1) return -1;
+  if ((arg = XlatFcntlArg(arg)) == -1) return -1;
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  return fcntl(fd, cmd, arg);
 }
 
 static int OpChdir(struct Machine *m, int64_t path) {
@@ -477,6 +804,15 @@ static int OpChmod(struct Machine *m, int64_t path, uint32_t mode) {
   return chmod(LoadStr(m, path), mode);
 }
 
+static int OpFork(struct Machine *m) {
+  return enosys();
+}
+
+static int OpExecve(struct Machine *m, int64_t programaddr, int64_t argvaddr,
+                    int64_t envpaddr) {
+  return enosys();
+}
+
 static int64_t OpGetcwd(struct Machine *m, int64_t bufaddr, size_t size) {
   size_t n;
   char *buf;
@@ -496,6 +832,7 @@ static int64_t OpGetcwd(struct Machine *m, int64_t bufaddr, size_t size) {
 }
 
 static int OpSigaction(struct Machine *m, int sig, int64_t act, int64_t old) {
+  return 0;
   int rc;
   struct OpSigactionMemory {
     struct sigaction act, old;
@@ -560,6 +897,44 @@ static int OpGettimeofday(struct Machine *m, int64_t tv, int64_t tz) {
   return rc;
 }
 
+static int OpPoll(struct Machine *m, int64_t fdsaddr, uint64_t nfds,
+                  int32_t timeout_ms) {
+  int rc;
+  size_t n;
+  struct pollfd *fds;
+  if (!__builtin_mul_overflow(sizeof(*fds), nfds, &n) && n <= 0x7ffff000) {
+    if ((fds = malloc(n))) {
+      VirtualSend(m, fds, fdsaddr, n);
+      SetReadAddr(m, fdsaddr, n);
+      rc = poll(fds, nfds, timeout_ms);
+      free(fds);
+      return rc;
+    } else {
+      return enomem();
+    }
+  } else {
+    return einval();
+  }
+}
+
+static int OpSigprocmask(struct Machine *m, int how, int64_t setaddr,
+                         int64_t oldsetaddr) {
+  int rc;
+  sigset_t *set, oldset, ss;
+  if (setaddr) {
+    set = &ss;
+    memset(set, 0, sizeof(ss));
+    VirtualSend(m, set, setaddr, 8);
+  } else {
+    set = NULL;
+  }
+  if ((rc = sigprocmask(XlatSig(how), set, &oldset)) != -1) {
+    if (setaddr) VirtualRecv(m, setaddr, set, 8);
+    if (oldsetaddr) VirtualRecv(m, oldsetaddr, &oldset, 8);
+  }
+  return rc;
+}
+
 static int DoOpen(struct Machine *m, int64_t path, int flags, int mode) {
   return OpOpenat(m, AT_FDCWD_LINUX, path, flags, mode);
 }
@@ -580,15 +955,20 @@ static int DoLstat(struct Machine *m, int64_t path, int64_t st) {
   return OpFstatat(m, AT_FDCWD_LINUX, path, st, 0x0400);
 }
 
-void OpSyscall(struct Machine *m) {
+static int DoAccept(struct Machine *m, int fd, int64_t addraddr,
+                    int64_t addrsizeaddr) {
+  return OpAccept4(m, fd, addraddr, addrsizeaddr, 0);
+}
+
+void OpSyscall(struct Machine *m, uint32_t rde) {
   uint64_t i, ax, di, si, dx, r0, r8, r9;
   ax = Read64(m->ax);
   di = Read64(m->di);
   si = Read64(m->si);
   dx = Read64(m->dx);
-  r0 = Read32(m->r10);
-  r8 = Read32(m->r8);
-  r9 = Read32(m->r9);
+  r0 = Read64(m->r10);
+  r8 = Read64(m->r8);
+  r9 = Read64(m->r9);
   switch (ax & 0x1ff) {
     SYSCALL(0x000, OpRead(m, di, si, dx));
     SYSCALL(0x001, OpWrite(m, di, si, dx));
@@ -597,26 +977,26 @@ void OpSyscall(struct Machine *m) {
     SYSCALL(0x004, DoStat(m, di, si));
     SYSCALL(0x005, OpFstat(m, di, si));
     SYSCALL(0x006, DoLstat(m, di, si));
-    SYSCALL(0x007, poll(PNN(di), si, dx));
-    SYSCALL(0x008, lseek(di, si, dx));
+    SYSCALL(0x007, OpPoll(m, di, si, dx));
+    SYSCALL(0x008, OpLseek(m, di, si, dx));
     SYSCALL(0x009, OpMmap(m, di, si, dx, r0, r8, r9));
     SYSCALL(0x01A, OpMsync(m, di, si, dx));
     SYSCALL(0x00A, OpMprotect(m, di, si, dx));
     SYSCALL(0x00B, OpMunmap(m, di, si));
     SYSCALL(0x00D, OpSigaction(m, di, si, dx));
-    SYSCALL(0x00E, sigprocmask(di, P(si), P(dx)));
-    SYSCALL(0x010, ioctl(di, si, P(dx)));
+    SYSCALL(0x00E, OpSigprocmask(m, di, si, dx));
+    SYSCALL(0x010, OpIoctl(m, di, si, dx));
     SYSCALL(0x011, OpPread(m, di, si, dx, r0));
     SYSCALL(0x012, OpPwrite(m, di, si, dx, r0));
-    SYSCALL(0x013, readv(di, P(si), dx));
-    SYSCALL(0x014, writev(di, P(si), dx));
+    SYSCALL(0x013, OpReadv(m, di, si, dx));
+    SYSCALL(0x014, OpWritev(m, di, si, dx));
     SYSCALL(0x015, DoAccess(m, di, si));
     SYSCALL(0x016, OpPipe(m, di));
     SYSCALL(0x017, select(di, P(si), P(dx), P(r0), P(r8)));
     SYSCALL(0x018, sched_yield());
     SYSCALL(0x01C, OpMadvise(m, di, si, dx));
-    SYSCALL(0x020, dup(di));
-    SYSCALL(0x021, dup2(di, si));
+    SYSCALL(0x020, OpDup(m, di));
+    SYSCALL(0x021, OpDup2(m, di, si));
     SYSCALL(0x022, pause());
     SYSCALL(0x023, OpNanosleep(m, di, si));
     SYSCALL(0x024, getitimer(di, PNN(si)));
@@ -624,29 +1004,29 @@ void OpSyscall(struct Machine *m) {
     SYSCALL(0x026, setitimer(di, PNN(si), P(dx)));
     SYSCALL(0x027, getpid());
     SYSCALL(0x028, sendfile(di, si, P(dx), r0));
-    SYSCALL(0x029, socket(di, si, dx));
-    SYSCALL(0x02A, connect(di, PNN(si), dx));
-    SYSCALL(0x02B, accept(di, PNN(di), PNN(dx)));
+    SYSCALL(0x029, OpSocket(m, di, si, dx));
+    SYSCALL(0x02A, OpConnect(m, di, si, dx));
+    SYSCALL(0x02B, DoAccept(m, di, di, dx));
     SYSCALL(0x02C, sendto(di, PNN(si), dx, r0, P(r8), r9));
     SYSCALL(0x02D, recvfrom(di, P(si), dx, r0, P(r8), P(r9)));
-    SYSCALL(0x030, shutdown(di, si));
-    SYSCALL(0x031, bind(di, PNN(si), dx));
-    SYSCALL(0x032, listen(di, si));
+    SYSCALL(0x030, OpShutdown(m, di, si));
+    SYSCALL(0x031, OpBind(m, di, si, dx));
+    SYSCALL(0x032, OpListen(m, di, si));
     SYSCALL(0x033, getsockname(di, PNN(si), PNN(dx)));
     SYSCALL(0x034, getpeername(di, PNN(si), PNN(dx)));
-    SYSCALL(0x036, setsockopt(di, si, dx, PNN(r0), r8));
+    SYSCALL(0x036, OpSetsockopt(m, di, si, dx, r0, r8));
     SYSCALL(0x037, getsockopt(di, si, dx, PNN(r0), PNN(r8)));
-    SYSCALL(0x039, fork());
-    SYSCALL(0x03B, execve(PNN(r8), PNN(r8), PNN(r8)));
+    SYSCALL(0x039, OpFork(m));
+    SYSCALL(0x03B, OpExecve(m, di, si, dx));
     SYSCALL(0x03D, wait4(di, P(si), dx, P(r0)));
     SYSCALL(0x03E, kill(di, si));
     SYSCALL(0x03F, uname(P(di)));
-    SYSCALL(0x048, fcntl(di, si, dx));
+    SYSCALL(0x048, OpFcntl(m, di, si, dx));
     SYSCALL(0x049, flock(di, si));
-    SYSCALL(0x04A, fsync(di));
-    SYSCALL(0x04B, fdatasync(di));
+    SYSCALL(0x04A, OpFsync(m, di));
+    SYSCALL(0x04B, OpFdatasync(m, di));
     SYSCALL(0x04C, OpTruncate(m, di, si));
-    SYSCALL(0x04D, ftruncate(di, si));
+    SYSCALL(0x04D, OpFtruncate(m, di, si));
     SYSCALL(0x04F, OpGetcwd(m, di, si));
     SYSCALL(0x050, OpChdir(m, di));
     SYSCALL(0x052, OpRename(m, di, si));
@@ -657,7 +1037,7 @@ void OpSyscall(struct Machine *m) {
     SYSCALL(0x057, OpUnlink(m, di));
     SYSCALL(0x058, OpSymlink(m, di, si));
     SYSCALL(0x05A, OpChmod(m, di, si));
-    SYSCALL(0x05B, fchmod(di, si));
+    SYSCALL(0x05B, OpFchmod(m, di, si));
     SYSCALL(0x060, OpGettimeofday(m, di, si));
     SYSCALL(0x061, getrlimit(di, P(si)));
     SYSCALL(0x062, getrusage(di, P(si)));
@@ -691,6 +1071,7 @@ void OpSyscall(struct Machine *m) {
     SYSCALL(0x113, splice(di, P(si), dx, P(r0), r8, XlatAtf(r9)));
     SYSCALL(0x115, sync_file_range(di, si, dx, XlatAtf(r0)));
     SYSCALL(0x118, utimensat(XlatAfd(m, di), P(si), P(dx), XlatAtf(r0)));
+    SYSCALL(0x120, OpAccept4(m, di, si, dx, r0));
     SYSCALL(0x177, vmsplice(di, P(si), dx, r0));
     CASE(0xE7, HaltMachine(m, di | 0x100));
     default:

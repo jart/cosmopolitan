@@ -10,6 +10,8 @@ struct Elf {
   Elf64_Ehdr *ehdr;
   size_t size;
   int64_t base;
+  char *map;
+  size_t mapsize;
 };
 
 void LoadProgram(struct Machine *, const char *, char **, char **,

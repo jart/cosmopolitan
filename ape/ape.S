@@ -236,9 +236,6 @@ pc:	cld
 	ljmp	$0,$REAL(realmodeloader)
 	.endfn	pc,globl,hidden
 
-/	Be gentler on Unix line buffer impls.
-	.byte	0x0a
-
 /	Determines disk geometry.
 /
 /	We use imperial measurements for storage systems so the software
@@ -1055,9 +1052,9 @@ realmodeloader:
 	call	rlinit
 	call	sinit4
 	mov	$VIDYA_MODE,%di
+	call	vinit
 	mov	%es,XLM(VIDEO_POSITION_FAR_POINTER)
 	mov	%ax,XLM(VIDEO_POSITION_FAR_POINTER)+2
-	call	vinit
 	mov	$REAL(.Lstr.ape),%di
 	call	rvputs
 	.optfn	_start16
@@ -1370,8 +1367,8 @@ vtput:	push	%bp
 	mov	%di,%dx
 	bband	VIDYA_REWIND,%dh,%dl
 	bbadd	VIDYA_SIZE,%dh,%dl
-	bbmov	VIDYA_COLUMNS*2,%bx,%bh,%bl
-0:	cmp	%di,%dx
+	bbmov	VIDYA_COLUMNS*2-2,%bx,%bh,%bl
+0:	cmp	%dx,%di
 	je	6f
 	ja	3f
 	lodsb				# todo: utf8 → cp437
@@ -1523,12 +1520,12 @@ longmodeloader:
 /	Long Mode Hardware Check
 lcheck:	push	%bp
 	mov	%sp,%bp
-	pushfw				# check for i8086 / i8088 / i80186
+	pushf				# check for i8086 / i8088 / i80186
 	pop	%ax
-	and	$0b111<<12,%ax		# see intel manual volume 1 §19.1.2
-	jnz	9f
-	pushfl				# now check for later model of 80486
-	pop	%eax			# test ability to *change* cpuid bit
+	test	$0x80,%ah		# see intel manual volume 1 20.1.2
+	jnz	9f			# we now assume 32bit is supported
+	pushfl				# now check for i386 or early i486
+	pop	%eax			# test ability to change cpuid bit
 	mov	%eax,%ecx
 	mov	$1<<21,%ebx
 	xor	%ebx,%eax
@@ -1537,8 +1534,8 @@ lcheck:	push	%bp
 	pushfl
 	pop	%eax
 	cmp	%eax,%ecx
-	je	12f
-	and	%ebx,%eax		# puts cpuid bit in the on position
+	je	12f			# we assume cpuid inst is available
+	or	%ebx,%eax		# puts cpuid bit in the on position
 	push	%eax
 	popfl
 	mov	$0x80000000,%edi	# get amd ext cpuid thingy length
@@ -1549,7 +1546,7 @@ lcheck:	push	%bp
 	jl	10f
 	mov	%edi,%eax
 	cpuid
-	mov	$1<<29/*LM*/,%edi	# check for nexgen32e support
+	mov	$1<<29,%edi		# need nexgen32e long mode support
 	and	%edi,%edx
 	cmp	%edi,%edx
 	jne	10f

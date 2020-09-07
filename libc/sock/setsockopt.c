@@ -51,7 +51,7 @@ static textwindows int setsockopt$nt(struct Fd *fd, int level, int optname,
  *   int yes = 1;
  *   setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(yes));
  *
- * @param level can be SOL_SOCKET, IPPROTO_TCP, etc.
+ * @param level can be SOL_SOCKET, SOL_IP, SOL_TCP, etc.
  * @param optname can be SO_{REUSE{PORT,ADDR},KEEPALIVE,etc.} etc.
  * @return 0 on success, or -1 w/ errno
  * @error ENOPROTOOPT for unknown (level,optname)
@@ -60,6 +60,7 @@ static textwindows int setsockopt$nt(struct Fd *fd, int level, int optname,
  */
 int setsockopt(int fd, int level, int optname, const void *optval,
                uint32_t optlen) {
+  if (!optval) return efault();
   if (!level || !optname) return enoprotoopt(); /* our sysvconsts definition */
   if (optname == -1) return 0;                  /* our sysvconsts definition */
   if (!IsWindows()) {

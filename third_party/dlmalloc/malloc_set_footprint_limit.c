@@ -21,5 +21,5 @@ size_t malloc_set_footprint_limit(size_t bytes) {
   } else {
     result = granularity_align(bytes);
   }
-  return gm->footprint_limit = result;
+  return g_dlmalloc->footprint_limit = result;
 }

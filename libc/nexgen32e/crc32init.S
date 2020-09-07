@@ -18,7 +18,6 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.text.startup
 
 /	Generates lookup table for computing CRC-32 byte-by-byte.
 /

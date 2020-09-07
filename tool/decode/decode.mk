@@ -36,6 +36,7 @@ TOOL_DECODE_DIRECTDEPS =				\
 	LIBC_STR					\
 	LIBC_STUBS					\
 	LIBC_SYSV					\
+	LIBC_SYSV_CALLS					\
 	LIBC_UNICODE					\
 	LIBC_X						\
 	TOOL_DECODE_LIB					\

@@ -312,30 +312,6 @@ void sincosl(long double, long double *, long double *);
 #define __X87_CONST(OP, VALUE) VALUE
 #endif
 
-#define fnstsw() __X87_FPU_STATUS("fnstsw")
-#define fstsw()  __X87_FPU_STATUS("fstsw")
-#define __X87_FPU_STATUS(OP)               \
-  ({                                       \
-    unsigned short fpsr;                   \
-    asm volatile(OP "\t%0" : "=am"(fpsr)); \
-    fpsr;                                  \
-  })
-
-#define finit()  __X87_INIT("finit")
-#define fninit() __X87_INIT("fninit")
-#define __X87_INIT(OP)                                                   \
-  ({                                                                     \
-    long double st0, stm;                                                \
-    asm volatile(OP                                                      \
-                 : "=t"(st0)                                             \
-                 : /* no inputs */                                       \
-                 : "st(1)", "st(2)", "st(3)", "st(4)", "st(5)", "st(6)", \
-                   "st(7)", "fpsr");                                     \
-    /* assume(!fpsr && fpcr == FPU_DEFAULT); */                          \
-    asm("fst\t%0" : "=m"(stm) : "t"(st0));                               \
-    st0;                                                                 \
-  })
-
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_MATH_H_ */

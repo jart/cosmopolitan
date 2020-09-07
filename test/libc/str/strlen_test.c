@@ -29,8 +29,8 @@ wchar_t u32[] = L"utf32 ☻";
 
 TEST(strlen, usageExample_c11) {
   EXPECT_EQ(6 + 3, strlen(u8));
-  EXPECT_EQ(7, strlen(u16));
-  EXPECT_EQ(7, strlen(u32));
+  EXPECT_EQ(7, strlen16(u16));
+  EXPECT_EQ(7, wcslen(u32));
 }
 
 TEST(strlen, usageExample_c99) {

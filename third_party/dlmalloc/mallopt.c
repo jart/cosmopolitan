@@ -24,17 +24,17 @@ bool32 mallopt(int param_number, int value) {
   val = (value == -1) ? SIZE_MAX : (size_t)value;
   switch (param_number) {
     case M_TRIM_THRESHOLD:
-      mparams.trim_threshold = val;
+      g_mparams.trim_threshold = val;
       return true;
     case M_GRANULARITY:
-      if (val >= mparams.page_size && ((val & (val - 1)) == 0)) {
-        mparams.granularity = val;
+      if (val >= g_mparams.page_size && ((val & (val - 1)) == 0)) {
+        g_mparams.granularity = val;
         return true;
       } else {
         return false;
       }
     case M_MMAP_THRESHOLD:
-      mparams.mmap_threshold = val;
+      g_mparams.mmap_threshold = val;
       return true;
     default:
       return false;

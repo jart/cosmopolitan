@@ -5,46 +5,56 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define SibBase(x)  ((x & 000007000000) >> 022)
-#define SibIndex(x) ((x & 000700000000) >> 030)
-#define ModrmRm(x)  ((x & 000000000700) >> 006)
-#define ModrmReg(x) ((x & 000000000007) >> 000)
-#define ModrmSrm(x) ((x & 000000070000) >> 014)
-#define ModrmMod(x) ((x & 000060000000) >> 026)
-#define RegLog2(x)  ((x & 006000000000) >> 034)
-#define Rexx(x)     ((x & 001000000000) >> 033)
-#define Asz(x)      ((x & 000000400000) >> 021)
-#define Rexw(x)     ((x & 000000004000) >> 013)
-#define Rexr(x)     ((x & 000000000010) >> 003)
-#define Rexb(x)     ((x & 000010000000) >> 025)
 #define Rex(x)      ((x & 000000000020) >> 004)
 #define Osz(x)      ((x & 000000000040) >> 005)
 #define Rep(x)      ((x & 030000000000) >> 036)
+#define Rexr(x)     ((x & 000000000010) >> 003)
+#define Rexw(x)     ((x & 000000000100) >> 006)
+#define Rexb(x)     ((x & 000000002000) >> 012)
+#define Sego(x)     ((x & 000007000000) >> 022)
+#define Mode(x)     ((x & 001400000000) >> 032)
+#define Eamode(x)   ((x & 000300000000) >> 030)
+#define RexbRm(x)   ((x & 000000003600) >> 007)
+#define RexrReg(x)  ((x & 000000000017) >> 000)
+#define RegLog2(x)  ((x & 006000000000) >> 034)
+#define ModrmRm(x)  ((x & 000000001600) >> 007)
+#define ModrmReg(x) ((x & 000000000007) >> 000)
+#define ModrmSrm(x) ((x & 000000070000) >> 014)
+#define ModrmMod(x) ((x & 000060000000) >> 026)
 
-#define IsModrmRegister(x) (ModrmMod(x) == 3)
-#define SibExists(x)       (ModrmRm(x) == 4)
-#define SibHasIndex(x)     (SibIndex(x) != 4 || Rexx(x))
-#define SibHasBase(x)      (SibBase(x) != 5 || ModrmMod(x))
-#define SibIsAbsolute(x)   (!SibHasBase(x) && !SibHasIndex(x))
-#define IsRipRelative(x)   (ModrmRm(x) == 5 && !ModrmMod(x))
+#define AddrByteReg(m, k) ((uint8_t *)m->reg + kByteReg[k])
+#define ByteRexrReg(m, x) AddrByteReg(m, (x & 00000000037) >> 0)
+#define ByteRexbRm(m, x)  AddrByteReg(m, (x & 00000007600) >> 7)
+#define ByteRexbSrm(m, x) AddrByteReg(m, (x & 00000370000) >> 12)
+#define RexbBase(m, x)    (Rexb(x) << 3 | m->xedd->op.base)
+#define RegSrm(m, x)      Abp8(m->reg[(x & 00000070000) >> 12])
+#define RegRexbRm(m, x)   Abp8(m->reg[RexbRm(x)])
+#define RegRexbSrm(m, x)  Abp8(m->reg[(x & 00000170000) >> 12])
+#define RegRexrReg(m, x)  Abp8(m->reg[RexrReg(x)])
+#define RegRexbBase(m, x) Abp8(m->reg[RexbBase(m, x)])
+#define RegRexxIndex(m)   Abp8(m->reg[m->xedd->op.rexx << 3 | m->xedd->op.index])
+#define MmRm(m, x)        Abp16(m->xmm[(x & 00000001600) >> 7])
+#define MmReg(m, x)       Abp16(m->xmm[(x & 00000000007) >> 0])
+#define XmmRexbRm(m, x)   Abp16(m->xmm[RexbRm(x)])
+#define XmmRexrReg(m, x)  Abp16(m->xmm[RexrReg(x)])
 
-#define ByteRexrReg(m, x)  m->beg[(x & 00000000037) >> 0]
-#define ByteRexbRm(m, x)   m->beg[(x & 00000003700) >> 6]
-#define ByteRexbSrm(m, x)  m->beg[(x & 00000370000) >> 12]
-#define RegRexbSrm(m, x)   Abp8(m->reg[(x & 00000170000) >> 12])
-#define RegRexrReg(m, x)   Abp8(m->reg[(x & 00000000017) >> 0])
-#define RegRexbRm(m, x)    Abp8(m->reg[(x & 00000001700) >> 6])
-#define RegRexbBase(m, x)  Abp8(m->reg[(x & 00017000000) >> 18])
-#define RegRexxIndex(m, x) Abp8(m->reg[(x & 01700000000) >> 24])
-#define XmmRexrReg(m, x)   Abp16(m->veg[(x & 00000000017) >> 0])
-#define XmmRexbRm(m, x)    Abp16(m->veg[(x & 00000001700) >> 6])
-#define MmReg(m, x)        Abp16(m->veg[(x & 00000000007) >> 0])
-#define MmRm(m, x)         Abp16(m->veg[(x & 00000000700) >> 6])
+#define Rexx(m)             m->op.rexx
+#define SibBase(m)          m->op.base
+#define SibIndex(m)         m->op.index
+#define SibExists(x)        (ModrmRm(x) == 4)
+#define IsModrmRegister(x)  (ModrmMod(x) == 3)
+#define SibHasIndex(x)      (SibIndex(x) != 4 || Rexx(x))
+#define SibHasBase(x, r)    (SibBase(x) != 5 || ModrmMod(r))
+#define SibIsAbsolute(x, r) (!SibHasBase(x, r) && !SibHasIndex(x))
+#define IsRipRelative(x)    (ModrmRm(x) == 5 && !ModrmMod(x))
+
+extern const uint8_t kByteReg[32];
 
 int64_t ComputeAddress(const struct Machine *, uint32_t) nosideeffect;
 
 void *ComputeReserveAddressRead(struct Machine *, uint32_t, size_t);
 void *ComputeReserveAddressRead1(struct Machine *, uint32_t);
+void *ComputeReserveAddressRead4(struct Machine *, uint32_t);
 void *ComputeReserveAddressRead8(struct Machine *, uint32_t);
 void *ComputeReserveAddressWrite(struct Machine *, uint32_t, size_t);
 void *ComputeReserveAddressWrite1(struct Machine *, uint32_t);

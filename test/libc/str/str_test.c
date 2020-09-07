@@ -21,22 +21,26 @@
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-TEST(strlen16, testEmpty) { EXPECT_EQ(0, strlen(u"")); }
-TEST(strlen16, testAscii) { EXPECT_EQ(5, strlen(u"hello")); }
+TEST(strlen16, testEmpty) {
+  EXPECT_EQ(0, strlen16(u""));
+}
+TEST(strlen16, testAscii) {
+  EXPECT_EQ(5, strlen16(u"hello"));
+}
 
 TEST(strlen16, testUnicode) {
-  EXPECT_EQ(28, strlen(u"αcτµαlly pδrταblε εxεcµταblε"));
+  EXPECT_EQ(28, strlen16(u"αcτµαlly pδrταblε εxεcµταblε"));
 }
 
 TEST(strclen, testAegeanNumberSupplementaryPlane) {
   EXPECT_EQ(36, strlen("𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
-  EXPECT_EQ(18, strlen(u"𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
-  EXPECT_EQ(9, strlen(L"𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
+  EXPECT_EQ(18, strlen16(u"𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
+  EXPECT_EQ(9, wcslen(L"𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
   EXPECT_EQ(9, strclen("𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
   EXPECT_EQ(9, strclen(u"𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
   EXPECT_EQ(9, strclen(L"𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
 }
 
 TEST(strlen16, testCoolKidNulTerminator) {
-  EXPECT_EQ(2, strlen((const char16_t *)"\x00\xd8\x00\xdc\x00"));
+  EXPECT_EQ(2, strlen16((const char16_t *)"\x00\xd8\x00\xdc\x00"));
 }

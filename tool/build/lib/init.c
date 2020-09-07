@@ -19,31 +19,5 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "tool/build/lib/machine.h"
 
-static void InitRegisterBytePointers(struct Machine *m) {
-  unsigned i, j, k;
-  for (i = 0; i < 2; ++i) {
-    for (j = 0; j < 2; ++j) {
-      for (k = 0; k < 8; ++k) {
-        if (i) {
-          m->beg[i << 4 | j << 3 | k] = m->reg[j << 3 | k];
-        } else {
-          m->beg[i << 4 | j << 3 | k] = &m->reg[k & 0b11][(k & 0b100) >> 2];
-        }
-      }
-    }
-  }
-}
-
-static void InitRegisterXmmPointers(struct Machine *m) {
-  unsigned i, j;
-  for (i = 0; i < 2; ++i) {
-    for (j = 0; j < 8; ++j) {
-      m->veg[i << 3 | j] = m->xmm[i][j];
-    }
-  }
-}
-
 void InitMachine(struct Machine *m) {
-  InitRegisterBytePointers(m);
-  InitRegisterXmmPointers(m);
 }

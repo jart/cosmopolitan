@@ -21,13 +21,13 @@
 #include "net/http/http.h"
 
 /**
- * Returns small number for HTTP header, or 0 if not found.
+ * Returns small number for HTTP header, or -1 if not found.
  */
-enum HttpHeader gethttpheader(const char *str, unsigned int len) {
+int GetHttpHeader(const char *str, size_t len) {
   const struct HttpHeaderSlot *slot;
-  if ((slot = in_word_set(str, len))) {
+  if ((slot = LookupHttpHeader(str, len))) {
     return slot->code;
   } else {
-    return 0;
+    return -1;
   }
 }

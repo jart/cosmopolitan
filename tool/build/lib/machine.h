@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_TOOL_BUILD_LIB_MACHINE_H_
 #define COSMOPOLITAN_TOOL_BUILD_LIB_MACHINE_H_
-#include "libc/elf/struct/ehdr.h"
 #include "libc/runtime/runtime.h"
 #include "third_party/xed/x86.h"
 #include "tool/build/lib/fds.h"
@@ -26,9 +25,13 @@ COSMOPOLITAN_C_START_
 struct Machine {
   struct XedDecodedInst *xedd;
   uint64_t ip;
+  uint8_t cs[8];
+  uint8_t ss[8];
   uint64_t codevirt;
   uint8_t *codereal;
+  uint32_t mode;
   uint32_t flags;
+  uint32_t tlbindex;
   uint32_t stashsize;
   int64_t stashaddr;
   int64_t readaddr;
@@ -36,7 +39,7 @@ struct Machine {
   uint32_t readsize;
   uint32_t writesize;
   union {
-    uint8_t reg[2 * 8][8];
+    uint8_t reg[16][8];
     struct {
       uint8_t ax[8];
       uint8_t cx[8];
@@ -55,14 +58,19 @@ struct Machine {
       uint8_t r14[8];
       uint8_t r15[8];
     };
-  } aligned(8);
-  uint32_t tlbindex;
+  };
+  uint8_t *real;
+  uint64_t realsize;
+  uint64_t *cr3;
   struct TlbEntry {
     int64_t v;
     void *r;
   } tlb[16];
-  uint8_t *veg[2 * 8];
-  uint8_t *beg[2 * 2 * 8];
+  uint8_t xmm[16][16] aligned(16);
+  uint8_t es[8];
+  uint8_t ds[8];
+  uint8_t fs[8];
+  uint8_t gs[8];
   struct MachineFpu {
     long double st[8];
     union {
@@ -129,16 +137,14 @@ struct Machine {
     uint32_t i;
     void *p[6];
   } freelist;
-  pml4t_t cr3;
-  uint8_t xmm[2][8][16] aligned(16);
   int64_t bofram[2];
   jmp_buf onhalt;
   int64_t faultaddr;
   uint8_t stash[4096];
   uint8_t xmmtype[2][8];
-  struct XedDecodedInst icache[1024];
+  uint8_t icache[2048][40] aligned(8);
   struct MachineFds fds;
-};
+} aligned(64);
 
 void ResetCpu(struct Machine *);
 void LoadInstruction(struct Machine *);

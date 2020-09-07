@@ -25,8 +25,7 @@ LIBC_TIME_A = o/$(MODE)/libc/time/time.a
 LIBC_TIME_A_FILES :=				\
 	$(wildcard libc/time/struct/*)		\
 	$(wildcard libc/time/*)
-LIBC_TIME_A_FILES := $(wildcard libc/time/*)
-LIBC_TIME_A_HDRS = $(filter %.h,$(LIBC_TIME_A_FILES))
+LIBC_TIME_A_HDRS := $(filter %.h,$(LIBC_TIME_A_FILES))
 LIBC_TIME_A_SRCS_S = $(filter %.S,$(LIBC_TIME_A_FILES))
 LIBC_TIME_A_SRCS_C = $(filter %.c,$(LIBC_TIME_A_FILES))
 

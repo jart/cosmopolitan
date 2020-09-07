@@ -108,7 +108,7 @@ int socket$nt(int, int, int) hidden;
 size_t iovec2nt(struct iovec$nt[hasatleast 16], const struct iovec *,
                 size_t) hidden;
 ssize_t sendto$nt(struct Fd *, const struct iovec *, size_t, uint32_t, void *,
-                  uint32_t *) hidden;
+                  uint32_t) hidden;
 ssize_t recvfrom$nt(struct Fd *, const struct iovec *, size_t, uint32_t, void *,
                     uint32_t *) hidden;
 

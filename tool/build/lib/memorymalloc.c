@@ -45,6 +45,7 @@ struct Machine *NewMachine(void) {
   struct Machine *m;
   m = memalign(alignof(struct Machine), sizeof(struct Machine));
   memset(m, 0, sizeof(struct Machine));
+  m->mode = XED_MACHINE_MODE_LONG_64;
   InitMachine(m);
   return m;
 }

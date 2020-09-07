@@ -18,41 +18,29 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/bisectcarleft.h"
+#include "libc/assert.h"
 #include "libc/bits/weaken.h"
+#include "libc/conv/itoa.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/backtrace.h"
 #include "libc/macros.h"
 #include "libc/nexgen32e/gc.h"
 #include "libc/nexgen32e/stackframe.h"
+#include "libc/runtime/missioncritical.h"
 #include "libc/runtime/symbols.h"
 #include "libc/stdio/stdio.h"
-
-static char *FormatAddress(FILE *f, const struct SymbolTable *st, intptr_t addr,
-                           char *out, unsigned size, bool symbolic) {
-  int64_t addend;
-  const char *name;
-  const struct Symbol *symbol;
-  if (st->count && ((intptr_t)addr >= (intptr_t)&_base &&
-                    (intptr_t)addr <= (intptr_t)&_end && symbolic)) {
-    symbol = &st->symbols[bisectcarleft((const int32_t(*)[2])st->symbols,
-                                        st->count, addr - st->addr_base - 1)];
-    addend = addr - st->addr_base - symbol->addr_rva;
-    name = &st->name_base[symbol->name_rva];
-    snprintf(out, size, "%s%c%#x", name, addend >= 0 ? '+' : '-', ABS(addend));
-  } else {
-    snprintf(out, size, "%p", addr);
-  }
-  return out;
-}
+#include "libc/str/str.h"
 
 int PrintBacktraceUsingSymbols(FILE *f, const struct StackFrame *bp,
-                               struct SymbolTable *symbols) {
+                               struct SymbolTable *st) {
   size_t gi;
-  char buf[256];
   intptr_t addr;
+  int64_t addend;
   struct Garbages *garbage;
+  char *p, buf[256], ibuf[21];
+  const struct Symbol *symbol;
   const struct StackFrame *frame;
-  if (!symbols) return -1;
+  if (!st) return -1;
   garbage = weaken(g_garbage);
   gi = garbage ? garbage->i : 0;
   for (frame = bp; frame; frame = frame->next) {
@@ -62,8 +50,25 @@ int PrintBacktraceUsingSymbols(FILE *f, const struct StackFrame *bp,
         --gi;
       } while ((addr = garbage->p[gi].ret) == weakaddr("CollectGarbage"));
     }
-    fprintf(f, "%p %p %s\n", frame, addr,
-            FormatAddress(f, symbols, addr, buf, sizeof(buf), true));
+    p = buf;
+    p = mempcpy(p, ibuf, uint64toarray_fixed16((intptr_t)frame, ibuf, 48));
+    *p++ = ' ';
+    p = mempcpy(p, ibuf, uint64toarray_fixed16(addr, ibuf, 48));
+    *p++ = ' ';
+    if (st->count && ((intptr_t)addr >= (intptr_t)&_base &&
+                      (intptr_t)addr <= (intptr_t)&_end)) {
+      symbol = &st->symbols[bisectcarleft((const int32_t(*)[2])st->symbols,
+                                          st->count, addr - st->addr_base - 1)];
+      p = stpcpy(p, &st->name_base[symbol->name_rva]);
+      addend = addr - st->addr_base - symbol->addr_rva;
+      *p++ = addend >= 0 ? '+' : '-';
+      if (addend) *p++ = '0', *p++ = 'x';
+      p = mempcpy(p, ibuf, uint64toarray_radix16(ABS(addend), ibuf));
+    } else {
+      p = stpcpy(p, "UNKNOWN");
+    }
+    *p++ = '\n';
+    __print(buf, p - buf);
   }
   return 0;
 }

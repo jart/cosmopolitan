@@ -18,64 +18,66 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
+#include "libc/nexgen32e/bsf.h"
 #include "libc/str/str.h"
 #include "third_party/xed/x86.h"
+#include "tool/build/lib/address.h"
+#include "tool/build/lib/endian.h"
 #include "tool/build/lib/machine.h"
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/stats.h"
 #include "tool/build/lib/throw.h"
 
-static bool IsOpcodeEqual(uint8_t *a, uint8_t b[16], size_t size) {
-  unsigned i;
-  if (size) {
-    i = 0;
-    do {
-      if (a[i] != b[i]) {
-        return false;
-      }
-    } while (++i < size);
-    return true;
+static bool IsOpcodeEqual(struct XedDecodedInst *xedd, uint8_t *a) {
+  uint64_t w;
+  if (xedd->length) {
+    if (xedd->length <= 7) {
+      w = Read64(a) ^ Read64(xedd->bytes);
+      return !w || bsfl(w) >= (xedd->length << 3);
+    } else {
+      return memcmp(a, xedd->bytes, xedd->length) == 0;
+    }
   } else {
     return false;
   }
 }
 
+static void DecodeInstruction(struct Machine *m, uint8_t *p, unsigned n) {
+  struct XedDecodedInst xedd[1];
+  xed_decoded_inst_zero_set_mode(xedd, m->mode);
+  if (!xed_instruction_length_decode(xedd, p, n)) {
+    memcpy(m->xedd, xedd, sizeof(m->icache[0]));
+  } else {
+    HaltMachine(m, kMachineDecodeError);
+  }
+}
+
 void LoadInstruction(struct Machine *m) {
-  unsigned i;
-  enum XedError err;
+  uint64_t ip;
+  unsigned i, key;
   uint8_t *addr, *toil, copy[15];
-  if ((i = 0x1000 - (m->ip & 0xfff)) >= 15) {
-    if (ROUNDDOWN(m->ip, 0x1000) == m->codevirt && m->ip) {
-      addr = m->codereal + (m->ip & 0xfff);
+  ip = Read64(m->cs) + MaskAddress(m->mode & 3, m->ip);
+  key = ip & (ARRAYLEN(m->icache) - 1);
+  m->xedd = (struct XedDecodedInst *)m->icache[key];
+  if ((i = 0x1000 - (ip & 0xfff)) >= 15) {
+    if (ROUNDDOWN(ip, 0x1000) == m->codevirt && ip) {
+      addr = m->codereal + (ip & 0xfff);
     } else {
-      m->codevirt = ROUNDDOWN(m->ip, 0x1000);
+      m->codevirt = ROUNDDOWN(ip, 0x1000);
       m->codereal = ResolveAddress(m, m->codevirt);
-      addr = m->codereal + (m->ip & 0xfff);
+      addr = m->codereal + (ip & 0xfff);
     }
-    m->xedd = m->icache + (m->ip & (ARRAYLEN(m->icache) - 1));
-    if (IsOpcodeEqual(addr, m->xedd->bytes, m->xedd->length)) {
-      taken++;
-    } else {
-      ntaken++;
-      xed_decoded_inst_zero_set_mode(m->xedd, XED_MACHINE_MODE_LONG_64);
-      if (xed_instruction_length_decode(m->xedd, addr, 15)) {
-        HaltMachine(m, kMachineDecodeError);
-      }
+    if (!IsOpcodeEqual(m->xedd, addr)) {
+      DecodeInstruction(m, addr, 15);
     }
   } else {
-    m->xedd = m->icache;
-    xed_decoded_inst_zero_set_mode(m->xedd, XED_MACHINE_MODE_LONG_64);
-    addr = ResolveAddress(m, m->ip);
-    if ((toil = FindReal(m, m->ip + i))) {
+    addr = ResolveAddress(m, ip);
+    if ((toil = FindReal(m, ip + i))) {
       memcpy(copy, addr, i);
       memcpy(copy + i, toil, 15 - i);
-      if ((err = xed_instruction_length_decode(m->xedd, copy, 15))) {
-        HaltMachine(m, kMachineDecodeError);
-      }
+      DecodeInstruction(m, copy, 15);
     } else {
-      if ((err = xed_instruction_length_decode(m->xedd, addr, i))) {
-        HaltMachine(m, kMachineDecodeError);
-      }
+      DecodeInstruction(m, addr, i);
     }
   }
 }

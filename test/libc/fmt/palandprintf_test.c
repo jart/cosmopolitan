@@ -416,12 +416,8 @@ TEST(sprintf, test_float) {
   EXPECT_STREQ("42.90", Format("%.2f", 42.8952));
   EXPECT_STREQ("42.895200000", Format("%.9f", 42.8952));
   EXPECT_STREQ("42.8952230000", Format("%.10f", 42.895223));
-  /* this testcase checks, that the precision is truncated to 9 digits. */
-  /* a perfect working float should return the whole number */
-  EXPECT_STREQ("42.895223123000", Format("%.12f", 42.89522312345678));
-  /* this testcase checks, that the precision is truncated AND rounded to 9 */
-  /* digits. a perfect working float should return the whole number */
-  EXPECT_STREQ("42.895223877000", Format("%.12f", 42.89522387654321));
+  EXPECT_STREQ("42.89522312345678", Format("%.14f", 42.89522312345678));
+  EXPECT_STREQ("42.89522387654321", Format("%.14f", 42.89522387654321));
   EXPECT_STREQ(" 42.90", Format("%6.2f", 42.8952));
   EXPECT_STREQ("+42.90", Format("%+6.2f", 42.8952));
   EXPECT_STREQ("+42.9", Format("%+5.1f", 42.9252));

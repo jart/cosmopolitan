@@ -17,11 +17,11 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/conv/itoa.h"
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
-#include "libc/stdio/stdio.h"
+#include "libc/runtime/missioncritical.h"
 
 /**
  * Handles failure of CHECK_xx() macros in -DNDEBUG mode.
@@ -35,8 +35,17 @@
  */
 relegated void ___check_fail_ndebug(uint64_t want, uint64_t got,
                                     const char *opchar) {
-  int lasterr = errno;
+  char bx[21];
+  int lasterr;
+  lasterr = errno;
   startfatal_ndebug();
-  fprintf(stderr, "%s: %#lx %s %#lx (%s)\n", "check failed", want, opchar, got,
-          strerror(lasterr));
+  __print_string("check failed: 0x");
+  __print(bx, uint64toarray_radix16(want, bx));
+  __print_string(" ");
+  __print_string(opchar);
+  __print_string(" 0x");
+  __print(bx, uint64toarray_radix16(got, bx));
+  __print_string(" (");
+  __print(bx, int64toarray_radix10(lasterr, bx));
+  __print_string(")\n");
 }

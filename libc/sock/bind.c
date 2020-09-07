@@ -35,6 +35,7 @@
  * @asyncsignalsafe
  */
 int bind(int fd, const void *addr, uint32_t addrsize) {
+  if (!addr) return efault();
   if (addrsize == sizeof(struct sockaddr_in)) {
     if (!IsWindows()) {
       if (!IsBsd()) {

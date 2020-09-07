@@ -17,16 +17,21 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/time/time.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/time.h"
 
+void OpPause(struct Machine *m, uint32_t rde) {
+  sched_yield();
+}
+
 /**
  * I am the timelorde.
  */
-void OpRdtsc(struct Machine *m) {
+void OpRdtsc(struct Machine *m, uint32_t rde) {
   uint64_t c;
 #ifdef __x86_64__
   c = rdtsc();
@@ -37,4 +42,13 @@ void OpRdtsc(struct Machine *m) {
 #endif
   Write64(m->ax, (c >> 000) & 0xffffffff);
   Write64(m->dx, (c >> 040) & 0xffffffff);
+}
+
+void OpRdtscp(struct Machine *m, uint32_t rde) {
+  uint32_t core, node, tscaux;
+  OpRdtsc(m, rde);
+  core = 0;
+  node = 0;
+  tscaux = (node & 0xfff) << 12 | (core & 0xfff);
+  Write64(m->ax, tscaux & 0xffffffff);
 }

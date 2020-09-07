@@ -102,6 +102,111 @@ struct AsanGlobal {
   char *odr_indicator;
 };
 
+struct AsanMorgue {
+  unsigned i;
+  void *p[16];
+};
+
+static struct AsanMorgue __asan_morgue;
+
+static const char *__asan_dscribe_free_poison(int c) {
+  switch (c) {
+    case kAsanHeapFree:
+      return "heap double free";
+    case kAsanRelocated:
+      return "free after relocate";
+    case kAsanStackFree:
+      return "stack double free";
+    default:
+      return "invalid pointer";
+  }
+}
+
+static const char *__asan_describe_access_poison(int c) {
+  switch (c) {
+    case kAsanHeapFree:
+      return "heap use after free";
+    case kAsanStackFree:
+      return "stack use after release";
+    case kAsanRelocated:
+      return "heap use after relocate";
+    case kAsanHeapUnderrun:
+      return "heap underrun";
+    case kAsanHeapOverrun:
+      return "heap overrun";
+    case kAsanGlobalOverrun:
+      return "global overrun";
+    case kAsanGlobalUnregistered:
+      return "global unregistered";
+    case kAsanStackUnderrun:
+      return "stack underflow";
+    case kAsanStackOverrun:
+      return "stack overflow";
+    case kAsanAllocaOverrun:
+      return "alloca overflow";
+    case kAsanUnscoped:
+      return "unscoped";
+    default:
+      return "poisoned";
+  }
+}
+
+static noreturn void __asan_die(const char *msg, size_t size) {
+  __print(msg, size);
+  PrintBacktraceUsingSymbols(stderr, __builtin_frame_address(0),
+                             getsymboltable());
+  DebugBreak();
+  _Exit(66);
+}
+
+static noreturn void __asan_report_deallocate_fault(void *addr, int c) {
+  char *p, ibuf[21], buf[256];
+  p = buf;
+  p = stpcpy(p, "error: ");
+  p = stpcpy(p, __asan_dscribe_free_poison(c));
+  p = stpcpy(p, " ");
+  p = mempcpy(p, ibuf, int64toarray_radix10(c, ibuf));
+  p = stpcpy(p, " at 0x");
+  p = mempcpy(p, ibuf, uint64toarray_fixed16((intptr_t)addr, ibuf, 48));
+  p = stpcpy(p, "\n");
+  __asan_die(buf, p - buf);
+}
+
+static noreturn void __asan_report_memory_fault(uint8_t *addr, int size,
+                                                const char *kind) {
+  char *p, ibuf[21], buf[256];
+  p = buf;
+  p = stpcpy(p, "error: ");
+  p = stpcpy(p, __asan_describe_access_poison(*(char *)SHADOW((intptr_t)addr)));
+  p = stpcpy(p, " ");
+  p = mempcpy(p, ibuf, uint64toarray_radix10(size, ibuf));
+  p = stpcpy(p, "-byte ");
+  p = stpcpy(p, kind);
+  p = stpcpy(p, " at 0x");
+  p = mempcpy(p, ibuf, uint64toarray_fixed16((intptr_t)addr, ibuf, 48));
+  p = stpcpy(p, "\n");
+  __asan_die(buf, p - buf);
+}
+
+static const void *__asan_morgue_add(void *p) {
+  void *r;
+  r = __asan_morgue.p[__asan_morgue.i];
+  __asan_morgue.p[__asan_morgue.i] = p;
+  __asan_morgue.i += 1;
+  __asan_morgue.i &= ARRAYLEN(__asan_morgue.p) - 1;
+  return r;
+}
+
+static void __asan_morgue_flush(void) {
+  void *p;
+  unsigned i;
+  for (i = 0; i < ARRAYLEN(__asan_morgue.p); ++i) {
+    p = __asan_morgue.p[i];
+    __asan_morgue.p[i] = NULL;
+    dlfree(p);
+  }
+}
+
 static bool __asan_is_mapped(void *p) {
   int x, i;
   x = (intptr_t)p >> 16;
@@ -109,41 +214,8 @@ static bool __asan_is_mapped(void *p) {
   return i < _mmi.i && x >= _mmi.p[i].x && x <= _mmi.p[i].y;
 }
 
-void __asan_map_shadow(void *addr, size_t size) {
-  int i, n, x;
-  char *a, *b;
-  struct DirectMap sm;
-  a = (char *)ROUNDDOWN(SHADOW((intptr_t)addr), FRAMESIZE);
-  b = (char *)ROUNDDOWN(SHADOW((intptr_t)addr + size - 1), FRAMESIZE);
-  for (; a <= b; a += FRAMESIZE) {
-    if (!__asan_is_mapped(a)) {
-      sm = DirectMap(a, FRAMESIZE, PROT_READ | PROT_WRITE,
-                     MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
-      if (sm.addr == MAP_FAILED ||
-          TrackMemoryInterval(&_mmi, (intptr_t)a >> 16, (intptr_t)a >> 16,
-                              sm.maphandle) == -1) {
-        abort();
-      }
-    }
-  }
-}
-
-size_t __asan_malloc_usable_size(const void *vp) {
-  char *s;
-  size_t n;
-  for (n = 0, s = (char *)SHADOW((intptr_t)vp);; ++s) {
-    if (!*s) {
-      n += 8;
-    } else if (*s > 0) {
-      n += *s & 7;
-    } else {
-      break;
-    }
-  }
-  return n;
-}
-
-void *__asan_allocate(size_t align, size_t size, int underrun, int overrun) {
+static void *__asan_allocate(size_t align, size_t size, int underrun,
+                             int overrun) {
   char *p, *s;
   size_t q, r, i;
   if (!(p = dlmemalign(align, ROUNDUP(size, 8) + 16))) return NULL;
@@ -160,29 +232,59 @@ void *__asan_allocate(size_t align, size_t size, int underrun, int overrun) {
   return p;
 }
 
-void __asan_deallocate(char *p, int kind) {
+static void __asan_deallocate(char *p, int kind) {
+  char *s;
+  s = (char *)SHADOW((intptr_t)p);
+  if ((*s < 0 && *s != kAsanHeapOverrun) || *s >= 8) {
+    __asan_report_deallocate_fault(p, *s);
+  }
+  for (; *s >= 0; ++s) *s = kind;
+  dlfree(__asan_morgue_add(p));
+}
+
+static void __asan_poison_redzone(intptr_t addr, size_t size, size_t redsize,
+                                  int kind) {
+  char *s;
+  intptr_t p;
+  size_t a, b, w;
+  w = (intptr_t)addr & 7;
+  p = (intptr_t)addr - w;
+  a = w + size;
+  b = w + redsize;
+  s = (char *)SHADOW(p + a);
+  if (a & 7) *s++ = a & 7;
+  memset(s, kind, (b - ROUNDUP(a, 8)) >> 3);
+}
+
+static size_t __asan_malloc_usable_size(const void *vp) {
   char *s;
   size_t n;
-  s = (char *)SHADOW((intptr_t)p);
-  n = dlmalloc_usable_size(p);
-  n /= 8;
-  memset(s, kind, n);
-  dlfree(p);
+  for (n = 0, s = (char *)SHADOW((intptr_t)vp);; ++s) {
+    if (!*s) {
+      n += 8;
+    } else if (*s > 0) {
+      n += *s & 7;
+    } else {
+      break;
+    }
+  }
+  return n;
 }
 
-void __asan_free(void *vp) {
-  __asan_deallocate(vp, kAsanHeapFree);
+static void __asan_free(void *p) {
+  if (!p) return;
+  __asan_deallocate(p, kAsanHeapFree);
 }
 
-void *__asan_memalign(size_t align, size_t size) {
+static void *__asan_memalign(size_t align, size_t size) {
   return __asan_allocate(align, size, kAsanHeapUnderrun, kAsanHeapOverrun);
 }
 
-void *__asan_malloc(size_t size) {
+static void *__asan_malloc(size_t size) {
   return __asan_memalign(16, size);
 }
 
-void *__asan_calloc(size_t n, size_t m) {
+static void *__asan_calloc(size_t n, size_t m) {
   char *p;
   size_t size;
   if (__builtin_mul_overflow(n, m, &size)) size = -1;
@@ -190,7 +292,7 @@ void *__asan_calloc(size_t n, size_t m) {
   return p;
 }
 
-void *__asan_realloc(void *p, size_t n) {
+static void *__asan_realloc(void *p, size_t n) {
   char *p2;
   if (p) {
     if (n) {
@@ -208,86 +310,32 @@ void *__asan_realloc(void *p, size_t n) {
   return p2;
 }
 
-void *__asan_valloc(size_t n) {
+static void *__asan_valloc(size_t n) {
   return __asan_memalign(PAGESIZE, n);
 }
 
-void *__asan_pvalloc(size_t n) {
+static void *__asan_pvalloc(size_t n) {
   return __asan_valloc(ROUNDUP(n, PAGESIZE));
 }
 
-void __asan_poison(intptr_t addr, size_t size, size_t redsize, int kind) {
-  char *s;
-  intptr_t p;
-  size_t a, b, w;
-  w = (intptr_t)addr & 7;
-  p = (intptr_t)addr - w;
-  a = w + size;
-  b = w + redsize;
-  s = (char *)SHADOW(p + a);
-  if (a & 7) *s++ = a & 7;
-  memset(s, kind, (b - ROUNDUP(a, 8)) >> 3);
-}
-
 void __asan_register_globals(struct AsanGlobal g[], int n) {
-  size_t i;
+  unsigned i;
   for (i = 0; i < n; ++i) {
-    __asan_poison((intptr_t)g[i].addr, g[i].size, g[i].size_with_redzone,
-                  kAsanGlobalOverrun);
+    __asan_poison_redzone((intptr_t)g[i].addr, g[i].size,
+                          g[i].size_with_redzone, kAsanGlobalOverrun);
   }
 }
 
-void __asan_report_memory_fault(uint8_t *addr, int size, const char *kind) {
-  char *p, *s, ibuf[21], buf[256];
-  switch (*(char *)SHADOW((intptr_t)addr)) {
-    case kAsanStackFree:
-      s = "stack use after release";
-      break;
-    case kAsanHeapFree:
-      s = "heap use after free";
-      break;
-    case kAsanRelocated:
-      s = "heap use after relocate";
-      break;
-    case kAsanHeapUnderrun:
-      s = "heap underrun";
-      break;
-    case kAsanHeapOverrun:
-      s = "heap overrun";
-      break;
-    case kAsanStackUnderrun:
-      s = "stack underflow";
-      break;
-    case kAsanStackOverrun:
-      s = "stack overflow";
-      break;
-    case kAsanAllocaOverrun:
-      s = "alloca overflow";
-      break;
-    case kAsanUnscoped:
-      s = "unscoped";
-      break;
-    default:
-      s = "poisoned";
-      break;
+void __asan_unregister_globals(struct AsanGlobal g[], int n) {
+  unsigned i;
+  intptr_t a, b;
+  for (i = 0; i < n; ++i) {
+    a = ROUNDUP((intptr_t)g[i].addr, 8);
+    b = ROUNDDOWN((intptr_t)g[i].addr + g[i].size_with_redzone, 8);
+    if (b > a) {
+      memset((char *)SHADOW(a), kAsanGlobalUnregistered, (b - a) >> 3);
+    }
   }
-  p = buf;
-  p = stpcpy(p, "error: ");
-  p = stpcpy(p, s);
-  p = stpcpy(p, " ");
-  uint64toarray_radix10(size, ibuf);
-  p = stpcpy(p, ibuf);
-  p = stpcpy(p, "-byte ");
-  p = stpcpy(p, kind);
-  p = stpcpy(p, " at 0x");
-  uint64toarray_fixed16((intptr_t)addr, ibuf, 48);
-  p = stpcpy(p, ibuf);
-  p = stpcpy(p, "\n");
-  __print(buf, p - buf);
-  PrintBacktraceUsingSymbols(stderr, __builtin_frame_address(0),
-                             getsymboltable());
-  DebugBreak();
-  _Exit(66);
 }
 
 void *__asan_stack_malloc(size_t size, int classid) {
@@ -295,7 +343,7 @@ void *__asan_stack_malloc(size_t size, int classid) {
 }
 
 void __asan_stack_free(char *p, size_t size, int classid) {
-  return __asan_deallocate(p, kAsanStackFree);
+  dlfree(p);
 }
 
 void __asan_report_load_n(uint8_t *addr, int size) {
@@ -316,16 +364,8 @@ void __asan_unpoison_stack_memory(uintptr_t p, size_t n) {
   if (n & 7) *(char *)SHADOW(p + n) = n & 7;
 }
 
-void __asan_loadN(intptr_t ptr, size_t size) {
-  DebugBreak();
-}
-
-void __asan_storeN(intptr_t ptr, size_t size) {
-  DebugBreak();
-}
-
 void __asan_alloca_poison(intptr_t addr, size_t size) {
-  __asan_poison(addr, size, size + 32, kAsanAllocaOverrun);
+  __asan_poison_redzone(addr, size, size + 32, kAsanAllocaOverrun);
 }
 
 void __asan_allocas_unpoison(uintptr_t top, uintptr_t bottom) {
@@ -352,7 +392,27 @@ void __asan_install_malloc_hooks(void) {
   HOOK(hook$malloc_usable_size, __asan_malloc_usable_size);
 }
 
-void __asan_init(int argc, char *argv[], char **envp, intptr_t *auxv) {
+void __asan_map_shadow(void *addr, size_t size) {
+  int i, n, x;
+  char *a, *b;
+  struct DirectMap sm;
+  a = (char *)ROUNDDOWN(SHADOW((intptr_t)addr), FRAMESIZE);
+  b = (char *)ROUNDDOWN(SHADOW((intptr_t)addr + size - 1), FRAMESIZE);
+  for (; a <= b; a += FRAMESIZE) {
+    if (!__asan_is_mapped(a)) {
+      sm = DirectMap(a, FRAMESIZE, PROT_READ | PROT_WRITE,
+                     MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
+      if (sm.addr == MAP_FAILED ||
+          TrackMemoryInterval(&_mmi, (intptr_t)a >> 16, (intptr_t)a >> 16,
+                              sm.maphandle) == -1) {
+        abort();
+      }
+    }
+  }
+}
+
+textstartup void __asan_init(int argc, char *argv[], char **envp,
+                             intptr_t *auxv) {
   int i;
   static bool once;
   register intptr_t rsp asm("rsp");
@@ -367,4 +427,9 @@ void __asan_init(int argc, char *argv[], char **envp, intptr_t *auxv) {
   }
 }
 
-const void *const g_asan_ctor[] initarray = {getsymboltable};
+static textstartup void __asan_ctor(void) {
+  /* __cxa_atexit(__asan_morgue_flush, NULL, NULL); */
+  getsymboltable();
+}
+
+const void *const g_asan_ctor[] initarray = {__asan_ctor};

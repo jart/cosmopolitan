@@ -18,7 +18,9 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
+#include "libc/time/struct/timezone.h"
 #include "libc/time/time.h"
 
 /**

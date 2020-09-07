@@ -26,22 +26,14 @@ tinymath_lroundl:
 	mov	%rsp,%rbp
 	.profilable
 	push	%rax
-	push	%rax
 	fldt	16(%rbp)
-	fnstcw	-8(%rbp)
-	movzwl	-8(%rbp),%edx
-	and	$0b11110011,%dh			# RC (Rounding Control)
-	or	$0b00000100,%dh			# →-∞
-	mov	%dx,-4(%rbp)
 	fxam
 	fnstsw
 	fabs
 	test	$FPU_C1>>8,%ah
 	fadds	.Lhalf(%rip)
-	fldcw	-4(%rbp)
-	fistpq	-16(%rbp)
-	fldcw	-8(%rbp)
-	mov	-16(%rbp),%rax
+	fisttpq	-8(%rbp)
+	mov	-8(%rbp),%rax
 	je	1f
 	neg	%rax
 1:	leave

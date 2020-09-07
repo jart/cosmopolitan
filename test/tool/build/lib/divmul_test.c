@@ -32,8 +32,8 @@
 
 #define CX     1
 #define OSZ    00000000040
-#define REXW   00000004000
-#define RM(x)  (0000000700 & ((x) << 006))
+#define REXW   00000000100
+#define RM(x)  (0000001600 & ((x) << 007))
 #define MOD(x) (0060000000 & ((x) << 026))
 
 jmp_buf sigfpejmp;

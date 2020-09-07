@@ -23,6 +23,7 @@ Elf64_Ehdr *mapelfread(const char *, struct MappedFile *);
 char *getelfstringtable(const Elf64_Ehdr *, size_t);
 Elf64_Sym *getelfsymboltable(const Elf64_Ehdr *, size_t, Elf64_Xword *);
 Elf64_Shdr *getelfsectionbyaddress(const Elf64_Ehdr *, size_t, void *);
+bool iself64binary(const Elf64_Ehdr *, size_t);
 
 forceinline void checkelfaddress(const Elf64_Ehdr *elf, size_t mapsize,
                                  intptr_t addr, size_t addrsize) {
@@ -31,13 +32,6 @@ forceinline void checkelfaddress(const Elf64_Ehdr *elf, size_t mapsize,
     abort();
   }
 #endif
-}
-
-static inline bool iself64binary(const Elf64_Ehdr *elf, size_t mapsize) {
-  return mapsize >= sizeof(Elf64_Ehdr) &&
-         memcmp(elf->e_ident, ELFMAG, 4) == 0 &&
-         (elf->e_ident[EI_CLASS] == ELFCLASSNONE ||
-          elf->e_ident[EI_CLASS] == ELFCLASS64);
 }
 
 static inline bool iselfsymbolcontent(const Elf64_Sym *sym) {

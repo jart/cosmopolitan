@@ -31,7 +31,6 @@
 #include "tool/build/lib/modrm.h"
 #include "tool/build/lib/throw.h"
 #include "tool/build/lib/word.h"
-#include "tool/build/lib/x87.h"
 
 #define FPUREG 0
 #define MEMORY 1
@@ -153,6 +152,57 @@ static void FpuSetMemoryLdbl(struct Machine *m, long double f) {
   SetMemoryLdbl(m, m->fpu.dp, f);
 }
 
+static long ltruncl(long double x) {
+  return x;
+}
+
+static int ClearC2(int sw) {
+  return sw & ~FPU_C2;
+}
+
+static long double f2xm1(long double x) {
+  return exp2l(x) - 1;
+}
+
+static long double fyl2x(long double x, long double y) {
+  return y * log2l(x);
+}
+
+static long double fyl2xp1(long double x, long double y) {
+  return y * log2l(x + 1);
+}
+
+static long double fscale(long double significand, long double exponent) {
+  return scalbl(significand, exponent);
+}
+
+static long double x87remainder(long double x, long double y, uint32_t *sw,
+                                long double rem(long double, long double),
+                                long rnd(long double)) {
+  int s;
+  long q;
+  long double r;
+  s = 0;
+  r = rem(x, y);
+  q = rnd(x / y);
+  s &= ~FPU_C2; /* ty libm */
+  if (q & 0b001) s |= FPU_C1;
+  if (q & 0b010) s |= FPU_C3;
+  if (q & 0b100) s |= FPU_C0;
+  if (sw) *sw = s | (*sw & ~(FPU_C0 | FPU_C1 | FPU_C2 | FPU_C3));
+  return r;
+}
+
+static long double fprem(long double dividend, long double modulus,
+                         uint32_t *sw) {
+  return x87remainder(dividend, modulus, sw, fmodl, ltruncl);
+}
+
+static long double fprem1(long double dividend, long double modulus,
+                          uint32_t *sw) {
+  return x87remainder(dividend, modulus, sw, remainderl, lrintl);
+}
+
 static long double FpuAdd(struct Machine *m, long double x, long double y) {
   if (!isunordered(x, y)) {
     switch (isinf(y) << 1 | isinf(x)) {
@@ -263,7 +313,7 @@ static void FpuCompare(struct Machine *m, long double y) {
   }
 }
 
-void OpFxam(struct Machine *m) {
+static void OpFxam(struct Machine *m) {
   long double x;
   x = *FpuSt(m, 0);
   m->fpu.c1 = !!signbit(x);
@@ -741,7 +791,7 @@ static void OpFldConstant(struct Machine *m) {
       x = fldz();
       break;
     default:
-      OpUd(m);
+      OpUd(m, m->xedd->op.rde);
   }
   FpuPush(m, x);
 }
@@ -844,7 +894,7 @@ static void OpFfree(struct Machine *m) {
 }
 
 static void OpFfreep(struct Machine *m) {
-  OpFfree(m);
+  if (ModrmRm(m->xedd->op.rde)) OpFfree(m);
   FpuPop(m);
 }
 
@@ -932,7 +982,7 @@ void OpFinit(struct Machine *m) {
   m->fpu.tw = -1;
 }
 
-void OpFwait(struct Machine *m) {
+void OpFwait(struct Machine *m, uint32_t rde) {
   if ((m->fpu.ie & !m->fpu.im) | (m->fpu.de & !m->fpu.dm) |
       (m->fpu.ze & !m->fpu.zm) | (m->fpu.oe & !m->fpu.om) |
       (m->fpu.ue & !m->fpu.um) | (m->fpu.pe & !m->fpu.pm) |
@@ -986,15 +1036,15 @@ long double FpuPop(struct Machine *m) {
   return x;
 }
 
-void OpFpu(struct Machine *m) {
+void OpFpu(struct Machine *m, uint32_t rde) {
   unsigned op;
   bool ismemory;
   op = m->xedd->op.opcode & 0b111;
-  ismemory = ModrmMod(m->xedd->op.rde) != 0b11;
+  ismemory = ModrmMod(rde) != 0b11;
   m->fpu.ip = m->ip - m->xedd->length;
-  m->fpu.op = op << 8 | m->xedd->op.modrm;
-  m->fpu.dp = ismemory ? ComputeAddress(m, m->xedd->op.rde) : 0;
-  switch (DISP(op, ismemory, m->xedd->op.reg)) {
+  m->fpu.op = op << 8 | ModrmMod(rde) << 6 | ModrmReg(rde) << 3 | ModrmRm(rde);
+  m->fpu.dp = ismemory ? ComputeAddress(m, rde) : 0;
+  switch (DISP(op, ismemory, ModrmReg(rde))) {
     CASE(DISP(0xD8, FPUREG, 0), OpFaddStEst(m));
     CASE(DISP(0xD8, FPUREG, 1), OpFmulStEst(m));
     CASE(DISP(0xD8, FPUREG, 2), OpFcom(m));
@@ -1106,17 +1156,17 @@ void OpFpu(struct Machine *m) {
     CASE(DISP(0xDF, MEMORY, 5), OpFildll(m));
     CASE(DISP(0xDF, MEMORY, 7), OpFistpll(m));
     case DISP(0xD9, FPUREG, 4):
-      switch (ModrmRm(m->xedd->op.rde)) {
+      switch (ModrmRm(rde)) {
         CASE(0, OpFchs(m));
         CASE(1, OpFabs(m));
         CASE(4, OpFtst(m));
         CASE(5, OpFxam(m));
         default:
-          OpUd(m);
+          OpUd(m, rde);
       }
       break;
     case DISP(0xD9, FPUREG, 6):
-      switch (ModrmRm(m->xedd->op.rde)) {
+      switch (ModrmRm(rde)) {
         CASE(0, OpF2xm1(m));
         CASE(1, OpFyl2x(m));
         CASE(2, OpFptan(m));
@@ -1130,7 +1180,7 @@ void OpFpu(struct Machine *m) {
       }
       break;
     case DISP(0xD9, FPUREG, 7):
-      switch (ModrmRm(m->xedd->op.rde)) {
+      switch (ModrmRm(rde)) {
         CASE(0, OpFprem(m));
         CASE(1, OpFyl2xp1(m));
         CASE(2, OpFsqrt(m));
@@ -1144,14 +1194,14 @@ void OpFpu(struct Machine *m) {
       }
       break;
     case DISP(0xDb, FPUREG, 4):
-      switch (ModrmRm(m->xedd->op.rde)) {
+      switch (ModrmRm(rde)) {
         CASE(2, OpFnclex(m));
         CASE(3, OpFinit(m));
         default:
-          OpUd(m);
+          OpUd(m, rde);
       }
       break;
     default:
-      OpUd(m);
+      OpUd(m, rde);
   }
 }

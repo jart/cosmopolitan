@@ -553,10 +553,10 @@ struct malloc_segment {
 typedef struct malloc_segment msegment;
 typedef struct malloc_segment *msegmentptr;
 
-/* ──────────────────────────── malloc_state ───────────────────────────── */
+/* ──────────────────────────── MallocState ───────────────────────────── */
 
 /*
-   A malloc_state holds all of the bookkeeping for a space.
+   A MallocState holds all of the bookkeeping for a space.
    The main fields are:
 
   Top
@@ -640,7 +640,7 @@ typedef struct malloc_segment *msegmentptr;
     extensions to this malloc.
 */
 
-struct malloc_state {
+struct MallocState {
   binmap_t smallmap;
   binmap_t treemap;
   size_t dvsize;
@@ -657,21 +657,20 @@ struct malloc_state {
   size_t max_footprint;
   size_t footprint_limit; /* zero means no limit */
   flag_t mflags;
-
   msegment seg;
   void *extp; /* Unused but available for extensions */
   size_t exts;
 };
-
-#define gm (&_gm_)
-extern struct malloc_state _gm_;
-typedef struct malloc_state *mstate;
 
 struct MallocStats {
   size_t maxfp;
   size_t fp;
   size_t used;
 };
+
+typedef struct MallocState *mstate;
+
+extern struct MallocState g_dlmalloc[1];
 
 /* ───────────────────────────────  Hooks ──────────────────────────────── */
 
@@ -718,16 +717,16 @@ void *AddressDeathAction(void *);
   (align_offset(chunk2mem(0)) + pad_request(sizeof(struct malloc_segment)) + \
    MIN_CHUNK_SIZE)
 
-/* ───────────── Global malloc_state and malloc_params ─────────────────── */
+/* ───────────── Global MallocState and MallocParams ─────────────────── */
 
 /*
-  malloc_params holds global properties, including those that can be
+  MallocParams holds global properties, including those that can be
   dynamically set using mallopt. There is a single instance, mparams,
   initialized in init_mparams. Note that the non-zeroness of "magic"
   also serves as an initialization flag.
 */
 
-struct malloc_params {
+struct MallocParams {
   size_t magic;
   size_t page_size;
   size_t granularity;
@@ -736,18 +735,18 @@ struct malloc_params {
   flag_t default_mflags;
 };
 
-extern struct malloc_params mparams;
+extern struct MallocParams g_mparams;
 
 #define ensure_initialization()     \
   /* we use a constructor [jart] */ \
-  assert(mparams.magic != 0)
-/* (void)(mparams.magic != 0 || init_mparams()) */
+  assert(g_mparams.magic != 0)
+/* (void)(g_mparams.magic != 0 || init_mparams()) */
 
 #define is_initialized(M) ((M)->top != 0)
 #define is_page_aligned(S) \
-  (((size_t)(S) & (mparams.page_size - SIZE_T_ONE)) == 0)
+  (((size_t)(S) & (g_mparams.page_size - SIZE_T_ONE)) == 0)
 #define is_granularity_aligned(S) \
-  (((size_t)(S) & (mparams.granularity - SIZE_T_ONE)) == 0)
+  (((size_t)(S) & (g_mparams.granularity - SIZE_T_ONE)) == 0)
 
 /* ────────────────────────── system alloc setup ───────────────────────── */
 
@@ -777,13 +776,16 @@ extern struct malloc_params mparams;
        (L) ? ((M)->mflags | USE_LOCK_BIT) : ((M)->mflags & ~USE_LOCK_BIT))
 
 /* page-align a size */
-#define page_align(S) \
-  (((S) + (mparams.page_size - SIZE_T_ONE)) & ~(mparams.page_size - SIZE_T_ONE))
+#define page_align(S)                           \
+  (((S) + (g_mparams.page_size - SIZE_T_ONE)) & \
+   ~(g_mparams.page_size - SIZE_T_ONE))
 
 /* granularity-align a size */
-#define granularity_align(S)                    \
-  (((S) + (mparams.granularity - SIZE_T_ONE)) & \
-   ~(mparams.granularity - SIZE_T_ONE))
+#define granularity_align(S)                      \
+  (((S) + (g_mparams.granularity - SIZE_T_ONE)) & \
+   ~(g_mparams.granularity - SIZE_T_ONE))
+
+#define mmap_align(s) granularity_align((size_t)(s))
 
 /* ──────────────────────── Operations on bin maps ─────────────────────── */
 
@@ -849,10 +851,10 @@ extern struct malloc_params mparams;
 
 /*
   For security, the main invariant is that malloc/free/etc never
-  writes to a static address other than malloc_state, unless static
-  malloc_state itself has been corrupted, which cannot occur via
+  writes to a static address other than MallocState, unless static
+  MallocState itself has been corrupted, which cannot occur via
   malloc (because of these checks). In essence this means that we
-  believe all pointers, sizes, maps etc held in malloc_state, but
+  believe all pointers, sizes, maps etc held in MallocState, but
   check all of those linked or offsetted from other embedded data
   structures.  These checks are interspersed with main code in a way
   that tends to minimize their run-time cost.
@@ -893,7 +895,7 @@ extern struct malloc_params mparams;
 #if (FOOTERS && !IsTrustworthy())
 /* Check if (alleged) mstate m has expected magic field */
 #define ok_magic(M) \
-  ((uintptr_t)(M) <= 0x00007ffffffffffful && (M)->magic == mparams.magic)
+  ((uintptr_t)(M) <= 0x00007ffffffffffful && (M)->magic == g_mparams.magic)
 #else /* (FOOTERS && !IsTrustworthy()) */
 #define ok_magic(M) (1)
 #endif /* (FOOTERS && !IsTrustworthy()) */
@@ -934,12 +936,13 @@ extern struct malloc_params mparams;
 #else /* FOOTERS */
 
 /* Set foot of inuse chunk to be xor of mstate and seed */
-#define mark_inuse_foot(M, p, s) \
-  (((mchunkptr)((char *)(p) + (s)))->prev_foot = ((size_t)(M) ^ mparams.magic))
+#define mark_inuse_foot(M, p, s)                 \
+  (((mchunkptr)((char *)(p) + (s)))->prev_foot = \
+       ((size_t)(M) ^ g_mparams.magic))
 
 #define get_mstate_for(p)                                            \
   ((mstate)(((mchunkptr)((char *)(p) + (chunksize(p))))->prev_foot ^ \
-            mparams.magic))
+            g_mparams.magic))
 
 #define set_inuse(M, p, s)                                   \
   ((p)->head = (((p)->head & PINUSE_BIT) | s | CINUSE_BIT),  \

@@ -24,7 +24,7 @@
 #define FLAGS_ID   21
 
 #define GetLazyParityBool(f)    GetParity((f) >> 24)
-#define SetLazyParityByte(f, x) (((f) & ~0xFF000000u) | ((x)&0xFF) << 24)
+#define SetLazyParityByte(f, x) (((f) & ~0xFF000000u) | ((x)&0xFFu) << 24)
 
 #define GetParity(WORD)     \
   ({                        \

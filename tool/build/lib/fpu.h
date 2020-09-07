@@ -10,9 +10,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-void OpFpu(struct Machine *);
+void OpFpu(struct Machine *, uint32_t);
 void OpFinit(struct Machine *);
-void OpFwait(struct Machine *);
+void OpFwait(struct Machine *, uint32_t);
 void FpuPush(struct Machine *, long double);
 long double FpuPop(struct Machine *);
 long double *FpuSt(struct Machine *, unsigned);

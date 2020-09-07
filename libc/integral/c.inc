@@ -179,7 +179,7 @@ typedef struct axdx_t {
 #undef __SIZEOF_INTMAX__
 #endif
 #if !defined(__STRICT_ANSI__) && __SIZEOF_POINTER__ == 8 && \
-    (__GNUC__ * 100 + __GNUC_MINOR__ >= 406 || defined(__llvm__))
+    ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 406 || defined(__llvm__))
 #define __SIZEOF_INTMAX__ 16
 #else
 #define __SIZEOF_INTMAX__ __SIZEOF_POINTER__
@@ -279,7 +279,7 @@ typedef uint64_t uintmax_t;
 #ifndef noinstrument
 #if !defined(__STRICT_ANSI__) &&                    \
     (__has_attribute(__no_instrument_function__) || \
-     __GNUC__ * 100 + __GNUC_MINOR__ >= 204)
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 204)
 #define noinstrument __attribute__((__no_instrument_function__))
 #else
 #define noinstrument
@@ -287,8 +287,9 @@ typedef uint64_t uintmax_t;
 #endif
 
 #ifndef noreturn
-#if !defined(__STRICT_ANSI__) && \
-    (__has_attribute(__noreturn__) || __GNUC__ * 100 + __GNUC_MINOR__ >= 208)
+#if !defined(__STRICT_ANSI__) &&      \
+    (__has_attribute(__noreturn__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 208)
 #define noreturn __attribute__((__noreturn__))
 #else
 #define noreturn
@@ -301,8 +302,9 @@ typedef uint64_t uintmax_t;
  * @see pureconst
  */
 #ifndef nosideeffect
-#if !defined(__STRICT_ANSI__) && \
-    (__has_attribute(__pure__) || __GNUC__ * 100 + __GNUC_MINOR__ >= 296)
+#if !defined(__STRICT_ANSI__) &&  \
+    (__has_attribute(__pure__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 296)
 #define nosideeffect __attribute__((__pure__))
 #else
 #define nosideeffect
@@ -310,8 +312,9 @@ typedef uint64_t uintmax_t;
 #endif
 
 #ifndef noinline
-#if !defined(__STRICT_ANSI__) && \
-    (__has_attribute(__noinline__) || __GNUC__ * 100 + __GNUC_MINOR__ >= 301)
+#if !defined(__STRICT_ANSI__) &&      \
+    (__has_attribute(__noinline__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 301)
 #define noinline __attribute__((__noinline__))
 #else
 #define noinline
@@ -319,8 +322,9 @@ typedef uint64_t uintmax_t;
 #endif
 
 #ifndef noclone
-#if !defined(__STRICT_ANSI__) && \
-    (__has_attribute(__noclone__) || __GNUC__ * 100 + __GNUC_MINOR__ >= 405)
+#if !defined(__STRICT_ANSI__) &&     \
+    (__has_attribute(__noclone__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 405)
 #define noclone __attribute__((__noclone__))
 #else
 #define noclone
@@ -343,9 +347,11 @@ typedef uint64_t uintmax_t;
 #ifdef __cplusplus
 #define forceinline inline
 #else
-#if !defined(__STRICT_ANSI__) && __GNUC__ * 100 + __GNUC_MINOR__ >= 302
-#if __GNUC__ * 100 + __GNUC_MINOR__ >= 403 || !defined(__cplusplus) || \
-    (defined(__clang__) &&                                             \
+#if !defined(__STRICT_ANSI__) && \
+    (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 302
+#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 403 || \
+    !defined(__cplusplus) ||                              \
+    (defined(__clang__) &&                                \
      (defined(__GNUC_STDC_INLINE__) || defined(__GNUC_GNU_INLINE__)))
 #if defined(__GNUC_STDC_INLINE__) || defined(__cplusplus)
 #define forceinline                                                 \
@@ -379,8 +385,9 @@ typedef uint64_t uintmax_t;
  * @see unsigned char
  */
 #ifndef mayalias
-#if !defined(__STRICT_ANSI__) && \
-    (__has_attribute(__may_alias__) || __GNUC__ * 100 + __GNUC_MINOR__ >= 303)
+#if !defined(__STRICT_ANSI__) &&       \
+    (__has_attribute(__may_alias__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 303)
 #define mayalias __attribute__((__may_alias__))
 #else
 #define mayalias
@@ -393,8 +400,9 @@ typedef uint64_t uintmax_t;
  * @see gc(), free(), close(), etc.
  */
 #ifndef nodiscard
-#if !defined(__STRICT_ANSI__) && (__GNUC__ * 100 + __GNUC_MINOR__ >= 304 || \
-                                  __has_attribute(__warn_unused_result__))
+#if !defined(__STRICT_ANSI__) &&                           \
+    ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 304 || \
+     __has_attribute(__warn_unused_result__))
 #define nodiscard __attribute__((__warn_unused_result__))
 #else
 #define nodiscard
@@ -416,7 +424,7 @@ typedef uint64_t uintmax_t;
 
 #ifndef flattenout
 #if __has_attribute(__flatten__) || \
-    (__GNUC__ * 100 + __GNUC_MINOR__ >= 401 && !defined(__llvm__))
+    ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 401 && !defined(__llvm__))
 #define flattenout __attribute__((__flatten__))
 #else
 #define flattenout
@@ -424,9 +432,10 @@ typedef uint64_t uintmax_t;
 #endif
 
 #ifndef externinline
-#if !defined(__STRICT_ANSI__) &&                                        \
-    (!defined(__cplusplus) || __GNUC__ * 100 + __GNUC_MINOR__ >= 403 || \
-     (defined(__clang__) &&                                             \
+#if !defined(__STRICT_ANSI__) &&                           \
+    (!defined(__cplusplus) ||                              \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 403 || \
+     (defined(__clang__) &&                                \
       (defined(__GNUC_STDC_INLINE__) || defined(__GNUC_GNU_INLINE__))))
 #if defined(__GNUC_STDC_INLINE__) || defined(__cplusplus)
 #define externinline extern __inline __attribute__((__gnu_inline__))
@@ -443,16 +452,18 @@ typedef uint64_t uintmax_t;
  * @note can be used to minimize page-faults and improve locality
  */
 #ifndef relegated
-#if !defined(__STRICT_ANSI__) && \
-    (__has_attribute(__cold__) || __GNUC__ * 100 + __GNUC_MINOR__ >= 403)
+#if !defined(__STRICT_ANSI__) &&  \
+    (__has_attribute(__cold__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 403)
 #define relegated __attribute__((__cold__))
 #else
 #define relegated
 #endif
 #endif
 
-#if !defined(__STRICT_ANSI__) && \
-    (__has_attribute(__warning__) || __GNUC__ * 100 + __GNUC_MINOR__ >= 403)
+#if !defined(__STRICT_ANSI__) &&     \
+    (__has_attribute(__warning__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 403)
 #define warnifused(s) __attribute__((__warning__(s)))
 #else
 #define warnifused(s)
@@ -465,7 +476,8 @@ typedef uint64_t uintmax_t;
  */
 #ifndef firstclass
 #if !defined(__STRICT_ANSI__) && \
-    (__has_attribute(__hot__) || __GNUC__ * 100 + __GNUC_MINOR__ >= 403)
+    (__has_attribute(__hot__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 403)
 #define firstclass __attribute__((__hot__))
 #else
 #define firstclass
@@ -479,8 +491,9 @@ typedef uint64_t uintmax_t;
  * runtime too (only in MODE=dbg mode) by synthetic Ubsan code.
  */
 #ifndef paramsnonnull
-#if !defined(__STRICT_ANSI__) && \
-    (__has_attribute(__nonnull__) || __GNUC__ * 100 + __GNUC_MINOR__ >= 403)
+#if !defined(__STRICT_ANSI__) &&     \
+    (__has_attribute(__nonnull__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 403)
 #define paramsnonnull(opt_1idxs) __attribute__((__nonnull__ opt_1idxs))
 #else
 #define paramsnonnull(opt_1idxs)
@@ -505,7 +518,7 @@ typedef uint64_t uintmax_t;
  */
 #if __STDC_VERSION__ + 0 < 199901L && !defined(restrict)
 #if !defined(__STRICT_ANSI__) && !defined(__cplusplus) && \
-    (__GNUC__ * 100 + __GNUC_MINOR__ >= 301 || defined(_MSC_VER))
+    ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 301 || defined(_MSC_VER))
 #define restrict __restrict__
 #else
 #define restrict
@@ -520,7 +533,8 @@ typedef uint64_t uintmax_t;
 #ifndef nocallback
 #if !defined(__STRICT_ANSI__) &&  \
     (__has_attribute(__leaf__) || \
-     (!defined(__llvm__) && __GNUC__ * 100 + __GNUC_MINOR__ >= 406))
+     (!defined(__llvm__) &&       \
+      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 406))
 #define nocallback __attribute__((__leaf__))
 #else
 #define nocallback
@@ -529,7 +543,8 @@ typedef uint64_t uintmax_t;
 
 #ifndef nothrow
 #if defined(__cplusplus) && !defined(__STRICT_ANSI__) && \
-    (__has_attribute(nothrow) || __GNUC__ * 100 + __GNUC_MINOR__ >= 303)
+    (__has_attribute(nothrow) ||                         \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 303)
 #define nothrow __attribute__((__nothrow__))
 #elif defined(_MSC_VER)
 #define nothrow __declspec(nothrow)
@@ -545,7 +560,8 @@ typedef uint64_t uintmax_t;
  */
 #ifndef nooptimize
 #ifndef __STRICT_ANSI__
-#if __GNUC__ * 100 + __GNUC_MINOR__ >= 407 || __has_attribute(__optimize__)
+#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
+    __has_attribute(__optimize__)
 #define nooptimize __attribute__((__optimize__(1)))
 #elif defined(__llvm__) || __has_attribute(__optnone__)
 #define nooptimize __attribute__((__optnone__))
@@ -564,7 +580,8 @@ typedef uint64_t uintmax_t;
  */
 #ifndef optimizesize
 #ifndef __STRICT_ANSI__
-#if __GNUC__ * 100 + __GNUC_MINOR__ >= 407 || __has_attribute(__optimize__)
+#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
+    __has_attribute(__optimize__)
 #define optimizesize __attribute__((__optimize__("s")))
 #elif defined(__llvm__) || __has_attribute(__optnone__)
 #define optimizesize __attribute__((__optnone__))
@@ -584,8 +601,9 @@ typedef uint64_t uintmax_t;
  * @todo this is dangerous delete?
  */
 #ifndef optimizespeed
-#if !defined(__STRICT_ANSI__) && \
-    (__GNUC__ * 100 + __GNUC_MINOR__ >= 407 || __has_attribute(__optimize__))
+#if !defined(__STRICT_ANSI__) &&                           \
+    ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
+     __has_attribute(__optimize__))
 #define optimizespeed __attribute__((__optimize__(3)))
 #else
 #define optimizespeed
@@ -596,8 +614,9 @@ typedef uint64_t uintmax_t;
  * Declares prototype that behaves similar to setjmp() or vfork().
  */
 #ifndef returnstwice
-#if !defined(__STRICT_ANSI__) && (__has_attribute(__returns_twice__) || \
-                                  __GNUC__ * 100 + __GNUC_MINOR__ >= 402)
+#if !defined(__STRICT_ANSI__) &&           \
+    (__has_attribute(__returns_twice__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 402)
 #define returnstwice __attribute__((__returns_twice__))
 #else
 #define returnstwice
@@ -622,8 +641,9 @@ typedef uint64_t uintmax_t;
  * @see nodebuginfo
  */
 #ifndef artificial
-#if !defined(__STRICT_ANSI__) && (__has_attribute(__artificial__) || \
-                                  __GNUC__ * 100 + __GNUC_MINOR__ >= 403)
+#if !defined(__STRICT_ANSI__) &&        \
+    (__has_attribute(__artificial__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 403)
 #define artificial __attribute__((__artificial__))
 #else
 #define artificial
@@ -636,8 +656,9 @@ typedef uint64_t uintmax_t;
  * @see libc/dce.h
  */
 #ifndef microarchitecture
-#if !defined(__STRICT_ANSI__) && \
-    (__has_attribute(__target__) || __GNUC__ * 100 + __GNUC_MINOR__ >= 404)
+#if !defined(__STRICT_ANSI__) &&    \
+    (__has_attribute(__target__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 404)
 #define microarchitecture(march) __attribute__((__target__(march)))
 #else
 #define microarchitecture(march)
@@ -661,7 +682,7 @@ typedef uint64_t uintmax_t;
  * Defines function with prologue that fixes misaligned stack.
  * @see nocallersavedregisters and consider assembly
  */
-#if __GNUC__ * 100 + __GNUC_MINOR__ >= 408 || \
+#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 408 || \
     __has_attribute(__force_align_arg_pointer__)
 #define forcealignargpointer __attribute__((__force_align_arg_pointer__))
 #else
@@ -675,8 +696,9 @@ typedef uint64_t uintmax_t;
  * runtime too by synthetic code, only in MODE=dbg mode.
  */
 #ifndef returnsnonnull
-#if !defined(__STRICT_ANSI__) && (__has_attribute(__returns_nonnull__) || \
-                                  __GNUC__ * 100 + __GNUC_MINOR__ >= 409)
+#if !defined(__STRICT_ANSI__) &&             \
+    (__has_attribute(__returns_nonnull__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 409)
 #define returnsnonnull __attribute__((__returns_nonnull__))
 #else
 #define returnsnonnull
@@ -690,8 +712,9 @@ typedef uint64_t uintmax_t;
  * @param (alignment, misalignment)
  * @see attributeallocalign(), returnspointerwithnoaliases, mallocesque
  */
-#if !defined(__STRICT_ANSI__) && (__has_attribute(__assume_aligned__) || \
-                                  __GNUC__ * 100 + __GNUC_MINOR__ >= 409)
+#if !defined(__STRICT_ANSI__) &&            \
+    (__has_attribute(__assume_aligned__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 409)
 #define returnsaligned(x) __attribute__((__assume_aligned__ x))
 #else
 #define returnsaligned(x)
@@ -702,8 +725,9 @@ typedef uint64_t uintmax_t;
  * @see attributeallocsize(), attributeallocalign()
  */
 #ifndef returnspointerwithnoaliases
-#if !defined(__STRICT_ANSI__) && \
-    (__has_attribute(__malloc__) || __GNUC__ * 100 + __GNUC_MINOR__ >= 409)
+#if !defined(__STRICT_ANSI__) &&    \
+    (__has_attribute(__malloc__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 409)
 #define returnspointerwithnoaliases __attribute__((__malloc__))
 #elif defined(_MSC_VER)
 #define returnspointerwithnoaliases __declspec(allocator)
@@ -713,8 +737,9 @@ typedef uint64_t uintmax_t;
 #endif
 
 #ifndef attributeallocsize
-#if !defined(__STRICT_ANSI__) && (__has_attribute(__alloc_size__) || \
-                                  __GNUC__ * 100 + __GNUC_MINOR__ >= 409)
+#if !defined(__STRICT_ANSI__) &&        \
+    (__has_attribute(__alloc_size__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 409)
 #define attributeallocsize(x) __attribute__((__alloc_size__ x))
 #else
 #define attributeallocsize(x)
@@ -722,8 +747,9 @@ typedef uint64_t uintmax_t;
 #endif
 
 #ifndef attributeallocalign
-#if !defined(__STRICT_ANSI__) && (__has_attribute(__alloc_align__) || \
-                                  __GNUC__ * 100 + __GNUC_MINOR__ >= 409)
+#if !defined(__STRICT_ANSI__) &&         \
+    (__has_attribute(__alloc_align__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 409)
 #define attributeallocalign(x) __attribute__((__alloc_align__ x))
 #else
 #define attributeallocalign(x)
@@ -747,7 +773,7 @@ typedef uint64_t uintmax_t;
 #if __cplusplus + 0 >= 201103L
 #define autotype(x) auto
 #elif (__has_builtin(auto_type) || defined(__llvm__) || \
-       __GNUC__ * 100 + __GNUC_MINOR__ >= 409)
+       (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 409)
 #define autotype(x) __auto_type
 #else
 #define autotype(x) typeof(x)

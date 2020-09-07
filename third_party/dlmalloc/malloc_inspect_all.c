@@ -64,8 +64,8 @@ void malloc_inspect_all(void (*handler)(void* start, void* end,
                                         size_t used_bytes, void* callback_arg),
                         void* arg) {
   ensure_initialization();
-  if (!PREACTION(gm)) {
-    internal_inspect_all(gm, handler, arg);
-    POSTACTION(gm);
+  if (!PREACTION(g_dlmalloc)) {
+    internal_inspect_all(g_dlmalloc, handler, arg);
+    POSTACTION(g_dlmalloc);
   }
 }

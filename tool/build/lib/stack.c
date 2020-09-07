@@ -19,94 +19,274 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/check.h"
 #include "libc/macros.h"
+#include "tool/build/lib/address.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/modrm.h"
 #include "tool/build/lib/stack.h"
+#include "tool/build/lib/throw.h"
 
-void Push64(struct Machine *m, uint64_t x) {
-  uint64_t v;
-  void *p[2];
-  uint8_t b[8];
-  v = Read64(m->sp);
-  v -= 8;
-  Write64(m->sp, v);
-  Write64(AccessRam(m, v, 8, p, b, false), x);
-  EndStore(m, v, 8, p, b);
-}
+static const uint8_t kStackOsz[2][3] = {
+    [0][XED_MODE_REAL] = 2, [0][XED_MODE_LEGACY] = 4, [0][XED_MODE_LONG] = 8,
+    [1][XED_MODE_REAL] = 4, [1][XED_MODE_LEGACY] = 2, [1][XED_MODE_LONG] = 2,
+};
 
-void Push16(struct Machine *m, uint16_t x) {
-  uint64_t v;
-  void *p[2];
-  uint8_t b[2];
-  v = Read64(m->sp);
-  v -= 2;
-  Write64(m->sp, v);
-  Write16(b, x);
-  Write64(AccessRam(m, v, 2, p, b, false), x);
-  EndStore(m, v, 2, p, b);
-}
+static const uint8_t kCallOsz[2][3] = {
+    [0][XED_MODE_REAL] = 2, [0][XED_MODE_LEGACY] = 4, [0][XED_MODE_LONG] = 8,
+    [1][XED_MODE_REAL] = 4, [1][XED_MODE_LEGACY] = 2, [1][XED_MODE_LONG] = 8,
+};
 
-uint64_t Pop64(struct Machine *m, uint16_t extra) {
-  void *p[2];
-  uint8_t b[8];
-  uint64_t v, x;
-  v = Read64(m->sp);
-  x = Read64(AccessRam(m, v, 8, p, b, true));
-  Write64(m->sp, v + 8 + extra);
-  return x;
-}
-
-uint16_t Pop16(struct Machine *m, uint16_t extra) {
-  void *p[2];
-  uint8_t b[2];
-  uint16_t v, x;
-  v = Read64(m->sp);
-  x = Read16(AccessRam(m, v, 2, p, b, true));
-  Write64(m->sp, v + 2 + extra);
-  return x;
-}
-
-static void OpCall(struct Machine *m, uint64_t func) {
-  Push64(m, m->ip);
-  m->ip = func;
-}
-
-void OpCallJvds(struct Machine *m) {
-  OpCall(m, m->ip + m->xedd->op.disp);
-}
-
-void OpCallEq(struct Machine *m, uint32_t rde) {
-  void *p[2];
-  uint8_t b[8];
-  OpCall(m, Read64(IsModrmRegister(rde)
-                       ? RegRexbRm(m, rde)
-                       : AccessRam(m, ComputeAddress(m, rde), 8, p, b, true)));
-}
-
-void OpLeave(struct Machine *m) {
-  memcpy(m->sp, m->bp, sizeof(m->sp));
-  Write64(m->bp, Pop64(m, 0));
-}
-
-void OpRet(struct Machine *m, uint16_t n) {
-  m->ip = Pop64(m, n);
-}
-
-void PushOsz(struct Machine *m, uint32_t rde, uint64_t x) {
-  if (!Osz(rde)) {
-    Push64(m, x);
+static void WriteStackWord(uint8_t *p, uint32_t rde, uint32_t osz, uint64_t x) {
+  if (osz == 8) {
+    Write64(p, x);
+  } else if (osz == 2) {
+    Write16(p, x);
   } else {
-    Push16(m, x);
+    Write32(p, x);
   }
 }
 
-void OpBofram(struct Machine *m) {
+static uint64_t ReadStackWord(uint8_t *p, uint32_t osz) {
+  if (osz == 8) {
+    return Read64(p);
+  } else if (osz == 2) {
+    return Read16(p);
+  } else {
+    return Read32(p);
+  }
+}
+
+void Push(struct Machine *m, uint32_t rde, uint64_t x) {
+  uint64_t v;
+  void *p[2];
+  uint8_t b[8];
+  unsigned osz;
+  osz = kStackOsz[m->xedd->op.osz][Mode(rde)];
+  switch (Eamode(rde)) {
+    case XED_MODE_REAL:
+      v = (Read32(m->sp) - osz) & 0xffff;
+      Write16(m->sp, v);
+      v += Read64(m->ss);
+      break;
+    case XED_MODE_LEGACY:
+      v = (Read32(m->sp) - osz) & 0xffffffff;
+      Write64(m->sp, v);
+      v += Read64(m->ss);
+      break;
+    case XED_MODE_LONG:
+      v = (Read64(m->sp) - osz) & 0xffffffffffffffff;
+      Write64(m->sp, v);
+      break;
+    default:
+      unreachable;
+  }
+  WriteStackWord(AccessRam(m, v, osz, p, b, false), rde, osz, x);
+  EndStore(m, v, osz, p, b);
+}
+
+void OpPushZvq(struct Machine *m, uint32_t rde) {
+  unsigned osz;
+  osz = kStackOsz[m->xedd->op.osz][Mode(rde)];
+  Push(m, rde, ReadStackWord(RegRexbSrm(m, rde), osz));
+}
+
+uint64_t Pop(struct Machine *m, uint32_t rde, uint16_t extra) {
+  uint64_t v;
+  void *p[2];
+  uint8_t b[8];
+  unsigned osz;
+  osz = kStackOsz[m->xedd->op.osz][Mode(rde)];
+  switch (Eamode(rde)) {
+    case XED_MODE_LONG:
+      v = Read64(m->sp);
+      Write64(m->sp, v + osz + extra);
+      break;
+    case XED_MODE_LEGACY:
+      v = Read32(m->sp);
+      Write64(m->sp, (v + osz + extra) & 0xffffffff);
+      v += Read64(m->ss);
+      break;
+    case XED_MODE_REAL:
+      v = Read32(m->sp);
+      Write16(m->sp, v + osz + extra);
+      v += Read64(m->ss);
+      break;
+    default:
+      unreachable;
+  }
+  return ReadStackWord(AccessRam(m, v, osz, p, b, true), osz);
+}
+
+void OpPopZvq(struct Machine *m, uint32_t rde) {
+  uint64_t x;
+  x = Pop(m, rde, 0);
+  switch (kStackOsz[m->xedd->op.osz][Mode(rde)]) {
+    case 8:
+    case 4:
+      Write64(RegRexbSrm(m, rde), x);
+      break;
+    case 2:
+      Write16(RegRexbSrm(m, rde), x);
+      break;
+    default:
+      unreachable;
+  }
+}
+
+static void OpCall(struct Machine *m, uint32_t rde, uint64_t func) {
+  Push(m, rde, m->ip);
+  m->ip = func;
+}
+
+void OpCallJvds(struct Machine *m, uint32_t rde) {
+  OpCall(m, rde, m->ip + m->xedd->op.disp);
+}
+
+static uint64_t LoadAddressFromMemory(struct Machine *m, uint32_t rde) {
+  unsigned osz;
+  osz = kCallOsz[m->xedd->op.osz][Mode(rde)];
+  return ReadStackWord(GetModrmRegisterWordPointerRead(m, rde, osz), osz);
+}
+
+void OpCallEq(struct Machine *m, uint32_t rde) {
+  OpCall(m, rde, LoadAddressFromMemory(m, rde));
+}
+
+void OpJmpEq(struct Machine *m, uint32_t rde) {
+  m->ip = LoadAddressFromMemory(m, rde);
+}
+
+void OpLeave(struct Machine *m, uint32_t rde) {
+  switch (Eamode(rde)) {
+    case XED_MODE_LONG:
+      Write64(m->sp, Read64(m->bp));
+      Write64(m->bp, Pop(m, rde, 0));
+      break;
+    case XED_MODE_LEGACY:
+      Write64(m->sp, Read32(m->bp));
+      Write64(m->bp, Pop(m, rde, 0));
+      break;
+    case XED_MODE_REAL:
+      Write16(m->sp, Read16(m->bp));
+      Write16(m->bp, Pop(m, rde, 0));
+      break;
+    default:
+      unreachable;
+  }
+}
+
+void OpRet(struct Machine *m, uint32_t rde, uint16_t n) {
+  m->ip = Pop(m, rde, n);
+}
+
+void OpBofram(struct Machine *m, uint32_t rde) {
   if (m->xedd->op.disp) {
     m->bofram[0] = m->ip;
     m->bofram[1] = m->ip + (m->xedd->op.disp & 0xff);
   } else {
     m->bofram[0] = 0;
     m->bofram[1] = 0;
+  }
+}
+
+void OpPushEvq(struct Machine *m, uint32_t rde) {
+  unsigned osz;
+  osz = kStackOsz[m->xedd->op.osz][Mode(rde)];
+  Push(m, rde,
+       ReadStackWord(GetModrmRegisterWordPointerRead(m, rde, osz), osz));
+}
+
+void OpPopEvq(struct Machine *m, uint32_t rde) {
+  unsigned osz;
+  osz = kStackOsz[m->xedd->op.osz][Mode(rde)];
+  WriteStackWord(GetModrmRegisterWordPointerWrite(m, rde, osz), rde, osz,
+                 Pop(m, rde, 0));
+}
+
+static void Pushaw(struct Machine *m, uint32_t rde) {
+  uint16_t v;
+  uint8_t b[8][2];
+  memcpy(b[0], m->di, 2);
+  memcpy(b[1], m->si, 2);
+  memcpy(b[2], m->bp, 2);
+  memcpy(b[3], m->sp, 2);
+  memcpy(b[4], m->bx, 2);
+  memcpy(b[5], m->dx, 2);
+  memcpy(b[6], m->cx, 2);
+  memcpy(b[7], m->ax, 2);
+  Write16(m->sp, (v = (Read16(m->sp) - sizeof(b)) & 0xffff));
+  VirtualRecv(m, Read64(m->ss) + v, b, sizeof(b));
+}
+
+static void Pushad(struct Machine *m, uint32_t rde) {
+  uint32_t v;
+  uint8_t b[8][4];
+  memcpy(b[0], m->di, 4);
+  memcpy(b[1], m->si, 4);
+  memcpy(b[2], m->bp, 4);
+  memcpy(b[3], m->sp, 4);
+  memcpy(b[4], m->bx, 4);
+  memcpy(b[5], m->dx, 4);
+  memcpy(b[6], m->cx, 4);
+  memcpy(b[7], m->ax, 4);
+  Write64(m->sp, (v = (Read32(m->sp) - sizeof(b)) & 0xffffffff));
+  VirtualRecv(m, Read64(m->ss) + v, b, sizeof(b));
+}
+
+void OpPusha(struct Machine *m, uint32_t rde) {
+  switch (Eamode(rde)) {
+    case XED_MODE_REAL:
+      Pushaw(m, rde);
+      break;
+    case XED_MODE_LEGACY:
+      Pushad(m, rde);
+      break;
+    case XED_MODE_LONG:
+      OpUd(m, rde);
+    default:
+      unreachable;
+  }
+}
+
+static void Popaw(struct Machine *m, uint32_t rde) {
+  uint8_t b[8][2];
+  VirtualSend(m, b, Read64(m->ss) + Read16(m->sp), sizeof(b));
+  Write16(m->sp, (Read32(m->sp) + sizeof(b)) & 0xffff);
+  memcpy(m->di, b[0], 2);
+  memcpy(m->si, b[1], 2);
+  memcpy(m->bp, b[2], 2);
+  memcpy(m->sp, b[3], 2);
+  memcpy(m->bx, b[4], 2);
+  memcpy(m->dx, b[5], 2);
+  memcpy(m->cx, b[6], 2);
+  memcpy(m->ax, b[7], 2);
+}
+
+static void Popad(struct Machine *m, uint32_t rde) {
+  uint8_t b[8][4];
+  VirtualSend(m, b, Read64(m->ss) + Read32(m->sp), sizeof(b));
+  Write64(m->sp, (Read32(m->sp) + sizeof(b)) & 0xffffffff);
+  memcpy(m->di, b[0], 4);
+  memcpy(m->si, b[1], 4);
+  memcpy(m->bp, b[2], 4);
+  memcpy(m->sp, b[3], 4);
+  memcpy(m->bx, b[4], 4);
+  memcpy(m->dx, b[5], 4);
+  memcpy(m->cx, b[6], 4);
+  memcpy(m->ax, b[7], 4);
+}
+
+void OpPopa(struct Machine *m, uint32_t rde) {
+  switch (Eamode(rde)) {
+    case XED_MODE_REAL:
+      Popaw(m, rde);
+      break;
+    case XED_MODE_LEGACY:
+      Popad(m, rde);
+      break;
+    case XED_MODE_LONG:
+      OpUd(m, rde);
+    default:
+      unreachable;
   }
 }

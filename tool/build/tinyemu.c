@@ -17,6 +17,8 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/log/log.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/ex.h"
@@ -24,6 +26,8 @@
 #include "libc/x/x.h"
 #include "tool/build/lib/loader.h"
 #include "tool/build/lib/machine.h"
+#include "tool/build/lib/memory.h"
+#include "tool/build/lib/pty.h"
 #include "tool/build/lib/syscall.h"
 
 struct Machine m[1];
@@ -32,6 +36,7 @@ int main(int argc, char *argv[]) {
   int rc;
   struct Elf elf;
   const char *codepath;
+  showcrashreports();
   codepath = argv[1];
   if (argc < 2) {
     fputs("Usage: ", stderr);
@@ -39,6 +44,8 @@ int main(int argc, char *argv[]) {
     fputs(" PROG [ARGS...]\n", stderr);
     return EX_USAGE;
   }
+  m->cr3 = MallocPage();
+  m->mode = XED_MACHINE_MODE_LONG_64;
   InitMachine(m);
   LoadProgram(m, argv[1], argv + 2, environ, &elf);
   m->fds.i = 3;

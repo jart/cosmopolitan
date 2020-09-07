@@ -102,7 +102,7 @@ struct SamplingSolution *ComputeSamplingSolution(long dn, long sn, double dar,
   if (!dar) dar = sn, dar /= dn;
   if (!off) off = (dar - 1) / 2;
   f = dar < 1 ? 1 / dar : dar;
-  s = 3 * f + 1;
+  s = 3 * f + 4;
   fweights = gc(xcalloc(s, sizeof(double)));
   res = NewSamplingSolution(dn, s);
   weights = res->weights;
@@ -147,9 +147,9 @@ static int Sharpen(int ax, int bx, int cx) {
 
 static void GyaradosImpl(long dyw, long dxw, int dst[dyw][dxw], long syw,
                          long sxw, const int src[syw][sxw], long dyn, long dxn,
-                         long syn, long sxn, short tmp0[restrict dyn][sxn],
-                         short tmp1[restrict dyn][sxn],
-                         short tmp2[restrict dyn][dxn], long yfn, long xfn,
+                         long syn, long sxn, int tmp0[restrict dyn][sxn],
+                         int tmp1[restrict dyn][sxn],
+                         int tmp2[restrict dyn][dxn], long yfn, long xfn,
                          const short fyi[dyn][yfn], const short fyw[dyn][yfn],
                          const short fxi[dxn][xfn], const short fxw[dxn][xfn],
                          bool sharpen) {
@@ -216,9 +216,9 @@ void *Gyarados(long dyw, long dxw, int dst[dyw][dxw], long syw, long sxw,
       CHECK_LE(syn, 0x7fff);
       CHECK_LE(sxn, 0x7fff);
       GyaradosImpl(dyw, dxw, dst, syw, sxw, src, dyn, dxn, syn, sxn,
-                   gc(xmemalign(64, sizeof(short) * dyn * sxn)),
-                   gc(xmemalign(64, sizeof(short) * dyn * sxn)),
-                   gc(xmemalign(64, sizeof(short) * dyn * dxn)), cy->s, cx->s,
+                   gc(xmemalign(64, sizeof(int) * dyn * sxn)),
+                   gc(xmemalign(64, sizeof(int) * dyn * sxn)),
+                   gc(xmemalign(64, sizeof(int) * dyn * dxn)), cy->s, cx->s,
                    cy->indices, cy->weights, cx->indices, cx->weights, sharpen);
     } else {
       ZeroMatrix(dyw, dxw, dst, dyn, dxn);

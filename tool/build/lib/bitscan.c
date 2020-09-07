@@ -22,7 +22,7 @@
 #include "tool/build/lib/machine.h"
 #include "tool/build/lib/modrm.h"
 
-uint64_t AluBsr(struct Machine *m, uint32_t rde, uint64_t _, uint64_t x) {
+uint64_t AluBsr(struct Machine *m, uint32_t rde, uint64_t x) {
   unsigned i;
   if (Rexw(rde)) {
     x &= 0xffffffffffffffff;
@@ -43,7 +43,7 @@ uint64_t AluBsr(struct Machine *m, uint32_t rde, uint64_t _, uint64_t x) {
   }
 }
 
-uint64_t AluBsf(struct Machine *m, uint32_t rde, uint64_t _, uint64_t x) {
+uint64_t AluBsf(struct Machine *m, uint32_t rde, uint64_t x) {
   unsigned i;
   if (Rexw(rde)) {
     x &= 0xffffffffffffffff;
@@ -64,7 +64,7 @@ uint64_t AluBsf(struct Machine *m, uint32_t rde, uint64_t _, uint64_t x) {
   }
 }
 
-uint64_t AluPopcnt(struct Machine *m, uint32_t rde, uint64_t _, uint64_t x) {
+uint64_t AluPopcnt(struct Machine *m, uint32_t rde, uint64_t x) {
   m->flags = SetFlag(m->flags, FLAGS_ZF, !x);
   m->flags = SetFlag(m->flags, FLAGS_CF, false);
   m->flags = SetFlag(m->flags, FLAGS_SF, false);

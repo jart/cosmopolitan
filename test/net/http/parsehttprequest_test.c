@@ -19,52 +19,42 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/gc.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 #include "net/http/http.h"
 
-TEST(parsehttprequest, testEmpty) {
-  FILE *f = fmemopen(NULL, BUFSIZ, "r+");
-  struct HttpRequest *req = calloc(1, sizeof(struct HttpRequest));
-  EXPECT_EQ(-1, parsehttprequest(req, f));
-  EXPECT_TRUE(feof(f));
-  freehttprequest(&req);
-  fclose(f);
+struct HttpRequest req[1];
+
+static char *slice(const char *m, struct HttpRequestSlice s) {
+  return memcpy(xmalloc(s.b - s.a), m + s.a, s.b - s.a);
 }
 
-TEST(parsehttprequest, testNoHeaders) {
-  const char kMessage[] = "GET /foo HTTP/1.0\r\n"
-                          "\r\n";
-  FILE *f = fmemopen(NULL, BUFSIZ, "r+");
-  ASSERT_EQ(1, fwrite(kMessage, strlen(kMessage), 1, f));
-  struct HttpRequest *req = calloc(1, sizeof(struct HttpRequest));
-  EXPECT_EQ(0, parsehttprequest(req, f));
-  EXPECT_STREQN("GET", req->method.p, req->method.i);
-  EXPECT_STREQN("/foo", req->uri.p, req->uri.i);
-  EXPECT_STREQN("HTTP/1.0", req->version.p, req->version.i);
-  EXPECT_EQ(0, req->headers.count);
-  freehttprequest(&req);
-  fclose(f);
+TEST(ParseHttpRequest, testEmpty) {
+  EXPECT_EQ(-1, ParseHttpRequest(req, "", 0));
 }
 
-TEST(parsehttprequest, testSomeHeaders) {
-  const char kMessage[] = "GET /foo?bar%20hi HTTP/1.0\r\n"
-                          "Host: foo.example\r\n"
-                          "Content-Length: 0\r\n"
-                          "\r\n";
-  FILE *f = fmemopen(NULL, BUFSIZ, "r+");
-  ASSERT_EQ(1, fwrite(kMessage, strlen(kMessage), 1, f));
-  struct HttpRequest *req = calloc(1, sizeof(struct HttpRequest));
-  EXPECT_EQ(0, parsehttprequest(req, f));
-  EXPECT_STREQN("GET", req->method.p, req->method.i);
-  EXPECT_STREQN("/foo?bar%20hi", req->uri.p, req->uri.i);
-  EXPECT_STREQN("HTTP/1.0", req->version.p, req->version.i);
-  EXPECT_EQ(2, req->headers.count);
-  EXPECT_STREQ("host:foo.example", critbit0_get(&req->headers, "host:"));
-  EXPECT_STREQ("content-length:0",
-               critbit0_get(&req->headers, "content-length:"));
-  EXPECT_EQ(NULL, critbit0_get(&req->headers, "content:"));
-  freehttprequest(&req);
-  fclose(f);
+TEST(ParseHttpRequest, testNoHeaders) {
+  static const char m[] = "GET /foo HTTP/1.0\r\n\r\n";
+  EXPECT_EQ(0, ParseHttpRequest(req, m, strlen(m)));
+  EXPECT_EQ(kHttpGet, req->method);
+  EXPECT_STREQ("/foo", gc(slice(m, req->uri)));
+  EXPECT_STREQ("HTTP/1.0", gc(slice(m, req->version)));
+}
+
+TEST(ParseHttpRequest, testSomeHeaders) {
+  static const char m[] = "\
+POST /foo?bar%20hi HTTP/1.0\r\n\
+Host: foo.example\r\n\
+Content-Length: 0\r\n\
+\r\n";
+  EXPECT_EQ(0, ParseHttpRequest(req, m, strlen(m)));
+  EXPECT_EQ(kHttpPost, req->method);
+  EXPECT_STREQ("/foo?bar%20hi", gc(slice(m, req->uri)));
+  EXPECT_STREQ("HTTP/1.0", gc(slice(m, req->version)));
+  EXPECT_STREQ("foo.example", gc(slice(m, req->headers[kHttpHost])));
+  EXPECT_STREQ("0", gc(slice(m, req->headers[kHttpContentLength])));
+  EXPECT_STREQ("", gc(slice(m, req->headers[kHttpEtag])));
 }

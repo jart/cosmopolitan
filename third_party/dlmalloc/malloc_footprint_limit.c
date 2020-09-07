@@ -10,6 +10,6 @@
  * this number of bytes can actually be obtained from the system.
  */
 size_t malloc_footprint_limit(void) {
-  size_t maf = gm->footprint_limit;
+  size_t maf = g_dlmalloc->footprint_limit;
   return maf == 0 ? SIZE_MAX : maf;
 }

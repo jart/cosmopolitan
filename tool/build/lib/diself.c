@@ -22,6 +22,7 @@
 #include "libc/elf/elf.h"
 #include "libc/elf/struct/sym.h"
 #include "libc/log/check.h"
+#include "libc/macros.h"
 #include "tool/build/lib/dis.h"
 
 static int DisSymCompare(const struct DisSym *a, const struct DisSym *b) {
@@ -113,18 +114,29 @@ bool DisIsText(struct Dis *d, int64_t addr) {
 }
 
 long DisFindSym(struct Dis *d, int64_t addr) {
-  size_t i;
+  size_t i, l, r, m, n;
   if (DisIsProg(d, addr)) {
-    for (i = 0; i < d->syms.i; ++i) {
-      if (addr == d->syms.p[i].addr) return i;
+    l = 0;
+    r = d->syms.i;
+    while (l < r) {
+      m = (l + r) >> 1;
+      if (d->syms.p[m].addr < addr) {
+        l = m + 1;
+      } else {
+        r = m;
+      }
     }
-    for (i = 0; i < d->syms.i; ++i) {
+    if (d->syms.p[l].addr == addr) {
+      return l;
+    }
+    l = MAX(0, (long)l - 10);
+    for (n = 0, i = l; i < d->syms.i && n < 20; ++i, ++n) {
       if (addr >= d->syms.p[i].addr &&
           addr < d->syms.p[i].addr + d->syms.p[i].size) {
         return i;
       }
     }
-    for (i = 0; i < d->syms.i; ++i) {
+    for (n = 0, i = l; i < d->syms.i && n < 20; ++i, ++n) {
       if (addr >= d->syms.p[i].addr &&
           (i + 1 == d->syms.i || addr < d->syms.p[i + 1].addr)) {
         return i;

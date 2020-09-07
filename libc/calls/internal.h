@@ -21,6 +21,9 @@
 #define COSMOPOLITAN_LIBC_CALLS_INTERNAL_H_
 #ifndef __STRICT_ANSI__
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/itimerval.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/limits.h"
 #include "libc/macros.h"
@@ -28,6 +31,8 @@
 #include "libc/nt/struct/startupinfo.h"
 #include "libc/nt/struct/systeminfo.h"
 #include "libc/runtime/runtime.h"
+#include "libc/time/struct/timezone.h"
+#include "libc/time/struct/utimbuf.h"
 
 #define kSigactionMinRva 8 /* >SIG_{ERR,DFL,IGN,...} */
 
@@ -41,14 +46,6 @@ struct NtWin32FileAttributeData;
 struct ZiposHandle;
 struct __darwin_siginfo;
 struct __darwin_ucontext;
-struct itimerval;
-struct rlimit;
-struct rusage;
-struct sigset;
-struct sysinfo;
-struct timeval;
-struct timezone;
-struct utimbuf;
 
 struct IoctlPtmGet {
   int theduxfd;

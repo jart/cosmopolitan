@@ -88,6 +88,7 @@ TEST(modrm, testPuttingOnTheRiz) {
 }
 
 TEST(modrm, testSibIndexOnly) {
+  // lea 0x0(,%rcx,4),%r8
   //       mod                  = 0b00  (0)
   //       reg                  = 0b000 (0)
   //       rm                   = 0b100 (4)
@@ -96,11 +97,16 @@ TEST(modrm, testSibIndexOnly) {
   //       base                 = 0b101 (5)
   struct Machine *m = gc(NewMachine());
   struct XedDecodedInst *xedd = gc(calloc(1, sizeof(struct XedDecodedInst)));
-  uint8_t op[] = {76, 141, 4, 141, 0, 0, 0, 0}; /* lea 0x0(,%rcx,4),%r8 */
+  uint8_t op[] = {0x4c, 0x8d, 0x04, 0x8d, 0, 0, 0, 0};
   m->xedd = xedd;
   Write64(m->bp, 0x123);
   Write64(m->cx, 0x123);
   xed_decoded_inst_zero_set_mode(xedd, XED_MACHINE_MODE_LONG_64);
   ASSERT_EQ(0, xed_instruction_length_decode(xedd, op, sizeof(op)));
+  EXPECT_TRUE(Rexw(m->xedd->op.rde));
+  EXPECT_TRUE(Rexr(m->xedd->op.rde));
+  EXPECT_FALSE(Rexb(m->xedd->op.rde));
+  EXPECT_EQ(0b000, ModrmReg(m->xedd->op.rde));
+  EXPECT_EQ(0b100, ModrmRm(m->xedd->op.rde));
   EXPECT_EQ(0x123 * 4, (uint64_t)ComputeAddress(m, m->xedd->op.rde));
 }

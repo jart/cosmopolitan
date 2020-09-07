@@ -63,9 +63,15 @@ $(TOOL_BUILD_LIB_A).pkg:				\
 		$(TOOL_BUILD_LIB_A_OBJS)		\
 		$(foreach x,$(TOOL_BUILD_LIB_A_DIRECTDEPS),$($(x)_A).pkg)
 
-# $(TOOL_BUILD_LIB_A_OBJS):				\
-# 		OVERRIDE_CFLAGS +=			\
-# 			-fsanitize=address
+ifeq (,$(MODE))
+$(TOOL_BUILD_LIB_A_OBJS):				\
+		OVERRIDE_CFLAGS +=			\
+			-fsanitize=address
+endif
+
+o/$(MODE)/tool/build/lib/ssefloat.o:			\
+		TARGET_ARCH +=				\
+			-msse3
 
 TOOL_BUILD_LIB_LIBS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)))
 TOOL_BUILD_LIB_SRCS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)_SRCS))

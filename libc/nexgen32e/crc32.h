@@ -3,8 +3,6 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const uint32_t kCrc32Tab[256];
-
 void crc32init(uint32_t[hasatleast 256], uint32_t);
 uint32_t crc32_z(uint32_t, const void *, size_t);
 extern uint32_t (*const crc32c)(uint32_t, const void *, size_t) paramsnonnull();

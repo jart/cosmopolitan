@@ -111,6 +111,7 @@
                              ".clang-format")
                             "-style=file"))))
           (when arg
+            (message arg)
             (write-region nil nil tmp)
             (let ((buf (get-buffer-create "*clang-format*"))
                   (exe (cosmo--find-clang-format-bin)))

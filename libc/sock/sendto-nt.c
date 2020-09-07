@@ -18,8 +18,11 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
+#include "libc/sysv/consts/fileno.h"
 
 /**
  * Performs send(), sendto(), or writev() on Windows NT.
@@ -29,11 +32,11 @@
  */
 textwindows ssize_t sendto$nt(struct Fd *fd, const struct iovec *iov,
                               size_t iovlen, uint32_t flags, void *opt_in_addr,
-                              uint32_t *in_addrsize) {
+                              uint32_t in_addrsize) {
   uint32_t sent;
   struct iovec$nt iovnt[16];
   if (WSASendTo(fd->handle, iovnt, iovec2nt(iovnt, iov, iovlen), &sent, flags,
-                opt_in_addr, *in_addrsize, NULL, NULL) != -1) {
+                opt_in_addr, in_addrsize, NULL, NULL) != -1) {
     return sent;
   } else {
     return winsockerr();

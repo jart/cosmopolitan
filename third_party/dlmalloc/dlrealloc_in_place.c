@@ -11,7 +11,7 @@ void *dlrealloc_in_place(void *oldmem, size_t bytes) {
       size_t nb = request2size(bytes);
       mchunkptr oldp = mem2chunk(oldmem);
 #if !FOOTERS
-      mstate m = gm;
+      mstate m = g_dlmalloc;
 #else  /* FOOTERS */
       mstate m = get_mstate_for(oldp);
       if (!ok_magic(m)) {

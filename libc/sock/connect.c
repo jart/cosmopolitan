@@ -34,6 +34,7 @@
  * @asyncsignalsafe
  */
 int connect(int fd, const void *addr, uint32_t addrsize) {
+  if (!addr) return efault();
   if (!IsWindows()) {
     return connect$sysv(fd, addr, addrsize);
   } else if (isfdkind(fd, kFdSocket)) {

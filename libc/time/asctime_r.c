@@ -28,7 +28,7 @@ static unsigned clip(unsigned index, unsigned count) {
   return index < count ? index : 0;
 }
 
-char *asctime_r(const struct tm *date, char *buf /*[64]*/) {
+char *asctime_r(const struct tm *date, char buf[hasatleast 64]) {
   (snprintf)(buf, 64, "%.3s %.3s%3d %.2d:%.2d:%.2d %d\n",
              kWeekdayNameShort[clip(date->tm_wday, 7)],
              kMonthNameShort[clip(date->tm_mon, 12)], date->tm_mday,

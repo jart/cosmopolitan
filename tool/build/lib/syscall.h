@@ -7,7 +7,7 @@ COSMOPOLITAN_C_START_
 
 extern const struct MachineFdCb kMachineFdCbHost;
 
-void OpSyscall(struct Machine *);
+void OpSyscall(struct Machine *, uint32_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

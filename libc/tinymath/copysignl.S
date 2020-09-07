@@ -17,6 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/lib/pc.h"
 #include "libc/macros.h"
 .source	__FILE__
 
@@ -29,7 +30,7 @@ tinymath_copysignl:
 	fnstsw
 	fstp	%st
 	fldt	16(%rbp)
-	testb	$2,%ah
+	test	$FPU_C1>>8,%ah
 	fabs
 	je	1f
 	fchs

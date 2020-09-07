@@ -34,16 +34,13 @@
 #include "libc/fmt/palandprintf.h"
 #include "libc/math.h"
 
-static const int kPow10[] = {1,      10,      100,      1000,      10000,
-                             100000, 1000000, 10000000, 100000000, 1000000000};
-
 /**
  * Formats floating point number.
  *
  * @see xdtoa() for higher precision at the cost of bloat
  * @see palandprintf() which is intended caller
  */
-int ftoa(int out(int, void *), void *arg, long double value, unsigned long prec,
+int ftoa(int out(int, void *), void *arg, long double value, int prec,
          unsigned long width, unsigned long flags) {
   long whole, frac;
   long double tmp, diff;
@@ -72,32 +69,31 @@ int ftoa(int out(int, void *), void *arg, long double value, unsigned long prec,
       prec = 6;
     }
 
-    /* limit precision to 9, cause a prec >= 10 can lead to overflow errors */
-    while (len < PRINTF_FTOA_BUFFER_SIZE && prec > 9) {
+    while (len < PRINTF_FTOA_BUFFER_SIZE && prec > 14) {
       buf[len++] = '0';
       prec--;
     }
 
     whole = truncl(fabsl(value));
-    tmp = (fabsl(value) - whole) * kPow10[prec];
+    tmp = (fabsl(value) - whole) * exp10l(prec);
     frac = tmp;
     diff = tmp - frac;
 
-    if (diff > 0.5) {
+    if (diff > .5) {
       ++frac; /* handle rollover, e.g. case 0.99 with prec 1 is 1.0 */
-      if (frac >= kPow10[prec]) {
+      if (frac >= exp10l(prec)) {
         frac = 0;
         ++whole;
       }
-    } else if (diff < 0.5) {
+    } else if (diff < .5) {
     } else if (!frac || (frac & 1)) {
       ++frac; /* if halfway, round up if odd OR if last digit is 0 */
     }
 
     if (!prec) {
       diff = fabsl(value) - whole;
-      if ((!(diff < 0.5) || (diff > 0.5)) && (whole & 1)) {
-        /* exactly 0.5 and ODD, then round up */
+      if ((!(diff < .5) || (diff > .5)) && (whole & 1)) {
+        /* exactly .5 and ODD, then round up */
         /* 1.5 -> 2, but 2.5 -> 2 */
         ++whole;
       }
