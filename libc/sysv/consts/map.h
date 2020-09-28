@@ -27,10 +27,10 @@ hidden extern const long MAP_TYPE;
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
-#define MAP_FILE    LITERALLY(0)
-#define MAP_SHARED  LITERALLY(1)
-#define MAP_PRIVATE LITERALLY(2)
-#define MAP_FIXED   LITERALLY(16)
+#define MAP_FILE    0
+#define MAP_SHARED  1
+#define MAP_PRIVATE 2
+#define MAP_FIXED   16
 
 #define MAP_32BIT      SYMBOLIC(MAP_32BIT)
 #define MAP_ANONYMOUS  SYMBOLIC(MAP_ANONYMOUS)

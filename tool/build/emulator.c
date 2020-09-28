@@ -64,13 +64,16 @@
 #include "tool/build/lib/breakpoint.h"
 #include "tool/build/lib/case.h"
 #include "tool/build/lib/cga.h"
+#include "tool/build/lib/demangle.h"
 #include "tool/build/lib/dis.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/fds.h"
 #include "tool/build/lib/flags.h"
 #include "tool/build/lib/fpu.h"
+#include "tool/build/lib/high.h"
 #include "tool/build/lib/loader.h"
 #include "tool/build/lib/machine.h"
+#include "tool/build/lib/mda.h"
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/modrm.h"
 #include "tool/build/lib/panel.h"
@@ -176,8 +179,10 @@ static const char kSegmentNames[16][4] = {
 
 static int tyn;
 static int txn;
+static int tick;
+static int speed;
+static int vidya;
 static int ttyfd;
-static bool vidya;
 static bool react;
 static bool ssehex;
 static int exitcode;
@@ -200,7 +205,6 @@ static struct Panels pan;
 static int64_t readstart;
 static int64_t writestart;
 static int64_t stackstart;
-static struct DisHigh high;
 static struct Machine m[2];
 static struct MachinePty *pty;
 static char logpath[PATH_MAX];
@@ -521,6 +525,9 @@ static void SetupDraw(void) {
     c2y[1] -= tyn - c2y[2] - 26;
     c2y[2] = tyn - 26;
   }
+  if (tyn - c2y[2] < 26) {
+    c2y[2] = tyn - 26;
+  }
 
   a = (tyn - (cpuy + ssey) - 3) / 4;
   c3y[0] = cpuy;
@@ -642,15 +649,11 @@ static void SetupDraw(void) {
         xcalloc(pan.p[i].bottom - pan.p[i].top, sizeof(struct Buffer));
   }
 
-  if (pty->yn != pan.display.bottom - pan.display.top ||
-      pty->xn != pan.display.right - pan.display.left) {
-    LOGF("MachinePtyResize");
-    MachinePtyResize(pty, pan.display.bottom - pan.display.top,
-                     pan.display.right - pan.display.left);
-  }
+  MachinePtyResize(pty, pan.display.bottom - pan.display.top,
+                   pan.display.right - pan.display.left);
 }
 
-static long GetDisIndex(int64_t addr) {
+static long GetDisIndex(void) {
   long i;
   if ((i = DisFind(dis, GetIp())) == -1) {
     Dis(dis, m, GetIp(), pan.disassembly.bottom - pan.disassembly.top * 2);
@@ -692,12 +695,21 @@ static void DrawTerminal(struct Panel *p) {
 }
 
 void DrawDisplay(struct Panel *p) {
-  if (vidya) {
-    DrawHr(&pan.displayhr, "COLOR GRAPHICS ADAPTER");
-    DrawCga(p, VirtualSend(m, gc(xmalloc(25 * 80 * 2)), 0xb8000, 25 * 80 * 2));
-  } else {
-    DrawHr(&pan.displayhr, "TELETYPEWRITER");
-    DrawTerminal(p);
+  switch (vidya) {
+    case 7:
+      DrawHr(&pan.displayhr, "MONOCHROME DISPLAY ADAPTER");
+      DrawMda(p,
+              VirtualSend(m, gc(xmalloc(25 * 80 * 2)), 0xb0000, 25 * 80 * 2));
+      break;
+    case 3:
+      DrawHr(&pan.displayhr, "COLOR GRAPHICS ADAPTER");
+      DrawCga(p,
+              VirtualSend(m, gc(xmalloc(25 * 80 * 2)), 0xb8000, 25 * 80 * 2));
+      break;
+    default:
+      DrawHr(&pan.displayhr, "TELETYPEWRITER");
+      DrawTerminal(p);
+      break;
   }
 }
 
@@ -947,15 +959,17 @@ static void DrawMaps(struct Panel *p) {
 
 static void DrawBreakpoints(struct Panel *p) {
   int64_t addr;
-  char buf[128];
   const char *name;
+  char *s, buf[256];
   long i, line, sym;
   for (line = 0, i = breakpoints.i; i--;) {
     if (breakpoints.p[i].disable) continue;
     addr = breakpoints.p[i].addr;
     sym = DisFindSym(dis, addr);
     name = sym != -1 ? dis->syms.stab + dis->syms.p[sym].name : "UNKNOWN";
-    snprintf(buf, sizeof(buf), "%p %s", addr, name);
+    s = buf;
+    s += sprintf(s, "%p ", addr);
+    CHECK_LT(Demangle(s, name), buf + ARRAYLEN(buf));
     AppendPanel(p, line, buf);
     if (sym != -1 && addr != dis->syms.p[sym].addr) {
       snprintf(buf, sizeof(buf), "+%#lx", addr - dis->syms.p[sym].addr);
@@ -982,8 +996,8 @@ static void DrawTrace(struct Panel *p) {
   int i, n;
   long sym;
   uint8_t *r;
-  char line[128];
   const char *name;
+  char *s, line[256];
   int64_t sp, bp, rp;
   rp = m->ip;
   bp = Read64(m->bp);
@@ -992,7 +1006,9 @@ static void DrawTrace(struct Panel *p) {
     rp += Read64(m->cs);
     sym = DisFindSym(dis, rp);
     name = sym != -1 ? dis->syms.stab + dis->syms.p[sym].name : "UNKNOWN";
-    snprintf(line, sizeof(line), "%p %p %s", Read64(m->ss) + bp, rp, name);
+    s = line;
+    s += sprintf(s, "%p %p ", Read64(m->ss) + bp, rp);
+    s = Demangle(s, name);
     AppendPanel(p, i, line);
     if (sym != -1 && rp != dis->syms.p[sym].addr) {
       snprintf(line, sizeof(line), "+%#lx", rp - dis->syms.p[sym].addr);
@@ -1015,19 +1031,8 @@ static void DrawTrace(struct Panel *p) {
       break;
     }
     sp = bp;
-    switch (m->mode & 3) {
-      case XED_MODE_LONG:
-        bp = Read64(r + 0);
-        rp = Read64(r + 8);
-        break;
-      case XED_MODE_REAL:
-      case XED_MODE_LEGACY:
-        bp = Read32(r + 0);
-        rp = Read32(r + 4);
-        break;
-      default:
-        unreachable;
-    }
+    bp = Read64(r + 0);
+    rp = Read64(r + 8);
   }
 }
 
@@ -1098,12 +1103,53 @@ static void Redraw(void) {
   }
 }
 
+static void ReactiveDraw(void) {
+  if (tuimode) {
+    m->ip -= m->xedd->length;
+    SetupDraw();
+    Redraw();
+    m->ip += m->xedd->length;
+    tick = speed;
+  }
+}
+
 static int OnPtyFdClose(int fd) {
   return 0;
 }
 
+static bool HasPendingInput(int fd) {
+  struct pollfd fds[1];
+  fds[0].fd = fd;
+  fds[0].events = POLLIN;
+  fds[0].revents = 0;
+  poll(fds, ARRAYLEN(fds), 0);
+  return fds[0].revents & (POLLIN | POLLERR);
+}
+
+static ssize_t ConsumePtyInput(int fd) {
+  char *buf;
+  ssize_t rc;
+  buf = malloc(PAGESIZE);
+  pty->conf |= kMachinePtyBlinkcursor;
+  ReactiveDraw();
+  rc = read(fd, buf, PAGESIZE);
+  pty->conf &= ~kMachinePtyBlinkcursor;
+  ReactiveDraw();
+  if (rc > 0) MachinePtyWriteInput(pty, buf, rc);
+  free(buf);
+  return rc;
+}
+
 static ssize_t OnPtyFdRead(int fd, void *data, size_t size) {
-  return read(fd, data, size);
+  ssize_t rc;
+  if (!size) return 0;
+  if (HasPendingInput(fd)) {
+    if ((rc = ConsumePtyInput(fd)) <= 0) return rc;
+  }
+  while (!(rc = MachinePtyRead(pty, data, size))) {
+    if ((rc = ConsumePtyInput(fd)) <= 0) return rc;
+  }
+  return rc;
 }
 
 static ssize_t OnPtyFdWrite(int fd, const void *data, size_t size) {
@@ -1115,12 +1161,46 @@ static ssize_t OnPtyFdWrite(int fd, const void *data, size_t size) {
   }
 }
 
+static int OnPtyFdTiocgwinsz(int fd, struct winsize *ws) {
+  ws->ws_row = pty->yn;
+  ws->ws_col = pty->xn;
+  return 0;
+}
+
+static int OnPtyFdTcgets(int fd, struct termios *c) {
+  memset(c, 0, sizeof(*c));
+  if (!(pty->conf & kMachinePtyNocanon)) c->c_iflag |= ICANON;
+  if (!(pty->conf & kMachinePtyNoecho)) c->c_iflag |= ECHO;
+  if (!(pty->conf & kMachinePtyNoopost)) c->c_oflag |= OPOST;
+  return 0;
+}
+
+static int OnPtyFdTcsets(int fd, uint64_t request, struct termios *c) {
+  if (c->c_iflag & ICANON) {
+    pty->conf &= ~kMachinePtyNocanon;
+  } else {
+    pty->conf |= kMachinePtyNocanon;
+  }
+  if (c->c_iflag & ECHO) {
+    pty->conf &= ~kMachinePtyNoecho;
+  } else {
+    pty->conf |= kMachinePtyNoecho;
+  }
+  if (c->c_oflag & OPOST) {
+    pty->conf &= ~kMachinePtyNoopost;
+  } else {
+    pty->conf |= kMachinePtyNoopost;
+  }
+  return 0;
+}
+
 static int OnPtyFdIoctl(int fd, uint64_t request, void *memory) {
   if (request == TIOCGWINSZ) {
-    struct winsize *ws = memory;
-    ws->ws_row = pan.display.bottom - pan.display.top;
-    ws->ws_col = pan.display.right - pan.display.left;
-    return 0;
+    return OnPtyFdTiocgwinsz(fd, memory);
+  } else if (request == TCGETS) {
+    return OnPtyFdTcgets(fd, memory);
+  } else if (request == TCSETS || request == TCSETSW || request == TCSETSF) {
+    return OnPtyFdTcsets(fd, request, memory);
   } else {
     return einval();
   }
@@ -1278,9 +1358,59 @@ static void OnDiskService(void) {
 }
 
 static void OnVidyaServiceSetMode(void) {
+  vidya = m->ax[0];
 }
 
-static void OnVidyaServiceSetCursor(void) {
+static void OnVidyaServiceGetMode(void) {
+  m->ax[0] = vidya;
+  m->ax[1] = 80; /* columns */
+  m->bx[1] = 0;  /* page */
+}
+
+static void OnVidyaServiceSetCursorPosition(void) {
+  pty->y = m->dx[1];
+  pty->x = m->dx[0];
+}
+
+static void OnVidyaServiceGetCursorPosition(void) {
+  m->dx[1] = pty->y;
+  m->dx[0] = pty->x;
+  m->cx[1] = 5; /* cursor ▂ scan lines 5..7 of 0..7 */
+  m->cx[0] = 7 | !!(pty->conf & kMachinePtyNocursor) << 5;
+}
+
+static void OnVidyaServiceWriteCharacter(void) {
+  char buf[12];
+  int i, n, y, x;
+  y = pty->y;
+  x = pty->x;
+  n = FormatCga(m->bx[0], buf);
+  n += tpencode(buf + n, 6, kCp437[m->ax[0]], false);
+  i = Read16(m->cx);
+  while (i--) MachinePtyWrite(pty, buf, n);
+  pty->y = y;
+  pty->x = x;
+}
+
+static char16_t VidyaServiceXlatTeletype(uint8_t c) {
+  switch (c) {
+    case '\a':
+    case '\b':
+    case '\r':
+    case '\n':
+    case 0177:
+      return c;
+    default:
+      return kCp437[c];
+  }
+}
+
+static void OnVidyaServiceTeletypeOutput(void) {
+  int n;
+  char buf[12];
+  n = FormatCga(m->bx[0], buf);
+  n += tpencode(buf + n, 6, VidyaServiceXlatTeletype(m->ax[0]), false);
+  MachinePtyWrite(pty, buf, n);
 }
 
 static void OnVidyaService(void) {
@@ -1289,7 +1419,47 @@ static void OnVidyaService(void) {
       OnVidyaServiceSetMode();
       break;
     case 0x02:
-      OnVidyaServiceSetCursor();
+      OnVidyaServiceSetCursorPosition();
+      break;
+    case 0x03:
+      OnVidyaServiceGetCursorPosition();
+      break;
+    case 0x09:
+      OnVidyaServiceWriteCharacter();
+      break;
+    case 0x0E:
+      OnVidyaServiceTeletypeOutput();
+      break;
+    case 0x0F:
+      OnVidyaServiceGetMode();
+      break;
+    default:
+      break;
+  }
+}
+
+static void OnKeyboardServiceReadKeyPress(void) {
+  uint8_t b;
+  ReactiveDraw();
+  read(0, &b, 1);
+  switch (b) {
+    case 0177:
+      b = '\b';
+      break;
+    case CTRL('C'):
+      raise(SIGINT);
+      break;
+    default:
+      break;
+  }
+  m->ax[0] = b;
+  m->ax[1] = 0;
+}
+
+static void OnKeyboardService(void) {
+  switch (m->ax[1]) {
+    case 0x00:
+      OnKeyboardServiceReadKeyPress();
       break;
     default:
       break;
@@ -1356,6 +1526,9 @@ static bool OnHalt(int interrupt) {
     case 0x15:
       OnInt15h();
       return true;
+    case 0x16:
+      OnKeyboardService();
+      return true;
     case kMachineSegmentationFault:
       OnSegmentationFault();
       return false;
@@ -1394,11 +1567,19 @@ static void OnPageDown(void) {
 }
 
 static void OnUpArrow(void) {
-  opstart--;
+  if (action & CONTINUE) {
+    speed = MIN(0x40000000, MAX(1, speed) << 1);
+  } else {
+    --opstart;
+  }
 }
 
 static void OnDownArrow(void) {
-  opstart++;
+  if (action & CONTINUE) {
+    speed >>= 1;
+  } else {
+    ++opstart;
+  }
 }
 
 static void OnHome(void) {
@@ -1422,15 +1603,6 @@ static void OnFeed(void) {
 }
 
 static void OnUp(void) {
-  uint8_t b[8];
-  int64_t sp, bp, ret;
-  bp = Read64(m->bp);
-  sp = Read64(m->sp);
-  if (bp >= sp) {
-    VirtualSend(m, b, bp + 8, sizeof(b));
-    ret = Read64(b);
-    ScrollOp(&pan.disassembly, GetDisIndex(ret));
-  }
 }
 
 static void OnDown(void) {
@@ -1460,7 +1632,7 @@ static void OnFinish(void) {
 }
 
 static void OnContinue(void) {
-  action |= CONTINUE;
+  action ^= CONTINUE;
   action &= ~STEP;
   action &= ~NEXT;
   action &= ~FINISH;
@@ -1495,12 +1667,7 @@ static void OnSseHex(void) {
 }
 
 static bool HasPendingKeyboard(void) {
-  struct pollfd fds[1];
-  fds[0].fd = ttyfd;
-  fds[0].events = POLLIN;
-  fds[0].revents = 0;
-  poll(fds, ARRAYLEN(fds), 0);
-  return fds[0].revents & (POLLIN | POLLERR);
+  return HasPendingInput(ttyfd);
 }
 
 static bool IsExecuting(void) {
@@ -1700,10 +1867,11 @@ static void Tui(void) {
   long op;
   ssize_t bp;
   int interrupt;
+  bool interactive;
   LOGF("TUI");
   TuiSetup();
   SetupDraw();
-  ScrollOp(&pan.disassembly, GetDisIndex(m->ip));
+  ScrollOp(&pan.disassembly, GetDisIndex());
   if (!(interrupt = setjmp(m->onhalt))) {
     for (;;) {
       if (!(action & FAILURE)) {
@@ -1719,13 +1887,18 @@ static void Tui(void) {
         GetTtySize();
         action &= ~WINCHED;
       }
-      SetupDraw();
-      Redraw();
+      interactive = ++tick > speed;
+      if (!(action & CONTINUE) || interactive) {
+        tick = 0;
+        GetDisIndex();
+        SetupDraw();
+        Redraw();
+      }
       if (action & FAILURE) {
         LOGF("TUI FAILURE");
         PrintMessageBox(ttyfd, systemfailure, tyn, txn);
         ReadKeyboard();
-      } else if (!IsExecuting() || HasPendingKeyboard()) {
+      } else if (!IsExecuting() || (interactive && HasPendingKeyboard())) {
         ReadKeyboard();
       }
       if (action & INT) {
@@ -1755,7 +1928,7 @@ static void Tui(void) {
         break;
       }
       if (IsExecuting()) {
-        op = GetDisIndex(m->ip);
+        op = GetDisIndex();
         ScrollOp(&pan.disassembly, op);
         VERBOSEF("%s", DisGetLine(dis, m, op));
         memcpy(&m[1], &m[0], sizeof(m[0]));
@@ -1789,7 +1962,7 @@ static void Tui(void) {
         CheckFramePointer();
         ops++;
         if (!(action & CONTINUE)) {
-          ScrollOp(&pan.disassembly, GetDisIndex(m->ip));
+          ScrollOp(&pan.disassembly, GetDisIndex());
           if ((action & FINISH) && IsRet()) action &= ~FINISH;
           if (((action & NEXT) && IsRet()) || (action & FINISH)) {
             action &= ~NEXT;
@@ -1807,7 +1980,7 @@ static void Tui(void) {
     if (OnHalt(interrupt)) {
       goto KeepGoing;
     }
-    ScrollOp(&pan.disassembly, GetDisIndex(m->ip));
+    ScrollOp(&pan.disassembly, GetDisIndex());
   }
   TuiCleanup();
 }
@@ -1825,7 +1998,6 @@ static void GetOpts(int argc, char *argv[]) {
         break;
       case 'r':
         m->mode = XED_MACHINE_MODE_REAL;
-        vidya = true;
         break;
       case 's':
         printstats = true;
@@ -1834,7 +2006,7 @@ static void GetOpts(int argc, char *argv[]) {
         HandleBreakpointFlag(optarg);
         break;
       case 'H':
-        g_dis_high = NULL;
+        memset(&g_high, 0, sizeof(g_high));
         break;
       case 'v':
         ++g_loglevel;
@@ -1905,14 +2077,14 @@ int main(int argc, char *argv[]) {
   m->mode = XED_MACHINE_MODE_LONG_64;
   ssewidth = 2; /* 16-bit is best bit */
   if (!NoDebug()) showcrashreports();
-  // OnlyRunOnFirstCpu();
+  /* OnlyRunOnFirstCpu(); */
   if ((colorize = cancolor())) {
-    high.keyword = 155;
-    high.reg = 215;
-    high.literal = 182;
-    high.label = 221;
-    high.comment = 112;
-    g_dis_high = &high;
+    g_high.keyword = 155;
+    g_high.reg = 215;
+    g_high.literal = 182;
+    g_high.label = 221;
+    g_high.comment = 112;
+    g_high.quote = 215;
   }
   GetOpts(argc, argv);
   if (optind == argc) PrintUsage(EX_USAGE, stderr);

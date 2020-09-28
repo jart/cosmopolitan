@@ -17,9 +17,11 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/alg/arraylist2.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.h"
 #include "libc/conv/conv.h"
+#include "libc/conv/itoa.h"
 #include "libc/log/check.h"
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
@@ -32,13 +34,18 @@
 #include "tool/build/lib/pty.h"
 
 struct MachinePty *MachinePtyNew(void) {
-  return xcalloc(1, sizeof(struct MachinePty));
+  struct MachinePty *pty;
+  pty = xcalloc(1, sizeof(struct MachinePty));
+  MachinePtyResize(pty, 25, 80);
+  return pty;
 }
 
 void MachinePtyResize(struct MachinePty *pty, int yn, int xn) {
   unsigned y, ym, xm, y0;
   uint32_t *wcs, *fgs, *bgs, *prs;
-  if (yn <= 0 || xn <= 0) return;
+  if (xn < 80) xn = 80;
+  if (yn < 25) yn = 25;
+  if (xn == pty->xn && yn == pty->yn) return;
   wcs = xcalloc(yn * xn, 4);
   fgs = xcalloc(yn * xn, 4);
   bgs = xcalloc(yn * xn, 4);
@@ -92,7 +99,9 @@ static void MachinePtyNewline(struct MachinePty *pty) {
   pty->x = 0;
   if (++pty->y == pty->yn) {
     --pty->y;
-    MachinePtyScroll(pty);
+    if (!(pty->conf & kMachinePtyNoopost)) {
+      MachinePtyScroll(pty);
+    }
   }
 }
 
@@ -335,6 +344,38 @@ static void MachinePtyShowCursor(struct MachinePty *pty) {
   pty->conf &= ~kMachinePtyNocursor;
 }
 
+static void MachinePtyReportCursorPosition(struct MachinePty *pty) {
+  char *p;
+  char buf[2 + 10 + 1 + 10 + 1];
+  p = buf;
+  *p++ = '\e';
+  *p++ = '[';
+  p += uint64toarray_radix10((pty->y + 1) & 0xffffffff, p);
+  *p++ = ';';
+  p += uint64toarray_radix10((pty->x + 1) & 0xffffffff, p);
+  *p++ = 'R';
+  CONCAT(&pty->input.p, &pty->input.i, &pty->input.n, buf, p - buf);
+}
+
+static void MachinePtyCsiN(struct MachinePty *pty) {
+  switch (atoi(pty->esc.s)) {
+    case 6:
+      MachinePtyReportCursorPosition(pty);
+      break;
+    default:
+      break;
+  }
+}
+
+static void MachinePtyCsiScrollUp(struct MachinePty *pty) {
+  int n;
+  n = atoi(pty->esc.s);
+  n = MAX(1, n);
+  while (n--) {
+    MachinePtyScroll(pty);
+  }
+}
+
 static void MachinePtyCsi(struct MachinePty *pty) {
   switch (pty->esc.s[pty->esc.i - 1]) {
     case 'A':
@@ -361,6 +402,12 @@ static void MachinePtyCsi(struct MachinePty *pty) {
       break;
     case 'm':
       MachinePtySelectGraphicsRendition(pty);
+      break;
+    case 'n':
+      MachinePtyCsiN(pty);
+      break;
+    case 'S':
+      MachinePtyCsiScrollUp(pty);
       break;
     case 'l':
       if (strcmp(pty->esc.s, "?25l") == 0) {
@@ -389,7 +436,6 @@ static void MachinePtyEscAppend(struct MachinePty *pty, char c) {
 ssize_t MachinePtyWrite(struct MachinePty *pty, const void *data, size_t n) {
   int i;
   const uint8_t *p;
-  if (!pty->yn || !pty->xn) return 0;
   for (p = data, i = 0; i < n; ++i) {
     switch (pty->state) {
       case kMachinePtyAscii:
@@ -407,6 +453,14 @@ ssize_t MachinePtyWrite(struct MachinePty *pty, const void *data, size_t n) {
               break;
             case '\n':
               MachinePtyNewline(pty);
+              break;
+            case 0177:
+            case '\b':
+              pty->x = MAX(0, pty->x - 1);
+              break;
+            case '\f':
+              break;
+            case '\a':
               break;
             default:
               SetMachinePtyCell(pty, p[i]);
@@ -483,47 +537,87 @@ ssize_t MachinePtyWrite(struct MachinePty *pty, const void *data, size_t n) {
   return n;
 }
 
+ssize_t MachinePtyWriteInput(struct MachinePty *pty, const void *data,
+                             size_t n) {
+  const char *p = data;
+  CONCAT(&pty->input.p, &pty->input.i, &pty->input.n, data, n);
+  if (!(pty->conf & kMachinePtyNoecho)) {
+    MachinePtyWrite(pty, data, n);
+  }
+  return n;
+}
+
+ssize_t MachinePtyRead(struct MachinePty *pty, void *buf, size_t size) {
+  char *p;
+  size_t n;
+  n = MIN(size, pty->input.i);
+  if (!(pty->conf & kMachinePtyNocanon)) {
+    if ((p = memchr(pty->input.p, '\n', n))) {
+      n = MIN(n, pty->input.p - p + 1);
+    } else {
+      n = 0;
+    }
+  }
+  memcpy(buf, pty->input.p, n);
+  memcpy(pty->input.p, pty->input.p + n, pty->input.i - n);
+  pty->input.i -= n;
+  return n;
+}
+
 void MachinePtyAppendLine(struct MachinePty *pty, struct Buffer *buf,
                           unsigned y) {
+  bool atcursor;
   uint32_t x, i, fg, bg, pr, wc, w;
   if (y >= pty->yn) return;
   for (fg = bg = pr = x = 0; x < pty->xn; x += w) {
     i = y * pty->xn + x;
     wc = pty->wcs[i];
     w = MAX(0, wcwidth(wc));
-    if (w) {
-      if (pty->prs[i] != pr || pty->fgs[i] != fg || pty->bgs[i] != bg) {
-        fg = pty->fgs[i];
-        bg = pty->bgs[i];
-        pr = pty->prs[i];
-        AppendStr(buf, "\e[0");
-        if (pr & kMachinePtyBold) AppendStr(buf, ";1");
-        if (pr & kMachinePtyFaint) AppendStr(buf, ";2");
-        if (pr & kMachinePtyFlip) AppendStr(buf, ";7");
-        if (pr & kMachinePtyFg) {
-          if (pr & kMachinePtyTrue) {
-            AppendFmt(buf, ";38;2;%d;%d;%d", (fg & 0x0000ff) >> 000,
-                      (fg & 0x00ff00) >> 010, (fg & 0xff0000) >> 020);
-          } else {
-            AppendFmt(buf, ";38;5;%d", fg);
-          }
-        }
-        if (pr & kMachinePtyBg) {
-          if (pr & kMachinePtyTrue) {
-            AppendFmt(buf, ";48;2;%d;%d;%d", (bg & 0x0000ff) >> 000,
-                      (bg & 0x00ff00) >> 010, (bg & 0xff0000) >> 020);
-          } else {
-            AppendFmt(buf, ";48;5;%d", bg);
-          }
-        }
-        AppendStr(buf, "m");
+    atcursor = y == pty->y && x == pty->x;
+    if ((w && atcursor) ||
+        (pty->prs[i] != pr || pty->fgs[i] != fg || pty->bgs[i] != bg)) {
+      fg = pty->fgs[i];
+      bg = pty->bgs[i];
+      pr = pty->prs[i];
+      AppendStr(buf, "\e[0");
+      if (w && atcursor) {
+        pr ^= kMachinePtyFlip;
       }
+      if (pr & kMachinePtyBold) AppendStr(buf, ";1");
+      if (pr & kMachinePtyFaint) AppendStr(buf, ";2");
+      if (pr & kMachinePtyBlink) AppendStr(buf, ";5");
+      if (pr & kMachinePtyFlip) AppendStr(buf, ";7");
+      if (pr & kMachinePtyFg) {
+        if (pr & kMachinePtyTrue) {
+          AppendFmt(buf, ";38;2;%d;%d;%d", (fg & 0x0000ff) >> 000,
+                    (fg & 0x00ff00) >> 010, (fg & 0xff0000) >> 020);
+        } else {
+          AppendFmt(buf, ";38;5;%d", fg);
+        }
+      }
+      if (pr & kMachinePtyBg) {
+        if (pr & kMachinePtyTrue) {
+          AppendFmt(buf, ";48;2;%d;%d;%d", (bg & 0x0000ff) >> 000,
+                    (bg & 0x00ff00) >> 010, (bg & 0xff0000) >> 020);
+        } else {
+          AppendFmt(buf, ";48;5;%d", bg);
+        }
+      }
+      AppendStr(buf, "m");
+    }
+    if (w) {
       AppendWide(buf, wc);
     } else {
       w = 1;
-      if (y == pty->y && x == pty->x) {
+      if (atcursor) {
         if (!(pty->conf & kMachinePtyNocursor)) {
-          AppendStr(buf, "\e[5m▂\e[25m");
+          if (pty->conf & kMachinePtyBlinkcursor) {
+            AppendStr(buf, "\e[5m");
+          }
+          AppendWide(buf, u'▂');
+          if (pty->conf & kMachinePtyBlinkcursor) {
+            AppendStr(buf, "\e[25m");
+          }
         }
       } else {
         AppendChar(buf, ' ');

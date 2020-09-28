@@ -40,7 +40,7 @@ cescapec:
 	ret
 .LHT:	mov	$'t,%ah
 	ret
-.LLF:	or	$'n<<010|'\\<<020|'\n<<030,%eax
+.LLF:	mov	$'n,%ah
 	ret
 .LVT:	mov	$'v,%ah
 	ret

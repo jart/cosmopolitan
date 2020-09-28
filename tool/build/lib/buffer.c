@@ -17,9 +17,9 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "dsp/tty/tty.h"
 #include "libc/alg/arraylist2.h"
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/str/tpencode.h"
@@ -58,5 +58,22 @@ void AppendFmt(struct Buffer *b, const char *fmt, ...) {
  * Writes buffer until completion, interrupt, or error occurs.
  */
 ssize_t WriteBuffer(struct Buffer *b, int fd) {
-  return ttywrite(fd, b->p, b->i);
+  char *p;
+  ssize_t rc;
+  size_t wrote, n;
+  p = b->p;
+  n = b->i;
+  do {
+  TryAgain:
+    if ((rc = write(fd, p, n)) != -1) {
+      wrote = rc;
+      p += wrote;
+      n -= wrote;
+    } else if (errno == EINTR) {
+      goto TryAgain;
+    } else {
+      return -1;
+    }
+  } while (n);
+  return 0;
 }

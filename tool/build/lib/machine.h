@@ -137,12 +137,13 @@ struct Machine {
     uint32_t i;
     void *p[6];
   } freelist;
+  int64_t brk;
   int64_t bofram[2];
   jmp_buf onhalt;
   int64_t faultaddr;
   uint8_t stash[4096];
   uint8_t xmmtype[2][8];
-  uint8_t icache[2048][40] aligned(8);
+  uint8_t icache[4096 / 4][40] aligned(16);
   struct MachineFds fds;
 } aligned(64);
 

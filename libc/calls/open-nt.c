@@ -22,6 +22,7 @@
 #include "libc/calls/ntmagicpaths.h"
 #include "libc/nexgen32e/tinystrcmp.h"
 #include "libc/nt/createfile.h"
+#include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/enum/fsctl.h"
 #include "libc/nt/errors.h"
@@ -38,7 +39,10 @@ static textwindows int64_t open$nt$impl(const char *file, uint32_t flags,
   char16_t file16[PATH_MAX];
   if (mkntpath2(file, flags, file16) == -1) return -1;
   if ((handle = CreateFile(
-           file16, (flags & 0xf000000f),
+           file16,
+           (flags & 0xf000000f) | (/* this is needed if we mmap(rwx+cow)
+                                      nt is choosy about open() access */
+                                   kNtGenericExecute | kNtFileGenericWrite),
            (flags & O_EXCL)
                ? kNtFileShareExclusive
                : kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,

@@ -24,13 +24,12 @@
 char b1[64];
 char b2[64];
 struct Dis d[1];
-struct DisBuilder b = {d, d->xedd, 0};
 
 TEST(DisInst, testInt3) {
   uint8_t op[] = {0xcc};
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("int3    ", b1);
 }
 
@@ -38,7 +37,7 @@ TEST(DisInst, testImmMem_needsSuffix) {
   uint8_t op[] = {0x80, 0x3c, 0x07, 0x00};
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("cmpb    $0,(%rdi,%rax)", b1);
 }
 
@@ -46,7 +45,7 @@ TEST(DisInst, testImmReg_doesntNeedSuffix) {
   uint8_t op[] = {0xb8, 0x08, 0x70, 0x40, 0x00};
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("mov     $0x407008,%eax", b1);
 }
 
@@ -60,23 +59,23 @@ TEST(DisInst, testPuttingOnTheRiz) {
   };
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, ops[0], sizeof(ops[0])));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("lea     (%rsi),%esi", b1);
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, ops[1], sizeof(ops[1])));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("lea     (%esi,%eiz,8),%esi", b1);
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, ops[2], sizeof(ops[2])));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("lea     0(%ebp,%eiz,8),%esi", b1);
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, ops[3], sizeof(ops[3])));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("lea     0x31337,%esi", b1);
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, ops[4], sizeof(ops[4])));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("lea     0(%rbp,%riz,8),%esi", b1);
 }
 
@@ -84,7 +83,7 @@ TEST(DisInst, testSibIndexOnly) {
   uint8_t op[] = {76, 141, 4, 141, 0, 0, 0, 0};
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("lea     0(,%rcx,4),%r8", b1);
 }
 
@@ -92,7 +91,7 @@ TEST(DisInst, testRealMode) {
   uint8_t op[] = {0x89, 0xe5};
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_REAL);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("mov     %sp,%bp", b1);
 }
 
@@ -100,7 +99,7 @@ TEST(DisInst, testNop) {
   uint8_t op[] = {0x66, 0x2e, 0x0f, 0x1f, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00};
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("nopw    %cs:0(%rax,%rax)", b1);
 }
 
@@ -110,7 +109,7 @@ TEST(DisInst, testPush) {
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
   EXPECT_EQ(4, ModrmSrm(d->xedd->op.rde));
   EXPECT_EQ(1, Rexb(d->xedd->op.rde));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("pop     %r12", b1);
 }
 
@@ -118,11 +117,11 @@ TEST(DisInst, testMovb) {
   uint8_t op[] = {0x8a, 0x1e, 0x0c, 0x32};
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("mov     (%rsi),%bl", b1);
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_REAL);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("mov     0x320c,%bl", b1);
 }
 
@@ -130,7 +129,7 @@ TEST(DisInst, testLes) {
   uint8_t op[] = {0xc4, 0x3e, 0x16, 0x32};
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_REAL);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("les     0x3216,%di", b1);
 }
 
@@ -138,7 +137,7 @@ TEST(DisInst, testStosbLong) {
   uint8_t op[] = {0xAA};
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("stosb   %al,(%rdi)", b1);
 }
 
@@ -146,7 +145,7 @@ TEST(DisInst, testStosbReal) {
   uint8_t op[] = {0xAA};
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_REAL);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("stosb   %al,(%di)", b1);
 }
 
@@ -154,7 +153,7 @@ TEST(DisInst, testStosbLegacy) {
   uint8_t op[] = {0xAA};
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LEGACY_32);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("stosb   %al,(%edi)", b1);
 }
 
@@ -162,7 +161,7 @@ TEST(DisInst, testStosbLongAsz) {
   uint8_t op[] = {0x67, 0xAA};
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("stosb   %al,(%edi)", b1);
 }
 
@@ -170,7 +169,7 @@ TEST(DisInst, testAddLong) {
   uint8_t op[] = {0x01, 0xff};
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("add     %edi,%edi", b1);
 }
 
@@ -178,7 +177,7 @@ TEST(DisInst, testAddLegacy) {
   uint8_t op[] = {0x01, 0xff};
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LEGACY_32);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("add     %edi,%edi", b1);
 }
 
@@ -186,7 +185,7 @@ TEST(DisInst, testAddReal) {
   uint8_t op[] = {0x01, 0xff};
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_REAL);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("add     %di,%di", b1);
 }
 
@@ -194,7 +193,7 @@ TEST(DisInst, testAddLongOsz) {
   uint8_t op[] = {0x66, 0x01, 0xff};
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("add     %di,%di", b1);
 }
 
@@ -202,7 +201,7 @@ TEST(DisInst, testAddLegacyOsz) {
   uint8_t op[] = {0x66, 0x01, 0xff};
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LEGACY_32);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("add     %di,%di", b1);
 }
 
@@ -210,7 +209,7 @@ TEST(DisInst, testAddRealOsz) {
   uint8_t op[] = {0x66, 0x01, 0xff};
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_REAL);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("add     %edi,%edi", b1);
 }
 
@@ -219,6 +218,54 @@ TEST(DisInst, testFxam) {
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
   ASSERT_EQ(4, ModrmReg(d->xedd->op.rde));
-  DisInst(b, b1, DisSpec(d->xedd, b2));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("fxam    ", b1);
+}
+
+TEST(DisInst, testOrImmCode16gcc) {
+  uint8_t op[] = {0x67, 0x81, 0x4c, 0x24, 0x0c, 0x00, 0x0c};
+  xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_REAL);
+  ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
+  EXPECT_STREQ("or      $0xc00,12(%esp)", b1);
+}
+
+TEST(DisInst, testPause) {
+  uint8_t op[] = {0xf3, 0x90};
+  xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
+  ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
+  EXPECT_STREQ("pause   ", b1);
+}
+
+TEST(DisInst, testJmpEw) {
+  uint8_t op[] = {0xff, 0xe0};
+  xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_REAL);
+  ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
+  EXPECT_STREQ("jmp     %ax", b1);
+}
+
+TEST(DisInst, testJmpEv16) {
+  uint8_t op[] = {0x66, 0xff, 0xe0};
+  xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_REAL);
+  ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
+  EXPECT_STREQ("jmp     %eax", b1);
+}
+
+TEST(DisInst, testJmpEv32) {
+  uint8_t op[] = {0xff, 0xe0};
+  xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LEGACY_32);
+  ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
+  EXPECT_STREQ("jmp     %eax", b1);
+}
+
+TEST(DisInst, testJmpEq) {
+  uint8_t op[] = {0x66, 0xff, 0xe0};
+  xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_LONG_64);
+  ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
+  EXPECT_STREQ("jmp     %rax", b1);
 }

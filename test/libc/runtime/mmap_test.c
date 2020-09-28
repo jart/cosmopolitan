@@ -21,9 +21,11 @@
 #include "libc/bits/xchg.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
+#include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/memtrack.h"
+#include "libc/runtime/missioncritical.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -106,5 +108,6 @@ TEST(isheap, emptyMalloc) {
 }
 
 TEST(isheap, mallocOffset) {
-  ASSERT_TRUE(isheap((char *)gc(malloc(131072)) + 100000));
+  char *p = gc(malloc(131072));
+  ASSERT_TRUE(isheap(p + 100000));
 }

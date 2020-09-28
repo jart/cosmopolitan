@@ -17,73 +17,49 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/arraylist2.h"
-#include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
-#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/o.h"
 
-static size_t getfilesize(int fd) {
-  struct stat st;
-  st.st_size = 0;
-  fstat(fd, &st);
-  return st.st_size;
-}
-
-static size_t smudgefilesize(size_t size) {
-  return roundup(size, PAGESIZE) + PAGESIZE;
-}
-
 /**
- * Reads entire file into memory.
+ * Writes data to file.
  *
- * This function is fantastic for being lazy. It may waste space if the
- * file is large, but it's implemented in a conscientious way that won't
- * bomb the systemwide page cache. It means performance too, naturally.
- *
- * @return contents which must be free()'d or NULL w/ errno
+ * @param size can be -1 to strlen(data)
+ * @return if failed, -1 w/ errno
+ * @note this is uninterruptible
  */
-char *slurp(const char *path, size_t *opt_out_readlength) {
-  int fd;
+int xbarf(const char *path, const void *data, size_t size) {
+  char *p;
   ssize_t rc;
-  char *res, *p;
-  size_t i, n, got, want;
-  res = NULL;
-  if ((fd = open(path, O_RDONLY)) == -1) goto Failure;
-  n = getfilesize(fd);
-  /* TODO(jart): Fix this, it's totally broken */
-  if (!(res = valloc(smudgefilesize(n)))) goto Failure;
-  if (n > FRAMESIZE) fadvise(fd, 0, n, MADV_SEQUENTIAL);
-  i = 0;
-  for (;;) {
-    want = smudgefilesize(n - i);
-  TryAgain:
-    if ((rc = read(fd, &res[i], want)) == -1) {
-      if (errno == EINTR) goto TryAgain;
-      goto Failure;
-    }
-    got = (size_t)rc;
-    if (i + 1 >= n) {
-      if ((p = realloc(res, smudgefilesize((n += n >> 1))))) {
-        res = p;
-      } else {
-        goto Failure;
+  int fd, res;
+  size_t i, wrote;
+  res = 0;
+  p = data;
+  if (size == -1) size = strlen(p);
+  if ((fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644)) != -1) {
+    if (ftruncate(fd, size) != -1) {
+      if (size > 2 * 1024 * 1024) {
+        fadvise(fd, 0, size, MADV_SEQUENTIAL);
       }
+      for (i = 0; i < size; i += wrote) {
+      TryAgain:
+        if ((rc = pwrite(fd, p + i, size - i, i)) != -1) {
+          wrote = rc;
+        } else if (errno == EINTR) {
+          goto TryAgain;
+        } else {
+          res = -1;
+          break;
+        }
+      }
+    } else {
+      res = -1;
     }
-    i += got;
-    if (got == 0) break;
-    if (got > want) abort();
+    close(fd);
+  } else {
+    res = -1;
   }
-  if (opt_out_readlength) *opt_out_readlength = i;
-  res[i] = '\0';
-  close(fd);
   return res;
-Failure:
-  free(res);
-  close(fd);
-  return NULL;
 }

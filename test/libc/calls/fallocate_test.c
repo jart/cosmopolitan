@@ -18,13 +18,13 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/calls/struct/stat.h"
-#include "libc/calls/calls.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -56,7 +56,7 @@ TEST(fallocate_020, test) {
   ASSERT_NE(-1, close(fd));
   ASSERT_NE(-1, stat(path, &st));
   ASSERT_EQ(31337, st.st_size);
-  ASSERT_BINEQ(u"helloworld", gc(slurp(path, NULL)));
+  ASSERT_BINEQ(u"helloworld", gc(xslurp(path, NULL)));
   unlink(path);
 }
 

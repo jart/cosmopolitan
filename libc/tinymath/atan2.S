@@ -28,6 +28,6 @@
 /	@note	the greatest of all libm functions
 tinymath_atan2:
 	ezlea	tinymath_atan2l,ax
-	jmp	_f2ld2
+	jmp	_d2ld2
 	.endfn	tinymath_atan2,globl
 	.alias	tinymath_atan2,atan2

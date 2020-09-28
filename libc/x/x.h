@@ -49,6 +49,7 @@ int xwrite(int, const void *, uint64_t);
 │ cosmopolitan § eXtended apis » memory                                    ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+void xdie(void) noreturn;
 char *xdtoa(double) _XMAL;
 char *xasprintf(const char *, ...) printfesque(1) paramsnonnull((1)) _XMAL;
 char *xvasprintf(const char *, va_list) _XPNN _XMAL;
@@ -63,6 +64,7 @@ char *xstrdup(const char *) _XPNN _XMAL;
 char *xstrndup(const char *, size_t) _XPNN _XMAL;
 char *xstrcat(const char *, ...) paramsnonnull((1)) nullterminated() _XMAL;
 char *xstrmul(const char *, size_t) paramsnonnull((1)) _XMAL;
+char *xjoinpaths(const char *, const char *) paramsnonnull() _XMAL;
 char *xinet_ntop(int, const void *) _XPNN _XMAL;
 char *xaescapec(const char *) _XPNN _XMAL;
 char *xaescapesh(const char *) _XPNN _XMAL;
@@ -82,7 +84,8 @@ char *xiso8601ts(struct timespec *) mallocesque;
 │ cosmopolitan § eXtended apis » input / output                            ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-char *xslurp(const char *) _XPNN _XMALPG nodiscard;
+char *xslurp(const char *, size_t *) paramsnonnull((1)) _XMALPG nodiscard;
+int xbarf(const char *, const void *, size_t);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § eXtended apis » safety                                    ─╬─│┼

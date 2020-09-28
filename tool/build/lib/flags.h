@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_TOOL_BUILD_LIB_FLAGS_H_
 #define COSMOPOLITAN_TOOL_BUILD_LIB_FLAGS_H_
+#include "tool/build/lib/machine.h"
 
 #define FLAGS_CF   0
 #define FLAGS_VF   1
@@ -23,17 +24,11 @@
 #define FLAGS_VIP  20
 #define FLAGS_ID   21
 
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
 #define GetLazyParityBool(f)    GetParity((f) >> 24)
 #define SetLazyParityByte(f, x) (((f) & ~0xFF000000u) | ((x)&0xFFu) << 24)
-
-#define GetParity(WORD)     \
-  ({                        \
-    unsigned Byte = (WORD); \
-    Byte ^= Byte >> 4;      \
-    Byte ^= Byte >> 2;      \
-    Byte ^= Byte >> 1;      \
-    ~Byte & 1;              \
-  })
 
 #define GetFlag(FLAGS, BIT)               \
   ({                                      \
@@ -66,13 +61,10 @@
     Flags;                                                \
   })
 
-forceinline uint64_t ExportFlags(uint64_t flags) {
-  flags = SetFlag(flags, FLAGS_IOPL, 3);
-  flags = SetFlag(flags, FLAGS_F1, true);
-  flags = SetFlag(flags, FLAGS_F0, false);
-  flags = flags & ~(1ull << FLAGS_PF);
-  flags |= GetLazyParityBool(flags) << FLAGS_PF;
-  return flags;
-}
+bool GetParity(uint8_t);
+uint64_t ExportFlags(uint64_t);
+void ImportFlags(struct Machine *, uint64_t);
 
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_TOOL_BUILD_LIB_FLAGS_H_ */

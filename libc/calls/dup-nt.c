@@ -34,13 +34,13 @@ textwindows int dup$nt(int oldfd, int newfd, int flags) {
   if (newfd == -1) {
     if ((newfd = createfd()) == -1) return -1;
   } else if (isfdindex(newfd)) {
-    close(newfd);
-  } else if (isfdlegal(newfd)) {
+    if (g_fds.p[newfd].kind != kFdEmpty) {
+      close(newfd);
+    }
+  } else {
     do {
       if (growfds() == -1) return -1;
     } while (newfd >= g_fds.n);
-  } else {
-    return ebadf();
   }
   if (DuplicateHandle(GetCurrentProcess(), g_fds.p[oldfd].handle,
                       GetCurrentProcess(), &g_fds.p[newfd].handle, 0,

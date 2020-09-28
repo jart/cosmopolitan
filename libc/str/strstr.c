@@ -35,13 +35,13 @@
 char *(strstr)(const char *haystack, const char *needle) {
   if (needle[0]) {
     if (needle[1]) {
-      if (!((intptr_t)needle & 0xf) && X86_HAVE(SSE4_2) && !IsTiny()) {
+      if (!((intptr_t)needle & 0xf) && X86_HAVE(SSE4_2)) {
         return strstr$sse42(haystack, needle);
       } else {
         size_t needlelen;
         alignas(16) char needle2[64];
         needlelen = strlen(needle);
-        if (needlelen < 64 && X86_HAVE(SSE4_2) && !IsTiny()) {
+        if (needlelen < 64 && X86_HAVE(SSE4_2)) {
           memcpy(needle2, needle, (needlelen + 1) * sizeof(char));
           return strstr$sse42(haystack, needle2);
         } else {

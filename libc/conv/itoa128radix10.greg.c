@@ -48,15 +48,7 @@ noinline size_t uint128toarray_radix10(uint128_t i, char *a) {
  * @return bytes written w/o nul
  */
 size_t int128toarray_radix10(int128_t i, char *a) {
-  if (i < 0) {
-    if (i != INT128_MIN) {
-      *a++ = '-';
-      return 1 + uint128toarray_radix10(-i, a);
-    } else {
-      memcpy(a, "-170141183460469231731687303715884105728", 41);
-      return 40;
-    }
-  } else {
-    return uint128toarray_radix10(i, a);
-  }
+  if (i >= 0) return uint128toarray_radix10(i, a);
+  *a++ = '-';
+  return 1 + uint128toarray_radix10(-i, a);
 }

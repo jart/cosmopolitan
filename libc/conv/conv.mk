@@ -61,6 +61,11 @@ o/$(MODE)/libc/conv/filetimetotimeval.o:	\
 		OVERRIDE_CFLAGS +=		\
 			-O3
 
+o/$(MODE)/libc/conv/itoa64radix10.greg.o	\
+o/$(MODE)/libc/conv/itoa128radix10.greg.o:	\
+		OVERRIDE_CFLAGS +=		\
+			-fwrapv
+
 $(LIBC_CONV_A_OBJS):				\
 		OVERRIDE_CFLAGS +=		\
 			$(NO_MAGIC)

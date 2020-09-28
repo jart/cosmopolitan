@@ -16,17 +16,10 @@ COSMOPOLITAN_C_START_
   - uint128toarray_radix10(0x31337, a)        l: 93 (27ns) m: 141 (41ns)
   - int128toarray_radix10(0x31337, a)         l: 96 (28ns) m: 173 (51ns)
 
-  SLOWEST + GENERAL
-
-  - int64toarray(0x31337, a, 10)              l: 218 (64ns) m: 262 (77ns)
-  - uint64toarray(0x31337, a, 10)             l: 565 (166ns) m: 260 (76ns)
-
 */
 
-size_t int64toarray_radix10(int64_t, char *);
-size_t uint64toarray_radix10(uint64_t, char *);
-size_t int64toarray(int64_t, char *, int);
-size_t uint64toarray(uint64_t, char *, int);
+size_t int64toarray_radix10(int64_t, char[hasatleast 21]);
+size_t uint64toarray_radix10(uint64_t, char[hasatleast 21]);
 size_t uint64toarray_radix16(uint64_t, char[hasatleast 17]);
 size_t uint64toarray_fixed16(uint64_t, char[hasatleast 17], uint8_t);
 

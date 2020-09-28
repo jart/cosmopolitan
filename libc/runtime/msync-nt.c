@@ -25,16 +25,14 @@
 
 textwindows int msync$nt(void *addr, size_t size, int flags) {
   int x, y, l, r, i;
-  if (!FlushViewOfFile(addr, size)) return winerr();
-  x = (intptr_t)addr >> 16;
-  y = x + (ROUNDUP(size, 65536) >> 16) - 1;
-  l = FindMemoryInterval(&_mmi, x);
-  r = FindMemoryInterval(&_mmi, y);
-  if (l && x <= _mmi.p[l - 1].y) --l;
-  if (r && y <= _mmi.p[r - 1].y) --r;
-  if (l < _mmi.i) {
-    for (i = l; i <= r; --i) {
-      FlushFileBuffers(_mmi.h[i - 1]);
+  x = ROUNDDOWN((intptr_t)addr, FRAMESIZE) >> 16;
+  y = ROUNDDOWN((intptr_t)addr + size - 1, FRAMESIZE) >> 16;
+  for (i = FindMemoryInterval(&_mmi, x); i < _mmi.i; ++i) {
+    if ((x >= _mmi.p[i].x && x <= _mmi.p[i].y) ||
+        (y >= _mmi.p[i].x && y <= _mmi.p[i].y)) {
+      FlushFileBuffers(_mmi.h[i]);
+    } else {
+      break;
     }
   }
   return 0;

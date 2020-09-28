@@ -50,6 +50,12 @@
 #include "tool/build/lib/throw.h"
 #include "tool/build/lib/time.h"
 
+#define OpLfence    OpNoop
+#define OpMfence    OpNoop
+#define OpSfence    OpNoop
+#define OpClflush   OpNoop
+#define OpHintNopEv OpNoop
+
 typedef void (*nexgen32e_f)(struct Machine *, uint32_t);
 
 static uint64_t ReadMemory(uint32_t rde, uint8_t p[8]) {
@@ -130,38 +136,7 @@ static bool IsGreater(struct Machine *m) {
          (GetFlag(m->flags, FLAGS_SF) == GetFlag(m->flags, FLAGS_OF));
 }
 
-static void ImportFlags(struct Machine *m, uint64_t flags) {
-  uint64_t old, mask = 0;
-  mask |= 1u << FLAGS_CF;
-  mask |= 1u << FLAGS_PF;
-  mask |= 1u << FLAGS_AF;
-  mask |= 1u << FLAGS_ZF;
-  mask |= 1u << FLAGS_SF;
-  mask |= 1u << FLAGS_TF;
-  mask |= 1u << FLAGS_IF;
-  mask |= 1u << FLAGS_DF;
-  mask |= 1u << FLAGS_OF;
-  mask |= 1u << FLAGS_NT;
-  mask |= 1u << FLAGS_AC;
-  mask |= 1u << FLAGS_ID;
-  m->flags = (flags & mask) | (m->flags & ~mask);
-  m->flags = SetFlag(m->flags, FLAGS_RF, false);
-  m->flags = SetLazyParityByte(m->flags, !((m->flags >> FLAGS_PF) & 1));
-}
-
-static void OpLfence(struct Machine *m, uint32_t rde) {
-}
-
-static void OpMfence(struct Machine *m, uint32_t rde) {
-}
-
-static void OpSfence(struct Machine *m, uint32_t rde) {
-}
-
-static void OpClflush(struct Machine *m, uint32_t rde) {
-}
-
-static void OpWutNopEv(struct Machine *m, uint32_t rde) {
+static void OpNoop(struct Machine *m, uint32_t rde) {
 }
 
 static void OpCmc(struct Machine *m, uint32_t rde) {
@@ -216,27 +191,27 @@ static void OpLeaGvqpM(struct Machine *m, uint32_t rde) {
   WriteRegister(rde, RegRexrReg(m, rde), ComputeAddress(m, rde));
 }
 
-static void OpPushSeg(struct Machine *m, uint32_t rde) {
+static relegated void OpPushSeg(struct Machine *m, uint32_t rde) {
   uint8_t seg = (m->xedd->op.opcode & 070) >> 3;
   Push(m, rde, Read64(GetSegment(m, rde, seg)) >> 4);
 }
 
-static void OpPopSeg(struct Machine *m, uint32_t rde) {
+static relegated void OpPopSeg(struct Machine *m, uint32_t rde) {
   uint8_t seg = (m->xedd->op.opcode & 070) >> 3;
   Write64(GetSegment(m, rde, seg), Pop(m, rde, 0) << 4);
 }
 
-static void OpMovEvqpSw(struct Machine *m, uint32_t rde) {
+static relegated void OpMovEvqpSw(struct Machine *m, uint32_t rde) {
   WriteRegisterOrMemory(rde, GetModrmRegisterWordPointerWriteOszRexw(m, rde),
                         Read64(GetSegment(m, rde, ModrmReg(rde))) >> 4);
 }
 
-static void OpMovSwEvqp(struct Machine *m, uint32_t rde) {
+static relegated void OpMovSwEvqp(struct Machine *m, uint32_t rde) {
   Write64(GetSegment(m, rde, ModrmReg(rde)),
           ReadMemory(rde, GetModrmRegisterWordPointerReadOszRexw(m, rde)) << 4);
 }
 
-static void OpJmpf(struct Machine *m, uint32_t rde) {
+static relegated void OpJmpf(struct Machine *m, uint32_t rde) {
   Write64(m->cs, m->xedd->op.uimm0 << 4);
   m->ip = m->xedd->op.disp;
 }
@@ -474,7 +449,8 @@ static void OpBit(struct Machine *m, uint32_t rde) {
       SetWriteAddr(m, v, 1 << w);
     }
   }
-  y = 1ull << bit;
+  y = 1;
+  y <<= bit;
   x = ReadMemory(rde, p);
   m->flags = SetFlag(m->flags, FLAGS_CF, !!(y & x));
   switch (op) {
@@ -495,7 +471,7 @@ static void OpBit(struct Machine *m, uint32_t rde) {
   WriteRegisterOrMemory(rde, p, z);
 }
 
-static void OpConvert1(struct Machine *m, uint32_t rde) {
+static void OpSax(struct Machine *m, uint32_t rde) {
   if (Rexw(rde)) {
     Write64(m->ax, (int32_t)Read32(m->ax));
   } else if (!Osz(rde)) {
@@ -505,7 +481,7 @@ static void OpConvert1(struct Machine *m, uint32_t rde) {
   }
 }
 
-static void OpConvert2(struct Machine *m, uint32_t rde) {
+static void OpConvert(struct Machine *m, uint32_t rde) {
   if (Rexw(rde)) {
     Write64(m->dx, Read64(m->ax) & 0x8000000000000000 ? 0xffffffffffffffff : 0);
   } else if (!Osz(rde)) {
@@ -530,7 +506,7 @@ static void OpBswapZvqp(struct Machine *m, uint32_t rde) {
             ((x & 0xff000000) >> 030 | (x & 0x000000ff) << 030 |
              (x & 0x00ff0000) >> 010 | (x & 0x0000ff00) << 010));
   } else {
-    Write16(RegRexbSrm(m, rde), ((x & 0x00ff) << 010 | (x & 0xff00) << 010));
+    Write16(RegRexbSrm(m, rde), (x & 0x00ff) << 010 | (x & 0xff00) << 010);
   }
 }
 
@@ -625,18 +601,41 @@ static void OpMovswGvqpEw(struct Machine *m, uint32_t rde) {
 }
 
 static void OpMovsxdGdqpEd(struct Machine *m, uint32_t rde) {
-  uint64_t x;
-  uint8_t *p;
-  x = (int32_t)Read32(GetModrmRegisterWordPointerRead4(m, rde));
-  if (!Rexw(rde)) x &= 0xffffffff; /* wut */
-  Write64(RegRexrReg(m, rde), x);
+  Write64(RegRexrReg(m, rde),
+          (int32_t)Read32(GetModrmRegisterWordPointerRead4(m, rde)));
 }
 
-static void OpAlub(struct Machine *m, uint32_t rde) {
-  uint8_t *a;
-  a = GetModrmRegisterBytePointerWrite(m, rde);
-  Write8(a, kAlu[(m->xedd->op.opcode & 070) >> 3][0](
-                Read8(a), Read8(ByteRexrReg(m, rde)), &m->flags));
+static void Alub(struct Machine *m, uint32_t rde, aluop_f op) {
+  uint8_t *a = GetModrmRegisterBytePointerWrite(m, rde);
+  Write8(a, op(Read8(a), Read8(ByteRexrReg(m, rde)), &m->flags));
+}
+
+static void OpAlubAdd(struct Machine *m, uint32_t rde) {
+  Alub(m, rde, Add8);
+}
+
+static void OpAlubOr(struct Machine *m, uint32_t rde) {
+  Alub(m, rde, Or8);
+}
+
+static void OpAlubAdc(struct Machine *m, uint32_t rde) {
+  Alub(m, rde, Adc8);
+}
+
+static void OpAlubSbb(struct Machine *m, uint32_t rde) {
+  Alub(m, rde, Sbb8);
+}
+
+static void OpAlubAnd(struct Machine *m, uint32_t rde) {
+  Alub(m, rde, And8);
+}
+
+static void OpAlubSub(struct Machine *m, uint32_t rde) {
+  Alub(m, rde, Sub8);
+}
+
+static void OpAlubXor(struct Machine *m, uint32_t rde) {
+  Alub(m, rde, Xor8);
 }
 
 static void AlubRo(struct Machine *m, uint32_t rde, aluop_f op) {
@@ -652,11 +651,38 @@ static void OpAlubTest(struct Machine *m, uint32_t rde) {
   AlubRo(m, rde, And8);
 }
 
-static void OpAlubFlip(struct Machine *m, uint32_t rde) {
+static void AlubFlip(struct Machine *m, uint32_t rde, aluop_f op) {
   Write8(ByteRexrReg(m, rde),
-         kAlu[(m->xedd->op.opcode & 070) >> 3][0](
-             Read8(ByteRexrReg(m, rde)),
-             Read8(GetModrmRegisterBytePointerRead(m, rde)), &m->flags));
+         op(Read8(ByteRexrReg(m, rde)),
+            Read8(GetModrmRegisterBytePointerRead(m, rde)), &m->flags));
+}
+
+static void OpAlubFlipAdd(struct Machine *m, uint32_t rde) {
+  AlubFlip(m, rde, Add8);
+}
+
+static void OpAlubFlipOr(struct Machine *m, uint32_t rde) {
+  AlubFlip(m, rde, Or8);
+}
+
+static void OpAlubFlipAdc(struct Machine *m, uint32_t rde) {
+  AlubFlip(m, rde, Adc8);
+}
+
+static void OpAlubFlipSbb(struct Machine *m, uint32_t rde) {
+  AlubFlip(m, rde, Sbb8);
+}
+
+static void OpAlubFlipAnd(struct Machine *m, uint32_t rde) {
+  AlubFlip(m, rde, And8);
+}
+
+static void OpAlubFlipSub(struct Machine *m, uint32_t rde) {
+  AlubFlip(m, rde, Sub8);
+}
+
+static void OpAlubFlipXor(struct Machine *m, uint32_t rde) {
+  AlubFlip(m, rde, Xor8);
 }
 
 static void AlubFlipRo(struct Machine *m, uint32_t rde, aluop_f op) {
@@ -765,9 +791,36 @@ static void OpAluwiReg(struct Machine *m, uint32_t rde) {
   }
 }
 
-static void OpAluAlIb(struct Machine *m, uint32_t rde) {
-  Write8(m->ax, kAlu[(m->xedd->op.opcode & 070) >> 3][0](
-                    Read8(m->ax), m->xedd->op.uimm0, &m->flags));
+static void AluAlIb(struct Machine *m, aluop_f op) {
+  Write8(m->ax, op(Read8(m->ax), m->xedd->op.uimm0, &m->flags));
+}
+
+static void OpAluAlIbAdd(struct Machine *m, uint32_t rde) {
+  AluAlIb(m, Add8);
+}
+
+static void OpAluAlIbOr(struct Machine *m, uint32_t rde) {
+  AluAlIb(m, Or8);
+}
+
+static void OpAluAlIbAdc(struct Machine *m, uint32_t rde) {
+  AluAlIb(m, Adc8);
+}
+
+static void OpAluAlIbSbb(struct Machine *m, uint32_t rde) {
+  AluAlIb(m, Sbb8);
+}
+
+static void OpAluAlIbAnd(struct Machine *m, uint32_t rde) {
+  AluAlIb(m, And8);
+}
+
+static void OpAluAlIbSub(struct Machine *m, uint32_t rde) {
+  AluAlIb(m, Sub8);
+}
+
+static void OpAluAlIbXor(struct Machine *m, uint32_t rde) {
+  AluAlIb(m, Xor8);
 }
 
 static void OpAluRaxIvds(struct Machine *m, uint32_t rde) {
@@ -831,18 +884,19 @@ static void OpBsubiImm(struct Machine *m, uint32_t rde) {
   Bsubi(m, rde, m->xedd->op.uimm0);
 }
 
-static void LoadFarPointer(struct Machine *m, uint32_t rde, uint8_t seg[8]) {
+static relegated void LoadFarPointer(struct Machine *m, uint32_t rde,
+                                     uint8_t seg[8]) {
   uint32_t fp;
   fp = Read32(ComputeReserveAddressRead4(m, rde));
   Write64(seg, (fp & 0x0000ffff) << 4);
   Write16(RegRexrReg(m, rde), fp >> 16);
 }
 
-static void OpLes(struct Machine *m, uint32_t rde) {
+static relegated void OpLes(struct Machine *m, uint32_t rde) {
   LoadFarPointer(m, rde, m->es);
 }
 
-static void OpLds(struct Machine *m, uint32_t rde) {
+static relegated void OpLds(struct Machine *m, uint32_t rde) {
   LoadFarPointer(m, rde, m->ds);
 }
 
@@ -851,14 +905,6 @@ static void OpLgdtMs(struct Machine *m, uint32_t rde) {
 
 static void OpPushImm(struct Machine *m, uint32_t rde) {
   Push(m, rde, m->xedd->op.uimm0);
-}
-
-static void OpRet0(struct Machine *m, uint32_t rde) {
-  OpRet(m, rde, 0);
-}
-
-static void OpRetImm(struct Machine *m, uint32_t rde) {
-  OpRet(m, rde, m->xedd->op.uimm0);
 }
 
 static void Interrupt(struct Machine *m, uint32_t rde, int i) {
@@ -1213,17 +1259,18 @@ static void OpNegEb(struct Machine *m, uint32_t rde) {
   AluEb(m, rde, Neg8);
 }
 
+static const nexgen32e_f kOp0f6[] = {
+    OpAlubiTest,
+    OpAlubiTest,
+    OpNotEb,
+    OpNegEb,
+    OpMulAxAlEbUnsigned,
+    OpMulAxAlEbSigned,
+    OpDivAlAhAxEbUnsigned,
+    OpDivAlAhAxEbSigned,
+};
+
 static void Op0f6(struct Machine *m, uint32_t rde) {
-  static const nexgen32e_f kOp0f6[] = {
-      OpAlubiTest,
-      OpAlubiTest,
-      OpNotEb,
-      OpNegEb,
-      OpMulAxAlEbUnsigned,
-      OpMulAxAlEbSigned,
-      OpDivAlAhAxEbUnsigned,
-      OpDivAlAhAxEbSigned,
-  };
   kOp0f6[ModrmReg(rde)](m, rde);
 }
 
@@ -1239,17 +1286,18 @@ static void OpNegEvqp(struct Machine *m, uint32_t rde) {
   AluEvqp(m, rde, kAlu[ALU_NEG]);
 }
 
+static const nexgen32e_f kOp0f7[] = {
+    OpTestEvqpIvds,
+    OpTestEvqpIvds,
+    OpNotEvqp,
+    OpNegEvqp,
+    OpMulRdxRaxEvqpUnsigned,
+    OpMulRdxRaxEvqpSigned,
+    OpDivRdxRaxEvqpUnsigned,
+    OpDivRdxRaxEvqpSigned,
+};
+
 static void Op0f7(struct Machine *m, uint32_t rde) {
-  static const nexgen32e_f kOp0f7[] = {
-      OpTestEvqpIvds,
-      OpTestEvqpIvds,
-      OpNotEvqp,
-      OpNegEvqp,
-      OpMulRdxRaxEvqpUnsigned,
-      OpMulRdxRaxEvqpSigned,
-      OpDivRdxRaxEvqpUnsigned,
-      OpDivRdxRaxEvqpSigned,
-  };
   kOp0f7[ModrmReg(rde)](m, rde);
 }
 
@@ -1274,9 +1322,10 @@ static void OpDecEvqp(struct Machine *m, uint32_t rde) {
   AluEvqp(m, rde, kAlu[ALU_DEC]);
 }
 
+static const nexgen32e_f kOp0ff[] = {OpIncEvqp, OpDecEvqp, OpCallEq,  OpUd,
+                                     OpJmpEq,   OpUd,      OpPushEvq, OpUd};
+
 static void Op0ff(struct Machine *m, uint32_t rde) {
-  static const nexgen32e_f kOp0ff[] = {OpIncEvqp, OpDecEvqp, OpCallEq,  OpUd,
-                                       OpJmpEq,   OpUd,      OpPushEvq, OpUd};
   kOp0ff[ModrmReg(rde)](m, rde);
 }
 
@@ -1293,57 +1342,6 @@ static void Op101(struct Machine *m, uint32_t rde) {
     }
   }
   OpUd(m, rde);
-}
-
-static void Op171(struct Machine *m, uint32_t rde) {
-  switch (ModrmReg(rde)) {
-    case 2:
-      OpSseUdqIb(m, rde, kOpSseUdqIbPsrlw);
-      break;
-    case 4:
-      OpSseUdqIb(m, rde, kOpSseUdqIbPsraw);
-      break;
-    case 6:
-      OpSseUdqIb(m, rde, kOpSseUdqIbPsllw);
-      break;
-    default:
-      OpUd(m, rde);
-  }
-}
-
-static void Op172(struct Machine *m, uint32_t rde) {
-  switch (ModrmReg(rde)) {
-    case 2:
-      OpSseUdqIb(m, rde, kOpSseUdqIbPsrld);
-      break;
-    case 4:
-      OpSseUdqIb(m, rde, kOpSseUdqIbPsrad);
-      break;
-    case 6:
-      OpSseUdqIb(m, rde, kOpSseUdqIbPslld);
-      break;
-    default:
-      OpUd(m, rde);
-  }
-}
-
-static void Op173(struct Machine *m, uint32_t rde) {
-  switch (ModrmReg(rde)) {
-    case 2:
-      OpSseUdqIb(m, rde, kOpSseUdqIbPsrlq);
-      break;
-    case 3:
-      OpSseUdqIb(m, rde, kOpSseUdqIbPsrldq);
-      break;
-    case 6:
-      OpSseUdqIb(m, rde, kOpSseUdqIbPsllq);
-      break;
-    case 7:
-      OpSseUdqIb(m, rde, kOpSseUdqIbPslldq);
-      break;
-    default:
-      OpUd(m, rde);
-  }
 }
 
 static void OpDoubleShift(struct Machine *m, uint32_t rde) {
@@ -1386,6 +1384,8 @@ static void OpSalc(struct Machine *m, uint32_t rde) {
 static void OpNopEv(struct Machine *m, uint32_t rde) {
   if (ModrmMod(rde) == 0b01 && ModrmReg(rde) == 0 && ModrmRm(rde) == 0b101) {
     OpBofram(m, rde);
+  } else {
+    OpNoop(m, rde);
   }
 }
 
@@ -1394,63 +1394,65 @@ static void OpNop(struct Machine *m, uint32_t rde) {
     OpXchgZvqp(m, rde);
   } else if (Rep(rde) == 3) {
     OpPause(m, rde);
+  } else {
+    OpNoop(m, rde);
   }
 }
 
 static const nexgen32e_f kNexgen32e[] = {
-    [0x000] = OpAlub,
+    [0x000] = OpAlubAdd,
     [0x001] = OpAluw,
-    [0x002] = OpAlubFlip,
+    [0x002] = OpAlubFlipAdd,
     [0x003] = OpAluwFlip,
-    [0x004] = OpAluAlIb,
+    [0x004] = OpAluAlIbAdd,
     [0x005] = OpAluRaxIvds,
     [0x006] = OpPushSeg,
     [0x007] = OpPopSeg,
-    [0x008] = OpAlub,
+    [0x008] = OpAlubOr,
     [0x009] = OpAluw,
-    [0x00A] = OpAlubFlip,
+    [0x00A] = OpAlubFlipOr,
     [0x00B] = OpAluwFlip,
-    [0x00C] = OpAluAlIb,
+    [0x00C] = OpAluAlIbOr,
     [0x00D] = OpAluRaxIvds,
     [0x00E] = OpPushSeg,
     [0x00F] = OpPopSeg,
-    [0x010] = OpAlub,
+    [0x010] = OpAlubAdc,
     [0x011] = OpAluw,
-    [0x012] = OpAlubFlip,
+    [0x012] = OpAlubFlipAdc,
     [0x013] = OpAluwFlip,
-    [0x014] = OpAluAlIb,
+    [0x014] = OpAluAlIbAdc,
     [0x015] = OpAluRaxIvds,
     [0x016] = OpPushSeg,
     [0x017] = OpPopSeg,
-    [0x018] = OpAlub,
+    [0x018] = OpAlubSbb,
     [0x019] = OpAluw,
-    [0x01A] = OpAlubFlip,
+    [0x01A] = OpAlubFlipSbb,
     [0x01B] = OpAluwFlip,
-    [0x01C] = OpAluAlIb,
+    [0x01C] = OpAluAlIbSbb,
     [0x01D] = OpAluRaxIvds,
     [0x01E] = OpPushSeg,
     [0x01F] = OpPopSeg,
-    [0x020] = OpAlub,
+    [0x020] = OpAlubAnd,
     [0x021] = OpAluw,
-    [0x022] = OpAlubFlip,
+    [0x022] = OpAlubFlipAnd,
     [0x023] = OpAluwFlip,
-    [0x024] = OpAluAlIb,
+    [0x024] = OpAluAlIbAnd,
     [0x025] = OpAluRaxIvds,
     [0x026] = OpPushSeg,
     [0x027] = OpPopSeg,
-    [0x028] = OpAlub,
+    [0x028] = OpAlubSub,
     [0x029] = OpAluw,
-    [0x02A] = OpAlubFlip,
+    [0x02A] = OpAlubFlipSub,
     [0x02B] = OpAluwFlip,
-    [0x02C] = OpAluAlIb,
+    [0x02C] = OpAluAlIbSub,
     [0x02D] = OpAluRaxIvds,
     [0x02E] = OpUd,
     [0x02F] = OpDas,
-    [0x030] = OpAlub,
+    [0x030] = OpAlubXor,
     [0x031] = OpAluw,
-    [0x032] = OpAlubFlip,
+    [0x032] = OpAlubFlipXor,
     [0x033] = OpAluwFlip,
-    [0x034] = OpAluAlIb,
+    [0x034] = OpAluAlIbXor,
     [0x035] = OpAluRaxIvds,
     [0x036] = OpUd,
     [0x037] = OpAaa,
@@ -1550,9 +1552,9 @@ static const nexgen32e_f kNexgen32e[] = {
     [0x095] = OpXchgZvqp,
     [0x096] = OpXchgZvqp,
     [0x097] = OpXchgZvqp,
-    [0x098] = OpConvert1,
-    [0x099] = OpConvert2,
-    [0x09A] = OpUd,
+    [0x098] = OpSax,
+    [0x099] = OpConvert,
+    [0x09A] = OpCallf,
     [0x09B] = OpFwait,
     [0x09C] = OpPushf,
     [0x09D] = OpPopf,
@@ -1592,16 +1594,16 @@ static const nexgen32e_f kNexgen32e[] = {
     [0x0BF] = OpMovZvqpIvqp,
     [0x0C0] = OpBsubiImm,
     [0x0C1] = OpBsuwiImm,
-    [0x0C2] = OpRetImm,
-    [0x0C3] = OpRet0,
+    [0x0C2] = OpRet,
+    [0x0C3] = OpRet,
     [0x0C4] = OpLes,
     [0x0C5] = OpLds,
     [0x0C6] = OpMovEbIb,
     [0x0C7] = OpMovEvqpIvds,
     [0x0C8] = OpUd,
     [0x0C9] = OpLeave,
-    [0x0CA] = OpUd,
-    [0x0CB] = OpUd,
+    [0x0CA] = OpRetf,
+    [0x0CB] = OpRetf,
     [0x0CC] = OpInterrupt3,
     [0x0CD] = OpInterruptImm,
     [0x0CE] = OpUd,
@@ -1667,7 +1669,7 @@ static const nexgen32e_f kNexgen32e[] = {
     [0x10A] = OpUd,
     [0x10B] = OpUd,
     [0x10C] = OpUd,
-    [0x10D] = OpWutNopEv,
+    [0x10D] = OpHintNopEv,
     [0x10E] = OpUd,
     [0x10F] = OpUd,
     [0x110] = OpMov0f10,
@@ -1678,12 +1680,12 @@ static const nexgen32e_f kNexgen32e[] = {
     [0x115] = OpUnpckhpsd,
     [0x116] = OpMov0f16,
     [0x117] = OpMov0f17,
-    [0x118] = OpWutNopEv,
-    [0x119] = OpWutNopEv,
-    [0x11A] = OpWutNopEv,
-    [0x11B] = OpWutNopEv,
-    [0x11C] = OpWutNopEv,
-    [0x11D] = OpWutNopEv,
+    [0x118] = OpHintNopEv,
+    [0x119] = OpHintNopEv,
+    [0x11A] = OpHintNopEv,
+    [0x11B] = OpHintNopEv,
+    [0x11C] = OpHintNopEv,
+    [0x11D] = OpHintNopEv,
     [0x11E] = OpUd,
     [0x11F] = OpNopEv,
     [0x120] = OpUd,

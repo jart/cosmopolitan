@@ -12,8 +12,8 @@ struct MemoryIntervals {
   struct MemoryInterval {
     int x;
     int y;
-  } p[32];
-  long h[32];
+  } p[64];
+  long h[64];
 };
 
 extern struct MemoryIntervals _mmi;

@@ -36,7 +36,6 @@ int main(int argc, char *argv[]) {
   int rc;
   struct Elf elf;
   const char *codepath;
-  showcrashreports();
   codepath = argv[1];
   if (argc < 2) {
     fputs("Usage: ", stderr);

@@ -17,12 +17,6 @@ TOOL_BUILD_OBJS =					\
 TOOL_BUILD_COMS =					\
 	$(TOOL_BUILD_SRCS:%.c=o/$(MODE)/%.com)
 
-TOOL_BUILD_LINK =					\
-	$(TOOL_BUILD_DEPS)				\
-	o/$(MODE)/tool/build/%.o			\
-	$(CRT)						\
-	$(APE)
-
 TOOL_BUILD_CHECKS =					\
 	$(TOOL_BUILD).pkg				\
 	$(TOOL_BUILD_HDRS:%=o/$(MODE)/%.ok)		\
@@ -86,23 +80,9 @@ o/$(MODE)/tool/build/%.com.dbg:				\
 		$(APE)
 	-@$(APELINK)
 
-o/$(MODE)/tool/build/mkdeps.o: tool/build/mkdeps.c
-	-@ACTION=OBJECTIFY.c build/compile $(OBJECTIFY.c) $(OUTPUT_OPTION) $<
-
 o/$(MODE)/tool/build/emulator.o:			\
 		OVERRIDE_COPTS +=			\
 			-fno-sanitize=pointer-overflow
-
-o/$(MODE)/tool/build/transpile16.o:			\
-		OVERRIDE_CFLAGS +=			\
-			-ffixed-r8			\
-			-ffixed-r9			\
-			-ffixed-r10			\
-			-ffixed-r11			\
-			-ffixed-r12			\
-			-ffixed-r13			\
-			-ffixed-r14			\
-			-ffixed-r15
 
 .PHONY: o/$(MODE)/tool/build
 o/$(MODE)/tool/build:					\

@@ -2,8 +2,6 @@
 #define COSMOPOLITAN_TOOL_BUILD_LIB_MODRM_H_
 #include "tool/build/lib/abp.h"
 #include "tool/build/lib/machine.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
 
 #define Rex(x)      ((x & 000000000020) >> 004)
 #define Osz(x)      ((x & 000000000040) >> 005)
@@ -21,12 +19,16 @@ COSMOPOLITAN_C_START_
 #define ModrmReg(x) ((x & 000000000007) >> 000)
 #define ModrmSrm(x) ((x & 000000070000) >> 014)
 #define ModrmMod(x) ((x & 000060000000) >> 026)
+#define Modrm(x)    (ModrmMod(x) << 6 | ModrmReg(x) << 3 | ModrmRm(x))
 
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+#define RexbBase(m, x)    (Rexb(x) << 3 | m->xedd->op.base)
 #define AddrByteReg(m, k) ((uint8_t *)m->reg + kByteReg[k])
 #define ByteRexrReg(m, x) AddrByteReg(m, (x & 00000000037) >> 0)
 #define ByteRexbRm(m, x)  AddrByteReg(m, (x & 00000007600) >> 7)
 #define ByteRexbSrm(m, x) AddrByteReg(m, (x & 00000370000) >> 12)
-#define RexbBase(m, x)    (Rexb(x) << 3 | m->xedd->op.base)
 #define RegSrm(m, x)      Abp8(m->reg[(x & 00000070000) >> 12])
 #define RegRexbRm(m, x)   Abp8(m->reg[RexbRm(x)])
 #define RegRexbSrm(m, x)  Abp8(m->reg[(x & 00000170000) >> 12])

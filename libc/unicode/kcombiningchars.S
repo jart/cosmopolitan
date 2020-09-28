@@ -43,31 +43,6 @@ kCombiningChars:
 	add	$1208,%rsi
 	.init.end 400,_init_kCombiningChars
 
-/	The data below is sparse, as evidenced by:
-/	    o/tool/viz/bing.com <o/libc/str/CombiningChars.bin |
-/	      o/tool/viz/fold.com
-/	Thus ask the kernel to shrink its physical memory requirements
-/	which might sadly need mmap intermediate step on linux to work
-/	how one would have hoped.
- 	.text.startup
-kCombiningCharsInit:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable
-	ezlea	kCombiningChars,di
-	mov	$114752,%esi
-	call	mergepages
-	pop	%rbp
-	ret
-	.endfn	kCombiningCharsInit
-	.previous
-	.init_array
-	.align	8
-kCombiningCharsCtor:
-	.quad	kCombiningCharsInit
-	.endobj	kCombiningCharsCtor
-	.previous
-
 /	o/tool/build/lz4toasm.com \
 /	  -o o/libc/str/CombiningChars.s \
 /	  -s kCombiningChars \

@@ -100,19 +100,7 @@
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/modrm.h"
 #include "tool/build/lib/sse.h"
-
-union MachineVector {
-  float f32[4];
-  double f64[2];
-  int8_t i8[16];
-  int16_t i16[8];
-  int32_t i32[4];
-  int64_t i64[2];
-  uint8_t u8[16];
-  uint16_t u16[8];
-  uint32_t u32[4];
-  uint64_t u64[2];
-};
+#include "tool/build/lib/throw.h"
 
 static void SsePsubb(void *b, const void *a) {
   psubb(b, b, a);
@@ -711,29 +699,81 @@ void OpSsePmulld(struct Machine *m, uint32_t rde) {
   OpSse(m, rde, SsePmulld);
 }
 
-void OpSseUdqIb(struct Machine *m, uint32_t rde, enum OpSseUdqIbKernel kernel) {
+static void SseUdqIb(struct Machine *m, uint32_t rde, int kernel) {
+  void *y;
   uint8_t i;
-  union MachineVector x;
+  uint8_t x[16];
   i = m->xedd->op.uimm0;
-  memcpy(&x, XmmRexbRm(m, rde), 16);
+  y = XmmRexbRm(m, rde);
   switch (kernel) {
-    CASE(kOpSseUdqIbPsrlw, (psrlw)(x.u16, x.u16, i));
-    CASE(kOpSseUdqIbPsraw, (psraw)(x.i16, x.i16, i));
-    CASE(kOpSseUdqIbPsllw, (psllw)(x.u16, x.u16, i));
-    CASE(kOpSseUdqIbPsrld, (psrld)(x.u32, x.u32, i));
-    CASE(kOpSseUdqIbPsrad, (psrad)(x.i32, x.i32, i));
-    CASE(kOpSseUdqIbPslld, (pslld)(x.u32, x.u32, i));
-    CASE(kOpSseUdqIbPsrlq, (psrlq)(x.u64, x.u64, i));
-    CASE(kOpSseUdqIbPsrldq, (psrldq)(x.u8, x.u8, i));
-    CASE(kOpSseUdqIbPsllq, (psllq)(x.u64, x.u64, i));
-    CASE(kOpSseUdqIbPslldq, (pslldq)(x.u8, x.u8, i));
+    CASE(0, (psrlw)((void *)x, y, i));
+    CASE(1, (psraw)((void *)x, y, i));
+    CASE(2, (psllw)((void *)x, y, i));
+    CASE(3, (psrld)((void *)x, y, i));
+    CASE(4, (psrad)((void *)x, y, i));
+    CASE(5, (pslld)((void *)x, y, i));
+    CASE(6, (psrlq)((void *)x, y, i));
+    CASE(7, (psrldq)((void *)x, y, i));
+    CASE(8, (psllq)((void *)x, y, i));
+    CASE(9, (pslldq)((void *)x, y, i));
     default:
       unreachable;
   }
   if (Osz(rde)) {
-    memcpy(XmmRexbRm(m, rde), &x, 16);
+    memcpy(XmmRexbRm(m, rde), x, 16);
   } else {
-    memcpy(XmmRexbRm(m, rde), &x, 8);
+    memcpy(XmmRexbRm(m, rde), x, 8);
+  }
+}
+
+void Op171(struct Machine *m, uint32_t rde) {
+  switch (ModrmReg(rde)) {
+    case 2:
+      SseUdqIb(m, rde, 0);
+      break;
+    case 4:
+      SseUdqIb(m, rde, 1);
+      break;
+    case 6:
+      SseUdqIb(m, rde, 2);
+      break;
+    default:
+      OpUd(m, rde);
+  }
+}
+
+void Op172(struct Machine *m, uint32_t rde) {
+  switch (ModrmReg(rde)) {
+    case 2:
+      SseUdqIb(m, rde, 3);
+      break;
+    case 4:
+      SseUdqIb(m, rde, 4);
+      break;
+    case 6:
+      SseUdqIb(m, rde, 5);
+      break;
+    default:
+      OpUd(m, rde);
+  }
+}
+
+void Op173(struct Machine *m, uint32_t rde) {
+  switch (ModrmReg(rde)) {
+    case 2:
+      SseUdqIb(m, rde, 6);
+      break;
+    case 3:
+      SseUdqIb(m, rde, 7);
+      break;
+    case 6:
+      SseUdqIb(m, rde, 8);
+      break;
+    case 7:
+      SseUdqIb(m, rde, 9);
+      break;
+    default:
+      OpUd(m, rde);
   }
 }
 

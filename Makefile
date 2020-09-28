@@ -139,6 +139,7 @@ include dsp/tty/tty.mk				# ├──online
 include libc/dns/dns.mk				# │
 include libc/crypto/crypto.mk			# │
 include net/http/http.mk			#─┘
+include third_party/lemon/lemon.mk
 include third_party/linenoise/linenoise.mk
 include third_party/editline/editline.mk
 include third_party/duktape/duktape.mk
@@ -157,6 +158,8 @@ include tool/build/lib/buildlib.mk
 include tool/build/emucrt/emucrt.mk
 include tool/build/emubin/emubin.mk
 include tool/build/build.mk
+include tool/calc/calc.mk
+include tool/tags/tags.mk
 include tool/decode/lib/decodelib.mk
 include tool/decode/decode.mk
 include tool/hash/hash.mk

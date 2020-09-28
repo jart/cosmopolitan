@@ -27,6 +27,6 @@
  */
 char *xstrdup(const char *s) {
   void *res = strdup(s);
-  if (!res) die();
+  if (!res) xdie();
   return res;
 }

@@ -29,6 +29,7 @@
 #include "libc/bits/safemacros.h"
 #include "libc/conv/itoa.h"
 #include "libc/errno.h"
+#include "libc/escape/escape.h"
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
 #include "libc/math.h"
@@ -669,6 +670,12 @@ TEST(snprintf, testFixedWidthStringIsNull_wontLeakMemory) {
 TEST(snprintf, twosBaneWithTypePromotion) {
   int16_t x = 0x8000;
   EXPECT_STREQ("-32768", Format("%hd", x));
+}
+
+TEST(snprintf, formatStringLiteral) {
+  EXPECT_EQ('\\' | 'n' << 8, cescapec('\n'));
+  EXPECT_EQ('\\' | '3' << 8 | '7' << 16 | '7' << 24, cescapec('\377'));
+  EXPECT_STREQ("\"hi\\n\"", Format("%`'s", "hi\n"));
 }
 
 BENCH(palandprintf, bench) {

@@ -53,10 +53,11 @@ static uint64_t *GetPageTable(pml4t_t p, long i, void *NewPhysicalPage(void)) {
 }
 
 static void PtFinder(uint64_t *a, uint64_t *b, uint64_t n, pml4t_t pd, int k) {
+  unsigned i;
   uint64_t e, c;
-  unsigned start;
-  for (start = (*b >> k) & 511; *b - *a < n && ((*b >> k) & 511) >= start;) {
-    e = pd[(*b >> k) & 511];
+  while (*b - *a < n) {
+    i = (*b >> k) & 511;
+    e = pd[i];
     c = ROUNDUP(*b + 1, 1 << k);
     if (!IsValidPage(e)) {
       *b = c;
@@ -64,6 +65,9 @@ static void PtFinder(uint64_t *a, uint64_t *b, uint64_t n, pml4t_t pd, int k) {
       PtFinder(a, b, n, UnmaskPageAddr(e), k - 9);
     } else {
       *a = *b = c;
+    }
+    if (((*b >> k) & 511) < i) {
+      break;
     }
   }
 }

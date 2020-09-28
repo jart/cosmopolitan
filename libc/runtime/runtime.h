@@ -44,6 +44,7 @@ void exit(int) noreturn;
 void quick_exit(int) noreturn;
 void _exit(int) libcesque noreturn;
 void _Exit(int) libcesque noreturn;
+long _setstack(void *, void *, ...);
 void abort(void) noreturn noinstrument;
 void panic(void) noreturn noinstrument privileged;
 void triplf(void) noreturn noinstrument privileged;

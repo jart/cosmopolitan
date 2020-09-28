@@ -28,22 +28,26 @@
 #undef S
 #undef T
 
-#define T(NAME)      NAME##16
-#define S(S)         u##S
-#define C(C)         u##C
-#define strchr(x, y) strchr16(x, y)
+#define T(NAME)       NAME##16
+#define S(S)          u##S
+#define C(C)          u##C
+#define strrchr(x, y) strrchr16(x, y)
+#define strchr(x, y)  strchr16(x, y)
 #include "test/libc/str/strrchr_test.inc"
 #undef strchr
+#undef strrchr
 #undef C
 #undef S
 #undef T
 
-#define T(NAME)      NAME##32
-#define S(S)         L##S
-#define C(C)         L##C
-#define strchr(x, y) wcschr(x, y)
+#define T(NAME)       NAME##32
+#define S(S)          L##S
+#define C(C)          L##C
+#define strchr(x, y)  wcschr(x, y)
+#define strrchr(x, y) wcsrchr(x, y)
 #include "test/libc/str/strrchr_test.inc"
 #undef strchr
+#undef strrchr
 #undef C
 #undef S
 #undef T

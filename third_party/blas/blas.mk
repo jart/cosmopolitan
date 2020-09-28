@@ -34,10 +34,7 @@ THIRD_PARTY_BLAS_A_DEPS :=				\
 
 $(THIRD_PARTY_BLAS_A_OBJS):				\
 		OVERRIDE_CFLAGS +=			\
-			-O3 #$(MATHEMATICAL)
-
-#$(THIRD_PARTY_BLAS_A_OBJS):				\
-		CC = $(CLANG)
+			$(MATHEMATICAL)
 
 $(THIRD_PARTY_BLAS_A):					\
 		third_party/blas/			\

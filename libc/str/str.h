@@ -283,24 +283,6 @@ extern int (*const hook$wcsncmp)(const wchar_t *, const wchar_t *, size_t);
 
 #if __STDC_VERSION__ + 0 >= 201112
 
-#define strstr(haystack, needle) \
-  _Generic(*(haystack), wchar_t  \
-           : wcsstr, char16_t    \
-           : strstr16, default   \
-           : strstr)(haystack, needle)
-
-#define strrchr(s, c)           \
-  _Generic(*(s), wchar_t        \
-           : wcsrchr, char16_t  \
-           : strrchr16, default \
-           : strrchr)(s, c)
-
-#define strchrnul(s, c)           \
-  _Generic(*(s), wchar_t          \
-           : wcschrnul, char16_t  \
-           : strchrnul16, default \
-           : strchrnul)(s, c)
-
 #define strnlen(s, n)           \
   _Generic(*(s), wchar_t        \
            : wcsnlen, char16_t  \

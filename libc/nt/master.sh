@@ -5478,7 +5478,7 @@ imp	'RtlSetDaclSecurityDescriptor'				RtlSetDaclSecurityDescriptor				ntdll		138
 imp	'RtlSetDynamicTimeZoneInformation'			RtlSetDynamicTimeZoneInformation			ntdll		1386
 imp	'RtlSetEnvironmentStrings'				RtlSetEnvironmentStrings				ntdll		1387
 imp	'RtlSetEnvironmentVar'					RtlSetEnvironmentVar					ntdll		1388
-imp	'RtlSetEnvironmentVariable'				RtlSetEnvironmentVariable				ntdll		1389
+imp	'RtlSetEnvironmentVariable'				RtlSetEnvironmentVariable				ntdll		1389   
 imp	'RtlSetExtendedFeaturesMask'				RtlSetExtendedFeaturesMask				ntdll		1390
 imp	'RtlSetGroupSecurityDescriptor'				RtlSetGroupSecurityDescriptor				ntdll		1391
 imp	'RtlSetHeapInformation'					RtlSetHeapInformation					ntdll		1392

@@ -34,9 +34,9 @@ int mapfileread(const char *filename, struct MappedFile *mf) {
   mf->addr = MAP_FAILED;
   if ((mf->fd = open(filename, O_RDONLY)) != -1 &&
       (mf->size = getfiledescriptorsize(mf->fd)) < INT_MAX &&
-      (mf->addr = mf->size
-                      ? mmap(NULL, mf->size, PROT_READ, MAP_SHARED, mf->fd, 0)
-                      : NULL) != MAP_FAILED) {
+      (mf->addr = mf->size ? mmap(NULL, mf->size, PROT_READ,
+                                  MAP_PRIVATE | MAP_POPULATE, mf->fd, 0)
+                           : NULL) != MAP_FAILED) {
     return 0;
   } else {
     unmapfile(mf);
@@ -50,7 +50,7 @@ int mapfileread(const char *filename, struct MappedFile *mf) {
 int unmapfile(struct MappedFile *mf) {
   int rc;
   rc = 0;
-  if (mf->addr != MAP_FAILED) {
+  if (mf->addr && mf->addr != MAP_FAILED) {
     rc |= munmap(mf->addr, mf->size);
     mf->addr = MAP_FAILED;
   }

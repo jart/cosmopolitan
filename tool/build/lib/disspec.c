@@ -36,12 +36,6 @@ static const char kFpuName[][8][8] = {
     {"fneni", "fndisi", "fnclex", "fninit", "fnsetpm"},
 };
 
-char *DisOpFpu0(struct XedDecodedInst *x, int group) {
-  const char *s;
-  s = kFpuName[group][ModrmRm(x->op.rde)];
-  return *s ? s : UNKNOWN;
-}
-
 char *DisOpFpu1(struct XedDecodedInst *x, char *p, const char *extra) {
   stpcpy(stpcpy(p, kFpuName[0][ModrmReg(x->op.rde)]), extra);
   return p;
@@ -88,68 +82,88 @@ char *DisOpVpsWpsVssWssVpdWpdVsdWsd(struct XedDecodedInst *x, char *p,
   return p;
 }
 
+const char *DisSpecFpu0(struct XedDecodedInst *x, int group) {
+  const char *s;
+  s = kFpuName[group][ModrmRm(x->op.rde)];
+  return *s ? s : UNKNOWN;
+}
+
+const char *DisSpecRegMem(struct XedDecodedInst *x, const char *a,
+                          const char *b) {
+  if (IsModrmRegister(x->op.rde)) {
+    return a;
+  } else {
+    return b;
+  }
+}
+
+const char *DisSpecRegMemFpu0(struct XedDecodedInst *x, int group,
+                              const char *b) {
+  return DisSpecRegMem(x, DisSpecFpu0(x, group), b);
+}
+
 const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
   switch (x->op.opcode & 0xff) {
-    RCASE(0x00, "add Eb %Gb");
-    RCASE(0x01, "add Evqp %Gvqp");
-    RCASE(0x02, "add %Gb Eb");
-    RCASE(0x03, "add %Gvqp Evqp");
-    RCASE(0x04, "add %al Ib");
-    RCASE(0x05, "add %rAX Ivds");
+    RCASE(0x00, "ALU Eb %Gb");
+    RCASE(0x01, "ALU Evqp %Gvqp");
+    RCASE(0x02, "ALU %Gb Eb");
+    RCASE(0x03, "ALU %Gvqp Evqp");
+    RCASE(0x04, "ALU %al Ib");
+    RCASE(0x05, "ALU %rAX Ivds");
     RCASE(0x06, "push %es");
     RCASE(0x07, "pop %es");
-    RCASE(0x08, "or Eb %Gb");
-    RCASE(0x09, "or Evqp %Gvqp");
-    RCASE(0x0a, "or %Gb Eb");
-    RCASE(0x0b, "or %Gvqp Evqp");
-    RCASE(0x0c, "or %al Ib");
-    RCASE(0x0d, "or %rAX Ivds");
+    RCASE(0x08, "ALU Eb %Gb");
+    RCASE(0x09, "ALU Evqp %Gvqp");
+    RCASE(0x0a, "ALU %Gb Eb");
+    RCASE(0x0b, "ALU %Gvqp Evqp");
+    RCASE(0x0c, "ALU %al Ib");
+    RCASE(0x0d, "ALU %rAX Ivds");
     RCASE(0x0e, "push %cs");
     RCASE(0x0f, "pop %cs");
-    RCASE(0x10, "adc Eb %Gb");
-    RCASE(0x11, "adc Evqp %Gvqp");
-    RCASE(0x12, "adc %Gb Eb");
-    RCASE(0x13, "adc %Gvqp Evqp");
-    RCASE(0x14, "adc %al Ib");
-    RCASE(0x15, "adc %rAX Ivds");
+    RCASE(0x10, "ALU Eb %Gb");
+    RCASE(0x11, "ALU Evqp %Gvqp");
+    RCASE(0x12, "ALU %Gb Eb");
+    RCASE(0x13, "ALU %Gvqp Evqp");
+    RCASE(0x14, "ALU %al Ib");
+    RCASE(0x15, "ALU %rAX Ivds");
     RCASE(0x16, "push %ss");
     RCASE(0x17, "pop %ss");
-    RCASE(0x18, "sbb Eb %Gb");
-    RCASE(0x19, "sbb Evqp %Gvqp");
-    RCASE(0x1a, "sbb %Gb Eb");
-    RCASE(0x1b, "sbb %Gvqp Evqp");
-    RCASE(0x1c, "sbb %al Ib");
-    RCASE(0x1d, "sbb %rAX Ivds");
+    RCASE(0x18, "ALU Eb %Gb");
+    RCASE(0x19, "ALU Evqp %Gvqp");
+    RCASE(0x1a, "ALU %Gb Eb");
+    RCASE(0x1b, "ALU %Gvqp Evqp");
+    RCASE(0x1c, "ALU %al Ib");
+    RCASE(0x1d, "ALU %rAX Ivds");
     RCASE(0x1e, "push %ds");
     RCASE(0x1f, "pop %ds");
-    RCASE(0x20, "and Eb %Gb");
-    RCASE(0x21, "and Evqp %Gvqp");
-    RCASE(0x22, "and %Gb Eb");
-    RCASE(0x23, "and %Gvqp Evqp");
-    RCASE(0x24, "and %al Ib");
-    RCASE(0x25, "and %rAX Ivds");
+    RCASE(0x20, "ALU Eb %Gb");
+    RCASE(0x21, "ALU Evqp %Gvqp");
+    RCASE(0x22, "ALU %Gb Eb");
+    RCASE(0x23, "ALU %Gvqp Evqp");
+    RCASE(0x24, "ALU %al Ib");
+    RCASE(0x25, "ALU %rAX Ivds");
     RCASE(0x26, "push %es");
     RCASE(0x27, "pop %es");
-    RCASE(0x28, "sub Eb %Gb");
-    RCASE(0x29, "sub Evqp %Gvqp");
+    RCASE(0x28, "ALU Eb %Gb");
+    RCASE(0x29, "ALU Evqp %Gvqp");
+    RCASE(0x2a, "ALU %Gb Eb");
+    RCASE(0x2b, "ALU %Gvqp Evqp");
+    RCASE(0x2c, "ALU %al Ib");
+    RCASE(0x2d, "ALU %rAX Ivds");
     RCASE(0x2F, "das");
-    RCASE(0x2a, "sub %Gb Eb");
-    RCASE(0x2b, "sub %Gvqp Evqp");
-    RCASE(0x2c, "sub %al Ib");
-    RCASE(0x2d, "sub %rAX Ivds");
-    RCASE(0x30, "xor Eb %Gb");
-    RCASE(0x31, "xor Evqp %Gvqp");
-    RCASE(0x32, "xor %Gb Eb");
-    RCASE(0x33, "xor %Gvqp Evqp");
-    RCASE(0x34, "xor %al Ib");
-    RCASE(0x35, "xor %rAX Ivds");
+    RCASE(0x30, "ALU Eb %Gb");
+    RCASE(0x31, "ALU Evqp %Gvqp");
+    RCASE(0x32, "ALU %Gb Eb");
+    RCASE(0x33, "ALU %Gvqp Evqp");
+    RCASE(0x34, "ALU %al Ib");
+    RCASE(0x35, "ALU %rAX Ivds");
     RCASE(0x37, "aaa");
-    RCASE(0x38, "cmp Eb %Gb");
-    RCASE(0x39, "cmp Evqp %Gvqp");
-    RCASE(0x3A, "cmp %Gb Eb");
-    RCASE(0x3B, "cmp %Gvqp Evqp");
-    RCASE(0x3C, "cmp %al Ib");
-    RCASE(0x3D, "cmp %rAX Ivds");
+    RCASE(0x38, "ALU Eb %Gb");
+    RCASE(0x39, "ALU Evqp %Gvqp");
+    RCASE(0x3A, "ALU %Gb Eb");
+    RCASE(0x3B, "ALU %Gvqp Evqp");
+    RCASE(0x3C, "ALU %al Ib");
+    RCASE(0x3D, "ALU %rAX Ivds");
     RCASE(0x3F, "aas");
     RCASE(0x40 ... 0x47, "inc %Zv");
     RCASE(0x48 ... 0x4f, "dec %Zv");
@@ -167,26 +181,11 @@ const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
     RCASE(0x6D, "insWL Yv %dx");
     RCASE(0x6E, "outsb %dx Xb");
     RCASE(0x6F, "outsWL %dx Xv");
-    RCASE(0x70, "joBT Jbs");
-    RCASE(0x71, "jnoBT Jbs");
-    RCASE(0x72, "jbBT Jbs");
-    RCASE(0x73, "jaeBT Jbs");
-    RCASE(0x74, "jeBT Jbs");
-    RCASE(0x75, "jneBT Jbs");
-    RCASE(0x76, "jbeBT Jbs");
-    RCASE(0x77, "jaBT Jbs");
-    RCASE(0x78, "jsBT Jbs");
-    RCASE(0x79, "jnsBT Jbs");
-    RCASE(0x7a, "jpBT Jbs");
-    RCASE(0x7b, "jnpBT Jbs");
-    RCASE(0x7c, "jlBT Jbs");
-    RCASE(0x7d, "jgeBT Jbs");
-    RCASE(0x7e, "jleBT Jbs");
-    RCASE(0x7f, "jgBT Jbs");
-    RCASE(0x80, "ALU Eb Ib");
-    RCASE(0x81, "ALU Evqp Ivds");
-    RCASE(0x82, "ALU Eb Ib");
-    RCASE(0x83, "ALU Evqp Ibs");
+    RCASE(0x70 ... 0x7f, "jCC Jbs");
+    RCASE(0x80, "ALU2 Eb Ib");
+    RCASE(0x81, "ALU2 Evqp Ivds");
+    RCASE(0x82, "ALU2 Eb Ib");
+    RCASE(0x83, "ALU2 Evqp Ibs");
     RCASE(0x84, "test Eb %Gb");
     RCASE(0x85, "test %Gvqp Evqp");
     RCASE(0x86, "xchg %Gb Eb");
@@ -202,6 +201,7 @@ const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
     RCASE(0x91 ... 0x97, "xchg %Zvqp %rAX");
     RCASE(0x98, "cwtl");
     RCASE(0x99, "cltd");
+    RCASE(0x9A, "lcall Pvds Kvds");
     RCASE(0x9B, "fwait");
     RCASE(0x9C, "pushfWQ");
     RCASE(0x9D, "popfWQ");
@@ -234,6 +234,8 @@ const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
     RCASE(0xC6, "mov Eb Ib");
     RCASE(0xC7, "mov Evqp Ivds");
     RCASE(0xC9, "leave");
+    RCASE(0xCA, "lret Iw");
+    RCASE(0xCB, "lret");
     RCASE(0xCC, "int3");
     RCASE(0xCD, "int Ib");
     RCASE(0xD0, "BIT Eb $1");
@@ -280,163 +282,36 @@ const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
       switch (ModrmReg(x->op.rde)) {
         RCASE(1, "fxch EST1");
         RCASE(3, "fstps Msr %st");
-        case 0:
-          if (IsModrmRegister(x->op.rde)) {
-            return "fld EST";
-          } else {
-            return "flds Msr";
-          }
-          break;
-        case 2:
-          if (IsModrmRegister(x->op.rde)) {
-            return "fnop";
-          } else {
-            return "fsts Msr %st";
-          }
-          break;
-        case 4:
-          if (IsModrmRegister(x->op.rde)) {
-            return DisOpFpu0(x, 1);
-          } else {
-            return "fldenv Me";
-          }
-          break;
-        case 5:
-          if (IsModrmRegister(x->op.rde)) {
-            return DisOpFpu0(x, 2);
-          } else {
-            return "fldcw Mw";
-          }
-          break;
-        case 6:
-          if (IsModrmRegister(x->op.rde)) {
-            return DisOpFpu0(x, 3);
-          } else {
-            return "fnstenv M";
-          }
-          break;
-        case 7:
-          if (IsModrmRegister(x->op.rde)) {
-            return DisOpFpu0(x, 4);
-          } else {
-            return "fnstcw Mw";
-          }
-          break;
+        RCASE(0, DisSpecRegMem(x, "fld EST", "flds Msr"));
+        RCASE(2, DisSpecRegMem(x, "fnop", "fsts Msr %st"));
+        RCASE(4, DisSpecRegMemFpu0(x, 1, "fldenv Me"));
+        RCASE(5, DisSpecRegMemFpu0(x, 2, "fldcw Mw"));
+        RCASE(6, DisSpecRegMemFpu0(x, 3, "fnstenv M"));
+        RCASE(7, DisSpecRegMemFpu0(x, 4, "fnstcw Mw"));
       }
       break;
     case 0xDA:
       switch (ModrmReg(x->op.rde)) {
-        case 0:
-          if (!IsModrmRegister(x->op.rde)) {
-            return "fiaddl Mdi";
-          } else {
-            return "fcmovb %st EST";
-          }
-          break;
-        case 1:
-          if (!IsModrmRegister(x->op.rde)) {
-            return "fimull Mdi";
-          } else {
-            return "fcmove %st EST";
-          }
-          break;
-        case 2:
-          if (!IsModrmRegister(x->op.rde)) {
-            return "ficoml Mdi";
-          } else {
-            return "fcmovbe %st EST";
-          }
-          break;
-        case 3:
-          if (!IsModrmRegister(x->op.rde)) {
-            return "ficompl Mdi";
-          } else {
-            return "fcmovu %st EST";
-          }
-          break;
-        case 4:
-          if (!IsModrmRegister(x->op.rde)) {
-            return "fisubl Mdi";
-          } else {
-            return "fisubr Mdi";
-          }
-          break;
-        case 5:
-          if (!IsModrmRegister(x->op.rde)) {
-            return "fisubrl Mdi";
-          } else {
-            return "fucompp";
-          }
-          break;
-        case 6:
-          if (!IsModrmRegister(x->op.rde)) {
-            return "fidivl Mdi";
-          } else {
-            return UNKNOWN;
-          }
-          break;
-        case 7:
-          if (!IsModrmRegister(x->op.rde)) {
-            return "fidivrl Mdi";
-          } else {
-            return UNKNOWN;
-          }
-          break;
+        RCASE(0, DisSpecRegMem(x, "fcmovb %st EST", "fiaddl Mdi"));
+        RCASE(1, DisSpecRegMem(x, "fcmove %st EST", "fimull Mdi"));
+        RCASE(2, DisSpecRegMem(x, "fcmovbe %st EST", "ficoml Mdi"));
+        RCASE(3, DisSpecRegMem(x, "fcmovu %st EST", "ficompl Mdi"));
+        RCASE(4, DisSpecRegMem(x, "fisubr Mdi", "fisubl Mdi"));
+        RCASE(5, DisSpecRegMem(x, "fucompp", "fisubrl Mdi"));
+        RCASE(6, DisSpecRegMem(x, "fidivl Mdi", "UNKNOWN"));
+        RCASE(7, DisSpecRegMem(x, "fidivrl Mdi", "UNKNOWN"));
       }
       break;
     case 0xDB:
       switch (ModrmReg(x->op.rde)) {
-        case 0:
-          if (!IsModrmRegister(x->op.rde)) {
-            return "fildl Mdi";
-          } else {
-            return "fcmovnb %st EST";
-          }
-          break;
-        case 1:
-          if (!IsModrmRegister(x->op.rde)) {
-            return "fisttpl Mdi";
-          } else {
-            return "fcmovne %st EST";
-          }
-          break;
-        case 2:
-          if (!IsModrmRegister(x->op.rde)) {
-            return "fistl Mdi";
-          } else {
-            return "fcmovnbe %st EST";
-          }
-          break;
-        case 3:
-          if (!IsModrmRegister(x->op.rde)) {
-            return "fistpl Mdi";
-          } else {
-            return "fcmovnu %st EST";
-          }
-          break;
-        case 4:
-          return DisOpFpu0(x, 5);
-        case 5:
-          if (!IsModrmRegister(x->op.rde)) {
-            return "fldt Mer";
-          } else {
-            return "fucomi %st EST";
-          }
-          break;
-        case 6:
-          if (IsModrmRegister(x->op.rde)) {
-            return "fcomi %st EST";
-          } else {
-            return UNKNOWN;
-          }
-          break;
-        case 7:
-          if (!IsModrmRegister(x->op.rde)) {
-            return "fstpt Mer";
-          } else {
-            return UNKNOWN;
-          }
-          break;
+        RCASE(0, DisSpecRegMem(x, "fcmovnb %st EST", "fildl Mdi"));
+        RCASE(1, DisSpecRegMem(x, "fcmovne %st EST", "fisttpl Mdi"));
+        RCASE(2, DisSpecRegMem(x, "fcmovnbe %st EST", "fistl Mdi"));
+        RCASE(3, DisSpecRegMem(x, "fcmovnu %st EST", "fistpl Mdi"));
+        RCASE(4, DisSpecFpu0(x, 5));
+        RCASE(5, DisSpecRegMem(x, "fucomi %st EST", "fldt Mer"));
+        RCASE(6, DisSpecRegMem(x, "fcomi %st EST", UNKNOWN));
+        RCASE(7, DisSpecRegMem(x, UNKNOWN, "fstpt Mer"));
       }
       break;
     case 0xD8:
@@ -590,22 +465,7 @@ const char *DisSpecMap1(struct XedDecodedInst *x, char *p) {
     RCASE(0x2E, Osz(x->op.rde) ? "ucomisd %Vsd Wsd" : "ucomiss %Vss Wss");
     RCASE(0x2F, Osz(x->op.rde) ? "comisd %Vsd Wsd" : "comiss %Vss Wss");
     RCASE(0x31, "rdtsc");
-    RCASE(0x40, "cmovo %Gvqp Evqp");
-    RCASE(0x41, "cmovno %Gvqp Evqp");
-    RCASE(0x42, "cmovb %Gvqp Evqp");
-    RCASE(0x43, "cmovae %Gvqp Evqp");
-    RCASE(0x44, "cmove %Gvqp Evqp");
-    RCASE(0x45, "cmovne %Gvqp Evqp");
-    RCASE(0x46, "cmovbe %Gvqp Evqp");
-    RCASE(0x47, "cmova %Gvqp Evqp");
-    RCASE(0x48, "cmovs %Gvqp Evqp");
-    RCASE(0x49, "cmovns %Gvqp Evqp");
-    RCASE(0x4a, "cmovp %Gvqp Evqp");
-    RCASE(0x4b, "cmovnp %Gvqp Evqp");
-    RCASE(0x4c, "cmovl %Gvqp Evqp");
-    RCASE(0x4d, "cmovge %Gvqp Evqp");
-    RCASE(0x4e, "cmovle %Gvqp Evqp");
-    RCASE(0x4f, "cmovg %Gvqp Evqp");
+    RCASE(0x40 ... 0x4f, "cmovCC %Gvqp Evqp");
     RCASE(0x52, DisOpVpsWpsVssWss(x, p, "rsqrt"));
     RCASE(0x53, DisOpVpsWpsVssWss(x, p, "rcp"));
     RCASE(0x54, DisOpVpdWpdVpsWps(x, p, "and"));
@@ -635,38 +495,8 @@ const char *DisSpecMap1(struct XedDecodedInst *x, char *p) {
     RCASE(0x74, DisOpPqQqVdqWdq(x, p, "pcmpeqb"));
     RCASE(0x75, DisOpPqQqVdqWdq(x, p, "pcmpeqw"));
     RCASE(0x76, DisOpPqQqVdqWdq(x, p, "pcmpeqd"));
-    RCASE(0x80, "jo Jvds");
-    RCASE(0x81, "jno Jvds");
-    RCASE(0x82, "jb Jvds");
-    RCASE(0x83, "jae Jvds");
-    RCASE(0x84, "je Jvds");
-    RCASE(0x85, "jne Jvds");
-    RCASE(0x86, "jbe Jvds");
-    RCASE(0x87, "ja Jvds");
-    RCASE(0x88, "js Jvds");
-    RCASE(0x89, "jns Jvds");
-    RCASE(0x8a, "jp Jvds");
-    RCASE(0x8b, "jnp Jvds");
-    RCASE(0x8c, "jl Jvds");
-    RCASE(0x8d, "jge Jvds");
-    RCASE(0x8e, "jle Jvds");
-    RCASE(0x8f, "jg Jvds");
-    RCASE(0x90, "seto Eb");
-    RCASE(0x91, "setno Eb");
-    RCASE(0x92, "setb Eb");
-    RCASE(0x93, "setnb Eb");
-    RCASE(0x94, "sete Eb");
-    RCASE(0x95, "setne Eb");
-    RCASE(0x96, "setbe Eb");
-    RCASE(0x97, "seta Eb");
-    RCASE(0x98, "sets Eb");
-    RCASE(0x99, "setns Eb");
-    RCASE(0x9A, "setp Eb");
-    RCASE(0x9B, "setnp Eb");
-    RCASE(0x9C, "setl Eb");
-    RCASE(0x9D, "setge Eb");
-    RCASE(0x9E, "setle Eb");
-    RCASE(0x9F, "setg Eb");
+    RCASE(0x80 ... 0x8f, "jCC Jvds");
+    RCASE(0x90 ... 0x9f, "setCC Jvds");
     RCASE(0xA0, "push %fs");
     RCASE(0xA1, "pop %fs");
     RCASE(0xA2, "cpuid");

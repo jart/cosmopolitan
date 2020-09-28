@@ -17,13 +17,13 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/calls/struct/stat.h"
-#include "libc/calls/calls.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -44,6 +44,6 @@ TEST(ftruncate, test) {
   ASSERT_NE(-1, close(fd));
   ASSERT_NE(-1, stat(path, &st));
   ASSERT_EQ(31337, st.st_size);
-  ASSERT_BINEQ(u"helloworld", gc(slurp(path, NULL)));
+  ASSERT_BINEQ(u"helloworld", gc(xslurp(path, 0)));
   unlink(path);
 }

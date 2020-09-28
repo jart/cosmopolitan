@@ -243,21 +243,19 @@ fatal:
 int editorReadKey(int64_t fd) {
   int nread;
   char c, seq[3];
-  while ((nread = read(fd, &c, 1)) == 0) {
-  }
-  if (nread == -1) exit(1);
+  if ((nread = read(fd, &c, 1)) == -1) exit(1);
 
   while (1) {
     switch (c) {
       case CTRL('J'): /* newline */
         return CTRL('M');
-      case CTRL('['): /* escape sequence */
+      case CTRL('V'):
+        return PAGE_DOWN;
+      case '\e': /* escape sequence */
         /* If this is just an ESC, we'll timeout here. */
         if (read(fd, seq, 1) == 0) return CTRL('[');
-        if (read(fd, seq + 1, 1) == 0) return CTRL('[');
-
-        /* ESC [ sequences. */
         if (seq[0] == '[') {
+          if (read(fd, seq + 1, 1) == 0) return CTRL('[');
           if (seq[1] >= '0' && seq[1] <= '9') {
             /* Extended escape, read additional byte. */
             if (read(fd, seq + 2, 1) == 0) return CTRL('[');
@@ -296,10 +294,11 @@ int editorReadKey(int64_t fd) {
                 return END_KEY;
             }
           }
-        }
-
-        /* ESC O sequences. */
-        else if (seq[0] == 'O') {
+        } else if (seq[0] == 'v') {
+          return PAGE_UP;
+        } else if (seq[0] == 'O') {
+          if (read(fd, seq + 1, 1) == 0) return CTRL('[');
+          /* ESC O sequences. */
           switch (seq[1]) {
             case 'H':
               return HOME_KEY;
@@ -586,8 +585,9 @@ void editorUpdateRow(erow *row) {
   /* Create a version of the row we can directly print on the screen,
    * respecting tabs, substituting non printable characters with '?'. */
   free(row->render);
-  for (j = 0; j < row->size; j++)
+  for (j = 0; j < row->size; j++) {
     if (row->chars[j] == CTRL('I')) tabs++;
+  }
 
   row->render = malloc(row->size + tabs * 8 + nonprint * 9 + 1);
   idx = 0;
@@ -1200,9 +1200,10 @@ void editorMoveCursor(int key) {
 void editorProcessKeypress(int64_t fd) {
   /* When the file is modified, requires Ctrl-q to be pressed N times
    * before actually quitting. */
+  int c, times;
   static int quit_times;
 
-  int c = editorReadKey(fd);
+  c = editorReadKey(fd);
   switch (c) {
     case CTRL('M'): /* Enter */
       editorInsertNewline();
@@ -1271,6 +1272,13 @@ void editorProcessKeypress(int64_t fd) {
       break;
     }
 
+    case CTRL('L'):
+      times = E.screenrows / 2;
+      while (times--) editorMoveCursor(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
+      times = E.screenrows / 2;
+      while (times--) editorMoveCursor(c == PAGE_UP ? ARROW_DOWN : ARROW_UP);
+      break;
+
     case PAGE_UP:
     case PAGE_DOWN:
       if (c == PAGE_UP && E.cy != 0) {
@@ -1278,10 +1286,10 @@ void editorProcessKeypress(int64_t fd) {
       } else if (c == PAGE_DOWN && E.cy != E.screenrows - 1) {
         E.cy = E.screenrows - 1;
       }
-      {
-        int times = E.screenrows;
-        while (times--) editorMoveCursor(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
-      }
+      times = E.screenrows;
+      while (times--) editorMoveCursor(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
+      times = E.screenrows / 2;
+      while (times--) editorMoveCursor(c == PAGE_UP ? ARROW_DOWN : ARROW_UP);
       break;
 
     case HOME_KEY:
@@ -1316,9 +1324,6 @@ void editorProcessKeypress(int64_t fd) {
       editorMoveCursor(c);
       break;
 
-    case CTRL('L'): /* ctrl+l, clear screen */
-      /* Just refresht the line as side effect. */
-      break;
     case CTRL('['):
       /* Nothing to do for ESC in this mode. */
       break;

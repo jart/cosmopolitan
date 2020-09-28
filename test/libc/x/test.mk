@@ -24,10 +24,12 @@ TEST_LIBC_X_CHECKS =				\
 	$(TEST_LIBC_X_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
 
 TEST_LIBC_X_DIRECTDEPS =			\
+	LIBC_CALLS				\
 	LIBC_FMT				\
 	LIBC_MEM				\
 	LIBC_STDIO				\
 	LIBC_STR				\
+	LIBC_NEXGEN32E				\
 	LIBC_RUNTIME				\
 	LIBC_X					\
 	LIBC_STUBS				\

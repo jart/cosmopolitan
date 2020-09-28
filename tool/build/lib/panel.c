@@ -36,12 +36,13 @@
  * @param p is panel list in logically sorted order
  * @param tyn is terminal height in cells
  * @param txn is terminal width in cells
- * @return bytes emitted, or -1 w/ errno
+ * @return -1 w/ errno if an error happened
  * @see nblack's notcurses project too!
  */
 ssize_t PrintPanels(int fd, long pn, struct Panel p[pn], long tyn, long txn) {
   wint_t wc;
   ssize_t rc;
+  size_t wrote;
   struct Buffer b, *l;
   int x, y, i, j, width;
   enum { kUtf8, kAnsi, kAnsiCsi } state;

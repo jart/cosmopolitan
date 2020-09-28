@@ -14,6 +14,7 @@ o/$(MODE)/third_party:				\
 	o/$(MODE)/third_party/editline		\
 	o/$(MODE)/third_party/f2c		\
 	o/$(MODE)/third_party/getopt		\
+	o/$(MODE)/third_party/lemon		\
 	o/$(MODE)/third_party/lex		\
 	o/$(MODE)/third_party/linenoise		\
 	o/$(MODE)/third_party/lz4cli		\

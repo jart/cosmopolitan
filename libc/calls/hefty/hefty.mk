@@ -46,8 +46,7 @@ LIBC_CALLS_HEFTY_A_DIRECTDEPS =				\
 	LIBC_STR					\
 	LIBC_STUBS					\
 	LIBC_SYSV					\
-	LIBC_SYSV_CALLS					\
-	LIBC_TIME
+	LIBC_SYSV_CALLS
 
 LIBC_CALLS_HEFTY_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(LIBC_CALLS_HEFTY_A_DIRECTDEPS),$($(x))))

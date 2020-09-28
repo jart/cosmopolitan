@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
@@ -94,4 +95,14 @@ TEST(stpcpy, test) {
   p = stpcpy(p, s2);
   EXPECT_EQ((intptr_t)b + 10, (intptr_t)p);
   EXPECT_STREQ("hellothere", b);
+}
+
+TEST(memcpy, testBackwardsOverlap3) {
+  volatile char *c;
+  c = malloc(3);
+  memcpy(c, "\e[C", 3);
+  memcpy(c, c + 1, VEIL("r", 3) - 1);
+  EXPECT_EQ('[', c[0]);
+  EXPECT_EQ('C', c[1]);
+  free(c);
 }

@@ -45,15 +45,7 @@ noinline size_t uint64toarray_radix10(uint64_t i, char *a) {
  * @return bytes written w/o nul
  */
 size_t int64toarray_radix10(int64_t i, char *a) {
-  if (i < 0) {
-    if (i != INT64_MIN) {
-      *a++ = '-';
-      return 1 + uint64toarray_radix10(-i, a);
-    } else {
-      memcpy(a, "-9223372036854775808", 21);
-      return 20;
-    }
-  } else {
-    return uint64toarray_radix10(i, a);
-  }
+  if (i >= 0) return uint64toarray_radix10(i, a);
+  *a++ = '-';
+  return 1 + uint64toarray_radix10(-i, a);
 }

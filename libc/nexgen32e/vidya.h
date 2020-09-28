@@ -48,20 +48,20 @@
  * @mode long,legacy,real
  */
 
-#define VIDYA_ROWS 25
-#define VIDYA_COLUMNS 80
-#define VIDYA_SIZE (VIDYA_ROWS * VIDYA_COLUMNS * 2)
-#define VIDYA_MODE_MDA 7
-#define VIDYA_MODE_CGA 3
-#define VIDYA_ADDR_MDA 0xb0000
-#define VIDYA_ADDR_CGA 0xb8000
-#define VIDYA_ATTR_NORMAL 0x07 /* cozy default for both mda and cga */
-#define VIDYA_REWIND ~0x7fff   /* derived from mode addr min. lzcnt */
-#define VIDYA_SERVICE 0x10
-#define VIDYA_SET_MODE 0
-#define VIDYA_SET_CURSOR 0x0100
-#define VIDYA_SET_CURSOR_NONE 0x2000
-#define VIDYA_SET_BLINKING 0x1003
+#define VIDYA_ROWS              25
+#define VIDYA_COLUMNS           80
+#define VIDYA_SIZE              (VIDYA_ROWS * VIDYA_COLUMNS * 2)
+#define VIDYA_MODE_MDA          7
+#define VIDYA_MODE_CGA          3
+#define VIDYA_ADDR_MDA          0xb0000
+#define VIDYA_ADDR_CGA          0xb8000
+#define VIDYA_ATTR_NORMAL       0x07    /* cozy default for both mda and cga */
+#define VIDYA_REWIND            ~0x7fff /* derived from mode addr min. lzcnt */
+#define VIDYA_SERVICE           0x10
+#define VIDYA_SET_MODE          0x0003
+#define VIDYA_SET_CURSOR        0x0100
+#define VIDYA_SET_CURSOR_NONE   0x2000
+#define VIDYA_SET_BLINKING      0x1003
 #define VIDYA_SET_BLINKING_NONE 0x0000
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)

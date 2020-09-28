@@ -23,7 +23,5 @@
  * Returns number of bytes available in stream buffer.
  */
 unsigned favail(FILE *f) {
-  if (f->beg == f->end) return f->size;
-  if (f->end > f->beg) return f->end - f->beg;
-  return (f->size - f->beg) + f->end;
+  return ((f->end - f->beg - 1) & (f->size - 1)) + 1;
 }

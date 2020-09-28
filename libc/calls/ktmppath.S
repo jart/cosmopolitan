@@ -39,5 +39,4 @@ kTmpPath:
 	ezlea	GetTempPathA$flunk,ax
 	call	__getntsyspath
 	.init.end 300,_init_kTmpPath
-
 	.source	__FILE__

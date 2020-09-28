@@ -44,6 +44,10 @@ struct MemoryIntervals _mmi;
 /**
  * Beseeches system for page-table entries.
  *
+ *   char *p = mmap(NULL, 65536, PROT_READ | PROT_WRITE,
+ *                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+ *   munmap(p, 65536);
+ *
  * @param addr optionally requests a particular virtual base address,
  *     which needs to be 64kb aligned if passed (for NT compatibility)
  * @param size must be >0 and needn't be a multiple of FRAMESIZE
@@ -82,8 +86,6 @@ void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
     }
     addr = (void *)(intptr_t)((int64_t)x << 16);
   }
-  assert((flags & MAP_FIXED) ||
-         (!isheap(addr) && !isheap((char *)addr + size - 1)));
   dm = DirectMap(addr, size, prot, flags | MAP_FIXED, fd, off);
   if (dm.addr == MAP_FAILED || dm.addr != addr) {
     return MAP_FAILED;

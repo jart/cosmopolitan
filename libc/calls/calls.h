@@ -84,7 +84,6 @@ char *get_current_dir_name(void) nodiscard;
 char *getcwd(char *, size_t);
 char *realpath(const char *, char *);
 char *replaceuser(const char *) nodiscard;
-char *slurp(const char *, size_t *) nodiscard;
 char *ttyname(int);
 char *commandv(const char *, char[hasatleast PATH_MAX]);
 int access(const char *, int) nothrow;

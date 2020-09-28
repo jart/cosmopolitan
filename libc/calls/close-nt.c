@@ -24,7 +24,7 @@
 
 textwindows int close$nt(int fd) {
   bool32 ok;
-  if (isfdindex(fd)) {
+  if (isfdopen(fd)) {
     if (g_fds.p[fd].kind == kFdFile) {
       /*
        * Like Linux, closing a file on Windows doesn't guarantee it's

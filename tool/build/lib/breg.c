@@ -17,49 +17,21 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/xmmintrin.h"
-#include "libc/log/log.h"
-#include "libc/macros.h"
-#include "libc/math.h"
-#include "libc/str/str.h"
-#include "libc/testlib/ezbench.h"
-#include "libc/testlib/testlib.h"
-#include "third_party/blas/blas.h"
-#include "tool/viz/lib/formatstringtable-testlib.h"
+#include "tool/build/lib/modrm.h"
 
-TEST(dgemm, test) {
-  double alpha, beta;
-  long m, n, k, lda, ldb, ldc;
-  double A[3][3] = {{1 / 8.}, {6 / 8.}, {1 / 8.}};
-  double B[1][3] = {{1 / 8., 6 / 8., 1 / 8.}};
-  double C[3][3] = {0};
-  m = 3;
-  n = 3;
-  k = 1;
-  lda = 3;
-  ldb = 3;
-  ldc = 3;
-  beta = 1;
-  alpha = 1;
-  dgemm_("T", "T", &m, &n, &k, &alpha, &A[0][0], &lda, &B[0][0], &ldb, &beta,
-         &C[0][0], &ldc);
-  EXPECT_DBLMATRIXEQ(6, rint, 3, 3, C, "\n\
-.015625  .09375 .015625\n\
- .09375   .5625  .09375\n\
-.015625  .09375 .015625");
-}
-
-void dgemmer(long m, long n, long k, void *A, long lda, void *B, long ldb,
-             void *C, long ldc) {
-  double alpha, beta;
-  beta = 1;
-  alpha = 1;
-  dgemm_("N", "N", &m, &n, &k, &alpha, A, &lda, B, &ldb, &beta, C, &ldc);
-}
-
-BENCH(dgemm, bench) {
-  double(*A)[128][128] = tgc(tmalloc(128 * 128 * 8));
-  double(*B)[128][128] = tgc(tmalloc(128 * 128 * 8));
-  double(*C)[128][128] = tgc(tmalloc(128 * 128 * 8));
-  EZBENCH2("dgemm_", donothing, dgemmer(128, 128, 128, A, 128, B, 128, C, 128));
-}
+/**
+ * Byte register offsets.
+ *
+ * for (i = 0; i < 2; ++i) {      // rex
+ *   for (j = 0; j < 2; ++j) {    // rexb, or rexr
+ *     for (k = 0; k < 8; ++k) {  // reg, rm, or srm
+ *       kByteReg[i << 4 | j << 3 | k] =
+ *           i ? (j << 3 | k) * 8 : (k & 0b11) * 8 + ((k & 0b100) >> 2);
+ *     }
+ *   }
+ * }
+ */
+const uint8_t kByteReg[32] = {0x00, 0x08, 0x10, 0x18, 0x01, 0x09, 0x11, 0x19,
+                              0x00, 0x08, 0x10, 0x18, 0x01, 0x09, 0x11, 0x19,
+                              0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38,
+                              0x40, 0x48, 0x50, 0x58, 0x60, 0x68, 0x70, 0x78};

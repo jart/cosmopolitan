@@ -5,6 +5,7 @@
 COSMOPOLITAN_C_START_
 
 void DrawCga(struct Panel *, uint8_t[25][80][2]);
+size_t FormatCga(uint8_t, char[hasatleast 11]);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

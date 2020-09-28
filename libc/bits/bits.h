@@ -45,9 +45,9 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
 #define ROL(w, k) ((w) << (k) | CheckUnsigned(w) >> (sizeof(w) * 8 - (k)))
 #define SAR(w, k) (((w) & ~(~0u >> (k))) | ((w) >> ((k) & (sizeof(w) * 8 - 1))))
 
-#define bitreverse8(X) (kReverseBits[(X)&0xff])
-#define bitreverse16(X)                      \
-  ((uint16_t)kReverseBits[(X)&0xff] << 010 | \
+#define bitreverse8(X) (kReverseBits[(uint8_t)(X)])
+#define bitreverse16(X)                          \
+  ((uint16_t)kReverseBits[(uint8_t)(X)] << 010 | \
    kReverseBits[((uint16_t)(X) >> 010) & 0xff])
 
 #define READ16LE(S)                             \

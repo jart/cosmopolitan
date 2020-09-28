@@ -37,7 +37,6 @@ LIBC_X_A_DIRECTDEPS =				\
 	LIBC_CALLS				\
 	LIBC_ESCAPE				\
 	LIBC_FMT				\
-	LIBC_LOG				\
 	LIBC_MEM				\
 	LIBC_NEXGEN32E				\
 	LIBC_RUNTIME				\
@@ -45,7 +44,6 @@ LIBC_X_A_DIRECTDEPS =				\
 	LIBC_STR				\
 	LIBC_STUBS				\
 	LIBC_SYSV				\
-	LIBC_TIME				\
 	THIRD_PARTY_DTOA
 
 LIBC_X_A_DEPS :=				\

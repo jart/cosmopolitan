@@ -25,6 +25,7 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
@@ -39,28 +40,42 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.h"
 
+#define MAX_READ FRAMESIZE
+
 /**
  * @fileoverview Make dependency generator.
  *
- * This program generates Makefile code saying which sources include
- * which headers, thus improving build invalidation.
+ * This generates Makefile code for source -> header dependencies.
  *
- * The same thing can be accomplished using GCC's -M flag. This tool is
- * much faster. It's designed to process over 9,000 sources to generate
- * 50k+ lines of make code in ~80ms using one core and a meg of ram.
+ * Includes look like this:
+ *
+ *   - #include "root/of/repository/foo.h"
+ *   - .include "root/of/repository/foo.inc"
+ *
+ * They do not look like this:
+ *
+ *   -   #include "foo.h"
+ *   - #  include "foo.h"
+ *   - #include   "foo.h"
+ *
+ * Only the first 64kb of each source file is considered.
  */
 
-static const char kSourceExts[][5] = {".s", ".S", ".c", ".cc", ".cpp"};
-static alignas(16) const char kIncludePrefix[] = "include \"";
+alignas(16) const char kIncludePrefix[] = "include \"";
 
-static const char *const kModelessPackages[] = {
-    "libc/nt/",
-    "libc/stubs/",
-    "libc/sysv/",
+const char kSourceExts[][5] = {".s", ".S", ".c", ".cc", ".cpp"};
+
+const char *const kIgnorePrefixes[] = {
+#if 0
+    "libc/sysv/consts/",   "libc/sysv/calls/",  "libc/nt/kernel32/",
+    "libc/nt/KernelBase/", "libc/nt/advapi32/", "libc/nt/gdi32/",
+    "libc/nt/ntdll/",      "libc/nt/user32/",   "libc/nt/shell32/",
+#endif
 };
 
 struct Strings {
@@ -69,14 +84,14 @@ struct Strings {
 };
 
 struct Source {
-  uint32_t hash; /* 0 means empty w/ triangle probe */
-  uint32_t name; /* strings.p[name] w/ interning */
-  uint32_t id;   /* rehashing changes indexes */
+  unsigned hash; /* 0 means empty w/ triangle probe */
+  unsigned name; /* strings.p[name] w/ interning */
+  unsigned id;   /* rehashing changes indexes */
 };
 
 struct Edge {
-  int32_t from; /* sources.p[from.id] */
-  int32_t to;   /* sources.p[to.id] */
+  unsigned from; /* sources.p[from.id] */
+  unsigned to;   /* sources.p[to.id] */
 };
 
 struct Sources {
@@ -89,25 +104,40 @@ struct Edges {
   struct Edge *p;
 };
 
-int g_sourceid;
-struct Strings strings;
-struct Sources sources;
-struct Edges edges;
-const char *buildroot;
-int *visited;
 char *out;
 FILE *fout;
+int *visited;
+unsigned counter;
+struct Edges edges;
+struct Strings strings;
+struct Sources sources;
+const char *buildroot;
 
-static int CompareSourcesById(struct Source *a, struct Source *b) {
+int CompareSourcesById(struct Source *a, struct Source *b) {
   return a->id > b->id ? 1 : a->id < b->id ? -1 : 0;
 }
 
-static int CompareEdgesByFrom(struct Edge *a, struct Edge *b) {
+int CompareEdgesByFrom(struct Edge *a, struct Edge *b) {
   return a->from > b->from ? 1 : a->from < b->from ? -1 : 0;
 }
 
-static uint32_t Hash(const void *s, size_t l) {
+unsigned Hash(const void *s, size_t l) {
   return max(1, crc32c(0, s, l));
+}
+
+unsigned FindFirstFromEdge(unsigned id) {
+  unsigned m, l, r;
+  l = 0;
+  r = edges.i;
+  while (l < r) {
+    m = (l + r) >> 1;
+    if (edges.p[m].from < id) {
+      l = m + 1;
+    } else {
+      r = m;
+    }
+  }
+  return l;
 }
 
 void Crunch(void) {
@@ -140,9 +170,9 @@ void Rehash(void) {
   free(old.p);
 }
 
-uint32_t GetSourceId(const char *name, size_t len) {
+unsigned GetSourceId(const char *name, size_t len) {
   size_t i, step;
-  uint32_t hash;
+  unsigned hash;
   i = 0;
   hash = Hash(name, len);
   if (sources.n) {
@@ -167,55 +197,73 @@ uint32_t GetSourceId(const char *name, size_t len) {
   sources.p[i].hash = hash;
   sources.p[i].name = CONCAT(&strings.p, &strings.i, &strings.n, name, len);
   strings.p[strings.i++] = '\0';
-  return (sources.p[i].id = g_sourceid++);
+  return (sources.p[i].id = counter++);
+}
+
+bool ShouldSkipSource(const char *src) {
+  unsigned j;
+  for (j = 0; j < ARRAYLEN(kIgnorePrefixes); ++j) {
+    if (startswith(src, kIgnorePrefixes[j])) {
+      return true;
+    }
+  }
+  return false;
+}
+
+noreturn void OnMissingFile(const char *list, const char *src) {
+  DCHECK_EQ(ENOENT, errno, "%s", src);
+  /*
+   * This code helps GNU Make automatically fix itself when we
+   * delete a source file. It removes o/.../srcs.txt or
+   * o/.../hdrs.txt and exits nonzero. Since we use hyphen
+   * notation on mkdeps related rules, the build will
+   * automatically restart itself.
+   */
+  fprintf(stderr, "%s %s...\n", "Refreshing", list);
+  unlink(list);
+  exit(1);
 }
 
 void LoadRelationships(int argc, char *argv[]) {
-  struct MappedFile mf;
-  const char *p, *pe;
-  size_t i, linecap = 0;
-  char *line = NULL;
+  int fd;
+  ssize_t rc;
+  bool skipme;
   FILE *finpaths;
+  struct Edge edge;
+  char *line, *buf;
+  unsigned srcid, dependency;
+  size_t i, linecap, inclen, size;
+  const char *p, *pe, *src, *path, *pathend;
+  line = NULL;
+  linecap = 0;
+  inclen = strlen(kIncludePrefix);
+  buf = gc(xmemalign(PAGESIZE, PAGESIZE + MAX_READ + 16));
+  buf += PAGESIZE;
+  buf[-1] = '\n';
   for (i = optind; i < argc; ++i) {
     CHECK_NOTNULL((finpaths = fopen(argv[i], "r")));
     while (getline(&line, &linecap, finpaths) != -1) {
-      if (mapfileread(chomp(line), &mf) == -1) {
-        CHECK_EQ(ENOENT, errno, "%s", line);
-        /*
-         * This code helps GNU Make automatically fix itself when we
-         * delete a source file. It removes o/.../srcs.txt or
-         * o/.../hdrs.txt and exits nonzero. Since we use hyphen
-         * notation on mkdeps related rules, the build will
-         * automatically restart itself.
-         */
-        fprintf(stderr, "%s %s...\n", "Refreshing", argv[i]);
-        unlink(argv[i]);
-        exit(1);
-      }
-      if (mf.size) {
-        if (mf.size > PAGESIZE) {
-          madvise(mf.addr, mf.size, MADV_WILLNEED | MADV_SEQUENTIAL);
-        }
-        uint32_t sauce = GetSourceId(line, strlen(line));
-        size_t inclen = strlen(kIncludePrefix);
-        p = mf.addr;
-        pe = p + mf.size;
-        while ((p = strstr(p, kIncludePrefix))) {
-          const char *path = p + inclen;
-          const char *pathend = memchr(path, '"', pe - path);
-          if (pathend && (intptr_t)p > (intptr_t)mf.addr &&
-              (p[-1] == '#' || p[-1] == '.') &&
-              (p - 1 == mf.addr || p[-2] == '\n')) {
-            uint32_t dependency = GetSourceId(path, pathend - path);
-            struct Edge edge;
-            edge.from = sauce;
-            edge.to = dependency;
-            append(&edges, &edge);
-          }
-          p = path;
+      src = chomp(line);
+      if (ShouldSkipSource(src)) continue;
+      srcid = GetSourceId(src, strlen(src));
+      if ((fd = open(src, O_RDONLY)) == -1) OnMissingFile(argv[i], src);
+      CHECK_NE(-1, (rc = read(fd, buf, MAX_READ)));
+      close(fd);
+      size = rc;
+      memset(buf + size, 0, 16);
+      for (p = buf, pe = p + size; p < pe; ++p) {
+        p = strstr(p, kIncludePrefix);
+        if (!p) break;
+        path = p + inclen;
+        pathend = memchr(path, '"', pe - path);
+        if (pathend && (p[-1] == '#' || p[-1] == '.') && p[-2] == '\n') {
+          dependency = GetSourceId(path, pathend - path);
+          edge.from = srcid;
+          edge.to = dependency;
+          append(&edges, &edge);
+          p = pathend;
         }
       }
-      CHECK_NE(-1, unmapfile(&mf));
     }
     CHECK_NE(-1, fclose(finpaths));
   }
@@ -258,60 +306,100 @@ const char *StripExt(const char *s) {
 }
 
 bool IsObjectSource(const char *name) {
-  for (size_t i = 0; i < ARRAYLEN(kSourceExts); ++i) {
+  int i;
+  for (i = 0; i < ARRAYLEN(kSourceExts); ++i) {
     if (endswith(name, kSourceExts[i])) return true;
   }
   return false;
 }
 
-void Dive(uint32_t sauce) {
-  for (uint32_t i = bisectcarleft((const int32_t(*)[2])edges.p, edges.i, sauce);
-       edges.p[i].from == sauce; ++i) {
-    int32_t dep = edges.p[i].to;
-    if (bts(visited, dep)) continue;
+void Dive(unsigned id) {
+  int i;
+  for (i = FindFirstFromEdge(id); i < edges.i && edges.p[i].from == id; ++i) {
+    if (bts(visited, edges.p[i].to)) continue;
     fputs(" \\\n\t", fout);
-    fputs(&strings.p[sources.p[dep].name], fout);
-    Dive(dep);
+    fputs(&strings.p[sources.p[edges.p[i].to].name], fout);
+    Dive(edges.p[i].to);
   }
 }
 
-bool IsModeless(const char *path) {
-  size_t i;
-  for (i = 0; i < ARRAYLEN(kModelessPackages); ++i) {
-    if (startswith(path, kModelessPackages[i])) return true;
+size_t GetFileSizeOrZero(const char *path) {
+  struct stat st;
+  st.st_size = 0;
+  stat(path, &st);
+  return st.st_size;
+}
+
+bool FilesHaveSameContent(const char *path1, const char *path2) {
+  bool r;
+  int c1, c2;
+  size_t s1, s2;
+  FILE *f1, *f2;
+  s1 = GetFileSizeOrZero(path1);
+  s2 = GetFileSizeOrZero(path2);
+  if (s1 == s2) {
+    r = true;
+    if (s1) {
+      CHECK_NOTNULL((f1 = fopen(path1, "r")));
+      CHECK_NOTNULL((f2 = fopen(path2, "r")));
+      for (;;) {
+        c1 = getc(f1);
+        c2 = getc(f2);
+        if (c1 != c2) {
+          r = false;
+          break;
+        }
+        if (c1 == -1) {
+          break;
+        }
+      }
+      CHECK_NE(-1, fclose(f2));
+      CHECK_NE(-1, fclose(f1));
+    }
+  } else {
+    r = false;
   }
-  return false;
+  return r;
 }
 
 int main(int argc, char *argv[]) {
+  char *tp;
+  bool needprefix;
+  size_t i, bitmaplen;
+  const char *path, *prefix;
+  showcrashreports();
   out = "/dev/stdout";
   GetOpts(argc, argv);
-  char *tmp =
-      !fileexists(out) || isregularfile(out) ? xasprintf("%s.tmp", out) : NULL;
-  CHECK_NOTNULL((fout = fopen(tmp ? tmp : out, "w")));
+  tp = !fileexists(out) || isregularfile(out) ? xasprintf("%s.tmp", out) : NULL;
+  CHECK_NOTNULL((fout = fopen(tp ? tp : out, "w")));
   LoadRelationships(argc, argv);
   Crunch();
-  size_t bitmaplen = roundup((sources.i + 8) / 8, 4);
+  bitmaplen = roundup((sources.i + 8) / 8, 4);
   visited = malloc(bitmaplen);
-  for (size_t i = 0; i < sources.i; ++i) {
-    const char *path = &strings.p[sources.p[i].name];
+  for (i = 0; i < sources.i; ++i) {
+    path = &strings.p[sources.p[i].name];
     if (!IsObjectSource(path)) continue;
-    bool needprefix = !startswith(path, "o/");
-    const char *prefix = !needprefix ? "" : IsModeless(path) ? "o/" : buildroot;
+    needprefix = !startswith(path, "o/");
+    prefix = !needprefix ? "" : buildroot;
     fprintf(fout, "\n%s%s.o: \\\n\t%s", prefix, StripExt(path), path);
     memset(visited, 0, bitmaplen);
     bts(visited, i);
     Dive(i);
     fprintf(fout, "\n");
   }
-  if (fclose(fout) == -1) perror(out), exit(1);
-  if (tmp) {
-    if (rename(tmp, out) == -1) perror(out), exit(1);
+  CHECK_NE(-1, fclose(fout));
+  if (tp) {
+    /* prevent gnu make from restarting unless necessary */
+    if (!FilesHaveSameContent(tp, out)) {
+      CHECK_NE(-1, rename(tp, out));
+    } else {
+      CHECK_NE(-1, unlink(tp));
+    }
   }
   free_s(&strings.p);
   free_s(&sources.p);
   free_s(&edges.p);
   free_s(&visited);
-  free_s(&tmp);
+  free_s(&tp);
   return 0;
 }

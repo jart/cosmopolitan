@@ -27,6 +27,8 @@ SECTIONS {
     *(.text .text.*)
     *(.rodata .rodata.*)
     *(.data .data.*)
+    . = 0x1fe;
+    SHORT(0xaa55);
     *(.bss .bss.*)
     *(COMMON)
   }

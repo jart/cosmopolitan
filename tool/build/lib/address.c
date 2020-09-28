@@ -47,11 +47,10 @@ uint8_t *GetSegment(struct Machine *m, uint32_t rde, int s) {
 
 uint64_t AddSegment(struct Machine *m, uint32_t rde, uint64_t i, uint8_t s[8]) {
   if (!Sego(rde)) {
-    i += Read64(s);
+    return i + Read64(s);
   } else {
-    i += Read64(GetSegment(m, rde, Sego(rde) - 1));
+    return i + Read64(GetSegment(m, rde, Sego(rde) - 1));
   }
-  return i;
 }
 
 uint64_t DataSegment(struct Machine *m, uint32_t rde, uint64_t i) {

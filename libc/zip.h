@@ -81,41 +81,41 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /* end of central directory record */
-#define ZIP_CDIR_MAGIC(P)         read32le(P)
-#define ZIP_CDIR_DISK(P)          read16le((P) + 4)
-#define ZIP_CDIR_STARTINGDISK(P)  read16le((P) + 6)
-#define ZIP_CDIR_RECORDSONDISK(P) read16le((P) + 8)
-#define ZIP_CDIR_RECORDS(P)       read16le((P) + 10)
-#define ZIP_CDIR_SIZE(P)          read32le((P) + 12)
-#define ZIP_CDIR_OFFSET(P)        read32le((P) + 16)
-#define ZIP_CDIR_COMMENTSIZE(P)   read16le((P) + 20)
+#define ZIP_CDIR_MAGIC(P)         READ32LE(P)
+#define ZIP_CDIR_DISK(P)          READ16LE((P) + 4)
+#define ZIP_CDIR_STARTINGDISK(P)  READ16LE((P) + 6)
+#define ZIP_CDIR_RECORDSONDISK(P) READ16LE((P) + 8)
+#define ZIP_CDIR_RECORDS(P)       READ16LE((P) + 10)
+#define ZIP_CDIR_SIZE(P)          READ32LE((P) + 12)
+#define ZIP_CDIR_OFFSET(P)        READ32LE((P) + 16)
+#define ZIP_CDIR_COMMENTSIZE(P)   READ16LE((P) + 20)
 #define ZIP_CDIR_COMMENT(P)       (&(P)[22])
 #define ZIP_CDIR_HDRSIZE(P)       (ZIP_CDIR_COMMENTSIZE(P) + kZipCdirHdrMinSize)
 
 /* central directory file header */
-#define ZIP_CFILE_MAGIC(P)          read32le(P)
+#define ZIP_CFILE_MAGIC(P)          READ32LE(P)
 #define ZIP_CFILE_VERSIONMADE(P)    ((P)[4])
 #define ZIP_CFILE_FILEATTRCOMPAT(P) ((P)[5])
 #define ZIP_CFILE_VERSIONNEED(P)    ((P)[6])
 #define ZIP_CFILE_OSNEED(P)         ((P)[7])
-#define ZIP_CFILE_GENERALFLAG(P)    read16le((P) + kZipCfileOffsetGeneralflag)
+#define ZIP_CFILE_GENERALFLAG(P)    READ16LE((P) + kZipCfileOffsetGeneralflag)
 #define ZIP_CFILE_COMPRESSIONMETHOD(P) \
-  read16le((P) + kZipCfileOffsetCompressionmethod)
+  READ16LE((P) + kZipCfileOffsetCompressionmethod)
 #define ZIP_CFILE_LASTMODIFIEDTIME(P) \
-  read16le((P) + kZipCfileOffsetLastmodifiedtime) /* @see DOS_TIME() */
+  READ16LE((P) + kZipCfileOffsetLastmodifiedtime) /* @see DOS_TIME() */
 #define ZIP_CFILE_LASTMODIFIEDDATE(P) \
-  read16le((P) + kZipCfileOffsetLastmodifieddate) /* @see DOS_DATE() */
-#define ZIP_CFILE_CRC32(P)              read32le((P) + kZipCfileOffsetCrc32)
+  READ16LE((P) + kZipCfileOffsetLastmodifieddate) /* @see DOS_DATE() */
+#define ZIP_CFILE_CRC32(P)              READ32LE((P) + kZipCfileOffsetCrc32)
 #define ZIP_CFILE_COMPRESSEDSIZE(P)     READ32LE(P + kZipCfileOffsetCompressedsize)
-#define ZIP_CFILE_UNCOMPRESSEDSIZE(P)   read32le((P) + 24)
-#define ZIP_CFILE_NAMESIZE(P)           read16le((P) + 28)
-#define ZIP_CFILE_EXTRASIZE(P)          read16le((P) + 30)
-#define ZIP_CFILE_COMMENTSIZE(P)        read16le((P) + 32)
-#define ZIP_CFILE_DISK(P)               read16le((P) + 34)
-#define ZIP_CFILE_INTERNALATTRIBUTES(P) read16le((P) + 36)
+#define ZIP_CFILE_UNCOMPRESSEDSIZE(P)   READ32LE((P) + 24)
+#define ZIP_CFILE_NAMESIZE(P)           READ16LE((P) + 28)
+#define ZIP_CFILE_EXTRASIZE(P)          READ16LE((P) + 30)
+#define ZIP_CFILE_COMMENTSIZE(P)        READ16LE((P) + 32)
+#define ZIP_CFILE_DISK(P)               READ16LE((P) + 34)
+#define ZIP_CFILE_INTERNALATTRIBUTES(P) READ16LE((P) + 36)
 #define ZIP_CFILE_EXTERNALATTRIBUTES(P) \
-  read32le((P) + kZipCfileOffsetExternalattributes)
-#define ZIP_CFILE_OFFSET(P) read32le((P) + kZipCfileOffsetOffset)
+  READ32LE((P) + kZipCfileOffsetExternalattributes)
+#define ZIP_CFILE_OFFSET(P) READ32LE((P) + kZipCfileOffsetOffset)
 #define ZIP_CFILE_NAME(P)   ((const char *)(&(P)[46])) /* not nul-terminated */
 #define ZIP_CFILE_EXTRA(P)  (&(P)[46 + ZIP_CFILE_NAMESIZE(P)])
 #define ZIP_CFILE_COMMENT(P) \
@@ -125,22 +125,22 @@
    kZipCfileHdrMinSize)
 
 /* central directory file header */
-#define ZIP_LFILE_MAGIC(P)       read32le(P)
+#define ZIP_LFILE_MAGIC(P)       READ32LE(P)
 #define ZIP_LFILE_VERSIONNEED(P) ((P)[4])
 #define ZIP_LFILE_OSNEED(P)      ((P)[5])
-#define ZIP_LFILE_GENERALFLAG(P) read16le((P) + kZipLfileOffsetGeneralflag)
+#define ZIP_LFILE_GENERALFLAG(P) READ16LE((P) + kZipLfileOffsetGeneralflag)
 #define ZIP_LFILE_COMPRESSIONMETHOD(P) \
-  read16le((P) + kZipLfileOffsetCompressionmethod)
+  READ16LE((P) + kZipLfileOffsetCompressionmethod)
 #define ZIP_LFILE_LASTMODIFIEDTIME(P) \
-  read16le((P) + kZipLfileOffsetLastmodifiedtime) /* @see DOS_TIME() */
+  READ16LE((P) + kZipLfileOffsetLastmodifiedtime) /* @see DOS_TIME() */
 #define ZIP_LFILE_LASTMODIFIEDDATE(P) \
-  read16le((P) + kZipLfileOffsetLastmodifieddate) /* @see DOS_DATE() */
-#define ZIP_LFILE_CRC32(P) read32le((P) + kZipLfileOffsetCrc32)
+  READ16LE((P) + kZipLfileOffsetLastmodifieddate) /* @see DOS_DATE() */
+#define ZIP_LFILE_CRC32(P) READ32LE((P) + kZipLfileOffsetCrc32)
 #define ZIP_LFILE_COMPRESSEDSIZE(P) \
-  read32le((P) + kZipLfileOffsetCompressedsize)
-#define ZIP_LFILE_UNCOMPRESSEDSIZE(P) read32le((P) + 22)
-#define ZIP_LFILE_NAMESIZE(P)         read16le((P) + 26)
-#define ZIP_LFILE_EXTRASIZE(P)        read16le((P) + 28)
+  READ32LE((P) + kZipLfileOffsetCompressedsize)
+#define ZIP_LFILE_UNCOMPRESSEDSIZE(P) READ32LE((P) + 22)
+#define ZIP_LFILE_NAMESIZE(P)         READ16LE((P) + 26)
+#define ZIP_LFILE_EXTRASIZE(P)        READ16LE((P) + 28)
 #define ZIP_LFILE_NAME(P)             ((const char *)(&(P)[30]))
 #define ZIP_LFILE_EXTRA(P)            (&(P)[30 + ZIP_LFILE_NAMESIZE(P)])
 #define ZIP_LFILE_HDRSIZE(P) \
@@ -148,8 +148,8 @@
 #define ZIP_LFILE_CONTENT(P) ((P) + ZIP_LFILE_HDRSIZE(P))
 #define ZIP_LFILE_SIZE(P)    (ZIP_LFILE_HDRSIZE(P) + ZIP_LFILE_COMPRESSEDSIZE(P))
 
-#define ZIP_EXTRA_HEADERID(P)    read16le(P)
-#define ZIP_EXTRA_CONTENTSIZE(P) read16le((P) + 2)
+#define ZIP_EXTRA_HEADERID(P)    READ16LE(P)
+#define ZIP_EXTRA_CONTENTSIZE(P) READ16LE((P) + 2)
 #define ZIP_EXTRA_CONTENT(P)     (&(P)[4])
 #define ZIP_EXTRA_SIZE(P)        (ZIP_EXTRA_CONTENTSIZE(P) + kZipExtraHdrSize)
 

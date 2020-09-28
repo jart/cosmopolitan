@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,30 +17,17 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/sysv/consts/madv.h"
-#include "libc/sysv/consts/nr.h"
-#include "libc/macros.h"
-.text.startup
-.source	__FILE__
+#include "tool/tags/keywords.inc"
+#include "tool/tags/tags.h"
 
-/	Merges page table entries for pages with identical content.
-/
-/	This is a hint. It can help trim physical memory for things
-/	like extremely sparse data.
-/
-/	@param	rdi is base address
-/	@param	rsi is byte length
-mergepages:
-	.leafprologue
-	.profilable
-	mov	$-PAGESIZE,%rax
-	and	%rax,%rdi
-	and	%rax,%rsi
-	mov	__NR_madvise,%eax
-	mov	MADV_MERGEABLE,%edx
-	test	%edx,%edx
-	jz	1f
-	syscall
-1:	.leafepilogue
-	.endfn	mergepages,globl
+/**
+ * Returns small number for HTTP header, or -1 if not found.
+ */
+int GetKeyword(const char *str, size_t len) {
+  const struct KeywordSlot *slot;
+  if ((slot = LookupKeyword(str, len))) {
+    return slot->code;
+  } else {
+    return -1;
+  }
+}

@@ -155,8 +155,7 @@ MATHEMATICAL =								\
 DEFAULT_CPPFLAGS =							\
 	-DIMAGE_BASE_VIRTUAL=$(IMAGE_BASE_VIRTUAL)			\
 	-nostdinc							\
-	-iquote .							\
-	-include libc/integral/normalize.inc
+	-iquote .
 
 DEFAULT_CFLAGS =							\
 	-std=gnu2x
@@ -217,7 +216,8 @@ cpp.flags =								\
 	$(DEFAULT_CPPFLAGS)						\
 	$(CONFIG_CPPFLAGS)						\
 	$(CPPFLAGS)							\
-	$(OVERRIDE_CPPFLAGS)
+	$(OVERRIDE_CPPFLAGS)						\
+	-include libc/integral/normalize.inc
 
 copt.flags =								\
 	$(TARGET_ARCH)							\
@@ -317,18 +317,20 @@ OBJECTIFY.c99.c = $(CC) $(OBJECTIFY.c.flags) -std=c99 -Wextra -Werror -pedantic-
 OBJECTIFY.c11.c = $(CC) $(OBJECTIFY.c.flags) -std=c11 -Wextra -Werror -pedantic-errors -c
 OBJECTIFY.c2x.c = $(CC) $(OBJECTIFY.c.flags) -std=c2x -Wextra -Werror -pedantic-errors -c
 
-# No-Clobber ABI (clobbers nothing, except rax and flags)
-#
-# This ABI is intended for core library functions that're frequently
-# called by just about everything, e.g. memcpy, malloc, etc. By offering
-# this guarantee, callers can optionally call these functions via asm(),
-# which reduces register allocator pressure at call sites.
-#
-# This makes unrelated caller code faster, but the NCABI functions
-# themselves a tiny bit slower. That's OK, since modern NexGen-32e CPUs
-# seem to have one fifth of their execution engines devoted to pushing
-# and popping, probably so legacy IA-32 code keeps going fast; so we use
-# it to our advantage.
+OBJECTIFY.real.c =							\
+	$(GCC)								\
+	$(OBJECTIFY.c.flags)						\
+	-wrapper build/realify.sh					\
+	-ffixed-r8							\
+	-ffixed-r9							\
+	-ffixed-r10							\
+	-ffixed-r11							\
+	-ffixed-r12							\
+	-ffixed-r13							\
+	-ffixed-r14							\
+	-ffixed-r15							\
+	-c
+
 OBJECTIFY.ncabi.c =							\
 	$(GCC)								\
 	$(OBJECTIFY.c.flags)						\
@@ -350,9 +352,6 @@ OBJECTIFY.ncabi.c =							\
 	-c								\
 	-xc
 
-# Initializer ABI
-#
-# Doesn't clobber RDI and RSI.
 OBJECTIFY.initabi.c =							\
 	$(GCC)								\
 	$(OBJECTIFY.c.flags)						\

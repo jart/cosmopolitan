@@ -28,7 +28,6 @@ LIBC_STDIO_A_DIRECTDEPS =				\
 	LIBC_ALG					\
 	LIBC_BITS					\
 	LIBC_CALLS					\
-	LIBC_CALLS_HEFTY				\
 	LIBC_CONV					\
 	LIBC_ESCAPE					\
 	LIBC_FMT					\

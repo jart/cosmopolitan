@@ -18,7 +18,7 @@ CONFIG_CCFLAGS +=		\
 	-Og
 
 TARGET_ARCH ?=			\
-	-march=k8-sse3
+	-msse3
 
 RAGELFLAGS ?= -G2
 

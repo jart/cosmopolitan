@@ -298,8 +298,7 @@ static long double FpuRound(struct Machine *m, long double x) {
 }
 
 static void FpuCompare(struct Machine *m, long double y) {
-  long double x;
-  x = St0(m);
+  long double x = St0(m);
   m->fpu.c1 = false;
   if (!isunordered(x, y)) {
     m->fpu.c0 = x < y;
@@ -452,7 +451,7 @@ static void OpFsincos(struct Machine *m) {
 
 static void OpFpatan(struct Machine *m) {
   FpuClearRoundup(m);
-  FpuSetStPop(m, 1, atan2l(St0(m), St1(m)));
+  FpuSetStPop(m, 1, atan2l(St1(m), St0(m)));
 }
 
 static void OpFcom(struct Machine *m) {
@@ -704,8 +703,7 @@ static void OpFincstp(struct Machine *m) {
 }
 
 static void OpFxtract(struct Machine *m) {
-  long double x;
-  x = St0(m);
+  long double x = St0(m);
   FpuSetSt0(m, logbl(x));
   FpuPush(m, significandl(x));
 }
@@ -766,30 +764,44 @@ static void OpFldl(struct Machine *m) {
   FpuPush(m, FpuGetMemoryDouble(m));
 }
 
+static long double Fld1(void) {
+  return 1;
+}
+
+static long double Fldl2t(void) {
+  return 0xd.49a784bcd1b8afep-2L; /* log₂10 */
+}
+
+static long double Fldl2e(void) {
+  return 0xb.8aa3b295c17f0bcp-3L; /* log₂𝑒 */
+}
+
+static long double Fldpi(void) {
+  return 0x1.921fb54442d1846ap+1L; /* π */
+}
+
+static long double Fldlg2(void) {
+  return 0x9.a209a84fbcff799p-5L; /* log₁₀2 */
+}
+
+static long double Fldln2(void) {
+  return 0xb.17217f7d1cf79acp-4L; /* logₑ2 */
+}
+
+static long double Fldz(void) {
+  return 0;
+}
+
 static void OpFldConstant(struct Machine *m) {
   long double x;
   switch (ModrmRm(m->xedd->op.rde)) {
-    case 0:
-      x = fld1();
-      break;
-    case 1:
-      x = fldl2t();
-      break;
-    case 2:
-      x = fldl2e();
-      break;
-    case 3:
-      x = fldpi();
-      break;
-    case 4:
-      x = fldlg2();
-      break;
-    case 5:
-      x = fldln2();
-      break;
-    case 6:
-      x = fldz();
-      break;
+    CASE(0, x = Fld1());
+    CASE(1, x = Fldl2t());
+    CASE(2, x = Fldl2e());
+    CASE(3, x = Fldpi());
+    CASE(4, x = Fldlg2());
+    CASE(5, x = Fldln2());
+    CASE(6, x = Fldz());
     default:
       OpUd(m, m->xedd->op.rde);
   }

@@ -49,14 +49,15 @@ o/$(MODE)/tool/build/emubin/%.bin.dbg:			\
 		$(TOOL_BUILD_EMUBIN_A).pkg
 	@$(ELFLINK) -e emucrt -z max-page-size=0x10
 
-o/$(MODE)/tool/build/emubin/real/spiral.o: tool/build/emubin/real/spiral.c
-	@$(MKDIR) $(@D)
-	/opt/cross/bin/i486-linux-musl-gcc -nostdlib -nostdinc -m16 -Os -g -c -o $@ $<
+o/tiny/tool/build/emubin/spiral.bin.dbg:		\
+		$(TOOL_BUILD_EMUBIN_DEPS)		\
+		o/tiny/tool/build/emubin/spiral.real.o
+	@$(ELFLINK) -z max-page-size=0x10 -T tool/build/emucrt/real.lds
 
-o/$(MODE)/tool/build/emubin/real/spiral.bin: o/$(MODE)/tool/build/emubin/real/spiral.o
-	/opt/cross/bin/i486-linux-musl-ld -static -nostdlib --oformat=binary -T tool/build/emubin/real/spiral.lds -o $@ $^
-
-o/$(MODE)/tool/build/emubin/hug.o: OVERRIDE_CFLAGS += -ffast-math
+o/tiny/tool/build/emubin/mdatest.bin.dbg:		\
+		$(TOOL_BUILD_EMUBIN_DEPS)		\
+		o/tiny/tool/build/emubin/mdatest.real.o
+	@$(ELFLINK) -z max-page-size=0x10 -T tool/build/emucrt/real.lds
 
 .PHONY: o/$(MODE)/tool/build/emubin
 o/$(MODE)/tool/build/emubin:				\

@@ -19,4 +19,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-long(roundup)(long w, long k) { return ROUNDUP(w, k); }
+long(roundup)(long w, long k) {
+  return ROUNDUP(w, k);
+}

@@ -33,27 +33,6 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 
-static struct CanColor {
-  bool once;
-  bool result;
-  struct OldNtConsole {
-    unsigned codepage;
-    unsigned mode;
-    int64_t handle;
-  } oldin, oldout;
-} g_cancolor;
-
-static textwindows void restorecmdexe(void) {
-  if (g_cancolor.oldin.handle) {
-    SetConsoleCP(g_cancolor.oldin.codepage);
-    SetConsoleMode(g_cancolor.oldin.handle, g_cancolor.oldin.mode);
-  }
-  if (g_cancolor.oldout.handle) {
-    SetConsoleOutputCP(g_cancolor.oldout.codepage);
-    SetConsoleMode(g_cancolor.oldout.handle, g_cancolor.oldout.mode);
-  }
-}
-
 /**
  * Returns true if ANSI terminal colors are appropriate.
  *
@@ -75,47 +54,20 @@ static textwindows void restorecmdexe(void) {
  * It's that easy fam.
  */
 bool cancolor(void) {
-  int64_t handle;
+  static bool once;
+  static bool result;
   const char *term;
-  if (g_cancolor.once) return g_cancolor.result;
-  g_cancolor.once = true;
-  if (IsWindows()) {
-    if ((int)weakaddr("v_ntsubsystem") == kNtImageSubsystemWindowsCui &&
-        NtGetVersion() >= kNtVersionWindows10) {
-      atexit(restorecmdexe);
-      if (GetFileType((handle = g_fds.p[STDIN_FILENO].handle)) ==
-          kNtFileTypeChar) {
-        g_cancolor.result = true;
-        g_cancolor.oldin.handle = handle;
-        g_cancolor.oldin.codepage = GetConsoleCP();
-        SetConsoleCP(kNtCpUtf8);
-        GetConsoleMode(handle, &g_cancolor.oldin.mode);
-        SetConsoleMode(handle, g_cancolor.oldin.mode | kNtEnableProcessedInput |
-                                   kNtEnableVirtualTerminalInput);
-      }
-      if (GetFileType((handle = g_fds.p[STDOUT_FILENO].handle)) ==
-              kNtFileTypeChar ||
-          GetFileType((handle = g_fds.p[STDERR_FILENO].handle)) ==
-              kNtFileTypeChar) {
-        g_cancolor.result = true;
-        g_cancolor.oldout.handle = handle;
-        g_cancolor.oldout.codepage = GetConsoleOutputCP();
-        SetConsoleOutputCP(kNtCpUtf8);
-        GetConsoleMode(handle, &g_cancolor.oldout.mode);
-        SetConsoleMode(handle, g_cancolor.oldout.mode |
-                                   kNtEnableProcessedOutput |
-                                   kNtEnableVirtualTerminalProcessing);
+  if (!once) {
+    if (!result) {
+      if ((term = getenv("TERM"))) {
+        /* anything but emacs basically */
+        result = strcmp(term, "dumb") != 0;
+      } else {
+        /* TODO(jart): Why does Mac bash login shell exec nuke TERM? */
+        result = IsXnu();
       }
     }
+    once = true;
   }
-  if (!g_cancolor.result) {
-    if ((term = getenv("TERM"))) {
-      /* anything but emacs basically */
-      g_cancolor.result = strcmp(term, "dumb") != 0;
-    } else {
-      /* TODO(jart): Why does Mac bash login shell exec nuke TERM? */
-      g_cancolor.result = IsXnu();
-    }
-  }
-  return g_cancolor.result;
+  return result;
 }

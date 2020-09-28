@@ -29,6 +29,6 @@
  */
 void *xrealloc(void *p1, size_t newsize) {
   void *p2 = realloc(p1, newsize);
-  if (!p2) die();
+  if (!p2) xdie();
   return p2;
 }

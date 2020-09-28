@@ -33,13 +33,9 @@ void OpPause(struct Machine *m, uint32_t rde) {
  */
 void OpRdtsc(struct Machine *m, uint32_t rde) {
   uint64_t c;
-#ifdef __x86_64__
-  c = rdtsc();
-#else
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
   c = ts.tv_sec * 1000000000 + ts.tv_nsec;
-#endif
   Write64(m->ax, (c >> 000) & 0xffffffff);
   Write64(m->dx, (c >> 040) & 0xffffffff);
 }
@@ -50,5 +46,5 @@ void OpRdtscp(struct Machine *m, uint32_t rde) {
   core = 0;
   node = 0;
   tscaux = (node & 0xfff) << 12 | (core & 0xfff);
-  Write64(m->ax, tscaux & 0xffffffff);
+  Write64(m->cx, tscaux & 0xffffffff);
 }

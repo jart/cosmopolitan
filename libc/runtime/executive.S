@@ -20,6 +20,8 @@
 #include "libc/dce.h"
 #include "libc/macros.h"
 #include "libc/notice.inc"
+#include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/map.h"
 #include "libc/dce.h"
 .text.startup
 .source	__FILE__
@@ -40,12 +42,15 @@ _executive:
 	mov	%rdx,%r14
 	mov	%rcx,%r15
 	call	_spawn
-	mov	%r12,%rdi
-	mov	%r13,%rsi
-	mov	%r14,%rdx
-	mov	%r15,%rcx
+	call	_getstack
+	mov	%rax,%rdi
 	.weak	main
-	call	main
+	mov	$main,%esi
+	mov	%r12,%rdx
+	mov	%r13,%rcx
+	mov	%r14,%r8
+	mov	%r15,%r9
+	call	_setstack
 	mov	%eax,%edi
 	call	exit
 9:	.endfn	_executive,weak,hidden

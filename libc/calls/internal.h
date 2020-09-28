@@ -1,22 +1,3 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=8 sts=2 sw=2 fenc=utf-8                                :vi│
-╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
-│                                                                              │
-│ This program is free software; you can redistribute it and/or modify         │
-│ it under the terms of the GNU General Public License as published by         │
-│ the Free Software Foundation; version 2 of the License.                      │
-│                                                                              │
-│ This program is distributed in the hope that it will be useful, but          │
-│ WITHOUT ANY WARRANTY; without even the implied warranty of                   │
-│ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU             │
-│ General Public License for more details.                                     │
-│                                                                              │
-│ You should have received a copy of the GNU General Public License            │
-│ along with this program; if not, write to the Free Software                  │
-│ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
-│ 02110-1301 USA                                                               │
-╚─────────────────────────────────────────────────────────────────────────────*/
 #ifndef COSMOPOLITAN_LIBC_CALLS_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_INTERNAL_H_
 #ifndef __STRICT_ANSI__
@@ -54,15 +35,8 @@ struct IoctlPtmGet {
   char workername[16];
 };
 
-/**
- * List of open handles on Windows NT.
- *
- * The array is indexed by the sysv-style file descriptor numbers that
- * we assign. It's needed to make file descriptors only require 32bits
- * and helps us abstract peculiarities like close() vs. closesocket().
- */
 struct Fds {
-  size_t f;  // length
+  size_t f;  // arbitrary free slot start search index
   size_t n;  // capacity
   struct Fd {
     int64_t handle;
@@ -82,33 +56,26 @@ struct Fds {
 
 extern const struct Fd kEmptyFd;
 
-hidden extern int g_sighandrvas[NSIG];
-hidden extern struct Fds g_fds;
-hidden extern struct NtSystemInfo g_ntsysteminfo;
-hidden extern struct NtStartupInfo g_ntstartupinfo;
-hidden extern const struct NtSecurityAttributes kNtIsInheritable;
-
-forceinline bool isfdlegal(int fd) {
-  if (!IsTrustworthy()) {
-    return (0 <= fd && fd <= INT_MAX);
-  } else {
-    return fd;
-  }
-}
-
-forceinline bool isfdindex(int fd) {
-  if (!IsTrustworthy()) {
-    return (0 <= fd && fd < g_fds.n);
-  } else {
-    return fd;
-  }
-}
+extern int g_sighandrvas[NSIG] hidden;
+extern struct Fds g_fds hidden;
+extern struct NtSystemInfo g_ntsysteminfo hidden;
+extern struct NtStartupInfo g_ntstartupinfo hidden;
+extern const struct NtSecurityAttributes kNtIsInheritable hidden;
 
 ssize_t createfd(void) hidden;
 int growfds(void) hidden;
 void removefd(int) hidden;
 enum FdKind fdkind(int) hidden nosideeffect;
+bool isfdopen(int) hidden nosideeffect;
 bool isfdkind(int, enum FdKind) hidden nosideeffect;
+
+forceinline bool isfdindex(int fd) {
+  if (!IsTrustworthy()) {
+    return (0 <= fd && fd < g_fds.n);
+  } else {
+    return true;
+  }
+}
 
 forceinline size_t clampio(size_t size) {
   if (!IsTrustworthy()) {

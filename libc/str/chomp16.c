@@ -26,6 +26,6 @@
  * @see getline
  */
 char16_t *chomp16(char16_t *line) {
-  if (line) line[strcspn(line, u"\r\n")] = '\0';
+  if (line) line[strcspn16(line, u"\r\n")] = '\0';
   return line;
 }

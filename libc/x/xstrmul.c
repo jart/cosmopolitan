@@ -21,6 +21,9 @@
 #include "libc/str/str.h"
 #include "libc/x/x.h"
 
+/**
+ * Multiplies string.
+ */
 char *xstrmul(const char *s, size_t n) {
   char *p;
   size_t i, m, size;

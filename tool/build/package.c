@@ -352,7 +352,8 @@ void OpenObject(struct Package *pkg, struct Object *obj, int mode, int prot,
   CHECK_NE(MAP_FAILED, (obj->elf = mmap(NULL, (obj->size = st.st_size), prot,
                                         flags, fd, 0)));
   CHECK_NE(-1, close(fd));
-  CHECK(iself64binary(obj->elf, obj->size));
+  CHECK(iself64binary(obj->elf, obj->size), "path=%`'s",
+        &pkg->strings.p[obj->path]);
   CHECK_NOTNULL((obj->strs = getelfstringtable(obj->elf, obj->size)));
   CHECK_NOTNULL(
       (obj->syms = getelfsymboltable(obj->elf, obj->size, &obj->symcount)));

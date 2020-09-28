@@ -31,7 +31,6 @@
  * @see libc/sysv/consts.sh
  */
 int getrlimit(int resource, struct rlimit *rlim) {
-  /* TODO(jart): Windows */
   if (resource == -1) return einval();
   return getrlimit$sysv(resource, rlim);
 }

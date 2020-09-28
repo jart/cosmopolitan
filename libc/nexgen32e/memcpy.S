@@ -100,10 +100,15 @@ MemCpy:	.leafprologue
 	mov	%ecx,(%rdi)
 	mov	%ebx,-4(%rdi,%rdx)
 	jmp	1b
-.L3:	mov	2(%rsi),%cl
-	mov	%cl,2(%rdi)
-.L2:	mov	1(%rsi),%cl
-	mov	%cl,1(%rdi)
+.L3:	push	%rbx
+	mov	(%rsi),%cx
+	mov	-2(%rsi,%rdx),%bx
+	mov	%cx,(%rdi)
+	mov	%bx,-2(%rdi,%rdx)
+	jmp	1b
+.L2:	mov	(%rsi),%cx
+	mov	%cx,(%rdi)
+	jmp	.L0
 .L1:	mov	(%rsi),%cl
 	mov	%cl,(%rdi)
 	jmp	.L0

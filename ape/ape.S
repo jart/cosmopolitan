@@ -1051,7 +1051,6 @@ realmodeloader:
 	mov	%sp,%bp
 	call	rlinit
 	call	sinit4
-	mov	$VIDYA_MODE,%di
 	call	vinit
 	mov	%es,XLM(VIDEO_POSITION_FAR_POINTER)
 	mov	%ax,XLM(VIDEO_POSITION_FAR_POINTER)+2
@@ -1291,32 +1290,16 @@ sputc:	push	%ax
 	ret
 	.endfn	sputc,globl
 
-/	Asks BIOS to initialize MDA/CGA display w/o cursor/blinking.
+/	Asks BIOS to initialize Monochrome Display Adapter.
 /
-/	@param	dil	video mode
 /	@return	es:ax	start of video page
 /	@mode	real
-vinit:	push	%bp
-	mov	%sp,%bp
-	push	%bx
-	bbmov	VIDYA_ADDR_CGA>>4,%ax,%ah,%al
+vinit:	push	$7
+	pop	%ax
+	int	$VIDYA_SERVICE
+	bbmov	VIDYA_ADDR_MDA>>4,%ax,%ah,%al
 	mov	%ax,%es
-	mov	%di,%ax
-	cmp	$VIDYA_MODE_CGA,%al
-	je	1f
-	xor	%ch,%ch				# aka movesdi VIDYA_ADDR_MDA
-1:	xor	%di,%di
-	bbmov	VIDYA_SET_MODE,%ax,%ah,%al
-	int	$VIDYA_SERVICE
-	bbmov	VIDYA_SET_CURSOR,,%ah,%al
-	bbmov	VIDYA_SET_CURSOR_NONE,,%ch,%cl	# since we don't support it
-	int	$VIDYA_SERVICE
-	bbmov	VIDYA_SET_BLINKING,,%ah,%al	# ← cargo culting (ega?)
-	bbmov	VIDYA_SET_BLINKING_NONE,,%bh,%bl
-	int	$VIDYA_SERVICE
 	xor	%ax,%ax
-	pop	%bx
-	pop	%bp
 	ret
 	.endfn	vinit,globl
 

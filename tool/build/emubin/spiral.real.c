@@ -17,6 +17,8 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/emubin/poke.h"
+#include "tool/build/emubin/real.h"
 
 #define signbit(x) __builtin_signbit(x)
 
@@ -38,45 +40,49 @@ static const unsigned char kBlocks[] = {
     [0b0001] = 0xdf,  // ▀
 };
 
-static void *memset(void *di, int al, unsigned long cx) {
-  asm("rep stosb %%al,(%0)"
+forceinline void *memset(void *di, int al, unsigned long cx) {
+  asm("rep stosb"
       : "=D"(di), "=c"(cx), "=m"(*(char(*)[cx])di)
       : "0"(di), "1"(cx), "a"(al));
   return di;
 }
 
-static long double pi(void) {
+forceinline long double pi(void) {
   long double x;
   asm("fldpi" : "=t"(x));
   return x;
 }
 
-static void sincosl(long double x, long double *sin, long double *cos) {
+forceinline long double tau(void) {
+  return pi() * 2;
+}
+
+forceinline void sincosl(long double x, long double *sin, long double *cos) {
   asm("fsincos" : "=t"(*sin), "=u"(*cos) : "0"(x));
 }
 
-static long double atan2l(long double x, long double y) {
+forceinline long double atan2l(long double x, long double y) {
   asm("fpatan" : "+t"(x) : "u"(y) : "st(1)");
   return x;
 }
 
-static long lrintl(long double x) {
+forceinline long lrintl(long double x) {
   long i;
   asm("fistp%z0\t%0" : "=m"(i) : "t"(x) : "st");
   return i;
 }
 
-static long double truncl(long double x) {
+forceinline long double truncl(long double x) {
   asm("frndint" : "+t"(x));
   return x;
 }
 
-static long double fabsl(long double x) {
+forceinline long double fabsl(long double x) {
   asm("fabs" : "+t"(x));
   return x;
 }
 
-static long lroundl(long double x) {
+forceinline long lroundl(long double x) {
   int s = signbit(x);
   x = truncl(fabsl(x) + .5);
   if (s) x = -x;
@@ -93,36 +99,40 @@ static void SetFpuControlWord(unsigned short cw) {
   asm volatile("fldcw\t%0" : /* no outputs */ : "m"(cw));
 }
 
+static void InitializeFpu(void) {
+  asm("fninit");
+}
+
 static void SetTruncationRounding(void) {
   SetFpuControlWord(GetFpuControlWord() | 0x0c00);
 }
 
-static void spiral(unsigned char p[25][80][2], unsigned char B[25][80]) {
+static void spiral(unsigned char p[25][80][2], unsigned char B[25][80], int g) {
   int i, x, y;
   long double a, b, u, v, h;
   for (a = b = i = 0; i < 1000; ++i) {
     sincosl(a, &u, &v);
-    h = atan2l(u, v);
+    h = atan2l(u, v) - .333L * g;
     x = lroundl(80 + u * b);
     y = lroundl(25 + v * b * (1. / ((266 / 64.) * (900 / 1600.))));
     B[y >> 1][x >> 1] |= 1 << ((y & 1) << 1 | (x & 1));
-    p[y >> 1][x >> 1][0] = kBlocks[B[y >> 1][x >> 1]];
-    p[y >> 1][x >> 1][1] = (lrintl((h + pi() * 2) * (8 / (pi() * 2))) & 7) + 8;
+    POKE(p[y >> 1][x >> 1][0], kBlocks[B[y >> 1][x >> 1]]);
+    POKE(p[y >> 1][x >> 1][1], (lrintl((h + tau()) * (8 / tau())) & 7) + 8);
     a += .05;
     b += .05;
   }
 }
 
 int main() {
-  asm(".pushsection .start,\"ax\",@progbits\n\t"
-      ".globl\t_start\n"
-      "_start:\n\t"
-      "callw\tmain\n\t"
-      ".popsection");
+  int g;
+  InitializeFpu();
   SetTruncationRounding();
-  for (;;) {
-    memset((void *)0x40000, 0, 25 * 80);
-    memset((void *)0xb8000, 0, 25 * 80 * 2);
-    spiral((void *)0xb8000, (void *)0x40000);
+  SetVideoMode(3);
+  for (g = 0;; ++g) {
+    SetEs(0);
+    memset((void *)(0x7c00 + 512), 0, 25 * 80);
+    SetEs(0xb8000 >> 4);
+    memset((void *)0, 0, 25 * 80 * 2);
+    spiral((void *)0, (void *)(0x7c00 + 512), g);
   }
 }

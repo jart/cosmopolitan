@@ -26,6 +26,6 @@
  * @see getline
  */
 wchar_t *wchomp(wchar_t *line) {
-  if (line) line[strcspn(line, L"\r\n")] = '\0';
+  if (line) line[wcscspn(line, L"\r\n")] = '\0';
   return line;
 }

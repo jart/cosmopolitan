@@ -29,8 +29,8 @@ int ioctl$default(int fd, uint64_t request, void *memory) {
   int64_t handle;
   if (!IsWindows()) {
     return ioctl$sysv(fd, request, memory);
-  } else if (isfdindex(fd)) {
-    if (isfdkind(fd, kFdSocket)) {
+  } else if (isfdopen(fd)) {
+    if (g_fds.p[fd].kind == kFdSocket) {
       handle = g_fds.p[fd].handle;
       if ((rc = weaken(__ioctlsocket$nt)(handle, request, memory)) != -1) {
         return rc;

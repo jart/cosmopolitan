@@ -247,7 +247,7 @@ syscon	mmap	MAP_HUGE_MASK				63			0			0			0			0
 syscon	mmap	MAP_HUGE_SHIFT				26			0			0			0			0
 syscon	mmap	MAP_LOCKED				0x2000			0			0			0			0
 syscon	mmap	MAP_NONBLOCK				0x010000		0			0			0			0
-syscon	mmap	MAP_POPULATE				0x8000			0			0			0			0
+syscon	mmap	MAP_POPULATE				0x8000			0			0			0			0			# can avoid madvise(MADV_WILLNEED) on private file mapping
 syscon	mmap	MAP_TYPE				15			0			0			0			0			# what is it
 syscon	compat	MAP_EXECUTABLE				0x1000			0			0			0			0			# ignored
 syscon	compat	MAP_DENYWRITE				0x0800			0			0			0			0
@@ -301,8 +301,8 @@ syscon	mprot	PROT_NONE				0			0			0			0			0			# unix consensus (nt needs special
 syscon	mprot	PROT_READ				1			1			1			1			1			# unix consensus
 syscon	mprot	PROT_WRITE				2			2			2			2			2			# unix consensus
 syscon	mprot	PROT_EXEC				4			4			4			4			4			# unix consensus
-syscon	mprot	PROT_GROWSDOWN				0x01000000		0			0			0			0x01000000		# bsd consensus
-syscon	mprot	PROT_GROWSUP				0x02000000		0			0			0			0
+syscon	mprot	PROT_GROWSDOWN				0x01000000		0			0			0			0			# intended for mprotect; see MAP_GROWSDOWN for mmap() (todo: what was 0x01000000 on nt)
+syscon	mprot	PROT_GROWSUP				0x02000000		0			0			0			0			# intended for mprotect; see MAP_GROWSDOWN for mmap()
 
 syscon	mremap	MREMAP_MAYMOVE				1			1			1			1			1			# faked non-linux (b/c linux only)
 syscon	mremap	MREMAP_FIXED				2			2			2			2			2			# faked non-linux (b/c linux only)
@@ -319,6 +319,28 @@ syscon	access	F_OK					0			0			0			0			0			# consensus
 syscon	access	X_OK					1			1			1			1			0xa0000000		# unix consensus and kNtGenericExecute | kNtGenericRead
 syscon	access	W_OK					2			2			2			2			0x40000000		# unix consensus and kNtGenericWrite
 syscon	access	R_OK					4			4			4			4			0x80000000		# unix consensus and kNtGenericRead
+
+#	flock() flags
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			XENIX			Commentary
+syscon	lock	LOCK_SH					1			1			1			1			0			# shared [unix consensus]
+syscon	lock	LOCK_EX					2			2			2			2			2			# exclusive [consensus!]
+syscon	lock	LOCK_NB					4			4			4			4			1			# non-blocking [unix consensus]
+syscon	lock	LOCK_UN					8			8			8			8			8			# unlock [unix consensus & faked NT]
+
+#	waitpid() / wait4() options
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			XENIX			Commentary
+syscon	waitpid	WNOHANG					1			1			1			1			0			# unix consensus
+syscon	waitpid	WUNTRACED				2			2			2			2			0			# unix consensus
+syscon	waitpid	WCONTINUED				8			0x10			4			8			0
+
+#	waitid() options
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			XENIX			Commentary
+syscon	waitid	WEXITED					4			4			0x10			0			0
+syscon	waitid	WSTOPPED				2			8			2			0			0
+syscon	waitid	WNOWAIT					0x01000000		0x20			8			0			0
 
 #	stat::st_mode constants
 #
@@ -1048,7 +1070,6 @@ syscon	af	AF_NFC					39			0			0			0			0
 syscon	af	AF_VSOCK				40			0			0			0			0
 syscon	af	AF_KCM					41			0			0			0			0
 syscon	af	AF_MAX					42			40			42			36			35
-
 
 syscon	pf	PF_UNIX					1			1			1			1			1			# consensus
 syscon	pf	PF_UNSPEC				0			0			0			0			0			# consensus
@@ -1862,6 +1883,7 @@ syscon	misc	LC_MONETARY_MASK			0x10			0			4			8			0
 syscon	misc	LC_MESSAGES_MASK			0x20			0			0x20			0x40			0
 syscon	misc	LC_ALL_MASK				0x1fbf			0			63			126			0
 
+syscon	lock	LOCK_UNLOCK_CACHE			54			0			0			0			0			# wut
 
 syscon	ptrace	PTRACE_GETREGSET			0x4204			0			0			0			0
 syscon	ptrace	PTRACE_GETSIGMASK			0x420a			0			0			0			0
@@ -1893,12 +1915,6 @@ syscon	misc	BUS_MCEERR_AR				4			0			0			0			0
 syscon	misc	IP6F_MORE_FRAG				0x0100			0x0100			0x0100			0x0100			0x0100			# consensus
 syscon	misc	IP6F_OFF_MASK				0xf8ff			0xf8ff			0xf8ff			0xf8ff			0xf8ff			# consensus
 syscon	misc	IP6F_RESERVED_MASK			0x0600			0x0600			0x0600			0x0600			0x0600			# consensus
-
-syscon	lock	LOCK_SH					1			1			1			1			0			# unix consensus
-syscon	lock	LOCK_EX					2			2			2			2			2			# consensus!
-syscon	lock	LOCK_NB					4			4			4			4			1			# unix consensus
-syscon	lock	LOCK_UN					8			8			8			8			8			# unix consensus & faked NT
-syscon	lock	LOCK_UNLOCK_CACHE			54			0			0			0			0
 
 syscon	misc	NO_SENSE				0			0			0			0			0			# consensus
 syscon	misc	NO_ADDRESS				4			4			4			4			0x2afc			# unix consensus
@@ -2025,9 +2041,9 @@ syscon	misc	RTLD_NOLOAD				4			0x10			0x2000			0			0
 syscon	misc	RTLD_DI_LINKMAP				0			0			2			0			0
 syscon	misc	RTLD_LOCAL				0			4			0			0			0
 
-syscon	misc	RUSAGE_SELF				0			0			0			0			0			# unix consensus & faked nt
-syscon	misc	RUSAGE_CHILDREN				-1			-1			-1			-1			99			# unix consensus & unavailable on nt
-syscon	misc	RUSAGE_THREAD				1			99			1			1			1			# faked nt & unavailable on xnu
+syscon	rusage	RUSAGE_SELF				0			0			0			0			0			# unix consensus & faked nt
+syscon	rusage	RUSAGE_CHILDREN				-1			-1			-1			-1			99			# unix consensus & unavailable on nt
+syscon	rusage	RUSAGE_THREAD				1			99			1			1			1			# faked nt & unavailable on xnu
 
 syscon	misc	FSETLOCKING_QUERY			0			0			0			0			0			# consensus
 syscon	misc	FSETLOCKING_BYCALLER			2			0			0			0			0
@@ -2315,10 +2331,8 @@ syscon	misc	TUEXEC					0x40			0x40			0x40			0x40			0			# unix consensus
 syscon	misc	TUREAD					0x0100			0x0100			0x0100			0x0100			0			# unix consensus
 syscon	misc	TUWRITE					0x80			0x80			0x80			0x80			0			# unix consensus
 syscon	misc	TVERSLEN				2			2			2			2			0			# unix consensus
-syscon	misc	WNOHANG					1			1			1			1			0			# unix consensus
 syscon	misc	WORD_BIT				0x20			0x20			0x20			0x20			0			# unix consensus
 syscon	misc	WRQ					2			2			2			2			0			# unix consensus
-syscon	misc	WUNTRACED				2			2			2			2			0			# unix consensus
 syscon	misc	SIGEV_THREAD				2			3			2			0			0
 syscon	misc	SIGEV_SIGNAL				0			1			1			0			0
 syscon	misc	SIGEV_NONE				1			0			0			0			0
@@ -2757,10 +2771,6 @@ syscon	misc	TSS_DTOR_ITERATIONS			0			0			4			0			0
 syscon	misc	TTY_NAME_MAX				0x20			0			0			260			0
 syscon	misc	UIO_MAXIOV				0x0400			0			0			0x0400			0
 syscon	misc	USER_PROCESS				7			7			4			0			0
-syscon	misc	WCONTINUED				8			0x10			4			8			0
-syscon	misc	WEXITED					4			4			0x10			0			0
-syscon	misc	WNOWAIT					0x01000000		0x20			8			0			0
-syscon	misc	WSTOPPED				2			8			2			0			0
 syscon	misc	YESEXPR					0x050000		52			52			47			0
 syscon	misc	YESSTR					0x050002		54			54			46			0
 

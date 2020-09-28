@@ -32,7 +32,7 @@ char *xaescape(const char *unescaped,
                         unsigned length)) {
   char *escaped = NULL;
   if (aescape(&escaped, 32, unescaped, strlen(unescaped), impl) == -1) {
-    die();
+    xdie();
   }
   return escaped;
 }

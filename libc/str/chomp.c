@@ -26,6 +26,13 @@
  * @see getline
  */
 char *(chomp)(char *line) {
-  if (line) line[strcspn(line, "\r\n")] = '\0';
+  size_t i;
+  for (i = strlen(line); i--;) {
+    if (line[i] == '\r' || line[i] == '\n') {
+      line[i] = '\0';
+    } else {
+      break;
+    }
+  }
   return line;
 }

@@ -33,7 +33,9 @@
 #include "libc/str/tpencode.h"
 #include "third_party/xed/x86.h"
 #include "tool/build/lib/case.h"
+#include "tool/build/lib/demangle.h"
 #include "tool/build/lib/dis.h"
+#include "tool/build/lib/high.h"
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/modrm.h"
 
@@ -73,93 +75,99 @@ static char *DisOctets(char *p, const uint8_t *d, size_t n) {
 }
 
 static char *DisByte(char *p, const uint8_t *d, size_t n) {
-  if (g_dis_high) p = DisHigh(p, g_dis_high->keyword);
+  p = HighStart(p, g_high.keyword);
   p = DisColumn(stpcpy(p, ".byte"), p, NAMELEN);
-  if (g_dis_high) p = DisHigh(p, -1);
+  p = HighEnd(p);
   p = DisOctets(p, d, n);
   return p;
 }
 
-static char *DisError(struct DisBuilder b, char *p) {
-  p = DisColumn(DisByte(p, b.xedd->bytes, MIN(15, b.xedd->length)), p, CODELEN);
-  if (g_dis_high) p = DisHigh(p, g_dis_high->comment);
+static char *DisError(struct Dis *d, char *p) {
+  p = DisColumn(DisByte(p, d->xedd->bytes, MIN(15, d->xedd->length)), p,
+                CODELEN);
+  p = HighStart(p, g_high.comment);
   *p++ = '#';
   *p++ = ' ';
-  p = stpcpy(p, indexdoublenulstring(kXedErrorNames, b.xedd->op.error));
-  if (g_dis_high) p = DisHigh(p, -1);
+  p = stpcpy(p, indexdoublenulstring(kXedErrorNames, d->xedd->op.error));
+  p = HighEnd(p);
   *p = '\0';
   return p;
 }
 
-static char *DisAddr(struct DisBuilder b, char *p) {
-  if (INT_MIN <= b.addr && b.addr <= INT_MAX) {
-    return p + uint64toarray_fixed16(b.addr, p, 32);
+static char *DisAddr(struct Dis *d, char *p) {
+  if (INT32_MIN <= d->addr && d->addr <= INT32_MAX) {
+    return p + uint64toarray_fixed16(d->addr, p, 32);
   } else {
-    return p + uint64toarray_fixed16(b.addr, p, 48);
+    return p + uint64toarray_fixed16(d->addr, p, 48);
   }
 }
 
-static char *DisRaw(struct DisBuilder b, char *p) {
+static char *DisRaw(struct Dis *d, char *p) {
   long i;
-  for (i = 0; i < PFIXLEN - MIN(PFIXLEN, b.xedd->op.PIVOTOP); ++i) {
+  for (i = 0; i < PFIXLEN - MIN(PFIXLEN, d->xedd->op.PIVOTOP); ++i) {
     *p++ = ' ';
     *p++ = ' ';
   }
-  for (i = 0; i < MIN(15, b.xedd->length); ++i) {
-    if (i == b.xedd->op.PIVOTOP) *p++ = ' ';
-    *p++ = "0123456789abcdef"[(b.xedd->bytes[i] & 0xf0) >> 4];
-    *p++ = "0123456789abcdef"[b.xedd->bytes[i] & 0x0f];
+  for (i = 0; i < MIN(15, d->xedd->length); ++i) {
+    if (i == d->xedd->op.PIVOTOP) *p++ = ' ';
+    *p++ = "0123456789abcdef"[(d->xedd->bytes[i] & 0xf0) >> 4];
+    *p++ = "0123456789abcdef"[d->xedd->bytes[i] & 0x0f];
   }
   *p = '\0';
   return p;
 }
 
-static char *DisCode(struct DisBuilder b, char *p) {
+static char *DisCode(struct Dis *d, char *p) {
   char optspecbuf[128];
-  if (!b.xedd->op.error) {
-    return DisInst(b, p, DisSpec(b.xedd, optspecbuf));
+  if (!d->xedd->op.error) {
+    return DisInst(d, p, DisSpec(d->xedd, optspecbuf));
   } else {
-    return DisError(b, p);
+    return DisError(d, p);
   }
 }
 
-static char *DisLineCode(struct DisBuilder b, char *p) {
-  p = DisColumn(DisAddr(b, p), p, ADDRLEN);
-  p = DisColumn(DisRaw(b, p), p, PFIXLEN * 2 + 1 + BYTELEN * 2);
-  p = DisCode(b, p);
+static char *DisLineCode(struct Dis *d, char *p) {
+  p = DisColumn(DisAddr(d, p), p, ADDRLEN);
+  p = DisColumn(DisRaw(d, p), p, PFIXLEN * 2 + 1 + BYTELEN * 2);
+  p = DisCode(d, p);
   return p;
 }
 
-static char *DisLineData(struct DisBuilder b, char *p, const uint8_t *d,
-                         size_t n) {
+static char *DisLineData(struct Dis *d, char *p, const uint8_t *b, size_t n) {
   size_t i;
-  p = DisColumn(DisAddr(b, p), p, ADDRLEN);
-  p = DisColumn(DisByte(p, d, n), p, 64);
-  if (g_dis_high) p = DisHigh(p, g_dis_high->comment);
+  p = DisColumn(DisAddr(d, p), p, ADDRLEN);
+  p = DisColumn(DisByte(p, b, n), p, 64);
+  p = HighStart(p, g_high.comment);
   *p++ = '#';
   *p++ = ' ';
-  for (i = 0; i < n; ++i) p += tpencode(p, 8, bing(d[i], 0), false);
-  if (g_dis_high) p = DisHigh(p, -1);
+  for (i = 0; i < n; ++i) p += tpencode(p, 8, bing(b[i], 0), false);
+  p = HighEnd(p);
   *p = '\0';
   return p;
 }
 
-static char *DisLabel(struct DisBuilder b, char *p, const char *name) {
-  p = DisColumn(DisAddr(b, p), p, ADDRLEN);
-  if (g_dis_high) p = DisHigh(p, g_dis_high->label);
-  p = stpcpy(p, name);
-  if (g_dis_high) p = DisHigh(p, -1);
+static char *DisLabel(struct Dis *d, char *p, const char *name) {
+  p = DisColumn(DisAddr(d, p), p, ADDRLEN);
+  p = HighStart(p, g_high.label);
+  p = Demangle(p, name);
+  p = HighEnd(p);
   *p++ = ':';
   *p = '\0';
   return p;
 }
 
 long DisFind(struct Dis *d, int64_t addr) {
-  long i;
-  for (i = 0; i < d->ops.i; ++i) {
-    if (addr >= d->ops.p[i].addr &&
-        addr < d->ops.p[i].addr + d->ops.p[i].size) {
-      return i;
+  int l, r, m, i;
+  l = 0;
+  r = d->ops.i - 1;
+  while (l <= r) {
+    m = (l + r) >> 1;
+    if (d->ops.p[m].addr < addr) {
+      l = m + 1;
+    } else if (d->ops.p[m].addr > addr) {
+      r = m - 1;
+    } else {
+      return m;
     }
   }
   return -1;
@@ -181,8 +189,8 @@ static long DisOne(struct Dis *d, struct Machine *m, int64_t addr) {
       op.addr = addr;
       op.size = 0;
       op.active = true;
-      DisLabel((struct DisBuilder){d, d->xedd, addr}, d->buf,
-               d->syms.stab + d->syms.p[symbol].name);
+      d->addr = addr;
+      DisLabel(d, d->buf, d->syms.stab + d->syms.p[symbol].name);
       if (!(op.s = strdup(d->buf))) return -1;
       APPEND(&d->ops.p, &d->ops.i, &d->ops.n, &op);
     }
@@ -238,7 +246,8 @@ const char *DisGetLine(struct Dis *d, struct Machine *m, size_t i) {
   xed_instruction_length_decode(
       d->xedd, AccessRam(m, d->ops.p[i].addr, d->ops.p[i].size, r, b, true),
       d->ops.p[i].size);
-  p = DisLineCode((struct DisBuilder){d, d->xedd, d->ops.p[i].addr}, d->buf);
+  d->addr = d->ops.p[i].addr;
+  p = DisLineCode(d, d->buf);
   CHECK_LT(p - d->buf, sizeof(d->buf));
   return d->buf;
 }

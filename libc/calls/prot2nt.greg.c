@@ -37,7 +37,7 @@ privileged uint32_t prot2nt(int prot, int flags) {
               : HAS(prot, PROT_READ | PROT_WRITE)
                     ? (HAS(flags, MAP_SHARED) || HAS(flags, MAP_ANONYMOUS))
                           ? kNtPageReadwrite
-                          : kNtPageWritecopy
+                          : kNtPageReadwrite /* kNtPageWritecopy */
                     : HAS(prot, PROT_READ | PROT_EXEC)
                           ? kNtPageExecuteRead
                           : HAS(prot, PROT_EXEC)

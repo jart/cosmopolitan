@@ -17,63 +17,20 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timespec.h"
-#include "libc/calls/struct/timeval.h"
-#include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/mem/mem.h"
-#include "libc/sysv/consts/clock.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"
-#include "libc/x/x.h"
-
-STATIC_YOINK("stoa");
-STATIC_YOINK("ntoa");
+#include "libc/calls/calls.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 
 /**
- * @fileoverview Timestamps in One True Format w/o toil.
+ * Allocates deterministic stack for process.
+ * @see _executive()
  */
-
-static char *xiso8601$impl(struct timespec *opt_ts, int sswidth) {
-  struct tm tm;
-  struct timespec ts;
-  int64_t sec, subsec;
-  char timebuf[64], zonebuf[8];
-  if (opt_ts) {
-    sec = opt_ts->tv_sec;
-    subsec = opt_ts->tv_nsec;
-  } else {
-    errno = 0;
-    clock_gettime(CLOCK_REALTIME, &ts);
-    sec = ts.tv_sec;
-    subsec = ts.tv_nsec;
-    sswidth = 9;
-    if (errno == ENOSYS) {
-      subsec /= 1000;
-      sswidth = 6;
-    }
-  }
-  if (IsWindows() && sswidth == 9) {
-    subsec /= 100;
-    sswidth = 7; /* windows nt uses hectonanoseconds */
-  }
-  localtime_r(&sec, &tm);
-  strftime(timebuf, sizeof(timebuf), "%Y-%m-%dT%H:%M:%S", &tm);
-  strftime(zonebuf, sizeof(zonebuf), "%z", &tm);
-  return (xasprintf)("%s.%0*ld%s", timebuf, sswidth, subsec, zonebuf);
-}
-
-/**
- * Returns allocated string representation of nanosecond timestamp.
- */
-char *xiso8601ts(struct timespec *opt_ts) {
-  return xiso8601$impl(opt_ts, 9);
-}
-
-/**
- * Returns allocated string representation of microsecond timestamp.
- */
-char *xiso8601tv(struct timeval *opt_tv) {
-  return xiso8601$impl(
-      opt_tv ? &(struct timespec){opt_tv->tv_sec, opt_tv->tv_usec} : NULL, 6);
+void *_getstack(void) {
+  char *p;
+  p = mmap((char *)0x700000000000 - STACKSIZE, STACKSIZE,
+           PROT_READ | PROT_WRITE, MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1,
+           0);
+  if (p == MAP_FAILED) abort();
+  return p + STACKSIZE;
 }

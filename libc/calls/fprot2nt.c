@@ -33,7 +33,10 @@ uint32_t fprot2nt(int prot, int flags) {
   return (HAS(prot, PROT_READ) ? kNtFileMapRead : 0) |
          (HAS(prot, PROT_WRITE) ? kNtFileMapWrite : 0) |
          (HAS(prot, PROT_EXEC) ? kNtFileMapExecute : 0) |
-         (HAS(flags, MAP_PRIVATE) ? kNtFileMapCopy : 0) |
          (HAS(flags, kNtSecLargePages) ? kNtFileMapLargePages : 0) |
-         (HAS(flags, kNtSecReserve) ? kNtFileMapReserve : 0);
+         (HAS(flags, kNtSecReserve) ? kNtFileMapReserve : 0) |
+         ((HAS(flags, MAP_PRIVATE) && HAS(prot, PROT_READ) &&
+           HAS(prot, PROT_WRITE))
+              ? kNtFileMapCopy
+              : 0);
 }

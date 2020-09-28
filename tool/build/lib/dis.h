@@ -45,24 +45,9 @@ struct Dis {
     } * p;
   } edges;
   struct XedDecodedInst xedd[1];
+  uint64_t addr;
   char buf[512];
 };
-
-struct DisBuilder {
-  struct Dis *dis;
-  struct XedDecodedInst *xedd;
-  int64_t addr;
-};
-
-struct DisHigh {
-  uint8_t keyword;
-  uint8_t reg;
-  uint8_t literal;
-  uint8_t label;
-  uint8_t comment;
-};
-
-extern struct DisHigh *g_dis_high;
 
 long Dis(struct Dis *, struct Machine *, int64_t, int);
 long DisFind(struct Dis *, int64_t);
@@ -74,10 +59,9 @@ long DisFindSym(struct Dis *, int64_t);
 long DisFindSymByName(struct Dis *, const char *);
 bool DisIsText(struct Dis *, int64_t);
 bool DisIsProg(struct Dis *, int64_t);
+char *DisInst(struct Dis *, char *, const char *);
+char *DisArg(struct Dis *, char *, const char *);
 const char *DisSpec(struct XedDecodedInst *, char *);
-char *DisInst(struct DisBuilder, char *, const char *);
-char *DisArg(struct DisBuilder, char *, const char *);
-char *DisHigh(char *, int);
 const char *DisGetLine(struct Dis *, struct Machine *, size_t);
 
 COSMOPOLITAN_C_END_

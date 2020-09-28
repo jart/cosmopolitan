@@ -24,7 +24,7 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int fcntl$nt(int fd, int cmd, unsigned arg) {
-  if (!isfdindex(fd)) return ebadf();
+  if (!isfdkind(fd, kFdFile)) return ebadf();
   switch (cmd) {
     case F_GETFD:
       return GetHandleInformation(g_fds.p[fd].handle, &arg) ? (arg ^ FD_CLOEXEC)

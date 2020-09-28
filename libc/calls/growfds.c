@@ -28,7 +28,7 @@ int growfds(void) {
   struct Fd *p;
   if (weaken(realloc)) {
     if ((p = weaken(realloc)(g_fds.p != g_fds.__init_p ? g_fds.p : NULL,
-                             (n = ((i = g_fds.n) * 2)) * sizeof(*p)))) {
+                             (n = (i = g_fds.n) << 1) * sizeof(*p)))) {
       do {
         p[i++].kind = kFdEmpty;
       } while (i < n);

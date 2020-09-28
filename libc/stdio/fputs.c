@@ -17,8 +17,11 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/macros.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 /**
  * Writes string to stream.
@@ -32,15 +35,14 @@
  * @return strlen(s) or -1 w/ errno on error
  */
 int fputs(const char *s, FILE *f) {
-  unsigned char *p = (unsigned char *)s;
-  int res = 0;
-  while (*p) {
-    if (fputc(*p++, f) == -1) {
+  int i, n, m;
+  n = strlen(s);
+  for (i = 0; i < n; ++i) {
+    if (fputc(s[i], f) == -1) {
       if (ferror(f) == EINTR) continue;
       if (feof(f)) errno = f->state = EPIPE;
       return -1;
     }
-    ++res;
   }
-  return ++res;
+  return n;
 }

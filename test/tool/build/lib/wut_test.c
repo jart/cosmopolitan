@@ -17,18 +17,16 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/conv/itoa.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "tool/build/lib/dis.h"
+#include "libc/testlib/testlib.h"
 
-struct DisHigh *g_dis_high;
-
-char *DisHigh(char *p, int h) {
-  if (h != -1) {
-    p = stpcpy(p, "\e[38;5;");
-    p += uint64toarray_radix10(h, p);
-  } else {
-    p = stpcpy(p, "\e[39");
-  }
-  return stpcpy(p, "m");
+TEST(memcpy, testBackwardsOverlap3) {
+  volatile char *c;
+  c = malloc(3);
+  memcpy(c, "\e[C", 3);
+  memcpy(c, c + 1, VEIL("r", 3) - 1);
+  EXPECT_EQ('[', c[0]);
+  EXPECT_EQ('C', c[1]);
+  free(c);
 }

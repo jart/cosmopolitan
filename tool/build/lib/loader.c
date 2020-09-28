@@ -52,6 +52,7 @@ static void LoadElfLoadSegment(struct Machine *m, void *code, size_t codesize,
   fstart = felf + ROUNDDOWN(phdr->p_offset, align);
   fend = felf + ROUNDUP(phdr->p_offset + phdr->p_filesz, align);
   bsssize = vend - vbss;
+  m->brk = MAX(m->brk, vend);
   CHECK_GE(vend, vstart);
   CHECK_GE(fend, fstart);
   CHECK_LE(felf, fstart);
@@ -120,7 +121,7 @@ void LoadProgram(struct Machine *m, const char *prog, char **args, char **vars,
   DCHECK_NOTNULL(prog);
   elf->prog = prog;
   if ((fd = open(prog, O_RDONLY)) == -1 ||
-      (fstat(fd, &st) == -1 || !st.st_size) || !S_ISREG(st.st_mode)) {
+      (fstat(fd, &st) == -1 || !st.st_size) /* || !S_ISREG(st.st_mode) */) {
     fputs(prog, stderr);
     fputs(": not found\n", stderr);
     exit(1);

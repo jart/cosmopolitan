@@ -49,7 +49,6 @@ void ThrowProtectionFault(struct Machine *m) {
 }
 
 void OpUd(struct Machine *m, uint32_t rde) {
-  DebugBreak();
   m->ip -= m->xedd->length;
   HaltMachine(m, kMachineUndefinedInstruction);
 }

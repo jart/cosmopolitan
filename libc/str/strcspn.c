@@ -23,6 +23,9 @@
 /**
  * Returns prefix length, consisting of chars not in reject.
  * a.k.a. Return index of first byte that's in charset.
+ *
+ * @param reject is nul-terminated character set
+ * @see strspn(), strtok_r()
  * @asyncsignalsafe
  */
 size_t(strcspn)(const char *s, const char *reject) {

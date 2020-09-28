@@ -124,6 +124,13 @@ TEST(pml4t, testFindPml4t_holeTooSmall_skipsOver) {
   ASSERT_EQ(0x700006000, FindPml4t(cr3, 0x700000000, 0x10000));
 }
 
+TEST(pml4t, testFindPml4t_bigAllocation) {
+  ASSERT_EQ(0x00200000, FindPml4t(cr3, 0x00200000, 0x00400000));
+  ASSERT_EQ(0x00201000, FindPml4t(cr3, 0x00201000, 0x00400000));
+  ASSERT_EQ(0xff200000, FindPml4t(cr3, 0xff200000, 0x00400000));
+  ASSERT_EQ(0xff201000, FindPml4t(cr3, 0xff201000, 0x00400000));
+}
+
 TEST(pml4t, testFreePmlt) {
   ASSERT_NE(-1, RegisterPml4t(cr3, 0x000005000, 0x123000, 0x2000, NewPage));
   ASSERT_NE(-1, RegisterPml4t(cr3, 0x000000000, 0x321000, 0x1000, NewPage));

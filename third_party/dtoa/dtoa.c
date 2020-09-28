@@ -6,6 +6,8 @@
 #include "libc/str/str.h"
 #include "third_party/dtoa/dtoa.h"
 
+#define Omit_Private_Memory
+
 #define IEEE_8087 1
 /* #define SET_INEXACT 1 */
 

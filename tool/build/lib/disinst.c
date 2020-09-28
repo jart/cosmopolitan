@@ -21,6 +21,7 @@
 #include "libc/nexgen32e/tinystrcmp.h"
 #include "libc/str/str.h"
 #include "tool/build/lib/dis.h"
+#include "tool/build/lib/high.h"
 #include "tool/build/lib/modrm.h"
 
 static const char kJcxz[3][6] = {"jcxz", "jecxz", "jrcxz"};
@@ -28,43 +29,45 @@ static const char kAluOp[8][4] = {"add", "or",  "adc", "sbb",
                                   "and", "sub", "xor", "cmp"};
 static const char kBitOp[8][4] = {"rol", "ror", "rcl", "rcr",
                                   "shl", "shr", "sal", "sar"};
+static const char kCc[16][3] = {"o", "no", "b", "ae", "e", "ne", "be", "a",
+                                "s", "ns", "p", "np", "l", "ge", "le", "g"};
 
 static bool IsProbablyByteOp(struct XedDecodedInst *x) {
   return !(x->op.opcode & 1);
 }
 
-static int IsRepOpcode(struct DisBuilder b) {
-  switch (b.xedd->op.opcode & ~1) {
-    case 0x6C: /* INS */
+static int IsRepOpcode(struct Dis *d) {
+  switch (d->xedd->op.opcode & ~1) {
+    case 0x6C:  // INS
       return 1;
-    case 0x6E: /* OUTS */
+    case 0x6E:  // OUTS
       return 1;
-    case 0xA4: /* MOVS */
+    case 0xA4:  // MOVS
       return 1;
-    case 0xAA: /* STOS */
+    case 0xAA:  // STOS
       return 1;
-    case 0xAC: /* LODS */
+    case 0xAC:  // LODS
       return 1;
-    case 0xA6: /* CMPS */
+    case 0xA6:  // CMPS
       return 2;
-    case 0xAE: /* SCAS */
+    case 0xAE:  // SCAS
       return 2;
     default:
       return 0;
   }
 }
 
-static char *DisRepPrefix(struct DisBuilder b, char *p) {
+static char *DisRepPrefix(struct Dis *d, char *p) {
   const char *s;
-  if (Rep(b.xedd->op.rde) && b.xedd->op.map == XED_ILD_MAP0) {
-    switch (IsRepOpcode(b)) {
+  if (Rep(d->xedd->op.rde) && d->xedd->op.map == XED_ILD_MAP0) {
+    switch (IsRepOpcode(d)) {
       case 0:
         break;
       case 1:
         p = stpcpy(p, "rep ");
         break;
       case 2:
-        p = stpcpy(p, Rep(b.xedd->op.rde) == 2 ? "repnz " : "repz ");
+        p = stpcpy(p, Rep(d->xedd->op.rde) == 2 ? "repnz " : "repz ");
         break;
       default:
         break;
@@ -73,8 +76,8 @@ static char *DisRepPrefix(struct DisBuilder b, char *p) {
   return p;
 }
 
-static char *DisBranchTaken(struct DisBuilder b, char *p) {
-  switch (b.xedd->op.hint) {
+static char *DisBranchTaken(struct Dis *d, char *p) {
+  switch (d->xedd->op.hint) {
     case XED_HINT_NTAKEN:
       return stpcpy(p, ",pn");
     case XED_HINT_TAKEN:
@@ -84,24 +87,26 @@ static char *DisBranchTaken(struct DisBuilder b, char *p) {
   }
 }
 
-static char *DisName(struct DisBuilder b, char *bp, const char *name,
+static char *DisName(struct Dis *d, char *bp, const char *name,
                      bool ambiguous) {
   char *p, *np;
   uint32_t rde;
   bool notbyte, notlong, wantsuffix, wantsuffixsd;
   p = bp;
-  rde = b.xedd->op.rde;
-  if (b.xedd->op.lock) p = stpcpy(p, "lock ");
-  p = DisRepPrefix(b, p);
+  rde = d->xedd->op.rde;
+  if (d->xedd->op.lock) p = stpcpy(p, "lock ");
+  p = DisRepPrefix(d, p);
   if (tinystrcmp(name, "BIT") == 0) {
     p = stpcpy(p, kBitOp[ModrmReg(rde)]);
+  } else if (tinystrcmp(name, "nop") == 0 && d->xedd->op.rep) {
+    p = stpcpy(p, "pause");
   } else if (tinystrcmp(name, "CALL") == 0) {
     p = stpcpy(p, "call");
   } else if (tinystrcmp(name, "JMP") == 0) {
     p = stpcpy(p, "jmp");
   } else if (tinystrcmp(name, "jcxz") == 0) {
     p = stpcpy(p, kJcxz[Eamode(rde)]);
-    p = DisBranchTaken(b, p);
+    p = DisBranchTaken(d, p);
   } else if (tinystrcmp(name, "loop") == 0 || tinystrcmp(name, "loope") == 0 ||
              tinystrcmp(name, "loopne") == 0) {
     p = stpcpy(p, name);
@@ -109,7 +114,7 @@ static char *DisName(struct DisBuilder b, char *bp, const char *name,
       *p++ = "wl"[Eamode(rde)];
       *p = '\0';
     }
-    p = DisBranchTaken(b, p);
+    p = DisBranchTaken(d, p);
   } else if (tinystrcmp(name, "cwtl") == 0) {
     if (Osz(rde)) name = "cbtw";
     if (Rexw(rde)) name = "cltq";
@@ -127,10 +132,15 @@ static char *DisName(struct DisBuilder b, char *bp, const char *name,
       *p++ = *np;
     }
     if (tinystrcmp(name, "ALU") == 0) {
+      p = stpcpy(p, kAluOp[(d->xedd->op.opcode & 070) >> 3]);
+    } else if (tinystrcmp(name, "ALU2") == 0) {
       p = stpcpy(p, kAluOp[ModrmReg(rde)]);
     } else if (tinystrcmp(np, "WLQ") == 0) {
       notbyte = true;
       wantsuffix = true;
+    } else if (tinystrcmp(np, "CC") == 0) {
+      p = stpcpy(p, kCc[d->xedd->op.opcode & 15]);
+      p = DisBranchTaken(d, p);
     } else if (tinystrcmp(np, "WQ") == 0) {
       notbyte = true;
       notlong = Eamode(rde) != XED_MODE_REAL;
@@ -143,8 +153,6 @@ static char *DisName(struct DisBuilder b, char *bp, const char *name,
       wantsuffixsd = true;
     } else if (tinystrcmp(np, "ABS") == 0) {
       if (Rexw(rde)) p = stpcpy(p, "abs");
-    } else if (tinystrcmp(np, "BT") == 0) {
-      p = DisBranchTaken(b, p);
     }
     if (wantsuffixsd) {
       if (Osz(rde)) {
@@ -155,12 +163,12 @@ static char *DisName(struct DisBuilder b, char *bp, const char *name,
     } else if (wantsuffix || (ambiguous && !startswith(name, "f") &&
                               !startswith(name, "set"))) {
       if (Osz(rde)) {
-        if (Eamode(rde) != XED_MODE_REAL) {
+        if (Mode(rde) != XED_MODE_REAL) {
           *p++ = 'w';
         }
       } else if (Rexw(rde)) {
         *p++ = 'q';
-      } else if (ambiguous && !notbyte && IsProbablyByteOp(b.xedd)) {
+      } else if (ambiguous && !notbyte && IsProbablyByteOp(d->xedd)) {
         *p++ = 'b';
       } else if (!notlong) {
         *p++ = 'l';
@@ -177,28 +185,28 @@ static char *DisName(struct DisBuilder b, char *bp, const char *name,
  * Disassembles instruction based on string spec.
  * @see DisSpec()
  */
-char *DisInst(struct DisBuilder b, char *p, const char *spec) {
+char *DisInst(struct Dis *d, char *p, const char *spec) {
   long i, n;
-  char sbuf[256];
-  char args[4][128];
+  char sbuf[300];
+  char args[4][300];
   char *s, *name, *state;
   bool hasarg, hasmodrm, hasregister, hasmemory;
-  CHECK_EQ(0, (int)b.xedd->op.error);
+  CHECK_EQ(0, (int)d->xedd->op.error);
   DCHECK_LT(strlen(spec), 128);
   hasarg = false;
-  hasmodrm = b.xedd->op.has_modrm;
-  hasmemory = hasmodrm && !IsModrmRegister(b.xedd->op.rde);
-  hasregister = hasmodrm && IsModrmRegister(b.xedd->op.rde);
+  hasmodrm = d->xedd->op.has_modrm;
+  hasmemory = hasmodrm && !IsModrmRegister(d->xedd->op.rde);
+  hasregister = hasmodrm && IsModrmRegister(d->xedd->op.rde);
   name = strtok_r(strcpy(sbuf, spec), " ", &state);
   for (n = 0; (s = strtok_r(NULL, " ", &state)); ++n) {
     hasarg = true;
     hasregister |= *s == '%';
     hasmemory |= *s == 'O';
-    CHECK_LT(DisArg(b, args[n], s) - args[n], sizeof(args[n]));
+    CHECK_LT(DisArg(d, args[n], s) - args[n], sizeof(args[n]));
   }
-  if (g_dis_high) p = DisHigh(p, g_dis_high->keyword);
-  p = DisName(b, p, name, hasarg && !hasregister && hasmemory);
-  if (g_dis_high) p = DisHigh(p, -1);
+  p = HighStart(p, g_high.keyword);
+  p = DisName(d, p, name, hasarg && !hasregister && hasmemory);
+  p = HighEnd(p);
   for (i = 0; i < n; ++i) {
     if (i && args[n - i][0]) {
       *p++ = ',';

@@ -20,9 +20,5 @@
 #include "libc/calls/internal.h"
 
 bool isfdkind(int fd, enum FdKind kind) {
-  if (isfdindex(fd)) {
-    return g_fds.p[fd].kind == kind;
-  } else {
-    return false;
-  }
+  return isfdindex(fd) && g_fds.p[fd].kind == kind;
 }

@@ -69,6 +69,8 @@ o/$(MODE)/libc/runtime/winmain.greg.o:			\
 		DEFAULT_CPPFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED
 
+o/$(MODE)/libc/runtime/main-gcc.asm: OVERRIDE_CFLAGS += -ffixed-r12 -ffixed-r13 -ffixed-r14 -ffixed-r15
+
 LIBC_RUNTIME_LIBS = $(foreach x,$(LIBC_RUNTIME_ARTIFACTS),$($(x)))
 LIBC_RUNTIME_SRCS = $(foreach x,$(LIBC_RUNTIME_ARTIFACTS),$($(x)_SRCS))
 LIBC_RUNTIME_HDRS = $(foreach x,$(LIBC_RUNTIME_ARTIFACTS),$($(x)_HDRS))

@@ -31,6 +31,16 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 
+/**
+ * Prints stack frames with symbols.
+ *
+ *   PrintBacktraceUsingSymbols(stdout, NULL, getsymboltable());
+ *
+ * @param f is output stream
+ * @param bp is rbp which can be NULL to detect automatically
+ * @param st is open symbol table for current executable
+ * @return -1 w/ errno if error happened
+ */
 int PrintBacktraceUsingSymbols(FILE *f, const struct StackFrame *bp,
                                struct SymbolTable *st) {
   size_t gi;
@@ -41,6 +51,7 @@ int PrintBacktraceUsingSymbols(FILE *f, const struct StackFrame *bp,
   const struct Symbol *symbol;
   const struct StackFrame *frame;
   if (!st) return -1;
+  if (!bp) bp = __builtin_frame_address(0);
   garbage = weaken(g_garbage);
   gi = garbage ? garbage->i : 0;
   for (frame = bp; frame; frame = frame->next) {

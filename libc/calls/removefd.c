@@ -17,12 +17,12 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
 #include "libc/calls/internal.h"
+#include "libc/macros.h"
 
 void removefd(int fd) {
-  if (isfdindex(fd)) {
+  if (isfdopen(fd)) {
     g_fds.p[fd].kind = kFdEmpty;
-    g_fds.f = min(g_fds.f, fd);
+    g_fds.f = MIN(g_fds.f, fd);
   }
 }

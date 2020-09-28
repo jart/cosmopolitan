@@ -35,32 +35,32 @@ void OpCpuid(struct Machine *m, uint32_t rde) {
       dx = 'o' | 's' << 8 | 'm' << 16 | 'o' << 24;
       break;
     case 1:
-      cx |= 1 << 0;  /* sse3 */
-      cx |= 0 << 1;  /* pclmulqdq */
-      cx |= 1 << 9;  /* ssse3 */
-      cx |= 1 << 23; /* popcnt */
-      cx |= 0 << 30; /* rdrnd */
-      cx |= 0 << 25; /* aes */
-      dx |= 1 << 0;  /* fpu */
-      dx |= 1 << 4;  /* tsc */
-      dx |= 1 << 6;  /* pae */
-      dx |= 1 << 8;  /* cmpxchg8b */
-      dx |= 1 << 15; /* cmov */
-      dx |= 1 << 19; /* clflush */
-      dx |= 1 << 23; /* mmx */
-      dx |= 1 << 25; /* sse */
-      dx |= 1 << 26; /* sse2 */
+      cx |= 1 << 0;   // sse3
+      cx |= 0 << 1;   // pclmulqdq
+      cx |= 1 << 9;   // ssse3
+      cx |= 1 << 23;  // popcnt
+      cx |= 0 << 30;  // rdrnd
+      cx |= 0 << 25;  // aes
+      dx |= 1 << 0;   // fpu
+      dx |= 1 << 4;   // tsc
+      dx |= 1 << 6;   // pae
+      dx |= 1 << 8;   // cmpxchg8b
+      dx |= 1 << 15;  // cmov
+      dx |= 1 << 19;  // clflush
+      dx |= 1 << 23;  // mmx
+      dx |= 1 << 25;  // sse
+      dx |= 1 << 26;  // sse2
       break;
     case 7:
-      bx |= 1 << 9; /* erms */
+      bx |= 1 << 9;  // erms
       break;
     case 0x80000001:
-      cx |= 1 << 0;  /* lahf/sahf */
-      dx |= 1 << 11; /* syscall */
-      dx |= 1 << 29; /* long mode */
+      cx |= 1 << 0;   // lahf
+      dx |= 1 << 11;  // syscall
+      dx |= 1 << 29;  // long
       break;
     case 0x80000007:
-      dx |= 1 << 8; /* invtsc */
+      dx |= 1 << 8;  // invtsc
       break;
     default:
       break;

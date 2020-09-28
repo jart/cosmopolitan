@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "tool/build/emubin/metalsha256.h"
 
-#define DISINGENUOUS /* 100 million NOPs is still 100 MIPS lool */
+//#define DISINGENUOUS /* 100 million NOPs is still 100 MIPS lool */
 
 static void Print(uint8_t c) {
   asm volatile("out\t%0,$0xE9" : /* no outputs */ : "a"(c) : "memory");

@@ -26,6 +26,10 @@ TEST(int64toarray_radix10, test) {
   char buf[21];
   EXPECT_EQ(1, int64toarray_radix10(0, buf));
   EXPECT_STREQ("0", buf);
+  EXPECT_EQ(1, int64toarray_radix10(1, buf));
+  EXPECT_STREQ("1", buf);
+  EXPECT_EQ(2, int64toarray_radix10(-1, buf));
+  EXPECT_STREQ("-1", buf);
   EXPECT_EQ(19, int64toarray_radix10(INT64_MAX, buf));
   EXPECT_STREQ("9223372036854775807", buf);
   EXPECT_EQ(20, int64toarray_radix10(INT64_MIN, buf));
