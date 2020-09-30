@@ -1,5 +1,11 @@
 # Cosmopolitan
 
+Fast portable static native textmode executable containers.
+
+For an introduction to this project, please read the <a
+href="https://justine.storage.googleapis.com/ape.html">αcτµαlly pδrταblε
+εxεcµταblε</a> blog post.
+
 Cosmopolitan builds run natively on most platforms without dependencies,
 because it implements the subset of the C library, compiler runtimes and
 system call interfaces that've achieved near universal consensus amongst
