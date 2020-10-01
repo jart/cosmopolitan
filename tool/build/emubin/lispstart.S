@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,29 +17,36 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "tool/build/emubin/poke.h"
-#include "tool/build/emubin/real.h"
-#include "tool/build/emubin/realstart.inc"
 
-/*
-m=tiny; make -j12 MODE=$m o/$m/tool/build/{tinyemu,emulator}.com   \
-o/$m/tool/build/emubin/mdatest.bin && o/$m/tool/build/emulator.com \
--rt o/$m/tool/build/emubin/mdatest.bin
-*/
-
-static void MdaTest(uint16_t p[25][80]) {
-  int i, y, x;
-  for (i = 0; i < 256; ++i) {
-    y = i / 16;
-    x = i % 16 * 3;
-    POKE(p[y][x + 0], i << 8 | "0123456789abcdef"[(i & 0xf0) >> 4]);
-    POKE(p[y][x + 1], i << 8 | "0123456789abcdef"[(i & 0x0f) >> 0]);
-  }
-}
-
-int main() {
-  SetVideoMode(7);
-  SetEs(0xb0000 >> 4);
-  MdaTest((void *)0);
-  for (;;) asm("pause");
-}
+	.code16
+	.section .start,"ax",@progbits
+_start:	jmp	1f
+1:	ljmp	$0x600>>4,$2f
+2:	push	%cs
+	pop	%ds
+	push	%cs
+	pop	%es
+	mov	$0x70000>>4,%ax
+	cli
+	mov	%ax,%ss
+	xor	%sp,%sp
+	sti
+	cld
+	xor	%ax,%ax
+	xor	%di,%di
+	mov	$0x7c00-0x600,%cx
+	rep stosb
+	xchg	%di,%bx
+	inc	%cx
+	xor	%dh,%dh
+	mov	$v_sectors+0x0200,%ax
+	int	$0x13
+	xor	%bp,%bp
+	sub	$6,%sp
+	call	main
+	nop
+	.type	_start,@function
+	.size	_start,.-_start
+	.globl	_start
+	.globl	v_sectors
+	.globl	main

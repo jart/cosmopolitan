@@ -16,11 +16,12 @@
 s/[ \t][ \t]*#.*//
 
 # preserve hardcoded stack offsets
-s/leave\(q\|\)/leavew ; add $6,%sp/
-s/call\(q\|\)\t/sub $6,%sp ; callw /
+# bloats code size 13% compared to recomputing stack solution
+s/leave\(q\|\)/leavew\n\tadd\t$6,%sp/
+s/call\(q\|\)\t/sub\t$6,%sp\n\tcallw\t/
 s/ret\(q\|\)/retw\t$6/
-s/pushq\t\(.*\)/sub $6,%sp ; push \1/
-s/popq\t\(.*\)/pop \1 ; add $6,%sp/
+s/pushq\t\(.*\)/sub\t$6,%sp\n\tpush\t\1/
+s/popq\t\(.*\)/pop\t\1\n\tadd\t$6,%sp/
 
 # can be used instead if
 #   1. functions have 6 args or fewer
@@ -30,8 +31,10 @@ s/popq\t\(.*\)/pop \1 ; add $6,%sp/
 #s/ret\(q\|\)/retw/
 #s/popq\t%rbp/pop\t%bp/
 #s/pushq\t%rbp/push\t%bp/
-#s/pushq\t\(.*\)/sub $6,%sp ; push \1/
-#s/popq\t\(.*\)/pop \1 ; add $6,%sp/
+#s/pushq\t\(.*\)/sub $6,%sp\n\tpush \1/
+#s/popq\t\(.*\)/pop \1\n\tadd $6,%sp/
+
+s/, /,/g
 
 # 32-bitify
 s/rax/eax/g
@@ -48,11 +51,13 @@ s/movswl/mov/
 s/movzwl/mov/
 s/movslq/mov/
 s/movzlq/mov/
+s/movsbl/movsbw/
 
 # unsuffix
 s/^\(\t\(fild\|fist\|fistp\|fiadd\|fisub\|fisubr\|fimul\|fidiv\|fidivr\|ficom\)\)q\t/\1\t/
 s/^\(\t\(mov\|add\|adc\|cmp\|test\|lea\|sbb\|mul\|imul\|div\|idiv\|in\|out\|xor\|sub\|and\|or\|rol\|ror\|rcl\|rcr\|shl\|shr\|sal\|sar\|inc\|dec\|not\|neg\)\)l\t/\1w\t/
 s/^\(\t[a-z]*\)q\t/\1w\t/
+s/movsww/mov/
 
 # remove fluff
 s/mov\t%eax,%eax//
@@ -85,7 +90,6 @@ s/(%eax,%ecx/(%EAX,%ECX/
 s/(%eax,%edi/(%EAX,%EDI/
 s/(%eax,%edx/(%EAX,%EDX/
 s/(%eax,%esi/(%EAX,%ESI/
-s/(%eax,%esp/(%EAX,%ESP/
 s/(%ebp,%eax/(%EBP,%EAX/
 s/(%ebp,%ebp/(%EBP,%EBP/
 s/(%ebp,%ebx/(%EBP,%EBX/
@@ -93,7 +97,6 @@ s/(%ebp,%ecx/(%EBP,%ECX/
 s/(%ebp,%edi/(%EBP,%EDI/
 s/(%ebp,%edx/(%EBP,%EDX/
 s/(%ebp,%esi/(%EBP,%ESI/
-s/(%ebp,%esp/(%EBP,%ESP/
 s/(%ebx,%eax/(%EBX,%EAX/
 s/(%ebx,%ebp/(%EBX,%EBP/
 s/(%ebx,%ebx/(%EBX,%EBX/
@@ -101,7 +104,6 @@ s/(%ebx,%ecx/(%EBX,%ECX/
 s/(%ebx,%edi/(%EBX,%EDI/
 s/(%ebx,%edx/(%EBX,%EDX/
 s/(%ebx,%esi/(%EBX,%ESI/
-s/(%ebx,%esp/(%EBX,%ESP/
 s/(%ecx,%eax/(%ECX,%EAX/
 s/(%ecx,%ebp/(%ECX,%EBP/
 s/(%ecx,%ebx/(%ECX,%EBX/
@@ -109,7 +111,6 @@ s/(%ecx,%ecx/(%ECX,%ECX/
 s/(%ecx,%edi/(%ECX,%EDI/
 s/(%ecx,%edx/(%ECX,%EDX/
 s/(%ecx,%esi/(%ECX,%ESI/
-s/(%ecx,%esp/(%ECX,%ESP/
 s/(%edi,%eax/(%EDI,%EAX/
 s/(%edi,%ebp/(%EDI,%EBP/
 s/(%edi,%ebx/(%EDI,%EBX/
@@ -117,7 +118,6 @@ s/(%edi,%ecx/(%EDI,%ECX/
 s/(%edi,%edi/(%EDI,%EDI/
 s/(%edi,%edx/(%EDI,%EDX/
 s/(%edi,%esi/(%EDI,%ESI/
-s/(%edi,%esp/(%EDI,%ESP/
 s/(%edx,%eax/(%EDX,%EAX/
 s/(%edx,%ebp/(%EDX,%EBP/
 s/(%edx,%ebx/(%EDX,%EBX/
@@ -125,7 +125,6 @@ s/(%edx,%ecx/(%EDX,%ECX/
 s/(%edx,%edi/(%EDX,%EDI/
 s/(%edx,%edx/(%EDX,%EDX/
 s/(%edx,%esi/(%EDX,%ESI/
-s/(%edx,%esp/(%EDX,%ESP/
 s/(%esi,%eax/(%ESI,%EAX/
 s/(%esi,%ebp/(%ESI,%EBP/
 s/(%esi,%ebx/(%ESI,%EBX/
@@ -133,7 +132,6 @@ s/(%esi,%ecx/(%ESI,%ECX/
 s/(%esi,%edi/(%ESI,%EDI/
 s/(%esi,%edx/(%ESI,%EDX/
 s/(%esi,%esi/(%ESI,%ESI/
-s/(%esi,%esp/(%ESI,%ESP/
 s/(%esp,%eax/(%ESP,%EAX/
 s/(%esp,%ebp/(%ESP,%EBP/
 s/(%esp,%ebx/(%ESP,%EBX/
@@ -141,7 +139,6 @@ s/(%esp,%ecx/(%ESP,%ECX/
 s/(%esp,%edi/(%ESP,%EDI/
 s/(%esp,%edx/(%ESP,%EDX/
 s/(%esp,%esi/(%ESP,%ESI/
-s/(%esp,%esp/(%ESP,%ESP/
 s/(,%eax/(,%EAX/
 s/(,%ebx/(,%EBX/
 s/(,%ecx/(,%ECX/
@@ -149,7 +146,6 @@ s/(,%edx/(,%EDX/
 s/(,%esi/(,%ESI/
 s/(,%edi/(,%EDI/
 s/(,%ebp/(,%EBP/
-s/(,%esp/(,%ESP/
 s/(%eax)/(%EAX)/
 s/(%ecx)/(%ECX)/
 s/(%edx)/(%EDX)/
@@ -166,8 +162,15 @@ s/esi/si/g
 s/esp/sp/g
 
 # sigh :\
-# impossible to avoid rex byte access with naive substitution
-# best workaround is avoid uint8_t* and try using uint16_t* more
+# gcc needs a flag for not using rex byte regs. workaround:
+# - %dil can be avoided through copious use of STOS() macro
+# - %sil can be avoided through copious use of LODS() macro
+# - %bpl shouldn't be allocated due to -fno-omit-frame-pointer
+# - %spl shouldn't be allocated like ever
+# beyond that there's only a few cases where %dil and %sil
+# need some handcoded asm() macros to workaround, for example
+# if ARG1 is long and you say (ARG1 & 1) gcc will use %dil
+# so just kludge it using asm("and\t$1,%0" : "+Q"(ARG1))
 #s/dil/bl/g
 #s/sil/bh/g
 #s/spl/bl/g

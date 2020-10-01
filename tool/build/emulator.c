@@ -239,6 +239,13 @@ static bool IsCall(void) {
           (m->xedd->op.opcode == 0xFF && m->xedd->op.reg == 2));
 }
 
+static bool IsLongBranch(void) {
+  return m->xedd && m->xedd->op.map == XED_ILD_MAP0 &&
+         (m->xedd->op.opcode == 0xEA || m->xedd->op.opcode == 0x9A ||
+          (m->xedd->op.opcode == 0xFF && m->xedd->op.reg == 3) ||
+          (m->xedd->op.opcode == 0xFF && m->xedd->op.reg == 5));
+}
+
 static bool IsDebugBreak(void) {
   return m->xedd->op.map == XED_ILD_MAP0 && m->xedd->op.opcode == 0xCC;
 }
@@ -434,7 +441,7 @@ void TuiSetup(void) {
     LOGF("loaded program %s\n%s", codepath, gc(FormatPml4t(m->cr3)));
     LoadSyms();
     ResolveBreakpoints();
-    Dis(dis, m, elf->base, 100);
+    Dis(dis, m, elf->base, elf->base, 100);
     once = true;
   }
   CHECK_NE(-1, (ttyfd = open("/dev/tty", O_RDWR)));
@@ -655,8 +662,9 @@ static void SetupDraw(void) {
 
 static long GetDisIndex(void) {
   long i;
-  if ((i = DisFind(dis, GetIp())) == -1) {
-    Dis(dis, m, GetIp(), pan.disassembly.bottom - pan.disassembly.top * 2);
+  if ((i = DisFind(dis, GetIp())) == -1 || IsLongBranch()) {
+    Dis(dis, m, GetIp(), m->ip,
+        pan.disassembly.bottom - pan.disassembly.top * 2);
     CHECK_NE(-1, (i = DisFind(dis, GetIp())));
   }
   while (i + 1 < dis->ops.i && !dis->ops.p[i].size) ++i;
@@ -1003,7 +1011,6 @@ static void DrawTrace(struct Panel *p) {
   bp = Read64(m->bp);
   sp = Read64(m->sp);
   for (i = 0; i < p->bottom - p->top;) {
-    rp += Read64(m->cs);
     sym = DisFindSym(dis, rp);
     name = sym != -1 ? dis->syms.stab + dis->syms.p[sym].name : "UNKNOWN";
     s = line;
@@ -1410,6 +1417,7 @@ static void OnVidyaServiceTeletypeOutput(void) {
   char buf[12];
   n = FormatCga(m->bx[0], buf);
   n += tpencode(buf + n, 6, VidyaServiceXlatTeletype(m->ax[0]), false);
+  LOGF("teletype output %`'.*s", n, buf);
   MachinePtyWrite(pty, buf, n);
 }
 
@@ -1512,6 +1520,7 @@ static void OnInt15h(void) {
 }
 
 static bool OnHalt(int interrupt) {
+  ReactiveDraw();
   switch (interrupt) {
     case 1:
     case 3:

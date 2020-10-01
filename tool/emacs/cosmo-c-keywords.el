@@ -126,6 +126,7 @@
         (cosmo
          '("__rbx"
            "__msabi"
+           "offsetof"
            "microarchitecture"
            "targetclones"
            "testonly"

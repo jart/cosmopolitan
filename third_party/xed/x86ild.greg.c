@@ -130,8 +130,8 @@ static const struct XedDenseMagnums {
   xed_bits_t OSZ_NONTERM_REFINING66_EOSZ[2][2][3];
 } kXed = {
     .vex_prefix_recoding = {0, 1, 3, 2},
-    .BRDISPz_BRDISP_WIDTH = {0x00, 0x10, 0x20, 0x20},
-    .MEMDISPv_DISP_WIDTH = {0x00, 0x10, 0x20, 0x40},
+    .BRDISPz_BRDISP_WIDTH = {0, 16, 32, 32},
+    .MEMDISPv_DISP_WIDTH = {0, 16, 32, 64},
     .SIMMz_IMM_WIDTH = {0x00, 0x10, 0x20, 0x20},
     .UIMMv_IMM_WIDTH = {0x00, 0x10, 0x20, 0x40},
     .ASZ_NONTERM_EASZ =
@@ -786,6 +786,28 @@ privileged static void xed_evex_scanner(struct XedDecodedInst *d) {
   }
 }
 
+privileged static uint64_t xed_read_number(uint8_t *p, size_t n, bool s) {
+  switch (s << 2 | bsr(n)) {
+    case 0b000:
+      return *p;
+    case 0b100:
+      return (int8_t)*p;
+    case 0b001:
+      return READ16LE(p);
+    case 0b101:
+      return (int16_t)READ16LE(p);
+    case 0b010:
+      return READ32LE(p);
+    case 0b110:
+      return (int32_t)READ32LE(p);
+    case 0b011:
+    case 0b111:
+      return READ64LE(p);
+    default:
+      unreachable;
+  }
+}
+
 privileged static void xed_evex_imm_scanner(struct XedDecodedInst *d) {
   uint64_t uimm0;
   uint8_t *itext, *imm_ptr;
@@ -829,34 +851,9 @@ privileged static void xed_evex_imm_scanner(struct XedDecodedInst *d) {
       return;
     }
   }
-  imm_ptr = itext + d->op.pos_imm;
   if (imm_bytes) {
-    switch (d->op.imm_signed << 2 | bsr(imm_bytes)) {
-      case 0b000:
-        d->op.uimm0 = *imm_ptr;
-        break;
-      case 0b100:
-        d->op.uimm0 = (int8_t)*imm_ptr;
-        break;
-      case 0b001:
-        d->op.uimm0 = READ16LE(imm_ptr);
-        break;
-      case 0b101:
-        d->op.uimm0 = (int16_t)READ16LE(imm_ptr);
-        break;
-      case 0b010:
-        d->op.uimm0 = READ32LE(imm_ptr);
-        break;
-      case 0b110:
-        d->op.uimm0 = (int32_t)READ32LE(imm_ptr);
-        break;
-      case 0b011:
-      case 0b111:
-        d->op.uimm0 = READ64LE(imm_ptr);
-        break;
-      default:
-        break;
-    }
+    d->op.uimm0 =
+        xed_read_number(itext + d->op.pos_imm, imm_bytes, d->op.imm_signed);
   }
 }
 
@@ -1026,6 +1023,7 @@ privileged static void XED_LF_BRDISPz_BRDISP_WIDTH_OSZ_NONTERM_EOSZ_l2(
   x->op.disp_width =
       kXed.BRDISPz_BRDISP_WIDTH[kXed.OSZ_NONTERM_EOSZ[x->op.rexw][x->op.osz]
                                                      [x->op.mode]];
+  x->op.disp_unsigned = true;
 }
 
 privileged static void XED_LF_RESOLVE_BYREG_DISP_map0x0_op0xc7_l1(
@@ -1046,6 +1044,7 @@ privileged static void XED_LF_MEMDISPv_DISP_WIDTH_ASZ_NONTERM_EASZ_l2(
     struct XedDecodedInst *x) {
   x->op.disp_width =
       kXed.MEMDISPv_DISP_WIDTH[kXed.ASZ_NONTERM_EASZ[x->op.asz][x->op.mode]];
+  x->op.disp_unsigned = true;
 }
 
 privileged static void XED_LF_BRDISP32_BRDISP_WIDTH_CONST_l2(
@@ -1056,15 +1055,14 @@ privileged static void XED_LF_BRDISP32_BRDISP_WIDTH_CONST_l2(
 privileged static void XED_LF_DISP_BUCKET_0_l1(struct XedDecodedInst *x) {
   if (x->op.mode <= XED_MODE_LEGACY) {
     XED_LF_BRDISPz_BRDISP_WIDTH_OSZ_NONTERM_EOSZ_l2(x);
+    x->op.disp_unsigned = false;
   } else if (x->op.mode == XED_MODE_LONG) {
     XED_LF_BRDISP32_BRDISP_WIDTH_CONST_l2(x);
   }
 }
 
 privileged static void xed_disp_scanner(struct XedDecodedInst *d) {
-  uint8_t *disp_ptr;
   xed_bits_t length, disp_width, disp_bytes, max_bytes;
-  const xed_bits_t ilog2[] = {99, 0, 1, 99, 2, 99, 99, 99, 3};
   length = d->length;
   if (d->op.map < XED_ILD_MAP2) {
     switch (xed_disp_bits_2d[d->op.map][d->op.opcode]) {
@@ -1095,23 +1093,8 @@ privileged static void xed_disp_scanner(struct XedDecodedInst *d) {
   if (disp_bytes) {
     max_bytes = d->op.max_bytes;
     if (length + disp_bytes <= max_bytes) {
-      disp_ptr = d->bytes + length;
-      switch (ilog2[disp_bytes]) {
-        case 0:
-          d->op.disp = *(int8_t *)disp_ptr;
-          break;
-        case 1:
-          d->op.disp = (int16_t)READ16LE(disp_ptr);
-          break;
-        case 2:
-          d->op.disp = (int32_t)READ32LE(disp_ptr);
-          break;
-        case 3:
-          d->op.disp = (int64_t)READ64LE(disp_ptr);
-          break;
-        default:
-          break;
-      }
+      d->op.disp =
+          xed_read_number(d->bytes + length, disp_bytes, !d->op.disp_unsigned);
       d->op.pos_disp = length;
       d->length = length + disp_bytes;
     } else {

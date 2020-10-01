@@ -258,7 +258,7 @@ xed_imm_bits_2d.rodata:
 	.byte	1,0x07			# 69─69 i
 	.byte	2,0x05			# 6a─6b j─k
 	.byte	20,0x01			# 6c─7f l─⌂	
-.byte	1,0x05			# 80─80 Ç
+	.byte	1,0x05			# 80─80 Ç
 	.byte	1,0x07			# 81─81 ü
 	.byte	2,0x05			# 82─83 é─â
 	.byte	22,0x01			# 84─99 ä─Ö

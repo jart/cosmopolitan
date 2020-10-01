@@ -238,7 +238,7 @@ static void __asan_deallocate(char *p, int kind) {
   if ((*s < 0 && *s != kAsanHeapOverrun) || *s >= 8) {
     __asan_report_deallocate_fault(p, *s);
   }
-  for (; *s >= 0; ++s) *s = kind;
+  memset(s, kind, dlmalloc_usable_size(p) >> 3);
   dlfree(__asan_morgue_add(p));
 }
 

@@ -361,8 +361,8 @@ struct XedOperands { /*
   bool rexx : 1;   // rex.x or rex.wx or etc. see sib table
   bool rexrr : 1;  // evex
   bool asz : 1;    // address size override
-  int64_t disp;    // displacement(%xxx) sign-extended
-  uint64_t uimm0;  // $immediate sign-extended
+  int64_t disp;    // displacement(%xxx) mostly sign-extended
+  uint64_t uimm0;  // $immediate mostly sign-extended
   bool out_of_bytes : 1;
   bool is_intel_specific : 1;
   bool ild_f2 : 1;
@@ -383,6 +383,7 @@ struct XedOperands { /*
   uint8_t rep : 2;  // 0, 2 (0xf2 repnz), 3 (0xf3 rep/repe)
   uint8_t has_modrm : 2;
   bool imm_signed : 1;        // internal
+  bool disp_unsigned : 1;     // internal
   uint8_t seg_ovd : 3;        // XED_SEG_xx
   uint8_t error : 5;          // enum XedError
   uint8_t mode : 2;           // real,legacy,long

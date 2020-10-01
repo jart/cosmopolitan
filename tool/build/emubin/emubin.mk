@@ -49,6 +49,21 @@ o/$(MODE)/tool/build/emubin/%.bin.dbg:			\
 		$(TOOL_BUILD_EMUBIN_A).pkg
 	@$(ELFLINK) -e emucrt -z max-page-size=0x10
 
+o/dbg/tool/build/emubin/lisp.real.com.dbg:		\
+		$(TOOL_BUILD_EMUBIN_DEPS)		\
+		$(TOOL_BUILD_EMUBIN_A)			\
+		o/dbg/tool/build/emubin/lisp.real.o	\
+		$(CRT)					\
+		$(APE)
+	-@$(APELINK)
+
+o/tiny/tool/build/emubin/lisp.bin.dbg:			\
+		$(TOOL_BUILD_EMUBIN_DEPS)		\
+		o/tiny/tool/build/emubin/lisp.real.o	\
+		o/tiny/tool/build/emubin/lispstart.o	\
+		tool/build/emubin/lisp.lds
+	@$(ELFLINK) -z max-page-size=0x10
+
 o/tiny/tool/build/emubin/spiral.bin.dbg:		\
 		$(TOOL_BUILD_EMUBIN_DEPS)		\
 		o/tiny/tool/build/emubin/spiral.real.o

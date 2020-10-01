@@ -256,6 +256,7 @@
            "__builtin_lrintf"
            "__builtin_lrintl"
            "__builtin_memcpy"
+           "__builtin_memcmp"
            "__builtin_memset"
            "__builtin_strlen"))
 

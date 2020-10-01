@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode: ld-script; indent-tabs-mode: nil; tab-width: 2; coding: utf-8   -*-│
+│vi: set et sts=2 tw=2 fenc=utf-8                                           :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,73 +17,36 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "third_party/xed/x86.h"
-#include "tool/build/lib/address.h"
-#include "tool/build/lib/endian.h"
-#include "tool/build/lib/modrm.h"
-#include "tool/build/lib/throw.h"
 
-uint64_t AddressOb(struct Machine *m, uint32_t rde) {
-  return AddSegment(m, rde, m->xedd->op.disp, m->ds);
-}
+ENTRY(_start)
 
-uint8_t *GetSegment(struct Machine *m, uint32_t rde, int s) {
-  switch (s & 7) {
-    case 0:
-      return m->es;
-    case 1:
-      return m->cs;
-    case 2:
-      return m->ss;
-    case 3:
-      return m->ds;
-    case 4:
-      return m->fs;
-    case 5:
-      return m->gs;
-    case 6:
-    case 7:
-      OpUd(m, rde);
-    default:
-      unreachable;
+SECTIONS {
+
+  .text 0x7c00 - 0x600 : {
+    *(.start)
+    rodata = .;
+    *(.rodata .rodata.*)
+    . = 0x1fe;
+    SHORT(0xaa55);
+    *(.text .text.*)
+    . = ALIGN(512);
+  }
+
+  .bss : {
+    bss = .;
+    *(.bss .bss.*)
+    *(COMMON)
+  }
+
+  /DISCARD/ : {
+    *(.*)
   }
 }
 
-uint64_t AddSegment(struct Machine *m, uint32_t rde, uint64_t i, uint8_t s[8]) {
-  if (!Sego(rde)) {
-    return i + Read64(s);
-  } else {
-    return i + Read64(GetSegment(m, rde, Sego(rde) - 1));
-  }
-}
-
-uint64_t DataSegment(struct Machine *m, uint32_t rde, uint64_t i) {
-  return AddSegment(m, rde, i, m->ds);
-}
-
-uint64_t AddressSi(struct Machine *m, uint32_t rde) {
-  switch (Eamode(rde)) {
-    case XED_MODE_LONG:
-      return DataSegment(m, rde, Read64(m->si));
-    case XED_MODE_REAL:
-      return DataSegment(m, rde, Read16(m->si));
-    case XED_MODE_LEGACY:
-      return DataSegment(m, rde, Read32(m->si));
-    default:
-      unreachable;
-  }
-}
-
-uint64_t AddressDi(struct Machine *m, uint32_t rde) {
-  uint64_t i = Read64(m->es);
-  switch (Eamode(rde)) {
-    case XED_MODE_LONG:
-      return i + Read64(m->di);
-    case XED_MODE_REAL:
-      return i + Read16(m->di);
-    case XED_MODE_LEGACY:
-      return i + Read32(m->di);
-    default:
-      unreachable;
-  }
-}
+syntax = 0x600+2048*2;
+look = 0x600+2048*2+256;
+token = 0x600+2048*2+256+1;
+globals = 0x600+2048*2+256+1+16;
+index = 0x600+2048*2+256+1+16+2;
+str = 0x600+2048*2+256+1+16+2+4;
+v_sectors = SIZEOF(.text) / 512;

@@ -188,7 +188,7 @@ static void OpSahf(struct Machine *m, uint32_t rde) {
 }
 
 static void OpLeaGvqpM(struct Machine *m, uint32_t rde) {
-  WriteRegister(rde, RegRexrReg(m, rde), ComputeAddress(m, rde));
+  WriteRegister(rde, RegRexrReg(m, rde), LoadEffectiveAddress(m, rde).addr);
 }
 
 static relegated void OpPushSeg(struct Machine *m, uint32_t rde) {
@@ -214,6 +214,14 @@ static relegated void OpMovSwEvqp(struct Machine *m, uint32_t rde) {
 static relegated void OpJmpf(struct Machine *m, uint32_t rde) {
   Write64(m->cs, m->xedd->op.uimm0 << 4);
   m->ip = m->xedd->op.disp;
+}
+
+static relegated void OpXlatAlBbb(struct Machine *m, uint32_t rde) {
+  uint64_t v;
+  v = MaskAddress(Eamode(rde), Read64(m->bx) + Read8(m->ax));
+  v = DataSegment(m, rde, v);
+  SetReadAddr(m, v, 1);
+  Write8(m->ax, Read8(ResolveAddress(m, v)));
 }
 
 static void WriteEaxAx(struct Machine *m, uint32_t rde, uint32_t x) {
@@ -262,14 +270,6 @@ static void OpOutDxAl(struct Machine *m, uint32_t rde) {
 
 static void OpOutDxAx(struct Machine *m, uint32_t rde) {
   OpOut(m, Read16(m->dx), ReadEaxAx(m, rde));
-}
-
-static void OpXlatAlBbb(struct Machine *m, uint32_t rde) {
-  uint64_t v;
-  v = MaskAddress(Eamode(rde), Read64(m->bx) + Read8(m->ax));
-  v = DataSegment(m, rde, v);
-  SetReadAddr(m, v, 1);
-  Write8(m->ax, Read8(ResolveAddress(m, v)));
 }
 
 static void AluEb(struct Machine *m, uint32_t rde, aluop_f op) {
@@ -515,13 +515,17 @@ static void OpMovEbIb(struct Machine *m, uint32_t rde) {
 }
 
 static void OpMovAlOb(struct Machine *m, uint32_t rde) {
-  SetReadAddr(m, m->xedd->op.disp, 1);
-  Write8(ResolveAddress(m, m->xedd->op.disp), Read8(m->ax));
+  int64_t addr;
+  addr = AddressOb(m, rde);
+  SetWriteAddr(m, addr, 1);
+  Write8(m->ax, Read8(ResolveAddress(m, addr)));
 }
 
 static void OpMovObAl(struct Machine *m, uint32_t rde) {
-  SetWriteAddr(m, m->xedd->op.disp, 1);
-  Write8(m->ax, Read8(ResolveAddress(m, m->xedd->op.disp)));
+  int64_t addr;
+  addr = AddressOb(m, rde);
+  SetReadAddr(m, addr, 1);
+  Write8(ResolveAddress(m, addr), Read8(m->ax));
 }
 
 static void OpMovRaxOvqp(struct Machine *m, uint32_t rde) {
@@ -1199,35 +1203,6 @@ static void OpJcxz(struct Machine *m, uint32_t rde) {
   }
 }
 
-static void Loop(struct Machine *m, uint32_t rde, bool cond) {
-  uint64_t cx;
-  cx = Read64(m->cx) - 1;
-  if (Eamode(rde) != XED_MODE_REAL) {
-    if (Eamode(rde) == XED_MODE_LEGACY) {
-      cx &= 0xffffffff;
-    }
-    Write64(m->cx, cx);
-  } else {
-    cx &= 0xffff;
-    Write16(m->cx, cx);
-  }
-  if (cx && cond) {
-    OpJmp(m, rde);
-  }
-}
-
-static void OpLoope(struct Machine *m, uint32_t rde) {
-  Loop(m, rde, GetFlag(m->flags, FLAGS_ZF));
-}
-
-static void OpLoopne(struct Machine *m, uint32_t rde) {
-  Loop(m, rde, !GetFlag(m->flags, FLAGS_ZF));
-}
-
-static void OpLoop1(struct Machine *m, uint32_t rde) {
-  Loop(m, rde, true);
-}
-
 static void Bitscan(struct Machine *m, uint32_t rde, bitscan_f op) {
   WriteRegister(
       rde, RegRexrReg(m, rde),
@@ -1257,6 +1232,35 @@ static void OpNotEb(struct Machine *m, uint32_t rde) {
 
 static void OpNegEb(struct Machine *m, uint32_t rde) {
   AluEb(m, rde, Neg8);
+}
+
+static relegated void Loop(struct Machine *m, uint32_t rde, bool cond) {
+  uint64_t cx;
+  cx = Read64(m->cx) - 1;
+  if (Eamode(rde) != XED_MODE_REAL) {
+    if (Eamode(rde) == XED_MODE_LEGACY) {
+      cx &= 0xffffffff;
+    }
+    Write64(m->cx, cx);
+  } else {
+    cx &= 0xffff;
+    Write16(m->cx, cx);
+  }
+  if (cx && cond) {
+    OpJmp(m, rde);
+  }
+}
+
+static relegated void OpLoope(struct Machine *m, uint32_t rde) {
+  Loop(m, rde, GetFlag(m->flags, FLAGS_ZF));
+}
+
+static relegated void OpLoopne(struct Machine *m, uint32_t rde) {
+  Loop(m, rde, !GetFlag(m->flags, FLAGS_ZF));
+}
+
+static relegated void OpLoop1(struct Machine *m, uint32_t rde) {
+  Loop(m, rde, true);
 }
 
 static const nexgen32e_f kOp0f6[] = {

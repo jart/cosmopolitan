@@ -23,7 +23,7 @@
 #include "tool/build/lib/flags.h"
 #include "tool/build/lib/throw.h"
 
-void OpDas(struct Machine *m, uint32_t rde) {
+relegated void OpDas(struct Machine *m, uint32_t rde) {
   uint8_t al, af, cf;
   af = cf = 0;
   al = m->ax[0];
@@ -39,7 +39,7 @@ void OpDas(struct Machine *m, uint32_t rde) {
   AluFlags8(m->ax[0], af, &m->flags, 0, cf);
 }
 
-void OpAaa(struct Machine *m, uint32_t rde) {
+relegated void OpAaa(struct Machine *m, uint32_t rde) {
   uint8_t af, cf;
   af = cf = 0;
   if ((m->ax[0] & 0x0f) > 9 || GetFlag(m->flags, FLAGS_AF)) {
@@ -51,7 +51,7 @@ void OpAaa(struct Machine *m, uint32_t rde) {
   AluFlags8(m->ax[0], af, &m->flags, 0, cf);
 }
 
-void OpAas(struct Machine *m, uint32_t rde) {
+relegated void OpAas(struct Machine *m, uint32_t rde) {
   uint8_t af, cf;
   af = cf = 0;
   if ((m->ax[0] & 0x0f) > 9 || GetFlag(m->flags, FLAGS_AF)) {
@@ -63,7 +63,7 @@ void OpAas(struct Machine *m, uint32_t rde) {
   AluFlags8(m->ax[0], af, &m->flags, 0, cf);
 }
 
-void OpAam(struct Machine *m, uint32_t rde) {
+relegated void OpAam(struct Machine *m, uint32_t rde) {
   uint8_t i = m->xedd->op.uimm0;
   if (!i) ThrowDivideError(m);
   m->ax[1] = m->ax[0] / i;
@@ -71,7 +71,7 @@ void OpAam(struct Machine *m, uint32_t rde) {
   AluFlags8(m->ax[0], 0, &m->flags, 0, 0);
 }
 
-void OpAad(struct Machine *m, uint32_t rde) {
+relegated void OpAad(struct Machine *m, uint32_t rde) {
   uint8_t i = m->xedd->op.uimm0;
   Write16(m->ax, (m->ax[1] * i + m->ax[0]) & 0xff);
   AluFlags8(m->ax[0], 0, &m->flags, 0, 0);

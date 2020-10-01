@@ -141,6 +141,7 @@
    "OPEN_MAX"
    "ATEXIT_MAX"
    "IM_FEELING_NAUGHTY"
+   "__REAL_MODE__"
    "__x86__"
    "__i386__"))
 

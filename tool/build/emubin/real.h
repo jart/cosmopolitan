@@ -3,14 +3,6 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-asm(".pushsection .start,\"ax\",@progbits\n\t"
-    ".globl\t_start\n"
-    "_start:\n\t"
-    "jmp\t1f\n1:\t"
-    "call\tmain\n\t"
-    "nop\n\t"
-    ".popsection");
-
 forceinline void SetEs(int base) {
   asm volatile("mov%z0\t%0,%%es" : /* no outputs */ : "r"(base));
 }

@@ -28,6 +28,7 @@ struct MachinePty {
   uint32_t fg;
   uint32_t bg;
   uint32_t u8;
+  uint32_t n8;
   uint32_t *wcs;
   uint32_t *fgs;
   uint32_t *bgs;

@@ -469,18 +469,21 @@ ssize_t MachinePtyWrite(struct MachinePty *pty, const void *data, size_t n) {
         } else if (!ThomPikeCont(p[i])) {
           pty->state = kMachinePtyUtf8;
           pty->u8 = ThomPikeByte(p[i]);
+          pty->n8 = ThomPikeLen(p[i]) - 1;
         }
         break;
       case kMachinePtyUtf8:
         if (ThomPikeCont(p[i])) {
           pty->u8 <<= 6;
           pty->u8 |= p[i] & 0b00111111;
-        } else {
-          SetMachinePtyCell(pty, pty->u8);
-          pty->state = kMachinePtyAscii;
-          pty->u8 = 0;
-          --i;
+          if (--pty->n8) {
+            break;
+          }
         }
+        SetMachinePtyCell(pty, pty->u8);
+        pty->state = kMachinePtyAscii;
+        pty->u8 = 0;
+        --i;
         break;
       case kMachinePtyEsc:
         if (p[i] == '[') {
@@ -530,9 +533,6 @@ ssize_t MachinePtyWrite(struct MachinePty *pty, const void *data, size_t n) {
       default:
         abort();
     }
-  }
-  if (pty->u8) {
-    SetMachinePtyCell(pty, pty->u8);
   }
   return n;
 }

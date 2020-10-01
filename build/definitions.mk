@@ -321,6 +321,7 @@ OBJECTIFY.real.c =							\
 	$(GCC)								\
 	$(OBJECTIFY.c.flags)						\
 	-wrapper build/realify.sh					\
+	-D__REAL_MODE__							\
 	-ffixed-r8							\
 	-ffixed-r9							\
 	-ffixed-r10							\
@@ -329,6 +330,11 @@ OBJECTIFY.real.c =							\
 	-ffixed-r13							\
 	-ffixed-r14							\
 	-ffixed-r15							\
+	-fcall-used-rbx							\
+	-fno-omit-frame-pointer						\
+	-momit-leaf-frame-pointer					\
+	-mpreferred-stack-boundary=3					\
+	-fno-delete-null-pointer-checks					\
 	-c
 
 OBJECTIFY.ncabi.c =							\

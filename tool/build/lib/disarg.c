@@ -59,6 +59,43 @@ static int64_t RipRelative(struct Dis *d, int64_t i) {
   return d->addr + d->xedd->length + i;
 }
 
+static int64_t ZeroExtend(uint32_t rde, int64_t i) {
+  switch (Mode(rde)) {
+    case XED_MODE_REAL:
+      return i & 0xffff;
+    case XED_MODE_LEGACY:
+      return i & 0xffffffff;
+    default:
+      return i;
+  }
+}
+
+static int64_t Unrelative(uint32_t rde, int64_t i) {
+  switch (Eamode(rde)) {
+    case XED_MODE_REAL:
+      return i & 0xffff;
+    case XED_MODE_LEGACY:
+      return i & 0xffffffff;
+    default:
+      return i;
+  }
+}
+
+static int64_t GetSeg(struct Dis *d, uint32_t rde, unsigned char *s) {
+  switch (Sego(rde) ? Sego(rde) : d->xedd->op.hint) {
+    default:
+      return Read64(s);
+    case 1:
+      return Read64(d->m->es);
+    case 2:
+      return Read64(d->m->cs);
+    case 3:
+      return Read64(d->m->ss);
+    case 4:
+      return Read64(d->m->ds);
+  }
+}
+
 static const char *GetAddrReg(struct Dis *d, uint32_t rde, uint8_t x,
                               uint8_t r) {
   return kGreg[Eamode(rde) == XED_MODE_REAL][Eamode(rde) == XED_MODE_LONG]
@@ -106,12 +143,12 @@ static char *DisInt(char *p, int64_t x) {
   return p;
 }
 
-static char *DisSym(struct Dis *d, char *p, int64_t addr) {
+static char *DisSym(struct Dis *d, char *p, int64_t addr, int64_t ip) {
   long sym;
   int64_t addend;
   const char *name;
-  if ((sym = DisFindSym(d, addr)) != -1 && d->syms.p[sym].name) {
-    addend = addr - d->syms.p[sym].addr;
+  if ((sym = DisFindSym(d, ip)) != -1 && d->syms.p[sym].name) {
+    addend = ip - d->syms.p[sym].addr;
     name = d->syms.stab + d->syms.p[sym].name;
     p = Demangle(p, name);
     if (addend) {
@@ -124,10 +161,11 @@ static char *DisSym(struct Dis *d, char *p, int64_t addr) {
   }
 }
 
-static char *DisSymLiteral(struct Dis *d, char *p, uint64_t x) {
+static char *DisSymLiteral(struct Dis *d, uint32_t rde, char *p, uint64_t addr,
+                           uint64_t ip) {
   *p++ = '$';
   p = HighStart(p, g_high.literal);
-  p = DisSym(d, p, x);
+  p = DisSym(d, p, addr, ip);
   p = HighEnd(p);
   return p;
 }
@@ -154,18 +192,30 @@ static char *DisSego(struct Dis *d, uint32_t rde, char *p) {
   return p;
 }
 
+static bool IsRealModrmAbsolute(uint32_t rde) {
+  return Eamode(rde) == XED_MODE_REAL && ModrmRm(rde) == 6 && !ModrmMod(rde);
+}
+
 static char *DisM(struct Dis *d, uint32_t rde, char *p) {
   int64_t disp;
   const char *base, *index, *scale;
   p = DisSego(d, rde, p);
   base = index = scale = NULL;
   if (ModrmMod(rde) == 0b01 || ModrmMod(rde) == 0b10 || IsRipRelative(rde) ||
-      (Eamode(rde) == XED_MODE_REAL && ModrmRm(rde) == 6 && !ModrmMod(rde)) ||
+      IsRealModrmAbsolute(rde) ||
       (ModrmMod(rde) == 0b00 && ModrmRm(rde) == 0b100 &&
        SibBase(d->xedd) == 0b101)) {
     disp = d->xedd->op.disp;
-    if (IsRipRelative(rde)) disp = RipRelative(d, disp);
-    p = DisSym(d, p, disp);
+    if (IsRipRelative(rde)) {
+      if (Mode(rde) == XED_MODE_LONG) {
+        disp = RipRelative(d, disp);
+      } else {
+        disp = Unrelative(rde, disp);
+      }
+    } else if (IsRealModrmAbsolute(rde)) {
+      disp = Unrelative(rde, disp);
+    }
+    p = DisSym(d, p, disp, disp);
   }
   if (Eamode(rde) != XED_MODE_REAL) {
     if (!SibExists(rde)) {
@@ -355,11 +405,12 @@ static char *DisHd(struct Dis *d, uint32_t rde, char *p) {
 }
 
 static char *DisImm(struct Dis *d, uint32_t rde, char *p) {
-  return DisSymLiteral(d, p, d->xedd->op.uimm0);
+  return DisSymLiteral(d, rde, p, d->xedd->op.uimm0,
+                       ZeroExtend(rde, d->xedd->op.uimm0));
 }
 
 static char *DisRvds(struct Dis *d, uint32_t rde, char *p) {
-  return DisSymLiteral(d, p, d->xedd->op.disp);
+  return DisSymLiteral(d, rde, p, d->xedd->op.disp, d->xedd->op.disp);
 }
 
 static char *DisKpvds(struct Dis *d, uint32_t rde, char *p, uint64_t x) {
@@ -400,11 +451,12 @@ static char *DisJb(struct Dis *d, uint32_t rde, char *p) {
 }
 
 static char *DisJvds(struct Dis *d, uint32_t rde, char *p) {
-  return DisSym(d, p, RipRelative(d, d->xedd->op.disp));
+  return DisSym(d, p, RipRelative(d, d->xedd->op.disp),
+                RipRelative(d, d->xedd->op.disp) - Read64(d->m->cs));
 }
 
 static char *DisAbs(struct Dis *d, uint32_t rde, char *p) {
-  return DisSym(d, p, d->xedd->op.disp);
+  return DisSym(d, p, d->xedd->op.disp, d->xedd->op.disp);
 }
 
 static char *DisSw(struct Dis *d, uint32_t rde, char *p) {

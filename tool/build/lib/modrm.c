@@ -26,51 +26,7 @@
 #include "tool/build/lib/modrm.h"
 #include "tool/build/lib/throw.h"
 
-static relegated noinline int64_t ComputeAddressReal(const struct Machine *m,
-                                                     uint32_t rde, uint8_t *s,
-                                                     uint64_t i) {
-  switch (ModrmRm(rde)) {
-    case 0:
-      i += Read16(m->bx);
-      i += Read16(m->si);
-      break;
-    case 1:
-      i += Read16(m->bx);
-      i += Read16(m->di);
-      break;
-    case 2:
-      s = m->ss;
-      i += Read16(m->bp);
-      i += Read16(m->si);
-      break;
-    case 3:
-      s = m->ss;
-      i += Read16(m->bp);
-      i += Read16(m->di);
-      break;
-    case 4:
-      i += Read16(m->si);
-      break;
-    case 5:
-      i += Read16(m->di);
-      break;
-    case 6:
-      if (ModrmMod(rde)) {
-        s = m->ss;
-        i += Read16(m->bp);
-      }
-      break;
-    case 7:
-      i += Read16(m->bx);
-      break;
-    default:
-      unreachable;
-  }
-  i &= 0xffff;
-  return AddSegment(m, rde, i, s);
-}
-
-int64_t ComputeAddress(const struct Machine *m, uint32_t rde) {
+struct AddrSeg LoadEffectiveAddress(const struct Machine *m, uint32_t rde) {
   uint8_t *s = m->ds;
   uint64_t i = m->xedd->op.disp;
   DCHECK(!IsModrmRegister(rde));
@@ -100,10 +56,53 @@ int64_t ComputeAddress(const struct Machine *m, uint32_t rde) {
     if (Eamode(rde) == XED_MODE_LEGACY) {
       i &= 0xffffffff;
     }
-    return AddSegment(m, rde, i, s);
   } else {
-    return ComputeAddressReal(m, rde, s, i);
+    switch (ModrmRm(rde)) {
+      case 0:
+        i += Read16(m->bx);
+        i += Read16(m->si);
+        break;
+      case 1:
+        i += Read16(m->bx);
+        i += Read16(m->di);
+        break;
+      case 2:
+        s = m->ss;
+        i += Read16(m->bp);
+        i += Read16(m->si);
+        break;
+      case 3:
+        s = m->ss;
+        i += Read16(m->bp);
+        i += Read16(m->di);
+        break;
+      case 4:
+        i += Read16(m->si);
+        break;
+      case 5:
+        i += Read16(m->di);
+        break;
+      case 6:
+        if (ModrmMod(rde)) {
+          s = m->ss;
+          i += Read16(m->bp);
+        }
+        break;
+      case 7:
+        i += Read16(m->bx);
+        break;
+      default:
+        unreachable;
+    }
+    i &= 0xffff;
   }
+  return (struct AddrSeg){i, s};
+}
+
+int64_t ComputeAddress(const struct Machine *m, uint32_t rde) {
+  struct AddrSeg ea;
+  ea = LoadEffectiveAddress(m, rde);
+  return AddSegment(m, rde, ea.addr, ea.seg);
 }
 
 void *ComputeReserveAddressRead(struct Machine *m, uint32_t rde, size_t n) {

@@ -45,11 +45,12 @@ struct Dis {
     } * p;
   } edges;
   struct XedDecodedInst xedd[1];
-  uint64_t addr;
+  struct Machine *m; /* for the segment registers */
+  uint64_t addr;     /* current effective address */
   char buf[512];
 };
 
-long Dis(struct Dis *, struct Machine *, int64_t, int);
+long Dis(struct Dis *, struct Machine *, uint64_t, uint64_t, int);
 long DisFind(struct Dis *, int64_t);
 void DisFree(struct Dis *);
 void DisFreeOp(struct DisOp *);

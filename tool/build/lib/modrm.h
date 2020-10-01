@@ -50,9 +50,15 @@ COSMOPOLITAN_C_START_
 #define SibIsAbsolute(x, r) (!SibHasBase(x, r) && !SibHasIndex(x))
 #define IsRipRelative(x)    (ModrmRm(x) == 5 && !ModrmMod(x))
 
+struct AddrSeg {
+  int64_t addr;
+  uint8_t *seg;
+};
+
 extern const uint8_t kByteReg[32];
 
-int64_t ComputeAddress(const struct Machine *, uint32_t) nosideeffect;
+int64_t ComputeAddress(const struct Machine *, uint32_t);
+struct AddrSeg LoadEffectiveAddress(const struct Machine *, uint32_t);
 
 void *ComputeReserveAddressRead(struct Machine *, uint32_t, size_t);
 void *ComputeReserveAddressRead1(struct Machine *, uint32_t);

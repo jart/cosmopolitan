@@ -6,6 +6,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+uint64_t AddressOb(struct Machine *, uint32_t);
 uint64_t AddressDi(struct Machine *, uint32_t);
 uint64_t AddressSi(struct Machine *, uint32_t);
 uint64_t DataSegment(struct Machine *, uint32_t, uint64_t);

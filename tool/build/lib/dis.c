@@ -35,6 +35,7 @@
 #include "tool/build/lib/case.h"
 #include "tool/build/lib/demangle.h"
 #include "tool/build/lib/dis.h"
+#include "tool/build/lib/endian.h"
 #include "tool/build/lib/high.h"
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/modrm.h"
@@ -173,19 +174,21 @@ long DisFind(struct Dis *d, int64_t addr) {
   return -1;
 }
 
-static long DisOne(struct Dis *d, struct Machine *m, int64_t addr) {
+static long DisAppendOpLines(struct Dis *d, struct Machine *m, int64_t addr) {
   void *r;
+  int64_t ip;
   unsigned k;
   uint8_t b[15];
   struct DisOp op;
   long i, n, symbol;
   n = 15;
-  if ((symbol = DisFindSym(d, addr)) != -1) {
-    if (d->syms.p[symbol].addr <= addr &&
-        addr < d->syms.p[symbol].addr + d->syms.p[symbol].size) {
-      n = d->syms.p[symbol].size - (addr - d->syms.p[symbol].addr);
+  ip = addr - Read64(m->cs);
+  if ((symbol = DisFindSym(d, ip)) != -1) {
+    if (d->syms.p[symbol].addr <= ip &&
+        ip < d->syms.p[symbol].addr + d->syms.p[symbol].size) {
+      n = d->syms.p[symbol].size - (ip - d->syms.p[symbol].addr);
     }
-    if (addr == d->syms.p[symbol].addr && d->syms.p[symbol].name) {
+    if (ip == d->syms.p[symbol].addr && d->syms.p[symbol].name) {
       op.addr = addr;
       op.size = 0;
       op.active = true;
@@ -219,18 +222,19 @@ static long DisOne(struct Dis *d, struct Machine *m, int64_t addr) {
   return n;
 }
 
-long Dis(struct Dis *d, struct Machine *m, int64_t addr, int lines) {
+long Dis(struct Dis *d, struct Machine *m, uint64_t addr, uint64_t ip,
+         int lines) {
   int64_t i, j, symbol;
   DisFreeOps(&d->ops);
   if ((symbol = DisFindSym(d, addr)) != -1 &&
       (d->syms.p[symbol].addr < addr &&
        addr < d->syms.p[symbol].addr + d->syms.p[symbol].size)) {
     for (i = d->syms.p[symbol].addr; i < addr; i += j) {
-      if ((j = DisOne(d, m, i)) == -1) return -1;
+      if ((j = DisAppendOpLines(d, m, i)) == -1) return -1;
     }
   }
   for (i = 0; i < lines; ++i, addr += j) {
-    if ((j = DisOne(d, m, addr)) == -1) return -1;
+    if ((j = DisAppendOpLines(d, m, addr)) == -1) return -1;
   }
   return 0;
 }
@@ -247,6 +251,7 @@ const char *DisGetLine(struct Dis *d, struct Machine *m, size_t i) {
       d->xedd, AccessRam(m, d->ops.p[i].addr, d->ops.p[i].size, r, b, true),
       d->ops.p[i].size);
   d->addr = d->ops.p[i].addr;
+  d->m = m;
   p = DisLineCode(d, d->buf);
   CHECK_LT(p - d->buf, sizeof(d->buf));
   return d->buf;

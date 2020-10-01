@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "tool/build/emubin/poke.h"
 #include "tool/build/emubin/real.h"
+#include "tool/build/emubin/realstart.inc"
 
 #define signbit(x) __builtin_signbit(x)
 
