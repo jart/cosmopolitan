@@ -75,7 +75,7 @@ static int ppatoi(const char **str) {
  *   - `%Lf`  long double
  *   - `%p`   pointer (48-bit hexadecimal)
  *
- * Length Modifiers
+ * Size Modifiers
  *
  *   - `%hhd` char (8-bit)
  *   - `%hd`  short (16-bit)
@@ -89,7 +89,11 @@ static int ppatoi(const char **str) {
  *   - `%08d` fixed columns w/ zero leftpadding
  *   - `%8d`  fixed columns w/ space leftpadding
  *   - `%*s`  variable column string (thompson-pike)
- *   - `%.*s` variable column data (ignore nul terminator)
+ *
+ * Precision Modifiers
+ *
+ *   - `%.8s` supplied character length (ignore nul terminator)
+ *   - `%.*s` supplied character length argument (ignore nul terminator)
  *
  * Formatting Modifiers
  *
@@ -112,9 +116,9 @@ hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
   long double ldbl;
   wchar_t charbuf[3];
   const char *alphabet;
-  int (*out)(int, void *);
+  int (*out)(long, void *);
   unsigned char signbit, log2base;
-  int w, rc, flags, width, lasterr, precision;
+  int w, flags, width, lasterr, precision;
 
   lasterr = errno;
   out = fn ? fn : (int (*)(int, void *))missingno;
@@ -255,7 +259,8 @@ hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
       case 'u': {
         flags &= ~FLAGS_HASH; /* no hash for dec format */
       DoNumber:
-        if (weaken(ntoa)(out, arg, va, signbit, log2base, precision, width,
+        if (!weaken(ntoa) ||
+            weaken(ntoa)(out, arg, va, signbit, log2base, precision, width,
                          flags, alphabet) == -1) {
           return -1;
         }
@@ -269,7 +274,8 @@ hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
         } else {
           ldbl = va_arg(va, double);
         }
-        if (weaken(ftoa)(out, arg, ldbl, precision, width, flags) == -1) {
+        if (!weaken(ftoa) ||
+            weaken(ftoa)(out, arg, ldbl, precision, width, flags) == -1) {
           return -1;
         }
         break;
@@ -297,8 +303,10 @@ hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
       case 's':
         p = va_arg(va, void *);
       showstr:
-        rc = weaken(stoa)(out, arg, p, flags, precision, width, signbit, qchar);
-        if (rc == -1) return -1;
+        if (!weaken(stoa) || weaken(stoa)(out, arg, p, flags, precision, width,
+                                          signbit, qchar) == -1) {
+          return -1;
+        }
         break;
 
       case '%':

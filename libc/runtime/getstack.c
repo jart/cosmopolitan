@@ -28,9 +28,9 @@
  */
 void *_getstack(void) {
   char *p;
-  p = mmap((char *)0x700000000000 - STACKSIZE, STACKSIZE,
-           PROT_READ | PROT_WRITE, MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1,
-           0);
+  p = mmap((char *)0x700000000000 /* IMAGE_BASE_VIRTUAL */ - STACKSIZE,
+           STACKSIZE, PROT_READ | PROT_WRITE,
+           MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   if (p == MAP_FAILED) abort();
   return p + STACKSIZE;
 }

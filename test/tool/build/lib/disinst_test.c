@@ -17,6 +17,10 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/rand/lcg.h"
+#include "libc/rand/rand.h"
+#include "libc/stdio/stdio.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "tool/build/lib/dis.h"
 #include "tool/build/lib/modrm.h"
@@ -227,7 +231,7 @@ TEST(DisInst, testOrImmCode16gcc) {
   xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_REAL);
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
   DisInst(d, b1, DisSpec(d->xedd, b2));
-  EXPECT_STREQ("or      $0xc00,12(%esp)", b1);
+  EXPECT_STREQ("orw     $0xc00,12(%esp)", b1);
 }
 
 TEST(DisInst, testPause) {
@@ -268,4 +272,20 @@ TEST(DisInst, testJmpEq) {
   ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
   DisInst(d, b1, DisSpec(d->xedd, b2));
   EXPECT_STREQ("jmp     %rax", b1);
+}
+
+TEST(DisInst, testMovswSs) {
+  uint8_t op[] = {0x36, 0xA5};
+  xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_REAL);
+  ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
+  EXPECT_STREQ("movs    %ss:(%si),(%di)", b1);
+}
+
+TEST(DisInst, testRealModrm_sibOverlap_showsNoDisplacement) {
+  uint8_t op[] = {0x8b, 0b00100101};
+  xed_decoded_inst_zero_set_mode(d->xedd, XED_MACHINE_MODE_REAL);
+  ASSERT_EQ(0, xed_instruction_length_decode(d->xedd, op, sizeof(op)));
+  DisInst(d, b1, DisSpec(d->xedd, b2));
+  EXPECT_STREQ("mov     (%di),%sp", b1);
 }

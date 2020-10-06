@@ -25,7 +25,7 @@
 /**
  * Converts UNIX nanosecond timestamp to Windows COBOL timestamp.
  */
-struct NtFileTime timespectofiletime(struct timespec ts) {
+struct NtFileTime TimeSpecToFileTime(struct timespec ts) {
   uint64_t x;
   x = MODERNITYSECONDS;
   x += ts.tv_sec * HECTONANOSECONDS;

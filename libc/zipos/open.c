@@ -99,9 +99,9 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
   if ((h->size = ZIP_LFILE_UNCOMPRESSEDSIZE(zipos->map + lf))) {
     if (ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf)) {
       assert(ZIP_LFILE_COMPRESSEDSIZE(zipos->map + lf));
-      h->mapsize = ROUNDUP(h->size + FRAMESIZE, FRAMESIZE);
-      if ((h->map = mapanon(h->mapsize)) != MAP_FAILED) {
-        h->mem = h->map + FRAMESIZE / 2;
+      h->mapsize = h->size;
+      if ((h->map = malloc(h->mapsize)) != MAP_FAILED) {
+        h->mem = h->map;
         if ((IsTiny() ? __zipos_inflate_tiny : __zipos_inflate_fast)(
                 h, ZIP_LFILE_CONTENT(zipos->map + lf),
                 ZIP_LFILE_COMPRESSEDSIZE(zipos->map + lf)) == -1) {
@@ -132,7 +132,7 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
  * Loads compressed file from αcτµαlly pδrταblε εxεcµταblε object store.
  *
  * @param uri is obtained via __zipos_parseuri()
- * @asyncsignalsafe
+ * @note don't call open() from signal handlers
  */
 int __zipos_open(const struct ZiposUri *name, unsigned flags, int mode) {
   int fd;
@@ -140,7 +140,6 @@ int __zipos_open(const struct ZiposUri *name, unsigned flags, int mode) {
   sigset_t oldmask;
   struct Zipos *zipos;
   assert((flags & O_ACCMODE) == O_RDONLY);
-  sigprocmask(SIG_BLOCK, &kSigsetFull, &oldmask);
   if ((zipos = __zipos_get())) {
     if ((cf = __zipos_find(zipos, name)) != -1) {
       fd = __zipos_load(zipos, cf, flags, mode);
@@ -150,6 +149,5 @@ int __zipos_open(const struct ZiposUri *name, unsigned flags, int mode) {
   } else {
     fd = enoexec();
   }
-  sigprocmask(SIG_SETMASK, &oldmask, NULL);
   return fd;
 }

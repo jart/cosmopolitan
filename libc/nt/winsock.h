@@ -1,6 +1,8 @@
 #ifndef COSMOPOLITAN_LIBC_NT_WINSOCK_H_
 #define COSMOPOLITAN_LIBC_NT_WINSOCK_H_
 #include "libc/nt/struct/overlapped.h"
+#include "libc/nt/struct/pollfd.h"
+#include "libc/sock/sock.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 #if 0
@@ -54,10 +56,6 @@ COSMOPOLITAN_C_START_
 #define kNtTfUseDefaultWorker 0x00
 #define kNtTfUseSystemThread  0x10
 #define kNtTfUseKernelApc     0x20
-
-struct sockaddr;
-struct sockaddr_in;
-struct pollfd$nt;
 
 enum NtWsaEComparator { COMP_EQUAL, COMP_NOTLESS };
 

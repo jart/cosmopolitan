@@ -29,7 +29,7 @@
  */
 int __zipos_close(struct ZiposHandle *h) {
   if (h) {
-    munmap(h->map, h->mapsize);
+    free(h->map);
     free(h);
   }
   return 0;

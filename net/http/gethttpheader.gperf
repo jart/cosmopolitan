@@ -58,5 +58,5 @@ Retry-After,          kHttpRetryAfter
 Server,               kHttpServer
 Vary,                 kHttpVary
 Warning,              kHttpWarning
-WWW-Authenticate,     kHttpWwwAuthenticate
+Www-Authenticate,     kHttpWwwAuthenticate
 Last-Modified,        kHttpLastModified

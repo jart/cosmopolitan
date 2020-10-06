@@ -71,27 +71,25 @@ static size_t KnuthMorrisPratt(m, T, W, n, S)
  * @param needlelen is its character count
  * @return pointer to first result or NULL if not found
  */
-void *(memmem)(const void *haystack_, size_t haystacklen, const void *needle_,
+void *(memmem)(const void *haystackp, size_t haystacklen, const void *needlep,
                size_t needlelen) {
+  long *T;
+  size_t i;
   const char *haystack, *needle, *h;
-  haystack = haystack_;
-  needle = needle_;
+  needle = needlep;
+  haystack = haystackp;
   if (needlelen > haystacklen) return NULL;
-  if (!needlelen) return (/*unconst*/ void *)haystack;
+  if (!needlelen) return haystack;
   h = memchr(haystack, *needle, haystacklen);
-  if (!h || needlelen == 1) return (/*unconst*/ void *)h;
+  if (!h || needlelen == 1) return h;
   haystacklen -= h - haystack;
-  long stacktmp[16];
-  void *freeme = NULL;
-  long *T = (needlelen + 1 < ARRAYLEN(stacktmp))
-                ? &stacktmp[0]
-                : (freeme = malloc((needlelen + 1) * sizeof(long)));
-  KnuthMorrisPrattInit(needlelen, T, needle);
-  size_t i = KnuthMorrisPratt(needlelen, T, needle, haystacklen, h);
-  free(freeme);
-  if (i < haystacklen) {
-    return (/*unconst*/ char *)h + i * sizeof(char);
+  if (needlelen < haystacklen && memcmp(h, needle, needlelen) == 0) {
+    return h;
   } else {
-    return NULL;
+    T = malloc((needlelen + 1) * sizeof(long));
+    KnuthMorrisPrattInit(needlelen, T, needle);
+    i = KnuthMorrisPratt(needlelen, T, needle, haystacklen, h);
+    free(T);
+    return i < haystacklen ? h + i * sizeof(char) : NULL;
   }
 }

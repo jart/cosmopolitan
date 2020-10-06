@@ -20,7 +20,7 @@
 #include "libc/conv/conv.h"
 #include "libc/nt/struct/filetime.h"
 
-struct NtFileTime timetofiletime(int64_t t) {
+struct NtFileTime TimeToFileTime(int64_t t) {
   uint64_t t2 = (t + MODERNITYSECONDS) * HECTONANOSECONDS;
   return (struct NtFileTime){(uint32_t)t2, (uint32_t)(t2 >> 32)};
 }

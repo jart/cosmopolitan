@@ -72,7 +72,7 @@ o/$(MODE)/%.c11.o: %.c11.c; @ACTION=OBJECTIFY.c11 build/compile $(OBJECTIFY.c11.
 o/$(MODE)/%.c2x.o: %.c2x.c; @ACTION=OBJECTIFY.c2x build/compile $(OBJECTIFY.c2x.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.initabi.o: %.initabi.c; @ACTION=OBJECTIFY.init build/compile $(OBJECTIFY.initabi.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.ncabi.o: %.ncabi.c; @ACTION=OBJECTIFY.nc build/compile $(OBJECTIFY.ncabi.c) $(OUTPUT_OPTION) $<
-o/tiny/%.real.o: %.real.c; @ACTION=OBJECTIFY.real build/compile $(OBJECTIFY.real.c) $(OUTPUT_OPTION) $<
+o/$(MODE)/%.real.o: %.c; @ACTION=OBJECTIFY.real build/compile $(OBJECTIFY.real.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.runs: o/$(MODE)/%; @ACTION=CHECK.runs TARGET=$< build/runcom $< $(TESTARGS) && touch $@
 o/$(MODE)/%.pkg:; @build/package $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) $(filter %.o,$^)
 o/$(MODE)/%.zip.o: %; @build/zipobj $(OUTPUT_OPTION) $<

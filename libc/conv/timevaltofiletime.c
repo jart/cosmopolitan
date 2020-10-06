@@ -22,7 +22,7 @@
 #include "libc/nt/struct/filetime.h"
 #include "libc/time/time.h"
 
-struct NtFileTime timevaltofiletime(const struct timeval *tv) {
+struct NtFileTime TimeValToFileTime(const struct timeval *tv) {
   uint64_t t2 = tv->tv_sec * HECTONANOSECONDS + tv->tv_usec * 10 +
                 MODERNITYSECONDS * HECTONANOSECONDS;
   return (struct NtFileTime){(uint32_t)t2, (uint32_t)(t2 >> 32)};

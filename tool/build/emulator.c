@@ -56,6 +56,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/time/time.h"
 #include "libc/unicode/unicode.h"
 #include "libc/x/x.h"
 #include "third_party/dtoa/dtoa.h"
@@ -91,8 +92,7 @@ DESCRIPTION\n\
 \n\
 FLAGS\n\
 \n\
-  -h\n\
-  -?        help\n\
+  -h        help\n\
   -v        verbosity\n\
   -r        real mode\n\
   -s        statistics\n\
@@ -137,8 +137,9 @@ COMPLETENESS\n\
 #define QUIT     0x200
 #define EXIT     0x400
 
-#define CTRL(C) ((C) ^ 0100)
-#define ALT(C)  (('\e' << 010) | (C))
+#define CTRL(C)   ((C) ^ 0100)
+#define ALT(C)    (('\e' << 010) | (C))
+#define SEX(x, b) ((x) | ((x) & (1ull << (b)) ? -(1ull << (b)) : 0))
 
 struct Panels {
   union {
@@ -215,16 +216,6 @@ static struct Breakpoints breakpoints;
 static void SetupDraw(void);
 static void Redraw(void);
 
-static uint64_t SignExtend(uint64_t x, uint8_t b) {
-  uint64_t s;
-  s = 1;
-  b -= 1;
-  b &= 63;
-  s <<= b;
-  if (x & s) x |= ~(s - 1);
-  return x;
-}
-
 static char *FormatDouble(char *b, double x) {
   return g_fmt(b, x);
 }
@@ -234,16 +225,15 @@ static void SetCarry(bool cf) {
 }
 
 static bool IsCall(void) {
-  return m->xedd->op.map == XED_ILD_MAP0 &&
-         (m->xedd->op.opcode == 0xE8 ||
-          (m->xedd->op.opcode == 0xFF && m->xedd->op.reg == 2));
+  return (m->xedd->op.dispatch == 0x0E8 ||
+          (m->xedd->op.dispatch == 0x0FF && m->xedd->op.reg == 2));
 }
 
 static bool IsLongBranch(void) {
-  return m->xedd && m->xedd->op.map == XED_ILD_MAP0 &&
-         (m->xedd->op.opcode == 0xEA || m->xedd->op.opcode == 0x9A ||
-          (m->xedd->op.opcode == 0xFF && m->xedd->op.reg == 3) ||
-          (m->xedd->op.opcode == 0xFF && m->xedd->op.reg == 5));
+  return m->mode != XED_MODE_LONG &&
+         (m->xedd->op.dispatch == 0x0EA || m->xedd->op.dispatch == 0x09A ||
+          (m->xedd->op.opcode == 0x0FF && m->xedd->op.reg == 3) ||
+          (m->xedd->op.opcode == 0x0FF && m->xedd->op.reg == 5));
 }
 
 static bool IsDebugBreak(void) {
@@ -370,13 +360,16 @@ static void GetTtySize(void) {
 static void TuiRejuvinate(void) {
   GetTtySize();
   ttyhidecursor(STDOUT_FILENO);
-  ttyraw(0);
+  ttyraw(kTtySigs);
   xsigaction(SIGBUS, OnBusted, SA_NODEFER, 0, NULL);
 }
 
 static void OnCtrlC(void) {
-  LOGF("OnCtrlC");
-  action |= INT;
+  if (tuimode) {
+    action |= INT;
+  } else {
+    HaltMachine(m, kMachineExit);
+  }
 }
 
 static void OnQ(void) {
@@ -404,7 +397,7 @@ static void OnCont(void) {
 static void TuiCleanup(void) {
   sigaction(SIGWINCH, oldsig + 0, NULL);
   sigaction(SIGCONT, oldsig + 2, NULL);
-  ttyraw((enum TtyRawFlags)(-1u));
+  ttyraw(-1);
   ttyshowcursor(STDOUT_FILENO);
   CHECK_NE(-1, close(ttyfd));
   tuimode = false;
@@ -447,6 +440,7 @@ void TuiSetup(void) {
   CHECK_NE(-1, (ttyfd = open("/dev/tty", O_RDWR)));
   xsigaction(SIGWINCH, OnWinch, 0, 0, oldsig + 0);
   xsigaction(SIGCONT, OnCont, SA_RESTART, 0, oldsig + 2);
+  xsigaction(SIGINT, OnCtrlC, 0 /* SA_NODEFER */, 0, oldsig + 3);
   memcpy(&m[1], &m[0], sizeof(m[0]));
   TuiRejuvinate();
 }
@@ -660,12 +654,19 @@ static void SetupDraw(void) {
                    pan.display.right - pan.display.left);
 }
 
+static long Disassemble(void) {
+  long lines, current;
+  lines = pan.disassembly.bottom - pan.disassembly.top * 2;
+  CHECK_NE(-1, Dis(dis, m, GetIp(), m->ip, lines));
+  current = DisFind(dis, GetIp());
+  CHECK_NE(-1, current);
+  return current;
+}
+
 static long GetDisIndex(void) {
   long i;
-  if ((i = DisFind(dis, GetIp())) == -1 || IsLongBranch()) {
-    Dis(dis, m, GetIp(), m->ip,
-        pan.disassembly.bottom - pan.disassembly.top * 2);
-    CHECK_NE(-1, (i = DisFind(dis, GetIp())));
+  if ((i = DisFind(dis, GetIp())) == -1) {
+    i = Disassemble();
   }
   while (i + 1 < dis->ops.i && !dis->ops.p[i].size) ++i;
   return i;
@@ -864,7 +865,7 @@ static void DrawXmm(struct Panel *p, long i, long r) {
           if (0 && ssewidth == 1 && (040 <= ival && ival < 0200 - 1)) {
             sprintf(buf, "%`'c", ival);
           } else {
-            int64toarray_radix10(SignExtend(ival, ssewidth * 8), buf);
+            int64toarray_radix10(SEX(ival, ssewidth * 8), buf);
           }
         } else {
           uint64toarray_fixed16(ival, buf, ssewidth * 8);
@@ -977,7 +978,7 @@ static void DrawBreakpoints(struct Panel *p) {
     name = sym != -1 ? dis->syms.stab + dis->syms.p[sym].name : "UNKNOWN";
     s = buf;
     s += sprintf(s, "%p ", addr);
-    CHECK_LT(Demangle(s, name), buf + ARRAYLEN(buf));
+    CHECK_LT(Demangle(s, name, DIS_MAX_SYMBOL_LENGTH), buf + ARRAYLEN(buf));
     AppendPanel(p, line, buf);
     if (sym != -1 && addr != dis->syms.p[sym].addr) {
       snprintf(buf, sizeof(buf), "+%#lx", addr - dis->syms.p[sym].addr);
@@ -1015,7 +1016,7 @@ static void DrawTrace(struct Panel *p) {
     name = sym != -1 ? dis->syms.stab + dis->syms.p[sym].name : "UNKNOWN";
     s = line;
     s += sprintf(s, "%p %p ", Read64(m->ss) + bp, rp);
-    s = Demangle(s, name);
+    s = Demangle(s, name, DIS_MAX_SYMBOL_LENGTH);
     AppendPanel(p, i, line);
     if (sym != -1 && rp != dis->syms.p[sym].addr) {
       snprintf(line, sizeof(line), "+%#lx", rp - dis->syms.p[sym].addr);
@@ -1417,7 +1418,6 @@ static void OnVidyaServiceTeletypeOutput(void) {
   char buf[12];
   n = FormatCga(m->bx[0], buf);
   n += tpencode(buf + n, 6, VidyaServiceXlatTeletype(m->ax[0]), false);
-  LOGF("teletype output %`'.*s", n, buf);
   MachinePtyWrite(pty, buf, n);
 }
 
@@ -1520,6 +1520,7 @@ static void OnInt15h(void) {
 }
 
 static bool OnHalt(int interrupt) {
+  LOGF("OnHalt(%d)", interrupt);
   ReactiveDraw();
   switch (interrupt) {
     case 1:
@@ -1577,15 +1578,24 @@ static void OnPageDown(void) {
 
 static void OnUpArrow(void) {
   if (action & CONTINUE) {
-    speed = MIN(0x40000000, MAX(1, speed) << 1);
+    if (speed >= -1) {
+      speed = MIN(0x40000000, MAX(1, speed) << 1);  // 1..40mips skip
+    } else {
+      speed >>= 1;
+    }
   } else {
     --opstart;
   }
+  LOGF("speed %d", speed);
 }
 
 static void OnDownArrow(void) {
   if (action & CONTINUE) {
-    speed >>= 1;
+    if (speed > 0) {
+      speed >>= 1;
+    } else {
+      speed = MAX(-(5 * 1000), MIN(-10, speed) << 1);  // 10ms..5s delay
+    }
   } else {
     ++opstart;
   }
@@ -1897,6 +1907,9 @@ static void Tui(void) {
         action &= ~WINCHED;
       }
       interactive = ++tick > speed;
+      if (interactive && speed < 0) {
+        dsleep(.001L * -speed);
+      }
       if (!(action & CONTINUE) || interactive) {
         tick = 0;
         GetDisIndex();
@@ -1907,7 +1920,8 @@ static void Tui(void) {
         LOGF("TUI FAILURE");
         PrintMessageBox(ttyfd, systemfailure, tyn, txn);
         ReadKeyboard();
-      } else if (!IsExecuting() || (interactive && HasPendingKeyboard())) {
+      } else if (!IsExecuting() || ((interactive || !(action & CONTINUE)) &&
+                                    !(action & INT) && HasPendingKeyboard())) {
         ReadKeyboard();
       }
       if (action & INT) {
@@ -1961,6 +1975,9 @@ static void Tui(void) {
         }
         if (!IsDebugBreak()) {
           ExecuteInstruction(m);
+          if (IsLongBranch()) {
+            Disassemble();
+          }
         } else {
           m->ip += m->xedd->length;
           action &= ~NEXT;
@@ -1997,7 +2014,7 @@ static void Tui(void) {
 static void GetOpts(int argc, char *argv[]) {
   int opt;
   stpcpy(stpcpy(stpcpy(logpath, kTmpPath), basename(argv[0])), ".log");
-  while ((opt = getopt(argc, argv, "?hvtrRsb:HL:")) != -1) {
+  while ((opt = getopt(argc, argv, "hvtrRsb:HL:")) != -1) {
     switch (opt) {
       case 't':
         tuimode = true;
@@ -2007,6 +2024,7 @@ static void GetOpts(int argc, char *argv[]) {
         break;
       case 'r':
         m->mode = XED_MACHINE_MODE_REAL;
+        g_disisprog_disable = true;
         break;
       case 's':
         printstats = true;
@@ -2024,7 +2042,6 @@ static void GetOpts(int argc, char *argv[]) {
         strcpy(logpath, optarg);
         break;
       case 'h':
-      case '?':
         PrintUsage(EXIT_SUCCESS, stdout);
       default:
         PrintUsage(EX_USAGE, stderr);

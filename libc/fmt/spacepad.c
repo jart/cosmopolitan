@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/palandprintf.h"
 
-int spacepad(int out(int, void *), void *arg, unsigned long n) {
+int spacepad(int out(long, void *), void *arg, unsigned long n) {
   int i, rc;
   for (rc = i = 0; i < n; ++i) rc |= out(' ', arg);
   return rc;

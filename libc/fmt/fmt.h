@@ -29,6 +29,8 @@ char *strerror(int) returnsnonnull nothrow nocallback;
 int strerror_r(int, char *, size_t) nothrow nocallback;
 int palandprintf(void *, void *, const char *, va_list) hidden;
 char *itoa(int, char *, int) compatfn;
+char *fcvt(double, int, int *, int *);
+char *ecvt(double, int, int *, int *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § string formatting » optimizations                         ─╬─│┼

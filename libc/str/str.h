@@ -64,10 +64,6 @@ void *isnotplaintext(const void *, size_t) nothrow nocallback nosideeffect;
 
 #define INVALID_CODEPOINT 0xfffd
 
-#define UTF16_MASK 0b1111110000000000
-#define UTF16_MOAR 0b1101100000000000 /* 0xD800..0xDBFF */
-#define UTF16_CONT 0b1101110000000000 /* 0xDC00..0xDBFF */
-
 unsigned getutf16(const char16_t *, wint_t *);
 int pututf16(char16_t *, size_t, wint_t, bool);
 int iswalnum(wint_t);

@@ -63,7 +63,7 @@ textwindows int utimensat$nt(int dirfd, const char *path,
       } else if (ts[i].tv_nsec == UTIME_OMIT) {
         ftp[i] = NULL;
       } else {
-        ft[i] = timespectofiletime(ts[i]);
+        ft[i] = TimeSpecToFileTime(ts[i]);
         ftp[i] = &ft[i];
       }
     }

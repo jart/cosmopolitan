@@ -36,8 +36,8 @@ textwindows int getrusage$nt(int who, struct rusage *usage) {
   if ((who == RUSAGE_SELF ? GetProcessTimes : GetThreadTimes)(
           (who == RUSAGE_SELF ? GetCurrentProcess : GetCurrentThread)(),
           &CreationFileTime, &ExitFileTime, &KernelFileTime, &UserFileTime)) {
-    filetimetotimeval(&usage->ru_utime, UserFileTime);
-    filetimetotimeval(&usage->ru_stime, KernelFileTime);
+    FileTimeToTimeVal(&usage->ru_utime, UserFileTime);
+    FileTimeToTimeVal(&usage->ru_stime, KernelFileTime);
     return 0;
   } else {
     return winerr();

@@ -54,10 +54,3 @@ TEST(inet_ntop, testNoSpace) {
   ASSERT_STREQ("", buf);
   tfree(buf);
 }
-
-TEST(inet_ntop, testSqueeze) {
-  char *buf = memcpy(tmalloc(8), "hi", 3);
-  uint8_t localhost[4] = {0, 0, 0, 0};
-  ASSERT_STREQ("0.0.0.0", inet_ntop(AF_INET, localhost, buf, 8));
-  tfree(buf);
-}

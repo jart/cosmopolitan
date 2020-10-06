@@ -45,6 +45,7 @@ COUNTERMAND=
 
 # The GNU Compiler Collection passes a lot of CFLAGS to the preprocessor
 # (which we call CCFLAGS) but it should pass more; and we do just that.
+NOPG=0
 FIRST=1
 OUTARG=0
 INVISIBLE=0
@@ -65,13 +66,16 @@ for x; do
     -w)
       set -- "$@" "$x" -D__W__
       ;;
+    -x-no-pg)
+      NOPG=1
+      ;;
     -pg)
-      if [ $INVISIBLE -eq 0 ]; then
+      if [ $NOPG -eq 0 ] && [ $INVISIBLE -eq 0 ]; then
         set -- "$@" "$x" -D__PG__  # @see libc/macros.h
       fi
       ;;
     -mfentry)
-      if [ $INVISIBLE -eq 0 ]; then
+      if [ $NOPG -eq 0 ] && [ $INVISIBLE -eq 0 ]; then
         set -- "$@" "$x" -D__MFENTRY__
       fi
       ;;

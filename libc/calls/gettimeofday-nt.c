@@ -29,7 +29,7 @@
 int gettimeofday$nt(struct timeval *tv, struct timezone *tz) {
   struct NtFileTime ft;
   GetSystemTimeAsFileTime(&ft);
-  filetimetotimeval(tv, ft);
+  FileTimeToTimeVal(tv, ft);
   if (tz) memset(tz, 0, sizeof(*tz));
   return 0;
 }

@@ -28,8 +28,11 @@
  */
 bool isheap(void *p) {
   int x, i;
+#if 1
   register intptr_t rsp asm("rsp");
   if ((intptr_t)p >= rsp) return false;
+#endif
+  if ((intptr_t)p <= (intptr_t)_end) return false;
   x = (intptr_t)p >> 16;
   i = FindMemoryInterval(&_mmi, x);
   return i < _mmi.i && x >= _mmi.p[i].x && x <= _mmi.p[i].y;

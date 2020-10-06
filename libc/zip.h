@@ -57,6 +57,7 @@
 #define kZipCfileOffsetLastmodifieddate   14
 #define kZipCfileOffsetCrc32              16
 #define kZipCfileOffsetCompressedsize     20
+#define kZipCfileOffsetUncompressedsize   24
 #define kZipCfileOffsetExternalattributes 38
 #define kZipCfileOffsetOffset             42
 
@@ -71,10 +72,10 @@
 
 #define kZipGflagUtf8 0x800
 
-#define kZipExtraHdrSize       4
-#define kZipExtraZip64         0x0001
-#define kZipExtraNtfs          0x000a
-#define kZipExtraNtfsFiletimes 0x0001
+#define kZipExtraHdrSize           4
+#define kZipExtraZip64             0x0001
+#define kZipExtraNtfs              0x000a
+#define kZipExtraExtendedTimestamp 0x5455
 
 #define kZipCfileMagic "PK\001\002"
 
@@ -105,9 +106,10 @@
   READ16LE((P) + kZipCfileOffsetLastmodifiedtime) /* @see DOS_TIME() */
 #define ZIP_CFILE_LASTMODIFIEDDATE(P) \
   READ16LE((P) + kZipCfileOffsetLastmodifieddate) /* @see DOS_DATE() */
-#define ZIP_CFILE_CRC32(P)              READ32LE((P) + kZipCfileOffsetCrc32)
-#define ZIP_CFILE_COMPRESSEDSIZE(P)     READ32LE(P + kZipCfileOffsetCompressedsize)
-#define ZIP_CFILE_UNCOMPRESSEDSIZE(P)   READ32LE((P) + 24)
+#define ZIP_CFILE_CRC32(P)          READ32LE((P) + kZipCfileOffsetCrc32)
+#define ZIP_CFILE_COMPRESSEDSIZE(P) READ32LE(P + kZipCfileOffsetCompressedsize)
+#define ZIP_CFILE_UNCOMPRESSEDSIZE(P) \
+  READ32LE((P) + kZipCfileOffsetUncompressedsize)
 #define ZIP_CFILE_NAMESIZE(P)           READ16LE((P) + 28)
 #define ZIP_CFILE_EXTRASIZE(P)          READ16LE((P) + 30)
 #define ZIP_CFILE_COMMENTSIZE(P)        READ16LE((P) + 32)
@@ -124,7 +126,7 @@
   (ZIP_CFILE_NAMESIZE(P) + ZIP_CFILE_EXTRASIZE(P) + ZIP_CFILE_COMMENTSIZE(P) + \
    kZipCfileHdrMinSize)
 
-/* central directory file header */
+/* local file header */
 #define ZIP_LFILE_MAGIC(P)       READ32LE(P)
 #define ZIP_LFILE_VERSIONNEED(P) ((P)[4])
 #define ZIP_LFILE_OSNEED(P)      ((P)[5])

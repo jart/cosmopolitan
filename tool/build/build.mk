@@ -35,6 +35,7 @@ TOOL_BUILD_DIRECTDEPS =					\
 	LIBC_ELF					\
 	LIBC_FMT					\
 	LIBC_LOG					\
+	LIBC_LOG_ASAN					\
 	LIBC_TINYMATH					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\

@@ -21,8 +21,8 @@
 	.code16
 	.section .start,"ax",@progbits
 _start:	jmp	1f
-1:	ljmp	$0x600>>4,$2f
-2:	push	%cs
+1:	ljmp	$0x600>>4,$_begin
+_begin:	push	%cs
 	pop	%ds
 	push	%cs
 	pop	%es
@@ -50,3 +50,45 @@ _start:	jmp	1f
 	.globl	_start
 	.globl	v_sectors
 	.globl	main
+
+setjmp:	mov	%sp,%ax
+	stosw				# sp
+	xchg	%ax,%si
+	movsw	%ss:(%si),(%di)		# ip
+	mov	%bp,%ax
+	stosw				# bp
+	ret
+	.type	setjmp,@function
+	.size	setjmp,.-setjmp
+	.globl	setjmp
+
+longjmp:
+	mov	(%di),%sp
+	mov	2(%di),%dx
+	mov	4(%di),%bp
+	pop	%ax
+	mov	%si,%ax
+	jmp	*%dx
+	.type	longjmp,@function
+	.size	longjmp,.-longjmp
+	.globl	longjmp
+
+	.globl	q.syntax
+	.type	q.syntax,@function
+	.globl	q.look
+	.type	q.look,@function
+	.globl	q.globals
+	.type	q.globals,@function
+	.globl	q.index
+	.type	q.index,@function
+	.globl	q.token
+	.type	q.token,@function
+	.globl	q.str
+	.type	q.str,@function
+
+	.globl	boot
+	.type	boot,@function
+	.globl	bss
+	.type	bss,@function
+	.globl	rodata
+	.type	rodata,@function

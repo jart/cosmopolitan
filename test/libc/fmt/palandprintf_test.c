@@ -679,9 +679,12 @@ TEST(snprintf, formatStringLiteral) {
 }
 
 BENCH(palandprintf, bench) {
-  EZBENCH2("snprintf %x", donothing, Format("%x", VEIL("r", INT_MIN)));
-  EZBENCH2("snprintf %d", donothing, Format("%d", VEIL("r", INT_MIN)));
-  EZBENCH2("snprintf %s", donothing, Format("%s", VEIL("r", "hi (╯°□°)╯")));
+  EZBENCH2("23 %x", donothing, Format("%x", VEIL("r", 23)));
+  EZBENCH2("23 %d", donothing, Format("%d", VEIL("r", 23)));
+  EZBENCH2("INT_MIN %x", donothing, Format("%x", VEIL("r", INT_MIN)));
+  EZBENCH2("INT_MIN %d", donothing, Format("%d", VEIL("r", INT_MIN)));
+  EZBENCH2("ascii %s", donothing, Format("%s", VEIL("r", "hiuhcreohucreo")));
+  EZBENCH2("utf8 %s", donothing, Format("%s", VEIL("r", "hi (╯°□°)╯")));
   EZBENCH2("snprintf %hs", donothing, Format("%hs", VEIL("r", u"hi (╯°□°)╯")));
   EZBENCH2("snprintf %ls", donothing, Format("%ls", VEIL("r", L"hi (╯°□°)╯")));
   EZBENCH2("int64toarray", donothing, int64toarray_radix10(-3, buffer));

@@ -25,17 +25,13 @@
 
 struct SprintfStr {
   char *p;
-  size_t i, n;
+  size_t i;
+  size_t n;
 };
 
 static int vsnprintfputchar(unsigned char c, struct SprintfStr *str) {
-  if (str->i < str->n) {
-    if (str->p) str->p[str->i] = c;
-    str->i++;
-  } else {
-    if (!IsTrustworthy() && str->i >= INT_MAX) abort();
-    str->i++;
-  }
+  if (str->i < str->n) str->p[str->i] = c;
+  str->i++;
   return 0;
 }
 
@@ -48,15 +44,11 @@ static int vsnprintfputchar(unsigned char c, struct SprintfStr *str) {
  * @return number of bytes written, excluding the NUL terminator; or,
  *     if the output buffer wasn't passed, or was too short, then the
  *     number of characters that *would* have been written is returned
- * @throw EOVERFLOW when a formatted field exceeds its limit, which can
- *     be checked by setting errno to 0 before calling
  * @see palandprintf() and printf() for detailed documentation
  */
 int(vsnprintf)(char *buf, size_t size, const char *fmt, va_list va) {
   struct SprintfStr str = {buf, 0, size};
   palandprintf(vsnprintfputchar, &str, fmt, va);
-  if (str.p && str.n) {
-    str.p[min(str.i, str.n - 1)] = '\0';
-  }
+  if (str.n) str.p[min(str.i, str.n - 1)] = '\0';
   return str.i;
 }

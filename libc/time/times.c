@@ -47,9 +47,9 @@ static noinline long times2(struct tms *out_times, struct rusage *ru) {
                          &KernelTime, &UserTime)) {
       return winerr();
     }
-    filetimetotimeval(&tv, UserTime);
+    FileTimeToTimeVal(&tv, UserTime);
     out_times->tms_utime = convertmicros(&tv, tick);
-    filetimetotimeval(&tv, KernelTime);
+    FileTimeToTimeVal(&tv, KernelTime);
     out_times->tms_stime = convertmicros(&tv, tick);
     out_times->tms_cutime = 0;
     out_times->tms_cstime = 0;

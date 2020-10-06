@@ -31,6 +31,10 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 
+STATIC_YOINK("ntoa");
+STATIC_YOINK("stoa");
+STATIC_YOINK("ftoa");
+
 /**
  * Handles failure of CHECK_xx() macros.
  */
@@ -47,30 +51,30 @@ relegated void __check_fail(const char *suffix, const char *opstr,
   if (!memccpy(sufbuf, suffix, '\0', sizeof(sufbuf))) strcpy(sufbuf, "?");
   strtoupper(sufbuf);
 
-  fprintf(stderr,
-          "check failed\n"
-          "\tCHECK_%s(%s, %s);\n"
-          "\t\t → %#lx (%s)\n"
-          "\t\t%s %#lx (%s)\n",
-          sufbuf, wantstr, gotstr, want, wantstr, opstr, got, gotstr);
+  (fprintf)(stderr,
+            "check failed\n"
+            "\tCHECK_%s(%s, %s);\n"
+            "\t\t → %#lx (%s)\n"
+            "\t\t%s %#lx (%s)\n",
+            sufbuf, wantstr, gotstr, want, wantstr, opstr, got, gotstr);
 
   if (!isempty(fmt)) {
     fputc('\t', stderr);
     va_start(va, fmt);
-    vfprintf(stderr, fmt, va);
+    (vfprintf)(stderr, fmt, va);
     va_end(va);
     fputc('\n', stderr);
   }
 
-  fprintf(stderr, "\t%s\n\t%s%s%s%s\n", strerror(lasterr), SUBTLE,
-          getauxval(AT_EXECFN), g_argc > 1 ? " \\" : "", RESET);
+  (fprintf)(stderr, "\t%s\n\t%s%s%s%s\n", strerror(lasterr), SUBTLE,
+            getauxval(AT_EXECFN), g_argc > 1 ? " \\" : "", RESET);
 
   for (i = 1; i < g_argc; ++i) {
-    fprintf(stderr, "\t\t%s%s\n", g_argv[i], i < g_argc - 1 ? " \\" : "");
+    (fprintf)(stderr, "\t\t%s%s\n", g_argv[i], i < g_argc - 1 ? " \\" : "");
   }
 
   if (!IsTiny() && lasterr == ENOMEM) {
-    fprintf(stderr, "\n");
+    (fprintf)(stderr, "\n");
     fflush(stderr);
     PrintMemoryIntervals(fileno(stderr), &_mmi);
   }

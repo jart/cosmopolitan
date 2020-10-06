@@ -65,6 +65,11 @@ $(LIBC_LOG_A_OBJS):					\
 			$(NO_MAGIC)			\
 			-fwrapv
 
+ifeq (,$(MODE))
+LIBC_LOG_ASAN = o/$(MODE)/libc/log/asan.o
+endif
+LIBC_LOG_ASAN_A = o/$(MODE)/libc/log/log.a
+
 LIBC_LOG_LIBS = $(foreach x,$(LIBC_LOG_ARTIFACTS),$($(x)))
 LIBC_LOG_SRCS = $(foreach x,$(LIBC_LOG_ARTIFACTS),$($(x)_SRCS))
 LIBC_LOG_HDRS = $(foreach x,$(LIBC_LOG_ARTIFACTS),$($(x)_HDRS))

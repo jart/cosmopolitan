@@ -15,7 +15,7 @@
  * Log level for compile-time DCE.
  */
 #ifndef LOGGABLELEVEL
-#ifndef NDEBUG
+#ifndef TINY
 #define LOGGABLELEVEL kLogDebug
 /* #elif IsTiny() */
 /* #define LOGGABLELEVEL kLogInfo */

@@ -41,6 +41,8 @@
 #include "libc/sysv/consts/prot.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 
+STATIC_YOINK("_init_asan");
+
 /**
  * @fileoverview Cosmopolitan Address Sanitizer Runtime.
  *

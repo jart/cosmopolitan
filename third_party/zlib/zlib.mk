@@ -57,6 +57,12 @@ o/$(MODE)/third_party/zlib/adler32.o:			\
 			-ffunction-sections		\
 			-fdata-sections
 
+ifeq (,$(MODE))
+$(THIRD_PARTY_ZLIB_A_OBJS):				\
+		OVERRIDE_CFLAGS +=			\
+			-fsanitize=address
+endif
+
 THIRD_PARTY_ZLIB_LIBS = $(foreach x,$(THIRD_PARTY_ZLIB_ARTIFACTS),$($(x)))
 THIRD_PARTY_ZLIB_SRCS = $(foreach x,$(THIRD_PARTY_ZLIB_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_ZLIB_HDRS = $(foreach x,$(THIRD_PARTY_ZLIB_ARTIFACTS),$($(x)_HDRS))

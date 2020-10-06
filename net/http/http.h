@@ -1,30 +1,25 @@
 #ifndef COSMOPOLITAN_LIBC_HTTP_HTTP_H_
 #define COSMOPOLITAN_LIBC_HTTP_HTTP_H_
 #include "libc/alg/alg.h"
+#include "libc/time/struct/tm.h"
 
-#define kHttpGet         0
-#define kHttpHead        1
-#define kHttpPost        2
-#define kHttpPut         3
-#define kHttpDelete      4
-#define kHttpConnect     5
-#define kHttpOptions     6
-#define kHttpTrace       7
-#define kHttpCopy        8
-#define kHttpCheckout    9
-#define kHttpLock        10
-#define kHttpMerge       11
-#define kHttpMkactivity  12
-#define kHttpMkcol       13
-#define kHttpMove        14
-#define kHttpNotify      15
-#define kHttpPatch       16
-#define kHttpPropfind    17
-#define kHttpProppatch   18
-#define kHttpReport      19
-#define kHttpSubscribe   20
-#define kHttpUnlock      21
-#define kHttpUnsubscribe 22
+#define kHttpGet     0
+#define kHttpHead    1
+#define kHttpPost    2
+#define kHttpPut     3
+#define kHttpDelete  4
+#define kHttpConnect 5
+#define kHttpOptions 6
+#define kHttpTrace   7
+#define kHttpCopy    8
+#define kHttpLock    9
+#define kHttpMerge   10
+#define kHttpMkcol   11
+#define kHttpMove    12
+#define kHttpNotify  13
+#define kHttpPatch   14
+#define kHttpReport  15
+#define kHttpUnlock  16
 
 #define kHttpAccept             0
 #define kHttpAcceptCharset      1
@@ -86,17 +81,24 @@ struct HttpRequestSlice {
 
 struct HttpRequest {
   int method;
+  int length;
   struct HttpRequestSlice uri;
   struct HttpRequestSlice version;
   struct HttpRequestSlice scratch;
   struct HttpRequestSlice headers[kHttpHeadersMax];
 };
 
+extern const char kHttpMethod[17][8];
+
 int GetHttpHeader(const char *, size_t);
 int GetHttpMethod(const char *, size_t);
 int ParseHttpRequest(struct HttpRequest *, const char *, size_t);
 int NegotiateHttpRequest(int, const char *, uint32_t *, char *, uint32_t *,
                          uint32_t *, bool, long double);
+char *FormatHttpDateTime(char[hasatleast 30], struct tm *);
+bool ParseHttpRange(const char *, size_t, long, long *, long *);
+unsigned ParseHttpVersion(const char *, size_t);
+int64_t ParseHttpDateTime(const char *, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -43,6 +43,10 @@ nodiscard char *tabpad(const char *s, unsigned width) {
   need = width > l ? (roundup(width, 8) - l - 1) / 8 + 1 : 0;
   p = memcpy(malloc(l + need + 1), s, l);
   for (i = 0; i < need; ++i) p[l + i] = '\t';
+  if (!need) {
+    p[l] = ' ';
+    ++need;
+  }
   p[l + need] = '\0';
   return p;
 }

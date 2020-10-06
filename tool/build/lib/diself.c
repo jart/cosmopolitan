@@ -22,8 +22,12 @@
 #include "libc/elf/elf.h"
 #include "libc/elf/struct/sym.h"
 #include "libc/log/check.h"
+#include "libc/log/log.h"
 #include "libc/macros.h"
+#include "libc/str/str.h"
 #include "tool/build/lib/dis.h"
+
+bool g_disisprog_disable;
 
 static int DisSymCompare(const struct DisSym *a, const struct DisSym *b) {
   if (a->addr != b->addr) {
@@ -72,6 +76,8 @@ static void DisLoadElfSyms(struct Dis *d, struct Elf *elf) {
       if (!st[i].st_name) continue;
       if (!(0 <= st[i].st_name && st[i].st_name < stablen)) continue;
       if (ELF64_ST_TYPE(st[i].st_info) == STT_SECTION) continue;
+      if (ELF64_ST_TYPE(st[i].st_info) == STT_FILE) continue;
+      if (startswith(d->syms.stab + st[i].st_name, "v_")) continue;
       isabs = st[i].st_shndx == SHN_ABS;
       isweak = ELF64_ST_BIND(st[i].st_info) == STB_WEAK;
       islocal = ELF64_ST_BIND(st[i].st_info) == STB_LOCAL;
@@ -85,6 +91,7 @@ static void DisLoadElfSyms(struct Dis *d, struct Elf *elf) {
       t.addr = st[i].st_value;
       t.rank = -islocal + -isweak + -isabs + isprotected + isobject + isfunc;
       t.iscode = DisIsText(d, st[i].st_value) ? !isobject : isfunc;
+      t.isabs = isabs;
       APPEND(&d->syms.p, &d->syms.i, &d->syms.n, &t);
     }
   }
@@ -93,6 +100,7 @@ static void DisLoadElfSyms(struct Dis *d, struct Elf *elf) {
 
 bool DisIsProg(struct Dis *d, int64_t addr) {
   long i;
+  if (g_disisprog_disable) return true;
   for (i = 0; i < d->loads.i; ++i) {
     if (addr >= d->loads.p[i].addr &&
         addr < d->loads.p[i].addr + d->loads.p[i].size) {

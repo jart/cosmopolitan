@@ -27,6 +27,7 @@ TOOL_BUILD_EMUBIN_CHECKS =				\
 
 TOOL_BUILD_EMUBIN_DIRECTDEPS =				\
 	LIBC_STUBS					\
+	LIBC_NEXGEN32E					\
 	LIBC_TINYMATH
 
 TOOL_BUILD_EMUBIN_DEPS :=				\
@@ -57,10 +58,10 @@ o/dbg/tool/build/emubin/lisp.real.com.dbg:		\
 		$(APE)
 	-@$(APELINK)
 
-o/tiny/tool/build/emubin/lisp.bin.dbg:			\
+o/$(MODE)/tool/build/emubin/lisp.bin.dbg:		\
 		$(TOOL_BUILD_EMUBIN_DEPS)		\
-		o/tiny/tool/build/emubin/lisp.real.o	\
-		o/tiny/tool/build/emubin/lispstart.o	\
+		o/$(MODE)/tool/build/emubin/lisp.real.o	\
+		o/$(MODE)/tool/build/emubin/lispstart.o	\
 		tool/build/emubin/lisp.lds
 	@$(ELFLINK) -z max-page-size=0x10
 

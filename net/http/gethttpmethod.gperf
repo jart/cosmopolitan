@@ -9,7 +9,7 @@
 %readonly-tables
 %struct-type
 %define lookup-function-name LookupHttpMethod
-struct HttpMethodSlot { char *name; char code; };
+struct HttpMethodSlot { char name[8]; char code; };
 %%
 DELETE,      kHttpDelete
 GET,         kHttpGet
@@ -20,17 +20,11 @@ CONNECT,     kHttpConnect
 OPTIONS,     kHttpOptions
 TRACE,       kHttpTrace
 COPY,        kHttpCopy
-CHECKOUT,    kHttpCheckout
 LOCK,        kHttpLock
 MERGE,       kHttpMerge
-MKACTIVITY,  kHttpMkactivity
 MKCOL,       kHttpMkcol
 MOVE,        kHttpMove
 NOTIFY,      kHttpNotify
 PATCH,       kHttpPatch
-PROPFIND,    kHttpPropfind
-PROPPATCH,   kHttpProppatch
 REPORT,      kHttpReport
-SUBSCRIBE,   kHttpSubscribe
 UNLOCK,      kHttpUnlock
-UNSUBSCRIBE, kHttpUnsubscribe

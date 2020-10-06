@@ -40,7 +40,7 @@
  * @see xdtoa() for higher precision at the cost of bloat
  * @see palandprintf() which is intended caller
  */
-int ftoa(int out(int, void *), void *arg, long double value, int prec,
+int ftoa(int out(long, void *), void *arg, long double value, int prec,
          unsigned long width, unsigned long flags) {
   long whole, frac;
   long double tmp, diff;

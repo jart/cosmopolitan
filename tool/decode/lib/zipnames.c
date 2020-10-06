@@ -30,6 +30,7 @@ const struct IdName kZipCompressionNames[] = {
 const struct IdName kZipExtraNames[] = {
     {kZipExtraZip64, "kZipExtraZip64"},
     {kZipExtraNtfs, "kZipExtraNtfs"},
+    {kZipExtraExtendedTimestamp, "kZipExtraExtendedTimestamp"},
     {0, 0},
 };
 

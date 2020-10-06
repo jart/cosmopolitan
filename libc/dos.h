@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_DOS_H_
 #define COSMOPOLITAN_LIBC_DOS_H_
+#include "libc/macros.h"
 
 /**
  * @fileoverview MS-DOS Data Structures.

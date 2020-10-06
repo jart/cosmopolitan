@@ -64,13 +64,12 @@ ssize_t WriteBuffer(struct Buffer *b, int fd) {
   p = b->p;
   n = b->i;
   do {
-  TryAgain:
     if ((rc = write(fd, p, n)) != -1) {
       wrote = rc;
       p += wrote;
       n -= wrote;
     } else if (errno == EINTR) {
-      goto TryAgain;
+      break;
     } else {
       return -1;
     }

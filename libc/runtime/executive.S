@@ -53,8 +53,7 @@ _executive:
 	call	_setstack
 	mov	%eax,%edi
 	call	exit
-9:	.endfn	_executive,weak,hidden
-
+	.endfn	_executive,weak,hidden
 	ud2
 
 #ifdef __PG__

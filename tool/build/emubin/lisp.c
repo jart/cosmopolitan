@@ -3,36 +3,35 @@
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
-│ This program is free software; you can redistribute it and/or modify         │
-│ it under the terms of the GNU General Public License as published by         │
-│ the Free Software Foundation; version 2 of the License.                      │
+│ Permission to use, copy, modify, and/or distribute this software for         │
+│ any purpose with or without fee is hereby granted, provided that the         │
+│ above copyright notice and this permission notice appear in all copies.      │
 │                                                                              │
-│ This program is distributed in the hope that it will be useful, but          │
-│ WITHOUT ANY WARRANTY; without even the implied warranty of                   │
-│ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU             │
-│ General Public License for more details.                                     │
-│                                                                              │
-│ You should have received a copy of the GNU General Public License            │
-│ along with this program; if not, write to the Free Software                  │
-│ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
-│ 02110-1301 USA                                                               │
+│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
+│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
+│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
+│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
+│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
+│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
+│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
+│ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 
 #define TRACE  0
 #define ERRORS 1
 #define LONG   long
 #define WORD   short
-#define WORDS  2048
+#define WORDS  8192
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ The LISP Challenge § 8086 PC BIOS / x86_64 Linux System Integration      ─╬─│┼
+│ The LISP Challenge § Impure x86_64 Linux 8086 PC BIOS System Integration ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#define ATOM(x) /* a.k.a. !(x&1) */                          \
-  ({                                                         \
-    char IsAtom;                                             \
-    asm("test%z1\t$1,%1" : "=@ccz"(IsAtom) : "Qm"((char)x)); \
-    IsAtom;                                                  \
+#define TYPE(x) /* a.k.a. x&1 */                              \
+  ({                                                          \
+    char IsAtom;                                              \
+    asm("test%z1\t$1,%1" : "=@ccnz"(IsAtom) : "Qm"((char)x)); \
+    IsAtom;                                                   \
   })
 
 #define OBJECT(t, v) /* a.k.a. v<<1|t */ \
@@ -57,71 +56,109 @@
     c;                                               \
   })
 
-#define REAL_READ(BASE, INDEX, DISP) /* a.k.a. b[i] */        \
-  ({                                                          \
-    __typeof(*(BASE)) Reg;                                    \
-    if (__builtin_constant_p(INDEX) && !(INDEX)) {            \
-      asm("mov\t%c2(%1),%0"                                   \
-          : "=Q"(Reg)                                         \
-          : "bDS"(BASE), "i"((DISP) * sizeof(*(BASE))));      \
-    } else {                                                  \
-      asm("mov\t%c3(%1,%2),%0"                                \
-          : "=Q"(Reg)                                         \
-          : "b"(BASE), "DS"((long)(INDEX) * sizeof(*(BASE))), \
-            "i"((DISP) * sizeof(*(BASE))));                   \
-    }                                                         \
-    Reg;                                                      \
+#define REAL_READ_(REG, BASE, INDEX, DISP)                               \
+  ({                                                                     \
+    __typeof(*(BASE)) Reg;                                               \
+    if (__builtin_constant_p(INDEX) && !(INDEX)) {                       \
+      asm("mov\t%c2(%1),%0"                                              \
+          : REG(Reg)                                                     \
+          : "bDS"(BASE), "i"((DISP) * sizeof(*(BASE))),                  \
+            "m"(BASE[(INDEX) + (DISP)]));                                \
+    } else {                                                             \
+      asm("mov\t%c3(%1,%2),%0"                                           \
+          : REG(Reg)                                                     \
+          : "b"(BASE), "DS"((long)(INDEX) * sizeof(*(BASE))),            \
+            "i"((DISP) * sizeof(*(BASE))), "m"(BASE[(INDEX) + (DISP)])); \
+    }                                                                    \
+    Reg;                                                                 \
   })
 
-#define REAL_READ_ARRAY_FIELD(OBJECT, MEMBER, INDEX, DISP) /* o->m[i] */  \
+/* #ifdef __REAL_MODE__ */
+#define REAL_READ(BASE, INDEX, DISP) /* a.k.a. b[i] */        \
+  (sizeof(*(BASE)) == 1 ? REAL_READ_("=Q", BASE, INDEX, DISP) \
+                        : REAL_READ_("=r", BASE, INDEX, DISP))
+/* #else */
+/* #define REAL_READ(BASE, INDEX, DISP) BASE[INDEX + DISP] */
+/* #endif */
+
+#define REAL_READ_ARRAY_FIELD_(REG, OBJECT, MEMBER, INDEX, DISP)          \
   ({                                                                      \
     __typeof(*(OBJECT->MEMBER)) Reg;                                      \
     if (!(OBJECT)) {                                                      \
       asm("mov\t%c2(%1),%0"                                               \
-          : "=Q"(Reg)                                                     \
+          : REG(Reg)                                                      \
           : "bDS"((long)(INDEX) * sizeof(*(OBJECT->MEMBER))),             \
             "i"(__builtin_offsetof(__typeof(*(OBJECT)), MEMBER) +         \
-                sizeof(*(OBJECT->MEMBER)) * (DISP)));                     \
+                sizeof(*(OBJECT->MEMBER)) * (DISP)),                      \
+            "m"(OBJECT->MEMBER));                                         \
     } else {                                                              \
       asm("mov\t%c3(%1,%2),%0"                                            \
-          : "=Q"(Reg)                                                     \
+          : REG(Reg)                                                      \
           : "b"(OBJECT), "DS"((long)(INDEX) * sizeof(*(OBJECT->MEMBER))), \
             "i"(__builtin_offsetof(__typeof(*(OBJECT)), MEMBER) +         \
-                sizeof(*(OBJECT->MEMBER)) * (DISP)));                     \
+                sizeof(*(OBJECT->MEMBER)) * (DISP)),                      \
+            "m"(OBJECT->MEMBER));                                         \
     }                                                                     \
     Reg;                                                                  \
   })
 
-#define REAL_WRITE_ARRAY_FIELD(OBJECT, MEMBER, INDEX, DISP, VALUE)           \
-  do {                                                                       \
-    __typeof(*(OBJECT->MEMBER)) Reg;                                         \
-    if (!(OBJECT)) {                                                         \
-      asm volatile("mov\t%0,%c2(%1)"                                         \
-                   : /* manual output */                                     \
-                   : "Q"((__typeof(*(OBJECT->MEMBER)))(VALUE)),              \
-                     "bDS"((long)(INDEX) * sizeof(*(OBJECT->MEMBER))),       \
-                     "i"(__builtin_offsetof(__typeof(*(OBJECT)), MEMBER) +   \
-                         sizeof(*(OBJECT->MEMBER)) * (DISP))                 \
-                   : "memory");                                              \
-    } else {                                                                 \
-      asm volatile("mov\t%0,%c3(%1,%2)"                                      \
-                   : /* manual output */                                     \
-                   : "Q"((__typeof(*(OBJECT->MEMBER)))(VALUE)), "b"(OBJECT), \
-                     "DS"((long)(INDEX) * sizeof(*(OBJECT->MEMBER))),        \
-                     "i"(__builtin_offsetof(__typeof(*(OBJECT)), MEMBER) +   \
-                         sizeof(*(OBJECT->MEMBER)) * (DISP))                 \
-                   : "memory");                                              \
-    }                                                                        \
+/* #ifdef __REAL_MODE__ */
+#define REAL_READ_ARRAY_FIELD(OBJECT, MEMBER, INDEX, DISP) /* o->m[i] */ \
+  (sizeof(*(OBJECT->MEMBER)) == 1                                        \
+       ? REAL_READ_ARRAY_FIELD_("=Q", OBJECT, MEMBER, INDEX, DISP)       \
+       : REAL_READ_ARRAY_FIELD_("=r", OBJECT, MEMBER, INDEX, DISP))
+/* #else */
+/* #define REAL_READ_ARRAY_FIELD(o, m, i, d) o->m[i + d] */
+/* #endif */
+
+#define REAL_WRITE_ARRAY_FIELD_(REG, OBJECT, MEMBER, INDEX, DISP, VALUE) \
+  do {                                                                   \
+    if (!(OBJECT)) {                                                     \
+      asm("mov\t%1,%c3(%2)"                                              \
+          : "=m"(OBJECT->MEMBER)                                         \
+          : REG((__typeof(*(OBJECT->MEMBER)))(VALUE)),                   \
+            "bDS"((long)(INDEX) * sizeof(*(OBJECT->MEMBER))),            \
+            "i"(__builtin_offsetof(__typeof(*(OBJECT)), MEMBER) +        \
+                sizeof(*(OBJECT->MEMBER)) * (DISP)));                    \
+    } else {                                                             \
+      asm("mov\t%1,%c4(%2,%3)"                                           \
+          : "=m"(OBJECT->MEMBER)                                         \
+          : REG((__typeof(*(OBJECT->MEMBER)))(VALUE)), "b"(OBJECT),      \
+            "DS"((long)(INDEX) * sizeof(*(OBJECT->MEMBER))),             \
+            "i"(__builtin_offsetof(__typeof(*(OBJECT)), MEMBER) +        \
+                sizeof(*(OBJECT->MEMBER)) * (DISP)));                    \
+    }                                                                    \
   } while (0)
 
-static void *SetMemory(void *di, int al, unsigned long cx) {
+/* #ifdef __REAL_MODE__ */
+#define REAL_WRITE_ARRAY_FIELD(OBJECT, MEMBER, INDEX, DISP, VALUE)         \
+  do {                                                                     \
+    __typeof(*(OBJECT->MEMBER)) Reg;                                       \
+    switch (sizeof(*(OBJECT->MEMBER))) {                                   \
+      case 1:                                                              \
+        REAL_WRITE_ARRAY_FIELD_("Q", OBJECT, MEMBER, INDEX, DISP, VALUE);  \
+        break;                                                             \
+      default:                                                             \
+        REAL_WRITE_ARRAY_FIELD_("ri", OBJECT, MEMBER, INDEX, DISP, VALUE); \
+        break;                                                             \
+    }                                                                      \
+  } while (0)
+/* #else */
+/* #define REAL_WRITE_ARRAY_FIELD(o, m, i, d, v) o->m[i + d] = v */
+/* #endif */
+
+long jb[8];
+int setjmp(void *) __attribute__((__returns_twice__));
+int longjmp(void *, int) __attribute__((__noreturn__));
+
+static inline void *SetMemory(void *di, int al, unsigned long cx) {
   asm("rep stosb"
       : "=D"(di), "=c"(cx), "=m"(*(char(*)[cx])di)
       : "0"(di), "1"(cx), "a"(al));
   return di;
 }
 
-static void *CopyMemory(void *di, void *si, unsigned long cx) {
+static inline void *CopyMemory(void *di, void *si, unsigned long cx) {
   asm("rep movsb"
       : "=D"(di), "=S"(si), "=c"(cx), "=m"(*(char(*)[cx])di)
       : "0"(di), "1"(si), "2"(cx));
@@ -147,14 +184,13 @@ static void RawMode(void) {
 #endif
 }
 
-__attribute__((__noinline__)) static int PrintChar(LONG c) {
+__attribute__((__noinline__)) static void PrintChar(LONG c) {
 #ifdef __REAL_MODE__
   asm volatile("mov\t$0x0E,%%ah\n\t"
                "int\t$0x10"
                : /* no outputs */
                : "a"(c), "b"(7)
                : "memory");
-  return 0;
 #else
   static short buf;
   int rc;
@@ -163,7 +199,6 @@ __attribute__((__noinline__)) static int PrintChar(LONG c) {
                : "=a"(rc)
                : "0"(1), "D"(1), "S"(&buf), "d"(1)
                : "rcx", "r11", "memory");
-  return rc;
 #endif
 }
 
@@ -177,6 +212,7 @@ static void PrintString(char *s) {
 }
 
 static int XlatChar(LONG c) {
+  if (c == 0x7F) return '\b';
   if (c >= 'a') {
     asm volatile("" ::: "memory");
     if (c <= 'z') c -= 'a' - 'A';
@@ -185,19 +221,16 @@ static int XlatChar(LONG c) {
 }
 
 static int EchoChar(LONG c) {
-  if (c == '\b' || c == 0x7F) {
-    PrintString("\b \b");
-    return '\b';
-  } else {
+  if (c != '\b') {
     PrintChar(c);
     if (c == '\r') {
       PrintChar('\n');
     }
-    return c;
   }
+  return c;
 }
 
-static noinline int ReadChar(void) {
+__attribute__((__noinline__)) static noinline int ReadChar(void) {
   int c;
 #ifdef __REAL_MODE__
   asm volatile("int\t$0x16" : "=a"(c) : "0"(0) : "memory");
@@ -213,13 +246,13 @@ static noinline int ReadChar(void) {
 }
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ The LISP Challenge § LISP Machine                                        ─╬─│┼
+│ The LISP Challenge § Pure Original LISP Machine                          ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#define TYPE_ATOM 0
-#define TYPE_CONS 1
+#define ATOM 0
+#define CONS 1
 
-#define ATOM_NIL    0
+#define NIL         0
 #define ATOM_T      8
 #define ATOM_QUOTE  12
 #define ATOM_ATOM   24
@@ -234,7 +267,7 @@ static noinline int ReadChar(void) {
 #define ATOM_DEFUN  110
 
 #define Quote(x)   List(ATOM_QUOTE, x)
-#define List(x, y) Cons(x, Cons(y, ATOM_NIL))
+#define List(x, y) Cons(x, Cons(y, NIL))
 #define Caar(x)    Car(Car(x))    // ((A B C D) (E F G) H I) → A
 #define Cdar(x)    Cdr(Car(x))    // ((A B C D) (E F G) H I) → (B C D)
 #define Cadar(x)   Cadr(Car(x))   // ((A B C D) (E F G) H I) → B
@@ -242,21 +275,39 @@ static noinline int ReadChar(void) {
 #define Cadr(x)    Car(Cdr(x))    // ((A B C D) (E F G) H I) → (E F G)
 #define Caddr(x)   Cadr(Cdr(x))   // ((A B C D) (E F G) H I) → H
 
-#define BOOL(x)  ((x) ? ATOM_T : ATOM_NIL)
+#define BOOL(x)  ((x) ? ATOM_T : NIL)
 #define VALUE(x) ((x) >> 1)
+#define PTR(i)   ((i) << 1 | CONS)
+
+#define ARRAYLEN(A) \
+  ((sizeof(A) / sizeof(*(A))) / ((unsigned)!(sizeof(A) % sizeof(*(A)))))
 
 struct Lisp {
-  WORD memory[WORDS];
+  WORD mem[WORDS];
   unsigned char syntax[256];
-  unsigned char look;
-  char token[16];
+  WORD look;
   WORD globals;
-  int index;
+  WORD index;
+  char token[128];
   char str[WORDS];
 };
 
-const char kSymbols[] aligned(1) = "\
+_Static_assert(sizeof(struct Lisp) <= 0x7c00 - 0x600,
+               "LISP Machine too large for real mode");
+
+_Alignas(char) const char kSymbols[] = "\
 NIL\0T\0QUOTE\0ATOM\0EQ\0COND\0CAR\0CDR\0CONS\0LABEL\0LAMBDA\0SET\0DEFUN\0";
+
+_Alignas(WORD) const WORD kGlobals[] = {
+    [0] = PTR(2),  // ((T . T) (NIL . NIL))
+    [1] = PTR(4),  //
+    [2] = ATOM_T,  // (T . T)
+    [3] = ATOM_T,  //
+    [4] = PTR(6),  // ((NIL . NIL))
+    [5] = NIL,     //
+    [6] = NIL,     // (NIL . NIL)
+    [7] = NIL,     //
+};
 
 #ifdef __REAL_MODE__
 static struct Lisp *const q;
@@ -281,28 +332,39 @@ static void SetupSyntax(void) {
   q->syntax['\''] = '\'';
 }
 
-forceinline WORD Car(LONG x) {
-  return REAL_READ_ARRAY_FIELD(q, memory, VALUE(x), 0);
+static inline WORD Car(LONG x) {
+  return REAL_READ_ARRAY_FIELD(q, mem, VALUE(x), 0);
 }
 
-forceinline WORD Cdr(LONG x) {
-  return REAL_READ_ARRAY_FIELD(q, memory, VALUE(x), 1);
+static inline WORD Cdr(LONG x) {
+  return REAL_READ_ARRAY_FIELD(q, mem, VALUE(x), 1);
 }
 
 static WORD Cons(WORD car, WORD cdr) {
-  int i, c;
+#if TRACE
+  PrintString("CONS->");
+  Print(car);
+  PrintString("      ");
+  Print(cdr);
+#endif
+  int i, cell;
   i = q->index;
-  REAL_WRITE_ARRAY_FIELD(q, memory, i, 0, car);
-  REAL_WRITE_ARRAY_FIELD(q, memory, i, 1, cdr);
-  q->index += 2;
-  c = OBJECT(TYPE_CONS, i);
-  return c;
+  REAL_WRITE_ARRAY_FIELD(q, mem, i, 0, car);
+  REAL_WRITE_ARRAY_FIELD(q, mem, i, 1, cdr);
+  q->index = i + 2;
+  cell = OBJECT(CONS, i);
+#if TRACE
+  PrintString("CONS<-");
+  Print(cell);
+#endif
+  return cell;
 }
 
 static void SetupBuiltins(void) {
   CopyMemory(q->str, kSymbols, sizeof(kSymbols));
-  q->globals =
-      Cons(Cons(ATOM_NIL, ATOM_NIL), Cons(Cons(ATOM_T, ATOM_T), ATOM_NIL));
+  CopyMemory(q->mem, kGlobals, sizeof(kGlobals));
+  q->index = ARRAYLEN(kGlobals);
+  q->globals = PTR(0);
 }
 
 static char *StpCpy(char *d, char *s) {
@@ -314,7 +376,7 @@ static char *StpCpy(char *d, char *s) {
   return d;
 }
 
-static WORD Intern(char *s) {
+WORD Intern(char *s) {
   int j, cx;
   char c, *z, *t;
   z = q->str;
@@ -325,7 +387,7 @@ static WORD Intern(char *s) {
         break;
       }
       if (!c) {
-        return OBJECT(TYPE_ATOM, z - q->str - j - 1);
+        return OBJECT(ATOM, z - q->str - j - 1);
       }
       c = LODS(z);
     }
@@ -334,11 +396,11 @@ static WORD Intern(char *s) {
   }
   --z;
   StpCpy(z, s);
-  return OBJECT(TYPE_ATOM, SUB((long)z, q->str));
+  return OBJECT(ATOM, SUB((long)z, q->str));
 }
 
 forceinline unsigned char XlatSyntax(unsigned char b) {
-  return REAL_READ_ARRAY_FIELD(q, syntax, b, 0); /* a.k.a. q->syntax[b] */
+  return REAL_READ_ARRAY_FIELD(q, syntax, b, 0);
 }
 
 static void GetToken(void) {
@@ -357,7 +419,8 @@ static void GetToken(void) {
       if (b != '\b') {
         STOS(t, b);
       } else if (t > q->token) {
-        --t;
+        PrintString("\b \b");
+        if (t > q->token) --t;
       }
       b = ReadChar();
     }
@@ -387,7 +450,7 @@ static WORD GetList(void) {
     case '\'':
       return AddList(GetQuote());
     case ')':
-      return ATOM_NIL;
+      return NIL;
     case '.':
       return ConsumeObject();
   }
@@ -422,7 +485,7 @@ static void PrintList(LONG x) {
   PrintChar('(');
   PrintObject(Car(x));
   while ((x = Cdr(x))) {
-    if (!ATOM(x)) {
+    if (TYPE(x) == CONS) {
       PrintChar(' ');
       PrintObject(Car(x));
     } else {
@@ -434,7 +497,7 @@ static void PrintList(LONG x) {
 }
 
 static void PrintObject(LONG x) {
-  if (ATOM(x)) {
+  if (TYPE(x) == ATOM) {
     PrintAtom(x);
   } else {
     PrintList(x);
@@ -447,8 +510,7 @@ static void Print(LONG i) {
 }
 
 __attribute__((__noreturn__)) static void Reset(void) {
-  asm volatile("jmp\tRepl");
-  __builtin_unreachable();
+  longjmp(jb, 1);
 }
 
 __attribute__((__noreturn__)) static void OnUndefined(LONG x) {
@@ -472,7 +534,7 @@ __attribute__((__noreturn__)) static void OnArity(void) {
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 static WORD Atom(LONG x) {
-  return BOOL(ATOM(x));
+  return BOOL(TYPE(x) == ATOM);
 }
 
 static WORD Null(LONG x) {
@@ -480,24 +542,32 @@ static WORD Null(LONG x) {
 }
 
 static WORD Eq(LONG x, LONG y) {
-  return BOOL(x == y); /* undefiled if !ATOM(x)||!ATOM(y) */
+  return BOOL(x == y); /* undefined if !Atom(x)||!Atom(y) */
 }
 
 static WORD Assoc(LONG x, LONG y) {
-  for (;;) {
-    if (!y) OnUndefined(x);
-    if (Eq(Caar(y), x)) break;
-    y = Cdr(y);
-  }
-  return Cdar(y);
+  if (Null(y)) OnUndefined(x);
+  if (Eq(Caar(y), x)) return Cdar(y);
+  return Assoc(x, Cdr(y));
 }
 
 static WORD Append(LONG x, LONG y) {
-  if (x) {
-    return Cons(Car(x), Append(Cdr(x), y));
+#if TRACE
+  PrintString("APPEND->");
+  Print(x);
+  PrintString("        ");
+  Print(y);
+#endif
+  if (!Null(x)) {
+    x = Cons(Car(x), Append(Cdr(x), y));
   } else {
-    return y;
+    x = y;
   }
+#if TRACE
+  PrintString("APPEND<-");
+  Print(x);
+#endif
+  return x;
 }
 
 /**
@@ -506,26 +576,41 @@ static WORD Append(LONG x, LONG y) {
  * @note recoded to make lists in dot notation
  * @note it's zip() basically
  */
-static WORD Pair(LONG x, LONG y) {
-  if (!x && !y) {
-    return ATOM_NIL;
-  } else if (!ATOM(x) && !ATOM(y)) {
-    return Cons(Cons(Car(x), Car(y)), Pair(Cdr(x), Cdr(y)));
+static WORD Pair_(LONG x, LONG y) {
+  if (Null(x) && Null(y)) {
+    return NIL;
+  } else if (TYPE(x) == CONS && TYPE(y) == CONS) {
+    return Cons(Cons(Car(x), Car(y)), Pair_(Cdr(x), Cdr(y)));
   } else {
     OnArity();
   }
+}
+
+static WORD Pair(LONG x, LONG y) {
+#if TRACE
+  PrintString("PAIR->");
+  Print(x);
+  PrintString("      ");
+  Print(y);
+#endif
+  x = Pair_(x, y);
+#if TRACE
+  PrintString("PAIR<-");
+  Print(x);
+#endif
+  return x;
 }
 
 static WORD Appq(long m) {
   if (m) {
     return Cons(List(ATOM_QUOTE, Car(m)), Appq(Cdr(m)));
   } else {
-    return ATOM_NIL;
+    return NIL;
   }
 }
 
 static WORD Apply(long f, long a) {
-  return Eval(Cons(f, Appq(a)), ATOM_NIL);
+  return Eval(Cons(f, Appq(a)), NIL);
 }
 
 static WORD Evcon(LONG c, LONG a) {
@@ -536,12 +621,27 @@ static WORD Evcon(LONG c, LONG a) {
   }
 }
 
-static WORD Evlis(LONG m, LONG a) {
+static WORD Evlis_(LONG m, LONG a) {
   if (m) {
-    return Cons(Eval(Car(m), a), Evlis(Cdr(m), a));
+    return Cons(Eval(Car(m), a), Evlis_(Cdr(m), a));
   } else {
-    return ATOM_NIL;
+    return NIL;
   }
+}
+
+static WORD Evlis(LONG m, LONG a) {
+#if TRACE
+  PrintString("EVLIS->");
+  Print(m);
+  PrintString("       ");
+  Print(a);
+#endif
+  m = Evlis_(m, a);
+#if TRACE
+  PrintString("EVLIS<-");
+  Print(m);
+#endif
+  return m;
 }
 
 static WORD Set(LONG e) {
@@ -563,9 +663,9 @@ static WORD Defun(LONG e) {
 }
 
 static WORD Evaluate(LONG e, LONG a) {
-  if (ATOM(e)) {
+  if (Atom(e)) {
     return Assoc(e, a);
-  } else if (ATOM(Car(e))) {
+  } else if (Atom(Car(e))) {
     switch (Car(e)) {
       case ATOM_QUOTE:
         return Cadr(e);
@@ -601,6 +701,8 @@ static WORD Eval(LONG e, LONG a) {
 #if TRACE
   PrintString("->");
   Print(e);
+  PrintString("  ");
+  Print(a);
 #endif
   e = Evaluate(e, a);
 #if TRACE
@@ -615,6 +717,7 @@ static WORD Eval(LONG e, LONG a) {
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 void Repl(void) {
+  setjmp(jb);
   for (;;) {
     PrintString("* ");
     Print(Eval(Read(), q->globals));
@@ -622,7 +725,7 @@ void Repl(void) {
 }
 
 int main(int argc, char *argv[]) {
-  RawMode();
+  /* RawMode(); */
   SetupSyntax();
   SetupBuiltins();
   PrintString("THE LISP CHALLENGE V1\r\n"

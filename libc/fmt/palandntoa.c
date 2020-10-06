@@ -31,7 +31,7 @@
 
 uintmax_t __udivmodti4(uintmax_t, uintmax_t, uintmax_t *);
 
-static int ntoaformat(int out(int, void *), void *arg, char *buf, unsigned len,
+static int ntoaformat(int out(long, void *), void *arg, char *buf, unsigned len,
                       bool negative, unsigned log2base, unsigned prec,
                       unsigned width, unsigned char flags) {
   unsigned i, idx;
@@ -103,7 +103,7 @@ static int ntoaformat(int out(int, void *), void *arg, char *buf, unsigned len,
   return 0;
 }
 
-int ntoa2(int out(int, void *), void *arg, uintmax_t value, bool neg,
+int ntoa2(int out(long, void *), void *arg, uintmax_t value, bool neg,
           unsigned log2base, unsigned prec, unsigned width, unsigned flags,
           const char *alphabet) {
   uintmax_t remainder;
@@ -135,7 +135,7 @@ int ntoa2(int out(int, void *), void *arg, uintmax_t value, bool neg,
   return ntoaformat(out, arg, buf, len, neg, log2base, prec, width, flags);
 }
 
-int ntoa(int out(int, void *), void *arg, va_list va, unsigned char signbit,
+int ntoa(int out(long, void *), void *arg, va_list va, unsigned char signbit,
          unsigned long log2base, unsigned long prec, unsigned long width,
          unsigned char flags, const char *lang) {
   bool neg;

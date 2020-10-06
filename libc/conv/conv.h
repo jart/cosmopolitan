@@ -15,8 +15,8 @@
  * of the UNIX operation system signalled the end of modernity. Windows
  * timestamps are living proof.
  */
-#define MODERNITYSECONDS 11644473600
-#define HECTONANOSECONDS 10000000
+#define MODERNITYSECONDS 11644473600ull
+#define HECTONANOSECONDS 10000000ull
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -46,12 +46,13 @@ long strtol(const char *, char **, int)
 │ cosmopolitan § conversion » time                                         ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-struct timespec filetimetotimespec(struct NtFileTime);
-struct NtFileTime timespectofiletime(struct timespec);
-struct NtFileTime timetofiletime(int64_t) nothrow pureconst;
+int64_t DosDateTimeToUnix(unsigned, unsigned);
+struct timespec FileTimeToTimeSpec(struct NtFileTime);
+struct NtFileTime TimeSpecToFileTime(struct timespec);
+struct NtFileTime TimeToFileTime(int64_t) nothrow pureconst;
 int64_t filetimetotime(struct NtFileTime) nothrow pureconst;
-void filetimetotimeval(struct timeval *, struct NtFileTime) nothrow;
-struct NtFileTime timevaltofiletime(const struct timeval *) nosideeffect;
+void FileTimeToTimeVal(struct timeval *, struct NtFileTime) nothrow;
+struct NtFileTime TimeValToFileTime(const struct timeval *) nosideeffect;
 long convertmicros(const struct timeval *, long) paramsnonnull() nosideeffect;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗

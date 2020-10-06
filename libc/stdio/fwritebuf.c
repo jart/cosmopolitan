@@ -37,6 +37,7 @@ int fwritebuf(FILE *f) {
   unsigned bytes;
   bytes = (f->beg < f->end ? f->end : f->size) - f->beg;
   if ((put = write(f->fd, &f->buf[f->beg], bytes)) == -1) {
+    if (errno == EINTR) return 0;
     return (int)fseterrno(f);
   }
   f->beg = (unsigned)((f->beg + put) & (f->size - 1));

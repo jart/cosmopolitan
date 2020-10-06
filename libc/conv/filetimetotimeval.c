@@ -22,9 +22,11 @@
 #include "libc/conv/conv.h"
 #include "libc/nt/struct/filetime.h"
 
-void filetimetotimeval(struct timeval *tv, struct NtFileTime ft) {
-  uint64_t t = (uint64_t)ft.dwHighDateTime << 32 | ft.dwLowDateTime;
-  uint64_t x = t - MODERNITYSECONDS * HECTONANOSECONDS;
-  tv->tv_sec = x / HECTONANOSECONDS;
+void FileTimeToTimeVal(struct timeval *tv, struct NtFileTime ft) {
+  uint64_t x;
+  x = ft.dwHighDateTime;
+  x <<= 32;
+  x |= ft.dwLowDateTime;
+  tv->tv_sec = x / HECTONANOSECONDS - MODERNITYSECONDS;
   tv->tv_usec = x % HECTONANOSECONDS / 10;
 }

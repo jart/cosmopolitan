@@ -35,14 +35,14 @@
 #include "net/http/http.h"
 #define GPERF_DOWNCASE
 #line 12 "gethttpmethod.gperf"
-struct HttpMethodSlot { char *name; char code; };
+struct HttpMethodSlot { char name[8]; char code; };
 
-#define TOTAL_KEYWORDS 23
+#define TOTAL_KEYWORDS 17
 #define MIN_WORD_LENGTH 3
-#define MAX_WORD_LENGTH 11
-#define MIN_HASH_VALUE 4
-#define MAX_HASH_VALUE 34
-/* maximum key range = 31, duplicates = 0 */
+#define MAX_WORD_LENGTH 7
+#define MIN_HASH_VALUE 3
+#define MAX_HASH_VALUE 25
+/* maximum key range = 23, duplicates = 0 */
 
 #ifndef GPERF_DOWNCASE
 #define GPERF_DOWNCASE 1
@@ -101,32 +101,32 @@ hash (register const char *str, register size_t len)
 {
   static const unsigned char asso_values[] =
     {
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35,  0, 35,  5, 10, 10,
-      35,  5, 10, 35, 35,  0, 30, 15,  0,  0,
-       0, 35,  5, 15,  0,  5, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35, 35,  0, 35,  5,
-      10, 10, 35,  5, 10, 35, 35,  0, 30, 15,
-       0,  0,  0, 35,  5, 15,  0,  5, 35, 35,
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35
+      26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+      26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+      26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+      26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+      26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+      26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+      26, 26, 26, 26, 26,  0, 26,  5, 15,  0,
+      26,  5,  0, 26, 26, 10, 15, 10,  0,  5,
+       0, 26, 10, 26,  5,  0, 26, 26, 26, 26,
+      26, 26, 26, 26, 26, 26, 26,  0, 26,  5,
+      15,  0, 26,  5,  0, 26, 26, 10, 15, 10,
+       0,  5,  0, 26, 10, 26,  5,  0, 26, 26,
+      26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+      26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+      26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+      26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+      26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+      26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+      26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+      26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+      26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+      26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+      26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+      26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+      26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+      26, 26, 26, 26, 26, 26
     };
   return len + asso_values[(unsigned char)str[1]] + asso_values[(unsigned char)str[0]];
 }
@@ -136,58 +136,46 @@ LookupHttpMethod (register const char *str, register size_t len)
 {
   static const struct HttpMethodSlot wordlist[] =
     {
-      {""}, {""}, {""}, {""},
-#line 17 "gethttpmethod.gperf"
-      {"POST",        kHttpPost},
-#line 30 "gethttpmethod.gperf"
-      {"PATCH",       kHttpPatch},
-#line 29 "gethttpmethod.gperf"
-      {"NOTIFY",      kHttpNotify},
-#line 20 "gethttpmethod.gperf"
-      {"OPTIONS",     kHttpOptions},
+      {""}, {""}, {""},
 #line 18 "gethttpmethod.gperf"
       {"PUT",         kHttpPut},
-#line 22 "gethttpmethod.gperf"
-      {"COPY",        kHttpCopy},
-#line 21 "gethttpmethod.gperf"
-      {"TRACE",       kHttpTrace},
-#line 35 "gethttpmethod.gperf"
+#line 16 "gethttpmethod.gperf"
+      {"HEAD",        kHttpHead},
+#line 28 "gethttpmethod.gperf"
+      {"PATCH",       kHttpPatch},
+#line 30 "gethttpmethod.gperf"
       {"UNLOCK",      kHttpUnlock},
-#line 19 "gethttpmethod.gperf"
-      {"CONNECT",     kHttpConnect},
-#line 31 "gethttpmethod.gperf"
-      {"PROPFIND",    kHttpPropfind},
-#line 32 "gethttpmethod.gperf"
-      {"PROPPATCH",   kHttpProppatch},
-      {""},
-#line 36 "gethttpmethod.gperf"
-      {"UNSUBSCRIBE", kHttpUnsubscribe},
       {""},
 #line 15 "gethttpmethod.gperf"
       {"GET",         kHttpGet},
-#line 28 "gethttpmethod.gperf"
-      {"MOVE",        kHttpMove},
-#line 27 "gethttpmethod.gperf"
-      {"MKCOL",       kHttpMkcol},
-#line 33 "gethttpmethod.gperf"
-      {"REPORT",      kHttpReport},
+#line 17 "gethttpmethod.gperf"
+      {"POST",        kHttpPost},
       {""},
-#line 23 "gethttpmethod.gperf"
-      {"CHECKOUT",    kHttpCheckout},
-#line 16 "gethttpmethod.gperf"
-      {"HEAD",        kHttpHead},
+#line 27 "gethttpmethod.gperf"
+      {"NOTIFY",      kHttpNotify},
+#line 20 "gethttpmethod.gperf"
+      {"OPTIONS",     kHttpOptions},
+      {""},
+#line 22 "gethttpmethod.gperf"
+      {"COPY",        kHttpCopy},
+#line 24 "gethttpmethod.gperf"
+      {"MERGE",       kHttpMerge},
+#line 29 "gethttpmethod.gperf"
+      {"REPORT",      kHttpReport},
+#line 19 "gethttpmethod.gperf"
+      {"CONNECT",     kHttpConnect},
+      {""},
 #line 26 "gethttpmethod.gperf"
-      {"MKACTIVITY",  kHttpMkactivity},
+      {"MOVE",        kHttpMove},
+#line 21 "gethttpmethod.gperf"
+      {"TRACE",       kHttpTrace},
 #line 14 "gethttpmethod.gperf"
       {"DELETE",      kHttpDelete},
       {""}, {""},
-#line 34 "gethttpmethod.gperf"
-      {"SUBSCRIBE",   kHttpSubscribe},
+#line 23 "gethttpmethod.gperf"
+      {"LOCK",        kHttpLock},
 #line 25 "gethttpmethod.gperf"
-      {"MERGE",       kHttpMerge},
-      {""}, {""}, {""},
-#line 24 "gethttpmethod.gperf"
-      {"LOCK",        kHttpLock}
+      {"MKCOL",       kHttpMkcol}
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)

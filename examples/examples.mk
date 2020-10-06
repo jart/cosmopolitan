@@ -49,6 +49,7 @@ EXAMPLES_DIRECTDEPS =						\
 	LIBC_CONV						\
 	LIBC_FMT						\
 	LIBC_LOG						\
+	LIBC_LOG_ASAN						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
 	LIBC_NT_KERNELBASE					\

@@ -155,7 +155,7 @@ int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
             ap->sa_restorer = &__restore_rt;
           }
         }
-        if (rva >= 0) {
+        if (rva >= kSigactionMinRva) {
           ap->sa_sigaction = (sigaction_f)__sigenter;
         }
       }

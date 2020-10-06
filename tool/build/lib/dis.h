@@ -6,6 +6,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+#define DIS_MAX_SYMBOL_LENGTH 32
+
 struct Dis {
   struct DisOps {
     size_t i, n;
@@ -49,6 +51,8 @@ struct Dis {
   uint64_t addr;     /* current effective address */
   char buf[512];
 };
+
+extern bool g_disisprog_disable;
 
 long Dis(struct Dis *, struct Machine *, uint64_t, uint64_t, int);
 long DisFind(struct Dis *, int64_t);

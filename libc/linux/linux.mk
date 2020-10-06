@@ -3,7 +3,7 @@
 
 PKGS += LIBC_LINUX
 
-LIBC_LINUX_HDRS = $(filter %.h,$(LIBC_FILES))
+LIBC_LINUX_HDRS = $(filter %.h,$(LIBC_LINUX_FILES))
 LIBC_LINUX_FILES := $(wildcard libc/linux/*)
 LIBC_LINUX_CHECKS = $(LIBC_LINUX_HDRS:%=o/$(MODE)/%.ok)
 

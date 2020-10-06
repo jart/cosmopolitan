@@ -474,11 +474,8 @@ ssize_t MachinePtyWrite(struct MachinePty *pty, const void *data, size_t n) {
         break;
       case kMachinePtyUtf8:
         if (ThomPikeCont(p[i])) {
-          pty->u8 <<= 6;
-          pty->u8 |= p[i] & 0b00111111;
-          if (--pty->n8) {
-            break;
-          }
+          pty->u8 = ThomPikeMerge(pty->u8, p[i]);
+          if (--pty->n8) break;
         }
         SetMachinePtyCell(pty, pty->u8);
         pty->state = kMachinePtyAscii;

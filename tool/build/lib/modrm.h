@@ -48,7 +48,7 @@ COSMOPOLITAN_C_START_
 #define SibHasIndex(x)      (SibIndex(x) != 4 || Rexx(x))
 #define SibHasBase(x, r)    (SibBase(x) != 5 || ModrmMod(r))
 #define SibIsAbsolute(x, r) (!SibHasBase(x, r) && !SibHasIndex(x))
-#define IsRipRelative(x)    (ModrmRm(x) == 5 && !ModrmMod(x))
+#define IsRipRelative(x)    (Eamode(x) && ModrmRm(x) == 5 && !ModrmMod(x))
 
 struct AddrSeg {
   int64_t addr;

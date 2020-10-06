@@ -112,7 +112,10 @@ int ParseHttpRequest(struct HttpRequest *req, const char *p, size_t n) {
         }
         break;
       case LF2:
-        if (c == '\n') return 0;
+        if (c == '\n') {
+          req->length = i + 1;
+          return 0;
+        }
         return ebadmsg();
       default:
         unreachable;

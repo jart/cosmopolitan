@@ -94,12 +94,12 @@ void showcompressmethod(uint16_t compressmethod) {
 
 void showextrantfs(uint8_t *ntfs) {
   struct timespec mtime, atime, ctime;
-  mtime = filetimetotimespec(
+  mtime = FileTimeToTimeSpec(
       (struct NtFileTime){read32le(ntfs + 8), read32le(ntfs + 12)});
-  atime = filetimetotimespec(
+  atime = FileTimeToTimeSpec(
       (struct NtFileTime){read32le(ntfs + 16), read32le(ntfs + 20)});
-  ctime = filetimetotimespec(
-      (struct NtFileTime){read32le(ntfs + 24), read32le(ntfs + 30)});
+  ctime = FileTimeToTimeSpec(
+      (struct NtFileTime){read32le(ntfs + 24), read32le(ntfs + 28)});
   show(".long", gc(xasprintf("%d", read32le(ntfs))), "ntfs reserved");
   show(".short", gc(xasprintf("0x%04x", read16le(ntfs + 4))),
        "ntfs attribute tag value #1");
@@ -114,10 +114,46 @@ void showextrantfs(uint8_t *ntfs) {
        gc(xasprintf("%s (%s)", "ntfs creation time", gc(xiso8601(&ctime)))));
 }
 
-void showextra(uint8_t *extra) {
+void ShowExtendedTimestamp(uint8_t *p, size_t n, bool islocal) {
+  int flag;
+  int64_t x;
+  struct timespec ts;
+  flag = *p++;
+  show(".byte", gc(xasprintf("0b%03hhb", flag)), "fields present in local");
+  if (!islocal) {
+    show(".quad", gc(xasprintf("%u", READ32LE(p))),
+         gc(xasprintf("%s (%s)", "last modified", gc(xiso8601(&ts)))));
+  } else {
+    if (flag & 1) {
+      ts = (struct timespec){READ32LE(p)};
+      show(".quad", gc(xasprintf("%u", READ32LE(p))),
+           gc(xasprintf("%s (%s)", "last modified", gc(xiso8601(&ts)))));
+      p += 4;
+    }
+    flag >>= 1;
+    if (flag & 1) {
+      ts = (struct timespec){READ32LE(p)};
+      show(".quad", gc(xasprintf("%u", READ32LE(p))),
+           gc(xasprintf("%s (%s)", "access time", gc(xiso8601(&ts)))));
+      p += 4;
+    }
+    flag >>= 1;
+    if (flag & 1) {
+      ts = (struct timespec){READ32LE(p)};
+      show(".quad", gc(xasprintf("%u", READ32LE(p))),
+           gc(xasprintf("%s (%s)", "creation time", gc(xiso8601(&ts)))));
+    }
+  }
+}
+
+void showextra(uint8_t *extra, bool islocal) {
   switch (ZIP_EXTRA_HEADERID(extra)) {
     case kZipExtraNtfs:
       showextrantfs(ZIP_EXTRA_CONTENT(extra));
+      break;
+    case kZipExtraExtendedTimestamp:
+      ShowExtendedTimestamp(ZIP_EXTRA_CONTENT(extra),
+                            ZIP_EXTRA_CONTENTSIZE(extra), islocal);
       break;
     case kZipExtraZip64:
       /* TODO */
@@ -140,7 +176,7 @@ void showexternalattributes(uint8_t *cf) {
   }
 }
 
-void showextras(uint8_t *extras, uint16_t extrassize) {
+void showextras(uint8_t *extras, uint16_t extrassize, bool islocal) {
   int i;
   bool first;
   uint8_t *p, *pe;
@@ -159,7 +195,7 @@ void showextras(uint8_t *extras, uint16_t extrassize) {
         first = false;
         printf("%d:", (i + 1) * 10);
       }
-      showextra(p);
+      showextra(p, islocal);
       printf("%d:", (i + 2) * 10);
     }
   }
@@ -201,7 +237,7 @@ void showlocalfileheader(uint8_t *lf, uint16_t idx) {
               gc(strndup(ZIP_LFILE_NAME(lf), ZIP_LFILE_NAMESIZE(lf)))),
        "name");
   printf("1:");
-  showextras(ZIP_LFILE_EXTRA(lf), ZIP_LFILE_EXTRASIZE(lf));
+  showextras(ZIP_LFILE_EXTRA(lf), ZIP_LFILE_EXTRASIZE(lf), true);
   printf("2:");
   disassemblehex(ZIP_LFILE_CONTENT(lf), ZIP_LFILE_COMPRESSEDSIZE(lf), stdout);
   printf("3:\n");
@@ -252,7 +288,7 @@ void showcentralfileheader(uint8_t *cf) {
               gc(strndup(ZIP_CFILE_NAME(cf), ZIP_CFILE_NAMESIZE(cf)))),
        "name");
   printf("1:");
-  showextras(ZIP_CFILE_EXTRA(cf), ZIP_CFILE_EXTRASIZE(cf));
+  showextras(ZIP_CFILE_EXTRA(cf), ZIP_CFILE_EXTRASIZE(cf), false);
   printf("2:");
   disassemblehex(ZIP_CFILE_COMMENT(cf), ZIP_CFILE_COMMENTSIZE(cf), stdout);
   printf("3:\n");

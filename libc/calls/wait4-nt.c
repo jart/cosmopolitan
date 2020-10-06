@@ -50,8 +50,8 @@ textwindows int wait4$nt(int pid, int *opt_out_wstatus, int options,
           memset(opt_out_rusage, 0, sizeof(*opt_out_rusage));
           GetProcessTimes(GetCurrentProcess(), &createfiletime, &exitfiletime,
                           &kernelfiletime, &userfiletime);
-          filetimetotimeval(&opt_out_rusage->ru_utime, userfiletime);
-          filetimetotimeval(&opt_out_rusage->ru_stime, kernelfiletime);
+          FileTimeToTimeVal(&opt_out_rusage->ru_utime, userfiletime);
+          FileTimeToTimeVal(&opt_out_rusage->ru_stime, kernelfiletime);
         }
         return pid;
       } else if (options & WNOHANG) {

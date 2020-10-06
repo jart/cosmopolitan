@@ -63,6 +63,7 @@ FC = gfortran  #/opt/cross9f/bin/x86_64-linux-musl-gfortran
 AS = o/third_party/gcc/bin/x86_64-linux-musl-as
 CC = o/third_party/gcc/bin/x86_64-linux-musl-gcc
 CXX = o/third_party/gcc/bin/x86_64-linux-musl-g++
+CXXFILT = o/third_party/gcc/bin/x86_64-linux-musl-c++filt
 LD = o/third_party/gcc/bin/x86_64-linux-musl-ld.bfd
 AR = o/third_party/gcc/bin/x86_64-linux-musl-ar
 NM = o/third_party/gcc/bin/x86_64-linux-musl-nm
@@ -319,6 +320,7 @@ OBJECTIFY.c2x.c = $(CC) $(OBJECTIFY.c.flags) -std=c2x -Wextra -Werror -pedantic-
 
 OBJECTIFY.real.c =							\
 	$(GCC)								\
+	-x-no-pg							\
 	$(OBJECTIFY.c.flags)						\
 	-wrapper build/realify.sh					\
 	-D__REAL_MODE__							\
@@ -330,7 +332,12 @@ OBJECTIFY.real.c =							\
 	-ffixed-r13							\
 	-ffixed-r14							\
 	-ffixed-r15							\
+	-mno-red-zone							\
 	-fcall-used-rbx							\
+	-fno-jump-tables						\
+	-fno-shrink-wrap						\
+	-fno-schedule-insns2						\
+	-flive-range-shrinkage						\
 	-fno-omit-frame-pointer						\
 	-momit-leaf-frame-pointer					\
 	-mpreferred-stack-boundary=3					\

@@ -77,7 +77,7 @@ int clock_gettime(int clockid, struct timespec *out_ts) {
   } else {
     struct NtFileTime ft;
     GetSystemTimeAsFileTime(&ft);
-    *out_ts = filetimetotimespec(ft);
+    *out_ts = FileTimeToTimeSpec(ft);
     return 0;
   }
 }

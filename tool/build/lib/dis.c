@@ -150,7 +150,7 @@ static char *DisLineData(struct Dis *d, char *p, const uint8_t *b, size_t n) {
 static char *DisLabel(struct Dis *d, char *p, const char *name) {
   p = DisColumn(DisAddr(d, p), p, ADDRLEN);
   p = HighStart(p, g_high.label);
-  p = Demangle(p, name);
+  p = Demangle(p, name, DIS_MAX_SYMBOL_LENGTH);
   p = HighEnd(p);
   *p++ = ':';
   *p = '\0';

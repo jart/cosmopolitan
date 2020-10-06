@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/str/str.h"
+#include "libc/str/utf16.h"
 
 /**
  * Decodes UTF-16 character.
@@ -30,16 +31,15 @@
  */
 forcealignargpointer unsigned(getutf16)(const char16_t *p, wint_t *wc) {
   unsigned skip = 0;
-  while ((p[skip] & UTF16_MASK) == UTF16_CONT) skip++;
-  if ((p[skip] & UTF16_MASK) != UTF16_MOAR) {
+  while (IsUtf16Cont(p[skip])) skip++;
+  if (IsUcs2(p[skip])) {
     *wc = p[skip];
     return skip + 1;
-  } else if ((p[skip + 1] & UTF16_MASK) != UTF16_CONT) {
+  } else if (IsUtf16Cont(p[skip + 1])) {
     *wc = INVALID_CODEPOINT;
     return -1;
   } else {
-    *wc = 0x10000 + ((((unsigned)p[skip + 0] - 0xd800) << 10) +
-                     ((unsigned)p[skip + 1] - 0xdc00));
+    *wc = MergeUtf16(p[skip], p[skip + 1]);
     return skip + 2;
   }
 }

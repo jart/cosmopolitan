@@ -1421,11 +1421,11 @@ offtime(timep, offset)
 ** where, to make the math easy, the answer for year zero is defined as zero.
 */
 
-pureconst static int
+pureconst optimizespeed static int
 leaps_thru_end_of(y)
 	register const int	y;
 {
-	return (y >= 0) ? (y / 4 - div100int64(y) + y / 400) :
+	return (y >= 0) ? (y / 4 - y / 100 + y / 400) :
 		-(leaps_thru_end_of(-(y + 1)) + 1);
 }
 
@@ -1605,15 +1605,19 @@ timesub(timep, offset, sp, tmp)
 ** Simplified normalize logic courtesy Paul Eggert.
 */
 
-static int
+static inline int
 increment_overflow(number, delta)
 	int *	number;
 	int	delta;
 {
+#ifdef __GNUC__
+	return __builtin_add_overflow(*number, delta, number);
+#else
 	int	number0;
 	number0 = *number;
 	*number += delta;
 	return (*number < number0) != (delta < 0);
+#endif
 }
 
 static int

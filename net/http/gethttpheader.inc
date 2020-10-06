@@ -216,7 +216,7 @@ LookupHttpHeader (register const char *str, register size_t len)
 #line 43 "gethttpheader.gperf"
       {"Keep-Alive",           kHttpKeepAlive},
 #line 61 "gethttpheader.gperf"
-      {"WWW-Authenticate",     kHttpWwwAuthenticate},
+      {"Www-Authenticate",     kHttpWwwAuthenticate},
 #line 35 "gethttpheader.gperf"
       {"Expires",              kHttpExpires},
 #line 46 "gethttpheader.gperf"

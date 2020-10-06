@@ -49,9 +49,9 @@ textwindows int fstat$nt(int64_t handle, struct stat *st) {
               : (((filetype == kNtFileTypeDisk) ? S_IFBLK : 0) |
                  ((filetype == kNtFileTypeChar) ? S_IFCHR : 0) |
                  ((filetype == kNtFileTypePipe) ? S_IFIFO : 0))));
-    st->st_atim = filetimetotimespec(wst.ftLastAccessFileTime);
-    st->st_mtim = filetimetotimespec(wst.ftLastWriteFileTime);
-    st->st_ctim = filetimetotimespec(wst.ftCreationFileTime);
+    st->st_atim = FileTimeToTimeSpec(wst.ftLastAccessFileTime);
+    st->st_mtim = FileTimeToTimeSpec(wst.ftLastWriteFileTime);
+    st->st_ctim = FileTimeToTimeSpec(wst.ftCreationFileTime);
     st->st_size = (uint64_t)wst.nFileSizeHigh << 32 | wst.nFileSizeLow;
     st->st_blksize = PAGESIZE;
     st->st_dev = wst.dwVolumeSerialNumber;

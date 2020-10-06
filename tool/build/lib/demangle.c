@@ -17,10 +17,14 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/hefty/spawn.h"
+#include "libc/calls/struct/iovec.h"
 #include "libc/macros.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sock/sock.h"
 #include "libc/str/str.h"
 #include "tool/build/lib/demangle.h"
 
@@ -37,12 +41,14 @@ void CloseCxxFilt(void) {
 
 void SpawnCxxFilt(void) {
   int pid;
+  const char *cxxfilt;
   char path[PATH_MAX];
-  if (commandv("c++filt", path)) {
+  cxxfilt = firstnonnull(getenv("CXXFILT"), "c++filt");
+  if (commandv(cxxfilt, path)) {
     g_cxxfilt.fds[0] = -1;
     g_cxxfilt.fds[1] = -1;
     g_cxxfilt.fds[2] = 2;
-    if ((pid = spawnve(0, g_cxxfilt.fds, path, (char *const[]){"c++filt", NULL},
+    if ((pid = spawnve(0, g_cxxfilt.fds, path, (char *const[]){cxxfilt, NULL},
                        environ)) != -1) {
       atexit(CloseCxxFilt);
     }
@@ -52,30 +58,50 @@ void SpawnCxxFilt(void) {
   g_cxxfilt.pid = pid;
 }
 
-char *DemangleCxxFilt(char *p, const char *symbol) {
-  int n;
-  char buf[512];
-  bool iscomplicated;
+char *CopySymbol(char *p, size_t pn, const char *s, size_t sn) {
+  size_t extra;
+  bool showdots, iscomplicated;
+  assert(pn >= 1 + 3 + 1 + 1);
+  iscomplicated = memchr(s, ' ', sn) || memchr(s, '(', sn);
+  extra = 1;
+  if (iscomplicated) extra += 2;
+  if (sn + extra > pn) {
+    sn = pn - extra - 3;
+    showdots = true;
+  } else {
+    showdots = false;
+  }
+  if (iscomplicated) *p++ = '"';
+  p = mempcpy(p, s, sn);
+  if (showdots) p = stpcpy(p, "...");
+  if (iscomplicated) *p++ = '"';
+  *p = '\0';
+  return p;
+}
+
+char *DemangleCxxFilt(char *p, size_t pn, const char *s, size_t sn) {
+  ssize_t rc;
+  size_t got;
+  struct iovec iov[2];
+  static char buf[PAGESIZE];
   if (!g_cxxfilt.pid) SpawnCxxFilt();
   if (g_cxxfilt.pid == -1) return NULL;
-  if ((n = strlen(symbol)) >= ARRAYLEN(buf)) return NULL;
-  memcpy(buf, symbol, n);
-  buf[n] = '\n';
-  write(g_cxxfilt.fds[0], buf, n + 1);
-  n = read(g_cxxfilt.fds[1], buf, ARRAYLEN(buf));
-  if (n > 1 && buf[n - 1] == '\n') {
-    if (buf[n - 2] == '\r') --n;
-    --n;
-    iscomplicated = memchr(buf, ' ', n) || memchr(buf, '(', n);
-    if (iscomplicated) *p++ = '"';
-    p = mempcpy(p, buf, n);
-    if (iscomplicated) *p++ = '"';
-    *p = '\0';
-    return p;
-  } else {
-    CloseCxxFilt();
-    return NULL;
+  buf[0] = '\n';
+  iov[0].iov_base = s;
+  iov[0].iov_len = sn;
+  iov[1].iov_base = buf;
+  iov[1].iov_len = 1;
+  writev(g_cxxfilt.fds[0], iov, ARRAYLEN(iov));
+  if ((rc = read(g_cxxfilt.fds[1], buf, sizeof(buf))) != -1) {
+    got = rc;
+    if (got >= 2 && buf[got - 1] == '\n') {
+      if (buf[got - 2] == '\r') --got;
+      --got;
+      return CopySymbol(p, pn, buf, got);
+    }
   }
+  CloseCxxFilt();
+  return NULL;
 }
 
 /**
@@ -85,10 +111,12 @@ char *DemangleCxxFilt(char *p, const char *symbol) {
  * x86_64 disassembler. That's just for the GNU encoding scheme. So
  * what we'll do, is just offload this work to the c++filt program.
  */
-char *Demangle(char *p, const char *symbol) {
+char *Demangle(char *p, const char *symbol, size_t n) {
   char *r;
+  size_t sn;
+  sn = strlen(symbol);
   if (startswith(symbol, "_Z")) {
-    if ((r = DemangleCxxFilt(p, symbol))) return r;
+    if ((r = DemangleCxxFilt(p, n, symbol, sn))) return r;
   }
-  return stpcpy(p, symbol);
+  return CopySymbol(p, n, symbol, sn);
 }

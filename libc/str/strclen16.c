@@ -18,11 +18,14 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
+#include "libc/str/utf16.h"
 
 /**
  * Returns number of characters in UTF-16 or UCS-2 string.
  */
-size_t strclen16(const char16_t *s) { return strnclen16(s, -1ull); }
+size_t strclen16(const char16_t *s) {
+  return strnclen16(s, -1ull);
+}
 
 noinline size_t strnclen16(const char16_t *p, size_t n) {
   size_t l = 0;

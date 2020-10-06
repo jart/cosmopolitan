@@ -55,7 +55,7 @@ int main(int argc, char *argv[], char **envp) {
   unsigned long val;
   char fmt[64], **env;
   printf("\nArguments:\n");
-  for (i = 0; i < argc; ++i) {
+  for (i = 0; i < g_argc; ++i) {
     printf(" ☼ %s\n", argv[i]);
   }
   printf("\nEnvironment:\n");

@@ -20,6 +20,7 @@
 #include "libc/log/check.h"
 #include "libc/nexgen32e/tinystrcmp.h"
 #include "libc/str/str.h"
+#include "third_party/zlib/zlib.h"
 #include "tool/build/lib/dis.h"
 #include "tool/build/lib/high.h"
 #include "tool/build/lib/modrm.h"
@@ -163,7 +164,7 @@ static char *DisName(struct Dis *d, char *bp, const char *name,
     } else if (wantsuffix || (ambiguous && !startswith(name, "f") &&
                               !startswith(name, "set"))) {
       if (Osz(rde)) {
-        if (Mode(rde) != XED_MODE_REAL) {
+        if (ambiguous || Mode(rde) != XED_MODE_REAL) {
           *p++ = 'w';
         }
       } else if (Rexw(rde)) {
@@ -187,8 +188,8 @@ static char *DisName(struct Dis *d, char *bp, const char *name,
  */
 char *DisInst(struct Dis *d, char *p, const char *spec) {
   long i, n;
-  char sbuf[300];
-  char args[4][300];
+  char sbuf[64];
+  char args[4][256];
   char *s, *name, *state;
   bool hasarg, hasmodrm, hasregister, hasmemory;
   CHECK_EQ(0, (int)d->xedd->op.error);

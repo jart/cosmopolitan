@@ -52,6 +52,7 @@ $(LIBC_CONV_A).pkg:				\
 		$(LIBC_CONV_A_OBJS)		\
 		$(foreach x,$(LIBC_CONV_A_DIRECTDEPS),$($(x)_A).pkg)
 
+o/$(MODE)/libc/conv/dosdatetimetounix.o		\
 o/$(MODE)/libc/conv/itoa64radix10.greg.o	\
 o/$(MODE)/libc/conv/timetofiletime.o		\
 o/$(MODE)/libc/conv/filetimetotime.o		\

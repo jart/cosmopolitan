@@ -7,12 +7,12 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-int spacepad(int(int, void *), void *, unsigned long) hidden;
-int ftoa(int(int, void *), void *, long double, int, unsigned long,
+int spacepad(int(long, void *), void *, unsigned long) hidden;
+int ftoa(int(long, void *), void *, long double, int, unsigned long,
          unsigned long) hidden;
-int stoa(int(int, void *), void *, void *, unsigned long, unsigned long,
+int stoa(int(long, void *), void *, void *, unsigned long, unsigned long,
          unsigned long, unsigned char, unsigned char) hidden;
-int ntoa(int(int, void *), void *, va_list, unsigned char, unsigned long,
+int ntoa(int(long, void *), void *, va_list, unsigned char, unsigned long,
          unsigned long, unsigned long, unsigned char, const char *) hidden;
 
 COSMOPOLITAN_C_END_

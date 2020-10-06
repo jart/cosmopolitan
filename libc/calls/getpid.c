@@ -28,7 +28,6 @@
 static int g_pid;
 
 static void __updatepid(void) {
-  atfork(__updatepid, NULL);
   g_pid = __getpid();
 }
 
@@ -47,8 +46,9 @@ int __getpid(void) {
 int getpid(void) {
   static bool once;
   if (!once) {
-    once = true;
     __updatepid();
+    atfork(__updatepid, NULL);
+    once = true;
   }
   return g_pid;
 }

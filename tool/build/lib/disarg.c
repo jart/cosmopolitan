@@ -143,21 +143,30 @@ static char *DisInt(char *p, int64_t x) {
   return p;
 }
 
-static char *DisSym(struct Dis *d, char *p, int64_t addr, int64_t ip) {
-  long sym;
+static char *DisSymImpl(struct Dis *d, char *p, int64_t x, long sym) {
   int64_t addend;
   const char *name;
-  if ((sym = DisFindSym(d, ip)) != -1 && d->syms.p[sym].name) {
-    addend = ip - d->syms.p[sym].addr;
-    name = d->syms.stab + d->syms.p[sym].name;
-    p = Demangle(p, name);
-    if (addend) {
-      *p++ = '+';
-      p = DisInt(p, addend);
-    }
-    return p;
+  addend = x - d->syms.p[sym].addr;
+  name = d->syms.stab + d->syms.p[sym].name;
+  p = Demangle(p, name, DIS_MAX_SYMBOL_LENGTH);
+  if (addend) {
+    *p++ = '+';
+    p = DisInt(p, addend);
+  }
+  return p;
+}
+
+static char *DisSym(struct Dis *d, char *p, int64_t x1, int64_t x2,
+                    bool isrelative) {
+  long sym;
+  if ((sym = DisFindSym(d, x2)) != -1 && d->syms.p[sym].name &&
+      (d->syms.p[sym].isabs ^ isrelative)) {
+    return DisSymImpl(d, p, x2, sym);
+  } else if ((sym = DisFindSym(d, x1)) != -1 && d->syms.p[sym].name &&
+             (d->syms.p[sym].isabs ^ isrelative)) {
+    return DisSymImpl(d, p, x1, sym);
   } else {
-    return DisInt(p, addr);
+    return DisInt(p, x1);
   }
 }
 
@@ -165,7 +174,7 @@ static char *DisSymLiteral(struct Dis *d, uint32_t rde, char *p, uint64_t addr,
                            uint64_t ip) {
   *p++ = '$';
   p = HighStart(p, g_high.literal);
-  p = DisSym(d, p, addr, ip);
+  p = DisSym(d, p, addr, addr, false);
   p = HighEnd(p);
   return p;
 }
@@ -196,27 +205,36 @@ static bool IsRealModrmAbsolute(uint32_t rde) {
   return Eamode(rde) == XED_MODE_REAL && ModrmRm(rde) == 6 && !ModrmMod(rde);
 }
 
-static char *DisM(struct Dis *d, uint32_t rde, char *p) {
+static char *DisDisp(struct Dis *d, uint32_t rde, char *p) {
+  bool rela;
   int64_t disp;
-  const char *base, *index, *scale;
-  p = DisSego(d, rde, p);
-  base = index = scale = NULL;
   if (ModrmMod(rde) == 0b01 || ModrmMod(rde) == 0b10 || IsRipRelative(rde) ||
       IsRealModrmAbsolute(rde) ||
-      (ModrmMod(rde) == 0b00 && ModrmRm(rde) == 0b100 &&
-       SibBase(d->xedd) == 0b101)) {
+      (Eamode(rde) != XED_MODE_REAL && ModrmMod(rde) == 0b00 &&
+       ModrmRm(rde) == 0b100 && SibBase(d->xedd) == 0b101)) {
     disp = d->xedd->op.disp;
     if (IsRipRelative(rde)) {
       if (Mode(rde) == XED_MODE_LONG) {
         disp = RipRelative(d, disp);
+        rela = true;
       } else {
         disp = Unrelative(rde, disp);
+        rela = false;
       }
     } else if (IsRealModrmAbsolute(rde)) {
       disp = Unrelative(rde, disp);
+      rela = false;
+    } else {
+      rela = true;
     }
-    p = DisSym(d, p, disp, disp);
+    p = DisSym(d, p, disp, disp, rela);
   }
+  return p;
+}
+
+static char *DisBis(struct Dis *d, uint32_t rde, char *p) {
+  const char *base, *index, *scale;
+  base = index = scale = NULL;
   if (Eamode(rde) != XED_MODE_REAL) {
     if (!SibExists(rde)) {
       DCHECK(!d->xedd->op.has_sib);
@@ -287,6 +305,13 @@ static char *DisM(struct Dis *d, uint32_t rde, char *p) {
     *p++ = ')';
   }
   *p = '\0';
+  return p;
+}
+
+static char *DisM(struct Dis *d, uint32_t rde, char *p) {
+  p = DisSego(d, rde, p);
+  p = DisDisp(d, rde, p);
+  p = DisBis(d, rde, p);
   return p;
 }
 
@@ -452,11 +477,11 @@ static char *DisJb(struct Dis *d, uint32_t rde, char *p) {
 
 static char *DisJvds(struct Dis *d, uint32_t rde, char *p) {
   return DisSym(d, p, RipRelative(d, d->xedd->op.disp),
-                RipRelative(d, d->xedd->op.disp) - Read64(d->m->cs));
+                RipRelative(d, d->xedd->op.disp) - Read64(d->m->cs), true);
 }
 
 static char *DisAbs(struct Dis *d, uint32_t rde, char *p) {
-  return DisSym(d, p, d->xedd->op.disp, d->xedd->op.disp);
+  return DisSym(d, p, d->xedd->op.disp, d->xedd->op.disp, false);
 }
 
 static char *DisSw(struct Dis *d, uint32_t rde, char *p) {
@@ -477,12 +502,12 @@ static char *DisY(struct Dis *d, uint32_t rde, char *p) {
 }
 
 static char *DisX(struct Dis *d, uint32_t rde, char *p) {
-  DisSego(d, rde, p);
+  p = DisSego(d, rde, p);
   return DisSpecialAddr(d, rde, p, 6);  // ds:si
 }
 
 static char *DisBBb(struct Dis *d, uint32_t rde, char *p) {
-  DisSego(d, rde, p);
+  p = DisSego(d, rde, p);
   return DisSpecialAddr(d, rde, p, 3);  // ds:bx
 }
 

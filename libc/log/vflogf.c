@@ -37,6 +37,10 @@
 
 #define kNontrivialSize (8 * 1000 * 1000)
 
+STATIC_YOINK("ntoa");
+STATIC_YOINK("stoa");
+STATIC_YOINK("ftoa");
+
 static int loglevel2char(unsigned level) {
   switch (level) {
     case kLogInfo:
@@ -47,6 +51,8 @@ static int loglevel2char(unsigned level) {
       return 'W';
     case kLogFatal:
       return 'F';
+    case kLogVerbose:
+      return 'V';
     default:
       return '?';
   }
@@ -80,8 +86,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   long double t2;
   const char *prog;
   int64_t secs, nsec, dots;
-  char zonebuf[8], *zonebufp;
-  char timebuf[24], *timebufp;
+  char timebuf[32], *timebufp;
   if (!f) f = g_logfile;
   if (fileno(f) == -1) return;
   t2 = nowl();
@@ -89,22 +94,19 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   nsec = rem1000000000int64(t2 * 1e9L);
   if (secs > ts.tv_sec) {
     localtime_r(&secs, &tm);
-    strftime(timebuf, sizeof(timebuf), "%Y%m%dT%H%M%S", &tm);
-    strftime(zonebuf, sizeof(zonebuf), "%Z", &tm);
+    strftime(timebuf, sizeof(timebuf), "%Y-%m-%dT%H:%M:%S.", &tm);
     timebufp = timebuf;
-    zonebufp = zonebuf;
     dots = nsec;
   } else {
-    timebufp = "---------------";
-    zonebufp = "---";
+    timebufp = "--------------------";
     dots = nsec - ts.tv_nsec;
   }
   ts.tv_sec = secs;
   ts.tv_nsec = nsec;
   prog = basename(program_invocation_name);
-  if (fprintf(f, "%c%s%s%06ld:%s:%d:%.*s:%d] ", loglevel2char(level), timebufp,
-              zonebufp, rem1000000int64(div1000int64(dots)), file, line,
-              strchrnul(prog, '.') - prog, prog, getpid()) <= 0) {
+  if ((fprintf)(f, "%c%s%06ld:%s:%d:%.*s:%d] ", loglevel2char(level), timebufp,
+                rem1000000int64(div1000int64(dots)), file, line,
+                strchrnul(prog, '.') - prog, prog, getpid()) <= 0) {
     vflogf_onfail(f);
   }
   (vfprintf)(f, fmt, va);
@@ -112,7 +114,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   fputc('\n', f);
   if (level == kLogFatal) {
     startfatal(file, line);
-    fprintf(stderr, "fatal error see logfile\n");
+    (fprintf)(stderr, "fatal error see logfile\n");
     die();
     unreachable;
   }

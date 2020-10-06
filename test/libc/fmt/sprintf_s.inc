@@ -72,6 +72,22 @@ TEST(SUITE(snprintf), testStringPrecision_showsTrueBinary) {
   EXPECT_STREQ("\3\4\0", Format("%.*s", 3, "\3\4\0"));
 }
 
-TEST(SUITE(snprintf), testPrecision_usesCodepointCount) {
-  EXPECT_STREQ("ちゃぶ台返し", Format("%.*s", 6, "ちゃぶ台返し"));
+TEST(SUITE(snprintf), testPrecision_usesByteCount) {
+  EXPECT_STREQ("ちゃ", Format("%.*s", 6, "ちゃぶ台返し"));
+}
+
+TEST(SUITE(snprintf), testReprChar16) {
+  EXPECT_STREQ("u'♥'", Format("%`'hc", u'♥'));
+}
+
+TEST(SUITE(snprintf), testReprChar32) {
+  EXPECT_STREQ("L'♥'", Format("%`'Lc", L'♥'));
+}
+
+TEST(SUITE(snprintf), testReprUtf8) {
+  EXPECT_STREQ("\"♥\"", Format("%`'s", u8"♥"));
+}
+
+TEST(SUITE(snprintf), testReprUtf8Precision_countsBytes) {
+  EXPECT_STREQ("\"♥\"", Format("%`'.*s", 3, u8"♥"));
 }

@@ -17,11 +17,9 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/fmt.h"
-#include "libc/sock/internal.h"
-#include "libc/sock/sock.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/conv/itoa.h"
 #include "libc/sysv/consts/af.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Formats internet address to string.
@@ -33,11 +31,21 @@
  * @return dst on success or NULL w/ errno
  */
 const char *inet_ntop(int af, const void *src, char *dst, uint32_t size) {
+  char *p;
+  unsigned char *ip4;
   if (src) {
     if (af == AF_INET) {
-      unsigned char *p = (unsigned char *)src;
-      if (snprintf(dst, size, "%hhu.%hhu.%hhu.%hhu", p[0], p[1], p[2], p[3]) <
-          size) {
+      if (size >= 16) {
+        p = dst;
+        ip4 = src;
+        p += uint64toarray_radix10(ip4[0], p);
+        *p++ = '.';
+        p += uint64toarray_radix10(ip4[1], p);
+        *p++ = '.';
+        p += uint64toarray_radix10(ip4[2], p);
+        *p++ = '.';
+        p += uint64toarray_radix10(ip4[3], p);
+        *p = '\0';
         return dst;
       } else {
         enospc();

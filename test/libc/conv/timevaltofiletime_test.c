@@ -23,11 +23,11 @@
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 
-TEST(timevaltofiletime, roundTrip) {
+TEST(TimeValToFileTime, roundTrip) {
   struct timeval tv1, tv2;
   tv1.tv_sec = 31337;
   tv1.tv_usec = 1337;
-  filetimetotimeval(&tv2, timevaltofiletime(&tv1));
+  FileTimeToTimeVal(&tv2, TimeValToFileTime(&tv1));
   EXPECT_EQ(31337, tv2.tv_sec);
   EXPECT_EQ(1337, tv2.tv_usec);
 }
