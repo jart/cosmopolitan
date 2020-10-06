@@ -70,6 +70,5 @@ o/$(MODE)/tool/tags/%.com.dbg:			\
 	@$(APELINK)
 
 .PHONY: o/$(MODE)/tool/tags
-o/$(MODE)/tool/tags:				\
-		$(TOOL_TAGS_BINS)		\
-		$(TOOL_TAGS_CHECKS)
+o/$(MODE)/tool/tags:
+# TODO: Why isn't tags.h.inc being generated?

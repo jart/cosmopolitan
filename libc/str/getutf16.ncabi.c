@@ -35,7 +35,7 @@ forcealignargpointer unsigned(getutf16)(const char16_t *p, wint_t *wc) {
   if (IsUcs2(p[skip])) {
     *wc = p[skip];
     return skip + 1;
-  } else if (IsUtf16Cont(p[skip + 1])) {
+  } else if (!IsUtf16Cont(p[skip + 1])) {
     *wc = INVALID_CODEPOINT;
     return -1;
   } else {
