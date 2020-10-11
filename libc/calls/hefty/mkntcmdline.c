@@ -45,7 +45,7 @@ static int mkntcmdline_append(char16_t **p, size_t *i, size_t *n, char16_t c) {
  * Converts System V argv to Windows-style command line.
  *
  * Escaping is performed and it's designed to round-trip with
- * getdosargv() or getdosargv(). This function does NOT escape
+ * GetDosArgv() or GetDosArgv(). This function does NOT escape
  * command interpreter syntax, e.g. $VAR (sh), %VAR% (cmd).
  *
  * @param argv is an a NULL-terminated array of UTF-8 strings

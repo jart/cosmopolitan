@@ -31,39 +31,54 @@
 #include "tool/build/lib/throw.h"
 
 void SetReadAddr(struct Machine *m, int64_t addr, uint32_t size) {
-  m->readaddr = addr;
-  m->readsize = size;
+  if (size) {
+    m->readaddr = addr;
+    m->readsize = size;
+  }
 }
 
 void SetWriteAddr(struct Machine *m, int64_t addr, uint32_t size) {
-  m->writeaddr = addr;
-  m->writesize = size;
+  if (size) {
+    m->writeaddr = addr;
+    m->writesize = size;
+  }
 }
 
-void *FindReal(struct Machine *m, int64_t v) {
-  uint64_t *p;
-  unsigned skew;
-  unsigned char i;
-  skew = v & 0xfff;
-  v &= -0x1000;
+void *FindReal(struct Machine *m, int64_t virt) {
+  uint8_t *host;
+  uint64_t real, pte, *pt;
+  unsigned skew, level, i;
+  if (!(-0x800000000000 <= virt && virt < 0x800000000000)) {
+    return NULL;
+  }
+  skew = virt & 0xfff;
+  virt &= -0x1000;
   for (i = 0; i < ARRAYLEN(m->tlb); ++i) {
-    if (m->tlb[i].v == v && m->tlb[i].r) {
-      return (char *)m->tlb[i].r + skew;
+    if (m->tlb[i].virt == virt && m->tlb[i].host) {
+      return m->tlb[i].host + skew;
     }
   }
-  for (p = m->cr3, i = 39; i >= 12; i -= 9) {
-    if (IsValidPage(p[(v >> i) & 511])) {
-      p = UnmaskPageAddr(p[(v >> i) & 511]);
-    } else {
+  level = 39;
+  real = m->cr3;
+  for (;;) {
+    if (real + 0x1000 > m->real.n) {
       return NULL;
     }
+    host = m->real.p + real;
+    if (level < 12) break;
+    pt = (uint64_t *)host;
+    pte = pt[(virt >> level) & 511];
+    if (!(pte & 1)) {
+      return NULL;
+    }
+    real = pte & 0x00007ffffffff000;
+    level -= 9;
   }
   m->tlbindex = (m->tlbindex + 1) & (ARRAYLEN(m->tlb) - 1);
   m->tlb[m->tlbindex] = m->tlb[0];
-  m->tlb[0].r = p;
-  m->tlb[0].v = ROUNDDOWN(v, 0x1000);
-  DCHECK_NOTNULL(p);
-  return (char *)p + skew;
+  m->tlb[0].host = host;
+  m->tlb[0].virt = virt;
+  return host + skew;
 }
 
 void *ResolveAddress(struct Machine *m, int64_t v) {
@@ -196,7 +211,7 @@ void *LoadStr(struct Machine *m, int64_t addr) {
   if (!addr) return NULL;
   if (!(page = FindReal(m, addr))) return NULL;
   if ((p = memchr(page, '\0', have))) {
-    SetReadAddr(m, addr, p - page);
+    SetReadAddr(m, addr, p - page + 1);
     return page;
   }
   CHECK_LT(m->freelist.i, ARRAYLEN(m->freelist.p));
@@ -205,7 +220,7 @@ void *LoadStr(struct Machine *m, int64_t addr) {
   for (;;) {
     if (!(page = FindReal(m, addr + have))) break;
     if ((p = memccpy(copy + have, page, '\0', 0x1000))) {
-      SetReadAddr(m, addr, have + (p - (copy + have)));
+      SetReadAddr(m, addr, have + (p - (copy + have)) + 1);
       return (m->freelist.p[m->freelist.i++] = copy);
     }
     have += 0x1000;
@@ -217,19 +232,19 @@ void *LoadStr(struct Machine *m, int64_t addr) {
 }
 
 void *LoadBuf(struct Machine *m, int64_t addr, size_t size) {
-  char *buf, *copy;
   size_t have, need;
+  char *buf, *copy, *page;
   have = 0x1000 - (addr & 0xfff);
   if (!addr) return NULL;
   if (!(buf = FindReal(m, addr))) return NULL;
   if (size > have) {
     CHECK_LT(m->freelist.i, ARRAYLEN(m->freelist.p));
     if (!(copy = malloc(size))) return NULL;
-    memcpy(copy, buf, have);
+    buf = memcpy(copy, buf, have);
     do {
       need = MIN(0x1000, size - have);
-      if ((buf = FindReal(m, addr + have))) {
-        memcpy(copy + have, buf, need);
+      if ((page = FindReal(m, addr + have))) {
+        memcpy(copy + have, page, need);
         have += need;
       } else {
         free(copy);

@@ -57,42 +57,14 @@ _executive:
 	ud2
 
 #ifdef __PG__
-/	Enables plaintext function tracing if --ftrace flag passed.
-/
-/	The --ftrace CLI arg is removed before main() is called. This
-/	code is intended for diagnostic purposes and assumes binaries
-/	are trustworthy and stack isn't corrupted. Logging plain text
-/	allows program structure to easily be visualized and hotspots
-/	identified w/ sed | sort | uniq -c | sort. A compressed trace
-/	can be made by appending --ftrace 2>&1 | gzip -4 >trace.gz to
-/	the CLI arguments. Have fun.
-/
-/	@see	libc/runtime/ftrace.greg.c
-/	@see	libc/crt/crt.S
 	.init.start 800,_init_ftrace
 	push	%rdi
 	push	%rsi
-	xor	%edx,%edx
-	loadstr	"--ftrace",di
-	xor	%ecx,%ecx
-0:	inc	%ecx
-	mov	(%r13,%rcx,8),%rsi
-	test	%edx,%edx
-	jz	1f
-	mov	%rsi,-8(%r13,%rcx,8)
-1:	test	%rsi,%rsi
-	jz	2f
-	test	%edx,%edx
-	jnz	0b
-	call	tinystrcmp
-	test	%eax,%eax
-	setz	%dl
-	jmp	0b
-2:	sub	%rdx,%r12
-	test	%edx,%edx
-	jz	2f
+	mov	%r12d,%edi
+	mov	%r13,%rsi
 	call	ftrace_init
-2:	pop	%rsi
+	mov	%eax,%r12d
+	pop	%rsi
 	pop	%rdi
 	.init.end 800,_init_ftrace
-#endif /* -pg */
+#endif

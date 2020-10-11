@@ -11,7 +11,8 @@ TOOL_BUILD_EMUBIN_BINS =				\
 	o/$(MODE)/tool/build/emubin/prime.bin		\
 	o/$(MODE)/tool/build/emubin/prime.bin.dbg	\
 	o/$(MODE)/tool/build/emubin/pi.bin		\
-	o/$(MODE)/tool/build/emubin/pi.bin.dbg
+	o/$(MODE)/tool/build/emubin/pi.bin.dbg		\
+	o/$(MODE)/tool/build/emubin/linmap.elf
 
 TOOL_BUILD_EMUBIN_A = o/$(MODE)/tool/build/emubin/emubin.a
 TOOL_BUILD_EMUBIN_FILES := $(wildcard tool/build/emubin/*)
@@ -49,6 +50,13 @@ o/$(MODE)/tool/build/emubin/%.bin.dbg:			\
 		o/$(MODE)/tool/build/emubin/%.o		\
 		$(TOOL_BUILD_EMUBIN_A).pkg
 	@$(ELFLINK) -e emucrt -z max-page-size=0x10
+
+o/$(MODE)/tool/build/emubin/%.elf:			\
+		$(TOOL_BUILD_EMUBIN_DEPS)		\
+		$(TOOL_BUILD_EMUBIN_A)			\
+		o/$(MODE)/tool/build/emubin/%.o		\
+		$(ELF)
+	@$(ELFLINK)
 
 o/dbg/tool/build/emubin/lisp.real.com.dbg:		\
 		$(TOOL_BUILD_EMUBIN_DEPS)		\

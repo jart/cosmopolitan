@@ -28,18 +28,18 @@ void PrintMemoryIntervals(int fd, const struct MemoryIntervals *mm) {
   int i, frames, maptally, gaptally;
   maptally = 0;
   gaptally = 0;
-  (dprintf)(fd, "%s%zd%s\n", "mm->i == ", mm->i, ";");
+  (dprintf)(fd, "%s%zd%s\r\n", "mm->i == ", mm->i, ";");
   for (i = 0; i < mm->i; ++i) {
     if (i && mm->p[i].x != mm->p[i - 1].y + 1) {
       frames = mm->p[i].x - mm->p[i - 1].y - 1;
       gaptally += frames;
-      (dprintf)(fd, "%s%,zd%s\n", "/* ", frames, " */");
+      (dprintf)(fd, "%s%,zd%s\r\n", "/* ", frames, " */");
     }
     frames = mm->p[i].y + 1 - mm->p[i].x;
     maptally += frames;
-    (dprintf)(fd, "%s%3u%s0x%08x,0x%08x%s%,zd%s\n", "mm->p[", i, "]=={",
+    (dprintf)(fd, "%s%3u%s0x%08x,0x%08x%s%,zd%s\r\n", "mm->p[", i, "]=={",
               mm->p[i].x, mm->p[i].y, "}; /* ", frames, " */");
   }
-  (dprintf)(fd, "%s%,zd%s%,zd%s\n\n", "/* ", maptally, " frames mapped w/ ",
+  (dprintf)(fd, "%s%,zd%s%,zd%s\r\n\r\n", "/* ", maptally, " frames mapped w/ ",
             gaptally, " frames gapped */");
 }

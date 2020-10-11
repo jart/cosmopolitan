@@ -25,6 +25,7 @@
 #include "libc/str/appendchar.h"
 #include "libc/str/str.h"
 #include "libc/str/tpenc.h"
+#include "libc/str/utf16.h"
 
 /* TODO(jart): Make early-stage data structures happen. */
 #undef isspace
@@ -39,11 +40,7 @@ struct DosArgv {
   wint_t wc;
 };
 
-static textwindows void decodedosargv(struct DosArgv *st) {
-  st->s += getutf16(st->s, &st->wc);
-}
-
-static textwindows void appenddosargv(struct DosArgv *st, wint_t wc) {
+static textwindows void AppendDosArgv(struct DosArgv *st, wint_t wc) {
   AppendChar(&st->p, st->pe, wc);
 }
 
@@ -66,7 +63,7 @@ static textwindows void appenddosargv(struct DosArgv *st, wint_t wc) {
  * @see libc/runtime/ntspawn.c
  * @note kudos to Simon Tatham for figuring out quoting behavior
  */
-textwindows int getdosargv(const char16_t *cmdline, char *buf, size_t size,
+textwindows int GetDosArgv(const char16_t *cmdline, char *buf, size_t size,
                            char **argv, size_t max) {
   bool inquote;
   size_t i, argc, slashes, quotes;
@@ -75,9 +72,9 @@ textwindows int getdosargv(const char16_t *cmdline, char *buf, size_t size,
   st.p = buf;
   st.pe = buf + size;
   argc = 0;
-  decodedosargv(&st);
+  st.wc = DecodeNtsUtf16(&st.s);
   while (st.wc) {
-    while (st.wc && iswspace(st.wc)) decodedosargv(&st);
+    while (st.wc && iswspace(st.wc)) st.wc = DecodeNtsUtf16(&st.s);
     if (!st.wc) break;
     if (++argc < max) {
       argv[argc - 1] = st.p < st.pe ? st.p : NULL;
@@ -88,27 +85,27 @@ textwindows int getdosargv(const char16_t *cmdline, char *buf, size_t size,
       if (st.wc == '"' || st.wc == '\\') {
         slashes = 0;
         quotes = 0;
-        while (st.wc == '\\') decodedosargv(&st), slashes++;
-        while (st.wc == '"') decodedosargv(&st), quotes++;
+        while (st.wc == '\\') st.wc = DecodeNtsUtf16(&st.s), slashes++;
+        while (st.wc == '"') st.wc = DecodeNtsUtf16(&st.s), quotes++;
         if (!quotes) {
-          while (slashes--) appenddosargv(&st, '\\');
+          while (slashes--) AppendDosArgv(&st, '\\');
         } else {
-          while (slashes >= 2) appenddosargv(&st, '\\'), slashes -= 2;
-          if (slashes) appenddosargv(&st, '"'), quotes--;
+          while (slashes >= 2) AppendDosArgv(&st, '\\'), slashes -= 2;
+          if (slashes) AppendDosArgv(&st, '"'), quotes--;
           if (quotes > 0) {
             if (!inquote) quotes--;
-            for (i = 3; i <= quotes + 1; i += 3) appenddosargv(&st, '"');
+            for (i = 3; i <= quotes + 1; i += 3) AppendDosArgv(&st, '"');
             inquote = (quotes % 3 == 0);
           }
         }
       } else {
-        appenddosargv(&st, st.wc);
-        decodedosargv(&st);
+        AppendDosArgv(&st, st.wc);
+        st.wc = DecodeNtsUtf16(&st.s);
       }
     }
-    appenddosargv(&st, '\0');
+    AppendDosArgv(&st, '\0');
   }
-  appenddosargv(&st, '\0');
+  AppendDosArgv(&st, '\0');
   if (size) buf[min(st.p - buf, size - 1)] = '\0';
   if (max) argv[min(argc, max - 1)] = NULL;
   return argc;

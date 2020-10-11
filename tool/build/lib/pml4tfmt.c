@@ -17,6 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/log/check.h"
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/x/x.h"
@@ -59,12 +60,17 @@ static void FormatEndPage(struct Pml4tFormater *pp, int64_t end) {
   AppendFmt(&pp->b, "%p %p %,ld bytes", end - 1, size, size);
 }
 
-char *FormatPml4t(uint64_t pml4t[512]) {
+static void *GetPt(struct Machine *m, uint64_t r) {
+  CHECK_LE(r + 0x1000, m->real.n);
+  return m->real.p + r;
+}
+
+char *FormatPml4t(struct Machine *m) {
   uint64_t *pd[4];
   unsigned short i, a[4];
   struct Pml4tFormater pp = {0};
   unsigned short range[][2] = {{256, 512}, {0, 256}};
-  pd[0] = pml4t;
+  pd[0] = GetPt(m, m->cr3);
   for (i = 0; i < ARRAYLEN(range); ++i) {
     a[0] = range[i][0];
     do {
@@ -72,19 +78,19 @@ char *FormatPml4t(uint64_t pml4t[512]) {
       if (!IsValidPage(pd[0][a[0]])) {
         if (pp.t) FormatEndPage(&pp, MakeAddress(a));
       } else {
-        pd[1] = UnmaskPageAddr(pd[0][a[0]]);
+        pd[1] = GetPt(m, UnmaskPageAddr(pd[0][a[0]]));
         do {
           a[2] = a[3] = 0;
           if (!IsValidPage(pd[1][a[1]])) {
             if (pp.t) FormatEndPage(&pp, MakeAddress(a));
           } else {
-            pd[2] = UnmaskPageAddr(pd[1][a[1]]);
+            pd[2] = GetPt(m, UnmaskPageAddr(pd[1][a[1]]));
             do {
               a[3] = 0;
               if (!IsValidPage(pd[2][a[2]])) {
                 if (pp.t) FormatEndPage(&pp, MakeAddress(a));
               } else {
-                pd[3] = UnmaskPageAddr(pd[2][a[2]]);
+                pd[3] = GetPt(m, UnmaskPageAddr(pd[2][a[2]]));
                 do {
                   if (!IsValidPage(pd[3][a[3]])) {
                     if (pp.t) FormatEndPage(&pp, MakeAddress(a));

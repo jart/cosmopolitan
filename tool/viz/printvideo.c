@@ -144,10 +144,7 @@ Effects Shortcuts:\n\
   H          +Hue             ALT+H      -Hue\n\
   S          +Saturation      ALT+S      -Saturation\n\
   L          +Lightness       ALT+L      -Lightness\n\
-  F1         {Unsharp,Sharp}\n\
-  F2         {Gaussian,Boxblur}\n\
-  F3         Sobel\n\
-  F4         Emboss\n\
+  CTRL-G     {Unsharp,Sharp}\n\
 \n\
 Environment Variables:\n\
   SOX        overrides location of SoX executable\n\
@@ -1157,8 +1154,6 @@ static optimizesize void ReadKeyboard(void) {
           case CTRL('G'):
             sharp_ = (sharp_ + 1) % kSharpMAX;
             break;
-          case CTRL('B'):
-            longjmp(jb_, 1);
           case CTRL('\\'):
             raise(SIGQUIT);
             break;

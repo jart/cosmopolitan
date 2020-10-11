@@ -18,10 +18,12 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/log/backtrace.h"
 #include "libc/log/log.h"
 #include "libc/runtime/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/exit.h"
+#include "libc/sysv/consts/fileno.h"
 
 /**
  * Aborts process after printing details on its current state.
@@ -33,7 +35,7 @@ relegated noreturn void die(void) {
     if (!IsTiny()) {
       g_runstate |= RUNSTATE_BROKEN;
       if (IsDebuggerPresent(false)) DebugBreak();
-      backtrace(stderr);
+      ShowBacktrace(STDERR_FILENO, NULL);
     }
     exit(EXIT_FAILURE);
     unreachable;

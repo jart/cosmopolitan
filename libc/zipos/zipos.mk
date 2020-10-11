@@ -12,8 +12,7 @@ LIBC_ZIPOS_A_SRCS_C = $(filter %.c,$(LIBC_ZIPOS_A_FILES))
 
 LIBC_ZIPOS =						\
 	$(LIBC_ZIPOS_A_DEPS)				\
-	$(LIBC_ZIPOS_A)					\
-	o/$(MODE)/libc/zipos/zipos.o
+	$(LIBC_ZIPOS_A)
 
 LIBC_ZIPOS_A_SRCS =					\
 	$(LIBC_ZIPOS_A_SRCS_S)				\

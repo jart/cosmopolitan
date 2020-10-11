@@ -400,10 +400,11 @@ Exactly one of IEEE_8087, IEEE_MC68k, VAX, or IBM should be defined.
 #ifdef SET_INEXACT
 #define dtoa_divmax 27
 #else
-int dtoa_divmax = 2; /* Permit experimenting: on some systems, 64-bit integer */
-                     /* division is slow enough that we may sometimes want to */
-                     /* avoid using it.   We assume (but do not check) that   */
-                     /* dtoa_divmax <= 27.*/
+/* Permit experimenting: on some systems, 64-bit integer */
+/* division is slow enough that we may sometimes want to */
+/* avoid using it.   We assume (but do not check) that   */
+/* dtoa_divmax <= 27.*/
+extern int dtoa_divmax;
 #endif
 
 typedef struct BF96 { /* Normalized 96-bit software floating point numbers */

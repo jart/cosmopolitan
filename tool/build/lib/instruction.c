@@ -75,12 +75,12 @@ void LoadInstruction(struct Machine *m) {
   key = ip & (ARRAYLEN(m->icache) - 1);
   m->xedd = (struct XedDecodedInst *)m->icache[key];
   if ((ip & 0xfff) < 0x1000 - 15) {
-    if (ip - (ip & 0xfff) == m->codevirt && ip) {
-      addr = m->codereal + (ip & 0xfff);
+    if (ip - (ip & 0xfff) == m->codevirt && m->codehost) {
+      addr = m->codehost + (ip & 0xfff);
     } else {
       m->codevirt = ip - (ip & 0xfff);
-      m->codereal = ResolveAddress(m, m->codevirt);
-      addr = m->codereal + (ip & 0xfff);
+      m->codehost = ResolveAddress(m, m->codevirt);
+      addr = m->codehost + (ip & 0xfff);
     }
     if (!IsOpcodeEqual(m->xedd, addr)) {
       DecodeInstruction(m, addr, 15);

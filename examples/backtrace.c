@@ -8,12 +8,14 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/calls/calls.h"
+#include "libc/log/backtrace.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/fileno.h"
 
 /*
 
@@ -45,9 +47,9 @@
 
 void hello(void) {
   gc(malloc(1));
-  backtrace(stdout);
+  ShowBacktrace(STDOUT_FILENO, NULL);
   setenv("ADDR2LINE", "", true);
-  backtrace(stdout);
+  ShowBacktrace(STDOUT_FILENO, NULL);
 }
 
 void world(void) {

@@ -92,14 +92,21 @@ static int ppatoi(const char **str) {
  *
  * Precision Modifiers
  *
- *   - `%.8s` supplied character length (ignore nul terminator)
- *   - `%.*s` supplied character length argument (ignore nul terminator)
+ *   - `%.8s`  supplied byte length (obeys nul terminator)
+ *   - `%.*s`  supplied byte length argument (obeys nul terminator)
+ *   - `%`.*s` supplied byte length argument c escaped (ignores nul terminator)
+ *   - `%#.*s` supplied byte length argument visualized (ignores nul terminator)
+ *   - `%.*hs` supplied char16_t length argument (obeys nul terminator)
+ *   - `%.*ls` supplied wchar_t length argument (obeys nul terminator)
  *
  * Formatting Modifiers
  *
  *   - `%,d`  thousands separators
  *   - `%'s`  escaped c string literal
- *   - `%'c`  escaped c character literal
+ *   - `%`c`  c escaped character
+ *   - `%`'c` c escaped character quoted
+ *   - `%`s`  c escaped string
+ *   - `%`'s` c escaped string quoted
  *   - `%`s`  escaped double quoted c string literal
  *   - `%`c`  escaped double quoted c character literal
  *   - `%+d`  plus leftpad if positive (aligns w/ negatives)
@@ -114,7 +121,7 @@ hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
   void *p;
   char qchar;
   long double ldbl;
-  wchar_t charbuf[3];
+  wchar_t charbuf[1];
   const char *alphabet;
   int (*out)(long, void *);
   unsigned char signbit, log2base;
@@ -281,14 +288,15 @@ hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
         break;
 
       case 'c':
+        precision = 1;
+        flags |= FLAGS_PRECISION;
         qchar = '\'';
         p = charbuf;
-        charbuf[0] = va_arg(va, int);
-        charbuf[1] = L'\0';
+        charbuf[0] = va_arg(va, int); /* assume little endian */
         goto showstr;
 
       case 'm':
-        p = weaken(strerror)(lasterr);
+        p = weaken(strerror) ? weaken(strerror)(lasterr) : "?";
         signbit = 0;
         goto showstr;
 

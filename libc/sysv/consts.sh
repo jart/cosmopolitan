@@ -214,16 +214,16 @@ syscon	open	O_APPEND				0x0400			8			8			8			0x00000004		# bsd consensus & kNtFi
 syscon	open	O_CREAT					0x40			0x0200			0x0200			0x0200			0x00000040		# bsd consensus & NT faked as Linux
 syscon	open	O_EXCL					0x80			0x0800			0x0800			0x0800			0x00000080		# bsd consensus & NT faked as Linux
 syscon	open	O_TRUNC					0x0200			0x0400			0x0400			0x0400			0x00000200		# bsd consensus & NT faked as Linux
+syscon	open	O_DIRECTORY				0x010000		0x100000		0x020000		0x020000		0x02000000		# kNtFileFlagBackupSemantics
 syscon	open	O_DIRECT				0x4000			0			0x010000		0			0x00200000		# kNtFileFlagNoBuffering>>8
+syscon	open	O_CLOEXEC				0x080000		0x01000000		0x100000		0x010000		0x00080000		# NT faked as Linux
+syscon	open	O_TMPFILE				0x410000		0			0			0			0x04000100		# Linux 3.11+ (c. 2013) & kNtFileAttributeTemporary|kNtFileFlagDeleteOnClose
+syscon	open	O_SPARSE				0			0			0			0			0x00040000		# we invented it
 syscon	open	O_NDELAY				0x0800			4			4			4			0			# bsd consensus & kNtFileFlagWriteThrough>>8 → 0x00800000 (???)
 syscon	open	O_NONBLOCK				0x0800			4			4			4			0			# bsd consensus
-syscon	open	O_CLOEXEC				0x080000		0x01000000		0x100000		0x010000		0x00080000		# NT faked as Linux
-syscon	open	O_SPARSE				0			0			0			0			0x00040000		# we invented it
-syscon	open	O_TMPFILE				0x410000		0			0			0			0x04000100		# Linux 3.11+ (c. 2013) & kNtFileAttributeTemporary|kNtFileFlagDeleteOnClose
 syscon	open	O_ASYNC					0x2000			0x40			0x40			0x40			0			# bsd consensus
 syscon	open	O_NOFOLLOW				0x020000		0x0100			0x0100			0x0100			0			# bsd consensus
 syscon	open	O_SYNC					0x101000		0x80			0x80			0x80			0			# bsd consensus
-syscon	open	O_DIRECTORY				0x010000		0x100000		0x020000		0x020000		0
 syscon	open	O_NOCTTY				0x0100			0x020000		0x8000			0x8000			0			# used for remote viewing (default behavior on freebsd)
 syscon	open	O_DSYNC					0x1000			0x400000		0			0x80			0
 syscon	open	O_RSYNC					0x101000		0			0			0x80			0
@@ -236,19 +236,19 @@ syscon	compat	O_LARGEFILE				0			0			0			0			0
 syscon	compat	MAP_FILE				0			0			0			0			0			# consensus
 syscon	mmap	MAP_SHARED				1			1			1			1			1			# forced consensus & faked nt
 syscon	mmap	MAP_PRIVATE				2			2			2			2			2			# forced consensus & faked nt
-syscon	mmap	MAP_FIXED				16			16			16			16			16			# unix consensus; openbsd appears to forbid; faked nt
+syscon	mmap	MAP_FIXED				0x10			0x10			0x10			0x10			0x10			# unix consensus; openbsd appears to forbid; faked nt
 syscon	mmap	MAP_ANONYMOUS				0x20			0x1000			0x1000			0x1000			0x20			# bsd consensus; faked nt
-syscon	compat	MAP_ANON				0x20			0x1000			0x1000			0x1000			0x20			# bsd consensus; faked nt
 syscon	mmap	MAP_NORESERVE				0x4000			0x40			0			0			0			# Linux calls it "reserve"; NT calls it "commit"? which is default?
 syscon	mmap	MAP_GROWSDOWN				0x0100			0			0x0400			0x0400			0x100000		# MAP_STACK on BSD; MEM_TOP_DOWN on NT
-syscon	compat	MAP_STACK				0x020000		0			0x0400			0x4000			0x100000
 syscon	mmap	MAP_HUGETLB				0x040000		0			0			0			0x80000000		# kNtSecLargePages
 syscon	mmap	MAP_HUGE_MASK				63			0			0			0			0
 syscon	mmap	MAP_HUGE_SHIFT				26			0			0			0			0
 syscon	mmap	MAP_LOCKED				0x2000			0			0			0			0
-syscon	mmap	MAP_NONBLOCK				0x010000		0			0			0			0
+syscon	mmap	MAP_NONBLOCK				0x10000			0			0			0			0
 syscon	mmap	MAP_POPULATE				0x8000			0			0			0			0			# can avoid madvise(MADV_WILLNEED) on private file mapping
 syscon	mmap	MAP_TYPE				15			0			0			0			0			# what is it
+syscon	compat	MAP_ANON				0x20			0x1000			0x1000			0x1000			0x20			# bsd consensus; faked nt
+syscon	compat	MAP_STACK				0x020000		0			0x0400			0x4000			0x100000
 syscon	compat	MAP_EXECUTABLE				0x1000			0			0			0			0			# ignored
 syscon	compat	MAP_DENYWRITE				0x0800			0			0			0			0
 syscon	compat	MAP_32BIT				0x40			0			0x080000		0			0			# iffy
@@ -581,6 +581,35 @@ syscon	so	SO_TIMESTAMPING				37			0			0			0			0
 syscon	so	SO_TIMESTAMPNS				35			0			0			0			0
 syscon	so	SO_WIFI_STATUS				41			0			0			0			0
 
+syscon	sol	SOL_IP					0			0			0			0			0			# consensus
+syscon	sol	SOL_SOCKET				1			0xffff			0xffff			0xffff			0xffff			# bsd+nt consensus (todo: what's up with ipproto_icmp overlap)
+syscon	sol	SOL_TCP					6			6			6			6			6			# consensus
+syscon	sol	SOL_UDP					17			17			17			17			17			# consensus
+syscon	sol	SOL_IPV6				41			41			41			41			41
+syscon	sol	SOL_ICMPV6				58			58			58			58			0
+syscon	sol	SOL_AAL					265			0			0			0			0
+syscon	sol	SOL_ALG					279			0			0			0			0
+syscon	sol	SOL_ATM					264			0			0			0			0
+syscon	sol	SOL_BLUETOOTH				274			0			0			0			0
+syscon	sol	SOL_CAIF				278			0			0			0			0
+syscon	sol	SOL_DCCP				269			0			0			0			0
+syscon	sol	SOL_DECNET				261			0			0			0			0
+syscon	sol	SOL_IRDA				266			0			0			0			0
+syscon	sol	SOL_IUCV				277			0			0			0			0
+syscon	sol	SOL_KCM					281			0			0			0			0
+syscon	sol	SOL_LLC					268			0			0			0			0
+syscon	sol	SOL_NETBEUI				267			0			0			0			0
+syscon	sol	SOL_NETLINK				270			0			0			0			0
+syscon	sol	SOL_NFC					280			0			0			0			0
+syscon	sol	SOL_PACKET				263			0			0			0			0
+syscon	sol	SOL_PNPIPE				275			0			0			0			0
+syscon	sol	SOL_PPPOL2TP				273			0			0			0			0
+syscon	sol	SOL_RAW					255			0			0			0			0
+syscon	sol	SOL_RDS					276			0			0			0			0
+syscon	sol	SOL_RXRPC				272			0			0			0			0
+syscon	sol	SOL_TIPC				271			0			0			0			0
+syscon	sol	SOL_X25					262			0			0			0			0
+
 #	{set,get}sockopt(fd, level=IPPROTO_TCP, X, ...)
 #	» most elite of all tuning groups
 #
@@ -591,7 +620,7 @@ syscon	so	SO_WIFI_STATUS				41			0			0			0			0
 #	@see https://www.iana.org/assignments/tcp-parameters/tcp-parameters.txt
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			XENIX			Commentary
-syscon	tcp	TCP_NODELAY				1			1			1			1			1			# consensus
+syscon	tcp	TCP_NODELAY				1			1			1			1			1			# strong consensus for disabling nagle's algorithm
 syscon	tcp	TCP_MAXSEG				2			2			2			2			0			# reduces tcp segment size; see also tcp offloading
 syscon	tcp	TCP_FASTOPEN				23			261			0x0401			0			15                      # reduces roundtrips; for listener; Linux 3.7+ (c. 2012) / or is windows it 0x22? /proc/sys/net/ipv4/tcp_fastopen TODO(jart): MSG_FASTOPEN
 syscon	tcp	TCP_KEEPIDLE				4			0			0x100			0			0			# keepalives
@@ -620,6 +649,39 @@ syscon	tcp	TCP_REPAIR				19			0			0			0			0			# what is it
 syscon	tcp	TCP_REPAIR_OPTIONS			22			0			0			0			0			# what is it
 syscon	tcp	TCP_REPAIR_QUEUE			20			0			0			0			0			# what is it
 syscon	tcp	TCP_THIN_LINEAR_TIMEOUTS		16			0			0			0			0			# what is it
+
+syscon	iproto	IPPROTO_IP				0			0			0			0			0			# consensus
+syscon	iproto	IPPROTO_ICMP				1			1			1			1			1			# consensus
+syscon	iproto	IPPROTO_TCP				6			6			6			6			6			# consensus
+syscon	iproto	IPPROTO_UDP				17			17			17			17			17			# consensus
+syscon	iproto	IPPROTO_RAW				255			255			255			255			255			# consensus
+syscon	iproto	IPPROTO_HOPOPTS				0			0			0			0			0			# consensus
+syscon	iproto	IPPROTO_IDP				22			22			22			22			22			# consensus
+syscon	iproto	IPPROTO_IGMP				2			2			2			2			2			# consensus
+syscon	iproto	IPPROTO_PUP				12			12			12			12			12			# consensus
+syscon	iproto	IPPROTO_AH				51			51			51			51			0			# unix consensus
+syscon	iproto	IPPROTO_DSTOPTS				60			60			60			60			0			# unix consensus
+syscon	iproto	IPPROTO_EGP				8			8			8			8			0			# unix consensus
+syscon	iproto	IPPROTO_ENCAP				98			98			98			98			0			# unix consensus
+syscon	iproto	IPPROTO_ESP				50			50			50			50			0			# unix consensus
+syscon	iproto	IPPROTO_FRAGMENT			44			44			44			44			0			# unix consensus
+syscon	iproto	IPPROTO_GRE				47			47			47			47			0			# unix consensus
+syscon	iproto	IPPROTO_ICMPV6				58			58			58			58			0			# unix consensus
+syscon	iproto	IPPROTO_IPIP				4			4			4			4			0			# unix consensus
+syscon	iproto	IPPROTO_IPV6				41			41			41			41			0			# unix consensus
+syscon	iproto	IPPROTO_NONE				59			59			59			59			0			# unix consensus
+syscon	iproto	IPPROTO_PIM				103			103			103			103			0			# unix consensus
+syscon	iproto	IPPROTO_ROUTING				43			43			43			43			0			# unix consensus
+syscon	iproto	IPPROTO_RSVP				46			46			46			46			0			# unix consensus
+syscon	iproto	IPPROTO_TP				29			29			29			29			0			# unix consensus
+syscon	iproto	IPPROTO_MPLS				137			0			137			137			0
+syscon	iproto	IPPROTO_MTP				92			92			92			0			0
+syscon	iproto	IPPROTO_SCTP				132			132			132			0			0
+syscon	iproto	IPPROTO_MH				135			0			135			0			0
+syscon	iproto	IPPROTO_UDPLITE				136			0			136			0			0
+syscon	iproto	IPPROTO_BEETPH				94			0			0			0			0
+syscon	iproto	IPPROTO_COMP				108			0			0			0			0
+syscon	iproto	IPPROTO_DCCP				33			0			0			0			0
 
 syscon	misc	EXTA					14			0x4b00			0x4b00			0x4b00			0			# bsd consensus
 syscon	misc	EXTB					15			0x9600			0x9600			0x9600			0			# bsd consensus
@@ -931,39 +993,6 @@ syscon	icmp6	ICMP6_ECHO_REPLY			129			129			129			129			0			# unix consensus
 syscon	icmp6	ICMP6_ROUTER_RENUMBERING		138			138			138			138			0			# unix consensus
 syscon	icmp6	ICMP6_RR_RESULT_FLAGS_FORBIDDEN		0x0100			0x0100			0x0100			0x0100			0			# unix consensus
 syscon	icmp6	ICMP6_RR_RESULT_FLAGS_OOB		0x0200			0x0200			0x0200			0x0200			0			# unix consensus
-
-syscon	iproto	IPPROTO_HOPOPTS				0			0			0			0			0			# consensus
-syscon	iproto	IPPROTO_ICMP				1			1			1			1			1			# consensus
-syscon	iproto	IPPROTO_IDP				22			22			22			22			22			# consensus
-syscon	iproto	IPPROTO_IGMP				2			2			2			2			2			# consensus
-syscon	iproto	IPPROTO_IP				0			0			0			0			0			# consensus
-syscon	iproto	IPPROTO_PUP				12			12			12			12			12			# consensus
-syscon	iproto	IPPROTO_RAW				255			255			255			255			255			# consensus
-syscon	iproto	IPPROTO_TCP				6			6			6			6			6			# consensus
-syscon	iproto	IPPROTO_UDP				17			17			17			17			17			# consensus
-syscon	iproto	IPPROTO_AH				51			51			51			51			0			# unix consensus
-syscon	iproto	IPPROTO_DSTOPTS				60			60			60			60			0			# unix consensus
-syscon	iproto	IPPROTO_EGP				8			8			8			8			0			# unix consensus
-syscon	iproto	IPPROTO_ENCAP				98			98			98			98			0			# unix consensus
-syscon	iproto	IPPROTO_ESP				50			50			50			50			0			# unix consensus
-syscon	iproto	IPPROTO_FRAGMENT			44			44			44			44			0			# unix consensus
-syscon	iproto	IPPROTO_GRE				47			47			47			47			0			# unix consensus
-syscon	iproto	IPPROTO_ICMPV6				58			58			58			58			0			# unix consensus
-syscon	iproto	IPPROTO_IPIP				4			4			4			4			0			# unix consensus
-syscon	iproto	IPPROTO_IPV6				41			41			41			41			0			# unix consensus
-syscon	iproto	IPPROTO_NONE				59			59			59			59			0			# unix consensus
-syscon	iproto	IPPROTO_PIM				103			103			103			103			0			# unix consensus
-syscon	iproto	IPPROTO_ROUTING				43			43			43			43			0			# unix consensus
-syscon	iproto	IPPROTO_RSVP				46			46			46			46			0			# unix consensus
-syscon	iproto	IPPROTO_TP				29			29			29			29			0			# unix consensus
-syscon	iproto	IPPROTO_MPLS				137			0			137			137			0
-syscon	iproto	IPPROTO_MTP				92			92			92			0			0
-syscon	iproto	IPPROTO_SCTP				132			132			132			0			0
-syscon	iproto	IPPROTO_MH				135			0			135			0			0
-syscon	iproto	IPPROTO_UDPLITE				136			0			136			0			0
-syscon	iproto	IPPROTO_BEETPH				94			0			0			0			0
-syscon	iproto	IPPROTO_COMP				108			0			0			0			0
-syscon	iproto	IPPROTO_DCCP				33			0			0			0			0
 
 syscon	sio	SIOCADDMULTI				0x8931			0x80206931		0x80206931		0x80206931		0			# bsd consensus
 syscon	sio	SIOCATMARK				0x8905			0x40047307		0x40047307		0x40047307		0			# bsd consensus
@@ -1412,35 +1441,6 @@ syscon	msg	MSG_PROXY				0x10			0			0			0			0
 syscon	msg	MSG_RST					0x1000			0			0			0			0
 syscon	msg	MSG_STAT				11			0			0			0			0
 syscon	msg	MSG_SYN					0x0400			0			0			0			0
-
-syscon	sol	SOL_IP					0			0			0			0			0			# consensus
-syscon	sol	SOL_SOCKET				1			0xffff			0xffff			0xffff			0xffff			# bsd+nt consensus
-syscon	sol	SOL_TCP					6			6			6			6			6
-syscon	sol	SOL_UDP					17			17			17			17			17
-syscon	sol	SOL_IPV6				41			41			41			41			41
-syscon	sol	SOL_ICMPV6				58			58			58			58			0
-syscon	sol	SOL_AAL					265			0			0			0			0
-syscon	sol	SOL_ALG					279			0			0			0			0
-syscon	sol	SOL_ATM					264			0			0			0			0
-syscon	sol	SOL_BLUETOOTH				274			0			0			0			0
-syscon	sol	SOL_CAIF				278			0			0			0			0
-syscon	sol	SOL_DCCP				269			0			0			0			0
-syscon	sol	SOL_DECNET				261			0			0			0			0
-syscon	sol	SOL_IRDA				266			0			0			0			0
-syscon	sol	SOL_IUCV				277			0			0			0			0
-syscon	sol	SOL_KCM					281			0			0			0			0
-syscon	sol	SOL_LLC					268			0			0			0			0
-syscon	sol	SOL_NETBEUI				267			0			0			0			0
-syscon	sol	SOL_NETLINK				270			0			0			0			0
-syscon	sol	SOL_NFC					280			0			0			0			0
-syscon	sol	SOL_PACKET				263			0			0			0			0
-syscon	sol	SOL_PNPIPE				275			0			0			0			0
-syscon	sol	SOL_PPPOL2TP				273			0			0			0			0
-syscon	sol	SOL_RAW					255			0			0			0			0
-syscon	sol	SOL_RDS					276			0			0			0			0
-syscon	sol	SOL_RXRPC				272			0			0			0			0
-syscon	sol	SOL_TIPC				271			0			0			0			0
-syscon	sol	SOL_X25					262			0			0			0			0
 
 syscon	in	IN_LOOPBACKNET				127			127			127			127			0			# unix consensus
 syscon	in	IN_ACCESS				1			0			0			0			0
@@ -2477,9 +2477,9 @@ syscon	termios	NETGRAPHDISC				0			0			0x6			0			-1			# boop
 syscon	termios	H4DISC					0			0			0x7			0			-1			# boop
 
 syscon	termios	ISIG					0b0000000000000001	0b0000000010000000	0b0000000010000000	0b0000000010000000	0b0000000000000001	# termios.c_lflag|=ISIG makes Ctrl-C, Ctrl-\, etc. generate signals
-syscon	termios	ICANON					0b0000000000000010	0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000000000010	# termios.c_lflag&=~ICANON disables 1960's version of gnu readline
+syscon	termios	ICANON					0b0000000000000010	0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000000000010	# termios.c_lflag&=~ICANON disables 1960's version of gnu readline (see also VMIN)
 syscon	termios	XCASE					0b0000000000000100	0			0			16777216		0b0000000000000100	# termios.c_lflag
-syscon	termios	ECHO					0b0000000000001000	0b0000000000001000	0b0000000000001000	0b0000000000001000	0b0000000000001000	# termios.c_lflag&=~ECHO is for passwords
+syscon	termios	ECHO					0b0000000000001000	0b0000000000001000	0b0000000000001000	0b0000000000001000	0b0000000000001000	# termios.c_lflag&=~ECHO is for passwords and raw mode
 syscon	termios	ECHOE					0b0000000000010000	0b0000000000000010	0b0000000000000010	0b0000000000000010	0b0000000000010000	# termios.c_lflag
 syscon	termios	ECHOK					0b0000000000100000	0b0000000000000100	0b0000000000000100	0b0000000000000100	0b0000000000100000	# termios.c_lflag
 syscon	termios	ECHONL					0b0000000001000000	0b0000000000010000	0b0000000000010000	0b0000000000010000	0b0000000001000000	# termios.c_lflag
@@ -2493,8 +2493,8 @@ syscon	termios	PENDIN					0b0100000000000000	536870912		536870912		536870912		0b
 syscon	termios	IEXTEN					0b1000000000000000	0b0000010000000000	0b0000010000000000	0b0000010000000000	0b1000000000000000	# termios.c_lflag&=~IEXTEN disables platform input processing magic
 syscon	termios	EXTPROC					65536			0b0000100000000000	0b0000100000000000	0b0000100000000000	65536			# termios.c_lflag
 
-syscon	termios	IGNBRK					0b0000000000000001	0b0000000000000001	0b0000000000000001	0b0000000000000001	0b0000000000000001	# termios.c_iflag it's complicated                                      UNIXCONSENSUS
-syscon	termios	BRKINT					0b0000000000000010	0b0000000000000010	0b0000000000000010	0b0000000000000010	0b0000000000000010	# termios.c_iflag it's complicated                                      UNIXCONSENSUS
+syscon	termios	IGNBRK					0b0000000000000001	0b0000000000000001	0b0000000000000001	0b0000000000000001	0b0000000000000001	# termios.c_iflag it's complicated, uart only?                          UNIXCONSENSUS
+syscon	termios	BRKINT					0b0000000000000010	0b0000000000000010	0b0000000000000010	0b0000000000000010	0b0000000000000010	# termios.c_iflag it's complicated, uart only?                          UNIXCONSENSUS
 syscon	termios	IGNPAR					0b0000000000000100	0b0000000000000100	0b0000000000000100	0b0000000000000100	0b0000000000000100	# termios.c_iflag|=IGNPAR ignores parity and framing errors; see PARMRK UNIXCONSENSUS
 syscon	termios	PARMRK					0b0000000000001000	0b0000000000001000	0b0000000000001000	0b0000000000001000	0b0000000000001000	# termios.c_iflag|=PARMRK passes-through parity bit                     UNIXCONSENSUS
 syscon	termios	INPCK					0b0000000000010000	0b0000000000010000	0b0000000000010000	0b0000000000010000	0b0000000000010000	# termios.c_iflag|=INPCK enables parity checking                        UNIXCONSENSUS
@@ -2554,8 +2554,8 @@ syscon	termios	VQUIT					1			9			9			9			0			# termios.c_cc[VQUIT]=𝑥
 syscon	termios	VERASE					2			3			3			3			0			# termios.c_cc[VERASE]=𝑥
 syscon	termios	VKILL					3			5			5			5			0			# termios.c_cc[VKILL]=𝑥
 syscon	termios	VEOF					4			0			0			0			0			# termios.c_cc[VEOF]=𝑥
-syscon	termios	VTIME					5			17			17			17			0			# termios.c_cc[VTIME]=𝑥 yields 𝑥×𝟷𝟶𝟶ms non-canonical read timeout
-syscon	termios	VMIN					6			16			16			16			0			# termios.c_cc[VMIN]=𝑥
+syscon	termios	VTIME					5			17			17			17			0			# termios.c_cc[VTIME]=𝑥 sets non-canonical read timeout to 𝑥×𝟷𝟶𝟶ms which is needed when entering escape sequences manually with the escape key
+syscon	termios	VMIN					6			16			16			16			0			# termios.c_cc[VMIN]=𝑥 in non-canonical mode can be set to 0 for non-blocking reads, 1 for single character raw mode reads, or higher to buffer
 syscon	termios	VSWTC					7			0			0			0			0			# termios.c_cc[VSWTC]=𝑥
 syscon	termios	VSTART					8			12			12			12			0			# termios.c_cc[VSTART]=𝑥
 syscon	termios	VSTOP					9			13			13			13			0			# termios.c_cc[VSTOP]=𝑥

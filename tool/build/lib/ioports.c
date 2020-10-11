@@ -17,6 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/iovec.h"
 #include "libc/sysv/consts/fileno.h"
 #include "tool/build/lib/ioports.h"
 
@@ -26,7 +27,7 @@ static int OpE9Read(struct Machine *m) {
   fd = STDIN_FILENO;
   if (fd >= m->fds.i) return -1;
   if (!m->fds.p[fd].cb) return -1;
-  if (m->fds.p[fd].cb->read(m->fds.p[fd].fd, &b, 1) == 1) {
+  if (m->fds.p[fd].cb->readv(m->fds.p[fd].fd, &(struct iovec){&b, 1}, 1) == 1) {
     return b;
   } else {
     return -1;
@@ -38,7 +39,7 @@ static void OpE9Write(struct Machine *m, uint8_t b) {
   fd = STDOUT_FILENO;
   if (fd >= m->fds.i) return;
   if (!m->fds.p[fd].cb) return;
-  m->fds.p[fd].cb->write(m->fds.p[fd].fd, &b, 1);
+  m->fds.p[fd].cb->writev(m->fds.p[fd].fd, &(struct iovec){&b, 1}, 1);
 }
 
 uint64_t OpIn(struct Machine *m, uint16_t p) {

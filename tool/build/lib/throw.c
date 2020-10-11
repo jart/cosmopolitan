@@ -18,9 +18,12 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/check.h"
+#include "libc/log/log.h"
+#include "libc/nexgen32e/vendor.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "tool/build/lib/address.h"
+#include "tool/build/lib/endian.h"
 #include "tool/build/lib/throw.h"
 
 static bool IsHaltingInitialized(struct Machine *m) {
@@ -40,7 +43,15 @@ void ThrowDivideError(struct Machine *m) {
 
 void ThrowSegmentationFault(struct Machine *m, int64_t va) {
   m->faultaddr = va;
-  m->ip -= m->xedd->length;
+  if (m->xedd) m->ip -= m->xedd->length;
+  WARNF("%s%s ADDR %p IP %p AX %lx CX %lx DX %lx BX %lx SP %lx "
+        "BP %lx SI %lx DI %lx R8 %lx R9 %lx R10 %lx R11 %lx R12 %lx R13 %lx "
+        "R14 %lx R15 %lx",
+        "SEGMENTATION FAULT", IsGenuineCosmo() ? " SIMULATED" : "", va, m->ip,
+        Read64(m->ax), Read64(m->cx), Read64(m->dx), Read64(m->bx),
+        Read64(m->sp), Read64(m->bp), Read64(m->si), Read64(m->di),
+        Read64(m->r8), Read64(m->r9), Read64(m->r10), Read64(m->r11),
+        Read64(m->r12), Read64(m->r13), Read64(m->r14), Read64(m->r15));
   HaltMachine(m, kMachineSegmentationFault);
 }
 
@@ -49,7 +60,7 @@ void ThrowProtectionFault(struct Machine *m) {
 }
 
 void OpUd(struct Machine *m, uint32_t rde) {
-  m->ip -= m->xedd->length;
+  if (m->xedd) m->ip -= m->xedd->length;
   HaltMachine(m, kMachineUndefinedInstruction);
 }
 

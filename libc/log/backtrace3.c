@@ -20,6 +20,7 @@
 #include "libc/alg/bisectcarleft.h"
 #include "libc/assert.h"
 #include "libc/bits/weaken.h"
+#include "libc/calls/calls.h"
 #include "libc/conv/itoa.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/backtrace.h"
@@ -28,26 +29,26 @@
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/missioncritical.h"
 #include "libc/runtime/symbols.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 
 /**
  * Prints stack frames with symbols.
  *
- *   PrintBacktraceUsingSymbols(stdout, NULL, getsymboltable());
+ *   PrintBacktraceUsingSymbols(STDOUT_FILENO, NULL, GetSymbolTable());
  *
  * @param f is output stream
  * @param bp is rbp which can be NULL to detect automatically
  * @param st is open symbol table for current executable
  * @return -1 w/ errno if error happened
  */
-int PrintBacktraceUsingSymbols(FILE *f, const struct StackFrame *bp,
+int PrintBacktraceUsingSymbols(int fd, const struct StackFrame *bp,
                                struct SymbolTable *st) {
+  char *p;
   size_t gi;
   intptr_t addr;
   int64_t addend;
   struct Garbages *garbage;
-  char *p, buf[256], ibuf[21];
+  char buf[256], ibuf[21];
   const struct Symbol *symbol;
   const struct StackFrame *frame;
   if (!st) return -1;
@@ -78,8 +79,11 @@ int PrintBacktraceUsingSymbols(FILE *f, const struct StackFrame *bp,
     } else {
       p = stpcpy(p, "UNKNOWN");
     }
+    *p++ = '\r';
     *p++ = '\n';
-    __print(buf, p - buf);
+    if (write(fd, buf, p - buf) == -1) {
+      return -1;
+    }
   }
   return 0;
 }

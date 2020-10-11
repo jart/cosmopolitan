@@ -279,7 +279,9 @@ void ProcessFile(struct ElfWriter *elf, const char *path) {
     map = NULL;
   }
   EmitZip(elf, path, pathlen, map, &st);
-  CHECK_NE(-1, munmap(map, st.st_size));
+  if (st.st_size) {
+    CHECK_NE(-1, munmap(map, st.st_size));
+  }
 }
 
 void PullEndOfCentralDirectoryIntoLinkage(struct ElfWriter *elf) {

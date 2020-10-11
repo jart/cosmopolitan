@@ -51,6 +51,7 @@ Contact: antirez@gmail.com\"\n\
  */
 
 #define KILO_VERSION "0.0.1"
+#define SYNTAX       1
 
 #ifndef _BSD_SOURCE
 #define _BSD_SOURCE
@@ -169,14 +170,16 @@ void editorSetStatusMessage(const char *fmt, ...);
  * There is no support to highlight patterns currently. */
 
 /* C / C++ */
-const char *const C_HL_extensions[] = {".c", ".cpp", NULL};
+const char *const C_HL_extensions[] = {".c", ".h", ".cpp", NULL};
 const char *const C_HL_keywords[] = {
     /* A few C / C++ keywords */
     "switch", "if", "while", "for", "break", "continue", "return", "else",
     "struct", "union", "typedef", "static", "enum", "class",
     /* C types */
     "int|", "long|", "double|", "float|", "char|", "unsigned|", "signed|",
-    "void|", NULL};
+    "void|", "const|", "size_t|", "ssize_t|", "uint8_t|", "int8_t|",
+    "uint16_t|", "int16_t|", "uint32_t|", "int32_t|", "uint64_t|", "int64_t|",
+    NULL};
 
 /* Here we define an array of syntax highlights by extensions, keywords,
  * comments delimiters and flags. */
@@ -201,7 +204,10 @@ void disableRawMode(int64_t fd) {
 
 /* Called at exit to avoid remaining in raw mode. */
 void editorAtExit(void) {
+  char buf[64];
   disableRawMode(STDIN_FILENO);
+  write(STDOUT_FILENO, buf,
+        sprintf(buf, "\e[%d;%dH\r\n\r\n\r\n", E.screenrows, E.screencols));
 }
 
 /* Raw mode: 1960 magic shit. */
@@ -530,8 +536,10 @@ void editorUpdateSyntax(erow *row) {
    * state changed. This may recursively affect all the following rows
    * in the file. */
   int oc = editorRowHasOpenComment(row);
-  /* if (row->hl_oc != oc && row->idx + 1 < E.numrows) */
-  /*   editorUpdateSyntax(&E.row[row->idx + 1]); */
+#if SYNTAX
+  if (row->hl_oc != oc && row->idx + 1 < E.numrows)
+    editorUpdateSyntax(&E.row[row->idx + 1]);
+#endif
   row->hl_oc = oc;
 }
 
@@ -586,15 +594,17 @@ void editorUpdateRow(erow *row) {
    * respecting tabs, substituting non printable characters with '?'. */
   free(row->render);
   for (j = 0; j < row->size; j++) {
-    if (row->chars[j] == CTRL('I')) tabs++;
+    if (row->chars[j] == '\t') tabs++;
   }
 
   row->render = malloc(row->size + tabs * 8 + nonprint * 9 + 1);
   idx = 0;
   for (j = 0; j < row->size; j++) {
-    if (row->chars[j] == CTRL('I')) {
+    if (row->chars[j] == '\t') {
       row->render[idx++] = ' ';
-      while ((idx + 1) % 8 != 0) row->render[idx++] = ' ';
+      while (idx % 8 != 0) {
+        row->render[idx++] = ' ';
+      }
     } else {
       row->render[idx++] = row->chars[j];
     }
@@ -603,7 +613,9 @@ void editorUpdateRow(erow *row) {
   row->render[idx] = '\0';
 
   /* Update the syntax highlighting attributes of the row. */
-  /* editorUpdateSyntax(row); */
+#if SYNTAX
+  editorUpdateSyntax(row);
+#endif
 }
 
 /* Insert a row at the specified position, shifting the other rows on the bottom
@@ -918,38 +930,46 @@ void editorRefreshScreen(void) {
     r = &E.row[filerow];
 
     int len = r->rsize - E.coloff;
-    /* int current_color = -1; */
+#if SYNTAX
+    int current_color = -1;
+#endif
     if (len > 0) {
       if (len > E.screencols) len = E.screencols;
       char *c = r->render + E.coloff;
-      /* unsigned char *hl = r->hl + E.coloff; */
+#if SYNTAX
+      unsigned char *hl = r->hl + E.coloff;
+#endif
       int j;
       for (j = 0; j < len; j++) {
-        /* if (hl[j] == HL_NONPRINT) { */
-        /*   char sym; */
-        /*   abAppend(&ab, "\e[7m", 4); */
-        /*   if (c[j] <= 26) */
-        /*     sym = '@' + c[j]; */
-        /*   else */
-        /*     sym = '?'; */
-        /*   abAppend(&ab, &sym, 1); */
-        /*   abAppend(&ab, "\e[0m", 4); */
-        /* } else if (hl[j] == HL_NORMAL) { */
-        /*   if (current_color != -1) { */
-        /*     abAppend(&ab, "\e[39m", 5); */
-        /*     current_color = -1; */
-        /*   } */
-        abAppend(&ab, c + j, 1);
-        /* } else { */
-        /*   int color = editorSyntaxToColor(hl[j]); */
-        /*   if (color != current_color) { */
-        /*     char buf_[16]; */
-        /*     int clen = snprintf(buf_, sizeof(buf_), "\e[%dm", color); */
-        /*     current_color = color; */
-        /*     abAppend(&ab, buf_, clen); */
-        /*   } */
-        /* abAppend(&ab, c + j, 1); */
-        /* } */
+#if SYNTAX
+        if (hl[j] == HL_NONPRINT) {
+          char sym;
+          abAppend(&ab, "\e[7m", 4);
+          if (c[j] <= 26)
+            sym = '@' + c[j];
+          else
+            sym = '?';
+          abAppend(&ab, &sym, 1);
+          abAppend(&ab, "\e[0m", 4);
+        } else if (hl[j] == HL_NORMAL) {
+          if (current_color != -1) {
+            abAppend(&ab, "\e[39m", 5);
+            current_color = -1;
+          }
+#endif
+          abAppend(&ab, c + j, 1);
+#if SYNTAX
+        } else {
+          int color = editorSyntaxToColor(hl[j]);
+          if (color != current_color) {
+            char buf_[16];
+            int clen = snprintf(buf_, sizeof(buf_), "\e[%dm", color);
+            current_color = color;
+            abAppend(&ab, buf_, clen);
+          }
+          abAppend(&ab, c + j, 1);
+        }
+#endif
       }
     }
     abAppend(&ab, "\e[39m", 5);
@@ -1200,8 +1220,8 @@ void editorMoveCursor(int key) {
 void editorProcessKeypress(int64_t fd) {
   /* When the file is modified, requires Ctrl-q to be pressed N times
    * before actually quitting. */
-  int c, times;
   static int quit_times;
+  int c, c2, times, oldcx;
 
   c = editorReadKey(fd);
   switch (c) {
@@ -1226,16 +1246,16 @@ void editorProcessKeypress(int64_t fd) {
 
     case CTRL('U'):
     case CTRL('X'): {
-      int c2 = editorReadKey(fd);
+      c2 = editorReadKey(fd);
       switch (c2) {
         case CTRL('S'):
           editorSave();
           break;
-        case CTRL('C'):
-          /* Erase in Display (ED): Clear from cursor to end of screen. */
-          write(STDOUT_FILENO, "\r\e[0J", 5);
+        case CTRL('C'): {
+          /* write(STDOUT_FILENO, "\r\e[0J", 5); */
           exit(0);
           break;
+        }
         default: /* ignore */
           break;
       }
@@ -1254,7 +1274,7 @@ void editorProcessKeypress(int64_t fd) {
       break;
 
     case CTRL('K'): { /* Kill Line */
-      int oldcx = E.cx;
+      oldcx = E.cx;
       do {
         editorMoveCursor(ARROW_RIGHT);
       } while (E.cx);
@@ -1294,7 +1314,7 @@ void editorProcessKeypress(int64_t fd) {
 
     case HOME_KEY:
     case CTRL('A'):
-      while (E.cx) editorMoveCursor(ARROW_LEFT);
+      while (E.cx || E.coloff) editorMoveCursor(ARROW_LEFT);
       break;
     case END_KEY:
     case CTRL('E'):

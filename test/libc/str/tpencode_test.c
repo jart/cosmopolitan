@@ -61,3 +61,7 @@ TEST(tpencode, testMathematicalNotMuhPolicyDrivenBehavior_nonCanonicalNul) {
   ASSERT_BINEQ(u"└Ç", PROGN(ASSERT_EQ(2, tpencode(buf, 8, 0, true)), buf));
   ASSERT_BINEQ(u"└Ç", PROGN(ASSERT_EQ(2, (tpencode)(buf, 8, 0, true)), buf));
 }
+
+TEST(tpencode, testC1Csi) {
+  ASSERT_BINEQ(u"┬¢", PROGN(ASSERT_EQ(2, tpencode(buf, 8, 0x9B, false)), buf));
+}

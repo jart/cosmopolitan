@@ -24,9 +24,9 @@
  */
 int wcwidth(wchar_t ucs) {
   if (ucs == 0) return 0;
-  if (ucs < 32 || (ucs >= 0x7f && ucs < 0xa0)) {
+  if ((0 <= ucs && ucs < 32) || (0x7f <= ucs && ucs < 0xA0)) {
     return -1;
-  } else if (0 <= ucs && ucs < kCombiningCharsBits &&
+  } else if ((0 <= ucs && ucs < kCombiningCharsBits) &&
              !!(kCombiningChars[ucs >> 3] & (1 << (ucs & 7)))) {
     return 0;
   } else if (0 <= ucs && ucs < kEastAsianWidthBits) {

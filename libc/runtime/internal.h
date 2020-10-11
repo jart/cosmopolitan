@@ -25,7 +25,7 @@ void *__cxa_finalize(void *) hidden;
 void _executive(int, char **, char **, long (*)[2]) hidden noreturn;
 void __stack_chk_fail(void) noreturn relegated;
 void __stack_chk_fail_local(void) noreturn relegated hidden;
-int getdosargv(const char16_t *, char *, size_t, char **, size_t) hidden;
+int GetDosArgv(const char16_t *, char *, size_t, char **, size_t) hidden;
 
 forceinline void AssertNeverCalledWhileTerminating(void) {
   if (!NoDebug() && (g_runstate & RUNSTATE_TERMINATE)) {

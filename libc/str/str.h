@@ -8,7 +8,6 @@ COSMOPOLITAN_C_START_
   fourth age telecommunications */
 
 extern const uint8_t gperf_downcase[256];
-extern const uint8_t kCtype[256];
 extern const uint8_t kToLower[256];
 extern const uint8_t kToUpper[256];
 extern const uint16_t kToLower16[256];
@@ -64,6 +63,7 @@ void *isnotplaintext(const void *, size_t) nothrow nocallback nosideeffect;
 
 #define INVALID_CODEPOINT 0xfffd
 
+wint_t DecodeNtsUtf16(const char16_t **);
 unsigned getutf16(const char16_t *, wint_t *);
 int pututf16(char16_t *, size_t, wint_t, bool);
 int iswalnum(wint_t);
@@ -78,8 +78,8 @@ int iswupper(wint_t);
 int iswxdigit(wint_t);
 int iswpunct(wint_t);
 int iswprint(wint_t);
-unsigned towlower(unsigned);
-unsigned towupper(unsigned);
+wint_t towlower(wint_t);
+wint_t towupper(wint_t);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § strings                                                   ─╬─│┼

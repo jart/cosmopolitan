@@ -3,7 +3,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-forceinline noreturn long LinuxExit(int rc) {
+forceinline noreturn long LinuxExit(long rc) {
   asm volatile("syscall"
                : /* no outputs */
                : "a"(0xE7), "D"(rc)

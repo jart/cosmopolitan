@@ -23,19 +23,20 @@
 #include "libc/elf/elf.h"
 #include "libc/elf/struct/phdr.h"
 #include "libc/log/check.h"
+#include "libc/log/log.h"
 #include "libc/macros.h"
+#include "libc/nexgen32e/vendor.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "tool/build/lib/argv.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/loader.h"
 #include "tool/build/lib/machine.h"
 #include "tool/build/lib/memory.h"
-
-#define DSOLOL "ERROR: ELF not ET_EXEC try `gcc -static -o foo foo.c`\n"
 
 static void LoadElfLoadSegment(struct Machine *m, void *code, size_t codesize,
                                Elf64_Phdr *phdr) {
@@ -45,13 +46,20 @@ static void LoadElfLoadSegment(struct Machine *m, void *code, size_t codesize,
   align = MAX(phdr->p_align, PAGESIZE);
   CHECK_EQ(1, popcnt(align));
   CHECK_EQ(0, (phdr->p_vaddr - phdr->p_offset) % align);
+  /*-Type-Offset---VirtAddr-----------PhysAddr-----------FileSiz--MemSiz---Flg-Align----*/
+  /*-LOAD-0x000000-0x0000000000400000-0x0000000000400000-0x0008e4-0x0008e4-R-E-0x200000-*/
+  /*-LOAD-0x000fe0-0x0000000000600fe0-0x0000000000600fe0-0x000030-0x000310-RW--0x200000-*/
   felf = (int64_t)(intptr_t)code;
   vstart = ROUNDDOWN(phdr->p_vaddr, align);
   vbss = ROUNDUP(phdr->p_vaddr + phdr->p_filesz, align);
   vend = ROUNDUP(phdr->p_vaddr + phdr->p_memsz, align);
   fstart = felf + ROUNDDOWN(phdr->p_offset, align);
-  fend = felf + ROUNDUP(phdr->p_offset + phdr->p_filesz, align);
+  fend = felf + phdr->p_offset + phdr->p_filesz;
   bsssize = vend - vbss;
+  LOGF("LOADELFLOADSEGMENT"
+       " VSTART %#lx VBSS %#lx VEND %#lx"
+       " FSTART %#lx FEND %#lx BSSSIZE %#lx",
+       vstart, vbss, vend, fstart, fend, bsssize);
   m->brk = MAX(m->brk, vend);
   CHECK_GE(vend, vstart);
   CHECK_GE(fend, fstart);
@@ -61,12 +69,9 @@ static void LoadElfLoadSegment(struct Machine *m, void *code, size_t codesize,
   CHECK_GE(vend - vstart, fstart - fend);
   CHECK_LE(phdr->p_filesz, phdr->p_memsz);
   CHECK_EQ(felf + phdr->p_offset - fstart, phdr->p_vaddr - vstart);
-  CHECK_NE(-1, RegisterMemory(m, vstart, (void *)fstart, fend - fstart));
-  if (bsssize) {
-    CHECK_NE(MAP_FAILED, (rbss = mmap(NULL, bsssize, PROT_READ | PROT_WRITE,
-                                      MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
-    CHECK_NE(-1, RegisterMemory(m, vbss, rbss, bsssize));
-  }
+  CHECK_NE(-1, ReserveVirtual(m, vstart, fend - fstart));
+  VirtualRecv(m, vstart, (void *)fstart, fend - fstart);
+  if (bsssize) CHECK_NE(-1, ReserveVirtual(m, vbss, bsssize));
   if (phdr->p_memsz - phdr->p_filesz > bsssize) {
     VirtualSet(m, phdr->p_vaddr + phdr->p_filesz, 0,
                phdr->p_memsz - phdr->p_filesz - bsssize);
@@ -76,11 +81,8 @@ static void LoadElfLoadSegment(struct Machine *m, void *code, size_t codesize,
 static void LoadElf(struct Machine *m, struct Elf *elf) {
   unsigned i;
   Elf64_Phdr *phdr;
-  if (elf->ehdr->e_type != ET_EXEC) {
-    write(STDERR_FILENO, DSOLOL, strlen(DSOLOL));
-    exit(1);
-  }
   m->ip = elf->base = elf->ehdr->e_entry;
+  LOGF("LOADELF ENTRY %p", m->ip);
   for (i = 0; i < elf->ehdr->e_phnum; ++i) {
     phdr = getelfsegmentheaderaddress(elf->ehdr, elf->size, i);
     switch (phdr->p_type) {
@@ -114,10 +116,11 @@ void LoadProgram(struct Machine *m, const char *prog, char **args, char **vars,
                  struct Elf *elf) {
   int fd;
   ssize_t rc;
+  int64_t sp;
+  char *real;
   void *stack;
   struct stat st;
-  char *real, *memory;
-  size_t i, codesize, mappedsize, extrasize, stacksize;
+  size_t i, codesize, mappedsize, extrasize;
   DCHECK_NOTNULL(prog);
   elf->prog = prog;
   if ((fd = open(prog, O_RDONLY)) == -1 ||
@@ -148,14 +151,11 @@ void LoadProgram(struct Machine *m, const char *prog, char **args, char **vars,
   ResetCpu(m);
   if (m->mode == XED_MACHINE_MODE_REAL) {
     elf->base = 0x7c00;
-    CHECK_NE(MAP_FAILED,
-             (memory = mmap(NULL, BIGPAGESIZE, PROT_READ | PROT_WRITE,
-                            MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
-    RegisterMemory(m, 0, memory, BIGPAGESIZE);
+    CHECK_NE(-1, ReserveVirtual(m, 0, BIGPAGESIZE));
     m->ip = 0x7c00;
     Write64(m->cs, 0);
     Write64(m->dx, 0);
-    memcpy(memory + 0x7c00, elf->map, 512);
+    VirtualRecv(m, m->ip, elf->map, 512);
     if (memcmp(elf->map, "\177ELF", 4) == 0) {
       elf->ehdr = (void *)elf->map;
       elf->size = codesize;
@@ -166,11 +166,9 @@ void LoadProgram(struct Machine *m, const char *prog, char **args, char **vars,
       elf->size = 0;
     }
   } else {
-    stacksize = STACKSIZE;
-    CHECK_NE(MAP_FAILED, (stack = mmap(NULL, stacksize, PROT_READ | PROT_WRITE,
-                                       MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
-    Write64(m->sp, 0x0000800000000000);
-    RegisterMemory(m, 0x0000800000000000 - stacksize, stack, stacksize);
+    sp = 0x800000000000;
+    Write64(m->sp, sp);
+    CHECK_NE(-1, ReserveVirtual(m, sp - STACKSIZE, STACKSIZE));
     LoadArgv(m, prog, args, vars);
     if (memcmp(elf->map, "\177ELF", 4) == 0) {
       elf->ehdr = (void *)elf->map;

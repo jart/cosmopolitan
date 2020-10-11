@@ -33,6 +33,8 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/testlib/testlib.h"
 
+/* TODO(jart): DELETE */
+
 struct TestMemoryStack g_testmem;
 struct TestMemoryStack g_testmem_trash;
 static struct TestAllocation g_testmem_scratch[2][8];
@@ -86,16 +88,7 @@ static struct TestAllocation talloc(size_t n) {
   }
 }
 
-static void testmem_fini(void) {
-  CHECK_EQ(0, g_testmem.i);
-  free_s(&g_testmem.p);
-  while (g_testmem_trash.i) {
-    testmem_destroy(testmem_pop(&g_testmem_trash));
-  }
-}
-
 static textstartup void testmem_init(void) {
-  atexit(testmem_fini);
   g_testmem.p = g_testmem_scratch[0];
   g_testmem.n = ARRAYLEN(g_testmem_scratch[0]);
   g_testmem_trash.p = g_testmem_scratch[1];

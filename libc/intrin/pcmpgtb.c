@@ -23,6 +23,8 @@
 /**
  * Compares signed 8-bit integers w/ greater than predicate.
  *
+ * Note that operands can be xor'd with 0x80 for unsigned compares.
+ *
  * @param 𝑎 [w/o] receives result
  * @param 𝑏 [r/o] supplies first input vector
  * @param 𝑐 [r/o] supplies second input vector

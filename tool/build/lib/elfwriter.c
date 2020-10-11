@@ -17,10 +17,8 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/arraylist.h"
 #include "libc/alg/arraylist2.h"
 #include "libc/assert.h"
-#include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/log/check.h"
 #include "libc/macros.h"
@@ -44,7 +42,8 @@ static const Elf64_Ehdr kObjHeader = {
     .e_machine = EM_NEXGEN32E,
     .e_version = 1,
     .e_ehsize = sizeof(Elf64_Ehdr),
-    .e_shentsize = sizeof(Elf64_Shdr)};
+    .e_shentsize = sizeof(Elf64_Shdr),
+};
 
 static size_t AppendSection(struct ElfWriter *elf, const char *name,
                             int sh_type, int sh_flags) {
@@ -193,7 +192,7 @@ void elfwriter_close(struct ElfWriter *elf) {
 void elfwriter_align(struct ElfWriter *elf, size_t addralign, size_t entsize) {
   elf->entsize = entsize;
   elf->addralign = addralign;
-  elf->wrote = roundup(elf->wrote, addralign);
+  elf->wrote = ROUNDUP(elf->wrote, addralign);
 }
 
 size_t elfwriter_startsection(struct ElfWriter *elf, const char *name,
@@ -214,7 +213,7 @@ void *elfwriter_reserve(struct ElfWriter *elf, size_t size) {
     do {
       greed = greed + (greed >> 1);
     } while (need > greed);
-    greed = roundup(greed, FRAMESIZE);
+    greed = ROUNDUP(greed, FRAMESIZE);
     CHECK_NE(-1, ftruncate(elf->fd, greed));
     CHECK_NE(MAP_FAILED, mmap((char *)elf->map + elf->mapsize,
                               greed - elf->mapsize, PROT_READ | PROT_WRITE,

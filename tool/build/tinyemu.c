@@ -30,22 +30,17 @@
 #include "tool/build/lib/pty.h"
 #include "tool/build/lib/syscall.h"
 
-struct Machine m[1];
-
 int main(int argc, char *argv[]) {
   int rc;
   struct Elf elf;
-  const char *codepath;
-  codepath = argv[1];
+  struct Machine *m;
   if (argc < 2) {
     fputs("Usage: ", stderr);
     fputs(argv[0], stderr);
     fputs(" PROG [ARGS...]\n", stderr);
     return EX_USAGE;
   }
-  m->cr3 = MallocPage();
-  m->mode = XED_MACHINE_MODE_LONG_64;
-  InitMachine(m);
+  m = NewMachine();
   LoadProgram(m, argv[1], argv + 2, environ, &elf);
   m->fds.i = 3;
   m->fds.n = 8;

@@ -42,6 +42,7 @@
 #include "libc/zip.h"
 #include "third_party/zlib/zlib.h"
 
+STATIC_YOINK("zip_uri_support");
 STATIC_YOINK("libc/testlib/hyperion.txt");
 
 TEST(undeflate, testEmbeddedPlaintextConstant) {
@@ -86,7 +87,7 @@ TEST(undeflate, testEmbeddedCompressedZipFile_theHardWay) {
   struct DeflateState ds;
   uint8_t *map, *cd, *cf, *lf, *data;
   found = false;
-  ASSERT_NE(-1, (fd = open(findcombinary(), O_RDONLY)));
+  ASSERT_NE(-1, (fd = open(FindComBinary(), O_RDONLY)));
   ASSERT_NE(-1, fstat(fd, &st));
   ASSERT_NE(MAP_FAILED,
             (map = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0)));

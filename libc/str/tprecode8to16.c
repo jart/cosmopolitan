@@ -17,9 +17,9 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/conv/conv.h"
 #include "libc/str/str.h"
-#include "libc/str/tpdecode.h"
+#include "libc/str/thompike.h"
+#include "libc/str/utf16.h"
 
 /**
  * Transcodes UTF-8 to UTF-16.
@@ -30,19 +30,31 @@
  * @return number of shorts written excluding NUL
  */
 size_t tprecode8to16(char16_t *dst, size_t dstsize, const char *src) {
-  size_t i = 0;
+  size_t i;
+  unsigned n;
+  uint64_t w;
+  wint_t x, y;
+  i = 0;
   if (dstsize) {
     for (;;) {
-      wint_t wc;
-      src += abs(tpdecode(src, &wc));
-      if (!wc || dstsize == 1) {
-        dst[i] = u'\0';
-        break;
+      if (!(x = *src++ & 0xff)) break;
+      if (ThomPikeCont(x)) continue;
+      if (!isascii(x)) {
+        n = ThomPikeLen(x);
+        x = ThomPikeByte(x);
+        while (--n) {
+          if (!(y = *src++ & 0xff)) goto stop;
+          x = ThomPikeMerge(x, y);
+        }
       }
-      size_t got = abs(pututf16(&dst[i], dstsize, wc, false));
-      dstsize -= got;
-      i += got;
+      w = EncodeUtf16(x);
+      while (w && i + 1 < dstsize) {
+        dst[i++] = w & 0xFFFF;
+        w >>= 16;
+      }
     }
+  stop:
+    dst[i] = 0;
   }
   return i;
 }

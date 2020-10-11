@@ -24,6 +24,7 @@
 #include "libc/intrin/pshufw.h"
 #include "libc/intrin/shufpd.h"
 #include "libc/intrin/shufps.h"
+#include "libc/log/log.h"
 #include "libc/macros.h"
 #include "libc/math.h"
 #include "libc/str/str.h"
@@ -387,33 +388,26 @@ static void VspsdWspsd(struct Machine *m, uint32_t rde,
                        double_v opd(struct Machine *, double_v, double_v)) {
   float_v xf, yf;
   double_v xd, yd;
-  switch (Rep(rde) | Osz(rde)) {
-    case 0:
-      memcpy(&yf, GetModrmRegisterXmmPointerRead16(m, rde), 16);
-      memcpy(&xf, XmmRexrReg(m, rde), 16);
-      xf = opf(m, xf, yf);
-      memcpy(XmmRexrReg(m, rde), &xf, 16);
-      break;
-    case 1:
-      memcpy(&yd, GetModrmRegisterXmmPointerRead16(m, rde), 16);
-      memcpy(&xd, XmmRexrReg(m, rde), 16);
-      xd = opd(m, xd, yd);
-      memcpy(XmmRexrReg(m, rde), &xd, 16);
-      break;
-    case 2:
-      memcpy(&yd, GetModrmRegisterXmmPointerRead8(m, rde), 8);
-      memcpy(&xd, XmmRexrReg(m, rde), 8);
-      xd = opd(m, xd, yd);
-      memcpy(XmmRexrReg(m, rde), &xd, 8);
-      break;
-    case 3:
-      memcpy(&yf, GetModrmRegisterXmmPointerRead4(m, rde), 4);
-      memcpy(&xf, XmmRexrReg(m, rde), 4);
-      xf = opf(m, xf, yf);
-      memcpy(XmmRexrReg(m, rde), &xf, 4);
-      break;
-    default:
-      unreachable;
+  if (Rep(rde) == 2) {
+    memcpy(&yd, GetModrmRegisterXmmPointerRead8(m, rde), 8);
+    memcpy(&xd, XmmRexrReg(m, rde), 8);
+    xd = opd(m, xd, yd);
+    memcpy(XmmRexrReg(m, rde), &xd, 8);
+  } else if (Rep(rde) == 3) {
+    memcpy(&yf, GetModrmRegisterXmmPointerRead4(m, rde), 4);
+    memcpy(&xf, XmmRexrReg(m, rde), 4);
+    xf = opf(m, xf, yf);
+    memcpy(XmmRexrReg(m, rde), &xf, 4);
+  } else if (Osz(rde)) {
+    memcpy(&yd, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    memcpy(&xd, XmmRexrReg(m, rde), 16);
+    xd = opd(m, xd, yd);
+    memcpy(XmmRexrReg(m, rde), &xd, 16);
+  } else {
+    memcpy(&yf, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    memcpy(&xf, XmmRexrReg(m, rde), 16);
+    xf = opf(m, xf, yf);
+    memcpy(XmmRexrReg(m, rde), &xf, 16);
   }
 }
 

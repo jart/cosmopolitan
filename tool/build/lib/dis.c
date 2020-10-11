@@ -178,9 +178,9 @@ static long DisAppendOpLines(struct Dis *d, struct Machine *m, int64_t addr) {
   void *r;
   int64_t ip;
   unsigned k;
-  uint8_t b[15];
   struct DisOp op;
   long i, n, symbol;
+  uint8_t *p, b[15];
   n = 15;
   ip = addr - Read64(m->cs);
   if ((symbol = DisFindSym(d, ip)) != -1) {
@@ -202,8 +202,9 @@ static long DisAppendOpLines(struct Dis *d, struct Machine *m, int64_t addr) {
   if (!(r = FindReal(m, addr))) return -1;
   k = 0x1000 - (addr & 0xfff);
   if (n <= k) {
-    memcpy(b, r, n);
+    p = r;
   } else {
+    p = b;
     memcpy(b, r, k);
     if ((r = FindReal(m, addr + k))) {
       memcpy(b + k, r, n - k);
@@ -212,7 +213,7 @@ static long DisAppendOpLines(struct Dis *d, struct Machine *m, int64_t addr) {
     }
   }
   xed_decoded_inst_zero_set_mode(d->xedd, m->mode);
-  xed_instruction_length_decode(d->xedd, b, n);
+  xed_instruction_length_decode(d->xedd, p, n);
   n = d->xedd->op.error ? 1 : d->xedd->length;
   op.addr = addr;
   op.size = n;
@@ -240,7 +241,6 @@ long Dis(struct Dis *d, struct Machine *m, uint64_t addr, uint64_t ip,
 }
 
 const char *DisGetLine(struct Dis *d, struct Machine *m, size_t i) {
-  char *p;
   void *r[2];
   uint8_t b[15];
   if (i >= d->ops.i) return "";
@@ -250,10 +250,9 @@ const char *DisGetLine(struct Dis *d, struct Machine *m, size_t i) {
   xed_instruction_length_decode(
       d->xedd, AccessRam(m, d->ops.p[i].addr, d->ops.p[i].size, r, b, true),
       d->ops.p[i].size);
-  d->addr = d->ops.p[i].addr;
   d->m = m;
-  p = DisLineCode(d, d->buf);
-  CHECK_LT(p - d->buf, sizeof(d->buf));
+  d->addr = d->ops.p[i].addr;
+  CHECK_LT(DisLineCode(d, d->buf) - d->buf, sizeof(d->buf));
   return d->buf;
 }
 

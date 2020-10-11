@@ -85,7 +85,7 @@ long GetIntegerCoefficients(long N[static 6], const double C[static 6], long M,
       N[i] = 0;
     }
   }
-  if (!IsTiny() && least > 1) {
+  if (!NoDebug() && least > 1) {
     for (j[0] = 0; j[0] < J[0]; ++j[0]) {
       for (j[1] = 0; j[1] < J[1]; ++j[1]) {
         for (j[2] = 0; j[2] < J[2]; ++j[2]) {

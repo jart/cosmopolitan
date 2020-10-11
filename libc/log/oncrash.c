@@ -32,9 +32,9 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sig.h"
 
@@ -49,17 +49,17 @@ STATIC_YOINK("stoa");
 
 struct siginfo;
 
-aligned(1) const char kGregOrder[17] = {
+const char kGregOrder[17] aligned(1) = {
     13, 11, 8, 14, 12, 9, 10, 15, 16, 0, 1, 2, 3, 4, 5, 6, 7,
 };
 
-aligned(1) const char kGregNames[17][4] = {
+const char kGregNames[17][4] aligned(1) = {
     "R8",  "R9",  "R10", "R11", "R12", "R13", "R14", "R15", "RDI",
     "RSI", "RBP", "RBX", "RDX", "RAX", "RCX", "RSP", "RIP",
 };
 
-aligned(1) const char kGodHatesFlags[12] = "CVPRAKZSTIDO";
-aligned(1) const char kCrashSigNames[8][5] = {"QUIT", "FPE",  "ILL", "SEGV",
+const char kGodHatesFlags[12] aligned(1) = "CVPRAKZSTIDO";
+const char kCrashSigNames[8][5] aligned(1) = {"QUIT", "FPE",  "ILL", "SEGV",
                                               "TRAP", "ABRT", "BUS"};
 
 int kCrashSigs[8];
@@ -75,60 +75,60 @@ relegated static const char *TinyStrSignal(int sig) {
   return "???";
 }
 
-relegated static void ShowFunctionCalls(FILE *f, ucontext_t *ctx) {
+relegated static void ShowFunctionCalls(int fd, ucontext_t *ctx) {
   struct StackFrame *bp;
   struct StackFrame goodframe;
-  fputc('\n', f);
+  write(fd, "\r\n", 2);
   if (ctx && ctx->uc_mcontext.rip && ctx->uc_mcontext.rbp) {
     goodframe.next = (struct StackFrame *)ctx->uc_mcontext.rbp;
     goodframe.addr = ctx->uc_mcontext.rip;
     bp = &goodframe;
-    showbacktrace(f, bp);
+    ShowBacktrace(fd, bp);
   }
 }
 
-relegated static void DescribeCpuFlags(FILE *f, unsigned efl) {
-  size_t i;
+relegated static void DescribeCpuFlags(int fd, unsigned flags) {
+  unsigned i;
+  char buf[64], *p;
+  p = buf;
   for (i = 0; i < ARRAYLEN(kGodHatesFlags); ++i) {
-    if (efl & 1) {
-      fputc(' ', f);
-      fputc(kGodHatesFlags[i], f);
-      fputc('F', f);
+    if (flags & 1) {
+      *p++ = ' ';
+      *p++ = kGodHatesFlags[i];
+      *p++ = 'F';
     }
-    efl >>= 1;
+    flags >>= 1;
   }
-  (fprintf)(f, " %s%d\n", "IOPL", efl & 3);
+  p = stpcpy(p, " IOPL");
+  *p++ = '0' + (flags & 3);
+  write(fd, buf, p - buf);
 }
 
-relegated static void ShowGeneralRegisters(FILE *f, ucontext_t *ctx) {
+relegated static void ShowGeneralRegisters(int fd, ucontext_t *ctx) {
   size_t i, j, k;
   long double st;
-  fputc('\n', f);
+  write(fd, "\r\n", 2);
   for (i = 0, j = 0, k = 0; i < ARRAYLEN(kGregNames); ++i) {
-    if (j > 0) {
-      fputc(' ', f);
-    }
-    (fprintf)(f, "%-3s %016lx", kGregNames[(unsigned)kGregOrder[i]],
+    if (j > 0) write(fd, " ", 1);
+    (dprintf)(fd, "%-3s %016lx", kGregNames[(unsigned)kGregOrder[i]],
               ctx->uc_mcontext.gregs[(unsigned)kGregOrder[i]]);
     if (++j == 3) {
       j = 0;
       memcpy(&st, (char *)&ctx->fpustate.st[k], sizeof(st));
-      (fprintf)(f, " %s(%zu) %Lf", "ST", k, st);
+      (dprintf)(fd, " %s(%zu) %Lf", "ST", k, st);
       ++k;
-      fputc('\r', f);
-      fputc('\n', f);
+      write(fd, "\r\n", 2);
     }
   }
-  fflush(stderr);
-  DescribeCpuFlags(f, ctx->uc_mcontext.gregs[REG_EFL]);
+  DescribeCpuFlags(fd, ctx->uc_mcontext.gregs[REG_EFL]);
 }
 
-relegated static void ShowSseRegisters(FILE *f, ucontext_t *ctx) {
+relegated static void ShowSseRegisters(int fd, ucontext_t *ctx) {
   size_t i;
-  fputc('\n', f);
+  write(fd, "\r\n", 2);
   for (i = 0; i < 8; ++i) {
-    (fprintf)(f, VEIL("r", "%s%-2zu %016lx%016lx %s%-2d %016lx%016lx\n"), "XMM",
-              i + 0, ctx->fpustate.xmm[i + 0].u64[0],
+    (dprintf)(fd, VEIL("r", "%s%-2zu %016lx%016lx %s%-2d %016lx%016lx\r\n"),
+              "XMM", i + 0, ctx->fpustate.xmm[i + 0].u64[0],
               ctx->fpustate.xmm[i + 0].u64[1], "XMM", i + 8,
               ctx->fpustate.xmm[i + 8].u64[0], ctx->fpustate.xmm[i + 8].u64[1]);
   }
@@ -149,23 +149,23 @@ relegated static void ShowMemoryMappings(int outfd) {
   }
 }
 
-relegated static void ShowCrashReport(int err, FILE *f, int sig,
+relegated static void ShowCrashReport(int err, int fd, int sig,
                                       ucontext_t *ctx) {
   struct utsname names;
-  (fprintf)(f, VEIL("r", "\n%serror%s: Uncaught SIG%s\n  %s\n  %s\n"), RED2,
-            RESET, TinyStrSignal(sig), getauxval(AT_EXECFN), strerror(err));
+  (dprintf)(fd, VEIL("r", "\r\n%serror%s: Uncaught SIG%s\r\n  %s\r\n  %s\r\n"),
+            RED2, RESET, TinyStrSignal(sig), getauxval(AT_EXECFN),
+            strerror(err));
   if (uname(&names) != -1) {
-    (fprintf)(f, VEIL("r", "  %s %s %s %s\n"), names.sysname, names.nodename,
+    (dprintf)(fd, VEIL("r", "  %s %s %s %s\r\n"), names.sysname, names.nodename,
               names.release, names.version);
   }
-  ShowFunctionCalls(f, ctx);
+  ShowFunctionCalls(fd, ctx);
   if (ctx) {
-    ShowGeneralRegisters(f, ctx);
-    ShowSseRegisters(f, ctx);
+    ShowGeneralRegisters(fd, ctx);
+    ShowSseRegisters(fd, ctx);
   }
-  fputc('\n', f);
-  fflush(f);
-  ShowMemoryMappings(fileno(f));
+  write(fd, "\r\n", 2);
+  ShowMemoryMappings(fd);
 }
 
 relegated static void RestoreDefaultCrashSignalHandlers(void) {
@@ -215,7 +215,7 @@ relegated void oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
                            : 0);
   }
   if (gdbpid > 0 && (sig == SIGTRAP || sig == SIGQUIT)) return;
-  ShowCrashReport(err, stderr, sig, ctx);
-  quick_exit(128 + sig);
+  ShowCrashReport(err, STDERR_FILENO, sig, ctx);
+  exit(128 + sig);
   unreachable;
 }

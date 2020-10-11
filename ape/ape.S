@@ -815,8 +815,8 @@ ape.pe:	.ascin	"PE",4
 	.short	.LDLLEXE		# DllCharacteristics
 	.quad	0x0000000000100000	# StackReserve
 	.quad	0x0000000000100000	# StackCommit
-	.quad	0x0000000000080000	# HeapReserve
-	.quad	0x0000000000001000	# HeapCommit
+	.quad	0x0000000000000000	# HeapReserve
+	.quad	0x0000000000000000	# HeapCommit
 	.long	0x00000000		# LoaderFlags
 	.long	16			# NumberOfDirectoryEntries
 	.long	0,0			# ExportsDirectory

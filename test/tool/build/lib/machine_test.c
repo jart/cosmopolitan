@@ -98,27 +98,30 @@ const uint8_t kTenthprime2[] = {
     0xC3,                          //
 };
 
-int64_t base;
-uint8_t *real;
-size_t realsize;
 struct Machine *m;
 
 void SetUp(void) {
-  base = 0;
   m = NewMachine();
-  m->cr3 = MallocPage();
-  realsize = 0x10000;
-  real = tmemalign(PAGESIZE, ROUNDUP(realsize, PAGESIZE));
-  RegisterMemory(m, base, real, realsize);
-  m->ip = base;
-  Write64(m->sp, m->ip + realsize);
+  m->ip = 0;
+  ReserveVirtual(m, 0, 4096);
+  ASSERT_EQ(0x5000, m->real.i);
+  ASSERT_EQ(0x1007, Read64(m->real.p + 0x0000));  // PML4T
+  ASSERT_EQ(0x2007, Read64(m->real.p + 0x1000));  // PDPT
+  ASSERT_EQ(0x3007, Read64(m->real.p + 0x2000));  // PDE
+  ASSERT_EQ(0x4007, Read64(m->real.p + 0x3000));  // PT
+  Write64(m->sp, 4096);
 }
 
 void TearDown(void) {
-  ResetRam(m);
-  free(m->cr3);
-  tfree(real);
-  free(m);
+  FreeVirtual(m, 0, 4096);
+  ASSERT_EQ(0x5000, m->real.i);
+  ASSERT_EQ(0x1007, Read64(m->real.p + 0x0000));  // PML4T
+  ASSERT_EQ(0x2007, Read64(m->real.p + 0x1000));  // PDPT
+  ASSERT_EQ(0x3007, Read64(m->real.p + 0x2000));  // PDE
+  ASSERT_EQ(0x0000, Read64(m->real.p + 0x3000));  // PT
+  ASSERT_EQ(0x4000, m->realfree->i);
+  ASSERT_EQ(0x1000, m->realfree->n);
+  FreeMachine(m);
 }
 
 int ExecuteUntilHalt(struct Machine *m) {
@@ -134,121 +137,121 @@ int ExecuteUntilHalt(struct Machine *m) {
 }
 
 TEST(machine, test) {
-  memcpy(real, kTenthprime, sizeof(kTenthprime));
+  VirtualRecv(m, 0, kTenthprime, sizeof(kTenthprime));
   ASSERT_EQ(kMachineHalt, ExecuteUntilHalt(m));
   ASSERT_EQ(15, Read32(m->ax));
 }
 
 TEST(machine, testFpu) {
-  memcpy(real, kPi80, sizeof(kPi80));
+  VirtualRecv(m, 0, kPi80, sizeof(kPi80));
   ASSERT_EQ(kMachineHalt, ExecuteUntilHalt(m));
   ASSERT_TRUE(fabs(3.14159 - FpuPop(m)) < 0.0001);
-  m->ip = base;
+  m->ip = 0;
   ASSERT_EQ(kMachineHalt, ExecuteUntilHalt(m));
   ASSERT_TRUE(fabs(3.14159 - FpuPop(m)) < 0.0001);
 }
 
 BENCH(machine, benchPrimeNumberPrograms) {
-  memcpy(real, kTenthprime2, sizeof(kTenthprime2));
-  EZBENCH2("tenthprime2", m->ip = base, ExecuteUntilHalt(m));
+  VirtualRecv(m, 0, kTenthprime2, sizeof(kTenthprime2));
+  EZBENCH2("tenthprime2", m->ip = 0, ExecuteUntilHalt(m));
   ASSERT_EQ(15, Read32(m->ax));
-  memcpy(real, kTenthprime, sizeof(kTenthprime));
-  EZBENCH2("tenthprime", m->ip = base, ExecuteUntilHalt(m));
+  VirtualRecv(m, 0, kTenthprime, sizeof(kTenthprime));
+  EZBENCH2("tenthprime", m->ip = 0, ExecuteUntilHalt(m));
   ASSERT_EQ(15, Read32(m->ax));
 }
 
 BENCH(machine, benchFpu) {
-  memcpy(real, kPi80, sizeof(kPi80));
-  EZBENCH2("pi80", m->ip = base, PROGN(ExecuteUntilHalt(m), FpuPop(m)));
+  VirtualRecv(m, 0, kPi80, sizeof(kPi80));
+  EZBENCH2("pi80", m->ip = 0, PROGN(ExecuteUntilHalt(m), FpuPop(m)));
 }
 
 BENCH(machine, benchLoadExec2) {
   uint8_t kMovCode[] = {0xbe, 0x03, 0x00, 0x00, 0x00};
-  memcpy(real, kMovCode, sizeof(kMovCode));
+  VirtualRecv(m, 0, kMovCode, sizeof(kMovCode));
   LoadInstruction(m);
-  EZBENCH2("mov", m->ip = base, ExecuteInstruction(m));
+  EZBENCH2("mov", m->ip = 0, ExecuteInstruction(m));
 }
 
 BENCH(machine, benchLoadExec3) {
   uint8_t kMovdCode[] = {0x66, 0x0f, 0x6e, 0xc0};
   Write64(m->ax, 0);
-  memcpy(real, kMovdCode, sizeof(kMovdCode));
+  VirtualRecv(m, 0, kMovdCode, sizeof(kMovdCode));
   LoadInstruction(m);
-  EZBENCH2("movd", m->ip = base, ExecuteInstruction(m));
+  EZBENCH2("movd", m->ip = 0, ExecuteInstruction(m));
 }
 
 BENCH(machine, benchLoadExec4) {
   uint8_t kAddpsRegregCode[] = {0x0f, 0x58, 0xC0};
   uint8_t kAddpsMemregCode[] = {0x0f, 0x58, 0x00};
   Write64(m->ax, 0);
-  memcpy(real, kAddpsRegregCode, sizeof(kAddpsRegregCode));
+  VirtualRecv(m, 0, kAddpsRegregCode, sizeof(kAddpsRegregCode));
   LoadInstruction(m);
-  EZBENCH2("addps reg reg", m->ip = base, ExecuteInstruction(m));
-  memcpy(real, kAddpsMemregCode, sizeof(kAddpsMemregCode));
+  EZBENCH2("addps reg reg", m->ip = 0, ExecuteInstruction(m));
+  VirtualRecv(m, 0, kAddpsMemregCode, sizeof(kAddpsMemregCode));
   LoadInstruction(m);
-  EZBENCH2("addps mem reg", m->ip = base, ExecuteInstruction(m));
+  EZBENCH2("addps mem reg", m->ip = 0, ExecuteInstruction(m));
 }
 
 BENCH(machine, benchLoadExec5) {
   uint8_t kPaddwRegregCode[] = {0x66, 0x0F, 0xFD, 0xC0};
   uint8_t kPaddwMemregCode[] = {0x66, 0x0F, 0xFD, 0x00};
   Write64(m->ax, 0);
-  memcpy(real, kPaddwRegregCode, sizeof(kPaddwRegregCode));
+  VirtualRecv(m, 0, kPaddwRegregCode, sizeof(kPaddwRegregCode));
   LoadInstruction(m);
-  EZBENCH2("paddw", m->ip = base, ExecuteInstruction(m));
-  memcpy(real, kPaddwMemregCode, sizeof(kPaddwMemregCode));
+  EZBENCH2("paddw", m->ip = 0, ExecuteInstruction(m));
+  VirtualRecv(m, 0, kPaddwMemregCode, sizeof(kPaddwMemregCode));
   LoadInstruction(m);
-  EZBENCH2("paddw mem", m->ip = base, ExecuteInstruction(m));
+  EZBENCH2("paddw mem", m->ip = 0, ExecuteInstruction(m));
 }
 
 BENCH(machine, benchLoadExec6) {
   uint8_t kPsubqRegregCode[] = {0x66, 0x0F, 0xFB, 0xC0};
   uint8_t kPsubqMemregCode[] = {0x66, 0x0F, 0xFB, 0x00};
   Write64(m->ax, 0);
-  memcpy(real, kPsubqRegregCode, sizeof(kPsubqRegregCode));
+  VirtualRecv(m, 0, kPsubqRegregCode, sizeof(kPsubqRegregCode));
   LoadInstruction(m);
-  EZBENCH2("psubq", m->ip = base, ExecuteInstruction(m));
-  memcpy(real, kPsubqMemregCode, sizeof(kPsubqMemregCode));
+  EZBENCH2("psubq", m->ip = 0, ExecuteInstruction(m));
+  VirtualRecv(m, 0, kPsubqMemregCode, sizeof(kPsubqMemregCode));
   LoadInstruction(m);
-  EZBENCH2("psubq mem", m->ip = base, ExecuteInstruction(m));
+  EZBENCH2("psubq mem", m->ip = 0, ExecuteInstruction(m));
 }
 
 BENCH(machine, benchAddqMem) {
   uint8_t kAddMemregCode[] = {0x48, 0x03, 0x08};
   Write64(m->ax, 0);
-  memcpy(real, kAddMemregCode, sizeof(kAddMemregCode));
+  VirtualRecv(m, 0, kAddMemregCode, sizeof(kAddMemregCode));
   LoadInstruction(m);
-  EZBENCH2("addq mem", m->ip = base, ExecuteInstruction(m));
+  EZBENCH2("addq mem", m->ip = 0, ExecuteInstruction(m));
 }
 
 BENCH(machine, benchAddlMem) {
   uint8_t kAddMemregCode[] = {0x03, 0x08};
   Write64(m->ax, 0);
-  memcpy(real, kAddMemregCode, sizeof(kAddMemregCode));
+  VirtualRecv(m, 0, kAddMemregCode, sizeof(kAddMemregCode));
   LoadInstruction(m);
-  EZBENCH2("addl mem", m->ip = base, ExecuteInstruction(m));
+  EZBENCH2("addl mem", m->ip = 0, ExecuteInstruction(m));
 }
 
 BENCH(machine, benchAddq) {
   uint8_t kAddqCode[] = {0x48, 0x01, 0xd8};
   Write64(m->ax, 0);
-  memcpy(real, kAddqCode, sizeof(kAddqCode));
+  VirtualRecv(m, 0, kAddqCode, sizeof(kAddqCode));
   LoadInstruction(m);
-  EZBENCH2("addq", m->ip = base, ExecuteInstruction(m));
+  EZBENCH2("addq", m->ip = 0, ExecuteInstruction(m));
 }
 
 BENCH(machine, benchAddb) {
   uint8_t kAddbCode[] = {0x00, 0xd8};
   Write64(m->ax, 0);
-  memcpy(real, kAddbCode, sizeof(kAddbCode));
+  VirtualRecv(m, 0, kAddbCode, sizeof(kAddbCode));
   LoadInstruction(m);
-  EZBENCH2("addb", m->ip = base, ExecuteInstruction(m));
+  EZBENCH2("addb", m->ip = 0, ExecuteInstruction(m));
 }
 
 BENCH(machine, benchXorReg) {
-  memcpy(real, kTenthprime, sizeof(kTenthprime));
+  VirtualRecv(m, 0, kTenthprime, sizeof(kTenthprime));
   LoadInstruction(m);
-  EZBENCH2("xor", m->ip = base, ExecuteInstruction(m));
+  EZBENCH2("xor", m->ip = 0, ExecuteInstruction(m));
 }
 
 BENCH(machine, benchLoadExec8) {
@@ -257,16 +260,16 @@ BENCH(machine, benchLoadExec8) {
   OpFinit(m);
   *FpuSt(m, 0) = M_PI;
   FpuSetTag(m, 0, kFpuTagValid);
-  memcpy(real, kFchsCode, sizeof(kFchsCode));
+  VirtualRecv(m, 0, kFchsCode, sizeof(kFchsCode));
   LoadInstruction(m);
-  EZBENCH2("fchs", m->ip = base, ExecuteInstruction(m));
+  EZBENCH2("fchs", m->ip = 0, ExecuteInstruction(m));
 }
 
 BENCH(machine, benchPushpop) {
   uint8_t kPushpop[] = {0x50, 0x58};
   Write64(m->ax, 0);
-  memcpy(real, kPushpop, sizeof(kPushpop));
-  EZBENCH2("pushpop", m->ip = base,
+  VirtualRecv(m, 0, kPushpop, sizeof(kPushpop));
+  EZBENCH2("pushpop", m->ip = 0,
            PROGN(LoadInstruction(m), ExecuteInstruction(m), LoadInstruction(m),
                  ExecuteInstruction(m)));
 }
@@ -274,29 +277,27 @@ BENCH(machine, benchPushpop) {
 BENCH(machine, benchPause) {
   uint8_t kPause[] = {0xf3, 0x90};
   Write64(m->ax, 0);
-  memcpy(real, kPause, sizeof(kPause));
+  VirtualRecv(m, 0, kPause, sizeof(kPause));
   LoadInstruction(m);
-  EZBENCH2("pause", m->ip = base, ExecuteInstruction(m));
+  EZBENCH2("pause", m->ip = 0, ExecuteInstruction(m));
 }
 
 BENCH(machine, benchClc) {
   uint8_t kClc[] = {0xf8};
   Write64(m->ax, 0);
-  memcpy(real, kClc, sizeof(kClc));
+  VirtualRecv(m, 0, kClc, sizeof(kClc));
   LoadInstruction(m);
-  EZBENCH2("clc", m->ip = base, ExecuteInstruction(m));
+  EZBENCH2("clc", m->ip = 0, ExecuteInstruction(m));
 }
 
 BENCH(machine, benchNop) {
   uint8_t kNop[] = {0x90};
   Write64(m->ax, 0);
-  memcpy(real, kNop, sizeof(kNop));
+  VirtualRecv(m, 0, kNop, sizeof(kNop));
   LoadInstruction(m);
-  EZBENCH2("nop", m->ip = base, ExecuteInstruction(m));
-}
-
-TEST(machine, sizeIsReasonable) {
-  ASSERT_LE(sizeof(struct Machine), 65536 * 3);
+  EZBENCH2("nop", m->ip = 0, ExecuteInstruction(m));
+  EZBENCH2("nop w/ load", m->ip = 0,
+           PROGN(LoadInstruction(m), ExecuteInstruction(m)));
 }
 
 TEST(x87, fprem1) {
@@ -308,7 +309,7 @@ TEST(x87, fprem1) {
       0xf4,                                // hlt
       0x00, 0x00, 0xc0, 0xbf,              // .float -1.5
   };
-  memcpy(real, prog, sizeof(prog));
+  VirtualRecv(m, 0, prog, sizeof(prog));
   ASSERT_EQ(kMachineHalt, ExecuteUntilHalt(m));
   ASSERT_LDBL_EQ(1, FpuPop(m));
 }
@@ -323,7 +324,11 @@ TEST(x87, fprem2) {
       0x00, 0x60, 0x5e, 0x75, 0x64, 0xd9, 0x45, 0x43,  //
       0x5b, 0x14, 0xea, 0x9d, 0x77, 0xb2, 0x0b, 0x3d,  //
   };
-  memcpy(real, prog, sizeof(prog));
+  VirtualRecv(m, 0, prog, sizeof(prog));
   ASSERT_EQ(kMachineHalt, ExecuteUntilHalt(m));
   ASSERT_LDBL_EQ(1.1766221079117338e-14, FpuPop(m));
+}
+
+TEST(machine, sizeIsReasonable) {
+  ASSERT_LE(sizeof(struct Machine), 65536 * 3);
 }

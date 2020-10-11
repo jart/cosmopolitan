@@ -48,7 +48,6 @@ void OnSigFpe(void) {
 
 void SetUp(void) {
   m->xedd = xedd;
-  InitMachine(m);
   CHECK_NE(-1, xsigaction(SIGFPE, OnSigFpe, SA_NODEFER, 0, oldsigfpe));
 }
 

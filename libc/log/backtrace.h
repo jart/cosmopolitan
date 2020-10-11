@@ -2,12 +2,11 @@
 #define COSMOPOLITAN_LIBC_LOG_BACKTRACE_H_
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/symbols.h"
-#include "libc/stdio/stdio.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-void showbacktrace(FILE *, const struct StackFrame *);
-int PrintBacktraceUsingSymbols(FILE *, const struct StackFrame *,
+void ShowBacktrace(int, const struct StackFrame *);
+int PrintBacktraceUsingSymbols(int, const struct StackFrame *,
                                struct SymbolTable *);
 
 COSMOPOLITAN_C_END_

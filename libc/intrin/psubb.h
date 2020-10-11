@@ -4,7 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-void psubb(int8_t[16], const int8_t[16], const int8_t[16]);
+void psubb(uint8_t[16], const uint8_t[16], const uint8_t[16]);
 
 #define psubb(A, B, C) \
   INTRIN_SSEVEX_X_X_X_(psubb, SSE2, "psubb", INTRIN_NONCOMMUTATIVE, A, B, C)

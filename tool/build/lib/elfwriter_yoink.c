@@ -23,11 +23,11 @@
 void elfwriter_yoink(struct ElfWriter *elf, const char *symbol) {
   unsigned char *p;
   struct ElfWriterSymRef sym;
-  const unsigned char nopl[8] = "\x0f\x1f\x04\x25\x00\x00\x00\x00";
+  const unsigned char kNopl[8] = "\017\037\004\045\000\000\000\000";
   p = elfwriter_reserve(elf, 8);
-  memcpy(p, nopl, sizeof(nopl));
+  memcpy(p, kNopl, sizeof(kNopl));
   sym = elfwriter_linksym(elf, symbol, ELF64_ST_INFO(STB_GLOBAL, STT_OBJECT),
                           STV_HIDDEN);
-  elfwriter_appendrela(elf, sizeof(nopl) - 4, sym, R_X86_64_32, 0);
-  elfwriter_commit(elf, sizeof(nopl));
+  elfwriter_appendrela(elf, sizeof(kNopl) - 4, sym, R_X86_64_32, 0);
+  elfwriter_commit(elf, sizeof(kNopl));
 }

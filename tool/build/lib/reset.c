@@ -60,17 +60,9 @@ static void ResetSse(struct Machine *m) {
   m->sse.rc = RINT;
   m->sse.ftz = false;
   memset(m->xmm, 0, sizeof(m->xmm));
-  memset(m->xmmtype, 0, sizeof(m->xmmtype));
-}
-
-static void ResetTlb(struct Machine *m) {
-  m->tlbindex = 0;
-  memset(m->tlb, 0, sizeof(m->tlb));
 }
 
 void ResetCpu(struct Machine *m) {
-  m->codevirt = 0;
-  m->codereal = NULL;
   m->faultaddr = 0;
   m->stashsize = 0;
   m->stashaddr = 0;
@@ -89,7 +81,13 @@ void ResetCpu(struct Machine *m) {
   memset(m->reg, 0, sizeof(m->reg));
   memset(m->bofram, 0, sizeof(m->bofram));
   memset(&m->freelist, 0, sizeof(m->freelist));
-  ResetTlb(m);
   ResetSse(m);
   ResetFpu(m);
+}
+
+void ResetTlb(struct Machine *m) {
+  m->tlbindex = 0;
+  memset(m->tlb, 0, sizeof(m->tlb));
+  m->codevirt = 0;
+  m->codehost = NULL;
 }

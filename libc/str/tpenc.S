@@ -24,19 +24,15 @@
 /
 /	@param	edi is int to encode
 /	@return	rax is word-encoded byte buffer
-/	@clob	edi,rax,flags
 /	@note	invented on a napkin in a new jersey diner
 tpenc:	.leafprologue
 	.profilable
-	push	%rcx
-	push	%rdx
 	mov	%edi,%edi
 	xor	%eax,%eax
 	cmp	$127,%edi
 	jbe	3f
 	bsr	%edi,%ecx
-	ezlea	kTpenc,dx
-	mov	-7*(1+1)(%rdx,%rcx,2),%ecx
+	mov	kTpenc-7*(1+1)(,%rcx,2),%ecx
 1:	mov	%edi,%edx
 	shr	$6,%edi
 	and	$0b00111111,%dl
@@ -47,12 +43,11 @@ tpenc:	.leafprologue
 	jnz	1b
 2:	or	%ch,%al
 3:	or	%rdi,%rax
-	pop	%rdx
-	pop	%rcx
 	.leafepilogue
 	.endfn	tpenc,globl
 
 	.rodata
+	.align	4
 kTpenc:	.rept	4			# MSB≤10 (0x7FF)
 	.byte	1,0b11000000		# len,mark
 	.endr
@@ -68,4 +63,5 @@ kTpenc:	.rept	4			# MSB≤10 (0x7FF)
 	.rept	6			# MSB≤31 (0xffffffff)
 	.byte	5,0b11111100		# len,mark
 	.endr
+	.zero	2
 	.endobj	kTpenc

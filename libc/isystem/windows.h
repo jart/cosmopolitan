@@ -37,6 +37,7 @@
 
 #define PVOID    void*
 #define PVOID64  void*
+#define LPCVOID  const void*
 #define CHAR     char
 #define SHORT    short
 #define CONST    const

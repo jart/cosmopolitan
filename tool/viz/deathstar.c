@@ -35,8 +35,8 @@ const char *kShades[] = {
 
 jmp_buf jb_;
 double light_[3] = {-50, 0, 50};
-struct Sphere pos_ = {20, 20, 20, 20};
-struct Sphere neg_ = {1, 1, -6, 20};
+struct Sphere pos_ = {11, 11, 11, 11};
+struct Sphere neg_ = {1, 1, -4, 11};
 
 static void OnCtrlC(int sig) {
   longjmp(jb_, 1);
@@ -128,7 +128,7 @@ int main() {
   double ang;
   struct termios old;
   if (cancolor()) {
-    ttyhidecursor(fileno(stdout));
+    WRITE("\e[?25l");
     if (!setjmp(jb_)) {
       xsigaction(SIGINT, OnCtrlC, 0, 0, NULL);
       ang = 0;
@@ -143,7 +143,7 @@ int main() {
         usleep(1. / FRAMERATE * 1e6);
       }
     }
-    ttyshowcursor(fileno(stdout));
+    WRITE("\e[0m\e[H\e[J\e[?25h");
     return 0;
   } else {
     return 1;

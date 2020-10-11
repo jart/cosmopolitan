@@ -44,7 +44,7 @@ static int StoaEmitWordEncodedString(int f(long, void *), void *a, uint64_t w) {
 }
 
 static int StoaEmitUnicode(int f(long, void *), void *a, wint_t c) {
-  if (0 <= c && c <= 127) {
+  if (isascii(c)) {
     return f(c, a);
   } else {
     return StoaEmitWordEncodedString(f, a, tpenc(c));
@@ -52,7 +52,7 @@ static int StoaEmitUnicode(int f(long, void *), void *a, wint_t c) {
 }
 
 static int StoaEmitQuoted(int f(long, void *), void *a, wint_t c) {
-  if (0 <= c && c <= 127) {
+  if (isascii(c)) {
     return StoaEmitWordEncodedString(f, a, cescapec(c));
   } else {
     return StoaEmitWordEncodedString(f, a, tpenc(c));
@@ -92,8 +92,8 @@ int stoa(int out(long, void *), void *arg, void *data, unsigned long flags,
   wint_t wc;
   unsigned n;
   emit_f emit;
-  bool justdobytes;
   unsigned w, c, pad;
+  bool justdobytes, ignorenul;
 
   p = data;
   if (!p) {
@@ -105,13 +105,35 @@ int stoa(int out(long, void *), void *arg, void *data, unsigned long flags,
     if (StoaEmitQuote(out, arg, flags, qchar, signbit) == -1) return -1;
   }
 
-  if (!(flags & FLAGS_PRECISION)) {
-    if (signbit == 63) {
-      precision = tinywcsnlen((const wchar_t *)p, -1);
-    } else if (signbit == 15) {
-      precision = tinystrnlen16((const char16_t *)p, -1);
+  ignorenul = false;
+  justdobytes = false;
+  if (signbit == 15 || signbit == 63) {
+    if (flags & FLAGS_QUOTE) {
+      emit = StoaEmitQuoted;
+      ignorenul = flags & FLAGS_PRECISION;
     } else {
-      precision = strlen(p);
+      emit = StoaEmitUnicode;
+    }
+  } else if ((flags & FLAGS_HASH) && weaken(kCp437)) {
+    justdobytes = true;
+    emit = StoaEmitVisualized;
+    ignorenul = flags & FLAGS_PRECISION;
+  } else if (flags & FLAGS_QUOTE) {
+    emit = StoaEmitQuoted;
+    ignorenul = flags & FLAGS_PRECISION;
+  } else {
+    justdobytes = true;
+    emit = StoaEmitByte;
+  }
+
+  if (!(flags & FLAGS_PRECISION)) precision = -1;
+  if (!(flags & FLAGS_PRECISION) || !ignorenul) {
+    if (signbit == 63) {
+      precision = tinywcsnlen((const wchar_t *)p, precision);
+    } else if (signbit == 15) {
+      precision = tinystrnlen16((const char16_t *)p, precision);
+    } else {
+      precision = strnlen(p, precision);
     }
   }
 
@@ -138,32 +160,17 @@ int stoa(int out(long, void *), void *arg, void *data, unsigned long flags,
     if (spacepad(out, arg, pad) == -1) return -1;
   }
 
-  justdobytes = false;
-  if (signbit == 15 || signbit == 63) {
-    if (flags & FLAGS_QUOTE) {
-      emit = StoaEmitQuoted;
-    } else {
-      emit = StoaEmitUnicode;
-    }
-  } else if ((flags & FLAGS_HASH) && weaken(kCp437)) {
-    justdobytes = true;
-    emit = StoaEmitVisualized;
-  } else if (flags & FLAGS_QUOTE) {
-    emit = StoaEmitQuoted;
-  } else {
-    justdobytes = true;
-    emit = StoaEmitByte;
-  }
-
   if (justdobytes) {
     while (precision--) {
       wc = *p++ & 0xff;
+      if (!wc && !ignorenul) break;
       if (emit(out, arg, wc) == -1) return -1;
     }
   } else {
     while (precision--) {
       if (signbit == 15) {
         wc = *(const char16_t *)p;
+        if (!wc && !ignorenul) break;
         if (IsUcs2(wc)) {
           p += sizeof(char16_t);
         } else if (IsUtf16Cont(wc)) {
@@ -177,10 +184,12 @@ int stoa(int out(long, void *), void *arg, void *data, unsigned long flags,
         }
       } else if (signbit == 63) {
         wc = *(const wint_t *)p;
+        if (!wc && !ignorenul) break;
         p += sizeof(wint_t);
         if (!wc) break;
       } else {
         wc = *p++ & 0xff;
+        if (!wc && !ignorenul) break;
         if (!isascii(wc)) {
           if (ThomPikeCont(wc)) continue;
           n = ThomPikeLen(wc) - 1;

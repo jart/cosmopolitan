@@ -30,9 +30,9 @@
 /**
  * Maps debuggable binary into memory and indexes symbol addresses.
  *
- * @return object freeable with closesymboltable(), or NULL w/ errno
+ * @return object freeable with CloseSymbolTable(), or NULL w/ errno
  */
-struct SymbolTable *opensymboltable(const char *filename) {
+struct SymbolTable *OpenSymbolTable(const char *filename) {
   unsigned i, j;
   struct SymbolTable *t;
   const Elf64_Sym *symtab, *sym;
@@ -56,7 +56,7 @@ struct SymbolTable *opensymboltable(const char *filename) {
     t->count = j;
     carsort1000(t->count, (void *)t->symbols);
   } else {
-    closesymboltable(&t);
+    CloseSymbolTable(&t);
   }
   return t == MAP_FAILED ? NULL : t;
 }

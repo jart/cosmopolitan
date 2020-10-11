@@ -21,5 +21,5 @@
 .source	__FILE__
 
 _start_xnu:
-	jmp	abort
+	ud2
 	.endfn	_start_xnu,weak

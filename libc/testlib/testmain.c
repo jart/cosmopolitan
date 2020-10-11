@@ -51,10 +51,13 @@ static testonly void PrintUsage(int rc, FILE *f) {
 
 static testonly void GetOpts(int argc, char *argv[]) {
   int opt;
-  while ((opt = getopt(argc, argv, "?hb")) != -1) {
+  while ((opt = getopt(argc, argv, "?hbv")) != -1) {
     switch (opt) {
       case 'b':
         runbenchmarks_ = true;
+        break;
+      case 'v':
+        ++g_loglevel;
         break;
       case '?':
       case 'h':

@@ -676,16 +676,24 @@ TEST(snprintf, formatStringLiteral) {
   EXPECT_EQ('\\' | 'n' << 8, cescapec('\n'));
   EXPECT_EQ('\\' | '3' << 8 | '7' << 16 | '7' << 24, cescapec('\377'));
   EXPECT_STREQ("\"hi\\n\"", Format("%`'s", "hi\n"));
+  EXPECT_STREQ("\"\\000\"", Format("%`'.*s", 1, "\0"));
+}
+
+TEST(palandprintf, precisionStillRespectsNulTerminatorIfNotEscOrRepr) {
+  EXPECT_STREQ("Makefile - 25 lines ",
+               Format("%.20s - %d lines %s", "Makefile", 25, ""));
 }
 
 BENCH(palandprintf, bench) {
-  EZBENCH2("23 %x", donothing, Format("%x", VEIL("r", 23)));
-  EZBENCH2("23 %d", donothing, Format("%d", VEIL("r", 23)));
-  EZBENCH2("INT_MIN %x", donothing, Format("%x", VEIL("r", INT_MIN)));
-  EZBENCH2("INT_MIN %d", donothing, Format("%d", VEIL("r", INT_MIN)));
   EZBENCH2("ascii %s", donothing, Format("%s", VEIL("r", "hiuhcreohucreo")));
   EZBENCH2("utf8 %s", donothing, Format("%s", VEIL("r", "hi (╯°□°)╯")));
   EZBENCH2("snprintf %hs", donothing, Format("%hs", VEIL("r", u"hi (╯°□°)╯")));
   EZBENCH2("snprintf %ls", donothing, Format("%ls", VEIL("r", L"hi (╯°□°)╯")));
-  EZBENCH2("int64toarray", donothing, int64toarray_radix10(-3, buffer));
+  EZBENCH2("23 %x", donothing, Format("%x", VEIL("r", 23)));
+  EZBENCH2("23 %d", donothing, Format("%d", VEIL("r", 23)));
+  EZBENCH2("INT_MIN %x", donothing, Format("%x", VEIL("r", INT_MIN)));
+  EZBENCH2("INT_MIN %d", donothing, Format("%d", VEIL("r", INT_MIN)));
+  EZBENCH2("23 int64toarray", donothing, int64toarray_radix10(23, buffer));
+  EZBENCH2("INT_MIN int64toarray", donothing,
+           int64toarray_radix10(INT_MIN, buffer));
 }

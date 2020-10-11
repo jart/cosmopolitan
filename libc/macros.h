@@ -15,7 +15,7 @@
 #define TRUE  1
 #define FALSE 0
 
-#define ROUNDUP(X, K)       (((X) + ((K)-1)) & ~((K)-1))
+#define ROUNDUP(X, K)       (((X) + (K)-1) & -(K))
 #define ROUNDDOWN(X, K)     ((X) & -(K))
 #define ABS(X)              ((X) >= 0 ? (X) : -(X))
 #define MIN(X, Y)           ((Y) > (X) ? (X) : (Y))

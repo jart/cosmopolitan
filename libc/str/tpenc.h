@@ -16,7 +16,7 @@ uint64_t tpenc(int32_t) pureconst;
       asm("call\ttpenc"             \
           : "=a"(Buf), "+D"(Code)   \
           : /* inputs */            \
-          : "cc");                  \
+          : "rcx", "rdx", "cc");    \
     }                               \
     Buf;                            \
   })

@@ -26,7 +26,7 @@
 
 /* this is a reduced-precision calculation of YCbCr-to-RGB introduced
    to make sure the code produces the same results in both SIMD and scalar */
-#define FLOAT2FIXED(x) (((int)((x)*4096.0f + 0.5f)) << 8)
+#define FLOAT2FIXED(x) (((int)((x)*4096.0f + .5f)) << 8)
 
 void stbi__YCbCr_to_RGB_row(unsigned char *out, const unsigned char *y,
                             const unsigned char *pcb, const unsigned char *pcr,
@@ -45,9 +45,9 @@ void stbi__YCbCr_to_RGB_row(unsigned char *out, const unsigned char *y,
     g = y_fixed + (cr * -FLOAT2FIXED(0.71414f)) +
         ((cb * -FLOAT2FIXED(0.34414f)) & 0xffff0000);
     b = y_fixed + cb * FLOAT2FIXED(1.77200f);
-    r /= 1048576;
-    g /= 1048576;
-    b /= 1048576;
+    r >>= 20;
+    g >>= 20;
+    b >>= 20;
     b4[0] = MIN(255, MAX(0, r));
     b4[1] = MIN(255, MAX(0, g));
     b4[2] = MIN(255, MAX(0, b));

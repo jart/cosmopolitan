@@ -19,7 +19,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/conv/conv.h"
 #include "libc/str/str.h"
-#include "libc/str/tpencode.h"
+#include "libc/str/tpenc.h"
+#include "libc/str/utf16.h"
 
 /**
  * Transcodes UTF-16 to UTF-8.
@@ -30,19 +31,25 @@
  * @return number of bytes written excluding NUL
  */
 size_t tprecode16to8(char *dst, size_t dstsize, const char16_t *src) {
-  size_t i = 0;
+  size_t i;
+  uint64_t w;
+  wint_t x, y;
+  i = 0;
   if (dstsize) {
     for (;;) {
-      wint_t wc;
-      src += abs(getutf16(src, &wc));
-      if (!wc || dstsize == 1) {
-        dst[i] = '\0';
-        break;
+      if (!(x = *src++)) break;
+      if (IsUtf16Cont(x)) continue;
+      if (!IsUcs2(x)) {
+        if (!(y = *src++)) break;
+        x = MergeUtf16(x, y);
       }
-      size_t got = abs(tpencode(&dst[i], dstsize, wc, false));
-      dstsize -= got;
-      i += got;
+      w = tpenc(x);
+      while (w && i + 1 < dstsize) {
+        dst[i++] = w & 0xFF;
+        w >>= 8;
+      }
     }
+    dst[i] = 0;
   }
   return i;
 }

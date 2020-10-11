@@ -35,7 +35,7 @@ COSMOPOLITAN_C_START_
      each release.” ──Quoth MSDN */
 #endif
 
-NtStatus NtDelayExecution(bool32 alertable, int64_t *hectonanoseconds);
+NtStatus NtDelayExecution(bool32 alertable, int64_t *AbsCobolOrNegRelHectoNano);
 
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/nt/thunk/time.inc"

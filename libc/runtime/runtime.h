@@ -41,7 +41,6 @@ void *mapanon(size_t) vallocesque attributeallocsize((1));
 int setjmp(jmp_buf) libcesque returnstwice paramsnonnull();
 void longjmp(jmp_buf, int) libcesque noreturn paramsnonnull();
 void exit(int) noreturn;
-void quick_exit(int) noreturn;
 void _exit(int) libcesque noreturn;
 void _Exit(int) libcesque noreturn;
 long _setstack(void *, void *, ...);

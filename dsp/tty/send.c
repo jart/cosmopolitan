@@ -20,6 +20,8 @@
 #include "dsp/tty/tty.h"
 #include "libc/str/str.h"
 
+/* TODO(jart): DELETE */
+
 /**
  * Sends data to teletypewriter.
  *
@@ -27,4 +29,6 @@
  *
  * @return 0 on success, or -1 w/ errno
  */
-int ttysend(int fd, const char *str) { return ttywrite(fd, str, strlen(str)); }
+int ttysend(int fd, const char *str) {
+  return ttywrite(fd, str, strlen(str));
+}

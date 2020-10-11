@@ -27,6 +27,11 @@
 /**
  * Writes data from multiple buffers.
  *
+ * Please note that it's not an error for a short write to happen. This
+ * can happen in the kernel if EINTR happens after some of the write has
+ * been committed. It can also happen if we need to polyfill this system
+ * call using write().
+ *
  * @return number of bytes actually handed off, or -1 w/ errno
  */
 ssize_t writev(int fd, const struct iovec *iov, int iovlen) {

@@ -17,48 +17,23 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/timespec.h"
-#include "libc/calls/struct/timeval.h"
-#include "libc/conv/conv.h"
 #include "libc/dce.h"
-#include "libc/macros.h"
-#include "libc/nexgen32e/nexgen32e.h"
-#include "libc/nt/enum/status.h"
-#include "libc/nt/errors.h"
-#include "libc/nt/nt/time.h"
-#include "libc/nt/synchronization.h"
-#include "libc/sock/internal.h"
-#include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
 /**
  * Sleeps for a particular amount of time.
  */
 int nanosleep(const struct timespec *req, struct timespec *rem) {
-  long res, millis, hectonanos;
   if (!req) return efault();
   if (!IsWindows()) {
     if (!IsXnu()) {
       return nanosleep$sysv(req, rem);
     } else {
-      return select$sysv(
-          0, 0, 0, 0, /* lool */
-          &(struct timeval){req->tv_sec, div1000int64(req->tv_nsec)});
+      return nanosleep$xnu(req, rem);
     }
   } else {
-    if (rem) memcpy(rem, req, sizeof(*rem));
-    if (req->tv_sec && req->tv_nsec) {
-      hectonanos = MAX(1, req->tv_sec * 10000000L + div100int64(req->tv_nsec));
-    } else {
-      hectonanos = 1;
-    }
-    if (NtError(NtDelayExecution(true, &hectonanos))) {
-      millis = div10000int64(hectonanos);
-      res = SleepEx(millis, true);
-      if (res == kNtWaitIoCompletion) return eintr();
-    }
-    if (rem) memset(rem, 0, sizeof(*rem));
-    return 0;
+    return nanosleep$nt(req, rem);
   }
 }

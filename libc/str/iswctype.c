@@ -20,33 +20,71 @@
 #include "libc/macros.h"
 #include "libc/str/str.h"
 
-static const struct WcTypes {
-  char name[8];
-  wctype_t type;
-} wctypes[] = {{"alnum", 0x006}, {"alpha", 0x002}, {"blank", 0x080},
-               {"cntrl", 0x100}, {"digit", 0x004}, {"graph", 0x200},
-               {"lower", 0x020}, {"print", 0x010}, {"punct", 0x300},
-               {"space", 0x001}, {"upper", 0x040}, {"xdigit", 0x008}};
+#define ALNUM  1
+#define ALPHA  2
+#define BLANK  3
+#define CNTRL  4
+#define DIGIT  5
+#define GRAPH  6
+#define LOWER  7
+#define PRINT  8
+#define PUNCT  9
+#define SPACE  10
+#define UPPER  11
+#define XDIGIT 12
 
-wctype_t wctype(const char *s) {
-  char name[8];
-  strncpy(name, s, sizeof(name));
-  for (unsigned i = 0; i < ARRAYLEN(wctypes); ++i) {
-    if (memcmp(name, wctypes[i].name, sizeof(name)) == 0) {
-      return wctypes[i].type;
+static const struct {
+  char name[7];
+  char type;
+} kWcTypes[] = {
+    {"alnum", ALNUM}, {"alpha", ALPHA}, {"blank", BLANK}, {"cntrl", CNTRL},
+    {"digit", DIGIT}, {"graph", GRAPH}, {"lower", LOWER}, {"print", PRINT},
+    {"punct", PUNCT}, {"space", SPACE}, {"upper", UPPER}, {"xdigit", XDIGIT},
+};
+
+static int CompareStrings(const char *l, const char *r) {
+  size_t i = 0;
+  while (l[i] == r[i] && r[i]) ++i;
+  return (l[i] & 0xff) - (r[i] & 0xff);
+}
+
+wctype_t wctype(const char *name) {
+  unsigned i;
+  for (i = 0; i < ARRAYLEN(kWcTypes); ++i) {
+    if (CompareStrings(name, kWcTypes[i].name) == 0) {
+      return kWcTypes[i].type;
     }
   }
   return 0;
 }
 
-int iswctype(wint_t c, wctype_t type) {
-  if (c < 128) {
-    if (!(type & ~0xff)) {
-      return kCtype[(unsigned char)type];
-    }
-    if (type == 0x100) return iscntrl((unsigned char)c);
-    if (type == 0x200) return isgraph((unsigned char)c);
-    if (type == 0x300) return ispunct((unsigned char)c);
+int iswctype(wint_t wc, wctype_t type) {
+  switch (type) {
+    case ALNUM:
+      return iswalnum(wc);
+    case ALPHA:
+      return iswalpha(wc);
+    case BLANK:
+      return iswblank(wc);
+    case CNTRL:
+      return iswcntrl(wc);
+    case DIGIT:
+      return iswdigit(wc);
+    case GRAPH:
+      return iswgraph(wc);
+    case LOWER:
+      return iswlower(wc);
+    case PRINT:
+      return iswprint(wc);
+    case PUNCT:
+      return iswpunct(wc);
+    case SPACE:
+      return iswspace(wc);
+    case UPPER:
+      return iswupper(wc);
+    case XDIGIT:
+      return iswxdigit(wc);
+    default:
+      return 0;
   }
-  return 0;
 }

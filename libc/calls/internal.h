@@ -181,6 +181,7 @@ i64 sendfile$sysv(i32, i32, i64 *, u64) hidden;
 i64 splice$sysv(i32, i64 *, i32, i64 *, u64, u32) hidden;
 i64 vmsplice$sysv(i32, const struct iovec *, i64, u32) hidden;
 i64 write$sysv(i32, const void *, u64) hidden;
+int getitimer$sysv(i32, struct itimerval *) hidden;
 int setresgid$sysv(uint32_t, uint32_t, uint32_t) hidden;
 int setresuid$sysv(uint32_t, uint32_t, uint32_t) hidden;
 u32 getgid$sysv(void) hidden;
@@ -204,6 +205,7 @@ u32 prot2nt(i32, i32) privileged;
 void __restore_rt() hidden;
 void __sigenter$xnu(void *, i32, i32, void *, void *) hidden noreturn;
 int utimensat$xnu(int, const char *, const struct timespec *, int) hidden;
+int nanosleep$xnu(const struct timespec *, struct timespec *) hidden;
 void stat2linux(void *) hidden;
 void xnutrampoline(void *, i32, i32, const struct __darwin_siginfo *,
                    const struct __darwin_ucontext *) hidden noreturn;
@@ -247,6 +249,8 @@ ssize_t read$nt(struct Fd *, const struct iovec *, size_t, ssize_t) hidden;
 ssize_t write$nt(struct Fd *, const struct iovec *, size_t, ssize_t) hidden;
 int utimensat$nt(int, const char *, const struct timespec *, int) hidden;
 int getrusage$nt(int, struct rusage *) hidden;
+int setitimer$nt(int, const struct itimerval *, struct itimerval *) hidden;
+int nanosleep$nt(const struct timespec *, struct timespec *) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » windows nt » support                           ─╬─│┼
@@ -257,6 +261,7 @@ void ntcontext2linux(struct ucontext *, const struct NtContext *) hidden;
 struct NtOverlapped *offset2overlap(int64_t, struct NtOverlapped *) hidden;
 bool32 ntsetprivilege(i64, const char16_t *, u32) hidden;
 bool32 onntconsoleevent$nt(u32) hidden;
+void onntalarm(void *, uint32_t, uint32_t) hidden;
 int ntaccesscheck(const char16_t *, u32) paramsnonnull() hidden;
 i64 ntreturn(u32);
 i64 winerr(void) nocallback privileged;

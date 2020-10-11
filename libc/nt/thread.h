@@ -1,6 +1,8 @@
 #ifndef COSMOPOLITAN_LIBC_NT_THREADS_H_
 #define COSMOPOLITAN_LIBC_NT_THREADS_H_
 #include "libc/nt/enum/threadaccess.h"
+#include "libc/nt/struct/overlapped.h"
+#include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/thunk/msabi.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -31,6 +33,13 @@ COSMOPOLITAN_C_START_
 ╚────────────────────────────────────────────────────────────────────────────│*/
 #endif
 
+typedef uint32_t (*NtThreadStartRoutine)(void *lpParameter);
+
+int64_t CreateThread(struct NtSecurityAttributes *lpThreadAttributes,
+                     size_t dwStackSize, NtThreadStartRoutine lpStartAddress,
+                     void *lpParameter, uint32_t dwCreationFlags,
+                     uint32_t *opt_lpThreadId);
+
 void ExitThread(uint32_t dwExitCode) noreturn;
 int64_t GetCurrentThread(void);
 uint32_t GetCurrentThreadId(void);
@@ -46,6 +55,10 @@ bool32 SetThreadPriority(int64_t hThread, int32_t nPriority);
 bool32 SetThreadPriorityBoost(int64_t hThread, bool32 bDisablePriorityBoost);
 bool32 GetThreadPriorityBoost(int64_t hThread, bool32 *pDisablePriorityBoost);
 bool32 GetThreadIOPendingFlag(int64_t hThread, bool32 *lpIOIsPending);
+
+bool32 CancelSynchronousIo(int64_t hThread);
+bool32 CancelIo(int64_t hFile);
+bool32 CancelIoEx(int64_t hFile, struct NtOverlapped opt_lpOverlapped);
 
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/thread.inc"

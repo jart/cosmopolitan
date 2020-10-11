@@ -17,10 +17,10 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
 #include "libc/errno.h"
+#include "libc/macros.h"
 #include "libc/nt/process.h"
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
@@ -36,10 +36,8 @@ void testlib_finish(void) {
 }
 
 noreturn void testlib_abort(void) {
-  int rc;
   testlib_finish();
-  rc = min(255, g_testlib_failed);
-  quick_exit(rc); /* so we don't run __testmemory_fini() */
+  exit(MIN(255, g_testlib_failed));
   unreachable;
 }
 

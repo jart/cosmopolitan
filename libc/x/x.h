@@ -60,6 +60,8 @@ void *xcalloc(size_t, size_t) attributeallocsize((1, 2)) _XMAL;
 void *xvalloc(size_t) attributeallocsize((1)) _XMALPG;
 void *xmemalign(size_t, size_t) attributeallocalign((1))
     attributeallocsize((2)) _XMAL;
+void *xmemalignzero(size_t, size_t) attributeallocalign((1))
+    attributeallocsize((2)) _XMAL;
 char *xstrdup(const char *) _XPNN _XMAL;
 char *xstrndup(const char *, size_t) _XPNN _XMAL;
 char *xstrcat(const char *, ...) paramsnonnull((1)) nullterminated() _XMAL;

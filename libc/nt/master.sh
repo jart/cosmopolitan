@@ -341,11 +341,11 @@ imp	'CallWindowProc'					CallWindowProcW						user32		1537
 imp	'CallbackMayRunLong'					CallbackMayRunLong					KernelBase	100
 imp	'CancelDC'						CancelDC						gdi32		1038
 imp	'CancelDeviceWakeupRequest'				CancelDeviceWakeupRequest				kernel32	113
-imp	'CancelIo'						CancelIo						KernelBase	101
-imp	'CancelIoEx'						CancelIoEx						KernelBase	102
+imp	'CancelIo'						CancelIo						KernelBase	101	1
+imp	'CancelIoEx'						CancelIoEx						KernelBase	102	2
 imp	'CancelOverlappedAccess'				CancelOverlappedAccess					advapi32	1091
 imp	'CancelShutdown'					CancelShutdown						user32		1538
-imp	'CancelSynchronousIo'					CancelSynchronousIo					KernelBase	103
+imp	'CancelSynchronousIo'					CancelSynchronousIo					KernelBase	103	1
 imp	'CancelTimerQueueTimer'					CancelTimerQueueTimer					kernel32	118
 imp	'CancelWaitableTimer'					CancelWaitableTimer					KernelBase	105
 imp	'CascadeChildWindows'					CascadeChildWindows					user32		1539
@@ -625,7 +625,7 @@ imp	'CreateIcon'						CreateIcon						user32		1615
 imp	'CreateIconFromResource'				CreateIconFromResource					user32		1616
 imp	'CreateIconFromResourceEx'				CreateIconFromResourceEx				user32		1617
 imp	'CreateIconIndirect'					CreateIconIndirect					user32		1618
-imp	'CreateIoCompletionPort'				CreateIoCompletionPort					KernelBase	195
+imp	'CreateIoCompletionPort'				CreateIoCompletionPort					KernelBase	195	4
 imp	'CreateJobObjectA'					CreateJobObjectA					kernel32	209
 imp	'CreateJobObject'					CreateJobObjectW					kernel32	210
 imp	'CreateJobSet'						CreateJobSet						kernel32	211
@@ -702,7 +702,7 @@ imp	'CreateSymbolicLinkTransactedA'				CreateSymbolicLinkTransactedA				kernel32
 imp	'CreateSymbolicLinkTransacted'				CreateSymbolicLinkTransactedW				kernel32	238
 imp	'CreateSystemThreads'					CreateSystemThreads					user32		1623
 imp	'CreateTapePartition'					CreateTapePartition					kernel32	240
-imp	'CreateThread'						CreateThread						KernelBase	224
+imp	'CreateThread'						CreateThread						KernelBase	224	6
 imp	'CreateThreadpool'					CreateThreadpool					KernelBase	225
 imp	'CreateThreadpoolCleanupGroup'				CreateThreadpoolCleanupGroup				KernelBase	226
 imp	'CreateThreadpoolIo'					CreateThreadpoolIo					KernelBase	227
@@ -717,7 +717,7 @@ imp	'CreateUmsThreadContext'				CreateUmsThreadContext					kernel32	252
 imp	'CreateWaitableTimerA'					CreateWaitableTimerA					kernel32	253
 imp	'CreateWaitableTimerExA'				CreateWaitableTimerExA					kernel32	254
 imp	'CreateWaitableTimerEx'					CreateWaitableTimerExW					KernelBase	233
-imp	'CreateWaitableTimer'					CreateWaitableTimerW					KernelBase	234
+imp	'CreateWaitableTimer'					CreateWaitableTimerW					KernelBase	234	3
 imp	'CreateWellKnownSid'					CreateWellKnownSid					KernelBase	235
 imp	'CreateWindowEx'					CreateWindowExW						user32		1625	12
 imp	'CreateWindowExA'					CreateWindowExA						user32		1624	12
@@ -2516,8 +2516,8 @@ imp	'GetPtrCalDataArray'					GetPtrCalDataArray					KernelBase	692
 imp	'GetPublisherCacheFolder'				GetPublisherCacheFolder					KernelBase	693
 imp	'GetPublisherRootFolder'				GetPublisherRootFolder					KernelBase	694
 imp	'GetQueueStatus'					GetQueueStatus						user32		1936
-imp	'GetQueuedCompletionStatus'				GetQueuedCompletionStatus				KernelBase	695
-imp	'GetQueuedCompletionStatusEx'				GetQueuedCompletionStatusEx				KernelBase	696
+imp	'GetQueuedCompletionStatus'				GetQueuedCompletionStatus				KernelBase	695	5
+imp	'GetQueuedCompletionStatusEx'				GetQueuedCompletionStatusEx				KernelBase	696	6
 imp	'GetROP2'						GetROP2							gdi32		1695
 imp	'GetRandomRgn'						GetRandomRgn						gdi32		1696
 imp	'GetRasterizerCaps'					GetRasterizerCaps					gdi32		1697
@@ -4320,7 +4320,7 @@ imp	'PolylineTo'						PolylineTo						gdi32		1791
 imp	'PoolPerAppKeyStateInternal'				PoolPerAppKeyStateInternal				KernelBase	1220
 imp	'PostMessageA'						PostMessageA						user32		2204
 imp	'PostMessage'						PostMessageW						user32		2205
-imp	'PostQueuedCompletionStatus'				PostQueuedCompletionStatus				KernelBase	1221
+imp	'PostQueuedCompletionStatus'				PostQueuedCompletionStatus				KernelBase	1221	4
 imp	'PostQuitMessage'					PostQuitMessage						user32		2206	1
 imp	'PostThreadMessageA'					PostThreadMessageA					user32		2207
 imp	'PostThreadMessage'					PostThreadMessageW					user32		2208
@@ -4517,7 +4517,7 @@ imp	'ReadEncryptedFileRaw'					ReadEncryptedFileRaw					advapi32	1601
 imp	'ReadEventLogA'						ReadEventLogA						advapi32	1602
 imp	'ReadEventLog'						ReadEventLogW						advapi32	1603
 imp	'ReadFile'						ReadFile						KernelBase	1311	5
-imp	'ReadFileEx'						ReadFileEx						KernelBase	1312
+imp	'ReadFileEx'						ReadFileEx						KernelBase	1312	5
 imp	'ReadFileScatter'					ReadFileScatter						KernelBase	1313	5
 imp	'ReadProcessMemory'					ReadProcessMemory					KernelBase	1314
 imp	'ReadStateAtomValue'					ReadStateAtomValue					KernelBase	1315
@@ -6225,7 +6225,7 @@ imp	'SetFileAttributesA'					SetFileAttributesA					KernelBase	1507	2
 imp	'SetFileAttributesTransactedA'				SetFileAttributesTransactedA				kernel32	1314
 imp	'SetFileAttributesTransacted'				SetFileAttributesTransactedW				kernel32	1315
 imp	'SetFileBandwidthReservation'				SetFileBandwidthReservation				kernel32	1317
-imp	'SetFileCompletionNotificationModes'			SetFileCompletionNotificationModes			kernel32	1318
+imp	'SetFileCompletionNotificationModes'			SetFileCompletionNotificationModes			kernel32	1318	2
 imp	'SetFileInformationByHandle'				SetFileInformationByHandle				KernelBase	1509
 imp	'SetFileIoOverlappedRange'				SetFileIoOverlappedRange				KernelBase	1510
 imp	'SetFilePointer'					SetFilePointer						KernelBase	1511	4
@@ -6425,7 +6425,7 @@ imp	'SetVolumeLabel'					SetVolumeLabelW						kernel32	1401
 imp	'SetVolumeMountPointA'					SetVolumeMountPointA					kernel32	1402
 imp	'SetVolumeMountPoint'					SetVolumeMountPointW					kernel32	1403
 imp	'SetVolumeMountPointWStub'				SetVolumeMountPointWStub				kernel32	1404
-imp	'SetWaitableTimer'					SetWaitableTimer					KernelBase	1583
+imp	'SetWaitableTimer'					SetWaitableTimer					KernelBase	1583	6
 imp	'SetWaitableTimerEx'					SetWaitableTimerEx					KernelBase	1584
 imp	'SetWinEventHook'					SetWinEventHook						user32		2388
 imp	'SetWinMetaFileBits'					SetWinMetaFileBits					gdi32		1917
@@ -7188,7 +7188,7 @@ imp	'WriteConsoleOutputCharacter'				WriteConsoleOutputCharacterW				KernelBase	
 imp	'WriteConsoleOutputCharacterA'				WriteConsoleOutputCharacterA				KernelBase	1819	5
 imp	'WriteEncryptedFileRaw'					WriteEncryptedFileRaw					advapi32	1857
 imp	'WriteFile'						WriteFile						KernelBase	1823	5
-imp	'WriteFileEx'						WriteFileEx						KernelBase	1824
+imp	'WriteFileEx'						WriteFileEx						KernelBase	1824	5
 imp	'WriteFileGather'					WriteFileGather						KernelBase	1825	5
 imp	'WritePrivateProfileSectionA'				WritePrivateProfileSectionA				kernel32	1565
 imp	'WritePrivateProfileSection'				WritePrivateProfileSectionW				kernel32	1566

@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_UCONTEXT_H_
 #define COSMOPOLITAN_LIBC_CALLS_UCONTEXT_H_
-#include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaltstack.h"
 #include "libc/calls/struct/sigset.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)

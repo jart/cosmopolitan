@@ -37,9 +37,9 @@ textwindows bool32 onntconsoleevent(uint32_t CtrlType) {
     case kNtCtrlCloseEvent:
       sig = pushpop(SIGHUP);
       break;
-    case kNtCtrlLogoffEvent:
-    case kNtCtrlShutdownEvent:
-      sig = pushpop(SIGTERM);
+    case kNtCtrlLogoffEvent:    // only received by services so hack hack hack
+    case kNtCtrlShutdownEvent:  // only received by services so hack hack hack
+      sig = pushpop(SIGALRM);
       break;
     default:
       return false;

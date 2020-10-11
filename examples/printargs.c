@@ -72,5 +72,9 @@ int main(int argc, char *argv[], char **envp) {
                  fmt),
            kAuxiliaryValues[i].name, key, val, kAuxiliaryValues[i].description);
   }
+  printf("\nSpecial Directories:\n");
+  printf(" ☼ kTmpPath = %`'s\n", kTmpPath);
+  printf(" ☼ kNtSystemDirectory = %`'s\n", kNtSystemDirectory);
+  printf(" ☼ kNtWindowsDirectory = %`'s\n", kNtWindowsDirectory);
   return 0;
 }

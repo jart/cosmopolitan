@@ -38,6 +38,8 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/x/x.h"
 
+/* TODO(jart): DELETE */
+
 #define FD STDOUT_FILENO
 
 static struct TtyRaw {

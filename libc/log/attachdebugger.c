@@ -29,9 +29,12 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/w.h"
+
+#define RESTORE_TTY "\e[?1000;1002;1015;1006l\e[?25h"
 
 /**
  * Launches GDB debugger GUI for current process.
@@ -50,17 +53,18 @@
  * @note this is called via eponymous spinlock macro wrapper
  */
 relegated int(attachdebugger)(intptr_t continuetoaddr) {
-  int ttyin, ttyout;
+  int ttyfd;
   struct StackFrame *bp;
   char pidstr[11], breakcmd[40];
   const char *se, *elf, *gdb, *rewind, *layout;
   if (IsGenuineCosmo() || !(gdb = GetGdbPath()) ||
-      (ttyin = ttyout = open(_PATH_TTY, O_RDWR, 0)) == -1) {
+      (ttyfd = open(_PATH_TTY, O_RDWR, 0)) == -1) {
     return -1;
   }
+  write(ttyfd, RESTORE_TTY, strlen(RESTORE_TTY));
   snprintf(pidstr, sizeof(pidstr), "%u", getpid());
   layout = "layout asm";
-  if ((elf = finddebugbinary())) {
+  if ((elf = FindDebugBinary())) {
     se = "-se";
     if (fileexists(__FILE__)) layout = "layout src";
   } else {
@@ -78,7 +82,7 @@ relegated int(attachdebugger)(intptr_t continuetoaddr) {
     rewind = NULL;
     breakcmd[0] = '\0';
   }
-  return spawnve(0, (int[3]){ttyin, ttyout, STDERR_FILENO}, gdb,
+  return spawnve(0, (int[3]){ttyfd, ttyfd, STDERR_FILENO}, gdb,
                  (char *const[]){
                      "gdb",    "--tui",
                      "-p",     pidstr,

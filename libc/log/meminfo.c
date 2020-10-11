@@ -26,7 +26,7 @@ STATIC_YOINK("ntoa");
 STATIC_YOINK("stoa");
 
 static void onmemchunk(void *start, void *end, size_t used_bytes, void *arg) {
-  (dprintf)(*(int *)arg, "%p - %p : %08zx / %08lx\n", start, end, used_bytes,
+  (dprintf)(*(int *)arg, "%p - %p : %08zx / %08lx\r\n", start, end, used_bytes,
             (intptr_t)end - (intptr_t)start);
 }
 
@@ -35,7 +35,7 @@ static void onmemchunk(void *start, void *end, size_t used_bytes, void *arg) {
  */
 void meminfo(int fd) {
   memsummary(fd);
-  (dprintf)(fd, "%*s   %*s   %*s   %*s\n", POINTER_XDIGITS, "start",
+  (dprintf)(fd, "%*s   %*s   %*s   %*s\r\n", POINTER_XDIGITS, "start",
             POINTER_XDIGITS, "end", 8, "used", 8, "size");
   malloc_inspect_all(onmemchunk, &fd);
 }

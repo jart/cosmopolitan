@@ -17,11 +17,6 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/conv/conv.h"
-#include "libc/dce.h"
-#include "libc/log/check.h"
-#include "libc/log/log.h"
 #include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #include "tool/build/lib/abp.h"
@@ -558,7 +553,7 @@ static void OpMovZvqpIvqp(struct Machine *m, uint32_t rde) {
   WriteRegister(rde, RegRexbSrm(m, rde), m->xedd->op.uimm0);
 }
 
-static void OpIncZv(struct Machine *m, uint32_t rde) {
+static relegated void OpIncZv(struct Machine *m, uint32_t rde) {
   if (!Osz(rde)) {
     Write32(RegSrm(m, rde), Inc32(Read32(RegSrm(m, rde)), 0, &m->flags));
   } else {
@@ -566,7 +561,7 @@ static void OpIncZv(struct Machine *m, uint32_t rde) {
   }
 }
 
-static void OpDecZv(struct Machine *m, uint32_t rde) {
+static relegated void OpDecZv(struct Machine *m, uint32_t rde) {
   if (!Osz(rde)) {
     Write32(RegSrm(m, rde), Dec32(Read32(RegSrm(m, rde)), 0, &m->flags));
   } else {
@@ -886,22 +881,6 @@ static void OpBsubiCl(struct Machine *m, uint32_t rde) {
 
 static void OpBsubiImm(struct Machine *m, uint32_t rde) {
   Bsubi(m, rde, m->xedd->op.uimm0);
-}
-
-static relegated void LoadFarPointer(struct Machine *m, uint32_t rde,
-                                     uint8_t seg[8]) {
-  uint32_t fp;
-  fp = Read32(ComputeReserveAddressRead4(m, rde));
-  Write64(seg, (fp & 0x0000ffff) << 4);
-  Write16(RegRexrReg(m, rde), fp >> 16);
-}
-
-static relegated void OpLes(struct Machine *m, uint32_t rde) {
-  LoadFarPointer(m, rde, m->es);
-}
-
-static relegated void OpLds(struct Machine *m, uint32_t rde) {
-  LoadFarPointer(m, rde, m->ds);
 }
 
 static void OpLgdtMs(struct Machine *m, uint32_t rde) {
@@ -1234,6 +1213,22 @@ static void OpNegEb(struct Machine *m, uint32_t rde) {
   AluEb(m, rde, Neg8);
 }
 
+static relegated void LoadFarPointer(struct Machine *m, uint32_t rde,
+                                     uint8_t seg[8]) {
+  uint32_t fp;
+  fp = Read32(ComputeReserveAddressRead4(m, rde));
+  Write64(seg, (fp & 0x0000ffff) << 4);
+  Write16(RegRexrReg(m, rde), fp >> 16);
+}
+
+static relegated void OpLes(struct Machine *m, uint32_t rde) {
+  LoadFarPointer(m, rde, m->es);
+}
+
+static relegated void OpLds(struct Machine *m, uint32_t rde) {
+  LoadFarPointer(m, rde, m->ds);
+}
+
 static relegated void Loop(struct Machine *m, uint32_t rde, bool cond) {
   uint64_t cx;
   cx = Read64(m->cx) - 1;
@@ -1386,10 +1381,12 @@ static void OpSalc(struct Machine *m, uint32_t rde) {
 }
 
 static void OpNopEv(struct Machine *m, uint32_t rde) {
-  if (ModrmMod(rde) == 0b01 && ModrmReg(rde) == 0 && ModrmRm(rde) == 0b101) {
-    OpBofram(m, rde);
-  } else {
-    OpNoop(m, rde);
+  switch (ModrmMod(rde) << 6 | ModrmReg(rde) << 3 | ModrmRm(rde)) {
+    case 0x45:
+      OpBofram(m, rde);
+      break;
+    default:
+      OpNoop(m, rde);
   }
 }
 

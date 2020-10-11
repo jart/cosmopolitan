@@ -9,8 +9,9 @@
  * generate code that calls MS ABI functions directly, without needing
  * to jump through the assembly thunks.
  */
-#if __GNUC__ * 100 + __GNUC_MINOR__ >= 408 || \
-    (__has_attribute(__ms_abi__) || defined(__llvm__))
+#if !defined(__STRICT_ANSI__) &&               \
+    (__GNUC__ * 100 + __GNUC_MINOR__ >= 408 || \
+     (__has_attribute(__ms_abi__) || defined(__llvm__)))
 #define __msabi __attribute__((__ms_abi__))
 #endif
 
@@ -18,7 +19,7 @@
  * Returns true if header should provide MS-ABI overrides.
  */
 #ifndef ShouldUseMsabiAttribute
-#if defined(__msabi) && defined(NDEBUG) && !defined(__STRICT_ANSI__)
+#if defined(__msabi) && defined(NDEBUG) && !defined(__PG__)
 #define ShouldUseMsabiAttribute() 1
 #else
 #define ShouldUseMsabiAttribute() 0

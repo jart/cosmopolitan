@@ -90,7 +90,6 @@ systemfive:
 	.quad	0
 	.endobj	systemfive,globl,hidden
 	.previous
-
 .Lanchorpoint:
 systemfive.linux:
 	movswl	%ax,%eax
@@ -104,24 +103,31 @@ systemfive.linux:
 	cmp	$-4095,%rax
 	jae	systemfive.error
 	ret
+	.endfn	systemfive.linux,globl,hidden
 systemfive.error:
 	neg	%eax
 /	𝑠𝑙𝑖𝑑𝑒
+	.endfn	systemfive.error
 systemfive.errno:
 	mov	%eax,errno(%rip)
-	pushpop	-1,%rax
+	push	$-1
+	pop	%rax
 	stc
 	ret
+	.endfn	systemfive.errno
 systemfive.enosys:
 	mov	ENOSYS(%rip),%eax
 	jmp	systemfive.errno
+	.endfn	systemfive.enosys
 systemfive.openbsd:
 	shr	$48,%rax
 	jmp	systemfive.bsd
+	.endfn	systemfive.openbsd,globl,hidden
 systemfive.freebsd:
 	shr	$32,%rax
 	movzwl	%ax,%eax
 /	𝑠𝑙𝑖𝑑𝑒
+	.endfn	systemfive.freebsd,globl,hidden
 systemfive.bsd:
 	cmp	$0xfff,%ax
 	jae	systemfive.enosys
@@ -132,26 +138,21 @@ systemfive.bsd:
 	pop	%rbp
 	jc	systemfive.errno
 	ret
+	.endfn	systemfive.bsd
 systemfive.xnu:
-/	Do this
-/	0x35022721530005
-/	        │└┴┴─┐
-/	        └┐   ├┬┐
-/	0x00000002000153
+/	do this to rax
+/	0x????????2153????
+/	          │└┴┴─┐
+/	          └┐   ├┬┐
+/	0x0000000002000153
 	mov	%eax,%r11d
-	shr	$0x10,%eax
-	and	$0xfff,%eax
-	shr	$0x1c,%r11d
-	shl	$0x18,%r11d
+	shr	$4*7,%r11d
+	shl	$4*6,%r11d
+	shl	$4*1,%eax
+	shr	$4*5,%eax
 	or	%r11d,%eax
 	jmp	systemfive.bsd
-	.endfn	systemfive.errno,globl,hidden
-	.endfn	systemfive.error,globl,hidden
-	.endfn	systemfive.enosys,globl,hidden
 	.endfn	systemfive.xnu,globl,hidden
-	.endfn	systemfive.freebsd,globl,hidden
-	.endfn	systemfive.openbsd,globl,hidden
-	.endfn	systemfive.linux,globl,hidden
 	.previous
 
 /	Initializes System Five system call support.

@@ -17,25 +17,14 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/bits/safemacros.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/conv/conv.h"
 #include "libc/conv/itoa.h"
 #include "libc/log/asan.h"
 #include "libc/log/backtrace.h"
-#include "libc/log/log.h"
-#include "libc/macros.h"
 #include "libc/mem/hook/hook.h"
 #include "libc/runtime/directmap.h"
-#include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.h"
-#include "libc/runtime/missioncritical.h"
-#include "libc/runtime/runtime.h"
-#include "libc/runtime/symbols.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -154,9 +143,9 @@ static const char *__asan_describe_access_poison(int c) {
 }
 
 static noreturn void __asan_die(const char *msg, size_t size) {
-  __print(msg, size);
-  PrintBacktraceUsingSymbols(stderr, __builtin_frame_address(0),
-                             getsymboltable());
+  write(STDERR_FILENO, msg, size);
+  PrintBacktraceUsingSymbols(STDERR_FILENO, __builtin_frame_address(0),
+                             GetSymbolTable());
   DebugBreak();
   _Exit(66);
 }
@@ -170,7 +159,7 @@ static noreturn void __asan_report_deallocate_fault(void *addr, int c) {
   p = mempcpy(p, ibuf, int64toarray_radix10(c, ibuf));
   p = stpcpy(p, " at 0x");
   p = mempcpy(p, ibuf, uint64toarray_fixed16((intptr_t)addr, ibuf, 48));
-  p = stpcpy(p, "\n");
+  p = stpcpy(p, "\r\n");
   __asan_die(buf, p - buf);
 }
 
@@ -186,7 +175,7 @@ static noreturn void __asan_report_memory_fault(uint8_t *addr, int size,
   p = stpcpy(p, kind);
   p = stpcpy(p, " at 0x");
   p = mempcpy(p, ibuf, uint64toarray_fixed16((intptr_t)addr, ibuf, 48));
-  p = stpcpy(p, "\n");
+  p = stpcpy(p, "\r\n");
   __asan_die(buf, p - buf);
 }
 
@@ -207,13 +196,6 @@ static void __asan_morgue_flush(void) {
     __asan_morgue.p[i] = NULL;
     dlfree(p);
   }
-}
-
-static bool __asan_is_mapped(void *p) {
-  int x, i;
-  x = (intptr_t)p >> 16;
-  i = FindMemoryInterval(&_mmi, x);
-  return i < _mmi.i && x >= _mmi.p[i].x && x <= _mmi.p[i].y;
 }
 
 static void *__asan_allocate(size_t align, size_t size, int underrun,
@@ -394,44 +376,62 @@ void __asan_install_malloc_hooks(void) {
   HOOK(hook$malloc_usable_size, __asan_malloc_usable_size);
 }
 
-void __asan_map_shadow(void *addr, size_t size) {
-  int i, n, x;
-  char *a, *b;
+static bool __asan_is_mapped(int x) {
+  int i = FindMemoryInterval(&_mmi, x);
+  return i < _mmi.i && x >= _mmi.p[i].x && x <= _mmi.p[i].y;
+}
+
+void __asan_map_shadow(void *p, size_t n) {
+  int i, x, a, b;
   struct DirectMap sm;
-  a = (char *)ROUNDDOWN(SHADOW((intptr_t)addr), FRAMESIZE);
-  b = (char *)ROUNDDOWN(SHADOW((intptr_t)addr + size - 1), FRAMESIZE);
-  for (; a <= b; a += FRAMESIZE) {
+  a = SHADOW((uintptr_t)p) >> 16;
+  b = ROUNDUP(SHADOW(ROUNDUP((uintptr_t)p + n, 8)), 1 << 16) >> 16;
+  for (; a < b; ++a) {
     if (!__asan_is_mapped(a)) {
-      sm = DirectMap(a, FRAMESIZE, PROT_READ | PROT_WRITE,
+      sm = DirectMap((void *)((uintptr_t)a << 16), 1 << 16,
+                     PROT_READ | PROT_WRITE,
                      MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
       if (sm.addr == MAP_FAILED ||
-          TrackMemoryInterval(&_mmi, (intptr_t)a >> 16, (intptr_t)a >> 16,
-                              sm.maphandle) == -1) {
+          TrackMemoryInterval(&_mmi, a, a, sm.maphandle) == -1) {
         abort();
       }
     }
   }
 }
 
-textstartup void __asan_init(int argc, char *argv[], char **envp,
-                             intptr_t *auxv) {
-  int i;
-  static bool once;
-  register intptr_t rsp asm("rsp");
-  if (!once) {
-    __asan_map_shadow(_base, _end - _base);
-    __asan_map_shadow((void *)ROUNDDOWN(rsp, STACKSIZE), STACKSIZE);
-    for (i = 0; i < argc; ++i) __asan_map_shadow(argv[i], strlen(argv[i]));
-    for (; *envp; ++envp) __asan_map_shadow(*envp, strlen(*envp));
-    __asan_map_shadow(auxv, sizeof(intptr_t) * 2);
-    __asan_install_malloc_hooks();
-    once = true;
+static char *__asan_get_stack_base(void) {
+  register uintptr_t rsp asm("rsp");
+  return (char *)ROUNDDOWN(ROUNDDOWN(rsp, STACKSIZE), FRAMESIZE);
+}
+
+static textstartup size_t __asan_get_auxv_size(intptr_t *auxv) {
+  unsigned i;
+  for (i = 0;; i += 2) {
+    if (!auxv[i]) break;
+  }
+  return (i + 2) * sizeof(intptr_t);
+}
+
+static textstartup void __asan_shadow_string_list(char **list) {
+  for (; *list; ++list) {
+    __asan_map_shadow(*list, strlen(*list) + 1);
   }
 }
 
+textstartup void __asan_init(int argc, char **argv, char **envp,
+                             intptr_t *auxv) {
+  static bool once;
+  if (once) return;
+  __asan_map_shadow(_base, _end - _base);
+  __asan_map_shadow(__asan_get_stack_base(), STACKSIZE);
+  __asan_shadow_string_list(argv);
+  __asan_shadow_string_list(envp);
+  __asan_map_shadow(auxv, __asan_get_auxv_size(auxv));
+  __asan_install_malloc_hooks();
+}
+
 static textstartup void __asan_ctor(void) {
-  /* __cxa_atexit(__asan_morgue_flush, NULL, NULL); */
-  getsymboltable();
+  __cxa_atexit(__asan_morgue_flush, NULL, NULL);
 }
 
 const void *const g_asan_ctor[] initarray = {__asan_ctor};

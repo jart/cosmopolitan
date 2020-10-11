@@ -22,6 +22,8 @@
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
+#include "libc/str/str.h"
+#include "libc/str/tpenc.h"
 #include "libc/str/tpencode.h"
 #include "tool/build/lib/buffer.h"
 
@@ -38,8 +40,13 @@ void AppendStr(struct Buffer *b, const char *s) {
 }
 
 void AppendWide(struct Buffer *b, wint_t wc) {
-  char cbuf[8];
-  AppendData(b, cbuf, tpencode(cbuf, 8, wc, false));
+  uint64_t wb;
+  wb = wc;
+  if (!isascii(wb)) wb = tpenc(wb);
+  do {
+    AppendChar(b, wb & 0xFF);
+    wb >>= 8;
+  } while (wb);
 }
 
 void AppendFmt(struct Buffer *b, const char *fmt, ...) {

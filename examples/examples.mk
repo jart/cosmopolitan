@@ -141,9 +141,9 @@ o/$(MODE)/examples/nesemu1.com.dbg:				\
 		$(APE)
 	@$(APELINK)
 
-o/$(MODE)/usr/share/dict/words: usr/share/dict/words.gz
+usr/share/dict/words: usr/share/dict/words.gz
 	@$(MKDIR) $(dir $@)
-	@$(GZ) $(ZFLAGS) <$< >$@
+	@$(GZ) $(ZFLAGS) -d <$< >$@
 
 o/$(MODE)/examples/ugh.ok: o/$(MODE)/examples/wut.com
 	$<

@@ -1342,7 +1342,7 @@ TEST(paddusw, fuzz) {
 
 TEST(psubb, fuzz) {
   int i, j;
-  int8_t x[16], y[16], a[16], b[16];
+  uint8_t x[16], y[16], a[16], b[16];
   for (i = 0; i < 100; ++i) {
     RngSet(x, sizeof(x));
     RngSet(y, sizeof(y));

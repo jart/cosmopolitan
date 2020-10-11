@@ -23,14 +23,14 @@
 tinymath_ceil:
 	.leafprologue
 	.profilable
-	movsd	.Llol(%rip),%xmm1
-	movsd	.Lcat(%rip),%xmm2
+	movsd	nan(%rip),%xmm1
+	movsd	sig(%rip),%xmm2
 	andpd	%xmm0,%xmm1
 	comisd	%xmm1,%xmm2
 	jbe	1f
 	cvttsd2siq %xmm0,%rax
 	pxor	%xmm1,%xmm1
-	movsd	.Lmog(%rip),%xmm2
+	movsd	one(%rip),%xmm2
 	cvtsi2sdq %rax,%xmm1
 	cmpnlesd %xmm1,%xmm0
 	andpd	%xmm2,%xmm0
@@ -39,16 +39,9 @@ tinymath_ceil:
 	.endfn	tinymath_ceil,globl
 	.alias	tinymath_ceil,ceil
 
-	.rodata.cst16
-.Llol:	.long	4294967295
-	.long	2147483647
-	.long	0
-	.long	0
-
 	.rodata.cst8
-.Lcat:	.long	0
-	.long	1127219200
-.Lmog:	.long	0
-	.long	1072693248
+nan:	.double	nan
+sig:	.double	0x0010000000000000
+one:	.double	1
 
 /	vroundsd $_MM_FROUND_TO_POS_INF|_MM_FROUND_NO_EXC,%xmm0,%xmm0,%xmm0

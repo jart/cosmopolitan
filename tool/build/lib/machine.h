@@ -5,10 +5,6 @@
 #include "tool/build/lib/fds.h"
 #include "tool/build/lib/pml4t.h"
 
-#define kXmmIntegral 0
-#define kXmmDouble   1
-#define kXmmFloat    2
-
 #define kMachineHalt                 -1
 #define kMachineDecodeError          -2
 #define kMachineUndefinedInstruction -3
@@ -28,7 +24,7 @@ struct Machine {
   uint8_t cs[8];
   uint8_t ss[8];
   uint64_t codevirt;
-  uint8_t *codereal;
+  uint8_t *codehost;
   uint32_t mode;
   uint32_t flags;
   uint32_t tlbindex;
@@ -59,13 +55,15 @@ struct Machine {
       uint8_t r15[8];
     };
   };
-  uint8_t *real;
-  uint64_t realsize;
-  uint64_t *cr3;
-  struct TlbEntry {
-    int64_t v;
-    void *r;
+  struct MachineTlb {
+    int64_t virt;
+    uint8_t *host;
   } tlb[16];
+  struct MachineReal {
+    size_t i, n;
+    uint8_t *p;
+  } real;
+  uint64_t cr3;
   uint8_t xmm[16][16] aligned(16);
   uint8_t es[8];
   uint8_t ds[8];
@@ -76,34 +74,34 @@ struct Machine {
     union {
       uint32_t cw;
       struct {
-        unsigned im : 1;  /* invalid operation mask */
-        unsigned dm : 1;  /* denormal operand mask */
-        unsigned zm : 1;  /* zero divide mask */
-        unsigned om : 1;  /* overflow mask */
-        unsigned um : 1;  /* underflow mask */
-        unsigned pm : 1;  /* precision mask */
-        unsigned _p1 : 2; /* reserved */
-        unsigned pc : 2;  /* precision: 32,∅,64,80 */
-        unsigned rc : 2;  /* rounding: even,→-∞,→+∞,→0 */
+        unsigned im : 1;   // invalid operation mask
+        unsigned dm : 1;   // denormal operand mask
+        unsigned zm : 1;   // zero divide mask
+        unsigned om : 1;   // overflow mask
+        unsigned um : 1;   // underflow mask
+        unsigned pm : 1;   // precision mask
+        unsigned _p1 : 2;  // reserved
+        unsigned pc : 2;   // precision: 32,∅,64,80
+        unsigned rc : 2;   // rounding: even,→-∞,→+∞,→0
       };
     };
     union {
       uint32_t sw;
       struct {
-        unsigned ie : 1; /* invalid operation */
-        unsigned de : 1; /* denormalized operand */
-        unsigned ze : 1; /* zero divide */
-        unsigned oe : 1; /* overflow */
-        unsigned ue : 1; /* underflow */
-        unsigned pe : 1; /* precision */
-        unsigned sf : 1; /* stack fault */
-        unsigned es : 1; /* exception summary status */
-        unsigned c0 : 1; /* condition 0 */
-        unsigned c1 : 1; /* condition 1 */
-        unsigned c2 : 1; /* condition 2 */
-        unsigned sp : 3; /* top stack */
-        unsigned c3 : 1; /* condition 3 */
-        unsigned bf : 1; /* busy flag */
+        unsigned ie : 1;  // invalid operation
+        unsigned de : 1;  // denormalized operand
+        unsigned ze : 1;  // zero divide
+        unsigned oe : 1;  // overflow
+        unsigned ue : 1;  // underflow
+        unsigned pe : 1;  // precision
+        unsigned sf : 1;  // stack fault
+        unsigned es : 1;  // exception summary status
+        unsigned c0 : 1;  // condition 0
+        unsigned c1 : 1;  // condition 1
+        unsigned c2 : 1;  // condition 2
+        unsigned sp : 3;  // top stack
+        unsigned c3 : 1;  // condition 3
+        unsigned bf : 1;  // busy flag
       };
     };
     int tw;
@@ -111,28 +109,33 @@ struct Machine {
     int64_t ip;
     int64_t dp;
   } fpu;
-  struct {
+  struct MachineSse {
     union {
       uint32_t mxcsr;
       struct {
-        unsigned ie : 1;  /* invalid operation flag */
-        unsigned de : 1;  /* denormal flag */
-        unsigned ze : 1;  /* divide by zero flag */
-        unsigned oe : 1;  /* overflow flag */
-        unsigned ue : 1;  /* underflow flag */
-        unsigned pe : 1;  /* precision flag */
-        unsigned daz : 1; /* denormals are zeros */
-        unsigned im : 1;  /* invalid operation mask */
-        unsigned dm : 1;  /* denormal mask */
-        unsigned zm : 1;  /* divide by zero mask */
-        unsigned om : 1;  /* overflow mask */
-        unsigned um : 1;  /* underflow mask */
-        unsigned pm : 1;  /* precision mask */
-        unsigned rc : 2;  /* rounding control */
-        unsigned ftz : 1; /* flush to zero */
+        unsigned ie : 1;   // invalid operation flag
+        unsigned de : 1;   // denormal flag
+        unsigned ze : 1;   // divide by zero flag
+        unsigned oe : 1;   // overflow flag
+        unsigned ue : 1;   // underflow flag
+        unsigned pe : 1;   // precision flag
+        unsigned daz : 1;  // denormals are zeros
+        unsigned im : 1;   // invalid operation mask
+        unsigned dm : 1;   // denormal mask
+        unsigned zm : 1;   // divide by zero mask
+        unsigned om : 1;   // overflow mask
+        unsigned um : 1;   // underflow mask
+        unsigned pm : 1;   // precision mask
+        unsigned rc : 2;   // rounding control
+        unsigned ftz : 1;  // flush to zero
       };
     };
   } sse;
+  struct MachineRealFree {
+    uint64_t i;
+    uint64_t n;
+    struct MachineRealFree *next;
+  } * realfree;
   struct FreeList {
     uint32_t i;
     void *p[6];
@@ -141,18 +144,23 @@ struct Machine {
   int64_t bofram[2];
   jmp_buf onhalt;
   int64_t faultaddr;
-  uint8_t stash[4096];
-  uint8_t xmmtype[2][8];
-  uint8_t icache[4096 / 4][40] aligned(16);
   struct MachineFds fds;
+  uint8_t stash[4096];
+  uint8_t icache[1024][40];
 } aligned(64);
 
+struct Machine *NewMachine(void) nodiscard;
+void FreeMachine(struct Machine *);
+void ResetMem(struct Machine *);
 void ResetCpu(struct Machine *);
+void ResetTlb(struct Machine *);
 void LoadInstruction(struct Machine *);
 void ExecuteInstruction(struct Machine *);
-struct Machine *NewMachine(void) nodiscard;
-void LoadArgv(struct Machine *, const char *, char **, char **);
-void InitMachine(struct Machine *);
+long AllocateLinearPage(struct Machine *);
+int ReserveVirtual(struct Machine *, int64_t, size_t);
+char *FormatPml4t(struct Machine *) nodiscard;
+int64_t FindVirtual(struct Machine *, int64_t, size_t);
+int FreeVirtual(struct Machine *, int64_t, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

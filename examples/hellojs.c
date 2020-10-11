@@ -15,6 +15,8 @@
 #include "libc/sysv/consts/o.h"
 #include "third_party/duktape/duktape.h"
 
+STATIC_YOINK("zip_uri_support");
+
 static duk_ret_t NativePrint(duk_context *ctx) {
   duk_push_string(ctx, " ");
   duk_insert(ctx, 0);

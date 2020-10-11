@@ -25,8 +25,10 @@
 /	This turns stuff like (char)0xFF into \0377. The returned
 /	string is word-encoded, e.g. '\\'|'0'<<010|'3'<<020|etc.
 /
+/	@param	dil contains byte to escape
 /	@see	libc/nexgen32e/cescapec.c
 cescapec:
+	movzbl	%dil,%edi
 	lea	-7(%rdi),%ecx
 	cmp	$85,%cl
 	ja	1f
@@ -63,12 +65,11 @@ cescapec:
 	ret
 .LQM:
 #endif
-1:	movzbl	%dil,%eax
-	cmp	$127,%eax
+1:	mov	%edi,%eax
+	lea	-0x20(%rax),%ecx
+	cmp	$0x5E,%ecx
 	ja	2f
-	ezlea	kCtype,cx
-	testb	$16,(%rcx,%rax)
-	jne	3f
+	ret
 2:	and	$-64,%eax
 	mov	%edi,%ecx
 	and	$56,%ecx
@@ -78,7 +79,7 @@ cescapec:
 	or	%ecx,%edi
 	lea	(%rdi,%rax,4),%eax
 	add	$'0<<030|'0<<020|'0<<010|'\\,%eax
-3:	ret
+	ret
 	.endfn	cescapec,globl
 
 	.initro 300,_init_cescapec

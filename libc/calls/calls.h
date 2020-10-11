@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_SYSCALLS_H_
 #define COSMOPOLITAN_LIBC_CALLS_SYSCALLS_H_
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/typedef/sighandler_t.h"
 #include "libc/dce.h"
@@ -58,12 +59,10 @@ struct iovec;
 struct rlimit;
 struct rusage;
 struct sigaction;
-struct siginfo;
 struct sigset;
 struct stat;
 struct sysinfo;
 struct tms;
-struct ucontext;
 struct utsname;
 
 typedef int sig_atomic_t;
@@ -210,6 +209,7 @@ size_t getfiledescriptorsize(int);
 ssize_t copy_file_range(int, long *, int, long *, size_t, uint32_t);
 ssize_t copyfd(int, int64_t *, int, int64_t *, size_t, uint32_t);
 ssize_t read(int, void *, size_t);
+ssize_t readansi(int, char *, size_t);
 ssize_t readlinkat(int, const char *, char *, size_t);
 ssize_t splice(int, int64_t *, int, int64_t *, size_t, uint32_t);
 ssize_t vmsplice(int, const struct iovec *, int64_t, uint32_t);

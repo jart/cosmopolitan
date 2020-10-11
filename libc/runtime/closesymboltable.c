@@ -25,7 +25,7 @@
  * Frees symbol table.
  * @return 0 on success or -1 on system error
  */
-int closesymboltable(struct SymbolTable **table) {
+int CloseSymbolTable(struct SymbolTable **table) {
   int rc;
   struct SymbolTable *t;
   rc = 0;

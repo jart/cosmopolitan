@@ -172,7 +172,12 @@ static void MovqVqWq(struct Machine *m, uint32_t rde) {
 }
 
 static void MovssVpsWps(struct Machine *m, uint32_t rde) {
-  memcpy(XmmRexrReg(m, rde), GetModrmRegisterXmmPointerRead4(m, rde), 4);
+  if (IsModrmRegister(rde)) {
+    memcpy(XmmRexrReg(m, rde), XmmRexbRm(m, rde), 4);
+  } else {
+    memcpy(XmmRexrReg(m, rde), ComputeReserveAddressRead4(m, rde), 4);
+    memset(XmmRexrReg(m, rde) + 4, 0, 12);
+  }
 }
 
 static void MovssWpsVps(struct Machine *m, uint32_t rde) {
@@ -180,11 +185,16 @@ static void MovssWpsVps(struct Machine *m, uint32_t rde) {
 }
 
 static void MovsdVpsWps(struct Machine *m, uint32_t rde) {
-  memcpy(XmmRexrReg(m, rde), GetModrmRegisterXmmPointerRead16(m, rde), 8);
+  if (IsModrmRegister(rde)) {
+    memcpy(XmmRexrReg(m, rde), XmmRexbRm(m, rde), 8);
+  } else {
+    memcpy(XmmRexrReg(m, rde), ComputeReserveAddressRead8(m, rde), 8);
+    memset(XmmRexrReg(m, rde) + 8, 0, 8);
+  }
 }
 
 static void MovsdWpsVps(struct Machine *m, uint32_t rde) {
-  memcpy(GetModrmRegisterXmmPointerWrite16(m, rde), XmmRexrReg(m, rde), 8);
+  memcpy(GetModrmRegisterXmmPointerWrite8(m, rde), XmmRexrReg(m, rde), 8);
 }
 
 static void MovhlpsVqUq(struct Machine *m, uint32_t rde) {

@@ -21,6 +21,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/macros.h"
 #include "libc/runtime/runtime.h"
@@ -47,7 +48,7 @@ ssize_t pread(int fd, void *buf, size_t size, int64_t offset) {
   } else if (!IsWindows()) {
     rc = pread$sysv(fd, buf, size, offset);
   } else if (isfdkind(fd, kFdFile)) {
-    rc = read$nt(&g_fds.p[fd], buf, size, offset);
+    rc = read$nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1, offset);
   } else {
     rc = ebadf();
   }

@@ -36,6 +36,7 @@ TEST_TOOL_BUILD_LIB_DIRECTDEPS =				\
 	LIBC_NEXGEN32E						\
 	LIBC_RUNTIME						\
 	LIBC_FMT						\
+	LIBC_STR						\
 	LIBC_STDIO						\
 	LIBC_LOG						\
 	LIBC_SYSV						\

@@ -23,12 +23,13 @@ ENTRY(_start)
 SECTIONS {
 
   .text 0x7c00 - 0x600 : {
-    *(.start)
+    *(.start .start.*)
     rodata = .;
     *(.rodata .rodata.*)
     . = 0x1fe;
     SHORT(0xaa55);
     *(.text .text.*)
+    BYTE(0x90);
     _etext = .;
     . = ALIGN(512);
   }

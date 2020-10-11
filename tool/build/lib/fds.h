@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_TOOL_BUILD_LIB_FDS_H_
 #define COSMOPOLITAN_TOOL_BUILD_LIB_FDS_H_
+#include "libc/calls/struct/iovec.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -9,8 +10,8 @@ struct MachineFds {
     int fd;
     struct MachineFdCb {
       int (*close)(int);
-      ssize_t (*read)(int, void *, size_t);
-      ssize_t (*write)(int, const void *, size_t);
+      ssize_t (*readv)(int, const struct iovec *, int);
+      ssize_t (*writev)(int, const struct iovec *, int);
       int (*ioctl)(int, uint64_t, void *);
     } * cb;
   } * p;

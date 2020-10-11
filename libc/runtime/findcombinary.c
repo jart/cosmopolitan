@@ -28,25 +28,25 @@ struct FindComBinary {
   char buf[PATH_MAX];
 };
 
-static struct FindComBinary findcombinary_;
+static struct FindComBinary g_findcombinary;
 
 /**
  * Returns path of binary without debug information, or null.
  *
  * @return path to non-debug binary, or -1 w/ errno
  */
-const char *findcombinary(void) {
+const char *FindComBinary(void) {
   size_t len;
   const char *p;
-  if (!findcombinary_.once) {
-    findcombinary_.once = true;
+  if (!g_findcombinary.once) {
+    g_findcombinary.once = true;
     if ((p = (const char *)getauxval(AT_EXECFN)) &&
-        (len = strlen(p)) < ARRAYLEN(findcombinary_.buf)) {
-      findcombinary_.res = memcpy(findcombinary_.buf, p, len + 1);
-      if (len > 4 && memcmp(&findcombinary_.buf[len - 4], ".dbg", 4) == 0) {
-        findcombinary_.buf[len - 4] = '\0';
+        (len = strlen(p)) < ARRAYLEN(g_findcombinary.buf)) {
+      g_findcombinary.res = memcpy(g_findcombinary.buf, p, len + 1);
+      if (len > 4 && memcmp(&g_findcombinary.buf[len - 4], ".dbg", 4) == 0) {
+        g_findcombinary.buf[len - 4] = '\0';
       }
     }
   }
-  return findcombinary_.res;
+  return g_findcombinary.res;
 }

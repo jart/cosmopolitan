@@ -2,7 +2,7 @@
 #define COSMOPOLITAN_LIBC_LINUX_READ_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
-forceinline long LinuxRead(int fd, void *data, unsigned long size) {
+forceinline long LinuxRead(long fd, void *data, unsigned long size) {
   long rc;
   asm volatile("syscall"
                : "=a"(rc), "=m"(*(char(*)[size])data)

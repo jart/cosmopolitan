@@ -28,7 +28,19 @@
 #define TM_ZONE            tm_zone
 #define INITIALIZE(x)      x = 0
 
+STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("usr/share/zoneinfo/Beijing");
+STATIC_YOINK("usr/share/zoneinfo/Berlin");
+STATIC_YOINK("usr/share/zoneinfo/Boulder");
+STATIC_YOINK("usr/share/zoneinfo/Chicago");
 STATIC_YOINK("usr/share/zoneinfo/GST");
+STATIC_YOINK("usr/share/zoneinfo/Honolulu");
+STATIC_YOINK("usr/share/zoneinfo/Israel");
+STATIC_YOINK("usr/share/zoneinfo/Japan");
+STATIC_YOINK("usr/share/zoneinfo/London");
+STATIC_YOINK("usr/share/zoneinfo/Melbourne");
+STATIC_YOINK("usr/share/zoneinfo/New_York");
+STATIC_YOINK("usr/share/zoneinfo/Singapore");
 
 /* clang-format off */
 /*
@@ -807,15 +819,15 @@ getrule(strp, rulep)
 
 static time_t
 transtime(janfirst, year, rulep, offset)
-const time_t				janfirst;
-const int				year;
-register const struct rule * const	rulep;
-const int32_t				offset;
+	const time_t				janfirst;
+	const int				year;
+	register const struct rule * const	rulep;
+	const int32_t				offset;
 {
-	register int	leapyear;
-	register time_t	value;
-	register int	i;
-	int		d, m1, yy0, yy1, yy2, dow;
+	register int				leapyear;
+	register time_t				value;
+	register int				i;
+	int					d, m1, yy0, yy1, yy2, dow;
 
 	INITIALIZE(value);
 	leapyear = isleap(year);
@@ -857,9 +869,9 @@ const int32_t				offset;
 		*/
 		m1 = (rulep->r_mon + 9) % 12 + 1;
 		yy0 = (rulep->r_mon <= 2) ? (year - 1) : year;
-		yy1 = div100int64(yy0);
-		yy2 = rem100int64(yy0);
-		dow = (div10int64(26 * m1 - 2) +
+		yy1 = yy0 / 100;
+		yy2 = yy0 % 100;
+		dow = ((26 * m1 - 2) / 10 +
 			1 + yy2 + yy2 / 4 + yy1 / 4 - 2 * yy1) % 7;
 		if (dow < 0)
 			dow += DAYSPERWEEK;

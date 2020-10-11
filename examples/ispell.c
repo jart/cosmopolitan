@@ -22,6 +22,8 @@
 #include "libc/sysv/consts/fileno.h"
 #include "libc/x/x.h"
 
+STATIC_YOINK("zip_uri_support");
+
 /**
  * @fileoverview Simple Interactive Spell Checker.
  *

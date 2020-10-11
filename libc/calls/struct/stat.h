@@ -3,7 +3,7 @@
 #include "libc/calls/struct/timespec.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
-struct stat {
+struct stat {               /* linux abi */
   int64_t st_dev;           /* 0: id of device with file */
   int64_t st_ino;           /* 8: inode number in disk b-tree */
   int64_t st_nlink;         /* 16: hard link count */

@@ -38,7 +38,7 @@ int(gdbexec)(const char *cmd) {
   char pidstr[11], breakcmd[40];
   if (!(gdb = GetGdbPath())) return -1;
   snprintf(pidstr, sizeof(pidstr), "%u", getpid());
-  if ((elf = finddebugbinary())) {
+  if ((elf = FindDebugBinary())) {
     se = "-se";
   } else {
     se = "-q";

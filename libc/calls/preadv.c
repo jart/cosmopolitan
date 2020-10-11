@@ -48,7 +48,7 @@ ssize_t preadv(int fd, struct iovec *iovec, int count, int64_t off) {
    */
   if (!once) {
     once = true;
-    if (IsLinux() && iovec->iov_len >= __NR_preadv_linux) {
+    if (IsModeDbg() || (IsLinux() && iovec->iov_len >= __NR_preadv_linux)) {
       /*
        * Read size is too large to detect older kernels safely without
        * introducing nontrivial mechanics. We'll try again later.

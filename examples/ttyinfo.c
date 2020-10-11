@@ -16,7 +16,6 @@
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -27,82 +26,138 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/x/x.h"
 
-/*
-  "\e[c"  → "\e[?1;2c"
-  "\e[x"  → "\e[2;1;1;112;112;1;0x"
-  "\e[>c" → "\e[>83;40500;0c"
-  "\e[6n" → "\e[52;1R"
-*/
+#define CTRL(C)                ((C) ^ 0b01000000)
+#define ENABLE_MOUSE_TRACKING  "\e[?1000;1002;1015;1006h"
+#define DISABLE_MOUSE_TRACKING "\e[?1000;1002;1015;1006l"
+#define PROBE_DISPLAY_SIZE     "\e7\e[9979;9979H\e[6n\e8"
 
-#define CTRL(C)               ((C) ^ 0b01000000)
-#define PROBE_VT100           "\e[c"   /* e.g. "\e[?1;2c", "\e[>0c" */
-#define PROBE_SECONDARY       "\e[>c"  /* "\e[>83;40500;0c" (Screen v4.05.00) */
-#define PROBE_PARAMETERS      "\e[x"   /* e.g. "\e[2;1;1;112;112;1;0x" */
-#define PROBE_CURSOR_POSITION "\e[6n"  /* e.g. "\e[𝑦;𝑥R" */
-#define PROBE_SUN_DTTERM_SIZE "\e[14t" /* e.g. "\e[𝑦;𝑥R" */
+char code[512];
+struct winsize wsize;
+struct termios oldterm;
+volatile bool resized, killed;
 
-int fd_;
-jmp_buf jb_;
-ssize_t got_;
-uint8_t buf_[128];
-struct TtyIdent ti_;
-struct winsize wsize_;
-volatile bool resized_;
-
-void OnResize(void) {
-  resized_ = true;
-}
-void OnKilled(int sig) {
-  longjmp(jb_, 128 + sig + 1);
+void onresize(void) {
+  resized = true;
 }
 
-void getsome(void) {
-  if ((got_ = read(fd_, buf_, sizeof(buf_))) == -1 && errno != EINTR) {
-    printf("%s%s\r\n", "error: ", strerror(errno));
-    longjmp(jb_, EXIT_FAILURE + 1);
+void onkilled(int sig) {
+  killed = true;
+}
+
+void restoretty(void) {
+  write(1, DISABLE_MOUSE_TRACKING, strlen(DISABLE_MOUSE_TRACKING));
+  ioctl(1, TCSETS, &oldterm);
+}
+
+int rawmode(void) {
+  static bool once;
+  struct termios t;
+  if (!once) {
+    if (ioctl(1, TCGETS, &oldterm) != -1) {
+      atexit(restoretty);
+    } else {
+      return -1;
+    }
+    once = true;
   }
-  if (got_ >= 0) {
-    printf("%`'.*s\r\n", got_, buf_);
-    if (got_ > 0 && buf_[0] == CTRL('C')) {
-      longjmp(jb_, EXIT_SUCCESS + 1);
+  memcpy(&t, &oldterm, sizeof(t));
+  t.c_cc[VMIN] = 1;
+  t.c_cc[VTIME] = 1;
+  t.c_iflag &= ~(INPCK | ISTRIP | PARMRK | INLCR | IGNCR | ICRNL | IXON |
+                 IGNBRK | BRKINT);
+  t.c_lflag &= ~(IEXTEN | ICANON | ECHO | ECHONL | ISIG);
+  t.c_cflag &= ~(CSIZE | PARENB);
+  t.c_oflag &= ~OPOST;
+  t.c_cflag |= CS8;
+  t.c_iflag |= IUTF8;
+  ioctl(1, TCSETS, &t);
+  write(1, ENABLE_MOUSE_TRACKING, strlen(ENABLE_MOUSE_TRACKING));
+  write(1, PROBE_DISPLAY_SIZE, strlen(PROBE_DISPLAY_SIZE));
+  return 0;
+}
+
+void getsize(void) {
+  if (getttysize(1, &wsize) != -1) {
+    printf("termios says terminal size is %hu×%hu\r\n", wsize.ws_col,
+           wsize.ws_row);
+  } else {
+    printf("%s\n", strerror(errno));
+  }
+}
+
+const char *describemouseevent(int e) {
+  static char buf[64];
+  buf[0] = 0;
+  if (e & 0x10) {
+    strcat(buf, " ctrl");
+  }
+  if (e & 0x40) {
+    strcat(buf, " wheel");
+    if (e & 0x01) {
+      strcat(buf, " down");
+    } else {
+      strcat(buf, " up");
+    }
+  } else {
+    switch (e & 3) {
+      case 0:
+        strcat(buf, " left");
+        break;
+      case 1:
+        strcat(buf, " middle");
+        break;
+      case 2:
+        strcat(buf, " right");
+        break;
+      default:
+        unreachable;
+    }
+    if (e & 0x20) {
+      strcat(buf, " drag");
+    } else if (e & 0x04) {
+      strcat(buf, " up");
+    } else {
+      strcat(buf, " down");
     }
   }
-  if (resized_) {
-    CHECK_NE(-1, getttysize(fd_, &wsize_));
-    printf("SIGWINCH → %hu×%hu\r\n", wsize_.ws_row, wsize_.ws_col);
-    resized_ = false;
-  }
-}
-
-void probe(const char *s) {
-  printf("%`'s → ", s);
-  write(fd_, s, strlen(s));
-  getsome();
+  return buf + 1;
 }
 
 int main(int argc, char *argv[]) {
-  int rc;
-  char ttyname[64];
-  struct termios old;
-  CHECK_NE(-1, (fd_ = open("/dev/tty", O_RDWR)));
-  CHECK_NE(-1, ttyconfig(fd_, ttysetrawmode, 0, &old));
-  if (!(rc = setjmp(jb_))) {
-    xsigaction(SIGTERM, OnKilled, 0, 0, NULL);
-    xsigaction(SIGWINCH, OnResize, 0, 0, NULL);
-    if (ttyident(&ti_, STDIN_FILENO, STDOUT_FILENO) != -1) {
-      ttysendtitle(fd_, "justine was here", &ti_);
-      fputs(ttydescribe(ttyname, sizeof(ttyname), &ti_), stdout);
+  int e, c, y, x, n, yn, xn;
+  xsigaction(SIGTERM, onkilled, 0, 0, NULL);
+  xsigaction(SIGWINCH, onresize, 0, 0, NULL);
+  xsigaction(SIGCONT, onresize, 0, 0, NULL);
+  rawmode();
+  getsize();
+  while (!killed) {
+    if (resized) {
+      printf("SIGWINCH ");
+      getsize();
+      resized = false;
     }
-    fputs("\r\n", stdout);
-    probe(PROBE_VT100);
-    probe(PROBE_SECONDARY);
-    probe(PROBE_PARAMETERS);
-    probe(PROBE_CURSOR_POSITION);
-    /* probe(PROBE_SUN_DTTERM_SIZE); */
-    getsome();
-    for (;;) getsome();
+    if ((n = readansi(0, code, sizeof(code))) == -1) {
+      if (errno == EINTR) continue;
+      printf("ERROR: READ: %s\r\n", strerror(errno));
+      exit(1);
+    }
+    printf("%`'.*s ", n, code);
+    if (iscntrl(code[0]) && !code[1]) {
+      printf("is CTRL-%c a.k.a. ^%c\r\n", CTRL(code[0]), CTRL(code[0]));
+      if (code[0] == CTRL('C') || code[0] == CTRL('D')) break;
+    } else if (startswith(code, "\e[") && endswith(code, "R")) {
+      yn = 1, xn = 1;
+      sscanf(code, "\e[%d;%dR", &yn, &xn);
+      printf("inband signalling says terminal size is %d×%d\r\n", xn, yn);
+    } else if (startswith(code, "\e[<") &&
+               (endswith(code, "m") || endswith(code, "M"))) {
+      e = 0, y = 1, x = 1;
+      sscanf(code, "\e[<%d;%d;%d%c", &e, &y, &x, &c);
+      printf("mouse %s at %d×%d\r\n", describemouseevent(e | (c == 'm') << 2),
+             x, y);
+    } else {
+      printf("\r\n");
+    }
   }
-  ttyrestore(fd_, &old);
-  ttyidentclear(&ti_);
-  return rc - 1;
+  return 0;
 }

@@ -38,8 +38,8 @@
 static struct CmdExe {
   bool result;
   struct OldNtConsole {
-    unsigned codepage;
-    unsigned mode;
+    uint32_t codepage;
+    uint32_t mode;
     int64_t handle;
   } oldin, oldout;
 } g_cmdexe;
@@ -82,6 +82,8 @@ static textwindows void NormalizeCmdExe(void) {
       SetConsoleCP(kNtCpUtf8);
       GetConsoleMode(handle, &g_cmdexe.oldin.mode);
       SetConsoleMode(handle, g_cmdexe.oldin.mode | kNtEnableProcessedInput |
+                                 kNtEnableEchoInput | kNtEnableLineInput |
+                                 kNtEnableWindowInput |
                                  kNtEnableVirtualTerminalInput);
     }
     if (GetFileType((handle = hstdout)) == kNtFileTypeChar ||
@@ -92,7 +94,10 @@ static textwindows void NormalizeCmdExe(void) {
       SetConsoleOutputCP(kNtCpUtf8);
       GetConsoleMode(handle, &g_cmdexe.oldout.mode);
       SetConsoleMode(handle, g_cmdexe.oldout.mode | kNtEnableProcessedOutput |
-                                 kNtEnableVirtualTerminalProcessing);
+                                 kNtEnableWrapAtEolOutput |
+                                 (NtGetVersion() >= kNtVersionWindows10
+                                      ? kNtEnableVirtualTerminalProcessing
+                                      : 0));
     }
   }
 }
@@ -136,11 +141,11 @@ textwindows int WinMain(void *hInstance, void *hPrevInstance,
   *(/*unconst*/ int *)&hostos = WINDOWS;
   cmd16 = GetCommandLine();
   env16 = GetEnvironmentStrings();
-  count = getdosargv(cmd16, argblock, ARG_MAX, argarray, 512);
+  count = GetDosArgv(cmd16, argblock, ARG_MAX, argarray, 512);
   for (i = 0; argarray[0][i]; ++i) {
     if (argarray[0][i] == '\\') argarray[0][i] = '/';
   }
-  getdosenviron(env16, envblock, ENV_MAX, envarray, 512);
+  GetDosEnviron(env16, envblock, ENV_MAX, envarray, 512);
   FreeEnvironmentStrings(env16);
   _executive(count, argarray, envarray, auxarray);
 }

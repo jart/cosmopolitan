@@ -1,10 +1,12 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
+#include "libc/macros.h"
+#include "libc/runtime/runtime.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define kAutomapStart  0x0000100000000000
-#define kAutomapSize   0x0000100000000000
+#define kAutomapStart  0x0000100080000000  // asan can't spread its poison here
+#define kAutomapSize   0x00000fff80000000
 #define kFixedmapStart 0x0000200000000000
 
 struct MemoryIntervals {
@@ -12,8 +14,8 @@ struct MemoryIntervals {
   struct MemoryInterval {
     int x;
     int y;
-  } p[64];
-  long h[64];
+  } p[128];
+  long h[128];
 };
 
 extern struct MemoryIntervals _mmi;

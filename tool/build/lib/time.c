@@ -24,13 +24,14 @@
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/time.h"
 
+/**
+ * @fileoverview i am the timelorde
+ */
+
 void OpPause(struct Machine *m, uint32_t rde) {
   sched_yield();
 }
 
-/**
- * I am the timelorde.
- */
 void OpRdtsc(struct Machine *m, uint32_t rde) {
   uint64_t c;
   struct timespec ts;

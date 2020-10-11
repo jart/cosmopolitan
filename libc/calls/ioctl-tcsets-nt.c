@@ -41,15 +41,23 @@ textwindows int ioctl$tcsets$nt(int ignored, uint64_t request,
       }
       inmode &=
           ~(kNtEnableLineInput | kNtEnableEchoInput | kNtEnableProcessedInput);
+      if (tio->c_lflag & ICANON) inmode |= kNtEnableLineInput;
       if (tio->c_lflag & ECHO) inmode |= kNtEnableEchoInput;
       if (tio->c_lflag & (IEXTEN | ISIG)) inmode |= kNtEnableProcessedInput;
+      inmode |= kNtEnableWindowInput;
+      if (NtGetVersion() >= kNtVersionWindows10) {
+        inmode |= kNtEnableVirtualTerminalInput;
+      }
       SetConsoleMode(in, inmode);
     }
     if (outok) {
-      SetConsoleMode(out, outmode | kNtEnableProcessedOutput |
-                              (NtGetVersion() >= kNtVersionWindows10
-                                   ? kNtEnableVirtualTerminalProcessing
-                                   : 0));
+      outmode |= kNtEnableWrapAtEolOutput;
+      outmode |= kNtEnableProcessedOutput;
+      if (!(tio->c_oflag & OPOST)) outmode |= kNtDisableNewlineAutoReturn;
+      if (NtGetVersion() >= kNtVersionWindows10) {
+        outmode |= kNtEnableVirtualTerminalProcessing;
+      }
+      SetConsoleMode(out, outmode);
     }
     return 0;
   } else {

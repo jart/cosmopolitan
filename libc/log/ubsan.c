@@ -56,7 +56,7 @@ void __ubsan_abort(const struct UbsanSourceLocation *loc,
   g_runstate |= RUNSTATE_BROKEN;
   if (IsDebuggerPresent(false)) DebugBreak();
   startfatal(loc->file, loc->line);
-  fprintf(stderr, "%s\n", description);
+  fprintf(stderr, "%s\r\n", description);
   die();
   unreachable;
 }
@@ -86,7 +86,7 @@ void __ubsan_handle_type_mismatch(struct UbsanTypeMismatchInfo *type_mismatch,
              type_mismatch->alignment);
   } else {
     description = __ubsan_buf;
-    snprintf(__ubsan_buf, sizeof(__ubsan_buf), "%s\n\t%s %s %p %s %s",
+    snprintf(__ubsan_buf, sizeof(__ubsan_buf), "%s\r\n\t%s %s %p %s %s",
              "insufficient size", kind, "address", pointer,
              "with insufficient space for object of type",
              type_mismatch->type->name);

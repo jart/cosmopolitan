@@ -37,8 +37,16 @@ TEST(tpenc, test) {
   EXPECT_EQ(0x8080808080FEul, tpenc(INT_MIN));
 }
 
+TEST(tpenc, theimp) {
+  ASSERT_EQ(0x88989FF0, tpenc(L'😈'));
+}
+
+TEST(tpenc, testBeyondTheStandard) {
+  ASSERT_EQ(0xBFBFBFBFBFFF, tpenc(-1));
+}
+
 uint64_t Tpenc(int x) {
-  return (v = tpenc(x));
+  return (v = tpenc(VEIL("r", x)));
 }
 
 BENCH(tpenc, bench) {
@@ -47,6 +55,7 @@ BENCH(tpenc, bench) {
   EZBENCH(donothing, Tpenc(' '));
   EZBENCH(donothing, Tpenc(0x7f));
   EZBENCH(donothing, Tpenc(L'▄'));
+  EZBENCH(donothing, Tpenc(-1));
   EZBENCH(donothing, Tpenc(INT_MIN));
   fprintf(stderr, "\n");
 }

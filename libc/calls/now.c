@@ -31,13 +31,7 @@ static struct Now {
   bool once;
   uint64_t k0;
   long double r0, cpn;
-} now_;
-
-/**
- * Returns timestamp without needing system calls.
- * @note uses microsecond scale fallback on k8 or vm
- */
-long double (*nowl)(void);
+} g_now;
 
 static long double GetTimeSample(void) {
   uint64_t tick1, tick2;
@@ -48,7 +42,7 @@ static long double GetTimeSample(void) {
   nanosleep(&(struct timespec){0, 100000}, NULL);
   time2 = dtime(CLOCK_MONOTONIC);
   tick2 = rdtsc();
-  return (time2 - time1) * 1e9 / (tick2 - tick1);
+  return (time2 - time1) * 1e9 / MAX(1, tick2 - tick1);
 }
 
 static long double MeasureNanosPerCycle(void) {
@@ -62,15 +56,15 @@ static long double MeasureNanosPerCycle(void) {
 }
 
 static void InitTime(void) {
-  now_.cpn = MeasureNanosPerCycle();
-  now_.r0 = dtime(CLOCK_REALTIME);
-  now_.k0 = rdtsc();
-  now_.once = true;
+  g_now.cpn = MeasureNanosPerCycle();
+  g_now.r0 = dtime(CLOCK_REALTIME);
+  g_now.k0 = rdtsc();
+  g_now.once = true;
 }
 
 long double converttickstonanos(uint64_t ticks) {
-  if (!now_.once) InitTime();
-  return ticks * now_.cpn; /* pico scale */
+  if (!g_now.once) InitTime();
+  return ticks * g_now.cpn; /* pico scale */
 }
 
 long double converttickstoseconds(uint64_t ticks) {
@@ -83,15 +77,7 @@ long double nowl$sys(void) {
 
 long double nowl$art(void) {
   uint64_t ticks;
-  if (!now_.once) InitTime();
-  ticks = unsignedsubtract(rdtsc(), now_.k0);
-  return now_.r0 + converttickstoseconds(ticks);
+  if (!g_now.once) InitTime();
+  ticks = unsignedsubtract(rdtsc(), g_now.k0);
+  return g_now.r0 + converttickstoseconds(ticks);
 }
-
-INITIALIZER(301, _init_nowl, {
-  if (X86_HAVE(INVTSC)) {
-    nowl = nowl$art;
-  } else {
-    nowl = nowl$sys;
-  }
-})

@@ -25,9 +25,6 @@
 
 /	Terminates process, ignoring destructors and atexit() handlers.
 /
-/	Normally exit() or quick_exit() is better. This won't even flush
-/	stdio streams. Sometimes that makes sense, like after fork().
-/
 /	@param	edi is exit code ∈ [0,256)
 /	@note	_exit() is same thing
 /	@asyncsignalsafe

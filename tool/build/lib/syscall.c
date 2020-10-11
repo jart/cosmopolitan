@@ -34,6 +34,8 @@
 #include "libc/log/log.h"
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/vendor.h"
+#include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
@@ -65,6 +67,7 @@
 #include "libc/x/x.h"
 #include "tool/build/lib/case.h"
 #include "tool/build/lib/endian.h"
+#include "tool/build/lib/iovs.h"
 #include "tool/build/lib/machine.h"
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/pml4t.h"
@@ -93,8 +96,8 @@
 
 const struct MachineFdCb kMachineFdCbHost = {
     .close = close,
-    .read = read,
-    .write = write,
+    .readv = readv,
+    .writev = writev,
     .ioctl = ioctl,
 };
 
@@ -281,10 +284,10 @@ static int XlatTcp(int x) {
   switch (x) {
     XLAT(1, TCP_NODELAY);
     XLAT(2, TCP_MAXSEG);
-    XLAT(23, TCP_FASTOPEN);
     XLAT(4, TCP_KEEPIDLE);
     XLAT(5, TCP_KEEPINTVL);
     XLAT(6, TCP_KEEPCNT);
+    XLAT(23, TCP_FASTOPEN);
     default:
       return x;
   }
@@ -398,18 +401,58 @@ static int XlatRusage(int x) {
   }
 }
 
-static void *VirtualSendRead(struct Machine *m, void *dst, int64_t addr,
-                             uint64_t n) {
+static void VirtualSendRead(struct Machine *m, void *dst, int64_t addr,
+                            uint64_t n) {
   VirtualSend(m, dst, addr, n);
   SetReadAddr(m, addr, n);
-  return dst;
 }
 
-static void *VirtualRecvWrite(struct Machine *m, int64_t addr, void *dst,
-                              uint64_t n) {
-  VirtualRecv(m, addr, dst, n);
+static void VirtualRecvWrite(struct Machine *m, int64_t addr, void *src,
+                             uint64_t n) {
+  VirtualRecv(m, addr, src, n);
   SetWriteAddr(m, addr, n);
-  return dst;
+}
+
+static int AppendIovsReal(struct Machine *m, struct Iovs *ib, int64_t addr,
+                          size_t size) {
+  void *real;
+  size_t have;
+  unsigned got;
+  while (size) {
+    if (!(real = FindReal(m, addr))) return efault();
+    have = 0x1000 - (addr & 0xfff);
+    got = MIN(size, have);
+    if (AppendIovs(ib, real, got) == -1) return -1;
+    addr += got;
+    size -= got;
+  }
+  return 0;
+}
+
+static int AppendIovsGuest(struct Machine *m, struct Iovs *iv, int64_t iovaddr,
+                           long iovlen) {
+  int rc;
+  long i, iovsize;
+  struct iovec *guestiovs;
+  if (!__builtin_mul_overflow(iovlen, sizeof(struct iovec), &iovsize) &&
+      (0 <= iovsize && iovsize <= 0x7ffff000)) {
+    if ((guestiovs = malloc(iovsize))) {
+      VirtualSendRead(m, guestiovs, iovaddr, iovsize);
+      for (rc = i = 0; i < iovlen; ++i) {
+        if (AppendIovsReal(m, iv, (intptr_t)guestiovs[i].iov_base,
+                           guestiovs[i].iov_len) == -1) {
+          rc = -1;
+          break;
+        }
+      }
+      free(guestiovs);
+    } else {
+      rc = enomem();
+    }
+  } else {
+    rc = eoverflow();
+  }
+  return rc;
 }
 
 static struct sigaction *CoerceSigactionToCosmo(
@@ -463,44 +506,52 @@ static int OpMadvise(struct Machine *m, int64_t addr, size_t length,
 }
 
 static int64_t OpBrk(struct Machine *m, int64_t addr) {
-  void *real;
-  if (addr && addr != m->brk) {
-    if (addr < m->brk) {
-      addr = ROUNDUP(addr, FRAMESIZE);
-      FreePml4t(m->cr3, addr, m->brk - addr, free, munmap);
+  addr = ROUNDUP(addr, PAGESIZE);
+  if (addr > m->brk) {
+    if (ReserveVirtual(m, m->brk, addr - m->brk) != -1) {
       m->brk = addr;
-    } else {
-      addr = ROUNDUP(addr, FRAMESIZE);
-      if ((real = mmap(NULL, addr - m->brk, PROT_READ | PROT_WRITE,
-                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)) != MAP_FAILED) {
-        CHECK_NE(-1, RegisterMemory(m, m->brk, real, addr - m->brk));
-        m->brk = addr;
-      }
+    }
+  } else if (addr < m->brk) {
+    if (FreeVirtual(m, addr, m->brk - addr) != -1) {
+      m->brk = addr;
     }
   }
   return m->brk;
 }
 
 static int64_t OpMmap(struct Machine *m, int64_t virt, size_t size, int prot,
-                      int flags, int fd, int64_t off) {
-  void *real;
+                      int flags, int fd, int64_t offset) {
+  void *tmp;
+  LOGF("MMAP%s %p %,ld %#x %#x %d %#lx", IsGenuineCosmo() ? " SIMULATED" : "",
+       virt, size, prot, flags, fd, offset);
   flags = XlatMapFlags(flags);
   if (fd != -1 && (fd = XlatFd(m, fd)) == -1) return -1;
-  real = mmap(NULL, size, prot, flags & ~MAP_FIXED, fd, off);
-  if (real == MAP_FAILED) return -1;
   if (!(flags & MAP_FIXED)) {
-    if (0 <= virt && virt < 0x400000) virt = 0x400000;
-    if ((virt = FindPml4t(m->cr3, virt, size)) == -1) return -1;
+    if (!virt) {
+      if ((virt = FindVirtual(m, m->brk, size)) == -1) return -1;
+      m->brk = virt + size;
+    } else {
+      if ((virt = FindVirtual(m, virt, size)) == -1) return -1;
+    }
   }
-  CHECK_NE(-1, RegisterMemory(m, virt, real, size));
+  if (ReserveVirtual(m, virt, size) == -1) return -1;
+  if (fd != -1 && !(flags & MAP_ANONYMOUS)) {
+    /* TODO: lazy page loading */
+    CHECK_NOTNULL((tmp = malloc(size)));
+    CHECK_EQ(size, pread(fd, tmp, size, offset));
+    VirtualRecvWrite(m, virt, tmp, size);
+    free(tmp);
+  }
   return virt;
 }
 
 static int OpMunmap(struct Machine *m, int64_t addr, uint64_t size) {
-  return FreePml4t(m->cr3, addr, size, free, munmap);
+  return FreeVirtual(m, addr, size);
 }
 
 static int OpMsync(struct Machine *m, int64_t virt, size_t size, int flags) {
+  return enosys();
+#if 0
   size_t i;
   void *page;
   virt = ROUNDDOWN(virt, 4096);
@@ -510,42 +561,7 @@ static int OpMsync(struct Machine *m, int64_t virt, size_t size, int flags) {
     if (msync(page, 4096, flags) == -1) return -1;
   }
   return 0;
-}
-
-static void *GetDirectBuf(struct Machine *m, int64_t addr, size_t *size) {
-  void *page;
-  *size = MIN(*size, 0x1000 - (addr & 0xfff));
-  if (!(page = FindReal(m, addr))) return MAP_FAILED;
-  return page;
-}
-
-static struct iovec *GetDirectIov(struct Machine *m, int64_t addr, int *len) {
-  int i;
-  size_t n, size;
-  struct iovec *iov;
-  if (!__builtin_mul_overflow(sizeof(*iov), *len, &n) && n <= 0x7ffff000) {
-    if ((iov = malloc(n))) {
-      VirtualSendRead(m, iov, addr, n);
-      for (i = 0; i < *len; ++i) {
-        size = iov[i].iov_len;
-        if ((iov[i].iov_base = GetDirectBuf(
-                 m, (int64_t)(intptr_t)iov[i].iov_base, &size)) == MAP_FAILED) {
-          free(iov);
-          return (struct iovec *)efault();
-        }
-        if (size < iov[i].iov_len) {
-          iov[i].iov_len = size;
-          *len = i + 1;
-          break;
-        }
-      }
-      return iov;
-    } else {
-      return (struct iovec *)-1;
-    }
-  } else {
-    return (struct iovec *)eoverflow();
-  }
+#endif
 }
 
 static int OpClose(struct Machine *m, int fd) {
@@ -575,36 +591,39 @@ static int OpOpenat(struct Machine *m, int dirfd, int64_t path, int flags,
 }
 
 static int OpPipe(struct Machine *m, int64_t pipefds_addr) {
-  void *p[2];
-  uint8_t b[8];
-  int rc, i, j, *pipefds;
-  if ((i = MachineFdAdd(&m->fds)) == -1) return -1;
-  if ((j = MachineFdAdd(&m->fds)) == -1) return -1;
-  if ((rc = pipe((pipefds = BeginStoreNp(m, pipefds_addr, 8, p, b)))) != -1) {
-    EndStoreNp(m, pipefds_addr, 8, p, b);
-    m->fds.p[i].cb = &kMachineFdCbHost;
-    m->fds.p[i].fd = pipefds[0];
-    m->fds.p[j].cb = &kMachineFdCbHost;
-    m->fds.p[j].fd = pipefds[1];
-  } else {
+  int i, j, pipefds[2];
+  if ((i = MachineFdAdd(&m->fds)) != -1) {
+    if ((j = MachineFdAdd(&m->fds)) != -1) {
+      if (pipe(pipefds) != -1) {
+        m->fds.p[i].cb = &kMachineFdCbHost;
+        m->fds.p[i].fd = pipefds[0];
+        m->fds.p[j].cb = &kMachineFdCbHost;
+        m->fds.p[j].fd = pipefds[1];
+        pipefds[0] = i;
+        pipefds[1] = j;
+        VirtualRecvWrite(m, pipefds_addr, pipefds, sizeof(pipefds));
+        return 0;
+      }
+      MachineFdRemove(&m->fds, j);
+    }
     MachineFdRemove(&m->fds, i);
-    MachineFdRemove(&m->fds, j);
   }
-  return rc;
+  return -1;
 }
 
 static int OpDup(struct Machine *m, int fd) {
-  int i, rc;
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
-  if ((i = MachineFdAdd(&m->fds)) == -1) return -1;
-  if ((rc = dup(fd)) != -1) {
-    m->fds.p[i].cb = &kMachineFdCbHost;
-    m->fds.p[i].fd = rc;
-    rc = i;
-  } else {
-    MachineFdRemove(&m->fds, i);
+  int i;
+  if ((fd = XlatFd(m, fd)) != -1) {
+    if ((i = MachineFdAdd(&m->fds)) != -1) {
+      if ((fd = dup(fd)) != -1) {
+        m->fds.p[i].cb = &kMachineFdCbHost;
+        m->fds.p[i].fd = fd;
+        return i;
+      }
+      MachineFdRemove(&m->fds, i);
+    }
   }
-  return rc;
+  return -1;
 }
 
 static int OpDup2(struct Machine *m, int fd, int newfd) {
@@ -708,24 +727,70 @@ static int OpSetsockopt(struct Machine *m, int fd, int level, int optname,
 }
 
 static ssize_t OpRead(struct Machine *m, int fd, int64_t addr, size_t size) {
-  void *data;
   ssize_t rc;
-  if (!(0 <= fd && fd < m->fds.i) || !m->fds.p[fd].cb) return ebadf();
-  if ((data = GetDirectBuf(m, addr, &size)) == MAP_FAILED) return efault();
-  if ((rc = m->fds.p[fd].cb->read(m->fds.p[fd].fd, data, size)) != -1) {
-    SetWriteAddr(m, addr, rc);
+  struct Iovs iv;
+  InitIovs(&iv);
+  if ((0 <= fd && fd < m->fds.i) && m->fds.p[fd].cb) {
+    if ((rc = AppendIovsReal(m, &iv, addr, size)) != -1) {
+      if ((rc = m->fds.p[fd].cb->readv(m->fds.p[fd].fd, iv.p, iv.i)) != -1) {
+        SetWriteAddr(m, addr, rc);
+      }
+    }
+  } else {
+    rc = ebadf();
   }
+  FreeIovs(&iv);
+  return rc;
+}
+
+static ssize_t OpPread(struct Machine *m, int fd, int64_t addr, size_t size,
+                       int64_t offset) {
+  ssize_t rc;
+  struct Iovs iv;
+  InitIovs(&iv);
+  if ((rc = XlatFd(m, fd)) != -1) {
+    fd = rc;
+    if ((rc = AppendIovsReal(m, &iv, addr, size)) != -1) {
+      if ((rc = preadv(fd, iv.p, iv.i, offset)) != -1) {
+        SetWriteAddr(m, addr, rc);
+      }
+    }
+  }
+  FreeIovs(&iv);
   return rc;
 }
 
 static ssize_t OpWrite(struct Machine *m, int fd, int64_t addr, size_t size) {
-  void *data;
   ssize_t rc;
-  if (!(0 <= fd && fd < m->fds.i) || !m->fds.p[fd].cb) return ebadf();
-  if ((data = GetDirectBuf(m, addr, &size)) == MAP_FAILED) return efault();
-  if ((rc = m->fds.p[fd].cb->write(m->fds.p[fd].fd, data, size)) != -1) {
-    SetReadAddr(m, addr, size);
+  struct Iovs iv;
+  InitIovs(&iv);
+  if ((0 <= fd && fd < m->fds.i) && m->fds.p[fd].cb) {
+    if ((rc = AppendIovsReal(m, &iv, addr, size)) != -1) {
+      if ((rc = m->fds.p[fd].cb->writev(m->fds.p[fd].fd, iv.p, iv.i)) != -1) {
+        SetReadAddr(m, addr, rc);
+      }
+    }
+  } else {
+    rc = ebadf();
   }
+  FreeIovs(&iv);
+  return rc;
+}
+
+static ssize_t OpPwrite(struct Machine *m, int fd, int64_t addr, size_t size,
+                        int64_t offset) {
+  ssize_t rc;
+  struct Iovs iv;
+  InitIovs(&iv);
+  if ((rc = XlatFd(m, fd)) != -1) {
+    fd = rc;
+    if ((rc = AppendIovsReal(m, &iv, addr, size)) != -1) {
+      if ((rc = pwritev(fd, iv.p, iv.i, offset)) != -1) {
+        SetReadAddr(m, addr, rc);
+      }
+    }
+  }
+  FreeIovs(&iv);
   return rc;
 }
 
@@ -746,9 +811,9 @@ static int IoctlTcgets(struct Machine *m, int fd, int64_t addr,
   if ((rc = fn(fd, TCGETS, &tio)) != -1) {
     memcpy(&tio2, &tio, sizeof(tio));
     tio2.c_iflag = 0;
-    if (tio.c_iflag & ISIG) tio2.c_iflag |= ISIG_LINUX;
-    if (tio.c_iflag & ICANON) tio2.c_iflag |= ICANON_LINUX;
-    if (tio.c_iflag & ECHO) tio2.c_iflag |= ECHO_LINUX;
+    if (tio.c_lflag & ISIG) tio2.c_lflag |= ISIG_LINUX;
+    if (tio.c_lflag & ICANON) tio2.c_lflag |= ICANON_LINUX;
+    if (tio.c_lflag & ECHO) tio2.c_lflag |= ECHO_LINUX;
     tio2.c_oflag = 0;
     if (tio.c_oflag & OPOST) tio2.c_oflag |= OPOST_LINUX;
     VirtualRecvWrite(m, addr, &tio2, sizeof(tio2));
@@ -762,9 +827,9 @@ static int IoctlTcsets(struct Machine *m, int fd, int64_t request, int64_t addr,
   VirtualSendRead(m, &tio, addr, sizeof(tio));
   memcpy(&tio2, &tio, sizeof(tio));
   tio2.c_iflag = 0;
-  if (tio.c_iflag & ISIG_LINUX) tio2.c_iflag |= ISIG;
-  if (tio.c_iflag & ICANON_LINUX) tio2.c_iflag |= ICANON;
-  if (tio.c_iflag & ECHO_LINUX) tio2.c_iflag |= ECHO;
+  if (tio.c_lflag & ISIG_LINUX) tio2.c_lflag |= ISIG;
+  if (tio.c_lflag & ICANON_LINUX) tio2.c_lflag |= ICANON;
+  if (tio.c_lflag & ECHO_LINUX) tio2.c_lflag |= ECHO;
   tio2.c_oflag = 0;
   if (tio.c_oflag & OPOST_LINUX) tio2.c_oflag |= OPOST;
   return fn(fd, request, &tio2);
@@ -791,44 +856,34 @@ static int OpIoctl(struct Machine *m, int fd, uint64_t request, int64_t addr) {
   }
 }
 
-static ssize_t OpPread(struct Machine *m, int fd, int64_t addr, size_t size,
-                       int64_t offset) {
-  void *data;
-  ssize_t rc;
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
-  if ((data = GetDirectBuf(m, addr, &size)) == MAP_FAILED) return efault();
-  if ((rc = pread(fd, data, size, offset)) != -1) SetWriteAddr(m, addr, rc);
-  return rc;
-}
-
-static ssize_t OpPwrite(struct Machine *m, int fd, int64_t addr, size_t size,
-                        int64_t offset) {
-  void *data;
-  ssize_t rc;
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
-  if ((data = GetDirectBuf(m, addr, &size)) == MAP_FAILED) return efault();
-  if ((rc = pwrite(fd, data, size, offset)) != -1) SetReadAddr(m, addr, size);
-  return rc;
-}
-
 static ssize_t OpReadv(struct Machine *m, int fd, int64_t iovaddr, int iovlen) {
   ssize_t rc;
-  struct iovec *iov;
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
-  if ((iov = GetDirectIov(m, iovaddr, &iovlen)) == MAP_FAILED) return -1;
-  rc = readv(fd, iov, iovlen);
-  free(iov);
+  struct Iovs iv;
+  InitIovs(&iv);
+  if ((0 <= fd && fd < m->fds.i) && m->fds.p[fd].cb) {
+    if ((rc = AppendIovsGuest(m, &iv, iovaddr, iovlen)) != -1) {
+      rc = m->fds.p[fd].cb->readv(m->fds.p[fd].fd, iv.p, iv.i);
+    }
+  } else {
+    rc = ebadf();
+  }
+  FreeIovs(&iv);
   return rc;
 }
 
 static ssize_t OpWritev(struct Machine *m, int fd, int64_t iovaddr,
                         int iovlen) {
   ssize_t rc;
-  struct iovec *iov;
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
-  if ((iov = GetDirectIov(m, iovaddr, &iovlen)) == MAP_FAILED) return -1;
-  rc = writev(fd, iov, iovlen);
-  free(iov);
+  struct Iovs iv;
+  InitIovs(&iv);
+  if ((0 <= fd && fd < m->fds.i) && m->fds.p[fd].cb) {
+    if ((rc = AppendIovsGuest(m, &iv, iovaddr, iovlen)) != -1) {
+      rc = m->fds.p[fd].cb->writev(m->fds.p[fd].fd, iv.p, iv.i);
+    }
+  } else {
+    rc = ebadf();
+  }
+  FreeIovs(&iv);
   return rc;
 }
 
@@ -850,33 +905,25 @@ static int OpFaccessat(struct Machine *m, int dirfd, int64_t path, int mode,
   return faccessat(dirfd, LoadStr(m, path), mode, flags);
 }
 
-static int OpFstatat(struct Machine *m, int dirfd, int64_t path, int64_t st,
+static int OpFstatat(struct Machine *m, int dirfd, int64_t path, int64_t staddr,
                      int flags) {
   int rc;
-  void *stp[2];
-  uint8_t *stbuf;
+  struct stat st;
   flags = XlatAtf(flags);
   if ((dirfd = XlatAfd(m, dirfd)) == -1) return -1;
-  if (!(stbuf = malloc(sizeof(struct stat)))) return enomem();
-  if ((rc = fstatat(dirfd, LoadStr(m, path),
-                    BeginStoreNp(m, st, sizeof(stbuf), stp, stbuf), flags)) !=
-      -1) {
-    EndStoreNp(m, st, sizeof(stbuf), stp, stbuf);
+  if ((rc = fstatat(dirfd, LoadStr(m, path), &st, flags)) != -1) {
+    VirtualRecvWrite(m, staddr, &st, sizeof(struct stat));
   }
-  free(stbuf);
   return rc;
 }
 
-static int OpFstat(struct Machine *m, int fd, int64_t st) {
+static int OpFstat(struct Machine *m, int fd, int64_t staddr) {
   int rc;
-  void *stp[2];
-  uint8_t *stbuf;
+  struct stat st;
   if ((fd = XlatFd(m, fd)) == -1) return -1;
-  if (!(stbuf = malloc(sizeof(struct stat)))) return enomem();
-  if ((rc = fstat(fd, BeginStoreNp(m, st, sizeof(stbuf), stp, stbuf))) != -1) {
-    EndStoreNp(m, st, sizeof(stbuf), stp, stbuf);
+  if ((rc = fstat(fd, &st)) != -1) {
+    VirtualRecvWrite(m, staddr, &st, sizeof(struct stat));
   }
-  free(stbuf);
   return rc;
 }
 
@@ -1091,21 +1138,34 @@ static int OpGettimeofday(struct Machine *m, int64_t tv, int64_t tz) {
 
 static int OpPoll(struct Machine *m, int64_t fdsaddr, uint64_t nfds,
                   int32_t timeout_ms) {
-  int rc;
-  size_t n;
-  struct pollfd *fds;
-  if (!__builtin_mul_overflow(sizeof(*fds), nfds, &n) && n <= 0x7ffff000) {
-    if ((fds = malloc(n))) {
-      VirtualSendRead(m, fds, fdsaddr, n);
-      rc = poll(fds, nfds, timeout_ms);
-      free(fds);
-      return rc;
+  int count, i;
+  uint64_t fdssize;
+  struct pollfd *hostfds, *guestfds;
+  if (!__builtin_mul_overflow(nfds, sizeof(struct pollfd), &fdssize) &&
+      fdssize <= 0x7ffff000) {
+    hostfds = malloc(fdssize);
+    guestfds = malloc(fdssize);
+    if (hostfds && guestfds) {
+      VirtualSendRead(m, guestfds, fdsaddr, fdssize);
+      memcpy(hostfds, guestfds, fdssize);
+      for (i = 0; i < nfds; ++i) {
+        hostfds[i].fd = XlatFd(m, hostfds[i].fd);
+      }
+      if ((count = poll(hostfds, nfds, timeout_ms)) != -1) {
+        for (i = 0; i < count; ++i) {
+          hostfds[i].fd = guestfds[i].fd;
+        }
+        VirtualRecvWrite(m, fdsaddr, hostfds, count * sizeof(struct pollfd));
+      }
     } else {
-      return enomem();
+      count = enomem();
     }
+    free(guestfds);
+    free(hostfds);
   } else {
-    return einval();
+    count = einval();
   }
+  return count;
 }
 
 static int OpSigprocmask(struct Machine *m, int how, int64_t setaddr,
@@ -1303,7 +1363,7 @@ void OpSyscall(struct Machine *m, uint32_t rde) {
     SYSCALL(0x177, vmsplice(di, P(si), dx, r0));
     CASE(0xE7, HaltMachine(m, di | 0x100));
     default:
-      /* LOGF("missing syscall 0x%03x", ax); */
+      LOGF("missing syscall 0x%03x", ax);
       ax = enosys();
       break;
   }

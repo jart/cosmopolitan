@@ -52,10 +52,10 @@ relegated void __check_fail(const char *suffix, const char *opstr,
   strtoupper(sufbuf);
 
   (fprintf)(stderr,
-            "check failed\n"
-            "\tCHECK_%s(%s, %s);\n"
-            "\t\t → %#lx (%s)\n"
-            "\t\t%s %#lx (%s)\n",
+            "check failed\r\n"
+            "\tCHECK_%s(%s, %s);\r\n"
+            "\t\t → %#lx (%s)\r\n"
+            "\t\t%s %#lx (%s)\r\n",
             sufbuf, wantstr, gotstr, want, wantstr, opstr, got, gotstr);
 
   if (!isempty(fmt)) {
@@ -63,18 +63,18 @@ relegated void __check_fail(const char *suffix, const char *opstr,
     va_start(va, fmt);
     (vfprintf)(stderr, fmt, va);
     va_end(va);
-    fputc('\n', stderr);
+    fputs("\r\n", stderr);
   }
 
-  (fprintf)(stderr, "\t%s\n\t%s%s%s%s\n", strerror(lasterr), SUBTLE,
+  (fprintf)(stderr, "\t%s\r\n\t%s%s%s%s\r\n", strerror(lasterr), SUBTLE,
             getauxval(AT_EXECFN), g_argc > 1 ? " \\" : "", RESET);
 
   for (i = 1; i < g_argc; ++i) {
-    (fprintf)(stderr, "\t\t%s%s\n", g_argv[i], i < g_argc - 1 ? " \\" : "");
+    (fprintf)(stderr, "\t\t%s%s\r\n", g_argv[i], i < g_argc - 1 ? " \\" : "");
   }
 
   if (!IsTiny() && lasterr == ENOMEM) {
-    (fprintf)(stderr, "\n");
+    (fprintf)(stderr, "\r\n");
     fflush(stderr);
     PrintMemoryIntervals(fileno(stderr), &_mmi);
   }

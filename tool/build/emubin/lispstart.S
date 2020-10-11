@@ -17,11 +17,15 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+.code16
+.section .start,"ax",@progbits
 
-	.code16
-	.section .start,"ax",@progbits
 _start:	jmp	1f
 1:	ljmp	$0x600>>4,$_begin
+	.type	_start,@function
+	.size	_start,.-_start
+	.globl	_start
+
 _begin:	push	%cs
 	pop	%ds
 	push	%cs
@@ -42,26 +46,24 @@ _begin:	push	%cs
 	mov	$v_sectors+0x0200,%ax
 	int	$0x13
 	xor	%bp,%bp
-	sub	$6,%sp
-	call	main
-	nop
-	.type	_start,@function
-	.size	_start,.-_start
-	.globl	_start
-	.globl	v_sectors
-	.globl	main
+	jmp	main
+	.type	_begin,@function
+	.size	_begin,.-_begin
 
+	.section .start.setjmp,"ax",@progbits
 setjmp:	mov	%sp,%ax
-	stosw				# sp
+	stosw
 	xchg	%ax,%si
-	movsw	%ss:(%si),(%di)		# ip
+	movsw	%ss:(%si),(%di)
 	mov	%bp,%ax
-	stosw				# bp
-	ret
+	stosw
+	ret	$6
 	.type	setjmp,@function
 	.size	setjmp,.-setjmp
 	.globl	setjmp
+	.previous
 
+	.section .start.longjmp,"ax",@progbits
 longjmp:
 	mov	(%di),%sp
 	mov	2(%di),%dx
@@ -72,23 +74,4 @@ longjmp:
 	.type	longjmp,@function
 	.size	longjmp,.-longjmp
 	.globl	longjmp
-
-	.globl	q.syntax
-	.type	q.syntax,@function
-	.globl	q.look
-	.type	q.look,@function
-	.globl	q.globals
-	.type	q.globals,@function
-	.globl	q.index
-	.type	q.index,@function
-	.globl	q.token
-	.type	q.token,@function
-	.globl	q.str
-	.type	q.str,@function
-
-	.globl	boot
-	.type	boot,@function
-	.globl	bss
-	.type	bss,@function
-	.globl	rodata
-	.type	rodata,@function
+	.previous

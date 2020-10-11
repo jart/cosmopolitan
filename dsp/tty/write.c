@@ -25,6 +25,8 @@
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/termios.h"
 
+/* TODO(jart): DELETE */
+
 /**
  * Sends data to teletypewriter the pain-free way.
  *

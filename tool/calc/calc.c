@@ -368,6 +368,11 @@ static long double FnBsr(struct Numbers *a) {
   return bsr(a->x);
 }
 
+static long double FnBsrl(struct Numbers *a) {
+  if (!a) MissingArgumentError();
+  return bsrl(a->x);
+}
+
 static long double FnBsfl(struct Numbers *a) {
   if (!a) MissingArgumentError();
   return bsfl(a->x);
@@ -610,7 +615,7 @@ static const struct Fn {
     {"bsfl", FnBsfl},
     {"bsfl", FnBsfl},
     {"bsr", FnBsr},
-    {"bsr", FnBsr},
+    {"bsrl", FnBsrl},
     {"cbrt", FnCbrt},
     {"ceil", FnCeil},
     {"copysign", FnCopysign},

@@ -10,7 +10,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define CHECK(X, ...)         __CHK(eq, ==, true, "true", !!(X), #X, "" __VA_ARGS__)
+#define CHECK(X, ...)         __CHK(ne, !=, false, "false", !!(X), #X, "" __VA_ARGS__)
 #define CHECK_EQ(Y, X, ...)   __CHK(eq, ==, Y, #Y, X, #X, "" __VA_ARGS__)
 #define CHECK_NE(Y, X, ...)   __CHK(ne, !=, Y, #Y, X, #X, "" __VA_ARGS__)
 #define CHECK_LE(Y, X, ...)   __CHK(le, <=, Y, #Y, X, #X, "" __VA_ARGS__)
@@ -19,7 +19,7 @@ COSMOPOLITAN_C_START_
 #define CHECK_GT(Y, X, ...)   __CHK(gt, >, Y, #Y, X, #X, "" __VA_ARGS__)
 #define CHECK_NOTNULL(X, ...) __CHK(ne, !=, NULL, "NULL", X, #X, "" __VA_ARGS__)
 
-#define DCHECK(X, ...)       __DCHK(eq, ==, true, "true", !!(X), #X, "" __VA_ARGS__)
+#define DCHECK(X, ...)       __DCHK(ne, !=, false, "false", !!(X), #X, "" __VA_ARGS__)
 #define DCHECK_EQ(Y, X, ...) __DCHK(eq, ==, Y, #Y, X, #X, "" __VA_ARGS__)
 #define DCHECK_NE(Y, X, ...) __DCHK(ne, !=, Y, #Y, X, #X, "" __VA_ARGS__)
 #define DCHECK_LE(Y, X, ...) __DCHK(le, <=, Y, #Y, X, #X, "" __VA_ARGS__)

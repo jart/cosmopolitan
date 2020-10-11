@@ -31,7 +31,7 @@
  *
  * @return path to debug binary, or -1 w/ errno
  */
-const char *finddebugbinary(void) {
+const char *FindDebugBinary(void) {
   static char buf[PATH_MAX];
   if (buf[0]) return &buf[0];
   const char *const trybins[] = {program_invocation_name,

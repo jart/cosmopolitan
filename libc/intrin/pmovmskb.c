@@ -19,6 +19,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/pmovmskb.h"
 
+/**
+ * Turns result of byte comparison into bitmask.
+ *
+ * @param 𝑝 is byte vector to crunch
+ * @see pcmpeqb(), bsf(), etc.
+ */
 uint32_t(pmovmskb)(const uint8_t p[16]) {
   uint32_t i, m;
   for (m = i = 0; i < 16; ++i) {

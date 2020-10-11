@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/arraylist2.h"
 #include "libc/assert.h"
+#include "libc/log/log.h"
 #include "tool/build/lib/breakpoint.h"
 
 void PopBreakpoint(struct Breakpoints *bps) {

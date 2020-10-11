@@ -1,10 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_NT_WINSOCK_H_
 #define COSMOPOLITAN_LIBC_NT_WINSOCK_H_
+#include "libc/nt/struct/guid.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/struct/pollfd.h"
 #include "libc/sock/sock.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
 #if 0
 /* ░▓█████████████████████████████████████████████▓▒
    ░█▓░░░░░░░░░▓██▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██▓▒░
@@ -46,9 +45,8 @@ COSMOPOLITAN_C_START_
 ╚────────────────────────────────────────────────────────────────────────────│*/
 #endif
 
-#define kNtSioSocketCloseNotify 0x9800000Du
-#define kNtSioUdpConnreset      0x9800000Cu
-#define kNtSioUdpNetreset       0x9800000F
+#define kNtWsaFlagOverlapped      0x01
+#define kNtWsaFlagNoHandleInherit 0x80
 
 #define kNtTfDisconnect       0x01
 #define kNtTfReuseSocket      0x02
@@ -56,6 +54,67 @@ COSMOPOLITAN_C_START_
 #define kNtTfUseDefaultWorker 0x00
 #define kNtTfUseSystemThread  0x10
 #define kNtTfUseKernelApc     0x20
+
+#define kNtSoConnectTime          0x700C
+#define kNtSoUpdateAcceptContext  0x700B
+#define kNtSoUpdateConnectContext 0x7010
+
+#define kNtSioAddressListChange           0x28000017u
+#define kNtSioAddressListQuery            0x48000016u
+#define kNtSioAddressListSort             0xC8000019u
+#define kNtSioAssociateHandle             0x88000001u
+#define kNtSioEnableCircularQueueing      0x28000002u
+#define kNtSioFindRoute                   0x48000003u
+#define kNtSioFlush                       0x28000004u
+#define kNtSioGetBroadcastAddress         0x48000005u
+#define kNtSioGetExtensionFunctionPointer 0xC8000006u
+#define kNtSioGetGroupQos                 0xC8000008u
+#define kNtSioGetQos                      0xC8000007u
+#define kNtSioMulticastScope              0x8800000Au
+#define kNtSioMultipointLoopback          0x88000009u
+#define kNtSioQueryRssProcessorInfo       0x48000025u
+#define kNtSioQueryTargetPnpHandle        0x48000018u
+#define kNtSioReserved1                   0x8800001Au
+#define kNtSioReserved2                   0x88000021u
+#define kNtSioRoutingInterfaceChange      0x88000015u
+#define kNtSioRoutingInterfaceQuery       0xC8000014u
+#define kNtSioSetGroupQos                 0x8800000Cu
+#define kNtSioSetQos                      0x8800000Bu
+#define kNtSioSocketCloseNotify           0x9800000Du
+#define kNtSioTranslateHandle             0xC800000Du
+#define kNtSioUdpConnreset                0x9800000Cu
+#define kNtSioUdpNetreset                 0x9800000Fu
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+#define kNtWsaidAcceptex                             \
+  {                                                  \
+    0xB5367DF1, 0xCBAC, 0x11CF, {                    \
+      0x95, 0xCA, 0x00, 0x80, 0x5F, 0x48, 0xA1, 0x92 \
+    }                                                \
+  }
+
+#define kNtWsaidConnectex                            \
+  {                                                  \
+    0x25A207B9, 0xDDF3, 0x4660, {                    \
+      0x8E, 0xE9, 0x76, 0xE5, 0x8C, 0x74, 0x06, 0x3E \
+    }                                                \
+  }
+
+#define kNtWsaidDisconnectex                         \
+  {                                                  \
+    0x7FDA2E11, 0x8630, 0x436F, {                    \
+      0xA0, 0x31, 0xF5, 0x36, 0xA6, 0xEE, 0xC1, 0x57 \
+    }                                                \
+  }
+
+#define kNtWsaidTransmitfile                         \
+  {                                                  \
+    0xB5367DF0, 0xCBAC, 0x11CF, {                    \
+      0x95, 0xCA, 0x00, 0x80, 0x5F, 0x48, 0xA1, 0x92 \
+    }                                                \
+  }
 
 enum NtWsaEComparator { COMP_EQUAL, COMP_NOTLESS };
 
@@ -94,13 +153,6 @@ struct NtWsaData {
   char *lpVendorInfo;
   char szDescription[257];
   char szSystemStatus[129];
-};
-
-struct NtGuid {
-  uint32_t Data1;
-  uint16_t Data2;
-  uint16_t Data3;
-  uint8_t Data4[8];
 };
 
 struct NtSocketAddress {
@@ -511,6 +563,14 @@ void GetAcceptExSockaddrs(
     int *out_LocalSockaddrLength,
     struct sockaddr **out_RemoteSockaddr /*[*RemoteSockaddrLength]*/,
     int *out_RemoteSockaddrLength);
+
+bool32 ConnectEx(int64_t s, const struct sockaddr *name, int namelen,
+                 const void *opt_lpSendBuffer, uint32_t dwSendDataLength,
+                 uint32_t *out_lpdwBytesSent,
+                 struct NtOverlapped *inout_lpOverlapped);
+
+bool32 DisconnectEx(int64_t s, struct NtOverlapped *inout_opt_lpOverlapped,
+                    uint32_t dwFlags, uint32_t dwReserved);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

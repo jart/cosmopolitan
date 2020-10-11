@@ -20,34 +20,34 @@
 #include "libc/runtime/internal.h"
 #include "libc/testlib/testlib.h"
 
-TEST(getdosargv, empty) {
+TEST(GetDosArgv, empty) {
   size_t max = 4;
   size_t size = ARG_MAX;
   char *buf = tmalloc(size * sizeof(char));
   char **argv = tmalloc(max * sizeof(char *));
-  EXPECT_EQ(0, getdosargv(u"", buf, size, argv, max));
+  EXPECT_EQ(0, GetDosArgv(u"", buf, size, argv, max));
   EXPECT_EQ(NULL, argv[0]);
   tfree(argv);
   tfree(buf);
 }
 
-TEST(getdosargv, emptyish) {
+TEST(GetDosArgv, emptyish) {
   size_t max = 4;
   size_t size = ARG_MAX;
   char *buf = tmalloc(size * sizeof(char));
   char **argv = tmalloc(max * sizeof(char *));
-  EXPECT_EQ(0, getdosargv(u"  ", buf, size, argv, max));
+  EXPECT_EQ(0, GetDosArgv(u"  ", buf, size, argv, max));
   EXPECT_EQ(NULL, argv[0]);
   tfree(argv);
   tfree(buf);
 }
 
-TEST(getdosargv, basicUsage) {
+TEST(GetDosArgv, basicUsage) {
   size_t max = 4;
   size_t size = ARG_MAX;
   char *buf = tmalloc(size * sizeof(char));
   char **argv = tmalloc(max * sizeof(char *));
-  EXPECT_EQ(3, getdosargv(u"a\t \"b  c\"  d ", buf, size, argv, max));
+  EXPECT_EQ(3, GetDosArgv(u"a\t \"b  c\"  d ", buf, size, argv, max));
   EXPECT_STREQ("a", argv[0]);
   EXPECT_STREQ("b  c", argv[1]);
   EXPECT_STREQ("d", argv[2]);
@@ -56,12 +56,12 @@ TEST(getdosargv, basicUsage) {
   tfree(buf);
 }
 
-TEST(getdosargv, advancedUsage) {
+TEST(GetDosArgv, advancedUsage) {
   size_t max = 4;
   size_t size = ARG_MAX;
   char *buf = tmalloc(size * sizeof(char));
   char **argv = tmalloc(max * sizeof(char *));
-  EXPECT_EQ(2, getdosargv(u"(╯°□°)╯︵ ┻━┻", buf, size, argv, max));
+  EXPECT_EQ(2, GetDosArgv(u"(╯°□°)╯︵ ┻━┻", buf, size, argv, max));
   EXPECT_STREQ("(╯°□°)╯︵", argv[0]);
   EXPECT_STREQ("┻━┻", argv[1]);
   EXPECT_EQ(NULL, argv[2]);
@@ -69,12 +69,12 @@ TEST(getdosargv, advancedUsage) {
   tfree(buf);
 }
 
-TEST(getdosargv, testAegeanGothicSupplementaryPlanes) {
+TEST(GetDosArgv, testAegeanGothicSupplementaryPlanes) {
   size_t max = 4; /* these symbols are almost as old as dos */
   size_t size = ARG_MAX;
   char *buf = tmalloc(size * sizeof(char));
   char **argv = tmalloc(max * sizeof(char *));
-  EXPECT_EQ(2, getdosargv(u"𐄷𐄸𐄹𐄺𐄻𐄼 𐌰𐌱𐌲𐌳𐌴𐌵𐌶𐌷", buf, size, argv, max));
+  EXPECT_EQ(2, GetDosArgv(u"𐄷𐄸𐄹𐄺𐄻𐄼 𐌰𐌱𐌲𐌳𐌴𐌵𐌶𐌷", buf, size, argv, max));
   EXPECT_STREQ("𐄷𐄸𐄹𐄺𐄻𐄼", argv[0]);
   EXPECT_STREQ("𐌰𐌱𐌲𐌳𐌴𐌵𐌶𐌷", argv[1]);
   EXPECT_EQ(NULL, argv[2]);
@@ -82,12 +82,12 @@ TEST(getdosargv, testAegeanGothicSupplementaryPlanes) {
   tfree(buf);
 }
 
-TEST(getdosargv, realWorldUsage) {
+TEST(GetDosArgv, realWorldUsage) {
   size_t max = 512;
   size_t size = ARG_MAX;
   char *buf = tmalloc(size * sizeof(char));
   char **argv = tmalloc(max * sizeof(char *));
-  EXPECT_EQ(5, getdosargv(u"C:\\Users\\jtunn\\printargs.com oh yes yes yes",
+  EXPECT_EQ(5, GetDosArgv(u"C:\\Users\\jtunn\\printargs.com oh yes yes yes",
                           buf, size, argv, max));
   EXPECT_STREQ("C:\\Users\\jtunn\\printargs.com", argv[0]);
   EXPECT_STREQ("oh", argv[1]);
@@ -99,12 +99,12 @@ TEST(getdosargv, realWorldUsage) {
   tfree(buf);
 }
 
-TEST(getdosargv, bufferOverrun_countIsStillAccurate_truncatesMemoryWithGrace) {
+TEST(GetDosArgv, bufferOverrun_countIsStillAccurate_truncatesMemoryWithGrace) {
   size_t max = 3;
   size_t size = 7;
   char *buf = tmalloc(size * sizeof(char));
   char **argv = tmalloc(max * sizeof(char *));
-  EXPECT_EQ(3, getdosargv(u"a\t \"b  c\"  d ", buf, size, argv, max));
+  EXPECT_EQ(3, GetDosArgv(u"a\t \"b  c\"  d ", buf, size, argv, max));
   EXPECT_STREQ("a", argv[0]);
   EXPECT_STREQ("b  c", argv[1]);
   EXPECT_EQ(NULL, argv[2]);
@@ -112,44 +112,44 @@ TEST(getdosargv, bufferOverrun_countIsStillAccurate_truncatesMemoryWithGrace) {
   tfree(buf);
 }
 
-TEST(getdosargv, pureScanningMode) {
+TEST(GetDosArgv, pureScanningMode) {
   size_t max = 0;
   size_t size = 0;
   char *buf = NULL;
   char **argv = NULL;
-  EXPECT_EQ(3, getdosargv(u"a b c", buf, size, argv, max));
+  EXPECT_EQ(3, GetDosArgv(u"a b c", buf, size, argv, max));
 }
 
-TEST(getdosargv, justSlashQuote) {
+TEST(GetDosArgv, justSlashQuote) {
   size_t max = 4, size = 16;
   char *buf = tmalloc(size * sizeof(char));
   char **argv = tmalloc(max * sizeof(char *));
-  EXPECT_EQ(1, getdosargv(u"\"\\\\\\\"\"", buf, size, argv, max));
+  EXPECT_EQ(1, GetDosArgv(u"\"\\\\\\\"\"", buf, size, argv, max));
   EXPECT_STREQ("\\\"", argv[0]);
   tfree(argv);
   tfree(buf);
 }
 
-TEST(getdosargv, quoteInMiddleOfArg_wontSplitArg) {
+TEST(GetDosArgv, quoteInMiddleOfArg_wontSplitArg) {
   size_t max = 4, size = 16;
   char *buf = tmalloc(size * sizeof(char));
   char **argv = tmalloc(max * sizeof(char *));
-  EXPECT_EQ(1, getdosargv(u"hi\"\"there", buf, size, argv, max));
+  EXPECT_EQ(1, GetDosArgv(u"hi\"\"there", buf, size, argv, max));
   EXPECT_STREQ("hithere", argv[0]);
   max = 4, size = 16;
-  EXPECT_EQ(1, getdosargv(u"hi\" \"there", buf, size, argv, max));
+  EXPECT_EQ(1, GetDosArgv(u"hi\" \"there", buf, size, argv, max));
   EXPECT_STREQ("hi there", argv[0]);
   tfree(argv);
   tfree(buf);
 }
 
-TEST(getdosargv, waqQuoting1) {
+TEST(GetDosArgv, waqQuoting1) {
   size_t max = 4;
   size_t size = ARG_MAX;
   char *buf = tmalloc(size * sizeof(char));
   char **argv = tmalloc(max * sizeof(char *));
   EXPECT_EQ(2,
-            getdosargv(u"a\\\\\"\"\"\"\"\"\"\"b c\" d", buf, size, argv, max));
+            GetDosArgv(u"a\\\\\"\"\"\"\"\"\"\"b c\" d", buf, size, argv, max));
   EXPECT_STREQ("a\\\"\"b", argv[0]);
   EXPECT_STREQ("c d", argv[1]);
   EXPECT_EQ(NULL, argv[2]);
@@ -157,12 +157,12 @@ TEST(getdosargv, waqQuoting1) {
   tfree(buf);
 }
 
-TEST(getdosargv, waqQuoting2) {
+TEST(GetDosArgv, waqQuoting2) {
   size_t max = 4;
   size_t size = ARG_MAX;
   char *buf = tmalloc(size * sizeof(char));
   char **argv = tmalloc(max * sizeof(char *));
-  EXPECT_EQ(2, getdosargv(u"\"a\\\"b c\" d", buf, size, argv, max));
+  EXPECT_EQ(2, GetDosArgv(u"\"a\\\"b c\" d", buf, size, argv, max));
   EXPECT_STREQ("a\"b c", argv[0]);
   EXPECT_STREQ("d", argv[1]);
   EXPECT_EQ(NULL, argv[2]);

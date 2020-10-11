@@ -3,28 +3,11 @@
 
 PKGS += LIBC_TIME
 
-LIBC_TIME_ZONEINFOS =				\
-	Beijing					\
-	Berlin					\
-	Boulder					\
-	Chicago					\
-	GST					\
-	Honolulu				\
-	Israel					\
-	Japan					\
-	London					\
-	Melbourne				\
-	New_York				\
-	Singapore				\
-	Sydney					\
-	UTC
-
 LIBC_TIME_ARTIFACTS += LIBC_TIME_A
+LIBC_TIME_ZONEINFOS = $(wildcard usr/share/zoneinfo/*)
 LIBC_TIME = $(LIBC_TIME_A_DEPS) $(LIBC_TIME_A)
 LIBC_TIME_A = o/$(MODE)/libc/time/time.a
-LIBC_TIME_A_FILES :=				\
-	$(wildcard libc/time/struct/*)		\
-	$(wildcard libc/time/*)
+LIBC_TIME_A_FILES := $(wildcard libc/time/struct/*) $(wildcard libc/time/*)
 LIBC_TIME_A_HDRS := $(filter %.h,$(LIBC_TIME_A_FILES))
 LIBC_TIME_A_SRCS_S = $(filter %.S,$(LIBC_TIME_A_FILES))
 LIBC_TIME_A_SRCS_C = $(filter %.c,$(LIBC_TIME_A_FILES))
@@ -37,7 +20,8 @@ LIBC_TIME_A_OBJS =				\
 	$(LIBC_TIME_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(LIBC_TIME_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(LIBC_TIME_A_SRCS_C:%.c=o/$(MODE)/%.o)	\
-	o//libc/time/zoneinfo.o
+	$(LIBC_TIME_A_SRCS_C:%.c=o/$(MODE)/%.o)	\
+	$(LIBC_TIME_ZONEINFOS:%=o/$(MODE)/%.zip.o)
 
 LIBC_TIME_A_CHECKS =				\
 	$(LIBC_TIME_A).pkg			\
@@ -86,10 +70,6 @@ o/$(MODE)/libc/time/strftime.o:			\
 o/$(MODE)/libc/time/now.o:			\
 		OVERRIDE_CFLAGS +=		\
 			-O3
-
-o//libc/time/zoneinfo.o:			\
-		$(LIBC_TIME_ZONEINFOS:%=usr/share/zoneinfo/%)
-	@build/zipobj $(OUTPUT_OPTION) $(LIBC_TIME_ZONEINFOS:%=usr/share/zoneinfo/%)
 
 LIBC_TIME_LIBS = $(foreach x,$(LIBC_TIME_ARTIFACTS),$($(x)))
 LIBC_TIME_SRCS = $(foreach x,$(LIBC_TIME_ARTIFACTS),$($(x)_SRCS))

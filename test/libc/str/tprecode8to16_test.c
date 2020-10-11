@@ -28,3 +28,9 @@ TEST(tprecode8to16, test) {
   EXPECT_STREQ(u"hello☻♥", buf);
   tfree(buf);
 }
+
+TEST(tprecode8to16, test2) {
+  char16_t b[128];
+  EXPECT_EQ(34, tprecode8to16(b, 128, "(╯°□°)╯︵L┻━┻  𐌰𐌱𐌲𐌳𐌴𐌵𐌶𐌷𐌸𐌹"));
+  EXPECT_STREQ(u"(╯°□°)╯︵L┻━┻  𐌰𐌱𐌲𐌳𐌴𐌵𐌶𐌷𐌸𐌹", b);
+}

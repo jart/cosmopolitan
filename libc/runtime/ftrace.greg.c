@@ -24,6 +24,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
+#include "libc/intrin/repmovsb.h"
 #include "libc/macros.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/nt/files.h"
@@ -50,7 +51,7 @@ static char g_buf[512];
 static const char *g_lastsymbol;
 static struct SymbolTable *g_symbols;
 
-forceinline int getnestinglevel(struct StackFrame *frame) {
+forceinline int GetNestingLevel(struct StackFrame *frame) {
   int nesting = -2;
   while (frame) {
     ++nesting;
@@ -81,7 +82,7 @@ privileged interruptfn void ftrace_hook(void) {
                                       frame->addr - g_symbols->addr_base)]
                                   .name_rva];
     if (symbol != g_lastsymbol &&
-        (nesting = getnestinglevel(frame)) * 2 < ARRAYLEN(g_buf) - 3) {
+        (nesting = GetNestingLevel(frame)) * 2 < ARRAYLEN(g_buf) - 4) {
       i = 2;
       j = 0;
       while (nesting--) {
@@ -91,6 +92,7 @@ privileged interruptfn void ftrace_hook(void) {
       while (i < ARRAYLEN(g_buf) - 2 && symbol[j]) {
         g_buf[i++] = symbol[j++];
       }
+      g_buf[i++] = '\r';
       g_buf[i++] = '\n';
       __print(g_buf, i);
     }
@@ -100,13 +102,42 @@ privileged interruptfn void ftrace_hook(void) {
 }
 
 /**
- * Installs plaintext function tracer. Do not call.
+ * Enables plaintext function tracing if --ftrace flag passed.
+ *
+ * The --ftrace CLI arg is removed before main() is called. This
+ * code is intended for diagnostic purposes and assumes binaries
+ * are trustworthy and stack isn't corrupted. Logging plain text
+ * allows program structure to easily be visualized and hotspots
+ * identified w/ sed | sort | uniq -c | sort. A compressed trace
+ * can be made by appending --ftrace 2>&1 | gzip -4 >trace.gz to
+ * the CLI arguments. Have fun.
+ *
  * @see libc/runtime/_init.S for documentation
  */
-textstartup void ftrace_init(void) {
-  g_buf[0] = '+';
-  g_buf[1] = ' ';
-  if ((g_symbols = opensymboltable(finddebugbinary()))) {
-    __hook(ftrace_hook, g_symbols);
+textstartup int ftrace_init(int argc, char *argv[]) {
+  int i;
+  bool foundflag;
+  foundflag = false;
+  for (i = 1; i <= argc; ++i) {
+    if (!foundflag) {
+      if (argv[i]) {
+        if (strcmp(argv[i], "--ftrace") == 0) {
+          foundflag = true;
+        } else if (strcmp(argv[i], "----ftrace") == 0) {
+          strcpy(argv[i], "--ftrace");
+        }
+      }
+    } else {
+      argv[i - 1] = argv[i];
+    }
   }
+  if (foundflag) {
+    --argc;
+    g_buf[0] = '+';
+    g_buf[1] = ' ';
+    if ((g_symbols = OpenSymbolTable(FindDebugBinary()))) {
+      __hook(ftrace_hook, g_symbols);
+    }
+  }
+  return argc;
 }

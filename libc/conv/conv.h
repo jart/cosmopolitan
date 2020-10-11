@@ -27,9 +27,9 @@ long long llabs(long long) libcesque pureconst;
 char *ltpcpy(char *, long) paramsnonnull() libcesque nocallback;
 int llog10(unsigned long) libcesque pureconst;
 int unsleb128(const void *, size_t, int64_t *);
-int atoi(const char *) paramsnonnull() libcesque nosideeffect;
-long atol(const char *) paramsnonnull() libcesque nosideeffect;
-long long atoll(const char *) paramsnonnull() libcesque nosideeffect;
+int atoi(const char *) paramsnonnull() libcesque;
+long atol(const char *) paramsnonnull() libcesque;
+long long atoll(const char *) paramsnonnull() libcesque;
 unsigned long strtoul(const char *, char **, int) paramsnonnull((1));
 long long strtoll(const char *, char **, int) paramsnonnull((1));
 unsigned long long strtoull(const char *, char **, int) paramsnonnull((1));
@@ -39,8 +39,7 @@ intmax_t strtoimax(const char *, char **, int) paramsnonnull((1));
 uintmax_t strtoumax(const char *, char **, int) paramsnonnull((1));
 intmax_t wcstoimax(const wchar_t *, wchar_t **, int);
 long wcstol(const wchar_t *, wchar_t **, int);
-long strtol(const char *, char **, int)
-    paramsnonnull((1)) libcesque nosideeffect;
+long strtol(const char *, char **, int) paramsnonnull((1)) libcesque;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § conversion » time                                         ─╬─│┼

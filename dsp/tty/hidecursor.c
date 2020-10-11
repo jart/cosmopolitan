@@ -24,6 +24,9 @@
 #include "libc/nt/console.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/consolecursorinfo.h"
+#include "libc/runtime/runtime.h"
+
+/* TODO(jart): DELETE */
 
 static int ttysetcursor(int fd, bool visible) {
   struct NtConsoleCursorInfo ntcursor;

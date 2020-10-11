@@ -29,7 +29,12 @@
 #define __NR_pwritev_linux 0x0128
 
 /**
- * Writes data from multiple buffers to file descriptor at offset.
+ * Writes data from multiple buffers to offset.
+ *
+ * Please note that it's not an error for a short write to happen. This
+ * can happen in the kernel if EINTR happens after some of the write has
+ * been committed. It can also happen if we need to polyfill this system
+ * call using pwrite().
  *
  * @param count is recommended to be 16 or fewer; if it exceeds IOV_MAX
  *     then the extra buffers are simply ignored
@@ -48,7 +53,7 @@ ssize_t pwritev(int fd, const struct iovec *iovec, int count, int64_t off) {
    */
   if (!once) {
     once = true;
-    if (IsLinux() && iovec->iov_len >= __NR_pwritev_linux) {
+    if (IsModeDbg() || (IsLinux() && iovec->iov_len >= __NR_pwritev_linux)) {
       /*
        * Write size is too large to detect older kernels safely without
        * introducing nontrivial mechanics. We'll try again later.

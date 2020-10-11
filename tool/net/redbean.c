@@ -62,6 +62,7 @@
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
+#include "libc/sysv/consts/tcp.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
@@ -1136,10 +1137,13 @@ void ProcessConnection(void) {
   }
 }
 
-static void SetReusePortAndAllowMultipleProcesses(void) {
+static void TuneServerSocket(void) {
   int yes = 1;
   LOGIFNEG1(setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)));
   LOGIFNEG1(setsockopt(server, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(yes)));
+  LOGIFNEG1(setsockopt(server, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes)));
+  LOGIFNEG1(setsockopt(server, IPPROTO_TCP, TCP_FASTOPEN, &yes, sizeof(yes)));
+  LOGIFNEG1(setsockopt(server, IPPROTO_TCP, TCP_QUICKACK, &yes, sizeof(yes)));
 }
 
 void RedBean(void) {
@@ -1147,6 +1151,7 @@ void RedBean(void) {
   programfile = (const char *)getauxval(AT_EXECFN);
   CHECK(OpenZip(programfile));
   xsigaction(SIGINT, OnTerminate, 0, 0, 0);
+  xsigaction(SIGHUP, OnTerminate, 0, 0, 0);
   xsigaction(SIGTERM, OnTerminate, 0, 0, 0);
   xsigaction(SIGCHLD, SIG_IGN, 0, 0, 0);
   xsigaction(SIGPIPE, SIG_IGN, 0, 0, 0);
@@ -1154,7 +1159,7 @@ void RedBean(void) {
   xsigaction(SIGALRM, OnAlarm, 0, 0, 0);
   if (setitimer(ITIMER_REAL, &kHeartbeat, NULL) == -1) notimer = true;
   CHECK_NE(-1, (server = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)));
-  SetReusePortAndAllowMultipleProcesses();
+  TuneServerSocket();
   CHECK_NE(-1, bind(server, &serveraddr, sizeof(serveraddr)));
   CHECK_NE(-1, listen(server, 10));
   DescribeAddress(serveraddrstr, &serveraddr);

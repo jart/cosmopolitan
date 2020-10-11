@@ -30,6 +30,8 @@
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/errfuns.h"
 
+/* TODO(jart): DELETE */
+
 static int ttyident_probe(struct TtyIdent *ti, int ttyinfd, int ttyoutfd,
                           const char *msg) {
   ssize_t rc;

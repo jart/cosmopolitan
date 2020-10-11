@@ -121,10 +121,10 @@ bool32 CreateDirectory(const char16_t *lpPathName,
                        struct NtSecurityAttributes *lpSecurityAttributes);
 bool32 RemoveDirectory(const char16_t *lpPathName);
 
-int32_t DuplicateHandle(int64_t hSourceProcessHandle, int64_t hSourceHandle,
-                        int64_t hTargetProcessHandle, int64_t *lpTargetHandle,
-                        uint32_t dwDesiredAccess, bool32 bInheritHandle,
-                        uint32_t dwOptions);
+bool32 DuplicateHandle(int64_t hSourceProcessHandle, int64_t hSourceHandle,
+                       int64_t hTargetProcessHandle, int64_t *lpTargetHandle,
+                       uint32_t dwDesiredAccess, bool32 bInheritHandle,
+                       uint32_t dwOptions);
 
 bool32 GetHandleInformation(int64_t hObject, uint32_t *out_lpdwFlags);
 bool32 SetHandleInformation(int64_t hObject, uint32_t dwMask, uint32_t dwFlags);
@@ -244,6 +244,7 @@ bool32 ReadFileScatter(
     uint32_t nNumberOfBytesToReadThatsMultipleOfFileVolumeSectorSize,
     uint32_t *lpReserved, struct NtOverlapped *inout_lpOverlapped)
     paramsnonnull();
+
 bool32 WriteFileGather(int64_t hFileOpenedWithOverlappedAndNoBuffering,
                        const union NtFileSegmentElement aSegmentArray[],
                        uint32_t nNumberOfBytesToWrite, uint32_t *lpReserved,

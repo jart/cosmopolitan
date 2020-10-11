@@ -24,15 +24,15 @@
  * Returns debug binary symbol table, as global singleton.
  * @return symbol table, or NULL w/ errno on first call
  */
-struct SymbolTable *getsymboltable(void) {
+struct SymbolTable *GetSymbolTable(void) {
   static bool once;
   static struct SymbolTable *singleton;
   const char *debugbin;
   if (!once) {
     once = true;
-    if ((debugbin = finddebugbinary()) &&
-        (singleton = opensymboltable(debugbin))) {
-      __cxa_atexit(closesymboltable, &singleton, NULL);
+    if ((debugbin = FindDebugBinary()) &&
+        (singleton = OpenSymbolTable(debugbin))) {
+      __cxa_atexit(CloseSymbolTable, &singleton, NULL);
     }
   }
   return singleton;

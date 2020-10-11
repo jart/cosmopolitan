@@ -143,7 +143,14 @@
    "IM_FEELING_NAUGHTY"
    "__REAL_MODE__"
    "__x86__"
-   "__i386__"))
+   "__i386__"
+   "__W__"
+   "__PG__"
+   "__MFENTRY__"
+   "__MNO_VZEROUPPER__"
+   "__FSANITIZE_UNDEFINED__"
+   "__MNOP_MCOUNT__"
+   "__MRECORD_MCOUNT__"))
 
 (defconst cosmo-cpp-constants
   (append cosmo-cpp-constants-c11

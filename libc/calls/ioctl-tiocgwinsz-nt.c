@@ -28,25 +28,36 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int ioctl$tiocgwinsz$nt(int fd, struct winsize *ws) {
+  int i, fds[3];
   uint32_t mode;
   struct NtConsoleScreenBufferInfoEx sbinfo;
-  if (!isfdkind(fd, kFdFile)) return ebadf();
-  if (!GetConsoleMode(g_fds.p[fd].handle, &mode)) return enotty();
-  memset(&sbinfo, 0, sizeof(sbinfo));
-  sbinfo.cbSize = sizeof(sbinfo);
-  if (GetConsoleScreenBufferInfoEx(g_fds.p[fd].handle, &sbinfo)) {
-    ws->ws_col = sbinfo.srWindow.Right - sbinfo.srWindow.Left;
-    ws->ws_row = sbinfo.srWindow.Bottom - sbinfo.srWindow.Top;
-    ws->ws_xpixel = 0;
-    ws->ws_ypixel = 0;
-    return 0;
-  } else if (g_ntstartupinfo.dwFlags & kNtStartfUsecountchars) {
-    ws->ws_col = g_ntstartupinfo.dwXCountChars;
-    ws->ws_row = g_ntstartupinfo.dwYCountChars;
-    ws->ws_xpixel = 0;
-    ws->ws_ypixel = 0;
-    return 0;
-  } else {
-    return winerr();
+  fds[0] = fd, fds[1] = 1, fds[2] = 0;
+  for (i = 0; i < ARRAYLEN(fds); ++i) {
+    if (isfdkind(fds[i], kFdFile) || isfdkind(fds[i], kFdConsole)) {
+      if (GetConsoleMode(g_fds.p[fds[i]].handle, &mode)) {
+        memset(&sbinfo, 0, sizeof(sbinfo));
+        sbinfo.cbSize = sizeof(sbinfo);
+        if (GetConsoleScreenBufferInfoEx(g_fds.p[fds[i]].handle, &sbinfo)) {
+          ws->ws_col = sbinfo.srWindow.Right - sbinfo.srWindow.Left + 1;
+          ws->ws_row = sbinfo.srWindow.Bottom - sbinfo.srWindow.Top + 1;
+          ws->ws_xpixel = 0;
+          ws->ws_ypixel = 0;
+          return 0;
+        } else if (g_ntstartupinfo.dwFlags & kNtStartfUsecountchars) {
+          ws->ws_col = g_ntstartupinfo.dwXCountChars;
+          ws->ws_row = g_ntstartupinfo.dwYCountChars;
+          ws->ws_xpixel = 0;
+          ws->ws_ypixel = 0;
+          return 0;
+        } else {
+          winerr();
+        }
+      } else {
+        enotty();
+      }
+    } else {
+      ebadf();
+    }
   }
+  return -1;
 }

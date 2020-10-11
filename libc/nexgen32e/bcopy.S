@@ -29,4 +29,3 @@
 bcopy:	jmp	memmove
 	.endfn	bcopy,globl
 	.source	__FILE__
-	.source	__FILE__

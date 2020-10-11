@@ -27,9 +27,8 @@ int sleep(uint32_t);
 int usleep(uint32_t);
 int nanosleep(const struct timespec *, struct timespec *);
 unsigned alarm(unsigned);
-int getitimer(int, struct itimerval *) paramsnonnull();
-int setitimer(int, const struct itimerval *, struct itimerval *)
-    paramsnonnull((2));
+int getitimer(int, struct itimerval *);
+int setitimer(int, const struct itimerval *, struct itimerval *);
 
 void tzset(void);
 struct tm *gmtime(const int64_t *);

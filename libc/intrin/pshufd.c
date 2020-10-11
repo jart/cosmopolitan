@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/pshufd.h"
+#include "libc/str/str.h"
 
 /**
  * Shuffles int vector.
@@ -30,8 +31,5 @@ void(pshufd)(int32_t b[4], const int32_t a[4], uint8_t m) {
   t[1] = a[(m & 0b00001100) >> 2];
   t[2] = a[(m & 0b00110000) >> 4];
   t[3] = a[(m & 0b11000000) >> 6];
-  b[0] = t[0];
-  b[1] = t[1];
-  b[2] = t[2];
-  b[3] = t[3];
+  memcpy(b, t, 16);
 }

@@ -18,11 +18,14 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/limits.h"
 #include "libc/runtime/runtime.h"
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 
-textstartup static void strftime_test_init(void) { setenv("TZ", "GST", true); }
+textstartup static void strftime_test_init(void) {
+  setenv("TZ", "GST", true);
+}
 const void *const strftime_test_ctor[] initarray = {strftime_test_init};
 
 testonly char *FormatTime(const char *fmt, struct tm *tm) {
@@ -34,6 +37,12 @@ testonly char *FormatTime(const char *fmt, struct tm *tm) {
 TEST(strftime_100, iso8601_ShakaZuluTime) {
   int64_t t = 0x5cd04d0e;
   ASSERT_STREQ("2019-05-06T15:04:46Z",
+               FormatTime("%Y-%m-%dT%H:%M:%SZ", gmtime(&t)));
+}
+
+TEST(xiso8601, testUnixYearZero) {
+  int64_t t = 0;
+  ASSERT_STREQ("1970-01-01T00:00:00Z",
                FormatTime("%Y-%m-%dT%H:%M:%SZ", gmtime(&t)));
 }
 
@@ -66,3 +75,27 @@ TEST(strftime_201, rfc822_GoogleStandardTime) {
   ASSERT_STREQ("Mon, 06 May 19 08:04:46 -0700",
                FormatTime("%a, %d %b %y %T %z", localtime(&t)));
 }
+
+/* TEST(xiso8601, testModernity_TODO) { */
+/*   int64_t t = (1600 - 1970) * 31536000; */
+/*   ASSERT_STREQ("1600-01-01T00:00:00Z", */
+/*                FormatTime("%Y-%m-%dT%H:%M:%SZ", gmtime(&t))); */
+/* } */
+
+TEST(xiso8601, testAtLeastBetterThanTraditionalUnixLimit) {
+  int64_t t = 10737418235;
+  ASSERT_STREQ("2310-04-04T16:10:35Z",
+               FormatTime("%Y-%m-%dT%H:%M:%SZ", gmtime(&t)));
+}
+
+TEST(xiso8601, testSomethingHuge) {
+  int64_t t = 7707318812667;
+  ASSERT_STREQ("246205-03-18T20:24:27Z",
+               FormatTime("%Y-%m-%dT%H:%M:%SZ", gmtime(&t)));
+}
+
+/* TEST(xiso8601, testMostOfStelliferousEra_TODO) { */
+/*   int64_t t = INT64_MAX; */
+/*   ASSERT_STREQ("somethinghuge-01-01T00:00:00Z", */
+/*                FormatTime("%Y-%m-%dT%H:%M:%SZ", gmtime(&t))); */
+/* } */

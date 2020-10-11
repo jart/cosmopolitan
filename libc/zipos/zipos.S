@@ -19,6 +19,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
+/	static_yoink this symbol for open(zip:...) support.
+	zip_uri_support = 0
+	.globl	zip_uri_support
+
 	.yoink	__zip_start
 	.yoink	__zip_end
 	.yoink	__zipos_close

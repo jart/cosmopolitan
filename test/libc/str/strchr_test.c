@@ -31,6 +31,11 @@ TEST(strchr, text) {
   char buf[] = "hellothere";
   EXPECT_STREQ("there", strchr(buf, 't'));
 }
+TEST(strchr, testsse) {
+  char buf[] = "hellohellohellohellohellohellohellohello"
+               "theretheretheretheretheretheretherethere";
+  EXPECT_STREQ("theretheretheretheretheretheretherethere", strchr(buf, 't'));
+}
 TEST(rawmemchr, text) {
   char buf[] = "hellothere";
   EXPECT_STREQ("there", rawmemchr(buf, 't'));

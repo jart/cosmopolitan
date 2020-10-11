@@ -22,6 +22,7 @@
 #ifndef __STRICT_ANSI__
 #include "libc/bits/safemacros.h"
 #include "libc/str/appendchar.h"
+#include "libc/str/str.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /**
@@ -34,25 +35,28 @@
  * @param max is the pointer count capacity of envp
  * @return number of variables decoded, excluding NULL-terminator
  */
-static inline int getdosenviron(const char16_t *env, char *buf, size_t size,
+static inline int GetDosEnviron(const char16_t *env, char *buf, size_t size,
                                 char **envp, size_t max) {
-  const char16_t *s = env;
-  size_t envc = 0;
+  wint_t wc;
+  size_t envc;
+  char *p, *pe;
+  bool endstring;
+  const char16_t *s;
+  s = env;
+  envc = 0;
   if (size) {
-    wint_t wc;
-    char *p = buf;
-    char *pe = buf + size - 1;
+    p = buf;
+    pe = buf + size - 1;
     if (p < pe) {
-      s += getutf16(s, &wc);
+      wc = DecodeNtsUtf16(&s);
       while (wc) {
         if (++envc < max) {
           envp[envc - 1] = p < pe ? p : NULL;
         }
-        bool endstring;
         do {
           AppendChar(&p, pe, wc);
           endstring = !wc;
-          s += getutf16(s, &wc);
+          wc = DecodeNtsUtf16(&s);
         } while (!endstring);
         buf[min(p - buf, size - 2)] = u'\0';
       }

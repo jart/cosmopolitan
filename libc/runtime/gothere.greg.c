@@ -48,6 +48,7 @@ privileged interruptfn void GOT_HERE(long num) {
   msg[len++] = 'e';
   msg[len++] = ' ';
   len += int64toarray_radix10(num, &msg[len]);
+  msg[len++] = '\r';
   msg[len++] = '\n';
   msg[len] = '\0';
   __print(msg, len);

@@ -31,14 +31,13 @@
 #include "libc/nexgen32e/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 
 #define kBacktraceMaxFrames 128
 #define kBacktraceBufSize   ((kBacktraceMaxFrames - 1) * (16 + 1))
 
-static int PrintBacktraceUsingAddr2line(FILE *f, const struct StackFrame *bp) {
+static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   ssize_t got;
   intptr_t addr;
   size_t i, j, gi;
@@ -47,7 +46,7 @@ static int PrintBacktraceUsingAddr2line(FILE *f, const struct StackFrame *bp) {
   const struct StackFrame *frame;
   const char *debugbin, *p1, *p2, *p3, *addr2line;
   char buf[kBacktraceBufSize], *argv[kBacktraceMaxFrames];
-  if (!(debugbin = finddebugbinary()) || !(addr2line = GetAddr2linePath())) {
+  if (!(debugbin = FindDebugBinary()) || !(addr2line = GetAddr2linePath())) {
     return -1;
   }
   i = 0;
@@ -88,11 +87,11 @@ static int PrintBacktraceUsingAddr2line(FILE *f, const struct StackFrame *bp) {
                        strlen(" (discriminator ") - 1)) &&
           (p3 = memchr(p2, '\n', got - (p2 - p1)))) {
         if (p3 > p2 && p3[-1] == '\r') --p3;
-        fwrite(p1, 1, p2 - p1, f);
+        write(fd, p1, p2 - p1);
         got -= p3 - p1;
         p1 += p3 - p1;
       } else {
-        fwrite(p1, 1, got, f);
+        write(fd, p1, got);
         break;
       }
     }
@@ -103,20 +102,21 @@ static int PrintBacktraceUsingAddr2line(FILE *f, const struct StackFrame *bp) {
   return 0;
 }
 
-static int PrintBacktrace(FILE *f, const struct StackFrame *bp) {
+static int PrintBacktrace(int fd, const struct StackFrame *bp) {
   if (!IsTiny()) {
-    if (PrintBacktraceUsingAddr2line(f, bp) != -1) {
+    if (PrintBacktraceUsingAddr2line(fd, bp) != -1) {
       return 0;
     }
   }
-  return PrintBacktraceUsingSymbols(f, bp, getsymboltable());
+  return PrintBacktraceUsingSymbols(fd, bp, GetSymbolTable());
 }
 
-void showbacktrace(FILE *f, const struct StackFrame *bp) {
+void ShowBacktrace(int fd, const struct StackFrame *bp) {
   static bool noreentry;
+  if (!bp) bp = __builtin_frame_address(0);
   if (!noreentry) {
     noreentry = true;
-    PrintBacktrace(f, bp);
+    PrintBacktrace(fd, bp);
     noreentry = 0;
   }
 }

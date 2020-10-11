@@ -22,6 +22,8 @@
 #include "libc/runtime/gc.h"
 #include "libc/x/x.h"
 
+/* TODO(jart): DELETE */
+
 /**
  * Changes text in title bar of pseudo-teletypewriter window.
  *
