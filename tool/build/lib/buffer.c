@@ -49,16 +49,17 @@ void AppendWide(struct Buffer *b, wint_t wc) {
   } while (wb);
 }
 
-void AppendFmt(struct Buffer *b, const char *fmt, ...) {
-  int size;
+int AppendFmt(struct Buffer *b, const char *fmt, ...) {
+  int bytes;
   char *tmp;
   va_list va;
   tmp = NULL;
   va_start(va, fmt);
-  size = vasprintf(&tmp, fmt, va);
+  bytes = vasprintf(&tmp, fmt, va);
   va_end(va);
-  if (size != -1) AppendData(b, tmp, size);
+  if (bytes != -1) AppendData(b, tmp, bytes);
   free(tmp);
+  return bytes;
 }
 
 /**

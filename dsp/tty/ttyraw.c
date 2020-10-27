@@ -158,6 +158,5 @@ textstartup int ttyraw(enum TtyRawFlags flags) {
   } else {
     rc = ttyraw_disable();
   }
-  cancolor();
   return rc;
 }

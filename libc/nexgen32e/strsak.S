@@ -105,15 +105,6 @@ strnlen_s:
 	.leafepilogue
 	.endfn	strnlen_s,globl
 
-/	Returns length of NUL-terminated string.
-/
-/	@param	rdi is non-null NUL-terminated string pointer
-/	@return	rax is the number of bytes, excluding the NUL
-/	@asyncsignalsafe
-strlen:	or	$-1,%rsi
-/	𝑠𝑙𝑖𝑑𝑒
-	.endfn	strlen,globl
-
 /	Returns length of NUL-terminated memory, with limit.
 /
 /	@param	rdi is non-null memory
@@ -129,7 +120,7 @@ strnlen:.leafprologue
 	.endfn	strnlen,globl
 
 /	Swiss army knife of string character scanning.
-/	Sixteen fast functions in one.
+/	Fourteen fast functions in one.
 /
 /	@param	rdi is non-null string memory
 /	@param	rsi is max number of bytes to consider

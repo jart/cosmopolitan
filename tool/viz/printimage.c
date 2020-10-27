@@ -399,7 +399,6 @@ void WithImageFile(const char *path,
 
 int main(int argc, char *argv[]) {
   int i;
-  cancolor();
   GetOpts(&argc, argv);
   stbi_set_unpremultiply_on_load(true);
   for (i = optind; i < argc; ++i) {

@@ -58,6 +58,14 @@ o/$(MODE)/tool/build/emubin/%.elf:			\
 		$(ELF)
 	@$(ELFLINK)
 
+o/$(MODE)/tool/build/emubin/lisp.elf:			\
+		$(TOOL_BUILD_EMUBIN_DEPS)		\
+		$(TOOL_BUILD_EMUBIN_A)			\
+		o/$(MODE)/tool/build/emubin/lisp.o	\
+		o/$(MODE)/tool/build/emubin/lispelf.o	\
+		$(ELF)
+	@$(ELFLINK)
+
 o/dbg/tool/build/emubin/lisp.real.com.dbg:		\
 		$(TOOL_BUILD_EMUBIN_DEPS)		\
 		$(TOOL_BUILD_EMUBIN_A)			\
@@ -69,6 +77,13 @@ o/dbg/tool/build/emubin/lisp.real.com.dbg:		\
 o/$(MODE)/tool/build/emubin/lisp.bin.dbg:		\
 		$(TOOL_BUILD_EMUBIN_DEPS)		\
 		o/$(MODE)/tool/build/emubin/lisp.real.o	\
+		o/$(MODE)/tool/build/emubin/lispstart.o	\
+		tool/build/emubin/lisp.lds
+	@$(ELFLINK) -z max-page-size=0x10
+
+o/$(MODE)/tool/build/emubin/love.bin.dbg:		\
+		$(TOOL_BUILD_EMUBIN_DEPS)		\
+		o/$(MODE)/tool/build/emubin/love.o	\
 		o/$(MODE)/tool/build/emubin/lispstart.o	\
 		tool/build/emubin/lisp.lds
 	@$(ELFLINK) -z max-page-size=0x10

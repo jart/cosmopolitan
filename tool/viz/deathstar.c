@@ -1,7 +1,9 @@
 #include "dsp/tty/tty.h"
+#include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/log/check.h"
+#include "libc/log/color.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"
 #include "libc/math.h"
@@ -21,10 +23,10 @@
 #define WRITE(s)  write(STDOUT_FILENO, s, strlen(s))
 
 struct Sphere {
-  double cx, cy, cz, r;
+  long double cx, cy, cz, r;
 };
 
-const char *kShades[] = {
+static const char *kShades[] = {
     "\e[48;5;232m ", "\e[48;5;233m ", "\e[48;5;234m ", "\e[48;5;235m ",
     "\e[48;5;236m ", "\e[48;5;237m ", "\e[48;5;238m ", "\e[48;5;239m ",
     "\e[48;5;240m ", "\e[48;5;241m ", "\e[48;5;242m ", "\e[48;5;243m ",
@@ -33,52 +35,53 @@ const char *kShades[] = {
     "\e[48;5;252m ", "\e[48;5;253m ", "\e[48;5;254m ", "\e[48;5;255m ",
 };
 
-jmp_buf jb_;
-double light_[3] = {-50, 0, 50};
-struct Sphere pos_ = {11, 11, 11, 11};
-struct Sphere neg_ = {1, 1, -4, 11};
+static jmp_buf jb_;
+static long double light_[3] = {-50, 0, 50};
+static struct Sphere pos_ = {11, 11, 11, 11};
+static struct Sphere neg_ = {1, 1, -4, 11};
 
 static void OnCtrlC(int sig) {
   longjmp(jb_, 1);
 }
 
-static void Normalize(double v[3]) {
-  double len;
-  len = 1 / sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+static void Normalize(long double v[3]) {
+  long double len;
+  len = 1 / sqrtl(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
   v[0] *= len;
   v[1] *= len;
   v[2] *= len;
 }
 
-static double Dot(const double x[3], const double y[3]) {
-  return fabs(x[0] * y[0] + x[1] * y[1] + x[2] * y[2]);
+static long double Dot(const long double x[3], const long double y[3]) {
+  return fabsl(x[0] * y[0] + x[1] * y[1] + x[2] * y[2]);
 }
 
 /* check if a ray (x,y, -inf)->(x, y, inf) hits a sphere; if so, return
    the intersecting z values.  z1 is closer to the eye */
-static int HitSphere(struct Sphere *s, double x, double y, double z[2]) {
-  double zsq;
+static int HitSphere(struct Sphere *s, long double x, long double y,
+                     long double z[2]) {
+  long double zsq;
   x -= s->cx;
   y -= s->cy;
   zsq = s->r * s->r - (x * x + y * y);
   if (zsq < 0) {
     return 0;
   } else {
-    zsq = sqrt(zsq);
+    zsq = sqrtl(zsq);
     z[0] = s->cz - zsq;
     z[1] = s->cz + zsq;
     return 1;
   }
 }
 
-static void DrawSphere(double k, double ambient) {
+static void DrawSphere(long double k, long double ambient) {
   int i, j, hit_result;
-  double x, y, vec[3], zb[2], zs[2];
-  for (i = floor(pos_.cy - pos_.r); i <= ceil(pos_.cy + pos_.r); i++) {
-    y = i + .5;
-    for (j = floor(pos_.cx - 2 * pos_.r); j <= ceil(pos_.cx + 2 * pos_.r);
+  long double x, y, vec[3], zb[2], zs[2];
+  for (i = floorl(pos_.cy - pos_.r); i <= ceill(pos_.cy + pos_.r); i++) {
+    y = i + .5L;
+    for (j = floorl(pos_.cx - 2 * pos_.r); j <= ceill(pos_.cx + 2 * pos_.r);
          j++) {
-      x = .5 * (j - pos_.cx) + .5 + pos_.cx;
+      x = .5L * (j - pos_.cx) + .5L + pos_.cx;
       if (!HitSphere(&pos_, x, y, zb)) {
         /* ray lands in blank space, draw bg */
         hit_result = 0;
@@ -114,10 +117,10 @@ static void DrawSphere(double k, double ambient) {
           break;
       }
       Normalize(vec);
-      WRITE(
-          kShades[MIN(ARRAYLEN(kShades) - 1,
-                      MAX(0, lround((1 - (pow(Dot(light_, vec), k) + ambient)) *
-                                    (ARRAYLEN(kShades) - 1))))]);
+      WRITE(kShades[min(
+          ARRAYLEN(kShades) - 1,
+          max(0, lroundl((1 - (powl(Dot(light_, vec), k) + ambient)) *
+                         (ARRAYLEN(kShades) - 1))))]);
     }
     WRITE("\e[0m\n");
   }
@@ -125,7 +128,7 @@ static void DrawSphere(double k, double ambient) {
 }
 
 int main() {
-  double ang;
+  long double ang;
   struct termios old;
   if (cancolor()) {
     WRITE("\e[?25l");
@@ -134,13 +137,12 @@ int main() {
       ang = 0;
       for (;;) {
         WRITE("\e[H");
-        light_[1] = cos(ang * 2);
-        light_[2] = cos(ang);
-        light_[0] = sin(ang);
+        light_[1] = cosl(ang * 2);
+        sincosl(ang, &light_[0], &light_[2]);
         Normalize(light_);
-        ang += .05;
-        DrawSphere(1.5, .01);
-        usleep(1. / FRAMERATE * 1e6);
+        ang += .05L;
+        DrawSphere(1.5L, .01L);
+        usleep(1.L / FRAMERATE * 1e6);
       }
     }
     WRITE("\e[0m\e[H\e[J\e[?25h");

@@ -1,2 +1,2 @@
 .include "libc/sysv/consts/syscon.inc"
-.syscon mmap MAP_FIXED 16 16 16 16 16
+.syscon mmap MAP_FIXED 0x10 0x10 0x10 0x10 0x10

@@ -23,5 +23,5 @@
 
 onntconsoleevent$nt:
 	ezlea	onntconsoleevent,ax
-	jmp	nt2sysv
+	jmp	__nt2sysv
 	.endfn	onntconsoleevent$nt,globl,hidden

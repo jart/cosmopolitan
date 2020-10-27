@@ -4,11 +4,11 @@
 
 #define CompilerBarrier() asm volatile("" ::: "memory");
 
-#define TYPE(x) /* a.k.a. x&1 */                              \
-  ({                                                          \
-    char IsAtom;                                              \
-    asm("test%z1\t$1,%1" : "=@ccnz"(IsAtom) : "Qm"((char)x)); \
-    IsAtom;                                                   \
+#define ISATOM(x) /* a.k.a. !(x&1) */                        \
+  ({                                                         \
+    _Bool IsAtom;                                            \
+    asm("test%z1\t$1,%1" : "=@ccz"(IsAtom) : "Qm"((char)x)); \
+    IsAtom;                                                  \
   })
 
 #define OBJECT(t, v) /* a.k.a. v<<1|t */ \
@@ -112,9 +112,6 @@
     }                                                                  \
   } while (0)
 
-int setjmp(void *) __attribute__((__returns_twice__));
-int longjmp(void *, int) __attribute__((__noreturn__));
-
 static inline void *SetMemory(void *di, int al, unsigned long cx) {
   asm("rep stosb"
       : "=D"(di), "=c"(cx), "=m"(*(char(*)[cx])di)
@@ -170,6 +167,7 @@ static int ReadChar(void) {
   int c;
 #ifdef __REAL_MODE__
   asm volatile("int\t$0x16" : "=a"(c) : "0"(0) : "memory");
+  c &= 0xff;
 #else
   static int buf;
   asm volatile("syscall"

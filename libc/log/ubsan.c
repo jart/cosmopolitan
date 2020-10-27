@@ -55,7 +55,7 @@ void __ubsan_abort(const struct UbsanSourceLocation *loc,
   }
   g_runstate |= RUNSTATE_BROKEN;
   if (IsDebuggerPresent(false)) DebugBreak();
-  startfatal(loc->file, loc->line);
+  __start_fatal(loc->file, loc->line);
   fprintf(stderr, "%s\r\n", description);
   die();
   unreachable;
@@ -74,7 +74,7 @@ void __ubsan_handle_type_mismatch(struct UbsanTypeMismatchInfo *type_mismatch,
                                   uintptr_t pointer) {
   struct UbsanSourceLocation *loc = &type_mismatch->location;
   const char *description;
-  const char *kind = indexdoublenulstring(kUbsanTypeCheckKinds,
+  const char *kind = IndexDoubleNulString(kUbsanTypeCheckKinds,
                                           type_mismatch->type_check_kind);
   if (pointer == 0) {
     description = "null pointer access";

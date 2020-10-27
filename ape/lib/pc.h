@@ -128,7 +128,7 @@
 /* Long Mode Paging
    @see Intel Manual V.3A §4.1 §4.5
                                           IsValid (ignored on CR3) V┐
-     ┌Block Instr. Fetches (if NXE)  IsWritable (ignored on CR3) RW┐│
+     ┌XD:No Inst. Fetches (if NXE)   IsWritable (ignored on CR3) RW┐│
      │                                 Permit User-Mode Access - u┐││
      │                             Page-level Write-Through - PWT┐│││
      │                            Page-level Cache Disable - PCD┐││││
@@ -147,7 +147,6 @@
      ││   ││     ││├──────────────────┐        │        ││ ││││││││││
      ││   ││     │││ Phys. Addr. 1GB  │        │        ││ ││││││││││
      ││   ││     │││                  │        │        ││ ││││││││││
-     0b00000000000011111111111111111111111111111111111111000000000000
      6666555555555544444444443333333333222222222211111111110000000000
      3210987654321098765432109876543210987654321098765432109876543210*/
 #define PAGE_V   /*                                    */ 0b000000001

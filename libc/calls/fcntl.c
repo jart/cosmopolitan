@@ -31,7 +31,12 @@
  * @return 0 on success, or -1 w/ errno
  * @asyncsignalsafe
  */
-int fcntl(int fd, int cmd, int arg) {
+int fcntl(int fd, int cmd, ...) {
+  va_list va;
+  unsigned arg;
+  va_start(va, cmd);
+  arg = va_arg(va, unsigned);
+  va_end(va);
   if (!IsWindows()) {
     return fcntl$sysv(fd, cmd, arg);
   } else {

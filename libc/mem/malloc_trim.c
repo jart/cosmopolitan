@@ -17,27 +17,15 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/str.h"
-#include "libc/testlib/ezbench.h"
-#include "libc/testlib/hyperion.h"
-#include "libc/testlib/testlib.h"
+#include "libc/mem/mem.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 
-#if 0
-void *isnotplaintext(const void *, size_t)
-    __attribute__((__pure__, __leaf__, __nothrow__));
-#endif
-
-TEST(isnotplaintext, test) {
-  EXPECT_EQ(NULL, isnotplaintext(kHyperion, kHyperionSize));
-  EXPECT_STREQ("", isnotplaintext(kHyperion, kHyperionSize + 1));
-}
-
-char *doit(char *data, size_t size) {
-  data = isnotplaintext(data, size);
-  asm volatile("" : "+r"(data));
-  return data;
-}
-
-BENCH(isnotplaintext, bench) {
-  EZBENCH(donothing, doit(kHyperion, kHyperionSize));
+/**
+ * Releases freed memory back to system.
+ *
+ * @param pad can specify how many bytes of memory to leave available
+ * @return 1 if it actually released any memory, else 0
+ */
+int malloc_trim(size_t pad) {
+  return dlmalloc_trim(pad);
 }

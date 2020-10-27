@@ -35,6 +35,7 @@
 #include "tool/build/lib/machine.h"
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/modrm.h"
+#include "tool/build/lib/op101.h"
 #include "tool/build/lib/sse.h"
 #include "tool/build/lib/ssefloat.h"
 #include "tool/build/lib/ssemov.h"
@@ -883,9 +884,6 @@ static void OpBsubiImm(struct Machine *m, uint32_t rde) {
   Bsubi(m, rde, m->xedd->op.uimm0);
 }
 
-static void OpLgdtMs(struct Machine *m, uint32_t rde) {
-}
-
 static void OpPushImm(struct Machine *m, uint32_t rde) {
   Push(m, rde, m->xedd->op.uimm0);
 }
@@ -1328,21 +1326,6 @@ static void Op0ff(struct Machine *m, uint32_t rde) {
   kOp0ff[ModrmReg(rde)](m, rde);
 }
 
-static void Op101(struct Machine *m, uint32_t rde) {
-  if (IsModrmRegister(rde)) {
-    if (ModrmReg(rde) == 0b111 && ModrmRm(rde) == 0b001) {
-      OpRdtscp(m, rde);
-      return;
-    }
-  } else {
-    if (ModrmReg(rde) == 2) {
-      OpLgdtMs(m, rde);
-      return;
-    }
-  }
-  OpUd(m, rde);
-}
-
 static void OpDoubleShift(struct Machine *m, uint32_t rde) {
   uint8_t *p;
   uint64_t x;
@@ -1397,6 +1380,44 @@ static void OpNop(struct Machine *m, uint32_t rde) {
     OpPause(m, rde);
   } else {
     OpNoop(m, rde);
+  }
+}
+
+static void OpMovRqCq(struct Machine *m, uint32_t rde) {
+  switch (ModrmReg(rde)) {
+    case 0:
+      Write64(RegRexbRm(m, rde), m->cr0);
+      break;
+    case 2:
+      Write64(RegRexbRm(m, rde), m->cr2);
+      break;
+    case 3:
+      Write64(RegRexbRm(m, rde), m->cr3);
+      break;
+    case 4:
+      Write64(RegRexbRm(m, rde), m->cr4);
+      break;
+    default:
+      OpUd(m, rde);
+  }
+}
+
+static void OpMovCqRq(struct Machine *m, uint32_t rde) {
+  switch (ModrmReg(rde)) {
+    case 0:
+      m->cr0 = Read64(RegRexbRm(m, rde));
+      break;
+    case 2:
+      m->cr2 = Read64(RegRexbRm(m, rde));
+      break;
+    case 3:
+      m->cr3 = Read64(RegRexbRm(m, rde));
+      break;
+    case 4:
+      m->cr4 = Read64(RegRexbRm(m, rde));
+      break;
+    default:
+      OpUd(m, rde);
   }
 }
 
@@ -1689,9 +1710,9 @@ static const nexgen32e_f kNexgen32e[] = {
     [0x11D] = OpHintNopEv,
     [0x11E] = OpUd,
     [0x11F] = OpNopEv,
-    [0x120] = OpUd,
+    [0x120] = OpMovRqCq,
     [0x121] = OpUd,
-    [0x122] = OpUd,
+    [0x122] = OpMovCqRq,
     [0x123] = OpUd,
     [0x124] = OpUd,
     [0x125] = OpUd,

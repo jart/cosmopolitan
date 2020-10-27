@@ -1603,7 +1603,6 @@ int main(int argc, char *argv[]) {
   sigaddset(&wut, SIGPIPE);
   sigprocmask(SIG_SETMASK, &wut, NULL);
   if (!NoDebug()) showcrashreports();
-  cancolor();
   fullclear_ = true;
   GetOpts(argc, argv);
   if (!tuned_) PickDefaults();
@@ -1613,7 +1612,7 @@ int main(int argc, char *argv[]) {
   ffplay_ = commandvenv("FFPLAY", "ffplay");
   infd_ = STDIN_FILENO;
   outfd_ = STDOUT_FILENO;
-  nullfd_ = open("/dev/null", O_APPEND | O_RDWR | O_NONBLOCK);
+  nullfd_ = open("/dev/null", O_APPEND | O_RDWR);
   if (!setjmp(jb_)) {
     xsigaction(SIGINT, OnCtrlC, 0, 0, NULL);
     xsigaction(SIGHUP, OnCtrlC, 0, 0, NULL);
@@ -1625,11 +1624,11 @@ int main(int argc, char *argv[]) {
     __cxa_atexit(OnExit, NULL, NULL);
     g_logfile = fopen(logpath_, "a");
     if (ischardev(infd_) && ischardev(outfd_)) {
-      CHECK_NE(-1, fcntl(infd_, F_SETFL, O_NONBLOCK));
+      /* CHECK_NE(-1, fcntl(infd_, F_SETFL, O_NONBLOCK)); */
     } else if (infd_ != outfd_) {
       infd_ = -1;
     }
-    CHECK_NE(-1, fcntl(outfd_, F_SETFL, O_NONBLOCK));
+    /* CHECK_NE(-1, fcntl(outfd_, F_SETFL, O_NONBLOCK)); */
     if (CanPlayAudio()) MakeLatencyLittleLessBad();
     TryToOpenFrameBuffer();
     RenounceSpecialPrivileges();

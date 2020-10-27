@@ -34,7 +34,7 @@
 STATIC_YOINK("die");
 STATIC_YOINK("__ubsan_abort");
 
-extern const unsigned char kOncrashThunks[7][11];
+extern const unsigned char __oncrash_thunks[7][11];
 
 /**
  * Installs crash signal handlers.
@@ -73,7 +73,7 @@ void showcrashreports(void) {
   }
   for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
     if (kCrashSigs[i]) {
-      sa.sa_sigaction = (sigaction_f)kOncrashThunks[i];
+      sa.sa_sigaction = (sigaction_f)__oncrash_thunks[i];
       sigaction(kCrashSigs[i], &sa, &g_oldcrashacts[i]);
     }
   }

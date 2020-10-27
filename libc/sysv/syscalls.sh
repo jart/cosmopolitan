@@ -91,7 +91,7 @@ scall	'socketpair$sysv'	0x0087008720870035	globl hidden
 scall	'setsockopt$sysv'	0x0069006920690036	globl hidden
 scall	'getsockopt$sysv'	0x0076007620760037	globl hidden
 scall	'fork$sysv'		0x0002000220020039	globl hidden
-scall	vfork			0x004200422042003a	globl
+#scall	vfork			0x004200422042003a	globl # needs to be called via vfork.S
 scall	posix_spawn		0xffffffff20f4ffff	globl hidden # TODO: put in spawnve()
 scall	'execve$sysv'		0x003b003b203b003b	globl hidden
 scall	'wait4$sysv'		0x000b00072007003d	globl hidden

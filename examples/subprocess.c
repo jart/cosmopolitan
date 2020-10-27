@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
    *
    * 1. gc() automates calling free() on return.
    * 2. xasprintf("foo %s", "bar") is our version of "foo %s" % ("bar")
-   * 3. Demonstrates correct escaping for bourne shell cf. xaescapeshq()
+   * 3. Demonstrates correct escaping for bourne shell
    */
   if (!fileexists(kProgram)) {
     system(gc(xasprintf("%s '%s'", "make -j4",

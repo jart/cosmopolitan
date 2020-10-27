@@ -17,48 +17,34 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/intrin/pcmpeqb.h"
+#include "libc/intrin/pmovmskb.h"
+#include "libc/nexgen32e/bsf.h"
+#include "libc/str/str.h"
 
 /**
- * Checks if memory address contains non-plain text.
+ * Returns length of NUL-terminated string.
  *
- * @param data points to memory that's interpreted as char
- * @param size is usually strlen(data) and provided by caller
- * @return NULL if plain text, or pointer to first non-text datum
- * @type char may be 6/7/8/16/32/64-bit signed/unsigned single/multi
- * @author Justine Alexandra Roberts Tunney <jtunney@gmail.com>
- * @see ASA X3.4, ISO/IEC 646, ITU T.50, ANSI X3.64-1979
- * @perf 27gBps on i7-6700 w/ -O3 -mavx2
- * @cost 143 bytes of code w/ -Os
+ * @param s is non-null NUL-terminated string pointer
+ * @return number of bytes (excluding NUL)
+ * @asyncsignalsafe
  */
-void *isnotplaintext(const void *data, size_t size) {
-  /*
-   * ASCII, EBCDIC, UNICODE, ISO IR-67, etc. all agree upon the
-   * encoding of the NUL, SOH, STX, and ETX characters due to a
-   * longstanding human tradition of using them for the purpose
-   * of delimiting text from non-text, b/c fixed width integers
-   * makes their presence in binary formats nearly unavoidable.
-   */
-#define isnotplain(C) (0 <= (C) && (C) < 4)
-  char no;
-  unsigned i;
-  const char *p, *pe;
-  if (CHAR_BIT > 6) {
-    p = (const char *)data;
-    pe = (const char *)(p + size);
-    for (; ((intptr_t)p & 31) && p < pe; ++p) {
-      if (isnotplain(*p)) return p;
-    }
-    for (; p + 64 < pe; p += 64) {
-      no = 0;
-      for (i = 0; i < 64; ++i) {
-        no |= isnotplain(p[i]);
-      }
-      if (no & 1) break;
-    }
-    for (; p < pe; ++p) {
-      if (isnotplain(*p)) return p;
-    }
+size_t strlen(const char *s) {
+  const char *p;
+  unsigned k, m;
+  uint8_t v1[16], vz[16];
+  k = (uintptr_t)s & 15;
+  p = (const char *)((uintptr_t)s & -16);
+  memset(vz, 0, 16);
+  memcpy(v1, p, 16);
+  pcmpeqb(v1, v1, vz);
+  m = pmovmskb(v1) >> k << k;
+  while (!m) {
+    p += 16;
+    memcpy(v1, p, 16);
+    pcmpeqb(v1, v1, vz);
+    m = pmovmskb(v1);
   }
-  return 0;
-#undef isnotplain
+  return p + bsf(m) - s;
 }

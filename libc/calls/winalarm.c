@@ -17,12 +17,15 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/escape/escape.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/sig.h"
 
-/**
- * Delegates to escapec(), allocating as much memory as needed.
- * @return bytes written excluding NUL, or -1 on alloc error or overflow
- */
-int aescapec(char **escaped, const char *unescaped, unsigned length) {
-  return aescape(escaped, 32, unescaped, length, escapec);
+void __winalarm(void *lpArgToCompletionRoutine, uint32_t dwTimerLowValue,
+                uint32_t dwTimerHighValue) {
+  siginfo_t info;
+  memset(&info, 0, sizeof(info));
+  info.si_signo = SIGALRM;
+  __sigenter(info.si_signo, &info, NULL);
 }

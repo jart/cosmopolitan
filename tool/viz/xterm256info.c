@@ -700,7 +700,7 @@ int main(int argc, char *argv[]) {
   for (i = 0; i < 256; ++i) {
     printf("\e[48;5;%dm  \e[0m \e[38;5;%dm██\e[0m \e[1;48;5;%dm  "
            "\e[0m \e[1;38;5;%dm██\e[0m %-6hhu%-18s#%02hhx%02hhx%02hhx\n",
-           i, i, i, i, i, indexdoublenulstring(kXtermName, i), kXtermRgb[i].r,
+           i, i, i, i, i, IndexDoubleNulString(kXtermName, i), kXtermRgb[i].r,
            kXtermRgb[i].g, kXtermRgb[i].b);
   }
   return 0;

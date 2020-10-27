@@ -35,7 +35,7 @@ const char *geterrname(int code) {
   n = &EXFULL + 1 - e;
   for (i = 0; i < n; ++i) {
     if (code == e[i]) {
-      return indexdoublenulstring(kErrnoNames, i);
+      return IndexDoubleNulString(kErrnoNames, i);
     }
   }
   return NULL;

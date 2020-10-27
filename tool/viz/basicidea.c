@@ -248,7 +248,6 @@ int main(int argc, char *argv[]) {
   void *rgb;
   size_t size;
   unsigned yn, xn;
-  cancolor();
   GetTermSize(&yn, &xn);
   yn *= 2;
   size = yn * xn * 4;

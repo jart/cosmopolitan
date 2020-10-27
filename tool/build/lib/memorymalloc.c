@@ -35,7 +35,6 @@
 struct Machine *NewMachine(void) {
   struct Machine *m;
   m = xmemalignzero(alignof(struct Machine), sizeof(struct Machine));
-  m->mode = XED_MACHINE_MODE_LONG_64;
   ResetCpu(m);
   ResetMem(m);
   return m;
@@ -60,11 +59,20 @@ void FreeMachine(struct Machine *m) {
 void ResetMem(struct Machine *m) {
   FreeMachineRealFree(m);
   ResetTlb(m);
+  memset(&m->memstat, 0, sizeof(m->memstat));
   m->real.i = 0;
-  m->cr3 = AllocateLinearPage(m);
+  m->cr3 = 0;
 }
 
 long AllocateLinearPage(struct Machine *m) {
+  long page;
+  if ((page = AllocateLinearPageRaw(m)) != -1) {
+    memset(m->real.p + page, 0, 0x1000);
+  }
+  return page;
+}
+
+long AllocateLinearPageRaw(struct Machine *m) {
   uint8_t *p;
   size_t i, n;
   struct MachineRealFree *rf;
@@ -79,6 +87,8 @@ long AllocateLinearPage(struct Machine *m) {
       m->realfree = rf->next;
       free(rf);
     }
+    --m->memstat.freed;
+    ++m->memstat.reclaimed;
   } else {
     i = m->real.i;
     n = m->real.n;
@@ -94,6 +104,7 @@ long AllocateLinearPage(struct Machine *m) {
         m->real.p = p;
         m->real.n = n;
         ResetTlb(m);
+        ++m->memstat.resizes;
       } else {
         return -1;
       }
@@ -102,8 +113,9 @@ long AllocateLinearPage(struct Machine *m) {
     DCHECK_EQ(0, n & 0xfff);
     DCHECK_LE(i + 0x1000, n);
     m->real.i += 0x1000;
+    ++m->memstat.allocated;
   }
-  memset(m->real.p + i, 0, 0x1000); /* TODO: lazy page clearing */
+  ++m->memstat.committed;
   return i;
 }
 
@@ -117,22 +129,49 @@ static void MachineWrite64(struct Machine *m, unsigned long i, uint64_t x) {
   Write64(m->real.p + i, x);
 }
 
-int ReserveVirtual(struct Machine *m, int64_t virt, size_t size) {
-  int64_t level, pt, ti, mi, end;
-  for (end = virt + size; virt < end; virt += 0x1000) {
-    for (pt = m->cr3, level = 39; level >= 12; level -= 9) {
-      pt = pt & 0x00007ffffffff000;
-      ti = (virt >> level) & 511;
-      DEBUGF("reserve %p level %d table %p index %ld", virt, level, pt, ti);
-      mi = pt + ti * 8;
-      pt = MachineRead64(m, mi);
-      if (!(pt & 1)) {
-        if ((pt = AllocateLinearPage(m)) == -1) return -1;
-        MachineWrite64(m, mi, pt | 7);
-      }
+int ReserveReal(struct Machine *m, size_t n) {
+  uint8_t *p;
+  DCHECK_EQ(0, n & 0xfff);
+  if (m->real.n < n) {
+    if ((p = realloc(m->real.p, n))) {
+      m->real.p = p;
+      m->real.n = n;
+      ResetTlb(m);
+      ++m->memstat.resizes;
+    } else {
+      return -1;
     }
   }
   return 0;
+}
+
+int ReserveVirtual(struct Machine *m, int64_t virt, size_t size, uint64_t key) {
+  int64_t ti, mi, pt, end, level;
+  for (end = virt + size;;) {
+    for (pt = m->cr3, level = 39; level >= 12; level -= 9) {
+      pt = pt & 0x7ffffffff000;
+      ti = (virt >> level) & 511;
+      mi = (pt & 0x7ffffffff000) + ti * 8;
+      pt = MachineRead64(m, mi);
+      if (level > 12) {
+        if (!(pt & 1)) {
+          if ((pt = AllocateLinearPage(m)) == -1) return -1;
+          MachineWrite64(m, mi, pt | 7);
+          ++m->memstat.pagetables;
+        }
+        continue;
+      }
+      for (;;) {
+        if (!(pt & 1)) {
+          MachineWrite64(m, mi, key);
+          ++m->memstat.reserved;
+        }
+        if ((virt += 0x1000) >= end) return 0;
+        if (++ti == 512) break;
+        pt = MachineRead64(m, (mi += 8));
+      }
+    }
+  }
 }
 
 int64_t FindVirtual(struct Machine *m, int64_t virt, size_t size) {
@@ -154,30 +193,39 @@ int64_t FindVirtual(struct Machine *m, int64_t virt, size_t size) {
   return virt;
 }
 
-int FreeVirtual(struct Machine *m, int64_t base, size_t size) {
+static void AppendRealFree(struct Machine *m, uint64_t real) {
   struct MachineRealFree *rf;
-  uint64_t i, mi, pt, la, end, virt;
-  for (virt = base, end = virt + size; virt < end;) {
+  if (m->realfree && real == m->realfree->i + m->realfree->n) {
+    m->realfree->n += 0x1000;
+  } else if ((rf = malloc(sizeof(struct MachineRealFree)))) {
+    rf->i = real;
+    rf->n = 0x1000;
+    rf->next = m->realfree;
+    m->realfree = rf;
+  }
+}
+
+int FreeVirtual(struct Machine *m, int64_t base, size_t size) {
+  uint64_t i, mi, pt, end, virt;
+  for (virt = base, end = virt + size; virt < end; virt += 1ull << i) {
     for (pt = m->cr3, i = 39;; i -= 9) {
       mi = (pt & 0x7ffffffff000) + ((virt >> i) & 511) * 8;
       pt = MachineRead64(m, mi);
       if (!(pt & 1)) {
         break;
       } else if (i == 12) {
-        MachineWrite64(m, mi, 0);
-        la = pt & 0x7ffffffff000;
-        if (m->realfree && la == m->realfree->i + m->realfree->n) {
-          m->realfree->n += 0x1000;
-        } else if ((rf = malloc(sizeof(struct MachineRealFree)))) {
-          rf->i = la;
-          rf->n = 0x1000;
-          rf->next = m->realfree;
-          m->realfree = rf;
+        ++m->memstat.freed;
+        if (pt & 0x0e00) {
+          --m->memstat.reserved;
+        } else {
+          --m->memstat.committed;
+          AppendRealFree(m, pt & 0x7ffffffff000);
         }
+        MachineWrite64(m, mi, 0);
         break;
       }
     }
-    virt += 1ull << i;
   }
+  ResetTlb(m);
   return 0;
 }

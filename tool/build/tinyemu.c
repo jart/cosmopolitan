@@ -17,18 +17,21 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/log/log.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
+#include "libc/calls/calls.h"
+#include "libc/log/check.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/x/x.h"
 #include "tool/build/lib/loader.h"
 #include "tool/build/lib/machine.h"
-#include "tool/build/lib/memory.h"
-#include "tool/build/lib/pty.h"
 #include "tool/build/lib/syscall.h"
+
+static void AddHostFd(struct Machine *m, int fd) {
+  int i = m->fds.i++;
+  CHECK_NE(-1, (m->fds.p[i].fd = dup(fd)));
+  m->fds.p[i].cb = &kMachineFdCbHost;
+}
 
 int main(int argc, char *argv[]) {
   int rc;
@@ -42,15 +45,10 @@ int main(int argc, char *argv[]) {
   }
   m = NewMachine();
   LoadProgram(m, argv[1], argv + 2, environ, &elf);
-  m->fds.i = 3;
-  m->fds.n = 8;
-  m->fds.p = xcalloc(m->fds.n, sizeof(struct MachineFd));
-  m->fds.p[0].fd = STDIN_FILENO;
-  m->fds.p[0].cb = &kMachineFdCbHost;
-  m->fds.p[1].fd = STDOUT_FILENO;
-  m->fds.p[1].cb = &kMachineFdCbHost;
-  m->fds.p[2].fd = STDERR_FILENO;
-  m->fds.p[2].cb = &kMachineFdCbHost;
+  m->fds.p = xcalloc((m->fds.n = 8), sizeof(struct MachineFd));
+  AddHostFd(m, STDIN_FILENO);
+  AddHostFd(m, STDOUT_FILENO);
+  AddHostFd(m, STDERR_FILENO);
   if (!(rc = setjmp(m->onhalt))) {
     for (;;) {
       LoadInstruction(m);

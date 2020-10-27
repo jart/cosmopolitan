@@ -19,6 +19,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "tool/build/lib/stats.h"
 
-unsigned long ops;
 unsigned long taken;
 unsigned long ntaken;
+unsigned long opcount;

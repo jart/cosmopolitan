@@ -668,7 +668,6 @@ int main(int argc, char *argv[]) {
         break;
     }
   }
-  cancolor();
   showcrashreports();
   for (i = optind; i < argc; ++i) {
     WithImageFile(argv[i], scaler);

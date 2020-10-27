@@ -24,69 +24,69 @@
 /	caused the crash, particularly in the GDB GUI. They're coded
 /	into an array to pinch pennies on code size registering them.
 
-kOncrashThunks:
+__oncrash_thunks:
 
 	.org	11*0
-oncrash_sigquit:
+__oncrash_sigquit:
 	push	%rbp
 	mov	%rsp,%rbp
-	call	oncrash
+	call	__oncrash
 	pop	%rbp
 	ret
-	.endfn	oncrash_sigquit,globl
+	.endfn	__oncrash_sigquit,globl
 
 	.org	11*1
-oncrash_sigfpe:
+__oncrash_sigfpe:
 	push	%rbp
 	mov	%rsp,%rbp
-	call	oncrash
+	call	__oncrash
 	pop	%rbp
 	ret
-	.endfn	oncrash_sigfpe,globl
+	.endfn	__oncrash_sigfpe,globl
 
 	.org	11*2
-oncrash_sigill:
+__oncrash_sigill:
 	push	%rbp
 	mov	%rsp,%rbp
-	call	oncrash
+	call	__oncrash
 	pop	%rbp
 	ret
-	.endfn	oncrash_sigill,globl
+	.endfn	__oncrash_sigill,globl
 
 	.org	11*3
-oncrash_sigsegv:
+__oncrash_sigsegv:
 	push	%rbp
 	mov	%rsp,%rbp
-	call	oncrash
+	call	__oncrash
 	pop	%rbp
 	ret
-	.endfn	oncrash_sigsegv,globl
+	.endfn	__oncrash_sigsegv,globl
 
 	.org	11*4
-oncrash_sigtrap:
+__oncrash_sigtrap:
 	push	%rbp
 	mov	%rsp,%rbp
-	call	oncrash
+	call	__oncrash
 	pop	%rbp
 	ret
-	.endfn	oncrash_sigtrap,globl
+	.endfn	__oncrash_sigtrap,globl
 
 	.org	11*5
-oncrash_sigabrt:
+__oncrash_sigabrt:
 	push	%rbp
 	mov	%rsp,%rbp
-	call	oncrash
+	call	__oncrash
 	pop	%rbp
 	ret
-	.endfn	oncrash_sigabrt,globl
+	.endfn	__oncrash_sigabrt,globl
 
 	.org	11*6
-oncrash_sigbus:
+__oncrash_sigbus:
 	push	%rbp
 	mov	%rsp,%rbp
-	call	oncrash
+	call	__oncrash
 	pop	%rbp
 	ret
-	.endfn	oncrash_sigbus,globl
+	.endfn	__oncrash_sigbus,globl
 
-	.endobj	kOncrashThunks,globl
+	.endobj	__oncrash_thunks,globl

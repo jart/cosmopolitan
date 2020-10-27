@@ -29,7 +29,7 @@ SECTIONS {
     . = 0x1fe;
     SHORT(0xaa55);
     *(.text .text.*)
-    BYTE(0x90);
+    /*BYTE(0x90);*/
     _etext = .;
     . = ALIGN(512);
   }

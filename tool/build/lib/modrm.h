@@ -59,7 +59,6 @@ extern const uint8_t kByteReg[32];
 
 int64_t ComputeAddress(const struct Machine *, uint32_t);
 struct AddrSeg LoadEffectiveAddress(const struct Machine *, uint32_t);
-
 void *ComputeReserveAddressRead(struct Machine *, uint32_t, size_t);
 void *ComputeReserveAddressRead1(struct Machine *, uint32_t);
 void *ComputeReserveAddressRead4(struct Machine *, uint32_t);
@@ -68,7 +67,6 @@ void *ComputeReserveAddressWrite(struct Machine *, uint32_t, size_t);
 void *ComputeReserveAddressWrite1(struct Machine *, uint32_t);
 void *ComputeReserveAddressWrite4(struct Machine *, uint32_t);
 void *ComputeReserveAddressWrite8(struct Machine *, uint32_t);
-
 uint8_t *GetModrmRegisterBytePointerRead(struct Machine *, uint32_t);
 uint8_t *GetModrmRegisterBytePointerWrite(struct Machine *, uint32_t);
 uint8_t *GetModrmRegisterMmPointerRead(struct Machine *, uint32_t, size_t);
@@ -82,6 +80,7 @@ uint8_t *GetModrmRegisterWordPointerRead8(struct Machine *, uint32_t);
 uint8_t *GetModrmRegisterWordPointerReadOsz(struct Machine *, uint32_t);
 uint8_t *GetModrmRegisterWordPointerReadOszRexw(struct Machine *, uint32_t);
 uint8_t *GetModrmRegisterWordPointerWrite(struct Machine *, uint32_t, size_t);
+uint8_t *GetModrmRegisterWordPointerWrite2(struct Machine *, uint32_t);
 uint8_t *GetModrmRegisterWordPointerWrite4(struct Machine *, uint32_t);
 uint8_t *GetModrmRegisterWordPointerWrite8(struct Machine *, uint32_t);
 uint8_t *GetModrmRegisterWordPointerWriteOsz(struct Machine *, uint32_t);

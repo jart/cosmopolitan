@@ -17,52 +17,65 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/escape/escape.h"
-#include "libc/limits.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/macros.h"
+#include "libc/str/thompike.h"
+#include "libc/unicode/unicode.h"
 
 /**
- * Escapes memory for inclusion in C string literals (or Python, etc.)
+ * Returns monospace display width of UTF-8 string.
  *
- * The outer quotation marks are *not* added.
+ * - Control codes are discounted
+ * - ANSI escape sequences are discounted
+ * - East asian glyphs, emoji, etc. count as two
  *
- * @param buf is the output area, which can't overlap and, no matter
- *     what, a NUL-terminator will always be placed in the buffer at
- *     an appropriate place, provided buf!=NULL && size!=0
- * @param size is the byte-length of the output area
- * @param s is the data, which may have NUL characters
- * @param l is the byte-length of s or -1 if s is NUL-terminated
- * @return number of characters written, excluding NUL terminator; or,
- *     if the output buffer wasn't passed, or was too short, then the
- *     number of characters that *would* have been written is returned;
- *     since that's how the snprintf() API works; or -1 on overflow
- * @see xaescapec() for an easier api
+ * @param s is NUL-terminated string
+ * @param n is max bytes to consider
+ * @return monospace display width
  */
-int escapec(char *buf, unsigned size, const char *s, unsigned l) {
-  if (l >= INT_MAX) return eoverflow();
-  unsigned i, j = 0;
-  for (i = 0; i < l; ++i) {
-    unsigned t = cescapec(s[i]);
-    if (t) {
-      while (t) {
-        if (j < size) {
-          buf[j] = (unsigned char)t;
-          t >>= 8;
-        }
-        j++;
+int strnwidth(const char *s, size_t n) {
+  wint_t c, w;
+  unsigned l, r;
+  enum { kAscii, kUtf8, kEsc, kCsi } t;
+  for (w = r = t = l = 0; n--;) {
+    if ((c = *s++ & 0xff)) {
+      switch (t) {
+        case kAscii:
+          if (0x20 <= c && c <= 0x7E || c == '\t') {
+            ++l;
+          } else if (c == 033) {
+            t = kEsc;
+          } else if (c >= 0300) {
+            t = kUtf8;
+            w = ThomPikeByte(c);
+            r = ThomPikeLen(c) - 1;
+          }
+          break;
+        case kUtf8:
+          if (ThomPikeCont(c)) {
+            w = ThomPikeMerge(w, c);
+            if (--r) break;
+          }
+          l += MAX(0, wcwidth(w));
+          t = kAscii;
+          break;
+        case kEsc:
+          if (c == '[') {
+            t = kCsi;
+          } else if (!(040 <= c && c < 060)) {
+            t = kAscii;
+          }
+          break;
+        case kCsi:
+          if (!(060 <= c && c < 0100)) {
+            t = kAscii;
+          }
+          break;
+        default:
+          unreachable;
       }
     } else {
-      if (l == -1) {
-        break;
-      }
+      break;
     }
   }
-  if (buf && size) {
-    if (j < size) {
-      buf[j] = '\0';
-    } else {
-      buf[size - 1] = '\0';
-    }
-  }
-  return j;
+  return l;
 }

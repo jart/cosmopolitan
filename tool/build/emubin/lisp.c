@@ -18,15 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "tool/build/emubin/lisp.h"
 
-#define TRACE   0  // print eval input output
-#define RETRO   1  // auto capitalize input
-#define ERRORS  1  // print messages or undefined behavior
-#define DELETE  1  // allow backspace to rub out symbol
-#define QUOTES  1  // allow 'X shorthand (QUOTE X)
-#define MUTABLE 0  // allow setting globals
-#define PROMPT  1  // show repl prompt
-#define WORD    short
-#define WORDS   8192
+#define TRACE  0  // print eval input output
+#define RETRO  0  // auto capitalize input
+#define DELETE 0  // allow backspace to rub out symbol
+#define QUOTES 0  // allow 'X shorthand (QUOTE X)
+#define PROMPT 0  // show repl prompt
+#define WORD   short
+#define WORDS  8192
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ The LISP Challenge § LISP Machine                                        ─╬─│┼
@@ -36,25 +34,16 @@
 #define CONS 1
 
 #define NIL         0
-#define ATOM_T      8
-#define ATOM_QUOTE  12
-#define ATOM_ATOM   24
-#define ATOM_EQ     34
-#define ATOM_COND   40
-#define ATOM_CAR    50
-#define ATOM_CDR    58
-#define ATOM_CONS   66
-#define ATOM_LAMBDA 76
-#define ATOM_SET    90
-
-#define Quote(x)   List(ATOM_QUOTE, x)
-#define List(x, y) Cons(x, Cons(y, NIL))
-#define Caar(x)    Car(Car(x))    // ((A B C D) (E F G) H I) → A
-#define Cdar(x)    Cdr(Car(x))    // ((A B C D) (E F G) H I) → (B C D)
-#define Cadar(x)   Cadr(Car(x))   // ((A B C D) (E F G) H I) → B
-#define Caddar(x)  Caddr(Car(x))  // ((A B C D) (E F G) H I) → C
-#define Cadr(x)    Car(Cdr(x))    // ((A B C D) (E F G) H I) → (E F G)
-#define Caddr(x)   Cadr(Cdr(x))   // ((A B C D) (E F G) H I) → H
+#define UNDEFINED   8
+#define ATOM_T      30
+#define ATOM_QUOTE  34
+#define ATOM_ATOM   46
+#define ATOM_EQ     56
+#define ATOM_COND   62
+#define ATOM_CAR    72
+#define ATOM_CDR    80
+#define ATOM_CONS   88
+#define ATOM_LAMBDA 98
 
 #define BOOL(x)  ((x) ? ATOM_T : NIL)
 #define VALUE(x) ((x) >> 1)
@@ -67,7 +56,6 @@ struct Lisp {
   WORD globals;
   WORD index;
   char token[128];
-  long jb[8];
   char str[WORDS];
 };
 
@@ -75,6 +63,7 @@ _Static_assert(sizeof(struct Lisp) <= 0x7c00 - 0x600,
                "LISP Machine too large for real mode");
 
 _Alignas(char) const char kSymbols[] = "NIL\0"
+                                       "*UNDEFINED\0"
                                        "T\0"
                                        "QUOTE\0"
                                        "ATOM\0"
@@ -83,8 +72,7 @@ _Alignas(char) const char kSymbols[] = "NIL\0"
                                        "CAR\0"
                                        "CDR\0"
                                        "CONS\0"
-                                       "LAMBDA\0"
-                                       "SET\0";
+                                       "LAMBDA\0";
 
 #ifdef __REAL_MODE__
 static struct Lisp *const q;
@@ -112,6 +100,10 @@ static void SetupSyntax(void) {
 #endif
 }
 
+static void SetupBuiltins(void) {
+  CopyMemory(q->str, kSymbols, sizeof(kSymbols));
+}
+
 static inline WORD Car(long x) {
   return PEEK_ARRAY(q, mem, VALUE(x), 0);
 }
@@ -136,23 +128,16 @@ static WORD Cons(WORD car, WORD cdr) {
   return cell;
 }
 
-static void SetupBuiltins(void) {
-  CopyMemory(q->str, kSymbols, sizeof(kSymbols));
-  q->mem[0] = PTR(2);
-  q->globals = PTR(0);
-  q->index = 4;
-}
-
 static char *StpCpy(char *d, char *s) {
   char c;
   do {
-    c = LODS(s); /* a.k.a. c = *s++; */
-    STOS(d, c);  /* a.k.a. *d++ = c; */
+    c = LODS(s);  // a.k.a. c = *s++
+    STOS(d, c);   // a.k.a. *d++ = c
   } while (c);
   return d;
 }
 
-WORD Intern(char *s) {
+static WORD Intern(char *s) {
   int j, cx;
   char c, *z, *t;
   z = q->str;
@@ -175,7 +160,7 @@ WORD Intern(char *s) {
   return OBJECT(ATOM, SUB((long)z, q->str));
 }
 
-forceinline unsigned char XlatSyntax(unsigned char b) {
+static unsigned char XlatSyntax(unsigned char b) {
   return PEEK_ARRAY(q, syntax, b, 0);
 }
 
@@ -207,17 +192,19 @@ static int GetChar(void) {
 
 static void GetToken(void) {
   char *t;
-  unsigned char b;
+  unsigned char b, x;
   b = q->look;
   t = q->token;
-  while (XlatSyntax(b) == ' ') {
+  for (;;) {
+    x = XlatSyntax(b);
+    if (x != ' ') break;
     b = GetChar();
   }
-  if (XlatSyntax(b)) {
+  if (x) {
     STOS(t, b);
     b = GetChar();
   } else {
-    while (b && !XlatSyntax(b)) {
+    while (b && !x) {
       if (!DELETE || b != '\b') {
         STOS(t, b);
       } else if (t > q->token) {
@@ -225,6 +212,7 @@ static void GetToken(void) {
         if (t > q->token) --t;
       }
       b = GetChar();
+      x = XlatSyntax(b);
     }
   }
   STOS(t, 0);
@@ -234,6 +222,18 @@ static void GetToken(void) {
 static WORD ConsumeObject(void) {
   GetToken();
   return GetObject();
+}
+
+static WORD Cadr(long x) {
+  return Car(Cdr(x));  // ((A B C D) (E F G) H I) → (E F G)
+}
+
+static WORD List(long x, long y) {
+  return Cons(x, Cons(y, NIL));
+}
+
+static WORD Quote(long x) {
+  return List(ATOM_QUOTE, x);
 }
 
 static WORD GetQuote(void) {
@@ -298,7 +298,7 @@ static void PrintList(long x) {
   PrintChar('(');
   PrintObject(Car(x));
   while ((x = Cdr(x))) {
-    if (TYPE(x) == CONS) {
+    if (!ISATOM(x)) {
       PrintChar(' ');
       PrintObject(Car(x));
     } else {
@@ -311,7 +311,7 @@ static void PrintList(long x) {
 }
 
 static void PrintObject(long x) {
-  if (TYPE(x) == ATOM) {
+  if (ISATOM(x)) {
     PrintAtom(x);
   } else {
     PrintList(x);
@@ -323,40 +323,36 @@ static void Print(long i) {
   PrintString("\r\n");
 }
 
-__attribute__((__noreturn__)) static void Reset(void) {
-  longjmp(q->jb, 1);
-}
-
-__attribute__((__noreturn__)) static void OnArity(void) {
-  PrintString("ARITY!\n");
-  Reset();
-}
-
-__attribute__((__noreturn__)) static void OnUndefined(long x) {
-  PrintString("UNDEF! ");
-  Print(x);
-  Reset();
-}
-
-#if !ERRORS
-#define OnArity()      __builtin_unreachable()
-#define OnUndefined(x) __builtin_unreachable()
-#endif
-
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ The LISP Challenge § Bootstrap John McCarthy's Metacircular Evaluator    ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 static WORD Atom(long x) {
-  return BOOL(TYPE(x) == ATOM);
+  return BOOL(ISATOM(x));
 }
 
-static WORD Null(long x) {
-  return BOOL(!x);
-}
-
-static WORD Eq(long x, long y) {
+WORD Eq(long x, long y) {
   return BOOL(x == y);
+}
+
+static WORD Caar(long x) {
+  return Car(Car(x));  // ((A B C D) (E F G) H I) → A
+}
+
+static WORD Cdar(long x) {
+  return Cdr(Car(x));  // ((A B C D) (E F G) H I) → (B C D)
+}
+
+static WORD Cadar(long x) {
+  return Cadr(Car(x));  // ((A B C D) (E F G) H I) → B
+}
+
+static WORD Caddr(long x) {
+  return Cadr(Cdr(x));  // ((A B C D) (E F G) H I) → H
+}
+
+static WORD Caddar(long x) {
+  return Caddr(Car(x));  // ((A B C D) (E F G) H I) → C
 }
 
 static WORD Arg1(long e, long a) {
@@ -368,37 +364,36 @@ static WORD Arg2(long e, long a) {
 }
 
 static WORD Append(long x, long y) {
-  return Null(x) ? y : Cons(Car(x), Append(Cdr(x), y));
+  return x ? Cons(Car(x), Append(Cdr(x), y)) : y;
 }
 
 static WORD Evcon(long c, long a) {
   return Eval(Caar(c), a) ? Eval(Cadar(c), a) : Evcon(Cdr(c), a);
 }
 
-static WORD Evlis(long m, long a) {
-  return m ? Cons(Eval(Car(m), a), Evlis(Cdr(m), a)) : NIL;
+static WORD Bind(long v, long a, long e) {
+  return v ? Cons(Cons(Car(v), Eval(Car(a), e)), Bind(Cdr(v), Cdr(a), e)) : e;
 }
 
 static WORD Assoc(long x, long y) {
-  if (!y) OnUndefined(x);
-  return Eq(Caar(y), x) ? Cdar(y) : Assoc(x, Cdr(y));
+  return y ? Eq(Caar(y), x) ? Cdar(y) : Assoc(x, Cdr(y)) : NIL;
 }
 
 static WORD Pair(long x, long y) {
-  if (Null(x) && Null(y)) {
+  if (Atom(x) || Atom(y)) {
     return NIL;
-  } else if (!Atom(x) && !Atom(y)) {
-    return Cons(Cons(Car(x), Car(y)), Pair(Cdr(x), Cdr(y)));
   } else {
-    OnArity();
+    return Cons(Cons(Car(x), Car(y)), Pair(Cdr(x), Cdr(y)));
   }
 }
 
-static WORD Evaluate(long e, long a) {
+__attribute__((__noinline__)) static WORD Evaluate(long e, long a) {
   if (Atom(e)) {
     return Assoc(e, a);
   } else if (Atom(Car(e))) {
     switch (Car(e)) {
+      case NIL:
+        return UNDEFINED;
       case ATOM_QUOTE:
         return Cadr(e);
       case ATOM_ATOM:
@@ -413,17 +408,13 @@ static WORD Evaluate(long e, long a) {
         return Cdr(Arg1(e, a));
       case ATOM_CONS:
         return Cons(Arg1(e, a), Arg2(e, a));
-#if MUTABLE
-      case ATOM_SET:
-        return Cdar(Set(a, Cons(Arg1(e, a), Arg2(e, a)), Cons(Car(a), Cdr(a))));
-#endif
       default:
-        return Eval(Cons(Assoc(Car(e), a), Evlis(Cdr(e), a)), a);
+        return Eval(Cons(Assoc(Car(e), a), Cdr(e)), a);
     }
   } else if (Eq(Caar(e), ATOM_LAMBDA)) {
-    return Eval(Caddar(e), Append(Pair(Cadar(e), Evlis(Cdr(e), a)), a));
+    return Eval(Caddar(e), Bind(Cadar(e), Cdr(e), a));
   } else {
-    OnUndefined(Caar(e));
+    return UNDEFINED;
   }
 }
 
@@ -448,9 +439,6 @@ static WORD Eval(long e, long a) {
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 void Repl(void) {
-#if ERRORS
-  setjmp(q->jb);
-#endif
   for (;;) {
 #if PROMPT
     PrintString("* ");
@@ -460,7 +448,7 @@ void Repl(void) {
 }
 
 int main(int argc, char *argv[]) {
-  /* RawMode(); */
+  RawMode();
   SetupSyntax();
   SetupBuiltins();
 #if PROMPT

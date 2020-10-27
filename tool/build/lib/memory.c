@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/log/check.h"
+#include "libc/log/log.h"
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
@@ -44,41 +45,58 @@ void SetWriteAddr(struct Machine *m, int64_t addr, uint32_t size) {
   }
 }
 
+long HandlePageFault(struct Machine *m, uint64_t entry, uint64_t table,
+                     unsigned index) {
+  long page;
+  if ((page = AllocateLinearPage(m)) != -1) {
+    --m->memstat.reserved;
+    *(uint64_t *)(m->real.p + table + index * 8) =
+        page | entry & ~0x7ffffffffe00;
+  }
+  return page;
+}
+
 void *FindReal(struct Machine *m, int64_t virt) {
-  uint8_t *host;
-  uint64_t real, pte, *pt;
-  unsigned skew, level, i;
-  if (!(-0x800000000000 <= virt && virt < 0x800000000000)) {
+  long page;
+  uint64_t table, entry;
+  unsigned skew, level, index, i;
+  if ((m->mode & 3) != XED_MODE_REAL) {
+    if (-0x800000000000 <= virt && virt < 0x800000000000) {
+      skew = virt & 0xfff;
+      virt &= -0x1000;
+      for (i = 0; i < ARRAYLEN(m->tlb); ++i) {
+        if (m->tlb[i].virt == virt && m->tlb[i].host) {
+          return m->tlb[i].host + skew;
+        }
+      }
+      level = 39;
+      entry = m->cr3;
+      do {
+        table = entry & 0x7ffffffff000;
+        CHECK_LT(table, m->real.n);
+        index = (virt >> level) & 511;
+        entry = *(uint64_t *)(m->real.p + table + index * 8);
+        if (!(entry & 1)) return NULL;
+      } while ((level -= 9) >= 12);
+      if (!(entry & 0x0e00)) {
+        page = entry & 0x7ffffffff000;
+        CHECK_LT(page, m->real.n);
+      } else if ((page = HandlePageFault(m, entry, table, index)) == -1) {
+        return NULL;
+      }
+      m->tlbindex = (m->tlbindex + 1) & (ARRAYLEN(m->tlb) - 1);
+      m->tlb[m->tlbindex] = m->tlb[0];
+      m->tlb[0].virt = virt;
+      m->tlb[0].host = m->real.p + page;
+      return m->real.p + page + skew;
+    } else {
+      return NULL;
+    }
+  } else if (0 <= virt && virt + 0xfff < m->real.n) {
+    return m->real.p + virt;
+  } else {
     return NULL;
   }
-  skew = virt & 0xfff;
-  virt &= -0x1000;
-  for (i = 0; i < ARRAYLEN(m->tlb); ++i) {
-    if (m->tlb[i].virt == virt && m->tlb[i].host) {
-      return m->tlb[i].host + skew;
-    }
-  }
-  level = 39;
-  real = m->cr3;
-  for (;;) {
-    if (real + 0x1000 > m->real.n) {
-      return NULL;
-    }
-    host = m->real.p + real;
-    if (level < 12) break;
-    pt = (uint64_t *)host;
-    pte = pt[(virt >> level) & 511];
-    if (!(pte & 1)) {
-      return NULL;
-    }
-    real = pte & 0x00007ffffffff000;
-    level -= 9;
-  }
-  m->tlbindex = (m->tlbindex + 1) & (ARRAYLEN(m->tlb) - 1);
-  m->tlb[m->tlbindex] = m->tlb[0];
-  m->tlb[0].host = host;
-  m->tlb[0].virt = virt;
-  return host + skew;
 }
 
 void *ResolveAddress(struct Machine *m, int64_t v) {

@@ -19,6 +19,7 @@
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
+#include "libc/log/color.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"
 #include "libc/math.h"

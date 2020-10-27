@@ -38,7 +38,7 @@ relegated void ___check_fail_ndebug(uint64_t want, uint64_t got,
   char bx[21];
   int lasterr;
   lasterr = errno;
-  startfatal_ndebug();
+  __start_fatal_ndebug();
   __print_string("check failed: 0x");
   __print(bx, uint64toarray_radix16(want, bx));
   __print_string(" ");

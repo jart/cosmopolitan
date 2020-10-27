@@ -22,9 +22,11 @@
 #include "libc/conv/itoa.h"
 #include "libc/log/asan.h"
 #include "libc/log/backtrace.h"
+#include "libc/log/log.h"
 #include "libc/mem/hook/hook.h"
 #include "libc/runtime/directmap.h"
 #include "libc/runtime/memtrack.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -144,16 +146,23 @@ static const char *__asan_describe_access_poison(int c) {
 
 static noreturn void __asan_die(const char *msg, size_t size) {
   write(STDERR_FILENO, msg, size);
-  PrintBacktraceUsingSymbols(STDERR_FILENO, __builtin_frame_address(0),
-                             GetSymbolTable());
-  DebugBreak();
-  _Exit(66);
+  die();
+}
+
+static char *__asan_report_start(char *p) {
+  bool ansi;
+  const char *term;
+  term = getenv("TERM");
+  ansi = !term || strcmp(term, "dumb") != 0;
+  if (ansi) p = stpcpy(p, "\r\e[J\e[1;91m");
+  p = stpcpy(p, "asan error");
+  if (ansi) p = stpcpy(p, "\e[0m");
+  return stpcpy(p, ": ");
 }
 
 static noreturn void __asan_report_deallocate_fault(void *addr, int c) {
   char *p, ibuf[21], buf[256];
-  p = buf;
-  p = stpcpy(p, "error: ");
+  p = __asan_report_start(buf);
   p = stpcpy(p, __asan_dscribe_free_poison(c));
   p = stpcpy(p, " ");
   p = mempcpy(p, ibuf, int64toarray_radix10(c, ibuf));
@@ -166,8 +175,7 @@ static noreturn void __asan_report_deallocate_fault(void *addr, int c) {
 static noreturn void __asan_report_memory_fault(uint8_t *addr, int size,
                                                 const char *kind) {
   char *p, ibuf[21], buf[256];
-  p = buf;
-  p = stpcpy(p, "error: ");
+  p = __asan_report_start(buf);
   p = stpcpy(p, __asan_describe_access_poison(*(char *)SHADOW((intptr_t)addr)));
   p = stpcpy(p, " ");
   p = mempcpy(p, ibuf, uint64toarray_radix10(size, ibuf));

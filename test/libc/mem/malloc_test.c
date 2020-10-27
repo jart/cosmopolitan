@@ -73,4 +73,5 @@ TEST(malloc, test) {
   for (i = 0; i < ARRAYLEN(A); ++i) free(A[i]);
   for (i = 0; i < ARRAYLEN(maps); ++i) munmap(maps[i], mapsizes[i]);
   for (i = 0; i < ARRAYLEN(fds); ++i) close(fds[i]);
+  malloc_trim(0);
 }

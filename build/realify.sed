@@ -15,21 +15,21 @@
 # remove comments
 s/[ \t][ \t]*#.*//
 
-#s/leave\(q\|\)/leavew/
-#s/call\(q\|\)/callw/
-#s/ret\(q\|\)/retw/
-#s/popq\t%rbp/pop\t%bp/
-#s/pushq\t%rbp/push\t%bp/
-#s/pushq\t\(.*\)/sub $6,%sp\n\tpush \1/
-#s/popq\t\(.*\)/pop \1\n\tadd $6,%sp/
-
-# preserve hardcoded stack offsets
-# bloats code size 13%
-s/leave\(q\|\)/leavew\n\tadd\t$6,%sp/
-s/call\(q\|\)\t/sub\t$6,%sp\n\tcallw\t/
-s/ret\(q\|\)/retw\t$6/
+s/leave\(q\|\)/leavew/
+s/call\(q\|\)/callw/
+s/ret\(q\|\)/retw/
+s/popq\t%rbp/pop\t%bp/
+s/pushq\t%rbp/push\t%bp/
 s/pushq\t\(.*\)/sub\t$6,%sp\n\tpush\t\1/
 s/popq\t\(.*\)/pop\t\1\n\tadd\t$6,%sp/
+
+# # preserve hardcoded stack offsets
+# # bloats code size 13%
+# s/leave\(q\|\)/leavew\n\tadd\t$6,%sp/
+# s/call\(q\|\)\t/sub\t$6,%sp\n\tcallw\t/
+# s/ret\(q\|\)/retw\t$6/
+# s/pushq\t\(.*\)/sub\t$6,%sp\n\tpush\t\1/
+# s/popq\t\(.*\)/pop\t\1\n\tadd\t$6,%sp/
 
 s/, /,/g
 

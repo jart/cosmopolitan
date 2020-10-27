@@ -29,7 +29,6 @@
 #include "libc/bits/safemacros.h"
 #include "libc/conv/itoa.h"
 #include "libc/errno.h"
-#include "libc/escape/escape.h"
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
 #include "libc/math.h"

@@ -34,6 +34,7 @@ LIBC_SYSV_A_FILES :=					\
 	libc/sysv/restorert.S				\
 	libc/sysv/syscall.S				\
 	libc/sysv/systemfive.S				\
+	libc/sysv/vfork.S				\
 	$(wildcard libc/sysv/stubs/*)			\
 	$(wildcard libc/sysv/consts/*)			\
 	$(wildcard libc/sysv/errfuns/*)
@@ -86,6 +87,7 @@ LIBC_SYSV_CALLS_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(LIBC_SYSV_CALLS_A_DIRECTDEPS),$($(x))))
 
 $(LIBC_SYSV_CALLS_A):					\
+		libc/sysv/calls/			\
 		$(LIBC_SYSV_CALLS_A).pkg		\
 		$(LIBC_SYSV_CALLS_A_OBJS)
 

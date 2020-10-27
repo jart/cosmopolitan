@@ -17,23 +17,23 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/internal.h"
 #include "libc/str/str.h"
 
 /**
  * Returns number of characters in UTF-8 string.
  */
-size_t(strclen)(const char *s) { return strnclen(s, -1ull); }
+size_t strclen(const char *s) {
+  return strnclen(s, -1);
+}
 
-noinline size_t(strnclen)(const char *s, size_t n) {
-  const unsigned char *p = (const unsigned char *)s;
-  size_t l = 0;
+noinline size_t strnclen(const char *s, size_t n) {
+  size_t r = 0;
   if (n) {
-    while (*p && n && iscont(*p)) ++p, --n;
-    while (*p) {
-      if (!iscont(*p++)) l++;
+    while (n && *s && (*s & 0300) == 0200) ++s, --n;
+    while (*s) {
+      if ((*s++ & 0300) != 0200) r++;
       if (!--n) break;
     }
   }
-  return l;
+  return r;
 }

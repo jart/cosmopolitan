@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/bsd.h"
+#include "libc/log/color.h"
 #include "libc/log/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"

@@ -590,7 +590,6 @@ int main(int argc, char *argv[]) {
   unsigned yd, xd;
   __fast_math();
   showcrashreports();
-  cancolor();
   GetOpts(argc, argv);
   // if sizes are given, 2 cases:
   //  - positive values: use that as the target size

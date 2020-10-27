@@ -26,27 +26,12 @@
 
 hidden extern const uint32_t kSha256Tab[64];
 
-extern const struct TpEncode {
-  uint8_t mark;
-  uint8_t len;
-} kTpDecoderRing[32];
-
-forceinline struct TpEncode UseTpDecoderRing(wint_t c) {
-  unsigned msb;
-  if (c) {
-    asm("bsr\t%1,%0" : "=r"(msb) : "rm"(c) : "cc");
-  } else {
-    msb = 0;
-  }
-  return kTpDecoderRing[msb];
-}
-
 nodebuginfo forceinline bool32 ismoar(wint_t c) {
-  return (c & 0b11000000) == 0b11000000;
+  return (c & 0300) == 0300;
 }
 
 nodebuginfo forceinline bool32 iscont(wint_t c) {
-  return (c & 0b11000000) == 0b10000000;
+  return (c & 0300) == 0200;
 }
 
 char *strstr$sse42(const char *, const char *) strlenesque hidden;

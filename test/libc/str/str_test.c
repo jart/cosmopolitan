@@ -37,8 +37,8 @@ TEST(strclen, testAegeanNumberSupplementaryPlane) {
   EXPECT_EQ(18, strlen16(u"𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
   EXPECT_EQ(9, wcslen(L"𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
   EXPECT_EQ(9, strclen("𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
-  EXPECT_EQ(9, strclen(u"𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
-  EXPECT_EQ(9, strclen(L"𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
+  EXPECT_EQ(9, strclen16(u"𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
+  EXPECT_EQ(9, wcslen(L"𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
 }
 
 TEST(strlen16, testCoolKidNulTerminator) {

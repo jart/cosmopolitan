@@ -293,14 +293,14 @@ syscon	spawn	POSIX_SPAWN_SETSCHEDPARAM		0x10			0			4			4			0
 syscon	spawn	POSIX_SPAWN_SETSCHEDULER		0x20			0			8			8			0
 syscon	spawn	POSIX_SPAWN_USEVFORK			0x40			0			0			0			0
 
-#	mprotect(), etc.
+#	mmap(), mprotect(), etc.
 #	digital restrictions management for the people
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			XENIX			Commentary
-syscon	mprot	PROT_NONE				0			0			0			0			0			# unix consensus (nt needs special business logic here)
-syscon	mprot	PROT_READ				1			1			1			1			1			# unix consensus
-syscon	mprot	PROT_WRITE				2			2			2			2			2			# unix consensus
-syscon	mprot	PROT_EXEC				4			4			4			4			4			# unix consensus
+syscon	mprot	PROT_NONE				0			0			0			0			0			# mmap, mprotect, unix consensus (nt needs special business logic here)
+syscon	mprot	PROT_READ				1			1			1			1			1			# mmap, mprotect, unix consensus
+syscon	mprot	PROT_WRITE				2			2			2			2			2			# mmap, mprotect, unix consensus
+syscon	mprot	PROT_EXEC				4			4			4			4			4			# mmap, mprotect, unix consensus
 syscon	mprot	PROT_GROWSDOWN				0x01000000		0			0			0			0			# intended for mprotect; see MAP_GROWSDOWN for mmap() (todo: what was 0x01000000 on nt)
 syscon	mprot	PROT_GROWSUP				0x02000000		0			0			0			0			# intended for mprotect; see MAP_GROWSDOWN for mmap()
 
@@ -2798,6 +2798,7 @@ syscon	nr	__NR_access				0x0015			0x2000021		0x0021			0x0021          	-1
 syscon	nr	__NR_sched_yield			0x0018			0x100003c		0x014b			0x012a          	-1
 syscon	nr	__NR_sendfile				0x0028			0x2000151		0x0189			0xffff          	-1
 syscon	nr	__NR_fork				0x0039			0x2000002		0x0002			0x0002          	-1
+syscon	nr	__NR_vfork				0x003a			0x2000042		0x0042			0x0042          	-1
 syscon	nr	__NR_gettimeofday			0x0060			0x2000074		0x0074			0x0043          	-1
 syscon	nr	__NR_arch_prctl				0x009e			0x000ffff		0x00a5			0x00a5          	-1
 syscon	nr	__NR_gettid				0x00ba			0x200011e		0xffff			0xffff          	-1

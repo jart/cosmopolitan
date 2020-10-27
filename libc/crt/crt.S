@@ -54,9 +54,8 @@ _start:	test	%rdi,%rdi
 	mov	%rdi,%rcx			# auxv
 	mov	%ebx,%edi
 	call	_executive
-9:	.endfn	_start,weak,hidden
-
-	ud2
+9:	ud2
+	.endfn	_start,weak,hidden
 
 /	Macintosh userspace program entrypoint.
 /

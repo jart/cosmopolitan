@@ -62,10 +62,6 @@ TEST(wcwidth, testCjkWidesAndCombiningLowLines_widthIsNotLength) {
   /*────────────────────────────────────────────────────┴─*/
 }
 
-TEST(strwidth, tab) {
-  EXPECT_EQ(32, strwidth("mov    0x0(%rip),%rcx        \t"));
-}
-
 TEST(wcwidth, block) {
   EXPECT_EQ(1, wcwidth(u'▄'));
 }

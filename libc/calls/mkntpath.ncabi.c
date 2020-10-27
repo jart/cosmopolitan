@@ -17,14 +17,30 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/pushpop.h"
-#include "libc/bits/safemacros.h"
-#include "libc/calls/hefty/ntspawn.h"
-#include "libc/calls/internal.h"
-#include "libc/conv/conv.h"
+#include "libc/calls/ntmagicpaths.h"
+#include "libc/nexgen32e/tinystrcmp.h"
 #include "libc/str/str.h"
 #include "libc/str/tpdecode.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
+
+textwindows static const char *FixNtMagicPath(const char *path,
+                                              unsigned flags) {
+  const struct NtMagicPaths *mp = &kNtMagicPaths;
+  asm("" : "+r"(mp));
+  if (path[0] != '/') return path;
+  if (tinystrcmp(path, mp->devtty) == 0) {
+    if ((flags & O_ACCMODE) == O_RDONLY) {
+      return mp->conin;
+    } else if ((flags & O_ACCMODE) == O_WRONLY) {
+      return mp->conout;
+    }
+  }
+  if (tinystrcmp(path, mp->devnull) == 0) return mp->nul;
+  if (tinystrcmp(path, mp->devstdin) == 0) return mp->conin;
+  if (tinystrcmp(path, mp->devstdout) == 0) return mp->conout;
+  return path;
+}
 
 /**
  * Copies path for Windows NT.
@@ -33,13 +49,13 @@
  * forward-slashes with backslashes; and (3) remapping several
  * well-known paths (e.g. /dev/null → NUL) for convenience.
  *
+ * @param flags is used by open()
  * @param path16 is shortened so caller can prefix, e.g. \\.\pipe\, and
  *     due to a plethora of special-cases throughout the Win32 API
- * @param flags is used by open(), see fixntmagicpath2()
  * @return short count excluding NUL on success, or -1 w/ errno
  * @error ENAMETOOLONG
  */
-forcealignargpointer textwindows int(mkntpath)(
+forcealignargpointer textwindows int mkntpath(
     const char *path, unsigned flags,
     char16_t path16[hasatleast PATH_MAX - 16]) {
   /*
@@ -52,7 +68,7 @@ forcealignargpointer textwindows int(mkntpath)(
   int rc;
   wint_t wc;
   size_t i, j;
-  path = fixntmagicpath(path, flags);
+  path = FixNtMagicPath(path, flags);
   i = 0;
   j = 0;
   for (;;) {

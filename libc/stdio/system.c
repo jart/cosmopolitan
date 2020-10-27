@@ -22,7 +22,6 @@
 #include "libc/calls/hefty/ntspawn.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
-#include "libc/escape/escape.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/accounting.h"
 #include "libc/nt/enum/startf.h"

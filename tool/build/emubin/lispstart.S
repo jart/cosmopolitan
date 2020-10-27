@@ -49,29 +49,3 @@ _begin:	push	%cs
 	jmp	main
 	.type	_begin,@function
 	.size	_begin,.-_begin
-
-	.section .start.setjmp,"ax",@progbits
-setjmp:	mov	%sp,%ax
-	stosw
-	xchg	%ax,%si
-	movsw	%ss:(%si),(%di)
-	mov	%bp,%ax
-	stosw
-	ret	$6
-	.type	setjmp,@function
-	.size	setjmp,.-setjmp
-	.globl	setjmp
-	.previous
-
-	.section .start.longjmp,"ax",@progbits
-longjmp:
-	mov	(%di),%sp
-	mov	2(%di),%dx
-	mov	4(%di),%bp
-	pop	%ax
-	mov	%si,%ax
-	jmp	*%dx
-	.type	longjmp,@function
-	.size	longjmp,.-longjmp
-	.globl	longjmp
-	.previous

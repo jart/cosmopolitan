@@ -108,7 +108,6 @@ int64_t Rcl64(uint64_t, uint64_t, uint32_t *);
 
 uint64_t BsuDoubleShift(int, uint64_t, uint64_t, uint8_t, bool, uint32_t *);
 
-int64_t AluFlags(uint64_t, uint32_t, uint32_t *, uint32_t, uint32_t, uint32_t);
 int64_t AluFlags8(uint8_t, uint32_t, uint32_t *, uint32_t, uint32_t);
 int64_t AluFlags16(uint16_t, uint32_t, uint32_t *, uint32_t, uint32_t);
 int64_t AluFlags32(uint32_t, uint32_t, uint32_t *, uint32_t, uint32_t);

@@ -117,7 +117,6 @@ include libc/ohmyplus/ohmyplus.mk		# │
 include libc/zipos/zipos.mk			# │
 include third_party/dtoa/dtoa.mk		# │
 include libc/time/time.mk			# │
-include libc/escape/escape.mk			# │
 include libc/alg/alg.mk				# │
 include libc/calls/hefty/hefty.mk		# │
 include libc/stdio/stdio.mk			# │

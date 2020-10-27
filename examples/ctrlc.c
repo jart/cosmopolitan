@@ -9,6 +9,7 @@
 #endif
 #include "libc/calls/calls.h"
 #include "libc/log/check.h"
+#include "libc/log/color.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"

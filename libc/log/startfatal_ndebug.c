@@ -17,6 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/log/color.h"
 #include "libc/runtime/missioncritical.h"
 #include "libc/stdio/stdio.h"
 
@@ -24,11 +25,10 @@
  * Prints initial part of fatal message.
  *
  * @note this is support code for __check_fail(), __assert_fail(), etc.
- * @see startfatal()
+ * @see __start_fatal()
  */
-relegated void startfatal_ndebug(void) {
-  fflush(stdout);
-  fflush(stderr);
+relegated void __start_fatal_ndebug(void) {
+  if (cancolor()) __print_string("\r\e[J");
   __print_string("error:");
   __print_string(program_invocation_name);
   __print_string(": ");

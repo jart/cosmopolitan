@@ -17,7 +17,6 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/escape/escape.h"
 #include "libc/str/str.h"
 
 static textwindows bool shouldescapedos(const char16_t c) {

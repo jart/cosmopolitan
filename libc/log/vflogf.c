@@ -32,6 +32,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/fileno.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 
@@ -113,8 +114,8 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   va_end(va);
   fputs("\r\n", f);
   if (level == kLogFatal) {
-    startfatal(file, line);
-    (fprintf)(stderr, "fatal error see logfile\r\n");
+    __start_fatal(file, line);
+    (dprintf)(STDERR_FILENO, "fatal error see logfile\r\n");
     die();
     unreachable;
   }

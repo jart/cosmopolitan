@@ -18,10 +18,10 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.text.windows
 .source	__FILE__
 
-onntalarm$nt:
-	ezlea	onntalarm,ax
-	jmp	nt2sysv
-	.endfn	onntalarm$nt,globl,hidden
+	.init.start 300,_init_wincrash
+	pushpop	1,%rcx
+	ezlea	__wincrash$nt,dx
+	ntcall	__imp_AddVectoredExceptionHandler
+	.init.end 300,_init_wincrash,globl,hidden

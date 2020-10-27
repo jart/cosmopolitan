@@ -25,18 +25,18 @@
 .source	__FILE__
 
 	.init.start 400,_init_g_stderr
-	lea	g_stderr(%rip),%rax
+	ezlea	g_stderr,ax
 	push	$_IOLBF
 	pop	(%rax)				#→ f.fd
 	push	STDERR_FILENO
 	pop	12(%rax)
 	mov	O_WRONLY,%edx
 	mov	%edx,4(%rax)			#→ f.iomode
-	lea	g_stderr_buf(%rip),%rcx
+	ezlea	g_stderr_buf,cx
 	mov	%rcx,24(%rax)			#→ f.buf
 	movl	$BUFSIZ,32(%rax)		#→ f.size
-	lea	fwritebuf(%rip),%rcx
-	lea	fswritebuf(%rip),%rdx
+	ezlea	fwritebuf,cx
+	ezlea	fswritebuf,dx
 	testb	IsMetal()
 	cmove	%rcx,%rdx
 	mov	%rdx,48(%rax)			#→ f.writer

@@ -35,7 +35,7 @@
 /**
  * Resolves address for internet name.
  *
- * @param node is either an ip string or a utf-8 hostname
+ * @param name is either an ip string or a utf-8 hostname
  * @param service is the port number as a string
  * @param hints may be passed to specialize behavior (optional)
  * @param res receives a pointer that must be freed with freeaddrinfo(),

@@ -30,6 +30,7 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/errno.h"
+#include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"
@@ -321,11 +322,22 @@ static int XlatMsyncFlags(int x) {
   return res;
 }
 
+static unsigned XlatOpenMode(unsigned flags) {
+  switch (flags & 3) {
+    case 0:
+      return O_RDONLY;
+    case 1:
+      return O_WRONLY;
+    case 2:
+      return O_RDWR;
+    default:
+      unreachable;
+  }
+}
+
 static unsigned XlatOpenFlags(unsigned flags) {
   unsigned res = 0;
-  if ((flags & 3) == 0) res = O_RDONLY;
-  if ((flags & 3) == 1) res = O_WRONLY;
-  if ((flags & 3) == 3) res = O_RDWR;
+  res = XlatOpenMode(flags);
   if (flags & 0x80000) res |= O_CLOEXEC;
   if (flags & 0x400) res |= O_APPEND;
   if (flags & 0x40) res |= O_CREAT;
@@ -355,6 +367,7 @@ static int XlatFcntlArg(int x) {
   switch (x) {
     XLAT(0, 0);
     XLAT(1, FD_CLOEXEC);
+    XLAT(0x0800, O_NONBLOCK);
     default:
       return einval();
   }
@@ -398,6 +411,14 @@ static int XlatRusage(int x) {
     XLAT(1, RUSAGE_THREAD);
     default:
       return einval();
+  }
+}
+
+static const char *GetSimulated(void) {
+  if (IsGenuineCosmo()) {
+    return " SIMULATED";
+  } else {
+    return "";
   }
 }
 
@@ -508,7 +529,7 @@ static int OpMadvise(struct Machine *m, int64_t addr, size_t length,
 static int64_t OpBrk(struct Machine *m, int64_t addr) {
   addr = ROUNDUP(addr, PAGESIZE);
   if (addr > m->brk) {
-    if (ReserveVirtual(m, m->brk, addr - m->brk) != -1) {
+    if (ReserveVirtual(m, m->brk, addr - m->brk, 0x0207) != -1) {
       m->brk = addr;
     }
   } else if (addr < m->brk) {
@@ -519,34 +540,47 @@ static int64_t OpBrk(struct Machine *m, int64_t addr) {
   return m->brk;
 }
 
+static int OpMunmap(struct Machine *m, int64_t virt, uint64_t size) {
+  VERBOSEF("MUNMAP%s %p %,ld", GetSimulated(), virt, size);
+  return FreeVirtual(m, virt, size);
+}
+
 static int64_t OpMmap(struct Machine *m, int64_t virt, size_t size, int prot,
                       int flags, int fd, int64_t offset) {
   void *tmp;
-  LOGF("MMAP%s %p %,ld %#x %#x %d %#lx", IsGenuineCosmo() ? " SIMULATED" : "",
-       virt, size, prot, flags, fd, offset);
-  flags = XlatMapFlags(flags);
-  if (fd != -1 && (fd = XlatFd(m, fd)) == -1) return -1;
-  if (!(flags & MAP_FIXED)) {
-    if (!virt) {
-      if ((virt = FindVirtual(m, m->brk, size)) == -1) return -1;
-      m->brk = virt + size;
-    } else {
-      if ((virt = FindVirtual(m, virt, size)) == -1) return -1;
+  uint64_t key;
+  VERBOSEF("MMAP%s %p %,ld %#x %#x %d %#lx", GetSimulated(), virt, size, prot,
+           flags, fd, offset);
+  if (prot & PROT_READ) {
+    key = 0x0205;
+    if (prot & PROT_WRITE) key |= 2;
+    if (!(prot & PROT_EXEC)) key |= 0x8000000000000000;
+    flags = XlatMapFlags(flags);
+    if (fd != -1 && (fd = XlatFd(m, fd)) == -1) return -1;
+    if (!(flags & MAP_FIXED)) {
+      if (!virt) {
+        if ((virt = FindVirtual(m, m->brk, size)) == -1) return -1;
+        m->brk = virt + size;
+      } else {
+        if ((virt = FindVirtual(m, virt, size)) == -1) return -1;
+      }
     }
+    if (ReserveVirtual(m, virt, size, key) != -1) {
+      if (fd != -1 && !(flags & MAP_ANONYMOUS)) {
+        /* TODO: lazy file mappings */
+        CHECK_NOTNULL((tmp = malloc(size)));
+        CHECK_EQ(size, pread(fd, tmp, size, offset));
+        VirtualRecvWrite(m, virt, tmp, size);
+        free(tmp);
+      }
+    } else {
+      FreeVirtual(m, virt, size);
+      return -1;
+    }
+    return virt;
+  } else {
+    return FreeVirtual(m, virt, size);
   }
-  if (ReserveVirtual(m, virt, size) == -1) return -1;
-  if (fd != -1 && !(flags & MAP_ANONYMOUS)) {
-    /* TODO: lazy page loading */
-    CHECK_NOTNULL((tmp = malloc(size)));
-    CHECK_EQ(size, pread(fd, tmp, size, offset));
-    VirtualRecvWrite(m, virt, tmp, size);
-    free(tmp);
-  }
-  return virt;
-}
-
-static int OpMunmap(struct Machine *m, int64_t addr, uint64_t size) {
-  return FreeVirtual(m, addr, size);
 }
 
 static int OpMsync(struct Machine *m, int64_t virt, size_t size, int flags) {
@@ -574,18 +608,23 @@ static int OpClose(struct Machine *m, int fd) {
   return rc;
 }
 
-static int OpOpenat(struct Machine *m, int dirfd, int64_t path, int flags,
+static int OpOpenat(struct Machine *m, int dirfd, int64_t pathaddr, int flags,
                     int mode) {
   int fd, i;
+  const char *path;
   flags = XlatOpenFlags(flags);
   if ((dirfd = XlatAfd(m, dirfd)) == -1) return -1;
   if ((i = MachineFdAdd(&m->fds)) == -1) return -1;
-  if ((fd = openat(dirfd, LoadStr(m, path), flags, mode)) != -1) {
+  path = LoadStr(m, pathaddr);
+  if ((fd = openat(dirfd, path, flags, mode)) != -1) {
     m->fds.p[i].cb = &kMachineFdCbHost;
     m->fds.p[i].fd = fd;
+    VERBOSEF("openat(%#x, %`'s, %#x, %#x) → %d [%d]", dirfd, path, flags, mode,
+             i, fd);
     fd = i;
   } else {
     MachineFdRemove(&m->fds, i);
+    VERBOSEF("openat(%#x, %`'s, %#x, %#x) failed", dirfd, path, flags, mode);
   }
   return fd;
 }
@@ -768,9 +807,13 @@ static ssize_t OpWrite(struct Machine *m, int fd, int64_t addr, size_t size) {
     if ((rc = AppendIovsReal(m, &iv, addr, size)) != -1) {
       if ((rc = m->fds.p[fd].cb->writev(m->fds.p[fd].fd, iv.p, iv.i)) != -1) {
         SetReadAddr(m, addr, rc);
+      } else {
+        VERBOSEF("write(%d [%d], %p, %zu) failed: %s", fd, m->fds.p[fd].fd,
+                 addr, size, strerror(errno));
       }
     }
   } else {
+    VERBOSEF("write(%d, %p, %zu) bad fd", fd, addr, size);
     rc = ebadf();
   }
   FreeIovs(&iv);
@@ -1363,7 +1406,7 @@ void OpSyscall(struct Machine *m, uint32_t rde) {
     SYSCALL(0x177, vmsplice(di, P(si), dx, r0));
     CASE(0xE7, HaltMachine(m, di | 0x100));
     default:
-      LOGF("missing syscall 0x%03x", ax);
+      VERBOSEF("missing syscall 0x%03x", ax);
       ax = enosys();
       break;
   }

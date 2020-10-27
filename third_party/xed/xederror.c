@@ -22,7 +22,7 @@
 /**
  * Xed error code names.
  *
- *   puts(indexdoublenulstring(kXedErrorNames, xedd->op.error));
+ *   puts(IndexDoubleNulString(kXedErrorNames, xedd->op.error));
  *
  * @see XedError
  */

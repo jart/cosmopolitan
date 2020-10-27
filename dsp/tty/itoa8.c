@@ -27,24 +27,21 @@ struct Itoa8 kItoa8;
 static textstartup void itoa8_init(void) {
   int i;
   uint8_t z;
-  char p[4];
+  uint32_t w;
   for (i = 0; i < 256; ++i) {
-    memset(p, 0, sizeof(p));
     if (i < 10) {
       z = 1;
-      p[0] = '0' + i;
+      w = '0' + i;
     } else if (i < 100) {
       z = 2;
-      p[0] = '0' + i / 10;
-      p[1] = '0' + i % 10;
+      w = ('0' + i / 10) | ('0' + i % 10) << 8;
     } else {
       z = 3;
-      p[0] = '0' + i / 100;
-      p[1] = '0' + i % 100 / 10;
-      p[2] = '0' + i % 100 % 10;
+      w = ('0' + i / 100) | ('0' + i % 100 / 10) << 8 |
+          ('0' + i % 100 % 10) << 16;
     }
     kItoa8.size[i] = z;
-    memcpy(&kItoa8.data[i], p, sizeof(p));
+    kItoa8.data[i] = w;
   }
 }
 

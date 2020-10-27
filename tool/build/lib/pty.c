@@ -32,6 +32,7 @@
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "libc/str/tpenc.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/unicode/unicode.h"
 #include "libc/x/x.h"
 #include "tool/build/lib/pty.h"
@@ -159,30 +160,30 @@
  * @see ECMA-48
  */
 
-struct MachinePty *MachinePtyNew(void) {
-  struct MachinePty *pty;
-  pty = xcalloc(1, sizeof(struct MachinePty));
-  MachinePtyResize(pty, 25, 80);
-  MachinePtyFullReset(pty);
-  MachinePtyErase(pty, 0, pty->yn * pty->xn);
+struct Pty *NewPty(void) {
+  struct Pty *pty;
+  pty = xcalloc(1, sizeof(struct Pty));
+  PtyResize(pty, 25, 80);
+  PtyFullReset(pty);
+  PtyErase(pty, 0, pty->yn * pty->xn);
   return pty;
 }
 
-static void MachinePtyFreePlanes(struct MachinePty *pty) {
+static void FreePtyPlanes(struct Pty *pty) {
   free(pty->wcs);
   free(pty->fgs);
   free(pty->bgs);
   free(pty->prs);
 }
 
-void MachinePtyFree(struct MachinePty *pty) {
+void FreePty(struct Pty *pty) {
   if (pty) {
-    MachinePtyFreePlanes(pty);
+    FreePtyPlanes(pty);
     free(pty);
   }
 }
 
-static wchar_t *MachinePtyGetXlatAscii(void) {
+static wchar_t *GetXlatAscii(void) {
   unsigned i;
   static bool once;
   static wchar_t xlat[128];
@@ -195,7 +196,7 @@ static wchar_t *MachinePtyGetXlatAscii(void) {
   return xlat;
 }
 
-static wchar_t *MachinePtyGetXlatLineDrawing(void) {
+static wchar_t *GetXlatLineDrawing(void) {
   unsigned i;
   static bool once;
   static wchar_t xlat[128];
@@ -212,7 +213,7 @@ static wchar_t *MachinePtyGetXlatLineDrawing(void) {
   return xlat;
 }
 
-static void MachinePtyXlatAlphabet(wchar_t xlat[128], int a, int b) {
+static void XlatAlphabet(wchar_t xlat[128], int a, int b) {
   unsigned i;
   for (i = 0; i < 128; ++i) {
     if ('a' <= i && i <= 'z') {
@@ -225,37 +226,37 @@ static void MachinePtyXlatAlphabet(wchar_t xlat[128], int a, int b) {
   }
 }
 
-static wchar_t *MachinePtyGetXlatItalic(void) {
+static wchar_t *GetXlatItalic(void) {
   static bool once;
   static wchar_t xlat[128];
   if (!once) {
-    MachinePtyXlatAlphabet(xlat, L'𝑎', L'𝐴');
+    XlatAlphabet(xlat, L'𝑎', L'𝐴');
     once = true;
   }
   return xlat;
 }
 
-static wchar_t *MachinePtyGetXlatBoldItalic(void) {
+static wchar_t *GetXlatBoldItalic(void) {
   static bool once;
   static wchar_t xlat[128];
   if (!once) {
-    MachinePtyXlatAlphabet(xlat, L'𝒂', L'𝑨');
+    XlatAlphabet(xlat, L'𝒂', L'𝑨');
     once = true;
   }
   return xlat;
 }
 
-static wchar_t *MachinePtyGetXlatBoldFraktur(void) {
+static wchar_t *GetXlatBoldFraktur(void) {
   static bool once;
   static wchar_t xlat[128];
   if (!once) {
-    MachinePtyXlatAlphabet(xlat, L'𝖆', L'𝕬');
+    XlatAlphabet(xlat, L'𝖆', L'𝕬');
     once = true;
   }
   return xlat;
 }
 
-static wchar_t *MachinePtyGetXlatFraktur(void) {
+static wchar_t *GetXlatFraktur(void) {
   unsigned i;
   static bool once;
   static wchar_t xlat[128];
@@ -274,7 +275,7 @@ static wchar_t *MachinePtyGetXlatFraktur(void) {
   return xlat;
 }
 
-static wchar_t *MachinePtyGetXlatDoubleWidth(void) {
+static wchar_t *GetXlatDoubleWidth(void) {
   unsigned i;
   static bool once;
   static wchar_t xlat[128];
@@ -291,50 +292,49 @@ static wchar_t *MachinePtyGetXlatDoubleWidth(void) {
   return xlat;
 }
 
-static wchar_t *MachinePtyGetXlatSgr(struct MachinePty *pty) {
-  switch (!!(pty->pr & kMachinePtyFraktur) << 2 |
-          !!(pty->pr & kMachinePtyItalic) << 1 |
-          !!(pty->pr & kMachinePtyBold) << 0) {
+static wchar_t *GetXlatSgr(struct Pty *pty) {
+  switch (!!(pty->pr & kPtyFraktur) << 2 | !!(pty->pr & kPtyItalic) << 1 |
+          !!(pty->pr & kPtyBold) << 0) {
     case 0b100:
     case 0b110:
-      return MachinePtyGetXlatFraktur();
+      return GetXlatFraktur();
     case 0b101:
     case 0b111:
-      return MachinePtyGetXlatBoldFraktur();
+      return GetXlatBoldFraktur();
     case 0b011:
-      return MachinePtyGetXlatBoldItalic();
+      return GetXlatBoldItalic();
     case 0b010:
-      return MachinePtyGetXlatItalic();
+      return GetXlatItalic();
     default:
-      return MachinePtyGetXlatAscii();
+      return GetXlatAscii();
   }
 }
 
-static void MachinePtySetXlat(struct MachinePty *pty, wchar_t *xlat) {
+static void PtySetXlat(struct Pty *pty, wchar_t *xlat) {
   pty->xlat = xlat;
-  pty->pr &= ~(kMachinePtyItalic | kMachinePtyFraktur);
+  pty->pr &= ~(kPtyItalic | kPtyFraktur);
 }
 
-static void MachinePtySetCodepage(struct MachinePty *pty, char id) {
+static void PtySetCodepage(struct Pty *pty, char id) {
   unsigned i;
   switch (id) {
     default:
     case 'B':
-      MachinePtySetXlat(pty, MachinePtyGetXlatAscii());
+      PtySetXlat(pty, GetXlatAscii());
       break;
     case '0':
-      MachinePtySetXlat(pty, MachinePtyGetXlatLineDrawing());
+      PtySetXlat(pty, GetXlatLineDrawing());
       break;
   }
 }
 
-void MachinePtyErase(struct MachinePty *pty, long dst, long n) {
+void PtyErase(struct Pty *pty, long dst, long n) {
   DCHECK_LE(dst + n, pty->yn * pty->xn);
   wmemset((void *)(pty->wcs + dst), ' ', n);
   wmemset((void *)(pty->prs + dst), 0, n);
 }
 
-void MachinePtyMemmove(struct MachinePty *pty, long dst, long src, long n) {
+void PtyMemmove(struct Pty *pty, long dst, long src, long n) {
   DCHECK_LE(src + n, pty->yn * pty->xn);
   DCHECK_LE(dst + n, pty->yn * pty->xn);
   memmove(pty->wcs + dst, pty->wcs + src, n * 4);
@@ -343,7 +343,7 @@ void MachinePtyMemmove(struct MachinePty *pty, long dst, long src, long n) {
   memmove(pty->prs + dst, pty->prs + src, n * 4);
 }
 
-void MachinePtyFullReset(struct MachinePty *pty) {
+void PtyFullReset(struct Pty *pty) {
   pty->y = 0;
   pty->x = 0;
   pty->pr = 0;
@@ -354,21 +354,21 @@ void MachinePtyFullReset(struct MachinePty *pty) {
   pty->state = 0;
   pty->esc.i = 0;
   pty->input.i = 0;
-  pty->xlat = MachinePtyGetXlatAscii();
-  MachinePtyErase(pty, 0, pty->yn * pty->xn);
+  pty->xlat = GetXlatAscii();
+  PtyErase(pty, 0, pty->yn * pty->xn);
 }
 
-void MachinePtySetY(struct MachinePty *pty, int y) {
-  pty->conf &= ~kMachinePtyRedzone;
+void PtySetY(struct Pty *pty, int y) {
+  pty->conf &= ~kPtyRedzone;
   pty->y = MAX(0, MIN(pty->yn - 1, y));
 }
 
-void MachinePtySetX(struct MachinePty *pty, int x) {
-  pty->conf &= ~kMachinePtyRedzone;
+void PtySetX(struct Pty *pty, int x) {
+  pty->conf &= ~kPtyRedzone;
   pty->x = MAX(0, MIN(pty->xn - 1, x));
 }
 
-void MachinePtyResize(struct MachinePty *pty, int yn, int xn) {
+void PtyResize(struct Pty *pty, int yn, int xn) {
   unsigned y, ym, xm, y0;
   uint32_t *wcs, *fgs, *bgs, *prs;
   if (xn < 80) xn = 80;
@@ -387,93 +387,92 @@ void MachinePtyResize(struct MachinePty *pty, int yn, int xn) {
     memcpy(bgs + y * xn, pty->bgs + y * pty->xn, xm * 4);
     memcpy(prs + y * xn, pty->prs + y * pty->xn, xm * 4);
   }
-  MachinePtyFreePlanes(pty);
+  FreePtyPlanes(pty);
   pty->wcs = wcs;
   pty->fgs = fgs;
   pty->bgs = bgs;
   pty->prs = prs;
   pty->yn = yn;
   pty->xn = xn;
-  MachinePtySetY(pty, pty->y);
-  MachinePtySetX(pty, pty->x);
+  PtySetY(pty, pty->y);
+  PtySetX(pty, pty->x);
 }
 
-static void MachinePtyConcatInput(struct MachinePty *pty, const char *data,
-                                  size_t n) {
+static void PtyConcatInput(struct Pty *pty, const char *data, size_t n) {
   CONCAT(&pty->input.p, &pty->input.i, &pty->input.n, data, n);
 }
 
-static void MachinePtyScroll(struct MachinePty *pty) {
-  MachinePtyMemmove(pty, 0, pty->xn, pty->xn * (pty->yn - 1));
-  MachinePtyErase(pty, pty->xn * (pty->yn - 1), pty->xn);
+static void PtyScroll(struct Pty *pty) {
+  PtyMemmove(pty, 0, pty->xn, pty->xn * (pty->yn - 1));
+  PtyErase(pty, pty->xn * (pty->yn - 1), pty->xn);
 }
 
-static void MachinePtyReverse(struct MachinePty *pty) {
-  MachinePtyMemmove(pty, pty->xn, 0, pty->xn * (pty->yn - 1));
-  MachinePtyErase(pty, 0, pty->xn);
+static void PtyReverse(struct Pty *pty) {
+  PtyMemmove(pty, pty->xn, 0, pty->xn * (pty->yn - 1));
+  PtyErase(pty, 0, pty->xn);
 }
 
-static void MachinePtyIndex(struct MachinePty *pty) {
+static void PtyIndex(struct Pty *pty) {
   if (pty->y < pty->yn - 1) {
     ++pty->y;
   } else {
-    MachinePtyScroll(pty);
+    PtyScroll(pty);
   }
 }
 
-static void MachinePtyReverseIndex(struct MachinePty *pty) {
+static void PtyReverseIndex(struct Pty *pty) {
   if (pty->y) {
     --pty->y;
   } else {
-    MachinePtyReverse(pty);
+    PtyReverse(pty);
   }
 }
 
-static void MachinePtyCarriageReturn(struct MachinePty *pty) {
-  MachinePtySetX(pty, 0);
+static void PtyCarriageReturn(struct Pty *pty) {
+  PtySetX(pty, 0);
 }
 
-static void MachinePtyNewline(struct MachinePty *pty) {
-  MachinePtyIndex(pty);
-  if (!(pty->conf & kMachinePtyNoopost)) {
-    MachinePtyCarriageReturn(pty);
+static void PtyNewline(struct Pty *pty) {
+  PtyIndex(pty);
+  if (!(pty->conf & kPtyNoopost)) {
+    PtyCarriageReturn(pty);
   }
 }
 
-static void MachinePtyAdvance(struct MachinePty *pty) {
+static void PtyAdvance(struct Pty *pty) {
   DCHECK_EQ(pty->xn - 1, pty->x);
-  DCHECK(pty->conf & kMachinePtyRedzone);
-  pty->conf &= ~kMachinePtyRedzone;
+  DCHECK(pty->conf & kPtyRedzone);
+  pty->conf &= ~kPtyRedzone;
   pty->x = 0;
   if (pty->y < pty->yn - 1) {
     ++pty->y;
   } else {
-    MachinePtyScroll(pty);
+    PtyScroll(pty);
   }
 }
 
-static void MachinePtyWriteGlyph(struct MachinePty *pty, wint_t wc, int w) {
+static void PtyWriteGlyph(struct Pty *pty, wint_t wc, int w) {
   uint32_t i;
   if (w < 1) wc = ' ', w = 1;
-  if ((pty->conf & kMachinePtyRedzone) || pty->x + w > pty->xn) {
-    MachinePtyAdvance(pty);
+  if ((pty->conf & kPtyRedzone) || pty->x + w > pty->xn) {
+    PtyAdvance(pty);
   }
   i = pty->y * pty->xn + pty->x;
   pty->wcs[i] = wc;
-  if ((pty->prs[i] = pty->pr) & (kMachinePtyFg | kMachinePtyBg)) {
+  if ((pty->prs[i] = pty->pr) & (kPtyFg | kPtyBg)) {
     pty->fgs[i] = pty->fg;
     pty->bgs[i] = pty->bg;
   }
   if ((pty->x += w) >= pty->xn) {
     pty->x = pty->xn - 1;
-    pty->conf |= kMachinePtyRedzone;
+    pty->conf |= kPtyRedzone;
   }
 }
 
-static void MachinePtyWriteTab(struct MachinePty *pty) {
+static void PtyWriteTab(struct Pty *pty) {
   unsigned x, x2;
-  if (pty->conf & kMachinePtyRedzone) {
-    MachinePtyAdvance(pty);
+  if (pty->conf & kPtyRedzone) {
+    PtyAdvance(pty);
   }
   x2 = MIN(pty->xn, ROUNDUP(pty->x + 1, 8));
   for (x = pty->x; x < x2; ++x) {
@@ -483,73 +482,73 @@ static void MachinePtyWriteTab(struct MachinePty *pty) {
     pty->x = x2;
   } else {
     pty->x = pty->xn - 1;
-    pty->conf |= kMachinePtyRedzone;
+    pty->conf |= kPtyRedzone;
   }
 }
 
-static int MachinePtyAtoi(const char *s, const char **e) {
+int PtyAtoi(const char *s, const char **e) {
   int i;
   for (i = 0; isdigit(*s); ++s) i *= 10, i += *s - '0';
   if (e) *e = s;
   return i;
 }
 
-static int MachinePtyGetMoveParam(struct MachinePty *pty) {
-  int x = MachinePtyAtoi(pty->esc.s, NULL);
+static int PtyGetMoveParam(struct Pty *pty) {
+  int x = PtyAtoi(pty->esc.s, NULL);
   if (x < 1) x = 1;
   return x;
 }
 
-static void MachinePtySetCursorPosition(struct MachinePty *pty) {
+static void PtySetCursorPosition(struct Pty *pty) {
   int row, col;
   const char *s = pty->esc.s;
-  row = max(1, MachinePtyAtoi(s, &s));
+  row = max(1, PtyAtoi(s, &s));
   if (*s == ';') ++s;
-  col = max(1, MachinePtyAtoi(s, &s));
-  MachinePtySetY(pty, row - 1);
-  MachinePtySetX(pty, col - 1);
+  col = max(1, PtyAtoi(s, &s));
+  PtySetY(pty, row - 1);
+  PtySetX(pty, col - 1);
 }
 
-static void MachinePtySetCursorRow(struct MachinePty *pty) {
-  MachinePtySetY(pty, MachinePtyGetMoveParam(pty) - 1);
+static void PtySetCursorRow(struct Pty *pty) {
+  PtySetY(pty, PtyGetMoveParam(pty) - 1);
 }
 
-static void MachinePtySetCursorColumn(struct MachinePty *pty) {
-  MachinePtySetX(pty, MachinePtyGetMoveParam(pty) - 1);
+static void PtySetCursorColumn(struct Pty *pty) {
+  PtySetX(pty, PtyGetMoveParam(pty) - 1);
 }
 
-static void MachinePtyMoveCursor(struct MachinePty *pty, int dy, int dx) {
-  int n = MachinePtyGetMoveParam(pty);
-  MachinePtySetY(pty, pty->y + dy * n);
-  MachinePtySetX(pty, pty->x + dx * n);
+static void PtyMoveCursor(struct Pty *pty, int dy, int dx) {
+  int n = PtyGetMoveParam(pty);
+  PtySetY(pty, pty->y + dy * n);
+  PtySetX(pty, pty->x + dx * n);
 }
 
-static void MachinePtyScrollUp(struct MachinePty *pty) {
-  int n = MachinePtyGetMoveParam(pty);
-  while (n--) MachinePtyScroll(pty);
+static void PtyScrollUp(struct Pty *pty) {
+  int n = PtyGetMoveParam(pty);
+  while (n--) PtyScroll(pty);
 }
 
-static void MachinePtyScrollDown(struct MachinePty *pty) {
-  int n = MachinePtyGetMoveParam(pty);
-  while (n--) MachinePtyReverse(pty);
+static void PtyScrollDown(struct Pty *pty) {
+  int n = PtyGetMoveParam(pty);
+  while (n--) PtyReverse(pty);
 }
 
-static void MachinePtySetCursorStatus(struct MachinePty *pty, bool status) {
+static void PtySetCursorStatus(struct Pty *pty, bool status) {
   if (status) {
-    pty->conf &= ~kMachinePtyNocursor;
+    pty->conf &= ~kPtyNocursor;
   } else {
-    pty->conf |= kMachinePtyNocursor;
+    pty->conf |= kPtyNocursor;
   }
 }
 
-static void MachinePtySetMode(struct MachinePty *pty, bool status) {
+static void PtySetMode(struct Pty *pty, bool status) {
   const char *p = pty->esc.s;
   switch (*p++) {
     case '?':
       while (isdigit(*p)) {
-        switch (MachinePtyAtoi(p, &p)) {
+        switch (PtyAtoi(p, &p)) {
           case 25:
-            MachinePtySetCursorStatus(pty, status);
+            PtySetCursorStatus(pty, status);
             break;
           default:
             break;
@@ -564,131 +563,131 @@ static void MachinePtySetMode(struct MachinePty *pty, bool status) {
   }
 }
 
-static void MachinePtySaveCursorPosition(struct MachinePty *pty) {
+static void PtySaveCursorPosition(struct Pty *pty) {
   pty->save = (pty->y & 0x7FFF) | (pty->x & 0x7FFF) << 16;
 }
 
-static void MachinePtyRestoreCursorPosition(struct MachinePty *pty) {
-  MachinePtySetY(pty, (pty->save & 0x00007FFF) >> 000);
-  MachinePtySetX(pty, (pty->save & 0x7FFF0000) >> 020);
+static void PtyRestoreCursorPosition(struct Pty *pty) {
+  PtySetY(pty, (pty->save & 0x00007FFF) >> 000);
+  PtySetX(pty, (pty->save & 0x7FFF0000) >> 020);
 }
 
-static void MachinePtyEraseDisplay(struct MachinePty *pty) {
-  switch (MachinePtyAtoi(pty->esc.s, NULL)) {
+static void PtyEraseDisplay(struct Pty *pty) {
+  switch (PtyAtoi(pty->esc.s, NULL)) {
     case 0:
-      MachinePtyErase(pty, pty->y * pty->xn + pty->x,
-                      pty->yn * pty->xn - (pty->y * pty->xn + pty->x));
+      PtyErase(pty, pty->y * pty->xn + pty->x,
+               pty->yn * pty->xn - (pty->y * pty->xn + pty->x));
       break;
     case 1:
-      MachinePtyErase(pty, 0, pty->y * pty->xn + pty->x);
+      PtyErase(pty, 0, pty->y * pty->xn + pty->x);
       break;
     case 2:
     case 3:
-      MachinePtyErase(pty, 0, pty->yn * pty->xn);
+      PtyErase(pty, 0, pty->yn * pty->xn);
       break;
     default:
       break;
   }
 }
 
-static void MachinePtyEraseLine(struct MachinePty *pty) {
-  switch (MachinePtyAtoi(pty->esc.s, NULL)) {
+static void PtyEraseLine(struct Pty *pty) {
+  switch (PtyAtoi(pty->esc.s, NULL)) {
     case 0:
-      MachinePtyErase(pty, pty->y * pty->xn + pty->x, pty->xn - pty->x);
+      PtyErase(pty, pty->y * pty->xn + pty->x, pty->xn - pty->x);
       break;
     case 1:
-      MachinePtyErase(pty, pty->y * pty->xn, pty->x);
+      PtyErase(pty, pty->y * pty->xn, pty->x);
       break;
     case 2:
-      MachinePtyErase(pty, pty->y * pty->xn, pty->xn);
+      PtyErase(pty, pty->y * pty->xn, pty->xn);
       break;
     default:
       break;
   }
 }
 
-static void MachinePtyEraseCells(struct MachinePty *pty) {
+static void PtyEraseCells(struct Pty *pty) {
   int i, n, x;
   i = pty->y * pty->xn + pty->x;
   n = pty->yn * pty->xn;
-  x = min(max(MachinePtyAtoi(pty->esc.s, NULL), 1), n - i);
-  MachinePtyErase(pty, i, x);
+  x = min(max(PtyAtoi(pty->esc.s, NULL), 1), n - i);
+  PtyErase(pty, i, x);
 }
 
-static int MachinePtyArg1(struct MachinePty *pty) {
-  return max(1, MachinePtyAtoi(pty->esc.s, NULL));
+static int PtyArg1(struct Pty *pty) {
+  return max(1, PtyAtoi(pty->esc.s, NULL));
 }
 
-static void MachinePtyInsertCells(struct MachinePty *pty) {
-  int n = min(pty->xn - pty->x, MachinePtyArg1(pty));
-  MachinePtyMemmove(pty, pty->y * pty->xn + pty->x + n,
-                    pty->y * pty->xn + pty->x, pty->xn - (pty->x + n));
-  MachinePtyErase(pty, pty->y * pty->xn + pty->x, n);
+static void PtyInsertCells(struct Pty *pty) {
+  int n = min(pty->xn - pty->x, PtyArg1(pty));
+  PtyMemmove(pty, pty->y * pty->xn + pty->x + n, pty->y * pty->xn + pty->x,
+             pty->xn - (pty->x + n));
+  PtyErase(pty, pty->y * pty->xn + pty->x, n);
 }
 
-static void MachinePtyInsertLines(struct MachinePty *pty) {
-  int n = min(pty->yn - pty->y, MachinePtyArg1(pty));
-  MachinePtyMemmove(pty, (pty->y + n) * pty->xn, pty->y * pty->xn,
-                    (pty->yn - pty->y - n) * pty->xn);
-  MachinePtyErase(pty, pty->y * pty->xn, n * pty->xn);
+static void PtyInsertLines(struct Pty *pty) {
+  int n = min(pty->yn - pty->y, PtyArg1(pty));
+  PtyMemmove(pty, (pty->y + n) * pty->xn, pty->y * pty->xn,
+             (pty->yn - pty->y - n) * pty->xn);
+  PtyErase(pty, pty->y * pty->xn, n * pty->xn);
 }
 
-static void MachinePtyDeleteCells(struct MachinePty *pty) {
-  int n = min(pty->xn - pty->x, MachinePtyArg1(pty));
-  MachinePtyMemmove(pty, pty->y * pty->xn + pty->x,
-                    pty->y * pty->xn + pty->x + n, pty->xn - (pty->x + n));
-  MachinePtyErase(pty, pty->y * pty->xn + pty->x, n);
+static void PtyDeleteCells(struct Pty *pty) {
+  int n = min(pty->xn - pty->x, PtyArg1(pty));
+  PtyMemmove(pty, pty->y * pty->xn + pty->x, pty->y * pty->xn + pty->x + n,
+             pty->xn - (pty->x + n));
+  PtyErase(pty, pty->y * pty->xn + pty->x, n);
 }
 
-static void MachinePtyDeleteLines(struct MachinePty *pty) {
-  int n = min(pty->yn - pty->y, MachinePtyArg1(pty));
-  MachinePtyMemmove(pty, pty->y * pty->xn, (pty->y + n) * pty->xn,
-                    (pty->yn - pty->y - n) * pty->xn);
-  MachinePtyErase(pty, (pty->y + n) * pty->xn, n * pty->xn);
+static void PtyDeleteLines(struct Pty *pty) {
+  int n = min(pty->yn - pty->y, PtyArg1(pty));
+  PtyMemmove(pty, pty->y * pty->xn, (pty->y + n) * pty->xn,
+             (pty->yn - pty->y - n) * pty->xn);
+  PtyErase(pty, (pty->y + n) * pty->xn, n * pty->xn);
 }
 
-static void MachinePtyReportDeviceStatus(struct MachinePty *pty) {
-  MachinePtyWriteInput(pty, "\e[0n", 4);
+static void PtyReportDeviceStatus(struct Pty *pty) {
+  PtyWriteInput(pty, "\e[0n", 4);
 }
 
-static void MachinePtyReportPreferredVtType(struct MachinePty *pty) {
-  MachinePtyWriteInput(pty, "\e[?1;0c", 4);
+static void PtyReportPreferredVtType(struct Pty *pty) {
+  PtyWriteInput(pty, "\e[?1;0c", 4);
 }
 
-static void MachinePtyReportPreferredVtIdentity(struct MachinePty *pty) {
-  MachinePtyWriteInput(pty, "\e/Z", 4);
+static void PtyReportPreferredVtIdentity(struct Pty *pty) {
+  PtyWriteInput(pty, "\e/Z", 4);
 }
 
-static void MachinePtyBell(struct MachinePty *pty) {
-  pty->conf |= kMachinePtyBell;
+static void PtyBell(struct Pty *pty) {
+  pty->conf |= kPtyBell;
 }
 
-static void MachinePtyLed(struct MachinePty *pty) {
-  switch (MachinePtyAtoi(pty->esc.s, NULL)) {
+static void PtyLed(struct Pty *pty) {
+  switch (PtyAtoi(pty->esc.s, NULL)) {
     case 0:
-      pty->conf &= ~kMachinePtyLed1;
-      pty->conf &= ~kMachinePtyLed2;
-      pty->conf &= ~kMachinePtyLed3;
-      pty->conf &= ~kMachinePtyLed4;
+      pty->conf &= ~kPtyLed1;
+      pty->conf &= ~kPtyLed2;
+      pty->conf &= ~kPtyLed3;
+      pty->conf &= ~kPtyLed4;
       break;
     case 1:
-      pty->conf |= kMachinePtyLed1;
+      pty->conf |= kPtyLed1;
       break;
     case 2:
-      pty->conf |= kMachinePtyLed2;
+      pty->conf |= kPtyLed2;
       break;
     case 3:
-      pty->conf |= kMachinePtyLed3;
+      pty->conf |= kPtyLed3;
       break;
     case 4:
-      pty->conf |= kMachinePtyLed4;
+      pty->conf |= kPtyLed4;
       break;
     default:
       break;
   }
 }
 
-static void MachinePtyReportCursorPosition(struct MachinePty *pty) {
+static void PtyReportCursorPosition(struct Pty *pty) {
   char *p;
   char buf[2 + 10 + 1 + 10 + 1];
   p = buf;
@@ -698,23 +697,23 @@ static void MachinePtyReportCursorPosition(struct MachinePty *pty) {
   *p++ = ';';
   p += uint64toarray_radix10((pty->x + 1) & 0x7fff, p);
   *p++ = 'R';
-  MachinePtyWriteInput(pty, buf, p - buf);
+  PtyWriteInput(pty, buf, p - buf);
 }
 
-static void MachinePtyCsiN(struct MachinePty *pty) {
-  switch (MachinePtyAtoi(pty->esc.s, NULL)) {
+static void PtyCsiN(struct Pty *pty) {
+  switch (PtyAtoi(pty->esc.s, NULL)) {
     case 5:
-      MachinePtyReportDeviceStatus(pty);
+      PtyReportDeviceStatus(pty);
       break;
     case 6:
-      MachinePtyReportCursorPosition(pty);
+      PtyReportCursorPosition(pty);
       break;
     default:
       break;
   }
 }
 
-static void MachinePtySelectGraphicsRendition(struct MachinePty *pty) {
+static void PtySelectGraphicsRendition(struct Pty *pty) {
   char *p, c;
   unsigned x;
   uint8_t code[4];
@@ -755,69 +754,69 @@ static void MachinePtySelectGraphicsRendition(struct MachinePty *pty) {
                 break;
               case 0:
                 pty->pr = 0;
-                pty->xlat = MachinePtyGetXlatSgr(pty);
+                pty->xlat = GetXlatSgr(pty);
                 break;
               case 1:
-                pty->pr |= kMachinePtyBold;
-                pty->xlat = MachinePtyGetXlatSgr(pty);
+                pty->pr |= kPtyBold;
+                pty->xlat = GetXlatSgr(pty);
                 break;
               case 2:
-                pty->pr |= kMachinePtyFaint;
+                pty->pr |= kPtyFaint;
                 break;
               case 3:
-                pty->pr |= kMachinePtyItalic;
-                pty->xlat = MachinePtyGetXlatSgr(pty);
+                pty->pr |= kPtyItalic;
+                pty->xlat = GetXlatSgr(pty);
                 break;
               case 4:
-                pty->pr |= kMachinePtyUnder;
+                pty->pr |= kPtyUnder;
                 break;
               case 5:
-                pty->pr |= kMachinePtyBlink;
+                pty->pr |= kPtyBlink;
                 break;
               case 7:
-                pty->pr |= kMachinePtyFlip;
+                pty->pr |= kPtyFlip;
                 break;
               case 8:
-                pty->pr |= kMachinePtyConceal;
+                pty->pr |= kPtyConceal;
                 break;
               case 9:
-                pty->pr |= kMachinePtyStrike;
+                pty->pr |= kPtyStrike;
                 break;
               case 20:
-                pty->pr |= kMachinePtyFraktur;
-                pty->xlat = MachinePtyGetXlatSgr(pty);
+                pty->pr |= kPtyFraktur;
+                pty->xlat = GetXlatSgr(pty);
                 break;
               case 21:
-                pty->pr |= kMachinePtyUnder | kMachinePtyDunder;
+                pty->pr |= kPtyUnder | kPtyDunder;
                 break;
               case 22:
-                pty->pr &= ~(kMachinePtyFaint | kMachinePtyBold);
-                pty->xlat = MachinePtyGetXlatSgr(pty);
+                pty->pr &= ~(kPtyFaint | kPtyBold);
+                pty->xlat = GetXlatSgr(pty);
                 break;
               case 23:
-                pty->pr &= ~kMachinePtyItalic;
-                pty->xlat = MachinePtyGetXlatSgr(pty);
+                pty->pr &= ~kPtyItalic;
+                pty->xlat = GetXlatSgr(pty);
                 break;
               case 24:
-                pty->pr &= ~(kMachinePtyUnder | kMachinePtyDunder);
+                pty->pr &= ~(kPtyUnder | kPtyDunder);
                 break;
               case 25:
-                pty->pr &= ~kMachinePtyBlink;
+                pty->pr &= ~kPtyBlink;
                 break;
               case 27:
-                pty->pr &= ~kMachinePtyFlip;
+                pty->pr &= ~kPtyFlip;
                 break;
               case 28:
-                pty->pr &= ~kMachinePtyConceal;
+                pty->pr &= ~kPtyConceal;
                 break;
               case 29:
-                pty->pr &= ~kMachinePtyStrike;
+                pty->pr &= ~kPtyStrike;
                 break;
               case 39:
-                pty->pr &= ~kMachinePtyFg;
+                pty->pr &= ~kPtyFg;
                 break;
               case 49:
-                pty->pr &= ~kMachinePtyBg;
+                pty->pr &= ~kPtyBg;
                 break;
               case 90 ... 97:
                 code[0] -= 90 - 30;
@@ -825,8 +824,8 @@ static void MachinePtySelectGraphicsRendition(struct MachinePty *pty) {
                 /* fallthrough */
               case 30 ... 37:
                 pty->fg = code[0] - 30;
-                pty->pr |= kMachinePtyFg;
-                pty->pr &= ~kMachinePtyTrue;
+                pty->pr |= kPtyFg;
+                pty->pr &= ~kPtyTrue;
                 break;
               case 100 ... 107:
                 code[0] -= 100 - 40;
@@ -834,8 +833,8 @@ static void MachinePtySelectGraphicsRendition(struct MachinePty *pty) {
                 /* fallthrough */
               case 40 ... 47:
                 pty->bg = code[0] - 40;
-                pty->pr |= kMachinePtyBg;
-                pty->pr &= ~kMachinePtyTrue;
+                pty->pr |= kPtyBg;
+                pty->pr &= ~kPtyTrue;
                 break;
               default:
                 break;
@@ -858,8 +857,8 @@ static void MachinePtySelectGraphicsRendition(struct MachinePty *pty) {
               code[3] = 0;
               t = kSgr;
               pty->fg = READ32LE(code);
-              pty->pr |= kMachinePtyFg;
-              pty->pr |= kMachinePtyTrue;
+              pty->pr |= kPtyFg;
+              pty->pr |= kPtyTrue;
             }
             break;
           case kSgrBgTrue:
@@ -867,21 +866,21 @@ static void MachinePtySelectGraphicsRendition(struct MachinePty *pty) {
               code[3] = 0;
               t = kSgr;
               pty->bg = READ32LE(code);
-              pty->pr |= kMachinePtyBg;
-              pty->pr |= kMachinePtyTrue;
+              pty->pr |= kPtyBg;
+              pty->pr |= kPtyTrue;
             }
             break;
           case kSgrFgXterm:
             t = kSgr;
             pty->fg = code[0];
-            pty->pr |= kMachinePtyFg;
-            pty->pr &= ~kMachinePtyTrue;
+            pty->pr |= kPtyFg;
+            pty->pr &= ~kPtyTrue;
             break;
           case kSgrBgXterm:
             t = kSgr;
             pty->bg = code[0];
-            pty->pr |= kMachinePtyBg;
-            pty->pr &= ~kMachinePtyTrue;
+            pty->pr |= kPtyBg;
+            pty->pr &= ~kPtyTrue;
             break;
           default:
             abort();
@@ -893,243 +892,243 @@ static void MachinePtySelectGraphicsRendition(struct MachinePty *pty) {
   }
 }
 
-static void MachinePtyCsi(struct MachinePty *pty) {
+static void PtyCsi(struct Pty *pty) {
   switch (pty->esc.s[pty->esc.i - 1]) {
     case 'f':
     case 'H':
-      MachinePtySetCursorPosition(pty);
+      PtySetCursorPosition(pty);
       break;
     case 'G':
-      MachinePtySetCursorColumn(pty);
+      PtySetCursorColumn(pty);
       break;
     case 'd':
-      MachinePtySetCursorRow(pty);
+      PtySetCursorRow(pty);
       break;
     case 'F':
       pty->x = 0;
       /* fallthrough */
     case 'A':
-      MachinePtyMoveCursor(pty, -1, +0);
+      PtyMoveCursor(pty, -1, +0);
       break;
     case 'E':
       pty->x = 0;
       /* fallthrough */
     case 'B':
-      MachinePtyMoveCursor(pty, +1, +0);
+      PtyMoveCursor(pty, +1, +0);
       break;
     case 'C':
-      MachinePtyMoveCursor(pty, +0, +1);
+      PtyMoveCursor(pty, +0, +1);
       break;
     case 'D':
-      MachinePtyMoveCursor(pty, +0, -1);
+      PtyMoveCursor(pty, +0, -1);
       break;
     case 'S':
-      MachinePtyScrollUp(pty);
+      PtyScrollUp(pty);
       break;
     case 'T':
-      MachinePtyScrollDown(pty);
+      PtyScrollDown(pty);
       break;
     case '@':
-      MachinePtyInsertCells(pty);
+      PtyInsertCells(pty);
       break;
     case 'P':
-      MachinePtyDeleteCells(pty);
+      PtyDeleteCells(pty);
       break;
     case 'L':
-      MachinePtyInsertLines(pty);
+      PtyInsertLines(pty);
       break;
     case 'M':
-      MachinePtyDeleteLines(pty);
+      PtyDeleteLines(pty);
       break;
     case 'J':
-      MachinePtyEraseDisplay(pty);
+      PtyEraseDisplay(pty);
       break;
     case 'K':
-      MachinePtyEraseLine(pty);
+      PtyEraseLine(pty);
       break;
     case 'X':
-      MachinePtyEraseCells(pty);
+      PtyEraseCells(pty);
       break;
     case 's':
-      MachinePtySaveCursorPosition(pty);
+      PtySaveCursorPosition(pty);
       break;
     case 'u':
-      MachinePtyRestoreCursorPosition(pty);
+      PtyRestoreCursorPosition(pty);
       break;
     case 'n':
-      MachinePtyCsiN(pty);
+      PtyCsiN(pty);
       break;
     case 'm':
-      MachinePtySelectGraphicsRendition(pty);
+      PtySelectGraphicsRendition(pty);
       break;
     case 'h':
-      MachinePtySetMode(pty, true);
+      PtySetMode(pty, true);
       break;
     case 'l':
-      MachinePtySetMode(pty, false);
+      PtySetMode(pty, false);
       break;
     case 'c':
-      MachinePtyReportPreferredVtType(pty);
+      PtyReportPreferredVtType(pty);
       break;
     case 'q':
-      MachinePtyLed(pty);
+      PtyLed(pty);
       break;
     default:
       break;
   }
 }
 
-static void MachinePtyScreenAlignmentDisplay(struct MachinePty *pty) {
+static void PtyScreenAlignmentDisplay(struct Pty *pty) {
   wmemset((void *)pty->wcs, 'E', pty->yn * pty->xn);
 }
 
-static void MachinePtyEscHash(struct MachinePty *pty) {
+static void PtyEscHash(struct Pty *pty) {
   switch (pty->esc.s[1]) {
     case '5':
-      MachinePtySetXlat(pty, MachinePtyGetXlatAscii());
+      PtySetXlat(pty, GetXlatAscii());
       break;
     case '6':
-      MachinePtySetXlat(pty, MachinePtyGetXlatDoubleWidth());
+      PtySetXlat(pty, GetXlatDoubleWidth());
       break;
     case '8':
-      MachinePtyScreenAlignmentDisplay(pty);
+      PtyScreenAlignmentDisplay(pty);
       break;
     default:
       break;
   }
 }
 
-static void MachinePtyEsc(struct MachinePty *pty) {
+static void PtyEsc(struct Pty *pty) {
   switch (pty->esc.s[0]) {
     case 'c':
-      MachinePtyFullReset(pty);
+      PtyFullReset(pty);
       break;
     case '7':
-      MachinePtySaveCursorPosition(pty);
+      PtySaveCursorPosition(pty);
       break;
     case '8':
-      MachinePtyRestoreCursorPosition(pty);
+      PtyRestoreCursorPosition(pty);
       break;
     case 'E':
       pty->x = 0;
     case 'D':
-      MachinePtyIndex(pty);
+      PtyIndex(pty);
       break;
     case 'M':
-      MachinePtyReverseIndex(pty);
+      PtyReverseIndex(pty);
       break;
     case 'Z':
-      MachinePtyReportPreferredVtIdentity(pty);
+      PtyReportPreferredVtIdentity(pty);
       break;
     case '(':
-      MachinePtySetCodepage(pty, pty->esc.s[1]);
+      PtySetCodepage(pty, pty->esc.s[1]);
       break;
     case '#':
-      MachinePtyEscHash(pty);
+      PtyEscHash(pty);
       break;
     default:
       break;
   }
 }
 
-static void MachinePtyCntrl(struct MachinePty *pty, int c01) {
+static void PtyCntrl(struct Pty *pty, int c01) {
   switch (c01) {
     case '\a':
-      MachinePtyBell(pty);
+      PtyBell(pty);
       break;
     case 0x85:
     case '\f':
     case '\v':
     case '\n':
-      MachinePtyNewline(pty);
+      PtyNewline(pty);
       break;
     case '\r':
-      MachinePtyCarriageReturn(pty);
+      PtyCarriageReturn(pty);
       break;
     case '\e':
-      pty->state = kMachinePtyEsc;
+      pty->state = kPtyEsc;
       pty->esc.i = 0;
       break;
     case '\t':
-      MachinePtyWriteTab(pty);
+      PtyWriteTab(pty);
       break;
     case 0x7F:
     case '\b':
       pty->x = MAX(0, pty->x - 1);
       break;
     case 0x84:
-      MachinePtyIndex(pty);
+      PtyIndex(pty);
       break;
     case 0x8D:
-      MachinePtyReverseIndex(pty);
+      PtyReverseIndex(pty);
       break;
     case 0x9B:
-      pty->state = kMachinePtyCsi;
+      pty->state = kPtyCsi;
       break;
     default:
       break;
   }
 }
 
-static void MachinePtyEscAppend(struct MachinePty *pty, char c) {
+static void PtyEscAppend(struct Pty *pty, char c) {
   pty->esc.i = MIN(pty->esc.i + 1, ARRAYLEN(pty->esc.s) - 1);
   pty->esc.s[pty->esc.i - 1] = c;
   pty->esc.s[pty->esc.i - 0] = 0;
 }
 
-ssize_t MachinePtyWrite(struct MachinePty *pty, const void *data, size_t n) {
+ssize_t PtyWrite(struct Pty *pty, const void *data, size_t n) {
   int i;
   wchar_t wc;
   const uint8_t *p;
   for (p = data, i = 0; i < n; ++i) {
     switch (pty->state) {
-      case kMachinePtyAscii:
+      case kPtyAscii:
         if (0x00 <= p[i] && p[i] <= 0x7F) {
           if (0x20 <= p[i] && p[i] <= 0x7E) {
             if ((wc = pty->xlat[p[i]]) >= 0) {
-              MachinePtyWriteGlyph(pty, wc, 1);
+              PtyWriteGlyph(pty, wc, 1);
             } else {
-              MachinePtyWriteGlyph(pty, -wc, 2);
+              PtyWriteGlyph(pty, -wc, 2);
             }
           } else {
-            MachinePtyCntrl(pty, p[i]);
+            PtyCntrl(pty, p[i]);
           }
         } else if (!ThomPikeCont(p[i])) {
-          pty->state = kMachinePtyUtf8;
+          pty->state = kPtyUtf8;
           pty->u8 = ThomPikeByte(p[i]);
           pty->n8 = ThomPikeLen(p[i]) - 1;
         }
         break;
-      case kMachinePtyUtf8:
+      case kPtyUtf8:
         if (ThomPikeCont(p[i])) {
           pty->u8 = ThomPikeMerge(pty->u8, p[i]);
           if (--pty->n8) break;
         }
         wc = pty->u8;
         if ((0x00 <= wc && wc <= 0x1F) || (0x7F <= wc && wc <= 0x9F)) {
-          MachinePtyCntrl(pty, wc);
+          PtyCntrl(pty, wc);
         } else {
-          MachinePtyWriteGlyph(pty, wc, wcwidth(wc));
+          PtyWriteGlyph(pty, wc, wcwidth(wc));
         }
-        pty->state = kMachinePtyAscii;
+        pty->state = kPtyAscii;
         pty->u8 = 0;
         --i;
         break;
-      case kMachinePtyEsc:
+      case kPtyEsc:
         if (p[i] == '[') {
-          pty->state = kMachinePtyCsi;
-        } else if (0x30 <= p[i] && p[i] <= 0x7e) {
-          MachinePtyEscAppend(pty, p[i]);
-          MachinePtyEsc(pty);
-          pty->state = kMachinePtyAscii;
-        } else if (0x20 <= p[i] && p[i] <= 0x2f) {
-          MachinePtyEscAppend(pty, p[i]);
+          pty->state = kPtyCsi;
+        } else if (0x30 <= p[i] && p[i] <= 0x7E) {
+          PtyEscAppend(pty, p[i]);
+          PtyEsc(pty);
+          pty->state = kPtyAscii;
+        } else if (0x20 <= p[i] && p[i] <= 0x2F) {
+          PtyEscAppend(pty, p[i]);
         } else {
-          pty->state = kMachinePtyAscii;
+          pty->state = kPtyAscii;
         }
         break;
-      case kMachinePtyCsi:
-        MachinePtyEscAppend(pty, p[i]);
+      case kPtyCsi:
+        PtyEscAppend(pty, p[i]);
         switch (p[i]) {
           case ':':
           case ';':
@@ -1152,11 +1151,11 @@ ssize_t MachinePtyWrite(struct MachinePty *pty, const void *data, size_t n) {
           case '\\':
           case 'A' ... 'Z':
           case 'a' ... 'z':
-            MachinePtyCsi(pty);
-            pty->state = kMachinePtyAscii;
+            PtyCsi(pty);
+            pty->state = kPtyAscii;
             break;
           default:
-            pty->state = kMachinePtyAscii;
+            pty->state = kPtyAscii;
             continue;
         }
         break;
@@ -1167,20 +1166,19 @@ ssize_t MachinePtyWrite(struct MachinePty *pty, const void *data, size_t n) {
   return n;
 }
 
-ssize_t MachinePtyWriteInput(struct MachinePty *pty, const void *data,
-                             size_t n) {
-  MachinePtyConcatInput(pty, data, n);
-  if (!(pty->conf & kMachinePtyNoecho)) {
-    MachinePtyWrite(pty, data, n);
+ssize_t PtyWriteInput(struct Pty *pty, const void *data, size_t n) {
+  PtyConcatInput(pty, data, n);
+  if (!(pty->conf & kPtyNoecho)) {
+    PtyWrite(pty, data, n);
   }
   return n;
 }
 
-ssize_t MachinePtyRead(struct MachinePty *pty, void *buf, size_t size) {
+ssize_t PtyRead(struct Pty *pty, void *buf, size_t size) {
   char *p;
   size_t n;
   n = MIN(size, pty->input.i);
-  if (!(pty->conf & kMachinePtyNocanon)) {
+  if (!(pty->conf & kPtyNocanon)) {
     if ((p = memchr(pty->input.p, '\n', n))) {
       n = MIN(n, pty->input.p - p + 1);
     } else {
@@ -1193,7 +1191,7 @@ ssize_t MachinePtyRead(struct MachinePty *pty, void *buf, size_t size) {
   return n;
 }
 
-static char *MachinePtyEncodeRgb(char *p, int rgb) {
+static char *PtyEncodeRgb(char *p, int rgb) {
   *p++ = '2';
   *p++ = ';';
   p += uint64toarray_radix10((rgb & 0x0000ff) >> 000, p);
@@ -1204,94 +1202,91 @@ static char *MachinePtyEncodeRgb(char *p, int rgb) {
   return p;
 }
 
-static char *MachinePtyEncodeXterm256(char *p, int xt) {
+static char *PtyEncodeXterm256(char *p, int xt) {
   *p++ = '5';
   *p++ = ';';
   p += uint64toarray_radix10(xt, p);
   return p;
 }
 
-char *MachinePtyEncodeStyle(char *p, uint32_t xr, uint32_t pr, uint32_t fg,
-                            uint32_t bg) {
+char *PtyEncodeStyle(char *p, uint32_t xr, uint32_t pr, uint32_t fg,
+                     uint32_t bg) {
   *p++ = '\e';
   *p++ = '[';
-  if (pr & (kMachinePtyBold | kMachinePtyFaint | kMachinePtyFlip |
-            kMachinePtyUnder | kMachinePtyDunder | kMachinePtyBlink |
-            kMachinePtyStrike | kMachinePtyFg | kMachinePtyBg)) {
-    if (xr & (kMachinePtyBold | kMachinePtyFaint)) {
-      if ((xr & (kMachinePtyBold | kMachinePtyFaint)) ^
-          (pr & (kMachinePtyBold | kMachinePtyFaint))) {
+  if (pr & (kPtyBold | kPtyFaint | kPtyFlip | kPtyUnder | kPtyDunder |
+            kPtyBlink | kPtyStrike | kPtyFg | kPtyBg)) {
+    if (xr & (kPtyBold | kPtyFaint)) {
+      if ((xr & (kPtyBold | kPtyFaint)) ^ (pr & (kPtyBold | kPtyFaint))) {
         *p++ = '2';
         *p++ = '2';
         *p++ = ';';
       }
-      if (pr & kMachinePtyBold) {
+      if (pr & kPtyBold) {
         *p++ = '1';
         *p++ = ';';
       }
-      if (pr & kMachinePtyFaint) {
+      if (pr & kPtyFaint) {
         *p++ = '2';
         *p++ = ';';
       }
     }
-    if (xr & (kMachinePtyUnder | kMachinePtyDunder)) {
-      if ((xr & (kMachinePtyUnder | kMachinePtyDunder)) ^
-          (pr & (kMachinePtyUnder | kMachinePtyDunder))) {
+    if (xr & (kPtyUnder | kPtyDunder)) {
+      if ((xr & (kPtyUnder | kPtyDunder)) ^ (pr & (kPtyUnder | kPtyDunder))) {
         *p++ = '2';
         *p++ = '4';
         *p++ = ';';
       }
-      if (pr & kMachinePtyUnder) {
+      if (pr & kPtyUnder) {
         *p++ = '4';
         *p++ = ';';
       }
-      if (pr & kMachinePtyDunder) {
+      if (pr & kPtyDunder) {
         *p++ = '2';
         *p++ = '1';
         *p++ = ';';
       }
     }
-    if (xr & (kMachinePtyFlip | kMachinePtyBlink | kMachinePtyStrike)) {
-      if (xr & kMachinePtyFlip) {
-        if (!(pr & kMachinePtyFlip)) *p++ = '2';
+    if (xr & (kPtyFlip | kPtyBlink | kPtyStrike)) {
+      if (xr & kPtyFlip) {
+        if (!(pr & kPtyFlip)) *p++ = '2';
         *p++ = '7';
         *p++ = ';';
       }
-      if (xr & kMachinePtyBlink) {
-        if (!(pr & kMachinePtyBlink)) *p++ = '2';
+      if (xr & kPtyBlink) {
+        if (!(pr & kPtyBlink)) *p++ = '2';
         *p++ = '5';
         *p++ = ';';
       }
-      if (xr & kMachinePtyStrike) {
-        if (!(pr & kMachinePtyStrike)) *p++ = '2';
+      if (xr & kPtyStrike) {
+        if (!(pr & kPtyStrike)) *p++ = '2';
         *p++ = '9';
         *p++ = ';';
       }
     }
-    if (xr & (kMachinePtyFg | kMachinePtyTrue)) {
+    if (xr & (kPtyFg | kPtyTrue)) {
       *p++ = '3';
-      if (pr & kMachinePtyFg) {
+      if (pr & kPtyFg) {
         *p++ = '8';
         *p++ = ';';
-        if (pr & kMachinePtyTrue) {
-          p = MachinePtyEncodeRgb(p, fg);
+        if (pr & kPtyTrue) {
+          p = PtyEncodeRgb(p, fg);
         } else {
-          p = MachinePtyEncodeXterm256(p, fg);
+          p = PtyEncodeXterm256(p, fg);
         }
       } else {
         *p++ = '9';
       }
       *p++ = ';';
     }
-    if (xr & (kMachinePtyBg | kMachinePtyTrue)) {
+    if (xr & (kPtyBg | kPtyTrue)) {
       *p++ = '4';
-      if (pr & kMachinePtyBg) {
+      if (pr & kPtyBg) {
         *p++ = '8';
         *p++ = ';';
-        if (pr & kMachinePtyTrue) {
-          p = MachinePtyEncodeRgb(p, bg);
+        if (pr & kPtyTrue) {
+          p = PtyEncodeRgb(p, bg);
         } else {
-          p = MachinePtyEncodeXterm256(p, bg);
+          p = PtyEncodeXterm256(p, bg);
         }
       } else {
         *p++ = '9';
@@ -1307,25 +1302,24 @@ char *MachinePtyEncodeStyle(char *p, uint32_t xr, uint32_t pr, uint32_t fg,
   return p;
 }
 
-void MachinePtyAppendLine(struct MachinePty *pty, struct Buffer *buf,
-                          unsigned y) {
+int PtyAppendLine(struct Pty *pty, struct Buffer *buf, unsigned y) {
   uint64_t u;
-  size_t need;
   char *p, *pb;
-  uint32_t i, j, w, wc, np, xp, pr, fg, bg, ci;
-  if (y >= pty->yn) return;
-  need = buf->i + pty->xn * 60;
-  if (need > buf->n) {
-    CHECK_NOTNULL((buf->p = realloc(buf->p, need)));
-    buf->n = need;
+  uint32_t i, j, n, w, wc, np, xp, pr, fg, bg, ci;
+  if (y >= pty->yn) return einval();
+  n = buf->i + pty->xn * 60; /* torture character length */
+  if (n > buf->n) {
+    if (!(p = realloc(buf->p, n))) return -1;
+    buf->p = p;
+    buf->n = n;
   }
   i = y * pty->xn;
   j = (y + 1) * pty->xn;
   pb = buf->p + buf->i;
-  ci = !(pty->conf & kMachinePtyNocursor) && y == pty->y ? i + pty->x : -1;
+  ci = !(pty->conf & kPtyNocursor) && y == pty->y ? i + pty->x : -1;
   for (pr = 0; i < j; i += w) {
     np = pty->prs[i];
-    if (!(np & kMachinePtyConceal)) {
+    if (!(np & kPtyConceal)) {
       wc = pty->wcs[i];
       DCHECK(!(0x00 <= wc && wc <= 0x1F));
       DCHECK(!(0x7F <= wc && wc <= 0x9F));
@@ -1342,30 +1336,30 @@ void MachinePtyAppendLine(struct MachinePty *pty, struct Buffer *buf,
     }
     if (i == ci) {
       if (u != ' ') {
-        np ^= kMachinePtyFlip;
+        np ^= kPtyFlip;
       } else {
         u = tpenc(u'▂');
-        if (pty->conf & kMachinePtyBlinkcursor) {
-          np |= kMachinePtyBlink;
+        if (pty->conf & kPtyBlinkcursor) {
+          np |= kPtyBlink;
         }
       }
     }
     fg = bg = -1;
     xp = pr ^ np;
-    if (np & (kMachinePtyFg | kMachinePtyBg)) {
-      if (np & kMachinePtyFg) {
-        if (pty->fgs[i] != fg) xp |= kMachinePtyFg;
+    if (np & (kPtyFg | kPtyBg)) {
+      if (np & kPtyFg) {
+        if (pty->fgs[i] != fg) xp |= kPtyFg;
         fg = pty->fgs[i];
       }
-      if (np & kMachinePtyBg) {
-        if (pty->bgs[i] != bg) xp |= kMachinePtyBg;
+      if (np & kPtyBg) {
+        if (pty->bgs[i] != bg) xp |= kPtyBg;
         bg = pty->bgs[i];
       }
     }
     p = pb;
     if (xp) {
       pr = np;
-      p = MachinePtyEncodeStyle(p, xp, pr, fg, bg);
+      p = PtyEncodeStyle(p, xp, pr, fg, bg);
     }
     do {
       *p++ = u & 0xFF;
@@ -1376,4 +1370,5 @@ void MachinePtyAppendLine(struct MachinePty *pty, struct Buffer *buf,
   }
   DCHECK_LE(pb - buf->p, buf->n);
   buf->i = pb - buf->p;
+  return 0;
 }

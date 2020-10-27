@@ -19,17 +19,19 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.h"
+#include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
+#include "libc/log/color.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/fileno.h"
 
 STATIC_YOINK("ntoa");
 STATIC_YOINK("stoa");
@@ -46,12 +48,12 @@ relegated void __check_fail(const char *suffix, const char *opstr,
   va_list va;
   char sufbuf[8];
   int lasterr = errno;
-  startfatal(file, line);
+  __start_fatal(file, line);
 
   if (!memccpy(sufbuf, suffix, '\0', sizeof(sufbuf))) strcpy(sufbuf, "?");
   strtoupper(sufbuf);
 
-  (fprintf)(stderr,
+  (dprintf)(STDERR_FILENO,
             "check failed\r\n"
             "\tCHECK_%s(%s, %s);\r\n"
             "\t\t → %#lx (%s)\r\n"
@@ -59,27 +61,26 @@ relegated void __check_fail(const char *suffix, const char *opstr,
             sufbuf, wantstr, gotstr, want, wantstr, opstr, got, gotstr);
 
   if (!isempty(fmt)) {
-    fputc('\t', stderr);
+    (dprintf)(STDERR_FILENO, "\t");
     va_start(va, fmt);
-    (vfprintf)(stderr, fmt, va);
+    (vdprintf)(STDERR_FILENO, fmt, va);
     va_end(va);
-    fputs("\r\n", stderr);
+    (dprintf)(STDERR_FILENO, "\r\n");
   }
 
-  (fprintf)(stderr, "\t%s\r\n\t%s%s%s%s\r\n", strerror(lasterr), SUBTLE,
+  (dprintf)(STDERR_FILENO, "\t%s\r\n\t%s%s%s%s\r\n", strerror(lasterr), SUBTLE,
             getauxval(AT_EXECFN), g_argc > 1 ? " \\" : "", RESET);
 
   for (i = 1; i < g_argc; ++i) {
-    (fprintf)(stderr, "\t\t%s%s\r\n", g_argv[i], i < g_argc - 1 ? " \\" : "");
+    (dprintf)(STDERR_FILENO, "\t\t%s%s\r\n", g_argv[i],
+              i < g_argc - 1 ? " \\" : "");
   }
 
   if (!IsTiny() && lasterr == ENOMEM) {
-    (fprintf)(stderr, "\r\n");
-    fflush(stderr);
-    PrintMemoryIntervals(fileno(stderr), &_mmi);
+    (dprintf)(STDERR_FILENO, "\r\n");
+    PrintMemoryIntervals(STDERR_FILENO, &_mmi);
   }
 
-  fflush(stderr);
   die();
   unreachable;
 }

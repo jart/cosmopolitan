@@ -21,7 +21,7 @@
 .text.windows
 .source	__FILE__
 
-onwincrash$nt:
-	ezlea	onwincrash,ax
-	jmp	nt2sysv
-	.endfn	onwincrash$nt,globl
+__wincrash$nt:
+	ezlea	__wincrash,ax
+	jmp	__nt2sysv
+	.endfn	__wincrash$nt,globl

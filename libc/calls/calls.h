@@ -111,7 +111,7 @@ int fchmod(int, uint32_t) nothrow;
 int fchmodat(int, const char *, uint32_t, uint32_t);
 int fchown(int, uint32_t, uint32_t);
 int fchownat(int, const char *, uint32_t, uint32_t, uint32_t);
-int fcntl();
+int fcntl(int, int, ...);
 int fdatasync(int);
 int filecmp(const char *, const char *);
 int flock(int, int);
@@ -189,7 +189,7 @@ int uname(struct utsname *);
 int unlink(const char *);
 int unlink_s(const char **);
 int unlinkat(int, const char *, int);
-int vfork(void);
+int vfork(void) returnstwice;
 int wait(int *);
 int wait3(int *, int, struct rusage *);
 int wait4(int, int *, int, struct rusage *);
@@ -242,7 +242,7 @@ int vdprintf(int, const char *, va_list) paramsnonnull();
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 
 void _init_onntconsoleevent(void);
-void _init_onwincrash(void);
+void _init_wincrash(void);
 
 #define __SIGACTION(FN, SIG, ...)          \
   ({                                       \
@@ -260,14 +260,14 @@ void _init_onwincrash(void);
           case SIGSEGV:                    \
           case SIGABRT:                    \
           case SIGFPE:                     \
-            YOINK(_init_onwincrash);       \
+            YOINK(_init_wincrash);         \
             break;                         \
           default:                         \
             break;                         \
         }                                  \
       } else {                             \
         YOINK(_init_onntconsoleevent);     \
-        YOINK(_init_onwincrash);           \
+        YOINK(_init_wincrash);             \
       }                                    \
     }                                      \
     (FN)(SIG, __VA_ARGS__);                \

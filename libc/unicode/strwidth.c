@@ -17,56 +17,18 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
-#include "libc/conv/conv.h"
-#include "libc/limits.h"
-#include "libc/str/internal.h"
-#include "libc/str/str.h"
-#include "libc/str/tpdecode.h"
 #include "libc/unicode/unicode.h"
 
-#define kOneTrueTabWidth 8
-
 /**
- * Returns monospace display width in UTF-8 string.
+ * Returns monospace display width of UTF-8 string.
+ *
+ * - Control codes are discounted
+ * - ANSI escape sequences are discounted
+ * - East asian glyphs, emoji, etc. count as two
+ *
+ * @param s is NUL-terminated string
+ * @return monospace display width
  */
-int(strwidth)(const char *s) {
-  return strnwidth(s, SIZE_MAX);
-}
-
-int(strnwidth)(const char *s, size_t n) {
-  /* TODO(jart): Fix this function. */
-  size_t l;
-  wint_t wc;
-  const unsigned char *p, *pe;
-  l = 0;
-  if (n) {
-    p = (const unsigned char *)s;
-    pe = (const unsigned char *)(n == SIZE_MAX ? INTPTR_MAX : (intptr_t)s + n);
-    for (;;) {
-      while (p < pe && iscont(*p)) p++;
-      if (p == pe || !*p) break;
-      if (*p == L'\t') {
-        if (l & (kOneTrueTabWidth - 1)) {
-          l += kOneTrueTabWidth - (l & (kOneTrueTabWidth - 1));
-        } else {
-          l += kOneTrueTabWidth;
-        }
-        ++p;
-      } else if (*p == L'\e') {
-        while (++p < pe && *p) {
-          if (*p == '[' || *p == ';' || isdigit(*p)) {
-            continue;
-          } else {
-            ++p;
-            break;
-          }
-        }
-      } else {
-        p += abs(tpdecode((const char *)p, &wc));
-        l += max(0, wcwidth(wc));
-      }
-    }
-  }
-  return l;
+int strwidth(const char *s) {
+  return strnwidth(s, -1);
 }

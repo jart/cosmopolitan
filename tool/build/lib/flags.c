@@ -53,3 +53,12 @@ uint64_t ExportFlags(uint64_t flags) {
   flags |= GetLazyParityBool(flags) << FLAGS_PF;
   return flags;
 }
+
+int64_t AluFlags(uint64_t x, uint32_t af, uint32_t *f, uint32_t of, uint32_t cf,
+                 uint32_t sf) {
+  *f &= ~(1u << FLAGS_CF | 1u << FLAGS_ZF | 1u << FLAGS_SF | 1u << FLAGS_OF |
+          1u << FLAGS_AF | 0xFF000000u);
+  *f |= sf << FLAGS_SF | cf << FLAGS_CF | !x << FLAGS_ZF | of << FLAGS_OF |
+        af << FLAGS_AF | (x & 0xFF) << 24;
+  return x;
+}

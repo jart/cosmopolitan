@@ -30,8 +30,7 @@ int tolower(int);
 int ispunct(int);
 int toupper(int);
 int hextoint(int);
-
-void *isnotplaintext(const void *, size_t) nothrow nocallback nosideeffect;
+int cescapec(int);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § characters » thompson-pike encoding                       ─╬─│┼
@@ -173,7 +172,7 @@ bool wcsstartswith(const wchar_t *, const wchar_t *) strlenesque;
 bool endswith(const char *, const char *) strlenesque;
 bool endswith16(const char16_t *, const char16_t *) strlenesque;
 bool wcsendswith(const wchar_t *, const wchar_t *) strlenesque;
-const char *indexdoublenulstring(const char *, unsigned) strlenesque;
+const char *IndexDoubleNulString(const char *, unsigned) strlenesque;
 int getkvlin(const char *, const char *const[]);
 wchar_t *wmemset(wchar_t *, wchar_t, size_t) memcpyesque;
 char16_t *memset16(char16_t *, char16_t, size_t) memcpyesque;
@@ -193,6 +192,8 @@ char *strtoupper(char *) paramsnonnull();
 char *chomp(char *);
 char16_t *chomp16(char16_t *);
 wchar_t *wchomp(wchar_t *);
+
+bool escapedos(char16_t *, unsigned, const char16_t *, unsigned);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § strings » multibyte                                       ─╬─│┼
@@ -340,27 +341,6 @@ extern int (*const hook$wcsncmp)(const wchar_t *, const wchar_t *, size_t);
            : wcsncasecmp, char16_t  \
            : strncasecmp16, default \
            : strncasecmp)(s1, s2, n)
-
-#define startswith(s, c)             \
-  _Generic(*(s), wchar_t             \
-           : wcsstartswith, char16_t \
-           : startswith16, default   \
-           : startswith)(s, c)
-
-#define endswith(s, c)             \
-  _Generic(*(s), wchar_t           \
-           : wcsendswith, char16_t \
-           : endswith16, default   \
-           : endswith)(s, c)
-
-#define strclen(s) \
-  _Generic(*(s), wchar_t : wcslen, char16_t : strclen16, default : strclen)(s)
-
-#define strnclen(s, n)           \
-  _Generic(*(s), wchar_t         \
-           : wcslen, char16_t    \
-           : strnclen16, default \
-           : strnclen)(s, n)
 
 #define chomp(s) \
   _Generic(*(s), wchar_t : wchomp, char16_t : chomp16, default : chomp)(s)

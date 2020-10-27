@@ -19,11 +19,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
-const char *indexdoublenulstring(const char *p, unsigned i) {
+const char *IndexDoubleNulString(const char *s, unsigned i) {
+  size_t n;
   while (i--) {
-    const char *p2 = rawmemchr(p, '\0');
-    if (p2 == p) return NULL;
-    p = p2 + 1;
+    if ((n = strlen(s))) {
+      s += n + 1;
+    } else {
+      return NULL;
+    }
   }
-  return p;
+  return s;
 }

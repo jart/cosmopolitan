@@ -17,57 +17,63 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
-#include "libc/dce.h"
-#include "libc/escape/escape.h"
-#include "libc/limits.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/calls/ucontext.h"
+#include "libc/nt/enum/exceptionhandleractions.h"
+#include "libc/nt/signals.h"
+#include "libc/nt/struct/ntexceptionpointers.h"
+#include "libc/nt/struct/ntexceptionrecord.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/sig.h"
 
-#define SHQUOTE_PUTCHAR(c)             \
-  do {                                 \
-    if (buf != NULL && j < size - 1) { \
-      buf[j] = (c);                    \
-    }                                  \
-    j++;                               \
-  } while (0)
-
-/**
- * Quotes memory for inclusion in single-quoted SystemV string literals.
- *
- * The outer quotation marks are *not* added.
- *
- * @param buf is the output area, which can't overlap and, no matter
- *     what, a NUL-terminator will always be placed in the buffer at
- *     an appropriate place, provided buf!=NULL && size!=0
- * @param size is the byte-length of the output area
- * @param s is the data, which may have NUL characters
- * @param l is the byte-length of s
- * @return number of characters written, excluding NUL terminator; or,
- *     if the output buffer wasn't passed, or was too short, then the
- *     number of characters that *would* have been written is returned;
- *     since that's how the snprintf() API works; and never < 0
- * @see xaescapesh() for an easier api
- */
-int escapesh(char *buf, unsigned size, const char *s, unsigned l) {
-  assert(size <= INT_MAX && l <= INT_MAX);
-  if (!IsTrustworthy() && l >= INT_MAX) abort();
-  unsigned j = 0;
-  for (unsigned i = 0; i < l; ++i) {
-    if (s[i] != '\'') {
-      SHQUOTE_PUTCHAR(s[i]);
-    } else {
-      const char *const s2 = "'\"'\"'";
-      unsigned l2 = 5;
-      for (unsigned k = 0; k < l2; ++k) {
-        SHQUOTE_PUTCHAR(s2[k]);
-      }
-    }
+textwindows unsigned __wincrash(struct NtExceptionPointers *ep) {
+  int sig;
+  struct Goodies {
+    ucontext_t ctx;
+    struct siginfo si;
+  } g;
+  switch (ep->ExceptionRecord->ExceptionCode) {
+    case kNtSignalBreakpoint:
+      sig = SIGTRAP;
+      break;
+    case kNtSignalIllegalInstruction:
+    case kNtSignalPrivInstruction:
+      sig = SIGILL;
+      break;
+    case kNtSignalGuardPage:
+    case kNtSignalAccessViolation:
+    case kNtSignalInPageError:
+      sig = SIGSEGV;
+      break;
+    case kNtSignalInvalidHandle:
+    case kNtSignalInvalidParameter:
+    case kNtSignalAssertionFailure:
+      sig = SIGABRT;
+      break;
+    case kNtSignalFltDenormalOperand:
+    case kNtSignalFltDivideByZero:
+    case kNtSignalFltInexactResult:
+    case kNtSignalFltInvalidOperation:
+    case kNtSignalFltOverflow:
+    case kNtSignalFltStackCheck:
+    case kNtSignalFltUnderflow:
+    case kNtSignalIntegerDivideByZero:
+    case kNtSignalFloatMultipleFaults:
+    case kNtSignalFloatMultipleTraps:
+      sig = SIGFPE;
+      break;
+    case kNtSignalDllNotFound:
+    case kNtSignalOrdinalNotFound:
+    case kNtSignalEntrypointNotFound:
+    case kNtSignalDllInitFailed:
+      sig = SIGSYS;
+      break;
+    default:
+      return kNtExceptionContinueSearch;
   }
-  if (buf && size) {
-    buf[min(j, size - 1)] = '\0';
-  }
-  return j;
+  memset(&g, 0, sizeof(g));
+  ntcontext2linux(&g.ctx, ep->ContextRecord);
+  return __sigenter(sig, &g.si, &g.ctx) ? kNtExceptionContinueExecution
+                                        : kNtExceptionContinueSearch;
 }

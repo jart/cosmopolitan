@@ -17,8 +17,6 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timespec.h"
-#include "libc/math.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/time/time.h"
 

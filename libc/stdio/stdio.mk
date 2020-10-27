@@ -29,7 +29,6 @@ LIBC_STDIO_A_DIRECTDEPS =				\
 	LIBC_BITS					\
 	LIBC_CALLS					\
 	LIBC_CONV					\
-	LIBC_ESCAPE					\
 	LIBC_FMT					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\

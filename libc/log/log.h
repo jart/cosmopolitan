@@ -39,7 +39,6 @@ void meminfo(int);                   /* shows malloc statistics &c. */
 void memsummary(int);                /* light version of same thing */
 uint16_t getttycols(uint16_t);
 int getttysize(int, struct winsize *) paramsnonnull();
-bool cancolor(void) nothrow nocallback;
 bool isterminalinarticulate(void) nosideeffect;
 char *commandvenv(const char *, const char *) nodiscard;
 const char *GetAddr2linePath(void);

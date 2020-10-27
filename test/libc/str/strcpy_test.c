@@ -17,63 +17,25 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/calls/struct/siginfo.h"
-#include "libc/calls/ucontext.h"
-#include "libc/nt/enum/exceptionhandleractions.h"
-#include "libc/nt/signals.h"
-#include "libc/nt/struct/ntexceptionpointers.h"
-#include "libc/nt/struct/ntexceptionrecord.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/sig.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/testlib.h"
 
-textwindows unsigned onwincrash(struct NtExceptionPointers *ep) {
-  int sig;
-  struct Goodies {
-    ucontext_t ctx;
-    struct siginfo si;
-  } g;
-  switch (ep->ExceptionRecord->ExceptionCode) {
-    case kNtSignalBreakpoint:
-      sig = SIGTRAP;
-      break;
-    case kNtSignalIllegalInstruction:
-    case kNtSignalPrivInstruction:
-      sig = SIGILL;
-      break;
-    case kNtSignalGuardPage:
-    case kNtSignalAccessViolation:
-    case kNtSignalInPageError:
-      sig = SIGSEGV;
-      break;
-    case kNtSignalInvalidHandle:
-    case kNtSignalInvalidParameter:
-    case kNtSignalAssertionFailure:
-      sig = SIGABRT;
-      break;
-    case kNtSignalFltDenormalOperand:
-    case kNtSignalFltDivideByZero:
-    case kNtSignalFltInexactResult:
-    case kNtSignalFltInvalidOperation:
-    case kNtSignalFltOverflow:
-    case kNtSignalFltStackCheck:
-    case kNtSignalFltUnderflow:
-    case kNtSignalIntegerDivideByZero:
-    case kNtSignalFloatMultipleFaults:
-    case kNtSignalFloatMultipleTraps:
-      sig = SIGFPE;
-      break;
-    case kNtSignalDllNotFound:
-    case kNtSignalOrdinalNotFound:
-    case kNtSignalEntrypointNotFound:
-    case kNtSignalDllInitFailed:
-      sig = SIGSYS;
-      break;
-    default:
-      return kNtExceptionContinueSearch;
-  }
-  memset(&g, 0, sizeof(g));
-  ntcontext2linux(&g.ctx, ep->ContextRecord);
-  return __sigenter(sig, &g.si, &g.ctx) ? kNtExceptionContinueExecution
-                                        : kNtExceptionContinueSearch;
+TEST(strcpy, test) {
+  char buf[64];
+  EXPECT_STREQ("hello", strcpy(buf, "hello"));
+  EXPECT_STREQ("hello there what's up", strcpy(buf, "hello there what's up"));
+}
+
+BENCH(strcpy, bench) {
+  extern char *strcpy_(char *, const char *) asm("strcpy");
+  static char buf[1024], buf2[1024];
+  memset(buf2, -1, sizeof(buf2) - 1);
+  EZBENCH2("strcpy 1", donothing, strcpy_(buf, ""));
+  EZBENCH2("strcpy 2", donothing, strcpy_(buf, "1"));
+  EZBENCH2("strcpy 7", donothing, strcpy_(buf, "123456"));
+  EZBENCH2("strcpy 8", donothing, strcpy_(buf, "1234567"));
+  EZBENCH2("strcpy 9", donothing, strcpy_(buf, "12345678"));
+  EZBENCH2("strcpy 16", donothing, strcpy_(buf, "123456781234567"));
+  EZBENCH2("strcpy 1023", donothing, strcpy_(buf, buf2));
 }

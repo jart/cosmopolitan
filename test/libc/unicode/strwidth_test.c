@@ -17,15 +17,11 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/escape/escape.h"
-#include "libc/x/x.h"
+#include "libc/testlib/testlib.h"
+#include "libc/unicode/unicode.h"
 
-/**
- * Delegates NUL-terminated string to escapec() or dies.
- *
- * The surrounding quotes are *not* included. Death hapens only on
- * allocation error or int32 overflow, which are extremely unlikely.
- *
- * @return escaped string which must make its way to free()
- */
-char *xaescapec(const char *unescaped) { return xaescape(unescaped, escapec); }
+TEST(strwidth, test) {
+  EXPECT_EQ(5, strwidth("hello"));
+  EXPECT_EQ(5, strwidth("\1he\e[0;0mllo\e#8"));
+  EXPECT_EQ(10, strwidth("ＨＥＬＬＯ"));
+}

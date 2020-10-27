@@ -29,7 +29,8 @@
 /	@param	%rcx,%rdx,%r8,%r9
 /	@return	%rax,%xmm0
 /	@note	this is so much slower than sysv2nt()
-nt2sysv:push	%rbp
+__nt2sysv:
+	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	sub	$0x100,%rsp
@@ -53,5 +54,5 @@ nt2sysv:push	%rbp
 	pop	%rbx
 	leave
 	ret
-	.endfn	nt2sysv,globl,hidden
+	.endfn	__nt2sysv,globl,hidden
 	.source	__FILE__

@@ -28,6 +28,7 @@ LIBC_STR_A_CHECKS =						\
 	$(LIBC_STR_A_HDRS:%=o/$(MODE)/%.ok)
 
 LIBC_STR_A_DIRECTDEPS =						\
+	LIBC_INTRIN						\
 	LIBC_STUBS						\
 	LIBC_NEXGEN32E
 

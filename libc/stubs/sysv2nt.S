@@ -29,7 +29,7 @@
 /	@return	is in %rax, %xmm0, or %st
 /	@note	GCC 4.8+ and Clang can avoid this indirection
 /	@note	thunk that jumps here must setup frame
-/	@note	this is so much faster than nt2sysv()
+/	@note	this is so much faster than __nt2sysv()
 __sysv2nt14:
 	pushq	72(%rbp)
 	pushq	64(%rbp)

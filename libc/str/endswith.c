@@ -25,11 +25,10 @@
  * @param s is a NUL-terminated string
  * @param suffix is also NUL-terminated
  */
-bool(endswith)(const char *s, const char *suffix) {
-  size_t l1, l2;
-  if (s == suffix) return true;
-  l1 = strlen(s);
-  l2 = strnlen(suffix, l1);
-  if (l2 > l1) return false;
-  return memcmp(s + (l1 - l2) * sizeof(char), suffix, l2 * sizeof(char)) == 0;
+bool endswith(const char *s, const char *suffix) {
+  size_t n, m;
+  n = strlen(s);
+  m = strlen(suffix);
+  if (m > n) return false;
+  return memcmp(s + n - m, suffix, m) == 0;
 }

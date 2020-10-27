@@ -68,6 +68,10 @@ $(TOOL_BUILD_LIB_A_OBJS):				\
 			-fsanitize=address
 endif
 
+o/$(MODE)/tool/build/lib/memory-gcc.asm:		\
+		OVERRIDE_CFLAGS +=			\
+			-fsanitize=address
+
 o/$(MODE)/tool/build/lib/ssefloat.o:			\
 		TARGET_ARCH +=				\
 			-msse3

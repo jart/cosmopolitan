@@ -1248,6 +1248,7 @@ void *dlrealloc_in_place(void *, size_t) hidden;
 void *dlvalloc(size_t) hidden;
 void *dlpvalloc(size_t) hidden;
 void *dlmemalign(size_t, size_t) hidden;
+int dlmalloc_trim(size_t) hidden;
 size_t dlmalloc_usable_size(const void *) hidden;
 int dlposix_memalign(void **, size_t, size_t) hidden;
 void **dlindependent_calloc(size_t, size_t, void *[]) hidden;

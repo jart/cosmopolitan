@@ -55,7 +55,7 @@ static struct ItimerNt {
 static uint32_t ItimerWorker(void *arg) {
   do {
     if (!WaitForSingleObject(g_itimernt.ith, -1)) {
-      onntalarm(NULL, 0, 0);
+      __winalarm(NULL, 0, 0);
     }
   } while (g_itimernt.ith && g_itimernt.tid == GetCurrentThreadId());
   return 0;

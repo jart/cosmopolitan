@@ -131,6 +131,9 @@ struct Machine {
       };
     };
   } sse;
+  uint64_t cr0;
+  uint64_t cr2;
+  uint64_t cr4;
   struct MachineRealFree {
     uint64_t i;
     uint64_t n;
@@ -140,6 +143,15 @@ struct Machine {
     uint32_t i;
     void *p[6];
   } freelist;
+  struct MachineMemstat {
+    int freed;
+    int resizes;
+    int reserved;
+    int committed;
+    int allocated;
+    int reclaimed;
+    int pagetables;
+  } memstat;
   int64_t brk;
   int64_t bofram[2];
   jmp_buf onhalt;
@@ -157,7 +169,9 @@ void ResetTlb(struct Machine *);
 void LoadInstruction(struct Machine *);
 void ExecuteInstruction(struct Machine *);
 long AllocateLinearPage(struct Machine *);
-int ReserveVirtual(struct Machine *, int64_t, size_t);
+long AllocateLinearPageRaw(struct Machine *);
+int ReserveReal(struct Machine *, size_t);
+int ReserveVirtual(struct Machine *, int64_t, size_t, uint64_t);
 char *FormatPml4t(struct Machine *) nodiscard;
 int64_t FindVirtual(struct Machine *, int64_t, size_t);
 int FreeVirtual(struct Machine *, int64_t, size_t);

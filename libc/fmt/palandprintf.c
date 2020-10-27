@@ -39,7 +39,6 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
 #include "libc/conv/conv.h"
-#include "libc/escape/escape.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/paland.inc"
 #include "libc/fmt/palandprintf.h"
@@ -58,7 +57,7 @@ static int ppatoi(const char **str) {
 }
 
 /**
- * Implements {,v}{,s{,n},{,{,x}as},f,d}printf state machine.
+ * Implements {,v}{,s{,n},{,{,x}as},f,d}printf domain-specific language.
  *
  * Type Specifiers
  *

@@ -24,16 +24,17 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int fcntl$nt(int fd, int cmd, unsigned arg) {
+  uint32_t flags;
   if (!isfdkind(fd, kFdFile)) return ebadf();
   switch (cmd) {
     case F_GETFD:
-      return GetHandleInformation(g_fds.p[fd].handle, &arg) ? (arg ^ FD_CLOEXEC)
-                                                            : -1;
+      if (!GetHandleInformation(g_fds.p[fd].handle, &flags)) return -1;
+      arg = (flags & FD_CLOEXEC) ^ FD_CLOEXEC;
+      return arg;
     case F_SETFD:
-      return SetHandleInformation(g_fds.p[fd].handle, FD_CLOEXEC,
-                                  arg ^ FD_CLOEXEC)
-                 ? 0
-                 : -1;
+      arg ^= FD_CLOEXEC;
+      if (!SetHandleInformation(g_fds.p[fd].handle, FD_CLOEXEC, arg)) return -1;
+      return 0;
     default:
       return 0; /* TODO(jart): Implement me. */
   }

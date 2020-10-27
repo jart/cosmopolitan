@@ -89,7 +89,7 @@ static char *DisError(struct Dis *d, char *p) {
   p = HighStart(p, g_high.comment);
   *p++ = '#';
   *p++ = ' ';
-  p = stpcpy(p, indexdoublenulstring(kXedErrorNames, d->xedd->op.error));
+  p = stpcpy(p, IndexDoubleNulString(kXedErrorNames, d->xedd->op.error));
   p = HighEnd(p);
   *p = '\0';
   return p;

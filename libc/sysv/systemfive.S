@@ -107,18 +107,18 @@ systemfive.linux:
 systemfive.error:
 	neg	%eax
 /	𝑠𝑙𝑖𝑑𝑒
-	.endfn	systemfive.error
+	.endfn	systemfive.error,globl,hidden
 systemfive.errno:
 	mov	%eax,errno(%rip)
 	push	$-1
 	pop	%rax
 	stc
 	ret
-	.endfn	systemfive.errno
+	.endfn	systemfive.errno,globl,hidden
 systemfive.enosys:
 	mov	ENOSYS(%rip),%eax
 	jmp	systemfive.errno
-	.endfn	systemfive.enosys
+	.endfn	systemfive.enosys,globl,hidden
 systemfive.openbsd:
 	shr	$48,%rax
 	jmp	systemfive.bsd

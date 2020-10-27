@@ -17,18 +17,19 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/log/color.h"
 #include "libc/log/internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/fileno.h"
 
 /**
  * Prints initial part of fatal message.
  *
  * @note this is support code for __check_fail(), __assert_fail(), etc.
- * @see startfatal_ndebug()
+ * @see __start_fatal_ndebug()
  */
-relegated void startfatal(const char *file, int line) {
-  fflush(stdout);
-  fprintf(stderr, "%s%s%s:%s:%d:%s%s: ", RED, "error", BLUE1, file, line,
-          program_invocation_short_name, RESET);
+relegated void __start_fatal(const char *file, int line) {
+  dprintf(STDERR_FILENO, "%s%s%s%s:%s:%d:%s%s: ", CLS, RED, "error", BLUE1,
+          file, line, program_invocation_short_name, RESET);
 }

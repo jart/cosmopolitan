@@ -26,12 +26,12 @@
 #include "libc/unicode/unicode.h"
 #include "tool/build/lib/pty.h"
 
-char *render(struct MachinePty *pty) {
+char *render(struct Pty *pty) {
   static struct Buffer b;
   int y;
   b.i = 0;
   for (y = 0; y < pty->yn; ++y) {
-    MachinePtyAppendLine(pty, &b, y);
+    PtyAppendLine(pty, &b, y);
   }
   b.p[b.i] = 0;
   return b.p;
@@ -76,10 +76,10 @@ static const char widelatin_golden[] = "\
                                                                                 ";
 
 TEST(pty, testFunWidth) {
-  struct MachinePty *pty = MachinePtyNew();
-  MachinePtyWrite(pty, widelatin, ARRAYLEN(widelatin) - 1);
+  struct Pty *pty = NewPty();
+  PtyWrite(pty, widelatin, ARRAYLEN(widelatin) - 1);
   EXPECT_STREQ(widelatin_golden, render(pty));
-  MachinePtyFree(pty);
+  FreePty(pty);
 }
 
 const char hyperion[] aligned(16) = "\
@@ -130,10 +130,10 @@ m scribe my hand is in the grave.                                               
                                                                                 ";
 
 TEST(pty, testPureAscii_benefitsFromVectorization) {
-  struct MachinePty *pty = MachinePtyNew();
-  MachinePtyWrite(pty, hyperion, ARRAYLEN(hyperion) - 1);
+  struct Pty *pty = NewPty();
+  PtyWrite(pty, hyperion, ARRAYLEN(hyperion) - 1);
   EXPECT_STREQN(pty->wcs, hyperion_golden, ARRAYLEN(hyperion_golden) - 1);
-  MachinePtyFree(pty);
+  FreePty(pty);
 }
 
 static const char kKiloAnsi[] = "\
@@ -196,7 +196,7 @@ TEST(pty, testLongestPossibleCharacter) {
   EXPECT_EQ(60, strlen("\e[21;22;27;24;25;29;38;2;255;255;255;48;2;255;255;"
                        "255m\377\277\277\277\277\277"));
   struct Buffer b = {0};
-  struct MachinePty *pty = MachinePtyNew();
+  struct Pty *pty = NewPty();
   const char *s = "\e[1;2;3;4;5;6;7;9m"
                   "h"
                   "\e[0;"
@@ -204,8 +204,8 @@ TEST(pty, testLongestPossibleCharacter) {
                   "48;2;255;255;255m"
                   "\377\277\277\277\277\277"
                   "\e[0m";
-  MachinePtyWrite(pty, s, strlen(s));
-  MachinePtyAppendLine(pty, &b, 0);
+  PtyWrite(pty, s, strlen(s));
+  PtyAppendLine(pty, &b, 0);
   AppendChar(&b, '\0');
   EXPECT_STREQ("\e[1;2;4;7;5;9m"
                "𝒉"
@@ -214,22 +214,23 @@ TEST(pty, testLongestPossibleCharacter) {
                "\e[0m▂                                                       "
                "                      ",
                b.p);
-  MachinePtyFree(pty);
+  FreePty(pty);
   free(b.p);
 }
 
 TEST(pty, test) {
-  struct MachinePty *pty = MachinePtyNew();
-  MachinePtyWrite(pty, kKiloAnsi, strlen(kKiloAnsi));
+  struct Pty *pty = NewPty();
+  PtyWrite(pty, kKiloAnsi, strlen(kKiloAnsi));
   EXPECT_STREQN(kKiloGolden, pty->wcs, wcslen(kKiloGolden));
-  MachinePtyFree(pty);
+  FreePty(pty);
 }
 
 BENCH(pty, bench) {
-  struct MachinePty *pty = MachinePtyNew();
+  struct Pty *pty = NewPty();
   EZBENCH2("pty write ascii", donothing,
-           MachinePtyWrite(pty, hyperion, sizeof(hyperion) - 1));
+           PtyWrite(pty, hyperion, sizeof(hyperion) - 1));
   EZBENCH2("pty write kilo", donothing,
-           MachinePtyWrite(pty, kKiloAnsi, sizeof(kKiloAnsi) - 1));
+           PtyWrite(pty, kKiloAnsi, sizeof(kKiloAnsi) - 1));
   EZBENCH2("pty render", donothing, render(pty));
+  FreePty(pty);
 }

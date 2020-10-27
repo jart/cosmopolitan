@@ -64,6 +64,7 @@ COSMOPOLITAN_C_START_
 bool GetParity(uint8_t);
 uint64_t ExportFlags(uint64_t);
 void ImportFlags(struct Machine *, uint64_t);
+int64_t AluFlags(uint64_t, uint32_t, uint32_t *, uint32_t, uint32_t, uint32_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -20,6 +20,7 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/vendor.h"
+#include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "tool/build/lib/address.h"
@@ -34,7 +35,7 @@ static bool IsHaltingInitialized(struct Machine *m) {
 
 void HaltMachine(struct Machine *m, int code) {
   CHECK(IsHaltingInitialized(m));
-  longjmp(m->onhalt, code);
+  gclongjmp(m->onhalt, code);
 }
 
 void ThrowDivideError(struct Machine *m) {

@@ -3,9 +3,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern unsigned long ops;
 extern unsigned long taken;
 extern unsigned long ntaken;
+extern unsigned long opcount;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

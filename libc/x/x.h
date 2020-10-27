@@ -68,11 +68,6 @@ char *xstrcat(const char *, ...) paramsnonnull((1)) nullterminated() _XMAL;
 char *xstrmul(const char *, size_t) paramsnonnull((1)) _XMAL;
 char *xjoinpaths(const char *, const char *) paramsnonnull() _XMAL;
 char *xinet_ntop(int, const void *) _XPNN _XMAL;
-char *xaescapec(const char *) _XPNN _XMAL;
-char *xaescapesh(const char *) _XPNN _XMAL;
-char *xaescapeshq(const char *) _XPNN _XMAL;
-char *xaescape(const char *, int (*)(char *, unsigned, const char *,
-                                     unsigned)) _XPNN hidden _XMAL;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § eXtended apis » time                                      ─╬─│┼

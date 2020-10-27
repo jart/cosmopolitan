@@ -18,7 +18,6 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
-#include "libc/escape/escape.h"
 #include "libc/fmt/paland.inc"
 #include "libc/fmt/palandprintf.h"
 #include "libc/nexgen32e/tinystrlen.h"

@@ -24,6 +24,7 @@
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/backtrace.h"
+#include "libc/log/color.h"
 #include "libc/log/gdb.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
@@ -49,18 +50,18 @@ STATIC_YOINK("stoa");
 
 struct siginfo;
 
-const char kGregOrder[17] aligned(1) = {
+static const char kGregOrder[17] aligned(1) = {
     13, 11, 8, 14, 12, 9, 10, 15, 16, 0, 1, 2, 3, 4, 5, 6, 7,
 };
 
-const char kGregNames[17][4] aligned(1) = {
+static const char kGregNames[17][4] aligned(1) = {
     "R8",  "R9",  "R10", "R11", "R12", "R13", "R14", "R15", "RDI",
     "RSI", "RBP", "RBX", "RDX", "RAX", "RCX", "RSP", "RIP",
 };
 
-const char kGodHatesFlags[12] aligned(1) = "CVPRAKZSTIDO";
-const char kCrashSigNames[8][5] aligned(1) = {"QUIT", "FPE",  "ILL", "SEGV",
-                                              "TRAP", "ABRT", "BUS"};
+static const char kGodHatesFlags[12] aligned(1) = "CVPRAKZSTIDO";
+static const char kCrashSigNames[8][5] aligned(1) = {
+    "QUIT", "FPE", "ILL", "SEGV", "TRAP", "ABRT", "BUS"};
 
 int kCrashSigs[8];
 struct sigaction g_oldcrashacts[8];
@@ -191,7 +192,7 @@ relegated static void RestoreDefaultCrashSignalHandlers(void) {
  *
  * This function never returns, except for traps w/ human supervision.
  */
-relegated void oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
+relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
   intptr_t rip;
   int gdbpid, err;
   static bool once;

@@ -156,17 +156,12 @@ static char *DisSymImpl(struct Dis *d, char *p, int64_t x, long sym) {
   return p;
 }
 
-static char *DisSym(struct Dis *d, char *p, int64_t x1, int64_t x2,
-                    bool isrelative) {
+static char *DisSym(struct Dis *d, char *p, int64_t value, int64_t addr) {
   long sym;
-  if ((sym = DisFindSym(d, x2)) != -1 && d->syms.p[sym].name &&
-      (d->syms.p[sym].isabs ^ isrelative)) {
-    return DisSymImpl(d, p, x2, sym);
-  } else if ((sym = DisFindSym(d, x1)) != -1 && d->syms.p[sym].name &&
-             (d->syms.p[sym].isabs ^ isrelative)) {
-    return DisSymImpl(d, p, x1, sym);
+  if ((sym = DisFindSym(d, addr)) != -1 && d->syms.p[sym].name) {
+    return DisSymImpl(d, p, addr, sym);
   } else {
-    return DisInt(p, x1);
+    return DisInt(p, value);
   }
 }
 
@@ -174,7 +169,7 @@ static char *DisSymLiteral(struct Dis *d, uint32_t rde, char *p, uint64_t addr,
                            uint64_t ip) {
   *p++ = '$';
   p = HighStart(p, g_high.literal);
-  p = DisSym(d, p, addr, addr, false);
+  p = DisSym(d, p, addr, addr);
   p = HighEnd(p);
   return p;
 }
@@ -227,7 +222,7 @@ static char *DisDisp(struct Dis *d, uint32_t rde, char *p) {
     } else {
       rela = true;
     }
-    p = DisSym(d, p, disp, disp, rela);
+    p = DisSym(d, p, disp, disp);
   }
   return p;
 }
@@ -477,11 +472,11 @@ static char *DisJb(struct Dis *d, uint32_t rde, char *p) {
 
 static char *DisJvds(struct Dis *d, uint32_t rde, char *p) {
   return DisSym(d, p, RipRelative(d, d->xedd->op.disp),
-                RipRelative(d, d->xedd->op.disp) - Read64(d->m->cs), true);
+                RipRelative(d, d->xedd->op.disp) - Read64(d->m->cs));
 }
 
 static char *DisAbs(struct Dis *d, uint32_t rde, char *p) {
-  return DisSym(d, p, d->xedd->op.disp, d->xedd->op.disp, false);
+  return DisSym(d, p, d->xedd->op.disp, d->xedd->op.disp);
 }
 
 static char *DisSw(struct Dis *d, uint32_t rde, char *p) {

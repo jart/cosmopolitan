@@ -46,9 +46,6 @@ static void LoadElfLoadSegment(struct Machine *m, void *code, size_t codesize,
   align = MAX(phdr->p_align, PAGESIZE);
   CHECK_EQ(1, popcnt(align));
   CHECK_EQ(0, (phdr->p_vaddr - phdr->p_offset) % align);
-  /*-Type-Offset---VirtAddr-----------PhysAddr-----------FileSiz--MemSiz---Flg-Align----*/
-  /*-LOAD-0x000000-0x0000000000400000-0x0000000000400000-0x0008e4-0x0008e4-R-E-0x200000-*/
-  /*-LOAD-0x000fe0-0x0000000000600fe0-0x0000000000600fe0-0x000030-0x000310-RW--0x200000-*/
   felf = (int64_t)(intptr_t)code;
   vstart = ROUNDDOWN(phdr->p_vaddr, align);
   vbss = ROUNDUP(phdr->p_vaddr + phdr->p_filesz, align);
@@ -56,10 +53,10 @@ static void LoadElfLoadSegment(struct Machine *m, void *code, size_t codesize,
   fstart = felf + ROUNDDOWN(phdr->p_offset, align);
   fend = felf + phdr->p_offset + phdr->p_filesz;
   bsssize = vend - vbss;
-  LOGF("LOADELFLOADSEGMENT"
-       " VSTART %#lx VBSS %#lx VEND %#lx"
-       " FSTART %#lx FEND %#lx BSSSIZE %#lx",
-       vstart, vbss, vend, fstart, fend, bsssize);
+  VERBOSEF("LOADELFLOADSEGMENT"
+           " VSTART %#lx VBSS %#lx VEND %#lx"
+           " FSTART %#lx FEND %#lx BSSSIZE %#lx",
+           vstart, vbss, vend, fstart, fend, bsssize);
   m->brk = MAX(m->brk, vend);
   CHECK_GE(vend, vstart);
   CHECK_GE(fend, fstart);
@@ -69,9 +66,9 @@ static void LoadElfLoadSegment(struct Machine *m, void *code, size_t codesize,
   CHECK_GE(vend - vstart, fstart - fend);
   CHECK_LE(phdr->p_filesz, phdr->p_memsz);
   CHECK_EQ(felf + phdr->p_offset - fstart, phdr->p_vaddr - vstart);
-  CHECK_NE(-1, ReserveVirtual(m, vstart, fend - fstart));
+  CHECK_NE(-1, ReserveVirtual(m, vstart, fend - fstart, 0x0207));
   VirtualRecv(m, vstart, (void *)fstart, fend - fstart);
-  if (bsssize) CHECK_NE(-1, ReserveVirtual(m, vbss, bsssize));
+  if (bsssize) CHECK_NE(-1, ReserveVirtual(m, vbss, bsssize, 0x0207));
   if (phdr->p_memsz - phdr->p_filesz > bsssize) {
     VirtualSet(m, phdr->p_vaddr + phdr->p_filesz, 0,
                phdr->p_memsz - phdr->p_filesz - bsssize);
@@ -82,7 +79,7 @@ static void LoadElf(struct Machine *m, struct Elf *elf) {
   unsigned i;
   Elf64_Phdr *phdr;
   m->ip = elf->base = elf->ehdr->e_entry;
-  LOGF("LOADELF ENTRY %p", m->ip);
+  VERBOSEF("LOADELF ENTRY %p", m->ip);
   for (i = 0; i < elf->ehdr->e_phnum; ++i) {
     phdr = getelfsegmentheaderaddress(elf->ehdr, elf->size, i);
     switch (phdr->p_type) {
@@ -149,9 +146,9 @@ void LoadProgram(struct Machine *m, const char *prog, char **args, char **vars,
   }
   CHECK_NE(-1, close(fd));
   ResetCpu(m);
-  if (m->mode == XED_MACHINE_MODE_REAL) {
+  if ((m->mode & 3) == XED_MODE_REAL) {
     elf->base = 0x7c00;
-    CHECK_NE(-1, ReserveVirtual(m, 0, BIGPAGESIZE));
+    CHECK_NE(-1, ReserveReal(m, BIGPAGESIZE));
     m->ip = 0x7c00;
     Write64(m->cs, 0);
     Write64(m->dx, 0);
@@ -168,7 +165,8 @@ void LoadProgram(struct Machine *m, const char *prog, char **args, char **vars,
   } else {
     sp = 0x800000000000;
     Write64(m->sp, sp);
-    CHECK_NE(-1, ReserveVirtual(m, sp - STACKSIZE, STACKSIZE));
+    m->cr3 = AllocateLinearPage(m);
+    CHECK_NE(-1, ReserveVirtual(m, sp - STACKSIZE, STACKSIZE, 0x0207));
     LoadArgv(m, prog, args, vars);
     if (memcmp(elf->map, "\177ELF", 4) == 0) {
       elf->ehdr = (void *)elf->map;

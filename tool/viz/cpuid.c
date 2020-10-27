@@ -17,6 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/log/color.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/cpuid4.h"
 #include "libc/nexgen32e/nexgen32e.h"
@@ -30,9 +31,6 @@
 #include "tool/decode/lib/idname.h"
 #include "tool/decode/lib/x86idnames.h"
 
-#define RED              (cancolor() ? "\x1b[91m" : "")
-#define GREEN            (cancolor() ? "\x1b[32m" : "")
-#define RESET            (cancolor() ? "\x1b[0m" : "")
 #define CANIUSE(FEATURE) caniuse(#FEATURE, X86_HAVE(FEATURE))
 #define SHOW(CONSTANT)   show(#CONSTANT, CONSTANT)
 

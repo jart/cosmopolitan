@@ -30,10 +30,10 @@ struct Dis {
     size_t i, n;
     struct DisSym {
       int64_t addr;
-      int rank;
       int unique;
       int size;
       int name;
+      char rank;
       bool iscode;
       bool isabs;
     } * p;

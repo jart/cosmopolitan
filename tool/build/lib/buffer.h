@@ -12,7 +12,7 @@ void AppendChar(struct Buffer *, char);
 void AppendData(struct Buffer *, char *, size_t);
 void AppendStr(struct Buffer *, const char *);
 void AppendWide(struct Buffer *, wint_t);
-void AppendFmt(struct Buffer *, const char *, ...);
+int AppendFmt(struct Buffer *, const char *, ...);
 ssize_t WriteBuffer(struct Buffer *, int);
 
 COSMOPOLITAN_C_END_

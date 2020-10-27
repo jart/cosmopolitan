@@ -20,11 +20,11 @@
 #include "libc/str/str.h"
 
 int getkvlin(const char *name, const char *const unsorted[]) {
+  unsigned i, n;
   if (unsorted) {
-    unsigned namelen = strlen(name);
-    for (int i = 0; unsorted[i]; ++i) {
-      if (strncmp(unsorted[i], name, namelen) == 0 &&
-          unsorted[i][namelen] == '=') {
+    n = strlen(name);
+    for (i = 0; unsorted[i]; ++i) {
+      if (strncmp(unsorted[i], name, n) == 0 && unsorted[i][n] == '=') {
         return i;
       }
     }

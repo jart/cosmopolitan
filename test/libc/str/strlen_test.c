@@ -21,6 +21,7 @@
 #include "libc/macros.h"
 #include "libc/nexgen32e/tinystrlen.h"
 #include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
 char u8[] = "utf-8 ☻";
@@ -128,4 +129,17 @@ TEST(tinystrnlen16, test) {
   EXPECT_EQ(3, tinystrnlen16(u"123", 3));
   EXPECT_EQ(2, tinystrnlen16(u"123", 2));
   EXPECT_EQ(3, tinystrnlen16(u"123", 4));
+}
+
+BENCH(strlen, bench) {
+  extern size_t strlen_(const char *) asm("strlen");
+  static char b[1024];
+  memset(b, -1, sizeof(b) - 1);
+  EZBENCH2("strlen 1", donothing, strlen_(""));
+  EZBENCH2("strlen 2", donothing, strlen_("1"));
+  EZBENCH2("strlen 7", donothing, strlen_("123456"));
+  EZBENCH2("strlen 8", donothing, strlen_("1234567"));
+  EZBENCH2("strlen 9", donothing, strlen_("12345678"));
+  EZBENCH2("strlen 16", donothing, strlen_("123456781234567"));
+  EZBENCH2("strlen 1023", donothing, strlen_(b));
 }

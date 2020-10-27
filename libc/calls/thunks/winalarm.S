@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,15 +17,11 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/calls/struct/siginfo.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/sig.h"
+#include "libc/macros.h"
+.text.windows
+.source	__FILE__
 
-void onntalarm(void *lpArgToCompletionRoutine, uint32_t dwTimerLowValue,
-               uint32_t dwTimerHighValue) {
-  siginfo_t info;
-  memset(&info, 0, sizeof(info));
-  info.si_signo = SIGALRM;
-  __sigenter(info.si_signo, &info, NULL);
-}
+__winalarm$nt:
+	ezlea	__winalarm,ax
+	jmp	__nt2sysv
+	.endfn	__winalarm$nt,globl,hidden

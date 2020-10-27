@@ -19,6 +19,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/unicode/unicode.h"
 
+extern const uint8_t kEastAsianWidth[];
+extern const uint32_t kEastAsianWidthBits;
+extern const uint8_t kCombiningChars[];
+extern const uint32_t kCombiningCharsBits;
+
 /**
  * Returns cell width of monospace character.
  */

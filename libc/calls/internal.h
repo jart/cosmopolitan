@@ -261,14 +261,10 @@ void ntcontext2linux(struct ucontext *, const struct NtContext *) hidden;
 struct NtOverlapped *offset2overlap(int64_t, struct NtOverlapped *) hidden;
 bool32 ntsetprivilege(i64, const char16_t *, u32) hidden;
 bool32 onntconsoleevent$nt(u32) hidden;
-void onntalarm(void *, uint32_t, uint32_t) hidden;
+void __winalarm(void *, uint32_t, uint32_t) hidden;
 int ntaccesscheck(const char16_t *, u32) paramsnonnull() hidden;
 i64 ntreturn(u32);
 i64 winerr(void) nocallback privileged;
-
-const char *__fixntmagicpath(const char *, unsigned) paramsnonnull() hidden;
-int __mkntpath(const char *, unsigned, char16_t[hasatleast PATH_MAX - 16])
-    paramsnonnull() hidden;
 
 #define mkntpath(PATH, PATH16) mkntpath2(PATH, -1u, PATH16)
 #define mkntpath2(PATH, FLAGS, PATH16)                           \
@@ -279,16 +275,6 @@ int __mkntpath(const char *, unsigned, char16_t[hasatleast PATH_MAX - 16])
         : "D"(PATH), "S"(FLAGS), "d"(&PATH16[0]), "m"((PATH)[0]) \
         : "cc");                                                 \
     Count;                                                       \
-  })
-
-#define fixntmagicpath(PATH, FLAGS)             \
-  ({                                            \
-    const char *Path2;                          \
-    asm("call\tfixntmagicpath"                  \
-        : "=a"(Path2)                           \
-        : "D"(PATH), "S"(FLAGS), "m"((PATH)[0]) \
-        : "cc");                                \
-    Path2;                                      \
   })
 
 #undef sigset

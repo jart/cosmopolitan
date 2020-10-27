@@ -49,6 +49,6 @@ static const char kRegexErrors[] =
  */
 size_t regerror(int e, const regex_t *preg, char *buf, size_t size) {
   return 1 + snprintf(buf, size, "%s",
-                      firstnonnull(indexdoublenulstring(kRegexErrors, e),
+                      firstnonnull(IndexDoubleNulString(kRegexErrors, e),
                                    "Unknown error"));
 }

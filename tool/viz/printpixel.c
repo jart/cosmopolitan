@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     r = (rgb & 0xff0000) >> 020;
     tty = rgb2tty(r, g, b);
     printf("\e[48;5;%dm    \e[0m %d \\e[48;5;%dm %s #%02x%02x%02x\n", tty.xt,
-           tty.xt, tty.xt, indexdoublenulstring(kXtermName, tty.xt), r, g, b);
+           tty.xt, tty.xt, IndexDoubleNulString(kXtermName, tty.xt), r, g, b);
   }
   return 0;
 }

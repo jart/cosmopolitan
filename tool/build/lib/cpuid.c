@@ -31,8 +31,8 @@ void OpCpuid(struct Machine *m, uint32_t rde) {
     case 0x80000000:
       ax = 7;
       bx = 'G' | 'e' << 8 | 'n' << 16 | 'u' << 24;
-      cx = 'i' | 'n' << 8 | 'e' << 16 | 'C' << 24;
-      dx = 'o' | 's' << 8 | 'm' << 16 | 'o' << 24;
+      dx = 'i' | 'n' << 8 | 'e' << 16 | 'C' << 24;
+      cx = 'o' | 's' << 8 | 'm' << 16 | 'o' << 24;
       break;
     case 1:
       cx |= 1 << 0;   // sse3

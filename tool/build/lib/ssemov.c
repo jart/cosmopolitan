@@ -17,6 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/pmovmskb.h"
 #include "libc/str/str.h"
 #include "tool/build/lib/address.h"
 #include "tool/build/lib/endian.h"
@@ -496,23 +497,9 @@ void OpMov0fD6(struct Machine *m, uint32_t rde) {
   }
 }
 
-static uint8_t pmovmskb(uint64_t x) {
-  return (x & 0x0000000000000080) >> 007 | (x & 0x0000000000008000) >> 016 |
-         (x & 0x0000000000800000) >> 025 | (x & 0x0000000080000000) >> 034 |
-         (x & 0x0000008000000000) >> 043 | (x & 0x0000800000000000) >> 052 |
-         (x & 0x0080000000000000) >> 061 | (x & 0x8000000000000000) >> 070;
-}
-
 void OpPmovmskbGdqpNqUdq(struct Machine *m, uint32_t rde) {
-  uint64_t bitmask;
-  if (Osz(rde)) {
-    bitmask = pmovmskb(Read64(XmmRexbRm(m, rde) + 8)) << 8 |
-              pmovmskb(Read64(XmmRexbRm(m, rde)));
-  } else {
-    bitmask = pmovmskb(Read64(MmRm(m, rde) + 8)) << 8 |
-              pmovmskb(Read64(MmRm(m, rde)));
-  }
-  Write64(RegRexrReg(m, rde), bitmask);
+  Write64(RegRexrReg(m, rde),
+          pmovmskb(XmmRexbRm(m, rde)) & (Osz(rde) ? 0xffff : 0xff));
 }
 
 void OpMaskMovDiXmmRegXmmRm(struct Machine *m, uint32_t rde) {

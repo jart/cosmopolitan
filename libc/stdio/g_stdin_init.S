@@ -25,14 +25,14 @@
 .source	__FILE__
 
 	.init.start 400,_init_g_stdin
-	lea	g_stdin(%rip),%rax
+	ezlea	g_stdin,ax
 	mov	O_RDONLY,%edx
 	mov	%edx,4(%rax)			#→ f.iomode
-	lea	g_stdin_buf(%rip),%rcx
+	ezlea	g_stdin_buf,cx
 	mov	%rcx,24(%rax)			#→ f.buf
 	movl	$BUFSIZ,32(%rax)		#→ f.size
-	lea	freadbuf(%rip),%rcx
-	lea	fsreadbuf(%rip),%rdx
+	ezlea	freadbuf,cx
+	ezlea	fsreadbuf,dx
 	testb	IsMetal()
 	cmove	%rcx,%rdx
 	mov	%rdx,40(%rax)			#→ f.reader

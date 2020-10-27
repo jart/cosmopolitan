@@ -35,7 +35,6 @@ LIBC_X_A_CHECKS =				\
 
 LIBC_X_A_DIRECTDEPS =				\
 	LIBC_CALLS				\
-	LIBC_ESCAPE				\
 	LIBC_FMT				\
 	LIBC_MEM				\
 	LIBC_NEXGEN32E				\

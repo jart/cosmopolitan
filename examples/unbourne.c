@@ -620,12 +620,12 @@
 #define octtobin(c)     ((c) - '0')
 #define scopy(s1, s2)   ((void)strcpy(s2, s1))
 
-/* #define TRACE(param) */
-#define TRACE(param)   \
-  do {                 \
-    printf("TRACE: "); \
-    printf param;      \
-  } while (0)
+#define TRACE(param)
+/* #define TRACE(param)   \ */
+/*   do {                 \ */
+/*     printf("TRACE: "); \ */
+/*     printf param;      \ */
+/*   } while (0) */
 
 #define TRACEV(param)
 #define digit_val(c)  ((c) - '0')
@@ -634,8 +634,6 @@
 #define is_in_name(c) ((c) == '_' || isalnum((unsigned char)(c)))
 #define is_name(c)    ((c) == '_' || isalpha((unsigned char)(c)))
 #define is_special(c) ((is_type + SYNBASE)[(signed char)(c)] & (ISSPECL | ISDIGIT))
-/* #define likely(x)     __builtin_expect(!!(x), 1) */
-/* #define unlikely(x)   __builtin_expect(!!(x), 0) */
 
 #define uninitialized_var(x) x = x /* suppress uninitialized warning w/o code */
 
@@ -643,9 +641,7 @@
  * Shell variables.
  */
 #define vifs    varinit[0]
-#define vmail   (&vifs)[1]
-#define vmpath  (&vmail)[1]
-#define vpath   (&vmpath)[1]
+#define vpath   (&vifs)[1]
 #define vps1    (&vpath)[1]
 #define vps2    (&vps1)[1]
 #define vps4    (&vps2)[1]
@@ -1497,46 +1493,48 @@ enum token {
 
 enum token_types { UNOP, BINOP, BUNOP, BBINOP, PAREN };
 
-static struct t_op const ops[] = {{"-r", FILRD, UNOP},
-                                  {"-w", FILWR, UNOP},
-                                  {"-x", FILEX, UNOP},
-                                  {"-e", FILEXIST, UNOP},
-                                  {"-f", FILREG, UNOP},
-                                  {"-d", FILDIR, UNOP},
-                                  {"-c", FILCDEV, UNOP},
-                                  {"-b", FILBDEV, UNOP},
-                                  {"-p", FILFIFO, UNOP},
-                                  {"-u", FILSUID, UNOP},
-                                  {"-g", FILSGID, UNOP},
-                                  {"-k", FILSTCK, UNOP},
-                                  {"-s", FILGZ, UNOP},
-                                  {"-t", FILTT, UNOP},
-                                  {"-z", STREZ, UNOP},
-                                  {"-n", STRNZ, UNOP},
-                                  {"-h", FILSYM, UNOP}, /* for backwards compat */
-                                  {"-O", FILUID, UNOP},
-                                  {"-G", FILGID, UNOP},
-                                  {"-L", FILSYM, UNOP},
-                                  {"-S", FILSOCK, UNOP},
-                                  {"=", STREQ, BINOP},
-                                  {"!=", STRNE, BINOP},
-                                  {"<", STRLT, BINOP},
-                                  {">", STRGT, BINOP},
-                                  {"-eq", INTEQ, BINOP},
-                                  {"-ne", INTNE, BINOP},
-                                  {"-ge", INTGE, BINOP},
-                                  {"-gt", INTGT, BINOP},
-                                  {"-le", INTLE, BINOP},
-                                  {"-lt", INTLT, BINOP},
-                                  {"-nt", FILNT, BINOP},
-                                  {"-ot", FILOT, BINOP},
-                                  {"-ef", FILEQ, BINOP},
-                                  {"!", UNOT, BUNOP},
-                                  {"-a", BAND, BBINOP},
-                                  {"-o", BOR, BBINOP},
-                                  {"(", LPAREN, PAREN},
-                                  {")", RPAREN, PAREN},
-                                  {0, 0, 0}};
+static struct t_op const ops[] = {
+    {"-r", FILRD, UNOP},
+    {"-w", FILWR, UNOP},
+    {"-x", FILEX, UNOP},
+    {"-e", FILEXIST, UNOP},
+    {"-f", FILREG, UNOP},
+    {"-d", FILDIR, UNOP},
+    {"-c", FILCDEV, UNOP},
+    {"-b", FILBDEV, UNOP},
+    {"-p", FILFIFO, UNOP},
+    {"-u", FILSUID, UNOP},
+    {"-g", FILSGID, UNOP},
+    {"-k", FILSTCK, UNOP},
+    {"-s", FILGZ, UNOP},
+    {"-t", FILTT, UNOP},
+    {"-z", STREZ, UNOP},
+    {"-n", STRNZ, UNOP},
+    {"-h", FILSYM, UNOP}, /* for backwards compat */
+    {"-O", FILUID, UNOP},
+    {"-G", FILGID, UNOP},
+    {"-L", FILSYM, UNOP},
+    {"-S", FILSOCK, UNOP},
+    {"=", STREQ, BINOP},
+    {"!=", STRNE, BINOP},
+    {"<", STRLT, BINOP},
+    {">", STRGT, BINOP},
+    {"-eq", INTEQ, BINOP},
+    {"-ne", INTNE, BINOP},
+    {"-ge", INTGE, BINOP},
+    {"-gt", INTGT, BINOP},
+    {"-le", INTLE, BINOP},
+    {"-lt", INTLT, BINOP},
+    {"-nt", FILNT, BINOP},
+    {"-ot", FILOT, BINOP},
+    {"-ef", FILEQ, BINOP},
+    {"!", UNOT, BUNOP},
+    {"-a", BAND, BBINOP},
+    {"-o", BOR, BBINOP},
+    {"(", LPAREN, PAREN},
+    {")", RPAREN, PAREN},
+    {0, 0, 0},
+};
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § the unbourne shell » text                                 ─╬─│┼
@@ -3644,7 +3642,7 @@ static int evalcommand(union node *cmd, int flags) {
   }
   /* Now locate the command. */
   if (cmdentry.cmdtype != CMDBUILTIN || !(cmdentry.u.cmd->flags & BUILTIN_REGULAR)) {
-    path = unlikely(path != NULL) ? path : pathval();
+    path = unlikely(path != NULL) ? path : pathval(); /* wut */
     find_command(argv[0], &cmdentry, cmd_flag | DO_ERR, path);
   }
   jp = NULL;
@@ -4213,21 +4211,21 @@ static void hashcd(void) {
  * Called with interrupts off.
  */
 static void changepath(const char *newval) {
-  const char *new;
   int idx;
   int bltin;
-  new = newval;
+  const char *neu;
+  neu = newval;
   idx = 0;
   bltin = -1;
   for (;;) {
-    if (*new == '%' && prefix(new + 1, "builtin")) {
+    if (*neu == '%' && prefix(neu + 1, "builtin")) {
       bltin = idx;
       break;
     }
-    new = strchr(new, ':');
-    if (!new) break;
+    neu = strchr(neu, ':');
+    if (!neu) break;
     idx++;
-    new ++;
+    neu++;
   }
   builtinloc = bltin;
   clearcmdentry();
@@ -9603,6 +9601,9 @@ static char *conv_escape(char *str, int *conv_ch) {
     case 'f':
       value = '\f';
       break; /* form-feed */
+    case 'e':
+      value = '\e';
+      break; /* escape */
     case 'n':
       value = '\n';
       break; /* newline */
@@ -10787,6 +10788,7 @@ static int exitcmd(int argc, char **argv) {
  */
 int main(int argc, char **argv) {
   showcrashreports();
+  unsetenv("PS1");
   char *shinit;
   volatile int state;
   struct jmploc jmploc;

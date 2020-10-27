@@ -240,9 +240,10 @@ static const struct Pick kPicksMixBlock[32] = {
     {TL, TR, 9}, /* ▓ */
 };
 
-static unsigned short bdist(struct TtyRgb a, struct TtyRgb b, struct TtyRgb c,
-                            struct TtyRgb d, struct TtyRgb w, struct TtyRgb x,
-                            struct TtyRgb y, struct TtyRgb z) {
+static unsigned short GetBlockDist(struct TtyRgb a, struct TtyRgb b,
+                                   struct TtyRgb c, struct TtyRgb d,
+                                   struct TtyRgb w, struct TtyRgb x,
+                                   struct TtyRgb y, struct TtyRgb z) {
   unsigned short dist;
   dist = 0;
   dist += ABS(a.r - w.r);
@@ -260,7 +261,7 @@ static unsigned short bdist(struct TtyRgb a, struct TtyRgb b, struct TtyRgb c,
   return dist;
 }
 
-static uint16_t *mixblock(uint16_t *p, struct TtyRgb ttl, struct TtyRgb ttr,
+static uint16_t *MixBlock(uint16_t *p, struct TtyRgb ttl, struct TtyRgb ttr,
                           struct TtyRgb tbl, struct TtyRgb tbr,
                           struct TtyRgb qtl, struct TtyRgb qtr,
                           struct TtyRgb qbl, struct TtyRgb qbr) {
@@ -465,15 +466,15 @@ static uint16_t *mixblock(uint16_t *p, struct TtyRgb ttl, struct TtyRgb ttr,
   return p;
 }
 
-static struct TtyRgb getquant(struct TtyRgb rgb) {
+static struct TtyRgb GetQuant(struct TtyRgb rgb) {
   return g_ansi2rgb_[rgb.xt];
 }
 
-static uint16_t *pickunicode(uint16_t *p, struct TtyRgb tl, struct TtyRgb tr,
+static uint16_t *PickUnicode(uint16_t *p, struct TtyRgb tl, struct TtyRgb tr,
                              struct TtyRgb bl, struct TtyRgb br,
                              struct TtyRgb tl2, struct TtyRgb tr2,
                              struct TtyRgb bl2, struct TtyRgb br2) {
-#define PICK(A, B, C, D) *p++ = bdist(tl, tr, bl, br, A, B, C, D)
+#define PICK(A, B, C, D) *p++ = GetBlockDist(tl, tr, bl, br, A, B, C, D)
   PICK(bl2, bl2, bl2, bl2); /*   k=0  bg=bl fg=NULL */
   PICK(bl2, bl2, bl2, br2); /* ▗ k=4  bg=bl fg=br   */
   PICK(bl2, bl2, bl2, tl2); /* ▗ k=4  bg=bl fg=tl   */
@@ -566,11 +567,11 @@ static uint16_t *pickunicode(uint16_t *p, struct TtyRgb tl, struct TtyRgb tr,
   return p;
 }
 
-static uint16_t *pickcp437(uint16_t *p, struct TtyRgb tl, struct TtyRgb tr,
+static uint16_t *PickCp437(uint16_t *p, struct TtyRgb tl, struct TtyRgb tr,
                            struct TtyRgb bl, struct TtyRgb br,
                            struct TtyRgb tl2, struct TtyRgb tr2,
                            struct TtyRgb bl2, struct TtyRgb br2) {
-#define PICK(A, B, C, D) *p++ = bdist(tl, tr, bl, br, A, B, C, D)
+#define PICK(A, B, C, D) *p++ = GetBlockDist(tl, tr, bl, br, A, B, C, D)
   PICK(bl2, bl2, bl2, bl2); /*   k=0  bg=bl fg=NULL */
   PICK(bl2, bl2, br2, br2); /* ▄ k=1  bg=bl fg=br   */
   PICK(bl2, bl2, tl2, tl2); /* ▄ k=1  bg=bl fg=tl   */
@@ -603,30 +604,30 @@ static uint16_t *pickcp437(uint16_t *p, struct TtyRgb tl, struct TtyRgb tr,
   return p;
 }
 
-static struct Pick pickblock_unicode_ansi(struct TtyRgb tl, struct TtyRgb tr,
-                                          struct TtyRgb bl, struct TtyRgb br) {
-  struct TtyRgb tl2 = getquant(tl);
-  struct TtyRgb tr2 = getquant(tr);
-  struct TtyRgb bl2 = getquant(bl);
-  struct TtyRgb br2 = getquant(br);
+static struct Pick PickBlockUnicodeAnsi(struct TtyRgb tl, struct TtyRgb tr,
+                                        struct TtyRgb bl, struct TtyRgb br) {
+  struct TtyRgb tl2 = GetQuant(tl);
+  struct TtyRgb tr2 = GetQuant(tr);
+  struct TtyRgb bl2 = GetQuant(bl);
+  struct TtyRgb br2 = GetQuant(br);
   unsigned i, p1, p2;
   uint16_t picks1[96] aligned(32);
   uint16_t picks2[32] aligned(32);
   memset(picks1, 0x79, sizeof(picks1));
   memset(picks2, 0x79, sizeof(picks2));
-  pickunicode(picks1, tl, tr, bl, br, tl2, tr2, bl2, br2);
-  mixblock(picks2, tl, tr, bl, br, tl2, tr2, bl2, br2);
+  PickUnicode(picks1, tl, tr, bl, br, tl2, tr2, bl2, br2);
+  MixBlock(picks2, tl, tr, bl, br, tl2, tr2, bl2, br2);
   p1 = windex(picks1, 96);
   p2 = windex(picks2, 32);
   return picks1[p1] <= picks2[p2] ? kPicksUnicode[p1] : kPicksMixBlock[p2];
 }
 
-static struct Pick pickblock_unicode_true(struct TtyRgb tl, struct TtyRgb tr,
-                                          struct TtyRgb bl, struct TtyRgb br) {
+static struct Pick PickBlockUnicodeTrue(struct TtyRgb tl, struct TtyRgb tr,
+                                        struct TtyRgb bl, struct TtyRgb br) {
   unsigned i;
   uint16_t picks[96] aligned(32);
   memset(picks, 0x79, sizeof(picks));
-  pickunicode(picks, tl, tr, bl, br, tl, tr, bl, br);
+  PickUnicode(picks, tl, tr, bl, br, tl, tr, bl, br);
   i = windex(picks, 96);
   if (i >= 88) {
     unsigned j;
@@ -640,39 +641,39 @@ static struct Pick pickblock_unicode_true(struct TtyRgb tl, struct TtyRgb tr,
   return kPicksUnicode[i];
 }
 
-static struct Pick pickblock_cp437_ansi(struct TtyRgb tl, struct TtyRgb tr,
-                                        struct TtyRgb bl, struct TtyRgb br) {
-  struct TtyRgb tl2 = getquant(tl);
-  struct TtyRgb tr2 = getquant(tr);
-  struct TtyRgb bl2 = getquant(bl);
-  struct TtyRgb br2 = getquant(br);
+static struct Pick PickBlockCp437Ansi(struct TtyRgb tl, struct TtyRgb tr,
+                                      struct TtyRgb bl, struct TtyRgb br) {
+  struct TtyRgb tl2 = GetQuant(tl);
+  struct TtyRgb tr2 = GetQuant(tr);
+  struct TtyRgb bl2 = GetQuant(bl);
+  struct TtyRgb br2 = GetQuant(br);
   unsigned i, p1, p2;
   uint16_t picks1[32] aligned(32);
   uint16_t picks2[32] aligned(32);
   memset(picks1, 0x79, sizeof(picks1));
   memset(picks2, 0x79, sizeof(picks2));
-  pickcp437(picks1, tl, tr, bl, br, tl2, tr2, bl2, br2);
-  mixblock(picks2, tl, tr, bl, br, tl2, tr2, bl2, br2);
+  PickCp437(picks1, tl, tr, bl, br, tl2, tr2, bl2, br2);
+  MixBlock(picks2, tl, tr, bl, br, tl2, tr2, bl2, br2);
   p1 = windex(picks1, 32);
   p2 = windex(picks2, 32);
   return picks1[p1] <= picks2[p2] ? kPicksCp437[p1] : kPicksMixBlock[p2];
 }
 
-static struct Pick pickblock_cp437_true(struct TtyRgb tl, struct TtyRgb tr,
-                                        struct TtyRgb bl, struct TtyRgb br) {
+static struct Pick PickBlockCp437True(struct TtyRgb tl, struct TtyRgb tr,
+                                      struct TtyRgb bl, struct TtyRgb br) {
   unsigned i;
   uint16_t picks[32] aligned(32);
   memset(picks, 0x79, sizeof(picks));
-  pickcp437(picks, tl, tr, bl, br, tl, tr, bl, br);
+  PickCp437(picks, tl, tr, bl, br, tl, tr, bl, br);
   return kPicksCp437[windex(picks, 32)];
 }
 
-static char *copyglyph(char *v, struct Glyph glyph) {
+static char *CopyGlyph(char *v, struct Glyph glyph) {
   memcpy(v, &glyph, 4);
   return v + glyph.len;
 }
 
-static char *copyblock(char *v, const struct TtyRgb chunk[hasatleast 4],
+static char *CopyBlock(char *v, const struct TtyRgb chunk[hasatleast 4],
                        struct Pick pick, struct TtyRgb *bg, struct TtyRgb *fg,
                        struct Glyph *glyph) {
   unsigned i;
@@ -721,16 +722,16 @@ static char *copyblock(char *v, const struct TtyRgb chunk[hasatleast 4],
   } else if (!ttyeq(*bg, chunk[pick.bg])) {
     v = setbg(v, (*bg = chunk[pick.bg]));
   }
-  return copyglyph(v, (*glyph = kGlyphs[i][pick.k]));
+  return CopyGlyph(v, (*glyph = kGlyphs[i][pick.k]));
 }
 
-static bool chunkeq(struct TtyRgb c[hasatleast 4],
+static bool ChunkEq(struct TtyRgb c[hasatleast 4],
                     struct TtyRgb c2[hasatleast 4]) {
   return ttyeq(c[TL], c[TR]) && ttyeq(c[BL], c[BR]) && ttyeq(c2[TL], c2[TR]) &&
          ttyeq(c2[BL], c2[BR]);
 }
 
-static struct TtyRgb *copychunk(struct TtyRgb chunk[hasatleast 4],
+static struct TtyRgb *CopyChunk(struct TtyRgb chunk[hasatleast 4],
                                 const struct TtyRgb *c, size_t n) {
   chunk[TL] = c[0 + 0];
   chunk[TR] = c[0 + 1];
@@ -739,7 +740,7 @@ static struct TtyRgb *copychunk(struct TtyRgb chunk[hasatleast 4],
   return chunk;
 }
 
-static noinline char *copyrun(char *v, size_t n,
+static noinline char *CopyRun(char *v, size_t n,
                               struct TtyRgb lastchunk[hasatleast 4],
                               const struct TtyRgb **c, size_t *x,
                               struct TtyRgb *bg, struct TtyRgb *fg,
@@ -752,12 +753,12 @@ static noinline char *copyrun(char *v, size_t n,
     *glyph = kGlyphs[0][0];
   }
   do {
-    v = copyglyph(v, *glyph);
+    v = CopyGlyph(v, *glyph);
     *x += 2;
     *c += 2;
     if (*x >= n) break;
-    copychunk(chunk, *c, n);
-  } while (chunkeq(chunk, lastchunk));
+    CopyChunk(chunk, *c, n);
+  } while (ChunkEq(chunk, lastchunk));
   *x -= 2;
   *c -= 2;
   return v;
@@ -776,21 +777,21 @@ char *ttyraster(char *v, const struct TtyRgb *c, size_t yn, size_t n,
   for (y = 0; y < yn; y += 2, c += n) {
     if (y) *v++ = '\r', *v++ = '\n';
     for (x = 0; x < n; x += 2, c += 2) {
-      copychunk(chun, c, n);
+      CopyChunk(chun, c, n);
       if (ttyquant()->alg == kTtyQuantTrue) {
         if (ttyquant()->blocks == kTtyBlocksCp437) {
-          p = pickblock_cp437_true(chun[TL], chun[TR], chun[BL], chun[BR]);
+          p = PickBlockCp437True(chun[TL], chun[TR], chun[BL], chun[BR]);
         } else {
-          p = pickblock_unicode_true(chun[TL], chun[TR], chun[BL], chun[BR]);
+          p = PickBlockUnicodeTrue(chun[TL], chun[TR], chun[BL], chun[BR]);
         }
       } else {
         if (ttyquant()->blocks == kTtyBlocksCp437) {
-          p = pickblock_cp437_ansi(chun[TL], chun[TR], chun[BL], chun[BR]);
+          p = PickBlockCp437Ansi(chun[TL], chun[TR], chun[BL], chun[BR]);
         } else {
-          p = pickblock_unicode_ansi(chun[TL], chun[TR], chun[BL], chun[BR]);
+          p = PickBlockUnicodeAnsi(chun[TL], chun[TR], chun[BL], chun[BR]);
         }
       }
-      v = copyblock(v, chun, p, &bg, &fg, &glyph);
+      v = CopyBlock(v, chun, p, &bg, &fg, &glyph);
       memcpy(lastchunk, chun, sizeof(chun));
     }
   }

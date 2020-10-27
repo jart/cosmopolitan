@@ -5,10 +5,12 @@
 COSMOPOLITAN_C_START_
 
 struct Panel {
-  int i;
-  int top, bottom;
-  int left, right;
+  int top;
+  int bottom;
+  int left;
+  int right;
   struct Buffer *lines;
+  size_t n;
 };
 
 ssize_t PrintPanels(int, long, struct Panel *, long, long);

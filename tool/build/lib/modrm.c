@@ -236,6 +236,10 @@ uint8_t *GetModrmRegisterWordPointerWrite(struct Machine *m, uint32_t rde,
   }
 }
 
+uint8_t *GetModrmRegisterWordPointerWrite2(struct Machine *m, uint32_t rde) {
+  return GetModrmRegisterWordPointerWrite(m, rde, 2);
+}
+
 uint8_t *GetModrmRegisterWordPointerWrite4(struct Machine *m, uint32_t rde) {
   return GetModrmRegisterWordPointerWrite(m, rde, 4);
 }
