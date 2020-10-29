@@ -166,6 +166,8 @@ systemfive.xnu:
 	.init.start 300,_init_systemfive
 	push	%rbx
 	push	%rsi
+	testb	$METAL,(%rdi)			# @see ape/ape.S
+	jnz	systemfive.init.metal
 	testb	$XNU,(%rdi)			# @see libc/crt/crt.S
 	jnz	systemfive.init.xnu
 	testb	$FREEBSD,(%rdi)			# @see libc/crt/crt.S
@@ -179,6 +181,11 @@ systemfive.xnu:
 systemfive.init.linux:
 	pushb	systemfive.linux-.Lanchorpoint
 	push	$LINUX
+	ezlea	syscon.linux,si
+	jmp	systemfive.init.os
+systemfive.init.metal:
+	pushb	systemfive.linux-.Lanchorpoint
+	push	$METAL
 	ezlea	syscon.linux,si
 	jmp	systemfive.init.os
 systemfive.init.windows:

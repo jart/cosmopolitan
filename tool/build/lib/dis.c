@@ -23,7 +23,6 @@
 #include "libc/conv/itoa.h"
 #include "libc/fmt/bing.h"
 #include "libc/fmt/fmt.h"
-#include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"
@@ -96,7 +95,7 @@ static char *DisError(struct Dis *d, char *p) {
 }
 
 static char *DisAddr(struct Dis *d, char *p) {
-  if (INT32_MIN <= d->addr && d->addr <= INT32_MAX) {
+  if (-0x80000000 <= d->addr && d->addr <= 0x7fffffff) {
     return p + uint64toarray_fixed16(d->addr, p, 32);
   } else {
     return p + uint64toarray_fixed16(d->addr, p, 48);

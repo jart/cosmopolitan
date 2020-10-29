@@ -133,7 +133,7 @@ int main() {
     SetEs(0);
     memset((void *)(0x7c00 + 512), 0, 25 * 80);
     SetEs(0xb8000 >> 4);
-    memset((void *)0, 0, 25 * 80 * 2);
+    /* memset((void *)0, 0, 25 * 80 * 2); */
     spiral((void *)0, (void *)(0x7c00 + 512), g);
   }
 }

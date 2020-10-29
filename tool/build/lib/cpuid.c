@@ -39,8 +39,9 @@ void OpCpuid(struct Machine *m, uint32_t rde) {
       cx |= 0 << 1;   // pclmulqdq
       cx |= 1 << 9;   // ssse3
       cx |= 1 << 23;  // popcnt
-      cx |= 0 << 30;  // rdrnd
+      cx |= 1 << 30;  // rdrnd
       cx |= 0 << 25;  // aes
+      cx |= 1 << 13;  // cmpxchg16b
       dx |= 1 << 0;   // fpu
       dx |= 1 << 4;   // tsc
       dx |= 1 << 6;   // pae
@@ -48,15 +49,31 @@ void OpCpuid(struct Machine *m, uint32_t rde) {
       dx |= 1 << 15;  // cmov
       dx |= 1 << 19;  // clflush
       dx |= 1 << 23;  // mmx
+      dx |= 1 << 24;  // fxsave
       dx |= 1 << 25;  // sse
       dx |= 1 << 26;  // sse2
       break;
     case 7:
-      bx |= 1 << 9;  // erms
+      switch (Read32(m->cx)) {
+        case 0:
+          bx |= 1 << 0;   // fsgsbase
+          bx |= 1 << 9;   // erms
+          bx |= 0 << 18;  // rdseed
+          cx |= 1 << 22;  // rdpid
+          break;
+        default:
+          break;
+      }
       break;
     case 0x80000001:
       cx |= 1 << 0;   // lahf
+      dx |= 1 << 0;   // fpu
+      dx |= 1 << 8;   // cmpxchg8b
       dx |= 1 << 11;  // syscall
+      dx |= 1 << 15;  // cmov
+      dx |= 1 << 23;  // mmx
+      dx |= 1 << 24;  // fxsave
+      dx |= 1 << 27;  // rdtscp
       dx |= 1 << 29;  // long
       break;
     case 0x80000007:

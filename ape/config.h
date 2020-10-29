@@ -32,7 +32,7 @@
 #define METAL_STDOUT COM1
 #endif
 #ifndef METAL_STDERR
-#define METAL_STDERR COM2 /* will fallback to stdout if COM2 not present */
+#define METAL_STDERR COM1
 #endif
 
 /**

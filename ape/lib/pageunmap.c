@@ -20,8 +20,9 @@
 #include "ape/lib/pc.h"
 #include "libc/bits/bits.h"
 
-textreal void pageunmap(uint64_t vaddr) {
-  uint64_t *entry = getpagetableentry(vaddr, 3, &g_pml4t, &g_ptsp_xlm);
+textreal void pageunmap(int64_t vaddr) {
+  uint64_t *entry;
+  entry = getpagetableentry(vaddr, 3, &g_pml4t, &g_ptsp_xlm);
   *entry &= ~PAGE_V;
   invlpg(vaddr);
 }

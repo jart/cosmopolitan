@@ -45,7 +45,10 @@
 #include "libc/nexgen32e/vidya.h"
 #include "libc/nt/pedef.h"
 #include "libc/nexgen32e/vidya.h"
+#include "libc/dce.h"
 #include "libc/sysv/consts/prot.h"
+
+#define USE_SYMBOL_HACK 0
 
 	.source	"NOTICE"
 	.source	"ape/ape.S"
@@ -179,6 +182,10 @@ stub:	mov	$0x40,%dl		# *literally* dos
 /	@noreturn
 	.code16
 pc:	cld
+#if USE_SYMBOL_HACK
+	.byte	0x0f,0x1f,0207			# nop rdi binbase
+	.short	(0x7c00-IMAGE_BASE_VIRTUAL)/512
+#endif
 	mov	$REAL_STACK_FRAME>>4,%di	# we need a stack
 	xor	%cx,%cx
 	rlstack	%di,%cx
@@ -197,6 +204,10 @@ pc:	cld
 	xor	%di,%di
 	rep
 	movsb	%ds:(%si),%es:(%di)
+#if USE_SYMBOL_HACK
+	.byte	0x0f,0x1f,0207			# nop rdi binbase
+	.short	(IMAGE_BASE_REAL-0x7c00)/512
+#endif
 	ljmp	$0,$REAL(1f)			# longjmp()
 1:	mov	$-512,%cx			# memcpy() [relocate this frame]
 	rep
@@ -932,9 +943,6 @@ ape.str:
 .Lstr.long:
 	.asciz	"nolong"
 	.endobj	.Lstr.long
-.Lstr.hello:
-	.asciz	"hello\n"
-	.endobj	.Lstr.hello
 	.endobj	ape.str
 
 /	Serial Line Configuration (8250 UART 16550)
@@ -964,7 +972,7 @@ sconf:	.short	1843200/*hz*/ / 16/*wut*/ / 9600/*baud*/
 	.align	8
 gdt:	.short	2f-1f		# table byte length
 	.long	REAL(1f),0	# table address
-	.align	8
+	.zero	2
 1:
 /	          ┌G:granularity (1 → limit *= 0x1000)
 /	          │┌D/B:default operation size (0 = 16|64bit, 1 = 32-bit)
@@ -1047,13 +1055,8 @@ ape.grub.entry:
 	nop
 	nop
 realmodeloader:
-	push	%bp
-	mov	%sp,%bp
 	call	rlinit
 	call	sinit4
-	call	vinit
-	mov	%es,XLM(VIDEO_POSITION_FAR_POINTER)
-	mov	%ax,XLM(VIDEO_POSITION_FAR_POINTER)+2
 	mov	$REAL(.Lstr.ape),%di
 	call	rvputs
 	.optfn	_start16
@@ -1062,38 +1065,29 @@ realmodeloader:
 	.endfn	realmodeloader,globl,hidden
 
 	.section .sort.text.real.init.1,"ax",@progbits
-	.type	rrinit,@function
-rlinit:	push	%bp
-	mov	%sp,%bp
-	.previous/*
+	.type	rlinit,@function
+rlinit:	.previous/*
 	...
 	decentralized function
 	...
 	*/.section .sort.text.real.init.3,"ax",@progbits
-	pop	%bp
 	ret
 	.previous
 
 /	Initializes present PC serial lines.
-sinit4:	push	%bp
-	mov	%sp,%bp
-	movw	$4,%cx
-	movw	$kBiosDataAreaXlm+COM1,%si
-0:	lodsb
-	mov	%al,%dl
-	lodsb
-	mov	%al,%dh
-	test	%dx,%dx
+sinit4:	mov	$4,%cx
+	mov	$kBiosDataAreaXlm+COM1,%si
+0:	lodsw
+	test	%ax,%ax
 	jz	1f
 	push	%cx
 	push	%si
-	mov	%dx,%di
-	movw	$REAL(sconf),%si
+	xchg	%ax,%di
+	mov	$REAL(sconf),%si
 	call	sinit
 	pop	%si
 	pop	%cx
 1:	loop	0b
-	pop	%bp
 	ret
 	.endfn	sinit4,global,hidden
 
@@ -1103,9 +1097,7 @@ sinit4:	push	%bp
 /	@param	char (*{es:,e,r}si)[4] register initial values
 /	@mode	long,legacy,real
 /	@see	www.lammertbies.nl/comm/info/serial-uart.html
-sinit:	push	%bp
-	mov	%sp,%bp
-	mov	%di,%dx
+sinit:	mov	%di,%dx
 	test	%dx,%dx
 	jz	2f
 	push	%dx
@@ -1123,8 +1115,7 @@ sinit:	push	%bp
 	add	$1,%dx
 	sub	$1,%cx
 	jns	1b
-2:	pop	%bp
-	ret
+2:	ret
 	.endfn	sinit,global,hidden
 
 /	Abnormally exits program.
@@ -1132,9 +1123,7 @@ sinit:	push	%bp
 /	@param	di message
 /	@mode	real
 /	@noreturn
-rldie:	push	%bp
-	mov	%sp,%bp
-	call	rlpute
+rldie:	call	rlpute
 	call	rloff
 	.endfn	rldie,globl,hidden
 
@@ -1142,9 +1131,7 @@ rldie:	push	%bp
 /
 /	@mode	real
 /	@noreturn
-rloff:	push	%bp
-	mov	%sp,%bp
-	mov	$kBiosDataAreaXlm+COM1,%di
+rloff:	mov	$kBiosDataAreaXlm+COM1,%di
 	mov	$4,%si
 	call	sflush
 	call	apmoff
@@ -1154,9 +1141,7 @@ rloff:	push	%bp
 /
 /	@param	di message
 /	@mode	real
-rlpute:	push	%bp
-	mov	%sp,%bp
-	mov	kBiosDataAreaXlm+METAL_STDERR(%bx),%si
+rlpute:	mov	kBiosDataAreaXlm+METAL_STDERR(%bx),%si
 	test	%si,%si
 	jnz	1f
 	mov	kBiosDataAreaXlm+METAL_STDOUT,%si
@@ -1176,8 +1161,7 @@ rlpute:	push	%bp
 	pop	%si
 	call	rlput2
 	jmp	1b
-2:	pop	%bp
-	ret
+2:	ret
 	.endfn	rlpute,globl,hidden
 
 /	Prints string to both video and serial.
@@ -1185,9 +1169,7 @@ rlpute:	push	%bp
 /	@param	di NUL-terminated string
 /	@param	si serial port
 /	@mode	real
-rlput2:	push	%bp
-	mov	%sp,%bp
-	push	%di
+rlput2:	push	%di
 	push	%si
 	call	rvputs
 	pop	%si
@@ -1195,33 +1177,42 @@ rlput2:	push	%bp
 	test	%si,%si
 	jz	1f
 	call	sputs
-1:	pop	%bp
-	ret
+1:	ret
 	.endfn	rlput2,globl,hidden
 
 /	Video put string.
 /
 /	@param	di is the string
 /	@mode	real
-rvputs:	push	%bp
-	mov	%sp,%bp
-	mov	%di,%si
-	les	XLM(VIDEO_POSITION_FAR_POINTER),%di
-	call	vputs
-	mov	%es,XLM(VIDEO_POSITION_FAR_POINTER)
-	mov	%ax,XLM(VIDEO_POSITION_FAR_POINTER)+2
-	pop	%bp
-	ret
+rvputs:	mov	%di,%si
+0:	lodsb
+	test	%al,%al
+	je	1f
+	call	rvputc
+	jmp	0b
+1:	ret
 	.endfn	rvputs,globl,hidden
+
+/	Video put char.
+/
+/	@param	al is the char
+/	@mode	real
+rvputc:	push	%bx				# don't clobber bp,bx,di,si,cx
+	push	%bp				# original ibm pc scroll up bug
+	mov	$7,%bx				# normal mda/cga style page zero
+	mov	$0x0e,%ah			# teletype output al cp437
+	int	$0x10				# vidya service
+	pop	%bp				# preserves al
+	pop	%bx
+	ret
+	.endfn	rvputc
 
 /	Writes string to serial line.
 /
 /	@param	di NUL-terminated string
 /	@param	si serial port
 /	@mode	long,legacy,real
-sputs:	push	%bp
-	mov	%sp,%bp
-	push	%bx
+sputs:	push	%bx
 	mov	%di,%bx
 1:	xchg	%bx,%si
 	lodsb
@@ -1234,7 +1225,6 @@ sputs:	push	%bp
 	pop	%si
 	jmp	1b
 2:	pop	%bx
-	pop	%bp
 	ret
 	.endfn	sputs,globl
 
@@ -1290,137 +1280,11 @@ sputc:	push	%ax
 	ret
 	.endfn	sputc,globl
 
-/	Asks BIOS to initialize Monochrome Display Adapter.
-/
-/	@return	es:ax	start of video page
-/	@mode	real
-vinit:	push	$7
-	pop	%ax
-	int	$VIDYA_SERVICE
-	bbmov	VIDYA_ADDR_MDA>>4,%ax,%ah,%al
-	mov	%ax,%es
-	xor	%ax,%ax
-	ret
-	.endfn	vinit,globl
-
-/	Prints byte to display w/ teletype emulation.
-/
-/	@param	es:di	screen position
-/	@param	sil	byte
-/	@return	es:ax	new screen position
-/	@mode	long,legacy,real
-vputc:	push	%bp
-	mov	%sp,%bp
-	sub	$16,%sp			# goal is to turn sil into a buffer
-	xchg	%si,%ax			# modrm sooo different in real mode
-	mov	%di,%cx
-	mov	%sp,%si
-	mov	%sp,%di
-	stosb
-	mov	%cx,%di
-	pushpop	1,%dx
-	jmp	23f
-
-/	Prints string to display w/ teletype emulation.
-/
-/	@param	es:di	screen position
-/	@param	si	NUL-terminated string
-/	@return	es:ax	new screen position
-/	@mode	long,legacy,real
-vputs:	push	%si			# inlined strlen
-1:	lodsb
-	test	%al,%al
-	jnz	1b
-	mov	%si,%dx
-	pop	%si
-	sub	%si,%dx
-/	fallthrough
-
-/	Prints data to display w/ teletype emulation.
-/
-/	@param	es:di	screen position
-/	@param	si	data address
-/	@param	dx	data size in bytes
-/	@return	es:ax	new screen position
-/	@mode	long,legacy,real
-vtput:	push	%bp
-	mov	%sp,%bp
-23:	push	%bx
-	mov	%dx,%cx
-	mov	%di,%dx
-	bband	VIDYA_REWIND,%dh,%dl
-	bbadd	VIDYA_SIZE,%dh,%dl
-	bbmov	VIDYA_COLUMNS*2-2,%bx,%bh,%bl
-0:	cmp	%dx,%di
-	je	6f
-	ja	3f
-	lodsb				# todo: utf8 → cp437
-	cmp	$'\n,%al
-	je	4f
-	cmp	$'\r,%al
-	je	5f
-1:	stosb
-	mov	$VIDYA_ATTR_NORMAL,%al	# todo: ansi color
-	stosb
-2:	loop	0b
-3:	mov	%di,%ax
-	pop	%bx
-	pop	%bp
-	ret
-4:	add	%bx,%di			# line feed
-	jmp	2b
-5:	mov	%di,%ax			# carriage return
-	push	%dx
-	xor	%dx,%dx
-	idiv	%bx			# todo: division is deprecated
-	sub	%dx,%di
-	pop	%dx
-	jmp	2b
-6:	push	%ax
-	push	%cx
-	push	%dx
-	push	%si
-	mov	%bx,%si
-	rlcall	vscroll
-	mov	%ax,%di
-	pop	%si
-	pop	%dx
-	pop	%cx
-	pop	%ax
-	jmp	2b
-	.endfn	vtput,globl
-	.endfn	vputs,globl
-	.endfn	vputc,globl
-
-/	Scrolls up content in display page.
-/
-/	@param	es:di	cursor address (bytes after aren't moved)
-/	@param	si	byte difference, e.g. VIDYA_COLUMNS*2
-/	@return	es:ax	new cursor address (which is es:di-si)
-/	@mode	long,legacy,real
-vscroll:not	%dx
-	mov	%di,%cx
-	bband	VIDYA_REWIND,%ch,%cl
-	xchg	%cx,%di		# di is now page addr, i.e. top-left
-	sub	%si,%cx		# cx is now future cursor address
-	push	%cx
-	sub	%di,%cx		# cx is now memcpy size
-	mov	%di,%si
-	add	%cx,%si
-	mov	$0,%ax
-	movpp	%ds,%es
-	rep movsb
-	pop	%ax
-	ret
-	.endfn	vscroll,globl
-
 /	Shuts down personal computer.
 /
 /	@mode	real
 /	@noreturn
-apmoff:	push	%bp
-	mov	%sp,%bp
-	mov	$0x5300,%ax		# apm installation check
+apmoff:	mov	$0x5300,%ax		# apm installation check
 	xor	%bx,%bx			# for the apm bios itself
 	int	$APM_SERVICE
 	jc	1f
@@ -1485,8 +1349,6 @@ apmoff:	push	%bp
 	long mode is long */
 
 longmodeloader:
-	push	%bp
-	mov	%sp,%bp
 	call	lcheck
 	call	a20
 	mov	$XLM(E820),%di
@@ -1495,15 +1357,13 @@ longmodeloader:
 	jc	9f
 	call	unreal
 	call	hiload
-	call	golong
+	jmp	golong
 9:	mov	$REAL(.Lstr.e820),%ax
 	call	rldie
 	.endfn	longmodeloader,globl,hidden
 
 /	Long Mode Hardware Check
-lcheck:	push	%bp
-	mov	%sp,%bp
-	pushf				# check for i8086 / i8088 / i80186
+lcheck:	pushf				# check for i8086 / i8088 / i80186
 	pop	%ax
 	test	$0x80,%ah		# see intel manual volume 1 20.1.2
 	jnz	9f			# we now assume 32bit is supported
@@ -1534,8 +1394,7 @@ lcheck:	push	%bp
 	cmp	%edi,%edx
 	jne	10f
 	xor	%ax,%ax
-1:	pop	%bp
-	ret
+1:	ret
 9:	mov	$REAL(.Lstr.oldskool),%ax
 	jmp	20f
 10:	mov	$REAL(.Lstr.long),%ax
@@ -1587,9 +1446,7 @@ e820:	push	%bp
 
 /	Unreal Mode.
 /	Makes 4gb of real memory accessible via %fs segment.
-unreal:	push	%bp
-	mov	%sp,%bp
-	cli
+unreal:	cli
 	lgdt	REAL(gdt)
 	mov	%cr0,%eax
 	or	$CR0_PE,%al
@@ -1599,16 +1456,13 @@ unreal:	push	%bp
 	mov	%cx,%fs
 	and	$~CR0_PE,%al
 	mov	%eax,%cr0
-	ljmpl	$0,$REAL(1f)
+	ljmp	$0,$REAL(1f)
 1:	sti
-	pop	%bp
 	ret
 	.endfn	unreal
 
 /	Loads remainder of executable off disk.
-hiload:	push	%bp
-	mov	%sp,%bp
-	push	%bx
+hiload:	push	%bx
 	mov	$IMAGE_BASE_REAL,%esi		# relocate, again
 	mov	$IMAGE_BASE_PHYSICAL,%ebx
 	mov	$v_ape_realsectors,%ecx
@@ -1647,7 +1501,6 @@ hiload:	push	%bp
 	pop	%cx
 	jmp	0b
 9:	pop	%bx
-	pop	%bp
 	ret
 	.endfn	hiload
 
@@ -1724,18 +1577,16 @@ a20:	cli
 /	stack segment base. This function only defines enough tables
 /	to get us started.
 #define	TIP REAL_STACK_FRAME
-pinit:	push	%bp
-	mov	%sp,%bp
-	push	%ds
+pinit:	push	%ds
 	mov	$(TIP-0x4000)>>4,%ax
 	mov	%ax,%ds
-	movl	$TIP-0x2000+PAGE_V+PAGE_RW,%ds:0x3000		# PML4T→PDPT
-	movl	$TIP-0x3000+PAGE_V+PAGE_RW,%ds:0x2000		# PDPT→PDT
-	movl	$TIP-0x4000+PAGE_V+PAGE_RW,%ds:0x1000		# PDT→PD
+	movl	$TIP-0x2000+PAGE_V+PAGE_RW,0x3000		# PML4T→PDPT
+	movl	$TIP-0x3000+PAGE_V+PAGE_RW,0x2000		# PDPT→PDT
+	movl	$TIP-0x4000+PAGE_V+PAGE_RW,0x1000		# PDT→PD
 	mov	$0x100000/0x1000,%cx				# PD→512kb
 	mov	$PAGE_V+PAGE_RW,%eax
 	xor	%si,%si
-0:	mov	%eax,%ds:(%si)
+0:	mov	%eax,(%si)
 	add	$0x1000,%eax
 	add	$8,%si
 	loop	0b
@@ -1743,7 +1594,6 @@ pinit:	push	%bp
 	movl	$TIP-0x4000,XLM(PAGE_TABLE_STACK_POINTER)	# STACK→XLM
 	mov	$TIP-0x1000,%eax				# PML4T→CR3
 	mov	%eax,%cr3
-	pop	%bp
 	ret
 	.endfn	pinit,globl,hidden
 
@@ -1765,43 +1615,46 @@ golong:	cli
 	or	$CR0_PE|CR0_PG|CR0_MP,%eax
 	and	$~CR0_EM,%eax
 	mov	%eax,%cr0
-	ljmp	$GDT_LONG_CODE,$REAL(1f)
-	.code64
-1:	mov	$GDT_LONG_DATA,%eax
-	mov	%ax,%ds
-	mov	%ax,%fs
-	mov	%ax,%gs
-	xor	%edx,%edx
-	jmp	long
+	ljmp	$GDT_LONG_CODE,$REAL(long)
 	.endfn	golong
 
 /	Long mode is long.
-/
 /	@noreturn
-long:	.frame0
-	xor	%edi,%edi
-	call	pageunmap
-
-	mov	$e820map_xlm,%edi
-	call	smapsort
-
-	mov	$e820map_xlm,%edi
-	mov	$g_pml4t,%esi
-	mov	$g_ptsp_xlm,%edx
-	call	flattenhighmemory
-
-	mov	$REAL(.Lstr.hello),%edi
-	mov	kBiosDataAreaXlm+METAL_STDOUT,%esi
-	call	sputs
-	mov	$kBiosDataAreaXlm+METAL_STDOUT,%edi
-	mov	$4,%esi
-	call	sflush
-
-	jmp	triplf
-	lea	triplf(%rip),%rdx
-	call	_start
-	jmp	triplf
+	.code64
+long:	push	$GDT_LONG_DATA
+	pop	%rax
+	mov	%eax,%ds
+	mov	%eax,%ss
+	mov	%eax,%es
+	mov	%eax,%fs
+	mov	%eax,%gs
+	xor	%ebp,%ebp
+	mov	$REAL_STACK_FRAME+FRAMESIZE,%esp
+	call	__map_image
+	mov	$_metal,%eax
+	jmp	*%rax
 	.endfn	long
+
+/	Long mode in virtual address space.
+/	@noreturn
+_metal:
+#if USE_SYMBOL_HACK
+	.byte	0x0f,0x1f,0207			# nop rdi binbase
+	.long	(IMAGE_BASE_VIRTUAL-IMAGE_BASE_REAL)/512
+#endif
+	xor	%eax,%eax			# clear bss
+	mov	$.Lape.bss.vaddr,%edi
+	mov	$.Lape.bss.memsz,%ecx
+	rep stosb
+	movb	$METAL,hostos(%rip)
+	push	$0				# auxv
+	push	$0
+	push	$0				# envp
+	push	$0				# auxv
+	push	$0				# argc
+	xor	%edi,%edi
+	jmp	_start
+	.endfn	_metal
 
 /	Avoid linker script variables appearing as code in objdump.
 	.macro	.ldsvar	name:req

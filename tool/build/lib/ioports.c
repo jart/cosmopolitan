@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/iovec.h"
+#include "libc/nexgen32e/uart.h"
 #include "libc/sysv/consts/fileno.h"
 #include "tool/build/lib/ioports.h"
 
@@ -42,10 +43,42 @@ static void OpE9Write(struct Machine *m, uint8_t b) {
   m->fds.p[fd].cb->writev(m->fds.p[fd].fd, &(struct iovec){&b, 1}, 1);
 }
 
+static int OpSerialIn(struct Machine *m, int r) {
+  switch (r) {
+    case UART_DLL:
+      if (!m->dlab) {
+        return OpE9Read(m);
+      } else {
+        return 0x01;
+      }
+    case UART_LSR:
+      return UART_TTYDA | UART_TTYTXR | UART_TTYIDL;
+    default:
+      return 0;
+  }
+}
+
+static void OpSerialOut(struct Machine *m, int r, uint32_t x) {
+  switch (r) {
+    case UART_DLL:
+      if (!m->dlab) {
+        return OpE9Write(m, x);
+      }
+      break;
+    case UART_LCR:
+      m->dlab = !!(x & UART_DLAB);
+      break;
+    default:
+      break;
+  }
+}
+
 uint64_t OpIn(struct Machine *m, uint16_t p) {
   switch (p) {
     case 0xE9:
       return OpE9Read(m);
+    case 0x3F8 ... 0x3FF:
+      return OpSerialIn(m, p - 0x3F8);
     default:
       return -1;
   }
@@ -55,6 +88,9 @@ void OpOut(struct Machine *m, uint16_t p, uint32_t x) {
   switch (p) {
     case 0xE9:
       OpE9Write(m, x);
+      break;
+    case 0x3F8 ... 0x3FF:
+      OpSerialOut(m, p - 0x3F8, x);
       break;
     default:
       break;

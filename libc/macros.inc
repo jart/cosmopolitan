@@ -186,11 +186,6 @@
  .endif
 .endm
 
-/	Custom emulator instruction for bottom stack frame.
-.macro	bofram	endfunc:req
-	.byte	0x0f,0x1f,0x45,\endfunc-.	# nopl disp8(%rbp)
-.endm
-
 /	Overrides LOOP instruction.
 /	With its mop-Fusion Mexican equivalent.
 /	Thus avoiding 3x legacy pipeline slowdown.
@@ -329,4 +324,9 @@ _init_\name:
 	sub	$32,%rsp
 	call	*\symbol(%rip)
 	add	$32,%rsp
+.endm
+
+/	Custom emulator instruction for bottom stack frame.
+.macro	bofram	endfunc:req
+	.byte	0x0f,0x1f,0105,\endfunc-.	# nopl disp8(%rbp)
 .endm

@@ -109,6 +109,29 @@ static void LoadBin(struct Machine *m, intptr_t base, const char *prog,
   m->ip = base;
 }
 
+static void BootProgram(struct Machine *m, struct Elf *elf, size_t codesize) {
+  m->ip = 0x7c00;
+  elf->base = 0x7c00;
+  CHECK_NE(-1, ReserveReal(m, 0x00f00000));
+  memset(m->real.p, 0, 0x00f00000);
+  Write16(m->real.p + 0x400, 0x3F8);
+  Write16(m->real.p + 0x40E, 0xb0000 >> 4);
+  Write16(m->real.p + 0x413, 0xb0000 / 1024);
+  Write16(m->real.p + 0x44A, 80);
+  Write64(m->cs, 0);
+  Write64(m->dx, 0);
+  memcpy(m->real.p + 0x7c00, elf->map, 512);
+  if (memcmp(elf->map, "\177ELF", 4) == 0) {
+    elf->ehdr = (void *)elf->map;
+    elf->size = codesize;
+    elf->base = elf->ehdr->e_entry;
+  } else {
+    elf->base = 0x7c00;
+    elf->ehdr = NULL;
+    elf->size = 0;
+  }
+}
+
 void LoadProgram(struct Machine *m, const char *prog, char **args, char **vars,
                  struct Elf *elf) {
   int fd;
@@ -147,21 +170,7 @@ void LoadProgram(struct Machine *m, const char *prog, char **args, char **vars,
   CHECK_NE(-1, close(fd));
   ResetCpu(m);
   if ((m->mode & 3) == XED_MODE_REAL) {
-    elf->base = 0x7c00;
-    CHECK_NE(-1, ReserveReal(m, BIGPAGESIZE));
-    m->ip = 0x7c00;
-    Write64(m->cs, 0);
-    Write64(m->dx, 0);
-    VirtualRecv(m, m->ip, elf->map, 512);
-    if (memcmp(elf->map, "\177ELF", 4) == 0) {
-      elf->ehdr = (void *)elf->map;
-      elf->size = codesize;
-      elf->base = elf->ehdr->e_entry;
-    } else {
-      elf->base = 0x7c00;
-      elf->ehdr = NULL;
-      elf->size = 0;
-    }
+    BootProgram(m, elf, codesize);
   } else {
     sp = 0x800000000000;
     Write64(m->sp, sp);

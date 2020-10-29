@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,23 +17,22 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/macros.h"
-.source	__FILE__
+#include "ape/lib/pc.h"
+#include "ape/relocations.h"
+#include "libc/runtime/runtime.h"
 
-#define BYTES 64
+textreal static void __map_segment(uint64_t k, uint64_t a, uint64_t b) {
+  uint64_t *e;
+  for (; a < b; a += 0x1000) {
+    e = getpagetableentry(IMAGE_BASE_VIRTUAL + a, 3, &g_pml4t, &g_ptsp_xlm);
+    *e = (IMAGE_BASE_PHYSICAL + a) | k;
+  }
+}
 
-/	RII constant holding 'C:/WINDOWS' directory.
-/
-/	@note	guarantees trailing slash if non-empty
-	.initbss 300,_init_kNtWindowsDirectory
-kNtWindowsDirectory:
-	.zero	BYTES
-	.endobj	kNtWindowsDirectory,globl
-	.previous
-
-	.init.start 300,_init_kNtWindowsDirectory
-	pushpop	BYTES,%rdx
-	mov	__imp_GetWindowsDirectoryA(%rip),%rax
-	call	__getntsyspath
-	.init.end 300,_init_kNtWindowsDirectory
+textreal void __map_image(void) {
+  pageunmap(0);
+  __map_segment(PAGE_V | PAGE_U, 0, (uintptr_t)_etext - IMAGE_BASE_VIRTUAL);
+  __map_segment(PAGE_V | PAGE_U | PAGE_RW | PAGE_XD,
+                (uintptr_t)_etext - IMAGE_BASE_VIRTUAL,
+                (uintptr_t)_end - IMAGE_BASE_VIRTUAL);
+}

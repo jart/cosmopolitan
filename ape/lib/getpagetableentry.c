@@ -24,14 +24,16 @@ textreal static uint64_t pushpagetable(uint64_t *ptsp) {
   return (*ptsp -= PAGESIZE) | PAGE_V | PAGE_RW;
 }
 
-textreal uint64_t *getpagetableentry(uint64_t vaddr, unsigned depth,
+textreal uint64_t *getpagetableentry(int64_t vaddr, unsigned depth,
                                      struct PageTable *pml4t, uint64_t *ptsp) {
+  uint64_t *entry;
+  unsigned char shift;
   assert(depth <= 3);
-  assert(*ptsp % PAGESIZE == 0);
-  assert((intptr_t)pml4t % PAGESIZE == 0);
-  unsigned char shift = 39;
+  assert(!(*ptsp & 0xfff));
+  assert(!((uintptr_t)pml4t & 0xfff));
+  shift = 39;
   for (;;) {
-    uint64_t *entry = &pml4t->p[(vaddr >> shift) & 511];
+    entry = &pml4t->p[(vaddr >> shift) & 511];
     if (!depth--) return entry;
     shift -= 9;
     if (!*entry) *entry = pushpagetable(ptsp);

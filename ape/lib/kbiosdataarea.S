@@ -37,7 +37,7 @@
 	.size	kBiosDataAreaXlm,XLM_BIOS_DATA_AREA_SIZE
 	kBiosDataAreaXlm = XLM(BIOS_DATA_AREA)
 
-	.section .sort.real.init.2.kBiosDataArea,"ax",@progbits
+	.section .sort.text.real.init.2.kBiosDataArea,"ax",@progbits
 	movpp	%ds,%es			# copy bios data to valid page
 	mov	$PC_BIOS_DATA_AREA,%si
 	mov	$XLM(BIOS_DATA_AREA),%di

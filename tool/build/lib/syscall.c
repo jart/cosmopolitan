@@ -422,18 +422,6 @@ static const char *GetSimulated(void) {
   }
 }
 
-static void VirtualSendRead(struct Machine *m, void *dst, int64_t addr,
-                            uint64_t n) {
-  VirtualSend(m, dst, addr, n);
-  SetReadAddr(m, addr, n);
-}
-
-static void VirtualRecvWrite(struct Machine *m, int64_t addr, void *src,
-                             uint64_t n) {
-  VirtualRecv(m, addr, src, n);
-  SetWriteAddr(m, addr, n);
-}
-
 static int AppendIovsReal(struct Machine *m, struct Iovs *ib, int64_t addr,
                           size_t size) {
   void *real;

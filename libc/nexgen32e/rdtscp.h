@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NEXGEN32E_RDTSCP_H_
 #define COSMOPOLITAN_LIBC_NEXGEN32E_RDTSCP_H_
+#include "libc/bits/bits.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -32,17 +33,26 @@ COSMOPOLITAN_C_START_
  */
 #define rdpid()                                                           \
   ({                                                                      \
+    bool Ok;                                                              \
     long Msr;                                                             \
+    Ok = false;                                                           \
     if (X86_HAVE(RDPID)) {                                                \
       asm volatile("rdpid\t%0" : "=r"(Msr) : /* no inputs */ : "memory"); \
+      Ok = true;                                                          \
     } else if (IsLinux()) {                                               \
-      asm volatile("lsl\t%1,%0" : "=r"(Msr) : "r"(0x7b) : "memory");      \
-    } else if (X86_HAVE(RDTSCP)) {                                        \
+      asm volatile(ZFLAG_ASM("lsl\t%2,%1")                                \
+                   : ZFLAG_CONSTRAINT(Ok), "=r"(Msr)                      \
+                   : "r"(0x7b)                                            \
+                   : "memory");                                           \
+    }                                                                     \
+    if (!Ok && X86_HAVE(RDTSCP)) {                                        \
       asm volatile("rdtscp"                                               \
                    : "=c"(Msr)                                            \
                    : /* no inputs */                                      \
                    : "eax", "edx", "memory");                             \
-    } else {                                                              \
+      Ok = true;                                                          \
+    }                                                                     \
+    if (!Ok) {                                                            \
       Msr = -1;                                                           \
     }                                                                     \
     Msr;                                                                  \

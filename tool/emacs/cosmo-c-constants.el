@@ -20,6 +20,8 @@
 
 (defconst cosmo-c-constants-limits
   '("IMAGE_BASE_VIRTUAL"
+    "IMAGE_BASE_REAL"
+    "IMAGE_BASE_PHYSICAL"
     "SIZEOF_SHORT"
     "SIZEOF_INT"
     "SIZEOF_LONG"

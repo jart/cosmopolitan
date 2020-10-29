@@ -21,18 +21,27 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/str/tpenc.h"
-#include "libc/str/tpencode.h"
 #include "tool/build/lib/buffer.h"
 
-void AppendChar(struct Buffer *b, char c) {
-  APPEND(&b->p, &b->i, &b->n, &c);
+void AppendData(struct Buffer *b, char *data, unsigned len) {
+  char *p;
+  unsigned n;
+  if (b->i + len + 1 > b->n) {
+    n = MAX(b->i + len + 1, MAX(16, b->n + (b->n >> 1)));
+    if (!(p = realloc(b->p, n))) return;
+    b->p = p;
+    b->n = n;
+  }
+  memcpy(b->p + b->i, data, len);
+  b->p[b->i += len] = 0;
 }
 
-void AppendData(struct Buffer *b, char *data, size_t len) {
-  CONCAT(&b->p, &b->i, &b->n, data, len);
+void AppendChar(struct Buffer *b, char c) {
+  AppendData(b, &c, 1);
 }
 
 void AppendStr(struct Buffer *b, const char *s) {

@@ -41,6 +41,7 @@ TOOL_BUILD_LIB_A_DIRECTDEPS =				\
 	LIBC_SYSV_CALLS					\
 	LIBC_TIME					\
 	LIBC_LOG					\
+	LIBC_RAND					\
 	LIBC_STR					\
 	LIBC_SOCK					\
 	LIBC_UNICODE					\
@@ -68,7 +69,7 @@ $(TOOL_BUILD_LIB_A_OBJS):				\
 			-fsanitize=address
 endif
 
-o/$(MODE)/tool/build/lib/memory-gcc.asm:		\
+o/$(MODE)/tool/build/lib/buffer-gcc.asm:		\
 		OVERRIDE_CFLAGS +=			\
 			-fsanitize=address
 

@@ -23,12 +23,12 @@
 #include "libc/stdio/stdio.h"
 
 static void fin(FILE *f) {
-  f->buf[f->end] = inb(f->fd);
+  f->buf[f->end] = inb(0x3F8);
   f->end = (f->end + 1) & (f->size - 1);
 }
 
 static void fout(FILE *f) {
-  outb(f->fd, f->buf[f->beg]);
+  outb(0x3F8, f->buf[f->beg]);
   f->beg = (f->beg + 1) & (f->size - 1);
 }
 
@@ -36,7 +36,7 @@ static int serialstdio(FILE *f, unsigned char status, void action(FILE *)) {
   int block = 1;
   unsigned tally = 0;
   while (f->end != f->beg) {
-    if (!(inb(f->fd + UART_LSR) & status)) {
+    if (!(inb(0x3F8 + UART_LSR) & status)) {
       if (!block) break;
       asm("pause");
     } else {
@@ -50,6 +50,7 @@ static int serialstdio(FILE *f, unsigned char status, void action(FILE *)) {
 int fsreadbuf(FILE *f) {
   return serialstdio(f, UART_TTYDA, fin);
 }
+
 int fswritebuf(FILE *f) {
   return serialstdio(f, UART_TTYTXR, fout);
 }

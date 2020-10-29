@@ -290,13 +290,6 @@ static bool IsCall(void) {
           (m->xedd->op.dispatch == 0x0FF && m->xedd->op.reg == 2));
 }
 
-static bool IsLongBranch(void) {
-  return m->mode != XED_MODE_LONG &&
-         (m->xedd->op.dispatch == 0x0EA || m->xedd->op.dispatch == 0x09A ||
-          (m->xedd->op.opcode == 0x0FF && m->xedd->op.reg == 3) ||
-          (m->xedd->op.opcode == 0x0FF && m->xedd->op.reg == 5));
-}
-
 static bool IsDebugBreak(void) {
   return m->xedd->op.map == XED_ILD_MAP0 && m->xedd->op.opcode == 0xCC;
 }
@@ -791,6 +784,17 @@ static int GetTerminalDimensions(int *out_y, int *out_x) {
   return ReadCursorPosition(out_y, out_x);
 }
 
+void CommonSetup(void) {
+  static bool once;
+  if (!once) {
+    if (tuimode || breakpoints.i) {
+      LoadSyms();
+      ResolveBreakpoints();
+    }
+    once = true;
+  }
+}
+
 void TuiSetup(void) {
   int y, x;
   bool report;
@@ -798,8 +802,7 @@ void TuiSetup(void) {
   report = false;
   if (!once) {
     LOGF("loaded program %s\n%s", codepath, gc(FormatPml4t(m)));
-    LoadSyms();
-    ResolveBreakpoints();
+    CommonSetup();
     ioctl(ttyout, TCGETS, &oldterm);
     xsigaction(SIGINT, OnSigInt, 0, 0, oldsig + 3);
     atexit(TtyRestore2);
@@ -820,14 +823,7 @@ void TuiSetup(void) {
 }
 
 static void ExecSetup(void) {
-  static bool once;
-  if (!once) {
-    if (breakpoints.i) {
-      LoadSyms();
-      ResolveBreakpoints();
-    }
-    once = true;
-  }
+  CommonSetup();
   setitimer(ITIMER_REAL,
             &((struct itimerval){{0, 1. / 60 * 1e6}, {0, 1. / 60 * 1e6}}),
             NULL);
@@ -1089,44 +1085,49 @@ static void DrawHr(struct Panel *p, const char *s) {
   AppendStr(&p->lines[0], "\e[0m");
 }
 
-void DrawTerminal(struct Panel *p) {
-  long i, y, yn;
+static void DrawTerminalHr(struct Panel *p) {
+  long i;
+  if (p->bottom == p->top) return;
   if (pty->conf & kPtyBell) {
     if (!alarmed) {
       alarmed = true;
       setitimer(ITIMER_REAL, &((struct itimerval){{0, 0}, {0, 800000}}), NULL);
     }
-    AppendStr(&pan.displayhr.lines[0], "\e[1m");
+    AppendStr(&p->lines[0], "\e[1m");
   }
-  AppendStr(&pan.displayhr.lines[0],
-            gc(xasprintf("──────────TELETYPEWRITER──%s──%s──%s──%s",
-                         (pty->conf & kPtyLed1) ? "\e[1;31m◎\e[0m" : "○",
-                         (pty->conf & kPtyLed2) ? "\e[1;32m◎\e[0m" : "○",
-                         (pty->conf & kPtyLed3) ? "\e[1;33m◎\e[0m" : "○",
-                         (pty->conf & kPtyLed4) ? "\e[1;34m◎\e[0m" : "○")));
-  for (i = 36; i < pan.displayhr.right - pan.displayhr.left; ++i) {
-    AppendWide(&pan.displayhr.lines[0], u'─');
+  AppendFmt(&p->lines[0], "──────────TELETYPEWRITER──%s──%s──%s──%s",
+            (pty->conf & kPtyLed1) ? "\e[1;31m◎\e[0m" : "○",
+            (pty->conf & kPtyLed2) ? "\e[1;32m◎\e[0m" : "○",
+            (pty->conf & kPtyLed3) ? "\e[1;33m◎\e[0m" : "○",
+            (pty->conf & kPtyLed4) ? "\e[1;34m◎\e[0m" : "○");
+  for (i = 36; i < p->right - p->left; ++i) {
+    AppendWide(&p->lines[0], u'─');
   }
+}
+
+static void DrawTerminal(struct Panel *p) {
+  long y, yn;
+  if (p->top == p->bottom) return;
   for (yn = MIN(pty->yn, p->bottom - p->top), y = 0; y < yn; ++y) {
     PtyAppendLine(pty, p->lines + y, y);
     AppendStr(p->lines + y, "\e[0m");
   }
 }
 
-void DrawDisplay(struct Panel *p) {
-  if (p->top == p->bottom) return;
+static void DrawDisplay(struct Panel *p) {
   switch (vidya) {
     case 7:
       DrawHr(&pan.displayhr, "MONOCHROME DISPLAY ADAPTER");
-      DrawMda(p,
-              VirtualSend(m, gc(xmalloc(25 * 80 * 2)), 0xb0000, 25 * 80 * 2));
+      if (0xb0000 + 25 * 80 * 2 > m->real.n) return;
+      DrawMda(p, (void *)(m->real.p + 0xb0000));
       break;
     case 3:
       DrawHr(&pan.displayhr, "COLOR GRAPHICS ADAPTER");
-      DrawCga(p,
-              VirtualSend(m, gc(xmalloc(25 * 80 * 2)), 0xb8000, 25 * 80 * 2));
+      if (0xb8000 + 25 * 80 * 2 > m->real.n) return;
+      DrawCga(p, (void *)(m->real.p + 0xb8000));
       break;
     default:
+      DrawTerminalHr(&pan.displayhr);
       DrawTerminal(p);
       break;
   }
@@ -1530,9 +1531,9 @@ static int AppendStat(struct Buffer *b, const char *name, int64_t value,
   return 1 + width;
 }
 
-void DrawStatus(struct Panel *p) {
+static void DrawStatus(struct Panel *p) {
   int yn, xn, rw;
-  struct Buffer s;
+  struct Buffer *s;
   struct MachineMemstat *a, *b;
   yn = p->top - p->bottom;
   xn = p->right - p->left;
@@ -1540,19 +1541,21 @@ void DrawStatus(struct Panel *p) {
   rw = 0;
   a = &m->memstat;
   b = &lastmemstat;
-  memset(&s, 0, sizeof(s));
-  if (ips > 0) rw += AppendStat(&s, "ips", ips, false);
-  rw += AppendStat(&s, "kb", m->real.n / 1024, false);
-  rw += AppendStat(&s, "reserve", a->reserved, a->reserved != b->reserved);
-  rw += AppendStat(&s, "commit", a->committed, a->committed != b->committed);
-  rw += AppendStat(&s, "freed", a->freed, a->freed != b->freed);
-  rw += AppendStat(&s, "tables", a->pagetables, a->pagetables != b->pagetables);
-  rw += AppendStat(&s, "fds", m->fds.i, false);
+  s = xmalloc(sizeof(struct Buffer));
+  memset(s, 0, sizeof(*s));
+  if (ips > 0) rw += AppendStat(s, "ips", ips, false);
+  rw += AppendStat(s, "kb", m->real.n / 1024, false);
+  rw += AppendStat(s, "reserve", a->reserved, a->reserved != b->reserved);
+  rw += AppendStat(s, "commit", a->committed, a->committed != b->committed);
+  rw += AppendStat(s, "freed", a->freed, a->freed != b->freed);
+  rw += AppendStat(s, "tables", a->pagetables, a->pagetables != b->pagetables);
+  rw += AppendStat(s, "fds", m->fds.i, false);
   AppendFmt(&p->lines[0], "\e[7m%-*s%s\e[0m", xn - rw,
             statusmessage && nowl() < statusexpires ? statusmessage
                                                     : "das blinkenlights",
-            s.p);
-  free(s.p);
+            s->p);
+  free(s->p);
+  free(s);
   memcpy(b, a, sizeof(*a));
 }
 
@@ -1900,7 +1903,9 @@ static void OnDiskServiceGetParams(void) {
 }
 
 static void OnDiskServiceReadSectors(void) {
-  int64_t drive, head, track, sector, offset, size, addr;
+  static int x;
+  uint64_t addr, size;
+  int64_t drive, head, track, sector, offset;
   drive = m->dx[0];
   head = m->dx[1];
   track = (m->cx[0] & 0b11000000) << 2 | m->cx[1];
@@ -1910,9 +1915,9 @@ static void OnDiskServiceReadSectors(void) {
   offset = sector * 512 + track * 512 * 63 + head * 512 * 63 * 1024;
   if (0 <= sector && offset + size <= elf->mapsize) {
     addr = Read64(m->es) + Read16(m->bx);
-    if (addr + size <= 0xffff0 + 0xffff + 1) {
+    if (addr + size <= m->real.n) {
       SetWriteAddr(m, addr, size);
-      VirtualRecv(m, addr, elf->map + offset, size);
+      memcpy(m->real.p + addr, elf->map + offset, size);
       m->ax[1] = 0x00;
       SetCarry(false);
     } else {
@@ -2080,12 +2085,16 @@ static void OnApmService(void) {
 
 static void OnE820(void) {
   uint8_t p[20];
-  if (Read32(m->dx) == 0x534D4150 && Read32(m->cx) == 24) {
+  uint64_t addr;
+  addr = Read64(m->es) + Read16(m->di);
+  if (Read32(m->dx) == 0x534D4150 && Read32(m->cx) == 24 &&
+      addr + sizeof(p) <= m->real.n) {
     if (!Read32(m->bx)) {
       Write64(p + 000, 0);
-      Write64(p + 010, BIGPAGESIZE);
+      Write64(p + 010, m->real.n);
       Write32(p + 014, 1);
-      VirtualRecv(m, Read64(m->es) + Read16(m->di), p, sizeof(p));
+      memcpy(m->real.p + addr, p, sizeof(p));
+      SetWriteAddr(m, addr, sizeof(p));
       Write32(m->cx, sizeof(p));
       Write32(m->bx, 1);
     } else {
@@ -2155,6 +2164,24 @@ static bool OnHalt(int interrupt) {
       OnExit(interrupt);
       return false;
   }
+}
+
+static void OnBinbase(struct Machine *m) {
+  unsigned i;
+  int64_t skew;
+  skew = m->xedd->op.disp * 512;
+  LOGF("skew binbase %,ld @ %p", skew, GetIp());
+  for (i = 0; i < dis->syms.i; ++i) {
+    dis->syms.p[i].addr += skew;
+  }
+  for (i = 0; i < dis->loads.i; ++i) {
+    dis->loads.p[i].addr += skew;
+  }
+  Disassemble();
+}
+
+static void OnLongBranch(struct Machine *m) {
+  Disassemble();
 }
 
 static void OnPageUp(void) {
@@ -2647,9 +2674,6 @@ static void Tui(void) {
             ScrollReadData(&pan.readdata);
             ScrollWriteData(&pan.writedata);
           }
-          if (IsLongBranch()) {
-            Disassemble();
-          }
         } else {
           m->ip += m->xedd->length;
           action &= ~NEXT;
@@ -2787,6 +2811,8 @@ int main(int argc, char *argv[]) {
   pty = NewPty();
   m = NewMachine();
   m->mode = XED_MACHINE_MODE_LONG_64;
+  m->onbinbase = OnBinbase;
+  m->onlongbranch = OnLongBranch;
   speed = 16;
   SetXmmSize(2);
   SetXmmDisp(kXmmHex);

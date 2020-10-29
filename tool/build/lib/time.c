@@ -22,6 +22,7 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/time/time.h"
 #include "tool/build/lib/endian.h"
+#include "tool/build/lib/modrm.h"
 #include "tool/build/lib/time.h"
 
 /**
@@ -41,11 +42,18 @@ void OpRdtsc(struct Machine *m, uint32_t rde) {
   Write64(m->dx, (c >> 040) & 0xffffffff);
 }
 
-void OpRdtscp(struct Machine *m, uint32_t rde) {
-  uint32_t core, node, tscaux;
-  OpRdtsc(m, rde);
+static int64_t GetTscAux(struct Machine *m) {
+  uint32_t core, node;
   core = 0;
   node = 0;
-  tscaux = (node & 0xfff) << 12 | (core & 0xfff);
-  Write64(m->cx, tscaux & 0xffffffff);
+  return (node & 0xfff) << 12 | (core & 0xfff);
+}
+
+void OpRdtscp(struct Machine *m, uint32_t rde) {
+  OpRdtsc(m, rde);
+  Write64(m->cx, GetTscAux(m));
+}
+
+void OpRdpid(struct Machine *m, uint32_t rde) {
+  Write64(RegRexbRm(m, rde), GetTscAux(m));
 }

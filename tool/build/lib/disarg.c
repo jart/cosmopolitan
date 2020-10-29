@@ -336,20 +336,24 @@ static char *DisEvqp(struct Dis *d, uint32_t rde, char *p) {
   return DisE(d, rde, p, DisRegisterWord);
 }
 
-static char *DisEdqpReg(struct Dis *d, uint32_t rde, char *p) {
+static char *DisRv(struct Dis *d, uint32_t rde, char *p) {
+  return DisRegister(p, kGreg[Osz(rde)][0][Rexb(rde)][ModrmRm(rde)]);
+}
+
+static char *DisRvqp(struct Dis *d, uint32_t rde, char *p) {
+  return DisRegister(p, kGreg[Osz(rde)][Rexw(rde)][Rexb(rde)][ModrmRm(rde)]);
+}
+
+static char *DisRdqp(struct Dis *d, uint32_t rde, char *p) {
   return DisRegister(p, kGreg[0][Rexw(rde)][Rexb(rde)][ModrmRm(rde)]);
 }
 
 static char *DisEdqp(struct Dis *d, uint32_t rde, char *p) {
-  return DisRegMem(d, rde, p, DisEdqpReg);
-}
-
-static char *DisEvReg(struct Dis *d, uint32_t rde, char *p) {
-  return DisRegister(p, kGreg[Osz(rde)][0][Rexb(rde)][ModrmRm(rde)]);
+  return DisRegMem(d, rde, p, DisRdqp);
 }
 
 static char *DisEv(struct Dis *d, uint32_t rde, char *p) {
-  return DisRegMem(d, rde, p, DisEvReg);
+  return DisRegMem(d, rde, p, DisRv);
 }
 
 static char *DisGvq(struct Dis *d, uint32_t rde, char *p, int r) {
@@ -597,8 +601,6 @@ static char *DisWps(struct Dis *d, uint32_t rde, char *p) {
 #define DisOvqp DisAbs
 #define DisPpi  DisPq
 #define DisQpi  DisQq
-#define DisRdqp DisGdqp
-#define DisRvqp DisGvqp
 #define DisVpd  DisVdq
 #define DisVps  DisVdq
 #define DisVq   DisVdq

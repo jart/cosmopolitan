@@ -25,6 +25,8 @@ void VirtualRecv(struct Machine *, int64_t, void *, uint64_t);
 void *VirtualSend(struct Machine *, void *, int64_t, uint64_t);
 void VirtualSet(struct Machine *, int64_t, char, uint64_t);
 void *RealAddress(struct Machine *, int64_t);
+void VirtualSendRead(struct Machine *, void *, int64_t, uint64_t);
+void VirtualRecvWrite(struct Machine *, int64_t, void *, uint64_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

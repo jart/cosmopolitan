@@ -34,6 +34,7 @@ TOOL_BUILD_DIRECTDEPS =					\
 	LIBC_DNS					\
 	LIBC_ELF					\
 	LIBC_FMT					\
+	LIBC_INTRIN					\
 	LIBC_LOG					\
 	LIBC_LOG_ASAN					\
 	LIBC_TINYMATH					\

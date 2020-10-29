@@ -157,6 +157,7 @@
 #define PAGE_1GB /*                                    */ 0b110000000
 #define PAGE_TA  0b11111111111111111111111111111111111111000000000000
 #define PAGE_PA2 0b11111111111111111111111111111000000000000000000000
+#define PAGE_XD  0x8000000000000000
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 #include "ape/config.h"
@@ -213,9 +214,9 @@ extern uint64_t g_ptsp_xlm;
 void bootdr(char drive) noreturn;
 
 void smapsort(struct SmapEntry *);
-uint64_t *getpagetableentry(uint64_t, unsigned, struct PageTable *, uint64_t *);
+uint64_t *getpagetableentry(int64_t, unsigned, struct PageTable *, uint64_t *);
 void flattenhighmemory(struct SmapEntry *, struct PageTable *, uint64_t *);
-void pageunmap(uint64_t);
+void pageunmap(int64_t);
 
 forceinline unsigned long eflags(void) {
   unsigned long res;

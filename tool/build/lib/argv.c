@@ -17,16 +17,10 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/arraylist2.h"
-#include "libc/assert.h"
-#include "libc/bits/popcnt.h"
-#include "libc/bits/safemacros.h"
 #include "libc/log/check.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"
-#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/auxv.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/machine.h"
 #include "tool/build/lib/memory.h"

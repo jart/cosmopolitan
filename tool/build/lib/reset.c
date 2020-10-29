@@ -62,6 +62,10 @@ static void ResetSse(struct Machine *m) {
   memset(m->xmm, 0, sizeof(m->xmm));
 }
 
+void ResetInstructionCache(struct Machine *m) {
+  memset(m->icache, -1, sizeof(m->icache));
+}
+
 void ResetCpu(struct Machine *m) {
   m->faultaddr = 0;
   m->stashsize = 0;

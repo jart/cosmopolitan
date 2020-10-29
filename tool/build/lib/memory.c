@@ -143,8 +143,18 @@ void *VirtualSend(struct Machine *m, void *dst, int64_t src, uint64_t n) {
   return dst;
 }
 
+void VirtualSendRead(struct Machine *m, void *dst, int64_t addr, uint64_t n) {
+  VirtualSend(m, dst, addr, n);
+  SetReadAddr(m, addr, n);
+}
+
 void VirtualRecv(struct Machine *m, int64_t dst, void *src, uint64_t n) {
   VirtualCopy(m, dst, src, n, false);
+}
+
+void VirtualRecvWrite(struct Machine *m, int64_t addr, void *src, uint64_t n) {
+  VirtualRecv(m, addr, src, n);
+  SetWriteAddr(m, addr, n);
 }
 
 void *ReserveAddress(struct Machine *m, int64_t v, size_t n) {

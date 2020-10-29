@@ -27,7 +27,7 @@ EXAMPLES_PACKAGE_FILES := $(wildcard examples/package/*)
 # Defines sets of files without needing further iops.
 EXAMPLES_PACKAGE_SRCS = $(filter %.c,$(EXAMPLES_PACKAGE_FILES))
 EXAMPLES_PACKAGE_HDRS = $(filter %.h,$(EXAMPLES_PACKAGE_FILES))
-EXAMPLES_PACKAGE_COMS = $(EXAMPLES_PACKAGE_OBJS:%.o=%.com)
+EXAMPLES_PACKAGE_COMS = $(EXAMPLES_PACKAGE_SRCS:%.c=o/$(MODE)/%.com)
 EXAMPLES_PACKAGE_BINS =					\
 	$(EXAMPLES_PACKAGE_COMS)			\
 	$(EXAMPLES_PACKAGE_COMS:%=%.dbg)

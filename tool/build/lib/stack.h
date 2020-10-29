@@ -11,7 +11,6 @@ void OpRet(struct Machine *, uint32_t);
 void OpRetf(struct Machine *, uint32_t);
 void OpLeave(struct Machine *, uint32_t);
 void OpCallEq(struct Machine *, uint32_t);
-void OpBofram(struct Machine *, uint32_t);
 void OpPopEvq(struct Machine *, uint32_t);
 void OpPopZvq(struct Machine *, uint32_t);
 void OpPushZvq(struct Machine *, uint32_t);

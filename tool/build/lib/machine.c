@@ -17,7 +17,9 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/log/check.h"
 #include "libc/macros.h"
+#include "libc/rand/rand.h"
 #include "libc/runtime/runtime.h"
 #include "tool/build/lib/abp.h"
 #include "tool/build/lib/address.h"
@@ -202,14 +204,87 @@ static relegated void OpMovEvqpSw(struct Machine *m, uint32_t rde) {
                         Read64(GetSegment(m, rde, ModrmReg(rde))) >> 4);
 }
 
-static relegated void OpMovSwEvqp(struct Machine *m, uint32_t rde) {
-  Write64(GetSegment(m, rde, ModrmReg(rde)),
-          ReadMemory(rde, GetModrmRegisterWordPointerReadOszRexw(m, rde)) << 4);
+static relegated int GetDescriptor(struct Machine *m, int selector,
+                                   uint64_t *out_descriptor) {
+  uint8_t buf[8];
+  DCHECK(m->gdt_base + m->gdt_limit <= m->real.n);
+  selector &= -8;
+  if (8 <= selector && selector + 8 <= m->gdt_limit) {
+    SetReadAddr(m, m->gdt_base + selector, 8);
+    *out_descriptor = Read64(m->real.p + m->gdt_base + selector);
+    return 0;
+  } else {
+    return -1;
+  }
 }
 
-static relegated void OpJmpf(struct Machine *m, uint32_t rde) {
-  Write64(m->cs, m->xedd->op.uimm0 << 4);
-  m->ip = m->xedd->op.disp;
+static uint64_t GetDescriptorBase(uint64_t d) {
+  return (d & 0xff00000000000000) >> 32 | (d & 0x000000ffffff0000) >> 16;
+}
+
+static uint64_t GetDescriptorLimit(uint64_t d) {
+  return (d & 0x000f000000000000) >> 32 | d & 0xffff;
+}
+
+static int GetDescriptorMode(uint64_t d) {
+  uint8_t kMode[] = {
+      XED_MACHINE_MODE_REAL,
+      XED_MACHINE_MODE_LONG_64,
+      XED_MACHINE_MODE_LEGACY_32,
+      XED_MACHINE_MODE_LONG_64,
+  };
+  return kMode[(d & 0x0060000000000000) >> 53];
+}
+
+static bool IsProtectedMode(struct Machine *m) {
+  return m->cr0 & 1;
+}
+
+static relegated void OpMovSwEvqp(struct Machine *m, uint32_t rde) {
+  uint64_t x, d;
+  x = ReadMemory(rde, GetModrmRegisterWordPointerReadOszRexw(m, rde));
+  if (!IsProtectedMode(m)) {
+    x <<= 4;
+  } else if (GetDescriptor(m, x, &d) != -1) {
+    x = GetDescriptorBase(d);
+  } else {
+    ThrowProtectionFault(m);
+  }
+  Write64(GetSegment(m, rde, ModrmReg(rde)), x);
+}
+
+static void OpLsl(struct Machine *m, uint32_t rde) {
+  uint64_t descriptor;
+  if (GetDescriptor(m, Read16(GetModrmRegisterWordPointerRead2(m, rde)),
+                    &descriptor) != -1) {
+    WriteRegister(rde, RegRexrReg(m, rde), GetDescriptorLimit(descriptor));
+    SetFlag(m->flags, FLAGS_ZF, true);
+  } else {
+    SetFlag(m->flags, FLAGS_ZF, false);
+  }
+}
+
+static void ChangeMachineMode(struct Machine *m, int mode) {
+  if (mode == m->mode) return;
+  ResetInstructionCache(m);
+  m->mode = mode;
+}
+
+static void OpJmpf(struct Machine *m, uint32_t rde) {
+  uint64_t descriptor;
+  if (!IsProtectedMode(m)) {
+    Write64(m->cs, m->xedd->op.uimm0 << 4);
+    m->ip = m->xedd->op.disp;
+  } else if (GetDescriptor(m, m->xedd->op.uimm0, &descriptor) != -1) {
+    Write64(m->cs, GetDescriptorBase(descriptor));
+    m->ip = m->xedd->op.disp;
+    ChangeMachineMode(m, GetDescriptorMode(descriptor));
+  } else {
+    ThrowProtectionFault(m);
+  }
+  if (m->onlongbranch) {
+    m->onlongbranch(m);
+  }
 }
 
 static relegated void OpXlatAlBbb(struct Machine *m, uint32_t rde) {
@@ -373,11 +448,49 @@ static void OpCmpxchg16b(struct Machine *m, uint32_t rde) {
   }
 }
 
-static void OpCmpxchgDxAx(struct Machine *m, uint32_t rde) {
-  if (Rexw(rde)) {
-    OpCmpxchg16b(m, rde);
-  } else {
-    OpCmpxchg8b(m, rde);
+static void OpRdrand(struct Machine *m, uint32_t rde) {
+  WriteRegister(rde, RegRexbRm(m, rde), rand64());
+}
+
+static void OpRdseed(struct Machine *m, uint32_t rde) {
+  OpRdrand(m, rde);
+}
+
+static void Op1c7(struct Machine *m, uint32_t rde) {
+  bool ismem;
+  ismem = !IsModrmRegister(rde);
+  switch (ModrmReg(rde)) {
+    case 1:
+      if (ismem) {
+        if (Rexw(rde)) {
+          OpCmpxchg16b(m, rde);
+        } else {
+          OpCmpxchg8b(m, rde);
+        }
+      } else {
+        OpUd(m, rde);
+      }
+      break;
+    case 6:
+      if (!ismem) {
+        OpRdrand(m, rde);
+      } else {
+        OpUd(m, rde);
+      }
+      break;
+    case 7:
+      if (!ismem) {
+        if (Rep(rde) == 3) {
+          OpRdpid(m, rde);
+        } else {
+          OpRdseed(m, rde);
+        }
+      } else {
+        OpUd(m, rde);
+      }
+      break;
+    default:
+      OpUd(m, rde);
   }
 }
 
@@ -699,8 +812,7 @@ static void OpAlubFlipTest(struct Machine *m, uint32_t rde) {
 }
 
 static void Alubi(struct Machine *m, uint32_t rde, aluop_f op) {
-  uint8_t *a, x;
-  a = GetModrmRegisterBytePointerWrite(m, rde);
+  uint8_t *a = GetModrmRegisterBytePointerWrite(m, rde);
   Write8(a, op(Read8(a), m->xedd->op.uimm0, &m->flags));
 }
 
@@ -770,7 +882,6 @@ static void OpAluwFlipTest(struct Machine *m, uint32_t rde) {
 
 static void Aluwi(struct Machine *m, uint32_t rde, aluop_f ops[4]) {
   uint8_t *a;
-  uint64_t x;
   a = GetModrmRegisterWordPointerWriteOszRexw(m, rde);
   WriteRegisterOrMemory(
       rde, a,
@@ -1339,8 +1450,105 @@ static void OpDoubleShift(struct Machine *m, uint32_t rde) {
                      m->xedd->op.opcode & 8, &m->flags));
 }
 
+static void OpFxsave(struct Machine *m, uint32_t rde) {
+  int64_t v;
+  uint8_t buf[32];
+  memset(buf, 0, 32);
+  Write16(buf + 0, m->fpu.cw);
+  Write16(buf + 2, m->fpu.sw);
+  Write8(buf + 4, m->fpu.tw);
+  Write16(buf + 6, m->fpu.op);
+  Write32(buf + 8, m->fpu.ip);
+  Write32(buf + 24, m->sse.mxcsr);
+  v = ComputeAddress(m, rde);
+  VirtualRecv(m, v + 0, buf, 32);
+  VirtualRecv(m, v + 32, m->fpu.st, 128);
+  VirtualRecv(m, v + 160, m->xmm, 256);
+  SetWriteAddr(m, v, 416);
+}
+
+static void OpFxrstor(struct Machine *m, uint32_t rde) {
+  int64_t v;
+  uint8_t buf[32];
+  v = ComputeAddress(m, rde);
+  SetReadAddr(m, v, 416);
+  VirtualSend(m, buf, v + 0, 32);
+  VirtualSend(m, m->fpu.st, v + 32, 128);
+  VirtualSend(m, m->xmm, v + 160, 256);
+  m->fpu.cw = Read16(buf + 0);
+  m->fpu.sw = Read16(buf + 2);
+  m->fpu.tw = Read8(buf + 4);
+  m->fpu.op = Read16(buf + 6);
+  m->fpu.ip = Read32(buf + 8);
+  m->sse.mxcsr = Read32(buf + 24);
+}
+
+static void OpXsave(struct Machine *m, uint32_t rde) {
+}
+
+static void OpLdmxcsr(struct Machine *m, uint32_t rde) {
+  m->sse.mxcsr = Read32(ComputeReserveAddressRead4(m, rde));
+}
+
+static void OpStmxcsr(struct Machine *m, uint32_t rde) {
+  Write32(ComputeReserveAddressWrite4(m, rde), m->sse.mxcsr);
+}
+
+static void OpRdfsbase(struct Machine *m, uint32_t rde) {
+  WriteRegister(rde, RegRexbRm(m, rde), Read64(m->fs));
+}
+
+static void OpRdgsbase(struct Machine *m, uint32_t rde) {
+  WriteRegister(rde, RegRexbRm(m, rde), Read64(m->gs));
+}
+
+static void OpWrfsbase(struct Machine *m, uint32_t rde) {
+  Write64(m->fs, ReadMemory(rde, RegRexbRm(m, rde)));
+}
+
+static void OpWrgsbase(struct Machine *m, uint32_t rde) {
+  Write64(m->gs, ReadMemory(rde, RegRexbRm(m, rde)));
+}
+
 static void Op1ae(struct Machine *m, uint32_t rde) {
+  bool ismem;
+  ismem = !IsModrmRegister(rde);
   switch (ModrmReg(rde)) {
+    case 0:
+      if (ismem) {
+        OpFxsave(m, rde);
+      } else {
+        OpRdfsbase(m, rde);
+      }
+      break;
+    case 1:
+      if (ismem) {
+        OpFxrstor(m, rde);
+      } else {
+        OpRdgsbase(m, rde);
+      }
+      break;
+    case 2:
+      if (ismem) {
+        OpLdmxcsr(m, rde);
+      } else {
+        OpWrfsbase(m, rde);
+      }
+      break;
+    case 3:
+      if (ismem) {
+        OpStmxcsr(m, rde);
+      } else {
+        OpWrgsbase(m, rde);
+      }
+      break;
+    case 4:
+      if (ismem) {
+        OpXsave(m, rde);
+      } else {
+        OpUd(m, rde);
+      }
+      break;
     case 5:
       OpLfence(m, rde);
       break;
@@ -1348,10 +1556,10 @@ static void Op1ae(struct Machine *m, uint32_t rde) {
       OpMfence(m, rde);
       break;
     case 7:
-      if (ModrmMod(rde) == 0b11 && ModrmReg(rde) == 0b111) {
-        OpSfence(m, rde);
-      } else {
+      if (ismem) {
         OpClflush(m, rde);
+      } else {
+        OpSfence(m, rde);
       }
       break;
     default:
@@ -1363,10 +1571,31 @@ static void OpSalc(struct Machine *m, uint32_t rde) {
   Write8(m->ax, GetFlag(m->flags, FLAGS_CF));
 }
 
+static void OpBofram(struct Machine *m, uint32_t rde) {
+  if (m->xedd->op.disp) {
+    m->bofram[0] = m->ip;
+    m->bofram[1] = m->ip + (m->xedd->op.disp & 0xff);
+  } else {
+    m->bofram[0] = 0;
+    m->bofram[1] = 0;
+  }
+}
+
+static void OpBinbase(struct Machine *m, uint32_t rde) {
+  if (m->onbinbase) {
+    m->onbinbase(m);
+  }
+}
+
 static void OpNopEv(struct Machine *m, uint32_t rde) {
   switch (ModrmMod(rde) << 6 | ModrmReg(rde) << 3 | ModrmRm(rde)) {
-    case 0x45:
+    case 0105:
       OpBofram(m, rde);
+      break;
+    case 0007:
+    case 0107:
+    case 0207:
+      OpBinbase(m, rde);
       break;
     default:
       OpNoop(m, rde);
@@ -1419,6 +1648,14 @@ static void OpMovCqRq(struct Machine *m, uint32_t rde) {
     default:
       OpUd(m, rde);
   }
+}
+
+static void OpWrmsr(struct Machine *m, uint32_t rde) {
+}
+
+static void OpRdmsr(struct Machine *m, uint32_t rde) {
+  Write32(m->dx, 0);
+  Write32(m->ax, 0);
 }
 
 static const nexgen32e_f kNexgen32e[] = {
@@ -1681,7 +1918,7 @@ static const nexgen32e_f kNexgen32e[] = {
     [0x100] = OpUd,
     [0x101] = Op101,
     [0x102] = OpUd,
-    [0x103] = OpUd,
+    [0x103] = OpLsl,
     [0x104] = OpUd,
     [0x105] = OpSyscall,
     [0x106] = OpUd,
@@ -1708,7 +1945,7 @@ static const nexgen32e_f kNexgen32e[] = {
     [0x11B] = OpHintNopEv,
     [0x11C] = OpHintNopEv,
     [0x11D] = OpHintNopEv,
-    [0x11E] = OpUd,
+    [0x11E] = OpHintNopEv,
     [0x11F] = OpNopEv,
     [0x120] = OpMovRqCq,
     [0x121] = OpUd,
@@ -1726,9 +1963,9 @@ static const nexgen32e_f kNexgen32e[] = {
     [0x12D] = OpCvt0f2d,
     [0x12E] = OpComissVsWs,
     [0x12F] = OpComissVsWs,
-    [0x130] = OpUd,
+    [0x130] = OpWrmsr,
     [0x131] = OpRdtsc,
-    [0x132] = OpUd,
+    [0x132] = OpRdmsr,
     [0x133] = OpUd,
     [0x134] = OpUd,
     [0x135] = OpUd,
@@ -1877,7 +2114,7 @@ static const nexgen32e_f kNexgen32e[] = {
     [0x1C4] = OpPinsrwVdqEwIb,
     [0x1C5] = OpPextrwGdqpUdqIb,
     [0x1C6] = OpShufpsd,
-    [0x1C7] = OpCmpxchgDxAx,
+    [0x1C7] = Op1c7,
     [0x1C8] = OpBswapZvqp,
     [0x1C9] = OpBswapZvqp,
     [0x1CA] = OpBswapZvqp,

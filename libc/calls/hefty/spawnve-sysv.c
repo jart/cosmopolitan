@@ -84,7 +84,7 @@ int spawnve$sysv(unsigned flags, int stdiofds[3], const char *program,
   }
 
   if (pid != -1) {
-    if ((pid = fork$sysv()) == 0) {
+    if ((pid = vfork()) == 0) {
       if (flags & SPAWN_DETACH) {
         if (setsid() == -1) abort();
         if ((rc = fork$sysv()) == -1) abort();

@@ -3,7 +3,6 @@
 #include "libc/runtime/runtime.h"
 #include "third_party/xed/x86.h"
 #include "tool/build/lib/fds.h"
-#include "tool/build/lib/pml4t.h"
 
 #define kMachineHalt                 -1
 #define kMachineDecodeError          -2
@@ -134,6 +133,10 @@ struct Machine {
   uint64_t cr0;
   uint64_t cr2;
   uint64_t cr4;
+  uint64_t gdt_base;
+  uint64_t idt_base;
+  uint16_t gdt_limit;
+  uint16_t idt_limit;
   struct MachineRealFree {
     uint64_t i;
     uint64_t n;
@@ -156,9 +159,12 @@ struct Machine {
   int64_t bofram[2];
   jmp_buf onhalt;
   int64_t faultaddr;
+  bool dlab;
   struct MachineFds fds;
   uint8_t stash[4096];
   uint8_t icache[1024][40];
+  void (*onbinbase)(struct Machine *);
+  void (*onlongbranch)(struct Machine *);
 } aligned(64);
 
 struct Machine *NewMachine(void) nodiscard;
@@ -166,6 +172,7 @@ void FreeMachine(struct Machine *);
 void ResetMem(struct Machine *);
 void ResetCpu(struct Machine *);
 void ResetTlb(struct Machine *);
+void ResetInstructionCache(struct Machine *);
 void LoadInstruction(struct Machine *);
 void ExecuteInstruction(struct Machine *);
 long AllocateLinearPage(struct Machine *);

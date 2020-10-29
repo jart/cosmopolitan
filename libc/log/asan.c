@@ -140,6 +140,7 @@ static const char *__asan_describe_access_poison(int c) {
     case kAsanUnscoped:
       return "unscoped";
     default:
+      DebugBreak();
       return "poisoned";
   }
 }

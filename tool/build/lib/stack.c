@@ -186,16 +186,6 @@ void OpRet(struct Machine *m, uint32_t rde) {
   m->ip = Pop(m, rde, m->xedd->op.uimm0);
 }
 
-void OpBofram(struct Machine *m, uint32_t rde) {
-  if (m->xedd->op.disp) {
-    m->bofram[0] = m->ip;
-    m->bofram[1] = m->ip + (m->xedd->op.disp & 0xff);
-  } else {
-    m->bofram[0] = 0;
-    m->bofram[1] = 0;
-  }
-}
-
 void OpPushEvq(struct Machine *m, uint32_t rde) {
   unsigned osz;
   osz = kStackOsz[m->xedd->op.osz][Mode(rde)];
@@ -303,9 +293,15 @@ relegated void OpCallf(struct Machine *m, uint32_t rde) {
   Push(m, rde, m->ip);
   Write64(m->cs, m->xedd->op.uimm0 << 4);
   m->ip = m->xedd->op.disp & (Osz(rde) ? 0xffff : 0xffffffff);
+  if (m->onlongbranch) {
+    m->onlongbranch(m);
+  }
 }
 
 relegated void OpRetf(struct Machine *m, uint32_t rde) {
   m->ip = Pop(m, rde, 0);
   Write64(m->cs, Pop(m, rde, m->xedd->op.uimm0) << 4);
+  if (m->onlongbranch) {
+    m->onlongbranch(m);
+  }
 }
