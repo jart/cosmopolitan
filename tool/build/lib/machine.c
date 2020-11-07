@@ -1632,6 +1632,7 @@ static void OpMovRqCq(struct Machine *m, uint32_t rde) {
 }
 
 static void OpMovCqRq(struct Machine *m, uint32_t rde) {
+  int64_t cr3;
   switch (ModrmReg(rde)) {
     case 0:
       m->cr0 = Read64(RegRexbRm(m, rde));
@@ -1640,7 +1641,12 @@ static void OpMovCqRq(struct Machine *m, uint32_t rde) {
       m->cr2 = Read64(RegRexbRm(m, rde));
       break;
     case 3:
-      m->cr3 = Read64(RegRexbRm(m, rde));
+      cr3 = Read64(RegRexbRm(m, rde));
+      if (0 <= cr3 && cr3 + 512 * 8 <= m->real.n) {
+        m->cr3 = cr3;
+      } else {
+        ThrowProtectionFault(m);
+      }
       break;
     case 4:
       m->cr4 = Read64(RegRexbRm(m, rde));

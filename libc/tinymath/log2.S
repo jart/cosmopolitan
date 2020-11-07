@@ -24,7 +24,8 @@
 /
 /	@param	𝑥 is a double passed in the lower quadword of %xmm0
 /	@return	result in lower quadword of %xmm0
-log2:	push	%rbp
+tinymath_log2:
+	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	push	%rax
@@ -36,4 +37,5 @@ log2:	push	%rbp
 	movsd	-8(%rbp),%xmm0
 	leave
 	ret
-	.endfn	log2,globl
+	.endfn	tinymath_log2,globl
+	.alias	tinymath_log2,log2

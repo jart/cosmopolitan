@@ -28,6 +28,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/mremap.h"
+#include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/prot.h"
@@ -177,6 +178,7 @@ struct ElfWriter *elfwriter_open(const char *path, int mode) {
 void elfwriter_close(struct ElfWriter *elf) {
   size_t i;
   FlushTables(elf);
+  CHECK_NE(-1, msync(elf->map, elf->wrote, MS_SYNC));
   CHECK_NE(-1, munmap(elf->map, elf->mapsize));
   CHECK_NE(-1, ftruncate(elf->fd, elf->wrote));
   CHECK_NE(-1, close(elf->fd));

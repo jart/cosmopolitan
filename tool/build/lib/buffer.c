@@ -49,13 +49,16 @@ void AppendStr(struct Buffer *b, const char *s) {
 }
 
 void AppendWide(struct Buffer *b, wint_t wc) {
+  unsigned i;
   uint64_t wb;
-  wb = wc;
-  if (!isascii(wb)) wb = tpenc(wb);
+  char buf[8];
+  i = 0;
+  wb = tpenc(wc);
   do {
-    AppendChar(b, wb & 0xFF);
+    buf[i++] = wb & 0xFF;
     wb >>= 8;
   } while (wb);
+  AppendData(b, buf, i);
 }
 
 int AppendFmt(struct Buffer *b, const char *fmt, ...) {
@@ -72,24 +75,31 @@ int AppendFmt(struct Buffer *b, const char *fmt, ...) {
 }
 
 /**
- * Writes buffer until completion, interrupt, or error occurs.
+ * Writes buffer until completion, or error occurs.
  */
 ssize_t WriteBuffer(struct Buffer *b, int fd) {
+  bool t;
   char *p;
   ssize_t rc;
   size_t wrote, n;
   p = b->p;
   n = b->i;
+  t = false;
   do {
     if ((rc = write(fd, p, n)) != -1) {
       wrote = rc;
       p += wrote;
       n -= wrote;
     } else if (errno == EINTR) {
-      break;
+      t = true;
     } else {
       return -1;
     }
   } while (n);
-  return 0;
+  if (!t) {
+    return 0;
+  } else {
+    errno = EINTR;
+    return -1;
+  }
 }

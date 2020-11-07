@@ -108,6 +108,11 @@ o/$(MODE)/examples/%.elf:					\
 		$(ELF)
 	@$(ELFLINK)
 
+o/$(MODE)/examples/tiny-raw-linux-tutorial.elf:			\
+		o/$(MODE)/examples/tiny-raw-linux-tutorial.o	\
+		$(ELF)
+	@$(ELFLINK) -N -z max-page-size=0x10
+
 $(EXAMPLES_OBJS): examples/examples.mk
 
 o/$(MODE)/examples/hellojs.com.dbg:				\

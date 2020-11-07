@@ -43,12 +43,12 @@ long hilbert(long n, long y, long x) {
   long d, s, ry, rx;
   d = 0;
   for (s = n / 2; s > 0; s /= 2) {
-    rx = (x & s) > 0;
     ry = (y & s) > 0;
+    rx = (x & s) > 0;
     d += s * s * ((3 * rx) ^ ry);
     m = RotateQuadrant(n, y, x, ry, rx);
-    x = m.dx;
     y = m.ax;
+    x = m.dx;
   }
   return d;
 }

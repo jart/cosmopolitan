@@ -364,7 +364,7 @@ void WithImageFile(const char *path,
                    void fn(long yn, long xn, unsigned char RGB[3][yn][xn])) {
   struct stat st;
   void *map, *data, *data2;
-  int fd, yn, xn, cn, dyn, dxn;
+  int fd, yn, xn, cn, dyn, dxn, syn, sxn;
   CHECK_NE(-1, (fd = open(path, O_RDONLY)), "%s", path);
   CHECK_NE(-1, fstat(fd, &st));
   CHECK_GT(st.st_size, 0);
@@ -387,10 +387,26 @@ void WithImageFile(const char *path,
     cn = 3;
   }
   if (g_flags.height && g_flags.width) {
+    syn = yn;
+    sxn = xn;
     dyn = g_flags.height;
     dxn = g_flags.width;
+    while (HALF(syn) > dyn || HALF(sxn) > dxn) {
+      if (HALF(sxn) > dxn) {
+        Magikarp2xX(yn, xn, data, syn, sxn);
+        Magikarp2xX(yn, xn, (char *)data + yn * xn, syn, sxn);
+        Magikarp2xX(yn, xn, (char *)data + yn * xn * 2, syn, sxn);
+        sxn = HALF(sxn);
+      }
+      if (HALF(syn) > dyn) {
+        Magikarp2xY(yn, xn, data, syn, sxn);
+        Magikarp2xY(yn, xn, (char *)data + yn * xn, syn, sxn);
+        Magikarp2xY(yn, xn, (char *)data + yn * xn * 2, syn, sxn);
+        syn = HALF(syn);
+      }
+    }
     data = EzGyarados(3, dyn, dxn, gc(memalign(32, dyn * dxn * 3)), cn, yn, xn,
-                      data, 0, cn, dyn, dxn, yn, xn, 0, 0, 0, 0);
+                      data, 0, cn, dyn, dxn, syn, sxn, 0, 0, 0, 0);
     yn = dyn;
     xn = dxn;
   }

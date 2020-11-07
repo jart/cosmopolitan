@@ -17,6 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "dsp/scale/cdecimate2xuint8x8.h"
 #include "dsp/tty/tty.h"
 #include "libc/alg/arraylist2.h"
 #include "libc/assert.h"
@@ -90,6 +91,7 @@
 #include "tool/build/lib/stats.h"
 #include "tool/build/lib/syscall.h"
 #include "tool/build/lib/throw.h"
+#include "tool/build/lib/xmmtype.h"
 
 #define USAGE \
   " [-?HhrRstv] [ROM] [ARGS...]\n\
@@ -102,6 +104,7 @@ DESCRIPTION\n\
 FLAGS\n\
 \n\
   -h        help\n\
+  -z        zoom\n\
   -v        verbosity\n\
   -r        real mode\n\
   -s        statistics\n\
@@ -122,8 +125,10 @@ FEATURES\n\
   8086, 8087, i386, x86_64, SSE3, SSSE3, POPCNT, MDA, CGA, TTY\n\
 \n"
 
-#define DUMPWIDTH 64
-#define DISPWIDTH 80
+#define MAXZOOM    16
+#define DUMPWIDTH  64
+#define DISPWIDTH  80
+#define WHEELDELTA 1
 
 #define RESTART  0x001
 #define REDRAW   0x002
@@ -138,27 +143,30 @@ FEATURES\n\
 #define EXIT     0x400
 #define ALARM    0x800
 
-#define kXmmIntegral 0
-#define kXmmDouble   1
-#define kXmmFloat    2
-
 #define kXmmDecimal 0
 #define kXmmHex     1
 #define kXmmChar    2
 
-#define kMouseLeftDown   0
-#define kMouseMiddleDown 1
-#define kMouseRightDown  2
-#define kMouseLeftUp     4
-#define kMouseMiddleUp   5
-#define kMouseRightUp    6
-#define kMouseLeftDrag   32
-#define kMouseMiddleDrag 33
-#define kMouseRightDrag  34
-#define kMouseWheelUp    64
-#define kMouseWheelDown  65
+#define kMouseLeftDown      0
+#define kMouseMiddleDown    1
+#define kMouseRightDown     2
+#define kMouseLeftUp        4
+#define kMouseMiddleUp      5
+#define kMouseRightUp       6
+#define kMouseLeftDrag      32
+#define kMouseMiddleDrag    33
+#define kMouseRightDrag     34
+#define kMouseWheelUp       64
+#define kMouseWheelDown     65
+#define kMouseCtrlWheelUp   80
+#define kMouseCtrlWheelDown 81
 
 #define CTRL(C) ((C) ^ 0100)
+
+struct MemoryView {
+  int64_t start;
+  unsigned zoom;
+};
 
 struct MachineState {
   uint64_t ip;
@@ -204,6 +212,8 @@ struct Panels {
   };
 };
 
+static const signed char kThePerfectKernel[8] = {-1, -3, 3, 17, 17, 3, -3, -1};
+
 static const char kRegisterNames[16][4] = {
     "RAX", "RCX", "RDX", "RBX", "RSP", "RBP", "RSI", "RDI",
     "R8",  "R9",  "R10", "R11", "R12", "R13", "R14", "R15",
@@ -215,6 +225,7 @@ static bool alarmed;
 static bool colorize;
 static bool mousemode;
 static bool printstats;
+static bool showhighsse;
 
 static int tyn;
 static int txn;
@@ -228,37 +239,32 @@ static int opline;
 static int action;
 static int xmmdisp;
 static int exitcode;
-static int codezoom;
-static int readzoom;
-static int writezoom;
-static int stackzoom;
 
 static long ips;
 static long rombase;
 static long codesize;
 static int64_t opstart;
-static int64_t codestart;
-static int64_t readstart;
 static int64_t mapsstart;
-static int64_t writestart;
-static int64_t stackstart;
 static int64_t framesstart;
 static int64_t breakpointsstart;
 static uint64_t last_opcount;
 static char *codepath;
 static void *onbusted;
 static char *statusmessage;
-static struct Machine *m;
 static struct Pty *pty;
+static struct Machine *m;
 
 static struct Panels pan;
+static struct MemoryView codeview;
+static struct MemoryView readview;
+static struct MemoryView writeview;
+static struct MemoryView stackview;
 static struct MachineState laststate;
 static struct Breakpoints breakpoints;
 static struct MachineMemstat lastmemstat;
+static struct XmmType xmmtype;
 static struct Elf elf[1];
 static struct Dis dis[1];
-static uint8_t xmmtype[16];
-static uint8_t xmmsize[16];
 
 long double last_seconds;
 static long double statusexpires;
@@ -308,9 +314,9 @@ static bool IsRet(void) {
 }
 
 static int GetXmmTypeCellCount(int r) {
-  switch (xmmtype[r]) {
+  switch (xmmtype.type[r]) {
     case kXmmIntegral:
-      return 16 / xmmsize[r];
+      return 16 / xmmtype.size[r];
     case kXmmFloat:
       return 4;
     case kXmmDouble:
@@ -395,162 +401,6 @@ static int64_t ReadWord(uint8_t *p) {
       return Read32(p);
     case 2:
       return Read16(p);
-  }
-}
-
-static void UpdateXmmTypes(int regtype, int rmtype) {
-  xmmtype[RexrReg(m->xedd->op.rde)] = regtype;
-  if (IsModrmRegister(m->xedd->op.rde)) {
-    xmmtype[RexbRm(m->xedd->op.rde)] = rmtype;
-  }
-}
-
-static void UpdateXmmSizes(int regsize, int rmsize) {
-  xmmsize[RexrReg(m->xedd->op.rde)] = regsize;
-  if (IsModrmRegister(m->xedd->op.rde)) {
-    xmmsize[RexbRm(m->xedd->op.rde)] = rmsize;
-  }
-}
-
-static void UpdateXmmType(void) {
-  switch (m->xedd->op.dispatch) {
-    case 0x12E:  // UCOMIS
-    case 0x12F:  // COMIS
-    case 0x151:  // SQRT
-    case 0x152:  // RSQRT
-    case 0x153:  // RCP
-    case 0x158:  // ADD
-    case 0x159:  // MUL
-    case 0x15C:  // SUB
-    case 0x15D:  // MIN
-    case 0x15E:  // DIV
-    case 0x15F:  // MAX
-    case 0x1C2:  // CMP
-      if (Osz(m->xedd->op.rde) || Rep(m->xedd->op.rde) == 2) {
-        UpdateXmmTypes(kXmmDouble, kXmmDouble);
-      } else {
-        UpdateXmmTypes(kXmmFloat, kXmmFloat);
-      }
-      break;
-    case 0x12A:  // CVTPI2PS,CVTSI2SS,CVTPI2PD,CVTSI2SD
-      if (Osz(m->xedd->op.rde) || Rep(m->xedd->op.rde) == 2) {
-        UpdateXmmSizes(8, 4);
-        UpdateXmmTypes(kXmmDouble, kXmmIntegral);
-      } else {
-        UpdateXmmSizes(4, 4);
-        UpdateXmmTypes(kXmmFloat, kXmmIntegral);
-      }
-      break;
-    case 0x15A:  // CVT{P,S}{S,D}2{P,S}{S,D}
-      if (Osz(m->xedd->op.rde) || Rep(m->xedd->op.rde) == 2) {
-        UpdateXmmTypes(kXmmFloat, kXmmDouble);
-      } else {
-        UpdateXmmTypes(kXmmDouble, kXmmFloat);
-      }
-      break;
-    case 0x15B:  // CVT{,T}{DQ,PS}2{PS,DQ}
-      UpdateXmmSizes(4, 4);
-      if (Osz(m->xedd->op.rde) || Rep(m->xedd->op.rde) == 3) {
-        UpdateXmmTypes(kXmmIntegral, kXmmFloat);
-      } else {
-        UpdateXmmTypes(kXmmFloat, kXmmIntegral);
-      }
-      break;
-    case 0x17C:  // HADD
-    case 0x17D:  // HSUB
-    case 0x1D0:  // ADDSUB
-      if (Osz(m->xedd->op.rde)) {
-        UpdateXmmTypes(kXmmDouble, kXmmDouble);
-      } else {
-        UpdateXmmTypes(kXmmFloat, kXmmFloat);
-      }
-      break;
-    case 0x164:  // PCMPGTB
-    case 0x174:  // PCMPEQB
-    case 0x1D8:  // PSUBUSB
-    case 0x1DA:  // PMINUB
-    case 0x1DC:  // PADDUSB
-    case 0x1DE:  // PMAXUB
-    case 0x1E0:  // PAVGB
-    case 0x1E8:  // PSUBSB
-    case 0x1EC:  // PADDSB
-    case 0x1F8:  // PSUBB
-    case 0x1FC:  // PADDB
-      UpdateXmmSizes(1, 1);
-      UpdateXmmTypes(kXmmIntegral, kXmmIntegral);
-      break;
-    case 0x165:  // PCMPGTW
-    case 0x175:  // PCMPEQW
-    case 0x171:  // PSRLW,PSRAW,PSLLW
-    case 0x1D1:  // PSRLW
-    case 0x1D5:  // PMULLW
-    case 0x1D9:  // PSUBUSW
-    case 0x1DD:  // PADDUSW
-    case 0x1E1:  // PSRAW
-    case 0x1E3:  // PAVGW
-    case 0x1E4:  // PMULHUW
-    case 0x1E5:  // PMULHW
-    case 0x1E9:  // PSUBSW
-    case 0x1EA:  // PMINSW
-    case 0x1ED:  // PADDSW
-    case 0x1EE:  // PMAXSW
-    case 0x1F1:  // PSLLW
-    case 0x1F6:  // PSADBW
-    case 0x1F9:  // PSUBW
-    case 0x1FD:  // PADDW
-      UpdateXmmSizes(2, 2);
-      UpdateXmmTypes(kXmmIntegral, kXmmIntegral);
-      break;
-    case 0x166:  // PCMPGTD
-    case 0x176:  // PCMPEQD
-    case 0x172:  // PSRLD,PSRAD,PSLLD
-    case 0x1D2:  // PSRLD
-    case 0x1E2:  // PSRAD
-    case 0x1F2:  // PSLLD
-    case 0x1FA:  // PSUBD
-    case 0x1FE:  // PADDD
-      UpdateXmmSizes(4, 4);
-      UpdateXmmTypes(kXmmIntegral, kXmmIntegral);
-      break;
-    case 0x173:  // PSRLQ,PSRLQ,PSRLDQ,PSLLQ,PSLLDQ
-    case 0x1D3:  // PSRLQ
-    case 0x1D4:  // PADDQ
-    case 0x1F3:  // PSLLQ
-    case 0x1F4:  // PMULUDQ
-    case 0x1FB:  // PSUBQ
-      UpdateXmmSizes(8, 8);
-      UpdateXmmTypes(kXmmIntegral, kXmmIntegral);
-      break;
-    case 0x16B:  // PACKSSDW
-    case 0x1F5:  // PMADDWD
-      UpdateXmmSizes(4, 2);
-      UpdateXmmTypes(kXmmIntegral, kXmmIntegral);
-      break;
-    case 0x163:  // PACKSSWB
-    case 0x167:  // PACKUSWB
-      UpdateXmmSizes(1, 2);
-      UpdateXmmTypes(kXmmIntegral, kXmmIntegral);
-      break;
-    case 0x128:  // MOVAPS Vps Wps
-      if (IsModrmRegister(m->xedd->op.rde)) {
-        xmmtype[RexrReg(m->xedd->op.rde)] = xmmtype[RexbRm(m->xedd->op.rde)];
-        xmmsize[RexrReg(m->xedd->op.rde)] = xmmsize[RexbRm(m->xedd->op.rde)];
-      }
-      break;
-    case 0x129:  // MOVAPS Wps Vps
-      if (IsModrmRegister(m->xedd->op.rde)) {
-        xmmtype[RexbRm(m->xedd->op.rde)] = xmmtype[RexrReg(m->xedd->op.rde)];
-        xmmsize[RexbRm(m->xedd->op.rde)] = xmmsize[RexrReg(m->xedd->op.rde)];
-      }
-      break;
-    case 0x16F:  // MOVDQA Vdq Wdq
-      if (Osz(m->xedd->op.rde) && IsModrmRegister(m->xedd->op.rde)) {
-        xmmtype[RexrReg(m->xedd->op.rde)] = xmmtype[RexbRm(m->xedd->op.rde)];
-        xmmsize[RexrReg(m->xedd->op.rde)] = xmmsize[RexbRm(m->xedd->op.rde)];
-      }
-      break;
-    default:
-      return;
   }
 }
 
@@ -861,12 +711,14 @@ static bool IsSegNonZero(void) {
 
 static int PickNumberOfXmmRegistersToShow(void) {
   if (IsXmmNonZero(0, 8) || IsXmmNonZero(8, 16)) {
-    if (IsXmmNonZero(8, 16)) {
+    if (showhighsse || IsXmmNonZero(8, 16)) {
+      showhighsse = true;
       return 16;
     } else {
       return 8;
     }
   } else {
+    showhighsse = false;
     return 0;
   }
 }
@@ -1248,7 +1100,7 @@ static void DrawXmm(struct Panel *p, long i, long r) {
   cellwidth = MIN(MAX(0, (panwidth - left) / cells - 1), sizeof(buf) - 1);
   for (j = 0; j < cells; ++j) {
     AppendPanel(p, i, " ");
-    switch (xmmtype[r]) {
+    switch (xmmtype.type[r]) {
       case kXmmFloat:
         memcpy(&f, xmm + j * sizeof(f), sizeof(f));
         FormatDouble(buf, f);
@@ -1259,8 +1111,8 @@ static void DrawXmm(struct Panel *p, long i, long r) {
         break;
       case kXmmIntegral:
         ival = 0;
-        for (k = 0; k < xmmsize[r]; ++k) {
-          itmp = xmm[j * xmmsize[r] + k] & 0xff;
+        for (k = 0; k < xmmtype.size[r]; ++k) {
+          itmp = xmm[j * xmmtype.size[r] + k] & 0xff;
           itmp <<= k * 8;
           ival |= itmp;
         }
@@ -1268,10 +1120,10 @@ static void DrawXmm(struct Panel *p, long i, long r) {
           if (xmmdisp == kXmmChar && iswalnum(ival)) {
             sprintf(buf, "%lc", ival);
           } else {
-            uint64toarray_fixed16(ival, buf, xmmsize[r] * 8);
+            uint64toarray_fixed16(ival, buf, xmmtype.size[r] * 8);
           }
         } else {
-          int64toarray_radix10(SignExtend(ival, xmmsize[r] * 8), buf);
+          int64toarray_radix10(SignExtend(ival, xmmtype.size[r] * 8), buf);
         }
         break;
       default:
@@ -1288,91 +1140,125 @@ static void DrawXmm(struct Panel *p, long i, long r) {
 }
 
 static void DrawSse(struct Panel *p) {
-  long i;
-  if (p->top == p->bottom) return;
-  for (i = 0; i < MIN(16, MAX(0, p->bottom - p->top)); ++i) {
-    DrawXmm(p, i, i);
-  }
-}
-
-static void ScrollCode(struct Panel *p) {
   long i, n;
   n = p->bottom - p->top;
-  i = GetIp() / DUMPWIDTH;
-  if (!(codestart <= i && i < codestart + n)) {
-    codestart = i;
+  if (n > 0) {
+    for (i = 0; i < MIN(16, n); ++i) {
+      DrawXmm(p, i, i);
+    }
   }
 }
 
-static void ScrollReadData(struct Panel *p) {
-  long i, n, addr;
-  n = p->bottom - p->top;
-  i = m->readaddr / (DUMPWIDTH * (1 << readzoom));
-  if (!(readstart <= i && i < readstart + n)) {
-    readstart = i - n / 3;
-  }
-}
-
-static void ScrollWriteData(struct Panel *p) {
-  long i, n, addr;
-  n = p->bottom - p->top;
-  i = m->writeaddr / DUMPWIDTH;
-  if (!(writestart <= i && i < writestart + n)) {
-    writestart = i - n / 3;
-  }
-}
-
-static void ScrollStack(struct Panel *p) {
+static void ScrollMemoryView(struct Panel *p, struct MemoryView *v, int64_t a) {
   long i, n;
   n = p->bottom - p->top;
-  i = GetSp() / DUMPWIDTH;
-  if (!(stackstart <= i && i < stackstart + n)) {
-    stackstart = i;
+  i = a / (DUMPWIDTH * (1ull << v->zoom));
+  if (!(v->start <= i && i < v->start + n)) {
+    v->start = i;
   }
 }
 
-static uint8_t Downsample(uint8_t al, uint8_t bl, uint8_t cl, uint8_t dl) {
-  int16_t ax, bx;
-  bx = bl;
-  bx += cl;
-  bx *= 3;
-  ax = al;
-  ax += dl;
-  ax += bx;
-  ax += 4;
-  ax >>= 3;
-  al = ax;
-  return al;
+static void ZoomMemoryView(struct MemoryView *v, int dy) {
+  v->start *= (DUMPWIDTH * (1ull << v->zoom));
+  v->zoom = MIN(MAXZOOM, MAX(0, v->zoom + dy));
+  v->start /= (DUMPWIDTH * (1ull << v->zoom));
 }
 
-static uint8_t Sharpen(uint8_t al, uint8_t bl, uint8_t cl) {
-  int16_t ax, bx, cx;
-  ax = al;
-  bx = bl;
-  cx = cl;
-  ax *= -1;
-  bx *= +6;
-  cx *= -1;
-  ax += bx;
-  ax += cx;
-  ax += 2;
-  ax >>= 2;
-  return MIN(255, MAX(0, ax));
+static void ScrollMemoryViews(void) {
+  ScrollMemoryView(&pan.code, &codeview, GetIp());
+  ScrollMemoryView(&pan.readdata, &readview, m->readaddr);
+  ScrollMemoryView(&pan.writedata, &writeview, m->writeaddr);
+  ScrollMemoryView(&pan.stack, &stackview, GetSp());
 }
 
-static void DrawMemory(struct Panel *p, int zoom, long startline, long histart,
-                       long hiend) {
-  char buf[16];
+static void ZoomMemoryViews(struct Panel *p, int dy) {
+  if (p == &pan.code) {
+    ZoomMemoryView(&codeview, dy);
+  } else if (p == &pan.readdata) {
+    ZoomMemoryView(&readview, dy);
+  } else if (p == &pan.writedata) {
+    ZoomMemoryView(&writeview, dy);
+  } else if (p == &pan.stack) {
+    ZoomMemoryView(&stackview, dy);
+  }
+}
+
+static void DrawMemoryZoomed(struct Panel *p, struct MemoryView *view,
+                             long histart, long hiend) {
   bool high, changed;
-  long i, j, k, c, width;
-  if (p->top == p->bottom) return;
+  uint8_t *canvas, *chunk, *invalid;
+  int64_t a, b, c, d, n, i, j, k, size;
+  struct ContiguousMemoryRanges ranges;
+  a = view->start * DUMPWIDTH * (1ull << view->zoom);
+  b = (view->start + (p->bottom - p->top)) * DUMPWIDTH * (1ull << view->zoom);
+  size = (p->bottom - p->top) * DUMPWIDTH;
+  canvas = xcalloc(1, size);
+  invalid = xcalloc(1, size);
+  memset(&ranges, 0, sizeof(ranges));
+  FindContiguousMemoryRanges(m, &ranges);
+  for (k = i = 0; i < ranges.i; ++i) {
+    if ((a >= ranges.p[i].a && a < ranges.p[i].b) ||
+        (b >= ranges.p[i].a && b < ranges.p[i].b) ||
+        (a < ranges.p[i].a && b >= ranges.p[i].b)) {
+      c = MAX(a, ranges.p[i].a);
+      d = MIN(b, ranges.p[i].b);
+      n = ROUNDUP(ROUNDUP(d - c, 16), 1ull << view->zoom);
+      chunk = xmalloc(n);
+      VirtualSend(m, chunk, c, d - c);
+      memset(chunk + (d - c), 0, n - (d - c));
+      for (j = 0; j < view->zoom; ++j) {
+        cDecimate2xUint8x8(ROUNDUP(n, 16), chunk, kThePerfectKernel);
+        n >>= 1;
+      }
+      j = (c - a) / (1ull << view->zoom);
+      memset(invalid + k, -1, j - k);
+      memcpy(canvas + j, chunk, MIN(n, size - j));
+      k = j + MIN(n, size - j);
+      free(chunk);
+    }
+  }
+  memset(invalid + k, -1, size - k);
+  free(ranges.p);
   high = false;
-  width = DUMPWIDTH * (1 << zoom);
+  for (c = i = 0; i < p->bottom - p->top; ++i) {
+    AppendFmt(&p->lines[i], "%p ",
+              (view->start + i) * DUMPWIDTH * (1ull << view->zoom));
+    for (j = 0; j < DUMPWIDTH; ++j, ++c) {
+      a = ((view->start + i) * DUMPWIDTH + j + 0) * (1ull << view->zoom);
+      b = ((view->start + i) * DUMPWIDTH + j + 1) * (1ull << view->zoom);
+      changed = ((histart >= a && hiend < b) ||
+                 (histart && hiend && histart >= a && hiend < b));
+      if (changed && !high) {
+        high = true;
+        AppendStr(&p->lines[i], "\e[7m");
+      } else if (!changed && high) {
+        AppendStr(&p->lines[i], "\e[27m");
+        high = false;
+      }
+      if (invalid[c]) {
+        AppendWide(&p->lines[i], u'⋅');
+      } else {
+        AppendWide(&p->lines[i], kCp437[canvas[c]]);
+      }
+    }
+    if (high) {
+      AppendStr(&p->lines[i], "\e[27m");
+      high = false;
+    }
+  }
+  free(invalid);
+  free(canvas);
+}
+
+static void DrawMemoryUnzoomed(struct Panel *p, struct MemoryView *view,
+                               long histart, long hiend) {
+  long i, j, k, c;
+  bool high, changed;
+  high = false;
   for (i = 0; i < p->bottom - p->top; ++i) {
-    snprintf(buf, sizeof(buf), "%p ", (startline + i) * width);
-    AppendStr(&p->lines[i], buf);
-    for (j = 0; j < width; ++j) {
-      k = (startline + i) * DUMPWIDTH + j;
+    AppendFmt(&p->lines[i], "%p ", (view->start + i) * DUMPWIDTH);
+    for (j = 0; j < DUMPWIDTH; ++j) {
+      k = (view->start + i) * DUMPWIDTH + j;
       c = VirtualBing(k);
       changed = histart <= k && k < hiend;
       if (changed && !high) {
@@ -1388,6 +1274,16 @@ static void DrawMemory(struct Panel *p, int zoom, long startline, long histart,
       AppendStr(&p->lines[i], "\e[27m");
       high = false;
     }
+  }
+}
+
+static void DrawMemory(struct Panel *p, struct MemoryView *view, long histart,
+                       long hiend) {
+  if (p->top == p->bottom) return;
+  if (view->zoom) {
+    DrawMemoryZoomed(p, view, histart, hiend);
+  } else {
+    DrawMemoryUnzoomed(p, view, histart, hiend);
   }
 }
 
@@ -1597,14 +1493,11 @@ static void Redraw(void) {
   DrawMaps(&pan.maps);
   DrawFrames(&pan.frames);
   DrawBreakpoints(&pan.breakpoints);
-  DrawMemory(&pan.code, codezoom, codestart, GetIp(),
-             GetIp() + m->xedd->length);
-  DrawMemory(&pan.readdata, readzoom, readstart, m->readaddr,
-             m->readaddr + m->readsize);
-  DrawMemory(&pan.writedata, writezoom, writestart, m->writeaddr,
+  DrawMemory(&pan.code, &codeview, GetIp(), GetIp() + m->xedd->length);
+  DrawMemory(&pan.readdata, &readview, m->readaddr, m->readaddr + m->readsize);
+  DrawMemory(&pan.writedata, &writeview, m->writeaddr,
              m->writeaddr + m->writesize);
-  DrawMemory(&pan.stack, stackzoom, stackstart, GetSp(),
-             GetSp() + GetPointerWidth());
+  DrawMemory(&pan.stack, &stackview, GetSp(), GetSp() + GetPointerWidth());
   DrawStatus(&pan.status);
   PreventBufferbloat();
   if (PrintPanels(ttyout, ARRAYLEN(pan.p), pan.p, tyn, txn) == -1) {
@@ -2295,16 +2188,16 @@ static void OnRestart(void) {
 static void OnXmmType(void) {
   uint8_t t;
   unsigned i;
-  t = CycleXmmType(xmmtype[0]);
+  t = CycleXmmType(xmmtype.type[0]);
   for (i = 0; i < 16; ++i) {
-    xmmtype[i] = t;
+    xmmtype.type[i] = t;
   }
 }
 
 static void SetXmmSize(int bytes) {
   unsigned i;
   for (i = 0; i < 16; ++i) {
-    xmmsize[i] = bytes;
+    xmmtype.size[i] = bytes;
   }
 }
 
@@ -2313,7 +2206,7 @@ static void SetXmmDisp(int disp) {
 }
 
 static void OnXmmSize(void) {
-  SetXmmSize(CycleXmmSize(xmmsize[0]));
+  SetXmmSize(CycleXmmSize(xmmtype.size[0]));
 }
 
 static void OnXmmDisp(void) {
@@ -2328,8 +2221,67 @@ static void Sleep(int ms) {
   poll((struct pollfd[]){{ttyin, POLLIN}}, 1, ms);
 }
 
+static void OnMouseWheelUp(struct Panel *p) {
+  if (p == &pan.disassembly) {
+    opstart -= WHEELDELTA;
+  } else if (p == &pan.code) {
+    codeview.start -= WHEELDELTA;
+  } else if (p == &pan.readdata) {
+    readview.start -= WHEELDELTA;
+  } else if (p == &pan.writedata) {
+    writeview.start -= WHEELDELTA;
+  } else if (p == &pan.stack) {
+    stackview.start -= WHEELDELTA;
+  } else if (p == &pan.maps) {
+    mapsstart = MAX(0, mapsstart - 1);
+  } else if (p == &pan.frames) {
+    framesstart = MAX(0, framesstart - 1);
+  } else if (p == &pan.breakpoints) {
+    breakpointsstart = MAX(0, breakpointsstart - 1);
+  }
+}
+
+static void OnMouseWheelDown(struct Panel *p) {
+  if (p == &pan.disassembly) {
+    opstart += WHEELDELTA;
+  } else if (p == &pan.code) {
+    codeview.start += WHEELDELTA;
+  } else if (p == &pan.readdata) {
+    readview.start += WHEELDELTA;
+  } else if (p == &pan.writedata) {
+    writeview.start += WHEELDELTA;
+  } else if (p == &pan.stack) {
+    stackview.start += WHEELDELTA;
+  } else if (p == &pan.maps) {
+    mapsstart += 1;
+  } else if (p == &pan.frames) {
+    framesstart += 1;
+  } else if (p == &pan.breakpoints) {
+    breakpointsstart += 1;
+  }
+}
+
+static void OnMouseCtrlWheelUp(struct Panel *p) {
+  ZoomMemoryViews(p, -1);
+}
+
+static void OnMouseCtrlWheelDown(struct Panel *p) {
+  ZoomMemoryViews(p, +1);
+}
+
+static struct Panel *LocatePanel(int y, int x) {
+  int i;
+  for (i = 0; i < ARRAYLEN(pan.p); ++i) {
+    if ((pan.p[i].left <= x && x < pan.p[i].right) &&
+        (pan.p[i].top <= y && y < pan.p[i].bottom)) {
+      return &pan.p[i];
+    }
+  }
+  return NULL;
+}
+
 static void OnMouse(char *p) {
-  int e, i, x, y, dy;
+  int e, x, y;
   struct Panel *ep;
   e = strtol(p, &p, 10);
   if (*p == ';') ++p;
@@ -2337,37 +2289,19 @@ static void OnMouse(char *p) {
   if (*p == ';') ++p;
   y = min(tyn, max(1, strtol(p, &p, 10))) - 1;
   e |= (*p == 'm') << 2;
-  for (ep = 0, i = 0; i < ARRAYLEN(pan.p); ++i) {
-    if ((pan.p[i].left <= x && x < pan.p[i].right) &&
-        (pan.p[i].top <= y && y < pan.p[i].bottom)) {
-      ep = &pan.p[i];
-      break;
-    }
-  }
-  if (ep) {
-    dy = 3;
+  if ((ep = LocatePanel(y, x))) {
     switch (e) {
       case kMouseWheelUp:
-        if (ep == &pan.disassembly) opstart -= dy;
-        if (ep == &pan.code) codestart -= dy;
-        if (ep == &pan.readdata) readstart -= dy;
-        if (ep == &pan.writedata) writestart -= dy;
-        if (ep == &pan.stack) stackstart -= dy;
-        if (ep == &pan.maps) mapsstart = MAX(0, mapsstart - 1);
-        if (ep == &pan.frames) framesstart = MAX(0, framesstart - 1);
-        if (ep == &pan.breakpoints) {
-          breakpointsstart = MAX(0, breakpointsstart - 1);
-        }
+        OnMouseWheelUp(ep);
         break;
       case kMouseWheelDown:
-        if (ep == &pan.disassembly) opstart += dy;
-        if (ep == &pan.code) codestart += dy;
-        if (ep == &pan.readdata) readstart += dy;
-        if (ep == &pan.writedata) writestart += dy;
-        if (ep == &pan.stack) stackstart += dy;
-        if (ep == &pan.maps) mapsstart += 1;
-        if (ep == &pan.frames) framesstart += 1;
-        if (ep == &pan.breakpoints) breakpointsstart += 1;
+        OnMouseWheelDown(ep);
+        break;
+      case kMouseCtrlWheelUp:
+        OnMouseCtrlWheelUp(ep);
+        break;
+      case kMouseCtrlWheelDown:
+        OnMouseCtrlWheelDown(ep);
         break;
       default:
         break;
@@ -2377,6 +2311,7 @@ static void OnMouse(char *p) {
 
 static void ReadKeyboard(void) {
   char buf[64], *p = buf;
+  memset(buf, 0, sizeof(buf));
   if (readansi(ttyin, buf, sizeof(buf)) == -1) {
     if (errno == EINTR) {
       LOGF("readkeyboard interrupted");
@@ -2573,7 +2508,6 @@ static void Tui(void) {
     for (;;) {
       if (!(action & FAILURE)) {
         LoadInstruction(m);
-        UpdateXmmType();
         if ((action & (FINISH | NEXT | CONTINUE)) &&
             (bp = IsAtBreakpoint(&breakpoints, GetIp())) != -1) {
           action &= ~(FINISH | NEXT | CONTINUE);
@@ -2598,10 +2532,7 @@ static void Tui(void) {
         HandleAlarm();
       }
       if (action & FAILURE) {
-        ScrollCode(&pan.code);
-        ScrollStack(&pan.stack);
-        ScrollReadData(&pan.readdata);
-        ScrollWriteData(&pan.writedata);
+        ScrollMemoryViews();
       }
       if (!(action & CONTINUE) || interactive) {
         tick = 0;
@@ -2666,13 +2597,11 @@ static void Tui(void) {
           }
         }
         if (!IsDebugBreak()) {
+          UpdateXmmType(m, &xmmtype);
           ExecuteInstruction(m);
           ++opcount;
           if (!(action & CONTINUE) || interactive) {
-            ScrollCode(&pan.code);
-            ScrollStack(&pan.stack);
-            ScrollReadData(&pan.readdata);
-            ScrollWriteData(&pan.writedata);
+            ScrollMemoryViews();
           }
         } else {
           m->ip += m->xedd->length;
@@ -2703,7 +2632,7 @@ static void Tui(void) {
 static void GetOpts(int argc, char *argv[]) {
   int opt;
   stpcpy(stpcpy(stpcpy(logpath, kTmpPath), basename(argv[0])), ".log");
-  while ((opt = getopt(argc, argv, "hvtrRsb:HL:")) != -1) {
+  while ((opt = getopt(argc, argv, "hvtrzRsb:HL:")) != -1) {
     switch (opt) {
       case 't':
         tuimode = true;
@@ -2729,6 +2658,12 @@ static void GetOpts(int argc, char *argv[]) {
         break;
       case 'L':
         strcpy(logpath, optarg);
+        break;
+      case 'z':
+        ++codeview.zoom;
+        ++readview.zoom;
+        ++writeview.zoom;
+        ++stackview.zoom;
         break;
       case 'h':
         PrintUsage(EXIT_SUCCESS, stdout);

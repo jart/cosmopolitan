@@ -44,6 +44,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/time/time.h"
@@ -362,6 +363,7 @@ void OpenObject(struct Package *pkg, struct Object *obj, int mode, int prot,
 }
 
 void CloseObject(struct Object *obj) {
+  msync(obj->elf, obj->size, MS_SYNC);
   CHECK_NE(-1, munmap(obj->elf, obj->size));
 }
 

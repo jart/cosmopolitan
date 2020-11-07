@@ -20,7 +20,12 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-log2f:	push	%rbp
+/	Calculates log₂𝑥.
+/
+/	@param	𝑥 is a float passed in the lower quarter of %xmm0
+/	@return	result in lower quarter of %xmm0
+tinymath_log2f:
+	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	push	%rax
@@ -32,4 +37,5 @@ log2f:	push	%rbp
 	movss	4(%rsp),%xmm0
 	leave
 	ret
-	.endfn	log2f,globl
+	.endfn	tinymath_log2f,globl
+	.alias	tinymath_log2f,log2f

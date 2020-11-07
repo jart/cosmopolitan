@@ -1631,7 +1631,7 @@ long:	push	$GDT_LONG_DATA
 	xor	%ebp,%ebp
 	mov	$REAL_STACK_FRAME+FRAMESIZE,%esp
 	call	__map_image
-	mov	$_metal,%eax
+	ezlea	_metal,ax
 	jmp	*%rax
 	.endfn	long
 
@@ -1646,8 +1646,12 @@ _metal:
 	mov	$.Lape.bss.vaddr,%edi
 	mov	$.Lape.bss.memsz,%ecx
 	rep stosb
-	movb	$METAL,hostos(%rip)
-	push	$0				# auxv
+	.weak	hostos
+	ezlea	hostos,ax
+	test	%rax,%rax
+	jz	1f
+	movb	$METAL,(%rax)
+1:	push	$0				# auxv
 	push	$0
 	push	$0				# envp
 	push	$0				# auxv
