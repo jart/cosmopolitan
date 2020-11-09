@@ -17,21 +17,24 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/elf/def.h"
-#include "libc/elf/elf.h"
+#include "libc/alg/reverse.h"
+#include "libc/conv/conv.h"
+#include "libc/conv/itoa.h"
+#include "libc/limits.h"
 
-Elf64_Shdr *getelfsectionbyaddress(const Elf64_Ehdr *elf, size_t mapsize,
-                                   void *addr) {
-  Elf64_Half i;
-  Elf64_Shdr *shdr;
-  if (elf) {
-    for (i = elf->e_shnum; i > 0; --i) {
-      shdr = getelfsectionheaderaddress(elf, mapsize, i - 1);
-      if ((intptr_t)addr >= shdr->sh_addr &&
-          (intptr_t)addr < shdr->sh_addr + shdr->sh_size) {
-        return shdr;
-      }
-    }
-  }
-  return NULL;
+/**
+ * Converts unsigned 64-bit integer to octal string.
+ * @param a needs at least 24 bytes
+ * @return bytes written w/o nul
+ */
+noinline size_t uint64toarray_radix8(uint64_t i, char a[hasatleast 24]) {
+  size_t j;
+  j = 0;
+  do {
+    a[j++] = i % 8 + '0';
+    i /= 8;
+  } while (i > 0);
+  a[j] = '\0';
+  reverse(a, j);
+  return j;
 }

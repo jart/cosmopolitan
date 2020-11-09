@@ -20,10 +20,9 @@ COSMOPOLITAN_C_START_
 struct MappedFile;
 
 Elf64_Ehdr *mapelfread(const char *, struct MappedFile *);
-char *getelfstringtable(const Elf64_Ehdr *, size_t);
-Elf64_Sym *getelfsymboltable(const Elf64_Ehdr *, size_t, Elf64_Xword *);
-Elf64_Shdr *getelfsectionbyaddress(const Elf64_Ehdr *, size_t, void *);
-bool iself64binary(const Elf64_Ehdr *, size_t);
+char *GetElfStringTable(const Elf64_Ehdr *, size_t);
+Elf64_Sym *GetElfSymbolTable(const Elf64_Ehdr *, size_t, Elf64_Xword *);
+bool IsElf64Binary(const Elf64_Ehdr *, size_t);
 
 forceinline void checkelfaddress(const Elf64_Ehdr *elf, size_t mapsize,
                                  intptr_t addr, size_t addrsize) {
@@ -94,7 +93,7 @@ static inline void getelfvirtualaddressrange(const Elf64_Ehdr *elf,
   if (out_end) *out_end = end;
 }
 
-static inline char *getelfstring(const Elf64_Ehdr *elf, size_t mapsize,
+static inline char *GetElfString(const Elf64_Ehdr *elf, size_t mapsize,
                                  const char *strtab, Elf64_Word rva) {
   intptr_t addr = (intptr_t)strtab + rva;
 #if !(TRUSTWORTHY + ELF_TRUSTWORTHY + 0)
@@ -105,10 +104,10 @@ static inline char *getelfstring(const Elf64_Ehdr *elf, size_t mapsize,
   return (char *)addr;
 }
 
-static inline const char *getelfsectionname(const Elf64_Ehdr *elf,
+static inline const char *GetElfSectionName(const Elf64_Ehdr *elf,
                                             size_t mapsize, Elf64_Shdr *shdr) {
   if (!elf || !shdr) return NULL;
-  return getelfstring(elf, mapsize, getelfsectionnamestringtable(elf, mapsize),
+  return GetElfString(elf, mapsize, getelfsectionnamestringtable(elf, mapsize),
                       shdr->sh_name);
 }
 

@@ -25,7 +25,9 @@
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/enum/loadlibrarysearch.h"
+#include "libc/nt/enum/pageflags.h"
 #include "libc/nt/files.h"
+#include "libc/nt/memory.h"
 #include "libc/nt/pedef.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
@@ -117,10 +119,10 @@ static textwindows void NormalizeCmdExe(void) {
  *   3. Environment variables are passed to us as a sorted UTF-16 double
  *      NUL terminated list. We translate this to char ** using UTF-8.
  *
- *   4. NT likes to choose a stack address that's beneath the program
- *      image. We want to be able to assume that stack addresses are
- *      located at higher addresses than heap and program memory. So the
- *      _executive() function will switch stacks appropriately.
+ *   4. Allocates new stack at a high address. NT likes to choose a
+ *      stack address that's beneath the program image. We want to be
+ *      able to assume that stack addresses are located at higher
+ *      addresses than heap and program memory.
  *
  *   5. Windows users are afraid of "drive-by downloads" where someone
  *      might accidentally an evil DLL to their Downloads folder which
@@ -131,21 +133,27 @@ static textwindows void NormalizeCmdExe(void) {
  */
 textwindows int WinMain(void *hInstance, void *hPrevInstance,
                         const char *lpCmdLine, int nCmdShow) {
+  char *stack;
   int i, count;
   const char16_t *cmd16, *env16;
-  char *argarray[512], *envarray[512];
+  char *argv[512], *envp[512];
   char argblock[ARG_MAX], envblock[ENV_MAX];
-  long auxarray[][2] = {{pushpop(0L), pushpop(0L)}};
+  long auxv[][2] = {{pushpop(0L), pushpop(0L)}};
   MitigateDriveByDownloads();
   NormalizeCmdExe();
   *(/*unconst*/ int *)&hostos = WINDOWS;
   cmd16 = GetCommandLine();
   env16 = GetEnvironmentStrings();
-  count = GetDosArgv(cmd16, argblock, ARG_MAX, argarray, 512);
-  for (i = 0; argarray[0][i]; ++i) {
-    if (argarray[0][i] == '\\') argarray[0][i] = '/';
+  count = GetDosArgv(cmd16, argblock, ARG_MAX, argv, 512);
+  for (i = 0; argv[0][i]; ++i) {
+    if (argv[0][i] == '\\') argv[0][i] = '/';
   }
-  GetDosEnviron(env16, envblock, ENV_MAX, envarray, 512);
+  GetDosEnviron(env16, envblock, ENV_MAX, envp, 512);
   FreeEnvironmentStrings(env16);
-  _executive(count, argarray, envarray, auxarray);
+  stack = MapViewOfFileExNuma(
+      CreateFileMappingNuma(-1, NULL, pushpop(kNtPageReadwrite), 0, STACKSIZE,
+                            NULL, kNtNumaNoPreferredNode),
+      kNtFileMapRead | kNtFileMapWrite, 0, 0, STACKSIZE,
+      (char *)0x777000000000 - STACKSIZE, kNtNumaNoPreferredNode);
+  return _setstack(stack + STACKSIZE, _executive, count, argv, envp, auxv);
 }

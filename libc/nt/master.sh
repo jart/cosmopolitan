@@ -1979,7 +1979,7 @@ imp	'GetCompressedFileSizeTransactedA'			GetCompressedFileSizeTransactedA			kern
 imp	'GetCompressedFileSizeTransacted'			GetCompressedFileSizeTransactedW			kernel32	479
 imp	'GetComputerNameA'					GetComputerNameA					kernel32	481
 imp	'GetComputerNameExA'					GetComputerNameExA					KernelBase	448
-imp	'GetComputerNameEx'					GetComputerNameExW					KernelBase	449
+imp	'GetComputerNameEx'					GetComputerNameExW					KernelBase	449	3
 imp	'GetComputerName'					GetComputerNameW					kernel32	484
 imp	'GetConsoleAliasA'					GetConsoleAliasA					KernelBase	450
 imp	'GetConsoleAliasExesA'					GetConsoleAliasExesA					KernelBase	451

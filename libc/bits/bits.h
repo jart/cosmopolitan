@@ -148,6 +148,36 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
     Ple[7] = (uint8_t)(Vle >> 070); \
   } while (0)
 
+#define WRITE16BE(P, V)             \
+  do {                              \
+    uint8_t *Ple = (uint8_t *)(P);  \
+    uint16_t Vle = (V);             \
+    Ple[1] = (uint8_t)(Vle >> 000); \
+    Ple[0] = (uint8_t)(Vle >> 010); \
+  } while (0)
+#define WRITE32BE(P, V)             \
+  do {                              \
+    uint8_t *Ple = (uint8_t *)(P);  \
+    uint32_t Vle = (V);             \
+    Ple[3] = (uint8_t)(Vle >> 000); \
+    Ple[2] = (uint8_t)(Vle >> 010); \
+    Ple[1] = (uint8_t)(Vle >> 020); \
+    Ple[0] = (uint8_t)(Vle >> 030); \
+  } while (0)
+#define WRITE64BE(P, V)             \
+  do {                              \
+    uint8_t *Ple = (uint8_t *)(P);  \
+    uint64_t Vle = (V);             \
+    Ple[7] = (uint8_t)(Vle >> 000); \
+    Ple[6] = (uint8_t)(Vle >> 010); \
+    Ple[5] = (uint8_t)(Vle >> 020); \
+    Ple[4] = (uint8_t)(Vle >> 030); \
+    Ple[3] = (uint8_t)(Vle >> 040); \
+    Ple[2] = (uint8_t)(Vle >> 050); \
+    Ple[1] = (uint8_t)(Vle >> 060); \
+    Ple[0] = (uint8_t)(Vle >> 070); \
+  } while (0)
+
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § bits » some assembly required                             ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/

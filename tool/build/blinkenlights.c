@@ -21,6 +21,7 @@
 #include "dsp/tty/tty.h"
 #include "libc/alg/arraylist2.h"
 #include "libc/assert.h"
+#include "libc/bits/bits.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
@@ -165,7 +166,7 @@ FEATURES\n\
 
 struct MemoryView {
   int64_t start;
-  unsigned zoom;
+  int zoom;
 };
 
 struct MachineState {
@@ -1158,10 +1159,17 @@ static void ScrollMemoryView(struct Panel *p, struct MemoryView *v, int64_t a) {
   }
 }
 
-static void ZoomMemoryView(struct MemoryView *v, int dy) {
-  v->start *= (DUMPWIDTH * (1ull << v->zoom));
-  v->zoom = MIN(MAXZOOM, MAX(0, v->zoom + dy));
-  v->start /= (DUMPWIDTH * (1ull << v->zoom));
+static void ZoomMemoryView(struct MemoryView *v, long y, long x, int dy) {
+  long a, b, i, s;
+  s = v->start;
+  a = v->zoom;
+  b = MIN(MAXZOOM, MAX(0, a + dy));
+  i = y * DUMPWIDTH - x;
+  s *= DUMPWIDTH * (1L << a);
+  s += i * (1L << a) - i * (1L << b);
+  s /= DUMPWIDTH * (1L << b);
+  v->zoom = b;
+  v->start = s;
 }
 
 static void ScrollMemoryViews(void) {
@@ -1171,15 +1179,15 @@ static void ScrollMemoryViews(void) {
   ScrollMemoryView(&pan.stack, &stackview, GetSp());
 }
 
-static void ZoomMemoryViews(struct Panel *p, int dy) {
+static void ZoomMemoryViews(struct Panel *p, int y, int x, int dy) {
   if (p == &pan.code) {
-    ZoomMemoryView(&codeview, dy);
+    ZoomMemoryView(&codeview, y, x, dy);
   } else if (p == &pan.readdata) {
-    ZoomMemoryView(&readview, dy);
+    ZoomMemoryView(&readview, y, x, dy);
   } else if (p == &pan.writedata) {
-    ZoomMemoryView(&writeview, dy);
+    ZoomMemoryView(&writeview, y, x, dy);
   } else if (p == &pan.stack) {
-    ZoomMemoryView(&stackview, dy);
+    ZoomMemoryView(&stackview, y, x, dy);
   }
 }
 
@@ -1798,14 +1806,18 @@ static void OnDiskServiceGetParams(void) {
 static void OnDiskServiceReadSectors(void) {
   static int x;
   uint64_t addr, size;
-  int64_t drive, head, track, sector, offset;
+  int64_t sectors, drive, head, track, sector, offset;
+  sectors = m->ax[0];
   drive = m->dx[0];
   head = m->dx[1];
   track = (m->cx[0] & 0b11000000) << 2 | m->cx[1];
   sector = (m->cx[0] & 0b00111111) - 1;
   offset = head * track * sector * 512;
-  size = m->ax[0] * 512;
+  size = sectors * 512;
   offset = sector * 512 + track * 512 * 63 + head * 512 * 63 * 1024;
+  VERBOSEF("bios read sectors %d "
+           "@ sector %ld track %ld head %ld drive %ld offset %#lx",
+           sectors, sector, track, head, drive, offset);
   if (0 <= sector && offset + size <= elf->mapsize) {
     addr = Read64(m->es) + Read16(m->bx);
     if (addr + size <= m->real.n) {
@@ -1819,6 +1831,8 @@ static void OnDiskServiceReadSectors(void) {
       SetCarry(true);
     }
   } else {
+    WARNF("bios read sector failed 0 <= %d && %lx + %lx <= %lx", sector, offset,
+          size, elf->mapsize);
     m->ax[0] = 0x00;
     m->ax[1] = 0x0d;
     SetCarry(true);
@@ -2074,7 +2088,9 @@ static void OnBinbase(struct Machine *m) {
 }
 
 static void OnLongBranch(struct Machine *m) {
-  Disassemble();
+  if (tuimode) {
+    Disassemble();
+  }
 }
 
 static void OnPageUp(void) {
@@ -2098,20 +2114,28 @@ static void SetStatus(const char *fmt, ...) {
   setitimer(ITIMER_REAL, &((struct itimerval){{0, 0}, {1, 0}}), NULL);
 }
 
+static int ClampSpeed(int s) {
+  return MAX(-0x1000, MIN(0x40000000, s));
+}
+
 static void OnTurbo(void) {
-  if (speed >= -1) {
-    speed = MIN(0x40000000, MAX(1, speed) << 1);  // 1..40mips skip
+  if (!speed || speed == -1) {
+    speed = 1;
+  } else if (speed > 0) {
+    speed = ClampSpeed(speed << 1);
   } else {
-    speed >>= 1;
+    speed = ClampSpeed(speed >> 1);
   }
   SetStatus("speed %,d", speed);
 }
 
 static void OnSlowmo(void) {
-  if (speed > 0) {
-    speed >>= 1;
+  if (!speed || speed == 1) {
+    speed = -1;
+  } else if (speed > 0) {
+    speed = ClampSpeed(speed >> 1);
   } else {
-    speed = MAX(-(5 * 1000), MIN(-1, speed) << 1);  // 1ms..5s delay
+    speed = ClampSpeed(speed << 1);
   }
   SetStatus("speed %,d", speed);
 }
@@ -2221,7 +2245,7 @@ static void Sleep(int ms) {
   poll((struct pollfd[]){{ttyin, POLLIN}}, 1, ms);
 }
 
-static void OnMouseWheelUp(struct Panel *p) {
+static void OnMouseWheelUp(struct Panel *p, int y, int x) {
   if (p == &pan.disassembly) {
     opstart -= WHEELDELTA;
   } else if (p == &pan.code) {
@@ -2241,7 +2265,7 @@ static void OnMouseWheelUp(struct Panel *p) {
   }
 }
 
-static void OnMouseWheelDown(struct Panel *p) {
+static void OnMouseWheelDown(struct Panel *p, int y, int x) {
   if (p == &pan.disassembly) {
     opstart += WHEELDELTA;
   } else if (p == &pan.code) {
@@ -2261,12 +2285,12 @@ static void OnMouseWheelDown(struct Panel *p) {
   }
 }
 
-static void OnMouseCtrlWheelUp(struct Panel *p) {
-  ZoomMemoryViews(p, -1);
+static void OnMouseCtrlWheelUp(struct Panel *p, int y, int x) {
+  ZoomMemoryViews(p, y, x, -1);
 }
 
-static void OnMouseCtrlWheelDown(struct Panel *p) {
-  ZoomMemoryViews(p, +1);
+static void OnMouseCtrlWheelDown(struct Panel *p, int y, int x) {
+  ZoomMemoryViews(p, y, x, +1);
 }
 
 static struct Panel *LocatePanel(int y, int x) {
@@ -2290,18 +2314,20 @@ static void OnMouse(char *p) {
   y = min(tyn, max(1, strtol(p, &p, 10))) - 1;
   e |= (*p == 'm') << 2;
   if ((ep = LocatePanel(y, x))) {
+    y -= ep->top;
+    x -= ep->left;
     switch (e) {
       case kMouseWheelUp:
-        OnMouseWheelUp(ep);
+        OnMouseWheelUp(ep, y, x);
         break;
       case kMouseWheelDown:
-        OnMouseWheelDown(ep);
+        OnMouseWheelDown(ep, y, x);
         break;
       case kMouseCtrlWheelUp:
-        OnMouseCtrlWheelUp(ep);
+        OnMouseCtrlWheelUp(ep, y, x);
         break;
       case kMouseCtrlWheelDown:
-        OnMouseCtrlWheelDown(ep);
+        OnMouseCtrlWheelDown(ep, y, x);
         break;
       default:
         break;

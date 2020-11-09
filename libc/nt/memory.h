@@ -46,12 +46,14 @@ int64_t CreateFileMappingNuma(
     const struct NtSecurityAttributes *opt_lpFileMappingAttributes,
     uint32_t flProtect, uint32_t dwMaximumSizeHigh, uint32_t dwMaximumSizeLow,
     const char16_t *opt_lpName, uint32_t nndDesiredNumaNode);
+
 void *MapViewOfFileExNuma(
     int64_t hFileMappingObject, /* @see CreateFileMapping() */
     uint32_t dwDesiredAccess, uint32_t dwFileOffsetHigh, /* high order bits */
     uint32_t dwFileOffsetLow,                            /* low order bits */
     size_t dwNumberOfBytesToMap, void *opt_lpDesiredBaseAddress,
     uint32_t nndDesiredNumaNode);
+
 bool32 UnmapViewOfFile(const void *lpBaseAddress);
 bool32 FlushViewOfFile(const void *lpBaseAddress,
                        size_t dwNumberOfBytesToFlush);

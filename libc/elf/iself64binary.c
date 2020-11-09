@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/elf/elf.h"
 
-bool iself64binary(const Elf64_Ehdr *elf, size_t mapsize) {
+bool IsElf64Binary(const Elf64_Ehdr *elf, size_t mapsize) {
   if (mapsize < sizeof(Elf64_Ehdr)) return false;
   if (memcmp(elf->e_ident, ELFMAG, 4)) return false;
   return (elf->e_ident[EI_CLASS] == ELFCLASSNONE ||

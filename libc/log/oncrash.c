@@ -152,6 +152,7 @@ relegated static void ShowMemoryMappings(int outfd) {
 
 relegated static void ShowCrashReport(int err, int fd, int sig,
                                       ucontext_t *ctx) {
+  int i;
   struct utsname names;
   (dprintf)(fd, VEIL("r", "\r\n%serror%s: Uncaught SIG%s\r\n  %s\r\n  %s\r\n"),
             RED2, RESET, TinyStrSignal(sig), getauxval(AT_EXECFN),
@@ -167,6 +168,11 @@ relegated static void ShowCrashReport(int err, int fd, int sig,
   }
   write(fd, "\r\n", 2);
   ShowMemoryMappings(fd);
+  write(fd, "\r\n", 2);
+  for (i = 0; i < g_argc; ++i) {
+    write(fd, g_argv[i], strlen(g_argv[i]));
+    write(fd, "\r\n", 2);
+  }
 }
 
 relegated static void RestoreDefaultCrashSignalHandlers(void) {

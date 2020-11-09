@@ -74,8 +74,8 @@ static void DisLoadElfSyms(struct Dis *d, struct Elf *elf) {
   const Elf64_Sym *st, *sym;
   bool isabs, iscode, isweak, islocal, ishidden, isprotected, isfunc, isobject;
   j = 0;
-  if ((d->syms.stab = getelfstringtable(elf->ehdr, elf->size)) &&
-      (st = getelfsymboltable(elf->ehdr, elf->size, &n))) {
+  if ((d->syms.stab = GetElfStringTable(elf->ehdr, elf->size)) &&
+      (st = GetElfSymbolTable(elf->ehdr, elf->size, &n))) {
     stablen = (intptr_t)elf->ehdr + elf->size - (intptr_t)d->syms.stab;
     if (d->syms.n < n) {
       d->syms.n = n;

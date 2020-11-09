@@ -109,24 +109,24 @@ struct Packages {
   struct Package {
     uint32_t magic;
     int32_t abi;
-    uint32_t path; /* pkg->strings.p[path] */
-    int64_t fd;    /* not persisted */
-    void *addr;    /* not persisted */
-    size_t size;   /* not persisted */
+    uint32_t path;  // pkg->strings.p[path]
+    int64_t fd;     // not persisted
+    void *addr;     // not persisted
+    size_t size;    // not persisted
     struct Strings {
       size_t i, n;
-      char *p; /* persisted as pkg+RVA */
-    } strings; /* TODO(jart): interning? */
+      char *p;  // persisted as pkg+RVA
+    } strings;  // TODO(jart): interning?
     struct Objects {
       size_t i, n;
       struct Object {
-        uint32_t path;          /* pkg->strings.p[path] */
-        int64_t fd;             /* not persisted */
-        struct Elf64_Ehdr *elf; /* not persisted */
-        size_t size;            /* not persisted */
-        char *strs;             /* not persisted */
-        Elf64_Sym *syms;        /* not persisted */
-        Elf64_Xword symcount;   /* not persisted */
+        uint32_t path;           // pkg->strings.p[path]
+        unsigned mode;           // not persisted
+        struct Elf64_Ehdr *elf;  // not persisted
+        size_t size;             // not persisted
+        char *strs;              // not persisted
+        Elf64_Sym *syms;         // not persisted
+        Elf64_Xword symcount;    // not persisted
         struct Sections {
           size_t i, n;
           struct Section {
@@ -149,20 +149,20 @@ struct Packages {
               } * p;
             } ops;
           } * p;
-        } sections; /* not persisted */
-      } * p;        /* persisted as pkg+RVA */
+        } sections;  // not persisted
+      } * p;         // persisted as pkg+RVA
     } objects;
     struct Symbols {
       size_t i, n;
       struct Symbol {
-        uint32_t name; /* pkg->strings.p[name] */
+        uint32_t name;  // pkg->strings.p[name]
         enum SectionKind kind : 8;
         uint8_t bind : 4;
         uint8_t type : 4;
-        uint16_t object; /* pkg->objects.p[object] */
-      } * p;             /* persisted as pkg+RVA */
-    } symbols, undefs;   /* TODO(jart): hash undefs? */
-  } * *p;                /* persisted across multiple files */
+        uint16_t object;  // pkg->objects.p[object]
+      } * p;              // persisted as pkg+RVA
+    } symbols, undefs;    // TODO(jart): hash undefs?
+  } * *p;                 // persisted across multiple files
 };
 
 int CompareSymbolName(const struct Symbol *a, const struct Symbol *b,
@@ -265,7 +265,7 @@ void IndexSections(struct Object *obj) {
     memset(&sect, 0, sizeof(sect));
     CHECK_NOTNULL((shdr = getelfsectionheaderaddress(obj->elf, obj->size, i)));
     if (shdr->sh_type != SHT_NULL) {
-      CHECK_NOTNULL((name = getelfsectionname(obj->elf, obj->size, shdr)));
+      CHECK_NOTNULL((name = GetElfSectionName(obj->elf, obj->size, shdr)));
       if (startswith(name, ".sort.")) name += 5;
       if ((strcmp(name, ".piro.relo") == 0 ||
            startswith(name, ".piro.relo.")) ||
@@ -329,7 +329,7 @@ void LoadSymbols(struct Package *pkg, uint32_t object) {
     if (symbol.bind != STB_LOCAL &&
         (symbol.type == STT_OBJECT || symbol.type == STT_FUNC ||
          symbol.type == STT_COMMON || symbol.type == STT_NOTYPE)) {
-      name = getelfstring(obj->elf, obj->size, obj->strs, obj->syms[i].st_name);
+      name = GetElfString(obj->elf, obj->size, obj->strs, obj->syms[i].st_name);
       DEBUGF("%s", name);
       if (strcmp(name, "_GLOBAL_OFFSET_TABLE_") != 0) {
         symbol.kind = ClassifySection(obj, symbol.type, obj->syms[i].st_shndx);
@@ -347,23 +347,25 @@ void OpenObject(struct Package *pkg, struct Object *obj, int mode, int prot,
                 int flags) {
   int fd;
   struct stat st;
-  CHECK_NE(-1, (fd = open(&pkg->strings.p[obj->path], mode)), "path=%`'s",
-           &pkg->strings.p[obj->path]);
+  CHECK_NE(-1, (fd = open(&pkg->strings.p[obj->path], (obj->mode = mode))),
+           "path=%`'s", &pkg->strings.p[obj->path]);
   CHECK_NE(-1, fstat(fd, &st));
   CHECK_NE(MAP_FAILED, (obj->elf = mmap(NULL, (obj->size = st.st_size), prot,
                                         flags, fd, 0)));
   CHECK_NE(-1, close(fd));
-  CHECK(iself64binary(obj->elf, obj->size), "path=%`'s",
+  CHECK(IsElf64Binary(obj->elf, obj->size), "path=%`'s",
         &pkg->strings.p[obj->path]);
-  CHECK_NOTNULL((obj->strs = getelfstringtable(obj->elf, obj->size)));
+  CHECK_NOTNULL((obj->strs = GetElfStringTable(obj->elf, obj->size)));
   CHECK_NOTNULL(
-      (obj->syms = getelfsymboltable(obj->elf, obj->size, &obj->symcount)));
+      (obj->syms = GetElfSymbolTable(obj->elf, obj->size, &obj->symcount)));
   CHECK_NE(0, obj->symcount);
   IndexSections(obj);
 }
 
 void CloseObject(struct Object *obj) {
-  msync(obj->elf, obj->size, MS_SYNC);
+  if ((obj->mode & O_ACCMODE) != O_RDONLY) {
+    CHECK_NE(-1, msync(obj->elf, obj->size, MS_ASYNC | MS_INVALIDATE));
+  }
   CHECK_NE(-1, munmap(obj->elf, obj->size));
 }
 
@@ -477,7 +479,7 @@ void OptimizeRelocations(struct Package *pkg, struct Packages *deps,
         if ((ELF64_R_TYPE(rela->r_info) == R_X86_64_PC32 ||
              ELF64_R_TYPE(rela->r_info) == R_X86_64_GOTPCREL) &&
             FindSymbol(
-                getelfstring(obj->elf, obj->size, obj->strs,
+                GetElfString(obj->elf, obj->size, obj->strs,
                              obj->syms[ELF64_R_SYM(rela->r_info)].st_name),
                 pkg, deps, &refpkg, &refsym) &&
             (refsym->kind == kData || refsym->kind == kBss) &&
@@ -500,7 +502,7 @@ void OptimizeRelocations(struct Package *pkg, struct Packages *deps,
          * Then libc/runtime/ftrace.greg.c morphs it back at runtime.
          */
         if (ELF64_R_TYPE(rela->r_info) == R_X86_64_GOTPCRELX &&
-            strcmp(getelfstring(obj->elf, obj->size, obj->strs,
+            strcmp(GetElfString(obj->elf, obj->size, obj->strs,
                                 obj->syms[ELF64_R_SYM(rela->r_info)].st_name),
                    "mcount") == 0) {
           rela->r_info = R_X86_64_NONE;
@@ -518,7 +520,7 @@ void OptimizeRelocations(struct Package *pkg, struct Packages *deps,
          */
         if ((ELF64_R_TYPE(rela->r_info) == R_X86_64_PC32 ||
              ELF64_R_TYPE(rela->r_info) == R_X86_64_PLT32) &&
-            strcmp(getelfstring(obj->elf, obj->size, obj->strs,
+            strcmp(GetElfString(obj->elf, obj->size, obj->strs,
                                 obj->syms[ELF64_R_SYM(rela->r_info)].st_name),
                    "mcount") == 0) {
           rela->r_info = R_X86_64_NONE;
@@ -598,7 +600,7 @@ void CompressLowEntropyReadOnlyDataSections(struct Package *pkg,
          !(shdr->sh_flags &
            (SHF_WRITE | SHF_MERGE | SHF_STRINGS | SHF_COMPRESSED))) &&
         (p = getelfsectionaddress(obj->elf, obj->size, shdr)) &&
-        startswith((name = getelfsectionname(obj->elf, obj->size, shdr)),
+        startswith((name = GetElfSectionName(obj->elf, obj->size, shdr)),
                    ".rodata") &&
         rlencode(&rle, p, shdr->sh_size) != -1) {
       isprofitable = rle.i * sizeof(rle.p[0]) <= shdr->sh_size / 2;

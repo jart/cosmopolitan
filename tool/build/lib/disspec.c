@@ -238,8 +238,8 @@ const char *DisSpecMap0(struct XedDecodedInst *x, char *p) {
     RCASE(0xCB, "lret");
     RCASE(0xCC, "int3");
     RCASE(0xCD, "int Ib");
-    RCASE(0xD0, "BIT Eb $1");
-    RCASE(0xD1, "BIT Evqp $1");
+    RCASE(0xD0, "BIT Eb");
+    RCASE(0xD1, "BIT Evqp");
     RCASE(0xD2, "BIT Evqp %cl");
     RCASE(0xD3, "BIT Evqp %cl");
     RCASE(0xD4, x->op.uimm0 == 0x0a ? "aam" : "aam Ib");

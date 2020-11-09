@@ -17,21 +17,39 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/lib/pc.h"
-#include "ape/relocations.h"
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/log/check.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/o.h"
 
-textreal static void __map_segment(uint64_t k, uint64_t a, uint64_t b) {
-  uint64_t *e;
-  for (; a < b; a += 0x1000) {
-    e = getpagetableentry(IMAGE_BASE_VIRTUAL + a, 3, &g_pml4t, &g_ptsp_xlm);
-    *e = (IMAGE_BASE_REAL + a) | k;
-  }
+/**
+ * Removes file system caches from RAM.
+ *
+ * make o//tool/build/dropcache.com
+ * sudo mv o//tool/build/dropcache.com /usr/local/bin/
+ * sudo chown root /usr/local/bin/dropcache.com
+ * sudo chmod u+s /usr/local/bin/dropcache.com
+ */
+
+static void Write(int fd, const char *s) {
+  write(fd, s, strlen(s));
 }
 
-textreal void __map_image(void) {
-  __map_segment(PAGE_V | PAGE_U, 0, (uintptr_t)_etext - IMAGE_BASE_VIRTUAL);
-  __map_segment(PAGE_V | PAGE_U | PAGE_RW | PAGE_XD,
-                (uintptr_t)_etext - IMAGE_BASE_VIRTUAL,
-                (uintptr_t)_end - IMAGE_BASE_VIRTUAL);
+int main(int argc, char *argv[]) {
+  int fd;
+  sync();
+  fd = open("/proc/sys/vm/drop_caches", O_WRONLY);
+  if (fd == -1) {
+    if (errno == EACCES) {
+      Write(1, "error: need root privileges\n");
+    } else if (errno == ENOENT) {
+      Write(1, "error: need /proc filesystem\n");
+    }
+    exit(1);
+  }
+  Write(fd, "3\n");
+  close(fd);
+  return 0;
 }

@@ -22,7 +22,7 @@
 #include "libc/runtime/ezmap.h"
 
 Elf64_Ehdr *mapelfread(const char *filename, struct MappedFile *mf) {
-  if (mapfileread(filename, mf) != -1 && iself64binary(mf->addr, mf->size)) {
+  if (mapfileread(filename, mf) != -1 && IsElf64Binary(mf->addr, mf->size)) {
     return mf->addr;
   } else {
     unmapfile(mf);

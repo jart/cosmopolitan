@@ -65,7 +65,7 @@ CC = o/third_party/gcc/bin/x86_64-linux-musl-gcc
 CXX = o/third_party/gcc/bin/x86_64-linux-musl-g++
 CXXFILT = o/third_party/gcc/bin/x86_64-linux-musl-c++filt
 LD = o/third_party/gcc/bin/x86_64-linux-musl-ld.bfd
-AR = o/third_party/gcc/bin/x86_64-linux-musl-ar
+AR = build/archive
 NM = o/third_party/gcc/bin/x86_64-linux-musl-nm
 GCC = o/third_party/gcc/bin/x86_64-linux-musl-gcc
 STRIP = o/third_party/gcc/bin/x86_64-linux-musl-strip
@@ -295,7 +295,7 @@ PREPROCESS.lds = $(CC) $(PREPROCESS.lds.flags)
 LINK = build/link $(LD) $(LINK.flags)
 ELF = o/libc/elf/elf.lds
 ELFLINK = ACTION=LINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION)
-ARCHIVE = build/archive $(AR) $(ARFLAGS)
+ARCHIVE = $(AR) $(ARFLAGS)
 LINKARGS = $(patsubst %.lds,-T %.lds,$(call uniqr,$(LD.libs) $(filter-out %.pkg,$^)))
 LOLSAN = build/lolsan -b $(IMAGE_BASE_VIRTUAL)
 

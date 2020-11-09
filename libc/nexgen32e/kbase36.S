@@ -35,13 +35,13 @@ kBase36:.zero	256
 	pushpop	10,%rcx
 0:	inc	%eax
 	stosb
-	loop	0b
+	.loop	0b
 	add	$'A-1-'9,%rdi
 	pushpop	'Z+1-'A,%rcx
 0:	inc	%eax
 	mov	%al,0x20(%rdi)
 	stosb
-	loop	0b
+	.loop	0b
 	add	$255-'Z,%rdi
 	.init.end 300,_init_kBase36
 	.source	__FILE__

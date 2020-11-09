@@ -21,6 +21,9 @@
 #include "libc/calls/internal.h"
 #include "libc/sysv/consts/at.h"
 
+/**
+ * Renames files relative to directories.
+ */
 int renameat(int olddirfd, const char *oldpath, int newdirfd,
              const char *newpath) {
   unsigned mode;

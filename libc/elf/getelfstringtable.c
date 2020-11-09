@@ -20,7 +20,7 @@
 #include "libc/elf/def.h"
 #include "libc/elf/elf.h"
 
-char *getelfstringtable(const Elf64_Ehdr *elf, size_t mapsize) {
+char *GetElfStringTable(const Elf64_Ehdr *elf, size_t mapsize) {
   Elf64_Half i;
   Elf64_Shdr *shdr;
   for (i = elf->e_shnum; i > 0; --i) {

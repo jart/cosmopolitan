@@ -59,7 +59,7 @@ crc32init:
 	pand	%xmm0,%xmm3
 	pxor	%xmm4,%xmm3
 	movdqa	%xmm3,%xmm4
-	loop	2b
+	.loop	2b
 	movdqu	%xmm3,(%rdi)
 	add	$16,%rdi
 	paddd	%xmm2,%xmm1

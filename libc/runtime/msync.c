@@ -27,7 +27,9 @@
 /**
  * Synchronize memory mapping changes to disk.
  *
- * @param flags needs MS_SYNC or MS_ASYNC and can have MS_INVALIDATE
+ * Without this, there's no guarantee memory is written back to disk.
+ *
+ * @param flags needs MS_ASYNC or MS_SYNC and can have MS_INVALIDATE
  * @return 0 on success or -1 w/ errno
  */
 int msync(void *addr, size_t size, int flags) {

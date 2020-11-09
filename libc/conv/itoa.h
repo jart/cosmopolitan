@@ -22,6 +22,7 @@ size_t int64toarray_radix10(int64_t, char[hasatleast 21]);
 size_t uint64toarray_radix10(uint64_t, char[hasatleast 21]);
 size_t uint64toarray_radix16(uint64_t, char[hasatleast 17]);
 size_t uint64toarray_fixed16(uint64_t, char[hasatleast 17], uint8_t);
+size_t uint64toarray_radix8(uint64_t, char[hasatleast 24]);
 
 #ifndef __STRICT_ANSI__
 size_t int128toarray_radix10(int128_t, char *);

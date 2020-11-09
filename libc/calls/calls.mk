@@ -16,10 +16,10 @@ LIBC_CALLS_ARTIFACTS += LIBC_CALLS_A
 LIBC_CALLS = $(LIBC_CALLS_A_DEPS) $(LIBC_CALLS_A)
 LIBC_CALLS_A = o/$(MODE)/libc/calls/syscalls.a
 LIBC_CALLS_A_FILES :=					\
+	$(wildcard libc/calls/*)			\
 	$(wildcard libc/calls/typedef/*)		\
 	$(wildcard libc/calls/thunks/*)			\
-	$(wildcard libc/calls/struct/*)			\
-	$(wildcard libc/calls/*)	
+	$(wildcard libc/calls/struct/*)
 LIBC_CALLS_A_HDRS = $(filter %.h,$(LIBC_CALLS_A_FILES))
 LIBC_CALLS_A_SRCS_S = $(filter %.S,$(LIBC_CALLS_A_FILES))
 LIBC_CALLS_A_SRCS_C = $(filter %.c,$(LIBC_CALLS_A_FILES))

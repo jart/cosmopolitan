@@ -18,19 +18,16 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/prot.h"
+#include "libc/calls/internal.h"
+#include "libc/dce.h"
 
 /**
- * Allocates deterministic stack for process.
- * @see _executive()
+ * Flushes file system changes to disk to the greatest extent possible.
  */
-void *_getstack(void) {
-  char *p;
-  p = mmap((char *)0x700000000000 /* IMAGE_BASE_VIRTUAL */ - STACKSIZE,
-           STACKSIZE, PROT_READ | PROT_WRITE,
-           MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  if (p == MAP_FAILED) abort();
-  return p + STACKSIZE;
+void sync(void) {
+  if (!IsWindows()) {
+    sync$sysv();
+  } else {
+    sync$nt();
+  }
 }

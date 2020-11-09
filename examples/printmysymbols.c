@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
       (tab = OpenSymbolTable(filename))) {
     for (unsigned i = 0; i < tab->count; ++i) {
       printf("%p %s\n", tab->addr_base + tab->symbols[i].addr_rva,
-             getelfstring(tab->elf, tab->elfsize, tab->name_base,
+             GetElfString(tab->elf, tab->elfsize, tab->name_base,
                           tab->symbols[i].name_rva));
     }
   } else {

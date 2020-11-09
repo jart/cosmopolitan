@@ -178,7 +178,7 @@ struct ElfWriter *elfwriter_open(const char *path, int mode) {
 void elfwriter_close(struct ElfWriter *elf) {
   size_t i;
   FlushTables(elf);
-  CHECK_NE(-1, msync(elf->map, elf->wrote, MS_SYNC));
+  CHECK_NE(-1, msync(elf->map, elf->wrote, MS_ASYNC));
   CHECK_NE(-1, munmap(elf->map, elf->mapsize));
   CHECK_NE(-1, ftruncate(elf->fd, elf->wrote));
   CHECK_NE(-1, close(elf->fd));

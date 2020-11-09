@@ -13,6 +13,9 @@ uint32_t GetSystemDirectoryA(char *lpBuffer, uint32_t uSize);
 uint32_t GetWindowsDirectory(char16_t *lpBuffer, uint32_t uSize);
 uint32_t GetTempPath(uint32_t uSize, char16_t *lpBuffer);
 
+bool32 GetComputerNameEx(/* enum/computernameformat.h */ int NameType,
+                         char16_t *opt_lpBuffer, uint32_t *nSize);
+
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/systeminfo.inc"
 #endif /* ShouldUseMsabiAttribute() */

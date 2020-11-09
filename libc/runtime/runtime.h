@@ -43,7 +43,6 @@ void longjmp(jmp_buf, int) libcesque noreturn paramsnonnull();
 void exit(int) noreturn;
 void _exit(int) libcesque noreturn;
 void _Exit(int) libcesque noreturn;
-long _setstack(void *, void *, ...);
 void abort(void) noreturn noinstrument;
 void panic(void) noreturn noinstrument privileged;
 void triplf(void) noreturn noinstrument privileged;

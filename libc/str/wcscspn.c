@@ -20,9 +20,20 @@
 #include "libc/nexgen32e/hascharacter.h"
 #include "libc/str/str.h"
 
-#undef strcspn
-#define char wchar_t
-#define HasCharacter HasCharacterWide
-#define strcspn      wcscspn
-
-#include "libc/str/strcspn.c"
+/**
+ * Returns prefix length, consisting of chars not in reject.
+ * a.k.a. Return index of first byte that's in charset.
+ *
+ * @param reject is nul-terminated character set
+ * @see strspn(), strtok_r()
+ * @asyncsignalsafe
+ */
+size_t wcscspn(const wchar_t *s, const wchar_t *reject) {
+  size_t i;
+  for (i = 0; s[i]; ++i) {
+    if (HasCharacterWide(s[i], reject)) {
+      break;
+    }
+  }
+  return i;
+}

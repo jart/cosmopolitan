@@ -20,7 +20,7 @@
 #include "libc/elf/def.h"
 #include "libc/elf/elf.h"
 
-Elf64_Sym *getelfsymboltable(const Elf64_Ehdr *elf, size_t mapsize,
+Elf64_Sym *GetElfSymbolTable(const Elf64_Ehdr *elf, size_t mapsize,
                              Elf64_Xword *out_count) {
   Elf64_Half i;
   Elf64_Shdr *shdr;

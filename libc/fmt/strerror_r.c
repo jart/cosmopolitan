@@ -63,7 +63,7 @@ int strerror_r(int err, char *buf, size_t size) {
     if (FormatMessage(
             kNtFormatMessageFromSystem | kNtFormatMessageIgnoreInserts, NULL,
             err, 0, buf16, ARRAYLEN(buf16) - 1, 0) > 0) {
-      chomp(buf16);
+      chomp16(buf16);
     } else {
       buf16[0] = u'\0';
     }

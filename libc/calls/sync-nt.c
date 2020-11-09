@@ -17,21 +17,38 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/lib/pc.h"
-#include "ape/relocations.h"
-#include "libc/runtime/runtime.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/nt/createfile.h"
+#include "libc/nt/files.h"
+#include "libc/nt/runtime.h"
+#include "libc/sysv/consts/ok.h"
 
-textreal static void __map_segment(uint64_t k, uint64_t a, uint64_t b) {
-  uint64_t *e;
-  for (; a < b; a += 0x1000) {
-    e = getpagetableentry(IMAGE_BASE_VIRTUAL + a, 3, &g_pml4t, &g_ptsp_xlm);
-    *e = (IMAGE_BASE_REAL + a) | k;
+/**
+ * Flushes all open file handles and, if possible, all disk drives.
+ */
+int sync$nt(void) {
+  unsigned i;
+  int64_t volume;
+  uint32_t drives;
+  char16_t path[] = u"\\\\.\\C:";
+  for (i = 0; i < g_fds.n; ++i) {
+    if (g_fds.p[i].kind == kFdFile) {
+      FlushFileBuffers(g_fds.p[i].handle);
+    }
   }
-}
-
-textreal void __map_image(void) {
-  __map_segment(PAGE_V | PAGE_U, 0, (uintptr_t)_etext - IMAGE_BASE_VIRTUAL);
-  __map_segment(PAGE_V | PAGE_U | PAGE_RW | PAGE_XD,
-                (uintptr_t)_etext - IMAGE_BASE_VIRTUAL,
-                (uintptr_t)_end - IMAGE_BASE_VIRTUAL);
+  for (drives = GetLogicalDrives(), i = 0; i <= 'Z' - 'A'; ++i) {
+    if (!(drives & (1 << i))) continue;
+    path[4] = 'A' + i;
+    if (ntaccesscheck(path, R_OK | W_OK) != -1) {
+      if ((volume = CreateFile(
+               path, kNtFileReadAttributes,
+               kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, 0,
+               kNtOpenExisting, 0, 0)) != -1) {
+        FlushFileBuffers(volume);
+        CloseHandle(volume);
+      }
+    }
+  }
+  return 0;
 }

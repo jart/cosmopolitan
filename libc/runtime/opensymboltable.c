@@ -39,8 +39,8 @@ struct SymbolTable *OpenSymbolTable(const char *filename) {
   t = MAP_FAILED;
   if (filename && (t = mapanon(BIGPAGESIZE)) != MAP_FAILED &&
       mapelfread(filename, &t->mf) &&
-      (t->name_base = getelfstringtable(t->elf, t->elfsize)) != NULL &&
-      (symtab = getelfsymboltable(t->elf, t->elfsize, &t->count)) &&
+      (t->name_base = GetElfStringTable(t->elf, t->elfsize)) != NULL &&
+      (symtab = GetElfSymbolTable(t->elf, t->elfsize, &t->count)) &&
       sizeof(struct SymbolTable) + sizeof(struct Symbol) * t->count <
           (t->scratch = BIGPAGESIZE)) {
     getelfvirtualaddressrange(t->elf, t->elfsize, &t->addr_base, &t->addr_end);

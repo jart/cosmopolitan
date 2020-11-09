@@ -42,16 +42,13 @@ _executive:
 	mov	%rdx,%r14
 	mov	%rcx,%r15
 	call	_spawn
-	call	_getstack
-	mov	%rax,%rdi
+	mov	%r12d,%edi
+	mov	%r13,%rsi
+	mov	%r14,%rdx
+	mov	%r15,%rcx
 	.weak	main
-	mov	$main,%esi
-	mov	%r12,%rdx
-	mov	%r13,%rcx
-	mov	%r14,%r8
-	mov	%r15,%r9
-	call	_setstack
-	mov	%eax,%edi
+	call	main
+	xchg	%eax,%edi
 	call	exit
 	.endfn	_executive,weak,hidden
 	ud2

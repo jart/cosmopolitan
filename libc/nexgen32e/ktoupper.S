@@ -30,6 +30,6 @@ kToUpper:
 	call	imapxlatab
 	pushpop	'z-'a,%rcx
 0:	subb	$0x20,(%r8,%rcx)
-	loop	0b
+	.loop	0b
 	.init.end 300,_init_kToUpper
 	.source	__FILE__

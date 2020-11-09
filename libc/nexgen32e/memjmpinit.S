@@ -36,7 +36,7 @@ memjmpinit:
 	lodsb
 	add	%rdx,%rax
 	stosq
-	loop	0b
+	.loop	0b
 	xor	%eax,%eax
 	testb	X86_HAVE(ERMS)+kCpuids(%rip)
 	setnz	%al

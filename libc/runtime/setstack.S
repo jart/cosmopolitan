@@ -24,7 +24,7 @@
 /	@param	rdi is new rsp, passed as malloc(size) + size
 /	@param	rsi is function to call in new stack space
 /	@param	rdx,rcx,r8,r9 get passed as args to rsi
-/	@return	happens on original stack
+/	@return	rax and happens on original stack
 _setstack:
 	push	%rbp
 	mov	%rsp,%rbp
@@ -43,4 +43,4 @@ _setstack:
 	pop	%rbx
 	pop	%rbp
 	ret
-	.endfn	_setstack,globl
+	.endfn	_setstack,globl,hidden

@@ -35,7 +35,7 @@ imapxlatab:
 	.align	8
 1:	stosq
 	add	%rdx,%rax
-	loop	1b
+	.loop	1b
 	.leafepilogue
 	.endfn	imapxlatab,globl,hidden
 	.source	__FILE__

@@ -4,57 +4,28 @@
 #
 # OVERVIEW
 #
-#   GNU Archiver Veneer
+#   Cosmopolitan Archiver
 #
 # DESCRIPTION
 #
-#   This script wraps normal archive commands that're transparently
-#   passed-through. It adds value too, by addressing difficulties
-#   that would normally cause a developer to need `make clean`.
+#   This goes 100x faster than ar and ranlib.
 #
 # EXAMPLE
 #
-#   build/archive ar rcsD library.a foo.o ...
+#   build/archive rcsD library.a foo.o ...
 
-if [ ! -d o/third_party/gcc ]; then
-  third_party/gcc/unbundle.sh
-fi
-
-export LC_ALL=C
-RM=${RM:-$(command -v rm) -f} || exit
 MKDIR=${MKDIR:-$(command -v mkdir) -p} || exit
-
-AR=$1
-ARFLAGS=$2
-OUT=$3
-shift 3
-
-# remove directory arguments (having .a targets depend on dirs is what
-# lets them be invalidated by deleted files)
-FIRST=1
-for x; do
-  if [ $FIRST -eq 1 ]; then
-    set --
-    FIRST=0
-  fi
-  if [ -d "$x" ]; then
-    if [ -f "$OUT" ] && [ "$x" -nt "$OUT" ]; then
-      $RM "$OUT"
-    fi
-    continue
-  fi
-  if [ "$x" != "${x%.o}" ]; then
-    set -- "$@" "$x"
-  fi
-done
-
-set -- "$AR" "$ARFLAGS" "$OUT" "$@"
-printf %s\\n "$*" >"$OUT.cmd"
-
-OUTDIR="${OUT%/*}"
-if [ "$OUTDIR" != "$OUT" ] && [ ! -d "$OUTDIR" ]; then
-  $MKDIR "$OUTDIR" || exit 2
+# if [ -x "o/$MODE/tool/build/ar.com" ]; then
+#   set -- "o/$MODE/tool/build/ar.com" "$@"
+# else
+if [ ! -x o/build/bootstrap/ar.com ]; then
+  mkdir -p o/build/bootstrap &&
+  cp -f build/bootstrap/ar.com o/build/bootstrap/ar.com.$$ &&
+  mv -f o/build/bootstrap/ar.com.$$ o/build/bootstrap/ar.com || exit
 fi
+set -- o/build/bootstrap/ar.com "$@"
+# fi
+OUT=$3
 
 printf "$LOGFMT" "${ACTION:-ARCHIVE.a}" "$OUT" >&2
 # if [ "$SILENT" = "0" ]; then

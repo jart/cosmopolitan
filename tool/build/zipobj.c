@@ -312,6 +312,7 @@ void zipobj(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
+  showcrashreports();
   zipobj(argc, argv);
   return 0;
 }

@@ -68,6 +68,6 @@ kPollNames:
 	lodsl
 	add	%rbx,%rax		# %rbx is image base (cosmo abi)
 	stosq
-	loop	0b
+	.loop	0b
 	add	$16,%rdi
 	.init.end 301,_init_kPollNames

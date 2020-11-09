@@ -38,8 +38,8 @@ static textwindows struct DirectMap DirectMapNt(void *addr, size_t size,
   protect = prot2nt(prot, flags);
   access = fprot2nt(prot, flags);
   if ((res.maphandle =
-           CreateFileMappingNuma(handle, &kNtIsInheritable, protect, size >> 32,
-                                 size, NULL, kNtNumaNoPreferredNode))) {
+           CreateFileMappingNuma(handle, NULL, protect, size >> 32, size, NULL,
+                                 kNtNumaNoPreferredNode))) {
     if (!(res.addr = MapViewOfFileExNuma(res.maphandle, access, off >> 32, off,
                                          size, addr, kNtNumaNoPreferredNode))) {
       CloseHandle(res.maphandle);

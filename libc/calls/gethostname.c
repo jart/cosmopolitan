@@ -17,21 +17,42 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/lib/pc.h"
-#include "ape/relocations.h"
-#include "libc/runtime/runtime.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/utsname.h"
+#include "libc/dce.h"
+#include "libc/macros.h"
+#include "libc/nt/enum/computernameformat.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/systeminfo.h"
+#include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
 
-textreal static void __map_segment(uint64_t k, uint64_t a, uint64_t b) {
-  uint64_t *e;
-  for (; a < b; a += 0x1000) {
-    e = getpagetableentry(IMAGE_BASE_VIRTUAL + a, 3, &g_pml4t, &g_ptsp_xlm);
-    *e = (IMAGE_BASE_REAL + a) | k;
+/**
+ * Returns name of host system, e.g.
+ *
+ *     pheidippides.domain.example
+ *     ^^^^^^^^^^^^
+ */
+int gethostname(char *name, size_t len) {
+  uint32_t nSize;
+  char16_t name16[256];
+  struct utsname u;
+  if (len < 1) return einval();
+  if (!name) return efault();
+  if (!IsWindows()) {
+    if (uname(&u) == -1) return -1;
+    if (!memccpy(name, u.nodename, '\0', len)) {
+      name[len - 1] = '\0';
+    }
+    return 0;
+  } else {
+    nSize = ARRAYLEN(name16);
+    if (!GetComputerNameEx(kNtComputerNameDnsHostname, name16, &nSize)) {
+      return winerr();
+    }
+    tprecode16to8(name, MIN(MIN(ARRAYLEN(name16), nSize + 1), len), name16);
+    return 0;
   }
-}
-
-textreal void __map_image(void) {
-  __map_segment(PAGE_V | PAGE_U, 0, (uintptr_t)_etext - IMAGE_BASE_VIRTUAL);
-  __map_segment(PAGE_V | PAGE_U | PAGE_RW | PAGE_XD,
-                (uintptr_t)_etext - IMAGE_BASE_VIRTUAL,
-                (uintptr_t)_end - IMAGE_BASE_VIRTUAL);
 }

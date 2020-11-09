@@ -10,6 +10,7 @@ typedef struct Elf64_Sym {
   uint8_t st_info;
   /* STV_{DEFAULT,INTERNAL,HIDDEN,PROTECTED} */
   uint8_t st_other;
+  /* SHN_UNDEF, <section index>, SHN_ABS, SHN_COMMON, etc. */
   Elf64_Section st_shndx;
   Elf64_Addr st_value;
   Elf64_Xword st_size;

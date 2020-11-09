@@ -51,7 +51,7 @@ kToLower16:
 	mov	$256,%ecx
 0:	lodsb
 	stosw
-	loop	0b
+	.loop	0b
 	pop	%rsi
 	.init.end 300,_init_kToLower
 

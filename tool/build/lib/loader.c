@@ -137,40 +137,24 @@ void LoadProgram(struct Machine *m, const char *prog, char **args, char **vars,
   int fd;
   ssize_t rc;
   int64_t sp;
-  char *real;
-  void *stack;
   struct stat st;
-  size_t i, codesize, mappedsize, extrasize;
+  size_t i, mappedsize;
   DCHECK_NOTNULL(prog);
   elf->prog = prog;
   if ((fd = open(prog, O_RDONLY)) == -1 ||
-      (fstat(fd, &st) == -1 || !st.st_size) /* || !S_ISREG(st.st_mode) */) {
+      (fstat(fd, &st) == -1 || !st.st_size)) {
     fputs(prog, stderr);
     fputs(": not found\n", stderr);
     exit(1);
   }
-  codesize = st.st_size;
-  elf->mapsize = ROUNDDOWN(codesize, FRAMESIZE);
-  extrasize = codesize - elf->mapsize;
-  elf->map = real = (char *)0x0000400000000000;
-  if (elf->mapsize) {
-    CHECK_NE(MAP_FAILED, mmap(real, elf->mapsize, PROT_READ | PROT_WRITE,
-                              MAP_PRIVATE | MAP_FIXED, fd, 0));
-    real += elf->mapsize;
-  }
-  if (extrasize) {
-    CHECK_NE(MAP_FAILED,
-             mmap(real, ROUNDUP(extrasize, FRAMESIZE), PROT_READ | PROT_WRITE,
-                  MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, -1, 0));
-    for (i = 0; i < extrasize; i += (size_t)rc) {
-      CHECK_NE(-1, (rc = pread(fd, real + i, extrasize - i, elf->mapsize + i)));
-    }
-    elf->mapsize += ROUNDUP(extrasize, FRAMESIZE);
-  }
+  elf->mapsize = st.st_size;
+  CHECK_NE(MAP_FAILED,
+           (elf->map = mmap(NULL, elf->mapsize, PROT_READ | PROT_WRITE,
+                            MAP_PRIVATE, fd, 0)));
   CHECK_NE(-1, close(fd));
   ResetCpu(m);
   if ((m->mode & 3) == XED_MODE_REAL) {
-    BootProgram(m, elf, codesize);
+    BootProgram(m, elf, elf->mapsize);
   } else {
     sp = 0x800000000000;
     Write64(m->sp, sp);
@@ -179,13 +163,13 @@ void LoadProgram(struct Machine *m, const char *prog, char **args, char **vars,
     LoadArgv(m, prog, args, vars);
     if (memcmp(elf->map, "\177ELF", 4) == 0) {
       elf->ehdr = (void *)elf->map;
-      elf->size = codesize;
+      elf->size = elf->mapsize;
       LoadElf(m, elf);
     } else {
       elf->base = IMAGE_BASE_VIRTUAL;
       elf->ehdr = NULL;
       elf->size = 0;
-      LoadBin(m, elf->base, prog, elf->map, codesize);
+      LoadBin(m, elf->base, prog, elf->map, elf->mapsize);
     }
   }
 }

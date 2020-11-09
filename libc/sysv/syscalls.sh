@@ -178,7 +178,7 @@ scall	mlockall		0x010f014421440097	globl
 scall	munlockall		0x0110014521450098	globl
 scall	'setrlimit$sysv'	0x00c300c320c300a0	globl hidden
 scall	chroot			0x003d003d203d00a1	globl
-scall	sync			0x00240024202400a2	globl
+scall	'sync$sysv'		0x00240024202400a2	globl hidden
 scall	acct			0x00330033203300a3	globl
 scall	settimeofday		0x0044007a207a00a4	globl
 scall	mount			0x0015001520a700a5	globl
@@ -649,10 +649,10 @@ scall	fhlinkat		0xffff0236ffffffff	globl
 scall	fhreadlink		0xffff0237ffffffff	globl
 scall	getaudit		0xffff01c1ffffffff	globl
 scall	getcontext		0xffff01a5ffffffff	globl
-scall	getdomainname		0xffff00a2ffffffff	globl
+#scall	getdomainname		0xffff00a2ffffffff	globl
 scall	getfhat			0xffff0234ffffffff	globl
 scall	gethostid		0xffff008effffffff	globl
-scall	gethostname		0xffff0057ffffffff	globl
+#scall	gethostname		0xffff0057ffffffff	globl
 scall	getkerninfo		0xffff003fffffffff	globl
 scall	getloginclass		0xffff020bffffffff	globl
 scall	'getpagesize$freebsd'	0xffff0040ffffffff	globl hidden

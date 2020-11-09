@@ -49,7 +49,7 @@ __getntsyspath:
 	cmpb	$'\\,-1(%rdi)
 	jne	2f
 	movb	$'/,-1(%rdi)
-2:	loop	1b
+2:	.loop	1b
 	leave
 	ret
 	.endfn	__getntsyspath,globl,hidden

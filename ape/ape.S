@@ -175,7 +175,7 @@ stub:	mov	$0x40,%dl		# *literally* dos
 	built the last forty years these routines also canonicalize the
 	cpu and program state, as it is written in the System V ABI. */
 
-/	Initializes program and jumps to long mode loader.
+/	Initializes program and jumps to real mode loader.
 /
 /	@param	dl drive number (use 0x40 to skip bios disk load)
 /	@mode	real
@@ -188,62 +188,46 @@ pc:	cld
 #endif
 	mov	$REAL_STACK_FRAME>>4,%di	# we need a stack
 	xor	%cx,%cx
+	mov	%cx,%es
 	rlstack	%di,%cx
-	movpp	%cs,%ax				# memcpy() [relocate this page]
+	push	%cs				# memcpy() [relocate this page]
+	pop	%ds
 	call	1f
 1:	pop	%si
 	sub	$RVA(1b),%si
-	mov	$4,%cl
-1:	shr	%si
-	loop	1b
-	mov	$512,%cx
-	mov	$IMAGE_BASE_REAL>>4,%di
-	mov	%si,%ds
-	mov	%di,%es
-	xor	%si,%si
+	mov	$IMAGE_BASE_REAL>>4,%ax
+	push	%ax				# save real base
+	push	%ax
+	pop	%es
 	xor	%di,%di
-	rep
-	movsb	%ds:(%si),%es:(%di)
+	mov	$512,%cx
+	rep movsb
 #if USE_SYMBOL_HACK
 	.byte	0x0f,0x1f,0207			# nop rdi binbase
 	.short	(IMAGE_BASE_REAL-0x7c00)/512
 #endif
 	ljmp	$0,$REAL(1f)			# longjmp()
-1:	mov	$-512,%cx			# memcpy() [relocate this frame]
-	rep
-	movsb	%ds:(%si),%es:(%di)
-	xor	%bp,%bp
-	mov	%bp,%ds				# %ds and %cs are now zero
-	call	1f				# setup frame pointers
-1:	push	%bp
-	mov	%sp,%bp
-	mov	$XLM_SIZE,%cx			# memset() [clear real bss]
+1:	mov	%cx,%ds				# %ds and %cs are now zero
+	mov	$XLM_SIZE,%cx			# memset to clear real bss
 	mov	$XLM_BASE_REAL>>4,%ax
 	mov	%ax,%es
 	xor	%ax,%ax
 	xor	%di,%di
-	rep
-	stosb	%al,%es:(%di)
+	rep stosb
 	cmp	$0x40,%dl			# statfs() [disk geometry]
 	je	6f
 	call	dsknfo
-	mov	$IMAGE_BASE_REAL>>4,%ax
-	mov	%ax,%es
-	mov	$v_ape_realsectors,%di		# total sectors to read
-	xor	%dh,%dh				# current head state
-	xor	%cx,%cx				# current cylinder state
-3:	mov	%di,%ax
-	call	pcread
-	mov	%es,%si
-4:	add	$512>>4,%si
+	pop	%es				# restore real base
+	mov	$1,%al				# current sector
+	xor	%cx,%cx				# current cylinder
+	xor	%dh,%dh				# current head
+	mov	$v_ape_realsectors,%di		# total sectors
+3:	call	pcread
 	dec	%di
-	jz	6f
-	dec	%ax
-	jnz	4b
-	mov	%si,%es
-	jmp	3b
-6:	mov	%cx,XLM(LOADSTATE)+0
-	mov	%dx,XLM(LOADSTATE)+2
+	jnz	3b
+6:	mov	%ax,XLM(LOADSTATE)+0
+	mov	%cx,XLM(LOADSTATE)+2
+	mov	%dx,XLM(LOADSTATE)+4
 	ljmp	$0,$REAL(realmodeloader)
 	.endfn	pc,globl,hidden
 
@@ -334,66 +318,40 @@ dsknfo:	push	%bx
 	jmp	1b
 	.endfn	dsknfo
 
-/	Reads disk sectors via BIOS.
+/	Reads disk sector via BIOS.
 /
-/	Each call to this function performs a single read. It has a
-/	special ABI, where its parameters are preserved, and rolled
-/	forward accordingly across calls. BIOS requirements on read
-/	parameter validity are abstracted. If the requested size is
-/	too large for one read, then it's tuned down appropriately.
-/
-/	Please note that dskinfo() must be called beforehand.
-/
-/	@param	ax number sectors to read
+/	@param	al sector number
 /	@param	es destination memory address >> 4
 /	@param	cx cylinder number
 /	@param	dh head number
 /	@param	dl drive number
 /	@return	number of sectors actually read
-pcread:	push	%bx
-	xor	%bx,%bx
-	mov	XLM(DRIVE_LAST_SECTOR),%bl
-	cmp	%ax,%bx			# ax = min(ax, pertrack)
-	ja	1f
-	mov	%bx,%ax
-1:	push	%cx			# how many sectors until 64k
-	push	%ax			# boundary reads can't cross
-	mov	$0x1000,%bx		# canonicalizing the segment
-	mov	%es,%ax			# register is not sufficient
-	sub	%ax,%bx
-	and	$0x0fff,%bx
-	mov	$5,%cx
-0:	shr	%bx
-	loop	0b
-	pop	%ax
-	pop	%cx
-	test	%bx,%bx			# %es 64k-aligned edge case
-	jz	1f
-	cmp	%ax,%bx			# ax = min(ax, remain64k)
-	ja	1f
-	mov	%bx,%ax
-1:	push	%ax			# setup int-13-2() params
+pcread:	push	%ax
 	push	%cx
 	xchg	%cl,%ch
 	ror	%cl
 	ror	%cl
-	or	$1,%cl			# one cylinder at a time
+	or	%al,%cl
 	xor	%bx,%bx			# es:bx is destination addr
-	mov	$0x02,%ah		# read disk sectors ordinal
+	mov	$1,%al			# read only one disk sector
+	mov	$2,%ah			# read disk sectors ordinal
 	int	$0x13
 	pop	%cx
-	pop	%bx
+	pop	%ax
 	jc	9f
-	mov	$0,%ah
-	cmp	%ax,%bx
-	jl	9f
+	mov	%es,%si
+	add	$512>>4,%si
+	mov	%si,%es
+	inc	%al
+	cmp	XLM(DRIVE_LAST_SECTOR),%al
+	jbe	2f
+	mov	$1,%al
 	inc	%cx
 	cmp	XLM(DRIVE_LAST_CYLINDER),%cx
-	jle	2f
+	jbe	2f
 	xor	%cx,%cx
 	inc	%dh
-2:	pop	%bx
-	ret
+2:	ret
 9:	push	%ax
 	xor	%ax,%ax			# try disk reset on error
 	int	$0x13
@@ -824,11 +782,11 @@ ape.pe:	.ascin	"PE",4
 	.long	0			# Checksum
 	.short	v_ntsubsystem		# Subsystem: 0=Neutral,2=GUI,3=Console
 	.short	.LDLLEXE		# DllCharacteristics
-	.quad	0x0000000000100000	# StackReserve
-	.quad	0x0000000000100000	# StackCommit
-	.quad	0x0000000000000000	# HeapReserve
-	.quad	0x0000000000000000	# HeapCommit
-	.long	0x00000000		# LoaderFlags
+	.quad	0x0000000000080000	# StackReserve
+	.quad	0x0000000000080000	# StackCommit
+	.quad	0			# HeapReserve
+	.quad	0			# HeapCommit
+	.long	0			# LoaderFlags
 	.long	16			# NumberOfDirectoryEntries
 	.long	0,0			# ExportsDirectory
 	.long	RVA(idata.idt)		# ImportsDirectory
@@ -857,10 +815,10 @@ ape.pe:	.ascin	"PE",4
 	.stub	.Lape.text.rva,long	# Relative Virtual Address
 	.stub	.Lape.text.filesz,long	# Physical Size
 	.stub	.Lape.text.offset,long	# Physical Offset
-	.long	0x00000000		# Relocation Table Offset
-	.long	0x00000000		# Line Number Table Offset
-	.short	0x0000			# Relocation Count
-	.short	0x0000			# Line Number Count
+	.long	0			# Relocation Table Offset
+	.long	0			# Line Number Table Offset
+	.short	0			# Relocation Count
+	.short	0			# Line Number Count
 	.long	.LPETEXT		# Flags
 	.previous
 
@@ -870,10 +828,10 @@ ape.pe:	.ascin	"PE",4
 	.stub	.Lape.ram.rva,long	# Relative Virtual Address
 	.stub	.Lape.ram.filesz,long	# Physical Size
 	.stub	.Lape.ram.offset,long	# Physical Offset
-	.long	0x00000000		# Relocation Table Offset
-	.long	0x00000000		# Line Number Table Offset
-	.short	0x0000			# Relocation Count
-	.short	0x0000			# Line Number Count
+	.long	0			# Relocation Table Offset
+	.long	0			# Line Number Table Offset
+	.short	0			# Relocation Count
+	.short	0			# Line Number Count
 	.long	.LPEDATA		# Flags
 	.previous
 
@@ -1246,7 +1204,8 @@ sflush:	mov	%si,%cx
 	mov	$UART_TTYIDL,%ah
 1:	in	%dx,%al
 	and	%ah,%al
-	rep nop				# todo(jart): interrupts are better
+	rep
+	nop
 	jz	1b
 	loop	0b
 2:	ret
@@ -1269,7 +1228,8 @@ sputc:	push	%ax
 1:	in	%dx,%al
 	and	%ah,%al
 	jnz	2f
-	rep nop				# todo(jart): interrupts are better
+	rep
+	nop
 	jmp	1b
 2:	mov	%di,%ax
 	mov	%si,%dx
@@ -1356,7 +1316,7 @@ longmodeloader:
 	call	e820
 	jc	9f
 	call	unreal
-	call	hiload
+/	call	hiload
 	jmp	golong
 9:	mov	$REAL(.Lstr.e820),%ax
 	call	rldie
@@ -1478,8 +1438,9 @@ hiload:	push	%bx
 	mov	$v_ape_highsectors,%di		# then copy rest off disk
 	mov	$REAL_SCRATCH_AREA>>4,%ax	# to real memory buffer
 	mov	%ax,%es
-	mov	XLM(LOADSTATE)+0,%cx
-	mov	XLM(LOADSTATE)+2,%dx
+	mov	XLM(LOADSTATE)+0,%ax
+	mov	XLM(LOADSTATE)+2,%cx
+	mov	XLM(LOADSTATE)+4,%dx
 0:	test	%di,%di
 	jz	9f
 	mov	%di,%ax
@@ -1590,6 +1551,7 @@ pinit:	push	%ds
 	add	$0x1000,%eax
 	add	$8,%si
 	loop	0b
+ 	movb	$0,0						# unmap null
 	pop	%ds
 	movl	$TIP-0x4000,XLM(PAGE_TABLE_STACK_POINTER)	# STACK→XLM
 	mov	$TIP-0x1000,%eax				# PML4T→CR3
@@ -1631,13 +1593,13 @@ long:	push	$GDT_LONG_DATA
 	xor	%ebp,%ebp
 	mov	$REAL_STACK_FRAME+FRAMESIZE,%esp
 	call	__map_image
-	ezlea	_metal,ax
+	ezlea	metal,ax
 	jmp	*%rax
 	.endfn	long
 
 /	Long mode in virtual address space.
 /	@noreturn
-_metal:
+metal:
 #if USE_SYMBOL_HACK
 	.byte	0x0f,0x1f,0207			# nop rdi binbase
 	.long	(IMAGE_BASE_VIRTUAL-IMAGE_BASE_REAL)/512
@@ -1658,7 +1620,7 @@ _metal:
 	push	$0				# argc
 	xor	%edi,%edi
 	jmp	_start
-	.endfn	_metal
+	.endfn	metal
 
 /	Avoid linker script variables appearing as code in objdump.
 	.macro	.ldsvar	name:req

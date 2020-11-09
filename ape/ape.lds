@@ -537,7 +537,8 @@ HIDDEN(.Lape.bss.align = .Lape.data.align);
 /* Program Loader Auto-Tune */
 HIDDEN(v_ape_realsectors =
            MIN(REAL_SCRATCH_AREA - IMAGE_BASE_REAL,
-               ROUNDUP(RVA(_edata), 512)) / 512);
+               ROUNDUP(RVA(_edata), 4096)) / 512);
+HIDDEN(v_ape_realpages = v_ape_realsectors / (4096 / 512));
 HIDDEN(v_ape_highsectors =
            (ROUNDUP(RVA(_edata), 512) / 512) - v_ape_realsectors);
 

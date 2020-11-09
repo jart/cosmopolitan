@@ -34,7 +34,7 @@ rldecode:
 	lodsb
 	jrcxz	2f
 1:	stosb
-	loop	1b
+	.loop	1b
 	jmp	0b
 2:	.leafepilogue
 	.endfn	rldecode,globl
