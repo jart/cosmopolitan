@@ -267,7 +267,7 @@ static struct XmmType xmmtype;
 static struct Elf elf[1];
 static struct Dis dis[1];
 
-long double last_seconds;
+static long double last_seconds;
 static long double statusexpires;
 static struct termios oldterm;
 static char logpath[PATH_MAX];

@@ -126,7 +126,7 @@
 #define XLM_BADIDT                          0x2230
 #define XLM_BADIDT_SIZE                     6
 #define XLM_LOADSTATE                       0x2240
-#define XLM_LOADSTATE_SIZE                  6
+#define XLM_LOADSTATE_SIZE                  8
 #define XLM_SIZE                            ROUNDUP(XLM_LOADSTATE + XLM_LOADSTATE_SIZE, 0x1000)
 #define IMAGE_BASE_REAL                     (XLM_BASE_REAL + XLM_SIZE)
 

@@ -225,9 +225,14 @@ pc:	cld
 3:	call	pcread
 	dec	%di
 	jnz	3b
-6:	mov	%ax,XLM(LOADSTATE)+0
-	mov	%cx,XLM(LOADSTATE)+2
-	mov	%dx,XLM(LOADSTATE)+4
+6:	mov	$XLM(LOADSTATE),%di		# ax,cx,dx,es
+	stosw
+	xchg	%cx,%ax
+	stosw
+	xchg	%dx,%ax
+	stosw
+	mov	%es,%ax
+	stosw
 	ljmp	$0,$REAL(realmodeloader)
 	.endfn	pc,globl,hidden
 

@@ -25,7 +25,7 @@ bool AreMemoryIntervalsOk(const struct MemoryIntervals *mm) {
   for (i = 0; i < mm->i; ++i) {
     if (mm->p[i].y < mm->p[i].x) return false;
     if (i) {
-      if (mm->h[i] || mm->h[i - 1]) {
+      if (mm->p[i].h || mm->p[i - 1].h) {
         if (mm->p[i].x <= mm->p[i - 1].y) return false;
       } else {
         if (mm->p[i].x <= mm->p[i - 1].y + 1) return false;

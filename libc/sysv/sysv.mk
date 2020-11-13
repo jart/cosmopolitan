@@ -34,7 +34,6 @@ LIBC_SYSV_A_FILES :=					\
 	libc/sysv/restorert.S				\
 	libc/sysv/syscall.S				\
 	libc/sysv/systemfive.S				\
-	libc/sysv/vfork.S				\
 	$(wildcard libc/sysv/stubs/*)			\
 	$(wildcard libc/sysv/consts/*)			\
 	$(wildcard libc/sysv/errfuns/*)

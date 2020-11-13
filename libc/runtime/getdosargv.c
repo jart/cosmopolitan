@@ -27,12 +27,6 @@
 #include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 
-/* TODO(jart): Make early-stage data structures happen. */
-#undef isspace
-#undef iswspace
-#define isspace(c)  ((c) == ' ' || (c) == '\t' || (c) == '\n' || (c) == '\r')
-#define iswspace(c) isspace(c)
-
 struct DosArgv {
   const char16_t *s;
   char *p;

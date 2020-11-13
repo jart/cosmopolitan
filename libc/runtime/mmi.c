@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,32 +17,6 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/macros.h"
+#include "libc/runtime/memtrack.h"
 
-/	Forks process without copying page tables.
-/
-/	This is the same as fork() except it's optimized for the case
-/	where the caller invokes exec() immediately afterwards.
-/
-/	@return	pid of child process or 0 if forked process
-/	@returnstwice
-vfork:	mov	__NR_vfork(%rip),%eax
-	cmp	$-1,%eax
-	je	systemfive.enosys
-	pop	%rsi
-	testb	IsBsd()
-	jnz	vfork.bsd
-	syscall
-	push	%rsi
-	cmp	$-4095,%rax
-	jae	systemfive.error
-	ret
-	.endfn	vfork,globl
-
-vfork.bsd:
-	syscall
-	push	%rsi
-	jc	systemfive.errno
-	ret
-	.endfn	vfork.bsd
+struct MemoryIntervals _mmi;

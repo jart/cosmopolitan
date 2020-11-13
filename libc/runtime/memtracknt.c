@@ -35,7 +35,7 @@ void ReleaseMemoryNt(struct MemoryIntervals *mm, int l, int r) {
   for (i = l; i <= r; ++i) {
     ok = UnmapViewOfFile(GetFrameAddr(mm->p[i].x));
     assert(ok);
-    ok = CloseHandle(mm->h[i]);
+    ok = CloseHandle(mm->p[i].h);
     assert(ok);
   }
 }

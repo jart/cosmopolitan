@@ -50,9 +50,9 @@ o/$(MODE)/test/ape/lib/%.com.dbg:			\
 		$(APE)
 	@$(APELINK)
 
-$(TEST_APE_LIB_OBJS):					\
-		OVERRIDE_CFLAGS +=			\
-			-fsanitize=address
+# $(TEST_APE_LIB_OBJS):					\
+# 		OVERRIDE_CFLAGS +=			\
+# 			-fsanitize=address
 
 .PHONY: o/$(MODE)/test/ape/lib
 o/$(MODE)/test/ape/lib:	$(TEST_APE_LIB_BINS)		\

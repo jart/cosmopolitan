@@ -12,7 +12,6 @@ extern int g_argc;                               /* CRT */
 extern char **g_argv;                            /* CRT */
 extern char **environ;                           /* CRT */
 extern unsigned long *g_auxv;                    /* CRT */
-extern jmp_buf g_winmain;                        /* CRT */
 extern char *program_invocation_name;            /* RII */
 extern char *program_invocation_short_name;      /* RII */
 extern uint64_t g_syscount;                      /* RII */

@@ -14,8 +14,10 @@ struct MemoryIntervals {
   struct MemoryInterval {
     int x;
     int y;
+    long h;
+    int prot;
+    int flags;
   } p[128];
-  long h[128];
 };
 
 extern struct MemoryIntervals _mmi;
@@ -23,7 +25,7 @@ extern struct MemoryIntervals _mmi;
 unsigned FindMemoryInterval(const struct MemoryIntervals *, int) nosideeffect;
 bool AreMemoryIntervalsOk(const struct MemoryIntervals *) nosideeffect;
 void PrintMemoryIntervals(int, const struct MemoryIntervals *);
-int TrackMemoryInterval(struct MemoryIntervals *, int, int, long);
+int TrackMemoryInterval(struct MemoryIntervals *, int, int, long, int, int);
 int ReleaseMemoryIntervals(struct MemoryIntervals *, int, int,
                            void (*)(struct MemoryIntervals *, int, int));
 void ReleaseMemoryNt(struct MemoryIntervals *, int, int);

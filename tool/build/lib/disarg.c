@@ -50,7 +50,7 @@ static const char kGreg[2][2][2][8][5] = {
      {{"rax", "rcx", "rdx", "rbx", "rsp", "rbp", "rsi", "rdi"},
       {"r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"}}},
     {{{"ax", "cx", "dx", "bx", "sp", "bp", "si", "di"},
-      {"r8w", "re9w", "r10w", "r11w", "r12w", "r13w", "r14w", "r15w"}},
+      {"r8w", "r9w", "r10w", "r11w", "r12w", "r13w", "r14w", "r15w"}},
      {{"rax", "rcx", "rdx", "rbx", "rsp", "rbp", "rsi", "rdi"},
       {"r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"}}},
 };

@@ -34,9 +34,6 @@ textwindows int accept$nt(struct Fd *fd, void *addr, uint32_t *addrsize,
   if ((client = createfd()) == -1) return -1;
   if ((g_fds.p[client].handle = WSAAccept(fd->handle, addr, (int32_t *)addrsize,
                                           NULL, NULL)) != -1) {
-    if (flags & SOCK_CLOEXEC) {
-      SetHandleInformation(g_fds.p[client].handle, kNtHandleFlagInherit, 0);
-    }
     if (flags & SOCK_NONBLOCK) {
       yes = 1;
       if (__ioctlsocket$nt(g_fds.p[client].handle, FIONBIO, &yes) == -1) {

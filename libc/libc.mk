@@ -15,7 +15,6 @@ o/$(MODE)/libc:	o/$(MODE)/libc/alg		\
 		o/$(MODE)/libc/crt		\
 		o/$(MODE)/libc/dns		\
 		o/$(MODE)/libc/elf		\
-		o/$(MODE)/libc/escape		\
 		o/$(MODE)/libc/fmt		\
 		o/$(MODE)/libc/intrin		\
 		o/$(MODE)/libc/linux		\

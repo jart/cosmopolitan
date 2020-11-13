@@ -20,7 +20,10 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/pushpop.h"
 #include "libc/bits/weaken.h"
+#include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/fmt/fmt.h"
+#include "libc/macros.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/nt/enum/filetype.h"
@@ -34,8 +37,21 @@
 #include "libc/nt/struct/teb.h"
 #include "libc/runtime/getdosenviron.h"
 #include "libc/runtime/internal.h"
+#include "libc/runtime/memtrack.h"
 #include "libc/runtime/missioncritical.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/winmain.h"
+#include "libc/sock/internal.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
+
+struct WinArgs {
+  char *argv[512];
+  char *envp[512];
+  long auxv[1][2];
+  char argblock[ARG_MAX];
+  char envblock[ENV_MAX];
+};
 
 static struct CmdExe {
   bool result;
@@ -46,13 +62,7 @@ static struct CmdExe {
   } oldin, oldout;
 } g_cmdexe;
 
-static textwindows void MitigateDriveByDownloads(void) {
-  unsigned wrote;
-  if (!SetDefaultDllDirectories(kNtLoadLibrarySearchSearchSystem32)) {
-    WriteFile(GetStdHandle(kNtStdErrorHandle), "nodll\n", 6, &wrote, NULL);
-    ExitProcess(1);
-  }
-}
+struct WinMain g_winmain;
 
 static textwindows void RestoreCmdExe(void) {
   if (g_cmdexe.oldin.handle) {
@@ -104,6 +114,53 @@ static textwindows void NormalizeCmdExe(void) {
   }
 }
 
+static textwindows char *AllocateMemory(void *addr, size_t size, int64_t *h) {
+  return MapViewOfFileExNuma(
+      (*h = CreateFileMappingNuma(-1, NULL, pushpop(kNtPageReadwrite), 0, size,
+                                  NULL, kNtNumaNoPreferredNode)),
+      kNtFileMapRead | kNtFileMapWrite, 0, 0, size, addr,
+      kNtNumaNoPreferredNode);
+}
+
+static textwindows noreturn void WinMainNew(int64_t hInstance,
+                                            int64_t hPrevInstance,
+                                            const char *lpCmdLine,
+                                            int nCmdShow) {
+  int64_t h;
+  size_t size;
+  int i, count;
+  uint64_t data;
+  struct WinArgs *wa;
+  const char16_t *env16;
+  g_winmain.nCmdShow = nCmdShow;
+  g_winmain.hInstance = hInstance;
+  g_winmain.hPrevInstance = hPrevInstance;
+  NormalizeCmdExe();
+  *(/*unconst*/ int *)&hostos = WINDOWS;
+  size = ROUNDUP(STACKSIZE + sizeof(struct WinArgs), FRAMESIZE);
+  data = 0x777000000000;
+  data = (intptr_t)AllocateMemory((char *)data, size, &_mmi.p[0].h);
+  _mmi.p[0].x = data >> 16;
+  _mmi.p[0].y = (data >> 16) + ((size >> 16) - 1);
+  _mmi.p[0].prot = PROT_READ | PROT_WRITE;
+  _mmi.p[0].flags = MAP_PRIVATE | MAP_ANONYMOUS;
+  _mmi.i = pushpop(1L);
+  wa = (struct WinArgs *)(data + size - sizeof(struct WinArgs));
+  count = GetDosArgv(GetCommandLine(), wa->argblock, ARG_MAX, wa->argv, 512);
+  for (i = 0; wa->argv[0][i]; ++i) {
+    if (wa->argv[0][i] == '\\') {
+      wa->argv[0][i] = '/';
+    }
+  }
+  env16 = GetEnvironmentStrings();
+  GetDosEnviron(env16, wa->envblock, ENV_MAX, wa->envp, 512);
+  FreeEnvironmentStrings(env16);
+  wa->auxv[0][0] = pushpop(0L);
+  wa->auxv[0][1] = pushpop(0L);
+  _jmpstack((char *)data + STACKSIZE, _executive, count, wa->argv, wa->envp,
+            wa->auxv);
+}
+
 /**
  * Main function on Windows NT.
  *
@@ -130,30 +187,15 @@ static textwindows void NormalizeCmdExe(void) {
  *      the downloads folder. Since we don't even use dynamic linking,
  *      we've cargo culted some API calls, that may harden against it.
  *
+ *   6. Finally, we need fork. Microsoft designed Windows to prevent us
+ *      from having fork() so we pass pipe handles in an environment
+ *      variable literally copy all the memory.
+ *
  */
-textwindows int WinMain(void *hInstance, void *hPrevInstance,
-                        const char *lpCmdLine, int nCmdShow) {
-  char *stack;
-  int i, count;
-  const char16_t *cmd16, *env16;
-  char *argv[512], *envp[512];
-  char argblock[ARG_MAX], envblock[ENV_MAX];
-  long auxv[][2] = {{pushpop(0L), pushpop(0L)}};
-  MitigateDriveByDownloads();
-  NormalizeCmdExe();
-  *(/*unconst*/ int *)&hostos = WINDOWS;
-  cmd16 = GetCommandLine();
-  env16 = GetEnvironmentStrings();
-  count = GetDosArgv(cmd16, argblock, ARG_MAX, argv, 512);
-  for (i = 0; argv[0][i]; ++i) {
-    if (argv[0][i] == '\\') argv[0][i] = '/';
-  }
-  GetDosEnviron(env16, envblock, ENV_MAX, envp, 512);
-  FreeEnvironmentStrings(env16);
-  stack = MapViewOfFileExNuma(
-      CreateFileMappingNuma(-1, NULL, pushpop(kNtPageReadwrite), 0, STACKSIZE,
-                            NULL, kNtNumaNoPreferredNode),
-      kNtFileMapRead | kNtFileMapWrite, 0, 0, STACKSIZE,
-      (char *)0x777000000000 - STACKSIZE, kNtNumaNoPreferredNode);
-  return _setstack(stack + STACKSIZE, _executive, count, argv, envp, auxv);
+textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
+                            const char *lpCmdLine, int nCmdShow) {
+  SetDefaultDllDirectories(kNtLoadLibrarySearchSearchSystem32);
+  if (weaken(winsockinit)) weaken(winsockinit)();
+  if (weaken(WinMainForked)) weaken(WinMainForked)();
+  WinMainNew(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
 }

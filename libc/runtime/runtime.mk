@@ -64,11 +64,6 @@ $(LIBC_RUNTIME_A_OBJS):					\
 		OVERRIDE_CFLAGS +=			\
 			$(NO_MAGIC)
 
-# @see ape/ape.s for tuning parameters that make this safe
-o/$(MODE)/libc/runtime/winmain.greg.o:			\
-		DEFAULT_CPPFLAGS +=			\
-			-DSTACK_FRAME_UNLIMITED
-
 LIBC_RUNTIME_LIBS = $(foreach x,$(LIBC_RUNTIME_ARTIFACTS),$($(x)))
 LIBC_RUNTIME_SRCS = $(foreach x,$(LIBC_RUNTIME_ARTIFACTS),$($(x)_SRCS))
 LIBC_RUNTIME_HDRS = $(foreach x,$(LIBC_RUNTIME_ARTIFACTS),$($(x)_HDRS))

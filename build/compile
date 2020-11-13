@@ -280,5 +280,5 @@ if "$@"; then
   exit 0
 fi
 
-printf "$LOGFMT" "$CCNAME $CCVERSION: compile $REASON:" "$*" >&2
+printf "\n$LOGFMT" "$CCNAME $CCVERSION: compile $REASON:" "$*" >&2
 exit 1

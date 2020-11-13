@@ -48,11 +48,11 @@ void GetSystemTimeAsFileTime(struct NtFileTime *);         // win8+
 void GetSystemTimePreciseAsFileTime(struct NtFileTime *);  // win8+
 
 uint32_t WaitForSingleObject(int64_t hHandle, uint32_t dwMilliseconds);
-uint32_t WaitForMultipleObjects(uint32_t nCount, const void **lpHandles,
+uint32_t WaitForMultipleObjects(uint32_t nCount, const int64_t *lpHandles,
                                 bool32 bWaitAll, uint32_t dwMilliseconds);
 uint32_t WaitForSingleObjectEx(int64_t hHandle, uint32_t dwMilliseconds,
                                bool32 bAlertable);
-uint32_t WaitForMultipleObjectsEx(unsigned int nCount, const void **lpHandles,
+uint32_t WaitForMultipleObjectsEx(unsigned int nCount, const int64_t *lpHandles,
                                   bool32 bWaitAll, uint32_t dwMilliseconds,
                                   bool32 bAlertable);
 

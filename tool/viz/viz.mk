@@ -84,11 +84,11 @@ $(TOOL_VIZ_OBJS):				\
 		$(BUILD_FILES)			\
 		tool/viz/viz.mk
 
-ifeq (,$(MODE))
-$(TOOL_VIZ_OBJS):				\
-		OVERRIDE_CFLAGS +=		\
-			-fsanitize=address
-endif
+# ifeq (,$(MODE))
+# $(TOOL_VIZ_OBJS):				\
+# 		OVERRIDE_CFLAGS +=		\
+# 			-fsanitize=address
+# endif
 
 .PHONY: o/$(MODE)/tool/viz
 o/$(MODE)/tool/viz:				\

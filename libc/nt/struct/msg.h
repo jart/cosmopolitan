@@ -6,8 +6,8 @@
 struct NtMsg {
   int64_t hwnd;
   uint32_t message;
-  uintptr_t wParam;
-  intptr_t lParam;
+  uint64_t wParam;
+  int64_t lParam;
   uint32_t time;
   struct NtPoint pt;
 };

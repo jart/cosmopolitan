@@ -92,11 +92,11 @@ $(TOOL_VIZ_LIB_A).pkg:					\
 		$(TOOL_VIZ_LIB_A_OBJS)			\
 		$(foreach x,$(TOOL_VIZ_LIB_A_DIRECTDEPS),$($(x)_A).pkg)
 
-ifeq (,$(MODE))
-$(TOOL_VIZ_LIB_A_OBJS):					\
-		OVERRIDE_CFLAGS +=			\
-			-fsanitize=address
-endif
+# ifeq (,$(MODE))
+# $(TOOL_VIZ_LIB_A_OBJS):					\
+# 		OVERRIDE_CFLAGS +=			\
+# 			-fsanitize=address
+# endif
 
 $(TOOL_VIZ_LIB_A_OBJS): tool/viz/lib/vizlib.mk
 

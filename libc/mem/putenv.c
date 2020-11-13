@@ -24,53 +24,49 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-static size_t g_environcap;
+#define MAX_VARS 512
 
-int PutEnvImpl(char *string, bool overwrite) {
-  if (!environ) {
-    g_environcap = 0;
-    if ((environ = calloc(8, sizeof(char *)))) {
-      g_environcap = 8;
-    }
-  }
-  char *equalp = strchr(string, '=');
-  if (!equalp) return einval();
-  unsigned namelen = equalp + 1 - string;
-  unsigned i;
+int PutEnvImpl(char *s, bool overwrite) {
+  char *p;
+  unsigned i, namelen;
+  p = strchr(s, '=');
+  if (!p) goto fail;
+  namelen = p + 1 - s;
   for (i = 0; environ[i]; ++i) {
-    if (strncmp(environ[i], string, namelen) == 0) {
+    if (strncmp(environ[i], s, namelen) == 0) {
       if (!overwrite) {
-        free_s(&string);
+        free(s);
         return 0;
       }
       goto replace;
     }
   }
-  if (i + 1 >= g_environcap) {
-    if (!g_environcap) g_environcap = i + 1;
-    if (!grow(&environ, &g_environcap, sizeof(char *), 0)) {
-      free_s(&string);
-      return -1;
-    }
-  }
+  if (i + 1 >= MAX_VARS) goto fail;
   environ[i + 1] = NULL;
 replace:
-  free_s(&environ[i]);
-  environ[i] = string;
+  free(environ[i]);
+  environ[i] = s;
   return 0;
+fail:
+  free(s);
+  return einval();
 }
 
 /**
  * Emplaces environment key=value.
  * @see setenv(), getenv()
  */
-int putenv(char *string) { return PutEnvImpl(string, true); }
-
-textexit static void putenv_fini(void) {
-  for (char **envp = environ; *envp; ++envp) free_s(envp);
-  free_s(&environ);
+int putenv(char *string) {
+  return PutEnvImpl(strdup(string), true);
 }
 
-textstartup static void putenv_init(void) { atexit(putenv_fini); }
+textstartup static void putenv_init(void) {
+  char **pin, **pout;
+  pin = environ;
+  pout = malloc(sizeof(char *) * MAX_VARS);
+  environ = pout;
+  while (*pin) *pout++ = strdup(*pin++);
+  *pout = NULL;
+}
 
 const void *const putenv_ctor[] initarray = {putenv_init};

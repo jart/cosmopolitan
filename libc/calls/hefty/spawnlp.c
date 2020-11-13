@@ -21,6 +21,7 @@
 #include "libc/calls/hefty/mkvarargv.h"
 #include "libc/calls/hefty/spawn.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/missioncritical.h"
 #include "libc/runtime/runtime.h"
 
 /**

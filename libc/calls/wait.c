@@ -18,9 +18,6 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/dce.h"
-#include "libc/sysv/errfuns.h"
 
 /**
  * Waits for status to change on any child process.
@@ -31,9 +28,5 @@
  * @asyncsignalsafe
  */
 int wait(int *opt_out_wstatus) {
-  if (!IsWindows()) {
-    return wait4$sysv(-1, opt_out_wstatus, 0, NULL);
-  } else {
-    return enosys(); /* TODO(jart) */
-  }
+  return wait4(-1, opt_out_wstatus, 0, NULL);
 }

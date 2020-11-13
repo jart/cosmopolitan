@@ -22,8 +22,10 @@ TOOL_NET_DIRECTDEPS =						\
 	LIBC_ALG						\
 	LIBC_BITS						\
 	LIBC_CALLS						\
+	LIBC_CALLS_HEFTY					\
 	LIBC_CONV						\
 	LIBC_DNS						\
+	LIBC_RAND						\
 	LIBC_FMT						\
 	LIBC_LOG						\
 	LIBC_LOG_ASAN						\
@@ -71,11 +73,11 @@ o/$(MODE)/tool/net/redbean.com.dbg:				\
 		$(APE)
 	@$(APELINK)
 
-ifeq (,$(MODE))
-$(TOOL_NET_OBJS):						\
-		OVERRIDE_CFLAGS +=				\
-			-fsanitize=address
-endif
+# ifeq (,$(MODE))
+# $(TOOL_NET_OBJS):						\
+# 		OVERRIDE_CFLAGS +=				\
+# 			-fsanitize=address
+# endif
 
 .PHONY: o/$(MODE)/tool/net
 o/$(MODE)/tool/net:						\

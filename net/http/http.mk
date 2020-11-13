@@ -59,11 +59,11 @@ o/$(MODE)/net/http/formathttpdatetime.o:	\
 		OVERRIDE_CFLAGS +=		\
 			-O3
 
-ifeq (,$(MODE))
-$(NET_HTTP_A_OBJS):				\
-		OVERRIDE_CFLAGS +=		\
-			-fsanitize=address
-endif
+# ifeq (,$(MODE))
+# $(NET_HTTP_A_OBJS):				\
+# 		OVERRIDE_CFLAGS +=		\
+# 			-fsanitize=address
+# endif
 
 NET_HTTP_LIBS = $(foreach x,$(NET_HTTP_ARTIFACTS),$($(x)))
 NET_HTTP_SRCS = $(foreach x,$(NET_HTTP_ARTIFACTS),$($(x)_SRCS))

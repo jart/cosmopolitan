@@ -29,7 +29,11 @@
 struct HttpRequest req[1];
 
 static char *slice(const char *m, struct HttpRequestSlice s) {
-  return memcpy(xmalloc(s.b - s.a), m + s.a, s.b - s.a);
+  char *p;
+  p = xmalloc(s.b - s.a + 1);
+  memcpy(p, m + s.a, s.b - s.a);
+  p[s.b - s.a] = 0;
+  return p;
 }
 
 TEST(ParseHttpRequest, testEmpty) {

@@ -40,6 +40,8 @@ TOOL_BUILD_DIRECTDEPS =					\
 	LIBC_TINYMATH					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
+	LIBC_NT_KERNELBASE				\
+	LIBC_NT_USER32					\
 	LIBC_RUNTIME					\
 	LIBC_SOCK					\
 	LIBC_STDIO					\
@@ -85,6 +87,12 @@ o/$(MODE)/tool/build/%.com.dbg:				\
 o/$(MODE)/tool/build/emulator.o:			\
 		OVERRIDE_COPTS +=			\
 			-fno-sanitize=pointer-overflow
+
+# ifeq (,$(MODE))
+# $(TOOL_BUILD_OBJS):					\
+# 		OVERRIDE_COPTS +=			\
+# 			-fsanitize=address
+# endif
 
 .PHONY: o/$(MODE)/tool/build
 o/$(MODE)/tool/build:					\

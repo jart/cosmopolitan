@@ -28,10 +28,13 @@
 /	@param	edi is exit code ∈ [0,256)
 /	@note	_exit() is same thing
 /	@asyncsignalsafe
-_Exit:	orl	$RUNSTATE_TERMINATE,g_runstate(%rip)
+_Exit:	push	%rbp
+	mov	%rsp,%rbp
+	orl	$RUNSTATE_TERMINATE,g_runstate(%rip)
 #if SupportsWindows()
 	testb	IsWindows()
 	jz	1f
+	sub	$32,%rsp
 	movzbl	%dil,%ecx		# %ERRORLEVEL% is limitless
 4:	call	*__imp_ExitProcess(%rip)
 	jmp	4b

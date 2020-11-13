@@ -30,8 +30,6 @@ static void RemoveMemoryIntervals(struct MemoryIntervals *mm, int i, int n) {
   assert(i + n <= mm->i);
   memcpy(mm->p + i, mm->p + i + n,
          (intptr_t)(mm->p + mm->i) - (intptr_t)(mm->p + i + n));
-  memcpy(mm->h + i, mm->h + i + n,
-         (intptr_t)(mm->h + mm->i) - (intptr_t)(mm->h + i + n));
   mm->i -= n;
 }
 
@@ -41,8 +39,6 @@ static void CreateMemoryInterval(struct MemoryIntervals *mm, int i) {
   assert(mm->i < ARRAYLEN(mm->p));
   memmove(mm->p + i + 1, mm->p + i,
           (intptr_t)(mm->p + mm->i) - (intptr_t)(mm->p + i));
-  memmove(mm->h + i + 1, mm->h + i,
-          (intptr_t)(mm->h + mm->i) - (intptr_t)(mm->h + i));
   ++mm->i;
 }
 
@@ -94,25 +90,31 @@ int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
   return 0;
 }
 
-int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h) {
+int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h,
+                        int prot, int flags) {
   unsigned i;
   assert(y >= x);
   assert(AreMemoryIntervalsOk(mm));
   i = FindMemoryInterval(mm, x);
-  if (i && x == mm->p[i - 1].y + 1 && h == mm->h[i - 1]) {
+  if (i && x == mm->p[i - 1].y + 1 && h == mm->p[i - 1].h &&
+      prot == mm->p[i - 1].prot && flags == mm->p[i - 1].flags) {
     mm->p[i - 1].y = y;
-    if (i < mm->i && y + 1 == mm->p[i].x && h == mm->h[i]) {
+    if (i < mm->i && y + 1 == mm->p[i].x && h == mm->p[i].h &&
+        prot == mm->p[i].prot && flags == mm->p[i].flags) {
       mm->p[i - 1].y = mm->p[i].y;
       RemoveMemoryIntervals(mm, i, 1);
     }
-  } else if (i < mm->i && y + 1 == mm->p[i].x && h == mm->h[i]) {
+  } else if (i < mm->i && y + 1 == mm->p[i].x && h == mm->p[i].h &&
+             prot == mm->p[i].prot && flags == mm->p[i].flags) {
     mm->p[i].x = x;
   } else {
     if (mm->i == ARRAYLEN(mm->p)) return enomem();
     CreateMemoryInterval(mm, i);
     mm->p[i].x = x;
     mm->p[i].y = y;
-    mm->h[i] = h;
+    mm->p[i].h = h;
+    mm->p[i].prot = prot;
+    mm->p[i].flags = flags;
   }
   return 0;
 }

@@ -134,7 +134,7 @@ DIR *opendir(const char *name) {
   DIR *res;
   if (!IsWindows() && !IsXnu()) {
     res = NULL;
-    if ((fd = open(name, O_RDONLY | O_DIRECTORY | O_CLOEXEC, 0)) != -1) {
+    if ((fd = open(name, O_RDONLY | O_DIRECTORY | O_CLOEXEC)) != -1) {
       if (!(res = fdopendir(fd))) close(fd);
     }
     return res;

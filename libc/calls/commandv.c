@@ -24,6 +24,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nt/ntdll.h"
+#include "libc/runtime/missioncritical.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ok.h"
@@ -32,7 +33,7 @@
 static int accessexe(char pathname[hasatleast PATH_MAX], size_t len,
                      const char *ext) {
   len = stpcpy(&pathname[len], ext) - &pathname[0];
-  if (access(pathname, X_OK) != -1) {
+  if (isexecutable(pathname)) {
     return len;
   } else {
     return -1;
@@ -48,7 +49,7 @@ static int accesscmd(char pathname[hasatleast PATH_MAX], const char *path,
   pathlen = strlen(path);
   if (pathlen + 1 + namelen + 1 + 4 + 1 > PATH_MAX) return -1;
   p = mempcpy(pathname, path, pathlen);
-  if (pathlen) *p++ = '/';
+  if (pathlen && pathname[pathlen - 1] != '/') *p++ = '/';
   p = mempcpy(p, name, namelen);
   len = p - &pathname[0];
   hasdot = !!memchr(basename(name), '.', namelen);

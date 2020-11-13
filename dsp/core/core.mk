@@ -58,11 +58,11 @@ o/$(MODE)/dsp/core/det3.o:			\
 		OVERRIDE_CFLAGS +=		\
 			-ffast-math
 
-ifeq (,$(MODE))
-$(DSP_CORE_OBJS):				\
-		OVERRIDE_CFLAGS +=		\
-			-fsanitize=address
-endif
+# ifeq (,$(MODE))
+# $(DSP_CORE_OBJS):				\
+# 		OVERRIDE_CFLAGS +=		\
+# 			-fsanitize=address
+# endif
 
 DSP_CORE_LIBS = $(foreach x,$(DSP_CORE_ARTIFACTS),$($(x)))
 DSP_CORE_SRCS = $(foreach x,$(DSP_CORE_ARTIFACTS),$($(x)_SRCS))

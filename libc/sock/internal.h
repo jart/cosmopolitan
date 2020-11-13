@@ -112,6 +112,7 @@ ssize_t sendto$nt(struct Fd *, const struct iovec *, size_t, uint32_t, void *,
 ssize_t recvfrom$nt(struct Fd *, const struct iovec *, size_t, uint32_t, void *,
                     uint32_t *) hidden;
 
+void winsockinit(void) hidden;
 int64_t winsockerr(void) nocallback hidden;
 int fixupnewsockfd$sysv(int, int) hidden;
 ssize_t WinSendRecv(int64_t, void *, size_t, uint32_t, struct sockaddr *,

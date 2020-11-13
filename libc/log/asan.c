@@ -401,7 +401,8 @@ void __asan_map_shadow(void *p, size_t n) {
                      PROT_READ | PROT_WRITE,
                      MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
       if (sm.addr == MAP_FAILED ||
-          TrackMemoryInterval(&_mmi, a, a, sm.maphandle) == -1) {
+          TrackMemoryInterval(&_mmi, a, a, sm.maphandle, PROT_READ | PROT_WRITE,
+                              MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED) == -1) {
         abort();
       }
     }

@@ -63,11 +63,11 @@ $(THIRD_PARTY_STB_A_OBJS):				\
 			-ffunction-sections		\
 			-fdata-sections
 
-o//third_party/stb/stb_image_write.o			\
-o//third_party/stb/stb_image.o:				\
-		OVERRIDE_CFLAGS +=			\
-			-ftrapv				\
-			-fsanitize=address
+# o//third_party/stb/stb_image_write.o			\
+# o//third_party/stb/stb_image.o:				\
+# 		OVERRIDE_CFLAGS +=			\
+# 			-ftrapv				\
+# 			-fsanitize=address
 
 $(THIRD_PARTY_STB_A_OBJS):				\
 		OVERRIDE_CPPFLAGS +=			\

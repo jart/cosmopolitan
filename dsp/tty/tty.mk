@@ -59,11 +59,11 @@ o/$(MODE)/dsp/tty/ttyraster.o:			\
 		OVERRIDE_CFLAGS +=		\
 			$(MATHEMATICAL)
 
-ifeq (,$(MODE))
-$(DSP_TTY_OBJS):				\
-		OVERRIDE_CFLAGS +=		\
-			-fsanitize=address
-endif
+# ifeq (,$(MODE))
+# $(DSP_TTY_OBJS):				\
+# 		OVERRIDE_CFLAGS +=		\
+# 			-fsanitize=address
+# endif
 
 DSP_TTY_LIBS = $(foreach x,$(DSP_TTY_ARTIFACTS),$($(x)))
 DSP_TTY_SRCS = $(foreach x,$(DSP_TTY_ARTIFACTS),$($(x)_SRCS))

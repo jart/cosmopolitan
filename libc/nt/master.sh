@@ -1635,7 +1635,7 @@ imp	'FillConsoleOutputAttribute'				FillConsoleOutputAttribute				KernelBase	354
 imp	'FillConsoleOutputCharacter'				FillConsoleOutputCharacterW				KernelBase	356	5
 imp	'FillConsoleOutputCharacterA'				FillConsoleOutputCharacterA				KernelBase	355	5
 imp	'FillPath'						FillPath						gdi32		1479
-imp	'FillRect'						FillRect						user32		1780
+imp	'FillRect'						FillRect						user32		1780	3
 imp	'FillRgn'						FillRgn							gdi32		1480
 imp	'FindActCtxSectionGuid'					FindActCtxSectionGuid					KernelBase	357
 imp	'FindActCtxSectionGuidWorker'				FindActCtxSectionGuidWorker				kernel32	372
@@ -3191,17 +3191,17 @@ imp	'LoadAlterBitmap'					LoadAlterBitmap						comdlg32	117
 imp	'LoadAppInitDlls'					LoadAppInitDlls						KernelBase	971
 imp	'LoadBitmapA'						LoadBitmapA						user32		2096
 imp	'LoadBitmap'						LoadBitmapW						user32		2097
-imp	'LoadCursorA'						LoadCursorA						user32		2098
+imp	'LoadCursorA'						LoadCursorA						user32		2098	2
 imp	'LoadCursorFromFileA'					LoadCursorFromFileA					user32		2099
 imp	'LoadCursorFromFile'					LoadCursorFromFileW					user32		2100
-imp	'LoadCursor'						LoadCursorW						user32		2101
+imp	'LoadCursor'						LoadCursorW						user32		2101	2
 imp	'LoadEnclaveData'					LoadEnclaveData						KernelBase	972
 imp	'LoadEnclaveImageA'					LoadEnclaveImageA					KernelBase	973
 imp	'LoadEnclaveImage'					LoadEnclaveImageW					KernelBase	974
 imp	'LoadIcon'						LoadIconW						user32		2103	2
 imp	'LoadIconA'						LoadIconA						user32		2102	2
-imp	'LoadImageA'						LoadImageA						user32		2104
-imp	'LoadImage'						LoadImageW						user32		2105
+imp	'LoadImageA'						LoadImageA						user32		2104	6
+imp	'LoadImage'						LoadImageW						user32		2105	6
 imp	'LoadKeyboardLayoutA'					LoadKeyboardLayoutA					user32		2106
 imp	'LoadKeyboardLayoutEx'					LoadKeyboardLayoutEx					user32		2107
 imp	'LoadKeyboardLayout'					LoadKeyboardLayoutW					user32		2108
@@ -3996,6 +3996,8 @@ imp	'NtWriteFileGather'					NtWriteFileGather					ntdll		656
 imp	'NtWriteRequestData'					NtWriteRequestData					ntdll		657
 imp	'NtWriteVirtualMemory'					NtWriteVirtualMemory					ntdll		658	5
 imp	'NtYieldExecution'					NtYieldExecution					ntdll		659	0
+imp	'DefWindowProcA'					DefWindowProcA						user32		173	4
+imp	'DefWindowProc'						DefWindowProcW						user32		174	4
 imp	'NtdllDefWindowProc_A'					NtdllDefWindowProc_A					ntdll		660
 imp	'NtdllDefWindowProc_W'					NtdllDefWindowProc_W					ntdll		661
 imp	'NtdllDialogWndProc_A'					NtdllDialogWndProc_A					ntdll		662
@@ -4644,10 +4646,10 @@ imp	'RegisterApplicationRecoveryCallback'			RegisterApplicationRecoveryCallback	
 imp	'RegisterApplicationRestart'				RegisterApplicationRestart				kernel32	1185
 imp	'RegisterBSDRWindow'					RegisterBSDRWindow					user32		2247
 imp	'RegisterBadMemoryNotification'				RegisterBadMemoryNotification				KernelBase	1384
-imp	'RegisterClassA'					RegisterClassA						user32		2248
-imp	'RegisterClassExA'					RegisterClassExA					user32		2249
-imp	'RegisterClassEx'					RegisterClassExW					user32		2250
-imp	'RegisterClass'						RegisterClassW						user32		2251
+imp	'RegisterClassA'					RegisterClassA						user32		2248	1
+imp	'RegisterClassExA'					RegisterClassExA					user32		2249	1
+imp	'RegisterClassEx'					RegisterClassExW					user32		2250	1
+imp	'RegisterClass'						RegisterClassW						user32		2251	1
 imp	'RegisterClipboardFormatA'				RegisterClipboardFormatA				user32		2252
 imp	'RegisterClipboardFormat'				RegisterClipboardFormatW				user32		2253
 imp	'RegisterConsoleIME'					RegisterConsoleIME					kernel32	1187
@@ -6482,9 +6484,9 @@ imp	'ShipAssert'						ShipAssert						ntdll		1612
 imp	'ShipAssertGetBufferInfo'				ShipAssertGetBufferInfo					ntdll		1613
 imp	'ShipAssertMsgA'					ShipAssertMsgA						ntdll		1614
 imp	'ShipAssertMsg'						ShipAssertMsgW						ntdll		1615
-imp	'ShowCaret'						ShowCaret						user32		2411
+imp	'ShowCaret'						ShowCaret						user32		2411	1
 imp	'ShowConsoleCursor'					ShowConsoleCursor					kernel32	1409
-imp	'ShowCursor'						ShowCursor						user32		2412
+imp	'ShowCursor'						ShowCursor						user32		2412	1
 imp	'ShowOwnedPopups'					ShowOwnedPopups						user32		2413
 imp	'ShowScrollBar'						ShowScrollBar						user32		2414
 imp	'ShowStartGlass'					ShowStartGlass						user32		2415

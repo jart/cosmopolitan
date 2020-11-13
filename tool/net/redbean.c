@@ -36,6 +36,7 @@
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
+#include "libc/rand/rand.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/missioncritical.h"
 #include "libc/runtime/runtime.h"
@@ -650,7 +651,7 @@ static bool OpenZip(const char *path) {
     map = MAP_FAILED;
     if ((fd = open(path, O_RDONLY)) != -1 && fstat(fd, &st) != -1 &&
         st.st_size &&
-        (map = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) &&
+        (map = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0)) &&
         (cdir = zipfindcentraldir(zmap, zmapsize)) && IndexAssets(map, cdir)) {
       ok = true;
       zmap = map;
@@ -1116,14 +1117,13 @@ void ProcessRequests(void) {
 void ProcessConnection(void) {
   int pid;
   clientaddrsize = sizeof(clientaddr);
-  client = accept4(server, &clientaddr, &clientaddrsize, SOCK_CLOEXEC);
+  client = accept4(server, &clientaddr, &clientaddrsize, 0 /* SOCK_CLOEXEC */);
   if (client != -1) {
     startconnection = nowl();
     if ((pid = uniprocess ? -1 : fork()) > 0) {
       close(client);
       return;
     }
-    if (!pid) close(server);
     if (pid == -1) terminated = true;
     DescribeAddress(clientaddrstr, &clientaddr);
     DEBUGF("%s accept", clientaddrstr);

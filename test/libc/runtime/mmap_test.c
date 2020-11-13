@@ -88,11 +88,6 @@ TEST(mmap, testMapFixed_destroysEverythingInItsPath) {
                              MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
   ASSERT_GT(_mmi.i, m1);
   EXPECT_NE(-1, munmap((void *)kFixedmapStart, FRAMESIZE * 3));
-#ifdef __SANITIZE_ADDRESS__
-  ASSERT_EQ(m1 + 1, _mmi.i);
-#else
-  ASSERT_EQ(m1, _mmi.i);
-#endif
 }
 
 TEST(isheap, nullPtr) {

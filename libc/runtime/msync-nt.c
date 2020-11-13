@@ -30,7 +30,7 @@ textwindows int msync$nt(void *addr, size_t size, int flags) {
   for (i = FindMemoryInterval(&_mmi, x); i < _mmi.i; ++i) {
     if ((x >= _mmi.p[i].x && x <= _mmi.p[i].y) ||
         (y >= _mmi.p[i].x && y <= _mmi.p[i].y)) {
-      FlushFileBuffers(_mmi.h[i]);
+      FlushFileBuffers(_mmi.p[i].h);
     } else {
       break;
     }

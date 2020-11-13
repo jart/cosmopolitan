@@ -56,11 +56,11 @@ struct Fds {
 
 extern const struct Fd kEmptyFd;
 
-extern int g_sighandrvas[NSIG] hidden;
-extern struct Fds g_fds hidden;
-extern struct NtSystemInfo g_ntsysteminfo hidden;
-extern struct NtStartupInfo g_ntstartupinfo hidden;
-extern const struct NtSecurityAttributes kNtIsInheritable hidden;
+hidden extern int g_sighandrvas[NSIG];
+hidden extern struct Fds g_fds;
+hidden extern struct NtSystemInfo g_ntsysteminfo;
+hidden extern struct NtStartupInfo g_ntstartupinfo;
+hidden extern const struct NtSecurityAttributes kNtIsInheritable;
 
 ssize_t createfd(void) hidden;
 int growfds(void) hidden;
@@ -218,6 +218,7 @@ void xnutrampoline(void *, i32, i32, const struct __darwin_siginfo *,
 int gettimeofday$nt(struct timeval *, struct timezone *) hidden;
 bool32 isatty$nt(int) hidden;
 char *getcwd$nt(char *, size_t) hidden;
+int fork$nt(void) hidden;
 int chdir$nt(const char *) hidden;
 int close$nt(int) hidden;
 int dup$nt(int, int, int) hidden;
@@ -258,6 +259,7 @@ int nanosleep$nt(const struct timespec *, struct timespec *) hidden;
 │ cosmopolitan § syscalls » windows nt » support                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+void WinMainForked(void) hidden;
 int getsetpriority$nt(int, unsigned, int, int (*)(int));
 void ntcontext2linux(struct ucontext *, const struct NtContext *) hidden;
 struct NtOverlapped *offset2overlap(int64_t, struct NtOverlapped *) hidden;

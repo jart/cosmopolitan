@@ -67,7 +67,7 @@ textwindows int spawnve$nt(unsigned flags, int stdiofds[3], const char *program,
   }
 
   if (handle != -1 &&
-      ntspawn(program, argv, envp, NULL, NULL,
+      ntspawn(program, argv, envp, &kNtIsInheritable, NULL,
               (flags & SPAWN_TABULARASA) ? false : true,
               (flags & SPAWN_DETACH)
                   ? (kNtCreateNewProcessGroup | kNtDetachedProcess |
@@ -83,7 +83,7 @@ textwindows int spawnve$nt(unsigned flags, int stdiofds[3], const char *program,
       if (handle != -1) {
         stdiofds[i] = tubes[i];
         g_fds.p[tubes[i]].kind = kFdFile;
-        g_fds.p[tubes[i]].flags = O_CLOEXEC;
+        g_fds.p[tubes[i]].flags = 0;
         CloseHandle(sti.stdiofds[i]);
       } else {
         CloseHandle(tubes[i]);

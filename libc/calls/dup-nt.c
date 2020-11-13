@@ -44,7 +44,7 @@ textwindows int dup$nt(int oldfd, int newfd, int flags) {
   }
   if (DuplicateHandle(GetCurrentProcess(), g_fds.p[oldfd].handle,
                       GetCurrentProcess(), &g_fds.p[newfd].handle, 0,
-                      (flags & O_CLOEXEC), kNtDuplicateSameAccess)) {
+                      flags & O_CLOEXEC, kNtDuplicateSameAccess)) {
     g_fds.p[newfd].kind = g_fds.p[oldfd].kind;
     g_fds.p[newfd].flags = flags;
     return newfd;

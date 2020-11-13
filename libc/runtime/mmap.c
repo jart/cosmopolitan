@@ -39,8 +39,6 @@
 #define ALIGNED(p)   (!(IP(p) & (FRAMESIZE - 1)))
 #define CANONICAL(p) (-0x800000000000 <= IP(p) && IP(p) <= 0x7fffffffffff)
 
-struct MemoryIntervals _mmi;
-
 /**
  * Beseeches system for page-table entries.
  *
@@ -92,7 +90,7 @@ void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   }
   a = ROUNDDOWN((intptr_t)addr, FRAMESIZE) >> 16;
   b = ROUNDDOWN((intptr_t)addr + size - 1, FRAMESIZE) >> 16;
-  if (TrackMemoryInterval(&_mmi, a, b, dm.maphandle) == -1) {
+  if (TrackMemoryInterval(&_mmi, a, b, dm.maphandle, prot, flags) == -1) {
     abort();
   }
   if (weaken(__asan_map_shadow)) {

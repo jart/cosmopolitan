@@ -31,7 +31,6 @@ static bool AreMemoryIntervalsEqual(const struct MemoryIntervals *mm1,
                                     const struct MemoryIntervals *mm2) {
   if (mm1->i != mm2->i) return false;
   if (memcmp(mm1->p, mm2->p, mm1->i * sizeof(*mm2->p)) != 0) return false;
-  if (memcmp(mm1->h, mm2->h, mm1->i * sizeof(*mm2->h)) != 0) return false;
   return true;
 }
 
@@ -67,7 +66,7 @@ static void RunTrackMemoryIntervalTest(const struct MemoryIntervals t[2], int x,
   struct MemoryIntervals *mm;
   mm = memcpy(memalign(alignof(*t), sizeof(*t)), t, sizeof(*t));
   CheckMemoryIntervalsAreOk(mm);
-  CHECK_NE(-1, TrackMemoryInterval(mm, x, y, h));
+  CHECK_NE(-1, TrackMemoryInterval(mm, x, y, h, 0, 0));
   CheckMemoryIntervalsAreOk(mm);
   CheckMemoryIntervalsEqual(mm, t + 1);
   free(mm);
@@ -86,8 +85,8 @@ static void RunReleaseMemoryIntervalsTest(const struct MemoryIntervals t[2],
 
 TEST(TrackMemoryInterval, TestEmpty) {
   static const struct MemoryIntervals mm[2] = {
-      {0, {}, {}},
-      {1, {{2, 2}}, {0}},
+      {0, {}},
+      {1, {{2, 2, 0}}},
   };
   RunTrackMemoryIntervalTest(mm, 2, 2, 0);
 }
@@ -98,10 +97,10 @@ TEST(TrackMemoryInterval, TestFull) {
   mm = calloc(1, sizeof(struct MemoryIntervals));
   for (i = 0; i < ARRAYLEN(mm->p); ++i) {
     CheckMemoryIntervalsAreOk(mm);
-    CHECK_NE(-1, TrackMemoryInterval(mm, i, i, i));
+    CHECK_NE(-1, TrackMemoryInterval(mm, i, i, i, 0, 0));
     CheckMemoryIntervalsAreOk(mm);
   }
-  CHECK_EQ(-1, TrackMemoryInterval(mm, i, i, i));
+  CHECK_EQ(-1, TrackMemoryInterval(mm, i, i, i, 0, 0));
   CHECK_EQ(ENOMEM, errno);
   CheckMemoryIntervalsAreOk(mm);
   free(mm);
@@ -109,62 +108,63 @@ TEST(TrackMemoryInterval, TestFull) {
 
 TEST(TrackMemoryInterval, TestAppend) {
   static const struct MemoryIntervals mm[2] = {
-      {1, {{2, 2}}, {0}},
-      {1, {{2, 3}}, {0}},
+      {1, {{2, 2}}},
+      {1, {{2, 3}}},
   };
   RunTrackMemoryIntervalTest(mm, 3, 3, 0);
 }
 
 TEST(TrackMemoryInterval, TestPrepend) {
   static const struct MemoryIntervals mm[2] = {
-      {1, {{2, 2}}, {0}},
-      {1, {{1, 2}}, {0}},
+      {1, {{2, 2}}},
+      {1, {{1, 2}}},
   };
   RunTrackMemoryIntervalTest(mm, 1, 1, 0);
 }
 
 TEST(TrackMemoryInterval, TestFillHole) {
   static const struct MemoryIntervals mm[2] = {
-      {4, {{1, 1}, {3, 4}, {5, 5}, {6, 8}}, {0, 0, 1, 0}},
-      {3, {{1, 4}, {5, 5}, {6, 8}}, {0, 1, 0}},
+      {4, {{1, 1}, {3, 4}, {5, 5, 1}, {6, 8}}},
+      {3, {{1, 4}, {5, 5, 1}, {6, 8}}},
   };
   RunTrackMemoryIntervalTest(mm, 2, 2, 0);
 }
 
 TEST(TrackMemoryInterval, TestAppend2) {
   static const struct MemoryIntervals mm[2] = {
-      {1, {{2, 2}}, {0}},
-      {2, {{2, 2}, {3, 3}}, {0, 1}},
+      {1, {{2, 2}}},
+      {2, {{2, 2}, {3, 3, 1}}},
   };
   RunTrackMemoryIntervalTest(mm, 3, 3, 1);
 }
 
 TEST(TrackMemoryInterval, TestPrepend2) {
   static const struct MemoryIntervals mm[2] = {
-      {1, {{2, 2}}, {0}},
-      {2, {{1, 1}, {2, 2}}, {1, 0}},
+      {1, {{2, 2}}},
+      {2, {{1, 1, 1}, {2, 2}}},
   };
   RunTrackMemoryIntervalTest(mm, 1, 1, 1);
 }
 
 TEST(TrackMemoryInterval, TestFillHole2) {
   static const struct MemoryIntervals mm[2] = {
-      {4, {{1, 1}, {3, 4}, {5, 5}, {6, 8}}, {0, 0, 1, 0}},
-      {5, {{1, 1}, {2, 2}, {3, 4}, {5, 5}, {6, 8}}, {0, 1, 0, 1, 0}},
+      {4, {{1, 1}, {3, 4}, {5, 5, 1}, {6, 8}}},
+      {5, {{1, 1}, {2, 2, 1}, {3, 4}, {5, 5, 1}, {6, 8}}},
   };
   RunTrackMemoryIntervalTest(mm, 2, 2, 1);
 }
 
 TEST(FindMemoryInterval, Test) {
   static const struct MemoryIntervals mm[1] = {
-      {4,
-       {
-           [0] = {1, 1},
-           [1] = {3, 4},
-           [2] = {5, 5},
-           [3] = {6, 8},
-       },
-       {0, 0, 1, 0}},
+      {
+          4,
+          {
+              [0] = {1, 1},
+              [1] = {3, 4},
+              [2] = {5, 5, 1},
+              [3] = {6, 8},
+          },
+      },
   };
   EXPECT_EQ(0, FindMemoryInterval(mm, 0));
   EXPECT_EQ(0, FindMemoryInterval(mm, 1));
@@ -180,96 +180,96 @@ TEST(FindMemoryInterval, Test) {
 
 TEST(ReleaseMemoryIntervals, TestEmpty) {
   static const struct MemoryIntervals mm[2] = {
-      {0, {}, {}},
-      {0, {}, {}},
+      {0, {}},
+      {0, {}},
   };
   RunReleaseMemoryIntervalsTest(mm, 2, 2);
 }
 
 TEST(ReleaseMemoryIntervals, TestRemoveElement_UsesInclusiveRange) {
   static const struct MemoryIntervals mm[2] = {
-      {3, {{0, 0}, {2, 2}, {4, 4}}, {}},
-      {2, {{0, 0}, {4, 4}}, {}},
+      {3, {{0, 0}, {2, 2}, {4, 4}}},
+      {2, {{0, 0}, {4, 4}}},
   };
   RunReleaseMemoryIntervalsTest(mm, 2, 2);
 }
 
 TEST(ReleaseMemoryIntervals, TestPunchHole) {
   static const struct MemoryIntervals mm[2] = {
-      {1, {{0, 9}}, {}},
-      {2, {{0, 3}, {6, 9}}, {}},
+      {1, {{0, 9}}},
+      {2, {{0, 3}, {6, 9}}},
   };
   RunReleaseMemoryIntervalsTest(mm, 4, 5);
 }
 
 TEST(ReleaseMemoryIntervals, TestShortenLeft) {
   static const struct MemoryIntervals mm[2] = {
-      {1, {{0, 9}}, {}},
-      {1, {{0, 7}}, {}},
+      {1, {{0, 9}}},
+      {1, {{0, 7}}},
   };
   RunReleaseMemoryIntervalsTest(mm, 8, 9);
 }
 
 TEST(ReleaseMemoryIntervals, TestShortenRight) {
   static const struct MemoryIntervals mm[2] = {
-      {1, {{0, 9}}, {}},
-      {1, {{3, 9}}, {}},
+      {1, {{0, 9}}},
+      {1, {{3, 9}}},
   };
   RunReleaseMemoryIntervalsTest(mm, 0, 2);
 }
 
 TEST(ReleaseMemoryIntervals, TestShortenLeft2) {
   static const struct MemoryIntervals mm[2] = {
-      {1, {{0, 9}}, {}},
-      {1, {{0, 7}}, {}},
+      {1, {{0, 9}}},
+      {1, {{0, 7}}},
   };
   RunReleaseMemoryIntervalsTest(mm, 8, 11);
 }
 
 TEST(ReleaseMemoryIntervals, TestShortenRight2) {
   static const struct MemoryIntervals mm[2] = {
-      {1, {{0, 9}}, {}},
-      {1, {{3, 9}}, {}},
+      {1, {{0, 9}}},
+      {1, {{3, 9}}},
   };
   RunReleaseMemoryIntervalsTest(mm, -3, 2);
 }
 
 TEST(ReleaseMemoryIntervals, TestZeroZero) {
   static const struct MemoryIntervals mm[2] = {
-      {1, {{3, 9}}, {}},
-      {1, {{3, 9}}, {}},
+      {1, {{3, 9}}},
+      {1, {{3, 9}}},
   };
   RunReleaseMemoryIntervalsTest(mm, 0, 0);
 }
 
 TEST(ReleaseMemoryIntervals, TestNoopLeft) {
   static const struct MemoryIntervals mm[2] = {
-      {1, {{3, 9}}, {}},
-      {1, {{3, 9}}, {}},
+      {1, {{3, 9}}},
+      {1, {{3, 9}}},
   };
   RunReleaseMemoryIntervalsTest(mm, 1, 2);
 }
 
 TEST(ReleaseMemoryIntervals, TestNoopRight) {
   static const struct MemoryIntervals mm[2] = {
-      {1, {{3, 9}}, {}},
-      {1, {{3, 9}}, {}},
+      {1, {{3, 9}}},
+      {1, {{3, 9}}},
   };
   RunReleaseMemoryIntervalsTest(mm, 10, 10);
 }
 
 TEST(ReleaseMemoryIntervals, TestBigFree) {
   static const struct MemoryIntervals mm[2] = {
-      {2, {{0, 3}, {6, 9}}, {}},
-      {0, {}, {}},
+      {2, {{0, 3}, {6, 9}}},
+      {0, {}},
   };
   RunReleaseMemoryIntervalsTest(mm, INT_MIN, INT_MAX);
 }
 
 TEST(ReleaseMemoryIntervals, TestWeirdGap) {
   static const struct MemoryIntervals mm[2] = {
-      {3, {{10, 10}, {20, 20}, {30, 30}}, {}},
-      {2, {{10, 10}, {30, 30}}, {}},
+      {3, {{10, 10}, {20, 20}, {30, 30}}},
+      {2, {{10, 10}, {30, 30}}},
   };
   RunReleaseMemoryIntervalsTest(mm, 15, 25);
 }
@@ -279,7 +279,7 @@ TEST(ReleaseMemoryIntervals, TestOutOfMemory) {
   struct MemoryIntervals *mm;
   mm = calloc(1, sizeof(struct MemoryIntervals));
   for (i = 0; i < ARRAYLEN(mm->p); ++i) {
-    CHECK_NE(-1, TrackMemoryInterval(mm, i * 10, i * 10 + 8, 0));
+    CHECK_NE(-1, TrackMemoryInterval(mm, i * 10, i * 10 + 8, 0, 0, 0));
   }
   CheckMemoryIntervalsAreOk(mm);
   CHECK_EQ(-1, ReleaseMemoryIntervals(mm, 4, 4, NULL));

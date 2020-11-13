@@ -7,8 +7,6 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/errno.h"
-#include "libc/log/log.h"
 #include "libc/stdio/stdio.h"
 
 int main() {

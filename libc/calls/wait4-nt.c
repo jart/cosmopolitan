@@ -21,11 +21,14 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/conv/conv.h"
+#include "libc/macros.h"
 #include "libc/nt/accounting.h"
 #include "libc/nt/enum/status.h"
+#include "libc/nt/enum/wait.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/filetime.h"
 #include "libc/nt/synchronization.h"
+#include "libc/runtime/missioncritical.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/w.h"
@@ -33,34 +36,51 @@
 
 textwindows int wait4$nt(int pid, int *opt_out_wstatus, int options,
                          struct rusage *opt_out_rusage) {
+  int pids[64];
+  int64_t handles[64];
   uint32_t dwExitCode;
+  uint32_t i, count, timeout;
   struct NtFileTime createfiletime, exitfiletime, kernelfiletime, userfiletime;
-  if (!isfdkind(pid, kFdProcess)) return esrch();
+  if (pid != -1) {
+    if (!isfdkind(pid, kFdProcess)) {
+      return echild();
+    }
+    handles[0] = g_fds.p[pid].handle;
+    pids[0] = pid;
+    count = 1;
+  } else {
+    for (count = 0, i = g_fds.n; i--;) {
+      if (g_fds.p[i].kind == kFdProcess) {
+        pids[count] = i;
+        handles[count] = g_fds.p[i].handle;
+        if (++count == ARRAYLEN(handles)) break;
+      }
+    }
+    if (!count) {
+      return echild();
+    }
+  }
   for (;;) {
     dwExitCode = kNtStillActive;
-    if (!(options & WNOHANG)) {
-      WaitForSingleObject(g_fds.p[pid].handle, 0xffffffff);
-    }
-    if (GetExitCodeProcess(g_fds.p[pid].handle, &dwExitCode)) {
-      if (dwExitCode != kNtStillActive) {
-        if (opt_out_wstatus) { /* @see WEXITSTATUS() */
-          *opt_out_wstatus = (dwExitCode & 0xff) << 8;
-        }
-        if (opt_out_rusage) {
-          memset(opt_out_rusage, 0, sizeof(*opt_out_rusage));
-          GetProcessTimes(GetCurrentProcess(), &createfiletime, &exitfiletime,
-                          &kernelfiletime, &userfiletime);
-          FileTimeToTimeVal(&opt_out_rusage->ru_utime, userfiletime);
-          FileTimeToTimeVal(&opt_out_rusage->ru_stime, kernelfiletime);
-        }
-        return pid;
-      } else if (options & WNOHANG) {
-        return pid;
-      } else {
-        continue;
-      }
+    if (options & WNOHANG) {
+      i = WaitForMultipleObjects(count, handles, false, 0);
+      if (i == kNtWaitTimeout) return 0;
     } else {
-      return winerr();
+      i = WaitForMultipleObjects(count, handles, false, -1);
     }
+    if (i == kNtWaitFailed) return winerr();
+    if (!GetExitCodeProcess(handles[i], &dwExitCode)) return winerr();
+    if (dwExitCode == kNtStillActive) continue;
+    if (opt_out_wstatus) { /* @see WEXITSTATUS() */
+      *opt_out_wstatus = (dwExitCode & 0xff) << 8;
+    }
+    if (opt_out_rusage) {
+      memset(opt_out_rusage, 0, sizeof(*opt_out_rusage));
+      GetProcessTimes(GetCurrentProcess(), &createfiletime, &exitfiletime,
+                      &kernelfiletime, &userfiletime);
+      FileTimeToTimeVal(&opt_out_rusage->ru_utime, userfiletime);
+      FileTimeToTimeVal(&opt_out_rusage->ru_stime, kernelfiletime);
+    }
+    return pids[i];
   }
 }

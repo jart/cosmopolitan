@@ -69,9 +69,9 @@
 #define PINT_PTR       intptr_t*
 #define UINT_PTR       uintptr_t
 #define PUINT_PTR      uintptr_t*
-#define LONG_PTR       int32_t*
+#define LONG_PTR       intptr_t
 #define PLONG_PTR      int32_t**
-#define ULONG_PTR      uint32_t*
+#define ULONG_PTR      uintptr_t
 #define PULONG_PTR     uint32_t**
 #define POINTER_64_INT int64_t*
 #define __int3264      int64_t

@@ -63,11 +63,11 @@ $(TEST_LIBC_RUNTIME_OBJS):					\
 	DEFAULT_CCFLAGS +=					\
 		-fno-builtin
 
-ifeq (,$(MODE))
-$(TEST_LIBC_RUNTIME_OBJS):				\
-		OVERRIDE_CFLAGS +=			\
-			-fsanitize=address
-endif
+# ifeq (,$(MODE))
+# $(TEST_LIBC_RUNTIME_OBJS):				\
+# 		OVERRIDE_CFLAGS +=			\
+# 			-fsanitize=address
+# endif
 
 o/$(MODE)/test/libc/runtime/getenv_test.com.runs:		\
 		o/$(MODE)/test/libc/runtime/getenv_test.com

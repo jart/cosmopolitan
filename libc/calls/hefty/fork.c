@@ -20,6 +20,7 @@
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/dce.h"
 
 /**
  * Creates new process zygote style.
@@ -29,7 +30,13 @@
  */
 int fork(void) {
   int rc;
-  rc = fork$sysv();
-  if (rc == 0) __onfork();
+  if (!IsWindows()) {
+    rc = fork$sysv();
+  } else {
+    rc = fork$nt();
+  }
+  if (rc == 0) {
+    __onfork();
+  }
   return rc;
 }

@@ -33,15 +33,15 @@
  */
 struct NtWsaData kNtWsaData;
 
-textwindows static void winsockfini(void) { WSACleanup(); }
-textstartup static void winsockinit(void) {
-  if (!IsWindows()) return;
-  atexit(winsockfini);
+textwindows static void winsockfini(void) {
+  WSACleanup();
+}
+
+textwindows void winsockinit(void) {
   int rc;
+  atexit(winsockfini);
   if ((rc = WSAStartup(VERSION, &kNtWsaData)) != 0 ||
       kNtWsaData.wVersion != VERSION) {
     abort();
   }
 }
-
-const void *const winsockctor[] initarray = {winsockinit};

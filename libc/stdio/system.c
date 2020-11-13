@@ -19,126 +19,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/mem/mem.h"
-#include "libc/nt/accounting.h"
-#include "libc/nt/enum/startf.h"
-#include "libc/nt/enum/status.h"
-#include "libc/nt/process.h"
-#include "libc/nt/runtime.h"
-#include "libc/nt/struct/processinformation.h"
-#include "libc/nt/synchronization.h"
+#include "libc/calls/hefty/spawn.h"
+#include "libc/dce.h"
+#include "libc/paths.h"
+#include "libc/runtime/missioncritical.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/fileno.h"
-#include "libc/sysv/errfuns.h"
-
-#define SHELL_BIN "/bin/sh"
-#define SHELL_ARG "-c"
-#define CMD_C     "CMD /C "
-
-static int system$sysv(const char *cmdline) {
-  int rc, n, wstatus;
-  struct mem {
-    char shell[sizeof(SHELL_BIN)];
-    char arg[sizeof(SHELL_ARG)];
-    char *args[4];
-    char cmdline[];
-  } * mem;
-  if (cmdline != NULL) {
-    mem = malloc(sizeof(struct mem) + (strlen(cmdline) + 1));
-    if (!mem) return enomem();
-    strcpy(mem->shell, SHELL_BIN);
-    strcpy(mem->arg, SHELL_ARG);
-    mem->args[0] = mem->shell;
-    mem->args[1] = mem->arg;
-    mem->args[2] = mem->cmdline;
-    mem->args[3] = NULL;
-    strcpy(mem->cmdline, cmdline);
-    if ((rc = vfork()) != -1) {
-      if (rc == 0) {
-        execve$sysv(mem->shell, mem->args, environ);
-        abort();
-      }
-      if ((rc = wait4$sysv(rc, &wstatus, 0, NULL)) != -1) {
-        rc = wstatus;
-      }
-    }
-    free(mem);
-    return rc;
-  } else {
-    return fileexists(SHELL_BIN);
-  }
-}
-
-static textwindows noinline int system$nt(const char *cmdline) {
-  char *mem;
-  int rc, status;
-  uint32_t dwExitCode;
-  struct NtStartupInfo startinfo;
-  struct NtProcessInformation *info;
-  uint16_t *cmdline16, *quotedcmdline16;
-  unsigned len, dosquotemultiplier, cmdline16bytes, quotedcmdline16bytes;
-  if (cmdline != NULL) {
-    rc = -1;
-    dosquotemultiplier = 2;
-    len = strlen(cmdline);
-    cmdline16bytes = (len + 1) * sizeof(uint16_t);
-    quotedcmdline16bytes =
-        strlen(CMD_C) * sizeof(uint16_t) + cmdline16bytes * dosquotemultiplier;
-    if (!(mem = malloc(sizeof(struct NtProcessInformation) + cmdline16bytes +
-                       quotedcmdline16bytes))) {
-      return enomem();
-    }
-    info = (struct NtProcessInformation *)mem;
-    cmdline16 = (uint16_t *)(mem + sizeof(struct NtProcessInformation));
-    quotedcmdline16 = (uint16_t *)(mem + sizeof(struct NtProcessInformation) +
-                                   cmdline16bytes);
-    strcpyzbw(cmdline16, cmdline);
-    strcpyzbw(quotedcmdline16, CMD_C);
-    if (escapedos(quotedcmdline16 + strlen(CMD_C), len * dosquotemultiplier,
-                  cmdline16, len)) {
-      memset(&startinfo, 0, sizeof(startinfo));
-      startinfo.cb = sizeof(struct NtStartupInfo);
-      startinfo.dwFlags = kNtStartfUsestdhandles;
-      startinfo.hStdInput = STDIN_FILENO;
-      startinfo.hStdOutput = STDOUT_FILENO;
-      startinfo.hStdError = STDERR_FILENO;
-      if (CreateProcess(
-              /* lpApplicationName    */ NULL,
-              /* lpCommandLine        */ quotedcmdline16,
-              /* lpProcessAttributes  */ NULL,
-              /* lpThreadAttributes   */ NULL,
-              /* bInheritHandles      */ true,
-              /* dwCreationFlags      */ kNtCreateNoWindow,
-              /* lpEnvironment        */ NULL,
-              /* lpCurrentDirectory   */ NULL,
-              /* lpStartupInfo        */ &startinfo,
-              /* lpProcessInformation */ info)) {
-        dwExitCode = kNtStillActive;
-        do {
-          WaitForSingleObject(info->hProcess, 0xffffffff);
-        } while ((status = GetExitCodeProcess(info->hProcess, &dwExitCode)) &&
-                 dwExitCode == kNtStillActive);
-        if (weaken(fflush)) {
-          weaken(fflush)(*weaken(stderr));
-        }
-        rc = (dwExitCode & 0xff) << 8; /* @see WEXITSTATUS() */
-        CloseHandle(info->hProcess);
-        CloseHandle(info->hThread);
-      } else {
-        rc = winerr();
-      }
-    } else {
-      rc = einval();
-    }
-    free(mem);
-    return rc;
-  } else {
-    /* how could cmd.exe not exist? */
-    return true;
-  }
-}
 
 /**
  * Launches program with system command interpreter.
@@ -148,12 +34,24 @@ static textwindows noinline int system$nt(const char *cmdline) {
  *     status that can be accessed using macros like WEXITSTATUS(s)
  */
 int system(const char *cmdline) {
-  int rc;
+  const char *prog, *arg;
+  int rc, wstatus, fds[3];
   if (weaken(fflush)) weaken(fflush)(NULL);
-  if (!IsWindows()) {
-    rc = system$sysv(cmdline);
+  if (cmdline) {
+    prog = !IsWindows() ? _PATH_BSHELL : "cmd";
+    arg = !IsWindows() ? "-c" : "/C";
+    fds[0] = 0;
+    fds[1] = 1;
+    fds[2] = 2;
+    if ((rc = spawnlp(0, fds, prog, prog, arg, cmdline, NULL)) != -1) {
+      if ((rc = wait4(rc, &wstatus, 0, NULL)) != -1) {
+        rc = wstatus;
+      }
+    }
+    return rc;
+  } else if (IsWindows()) {
+    return true;
   } else {
-    rc = system$nt(cmdline);
+    return fileexists(_PATH_BSHELL);
   }
-  return rc;
 }
