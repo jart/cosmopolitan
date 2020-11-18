@@ -33,7 +33,6 @@ relegated noreturn void die(void) {
   if (!once) {
     once = true;
     if (!IsTiny()) {
-      g_runstate |= RUNSTATE_BROKEN;
       if (IsDebuggerPresent(false)) DebugBreak();
       ShowBacktrace(STDERR_FILENO, NULL);
     }

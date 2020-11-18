@@ -43,22 +43,22 @@ static textwindows int64_t ParseInt(char16_t **p) {
   return x;
 }
 
-static textwindows void WriteAll(int64_t h, void *buf, size_t n) {
+static noinline textwindows void DoAll(int64_t h, void *buf, size_t n,
+                                       bool32 (*f)()) {
   char *p;
   size_t i;
-  uint32_t wrote;
-  for (p = buf, i = 0; i < n; i += wrote) {
-    WriteFile(h, p + i, n - i, &wrote, NULL);
+  uint32_t x;
+  for (p = buf, i = 0; i < n; i += x) {
+    f(h, p + i, n - i, &x, NULL);
   }
 }
 
-static textwindows void ReadAll(int64_t h, void *buf, size_t n) {
-  char *p;
-  size_t i;
-  uint32_t got;
-  for (p = buf, i = 0; i < n; i += got) {
-    ReadFile(h, p + i, n - i, &got, NULL);
-  }
+static noinline textwindows void WriteAll(int64_t h, void *buf, size_t n) {
+  DoAll(h, buf, n, WriteFile);
+}
+
+static noinline textwindows void ReadAll(int64_t h, void *buf, size_t n) {
+  DoAll(h, buf, n, ReadFile);
 }
 
 textwindows void WinMainForked(void) {

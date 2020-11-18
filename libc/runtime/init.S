@@ -50,7 +50,6 @@
 	.section .initprologue,"ax",@progbits
 	.type	_init,@function
 	.globl	_init
-	.comm	g_runstate,4
 _init:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

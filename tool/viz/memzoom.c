@@ -446,7 +446,6 @@ static void OnPrevEnd(void) {
 
 static void OnMouse(char *p) {
   int e, x, y;
-  struct Panel *ep;
   e = strtol(p, &p, 10);
   if (*p == ';') ++p;
   x = min(txn, max(1, strtol(p, &p, 10))) - 1;
@@ -843,13 +842,7 @@ static void RangesZoom(void) {
 }
 
 static void MemZoom(void) {
-  char *p;
-  int c, fg2, rc, fg;
-  long i, n, r, w, y, x, got, have;
   do {
-    if (action & INTERRUPTED) {
-      break;
-    }
     if (action & RESIZED) {
       GetTtySize();
       SetupCanvas();

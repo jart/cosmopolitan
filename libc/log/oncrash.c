@@ -203,7 +203,6 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
   int gdbpid, err;
   static bool once;
   err = errno;
-  g_runstate |= RUNSTATE_BROKEN;
   if (once) abort();
   once = true;
   /* TODO(jart): Needs translation for ucontext_t and possibly siginfo_t. */

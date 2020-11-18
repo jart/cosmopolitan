@@ -31,7 +31,6 @@
 _construct:
 	push	%rbp
 	mov	%rsp,%rbp
-	orb	$RUNSTATE_INITIALIZED,g_runstate(%rip)
 	ezlea	__init_array_start,ax		# static ctors in forward order
 	.weak	__init_array_start		# could be called multiple times
 	ezlea	__init_array_end,cx		# idempotency recommended

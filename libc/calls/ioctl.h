@@ -16,9 +16,6 @@ int ioctl(int, uint64_t, void *);
 #include "libc/macros.h"
 #include "libc/sysv/consts/termios.h"
 
-struct termios;
-struct winsize;
-
 #define ioctl(FD, REQUEST, MEMORY) ioctl$dispatch(FD, REQUEST, MEMORY)
 
 #define __IOCTL_DISPATCH(CMP, FD, REQUEST, MEMORY)                       \

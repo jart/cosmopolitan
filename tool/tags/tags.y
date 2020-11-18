@@ -43,7 +43,7 @@
 
 %token_prefix TK_
 %token_type {struct Token}
-%type expr {long double}
+%default_type {struct Token}
 %syntax_error { SyntaxError(); }
 
 %token AUTO BREAK CASE CHAR CONST CONTINUE DEFAULT DO DOUBLE ELSE ENUM EXTERN.

@@ -2,12 +2,11 @@
 #define COSMOPOLITAN_LIBC_CALLS_TERMIOS_INTERNAL_H_
 #ifndef __STRICT_ANSI__
 #include "libc/bits/safemacros.h"
+#include "libc/calls/struct/metatermios.h"
+#include "libc/calls/struct/termios.h"
 #include "libc/str/str.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-struct termios;
-union metatermios;
 
 #define COPY_TERMIOS(TO, FROM)                             \
   do {                                                     \

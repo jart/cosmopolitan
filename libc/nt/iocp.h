@@ -1,5 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_NT_IOCP_H_
 #define COSMOPOLITAN_LIBC_NT_IOCP_H_
+#include "libc/nt/struct/overlapped.h"
+#include "libc/nt/struct/overlappedentry.h"
 #if 0
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
@@ -26,8 +28,6 @@
 │ cosmopolitan § new technology » i/o completion ports                     ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 #endif
-#include "libc/nt/struct/overlapped.h"
-#include "libc/nt/struct/overlappedentry.h"
 
 #define kNtFileSkipCompletionPortOnSuccess 1
 #define kNtFileSkipSetEventOnHandle        2

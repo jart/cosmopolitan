@@ -39,7 +39,6 @@ abort:	push	%rbp
 	mov	%rsp,%rbp
 	and	$-16,%rsp
 	sub	$16,%rsp
-	orl	$RUNSTATE_BROKEN,g_runstate(%rip)
 	testb	IsWindows()
 	jnz	2f
 	mov	SIG_SETMASK,%edi
@@ -61,4 +60,3 @@ abort:	push	%rbp
 2:	mov	$134,%edi			# exit(128+SIGABRT) [bash-ism]
 	call	_Exit
 	.endfn	abort,globl,protected
-	.hidden	g_runstate

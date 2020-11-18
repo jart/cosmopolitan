@@ -72,7 +72,7 @@ privileged interruptfn void ftrace_hook(void) {
   const char *symbol;
   struct StackFrame *frame;
   LOAD_DEFAULT_RBX();
-  if (g_symbols && !(g_runstate & RUNSTATE_BROKEN)) {
+  if (g_symbols) {
     frame = __builtin_frame_address(0);
     symbol =
         &g_symbols->name_base[g_symbols

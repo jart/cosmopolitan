@@ -30,7 +30,6 @@
 /	@asyncsignalsafe
 _Exit:	push	%rbp
 	mov	%rsp,%rbp
-	orl	$RUNSTATE_TERMINATE,g_runstate(%rip)
 #if SupportsWindows()
 	testb	IsWindows()
 	jz	1f
@@ -49,4 +48,3 @@ _Exit:	push	%rbp
 3:	.quad	0
 	.endfn	_Exit,globl,protected
 	.hidden	__NR_exit
-	.hidden	g_runstate

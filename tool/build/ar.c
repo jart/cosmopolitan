@@ -107,15 +107,20 @@ int main(int argc, char *argv[]) {
   uint8_t *tablebuf;
   struct iovec iov[7];
   const char *symname;
+  const char *outpath;
   Elf64_Xword symcount;
   struct Ints symnames;
   struct String symbols;
   struct String filenames;
-  const char *options, *outpath;
   struct Header *header1, *header2;
   size_t wrote, remain, objectargcount;
   int *offsets, *modes, *sizes, *names;
   int i, j, fd, err, name, outfd, tablebufsize;
+
+  if (!(argc > 2 && strcmp(argv[1], "rcsD") == 0)) {
+    fprintf(stderr, "%s%s%s\n", "Usage: ", argv[0], " rcsD ARCHIVE FILE...");
+    return 1;
+  }
 
   st = xmalloc(sizeof(struct stat));
   symbols.i = 0;
@@ -128,12 +133,9 @@ int main(int argc, char *argv[]) {
   symnames.n = 1024;
   symnames.p = xmalloc(symnames.n * sizeof(int));
 
-  CHECK_GT(argc, 3);
-  options = argv[1];
   outpath = argv[2];
   objectargs = argv + 3;
   objectargcount = argc - 3;
-  CHECK_EQ(0, strcmp(options, "rcsD"));
   modes = xmalloc(sizeof(int) * objectargcount);
   names = xmalloc(sizeof(int) * objectargcount);
   sizes = xmalloc(sizeof(int) * objectargcount);

@@ -364,6 +364,109 @@ pcread:	push	%ax
 	jmp	1b
 	.endfn	pcread
 
+/	Waits for serial lines to become idle.
+/
+/	@param	di short array of serial ports (0 means not present)
+/	@param	si number of items in array
+/	@mode	long,legacy,real
+sflush:	mov	%si,%cx
+	mov	%di,%si
+	xor	%dx,%dx
+0:	lodsb
+	mov	%al,%dl
+	lodsb
+	mov	%al,%dh
+	test	%ax,%ax
+	jz	2f
+	add	$UART_LSR,%dx
+	mov	$UART_TTYIDL,%ah
+1:	in	%dx,%al
+	and	%ah,%al
+	rep
+	nop
+	jz	1b
+	loop	0b
+2:	ret
+	.endfn	sflush,globl
+
+/	Transmits byte over serial line.
+/
+/	This is both blocking and asynchronous.
+/
+/	@param	di character to send
+/	@param	si serial port
+/	@mode	long,legacy,real
+/	@see	ttytxr
+sputc:	push	%ax
+	push	%cx
+	push	%dx
+	mov	%si,%dx
+	add	$UART_LSR,%dx
+	mov	$UART_TTYTXR,%ah
+1:	in	%dx,%al
+	and	%ah,%al
+	jnz	2f
+	rep
+	nop
+	jmp	1b
+2:	mov	%di,%ax
+	mov	%si,%dx
+	out	%al,%dx
+	pop	%dx
+	pop	%cx
+	pop	%ax
+	ret
+	.endfn	sputc,globl
+
+/	Shuts down personal computer.
+/
+/	@mode	real
+/	@noreturn
+apmoff:	mov	$0x5300,%ax		# apm installation check
+	xor	%bx,%bx			# for the apm bios itself
+	int	$APM_SERVICE
+	jc	1f
+	cmp	$'P<<8|'M,%bx		# did apm bios service interrupt?
+	jne	1f
+	mov	$0x5301,%ax		# real mode interface connect
+	xor	%bx,%bx			# to apm bios device
+	int	$APM_SERVICE		# ignore errors e.g. already connected
+	xor	%bx,%bx
+	xor	%cx,%cx
+	mov	$0x5307,%ax		# set power state
+	mov	$1,%bl			# for all devices within my dominion
+	mov	$3,%cl			# to off
+	int	$APM_SERVICE
+1:	call	panic
+	.endfn	apmoff,globl
+
+/	Video put char.
+/
+/	@param	al is the char
+/	@mode	real
+rvputc:	push	%bx				# don't clobber bp,bx,di,si,cx
+	push	%bp				# original ibm pc scroll up bug
+	mov	$7,%bx				# normal mda/cga style page zero
+	mov	$0x0e,%ah			# teletype output al cp437
+	int	$0x10				# vidya service
+	pop	%bp				# preserves al
+	pop	%bx
+	ret
+	.endfn	rvputc
+
+/	Video put string.
+/
+/	@param	di is the string
+/	@mode	real
+rvputs:	mov	%di,%si
+0:	lodsb
+	test	%al,%al
+	je	1f
+	call	rvputc
+	jmp	0b
+1:	ret
+	.endfn	rvputs,globl,hidden
+
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ αcτµαlly pδrταblε εxεcµταblε § partition table                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
@@ -1143,33 +1246,6 @@ rlput2:	push	%di
 1:	ret
 	.endfn	rlput2,globl,hidden
 
-/	Video put string.
-/
-/	@param	di is the string
-/	@mode	real
-rvputs:	mov	%di,%si
-0:	lodsb
-	test	%al,%al
-	je	1f
-	call	rvputc
-	jmp	0b
-1:	ret
-	.endfn	rvputs,globl,hidden
-
-/	Video put char.
-/
-/	@param	al is the char
-/	@mode	real
-rvputc:	push	%bx				# don't clobber bp,bx,di,si,cx
-	push	%bp				# original ibm pc scroll up bug
-	mov	$7,%bx				# normal mda/cga style page zero
-	mov	$0x0e,%ah			# teletype output al cp437
-	int	$0x10				# vidya service
-	pop	%bp				# preserves al
-	pop	%bx
-	ret
-	.endfn	rvputc
-
 /	Writes string to serial line.
 /
 /	@param	di NUL-terminated string
@@ -1190,82 +1266,6 @@ sputs:	push	%bx
 2:	pop	%bx
 	ret
 	.endfn	sputs,globl
-
-/	Waits for serial lines to become idle.
-/
-/	@param	di short array of serial ports (0 means not present)
-/	@param	si number of items in array
-/	@mode	long,legacy,real
-sflush:	mov	%si,%cx
-	mov	%di,%si
-	xor	%dx,%dx
-0:	lodsb
-	mov	%al,%dl
-	lodsb
-	mov	%al,%dh
-	test	%ax,%ax
-	jz	2f
-	add	$UART_LSR,%dx
-	mov	$UART_TTYIDL,%ah
-1:	in	%dx,%al
-	and	%ah,%al
-	rep
-	nop
-	jz	1b
-	loop	0b
-2:	ret
-	.endfn	sflush,globl
-
-/	Transmits byte over serial line.
-/
-/	This is both blocking and asynchronous.
-/
-/	@param	di character to send
-/	@param	si serial port
-/	@mode	long,legacy,real
-/	@see	ttytxr
-sputc:	push	%ax
-	push	%cx
-	push	%dx
-	mov	%si,%dx
-	add	$UART_LSR,%dx
-	mov	$UART_TTYTXR,%ah
-1:	in	%dx,%al
-	and	%ah,%al
-	jnz	2f
-	rep
-	nop
-	jmp	1b
-2:	mov	%di,%ax
-	mov	%si,%dx
-	out	%al,%dx
-	pop	%dx
-	pop	%cx
-	pop	%ax
-	ret
-	.endfn	sputc,globl
-
-/	Shuts down personal computer.
-/
-/	@mode	real
-/	@noreturn
-apmoff:	mov	$0x5300,%ax		# apm installation check
-	xor	%bx,%bx			# for the apm bios itself
-	int	$APM_SERVICE
-	jc	1f
-	cmp	$'P<<8|'M,%bx		# did apm bios service interrupt?
-	jne	1f
-	mov	$0x5301,%ax		# real mode interface connect
-	xor	%bx,%bx			# to apm bios device
-	int	$APM_SERVICE		# ignore errors e.g. already connected
-	xor	%bx,%bx
-	xor	%cx,%cx
-	mov	$0x5307,%ax		# set power state
-	mov	$1,%bl			# for all devices within my dominion
-	mov	$3,%cl			# to off
-	int	$APM_SERVICE
-1:	call	panic
-	.endfn	apmoff,globl
 
 /*                                                               █ █▒
                                                                █     █

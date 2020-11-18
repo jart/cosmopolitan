@@ -53,7 +53,6 @@ void __ubsan_abort(const struct UbsanSourceLocation *loc,
   } else {
     abort();
   }
-  g_runstate |= RUNSTATE_BROKEN;
   if (IsDebuggerPresent(false)) DebugBreak();
   __start_fatal(loc->file, loc->line);
   fprintf(stderr, "%s\r\n", description);
