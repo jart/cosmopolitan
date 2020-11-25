@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/x86feature.h"
@@ -38,7 +38,7 @@ Flags:\n\
   -h         show this information\n\
 \n"
 
-STATIC_YOINK("die");
+STATIC_YOINK("__die");
 
 static bool runbenchmarks_;
 

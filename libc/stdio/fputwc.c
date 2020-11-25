@@ -21,7 +21,7 @@
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/str/tpencode.h"
+#include "libc/str/tpencode.internal.h"
 
 /**
  * Writes wide character to stream.

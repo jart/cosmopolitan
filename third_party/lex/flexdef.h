@@ -2,7 +2,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/runtime/runtime.h"
 #include "libc/macros.h"
-#include "libc/calls/openbsd.h"
+#include "libc/calls/openbsd.internal.h"
 
 /*	$OpenBSD: flexdef.h,v 1.15 2015/11/19 23:48:06 tedu Exp $	*/
 

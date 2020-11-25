@@ -21,7 +21,7 @@
 #include "dsp/scale/cdecimate2xuint8x8.h"
 #include "dsp/scale/scale.h"
 #include "libc/assert.h"
-#include "libc/fmt/bing.h"
+#include "libc/fmt/bing.internal.h"
 #include "libc/log/check.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"

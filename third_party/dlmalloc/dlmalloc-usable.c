@@ -1,5 +1,5 @@
 #include "libc/mem/mem.h"
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
 
 size_t dlmalloc_usable_size(const void* mem) {
   if (mem != 0) {

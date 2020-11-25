@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/limits.h"
 #include "libc/runtime/ezmap.h"
@@ -30,7 +30,7 @@
  * Memory-maps file for reading.
  * An internal veneer for a common mmap() use-case.
  */
-int mapfileread(const char *filename, struct MappedFile *mf) {
+int MapFileRead(const char *filename, struct MappedFile *mf) {
   mf->addr = MAP_FAILED;
   if ((mf->fd = open(filename, O_RDONLY)) != -1 &&
       (mf->size = getfiledescriptorsize(mf->fd)) < INT_MAX &&
@@ -39,15 +39,15 @@ int mapfileread(const char *filename, struct MappedFile *mf) {
                            : NULL) != MAP_FAILED) {
     return 0;
   } else {
-    unmapfile(mf);
+    UnmapFile(mf);
     return -1;
   }
 }
 
 /**
- * Releases resource returned by mapfileread().
+ * Releases resource returned by MapFileRead().
  */
-int unmapfile(struct MappedFile *mf) {
+int UnmapFile(struct MappedFile *mf) {
   int rc;
   rc = 0;
   if (mf->addr && mf->addr != MAP_FAILED) {

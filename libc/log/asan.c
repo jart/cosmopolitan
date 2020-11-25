@@ -17,20 +17,22 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/conv/itoa.h"
-#include "libc/log/asan.h"
-#include "libc/log/backtrace.h"
+#include "libc/log/asan.internal.h"
+#include "libc/log/backtrace.internal.h"
 #include "libc/log/log.h"
 #include "libc/mem/hook/hook.h"
 #include "libc/runtime/directmap.h"
 #include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
 
 STATIC_YOINK("_init_asan");
 
@@ -147,7 +149,7 @@ static const char *__asan_describe_access_poison(int c) {
 
 static noreturn void __asan_die(const char *msg, size_t size) {
   write(STDERR_FILENO, msg, size);
-  die();
+  __die();
 }
 
 static char *__asan_report_start(char *p) {

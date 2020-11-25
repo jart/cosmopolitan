@@ -17,13 +17,14 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/arraylist2.h"
+#include "libc/alg/arraylist2.internal.h"
 #include "libc/calls/hefty/ntspawn.h"
 #include "libc/conv/conv.h"
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
+#include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
-#include "libc/str/tpdecode.h"
+#include "libc/str/tpdecode.internal.h"
 #include "libc/sysv/errfuns.h"
 
 /**

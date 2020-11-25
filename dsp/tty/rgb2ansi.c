@@ -20,7 +20,7 @@
 #include "dsp/core/core.h"
 #include "dsp/tty/quant.h"
 #include "libc/assert.h"
-#include "libc/bits/initializer.h"
+#include "libc/bits/initializer.internal.h"
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"

@@ -151,8 +151,8 @@ imp	'AppXPostSuccessExtension'				AppXPostSuccessExtension				KernelBase	65
 imp	'AppXPreCreationExtension'				AppXPreCreationExtension				KernelBase	66
 imp	'AppXReleaseAppXContext'				AppXReleaseAppXContext					KernelBase	67
 imp	'AppXUpdatePackageCapabilities'				AppXUpdatePackageCapabilities				KernelBase	68
-imp	'AppendMenuA'						AppendMenuA						user32		1515
-imp	'AppendMenu'						AppendMenuW						user32		1516
+imp	'AppendMenuA'						AppendMenuA						user32		1515	4
+imp	'AppendMenu'						AppendMenuW						user32		1516	4
 imp	'ApplicationRecoveryFinished'				ApplicationRecoveryFinished				kernel32	34
 imp	'ApplicationRecoveryInProgress'				ApplicationRecoveryInProgress				kernel32	35
 imp	'ApplicationUserModelIdFromProductId'			ApplicationUserModelIdFromProductId			KernelBase	69
@@ -409,10 +409,10 @@ imp	'CheckTokenMembershipEx'				CheckTokenMembershipEx					KernelBase	128
 imp	'CheckWindowThreadDesktop'				CheckWindowThreadDesktop				user32		1580
 imp	'ChildWindowFromPoint'					ChildWindowFromPoint					user32		1581
 imp	'ChildWindowFromPointEx'				ChildWindowFromPointEx					user32		1582
-imp	'ChooseColorA'						ChooseColorA						comdlg32	102
-imp	'ChooseColor'						ChooseColorW						comdlg32	103
-imp	'ChooseFontA'						ChooseFontA						comdlg32	104
-imp	'ChooseFont'						ChooseFontW						comdlg32	105
+imp	'ChooseColorA'						ChooseColorA						comdlg32	102	1
+imp	'ChooseColor'						ChooseColorW						comdlg32	103	1
+imp	'ChooseFontA'						ChooseFontA						comdlg32	104	1
+imp	'ChooseFont'						ChooseFontW						comdlg32	105	1
 imp	'ChoosePixelFormat'					ChoosePixelFormat					gdi32		1040
 imp	'Chord'							Chord							gdi32		1041
 imp	'ChrCmpIA'						ChrCmpIA						KernelBase	129
@@ -557,8 +557,8 @@ imp	'CreateCaret'						CreateCaret						user32		1603
 imp	'CreateCodeAuthzLevel'					CreateCodeAuthzLevel					advapi32	1136
 imp	'CreateColorSpaceA'					CreateColorSpaceA					gdi32		1061
 imp	'CreateColorSpace'					CreateColorSpaceW					gdi32		1062
-imp	'CreateCompatibleBitmap'				CreateCompatibleBitmap					gdi32		1063
-imp	'CreateCompatibleDC'					CreateCompatibleDC					gdi32		1064
+imp	'CreateCompatibleBitmap'				CreateCompatibleBitmap					gdi32		1063	3
+imp	'CreateCompatibleDC'					CreateCompatibleDC					gdi32		1064	1
 imp	'CreateConsoleScreenBuffer'				CreateConsoleScreenBuffer				KernelBase	176
 imp	'CreateCursor'						CreateCursor						user32		1604
 imp	'CreateDCA'						CreateDCA						gdi32		1065
@@ -634,7 +634,7 @@ imp	'CreateMDIWindow'					CreateMDIWindowW					user32		1620
 imp	'CreateMailslotA'					CreateMailslotA						kernel32	212
 imp	'CreateMailslot'					CreateMailslotW						kernel32	213
 imp	'CreateMemoryResourceNotification'			CreateMemoryResourceNotification			KernelBase	196
-imp	'CreateMenu'						CreateMenu						user32		1621
+imp	'CreateMenu'						CreateMenu						user32		1621	0
 imp	'CreateMetaFileA'					CreateMetaFileA						gdi32		1087
 imp	'CreateMetaFile'					CreateMetaFileW						gdi32		1088
 imp	'CreateMutex'						CreateMutexW						KernelBase	200
@@ -653,7 +653,7 @@ imp	'CreatePenIndirect'					CreatePenIndirect					gdi32		1094
 imp	'CreatePipe'						CreatePipe						KernelBase	202	4
 imp	'CreatePolyPolygonRgn'					CreatePolyPolygonRgn					gdi32		1095
 imp	'CreatePolygonRgn'					CreatePolygonRgn					gdi32		1096
-imp	'CreatePopupMenu'					CreatePopupMenu						user32		1622
+imp	'CreatePopupMenu'					CreatePopupMenu						user32		1622	0
 imp	'CreatePrivateNamespaceA'				CreatePrivateNamespaceA					kernel32	222
 imp	'CreatePrivateNamespace'				CreatePrivateNamespaceW					KernelBase	203
 imp	'CreatePrivateObjectSecurity'				CreatePrivateObjectSecurity				KernelBase	204
@@ -1193,7 +1193,7 @@ imp	'DeleteAce'						DeleteAce						KernelBase	248
 imp	'DeleteAtom'						DeleteAtom						kernel32	270
 imp	'DeleteBoundaryDescriptor'				DeleteBoundaryDescriptor				KernelBase	249
 imp	'DeleteColorSpace'					DeleteColorSpace					gdi32		1383
-imp	'DeleteDC'						DeleteDC						gdi32		1384
+imp	'DeleteDC'						DeleteDC						gdi32		1384	1
 imp	'DeleteEnclave'						DeleteEnclave						KernelBase	251
 imp	'DeleteEnhMetaFile'					DeleteEnhMetaFile					gdi32		1385
 imp	'DeleteFiber'						DeleteFiber						KernelBase	252
@@ -1201,9 +1201,9 @@ imp	'DeleteFile'						DeleteFileW						KernelBase	254	1
 imp	'DeleteFileA'						DeleteFileA						KernelBase	253	1
 imp	'DeleteFileTransactedA'					DeleteFileTransactedA					kernel32	275
 imp	'DeleteFileTransacted'					DeleteFileTransactedW					kernel32	276
-imp	'DeleteMenu'						DeleteMenu						user32		1681
+imp	'DeleteMenu'						DeleteMenu						user32		1681	3
 imp	'DeleteMetaFile'					DeleteMetaFile						gdi32		1386
-imp	'DeleteObject'						DeleteObject						gdi32		1387
+imp	'DeleteObject'						DeleteObject						gdi32		1387	1
 imp	'DeleteProcThreadAttributeList'				DeleteProcThreadAttributeList				KernelBase	255	1
 imp	'DeleteService'						DeleteService						advapi32	1238
 imp	'DeleteStateAtomValue'					DeleteStateAtomValue					KernelBase	256
@@ -1227,7 +1227,7 @@ imp	'DestroyCaret'						DestroyCaret						user32		1684
 imp	'DestroyCursor'						DestroyCursor						user32		1685
 imp	'DestroyDCompositionHwndTarget'				DestroyDCompositionHwndTarget				user32		1686
 imp	'DestroyIcon'						DestroyIcon						user32		1687
-imp	'DestroyMenu'						DestroyMenu						user32		1688
+imp	'DestroyMenu'						DestroyMenu						user32		1688	1
 imp	'DestroyOPMProtectedOutput'				DestroyOPMProtectedOutput				gdi32		1389
 imp	'DestroyPalmRejectionDelayZone'				DestroyPalmRejectionDelayZone				user32		1504
 imp	'DestroyPhysicalMonitorInternal'			DestroyPhysicalMonitorInternal				gdi32		1390
@@ -2055,7 +2055,7 @@ imp	'GetCurrentThread'					GetCurrentThread					KernelBase	505	0
 imp	'GetCurrentThreadId'					GetCurrentThreadId					KernelBase	506	0
 imp	'GetCurrentThreadStackLimits'				GetCurrentThreadStackLimits				KernelBase	507
 imp	'GetCurrentUmsThread'					GetCurrentUmsThread					kernel32	547
-imp	'GetCursor'						GetCursor						user32		1826
+imp	'GetCursor'						GetCursor						user32		1826	0
 imp	'GetCursorFrameInfo'					GetCursorFrameInfo					user32		1827
 imp	'GetCursorInfo'						GetCursorInfo						user32		1828
 imp	'GetCursorPos'						GetCursorPos						user32		1829	1
@@ -2165,8 +2165,8 @@ imp	'GetFileSecurityA'					GetFileSecurityA					advapi32	1326	5
 imp	'GetFileSize'						GetFileSize						KernelBase	552	m
 imp	'GetFileSizeEx'						GetFileSizeEx						KernelBase	553	m
 imp	'GetFileTime'						GetFileTime						KernelBase	554	4
-imp	'GetFileTitleA'						GetFileTitleA						comdlg32	111
-imp	'GetFileTitle'						GetFileTitleW						comdlg32	112
+imp	'GetFileTitleA'						GetFileTitleA						comdlg32	111	3
+imp	'GetFileTitle'						GetFileTitleW						comdlg32	112	3
 imp	'GetFileType'						GetFileType						KernelBase	555	1
 imp	'GetFileVersionInfoA'					GetFileVersionInfoA					KernelBase	556
 imp	'GetFileVersionInfoByHandle'				GetFileVersionInfoByHandle				KernelBase	557
@@ -2240,7 +2240,7 @@ imp	'GetKerningPairsA'					GetKerningPairsA					gdi32		1666
 imp	'GetKerningPairs'					GetKerningPairsW					gdi32		1667
 imp	'GetKeyNameTextA'					GetKeyNameTextA						user32		1864
 imp	'GetKeyNameText'					GetKeyNameTextW						user32		1865
-imp	'GetKeyState'						GetKeyState						user32		1866
+imp	'GetKeyState'						GetKeyState						user32		1866	1
 imp	'GetKeyboardLayout'					GetKeyboardLayout					user32		1867
 imp	'GetKeyboardLayoutList'					GetKeyboardLayoutList					user32		1868
 imp	'GetKeyboardLayoutNameA'				GetKeyboardLayoutNameA					user32		1869
@@ -2287,7 +2287,7 @@ imp	'GetMappedFileName'					GetMappedFileNameW					KernelBase	595
 imp	'GetMaximumProcessorCount'				GetMaximumProcessorCount				kernel32	627
 imp	'GetMaximumProcessorGroupCount'				GetMaximumProcessorGroupCount				kernel32	628
 imp	'GetMemoryErrorHandlingCapabilities'			GetMemoryErrorHandlingCapabilities			KernelBase	596
-imp	'GetMenu'						GetMenu							user32		1881
+imp	'GetMenu'						GetMenu							user32		1881	1
 imp	'GetMenuBarInfo'					GetMenuBarInfo						user32		1882
 imp	'GetMenuCheckMarkDimensions'				GetMenuCheckMarkDimensions				user32		1883
 imp	'GetMenuContextHelpId'					GetMenuContextHelpId					user32		1884
@@ -2381,8 +2381,8 @@ imp	'GetObjectType'						GetObjectType						gdi32		1683
 imp	'GetObject'						GetObjectW						gdi32		1684
 imp	'GetOldestEventLogRecord'				GetOldestEventLogRecord					advapi32	1347
 imp	'GetOpenClipboardWindow'				GetOpenClipboardWindow					user32		1905
-imp	'GetOpenFileNameA'					GetOpenFileNameA					comdlg32	113
-imp	'GetOpenFileName'					GetOpenFileNameW					comdlg32	114
+imp	'GetOpenFileNameA'					GetOpenFileNameA					comdlg32	113	1
+imp	'GetOpenFileName'					GetOpenFileNameW					comdlg32	114	1
 imp	'GetOsManufacturingMode'				GetOsManufacturingMode					KernelBase	625
 imp	'GetOsSafeBootMode'					GetOsSafeBootMode					KernelBase	626
 imp	'GetOutlineTextMetricsA'				GetOutlineTextMetricsA					gdi32		1685
@@ -2431,7 +2431,7 @@ imp	'GetPhysicalCursorPos'					GetPhysicalCursorPos					user32		1907
 imp	'GetPhysicalMonitorDescription'				GetPhysicalMonitorDescription				gdi32		1689
 imp	'GetPhysicalMonitors'					GetPhysicalMonitors					gdi32		1690
 imp	'GetPhysicallyInstalledSystemMemory'			GetPhysicallyInstalledSystemMemory			KernelBase	663
-imp	'GetPixel'						GetPixel						gdi32		1691
+imp	'GetPixel'						GetPixel						gdi32		1691	3
 imp	'GetPixelFormat'					GetPixelFormat						gdi32		1692
 imp	'GetPointerCursorId'					GetPointerCursorId					user32		1908
 imp	'GetPointerDevice'					GetPointerDevice					user32		1909
@@ -2535,8 +2535,8 @@ imp	'GetRegistryValueWithFallback'				GetRegistryValueWithFallbackW				KernelBas
 imp	'GetRelAbs'						GetRelAbs						gdi32		1699
 imp	'GetRgnBox'						GetRgnBox						gdi32		1700
 imp	'GetRoamingLastObservedChangeTime'			GetRoamingLastObservedChangeTime			KernelBase	699
-imp	'GetSaveFileNameA'					GetSaveFileNameA					comdlg32	115
-imp	'GetSaveFileName'					GetSaveFileNameW					comdlg32	116
+imp	'GetSaveFileNameA'					GetSaveFileNameA					comdlg32	115	1
+imp	'GetSaveFileName'					GetSaveFileNameW					comdlg32	116	1
 imp	'GetScrollBarInfo'					GetScrollBarInfo					user32		1945
 imp	'GetScrollInfo'						GetScrollInfo						user32		1946
 imp	'GetScrollPos'						GetScrollPos						user32		1947
@@ -2606,7 +2606,7 @@ imp	'GetSystemDpiForProcess'				GetSystemDpiForProcess					user32		1954
 imp	'GetSystemFileCacheSize'				GetSystemFileCacheSize					KernelBase	739
 imp	'GetSystemFirmwareTable'				GetSystemFirmwareTable					KernelBase	740
 imp	'GetSystemInfo'						GetSystemInfo						KernelBase	741	1
-imp	'GetSystemMenu'						GetSystemMenu						user32		1955
+imp	'GetSystemMenu'						GetSystemMenu						user32		1955	2
 imp	'GetSystemMetadataPath'					GetSystemMetadataPath					KernelBase	742
 imp	'GetSystemMetadataPathForPackage'			GetSystemMetadataPathForPackage				KernelBase	743
 imp	'GetSystemMetadataPathForPackageFamily'			GetSystemMetadataPathForPackageFamily			KernelBase	744
@@ -2764,7 +2764,7 @@ imp	'GetWindowMinimizeRect'					GetWindowMinimizeRect					user32		1991
 imp	'GetWindowModuleFileNameA'				GetWindowModuleFileNameA				user32		1993
 imp	'GetWindowModuleFileName'				GetWindowModuleFileNameW				user32		1994
 imp	'GetWindowOrgEx'					GetWindowOrgEx						gdi32		1732
-imp	'GetWindowPlacement'					GetWindowPlacement					user32		1995
+imp	'GetWindowPlacement'					GetWindowPlacement					user32		1995	2
 imp	'GetWindowProcessHandle'				GetWindowProcessHandle					user32		1996
 imp	'GetWindowRect'						GetWindowRect						user32		1997	2
 imp	'GetWindowRgn'						GetWindowRgn						user32		1998
@@ -2913,10 +2913,10 @@ imp	'InjectKeyboardInput'					InjectKeyboardInput					user32		2037
 imp	'InjectMouseInput'					InjectMouseInput					user32		2038
 imp	'InjectPointerInput'					InjectPointerInput					user32		2039
 imp	'InjectTouchInput'					InjectTouchInput					user32		2040
-imp	'InsertMenuA'						InsertMenuA						user32		2041
+imp	'InsertMenuA'						InsertMenuA						user32		2041	5
 imp	'InsertMenuItemA'					InsertMenuItemA						user32		2042
 imp	'InsertMenuItem'					InsertMenuItemW						user32		2043
-imp	'InsertMenu'						InsertMenuW						user32		2044
+imp	'InsertMenu'						InsertMenuW						user32		2044	5
 imp	'InstallApplication'					InstallApplication					advapi32	1408
 imp	'InstallELAMCertificateInfo'				InstallELAMCertificateInfo				KernelBase	866
 imp	'InternalDeleteDC'					InternalDeleteDC					gdi32		1736
@@ -2985,7 +2985,7 @@ imp	'IsEnclaveTypeSupported'				IsEnclaveTypeSupported					KernelBase	906
 imp	'IsGUIThread'						IsGUIThread						user32		2065
 imp	'IsGlobalizationUserSettingsKeyRedirected'		IsGlobalizationUserSettingsKeyRedirected		KernelBase	907
 imp	'IsHungAppWindow'					IsHungAppWindow						user32		2066
-imp	'IsIconic'						IsIconic						user32		2067
+imp	'IsIconic'						IsIconic						user32		2067	1
 imp	'IsImmersiveProcess'					IsImmersiveProcess					user32		2068
 imp	'IsInDesktopWindowBand'					IsInDesktopWindowBand					user32		2069
 imp	'IsInternetESCEnabled'					IsInternetESCEnabled					KernelBase	908
@@ -4332,10 +4332,10 @@ imp	'PowerSetRequest'					PowerSetRequest						kernel32	1059
 imp	'PrefetchVirtualMemory'					PrefetchVirtualMemory					KernelBase	1222	4
 imp	'PrepareDiscForBurnRunDll'				PrepareDiscForBurnRunDllW				shell32		135
 imp	'PrepareTape'						PrepareTape						kernel32	1061
-imp	'PrintDlgA'						PrintDlgA						comdlg32	120
+imp	'PrintDlgA'						PrintDlgA						comdlg32	120	1
 imp	'PrintDlgExA'						PrintDlgExA						comdlg32	121
 imp	'PrintDlgEx'						PrintDlgExW						comdlg32	122
-imp	'PrintDlg'						PrintDlgW						comdlg32	123
+imp	'PrintDlg'						PrintDlgW						comdlg32	123	1
 imp	'PrintWindow'						PrintWindow						user32		2209
 imp	'PrintersGetCommand_RunDLL'				PrintersGetCommand_RunDLL				shell32		138
 imp	'PrintersGetCommand_RunDLLA'				PrintersGetCommand_RunDLLA				shell32		139
@@ -4541,7 +4541,7 @@ imp	'RecordShutdownReason'					RecordShutdownReason					user32		2245
 imp	'RectInRegion'						RectInRegion						gdi32		1796
 imp	'RectVisible'						RectVisible						gdi32		1797
 imp	'Rectangle'						Rectangle						gdi32		1798
-imp	'RedrawWindow'						RedrawWindow						user32		2246
+imp	'RedrawWindow'						RedrawWindow						user32		2246	4
 imp	'RefreshPackageInfo'					RefreshPackageInfo					KernelBase	1318
 imp	'RefreshPolicyExInternal'				RefreshPolicyExInternal					KernelBase	1319
 imp	'RefreshPolicyInternal'					RefreshPolicyInternal					KernelBase	1320
@@ -4699,7 +4699,7 @@ imp	'RegisterWowBaseHandlers'				RegisterWowBaseHandlers					kernel32	1194
 imp	'RegisterWowExec'					RegisterWowExec						kernel32	1195
 imp	'ReleaseActCtx'						ReleaseActCtx						KernelBase	1390
 imp	'ReleaseActCtxWorker'					ReleaseActCtxWorker					kernel32	1197
-imp	'ReleaseCapture'					ReleaseCapture						user32		2279
+imp	'ReleaseCapture'					ReleaseCapture						user32		2279	0
 imp	'ReleaseDC'						ReleaseDC						user32		2280
 imp	'ReleaseDwmHitTestWaiters'				ReleaseDwmHitTestWaiters				user32		2281
 imp	'ReleaseMutex'						ReleaseMutex						KernelBase	1391	1
@@ -4741,8 +4741,8 @@ imp	'ReplaceFileA'						ReplaceFileA						kernel32	1215
 imp	'ReplaceFileExInternal'					ReplaceFileExInternal					KernelBase	1408
 imp	'ReplaceFile'						ReplaceFileW						KernelBase	1409
 imp	'ReplacePartitionUnit'					ReplacePartitionUnit					kernel32	1217
-imp	'ReplaceTextA'						ReplaceTextA						comdlg32	124
-imp	'ReplaceText'						ReplaceTextW						comdlg32	125
+imp	'ReplaceTextA'						ReplaceTextA						comdlg32	124	1
+imp	'ReplaceText'						ReplaceTextW						comdlg32	125	1
 imp	'ReplyMessage'						ReplyMessage						user32		2288
 imp	'ReportEventA'						ReportEventA						advapi32	1704
 imp	'ReportEvent'						ReportEventW						advapi32	1705
@@ -4761,7 +4761,7 @@ imp	'ResolveDesktopForWOW'					ResolveDesktopForWOW					user32		2289
 imp	'ResolveLocaleName'					ResolveLocaleName					KernelBase	1415
 imp	'RestartDialog'						RestartDialog						shell32		59
 imp	'RestartDialogEx'					RestartDialogEx						shell32		730
-imp	'RestoreDC'						RestoreDC						gdi32		1808
+imp	'RestoreDC'						RestoreDC						gdi32		1808	2
 imp	'ResumeThread'						ResumeThread						KernelBase	1417
 imp	'ReuseDDElParam'					ReuseDDElParam						user32		2290
 imp	'RevertToSelf'						RevertToSelf						KernelBase	1418
@@ -6061,7 +6061,7 @@ imp	'SaferiPopulateDefaultsInRegistry'			SaferiPopulateDefaultsInRegistry			adva
 imp	'SaferiRecordEventLogEntry'				SaferiRecordEventLogEntry				advapi32	1722
 imp	'SaferiSearchMatchingHashRules'				SaferiSearchMatchingHashRules				advapi32	1723
 imp	'SaveAlternatePackageRootPath'				SaveAlternatePackageRootPath				KernelBase	1451
-imp	'SaveDC'						SaveDC							gdi32		1815
+imp	'SaveDC'						SaveDC							gdi32		1815	1
 imp	'SaveStateRootFolderPath'				SaveStateRootFolderPath					KernelBase	1452
 imp	'SbExecuteProcedure'					SbExecuteProcedure					ntdll		1610
 imp	'SbSelectProcedure'					SbSelectProcedure					ntdll		1611
@@ -6082,7 +6082,7 @@ imp	'SelectBrushLocal'					SelectBrushLocal					gdi32		1860
 imp	'SelectClipPath'					SelectClipPath						gdi32		1861
 imp	'SelectClipRgn'						SelectClipRgn						gdi32		1862
 imp	'SelectFontLocal'					SelectFontLocal						gdi32		1863
-imp	'SelectObject'						SelectObject						gdi32		1864
+imp	'SelectObject'						SelectObject						gdi32		1864	2
 imp	'SelectPalette'						SelectPalette						gdi32		1865
 imp	'SendDlgItemMessageA'					SendDlgItemMessageA					user32		2296
 imp	'SendDlgItemMessage'					SendDlgItemMessageW					user32		2297
@@ -6094,7 +6094,7 @@ imp	'SendMessageCallbackA'					SendMessageCallbackA					user32		2302
 imp	'SendMessageCallback'					SendMessageCallbackW					user32		2303
 imp	'SendMessageTimeoutA'					SendMessageTimeoutA					user32		2304
 imp	'SendMessageTimeout'					SendMessageTimeoutW					user32		2305
-imp	'SendMessage'						SendMessageW						user32		2306
+imp	'SendMessage'						SendMessageW						user32		2306	4
 imp	'SendNotifyMessageA'					SendNotifyMessageA					user32		2307
 imp	'SendNotifyMessage'					SendNotifyMessageW					user32		2308
 imp	'SetAbortProc'						SetAbortProc						gdi32		1866
@@ -6114,13 +6114,13 @@ imp	'SetBrushOrgEx'						SetBrushOrgEx						gdi32		1875
 imp	'SetCachedSigningLevel'					SetCachedSigningLevel					KernelBase	1458
 imp	'SetCalendarInfoA'					SetCalendarInfoA					kernel32	1249
 imp	'SetCalendarInfo'					SetCalendarInfoW					KernelBase	1459
-imp	'SetCapture'						SetCapture						user32		2310
+imp	'SetCapture'						SetCapture						user32		2310	1
 imp	'SetCaretBlinkTime'					SetCaretBlinkTime					user32		2311
 imp	'SetCaretPos'						SetCaretPos						user32		2312
-imp	'SetClassLongA'						SetClassLongA						user32		2313
+imp	'SetClassLongA'						SetClassLongA						user32		2313	3
 imp	'SetClassLongPtrA'					SetClassLongPtrA					user32		2314
 imp	'SetClassLongPtr'					SetClassLongPtrW					user32		2315
-imp	'SetClassLong'						SetClassLongW						user32		2316
+imp	'SetClassLong'						SetClassLongW						user32		2316	3
 imp	'SetClassWord'						SetClassWord						user32		2317
 imp	'SetClientDynamicTimeZoneInformation'			SetClientDynamicTimeZoneInformation			KernelBase	1460
 imp	'SetClientTimeZoneInformation'				SetClientTimeZoneInformation				KernelBase	1461
@@ -6176,7 +6176,7 @@ imp	'SetCurrentConsoleFontEx'				SetCurrentConsoleFontEx					KernelBase	1492
 imp	'SetCurrentDirectory'					SetCurrentDirectoryW					KernelBase	1494	1
 imp	'SetCurrentDirectoryA'					SetCurrentDirectoryA					KernelBase	1493	1
 imp	'SetCurrentProcessExplicitAppUserModelID'		SetCurrentProcessExplicitAppUserModelID			shell32		569
-imp	'SetCursor'						SetCursor						user32		2321
+imp	'SetCursor'						SetCursor						user32		2321	1
 imp	'SetCursorContents'					SetCursorContents					user32		2322
 imp	'SetCursorPos'						SetCursorPos						user32		2323
 imp	'SetDCBrushColor'					SetDCBrushColor						gdi32		1878
@@ -6304,7 +6304,7 @@ imp	'SetOPMSigningKeyAndSequenceNumbers'			SetOPMSigningKeyAndSequenceNumbers			
 imp	'SetPaletteEntries'					SetPaletteEntries					gdi32		1900
 imp	'SetParent'						SetParent						user32		2357	2
 imp	'SetPhysicalCursorPos'					SetPhysicalCursorPos					user32		2358
-imp	'SetPixel'						SetPixel						gdi32		1901
+imp	'SetPixel'						SetPixel						gdi32		1901	4
 imp	'SetPixelFormat'					SetPixelFormat						gdi32		1902
 imp	'SetPixelV'						SetPixelV						gdi32		1903
 imp	'SetPolyFillMode'					SetPolyFillMode						gdi32		1904
@@ -6443,7 +6443,7 @@ imp	'SetWindowLongPtrA'					SetWindowLongPtrA					user32		2396
 imp	'SetWindowLongPtr'					SetWindowLongPtrW					user32		2397
 imp	'SetWindowLong'						SetWindowLongW						user32		2398
 imp	'SetWindowOrgEx'					SetWindowOrgEx						gdi32		1919
-imp	'SetWindowPlacement'					SetWindowPlacement					user32		2399
+imp	'SetWindowPlacement'					SetWindowPlacement					user32		2399	2
 imp	'SetWindowPos'						SetWindowPos						user32		2400	7
 imp	'SetWindowRgn'						SetWindowRgn						user32		2401
 imp	'SetWindowRgnEx'					SetWindowRgnEx						user32		2402
@@ -6723,7 +6723,7 @@ imp	'TpWaitForWait'						TpWaitForWait						ntdll		1676
 imp	'TpWaitForWork'						TpWaitForWork						ntdll		1677
 imp	'TraceSetInformation'					TraceSetInformation					advapi32	1812
 imp	'TrackMouseEvent'					TrackMouseEvent						user32		2442
-imp	'TrackPopupMenu'					TrackPopupMenu						user32		2443
+imp	'TrackPopupMenu'					TrackPopupMenu						user32		2443	7
 imp	'TrackPopupMenuEx'					TrackPopupMenuEx					user32		2444
 imp	'TransactNamedPipe'					TransactNamedPipe					KernelBase	1684	7
 imp	'TranslateAcceleratorA'					TranslateAcceleratorA					user32		2446

@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_RUNTIME_H_
 #define COSMOPOLITAN_LIBC_NT_RUNTIME_H_
-#include "libc/nt/enum/ctrlevent.h"
+#include "libc/nt/struct/overlapped.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/typedef/handlerroutine.h"
 
@@ -21,8 +21,6 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-struct NtOverlapped;
-
 char16_t *GetCommandLine(void) nosideeffect;
 char16_t *GetEnvironmentStrings(void) nodiscard;
 bool32 FreeEnvironmentStrings(char16_t *) paramsnonnull();
@@ -35,7 +33,7 @@ bool32 WriteFile(int64_t hFile, const void *lpBuffer,
                  struct NtOverlapped *opt_lpOverlapped);
 bool32 TerminateProcess(int64_t hProcess, uint32_t uExitCode);
 int64_t GetCurrentProcess(void) pureconst;
-void ExitProcess(uint32_t uExitCode);
+void ExitProcess(uint32_t uExitCode) noreturn;
 uint32_t GetLastError(void) nosideeffect;
 bool32 CloseHandle(int64_t hObject) nothrow nocallback;
 intptr_t GetStdHandle(int64_t nStdHandle) nosideeffect;

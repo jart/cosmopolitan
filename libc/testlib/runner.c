@@ -20,7 +20,6 @@
 #include "libc/calls/calls.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/nexgen32e.h"
-#include "libc/runtime/missioncritical.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"

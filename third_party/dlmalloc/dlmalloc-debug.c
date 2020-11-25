@@ -1,4 +1,4 @@
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
 
 /* Check properties of any chunk, whether free, inuse, mmapped etc  */
 forceinline void do_check_any_chunk(mstate m, mchunkptr p) {

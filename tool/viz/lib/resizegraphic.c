@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/xmmintrin.h"
+#include "libc/bits/xmmintrin.internal.h"
 #include "libc/runtime/buffer.h"
 #include "tool/viz/lib/graphic.h"
 

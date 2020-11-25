@@ -17,11 +17,13 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/limits.h"
+#include "libc/nt/enum/processaccess.h"
+#include "libc/nt/enum/threadaccess.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thread.h"
@@ -64,7 +66,6 @@ static textwindows noinline int sched_setaffinity$nt(int pid,
  *
  * @param pid is the process or thread id (or 0 for caller)
  * @param bitsetsize is byte length of bitset
- * @param bitset can be manipulated using bt(), bts(), etc.
  * @return 0 on success, or -1 w/ errno
  */
 int sched_setaffinity(int pid, uint64_t bitsetsize, const void *bitset) {

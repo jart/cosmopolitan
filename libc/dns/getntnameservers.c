@@ -17,11 +17,13 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/arraylist.h"
+#include "libc/alg/arraylist.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/resolvconf.h"
+#include "libc/nt/enum/keyaccess.h"
+#include "libc/nt/enum/reggetvalueflags.h"
 #include "libc/nt/registry.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"

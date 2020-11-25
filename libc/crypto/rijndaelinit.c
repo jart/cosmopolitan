@@ -19,10 +19,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
-#include "libc/bits/xmmintrin.h"
+#include "libc/bits/xmmintrin.internal.h"
 #include "libc/crypto/rijndael.h"
 #include "libc/dce.h"
 #include "libc/str/internal.h"
+
+#define ROR(w, k) (CheckUnsigned(w) >> (k) | (w) << (sizeof(w) * 8 - (k)))
 
 static const uint8_t Rcon[11] = {0x8d, 0x01, 0x02, 0x04, 0x08, 0x10,
                                  0x20, 0x40, 0x80, 0x1b, 0x36};
@@ -45,7 +47,7 @@ forceinline uint32_t SubRot(uint32_t t) {
  */
 void rijndaelinit(struct Rijndael *ctx, uint32_t n, aes_block_t k1,
                   aes_block_t k2) {
-#define Nk (n - 6)
+#define Nk   (n - 6)
 #define W(i) (ctx->rk[(i) / 4].u32[(i) % 4])
 #define K(i) ((i) < 4 ? k1[i] : k2[(i)-4])
   uint32_t i, t;

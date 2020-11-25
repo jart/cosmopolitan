@@ -40,5 +40,5 @@ syscall:mov	%rdi,%rax
 	mov	%r8,%rcx		# ← intended
 	mov	%r9,%r8
 	mov	8(%rsp),%r9
-	jmp	*systemfive(%rip)
+	jmp	*__systemfive(%rip)
 	.endfn	syscall,globl

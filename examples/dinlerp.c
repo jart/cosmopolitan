@@ -12,7 +12,7 @@
 #include "dsp/scale/scale.h"
 #include "dsp/tty/itoa8.h"
 #include "dsp/tty/quant.h"
-#include "libc/alg/arraylist2.h"
+#include "libc/alg/arraylist2.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/stat.h"

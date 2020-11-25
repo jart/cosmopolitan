@@ -17,9 +17,9 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/bisectcarleft.h"
+#include "libc/alg/bisectcarleft.internal.h"
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.h"
@@ -31,9 +31,9 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/internal.h"
-#include "libc/runtime/missioncritical.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/symbols.h"
+#include "libc/runtime/symbols.internal.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
@@ -71,7 +71,6 @@ privileged interruptfn void ftrace_hook(void) {
   size_t i, j, nesting;
   const char *symbol;
   struct StackFrame *frame;
-  LOAD_DEFAULT_RBX();
   if (g_symbols) {
     frame = __builtin_frame_address(0);
     symbol =
@@ -98,7 +97,6 @@ privileged interruptfn void ftrace_hook(void) {
     }
     g_lastsymbol = symbol;
   }
-  RESTORE_RBX();
 }
 
 /**

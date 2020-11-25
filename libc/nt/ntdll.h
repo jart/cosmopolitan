@@ -1,21 +1,17 @@
 #ifndef COSMOPOLITAN_LIBC_NT_NTDLL_H_
 #define COSMOPOLITAN_LIBC_NT_NTDLL_H_
-#include "libc/nt/enum/eventtype.h"
-#include "libc/nt/enum/fileinformationclass.h"
-#include "libc/nt/enum/fsinformationclass.h"
-#include "libc/nt/enum/jobobjectinfoclass.h"
-#include "libc/nt/enum/keyinformationclass.h"
-#include "libc/nt/enum/objectinformationclass.h"
-#include "libc/nt/enum/status.h"
-#include "libc/nt/enum/systeminformationclass.h"
-#include "libc/nt/enum/tokeninformationclass.h"
-#include "libc/nt/enum/valueinformationclass.h"
+#include "libc/nt/struct/context.h"
+#include "libc/nt/struct/criticalsection.h"
+#include "libc/nt/struct/filebasicinformation.h"
+#include "libc/nt/struct/filenetworkopeninformation.h"
+#include "libc/nt/struct/iostatusblock.h"
+#include "libc/nt/struct/ntexceptionrecord.h"
+#include "libc/nt/struct/objectattributes.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/typedef/ioapcroutine.h"
 #include "libc/nt/typedef/pknormalroutine.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-#if 0
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
                       ▒▒▒▒░░░▒▒▒▒▒▒▓▓▓▓▓▓░
@@ -44,27 +40,14 @@ COSMOPOLITAN_C_START_
      the operating system and subject to change from one release of
      Windows to the next, and possibly even between service packs for
      each release.” ──Quoth MSDN */
-#endif
 
 #define g_nt_system_call_dispatcher (wambda *)0x7ffe0308
 
 extern const struct NtUnicodeString *const RtlNtdllName;
 
-#if 0
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § new technology » beyond the pale » eponymous runtime      ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#endif
-
-struct NtContext;
-struct NtCriticalSection;
-struct NtExceptionRecord;
-struct NtFileBasicInformation;
-struct NtFileNetworkOpenInformation;
-struct NtIoStatusBlock;
-struct NtObjectAttributes;
-struct NtSecurityDescriptor;
-struct NtUnicodeString;
 
 #define NT_PROCESS_FLAGS_CREATE_SUSPENDED 0x00000001
 #define NT_PROCESS_FLAGS_INHERIT_HANDLES  0x00000002
@@ -99,8 +82,7 @@ NtStatus NtCreateTimer(void **out_TimerHandle, uint32_t DesiredAccess,
 NtStatus NtSetTimer(void *TimerHandle, int64_t *DueTime, void *TimerApcRoutine,
                     void *TimerContext, int32_t Resume, int32_t Period,
                     int32_t *out_PreviousState);
-NtStatus NtQueryObject(void *ObjectHandle,
-                       enum NtObjectInformationClass ObjectInformationClass,
+NtStatus NtQueryObject(void *ObjectHandle, int ObjectInformationClass,
                        void *out_ObjectInformation,
                        uint32_t ObjectInformationLength,
                        uint32_t *opt_out_ReturnLength);
@@ -117,17 +99,15 @@ NtStatus NtSetValueKey(void *KeyHandle, struct NtUnicodeString *ValueName,
                        uint32_t opt_TitleIndex, uint32_t Type, void *Data,
                        uint32_t DataSize);
 NtStatus NtDeleteKey(void *KeyHandle);
-NtStatus NtQueryValueKey(
-    void *KeyHandle, struct NtUnicodeString *ValueName,
-    enum NtKeyValueInformationClass KeyValueInformationClass,
-    void *out_KeyValueInformation, uint32_t Length, uint32_t *out_ResultLength);
+NtStatus NtQueryValueKey(void *KeyHandle, struct NtUnicodeString *ValueName,
+                         int KeyValueInformationClass,
+                         void *out_KeyValueInformation, uint32_t Length,
+                         uint32_t *out_ResultLength);
 NtStatus NtFlushKey(void *KeyHandle);
-NtStatus NtEnumerateKey(int64_t hkey, uint32_t index,
-                        enum NtKeyInformationClass info_class,
+NtStatus NtEnumerateKey(int64_t hkey, uint32_t index, int info_class,
                         void *out_key_info, uint32_t key_info_size,
                         uint32_t *out_bytes_received);
-NtStatus NtEnumerateValueKey(int64_t hKey, uint32_t index,
-                             enum NtKeyValueInformationClass info_class,
+NtStatus NtEnumerateValueKey(int64_t hKey, uint32_t index, int info_class,
                              void *out_key_info, uint32_t key_info_size,
                              uint32_t *out_bytes_received);
 NtStatus NtQuerySystemTime(int64_t *SystemTime);
@@ -146,7 +126,7 @@ NtStatus NtRaiseException(struct NtExceptionRecord *ExceptionRecord,
                           struct NtContext *Context, int32_t SearchFrames);
 NtStatus NtCreateEvent(void **out_EventHandle, uint32_t DesiredAccess,
                        struct NtObjectAttributes *ObjectAttributes,
-                       enum NtEventType EventType, int32_t InitialState);
+                       int EventType, int32_t InitialState);
 NtStatus NtWaitForSingleObject(void *ObjectHandle, int32_t Alertable,
                                int64_t *TimeOut);
 NtStatus NtSetEvent(void *EventHandle, int32_t *opt_out_PreviousState);
@@ -214,16 +194,14 @@ NtStatus NtQueryDirectoryFile(
 NtStatus NtFlushVirtualMemory(int64_t ProcessHandle, void **inout_BaseAddress,
                               uint32_t **inout_FlushSize,
                               struct NtIoStatusBlock *out_IoStatusBlock);
-NtStatus NtQueryInformationJobObject(
-    void *JobHandle, enum NtJobObjectInfoClass JobInformationClass,
-    void *out_JobInformation, uint32_t JobInformationLength,
-    uint32_t *opt_out_ReturnLength);
+NtStatus NtQueryInformationJobObject(void *JobHandle, int JobInformationClass,
+                                     void *out_JobInformation,
+                                     uint32_t JobInformationLength,
+                                     uint32_t *opt_out_ReturnLength);
 
-#if 0
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § new technology » beyond the pale » runtime library        ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#endif
 
 NtStatus RtlInitializeCriticalSection(struct NtCriticalSection *out_crit);
 NtStatus RtlDeleteCriticalSection(struct NtCriticalSection *crit);

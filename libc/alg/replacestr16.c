@@ -18,14 +18,15 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
-#include "libc/alg/arraylist2.h"
-#include "libc/bits/safemacros.h"
+#include "libc/alg/arraylist2.internal.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
 #undef strlen
 #undef replacestr
 #define replacestr replacestr16
+#define memmem     memmem16
 #define char char16_t
 #define strlen strlen16
 #include "libc/alg/replacestr.c"

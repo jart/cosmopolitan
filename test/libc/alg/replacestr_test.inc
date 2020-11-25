@@ -20,19 +20,19 @@
 
 TEST(REPLACESTR, demo) {
   EXPECT_STREQ(S("hello friends"),
-               replacestr(S("hello world"), S("world"), S("friends")));
-  EXPECT_STREQ(S("bbbbbbbb"), replacestr(S("aaaa"), S("a"), S("bb")));
+               REPLACESTR(S("hello world"), S("world"), S("friends")));
+  EXPECT_STREQ(S("bbbbbbbb"), REPLACESTR(S("aaaa"), S("a"), S("bb")));
 }
 
 TEST(REPLACESTR, emptyString) {
-  EXPECT_STREQ(S(""), replacestr(S(""), S("x"), S("y")));
+  EXPECT_STREQ(S(""), REPLACESTR(S(""), S("x"), S("y")));
 }
 
 TEST(REPLACESTR, emptyNeedle) {
-  EXPECT_EQ(NULL, replacestr(S("a"), S(""), S("a")));
+  EXPECT_EQ(NULL, REPLACESTR(S("a"), S(""), S("a")));
   EXPECT_EQ(EINVAL, errno);
 }
 
 TEST(REPLACESTR, needleInReplacement_doesntExplode) {
-  EXPECT_STREQ(S("xxxxxxx"), replacestr(S("x"), S("x"), S("xxxxxxx")));
+  EXPECT_STREQ(S("xxxxxxx"), REPLACESTR(S("x"), S("x"), S("xxxxxxx")));
 }

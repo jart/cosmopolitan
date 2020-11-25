@@ -1,8 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_ENUM_GETFILEEXINFOLEVELS_H_
 #define COSMOPOLITAN_LIBC_NT_ENUM_GETFILEEXINFOLEVELS_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
-enum NtGetFileexInfoLevels { kNtGetFileExInfoStandard, kNtGetFile_MAX };
+#define kNtGetFileExInfoStandard 0
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_GETFILEEXINFOLEVELS_H_ */

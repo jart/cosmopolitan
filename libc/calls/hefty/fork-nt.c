@@ -28,7 +28,6 @@
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/memtrack.h"
-#include "libc/runtime/missioncritical.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"

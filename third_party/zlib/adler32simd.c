@@ -5,8 +5,8 @@
 │ Use of this source code is governed by the BSD-style licenses that can       │
 │ be found in the third_party/zlib/LICENSE file.                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/emmintrin.h"
-#include "libc/bits/tmmintrin.h"
+#include "libc/bits/emmintrin.internal.h"
+#include "libc/bits/tmmintrin.internal.h"
 #include "third_party/zlib/internal.h"
 
 asm(".ident\t\"\\n\\n\

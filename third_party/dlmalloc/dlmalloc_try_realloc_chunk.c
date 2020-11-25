@@ -1,4 +1,4 @@
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
 
 /* Realloc using mmap */
 static mchunkptr mmap_resize(mstate m, mchunkptr oldp, size_t nb, int flags) {

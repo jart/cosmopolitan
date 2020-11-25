@@ -11,11 +11,11 @@
                * http://csrc.nist.gov/publications/fips/fips180-2/fips180-2withchangenotice.pdf
               This implementation uses little endian byte order.
 *********************************************************************/
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/dce.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/internal.h"
-#include "libc/str/str.h"
+#include "libc/str/sha256.h"
 
 #define ROTLEFT(a, b)  (((a) << (b)) | ((a) >> (32 - (b))))
 #define ROTRIGHT(a, b) (((a) >> (b)) | ((a) << (32 - (b))))

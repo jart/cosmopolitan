@@ -25,7 +25,7 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"
-#include "libc/nexgen32e/vendor.h"
+#include "libc/nexgen32e/vendor.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/fileno.h"
@@ -81,7 +81,7 @@ static void LoadElf(struct Machine *m, struct Elf *elf) {
   m->ip = elf->base = elf->ehdr->e_entry;
   VERBOSEF("LOADELF ENTRY %p", m->ip);
   for (i = 0; i < elf->ehdr->e_phnum; ++i) {
-    phdr = getelfsegmentheaderaddress(elf->ehdr, elf->size, i);
+    phdr = GetElfSegmentHeaderAddress(elf->ehdr, elf->size, i);
     switch (phdr->p_type) {
       case PT_LOAD:
         elf->base = MIN(elf->base, phdr->p_vaddr);

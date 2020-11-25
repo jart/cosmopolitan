@@ -18,8 +18,8 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/bits/initializer.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/initializer.internal.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/nexgen32e/rdtsc.h"

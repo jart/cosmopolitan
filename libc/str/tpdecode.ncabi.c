@@ -19,8 +19,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/str/str.h"
-#include "libc/str/tpdecode.h"
-#include "libc/str/tpdecodecb.h"
+#include "libc/str/tpdecode.internal.h"
+#include "libc/str/tpdecodecb.internal.h"
 
 forceinline int getbyte(void *arg, uint32_t i) {
   return ((const unsigned char *)arg)[i];
@@ -32,7 +32,7 @@ forceinline int getbyte(void *arg, uint32_t i) {
  * @param s is a NUL-terminated string
  * @return number of bytes successfully consumed or -1 w/ errno
  * @note synchronization is performed
- * @see libc/str/tpdecodecb.h (for implementation)
+ * @see libc/str/tpdecodecb.internal.h (for implementation)
  */
 int(tpdecode)(const char *s, wint_t *out) {
   return tpdecodecb(out, (unsigned char)s[0], getbyte, (void *)s);

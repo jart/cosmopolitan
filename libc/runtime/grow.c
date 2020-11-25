@@ -56,7 +56,7 @@
  * @note tiny programs might need to explicitly YOINK(realloc)
  * @see test/libc/runtime/grow_test.c
  */
-bool grow(void *pp, size_t *capacity, size_t itemsize, size_t extra) {
+bool __grow(void *pp, size_t *capacity, size_t itemsize, size_t extra) {
   void **p, *p1, *p2;
   size_t n1, n2;                 /* item counts */
   size_t t1, t2;                 /* byte counts */

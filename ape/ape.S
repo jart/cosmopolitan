@@ -40,11 +40,10 @@
 #include "ape/notice.inc"
 #include "ape/relocations.h"
 #include "libc/elf/def.h"
-#include "libc/macho.h"
-#include "libc/nexgen32e/uart.h"
-#include "libc/nexgen32e/vidya.h"
-#include "libc/nt/pedef.h"
-#include "libc/nexgen32e/vidya.h"
+#include "libc/macho.internal.h"
+#include "libc/nexgen32e/uart.internal.h"
+#include "libc/nexgen32e/vidya.internal.h"
+#include "libc/nt/pedef.internal.h"
 #include "libc/dce.h"
 #include "libc/sysv/consts/prot.h"
 
@@ -439,33 +438,6 @@ apmoff:	mov	$0x5300,%ax		# apm installation check
 	int	$APM_SERVICE
 1:	call	panic
 	.endfn	apmoff,globl
-
-/	Video put char.
-/
-/	@param	al is the char
-/	@mode	real
-rvputc:	push	%bx				# don't clobber bp,bx,di,si,cx
-	push	%bp				# original ibm pc scroll up bug
-	mov	$7,%bx				# normal mda/cga style page zero
-	mov	$0x0e,%ah			# teletype output al cp437
-	int	$0x10				# vidya service
-	pop	%bp				# preserves al
-	pop	%bx
-	ret
-	.endfn	rvputc
-
-/	Video put string.
-/
-/	@param	di is the string
-/	@mode	real
-rvputs:	mov	%di,%si
-0:	lodsb
-	test	%al,%al
-	je	1f
-	call	rvputc
-	jmp	0b
-1:	ret
-	.endfn	rvputs,globl,hidden
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ αcτµαlly pδrταblε εxεcµταblε § partition table                           ─╬─│┼
@@ -1267,6 +1239,33 @@ sputs:	push	%bx
 	ret
 	.endfn	sputs,globl
 
+/	Video put string.
+/
+/	@param	di is the string
+/	@mode	real
+rvputs:	mov	%di,%si
+0:	lodsb
+	test	%al,%al
+	je	1f
+	rlcall	rvputc
+	jmp	0b
+1:	ret
+	.endfn	rvputs,globl,hidden
+
+/	Video put char.
+/
+/	@param	al is the char
+/	@mode	real
+rvputc:	push	%bx				# don't clobber bp,bx,di,si,cx
+	push	%bp				# original ibm pc scroll up bug
+	mov	$7,%bx				# normal mda/cga style page zero
+	mov	$0x0e,%ah			# teletype output al cp437
+	int	$0x10				# vidya service
+	pop	%bp				# preserves al
+	pop	%bx
+	ret
+	.endfn	rvputc
+
 /*                                                               █ █▒
                                                                █     █
                                         █▓▄                   █       █
@@ -1613,8 +1612,8 @@ metal:
 	mov	$.Lape.bss.vaddr,%edi
 	mov	$.Lape.bss.memsz,%ecx
 	rep stosb
-	.weak	hostos
-	ezlea	hostos,ax
+	.weak	__hostos
+	ezlea	__hostos,ax
 	test	%rax,%rax
 	jz	1f
 	movb	$METAL,(%rax)

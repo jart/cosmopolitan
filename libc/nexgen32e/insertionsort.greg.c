@@ -24,7 +24,7 @@
  * Sorts array of signed 32-bit integers.
  * @see djbsort()
  */
-textreal void insertionsort(size_t n, int32_t a[n]) {
+textreal void insertionsort(int32_t *a, size_t n) {
   int t;
   unsigned i, j;
   for (i = 1; i < n; ++i) {

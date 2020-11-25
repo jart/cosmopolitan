@@ -1,13 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_NT_ENUM_KEYINFORMATIONCLASS_H_
 #define COSMOPOLITAN_LIBC_NT_ENUM_KEYINFORMATIONCLASS_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
-enum NtKeyInformationClass {
-  kNtKeyBasicInformation,
-  kNtKeyNodeInformation,
-  kNtKeyFullInformation,
-  kNtKeyNameInformation
-};
+#define kNtKeyBasicInformation 0
+#define kNtKeyNodeInformation  1
+#define kNtKeyFullInformation  2
+#define kNtKeyNameInformation  3
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_KEYINFORMATIONCLASS_H_ */

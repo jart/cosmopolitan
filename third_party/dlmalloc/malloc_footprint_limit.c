@@ -1,6 +1,6 @@
 #include "libc/limits.h"
 #include "libc/mem/mem.h"
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
 
 /**
  * Returns the number of bytes that the heap is allowed to obtain from

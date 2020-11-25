@@ -8,7 +8,7 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "dsp/tty/tty.h"
-#include "libc/alg/arraylist2.h"
+#include "libc/alg/arraylist2.internal.h"
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/morton.h"
@@ -19,7 +19,7 @@
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
-#include "libc/log/color.h"
+#include "libc/log/color.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"
 #include "libc/math.h"

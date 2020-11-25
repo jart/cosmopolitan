@@ -1,7 +1,7 @@
 #include "libc/bits/bits.h"
 #include "libc/mem/mem.h"
 #include "libc/sysv/errfuns.h"
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
 
 void* dlmemalign$impl(mstate m, size_t alignment, size_t bytes) {
   void* mem = 0;

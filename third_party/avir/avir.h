@@ -58,7 +58,7 @@
 #define AVIR_CIMAGERESIZER_INCLUDED
 
 #include "third_party/avir/notice.h"
-#include "libc/bits/xmmintrin.h"
+#include "libc/bits/xmmintrin.internal.h"
 #include "libc/str/str.h"
 #include "libc/mem/mem.h"
 #include "libc/bits/bits.h"

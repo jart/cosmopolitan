@@ -17,8 +17,8 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/progn.h"
-#include "libc/fmt/bing.h"
+#include "libc/bits/progn.internal.h"
+#include "libc/fmt/bing.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"

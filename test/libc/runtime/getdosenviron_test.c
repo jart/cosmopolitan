@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/getdosenviron.h"
+#include "libc/runtime/getdosenviron.internal.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 

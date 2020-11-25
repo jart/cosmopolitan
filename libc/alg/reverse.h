@@ -3,16 +3,14 @@
 #include "libc/bits/xchg.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
-#if 0
 /**
  * Reverses array.
  *
- * @param ARRAY is a typed array or a pointer to one 
+ * @param ARRAY is a typed array or a pointer to one
  * @param COUNT is the number of items
  * @return pointer to start of array
  * @see ARRAYLEN()
  */
-#endif
 #define reverse(ARRAY, COUNT)              \
   ({                                       \
     autotype(&(ARRAY)[0]) Array = (ARRAY); \

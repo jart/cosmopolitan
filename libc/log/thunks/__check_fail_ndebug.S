@@ -25,5 +25,5 @@ __check_fail_ndebug:
 	mov	%rsp,%rbp
 	call	___check_fail_ndebug
 	pop	%rbp
-	jmp	die				# fewer elements in backtrace
+	jmp	__die				# fewer elements in backtrace
 	.endfn	__check_fail_ndebug,globl

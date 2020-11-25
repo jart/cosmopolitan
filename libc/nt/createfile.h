@@ -1,13 +1,8 @@
 #ifndef COSMOPOLITAN_LIBC_NT_CREATEFILE_H_
 #define COSMOPOLITAN_LIBC_NT_CREATEFILE_H_
-#include "libc/nt/enum/accessmask.h"
-#include "libc/nt/enum/creationdisposition.h"
-#include "libc/nt/enum/fileflagandattributes.h"
-#include "libc/nt/enum/filesharemode.h"
+#include "libc/nt/struct/securityattributes.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-struct NtSecurityAttributes;
 
 int64_t CreateFile(
     const char16_t *lpFileName, uint32_t dwDesiredAccess, uint32_t dwShareMode,

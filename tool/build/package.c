@@ -18,12 +18,12 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
-#include "libc/alg/arraylist.h"
-#include "libc/alg/bisect.h"
-#include "libc/alg/bisectcarleft.h"
+#include "libc/alg/arraylist.internal.h"
+#include "libc/alg/bisect.internal.h"
+#include "libc/alg/bisectcarleft.internal.h"
 #include "libc/assert.h"
 #include "libc/bits/bswap.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/conv/conv.h"
@@ -263,7 +263,7 @@ void IndexSections(struct Object *obj) {
   struct XedDecodedInst xedd;
   for (i = 0; i < obj->elf->e_shnum; ++i) {
     memset(&sect, 0, sizeof(sect));
-    CHECK_NOTNULL((shdr = getelfsectionheaderaddress(obj->elf, obj->size, i)));
+    CHECK_NOTNULL((shdr = GetElfSectionHeaderAddress(obj->elf, obj->size, i)));
     if (shdr->sh_type != SHT_NULL) {
       CHECK_NOTNULL((name = GetElfSectionName(obj->elf, obj->size, shdr)));
       if (startswith(name, ".sort.")) name += 5;
@@ -289,7 +289,7 @@ void IndexSections(struct Object *obj) {
       sect.kind = kUndef; /* should always and only be section #0 */
     }
     if (shdr->sh_flags & SHF_EXECINSTR) {
-      CHECK_NOTNULL((code = getelfsectionaddress(obj->elf, obj->size, shdr)));
+      CHECK_NOTNULL((code = GetElfSectionAddress(obj->elf, obj->size, shdr)));
       for (op.offset = 0; op.offset < shdr->sh_size; op.offset += op.length) {
         if (xed_instruction_length_decode(
                 xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_LONG_64),
@@ -453,15 +453,15 @@ void OptimizeRelocations(struct Package *pkg, struct Packages *deps,
   unsigned char *code, *p;
   Elf64_Shdr *shdr, *shdrcode;
   for (i = 0; i < obj->elf->e_shnum; ++i) {
-    shdr = getelfsectionheaderaddress(obj->elf, obj->size, i);
+    shdr = GetElfSectionHeaderAddress(obj->elf, obj->size, i);
     if (shdr->sh_type == SHT_RELA) {
       CHECK_EQ(sizeof(struct Elf64_Rela), shdr->sh_entsize);
-      CHECK_NOTNULL((shdrcode = getelfsectionheaderaddress(obj->elf, obj->size,
+      CHECK_NOTNULL((shdrcode = GetElfSectionHeaderAddress(obj->elf, obj->size,
                                                            shdr->sh_info)));
       if (!(shdrcode->sh_flags & SHF_EXECINSTR)) continue;
       CHECK_NOTNULL(
-          (code = getelfsectionaddress(obj->elf, obj->size, shdrcode)));
-      for (rela = getelfsectionaddress(obj->elf, obj->size, shdr);
+          (code = GetElfSectionAddress(obj->elf, obj->size, shdrcode)));
+      for (rela = GetElfSectionAddress(obj->elf, obj->size, shdr);
            ((uintptr_t)rela + shdr->sh_entsize <=
             min((uintptr_t)obj->elf + obj->size,
                 (uintptr_t)obj->elf + shdr->sh_offset + shdr->sh_size));
@@ -594,12 +594,12 @@ void CompressLowEntropyReadOnlyDataSections(struct Package *pkg,
   memset(&rle, 0, sizeof(rle));
   haverldecode = IsSymbolDirectlyReachable(pkg, deps, "rldecode");
   for (i = 0; i < obj->elf->e_shnum; ++i) {
-    if ((shdr = getelfsectionheaderaddress(obj->elf, obj->size, i)) &&
+    if ((shdr = GetElfSectionHeaderAddress(obj->elf, obj->size, i)) &&
         shdr->sh_size >= 256 &&
         (shdr->sh_type == SHT_PROGBITS &&
          !(shdr->sh_flags &
            (SHF_WRITE | SHF_MERGE | SHF_STRINGS | SHF_COMPRESSED))) &&
-        (p = getelfsectionaddress(obj->elf, obj->size, shdr)) &&
+        (p = GetElfSectionAddress(obj->elf, obj->size, shdr)) &&
         startswith((name = GetElfSectionName(obj->elf, obj->size, shdr)),
                    ".rodata") &&
         rlencode(&rle, p, shdr->sh_size) != -1) {

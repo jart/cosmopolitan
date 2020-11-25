@@ -18,7 +18,8 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/runtime/symbols.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/symbols.internal.h"
 
 /**
  * Returns debug binary symbol table, as global singleton.

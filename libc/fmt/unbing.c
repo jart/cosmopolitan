@@ -76,7 +76,7 @@ static textstartup void g_cp437i_init() {
   unsigned i;
   for (i = 0; i < 256; ++i) g_cp437i[i] = kCp437[i] << 8 | i;
   memcpy(g_cp437i + 256, kCp437iMultimappings, sizeof(kCp437iMultimappings));
-  djbsort(ARRAYLEN(g_cp437i), g_cp437i);
+  djbsort(g_cp437i, ARRAYLEN(g_cp437i));
 }
 
 const void *const g_cp437i_ctor[] initarray = {g_cp437i_init};

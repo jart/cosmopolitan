@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/nt/enum/movefileexflags.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/str/str.h"

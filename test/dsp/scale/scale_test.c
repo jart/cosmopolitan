@@ -22,7 +22,7 @@
 #include "dsp/core/core.h"
 #include "dsp/core/half.h"
 #include "dsp/scale/scale.h"
-#include "libc/fmt/bing.h"
+#include "libc/fmt/bing.internal.h"
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"

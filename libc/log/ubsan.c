@@ -22,9 +22,8 @@
 #include "libc/fmt/fmt.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
-#include "libc/log/ubsan.h"
+#include "libc/log/ubsan.internal.h"
 #include "libc/runtime/internal.h"
-#include "libc/runtime/missioncritical.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -56,7 +55,7 @@ void __ubsan_abort(const struct UbsanSourceLocation *loc,
   if (IsDebuggerPresent(false)) DebugBreak();
   __start_fatal(loc->file, loc->line);
   fprintf(stderr, "%s\r\n", description);
-  die();
+  __die();
   unreachable;
 }
 

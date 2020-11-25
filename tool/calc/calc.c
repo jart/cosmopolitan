@@ -18,15 +18,19 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/conv/conv.h"
 #include "libc/errno.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"
+#include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsf.h"
 #include "libc/nexgen32e/bsr.h"
+#include "libc/nexgen32e/ffs.h"
+#include "libc/nexgen32e/x86feature.h"
+#include "libc/rand/rand.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/time/time.h"
@@ -95,6 +99,34 @@ static long double ParseNumber(struct Token t) {
     return strtoumax(t.s, &ep, 0);
   } else {
     return strtod(t.s, &ep);
+  }
+}
+
+static long double FnRand(struct Numbers *a) {
+  return rand();
+}
+
+static long double FnRand32(struct Numbers *a) {
+  return rand32();
+}
+
+static long double FnRand64(struct Numbers *a) {
+  return rand64();
+}
+
+static long double FnRdrand(struct Numbers *a) {
+  if (X86_HAVE(RDRND)) {
+    return rdrand();
+  } else {
+    return NAN;
+  }
+}
+
+static long double FnRdseed(struct Numbers *a) {
+  if (X86_HAVE(RDSEED)) {
+    return rdseed();
+  } else {
+    return NAN;
   }
 }
 
@@ -662,6 +694,11 @@ static const struct Fn {
     {"pow", FnPow},
     {"powi", FnPowi},
     {"print", FnPrint},
+    {"rand", FnRand},
+    {"rand32", FnRand32},
+    {"rand64", FnRand64},
+    {"rdrand", FnRdrand},
+    {"rdseed", FnRdseed},
     {"remainder", FnRemainder},
     {"rint", FnRint},
     {"rol", FnRol},

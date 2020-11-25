@@ -18,13 +18,13 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/conv/conv.h"
 #include "libc/dce.h"
 #include "libc/log/log.h"
-#include "libc/nexgen32e/vendor.h"
+#include "libc/nexgen32e/vendor.internal.h"
 #include "libc/nt/struct/teb.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"

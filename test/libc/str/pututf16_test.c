@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 #include "libc/unicode/unicode.h"

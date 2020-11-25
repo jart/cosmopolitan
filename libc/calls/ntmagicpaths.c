@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/ntmagicpaths.h"
+#include "libc/calls/ntmagicpaths.internal.h"
 
 const struct NtMagicPaths kNtMagicPaths = {
 #define TAB(NAME, STRING) STRING,

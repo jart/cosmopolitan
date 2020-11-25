@@ -124,8 +124,7 @@
         ;;    "delete"))
 
         (cosmo
-         '("__rbx"
-           "__msabi"
+         '("__msabi"
            "offsetof"
            "microarchitecture"
            "targetclones"

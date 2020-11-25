@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_DEBUG_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-#if 0
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
                       ▒▒▒▒░░░▒▒▒▒▒▒▓▓▓▓▓▓░
@@ -27,7 +26,6 @@ COSMOPOLITAN_C_START_
 ╔────────────────────────────────────────────────────────────────▀▀▀─────────│─╗
 │ cosmopolitan § new technology » debugging                                ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#endif
 
 /* Some of these APIs were moved to system.h and libc.h */
 int32_t DebugBreakProcess(void *Process);

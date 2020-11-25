@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/arraylist2.h"
+#include "libc/alg/arraylist2.internal.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
@@ -29,6 +29,7 @@
 #include "libc/errno.h"
 #include "libc/log/check.h"
 #include "libc/macros.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"

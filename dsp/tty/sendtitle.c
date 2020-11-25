@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/tty.h"
-#include "libc/alg/arraylist2.h"
+#include "libc/alg/arraylist2.internal.h"
 #include "libc/runtime/gc.h"
 #include "libc/x/x.h"
 

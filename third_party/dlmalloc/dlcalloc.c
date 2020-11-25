@@ -1,5 +1,5 @@
 #include "libc/str/str.h"
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
 
 void *dlcalloc(size_t n_elements, size_t elem_size) {
   void *mem;

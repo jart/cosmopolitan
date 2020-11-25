@@ -19,7 +19,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/str/tinymemccpy.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 

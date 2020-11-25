@@ -1,11 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_NT_MEMORY_H_
 #define COSMOPOLITAN_LIBC_NT_MEMORY_H_
-#include "libc/nt/enum/filemapflags.h"
-#include "libc/nt/enum/memflags.h"
-#include "libc/nt/enum/offerpriority.h"
-#include "libc/nt/enum/pageflags.h"
+#include "libc/nt/struct/memorybasicinformation.h"
+#include "libc/nt/struct/memoryrangeentry.h"
+#include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/thunk/msabi.h"
-#if 0
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
                       ▒▒▒▒░░░▒▒▒▒▒▒▓▓▓▓▓▓░
@@ -30,16 +28,11 @@
 ╔────────────────────────────────────────────────────────────────▀▀▀─────────│─╗
 │ cosmopolitan § new technology » memory                                   ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#endif
 
 #define kNtNumaNoPreferredNode 0xffffffff
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-struct NtMemoryBasicInformation;
-struct NtMemoryRangeEntry;
-struct NtSecurityAttributes;
 
 int64_t CreateFileMappingNuma(
     int64_t opt_hFile /* -1ul is MAP_ANONYMOUS */,
@@ -73,7 +66,7 @@ bool32 PrefetchVirtualMemory(int64_t hProcess, const uint32_t *NumberOfEntries,
                              struct NtMemoryRangeEntry *VirtualAddresses,
                              uint32_t reserved_Flags);
 bool32 OfferVirtualMemory(void *inout_VirtualAddress, size_t Size,
-                          enum NtOfferPriority Priority);
+                          int Priority);
 
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/memory.inc"

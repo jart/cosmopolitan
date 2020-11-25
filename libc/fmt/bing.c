@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/fmt/bing.h"
+#include "libc/fmt/bing.internal.h"
 #include "libc/str/str.h"
 
 /**

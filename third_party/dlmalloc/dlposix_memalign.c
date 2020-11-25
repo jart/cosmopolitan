@@ -1,7 +1,7 @@
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
 #include "libc/sysv/errfuns.h"
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
 
 int dlposix_memalign(void** pp, size_t alignment, size_t bytes) {
   void* mem;

@@ -18,11 +18,11 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/conv/conv.h"
-#include "libc/macho.h"
+#include "libc/macho.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/map.h"
@@ -44,7 +44,7 @@ static size_t machosize;
 static void startfile(void) {
   showtitle("αcτµαlly pδrταblε εxεcµταblε", "tool/decode/macho", NULL, NULL,
             &kModelineAsm);
-  printf("#include \"libc/macho.h\"\n\n", path);
+  printf("#include \"libc/macho.internal.h\"\n\n", path);
 }
 
 static void showmachoheader(void) {

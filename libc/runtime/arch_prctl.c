@@ -165,7 +165,7 @@ int arch_prctl(int code, int64_t addr) {
   if (g_fsgs_once == 2) {
     return arch_prctl$fsgsbase(code, addr);
   }
-  switch (hostos) {
+  switch (__hostos) {
     case METAL:
       return arch_prctl$msr(code, addr);
     case FREEBSD:

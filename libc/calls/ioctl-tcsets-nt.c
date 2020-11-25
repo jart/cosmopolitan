@@ -18,9 +18,10 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/metatermios.h"
-#include "libc/calls/termios-internal.h"
+#include "libc/calls/struct/metatermios.internal.h"
+#include "libc/calls/termios.internal.h"
 #include "libc/nt/console.h"
+#include "libc/nt/enum/consolemodeflags.h"
 #include "libc/nt/enum/version.h"
 #include "libc/nt/struct/teb.h"
 #include "libc/sysv/consts/o.h"

@@ -5,7 +5,7 @@
 │ Use of this source code is governed by the BSD-style licenses that can       │
 │ be found in the third_party/zlib/LICENSE file.                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/emmintrin.h"
+#include "libc/bits/emmintrin.internal.h"
 #include "libc/str/str.h"
 #include "third_party/zlib/deflate.h"
 #include "third_party/zlib/internal.h"

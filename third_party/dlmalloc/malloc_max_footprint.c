@@ -1,5 +1,5 @@
 #include "libc/mem/mem.h"
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
 
 /**
  * Returns the maximum number of bytes obtained from the system. This

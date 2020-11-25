@@ -39,7 +39,7 @@ APE_DEPS = $(APE_LIB)
 APE_CHECKS = $(APE_HDRS:%=o/%.ok)
 
 o/ape/idata.inc:			\
-		ape/idata.h		\
+		ape/idata.internal.h	\
 		ape/relocations.h
 
 $(APE_OBJS):	$(BUILD_FILES)		\

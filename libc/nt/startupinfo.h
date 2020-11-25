@@ -1,11 +1,10 @@
 #ifndef COSMOPOLITAN_LIBC_NT_NTSTARTUPINFO_H_
 #define COSMOPOLITAN_LIBC_NT_NTSTARTUPINFO_H_
+#include "libc/nt/struct/procthreadattributelist.h"
+#include "libc/nt/struct/startupinfo.h"
 #include "libc/nt/thunk/msabi.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-struct NtStartupInfo;
-struct NtProcThreadAttributeList; /* opaque */
 
 void GetStartupInfo(struct NtStartupInfo *lpStartupInfo);
 

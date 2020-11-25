@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/conv/conv.h"
-#include "libc/conv/strlol.h"
+#include "libc/conv/strlol.internal.h"
 #include "libc/limits.h"
 
 long long strtoll(const char *s, char **endptr, int optional_base) {

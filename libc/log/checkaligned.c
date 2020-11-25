@@ -31,5 +31,5 @@ void __check_fail_aligned(unsigned bytes, uint64_t ptr) {
   if (!IsTiny()) memsummary(fileno(stderr));
   (dprintf)(fileno(stderr), "%s%d%s%#p\r\n", "error: pointer not ", bytes,
             "-byte aligned: ", ptr);
-  die();
+  __die();
 }

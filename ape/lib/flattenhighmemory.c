@@ -20,7 +20,7 @@
 #include "ape/config.h"
 #include "ape/lib/pc.h"
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 
 /**
  * Virtualizes physical memory.

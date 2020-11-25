@@ -1,7 +1,7 @@
 /*-*- mode:c; indent-tabs-mode:t; tab-width:8; coding:utf-8                 -*-│
 │vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/initializer.h"
+#include "libc/bits/initializer.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/macros.h"
 #include "libc/math.h"
@@ -12,7 +12,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
-#include "libc/tzfile.h"
+#include "libc/time/tzfile.internal.h"
 
 #define ALL_STATE
 

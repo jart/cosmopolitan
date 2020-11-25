@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/internal.h"
 #include "libc/str/tpenc.h"
-#include "libc/str/tpencode.h"
+#include "libc/str/tpencode.internal.h"
 
 /**
  * Thompson-Pike Varint Encoder.

@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_HEFTY_MKVARARGV_H_
 #define COSMOPOLITAN_LIBC_CALLS_HEFTY_MKVARARGV_H_
-#include "libc/alg/arraylist2.h"
+#include "libc/alg/arraylist2.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

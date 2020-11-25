@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/log/backtrace.h"
+#include "libc/log/backtrace.internal.h"
 #include "libc/log/log.h"
 #include "libc/runtime/internal.h"
 #include "libc/stdio/stdio.h"
@@ -28,7 +28,7 @@
 /**
  * Aborts process after printing details on its current state.
  */
-relegated noreturn void die(void) {
+relegated noreturn void __die(void) {
   static bool once;
   if (!once) {
     once = true;

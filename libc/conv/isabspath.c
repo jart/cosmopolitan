@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/conv/conv.h"
-#include "libc/conv/isslash.h"
+#include "libc/conv/isslash.internal.h"
 
 /**
  * Returns true if pathname could be absolute on any known platform.

@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/conv/conv.h"
 #include "libc/str/str.h"
-#include "libc/str/tpencode.h"
+#include "libc/str/tpencode.internal.h"
 
 size_t wcsrtombs(char *dest, const wchar_t **src, size_t len, mbstate_t *ps) {
   /* TODO(jart): broken */

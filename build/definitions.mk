@@ -383,5 +383,5 @@ TAGSFLAGS =								\
 	--if0=no							\
 	--langmap=c:.c.h.i						\
 	--line-directives=yes						\
-	--exclude=libc/nt/struct/imagefileheader.h			\
+	--exclude=libc/nt/struct/imagefileheader.internal.h		\
 	--exclude=libc/nt/struct/filesegmentelement.h

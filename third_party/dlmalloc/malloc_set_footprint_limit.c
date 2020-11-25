@@ -1,6 +1,6 @@
 #include "libc/limits.h"
 #include "libc/mem/mem.h"
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
 
 /**
  * Sets the maximum number of bytes to obtain from the system, causing

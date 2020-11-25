@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/log/check.h"
 #include "libc/nexgen32e/kompressor.h"
@@ -73,8 +73,8 @@ TEST(lz4, decompress_runLengthDecode) {
 TEST(lz4, zoneFileGmt) {
   if (!fileexists("usr/share/zoneinfo.dict.lz4")) return;
   struct MappedFile dict, gmt;
-  CHECK_NE(-1, mapfileread("usr/share/zoneinfo.dict.lz4", &dict));
-  CHECK_NE(-1, mapfileread("usr/share/zoneinfo/GMT.lz4", &gmt));
+  CHECK_NE(-1, MapFileRead("usr/share/zoneinfo.dict.lz4", &dict));
+  CHECK_NE(-1, MapFileRead("usr/share/zoneinfo/GMT.lz4", &gmt));
   size_t mapsize, gmtsize;
   char *mapping, *gmtdata;
   lz4decode((gmtdata = lz4decode(
@@ -91,6 +91,6 @@ TEST(lz4, zoneFileGmt) {
       u"               ☺   ☺       ☺   ☺   ♦°              GMT   ◙GMT0◙",
       gmtdata);
   munmap(mapping, mapsize);
-  unmapfile(&dict);
-  unmapfile(&gmt);
+  UnmapFile(&dict);
+  UnmapFile(&gmt);
 }

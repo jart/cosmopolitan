@@ -26,7 +26,7 @@
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/enum/version.h"
 #include "libc/nt/files.h"
-#include "libc/nt/pedef.h"
+#include "libc/nt/pedef.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/teb.h"
 #include "libc/runtime/runtime.h"

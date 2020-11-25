@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_DLL_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-#if 0
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
                       ▒▒▒▒░░░▒▒▒▒▒▒▓▓▓▓▓▓░
@@ -27,7 +26,6 @@ COSMOPOLITAN_C_START_
 ╔────────────────────────────────────────────────────────────────▀▀▀─────────│─╗
 │ cosmopolitan § new technology » dynamic link libraries                   ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#endif
 
 int64_t LoadLibrary(const char16_t *lpLibFileName);
 int64_t LoadLibraryEx(const char16_t *lpLibFileName, int64_t hFile,

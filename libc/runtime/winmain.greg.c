@@ -26,21 +26,21 @@
 #include "libc/macros.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
+#include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/enum/loadlibrarysearch.h"
 #include "libc/nt/enum/pageflags.h"
+#include "libc/nt/enum/version.h"
 #include "libc/nt/files.h"
 #include "libc/nt/memory.h"
-#include "libc/nt/pedef.h"
+#include "libc/nt/pedef.internal.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/teb.h"
-#include "libc/runtime/getdosenviron.h"
+#include "libc/runtime/getdosenviron.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.h"
-#include "libc/runtime/missioncritical.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/winmain.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -61,8 +61,6 @@ static struct CmdExe {
     int64_t handle;
   } oldin, oldout;
 } g_cmdexe;
-
-struct WinMain g_winmain;
 
 static textwindows void RestoreCmdExe(void) {
   if (g_cmdexe.oldin.handle) {
@@ -122,21 +120,15 @@ static textwindows char *AllocateMemory(void *addr, size_t size, int64_t *h) {
       kNtNumaNoPreferredNode);
 }
 
-static textwindows noreturn void WinMainNew(int64_t hInstance,
-                                            int64_t hPrevInstance,
-                                            const char *lpCmdLine,
-                                            int nCmdShow) {
+static textwindows noreturn void WinMainNew(void) {
   int64_t h;
   size_t size;
   int i, count;
   uint64_t data;
   struct WinArgs *wa;
   const char16_t *env16;
-  g_winmain.nCmdShow = nCmdShow;
-  g_winmain.hInstance = hInstance;
-  g_winmain.hPrevInstance = hPrevInstance;
   NormalizeCmdExe();
-  *(/*unconst*/ int *)&hostos = WINDOWS;
+  *(/*unconst*/ int *)&__hostos = WINDOWS;
   size = ROUNDUP(STACKSIZE + sizeof(struct WinArgs), FRAMESIZE);
   data = 0x777000000000;
   data = (intptr_t)AllocateMemory((char *)data, size, &_mmi.p[0].h);
@@ -191,11 +183,12 @@ static textwindows noreturn void WinMainNew(int64_t hInstance,
  *      from having fork() so we pass pipe handles in an environment
  *      variable literally copy all the memory.
  *
+ * @param hInstance call GetModuleHandle(NULL) from main if you need it
  */
 textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
                             const char *lpCmdLine, int nCmdShow) {
   SetDefaultDllDirectories(kNtLoadLibrarySearchSearchSystem32);
   if (weaken(winsockinit)) weaken(winsockinit)();
   if (weaken(WinMainForked)) weaken(WinMainForked)();
-  WinMainNew(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
+  WinMainNew();
 }

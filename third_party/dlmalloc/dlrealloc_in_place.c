@@ -1,6 +1,6 @@
 #include "libc/mem/mem.h"
 #include "libc/sysv/errfuns.h"
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
 
 void *dlrealloc_in_place(void *oldmem, size_t bytes) {
   void *mem = 0;

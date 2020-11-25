@@ -1,6 +1,6 @@
-#include "third_party/dlmalloc/dlmalloc.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
 
 /**
  * Prints on stderr the amount of space obtained from the system (both

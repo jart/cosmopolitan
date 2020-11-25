@@ -42,9 +42,9 @@ TEST(djbsort, test4) {
   a = memcpy(tgc(tmalloc(n * 4)), kA, n * 4);
   b = memcpy(tgc(tmalloc(n * 4)), kA, n * 4);
   c = memcpy(tgc(tmalloc(n * 4)), kA, n * 4);
-  insertionsort(n, a);
+  insertionsort(a, n);
   djbsort$avx2(b, n);
-  djbsort(n, c);
+  djbsort(c, n);
   ASSERT_EQ(0, memcmp(a, b, n * 4));
   ASSERT_EQ(0, memcmp(a, c, n * 4));
 }
@@ -69,8 +69,8 @@ TEST(djbsort, test64) {
   a = memcpy(tgc(tmalloc(n * 4)), kA, n * 4);
   b = memcpy(tgc(tmalloc(n * 4)), kA, n * 4);
   c = memcpy(tgc(tmalloc(n * 4)), kA, n * 4);
-  insertionsort(n, a);
-  djbsort(n, c);
+  insertionsort(a, n);
+  djbsort(c, n);
   ASSERT_EQ(0, memcmp(a, c, n * 4));
   if (X86_HAVE(AVX2)) {
     djbsort$avx2(b, n);
@@ -82,6 +82,6 @@ BENCH(djbsort, bench) {
   n = 256;
   a = gc(memalign(32, n * 4));
   EZBENCH2("insertionsort[255]", rngset(a, n * 4, rand64, -1),
-           insertionsort(n, a));
-  EZBENCH2("djbsort[255]", rngset(a, n * 4, rand64, -1), djbsort(n, a));
+           insertionsort(a, n));
+  EZBENCH2("djbsort[255]", rngset(a, n * 4, rand64, -1), djbsort(a, n));
 }

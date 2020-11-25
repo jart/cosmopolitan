@@ -1,5 +1,5 @@
-#include "libc/bits/initializer.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/initializer.internal.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/conv/conv.h"
@@ -14,7 +14,7 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
 
 STATIC_YOINK("_init_dlmalloc");
 

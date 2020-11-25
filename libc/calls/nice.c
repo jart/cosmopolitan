@@ -17,12 +17,14 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/conv/conv.h"
 #include "libc/sysv/consts/prio.h"
 
-static int clamp(int p) { return max(-NZERO, min(NZERO - 1, p)); }
+static int clamp(int p) {
+  return max(-NZERO, min(NZERO - 1, p));
+}
 
 /**
  * Changes process priority.

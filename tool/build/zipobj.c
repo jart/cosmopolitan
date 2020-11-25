@@ -17,13 +17,12 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/arraylist.h"
+#include "libc/alg/arraylist.internal.h"
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
-#include "libc/dos.h"
 #include "libc/elf/def.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
@@ -32,10 +31,10 @@
 #include "libc/mem/alloca.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nt/enum/fileflagandattributes.h"
-#include "libc/nt/struct/imageauxsymbolex.h"
+#include "libc/nt/struct/imageauxsymbolex.internal.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/symbols.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
@@ -61,6 +60,11 @@
 #define PUT32(P, V)                                                \
   P[0] = V & 0xff, P[1] = V >> 010 & 0xff, P[2] = V >> 020 & 0xff, \
   P[3] = V >> 030 & 0xff, P += 4
+
+#define DOS_DATE(YEAR, MONTH_IDX1, DAY_IDX1) \
+  (((YEAR)-1980) << 9 | (MONTH_IDX1) << 5 | (DAY_IDX1))
+#define DOS_TIME(HOUR, MINUTE, SECOND) \
+  ((HOUR) << 11 | (MINUTE) << 5 | (SECOND) >> 1)
 
 char *symbol_;
 char *outpath_;

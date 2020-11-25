@@ -7,7 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/bits/progn.h"
+#include "libc/bits/progn.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"
 #include "libc/runtime/runtime.h"

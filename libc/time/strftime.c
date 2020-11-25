@@ -23,7 +23,7 @@
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
-#include "libc/tzfile.h"
+#include "libc/time/tzfile.internal.h"
 
 STATIC_YOINK("ntoa");
 

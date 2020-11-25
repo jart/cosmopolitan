@@ -21,7 +21,7 @@
 #include "libc/dce.h"
 #include "libc/macros.h"
 #include "libc/nexgen32e/cachesize.h"
-#include "libc/nexgen32e/tinystrcmp.h"
+#include "libc/nexgen32e/tinystrcmp.internal.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/rand/rand.h"
 #include "libc/stdio/stdio.h"

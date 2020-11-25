@@ -7,7 +7,6 @@
 #include "libc/nt/struct/systemtime.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-#if 0
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
                       ▒▒▒▒░░░▒▒▒▒▒▒▓▓▓▓▓▓░
@@ -32,7 +31,6 @@ COSMOPOLITAN_C_START_
 ╔────────────────────────────────────────────────────────────────▀▀▀─────────│─╗
 │ cosmopolitan § new technology » synchronization                          ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#endif
 
 typedef void (*NtTimerapcroutine)(void *lpArgToCompletionRoutine,
                                   uint32_t dwTimerLowValue,

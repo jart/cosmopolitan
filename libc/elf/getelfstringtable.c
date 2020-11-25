@@ -25,9 +25,9 @@ char *GetElfStringTable(const Elf64_Ehdr *elf, size_t mapsize) {
   Elf64_Shdr *shdr;
   for (i = elf->e_shnum; i > 0; --i) {
     if (i - 1 == elf->e_shstrndx) continue;
-    shdr = getelfsectionheaderaddress(elf, mapsize, i - 1);
+    shdr = GetElfSectionHeaderAddress(elf, mapsize, i - 1);
     if (shdr->sh_type == SHT_STRTAB) {
-      return getelfsectionaddress(elf, mapsize, shdr);
+      return GetElfSectionAddress(elf, mapsize, shdr);
     }
   }
   return NULL;

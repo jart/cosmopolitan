@@ -18,19 +18,19 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
-#include "libc/alg/bisectcarleft.h"
-#include "libc/bits/safemacros.h"
+#include "libc/alg/bisectcarleft.internal.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/hefty/spawn.h"
 #include "libc/conv/conv.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
-#include "libc/log/backtrace.h"
+#include "libc/log/backtrace.internal.h"
 #include "libc/log/log.h"
-#include "libc/nexgen32e/gc.h"
+#include "libc/nexgen32e/gc.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/symbols.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 
@@ -55,14 +55,14 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   argv[i++] = "-a"; /* filter out w/ shell script wrapper for old versions */
   argv[i++] = "-pCife";
   argv[i++] = debugbin;
-  garbage = weaken(g_garbage);
+  garbage = weaken(__garbage);
   gi = garbage ? garbage->i : 0;
   for (frame = bp; frame && i < kBacktraceMaxFrames - 1; frame = frame->next) {
     addr = frame->addr;
-    if (addr == weakaddr("CollectGarbage")) {
+    if (addr == weakaddr("__gc")) {
       do {
         --gi;
-      } while ((addr = garbage->p[gi].ret) == weakaddr("CollectGarbage"));
+      } while ((addr = garbage->p[gi].ret) == weakaddr("__gc"));
     }
     argv[i++] = &buf[j];
     j += snprintf(&buf[j], 17, "%#x", addr - 1) + 1;

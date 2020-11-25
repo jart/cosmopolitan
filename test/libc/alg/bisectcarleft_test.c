@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
-#include "libc/alg/bisectcarleft.h"
+#include "libc/alg/bisectcarleft.internal.h"
 #include "libc/bits/bits.h"
 #include "libc/macros.h"
 #include "libc/runtime/runtime.h"

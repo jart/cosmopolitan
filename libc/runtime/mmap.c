@@ -22,7 +22,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
-#include "libc/log/asan.h"
+#include "libc/log/asan.internal.h"
 #include "libc/macros.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/directmap.h"

@@ -17,14 +17,8 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 
-uint32_t gray(uint32_t x) { return x ^ (x >> 1); }
-
-uint32_t ungray(uint32_t x) {
-  x ^= x >> 16;
-  x ^= x >> 8;
-  x ^= x >> 4;
-  x ^= x >> 2;
-  x ^= x >> 1;
-  return x;
+uint32_t gray(uint32_t x) {
+  return x ^ (x >> 1);
 }

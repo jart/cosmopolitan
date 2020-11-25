@@ -17,17 +17,17 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/hefty/spawn.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/gdb.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/stackframe.h"
-#include "libc/nexgen32e/vendor.h"
+#include "libc/nexgen32e/vendor.internal.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/symbols.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"

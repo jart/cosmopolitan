@@ -116,7 +116,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   if (level == kLogFatal) {
     __start_fatal(file, line);
     (dprintf)(STDERR_FILENO, "fatal error see logfile\r\n");
-    die();
+    __die();
     unreachable;
   }
 }

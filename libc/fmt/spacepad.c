@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/palandprintf.h"
+#include "libc/fmt/palandprintf.internal.h"
 
 int spacepad(int out(long, void *), void *arg, unsigned long n) {
   int i, rc;

@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/conv/conv.h"
@@ -32,8 +32,8 @@
 #include "libc/sysv/consts/s.h"
 
 textwindows int fstat$nt(int64_t handle, struct stat *st) {
+  int filetype;
   uint64_t actualsize;
-  enum NtFileType filetype;
   struct NtByHandleFileInformation wst;
   struct NtFileCompressionInfo fci;
   if (GetFileInformationByHandle(handle, &wst)) {

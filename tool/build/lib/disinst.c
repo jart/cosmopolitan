@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/check.h"
-#include "libc/nexgen32e/tinystrcmp.h"
+#include "libc/nexgen32e/tinystrcmp.internal.h"
 #include "libc/str/str.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/dis.h"

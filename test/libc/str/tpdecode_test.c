@@ -18,14 +18,14 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/bits/progn.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/progn.internal.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/errno.h"
-#include "libc/fmt/bing.h"
+#include "libc/fmt/bing.internal.h"
 #include "libc/limits.h"
 #include "libc/runtime/gc.h"
 #include "libc/str/str.h"
-#include "libc/str/tpdecode.h"
+#include "libc/str/tpdecode.internal.h"
 #include "libc/testlib/testlib.h"
 
 wint_t wc;

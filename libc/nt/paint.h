@@ -3,13 +3,12 @@
 #include "libc/nt/struct/drawtextparams.h"
 #include "libc/nt/struct/paintstruct.h"
 #include "libc/nt/struct/rect.h"
+#include "libc/nt/thunk/msabi.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-#if 0
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § new technology » cpu graphics                             ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#endif
 
 int64_t BeginPaint(int64_t hWnd, struct NtPaintStruct *lpPaint);
 int32_t EndPaint(int64_t hWnd, const struct NtPaintStruct *lpPaint);
@@ -27,7 +26,21 @@ int32_t DrawTextEx(int64_t hdc, char16_t *lpchText, int cchText,
                    struct NtRect *lprc, uint32_t format,
                    struct NtDrawTextParams *lpdtp);
 int32_t FillRect(int64_t hDC, const struct NtRect *lpRC, int64_t hBrush);
+uint32_t GetPixel(int64_t hdc, int x, int y);
+uint32_t SetPixel(int64_t hdc, int x, int y, uint32_t color);
+bool32 RedrawWindow(int64_t hWnd, const struct NtRect *opt_lprcUpdate,
+                    int64_t opt_hrgnUpdate, uint32_t rdwFlags);
+int64_t CreateCompatibleDC(int64_t hdc);
+int64_t CreateCompatibleBitmap(int64_t hdc, int cx, int cy);
+int64_t SelectObject(int64_t hdc, int64_t h);
+bool32 DeleteObject(int64_t ho);
+bool32 DeleteDC(int64_t hdc);
+int SaveDC(int64_t hdc);
+bool32 RestoreDC(int64_t hdc, int nSavedDC);
 
+#if ShouldUseMsabiAttribute()
+#include "libc/nt/thunk/paint.inc"
+#endif /* ShouldUseMsabiAttribute() */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_PAINT_H_ */

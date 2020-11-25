@@ -1,12 +1,10 @@
 #ifndef COSMOPOLITAN_LIBC_NT_THREADS_H_
 #define COSMOPOLITAN_LIBC_NT_THREADS_H_
-#include "libc/nt/enum/threadaccess.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/thunk/msabi.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-#if 0
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
                       ▒▒▒▒░░░▒▒▒▒▒▒▓▓▓▓▓▓░
@@ -31,7 +29,6 @@ COSMOPOLITAN_C_START_
 ╔────────────────────────────────────────────────────────────────▀▀▀─────────│─╗
 │ cosmopolitan § new technology » threads                                  ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#endif
 
 typedef uint32_t (*NtThreadStartRoutine)(void *lpParameter);
 

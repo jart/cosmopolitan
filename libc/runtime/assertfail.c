@@ -48,7 +48,7 @@ relegated void __assert_fail(const char *expr, const char *file, int line) {
     p = mempcpy(p, expr, exprlen);
     p = stpcpy(p, "\r\n");
     write(STDERR_FILENO, msg, p - msg);
-    if (weaken(die)) weaken(die)();
+    if (weaken(__die)) weaken(__die)();
   }
   abort();
   unreachable;

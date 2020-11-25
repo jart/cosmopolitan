@@ -32,7 +32,7 @@
 #include "dsp/mpeg/idct.h"
 #include "dsp/mpeg/mpeg.h"
 #include "dsp/mpeg/video.h"
-#include "libc/bits/initializer.h"
+#include "libc/bits/initializer.internal.h"
 #include "libc/conv/conv.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"

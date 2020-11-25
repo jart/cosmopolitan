@@ -24,6 +24,7 @@
 double rgb2stdpc(double x, double g) {
   return COMPANDLUMA_SRGB(x, g);
 }
+
 double rgb2linpc(double x, double g) {
   return UNCOMPANDLUMA_SRGB(x, g);
 }
@@ -31,6 +32,7 @@ double rgb2linpc(double x, double g) {
 double rgb2stdtv(double x) {
   return COMPANDLUMA_BT1886(x);
 }
+
 double rgb2lintv(double x) {
   return UNCOMPANDLUMA_BT1886(x);
 }

@@ -1,14 +1,10 @@
 #ifndef COSMOPOLITAN_LIBC_NT_ENUM_OBJECTINFORMATIONCLASS_H_
 #define COSMOPOLITAN_LIBC_NT_ENUM_OBJECTINFORMATIONCLASS_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
-enum NtObjectInformationClass {
-  kNtObjectBasicInformation, /*→ struct NtObjectBasicInformation */
-  kNtObjectNameInformation,  /*→ etc. */
-  kNtObjectTypeInformation,
-  kNtObjectAllInformation,
-  kNtObjectDataInformation
-};
+#define kNtObjectBasicInformation 0 /*→ struct NtObjectBasicInformation */
+#define kNtObjectNameInformation  1 /*→ etc. */
+#define kNtObjectTypeInformation  2
+#define kNtObjectAllInformation   3
+#define kNtObjectDataInformation  4
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_OBJECTINFORMATIONCLASS_H_ */

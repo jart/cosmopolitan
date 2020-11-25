@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/limits.h"
 #include "libc/str/str.h"
-#include "libc/str/tpencode.h"
+#include "libc/str/tpencode.internal.h"
 
 int wctomb(char *s, wchar_t wc) {
   if (!s) return 0;

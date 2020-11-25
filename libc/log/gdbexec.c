@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/hefty/spawn.h"
 #include "libc/fmt/fmt.h"
@@ -25,7 +25,7 @@
 #include "libc/log/log.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/symbols.h"
+#include "libc/runtime/symbols.internal.h"
 
 /**
  * Attachs GDB temporarilly, to do something like print a variable.

@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/initializer.h"
+#include "libc/bits/initializer.internal.h"
 #include "libc/stdio/stdio.h"
 
 FILE *g_logfile;

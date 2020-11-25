@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/quant.h"
-#include "libc/bits/progn.h"
+#include "libc/bits/progn.internal.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "net/http/csscolor.h"

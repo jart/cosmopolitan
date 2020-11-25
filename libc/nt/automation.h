@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_AUTOMATION_H_
 #include "libc/nt/typedef/hookproc.h"
 #include "libc/nt/typedef/wndenumproc.h"
-#if 0
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
                       ▒▒▒▒░░░▒▒▒▒▒▒▓▓▓▓▓▓░
@@ -27,7 +26,6 @@
 ╔────────────────────────────────────────────────────────────────▀▀▀─────────│─╗
 │ cosmopolitan § new technology » aol hacking                              ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#endif
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

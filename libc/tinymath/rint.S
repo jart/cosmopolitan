@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/bits/smmintrin.h"
+#include "libc/bits/smmintrin.internal.h"
 #include "libc/macros.h"
 .source	__FILE__
 

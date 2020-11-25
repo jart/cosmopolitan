@@ -17,6 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
 
 /**
@@ -30,6 +31,7 @@
  * @param size is the number of shorts available in s
  * @param awesome enables numbers the IETF unilaterally banned
  * @return number of shorts written or -1 w/ errno
+ * @todo delete
  */
 int(pututf16)(char16_t *s, size_t size, wint_t wc, bool awesome) {
   wint_t wc2;

@@ -56,8 +56,8 @@ asm(".include \"third_party/lex/COPYING\"");
 #include "libc/x/x.h"
 #include "libc/runtime/runtime.h"
 #include "libc/x/x.h"
-#include "libc/bits/safemacros.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
+#include "libc/bits/safemacros.internal.h"
 #include "tables.h"
 
 static char flex_version[] = FLEX_VERSION;

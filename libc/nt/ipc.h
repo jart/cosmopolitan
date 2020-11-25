@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_NT_IPC_H_
 #define COSMOPOLITAN_LIBC_NT_IPC_H_
-#if 0
+#include "libc/nt/struct/overlapped.h"
+#include "libc/nt/struct/securityattributes.h"
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
                       ▒▒▒▒░░░▒▒▒▒▒▒▓▓▓▓▓▓░
@@ -25,7 +26,6 @@
 ╔────────────────────────────────────────────────────────────────▀▀▀─────────│─╗
 │ cosmopolitan § new technology » ipc                                      ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#endif
 
 /* CreateNamedPipe:dwOpenMode */
 #define kNtPipeAccessInbound  0x00000001
@@ -51,9 +51,6 @@
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-struct NtOverlapped;
-struct NtSecurityAttributes;
 
 bool32 CreatePipe(int64_t *out_hReadPipe, int64_t *out_hWritePipe,
                   const struct NtSecurityAttributes *opt_lpPipeAttributes,

@@ -20,12 +20,13 @@
 #include "libc/elf/def.h"
 #include "libc/elf/elf.h"
 #include "libc/runtime/ezmap.h"
+#include "libc/runtime/internal.h"
 
-Elf64_Ehdr *mapelfread(const char *filename, struct MappedFile *mf) {
-  if (mapfileread(filename, mf) != -1 && IsElf64Binary(mf->addr, mf->size)) {
+Elf64_Ehdr *MapElfRead(const char *filename, struct MappedFile *mf) {
+  if (MapFileRead(filename, mf) != -1 && IsElf64Binary(mf->addr, mf->size)) {
     return mf->addr;
   } else {
-    unmapfile(mf);
+    UnmapFile(mf);
     return NULL;
   }
 }

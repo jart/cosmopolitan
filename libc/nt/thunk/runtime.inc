@@ -1,6 +1,3 @@
-#define ExitProcess(...) __imp_ExitProcess(__VA_ARGS__)
-extern typeof(ExitProcess) *const __imp_ExitProcess __msabi;
-
 #define FreeEnvironmentStrings(...) __imp_FreeEnvironmentStringsW(__VA_ARGS__)
 extern typeof(FreeEnvironmentStrings) *const
     __imp_FreeEnvironmentStringsW __msabi;

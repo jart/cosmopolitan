@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/nt/enum/filemapflags.h"
+#include "libc/nt/enum/pageflags.h"
 #include "libc/nt/memory.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"

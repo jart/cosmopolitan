@@ -23,6 +23,7 @@ ssize_t getrandom(void *, size_t, unsigned);
 int devrand(void *, size_t);
 int64_t winrandish(void);
 uint64_t rdrand(void);
+uint64_t rdseed(void);
 float randf(void);
 
 COSMOPOLITAN_C_END_

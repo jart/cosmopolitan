@@ -27,7 +27,7 @@
 #include "libc/runtime/gc.h"
 #include "libc/runtime/rbx.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/symbols.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/str/undeflate.h"

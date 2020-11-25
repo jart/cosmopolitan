@@ -46,8 +46,8 @@ syscount:
 	.previous
 
 	.init.start 701,_init_g_syscount
-	mov	systemfive(%rip),%rax
+	mov	__systemfive(%rip),%rax
 	stosq
 	ezlea	syscount,ax
-	mov	%rax,systemfive(%rip)
+	mov	%rax,__systemfive(%rip)
 	.init.end 701,_init_g_syscount

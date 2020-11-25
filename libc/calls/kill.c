@@ -40,10 +40,15 @@
  * @asyncsignalsafe
  */
 int kill(int pid, int sig) {
-  if (pid == getpid()) return raise(sig);
+  int me;
   if (!IsWindows()) {
     return kill$sysv(pid, sig, 1);
   } else {
-    return enosys();
+    me = getpid();
+    if (!pid || pid == me || pid == -me) {
+      return raise(sig);
+    } else {
+      return enosys();
+    }
   }
 }

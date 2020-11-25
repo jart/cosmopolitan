@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/hefty/spawn.h"
 #include "libc/calls/struct/itimerval.h"
@@ -36,7 +36,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sock/ipclassify.h"
+#include "libc/sock/ipclassify.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -303,7 +303,7 @@ int ReadResponse(void) {
           }
           break;
         default:
-          die();
+          __die();
       }
     } while (n);
   }

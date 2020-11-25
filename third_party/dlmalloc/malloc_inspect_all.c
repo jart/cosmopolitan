@@ -1,5 +1,5 @@
 #include "libc/mem/mem.h"
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
 
 static void internal_inspect_all(mstate m,
                                  void (*handler)(void* start, void* end,

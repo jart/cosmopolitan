@@ -17,7 +17,6 @@
  * offer marginal improvements in terms of code size and performance, at
  * the cost of portability.
  */
-#define HOSTOS (hostos & SUPPORT_VECTOR)
 #ifndef SUPPORT_VECTOR
 #define SUPPORT_VECTOR 0b11111111
 #endif
@@ -94,29 +93,30 @@
   ((SUPPORT_VECTOR & (LINUX | METAL | XNU | OPENBSD | FREEBSD)) != 0)
 
 #ifndef __ASSEMBLER__
-#define IsLinux()   ((HOSTOS & LINUX) == LINUX)
-#define IsMetal()   ((HOSTOS & METAL) == METAL)
-#define IsWindows() ((HOSTOS & WINDOWS) == WINDOWS)
-#define IsBsd()     ((HOSTOS & (XNU | FREEBSD | OPENBSD)) != 0)
-#define IsXnu()     ((HOSTOS & XNU) == XNU)
-#define IsFreebsd() ((HOSTOS & FREEBSD) == FREEBSD)
-#define IsOpenbsd() ((HOSTOS & OPENBSD) == OPENBSD)
+#define __HOSTOS    (__hostos & SUPPORT_VECTOR)
+#define IsLinux()   ((__HOSTOS & LINUX) == LINUX)
+#define IsMetal()   ((__HOSTOS & METAL) == METAL)
+#define IsWindows() ((__HOSTOS & WINDOWS) == WINDOWS)
+#define IsBsd()     ((__HOSTOS & (XNU | FREEBSD | OPENBSD)) != 0)
+#define IsXnu()     ((__HOSTOS & XNU) == XNU)
+#define IsFreebsd() ((__HOSTOS & FREEBSD) == FREEBSD)
+#define IsOpenbsd() ((__HOSTOS & OPENBSD) == OPENBSD)
 #else
 /* clang-format off */
-#define IsLinux() $LINUX,hostos(%rip)
-#define IsMetal() $METAL,hostos(%rip)
-#define IsWindows() $WINDOWS,hostos(%rip)
-#define IsBsd() $XNU|FREEBSD|OPENBSD,hostos(%rip)
-#define IsXnu() $XNU,hostos(%rip)
-#define IsFreebsd() $FREEBSD,hostos(%rip)
-#define IsOpenbsd() $OPENBSD,hostos(%rip)
+#define IsLinux() $LINUX,__hostos(%rip)
+#define IsMetal() $METAL,__hostos(%rip)
+#define IsWindows() $WINDOWS,__hostos(%rip)
+#define IsBsd() $XNU|FREEBSD|OPENBSD,__hostos(%rip)
+#define IsXnu() $XNU,__hostos(%rip)
+#define IsFreebsd() $FREEBSD,__hostos(%rip)
+#define IsOpenbsd() $OPENBSD,__hostos(%rip)
 /* clang-format on */
 #endif
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const int hostos;
+extern const int __hostos;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

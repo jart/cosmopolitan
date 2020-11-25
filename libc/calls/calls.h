@@ -226,7 +226,6 @@ uint32_t getsid(int) nosideeffect;
 uint32_t gettid(void) nosideeffect;
 uint32_t getuid(void) nosideeffect;
 uint32_t umask(int32_t);
-void *getprocaddressmodule(const char *, const char *);
 
 #define getcwd(BUF, SIZE)                                          \
   (isconstant(BUF) && (&(BUF)[0] == NULL) ? get_current_dir_name() \

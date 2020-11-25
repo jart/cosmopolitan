@@ -9,41 +9,25 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § bits                                                      ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-extern const bool kTrue;
-extern const bool kFalse;
 extern const uint8_t kReverseBits[256];
 
 uint32_t gray(uint32_t) pureconst;
 uint32_t ungray(uint32_t) pureconst;
-unsigned bcdadd(unsigned, unsigned) pureconst;
-unsigned long bcd2i(unsigned long) pureconst;
-unsigned long i2bcd(unsigned long) pureconst;
-void bcxcpy(unsigned char (*)[16], unsigned long);
-int ffs(int) pureconst;
-int ffsl(long int) pureconst;
-int ffsll(long long int) pureconst;
-int fls(int) pureconst;
-int flsl(long int) pureconst;
-int flsll(long long int) pureconst;
+
 uint8_t bitreverse8(uint8_t) libcesque pureconst;
 uint16_t bitreverse16(uint16_t) libcesque pureconst;
 uint32_t bitreverse32(uint32_t) libcesque pureconst;
 uint64_t bitreverse64(uint64_t) libcesque pureconst;
+
 unsigned long roundup2pow(unsigned long) libcesque pureconst;
 unsigned long roundup2log(unsigned long) libcesque pureconst;
 unsigned long rounddown2pow(unsigned long) libcesque pureconst;
+
 unsigned long hamming(unsigned long, unsigned long) pureconst;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § bits » no assembly required                               ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-
-/**
- * Undocumented incantations for ROR, ROL, and SAR.
- */
-#define ROR(w, k) (CheckUnsigned(w) >> (k) | (w) << (sizeof(w) * 8 - (k)))
-#define ROL(w, k) ((w) << (k) | CheckUnsigned(w) >> (sizeof(w) * 8 - (k)))
-#define SAR(w, k) (((w) & ~(~0u >> (k))) | ((w) >> ((k) & (sizeof(w) * 8 - 1))))
 
 #define bitreverse8(X) (kReverseBits[(uint8_t)(X)])
 #define bitreverse16(X)                          \
@@ -251,49 +235,6 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
     typeof(&Val) Mem = (MEM);                         \
     asm("mov%z1\t%1,%0" : "=m,m"(*Mem) : "i,r"(Val)); \
     Val;                                              \
-  })
-
-/**
- * Returns true if bit is set in memory.
- *
- * This is a generically-typed Bitset<T> ∀ RAM. This macro is intended
- * to be container-like with optimal machine instruction encoding, cf.
- * machine-agnostic container abstractions. Memory accesses are words.
- * Register allocation can be avoided if BIT is known. Be careful when
- * casting character arrays since that should cause a page fault.
- *
- * @param MEM is uint𝑘_t[] where 𝑘 ∈ {16,32,64} base address
- * @param BIT ∈ [-(2**(𝑘-1)),2**(𝑘-1)) is zero-based index
- * @return true if bit is set, otherwise false
- * @see Intel's Six Thousand Page Manual V.2A 3-113
- * @see bts(), btr(), btc()
- */
-#define bt(MEM, BIT)                                           \
-  ({                                                           \
-    bool OldBit;                                               \
-    if (isconstant(BIT)) {                                     \
-      asm(CFLAG_ASM("bt%z1\t%2,%1")                            \
-          : CFLAG_CONSTRAINT(OldBit)                           \
-          : "m"((MEM)[(BIT) / (sizeof((MEM)[0]) * CHAR_BIT)]), \
-            "J"((BIT) % (sizeof((MEM)[0]) * CHAR_BIT))         \
-          : "cc");                                             \
-    } else if (sizeof((MEM)[0]) == 2) {                        \
-      asm(CFLAG_ASM("bt\t%w2,%1")                              \
-          : CFLAG_CONSTRAINT(OldBit)                           \
-          : "m"((MEM)[0]), "r"(BIT)                            \
-          : "cc");                                             \
-    } else if (sizeof((MEM)[0]) == 4) {                        \
-      asm(CFLAG_ASM("bt\t%k2,%1")                              \
-          : CFLAG_CONSTRAINT(OldBit)                           \
-          : "m"((MEM)[0]), "r"(BIT)                            \
-          : "cc");                                             \
-    } else if (sizeof((MEM)[0]) == 8) {                        \
-      asm(CFLAG_ASM("bt\t%q2,%1")                              \
-          : CFLAG_CONSTRAINT(OldBit)                           \
-          : "m"((MEM)[0]), "r"(BIT)                            \
-          : "cc");                                             \
-    }                                                          \
-    OldBit;                                                    \
   })
 
 #define bts(MEM, BIT)     __BitOp("bts", BIT, MEM) /** bit test and set */

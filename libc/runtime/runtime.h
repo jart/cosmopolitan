@@ -55,7 +55,6 @@ int putenv(char *) paramsnonnull();
 int setenv(const char *, const char *, int) paramsnonnull();
 int unsetenv(const char *);
 int clearenv(void);
-void __fast_math(void);
 void fpreset(void);
 void savexmm(void *);
 void loadxmm(void *);
@@ -68,6 +67,9 @@ void *mremap(void *, uint64_t, uint64_t, int32_t, void *);
 int munmap(void *, uint64_t);
 int mprotect(void *, uint64_t, int) privileged;
 int msync(void *, size_t, int);
+void __print(const void *, size_t);
+void __print_string(const char *);
+void __fast_math(void);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § runtime » optimizations                                   ─╬─│┼

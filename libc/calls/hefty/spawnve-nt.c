@@ -23,6 +23,7 @@
 #include "libc/calls/hefty/ntspawn.h"
 #include "libc/calls/hefty/spawn.h"
 #include "libc/calls/internal.h"
+#include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/enum/startf.h"
 #include "libc/nt/files.h"
 #include "libc/nt/ipc.h"

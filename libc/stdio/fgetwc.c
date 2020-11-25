@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
-#include "libc/str/tpdecodecb.h"
+#include "libc/str/tpdecodecb.internal.h"
 
 /**
  * Reads UTF-8 character from stream.

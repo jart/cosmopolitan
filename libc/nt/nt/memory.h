@@ -4,7 +4,6 @@
 #include "libc/nt/enum/status.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-#if 0
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
                       ▒▒▒▒░░░▒▒▒▒▒▒▓▓▓▓▓▓░
@@ -33,7 +32,6 @@ COSMOPOLITAN_C_START_
      the operating system and subject to change from one release of
      Windows to the next, and possibly even between service packs for
      each release.” ──Quoth MSDN */
-#endif
 
 NtStatus NtAllocateVirtualMemory(int64_t ProcessHandle,
                                  void **inout_BaseAddress, uint32_t dwZeroBits,
@@ -42,11 +40,11 @@ NtStatus NtAllocateVirtualMemory(int64_t ProcessHandle,
                                  uint32_t dwPageProtect);
 NtStatus NtFreeVirtualMemory(int64_t ProcessHandle, void **inout_BaseAddress,
                              size_t *inout_FreeSize, uint32_t FreeType);
-NtStatus NtQueryVirtualMemory(
-    int64_t ProcessHandle, const void *BaseAddress,
-    enum NtMemoryInformationClass MemoryInformationClass,
-    void *out_MemoryInformation, size_t MemoryInformationLength,
-    size_t *opt_out_ReturnLength);
+NtStatus NtQueryVirtualMemory(int64_t ProcessHandle, const void *BaseAddress,
+                              int MemoryInformationClass,
+                              void *out_MemoryInformation,
+                              size_t MemoryInformationLength,
+                              size_t *opt_out_ReturnLength);
 NtStatus NtProtectVirtualMemory(int64_t ProcessHandle, void **inout_BaseAddress,
                                 uint32_t *inout_ProtectSize,
                                 uint32_t NewProtect, uint32_t *out_OldProtect);

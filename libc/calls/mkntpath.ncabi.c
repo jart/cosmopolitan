@@ -17,10 +17,11 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/ntmagicpaths.h"
-#include "libc/nexgen32e/tinystrcmp.h"
+#include "libc/calls/ntmagicpaths.internal.h"
+#include "libc/nexgen32e/tinystrcmp.internal.h"
+#include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
-#include "libc/str/tpdecode.h"
+#include "libc/str/tpdecode.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 

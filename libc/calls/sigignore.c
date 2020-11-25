@@ -21,6 +21,9 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/str/str.h"
 
+/**
+ * Configures process to ignore signal.
+ */
 int sigignore(int sig) {
   struct sigaction sa;
   memset(&sa, 0, sizeof(sa));

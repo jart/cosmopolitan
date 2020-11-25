@@ -21,7 +21,7 @@
 #include "libc/errno.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
-#include "libc/runtime/missioncritical.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * Handles failure of CHECK_xx() macros in -DNDEBUG mode.

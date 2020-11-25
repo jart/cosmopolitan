@@ -6,7 +6,6 @@
 #include "libc/nt/typedef/ioapcroutine.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-#if 0
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
                       ▒▒▒▒░░░▒▒▒▒▒▒▓▓▓▓▓▓░
@@ -35,7 +34,6 @@ COSMOPOLITAN_C_START_
      the operating system and subject to change from one release of
      Windows to the next, and possibly even between service packs for
      each release.” ──Quoth MSDN */
-#endif
 
 struct NtIoStatusBlock;
 struct NtObjectAttributes;

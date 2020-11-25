@@ -22,7 +22,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/symbols.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/sysv/consts/prot.h"
 
 /**

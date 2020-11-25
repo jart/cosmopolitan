@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
+#include "libc/alg/critbit0.h"
 #include "libc/bits/bits.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -36,8 +36,14 @@ static testonly nodiscard struct Bog *NewBog(unsigned n) {
   res->n = n;
   return res;
 }
-static testonly void ClearBog(struct Bog *bog) { bog->i = 0; }
-static testonly void FreeBog(struct Bog **bog) { free(*bog), *bog = NULL; }
+
+static testonly void ClearBog(struct Bog *bog) {
+  bog->i = 0;
+}
+
+static testonly void FreeBog(struct Bog **bog) {
+  free(*bog), *bog = NULL;
+}
 
 static const char *const elems[] = {"a",   "aa",  "aaz", "abz",
                                     "bba", "bbc", "bbd", NULL};

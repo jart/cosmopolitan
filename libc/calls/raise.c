@@ -19,7 +19,23 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/runtime/missioncritical.h"
+#include "libc/nt/console.h"
+#include "libc/nt/enum/ctrlevent.h"
+#include "libc/nt/runtime.h"
+#include "libc/sysv/consts/sig.h"
+
+static uint32_t GetCtrlEvent(int sig) {
+  switch (sig) {
+    case SIGINT:
+      return kNtCtrlCEvent;
+    case SIGHUP:
+      return kNtCtrlCloseEvent;
+    case SIGQUIT:
+      return kNtCtrlBreakEvent;
+    default:
+      ExitProcess(128 + sig);
+  }
+}
 
 /**
  * Sends signal to this process.
@@ -28,4 +44,23 @@
  * @return 0 on success or -1 w/ errno
  * @asyncsignalsafe
  */
-int raise(int sig) { return RAISE(sig); }
+int raise(int sig) {
+  if (sig == SIGTRAP) {
+    DebugBreak();
+    return 0;
+  }
+  if (sig == SIGFPE) {
+    volatile int x = 0;
+    x = 1 / x;
+    return 0;
+  }
+  if (!IsWindows()) {
+    return kill$sysv(getpid(), sig, 1);
+  } else {
+    if (GenerateConsoleCtrlEvent(GetCtrlEvent(sig), 0)) {
+      return 0;
+    } else {
+      return winerr();
+    }
+  }
+}

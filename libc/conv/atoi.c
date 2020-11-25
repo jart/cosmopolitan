@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/conv/conv.h"
-#include "libc/conv/strlol.h"
+#include "libc/conv/strlol.internal.h"
 #include "libc/limits.h"
 
 /**
@@ -29,4 +29,6 @@
  * @note calling strtoimax() directly with base 0 permits greater
  *     flexibility in terms of inputs
  */
-int atoi(const char *s) { return STRLOL(s, NULL, 10, INT_MIN, INT_MAX); }
+int atoi(const char *s) {
+  return STRLOL(s, NULL, 10, INT_MIN, INT_MAX);
+}

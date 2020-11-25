@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
-#include "libc/alg/bisect.h"
+#include "libc/alg/bisect.internal.h"
 
 /**
  * Searches sorted array for exact item in logarithmic time.

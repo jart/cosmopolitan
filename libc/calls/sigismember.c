@@ -18,13 +18,19 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sigbits.h"
-#include "libc/calls/calls.h"
+#include "libc/sysv/errfuns.h"
 
 /**
- * Returns true if sig ∈ set.
+ * Returns true if signal is member of set.
  *
  * @return true, false, or -1 w/ errno
- * @error EINVAL
  * @asyncsignalsafe
  */
-int(sigismember)(const sigset_t *set, int sig) { return sigismember(set, sig); }
+int sigismember(const sigset_t *set, int sig) {
+  unsigned i = sig - 1;
+  if (i < sizeof(set->__bits) * 8) {
+    return (set->__bits[i >> 6] >> (i & 63)) & 1;
+  } else {
+    return einval();
+  }
+}

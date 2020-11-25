@@ -21,7 +21,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/conv/conv.h"
-#include "libc/fmt/bing.h"
+#include "libc/fmt/bing.internal.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"

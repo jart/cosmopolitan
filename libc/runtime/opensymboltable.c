@@ -22,8 +22,9 @@
 #include "libc/elf/def.h"
 #include "libc/elf/elf.h"
 #include "libc/runtime/carsort.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/symbols.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 
@@ -38,15 +39,15 @@ struct SymbolTable *OpenSymbolTable(const char *filename) {
   const Elf64_Sym *symtab, *sym;
   t = MAP_FAILED;
   if (filename && (t = mapanon(BIGPAGESIZE)) != MAP_FAILED &&
-      mapelfread(filename, &t->mf) &&
+      MapElfRead(filename, &t->mf) &&
       (t->name_base = GetElfStringTable(t->elf, t->elfsize)) != NULL &&
       (symtab = GetElfSymbolTable(t->elf, t->elfsize, &t->count)) &&
       sizeof(struct SymbolTable) + sizeof(struct Symbol) * t->count <
           (t->scratch = BIGPAGESIZE)) {
-    getelfvirtualaddressrange(t->elf, t->elfsize, &t->addr_base, &t->addr_end);
+    GetElfVirtualAddressRange(t->elf, t->elfsize, &t->addr_base, &t->addr_end);
     for (j = i = 0; i < t->count; ++i) {
       sym = &symtab[i];
-      if (iselfsymbolcontent(sym) &&
+      if (IsElfSymbolContent(sym) &&
           (sym->st_value >= t->addr_base && sym->st_value <= t->addr_end)) {
         t->symbols[j].addr_rva = (unsigned)(sym->st_value - t->addr_base);
         t->symbols[j].name_rva = sym->st_name;

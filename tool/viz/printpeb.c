@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
@@ -133,7 +133,7 @@ void PrintSystemInfo(void) {
 #undef X
 }
 
-const char *ft2str(enum NtFileType ft) {
+const char *ft2str(int ft) {
   if (ft == kNtFileTypeUnknown) return "kNtFileTypeUnknown";
   if (ft == kNtFileTypeDisk) return "kNtFileTypeDisk";
   if (ft == kNtFileTypeChar) return "kNtFileTypeChar";

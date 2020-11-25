@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/conv/itoa.h"
-#include "libc/runtime/missioncritical.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * Debugs super low-level stuff, e.g.

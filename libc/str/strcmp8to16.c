@@ -18,9 +18,11 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/internal.h"
-#include "libc/str/strcmp8to16i.h"
+#include "libc/str/strcmp8to16i.internal.h"
 
-forceinline unsigned identity32u(unsigned x) { return x; }
+forceinline unsigned identity32u(unsigned x) {
+  return x;
+}
 
 /**
  * Compares UTF-8 and UTF-16 strings.

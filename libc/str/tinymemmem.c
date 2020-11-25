@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
-#include "libc/str/tinymemmem.h"
+#include "libc/str/tinymemmem.internal.h"
 
 /**
  * Naïve substring search implementation.

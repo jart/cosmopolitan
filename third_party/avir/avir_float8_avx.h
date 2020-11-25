@@ -16,12 +16,12 @@
 #ifndef AVIR_FLOAT8_AVX_INCLUDED
 #define AVIR_FLOAT8_AVX_INCLUDED
 
-#include "libc/bits/mmintrin.h"
-#include "libc/bits/avxintrin.h"
-#include "libc/bits/smmintrin.h"
-#include "libc/bits/pmmintrin.h"
-#include "libc/bits/avx2intrin.h"
-#include "libc/bits/xmmintrin.h"
+#include "libc/bits/mmintrin.internal.h"
+#include "libc/bits/avxintrin.internal.h"
+#include "libc/bits/smmintrin.internal.h"
+#include "libc/bits/pmmintrin.internal.h"
+#include "libc/bits/avx2intrin.internal.h"
+#include "libc/bits/xmmintrin.internal.h"
 #include "third_party/avir/avir_dil.h"
 
 namespace avir {

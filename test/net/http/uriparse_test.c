@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/bits/initializer.h"
+#include "libc/bits/initializer.internal.h"
 #include "libc/errno.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"

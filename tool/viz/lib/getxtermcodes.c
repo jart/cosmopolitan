@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/quant.h"
-#include "libc/bits/xmmintrin.h"
+#include "libc/bits/xmmintrin.internal.h"
 #include "libc/macros.h"
 #include "tool/viz/lib/graphic.h"
 

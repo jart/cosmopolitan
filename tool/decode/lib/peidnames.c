@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/pe.h"
+#include "libc/nt/pedef.internal.h"
 #include "tool/decode/lib/peidnames.h"
 
 const struct IdName kNtImageFileMachineNames[] = {

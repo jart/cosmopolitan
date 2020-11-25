@@ -59,13 +59,13 @@ set -- --regex-c='/^extern [^(]*(\*const \([^)]*\))(/\1/b' "$@"
 #   struct WorstSoftwareEver;
 set -- --regex-c='/^struct.*;$/uehocruehcroue/b' "$@"
 
-exec ${TAGS:-ctags}                                      \
-     -e                                                  \
-     --langmap=c:.c.h                                    \
-     --exclude=libc/nt/struct/imagefileheader.h          \
-     --exclude=libc/nt/struct/imageseparatedebugheader.h \
-     --exclude=libc/nt/struct/importobjectheader.h       \
-     --exclude=libc/nt/struct/nonpageddebuginfo.h        \
-     --exclude=libc/nt/struct/ansistring.h               \
-     --exclude=libc/nt/struct/filesegmentelement.h       \
+exec ${TAGS:-ctags}                                               \
+     -e                                                           \
+     --langmap=c:.c.h                                             \
+     --exclude=libc/nt/struct/imagefileheader.internal.h          \
+     --exclude=libc/nt/struct/imageseparatedebugheader.internal.h \
+     --exclude=libc/nt/struct/importobjectheader.h                \
+     --exclude=libc/nt/struct/nonpageddebuginfo.h                 \
+     --exclude=libc/nt/struct/ansistring.h                        \
+     --exclude=libc/nt/struct/filesegmentelement.h                \
      "$@"

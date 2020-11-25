@@ -18,13 +18,15 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sigbits.h"
-#include "libc/calls/calls.h"
+#include "libc/str/str.h"
 
 /**
  * Removes all signals from set.
  *
  * @return 0 on success, or -1 w/ errno
- * @error EINVAL
  * @asyncsignalsafe
  */
-int(sigemptyset)(sigset_t *set) { return sigemptyset(set); }
+int sigemptyset(sigset_t *set) {
+  memset(set->__bits, 0, sizeof(set->__bits));
+  return 0;
+}

@@ -20,7 +20,7 @@
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/pushpop.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/str/appendchar.h"
 #include "libc/str/str.h"

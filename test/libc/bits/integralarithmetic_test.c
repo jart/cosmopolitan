@@ -22,18 +22,15 @@
 #include "libc/macros.h"
 #include "libc/testlib/testlib.h"
 
+#define ROR(w, k) (CheckUnsigned(w) >> (k) | (w) << (sizeof(w) * 8 - (k)))
+#define ROL(w, k) ((w) << (k) | CheckUnsigned(w) >> (sizeof(w) * 8 - (k)))
+
 TEST(TwosComplementBane, LiteralsThatAreLiterallyTheSameNumber) {
   EXPECT_EQ(4, sizeof(INT_MIN));
   EXPECT_EQ(8, sizeof(-2147483648));
   EXPECT_TRUE(TYPE_SIGNED(-2147483648));
   EXPECT_FALSE(TYPE_SIGNED(0x80000000));
   EXPECT_FALSE(TYPE_SIGNED(-0x80000000));
-}
-
-TEST(ShiftArithmeticRight, DeclassifiedByGuySteele) {
-  EXPECT_EQ(-1u, SAR(-2u, 1u));
-  EXPECT_EQ(-1u, SAR(-1u, 1u));
-  EXPECT_EQ(0xc0000000u, SAR(0x80000000u, 1u));
 }
 
 TEST(RotateRight, Test) {

@@ -17,18 +17,18 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/bisectcarleft.h"
+#include "libc/alg/bisectcarleft.internal.h"
 #include "libc/assert.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/conv/itoa.h"
 #include "libc/fmt/fmt.h"
-#include "libc/log/backtrace.h"
+#include "libc/log/backtrace.internal.h"
 #include "libc/macros.h"
-#include "libc/nexgen32e/gc.h"
+#include "libc/nexgen32e/gc.internal.h"
 #include "libc/nexgen32e/stackframe.h"
-#include "libc/runtime/missioncritical.h"
-#include "libc/runtime/symbols.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 
 /**
@@ -53,14 +53,14 @@ int PrintBacktraceUsingSymbols(int fd, const struct StackFrame *bp,
   const struct StackFrame *frame;
   if (!st) return -1;
   if (!bp) bp = __builtin_frame_address(0);
-  garbage = weaken(g_garbage);
+  garbage = weaken(__garbage);
   gi = garbage ? garbage->i : 0;
   for (frame = bp; frame; frame = frame->next) {
     addr = frame->addr;
-    if (addr == weakaddr("CollectGarbage")) {
+    if (addr == weakaddr("__gc")) {
       do {
         --gi;
-      } while ((addr = garbage->p[gi].ret) == weakaddr("CollectGarbage"));
+      } while ((addr = garbage->p[gi].ret) == weakaddr("__gc"));
     }
     p = buf;
     p = mempcpy(p, ibuf, uint64toarray_fixed16((intptr_t)frame, ibuf, 48));

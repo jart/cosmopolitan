@@ -17,12 +17,12 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
 #include "libc/nt/dll.h"
-#include "libc/calls/calls.h"
 
 /**
  * Returns address of function in a DLL that's already loaded.
  */
-textwindows void *getprocaddressmodule(const char *module, const char *symbol) {
+textwindows void *GetProcAddressModule(const char *module, const char *symbol) {
   return GetProcAddress(GetModuleHandle(module), symbol);
 }

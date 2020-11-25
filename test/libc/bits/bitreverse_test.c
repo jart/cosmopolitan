@@ -28,6 +28,10 @@ TEST(bitreverse, test) {
   EXPECT_EQ(0xde00, (bitreverse16)(123));
   EXPECT_EQ(0xde000000u, bitreverse32(123));
   EXPECT_EQ(0xde000000u, (bitreverse32)(123));
+  EXPECT_EQ(0xde00000000000000ul, bitreverse64(123));
+  EXPECT_EQ(0xde00000000000000ul, (bitreverse64)(123));
+  EXPECT_EQ(0x482d96c305f7c697ul, bitreverse64(0xe963efa0c369b412));
+  EXPECT_EQ(0x482d96c305f7c697ul, (bitreverse64)(0xe963efa0c369b412));
 }
 
 BENCH(bitreverse, bench) {

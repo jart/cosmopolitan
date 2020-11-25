@@ -3,13 +3,11 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-enum CpuCacheType {
-  kCpuCacheTypeData = 1,
-  kCpuCacheTypeInstruction,
-  kCpuCacheTypeUnified,
-};
+#define kCpuCacheTypeData        1
+#define kCpuCacheTypeInstruction 2
+#define kCpuCacheTypeUnified     3
 
-unsigned getcachesize(enum CpuCacheType, int);
+unsigned getcachesize(int, int);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

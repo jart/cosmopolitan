@@ -58,7 +58,7 @@ static void DisLoadElfLoads(struct Dis *d, struct Elf *elf) {
     CHECK_NOTNULL(d->loads.p);
   }
   for (i = 0; i < n; ++i) {
-    phdr = getelfsegmentheaderaddress(elf->ehdr, elf->size, i);
+    phdr = GetElfSegmentHeaderAddress(elf->ehdr, elf->size, i);
     if (phdr->p_type != PT_LOAD) continue;
     d->loads.p[j].addr = phdr->p_vaddr;
     d->loads.p[j].size = phdr->p_memsz;

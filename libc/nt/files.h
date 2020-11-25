@@ -1,20 +1,15 @@
 #ifndef COSMOPOLITAN_LIBC_NT_FILES_H_
 #define COSMOPOLITAN_LIBC_NT_FILES_H_
-#include "libc/nt/enum/accessmask.h"
-#include "libc/nt/enum/fileinfobyhandleclass.h"
-#include "libc/nt/enum/filemovemethod.h"
-#include "libc/nt/enum/filesharemode.h"
-#include "libc/nt/enum/findexinfolevels.h"
-#include "libc/nt/enum/findexsearchops.h"
-#include "libc/nt/enum/getfileexinfolevels.h"
-#include "libc/nt/enum/movefileexflags.h"
-#include "libc/nt/enum/securityimpersonationlevel.h"
-#include "libc/nt/enum/securityinformation.h"
-#include "libc/nt/enum/tokentype.h"
+#include "libc/nt/struct/byhandlefileinformation.h"
 #include "libc/nt/struct/filesegmentelement.h"
 #include "libc/nt/struct/filetime.h"
+#include "libc/nt/struct/genericmapping.h"
+#include "libc/nt/struct/objectattributes.h"
+#include "libc/nt/struct/overlapped.h"
+#include "libc/nt/struct/privilegeset.h"
+#include "libc/nt/struct/securityattributes.h"
+#include "libc/nt/struct/win32finddata.h"
 #include "libc/nt/thunk/msabi.h"
-#if 0
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
                       ▒▒▒▒░░░▒▒▒▒▒▒▓▓▓▓▓▓░
@@ -39,60 +34,20 @@
 ╔────────────────────────────────────────────────────────────────▀▀▀─────────│─╗
 │ cosmopolitan § new technology » files                                    ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#endif
 
-/* CopyFileEx */
-#define NT_PROGRESS_CONTINUE                     0
-#define NT_PROGRESS_CANCEL                       1
-#define NT_PROGRESS_STOP                         2
-#define NT_PROGRESS_QUIET                        3
-#define NT_CALLBACK_CHUNK_FINISHED               0x00000000
-#define NT_CALLBACK_STREAM_SWITCH                0x00000001
-#define NT_COPY_FILE_FAIL_IF_EXISTS              0x00000001
-#define NT_COPY_FILE_RESTARTABLE                 0x00000002
-#define NT_COPY_FILE_OPEN_SOURCE_FOR_WRITE       0x00000004
-#define NT_COPY_FILE_ALLOW_DECRYPTED_DESTINATION 0x00000008
-#define NT_COPY_FILE_COPY_SYMLINK                0x00000800
-#define NT_COPY_FILE_NO_BUFFERING                0x00001000
-#define NT_COPY_FILE_REQUEST_SECURITY_PRIVILEGES 0x00002000 /* Win8+ */
-#define NT_COPY_FILE_RESUME_FROM_PAUSE           0x00004000 /* Win8+ */
-#define NT_COPY_FILE_REQUEST_SECURITY_PRIVILEGES 0x00002000 /* Win8+ */
-#define NT_COPY_FILE_NO_OFFLOAD                  0x00040000 /* Win8+ */
-#define NT_COPY_FILE_IGNORE_EDP_BLOCK            0x00400000 /* Win10+ */
-#define NT_COPY_FILE_IGNORE_SOURCE_ENCRYPTION    0x00800000 /* Win10+ */
+#define kNtHandleFlagInherit          1 /* SetHandleInformation */
+#define kNtHandleFlagProtectFromClose 2
 
-/* ReplaceFile */
-#define NT_REPLACEFILE_WRITE_THROUGH       0x00000001
-#define NT_REPLACEFILE_IGNORE_MERGE_ERRORS 0x00000002
-#define NT_REPLACEFILE_IGNORE_ACL_ERRORS   0x00000004
-#define NT_REPLACEFILE_WRITE_THROUGH       0x00000001
-#define NT_REPLACEFILE_IGNORE_MERGE_ERRORS 0x00000002
-#define NT_REPLACEFILE_IGNORE_ACL_ERRORS   0x00000004
+#define kNtFindFirstExCaseSensitive 1
+#define kNtFindFirstExLargeFetch    2
 
-/* SetHandleInformation */
-#define kNtHandleFlagInherit          0x00000001
-#define kNtHandleFlagProtectFromClose 0x00000002
-
-#define kNtFindFirstExCaseSensitive 0x00000001
-#define kNtFindFirstExLargeFetch    0x00000002
-
-#define kNtDuplicateCloseSource 0x00000001
-#define kNtDuplicateSameAccess  0x00000002
+#define kNtDuplicateCloseSource 1
+#define kNtDuplicateSameAccess  2
 
 #define kNtSymbolicLinkFlagDirectory 1
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-struct NtByHandleFileInformation;
-struct NtFileTime;
-struct NtGenericMapping;
-struct NtOverlapped;
-struct NtPrivilegeSet;
-struct NtSecurityAttributes;
-struct NtSecurityDescriptor;
-struct NtWin32FindData;
-struct NtWin32FindData;
 
 intptr_t LoadResource(int64_t hModule, int64_t hResInfo);
 uint32_t SetHandleCount(uint32_t uNumber);
@@ -111,8 +66,7 @@ bool32 CopyFile(const char16_t *lpExistingFileName,
 bool32 MoveFile(const char16_t *lpExistingFileName,
                 const char16_t *lpNewFileName) paramsnonnull();
 bool32 MoveFileEx(const char16_t *lpExistingFileName,
-                  const char16_t *lpNewFileName, enum NtMoveFileExFlags dwFlags)
-    paramsnonnull();
+                  const char16_t *lpNewFileName, int dwFlags) paramsnonnull();
 
 bool32 SetCurrentDirectory(const char16_t *lpPathName);
 uint32_t GetCurrentDirectory(uint32_t nBufferLength, char16_t *out_lpBuffer);
@@ -128,7 +82,7 @@ bool32 DuplicateHandle(int64_t hSourceProcessHandle, int64_t hSourceHandle,
 
 bool32 GetHandleInformation(int64_t hObject, uint32_t *out_lpdwFlags);
 bool32 SetHandleInformation(int64_t hObject, uint32_t dwMask, uint32_t dwFlags);
-enum NtFileType GetFileType(int64_t hFile);
+int GetFileType(int64_t hFile);
 
 bool32 GetFileInformationByHandleEx(int64_t hFile,
                                     uint32_t FileInformationClass,
@@ -140,8 +94,7 @@ bool32 GetFileInformationByHandle(
 
 uint32_t GetFileAttributes(const char16_t *lpFileName);
 bool32 GetFileAttributesEx(
-    const char16_t *lpFileName,
-    enum NtGetFileexInfoLevels fInfoLevelId /* kNtGetFileExInfoStandard */,
+    const char16_t *lpFileName, int fInfoLevelId /* kNtGetFileExInfoStandard */,
     void *out_lpFileInformation /* → struct NtWin32FileAttributeData * */)
     paramsnonnull();
 
@@ -187,10 +140,9 @@ bool32 CreateSymbolicLink(const char16_t *lpSymlinkFileName,
 
 uint32_t SetFilePointer(int64_t hFile, int32_t lDistanceToMove,
                         int32_t *optional_lpDistanceToMoveHigh,
-                        enum NtFileMoveMethod dwMoveMethod);
+                        int dwMoveMethod);
 bool32 SetFilePointerEx(int64_t hFile, int64_t liDistanceToMove,
-                        int64_t *optional_lpNewFilePointer,
-                        enum NtFileMoveMethod dwMoveMethod);
+                        int64_t *optional_lpNewFilePointer, int dwMoveMethod);
 
 bool32 SetEndOfFile(int64_t hFile);
 bool32 SetFileValidData(int64_t hFile, int64_t ValidDataLength);
@@ -202,13 +154,12 @@ bool32 GetFileSecurity(const char16_t *lpFileName,
 
 bool32 OpenProcessToken(int64_t hProcessHandle, uint32_t dwDesiredAccess,
                         int64_t *out_hTokenHandle);
-bool32 DuplicateToken(int64_t hExistingTokenHandle,
-                      enum NtSecurityImpersonationLevel dwImpersonationLevel,
+bool32 DuplicateToken(int64_t hExistingTokenHandle, int dwImpersonationLevel,
                       int64_t *out_hDuplicateTokenHandle);
 bool32 DuplicateTokenEx(int64_t hExistingToken, unsigned int dwDesiredAccess,
                         struct NtSecurityAttributes *lpTokenAttributes,
-                        enum NtSecurityImpersonationLevel ImpersonationLevel,
-                        enum NtTokenType TokenType, int64_t *out_phNewToken);
+                        int ImpersonationLevel, int TokenType,
+                        int64_t *out_phNewToken);
 
 bool32 AccessCheck(struct NtSecurityDescriptor *pSecurityDescriptor,
                    int64_t ClientToken, unsigned int DesiredAccess,
@@ -222,10 +173,8 @@ void MapGenericMask(uint32_t *AccessMask,
 
 int64_t FindFirstFile(const char16_t *lpFileName,
                       struct NtWin32FindData *out_lpFindFileData);
-int64_t FindFirstFileEx(const char16_t *lpFileName,
-                        enum NtFindexInfoLevels fInfoLevelId,
-                        void *out_lpFindFileData,
-                        enum NtFindexSearchOps fSearchOp,
+int64_t FindFirstFileEx(const char16_t *lpFileName, int fInfoLevelId,
+                        void *out_lpFindFileData, int fSearchOp,
                         void *reserved_lpSearchFilter,
                         uint32_t dwAdditionalFlags);
 bool32 FindNextFile(int64_t hFindFile,

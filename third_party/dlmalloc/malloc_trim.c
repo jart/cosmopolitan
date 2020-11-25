@@ -1,5 +1,5 @@
 #include "libc/mem/mem.h"
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
 
 /**
  * If possible, gives memory back to the system (via negative arguments

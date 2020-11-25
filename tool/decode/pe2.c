@@ -17,13 +17,13 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/conv/conv.h"
-#include "libc/nt/struct/imagentheaders.h"
-#include "libc/nt/struct/imageoptionalheader.h"
-#include "libc/pe.h"
+#include "libc/nt/struct/imagedosheader.internal.h"
+#include "libc/nt/struct/imagentheaders.internal.h"
+#include "libc/nt/struct/imageoptionalheader.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
@@ -57,7 +57,23 @@ static struct XedDecodedInst *ildreal(void *addr) {
 static void startfile(void) {
   showtitle("αcτµαlly pδrταblε εxεcµταblε", "tool/decode/pe", NULL, NULL,
             &kModelineAsm);
-  printf("#include \"libc/pe.h\"\n\n", path);
+  printf("#include \"libc/nt/pedef.internal.h\"\n\n", path);
+}
+
+static void *pecheckaddress(struct NtImageDosHeader *mz, size_t mzsize,
+                            void *addr, uint32_t addrsize) {
+#if !(TRUSTWORTHY + PE_TRUSTWORTHY + 0)
+  if ((intptr_t)addr < (intptr_t)mz ||
+      (intptr_t)addr + addrsize > (intptr_t)mz + mzsize) {
+    abort();
+  }
+#endif
+  return addr;
+}
+
+static void *pecomputerva(struct NtImageDosHeader *mz, size_t mzsize,
+                          uint32_t reladdr, uint32_t addrsize) {
+  return pecheckaddress(mz, mzsize, (void *)((intptr_t)mz + reladdr), addrsize);
 }
 
 static void showmzheader(void) {

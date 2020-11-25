@@ -804,16 +804,6 @@ typedef uint64_t uintmax_t;
   do {            \
   } while (0)
 
-/**
- * Makes one-line for-statements possible w/o formatter/linter drama.
- * @note Python uses this keyword
- */
-#define /* TODO(jart): delete */ pass FUIX MOE BROKEN a int a c int
-
-#ifndef assume
-#define /* TODO(jart): delete */ assume(x) __builtin_assume(x)
-#endif
-
 #ifndef likely
 #define likely(expr) __builtin_expect(!!(expr), 1)
 #endif

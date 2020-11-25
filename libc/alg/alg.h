@@ -12,7 +12,7 @@ void *bsearch(const void *, const void *, size_t, size_t,
 void *bsearch_r(const void *, const void *, size_t, size_t,
                 int cmp(const void *, const void *, void *), void *)
     paramsnonnull((1, 2, 5)) nothrow nosideeffect;
-void djbsort(size_t n, int32_t[n]);
+void djbsort(int32_t *, size_t);
 void qsort(void *, size_t, size_t, int (*)(const void *, const void *))
     paramsnonnull();
 void qsort_r(void *, size_t, size_t,
@@ -43,72 +43,14 @@ char16_t *concatstr16(const char16_t *, ...) nullterminated()
 wchar_t *concatwcs(const wchar_t *, ...) nullterminated()
     paramsnonnull() __algalloc;
 
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § algorithms » containers                                   ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
-struct critbit0 {
-  void *root;
-  size_t count;
-};
-
-bool critbit0_contains(struct critbit0 *, const char *) nothrow nosideeffect
-    paramsnonnull();
-bool critbit0_insert(struct critbit0 *, const char *) paramsnonnull();
-bool critbit0_delete(struct critbit0 *, const char *) nothrow paramsnonnull();
-void critbit0_clear(struct critbit0 *) nothrow paramsnonnull();
-char *critbit0_get(struct critbit0 *, const char *);
-intptr_t critbit0_allprefixed(struct critbit0 *, const char *,
-                              intptr_t (*)(const char *, void *), void *)
-    paramsnonnull((1, 2, 3)) nothrow;
-bool critbit0_emplace(struct critbit0 *, char *, size_t) paramsnonnull();
-
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § algorithms » comparators                                  ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
-int cmpsb(/*const signed char[1]*/ const void *, const void *)
-    paramsnonnull() nothrow nocallback nosideeffect;
-int cmpub(/*const unsigned char[1]*/ const void *, const void *)
-    paramsnonnull() nothrow nocallback nosideeffect;
-int cmpsw(/*const signed short[1]*/ const void *, const void *)
-    paramsnonnull() nothrow nocallback nosideeffect;
-int cmpuw(/*const unsigned short[1]*/ const void *, const void *)
-    paramsnonnull() nothrow nocallback nosideeffect;
-int cmpsl(/*const signed int[1]*/ const void *, const void *)
-    paramsnonnull() nothrow nocallback nosideeffect;
-int cmpul(/*const unsigned int[1]*/ const void *, const void *)
-    paramsnonnull() nothrow nocallback nosideeffect;
-int cmpsq(/*const signed long[1]*/ const void *, const void *)
-    paramsnonnull() nothrow nocallback nosideeffect;
-int cmpuq(/*const unsigned long[1]*/ const void *, const void *)
-    paramsnonnull() nothrow nocallback nosideeffect;
-
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § algorithms » generics                                     ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
-#if __STDC_VERSION__ + 0 >= 201112
-
-#define memmem(haystack, haystacklen, needle, needlelen) \
-  _Generic(*(haystack), wchar_t                          \
-           : wmemmem, char16_t                           \
-           : memmem16, default                           \
-           : memmem)(haystack, haystacklen, needle, needlelen)
-
-#define replacestr(s, needle, replacement) \
-  _Generic(*(s), wchar_t                   \
-           : replacewcs, char16_t          \
-           : replacestr16, default         \
-           : replacestr)(s, needle, replacement)
-
-#define concatstr(s, ...)         \
-  _Generic(*(s), wchar_t          \
-           : concatwcs, char16_t  \
-           : concatstr16, default \
-           : concatstr)(s, __VA_ARGS__)
-
-#endif /* C11 */
+int cmpsb(const void *, const void *);
+int cmpub(const void *, const void *);
+int cmpsw(const void *, const void *);
+int cmpuw(const void *, const void *);
+int cmpsl(const void *, const void *);
+int cmpul(const void *, const void *);
+int cmpsq(const void *, const void *);
+int cmpuq(const void *, const void *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

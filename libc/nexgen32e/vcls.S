@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/macros.h"
-#include "libc/nexgen32e/vidya.h"
+#include "libc/nexgen32e/vidya.internal.h"
 #include "libc/notice.inc"
 .real
 .code16 # ∩ .code32 ∩ .code64

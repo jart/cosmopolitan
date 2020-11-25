@@ -112,7 +112,7 @@ MemCpy:	.leafprologue
 .L1:	mov	(%rsi),%cl
 	mov	%cl,(%rdi)
 	jmp	.L0
-.Lerms:	cmp	$4*1024*1024,%rdx
+.Lerms:	cmp	$4*1024*1024,%rdx		# TODO: getcachesize()
 	ja	.Lnts
 	push	%rdi
 	push	%rsi

@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/bisect.h"
+#include "libc/alg/bisect.internal.h"
 #include "libc/nexgen32e/x86info.h"
 
 static int CmpX86ProcModelKey(const struct X86ProcessorModel *a,

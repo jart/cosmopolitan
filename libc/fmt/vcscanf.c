@@ -22,8 +22,9 @@
 #include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
-#include "libc/str/tpdecodecb.h"
+#include "libc/str/tpdecodecb.internal.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -232,7 +233,7 @@ int vcscanf(int callback(void *), void *arg, const char *fmt, va_list va) {
           size_t j = 0;
           for (;;) {
             if (ismalloc && !width && j + 2 + 1 >= bufsize &&
-                !weaken(grow)(&buf, &bufsize, charbytes, 0)) {
+                !weaken(__grow)(&buf, &bufsize, charbytes, 0)) {
               width = bufsize - 1;
             }
             if (c != -1 && j + !rawmode < bufsize && (rawmode || !isspace(c))) {

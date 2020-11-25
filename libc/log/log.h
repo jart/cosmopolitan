@@ -34,7 +34,7 @@ typedef struct FILE FILE;
 extern FILE *g_logfile;
 
 void perror(const char *) relegated; /* print the last system error */
-void die(void) relegated noreturn;   /* print backtrace and abort() */
+void __die(void) relegated noreturn; /* print backtrace and abort() */
 void meminfo(int);                   /* shows malloc statistics &c. */
 void memsummary(int);                /* light version of same thing */
 uint16_t getttycols(uint16_t);

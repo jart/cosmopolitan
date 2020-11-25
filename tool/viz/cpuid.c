@@ -17,9 +17,9 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/log/color.h"
+#include "libc/log/color.internal.h"
 #include "libc/log/log.h"
-#include "libc/nexgen32e/cpuid4.h"
+#include "libc/nexgen32e/cpuid4.internal.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/rdtscp.h"
 #include "libc/nexgen32e/x86feature.h"

@@ -1,6 +1,6 @@
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
 
 /*
   Common support for independent_X routines, handling
@@ -152,7 +152,7 @@ static void **ialloc(mstate m, size_t n_elements, size_t *sizes, int opts,
  *     int n = read_number_of_nodes_needed();
  *     if (n <= 0) return 0;
  *     pool = (struct Node**)(independent_calloc(n, sizeof(struct Node), 0);
- *     if (pool == 0) die();
+ *     if (pool == 0) __die();
  *     // organize into a linked list...
  *     struct Node* first = pool[0];
  *     for (i = 0; i < n-1; ++i)
@@ -206,8 +206,7 @@ void **dlindependent_calloc(size_t n_elements, size_t elem_size,
  *     int msglen = strlen(msg);
  *     size_t sizes[3] = { sizeof(struct Head), msglen, sizeof(struct Foot) };
  *     void* chunks[3];
- *     if (independent_comalloc(3, sizes, chunks) == 0)
- *       die();
+ *     if (independent_comalloc(3, sizes, chunks) == 0) __die();
  *     struct Head* head = (struct Head*)(chunks[0]);
  *     char*        body = (char*)(chunks[1]);
  *     struct Foot* foot = (struct Foot*)(chunks[2]);

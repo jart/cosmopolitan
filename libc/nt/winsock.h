@@ -4,7 +4,6 @@
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/struct/pollfd.h"
 #include "libc/sock/sock.h"
-#if 0
 /* ░▓█████████████████████████████████████████████▓▒
    ░█▓░░░░░░░░░▓██▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██▓▒░
    ░█▓░ ░▒▒▒▒  ▓██▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒██▓▒▒
@@ -43,7 +42,6 @@
 ╔────────────────────────────────────────────────────────────────▀▀▀▀───▀▀▀▀─│─╗
 │ cosmopolitan § new technology » winsock                                  ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#endif
 
 #define kNtWsaFlagOverlapped      0x01
 #define kNtWsaFlagNoHandleInherit 0x80

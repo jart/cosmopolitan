@@ -44,7 +44,7 @@ asm(".include \"third_party/m4/COPYING\"");
 
 #include "libc/assert.h"
 #include "libc/log/bsd.h"
-#include "libc/calls/openbsd.h"
+#include "libc/calls/openbsd.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/sysv/consts/sig.h"
 #include "third_party/getopt/getopt.h"

@@ -7,7 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/nt/enum/messageboxtype.h"
+#include "libc/nt/enum/mb.h"
 #include "libc/nt/messagebox.h"
 
 int main(int argc, char *argv[]) {

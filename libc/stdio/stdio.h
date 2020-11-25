@@ -118,10 +118,6 @@ int __getc_moar(FILE *);
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § standard i/o » definitions for assembler fans             ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
 #define stdin  SYMBOLIC(stdin)
 #define stdout SYMBOLIC(stdout)
 #define stderr SYMBOLIC(stderr)

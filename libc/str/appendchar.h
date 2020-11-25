@@ -3,7 +3,7 @@
 #ifndef __STRICT_ANSI__
 #include "libc/str/str.h"
 #include "libc/str/tpenc.h"
-#include "libc/str/tpencode.h"
+#include "libc/str/tpencode.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 static inline void AppendChar(char **p, char *pe, wint_t wc) {

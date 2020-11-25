@@ -17,10 +17,10 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/arraylist2.h"
+#include "libc/alg/arraylist2.internal.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/bswap.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/itimerval.h"
@@ -38,7 +38,6 @@
 #include "libc/nexgen32e/crc32.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/gc.h"
-#include "libc/runtime/missioncritical.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"

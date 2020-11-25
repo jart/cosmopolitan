@@ -24,6 +24,8 @@
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
+#include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/at.h"

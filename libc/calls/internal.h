@@ -196,7 +196,6 @@ void *mremap$sysv(void *, u64, u64, i32, void *) hidden;
 │ cosmopolitan § syscalls » system five » support                          ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-int __getpid(void) hidden;
 void __onfork(void) hidden;
 bool32 __sigenter(i32, struct siginfo *, struct ucontext *) hidden;
 i32 fixupnewfd$sysv(i32, i32) hidden;
@@ -246,7 +245,6 @@ int symlink$nt(const char *, const char *) hidden;
 int sysinfo$nt(struct sysinfo *) hidden;
 int truncate$nt(const char *, u64) hidden;
 int unlink$nt(const char *) hidden;
-int wait4$nt(int, int *, int, struct rusage *) hidden;
 i64 lseek$nt(int, i64, int) hidden;
 ssize_t read$nt(struct Fd *, const struct iovec *, size_t, ssize_t) hidden;
 ssize_t write$nt(struct Fd *, const struct iovec *, size_t, ssize_t) hidden;
@@ -260,6 +258,7 @@ int nanosleep$nt(const struct timespec *, struct timespec *) hidden;
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 void WinMainForked(void) hidden;
+void *GetProcAddressModule(const char *, const char *) hidden;
 int getsetpriority$nt(int, unsigned, int, int (*)(int));
 void ntcontext2linux(struct ucontext *, const struct NtContext *) hidden;
 struct NtOverlapped *offset2overlap(int64_t, struct NtOverlapped *) hidden;

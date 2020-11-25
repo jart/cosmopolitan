@@ -35,6 +35,8 @@
 #include "third_party/stb/internal.h"
 #include "third_party/stb/stb_image.h"
 
+#define ROL(w, k) ((w) << (k) | CheckUnsigned(w) >> (sizeof(w) * 8 - (k)))
+
 asm(".ident\t\"\\n\\n\
 stb_image (Public Domain)\\n\
 Credit: Sean Barrett, et al.\\n\

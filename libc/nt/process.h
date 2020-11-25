@@ -1,11 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_NT_PROCESS_H_
 #define COSMOPOLITAN_LIBC_NT_PROCESS_H_
-#include "libc/nt/enum/accessmask.h"
-#include "libc/nt/enum/processaccess.h"
-#include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/startupinfo.h"
+#include "libc/nt/struct/processinformation.h"
+#include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/thunk/msabi.h"
-#if 0
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
                       ▒▒▒▒░░░▒▒▒▒▒▒▓▓▓▓▓▓░
@@ -30,14 +28,9 @@
 ╔────────────────────────────────────────────────────────────────▀▀▀─────────│─╗
 │ cosmopolitan § new technology » processes                                ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#endif
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-struct NtProcessInformation;
-struct NtSecurityAttributes;
-struct NtStartupInfo;
 
 bool32 CreateProcess(const char16_t *opt_lpApplicationName,
                      char16_t *lpCommandLine,

@@ -1,20 +1,15 @@
 #ifndef COSMOPOLITAN_LIBC_NT_ENUM_JOBOBJECTINFOCLASS_H_
 #define COSMOPOLITAN_LIBC_NT_ENUM_JOBOBJECTINFOCLASS_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
-enum NtJobObjectInfoClass {
-  kNtJobObjectBasicAccountingInformation = 1,
-  kNtJobObjectBasicLimitInformation,
-  kNtJobObjectBasicProcessIdList,
-  kNtJobObjectBasicUIRestrictions,
-  kNtJobObjectSecurityLimitInformation,
-  kNtJobObjectEndOfJobTimeInformation,
-  kNtJobObjectAssociateCompletionPortInformation,
-  kNtJobObjectBasicAndIoAccountingInformation,
-  kNtJobObjectExtendedLimitInformation,
-  kNtJobObjectJobSetInformation,
-  kNtJobObjectInfoClass_MAX
-};
+#define kNtJobObjectBasicAccountingInformation         1
+#define kNtJobObjectBasicLimitInformation              2
+#define kNtJobObjectBasicProcessIdList                 3
+#define kNtJobObjectBasicUIRestrictions                4
+#define kNtJobObjectSecurityLimitInformation           5
+#define kNtJobObjectEndOfJobTimeInformation            6
+#define kNtJobObjectAssociateCompletionPortInformation 7
+#define kNtJobObjectBasicAndIoAccountingInformation    8
+#define kNtJobObjectExtendedLimitInformation           9
+#define kNtJobObjectJobSetInformation                  10
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_JOBOBJECTINFOCLASS_H_ */

@@ -20,10 +20,10 @@
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/sigaction-freebsd.h"
-#include "libc/calls/struct/sigaction-linux.h"
-#include "libc/calls/struct/sigaction-openbsd.h"
-#include "libc/calls/struct/sigaction-xnu.h"
+#include "libc/calls/struct/sigaction-freebsd.internal.h"
+#include "libc/calls/struct/sigaction-linux.internal.h"
+#include "libc/calls/struct/sigaction-openbsd.internal.h"
+#include "libc/calls/struct/sigaction-xnu.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/typedef/sigaction_f.h"
 #include "libc/calls/ucontext.h"
@@ -63,7 +63,7 @@ union metasigaction {
 
 static void sigaction$cosmo2native(union metasigaction *sa) {
   if (!sa) return;
-  switch (hostos) {
+  switch (__hostos) {
     case LINUX:
       SWITCHEROO(sa->cosmo, sa->linux, sa_handler, sa_flags, sa_restorer,
                  sa_mask);
@@ -87,7 +87,7 @@ static void sigaction$cosmo2native(union metasigaction *sa) {
 
 static void sigaction$native2cosmo(union metasigaction *sa) {
   if (!sa) return;
-  switch (hostos) {
+  switch (__hostos) {
     case LINUX:
       SWITCHEROO(sa->linux, sa->cosmo, sa_handler, sa_flags, sa_restorer,
                  sa_mask);

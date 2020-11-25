@@ -18,7 +18,6 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
-#include "libc/str/tinymemccpy.h"
 
 void *tinymemccpy(void *dst, const void *src, int termchar, size_t limit) {
   size_t i;

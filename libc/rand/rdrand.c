@@ -26,7 +26,7 @@
 /**
  * Intel Secure Key Digital Random Number Generator
  * Introduced w/ Ivy Bridge c. 2013 and Excavator c. 2015
- * @see rand32(), rand64(), and randcpy()
+ * @see rdseed(), rand32(), rand64(), and randcpy()
  */
 uint64_t rdrand(void) {
   char cf;

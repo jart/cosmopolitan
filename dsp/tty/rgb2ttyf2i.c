@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/quant.h"
-#include "libc/bits/xmmintrin.h"
+#include "libc/bits/xmmintrin.internal.h"
 
 struct TtyRgb rgb2ttyf2i_(__m128 rgb) {
   __v4si i4;

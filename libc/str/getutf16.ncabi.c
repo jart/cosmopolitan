@@ -28,6 +28,7 @@
  * @return number of bytes (NUL counts as 1) or -1 w/ errno
  * @note synchronization is performed to skip leading continuations;
  *     canonicalization and validation are performed to some extent
+ * @todo delete
  */
 forcealignargpointer unsigned(getutf16)(const char16_t *p, wint_t *wc) {
   unsigned skip = 0;

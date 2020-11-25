@@ -8,8 +8,6 @@
 
 /**
  * @fileoverview Common C preprocessor, assembler, and linker macros.
- *
- * @see libc/bits/safemacros.h which it's really complicated
  */
 
 #define TRUE  1

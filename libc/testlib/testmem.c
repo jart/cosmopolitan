@@ -18,10 +18,10 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/fmt/bing.h"
+#include "libc/fmt/bing.internal.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -44,7 +44,9 @@ static bool g_atstartofpage;
 static struct TestAllocation testmem_push(struct TestMemoryStack *stack,
                                           struct TestAllocation entry) {
   if (stack->i == stack->n) {
-    if (!grow(&stack->p, &stack->n, sizeof(struct TestAllocation), 0)) abort();
+    if (!__grow(&stack->p, &stack->n, sizeof(struct TestAllocation), 0)) {
+      abort();
+    }
   }
   return (stack->p[stack->i++] = entry);
 }
@@ -56,7 +58,7 @@ static struct TestAllocation testmem_pop(struct TestMemoryStack *stack) {
 }
 
 static void testmem_destroy(struct TestAllocation alloc) {
-  if (munmap(alloc.mapaddr, alloc.mapsize) == -1) perror("munmap"), die();
+  if (munmap(alloc.mapaddr, alloc.mapsize) == -1) perror("munmap"), __die();
 }
 
 static struct TestAllocation talloc(size_t n) {

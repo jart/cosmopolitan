@@ -17,11 +17,11 @@
 #define AVIR_FLOAT4_SSE_INCLUDED
 
 #include "third_party/avir/avir.h"
-#include "libc/bits/mmintrin.h"
-#include "libc/bits/xmmintrin.h"
-#include "libc/bits/xmmintrin.h"
-#include "libc/bits/xmmintrin.h"
-#include "libc/bits/emmintrin.h"
+#include "libc/bits/mmintrin.internal.h"
+#include "libc/bits/xmmintrin.internal.h"
+#include "libc/bits/xmmintrin.internal.h"
+#include "libc/bits/xmmintrin.internal.h"
+#include "libc/bits/emmintrin.internal.h"
 
 namespace avir {
 

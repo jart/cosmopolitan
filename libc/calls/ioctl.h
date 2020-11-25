@@ -1,20 +1,20 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_IOCTL_H_
 #define COSMOPOLITAN_LIBC_CALLS_IOCTL_H_
+#include "libc/macros.h"
+#include "libc/sysv/consts/termios.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § system calls » input output control                       ─╬─│┼
+│ cosmopolitan § system calls » ioctl                                      ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 int ioctl(int, uint64_t, void *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § system calls » input output control » undiamonding        ─╬─│┼
+│ cosmopolitan § system calls » ioctl » undiamonding (size optimization)   ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-#include "libc/macros.h"
-#include "libc/sysv/consts/termios.h"
 
 #define ioctl(FD, REQUEST, MEMORY) ioctl$dispatch(FD, REQUEST, MEMORY)
 

@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sigbits.h"
-#include "libc/calls/calls.h"
+#include "libc/str/str.h"
 
 /**
  * Adds all signals to set.
@@ -26,4 +26,7 @@
  * @return 0 on success, or -1 w/ errno
  * @asyncsignalsafe
  */
-int(sigfillset)(sigset_t *set) { return sigfillset(set); }
+int sigfillset(sigset_t *set) {
+  memset(set->__bits, -1, sizeof(set->__bits));
+  return 0;
+}

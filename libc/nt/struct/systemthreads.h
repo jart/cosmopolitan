@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_SYSTEMTHREADS_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_SYSTEMTHREADS_H_
 #include "libc/nt/enum/kwaitreason.h"
-#include "libc/nt/enum/threadstate.h"
 #include "libc/nt/struct/clientid.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
@@ -15,7 +14,7 @@ struct NtSystemThreads {
   int32_t Priority;
   int32_t BasePriority;
   uint32_t ContextSwitchCount;
-  enum NtThreadState State;
+  int State;
   uint32_t WaitReason;
 };
 

@@ -446,22 +446,22 @@
 #define PFILE_END_OF_FILE_INFORMATION struct FileEndOfFileInformation*
 
 #define _GET_FILEEX_INFO_LEVELS  NtGetFileexInfoLevels
-#define GET_FILEEX_INFO_LEVELS   struct NtGetFileexInfoLevels
-#define LPGET_FILEEX_INFO_LEVELS struct NtGetFileexInfoLevels*
+#define GET_FILEEX_INFO_LEVELS   int
+#define LPGET_FILEEX_INFO_LEVELS int*
 
 #define _WIN32_FIND_DATA  NtWin32FindData
 #define WIN32_FIND_DATA   struct NtWin32FindData
 #define LPWIN32_FIND_DATA struct NtWin32FindData*
 
 #define _FINDEX_INFO_LEVELS            NtFindexInfoLevels
-#define FINDEX_INFO_LEVELS             enum NtFindexInfoLevels
+#define FINDEX_INFO_LEVELS             int
 #define FindExInfoStandard             kNtFindExInfoStandard
 #define FindExInfoBasic                kNtFindExInfoBasic
 #define FindExInfoMaxInfoLevel         kNtFindExInfoMaxInfoLevel
 #define FIND_FIRST_EX_CASE_SENSITIVE   kNtFindFirstExCaseSensitive
 #define FIND_FIRST_EX_LARGE_FETCH      kNtFindFirstExLargeFetch
 #define _FINDEX_SEARCH_OPS             NtFindexSearchOps
-#define FINDEX_SEARCH_OPS              enum NtFindexSearchOps
+#define FINDEX_SEARCH_OPS              int
 #define FindExSearchNameMatch          kNtFindExSearchNameMatch
 #define FindExSearchLimitToDirectories kNtFindExSearchLimitToDirectories
 #define FindExSearchLimitToDevices     kNtFindExSearchLimitToDevices
@@ -477,7 +477,7 @@
 #define MOVEFILE_FAIL_IF_NOT_TRACKABLE kNtMovefileFailIfNotTrackable
 #define MOVEFILE_WRITE_THROUGH         kNtMovefileWriteThrough
 
-#define OFFER_PRIORITY             enum NtOfferPriority
+#define OFFER_PRIORITY             int
 #define VmOfferPriorityVeryLow     kNtVmOfferPriorityVeryLow
 #define VmOfferPriorityLow         kNtVmOfferPriorityLow
 #define VmOfferPriorityBelowNormal kNtVmOfferPriorityBelowNormal
@@ -486,20 +486,20 @@
 #define _KWAIT_REASON             uint32_t
 #define KWAIT_REASON              uint32_t
 #define _OBJECT_INFORMATION_CLASS NtObjectInformationClass
-#define OBJECT_INFORMATION_CLASS  enum NtObjectInformationClass
+#define OBJECT_INFORMATION_CLASS  int
 #define _PROCESSINFOCLASS         NtProcessinfoclass
-#define PROCESSINFOCLASS          enum NtProcessinfoclass
+#define PROCESSINFOCLASS          int
 #define _THREAD_STATE             NtThreadState
-#define THREAD_STATE              enum NtThreadState
+#define THREAD_STATE              int
 #define _TOKEN_TYPE               NtTokenType
-#define TOKEN_TYPE                enum NtTokenType
+#define TOKEN_TYPE                int
 
 #define _THREADINFOCLASS Nthreadinfoclass
-#define THREADINFOCLASS  enum Nthreadinfoclass
+#define THREADINFOCLASS  int
 
 #define _THREAD_INFORMATION_CLASS NtThreadInformationClass
-#define THREAD_INFORMATION_CLASS  enum NtThreadInformationClass
-#define PTHREAD_INFORMATION_CLASS enum NtThreadInformationClass*
+#define THREAD_INFORMATION_CLASS  int
+#define PTHREAD_INFORMATION_CLASS int*
 
 #define OWNER_SECURITY_INFORMATION     kNtOwnerSecurityInformation
 #define GROUP_SECURITY_INFORMATION     kNtGroupSecurityInformation
@@ -1219,9 +1219,9 @@
 #define PAFPROTOCOLS  struct NtAfProtocols*
 #define LPAFPROTOCOLS struct NtAfProtocols*
 
-#define WSAECOMPARATOR   enum NtWsaEComparator
-#define PWSAECOMPARATOR  enum NtWsaEComparator*
-#define LPWSAECOMPARATOR enum NtWsaEComparator*
+#define WSAECOMPARATOR   int
+#define PWSAECOMPARATOR  int*
+#define LPWSAECOMPARATOR int*
 
 #define WSANETWORKEVENTS   struct NtWsaNetworkEvents
 #define PWSANETWORKEVENTS  struct NtWsaNetworkEvents*
@@ -1299,9 +1299,9 @@
 #define LPCONDITIONPROC                    NtConditionProc
 #define LPWSAOVERLAPPED_COMPLETION_ROUTINE NtWsaOverlappedCompletionRoutine
 
-#define WSACOMPLETIONTYPE      enum NtWsaCompletionType
-#define PWSACOMPLETIONTYPE     enum NtWsaCompletionType*
-#define LPWSACOMPLETIONTYPE    enum NtWsaCompletionType*
+#define WSACOMPLETIONTYPE      int
+#define PWSACOMPLETIONTYPE     int*
+#define LPWSACOMPLETIONTYPE    int*
 #define NSP_NOTIFY_IMMEDIATELY kNtNspNotifyImmediately
 #define NSP_NOTIFY_HWND        kNtNspNotifyHwnd
 #define NSP_NOTIFY_EVENT       kNtNspNotifyEvent

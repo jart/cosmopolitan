@@ -34,7 +34,7 @@
 _start:	test	%rdi,%rdi
 	cmovnz	%rdi,%rsp
 	jz	0f
-	movb	$FREEBSD,hostos(%rip)
+	movb	$FREEBSD,__hostos(%rip)
 0:	mov	(%rsp),%ebx			# argc
 	lea	8(%rsp),%rsi			# argv
 	lea	24(%rsp,%rbx,8),%rdx		# envp
@@ -64,6 +64,6 @@ _start:	test	%rdi,%rdi
 /	@note	FreeBSD is special (see freebsd/lib/csu/amd64/...)
 /	@noreturn
 _start_xnu:
-	movb	$XNU,hostos(%rip)
+	movb	$XNU,__hostos(%rip)
 	jmp	0b
 	.endfn	_start_xnu,weak,hidden

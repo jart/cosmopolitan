@@ -1,11 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_ELF_STRUCT_DEF_H_
 #define COSMOPOLITAN_LIBC_ELF_STRUCT_DEF_H_
 
-#if 0
 /**
  * @fileoverview Executable and Linkable Format Definitions.
  */
-#endif
 
 #define EI_MAG0 0
 #define EI_MAG1 1

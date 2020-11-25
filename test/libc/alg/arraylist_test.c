@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
-#include "libc/alg/arraylist.h"
+#include "libc/alg/arraylist.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -61,37 +61,33 @@ TEST(append, isGenericallyTyped) {
 }
 
 TEST(concat, worksGreatForStrings) {
-  const char *ks =
-      "Und wird die Welt auch in Flammen stehen\n"
-      "Wir werden wieder auferstehen\n";
+  const char *ks = "Und wird die Welt auch in Flammen stehen\n"
+                   "Wir werden wieder auferstehen\n";
   struct string s;
   memset(&s, 0, sizeof(s));
   ASSERT_EQ(0, concat(&s, ks, strlen(ks)));
   ASSERT_EQ(strlen(ks), concat(&s, ks, strlen(ks) + 1));
-  ASSERT_STREQ(
-      "Und wird die Welt auch in Flammen stehen\n"
-      "Wir werden wieder auferstehen\n"
-      "Und wird die Welt auch in Flammen stehen\n"
-      "Wir werden wieder auferstehen\n",
-      s.p);
+  ASSERT_STREQ("Und wird die Welt auch in Flammen stehen\n"
+               "Wir werden wieder auferstehen\n"
+               "Und wird die Welt auch in Flammen stehen\n"
+               "Wir werden wieder auferstehen\n",
+               s.p);
   ASSERT_EQ(strlen(ks) * 2 + 1, s.i);
   free_s(&s.p);
 }
 
 TEST(concat, isGenericallyTyped) {
-  const char16_t *ks =
-      u"Drum hoch die Fäuste, hoch zum Licht.\n"
-      u"Unsere schwarzen Seelen bekommt ihr nicht.\n";
+  const char16_t *ks = u"Drum hoch die Fäuste, hoch zum Licht.\n"
+                       u"Unsere schwarzen Seelen bekommt ihr nicht.\n";
   struct string16 s;
   memset(&s, 0, sizeof(s));
   ASSERT_EQ(0, concat(&s, ks, strlen16(ks)));
   ASSERT_EQ(strlen16(ks), concat(&s, ks, strlen16(ks) + 1));
-  ASSERT_STREQ(
-      u"Drum hoch die Fäuste, hoch zum Licht.\n"
-      u"Unsere schwarzen Seelen bekommt ihr nicht.\n"
-      u"Drum hoch die Fäuste, hoch zum Licht.\n"
-      u"Unsere schwarzen Seelen bekommt ihr nicht.\n",
-      s.p);
+  ASSERT_STREQ(u"Drum hoch die Fäuste, hoch zum Licht.\n"
+               u"Unsere schwarzen Seelen bekommt ihr nicht.\n"
+               u"Drum hoch die Fäuste, hoch zum Licht.\n"
+               u"Unsere schwarzen Seelen bekommt ihr nicht.\n",
+               s.p);
   ASSERT_EQ(strlen16(ks) * 2 + 1, s.i);
   free_s(&s.p);
 }

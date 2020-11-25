@@ -177,7 +177,7 @@
 #ifdef __LINKER__
 #include "ape/macros.h"
 #include "ape/config.h"
-#include "libc/nt/pedef.h"
+#include "libc/nt/pedef.internal.h"
 #include "libc/zip.h"
 
 ENTRY(_start)

@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/bits/progn.h"
+#include "libc/bits/progn.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/dce.h"

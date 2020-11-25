@@ -19,7 +19,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/runtime/ezmap.h"
-#include "libc/runtime/symbols.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/symbols.internal.h"
 
 /**
  * Frees symbol table.
@@ -32,7 +33,7 @@ int CloseSymbolTable(struct SymbolTable **table) {
   if (*table && *table != MAP_FAILED) {
     t = *table;
     *table = NULL;
-    rc |= unmapfile(&t->mf);
+    rc |= UnmapFile(&t->mf);
     rc |= munmap(t, t->scratch);
   }
   return rc;

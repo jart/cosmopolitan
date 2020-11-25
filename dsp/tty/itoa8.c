@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/itoa8.h"
 #include "libc/bits/bits.h"
-#include "libc/bits/initializer.h"
+#include "libc/bits/initializer.internal.h"
 #include "libc/str/str.h"
 
 struct Itoa8 kItoa8;

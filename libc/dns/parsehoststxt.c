@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/arraylist.h"
+#include "libc/alg/arraylist.internal.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/hoststxt.h"
 #include "libc/runtime/runtime.h"

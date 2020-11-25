@@ -28,7 +28,6 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/filetime.h"
 #include "libc/nt/synchronization.h"
-#include "libc/runtime/missioncritical.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/w.h"

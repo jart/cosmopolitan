@@ -33,10 +33,9 @@
 /	@param	rax,rdx,xmm0,xmm1,st0,st1 is return value
 /	@see	test/libc/runtime/gc_test.c
 /	<LIMBO>
-CollectGarbage:
-	decq	g_garbage(%rip)
-	mov	g_garbage(%rip),%r8
-	mov	g_garbage+16(%rip),%r9
+__gc:	decq	__garbage(%rip)
+	mov	__garbage(%rip),%r8
+	mov	__garbage+16(%rip),%r9
 	js	9f
 	shl	$5,%r8
 	lea	(%r9,%r8),%r8
@@ -59,12 +58,12 @@ CollectGarbage:
 	leave
 	ret
 9:	call	abort
-	.endfn	CollectGarbage,globl,hidden
+	.endfn	__gc,globl,hidden
 	.source	__FILE__
 
 	.bss
 	.align	8
-g_garbage:
+__garbage:
 	.quad	0				# garbage.i
 	.quad	0				# garbage.n
 	.quad	0				# garbage.p
@@ -74,10 +73,10 @@ g_garbage:
 	.quad	0				# garbage.p[𝑖].arg
 	.quad	0				# garbage.p[𝑖].ret
 	.endr
-	.endobj	g_garbage,globl,hidden
+	.endobj	__garbage,globl,hidden
 	.previous
 
 	.init.start 100,_init_garbage
-	movb	$INITIAL_CAPACITY,g_garbage+8(%rip)
-	movl	$g_garbage+24,g_garbage+16(%rip)
+	movb	$INITIAL_CAPACITY,__garbage+8(%rip)
+	movl	$__garbage+24,__garbage+16(%rip)
 	.init.end 100,_init_garbage

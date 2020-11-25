@@ -62,9 +62,6 @@ int cescapec(int);
 
 #define INVALID_CODEPOINT 0xfffd
 
-wint_t DecodeNtsUtf16(const char16_t **);
-unsigned getutf16(const char16_t *, wint_t *);
-int pututf16(char16_t *, size_t, wint_t, bool);
 int iswalnum(wint_t);
 int iswalpha(wint_t);
 int iswblank(wint_t);
@@ -183,6 +180,7 @@ compatfn wchar_t *wmemmove(wchar_t *, const wchar_t *, size_t) memcpyesque;
 char *tinystrstr(const char *, const char *) strlenesque;
 char16_t *tinystrstr16(const char16_t *, const char16_t *) strlenesque;
 void *tinymemmem(const void *, size_t, const void *, size_t) strlenesque;
+void *tinymemccpy(void *, const void *, int, size_t) memcpyesque;
 
 void *memtolower(void *, size_t);
 char *strntolower(char *, size_t);
@@ -232,25 +230,6 @@ wctype_t wctype(const char *) strlenesque;
 int iswctype(wint_t, wctype_t) pureconst;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § strings » hashing                                         ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
-#define SHA256_BLOCK_SIZE 32
-
-struct Sha256Ctx {
-  uint8_t data[64];
-  uint32_t datalen;
-  uint64_t bitlen;
-  uint32_t state[8];
-};
-
-void sha256_init(struct Sha256Ctx *);
-void sha256_update(struct Sha256Ctx *, const uint8_t *, size_t);
-void sha256_final(struct Sha256Ctx *, uint8_t *);
-
-bool luhn(const char *);
-
-/*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § strings » system                                          ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
@@ -264,9 +243,8 @@ char *strsignal(int) returnsnonnull libcesque;
 extern int (*const __memcmp)(const void *, const void *, size_t);
 #define memcmp(a, b, n) __memcmp(a, b, n)
 
-/* gcc -Werror=stringop-truncation misunderstands strncpy() api */
 char *_strncpy(char *, const char *, size_t) asm("strncpy") memcpyesque;
-#define strncpy(DEST, SRC, N) _strncpy(DEST, SRC, N)
+#define strncpy(DEST, SRC, N) _strncpy(DEST, SRC, N) /* pacify bad warning */
 
 #define explicit_bzero(STR, BYTES)                                          \
   do {                                                                      \
@@ -378,43 +356,8 @@ char *_strncpy(char *, const char *, size_t) asm("strncpy") memcpyesque;
 
 #endif /* hosted/sse2/unbloat */
 
-#define pututf16(BUF, SIZE, CH, AWESOME) __pututf16(BUF, SIZE, CH, AWESOME)
-#define getutf16(BUF, CHPTR)             __getutf16(BUF, CHPTR)
 size_t _strlen(const char *s) asm("strlen") strlenesque;
 void *_memchr(const void *, int, size_t) asm("memchr") strlenesque;
-
-forceinline int __pututf16(char16_t *s, size_t size, wint_t wc,
-                           bool32 awesome) {
-  if (size >= 1 && (0x00 <= wc && wc <= 0xD7FF)) {
-    if (wc >= 32 || !awesome) {
-      s[0] = (char16_t)wc;
-      return 1;
-    } else if (size >= 2) {
-      s[0] = 0xd800;
-      s[1] = 0xdc00 | (char16_t)wc;
-      return 2;
-    }
-  }
-  int ax;
-  asm("call\tpututf16"
-      : "=a"(ax), "=m"(*(char(*)[size])s)
-      : "D"(s), "S"(size), "d"(wc)
-      : "cc");
-  return ax;
-}
-
-forceinline unsigned __getutf16(const char16_t *s, wint_t *wc) {
-  if ((0x00 <= s[0] && s[0] <= 0xD7FF)) {
-    *wc = s[0];
-    return 1;
-  }
-  unsigned ax;
-  asm("call\tgetutf16"
-      : "=a"(ax), "=m"(*wc)
-      : "D"(s), "S"(wc), "m"(*s), "m"(*(char(*)[4])s)
-      : "cc");
-  return ax;
-}
 
 #endif /* __GNUC__ && !__STRICT_ANSI__ */
 COSMOPOLITAN_C_END_

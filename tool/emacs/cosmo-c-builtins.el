@@ -1289,8 +1289,7 @@
            "isconstant"
            "chooseexpr"
            "likely"
-           "unlikely"
-           "assume"))
+           "unlikely"))
 
 )
     (concat "\\_<"

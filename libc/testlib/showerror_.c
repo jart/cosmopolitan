@@ -17,11 +17,11 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
-#include "libc/log/color.h"
+#include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/math.h"

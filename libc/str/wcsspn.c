@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/nexgen32e/hascharacter.h"
+#include "libc/nexgen32e/hascharacter.internal.h"
 #include "libc/str/str.h"
 
 #undef strspn

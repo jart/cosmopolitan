@@ -21,11 +21,13 @@
 #include "libc/dce.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
-#include "libc/runtime/missioncritical.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/nr.h"
+
+#define WasImported(SLOT) \
+  ((void *)*SLOT && *SLOT != (void *)&missingno /* see libc/crt/crt.S */)
 
 static privileged void __print$nt(const void *data, size_t len) {
   int64_t hand;
@@ -47,11 +49,10 @@ static privileged void __print$nt(const void *data, size_t len) {
  *
  * @param len can be computed w/ tinystrlen()
  * @clob nothing except flags
- * @see PRINT()
  */
 privileged void __print(const void *data, size_t len) {
   int64_t ax, ordinal;
-  if (NT_HAVE_IMPORT(__imp_WriteFile)) {
+  if (WasImported(__imp_WriteFile)) {
     __print$nt(data, len);
   } else {
     ordinal = __NR_write > 0 ? __NR_write : IsXnu() ? 0x2000004 : 4;
@@ -59,14 +60,13 @@ privileged void __print(const void *data, size_t len) {
                  : "=a"(ax)
                  : "0"(ordinal), "D"(STDERR_FILENO), "S"(data), "d"(len)
                  : "rcx", "r11", "memory", "cc");
-    if (ax == -1 && !hostos && !__NR_write) {
+    if (ax == -1 && !__hostos && !__NR_write) {
       asm volatile("syscall"
                    : "=a"(ax)
                    : "0"(ordinal), "D"(STDERR_FILENO), "S"(data), "d"(len)
                    : "rcx", "r11", "memory", "cc");
     }
   }
-  RESTORE_RBX();
 }
 
 privileged void __print_string(const char *s) {

@@ -25,7 +25,6 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/memtrack.h"
-#include "libc/runtime/missioncritical.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"

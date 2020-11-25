@@ -1,5 +1,5 @@
 #include "libc/mem/mem.h"
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
 
 /**
  * Frees and clears (sets to NULL) each non-null pointer in the given

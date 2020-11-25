@@ -18,10 +18,10 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
-#include "libc/alg/arraylist.h"
+#include "libc/alg/arraylist.internal.h"
 #include "libc/calls/hefty/ntspawn.h"
 #include "libc/dce.h"
-#include "libc/nexgen32e/tinystrcmp.h"
+#include "libc/nexgen32e/tinystrcmp.internal.h"
 #include "libc/str/str.h"
 
 static int CompareStrings(const char *l, const char *r) {

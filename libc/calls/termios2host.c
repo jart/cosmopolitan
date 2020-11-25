@@ -18,9 +18,9 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/ioctl.h"
-#include "libc/calls/struct/metatermios.h"
-#include "libc/calls/termios-internal.h"
+#include "libc/calls/struct/metatermios.internal.h"
 #include "libc/calls/termios.h"
+#include "libc/calls/termios.internal.h"
 #include "libc/dce.h"
 
 void *termios2host(union metatermios *t, const struct termios *lt) {

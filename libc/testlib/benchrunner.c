@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/kntprioritycombos.h"
+#include "libc/calls/kntprioritycombos.internal.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"

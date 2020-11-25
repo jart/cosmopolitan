@@ -84,11 +84,12 @@
 /	@clob	%rcx,%r10,%r11
 /	@see	syscalls.sh
 	.initbss 300,_init_systemfive
-hostos:	.quad	0
-	.endobj	hostos,globl,hidden
-systemfive:
+__hostos:
 	.quad	0
-	.endobj	systemfive,globl,hidden
+	.endobj	__hostos,globl,hidden
+__systemfive:
+	.quad	0
+	.endobj	__systemfive,globl,hidden
 	.previous
 .Lanchorpoint:
 systemfive.linux:
@@ -211,10 +212,10 @@ systemfive.init.xnu:
 systemfive.init.os:
 	ezlea	.Lanchorpoint,cx
 	pop	%rax
-	stosq	#→ hostos
+	stosq	#→ __hostos
 	pop	%rax
 	add	%rcx,%rax
-	stosq	#→ systemfive
+	stosq	#→ __systemfive
 	push	%rdi
 	ezlea	syscon.start,di
 	ezlea	syscon.end,bx

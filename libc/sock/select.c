@@ -18,9 +18,12 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timeval.h"
-#include "libc/sock/internal.h"
+#include "libc/sock/select.internal.h"
 #include "libc/sock/sock.h"
 
+/**
+ * Does what poll() does except with a complicated bitset API.
+ */
 int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
            struct timeval *timeout) {
   /* TODO(jart): Windows */

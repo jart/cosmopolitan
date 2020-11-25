@@ -22,7 +22,6 @@
 #include "libc/calls/hefty/spawn.h"
 #include "libc/dce.h"
 #include "libc/paths.h"
-#include "libc/runtime/missioncritical.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 

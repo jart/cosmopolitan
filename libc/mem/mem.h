@@ -19,7 +19,6 @@ void *memalign(size_t, size_t) attributeallocalign((1))
     attributeallocsize((2)) mallocesque;
 void *realloc(void *, size_t) reallocesque;
 void *realloc_in_place(void *, size_t);
-bool grow(void *, size_t *, size_t, size_t) paramsnonnull((1, 2)) libcesque;
 void *reallocarray(void *, size_t, size_t) nodiscard;
 void *valloc(size_t) attributeallocsize((1)) vallocesque;
 void *pvalloc(size_t) attributeallocsize((1)) mallocesque;
@@ -27,6 +26,7 @@ char *strdup(const char *) paramsnonnull() mallocesque;
 char *strndup(const char *, size_t) paramsnonnull()
     attributeallocsize((2)) mallocesque;
 int posix_memalign(void **, size_t, size_t); /* wut */
+bool __grow(void *, size_t *, size_t, size_t) paramsnonnull((1, 2)) libcesque;
 
 int malloc_trim(size_t);
 size_t bulk_free(void **, size_t);

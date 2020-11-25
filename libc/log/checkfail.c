@@ -18,13 +18,13 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
-#include "libc/log/color.h"
+#include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/runtime/memtrack.h"
@@ -81,6 +81,6 @@ relegated void __check_fail(const char *suffix, const char *opstr,
     PrintMemoryIntervals(STDERR_FILENO, &_mmi);
   }
 
-  die();
+  __die();
   unreachable;
 }

@@ -33,7 +33,7 @@
 ╠──────────────────────────────────────────────────────▌▀▄─▐──▀▄─▐▄─▐▄▐▄─▐▄─▐▄─│
 │ αcτµαlly pδrταblε εxεcµταblε § post-initialization read-only                 │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/runtime/internal.h"

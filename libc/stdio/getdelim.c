@@ -50,7 +50,7 @@ ssize_t getdelim(char **line, size_t *n, int delim, FILE *f) {
       if (feof(f) && i) rc = i;
       break;
     }
-    if (i + 2 >= *n && !grow(line, n, 1, 0)) {
+    if (i + 2 >= *n && !__grow(line, n, 1, 0)) {
       fseterrno(f);
       break;
     }

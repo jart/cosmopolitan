@@ -8,13 +8,6 @@
 │ cosmopolitan § conversion                                                ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-/**
- * COBOL timestamp (1601) for UNIX epoch (1970).
- *
- * It's a well-known fact in the social sciences that the introduction
- * of the UNIX operation system signalled the end of modernity. Windows
- * timestamps are living proof.
- */
 #define MODERNITYSECONDS 11644473600ull
 #define HECTONANOSECONDS 10000000ull
 

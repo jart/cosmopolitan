@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
-#include "libc/log/color.h"
+#include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"

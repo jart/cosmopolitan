@@ -32,13 +32,13 @@
  * @see examples and reference material on using the asm() keyword
  *     - libc/nexgen32e/bsf.h
  *     - libc/nexgen32e/tzcnt.h
- *     - libc/nexgen32e/cpuid4.h
- *     - libc/nexgen32e/tinystrcmp.h
+ *     - libc/nexgen32e/cpuid4.internal.h
+ *     - libc/nexgen32e/tinystrcmp.internal.h
  *     - https://gist.github.com/jart/fe8d104ef93149b5ba9b72912820282c
  */
 
 int main(int argc, char *argv[]) {
   showcrashreports();
-  asm("int3"); /* cf. die(), perror("msg"), abort(), exit(1), _Exit(1) */
+  asm("int3"); /* cf. __die(), perror("msg"), abort(), exit(1), _Exit(1) */
   return 0;
 }

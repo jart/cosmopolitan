@@ -3,7 +3,6 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 #include "libc/bits/xchg.h"
 
-#if 0
 /**
  * Fisher-Yates shuffle.
  *
@@ -12,7 +11,6 @@
  * @param n is the number of items in A
  * @see ARRAYLEN()
  */
-#endif
 #define shuffle(R, A, n)                      \
   do {                                        \
     autotype(A) Array = (A);                  \

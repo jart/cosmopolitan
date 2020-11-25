@@ -24,6 +24,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/log/log.h"
 #include "libc/nt/console.h"
+#include "libc/nt/enum/consolemodeflags.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 

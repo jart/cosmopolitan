@@ -18,8 +18,9 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
-#include "libc/str/tpdecode.h"
+#include "libc/str/tpdecode.internal.h"
 #include "libc/testlib/testlib.h"
 
 TEST(getutf16, testNul) {

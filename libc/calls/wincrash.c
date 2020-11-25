@@ -18,14 +18,11 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/siginfo.h"
 #include "libc/calls/ucontext.h"
 #include "libc/nt/enum/exceptionhandleractions.h"
-#include "libc/nt/signals.h"
+#include "libc/nt/enum/signal.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
-#include "libc/nt/struct/ntexceptionrecord.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/sig.h"
 
 textwindows unsigned __wincrash(struct NtExceptionPointers *ep) {
   int sig;

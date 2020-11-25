@@ -17,16 +17,19 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/str/internal.h"
-#include "libc/str/strcmp8to16i.h"
+#include "libc/str/strcmp8to16i.internal.h"
 
-forceinline unsigned identity32u(unsigned x) { return x; }
+forceinline unsigned identity32u(unsigned x) {
+  return x;
+}
 
 /**
  * Compares UTF-8 and UTF-16 strings, with limit.
  */
 int strncmp8to16(const char *s1, const char16_t *s2, size_t n) {
-  assume(n != -1ul);
+  assert(n != -1ul);
   return strcmp8to16i(s1, s2, n, identity32u);
 }
 

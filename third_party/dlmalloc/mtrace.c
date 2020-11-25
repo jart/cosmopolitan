@@ -18,9 +18,9 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/conv/itoa.h"
-#include "libc/runtime/missioncritical.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
 
 static uintptr_t lastfree_;
 

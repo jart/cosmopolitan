@@ -4,8 +4,7 @@
 COSMOPOLITAN_C_START_
 
 void imapxlatab(void *);
-void insertionsort(size_t n, int32_t[n]);
-void *doublebytes(size_t, void *);
+void insertionsort(int32_t *, size_t);
 
 int64_t div10int64(int64_t) libcesque pureconst;
 int64_t div100int64(int64_t) libcesque pureconst;

@@ -21,7 +21,7 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/hilbert.h"
 #include "libc/bits/morton.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/sigaction.h"
@@ -55,7 +55,7 @@
 #include "third_party/getopt/getopt.h"
 
 #define USAGE \
-  " [-hznmH] [-p PID] [PATH]\n\
+  " [-hznmHNW] [-p PID] [PATH]\n\
 \n\
 DESCRIPTION\n\
 \n\
@@ -65,10 +65,10 @@ FLAGS\n\
 \n\
   -h         help\n\
   -z         zoom\n\
-  -w         white bg color\n\
   -m         morton ordering\n\
   -H         hilbert ordering\n\
-  -n         natural scrolling\n\
+  -N         natural scrolling\n\
+  -W         white terminal background\n\
   -p PID     shows process virtual memory\n\
   -f INT     frames per second [default 10]\n\
 \n\
@@ -276,7 +276,7 @@ static void SetupCanvas(void) {
     munmap(canvas, canvassize);
     munmap(buffer, buffersize);
   }
-  displaysize = ROUNDUP(ROUNDUP(tyn * txn * (1ul << zoom), 16), 1ul << zoom);
+  displaysize = ROUNDUP(ROUNDUP((tyn * txn) << zoom, 16), 1ul << zoom);
   canvassize = ROUNDUP(displaysize, FRAMESIZE);
   buffersize = ROUNDUP(tyn * txn * 16 + PAGESIZE, FRAMESIZE);
   canvas = Allocate(canvassize);
@@ -341,7 +341,8 @@ static int GetCurrentRange(void) {
 }
 
 static void Move(long d) {
-  offset = MIN(highest, MAX(lowest, ROUNDDOWN(offset + d, 1L << zoom)));
+  d <<= zoom;
+  offset = MIN(highest, MAX(lowest, (offset + d) >> zoom << zoom));
 }
 
 static void SetZoom(long y, long x, int d) {
@@ -351,7 +352,7 @@ static void SetZoom(long y, long x, int d) {
     a = zoom;
     b = MIN(MAXZOOM, MAX(0, a + d));
     zoom = b;
-    Move(i * (1L << a) - i * (1L << b));
+    Move((i << a) - (i << b));
     SetupCanvas();
   }
 }
@@ -365,19 +366,19 @@ static void OnUnzoom(long y, long x) {
 }
 
 static void OnUp(void) {
-  Move(-(txn * (1l << zoom)));
+  Move(-(txn));
 }
 
 static void OnDown(void) {
-  Move(txn * (1l << zoom));
+  Move(txn);
 }
 
 static void OnPageUp(void) {
-  Move(-(txn * (tyn - 2) * (1l << zoom)));
+  Move(-(txn * (tyn - 2)));
 }
 
 static void OnPageDown(void) {
-  Move(txn * (tyn - 2) * (1l << zoom));
+  Move(txn * (tyn - 2));
 }
 
 static void OnHome(void) {
@@ -385,7 +386,7 @@ static void OnHome(void) {
 }
 
 static void OnEnd(void) {
-  offset = MAX(lowest, highest - txn * tyn * (1l << zoom));
+  offset = MAX(lowest, highest - txn * tyn);
 }
 
 static void OnLinear(void) {
@@ -425,7 +426,7 @@ static void OnPrev(void) {
 static void OnNextEnd(void) {
   long i, n;
   if ((i = GetCurrentRange()) != -1) {
-    n = tyn * txn * (1L << zoom);
+    n = (tyn * txn) << zoom;
     if (offset < ranges.p[i].b - n) {
       offset = ranges.p[i].b - n;
     } else if (i + 1 < ranges.i) {
@@ -437,7 +438,7 @@ static void OnNextEnd(void) {
 static void OnPrevEnd(void) {
   long i, n;
   if ((i = GetCurrentRange()) != -1) {
-    n = tyn * txn * (1L << zoom);
+    n = (tyn * txn) << zoom;
     if (i) {
       offset = MAX(ranges.p[i - 1].a, ranges.p[i - 1].b - n);
     }
@@ -753,7 +754,7 @@ static void Render(void) {
       } while (w);
     }
     p = stpcpy(p, "\e[0m ");
-    p += uint64toarray_radix16(offset + y * txn * (1ul << zoom), p);
+    p += uint64toarray_radix16(offset + ((y * txn) << zoom), p);
     p = stpcpy(p, "\e[K\r\n");
   }
   p = stpcpy(p, "\e[7m\e[K");
@@ -772,7 +773,7 @@ static void Render(void) {
     p += uint64toarray_radix10(MIN(offset / (long double)size * 100, 100), p);
     p = stpcpy(p, "%-");
     p += uint64toarray_radix10(
-        MIN((offset + tyn * txn * (1l << zoom)) / (long double)size * 100, 100),
+        MIN((offset + ((tyn * txn) << zoom)) / (long double)size * 100, 100),
         p);
     p = stpcpy(p, "% ");
   }
@@ -800,7 +801,7 @@ static void Zoom(long have) {
     memset(canvas + n, 0, canvassize - n);
   }
   if (have != -1) {
-    n = have / (1L << zoom);
+    n = have >> zoom;
     i = n / txn;
     r = n % txn;
     if (r) ++i;
@@ -827,7 +828,7 @@ static void RangesZoom(void) {
   LoadRanges();
   memset(canvas, 1, canvassize);
   a = offset;
-  b = MIN(highest, offset + tyn * txn * (1ul << zoom));
+  b = MIN(highest, offset + ((tyn * txn) << zoom));
   for (i = 0; i < ranges.i; ++i) {
     if ((a >= ranges.p[i].a && a < ranges.p[i].b) ||
         (b >= ranges.p[i].a && b < ranges.p[i].b) ||
@@ -871,13 +872,10 @@ static void GetOpts(int argc, char *argv[]) {
   int opt;
   char *p;
   fps = 10;
-  while ((opt = getopt(argc, argv, "hzHnwf:p:")) != -1) {
+  while ((opt = getopt(argc, argv, "hzHNWf:p:")) != -1) {
     switch (opt) {
       case 'z':
         ++zoom;
-        break;
-      case 'n':
-        natural = true;
         break;
       case 'm':
         order = MORTON;
@@ -885,8 +883,11 @@ static void GetOpts(int argc, char *argv[]) {
       case 'H':
         order = HILBERT;
         break;
-      case 'w':
+      case 'W':
         white = true;
+        break;
+      case 'N':
+        natural = true;
         break;
       case 'f':
         fps = strtol(optarg, NULL, 0);

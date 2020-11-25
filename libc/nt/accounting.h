@@ -1,9 +1,11 @@
 #ifndef COSMOPOLITAN_LIBC_NT_ACCOUNTING_H_
 #define COSMOPOLITAN_LIBC_NT_ACCOUNTING_H_
+#include "libc/nt/struct/filetime.h"
+#include "libc/nt/struct/iocounters.h"
+#include "libc/nt/struct/memorystatusex.h"
 #include "libc/nt/thunk/msabi.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-#if 0
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
                       ▒▒▒▒░░░▒▒▒▒▒▒▓▓▓▓▓▓░
@@ -28,11 +30,6 @@ COSMOPOLITAN_C_START_
 ╔────────────────────────────────────────────────────────────────▀▀▀─────────│─╗
 │ cosmopolitan § new technology » accounting                               ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#endif
-
-struct NtFileTime;
-struct NtIoCounters;
-struct NtMemoryStatusEx;
 
 int GetUserName(char16_t (*buf)[257], uint32_t *in_out_size);
 bool32 GlobalMemoryStatusEx(struct NtMemoryStatusEx *lpBuffer);

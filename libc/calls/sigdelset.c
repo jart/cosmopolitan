@@ -18,13 +18,20 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sigbits.h"
-#include "libc/calls/calls.h"
+#include "libc/sysv/errfuns.h"
 
 /**
- * Removes sig from set.
+ * Removes signal from set.
  *
  * @return 0 on success, or -1 w/ errno
- * @error EINVAL
  * @asyncsignalsafe
  */
-int(sigdelset)(sigset_t *set, int sig) { return sigdelset(set, sig); }
+int sigdelset(sigset_t *set, int sig) {
+  unsigned i = sig - 1;
+  if (i < sizeof(set->__bits) * 8) {
+    set->__bits[i >> 6] &= ~(1ull << (i & 63));
+    return 0;
+  } else {
+    return einval();
+  }
+}

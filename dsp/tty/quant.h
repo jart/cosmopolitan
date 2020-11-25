@@ -3,7 +3,7 @@
 #include "dsp/tty/ttyrgb.h"
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
-#include "libc/bits/xmmintrin.h"
+#include "libc/bits/xmmintrin.internal.h"
 #include "libc/limits.h"
 #include "libc/str/str.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)

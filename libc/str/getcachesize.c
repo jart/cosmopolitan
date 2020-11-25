@@ -21,7 +21,7 @@
 #include "libc/bits/bits.h"
 #include "libc/dce.h"
 #include "libc/nexgen32e/cachesize.h"
-#include "libc/nexgen32e/cpuid4.h"
+#include "libc/nexgen32e/cpuid4.internal.h"
 
 static unsigned getcachesize$cpuid4(int type, int level) {
   unsigned i, k;
@@ -51,7 +51,7 @@ static unsigned getcachesize$cpuid4(int type, int level) {
  * @param level starts at 1
  * @return size in bytes, or 0 if unknown
  */
-unsigned getcachesize(enum CpuCacheType type, int level) {
+unsigned getcachesize(int type, int level) {
   assert(1 <= type && type <= 3);
   assert(level >= 1);
   return getcachesize$cpuid4(type, level);

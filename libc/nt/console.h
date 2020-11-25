@@ -1,10 +1,15 @@
 #ifndef COSMOPOLITAN_LIBC_NT_CONSOLE_H_
 #define COSMOPOLITAN_LIBC_NT_CONSOLE_H_
-#include "libc/nt/enum/consolemodeflags.h"
+#include "libc/nt/struct/charinfo.h"
+#include "libc/nt/struct/consolecursorinfo.h"
+#include "libc/nt/struct/consolescreenbufferinfo.h"
+#include "libc/nt/struct/consolescreenbufferinfoex.h"
+#include "libc/nt/struct/consoleselectioninfo.h"
 #include "libc/nt/struct/coord.h"
+#include "libc/nt/struct/inputrecord.h"
+#include "libc/nt/struct/smallrect.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/typedef/handlerroutine.h"
-#if 0
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
                       ▒▒▒▒░░░▒▒▒▒▒▒▓▓▓▓▓▓░
@@ -29,20 +34,11 @@
 ╔────────────────────────────────────────────────────────────────▀▀▀─────────│─╗
 │ cosmopolitan § new technology » console                                  ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#endif
 
 #define kNtAttachParentProcess -1u
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-struct NtCharInfo;
-struct NtConsoleCursorInfo;
-struct NtConsoleScreenBufferInfo;
-struct NtConsoleScreenBufferInfoEx;
-struct NtConsoleSelectionInfo;
-struct NtInputRecord;
-struct NtSmallRect;
 
 bool32 WriteConsoleOutput(int64_t hConsoleOutput,
                           const struct NtCharInfo *lpBuffer,

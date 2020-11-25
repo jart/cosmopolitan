@@ -59,7 +59,7 @@ Contact: antirez@gmail.com\"\n\
 #define _GNU_SOURCE
 
 #include "libc/alg/alg.h"
-#include "libc/alg/arraylist2.h"
+#include "libc/alg/arraylist2.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/termios.h"
 #include "libc/calls/weirdtypes.h"

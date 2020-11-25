@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/conv/conv.h"
@@ -99,8 +99,8 @@ static void printelfehdr(void) {
 }
 
 static void printelfsegmentheader(int i) {
-  Elf64_Phdr *phdr = getelfsegmentheaderaddress(elf, st->st_size, i);
-  printf("/\tElf64_Phdr *phdr = getelfsegmentheaderaddress(elf, st->st_size, "
+  Elf64_Phdr *phdr = GetElfSegmentHeaderAddress(elf, st->st_size, i);
+  printf("/\tElf64_Phdr *phdr = GetElfSegmentHeaderAddress(elf, st->st_size, "
          "%d)\n",
          i);
   printf(".Lph%d:", i);
@@ -127,8 +127,8 @@ static void printelfsegmentheaders(void) {
 
 static void printelfsectionheader(int i, char *shstrtab) {
   Elf64_Shdr *shdr;
-  shdr = getelfsectionheaderaddress(elf, st->st_size, i);
-  printf("/\tElf64_Shdr *shdr = getelfsectionheaderaddress(elf, st->st_size, "
+  shdr = GetElfSectionHeaderAddress(elf, st->st_size, i);
+  printf("/\tElf64_Shdr *shdr = GetElfSectionHeaderAddress(elf, st->st_size, "
          "%d)\n",
          i);
   printf(".Lsh%d:", i);
@@ -154,7 +154,7 @@ static void printelfsectionheader(int i, char *shstrtab) {
 
 static void printelfsectionheaders(void) {
   Elf64_Half i;
-  char *shstrtab = getelfsectionnamestringtable(elf, st->st_size);
+  char *shstrtab = GetElfSectionNameStringTable(elf, st->st_size);
   if (shstrtab) {
     printf("\n");
     printf("\t.org\t%#x\n", elf->e_shoff);
@@ -163,10 +163,10 @@ static void printelfsectionheaders(void) {
     }
     printf("\n/\t%s\n", "elf->e_shstrndx");
     printf("\t.org\t%#x\n",
-           getelfsectionheaderaddress(elf, st->st_size, elf->e_shstrndx)
+           GetElfSectionHeaderAddress(elf, st->st_size, elf->e_shstrndx)
                ->sh_offset);
     for (i = 0; i < elf->e_shnum; ++i) {
-      Elf64_Shdr *shdr = getelfsectionheaderaddress(elf, st->st_size, i);
+      Elf64_Shdr *shdr = GetElfSectionHeaderAddress(elf, st->st_size, i);
       const char *str = GetElfString(elf, st->st_size, shstrtab, shdr->sh_name);
       show(".asciz", format(b1, "%`'s", str), NULL);
     }
@@ -207,7 +207,7 @@ static void printelfsymbol(Elf64_Sym *sym, char *strtab, char *shstrtab) {
               sym->st_shndx < 0xff00
                   ? format(b1, "%`'s",
                            GetElfString(elf, st->st_size, shstrtab,
-                                        getelfsectionheaderaddress(
+                                        GetElfSectionHeaderAddress(
                                             elf, st->st_size, sym->st_shndx)
                                             ->sh_name))
                   : findnamebyid(kElfSpecialSectionNames, sym->st_shndx)));
@@ -219,7 +219,7 @@ static void printelfsymboltable(void) {
   size_t i, symcount = 0;
   Elf64_Sym *symtab = GetElfSymbolTable(elf, st->st_size, &symcount);
   char *strtab = GetElfStringTable(elf, st->st_size);
-  char *shstrtab = getelfsectionnamestringtable(elf, st->st_size);
+  char *shstrtab = GetElfSectionNameStringTable(elf, st->st_size);
   if (symtab && strtab) {
     printf("\n\n");
     printf("\t.org\t%#x\n", (intptr_t)symtab - (intptr_t)elf);
@@ -238,7 +238,7 @@ static char *getelfsymbolname(const Elf64_Ehdr *elf, size_t mapsize,
   if (elf && sym &&
       ((shstrtab && !sym->st_name &&
         ELF64_ST_TYPE(sym->st_info) == STT_SECTION &&
-        (shdr = getelfsectionheaderaddress(elf, mapsize, sym->st_shndx)) &&
+        (shdr = GetElfSectionHeaderAddress(elf, mapsize, sym->st_shndx)) &&
         (res = GetElfString(elf, mapsize, shstrtab, shdr->sh_name))) ||
        (strtab && (res = GetElfString(elf, mapsize, strtab, sym->st_name))))) {
     return res;
@@ -255,26 +255,26 @@ static void printelfrelocations(void) {
   const Elf64_Shdr *shdr, *boop;
   char *strtab, *shstrtab, *symbolname;
   strtab = GetElfStringTable(elf, st->st_size);
-  shstrtab = getelfsectionnamestringtable(elf, st->st_size);
+  shstrtab = GetElfSectionNameStringTable(elf, st->st_size);
   for (i = 0; i < elf->e_shnum; ++i) {
-    if ((shdr = getelfsectionheaderaddress(elf, st->st_size, i)) &&
+    if ((shdr = GetElfSectionHeaderAddress(elf, st->st_size, i)) &&
         shdr->sh_type == SHT_RELA &&
-        (rela = getelfsectionaddress(elf, st->st_size, shdr))) {
+        (rela = GetElfSectionAddress(elf, st->st_size, shdr))) {
       printf("\n/\t%s\n", GetElfSectionName(elf, st->st_size, shdr));
       printf("\t.org\t%#x\n", (intptr_t)rela - (intptr_t)elf);
       for (j = 0; ((uintptr_t)rela + sizeof(Elf64_Rela) <=
                    min((uintptr_t)elf + st->st_size,
                        (uintptr_t)elf + shdr->sh_offset + shdr->sh_size));
            ++rela, ++j) {
-        boop = getelfsectionheaderaddress(elf, st->st_size, shdr->sh_link);
-        syms = getelfsectionaddress(elf, st->st_size, boop);
+        boop = GetElfSectionHeaderAddress(elf, st->st_size, shdr->sh_link);
+        syms = GetElfSectionAddress(elf, st->st_size, boop);
         sym = ELF64_R_SYM(rela->r_info);
         symbolname =
             getelfsymbolname(elf, st->st_size, strtab, shstrtab, &syms[sym]);
         printf("/\t%s+%#lx → %s%c%#lx\n",
                GetElfString(
                    elf, st->st_size, shstrtab,
-                   getelfsectionheaderaddress(elf, st->st_size, shdr->sh_info)
+                   GetElfSectionHeaderAddress(elf, st->st_size, shdr->sh_info)
                        ->sh_name),
                rela->r_offset, symbolname, rela->r_addend >= 0 ? '+' : '-',
                abs(rela->r_addend));

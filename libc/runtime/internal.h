@@ -2,6 +2,8 @@
 #define COSMOPOLITAN_LIBC_RUNTIME_INTERNAL_H_
 #ifndef __STRICT_ANSI__
 #include "libc/dce.h"
+#include "libc/elf/struct/ehdr.h"
+#include "libc/runtime/ezmap.h"
 #include "libc/runtime/runtime.h"
 
 #define STACK_CEIL 0x700000000000ul
@@ -23,6 +25,7 @@ void __stack_chk_fail_local(void) noreturn relegated hidden;
 void _jmpstack(void *, void *, ...) hidden noreturn;
 long _setstack(void *, void *, ...) hidden;
 int GetDosArgv(const char16_t *, char *, size_t, char **, size_t) hidden;
+Elf64_Ehdr *MapElfRead(const char *, struct MappedFile *) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

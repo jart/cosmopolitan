@@ -40,7 +40,7 @@
  * by: oz
  */
 
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/conv/conv.h"
 #include "libc/errno.h"
 #include "libc/limits.h"

@@ -17,8 +17,8 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/log/color.h"
-#include "libc/runtime/missioncritical.h"
+#include "libc/log/color.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 
 /**

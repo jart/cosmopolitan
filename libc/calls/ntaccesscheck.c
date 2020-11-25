@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/nt/enum/accessmask.h"
+#include "libc/nt/enum/securityimpersonationlevel.h"
 #include "libc/nt/enum/securityinformation.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"

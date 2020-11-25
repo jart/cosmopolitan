@@ -17,12 +17,12 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/arraylist.h"
+#include "libc/alg/arraylist.internal.h"
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/gc.h"
+#include "libc/nexgen32e/gc.internal.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
 
@@ -53,10 +53,10 @@ void __defer(struct StackFrame *frame, void *fn, void *arg) {
   frame2 = __builtin_frame_address(0);
   assert(frame2->next == frame);
   assert(PointerNotOwnedByParentStackFrame(frame2, frame, arg));
-  if (append(&g_garbage,
+  if (append(&__garbage,
              (&(const struct Garbage){frame->next, (intptr_t)fn, (intptr_t)arg,
                                       frame->addr})) != -1) {
-    atomic_store(&frame->addr, (intptr_t)&CollectGarbage);
+    atomic_store(&frame->addr, (intptr_t)&__gc);
   } else {
     abort();
   }

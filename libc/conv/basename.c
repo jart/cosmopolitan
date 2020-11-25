@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/conv/conv.h"
-#include "libc/conv/isslash.h"
+#include "libc/conv/isslash.internal.h"
 #include "libc/str/str.h"
 
 /**

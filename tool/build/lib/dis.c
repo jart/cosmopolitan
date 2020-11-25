@@ -18,10 +18,10 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
-#include "libc/alg/arraylist2.h"
-#include "libc/bits/safemacros.h"
+#include "libc/alg/arraylist2.internal.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/conv/itoa.h"
-#include "libc/fmt/bing.h"
+#include "libc/fmt/bing.internal.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -29,7 +29,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "libc/str/tpencode.h"
+#include "libc/str/tpencode.internal.h"
 #include "third_party/xed/x86.h"
 #include "tool/build/lib/case.h"
 #include "tool/build/lib/demangle.h"

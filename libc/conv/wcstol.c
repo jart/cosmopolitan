@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/conv/conv.h"
-#include "libc/conv/wcslol.h"
+#include "libc/conv/wcslol.internal.h"
 #include "libc/limits.h"
 #include "libc/str/str.h"
 

@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bigword.h"
+#include "libc/bits/bigword.internal.h"
 #include "libc/str/str.h"
 #define T wchar_t
 #define N (BIGWORD / sizeof(T))

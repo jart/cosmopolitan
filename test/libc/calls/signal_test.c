@@ -24,11 +24,13 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 
-testonly void OnCtrlC(int sig) { _exit(0); }
+testonly void OnCtrlC(int sig) {
+  _exit(0);
+}
 
 TEST(signal, test) {
   if (IsWindows()) return; /* omg */
   ASSERT_NE(SIG_ERR, signal(SIGINT, OnCtrlC));
   ASSERT_NE(-1, raise(SIGINT));
-  die();
+  __die();
 }

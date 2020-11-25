@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/lib/pc.h"
-#include "libc/nexgen32e/uart.h"
+#include "libc/nexgen32e/uart.internal.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 

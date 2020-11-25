@@ -18,7 +18,9 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/conv/conv.h"
-#include "libc/conv/strlol.h"
+#include "libc/conv/strlol.internal.h"
 #include "libc/limits.h"
 
-long atol(const char *s) { return STRLOL(s, NULL, 10, LONG_MIN, LONG_MAX); }
+long atol(const char *s) {
+  return STRLOL(s, NULL, 10, LONG_MIN, LONG_MAX);
+}

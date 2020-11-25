@@ -22,21 +22,20 @@
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/nt/process.h"
-#include "libc/runtime/missioncritical.h"
 #include "libc/runtime/runtime.h"
 
 static int g_pid;
 
-static void __updatepid(void) {
-  g_pid = __getpid();
+static int __get_pid(void) {
+  if (!IsWindows()) {
+    return getpid$sysv();
+  } else {
+    return GetCurrentProcessId();
+  }
 }
 
-int __getpid(void) {
-  if (!IsWindows()) {
-    return GETPID();
-  } else {
-    return NtGetPid();
-  }
+static void __update_pid(void) {
+  g_pid = __get_pid();
 }
 
 /**
@@ -46,8 +45,8 @@ int __getpid(void) {
 int getpid(void) {
   static bool once;
   if (!once) {
-    __updatepid();
-    atfork(__updatepid, NULL);
+    __update_pid();
+    atfork(__update_pid, NULL);
     once = true;
   }
   return g_pid;

@@ -38,7 +38,7 @@
 /**
  * PC Display Configuration (MDA/CGA)
  * @see www.lammertbies.nl/comm/info/serial-uart.html
- * @see ape/lib/vidya.h
+ * @see ape/lib/vidya.internal.h
  */
 #ifndef VIDYA_MODE
 #define VIDYA_MODE VIDYA_MODE_CGA

@@ -87,13 +87,6 @@ int ppoll(struct pollfd *, uint64_t, const struct timespec *,
 ssize_t sendto(int, const void *, size_t, uint32_t, const void *, uint32_t)
     paramsnonnull((2));
 
-typedef int64_t fd_set;
-#define FD_CLR(FD, SET)   btr(SET, FD)
-#define FD_ISSET(FD, SET) bt(SET, FD)
-#define FD_SET(FD, SET)   bts(SET, FD)
-#define FD_ZERO(SET)      *(SET) = 0
-int select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
-
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SOCK_SOCK_H_ */

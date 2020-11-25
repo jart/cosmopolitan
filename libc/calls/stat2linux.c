@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/metastat.h"
+#include "libc/calls/struct/metastat.internal.h"
 #include "libc/dce.h"
 
 #define SWITCHEROO(S1, S2, A, B, C, D, E, F, G, H, I, J, K, L, M) \

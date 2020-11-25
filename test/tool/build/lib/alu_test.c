@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/progn.h"
+#include "libc/bits/progn.internal.h"
 #include "libc/limits.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"

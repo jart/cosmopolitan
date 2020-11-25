@@ -33,7 +33,7 @@ int MachineFdAdd(struct MachineFds *mf) {
   } else {
     DCHECK_LE(mf->i, mf->n);
     if (mf->i == mf->n) {
-      if (!grow(&mf->p, &mf->n, sizeof(struct MachineFd), 0)) {
+      if (!__grow(&mf->p, &mf->n, sizeof(struct MachineFd), 0)) {
         return -1;
       }
     }

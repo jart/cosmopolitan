@@ -22,9 +22,10 @@
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/fmt.h"
-#include "libc/log/backtrace.h"
-#include "libc/log/color.h"
+#include "libc/log/backtrace.internal.h"
+#include "libc/log/color.internal.h"
 #include "libc/log/gdb.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
@@ -126,7 +127,7 @@ relegated static void ShowGeneralRegisters(int fd, ucontext_t *ctx) {
 
 relegated static void ShowSseRegisters(int fd, ucontext_t *ctx) {
   size_t i;
-  write(fd, "\r\n", 2);
+  write(fd, "\r\n\r\n", 4);
   for (i = 0; i < 8; ++i) {
     (dprintf)(fd, VEIL("r", "%s%-2zu %016lx%016lx %s%-2d %016lx%016lx\r\n"),
               "XMM", i + 0, ctx->fpustate.xmm[i + 0].u64[0],

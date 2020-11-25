@@ -35,7 +35,7 @@ char *xinet_ntop(int af, const void *src) {
   if (inet_ntop(af, src, ip, sizeof(ip)) && (res = strdup(ip))) {
     return res;
   } else {
-    if (weaken(die)) weaken(die)();
+    if (weaken(__die)) weaken(__die)();
     abort();
     unreachable;
   }

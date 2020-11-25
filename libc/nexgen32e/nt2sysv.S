@@ -28,7 +28,8 @@
 /	@param	%rax is function address
 /	@param	%rcx,%rdx,%r8,%r9
 /	@return	%rax,%xmm0
-/	@note	this is so much slower than sysv2nt()
+/	@note	slower than __sysv2nt
+/	@see	NT2SYSV() macro
 __nt2sysv:
 	push	%rbp
 	mov	%rsp,%rbp

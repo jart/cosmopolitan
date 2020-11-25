@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/calls/kntprioritycombos.h"
+#include "libc/calls/kntprioritycombos.internal.h"
 #include "libc/limits.h"
 #include "libc/macros.h"
 #include "libc/nt/enum/processcreationflags.h"

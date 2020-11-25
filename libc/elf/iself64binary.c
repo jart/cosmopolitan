@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/elf/elf.h"
+#include "libc/str/str.h"
 
 bool IsElf64Binary(const Elf64_Ehdr *elf, size_t mapsize) {
   if (mapsize < sizeof(Elf64_Ehdr)) return false;

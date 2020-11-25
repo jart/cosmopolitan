@@ -8,7 +8,8 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/alg/alg.h"
-#include "libc/alg/arraylist.h"
+#include "libc/alg/arraylist.internal.h"
+#include "libc/alg/critbit0.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/conv/conv.h"
@@ -18,7 +19,7 @@
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/str/tpdecode.h"
+#include "libc/str/tpdecode.internal.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/x/x.h"
 

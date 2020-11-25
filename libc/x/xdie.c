@@ -23,6 +23,6 @@
 #include "libc/x/x.h"
 
 void xdie(void) {
-  if (weaken(die)) die();
+  if (weaken(__die)) __die();
   abort();
 }

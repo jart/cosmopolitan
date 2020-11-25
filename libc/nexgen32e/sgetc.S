@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/macros.h"
-#include "libc/nexgen32e/uart.h"
+#include "libc/nexgen32e/uart.internal.h"
 #include "libc/notice.inc"
 .real
 .code16 # ∩ .code32 ∩ .code64

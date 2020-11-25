@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_PRIVILEGE_H_
 #define COSMOPOLITAN_LIBC_NT_PRIVILEGE_H_
 #include "libc/nt/struct/luid.h"
-#if 0
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
                       ▒▒▒▒░░░▒▒▒▒▒▒▓▓▓▓▓▓░
@@ -26,12 +25,11 @@
 ╔────────────────────────────────────────────────────────────────▀▀▀─────────│─╗
 │ cosmopolitan § new technology » check your privilege                     ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#endif
 
 #define kNtSePrivilegeEnabledByDefault 0x00000001u
-#define kNtSePrivilegeEnabled 0x00000002u
-#define kNtSePrivilegeRemoved 0x00000004u
-#define kNtSePrivilegeUsedForAccess 0x80000000u
+#define kNtSePrivilegeEnabled          0x00000002u
+#define kNtSePrivilegeRemoved          0x00000004u
+#define kNtSePrivilegeUsedForAccess    0x80000000u
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

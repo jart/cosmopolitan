@@ -19,8 +19,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
 #include "libc/fmt/paland.inc"
-#include "libc/fmt/palandprintf.h"
-#include "libc/nexgen32e/tinystrlen.h"
+#include "libc/fmt/palandprintf.internal.h"
+#include "libc/nexgen32e/tinystrlen.internal.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "libc/str/tpenc.h"

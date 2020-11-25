@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/iovec.h"
-#include "libc/nexgen32e/uart.h"
+#include "libc/nexgen32e/uart.internal.h"
 #include "libc/sysv/consts/fileno.h"
 #include "tool/build/lib/ioports.h"
 

@@ -187,6 +187,7 @@ include test/libc/rand/test.mk
 include test/libc/time/test.mk
 include test/libc/stdio/test.mk
 include test/libc/conv/test.mk
+include test/libc/release/test.mk
 include test/libc/test.mk
 include test/ape/lib/test.mk
 include test/ape/test.mk
@@ -253,8 +254,9 @@ COSMOPOLITAN_OBJECTS =		\
 	LIBC_CONV		\
 	LIBC_CRYPTO		\
 	LIBC_DNS		\
-	LIBC_FMT		\
 	LIBC_ELF		\
+	LIBC_FMT		\
+	LIBC_INTRIN		\
 	LIBC_LOG		\
 	LIBC_MEM		\
 	LIBC_NEXGEN32E		\
@@ -270,7 +272,9 @@ COSMOPOLITAN_OBJECTS =		\
 	LIBC_TIME		\
 	LIBC_TINYMATH		\
 	LIBC_UNICODE		\
+	LIBC_X			\
 	LIBC_ZIPOS		\
+	THIRD_PARTY_COMPILER_RT	\
 	THIRD_PARTY_DLMALLOC	\
 	THIRD_PARTY_DTOA	\
 	THIRD_PARTY_GETOPT	\
@@ -279,22 +283,31 @@ COSMOPOLITAN_OBJECTS =		\
 
 COSMOPOLITAN_HEADERS =		\
 	LIBC			\
+	LIBC_ALG		\
+	LIBC_BITS		\
 	LIBC_CALLS		\
 	LIBC_CONV		\
 	LIBC_CRYPTO		\
 	LIBC_DNS		\
+	LIBC_ELF		\
 	LIBC_FMT		\
+	LIBC_INTRIN		\
+	LIBC_LOG		\
 	LIBC_MEM		\
+	LIBC_NEXGEN32E		\
+	LIBC_NT			\
+	LIBC_OHMYPLUS		\
 	LIBC_RAND		\
 	LIBC_RUNTIME		\
 	LIBC_SOCK		\
 	LIBC_STDIO		\
 	LIBC_STR		\
-	LIBC_TIME		\
-	LIBC_UNICODE		\
-	LIBC_ZIPOS		\
 	LIBC_SYSV		\
-	LIBC_NT			\
+	LIBC_TIME		\
+	LIBC_TINYMATH		\
+	LIBC_UNICODE		\
+	LIBC_X			\
+	LIBC_ZIPOS		\
 	THIRD_PARTY_DLMALLOC	\
 	THIRD_PARTY_DTOA	\
 	THIRD_PARTY_GETOPT	\
@@ -302,11 +315,11 @@ COSMOPOLITAN_HEADERS =		\
 	THIRD_PARTY_REGEX
 
 o/$(MODE)/cosmopolitan.a: $(filter-out o/libc/stubs/exit11.o,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_OBJS)))
-o/$(MODE)/.cosmopolitan.h: $(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS))
-	build/rollup $^ >$@
-o/$(MODE)/cosmopolitan.h: o/$(MODE)/.cosmopolitan.h
-	build/compile $(PREPROCESS) -P $(OUTPUT_OPTION) $<
-	clang-format-10 -i $@
+o/cosmopolitan.h:				\
+		o/$(MODE)/tool/build/rollup.com.dbg	\
+		libc/integral/normalize.inc	\
+		$(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS))
+	@ACTION=ROLLUP TARGET=$@ build/do $^ >$@
 
 # UNSPECIFIED PREREQUISITES TUTORIAL
 #

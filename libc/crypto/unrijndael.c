@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/emmintrin.h"
+#include "libc/bits/emmintrin.internal.h"
 #include "libc/crypto/rijndael.h"
 #include "libc/nexgen32e/x86feature.h"
 

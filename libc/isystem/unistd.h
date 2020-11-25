@@ -1,6 +1,5 @@
 #ifndef LIBC_ISYSTEM_UNISTD_H_
 #define LIBC_ISYSTEM_UNISTD_H_
-#include "libc/calls/openbsd.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/sysv/consts/fileno.h"

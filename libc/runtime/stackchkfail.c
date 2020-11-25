@@ -17,12 +17,11 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/config.h"
-#include "libc/bits/bits.h"
 #include "libc/bits/pushpop.h"
-#include "libc/nt/process.h"
+#include "libc/nt/enum/version.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/struct/teb.h"
 #include "libc/runtime/internal.h"
-#include "libc/runtime/missioncritical.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/nr.h"
 
@@ -32,11 +31,13 @@
  * Aborts program under enemy fire to avoid being taken alive.
  */
 void __stack_chk_fail(void) {
+  size_t len;
+  const char *msg;
+  int64_t ax, cx, si;
   if (!IsWindows()) {
-    const char *const msg = STACK_SMASH_MESSAGE;
-    const size_t len = pushpop(sizeof(STACK_SMASH_MESSAGE) - 1);
+    msg = STACK_SMASH_MESSAGE;
+    len = pushpop(sizeof(STACK_SMASH_MESSAGE) - 1);
     if (!IsMetal()) {
-      unsigned ax;
       asm volatile("syscall"
                    : "=a"(ax)
                    : "0"(__NR_write), "D"(pushpop(STDERR_FILENO)), "S"(msg),
@@ -44,18 +45,31 @@ void __stack_chk_fail(void) {
                    : "rcx", "r11", "cc", "memory");
       asm volatile("syscall"
                    : "=a"(ax)
-                   : "0"(__NR_exit), "D"(pushpop(88))
+                   : "0"(__NR_exit), "D"(pushpop(23))
                    : "rcx", "r11", "cc", "memory");
     }
-    short(*ttys)[4] = (short(*)[4])XLM(BIOS_DATA_AREA);
-    unsigned long si;
-    unsigned cx;
     asm volatile("rep outsb"
                  : "=S"(si), "=c"(cx)
-                 : "0"(msg), "1"(len), "d"((*ttys)[1 /*COM2*/])
+                 : "0"(msg), "1"(len), "d"(0x3F8 /* COM1 */)
                  : "memory");
     triplf();
   }
-  NT_TERMINATE_PROCESS();
-  for (;;) TerminateProcess(GetCurrentProcess(), 42);
+  if (NtGetVersion() < kNtVersionFuture) {
+    do {
+      asm volatile(
+          "syscall"
+          : "=a"(ax), "=c"(cx)
+          : "0"(NtGetVersion() < kNtVersionWindows8
+                    ? 0x0029
+                    : NtGetVersion() < kNtVersionWindows81
+                          ? 0x002a
+                          : NtGetVersion() < kNtVersionWindows10 ? 0x002b
+                                                                 : 0x002c),
+            "1"(pushpop(-1L)), "d"(42)
+          : "r11", "cc", "memory");
+    } while (!ax);
+  }
+  for (;;) {
+    TerminateProcess(GetCurrentProcess(), 42);
+  }
 }
