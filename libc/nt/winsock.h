@@ -43,6 +43,9 @@
 │ cosmopolitan § new technology » winsock                                  ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+#define kNtCompEqual   0
+#define kNtCompNotless 1
+
 #define kNtWsaFlagOverlapped      0x01
 #define kNtWsaFlagNoHandleInherit 0x80
 
@@ -83,63 +86,31 @@
 #define kNtSioUdpConnreset                0x9800000Cu
 #define kNtSioUdpNetreset                 0x9800000Fu
 
+#define kNtNspNotifyImmediately 0
+#define kNtNspNotifyHwnd        1
+#define kNtNspNotifyEvent       2
+#define kNtNspNotifyPort        3
+#define kNtNspNotifyApc         4
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define kNtWsaidAcceptex                             \
-  {                                                  \
-    0xB5367DF1, 0xCBAC, 0x11CF, {                    \
-      0x95, 0xCA, 0x00, 0x80, 0x5F, 0x48, 0xA1, 0x92 \
-    }                                                \
-  }
-
-#define kNtWsaidConnectex                            \
-  {                                                  \
-    0x25A207B9, 0xDDF3, 0x4660, {                    \
-      0x8E, 0xE9, 0x76, 0xE5, 0x8C, 0x74, 0x06, 0x3E \
-    }                                                \
-  }
-
-#define kNtWsaidDisconnectex                         \
-  {                                                  \
-    0x7FDA2E11, 0x8630, 0x436F, {                    \
-      0xA0, 0x31, 0xF5, 0x36, 0xA6, 0xEE, 0xC1, 0x57 \
-    }                                                \
-  }
-
-#define kNtWsaidTransmitfile                         \
-  {                                                  \
-    0xB5367DF0, 0xCBAC, 0x11CF, {                    \
-      0x95, 0xCA, 0x00, 0x80, 0x5F, 0x48, 0xA1, 0x92 \
-    }                                                \
-  }
-
-enum NtWsaEComparator { COMP_EQUAL, COMP_NOTLESS };
-
-enum NtWsaCompletionType {
-  kNtNspNotifyImmediately = 0,
-  kNtNspNotifyHwnd,
-  kNtNspNotifyEvent,
-  kNtNspNotifyPort,
-  kNtNspNotifyApc,
-};
-
-struct timeval$nt {
+struct NtTimeval {
   int32_t tv_sec; /* [sic] */
   int32_t tv_usec;
 };
 
-struct iovec$nt {
+struct NtIovec {
   uint32_t len;
   char *buf;
 };
 
-struct msghdr$nt {
+struct NtMsgHdr {
   struct sockaddr *name;
   int32_t namelen;
-  struct iovec$nt *lpBuffers;
+  struct NtIovec *lpBuffers;
   uint32_t dwBufferCount;
-  struct iovec$nt Control;
+  struct NtIovec Control;
   uint32_t dwFlags;
 };
 
@@ -223,12 +194,12 @@ struct NtFlowSpec {
 struct NtQos {
   struct NtFlowSpec SendingFlowspec;
   struct NtFlowSpec ReceivingFlowspec;
-  struct iovec$nt ProviderSpecific;
+  struct NtIovec ProviderSpecific;
 };
 
 struct NtWsaVersion {
   uint32_t dwVersion;
-  enum NtWsaEComparator ecHow;
+  int ecHow;
 };
 
 struct NtAfProtocols {
@@ -303,9 +274,9 @@ struct NtTransmitFileBuffers {
 };
 
 typedef int (*NtConditionProc)(
-    const struct iovec$nt *lpCallerId, const struct iovec$nt *lpCallerData,
+    const struct NtIovec *lpCallerId, const struct NtIovec *lpCallerData,
     struct NtQos *inout_lpSQOS, struct NtQos *inout_lpGQOS,
-    const struct iovec$nt *lpCalleeId, const struct iovec$nt *lpCalleeData,
+    const struct NtIovec *lpCalleeId, const struct NtIovec *lpCalleeData,
     uint32_t *out_group, const uint32_t *dwCallbackData);
 
 typedef void (*NtWsaOverlappedCompletionRoutine)(
@@ -313,7 +284,7 @@ typedef void (*NtWsaOverlappedCompletionRoutine)(
     const struct NtOverlapped *lpOverlapped, uint32_t dwFlags);
 
 struct NtWsaCompletion {
-  enum NtWsaCompletionType Type;
+  int Type;
   union {
     struct {
       int64_t hWnd;
@@ -333,6 +304,11 @@ struct NtWsaCompletion {
       uint32_t Key;
     } Port;
   } Parameters;
+};
+
+struct NtFdSet {
+  uint32_t fd_count;
+  int64_t fd_array[64];
 };
 
 /**
@@ -359,14 +335,16 @@ int __ioctlsocket$nt(uint64_t, int32_t, uint32_t *);
 int __listen$nt(uint64_t, int);
 int __setsockopt$nt(uint64_t, int, int, const void *, int);
 int __shutdown$nt(uint64_t, int);
+int __select$nt(int, struct NtFdSet *, struct NtFdSet *, struct NtFdSet *,
+                struct NtTimeval *);
 
 uint64_t WSASocket(int af, int type, int protocol,
                    const struct NtWsaProtocolInfo *opt_lpProtocolInfo,
                    const uint32_t opt_group, uint32_t dwFlags) nodiscard;
 
 int WSAConnect(uint64_t s, const struct sockaddr *name, const int namelen,
-               const struct iovec$nt *opt_lpCallerData,
-               struct iovec$nt *opt_out_lpCalleeData,
+               const struct NtIovec *opt_lpCallerData,
+               struct NtIovec *opt_out_lpCalleeData,
                const struct NtQos *opt_lpSQOS, const struct NtQos *opt_lpGQOS)
     paramsnonnull((2));
 
@@ -376,7 +354,7 @@ bool32 WSAConnectByName(uint64_t s, const char16_t *nodename,
                         struct sockaddr *out_LocalAddress,
                         uint32_t *opt_inout_RemoteAddressLength,
                         struct sockaddr *out_RemoteAddress,
-                        const struct timeval$nt *opt_timeout,
+                        const struct NtTimeval *opt_timeout,
                         struct NtOverlapped *__Reserved) paramsnonnull((2, 3));
 
 bool32 WSAConnectByList(uint64_t s,
@@ -385,7 +363,7 @@ bool32 WSAConnectByList(uint64_t s,
                         struct sockaddr *out_LocalAddress,
                         uint32_t *opt_inout_RemoteAddressLength,
                         struct sockaddr *out_RemoteAddress,
-                        const struct timeval$nt *opt_timeout,
+                        const struct NtTimeval *opt_timeout,
                         struct NtOverlapped *__Reserved) paramsnonnull((2));
 
 int64_t WSAAccept(uint64_t s, struct sockaddr *out_addr,
@@ -394,19 +372,19 @@ int64_t WSAAccept(uint64_t s, struct sockaddr *out_addr,
                   const uint32_t *opt_dwCallbackData)
     paramsnonnull((2)) nodiscard;
 
-int WSASend(uint64_t s, const struct iovec$nt *lpBuffers,
-            uint32_t dwBufferCount, uint32_t *opt_out_lpNumberOfBytesSent,
-            uint32_t dwFlags, struct NtOverlapped *opt_inout_lpOverlapped,
+int WSASend(uint64_t s, const struct NtIovec *lpBuffers, uint32_t dwBufferCount,
+            uint32_t *opt_out_lpNumberOfBytesSent, uint32_t dwFlags,
+            struct NtOverlapped *opt_inout_lpOverlapped,
             const NtWsaOverlappedCompletionRoutine opt_lpCompletionRoutine)
     paramsnonnull((2));
 
-int WSASendMsg(int64_t Handle, const struct msghdr$nt *lpMsg, uint32_t dwFlags,
+int WSASendMsg(int64_t Handle, const struct NtMsgHdr *lpMsg, uint32_t dwFlags,
                uint32_t *opt_out_lpNumberOfBytesSent,
                struct NtOverlapped *opt_inout_lpOverlapped,
                const NtWsaOverlappedCompletionRoutine opt_lpCompletionRoutine)
     paramsnonnull((2));
 
-int WSASendTo(uint64_t s, const struct iovec$nt *lpBuffers,
+int WSASendTo(uint64_t s, const struct NtIovec *lpBuffers,
               uint32_t dwBufferCount,
               uint32_t *opt_out_lpNumberOfBytesSent /* opt if !overlapped */,
               uint32_t dwFlags, const void *opt_tosockaddr,
@@ -418,14 +396,14 @@ int WSASendTo(uint64_t s, const struct iovec$nt *lpBuffers,
 int WSAPoll(struct pollfd$nt *inout_fdArray, uint32_t nfds, signed timeout_ms)
     paramsnonnull();
 
-int WSARecv(uint64_t s, const struct iovec$nt *out_lpBuffers,
+int WSARecv(uint64_t s, const struct NtIovec *out_lpBuffers,
             uint32_t dwBufferCount, uint32_t *opt_out_lpNumberOfBytesRecvd,
             uint32_t *inout_lpFlags,
             struct NtOverlapped *opt_inout_lpOverlapped,
             const NtWsaOverlappedCompletionRoutine opt_lpCompletionRoutine)
     paramsnonnull((2, 5));
 
-int WSARecvFrom(uint64_t s, const struct iovec$nt *out_lpBuffers,
+int WSARecvFrom(uint64_t s, const struct NtIovec *out_lpBuffers,
                 uint32_t dwBufferCount, uint32_t *opt_out_lpNumberOfBytesRecvd,
                 uint32_t *inout_lpFlags, void *out_fromsockaddr,
                 uint32_t *inout_fromsockaddrlen,
@@ -434,7 +412,7 @@ int WSARecvFrom(uint64_t s, const struct iovec$nt *out_lpBuffers,
     paramsnonnull((2, 5, 6, 7));
 
 int WSARecvDisconnect(uint64_t s,
-                      const struct iovec$nt *opt_lpInboundDisconnectData);
+                      const struct NtIovec *opt_lpInboundDisconnectData);
 
 int WSADuplicateSocket(uint64_t s, uint32_t dwProcessId,
                        struct NtWsaProtocolInfo *out_lpProtocolInfo)
@@ -445,7 +423,7 @@ int WSAIoctl(uint64_t s, uint32_t dwIoControlCode, const void *lpvInBuffer,
              uint32_t *out_lpcbBytesReturned,
              struct NtOverlapped *opt_inout_lpOverlapped,
              const NtWsaOverlappedCompletionRoutine opt_lpCompletionRoutine)
-    paramsnonnull((3, 5, 7));
+    paramsnonnull((5, 7));
 
 int WSANSPIoctl(int64_t hLookup, uint32_t dwControlCode,
                 const void *lpvInBuffer, uint32_t cbInBuffer,
@@ -479,12 +457,12 @@ int WSAEnumProtocols(const int32_t *opt_lpiProtocols,
                      struct NtWsaProtocolInfo *out_lpProtocolBuffer,
                      uint32_t *inout_lpdwBufferLength) paramsnonnull();
 
-bool32 WSAGetQOSByName(uint64_t s, const struct iovec$nt *lpQOSName,
+bool32 WSAGetQOSByName(uint64_t s, const struct NtIovec *lpQOSName,
                        struct NtQos *out_lpQOS) paramsnonnull();
 
 uint64_t WSAJoinLeaf(uint64_t s, const struct sockaddr *name, const int namelen,
-                     const struct iovec$nt *opt_lpCallerData,
-                     struct iovec$nt *opt_out_lpCalleeData,
+                     const struct NtIovec *opt_lpCallerData,
+                     struct NtIovec *opt_out_lpCalleeData,
                      const struct NtQos *opt_lpSQOS,
                      const struct NtQos *opt_lpGQOS, uint32_t dwFlags)
     paramsnonnull((2, 4));

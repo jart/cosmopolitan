@@ -33,6 +33,6 @@ textwindows int chdir$nt(const char *path) {
   if (SetCurrentDirectory(path16)) {
     return 0;
   } else {
-    return winerr();
+    return __winerr();
   }
 }

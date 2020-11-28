@@ -24,7 +24,7 @@
 /**
  * Error return path for winsock wrappers.
  */
-textwindows int64_t winsockerr(void) {
-  errno = WSAGetLastError();
+textwindows int64_t __winsockerr(void) {
+  errno = MapDosErrorToErrno(WSAGetLastError());
   return -1;
 }

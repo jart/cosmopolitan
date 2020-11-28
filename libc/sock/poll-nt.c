@@ -21,6 +21,7 @@
 #include "libc/nt/struct/pollfd.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/yoink.inc"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/errfuns.h"
 
@@ -30,7 +31,7 @@ textwindows int poll$nt(struct pollfd *fds, uint64_t nfds, int32_t timeout_ms) {
   struct pollfd$nt ntfds[64];
   if (nfds > 64) return einval();
   for (i = 0; i < nfds; ++i) {
-    if (!isfdkind(fds[i].fd, kFdSocket)) return ebadf();
+    if (!__isfdkind(fds[i].fd, kFdSocket)) return ebadf();
     ntfds[i].handle = g_fds.p[fds[i].fd].handle;
     ntfds[i].events = fds[i].events & (POLLPRI | POLLIN | POLLOUT);
   }
@@ -40,6 +41,6 @@ textwindows int poll$nt(struct pollfd *fds, uint64_t nfds, int32_t timeout_ms) {
     }
     return got;
   } else {
-    return winsockerr();
+    return __winsockerr();
   }
 }

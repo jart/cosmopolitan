@@ -33,12 +33,22 @@ void InitializeFileDescriptors(void) {
   pushmov(&fds->f, 3ul);
   pushmov(&fds->n, ARRAYLEN(fds->__init_p));
   fds->p = fds->__init_p;
-  fds->__init_p[STDIN_FILENO].kind = pushpop(kFdFile);
-  fds->__init_p[STDOUT_FILENO].kind = pushpop(kFdFile);
-  fds->__init_p[STDERR_FILENO].kind = pushpop(kFdFile);
-  fds->__init_p[STDIN_FILENO].handle = GetStdHandle(pushpop(kNtStdInputHandle));
-  fds->__init_p[STDOUT_FILENO].handle =
-      GetStdHandle(pushpop(kNtStdOutputHandle));
-  fds->__init_p[STDERR_FILENO].handle =
-      GetStdHandle(pushpop(kNtStdErrorHandle));
+  if (!IsMetal()) {
+    fds->__init_p[STDIN_FILENO].kind = pushpop(kFdFile);
+    fds->__init_p[STDOUT_FILENO].kind = pushpop(kFdFile);
+    fds->__init_p[STDERR_FILENO].kind = pushpop(kFdFile);
+    fds->__init_p[STDIN_FILENO].handle =
+        GetStdHandle(pushpop(kNtStdInputHandle));
+    fds->__init_p[STDOUT_FILENO].handle =
+        GetStdHandle(pushpop(kNtStdOutputHandle));
+    fds->__init_p[STDERR_FILENO].handle =
+        GetStdHandle(pushpop(kNtStdErrorHandle));
+  } else {
+    fds->__init_p[STDIN_FILENO].kind = pushpop(kFdSerial);
+    fds->__init_p[STDOUT_FILENO].kind = pushpop(kFdSerial);
+    fds->__init_p[STDERR_FILENO].kind = pushpop(kFdSerial);
+    fds->__init_p[STDIN_FILENO].handle = 0x3F8;
+    fds->__init_p[STDOUT_FILENO].handle = 0x3F8;
+    fds->__init_p[STDERR_FILENO].handle = 0x3F8;
+  }
 }

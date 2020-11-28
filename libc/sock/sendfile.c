@@ -31,7 +31,8 @@ static textwindows ssize_t sendfile$linux2nt(int outfd, int infd,
                                              size_t uptobytes) {
   struct NtOverlapped Overlapped;
   struct NtOverlapped *lpOverlapped;
-  if (!isfdkind(outfd, kFdSocket) || !isfdkind(outfd, kFdFile)) return ebadf();
+  if (!__isfdkind(outfd, kFdSocket) || !__isfdkind(outfd, kFdFile))
+    return ebadf();
   if (inout_opt_inoffset) {
     memset(&Overlapped, 0, sizeof(Overlapped));
     Overlapped.Pointer = (void *)(intptr_t)(*inout_opt_inoffset);
@@ -44,7 +45,7 @@ static textwindows ssize_t sendfile$linux2nt(int outfd, int infd,
                    lpOverlapped, NULL, 0)) {
     return uptobytes;
   } else {
-    return winsockerr();
+    return __winsockerr();
   }
 }
 

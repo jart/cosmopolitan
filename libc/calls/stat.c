@@ -24,7 +24,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.h"
+#include "libc/zipos/zipos.internal.h"
 
 /**
  * Returns information about thing.

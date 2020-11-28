@@ -130,24 +130,20 @@ static void DrawSphere(long double k, long double ambient) {
 int main() {
   long double ang;
   struct termios old;
-  if (cancolor()) {
-    WRITE("\e[?25l");
-    if (!setjmp(jb_)) {
-      xsigaction(SIGINT, OnCtrlC, 0, 0, NULL);
-      ang = 0;
-      for (;;) {
-        WRITE("\e[H");
-        light_[1] = cosl(ang * 2);
-        sincosl(ang, &light_[0], &light_[2]);
-        Normalize(light_);
-        ang += .05L;
-        DrawSphere(1.5L, .01L);
-        usleep(1.L / FRAMERATE * 1e6);
-      }
+  WRITE("\e[?25l");
+  if (!setjmp(jb_)) {
+    xsigaction(SIGINT, OnCtrlC, 0, 0, NULL);
+    ang = 0;
+    for (;;) {
+      WRITE("\e[H");
+      light_[1] = cosl(ang * 2);
+      sincosl(ang, &light_[0], &light_[2]);
+      Normalize(light_);
+      ang += .05L;
+      DrawSphere(1.5L, .01L);
+      usleep(1.L / FRAMERATE * 1e6);
     }
-    WRITE("\e[0m\e[H\e[J\e[?25h");
-    return 0;
-  } else {
-    return 1;
   }
+  WRITE("\e[0m\e[H\e[J\e[?25h");
+  return 0;
 }

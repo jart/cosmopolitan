@@ -316,7 +316,7 @@ COSMOPOLITAN_HEADERS =		\
 
 o/$(MODE)/cosmopolitan.a: $(filter-out o/libc/stubs/exit11.o,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_OBJS)))
 o/cosmopolitan.h:				\
-		o/$(MODE)/tool/build/rollup.com.dbg	\
+		o/$(MODE)/tool/build/rollup.com	\
 		libc/integral/normalize.inc	\
 		$(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS))
 	@ACTION=ROLLUP TARGET=$@ build/do $^ >$@

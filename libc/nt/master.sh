@@ -2682,7 +2682,7 @@ imp	'GetThreadTimes'					GetThreadTimes						KernelBase	777	5
 imp	'GetThreadUILanguage'					GetThreadUILanguage					KernelBase	778
 imp	'GetThreadWaitChain'					GetThreadWaitChain					advapi32	1369
 imp	'GetTickCount'						GetTickCount						KernelBase	779
-imp	'GetTickCount64'					GetTickCount64						KernelBase	780
+imp	'GetTickCount64'					GetTickCount64						KernelBase	780	0
 imp	'GetTimeFormatA'					GetTimeFormatA						KernelBase	781
 imp	'GetTimeFormatAWorker'					GetTimeFormatAWorker					kernel32	782
 imp	'GetTimeFormatEx'					GetTimeFormatEx						KernelBase	782
@@ -3587,7 +3587,7 @@ imp	'NtAssociateWaitCompletionPacket'			NtAssociateWaitCompletionPacket				ntdll
 imp	'NtCallEnclave'						NtCallEnclave						ntdll		249
 imp	'NtCallbackReturn'					NtCallbackReturn					ntdll		250	3
 imp	'NtCancelIoFile'					NtCancelIoFile						ntdll		251	2
-imp	'NtCancelIoFileEx'					NtCancelIoFileEx					ntdll		252
+imp	'NtCancelIoFileEx'					NtCancelIoFileEx					ntdll		252	3
 imp	'NtCancelSynchronousIoFile'				NtCancelSynchronousIoFile				ntdll		253
 imp	'NtCancelTimer'						NtCancelTimer						ntdll		254
 imp	'NtCancelTimer2'					NtCancelTimer2						ntdll		255
@@ -3622,7 +3622,7 @@ imp	'NtCreateJobObject'					NtCreateJobObject					ntdll		283
 imp	'NtCreateJobSet'					NtCreateJobSet						ntdll		284
 imp	'NtCreateKey'						NtCreateKey						ntdll		285	7
 imp	'NtCreateKeyTransacted'					NtCreateKeyTransacted					ntdll		286
-imp	'NtCreateKeyedEvent'					NtCreateKeyedEvent					ntdll		287
+imp	'NtCreateKeyedEvent'					NtCreateKeyedEvent					ntdll		287	4
 imp	'NtCreateLowBoxToken'					NtCreateLowBoxToken					ntdll		288
 imp	'NtCreateMailslotFile'					NtCreateMailslotFile					ntdll		289
 imp	'NtCreateMutant'					NtCreateMutant						ntdll		290
@@ -3862,7 +3862,7 @@ imp	'NtRecoverResourceManager'				NtRecoverResourceManager				ntdll		523
 imp	'NtRecoverTransactionManager'				NtRecoverTransactionManager				ntdll		524
 imp	'NtRegisterProtocolAddressInformation'			NtRegisterProtocolAddressInformation			ntdll		525
 imp	'NtRegisterThreadTerminatePort'				NtRegisterThreadTerminatePort				ntdll		526
-imp	'NtReleaseKeyedEvent'					NtReleaseKeyedEvent					ntdll		527
+imp	'NtReleaseKeyedEvent'					NtReleaseKeyedEvent					ntdll		527	4
 imp	'NtReleaseMutant'					NtReleaseMutant						ntdll		528
 imp	'NtReleaseSemaphore'					NtReleaseSemaphore					ntdll		529
 imp	'NtReleaseWorkerFactoryWorker'				NtReleaseWorkerFactoryWorker				ntdll		530
@@ -3983,7 +3983,7 @@ imp	'NtVdm64CreateProcessInternal'				NtVdm64CreateProcessInternalW				kernel32	
 imp	'NtVdmControl'						NtVdmControl						ntdll		644
 imp	'NtWaitForAlertByThreadId'				NtWaitForAlertByThreadId				ntdll		645
 imp	'NtWaitForDebugEvent'					NtWaitForDebugEvent					ntdll		646
-imp	'NtWaitForKeyedEvent'					NtWaitForKeyedEvent					ntdll		647
+imp	'NtWaitForKeyedEvent'					NtWaitForKeyedEvent					ntdll		647	4
 imp	'NtWaitForMultipleObjects'				NtWaitForMultipleObjects				ntdll		648
 imp	'NtWaitForMultipleObjects32'				NtWaitForMultipleObjects32				ntdll		649
 imp	'NtWaitForSingleObject'					NtWaitForSingleObject					ntdll		650	3
@@ -5338,7 +5338,7 @@ imp	'RtlNewSecurityObjectWithMultipleInheritance'		RtlNewSecurityObjectWithMulti
 imp	'RtlNormalizeProcessParams'				RtlNormalizeProcessParams				ntdll		1244
 imp	'RtlNormalizeString'					RtlNormalizeString					ntdll		1245
 imp	'RtlNtPathNameToDosPathName'				RtlNtPathNameToDosPathName				ntdll		1246
-imp	'RtlNtStatusToDosError'					RtlNtStatusToDosError					ntdll		1247
+imp	'RtlNtStatusToDosError'					RtlNtStatusToDosError					ntdll		1247	1
 imp	'RtlNtStatusToDosErrorNoTeb'				RtlNtStatusToDosErrorNoTeb				ntdll		1248
 imp	'RtlNtdllName'						RtlNtdllName						ntdll		1249
 imp	'RtlNumberGenericTableElements'				RtlNumberGenericTableElements				ntdll		1250
@@ -7881,7 +7881,7 @@ imp	'qsort$nt'						qsort							ntdll		2294
 imp	'qsort_s$nt'						qsort_s							ntdll		2295
 imp	'recv$nt'						recv							ws2_32		16
 imp	'__recvfrom$nt'						recvfrom						ws2_32		17
-imp	'select$nt'						select							ws2_32		18
+imp	'__select$nt'						select							ws2_32		18	5
 imp	'semDxTrimNotification'					semDxTrimNotification					gdi32		1965
 imp	'send$nt'						send							ws2_32		19
 imp	'__sendto$nt'						sendto							ws2_32		20
@@ -7970,3 +7970,19 @@ imp	'wsprintfA'						wsprintfA						user32		2596
 imp	'wsprintf'						wsprintfW						user32		2601
 imp	'wvsprintfA'						wvsprintfA						user32		2602
 imp	'wvsprintf'						wvsprintfW						user32		2603
+
+imp	'InitializeCriticalSection'				InitializeCriticalSection				KernelBase	0	1
+imp	'EnterCriticalSection'					EnterCriticalSection					KernelBase	0	1
+imp	'LeaveCriticalSection'					LeaveCriticalSection					KernelBase	0	1
+imp	'TryEnterCriticalSection'				TryEnterCriticalSection					KernelBase	0	1
+imp	'DeleteCriticalSection'					DeleteCriticalSection					KernelBase	0	1
+imp	'InitializeCriticalSectionAndSpinCount'			InitializeCriticalSectionAndSpinCount			KernelBase	0	2
+imp	'SetCriticalSectionSpinCount'				SetCriticalSectionSpinCount				KernelBase	0	2
+
+imp	'InitializeSRWLock'					InitializeSRWLock					KernelBase	1128	1
+imp	'AcquireSRWLockExclusive'				AcquireSRWLockExclusive					KernelBase	683	1
+imp	'AcquireSRWLockShared'					AcquireSRWLockShared					KernelBase	684	1
+imp	'ReleaseSRWLockExclusive'				ReleaseSRWLockExclusive					KernelBase	1341	1
+imp	'ReleaseSRWLockShared'					ReleaseSRWLockShared					KernelBase	1342	1
+imp	'TryAcquireSRWLockExclusive'				TryAcquireSRWLockExclusive				KernelBase	1467	1
+imp	'TryAcquireSRWLockShared'				TryAcquireSRWLockShared					KernelBase	1468	1

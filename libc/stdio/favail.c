@@ -19,6 +19,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
 
+/* TODO(jart): Delete or rework */
+
 /**
  * Returns number of bytes available in stream buffer.
  */

@@ -23,18 +23,20 @@
 #include "libc/mem/mem.h"
 #include "libc/sysv/errfuns.h"
 
-int growfds(void) {
+int __ensurefds(int fd) {
   size_t i, n;
   struct Fd *p;
+  if (fd < g_fds.n) return fd;
   if (weaken(realloc)) {
-    if ((p = weaken(realloc)(g_fds.p != g_fds.__init_p ? g_fds.p : NULL,
-                             (n = (i = g_fds.n) << 1) * sizeof(*p)))) {
+    if ((p = weaken(realloc)(
+             g_fds.p != g_fds.__init_p ? g_fds.p : NULL,
+             (n = MAX(fd + 1, (i = g_fds.n) << 1)) * sizeof(*p)))) {
       do {
         p[i++].kind = kFdEmpty;
       } while (i < n);
       g_fds.p = p;
       g_fds.n = n;
-      return 0;
+      return fd;
     } else {
       return enomem();
     }

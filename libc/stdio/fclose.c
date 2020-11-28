@@ -37,10 +37,12 @@
  */
 int fclose(FILE *f) {
   int rc;
-  if (!f) return 0; /* good java behavior; glibc crashes */
+  if (!f) return 0;
   _fflushunregister(f);
   fflush(f);
-  free_s(&f->buf);
+  if (!f->nofree) {
+    free_s(&f->buf);
+  }
   f->state = EOF;
   if (f->noclose) {
     f->fd = -1;

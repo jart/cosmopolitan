@@ -31,7 +31,7 @@ static textwindows noinline int mkdir$nt(const char *path, uint32_t mode) {
   if (CreateDirectory(path16, NULL)) {
     return 0;
   } else {
-    return winerr();
+    return __winerr();
   }
 }
 

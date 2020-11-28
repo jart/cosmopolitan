@@ -37,7 +37,7 @@
 int listen(int fd, int backlog) {
   if (!IsWindows()) {
     return listen$sysv(fd, backlog);
-  } else if (isfdkind(fd, kFdSocket)) {
+  } else if (__isfdkind(fd, kFdSocket)) {
     return listen$nt(&g_fds.p[fd], backlog);
   } else {
     return ebadf();

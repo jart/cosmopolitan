@@ -24,11 +24,10 @@
 
 textwindows int pipe$nt(int pipefd[2], unsigned flags) {
   int reader, writer;
-  if ((reader = createfd()) == -1) return -1;
-  if ((writer = createfd()) == -1) return -1;
+  if ((reader = __getemptyfd()) == -1) return -1;
+  if ((writer = __getemptyfd()) == -1) return -1;
   if (CreatePipe(&g_fds.p[reader].handle, &g_fds.p[writer].handle,
-                 (flags & O_CLOEXEC) ? NULL : &kNtIsInheritable,
-                 0 /* let NT pick buffer size */)) {
+                 &kNtIsInheritable, 0)) {
     g_fds.p[reader].kind = kFdFile;
     g_fds.p[reader].flags = flags;
     g_fds.p[writer].kind = kFdFile;
@@ -37,6 +36,6 @@ textwindows int pipe$nt(int pipefd[2], unsigned flags) {
     pipefd[1] = writer;
     return 0;
   } else {
-    return winerr();
+    return __winerr();
   }
 }

@@ -1,0 +1,7 @@
+#ifndef COSMOPOLITAN_LIBC_NT_ENUM_SIO_H_
+#define COSMOPOLITAN_LIBC_NT_ENUM_SIO_H_
+
+#define kNtSioBspHandlePoll 0x4800001D
+#define kNtSioBaseHandle    0x48000022
+
+#endif /* COSMOPOLITAN_LIBC_NT_ENUM_SIO_H_ */

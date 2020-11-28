@@ -24,7 +24,7 @@
 
 textwindows int close$nt(int fd) {
   bool32 ok;
-  if (isfdopen(fd)) {
+  if (__isfdopen(fd)) {
     if (g_fds.p[fd].kind == kFdFile) {
       /*
        * Like Linux, closing a file on Windows doesn't guarantee it's
@@ -37,8 +37,8 @@ textwindows int close$nt(int fd) {
     if (g_fds.p[fd].kind == kFdConsole) {
       ok &= CloseHandle(g_fds.p[fd].extra);
     }
-    removefd(fd);
-    return ok ? 0 : winerr();
+    __removefd(fd);
+    return ok ? 0 : __winerr();
   } else {
     return ebadf();
   }

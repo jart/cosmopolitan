@@ -78,7 +78,7 @@ textwindows int ntspawn(
                       opt_out_lpProcessInformation)) {
       rc = 0;
     } else {
-      rc = winerr();
+      rc = __winerr();
     }
   } else {
     rc = -1;

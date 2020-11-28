@@ -20,6 +20,7 @@
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/yoink.inc"
 
 /**
  * Performs recv(), recvfrom(), or readv() on Windows NT.
@@ -32,12 +33,12 @@ textwindows ssize_t recvfrom$nt(struct Fd *fd, const struct iovec *iov,
                                 void *opt_out_srcaddr,
                                 uint32_t *opt_inout_srcaddrsize) {
   uint32_t got;
-  struct iovec$nt iovnt[16];
+  struct NtIovec iovnt[16];
   got = 0;
   if (WSARecvFrom(fd->handle, iovnt, iovec2nt(iovnt, iov, iovlen), &got, &flags,
                   opt_out_srcaddr, opt_inout_srcaddrsize, NULL, NULL) != -1) {
     return got;
   } else {
-    return winsockerr();
+    return __winsockerr();
   }
 }

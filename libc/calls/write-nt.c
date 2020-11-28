@@ -46,6 +46,6 @@ textwindows ssize_t write$nt(struct Fd *fd, const struct iovec *iov,
     FlushFileBuffers(fd->handle);
     return wrote;
   } else {
-    return winerr();
+    return __winerr();
   }
 }

@@ -23,7 +23,7 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.h"
+#include "libc/zipos/zipos.internal.h"
 
 /**
  * Reads data to multiple buffers.
@@ -31,19 +31,19 @@
  * @return number of bytes actually read, or -1 w/ errno
  */
 ssize_t readv(int fd, const struct iovec *iov, int iovlen) {
-  if (!IsTrustworthy()) {
-    if (fd == -1) return einval();
-    if (iovlen < 0) return einval();
-  }
-  if (isfdkind(fd, kFdZip)) {
+  if (fd < 0) return einval();
+  if (iovlen < 0) return einval();
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     return weaken(__zipos_read)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, iov, iovlen, -1);
-  }
-  if (!IsWindows()) {
+  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdSerial) {
+    return readv$serial(&g_fds.p[fd], iov, iovlen);
+  } else if (!IsWindows()) {
     return readv$sysv(fd, iov, iovlen);
-  } else if (isfdkind(fd, kFdFile) || isfdkind(fd, kFdConsole)) {
+  } else if (fd < g_fds.n &&
+             (g_fds.p[fd].kind == kFdFile || g_fds.p[fd].kind == kFdConsole)) {
     return read$nt(&g_fds.p[fd], iov, iovlen, -1);
-  } else if (isfdkind(fd, kFdSocket)) {
+  } else if (fd < g_fds.n && (g_fds.p[fd].kind == kFdSocket)) {
     return weaken(recvfrom$nt)(&g_fds.p[fd], iov, iovlen, 0, NULL, 0);
   } else {
     return ebadf();

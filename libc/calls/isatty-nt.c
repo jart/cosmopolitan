@@ -23,6 +23,6 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows bool32 isatty$nt(int fd) {
-  if (!isfdkind(fd, kFdFile)) return ebadf();
+  if (!__isfdkind(fd, kFdFile)) return ebadf();
   return GetFileType(g_fds.p[fd].handle) == kNtFileTypeChar;
 }

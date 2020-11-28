@@ -1,5 +1,5 @@
 .include "o/libc/nt/codegen.inc"
-.imp	KernelBase,__imp_InitializeCriticalSectionAndSpinCount,InitializeCriticalSectionAndSpinCount,856
+.imp	KernelBase,__imp_InitializeCriticalSectionAndSpinCount,InitializeCriticalSectionAndSpinCount,0
 
 	.text.windows
 InitializeCriticalSectionAndSpinCount:

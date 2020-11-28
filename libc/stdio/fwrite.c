@@ -37,7 +37,7 @@ size_t fwrite(const void *data, size_t stride, size_t count, FILE *f) {
       if (!(i % stride)) {
         return i / stride;
       } else {
-        return fseterr(f, EOVERFLOW);
+        return __fseterr(f, EOVERFLOW);
       }
     }
   }

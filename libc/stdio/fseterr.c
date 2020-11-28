@@ -21,7 +21,7 @@
 #include "libc/errno.h"
 #include "libc/stdio/internal.h"
 
-long fseterr(FILE *f, int err) {
+long __fseterr(FILE *f, int err) {
   if (!err) err = -1;
   f->state = f->state <= 0 ? err : f->state;
   if (err > 0) errno = err;

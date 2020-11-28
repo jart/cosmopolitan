@@ -22,7 +22,6 @@
 #include "libc/macros.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/select.internal.h"
 
 int nanosleep$xnu(const struct timespec *req, struct timespec *rem) {
   long millis;

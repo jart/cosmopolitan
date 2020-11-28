@@ -41,6 +41,6 @@ textwindows int stat$nt(const char *path, struct stat *st) {
     CloseHandle(fh);
     return rc;
   } else {
-    return winerr();
+    return __winerr();
   }
 }

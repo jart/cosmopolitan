@@ -33,7 +33,7 @@ textwindows int ioctl$tiocgwinsz$nt(int fd, struct winsize *ws) {
   struct NtConsoleScreenBufferInfoEx sbinfo;
   fds[0] = fd, fds[1] = 1, fds[2] = 0;
   for (i = 0; i < ARRAYLEN(fds); ++i) {
-    if (isfdkind(fds[i], kFdFile) || isfdkind(fds[i], kFdConsole)) {
+    if (__isfdkind(fds[i], kFdFile) || __isfdkind(fds[i], kFdConsole)) {
       if (GetConsoleMode(g_fds.p[fds[i]].handle, &mode)) {
         memset(&sbinfo, 0, sizeof(sbinfo));
         sbinfo.cbSize = sizeof(sbinfo);
@@ -50,7 +50,7 @@ textwindows int ioctl$tiocgwinsz$nt(int fd, struct winsize *ws) {
           ws->ws_ypixel = 0;
           return 0;
         } else {
-          winerr();
+          __winerr();
         }
       } else {
         enotty();

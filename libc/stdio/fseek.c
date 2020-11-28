@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/o.h"
 
 /**
  * Repositions open file stream.
@@ -29,20 +30,32 @@
  * is in the EOF state, this function can be used to restore it without
  * needing to reopen the file.
  *
- * @param stream is a non-null stream handle
+ * @param f is a non-null stream handle
  * @param offset is the byte delta
  * @param whence can be SEET_SET, SEEK_CUR, or SEEK_END
  * @returns new offset or -1 on error
  */
-long fseek(FILE *stream, long offset, int whence) {
-  int skew = fflush(stream);
-  if (whence == SEEK_CUR && skew != -1) offset -= skew;
+long fseek(FILE *f, long offset, int whence) {
+  int skew;
   int64_t newpos;
-  if ((newpos = lseek(stream->fd, offset, whence)) != -1) {
-    stream->state = 0;
-    return newpos;
+  if (f->fd != -1) {
+    if (whence == SEEK_CUR && f->beg < f->end) {
+      offset -= f->end - f->beg;
+    }
+    if (f->beg && !f->end) {
+      f->writer(f);
+    }
+    if ((newpos = lseek(f->fd, offset, whence)) != -1) {
+      f->state = 0;
+      f->beg = 0;
+      f->end = 0;
+      return newpos;
+    } else {
+      f->state = errno == ESPIPE ? EBADF : errno;
+      return -1;
+    }
   } else {
-    stream->state = errno == ESPIPE ? EBADF : errno;
+    f->beg = offset % f->size;
     return -1;
   }
 }

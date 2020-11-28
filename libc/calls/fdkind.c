@@ -20,7 +20,7 @@
 #include "libc/calls/internal.h"
 
 enum FdKind fdkind(int fd) {
-  if (isfdindex(fd)) {
+  if (0 <= fd && fd <= g_fds.n) {
     return g_fds.p[fd].kind;
   } else {
     return kFdEmpty;

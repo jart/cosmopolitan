@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/nt/enum/pageflags.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.h"
@@ -26,26 +27,24 @@ textwindows struct DirectMap DirectMapNt(void *addr, size_t size, unsigned prot,
                                          unsigned flags, int fd, int64_t off) {
   int64_t handle;
   struct DirectMap res;
-  uint32_t protect, access;
   if (fd != -1) {
     handle = g_fds.p[fd].handle;
   } else {
     handle = kNtInvalidHandleValue;
   }
-  protect = prot2nt(prot, flags);
-  access = fprot2nt(prot, flags);
-  if ((res.maphandle =
-           CreateFileMappingNuma(handle, NULL, protect, size >> 32, size, NULL,
-                                 kNtNumaNoPreferredNode))) {
-    if (!(res.addr = MapViewOfFileExNuma(res.maphandle, access, off >> 32, off,
-                                         size, addr, kNtNumaNoPreferredNode))) {
+  if ((res.maphandle = CreateFileMappingNuma(
+           handle, NULL, kNtPageExecuteReadwrite, size >> 32, size, NULL,
+           kNtNumaNoPreferredNode))) {
+    if (!(res.addr = MapViewOfFileExNuma(res.maphandle, fprot2nt(prot, flags),
+                                         off >> 32, off, size, addr,
+                                         kNtNumaNoPreferredNode))) {
       CloseHandle(res.maphandle);
       res.maphandle = kNtInvalidHandleValue;
-      res.addr = (void *)(intptr_t)winerr();
+      res.addr = (void *)(intptr_t)__winerr();
     }
   } else {
     res.maphandle = kNtInvalidHandleValue;
-    res.addr = (void *)(intptr_t)winerr();
+    res.addr = (void *)(intptr_t)__winerr();
   }
   return res;
 }

@@ -114,8 +114,8 @@ static textwindows void NormalizeCmdExe(void) {
 
 static textwindows char *AllocateMemory(void *addr, size_t size, int64_t *h) {
   return MapViewOfFileExNuma(
-      (*h = CreateFileMappingNuma(-1, NULL, pushpop(kNtPageReadwrite), 0, size,
-                                  NULL, kNtNumaNoPreferredNode)),
+      (*h = CreateFileMappingNuma(-1, NULL, pushpop(kNtPageExecuteReadwrite), 0,
+                                  size, NULL, kNtNumaNoPreferredNode)),
       kNtFileMapRead | kNtFileMapWrite, 0, 0, size, addr,
       kNtNumaNoPreferredNode);
 }

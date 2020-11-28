@@ -86,7 +86,7 @@ FILE *freopen(const char *pathname, const char *mode, FILE *stream) {
               kNtFileAttributeNormal)) {
         return stream;
       } else {
-        winerr();
+        __winerr();
         return NULL;
       }
     }

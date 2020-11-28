@@ -21,16 +21,17 @@
 #include "libc/calls/internal.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/yoink.inc"
 #include "libc/sysv/errfuns.h"
 
 textwindows int closesocket$nt(int fd) {
   int rc;
-  if (!isfdkind(fd, kFdSocket)) return ebadf();
+  if (!__isfdkind(fd, kFdSocket)) return ebadf();
   if (__closesocket$nt(g_fds.p[fd].handle) != -1) {
     rc = 0;
   } else {
-    rc = winsockerr();
+    rc = __winsockerr();
   }
-  removefd(fd);
+  __removefd(fd);
   return rc;
 }

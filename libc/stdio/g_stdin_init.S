@@ -31,10 +31,8 @@
 	ezlea	g_stdin_buf,cx
 	mov	%rcx,24(%rax)			#→ f.buf
 	movl	$BUFSIZ,32(%rax)		#→ f.size
-	ezlea	freadbuf,cx
-	ezlea	fsreadbuf,dx
-	testb	IsMetal()
-	cmove	%rcx,%rdx
+	ezlea	__freadbuf,cx
+	mov	%rcx,%rdx
 	mov	%rdx,40(%rax)			#→ f.reader
 	mov	%rax,stdin(%rip)
 	.init.end 400,_init_g_stdin,globl,hidden

@@ -46,6 +46,6 @@ textwindows int getpriority$nt(int ignored) {
     }
     abort();
   } else {
-    return winerr();
+    return __winerr();
   }
 }

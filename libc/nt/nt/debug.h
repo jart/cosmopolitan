@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_NT_NT_DEBUG_H_
 #define COSMOPOLITAN_LIBC_NT_NT_DEBUG_H_
 #include "libc/nt/enum/status.h"
+#include "libc/nt/struct/context.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*                            ░░░░
@@ -31,8 +32,6 @@ COSMOPOLITAN_C_START_
      the operating system and subject to change from one release of
      Windows to the next, and possibly even between service packs for
      each release.” ──Quoth MSDN */
-
-struct NtContext;
 
 NtStatus NtContinue(struct NtContext *Context, int32_t TestAlert);
 

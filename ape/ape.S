@@ -34,7 +34,6 @@
 │ αcτµαlly pδrταblε εxεcµταblε § program header                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/config.h"
-#include "ape/lib/apm.h"
 #include "ape/lib/pc.h"
 #include "ape/macros.h"
 #include "ape/notice.inc"
@@ -49,7 +48,7 @@
 
 #define USE_SYMBOL_HACK 0
 
-	.source	"NOTICE"
+	.source	"LICENSE"
 	.source	"ape/ape.S"
 	.source	"ape/ape.lds"
 	.section .text,"ax",@progbits
@@ -360,84 +359,8 @@ pcread:	push	%ax
 	xor	%ax,%ax			# try disk reset on error
 	int	$0x13
 	pop	%ax
-	jmp	1b
+	jmp	pcread
 	.endfn	pcread
-
-/	Waits for serial lines to become idle.
-/
-/	@param	di short array of serial ports (0 means not present)
-/	@param	si number of items in array
-/	@mode	long,legacy,real
-sflush:	mov	%si,%cx
-	mov	%di,%si
-	xor	%dx,%dx
-0:	lodsb
-	mov	%al,%dl
-	lodsb
-	mov	%al,%dh
-	test	%ax,%ax
-	jz	2f
-	add	$UART_LSR,%dx
-	mov	$UART_TTYIDL,%ah
-1:	in	%dx,%al
-	and	%ah,%al
-	rep
-	nop
-	jz	1b
-	loop	0b
-2:	ret
-	.endfn	sflush,globl
-
-/	Transmits byte over serial line.
-/
-/	This is both blocking and asynchronous.
-/
-/	@param	di character to send
-/	@param	si serial port
-/	@mode	long,legacy,real
-/	@see	ttytxr
-sputc:	push	%ax
-	push	%cx
-	push	%dx
-	mov	%si,%dx
-	add	$UART_LSR,%dx
-	mov	$UART_TTYTXR,%ah
-1:	in	%dx,%al
-	and	%ah,%al
-	jnz	2f
-	rep
-	nop
-	jmp	1b
-2:	mov	%di,%ax
-	mov	%si,%dx
-	out	%al,%dx
-	pop	%dx
-	pop	%cx
-	pop	%ax
-	ret
-	.endfn	sputc,globl
-
-/	Shuts down personal computer.
-/
-/	@mode	real
-/	@noreturn
-apmoff:	mov	$0x5300,%ax		# apm installation check
-	xor	%bx,%bx			# for the apm bios itself
-	int	$APM_SERVICE
-	jc	1f
-	cmp	$'P<<8|'M,%bx		# did apm bios service interrupt?
-	jne	1f
-	mov	$0x5301,%ax		# real mode interface connect
-	xor	%bx,%bx			# to apm bios device
-	int	$APM_SERVICE		# ignore errors e.g. already connected
-	xor	%bx,%bx
-	xor	%cx,%cx
-	mov	$0x5307,%ax		# set power state
-	mov	$1,%bl			# for all devices within my dominion
-	mov	$3,%cl			# to off
-	int	$APM_SERVICE
-1:	call	panic
-	.endfn	apmoff,globl
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ αcτµαlly pδrταblε εxεcµταblε § partition table                           ─╬─│┼
@@ -1156,115 +1079,41 @@ sinit:	mov	%di,%dx
 2:	ret
 	.endfn	sinit,global,hidden
 
-/	Abnormally exits program.
-/
-/	@param	di message
-/	@mode	real
-/	@noreturn
-rldie:	call	rlpute
-	call	rloff
-	.endfn	rldie,globl,hidden
-
-/	Shuts down machine.
-/
-/	@mode	real
-/	@noreturn
-rloff:	mov	$kBiosDataAreaXlm+COM1,%di
-	mov	$4,%si
-	call	sflush
-	call	apmoff
-	.endfn	rloff,globl,hidden
-
-/	Prints error message.
-/
-/	@param	di message
-/	@mode	real
-rlpute:	mov	kBiosDataAreaXlm+METAL_STDERR(%bx),%si
-	test	%si,%si
-	jnz	1f
-	mov	kBiosDataAreaXlm+METAL_STDOUT,%si
-1:	xor	%ax,%ax
-	push	%ax
-	push	%si
-	mov	$REAL(.Lstr.crlf),%ax
-	push	%ax
-	push	%si
-	push	%di
-	push	%si
-	mov	$REAL(.Lstr.error),%ax
-	push	%ax
-1:	pop	%di
-	test	%di,%di
-	jz	2f
-	pop	%si
-	call	rlput2
-	jmp	1b
-2:	ret
-	.endfn	rlpute,globl,hidden
-
-/	Prints string to both video and serial.
-/
-/	@param	di NUL-terminated string
-/	@param	si serial port
-/	@mode	real
-rlput2:	push	%di
-	push	%si
-	call	rvputs
-	pop	%si
-	pop	%di
-	test	%si,%si
-	jz	1f
-	call	sputs
-1:	ret
-	.endfn	rlput2,globl,hidden
-
-/	Writes string to serial line.
-/
-/	@param	di NUL-terminated string
-/	@param	si serial port
-/	@mode	long,legacy,real
-sputs:	push	%bx
-	mov	%di,%bx
-1:	xchg	%bx,%si
-	lodsb
-	xchg	%bx,%si
-	test	%al,%al
-	jz	2f
-	mov	%ax,%di
-	push	%si
-	rlcall	sputc
-	pop	%si
-	jmp	1b
-2:	pop	%bx
-	ret
-	.endfn	sputs,globl
-
 /	Video put string.
 /
 /	@param	di is the string
 /	@mode	real
-rvputs:	mov	%di,%si
+rvputs:	push	%bp
+	push	%bx
+	mov	%di,%si
 0:	lodsb
 	test	%al,%al
 	je	1f
-	rlcall	rvputc
-	jmp	0b
-1:	ret
-	.endfn	rvputs,globl,hidden
-
-/	Video put char.
-/
-/	@param	al is the char
-/	@mode	real
-rvputc:	push	%bx				# don't clobber bp,bx,di,si,cx
-	push	%bp				# original ibm pc scroll up bug
 	mov	$7,%bx				# normal mda/cga style page zero
 	mov	$0x0e,%ah			# teletype output al cp437
 	int	$0x10				# vidya service
-	pop	%bp				# preserves al
-	pop	%bx
+	jmp	0b
+1:	pop	%bx
+	pop	%bp
 	ret
-	.endfn	rvputc
+	.endfn	rvputs,globl,hidden
+
+/	Abnormally halts startup.
+/
+/	@param	di message
+/	@mode	real
+/	@noreturn
+rldie:	push	%di
+	mov	$REAL(.Lstr.error),%di
+	call	rvputs
+	pop	%di
+	call	rvputs
+	mov	$REAL(.Lstr.crlf),%di
+	call	rvputs
+	xor	%ax,%ax				# get keystroke
+	int	$0x16				# keyboard service
+	jmp	triplf
+	.endfn	rldie,globl,hidden
 
 /*                                                               █ █▒
                                                                █     █
@@ -1321,6 +1170,7 @@ longmodeloader:
 	jc	9f
 	call	unreal
 /	call	hiload
+	call	pinit
 	jmp	golong
 9:	mov	$REAL(.Lstr.e820),%ax
 	call	rldie
@@ -1568,7 +1418,6 @@ pinit:	push	%ds
 /	@see	Intel Manual V3A §4.1.2
 golong:	cli
 	lidt	XLM(BADIDT)
-	call	pinit
 	mov	%cr4,%eax
 	or	$CR4_PAE|CR4_PGE|CR4_OSFXSR,%eax
 	mov	%eax,%cr4

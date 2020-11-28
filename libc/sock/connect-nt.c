@@ -21,6 +21,7 @@
 #include "libc/calls/internal.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/yoink.inc"
 #include "libc/sysv/errfuns.h"
 
 textwindows int connect$nt(struct Fd *fd, const void *addr, uint32_t addrsize) {

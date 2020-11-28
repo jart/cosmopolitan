@@ -18,28 +18,21 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/nt/files.h"
-#include "libc/runtime/runtime.h"
 #include "libc/stdio/internal.h"
-#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
-/**
- * One-shot writes data from stream buffer to underlying file or device.
- *
- * @param f is a non-null open stream handle
- * @return number of bytes written or -1 on error
- */
-int fwritebuf(FILE *f) {
-  ssize_t put;
-  unsigned bytes;
-  bytes = (f->beg < f->end ? f->end : f->size) - f->beg;
-  if ((put = write(f->fd, &f->buf[f->beg], bytes)) == -1) {
+int __fwritebuf(FILE *f) {
+  ssize_t wrote;
+  if ((wrote = write(f->fd, f->buf, f->beg)) == -1) {
     if (errno == EINTR) return 0;
-    return (int)fseterrno(f);
+    return __fseterrno(f);
   }
-  f->beg = (unsigned)((f->beg + put) & (f->size - 1));
-  return bytes;
+  if (wrote == f->beg) {
+    f->beg = 0;
+  } else {
+    memcpy(f->buf, f->buf + wrote, f->beg - wrote);
+    f->beg -= wrote;
+  }
+  return wrote;
 }

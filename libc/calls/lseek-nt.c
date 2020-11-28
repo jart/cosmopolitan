@@ -23,10 +23,10 @@
 
 textwindows int64_t lseek$nt(int fd, int64_t offset, int whence) {
   int64_t res;
-  if (!isfdkind(fd, kFdFile)) return ebadf();
+  if (!__isfdkind(fd, kFdFile)) return ebadf();
   if (SetFilePointerEx(g_fds.p[fd].handle, offset, &res, whence)) {
     return res;
   } else {
-    return winerr();
+    return __winerr();
   }
 }

@@ -21,6 +21,7 @@
 #include "libc/calls/internal.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/yoink.inc"
 #include "libc/sysv/errfuns.h"
 
 textwindows int getsockopt$nt(struct Fd *fd, int level, int optname,
@@ -31,6 +32,6 @@ textwindows int getsockopt$nt(struct Fd *fd, int level, int optname,
       -1) {
     return 0;
   } else {
-    return winsockerr();
+    return __winsockerr();
   }
 }

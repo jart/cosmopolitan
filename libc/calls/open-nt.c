@@ -49,7 +49,7 @@ static textwindows int64_t open$nt$impl(const char *file, uint32_t flags,
            (flags & O_EXCL)
                ? kNtFileShareExclusive
                : kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,
-           (flags & O_CLOEXEC) ? &kNtIsInheritable : NULL,
+           &kNtIsInheritable,
            (flags & O_CREAT) && (flags & O_EXCL)
                ? kNtCreateNew
                : (flags & O_CREAT) && (flags & O_TRUNC)
@@ -94,7 +94,7 @@ static textwindows ssize_t open$nt$console(const struct NtMagicPaths *mp,
         open$nt$impl(mp->conout, (flags & ~O_ACCMODE) | O_WRONLY, mode);
     assert(g_fds.p[fd].extra != -1);
   } else {
-    return winerr();
+    return __winerr();
   }
   g_fds.p[fd].kind = kFdConsole;
   g_fds.p[fd].flags = flags;
@@ -111,13 +111,13 @@ static textwindows ssize_t open$nt$file(const char *file, uint32_t flags,
              ((flags & O_CREAT) && (flags & O_TRUNC))) {
     return eisdir();
   } else {
-    return winerr();
+    return __winerr();
   }
 }
 
 textwindows ssize_t open$nt(const char *file, uint32_t flags, int32_t mode) {
   size_t fd;
-  if ((fd = createfd()) == -1) return -1;
+  if ((fd = __getemptyfd()) == -1) return -1;
   if ((flags & O_ACCMODE) == O_RDWR &&
       tinystrcmp(file, kNtMagicPaths.devtty) == 0) {
     return open$nt$console(&kNtMagicPaths, flags, mode, fd);

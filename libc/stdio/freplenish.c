@@ -24,6 +24,8 @@
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 
+/* TODO(jart): Delete or rework */
+
 /**
  * Fills empty space in buffer with whatever's available.
  *
@@ -34,11 +36,9 @@ int freplenish(FILE *f) {
   ssize_t rc;
   size_t got;
   struct iovec iov[2];
-
   if (f->beg == f->end) {
     f->beg = f->end = 0;
   }
-
   if (f->beg <= f->end) {
     if (f->beg) {
       iov[0].iov_base = f->buf + f->end;
@@ -57,14 +57,14 @@ int freplenish(FILE *f) {
   if (rc != -1) {
     if (rc) {
       got = rc;
-      f->end = (f->end + got) & (f->size - 1);
+      f->end = (f->end + got) % f->size;
       return got;
     } else {
-      return fseteof(f);
+      return __fseteof(f);
     }
   } else if (errno == EINTR || errno == EAGAIN) {
     return 0;
   } else {
-    return fseterrno(f);
+    return __fseterrno(f);
   }
 }

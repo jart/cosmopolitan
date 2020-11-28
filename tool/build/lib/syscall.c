@@ -1227,7 +1227,11 @@ static int OpGetPpid(struct Machine *m) {
 }
 
 static int OpKill(struct Machine *m, int pid, int sig) {
-  return kill(pid, sig);
+  if (pid == getpid()) {
+    ThrowProtectionFault(m);
+  } else {
+    return kill(pid, sig);
+  }
 }
 
 static int OpGetUid(struct Machine *m) {

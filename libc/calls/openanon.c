@@ -61,24 +61,25 @@ static int openanon$impl(const char *name, unsigned flags,
                          char pathbuf[hasatleast PATH_MAX]) {
   int fd;
   openanon$genpath(name, state, pathbuf);
+  flags |= O_RDWR | O_CREAT | O_EXCL | O_TRUNC;
   if (!IsWindows()) {
-    flags |= O_RDWR | O_CREAT | O_EXCL | O_TRUNC;
     if ((fd = openat$sysv(AT_FDCWD, pathbuf, flags, 0600)) != -1) {
       unlink(pathbuf);
     }
     return fd;
   } else {
-    if ((fd = createfd()) != -1 &&
+    if ((fd = __getemptyfd()) != -1 &&
         (g_fds.p[fd].handle = CreateFileA(
              pathbuf, kNtGenericRead | kNtGenericWrite, kNtFileShareExclusive,
-             (flags & O_CLOEXEC) ? &kNtIsInheritable : NULL, kNtCreateAlways,
+             &kNtIsInheritable, kNtCreateAlways,
              (kNtFileAttributeNotContentIndexed | kNtFileAttributeNormal |
               kNtFileAttributeTemporary | kNtFileFlagDeleteOnClose),
              0)) != -1) {
       g_fds.p[fd].kind = kFdFile;
+      g_fds.p[fd].flags = flags;
       return fd;
     } else {
-      return winerr();
+      return __winerr();
     }
   }
 }

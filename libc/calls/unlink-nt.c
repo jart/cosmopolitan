@@ -27,6 +27,6 @@ textwindows int unlink$nt(const char *name) {
   if (DeleteFile(name16)) {
     return 0;
   } else {
-    return winerr();
+    return __winerr();
   }
 }

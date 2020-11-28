@@ -24,6 +24,7 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
@@ -37,7 +38,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zip.h"
-#include "libc/zipos/zipos.h"
+#include "libc/zipos/zipos.internal.h"
 #include "third_party/zlib/zlib.h"
 
 static int __zipos_inflate_fast(struct ZiposHandle *h, uint8_t *data,
@@ -48,7 +49,7 @@ static int __zipos_inflate_fast(struct ZiposHandle *h, uint8_t *data,
   zs.next_in = data;
   zs.avail_in = size;
   zs.total_in = size;
-  zs.next_out = h->mem;
+  zs.next_out = h->freeme;
   zs.avail_out = h->size;
   zs.total_out = h->size;
   zs.zfree = Z_NULL;
@@ -80,7 +81,7 @@ static int __zipos_inflate_fast(struct ZiposHandle *h, uint8_t *data,
 static int __zipos_inflate_tiny(struct ZiposHandle *h, uint8_t *data,
                                 size_t size) {
   struct DeflateState ds;
-  return undeflate(h->mem, h->size, data, size, &ds) != -1 ? 0 : eio();
+  return undeflate(h->freeme, h->size, data, size, &ds) != -1 ? 0 : eio();
 }
 
 static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
@@ -93,39 +94,37 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
   assert(ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf) == kZipCompressionNone ||
          ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf) ==
              kZipCompressionDeflate);
-  if ((fd = createfd()) == -1) return -1;
   if (!(h = calloc(1, sizeof(*h)))) return -1;
   h->cfile = cf;
   if ((h->size = ZIP_LFILE_UNCOMPRESSEDSIZE(zipos->map + lf))) {
     if (ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf)) {
       assert(ZIP_LFILE_COMPRESSEDSIZE(zipos->map + lf));
-      h->mapsize = h->size;
-      if ((h->map = malloc(h->mapsize)) != MAP_FAILED) {
-        h->mem = h->map;
-        if ((IsTiny() ? __zipos_inflate_tiny : __zipos_inflate_fast)(
-                h, ZIP_LFILE_CONTENT(zipos->map + lf),
-                ZIP_LFILE_COMPRESSEDSIZE(zipos->map + lf)) == -1) {
-          fd = -1;
-        }
-      } else {
-        fd = -1;
+      if ((h->freeme = malloc(h->size)) &&
+          (IsTiny() ? __zipos_inflate_tiny : __zipos_inflate_fast)(
+              h, ZIP_LFILE_CONTENT(zipos->map + lf),
+              ZIP_LFILE_COMPRESSEDSIZE(zipos->map + lf)) != -1) {
+        h->mem = h->freeme;
       }
     } else {
       h->mem = ZIP_LFILE_CONTENT(zipos->map + lf);
     }
   }
-  if (!IsTiny() && fd != -1 &&
+  if (!IsTiny() && h->mem &&
       crc32_z(0, h->mem, h->size) != ZIP_LFILE_CRC32(zipos->map + lf)) {
-    fd = eio();
+    errno = EIO;
+    h->mem = NULL;
   }
-  if (fd != -1) {
+  if (h->mem && (fd = __ensurefds(dup(zipos->fd))) != -1) {
+    h->handle = g_fds.p[fd].handle;
     g_fds.p[fd].kind = kFdZip;
     g_fds.p[fd].handle = (intptr_t)h;
     g_fds.p[fd].flags = flags;
+    return fd;
   } else {
-    __zipos_close(h);
+    free(h->freeme);
+    free(h);
+    return -1;
   }
-  return fd;
 }
 
 /**

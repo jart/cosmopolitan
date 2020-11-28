@@ -17,15 +17,8 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/bits/weaken.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
-#include "libc/dce.h"
-#include "libc/sock/internal.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.h"
+#include "libc/sock/sock.h"
 
 /**
  * Writes data to file descriptor.
@@ -39,34 +32,5 @@
  * @asyncsignalsafe
  */
 ssize_t write(int fd, const void *buf, size_t size) {
-  ssize_t rc;
-  size_t wrote;
-  if (fd == -1) return einval();
-  if (isfdkind(fd, kFdZip)) {
-    rc = weaken(__zipos_write)(
-        (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle,
-        (struct iovec[]){{buf, size}}, 1, -1);
-  } else if (!IsWindows()) {
-    rc = write$sysv(fd, buf, size);
-  } else if (isfdkind(fd, kFdSocket)) {
-    rc = weaken(sendto$nt)(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1, 0,
-                           NULL, 0);
-  } else if (isfdkind(fd, kFdFile) || isfdkind(fd, kFdConsole)) {
-    rc = write$nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1, -1);
-  } else {
-    return ebadf();
-  }
-  if (rc != -1) {
-    wrote = (size_t)rc;
-    if (wrote == 0) {
-      assert(size == 0);
-    } else {
-      assert(wrote <= size);
-    }
-  }
-  if (!IsTrustworthy() && rc != -1) {
-    if (!rc && size) abort();
-    if ((size_t)rc > size) abort();
-  }
-  return rc;
+  return writev(fd, &(struct iovec){buf, size}, 1);
 }

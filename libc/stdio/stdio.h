@@ -18,7 +18,8 @@ typedef struct FILE {
   uint32_t beg;                  // 0x10
   uint32_t end;                  // 0x14
   uint8_t *buf;                  // 0x18
-  size_t size;                   // 0x20
+  uint32_t size;                 // 0x20
+  uint32_t nofree;               // 0x24
   int (*reader)(struct FILE *);  // 0x28
   int (*writer)(struct FILE *);  // 0x30
 } FILE;
@@ -99,10 +100,8 @@ int vfscanf(FILE *, const char *, va_list);
 │ cosmopolitan § standard i/o » optimizations                              ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-int __getc_moar(FILE *);
-
 #define putc(c, f) fputc(c, f)
-#define getc(f)    (f->beg + 1 < f->end ? f->buf[f->beg++] : __getc_moar(f))
+#define getc(f)    (f->beg < f->end ? f->buf[f->beg++] : fgetc(f))
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define printf(FMT, ...)     (printf)(PFLINK(FMT), ##__VA_ARGS__)

@@ -1387,7 +1387,7 @@ int main(int argc, char *argv[]) {
       return 1;
     }
   }
-  if (IsWindows()) {
+  if (0 && IsWindows()) {
     Gui();
   } else {
     Tui();

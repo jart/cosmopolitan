@@ -23,7 +23,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/zip.h"
-#include "libc/zipos/zipos.h"
+#include "libc/zipos/zipos.internal.h"
 
 ssize_t __zipos_find(struct Zipos *zipos, const struct ZiposUri *name) {
   size_t i, cf;

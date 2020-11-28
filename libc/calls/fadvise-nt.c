@@ -38,7 +38,7 @@ textwindows int fadvise$nt(int fd, uint64_t offset, uint64_t len, int advice) {
   struct NtIoStatusBlock iostatus;
   struct NtFileBasicInformation basicinfo;
   struct NtFileAccessInformation accessinfo;
-  if (!isfdkind(fd, kFdFile)) return ebadf();
+  if (!__isfdkind(fd, kFdFile)) return ebadf();
   sharemode = /* xxx: no clue how to query this */
       kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete;
   /* TODO(jart): can we do it in one call w/ NtQueryObject? */
@@ -56,7 +56,7 @@ textwindows int fadvise$nt(int fd, uint64_t offset, uint64_t len, int advice) {
       }
       return 0;
     }
-    return winerr();
+    return __winerr();
   } else if (status == kNtStatusDllNotFound) {
     return enosys();
   } else {

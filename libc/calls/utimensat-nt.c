@@ -48,7 +48,7 @@ textwindows int utimensat$nt(int dirfd, const char *path,
           -1) {
         closeme = true;
       } else {
-        return winerr();
+        return __winerr();
       }
     } else {
       return einval();
@@ -77,7 +77,7 @@ textwindows int utimensat$nt(int dirfd, const char *path,
   if (SetFileTime(fh, NULL, ftp[0], ftp[1])) {
     rc = 0;
   } else {
-    rc = winerr();
+    rc = __winerr();
   }
   if (closeme) {
     CloseHandle(fh);

@@ -61,7 +61,7 @@ textwindows int madvise$nt(void *addr, size_t length, int advice) {
       if (fn(GetCurrentProcess(), &rangecount, ranges, 0)) {
         return 0;
       } else {
-        return winerr();
+        return __winerr();
       }
     } else {
       return enosys();
@@ -72,7 +72,7 @@ textwindows int madvise$nt(void *addr, size_t length, int advice) {
       if (fn(addr, length, kNtVmOfferPriorityNormal)) {
         return 0;
       } else {
-        return winerr();
+        return __winerr();
       }
     } else {
       return enosys();

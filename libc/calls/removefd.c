@@ -20,8 +20,8 @@
 #include "libc/calls/internal.h"
 #include "libc/macros.h"
 
-void removefd(int fd) {
-  if (isfdopen(fd)) {
+void __removefd(int fd) {
+  if (__isfdopen(fd)) {
     g_fds.p[fd].kind = kFdEmpty;
     g_fds.f = MIN(g_fds.f, fd);
   }

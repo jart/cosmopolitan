@@ -51,7 +51,7 @@ ssize_t recvfrom(int fd, void *buf, size_t size, uint32_t flags,
       sockaddr2linux(opt_out_srcaddr);
     }
     return got;
-  } else if (isfdkind(fd, kFdSocket)) {
+  } else if (__isfdkind(fd, kFdSocket)) {
     return recvfrom$nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1, flags,
                        opt_out_srcaddr, opt_inout_srcaddrsize);
   } else {

@@ -68,13 +68,12 @@
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "libc/zip.h"
-#include "libc/zipos/zipos.h"
+#include "libc/zipos/zipos.internal.h"
 #include "net/http/http.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/zlib/zlib.h"
 
 /* TODO(jart): Implement more lenient message framing */
-/* TODO(jart): Windows IOCP fiber system call support */
 
 #define USAGE \
   " [-hvdsm] [-p PORT]\n\
@@ -1116,7 +1115,7 @@ void ProcessRequests(void) {
 void ProcessConnection(void) {
   int pid;
   clientaddrsize = sizeof(clientaddr);
-  client = accept4(server, &clientaddr, &clientaddrsize, 0 /* SOCK_CLOEXEC */);
+  client = accept(server, &clientaddr, &clientaddrsize);
   if (client != -1) {
     startconnection = nowl();
     if ((pid = uniprocess ? -1 : fork()) > 0) {

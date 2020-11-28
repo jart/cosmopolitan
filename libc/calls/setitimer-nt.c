@@ -69,7 +69,7 @@ textwindows int setitimer$nt(int which, const struct itimerval *newvalue,
   if (newvalue) {
     if (newvalue->it_value.tv_sec && newvalue->it_value.tv_usec) {
       if (!(ith = CreateWaitableTimer(NULL, false, NULL))) {
-        return winerr();
+        return __winerr();
       }
       duetime = -(newvalue->it_value.tv_sec * HECTONANOSECONDS +
                   newvalue->it_value.tv_usec * 10);

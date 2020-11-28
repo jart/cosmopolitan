@@ -1,8 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_NT_TYPEDEF_IOAPCROUTINE_H_
 #define COSMOPOLITAN_LIBC_NT_TYPEDEF_IOAPCROUTINE_H_
+#include "libc/nt/struct/iostatusblock.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
-
-struct NtIoStatusBlock;
 
 typedef void (*NtIoApcRoutine)(void *ApcContext,
                                struct NtIoStatusBlock *IoStatusBlock,

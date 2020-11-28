@@ -18,14 +18,19 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timeval.h"
-#include "libc/sock/select.internal.h"
+#include "libc/dce.h"
+#include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 
 /**
  * Does what poll() does except with a complicated bitset API.
+ * @note windows nt is limited to first 64 socket descriptors
  */
 int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
            struct timeval *timeout) {
-  /* TODO(jart): Windows */
-  return select$sysv(nfds, readfds, writefds, exceptfds, timeout);
+  if (!IsWindows()) {
+    return select$sysv(nfds, readfds, writefds, exceptfds, timeout);
+  } else {
+    return select$nt(nfds, readfds, writefds, exceptfds, timeout);
+  }
 }

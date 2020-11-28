@@ -29,7 +29,7 @@
  * @return -1 w/ few exceptions
  * @note this is a code-size saving device
  */
-privileged int64_t winerr(void) {
+privileged int64_t __winerr(void) {
   if (IsWindows()) {
     errno = GetLastError();
     return -1;

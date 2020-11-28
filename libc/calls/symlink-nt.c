@@ -29,6 +29,6 @@ textwindows int symlink$nt(const char *target, const char *linkpath) {
   if (CreateSymbolicLink(linkpath16, target16, flags)) {
     return 0;
   } else {
-    return winerr();
+    return __winerr();
   }
 }

@@ -20,9 +20,10 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/macros.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.h"
+#include "libc/zipos/zipos.internal.h"
 
 /**
  * Closes file descriptor.
@@ -32,17 +33,24 @@
  */
 int close(int fd) {
   int rc;
-  if (fd == -1) return einval();
-  if (isfdkind(fd, kFdZip)) {
-    rc = weaken(__zipos_close)(
-        (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle);
+  if (fd < 0) return einval();
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    rc = weaken(__zipos_close)(fd);
+  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdEpoll) {
+    rc = weaken(close$epoll)(fd);
   } else if (!IsWindows()) {
     rc = close$sysv(fd);
-  } else if (isfdkind(fd, kFdSocket)) {
+  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdSocket) {
     rc = weaken(closesocket$nt)(fd);
-  } else {
+  } else if (fd < g_fds.n &&
+             (g_fds.p[fd].kind == kFdFile || g_fds.p[fd].kind == kFdConsole)) {
     rc = close$nt(fd);
+  } else {
+    rc = ebadf();
   }
-  removefd(fd);
+  if (fd < g_fds.n) {
+    g_fds.p[fd].kind = kFdEmpty;
+    g_fds.f = MIN(g_fds.f, fd);
+  }
   return rc;
 }

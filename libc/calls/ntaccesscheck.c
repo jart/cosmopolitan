@@ -81,7 +81,7 @@ textwindows int ntaccesscheck(const char16_t *pathname, uint32_t flags) {
       (result || flags == F_OK)) {
     rc = 0;
   } else {
-    rc = winerr();
+    rc = __winerr();
   }
   close(hImpersonatedToken);
   close(hToken);

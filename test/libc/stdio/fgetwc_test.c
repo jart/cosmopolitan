@@ -24,6 +24,7 @@
 TEST(fgetwc, testAscii_oneChar) {
   FILE *f = fmemopen(NULL, BUFSIZ, "r+");
   EXPECT_EQ('A', fputc('A', f));
+  rewind(f);
   EXPECT_EQ('A', fgetc(f));
   fclose(f);
 }
@@ -32,6 +33,7 @@ TEST(fgetwc, testAscii_twoChar) {
   FILE *f = fmemopen(NULL, BUFSIZ, "r+");
   EXPECT_EQ('A', fputc('A', f));
   EXPECT_EQ('B', fputc('B', f));
+  rewind(f);
   EXPECT_EQ('A', fgetc(f));
   EXPECT_EQ('B', fgetc(f));
   fclose(f);
@@ -40,6 +42,7 @@ TEST(fgetwc, testAscii_twoChar) {
 TEST(fgetwc, testUnicode_oneChar) {
   FILE *f = fmemopen(NULL, BUFSIZ, "r+");
   EXPECT_EQ(L'𐌰', fputwc(L'𐌰', f));
+  rewind(f);
   EXPECT_EQ(L'𐌰', fgetwc(f));
   fclose(f);
 }
@@ -50,7 +53,20 @@ TEST(fgetwc, testUnicode_oneChar_writtenAsRawUtf8) {
   EXPECT_EQ(0x90, fputc(0x90, f));
   EXPECT_EQ(0x8C, fputc(0x8C, f));
   EXPECT_EQ(0xB0, fputc(0xB0, f));
+  rewind(f);
   EXPECT_EQ(L'𐌰', fgetwc(f));
-  EXPECT_EQ(-1u, fgetwc(f));
+  fclose(f);
+}
+
+TEST(fgetwc, testUnicode_spuriousContChars_synchronizedBeforeRead) {
+  FILE *f = fmemopen(NULL, BUFSIZ, "r+");
+  EXPECT_EQ(0x90, fputc(0x90, f));
+  EXPECT_EQ(0x90, fputc(0x90, f));
+  EXPECT_EQ(0xF0, fputc(0xF0, f));
+  EXPECT_EQ(0x90, fputc(0x90, f));
+  EXPECT_EQ(0x8C, fputc(0x8C, f));
+  EXPECT_EQ(0xB0, fputc(0xB0, f));
+  rewind(f);
+  EXPECT_EQ(L'𐌰', fgetwc(f));
   fclose(f);
 }

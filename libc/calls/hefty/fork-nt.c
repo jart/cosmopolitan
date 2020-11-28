@@ -67,7 +67,7 @@ textwindows void WinMainForked(void) {
   char16_t *p;
   uint64_t size;
   char16_t var[21 + 1 + 21 + 1];
-  uint32_t i, varlen, protect, access;
+  uint32_t i, varlen, protect, access, oldprot;
   varlen = GetEnvironmentVariable(u"_FORK", var, ARRAYLEN(var));
   if (!varlen || varlen >= ARRAYLEN(var)) return;
   p = var;
@@ -98,11 +98,13 @@ textwindows void WinMainForked(void) {
         break;
     }
     if (_mmi.p[i].flags & MAP_PRIVATE) {
-      MapViewOfFileExNuma(
-          (_mmi.p[i].h = CreateFileMappingNuma(-1, NULL, protect, 0, size, NULL,
-                                               kNtNumaNoPreferredNode)),
-          access, 0, 0, size, addr, kNtNumaNoPreferredNode);
+      MapViewOfFileExNuma((_mmi.p[i].h = CreateFileMappingNuma(
+                               -1, NULL, kNtPageExecuteReadwrite, 0, size, NULL,
+                               kNtNumaNoPreferredNode)),
+                          kNtFileMapRead | kNtFileMapWrite | kNtFileMapExecute,
+                          0, 0, size, addr, kNtNumaNoPreferredNode);
       ReadAll(h, addr, size);
+      VirtualProtect(addr, size, protect, &oldprot);
     } else {
       MapViewOfFileExNuma(_mmi.p[i].h, access, 0, 0, size, addr,
                           kNtNumaNoPreferredNode);
@@ -148,7 +150,7 @@ textwindows int fork$nt(void) {
       }
       unsetenv("_FORK");
     } else {
-      rc = winerr();
+      rc = __winerr();
     }
   } else {
     rc = 0;

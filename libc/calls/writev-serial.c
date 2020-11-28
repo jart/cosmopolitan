@@ -18,39 +18,17 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/lib/pc.h"
+#include "libc/calls/internal.h"
 #include "libc/nexgen32e/uart.internal.h"
-#include "libc/stdio/internal.h"
-#include "libc/stdio/stdio.h"
 
-static void fin(FILE *f) {
-  f->buf[f->end] = inb(0x3F8);
-  f->end = (f->end + 1) & (f->size - 1);
-}
-
-static void fout(FILE *f) {
-  outb(0x3F8, f->buf[f->beg]);
-  f->beg = (f->beg + 1) & (f->size - 1);
-}
-
-static int serialstdio(FILE *f, unsigned char status, void action(FILE *)) {
-  int block = 1;
-  unsigned tally = 0;
-  while (f->end != f->beg) {
-    if (!(inb(0x3F8 + UART_LSR) & status)) {
-      if (!block) break;
-      asm("pause");
-    } else {
-      action(f);
-      tally++;
+ssize_t writev$serial(struct Fd *fd, const struct iovec *iov, int iovlen) {
+  size_t i, j, wrote = 0;
+  for (i = 0; i < iovlen; ++i) {
+    for (j = 0; j < iov[i].iov_len; ++j) {
+      while (!(inb(fd->handle + UART_LSR) & UART_TTYTXR)) asm("pause");
+      outb(fd->handle, ((char *)iov[i].iov_base)[j]);
+      ++wrote;
     }
   }
-  return (int)tally;
-}
-
-int fsreadbuf(FILE *f) {
-  return serialstdio(f, UART_TTYDA, fin);
-}
-
-int fswritebuf(FILE *f) {
-  return serialstdio(f, UART_TTYTXR, fout);
+  return wrote;
 }

@@ -17,11 +17,17 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 
 /**
  * Reads uint8_t from stream.
  */
 int fgetc(FILE *f) {
-  return getc(f);
+  int c;
+  if (f->beg >= f->end) {
+    if (!f->reader) return __fseteof(f);
+    if (f->reader(f) == -1) return -1;
+  }
+  return f->buf[f->beg++];
 }

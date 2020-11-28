@@ -180,11 +180,6 @@ NtStatus NtFlushInstructionCache(int64_t ProcessHandle, void *opt_BaseAddress,
                                  size_t FlushSize);
 NtStatus NtQueryAttributesFile(const struct NtObjectAttributes *object,
                                struct NtFileBasicInformation *file_information);
-NtStatus NtDeviceIoControlFile(
-    int64_t FileHandle, void *opt_Event, NtIoApcRoutine opt_ApcRoutine,
-    void *opt_ApcContext, struct NtIoStatusBlock *out_IoStatusBlock,
-    uint32_t IoControlCode, void *opt_InputBuffer, uint32_t InputBufferLength,
-    void *opt_out_OutputBuffer, uint32_t OutputBufferLength);
 NtStatus NtQueryDirectoryFile(
     int64_t FileHandle, void *opt_Event, NtIoApcRoutine opt_ApcRoutine,
     void *opt_ApcContext, struct NtIoStatusBlock *out_IoStatusBlock,

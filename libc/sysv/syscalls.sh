@@ -240,9 +240,9 @@ scall	io_getevents		0xffffffffffff00d0	globl
 scall	io_submit		0xffffffffffff00d1	globl
 scall	io_cancel		0xffffffffffff00d2	globl
 scall	lookup_dcookie		0xffffffffffff00d4	globl
-scall	epoll_create		0xffffffffffff00d5	globl
-scall	epoll_wait		0xffffffffffff00e8	globl
-scall	epoll_ctl		0xffffffffffff00e9	globl
+scall	'epoll_create$sysv'	0xffffffffffff00d5	globl
+scall	'epoll_wait$sysv'	0xffffffffffff00e8	globl
+scall	'epoll_ctl$sysv'	0xffffffffffff00e9	globl
 scall	getdents		0x00630110ffff00d9	globl hidden # getdents64 on linux
 scall	set_tid_address		0xffffffffffff00da	globl
 scall	restart_syscall		0xffffffffffff00db	globl
@@ -310,7 +310,7 @@ scall	'__accept4$sysv'	0x005d021dffff0120	globl hidden # Linux 2.6.28+
 scall	'__dup3$sysv'		0x0066ffffffff0124	globl hidden # Linux 2.6.27+
 scall	'__pipe2$sysv'		0x0065021effff0125	globl hidden # Linux 2.6.27+
 scall	epoll_pwait		0xffffffffffff0119	globl
-scall	epoll_create1		0xffffffffffff0123	globl
+scall	'epoll_create1$sysv'	0xffffffffffff0123	globl
 scall	perf_event_open		0xffffffffffff012a	globl
 scall	inotify_init1		0xffffffffffff0126	globl
 scall	rt_tgsigqueueinfo	0xffffffffffff0129	globl

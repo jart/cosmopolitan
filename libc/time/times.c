@@ -45,7 +45,7 @@ static noinline long times2(struct tms *out_times, struct rusage *ru) {
     struct NtFileTime CreationTime, ExitTime, KernelTime, UserTime;
     if (!GetProcessTimes(GetCurrentProcess(), &CreationTime, &ExitTime,
                          &KernelTime, &UserTime)) {
-      return winerr();
+      return __winerr();
     }
     FileTimeToTimeVal(&tv, UserTime);
     out_times->tms_utime = convertmicros(&tv, tick);

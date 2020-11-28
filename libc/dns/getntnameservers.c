@@ -82,7 +82,7 @@ textwindows int getntnameservers(struct ResolvConf *resolv) {
       }
     }
   } else {
-    rc = winerr();
+    rc = __winerr();
   }
   RegCloseKey(hkInterfaces);
   return rc;

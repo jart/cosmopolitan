@@ -26,7 +26,7 @@
 #include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.h"
+#include "libc/zipos/zipos.internal.h"
 
 /**
  * Reads from file at offset, thus avoiding superfluous lseek().
@@ -42,12 +42,12 @@
 ssize_t pread(int fd, void *buf, size_t size, int64_t offset) {
   ssize_t rc;
   if (fd == -1 || offset < 0) return einval();
-  if (isfdkind(fd, kFdZip)) {
+  if (__isfdkind(fd, kFdZip)) {
     rc = weaken(__zipos_read)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, buf, size, offset);
   } else if (!IsWindows()) {
     rc = pread$sysv(fd, buf, size, offset);
-  } else if (isfdkind(fd, kFdFile)) {
+  } else if (__isfdkind(fd, kFdFile)) {
     rc = read$nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1, offset);
   } else {
     rc = ebadf();

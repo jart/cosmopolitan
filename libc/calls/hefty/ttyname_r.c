@@ -76,7 +76,7 @@ int ttyname_r(int fd, char *buf, size_t size) {
   } else if (IsFreebsd()) {
     return ttyname$freebsd(fd, buf, size);
   } else if (IsWindows()) {
-    if (isfdkind(fd, kFdFile)) {
+    if (__isfdkind(fd, kFdFile)) {
       return ttyname$nt(fd, buf, size);
     } else {
       return ebadf();

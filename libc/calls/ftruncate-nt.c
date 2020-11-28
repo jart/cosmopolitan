@@ -25,14 +25,14 @@
 textwindows int ftruncate$nt(int fd, uint64_t length) {
   bool32 ok;
   int64_t tell;
-  if (!isfdkind(fd, kFdFile)) return ebadf();
+  if (!__isfdkind(fd, kFdFile)) return ebadf();
   tell = -1;
   if (SetFilePointerEx(g_fds.p[fd].handle, 0, &tell, kNtFileCurrent)) {
     ok = SetFilePointerEx(g_fds.p[fd].handle, length, NULL, kNtFileBegin) &&
          SetEndOfFile(g_fds.p[fd].handle);
     SetFilePointerEx(g_fds.p[fd].handle, tell, NULL, kNtFileBegin);
-    return ok ? 0 : winerr();
+    return ok ? 0 : __winerr();
   } else {
-    return winerr();
+    return __winerr();
   }
 }

@@ -22,7 +22,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/str/str.h"
-#include "libc/zipos/zipos.h"
+#include "libc/zipos/zipos.internal.h"
 
 /**
  * Reads data from zip store object.

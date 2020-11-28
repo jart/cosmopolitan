@@ -40,6 +40,6 @@ textwindows ssize_t read$nt(struct Fd *fd, const struct iovec *iov,
   } else if (NtGetErr() == kNtErrorBrokenPipe) {
     return 0; /* read() doesn't EPIPE lool */
   } else {
-    return winerr();
+    return __winerr();
   }
 }

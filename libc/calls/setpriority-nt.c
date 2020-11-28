@@ -48,6 +48,6 @@ textwindows int setpriority$nt(int nice) {
       SetThreadPriority(GetCurrentThread(), p.wut)) {
     return p.nice;
   } else {
-    return winerr();
+    return __winerr();
   }
 }

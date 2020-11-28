@@ -22,12 +22,12 @@
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 
-int freadbuf(FILE *f) {
+int __freadbuf(FILE *f) {
   ssize_t got;
-  got = read(f->fd, f->buf, f->size - 1);
-  if (got == -1) return fseterrno(f);
-  if (got == 0) return fseteof(f);
+  got = read(f->fd, f->buf, f->size);
+  if (got == -1) return __fseterrno(f);
+  if (got == 0) return __fseteof(f);
   f->beg = 0;
-  f->end = got & (f->size - 1);
+  f->end = got;
   return got;
 }

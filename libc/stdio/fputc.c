@@ -27,20 +27,19 @@
  * @return c (as unsigned char) if written or -1 w/ errno
  */
 noinstrument int fputc(int c, FILE *f) {
-  if (c != -1) {
+  if (f->beg < f->size) {
     c &= 0xff;
-    f->buf[f->end] = c;
-    f->end = (f->end + 1) & (f->size - 1);
-    if (unlikely(f->beg == f->end || f->bufmode == _IONBF ||
-                 (f->bufmode == _IOLBF && c == '\n'))) {
+    f->buf[f->beg++] = c;
+    if (f->beg == f->size || f->bufmode == _IONBF ||
+        (f->bufmode == _IOLBF && c == '\n')) {
       if (f->writer) {
-        return f->writer(f);
-      } else if (f->beg == f->end) {
-        return fseteof(f);
+        if (f->writer(f) == -1) return -1;
+      } else if (f->beg == f->size) {
+        f->beg = 0;
       }
     }
     return c;
   } else {
-    return fseteof(f);
+    return __fseteof(f);
   }
 }

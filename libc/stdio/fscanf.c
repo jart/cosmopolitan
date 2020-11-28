@@ -21,14 +21,25 @@
 #include "libc/stdio/stdio.h"
 
 /**
- * Stream decoder.
- * @see libc/fmt/vcscanf.h
+ * Decodes data from stream.
+ *
+ * To read a line of data from a well-formed trustworthy file:
+ *
+ *   int x, y;
+ *   char text[256];
+ *   fscanf(f, "%d %d %s\n", &x, &y, text);
+ *
+ * Please note that this function is brittle by default, which makes it
+ * a good fit for yolo coding. With some toil it can be used in a way
+ * that makes it reasonably hardened although getline() may be better.
+ *
+ * @see libc/fmt/vcscanf.c
  */
 int(fscanf)(FILE *stream, const char *fmt, ...) {
   int rc;
   va_list va;
   va_start(va, fmt);
-  rc = (vcscanf)((int (*)(void *))fgetc, stream, fmt, va);
+  rc = (vcscanf)((int (*)(void *))fgetc, (void *)ungetc, stream, fmt, va);
   va_end(va);
   return rc;
 }

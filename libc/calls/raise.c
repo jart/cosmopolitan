@@ -60,7 +60,7 @@ int raise(int sig) {
     if (GenerateConsoleCtrlEvent(GetCtrlEvent(sig), 0)) {
       return 0;
     } else {
-      return winerr();
+      return __winerr();
     }
   }
 }

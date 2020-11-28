@@ -26,7 +26,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/zip.h"
-#include "libc/zipos/zipos.h"
+#include "libc/zipos/zipos.internal.h"
 
 /**
  * Returns pointer to zip central directory of current executable.
@@ -38,25 +38,18 @@ struct Zipos *__zipos_get(void) {
   size_t mapsize;
   uint8_t *cdir;
   void *map;
-  int fd;
   if (!once) {
-    if (ZIP_CDIR_MAGIC(__zip_end) == kZipCdirHdrMagic) {
-      zipos.map = _base;
-      zipos.cdir = __zip_end;
-    } else {
-      exe = (const char *)getauxval(AT_EXECFN);
-      if ((fd = open(exe, O_RDONLY)) != -1) {
-        if ((mapsize = getfiledescriptorsize(fd)) != SIZE_MAX &&
-            (map = mmap(NULL, mapsize, PROT_READ, MAP_SHARED, fd, 0)) !=
-                MAP_FAILED) {
-          if ((cdir = zipfindcentraldir(map, mapsize))) {
-            zipos.map = map;
-            zipos.cdir = cdir;
-          } else {
-            munmap(map, mapsize);
-          }
+    exe = (const char *)getauxval(AT_EXECFN);
+    if ((zipos.fd = open(exe, O_RDONLY)) != -1) {
+      if ((mapsize = getfiledescriptorsize(zipos.fd)) != SIZE_MAX &&
+          (map = mmap(NULL, mapsize, PROT_READ, MAP_SHARED, zipos.fd, 0)) !=
+              MAP_FAILED) {
+        if ((cdir = zipfindcentraldir(map, mapsize))) {
+          zipos.map = map;
+          zipos.cdir = cdir;
+        } else {
+          munmap(map, mapsize);
         }
-        close(fd);
       }
     }
     once = true;

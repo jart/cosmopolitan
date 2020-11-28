@@ -20,17 +20,23 @@
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/mem/mem.h"
-#include "libc/zipos/zipos.h"
+#include "libc/nt/runtime.h"
+#include "libc/zipos/zipos.internal.h"
 
 /**
  * Closes compressed object.
  *
  * @param fd is vetted by close()
  */
-int __zipos_close(struct ZiposHandle *h) {
-  if (h) {
-    free(h->map);
-    free(h);
+int __zipos_close(int fd) {
+  struct ZiposHandle *h;
+  h = (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle;
+  if (!IsWindows()) {
+    close$sysv(fd);
+  } else {
+    CloseHandle(h->handle);
   }
+  free(h->freeme);
+  free(h);
   return 0;
 }

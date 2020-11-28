@@ -51,7 +51,7 @@ int fallocate(int fd, int32_t mode, int64_t offset, int64_t length) {
   } else if (!IsWindows()) {
     return posix_fallocate$sysv(fd, offset, length);
   } else if (IsWindows()) {
-    if (!isfdkind(fd, kFdFile)) return ebadf();
+    if (!__isfdkind(fd, kFdFile)) return ebadf();
     if (mode == FALLOC_FL_ZERO_RANGE) {
       if (DeviceIoControl(
               g_fds.p[fd].handle, kNtFsctlSetZeroData,
@@ -59,7 +59,7 @@ int fallocate(int fd, int32_t mode, int64_t offset, int64_t length) {
               sizeof(struct NtFileZeroDataInformation), NULL, 0, &br, NULL)) {
         return 0;
       } else {
-        return winerr();
+        return __winerr();
       }
     } else if (!mode && !offset) {
       /*

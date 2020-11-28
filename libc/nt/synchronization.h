@@ -32,6 +32,21 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § new technology » synchronization                          ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+#define InterlockedAdd(PTR, VAL)                                      \
+  ({                                                                  \
+    typeof(*(PTR)) Res;                                               \
+    typeof(Res) Val = (VAL);                                          \
+    asm volatile("xadd\t%0,%1" : "=r"(Res), "+m"(*(PTR)) : "0"(Val)); \
+    Res + Val;                                                        \
+  })
+
+#define InterlockedExchange(PTR, VAL)                      \
+  ({                                                       \
+    typeof(*(PTR)) Res = (VAL);                            \
+    asm volatile("xchg\t%0,%1" : "+r"(Res), "+m"(*(PTR))); \
+    Res;                                                   \
+  })
+
 typedef void (*NtTimerapcroutine)(void *lpArgToCompletionRoutine,
                                   uint32_t dwTimerLowValue,
                                   uint32_t dwTimerHighValue);
@@ -77,6 +92,16 @@ int32_t InitializeCriticalSectionAndSpinCount(
     struct NtCriticalSection *lpCriticalSection, uint32_t dwSpinCount);
 uint32_t SetCriticalSectionSpinCount(
     struct NtCriticalSection *lpCriticalSection, uint32_t dwSpinCount);
+
+void InitializeSRWLock(intptr_t *);
+void AcquireSRWLockExclusive(intptr_t *);
+void AcquireSRWLockShared(intptr_t *);
+void ReleaseSRWLockExclusive(intptr_t *);
+void ReleaseSRWLockShared(intptr_t *);
+void TryAcquireSRWLockExclusive(intptr_t *);
+void TryAcquireSRWLockShared(intptr_t *);
+
+uint64_t GetTickCount64(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

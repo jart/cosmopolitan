@@ -277,27 +277,17 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
  * @return true if value was exchanged, otherwise false
  * @see lockcmpxchg()
  */
-#define cmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)                    \
-  ({                                                                      \
-    bool DidIt;                                                           \
-    asm(ZFLAG_ASM("cmpxchg\t%3,%1")                                       \
-        : ZFLAG_CONSTRAINT(DidIt), "+m"(*(IFTHING)), "+a"(*(ISEQUALTOME)) \
-        : "r"((typeof(*(IFTHING)))(REPLACEITWITHME))                      \
-        : "cc");                                                          \
-    DidIt;                                                                \
-  })
-
-#define ezcmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)             \
-  ({                                                                 \
-    bool DidIt;                                                      \
-    autotype(IFTHING) IfThing = (IFTHING);                           \
-    typeof(*IfThing) IsEqualToMe = (ISEQUALTOME);                    \
-    typeof(*IfThing) ReplaceItWithMe = (REPLACEITWITHME);            \
-    asm(ZFLAG_ASM("cmpxchg\t%3,%1")                                  \
-        : ZFLAG_CONSTRAINT(DidIt), "+m"(*IfThing), "+a"(IsEqualToMe) \
-        : "r"(ReplaceItWithMe)                                       \
-        : "cc");                                                     \
-    DidIt;                                                           \
+#define cmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)                        \
+  ({                                                                          \
+    bool DidIt;                                                               \
+    autotype(IFTHING) IfThing = (IFTHING);                                    \
+    typeof(*IfThing) IsEqualToMe = (ISEQUALTOME);                             \
+    typeof(*IfThing) ReplaceItWithMe = (REPLACEITWITHME);                     \
+    asm volatile(ZFLAG_ASM("cmpxchg\t%3,%1")                                  \
+                 : ZFLAG_CONSTRAINT(DidIt), "+m"(*IfThing), "+a"(IsEqualToMe) \
+                 : "r"(ReplaceItWithMe)                                       \
+                 : "cc");                                                     \
+    DidIt;                                                                    \
   })
 
 /**
@@ -307,14 +297,17 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
  * @return true if value was exchanged, otherwise false
  * @see lockcmpxchg()
  */
-#define lockcmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)                \
-  ({                                                                      \
-    bool DidIt;                                                           \
-    asm(ZFLAG_ASM("lock cmpxchg\t%3,%1")                                  \
-        : ZFLAG_CONSTRAINT(DidIt), "+m"(*(IFTHING)), "+a"(*(ISEQUALTOME)) \
-        : "r"((typeof(*(IFTHING)))(REPLACEITWITHME))                      \
-        : "cc");                                                          \
-    DidIt;                                                                \
+#define lockcmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)                    \
+  ({                                                                          \
+    bool DidIt;                                                               \
+    autotype(IFTHING) IfThing = (IFTHING);                                    \
+    typeof(*IfThing) IsEqualToMe = (ISEQUALTOME);                             \
+    typeof(*IfThing) ReplaceItWithMe = (REPLACEITWITHME);                     \
+    asm volatile(ZFLAG_ASM("lock cmpxchg\t%3,%1")                             \
+                 : ZFLAG_CONSTRAINT(DidIt), "+m"(*IfThing), "+a"(IsEqualToMe) \
+                 : "r"(ReplaceItWithMe)                                       \
+                 : "cc");                                                     \
+    DidIt;                                                                    \
   })
 
 /**

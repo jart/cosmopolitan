@@ -39,7 +39,7 @@ static textwindows int setsockopt$nt(struct Fd *fd, int level, int optname,
   if (__setsockopt$nt(fd->handle, level, optname, optval, optlen) != -1) {
     return 0;
   } else {
-    return winsockerr();
+    return __winsockerr();
   }
 }
 
@@ -70,7 +70,7 @@ int setsockopt(int fd, int level, int optname, const void *optval,
       }
     } while (setsockopt_polyfill(&optname));
     return -1;
-  } else if (isfdkind(fd, kFdSocket)) {
+  } else if (__isfdkind(fd, kFdSocket)) {
     return setsockopt$nt(&g_fds.p[fd], level, optname, optval, optlen);
   } else {
     return ebadf();

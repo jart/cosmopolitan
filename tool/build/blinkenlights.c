@@ -898,10 +898,11 @@ void SetupDraw(void) {
 static long Disassemble(void) {
   long lines, current;
   lines = pan.disassembly.bottom - pan.disassembly.top * 2;
-  CHECK_NE(-1, Dis(dis, m, GetIp(), m->ip, lines));
-  current = DisFind(dis, GetIp());
-  CHECK_NE(-1, current);
-  return current;
+  if (Dis(dis, m, GetIp(), m->ip, lines) != -1) {
+    return DisFind(dis, GetIp());
+  } else {
+    return -1;
+  }
 }
 
 static long GetDisIndex(void) {

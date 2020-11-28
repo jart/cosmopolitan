@@ -44,7 +44,8 @@
  * @param va points to the variadic argument state
  * @see libc/fmt/pflink.h (dynamic memory is not a requirement)
  */
-int vcscanf(int callback(void *), void *arg, const char *fmt, va_list va) {
+int vcscanf(int callback(void *), int unget(int, void *), void *arg,
+            const char *fmt, va_list va) {
   struct FreeMe {
     struct FreeMe *next;
     void *ptr;
@@ -56,13 +57,18 @@ int vcscanf(int callback(void *), void *arg, const char *fmt, va_list va) {
   while (c != -1) {
     switch (p[i++]) {
       case '\0':
-        return items;
+        if (c != -1 && unget) {
+          unget(c, arg);
+        }
+        goto Done;
       case ' ':
       case '\t':
       case '\n':
       case '\r':
       case '\v':
-        while (isspace(c)) c = callback(arg);
+        while (isspace(c)) {
+          c = callback(arg);
+        }
         break;
       case '%': {
         uintmax_t number;

@@ -21,6 +21,7 @@
 #include "libc/calls/internal.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/yoink.inc"
 #include "libc/sysv/errfuns.h"
 
 textwindows int listen$nt(struct Fd *fd, int backlog) {
@@ -28,6 +29,6 @@ textwindows int listen$nt(struct Fd *fd, int backlog) {
   if (__listen$nt(fd->handle, backlog) != -1) {
     return 0;
   } else {
-    return winsockerr();
+    return __winsockerr();
   }
 }

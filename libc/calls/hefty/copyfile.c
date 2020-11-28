@@ -55,7 +55,7 @@ static textwindows int copyfile$nt(const char *src, const char *dst,
     }
     return 0;
   } else {
-    return winerr();
+    return __winerr();
   }
 }
 

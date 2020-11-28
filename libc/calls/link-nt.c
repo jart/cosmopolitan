@@ -17,10 +17,10 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
-#include "libc/calls/internal.h"
-#include "libc/calls/calls.h"
 
 textwindows int link$nt(const char *existingpath, const char *newpath) {
   char16_t newpath16[PATH_MAX];
@@ -30,7 +30,7 @@ textwindows int link$nt(const char *existingpath, const char *newpath) {
     if (CreateHardLink(newpath16, existingpath16, NULL)) {
       return 0;
     } else {
-      return winerr();
+      return __winerr();
     }
   } else {
     return -1;

@@ -35,17 +35,17 @@ syscon	errno	E2BIG					7			7			7			7			1639			# unix consensus & kNtErrorInvalid
 syscon	errno	ENOEXEC					8			8			8			8			193			# unix consensus & kNtErrorBadExeFormat
 syscon	errno	EBADF					9			9			9			9			6			# bad file descriptor; cf. EBADFD; unix consensus & kNtErrorInvalidHandle
 syscon	errno	ECHILD					10			10			10			10			128			# unix consensus & kNtErrorWaitNoChildren
-syscon	errno	EAGAIN					11			35			35			35			0x2733			# bsd consensus
-syscon	errno	EWOULDBLOCK				11			35			35			35			0x2733			# bsd consensus
+syscon	errno	EAGAIN					11			35			35			35			0x2733			# bsd consensus & WSAEWOULDBLOCK
+syscon	errno	EWOULDBLOCK				11			35			35			35			0x2733			# bsd consensus & WSAEWOULDBLOCK
 syscon	errno	ENOMEM					12			12			12			12			14			# unix consensus & kNtErrorOutofmemory
 syscon	errno	EACCES					13			13			13			13			5			# unix consensus & kNtErrorAccessDenied
 syscon	errno	EFAULT					14			14			14			14			487			# unix consensus & kNtErrorInvalidAddress
 syscon	errno	ENOTBLK					15			15			15			15			26			# unix consensus & kNtErrorNotDosDisk
 syscon	errno	EBUSY					16			16			16			16			170			# unix consensus & kNtErrorBusy
 syscon	errno	EEXIST					17			17			17			17			183			# unix consensus & kNtErrorAlreadyExists (should be kNtErrorFileExists too)
-syscon	errno	EXDEV					18			18			18			18			-1			# unix consensus
+syscon	errno	EXDEV					18			18			18			18			17			# unix consensus & kNtErrorNotSameDevice
 syscon	errno	ENODEV					19			19			19			19			1200			# unix consensus & kNtErrorBadDevice
-syscon	errno	ENOTDIR					20			20			20			20			3			# unix consensus & kNtErrorPathNotFound
+syscon	errno	ENOTDIR					20			20			20			20			3			# unix consensus & kNtErrorPathNotFound (TODO)
 syscon	errno	EISDIR					21			21			21			21			267			# unix consensus & kNtErrorDirectoryNotSupported
 syscon	errno	EINVAL					22			22			22			22			87			# unix consensus & kNtErrorInvalidParameter
 syscon	errno	ENFILE					23			23			23			23			331			# unix consensus & kNtErrorTooManyDescriptors
@@ -62,43 +62,43 @@ syscon	errno	EPIPE					32			32			32			32			109			# unix consensus & kNtErrorBrok
 syscon	errno	EDOM					33			33			33			33			-1			# bsd consensus
 syscon	errno	ERANGE					34			34			34			34			-1			# bsd consensus
 syscon	errno	EDEADLK					35			11			11			11			1131			# bsd consensus & kNtErrorPossibleDeadlock
-syscon	errno	ENAMETOOLONG				36			63			63			63			0x274f			# bsd consensus
+syscon	errno	ENAMETOOLONG				36			63			63			63			0x274f			# bsd consensus & WSAENAMETOOLONG
 syscon	errno	ENOLCK					37			77			77			77			-1			# bsd consensus
-syscon	errno	ENOTEMPTY				39			66			66			66			0x2752			# bsd consensus
-syscon	errno	ELOOP					40			62			62			62			0x274e			# bsd consensus
+syscon	errno	ENOTEMPTY				39			66			66			66			0x2752			# bsd consensus & WSAENOTEMPTY
+syscon	errno	ELOOP					40			62			62			62			0x274e			# bsd consensus & WSAELOOP
 syscon	errno	ENOMSG					42			91			83			90			-1
 syscon	errno	EIDRM					43			90			82			89			-1
-syscon	errno	EUSERS					87			68			68			68			0x2754			# bsd consensus
-syscon	errno	ENOTSOCK				88			38			38			38			0x2736			# bsd consensus
-syscon	errno	EDESTADDRREQ				89			39			39			39			0x2737			# bsd consensus
+syscon	errno	EUSERS					87			68			68			68			0x2754			# bsd consensus & WSAEUSERS
+syscon	errno	ENOTSOCK				88			38			38			38			0x2736			# bsd consensus & WSAENOTSOCK
+syscon	errno	EDESTADDRREQ				89			39			39			39			0x2737			# bsd consensus & WSAEDESTADDRREQ
 syscon	errno	EMSGSIZE				90			40			40			40			0x2738			# bsd consensus & WSAEMSGSIZE
-syscon	errno	EPROTOTYPE				91			41			41			41			0x2739			# bsd consensus
-syscon	errno	ENOPROTOOPT				92			42			42			42			0x273a			# bsd consensus
-syscon	errno	EPROTONOSUPPORT				93			43			43			43			0x273b			# bsd consensus
-syscon	errno	ESOCKTNOSUPPORT				94			44			44			44			0x273c			# bsd consensus
+syscon	errno	EPROTOTYPE				91			41			41			41			0x2739			# bsd consensus & WSAEPROTOTYPE
+syscon	errno	ENOPROTOOPT				92			42			42			42			0x273a			# bsd consensus & WSAENOPROTOOPT
+syscon	errno	EPROTONOSUPPORT				93			43			43			43			0x273b			# bsd consensus & WSAEPROTONOSUPPORT
+syscon	errno	ESOCKTNOSUPPORT				94			44			44			44			0x273c			# bsd consensus & WSAESOCKTNOSUPPORT
 syscon	errno	ENOTSUP					95			45			45			91			0x273d
 syscon	errno	EOPNOTSUPP				95			102			45			45			0x273d
-syscon	errno	EPFNOSUPPORT				96			46			46			46			0x273e			# bsd consensus
-syscon	errno	EAFNOSUPPORT				97			47			47			47			0x273f			# bsd consensus
-syscon	errno	EADDRINUSE				98			48			48			48			0x2740			# bsd consensus
-syscon	errno	EADDRNOTAVAIL				99			49			49			49			0x2741			# bsd consensus
-syscon	errno	ENETDOWN				100			50			50			50			0x2742			# bsd consensus
-syscon	errno	ENETUNREACH				101			51			51			51			0x2743			# bsd consensus
-syscon	errno	ENETRESET				102			52			52			52			0x2744			# bsd consensus
-syscon	errno	ECONNABORTED				103			53			53			53			0x2745			# bsd consensus
+syscon	errno	EPFNOSUPPORT				96			46			46			46			0x273e			# bsd consensus & WSAEPFNOSUPPORT
+syscon	errno	EAFNOSUPPORT				97			47			47			47			0x273f			# bsd consensus & WSAEAFNOSUPPORT
+syscon	errno	EADDRINUSE				98			48			48			48			0x2740			# bsd consensus & WSAEADDRINUSE
+syscon	errno	EADDRNOTAVAIL				99			49			49			49			0x2741			# bsd consensus & WSAEADDRNOTAVAIL
+syscon	errno	ENETDOWN				100			50			50			50			0x2742			# bsd consensus & WSAENETDOWN
+syscon	errno	ENETUNREACH				101			51			51			51			0x2743			# bsd consensus & WSAENETUNREACH
+syscon	errno	ENETRESET				102			52			52			52			0x2744			# bsd consensus & WSAENETRESET
+syscon	errno	ECONNABORTED				103			53			53			53			0x2745			# bsd consensus & WSAECONNABORTED
 syscon	errno	ECONNRESET				104			54			54			54			0x2746			# bsd consensus & WSAECONNRESET
-syscon	errno	ENOBUFS					105			55			55			55			0x2747			# bsd consensus
-syscon	errno	EISCONN					106			56			56			56			0x2748			# bsd consensus
-syscon	errno	ENOTCONN				107			57			57			57			0x2749			# bsd consensus
-syscon	errno	ESHUTDOWN				108			58			58			58			0x274a			# bsd consensus
-syscon	errno	ETOOMANYREFS				109			59			59			59			0x274b			# bsd consensus
-syscon	errno	ETIMEDOUT				110			60			60			60			0x274c			# bsd consensus
-syscon	errno	ECONNREFUSED				111			61			61			61			0x274d			# bsd consensus
-syscon	errno	EHOSTDOWN				112			64			64			64			0x2750			# bsd consensus
-syscon	errno	EHOSTUNREACH				113			65			65			65			0x2751			# bsd consensus
-syscon	errno	EALREADY				114			37			37			37			0x2735			# bsd consensus
-syscon	errno	EINPROGRESS				115			36			36			36			0x2734			# bsd consensus
-syscon	errno	ESTALE					116			70			70			70			0x2756			# bsd consensus
+syscon	errno	ENOBUFS					105			55			55			55			0x2747			# bsd consensus & WSAENOBUFS
+syscon	errno	EISCONN					106			56			56			56			0x2748			# bsd consensus & WSAEISCONN
+syscon	errno	ENOTCONN				107			57			57			57			0x2749			# bsd consensus & WSAENOTCONN
+syscon	errno	ESHUTDOWN				108			58			58			58			0x274a			# bsd consensus & WSAESHUTDOWN
+syscon	errno	ETOOMANYREFS				109			59			59			59			0x274b			# bsd consensus & WSAETOOMANYREFS
+syscon	errno	ETIMEDOUT				110			60			60			60			0x274c			# bsd consensus & WSAETIMEDOUT
+syscon	errno	ECONNREFUSED				111			61			61			61			0x274d			# bsd consensus & WSAECONNREFUSED
+syscon	errno	EHOSTDOWN				112			64			64			64			0x2750			# bsd consensus & WSAEHOSTDOWN
+syscon	errno	EHOSTUNREACH				113			65			65			65			0x2751			# bsd consensus & WSAEHOSTUNREACH
+syscon	errno	EALREADY				114			37			37			37			0x2735			# bsd consensus & WSAEALREADY
+syscon	errno	EINPROGRESS				115			36			36			36			0x2734			# bsd consensus & WSAEINPROGRESS
+syscon	errno	ESTALE					116			70			70			70			0x2756			# bsd consensus & WSAESTALE
 syscon	errno	ECHRNG					44			-1			-1			-1			-1			# bsd consensus
 syscon	errno	EL2NSYNC				45			-1			-1			-1			-1			# bsd consensus
 syscon	errno	EL3HLT					46			-1			-1			-1			-1			# bsd consensus
@@ -220,7 +220,7 @@ syscon	open	O_CLOEXEC				0x080000		0x01000000		0x100000		0x010000		0x00080000		#
 syscon	open	O_TMPFILE				0x410000		0			0			0			0x04000100		# Linux 3.11+ (c. 2013) & kNtFileAttributeTemporary|kNtFileFlagDeleteOnClose
 syscon	open	O_SPARSE				0			0			0			0			0x00040000		# we invented it
 syscon	open	O_NDELAY				0x0800			4			4			4			0			# bsd consensus & kNtFileFlagWriteThrough>>8 → 0x00800000 (???)
-syscon	open	O_NONBLOCK				0x0800			4			4			4			0			# bsd consensus
+syscon	open	O_NONBLOCK				0x0800			4			4			4			0x00000800		# bsd consensus & faked on nt to be same as linux
 syscon	open	O_ASYNC					0x2000			0x40			0x40			0x40			0			# bsd consensus
 syscon	open	O_NOFOLLOW				0x020000		0x0100			0x0100			0x0100			0			# bsd consensus
 syscon	open	O_SYNC					0x101000		0x80			0x80			0x80			0			# bsd consensus
@@ -388,10 +388,10 @@ syscon	fcntl2	F_DUPFD					0			0			0			0			0			# consensus
 
 syscon	fcntl2	F_GETFD					1			1			1			1			1			# unix consensus & faked nt
 syscon	fcntl2	F_SETFD					2			2			2			2			2			# unix consensus & faked nt
-syscon	fcntl3	FD_CLOEXEC				1			1			1			1			1			# unix consensus & inverse nt (kNtHandleFlagInherit)
+syscon	fcntl3	FD_CLOEXEC				1			1			1			1			1			# unix consensus & faked nt
 
 syscon	fcntl2	F_GETFL					3			3			3			3			3			# unix consensus & faked nt
-syscon	fcntl2	F_SETFL					4			4			4			4			4			# (unix consensus & faked nt)
+syscon	fcntl2	F_SETFL					4			4			4			4			4			# unix consensus & faked nt
 #       fcntl3	O_NONBLOCK
 #       fcntl3	O_APPEND
 #       fcntl3	O_ASYNC
@@ -498,25 +498,28 @@ syscon	clock	CLOCK_REALTIME_ALARM			8			-1			0			0			0			# bsd consensus
 syscon	clock	CLOCK_BOOTTIME_ALARM			9			-1			0			0			0			# bsd consensus
 syscon	clock	CLOCK_TAI				11			-1			0			0			0			# bsd consensus
 
-syscon	epoll	EPOLLIN					1			0			0			0			0
-syscon	epoll	EPOLL_CTL_ADD				1			0			0			0			0
-syscon	epoll	EPOLLPRI				2			0			0			0			0
-syscon	epoll	EPOLL_CTL_DEL				2			0			0			0			0
-syscon	epoll	EPOLL_CTL_MOD				3			0			0			0			0
-syscon	epoll	EPOLLOUT				4			0			0			0			0
-syscon	epoll	EPOLLERR				8			0			0			0			0
-syscon	epoll	EPOLLHUP				0x10			0			0			0			0
-syscon	epoll	EPOLLRDNORM				0x40			0			0			0			0
-syscon	epoll	EPOLLRDBAND				0x80			0			0			0			0
-syscon	epoll	EPOLLWRNORM				0x0100			0			0			0			0
-syscon	epoll	EPOLLWRBAND				0x0200			0			0			0			0
-syscon	epoll	EPOLLMSG				0x0400			0			0			0			0
-syscon	epoll	EPOLLRDHUP				0x2000			0			0			0			0
-syscon	epoll	EPOLL_CLOEXEC				0x080000		0			0			0			0
-syscon	epoll	EPOLLEXCLUSIVE				0x10000000		0			0			0			0
-syscon	epoll	EPOLLWAKEUP				0x20000000		0			0			0			0
-syscon	epoll	EPOLLONESHOT				0x40000000		0			0			0			0
-syscon	epoll	EPOLLET					0x80000000		0			0			0			0
+#	epoll
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			XENIX			Commentary
+syscon	epoll	EPOLL_CLOEXEC				0x080000		0x01000000		0x100000		0x010000		0x80000			# O_CLOEXEC
+syscon	epoll	EPOLL_CTL_ADD				1			1			1			1			1			# forced consensus, linux only natively, polyfilled elsewhere
+syscon	epoll	EPOLL_CTL_DEL				2			2			2			2			2			# forced consensus, linux only natively, polyfilled elsewhere
+syscon	epoll	EPOLL_CTL_MOD				3			3			3			3			3			# forced consensus, linux only natively, polyfilled elsewhere
+syscon	epoll	EPOLLIN					1			1			1			1			1			# forced consensus, linux only natively, polyfilled elsewhere
+syscon	epoll	EPOLLOUT				4			4			4			4			4			# forced consensus, linux only natively, polyfilled elsewhere
+syscon	epoll	EPOLLERR				8			8			8			8			8			# forced consensus, linux only natively, polyfilled elsewhere
+syscon	epoll	EPOLLPRI				2			2			2			2			2			# forced consensus, linux only natively, polyfilled elsewhere
+syscon	epoll	EPOLLHUP				0x10			0x10			0x10			0x10			0x10			# forced consensus, linux only natively, polyfilled elsewhere
+syscon	epoll	EPOLLRDNORM				0x40			0x40			0x40			0x40			0x40			# forced consensus, linux only natively, polyfilled elsewhere
+syscon	epoll	EPOLLRDBAND				0x80			0x80			0x80			0x80			0x80			# forced consensus, linux only natively, polyfilled elsewhere
+syscon	epoll	EPOLLWRNORM				0x0100			0x0100			0x0100			0x0100			0x0100			# forced consensus, linux only natively, polyfilled elsewhere
+syscon	epoll	EPOLLWRBAND				0x0200			0x0200			0x0200			0x0200			0x0200			# forced consensus, linux only natively, polyfilled elsewhere
+syscon	epoll	EPOLLMSG				0x0400			0x0400			0x0400			0x0400			0x0400			# forced consensus, linux only natively, polyfilled elsewhere
+syscon	epoll	EPOLLRDHUP				0x2000			0x2000			0x2000			0x2000			0x2000			# forced consensus, linux only natively, polyfilled elsewhere
+syscon	epoll	EPOLLEXCLUSIVE				0x10000000		0x10000000		0x10000000		0x10000000		0x10000000		# forced consensus, linux only natively, polyfilled elsewhere
+syscon	epoll	EPOLLWAKEUP				0x20000000		0x20000000		0x20000000		0x20000000		0x20000000		# forced consensus, linux only natively, polyfilled elsewhere
+syscon	epoll	EPOLLONESHOT				0x40000000		0x40000000		0x40000000		0x40000000		0x40000000		# forced consensus, linux only natively, polyfilled elsewhere
+syscon	epoll	EPOLLET					0x80000000		0x80000000		0x80000000		0x80000000		0x80000000		# forced consensus, linux only natively, polyfilled elsewhere
 
 #	{set,get}sockopt(fd, level=SOL_SOCKET, X, ...)
 #
@@ -1646,8 +1649,8 @@ syscon	sock	SOCK_DGRAM				2			2			2			2			2			# consensus
 syscon	sock	SOCK_RAW				3			3			3			3			3			# consensus
 syscon	sock	SOCK_RDM				4			4			4			4			4			# consensus
 syscon	sock	SOCK_SEQPACKET				5			5			5			5			5			# consensus
-syscon	sock	SOCK_CLOEXEC				0x080000		0x080000		0x10000000		0x8000			0x80			# faked xnu & WSA_FLAG_NO_HANDLE_INHERIT
-syscon	sock	SOCK_NONBLOCK				0x0800			0x0800			0x20000000		0x4000			0x0800			# faked xnu; faked nt; socket() will ioctl(FIONBIO=1)
+syscon	sock	SOCK_CLOEXEC				0x080000		0x080000		0x10000000		0x8000			0x00080000		# faked xnu & faked nt to be some as O_CLOEXEC
+syscon	sock	SOCK_NONBLOCK				0x0800			0x0800			0x20000000		0x4000			0x00000800		# faked xnu & faked nt to be same as O_NONBLOC and socket() will ioctl(FIONBIO=1)
 syscon	sock	SOCK_DCCP				6			0			0			0			0			# what is it?
 syscon	sock	SOCK_PACKET				10			0			0			0			0			# what is it?
 

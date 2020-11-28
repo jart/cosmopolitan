@@ -32,13 +32,14 @@
  * @param flags can have SOCK_{CLOEXEC,NONBLOCK}, which may apply to
  *     both the newly created socket and the server one
  * @return client fd which needs close(), or -1 w/ errno
+ * @asyncsignalsafe
  */
 int accept4(int fd, void *out_addr, uint32_t *inout_addrsize, int flags) {
   if (!out_addr) return efault();
   if (!inout_addrsize) return efault();
   if (!IsWindows()) {
     return accept4$sysv(fd, out_addr, inout_addrsize, flags);
-  } else if (isfdkind(fd, kFdSocket)) {
+  } else if (__isfdkind(fd, kFdSocket)) {
     return accept$nt(&g_fds.p[fd], out_addr, inout_addrsize, flags);
   } else {
     return ebadf();

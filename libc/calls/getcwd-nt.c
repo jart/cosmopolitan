@@ -31,7 +31,7 @@ textwindows char *getcwd$nt(char *buf, size_t size) {
       erange();
     }
   } else {
-    winerr();
+    __winerr();
   }
   return NULL;
 }

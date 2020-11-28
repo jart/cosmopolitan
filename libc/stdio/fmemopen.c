@@ -17,12 +17,8 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
 #include "libc/bits/popcnt.h"
-#include "libc/calls/calls.h"
-#include "libc/errno.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
@@ -31,46 +27,46 @@
 /**
  * Opens buffer as stream.
  *
- * This function is the heart of the streams implementation, and it's
- * truly magnificent for unit testing.
- *
  * @param buf becomes owned by this function, and is allocated if NULL
  * @return new stream or NULL w/ errno
- * @error ENOMEM, EINVAL
  */
 FILE *fmemopen(void *buf, size_t size, const char *mode) {
-  FILE *res;
+  FILE *f;
+  char *p;
   unsigned flags;
 
-  if (buf && !size) {
+  if (size && size > 0x7ffff000) {
     einval();
     return NULL;
   }
 
-  if (size && popcnt(size) != 1) {
-    einval();
-    return NULL;
-  }
-
-  if (!(res = calloc(1, sizeof(FILE)))) {
+  if (!(f = calloc(1, sizeof(FILE)))) {
     return NULL;
   }
 
   if (!buf) {
-    if (!size) size = FRAMESIZE;
-    if (!(buf = valloc(size))) {
-      free(res);
+    if (!size) size = BUFSIZ;
+    if (!(buf = calloc(1, size))) {
+      free(f);
       return NULL;
+    }
+  } else {
+    f->nofree = true;
+  }
+
+  f->fd = -1;
+  f->buf = buf;
+  f->size = size;
+  f->end = size;
+  f->iomode = fopenflags(mode);
+
+  if (f->iomode & O_APPEND) {
+    if ((p = memchr(buf, '\0', size))) {
+      f->beg = p - (char *)buf;
+    } else {
+      f->beg = f->end;
     }
   }
 
-  res->fd = -1;
-  setbuffer(res, buf, size);
-  res->bufmode = res->buf ? _IOFBF : _IONBF;
-  flags = fopenflags(mode);
-  res->iomode = (flags & O_ACCMODE) == O_RDWR
-                    ? O_RDWR
-                    : (flags & O_ACCMODE) == O_WRONLY ? O_WRONLY : O_RDONLY;
-
-  return res;
+  return f;
 }

@@ -66,6 +66,6 @@ textwindows int fstat$nt(int64_t handle, struct stat *st) {
     st->st_blocks = roundup(actualsize, PAGESIZE) / 512;
     return 0;
   } else {
-    return winerr();
+    return __winerr();
   }
 }

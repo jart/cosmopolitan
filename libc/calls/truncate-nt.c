@@ -36,5 +36,5 @@ textwindows int truncate$nt(const char *path, uint64_t length) {
     CloseHandle(fh);
     if (ok) return 0;
   }
-  return winerr();
+  return __winerr();
 }

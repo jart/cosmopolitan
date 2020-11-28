@@ -1,9 +1,8 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_CRITICALSECTIONDEBUG_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_CRITICALSECTIONDEBUG_H_
+#include "libc/nt/struct/criticalsection.h"
 #include "libc/nt/struct/linkedlist.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
-
-struct NtCriticalSection;
 
 struct NtCriticalSectionDebug {
   uint16_t Type;

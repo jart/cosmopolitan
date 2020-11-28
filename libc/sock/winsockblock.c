@@ -28,7 +28,7 @@ textwindows int64_t winsockblock(int64_t fh, unsigned eventbit, int64_t rc) {
   int64_t eh;
   struct NtWsaNetworkEvents ev;
   if (rc != -1) return rc;
-  if (WSAGetLastError() != EWOULDBLOCK) return winsockerr();
+  if (WSAGetLastError() != EWOULDBLOCK) return __winsockerr();
   eh = WSACreateEvent();
   memset(&ev, 0, sizeof(ev));
   if (WSAEventSelect(fh, eh, 1u << eventbit) != -1 &&
@@ -39,7 +39,7 @@ textwindows int64_t winsockblock(int64_t fh, unsigned eventbit, int64_t rc) {
       errno = ev.iErrorCode[eventbit];
     }
   } else {
-    winsockerr();
+    __winsockerr();
   }
   WSACloseEvent(eh);
   return rc;

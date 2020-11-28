@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_CALLS_INTERNAL_H_
 #ifndef __STRICT_ANSI__
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
@@ -37,7 +38,7 @@ struct IoctlPtmGet {
 
 struct Fds {
   size_t f;  // arbitrary free slot start search index
-  size_t n;  // capacity
+  size_t n;  // monotonic capacity
   struct Fd {
     int64_t handle;
     int64_t extra;
@@ -47,7 +48,9 @@ struct Fds {
       kFdSocket,
       kFdProcess,
       kFdConsole,
+      kFdSerial,
       kFdZip,
+      kFdEpoll,
     } kind;
     unsigned flags;
   } * p;
@@ -62,20 +65,12 @@ hidden extern struct NtSystemInfo g_ntsysteminfo;
 hidden extern struct NtStartupInfo g_ntstartupinfo;
 hidden extern const struct NtSecurityAttributes kNtIsInheritable;
 
-ssize_t createfd(void) hidden;
-int growfds(void) hidden;
-void removefd(int) hidden;
+ssize_t __getemptyfd(void) hidden;
+int __ensurefds(int) hidden;
+void __removefd(int) hidden;
 enum FdKind fdkind(int) hidden nosideeffect;
-bool isfdopen(int) hidden nosideeffect;
-bool isfdkind(int, enum FdKind) hidden nosideeffect;
-
-forceinline bool isfdindex(int fd) {
-  if (!IsTrustworthy()) {
-    return (0 <= fd && fd < g_fds.n);
-  } else {
-    return true;
-  }
-}
+bool __isfdopen(int) hidden nosideeffect;
+bool __isfdkind(int, enum FdKind) hidden nosideeffect;
 
 forceinline size_t clampio(size_t size) {
   if (!IsTrustworthy()) {
@@ -267,7 +262,7 @@ bool32 onntconsoleevent$nt(u32) hidden;
 void __winalarm(void *, uint32_t, uint32_t) hidden;
 int ntaccesscheck(const char16_t *, u32) paramsnonnull() hidden;
 i64 ntreturn(u32);
-i64 winerr(void) nocallback privileged;
+i64 __winerr(void) nocallback privileged;
 
 #define mkntpath(PATH, PATH16) mkntpath2(PATH, -1u, PATH16)
 #define mkntpath2(PATH, FLAGS, PATH16)                           \
@@ -279,6 +274,13 @@ i64 winerr(void) nocallback privileged;
         : "cc");                                                 \
     Count;                                                       \
   })
+
+/*───────────────────────────────────────────────────────────────────────────│─╗
+│ cosmopolitan § syscalls » drivers                                        ─╬─│┼
+╚────────────────────────────────────────────────────────────────────────────│*/
+
+ssize_t readv$serial(struct Fd *, const struct iovec *, int) hidden;
+ssize_t writev$serial(struct Fd *, const struct iovec *, int) hidden;
 
 #undef sigset
 #undef i32

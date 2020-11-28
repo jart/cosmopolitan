@@ -41,7 +41,7 @@ size_t fread(void *buf, size_t stride, size_t count, FILE *f) {
     } else if (!(i % stride)) {
       return i / stride;
     } else {
-      return fseterr(f, EOVERFLOW);
+      return __fseterr(f, EOVERFLOW);
     }
   }
   return count;

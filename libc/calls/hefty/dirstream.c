@@ -74,7 +74,7 @@ static textwindows noinline DIR *opendir$nt(const char *name) {
   if ((res->fd = FindFirstFile(name16, &res->windata)) != -1) {
     return res;
   } else {
-    winerr();
+    __winerr();
     free(res);
     return NULL;
   }
@@ -220,7 +220,7 @@ int closedir(DIR *dir) {
     if (!IsWindows()) {
       rc = close(dir->fd);
     } else {
-      rc = FindClose(dir->fd) ? 0 : winerr();
+      rc = FindClose(dir->fd) ? 0 : __winerr();
     }
     free(dir);
   } else {

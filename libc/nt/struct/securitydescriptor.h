@@ -1,8 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_SECURITYDESCRIPTOR_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_SECURITYDESCRIPTOR_H_
+#include "libc/nt/struct/acl.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
-
-struct NtAcl;
 
 struct NtSecurityDescriptor {
   uint8_t Revision;

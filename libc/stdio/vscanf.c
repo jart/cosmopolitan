@@ -25,5 +25,5 @@
  * @see libc/fmt/vcscanf.h
  */
 int(vscanf)(const char *fmt, va_list ap) {
-  return (vcscanf)((int (*)(void *))fgetc, stdin, fmt, ap);
+  return (vcscanf)((int (*)(void *))fgetc, (void *)ungetc, stdin, fmt, ap);
 }

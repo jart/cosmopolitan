@@ -95,6 +95,7 @@ int GetHttpMethod(const char *, size_t);
 int ParseHttpRequest(struct HttpRequest *, const char *, size_t);
 int NegotiateHttpRequest(int, const char *, uint32_t *, char *, uint32_t *,
                          uint32_t *, bool, long double);
+long ParseContentLength(const struct HttpRequest *, const char *);
 char *FormatHttpDateTime(char[hasatleast 30], struct tm *);
 bool ParseHttpRange(const char *, size_t, long, long *, long *);
 unsigned ParseHttpVersion(const char *, size_t);

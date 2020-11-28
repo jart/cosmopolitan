@@ -21,6 +21,7 @@
 #include "libc/calls/internal.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/yoink.inc"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -38,6 +39,6 @@ textwindows int bind$nt(struct Fd *fd, const void *addr, uint32_t addrsize) {
   if (__bind$nt(fd->handle, addr, addrsize) != -1) {
     return 0;
   } else {
-    return winsockerr();
+    return __winsockerr();
   }
 }

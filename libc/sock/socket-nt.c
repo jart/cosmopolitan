@@ -20,31 +20,31 @@
 #include "libc/calls/internal.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/yoink.inc"
 #include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/sock.h"
 
-STATIC_YOINK("closesocket$nt");
-STATIC_YOINK("kNtWsaData");
-STATIC_YOINK("recvfrom$nt");
-STATIC_YOINK("sendto$nt");
+#define CLOEXEC  0x00080000
+#define NONBLOCK 0x00000800
 
 textwindows int socket$nt(int family, int type, int protocol) {
   int fd;
-  if ((fd = createfd()) == -1) return -1;
-  if ((g_fds.p[fd].handle =
-           WSASocket(family, type & ~(SOCK_CLOEXEC | SOCK_NONBLOCK), protocol,
-                     NULL, 0, (type & SOCK_CLOEXEC))) != -1) {
-    if (type & SOCK_NONBLOCK) {
-      uint32_t yes = 1;
+  uint32_t yes;
+  if ((fd = __getemptyfd()) == -1) return -1;
+  if ((g_fds.p[fd].handle = WSASocket(family, type & ~(CLOEXEC | NONBLOCK),
+                                      protocol, NULL, 0, (type & CLOEXEC))) !=
+      -1) {
+    if (type & NONBLOCK) {
+      yes = 1;
       if (__ioctlsocket$nt(g_fds.p[fd].handle, FIONBIO, &yes) == -1) {
         __closesocket$nt(g_fds.p[fd].handle);
-        return winsockerr();
+        return __winsockerr();
       }
     }
     g_fds.p[fd].kind = kFdSocket;
-    g_fds.p[fd].flags = type;
+    g_fds.p[fd].flags = type & (CLOEXEC | NONBLOCK);
     return fd;
   } else {
-    return winsockerr();
+    return __winsockerr();
   }
 }

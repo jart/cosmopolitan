@@ -22,20 +22,20 @@
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.h"
+#include "libc/zipos/zipos.internal.h"
 
 /**
  * Returns information about file, via open()'d descriptor.
  * @asyncsignalsafe
  */
 int fstat(int fd, struct stat *st) {
-  if (isfdkind(fd, kFdZip)) {
+  if (__isfdkind(fd, kFdZip)) {
     return weaken(__zipos_fstat)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, st);
   } else if (!IsWindows()) {
     return fstat$sysv(fd, st);
   } else {
-    if (!isfdkind(fd, kFdFile)) return ebadf();
+    if (!__isfdkind(fd, kFdFile)) return ebadf();
     return fstat$nt(g_fds.p[fd].handle, st);
   }
 }

@@ -58,7 +58,7 @@ ssize_t sendto(int fd, const void *buf, size_t size, uint32_t flags,
       sockaddr2bsd(&addr2);
       return sendto$sysv(fd, buf, size, flags, &addr2, addrsize);
     }
-  } else if (isfdkind(fd, kFdSocket)) {
+  } else if (__isfdkind(fd, kFdSocket)) {
     return sendto$nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1, flags,
                      opt_addr, addrsize);
   } else {

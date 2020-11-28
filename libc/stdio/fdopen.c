@@ -17,6 +17,8 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/mem/mem.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/o.h"
@@ -31,14 +33,21 @@
  * @error ENOMEM
  */
 FILE *fdopen(int fd, const char *mode) {
-  FILE *res;
-  if ((res = fmemopen(NULL, BUFSIZ, mode))) {
-    res->fd = fd;
-    res->reader = freadbuf;
-    res->writer = fwritebuf;
-    if ((res->iomode & O_ACCMODE) != O_RDONLY) {
-      _fflushregister(res);
+  FILE *f;
+  if ((f = calloc(1, sizeof(FILE)))) {
+    f->fd = fd;
+    f->reader = __freadbuf;
+    f->writer = __fwritebuf;
+    f->bufmode = ischardev(fd) ? _IOLBF : _IOFBF;
+    f->iomode = fopenflags(mode);
+    f->size = BUFSIZ;
+    if ((f->buf = valloc(f->size))) {
+      if ((f->iomode & O_ACCMODE) != O_RDONLY) {
+        _fflushregister(f);
+      }
+      return f;
     }
+    free(f);
   }
-  return res;
+  return NULL;
 }

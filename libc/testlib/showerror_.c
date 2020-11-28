@@ -30,7 +30,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
 
-STATIC_YOINK("isfdkind");
+STATIC_YOINK("__isfdkind");
 
 const char *testlib_showerror_errno;
 const char *testlib_showerror_file;

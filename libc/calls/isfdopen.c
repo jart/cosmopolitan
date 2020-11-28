@@ -19,6 +19,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 
-bool isfdopen(int fd) {
-  return isfdindex(fd) && g_fds.p[fd].kind != kFdEmpty;
+bool __isfdopen(int fd) {
+  return 0 <= fd && fd < g_fds.n && g_fds.p[fd].kind != kFdEmpty;
 }

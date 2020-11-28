@@ -27,6 +27,6 @@ textwindows int rmdir$nt(const char *path) {
   if (RemoveDirectory(path16)) {
     return 0;
   } else {
-    return winerr();
+    return __winerr();
   }
 }

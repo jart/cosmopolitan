@@ -17,54 +17,19 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/calls/calls.h"
-#include "libc/stdio/stdio.h"
-#include "libc/testlib/testlib.h"
+#include "libc/str/str.h"
+#include "net/http/http.h"
 
-int pipefd[2];
-FILE *f, *reader, *writer;
-
-TEST(fgetc, testEnd) {
-  f = fmemopen(NULL, BUFSIZ, "r+");
-  EXPECT_EQ(EOF, fgetc(f));
-  EXPECT_TRUE(feof(f));
-  EXPECT_FALSE(ferror(f));
-  EXPECT_EQ(0, fclose(f));
-}
-
-TEST(fgetwc, testEnd) {
-  f = fmemopen(NULL, BUFSIZ, "r+");
-  EXPECT_EQ(WEOF, fgetwc(f));
-  EXPECT_TRUE(feof(f));
-  EXPECT_FALSE(ferror(f));
-  EXPECT_EQ(0, fclose(f));
-}
-
-TEST(fgetwc, testMultibyte) {
-  f = fmemopen(NULL, BUFSIZ, "r+");
-  EXPECT_EQ(L'𝑥', fputwc(L'𝑥', f));
-  EXPECT_EQ(L'𝑦', fputwc(L'𝑦', f));
-  EXPECT_EQ(L'𝑧', fputwc(L'𝑧', f));
-  EXPECT_EQ(L'𝑥', fgetwc(f));
-  EXPECT_EQ(L'𝑦', fgetwc(f));
-  EXPECT_EQ(L'𝑧', fgetwc(f));
-  EXPECT_EQ(WEOF, fgetwc(f));
-  EXPECT_TRUE(feof(f));
-  fclose(f);
-}
-
-TEST(fgetc, testPipe) {
-  ASSERT_NE(-1, pipe(pipefd));
-  writer = fdopen(pipefd[1], "w");
-  reader = fdopen(pipefd[0], "r");
-  EXPECT_EQ('a', fputc('a', writer));
-  EXPECT_EQ('b', fputc('b', writer));
-  EXPECT_EQ('c', fputc('c', writer));
-  EXPECT_EQ(3, fflush(writer));
-  EXPECT_EQ('a', fgetc(reader));
-  EXPECT_EQ('b', fgetc(reader));
-  EXPECT_EQ('c', fgetc(reader));
-  EXPECT_EQ(0, fclose(reader));
-  EXPECT_EQ(0, fclose(writer));
+long ParseContentLength(const struct HttpRequest *req, const char *p) {
+  long i, r, n = 0;
+  for (i = req->headers[kHttpContentLength].a;
+       i < req->headers[kHttpContentLength].b; ++i) {
+    if (isdigit(p[i])) {
+      if (!__builtin_mul_overflow(n, 10, &r) &&
+          !__builtin_add_overflow(r, p[i] - '0', &r)) {
+        n = r;
+      }
+    }
+  }
+  return n;
 }

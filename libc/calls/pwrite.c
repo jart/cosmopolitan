@@ -43,7 +43,7 @@ ssize_t pwrite(int fd, const void *buf, size_t size, int64_t offset) {
   size = MIN(size, 0x7ffff000);
   if (!IsWindows()) {
     rc = pwrite$sysv(fd, buf, size, offset);
-  } else if (isfdkind(fd, kFdFile)) {
+  } else if (__isfdkind(fd, kFdFile)) {
     rc = write$nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1, offset);
   } else {
     return ebadf();

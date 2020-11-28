@@ -35,10 +35,8 @@
 	ezlea	g_stderr_buf,cx
 	mov	%rcx,24(%rax)			#→ f.buf
 	movl	$BUFSIZ,32(%rax)		#→ f.size
-	ezlea	fwritebuf,cx
-	ezlea	fswritebuf,dx
-	testb	IsMetal()
-	cmove	%rcx,%rdx
+	ezlea	__fwritebuf,cx
+	mov	%rcx,%rdx
 	mov	%rdx,48(%rax)			#→ f.writer
 	mov	%rax,stderr(%rip)
 	.init.end 400,_init_g_stderr,globl,hidden

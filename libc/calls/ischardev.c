@@ -40,7 +40,7 @@ textstartup bool32 ischardev(int fd) {
       return false;
     }
   } else {
-    return isfdkind(fd, kFdFile) &&
+    return __isfdkind(fd, kFdFile) &&
            GetFileType(g_fds.p[fd].handle) == kNtFileTypeChar;
   }
 }

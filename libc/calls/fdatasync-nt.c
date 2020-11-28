@@ -22,11 +22,11 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int fdatasync$nt(int fd) {
-  if (!isfdkind(fd, kFdFile)) return ebadf();
+  if (!__isfdkind(fd, kFdFile)) return ebadf();
   /*
    * XXX: On Windows NT this might be more analagous to fflush() and
    *      Microsoft docs say to do manual block i/o for database-ish
    *      guarantees on disk persistence. Consider: Really good UPS.
    */
-  return FlushFileBuffers(g_fds.p[fd].handle) ? 0 : winerr();
+  return FlushFileBuffers(g_fds.p[fd].handle) ? 0 : __winerr();
 }

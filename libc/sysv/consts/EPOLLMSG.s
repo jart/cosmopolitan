@@ -1,2 +1,2 @@
 .include "libc/sysv/consts/syscon.inc"
-.syscon epoll EPOLLMSG 0x0400 0 0 0 0
+.syscon epoll EPOLLMSG 0x0400 0x0400 0x0400 0x0400 0x0400

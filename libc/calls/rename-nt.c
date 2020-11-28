@@ -34,6 +34,6 @@ textwindows int rename$nt(const char *oldpath, const char *newpath) {
   if (MoveFileEx(oldpath16, newpath16, kNtMovefileReplaceExisting)) {
     return 0;
   } else {
-    return winerr();
+    return __winerr();
   }
 }

@@ -55,7 +55,7 @@ int mprotect(void *addr, uint64_t len, int prot) {
     if (__imp_VirtualProtect(addr, len, prot2nt(prot, 0), &oldprot)) {
       return 0;
     } else {
-      return winerr();
+      return __winerr();
     }
   }
 }

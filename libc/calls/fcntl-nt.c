@@ -21,20 +21,31 @@
 #include "libc/nt/files.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int fcntl$nt(int fd, int cmd, unsigned arg) {
   uint32_t flags;
-  if (!isfdkind(fd, kFdFile)) return ebadf();
+  if (!__isfdkind(fd, kFdFile)) return ebadf();
   switch (cmd) {
+    case F_GETFL:
+      return g_fds.p[fd].flags;
+    case F_SETFL:
+      return (g_fds.p[fd].flags = arg);
     case F_GETFD:
-      if (!GetHandleInformation(g_fds.p[fd].handle, &flags)) return -1;
-      arg = (flags & FD_CLOEXEC) ^ FD_CLOEXEC;
-      return arg;
+      if (g_fds.p[fd].flags & O_CLOEXEC) {
+        return FD_CLOEXEC;
+      } else {
+        return 0;
+      }
     case F_SETFD:
-      arg ^= FD_CLOEXEC;
-      if (!SetHandleInformation(g_fds.p[fd].handle, FD_CLOEXEC, arg)) return -1;
-      return 0;
+      if (arg & O_CLOEXEC) {
+        g_fds.p[fd].flags |= O_CLOEXEC;
+        return FD_CLOEXEC;
+      } else {
+        g_fds.p[fd].flags &= ~O_CLOEXEC;
+        return 0;
+      }
     default:
       return 0; /* TODO(jart): Implement me. */
   }

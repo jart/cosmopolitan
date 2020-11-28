@@ -45,7 +45,6 @@ static struct StdioFlush g_fflush;
  *
  * @param f is the stream handle
  * @return number of bytes written or -1 on error
- * @see fwritebuf
  */
 int fflush(FILE *f) {
   size_t i;
@@ -62,19 +61,14 @@ int fflush(FILE *f) {
         }
       }
     }
-  } else if (f->fd != -1 && (f->iomode & O_WRONLY)) {
-    if (!f->state) {
-      while (f->beg != f->end) {
-        if ((wrote = fwritebuf(f)) != -1) {
-          res += wrote;
-        } else {
-          res = -1;
-          break;
-        }
+  } else if (f->fd != -1) {
+    while (!f->state && f->beg && !f->end) {
+      if ((wrote = __fwritebuf(f)) != -1) {
+        res += wrote;
       }
-    } else if (f->state != -1) {
-      res = fseterr(f, f->state);
     }
+  } else if (f->beg && f->beg < f->size) {
+    f->buf[f->beg] = 0;
   }
   return res;
 }

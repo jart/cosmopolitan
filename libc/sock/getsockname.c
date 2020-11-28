@@ -31,7 +31,7 @@
 int getsockname(int fd, void *out_addr, uint32_t *out_addrsize) {
   if (!IsWindows()) {
     return getsockname$sysv(fd, out_addr, out_addrsize);
-  } else if (isfdkind(fd, kFdSocket)) {
+  } else if (__isfdkind(fd, kFdSocket)) {
     return getsockname$nt(&g_fds.p[fd], out_addr, out_addrsize);
   } else {
     return ebadf();

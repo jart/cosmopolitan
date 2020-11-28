@@ -48,8 +48,7 @@ static const char kInput[] = "127.0.0.1	localhost\n"
 
 TEST(resolvehoststxt, testBasicLookups) {
   struct HostsTxt *ht = calloc(1, sizeof(struct HostsTxt));
-  FILE *f = fmemopen(NULL, BUFSIZ, "r+");
-  ASSERT_EQ(strlen(kInput), fwrite(kInput, 1, strlen(kInput), f));
+  FILE *f = fmemopen(kInput, strlen(kInput), "r+");
   ASSERT_EQ(0, parsehoststxt(ht, f));
   sorthoststxt(ht);
   ASSERT_EQ(5, ht->entries.i);
@@ -66,8 +65,7 @@ TEST(resolvehoststxt, testBasicLookups) {
 
 TEST(resolvehoststxt, testCanonicalize) {
   struct HostsTxt *ht = calloc(1, sizeof(struct HostsTxt));
-  FILE *f = fmemopen(NULL, BUFSIZ, "r+");
-  ASSERT_EQ(strlen(kInput), fwrite(kInput, 1, strlen(kInput), f));
+  FILE *f = fmemopen(kInput, strlen(kInput), "r+");
   ASSERT_EQ(0, parsehoststxt(ht, f));
   sorthoststxt(ht);
   ASSERT_EQ(5, ht->entries.i);

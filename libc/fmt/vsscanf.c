@@ -47,5 +47,5 @@ static int vsscanfcb(void *arg) {
  */
 int(vsscanf)(const char *str, const char *fmt, va_list va) {
   struct StringScannerState state = {(const unsigned char *)str, 0};
-  return vcscanf(vsscanfcb, &state, fmt, va);
+  return vcscanf(vsscanfcb, NULL, &state, fmt, va);
 }

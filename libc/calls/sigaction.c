@@ -81,7 +81,7 @@ static void sigaction$cosmo2native(union metasigaction *sa) {
                  sa_mask);
       break;
     default:
-      abort();
+      break;
   }
 }
 
@@ -105,7 +105,7 @@ static void sigaction$native2cosmo(union metasigaction *sa) {
                  sa_mask);
       break;
     default:
-      abort();
+      break;
   }
 }
 

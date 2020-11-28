@@ -30,17 +30,17 @@
  * Implements dup(), dup2(), and dup3() for Windows NT.
  */
 textwindows int dup$nt(int oldfd, int newfd, int flags) {
-  if (!isfdkind(oldfd, kFdFile)) return ebadf();
+  if (!__isfdkind(oldfd, kFdFile)) return ebadf();
   if (newfd == -1) {
-    if ((newfd = createfd()) == -1) return -1;
-  } else if (isfdindex(newfd)) {
+    if ((newfd = __getemptyfd()) == -1) {
+      return -1;
+    }
+  } else if (__ensurefds(newfd) != -1) {
     if (g_fds.p[newfd].kind != kFdEmpty) {
       close(newfd);
     }
   } else {
-    do {
-      if (growfds() == -1) return -1;
-    } while (newfd >= g_fds.n);
+    return -1;
   }
   if (DuplicateHandle(GetCurrentProcess(), g_fds.p[oldfd].handle,
                       GetCurrentProcess(), &g_fds.p[newfd].handle, 0,
@@ -49,6 +49,6 @@ textwindows int dup$nt(int oldfd, int newfd, int flags) {
     g_fds.p[newfd].flags = flags;
     return newfd;
   } else {
-    return winerr();
+    return __winerr();
   }
 }

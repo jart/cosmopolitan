@@ -22,6 +22,7 @@
 #include "libc/dce.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/yoink.inc"
 #include "libc/sysv/errfuns.h"
 
 textwindows int getpeername$nt(struct Fd *fd, void *out_addr,
@@ -30,6 +31,6 @@ textwindows int getpeername$nt(struct Fd *fd, void *out_addr,
   if (__getpeername$nt(fd->handle, out_addr, out_addrsize) != -1) {
     return 0;
   } else {
-    return winsockerr();
+    return __winsockerr();
   }
 }

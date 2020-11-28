@@ -17,16 +17,19 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/internal.h"
-#include "libc/stdio/stdio.h"
+#include "libc/bits/bits.h"
+#include "libc/calls/internal.h"
+#include "libc/mem/mem.h"
+#include "libc/sysv/errfuns.h"
 
-int __getc_moar(FILE *f) {
-  int b;
-  if (f->beg == f->end) {
-    if (!f->reader) return fseteof(f);
-    if (f->reader(f) == -1) return -1;
+/**
+ * Finds open file descriptor slot.
+ */
+ssize_t __getemptyfd(void) {
+  for (; g_fds.f < g_fds.n; ++g_fds.f) {
+    if (g_fds.p[g_fds.f].kind == kFdEmpty) {
+      return g_fds.f;
+    }
   }
-  b = f->buf[f->beg];
-  f->beg = (f->beg + 1) & (f->size - 1);
-  return b;
+  return __ensurefds(g_fds.f);
 }

@@ -56,7 +56,7 @@ static textwindows noinline int sched_setaffinity$nt(int pid,
       }
     }
   }
-  rc = SetAffinityMask(handle ? handle : pid, mask) ? 0 : winerr();
+  rc = SetAffinityMask(handle ? handle : pid, mask) ? 0 : __winerr();
   if (handle) CloseHandle(handle);
   return rc;
 }

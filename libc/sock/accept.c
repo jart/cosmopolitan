@@ -17,11 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/dce.h"
-#include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
-#include "libc/sysv/errfuns.h"
 
 /**
  * Creates client socket file descriptor for incoming connection.
@@ -33,11 +29,5 @@
  * @asyncsignalsafe
  */
 int accept(int fd, void *out_addr, uint32_t *inout_addrsize) {
-  if (!IsWindows()) {
-    return accept$sysv(fd, out_addr, inout_addrsize);
-  } else if (isfdkind(fd, kFdSocket)) {
-    return accept$nt(&g_fds.p[fd], out_addr, inout_addrsize, 0);
-  } else {
-    return ebadf();
-  }
+  return accept4(fd, out_addr, inout_addrsize, 0);
 }

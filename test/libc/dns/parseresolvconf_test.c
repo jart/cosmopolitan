@@ -46,8 +46,7 @@ TEST(parseresolvconf, testCorrectlyTokenizes) {
                         "nameserver  203.0.113.2 \n"
                         " nameserver  203.0.113.1\n";
   struct ResolvConf *rv = calloc(1, sizeof(struct ResolvConf));
-  FILE *f = fmemopen(NULL, BUFSIZ, "r+");
-  ASSERT_EQ(strlen(kInput), fwrite(kInput, 1, strlen(kInput), f));
+  FILE *f = fmemopen(kInput, strlen(kInput), "r+");
   ASSERT_EQ(2, parseresolvconf(rv, f));
   ASSERT_EQ(2, rv->nameservers.i);
   EXPECT_EQ(AF_INET, rv->nameservers.p[0].sin_family);

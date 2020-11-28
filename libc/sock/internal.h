@@ -3,6 +3,7 @@
 #ifndef __STRICT_ANSI__
 #include "libc/bits/bits.h"
 #include "libc/nt/winsock.h"
+#include "libc/sock/select.h"
 #include "libc/sock/sock.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -48,6 +49,8 @@ struct msghdr$bsd {
   uint32_t msg_flags; /* « different type */
 };
 
+errno_t MapDosErrorToErrno(uint32_t);
+
 int32_t __accept$sysv(int32_t, void *, uint32_t *) nodiscard hidden;
 int32_t __accept4$sysv(int32_t, void *, uint32_t *, int) nodiscard hidden;
 int32_t __connect$sysv(int32_t, const void *, uint32_t) hidden;
@@ -73,6 +76,11 @@ int64_t writev$sysv(int32_t, const struct iovec *, int32_t) hidden;
 ssize_t recvfrom$sysv(int, void *, size_t, int, void *, uint32_t *) hidden;
 ssize_t sendto$sysv(int, const void *, size_t, int, const void *,
                     uint32_t) hidden;
+int32_t select$sysv(int32_t, fd_set *, fd_set *, fd_set *,
+                    struct timeval *) hidden;
+int32_t epoll_create$sysv(int32_t) hidden;
+int32_t epoll_ctl$sysv(int32_t, int32_t, int32_t, void *) hidden;
+int32_t epoll_wait$sysv(int32_t, void *, int32_t, int32_t) hidden;
 
 int poll$nt(struct pollfd *, uint64_t, int32_t) hidden;
 int getsockopt$nt(struct Fd *, int, int, void *, uint32_t *) hidden;
@@ -84,8 +92,9 @@ int bind$nt(struct Fd *, const void *, uint32_t);
 int accept$nt(struct Fd *, void *, uint32_t *, int) hidden;
 int closesocket$nt(int) hidden;
 int socket$nt(int, int, int) hidden;
+int select$nt(int, fd_set *, fd_set *, fd_set *, struct timeval *) hidden;
 
-size_t iovec2nt(struct iovec$nt[hasatleast 16], const struct iovec *,
+size_t iovec2nt(struct NtIovec[hasatleast 16], const struct iovec *,
                 size_t) hidden;
 ssize_t sendto$nt(struct Fd *, const struct iovec *, size_t, uint32_t, void *,
                   uint32_t) hidden;
@@ -93,11 +102,13 @@ ssize_t recvfrom$nt(struct Fd *, const struct iovec *, size_t, uint32_t, void *,
                     uint32_t *) hidden;
 
 void winsockinit(void) hidden;
-int64_t winsockerr(void) nocallback hidden;
+int64_t __winsockerr(void) nocallback hidden;
 int fixupnewsockfd$sysv(int, int) hidden;
 ssize_t WinSendRecv(int64_t, void *, size_t, uint32_t, struct sockaddr *,
                     uint32_t *, bool) hidden;
 int64_t winsockblock(int64_t, unsigned, int64_t) hidden;
+
+int close$epoll(int) hidden;
 
 /**
  * Converts sockaddr (Linux/Windows) → sockaddr$bsd (XNU/BSD).

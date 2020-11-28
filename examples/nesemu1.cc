@@ -43,7 +43,7 @@
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "libc/zip.h"
-#include "libc/zipos/zipos.h"
+#include "libc/zipos/zipos.internal.h"
 #include "third_party/getopt/getopt.h"
 #include "tool/viz/lib/knobs.h"
 

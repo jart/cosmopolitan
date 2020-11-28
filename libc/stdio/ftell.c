@@ -26,4 +26,6 @@
  * @param stream is a non-null stream handle
  * @returns current byte offset from beginning of file, or -1
  */
-long ftell(FILE *stream) { return fseek(stream, 0, SEEK_CUR); }
+long ftell(FILE *stream) {
+  return fseek(stream, 0, SEEK_CUR);
+}

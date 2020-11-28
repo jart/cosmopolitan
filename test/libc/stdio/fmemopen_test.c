@@ -17,22 +17,23 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/calls/internal.h"
-#include "libc/mem/mem.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/stdio/stdio.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Finds open file descriptor slot.
- */
-ssize_t createfd(void) {
-  size_t fd;
-  for (;;) {
-    while (g_fds.f < g_fds.n) {
-      if (g_fds.p[(fd = g_fds.f++)].kind == kFdEmpty) {
-        return fd;
-      }
-    }
-    if (growfds() == -1) return -1;
-  }
+TEST(fmemopen, testWriteRewindRead) {
+  char c;
+  FILE *f;
+  f = fmemopen(NULL, BUFSIZ, "w+");
+  EXPECT_EQ(1, fwrite("c", 1, 1, f));
+  rewind(f);
+  EXPECT_EQ(1, fread(&c, 1, 1, f));
+  EXPECT_EQ('c', c);
 }
+
+/* TEST(fmemopen, testWriteRead_readsNothingButNotEof) { */
+/*   char c; */
+/*   FILE *f; */
+/*   f = fmemopen(NULL, BUFSIZ, "w+"); */
+/*   EXPECT_EQ(1, fwrite("c", 1, 1, f)); */
+/*   EXPECT_EQ(0, fread(&c, 1, 1, f)); */
+/* } */

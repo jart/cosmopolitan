@@ -48,7 +48,7 @@ int bind(int fd, const void *addr, uint32_t addrsize) {
         sockaddr2bsd(&addr2);
         return bind$sysv(fd, &addr2, addrsize);
       }
-    } else if (isfdkind(fd, kFdSocket)) {
+    } else if (__isfdkind(fd, kFdSocket)) {
       return bind$nt(&g_fds.p[fd], addr, addrsize);
     } else {
       return ebadf();

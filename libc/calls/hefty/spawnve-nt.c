@@ -49,14 +49,14 @@ textwindows int spawnve$nt(unsigned flags, int stdiofds[3], const char *program,
   sti.cb = sizeof(sti);
   sti.dwFlags = kNtStartfUsestdhandles;
 
-  if ((pid = createfd()) == -1) return -1;
+  if ((pid = __getemptyfd()) == -1) return -1;
 
   for (i = 0; i < 3; ++i) {
     if (stdiofds[i] == -1) {
       x = &h;
       y = &sti.stdiofds[i];
       if (kIoMotion[i]) xchg(&x, &y);
-      if ((tubes[i] = createfd()) != -1 &&
+      if ((tubes[i] = __getemptyfd()) != -1 &&
           CreatePipe(x, y, &kNtIsInheritable, 0)) {
         g_fds.p[tubes[i]].handle = h;
       } else {

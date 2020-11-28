@@ -20,4 +20,6 @@
 #include "libc/errno.h"
 #include "libc/stdio/internal.h"
 
-long fseterrno(FILE *f) { return fseterr(f, errno); }
+long __fseterrno(FILE *f) {
+  return __fseterr(f, errno);
+}

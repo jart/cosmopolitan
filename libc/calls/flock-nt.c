@@ -29,7 +29,7 @@
 textwindows int flock$nt(int fd, int op) {
   struct NtOverlapped ov;
   struct NtByHandleFileInformation info;
-  if (!isfdkind(fd, kFdFile)) return ebadf();
+  if (!__isfdkind(fd, kFdFile)) return ebadf();
   memset(&ov, 0, sizeof(ov));
   if (GetFileInformationByHandle(g_fds.p[fd].handle, &info) &&
       ((!(op & LOCK_UN) &&
@@ -39,6 +39,6 @@ textwindows int flock$nt(int fd, int op) {
                                        info.nFileSizeHigh, &ov)))) {
     return 0;
   } else {
-    return winerr();
+    return __winerr();
   }
 }

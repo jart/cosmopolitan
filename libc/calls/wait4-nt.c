@@ -41,7 +41,7 @@ textwindows int wait4$nt(int pid, int *opt_out_wstatus, int options,
   uint32_t i, count, timeout;
   struct NtFileTime createfiletime, exitfiletime, kernelfiletime, userfiletime;
   if (pid != -1) {
-    if (!isfdkind(pid, kFdProcess)) {
+    if (!__isfdkind(pid, kFdProcess)) {
       return echild();
     }
     handles[0] = g_fds.p[pid].handle;
@@ -67,8 +67,8 @@ textwindows int wait4$nt(int pid, int *opt_out_wstatus, int options,
     } else {
       i = WaitForMultipleObjects(count, handles, false, -1);
     }
-    if (i == kNtWaitFailed) return winerr();
-    if (!GetExitCodeProcess(handles[i], &dwExitCode)) return winerr();
+    if (i == kNtWaitFailed) return __winerr();
+    if (!GetExitCodeProcess(handles[i], &dwExitCode)) return __winerr();
     if (dwExitCode == kNtStillActive) continue;
     if (opt_out_wstatus) { /* @see WEXITSTATUS() */
       *opt_out_wstatus = (dwExitCode & 0xff) << 8;
@@ -80,6 +80,8 @@ textwindows int wait4$nt(int pid, int *opt_out_wstatus, int options,
       FileTimeToTimeVal(&opt_out_rusage->ru_utime, userfiletime);
       FileTimeToTimeVal(&opt_out_rusage->ru_stime, kernelfiletime);
     }
+    CloseHandle(g_fds.p[pids[i]].handle);
+    g_fds.p[pids[i]].kind = kFdEmpty;
     return pids[i];
   }
 }

@@ -17,6 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/relocations.h"
 #include "libc/alg/arraylist2.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
@@ -138,6 +139,9 @@ int main(int argc, char *argv[]) {
   APPENDSTR("#define COSMOPOLITAN_H_\n");
   APPENDSTR("#define IMAGE_BASE_VIRTUAL ");
   AppendInt(IMAGE_BASE_VIRTUAL);
+  APPENDSTR("\n");
+  APPENDSTR("#define IMAGE_BASE_PHYSICAL ");
+  AppendInt(IMAGE_BASE_PHYSICAL);
   APPENDSTR("\n");
   for (i = 1; i < argc; ++i) {
     Visit(argv[i]);

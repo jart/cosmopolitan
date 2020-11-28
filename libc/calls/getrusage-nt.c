@@ -40,6 +40,6 @@ textwindows int getrusage$nt(int who, struct rusage *usage) {
     FileTimeToTimeVal(&usage->ru_stime, KernelFileTime);
     return 0;
   } else {
-    return winerr();
+    return __winerr();
   }
 }

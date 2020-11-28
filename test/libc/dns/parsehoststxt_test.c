@@ -40,14 +40,14 @@ TEST(parsehoststxt, testEmpty) {
 }
 
 TEST(parsehoststxt, testCorrectlyTokenizesAndSorts) {
-  const char kInput[] =
-      "# this is a comment\n"
-      "# IP            HOST1 HOST2\n"
-      "203.0.113.1     lol.example. lol\n"
-      "203.0.113.2     cat.example. cat\n";
+  const char kInput[] = "# this is a comment\n"
+                        "# IP            HOST1 HOST2\n"
+                        "203.0.113.1     lol.example. lol\n"
+                        "203.0.113.2     cat.example. cat\n";
   struct HostsTxt *ht = calloc(1, sizeof(struct HostsTxt));
   FILE *f = fmemopen(NULL, BUFSIZ, "r+");
-  ASSERT_EQ(strlen(kInput), fwrite(kInput, 1, strlen(kInput), f));
+  fwrite(kInput, 1, strlen(kInput), f);
+  rewind(f);
   ASSERT_EQ(0, parsehoststxt(ht, f));
   sorthoststxt(ht);
   ASSERT_EQ(4, ht->entries.i);
@@ -68,12 +68,10 @@ TEST(parsehoststxt, testCorrectlyTokenizesAndSorts) {
 }
 
 TEST(parsehoststxt, testIpv6_isIgnored) {
-  const char kInput[] =
-      "::1             boop\n"
-      "203.0.113.2     cat     # ignore me\n";
+  const char kInput[] = "::1             boop\n"
+                        "203.0.113.2     cat     # ignore me\n";
   struct HostsTxt *ht = calloc(1, sizeof(struct HostsTxt));
-  FILE *f = fmemopen(NULL, BUFSIZ, "r+");
-  ASSERT_EQ(strlen(kInput), fwrite(kInput, 1, strlen(kInput), f));
+  FILE *f = fmemopen(kInput, strlen(kInput), "r+");
   ASSERT_EQ(0, parsehoststxt(ht, f));
   ASSERT_EQ(1, ht->entries.i);
   EXPECT_STREQ("cat", &ht->strings.p[ht->entries.p[0].name]);

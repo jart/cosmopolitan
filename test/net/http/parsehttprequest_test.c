@@ -36,13 +36,17 @@ static char *slice(const char *m, struct HttpRequestSlice s) {
   return p;
 }
 
-TEST(ParseHttpRequest, testEmpty) {
-  EXPECT_EQ(-1, ParseHttpRequest(req, "", 0));
+TEST(ParseHttpRequest, testEmpty_tooShort) {
+  EXPECT_EQ(0, ParseHttpRequest(req, "", 0));
+}
+
+TEST(ParseHttpRequest, testTooShort) {
+  EXPECT_EQ(0, ParseHttpRequest(req, "\r\n", 2));
 }
 
 TEST(ParseHttpRequest, testNoHeaders) {
   static const char m[] = "GET /foo HTTP/1.0\r\n\r\n";
-  EXPECT_EQ(0, ParseHttpRequest(req, m, strlen(m)));
+  EXPECT_EQ(strlen(m), ParseHttpRequest(req, m, strlen(m)));
   EXPECT_EQ(kHttpGet, req->method);
   EXPECT_STREQ("/foo", gc(slice(m, req->uri)));
   EXPECT_STREQ("HTTP/1.0", gc(slice(m, req->version)));
@@ -54,7 +58,7 @@ POST /foo?bar%20hi HTTP/1.0\r\n\
 Host: foo.example\r\n\
 Content-Length: 0\r\n\
 \r\n";
-  EXPECT_EQ(0, ParseHttpRequest(req, m, strlen(m)));
+  EXPECT_EQ(strlen(m), ParseHttpRequest(req, m, strlen(m)));
   EXPECT_EQ(kHttpPost, req->method);
   EXPECT_STREQ("/foo?bar%20hi", gc(slice(m, req->uri)));
   EXPECT_STREQ("HTTP/1.0", gc(slice(m, req->version)));

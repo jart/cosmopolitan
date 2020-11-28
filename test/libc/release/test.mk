@@ -25,6 +25,7 @@ o/$(MODE)/test/libc/release/smoke.com:				\
 		-nostdlib					\
 		-nostdinc					\
 		-Wl,--oformat=binary				\
+		-Wl,-z,max-page-size=0x1000			\
 		-Wl,-T,o/$(MODE)/ape/ape.lds			\
 		-include o/cosmopolitan.h			\
 		test/libc/release/smoke.c			\

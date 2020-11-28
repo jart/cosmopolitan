@@ -34,6 +34,6 @@ textwindows int sysinfo$nt(struct sysinfo *info) {
     info->mem_unit = 1;
     return 0;
   } else {
-    return winerr();
+    return __winerr();
   }
 }

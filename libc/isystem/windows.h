@@ -100,71 +100,72 @@
 #define PKAFFINITY KAFFINITY*
 #define KPRIORITY  LONG
 
-#define PWCHAR        WCHAR*
-#define LPWCH         WCHAR*
-#define PWCH          WCHAR*
-#define LPCWCH        CONST WCHAR*
-#define PCWCH         CONST WCHAR*
-#define NWPSTR        WCHAR*
-#define LPWSTR        WCHAR*
-#define PWSTR         WCHAR*
-#define PZPWSTR       PWSTR*
-#define PCZPWSTR      CONST PWSTR*
-#define LPUWSTR       WCHAR aligned(1)*
-#define PUWSTR        WCHAR aligned(1)*
-#define LPCWSTR       CONST WCHAR*
-#define PCWSTR        CONST WCHAR*
-#define PZPCWSTR      PCWSTR*
-#define LPCUWSTR      CONST WCHAR aligned(1)*
-#define PCUWSTR       CONST WCHAR aligned(1)*
-#define PCHAR         CHAR*
-#define LPCH          CHAR*
-#define PCH           CHAR*
-#define LPCCH         CONST CHAR*
-#define PCCH          CONST CHAR*
-#define NPSTR         CHAR*
-#define LPSTR         CHAR*
-#define PSTR          CHAR*
-#define PZPSTR        PSTR*
-#define PCZPSTR       CONST PSTR*
-#define LPCSTR        CONST CHAR*
-#define PCSTR         CONST CHAR*
-#define PZPCSTR       PCSTR*
-#define TCHAR         WCHAR
-#define PTCHAR        WCHAR*
-#define TBYTE         WCHAR
-#define PTBYTE        WCHAR*
-#define LPTCH         LPWSTR
-#define PTCH          LPWSTR
-#define PTSTR         LPWSTR
-#define LPTSTR        LPWSTR
-#define PCTSTR        LPCWSTR
-#define LPCTSTR       LPCWSTR
-#define PUTSTR        LPUWSTR
-#define LPUTSTR       LPUWSTR
-#define PCUTSTR       LPCUWSTR
-#define LPCUTSTR      LPCUWSTR
-#define LP            LPWSTR
-#define PSHORT        int16_t*
-#define PLONG         int32_t*
-#define HANDLE        int64_t
-#define PHANDLE       HANDLE*
-#define FCHAR         BYTE
-#define FSHORT        WORD
-#define FLONG         DWORD
-#define HRESULT       LONG
-#define CCHAR         char
-#define LCID          DWORD
-#define PLCID         PDWORD
-#define LANGID        WORD
-#define LONGLONG      int64_t
-#define ULONGLONG     uint64_t
-#define USN           LONGLONG
-#define PLONGLONG     LONGLONG*
-#define PULONGLONG    ULONGLONG*
-#define DWORDLONG     ULONGLONG
-#define PDWORDLONG    DWORDLONG*
-#define LARGE_INTEGER int64_t
+#define PWCHAR         WCHAR*
+#define LPWCH          WCHAR*
+#define PWCH           WCHAR*
+#define LPCWCH         CONST WCHAR*
+#define PCWCH          CONST WCHAR*
+#define NWPSTR         WCHAR*
+#define LPWSTR         WCHAR*
+#define PWSTR          WCHAR*
+#define PZPWSTR        PWSTR*
+#define PCZPWSTR       CONST PWSTR*
+#define LPUWSTR        WCHAR aligned(1)*
+#define PUWSTR         WCHAR aligned(1)*
+#define LPCWSTR        CONST WCHAR*
+#define PCWSTR         CONST WCHAR*
+#define PZPCWSTR       PCWSTR*
+#define LPCUWSTR       CONST WCHAR aligned(1)*
+#define PCUWSTR        CONST WCHAR aligned(1)*
+#define PCHAR          CHAR*
+#define LPCH           CHAR*
+#define PCH            CHAR*
+#define LPCCH          CONST CHAR*
+#define PCCH           CONST CHAR*
+#define NPSTR          CHAR*
+#define LPSTR          CHAR*
+#define PSTR           CHAR*
+#define PZPSTR         PSTR*
+#define PCZPSTR        CONST PSTR*
+#define LPCSTR         CONST CHAR*
+#define PCSTR          CONST CHAR*
+#define PZPCSTR        PCSTR*
+#define TCHAR          WCHAR
+#define PTCHAR         WCHAR*
+#define TBYTE          WCHAR
+#define PTBYTE         WCHAR*
+#define LPTCH          LPWSTR
+#define PTCH           LPWSTR
+#define PTSTR          LPWSTR
+#define LPTSTR         LPWSTR
+#define PCTSTR         LPCWSTR
+#define LPCTSTR        LPCWSTR
+#define PUTSTR         LPUWSTR
+#define LPUTSTR        LPUWSTR
+#define PCUTSTR        LPCUWSTR
+#define LPCUTSTR       LPCUWSTR
+#define LP             LPWSTR
+#define PSHORT         int16_t*
+#define PLONG          int32_t*
+#define HANDLE         int64_t
+#define PHANDLE        HANDLE*
+#define FCHAR          BYTE
+#define FSHORT         WORD
+#define FLONG          DWORD
+#define HRESULT        LONG
+#define CCHAR          char
+#define LCID           DWORD
+#define PLCID          PDWORD
+#define LANGID         WORD
+#define LONGLONG       int64_t
+#define ULONGLONG      uint64_t
+#define USN            LONGLONG
+#define PLONGLONG      LONGLONG*
+#define PULONGLONG     ULONGLONG*
+#define DWORDLONG      ULONGLONG
+#define PDWORDLONG     DWORDLONG*
+#define LARGE_INTEGER  int64_t
+#define PLARGE_INTEGER int64_t*
 
 #define ULONG        uint32_t
 #define PULONG       ULONG*
@@ -1273,9 +1274,9 @@
 #define WSAPROTOCOL_INFO   struct NtWsaProtocolInfo
 #define LPWSAPROTOCOL_INFO struct NtWsaProtocolInfo*
 
-#define _WSABUF  iovec$nt
-#define WSABUF   struct iovec$nt
-#define LPWSABUF struct iovec$nt*
+#define _WSABUF  NtIovec
+#define WSABUF   struct NtIovec
+#define LPWSABUF struct NtIovec*
 
 #define _GUID  NtGuid
 #define GUID   struct NtGuid
@@ -1320,9 +1321,9 @@
 #define SD_SEND    SHUT_WR
 #define SD_BOTH    SHUT_RDWR
 
-#define WSAMSG   struct msghdr$nt
-#define PWSAMSG  struct msghdr$nt*
-#define LPWSAMSG struct msghdr$nt*
+#define WSAMSG   struct NtMsgHdr
+#define PWSAMSG  struct NtMsgHdr*
+#define LPWSAMSG struct NtMsgHdr*
 
 #define _MEMORYSTATUSEX  NtMemoryStatusEx
 #define MEMORYSTATUSEX   struct NtMemoryStatusEx

@@ -904,12 +904,12 @@ static int Rebuffer(FILE *f) {
       f->end = (f->end + got) & (f->size - 1);
       return got;
     } else {
-      return fseteof(f);
+      return __fseteof(f);
     }
   } else if (errno == EINTR || errno == EAGAIN) {
     return 0;
   } else {
-    return fseterrno(f);
+    return __fseterrno(f);
   }
 }
 

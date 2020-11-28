@@ -73,6 +73,18 @@ o/$(MODE)/tool/net/redbean.com.dbg:				\
 		$(APE)
 	@$(APELINK)
 
+o/$(MODE)/tool/net/greenbean.com.dbg:				\
+		$(TOOL_NET_DEPS)				\
+		o/$(MODE)/tool/net/greenbean.o			\
+		o/$(MODE)/tool/net/redbean.ico.zip.o		\
+		o/$(MODE)/tool/net/redbean.png.zip.o		\
+		o/$(MODE)/tool/net/redbean.css.zip.o		\
+		o/$(MODE)/tool/net/redbean.html.zip.o		\
+		o/$(MODE)/tool/net/net.pkg			\
+		$(CRT)						\
+		$(APE)
+	@$(APELINK)
+
 # ifeq (,$(MODE))
 # $(TOOL_NET_OBJS):						\
 # 		OVERRIDE_CFLAGS +=				\

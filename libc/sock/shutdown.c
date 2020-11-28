@@ -28,7 +28,7 @@ static int shutdown$nt(struct Fd *fd, int how) {
   if (__shutdown$nt(fd->handle, how) != -1) {
     return 0;
   } else {
-    return winsockerr();
+    return __winsockerr();
   }
 }
 
@@ -48,7 +48,7 @@ int shutdown(int fd, int how) {
       /* TODO(jart): What's wrong with XNU shutdown()? */
       return 0;
     }
-  } else if (isfdkind(fd, kFdSocket)) {
+  } else if (__isfdkind(fd, kFdSocket)) {
     return shutdown$nt(&g_fds.p[fd], how);
   } else {
     return ebadf();

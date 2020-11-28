@@ -17,10 +17,8 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/sock/internal.h"
-#include "libc/sock/sock.h"
 #include "libc/calls/internal.h"
+#include "libc/sock/internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sock.h"
 

@@ -20,7 +20,7 @@
 #include "libc/stdio/stdio.h"
 
 int ungetc(int c, FILE *f) {
+  f->beg = (f->beg - 1) & (f->size - 1);
   f->buf[f->beg] = c;
-  f->beg = (f->beg - 1u) & (f->size - 1);
   return c;
 }

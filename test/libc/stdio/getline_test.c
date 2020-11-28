@@ -20,10 +20,11 @@
 #include "libc/bits/bits.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
 TEST(getline, testEmpty) {
-  FILE *f = fmemopen(NULL, BUFSIZ, "r+");
+  FILE *f = fmemopen("", 0, "r+");
   char *line = NULL;
   size_t linesize = 0;
   EXPECT_EQ(-1, getline(&line, &linesize, f));
@@ -34,8 +35,7 @@ TEST(getline, testEmpty) {
 }
 
 TEST(getline, testOneWithoutLineFeed) {
-  FILE *f = fmemopen(NULL, BUFSIZ, "r+");
-  ASSERT_EQ(5, fwrite("hello", 1, 5, f));
+  FILE *f = fmemopen("hello", 5, "r+");
   char *line = NULL;
   size_t linesize = 0;
   ASSERT_EQ(5, getline(&line, &linesize, f));
@@ -48,8 +48,8 @@ TEST(getline, testOneWithoutLineFeed) {
 }
 
 TEST(getline, testTwoLines) {
-  FILE *f = fmemopen(NULL, BUFSIZ, "r+");
-  ASSERT_EQ(12, fwrite("hello\nthere\n", 1, 12, f));
+  const char *s = "hello\nthere\n";
+  FILE *f = fmemopen(s, strlen(s), "r+");
   char *line = NULL;
   size_t linesize = 0;
   ASSERT_EQ(6, getline(&line, &linesize, f));
@@ -64,8 +64,8 @@ TEST(getline, testTwoLines) {
 }
 
 TEST(getline, testBinaryLine_countExcludesOnlyTheBonusNul) {
-  FILE *f = fmemopen(NULL, BUFSIZ, "r+");
-  fwrite("he\0\3o\n", 1, 6, f);
+  const char s[] = "he\0\3o\n";
+  FILE *f = fmemopen(s, sizeof(s), "r+");
   char *line = NULL;
   size_t linesize = 0;
   ASSERT_EQ(6, getline(&line, &linesize, f));
