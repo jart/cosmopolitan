@@ -29,7 +29,7 @@ textwindows int truncate$nt(const char *path, uint64_t length) {
   bool32 ok;
   int64_t fh;
   uint16_t path16[PATH_MAX];
-  if (mkntpath(path, path16) == -1) return -1;
+  if (__mkntpath(path, path16) == -1) return -1;
   if ((fh = CreateFile(path16, kNtGenericWrite, kNtFileShareRead, NULL,
                        kNtOpenExisting, kNtFileAttributeNormal, 0)) != -1) {
     ok = ftruncate$nt(fh, length);

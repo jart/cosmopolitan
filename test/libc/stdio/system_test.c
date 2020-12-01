@@ -17,9 +17,17 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/stdio.h"
 #include "libc/calls/calls.h"
+#include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
 
-TEST(system, nullParam_testsIfSystemHasShell) { ASSERT_EQ(true, system(NULL)); }
-TEST(system, test) { ASSERT_EQ(42, WEXITSTATUS(system("exit 42"))); }
+TEST(system, nullParam_testsIfSystemHasShell) {
+  ASSERT_EQ(true, system(NULL));
+}
+
+TEST(system, test) {
+  int rc;
+  rc = system("exit 42");
+  ASSERT_NE(-1, rc);
+  ASSERT_EQ(42, WEXITSTATUS(rc));
+}

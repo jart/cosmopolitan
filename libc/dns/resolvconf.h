@@ -18,7 +18,7 @@ struct ResolvConf {
 const struct ResolvConf *getresolvconf(void) returnsnonnull;
 int parseresolvconf(struct ResolvConf *, struct FILE *) paramsnonnull();
 void freeresolvconf(struct ResolvConf **) paramsnonnull();
-int getntnameservers(struct ResolvConf *resolv) paramsnonnull();
+int getntnameservers(struct ResolvConf *) paramsnonnull();
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

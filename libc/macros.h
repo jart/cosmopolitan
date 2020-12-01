@@ -33,7 +33,7 @@
 #define __STRINGIFY(A) #A
 #define __PASTE(A, B)  A##B
 #ifdef __ASSEMBLER__
-#include "libc/macros-cpp.inc"
-#include "libc/macros.inc"
+#include "libc/macros-cpp.internal.inc"
+#include "libc/macros.internal.inc"
 #endif /* __ASSEMBLER__ */
 #endif /* COSMOPOLITAN_LIBC_MACROS_H_ */

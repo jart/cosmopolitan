@@ -23,7 +23,7 @@
 
 textwindows int rmdir$nt(const char *path) {
   uint16_t path16[PATH_MAX];
-  if (mkntpath(path, path16) == -1) return -1;
+  if (__mkntpath(path, path16) == -1) return -1;
   if (RemoveDirectory(path16)) {
     return 0;
   } else {

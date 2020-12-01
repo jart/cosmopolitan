@@ -21,9 +21,11 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/hefty/spawn.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 /**
  * Launches program with system command interpreter.
@@ -33,21 +35,24 @@
  *     status that can be accessed using macros like WEXITSTATUS(s)
  */
 int system(const char *cmdline) {
+  char comspec[128];
+  int rc, pid, wstatus;
   const char *prog, *arg;
-  int rc, wstatus, fds[3];
   if (weaken(fflush)) weaken(fflush)(NULL);
   if (cmdline) {
-    prog = !IsWindows() ? _PATH_BSHELL : "cmd";
-    arg = !IsWindows() ? "-c" : "/C";
-    fds[0] = 0;
-    fds[1] = 1;
-    fds[2] = 2;
-    if ((rc = spawnlp(0, fds, prog, prog, arg, cmdline, NULL)) != -1) {
-      if ((rc = wait4(rc, &wstatus, 0, NULL)) != -1) {
-        rc = wstatus;
-      }
+    if ((pid = fork()) == -1) return -1;
+    if (!pid) {
+      strcpy(comspec, kNtSystemDirectory);
+      strcat(comspec, "cmd.exe");
+      prog = !IsWindows() ? _PATH_BSHELL : comspec;
+      arg = !IsWindows() ? "-c" : "/C";
+      execve(prog, (char *const[]){prog, arg, cmdline, NULL}, environ);
+      _exit(errno);
+    } else if (wait4(pid, &wstatus, 0, NULL) != -1) {
+      return wstatus;
+    } else {
+      return -1;
     }
-    return rc;
   } else if (IsWindows()) {
     return true;
   } else {

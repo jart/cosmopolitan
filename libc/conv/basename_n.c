@@ -36,7 +36,7 @@ textstartup char *basename_n(const char *path, size_t size) {
   if (size) {
     if (isslash(path[size - 1])) {
       l = size - 1;
-      while (isslash(path[l - 1])) --l;
+      while (l && isslash(path[l - 1])) --l;
       if (!l) return (/*unconst*/ char *)&path[size - 1];
       size = l;
     }

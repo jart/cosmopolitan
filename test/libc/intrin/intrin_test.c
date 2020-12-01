@@ -44,6 +44,8 @@
 #include "libc/intrin/pcmpgtb.h"
 #include "libc/intrin/pcmpgtd.h"
 #include "libc/intrin/pcmpgtw.h"
+#include "libc/intrin/pdep.h"
+#include "libc/intrin/pext.h"
 #include "libc/intrin/phaddd.h"
 #include "libc/intrin/phaddsw.h"
 #include "libc/intrin/phaddw.h"
@@ -101,7 +103,7 @@
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/nexgen32e/kcpuids.h"
-#include "libc/rand/lcg.h"
+#include "libc/rand/lcg.internal.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/gc.h"
 #include "libc/stdio/stdio.h"
@@ -2059,6 +2061,26 @@ TEST(pcmpeqw, test2) {
       (pcmpeqw)(b, x, y);
       EXPECT_EQ(0, memcmp(a, b, 16));
     }
+  }
+}
+
+TEST(pdep, fuzz) {
+  int i;
+  uint64_t x, y;
+  for (i = 0; i < 1000; ++i) {
+    x = rand64();
+    y = rand64();
+    ASSERT_EQ(pdep(x, y), (pdep)(x, y));
+  }
+}
+
+TEST(pext, fuzz) {
+  int i;
+  uint64_t x, y;
+  for (i = 0; i < 1000; ++i) {
+    x = rand64();
+    y = rand64();
+    ASSERT_EQ(pext(x, y), (pext)(x, y));
   }
 }
 

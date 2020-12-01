@@ -19,10 +19,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/conv/conv.h"
+#include "libc/mem/mem.h"
 #include "libc/testlib/testlib.h"
 
 TEST(basename, test) {
   EXPECT_STREQ("", basename(""));
+  EXPECT_STREQ("/", basename("/"));
   EXPECT_STREQ("hello", basename("hello"));
   EXPECT_STREQ("there", basename("hello/there"));
   EXPECT_STREQ("yo", basename("hello/there/yo"));
@@ -41,4 +43,14 @@ TEST(basename, testOnlySlashes_oneSlashOnlyVasily) {
 TEST(basename, testWindows_isGrantedRespect) {
   EXPECT_STREQ("there", basename("hello\\there"));
   EXPECT_STREQ("yo", basename("hello\\there\\yo"));
+}
+
+TEST(dirname, test) {
+  EXPECT_STREQ("/usr", dirname(strdup("/usr/lib")));
+  EXPECT_STREQ("usr", dirname(strdup("usr/lib")));
+  EXPECT_STREQ("/", dirname(strdup("/usr/")));
+  EXPECT_STREQ("/", dirname(strdup("/")));
+  EXPECT_STREQ(".", dirname(strdup("hello")));
+  EXPECT_STREQ(".", dirname(strdup(".")));
+  EXPECT_STREQ(".", dirname(strdup("..")));
 }

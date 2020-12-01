@@ -20,7 +20,7 @@
 #include "libc/macros.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/str/knuthmultiplicativehash.h"
+#include "libc/str/knuthmultiplicativehash.internal.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"

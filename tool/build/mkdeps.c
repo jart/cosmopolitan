@@ -36,7 +36,7 @@
 #include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/knuthmultiplicativehash.h"
+#include "libc/str/knuthmultiplicativehash.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/map.h"

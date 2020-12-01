@@ -9,7 +9,6 @@ COSMOPOLITAN_C_START_
 
 extern const uint8_t gperf_downcase[256];
 extern const uint8_t kToLower[256];
-extern const uint8_t kToUpper[256];
 extern const uint16_t kToLower16[256];
 extern const uint8_t kBase36[256];
 extern const char16_t kCp437[256];
@@ -170,7 +169,6 @@ bool endswith(const char *, const char *) strlenesque;
 bool endswith16(const char16_t *, const char16_t *) strlenesque;
 bool wcsendswith(const wchar_t *, const wchar_t *) strlenesque;
 const char *IndexDoubleNulString(const char *, unsigned) strlenesque;
-int getkvlin(const char *, const char *const[]);
 wchar_t *wmemset(wchar_t *, wchar_t, size_t) memcpyesque;
 char16_t *memset16(char16_t *, char16_t, size_t) memcpyesque;
 compatfn wchar_t *wmemcpy(wchar_t *, const wchar_t *, size_t) memcpyesque;
@@ -199,8 +197,8 @@ bool escapedos(char16_t *, unsigned, const char16_t *, unsigned);
 
 typedef unsigned mbstate_t;
 
-size_t tprecode8to16(char16_t *, size_t, const char *);
-size_t tprecode16to8(char *, size_t, const char16_t *);
+axdx_t tprecode8to16(char16_t *, size_t, const char *);
+axdx_t tprecode16to8(char *, size_t, const char16_t *);
 int strcmp8to16(const char *, const char16_t *) strlenesque;
 int strncmp8to16(const char *, const char16_t *, size_t) strlenesque;
 int strcasecmp8to16(const char *, const char16_t *) strlenesque;
@@ -240,9 +238,6 @@ char *strsignal(int) returnsnonnull libcesque;
 ╚────────────────────────────────────────────────────────────────────────────│*/
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 
-extern int (*const __memcmp)(const void *, const void *, size_t);
-#define memcmp(a, b, n) __memcmp(a, b, n)
-
 char *_strncpy(char *, const char *, size_t) asm("strncpy") memcpyesque;
 #define strncpy(DEST, SRC, N) _strncpy(DEST, SRC, N) /* pacify bad warning */
 
@@ -265,12 +260,12 @@ char *_strncpy(char *, const char *, size_t) asm("strncpy") memcpyesque;
 
 #define __memcpy_isgoodsize(SIZE)                              \
   (isconstant(SIZE) && ((SIZE) <= __BIGGEST_ALIGNMENT__ * 2 && \
-                        __builtin_popcount((unsigned)(SIZE)) == 1))
+                        __builtin_popcountl((unsigned)(SIZE)) == 1))
 
-#define __memset_isgoodsize(SIZE)                                      \
-  (isconstant(SIZE) && (((SIZE) <= __BIGGEST_ALIGNMENT__ &&            \
-                         __builtin_popcount((unsigned)(SIZE)) == 1) || \
-                        ((SIZE) % __BIGGEST_ALIGNMENT__ == 0 &&        \
+#define __memset_isgoodsize(SIZE)                                       \
+  (isconstant(SIZE) && (((SIZE) <= __BIGGEST_ALIGNMENT__ &&             \
+                         __builtin_popcountl((unsigned)(SIZE)) == 1) || \
+                        ((SIZE) % __BIGGEST_ALIGNMENT__ == 0 &&         \
                          (SIZE) / __BIGGEST_ALIGNMENT__ <= 3)))
 
 #define memcpy(DEST, SRC, SIZE)                                  \

@@ -41,21 +41,24 @@
  */
 textwindows int getntnameservers(struct ResolvConf *resolv) {
   int rc;
-  int64_t hkInterfaces = kNtInvalidHandleValue;
-  uint32_t keycount = 0;
+  char value8[128];
+  int64_t hkInterfaces;
+  struct sockaddr_in nameserver;
+  char16_t value[128], ifaceuuid[64];
+  uint32_t i, keycount, valuebytes, ifaceuuidlen;
+  keycount = 0;
+  hkInterfaces = kNtInvalidHandleValue;
   if (!RegOpenKeyEx(
           kNtHkeyLocalMachine,
           u"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces",
           0, kNtKeyRead, &hkInterfaces) &&
       !RegQueryInfoKey(hkInterfaces, NULL, NULL, NULL, &keycount, NULL, NULL,
                        NULL, NULL, NULL, NULL, NULL)) {
-    struct sockaddr_in nameserver;
     nameserver.sin_family = AF_INET;
     nameserver.sin_port = htons(DNS_PORT);
     rc = 0;
-    for (uint32_t i = 0; i < keycount; ++i) {
-      char16_t value[128], ifaceuuid[64];
-      uint32_t valuebytes, ifaceuuidlen = sizeof(ifaceuuid);
+    for (i = 0; i < keycount; ++i) {
+      ifaceuuidlen = sizeof(ifaceuuid);
       if (!RegEnumKeyEx(hkInterfaces, i, ifaceuuid, &ifaceuuidlen, NULL, NULL,
                         NULL, NULL) &&
           ((!RegGetValue(hkInterfaces, ifaceuuid, u"DhcpIpAddress",
@@ -74,7 +77,6 @@ textwindows int getntnameservers(struct ResolvConf *resolv) {
                          kNtRrfRtRegSz | kNtRrfRtRegMultiSz, NULL, value,
                          ((valuebytes = sizeof(value)), &valuebytes)) &&
             valuebytes > 2 * sizeof(char16_t)))) {
-        char value8[128];
         tprecode16to8(value8, sizeof(value8), value);
         if (inet_pton(AF_INET, value8, &nameserver.sin_addr.s_addr) == 1) {
           if (append(&resolv->nameservers, &nameserver) != -1) ++rc;

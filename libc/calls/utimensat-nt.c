@@ -42,7 +42,7 @@ textwindows int utimensat$nt(int dirfd, const char *path,
   if (flags) return einval();
   if (path) {
     if (dirfd == AT_FDCWD) {
-      if (mkntpath(path, path16) == -1) return -1;
+      if (__mkntpath(path, path16) == -1) return -1;
       if ((fh = CreateFile(path16, kNtFileWriteAttributes, kNtFileShareRead,
                            NULL, kNtOpenExisting, kNtFileAttributeNormal, 0)) !=
           -1) {

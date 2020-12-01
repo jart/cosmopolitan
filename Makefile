@@ -116,6 +116,7 @@ include libc/mem/mem.mk				# │
 include libc/ohmyplus/ohmyplus.mk		# │
 include libc/zipos/zipos.mk			# │
 include third_party/dtoa/dtoa.mk		# │
+include third_party/gdtoa/gdtoa.mk		# │
 include libc/time/time.mk			# │
 include libc/alg/alg.mk				# │
 include libc/calls/hefty/hefty.mk		# │
@@ -138,6 +139,7 @@ include dsp/tty/tty.mk				# ├──online
 include libc/dns/dns.mk				# │
 include libc/crypto/crypto.mk			# │
 include net/http/http.mk			#─┘
+include third_party/chibicc/chibicc.mk
 include third_party/lemon/lemon.mk
 include third_party/linenoise/linenoise.mk
 include third_party/editline/editline.mk

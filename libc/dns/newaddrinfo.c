@@ -23,19 +23,18 @@
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/af.h"
 
+#define SIZE    ROUNDUP(sizeof(struct addrinfo), sizeof(void *))
+#define ADDRLEN sizeof(struct sockaddr_in)
+
 struct addrinfo *newaddrinfo(uint16_t port) {
-  void *mem;
-  struct addrinfo *ai = NULL;
-  /* shoehorning is ok since this'll never be realloc()'d */
-  uint32_t size = ROUNDUP(sizeof(struct addrinfo), sizeof(void *));
-  uint32_t addrlen = sizeof(struct sockaddr_in);
-  if ((ai = mem = calloc(1, size + addrlen + DNS_NAME_MAX + 1))) {
+  struct addrinfo *ai;
+  if ((ai = calloc(1, SIZE + ADDRLEN + DNS_NAME_MAX + 1))) {
     ai->ai_family = AF_INET;
-    ai->ai_addrlen = addrlen;
-    ai->ai_addr4 = (struct sockaddr_in *)((char *)mem + size);
+    ai->ai_addrlen = ADDRLEN;
+    ai->ai_addr4 = (struct sockaddr_in *)((char *)ai + SIZE);
     ai->ai_addr4->sin_family = AF_INET;
     ai->ai_addr4->sin_port = htons(port);
-    ai->ai_canonname = (char *)mem + size + addrlen;
+    ai->ai_canonname = (char *)ai + SIZE + ADDRLEN;
   }
   return ai;
 }

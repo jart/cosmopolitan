@@ -42,7 +42,6 @@
 /	@see	also glibc static binaries which start at 800kb!!!
 /	@see	also go where interfaces sadly disempower ld prune
 /	@see	also the stl where bad linkage is due to tech debt
-/	@see	libc/macros-cpp.inc forthe getstr macro definition
 /	@note	libc/elf/elf.lds can be tinier with page align off
 /	@note	gas is more powerful than nasm due to rms notation
 /	@noreturn

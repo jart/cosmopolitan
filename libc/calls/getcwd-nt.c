@@ -18,18 +18,16 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/macros.h"
 #include "libc/nt/files.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows char *getcwd$nt(char *buf, size_t size) {
-  uint16_t name16[PATH_MAX];
-  if (GetCurrentDirectory(PATH_MAX, name16)) {
-    if (tprecode16to8(buf, size, name16) < size - 1) {
-      return buf;
-    } else {
-      erange();
-    }
+  uint16_t name16[PATH_MAX + 1];
+  if (GetCurrentDirectory(ARRAYLEN(name16), name16)) {
+    tprecode16to8(buf, size, name16);
+    return buf;
   } else {
     __winerr();
   }

@@ -38,7 +38,8 @@ static struct ResolvConfInitialStaticMemory {
 const struct ResolvConf *getresolvconf(void) {
   int rc;
   FILE *f;
-  struct ResolvConfInitialStaticMemory *init = &g_resolvconf_init;
+  struct ResolvConfInitialStaticMemory *init;
+  init = &g_resolvconf_init;
   if (!g_resolvconf) {
     g_resolvconf = &init->rv;
     pushmov(&init->rv.nameservers.n, ARRAYLEN(init->nameservers));

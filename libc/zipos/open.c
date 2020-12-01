@@ -28,7 +28,6 @@
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
-#include "libc/runtime/rbx.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/str/undeflate.h"

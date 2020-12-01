@@ -62,7 +62,7 @@ static textwindows noinline DIR *opendir$nt(const char *name) {
   int len;
   DIR *res;
   char16_t name16[PATH_MAX];
-  if ((len = mkntpath(name, name16)) == -1) return NULL;
+  if ((len = __mkntpath(name, name16)) == -1) return NULL;
   if (len + 2 + 1 > PATH_MAX) return PROGN(enametoolong(), NULL);
   if (name16[len - 1] == u'/' || name16[len - 1] == u'\\') {
     name16[--len] = u'\0';
@@ -87,7 +87,8 @@ static textwindows noinline struct dirent *readdir$nt(DIR *dir) {
     dir->ent.d_off = dir->tell++;
     dir->ent.d_reclen = sizeof(dir->ent) +
                         tprecode16to8(dir->ent.d_name, sizeof(dir->ent.d_name),
-                                      dir->windata.cFileName) +
+                                      dir->windata.cFileName)
+                            .ax +
                         1;
     switch (dir->windata.dwFileType) {
       case kNtFileTypeDisk:

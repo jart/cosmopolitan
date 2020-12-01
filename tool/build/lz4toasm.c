@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
 
   fprintf(fout,
           "/\t%s -o %s -s %s %s\n"
-          ".include \"libc/macros.inc\"\n"
+          ".include \"libc/macros.internal.inc\"\n"
           "\n",
           argv[0], outpath, symbol, lz4path);
 

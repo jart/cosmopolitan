@@ -20,7 +20,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/rand/lcg.h"
+#include "libc/rand/lcg.internal.h"
 #include "libc/rand/rand.h"
 #include "libc/stdio/temp.h"
 #include "libc/str/str.h"

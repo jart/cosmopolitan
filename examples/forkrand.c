@@ -16,13 +16,13 @@
 #include "libc/stdio/stdio.h"
 #include "libc/time/time.h"
 
-noinline void dostuff(void) {
+noinline void dostuff(const char *s) {
   int i, us;
   srand(rand64()); /* seeds rand() w/ intel rdrnd, auxv, etc. */
   for (i = 0; i < 5; ++i) {
     us = rand() % 500000;
     usleep(us);
-    printf("%s%u%s%u [%s=%d]\n", "hello no. ", i, " from ", getpid(), "us", us);
+    printf("hello no. %u from %s %u [us=%d]\n", i, s, getpid(), us);
     fflush(stdout);
   }
 }
@@ -32,13 +32,14 @@ int main(int argc, char *argv[]) {
   CHECK_NE(-1, (child = fork()));
   if (!child) {
     /* child process */
-    dostuff();
+    dostuff("child");
     return 0;
   } else {
     /* parent process */
-    dostuff();
+    dostuff("parent");
     /* note: abandoned children become zombies */
     CHECK_NE(-1, (rc = wait(&wstatus)));
-    return WEXITSTATUS(wstatus);
+    CHECK_EQ(0, WEXITSTATUS(wstatus));
+    return 0;
   }
 }

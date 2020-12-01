@@ -31,7 +31,7 @@ TEST(getpagetableentry, testLowestAddress) {
   memset(&stack, 0, sizeof(stack));
   uint64_t vaddr = 0;
   uint64_t paddr = 0x31337000;
-  *getpagetableentry(vaddr, 3, &pml4t, &ptsp) = paddr | PAGE_V;
+  *__getpagetableentry(vaddr, 3, &pml4t, &ptsp) = paddr | PAGE_V;
   EXPECT_EQ(&stack[2].p[0], pml4t.p[0] & PAGE_TA);    /* pml4t → pdpt */
   EXPECT_EQ(&stack[1].p[0], stack[2].p[0] & PAGE_TA); /* pdpt → pdt */
   EXPECT_EQ(&stack[0].p[0], stack[1].p[0] & PAGE_TA); /* pdt → pd */
@@ -52,7 +52,7 @@ TEST(getpagetableentry, testHigherAddress) {
   memset(&stack, 0, sizeof(stack));
   uint64_t vaddr = 0x133731337000;
   uint64_t paddr = 0x123000;
-  *getpagetableentry(vaddr, 3, &pml4t, &ptsp) = paddr | PAGE_V;
+  *__getpagetableentry(vaddr, 3, &pml4t, &ptsp) = paddr | PAGE_V;
   EXPECT_EQ(&stack[2].p[0], pml4t.p[38] & PAGE_TA);     /* pml4t → pdpt */
   EXPECT_EQ(&stack[1].p[0], stack[2].p[220] & PAGE_TA); /* pdpt → pdt */
   EXPECT_EQ(&stack[0].p[0], stack[1].p[393] & PAGE_TA); /* pdt → pd */

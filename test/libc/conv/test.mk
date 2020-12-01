@@ -27,6 +27,7 @@ TEST_LIBC_CONV_DIRECTDEPS =				\
 	LIBC_CONV					\
 	LIBC_FMT					\
 	LIBC_LOG					\
+	LIBC_MEM					\
 	LIBC_STDIO					\
 	LIBC_NEXGEN32E					\
 	LIBC_STUBS					\

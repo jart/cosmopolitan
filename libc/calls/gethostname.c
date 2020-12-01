@@ -49,10 +49,11 @@ int gethostname(char *name, size_t len) {
     return 0;
   } else {
     nSize = ARRAYLEN(name16);
-    if (!GetComputerNameEx(kNtComputerNameDnsHostname, name16, &nSize)) {
+    if (GetComputerNameEx(kNtComputerNameDnsHostname, name16, &nSize)) {
+      tprecode16to8(name, len, name16);
+      return 0;
+    } else {
       return __winerr();
     }
-    tprecode16to8(name, MIN(MIN(ARRAYLEN(name16), nSize + 1), len), name16);
-    return 0;
   }
 }

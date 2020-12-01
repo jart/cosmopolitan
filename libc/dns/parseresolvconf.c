@@ -44,16 +44,17 @@
  */
 int parseresolvconf(struct ResolvConf *resolv, struct FILE *f) {
   /* TODO(jart): options ndots:5 */
-  int rc = 0;
+  int rc;
   char *line;
   size_t linesize;
   struct sockaddr_in nameserver;
+  char *directive, *value, *tok, *comment;
+  rc = 0;
   line = NULL;
   linesize = 0;
   nameserver.sin_family = AF_INET;
   nameserver.sin_port = htons(DNS_PORT);
   while (getline(&line, &linesize, f) != -1) {
-    char *directive, *value, *tok, *comment;
     if ((comment = strchr(line, '#'))) *comment = '\0';
     if ((directive = strtok_r(line, " \t\r\n\v", &tok)) &&
         (value = strtok_r(NULL, " \t\r\n\v", &tok))) {

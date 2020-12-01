@@ -20,12 +20,13 @@
 #include "ape/lib/pc.h"
 #include "libc/assert.h"
 
-textreal static uint64_t pushpagetable(uint64_t *ptsp) {
+static textreal uint64_t __pushpagetable(uint64_t *ptsp) {
   return (*ptsp -= PAGESIZE) | PAGE_V | PAGE_RW;
 }
 
-textreal uint64_t *getpagetableentry(int64_t vaddr, unsigned depth,
-                                     struct PageTable *pml4t, uint64_t *ptsp) {
+textreal uint64_t *__getpagetableentry(int64_t vaddr, unsigned depth,
+                                       struct PageTable *pml4t,
+                                       uint64_t *ptsp) {
   uint64_t *entry;
   unsigned char shift;
   assert(depth <= 3);
@@ -36,7 +37,7 @@ textreal uint64_t *getpagetableentry(int64_t vaddr, unsigned depth,
     entry = &pml4t->p[(vaddr >> shift) & 511];
     if (!depth--) return entry;
     shift -= 9;
-    if (!*entry) *entry = pushpagetable(ptsp);
+    if (!*entry) *entry = __pushpagetable(ptsp);
     pml4t = (void *)(*entry & PAGE_TA);
   }
 }

@@ -96,5 +96,3 @@ error:
   free(cmdline_p);
   return NULL;
 }
-
-#undef APPENDCHAR

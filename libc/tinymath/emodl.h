@@ -9,7 +9,7 @@
  * @return (𝑥 mod 𝑦) ∈ [0.,𝑦)
  * @see fmodl()
  */
-static long double emodl(long double x, long double y) {
+static inline long double emodl(long double x, long double y) {
   return x - fabsl(y) * floorl(x / fabsl(y));
 }
 

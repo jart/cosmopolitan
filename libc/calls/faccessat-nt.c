@@ -25,6 +25,6 @@
 int faccessat$nt(int dirfd, const char *path, int mode, uint32_t flags) {
   char16_t path16[PATH_MAX];
   if (dirfd != AT_FDCWD || flags) return einval();
-  if (mkntpath(path, path16) == -1) return -1;
+  if (__mkntpath(path, path16) == -1) return -1;
   return ntaccesscheck(path16, mode);
 }

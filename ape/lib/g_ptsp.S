@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/lib/pc.h"
 #include "ape/config.h"
-#include "ape/macros.h"
+#include "ape/macros.internal.h"
 #include "ape/notice.inc"
 .section .real,"ax",@progbits
 .source	__FILE__

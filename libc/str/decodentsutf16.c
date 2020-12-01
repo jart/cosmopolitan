@@ -22,11 +22,17 @@
 
 wint_t DecodeNtsUtf16(const char16_t **s) {
   wint_t x, y;
-  if (!IsUcs2((x = *(*s)++))) {
-    if ((y = *(*s)++)) {
-      x = MergeUtf16(x, y);
+  for (;;) {
+    if (!(x = *(*s)++)) break;
+    if (IsUtf16Cont(x)) continue;
+    if (IsUcs2(x)) {
+      return x;
     } else {
-      x = 0;
+      if ((y = *(*s)++)) {
+        return MergeUtf16(x, y);
+      } else {
+        return 0;
+      }
     }
   }
   return x;

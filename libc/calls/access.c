@@ -32,12 +32,12 @@
  * @asyncsignalsafe
  */
 int access(const char *path, int mode) {
+  char16_t path16[PATH_MAX];
   if (!path) return efault();
   if (!IsWindows()) {
     return faccessat$sysv(AT_FDCWD, path, mode, 0);
   } else {
-    char16_t path16[PATH_MAX];
-    if (mkntpath(path, path16) == -1) return -1;
+    if (__mkntpath(path, path16) == -1) return -1;
     return ntaccesscheck(path16, mode);
   }
 }

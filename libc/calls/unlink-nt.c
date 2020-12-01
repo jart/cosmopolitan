@@ -23,7 +23,7 @@
 
 textwindows int unlink$nt(const char *name) {
   uint16_t name16[PATH_MAX];
-  if (mkntpath(name, name16) == -1) return -1;
+  if (__mkntpath(name, name16) == -1) return -1;
   if (DeleteFile(name16)) {
     return 0;
   } else {

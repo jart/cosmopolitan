@@ -20,8 +20,6 @@ COSMOPOLITAN_C_START_
                 ((((wc)-0x10000) & 1023) + 0xDC00) << 16) \
              : 0xFFFD)
 
-wint_t DecodeNtsUtf16(const char16_t **);
-
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_STR_UTF16_H_ */

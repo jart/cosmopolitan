@@ -94,6 +94,6 @@ textwindows int spawnve$nt(unsigned flags, int stdiofds[3], const char *program,
 
   g_fds.p[pid].kind = kFdProcess;
   g_fds.p[pid].handle = handle;
-  g_fds.p[pid].flags = flags;
+  g_fds.p[pid].flags = O_CLOEXEC;
   return pid;
 }

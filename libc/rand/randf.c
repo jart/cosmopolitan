@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/limits.h"
 #include "libc/rand/internal.h"
-#include "libc/rand/lcg.h"
+#include "libc/rand/lcg.internal.h"
 #include "libc/rand/rand.h"
 
 float randf(void) {

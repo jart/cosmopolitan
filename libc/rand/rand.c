@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/rand/internal.h"
-#include "libc/rand/lcg.h"
+#include "libc/rand/lcg.internal.h"
 #include "libc/rand/rand.h"
 
 /**

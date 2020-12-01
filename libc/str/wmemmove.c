@@ -19,6 +19,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
-compatfn wchar_t *wmemmove(wchar_t *dest, const wchar_t *src, size_t count) {
+wchar_t *wmemmove(wchar_t *dest, const wchar_t *src, size_t count) {
   return memmove(dest, src, count * sizeof(wchar_t));
 }

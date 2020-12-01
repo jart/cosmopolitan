@@ -9,7 +9,7 @@
  * @return (𝑥 mod 𝑦) ∈ [0.,𝑦)
  * @see fmod()
  */
-static double emod(double x, double y) {
+static inline double emod(double x, double y) {
   return x - fabs(y) * floor(x / fabs(y));
 }
 

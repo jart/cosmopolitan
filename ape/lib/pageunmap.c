@@ -22,7 +22,7 @@
 
 textreal void pageunmap(int64_t vaddr) {
   uint64_t *entry;
-  entry = getpagetableentry(vaddr, 3, &g_pml4t, &g_ptsp_xlm);
+  entry = __getpagetableentry(vaddr, 3, &g_pml4t, &g_ptsp_xlm);
   *entry &= ~PAGE_V;
   invlpg(vaddr);
 }

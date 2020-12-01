@@ -214,7 +214,8 @@ extern uint64_t g_ptsp_xlm;
 void bootdr(char drive) noreturn;
 
 void smapsort(struct SmapEntry *);
-uint64_t *getpagetableentry(int64_t, unsigned, struct PageTable *, uint64_t *);
+uint64_t *__getpagetableentry(int64_t, unsigned, struct PageTable *,
+                              uint64_t *);
 void flattenhighmemory(struct SmapEntry *, struct PageTable *, uint64_t *);
 void pageunmap(int64_t);
 

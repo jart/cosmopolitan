@@ -29,7 +29,6 @@
 #include "libc/log/log.h"
 #include "libc/macros.h"
 #include "libc/runtime/gc.h"
-#include "libc/runtime/rbx.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"

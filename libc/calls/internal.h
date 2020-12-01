@@ -252,6 +252,7 @@ int nanosleep$nt(const struct timespec *, struct timespec *) hidden;
 │ cosmopolitan § syscalls » windows nt » support                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+int64_t ntreturn(uint32_t);
 void WinMainForked(void) hidden;
 void *GetProcAddressModule(const char *, const char *) hidden;
 int getsetpriority$nt(int, unsigned, int, int (*)(int));
@@ -261,19 +262,9 @@ bool32 ntsetprivilege(i64, const char16_t *, u32) hidden;
 bool32 onntconsoleevent$nt(u32) hidden;
 void __winalarm(void *, uint32_t, uint32_t) hidden;
 int ntaccesscheck(const char16_t *, u32) paramsnonnull() hidden;
-i64 ntreturn(u32);
-i64 __winerr(void) nocallback privileged;
-
-#define mkntpath(PATH, PATH16) mkntpath2(PATH, -1u, PATH16)
-#define mkntpath2(PATH, FLAGS, PATH16)                           \
-  ({                                                             \
-    int Count;                                                   \
-    asm("call\tmkntpath"                                         \
-        : "=a"(Count), "=m"(*PATH16)                             \
-        : "D"(PATH), "S"(FLAGS), "d"(&PATH16[0]), "m"((PATH)[0]) \
-        : "cc");                                                 \
-    Count;                                                       \
-  })
+int64_t __winerr(void) nocallback privileged;
+int __mkntpath(const char *, char16_t[hasatleast PATH_MAX - 16]) hidden;
+int __mkntpath2(const char *, char16_t[hasatleast PATH_MAX - 16], int) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » drivers                                        ─╬─│┼

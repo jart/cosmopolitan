@@ -2,7 +2,7 @@
 #define COSMOPOLITAN_LIBC_COMPLEX_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-#if __STDC_VERSION__ + 0 >= 201112
+#if __STDC_VERSION__ + 0 >= 201112 && !defined(__STDC_NO_COMPLEX__)
 
 #define complex   _Complex
 #define imaginary _Imaginary

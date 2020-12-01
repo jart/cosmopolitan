@@ -28,7 +28,7 @@ LIBC_SYSV_A_DIRECTDEPS =				\
 	LIBC_STUBS
 
 LIBC_SYSV_A_FILES :=					\
-	libc/sysv/macros.h				\
+	libc/sysv/macros.internal.h			\
 	libc/sysv/errfuns.h				\
 	libc/sysv/g_syscount.S				\
 	libc/sysv/restorert.S				\
@@ -65,7 +65,7 @@ $(LIBC_SYSV_A).pkg:					\
 $(LIBC_SYSV_A_OBJS):					\
 		libc/sysv/consts/syscon.inc
 
-libc/sysv/consts/syscon.inc: libc/macros.inc
+libc/sysv/consts/syscon.inc: libc/macros.internal.inc
 
 #───────────────────────────────────────────────────────────────────────────────
 

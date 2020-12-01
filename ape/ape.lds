@@ -175,7 +175,7 @@
   Until then, we can build for those platforms using Linux or WSL. */
 
 #ifdef __LINKER__
-#include "ape/macros.h"
+#include "ape/macros.internal.h"
 #include "ape/config.h"
 #include "libc/nt/pedef.internal.h"
 #include "libc/zip.h"

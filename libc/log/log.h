@@ -52,6 +52,7 @@ bool isrunningundermake(void);
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § liblog » logging                                          ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
+#ifndef __STRICT_ANSI__
 
 extern unsigned g_loglevel; /* log level for runtime check */
 
@@ -223,6 +224,7 @@ void vffatalf(ARGS, va_list) asm("vflogf") ATTRV relegated noreturn libcesque;
 #undef ATTR
 #undef ATTRV
 
+#endif /* __STRICT_ANSI__ */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_LOG_LOG_H_ */

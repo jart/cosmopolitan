@@ -68,8 +68,8 @@ textwindows int ntspawn(
   char16_t program16[PATH_MAX], *lpCommandLine, *lpEnvironment;
   lpCommandLine = NULL;
   lpEnvironment = NULL;
-  if (mkntpath(program, program16) != -1 &&
-      (lpCommandLine = mkntcmdline(argv)) &&
+  if (__mkntpath(program, program16) != -1 &&
+      (lpCommandLine = mkntcmdline(&argv[1])) &&
       (lpEnvironment = mkntenvblock(envp))) {
     if (CreateProcess(program16, lpCommandLine, opt_lpProcessAttributes,
                       opt_lpThreadAttributes, bInheritHandles,

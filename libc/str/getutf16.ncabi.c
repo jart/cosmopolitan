@@ -21,6 +21,8 @@
 #include "libc/str/str.h"
 #include "libc/str/utf16.h"
 
+/* TODO: DELETE */
+
 /**
  * Decodes UTF-16 character.
  *

@@ -27,8 +27,8 @@
 textwindows int rename$nt(const char *oldpath, const char *newpath) {
   char16_t oldpath16[PATH_MAX];
   char16_t newpath16[PATH_MAX];
-  if (mkntpath(oldpath, oldpath16) == -1 ||
-      mkntpath(newpath, newpath16) == -1) {
+  if (__mkntpath(oldpath, oldpath16) == -1 ||
+      __mkntpath(newpath, newpath16) == -1) {
     return -1;
   }
   if (MoveFileEx(oldpath16, newpath16, kNtMovefileReplaceExisting)) {

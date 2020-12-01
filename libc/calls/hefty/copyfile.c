@@ -38,8 +38,8 @@ static textwindows int copyfile$nt(const char *src, const char *dst,
   int64_t fhsrc, fhdst;
   struct NtFileTime accessed, modified;
   char16_t src16[PATH_MAX], dst16[PATH_MAX];
-  if (mkntpath(src, src16) == -1) return -1;
-  if (mkntpath(dst, dst16) == -1) return -1;
+  if (__mkntpath(src, src16) == -1) return -1;
+  if (__mkntpath(dst, dst16) == -1) return -1;
   if (CopyFile(src16, dst16, !!(flags & COPYFILE_NOCLOBBER))) {
     if (flags & COPYFILE_PRESERVE_TIMESTAMPS) {
       fhsrc = CreateFile(src16, kNtFileReadAttributes, kNtFileShareRead, NULL,

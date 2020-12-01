@@ -26,6 +26,7 @@
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
@@ -122,7 +123,10 @@ static void Visit(const char *path) {
   APPENDSTR(path);
   APPENDSTR(" */\n\n");
   APPEND(&visited.p, &visited.i, &visited.n, &path);
-  CHECK_NE(-1, (fd = open(path, O_RDONLY)));
+  if ((fd = open(path, O_RDONLY)) == -1) {
+    fprintf(stderr, "error: %s: failed to open\n", path);
+    exit(1);
+  }
   CHECK_NE(-1, fstat(fd, &st));
   if (st.st_size) {
     CHECK_NE(MAP_FAILED,
@@ -137,12 +141,12 @@ int main(int argc, char *argv[]) {
   int i;
   APPENDSTR("#ifndef COSMOPOLITAN_H_\n");
   APPENDSTR("#define COSMOPOLITAN_H_\n");
-  APPENDSTR("#define IMAGE_BASE_VIRTUAL ");
-  AppendInt(IMAGE_BASE_VIRTUAL);
-  APPENDSTR("\n");
-  APPENDSTR("#define IMAGE_BASE_PHYSICAL ");
-  AppendInt(IMAGE_BASE_PHYSICAL);
-  APPENDSTR("\n");
+  /* APPENDSTR("#define IMAGE_BASE_VIRTUAL "); */
+  /* AppendInt(IMAGE_BASE_VIRTUAL); */
+  /* APPENDSTR("\n"); */
+  /* APPENDSTR("#define IMAGE_BASE_PHYSICAL "); */
+  /* AppendInt(IMAGE_BASE_PHYSICAL); */
+  /* APPENDSTR("\n"); */
   for (i = 1; i < argc; ++i) {
     Visit(argv[i]);
   }

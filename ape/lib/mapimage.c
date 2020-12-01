@@ -24,7 +24,7 @@
 textreal static void __map_segment(uint64_t k, uint64_t a, uint64_t b) {
   uint64_t *e;
   for (; a < b; a += 0x1000) {
-    e = getpagetableentry(IMAGE_BASE_VIRTUAL + a, 3, &g_pml4t, &g_ptsp_xlm);
+    e = __getpagetableentry(IMAGE_BASE_VIRTUAL + a, 3, &g_pml4t, &g_ptsp_xlm);
     *e = (IMAGE_BASE_REAL + a) | k;
   }
 }

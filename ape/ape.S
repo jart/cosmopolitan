@@ -35,7 +35,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/config.h"
 #include "ape/lib/pc.h"
-#include "ape/macros.h"
+#include "ape/macros.internal.h"
 #include "ape/notice.inc"
 #include "ape/relocations.h"
 #include "libc/elf/def.h"
@@ -785,8 +785,8 @@ ape.pe:	.ascin	"PE",4
 	.long	0			# Checksum
 	.short	v_ntsubsystem		# Subsystem: 0=Neutral,2=GUI,3=Console
 	.short	.LDLLEXE		# DllCharacteristics
-	.quad	0x0000000000080000	# StackReserve
-	.quad	0x0000000000080000	# StackCommit
+	.quad	0x0000000000020000	# StackReserve
+	.quad	0x0000000000020000	# StackCommit
 	.quad	0			# HeapReserve
 	.quad	0			# HeapCommit
 	.long	0			# LoaderFlags

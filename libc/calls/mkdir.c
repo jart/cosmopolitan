@@ -27,7 +27,7 @@
 
 static textwindows noinline int mkdir$nt(const char *path, uint32_t mode) {
   uint16_t path16[PATH_MAX];
-  if (mkntpath(path, path16) == -1) return -1;
+  if (__mkntpath(path, path16) == -1) return -1;
   if (CreateDirectory(path16, NULL)) {
     return 0;
   } else {

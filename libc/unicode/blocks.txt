@@ -38,7 +38,9 @@
 0180..024F; Latin Extended-B
 0250..02AF; IPA Extensions
 02B0..02FF; Spacing Modifier Letters
+
 0300..036F; Combining Diacritical Marks
+
 0370..03FF; Greek and Coptic
 0400..04FF; Cyrillic
 0500..052F; Cyrillic Supplement
@@ -73,6 +75,7 @@
 1380..139F; Ethiopic Supplement
 13A0..13FF; Cherokee
 1400..167F; Unified Canadian Aboriginal Syllabics
+
 1680..169F; Ogham
 16A0..16FF; Runic
 1700..171F; Tagalog

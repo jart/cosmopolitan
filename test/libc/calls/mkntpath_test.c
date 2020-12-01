@@ -24,7 +24,7 @@
 char16_t p[PATH_MAX];
 
 TEST(mkntpath, testEmpty) {
-  EXPECT_EQ(0, mkntpath("", p));
+  EXPECT_EQ(0, __mkntpath("", p));
   EXPECT_STREQ(u"", p);
 }
 
@@ -35,11 +35,11 @@ TEST(mkntpath, testSlashes) {
    * all it takes to make the feature entirely useless to us, similar to
    * the law of noncontradiction. We address the issue as follows:
    */
-  EXPECT_EQ(9, mkntpath("o/foo.com", p));
+  EXPECT_EQ(9, __mkntpath("o/foo.com", p));
   EXPECT_STREQ(u"o\\foo.com", p);
 }
 
 TEST(mkntpath, testUnicode) {
-  EXPECT_EQ(20, mkntpath("C:\\𐌰𐌱𐌲𐌳\\𐌴𐌵𐌶𐌷", p));
+  EXPECT_EQ(20, __mkntpath("C:\\𐌰𐌱𐌲𐌳\\𐌴𐌵𐌶𐌷", p));
   EXPECT_STREQ(u"C:\\𐌰𐌱𐌲𐌳\\𐌴𐌵𐌶𐌷", p);
 }

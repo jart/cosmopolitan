@@ -25,8 +25,8 @@
 textwindows int link$nt(const char *existingpath, const char *newpath) {
   char16_t newpath16[PATH_MAX];
   char16_t existingpath16[PATH_MAX];
-  if (mkntpath(existingpath, existingpath16) != -1 &&
-      mkntpath(newpath, newpath16) != -1) {
+  if (__mkntpath(existingpath, existingpath16) != -1 &&
+      __mkntpath(newpath, newpath16) != -1) {
     if (CreateHardLink(newpath16, existingpath16, NULL)) {
       return 0;
     } else {

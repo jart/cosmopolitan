@@ -31,8 +31,8 @@
 
 int getdomainname(char *name, size_t len) {
   uint32_t nSize;
-  char16_t name16[256];
   struct utsname u;
+  char16_t name16[256];
   if (len < 1) return einval();
   if (!name) return efault();
   if (!IsWindows()) {
@@ -44,10 +44,11 @@ int getdomainname(char *name, size_t len) {
     return 0;
   } else {
     nSize = ARRAYLEN(name16);
-    if (!GetComputerNameEx(kNtComputerNameDnsFullyQualified, name16, &nSize)) {
+    if (GetComputerNameEx(kNtComputerNameDnsFullyQualified, name16, &nSize)) {
+      tprecode16to8(name, len, name16);
+      return 0;
+    } else {
       return __winerr();
     }
-    tprecode16to8(name, MIN(MIN(ARRAYLEN(name16), nSize + 1), len), name16);
-    return 0;
   }
 }

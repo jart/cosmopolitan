@@ -20,7 +20,6 @@
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ntmagicpaths.internal.h"
-#include "libc/nexgen32e/tinystrcmp.internal.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
@@ -31,6 +30,7 @@
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
@@ -40,7 +40,7 @@ static textwindows int64_t open$nt$impl(const char *file, uint32_t flags,
   uint32_t br;
   int64_t handle;
   char16_t file16[PATH_MAX];
-  if (mkntpath2(file, flags, file16) == -1) return -1;
+  if (__mkntpath2(file, file16, flags) == -1) return -1;
   if ((handle = CreateFile(
            file16,
            (flags & 0xf000000f) | (/* this is needed if we mmap(rwx+cow)
@@ -119,7 +119,7 @@ textwindows ssize_t open$nt(const char *file, uint32_t flags, int32_t mode) {
   size_t fd;
   if ((fd = __getemptyfd()) == -1) return -1;
   if ((flags & O_ACCMODE) == O_RDWR &&
-      tinystrcmp(file, kNtMagicPaths.devtty) == 0) {
+      strcmp(file, kNtMagicPaths.devtty) == 0) {
     return open$nt$console(&kNtMagicPaths, flags, mode, fd);
   } else {
     return open$nt$file(file, flags, mode, fd);

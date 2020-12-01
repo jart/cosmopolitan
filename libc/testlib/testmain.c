@@ -22,7 +22,6 @@
 #include "libc/calls/internal.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/runtime/rbx.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"

@@ -31,7 +31,7 @@ textwindows int stat$nt(const char *path, struct stat *st) {
   int rc;
   int64_t fh;
   uint16_t path16[PATH_MAX];
-  if (mkntpath(path, path16) == -1) return -1;
+  if (__mkntpath(path, path16) == -1) return -1;
   if ((fh = CreateFile(
            path16, kNtFileReadAttributes,
            kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, NULL,

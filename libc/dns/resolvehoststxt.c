@@ -23,8 +23,8 @@
 #include "libc/dns/hoststxt.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
-#include "libc/sysv/errfuns.h"
 #include "libc/sysv/consts/af.h"
+#include "libc/sysv/errfuns.h"
 
 static int hoststxtgetcmp(const char *node, const struct HostsTxtEntry *entry,
                           const char *strings) {
@@ -50,14 +50,15 @@ static int hoststxtgetcmp(const char *node, const struct HostsTxtEntry *entry,
 int resolvehoststxt(const struct HostsTxt *ht, int af, const char *name,
                     struct sockaddr *addr, uint32_t addrsize,
                     const char **canon) {
+  struct sockaddr_in *addr4;
+  struct HostsTxtEntry *entry;
   if (af != AF_INET && af != AF_UNSPEC) return eafnosupport();
-  struct HostsTxtEntry *entry = bsearch_r(
-      name, ht->entries.p, ht->entries.i, sizeof(struct HostsTxtEntry),
-      (void *)hoststxtgetcmp, ht->strings.p);
-  if (entry) {
+  if ((entry = bsearch_r(name, ht->entries.p, ht->entries.i,
+                         sizeof(struct HostsTxtEntry), (void *)hoststxtgetcmp,
+                         ht->strings.p))) {
     if (addr) {
       if (addrsize < kMinSockaddr4Size) return einval();
-      struct sockaddr_in *addr4 = (struct sockaddr_in *)addr;
+      addr4 = (struct sockaddr_in *)addr;
       addr4->sin_family = AF_INET;
       memcpy(&addr4->sin_addr.s_addr, &entry->ip[0], 4);
     }

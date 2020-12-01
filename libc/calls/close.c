@@ -43,7 +43,8 @@ int close(int fd) {
   } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdSocket) {
     rc = weaken(closesocket$nt)(fd);
   } else if (fd < g_fds.n &&
-             (g_fds.p[fd].kind == kFdFile || g_fds.p[fd].kind == kFdConsole)) {
+             (g_fds.p[fd].kind == kFdFile || g_fds.p[fd].kind == kFdConsole ||
+              g_fds.p[fd].kind == kFdProcess)) {
     rc = close$nt(fd);
   } else {
     rc = ebadf();

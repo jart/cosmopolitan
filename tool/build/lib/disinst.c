@@ -18,7 +18,6 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/check.h"
-#include "libc/nexgen32e/tinystrcmp.internal.h"
 #include "libc/str/str.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/dis.h"
@@ -97,30 +96,30 @@ static char *DisName(struct Dis *d, char *bp, const char *name,
   rde = d->xedd->op.rde;
   if (d->xedd->op.lock) p = stpcpy(p, "lock ");
   p = DisRepPrefix(d, p);
-  if (tinystrcmp(name, "BIT") == 0) {
+  if (strcmp(name, "BIT") == 0) {
     p = stpcpy(p, kBitOp[ModrmReg(rde)]);
-  } else if (tinystrcmp(name, "nop") == 0 && d->xedd->op.rep) {
+  } else if (strcmp(name, "nop") == 0 && d->xedd->op.rep) {
     p = stpcpy(p, "pause");
-  } else if (tinystrcmp(name, "CALL") == 0) {
+  } else if (strcmp(name, "CALL") == 0) {
     p = stpcpy(p, "call");
-  } else if (tinystrcmp(name, "JMP") == 0) {
+  } else if (strcmp(name, "JMP") == 0) {
     p = stpcpy(p, "jmp");
-  } else if (tinystrcmp(name, "jcxz") == 0) {
+  } else if (strcmp(name, "jcxz") == 0) {
     p = stpcpy(p, kJcxz[Eamode(rde)]);
     p = DisBranchTaken(d, p);
-  } else if (tinystrcmp(name, "loop") == 0 || tinystrcmp(name, "loope") == 0 ||
-             tinystrcmp(name, "loopne") == 0) {
+  } else if (strcmp(name, "loop") == 0 || strcmp(name, "loope") == 0 ||
+             strcmp(name, "loopne") == 0) {
     p = stpcpy(p, name);
     if (Eamode(rde) != Mode(rde)) {
       *p++ = "wl"[Eamode(rde)];
       *p = '\0';
     }
     p = DisBranchTaken(d, p);
-  } else if (tinystrcmp(name, "cwtl") == 0) {
+  } else if (strcmp(name, "cwtl") == 0) {
     if (Osz(rde)) name = "cbtw";
     if (Rexw(rde)) name = "cltq";
     p = stpcpy(p, name);
-  } else if (tinystrcmp(name, "cltd") == 0) {
+  } else if (strcmp(name, "cltd") == 0) {
     if (Osz(rde)) name = "cwtd";
     if (Rexw(rde)) name = "cqto";
     p = stpcpy(p, name);
@@ -132,27 +131,27 @@ static char *DisName(struct Dis *d, char *bp, const char *name,
     for (np = name; *np && (islower(*np) || isdigit(*np)); ++np) {
       *p++ = *np;
     }
-    if (tinystrcmp(name, "ALU") == 0) {
+    if (strcmp(name, "ALU") == 0) {
       p = stpcpy(p, kAluOp[(d->xedd->op.opcode & 070) >> 3]);
-    } else if (tinystrcmp(name, "ALU2") == 0) {
+    } else if (strcmp(name, "ALU2") == 0) {
       p = stpcpy(p, kAluOp[ModrmReg(rde)]);
-    } else if (tinystrcmp(np, "WLQ") == 0) {
+    } else if (strcmp(np, "WLQ") == 0) {
       notbyte = true;
       wantsuffix = true;
-    } else if (tinystrcmp(np, "CC") == 0) {
+    } else if (strcmp(np, "CC") == 0) {
       p = stpcpy(p, kCc[d->xedd->op.opcode & 15]);
       p = DisBranchTaken(d, p);
-    } else if (tinystrcmp(np, "WQ") == 0) {
+    } else if (strcmp(np, "WQ") == 0) {
       notbyte = true;
       notlong = Eamode(rde) != XED_MODE_REAL;
       wantsuffix = true;
-    } else if (tinystrcmp(np, "LQ") == 0 || tinystrcmp(np, "WL") == 0) {
+    } else if (strcmp(np, "LQ") == 0 || strcmp(np, "WL") == 0) {
       notbyte = true;
       wantsuffix = true;
-    } else if (tinystrcmp(np, "SD") == 0) {
+    } else if (strcmp(np, "SD") == 0) {
       notbyte = true;
       wantsuffixsd = true;
-    } else if (tinystrcmp(np, "ABS") == 0) {
+    } else if (strcmp(np, "ABS") == 0) {
       if (Rexw(rde)) p = stpcpy(p, "abs");
     }
     if (wantsuffixsd) {

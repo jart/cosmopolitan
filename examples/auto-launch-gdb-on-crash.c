@@ -33,7 +33,6 @@
  *     - libc/nexgen32e/bsf.h
  *     - libc/nexgen32e/tzcnt.h
  *     - libc/nexgen32e/cpuid4.internal.h
- *     - libc/nexgen32e/tinystrcmp.internal.h
  *     - https://gist.github.com/jart/fe8d104ef93149b5ba9b72912820282c
  */
 

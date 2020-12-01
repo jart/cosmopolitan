@@ -17,20 +17,26 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/hefty/ntspawn.h"
 #include "libc/calls/hefty/spawn.h"
 #include "libc/calls/internal.h"
 #include "libc/conv/itoa.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
+#include "libc/nt/enum/startf.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
 static textwindows int64_t ParseInt(char16_t **p) {
@@ -42,8 +48,8 @@ static textwindows int64_t ParseInt(char16_t **p) {
   return x;
 }
 
-static noinline textwindows void DoAll(int64_t h, void *buf, size_t n,
-                                       bool32 (*f)()) {
+static noinline textwindows void ForkIo(int64_t h, void *buf, size_t n,
+                                        bool32 (*f)()) {
   char *p;
   size_t i;
   uint32_t x;
@@ -53,11 +59,11 @@ static noinline textwindows void DoAll(int64_t h, void *buf, size_t n,
 }
 
 static noinline textwindows void WriteAll(int64_t h, void *buf, size_t n) {
-  DoAll(h, buf, n, WriteFile);
+  ForkIo(h, buf, n, WriteFile);
 }
 
 static noinline textwindows void ReadAll(int64_t h, void *buf, size_t n) {
-  DoAll(h, buf, n, ReadFile);
+  ForkIo(h, buf, n, ReadFile);
 }
 
 textwindows void WinMainForked(void) {
@@ -79,7 +85,7 @@ textwindows void WinMainForked(void) {
     ReadAll(h, &_mmi.p[i], sizeof(_mmi.p[i]));
     addr = (void *)((uint64_t)_mmi.p[i].x << 16);
     size = ((uint64_t)(_mmi.p[i].y - _mmi.p[i].x) << 16) + FRAMESIZE;
-    switch (_mmi.p[i].prot) {
+    switch (_mmi.p[i].prot & (PROT_READ | PROT_WRITE | PROT_EXEC)) {
       case PROT_READ | PROT_WRITE | PROT_EXEC:
         protect = kNtPageExecuteReadwrite;
         access = kNtFileMapRead | kNtFileMapWrite | kNtFileMapExecute;
@@ -117,9 +123,12 @@ textwindows void WinMainForked(void) {
 
 textwindows int fork$nt(void) {
   jmp_buf jb;
+  int i, rc, pid;
   int64_t reader, writer;
-  int i, rc, pid, fds[3];
   char *p, buf[21 + 1 + 21 + 1];
+  struct NtStartupInfo startinfo;
+  struct NtProcessInformation procinfo;
+  if ((pid = __getemptyfd()) == -1) return -1;
   if (!setjmp(jb)) {
     if (CreatePipe(&reader, &writer, &kNtIsInheritable, 0)) {
       p = buf;
@@ -127,12 +136,19 @@ textwindows int fork$nt(void) {
       *p++ = ' ';
       p += uint64toarray_radix10(writer, p);
       setenv("_FORK", buf, true);
-      fds[0] = 0;
-      fds[1] = 1;
-      fds[2] = 2;
-      /* TODO: CloseHandle(g_fds.p[pid].h) if SIGCHLD is SIG_IGN */
-      if ((pid = spawnve(0, fds, g_argv[0], g_argv, environ)) != -1) {
+      memset(&startinfo, 0, sizeof(startinfo));
+      startinfo.cb = sizeof(struct NtStartupInfo);
+      startinfo.dwFlags = kNtStartfUsestdhandles;
+      startinfo.hStdInput = g_fds.p[0].handle;
+      startinfo.hStdOutput = g_fds.p[1].handle;
+      startinfo.hStdError = g_fds.p[2].handle;
+      if (ntspawn(g_argv[0], g_argv, environ, &kNtIsInheritable, NULL, true, 0,
+                  NULL, &startinfo, &procinfo) != -1) {
         CloseHandle(reader);
+        CloseHandle(procinfo.hThread);
+        g_fds.p[pid].kind = kFdProcess;
+        g_fds.p[pid].handle = procinfo.hProcess;
+        g_fds.p[pid].flags = O_CLOEXEC;
         WriteAll(writer, jb, sizeof(jb));
         WriteAll(writer, &_mmi.i, sizeof(_mmi.i));
         for (i = 0; i < _mmi.i; ++i) {
@@ -144,11 +160,11 @@ textwindows int fork$nt(void) {
         }
         WriteAll(writer, _edata, _end - _edata);
         CloseHandle(writer);
-        rc = pid;
       } else {
         rc = -1;
       }
       unsetenv("_FORK");
+      rc = pid;
     } else {
       rc = __winerr();
     }

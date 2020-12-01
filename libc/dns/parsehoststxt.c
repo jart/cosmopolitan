@@ -44,9 +44,10 @@
  * @see hoststxtsort() which is the logical next step
  */
 int parsehoststxt(struct HostsTxt *ht, FILE *f) {
-  int rc = 0;
+  int rc;
   char *line;
   size_t linesize;
+  rc = 0;
   line = NULL;
   linesize = 0;
   while ((getline(&line, &linesize, f)) != -1) {

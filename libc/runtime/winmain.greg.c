@@ -37,7 +37,6 @@
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/teb.h"
-#include "libc/runtime/getdosenviron.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
@@ -130,8 +129,7 @@ static textwindows noreturn void WinMainNew(void) {
   NormalizeCmdExe();
   *(/*unconst*/ int *)&__hostos = WINDOWS;
   size = ROUNDUP(STACKSIZE + sizeof(struct WinArgs), FRAMESIZE);
-  data = 0x777000000000;
-  data = (intptr_t)AllocateMemory((char *)data, size, &_mmi.p[0].h);
+  data = (intptr_t)AllocateMemory((char *)0x777000000000, size, &_mmi.p[0].h);
   _mmi.p[0].x = data >> 16;
   _mmi.p[0].y = (data >> 16) + ((size >> 16) - 1);
   _mmi.p[0].prot = PROT_READ | PROT_WRITE;

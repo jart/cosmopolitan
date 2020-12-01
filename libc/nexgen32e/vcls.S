@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/macros.h"
+#include "ape/macros.internal.h"
 #include "libc/nexgen32e/vidya.internal.h"
 #include "libc/notice.inc"
 .real

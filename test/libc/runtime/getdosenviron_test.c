@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/getdosenviron.internal.h"
+#include "libc/runtime/internal.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
@@ -98,6 +98,6 @@ TEST(GetDosEnviron, testEmpty_zeroTerminatesWheneverPossible_3) {
   size_t size = 2;
   char *block = tmalloc(size);
   EXPECT_EQ(0, GetDosEnviron(u"", block, size, NULL, 0));
-  EXPECT_BINEQ(u"  ", block);
+  EXPECT_BINEQ(u" ", block);
   tfree(block);
 }

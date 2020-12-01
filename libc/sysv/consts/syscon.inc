@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 /* clang-format off */
-.include "libc/macros.inc"
+.include "libc/macros.internal.inc"
 
 .macro	.syscon	group:req name:req linux:req xnu:req freebsd:req openbsd:req windows:req
 	yoink	_init_systemfive

@@ -32,15 +32,14 @@
  * @return bytes written (excluding NUL) or -1 w/ errno
  */
 int pascalifydnsname(uint8_t *buf, size_t size, const char *name) {
-  size_t i = 0;
-  size_t namelen = strlen(name);
-  if (namelen > DNS_NAME_MAX) return enametoolong();
+  size_t i, j, k, namelen;
+  if ((namelen = strlen(name)) > DNS_NAME_MAX) return enametoolong();
+  i = 0;
   if (size || namelen) {
     if (namelen + 1 > size) return enospc();
     buf[0] = '\0';
-    size_t j = 0;
+    j = 0;
     for (;;) {
-      size_t k;
       for (k = 0; name[j + k] && name[j + k] != '.'; ++k) {
         buf[i + k + 1] = name[j + k];
       }

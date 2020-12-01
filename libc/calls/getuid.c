@@ -23,7 +23,7 @@
 #include "libc/macros.h"
 #include "libc/nt/accounting.h"
 #include "libc/runtime/runtime.h"
-#include "libc/str/knuthmultiplicativehash.h"
+#include "libc/str/knuthmultiplicativehash.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 

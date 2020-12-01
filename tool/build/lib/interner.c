@@ -21,7 +21,7 @@
 #include "libc/alg/arraylist2.internal.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/str/knuthmultiplicativehash.h"
+#include "libc/str/knuthmultiplicativehash.internal.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
 #include "tool/build/lib/interner.h"

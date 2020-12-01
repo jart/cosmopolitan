@@ -20,7 +20,7 @@
 #include "ape/config.h"
 #include "ape/lib/pc.h"
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/macros.h"
 
 /**
  * Virtualizes physical memory.
@@ -33,27 +33,24 @@
  */
 textreal void flattenhighmemory(struct SmapEntry *e820, struct PageTable *pml4t,
                                 uint64_t *ptsp) {
-  struct SmapEntry *smap = e820;
-  struct SmapEntry *hole = e820;
-  uint64_t paddr = IMAGE_BASE_PHYSICAL;
-  uint64_t vaddr = IMAGE_BASE_VIRTUAL;
-  while (smap->size) {
+  uint64_t *entry, paddr, vaddr;
+  struct SmapEntry *smap, *hole;
+  for (smap = hole = e820, vaddr = IMAGE_BASE_VIRTUAL; smap->size; ++smap) {
     while (smap->size && smap->type != kMemoryUsable) smap++;
-    paddr = roundup(max(paddr, smap->addr), PAGESIZE);
-    while (paddr < rounddown(smap->addr + smap->size, PAGESIZE)) {
+    paddr = ROUNDUP(MAX(IMAGE_BASE_PHYSICAL, smap->addr), PAGESIZE);
+    while (paddr < ROUNDDOWN(smap->addr + smap->size, PAGESIZE)) {
       while (hole->size &&
              (hole->type == kMemoryUsable || hole->addr + hole->size < paddr)) {
         hole++;
       }
       if (paddr >= hole->addr && paddr < hole->addr + hole->size) {
-        paddr = roundup(hole->addr + hole->size, PAGESIZE);
+        paddr = ROUNDUP(hole->addr + hole->size, PAGESIZE);
       } else {
-        uint64_t *entry = getpagetableentry(vaddr, 3, pml4t, ptsp);
+        entry = __getpagetableentry(vaddr, 3, pml4t, ptsp);
         *entry = paddr | PAGE_V | PAGE_RW;
         vaddr += 0x1000;
         paddr += 0x1000;
       }
     }
-    smap++;
   }
 }

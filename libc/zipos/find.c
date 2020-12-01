@@ -19,7 +19,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/relocations.h"
 #include "libc/assert.h"
-#include "libc/runtime/rbx.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/zip.h"

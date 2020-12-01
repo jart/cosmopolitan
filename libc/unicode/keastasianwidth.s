@@ -1,5 +1,5 @@
 /	o/$(MODE)/tool/build/lz4toasm.com -o o/$(MODE)/libc/str/EastAsianWidth.s -s kEastAsianWidth o/$(MODE)/libc/str/EastAsianWidth.bin.lz4
-.include "libc/macros.inc"
+.include "libc/macros.internal.inc"
 
 	.rodata
 	.align	4

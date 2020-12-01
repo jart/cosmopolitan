@@ -420,6 +420,14 @@ static char *DisRdx(struct Dis *d, uint32_t rde, char *p) {
   return DisRegister(p, kGreg[Osz(rde)][Rexw(rde)][0][2]);
 }
 
+static char *DisPort(struct Dis *d, uint32_t rde, char *p) {
+  *p++ = '(';
+  p = DisRegister(p, kGreg[1][0][0][2]);
+  *p++ = ')';
+  *p = '\0';
+  return p;
+}
+
 static char *DisCd(struct Dis *d, uint32_t rde, char *p) {
   return DisRegister(p, kCtl[ModrmReg(rde)]);
 }
@@ -653,6 +661,7 @@ static const struct DisArg {
     {"%rAX", DisRax},    //
     {"%rDX", DisRdx},    //
     {"BBb", DisBBb},     //
+    {"DX", DisPort},     //
     {"EST", DisEst},     //
     {"EST1", DisEst1},   //
     {"ESsr", DisEssr},   //

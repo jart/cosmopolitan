@@ -24,8 +24,8 @@
 textwindows int symlink$nt(const char *target, const char *linkpath) {
   char16_t linkpath16[PATH_MAX], target16[PATH_MAX];
   uint32_t flags = isdirectory(target) ? kNtSymbolicLinkFlagDirectory : 0;
-  if (mkntpath(linkpath, linkpath16) == -1) return -1;
-  if (mkntpath(target, target16) == -1) return -1;
+  if (__mkntpath(linkpath, linkpath16) == -1) return -1;
+  if (__mkntpath(target, target16) == -1) return -1;
   if (CreateSymbolicLink(linkpath16, target16, flags)) {
     return 0;
   } else {

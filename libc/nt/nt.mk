@@ -166,8 +166,8 @@ o/libc/nt/ntdllimport.inc:				\
 		ape/relocations.h			\
 		libc/nt/ntdllimport.h			\
 		libc/macros.h				\
-		libc/macros.inc				\
-		libc/macros-cpp.inc
+		libc/macros.internal.inc		\
+		libc/macros-cpp.internal.inc
 
 #───────────────────────────────────────────────────────────────────────────────
 

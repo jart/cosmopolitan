@@ -46,7 +46,7 @@
 #define FLT_MIN_10_EXP   __FLT_MIN_10_EXP__
 #define FLT_MIN_EXP      __FLT_MIN_EXP__
 #define HLF_MAX          6.50e4f
-#define HLF_MIN          3.10e–5f
+#define HLF_MIN          3.10e-5f
 #define LDBL_DECIMAL_DIG __LDBL_DECIMAL_DIG__
 #define LDBL_DIG         __LDBL_DIG__
 #define LDBL_EPSILON     __LDBL_EPSILON__

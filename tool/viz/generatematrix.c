@@ -26,7 +26,7 @@
 #include "libc/macros.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
-#include "libc/rand/lcg.h"
+#include "libc/rand/lcg.internal.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"

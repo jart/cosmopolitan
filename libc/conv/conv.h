@@ -51,6 +51,7 @@ long convertmicros(const struct timeval *, long) paramsnonnull() nosideeffect;
 │ cosmopolitan § conversion » manipulation                                 ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+char *dirname(char *);
 char *basename(const char *) nosideeffect;
 char *basename_n(const char *, size_t) nosideeffect;
 bool isabspath(const char *) paramsnonnull() nosideeffect;
@@ -83,7 +84,7 @@ div_t div(int, int) pureconst;
 ldiv_t ldiv(long, long) pureconst;
 lldiv_t lldiv(long long, long long) pureconst;
 imaxdiv_t imaxdiv(intmax_t, intmax_t) pureconst;
-double RoundDecimalPlaces(double, double, double(double));
+double RoundDecimalPlaces(double, double, double (*)(double));
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § conversion » optimizations                                ─╬─│┼

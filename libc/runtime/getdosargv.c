@@ -22,7 +22,6 @@
 #include "libc/bits/pushpop.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/runtime/internal.h"
-#include "libc/str/appendchar.h"
 #include "libc/str/str.h"
 #include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
@@ -34,8 +33,31 @@ struct DosArgv {
   wint_t wc;
 };
 
+static textwindows wint_t DecodeDosArgv(const char16_t **s) {
+  wint_t x, y;
+  for (;;) {
+    if (!(x = *(*s)++)) break;
+    if (IsUtf16Cont(x)) continue;
+    if (IsUcs2(x)) {
+      return x;
+    } else {
+      if ((y = *(*s)++)) {
+        return MergeUtf16(x, y);
+      } else {
+        return 0;
+      }
+    }
+  }
+  return x;
+}
+
 static textwindows void AppendDosArgv(struct DosArgv *st, wint_t wc) {
-  AppendChar(&st->p, st->pe, wc);
+  uint64_t w;
+  w = tpenc(wc);
+  do {
+    if (st->p >= st->pe) break;
+    *st->p++ = w & 0xff;
+  } while (w >>= 8);
 }
 
 /**
@@ -66,9 +88,9 @@ textwindows int GetDosArgv(const char16_t *cmdline, char *buf, size_t size,
   st.p = buf;
   st.pe = buf + size;
   argc = 0;
-  st.wc = DecodeNtsUtf16(&st.s);
+  st.wc = DecodeDosArgv(&st.s);
   while (st.wc) {
-    while (st.wc && iswspace(st.wc)) st.wc = DecodeNtsUtf16(&st.s);
+    while (st.wc && isspace(st.wc)) st.wc = DecodeDosArgv(&st.s);
     if (!st.wc) break;
     if (++argc < max) {
       argv[argc - 1] = st.p < st.pe ? st.p : NULL;
@@ -79,8 +101,8 @@ textwindows int GetDosArgv(const char16_t *cmdline, char *buf, size_t size,
       if (st.wc == '"' || st.wc == '\\') {
         slashes = 0;
         quotes = 0;
-        while (st.wc == '\\') st.wc = DecodeNtsUtf16(&st.s), slashes++;
-        while (st.wc == '"') st.wc = DecodeNtsUtf16(&st.s), quotes++;
+        while (st.wc == '\\') st.wc = DecodeDosArgv(&st.s), slashes++;
+        while (st.wc == '"') st.wc = DecodeDosArgv(&st.s), quotes++;
         if (!quotes) {
           while (slashes--) AppendDosArgv(&st, '\\');
         } else {
@@ -94,7 +116,7 @@ textwindows int GetDosArgv(const char16_t *cmdline, char *buf, size_t size,
         }
       } else {
         AppendDosArgv(&st, st.wc);
-        st.wc = DecodeNtsUtf16(&st.s);
+        st.wc = DecodeDosArgv(&st.s);
       }
     }
     AppendDosArgv(&st, '\0');

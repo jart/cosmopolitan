@@ -32,12 +32,12 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § new technology » synchronization                          ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#define InterlockedAdd(PTR, VAL)                                      \
-  ({                                                                  \
-    typeof(*(PTR)) Res;                                               \
-    typeof(Res) Val = (VAL);                                          \
-    asm volatile("xadd\t%0,%1" : "=r"(Res), "+m"(*(PTR)) : "0"(Val)); \
-    Res + Val;                                                        \
+#define InterlockedAdd(PTR, VAL)                                           \
+  ({                                                                       \
+    typeof(*(PTR)) Res;                                                    \
+    typeof(Res) Val = (VAL);                                               \
+    asm volatile("lock xadd\t%0,%1" : "=r"(Res), "+m"(*(PTR)) : "0"(Val)); \
+    Res + Val;                                                             \
   })
 
 #define InterlockedExchange(PTR, VAL)                      \

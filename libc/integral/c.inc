@@ -2,7 +2,7 @@
 #define __attribute__(x)
 #endif
 
-#ifdef __STRICT_ANSI__
+#if defined(__STRICT_ANSI__) && __STDC_VERSION__ + 0 < 201112
 #define asm __asm__
 #endif
 
@@ -16,7 +16,8 @@
  */
 #if !defined(__GNUC__) && __cplusplus + 0 >= 201103L
 #define typeof(x) decltype(x)
-#elif defined(__STRICT_ANSI__) || !defined(__GNUC__)
+#elif (defined(__STRICT_ANSI__) || !defined(__GNUC__)) && \
+    __STDC_VERSION__ + 0 < 201112
 #define typeof(x) __typeof(x)
 #endif
 
@@ -123,7 +124,7 @@ typedef _Bool bool;
 #endif
 #endif
 
-#if !defined(__cplusplus) && !defined(__STRICT_ANSI__)
+#ifndef __cplusplus
 typedef __WCHAR_TYPE__ wchar_t;
 typedef __CHAR16_TYPE__ char16_t;
 typedef __CHAR32_TYPE__ char32_t;
@@ -159,7 +160,7 @@ typedef __UINT64_TYPE__ uint64_t;
  * @see LISP primitives CONS[CAR,CDR] w/ IBM 704 naming
  * @see int128_t
  */
-typedef struct axdx_t {
+typedef struct {
   intptr_t ax, dx;
 } axdx_t;
 
@@ -194,11 +195,15 @@ typedef int64_t intmax_t;
 typedef uint64_t uintmax_t;
 #endif
 
+#ifdef __GNUC__
 #define va_list            __builtin_va_list
 #define va_arg(ap, type)   __builtin_va_arg(ap, type)
 #define va_copy(dest, src) __builtin_va_copy(dest, src)
 #define va_end(ap)         __builtin_va_end(ap)
 #define va_start(ap, last) __builtin_va_start(ap, last)
+#else
+#include "libc/integral/lp64arg.inc"
+#endif
 
 #define libcesque   nothrow nocallback
 #define memcpyesque libcesque
@@ -366,7 +371,7 @@ typedef uint64_t uintmax_t;
 #elif defined(_MSC_VER)
 #define forceinline __forceinline
 #else
-#define forceinline static
+#define forceinline static inline
 #endif /* !ANSI && GCC >= 3.2 */
 #endif /* __cplusplus */
 #endif /* forceinline */
@@ -1046,7 +1051,7 @@ typedef uint64_t uintmax_t;
  * Pulls source file into ZIP portion of binary.
  * @see build/rules.mk which defines the wildcard build rule %.zip.o
  */
-#ifndef IM_FEELING_NAUGHTY
+#if !defined(IM_FEELING_NAUGHTY) && !defined(__STRICT_ANSI__)
 #define STATIC_YOINK_SOURCE(PATH) STATIC_YOINK(PATH)
 #else
 #define STATIC_YOINK_SOURCE(PATH)
