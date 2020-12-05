@@ -28,6 +28,21 @@
 /	@return	rax is pointer to substring or NULL
 /	@asyncsignalsafe
 strstr$sse42:
-	.strstr	.Lequalordered
+	.leafprologue
+	mov	%rdi,%rax
+	xor	%ecx,%ecx
+0:	mov	$-16,%rdx
+1:	add	$16,%rdx
+	movaps	(%rsi,%rdx),%xmm0
+2:	add	%rcx,%rax
+	lea	(%rax,%rdx),%rdi
+	pcmpistri $.Lequalordered,(%rdi),%xmm0
+3:	ja	2b	# !CF (no match) && !ZF (need NUL-term)
+	jnc	4f	# !CF (no match) && ZF (NUL-terminator)
+	jno	0b	# !OF ← CF && CX!=0 (matched at offset)
+	jns	1b	# !SF ← NUL ∉ XMM1 (need to match more)
+	jmp	5f	# youtu.be/nVk1DjMtLWs
+4:	xor	%eax,%eax
+5:	.leafepilogue
 	.endfn	strstr$sse42,globl,hidden
 	.source	__FILE__

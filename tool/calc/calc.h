@@ -13,7 +13,7 @@ struct Numbers {
   long double x;
 };
 
-static void SyntaxError(void) noreturn;
+static void SyntaxError(void) wontreturn;
 static long double ParseNumber(struct Token);
 static void NumbersFree(struct Numbers *);
 static struct Numbers *NumbersAppend(struct Numbers *, long double);

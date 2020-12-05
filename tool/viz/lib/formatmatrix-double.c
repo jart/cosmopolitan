@@ -19,10 +19,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/conv/conv.h"
+#include "libc/log/check.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"
 #include "libc/x/x.h"
+#include "third_party/gdtoa/gdtoa.h"
 #include "tool/viz/lib/formatstringtable.h"
 #include "tool/viz/lib/stringbuilder.h"
 
@@ -34,7 +36,9 @@ void *ConvertMatrixToStringTable(long yn, long xn, char *T[yn][xn],
   assert(yn && xn && !T[0][0]);
   for (y = 0; y < yn; ++y) {
     for (x = 0; x < xn; ++x) {
-      T[y][x] = xdtoa(RoundDecimalPlaces(M[y][x], digs, rounder));
+      T[y][x] = xmalloc(40);
+      T[y][x][0] = '\0';
+      g_dfmt_p(T[y][x], &M[y][x], digs, 40, 0);
     }
   }
   return T;

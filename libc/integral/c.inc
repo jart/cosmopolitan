@@ -2,6 +2,14 @@
 #define __attribute__(x)
 #endif
 
+#ifndef __cplusplus
+#define COSMOPOLITAN_C_START_
+#define COSMOPOLITAN_C_END_
+#define COSMOPOLITAN_CXX_START_
+#define COSMOPOLITAN_CXX_END_
+#define COSMOPOLITAN_CXX_USING_
+#endif
+
 #if defined(__STRICT_ANSI__) && __STDC_VERSION__ + 0 < 201112
 #define asm __asm__
 #endif
@@ -65,18 +73,6 @@
   do {                                 \
     if (!(x)) __builtin_unreachable(); \
   } while (0)
-#endif
-
-#if defined(__STRICT_ANSI__) ||                          \
-    (!defined(__GNUC__) && !__has_builtin(constant_p) && \
-     !defined(__builtin_constant_p))
-#define __builtin_constant_p(x) 0
-#endif
-
-#if defined(__STRICT_ANSI__) ||                           \
-    (!defined(__GNUC__) && !__has_builtin(choose_expr) && \
-     !defined(__builtin_choose_expr))
-#define __builtin_choose_expr(x, a, b) ((x) ? (long)(a) : (long)(b))
 #endif
 
 #if __STDC_VERSION__ + 0 < 201112
@@ -195,7 +191,7 @@ typedef int64_t intmax_t;
 typedef uint64_t uintmax_t;
 #endif
 
-#ifdef __GNUC__
+#ifndef __chibicc__
 #define va_list            __builtin_va_list
 #define va_arg(ap, type)   __builtin_va_arg(ap, type)
 #define va_copy(dest, src) __builtin_va_copy(dest, src)
@@ -230,11 +226,11 @@ typedef uint64_t uintmax_t;
 /**
  * Aligns automatic or static variable.
  */
-#ifndef aligned
+#ifndef forcealign
 #ifndef __STRICT_ANSI__
-#define aligned(bytes) __attribute__((__aligned__(bytes)))
+#define forcealign(bytes) __attribute__((__aligned__(bytes)))
 #else
-#define aligned(bytes)
+#define forcealign(bytes)
 #endif
 #endif
 
@@ -291,13 +287,13 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-#ifndef noreturn
+#ifndef wontreturn
 #if !defined(__STRICT_ANSI__) &&      \
     (__has_attribute(__noreturn__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 208)
-#define noreturn __attribute__((__noreturn__))
+#define wontreturn __attribute__((__noreturn__))
 #else
-#define noreturn
+#define wontreturn
 #endif
 #endif
 
@@ -1065,14 +1061,6 @@ typedef uint64_t uintmax_t;
  */
 #ifdef __BASE_FILE__
 STATIC_YOINK_SOURCE(__BASE_FILE__);
-#endif
-
-#ifndef __cplusplus
-#define COSMOPOLITAN_CXX_START_
-#define COSMOPOLITAN_CXX_END_
-#define COSMOPOLITAN_CXX_USING_
-#define COSMOPOLITAN_C_START_
-#define COSMOPOLITAN_C_END_
 #endif
 
 #define MACHINE_CODE_ANALYSIS_BEGIN_

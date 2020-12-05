@@ -20,6 +20,6 @@
 #include "libc/conv/conv.h"
 #include "libc/macros.h"
 
-intmax_t imaxabs(intmax_t x) {
+intmax_t(imaxabs)(intmax_t x) {
   return ABS(x);
 }

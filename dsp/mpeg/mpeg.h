@@ -77,12 +77,12 @@ struct plm_samples_t {
   double time;
   unsigned int count;
 #ifdef PLM_AUDIO_SEPARATE_CHANNELS
-  float left[PLM_AUDIO_SAMPLES_PER_FRAME] aligned(32);
-  float right[PLM_AUDIO_SAMPLES_PER_FRAME] aligned(32);
+  float left[PLM_AUDIO_SAMPLES_PER_FRAME] forcealign(32);
+  float right[PLM_AUDIO_SAMPLES_PER_FRAME] forcealign(32);
 #else
-  float interleaved[PLM_AUDIO_SAMPLES_PER_FRAME * 2] aligned(32);
+  float interleaved[PLM_AUDIO_SAMPLES_PER_FRAME * 2] forcealign(32);
 #endif
-} aligned(32);
+} forcealign(32);
 
 typedef struct plm_samples_t plm_samples_t;
 

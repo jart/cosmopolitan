@@ -19,4 +19,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/temp.h"
 
-int mkstemp(char *template) { return mkostempsm(template, 0, 0, 0600); }
+int mkstemp(char *template) {
+  return mkostempsm(template, 0, 0, 0600);
+}

@@ -28,8 +28,8 @@ int xwrite(int, const void *, uint64_t);
 │ cosmopolitan § eXtended apis » memory                                    ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-void xdie(void) noreturn;
-char *xdtoa(double) _XMAL;
+void xdie(void) wontreturn;
+char *xdtoa(long double) _XMAL;
 char *xasprintf(const char *, ...) printfesque(1) paramsnonnull((1)) _XMAL;
 char *xvasprintf(const char *, va_list) _XPNN _XMAL;
 char *xgetline(struct FILE *) _XPNN mallocesque;

@@ -33,10 +33,10 @@ typedef struct FILE FILE;
 
 extern FILE *g_logfile;
 
-void perror(const char *) relegated; /* print the last system error */
-void __die(void) relegated noreturn; /* print backtrace and abort() */
-void meminfo(int);                   /* shows malloc statistics &c. */
-void memsummary(int);                /* light version of same thing */
+void perror(const char *) relegated;   /* print the last system error */
+void __die(void) relegated wontreturn; /* print backtrace and abort() */
+void meminfo(int);                     /* shows malloc statistics &c. */
+void memsummary(int);                  /* light version of same thing */
 uint16_t getttycols(uint16_t);
 int getttysize(int, struct winsize *) paramsnonnull();
 bool isterminalinarticulate(void) nosideeffect;
@@ -218,8 +218,8 @@ void fverbosef(ARGS, ...) asm("flogf") ATTR relegated libcesque;
 void vfverbosef(ARGS, va_list) asm("vflogf") ATTRV relegated libcesque;
 void fdebugf(ARGS, ...) asm("flogf") ATTR relegated libcesque;
 void vfdebugf(ARGS, va_list) asm("vflogf") ATTRV relegated libcesque;
-void ffatalf(ARGS, ...) asm("flogf") ATTR relegated noreturn libcesque;
-void vffatalf(ARGS, va_list) asm("vflogf") ATTRV relegated noreturn libcesque;
+void ffatalf(ARGS, ...) asm("flogf") ATTR relegated wontreturn libcesque;
+void vffatalf(ARGS, va_list) asm("vflogf") ATTRV relegated wontreturn libcesque;
 #undef ARGS
 #undef ATTR
 #undef ATTRV

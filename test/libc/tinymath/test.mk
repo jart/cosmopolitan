@@ -32,8 +32,7 @@ TEST_LIBC_TINYMATH_DIRECTDEPS =					\
 	LIBC_NEXGEN32E						\
 	LIBC_STUBS						\
 	LIBC_TESTLIB						\
-	LIBC_X							\
-	THIRD_PARTY_DTOA
+	LIBC_X
 
 TEST_LIBC_TINYMATH_DEPS :=					\
 	$(call uniq,$(foreach x,$(TEST_LIBC_TINYMATH_DIRECTDEPS),$($(x))))

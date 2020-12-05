@@ -110,13 +110,13 @@
 #define PWSTR          WCHAR*
 #define PZPWSTR        PWSTR*
 #define PCZPWSTR       CONST PWSTR*
-#define LPUWSTR        WCHAR aligned(1)*
-#define PUWSTR         WCHAR aligned(1)*
+#define LPUWSTR        WCHAR forcealign(1)*
+#define PUWSTR         WCHAR forcealign(1)*
 #define LPCWSTR        CONST WCHAR*
 #define PCWSTR         CONST WCHAR*
 #define PZPCWSTR       PCWSTR*
-#define LPCUWSTR       CONST WCHAR aligned(1)*
-#define PCUWSTR        CONST WCHAR aligned(1)*
+#define LPCUWSTR       CONST WCHAR forcealign(1)*
+#define PCUWSTR        CONST WCHAR forcealign(1)*
 #define PCHAR          CHAR*
 #define LPCH           CHAR*
 #define PCH            CHAR*

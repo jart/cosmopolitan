@@ -1,21 +1,21 @@
 #include "third_party/chibicc/chibicc.h"
 
-Type *ty_void = &(Type){TY_VOID, 1, 1};
-Type *ty_bool = &(Type){TY_BOOL, 1, 1};
-
-Type *ty_char = &(Type){TY_CHAR, 1, 1};
-Type *ty_short = &(Type){TY_SHORT, 2, 2};
-Type *ty_int = &(Type){TY_INT, 4, 4};
-Type *ty_long = &(Type){TY_LONG, 8, 8};
-
-Type *ty_uchar = &(Type){TY_CHAR, 1, 1, true};
-Type *ty_ushort = &(Type){TY_SHORT, 2, 2, true};
-Type *ty_uint = &(Type){TY_INT, 4, 4, true};
-Type *ty_ulong = &(Type){TY_LONG, 8, 8, true};
-
-Type *ty_float = &(Type){TY_FLOAT, 4, 4};
-Type *ty_double = &(Type){TY_DOUBLE, 8, 8};
-Type *ty_ldouble = &(Type){TY_LDOUBLE, 16, 16};
+/* TODO(jart): Why can't these be const? */
+Type ty_void[1] = {{TY_VOID, 1, 1}};
+Type ty_bool[1] = {{TY_BOOL, 1, 1}};
+Type ty_char[1] = {{TY_CHAR, 1, 1}};
+Type ty_short[1] = {{TY_SHORT, 2, 2}};
+Type ty_int[1] = {{TY_INT, 4, 4}};
+Type ty_long[1] = {{TY_LONG, 8, 8}};
+Type ty_int128[1] = {{TY_INT128, 16, 16}};
+Type ty_uchar[1] = {{TY_CHAR, 1, 1, true}};
+Type ty_ushort[1] = {{TY_SHORT, 2, 2, true}};
+Type ty_uint[1] = {{TY_INT, 4, 4, true}};
+Type ty_ulong[1] = {{TY_LONG, 8, 8, true}};
+Type ty_uint128[1] = {{TY_INT128, 16, 16, true}};
+Type ty_float[1] = {{TY_FLOAT, 4, 4}};
+Type ty_double[1] = {{TY_DOUBLE, 8, 8}};
+Type ty_ldouble[1] = {{TY_LDOUBLE, 16, 16}};
 
 static Type *new_type(TypeKind kind, int size, int align) {
   Type *ty = calloc(1, sizeof(Type));
@@ -28,7 +28,7 @@ static Type *new_type(TypeKind kind, int size, int align) {
 bool is_integer(Type *ty) {
   TypeKind k = ty->kind;
   return k == TY_BOOL || k == TY_CHAR || k == TY_SHORT || k == TY_INT ||
-         k == TY_LONG || k == TY_ENUM;
+         k == TY_LONG || k == TY_INT128 || k == TY_ENUM;
 }
 
 bool is_flonum(Type *ty) {
@@ -42,18 +42,15 @@ bool is_numeric(Type *ty) {
 
 bool is_compatible(Type *t1, Type *t2) {
   if (t1 == t2) return true;
-
   if (t1->origin) return is_compatible(t1->origin, t2);
-
   if (t2->origin) return is_compatible(t1, t2->origin);
-
   if (t1->kind != t2->kind) return false;
-
   switch (t1->kind) {
     case TY_CHAR:
     case TY_SHORT:
     case TY_INT:
     case TY_LONG:
+    case TY_INT128:
       return t1->is_unsigned == t2->is_unsigned;
     case TY_FLOAT:
     case TY_DOUBLE:
@@ -64,11 +61,11 @@ bool is_compatible(Type *t1, Type *t2) {
     case TY_FUNC: {
       if (!is_compatible(t1->return_ty, t2->return_ty)) return false;
       if (t1->is_variadic != t2->is_variadic) return false;
-
       Type *p1 = t1->params;
       Type *p2 = t2->params;
-      for (; p1 && p2; p1 = p1->next, p2 = p2->next)
+      for (; p1 && p2; p1 = p1->next, p2 = p2->next) {
         if (!is_compatible(p1, p2)) return false;
+      }
       return p1 == NULL && p2 == NULL;
     }
     case TY_ARRAY:
@@ -125,19 +122,14 @@ Type *struct_type(void) {
 
 static Type *get_common_type(Type *ty1, Type *ty2) {
   if (ty1->base) return pointer_to(ty1->base);
-
   if (ty1->kind == TY_FUNC) return pointer_to(ty1);
   if (ty2->kind == TY_FUNC) return pointer_to(ty2);
-
   if (ty1->kind == TY_LDOUBLE || ty2->kind == TY_LDOUBLE) return ty_ldouble;
   if (ty1->kind == TY_DOUBLE || ty2->kind == TY_DOUBLE) return ty_double;
   if (ty1->kind == TY_FLOAT || ty2->kind == TY_FLOAT) return ty_float;
-
   if (ty1->size < 4) ty1 = ty_int;
   if (ty2->size < 4) ty2 = ty_int;
-
   if (ty1->size != ty2->size) return (ty1->size < ty2->size) ? ty2 : ty1;
-
   if (ty2->is_unsigned) return ty2;
   return ty1;
 }
@@ -157,7 +149,6 @@ static void usual_arith_conv(Node **lhs, Node **rhs) {
 
 void add_type(Node *node) {
   if (!node || node->ty) return;
-
   add_type(node->lhs);
   add_type(node->rhs);
   add_type(node->cond);
@@ -165,10 +156,8 @@ void add_type(Node *node) {
   add_type(node->els);
   add_type(node->init);
   add_type(node->inc);
-
   for (Node *n = node->body; n; n = n->next) add_type(n);
   for (Node *n = node->args; n; n = n->next) add_type(n);
-
   switch (node->kind) {
     case ND_NUM:
       node->ty = ty_int;
@@ -192,7 +181,7 @@ void add_type(Node *node) {
     }
     case ND_ASSIGN:
       if (node->lhs->ty->kind == TY_ARRAY)
-        error_tok(node->lhs->tok, "not an lvalue");
+        error_tok(node->lhs->tok, "not an lvalue!");
       if (node->lhs->ty->kind != TY_STRUCT)
         node->rhs = new_cast(node->rhs, node->lhs->ty);
       node->ty = node->lhs->ty;
@@ -244,12 +233,20 @@ void add_type(Node *node) {
       return;
     }
     case ND_DEREF:
+#if 0
+      if (node->lhs->ty->size == 16 && (node->lhs->ty->kind == TY_FLOAT ||
+                                        node->lhs->ty->kind == TY_DOUBLE)) {
+        node->ty = node->lhs->ty;
+      } else {
+#endif
       if (!node->lhs->ty->base)
         error_tok(node->tok, "invalid pointer dereference");
       if (node->lhs->ty->base->kind == TY_VOID)
         error_tok(node->tok, "dereferencing a void pointer");
-
       node->ty = node->lhs->ty->base;
+#if 0
+      }
+#endif
       return;
     case ND_STMT_EXPR:
       if (node->body) {
@@ -271,7 +268,6 @@ void add_type(Node *node) {
       add_type(node->cas_old);
       add_type(node->cas_new);
       node->ty = ty_bool;
-
       if (node->cas_addr->ty->kind != TY_PTR)
         error_tok(node->cas_addr->tok, "pointer expected");
       if (node->cas_old->ty->kind != TY_PTR)

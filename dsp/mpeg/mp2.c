@@ -266,7 +266,7 @@ struct plm_audio_t {
 	float D[1024];
 	float V[1024];
 	float U[32];
-} aligned(64);
+} forcealign(64);
 
 typedef plm_audio_t plm_audio_t;
 

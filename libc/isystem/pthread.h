@@ -5,12 +5,12 @@
 
 #define PTHREAD_ONCE_INIT 0
 
-#define PTHREAD_MUTEX_NORMAL 0
-#define PTHREAD_MUTEX_DEFAULT 0
-#define PTHREAD_MUTEX_RECURSIVE 1
+#define PTHREAD_MUTEX_NORMAL     0
+#define PTHREAD_MUTEX_DEFAULT    0
+#define PTHREAD_MUTEX_RECURSIVE  1
 #define PTHREAD_MUTEX_ERRORCHECK 2
-#define PTHREAD_MUTEX_STALLED 0
-#define PTHREAD_MUTEX_ROBUST 1
+#define PTHREAD_MUTEX_STALLED    0
+#define PTHREAD_MUTEX_ROBUST     1
 
 /* clang-format off */
 #define PTHREAD_MUTEX_INITIALIZER {{{0}}}
@@ -65,7 +65,7 @@ typedef struct {
   } __u;
 } pthread_rwlock_t;
 
-noreturn void pthread_exit(void *);
+wontreturn void pthread_exit(void *);
 pureconst pthread_t pthread_self(void);
 int pthread_create(pthread_t *, const pthread_attr_t *, void *(*)(void *),
                    void *);

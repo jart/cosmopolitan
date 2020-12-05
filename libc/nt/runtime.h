@@ -33,7 +33,7 @@ bool32 WriteFile(int64_t hFile, const void *lpBuffer,
                  struct NtOverlapped *opt_lpOverlapped);
 bool32 TerminateProcess(int64_t hProcess, uint32_t uExitCode);
 int64_t GetCurrentProcess(void) pureconst;
-void ExitProcess(uint32_t uExitCode) noreturn;
+void ExitProcess(uint32_t uExitCode) wontreturn;
 uint32_t GetLastError(void) nosideeffect;
 bool32 CloseHandle(int64_t hObject) nothrow nocallback;
 intptr_t GetStdHandle(int64_t nStdHandle) nosideeffect;

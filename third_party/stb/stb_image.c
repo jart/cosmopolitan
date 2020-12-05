@@ -1261,7 +1261,7 @@ static int stbi__parse_entropy_coded_data(stbi__jpeg *z) {
   if (!z->progressive) {
     if (z->scan_n == 1) {
       int i, j;
-      short data[64] aligned(16);
+      short data[64] forcealign(16);
       int n = z->order[0];
       // non-interleaved data, we just need to process one block at a time,
       // in trivial scanline order
@@ -1292,7 +1292,7 @@ static int stbi__parse_entropy_coded_data(stbi__jpeg *z) {
       return 1;
     } else {  // interleaved
       int i, j, k, x, y;
-      short data[64] aligned(16);
+      short data[64] forcealign(16);
       for (j = 0; j < z->img_mcu_y; ++j) {
         for (i = 0; i < z->img_mcu_x; ++i) {
           // scan an interleaved mcu... process scan_n components in order

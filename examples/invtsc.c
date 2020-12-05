@@ -18,7 +18,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
-#include "third_party/dtoa/dtoa.h"
+#include "third_party/gdtoa/gdtoa.h"
 
 /**
  * @fileoverview Measure CPU clock mystery constants.
@@ -52,15 +52,18 @@ long double GetSample(void) {
 
 void MeasureNanosecondsPerAlwaysRunningTimerCycle(void) {
   int i;
-  long double avg, samp;
+  long double avg, samp, elapsed;
   start_ = now();
   for (i = 1, avg = 1.0L; !isdone_; ++i) {
     samp = GetSample();
     avg += (samp - avg) / i;
     dsleep(kInterval);
-    printf("1c = %sns (last=%sns spent=%ss)\n", g_fmt(dtoabuf_[0], (double)avg),
-           g_fmt(dtoabuf_[1], (double)samp),
-           g_fmt(dtoabuf_[2], (double)(now() - start_)));
+    elapsed = now() - start_;
+    g_xfmt_p(dtoabuf_[0], &avg, 15, 32, 0);
+    g_xfmt_p(dtoabuf_[1], &samp, 15, 32, 0);
+    g_xfmt_p(dtoabuf_[2], &elapsed, 15, 32, 0);
+    printf("1c = %sns (last=%sns spent=%ss)\n", dtoabuf_[0], dtoabuf_[1],
+           dtoabuf_[2]);
   }
 }
 

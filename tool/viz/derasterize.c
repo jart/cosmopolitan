@@ -398,8 +398,8 @@ static struct Cell derasterize(unsigned char block[CN][YS * XS]) {
 static char *RenderImage(char *v, unsigned yn, unsigned xn,
                          const unsigned char srgb[yn][YS][xn][XS][CN]) {
   unsigned y, x, i, j, k;
-  unsigned char copy[YS][XS][CN] aligned(32);
-  unsigned char block[CN][YS * XS] aligned(32);
+  unsigned char copy[YS][XS][CN] forcealign(32);
+  unsigned char block[CN][YS * XS] forcealign(32);
   DCHECK_ALIGNED(32, v);
   DCHECK_ALIGNED(32, srgb);
   for (y = 0; y < yn; ++y) {

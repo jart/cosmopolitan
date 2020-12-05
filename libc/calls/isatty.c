@@ -27,7 +27,7 @@
  * @asyncsignalsafe
  */
 bool32 isatty(int fd) {
-  char buf[sizeof(uint16_t) * 4] aligned(2);
+  char buf[sizeof(uint16_t) * 4] forcealign(2);
   if (!IsWindows()) {
     return ioctl$sysv(fd, TIOCGWINSZ, &buf) != -1;
   } else {

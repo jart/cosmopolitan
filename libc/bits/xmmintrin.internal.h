@@ -35,8 +35,8 @@
 typedef int __v4si _Vector_size(16);
 typedef unsigned int __v4su _Vector_size(16);
 typedef float __v4sf _Vector_size(16);
-typedef float __m128 _Vector_size(16) aligned(16) mayalias;
-typedef float __m128_u _Vector_size(16) aligned(1) mayalias;
+typedef float __m128 _Vector_size(16) forcealign(16) mayalias;
+typedef float __m128_u _Vector_size(16) forcealign(1) mayalias;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § it's a trap! » sse » simd ops                             ─╬─│┼

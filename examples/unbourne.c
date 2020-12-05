@@ -141,7 +141,7 @@
 #include "libc/sysv/consts/rlim.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/w.h"
-#include "third_party/dtoa/dtoa.h"
+#include "third_party/gdtoa/gdtoa.h"
 #include "third_party/musl/passwd.h"
 
 #undef CEOF
@@ -1602,7 +1602,7 @@ static inline void sigclearmask(void) {
  * just do a longjmp to the exception handler.  The type of exception is
  * stored in the global variable "exception".
  */
-noreturn static void exraise(int e) {
+wontreturn static void exraise(int e) {
   if (vforked) _exit(exitstatus);
   INTOFF;
   exception = e;
@@ -1617,7 +1617,7 @@ noreturn static void exraise(int e) {
  * are held using the INTOFF macro.  (The test for iflag is just
  * defensive programming.)
  */
-noreturn static void onint(void) {
+wontreturn static void onint(void) {
   intpending = 0;
   sigclearmask();
   if (!(rootshell && iflag)) {
@@ -1896,20 +1896,20 @@ printfesque(1) static void sh_warnx(const char *fmt, ...) {
  * is not NULL then error prints an error message using printf style
  * formatting.  It then raises the error exception.
  */
-noreturn static void exverror(int cond, const char *msg, va_list ap) {
+wontreturn static void exverror(int cond, const char *msg, va_list ap) {
   exvwarning(msg, ap);
   flushall();
   exraise(cond);
 }
 
-noreturn static void exerror(int cond, const char *msg, ...) {
+wontreturn static void exerror(int cond, const char *msg, ...) {
   va_list ap;
   va_start(ap, msg);
   exverror(cond, msg, ap);
   va_end(ap);
 }
 
-noreturn static void sh_error(const char *msg, ...) {
+wontreturn static void sh_error(const char *msg, ...) {
   va_list ap;
   exitstatus = 2;
   va_start(ap, msg);
@@ -1917,16 +1917,16 @@ noreturn static void sh_error(const char *msg, ...) {
   va_end(ap);
 }
 
-noreturn static void badnum(const char *s) {
+wontreturn static void badnum(const char *s) {
   sh_error(illnum, s);
 }
 
-noreturn static void synerror(const char *msg) {
+wontreturn static void synerror(const char *msg) {
   errlinno = plinno;
   sh_error("Syntax error: %s", msg);
 }
 
-noreturn static void yyerror(const char *s) {
+wontreturn static void yyerror(const char *s) {
   sh_error("arithmetic expression: %s: \"%s\"", s, arith_startbuf);
 }
 
@@ -1935,7 +1935,7 @@ noreturn static void yyerror(const char *s) {
  * argument is the token that is expected, or -1 if more than one type
  * of token can occur at this point.
  */
-noreturn static void synexpect(int token) {
+wontreturn static void synexpect(int token) {
   char msg[64];
   if (token >= 0) {
     fmtstr(msg, 64, "%s unexpected (expecting %s)", tokname[lasttoken], tokname[token]);
@@ -1945,7 +1945,7 @@ noreturn static void synexpect(int token) {
   synerror(msg);
 }
 
-noreturn static void varunset(const char *end, const char *var_, const char *umsg, int varflags) {
+wontreturn static void varunset(const char *end, const char *var_, const char *umsg, int varflags) {
   const char *msg;
   const char *tail;
   tail = nullstr;
@@ -2096,7 +2096,7 @@ static char *nodesavestr(s) char *s;
   return rtn;
 }
 
-noreturn static void shellexec(char **, const char *, int);
+wontreturn static void shellexec(char **, const char *, int);
 static char **listvars(int, int, char ***);
 static char *argstr(char *p, int flag);
 static char *conv_escape(char *, int *);
@@ -3175,7 +3175,7 @@ out:
   return exitstatus;
 }
 
-noreturn static void evaltreenr(union node *n, int flags) {
+wontreturn static void evaltreenr(union node *n, int flags) {
   evaltree(n, flags);
   abort();
 }
@@ -3876,7 +3876,7 @@ static int eprintlist(struct output *out, struct strlist *sp, int sep) {
  * Exec a program.  Never returns.  If you change this routine, you may
  * have to change the find_command routine as well.
  */
-noreturn static void shellexec(char **argv, const char *path, int idx) {
+wontreturn static void shellexec(char **argv, const char *path, int idx) {
   char *cmdname;
   int e;
   char **envp;
@@ -9316,7 +9316,7 @@ static void setinteractive(int on) {
 /*
  * Called to exit the shell.
  */
-noreturn static void exitshell(void) {
+wontreturn static void exitshell(void) {
   struct jmploc loc;
   char *p;
   savestatus = exitstatus;

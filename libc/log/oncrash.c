@@ -51,17 +51,17 @@ STATIC_YOINK("stoa");
 
 struct siginfo;
 
-static const char kGregOrder[17] aligned(1) = {
+static const char kGregOrder[17] forcealign(1) = {
     13, 11, 8, 14, 12, 9, 10, 15, 16, 0, 1, 2, 3, 4, 5, 6, 7,
 };
 
-static const char kGregNames[17][4] aligned(1) = {
+static const char kGregNames[17][4] forcealign(1) = {
     "R8",  "R9",  "R10", "R11", "R12", "R13", "R14", "R15", "RDI",
     "RSI", "RBP", "RBX", "RDX", "RAX", "RCX", "RSP", "RIP",
 };
 
-static const char kGodHatesFlags[12] aligned(1) = "CVPRAKZSTIDO";
-static const char kCrashSigNames[8][5] aligned(1) = {
+static const char kGodHatesFlags[12] forcealign(1) = "CVPRAKZSTIDO";
+static const char kCrashSigNames[8][5] forcealign(1) = {
     "QUIT", "FPE", "ILL", "SEGV", "TRAP", "ABRT", "BUS"};
 
 int kCrashSigs[8];

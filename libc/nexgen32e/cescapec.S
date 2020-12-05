@@ -36,32 +36,32 @@ cescapec:
 	movzbl	%cl,%ecx
 	jmp	*cescapectab(,%rcx,8)
 .Lanchorpoint:
-.LBEL:	mov	$'a,%ah
+.LBEL:	mov	$'a',%ah
 	ret
-.LBS:	mov	$'b,%ah
+.LBS:	mov	$'b',%ah
 	ret
-.LHT:	mov	$'t,%ah
+.LHT:	mov	$'t',%ah
 	ret
-.LLF:	mov	$'n,%ah
+.LLF:	mov	$'n',%ah
 	ret
-.LVT:	mov	$'v,%ah
+.LVT:	mov	$'v',%ah
 	ret
-.LFF:	mov	$'f,%ah
+.LFF:	mov	$'f',%ah
 	ret
-.LCR:	mov	$'r,%ah
+.LCR:	mov	$'r',%ah
 	ret
-.LDQ:	mov	$'\",%ah
+.LDQ:	mov	$'\"',%ah
 	ret
-.LSQ:	mov	$'\',%ah
+.LSQ:	mov	$'\'',%ah
 	ret
-.LBSL:	mov	$'\\,%ah
+.LBSL:	mov	$'\\',%ah
 	ret
 #ifdef __STRICT_ANSI__
-.LQM:	mov	$'?,%ah
+.LQM:	mov	$'?',%ah
 	ret
 .LESC:
 #elif defined(__GNUC__)
-.LESC:	mov	$'e,%ah
+.LESC:	mov	$'e',%ah
 	ret
 .LQM:
 #endif

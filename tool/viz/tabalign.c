@@ -55,7 +55,7 @@ static struct Lines lines_;
 static size_t mincol_, col_, maxcol_, linecap_;
 static char *inpath_, *outpath_, *delim_, *line_;
 
-noreturn void usage(int rc, FILE *f) {
+wontreturn void usage(int rc, FILE *f) {
   fprintf(f, "%s%s%s\n", "Usage: ", program_invocation_name,
           " [-c] [-m MINCOL] [-M MAXCOL] [-F DELIM] [-o FILE] [FILE...]\n"
           "\n"

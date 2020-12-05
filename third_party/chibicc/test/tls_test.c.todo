@@ -1,0 +1,18 @@
+#include "third_party/chibicc/test/test.h"
+
+_Thread_local int x;
+
+void add(void) {
+  x += 3;
+}
+
+_Noreturn int test(void) {
+  x = 7;
+  add();
+  ASSERT(10, x);
+  exit(0);
+}
+
+int main(void) {
+  test();
+}

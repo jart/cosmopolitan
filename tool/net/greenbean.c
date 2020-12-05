@@ -372,7 +372,7 @@ static const char *GetContentType(const char *path, size_t n) {
   }
 }
 
-static noreturn void PrintUsage(FILE *f, int rc) {
+static wontreturn void PrintUsage(FILE *f, int rc) {
   fprintf(f, "SYNOPSIS\n\n  %s%s", program_invocation_name, USAGE);
   exit(rc);
 }

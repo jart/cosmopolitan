@@ -42,7 +42,7 @@ const struct IdName kXedModeNames[] = {
 enum XedMachineMode g_mode;
 struct XedDecodedInst g_xedd;
 
-noreturn void ShowUsage(int rc, FILE *f) {
+wontreturn void ShowUsage(int rc, FILE *f) {
   size_t i;
   fputs("Usage: ", f);
   fputs(program_invocation_name, f);

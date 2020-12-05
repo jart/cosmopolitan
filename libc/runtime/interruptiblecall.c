@@ -29,7 +29,7 @@ STATIC_YOINK("_init_onntconsoleevent");
 
 static struct InterruptibleCall *g_interruptiblecall;
 
-noreturn static void interruptcall(int sig) {
+wontreturn static void interruptcall(int sig) {
   longjmp(g_interruptiblecall->jb, 1);
   unreachable;
 }

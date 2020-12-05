@@ -24,7 +24,7 @@
  * Returns pointer to first byte matching any in accept, or NULL.
  * @asyncsignalsafe
  */
-char *(strpbrk)(const char *s, const char *accept) {
+char *strpbrk(const char *s, const char *accept) {
   size_t i;
   if (accept[0]) {
     if (!accept[1]) {

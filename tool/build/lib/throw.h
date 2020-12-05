@@ -4,12 +4,12 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-void OpUd(struct Machine *, uint32_t) noreturn;
-void HaltMachine(struct Machine *, int) noreturn;
-void ThrowDivideError(struct Machine *) noreturn;
-void ThrowSegmentationFault(struct Machine *, int64_t) noreturn;
-void ThrowProtectionFault(struct Machine *) noreturn;
-void OpHlt(struct Machine *, uint32_t) noreturn;
+void OpUd(struct Machine *, uint32_t) wontreturn;
+void HaltMachine(struct Machine *, int) wontreturn;
+void ThrowDivideError(struct Machine *) wontreturn;
+void ThrowSegmentationFault(struct Machine *, int64_t) wontreturn;
+void ThrowProtectionFault(struct Machine *) wontreturn;
+void OpHlt(struct Machine *, uint32_t) wontreturn;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

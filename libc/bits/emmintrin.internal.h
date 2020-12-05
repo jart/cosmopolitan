@@ -16,12 +16,12 @@ typedef short __v8hi _Vector_size(16);
 typedef unsigned short __v8hu _Vector_size(16);
 
 typedef double __v2df _Vector_size(16);
-typedef double __m128d _Vector_size(16) aligned(16);
-typedef double __m128d_u _Vector_size(16) aligned(1);
+typedef double __m128d _Vector_size(16) forcealign(16);
+typedef double __m128d_u _Vector_size(16) forcealign(1);
 
 typedef long long __v2di _Vector_size(16);
-typedef long long __m128i _Vector_size(16) aligned(16);
-typedef long long __m128i_u _Vector_size(16) aligned(1);
+typedef long long __m128i _Vector_size(16) forcealign(16);
+typedef long long __m128i_u _Vector_size(16) forcealign(1);
 typedef unsigned long long __v2du _Vector_size(16);
 
 struct thatispacked mayalias __usi128ma {

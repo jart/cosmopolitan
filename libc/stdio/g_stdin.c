@@ -24,7 +24,7 @@ STATIC_YOINK("_init_g_stdin");
 
 FILE *stdin;
 hidden FILE g_stdin;
-hidden unsigned char g_stdin_buf[BUFSIZ] aligned(PAGESIZE);
+hidden unsigned char g_stdin_buf[BUFSIZ] forcealign(PAGESIZE);
 
 static textstartup void g_stdin_init() {
   _fflushregister(stdin);

@@ -23,7 +23,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 
-noreturn void(verr)(int eval, const char *fmt, va_list va) {
+wontreturn void(verr)(int eval, const char *fmt, va_list va) {
   fprintf(stderr, "%s: %s%s%s[%m]: ", program_invocation_name, RED2, "ERROR",
           RESET);
   if (fmt) (vfprintf)(stderr, fmt, va);

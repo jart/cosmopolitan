@@ -20,11 +20,12 @@
 #include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/testlib/testlib.h"
-#include "third_party/dtoa/dtoa.h"
+#include "third_party/gdtoa/gdtoa.h"
 
 testonly char *testlib_formatfloat(long double x) {
-  char dtoabuf[32];
+  char buf[32];
   char *str = malloc(256);
-  sprintf(str, "%Lf (%s)", x, g_fmt(dtoabuf, x));
+  g_xfmt_p(buf, &x, 15, sizeof(buf), 0);
+  sprintf(str, "%Lf (%s)", x, buf);
   return str;
 }

@@ -19,14 +19,16 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
-#undef char
-#undef endswith
-#undef strlen
-#undef strnlen
-
-#define char char16_t
-#define endswith endswith16
-#define strlen strlen16
-#define strnlen strnlen16
-
-#include "libc/str/endswith.c"
+/**
+ * Returns true if s has suffix.
+ *
+ * @param s is a NUL-terminated string
+ * @param suffix is also NUL-terminated
+ */
+bool endswith16(const char16_t *s, const char16_t *suffix) {
+  size_t n, m;
+  n = strlen16(s);
+  m = strlen16(suffix);
+  if (m > n) return false;
+  return memcmp(s + n - m, suffix, m * sizeof(char16_t)) == 0;
+}

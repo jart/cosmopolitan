@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/bsd.h"
 
-noreturn void(err)(int eval, const char *fmt, ...) {
+wontreturn void(err)(int eval, const char *fmt, ...) {
   va_list va;
   va_start(va, fmt);
   (verr)(eval, fmt, va);

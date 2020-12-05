@@ -22,7 +22,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
-#include "third_party/dtoa/dtoa.h"
+#include "third_party/gdtoa/gdtoa.h"
 
 const char kConfig[] = "\
 /* FPU Control Word (x87) Exception Masks\n\
@@ -73,7 +73,8 @@ void PrintRegister(long double x) {
   memcpy(buf, &x, sizeof(x));
   memcpy(&lo, &buf[0], sizeof(lo));
   memcpy(&hi, &buf[8], sizeof(hi));
-  printf("/\t%016lb%064lb %s\n", hi, lo, g_fmt(buf, x));
+  g_xfmt_p(buf, &x, 15, 32, 0);
+  printf("/\t%016lb%064lb %s\n", hi, lo, buf);
 }
 
 int main(int argc, char *argv[]) {

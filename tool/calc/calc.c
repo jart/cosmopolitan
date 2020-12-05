@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/bits/bswap.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/conv/conv.h"
@@ -37,6 +38,7 @@
 #include "libc/x/x.h"
 #include "o/tool/calc/calc.c.inc"
 #include "o/tool/calc/calc.h.inc"
+#include "third_party/gdtoa/gdtoa.h"
 #include "tool/calc/calc.h"
 
 /**
@@ -51,28 +53,28 @@ static int g_column;
 static const char *g_file;
 static yyParser g_parser[1];
 
-noreturn static void Error(const char *msg) {
+wontreturn static void Error(const char *msg) {
   fprintf(stderr, "%s:%d:%d: %s\n", g_file, g_line, g_column, msg);
   longjmp(jb, 1);
 }
 
-noreturn static void SyntaxError(void) {
+wontreturn static void SyntaxError(void) {
   Error("SYNTAX ERROR");
 }
 
-noreturn static void LexError(void) {
+wontreturn static void LexError(void) {
   Error("LEX ERROR");
 }
 
-noreturn static void MissingArgumentError(void) {
+wontreturn static void MissingArgumentError(void) {
   Error("MISSING ARGUMENT");
 }
 
-noreturn static void MissingFunctionError(void) {
+wontreturn static void MissingFunctionError(void) {
   Error("MISSING FUNCTION");
 }
 
-noreturn static void SyscallError(const char *name) {
+wontreturn static void SyscallError(const char *name) {
   fprintf(stderr, "ERROR: %s[%s]: %d\n", name, g_file, errno);
   exit(1);
 }
@@ -395,6 +397,21 @@ static long double FnFpclassify(struct Numbers *a) {
   return fpclassify(a->x);
 }
 
+static long double FnBswap16(struct Numbers *a) {
+  if (!a) MissingArgumentError();
+  return bswap_16((uint16_t)a->x);
+}
+
+static long double FnBswap32(struct Numbers *a) {
+  if (!a) MissingArgumentError();
+  return bswap_32((uint32_t)a->x);
+}
+
+static long double FnBswap64(struct Numbers *a) {
+  if (!a) MissingArgumentError();
+  return bswap_64((uint64_t)a->x);
+}
+
 static long double FnBsr(struct Numbers *a) {
   if (!a) MissingArgumentError();
   return bsr(a->x);
@@ -611,9 +628,9 @@ static long double FnHex(struct Numbers *a) {
 }
 
 static void PrintNumber(long double x) {
-  char b[32];
-  g_fmt(b, x);
-  fputs(b, stdout);
+  char buf[32];
+  g_xfmt_p(buf, &x, 15, sizeof(buf), 0);
+  fputs(buf, stdout);
 }
 
 static void Print(struct Numbers *a) {
@@ -648,6 +665,9 @@ static const struct Fn {
     {"bsfl", FnBsfl},
     {"bsr", FnBsr},
     {"bsrl", FnBsrl},
+    {"bswap16", FnBswap16},
+    {"bswap32", FnBswap32},
+    {"bswap64", FnBswap64},
     {"cbrt", FnCbrt},
     {"ceil", FnCeil},
     {"copysign", FnCopysign},

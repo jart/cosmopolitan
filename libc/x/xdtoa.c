@@ -19,14 +19,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
 #include "libc/x/x.h"
-#include "third_party/dtoa/dtoa.h"
+#include "third_party/gdtoa/gdtoa.h"
 
 /**
  * Converts double to string w/ high-accuracy the easy way.
  *
- * @see gc(), free()
+ * @return string that needs to be free'd
  */
-char *xdtoa(double d) {
-  char buf[32];
-  return xstrdup(g_fmt(buf, d));
+char *xdtoa(long double d) {
+  char *p = xmalloc(32);
+  g_xfmt_p(p, &d, 16, 32, 2);
+  return p;
 }

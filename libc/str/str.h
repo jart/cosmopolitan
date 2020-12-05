@@ -238,8 +238,8 @@ char *strsignal(int) returnsnonnull libcesque;
 ╚────────────────────────────────────────────────────────────────────────────│*/
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 
-char *_strncpy(char *, const char *, size_t) asm("strncpy") memcpyesque;
-#define strncpy(DEST, SRC, N) _strncpy(DEST, SRC, N) /* pacify bad warning */
+char *__strncpy(char *, const char *, size_t) memcpyesque;
+#define strncpy(DEST, SRC, N) __strncpy(DEST, SRC, N) /* pacify bad warning */
 
 #define explicit_bzero(STR, BYTES)                                          \
   do {                                                                      \
@@ -318,7 +318,7 @@ char *_strncpy(char *, const char *, size_t) asm("strncpy") memcpyesque;
     size_t SiZe = (SIZE);                                                  \
     size_t Rcx;                                                            \
     asm("rep movsb"                                                        \
-        : "=D"(Rdi), "=S"(Rsi), "=D"(Rcx), "=m"(*(char(*)[SiZe])(Dest))    \
+        : "=D"(Rdi), "=S"(Rsi), "=c"(Rcx), "=m"(*(char(*)[SiZe])(Dest))    \
         : "0"(Dest), "1"(Src), "2"(SiZe), "m"(*(const char(*)[SiZe])(Src)) \
         : "cc");                                                           \
     Rdi;                                                                   \
@@ -350,9 +350,6 @@ char *_strncpy(char *, const char *, size_t) asm("strncpy") memcpyesque;
   })
 
 #endif /* hosted/sse2/unbloat */
-
-size_t _strlen(const char *s) asm("strlen") strlenesque;
-void *_memchr(const void *, int, size_t) asm("memchr") strlenesque;
 
 #endif /* __GNUC__ && !__STRICT_ANSI__ */
 COSMOPOLITAN_C_END_

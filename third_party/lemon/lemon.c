@@ -18,7 +18,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
-#include "third_party/dtoa/dtoa.h"
+#include "third_party/gdtoa/gdtoa.h"
 
 /*
 ** This file contains all sources (including headers) to the LEMON

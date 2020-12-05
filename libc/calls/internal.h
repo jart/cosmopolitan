@@ -198,12 +198,12 @@ i32 tunefd$sysv(i32, i32, i32, i32) hidden;
 u32 fprot2nt(i32, i32) hidden;
 u32 prot2nt(i32, i32) privileged;
 void __restore_rt() hidden;
-void __sigenter$xnu(void *, i32, i32, void *, void *) hidden noreturn;
+void __sigenter$xnu(void *, i32, i32, void *, void *) hidden wontreturn;
 int utimensat$xnu(int, const char *, const struct timespec *, int) hidden;
 int nanosleep$xnu(const struct timespec *, struct timespec *) hidden;
 void stat2linux(void *) hidden;
 void xnutrampoline(void *, i32, i32, const struct __darwin_siginfo *,
-                   const struct __darwin_ucontext *) hidden noreturn;
+                   const struct __darwin_ucontext *) hidden wontreturn;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » windows nt » veneers                           ─╬─│┼

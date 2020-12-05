@@ -24,7 +24,6 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
-#include "third_party/dtoa/dtoa.h"
 
 int main(int argc, char *argv[]) {
   int i;

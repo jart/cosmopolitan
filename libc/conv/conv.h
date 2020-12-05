@@ -97,7 +97,7 @@ double RoundDecimalPlaces(double, double, double (*)(double));
 #endif
 
 #ifndef __STRICT_ANSI__
-intmax_t __imaxabs(intmax_t) asm("imaxabs") libcesque pureconst;
+intmax_t __imaxabs(intmax_t) libcesque pureconst;
 #define imaxabs(x) __imaxabs(x)
 #endif /* !ANSI */
 

@@ -1,26 +1,19 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
-╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
-│                                                                              │
-│ This program is free software; you can redistribute it and/or modify         │
-│ it under the terms of the GNU General Public License as published by         │
-│ the Free Software Foundation; version 2 of the License.                      │
-│                                                                              │
-│ This program is distributed in the hope that it will be useful, but          │
-│ WITHOUT ANY WARRANTY; without even the implied warranty of                   │
-│ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU             │
-│ General Public License for more details.                                     │
-│                                                                              │
-│ You should have received a copy of the GNU General Public License            │
-│ along with this program; if not, write to the Free Software                  │
-│ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
-│ 02110-1301 USA                                                               │
-╚─────────────────────────────────────────────────────────────────────────────*/
+#if 0
+/*─────────────────────────────────────────────────────────────────╗
+│ To the extent possible under law, Justine Tunney has waived      │
+│ all copyright and related or neighboring rights to this file,    │
+│ as it is written in the following disclaimers:                   │
+│   • http://unlicense.org/                                        │
+│   • http://creativecommons.org/publicdomain/zero/1.0/            │
+╚─────────────────────────────────────────────────────────────────*/
+#endif
 #include "third_party/gdtoa/gdtoa.h"
 
+/**
+ * Converts string to long double.
+ */
 long double strtold(const char *s, char **endptr) {
-  long double result;
-  strtorQ(s, endptr, FPI_Round_near, &result);
-  return result;
+  long double x;
+  strtorx(s, endptr, FPI_Round_near, &x);
+  return x;
 }

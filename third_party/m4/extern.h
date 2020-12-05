@@ -114,7 +114,7 @@ extern void	usage(void);
 extern void	resizedivs(int);
 extern size_t	buffer_mark(void);
 extern void	dump_buffer(FILE *, size_t);
-extern void	m4errx(int, const char *, ...) noreturn;
+extern void	m4errx(int, const char *, ...) wontreturn;
 
 extern int	obtain_char(struct input_file *);
 extern void	set_input(struct input_file *, FILE *, const char *);

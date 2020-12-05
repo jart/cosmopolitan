@@ -19,14 +19,16 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
-#undef char
-#undef endswith
-#undef strlen
-#undef strnlen
-
-#define char wchar_t
-#define endswith wcsendswith
-#define strlen wcslen
-#define strnlen wcsnlen
-
-#include "libc/str/endswith.c"
+/**
+ * Returns true if s has suffix.
+ *
+ * @param s is a NUL-terminated string
+ * @param suffix is also NUL-terminated
+ */
+bool wcsendswith(const wchar_t *s, const wchar_t *suffix) {
+  size_t n, m;
+  n = wcslen(s);
+  m = wcslen(suffix);
+  if (m > n) return false;
+  return memcmp(s + n - m, suffix, m * sizeof(wchar_t)) == 0;
+}

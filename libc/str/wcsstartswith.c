@@ -19,14 +19,16 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
-#undef char
-#undef startswith
-#undef strlen
-#undef strncmp
-
-#define char wchar_t
-#define startswith wcsstartswith
-#define strlen wcslen
-#define strncmp wcsncmp
-
-#include "libc/str/startswith.c"
+/**
+ * Returns true if s has prefix.
+ *
+ * @param s is a NUL-terminated string
+ * @param prefix is also NUL-terminated
+ */
+bool wcsstartswith(const wchar_t *s, const wchar_t *prefix) {
+  for (;;) {
+    if (!*prefix) return true;
+    if (!*s) return false;
+    if (*s++ != *prefix++) return false;
+  }
+}

@@ -668,7 +668,7 @@ static int Write(const char *s) {
   return write(out, s, strlen(s));
 }
 
-static noreturn void PrintUsage(int rc) {
+static wontreturn void PrintUsage(int rc) {
   Write("SYNOPSIS\n\n  ");
   Write(program_invocation_name);
   Write(USAGE);

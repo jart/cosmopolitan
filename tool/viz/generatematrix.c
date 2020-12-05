@@ -35,7 +35,7 @@
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/x/x.h"
-#include "third_party/dtoa/dtoa.h"
+#include "third_party/gdtoa/gdtoa.h"
 #include "third_party/getopt/getopt.h"
 #include "tool/viz/lib/formatstringtable.h"
 
@@ -59,7 +59,7 @@ struct Range r1_ = {LONG_MIN, LONG_MAX};
 struct Range r2_ = {0, 1};
 StringTableFormatter *formatter_ = FormatStringTableAsCode;
 
-static noreturn void PrintUsage(int rc, FILE *f) {
+static wontreturn void PrintUsage(int rc, FILE *f) {
   fprintf(f, "Usage: %s%s", program_invocation_name, "\
  [FLAGS] [FILE]\n\
 \n\
@@ -95,8 +95,8 @@ static bool StringEquals(const char *a, const char *b) {
   return strcasecmp(a, b) == 0;
 }
 
-static noreturn void ShowInvalidArg(const char *name, const char *s,
-                                    const char *type) {
+static wontreturn void ShowInvalidArg(const char *name, const char *s,
+                                      const char *type) {
   fprintf(stderr, "error: invalid %s %s: %s\n", type, name, s);
   exit(EXIT_FAILURE);
 }

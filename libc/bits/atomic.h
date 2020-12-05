@@ -45,7 +45,7 @@ COSMOPOLITAN_C_START_
 
 struct AtomicFlag {
   uint32_t __cacheline[16]; /* Intel V.O §9.4.6 */
-} aligned(64);
+} forcealign(64);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -25,8 +25,8 @@
 #include "libc/sysv/consts/mlock.h"
 #include "libc/testlib/testlib.h"
 
-double g_avx2_juiceup_doubles_[4] aligned(32);
-unsigned long long g_avx2_juiceup_quadwords_[4] aligned(32);
+double g_avx2_juiceup_doubles_[4] forcealign(32);
+unsigned long long g_avx2_juiceup_quadwords_[4] forcealign(32);
 
 void testlib_benchwarmup(void) {
   /* get mathematical parts of cpu juiced up */

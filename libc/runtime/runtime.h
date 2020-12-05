@@ -6,45 +6,45 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § runtime                                                   ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-typedef long jmp_buf[8] aligned(CACHELINE);
+typedef long jmp_buf[8] forcealign(CACHELINE);
 
-extern int g_argc;                               /* CRT */
-extern char **g_argv;                            /* CRT */
-extern char **environ;                           /* CRT */
-extern unsigned long *g_auxv;                    /* CRT */
-extern char *program_invocation_name;            /* RII */
-extern char *program_invocation_short_name;      /* RII */
-extern uint64_t g_syscount;                      /* RII */
-extern const uint64_t kStartTsc;                 /* RII */
-extern const char kTmpPath[];                    /* RII */
-extern const char kNtSystemDirectory[];          /* RII */
-extern const char kNtWindowsDirectory[];         /* RII */
-extern unsigned char _base[] aligned(PAGESIZE);  /* αpε */
-extern unsigned char _ehead[] aligned(PAGESIZE); /* αpε */
-extern unsigned char _etext[] aligned(PAGESIZE); /* αpε */
-extern unsigned char _edata[] aligned(PAGESIZE); /* αpε */
-extern unsigned char _end[] aligned(PAGESIZE);   /* αpε */
-extern unsigned char _ereal;                     /* αpε */
-extern unsigned char __privileged_start;         /* αpε */
-extern unsigned char __test_start;               /* αpε */
-extern unsigned char __ro;                       /* αpε */
-extern unsigned char *__relo_start[];            /* αpε */
-extern unsigned char *__relo_end[];              /* αpε */
-extern uint8_t __zip_start[];                    /* αpε */
-extern uint8_t __zip_end[];                      /* αpε */
+extern int g_argc;                                  /* CRT */
+extern char **g_argv;                               /* CRT */
+extern char **environ;                              /* CRT */
+extern unsigned long *g_auxv;                       /* CRT */
+extern char *program_invocation_name;               /* RII */
+extern char *program_invocation_short_name;         /* RII */
+extern uint64_t g_syscount;                         /* RII */
+extern const uint64_t kStartTsc;                    /* RII */
+extern const char kTmpPath[];                       /* RII */
+extern const char kNtSystemDirectory[];             /* RII */
+extern const char kNtWindowsDirectory[];            /* RII */
+extern unsigned char _base[] forcealign(PAGESIZE);  /* αpε */
+extern unsigned char _ehead[] forcealign(PAGESIZE); /* αpε */
+extern unsigned char _etext[] forcealign(PAGESIZE); /* αpε */
+extern unsigned char _edata[] forcealign(PAGESIZE); /* αpε */
+extern unsigned char _end[] forcealign(PAGESIZE);   /* αpε */
+extern unsigned char _ereal;                        /* αpε */
+extern unsigned char __privileged_start;            /* αpε */
+extern unsigned char __test_start;                  /* αpε */
+extern unsigned char __ro;                          /* αpε */
+extern unsigned char *__relo_start[];               /* αpε */
+extern unsigned char *__relo_end[];                 /* αpε */
+extern uint8_t __zip_start[];                       /* αpε */
+extern uint8_t __zip_end[];                         /* αpε */
 
 long missingno();
 void mcount(void);
 unsigned long getauxval(unsigned long);
 void *mapanon(size_t) vallocesque attributeallocsize((1));
 int setjmp(jmp_buf) libcesque returnstwice paramsnonnull();
-void longjmp(jmp_buf, int) libcesque noreturn paramsnonnull();
-void exit(int) noreturn;
-void _exit(int) libcesque noreturn;
-void _Exit(int) libcesque noreturn;
-void abort(void) noreturn noinstrument;
-void panic(void) noreturn noinstrument privileged;
-void triplf(void) noreturn noinstrument privileged;
+void longjmp(jmp_buf, int) libcesque wontreturn paramsnonnull();
+void exit(int) wontreturn;
+void _exit(int) libcesque wontreturn;
+void _Exit(int) libcesque wontreturn;
+void abort(void) wontreturn noinstrument;
+void panic(void) wontreturn noinstrument privileged;
+void triplf(void) wontreturn noinstrument privileged;
 int __cxa_atexit(void *, void *, void *) libcesque;
 int atfork(void *, void *) libcesque;
 int atexit(void (*)(void)) libcesque;

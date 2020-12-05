@@ -298,9 +298,9 @@ static struct Graphic graphic_[2], *g1_, *g2_;
 static bool yes_, stats_, dither_, ttymode_, istango_;
 static long double deadline_, dura_, skip_, starttime_;
 static long double decode_start_, f1_start_, f2_start_;
-static bool fullclear_, historyclear_, tuned_, yonly_, gotvideo_;
+static int16_t pcm_[PLM_AUDIO_SAMPLES_PER_FRAME * 2 / 8][8];
 static int16_t pcmscale_[PLM_AUDIO_SAMPLES_PER_FRAME * 2 / 8][8];
-static int16_t pcm_[PLM_AUDIO_SAMPLES_PER_FRAME * 2 / 8][8] aligned(PAGESIZE);
+static bool fullclear_, historyclear_, tuned_, yonly_, gotvideo_;
 static int homerow_, lastrow_, playfd_, infd_, outfd_, nullfd_, speakerfails_;
 static char host_[DNS_NAME_MAX + 1], port_[8], path_[PATH_MAX], status_[7][200],
     logpath_[PATH_MAX], fifopath_[PATH_MAX], chansstr_[16], sratestr_[16];

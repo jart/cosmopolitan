@@ -786,7 +786,7 @@
  * Disabled temporarily in GCC 5+ because of an unresolved noreturn-related
  * issue: https://github.com/svaarala/duktape/issues/2155.
  */
-#define DUK_NORETURN(decl) decl noreturn
+#define DUK_NORETURN(decl) decl wontreturn
 #endif
 
 #if defined(DUK_F_GCC_VERSION) && (DUK_F_GCC_VERSION >= 40500L)

@@ -34,7 +34,8 @@ TEST_LIBC_FMT_DIRECTDEPS =				\
 	LIBC_SYSV					\
 	LIBC_TESTLIB					\
 	LIBC_UNICODE					\
-	LIBC_X
+	LIBC_X						\
+	THIRD_PARTY_GDTOA
 
 TEST_LIBC_FMT_DEPS :=					\
 	$(call uniq,$(foreach x,$(TEST_LIBC_FMT_DIRECTDEPS),$($(x))))

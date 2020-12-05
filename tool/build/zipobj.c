@@ -75,7 +75,7 @@ const char kNoCompressExts[][8] = {".gz",  ".xz",  ".jpg",  ".png",
                                    ".gif", ".zip", ".bz2",  ".mpg",
                                    ".mp4", ".lz4", ".webp", ".mpeg"};
 
-noreturn void PrintUsage(int rc, FILE *f) {
+wontreturn void PrintUsage(int rc, FILE *f) {
   fprintf(f, "%s%s%s\n", "Usage: ", program_invocation_name,
           " [-o FILE] [-s SYMBOL] [-y YOINK] [FILE...]\n");
   exit(rc);

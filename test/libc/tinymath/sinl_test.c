@@ -18,25 +18,26 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#include "libc/runtime/gc.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "third_party/dtoa/dtoa.h"
+#include "libc/x/x.h"
 
 char buf[32];
 
 TEST(sinl, testLongDouble) {
-  EXPECT_STREQ(".479425538604203", g_fmt(buf, sinl(0.5)));
-  EXPECT_STREQ("-.479425538604203", g_fmt(buf, sinl(-0.5)));
+  EXPECT_STREQ(".479425538604203", gc(xdtoa(sinl(.5))));
+  EXPECT_STREQ("-.479425538604203", gc(xdtoa(sinl(-.5))));
 }
 
 TEST(sinl, testDouble) {
-  EXPECT_STREQ(".479425538604203", g_fmt(buf, sin(0.5)));
-  EXPECT_STREQ("-.479425538604203", g_fmt(buf, sin(-0.5)));
+  EXPECT_STREQ(".479425538604203", gc(xdtoa(sin(.5))));
+  EXPECT_STREQ("-.479425538604203", gc(xdtoa(sin(-.5))));
 }
 
 TEST(sinl, testFloat) {
-  EXPECT_STARTSWITH(".4794255", g_fmt(buf, sinf(0.5f)));
-  EXPECT_STARTSWITH("-.4794255", g_fmt(buf, sinf(-0.5f)));
+  EXPECT_STARTSWITH(".4794255", gc(xdtoa(sinf(.5f))));
+  EXPECT_STARTSWITH("-.4794255", gc(xdtoa(sinf(-.5f))));
 }
 
 BENCH(sinl, bench) {

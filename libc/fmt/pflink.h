@@ -2,7 +2,7 @@
 #define COSMOPOLITAN_LIBC_FMT_PFLINK_H_
 #include "libc/dce.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
-#ifndef __STRICT_ANSI__
+#if !defined(__STRICT_ANSI__) && !defined(__chibicc__)
 
 /**
  * @fileoverview builtin+preprocessor+linker tricks for printf/scanf.
@@ -65,6 +65,19 @@
 #else
 #define PFLINK(FMT) FMT
 #define SFLINK(FMT) FMT
+asm(".pushsection .yoink\n\t"
+    "nop\tntoa(%rip)\n\t"
+    "nop\tftoa(%rip)\n\t"
+    "nop\tkCp437(%rip)\n\t"
+    "nop\tstrerror(%rip)\n\t"
+    "nop\tstrnwidth(%rip)\n\t"
+    "nop\tstrnwidth16(%rip)\n\t"
+    "nop\twcsnwidth(%rip)\n\t"
+    "nop\tmalloc(%rip)\n\t"
+    "nop\tcalloc(%rip)\n\t"
+    "nop\tfree_s(%rip)\n\t"
+    "nop\t__grow(%rip)\n\t"
+    ".popsection");
 #endif /* __STRICT_ANSI__ */
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_FMT_PFLINK_H_ */

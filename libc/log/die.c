@@ -28,7 +28,7 @@
 /**
  * Aborts process after printing details on its current state.
  */
-relegated noreturn void __die(void) {
+relegated wontreturn void __die(void) {
   static bool once;
   if (!once) {
     once = true;

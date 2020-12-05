@@ -137,6 +137,7 @@
 ;;   M-3 C-c C-c   Compile w/ MODE=rel
 ;;   M-4 C-c C-c   Compile w/ MODE=dbg
 ;;   M-5 C-c C-c   Compile w/ MODE=""
+;;   M-9 C-c C-c   Compile w/ chibicc
 
 (defun cosmo-intest (&optional file-name)
   (let (path root pkg)
@@ -155,7 +156,15 @@
         ((cosmo-intest) "dbg")
         (t "")))
 
-(defun cosmo--compile-command (this root kind mode)
+(defun cosmo--make-suffix (arg)
+  (cond ((eq arg 9) ".chibicc")
+        (t "")))
+
+(defun cosmo--make-objdump-flags (arg)
+  (cond ((eq arg 9) "-x")
+        (t "")))
+
+(defun cosmo--compile-command (this root kind mode suffix objdumpflags)
   (let* ((ext (file-name-extension this))       ;; e.g. "c"
          (dir (file-name-directory this))       ;; e.g. "/home/jart/daisy/libc/"
          (dots (file-relative-name root dir))   ;; e.g. "../"
@@ -170,20 +179,21 @@
                    (directory-file-name
                     (file-name-directory
                      (file-relative-name this root)))))
-          ((cosmo-contains "_test." (buffer-file-name))
+          ((and (equal suffix "")
+                (cosmo-contains "_test." (buffer-file-name)))
            (format "m=%s; make -j8 -O MODE=$m %s"
                    mode runs))
-          ((file-exists-p (format "%s" buddy))
+          ((and (equal suffix "")
+                (file-exists-p (format "%s" buddy)))
            (format (cosmo-join
                     " && "
-                    '("m=%s; n=%s; make -j8 -O o/$m/%s.o MODE=$m SILENT=0"
-                      "make -j8 -O MODE=$m %s"
+                    '("m=%s; n=%s; make -j8 -O o/$m/$n%s.o MODE=$m SILENT=0"
                       ;; "bloat o/$m/%s.o | head"
                       ;; "nm -C --size o/$m/%s.o | sort -r"
                       "echo"
                       "size -A o/$m/$n.o | grep '^[.T]' | grep -v 'debug\\|command.line\\|stack' | sort -rnk2"
-                      "objdump -wzCd o/$m/$n.o"))
-                   mode name name buns))
+                      "objdump %s -wzCd o/$m/$n%s.o"))
+                   mode name suffix objdumpflags suffix))
           ((eq kind 'run)
            (format
             (cosmo-join
@@ -199,13 +209,13 @@
            (format
             (cosmo-join
              " && "
-             `("m=%s; f=o/$m/%s.o"
+             `("m=%s; f=o/$m/%s%s.o"
                ,(concat "make -j8 -O $f MODE=$m SILENT=0")
                ;; "nm -C --size $f | sort -r"
                "echo"
                "size -A $f | grep '^[.T]' | grep -v 'debug\\|command.line\\|stack' | sort -rnk2"
-               "objdump -wzCd $f"))
-            mode name)))))
+               "objdump %s -wzCd $f"))
+            mode name suffix objdumpflags)))))
 
 (defun cosmo-compile (arg)
   (interactive "P")
@@ -213,9 +223,11 @@
          (root (locate-dominating-file this "Makefile")))
     (when root
       (let* ((mode (cosmo--make-mode arg))
+             (suffix (cosmo--make-suffix arg))
+             (objdumpflags (cosmo--make-objdump-flags arg))
              (compilation-scroll-output nil)
              (default-directory root)
-             (compile-command (cosmo--compile-command this root nil mode)))
+             (compile-command (cosmo--compile-command this root nil mode suffix objdumpflags)))
         (compile compile-command)))))
 
 (defun cosmo-compile-hook ()
@@ -554,7 +566,7 @@
                           (format "./%s" file))))
               ((memq major-mode '(c-mode c++-mode asm-mode fortran-mode))
                (let* ((mode (cosmo--make-mode arg))
-                      (compile-command (cosmo--compile-command this root 'run mode)))
+                      (compile-command (cosmo--compile-command this root 'run mode "" "")))
                  (compile compile-command)))
               ((eq major-mode 'sh-mode)
                (compile (format "sh %s" file)))
@@ -590,7 +602,7 @@
              (next (file-name-sans-extension name))
              (exec (format "o/%s/%s.com.dbg" mode next))
              (default-directory root)
-             (compile-command (cosmo--compile-command this root nil mode)))
+             (compile-command (cosmo--compile-command this root nil mode "" "")))
         (compile compile-command)
         (gdb (format "gdb -q -nh -i=mi %s -ex run" exec))))))
 

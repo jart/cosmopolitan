@@ -98,13 +98,13 @@ struct UbsanShiftOutOfBoundsData {
 };
 
 void __ubsan_abort(const struct UbsanSourceLocation *,
-                   const char *) relegated hidden noreturn;
+                   const char *) relegated hidden wontreturn;
 void __ubsan_handle_type_mismatch(struct UbsanTypeMismatchInfo *,
-                                  uintptr_t) relegated hidden noreturn;
+                                  uintptr_t) relegated hidden wontreturn;
 void ___ubsan_handle_type_mismatch_v1(struct UbsanTypeMismatchInfoClang *,
-                                      uintptr_t) relegated hidden noreturn;
+                                      uintptr_t) relegated hidden wontreturn;
 void __ubsan_handle_float_cast_overflow(void *,
-                                        void *) relegated hidden noreturn;
+                                        void *) relegated hidden wontreturn;
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_UBSAN_H_ */

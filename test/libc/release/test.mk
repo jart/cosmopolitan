@@ -20,10 +20,11 @@ o/$(MODE)/test/libc/release/smoke.com:				\
 		-o $@						\
 		-Os						\
 		-static						\
-		-fno-pie					\
 		-no-pie						\
+		-fno-pie					\
 		-nostdlib					\
 		-nostdinc					\
+		-Wl,--gc-sections				\
 		-Wl,--oformat=binary				\
 		-Wl,-z,max-page-size=0x1000			\
 		-Wl,-T,o/$(MODE)/ape/ape.lds			\

@@ -38,7 +38,7 @@ static uint32_t bit, maxbit;
 static struct BitaBuilder *bitset;
 static char *line, *tok, *s1, *category, *g_inpath, *g_outpath;
 
-noreturn void ShowUsage(FILE *f, int rc) {
+wontreturn void ShowUsage(FILE *f, int rc) {
   fprintf(f, "Usage: %s [-o OUTPUT] [INPUT]\n", "Usage",
           program_invocation_name);
   exit(rc);

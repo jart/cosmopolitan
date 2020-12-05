@@ -241,7 +241,7 @@ static void Setup(void) {
   sigaction(SIGWINCH, &(struct sigaction){.sa_sigaction = OnSigWinch}, NULL);
 }
 
-static noreturn void FailPath(const char *s, int rc) {
+static wontreturn void FailPath(const char *s, int rc) {
   Write("error: ");
   Write(s);
   Write(": ");
@@ -861,7 +861,7 @@ static void MemZoom(void) {
   } while (!(action & INTERRUPTED));
 }
 
-static noreturn void PrintUsage(int rc) {
+static wontreturn void PrintUsage(int rc) {
   Write("SYNOPSIS\n\n  ");
   Write(program_invocation_name);
   Write(USAGE);

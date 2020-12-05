@@ -63,7 +63,7 @@ struct Machine {
     uint8_t *p;
   } real;
   uint64_t cr3;
-  uint8_t xmm[16][16] aligned(16);
+  uint8_t xmm[16][16];
   uint8_t es[8];
   uint8_t ds[8];
   uint8_t fs[8];
@@ -165,7 +165,7 @@ struct Machine {
   uint8_t icache[1024][40];
   void (*onbinbase)(struct Machine *);
   void (*onlongbranch)(struct Machine *);
-} aligned(64);
+} forcealign(64);
 
 struct Machine *NewMachine(void) nodiscard;
 void FreeMachine(struct Machine *);

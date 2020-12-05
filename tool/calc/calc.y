@@ -22,7 +22,6 @@
 #include "tool/calc/calc.h"
 #include "libc/calls/calls.h"
 #include "libc/str/str.h"
-#include "third_party/dtoa/dtoa.h"
 #include "libc/x/x.h"
 #include "libc/runtime/gc.h"
 #include "libc/math.h"

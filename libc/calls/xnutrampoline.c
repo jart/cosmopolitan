@@ -425,9 +425,9 @@ static void xnussefpustate2linux(struct FpuState *fs,
   memcpy(fs->st, &xnufs->__fpu_stmm0, (8 + 16) * sizeof(uint128_t));
 }
 
-noreturn void xnutrampoline(void *fn, int infostyle, int sig,
-                            const struct __darwin_siginfo *xnuinfo,
-                            const struct __darwin_ucontext *xnuctx) {
+wontreturn void xnutrampoline(void *fn, int infostyle, int sig,
+                              const struct __darwin_siginfo *xnuinfo,
+                              const struct __darwin_ucontext *xnuctx) {
   /* note: this function impl can't access static memory */
   intptr_t ax;
   struct Goodies {

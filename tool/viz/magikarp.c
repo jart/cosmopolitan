@@ -43,7 +43,7 @@
 #include "libc/x/x.h"
 #include "third_party/avir/lanczos1b.h"
 #include "third_party/avir/lanczos1f.h"
-#include "third_party/dtoa/dtoa.h"
+#include "third_party/gdtoa/gdtoa.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/stb/stb_image.h"
 #include "tool/viz/lib/bilinearscale.h"

@@ -33,7 +33,6 @@
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
-#include "third_party/dtoa/dtoa.h"
 #include "tool/viz/lib/knobs.h"
 
 /**

@@ -118,7 +118,7 @@ forceinline pureconst size_t GreatestTwoDivisor(size_t x) {
   return x & (~x + 1);
 }
 
-noreturn void ShowUsage(FILE *f, int rc) {
+wontreturn void ShowUsage(FILE *f, int rc) {
   fprintf(f, "Usage: %s RUNITD PROGRAM HOSTNAME[:RUNITDPORT[:SSHPORT]]...\n",
           program_invocation_name);
   exit(rc);

@@ -34,8 +34,8 @@
 textwindows int fstat$nt(int64_t handle, struct stat *st) {
   int filetype;
   uint64_t actualsize;
-  struct NtByHandleFileInformation wst;
   struct NtFileCompressionInfo fci;
+  struct NtByHandleFileInformation wst;
   if (GetFileInformationByHandle(handle, &wst)) {
     memset(st, 0, sizeof(*st));
     filetype = GetFileType(handle);

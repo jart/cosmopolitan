@@ -99,7 +99,7 @@ LIBC_TESTLIB_A_DIRECTDEPS =					\
 	LIBC_UNICODE						\
 	LIBC_X							\
 	LIBC_ZIPOS						\
-	THIRD_PARTY_DTOA
+	THIRD_PARTY_GDTOA
 
 LIBC_TESTLIB_A_DEPS :=						\
 	$(call uniq,$(foreach x,$(LIBC_TESTLIB_A_DIRECTDEPS),$($(x))))

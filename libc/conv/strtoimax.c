@@ -37,10 +37,10 @@
  * @see strtoumax
  */
 intmax_t strtoimax(const char *s, char **endptr, int base) {
+  bool neg;
   uintmax_t x;
   intmax_t res;
   unsigned diglet, bits;
-  bool neg, islong, isunsigned;
 
   x = 0;
   bits = 0;
@@ -104,22 +104,12 @@ intmax_t strtoimax(const char *s, char **endptr, int base) {
     }
   }
 
-  if ((isunsigned = *s == 'u' || *s == 'U')) s++;
-  if ((islong = *s == 'l' || *s == 'L')) s++;
   if (endptr) *endptr = s;
 
   if (neg) {
     res = -x;
   } else {
     res = x;
-  }
-
-  if (isunsigned) {
-    if (islong) {
-      res = (uint64_t)res;
-    } else {
-      res = (uint32_t)res;
-    }
   }
 
   return res;

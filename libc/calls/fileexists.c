@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -33,12 +34,18 @@
  * function. The stat() function may be used to differentiate them.
  */
 bool fileexists(const char *path) {
-  /* TODO(jart): Use fast path on NT? */
+  int rc, olderr;
   struct stat st;
-  int olderr = errno;
-  int rc = stat(path, &st);
-  if (rc == -1 && (errno == ENOENT || errno == ENOTDIR)) {
-    errno = olderr;
+  uint16_t path16[PATH_MAX];
+  if (!IsWindows()) {
+    olderr = errno;
+    rc = stat(path, &st);
+    if (rc == -1 && (errno == ENOENT || errno == ENOTDIR)) {
+      errno = olderr;
+    }
+    return rc != -1;
+  } else {
+    if (__mkntpath(path, path16) == -1) return -1;
+    return GetFileAttributes(path16) != -1u;
   }
-  return rc != -1;
 }

@@ -197,7 +197,7 @@ struct IdtDescriptor {
 
 struct thatispacked PageTable {
   uint64_t p[512];
-} aligned(PAGESIZE);
+} forcealign(PAGESIZE);
 
 extern struct PageTable g_pml4t;
 extern struct GlobalDescriptorTable gdt;
@@ -211,7 +211,7 @@ extern struct SmapEntry e820map_xlm[XLM_E820_SIZE / sizeof(struct SmapEntry)];
 extern uint64_t g_ptsp;
 extern uint64_t g_ptsp_xlm;
 
-void bootdr(char drive) noreturn;
+void bootdr(char drive) wontreturn;
 
 void smapsort(struct SmapEntry *);
 uint64_t *__getpagetableentry(int64_t, unsigned, struct PageTable *,

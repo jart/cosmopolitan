@@ -37,7 +37,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/testlib/testlib.h"
-#include "third_party/dtoa/dtoa.h"
+#include "third_party/gdtoa/gdtoa.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/stb/stb_image.h"
 #include "third_party/xed/x86.h"
@@ -69,7 +69,7 @@ static struct Flags {
     .p = 1,
 };
 
-static noreturn void PrintUsage(int rc, FILE *f) {
+static wontreturn void PrintUsage(int rc, FILE *f) {
   fprintf(f, "Usage: %s%s", program_invocation_name, USAGE);
   exit(rc);
 }

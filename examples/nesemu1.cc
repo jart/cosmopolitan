@@ -1774,7 +1774,7 @@ Press enter to continue without sound: ",
   for (;;) CPU::Op();
 }
 
-noreturn void PrintUsage(int rc, FILE* f) {
+wontreturn void PrintUsage(int rc, FILE* f) {
   fprintf(f, "%s%s%s", "Usage: ", program_invocation_name, USAGE);
   exit(rc);
 }

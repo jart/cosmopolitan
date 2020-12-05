@@ -68,7 +68,7 @@
 #include "libc/time/time.h"
 #include "libc/unicode/unicode.h"
 #include "libc/x/x.h"
-#include "third_party/dtoa/dtoa.h"
+#include "third_party/gdtoa/gdtoa.h"
 #include "third_party/getopt/getopt.h"
 #include "tool/build/lib/address.h"
 #include "tool/build/lib/breakpoint.h"
@@ -277,8 +277,9 @@ static struct sigaction oldsig[4];
 static void SetupDraw(void);
 static void Redraw(void);
 
-static char *FormatDouble(char *b, double x) {
-  return g_fmt(b, x);
+static char *FormatDouble(char buf[32], long double x) {
+  g_xfmt_p(buf, &x, 15, 32, 0);
+  return buf;
 }
 
 static int64_t SignExtend(uint64_t x, char b) {
@@ -2463,7 +2464,7 @@ static void HandleBreakpointFlag(const char *s) {
   PushBreakpoint(&breakpoints, &b);
 }
 
-static noreturn void PrintUsage(int rc, FILE *f) {
+static wontreturn void PrintUsage(int rc, FILE *f) {
   fprintf(f, "SYNOPSIS\n\n  %s%s", program_invocation_name, USAGE);
   exit(rc);
 }

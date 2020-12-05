@@ -32,7 +32,7 @@
 static privileged void __print$nt(const void *data, size_t len) {
   int64_t hand;
   uint32_t wrote;
-  char xmm[256] aligned(16);
+  char xmm[256] forcealign(16);
   savexmm(&xmm[128]);
   hand = __imp_GetStdHandle(kNtStdErrorHandle);
   __imp_WriteFile(hand, data, len, &wrote, NULL);

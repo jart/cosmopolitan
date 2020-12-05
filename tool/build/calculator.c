@@ -33,7 +33,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/tinymath/emodl.h"
 #include "libc/x/x.h"
-#include "third_party/dtoa/dtoa.h"
+#include "third_party/gdtoa/gdtoa.h"
 #include "third_party/getopt/getopt.h"
 
 #define INT     intmax_t
@@ -162,7 +162,7 @@ INT Popcnt(INT x) {
 char *Repr(struct Value x) {
   static char buf[64];
   if (x.t == kFloat) {
-    g_fmt(buf, x.f);
+    g_xfmt_p(buf, &x.f, 16, sizeof(buf), 0);
   } else {
     sprintf(buf, "%jd", x.i);
   }
@@ -256,36 +256,47 @@ void Pushf(FLOAT f) {
 void OpDrop(void) {
   Pop();
 }
+
 void OpDup(void) {
   Push(Push(Pop()));
 }
+
 void OpExit(void) {
   exit(Popi());
 }
+
 void OpSrand(void) {
   srand(Popi());
 }
+
 void OpEmit(void) {
   fputwc(Popi(), stdout);
 }
+
 void OpCr(void) {
   Cr(stdout);
 }
+
 void OpPrint(void) {
   printf("%s ", Repr(Pop()));
 }
+
 void OpComment(void) {
   comment = true;
 }
+
 void Glue0f(FLOAT fn(void)) {
   Pushf(fn());
 }
+
 void Glue0i(INT fn(void)) {
   Pushi(fn());
 }
+
 void Glue1f(FLOAT fn(FLOAT)) {
   Pushf(fn(Popf()));
 }
+
 void Glue1i(INT fn(INT)) {
   Pushi(fn(Popi()));
 }
@@ -562,12 +573,16 @@ void GotoStartOfLine(void) {
 
 void GotoEndOfLine(void) {
 }
+
 void GotoPrevLine(void) {
 }
+
 void GotoNextLine(void) {
 }
+
 void GotoPrevChar(void) {
 }
+
 void GotoNextChar(void) {
 }
 

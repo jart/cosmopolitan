@@ -147,7 +147,7 @@ static const char *__asan_describe_access_poison(int c) {
   }
 }
 
-static noreturn void __asan_die(const char *msg, size_t size) {
+static wontreturn void __asan_die(const char *msg, size_t size) {
   write(STDERR_FILENO, msg, size);
   __die();
 }
@@ -163,7 +163,7 @@ static char *__asan_report_start(char *p) {
   return stpcpy(p, ": ");
 }
 
-static noreturn void __asan_report_deallocate_fault(void *addr, int c) {
+static wontreturn void __asan_report_deallocate_fault(void *addr, int c) {
   char *p, ibuf[21], buf[256];
   p = __asan_report_start(buf);
   p = stpcpy(p, __asan_dscribe_free_poison(c));
@@ -175,8 +175,8 @@ static noreturn void __asan_report_deallocate_fault(void *addr, int c) {
   __asan_die(buf, p - buf);
 }
 
-static noreturn void __asan_report_memory_fault(uint8_t *addr, int size,
-                                                const char *kind) {
+static wontreturn void __asan_report_memory_fault(uint8_t *addr, int size,
+                                                  const char *kind) {
   char *p, ibuf[21], buf[256];
   p = __asan_report_start(buf);
   p = stpcpy(p, __asan_describe_access_poison(*(char *)SHADOW((intptr_t)addr)));

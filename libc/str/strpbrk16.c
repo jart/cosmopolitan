@@ -20,10 +20,22 @@
 #include "libc/nexgen32e/hascharacter.internal.h"
 #include "libc/str/str.h"
 
-#undef strpbrk
-#define char char16_t
-#define HasCharacter HasCharacter16
-#define strpbrk      strpbrk16
-#define strchr(x, y) strchr16(x, y)
-
-#include "libc/str/strpbrk.c"
+/**
+ * Returns pointer to first byte matching any in accept, or NULL.
+ * @asyncsignalsafe
+ */
+char16_t *strpbrk16(const char16_t *s, const char16_t *accept) {
+  size_t i;
+  if (accept[0]) {
+    if (!accept[1]) {
+      return strchr16(s, accept[0]);
+    } else {
+      for (i = 0; s[i]; ++i) {
+        if (HasCharacter16(s[i], accept)) {
+          return (/*unconst*/ char16_t *)&s[i];
+        }
+      }
+    }
+  }
+  return NULL;
+}

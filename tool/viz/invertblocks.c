@@ -27,7 +27,7 @@
 static FILE *fi_, *fo_;
 static char *inpath_, *outpath_;
 
-noreturn void usage(int rc, FILE *f) {
+wontreturn void usage(int rc, FILE *f) {
   fprintf(f, "%s%s%s\n", "Usage: ", program_invocation_name,
           " [-o FILE] [FILE...]\n");
   exit(rc);

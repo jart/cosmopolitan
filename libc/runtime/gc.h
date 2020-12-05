@@ -25,7 +25,7 @@ COSMOPOLITAN_C_START_
 /**
  * Same as longjmp() but runs gc() / defer() destructors.
  */
-void gclongjmp(jmp_buf, int) nothrow noreturn paramsnonnull();
+void gclongjmp(jmp_buf, int) nothrow wontreturn paramsnonnull();
 
 /**
  * Calls FN(ARG) when function returns.

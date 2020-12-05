@@ -1,0 +1,30 @@
+chibicc is the simplest/tiniest/hackable/readable c11 compiler in the
+world that can build projects like python but goes 2x slower than gcc
+with 2x the code size, because it doesn't optimize or color registers
+although it can compile code at 5x the speed and could be even faster
+which is great, considering it's a 220kb αcτµαlly pδrταblε εxεcµταblε
+
+local enhancements
+
+- support __asm__
+- support __int128
+- support __vector_size__
+- support __builtin_memcpy
+- support __builtin_constant_p, __builtin_likely, etc.
+- support __builtin_isunordered, __builtin_islessgreater, etc.
+- support __builtin_ctz, __builtin_bswap, __builtin_popcount, etc.
+- support __constructor__, __destructor__, __section__, __cold__, etc.
+- improve error messages to trace macro expansions
+- reduce #lines of generated assembly by a third
+- reduce #bytes of generated binary by a third
+
+local bug fixes
+
+- fix 64-bit bug in generated code for struct bitfields
+
+local changes
+
+- use tabs in generated output
+- generated code no longer assumes red zone
+- emit .size directives for function definitions
+- use fisttp long double conversions if built w/ -msse3

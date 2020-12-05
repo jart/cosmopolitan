@@ -7,9 +7,9 @@ typedef float __m256 _Vector_size(32) mayalias;
 typedef double __m256d _Vector_size(32) mayalias;
 typedef long long __m256i _Vector_size(32) mayalias;
 
-typedef float __m256_u _Vector_size(32) aligned(1) mayalias;
-typedef double __m256d_u _Vector_size(32) aligned(1) mayalias;
-typedef long long __m256i_u _Vector_size(32) aligned(1) mayalias;
+typedef float __m256_u _Vector_size(32) forcealign(1) mayalias;
+typedef double __m256d_u _Vector_size(32) forcealign(1) mayalias;
+typedef long long __m256i_u _Vector_size(32) forcealign(1) mayalias;
 
 typedef double __v4df _Vector_size(32);
 typedef float __v8sf _Vector_size(32);

@@ -69,7 +69,7 @@ static struct Flags {
   enum TtyQuantizationAlgorithm quant;
 } g_flags;
 
-static noreturn void PrintUsage(int rc, FILE *f) {
+static wontreturn void PrintUsage(int rc, FILE *f) {
   fprintf(f, "Usage: %s%s", program_invocation_name, "\
  [FLAGS] [PATH]\n\
 \n\

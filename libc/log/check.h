@@ -84,15 +84,15 @@ COSMOPOLITAN_C_START_
 
 void __check_fail(const char *, const char *, uint64_t, const char *, uint64_t,
                   const char *, const char *, int, const char *,
-                  ...) relegated noreturn;
+                  ...) relegated wontreturn;
 
-void __check_fail_eq(uint64_t, uint64_t) relegated noreturn;
-void __check_fail_ne(uint64_t, uint64_t) relegated noreturn;
-void __check_fail_le(uint64_t, uint64_t) relegated noreturn;
-void __check_fail_lt(uint64_t, uint64_t) relegated noreturn;
-void __check_fail_ge(uint64_t, uint64_t) relegated noreturn;
-void __check_fail_gt(uint64_t, uint64_t) relegated noreturn;
-void __check_fail_aligned(unsigned, uint64_t) relegated noreturn;
+void __check_fail_eq(uint64_t, uint64_t) relegated wontreturn;
+void __check_fail_ne(uint64_t, uint64_t) relegated wontreturn;
+void __check_fail_le(uint64_t, uint64_t) relegated wontreturn;
+void __check_fail_lt(uint64_t, uint64_t) relegated wontreturn;
+void __check_fail_ge(uint64_t, uint64_t) relegated wontreturn;
+void __check_fail_gt(uint64_t, uint64_t) relegated wontreturn;
+void __check_fail_aligned(unsigned, uint64_t) relegated wontreturn;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

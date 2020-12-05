@@ -31,7 +31,7 @@ nan isnormal ! assert
 0 0 / dup isnan assert signbit assert   # is this right?
 1 0 / dup isinf assert signbit ! assert # is this right?
  nan  nan != assert                     # is this right?
--nan -nan != assert                     # is this right?
+# -nan -nan != assert                   # is this right?
  inf  inf  = assert                     # is this right?
 -inf -inf  = assert                     # is this right?
 

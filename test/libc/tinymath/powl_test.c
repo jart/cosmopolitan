@@ -23,7 +23,6 @@
 #include "libc/testlib/testlib.h"
 #include "libc/tinymath/tinymath.h"
 #include "libc/x/x.h"
-#include "third_party/dtoa/dtoa.h"
 
 TEST(powl, testLongDouble) {
   /* .4248496805467504836322459796959084815827285786480897 */

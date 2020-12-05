@@ -53,7 +53,7 @@
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
-void apmoff(void) noreturn;
+void apmoff(void) wontreturn;
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* APE_LIB_APM_H_ */

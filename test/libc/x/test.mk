@@ -34,7 +34,7 @@ TEST_LIBC_X_DIRECTDEPS =			\
 	LIBC_X					\
 	LIBC_STUBS				\
 	LIBC_TESTLIB				\
-	THIRD_PARTY_DTOA
+	THIRD_PARTY_GDTOA
 
 TEST_LIBC_X_DEPS :=				\
 	$(call uniq,$(foreach x,$(TEST_LIBC_X_DIRECTDEPS),$($(x))))

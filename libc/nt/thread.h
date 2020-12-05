@@ -37,7 +37,7 @@ int64_t CreateThread(struct NtSecurityAttributes *lpThreadAttributes,
                      void *lpParameter, uint32_t dwCreationFlags,
                      uint32_t *opt_lpThreadId);
 
-void ExitThread(uint32_t dwExitCode) noreturn;
+void ExitThread(uint32_t dwExitCode) wontreturn;
 int64_t GetCurrentThread(void);
 uint32_t GetCurrentThreadId(void);
 uint64_t SetThreadAffinityMask(int64_t hThread, uintptr_t dwThreadAffinityMask);

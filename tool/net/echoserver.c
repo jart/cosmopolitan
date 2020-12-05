@@ -100,7 +100,7 @@ nodiscard char *DescribeSocket(struct Socket *s) {
                    gc(DescribeAddress(&s->addr)));
 }
 
-noreturn void ShowUsageAndExit(bool iserror) {
+wontreturn void ShowUsageAndExit(bool iserror) {
   FILE *f = iserror ? stderr : stdout;
   int rc = iserror ? EXIT_FAILURE : EXIT_SUCCESS;
   fprintf(f, "%s: %s %s\n", "Usage", g_argv[0], "PROTOCOL:ADDR:PORT...");

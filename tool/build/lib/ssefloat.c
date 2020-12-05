@@ -38,8 +38,8 @@
   (!IsModeDbg() && __SSE3__ + 0 && \
    (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 408)
 
-typedef int int_v _Vector_size(16) aligned(16);
-typedef long long_v _Vector_size(16) aligned(16);
+typedef int int_v _Vector_size(16) forcealign(16);
+typedef long long_v _Vector_size(16) forcealign(16);
 
 static float_v Addps(struct Machine *m, float_v x, float_v y) {
   return x + y;

@@ -34,7 +34,7 @@ struct MallocParams g_mparams;
  * Note that contiguous allocations are what Doug Lea recommends.
  */
 static void *dlmalloc_requires_more_vespene_gas(size_t size) {
-  if (0 && !IsTrustworthy()) {
+  if (0) {
     size_t need = mallinfo().arena + size;
     if (need > 8 * 1024 * 1024) {
       struct sysinfo info;

@@ -22,9 +22,11 @@ int bsfl(long);
 int bsfll(long long);
 int bsfmax(uintmax_t);
 
+#ifdef __GNUC__
 #define bsf(u)   __builtin_ctz(u)
 #define bsfl(u)  __builtin_ctzl(u)
 #define bsfll(u) __builtin_ctzll(u)
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -20,9 +20,19 @@
 #include "libc/nexgen32e/hascharacter.internal.h"
 #include "libc/str/str.h"
 
-#undef strspn
-#define char wchar_t
-#define HasCharacter HasCharacterWide
-#define strspn       wcsspn
-
-#include "libc/str/strspn.c"
+/**
+ * Returns prefix length, consisting of chars in accept.
+ *
+ * @param accept is nul-terminated character set
+ * @see strcspn(), strtok_r()
+ * @asyncsignalsafe
+ */
+size_t wcsspn(const wchar_t *s, const wchar_t *accept) {
+  size_t i;
+  for (i = 0; s[i]; ++i) {
+    if (!HasCharacterWide(s[i], accept)) {
+      break;
+    }
+  }
+  return i;
+}

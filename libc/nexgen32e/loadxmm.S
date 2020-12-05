@@ -22,7 +22,7 @@
 
 /	Loads XMM registers from buffer.
 /
-/	@param	%rdi points to &(aligned(16) uint8_t[256])[128]
+/	@param	%rdi points to &(forcealign(16) uint8_t[256])[128]
 /	@note	modern cpus have out-of-order execution engines
 loadxmm:.leafprologue
 	movaps	-0x80(%rdi),%xmm0

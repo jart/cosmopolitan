@@ -119,7 +119,7 @@ static textwindows char *AllocateMemory(void *addr, size_t size, int64_t *h) {
       kNtNumaNoPreferredNode);
 }
 
-static textwindows noreturn void WinMainNew(void) {
+static textwindows wontreturn void WinMainNew(void) {
   int64_t h;
   size_t size;
   int i, count;

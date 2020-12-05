@@ -54,7 +54,7 @@ static size_t linecap_;
 static char *outpath_, *line_;
 static bool rawmode_, background_, emphasis_, cleanup_;
 
-noreturn void usage(int rc, FILE *f) {
+wontreturn void usage(int rc, FILE *f) {
   fprintf(f, kUsage, program_invocation_name);
   exit(rc);
 }

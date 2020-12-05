@@ -22,9 +22,11 @@ int bsrl(long);
 int bsrll(long long);
 int bsrmax(uintmax_t);
 
+#ifdef __GNUC__
 #define bsr(u)   ((sizeof(int) * 8 - 1) ^ __builtin_clz(u))
 #define bsrl(u)  ((sizeof(long) * 8 - 1) ^ __builtin_clzl(u))
 #define bsrll(u) ((sizeof(long long) * 8 - 1) ^ __builtin_clzll(u))
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -350,7 +350,7 @@ void testlib_runfixtures(testfn_t *, testfn_t *, const struct TestFixture *,
                          const struct TestFixture *);
 int testlib_countfixtures(const struct TestFixture *,
                           const struct TestFixture *);
-void testlib_abort(void) noreturn relegated;
+void testlib_abort(void) wontreturn relegated;
 bool testlib_strequals(size_t, const void *, const void *) nosideeffect;
 bool testlib_strnequals(size_t, const void *, const void *,
                         size_t) nosideeffect;

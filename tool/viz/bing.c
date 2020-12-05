@@ -35,7 +35,7 @@
 int ispipe_;
 int newlines_;
 
-noreturn void ShowUsage(FILE *f, int rc) {
+wontreturn void ShowUsage(FILE *f, int rc) {
   fputs(program_invocation_name, f);
   fputs(": [-p] [-n] [FILE...]\n", f);
   exit(rc);

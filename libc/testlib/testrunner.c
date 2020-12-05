@@ -35,7 +35,7 @@ void testlib_finish(void) {
   }
 }
 
-noreturn void testlib_abort(void) {
+wontreturn void testlib_abort(void) {
   testlib_finish();
   exit(MIN(255, g_testlib_failed));
   unreachable;

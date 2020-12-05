@@ -28,7 +28,7 @@ COSMOPOLITAN_C_START_
     Performance (New Hardware)                   ~20 ns     ~40 ns   ~400 ns
     Performance (Old Hardware)                  ~400 ns     ~40 ns   ~400 ns */
 
-typedef uint32_t aes_block_t _Vector_size(16) aligned(16);
+typedef uint32_t aes_block_t _Vector_size(16) forcealign(16);
 
 struct Rijndael {
   union {
@@ -47,8 +47,8 @@ aes_block_t unrijndael(uint32_t, aes_block_t, const struct Rijndael *);
 │ cosmopolitan § cryptography » implementation details                     ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-extern const uint8_t kAesSbox[256] aligned(64);
-extern const uint8_t kAesSboxInverse[256] aligned(64);
+extern const uint8_t kAesSbox[256] forcealign(64);
+extern const uint8_t kAesSboxInverse[256] forcealign(64);
 
 aes_block_t InvMixColumns(aes_block_t) hidden;
 

@@ -26,7 +26,7 @@
 
 /* #define compilerrt_abort() __compilerrt_abort_impl(__FILE__, __LINE__, __func__) */
 
-noreturn void __compilerrt_abort_impl(const char *file, int line,
+wontreturn void __compilerrt_abort_impl(const char *file, int line,
                                       const char *function);
 
 #define COMPILE_TIME_ASSERT(expr) COMPILE_TIME_ASSERT1(expr, __COUNTER__)

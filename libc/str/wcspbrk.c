@@ -20,10 +20,22 @@
 #include "libc/nexgen32e/hascharacter.internal.h"
 #include "libc/str/str.h"
 
-#undef strpbrk
-#define char wchar_t
-#define HasCharacter HasCharacterWide
-#define strpbrk      wcspbrk
-#define strchr(x, y) wcschr(x, y)
-
-#include "libc/str/strpbrk.c"
+/**
+ * Returns pointer to first byte matching any in accept, or NULL.
+ * @asyncsignalsafe
+ */
+wchar_t *wcspbrk(const wchar_t *s, const wchar_t *accept) {
+  size_t i;
+  if (accept[0]) {
+    if (!accept[1]) {
+      return wcschr(s, accept[0]);
+    } else {
+      for (i = 0; s[i]; ++i) {
+        if (HasCharacterWide(s[i], accept)) {
+          return (/*unconst*/ wchar_t *)&s[i];
+        }
+      }
+    }
+  }
+  return NULL;
+}

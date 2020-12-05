@@ -4,6 +4,10 @@
    "__LINE__"
    "__DATE__"))
 
+(defconst cosmo-cpp-constants-chibicc
+  '("__cosmo__"
+    "__chibicc__"))
+
 (defconst cosmo-cpp-constants-gcc-412
   '("__BASE_FILE__"
     "__CHAR_BIT__"
@@ -21,6 +25,8 @@
     "__SHRT_MAX__"
     "__DBL_MIN__"
     "__DBL_MAX__"
+    "__LDBL_MIN__"
+    "__LDBL_MAX__"
     "__FLT_MIN__"
     "__FLT_MAX__"
     "__WCHAR_MAX__"
@@ -156,6 +162,7 @@
   (append cosmo-cpp-constants-c11
           cosmo-cpp-constants-gcc-92
           cosmo-cpp-constants-gcc-412
+          cosmo-cpp-constants-chibicc
           cosmo-cpp-constants-cosmopolitan))
 
 (defconst cosmo-cpp-constants-regex

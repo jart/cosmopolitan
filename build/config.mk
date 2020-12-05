@@ -138,7 +138,7 @@ CONFIG_CCFLAGS +=		\
 	-fno-align-loops
 
 TARGET_ARCH ?=			\
-	-march=k8-sse3
+	-msse3
 
 endif
 

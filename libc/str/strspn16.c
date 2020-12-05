@@ -20,9 +20,19 @@
 #include "libc/nexgen32e/hascharacter.internal.h"
 #include "libc/str/str.h"
 
-#undef strspn
-#define char char16_t
-#define HasCharacter HasCharacter16
-#define strspn       strspn16
-
-#include "libc/str/strspn.c"
+/**
+ * Returns prefix length, consisting of chars in accept.
+ *
+ * @param accept is nul-terminated character set
+ * @see strcspn(), strtok_r()
+ * @asyncsignalsafe
+ */
+size_t strspn16(const char16_t *s, const char16_t *accept) {
+  size_t i;
+  for (i = 0; s[i]; ++i) {
+    if (!HasCharacter16(s[i], accept)) {
+      break;
+    }
+  }
+  return i;
+}

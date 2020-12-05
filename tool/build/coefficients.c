@@ -32,7 +32,7 @@
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/x/x.h"
-#include "third_party/dtoa/dtoa.h"
+#include "third_party/gdtoa/gdtoa.h"
 #include "third_party/getopt/getopt.h"
 
 #define USAGE \
@@ -60,7 +60,7 @@ static struct Flags {
     .H = 255,
 };
 
-static noreturn void PrintUsage(int rc, FILE *f) {
+static wontreturn void PrintUsage(int rc, FILE *f) {
   fprintf(f, "Usage: %s%s", program_invocation_name, USAGE);
   exit(rc);
 }

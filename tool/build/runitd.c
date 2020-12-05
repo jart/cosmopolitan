@@ -121,7 +121,7 @@ void OnChildTerminated(int sig) {
   g_childterm = true;
 }
 
-noreturn void ShowUsage(FILE *f, int rc) {
+wontreturn void ShowUsage(FILE *f, int rc) {
   fprintf(f, "%s: %s %s\n", "Usage", program_invocation_name,
           "[-d] [-r] [-l LISTENIP] [-p PORT] [-t TIMEOUTMS]");
   exit(rc);

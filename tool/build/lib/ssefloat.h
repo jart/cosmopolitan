@@ -4,8 +4,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-typedef float float_v _Vector_size(16) aligned(16);
-typedef double double_v _Vector_size(16) aligned(16);
+typedef float float_v _Vector_size(16) forcealign(16);
+typedef double double_v _Vector_size(16) forcealign(16);
 
 void OpUnpcklpsd(struct Machine *, uint32_t);
 void OpUnpckhpsd(struct Machine *, uint32_t);

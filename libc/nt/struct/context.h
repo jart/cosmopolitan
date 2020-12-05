@@ -5,7 +5,7 @@
 struct NtM128A {
   uint64_t Low;
   int64_t High;
-} aligned(16);
+} forcealign(16);
 
 struct NtXmmSaveArea32 {
   uint16_t ControlWord;
@@ -53,7 +53,7 @@ struct NtContext {
   uint64_t LastBranchFromRip;
   uint64_t LastExceptionToRip;
   uint64_t LastExceptionFromRip;
-} aligned(16);
+} forcealign(16);
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_CONTEXT_H_ */

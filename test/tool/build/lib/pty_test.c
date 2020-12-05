@@ -37,7 +37,7 @@ char *render(struct Pty *pty) {
   return b.p;
 }
 
-const char widelatin[] aligned(16) = "\
+const char widelatin[] forcealign(16) = "\
 Ａ-ＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ\r\n\
 ａｂ-ｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ\r\n\
 ０１２-３４５６７８９\r\n\
@@ -82,7 +82,7 @@ TEST(pty, testFunWidth) {
   FreePty(pty);
 }
 
-const char hyperion[] aligned(16) = "\
+const char hyperion[] forcealign(16) = "\
 Fanatics have their dreams, wherewith they weave \
 A paradise for a sect; the savage too \
 From forth the loftiest fashion of his sleep \

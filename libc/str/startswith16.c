@@ -19,14 +19,16 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
-#undef char
-#undef startswith
-#undef strlen
-#undef strncmp
-
-#define char char16_t
-#define startswith startswith16
-#define strlen strlen16
-#define strncmp strncmp16
-
-#include "libc/str/startswith.c"
+/**
+ * Returns true if s has prefix.
+ *
+ * @param s is a NUL-terminated string
+ * @param prefix is also NUL-terminated
+ */
+bool startswith16(const char16_t *s, const char16_t *prefix) {
+  for (;;) {
+    if (!*prefix) return true;
+    if (!*s) return false;
+    if (*s++ != *prefix++) return false;
+  }
+}

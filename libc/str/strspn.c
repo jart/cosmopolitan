@@ -27,7 +27,7 @@
  * @see strcspn(), strtok_r()
  * @asyncsignalsafe
  */
-size_t(strspn)(const char *s, const char *accept) {
+size_t strspn(const char *s, const char *accept) {
   size_t i;
   for (i = 0; s[i]; ++i) {
     if (!HasCharacter(s[i], accept)) {

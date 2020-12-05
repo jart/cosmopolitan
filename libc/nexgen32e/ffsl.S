@@ -41,7 +41,7 @@ ffsl:	.leafprologue
 	bsf	%rdi,%rax
 	or	$-1,%edx
 	cmovz	%edx,%eax
-	add	$1,%eax
+	inc	%eax
 	.leafepilogue
 	.endfn	ffsl,globl
 	.alias	ffsl,ffsll

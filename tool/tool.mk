@@ -8,6 +8,4 @@ o/$(MODE)/tool:			\
 	o/$(MODE)/tool/decode	\
 	o/$(MODE)/tool/hash	\
 	o/$(MODE)/tool/net	\
-	o/$(MODE)/tool/tags	\
-	o/$(MODE)/tool/viz	\
-	o/$(MODE)/tool/cc
+	o/$(MODE)/tool/viz

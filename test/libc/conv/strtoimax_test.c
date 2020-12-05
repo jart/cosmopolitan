@@ -21,10 +21,21 @@
 #include "libc/conv/conv.h"
 #include "libc/testlib/testlib.h"
 
-TEST(strtoimax, testZero) { EXPECT_EQ(0, strtoimax("0", NULL, 0)); }
-TEST(strtoimax, testDecimal) { EXPECT_EQ(-123, strtoimax("-123", NULL, 0)); }
-TEST(strtoimax, testHex) { EXPECT_EQ(-255, strtoimax("-0xff", NULL, 0)); }
-TEST(strtoimax, testOctal) { EXPECT_EQ(-123, strtoimax("-0173", NULL, 0)); }
+TEST(strtoimax, testZero) {
+  EXPECT_EQ(0, strtoimax("0", NULL, 0));
+}
+
+TEST(strtoimax, testDecimal) {
+  EXPECT_EQ(-123, strtoimax("-123", NULL, 0));
+}
+
+TEST(strtoimax, testHex) {
+  EXPECT_EQ(-255, strtoimax("-0xff", NULL, 0));
+}
+
+TEST(strtoimax, testOctal) {
+  EXPECT_EQ(-123, strtoimax("-0173", NULL, 0));
+}
 
 TEST(strtoimax, testLimits) {
   EXPECT_EQ(
@@ -33,12 +44,6 @@ TEST(strtoimax, testLimits) {
   EXPECT_EQ(
       ((uintmax_t)0x7fffffffffffffff) << 64 | (uintmax_t)0xffffffffffffffff,
       strtoimax("0x7fffffffffffffffffffffffffffffff", NULL, 0));
-}
-
-TEST(strtoimax, testZeroExtend) {
-  EXPECT_EQ(-1, strtoimax("-1", NULL, 0));
-  EXPECT_EQ(0xffffffff, strtoimax("-1u", NULL, 0));
-  EXPECT_EQ(0xffffffffffffffff, strtoimax("-1ul", NULL, 0));
 }
 
 TEST(strtoimax, testTwosBane) {

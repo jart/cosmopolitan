@@ -14,7 +14,7 @@ struct sigaction { /* cosmo abi */
   void (*sa_restorer)(void);
   struct sigset sa_mask;
   int64_t __pad;
-} aligned(8);
+} forcealign(8);
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGACTION_H_ */

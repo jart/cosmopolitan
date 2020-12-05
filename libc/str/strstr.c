@@ -18,7 +18,6 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
-#include "libc/dce.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/internal.h"
 #include "libc/str/str.h"
@@ -32,22 +31,26 @@
  * @asyncsignalsafe
  * @see memmem()
  */
-char *(strstr)(const char *haystack, const char *needle) {
+char *strstr(const char *haystack, const char *needle) {
+  size_t i;
   if (needle[0]) {
     if (needle[1]) {
-      if (!((intptr_t)needle & 0xf) && X86_HAVE(SSE4_2)) {
-        return strstr$sse42(haystack, needle);
-      } else {
-        size_t needlelen;
-        alignas(16) char needle2[64];
-        needlelen = strlen(needle);
-        if (needlelen < 64 && X86_HAVE(SSE4_2)) {
-          memcpy(needle2, needle, (needlelen + 1) * sizeof(char));
-          return strstr$sse42(haystack, needle2);
-        } else {
-          return tinystrstr(haystack, needle);
+      for (;;) {
+#if 0 /* todo: fix me */
+        if (!((uintptr_t)haystack & 15) && X86_HAVE(SSE4_2) &&
+            (((uintptr_t)needle + strlen(needle)) & 0xfff) <= 0xff0) {
+          return strstr$sse42(haystack, needle);
         }
+#endif
+        for (i = 0;;) {
+          if (!needle[i]) return haystack;
+          if (!haystack[i]) break;
+          if (needle[i] != haystack[i]) break;
+          ++i;
+        }
+        if (!*haystack++) break;
       }
+      return NULL;
     } else {
       return strchr(haystack, needle[0]);
     }

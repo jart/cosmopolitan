@@ -115,7 +115,6 @@ include third_party/dlmalloc/dlmalloc.mk	# │
 include libc/mem/mem.mk				# │
 include libc/ohmyplus/ohmyplus.mk		# │
 include libc/zipos/zipos.mk			# │
-include third_party/dtoa/dtoa.mk		# │
 include third_party/gdtoa/gdtoa.mk		# │
 include libc/time/time.mk			# │
 include libc/alg/alg.mk				# │
@@ -140,6 +139,7 @@ include libc/dns/dns.mk				# │
 include libc/crypto/crypto.mk			# │
 include net/http/http.mk			#─┘
 include third_party/chibicc/chibicc.mk
+include third_party/chibicc/test/test.mk
 include third_party/lemon/lemon.mk
 include third_party/linenoise/linenoise.mk
 include third_party/editline/editline.mk
@@ -160,13 +160,11 @@ include tool/build/emucrt/emucrt.mk
 include tool/build/emubin/emubin.mk
 include tool/build/build.mk
 include tool/calc/calc.mk
-include tool/tags/tags.mk
 include tool/decode/lib/decodelib.mk
 include tool/decode/decode.mk
 include tool/hash/hash.mk
 include tool/net/net.mk
 include tool/viz/viz.mk
-include tool/cc/cc.mk
 include tool/tool.mk
 include test/libc/alg/test.mk
 include test/libc/tinymath/test.mk
@@ -278,7 +276,7 @@ COSMOPOLITAN_OBJECTS =		\
 	LIBC_ZIPOS		\
 	THIRD_PARTY_COMPILER_RT	\
 	THIRD_PARTY_DLMALLOC	\
-	THIRD_PARTY_DTOA	\
+	THIRD_PARTY_GDTOA	\
 	THIRD_PARTY_GETOPT	\
 	THIRD_PARTY_MUSL	\
 	THIRD_PARTY_REGEX
@@ -311,7 +309,7 @@ COSMOPOLITAN_HEADERS =		\
 	LIBC_X			\
 	LIBC_ZIPOS		\
 	THIRD_PARTY_DLMALLOC	\
-	THIRD_PARTY_DTOA	\
+	THIRD_PARTY_GDTOA	\
 	THIRD_PARTY_GETOPT	\
 	THIRD_PARTY_MUSL	\
 	THIRD_PARTY_REGEX
