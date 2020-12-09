@@ -7,6 +7,7 @@ THIRD_PARTY_LEMON = o/$(MODE)/third_party/lemon/lemon.com.dbg
 
 THIRD_PARTY_LEMON_OBJS =					\
 	o/$(MODE)/third_party/lemon/lemon.o			\
+	o/$(MODE)/third_party/lemon/lemon.c.zip.o		\
 	o/$(MODE)/third_party/lemon/lempar.c.txt.zip.o
 
 THIRD_PARTY_LEMON_COMS =					\
