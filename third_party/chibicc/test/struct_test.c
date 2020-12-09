@@ -392,6 +392,24 @@ int main() {
            } x = {1}, y = {2};
            (0 ? x : y).a;
          }));
+  ASSERT(2, ({
+           struct {
+             int a;
+           } x = {1}, y = {2};
+           (x = y).a;
+         }));
+  ASSERT(1, ({
+           struct {
+             int a;
+           } x = {1}, y = {2};
+           (1 ? x : y).a;
+         }));
+  ASSERT(2, ({
+           struct {
+             int a;
+           } x = {1}, y = {2};
+           (0 ? x : y).a;
+         }));
 
   return 0;
 }

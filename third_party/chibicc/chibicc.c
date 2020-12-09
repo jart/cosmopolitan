@@ -141,7 +141,16 @@ static char *quote_makefile(char *s) {
 static void PrintMemoryUsage(void) {
   struct mallinfo mi;
   mi = mallinfo();
+  fprintf(stderr, "\n");
   fprintf(stderr, "allocated %,ld bytes of memory\n", mi.arena);
+  fprintf(stderr, "allocated %,ld nodes (%,ld bytes)\n", alloc_node_count,
+          sizeof(Node) * alloc_node_count);
+  fprintf(stderr, "allocated %,ld tokens (%,ld bytes)\n", alloc_token_count,
+          sizeof(Token) * alloc_token_count);
+  fprintf(stderr, "allocated %,ld objs (%,ld bytes)\n", alloc_obj_count,
+          sizeof(Obj) * alloc_obj_count);
+  fprintf(stderr, "allocated %,ld types (%,ld bytes)\n", alloc_type_count,
+          sizeof(Type) * alloc_type_count);
 }
 
 static void strarray_push_comma(StringArray *a, char *s) {

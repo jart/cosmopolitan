@@ -2,7 +2,10 @@
 
 #include "third_party/chibicc/chibicc.h"
 
-#define TOMBSTONE ((void *)-1)  // Represents a deleted hash entry
+#define INIT_SIZE      16            // initial hash bucket size
+#define LOW_WATERMARK  50            // keep usage below 50% after rehashing
+#define HIGH_WATERMARK 70            // perform rehash when usage exceeds 70%
+#define TOMBSTONE      ((void *)-1)  // represents deleted hash table entry
 
 static uint64_t fnv_hash(char *s, int len) {
   uint64_t hash = 0xcbf29ce484222325;
@@ -24,7 +27,8 @@ static void rehash(HashMap *map) {
     }
   }
   size_t cap = map->capacity;
-  while ((nkeys * 100) / cap >= 50) cap = cap * 2;
+  while ((nkeys * 100) / cap >= LOW_WATERMARK) cap = cap * 2;
+  assert(cap > 0);
   // Create a new hashmap and copy all key-values.
   HashMap map2 = {};
   map2.buckets = calloc(cap, sizeof(HashEntry));
@@ -56,9 +60,11 @@ static HashEntry *get_entry(HashMap *map, char *key, int keylen) {
 
 static HashEntry *get_or_insert_entry(HashMap *map, char *key, int keylen) {
   if (!map->buckets) {
-    map->buckets = calloc((map->capacity = 16), sizeof(HashEntry));
+    map->buckets = calloc(INIT_SIZE, sizeof(HashEntry));
+    map->capacity = INIT_SIZE;
+  } else if ((map->used * 100) / map->capacity >= HIGH_WATERMARK) {
+    rehash(map);
   }
-  if ((map->used * 100) / map->capacity >= 70) rehash(map);
   uint64_t hash = fnv_hash(key, keylen);
   for (int i = 0; i < map->capacity; i++) {
     HashEntry *ent = &map->buckets[(hash + i) & (map->capacity - 1)];

@@ -62,14 +62,14 @@ void strarray_push(StringArray *, char *);
 // tokenize.c
 //
 
-// Token
 typedef enum {
-  TK_RESERVED,  // Keywords or punctuators
-  TK_IDENT,     // Identifiers
-  TK_STR,       // String literals
-  TK_NUM,       // Numeric literals
-  TK_PP_NUM,    // Preprocessing numbers
-  TK_EOF,       // End-of-file markers
+  TK_IDENT,    // Identifiers
+  TK_PUNCT,    // Punctuators
+  TK_KEYWORD,  // Keywords
+  TK_STR,      // String literals
+  TK_NUM,      // Numeric literals
+  TK_PP_NUM,   // Preprocessing numbers
+  TK_EOF,      // End-of-file markers
 } TokenKind;
 
 struct File {
@@ -81,15 +81,14 @@ struct File {
   int line_delta;
 };
 
-// Token type
-struct Token {
-  TokenKind kind;    // Token kind
+struct thatispacked Token {
+  Token *next;       // Next token
   int len;           // Token length
   int line_no;       // Line number
   int line_delta;    // Line number
+  TokenKind kind;    // Token kind
   bool at_bol;       // True if this token is at beginning of line
   bool has_space;    // True if this token follows a space character
-  Token *next;       // Next token
   char *loc;         // Token location
   Type *ty;          // Used if TK_NUM or TK_STR
   File *file;        // Source location
@@ -518,7 +517,7 @@ int encode_utf8(char *, uint32_t);
 uint32_t decode_utf8(char **, char *);
 bool is_ident1(uint32_t);
 bool is_ident2(uint32_t);
-int str_width(char *, int);
+int display_width(char *, int);
 
 //
 // hashmap.c
@@ -563,6 +562,20 @@ extern bool opt_sse3;
 extern bool opt_sse4;
 extern bool opt_verbose;
 extern char *base_file;
+
+//
+// alloc.c
+//
+
+extern long alloc_node_count;
+extern long alloc_token_count;
+extern long alloc_obj_count;
+extern long alloc_type_count;
+
+Node *alloc_node(void);
+Token *alloc_token(void);
+Obj *alloc_obj(void);
+Type *alloc_type(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

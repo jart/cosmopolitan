@@ -2219,7 +2219,7 @@ static void emit_data(Obj *prog) {
     int align = (var->ty->kind == TY_ARRAY && var->ty->size >= 16)
                     ? MAX(16, var->align)
                     : var->align;
-    if (opt_common && var->is_tentative && !var->is_tls) {
+    if (opt_common && var->is_tentative) {
       println("\t.comm\t%s,%d,%d", nameof(var), var->ty->size, align);
     } else {
       if (var->section) {
@@ -2410,10 +2410,10 @@ static void emit_text(Obj *prog) {
     // Emit code
     gen_stmt(fn->body);
     assert(!depth);
-    // The C spec defines a special rule for the main function.
-    // Reaching the end of the main function is equivalent to
-    // returning 0, even though the behavior is undefined for the
-    // other functions. See C11 5.1.2.2.3.
+    // [https://www.sigbus.info/n1570#5.1.2.2.3p1] The C spec defines
+    // a special rule for the main function. Reaching the end of the
+    // main function is equivalent to returning 0, even though the
+    // behavior is undefined for the other functions.
     if (strcmp(nameof(fn), "main") == 0) {
       emitlin("\txor\t%eax,%eax");
     }

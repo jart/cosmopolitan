@@ -38,7 +38,7 @@ static void verror_at(char *filename, char *input, int line_no, char *loc,
   int indent = fprintf(stderr, "%s:%d: ", filename, line_no);
   fprintf(stderr, "%.*s\n", (int)(end - line), line);
   // Show the error message.
-  int pos = str_width(line, loc - line) + indent;
+  int pos = display_width(line, loc - line) + indent;
   fprintf(stderr, "%*s", pos, "");  // print pos spaces.
   fprintf(stderr, "^ ");
   vfprintf(stderr, fmt, ap);
@@ -53,6 +53,7 @@ void error_at(char *loc, char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   verror_at(current_file->name, current_file->contents, line_no, loc, fmt, ap);
+  va_end(ap);
   exit(1);
 }
 
@@ -64,7 +65,7 @@ void error_tok(Token *tok, char *fmt, ...) {
     verror_at(t->file->name, t->file->contents, t->line_no, t->loc, fmt, ap);
     va_end(ap);
   }
-  va_end(va);
+  va_end(ap);
   exit(1);
 }
 
@@ -73,6 +74,7 @@ void warn_tok(Token *tok, char *fmt, ...) {
   va_start(ap, fmt);
   verror_at(tok->file->name, tok->file->contents, tok->line_no, tok->loc, fmt,
             ap);
+  va_end(ap);
 }
 
 static int is_space(int c) {
@@ -103,9 +105,9 @@ Token *skip(Token *tok, char op) {
   }
 }
 
-// Create a new token and add it as the next token of `cur`.
+// Create a new token.
 static Token *new_token(TokenKind kind, char *start, char *end) {
-  Token *tok = calloc(1, sizeof(Token));
+  Token *tok = alloc_token();
   tok->kind = kind;
   tok->loc = start;
   tok->len = end - start;
@@ -117,18 +119,17 @@ static Token *new_token(TokenKind kind, char *start, char *end) {
   return tok;
 }
 
-// Read an identifier and returns a pointer pointing to the end
-// of an identifier.
-//
-// Returns null if p does not point to a valid identifier.
-static char *read_ident(char *p) {
+// Read an identifier and returns the length of it.
+// If p does not point to a valid identifier, 0 is returned.
+static int read_ident(char *start) {
+  char *p = start;
   uint32_t c = decode_utf8(&p, p);
-  if (!is_ident1(c)) return NULL;
+  if (!is_ident1(c)) return 0;
   for (;;) {
     char *q;
     c = decode_utf8(&q, p);
     if (!('a' <= c && c <= 'f') && !is_ident2(c)) {
-      return p;
+      return p - start;
     }
     p = q;
   }
@@ -138,6 +139,19 @@ static int from_hex(char c) {
   if ('0' <= c && c <= '9') return c - '0';
   if ('a' <= c && c <= 'f') return c - 'a' + 10;
   return c - 'A' + 10;
+}
+
+// Read a punctuator token from p and returns its length.
+static int read_punct(char *p) {
+  static char *kw[] = {"<<=", ">>=", "...", "==", "!=", "<=", ">=", "->",
+                       "+=",  "-=",  "*=",  "/=", "++", "--", "%=", "&=",
+                       "|=",  "^=",  "&&",  "||", "<<", ">>", "##"};
+  for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++) {
+    if (startswith(p, kw[i])) {
+      return strlen(kw[i]);
+    }
+  }
+  return ispunct(*p) ? 1 : 0;
 }
 
 static bool is_keyword(Token *tok) {
@@ -190,6 +204,17 @@ static int read_escaped_char(char **new_pos, char *p) {
     return c;
   }
   *new_pos = p + 1;
+  // Escape sequences are defined using themselves here. E.g.
+  // '\n' is implemented using '\n'. This tautological definition
+  // works because the compiler that compiles our compiler knows
+  // what '\n' actually is. In other words, we "inherit" the ASCII
+  // code of '\n' from the compiler that compiles our compiler,
+  // so we don't have to teach the actual code here.
+  //
+  // This fact has huge implications not only for the correctness
+  // of the compiler but also for the security of the generated code.
+  // For more info, read "Reflections on Trusting Trust" by Ken Thompson.
+  // https://github.com/rui314/chibicc/wiki/thompson1984.pdf
   switch (*p) {
     case 'a':
       return '\a';
@@ -217,7 +242,7 @@ static int read_escaped_char(char **new_pos, char *p) {
 static char *string_literal_end(char *p) {
   char *start = p;
   for (; *p != '"'; p++) {
-    if (*p == '\0') error_at(start, "unclosed string literal");
+    if (*p == '\n' || *p == '\0') error_at(start, "unclosed string literal");
     if (*p == '\\') p++;
   }
   return p;
@@ -225,7 +250,7 @@ static char *string_literal_end(char *p) {
 
 static Token *read_string_literal(char *start, char *quote) {
   char *end = string_literal_end(quote + 1);
-  char *buf = calloc(1, end - quote);
+  char *buf = calloc(2, end - quote);
   int len = 0;
   for (char *p = quote + 1; p < end;) {
     if (*p == '\\')
@@ -409,7 +434,7 @@ static void convert_pp_number(Token *tok) {
 void convert_pp_tokens(Token *tok) {
   for (Token *t = tok; t->kind != TK_EOF; t = t->next) {
     if (is_keyword(t))
-      t->kind = TK_RESERVED;
+      t->kind = TK_KEYWORD;
     else if (t->kind == TK_PP_NUM)
       convert_pp_number(t);
   }
@@ -546,34 +571,17 @@ Token *tokenize(File *file) {
       continue;
     }
     // Identifier or keyword
-    char *q;
-    if ((q = read_ident(p)) != NULL) {
-      cur = cur->next = new_token(TK_IDENT, p, q);
-      p = q;
+    int ident_len = read_ident(p);
+    if (ident_len) {
+      cur = cur->next = new_token(TK_IDENT, p, p + ident_len);
+      p += cur->len;
       continue;
     }
-    // Three-letter punctuators
-    if (LOOKINGAT(p, "<<=") || LOOKINGAT(p, ">>=") || LOOKINGAT(p, "...")) {
-      cur = cur->next = new_token(TK_RESERVED, p, p + 3);
-      p += 3;
-      continue;
-    }
-    // Two-letter punctuators
-    if (LOOKINGAT(p, "==") || LOOKINGAT(p, "!=") || LOOKINGAT(p, "<=") ||
-        LOOKINGAT(p, ">=") || LOOKINGAT(p, "->") || LOOKINGAT(p, "+=") ||
-        LOOKINGAT(p, "-=") || LOOKINGAT(p, "*=") || LOOKINGAT(p, "/=") ||
-        LOOKINGAT(p, "++") || LOOKINGAT(p, "--") || LOOKINGAT(p, "%=") ||
-        LOOKINGAT(p, "&=") || LOOKINGAT(p, "|=") || LOOKINGAT(p, "^=") ||
-        LOOKINGAT(p, "&&") || LOOKINGAT(p, "||") || LOOKINGAT(p, "<<") ||
-        LOOKINGAT(p, ">>") || LOOKINGAT(p, "##")) {
-      cur = cur->next = new_token(TK_RESERVED, p, p + 2);
-      p += 2;
-      continue;
-    }
-    // Single-letter punctuators
-    if (ispunct(*p)) {
-      cur = cur->next = new_token(TK_RESERVED, p, p + 1);
-      p++;
+    // Punctuators
+    int punct_len = read_punct(p);
+    if (punct_len) {
+      cur = cur->next = new_token(TK_PUNCT, p, p + punct_len);
+      p += cur->len;
       continue;
     }
     error_at(p, "invalid token");
@@ -665,6 +673,7 @@ static void remove_backslash_newline(char *p) {
       p[j++] = p[i++];
     }
   }
+  for (; n > 0; n--) p[j++] = '\n';
   p[j] = '\0';
 }
 
@@ -710,6 +719,11 @@ static void convert_universal_chars(char *p) {
 Token *tokenize_file(char *path) {
   char *p = read_file(path);
   if (!p) return NULL;
+  // UTF-8 texts may start with a 3-byte "BOM" marker sequence.
+  // If exists, just skip them because they are useless bytes.
+  // (It is actually not recommended to add BOM markers to UTF-8
+  // texts, but it's not uncommon particularly on Windows.)
+  if (!memcmp(p, "\xef\xbb\xbf", 3)) p += 3;
   canonicalize_newline(p);
   remove_backslash_newline(p);
   convert_universal_chars(p);

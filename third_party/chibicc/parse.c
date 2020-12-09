@@ -25,21 +25,13 @@ typedef struct Scope Scope;
 // Scope for local variables, global variables, typedefs
 // or enum constants
 typedef struct {
-  char *name;
-  int depth;
   Obj *var;
   Type *type_def;
   Type *enum_ty;
   int enum_val;
 } VarScope;
 
-// Scope for struct, union or enum tags
-typedef struct {
-  char *name;
-  int depth;
-  Type *ty;
-} TagScope;
-
+// Represents a block scope.
 struct Scope {
   Scope *next;
   // C has two block scopes; one is for variables/typedefs and
@@ -102,10 +94,6 @@ static Obj *locals;
 static Obj *globals;
 
 static Scope *scope = &(Scope){};
-
-// scope_depth is incremented by one at the beginning of a block
-// scope and decremented by one at the end of a block scope.
-static int scope_depth;
 
 // Points to the function object the parser is currently parsing.
 static Obj *current_fn;
@@ -173,12 +161,10 @@ static void enter_scope(void) {
   Scope *sc = calloc(1, sizeof(Scope));
   sc->next = scope;
   scope = sc;
-  scope_depth++;
 }
 
 static void leave_scope(void) {
   scope = scope->next;
-  scope_depth--;
 }
 
 // Find a variable by name.
@@ -190,16 +176,16 @@ static VarScope *find_var(Token *tok) {
   return NULL;
 }
 
-static TagScope *find_tag(Token *tok) {
+static Type *find_tag(Token *tok) {
   for (Scope *sc = scope; sc; sc = sc->next) {
-    TagScope *sc2 = hashmap_get2(&sc->tags, tok->loc, tok->len);
-    if (sc2) return sc2;
+    Type *ty = hashmap_get2(&sc->tags, tok->loc, tok->len);
+    if (ty) return ty;
   }
   return NULL;
 }
 
 Node *new_node(NodeKind kind, Token *tok) {
-  Node *node = calloc(1, sizeof(Node));
+  Node *node = alloc_node();
   node->kind = kind;
   node->tok = tok;
   return node;
@@ -252,7 +238,7 @@ static Node *new_vla_ptr(Obj *var, Token *tok) {
 
 Node *new_cast(Node *expr, Type *ty) {
   add_type(expr);
-  Node *node = calloc(1, sizeof(Node));
+  Node *node = alloc_node();
   node->kind = ND_CAST;
   node->tok = expr->tok;
   node->lhs = expr;
@@ -262,8 +248,6 @@ Node *new_cast(Node *expr, Type *ty) {
 
 static VarScope *push_scope(char *name) {
   VarScope *sc = calloc(1, sizeof(VarScope));
-  sc->name = name;
-  sc->depth = scope_depth;
   hashmap_put(&scope->vars, name, sc);
   return sc;
 }
@@ -303,7 +287,7 @@ static Initializer *new_initializer(Type *ty, bool is_flexible) {
 }
 
 static Obj *new_var(char *name, Type *ty) {
-  Obj *var = calloc(1, sizeof(Obj));
+  Obj *var = alloc_obj();
   var->name = name;
   var->ty = ty;
   var->align = ty->align;
@@ -330,9 +314,7 @@ static Obj *new_gvar(char *name, Type *ty) {
 
 static char *new_unique_name(void) {
   static int id = 0;
-  char *buf = calloc(1, 20);
-  sprintf(buf, ".L..%d", id++);
-  return buf;
+  return xasprintf(".L..%d", id++);
 }
 
 static Obj *new_anon_gvar(Type *ty) {
@@ -360,11 +342,7 @@ static Type *find_typedef(Token *tok) {
 }
 
 static void push_tag_scope(Token *tok, Type *ty) {
-  TagScope *sc = calloc(1, sizeof(TagScope));
-  sc->name = strndup(tok->loc, tok->len);
-  sc->depth = scope_depth;
-  sc->ty = ty;
-  hashmap_put2(&scope->tags, tok->loc, tok->len, sc);
+  hashmap_put2(&scope->tags, tok->loc, tok->len, ty);
 }
 
 // Consumes token if equal to STR or __STR__.
@@ -599,9 +577,14 @@ static Token *thing_attributes(Token *tok, void *arg) {
   error_tok(tok, "unknown function attribute");
 }
 
-// typespec = typename typename*
-// typename = "void" | "_Bool" | "char" | "short" | "int" | "long"
-//            | struct-decl | union-decl | typedef-name
+// declspec = ("void" | "_Bool" | "char" | "short" | "int" | "long"
+//             | "typedef" | "static" | "extern" | "inline"
+//             | "_Thread_local" | "__thread"
+//             | "signed" | "unsigned"
+//             | struct-decl | union-decl | typedef-name
+//             | enum-specifier | typeof-specifier
+//             | "const" | "volatile" | "auto" | "register" | "restrict"
+//             | "__restrict" | "__restrict__" | "_Noreturn")+
 //
 // The order of typenames in a type-specifier doesn't matter. For
 // example, `int long static` means the same as `static long int`.
@@ -614,7 +597,7 @@ static Token *thing_attributes(Token *tok, void *arg) {
 // while keeping the "current" type object that the typenames up
 // until that point represent. When we reach a non-typename token,
 // we returns the current type object.
-static Type *typespec(Token **rest, Token *tok, VarAttr *attr) {
+static Type *declspec(Token **rest, Token *tok, VarAttr *attr) {
   // We use a single integer as counters for all typenames.
   // For example, bits 0 and 1 represents how many times we saw the
   // keyword "void" so far. With this, we can use a switch statement
@@ -851,7 +834,7 @@ static Token *static_assertion(Token *tok) {
 }
 
 // func-params = ("void" | param ("," param)* ("," "...")?)? ")"
-// param       = typespec declarator
+// param       = declspec declarator
 static Type *func_params(Token **rest, Token *tok, Type *ty) {
   if (EQUAL(tok, "void") && EQUAL(tok->next, ")")) {
     *rest = tok->next->next;
@@ -868,7 +851,7 @@ static Type *func_params(Token **rest, Token *tok, Type *ty) {
       skip(tok, ')');
       break;
     }
-    Type *ty2 = typespec(&tok, tok, NULL);
+    Type *ty2 = declspec(&tok, tok, NULL);
     ty2 = declarator(&tok, tok, ty2);
     Token *name = ty2->name;
     if (ty2->kind == TY_ARRAY) {
@@ -935,8 +918,8 @@ static Type *declarator(Token **rest, Token *tok, Type *ty) {
   ty = pointers(&tok, tok, ty);
   if (EQUAL(tok, "(")) {
     Token *start = tok;
-    Type ignore = {};
-    declarator(&tok, tok->next, &ignore);
+    Type dummy = {};
+    declarator(&tok, start->next, &dummy);
     tok = skip(tok, ')');
     ty = type_suffix(rest, tok, ty);
     ty = declarator(&tok, start->next, ty);
@@ -959,8 +942,8 @@ static Type *abstract_declarator(Token **rest, Token *tok, Type *ty) {
   ty = pointers(&tok, tok, ty);
   if (EQUAL(tok, "(")) {
     Token *start = tok;
-    Type ignore = {};
-    abstract_declarator(&tok, tok->next, &ignore);
+    Type dummy = {};
+    abstract_declarator(&tok, start->next, &dummy);
     tok = skip(tok, ')');
     ty = type_suffix(rest, tok, ty);
     return abstract_declarator(&tok, start->next, ty);
@@ -968,9 +951,9 @@ static Type *abstract_declarator(Token **rest, Token *tok, Type *ty) {
   return type_suffix(rest, tok, ty);
 }
 
-// type-name = typespec abstract-declarator
+// type-name = declspec abstract-declarator
 static Type *typename(Token **rest, Token *tok) {
-  Type *ty = typespec(&tok, tok, NULL);
+  Type *ty = declspec(&tok, tok, NULL);
   return abstract_declarator(rest, tok, ty);
 }
 
@@ -1003,11 +986,11 @@ static Type *enum_specifier(Token **rest, Token *tok) {
     tok = tok->next;
   }
   if (tag && !EQUAL(tok, "{")) {
-    TagScope *sc = find_tag(tag);
-    if (!sc) error_tok(tag, "unknown enum type");
-    if (sc->ty->kind != TY_ENUM) error_tok(tag, "not an enum tag");
+    Type *ty = find_tag(tag);
+    if (!ty) error_tok(tag, "unknown enum type");
+    if (ty->kind != TY_ENUM) error_tok(tag, "not an enum tag");
     *rest = tok;
-    return sc->ty;
+    return ty;
   }
   tok = skip(tok, '{');
   // Read an enum-list.
@@ -1070,8 +1053,8 @@ static Node *new_alloca(Node *sz) {
   return node;
 }
 
-// declaration = typespec (declarator ("=" expr)? ("," declarator ("="
-// expr)?)*)? ";"
+// declaration = declspec (declarator ("=" expr)?
+//                         ("," declarator ("=" expr)?)*)? ";"
 static Node *declaration(Token **rest, Token *tok, Type *basety,
                          VarAttr *attr) {
   Node head = {};
@@ -1363,9 +1346,11 @@ static void struct_initializer1(Token **rest, Token *tok, Initializer *init) {
 // struct-initializer2 = initializer ("," initializer)*
 static void struct_initializer2(Token **rest, Token *tok, Initializer *init,
                                 Member *mem) {
+  bool first = true;
   for (; mem && !is_end(tok); mem = mem->next) {
     Token *start = tok;
-    if (mem != init->ty->members) tok = skip(tok, ',');
+    if (!first) tok = skip(tok, ',');
+    first = false;
     if (EQUAL(tok, "[") || EQUAL(tok, ".")) {
       *rest = start;
       return;
@@ -1389,6 +1374,7 @@ static void union_initializer(Token **rest, Token *tok, Initializer *init) {
   init->mem = init->ty->members;
   if (EQUAL(tok, "{")) {
     initializer2(&tok, tok->next, init->children[0]);
+    CONSUME(&tok, tok, ",");
     *rest = skip(tok, '}');
   } else {
     initializer2(rest, tok, init->children[0]);
@@ -1769,7 +1755,7 @@ static Node *stmt(Token **rest, Token *tok) {
     brk_label = node->brk_label = new_unique_name();
     cont_label = node->cont_label = new_unique_name();
     if (is_typename(tok)) {
-      Type *basety = typespec(&tok, tok, NULL);
+      Type *basety = declspec(&tok, tok, NULL);
       node->init = declaration(&tok, tok, basety, NULL);
     } else {
       node->init = expr_stmt(&tok, tok);
@@ -1872,7 +1858,7 @@ static Node *compound_stmt(Token **rest, Token *tok) {
   while (!EQUAL(tok, "}")) {
     if (is_typename(tok) && !EQUAL(tok->next, ":")) {
       VarAttr attr = {};
-      Type *basety = typespec(&tok, tok, &attr);
+      Type *basety = declspec(&tok, tok, &attr);
       if (attr.is_typedef) {
         tok = parse_typedef(tok, basety);
         continue;
@@ -2565,30 +2551,14 @@ static Node *mul(Token **rest, Token *tok) {
   }
 }
 
-// compound-literal = initializer "}"
-static Node *compound_literal(Token **rest, Token *tok, Type *ty,
-                              Token *start) {
-  if (scope_depth == 0) {
-    Obj *var = new_anon_gvar(ty);
-    gvar_initializer(rest, tok, var);
-    return new_var_node(var, start);
-  }
-  Obj *var = new_lvar(new_unique_name(), ty);
-  Node *lhs = lvar_initializer(rest, tok, var);
-  Node *rhs = new_var_node(var, tok);
-  return new_binary(ND_COMMA, lhs, rhs, tok);
-}
-
-// cast = "(" type-name ")" "{" compound-literal
-//      | "(" type-name ")" cast
-//      | unary
+// cast = "(" type-name ")" cast | unary
 static Node *cast(Token **rest, Token *tok) {
   if (EQUAL(tok, "(") && is_typename(tok->next)) {
     Token *start = tok;
     Type *ty = typename(&tok, tok->next);
     tok = skip(tok, ')');
     // compound literal
-    if (EQUAL(tok, "{")) return compound_literal(rest, tok, ty, start);
+    if (EQUAL(tok, "{")) return unary(rest, start);
     // type cast
     Node *node = new_cast(cast(rest, tok), ty);
     node->tok = start;
@@ -2612,9 +2582,10 @@ static Node *unary(Token **rest, Token *tok) {
     return new_unary(ND_ADDR, lhs, tok);
   }
   if (EQUAL(tok, "*")) {
-    // [C18 6.5.3.2p4] This is an oddity in the C spec, but dereferencing
-    // a function shouldn't do anything. If foo is a function, `*foo`,
-    // `**foo` or `*****foo` are all equivalent to just `foo`.
+    // [https://www.sigbus.info/n1570#6.5.3.2p4] This is an oddity
+    // in the C spec, but dereferencing a function shouldn't do
+    // anything. If foo is a function, `*foo`, `**foo` or `*****foo`
+    // are all equivalent to just `foo`.
     Node *node = cast(rest, tok->next);
     add_type(node);
     if (node->ty->kind == TY_FUNC) return node;
@@ -2640,14 +2611,14 @@ static Node *unary(Token **rest, Token *tok) {
   return postfix(rest, tok);
 }
 
-// struct-members = (typespec declarator (","  declarator)* ";")*
+// struct-members = (declspec declarator (","  declarator)* ";")*
 static void struct_members(Token **rest, Token *tok, Type *ty) {
   Member head = {};
   Member *cur = &head;
   int idx = 0;
   while (!EQUAL(tok, "}")) {
     VarAttr attr = {};
-    Type *basety = typespec(&tok, tok, &attr);
+    Type *basety = declspec(&tok, tok, &attr);
     bool first = true;
     // Anonymous struct member
     if ((basety->kind == TY_STRUCT || basety->kind == TY_UNION) &&
@@ -2708,8 +2679,8 @@ static Type *struct_union_decl(Token **rest, Token *tok) {
   }
   if (tag && !EQUAL(tok, "{")) {
     *rest = tok;
-    TagScope *sc = find_tag(tag);
-    if (sc) return sc->ty;
+    Type *ty2 = find_tag(tag);
+    if (ty2) return ty2;
     ty->size = -1;
     push_tag_scope(tag, ty);
     return ty;
@@ -2721,10 +2692,10 @@ static Type *struct_union_decl(Token **rest, Token *tok) {
   if (tag) {
     // If this is a redefinition, overwrite a previous type.
     // Otherwise, register the struct type.
-    TagScope *sc = find_tag(tag);
-    if (sc && sc->depth == scope_depth) {
-      *sc->ty = *ty;
-      return sc->ty;
+    Type *ty2 = hashmap_get2(&scope->tags, tag->loc, tag->len);
+    if (ty2) {
+      *ty2 = *ty;
+      return ty2;
     }
     push_tag_scope(tag, ty);
   }
@@ -2837,7 +2808,8 @@ static Node *new_inc_dec(Node *node, Token *tok, int addend) {
                   node->ty);
 }
 
-// postfix = ident "(" func-args ")" postfix-tail*
+// postfix = "(" type-name ")" "{" initializer-list "}"
+//         | ident "(" func-args ")" postfix-tail*
 //         | primary postfix-tail*
 //
 // postfix-tail = "[" expr "]"
@@ -2847,6 +2819,21 @@ static Node *new_inc_dec(Node *node, Token *tok, int addend) {
 //              | "++"
 //              | "--"
 static Node *postfix(Token **rest, Token *tok) {
+  if (EQUAL(tok, "(") && is_typename(tok->next)) {
+    // Compound literal
+    Token *start = tok;
+    Type *ty = typename(&tok, tok->next);
+    tok = skip(tok, ')');
+    if (scope->next == NULL) {
+      Obj *var = new_anon_gvar(ty);
+      gvar_initializer(rest, tok, var);
+      return new_var_node(var, start);
+    }
+    Obj *var = new_lvar("", ty);
+    Node *lhs = lvar_initializer(rest, tok, var);
+    Node *rhs = new_var_node(var, tok);
+    return new_binary(ND_COMMA, lhs, rhs, start);
+  }
   Node *node = primary(&tok, tok);
   for (;;) {
     if (EQUAL(tok, "(")) {
@@ -2961,7 +2948,7 @@ static Node *generic_selection(Token **rest, Token *tok) {
   return ret;
 }
 
-// primary = "(" "{" stmt stmt* "}" ")"
+// primary = "(" "{" stmt+ "}" ")"
 //         | "(" expr ")"
 //         | "sizeof" "(" type-name ")"
 //         | "sizeof" unary
@@ -3367,8 +3354,9 @@ static Token *function(Token *tok, Type *basety, VarAttr *attr) {
     fn->va_area = new_lvar("__va_area__", array_of(ty_char, 136));
   fn->alloca_bottom = new_lvar("__alloca_size__", pointer_to(ty_char));
   tok = skip(tok, '{');
-  // [C18 6.4.2.2] "__func__" is automatically defined as a
-  // local variable containing the current function name.
+  // [https://www.sigbus.info/n1570#6.4.2.2p1] "__func__" is
+  // automatically defined as a local variable containing the
+  // current function name.
   push_scope("__func__")->var =
       new_string_literal(fn->name, array_of(ty_char, strlen(fn->name) + 1));
   // [GNU] __FUNCTION__ is yet another name of __func__.
@@ -3401,7 +3389,7 @@ static Token *global_variable(Token *tok, Type *basety, VarAttr *attr) {
     if (attr->align) var->align = attr->align;
     if (EQUAL(tok, "=")) {
       gvar_initializer(&tok, tok->next, var);
-    } else if (!attr->is_extern) {
+    } else if (!attr->is_extern && !attr->is_tls) {
       var->is_tentative = true;
     }
   }
@@ -3537,7 +3525,7 @@ Obj *parse(Token *tok) {
     }
     VarAttr attr = {};
     tok = attribute_list(tok, &attr, thing_attributes);
-    Type *basety = typespec(&tok, tok, &attr);
+    Type *basety = declspec(&tok, tok, &attr);
     if (attr.is_typedef) {
       tok = parse_typedef(tok, basety);
       continue;

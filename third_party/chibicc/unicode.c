@@ -66,9 +66,9 @@ static bool in_range(uint32_t *range, uint32_t c) {
   return false;
 }
 
-// C11 allows not only ASCII but some multibyte characters in certan
-// Unicode ranges to be used in an identifier. See C11 Annex D for the
-// details.
+// [https://www.sigbus.info/n1570#D] C11 allows not only ASCII but
+// some multibyte characters in certan Unicode ranges to be used in an
+// identifier.
 //
 // This function returns true if a given character is acceptable as
 // the first character of an identifier.
@@ -108,7 +108,7 @@ bool is_ident2(uint32_t c) {
 
 // Returns the number of columns needed to display a given
 // string in a fixed-width font.
-int str_width(char *p, int len) {
+int display_width(char *p, int len) {
   char *start = p;
   int w = 0;
   while (p - start < len) {

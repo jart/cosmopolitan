@@ -445,6 +445,15 @@ int main() {
            };
            x.a;
          }));
+  ASSERT(1, ({
+           union {
+             int a;
+             char b;
+           } x = {
+               1,
+           };
+           x.a;
+         }));
   ASSERT(2, ({
            enum {
              x,

@@ -96,7 +96,7 @@ static Token *skip_line(Token *tok) {
 }
 
 static Token *copy_token(Token *tok) {
-  Token *t = calloc(1, sizeof(Token));
+  Token *t = alloc_token();
   *t = *tok;
   t->next = NULL;
   return t;
@@ -234,9 +234,8 @@ static Token *copy_line(Token **rest, Token *tok) {
 }
 
 static Token *new_num_token(int val, Token *tmpl) {
-  char buf[30];
-  sprintf(buf, "%d\n", val);
-  return tokenize(new_file(tmpl->file->name, tmpl->file->file_no, strdup(buf)));
+  char *buf = xasprintf("%d\n", val);
+  return tokenize(new_file(tmpl->file->name, tmpl->file->file_no, buf));
 }
 
 static Token *read_const_expr(Token **rest, Token *tok) {
@@ -270,10 +269,10 @@ static long eval_const_expr(Token **rest, Token *tok) {
   Token *expr = read_const_expr(rest, tok->next);
   expr = preprocess2(expr);
   if (expr->kind == TK_EOF) error_tok(start, "no expression");
-  // [C18 6.10.1.4] The standard requires we replace remaining
-  // non-macro identifiers with "0" before evaluating a constant
-  // expression. For example, `#if foo` is equivalent to `#if 0`
-  // if foo is not defined.
+  // [https://www.sigbus.info/n1570#6.10.1p4] The standard requires
+  // we replace remaining non-macro identifiers with "0" before
+  // evaluating a constant expression. For example, `#if foo` is
+  // equivalent to `#if 0` if foo is not defined.
   for (Token *t = expr; t->kind != TK_EOF; t = t->next) {
     if (t->kind == TK_IDENT) {
       Token *next = t->next;
@@ -453,8 +452,7 @@ static Token *stringize(Token *hash, Token *arg) {
 // Concatenate two tokens to create a new token.
 static Token *paste(Token *lhs, Token *rhs) {
   // Paste the two tokens.
-  char *buf = calloc(1, lhs->len + rhs->len + 1);
-  sprintf(buf, "%.*s%.*s", lhs->len, lhs->loc, rhs->len, rhs->loc);
+  char *buf = xasprintf("%.*s%.*s", lhs->len, lhs->loc, rhs->len, rhs->loc);
   // Tokenize the resulting string.
   Token *tok = tokenize(new_file(lhs->file->name, lhs->file->file_no, buf));
   if (tok->next->kind != TK_EOF)
@@ -706,7 +704,7 @@ static char *detect_include_guard(Token *tok) {
   return NULL;
 }
 
-static Token *include_file(Token *tok, char *path) {
+static Token *include_file(Token *tok, char *path, Token *filename_tok) {
   // Check for "#pragma once"
   if (hashmap_get(&pragma_once, path)) return tok;
   // If we read the same file before, and if the file was guarded
@@ -716,7 +714,8 @@ static Token *include_file(Token *tok, char *path) {
   char *guard_name = hashmap_get(&include_guards, path);
   if (guard_name && hashmap_get(&macros, guard_name)) return tok;
   Token *tok2 = tokenize_file(path);
-  if (!tok2) error_tok(tok, "%s: cannot open file: %s", path, strerror(errno));
+  if (!tok2)
+    error_tok(filename_tok, "%s: cannot open file: %s", path, strerror(errno));
   guard_name = detect_include_guard(tok2);
   if (guard_name) hashmap_put(&include_guards, path, guard_name);
   return append(tok2, tok);
@@ -760,19 +759,19 @@ static Token *preprocess2(Token *tok) {
         char *path =
             xasprintf("%s/%s", dirname(strdup(start->file->name)), filename);
         if (fileexists(path)) {
-          tok = include_file(tok, path);
+          tok = include_file(tok, path, start->next->next);
           continue;
         }
       }
       char *path = search_include_paths(filename);
-      tok = include_file(tok, path ? path : filename);
+      tok = include_file(tok, path ? path : filename, start->next->next);
       continue;
     }
     if (EQUAL(tok, "include_next")) {
       bool ignore;
       char *filename = read_include_filename(&tok, tok->next, &ignore);
       char *path = search_include_next(filename);
-      tok = include_file(tok, path ? path : filename);
+      tok = include_file(tok, path ? path : filename, start->next->next);
       continue;
     }
     if (EQUAL(tok, "define")) {
@@ -914,17 +913,13 @@ static char *format_date(struct tm *tm) {
       "Jan", "Feb", "Mar", "Apr", "May", "Jun",
       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
   };
-  char buf[30];
-  sprintf(buf, "\"%s %2d %d\"", mon[tm->tm_mon], tm->tm_mday,
-          tm->tm_year + 1900);
-  return strdup(buf);
+  return xasprintf("\"%s %2d %d\"", mon[tm->tm_mon], tm->tm_mday,
+                   tm->tm_year + 1900);
 }
 
 // __TIME__ is expanded to the current time, e.g. "13:34:03".
 static char *format_time(struct tm *tm) {
-  char buf[30];
-  sprintf(buf, "\"%02d:%02d:%02d\"", tm->tm_hour, tm->tm_min, tm->tm_sec);
-  return strdup(buf);
+  return xasprintf("\"%02d:%02d:%02d\"", tm->tm_hour, tm->tm_min, tm->tm_sec);
 }
 
 void init_macros(void) {
@@ -1302,11 +1297,11 @@ static void join_adjacent_string_literals(Token *tok) {
   }
   // Second pass: concatenate adjacent string literals.
   for (Token *tok1 = tok; tok1->kind != TK_EOF;) {
-    Token *tok2 = tok1->next;
-    if (tok1->kind != TK_STR || tok2->kind != TK_STR) {
+    if (tok1->kind != TK_STR || tok1->next->kind != TK_STR) {
       tok1 = tok1->next;
       continue;
     }
+#if 0
     assert(tok1->ty->base->size == tok2->ty->base->size);
     Token *t = copy_token(tok1);
     t->ty =
@@ -1317,6 +1312,25 @@ static void join_adjacent_string_literals(Token *tok) {
            tok2->str, tok2->ty->size);
     t->len = strlen(t->loc);
     *tok1 = *t;
+#else
+    Token *tok2 = tok1->next;
+    while (tok2->kind == TK_STR) tok2 = tok2->next;
+    int len = tok1->ty->array_len;
+    for (Token *t = tok1->next; t != tok2; t = t->next) {
+      len = len + t->ty->array_len - 1;
+    }
+    char *buf = calloc(tok1->ty->base->size, len);
+    int i = 0;
+    for (Token *t = tok1; t != tok2; t = t->next) {
+      memcpy(buf + i, t->str, t->ty->size);
+      i = i + t->ty->size - t->ty->base->size;
+    }
+    *tok1 = *copy_token(tok1);
+    tok1->ty = array_of(tok1->ty->base, len);
+    tok1->str = buf;
+    tok1->next = tok2;
+    tok1 = tok2;
+#endif
   }
 }
 
