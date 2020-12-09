@@ -17,14 +17,16 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "libc/runtime/interruptiblecall.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/sig.h"
 
 struct InterruptibleCall icall;
 
-static intptr_t peek(intptr_t *addr) { return *addr; }
+static intptr_t peek(intptr_t *addr) {
+  return *addr;
+}
 
 int main(int argc, char *argv[]) {
   int i;

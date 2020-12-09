@@ -22,7 +22,7 @@
 #include "libc/calls/hefty/ntspawn.h"
 #include "libc/calls/hefty/spawn.h"
 #include "libc/calls/internal.h"
-#include "libc/conv/itoa.h"
+#include "libc/fmt/itoa.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/enum/startf.h"

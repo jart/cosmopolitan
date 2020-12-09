@@ -25,27 +25,26 @@ TOOL_VIZ_LIB_A_OBJS =					\
 	$(TOOL_VIZ_LIB_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
 TOOL_VIZ_LIB_A_DIRECTDEPS =				\
-	DSP_TTY						\
 	DSP_CORE					\
 	DSP_SCALE					\
-	LIBC_INTRIN					\
+	DSP_TTY						\
 	LIBC_ALG					\
 	LIBC_BITS					\
 	LIBC_CALLS					\
-	LIBC_CONV					\
 	LIBC_FMT					\
-	LIBC_SYSV					\
-	LIBC_UNICODE					\
-	LIBC_TESTLIB					\
+	LIBC_INTRIN					\
+	LIBC_LOG					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
 	LIBC_RUNTIME					\
-	LIBC_LOG					\
+	LIBC_STDIO					\
+	LIBC_STR					\
+	LIBC_STUBS					\
+	LIBC_SYSV					\
+	LIBC_TESTLIB					\
 	LIBC_TIME					\
 	LIBC_TINYMATH					\
-	LIBC_STDIO					\
-	LIBC_STUBS					\
-	LIBC_STR					\
+	LIBC_UNICODE					\
 	LIBC_X						\
 	THIRD_PARTY_AVIR				\
 	THIRD_PARTY_GDTOA				\

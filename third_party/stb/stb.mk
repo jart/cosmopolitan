@@ -28,18 +28,17 @@ THIRD_PARTY_STB_A_OBJS =				\
 THIRD_PARTY_STB_A_DIRECTDEPS =				\
 	DSP_CORE					\
 	LIBC_ALG					\
-	LIBC_FMT					\
-	LIBC_STDIO					\
 	LIBC_BITS					\
-	LIBC_CONV					\
+	LIBC_FMT					\
+	LIBC_LOG					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
-	LIBC_TINYMATH					\
 	LIBC_RUNTIME					\
+	LIBC_STDIO					\
 	LIBC_STR					\
-	LIBC_LOG					\
-	LIBC_X						\
 	LIBC_STUBS					\
+	LIBC_TINYMATH					\
+	LIBC_X						\
 	THIRD_PARTY_ZLIB
 
 THIRD_PARTY_STB_A_DEPS :=				\

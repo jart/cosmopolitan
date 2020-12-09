@@ -7,7 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/conv/itoa.h"
+#include "libc/fmt/itoa.h"
 #include "libc/math.h"
 #include "libc/stdio/stdio.h"
 

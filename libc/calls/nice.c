@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "libc/sysv/consts/prio.h"
 
 static int clamp(int p) {

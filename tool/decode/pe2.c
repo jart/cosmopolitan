@@ -20,7 +20,7 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "libc/nt/struct/imagedosheader.internal.h"
 #include "libc/nt/struct/imagentheaders.internal.h"
 #include "libc/nt/struct/imageoptionalheader.internal.h"

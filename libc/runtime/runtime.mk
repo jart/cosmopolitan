@@ -34,15 +34,11 @@ LIBC_RUNTIME_A_CHECKS =					\
 	$(LIBC_RUNTIME_A_HDRS:%=o/$(MODE)/%.ok)
 
 LIBC_RUNTIME_A_DIRECTDEPS =				\
-	LIBC_BITS					\
 	LIBC_CALLS					\
-	LIBC_CONV					\
-	LIBC_TINYMATH					\
 	LIBC_ELF					\
 	LIBC_FMT					\
 	LIBC_NEXGEN32E					\
 	LIBC_NT_KERNELBASE				\
-	LIBC_RAND					\
 	LIBC_STR					\
 	LIBC_STUBS					\
 	LIBC_SYSV					\

@@ -28,11 +28,17 @@ program_invocation_short_name:
 	.previous
 
 	.init.start 400,_init_program_invocation_short_name
-	push	%rdi
 	push	%rsi
-	mov	(%r13),%rdi
-	call	basename
+	mov	(%r13),%rsi
+	mov	%rsi,%rcx
+1:	lodsb
+	cmp	$'/,%al
+	cmoveq	%rsi,%rcx
+	cmp	$'\\,%al
+	cmoveq	%rsi,%rcx
+	test	%al,%al
+	jnz	1b
+	xchg	%rcx,%rax
 	pop	%rsi
-	pop	%rdi
 	stosq
 	.init.end 400,_init_program_invocation_short_name

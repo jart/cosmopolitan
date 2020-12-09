@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
-#include "libc/conv/itoa.h"
+#include "libc/fmt/itoa.h"
 #include "libc/runtime/gc.h"
 #include "libc/str/str.h"
 #include "libc/unicode/unicode.h"

@@ -31,7 +31,7 @@
 #include "libc/str/str.h"
 #include "libc/mem/mem.h"
 #include "libc/fmt/fmt.h"
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "flexdef.h"
 
 

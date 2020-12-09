@@ -104,7 +104,6 @@ include ape/lib/apelib.mk			# │
 include ape/ape.mk				#─┘
 include libc/sysv/sysv.mk			#─┐
 include libc/nt/nt.mk				# ├──system
-include libc/conv/conv.mk			# │
 include libc/fmt/fmt.mk				# │
 include libc/rand/rand.mk			#─┘
 include libc/calls/calls.mk			#─┐
@@ -186,7 +185,6 @@ include test/libc/dns/test.mk
 include test/libc/rand/test.mk
 include test/libc/time/test.mk
 include test/libc/stdio/test.mk
-include test/libc/conv/test.mk
 include test/libc/release/test.mk
 include test/libc/test.mk
 include test/ape/lib/test.mk
@@ -251,7 +249,6 @@ COSMOPOLITAN_OBJECTS =		\
 	LIBC_BITS		\
 	LIBC_CALLS		\
 	LIBC_CALLS_HEFTY	\
-	LIBC_CONV		\
 	LIBC_CRYPTO		\
 	LIBC_DNS		\
 	LIBC_ELF		\
@@ -286,7 +283,6 @@ COSMOPOLITAN_HEADERS =		\
 	LIBC_ALG		\
 	LIBC_BITS		\
 	LIBC_CALLS		\
-	LIBC_CONV		\
 	LIBC_CRYPTO		\
 	LIBC_DNS		\
 	LIBC_ELF		\

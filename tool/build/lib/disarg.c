@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
-#include "libc/conv/itoa.h"
+#include "libc/fmt/itoa.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/macros.h"

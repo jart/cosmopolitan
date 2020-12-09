@@ -21,7 +21,7 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "libc/macho.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"

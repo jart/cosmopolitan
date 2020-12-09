@@ -42,7 +42,7 @@
 #include "libc/mem/mem.h"
 #include "libc/fmt/fmt.h"
 #include "libc/math.h"
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "flexdef.h"
 
 /* Take note: The buffer object is sometimes used as a String buffer (one

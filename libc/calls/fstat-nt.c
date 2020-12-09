@@ -20,7 +20,7 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/fileinfobyhandleclass.h"
 #include "libc/nt/enum/filetype.h"

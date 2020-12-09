@@ -21,7 +21,7 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "libc/log/check.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"

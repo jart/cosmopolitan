@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"

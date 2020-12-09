@@ -42,7 +42,6 @@ THIRD_PARTY_CHIBICC_A_DIRECTDEPS =					\
 	LIBC_BITS							\
 	LIBC_CALLS							\
 	LIBC_CALLS_HEFTY						\
-	LIBC_CONV							\
 	LIBC_FMT							\
 	LIBC_LOG							\
 	LIBC_MEM							\

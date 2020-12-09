@@ -23,14 +23,13 @@ TOOL_NET_DIRECTDEPS =						\
 	LIBC_BITS						\
 	LIBC_CALLS						\
 	LIBC_CALLS_HEFTY					\
-	LIBC_CONV						\
 	LIBC_DNS						\
-	LIBC_RAND						\
 	LIBC_FMT						\
 	LIBC_LOG						\
 	LIBC_LOG_ASAN						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
+	LIBC_RAND						\
 	LIBC_RUNTIME						\
 	LIBC_SOCK						\
 	LIBC_STDIO						\

@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "libc/sysv/consts/prio.h"
 #include "libc/sysv/errfuns.h"
 

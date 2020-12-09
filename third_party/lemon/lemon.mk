@@ -22,7 +22,6 @@ THIRD_PARTY_LEMON_LINK =					\
 THIRD_PARTY_LEMON_DIRECTDEPS =					\
 	LIBC_ALG						\
 	LIBC_CALLS						\
-	LIBC_CONV						\
 	LIBC_FMT						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\

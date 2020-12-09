@@ -20,7 +20,7 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/termios.h"
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/termios.h"

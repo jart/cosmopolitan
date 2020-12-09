@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
-#include "libc/conv/itoa.h"
+#include "libc/fmt/itoa.h"
 #include "tool/viz/lib/formatstringtable.h"
 
 void *FormatStringTableAsCode(long yn, long xn, const char *const T[yn][xn],

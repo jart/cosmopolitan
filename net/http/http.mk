@@ -30,7 +30,6 @@ NET_HTTP_A_CHECKS =				\
 NET_HTTP_A_DIRECTDEPS =				\
 	LIBC_ALG				\
 	LIBC_CALLS				\
-	LIBC_CONV				\
 	LIBC_FMT				\
 	LIBC_LOG				\
 	LIBC_LOG_ASAN				\

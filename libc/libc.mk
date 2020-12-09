@@ -11,7 +11,6 @@ LIBC_CHECKS = $(LIBC_HDRS:%=o/$(MODE)/%.ok)
 o/$(MODE)/libc:	o/$(MODE)/libc/alg		\
 		o/$(MODE)/libc/bits		\
 		o/$(MODE)/libc/calls		\
-		o/$(MODE)/libc/conv		\
 		o/$(MODE)/libc/crt		\
 		o/$(MODE)/libc/dns		\
 		o/$(MODE)/libc/elf		\

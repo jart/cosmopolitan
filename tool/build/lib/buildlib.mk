@@ -27,27 +27,26 @@ TOOL_BUILD_LIB_A_OBJS =					\
 TOOL_BUILD_LIB_A_DIRECTDEPS =				\
 	LIBC_ALG					\
 	LIBC_BITS					\
-	LIBC_CONV					\
 	LIBC_CALLS					\
 	LIBC_CALLS_HEFTY				\
 	LIBC_ELF					\
 	LIBC_FMT					\
+	LIBC_INTRIN					\
+	LIBC_LOG					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
+	LIBC_RAND					\
 	LIBC_RUNTIME					\
+	LIBC_SOCK					\
+	LIBC_STDIO					\
+	LIBC_STR					\
 	LIBC_STUBS					\
-	LIBC_INTRIN					\
 	LIBC_SYSV					\
 	LIBC_SYSV_CALLS					\
 	LIBC_TIME					\
-	LIBC_LOG					\
-	LIBC_RAND					\
-	LIBC_STR					\
-	LIBC_SOCK					\
-	LIBC_UNICODE					\
-	LIBC_STDIO					\
-	LIBC_X						\
 	LIBC_TINYMATH					\
+	LIBC_UNICODE					\
+	LIBC_X						\
 	THIRD_PARTY_COMPILER_RT				\
 	THIRD_PARTY_XED
 

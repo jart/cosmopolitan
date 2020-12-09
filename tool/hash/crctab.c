@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "libc/macros.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/runtime.h"

@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"

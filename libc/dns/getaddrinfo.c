@@ -19,10 +19,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/conv/conv.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/hoststxt.h"
 #include "libc/dns/resolvconf.h"
+#include "libc/fmt/conv.h"
 #include "libc/mem/mem.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"

@@ -21,7 +21,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/kntprioritycombos.internal.h"
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "libc/nexgen32e/ffs.h"
 #include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/enum/threadpriority.h"

@@ -38,7 +38,7 @@
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/paland.inc"
 #include "libc/fmt/palandprintf.internal.h"

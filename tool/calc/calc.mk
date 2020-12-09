@@ -27,16 +27,15 @@ TOOL_CALC_CHECKS =				\
 TOOL_CALC_DIRECTDEPS =				\
 	LIBC_BITS				\
 	LIBC_CALLS				\
-	LIBC_CONV				\
-	LIBC_LOG				\
 	LIBC_FMT				\
+	LIBC_LOG				\
 	LIBC_MEM				\
 	LIBC_NEXGEN32E				\
 	LIBC_RAND				\
 	LIBC_RUNTIME				\
 	LIBC_STDIO				\
-	LIBC_STUBS				\
 	LIBC_STR				\
+	LIBC_STUBS				\
 	LIBC_SYSV				\
 	LIBC_TINYMATH				\
 	LIBC_X					\

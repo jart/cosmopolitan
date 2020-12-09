@@ -39,7 +39,7 @@
 
 #include "flexdef.h"
 #include "libc/str/str.h"
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/str/str.h"

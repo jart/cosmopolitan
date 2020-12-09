@@ -60,7 +60,6 @@ THIRD_PARTY_LEX_DIRECTDEPS =				\
 	LIBC_ALG					\
 	LIBC_CALLS					\
 	LIBC_CALLS_HEFTY				\
-	LIBC_CONV					\
 	LIBC_FMT					\
 	LIBC_LOG					\
 	LIBC_MATH					\

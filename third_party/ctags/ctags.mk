@@ -15,17 +15,16 @@ THIRD_PARTY_CTAGS_CHECKS =					\
 THIRD_PARTY_CTAGS_DIRECTDEPS =					\
 	LIBC_CALLS						\
 	LIBC_CALLS_HEFTY					\
-	LIBC_CONV						\
-	LIBC_RUNTIME						\
-	LIBC_MEM						\
 	LIBC_FMT						\
 	LIBC_LOG						\
-	LIBC_TIME						\
-	LIBC_SYSV						\
+	LIBC_MEM						\
+	LIBC_NEXGEN32E						\
+	LIBC_RUNTIME						\
+	LIBC_STDIO						\
 	LIBC_STR						\
 	LIBC_STUBS						\
-	LIBC_STDIO						\
-	LIBC_NEXGEN32E						\
+	LIBC_SYSV						\
+	LIBC_TIME						\
 	LIBC_UNICODE						\
 	THIRD_PARTY_MUSL					\
 	THIRD_PARTY_REGEX

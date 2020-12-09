@@ -20,7 +20,7 @@
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"

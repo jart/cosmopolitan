@@ -20,7 +20,7 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/conv/itoa.h"
+#include "libc/fmt/itoa.h"
 #include "libc/log/asan.internal.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/log.h"

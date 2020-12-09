@@ -38,7 +38,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/log/bsd.h"
 #include "libc/limits.h"
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"

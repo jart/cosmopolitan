@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 
 STATIC_YOINK("ntoa");

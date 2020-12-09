@@ -1301,18 +1301,6 @@ static void join_adjacent_string_literals(Token *tok) {
       tok1 = tok1->next;
       continue;
     }
-#if 0
-    assert(tok1->ty->base->size == tok2->ty->base->size);
-    Token *t = copy_token(tok1);
-    t->ty =
-        array_of(tok1->ty->base, tok1->ty->array_len + tok2->ty->array_len - 1);
-    t->str = calloc(1, t->ty->size);
-    t->next = tok2->next;
-    memcpy(mempcpy(t->str, tok1->str, tok1->ty->size - tok1->ty->base->size),
-           tok2->str, tok2->ty->size);
-    t->len = strlen(t->loc);
-    *tok1 = *t;
-#else
     Token *tok2 = tok1->next;
     while (tok2->kind == TK_STR) tok2 = tok2->next;
     int len = tok1->ty->array_len;
@@ -1330,7 +1318,6 @@ static void join_adjacent_string_literals(Token *tok) {
     tok1->str = buf;
     tok1->next = tok2;
     tok1 = tok2;
-#endif
   }
 }
 

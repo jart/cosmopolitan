@@ -21,7 +21,6 @@ TEST_LIBC_FMT_CHECKS =					\
 TEST_LIBC_FMT_DIRECTDEPS =				\
 	LIBC_ALG					\
 	LIBC_CALLS_HEFTY				\
-	LIBC_CONV					\
 	LIBC_FMT					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
@@ -54,6 +53,10 @@ o/$(MODE)/test/libc/fmt/%.com.dbg:			\
 	@$(APELINK)
 
 $(TEST_LIBC_FMT_OBJS): test/libc/fmt/test.mk
+
+$(TEST_LIBC_FMT_OBJS):					\
+	DEFAULT_CCFLAGS +=				\
+		-fno-builtin
 
 .PHONY: o/$(MODE)/test/libc/fmt
 o/$(MODE)/test/libc/fmt:				\

@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_STR_STRCMP8TO16I_H_
 #define COSMOPOLITAN_LIBC_STR_STRCMP8TO16I_H_
-#include "libc/conv/conv.h"
+#include "libc/fmt/conv.h"
 #include "libc/macros.h"
 #include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"

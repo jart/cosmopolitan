@@ -17,8 +17,8 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/conv/itoa.h"
 #include "libc/errno.h"
+#include "libc/fmt/itoa.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
