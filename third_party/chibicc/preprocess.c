@@ -253,7 +253,7 @@ static Token *read_const_expr(Token **rest, Token *tok) {
         error_tok(start, "macro name must be an identifier");
       Macro *m = find_macro(tok);
       tok = tok->next;
-      if (has_paren) tok = skip(tok, ")");
+      if (has_paren) tok = skip(tok, ')');
       cur = cur->next = new_num_token(m ? 1 : 0, start);
       continue;
     }
@@ -318,16 +318,16 @@ static MacroParam *read_macro_params(Token **rest, Token *tok,
   MacroParam head = {};
   MacroParam *cur = &head;
   while (!EQUAL(tok, ")")) {
-    if (cur != &head) tok = skip(tok, ",");
+    if (cur != &head) tok = skip(tok, ',');
     if (EQUAL(tok, "...")) {
       *va_args_name = "__VA_ARGS__";
-      *rest = skip(tok->next, ")");
+      *rest = skip(tok->next, ')');
       return head.next;
     }
     if (tok->kind != TK_IDENT) error_tok(tok, "expected an identifier");
     if (EQUAL(tok->next, "...")) {
       *va_args_name = strndup(tok->loc, tok->len);
-      *rest = skip(tok->next->next, ")");
+      *rest = skip(tok->next->next, ')');
       return head.next;
     }
     MacroParam *m = calloc(1, sizeof(MacroParam));
@@ -386,7 +386,7 @@ static MacroArg *read_macro_args(Token **rest, Token *tok, MacroParam *params,
   MacroArg *cur = &head;
   MacroParam *pp = params;
   for (; pp; pp = pp->next) {
-    if (cur != &head) tok = skip(tok, ",");
+    if (cur != &head) tok = skip(tok, ',');
     cur = cur->next = read_macro_arg_one(&tok, tok, false);
     cur->name = pp->name;
   }
@@ -396,25 +396,27 @@ static MacroArg *read_macro_args(Token **rest, Token *tok, MacroParam *params,
       arg = calloc(1, sizeof(MacroArg));
       arg->tok = new_eof(tok);
     } else {
-      if (pp != params) tok = skip(tok, ",");
+      if (pp != params) tok = skip(tok, ',');
       arg = read_macro_arg_one(&tok, tok, true);
     }
     arg->name = va_args_name;
-    ;
     arg->is_va_args = true;
     cur = cur->next = arg;
   } else if (pp) {
     error_tok(start, "too many arguments");
   }
-  skip(tok, ")");
+  skip(tok, ')');
   *rest = tok;
   return head.next;
 }
 
 static MacroArg *find_arg(MacroArg *args, Token *tok) {
-  for (MacroArg *ap = args; ap; ap = ap->next)
-    if (tok->len == strlen(ap->name) && !strncmp(tok->loc, ap->name, tok->len))
+  for (MacroArg *ap = args; ap; ap = ap->next) {
+    if (tok->len == strlen(ap->name) &&
+        !strncmp(tok->loc, ap->name, tok->len)) {
       return ap;
+    }
+  }
   return NULL;
 }
 
@@ -543,7 +545,7 @@ static Token *subst(Token *tok, MacroArg *args) {
       if (has_varargs(args))
         for (Token *t = arg->tok; t->kind != TK_EOF; t = t->next)
           cur = cur->next = t;
-      tok = skip(tok, ")");
+      tok = skip(tok, ')');
       continue;
     }
     // Handle a macro token. Macro arguments are completely macro-expanded
@@ -932,11 +934,11 @@ __chibicc__\000\
 __cosmopolitan__\000\
 1\000\
 __GNUC__\000\
-6\000\
+9\000\
 __GNUC_MINOR__\000\
-6\000\
+0\000\
 __GNUC_PATCHLEVEL__\000\
-6\000\
+0\000\
 __NO_INLINE__\000\
 16\000\
 __BIGGEST_ALIGNMENT__\000\
@@ -1289,9 +1291,13 @@ static void join_adjacent_string_literals(Token *tok) {
                   "unsupported non-standard concatenation of string literals");
       }
     }
-    if (basety->size > 1)
-      for (Token *t = tok1; t->kind == TK_STR; t = t->next)
-        if (t->ty->base->size == 1) *t = *tokenize_string_literal(t, basety);
+    if (basety->size > 1) {
+      for (Token *t = tok1; t->kind == TK_STR; t = t->next) {
+        if (t->ty->base->size == 1) {
+          *t = *tokenize_string_literal(t, basety);
+        }
+      }
+    }
     while (tok1->kind == TK_STR) tok1 = tok1->next;
   }
   // Second pass: concatenate adjacent string literals.
@@ -1307,10 +1313,9 @@ static void join_adjacent_string_literals(Token *tok) {
         array_of(tok1->ty->base, tok1->ty->array_len + tok2->ty->array_len - 1);
     t->str = calloc(1, t->ty->size);
     t->next = tok2->next;
-    int i = 0;
-    for (int j = 0; j < tok1->ty->size - tok1->ty->base->size; i++, j++)
-      t->str[i] = tok1->str[j];
-    for (int j = 0; j < tok2->ty->size; i++, j++) t->str[i] = tok2->str[j];
+    memcpy(mempcpy(t->str, tok1->str, tok1->ty->size - tok1->ty->base->size),
+           tok2->str, tok2->ty->size);
+    t->len = strlen(t->loc);
     *tok1 = *t;
   }
 }

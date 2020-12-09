@@ -59,10 +59,7 @@ cescapec:
 #ifdef __STRICT_ANSI__
 .LQM:	mov	$'?',%ah
 	ret
-.LESC:
-#elif defined(__GNUC__)
-.LESC:	mov	$'e',%ah
-	ret
+#else
 .LQM:
 #endif
 1:	mov	%edi,%eax
@@ -91,9 +88,7 @@ cescapectab.ro:
 	.byte	1,.LVT-.Lanchorpoint
 	.byte	1,.LFF-.Lanchorpoint
 	.byte	1,.LCR-.Lanchorpoint
-	.byte	0x1b-'\r-1,1b-.Lanchorpoint
-	.byte	1,.LESC-.Lanchorpoint
-	.byte	'\"-0x1b-1,1b-.Lanchorpoint
+	.byte	'\"-'\r-1,1b-.Lanchorpoint
 	.byte	1,.LDQ-.Lanchorpoint
 	.byte	'\'-'\"-1,1b-.Lanchorpoint
 	.byte	1,.LSQ-.Lanchorpoint

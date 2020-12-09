@@ -126,11 +126,11 @@ static Obj *builtin_alloca;
 
 static Initializer *initializer(Token **, Token *, Type *, Type **);
 static Member *get_struct_member(Type *, Token *);
-static Node * bitor (Token **, Token *);
+static Node *binor(Token **, Token *);
 static Node *add(Token **, Token *);
 static Node *assign(Token **, Token *);
-static Node *bitand(Token **, Token *);
-static Node *bitxor(Token **, Token *);
+static Node *binand(Token **, Token *);
+static Node *binxor(Token **, Token *);
 static Node *cast(Token **, Token *);
 static Node *compound_stmt(Token **, Token *);
 static Node *conditional(Token **, Token *);
@@ -277,8 +277,9 @@ static Initializer *new_initializer(Type *ty, bool is_flexible) {
       return init;
     }
     init->children = calloc(ty->array_len, sizeof(Initializer *));
-    for (int i = 0; i < ty->array_len; i++)
+    for (int i = 0; i < ty->array_len; i++) {
       init->children[i] = new_initializer(ty->base, false);
+    }
     return init;
   }
   if (ty->kind == TY_STRUCT || ty->kind == TY_UNION) {
@@ -383,15 +384,15 @@ static bool consume_attribute(Token **rest, Token *tok, char *name) {
 static Token *attribute_list(Token *tok, void *arg,
                              Token *(*f)(Token *, void *)) {
   while (CONSUME(&tok, tok, "__attribute__")) {
-    tok = skip(tok, "(");
-    tok = skip(tok, "(");
+    tok = skip(tok, '(');
+    tok = skip(tok, '(');
     bool first = true;
     while (!CONSUME(&tok, tok, ")")) {
-      if (!first) tok = skip(tok, ",");
+      if (!first) tok = skip(tok, ',');
       first = false;
       tok = f(tok, arg);
     }
-    tok = skip(tok, ")");
+    tok = skip(tok, ')');
   }
   return tok;
 }
@@ -408,14 +409,14 @@ static Token *type_attributes(Token *tok, void *arg) {
       Token *altok = tok;
       ty->align = const_expr(&tok, tok);
       if (popcnt(ty->align) != 1) error_tok(altok, "must be two power");
-      tok = skip(tok, ")");
+      tok = skip(tok, ')');
     } else {
       ty->align = 16; /* biggest alignment */
     }
     return tok;
   }
   if (consume_attribute(&tok, tok, "vector_size")) {
-    tok = skip(tok, "(");
+    tok = skip(tok, '(');
     int vs = const_expr(&tok, tok);
     if (vs != 16) {
       error_tok(tok, "only vector_size 16 supported");
@@ -427,12 +428,12 @@ static Token *type_attributes(Token *tok, void *arg) {
       /* ty->base = ty; */
       /* ty->array_len = vs / ty->size; */
     }
-    return skip(tok, ")");
+    return skip(tok, ')');
   }
   if (consume_attribute(&tok, tok, "warn_if_not_aligned")) {
-    tok = skip(tok, "(");
+    tok = skip(tok, '(');
     const_expr(&tok, tok);
-    return skip(tok, ")");
+    return skip(tok, ')');
   }
   if (consume_attribute(&tok, tok, "deprecated") ||
       consume_attribute(&tok, tok, "may_alias") ||
@@ -443,7 +444,7 @@ static Token *type_attributes(Token *tok, void *arg) {
       consume_attribute(&tok, tok, "alloc_align")) {
     if (CONSUME(&tok, tok, "(")) {
       const_expr(&tok, tok);
-      tok = skip(tok, ")");
+      tok = skip(tok, ')');
     }
     return tok;
   }
@@ -465,9 +466,9 @@ static Token *thing_attributes(Token *tok, void *arg) {
     return tok;
   }
   if (consume_attribute(&tok, tok, "section")) {
-    tok = skip(tok, "(");
+    tok = skip(tok, '(');
     attr->section = ConsumeStringLiteral(&tok, tok);
-    return skip(tok, ")");
+    return skip(tok, ')');
   }
   if (consume_attribute(&tok, tok, "noreturn")) {
     attr->is_noreturn = true;
@@ -478,9 +479,9 @@ static Token *thing_attributes(Token *tok, void *arg) {
     return tok;
   }
   if (consume_attribute(&tok, tok, "visibility")) {
-    tok = skip(tok, "(");
+    tok = skip(tok, '(');
     attr->visibility = ConsumeStringLiteral(&tok, tok);
-    return skip(tok, ")");
+    return skip(tok, ')');
   }
   if (consume_attribute(&tok, tok, "externally_visible")) {
     attr->is_externally_visible = true;
@@ -490,7 +491,7 @@ static Token *thing_attributes(Token *tok, void *arg) {
     attr->is_constructor = true;
     if (CONSUME(&tok, tok, "(")) {
       const_expr(&tok, tok);
-      tok = skip(tok, ")");
+      tok = skip(tok, ')');
     }
     return tok;
   }
@@ -498,7 +499,7 @@ static Token *thing_attributes(Token *tok, void *arg) {
     attr->is_destructor = true;
     if (CONSUME(&tok, tok, "(")) {
       const_expr(&tok, tok);
-      tok = skip(tok, ")");
+      tok = skip(tok, ')');
     }
     return tok;
   }
@@ -508,22 +509,22 @@ static Token *thing_attributes(Token *tok, void *arg) {
       Token *altok = tok;
       attr->align = const_expr(&tok, tok);
       if (popcnt(attr->align) != 1) error_tok(altok, "must be two power");
-      tok = skip(tok, ")");
+      tok = skip(tok, ')');
     } else {
       attr->align = 16; /* biggest alignment */
     }
     return tok;
   }
   if (consume_attribute(&tok, tok, "warn_if_not_aligned")) {
-    tok = skip(tok, "(");
+    tok = skip(tok, '(');
     const_expr(&tok, tok);
-    return skip(tok, ")");
+    return skip(tok, ')');
   }
   if (consume_attribute(&tok, tok, "error") ||
       consume_attribute(&tok, tok, "warning")) {
-    tok = skip(tok, "(");
+    tok = skip(tok, '(');
     ConsumeStringLiteral(&tok, tok);
-    return skip(tok, ")");
+    return skip(tok, ')');
   }
   if (consume_attribute(&tok, tok, "noinline") ||
       consume_attribute(&tok, tok, "const") ||
@@ -570,13 +571,13 @@ static Token *thing_attributes(Token *tok, void *arg) {
       for (;;) {
         const_expr(&tok, tok);
         if (CONSUME(&tok, tok, ")")) break;
-        tok = skip(tok, ",");
+        tok = skip(tok, ',');
       }
     }
     return tok;
   }
   if (consume_attribute(&tok, tok, "format")) {
-    tok = skip(tok, "(");
+    tok = skip(tok, '(');
     consume_attribute(&tok, tok, "printf");
     consume_attribute(&tok, tok, "scanf");
     consume_attribute(&tok, tok, "strftime");
@@ -584,16 +585,16 @@ static Token *thing_attributes(Token *tok, void *arg) {
     consume_attribute(&tok, tok, "gnu_printf");
     consume_attribute(&tok, tok, "gnu_scanf");
     consume_attribute(&tok, tok, "gnu_strftime");
-    tok = skip(tok, ",");
+    tok = skip(tok, ',');
     const_expr(&tok, tok);
-    tok = skip(tok, ",");
+    tok = skip(tok, ',');
     const_expr(&tok, tok);
-    return skip(tok, ")");
+    return skip(tok, ')');
   }
   if (consume_attribute(&tok, tok, "format_arg")) {
-    tok = skip(tok, "(");
+    tok = skip(tok, '(');
     const_expr(&tok, tok);
-    return skip(tok, ")");
+    return skip(tok, ')');
   }
   error_tok(tok, "unknown function attribute");
 }
@@ -649,7 +650,7 @@ static Type *typespec(Token **rest, Token *tok, VarAttr *attr) {
         attr->is_static = true;
       } else if (EQUAL(tok, "extern")) {
         attr->is_extern = true;
-      } else if (EQUAL(tok, "inline")) {
+      } else if (EQUAL(tok, "inline") || EQUAL(tok, "__inline")) {
         attr->is_inline = true;
       } else {
         attr->is_tls = true;
@@ -682,14 +683,14 @@ static Type *typespec(Token **rest, Token *tok, VarAttr *attr) {
       tok = tok->next;
       if (EQUAL(tok, "(")) {
         ty = typename(&tok, tok->next);
-        tok = skip(tok, ")");
+        tok = skip(tok, ')');
       }
       is_atomic = true;
       goto Continue;
     }
     if (EQUAL(tok, "_Alignas")) {
       if (!attr) error_tok(tok, "_Alignas is not allowed in this context");
-      tok = skip(tok->next, "(");
+      tok = skip(tok->next, '(');
       if (is_typename(tok)) {
         attr->align = typename(&tok, tok)->align;
       } else {
@@ -699,13 +700,13 @@ static Type *typespec(Token **rest, Token *tok, VarAttr *attr) {
           error_tok(altok, "_Alignas needs two power");
         }
       }
-      tok = skip(tok, ")");
+      tok = skip(tok, ')');
       goto Continue;
     }
     // Handle user-defined types.
     Type *ty2 = find_typedef(tok);
     if (EQUAL(tok, "struct") || EQUAL(tok, "union") || EQUAL(tok, "enum") ||
-        EQUAL(tok, "typeof") || ty2) {
+        EQUAL(tok, "typeof") || EQUAL(tok, "__typeof") || ty2) {
       if (counter) break;
       if (EQUAL(tok, "struct")) {
         ty = struct_decl(&tok, tok->next);
@@ -713,7 +714,7 @@ static Type *typespec(Token **rest, Token *tok, VarAttr *attr) {
         ty = union_decl(&tok, tok->next);
       } else if (EQUAL(tok, "enum")) {
         ty = enum_specifier(&tok, tok->next);
-      } else if (EQUAL(tok, "typeof")) {
+      } else if (EQUAL(tok, "typeof") || EQUAL(tok, "__typeof")) {
         ty = typeof_specifier(&tok, tok->next);
       } else {
         ty = ty2;
@@ -831,6 +832,24 @@ static Type *typespec(Token **rest, Token *tok, VarAttr *attr) {
   return ty;
 }
 
+static Token *static_assertion(Token *tok) {
+  char *msg;
+  Token *start = tok;
+  tok = skip(tok->next, '(');
+  int64_t cond = const_expr(&tok, tok);
+  if (CONSUME(&tok, tok, ",")) {
+    msg = ConsumeStringLiteral(&tok, tok);
+  } else {
+    msg = "assertion failed";
+  }
+  tok = skip(tok, ')');
+  tok = skip(tok, ';');
+  if (!cond) {
+    error_tok(start, "%s", msg);
+  }
+  return tok;
+}
+
 // func-params = ("void" | param ("," param)* ("," "...")?)? ")"
 // param       = typespec declarator
 static Type *func_params(Token **rest, Token *tok, Type *ty) {
@@ -842,11 +861,11 @@ static Type *func_params(Token **rest, Token *tok, Type *ty) {
   Type *cur = &head;
   bool is_variadic = false;
   while (!EQUAL(tok, ")")) {
-    if (cur != &head) tok = skip(tok, ",");
+    if (cur != &head) tok = skip(tok, ',');
     if (EQUAL(tok, "...")) {
       is_variadic = true;
       tok = tok->next;
-      skip(tok, ")");
+      skip(tok, ')');
       break;
     }
     Type *ty2 = typespec(&tok, tok, NULL);
@@ -881,7 +900,7 @@ static Type *array_dimensions(Token **rest, Token *tok, Type *ty) {
     return array_of(ty, -1);
   }
   Node *expr = conditional(&tok, tok);
-  tok = skip(tok, "]");
+  tok = skip(tok, ']');
   ty = type_suffix(rest, tok, ty);
   if (ty->kind == TY_VLA || !is_const_expr(expr)) return vla_of(ty, expr);
   return array_of(ty, eval(expr));
@@ -891,14 +910,9 @@ static Type *array_dimensions(Token **rest, Token *tok, Type *ty) {
 //             | "[" array-dimensions
 //             | ε
 static Type *type_suffix(Token **rest, Token *tok, Type *ty) {
-  if (EQUAL(tok, "(")) {
-    ty = func_params(rest, tok->next, ty);
-  } else if (EQUAL(tok, "[")) {
-    ty = array_dimensions(rest, tok->next, ty);
-    *rest = attribute_list(*rest, ty, type_attributes);
-  } else {
-    *rest = tok;
-  }
+  if (EQUAL(tok, "(")) return func_params(rest, tok->next, ty);
+  if (EQUAL(tok, "[")) return array_dimensions(rest, tok->next, ty);
+  *rest = tok;
   return ty;
 }
 
@@ -923,10 +937,9 @@ static Type *declarator(Token **rest, Token *tok, Type *ty) {
     Token *start = tok;
     Type ignore = {};
     declarator(&tok, tok->next, &ignore);
-    tok = skip(tok, ")");
+    tok = skip(tok, ')');
     ty = type_suffix(rest, tok, ty);
     ty = declarator(&tok, start->next, ty);
-    /* *rest = attribute_list(tok, ty, type_attributes); */
     return ty;
   }
   Token *name = NULL;
@@ -938,7 +951,6 @@ static Type *declarator(Token **rest, Token *tok, Type *ty) {
   ty = type_suffix(rest, tok, ty);
   ty->name = name;
   ty->name_pos = name_pos;
-  /* *rest = attribute_list(tok, ty, type_attributes); */
   return ty;
 }
 
@@ -949,7 +961,7 @@ static Type *abstract_declarator(Token **rest, Token *tok, Type *ty) {
     Token *start = tok;
     Type ignore = {};
     abstract_declarator(&tok, tok->next, &ignore);
-    tok = skip(tok, ")");
+    tok = skip(tok, ')');
     ty = type_suffix(rest, tok, ty);
     return abstract_declarator(&tok, start->next, ty);
   }
@@ -997,12 +1009,12 @@ static Type *enum_specifier(Token **rest, Token *tok) {
     *rest = tok;
     return sc->ty;
   }
-  tok = skip(tok, "{");
+  tok = skip(tok, '{');
   // Read an enum-list.
   int i = 0;
   int val = 0;
   while (!consume_end(rest, tok)) {
-    if (i++ > 0) tok = skip(tok, ",");
+    if (i++ > 0) tok = skip(tok, ',');
     char *name = get_ident(tok);
     tok = tok->next;
     if (EQUAL(tok, "=")) val = const_expr(&tok, tok->next);
@@ -1016,7 +1028,7 @@ static Type *enum_specifier(Token **rest, Token *tok) {
 
 // typeof-specifier = "(" (expr | typename) ")"
 static Type *typeof_specifier(Token **rest, Token *tok) {
-  tok = skip(tok, "(");
+  tok = skip(tok, '(');
   Type *ty;
   if (is_typename(tok)) {
     ty = typename(&tok, tok);
@@ -1025,15 +1037,16 @@ static Type *typeof_specifier(Token **rest, Token *tok) {
     add_type(node);
     ty = node->ty;
   }
-  *rest = skip(tok, ")");
+  *rest = skip(tok, ')');
   return ty;
 }
 
 // Generate code for computing a VLA size.
 static Node *compute_vla_size(Type *ty, Token *tok) {
   Node *node = new_node(ND_NULL_EXPR, tok);
-  if (ty->base)
+  if (ty->base) {
     node = new_binary(ND_COMMA, node, compute_vla_size(ty->base, tok), tok);
+  }
   if (ty->kind != TY_VLA) return node;
   Node *base_sz;
   if (ty->base->kind == TY_VLA) {
@@ -1048,8 +1061,8 @@ static Node *compute_vla_size(Type *ty, Token *tok) {
 }
 
 static Node *new_alloca(Node *sz) {
-  Node *node =
-      new_unary(ND_FUNCALL, new_var_node(builtin_alloca, sz->tok), sz->tok);
+  Node *node;
+  node = new_unary(ND_FUNCALL, new_var_node(builtin_alloca, sz->tok), sz->tok);
   node->func_ty = builtin_alloca->ty;
   node->ty = builtin_alloca->ty->return_ty;
   node->args = sz;
@@ -1065,7 +1078,7 @@ static Node *declaration(Token **rest, Token *tok, Type *basety,
   Node *cur = &head;
   int i = 0;
   while (!EQUAL(tok, ";")) {
-    if (i++ > 0) tok = skip(tok, ",");
+    if (i++ > 0) tok = skip(tok, ',');
     Type *ty = declarator(&tok, tok, basety);
     if (ty->kind == TY_VOID) error_tok(tok, "variable declared void");
     if (!ty->name) error_tok(ty->name_pos, "variable name omitted");
@@ -1111,7 +1124,7 @@ static Node *declaration(Token **rest, Token *tok, Type *basety,
 static Token *skip_excess_element(Token *tok) {
   if (EQUAL(tok, "{")) {
     tok = skip_excess_element(tok->next);
-    return skip(tok, "}");
+    return skip(tok, '}');
   }
   assign(&tok, tok);
   return tok;
@@ -1188,13 +1201,13 @@ static void array_designator(Token **rest, Token *tok, Type *ty, int *begin,
   } else {
     *end = *begin;
   }
-  *rest = skip(tok, "]");
+  *rest = skip(tok, ']');
 }
 
 // struct-designator = "." ident
 static Member *struct_designator(Token **rest, Token *tok, Type *ty) {
   Token *start = tok;
-  tok = skip(tok, ".");
+  tok = skip(tok, '.');
   if (tok->kind != TK_IDENT) error_tok(tok, "expected a field designator");
   for (Member *mem = ty->members; mem; mem = mem->next) {
     // Anonymous struct member
@@ -1256,12 +1269,12 @@ static int count_array_init_elements(Token *tok, Type *ty) {
   Initializer *dummy = new_initializer(ty->base, true);
   int i = 0, max = 0;
   while (!consume_end(&tok, tok)) {
-    if (!first) tok = skip(tok, ",");
+    if (!first) tok = skip(tok, ',');
     first = false;
     if (EQUAL(tok, "[")) {
       i = const_expr(&tok, tok->next);
       if (EQUAL(tok, "...")) i = const_expr(&tok, tok->next);
-      tok = skip(tok, "]");
+      tok = skip(tok, ']');
       designation(&tok, tok, dummy);
     } else {
       initializer2(&tok, tok, dummy);
@@ -1274,7 +1287,7 @@ static int count_array_init_elements(Token *tok, Type *ty) {
 
 // array-initializer1 = "{" initializer ("," initializer)* ","? "}"
 static void array_initializer1(Token **rest, Token *tok, Initializer *init) {
-  tok = skip(tok, "{");
+  tok = skip(tok, '{');
   if (init->is_flexible) {
     int len = count_array_init_elements(tok, init->ty);
     *init = *new_initializer(array_of(init->ty->base, len), false);
@@ -1285,7 +1298,7 @@ static void array_initializer1(Token **rest, Token *tok, Initializer *init) {
     *init = *new_initializer(array_of(init->ty->base, len), false);
   }
   for (int i = 0; !consume_end(rest, tok); i++) {
-    if (!first) tok = skip(tok, ",");
+    if (!first) tok = skip(tok, ',');
     first = false;
     if (EQUAL(tok, "[")) {
       int begin, end;
@@ -1305,7 +1318,7 @@ static void array_initializer1(Token **rest, Token *tok, Initializer *init) {
   }
 }
 
-// array-initializer2 = initializer ("," initializer)*
+// array-initializer2 = initializer (',' initializer)*
 static void array_initializer2(Token **rest, Token *tok, Initializer *init,
                                int i) {
   if (init->is_flexible) {
@@ -1314,7 +1327,7 @@ static void array_initializer2(Token **rest, Token *tok, Initializer *init,
   }
   for (; i < init->ty->array_len && !is_end(tok); i++) {
     Token *start = tok;
-    if (i > 0) tok = skip(tok, ",");
+    if (i > 0) tok = skip(tok, ',');
     if (EQUAL(tok, "[") || EQUAL(tok, ".")) {
       *rest = start;
       return;
@@ -1326,11 +1339,11 @@ static void array_initializer2(Token **rest, Token *tok, Initializer *init,
 
 // struct-initializer1 = "{" initializer ("," initializer)* ","? "}"
 static void struct_initializer1(Token **rest, Token *tok, Initializer *init) {
-  tok = skip(tok, "{");
+  tok = skip(tok, '{');
   Member *mem = init->ty->members;
   bool first = true;
   while (!consume_end(rest, tok)) {
-    if (!first) tok = skip(tok, ",");
+    if (!first) tok = skip(tok, ',');
     first = false;
     if (EQUAL(tok, ".")) {
       mem = struct_designator(&tok, tok, init->ty);
@@ -1352,7 +1365,7 @@ static void struct_initializer2(Token **rest, Token *tok, Initializer *init,
                                 Member *mem) {
   for (; mem && !is_end(tok); mem = mem->next) {
     Token *start = tok;
-    if (mem != init->ty->members) tok = skip(tok, ",");
+    if (mem != init->ty->members) tok = skip(tok, ',');
     if (EQUAL(tok, "[") || EQUAL(tok, ".")) {
       *rest = start;
       return;
@@ -1370,13 +1383,13 @@ static void union_initializer(Token **rest, Token *tok, Initializer *init) {
     Member *mem = struct_designator(&tok, tok->next, init->ty);
     init->mem = mem;
     designation(&tok, tok, init->children[mem->idx]);
-    *rest = skip(tok, "}");
+    *rest = skip(tok, '}');
     return;
   }
   init->mem = init->ty->members;
   if (EQUAL(tok, "{")) {
     initializer2(&tok, tok->next, init->children[0]);
-    *rest = skip(tok, "}");
+    *rest = skip(tok, '}');
   } else {
     initializer2(rest, tok, init->children[0]);
   }
@@ -1386,15 +1399,23 @@ static void union_initializer(Token **rest, Token *tok, Initializer *init) {
 //             | struct-initializer | union-initializer
 //             | assign
 static void initializer2(Token **rest, Token *tok, Initializer *init) {
+  if (EQUAL(tok, "(") && init->ty->kind == TY_ARRAY &&
+      tok->next->kind == TK_STR) {
+    /* XXX: Kludge so typeof("str") s = ("str"); macros work. */
+    initializer2(rest, tok->next, init);
+    *rest = skip(*rest, ')');
+    return;
+  }
   if (init->ty->kind == TY_ARRAY && tok->kind == TK_STR) {
     string_initializer(rest, tok, init);
     return;
   }
   if (init->ty->kind == TY_ARRAY) {
-    if (EQUAL(tok, "{"))
+    if (EQUAL(tok, "{")) {
       array_initializer1(rest, tok, init);
-    else
+    } else {
       array_initializer2(rest, tok, init, 0);
+    }
     return;
   }
   if (init->ty->kind == TY_STRUCT) {
@@ -1422,7 +1443,7 @@ static void initializer2(Token **rest, Token *tok, Initializer *init) {
     // An initializer for a scalar variable can be surrounded by
     // braces. E.g. `int x = {3};`. Handle that case.
     initializer2(&tok, tok->next, init);
-    *rest = skip(tok, "}");
+    *rest = skip(tok, '}');
     return;
   }
   init->expr = assign(rest, tok);
@@ -1511,6 +1532,7 @@ static Node *create_lvar_init(Initializer *init, Type *ty, InitDesg *desg,
 //   x[0][1] = 7;
 //   x[1][0] = 8;
 //   x[1][1] = 9;
+//
 static Node *lvar_initializer(Token **rest, Token *tok, Obj *var) {
   Initializer *init = initializer(rest, tok, var->ty, &var->ty);
   InitDesg desg = {NULL, 0, NULL, var};
@@ -1619,19 +1641,27 @@ static bool is_typename(Token *tok) {
   static HashMap map;
   if (map.capacity == 0) {
     static char *kw[] = {
-        "void",       "_Bool",        "char",      "short",         "int",
-        "long",       "struct",       "union",     "typedef",       "enum",
-        "static",     "extern",       "_Alignas",  "signed",        "unsigned",
-        "const",      "volatile",     "auto",      "register",      "restrict",
-        "__restrict", "__restrict__", "_Noreturn", "float",         "double",
-        "typeof",     "inline",       "__inline",  "_Thread_local", "__thread",
-        "_Atomic",    "__int128",
+        "void",       "_Bool",        "char",      "short",    "int",
+        "long",       "struct",       "union",     "typedef",  "enum",
+        "static",     "extern",       "_Alignas",  "signed",   "unsigned",
+        "const",      "volatile",     "auto",      "register", "restrict",
+        "__restrict", "__restrict__", "_Noreturn", "float",    "double",
+        "typeof",     "__typeof",     "inline",    "__inline", "_Thread_local",
+        "__thread",   "_Atomic",      "__int128",
     };
     for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++) {
       hashmap_put(&map, kw[i], (void *)1);
     }
   }
   return hashmap_get2(&map, tok->loc, tok->len) || find_typedef(tok);
+}
+
+static bool is_const_expr_true(Node *node) {
+  if (is_flonum(node->ty)) {
+    return !!eval_double(node);
+  } else {
+    return eval(node);
+  }
 }
 
 // stmt = "return" expr? ";"
@@ -1654,7 +1684,7 @@ static Node *stmt(Token **rest, Token *tok) {
     Node *node = new_node(ND_RETURN, tok);
     if (CONSUME(rest, tok->next, ";")) return node;
     Node *exp = expr(&tok, tok->next);
-    *rest = skip(tok, ";");
+    *rest = skip(tok, ';');
     add_type(exp);
     Type *ty = current_fn->ty->return_ty;
     if (ty->kind != TY_STRUCT && ty->kind != TY_UNION)
@@ -1664,19 +1694,33 @@ static Node *stmt(Token **rest, Token *tok) {
   }
   if (EQUAL(tok, "if")) {
     Node *node = new_node(ND_IF, tok);
-    tok = skip(tok->next, "(");
+    tok = skip(tok->next, '(');
     node->cond = expr(&tok, tok);
-    tok = skip(tok, ")");
+    tok = skip(tok, ')');
     node->then = stmt(&tok, tok);
     if (EQUAL(tok, "else")) node->els = stmt(&tok, tok->next);
     *rest = tok;
+    if (is_const_expr(node->cond)) {
+      if (is_const_expr_true(node->cond)) { /* DCE */
+        return node->then;
+      } else if (node->els) {
+        return node->els;
+      } else {
+        return new_node(ND_BLOCK, node->tok);
+      }
+    }
     return node;
+  }
+  if (EQUAL(tok, "_Static_assert")) {
+    Token *start = tok;
+    *rest = static_assertion(tok);
+    return new_node(ND_BLOCK, start);
   }
   if (EQUAL(tok, "switch")) {
     Node *node = new_node(ND_SWITCH, tok);
-    tok = skip(tok->next, "(");
+    tok = skip(tok->next, '(');
     node->cond = expr(&tok, tok);
-    tok = skip(tok, ")");
+    tok = skip(tok, ')');
     Node *sw = current_switch;
     current_switch = node;
     char *brk = brk_label;
@@ -1698,7 +1742,7 @@ static Node *stmt(Token **rest, Token *tok) {
     } else {
       end = begin;
     }
-    tok = skip(tok, ":");
+    tok = skip(tok, ':');
     node->label = new_unique_name();
     node->lhs = stmt(rest, tok);
     node->begin = begin;
@@ -1710,7 +1754,7 @@ static Node *stmt(Token **rest, Token *tok) {
   if (EQUAL(tok, "default")) {
     if (!current_switch) error_tok(tok, "stray default");
     Node *node = new_node(ND_CASE, tok);
-    tok = skip(tok->next, ":");
+    tok = skip(tok->next, ':');
     node->label = new_unique_name();
     node->lhs = stmt(rest, tok);
     current_switch->default_case = node;
@@ -1718,7 +1762,7 @@ static Node *stmt(Token **rest, Token *tok) {
   }
   if (EQUAL(tok, "for")) {
     Node *node = new_node(ND_FOR, tok);
-    tok = skip(tok->next, "(");
+    tok = skip(tok->next, '(');
     enter_scope();
     char *brk = brk_label;
     char *cont = cont_label;
@@ -1731,9 +1775,9 @@ static Node *stmt(Token **rest, Token *tok) {
       node->init = expr_stmt(&tok, tok);
     }
     if (!EQUAL(tok, ";")) node->cond = expr(&tok, tok);
-    tok = skip(tok, ";");
+    tok = skip(tok, ';');
     if (!EQUAL(tok, ")")) node->inc = expr(&tok, tok);
-    tok = skip(tok, ")");
+    tok = skip(tok, ')');
     node->then = stmt(rest, tok);
     leave_scope();
     brk_label = brk;
@@ -1742,9 +1786,9 @@ static Node *stmt(Token **rest, Token *tok) {
   }
   if (EQUAL(tok, "while")) {
     Node *node = new_node(ND_FOR, tok);
-    tok = skip(tok->next, "(");
+    tok = skip(tok->next, '(');
     node->cond = expr(&tok, tok);
-    tok = skip(tok, ")");
+    tok = skip(tok, ')');
     char *brk = brk_label;
     char *cont = cont_label;
     brk_label = node->brk_label = new_unique_name();
@@ -1763,11 +1807,13 @@ static Node *stmt(Token **rest, Token *tok) {
     node->then = stmt(&tok, tok->next);
     brk_label = brk;
     cont_label = cont;
-    tok = skip(tok, "while");
-    tok = skip(tok, "(");
+    if (!EQUAL(tok, "while")) {
+      error_tok(tok, "expected while");
+    }
+    tok = skip(tok->next, '(');
     node->cond = expr(&tok, tok);
-    tok = skip(tok, ")");
-    *rest = skip(tok, ";");
+    tok = skip(tok, ')');
+    *rest = skip(tok, ';');
     return node;
   }
   if (EQUAL(tok, "asm") || EQUAL(tok, "__asm__")) {
@@ -1780,28 +1826,28 @@ static Node *stmt(Token **rest, Token *tok) {
       // [GNU] `goto *ptr` jumps to the address specified by `ptr`.
       Node *node = new_node(ND_GOTO_EXPR, tok);
       node->lhs = expr(&tok, tok->next->next);
-      *rest = skip(tok, ";");
+      *rest = skip(tok, ';');
       return node;
     }
     Node *node = new_node(ND_GOTO, tok);
     node->label = get_ident(tok->next);
     node->goto_next = gotos;
     gotos = node;
-    *rest = skip(tok->next->next, ";");
+    *rest = skip(tok->next->next, ';');
     return node;
   }
   if (EQUAL(tok, "break")) {
     if (!brk_label) error_tok(tok, "stray break");
     Node *node = new_node(ND_GOTO, tok);
     node->unique_label = brk_label;
-    *rest = skip(tok->next, ";");
+    *rest = skip(tok->next, ';');
     return node;
   }
   if (EQUAL(tok, "continue")) {
     if (!cont_label) error_tok(tok, "stray continue");
     Node *node = new_node(ND_GOTO, tok);
     node->unique_label = cont_label;
-    *rest = skip(tok->next, ";");
+    *rest = skip(tok->next, ';');
     return node;
   }
   if (tok->kind == TK_IDENT && EQUAL(tok->next, ":")) {
@@ -1859,7 +1905,7 @@ static Node *expr_stmt(Token **rest, Token *tok) {
   }
   Node *node = new_node(ND_EXPR_STMT, tok);
   node->lhs = expr(&tok, tok);
-  *rest = skip(tok, ";");
+  *rest = skip(tok, ';');
   return node;
 }
 
@@ -1899,15 +1945,15 @@ int64_t eval2(Node *node, char ***label) {
       return eval(node->lhs) / eval(node->rhs);
     case ND_NEG:
       return -eval(node->lhs);
-    case ND_MOD:
+    case ND_REM:
       if (node->ty->is_unsigned)
         return (uint64_t)eval(node->lhs) % eval(node->rhs);
       return eval(node->lhs) % eval(node->rhs);
-    case ND_BITAND:
+    case ND_BINAND:
       return eval(node->lhs) & eval(node->rhs);
-    case ND_BITOR:
+    case ND_BINOR:
       return eval(node->lhs) | eval(node->rhs);
-    case ND_BITXOR:
+    case ND_BINXOR:
       return eval(node->lhs) ^ eval(node->rhs);
     case ND_SHL:
       return eval(node->lhs) << eval(node->rhs);
@@ -1915,10 +1961,34 @@ int64_t eval2(Node *node, char ***label) {
       if (node->ty->is_unsigned && node->ty->size == 8)
         return (uint64_t)eval(node->lhs) >> eval(node->rhs);
       return eval(node->lhs) >> eval(node->rhs);
-    case ND_EQ:
-      return eval(node->lhs) == eval(node->rhs);
-    case ND_NE:
-      return eval(node->lhs) != eval(node->rhs);
+    case ND_EQ: {
+      bool lhs = is_const_expr(node->lhs);
+      bool rhs = is_const_expr(node->rhs);
+      if (rhs && node->lhs->kind == ND_VAR && node->lhs->ty->kind == TY_ARRAY &&
+          node->lhs->var->is_string_literal) {
+        return eval(node->rhs) == (intptr_t)node->lhs->var->init_data;
+      } else if (lhs && node->rhs->kind == ND_VAR &&
+                 node->rhs->ty->kind == TY_ARRAY &&
+                 node->rhs->var->is_string_literal) {
+        return eval(node->lhs) == (intptr_t)node->rhs->var->init_data;
+      } else {
+        return eval(node->lhs) == eval(node->rhs);
+      }
+    }
+    case ND_NE: {
+      bool lhs = is_const_expr(node->lhs);
+      bool rhs = is_const_expr(node->rhs);
+      if (rhs && node->lhs->kind == ND_VAR && node->lhs->ty->kind == TY_ARRAY &&
+          node->lhs->var->is_string_literal) {
+        return eval(node->rhs) != (intptr_t)node->lhs->var->init_data;
+      } else if (lhs && node->rhs->kind == ND_VAR &&
+                 node->rhs->ty->kind == TY_ARRAY &&
+                 node->rhs->var->is_string_literal) {
+        return eval(node->lhs) != (intptr_t)node->rhs->var->init_data;
+      } else {
+        return eval(node->lhs) != eval(node->rhs);
+      }
+    }
     case ND_LT:
       if (node->lhs->ty->is_unsigned)
         return (uint64_t)eval(node->lhs) < eval(node->rhs);
@@ -1965,7 +2035,12 @@ int64_t eval2(Node *node, char ***label) {
         error_tok(node->tok, "invalid initializer");
       return eval_rval(node->lhs, label) + node->member->offset;
     case ND_VAR:
-      if (!label) error_tok(node->tok, "not a compile-time constant");
+      if (!label) {
+        if (node->ty->kind == TY_ARRAY && node->var->is_string_literal) {
+          return (intptr_t)node->var->init_data;
+        }
+        error_tok(node->tok, "not a compile-time constant");
+      }
       if (node->var->ty->kind != TY_ARRAY && node->var->ty->kind != TY_FUNC)
         error_tok(node->tok, "invalid initializer");
       *label = &node->var->name;
@@ -1998,18 +2073,26 @@ bool is_const_expr(Node *node) {
     case ND_SUB:
     case ND_MUL:
     case ND_DIV:
-    case ND_BITAND:
-    case ND_BITOR:
-    case ND_BITXOR:
+    case ND_BINAND:
+    case ND_BINOR:
+    case ND_BINXOR:
     case ND_SHL:
     case ND_SHR:
-    case ND_EQ:
-    case ND_NE:
     case ND_LT:
     case ND_LE:
     case ND_LOGAND:
     case ND_LOGOR:
       return is_const_expr(node->lhs) && is_const_expr(node->rhs);
+    case ND_EQ:
+    case ND_NE: {
+      bool lhs = is_const_expr(node->lhs);
+      bool rhs = is_const_expr(node->rhs);
+      return (lhs && rhs) ||
+             (rhs && node->lhs->kind == ND_VAR &&
+              node->lhs->var->is_string_literal) ||
+             (lhs && node->rhs->kind == ND_VAR &&
+              node->rhs->var->is_string_literal);
+    }
     case ND_COND:
       if (!is_const_expr(node->cond)) return false;
       return is_const_expr(eval(node->cond) ? node->then : node->els);
@@ -2022,6 +2105,8 @@ bool is_const_expr(Node *node) {
       return is_const_expr(node->lhs);
     case ND_NUM:
       return true;
+    case ND_VAR:
+      return node->var->is_string_literal;
   }
   return false;
 }
@@ -2151,6 +2236,7 @@ static Node *to_assign(Node *binary) {
   return new_binary(ND_COMMA, expr1, expr2, tok);
 }
 
+// @hint it's expr() without the commas
 // assign    = conditional (assign-op assign)?
 // assign-op = "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|=" | "^="
 //           | "<<=" | ">>="
@@ -2167,13 +2253,13 @@ static Node *assign(Token **rest, Token *tok) {
   if (EQUAL(tok, "/="))
     return to_assign(new_binary(ND_DIV, node, assign(rest, tok->next), tok));
   if (EQUAL(tok, "%="))
-    return to_assign(new_binary(ND_MOD, node, assign(rest, tok->next), tok));
+    return to_assign(new_binary(ND_REM, node, assign(rest, tok->next), tok));
   if (EQUAL(tok, "&="))
-    return to_assign(new_binary(ND_BITAND, node, assign(rest, tok->next), tok));
+    return to_assign(new_binary(ND_BINAND, node, assign(rest, tok->next), tok));
   if (EQUAL(tok, "|="))
-    return to_assign(new_binary(ND_BITOR, node, assign(rest, tok->next), tok));
+    return to_assign(new_binary(ND_BINOR, node, assign(rest, tok->next), tok));
   if (EQUAL(tok, "^="))
-    return to_assign(new_binary(ND_BITXOR, node, assign(rest, tok->next), tok));
+    return to_assign(new_binary(ND_BINXOR, node, assign(rest, tok->next), tok));
   if (EQUAL(tok, "<<="))
     return to_assign(new_binary(ND_SHL, node, assign(rest, tok->next), tok));
   if (EQUAL(tok, ">>="))
@@ -2191,20 +2277,35 @@ static Node *conditional(Token **rest, Token *tok) {
   }
   if (EQUAL(tok->next, ":")) {
     // [GNU] Compile `a ?: b` as `tmp = a, tmp ? tmp : b`.
-    add_type(cond);
+    Node *els = conditional(rest, tok->next->next);
+    if (is_const_expr(cond)) { /* DCE */
+      if (is_const_expr_true(cond)) {
+        return cond;
+      } else {
+        return els;
+      }
+    }
     Obj *var = new_lvar("", cond->ty);
     Node *lhs = new_binary(ND_ASSIGN, new_var_node(var, tok), cond, tok);
     Node *rhs = new_node(ND_COND, tok);
     rhs->cond = new_var_node(var, tok);
     rhs->then = new_var_node(var, tok);
-    rhs->els = conditional(rest, tok->next->next);
+    rhs->els = els;
     return new_binary(ND_COMMA, lhs, rhs, tok);
   }
   Node *node = new_node(ND_COND, tok);
   node->cond = cond;
   node->then = expr(&tok, tok->next);
-  tok = skip(tok, ":");
+  tok = skip(tok, ':');
   node->els = conditional(rest, tok);
+  add_type(node);
+  if (is_const_expr(cond)) { /* DCE */
+    if (is_const_expr_true(cond)) {
+      return new_cast(node->then, node->ty);
+    } else {
+      return new_cast(node->els, node->ty);
+    }
+  }
   return node;
 }
 
@@ -2219,45 +2320,57 @@ static Node *logor(Token **rest, Token *tok) {
   return node;
 }
 
-// logand = bitor ("&&" bitor)*
+// logand = binor ("&&" binor)*
 static Node *logand(Token **rest, Token *tok) {
-  Node *node = bitor (&tok, tok);
+  Token *start = tok;
+  Node *node = binor(&tok, tok);
   while (EQUAL(tok, "&&")) {
     Token *start = tok;
-    node = new_binary(ND_LOGAND, node, bitor (&tok, tok->next), start);
+    node = new_binary(ND_LOGAND, node, binor(&tok, tok->next), start);
   }
   *rest = tok;
+#if 0
+  if (node->lhs && node->rhs) {
+    add_type(node->lhs);
+    add_type(node->rhs);
+    if (((is_const_expr(node->lhs) && !is_const_expr_true(node->lhs)) ||
+         (is_const_expr(node->rhs) && !is_const_expr_true(node->rhs)))) {
+      node->lhs = new_cast(new_num(0, start), node->lhs->ty); /* DCE */
+      node->rhs = new_cast(new_num(0, start), node->rhs->ty);
+    }
+  }
+#endif
   return node;
 }
 
-// bitor = bitxor ("|" bitxor)*
-static Node * bitor (Token * *rest, Token *tok) {
-  Node *node = bitxor(&tok, tok);
+// binor = binxor ("|" binxor)*
+static Node *binor(Token **rest, Token *tok) {
+  Node *node = binxor(&tok, tok);
   while (EQUAL(tok, "|")) {
     Token *start = tok;
-    node = new_binary(ND_BITOR, node, bitxor(&tok, tok->next), start);
+    node = new_binary(ND_BINOR, node, binxor(&tok, tok->next), start);
   }
   *rest = tok;
   return node;
 }
 
-// bitxor = bitand ("^" bitand)*
-static Node *bitxor(Token **rest, Token *tok) {
-  Node *node = bitand(&tok, tok);
+// binxor = binand ("^" binand)*
+static Node *binxor(Token **rest, Token *tok) {
+  Node *node = binand(&tok, tok);
   while (EQUAL(tok, "^")) {
     Token *start = tok;
-    node = new_binary(ND_BITXOR, node, bitand(&tok, tok->next), start);
+    node = new_binary(ND_BINXOR, node, binand(&tok, tok->next), start);
   }
   *rest = tok;
   return node;
 }
 
-// bitand = equality ("&" equality)*
-static Node *bitand(Token **rest, Token *tok) {
+// binand = equality ("&" equality)*
+static Node *binand(Token **rest, Token *tok) {
   Node *node = equality(&tok, tok);
   while (EQUAL(tok, "&")) {
     Token *start = tok;
-    node = new_binary(ND_BITAND, node, equality(&tok, tok->next), start);
+    node = new_binary(ND_BINAND, node, equality(&tok, tok->next), start);
   }
   *rest = tok;
   return node;
@@ -2387,6 +2500,31 @@ static Node *new_sub(Node *lhs, Node *rhs, Token *tok) {
   error_tok(tok, "invalid operands");
 }
 
+static Node *new_mul(Node *lhs, Node *rhs, Token *tok) {
+  return new_binary(ND_MUL, lhs, rhs, tok);
+}
+
+static Node *builtin_overflow(Token **rest, Token *tok,
+                              Node *new_op(Node *, Node *, Token *)) {
+  Token *start = tok;
+  tok = skip(tok->next, '(');
+  Node *lhs = assign(&tok, tok);
+  tok = skip(tok, ',');
+  Node *rhs = assign(&tok, tok);
+  tok = skip(tok, ',');
+  Node *dst = assign(&tok, tok);
+  *rest = skip(tok, ')');
+  Node *node = new_op(lhs, rhs, start);
+  add_type(node);
+  add_type(dst);
+  if (!is_compatible(pointer_to(node->ty), dst->ty)) {
+    error_tok(start, "output pointer type incompatible");
+  }
+  node->overflow = dst;
+  node->ty = copy_type(ty_bool);
+  return node;
+}
+
 // add = mul ("+" mul | "-" mul)*
 static Node *add(Token **rest, Token *tok) {
   Node *node = mul(&tok, tok);
@@ -2411,7 +2549,7 @@ static Node *mul(Token **rest, Token *tok) {
   for (;;) {
     Token *start = tok;
     if (EQUAL(tok, "*")) {
-      node = new_binary(ND_MUL, node, cast(&tok, tok->next), start);
+      node = new_mul(node, cast(&tok, tok->next), start);
       continue;
     }
     if (EQUAL(tok, "/")) {
@@ -2419,7 +2557,7 @@ static Node *mul(Token **rest, Token *tok) {
       continue;
     }
     if (EQUAL(tok, "%")) {
-      node = new_binary(ND_MOD, node, cast(&tok, tok->next), start);
+      node = new_binary(ND_REM, node, cast(&tok, tok->next), start);
       continue;
     }
     *rest = tok;
@@ -2448,7 +2586,7 @@ static Node *cast(Token **rest, Token *tok) {
   if (EQUAL(tok, "(") && is_typename(tok->next)) {
     Token *start = tok;
     Type *ty = typename(&tok, tok->next);
-    tok = skip(tok, ")");
+    tok = skip(tok, ')');
     // compound literal
     if (EQUAL(tok, "{")) return compound_literal(rest, tok, ty, start);
     // type cast
@@ -2523,7 +2661,7 @@ static void struct_members(Token **rest, Token *tok, Type *ty) {
     }
     // Regular struct members
     while (!CONSUME(&tok, tok, ";")) {
-      if (!first) tok = skip(tok, ",");
+      if (!first) tok = skip(tok, ',');
       first = false;
       Member *mem = calloc(1, sizeof(Member));
       mem->ty = declarator(&tok, tok, basety);
@@ -2576,7 +2714,7 @@ static Type *struct_union_decl(Token **rest, Token *tok) {
     push_tag_scope(tag, ty);
     return ty;
   }
-  tok = skip(tok, "{");
+  tok = skip(tok, '{');
   // Construct a struct object.
   struct_members(&tok, tok, ty);
   *rest = attribute_list(tok, ty, type_attributes);
@@ -2719,7 +2857,7 @@ static Node *postfix(Token **rest, Token *tok) {
       // x[y] is short for *(x+y)
       Token *start = tok;
       Node *idx = expr(&tok, tok->next);
-      tok = skip(tok, "]");
+      tok = skip(tok, ']');
       node = new_unary(ND_DEREF, new_add(node, idx, start), start);
       continue;
     }
@@ -2761,7 +2899,7 @@ static Node *funcall(Token **rest, Token *tok, Node *fn) {
   Node head = {};
   Node *cur = &head;
   while (!EQUAL(tok, ")")) {
-    if (cur != &head) tok = skip(tok, ",");
+    if (cur != &head) tok = skip(tok, ',');
     Node *arg = assign(&tok, tok);
     add_type(arg);
     if (!param_ty && !ty->is_variadic) error_tok(tok, "too many arguments");
@@ -2777,7 +2915,7 @@ static Node *funcall(Token **rest, Token *tok, Node *fn) {
     cur = cur->next = arg;
   }
   if (param_ty) error_tok(tok, "too few arguments");
-  *rest = skip(tok, ")");
+  *rest = skip(tok, ')');
   Node *node = new_unary(ND_FUNCALL, fn, tok);
   node->func_ty = ty;
   node->ty = ty->return_ty;
@@ -2795,7 +2933,7 @@ static Node *funcall(Token **rest, Token *tok, Node *fn) {
 //               | "default" ":" assign
 static Node *generic_selection(Token **rest, Token *tok) {
   Token *start = tok;
-  tok = skip(tok, "(");
+  tok = skip(tok, '(');
   Node *ctrl = assign(&tok, tok);
   add_type(ctrl);
   Type *t1 = ctrl->ty;
@@ -2805,15 +2943,15 @@ static Node *generic_selection(Token **rest, Token *tok) {
     t1 = pointer_to(t1->base);
   Node *ret = NULL;
   while (!CONSUME(rest, tok, ")")) {
-    tok = skip(tok, ",");
+    tok = skip(tok, ',');
     if (EQUAL(tok, "default")) {
-      tok = skip(tok->next, ":");
+      tok = skip(tok->next, ':');
       Node *node = assign(&tok, tok);
       if (!ret) ret = node;
       continue;
     }
     Type *t2 = typename(&tok, tok);
-    tok = skip(tok, ":");
+    tok = skip(tok, ':');
     Node *node = assign(&tok, tok);
     if (is_compatible(t1, t2)) ret = node;
   }
@@ -2842,18 +2980,18 @@ static Node *primary(Token **rest, Token *tok) {
     // This is a GNU statement expresssion.
     Node *node = new_node(ND_STMT_EXPR, tok);
     node->body = compound_stmt(&tok, tok->next->next)->body;
-    *rest = skip(tok, ")");
+    *rest = skip(tok, ')');
     return node;
   }
   if (EQUAL(tok, "(")) {
     Node *node = expr(&tok, tok->next);
-    *rest = skip(tok, ")");
+    *rest = skip(tok, ')');
     return node;
   }
   if (EQUAL(tok, "sizeof") && EQUAL(tok->next, "(") &&
       is_typename(tok->next->next)) {
     Type *ty = typename(&tok, tok->next->next);
-    *rest = skip(tok, ")");
+    *rest = skip(tok, ')');
     if (ty->kind == TY_VLA) {
       if (ty->vla_size) {
         return new_var_node(ty->vla_size, tok);
@@ -2873,7 +3011,7 @@ static Node *primary(Token **rest, Token *tok) {
   if (EQUAL(tok, "_Alignof") && EQUAL(tok->next, "(") &&
       is_typename(tok->next->next)) {
     Type *ty = typename(&tok, tok->next->next);
-    *rest = skip(tok, ")");
+    *rest = skip(tok, ')');
     return new_ulong(ty->align, tok);
   }
   if (EQUAL(tok, "_Alignof")) {
@@ -2884,90 +3022,196 @@ static Node *primary(Token **rest, Token *tok) {
   if (EQUAL(tok, "_Generic")) {
     return generic_selection(rest, tok->next);
   }
-  if (EQUAL(tok, "__builtin_constant_p")) {
-    tok = skip(tok->next, "(");
-    Node *e = expr(&tok, tok);
-    *rest = skip(tok, ")");
-    return new_num(is_const_expr(e), start);
-  }
-  if (EQUAL(tok, "__builtin_types_compatible_p")) {
-    tok = skip(tok->next, "(");
-    Type *t1 = typename(&tok, tok);
-    tok = skip(tok, ",");
-    Type *t2 = typename(&tok, tok);
-    *rest = skip(tok, ")");
-    return new_num(is_compatible(t1, t2), start);
-  }
-  if (EQUAL(tok, "__builtin_offsetof")) {
-    tok = skip(tok->next, "(");
-    Token *stok = tok;
-    Type *tstruct = typename(&tok, tok);
-    if (tstruct->kind != TY_STRUCT && tstruct->kind != TY_UNION) {
-      error_tok(stok, "not a structure or union type");
+  if (tok->len > 10 && !memcmp(tok->loc, "__builtin_", 10)) {
+    if (EQUAL(tok, "__builtin_constant_p")) {
+      tok = skip(tok->next, '(');
+      Node *e = expr(&tok, tok);
+      *rest = skip(tok, ')');
+      return new_num(is_const_expr(e), start); /* DCE */
     }
-    tok = skip(tok, ",");
-    Token *member = tok;
-    tok = tok->next;
-    *rest = skip(tok, ")");
-    for (Member *m = tstruct->members; m; m = m->next) {
-      if (m->name->len == member->len &&
-          !memcmp(m->name->loc, member->loc, m->name->len)) {
-        return new_num(m->offset, start);
+    if (EQUAL(tok, "__builtin_types_compatible_p")) {
+      tok = skip(tok->next, '(');
+      Type *t1 = typename(&tok, tok);
+      tok = skip(tok, ',');
+      Type *t2 = typename(&tok, tok);
+      *rest = skip(tok, ')');
+      return new_num(is_compatible(t1, t2), start);
+    }
+    if (EQUAL(tok, "__builtin_offsetof")) {
+      tok = skip(tok->next, '(');
+      Token *stok = tok;
+      Type *tstruct = typename(&tok, tok);
+      if (tstruct->kind != TY_STRUCT && tstruct->kind != TY_UNION) {
+        error_tok(stok, "not a structure or union type");
+      }
+      tok = skip(tok, ',');
+      Token *member = tok;
+      tok = tok->next;
+      *rest = skip(tok, ')');
+      for (Member *m = tstruct->members; m; m = m->next) {
+        if (m->name->len == member->len &&
+            !memcmp(m->name->loc, member->loc, m->name->len)) {
+          return new_num(m->offset, start);
+        }
+      }
+      error_tok(member, "no such member");
+    }
+    if (EQUAL(tok, "__builtin_reg_class")) {
+      tok = skip(tok->next, '(');
+      Type *ty = typename(&tok, tok);
+      *rest = skip(tok, ')');
+      if (is_integer(ty) || ty->kind == TY_PTR) return new_num(0, start);
+      if (is_flonum(ty)) return new_num(1, start);
+      return new_num(2, start);
+    }
+    if (EQUAL(tok, "__builtin_compare_and_swap")) {
+      Node *node = new_node(ND_CAS, tok);
+      tok = skip(tok->next, '(');
+      node->cas_addr = assign(&tok, tok);
+      tok = skip(tok, ',');
+      node->cas_old = assign(&tok, tok);
+      tok = skip(tok, ',');
+      node->cas_new = assign(&tok, tok);
+      *rest = skip(tok, ')');
+      return node;
+    }
+    if (EQUAL(tok, "__builtin_atomic_exchange")) {
+      Node *node = new_node(ND_EXCH, tok);
+      tok = skip(tok->next, '(');
+      node->lhs = assign(&tok, tok);
+      tok = skip(tok, ',');
+      node->rhs = assign(&tok, tok);
+      *rest = skip(tok, ')');
+      return node;
+    }
+    if (EQUAL(tok, "__builtin_expect")) { /* do nothing */
+      tok = skip(tok->next, '(');
+      Node *node = assign(&tok, tok);
+      tok = skip(tok, ',');
+      const_expr(&tok, tok);
+      *rest = skip(tok, ')');
+      return node;
+    }
+    if (EQUAL(tok, "__builtin_assume_aligned")) { /* do nothing */
+      tok = skip(tok->next, '(');
+      Node *node = assign(&tok, tok);
+      tok = skip(tok, ',');
+      const_expr(&tok, tok);
+      if (EQUAL(tok, ",")) {
+        const_expr(&tok, tok->next);
+      }
+      *rest = skip(tok, ')');
+      return node;
+    }
+    if (EQUAL(tok, "__builtin_add_overflow")) {
+      return builtin_overflow(rest, tok, new_add);
+    }
+    if (EQUAL(tok, "__builtin_sub_overflow")) {
+      return builtin_overflow(rest, tok, new_sub);
+    }
+    if (EQUAL(tok, "__builtin_mul_overflow")) {
+      return builtin_overflow(rest, tok, new_mul);
+    }
+    if (EQUAL(tok, "__builtin_neg_overflow")) {
+      Token *start = tok;
+      tok = skip(tok->next, '(');
+      Node *lhs = assign(&tok, tok);
+      tok = skip(tok, ',');
+      Node *dst = assign(&tok, tok);
+      *rest = skip(tok, ')');
+      Node *node = new_unary(ND_NEG, lhs, start);
+      add_type(node);
+      add_type(dst);
+      if (!is_compatible(pointer_to(node->ty), dst->ty)) {
+        error_tok(start, "output pointer type incompatible");
+      }
+      node->overflow = dst;
+      node->ty = copy_type(ty_bool);
+      return node;
+    }
+    if (EQUAL(tok, "__builtin_fpclassify")) {
+      Node *node = new_node(ND_FPCLASSIFY, tok);
+      node->fpc = calloc(1, sizeof(FpClassify));
+      node->ty = ty_int;
+      tok = skip(tok->next, '(');
+      for (int i = 0; i < 5; ++i) {
+        node->fpc->args[i] = const_expr(&tok, tok);
+        tok = skip(tok, ',');
+      }
+      node->fpc->node = expr(&tok, tok);
+      add_type(node->fpc->node);
+      if (!is_flonum(node->fpc->node->ty)) {
+        error_tok(node->fpc->node->tok, "need floating point");
+      }
+      *rest = skip(tok, ')');
+      return node;
+    }
+    if (EQUAL(tok, "__builtin_popcount") || EQUAL(tok, "__builtin_popcountl") ||
+        EQUAL(tok, "__builtin_popcountll")) {
+      Token *t = skip(tok->next, '(');
+      Node *node = assign(&t, t);
+      if (is_const_expr(node)) {
+        *rest = skip(t, ')');
+        return new_num(popcnt(eval(node)), t);
       }
     }
-    error_tok(member, "no such member");
   }
-  if (EQUAL(tok, "__builtin_reg_class")) {
-    tok = skip(tok->next, "(");
-    Type *ty = typename(&tok, tok);
-    *rest = skip(tok, ")");
-    if (is_integer(ty) || ty->kind == TY_PTR) return new_num(0, start);
-    if (is_flonum(ty)) return new_num(1, start);
-    return new_num(2, start);
+  if ((EQUAL(tok, "__builtin_strlen") ||
+       (!opt_no_builtin && EQUAL(tok, "strlen"))) &&
+      EQUAL(tok->next, "(") && tok->next->next->kind == TK_STR &&
+      EQUAL(tok->next->next->next, ")")) {
+    *rest = tok->next->next->next->next;
+    return new_num(strlen(tok->next->next->str), tok);
   }
-  if (EQUAL(tok, "__builtin_compare_and_swap")) {
-    Node *node = new_node(ND_CAS, tok);
-    tok = skip(tok->next, "(");
-    node->cas_addr = assign(&tok, tok);
-    tok = skip(tok, ",");
-    node->cas_old = assign(&tok, tok);
-    tok = skip(tok, ",");
-    node->cas_new = assign(&tok, tok);
-    *rest = skip(tok, ")");
-    return node;
-  }
-  if (EQUAL(tok, "__builtin_atomic_exchange")) {
-    Node *node = new_node(ND_EXCH, tok);
-    tok = skip(tok->next, "(");
-    node->lhs = assign(&tok, tok);
-    tok = skip(tok, ",");
-    node->rhs = assign(&tok, tok);
-    *rest = skip(tok, ")");
-    return node;
-  }
-  if (EQUAL(tok, "__builtin_fpclassify")) {
-    Node *node = new_node(ND_FPCLASSIFY, tok);
-    node->fpc = calloc(1, sizeof(FpClassify));
-    node->ty = ty_int;
-    tok = skip(tok->next, "(");
-    for (int i = 0; i < 5; ++i) {
-      node->fpc->args[i] = const_expr(&tok, tok);
-      tok = skip(tok, ",");
+  if ((EQUAL(tok, "__builtin_strpbrk") ||
+       (!opt_no_builtin && EQUAL(tok, "strpbrk")))) {
+    if (EQUAL(tok->next, "(") && tok->next->next->kind == TK_STR &&
+        EQUAL(tok->next->next->next, ",") &&
+        tok->next->next->next->next->kind == TK_STR &&
+        EQUAL(tok->next->next->next->next->next, ")")) {
+      *rest = tok->next->next->next->next->next->next;
+      char *res =
+          strpbrk(tok->next->next->str, tok->next->next->next->next->str);
+      if (res) {
+        return new_var_node(
+            new_string_literal(res, array_of(ty_char, strlen(res) + 1)), tok);
+      } else {
+        return new_num(0, tok);
+      }
     }
-    node->fpc->node = expr(&tok, tok);
-    add_type(node->fpc->node);
-    if (!is_flonum(node->fpc->node->ty)) {
-      error_tok(node->fpc->node->tok, "need floating point");
-    }
-    *rest = skip(tok, ")");
-    return node;
   }
-  if (EQUAL(tok, "__builtin_popcount") || EQUAL(tok, "__builtin_popcountl") ||
-      EQUAL(tok, "__builtin_popcountll")) {
-    Token *t = skip(tok->next, "(");
-    if (t->kind == TK_NUM && is_integer(t->ty)) {
-      *rest = skip(t->next, ")");
-      return new_num(popcnt(t->val), t);
+  if ((EQUAL(tok, "__builtin_strstr") ||
+       (!opt_no_builtin && EQUAL(tok, "strstr")))) {
+    if (EQUAL(tok->next, "(") && tok->next->next->kind == TK_STR &&
+        EQUAL(tok->next->next->next, ",") &&
+        tok->next->next->next->next->kind == TK_STR &&
+        EQUAL(tok->next->next->next->next->next, ")")) {
+      *rest = tok->next->next->next->next->next->next;
+      char *res =
+          strstr(tok->next->next->str, tok->next->next->next->next->str);
+      if (res) {
+        return new_var_node(
+            new_string_literal(res, array_of(ty_char, strlen(res) + 1)), tok);
+      } else {
+        return new_num(0, tok);
+      }
+    }
+  }
+  if ((EQUAL(tok, "__builtin_strchr") ||
+       (!opt_no_builtin && EQUAL(tok, "strchr")))) {
+    if (EQUAL(tok->next, "(") && tok->next->next->kind == TK_STR &&
+        EQUAL(tok->next->next->next, ",") &&
+        tok->next->next->next->next->kind == TK_NUM &&
+        EQUAL(tok->next->next->next->next->next, ")")) {
+      *rest = tok->next->next->next->next->next->next;
+      char *res =
+          strchr(tok->next->next->str, tok->next->next->next->next->val);
+      if (res) {
+        return new_var_node(
+            new_string_literal(res, array_of(ty_char, strlen(res) + 1)), tok);
+      } else {
+        return new_num(0, tok);
+      }
     }
   }
   if (tok->kind == TK_IDENT) {
@@ -2976,17 +3220,19 @@ static Node *primary(Token **rest, Token *tok) {
     *rest = tok->next;
     // For "static inline" function
     if (sc && sc->var && sc->var->is_function) {
-      if (current_fn)
+      if (current_fn) {
         strarray_push(&current_fn->refs, sc->var->name);
-      else
+      } else {
         sc->var->is_root = true;
+      }
     }
     if (sc) {
       if (sc->var) return new_var_node(sc->var, tok);
       if (sc->enum_ty) return new_num(sc->enum_val, tok);
     }
-    if (EQUAL(tok->next, "("))
+    if (EQUAL(tok->next, "(")) {
       error_tok(tok, "implicit declaration of a function");
+    }
     error_tok(tok, "undefined variable");
   }
   if (tok->kind == TK_STR) {
@@ -3012,7 +3258,7 @@ static Node *primary(Token **rest, Token *tok) {
 static Token *parse_typedef(Token *tok, Type *basety) {
   bool first = true;
   while (!CONSUME(&tok, tok, ";")) {
-    if (!first) tok = skip(tok, ",");
+    if (!first) tok = skip(tok, ',');
     first = false;
     Type *ty = declarator(&tok, tok, basety);
     if (!ty->name) error_tok(ty->name_pos, "typedef name omitted");
@@ -3043,8 +3289,9 @@ static void resolve_goto_labels(void) {
         break;
       }
     }
-    if (x->unique_label == NULL)
+    if (x->unique_label == NULL) {
       error_tok(x->tok->next, "use of undeclared label");
+    }
   }
   gotos = labels = NULL;
 }
@@ -3100,9 +3347,9 @@ static Token *function(Token *tok, Type *basety, VarAttr *attr) {
   }
   fn->is_root = !(fn->is_static && fn->is_inline);
   if (consume_attribute(&tok, tok, "asm")) {
-    tok = skip(tok, "(");
+    tok = skip(tok, '(');
     fn->asmname = ConsumeStringLiteral(&tok, tok);
-    tok = skip(tok, ")");
+    tok = skip(tok, ')');
   }
   tok = attribute_list(tok, &attr, thing_attributes);
   if (CONSUME(&tok, tok, ";")) return tok;
@@ -3119,7 +3366,7 @@ static Token *function(Token *tok, Type *basety, VarAttr *attr) {
   if (ty->is_variadic)
     fn->va_area = new_lvar("__va_area__", array_of(ty_char, 136));
   fn->alloca_bottom = new_lvar("__alloca_size__", pointer_to(ty_char));
-  tok = skip(tok, "{");
+  tok = skip(tok, '{');
   // [C18 6.4.2.2] "__func__" is automatically defined as a
   // local variable containing the current function name.
   push_scope("__func__")->var =
@@ -3137,17 +3384,17 @@ static Token *function(Token *tok, Type *basety, VarAttr *attr) {
 static Token *global_variable(Token *tok, Type *basety, VarAttr *attr) {
   bool first = true;
   while (!CONSUME(&tok, tok, ";")) {
-    if (!first) tok = skip(tok, ",");
+    if (!first) tok = skip(tok, ',');
     first = false;
     Type *ty = declarator(&tok, tok, basety);
     if (!ty->name) error_tok(ty->name_pos, "variable name omitted");
     Obj *var = new_gvar(get_ident(ty->name), ty);
     if (consume_attribute(&tok, tok, "asm")) {
-      tok = skip(tok, "(");
+      tok = skip(tok, '(');
       var->asmname = ConsumeStringLiteral(&tok, tok);
-      tok = skip(tok, ")");
+      tok = skip(tok, ')');
     }
-    /* tok = attribute_list(tok, &attr, thing_attributes); */
+    tok = attribute_list(tok, attr, thing_attributes);
     var->is_definition = !attr->is_extern;
     var->is_static = attr->is_static;
     var->is_tls = attr->is_tls;
@@ -3195,32 +3442,32 @@ static void scan_globals(void) {
   globals = head.next;
 }
 
-static Obj *declare1(char *name, Type *ret, Type *p1) {
-  Type *ty = func_type(ret);
-  ty->params = copy_type(p1);
-  return new_gvar(name, ty);
-}
-
-static Obj *declare_builtin0(char *name, Type *ret) {
+static Obj *declare0(char *name, Type *ret) {
+  if (!opt_no_builtin) new_gvar(name, func_type(ret));
   return new_gvar(xstrcat("__builtin_", name), func_type(ret));
 }
 
-static Obj *declare_builtin1(char *name, Type *ret, Type *p1) {
-  return declare1(xstrcat("__builtin_", name), ret, p1);
-}
-
-static Obj *declare_builtin2(char *name, Type *ret, Type *p1, Type *p2) {
+static Obj *declare1(char *name, Type *ret, Type *p1) {
   Type *ty = func_type(ret);
   ty->params = copy_type(p1);
-  ty->params->next = copy_type(p2);
+  if (!opt_no_builtin) new_gvar(name, ty);
   return new_gvar(xstrcat("__builtin_", name), ty);
 }
 
-static Obj *declare_builtin3(char *s, Type *r, Type *a, Type *b, Type *c) {
+static Obj *declare2(char *name, Type *ret, Type *p1, Type *p2) {
+  Type *ty = func_type(ret);
+  ty->params = copy_type(p1);
+  ty->params->next = copy_type(p2);
+  if (!opt_no_builtin) new_gvar(name, ty);
+  return new_gvar(xstrcat("__builtin_", name), ty);
+}
+
+static Obj *declare3(char *s, Type *r, Type *a, Type *b, Type *c) {
   Type *ty = func_type(r);
   ty->params = copy_type(a);
   ty->params->next = copy_type(b);
   ty->params->next->next = copy_type(c);
+  if (!opt_no_builtin) new_gvar(s, ty);
   return new_gvar(xstrcat("__builtin_", s), ty);
 }
 
@@ -3228,47 +3475,48 @@ void declare_builtin_functions(void) {
   Type *pvoid = pointer_to(ty_void);
   Type *pchar = pointer_to(ty_char);
   builtin_alloca = declare1("alloca", pointer_to(ty_void), ty_int);
-  declare_builtin0("trap", ty_int);
-  declare_builtin0("unreachable", ty_int);
-  declare_builtin0("inff", ty_float);
-  declare_builtin0("inf", ty_double);
-  declare_builtin0("infl", ty_ldouble);
-  declare_builtin1("ctz", ty_int, ty_int);
-  declare_builtin1("ctzl", ty_long, ty_long);
-  declare_builtin1("ctzll", ty_long, ty_long);
-  declare_builtin1("clz", ty_int, ty_int);
-  declare_builtin1("clzl", ty_long, ty_long);
-  declare_builtin1("clzll", ty_long, ty_long);
-  declare_builtin1("ffs", ty_int, ty_int);
-  declare_builtin1("ffsl", ty_int, ty_long);
-  declare_builtin1("ffsll", ty_int, ty_long);
-  declare_builtin1("bswap16", ty_ushort, ty_ushort);
-  declare_builtin1("bswap32", ty_uint, ty_uint);
-  declare_builtin1("bswap64", ty_ulong, ty_ulong);
-  declare_builtin1("popcount", ty_int, ty_uint);
-  declare_builtin1("popcountl", ty_long, ty_ulong);
-  declare_builtin1("popcountll", ty_long, ty_ulong);
-  declare_builtin1("signbitf", ty_int, ty_float);
-  declare_builtin1("signbit", ty_long, ty_double);
-  declare_builtin1("signbitl", ty_int, ty_ldouble);
-  declare_builtin1("nanf", ty_float, pchar);
-  declare_builtin1("nan", ty_double, pchar);
-  declare_builtin1("nanl", ty_ldouble, pchar);
-  declare_builtin1("isnan", ty_int, ty_double);
-  declare_builtin1("isinf", ty_int, ty_double);
-  declare_builtin1("isfinite", ty_int, ty_double);
-  declare_builtin2("isgreater", ty_int, ty_double, ty_double);
-  declare_builtin2("isgreaterequal", ty_int, ty_double, ty_double);
-  declare_builtin2("isless", ty_int, ty_double, ty_double);
-  declare_builtin2("islessequal", ty_int, ty_double, ty_double);
-  declare_builtin2("islessgreater", ty_int, ty_double, ty_double);
-  declare_builtin2("isunordered", ty_int, ty_double, ty_double);
-  declare_builtin2("strpbrk", pchar, pchar, pchar);
-  declare_builtin3("memcpy", pvoid, pvoid, pvoid, ty_ulong);
-  declare_builtin3("memset", pvoid, pvoid, ty_int, ty_ulong);
-  declare_builtin1("strlen", ty_ulong, pchar);
-  declare_builtin2("strchr", pchar, pchar, ty_int);
-  declare_builtin2("strstr", pchar, pchar, pchar);
+  declare0("trap", ty_int);
+  declare0("unreachable", ty_int);
+  declare0("inff", ty_float);
+  declare0("inf", ty_double);
+  declare0("infl", ty_ldouble);
+  declare1("ctz", ty_int, ty_int);
+  declare1("ctzl", ty_long, ty_long);
+  declare1("ctzll", ty_long, ty_long);
+  declare1("clz", ty_int, ty_int);
+  declare1("clzl", ty_long, ty_long);
+  declare1("clzll", ty_long, ty_long);
+  declare1("ffs", ty_int, ty_int);
+  declare1("ffsl", ty_int, ty_long);
+  declare1("ffsll", ty_int, ty_long);
+  declare1("bswap16", ty_ushort, ty_ushort);
+  declare1("bswap32", ty_uint, ty_uint);
+  declare1("bswap64", ty_ulong, ty_ulong);
+  declare1("popcount", ty_int, ty_uint);
+  declare1("popcountl", ty_long, ty_ulong);
+  declare1("popcountll", ty_long, ty_ulong);
+  declare1("signbitf", ty_int, ty_float);
+  declare1("signbit", ty_long, ty_double);
+  declare1("signbitl", ty_int, ty_ldouble);
+  declare1("nanf", ty_float, pchar);
+  declare1("nan", ty_double, pchar);
+  declare1("nanl", ty_ldouble, pchar);
+  declare1("isnan", ty_int, ty_double);
+  declare1("isinf", ty_int, ty_double);
+  declare1("isfinite", ty_int, ty_double);
+  declare2("isgreater", ty_int, ty_double, ty_double);
+  declare2("isgreaterequal", ty_int, ty_double, ty_double);
+  declare2("isless", ty_int, ty_double, ty_double);
+  declare2("islessequal", ty_int, ty_double, ty_double);
+  declare2("islessgreater", ty_int, ty_double, ty_double);
+  declare2("isunordered", ty_int, ty_double, ty_double);
+  declare2("strpbrk", pchar, pchar, pchar);
+  declare3("memcpy", pvoid, pvoid, pvoid, ty_ulong);
+  declare3("memset", pvoid, pvoid, ty_int, ty_ulong);
+  declare1("strlen", ty_ulong, pchar);
+  declare2("strchr", pchar, pchar, ty_int);
+  declare2("strstr", pchar, pchar, pchar);
+  declare1("frame_address", pvoid, ty_int);
 }
 
 // program = (typedef | function-definition | global-variable)*
@@ -3281,6 +3529,10 @@ Obj *parse(Token *tok) {
       a->next = staticasms;
       a->body = asm_stmt(&tok, tok);
       staticasms = a;
+      continue;
+    }
+    if (EQUAL(tok, "_Static_assert")) {
+      tok = static_assertion(tok);
       continue;
     }
     VarAttr attr = {};

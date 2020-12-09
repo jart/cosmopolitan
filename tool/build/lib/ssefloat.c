@@ -34,173 +34,6 @@
 #include "tool/build/lib/ssefloat.h"
 #include "tool/build/lib/throw.h"
 
-#define SSE_BUILTINS               \
-  (!IsModeDbg() && __SSE3__ + 0 && \
-   (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 408)
-
-typedef int int_v _Vector_size(16) forcealign(16);
-typedef long long_v _Vector_size(16) forcealign(16);
-
-static float_v Addps(struct Machine *m, float_v x, float_v y) {
-  return x + y;
-}
-
-static double_v Addpd(struct Machine *m, double_v x, double_v y) {
-  return x + y;
-}
-
-static float_v Mulps(struct Machine *m, float_v x, float_v y) {
-  return x * y;
-}
-
-static double_v Mulpd(struct Machine *m, double_v x, double_v y) {
-  return x * y;
-}
-
-static float_v Subps(struct Machine *m, float_v x, float_v y) {
-  return x - y;
-}
-
-static double_v Subpd(struct Machine *m, double_v x, double_v y) {
-  return x - y;
-}
-
-static float_v Divps(struct Machine *m, float_v x, float_v y) {
-  return x / y;
-}
-
-static double_v Divpd(struct Machine *m, double_v x, double_v y) {
-  return x / y;
-}
-
-static float_v Andps(struct Machine *m, float_v x, float_v y) {
-  return (float_v)((int_v)x & (int_v)y);
-}
-
-static double_v Andpd(struct Machine *m, double_v x, double_v y) {
-  return (double_v)((long_v)x & (long_v)y);
-}
-
-static float_v Andnps(struct Machine *m, float_v x, float_v y) {
-  return (float_v)(~(int_v)x & (int_v)y);
-}
-
-static double_v Andnpd(struct Machine *m, double_v x, double_v y) {
-  return (double_v)(~(long_v)x & (long_v)y);
-}
-
-static float_v Orps(struct Machine *m, float_v x, float_v y) {
-  return (float_v)((int_v)x | (int_v)y);
-}
-
-static double_v Orpd(struct Machine *m, double_v x, double_v y) {
-  return (double_v)((long_v)x | (long_v)y);
-}
-
-static float_v Xorps(struct Machine *m, float_v x, float_v y) {
-  return (float_v)((int_v)x ^ (int_v)y);
-}
-
-static double_v Xorpd(struct Machine *m, double_v x, double_v y) {
-  return (double_v)((long_v)x ^ (long_v)y);
-}
-
-static float_v Minps(struct Machine *m, float_v x, float_v y) {
-#if SSE_BUILTINS
-  return __builtin_ia32_minps(x, y);
-#else
-  unsigned i;
-  for (i = 0; i < 4; ++i) {
-    x[i] = MIN(x[i], y[i]);
-  }
-  return x;
-#endif
-}
-
-static double_v Minpd(struct Machine *m, double_v x, double_v y) {
-#if SSE_BUILTINS
-  return __builtin_ia32_minpd(x, y);
-#else
-  unsigned i;
-  for (i = 0; i < 2; ++i) {
-    x[i] = MIN(x[i], y[i]);
-  }
-  return x;
-#endif
-}
-
-static float_v Maxps(struct Machine *m, float_v x, float_v y) {
-#if SSE_BUILTINS
-  return __builtin_ia32_maxps(x, y);
-#else
-  unsigned i;
-  for (i = 0; i < 4; ++i) {
-    x[i] = MAX(x[i], y[i]);
-  }
-  return x;
-#endif
-}
-
-static double_v Maxpd(struct Machine *m, double_v x, double_v y) {
-#if SSE_BUILTINS
-  return __builtin_ia32_maxpd(x, y);
-#else
-  unsigned i;
-  for (i = 0; i < 2; ++i) {
-    x[i] = MAX(x[i], y[i]);
-  }
-  return x;
-#endif
-}
-
-static double_v Haddpd(struct Machine *m, double_v x, double_v y) {
-#if SSE_BUILTINS
-  return __builtin_ia32_haddpd(x, y);
-#else
-  return (double_v){x[0] + x[1], y[0] + y[1]};
-#endif
-}
-
-static float_v Haddps(struct Machine *m, float_v x, float_v y) {
-#if SSE_BUILTINS
-  return __builtin_ia32_haddps(x, y);
-#else
-  return (float_v){x[0] + x[1], x[2] + x[3], y[0] + y[1], y[2] + y[3]};
-#endif
-}
-
-static double_v Hsubpd(struct Machine *m, double_v x, double_v y) {
-#if SSE_BUILTINS
-  return __builtin_ia32_hsubpd(x, y);
-#else
-  return (double_v){x[0] - x[1], y[0] - y[1]};
-#endif
-}
-
-static float_v Hsubps(struct Machine *m, float_v x, float_v y) {
-#if SSE_BUILTINS
-  return __builtin_ia32_hsubps(x, y);
-#else
-  return (float_v){x[0] - x[1], x[2] - x[3], y[0] - y[1], y[2] - y[3]};
-#endif
-}
-
-static double_v Addsubpd(struct Machine *m, double_v x, double_v y) {
-#if SSE_BUILTINS
-  return __builtin_ia32_addsubpd(x, y);
-#else
-  return (double_v){x[0] - y[0], x[1] + y[1]};
-#endif
-}
-
-static float_v Addsubps(struct Machine *m, float_v x, float_v y) {
-#if SSE_BUILTINS
-  return __builtin_ia32_addsubps(x, y);
-#else
-  return (float_v){x[0] - y[0], x[1] + y[1], x[2] - y[2], x[3] + y[3]};
-#endif
-}
-
 void OpUnpcklpsd(struct Machine *m, uint32_t rde) {
   uint8_t *a, *b;
   a = XmmRexrReg(m, rde);
@@ -294,28 +127,28 @@ void OpShufpsd(struct Machine *m, uint32_t rde) {
 
 void OpSqrtpsd(struct Machine *m, uint32_t rde) {
   long i;
-  float_v xf;
-  double_v xd;
+  float xf[4];
+  double xd[2];
   switch (Rep(rde) | Osz(rde)) {
     case 0:
-      memcpy(&xf, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+      memcpy(xf, GetModrmRegisterXmmPointerRead16(m, rde), 16);
       for (i = 0; i < 4; ++i) xf[i] = sqrtf(xf[i]);
-      memcpy(XmmRexrReg(m, rde), &xf, 16);
+      memcpy(XmmRexrReg(m, rde), xf, 16);
       break;
     case 1:
-      memcpy(&xd, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+      memcpy(xd, GetModrmRegisterXmmPointerRead16(m, rde), 16);
       for (i = 0; i < 2; ++i) xd[i] = sqrt(xd[i]);
-      memcpy(XmmRexrReg(m, rde), &xd, 16);
+      memcpy(XmmRexrReg(m, rde), xd, 16);
       break;
     case 2:
-      memcpy(&xd, GetModrmRegisterXmmPointerRead8(m, rde), 8);
+      memcpy(xd, GetModrmRegisterXmmPointerRead8(m, rde), 8);
       xd[0] = sqrt(xd[0]);
-      memcpy(XmmRexrReg(m, rde), &xd, 8);
+      memcpy(XmmRexrReg(m, rde), xd, 8);
       break;
     case 3:
-      memcpy(&xf, GetModrmRegisterXmmPointerRead4(m, rde), 4);
+      memcpy(xf, GetModrmRegisterXmmPointerRead4(m, rde), 4);
       xf[0] = sqrtf(xf[0]);
-      memcpy(XmmRexrReg(m, rde), &xf, 4);
+      memcpy(XmmRexrReg(m, rde), xf, 4);
       break;
     default:
       unreachable;
@@ -323,91 +156,30 @@ void OpSqrtpsd(struct Machine *m, uint32_t rde) {
 }
 
 void OpRsqrtps(struct Machine *m, uint32_t rde) {
-  float_v x;
+  float x[4];
   unsigned i;
   if (Rep(rde) != 3) {
-    memcpy(&x, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    memcpy(x, GetModrmRegisterXmmPointerRead16(m, rde), 16);
     for (i = 0; i < 4; ++i) x[i] = 1.f / sqrtf(x[i]);
-    memcpy(XmmRexrReg(m, rde), &x, 16);
+    memcpy(XmmRexrReg(m, rde), x, 16);
   } else {
-    memcpy(&x, GetModrmRegisterXmmPointerRead4(m, rde), 4);
+    memcpy(x, GetModrmRegisterXmmPointerRead4(m, rde), 4);
     x[0] = 1.f / sqrtf(x[0]);
-    memcpy(XmmRexrReg(m, rde), &x, 4);
+    memcpy(XmmRexrReg(m, rde), x, 4);
   }
 }
 
 void OpRcpps(struct Machine *m, uint32_t rde) {
-  float_v x;
+  float x[4];
   unsigned i;
   if (Rep(rde) != 3) {
-    memcpy(&x, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    memcpy(x, GetModrmRegisterXmmPointerRead16(m, rde), 16);
     for (i = 0; i < 4; ++i) x[i] = 1.f / x[i];
-    memcpy(XmmRexrReg(m, rde), &x, 16);
+    memcpy(XmmRexrReg(m, rde), x, 16);
   } else {
-    memcpy(&x, GetModrmRegisterXmmPointerRead4(m, rde), 4);
+    memcpy(x, GetModrmRegisterXmmPointerRead4(m, rde), 4);
     x[0] = 1.f / x[0];
-    memcpy(XmmRexrReg(m, rde), &x, 4);
-  }
-}
-
-static void VpsdWpsd(struct Machine *m, uint32_t rde,
-                     float_v opf(struct Machine *, float_v, float_v),
-                     double_v opd(struct Machine *, double_v, double_v),
-                     bool isfloat, bool isdouble) {
-  float_v xf, yf;
-  double_v xd, yd;
-  if (isfloat) {
-    memcpy(&xf, XmmRexrReg(m, rde), 16);
-    memcpy(&yf, GetModrmRegisterXmmPointerRead16(m, rde), 16);
-    xf = opf(m, xf, yf);
-    memcpy(XmmRexrReg(m, rde), &xf, 16);
-  } else if (isdouble) {
-    memcpy(&xd, XmmRexrReg(m, rde), 16);
-    memcpy(&yd, GetModrmRegisterXmmPointerRead16(m, rde), 16);
-    xd = opd(m, xd, yd);
-    memcpy(XmmRexrReg(m, rde), &xd, 16);
-  } else {
-    OpUd(m, rde);
-  }
-}
-
-static void VpsdWpsd66(struct Machine *m, uint32_t rde,
-                       float_v opf(struct Machine *, float_v, float_v),
-                       double_v opd(struct Machine *, double_v, double_v)) {
-  VpsdWpsd(m, rde, opf, opd, !Osz(rde), Osz(rde));
-}
-
-static void VpsdWpsd66f2(struct Machine *m, uint32_t rde,
-                         float_v opf(struct Machine *, float_v, float_v),
-                         double_v opd(struct Machine *, double_v, double_v)) {
-  VpsdWpsd(m, rde, opf, opd, Rep(rde) == 2, Osz(rde));
-}
-
-static void VspsdWspsd(struct Machine *m, uint32_t rde,
-                       float_v opf(struct Machine *, float_v, float_v),
-                       double_v opd(struct Machine *, double_v, double_v)) {
-  float_v xf, yf;
-  double_v xd, yd;
-  if (Rep(rde) == 2) {
-    memcpy(&yd, GetModrmRegisterXmmPointerRead8(m, rde), 8);
-    memcpy(&xd, XmmRexrReg(m, rde), 8);
-    xd = opd(m, xd, yd);
-    memcpy(XmmRexrReg(m, rde), &xd, 8);
-  } else if (Rep(rde) == 3) {
-    memcpy(&yf, GetModrmRegisterXmmPointerRead4(m, rde), 4);
-    memcpy(&xf, XmmRexrReg(m, rde), 4);
-    xf = opf(m, xf, yf);
-    memcpy(XmmRexrReg(m, rde), &xf, 4);
-  } else if (Osz(rde)) {
-    memcpy(&yd, GetModrmRegisterXmmPointerRead16(m, rde), 16);
-    memcpy(&xd, XmmRexrReg(m, rde), 16);
-    xd = opd(m, xd, yd);
-    memcpy(XmmRexrReg(m, rde), &xd, 16);
-  } else {
-    memcpy(&yf, GetModrmRegisterXmmPointerRead16(m, rde), 16);
-    memcpy(&xf, XmmRexrReg(m, rde), 16);
-    xf = opf(m, xf, yf);
-    memcpy(XmmRexrReg(m, rde), &xf, 16);
+    memcpy(XmmRexrReg(m, rde), x, 4);
   }
 }
 
@@ -448,118 +220,376 @@ void OpComissVsWs(struct Machine *m, uint32_t rde) {
   }
 }
 
-static float_v Cmpps(struct Machine *m, float_v x, float_v y) {
-  long i;
-  switch (m->xedd->op.uimm0) {
+static int Cmps(int imm, float x, float y) {
+  switch (imm) {
     case 0:
-      return x == y;
+      return x == y ? -1 : 0;
     case 1:
-      return x < y;
+      return x < y ? -1 : 0;
     case 2:
-      return x <= y;
+      return x <= y ? -1 : 0;
     case 3:
-      for (i = 0; i < 4; ++i) {
-        x[i] = isnan(x[i]) || isnan(y[i]);
-      }
-      return x;
+      return isnan(x) || isnan(y) ? -1 : 0;
     case 4:
-      return x != y;
+      return x != y ? -1 : 0;
     case 5:
-      return x >= y;
+      return x >= y ? -1 : 0;
     case 6:
-      return x > y;
+      return x > y ? -1 : 0;
     case 7:
-      for (i = 0; i < 4; ++i) {
-        x[i] = !(isnan(x[i]) || isnan(y[i]));
-      }
-      return x;
+      return !(isnan(x) || isnan(y)) ? -1 : 0;
     default:
-      OpUd(m, 0);
+      return 0;
   }
 }
 
-static double_v Cmppd(struct Machine *m, double_v x, double_v y) {
+static int32_t Cmpd(int imm, double x, double y) {
   long i;
-  switch (m->xedd->op.uimm0) {
+  switch (imm) {
     case 0:
-      return x == y;
+      return x == y ? -1 : 0;
     case 1:
-      return x < y;
+      return x < y ? -1 : 0;
     case 2:
-      return x <= y;
+      return x <= y ? -1 : 0;
     case 3:
-      for (i = 0; i < 2; ++i) {
-        x[i] = isnan(x[i]) || isnan(y[i]);
-      }
-      return x;
+      return isnan(x) || isnan(y) ? -1 : 0;
     case 4:
-      return x != y;
+      return x != y ? -1 : 0;
     case 5:
-      return x >= y;
+      return x >= y ? -1 : 0;
     case 6:
-      return x > y;
+      return x > y ? -1 : 0;
     case 7:
-      for (i = 0; i < 2; ++i) {
-        x[i] = !(isnan(x[i]) || isnan(y[i]));
-      }
-      return x;
+      return !(isnan(x) || isnan(y)) ? -1 : 0;
     default:
-      OpUd(m, 0);
+      return 0;
   }
 }
 
 void OpAddpsd(struct Machine *m, uint32_t rde) {
-  VspsdWspsd(m, rde, Addps, Addpd);
+  if (Rep(rde) == 2) {
+    double x, y;
+    memcpy(&y, GetModrmRegisterXmmPointerRead8(m, rde), 8);
+    memcpy(&x, XmmRexrReg(m, rde), 8);
+    x += y;
+    memcpy(XmmRexrReg(m, rde), &x, 8);
+  } else if (Rep(rde) == 3) {
+    float x, y;
+    memcpy(&y, GetModrmRegisterXmmPointerRead4(m, rde), 4);
+    memcpy(&x, XmmRexrReg(m, rde), 4);
+    x += y;
+    memcpy(XmmRexrReg(m, rde), &x, 4);
+  } else if (Osz(rde)) {
+    double x[2], y[2];
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    x[0] += y[0];
+    x[1] += y[1];
+    memcpy(XmmRexrReg(m, rde), x, 16);
+  } else {
+    float x[4], y[4];
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    x[0] += y[0];
+    x[1] += y[1];
+    x[2] += y[2];
+    x[3] += y[3];
+    memcpy(XmmRexrReg(m, rde), x, 16);
+  }
 }
 
 void OpMulpsd(struct Machine *m, uint32_t rde) {
-  VspsdWspsd(m, rde, Mulps, Mulpd);
+  if (Rep(rde) == 2) {
+    double x, y;
+    memcpy(&y, GetModrmRegisterXmmPointerRead8(m, rde), 8);
+    memcpy(&x, XmmRexrReg(m, rde), 8);
+    x *= y;
+    memcpy(XmmRexrReg(m, rde), &x, 8);
+  } else if (Rep(rde) == 3) {
+    float x, y;
+    memcpy(&y, GetModrmRegisterXmmPointerRead4(m, rde), 4);
+    memcpy(&x, XmmRexrReg(m, rde), 4);
+    x *= y;
+    memcpy(XmmRexrReg(m, rde), &x, 4);
+  } else if (Osz(rde)) {
+    double x[2], y[2];
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    x[0] *= y[0];
+    x[1] *= y[1];
+    memcpy(XmmRexrReg(m, rde), x, 16);
+  } else {
+    float x[4], y[4];
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    x[0] *= y[0];
+    x[1] *= y[1];
+    x[2] *= y[2];
+    x[3] *= y[3];
+    memcpy(XmmRexrReg(m, rde), x, 16);
+  }
 }
 
 void OpSubpsd(struct Machine *m, uint32_t rde) {
-  VspsdWspsd(m, rde, Subps, Subpd);
+  if (Rep(rde) == 2) {
+    double x, y;
+    memcpy(&y, GetModrmRegisterXmmPointerRead8(m, rde), 8);
+    memcpy(&x, XmmRexrReg(m, rde), 8);
+    x -= y;
+    memcpy(XmmRexrReg(m, rde), &x, 8);
+  } else if (Rep(rde) == 3) {
+    float x, y;
+    memcpy(&y, GetModrmRegisterXmmPointerRead4(m, rde), 4);
+    memcpy(&x, XmmRexrReg(m, rde), 4);
+    x -= y;
+    memcpy(XmmRexrReg(m, rde), &x, 4);
+  } else if (Osz(rde)) {
+    double x[2], y[2];
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    x[0] -= y[0];
+    x[1] -= y[1];
+    memcpy(XmmRexrReg(m, rde), x, 16);
+  } else {
+    float x[4], y[4];
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    x[0] -= y[0];
+    x[1] -= y[1];
+    x[2] -= y[2];
+    x[3] -= y[3];
+    memcpy(XmmRexrReg(m, rde), x, 16);
+  }
 }
 
 void OpDivpsd(struct Machine *m, uint32_t rde) {
-  VspsdWspsd(m, rde, Divps, Divpd);
+  if (Rep(rde) == 2) {
+    double x, y;
+    memcpy(&y, GetModrmRegisterXmmPointerRead8(m, rde), 8);
+    memcpy(&x, XmmRexrReg(m, rde), 8);
+    x /= y;
+    memcpy(XmmRexrReg(m, rde), &x, 8);
+  } else if (Rep(rde) == 3) {
+    float x, y;
+    memcpy(&y, GetModrmRegisterXmmPointerRead4(m, rde), 4);
+    memcpy(&x, XmmRexrReg(m, rde), 4);
+    x /= y;
+    memcpy(XmmRexrReg(m, rde), &x, 4);
+  } else if (Osz(rde)) {
+    double x[2], y[2];
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    x[0] /= y[0];
+    x[1] /= y[1];
+    memcpy(XmmRexrReg(m, rde), x, 16);
+  } else {
+    float x[4], y[4];
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    x[0] /= y[0];
+    x[1] /= y[1];
+    x[2] /= y[2];
+    x[3] /= y[3];
+    memcpy(XmmRexrReg(m, rde), x, 16);
+  }
 }
 
 void OpMinpsd(struct Machine *m, uint32_t rde) {
-  VspsdWspsd(m, rde, Minps, Minpd);
+  if (Rep(rde) == 2) {
+    double x, y;
+    memcpy(&y, GetModrmRegisterXmmPointerRead8(m, rde), 8);
+    memcpy(&x, XmmRexrReg(m, rde), 8);
+    x = MIN(x, y);
+    memcpy(XmmRexrReg(m, rde), &x, 8);
+  } else if (Rep(rde) == 3) {
+    float x, y;
+    memcpy(&y, GetModrmRegisterXmmPointerRead4(m, rde), 4);
+    memcpy(&x, XmmRexrReg(m, rde), 4);
+    x = MIN(x, y);
+    memcpy(XmmRexrReg(m, rde), &x, 4);
+  } else if (Osz(rde)) {
+    double x[2], y[2];
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    x[0] = MIN(x[0], y[0]);
+    x[1] = MIN(x[1], y[1]);
+    memcpy(XmmRexrReg(m, rde), x, 16);
+  } else {
+    float x[4], y[4];
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    x[0] = MIN(x[0], y[0]);
+    x[1] = MIN(x[1], y[1]);
+    x[2] = MIN(x[2], y[2]);
+    x[3] = MIN(x[3], y[3]);
+    memcpy(XmmRexrReg(m, rde), x, 16);
+  }
 }
 
 void OpMaxpsd(struct Machine *m, uint32_t rde) {
-  VspsdWspsd(m, rde, Maxps, Maxpd);
+  if (Rep(rde) == 2) {
+    double x, y;
+    memcpy(&y, GetModrmRegisterXmmPointerRead8(m, rde), 8);
+    memcpy(&x, XmmRexrReg(m, rde), 8);
+    x = MAX(x, y);
+    memcpy(XmmRexrReg(m, rde), &x, 8);
+  } else if (Rep(rde) == 3) {
+    float x, y;
+    memcpy(&y, GetModrmRegisterXmmPointerRead4(m, rde), 4);
+    memcpy(&x, XmmRexrReg(m, rde), 4);
+    x = MAX(x, y);
+    memcpy(XmmRexrReg(m, rde), &x, 4);
+  } else if (Osz(rde)) {
+    double x[2], y[2];
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    x[0] = MAX(x[0], y[0]);
+    x[1] = MAX(x[1], y[1]);
+    memcpy(XmmRexrReg(m, rde), x, 16);
+  } else {
+    float x[4], y[4];
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    x[0] = MAX(x[0], y[0]);
+    x[1] = MAX(x[1], y[1]);
+    x[2] = MAX(x[2], y[2]);
+    x[3] = MAX(x[3], y[3]);
+    memcpy(XmmRexrReg(m, rde), x, 16);
+  }
 }
 
 void OpCmppsd(struct Machine *m, uint32_t rde) {
-  VspsdWspsd(m, rde, Cmpps, Cmppd);
+  int imm = m->xedd->op.uimm0;
+  if (Rep(rde) == 2) {
+    double x, y;
+    memcpy(&y, GetModrmRegisterXmmPointerRead8(m, rde), 8);
+    memcpy(&x, XmmRexrReg(m, rde), 8);
+    x = Cmpd(imm, x, y);
+    memcpy(XmmRexrReg(m, rde), &x, 8);
+  } else if (Rep(rde) == 3) {
+    float x, y;
+    memcpy(&y, GetModrmRegisterXmmPointerRead4(m, rde), 4);
+    memcpy(&x, XmmRexrReg(m, rde), 4);
+    x = Cmps(imm, x, y);
+    memcpy(XmmRexrReg(m, rde), &x, 4);
+  } else if (Osz(rde)) {
+    double x[2], y[2];
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    x[0] = Cmpd(imm, x[0], y[0]);
+    x[1] = Cmpd(imm, x[1], y[1]);
+    memcpy(XmmRexrReg(m, rde), x, 16);
+  } else {
+    float x[4], y[4];
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    x[0] = Cmps(imm, x[0], y[0]);
+    x[1] = Cmps(imm, x[1], y[1]);
+    x[2] = Cmps(imm, x[2], y[2]);
+    x[3] = Cmps(imm, x[3], y[3]);
+    memcpy(XmmRexrReg(m, rde), x, 16);
+  }
 }
 
 void OpAndpsd(struct Machine *m, uint32_t rde) {
-  VpsdWpsd66(m, rde, Andps, Andpd);
+  uint64_t x[2], y[2];
+  memcpy(x, XmmRexrReg(m, rde), 16);
+  memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+  x[0] &= y[0];
+  x[1] &= y[1];
+  memcpy(XmmRexrReg(m, rde), x, 16);
 }
 
 void OpAndnpsd(struct Machine *m, uint32_t rde) {
-  VpsdWpsd66(m, rde, Andnps, Andnpd);
+  uint64_t x[2], y[2];
+  memcpy(x, XmmRexrReg(m, rde), 16);
+  memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+  x[0] = ~x[0] & y[0];
+  x[1] = ~x[1] & y[1];
+  memcpy(XmmRexrReg(m, rde), x, 16);
 }
 
 void OpOrpsd(struct Machine *m, uint32_t rde) {
-  VpsdWpsd66(m, rde, Orps, Orpd);
+  uint64_t x[2], y[2];
+  memcpy(x, XmmRexrReg(m, rde), 16);
+  memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+  x[0] |= y[0];
+  x[1] |= y[1];
+  memcpy(XmmRexrReg(m, rde), x, 16);
 }
 
 void OpXorpsd(struct Machine *m, uint32_t rde) {
-  VpsdWpsd66(m, rde, Xorps, Xorpd);
+  uint64_t x[2], y[2];
+  memcpy(x, XmmRexrReg(m, rde), 16);
+  memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+  x[0] ^= y[0];
+  x[1] ^= y[1];
+  memcpy(XmmRexrReg(m, rde), x, 16);
 }
 
 void OpHaddpsd(struct Machine *m, uint32_t rde) {
-  VpsdWpsd66f2(m, rde, Haddps, Haddpd);
+  if (Rep(rde) == 2) {
+    float x[4], y[4], z[4];
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    z[0] = x[0] + x[1];
+    z[1] = x[2] + x[3];
+    z[2] = y[0] + y[1];
+    z[3] = y[2] + y[3];
+    memcpy(XmmRexrReg(m, rde), x, 16);
+  } else if (Osz(rde)) {
+    double x[2], y[2], z[2];
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    z[0] = x[0] + x[1];
+    z[1] = y[0] + y[1];
+    memcpy(XmmRexrReg(m, rde), z, 16);
+  } else {
+    OpUd(m, rde);
+  }
 }
 
 void OpHsubpsd(struct Machine *m, uint32_t rde) {
-  VpsdWpsd66f2(m, rde, Hsubps, Hsubpd);
+  if (Rep(rde) == 2) {
+    float x[4], y[4], z[4];
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    z[0] = x[0] - x[1];
+    z[1] = x[2] - x[3];
+    z[2] = y[0] - y[1];
+    z[3] = y[2] - y[3];
+    memcpy(XmmRexrReg(m, rde), x, 16);
+  } else if (Osz(rde)) {
+    double x[2], y[2], z[2];
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    z[0] = x[0] - x[1];
+    z[1] = y[0] - y[1];
+    memcpy(XmmRexrReg(m, rde), z, 16);
+  } else {
+    OpUd(m, rde);
+  }
 }
 
 void OpAddsubpsd(struct Machine *m, uint32_t rde) {
-  VpsdWpsd66f2(m, rde, Addsubps, Addsubpd);
+  if (Rep(rde) == 2) {
+    float x[4], y[4], z[4];
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    z[0] = x[0] - y[0];
+    z[1] = x[1] + y[1];
+    z[2] = x[2] - y[2];
+    z[3] = x[3] + y[3];
+    memcpy(XmmRexrReg(m, rde), x, 16);
+  } else if (Osz(rde)) {
+    double x[2], y[2], z[2];
+    memcpy(x, XmmRexrReg(m, rde), 16);
+    memcpy(y, GetModrmRegisterXmmPointerRead16(m, rde), 16);
+    z[0] = x[0] - y[0];
+    z[1] = x[1] + y[1];
+    memcpy(XmmRexrReg(m, rde), z, 16);
+  } else {
+    OpUd(m, rde);
+  }
 }

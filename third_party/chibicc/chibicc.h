@@ -114,7 +114,7 @@ void warn_tok(Token *, char *, ...)
 
 File **get_input_files(void);
 File *new_file(char *, int, char *);
-Token *skip(Token *, char *);
+Token *skip(Token *, char);
 Token *tokenize(File *);
 Token *tokenize_file(char *);
 Token *tokenize_string_literal(Token *, Type *);
@@ -269,10 +269,10 @@ typedef enum {
   ND_MUL,         // *
   ND_DIV,         // /
   ND_NEG,         // unary -
-  ND_MOD,         // %
-  ND_BITAND,      // &
-  ND_BITOR,       // |
-  ND_BITXOR,      // ^
+  ND_REM,         // %
+  ND_BINAND,      // &
+  ND_BINOR,       // |
+  ND_BINXOR,      // ^
   ND_SHL,         // <<
   ND_SHR,         // >>
   ND_EQ,          // ==
@@ -329,61 +329,44 @@ struct Node {
   Node *inc;
   // Block or statement expression
   Node *body;
-  union {
-    struct {
-      // Function call
-      Type *func_ty;
-      Node *args;
-      bool pass_by_stack;
-      Obj *ret_buffer;
-    };
-    struct {
-      // Switch
-      Node *case_next;
-      Node *default_case;
-      // Goto or labeled statement, or labels-as-values
-      char *label;
-      char *unique_label;
-      Node *goto_next;
-      // "break" and "continue" labels
-      char *brk_label;
-      char *cont_label;
-      // Case
-      long begin;
-      long end;
-    };
-    struct {
-      // Struct member access
-      Member *member;
-    };
-    struct {
-      // Assembly
-      Asm *azm;
-    };
-    struct {
-      // Atomic compare-and-swap
-      Node *cas_addr;
-      Node *cas_old;
-      Node *cas_new;
-    };
-    struct {
-      // Atomic op= operators
-      Obj *atomic_addr;
-      Node *atomic_expr;
-    };
-    struct {
-      // Variable
-      Obj *var;
-    };
-    struct {
-      // Numeric literal
-      int64_t val;
-      long double fval;
-    };
-    struct {
-      FpClassify *fpc;
-    };
-  };
+  // Function call
+  Type *func_ty;
+  Node *args;
+  Obj *ret_buffer;
+  bool pass_by_stack;
+  bool realign_stack;
+  // Switch
+  Node *case_next;
+  Node *default_case;
+  // Goto or labeled statement, or labels-as-values
+  char *label;
+  char *unique_label;
+  Node *goto_next;
+  // "break" and "continue" labels
+  char *brk_label;
+  char *cont_label;
+  // Case
+  long begin;
+  long end;
+  // Struct member access
+  Member *member;
+  // Assembly
+  Asm *azm;
+  // Atomic compare-and-swap
+  Node *cas_addr;
+  Node *cas_old;
+  Node *cas_new;
+  // Atomic op= operators
+  Obj *atomic_addr;
+  Node *atomic_expr;
+  // Variable
+  Obj *var;
+  // Arithmetic
+  Node *overflow;
+  // Numeric literal
+  int64_t val;
+  long double fval;
+  FpClassify *fpc;
 };
 
 Node *expr(Token **, Token *);
@@ -395,6 +378,12 @@ char *ConsumeStringLiteral(Token **, Token *);
 int64_t const_expr(Token **, Token *);
 int64_t eval(Node *);
 int64_t eval2(Node *, char ***);
+
+//
+// debug.c
+//
+
+void print_ast(FILE *, Obj *);
 
 //
 // type.c
@@ -560,15 +549,20 @@ void hashmap_test(void);
 //
 
 extern StringArray include_paths;
-extern bool opt_fcommon;
-extern bool opt_fpic;
-extern bool opt_verbose;
-extern bool opt_mpopcnt;
-extern char *base_file;
+extern bool opt_common;
+extern bool opt_data_sections;
+extern bool opt_fentry;
+extern bool opt_function_sections;
+extern bool opt_no_builtin;
+extern bool opt_nop_mcount;
 extern bool opt_pg;
-extern bool opt_mfentry;
-extern bool opt_mnop_mcount;
-extern bool opt_mrecord_mcount;
+extern bool opt_pic;
+extern bool opt_popcnt;
+extern bool opt_record_mcount;
+extern bool opt_sse3;
+extern bool opt_sse4;
+extern bool opt_verbose;
+extern char *base_file;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

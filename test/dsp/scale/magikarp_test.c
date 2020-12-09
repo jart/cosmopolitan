@@ -32,6 +32,8 @@
 #include "libc/x/x.h"
 #include "tool/viz/lib/formatstringtable-testlib.h"
 
+short *bingblit(int ys, int xs, unsigned char[ys][xs], int, int);
+
 TEST(magikarp, testConvolve) {
   signed char K[8] = {-1, -3, 3, 17, 17, 3, -3, -1};
   EXPECT_BINEQ(

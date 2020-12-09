@@ -8,10 +8,87 @@
 #define FPCLASSIFY(x) \
   __builtin_fpclassify(FPNAN, FPINFINITE, FPNORMAL, FPSUBNORMAL, FPZERO, x)
 
+#define conceal(x)         \
+  ({                       \
+    typeof(x) cloak = x;   \
+    asm("" : "+r"(cloak)); \
+    cloak;                 \
+  })
+
+struct frame {
+  struct frame *next;
+  intptr_t addr;
+};
+
+struct frame *frame(void) {
+  struct frame *myframe = __builtin_frame_address(0);
+  struct frame *parentframe = myframe->next;
+  return parentframe;
+}
+
+void test_frame_address(void) {
+  ASSERT(1, __builtin_frame_address(0) == frame());
+}
+
 void test_constant(void) {
   ASSERT(1, __builtin_constant_p(1));
+  ASSERT(0, __builtin_constant_p(conceal(1)));
   ASSERT(0, __builtin_constant_p(stdin));
   ASSERT(1, __builtin_constant_p(__builtin_popcount(0b10111011)));
+  ASSERT(1, __builtin_constant_p(__builtin_popcountll((size_t)0b10111011)));
+}
+
+void test_ignored(void) {
+  ASSERT(123, __builtin_assume_aligned(123, 8));
+  ASSERT(123, __builtin_assume_aligned(123, 32, 8));
+  ASSERT(123, __builtin_expect(123, 0));
+}
+
+void __attribute__((__aligned__(16))) test_clz(void) {
+  ASSERT(31, __builtin_clz(1));
+  ASSERT(63, __builtin_clzl(1));
+  ASSERT(63, __builtin_clzll(1));
+  ASSERT(25, __builtin_clz(77));
+  ASSERT(4, __builtin_clz(0x08000000));
+  ASSERT(4, __builtin_clz(0xfff08000000));
+  ASSERT(25, __builtin_clz(conceal(77)));
+  __builtin_clz(conceal(77));
+}
+
+__attribute__((__weak__)) void test_ctz(void) {
+  ASSERT(0, __builtin_ctz(1));
+  ASSERT(0, __builtin_ctz(77));
+  ASSERT(27, __builtin_ctz(0x08000000));
+  ASSERT(27, __builtin_ctz(0xffff08000000));
+  ASSERT(63, __builtin_ctzl(0x8000000000000000));
+  ASSERT(63, __builtin_ctzll(0x8000000000000000));
+  ASSERT(0, __builtin_ctz(conceal(77)));
+}
+
+void test_ffs(void) {
+  ASSERT(0, __builtin_ffs(0));
+  ASSERT(1, __builtin_ffs(1));
+  ASSERT(1, __builtin_ffs(77));
+  ASSERT(28, __builtin_ffs(0x08000000));
+  ASSERT(28, __builtin_ffs(0xffff08000000));
+  ASSERT(1, __builtin_ffs(conceal(77)));
+}
+
+void test_popcnt(void) {
+  ASSERT(0, __builtin_popcount(0));
+  ASSERT(1, __builtin_popcount(1));
+  ASSERT(6, __builtin_popcount(0b10111011));
+  ASSERT(6, __builtin_popcountl(0b10111011));
+  ASSERT(6, __builtin_popcountll(0xbb00000000000000));
+  ASSERT(6, __builtin_popcountl(conceal(0b10111011)));
+}
+
+void test_bswap(void) {
+  ASSERT(0x3412, __builtin_bswap16(0x1234));
+  ASSERT(0x78563412, __builtin_bswap32(0x12345678));
+  ASSERT(0xefcdab8967452301, __builtin_bswap64(0x0123456789abcdef));
+  ASSERT(0xefcdab89, __builtin_bswap32(0x0123456789abcdef));
+  ASSERT(0x78563412, __builtin_bswap32(conceal(0x12345678)));
 }
 
 void test_fpclassify(void) {
@@ -38,48 +115,34 @@ void test_fpclassify(void) {
   ASSERT(FPNAN, FPCLASSIFY(__builtin_nanl("")));
 }
 
-void __attribute__((__aligned__(16))) test_clz(void) {
-  ASSERT(31, __builtin_clz(1));
-  ASSERT(63, __builtin_clzl(1));
-  ASSERT(63, __builtin_clzll(1));
-  ASSERT(25, __builtin_clz(77));
-  ASSERT(4, __builtin_clz(0x08000000));
-  ASSERT(4, __builtin_clz(0xfff08000000));
+void test_strlen(void) {
+  ASSERT(5, strlen("hello"));
+  ASSERT(5, __builtin_strlen("hello"));
 }
 
-__attribute__((__weak__)) void test_ctz(void) {
-  ASSERT(0, __builtin_ctz(1));
-  ASSERT(0, __builtin_ctz(77));
-  ASSERT(27, __builtin_ctz(0x08000000));
-  ASSERT(27, __builtin_ctz(0xffff08000000));
-  ASSERT(63, __builtin_ctzl(0x8000000000000000));
-  ASSERT(63, __builtin_ctzll(0x8000000000000000));
+void test_strchr(void) {
+  ASSERT(1, __builtin_strchr("hello", 'z') == NULL);
+  ASSERT(0, (strcmp)(__builtin_strchr("hello", 'e'), "ello"));
 }
 
-void test_ffs(void) {
-  ASSERT(0, __builtin_ffs(0));
-  ASSERT(1, __builtin_ffs(1));
-  ASSERT(1, __builtin_ffs(77));
-  ASSERT(28, __builtin_ffs(0x08000000));
-  ASSERT(28, __builtin_ffs(0xffff08000000));
+void test_strpbrk(void) {
+  ASSERT(1, __builtin_strpbrk("hello", "z") == NULL);
+  ASSERT(0, (strcmp)(__builtin_strpbrk("hello", "ze"), "ello"));
 }
 
-void test_popcnt(void) {
-  ASSERT(0, __builtin_popcount(0));
-  ASSERT(1, __builtin_popcount(1));
-  ASSERT(6, __builtin_popcount(0b10111011));
-  ASSERT(6, __builtin_popcountl(0b10111011));
-  ASSERT(6, __builtin_popcountll(0xbb00000000000000));
-}
-
-void test_bswap(void) {
-  ASSERT(0x3412, __builtin_bswap16(0x1234));
-  ASSERT(0x78563412, __builtin_bswap32(0x12345678));
-  ASSERT(0xefcdab8967452301, __builtin_bswap64(0x0123456789abcdef));
-  ASSERT(0xefcdab89, __builtin_bswap32(0x0123456789abcdef));
+void test_strstr(void) {
+  ASSERT(1, __builtin_strstr("hello", "sup") == NULL);
+  ASSERT(0, (strcmp)(__builtin_strstr("hello", "ell"), "ello"));
 }
 
 void test_memcpy(void) {
+  {
+    char x[5] = {4, 3, 2, 1, 0};
+    char y[5] = {0, 1, 2, 3, 4};
+    char z[5] = {2, 3, 4, 1, 0};
+    ASSERT(1, x == (memcpy)(x, y + 2, 3));
+    ASSERT(0, memcmp(x, z, 5));
+  }
   {
     char x[5] = {4, 3, 2, 1, 0};
     char y[5] = {0, 1, 2, 3, 4};
@@ -94,6 +157,109 @@ void test_memcpy(void) {
     char z[5] = {2, 3, 4, 1, 0};
     ASSERT(1, x == __builtin_memcpy(x, y + 2, n));
     ASSERT(0, memcmp(x, z, 5));
+  }
+  {
+    char x[5] = {4, 3, 2, 1, 0};
+    ASSERT(1, x == __builtin_memcpy(x, x + 1, 4));
+    ASSERT(0, memcmp(x, (char[5]){3, 2, 1, 0, 0}, 5));
+  }
+}
+
+void test_add_overflow(void) {
+  {
+    int z;
+    ASSERT(0, __builtin_add_overflow(2, 3, &z));
+    ASSERT(5, z);
+  }
+  {
+    int x, y, z;
+    x = 2;
+    y = 3;
+    ASSERT(0, __builtin_add_overflow(x, y, &z));
+    ASSERT(5, z);
+  }
+  {
+    int x, y, z;
+    x = 0x7fffffff;
+    y = 1;
+    ASSERT(1, __builtin_add_overflow(x, y, &z));
+    ASSERT(-2147483648, z);
+  }
+  {
+    long x, y, z;
+    x = 0x7fffffff;
+    y = 1;
+    ASSERT(0, __builtin_add_overflow(x, y, &z));
+    ASSERT(2147483648, z);
+  }
+}
+
+void test_sub_overflow(void) {
+  {
+    int x, y, z;
+    x = 2;
+    y = 3;
+    ASSERT(0, __builtin_sub_overflow(x, y, &z));
+    ASSERT(-1, z);
+  }
+  {
+    int x, y, z;
+    x = -2147483648;
+    y = 1;
+    ASSERT(1, __builtin_sub_overflow(x, y, &z));
+    ASSERT(2147483647, z);
+  }
+  {
+    long x, y, z;
+    x = -2147483648;
+    y = 1;
+    ASSERT(0, __builtin_sub_overflow(x, y, &z));
+    ASSERT(-2147483649, z);
+  }
+}
+
+void test_mul_overflow(void) {
+  {
+    int x, y, z;
+    x = 2;
+    y = 3;
+    ASSERT(0, __builtin_mul_overflow(x, y, &z));
+    ASSERT(6, z);
+  }
+  {
+    int x, y, z;
+    x = 2147483647;
+    y = 2;
+    ASSERT(1, __builtin_mul_overflow(x, y, &z));
+    ASSERT(-2, z);
+  }
+  {
+    long x, y, z;
+    x = 2147483647;
+    y = 2;
+    ASSERT(0, __builtin_mul_overflow(x, y, &z));
+    ASSERT(4294967294, z);
+  }
+}
+
+void test_neg_overflow(void) {
+  {
+    int x, z;
+    x = 2;
+    ASSERT(0, __builtin_neg_overflow(x, &z));
+    ASSERT(-2, z);
+  }
+  {
+    int x, z;
+    x = -2147483648;
+    ASSERT(1, __builtin_neg_overflow(x, &z));
+    ASSERT(-2147483648, z);
+  }
+  {
+    long x, z;
+    x = -2147483648;
+    ASSERT(0, __builtin_neg_overflow(x, &z));
+    ASSERT(2147483648, z);
   }
 }
 
@@ -225,6 +391,7 @@ void test_offsetof(void) {
 
 int main() {
   test_constant();
+  test_frame_address();
   test_types_compatible_p();
   test_clz();
   test_ctz();
@@ -238,5 +405,14 @@ int main() {
   test_signbit();
   test_memcpy();
   test_offsetof();
+  test_ignored();
+  test_add_overflow();
+  test_sub_overflow();
+  test_mul_overflow();
+  test_neg_overflow();
+  test_strlen();
+  test_strchr();
+  test_strpbrk();
+  test_strstr();
   return 0;
 }

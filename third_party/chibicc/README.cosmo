@@ -6,21 +6,30 @@ which is great, considering it's a 220kb αcτµαlly pδrταblε εxεcµταb
 
 local enhancements
 
-- support __asm__
+- support dce
+- support gnu asm
 - support __int128
+- support _Static_assert
 - support __vector_size__
-- support __builtin_memcpy
+- support __builtin_add_overflow, etc.
+- support __builtin_memcpy, strlen, strpbrk, etc.
 - support __builtin_constant_p, __builtin_likely, etc.
 - support __builtin_isunordered, __builtin_islessgreater, etc.
 - support __builtin_ctz, __builtin_bswap, __builtin_popcount, etc.
-- support __constructor__, __destructor__, __section__, __cold__, etc.
+- support __constructor__, __section__, __cold__, -ffunction-sections, etc.
+- support building -x assembler-with-cpp a.k.a. .S files
+- support profiling w/ -mcount / -mfentry / -mnop-mcount
 - improve error messages to trace macro expansions
 - reduce #lines of generated assembly by a third
 - reduce #bytes of generated binary by a third
 
 local bug fixes
 
+- allow casted values to be lvalues
+- permit parentheses around string-initializer
 - fix 64-bit bug in generated code for struct bitfields
+- fix bug where last statement in statement expression couldn't have label
+- print_tokens (chibicc -E) now works in the case of adjacent string literals
 
 local changes
 

@@ -1,6 +1,21 @@
 #include "third_party/chibicc/test/test.h"
 
+void doge() __attribute__((__nonnull__));
+void cate(char *) __attribute__((__nonnull__(1)));
+int var __attribute__((__section__(".data.var")));
+int ar[4] __attribute__((__section__(".data.var")));
+typedef int int2[2] __attribute__((__aligned__(64)));
+typedef int int4[4] __attribute__((__warn_if_not_aligned__(16)));
+
+__attribute__((__nonnull__)) void doge2();
+__attribute__((__nonnull__(1))) void cate2(char *);
+__attribute__((__section__(".data.var"))) int var2;
+__attribute__((__section__(".data.var"))) int ar2[4];
+
 int main() {
+  int2 a;
+  ASSERT(64, _Alignof(int2));
+  ASSERT(64, _Alignof(a));
   ASSERT(5, ({
            struct {
              char a;

@@ -32,6 +32,8 @@
 #include "libc/x/x.h"
 #include "tool/viz/lib/formatstringtable-testlib.h"
 
+short *bingblit(int ys, int xs, unsigned char[ys][xs], int, int);
+
 void *AbsoluteDifference(int yn, int xn, unsigned char C[yn][xn], int ays,
                          int axs, const unsigned char A[ays][axs], int bys,
                          int bxs, const unsigned char B[bys][bxs]) {

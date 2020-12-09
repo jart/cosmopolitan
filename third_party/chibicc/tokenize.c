@@ -1,6 +1,6 @@
 #include "third_party/chibicc/chibicc.h"
 
-#define LOOKINGAT(TOK, OP) lookingat(TOK, OP, strlen(OP))
+#define LOOKINGAT(TOK, OP) (!memcmp(TOK, OP, strlen(OP)))
 
 // Input file
 static File *current_file;
@@ -75,29 +75,18 @@ void warn_tok(Token *tok, char *fmt, ...) {
             ap);
 }
 
-forceinline int compare_strings(const char *a, const char *b, size_t n) {
-  size_t i = 0;
-  if (!n-- || a == b) return 0;
-  while (a[i] == b[i] && b[i] && i < n) ++i;
-  return (a[i] & 0xff) - (b[i] & 0xff);
-}
-
 static int is_space(int c) {
   return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f' ||
          c == '\v';
 }
 
-static bool lookingat(const char *a, const char *b, size_t n) {
-  return !compare_strings(a, b, n);
-}
-
 // Consumes the current token if it matches `op`.
 bool equal(Token *tok, char *op, size_t n) {
-  return n == tok->len && !compare_strings(tok->loc, op, tok->len);
+  return n == tok->len && !memcmp(tok->loc, op, tok->len);
 }
 
 bool consume(Token **rest, Token *tok, char *str, size_t n) {
-  if (n == tok->len && !compare_strings(tok->loc, str, n)) {
+  if (n == tok->len && !memcmp(tok->loc, str, n)) {
     *rest = tok->next;
     return true;
   }
@@ -106,9 +95,12 @@ bool consume(Token **rest, Token *tok, char *str, size_t n) {
 }
 
 // Ensure that the current token is `op`.
-Token *skip(Token *tok, char *op) {
-  if (!EQUAL(tok, op)) error_tok(tok, "expected '%s'", op);
-  return tok->next;
+Token *skip(Token *tok, char op) {
+  if (tok->len == 1 && *tok->loc == op) {
+    return tok->next;
+  } else {
+    error_tok(tok, "expected '%c'", op);
+  }
 }
 
 // Create a new token and add it as the next token of `cur`.

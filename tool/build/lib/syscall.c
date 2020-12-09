@@ -442,7 +442,7 @@ static int AppendIovsReal(struct Machine *m, struct Iovs *ib, int64_t addr,
 static int AppendIovsGuest(struct Machine *m, struct Iovs *iv, int64_t iovaddr,
                            long iovlen) {
   int rc;
-  long i, iovsize;
+  size_t i, iovsize;
   struct iovec *guestiovs;
   if (!__builtin_mul_overflow(iovlen, sizeof(struct iovec), &iovsize) &&
       (0 <= iovsize && iovsize <= 0x7ffff000)) {

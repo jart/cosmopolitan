@@ -17,9 +17,9 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/runtime/runtime.h"
-#include "libc/calls/calls.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/testlib/testlib.h"
 
@@ -29,7 +29,9 @@ textstartup static void init(void) {
 }
 const void *const ctors[] initarray = {init};
 
-TEST(access, readDirectory) { ASSERT_EQ(0, access("test/libc/", F_OK)); }
+TEST(access, readDirectory) {
+  ASSERT_EQ(0, access("test/libc/", F_OK));
+}
 
 TEST(access, readThisCode) {
   ASSERT_EQ(0, access("test/libc/access_test.c", R_OK));

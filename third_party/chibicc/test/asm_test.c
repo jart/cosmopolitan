@@ -128,5 +128,11 @@ int main() {
   ASSERT(9, v1[6]);
   ASSERT(10, v1[7]);
 
+  {
+    char *p;
+    asm("mov\t%1,%0" : "=r"(p) : "r"("hello"));
+    ASSERT(1, !strcmp(p, "hello"));
+  }
+
   return 0;
 }

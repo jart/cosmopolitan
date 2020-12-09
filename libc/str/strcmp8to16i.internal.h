@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_STR_STRCMP8TO16I_H_
 #define COSMOPOLITAN_LIBC_STR_STRCMP8TO16I_H_
 #include "libc/conv/conv.h"
+#include "libc/macros.h"
 #include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
 #include "libc/str/tpdecode.internal.h"
@@ -12,9 +13,12 @@ forceinline int strcmp8to16i(const char *s1, const char16_t *s2, size_t n,
   int res = 0;
   if (n) {
     do {
+      unsigned i, j;
       wint_t wc1, wc2;
-      s1 += abs(tpdecode(s1, &wc1));
-      s2 += abs(getutf16(s2, &wc2));
+      i = tpdecode(s1, &wc1);
+      j = getutf16(s2, &wc2);
+      s1 += ABS(i);
+      s2 += ABS(j);
       if ((res = xlat(wc1) - xlat(wc2)) || !wc1) break;
     } while (n == -1ul || --n);
   }

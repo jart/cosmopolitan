@@ -22,6 +22,11 @@ set -e
 SPECIAL_TEXT=$(
   $1 --version |
     sed -n '
+        /chibicc/ {
+          i\
+chibicc
+          q
+        }
         /Free Software/ {
           i\
 gcc

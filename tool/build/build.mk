@@ -88,12 +88,6 @@ o/$(MODE)/tool/build/emulator.o:			\
 		OVERRIDE_COPTS +=			\
 			-fno-sanitize=pointer-overflow
 
-# ifeq (,$(MODE))
-# $(TOOL_BUILD_OBJS):					\
-# 		OVERRIDE_COPTS +=			\
-# 			-fsanitize=address
-# endif
-
 .PHONY: o/$(MODE)/tool/build
 o/$(MODE)/tool/build:					\
 		o/$(MODE)/tool/build/emucrt		\

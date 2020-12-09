@@ -164,8 +164,8 @@ void OpMulAxAlEbSigned(struct Machine *m, uint32_t rde) {
   int16_t ax;
   uint8_t *p;
   p = GetModrmRegisterBytePointerRead(m, rde);
-  __builtin_mul_overflow((int8_t)Read8(m->ax), (int8_t)Read8(p), &ax);
-  of = (int)ax != (int8_t)ax;
+  ax = (int8_t)Read8(m->ax) * (int8_t)Read8(p);
+  of = ax != (int8_t)ax;
   m->flags = SetFlag(m->flags, FLAGS_CF, of);
   m->flags = SetFlag(m->flags, FLAGS_OF, of);
   Write16(m->ax, ax);
@@ -176,8 +176,8 @@ void OpMulAxAlEbUnsigned(struct Machine *m, uint32_t rde) {
   bool of;
   uint8_t *p;
   p = GetModrmRegisterBytePointerRead(m, rde);
-  __builtin_mul_overflow(Read8(m->ax), Read8(p), &ax);
-  of = (uint8_t)ax != ax;
+  ax = Read8(m->ax) * Read8(p);
+  of = ax != (uint8_t)ax;
   m->flags = SetFlag(m->flags, FLAGS_CF, of);
   m->flags = SetFlag(m->flags, FLAGS_OF, of);
   Write16(m->ax, ax);
@@ -256,10 +256,12 @@ static void AluImul(struct Machine *m, uint32_t rde, uint8_t *a, uint8_t *b) {
     of = __builtin_mul_overflow(x, y, &z);
     Write64(RegRexrReg(m, rde), z & 0xffffffff);
   } else {
-    int16_t x, y, z;
+    int z;
+    int16_t x, y;
     x = Read16(a);
     y = Read16(b);
-    of = __builtin_mul_overflow(x, y, &z);
+    z = x * y;
+    of = z != (int16_t)z;
     Write16(RegRexrReg(m, rde), z);
   }
   m->flags = SetFlag(m->flags, FLAGS_CF, of);

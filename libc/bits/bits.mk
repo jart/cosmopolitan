@@ -39,9 +39,6 @@ $(LIBC_BITS_A).pkg:				\
 		$(LIBC_BITS_A_OBJS)		\
 		$(foreach x,$(LIBC_BITS_A_DIRECTDEPS),$($(x)_A).pkg)
 
-#o/$(MODE)/libc/bits/bsf.o: CC = clang-10
-#o/$(MODE)/libc/bits/bsf.o: CC = /opt/cross9cc/bin/x86_64-linux-musl-cc
-
 LIBC_BITS_LIBS = $(foreach x,$(LIBC_BITS_ARTIFACTS),$($(x)))
 LIBC_BITS_SRCS = $(foreach x,$(LIBC_BITS_ARTIFACTS),$($(x)_SRCS))
 LIBC_BITS_HDRS = $(foreach x,$(LIBC_BITS_ARTIFACTS),$($(x)_HDRS))

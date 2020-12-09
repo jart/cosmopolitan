@@ -39,7 +39,7 @@
  * @return -1 w/ errno if an error happened
  * @see nblack's notcurses project too!
  */
-ssize_t PrintPanels(int fd, long pn, struct Panel p[pn], long tyn, long txn) {
+ssize_t PrintPanels(int fd, long pn, struct Panel *p, long tyn, long txn) {
   wint_t wc;
   ssize_t rc;
   size_t wrote;

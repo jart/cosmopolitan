@@ -104,7 +104,7 @@ CONFIG_COPTS +=			\
 	-ftrapv
 
 TARGET_ARCH ?=			\
-	-march=k8-sse3
+	-msse3
 
 OVERRIDE_CCFLAGS +=		\
 	-fno-pie
@@ -177,6 +177,6 @@ ifeq ($(MODE), ansi)
 CONFIG_CFLAGS += -std=c11
 #CONFIG_CPPFLAGS += -ansi
 CONFIG_CXXFLAGS += -std=c++11
-TARGET_ARCH ?= -march=k8-sse3
+TARGET_ARCH ?= -msse3
 
 endif

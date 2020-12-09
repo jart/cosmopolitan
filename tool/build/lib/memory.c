@@ -169,7 +169,7 @@ void *ReserveAddress(struct Machine *m, int64_t v, size_t n) {
 }
 
 void *AccessRam(struct Machine *m, int64_t v, size_t n, void *p[2],
-                uint8_t tmp[n], bool copy) {
+                uint8_t *tmp, bool copy) {
   unsigned k;
   uint8_t *a, *b;
   DCHECK_LE(n, 0x1000);
@@ -188,32 +188,31 @@ void *AccessRam(struct Machine *m, int64_t v, size_t n, void *p[2],
   return tmp;
 }
 
-void *Load(struct Machine *m, int64_t v, size_t n, uint8_t b[n]) {
+void *Load(struct Machine *m, int64_t v, size_t n, uint8_t *b) {
   void *p[2];
   SetReadAddr(m, v, n);
   return AccessRam(m, v, n, p, b, true);
 }
 
 void *BeginStore(struct Machine *m, int64_t v, size_t n, void *p[2],
-                 uint8_t b[n]) {
+                 uint8_t *b) {
   SetWriteAddr(m, v, n);
   return AccessRam(m, v, n, p, b, false);
 }
 
 void *BeginStoreNp(struct Machine *m, int64_t v, size_t n, void *p[2],
-                   uint8_t b[n]) {
+                   uint8_t *b) {
   if (!v) return NULL;
   return BeginStore(m, v, n, p, b);
 }
 
 void *BeginLoadStore(struct Machine *m, int64_t v, size_t n, void *p[2],
-                     uint8_t b[n]) {
+                     uint8_t *b) {
   SetWriteAddr(m, v, n);
   return AccessRam(m, v, n, p, b, true);
 }
 
-void EndStore(struct Machine *m, int64_t v, size_t n, void *p[2],
-              uint8_t b[n]) {
+void EndStore(struct Machine *m, int64_t v, size_t n, void *p[2], uint8_t *b) {
   uint8_t *a;
   unsigned k;
   DCHECK_LE(n, 0x1000);
@@ -228,7 +227,7 @@ void EndStore(struct Machine *m, int64_t v, size_t n, void *p[2],
 }
 
 void EndStoreNp(struct Machine *m, int64_t v, size_t n, void *p[2],
-                uint8_t b[n]) {
+                uint8_t *b) {
   if (v) EndStore(m, v, n, p, b);
 }
 

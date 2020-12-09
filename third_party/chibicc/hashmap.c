@@ -18,8 +18,11 @@ static uint64_t fnv_hash(char *s, int len) {
 static void rehash(HashMap *map) {
   // Compute the size of the new hashmap.
   int nkeys = 0;
-  for (int i = 0; i < map->capacity; i++)
-    if (map->buckets[i].key && map->buckets[i].key != TOMBSTONE) nkeys++;
+  for (int i = 0; i < map->capacity; i++) {
+    if (map->buckets[i].key && map->buckets[i].key != TOMBSTONE) {
+      nkeys++;
+    }
+  }
   size_t cap = map->capacity;
   while ((nkeys * 100) / cap >= 50) cap = cap * 2;
   // Create a new hashmap and copy all key-values.
@@ -101,32 +104,3 @@ void hashmap_delete2(HashMap *map, char *key, int keylen) {
   HashEntry *ent = get_entry(map, key, keylen);
   if (ent) ent->key = TOMBSTONE;
 }
-
-#if 0
-void hashmap_test(void) {
-  HashMap *map = calloc(1, sizeof(HashMap));
-  for (int i = 0; i < 5000; i++)
-    hashmap_put(map, xasprintf("key %d", i), (void *)(size_t)i);
-  for (int i = 1000; i < 2000; i++) hashmap_delete(map, xasprintf("key %d", i));
-  for (int i = 1500; i < 1600; i++)
-    hashmap_put(map, xasprintf("key %d", i), (void *)(size_t)i);
-  for (int i = 6000; i < 7000; i++)
-    hashmap_put(map, xasprintf("key %d", i), (void *)(size_t)i);
-  for (int i = 0; i < 1000; i++)
-    assert((size_t)hashmap_get(map, xasprintf("key %d", i)) == i);
-  for (int i = 1000; i < 1500; i++)
-    assert(hashmap_get(map, "no such key") == NULL);
-  for (int i = 1500; i < 1600; i++)
-    assert((size_t)hashmap_get(map, xasprintf("key %d", i)) == i);
-  for (int i = 1600; i < 2000; i++)
-    assert(hashmap_get(map, "no such key") == NULL);
-  for (int i = 2000; i < 5000; i++)
-    assert((size_t)hashmap_get(map, xasprintf("key %d", i)) == i);
-  for (int i = 5000; i < 6000; i++)
-    assert(hashmap_get(map, "no such key") == NULL);
-  for (int i = 6000; i < 7000; i++)
-    hashmap_put(map, xasprintf("key %d", i), (void *)(size_t)i);
-  assert(hashmap_get(map, "no such key") == NULL);
-  printf("OK\n");
-}
-#endif

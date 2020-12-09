@@ -10,7 +10,7 @@
 #define COSMOPOLITAN_CXX_USING_
 #endif
 
-#if defined(__STRICT_ANSI__) && __STDC_VERSION__ + 0 < 201112
+#ifdef __STRICT_ANSI__
 #define asm __asm__
 #endif
 
@@ -773,8 +773,9 @@ typedef uint64_t uintmax_t;
  */
 #if __cplusplus + 0 >= 201103L
 #define autotype(x) auto
-#elif (__has_builtin(auto_type) || defined(__llvm__) || \
-       (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 409)
+#elif ((__has_builtin(auto_type) || defined(__llvm__) ||       \
+        (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 409) && \
+       !defined(__chibicc__))
 #define autotype(x) __auto_type
 #else
 #define autotype(x) typeof(x)

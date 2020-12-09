@@ -40,7 +40,7 @@ static void DecodeAsmConstraints(AsmOperand *op) {
     switch ((c = op->str[i++])) {
       case '\0':
       case ',':  // alternative group
-        return;
+        return;  // todo: read combos
       case '0':
       case '1':
       case '2':
@@ -180,13 +180,17 @@ static bool IsLvalue(AsmOperand *op) {
   }
 }
 
-static bool CanUseReg(Node *n) {
-  return is_integer(n->ty) || n->ty->kind == TY_PTR;
+static bool CanUseReg(Node **n) {
+  if ((*n)->ty->kind == TY_ARRAY) {
+    *n = new_cast(*n, pointer_to((*n)->ty->base));
+    return true;
+  }
+  return is_integer((*n)->ty) || (*n)->ty->kind == TY_PTR;
 }
 
 static bool CanUseXmm(Node *n) {
-  return n->ty->kind == TY_FLOAT || n->ty->kind == TY_DOUBLE ||
-         n->ty->kind == TY_PTR ||
+  return n->ty->vector_size == 16 || n->ty->kind == TY_FLOAT ||
+         n->ty->kind == TY_DOUBLE || n->ty->kind == TY_PTR ||
          (n->ty->kind == TY_ARRAY && n->ty->size == 16);
 }
 
@@ -201,7 +205,7 @@ static int PickAsmReferenceType(AsmOperand *op, AsmOperand *ref) {
     case kAsmMem:
       error_tok(op->tok, "bad reference");
     case kAsmReg:
-      if (!CanUseReg(op->node)) {
+      if (!CanUseReg(&op->node)) {
         error_tok(op->tok, "expected integral expression");
       }
       op->regmask = 0;
@@ -235,7 +239,7 @@ static int PickAsmOperandType(Asm *a, AsmOperand *op) {
   if ((op->type & kAsmFpu) && op->node->ty->kind == TY_LDOUBLE) return kAsmFpu;
   if ((op->type & kAsmXmm) && CanUseXmm(op->node)) return kAsmXmm;
   if ((op->type & kAsmMmx) && CanUseMmx(op->node)) return kAsmMmx;
-  if ((op->type & kAsmReg) && CanUseReg(op->node)) return kAsmReg;
+  if ((op->type & kAsmReg) && CanUseReg(&op->node)) return kAsmReg;
   if (op->type & kAsmFlag) return kAsmFlag;
   if (op->type & kAsmRaw) return kAsmRaw;
   error_tok(op->tok, "constraint mismatch");
@@ -245,7 +249,7 @@ static Token *ParseAsmOperand(Asm *a, AsmOperand *op, Token *tok) {
   int i;
   op->tok = tok;
   op->str = ConsumeStringLiteral(&tok, tok);
-  tok = skip(tok, "(");
+  tok = skip(tok, '(');
   op->node = expr(&tok, tok);
   add_type(op->node);
   DecodeAsmConstraints(op);
@@ -255,7 +259,7 @@ static Token *ParseAsmOperand(Asm *a, AsmOperand *op, Token *tok) {
   } else {
     op->type = PickAsmOperandType(a, op);
   }
-  return skip(tok, ")");
+  return skip(tok, ')');
 }
 
 static Token *ParseAsmOperands(Asm *a, Token *tok) {
@@ -267,7 +271,7 @@ static Token *ParseAsmOperands(Asm *a, Token *tok) {
     tok = ParseAsmOperand(a, &a->ops[a->n], tok);
     ++a->n;
     if (!EQUAL(tok, ",")) break;
-    tok = skip(tok, ",");
+    tok = skip(tok, ',');
   }
   return tok;
 }
@@ -314,10 +318,6 @@ static void PickAsmRegisters(Asm *a) {
           break;
       }
     }
-  }
-  for (i = 0; i < a->n; ++i) {
-    assert(!a->ops[i].regmask);
-    assert(!a->ops[i].x87mask);
   }
 }
 
@@ -378,11 +378,13 @@ static Token *ParseAsmClobbers(Asm *a, Token *tok) {
       i = s[3] - '0';
       i &= 7;
       a->x87clob |= 1 << i;
+    } else if (!strcmp(s, "memory")) {
+      /* do nothing */
     } else {
       error_tok(stok, "unknown clobber register");
     }
     if (!EQUAL(tok, ",")) break;
-    tok = skip(tok, ",");
+    tok = skip(tok, ',');
   }
   return tok;
 }
@@ -402,25 +404,25 @@ Asm *asm_stmt(Token **rest, Token *tok) {
   Asm *a = calloc(1, sizeof(Asm));
   tok = tok->next;
   while (EQUAL(tok, "volatile") || EQUAL(tok, "inline")) tok = tok->next;
-  tok = skip(tok, "(");
+  tok = skip(tok, '(');
   a->tok = tok;
   a->str = ConsumeStringLiteral(&tok, tok);
   if (!EQUAL(tok, ")")) {
     a->isgnu = true;
-    tok = skip(tok, ":");
+    tok = skip(tok, ':');
     tok = ParseAsmOperands(a, tok);
     if (!EQUAL(tok, ")")) {
-      tok = skip(tok, ":");
+      tok = skip(tok, ':');
       tok = ParseAsmOperands(a, tok);
       if (!EQUAL(tok, ")")) {
-        tok = skip(tok, ":");
+        tok = skip(tok, ':');
         tok = ParseAsmClobbers(a, tok);
       }
     }
   }
   PickAsmRegisters(a);
   MarkUsedAsmOperands(a);
-  *rest = skip(tok, ")");
+  *rest = skip(tok, ')');
   return a;
 }
 
@@ -541,24 +543,26 @@ static char *HandleAsmSpecifier(Asm *a, char *p) {
 
 static void EmitAsmText(Asm *a) {
   char c, *p;
-  if (a->isgnu) {
-    flushln();
-    fprintf(output_stream, "\t");
-    for (p = a->str;;) {
-      switch ((c = *p++)) {
-        case '\0':
-          fputc('\n', output_stream);
-          return;
-        case '%':
-          p = HandleAsmSpecifier(a, p);
-          break;
-        default:
-          fputc(c, output_stream);
-          break;
+  if (*a->str) {
+    if (a->isgnu) {
+      flushln();
+      fprintf(output_stream, "\t");
+      for (p = a->str;;) {
+        switch ((c = *p++)) {
+          case '\0':
+            fputc('\n', output_stream);
+            return;
+          case '%':
+            p = HandleAsmSpecifier(a, p);
+            break;
+          default:
+            fputc(c, output_stream);
+            break;
+        }
       }
+    } else {
+      println("\t%s", a->str);
     }
-  } else {
-    println("\t%s", a->str);
   }
 }
 
@@ -668,9 +672,9 @@ static void StoreAsmOutputs(Asm *a) {
           println("\tset%s\t(%%rax)", a->ops[i].str + a->ops[i].predicate);
           break;
         case kAsmReg:
+          z = bsr(a->ops[i].node->ty->size);
           if (a->ops[i].reg) {
             gen_addr(a->ops[i].node);
-            z = bsr(a->ops[i].node->ty->size);
             if (z > 3) error_tok(a->tok, "bad asm out size");
             println("\tmov\t%%%s,(%%rax)", kGreg[z][a->ops[i].reg]);
           } else {
@@ -678,7 +682,7 @@ static void StoreAsmOutputs(Asm *a) {
             push();
             pop("%rbx");
             gen_addr(a->ops[i].node);
-            println("\tmov\t%%rbx,(%%rax)");
+            println("\tmov\t%%%s,(%%rax)", kGreg[z][3]);
             println("\tpop\t%%rbx");
           }
           break;

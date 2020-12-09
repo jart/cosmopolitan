@@ -150,8 +150,9 @@ static int getTypeId(Type *ty) {
       return F64;
     case TY_LDOUBLE:
       return F80;
+    default:
+      return U64;
   }
-  return U64;
 }
 
 void gen_cast(Type *from, Type *to) {

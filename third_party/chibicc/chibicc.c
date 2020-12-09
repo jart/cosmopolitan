@@ -16,15 +16,21 @@ typedef enum {
   FILE_DSO,
 } FileType;
 
-bool opt_fcommon = true;
-bool opt_fpic;
-bool opt_verbose;
-bool opt_mpopcnt;
+bool opt_common = true;
+bool opt_data_sections;
+bool opt_fentry;
+bool opt_function_sections;
+bool opt_no_builtin;
+bool opt_nop_mcount;
 bool opt_pg;
-bool opt_mfentry;
-bool opt_mnop_mcount;
-bool opt_mrecord_mcount;
+bool opt_pic;
+bool opt_popcnt;
+bool opt_record_mcount;
+bool opt_sse3;
+bool opt_sse4;
+bool opt_verbose;
 
+static bool opt_A;
 static bool opt_E;
 static bool opt_M;
 static bool opt_MD;
@@ -54,6 +60,14 @@ static char **tmpfiles;
 static void usage(int status) {
   fprintf(stderr, "chibicc [ -o <path> ] <file>\n");
   exit(status);
+}
+
+static void version(void) {
+  printf("\
+chibicc (cosmopolitan) 9.0.0\n\
+copyright 2019 rui ueyama\n\
+copyright 2020 justine alexandra roberts tunney\n");
+  exit(0);
 }
 
 static bool take_arg(char *arg) {
@@ -130,231 +144,171 @@ static void PrintMemoryUsage(void) {
   fprintf(stderr, "allocated %,ld bytes of memory\n", mi.arena);
 }
 
+static void strarray_push_comma(StringArray *a, char *s) {
+  char *p;
+  for (; *s++ == ','; s = p) {
+    p = strchrnul(s, ',');
+    strarray_push(a, strndup(s, p - s));
+  }
+}
+
 static void parse_args(int argc, char **argv) {
   // Make sure that all command line options that take an argument
   // have an argument.
-  for (int i = 1; i < argc; i++)
-    if (take_arg(argv[i]))
-      if (!argv[++i]) usage(1);
+  for (int i = 1; i < argc; i++) {
+    if (take_arg(argv[i])) {
+      if (!argv[++i]) {
+        usage(1);
+      }
+    }
+  }
   StringArray idirafter = {};
   for (int i = 1; i < argc; i++) {
     if (!strcmp(argv[i], "-###")) {
       opt_hash_hash_hash = true;
-      continue;
-    }
-    if (!strcmp(argv[i], "-cc1")) {
+    } else if (!strcmp(argv[i], "-cc1")) {
       opt_cc1 = true;
-      continue;
-    }
-    if (!strcmp(argv[i], "--help")) usage(0);
-    if (!strcmp(argv[i], "-v")) {
+    } else if (!strcmp(argv[i], "--help")) {
+      usage(0);
+    } else if (!strcmp(argv[i], "--version")) {
+      version();
+    } else if (!strcmp(argv[i], "-v")) {
       opt_verbose = true;
       atexit(PrintMemoryUsage);
-      continue;
-    }
-    if (!strcmp(argv[i], "-o")) {
+    } else if (!strcmp(argv[i], "-o")) {
       opt_o = argv[++i];
-      continue;
-    }
-    if (!strncmp(argv[i], "-o", 2)) {
+    } else if (startswith(argv[i], "-o")) {
       opt_o = argv[i] + 2;
-      continue;
-    }
-    if (!strcmp(argv[i], "-S")) {
+    } else if (!strcmp(argv[i], "-S")) {
       opt_S = true;
-      continue;
-    }
-    if (!strcmp(argv[i], "-fcommon")) {
-      opt_fcommon = true;
-      continue;
-    }
-    if (!strcmp(argv[i], "-fno-common")) {
-      opt_fcommon = false;
-      continue;
-    }
-    if (!strcmp(argv[i], "-c")) {
+    } else if (!strcmp(argv[i], "-fcommon")) {
+      opt_common = true;
+    } else if (!strcmp(argv[i], "-fno-common")) {
+      opt_common = false;
+    } else if (!strcmp(argv[i], "-fno-builtin")) {
+      opt_no_builtin = true;
+    } else if (!strcmp(argv[i], "-c")) {
       opt_c = true;
-      continue;
-    }
-    if (!strcmp(argv[i], "-E")) {
+    } else if (!strcmp(argv[i], "-E")) {
       opt_E = true;
-      continue;
-    }
-    if (!strncmp(argv[i], "-I", 2)) {
+    } else if (!strcmp(argv[i], "-A")) {
+      opt_A = true;
+    } else if (!strcmp(argv[i], "-I")) {
+      strarray_push(&include_paths, argv[++i]);
+    } else if (startswith(argv[i], "-I")) {
       strarray_push(&include_paths, argv[i] + 2);
-      continue;
-    }
-    if (!strcmp(argv[i], "-D")) {
+    } else if (!strcmp(argv[i], "-iquote")) {
+      strarray_push(&include_paths, argv[++i]);
+    } else if (startswith(argv[i], "-iquote")) {
+      strarray_push(&include_paths, argv[i] + strlen("-iquote"));
+    } else if (!strcmp(argv[i], "-isystem")) {
+      strarray_push(&include_paths, argv[++i]);
+    } else if (startswith(argv[i], "-isystem")) {
+      strarray_push(&include_paths, argv[i] + strlen("-isystem"));
+    } else if (!strcmp(argv[i], "-D")) {
       define(argv[++i]);
-      continue;
-    }
-    if (!strncmp(argv[i], "-D", 2)) {
+    } else if (startswith(argv[i], "-D")) {
       define(argv[i] + 2);
-      continue;
-    }
-    if (!strcmp(argv[i], "-U")) {
+    } else if (!strcmp(argv[i], "-U")) {
       undef_macro(argv[++i]);
-      continue;
-    }
-    if (!strncmp(argv[i], "-U", 2)) {
+    } else if (!strncmp(argv[i], "-U", 2)) {
       undef_macro(argv[i] + 2);
-      continue;
-    }
-    if (!strcmp(argv[i], "-include")) {
+    } else if (!strcmp(argv[i], "-include")) {
       strarray_push(&opt_include, argv[++i]);
-      continue;
-    }
-    if (!strcmp(argv[i], "-x")) {
+    } else if (!strcmp(argv[i], "-x")) {
       opt_x = parse_opt_x(argv[++i]);
-      continue;
-    }
-    if (!strncmp(argv[i], "-x", 2)) {
+    } else if (!strncmp(argv[i], "-x", 2)) {
       opt_x = parse_opt_x(argv[i] + 2);
-      continue;
-    }
-    if (!strncmp(argv[i], "-l", 2) || !strncmp(argv[i], "-Wl,", 4)) {
-      strarray_push(&input_paths, argv[i]);
-      continue;
-    }
-    if (!strcmp(argv[i], "-Xassembler")) {
+    } else if (startswith(argv[i], "-Wa")) {
+      strarray_push_comma(&as_extra_args, argv[i]);
+    } else if (startswith(argv[i], "-Wl")) {
+      strarray_push_comma(&ld_extra_args, argv[i]);
+    } else if (!strcmp(argv[i], "-Xassembler")) {
       strarray_push(&as_extra_args, argv[++i]);
-      continue;
-    }
-    if (!strcmp(argv[i], "-Xlinker")) {
+    } else if (!strcmp(argv[i], "-Xlinker")) {
       strarray_push(&ld_extra_args, argv[++i]);
-      continue;
-    }
-    if (!strcmp(argv[i], "-s")) {
+    } else if (!strncmp(argv[i], "-l", 2) || !strncmp(argv[i], "-Wl,", 4)) {
+      strarray_push(&input_paths, argv[i]);
+    } else if (!strcmp(argv[i], "-s")) {
       strarray_push(&ld_extra_args, "-s");
-      continue;
-    }
-    if (!strcmp(argv[i], "-M")) {
+    } else if (!strcmp(argv[i], "-M")) {
       opt_M = true;
-      continue;
-    }
-    if (!strcmp(argv[i], "-MF")) {
+    } else if (!strcmp(argv[i], "-MF")) {
       opt_MF = argv[++i];
-      continue;
-    }
-    if (!strcmp(argv[i], "-MP")) {
+    } else if (!strcmp(argv[i], "-MP")) {
       opt_MP = true;
-      continue;
-    }
-    if (!strcmp(argv[i], "-MT")) {
-      if (opt_MT == NULL)
+    } else if (!strcmp(argv[i], "-MT")) {
+      if (!opt_MT) {
         opt_MT = argv[++i];
-      else
+      } else {
         opt_MT = xasprintf("%s %s", opt_MT, argv[++i]);
-      continue;
-    }
-    if (!strcmp(argv[i], "-MD")) {
+      }
+    } else if (!strcmp(argv[i], "-MD")) {
       opt_MD = true;
-      continue;
-    }
-    if (!strcmp(argv[i], "-MQ")) {
-      if (opt_MT == NULL)
+    } else if (!strcmp(argv[i], "-MQ")) {
+      if (!opt_MT) {
         opt_MT = quote_makefile(argv[++i]);
-      else
+      } else {
         opt_MT = xasprintf("%s %s", opt_MT, quote_makefile(argv[++i]));
-      continue;
-    }
-    if (!strcmp(argv[i], "-MMD")) {
+      }
+    } else if (!strcmp(argv[i], "-MMD")) {
       opt_MD = opt_MMD = true;
-      continue;
-    }
-    if (!strcmp(argv[i], "-fpie") || !strcmp(argv[i], "-fpic") ||
-        !strcmp(argv[i], "-fPIC")) {
-      opt_fpic = true;
-      continue;
-    }
-    if (!strcmp(argv[i], "-pg")) {
+    } else if (!strcmp(argv[i], "-fpie") || !strcmp(argv[i], "-fpic") ||
+               !strcmp(argv[i], "-fPIC")) {
+      opt_pic = true;
+    } else if (!strcmp(argv[i], "-pg")) {
       opt_pg = true;
-      continue;
-    }
-    if (!strcmp(argv[i], "-mfentry")) {
-      opt_mfentry = true;
-      continue;
-    }
-    if (!strcmp(argv[i], "-mrecord-mcount")) {
-      opt_mrecord_mcount = true;
-      continue;
-    }
-    if (!strcmp(argv[i], "-mnop-mcount")) {
-      opt_mnop_mcount = true;
-      continue;
-    }
-    if (!strcmp(argv[i], "-mpopcnt")) {
-      opt_mpopcnt = true;
-      continue;
-    }
-    if (!strcmp(argv[i], "-cc1-input")) {
+    } else if (!strcmp(argv[i], "-mfentry")) {
+      opt_fentry = true;
+    } else if (!strcmp(argv[i], "-ffunction-sections")) {
+      opt_function_sections = true;
+    } else if (!strcmp(argv[i], "-fdata-sections")) {
+      opt_data_sections = true;
+    } else if (!strcmp(argv[i], "-mrecord-mcount")) {
+      opt_record_mcount = true;
+    } else if (!strcmp(argv[i], "-mnop-mcount")) {
+      opt_nop_mcount = true;
+    } else if (!strcmp(argv[i], "-msse3")) {
+      opt_sse3 = true;
+    } else if (!strcmp(argv[i], "-msse4") || !strcmp(argv[i], "-msse4.2") ||
+               !strcmp(argv[i], "-msse4.1")) {
+      opt_sse4 = true;
+    } else if (!strcmp(argv[i], "-mpopcnt")) {
+      opt_popcnt = true;
+    } else if (!strcmp(argv[i], "-cc1-input")) {
       base_file = argv[++i];
-      continue;
-    }
-    if (!strcmp(argv[i], "-cc1-output")) {
+    } else if (!strcmp(argv[i], "-cc1-output")) {
       output_file = argv[++i];
-      continue;
-    }
-    if (!strcmp(argv[i], "-idirafter")) {
+    } else if (!strcmp(argv[i], "-idirafter")) {
       strarray_push(&idirafter, argv[i++]);
-      continue;
-    }
-    if (!strcmp(argv[i], "-static")) {
+    } else if (!strcmp(argv[i], "-static")) {
       opt_static = true;
       strarray_push(&ld_extra_args, "-static");
-      continue;
-    }
-    if (!strcmp(argv[i], "-shared")) {
-      fprintf(stderr, "error: -shared not supported\n");
-      exit(1);
-    }
-    if (!strcmp(argv[i], "-L")) {
+    } else if (!strcmp(argv[i], "-shared")) {
+      error("-shared not supported");
+    } else if (!strcmp(argv[i], "-L")) {
       strarray_push(&ld_extra_args, "-L");
       strarray_push(&ld_extra_args, argv[++i]);
-      continue;
-    }
-    if (!strncmp(argv[i], "-L", 2)) {
+    } else if (startswith(argv[i], "-L")) {
       strarray_push(&ld_extra_args, "-L");
       strarray_push(&ld_extra_args, argv[i] + 2);
-      continue;
+    } else {
+      if (argv[i][0] == '-' && argv[i][1]) {
+        /* compiler should not whine about the flags race */
+        if (opt_verbose) {
+          fprintf(stderr, "unknown argument: %s\n", argv[i]);
+        }
+      } else {
+        strarray_push(&input_paths, argv[i]);
+      }
     }
-#if 0
-    if (!strcmp(argv[i], "-hashmap-test")) {
-      hashmap_test();
-      exit(0);
-    }
-#endif
-    // These options are ignored for now.
-    if (startswith(argv[i], "-O") || startswith(argv[i], "-W") ||
-        startswith(argv[i], "-g") || startswith(argv[i], "-std=") ||
-        startswith(argv[i], "-fno-") || startswith(argv[i], "-mno-") ||
-        startswith(argv[i], "-fsanitize") ||
-        startswith(argv[i], "-fdebug-prefix-map") ||
-        !strcmp(argv[i], "-fwrapv") || !strcmp(argv[i], "-nostdlib") ||
-        !strcmp(argv[i], "-nostdinc") || !strcmp(argv[i], "-ffreestanding") ||
-        !strcmp(argv[i], "-fstrict-aliasing") ||
-        !strcmp(argv[i], "-fstrict-overflow") ||
-        !strcmp(argv[i], "-frecord-gcc-switches") ||
-        !strcmp(argv[i], "-fsignaling-nans") ||
-        !strcmp(argv[i], "-frounding-math") ||
-        !strcmp(argv[i], "-fcx-limited-range") ||
-        !strcmp(argv[i], "-fmodulo-sched") ||
-        !strcmp(argv[i], "-fmerge-constants") ||
-        !strcmp(argv[i], "-fmerge-all-constants") ||
-        !strcmp(argv[i], "-fno-builtin") ||
-        !strcmp(argv[i], "-fno-omit-frame-pointer") ||
-        !strcmp(argv[i], "-fno-stack-protector") ||
-        !strcmp(argv[i], "-fno-strict-aliasing") || !strcmp(argv[i], "-m64") ||
-        !strcmp(argv[i], "-mno-red-zone") || !strcmp(argv[i], "-w")) {
-      continue;
-    }
-    if (argv[i][0] == '-' && argv[i][1] != '\0')
-      error("unknown argument: %s", argv[i]);
-    strarray_push(&input_paths, argv[i]);
   }
-  for (int i = 0; i < idirafter.len; i++)
+  for (int i = 0; i < idirafter.len; i++) {
     strarray_push(&include_paths, idirafter.data[i]);
-  if (input_paths.len == 0) error("no input files");
+  }
+  if (!input_paths.len) {
+    error("no input files");
+  }
   // -E implies that the input is the C macro language.
   if (opt_E) opt_x = FILE_C;
 }
@@ -439,13 +393,36 @@ static void run_cc1(int argc, char **argv, char *input, char *output) {
   run_subprocess(args);
 }
 
+static void print_token(FILE *out, Token *tok) {
+  switch (tok->kind) {
+    case TK_STR:
+      switch (tok->ty->base->size) {
+        case 1:
+          fprintf(out, "%`'.*s", tok->ty->array_len - 1, tok->str);
+          break;
+        case 2:
+          fprintf(out, "%`'.*hs", tok->ty->array_len - 1, tok->str);
+          break;
+        case 4:
+          fprintf(out, "%`'.*ls", tok->ty->array_len - 1, tok->str);
+          break;
+        default:
+          UNREACHABLE();
+      }
+      break;
+    default:
+      fprintf(out, "%.*s", tok->len, tok->loc);
+      break;
+  }
+}
+
 static void print_tokens(Token *tok) {
   FILE *out = open_file(opt_o ? opt_o : "-");
   int line = 1;
   for (; tok->kind != TK_EOF; tok = tok->next) {
     if (line > 1 && tok->at_bol) fprintf(out, "\n");
     if (tok->has_space && !tok->at_bol) fprintf(out, " ");
-    fprintf(out, "%.*s", tok->len, tok->loc);
+    print_token(out, tok);
     line++;
   }
   fprintf(out, "\n");
@@ -547,7 +524,10 @@ static void cc1(void) {
     return;
   }
   Obj *prog = parse(tok);
-  // Traverse the AST to emit assembly.
+  if (opt_A) {
+    print_ast(stdout, prog);
+    return;
+  }
   FILE *out = open_file(output_file);
   codegen(prog, out);
   fclose(out);
@@ -582,7 +562,7 @@ static void run_linker(StringArray *inputs, char *output) {
   strarray_push(&arr, "elf_x86_64");
   strarray_push(&arr, "-z");
   strarray_push(&arr, "max-page-size=0x1000");
-  strarray_push(&arr, "-mnostdlib");
+  strarray_push(&arr, "-nostdlib");
   strarray_push(&arr, "--gc-sections");
   strarray_push(&arr, "--build-id=none");
   strarray_push(&arr, "--no-dynamic-linker");
@@ -611,8 +591,9 @@ int main(int argc, char **argv) {
     cc1();
     return 0;
   }
-  if (input_paths.len > 1 && opt_o && (opt_c || opt_S | opt_E))
+  if (input_paths.len > 1 && opt_o && (opt_c || opt_S | opt_E)) {
     error("cannot specify '-o' with '-c,' '-S' or '-E' with multiple files");
+  }
   StringArray ld_args = {};
   for (int i = 0; i < input_paths.len; i++) {
     char *input = input_paths.data[i];
@@ -650,7 +631,7 @@ int main(int argc, char **argv) {
       }
       continue;
     }
-    assert(type == FILE_C);
+    assert(type == FILE_C || type == FILE_ASM_CPP);
     // Just preprocess
     if (opt_E || opt_M) {
       run_cc1(argc, argv, input, NULL);

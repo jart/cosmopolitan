@@ -1,6 +1,6 @@
 (defconst cosmo-c-keywords-regex
   (let (
-        
+
         ;;         (kar
         ;;          '("case"
         ;;            "do"
@@ -237,6 +237,7 @@
            "__aligned__"
            "__alloc_align__"
            "__alloc_size__"
+           "__warn_if_not_aligned__"
            "__artificial__"
            "__assume_aligned__"
            "__cold__"

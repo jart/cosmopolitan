@@ -17,13 +17,14 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/timespec.h"
 #include "libc/conv/conv.h"
+#include "libc/macros.h"
 #include "libc/runtime/gc.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
-#include "libc/calls/struct/timespec.h"
 #include "libc/x/x.h"
 
 TEST(clock_gettime, testClockRealtime) {
@@ -31,5 +32,5 @@ TEST(clock_gettime, testClockRealtime) {
   struct timespec ts;
   EXPECT_NE(-1, gettimeofday(&tv, NULL));
   EXPECT_NE(-1, clock_gettime(CLOCK_REALTIME, &ts));
-  EXPECT_LT((unsigned)abs(ts.tv_sec - tv.tv_sec), 5u);
+  EXPECT_LT((unsigned)ABS(ts.tv_sec - tv.tv_sec), 5u);
 }

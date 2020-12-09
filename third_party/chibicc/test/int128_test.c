@@ -33,7 +33,17 @@ __int128 sub128x5(__int128 a, __int128 b, __int128 c, __int128 d, __int128 e) {
   return a - b - c - d - e;
 }
 
+__int128 sub128x6(int f, __int128 a, __int128 b, __int128 c, __int128 d,
+                  __int128 e) {
+  return f - a - b - c - d - e;
+}
+
+void lotsOfArgs(const char *file, int line, const char *func, intmax_t beg,
+                intmax_t end, intmax_t got, const char *gotcode, bool isfatal) {
+}
+
 void testLang128(void) {
+  lotsOfArgs(__FILE__, __LINE__, __FUNCTION__, 0, 0, 0, "", false);
   ASSERT(16, sizeof(__int128));
   ASSERT(16, sizeof(unsigned __int128));
   ASSERT(16, _Alignof(__int128));
@@ -60,6 +70,12 @@ void testLang128(void) {
             }));
   ASSERT128(I128(0x3a8eaaa2e9af03f5, 0xd7ed730a55920176),
             sub128x5(I128(0x0db9cd085ab6ba38, 0xdaf9c05f15896b5f),
+                     I128(0xb6429ba7b5b38454, 0x4061839d268a0a78),
+                     I128(0x19a0da005190a5ac, 0x755fa06484419e38),
+                     I128(0xafc6e44400b9eadd, 0x05e5afdb2e66cdb8),
+                     I128(0x5380c8796909a165, 0x47657977e6c4f381)));
+  ASSERT128(I128(0x1f1b109234418f84, 0x21f9f24c8535e4f0),
+            sub128x6(0x5ab6ba38, I128(0x0db9cd085ab6ba38, 0xdaf9c05f15896b5f),
                      I128(0xb6429ba7b5b38454, 0x4061839d268a0a78),
                      I128(0x19a0da005190a5ac, 0x755fa06484419e38),
                      I128(0xafc6e44400b9eadd, 0x05e5afdb2e66cdb8),
@@ -8157,6 +8173,27 @@ void testNot128(void) {
   ASSERT128(I128(0, 0), ~x);
 }
 
+void testAbi(void) {
+  ASSERT(0, ({
+           char buf[200];
+           sprintf(buf, "%d %d %d %d %032jx %032jx", 1, 2, 3, 4,
+                   I128(0x1ffffffff, 0x2ffffffff),
+                   I128(0x3eeeeeeee, 0x4eeeeeeee));
+           strcmp("1 2 3 4 00000001ffffffff00000002ffffffff "
+                  "00000003eeeeeeee00000004eeeeeeee",
+                  buf);
+         }));
+  ASSERT(0, ({
+           char buf[200];
+           sprintf(buf, "%d %d %d %d %d %032jx %032jx", 1, 2, 3, 4, 5,
+                   I128(0x1ffffffff, 0x2ffffffff),
+                   I128(0x3eeeeeeee, 0x4eeeeeeee));
+           strcmp("1 2 3 4 5 00000001ffffffff00000002ffffffff "
+                  "00000003eeeeeeee00000004eeeeeeee",
+                  buf);
+         }));
+}
+
 int main(void) {
   testLang128();
   testCompare128();
@@ -8179,5 +8216,6 @@ int main(void) {
   testCastDblUint128();
   testCastLdblInt128();
   testCastLdblUint128();
+  testAbi();
   return 0;
 }

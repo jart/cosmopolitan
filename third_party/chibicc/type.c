@@ -166,10 +166,10 @@ void add_type(Node *node) {
     case ND_SUB:
     case ND_MUL:
     case ND_DIV:
-    case ND_MOD:
-    case ND_BITAND:
-    case ND_BITOR:
-    case ND_BITXOR:
+    case ND_REM:
+    case ND_BINAND:
+    case ND_BINOR:
+    case ND_BINXOR:
       usual_arith_conv(&node->lhs, &node->rhs);
       node->ty = node->lhs->ty;
       return;
@@ -226,10 +226,11 @@ void add_type(Node *node) {
       return;
     case ND_ADDR: {
       Type *ty = node->lhs->ty;
-      if (ty->kind == TY_ARRAY)
+      if (ty->kind == TY_ARRAY) {
         node->ty = pointer_to(ty->base);
-      else
+      } else {
         node->ty = pointer_to(ty);
+      }
       return;
     }
     case ND_DEREF:
@@ -251,7 +252,17 @@ void add_type(Node *node) {
     case ND_STMT_EXPR:
       if (node->body) {
         Node *stmt = node->body;
-        while (stmt->next) stmt = stmt->next;
+        for (;;) {
+          if (stmt->next) {
+            stmt = stmt->next;
+          } else {
+            if (stmt->kind == ND_LABEL && stmt->lhs) {
+              stmt = stmt->lhs;
+            } else {
+              break;
+            }
+          }
+        }
         if (stmt->kind == ND_EXPR_STMT) {
           node->ty = stmt->lhs->ty;
           return;

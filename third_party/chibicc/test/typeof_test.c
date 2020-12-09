@@ -24,6 +24,12 @@ int main() {
            sizeof(x);
          }));
   ASSERT(12, sizeof(typeof(struct { int a, b, c; })));
-
-  return 0;
+  ASSERT(3, ({
+           label:
+             3;
+         }));
+  ASSERT(3, ({
+           __typeof(int) x = 3;
+           x;
+         }));
 }

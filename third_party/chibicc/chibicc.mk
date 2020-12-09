@@ -55,6 +55,7 @@ THIRD_PARTY_CHIBICC_A_DIRECTDEPS =					\
 	LIBC_TIME							\
 	LIBC_UNICODE							\
 	LIBC_X								\
+	THIRD_PARTY_COMPILER_RT						\
 	THIRD_PARTY_DLMALLOC						\
 	THIRD_PARTY_GDTOA
 
@@ -73,10 +74,10 @@ $(THIRD_PARTY_CHIBICC_A).pkg:						\
 o/$(MODE)/third_party/chibicc/chibicc.com.dbg:				\
 		$(THIRD_PARTY_CHIBICC_A_DEPS)				\
 		$(THIRD_PARTY_CHIBICC_A)				\
-		o/$(MODE)/third_party/chibicc/chibicc.o			\
-		$(THIRD_PARTY_CHIBICC_A).pkg				\
+		$(APE)							\
 		$(CRT)							\
-		$(APE)
+		o/$(MODE)/third_party/chibicc/chibicc.o			\
+		$(THIRD_PARTY_CHIBICC_A).pkg
 	@$(APELINK)
 
 o/$(MODE)/third_party/chibicc/chibicc2.com.dbg:				\
@@ -93,16 +94,16 @@ o/$(MODE)/third_party/chibicc/chibicc.o:				\
 			-DAPE=\"o/$(MODE)/ape/ape.o\"			\
 			-DLDS=\"o/$(MODE)/ape/ape.lds\"
 
-o/$(MODE)/third_party/chibicc/chibicc.chibicc.s:			\
+o/$(MODE)/third_party/chibicc/chibicc.chibicc.o:			\
 		CHIBICC_FLAGS +=					\
 			-DCRT=\"$(CRT)\"				\
 			-DAPE=\"o/$(MODE)/ape/ape.o\"			\
 			-DLDS=\"o/$(MODE)/ape/ape.lds\"
 
-o/$(MODE)/%.chibicc.s: %.c o/$(MODE)/third_party/chibicc/chibicc.com.dbg
-	@ACTION=CHIBICC TARGET=$@ build/do $(CHIBICC) $(CHIBICC_FLAGS) -S -o $@ $<
-o/$(MODE)/%.chibicc2.s: %.c o/$(MODE)/third_party/chibicc/chibicc2.com.dbg
-	@ACTION=CHIBICC2 TARGET=$@ build/do $(CHIBICC2) $(CHIBICC_FLAGS) -S -o $@ $<
+o/$(MODE)/%.chibicc.o: %.c o/$(MODE)/third_party/chibicc/chibicc.com.dbg
+	@ACTION=CHIBICC TARGET=$@ build/do $(CHIBICC) $(CHIBICC_FLAGS) -c -o $@ $<
+o/$(MODE)/%.chibicc2.o: %.c o/$(MODE)/third_party/chibicc/chibicc2.com.dbg
+	@ACTION=CHIBICC2 TARGET=$@ build/do $(CHIBICC2) $(CHIBICC_FLAGS) -c -o $@ $<
 
 THIRD_PARTY_CHIBICC_LIBS = $(foreach x,$(THIRD_PARTY_CHIBICC_ARTIFACTS),$($(x)))
 THIRD_PARTY_CHIBICC_SRCS = $(foreach x,$(THIRD_PARTY_CHIBICC_ARTIFACTS),$($(x)_SRCS))
@@ -115,5 +116,4 @@ $(THIRD_PARTY_CHIBICC_OBJS): $(BUILD_FILES) third_party/chibicc/chibicc.mk
 o/$(MODE)/third_party/chibicc:						\
 		o/$(MODE)/third_party/chibicc/test			\
 		$(THIRD_PARTY_CHIBICC_BINS)				\
-		$(THIRD_PARTY_CHIBICC_CHECKS)				\
-		$(THIRD_PARTY_CHIBICC_A_SRCS:%.c=o/$(MODE)/%.chibicc.s)
+		$(THIRD_PARTY_CHIBICC_CHECKS)

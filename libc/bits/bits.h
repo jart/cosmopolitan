@@ -229,12 +229,12 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
  * @see Intel Six-Thousand Page Manual Manual V.3A §8.2.3.1
  * @see atomic_load()
  */
-#define atomic_store(MEM, VAL)                        \
-  ({                                                  \
-    autotype(VAL) Val = (VAL);                        \
-    typeof(&Val) Mem = (MEM);                         \
-    asm("mov%z1\t%1,%0" : "=m,m"(*Mem) : "i,r"(Val)); \
-    Val;                                              \
+#define atomic_store(MEM, VAL)                    \
+  ({                                              \
+    autotype(VAL) Val = (VAL);                    \
+    typeof(&Val) Mem = (MEM);                     \
+    asm("mov%z1\t%1,%0" : "=m"(*Mem) : "r"(Val)); \
+    Val;                                          \
   })
 
 #define bts(MEM, BIT)     __BitOp("bts", BIT, MEM) /** bit test and set */

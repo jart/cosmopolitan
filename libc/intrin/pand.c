@@ -20,7 +20,7 @@
 #include "libc/intrin/pand.h"
 
 /**
- * Nands 128-bit integers.
+ * Ands 128-bit integers.
  *
  * @param 𝑎 [w/o] receives result
  * @param 𝑏 [r/o] supplies first input vector

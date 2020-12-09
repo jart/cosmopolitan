@@ -4,10 +4,10 @@
 #define FP_MAX 8
 
 int depth;
-static char *argreg8[] = {"%dil", "%sil", "%dl", "%cl", "%r8b", "%r9b"};
-static char *argreg16[] = {"%di", "%si", "%dx", "%cx", "%r8w", "%r9w"};
-static char *argreg32[] = {"%edi", "%esi", "%edx", "%ecx", "%r8d", "%r9d"};
-static char *argreg64[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"};
+static char argreg8[][5] = {"%dil", "%sil", "%dl", "%cl", "%r8b", "%r9b"};
+static char argreg16[][5] = {"%di", "%si", "%dx", "%cx", "%r8w", "%r9w"};
+static char argreg32[][5] = {"%edi", "%esi", "%edx", "%ecx", "%r8d", "%r9d"};
+static char argreg64[][5] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"};
 static Obj *current_fn;
 static char *lastline;
 
@@ -21,7 +21,7 @@ void flushln(void) {
   lastline = NULL;
 }
 
-static void emitln(char *nextline) {
+static void processln(char *nextline) {
   if (lastline) {
     // unsophisticated optimization pass to reduce asm noise a little bit
     if ((!strcmp(lastline, "\txor\t%eax,%eax") &&
@@ -60,11 +60,15 @@ static void emitln(char *nextline) {
   }
 }
 
+static void emitlin(char *nextline) {
+  processln(strdup(nextline));
+}
+
 void println(char *fmt, ...) {
   va_list ap;
   char *nextline;
   va_start(ap, fmt);
-  emitln(xvasprintf(fmt, ap));
+  emitlin(xvasprintf(fmt, ap));
   va_end(ap);
 }
 
@@ -74,18 +78,20 @@ int count(void) {
 }
 
 void push(void) {
-  println("\tpush\t%%rax");
+  emitlin("\tpush\t%rax");
   depth++;
 }
 
 void pop(char *arg) {
   println("\tpop\t%s", arg);
   depth--;
+  fflush(output_stream);
+  DCHECK_GE(depth, 0);
 }
 
 void push2(void) {
-  println("\tpush\t%%rdx");
-  println("\tpush\t%%rax");
+  emitlin("\tpush\t%rdx");
+  emitlin("\tpush\t%rax");
   depth++;
   depth++;
 }
@@ -95,6 +101,7 @@ void pop2(char *a, char *b) {
   println("\tpop\t%s", b);
   depth--;
   depth--;
+  DCHECK_GE(depth, 0);
 }
 
 void pushreg(char *arg) {
@@ -105,6 +112,7 @@ void pushreg(char *arg) {
 void popreg(char *arg) {
   println("\tpop\t%%%s", arg);
   depth--;
+  DCHECK_GE(depth, 0);
 }
 
 static const char *nameof(Obj *obj) {
@@ -115,30 +123,41 @@ static const char *nameof(Obj *obj) {
   }
 }
 
+static void pushx(void) {
+  emitlin("\tsub\t$16,%rsp");
+  emitlin("\tmovdqu\t%xmm0,(%rsp)");
+  depth += 2;
+}
+
+static void popx(int reg) {
+  println("\tmovdqu\t(%%rsp),%%xmm%d", reg);
+  emitlin("\tadd\t$16,%rsp");
+  depth -= 2;
+  DCHECK_GE(depth, 0);
+}
+
 static void pushf(Type *ty) {
   if (ty->vector_size == 16) {
-    println("\tsub\t$16,%%rsp");
-    println("\tmovdqu\t%%xmm0,(%%rsp)");
-    depth++;
-    depth++;
+    pushx();
   } else {
-    println("\tpush\t%%rax");
-    println("\tmovsd\t%%xmm0,(%%rsp)");
+    emitlin("\tpush\t%rax");
+    emitlin("\tmovsd\t%xmm0,(%rsp)");
     depth++;
   }
 }
 
 static void popf(Type *ty, int reg) {
   if (ty->vector_size == 16) {
-    println("\tmovdqu\t(%%rsp),%%xmm%d", reg);
-    println("\tadd\t$16,%%rsp");
-    depth--;
-    depth--;
+    popx(reg);
   } else {
     println("\tmovsd\t(%%rsp),%%xmm%d", reg);
-    println("\tadd\t$8,%%rsp");
+    emitlin("\tadd\t$8,%rsp");
     depth--;
   }
+}
+
+static void print_profiling_nop(void) {
+  emitlin("\t.byte\t0x0f,0x1f,0x44,0x00,0x00");
 }
 
 static void print_visibility(Obj *obj) {
@@ -174,7 +193,7 @@ void print_loc(int64_t file, int64_t line) {
     p += int64toarray_radix10(file, p);
     *p++ = ' ';
     int64toarray_radix10(line, p);
-    emitln(locbuf);
+    emitlin(locbuf);
     lastfile = file;
     lastline = line;
   }
@@ -242,7 +261,7 @@ static char *reg_ax(int sz) {
 
 // Compute the absolute address of a given node.
 // It's an error if a given node does not reside in memory.
-// asm() requires this not clobber flags or regs other than rax
+// asm() wants this to not clobber flags or regs other than rax.
 void gen_addr(Node *node) {
   switch (node->kind) {
     case ND_VAR:
@@ -256,7 +275,7 @@ void gen_addr(Node *node) {
         println("\tlea\t%d(%%rbp),%%rax", node->var->offset);
         return;
       }
-      if (opt_fpic) {
+      if (opt_pic) {
         if (node->var->is_tls) {
           // Dynamic thread-local variable
           println("\tmov\t%%fs:0,%%rax");
@@ -296,7 +315,7 @@ void gen_addr(Node *node) {
       // Global Offset Table using `@GOTPCREL(%rip)` notation.
       // Function
       if (node->ty->kind == TY_FUNC) {
-        if (!opt_fpic) {
+        if (!opt_pic) {
           println("\tmov\t$%s,%%eax", nameof(node->var));
         } else if (node->var->is_definition) {
           println("\tlea\t%s(%%rip),%%rax", nameof(node->var));
@@ -306,11 +325,15 @@ void gen_addr(Node *node) {
         return;
       }
       // Global variable
-      if (opt_fpic) {
+      if (opt_pic) {
         println("\tlea\t%s(%%rip),%%rax", nameof(node->var));
       } else {
         println("\tmov\t$%s,%%eax", nameof(node->var));
       }
+      return;
+    case ND_CAST:
+      gen_expr(node->lhs);
+      gen_cast(node->lhs->ty, node->ty);
       return;
     case ND_DEREF:
       gen_expr(node->lhs);
@@ -334,8 +357,10 @@ void gen_addr(Node *node) {
     case ND_VLA_PTR:
       println("\tlea\t%d(%%rbp),%%rax", node->var->offset);
       return;
+    default:
+      DCHECK(0);
+      error_tok(node->tok, "not an lvalue %d", node->kind);
   }
-  error_tok(node->tok, "not an lvalue");
 }
 
 // Load a value from where %rax is pointing to.
@@ -355,24 +380,32 @@ static void load(Type *ty) {
       return;
     case TY_FLOAT:
       if (ty->vector_size == 16) {
-        println("\tmovdqu\t(%%rax),%%xmm0");
+        if (ty->align >= 16) {
+          emitlin("\tmovaps\t(%rax),%xmm0");
+        } else {
+          emitlin("\tmovdqu\t(%rax),%xmm0");
+        }
       } else {
-        println("\tmovss\t(%%rax),%%xmm0");
+        emitlin("\tmovss\t(%rax),%xmm0");
         return;
       }
     case TY_DOUBLE:
       if (ty->vector_size == 16) {
-        println("\tmovdqu\t(%%rax),%%xmm0");
+        if (ty->align >= 16) {
+          emitlin("\tmovapd\t(%rax),%xmm0");
+        } else {
+          emitlin("\tmovdqu\t(%rax),%xmm0");
+        }
       } else {
-        println("\tmovsd\t(%%rax),%%xmm0");
+        emitlin("\tmovsd\t(%rax),%xmm0");
       }
       return;
     case TY_LDOUBLE:
-      println("\tfldt\t(%%rax)");
+      emitlin("\tfldt\t(%rax)");
       return;
     case TY_INT128:
-      println("\tmov\t8(%%rax),%%rdx");
-      println("\tmov\t(%%rax),%%rax");
+      emitlin("\tmov\t8(%rax),%rdx");
+      emitlin("\tmov\t(%rax),%rax");
       return;
     default:
       break;
@@ -388,9 +421,9 @@ static void load(Type *ty) {
   } else if (ty->size == 2) {
     println("\t%swl\t(%%rax),%%eax", insn);
   } else if (ty->size == 4) {
-    println("\tmovslq\t(%%rax),%%rax");
+    emitlin("\tmovslq\t(%rax),%rax");
   } else {
-    println("\tmov\t(%%rax),%%rax");
+    emitlin("\tmov\t(%rax),%rax");
   }
 }
 
@@ -399,53 +432,53 @@ static void gen_memcpy(size_t size) {
     case 0:
       break;
     case 1:
-      println("\tmov\t(%%rax),%%r8b");
-      println("\tmov\t%%r8b,(%%rdi)");
+      emitlin("\tmov\t(%rax),%r8b");
+      emitlin("\tmov\t%r8b,(%rdi)");
       break;
     case 2:
-      println("\tmov\t(%%rax),%%r8w");
-      println("\tmov\t%%r8w,(%%rdi)");
+      emitlin("\tmov\t(%rax),%r8w");
+      emitlin("\tmov\t%r8w,(%rdi)");
       break;
     case 3:
-      println("\tmov\t(%%rax),%%r8w");
-      println("\tmov\t%%r8w,(%%rdi)");
-      println("\tmov\t2(%%rax),%%r8b");
-      println("\tmov\t%%r8b,2(%%rdi)");
+      emitlin("\tmov\t(%rax),%r8w");
+      emitlin("\tmov\t%r8w,(%rdi)");
+      emitlin("\tmov\t2(%rax),%r8b");
+      emitlin("\tmov\t%r8b,2(%rdi)");
       break;
     case 4:
-      println("\tmov\t(%%rax),%%r8d");
-      println("\tmov\t%%r8d,(%%rdi)");
+      emitlin("\tmov\t(%rax),%r8d");
+      emitlin("\tmov\t%r8d,(%rdi)");
       break;
     case 5 ... 7:
-      println("\tmov\t(%%rax),%%r8d");
+      emitlin("\tmov\t(%rax),%r8d");
       println("\tmov\t%d(%%rax),%%r9d", size - 4);
-      println("\tmov\t%%r8d,(%%rdi)");
+      emitlin("\tmov\t%r8d,(%rdi)");
       println("\tmov\t%%r9d,%d(%%rdi)", size - 4);
       break;
     case 8:
-      println("\tmov\t(%%rax),%%r8");
-      println("\tmov\t%%r8,(%%rdi)");
+      emitlin("\tmov\t(%rax),%r8");
+      emitlin("\tmov\t%r8,(%rdi)");
       break;
     case 9 ... 15:
-      println("\tmov\t(%%rax),%%r8");
+      emitlin("\tmov\t(%rax),%r8");
       println("\tmov\t%d(%%rax),%%r9", size - 8);
-      println("\tmov\t%%r8,(%%rdi)");
+      emitlin("\tmov\t%r8,(%rdi)");
       println("\tmov\t%%r9,%d(%%rdi)", size - 8);
       break;
     case 16:
-      println("\tmovdqu\t(%%rax),%%xmm2");
-      println("\tmovdqu\t%%xmm2,(%%rdi)");
+      emitlin("\tmovdqu\t(%rax),%xmm2");
+      emitlin("\tmovdqu\t%xmm2,(%rdi)");
       break;
     case 17 ... 32:
-      println("\tmovdqu\t(%%rax),%%xmm2");
+      emitlin("\tmovdqu\t(%rax),%xmm2");
       println("\tmovdqu\t%d(%%rax),%%xmm3", size - 16);
-      println("\tmovdqu\t%%xmm2,(%%rdi)");
+      emitlin("\tmovdqu\t%xmm2,(%rdi)");
       println("\tmovdqu\t%%xmm3,%d(%%rdi)", size - 16);
       break;
     default:
-      println("\tmov\t%%rax,%%rsi");
+      emitlin("\tmov\t%rax,%rsi");
       print_mov_imm(size, "%rcx", "%ecx");
-      println("\trep movsb");
+      emitlin("\trep movsb");
       break;
   }
 }
@@ -460,61 +493,76 @@ static void store(Type *ty) {
       return;
     case TY_FLOAT:
       if (ty->vector_size == 16) {
-        println("\tmovdqu\t%%xmm0,(%%rdi)");
+        if (ty->align >= 16) {
+          emitlin("\tmovaps\t%xmm0,(%rdi)");
+        } else {
+          emitlin("\tmovdqu\t%xmm0,(%rdi)");
+        }
       } else {
-        println("\tmovss\t%%xmm0,(%%rdi)");
+        emitlin("\tmovss\t%xmm0,(%rdi)");
       }
       return;
     case TY_DOUBLE:
       if (ty->vector_size == 16) {
-        println("\tmovdqu\t%%xmm0,(%%rdi)");
+        if (ty->align >= 16) {
+          emitlin("\tmovapd\t%xmm0,(%rdi)");
+        } else {
+          emitlin("\tmovdqu\t%xmm0,(%rdi)");
+        }
       } else {
-        println("\tmovsd\t%%xmm0,(%%rdi)");
+        emitlin("\tmovsd\t%xmm0,(%rdi)");
       }
       return;
     case TY_LDOUBLE:
-      println("\tfstpt\t(%%rdi)");
+      emitlin("\tfstpt\t(%rdi)");
       return;
     case TY_INT128:
-      println("\tmov\t%%rax,(%%rdi)");
-      println("\tmov\t%%rdx,8(%%rdi)");
+      emitlin("\tmov\t%rax,(%rdi)");
+      emitlin("\tmov\t%rdx,8(%rdi)");
       return;
   }
+  if (ty->vector_size == 16) {
+    if (ty->align >= 16) {
+      emitlin("\tmovdqa\t%xmm0,(%rdi)");
+    } else {
+      emitlin("\tmovdqu\t%xmm0,(%rdi)");
+    }
+  }
   if (ty->size == 1) {
-    println("\tmov\t%%al,(%%rdi)");
+    emitlin("\tmov\t%al,(%rdi)");
   } else if (ty->size == 2) {
-    println("\tmov\t%%ax,(%%rdi)");
+    emitlin("\tmov\t%ax,(%rdi)");
   } else if (ty->size == 4) {
-    println("\tmov\t%%eax,(%%rdi)");
+    emitlin("\tmov\t%eax,(%rdi)");
   } else {
-    println("\tmov\t%%rax,(%%rdi)");
+    emitlin("\tmov\t%rax,(%rdi)");
   }
 }
 
 void cmp_zero(Type *ty) {
   switch (ty->kind) {
     case TY_FLOAT:
-      println("\txorps\t%%xmm1,%%xmm1");
-      println("\tucomiss\t%%xmm1,%%xmm0");
+      emitlin("\txorps\t%xmm1,%xmm1");
+      emitlin("\tucomiss\t%xmm1,%xmm0");
       return;
     case TY_DOUBLE:
-      println("\txorpd\t%%xmm1,%%xmm1");
-      println("\tucomisd\t%%xmm1,%%xmm0");
+      emitlin("\txorpd\t%xmm1,%xmm1");
+      emitlin("\tucomisd\t%xmm1,%xmm0");
       return;
     case TY_LDOUBLE:
-      println("\tfldz");
-      println("\tfucomip");
-      println("\tfstp\t%%st");
+      emitlin("\tfldz");
+      emitlin("\tfucomip");
+      emitlin("\tfstp\t%st");
       return;
     case TY_INT128:
-      println("mov\t%%rax,%%r11");
-      println("or\t%%edx,%%r11");
+      emitlin("\tmov\t%rax,%r11");
+      emitlin("\tor\t%rdx,%r11");
       return;
   }
   if (is_integer(ty) && ty->size <= 4) {
-    println("\ttest\t%%eax,%%eax");
+    emitlin("\ttest\t%eax,%eax");
   } else {
-    println("\ttest\t%%rax,%%rax");
+    emitlin("\ttest\t%rax,%rax");
   }
 }
 
@@ -532,14 +580,19 @@ void cmp_zero(Type *ty) {
 // members in its byte range [lo, hi).
 static bool has_flonum(Type *ty, int lo, int hi, int offset) {
   if (ty->kind == TY_STRUCT || ty->kind == TY_UNION) {
-    for (Member *mem = ty->members; mem; mem = mem->next)
-      if (!has_flonum(mem->ty, lo, hi, offset + mem->offset)) return false;
+    for (Member *mem = ty->members; mem; mem = mem->next) {
+      if (!has_flonum(mem->ty, lo, hi, offset + mem->offset)) {
+        return false;
+      }
+    }
     return true;
   }
   if (ty->kind == TY_ARRAY) {
-    for (int i = 0; i < ty->array_len; i++)
-      if (!has_flonum(ty->base, lo, hi, offset + ty->base->size * i))
+    for (int i = 0; i < ty->array_len; i++) {
+      if (!has_flonum(ty->base, lo, hi, offset + ty->base->size * i)) {
         return false;
+      }
+    }
     return true;
   }
   return offset < lo || hi <= offset || ty->kind == TY_FLOAT ||
@@ -582,8 +635,8 @@ static void push_args2(Node *args, bool first_pass) {
       pushf(args->ty);
       break;
     case TY_LDOUBLE:
-      println("\tsub\t$16,%%rsp");
-      println("\tfstpt\t(%%rsp)");
+      emitlin("\tsub\t$16,%rsp");
+      emitlin("\tfstpt\t(%rsp)");
       depth += 2;
       break;
     case TY_INT128:
@@ -591,6 +644,9 @@ static void push_args2(Node *args, bool first_pass) {
       break;
     default:
       push();
+  }
+  if (args->realign_stack) {
+    pushreg("rbx");
   }
 }
 
@@ -642,8 +698,12 @@ static int push_args(Node *node) {
       case TY_FLOAT:
       case TY_DOUBLE:
         if (fp++ >= FP_MAX) {
+          if ((stack & 1) && arg->ty->vector_size == 16) {
+            arg->realign_stack = true;
+            ++stack;
+          }
           arg->pass_by_stack = true;
-          stack++;
+          ++stack;
         }
         break;
       case TY_LDOUBLE:
@@ -651,11 +711,15 @@ static int push_args(Node *node) {
         stack += 2;
         break;
       case TY_INT128:
-        gp++;
-        if (gp++ >= GP_MAX) {
+        if (gp + 1 >= GP_MAX) {
+          if (stack & 1) {
+            arg->realign_stack = true;
+            ++stack;
+          }
           arg->pass_by_stack = true;
-          stack++;
-          stack++;
+          stack += 2;
+        } else {
+          gp += 2;
         }
         break;
       default:
@@ -667,7 +731,7 @@ static int push_args(Node *node) {
     }
   }
   if ((depth + stack) % 2 == 1) {
-    println("\tsub\t$8,%%rsp");
+    emitlin("\tsub\t$8,%rsp");
     depth++;
     stack++;
   }
@@ -697,7 +761,7 @@ static void copy_ret_buffer(Obj *var) {
   } else {
     for (int i = 0; i < MIN(8, ty->size); i++) {
       println("\tmov\t%%al,%d(%%rbp)", var->offset + i);
-      println("\tshr\t$8,%%rax");
+      emitlin("\tshr\t$8,%rax");
     }
     gp++;
   }
@@ -724,21 +788,21 @@ static void copy_struct_reg(void) {
   /* todo(jart): wat */
   Type *ty = current_fn->ty->return_ty;
   int gp = 0, fp = 0;
-  println("\tmov\t%%rax,%%rdi");
+  emitlin("\tmov\t%rax,%rdi");
   if (has_flonum(ty, 0, 8, 0)) {
     assert(ty->size == 4 || 8 <= ty->size);
     if (ty->size == 4) {
-      println("\tmovss\t(%%rdi),%%xmm0");
+      emitlin("\tmovss\t(%rdi),%xmm0");
     } else if (ty->size == 8) {
-      println("\tmovsd\t(%%rdi),%%xmm0");
+      emitlin("\tmovsd\t(%rdi),%xmm0");
     } else {
-      println("\tmovdqu\t(%%rdi),%%xmm0");
+      emitlin("\tmovdqu\t(%rdi),%xmm0");
     }
     fp++;
   } else {
-    println("\txor\t%%eax,%%eax");
+    emitlin("\txor\t%eax,%eax");
     for (int i = MIN(8, ty->size) - 1; i >= 0; i--) {
-      println("\tshl\t$8,%%rax");
+      emitlin("\tshl\t$8,%rax");
       println("\tmov\t%d(%%rdi),%%al", i);
     }
     gp++;
@@ -776,28 +840,28 @@ static void copy_struct_mem(void) {
 
 static void builtin_alloca(void) {
   // Align size to 16 bytes.
-  println("\tadd\t$15,%%rdi");
-  println("\tand\t$-16,%%rdi");
+  emitlin("\tadd\t$15,%rdi");
+  emitlin("\tand\t$-16,%rdi");
   // Shift the temporary area by %rdi.
   println("\tmov\t%d(%%rbp),%%rcx", current_fn->alloca_bottom->offset);
-  println("\
-\tsub\t%%rsp,%%rcx\n\
-\tmov\t%%rsp,%%rax\n\
-\tsub\t%%rdi,%%rsp\n\
-\tmov\t%%rsp,%%rdx\n\
+  emitlin("\
+\tsub\t%rsp,%rcx\n\
+\tmov\t%rsp,%rax\n\
+\tsub\t%rdi,%rsp\n\
+\tmov\t%rsp,%rdx\n\
 1:\n\
-\ttest\t%%rcx,%%rcx\n\
+\ttest\t%rcx,%rcx\n\
 \tje\t2f\n\
-\tmov\t(%%rax),%%r8b\n\
-\tmov\t%%r8b,(%%rdx)\n\
-\tinc\t%%rdx\n\
-\tinc\t%%rax\n\
-\tdec\t%%rcx\n\
+\tmov\t(%rax),%r8b\n\
+\tmov\t%r8b,(%rdx)\n\
+\tinc\t%rdx\n\
+\tinc\t%rax\n\
+\tdec\t%rcx\n\
 \tjmp\t1b\n\
 2:");
   // Move alloca_bottom pointer.
   println("\tmov\t%d(%%rbp),%%rax", current_fn->alloca_bottom->offset);
-  println("\tsub\t%%rdi,%%rax");
+  emitlin("\tsub\t%rdi,%rax");
   println("\tmov\t%%rax,%d(%%rbp)", current_fn->alloca_bottom->offset);
 }
 
@@ -811,76 +875,88 @@ static void gen_comis(Node *node, const char *op, int a, int b,
   } else {
     gen_expr(node->args);
   }
-  println("\txor\t%%eax,%%eax");
+  emitlin("\txor\t%eax,%eax");
   println("\t%s\t%%xmm%d,%%xmm%d", op, a, b);
   println("\tset%s\t%%al", pred);
 }
 
 static bool gen_builtin_funcall(Node *node, const char *name) {
-  if (!strcmp(name, "trap")) {
-    println("\tint3");
+  if (!strcmp(name, "alloca")) {
+    gen_expr(node->args);
+    emitlin("\tmov\t%rax,%rdi");
+    builtin_alloca();
+    return true;
+  } else if (!strcmp(name, "trap")) {
+    emitlin("\tint3");
     return true;
   } else if (!strcmp(name, "unreachable")) {
-    println("\tud2");
+    emitlin("\tud2");
+    return true;
+  } else if (!strcmp(name, "frame_address")) {
+    if (is_const_expr(node->args) && !eval(node->args)) {
+      emitlin("\tmov\t%rbp,%rax");
+    } else {
+      error_tok(node->args->tok, "must be 0");
+    }
     return true;
   } else if (!strcmp(name, "ctz")) {
     gen_expr(node->args);
-    println("\tbsf\t%%eax,%%eax");
+    emitlin("\tbsf\t%eax,%eax");
     return true;
   } else if (!strcmp(name, "ctzl") || !strcmp(name, "ctzll")) {
     gen_expr(node->args);
-    println("\tbsf\t%%rax,%%rax");
+    emitlin("\tbsf\t%rax,%rax");
     return true;
   } else if (!strcmp(name, "clz")) {
     gen_expr(node->args);
-    println("\
-\tbsr\t%%eax,%%eax\n\
-\txor\t$31,%%eax");
+    emitlin("\
+\tbsr\t%eax,%eax\n\
+\txor\t$31,%eax");
     return true;
   } else if (!strcmp(name, "clzl") || !strcmp(name, "clzll")) {
     gen_expr(node->args);
-    println("\
-\tbsr\t%%rax,%%rax\n\
-\txor\t$63,%%eax");
+    emitlin("\
+\tbsr\t%rax,%rax\n\
+\txor\t$63,%eax");
     return true;
   } else if (!strcmp(name, "ffs") || !strcmp(name, "ffsl") ||
              !strcmp(name, "ffsll")) {
     char regprefix;
     gen_expr(node->args);
-    println("\tor\t$-1,%%edi");
+    emitlin("\tor\t$-1,%edi");
     regprefix = endswith(name, "l") ? 'r' : 'e';
     println("\tbsf\t%%%cax,%%%cax", regprefix, regprefix);
-    println("\tcmovz\t%%edi,%%eax");
-    println("\tinc\t%%eax");
+    emitlin("\tcmovz\t%edi,%eax");
+    emitlin("\tinc\t%eax");
     return true;
   } else if (!strcmp(name, "bswap16")) {
     gen_expr(node->args);
-    println("\txchg\t%%al,%%ah");
+    emitlin("\txchg\t%al,%ah");
     return true;
   } else if (!strcmp(name, "bswap32")) {
     gen_expr(node->args);
-    println("\tbswap\t%%eax");
+    emitlin("\tbswap\t%eax");
     return true;
   } else if (!strcmp(name, "bswap64")) {
     gen_expr(node->args);
-    println("\tbswap\t%%rax");
+    emitlin("\tbswap\t%rax");
     return true;
   } else if (!strcmp(name, "popcount")) {
     gen_expr(node->args);
-    if (opt_mpopcnt) {
-      println("\tpopcnt\t%%eax,%%eax");
+    if (opt_popcnt) {
+      emitlin("\tpopcnt\t%eax,%eax");
     } else {
-      println("\tmov\t%%rax,%%rdi");
-      println("\tcall\t__popcountsi2");
+      emitlin("\tmov\t%eax,%edi");
+      emitlin("\tcall\t__popcountsi2");
     }
     return true;
   } else if (!strcmp(name, "popcountl") || !strcmp(name, "popcountll")) {
     gen_expr(node->args);
-    if (opt_mpopcnt) {
-      println("\tpopcnt\t%%rax,%%rax");
+    if (opt_popcnt) {
+      emitlin("\tpopcnt\t%rax,%rax");
     } else {
-      println("\tmov\t%%rax,%%rdi");
-      println("\tcall\t__popcountdi2");
+      emitlin("\tmov\t%rax,%rdi");
+      emitlin("\tcall\t__popcountdi2");
     }
     return true;
   } else if (!strcmp(name, "memcpy")) {
@@ -888,7 +964,7 @@ static bool gen_builtin_funcall(Node *node, const char *name) {
       gen_expr(node->args);
       push();
       gen_expr(node->args->next);
-      println("\tmov\t(%%rsp),%%rdi");
+      emitlin("\tmov\t(%rsp),%rdi");
       gen_memcpy(eval(node->args->next->next));
       pop("%rax");
       return true;
@@ -915,87 +991,111 @@ static bool gen_builtin_funcall(Node *node, const char *name) {
     gen_comis(node, "ucomisd", 0, 0, "p");
     return true;
   } else if (!strcmp(name, "nanf")) {
-    println("\
-\tmov\t$0x7fc00000,%%eax\n\
-\tmovd\t%%eax,%%xmm0");
+    emitlin("\
+\tmov\t$0x7fc00000,%eax\n\
+\tmovd\t%eax,%xmm0");
     return true;
   } else if (!strcmp(name, "nan")) {
-    println("\
-\tmov\t$0x7fffffffffffffff,%%rax\n\
-\tmovq\t%%rax,%%xmm0");
+    emitlin("\
+\tmov\t$0x7fffffffffffffff,%rax\n\
+\tmovq\t%rax,%xmm0");
     return true;
   } else if (!strcmp(name, "nanl")) {
-    println("\
+    emitlin("\
 \tpush\t$0x7fc00000\n\
-\tflds\t(%%rsp)\n\
-\tpop\t%%rax");
+\tflds\t(%rsp)\n\
+\tpop\t%rax");
     return true;
   } else if (!strcmp(name, "inff")) {
-    println("\
-\tmov\t$0x7f800000,%%eax\n\
-\tmovd\t%%eax,%%xmm0");
+    emitlin("\
+\tmov\t$0x7f800000,%eax\n\
+\tmovd\t%eax,%xmm0");
     return true;
   } else if (!strcmp(name, "inf")) {
-    println("\
-\tmov\t$0x7ff0000000000000,%%rax\n\
-\tmovq\t%%rax,%%xmm0");
+    emitlin("\
+\tmov\t$0x7ff0000000000000,%rax\n\
+\tmovq\t%rax,%xmm0");
     return true;
   } else if (!strcmp(name, "infl")) {
-    println("\
+    emitlin("\
 \tpush\t$0x7f800000\n\
-\tflds\t(%%rsp)\n\
-\tpop\t%%rax");
+\tflds\t(%rsp)\n\
+\tpop\t%rax");
     return true;
   } else if (!strcmp(name, "isinf")) {
     gen_expr(node->args);
-    println("\
-\tmov\t$0x7fffffffffffffff,%%rax\n\
-\tmovq\t%%rax,%%xmm1\n\
-\tandps\t%%xmm1,%%xmm0\n\
-\tmov\t$0x7fefffffffffffff,%%rax\n\
-\tmovq\t%%rax,%%xmm1\n\
-\txor\t%%eax,%%eax\n\
-\tcomisd\t%%xmm1,%%xmm0\n\
-\tseta\t%%al");
+    emitlin("\
+\tmov\t$0x7fffffffffffffff,%rax\n\
+\tmovq\t%rax,%xmm1\n\
+\tandps\t%xmm1,%xmm0\n\
+\tmov\t$0x7fefffffffffffff,%rax\n\
+\tmovq\t%rax,%xmm1\n\
+\txor\t%eax,%eax\n\
+\tcomisd\t%xmm1,%xmm0\n\
+\tseta\t%al");
     return true;
   } else if (!strcmp(name, "isfinite")) {
     gen_expr(node->args);
-    println("\
-\tmov\t$0x7fffffffffffffff,%%rax\n\
-\tmovq\t%%rax,%%xmm1\n\
-\tandps\t%%xmm1,%%xmm0\n\
-\tmov\t$0x7fefffffffffffff,%%rax\n\
-\tmovq\t%%rax,%%xmm1\n\
-\txor\t%%eax,%%eax\n\
-\tcomisd\t%%xmm0,%%xmm1\n\
-\tsetnb\t%%al");
+    emitlin("\
+\tmov\t$0x7fffffffffffffff,%rax\n\
+\tmovq\t%rax,%xmm1\n\
+\tandps\t%xmm1,%xmm0\n\
+\tmov\t$0x7fefffffffffffff,%rax\n\
+\tmovq\t%rax,%xmm1\n\
+\txor\t%eax,%eax\n\
+\tcomisd\t%xmm0,%xmm1\n\
+\tsetnb\t%al");
     return true;
   } else if (!strcmp(name, "signbitf")) {
     gen_expr(node->args);
-    println("\
-\tmovd\t%%xmm0,%%eax\n\
-\tand\t$0x80000000,%%eax");
+    emitlin("\
+\tmovd\t%xmm0,%eax\n\
+\tand\t$-2147483648,%eax");
     return true;
   } else if (!strcmp(name, "signbit")) {
     gen_expr(node->args);
-    println("\
-\tmovmskpd\t%%xmm0,%%eax\n\
-\tand\t$1,%%eax");
+    emitlin("\
+\tmovmskpd\t%xmm0,%eax\n\
+\tand\t$1,%eax");
     return true;
   } else if (!strcmp(name, "signbitl")) {
     gen_expr(node->args);
-    println("\
+    emitlin("\
 \tfxam\n\
-\tfnstsw\t%%ax\n\
-\tfstp\t%%st\n\
-\tand\t$0x200,%%eax");
+\tfnstsw\t%ax\n\
+\tfstp\t%st\n\
+\tand\t$0x200,%eax");
     return true;
-#if 0
-  } else {
-    error_tok(node->lhs->var->tok, "invalid expression");
-#endif
   }
   return false;
+}
+
+static int GetSseIntSuffix(Type *ty) {
+  switch (ty->kind) {
+    case TY_CHAR:
+      return 'b';
+    case TY_SHORT:
+      return 'w';
+    case TY_INT:
+      return 'd';
+    case TY_LONG:
+      return 'q';
+    default:
+      UNREACHABLE();
+  }
+}
+
+static bool IsOverflowArithmetic(Node *node) {
+  return (node->kind == ND_ADD || node->kind == ND_SUB ||
+          node->kind == ND_MUL || node->kind == ND_NEG) &&
+         node->overflow;
+}
+
+static void HandleOverflow(const char *ax) {
+  pop("%rdi");
+  println("\tmov\t%s,(%%rdi)", ax);
+  emitlin("\tseto\t%al");
+  emitlin("\tmovzbl\t%al,%eax");
 }
 
 // Generate code for a given node.
@@ -1014,7 +1114,7 @@ void gen_expr(Node *node) {
           } u = {node->fval};
           g_ffmt_p(fbuf, &u.f32, 7, sizeof(fbuf), 0);
           println("\tmov\t$%#x,%%eax\t# float %s", u.u32, fbuf);
-          println("\tmovq\t%%rax,%%xmm0");
+          emitlin("\tmovq\t%rax,%xmm0");
           return;
         }
         case TY_DOUBLE: {
@@ -1024,7 +1124,7 @@ void gen_expr(Node *node) {
           } u = {node->fval};
           g_dfmt_p(fbuf, &u.f64, 16, sizeof(fbuf), 0);
           println("\tmov\t$%#lx,%%rax\t# double %s", u.u64, fbuf);
-          println("\tmovq\t%%rax,%%xmm0");
+          emitlin("\tmovq\t%rax,%xmm0");
           return;
         }
         case TY_LDOUBLE: {
@@ -1036,18 +1136,18 @@ void gen_expr(Node *node) {
           u.f80 = node->fval;
           g_xfmt_p(fbuf, &u.f80, 19, sizeof(fbuf), 0);
           println("\tmov\t$%lu,%%rax\t# long double %s", u.u64[0], fbuf);
-          println("\tmov\t%%rax,-16(%%rsp)");
+          emitlin("\tmov\t%rax,-16(%rsp)");
           println("\tmov\t$%lu,%%rax", u.u64[1]);
-          println("\tmov\t%%rax,-8(%%rsp)");
-          println("\tfldt\t-16(%%rsp)");
+          emitlin("\tmov\t%rax,-8(%rsp)");
+          emitlin("\tfldt\t-16(%rsp)");
           return;
         }
         case TY_INT128:
           print_mov_imm(node->val, "%rax", "%eax");
           if (node->ty->is_unsigned) {
-            println("\txor\t%%edx,%%edx");
+            emitlin("\txor\t%edx,%edx");
           } else {
-            println("\tcqto");
+            emitlin("\tcqto");
           }
           return;
         default:
@@ -1056,35 +1156,48 @@ void gen_expr(Node *node) {
       }
     }
     case ND_NEG:
+      if (IsOverflowArithmetic(node)) {
+        gen_expr(node->overflow);
+        push();
+      }
       gen_expr(node->lhs);
       switch (node->ty->kind) {
         case TY_FLOAT:
-          println("\tmov\t$0x80000000,%%eax");
-          println("\tmovq\t%%rax,%%xmm1");
+          emitlin("\tmov\t$-2147483648,%eax");
+          emitlin("\tmovd\t%eax,%xmm1");
           if (node->ty->vector_size == 16) {
-            println("\tpshufd\t$0,%%xmm1");
+            emitlin("\tpshufd\t$0,%xmm1");
           }
-          println("\txorps\t%%xmm1,%%xmm0");
+          emitlin("\txorps\t%xmm1,%xmm0");
           return;
         case TY_DOUBLE:
-          println("\tmov\t$1,%%eax");
-          println("\tror\t%%rax");
-          println("\tmovq\t%%rax,%%xmm1");
+          emitlin("\tmov\t$1,%eax");
+          emitlin("\tror\t%rax");
+          emitlin("\tmovq\t%rax,%xmm1");
           if (node->ty->vector_size == 16) {
-            println("\tpshufd\t$0b01000100,%%xmm1");
+            emitlin("\tpshufd\t$0b01000100,%xmm1");
           }
-          println("\txorpd\t%%xmm1,%%xmm0");
+          emitlin("\txorpd\t%xmm1,%xmm0");
           return;
         case TY_LDOUBLE:
-          println("\tfchs");
+          emitlin("\tfchs");
           return;
         case TY_INT128:
-          println("\tneg\t%%rax");
-          println("\tadc\t$0,%%rdx");
-          println("\tneg\t%%rdx");
+          emitlin("\tneg\t%rax");
+          emitlin("\tadc\t$0,%rdx");
+          emitlin("\tneg\t%rdx");
           return;
       }
-      println("\tneg\t%%rax");
+      char *ax;
+      if (node->lhs->ty->kind == TY_LONG || node->lhs->ty->base) {
+        ax = "%rax";
+      } else {
+        ax = "%eax";
+      }
+      println("\tneg\t%s", ax);
+      if (IsOverflowArithmetic(node)) {
+        HandleOverflow(ax);
+      }
       return;
     case ND_VAR:
       gen_addr(node);
@@ -1118,19 +1231,19 @@ void gen_expr(Node *node) {
       if (node->lhs->kind == ND_MEMBER && node->lhs->member->is_bitfield) {
         // If the lhs is a bitfield, we need to read the current value
         // from memory and merge it with a new value.
-        println("\tmov\t%%rax,%%r8");
+        emitlin("\tmov\t%rax,%r8");
         Member *mem = node->lhs->member;
-        println("\tmov\t%%rax,%%rdi");
+        emitlin("\tmov\t%rax,%rdi");
         println("\tshl\t$%d,%%rdi", 64 - mem->bit_width);
         println("\tshr\t$%d,%%rdi", 64 - mem->bit_width - mem->bit_offset);
-        println("\tmov\t(%%rsp),%%rax");
+        emitlin("\tmov\t(%rsp),%rax");
         load(mem->ty);
         unsigned long mask = ((1ul << mem->bit_width) - 1) << mem->bit_offset;
         println("\tmov\t$%#lx,%%r9", ~mask);
-        println("\tand\t%%r9,%%rax");
-        println("\tor\t%%rdi,%%rax");
+        emitlin("\tand\t%r9,%rax");
+        emitlin("\tor\t%rdi,%rax");
         store(node->ty);
-        println("\tmov\t%%r8,%%rax");
+        emitlin("\tmov\t%r8,%rax");
         return;
       }
       store(node->ty);
@@ -1161,7 +1274,7 @@ void gen_expr(Node *node) {
           println("\tmovq\t$0,%d(%%rbp)", node->var->offset);
           break;
         case 9 ... 16:
-          println("\txor\t%%eax,%%eax");
+          emitlin("\txor\t%eax,%eax");
           println("\tmov\t%%rax,%d(%%rbp)", node->var->offset);
           println("\tmov\t%%rax,%d(%%rbp)",
                   node->var->offset + 8 - (16 - node->var->ty->size));
@@ -1170,8 +1283,8 @@ void gen_expr(Node *node) {
           // `rep stosb` is equivalent to `memset(%rdi, %al, %rcx)`.
           print_mov_imm(node->var->ty->size, "%rcx", "%ecx");
           println("\tlea\t%d(%%rbp),%%rdi", node->var->offset);
-          println("\txor\t%%eax,%%eax");
-          println("\trep stosb");
+          emitlin("\txor\t%eax,%eax");
+          emitlin("\trep stosb");
           break;
       }
       return;
@@ -1190,16 +1303,19 @@ void gen_expr(Node *node) {
     case ND_NOT:
       gen_expr(node->lhs);
       cmp_zero(node->lhs->ty);
-      println("\tsete\t%%al");
-      println("\tmovzbl\t%%al,%%rax");
+      emitlin("\tsete\t%al");
+      emitlin("\tmovzbl\t%al,%rax");
       return;
     case ND_BITNOT:
       gen_expr(node->lhs);
       if (node->lhs->ty->kind == TY_INT128) {
-        println("\tnot\t%%rax");
-        println("\tnot\t%%rdx");
+        emitlin("\tnot\t%rax");
+        emitlin("\tnot\t%rdx");
+      } else if (node->lhs->ty->vector_size == 16) {
+        emitlin("\tpcmpeqd\t%xmm1,%xmm1");
+        emitlin("\tpxor\t%xmm1,%xmm0");
       } else {
-        println("\tnot\t%%rax");
+        emitlin("\tnot\t%rax");
       }
       return;
     case ND_LOGAND: {
@@ -1210,10 +1326,10 @@ void gen_expr(Node *node) {
       gen_expr(node->rhs);
       cmp_zero(node->rhs->ty);
       println("\tje\t.L.false.%d", c);
-      println("\tmov\t$1,%%eax");
+      emitlin("\tmov\t$1,%eax");
       println("\tjmp\t.L.end.%d", c);
       println(".L.false.%d:", c);
-      println("\txor\t%%eax,%%eax");
+      emitlin("\txor\t%eax,%eax");
       println(".L.end.%d:", c);
       return;
     }
@@ -1225,24 +1341,23 @@ void gen_expr(Node *node) {
       gen_expr(node->rhs);
       cmp_zero(node->rhs->ty);
       println("\tjne\t.L.true.%d", c);
-      println("\txor\t%%eax,%%eax");
+      emitlin("\txor\t%eax,%eax");
       println("\tjmp\t.L.end.%d", c);
       println(".L.true.%d:", c);
-      println("\tmov\t$1,%%eax");
+      emitlin("\tmov\t$1,%eax");
       println(".L.end.%d:", c);
       return;
     }
     case ND_FUNCALL: {
       const char *funcname = NULL;
       if (node->lhs->kind == ND_VAR) {
-        if (!strcmp(nameof(node->lhs->var), "alloca")) {
-          gen_expr(node->args);
-          println("\tmov\t%%rax,%%rdi");
-          builtin_alloca();
-          return;
-        } else if (startswith(nameof(node->lhs->var), "__builtin_")) {
+        if (startswith(nameof(node->lhs->var), "__builtin_")) {
           funcname = nameof(node->lhs->var) + 10;
           if (gen_builtin_funcall(node, funcname)) {
+            return;
+          }
+        } else if (!opt_no_builtin) {
+          if (gen_builtin_funcall(node, nameof(node->lhs->var))) {
             return;
           }
         }
@@ -1251,7 +1366,7 @@ void gen_expr(Node *node) {
       if (!funcname) {
         if (node->lhs->kind == ND_VAR && !node->lhs->var->is_local &&
             !node->lhs->var->is_tls && node->lhs->ty->kind == TY_FUNC) {
-          if (!opt_fpic || node->lhs->var->is_definition) {
+          if (!opt_pic || node->lhs->var->is_definition) {
             funcname = nameof(node->lhs->var);
           } else {
             funcname = xasprintf("%s@gotpcrel(%%rip)", nameof(node->lhs->var));
@@ -1276,10 +1391,11 @@ void gen_expr(Node *node) {
             bool fp1 = has_flonum1(ty);
             bool fp2 = has_flonum2(ty);
             if (fp + fp1 + fp2 < FP_MAX && gp + !fp1 + !fp2 < GP_MAX) {
-              if (fp1)
+              if (fp1) {
                 popf(ty, fp++);
-              else
+              } else {
                 pop(argreg64[gp++]);
+              }
               if (ty->size > 8) {
                 if (fp2) {
                   popf(ty, fp++);
@@ -1291,7 +1407,9 @@ void gen_expr(Node *node) {
             break;
           case TY_FLOAT:
           case TY_DOUBLE:
-            if (fp < FP_MAX) popf(ty, fp++);
+            if (fp < FP_MAX) {
+              popf(ty, fp++);
+            }
             break;
           case TY_LDOUBLE:
             break;
@@ -1316,11 +1434,11 @@ void gen_expr(Node *node) {
         println("\tcall\t%s", funcname);
       } else {
         if (!node->lhs->ty->is_variadic) {
-          println("\tcall\t*%%rax");
+          emitlin("\tcall\t*%rax");
         } else {
-          println("\tmov\t%%rax,%%r10");
+          emitlin("\tmov\t%rax,%r10");
           print_mov_imm(fp, "%rax", "%eax");
-          println("\tcall\t*%%r10");
+          emitlin("\tcall\t*%r10");
         }
       }
       if (stack_args) {
@@ -1332,20 +1450,20 @@ void gen_expr(Node *node) {
       // respectively. We clear the upper bits here.
       switch (node->ty->kind) {
         case TY_BOOL:
-          println("\tmovzbl\t%%al,%%eax");
+          emitlin("\tmovzbl\t%al,%eax");
           return;
         case TY_CHAR:
           if (node->ty->is_unsigned) {
-            println("\tmovzbl\t%%al,%%eax");
+            emitlin("\tmovzbl\t%al,%eax");
           } else {
-            println("\tmovsbl\t%%al,%%eax");
+            emitlin("\tmovsbl\t%al,%eax");
           }
           return;
         case TY_SHORT:
           if (node->ty->is_unsigned) {
-            println("\tmovzwl\t%%ax,%%eax");
+            emitlin("\tmovzwl\t%ax,%eax");
           } else {
-            println("\tcwtl");
+            emitlin("\tcwtl");
           }
           return;
       }
@@ -1358,7 +1476,7 @@ void gen_expr(Node *node) {
       return;
     }
     case ND_LABEL_VAL:
-      if (opt_fpic) {
+      if (opt_pic) {
         println("\tlea\t%s(%%rip),%%rax", node->unique_label);
       } else {
         println("\tmov\t$%s,%%eax", node->unique_label);
@@ -1370,17 +1488,17 @@ void gen_expr(Node *node) {
       gen_expr(node->cas_new);
       push();
       gen_expr(node->cas_old);
-      println("\tmov\t%%rax,%%r8");
+      emitlin("\tmov\t%rax,%r8");
       load(node->cas_old->ty->base);
       pop("%rdx");  // new
       pop("%rdi");  // addr
       int sz = node->cas_addr->ty->base->size;
       println("\tlock cmpxchg %s,(%%rdi)", reg_dx(sz));
-      println("\tsete\t%%cl");
-      println("\tje\t1f");
+      emitlin("\tsete\t%cl");
+      emitlin("\tje\t1f");
       println("\tmov\t%s,(%%r8)", reg_ax(sz));
-      println("1:");
-      println("\tmovzbl\t%%cl,%%eax");
+      emitlin("1:");
+      emitlin("\tmovzbl\t%cl,%eax");
       return;
     }
     case ND_EXCH: {
@@ -1424,22 +1542,22 @@ void gen_expr(Node *node) {
         case ND_LE:
           println("\tucomis%c\t%%xmm0,%%xmm1", sd);
           if (node->kind == ND_EQ) {
-            println("\
-\tsete\t%%al\n\
-\tsetnp\t%%dl\n\
-\tand\t%%dl,%%al");
+            emitlin("\
+\tsete\t%al\n\
+\tsetnp\t%dl\n\
+\tand\t%dl,%al");
           } else if (node->kind == ND_NE) {
-            println("\
-\tsetne\t%%al\n\
-\tsetp\t%%dl\n\
-\tor\t%%dl,%%al");
+            emitlin("\
+\tsetne\t%al\n\
+\tsetp\t%dl\n\
+\tor\t%dl,%al");
           } else if (node->kind == ND_LT) {
-            println("\tseta\t%%al");
+            emitlin("\tseta\t%al");
           } else {
-            println("\tsetae\t%%al");
+            emitlin("\tsetae\t%al");
           }
-          println("\tand\t$1,%%al");
-          println("\tmovzbl\t%%al,%%eax");
+          emitlin("\tand\t$1,%al");
+          emitlin("\tmovzbl\t%al,%eax");
           return;
       }
       error_tok(node->tok, "invalid expression");
@@ -1449,43 +1567,52 @@ void gen_expr(Node *node) {
       gen_expr(node->rhs);
       switch (node->kind) {
         case ND_ADD:
-          println("\tfaddp");
+          emitlin("\tfaddp");
           return;
         case ND_SUB:
-          println("\tfsubrp");
+          emitlin("\tfsubrp");
           return;
         case ND_MUL:
-          println("\tfmulp");
+          emitlin("\tfmulp");
           return;
         case ND_DIV:
-          println("\tfdivrp");
+          emitlin("\tfdivrp");
           return;
         case ND_EQ:
         case ND_NE:
         case ND_LT:
         case ND_LE:
-          println("\tfcomip");
-          println("\tfstp\t%%st");
+          emitlin("\tfcomip");
+          emitlin("\tfstp\t%st");
           if (node->kind == ND_EQ)
-            println("\tsete\t%%al");
+            emitlin("\tsete\t%al");
           else if (node->kind == ND_NE)
-            println("\tsetne\t%%al");
+            emitlin("\tsetne\t%al");
           else if (node->kind == ND_LT)
-            println("\tseta\t%%al");
+            emitlin("\tseta\t%al");
           else
-            println("\tsetae\t%%al");
-          println("\tmovzbl\t%%al,%%eax");
+            emitlin("\tsetae\t%al");
+          emitlin("\tmovzbl\t%al,%eax");
           return;
       }
       error_tok(node->tok, "invalid expression");
     }
   }
-  if (node->rhs->ty->kind == TY_INT128) {
+  if (IsOverflowArithmetic(node)) {
+    gen_expr(node->overflow);
+    push();
+  }
+  if (node->lhs->ty->vector_size == 16) {
+    gen_expr(node->rhs);
+    pushx();
+    gen_expr(node->lhs);
+    popx(1);
+  } else if (node->rhs->ty->kind == TY_INT128) {
     gen_expr(node->rhs);
     push2();
     gen_expr(node->lhs);
     pop2("%rdi", "%rsi");
-  } else if (!opt_fpic && is_const_expr(node->rhs)) {
+  } else if (!opt_pic && is_const_expr(node->rhs)) {
     /* shortcut path for immediates */
     char **label = NULL;
     uint64_t val = eval2(node->rhs, &label);
@@ -1514,103 +1641,170 @@ void gen_expr(Node *node) {
   switch (node->kind) {
     case ND_ADD:
       if (node->lhs->ty->kind == TY_INT128) {
-        println("\tadd\t%%rdi,%%rax");
-        println("\tadc\t%%rsi,%%rdx");
+        emitlin("\tadd\t%rdi,%rax");
+        emitlin("\tadc\t%rsi,%rdx");
+      } else if (node->lhs->ty->vector_size == 16) {
+        println("\tpadd%c\t%%xmm1,%%xmm0", GetSseIntSuffix(node->lhs->ty));
       } else {
         println("\tadd\t%s,%s", di, ax);
       }
-      return;
+      break;
     case ND_SUB:
       if (node->lhs->ty->kind == TY_INT128) {
-        println("\tsub\t%%rdi,%%rax");
-        println("\tsbb\t%%rsi,%%rdx");
+        emitlin("\tsub\t%rdi,%rax");
+        emitlin("\tsbb\t%rsi,%rdx");
+      } else if (node->lhs->ty->vector_size == 16) {
+        println("\tpsub%c\t%%xmm1,%%xmm0", GetSseIntSuffix(node->lhs->ty));
       } else {
         println("\tsub\t%s,%s", di, ax);
       }
-      return;
+      break;
     case ND_MUL:
       if (node->lhs->ty->kind == TY_INT128) {
-        println("\
-\timul\t%%rdi,%%rdx\n\
-\timul\t%%rax,%%rsi\n\
-\tadd\t%%rdx,%%rsi\n\
-\tmul\t%%rdi\n\
-\tadd\t%%rsi,%%rdx");
+        emitlin("\
+\timul\t%rdi,%rdx\n\
+\timul\t%rax,%rsi\n\
+\tadd\t%rdx,%rsi\n\
+\tmul\t%rdi\n\
+\tadd\t%rsi,%rdx");
+      } else if (node->lhs->ty->vector_size == 16) {
+        switch (node->lhs->ty->kind) {
+          case TY_CHAR:
+            emitlin("\
+\tmovaps\t%xmm1,%xmm2\n\
+\tmovaps\t%xmm0,%xmm3\n\
+\tpunpcklbw %xmm0,%xmm3\n\
+\tpunpcklbw %xmm1,%xmm2\n\
+\tpmullw\t%xmm3,%xmm2\n\
+\tpunpckhbw %xmm0,%xmm0\n\
+\tpcmpeqd\t%xmm3,%xmm3\n\
+\tpunpckhbw %xmm1,%xmm1\n\
+\tpmullw\t%xmm0,%xmm1\n\
+\tandps\t%xmm3,%xmm2\n\
+\tmovaps\t%xmm2,%xmm0\n\
+\tandps\t%xmm3,%xmm1\n\
+\tpackuswb %xmm1,%xmm0");
+            break;
+          case TY_SHORT:
+            emitlin("\tpmullw\t%xmm1,%xmm0");
+            break;
+          case TY_INT:
+            if (opt_sse4) {
+              emitlin("\tpmulld\t%xmm1,%xmm0");
+            } else {
+              emitlin("\
+\tmovaps\t%xmm0,%xmm2\n\
+\tpsrlq\t$32,%xmm0\n\
+\tpmuludq\t%xmm1,%xmm2\n\
+\tpsrlq\t$32,%xmm1\n\
+\tpmuludq\t%xmm1,%xmm0\n\
+\tpshufd\t$8,%xmm2,%xmm2\n\
+\tpshufd\t$8,%xmm0,%xmm1\n\
+\tpunpckldq %xmm1,%xmm2\n\
+\tmovaps\t%xmm2,%xmm0");
+            }
+          case TY_LONG:
+            emitlin("\
+\tmovaps\t%xmm1,%xmm2\n\
+\tmovaps\t%xmm0,%xmm3\n\
+\tpmuludq\t%xmm1,%xmm3\n\
+\tmovaps\t%xmm2,%xmm4\n\
+\tmovaps\t%xmm0,%xmm1\n\
+\tpsrlq\t$32,%xmm4\n\
+\tpsrlq\t$32,%xmm1\n\
+\tpmuludq\t%xmm4,%xmm0\n\
+\tpmuludq\t%xmm2,%xmm1\n\
+\tpaddq\t%xmm0,%xmm1\n\
+\tpsllq\t$32,%xmm1\n\
+\tpaddq\t%xmm1,%xmm3\n\
+\tmovaps\t%xmm3,%xmm0");
+            break;
+          default:
+            UNREACHABLE();
+        }
       } else {
         println("\timul\t%s,%s", di, ax);
       }
-      return;
+      break;
     case ND_DIV:
-    case ND_MOD:
+    case ND_REM:
       if (node->lhs->ty->kind == TY_INT128) {
         bool skew;
         if ((skew = (depth & 1))) {
-          println("\tsub\t$8,%%rsp");
+          emitlin("\tsub\t$8,%rsp");
           depth++;
         }
-        println("\
-\tmov\t%%rsi,%%rcx\n\
-\tmov\t%%rdx,%%rsi\n\
-\tmov\t%%rdi,%%rdx\n\
-\tmov\t%%rax,%%rdi");
+        emitlin("\
+\tmov\t%rsi,%rcx\n\
+\tmov\t%rdx,%rsi\n\
+\tmov\t%rdi,%rdx\n\
+\tmov\t%rax,%rdi");
         if (node->kind == ND_DIV) {
           if (node->ty->is_unsigned) {
-            println("\tcall\t__udivti3");
+            emitlin("\tcall\t__udivti3");
           } else {
-            println("\tcall\t__divti3");
+            emitlin("\tcall\t__divti3");
           }
         } else {
           if (node->ty->is_unsigned) {
-            println("\tcall\t__umodti3");
+            emitlin("\tcall\t__umodti3");
           } else {
-            println("\tcall\t__modti3");
+            emitlin("\tcall\t__modti3");
           }
         }
         if (skew) {
-          println("\tadd\t$8,%%rsp");
+          emitlin("\tadd\t$8,%rsp");
           depth--;
         }
+      } else if (node->lhs->ty->vector_size == 16) {
+        error_tok(node->tok, "no div/rem sse instruction");
       } else {
         if (node->ty->is_unsigned) {
-          println("\txor\t%%edx,%%edx");
+          emitlin("\txor\t%edx,%edx");
           println("\tdiv\t%s", di);
         } else {
           if (node->lhs->ty->size == 8) {
-            println("\tcqo");
+            emitlin("\tcqo");
           } else {
-            println("\tcdq");
+            emitlin("\tcdq");
           }
           println("\tidiv\t%s", di);
         }
-        if (node->kind == ND_MOD) {
-          println("\tmov\t%%rdx,%%rax");
+        if (node->kind == ND_REM) {
+          emitlin("\tmov\t%rdx,%rax");
         }
       }
-      return;
-    case ND_BITAND:
+      break;
+    case ND_BINAND:
       if (node->lhs->ty->kind == TY_INT128) {
-        println("\tand\t%%rdi,%%rax");
-        println("\tand\t%%rsi,%%rdx");
+        emitlin("\tand\t%rdi,%rax");
+        emitlin("\tand\t%rsi,%rdx");
+      } else if (node->lhs->ty->vector_size == 16) {
+        emitlin("\tpand\t%xmm1,%xmm0");
       } else {
         println("\tand\t%s,%s", di, ax);
       }
-      return;
-    case ND_BITOR:
+      break;
+    case ND_BINOR:
       if (node->lhs->ty->kind == TY_INT128) {
-        println("\tor\t%%rdi,%%rax");
-        println("\tor\t%%rsi,%%rdx");
+        emitlin("\tor\t%rdi,%rax");
+        emitlin("\tor\t%rsi,%rdx");
+      } else if (node->lhs->ty->vector_size == 16) {
+        emitlin("\tpor\t%xmm1,%xmm0");
       } else {
         println("\tor\t%s,%s", di, ax);
       }
-      return;
-    case ND_BITXOR:
+      break;
+    case ND_BINXOR:
       if (node->lhs->ty->kind == TY_INT128) {
-        println("\txor\t%%rdi,%%rax");
-        println("\txor\t%%rsi,%%rdx");
+        emitlin("\txor\t%rdi,%rax");
+        emitlin("\txor\t%rsi,%rdx");
+      } else if (node->lhs->ty->vector_size == 16) {
+        emitlin("\tpxor\t%xmm1,%xmm0");
       } else {
         println("\txor\t%s,%s", di, ax);
       }
-      return;
+      break;
     case ND_EQ:
     case ND_NE:
     case ND_LT:
@@ -1618,115 +1812,226 @@ void gen_expr(Node *node) {
       if (node->lhs->ty->kind == TY_INT128) {
         switch (node->kind) {
           case ND_EQ:
-            println("\
-\txor\t%%rax,%%rdi\n\
-\txor\t%%rdx,%%rsi\n\
-\tor\t%%rsi,%%rdi\n\
-\tsete\t%%al");
+            emitlin("\
+\txor\t%rax,%rdi\n\
+\txor\t%rdx,%rsi\n\
+\tor\t%rsi,%rdi\n\
+\tsete\t%al");
             break;
           case ND_NE:
-            println("\
-\txor\t%%rax,%%rdi\n\
-\txor\t%%rdx,%%rsi\n\
-\tor\t%%rsi,%%rdi\n\
-\tsetne\t%%al");
+            emitlin("\
+\txor\t%rax,%rdi\n\
+\txor\t%rdx,%rsi\n\
+\tor\t%rsi,%rdi\n\
+\tsetne\t%al");
             break;
           case ND_LT:
             if (node->lhs->ty->is_unsigned) {
-              println("\
-\tcmp\t%%rdi,%%rax\n\
-\tmov\t%%rdx,%%rax\n\
-\tsbb\t%%rsi,%%rax\n\
-\tsetc\t%%al");
+              emitlin("\
+\tcmp\t%rdi,%rax\n\
+\tmov\t%rdx,%rax\n\
+\tsbb\t%rsi,%rax\n\
+\tsetc\t%al");
             } else {
-              println("\
-\tcmp\t%%rdi,%%rax\n\
-\tmov\t%%rdx,%%rax\n\
-\tsbb\t%%rsi,%%rax\n\
-\tsetl\t%%al");
+              emitlin("\
+\tcmp\t%rdi,%rax\n\
+\tmov\t%rdx,%rax\n\
+\tsbb\t%rsi,%rax\n\
+\tsetl\t%al");
             }
             break;
           case ND_LE:
             if (node->lhs->ty->is_unsigned) {
-              println("\
-\tcmp\t%%rax,%%rdi\n\
-\tsbb\t%%rdx,%%rsi\n\
-\tsetnc\t%%al");
+              emitlin("\
+\tcmp\t%rax,%rdi\n\
+\tsbb\t%rdx,%rsi\n\
+\tsetnc\t%al");
             } else {
-              println("\
-\tcmp\t%%rax,%%rdi\n\
-\tsbb\t%%rdx,%%rsi\n\
-\tsetge\t%%al");
+              emitlin("\
+\tcmp\t%rax,%rdi\n\
+\tsbb\t%rdx,%rsi\n\
+\tsetge\t%al");
+            }
+            break;
+        }
+      } else if (node->lhs->ty->vector_size == 16) {
+        switch (node->kind) {
+          case ND_EQ:
+            switch (node->lhs->ty->kind) {
+              case TY_CHAR:
+              case TY_SHORT:
+              case TY_INT:
+                println("\tpcmpeq%c\t%%xmm1,%%xmm0",
+                        GetSseIntSuffix(node->lhs->ty));
+                break;
+              default:
+                error_tok(node->tok, "todo sse eq");
+            }
+            break;
+          case ND_NE:
+            switch (node->lhs->ty->kind) {
+              case TY_CHAR:
+              case TY_SHORT:
+              case TY_INT:
+                println("\tpcmpeq%c\t%%xmm1,%%xmm0",
+                        GetSseIntSuffix(node->lhs->ty));
+                emitlin("\tpcmpeqd\t%xmm1,%xmm1\n"
+                        "\tandnps\t%xmm1,%xmm0");
+                break;
+              default:
+                error_tok(node->tok, "todo sse ne");
+            }
+            break;
+          case ND_LT:
+            if (node->lhs->ty->is_unsigned) {
+              switch (node->lhs->ty->kind) {
+                case TY_CHAR:
+                case TY_SHORT:
+                  println("\tpsubus%c\t%%xmm0,%%xmm1",
+                          GetSseIntSuffix(node->lhs->ty));
+                  emitlin("\tmovaps\t%xmm1,%xmm0\n"
+                          "\txorps\t%xmm1,%xmm1");
+                  println("\tpcmpeq%c\t%%xmm1,%%xmm0",
+                          GetSseIntSuffix(node->lhs->ty));
+                  emitlin("\tpcmpeqd\t%xmm1,%xmm1\n"
+                          "\tandnps\t%xmm1,%xmm0");
+                  break;
+                default:
+                  error_tok(node->tok, "todo sse ltu");
+              }
+            } else {
+              switch (node->lhs->ty->kind) {
+                case TY_CHAR:
+                case TY_SHORT:
+                case TY_INT:
+                  println("\tpcmpgt%c\t%%xmm0,%%xmm1",
+                          GetSseIntSuffix(node->lhs->ty));
+                  emitlin("\tmovaps\t%xmm1,%xmm0");
+                  break;
+                default:
+                  error_tok(node->tok, "todo sse lt");
+              }
+            }
+            break;
+          case ND_LE:
+            if (node->lhs->ty->is_unsigned) {
+              switch (node->lhs->ty->kind) {
+                case TY_CHAR:
+                  emitlin("\tpminub\t%xmm0,%xmm1\n"
+                          "\tpcmpeqb\t%xmm1,%xmm0");
+                  break;
+                case TY_SHORT:
+                  emitlin("\tpsubusw\t%xmm1,%xmm0\n"
+                          "\txorps\t%xmm1,%xmm1\n"
+                          "\tpcmpeqw\t%xmm1,%xmm0");
+                  break;
+                case TY_INT:
+                  emitlin("\tmov\t$-2147483648,%eax\n"
+                          "\tmovd\t%eax,%xmm2\n"
+                          "\tpshufd\t$0,%xmm2");
+                  emitlin("\tpcmpgtd\t%xmm1,%xmm0");
+                  emitlin("\tpcmpeqd\t%xmm1,%xmm1\n"
+                          "\tandnps\t%xmm1,%xmm0");
+                  break;
+                default:
+                  error_tok(node->tok, "todo sse leu");
+              }
+            } else {
+              switch (node->lhs->ty->kind) {
+                case TY_SHORT:
+                  emitlin("\tpminsw\t%xmm0,%xmm1\n"
+                          "\tpcmpeqw\t%xmm1,%xmm0");
+                  break;
+                case TY_CHAR:
+                case TY_INT:
+                  println("\tpcmpgt%c\t%%xmm1,%%xmm0",
+                          GetSseIntSuffix(node->lhs->ty));
+                  emitlin("\tpcmpeqd\t%xmm1,%xmm1\n"
+                          "\tandnps\t%xmm1,%xmm0");
+                  break;
+                default:
+                  error_tok(node->tok, "todo sse le");
+              }
             }
             break;
         }
       } else {
         println("\tcmp\t%s,%s", di, ax);
         if (node->kind == ND_EQ) {
-          println("\tsete\t%%al");
+          emitlin("\tsete\t%al");
         } else if (node->kind == ND_NE) {
-          println("\tsetne\t%%al");
+          emitlin("\tsetne\t%al");
         } else if (node->kind == ND_LT) {
           if (node->lhs->ty->is_unsigned) {
-            println("\tsetb\t%%al");
+            emitlin("\tsetb\t%al");
           } else {
-            println("\tsetl\t%%al");
+            emitlin("\tsetl\t%al");
           }
         } else if (node->kind == ND_LE) {
           if (node->lhs->ty->is_unsigned) {
-            println("\tsetbe\t%%al");
+            emitlin("\tsetbe\t%al");
           } else {
-            println("\tsetle\t%%al");
+            emitlin("\tsetle\t%al");
           }
         }
       }
-      println("\tmovzbl\t%%al,%%eax");
-      return;
+      emitlin("\tmovzbl\t%al,%eax");
+      break;
     case ND_SHL:
-      println("\tmov\t%%edi,%%ecx");
+      emitlin("\tmov\t%edi,%ecx");
       if (node->lhs->ty->kind == TY_INT128) {
-        println("\
-\tshld\t%%cl,%%rax,%%rdx\n\
-\tshl\t%%cl,%%rax\n\
-\txor\t%%edi,%%edi\n\
-\tand\t$64,%%cl\n\
-\tcmovne\t%%rax,%%rdx\n\
-\tcmovne\t%%rdi,%%rax");
+        emitlin("\
+\tshld\t%cl,%rax,%rdx\n\
+\tshl\t%cl,%rax\n\
+\txor\t%edi,%edi\n\
+\tand\t$64,%cl\n\
+\tcmovne\t%rax,%rdx\n\
+\tcmovne\t%rdi,%rax");
+      } else if (node->lhs->ty->vector_size == 16) {
+        error_tok(node->tok, "todo sse shl");
       } else {
         println("\tshl\t%%cl,%s", ax);
       }
-      return;
+      break;
     case ND_SHR:
-      println("\tmov\t%%edi,%%ecx");
+      emitlin("\tmov\t%edi,%ecx");
       if (node->lhs->ty->is_unsigned) {
         if (node->lhs->ty->kind == TY_INT128) {
-          println("\
-\tshrd\t%%cl,%%rdx,%%rax\n\
-\tshr\t%%cl,%%rdx\n\
-\txor\t%%edi,%%edi\n\
-\tand\t$64,%%cl\n\
-\tcmovne\t%%rdx,%%rax\n\
-\tcmovne\t%%rdi,%%rdx");
+          emitlin("\
+\tshrd\t%cl,%rdx,%rax\n\
+\tshr\t%cl,%rdx\n\
+\txor\t%edi,%edi\n\
+\tand\t$64,%cl\n\
+\tcmovne\t%rdx,%rax\n\
+\tcmovne\t%rdi,%rdx");
+        } else if (node->lhs->ty->vector_size == 16) {
+          error_tok(node->tok, "todo sse shr");
         } else {
           println("\tshr\t%%cl,%s", ax);
         }
       } else {
         if (node->lhs->ty->kind == TY_INT128) {
-          println("\
-\tshrd\t%%cl,%%rdx,%%rax\n\
-\tsar\t%%cl,%%rdx\n\
-\tmov\t%%rdx,%%rdi\n\
-\tsar\t$63,%%rdi\n\
-\tand\t$64,%%cl\n\
-\tcmovne\t%%rdx,%%rax\n\
-\tcmovne\t%%rdi,%%rdx");
+          emitlin("\
+\tshrd\t%cl,%rdx,%rax\n\
+\tsar\t%cl,%rdx\n\
+\tmov\t%rdx,%rdi\n\
+\tsar\t$63,%rdi\n\
+\tand\t$64,%cl\n\
+\tcmovne\t%rdx,%rax\n\
+\tcmovne\t%rdi,%rdx");
+        } else if (node->lhs->ty->vector_size == 16) {
+          error_tok(node->tok, "todo sse sar");
         } else {
           println("\tsar\t%%cl,%s", ax);
         }
       }
-      return;
+      break;
+    default:
+      error_tok(node->tok, "invalid expression");
   }
-  error_tok(node->tok, "invalid expression");
+  if (IsOverflowArithmetic(node)) {
+    HandleOverflow(ax);
+  }
 }
 
 void gen_stmt(Node *node) {
@@ -1806,7 +2111,7 @@ void gen_stmt(Node *node) {
       return;
     case ND_GOTO_EXPR:
       gen_expr(node->lhs);
-      println("\tjmp\t*%%rax");
+      emitlin("\tjmp\t*%rax");
       return;
     case ND_LABEL:
       println("%s:", node->unique_label);
@@ -1908,11 +2213,12 @@ static void emit_data(Obj *prog) {
     int align = (var->ty->kind == TY_ARRAY && var->ty->size >= 16)
                     ? MAX(16, var->align)
                     : var->align;
-    if (opt_fcommon && var->is_tentative && !var->is_tls) {
+    if (opt_common && var->is_tentative && !var->is_tls) {
       println("\t.comm\t%s,%d,%d", nameof(var), var->ty->size, align);
     } else {
       if (var->section) {
-        println("\t.section %s", var->section);
+        println("\t.section %s,\"aw\",@%s", var->section,
+                var->init_data ? "progbits" : "nobits");
       } else if (var->is_tls) {
         println("\t.section .t%s,\"awT\",@%s",
                 var->init_data ? "progbits" : "nobits",
@@ -1921,6 +2227,9 @@ static void emit_data(Obj *prog) {
       } else if (align <= 1 && var->is_string_literal) {
         println("\t.section .rodata.str1.1,\"aSM\",@progbits,1");
 #endif
+      } else if (opt_data_sections) {
+        println("\tsection .%s.%s", var->init_data ? "data" : "bss",
+                nameof(var));
       } else {
         println("\t.%s", var->init_data ? "data" : "bss");
       }
@@ -1999,9 +2308,11 @@ static void emit_text(Obj *prog) {
     flushln();
     fputc('\n', output_stream);
     if (fn->section) {
-      println("\t.section %s", fn->section);
+      println("\t.section %s,\"a\",@progbits", fn->section);
+    } else if (opt_function_sections) {
+      println("\tsection .text.%s", nameof(fn));
     } else {
-      println("\t.text");
+      emitlin("\t.text");
     }
     print_visibility(fn);
     print_align(fn->align);
@@ -2009,14 +2320,16 @@ static void emit_text(Obj *prog) {
     println("%s:", nameof(fn));
     current_fn = fn;
     // Prologue
-    println("\tpush\t%%rbp");
-    println("\tmov\t%%rsp,%%rbp");
-    if (opt_mnop_mcount) {
-      println("\tnopw\t0(%%rax,%%rax,1)");
-    } else if (opt_mrecord_mcount) {
-      println("\tcall\tmcount@gotpcrel(%%rip)");
-    } else if (opt_mfentry) {
-      println("\tcall\t__fentry__@gotpcrel(%%rip)");
+    emitlin("\tpush\t%rbp");
+    emitlin("\tmov\t%rsp,%rbp");
+    if (opt_nop_mcount) {
+      print_profiling_nop();
+    } else if (opt_fentry) {
+      emitlin("\tcall\t__fentry__@gotpcrel(%rip)");
+    } else if (opt_pg) {
+      emitlin("\tcall\tmcount@gotpcrel(%rip)");
+    } else {
+      print_profiling_nop();
     }
     println("\tsub\t$%d,%%rsp", fn->stack_size);
     println("\tmov\t%%rsp,%d(%%rbp)", fn->alloca_bottom->offset);
@@ -2096,25 +2409,25 @@ static void emit_text(Obj *prog) {
     // returning 0, even though the behavior is undefined for the
     // other functions. See C11 5.1.2.2.3.
     if (strcmp(nameof(fn), "main") == 0) {
-      println("\txor\t%%eax,%%eax");
+      emitlin("\txor\t%eax,%eax");
     }
     // Epilogue
     println(".L.return.%s:", nameof(fn));
     if (fn->is_noreturn) {
-      println("\tud2");
+      emitlin("\tud2");
     } else {
-      println("\tleave");
-      println("\tret");
+      emitlin("\tleave");
+      emitlin("\tret");
     }
     println("\t.size\t%s,.-%s", nameof(fn), nameof(fn));
     if (fn->is_constructor) {
-      println("\t.section .ctors,\"aw\",@progbits");
-      println("\t.align\t8");
+      emitlin("\t.section .ctors,\"aw\",@progbits");
+      emitlin("\t.align\t8");
       println("\t.quad\t%s", nameof(fn));
     }
     if (fn->is_destructor) {
-      println("\t.section .dtors,\"aw\",@progbits");
-      println("\t.align\t8");
+      emitlin("\t.section .dtors,\"aw\",@progbits");
+      emitlin("\t.align\t8");
       println("\t.quad\t%s", nameof(fn));
     }
   }

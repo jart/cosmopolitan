@@ -1,6 +1,9 @@
 #include "third_party/chibicc/test/test.h"
 
 int main() {
+  typeof("str") StringInitParen1 = ("str");
+  char StringInitParen2[] = ("str");
+
   ASSERT(0, ""[0]);
   ASSERT(1, sizeof(""));
 

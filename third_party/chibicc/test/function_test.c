@@ -87,26 +87,8 @@ unsigned short ushort_fn();
 char schar_fn();
 short sshort_fn();
 
-int add_all(int n, ...);
-
-typedef struct {
-  int gp_offset;
-  int fp_offset;
-  void *overflow_arg_area;
-  void *reg_save_area;
-} __va_elem;
-
-typedef __va_elem va_list[1];
-
-int add_all(int n, ...);
-int sprintf(char *buf, char *fmt, ...);
-int vsprintf(char *buf, char *fmt, va_list ap);
-
-char *fmt(char *buf, char *fmt, ...) {
-  va_list ap;
-  *ap = *(__va_elem *)__va_area__;
-  vsprintf(buf, fmt, ap);
-}
+int add_all(int, ...);
+int add_all(int, ...);
 
 double add_double(double x, double y);
 float add_float(float x, float y);
@@ -307,7 +289,7 @@ int main() {
 
   {
     char buf[100];
-    fmt(buf, "%d %d %s", 1, 2, "foo");
+    sprintf(buf, "%d %d %s", 1, 2, "foo");
     fprintf(f, "%s\n", buf);
   }
 
@@ -319,7 +301,7 @@ int main() {
 
   ASSERT(0, ({
            char buf[100];
-           fmt(buf, "%d %d %s", 1, 2, "foo");
+           sprintf(buf, "%d %d %s", 1, 2, "foo");
            strcmp("1 2 foo", buf);
          }));
 
@@ -342,7 +324,7 @@ int main() {
 
   ASSERT(0, ({
            char buf[100];
-           fmt(buf, "%.1f", (float)3.5);
+           sprintf(buf, "%.1f", (float)3.5);
            strcmp(buf, "3.5");
          }));
 

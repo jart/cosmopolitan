@@ -49,6 +49,8 @@ THIRD_PARTY_CHIBICC_TEST_DIRECTDEPS =						\
 	LIBC_NEXGEN32E								\
 	LIBC_UNICODE								\
 	LIBC_MEM								\
+	LIBC_X									\
+	THIRD_PARTY_CHIBICC							\
 	THIRD_PARTY_COMPILER_RT
 
 THIRD_PARTY_CHIBICC_TEST_DEPS :=						\
@@ -95,6 +97,4 @@ o/$(MODE)/third_party/chibicc/test/%2.com.dbg:					\
 .PHONY: o/$(MODE)/third_party/chibicc/test
 o/$(MODE)/third_party/chibicc/test:						\
 		$(THIRD_PARTY_CHIBICC_TEST_BINS)				\
-		$(THIRD_PARTY_CHIBICC_TEST_CHECKS)				\
-		$(THIRD_PARTY_CHIBICC_TEST_SRCS:%.c=o/$(MODE)/%.chibicc.s)	\
-		$(THIRD_PARTY_CHIBICC_TEST_SRCS:%.c=o/$(MODE)/%.chibicc2.s)
+		$(THIRD_PARTY_CHIBICC_TEST_CHECKS)
