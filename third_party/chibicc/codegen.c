@@ -342,6 +342,13 @@ void gen_addr(Node *node) {
       gen_expr(node->lhs);
       gen_addr(node->rhs);
       return;
+    case ND_ASSIGN:
+    case ND_COND:
+      if (node->ty->kind == TY_STRUCT || node->ty->kind == TY_UNION) {
+        gen_expr(node);
+        return;
+      }
+      break;
     case ND_MEMBER:
       gen_addr(node->lhs);
       if (node->member->offset) {
@@ -358,7 +365,6 @@ void gen_addr(Node *node) {
       println("\tlea\t%d(%%rbp),%%rax", node->var->offset);
       return;
     default:
-      DCHECK(0);
       error_tok(node->tok, "not an lvalue %d", node->kind);
   }
 }
