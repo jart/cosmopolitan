@@ -138,8 +138,6 @@ include libc/dns/dns.mk				# │
 include libc/crypto/crypto.mk			# │
 include net/http/http.mk			#─┘
 include third_party/lemon/lemon.mk
-include third_party/linenoise/linenoise.mk
-include third_party/editline/editline.mk
 include third_party/duktape/duktape.mk
 include third_party/regex/regex.mk
 include third_party/avir/avir.mk
@@ -148,10 +146,7 @@ include third_party/third_party.mk
 include libc/testlib/testlib.mk
 include tool/viz/lib/vizlib.mk
 include examples/examples.mk
-include third_party/lex/lex.mk
-include third_party/m4/m4.mk
 include third_party/lz4cli/lz4cli.mk
-include third_party/bzip2/bzip2.mk
 include tool/build/lib/buildlib.mk
 include third_party/chibicc/chibicc.mk
 include third_party/chibicc/test/test.mk

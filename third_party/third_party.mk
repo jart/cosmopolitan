@@ -5,21 +5,16 @@
 o/$(MODE)/third_party:				\
 	o/$(MODE)/third_party/avir		\
 	o/$(MODE)/third_party/blas		\
-	o/$(MODE)/third_party/bzip2		\
 	o/$(MODE)/third_party/chibicc		\
 	o/$(MODE)/third_party/compiler_rt	\
 	o/$(MODE)/third_party/ctags		\
 	o/$(MODE)/third_party/dlmalloc		\
 	o/$(MODE)/third_party/gdtoa		\
 	o/$(MODE)/third_party/duktape		\
-	o/$(MODE)/third_party/editline		\
 	o/$(MODE)/third_party/f2c		\
 	o/$(MODE)/third_party/getopt		\
 	o/$(MODE)/third_party/lemon		\
-	o/$(MODE)/third_party/lex		\
-	o/$(MODE)/third_party/linenoise		\
 	o/$(MODE)/third_party/lz4cli		\
-	o/$(MODE)/third_party/m4		\
 	o/$(MODE)/third_party/musl		\
 	o/$(MODE)/third_party/regex		\
 	o/$(MODE)/third_party/stb		\
