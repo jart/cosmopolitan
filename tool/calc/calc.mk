@@ -69,6 +69,10 @@ o/$(MODE)/tool/calc/%.com.dbg:			\
 		$(APE)
 	@$(APELINK)
 
+tool/calc/calc.c:				\
+		o/tool/calc/calc.c.inc		\
+		o/tool/calc/calc.h.inc
+
 .PHONY: o/$(MODE)/tool/calc
 o/$(MODE)/tool/calc:				\
 		$(TOOL_CALC_BINS)		\
