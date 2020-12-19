@@ -252,6 +252,10 @@ static const char *g_input_path;
 static const char *g_output_path;
 static struct Strings g_include_paths;
 
+static void PrintSlice(struct Slice s) {
+  fprintf(stderr, "%.*s\n", s.n, s.p);
+}
+
 static void AppendString(struct Strings *l, const char *p) {
   l->p = realloc(l->p, ++l->n * sizeof(*l->p));
   l->p[l->n - 1] = p;
@@ -434,152 +438,154 @@ static void Tokenize(struct Assembler *a, char *path) {
   line = 1;
   bol = true;
   while ((c = *p)) {
-    if (c == '#' || (c == '/' && bol)) {
-      p = strchr(p, '\n') + 1;
+    if (c == '#' || (c == '/' && bol) || (c == '/' && p[1] == '/')) {
+      p = strchr(p, '\n');
+      continue;
+    }
+    if (c == '\n') {
+      APPEND(a->things);
+      a->things.p[a->things.n - 1].t = TT_PUNCT;
+      a->things.p[a->things.n - 1].s = AppendLine(a, path, line);
+      a->things.p[a->things.n - 1].i = ';';
+      ++p;
       bol = true;
       ++line;
       continue;
     }
-    if (c == '\n') {
-      c = ';';
-      bol = true;
-      ++line;
-    } else {
-      bol = false;
-      if (c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f' ||
-          c == '\v' || c == ',') {
-        ++p;
-        continue;
+    bol = false;
+    if (c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f' ||
+        c == '\v' || c == ',') {
+      ++p;
+      continue;
+    }
+    if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || c == '_' ||
+        c == '%' || c == '@' || (c == '.' && !('0' <= p[1] && p[1] <= '9'))) {
+      for (i = 1;; ++i) {
+        if (!(('a' <= p[i] && p[i] <= 'z') || ('A' <= p[i] && p[i] <= 'Z') ||
+              ('0' <= p[i] && p[i] <= '9') || p[i] == '.' || p[i] == '_' ||
+              p[i] == '$')) {
+          break;
+        }
       }
-      if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || c == '_' ||
-          c == '%' || c == '@' || (c == '.' && !('0' <= p[1] && p[1] <= '9'))) {
-        for (i = 1;; ++i) {
-          if (!(('a' <= p[i] && p[i] <= 'z') || ('A' <= p[i] && p[i] <= 'Z') ||
-                ('0' <= p[i] && p[i] <= '9') || p[i] == '.' || p[i] == '_' ||
-                p[i] == '$' || p[i] == '(' || p[i] == ')')) {
-            break;
+      APPEND(a->things);
+      a->things.p[a->things.n - 1].t = TT_SLICE;
+      a->things.p[a->things.n - 1].s = AppendLine(a, path, line);
+      a->things.p[a->things.n - 1].i = a->slices.n;
+      APPEND(a->slices);
+      a->slices.p[a->slices.n - 1].p = p;
+      a->slices.p[a->slices.n - 1].n = i;
+      p += i;
+      continue;
+    }
+    if (('0' <= c && c <= '9') || (c == '.' && '0' <= p[1] && p[1] <= '9')) {
+      bool isfloat = c == '.';
+      if (c == '0' && p[1] != '.') {
+        if (p[1] == 'x' || p[1] == 'X') {
+          for (i = 2;; ++i) {
+            if (!(('0' <= p[i] && p[i] <= '9') ||
+                  ('a' <= p[i] && p[i] <= 'f') ||
+                  ('A' <= p[i] && p[i] <= 'F'))) {
+              break;
+            }
+          }
+        } else if (p[1] == 'b' || p[1] == 'B') {
+          for (i = 2;; ++i) {
+            if (!(p[i] == '0' || p[i] == '1')) break;
+          }
+        } else {
+          for (i = 1;; ++i) {
+            if (!('0' <= p[i] && p[i] <= '7')) break;
           }
         }
+      } else {
+        for (i = 1;; ++i) {
+          if (('0' <= p[i] && p[i] <= '9') || p[i] == '-' || p[i] == '+') {
+            continue;
+          } else if (p[i] == '.' || p[i] == 'e' || p[i] == 'E' || p[i] == 'e') {
+            isfloat = true;
+            continue;
+          }
+          break;
+        }
+      }
+      APPEND(a->things);
+      if (isfloat) {
+        APPEND(a->floats);
+        a->floats.p[a->floats.n - 1] = strtold(p, NULL);
+        a->things.p[a->things.n - 1].i = a->floats.n - 1;
+        a->things.p[a->things.n - 1].t = TT_FLOAT;
+      } else {
+        APPEND(a->ints);
+        a->ints.p[a->ints.n - 1] = strtol(p, NULL, 0);
+        a->things.p[a->things.n - 1].i = a->ints.n - 1;
+        if (p[i] == 'f' || p[i] == 'F') {
+          a->things.p[a->things.n - 1].t = TT_FORWARD;
+        } else if (p[i] == 'b' || p[i] == 'B') {
+          a->things.p[a->things.n - 1].t = TT_BACKWARD;
+        } else {
+          a->things.p[a->things.n - 1].t = TT_INT;
+        }
+      }
+      a->things.p[a->things.n - 1].s = AppendLine(a, path, line);
+      p += i;
+      continue;
+    }
+    if (c == '\'') {
+      i = 1;
+      c = p[i++];
+      c = ReadCharLiteral(&buf, c, p, &i);
+      if (p[i] == '\'') ++i;
+      p += i;
+      APPEND(a->things);
+      a->things.p[a->things.n - 1].t = TT_INT;
+      a->things.p[a->things.n - 1].s = AppendLine(a, path, line);
+      a->things.p[a->things.n - 1].i = a->ints.n;
+      APPEND(a->ints);
+      a->ints.p[a->ints.n - 1] = c;
+      continue;
+    }
+    if (c == '"') {
+      buf.n = 0;
+      buf.p = NULL;
+      for (i = 1; (c = p[i++]);) {
+        if (c == '"') break;
+        c = ReadCharLiteral(&buf, c, p, &i);
+        APPEND(buf);
+        buf.p[buf.n - 1] = c;
+      }
+      p += i;
+      if (a->things.n && a->things.p[a->things.n - 1].t == TT_SLICE &&
+          IS(a->slices.p[a->things.p[a->things.n - 1].i].p,
+             a->slices.p[a->things.p[a->things.n - 1].i].n, ".include")) {
+        APPEND(buf);
+        buf.p[buf.n - 1] = '\0';
+        --a->things.n;
+        if (fileexists(buf.p)) {
+          Tokenize(a, buf.p);
+        } else {
+          for (i = 0; i < g_include_paths.n; ++i) {
+            path2 = xstrcat(g_include_paths.p[i], '/', buf.p);
+            if (fileexists(path2)) {
+              Tokenize(a, path2);
+              free(path2);
+              break;
+            } else {
+              free(path2);
+            }
+          }
+        }
+        free(buf.p);
+      } else {
         APPEND(a->things);
         a->things.p[a->things.n - 1].t = TT_SLICE;
         a->things.p[a->things.n - 1].s = AppendLine(a, path, line);
         a->things.p[a->things.n - 1].i = a->slices.n;
         APPEND(a->slices);
-        a->slices.p[a->slices.n - 1].p = p;
-        a->slices.p[a->slices.n - 1].n = i;
-        p += i;
-        continue;
+        a->slices.p[a->slices.n - 1] = buf;
       }
-      if (('0' <= c && c <= '9') || (c == '.' && '0' <= p[1] && p[1] <= '9')) {
-        bool isfloat = c == '.';
-        if (c == '0' && p[1] != '.') {
-          if (p[1] == 'x' || p[1] == 'X') {
-            for (i = 2;; ++i) {
-              if (!(('0' <= p[i] && p[i] <= '9') ||
-                    ('a' <= p[i] && p[i] <= 'f') ||
-                    ('A' <= p[i] && p[i] <= 'F'))) {
-                break;
-              }
-            }
-          } else if (p[1] == 'b' || p[1] == 'B') {
-            for (i = 2;; ++i) {
-              if (!(p[i] == '0' || p[i] == '1')) break;
-            }
-          } else {
-            for (i = 1;; ++i) {
-              if (!('0' <= p[i] && p[i] <= '7')) break;
-            }
-          }
-        } else {
-          for (i = 1;; ++i) {
-            if (('0' <= p[i] && p[i] <= '9') || p[i] == '-' || p[i] == '+') {
-              continue;
-            } else if (p[i] == '.' || p[i] == 'e' || p[i] == 'E' ||
-                       p[i] == 'e') {
-              isfloat = true;
-              continue;
-            }
-            break;
-          }
-        }
-        APPEND(a->things);
-        if (isfloat) {
-          APPEND(a->floats);
-          a->floats.p[a->floats.n - 1] = strtold(p, NULL);
-          a->things.p[a->things.n - 1].i = a->floats.n - 1;
-          a->things.p[a->things.n - 1].t = TT_FLOAT;
-        } else {
-          APPEND(a->ints);
-          a->ints.p[a->ints.n - 1] = strtol(p, NULL, 0);
-          a->things.p[a->things.n - 1].i = a->ints.n - 1;
-          if (p[i] == 'f' || p[i] == 'F') {
-            a->things.p[a->things.n - 1].t = TT_FORWARD;
-          } else if (p[i] == 'b' || p[i] == 'B') {
-            a->things.p[a->things.n - 1].t = TT_BACKWARD;
-          } else {
-            a->things.p[a->things.n - 1].t = TT_INT;
-          }
-        }
-        a->things.p[a->things.n - 1].s = AppendLine(a, path, line);
-        p += i;
-        continue;
-      }
-      if (c == '\'') {
-        i = 1;
-        c = p[i++];
-        c = ReadCharLiteral(&buf, c, p, &i);
-        if (p[i] == '\'') ++i;
-        p += i;
-        APPEND(a->things);
-        a->things.p[a->things.n - 1].t = TT_INT;
-        a->things.p[a->things.n - 1].s = AppendLine(a, path, line);
-        a->things.p[a->things.n - 1].i = a->ints.n;
-        APPEND(a->ints);
-        a->ints.p[a->ints.n - 1] = c;
-        continue;
-      }
-      if (c == '"') {
-        buf.n = 0;
-        buf.p = NULL;
-        for (i = 1; (c = p[i++]);) {
-          if (c == '"') break;
-          c = ReadCharLiteral(&buf, c, p, &i);
-          APPEND(buf);
-          buf.p[buf.n - 1] = c;
-        }
-        p += i;
-        if (a->things.n && a->things.p[a->things.n - 1].t == TT_SLICE &&
-            IS(a->slices.p[a->things.p[a->things.n - 1].i].p,
-               a->slices.p[a->things.p[a->things.n - 1].i].n, ".include")) {
-          APPEND(buf);
-          buf.p[buf.n - 1] = '\0';
-          --a->things.n;
-          if (fileexists(buf.p)) {
-            Tokenize(a, buf.p);
-          } else {
-            for (i = 0; i < g_include_paths.n; ++i) {
-              path2 = xstrcat(g_include_paths.p[i], '/', buf.p);
-              if (fileexists(path2)) {
-                Tokenize(a, path2);
-                free(path2);
-                break;
-              } else {
-                free(path2);
-              }
-            }
-          }
-          free(buf.p);
-        } else {
-          APPEND(a->things);
-          a->things.p[a->things.n - 1].t = TT_SLICE;
-          a->things.p[a->things.n - 1].s = AppendLine(a, path, line);
-          a->things.p[a->things.n - 1].i = a->slices.n;
-          APPEND(a->slices);
-          a->slices.p[a->slices.n - 1] = buf;
-        }
-        continue;
-      }
+      continue;
     }
+
     APPEND(a->things);
     a->things.p[a->things.n - 1].t = TT_PUNCT;
     a->things.p[a->things.n - 1].s = AppendLine(a, path, line);
@@ -617,7 +623,7 @@ static wontreturn void Fail(struct Assembler *a, const char *fmt, ...) {
   vfprintf(stderr, fmt, va);
   va_end(va);
   fputc('\n', stderr);
-  exit(1);
+  __die();
 }
 
 static void Label(struct Assembler *a, int name) {
@@ -1161,6 +1167,13 @@ static wontreturn void InvalidRegister(struct Assembler *a) {
   Fail(a, "invalid register");
 }
 
+static int GetRegisterReg(struct Assembler *a) {
+  int reg;
+  struct Slice wut;
+  if ((reg = FindRegReg(GetString(a))) == -1) InvalidRegister(a);
+  return reg;
+}
+
 static int GetRegisterRm(struct Assembler *a) {
   int reg;
   struct Slice wut;
@@ -1215,6 +1228,7 @@ static int ParseMemory(struct Assembler *a, long *disp) {
 }
 
 static void EncodeModrm(struct Assembler *a, int reg, int mem, long disp) {
+  reg &= 7;
   reg <<= 3;
   if (mem & (HASBASE | HASINDEX)) {
     if (mem & ISRIP) {
@@ -1231,12 +1245,12 @@ static void EncodeModrm(struct Assembler *a, int reg, int mem, long disp) {
 }
 
 static void OnMov(struct Assembler *a, struct Slice op) {
-  int reg, mem;
   long imm, disp;
+  int reg, rm, mem, modrm;
   if (IsPunct(a, a->i, '$')) {
     ++a->i;
     imm = GetInt(a);
-    if (IsSlice(a, a->i)) {
+    if (IsSlice(a, a->i)) {  // imm -> reg
       reg = GetRegisterRm(a);
       if (reg & 0xff00) {
         Emit(a, reg >> 8);
@@ -1262,7 +1276,7 @@ static void OnMov(struct Assembler *a, struct Slice op) {
         default:
           Fail(a, "todo movd/movq");
       }
-    } else {
+    } else {  // imm -> mem
       mem = ParseMemory(a, &disp);
       if (mem & 0xff00) {
         Emit(a, mem >> 8);
@@ -1292,6 +1306,91 @@ static void OnMov(struct Assembler *a, struct Slice op) {
         default:
           unreachable;
       }
+    }
+  } else if (IsSlice(a, a->i)) {
+    reg = GetRegisterReg(a);
+    if (IsSlice(a, a->i)) {  // reg -> reg
+      rm = GetRegisterRm(a);
+      if (((reg & 070) >> 3) != ((rm & 070) >> 3)) {
+        Fail(a, "size mismatch");
+      }
+      if ((reg | rm) & 0xff00) {
+        Emit(a, (reg | rm) >> 8);
+      }
+      modrm = 0300 | (reg & 7) << 3 | rm & 7;
+      switch ((reg & 070) >> 3) {
+        case 0:
+          Emit(a, 0x88);
+          Emit(a, modrm);
+          break;
+        case 1:
+          Emit(a, OSZ);
+          Emit(a, 0x89);
+          Emit(a, modrm);
+          break;
+        case 2:
+        case 3:
+          Emit(a, 0x89);
+          Emit(a, modrm);
+          break;
+        case 4:
+          Emit(a, 0x66);
+          Emit(a, 0x0F);
+          Emit(a, 0x6F);
+          Emit(a, modrm);
+          break;
+        default:
+          unreachable;
+      }
+    } else {  // reg -> mem
+      mem = ParseMemory(a, &disp);
+      if ((reg | mem) & 0xff00) {
+        Emit(a, (reg | mem) >> 8);
+      }
+      modrm = 0300 | (reg & 7) << 3 | rm & 7;
+      switch ((reg & 070) >> 3) {
+        case 0:
+          Emit(a, 0x88);
+          EncodeModrm(a, reg, mem, 0);
+          break;
+        case 1:
+          Emit(a, OSZ);
+          Emit(a, 0x89);
+          EncodeModrm(a, reg, mem, 0);
+          break;
+        case 2:
+        case 3:
+          Emit(a, 0x89);
+          EncodeModrm(a, reg, mem, 0);
+          break;
+        default:
+          Fail(a, "todo movdqu");
+      }
+    }
+  } else {  // mem -> reg
+    mem = ParseMemory(a, &disp);
+    reg = GetRegisterReg(a);
+    if ((reg | mem) & 0xff00) {
+      Emit(a, (reg | mem) >> 8);
+    }
+    modrm = 0300 | (reg & 7) << 3 | rm & 7;
+    switch ((reg & 070) >> 3) {
+      case 0:
+        Emit(a, 0x8A);
+        EncodeModrm(a, reg, mem, 0);
+        break;
+      case 1:
+        Emit(a, OSZ);
+        Emit(a, 0x8B);
+        EncodeModrm(a, reg, mem, 0);
+        break;
+      case 2:
+      case 3:
+        Emit(a, 0x8B);
+        EncodeModrm(a, reg, mem, 0);
+        break;
+      default:
+        Fail(a, "todo movdqu");
     }
   }
 }
