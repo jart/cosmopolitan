@@ -1,2 +1,2 @@
-.include "o/libc/sysv/macros.inc"
+.include "o/libc/sysv/macros.internal.inc"
 .scall nlstat 0xffff0118ffffffff globl

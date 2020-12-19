@@ -95,7 +95,7 @@ $(LIBC_SYSV_CALLS_A).pkg:				\
 		$(foreach x,$(LIBC_SYSV_CALLS_A_DIRECTDEPS),$($(x)_A).pkg)
 
 $(LIBC_SYSV_CALLS_A_OBJS):				\
-		o/libc/sysv/macros.inc
+		o/libc/sysv/macros.internal.inc
 
 #───────────────────────────────────────────────────────────────────────────────
 
@@ -125,7 +125,7 @@ $(LIBC_SYSV_MACHCALLS_A).pkg:				\
 		$(foreach x,$(LIBC_SYSV_MACHCALLS_A_DIRECTDEPS),$($(x)_A).pkg)
 
 $(LIBC_SYSV_MACHCALLS_A_OBJS):				\
-		o/libc/sysv/macros.inc
+		o/libc/sysv/macros.internal.inc
 
 #───────────────────────────────────────────────────────────────────────────────
 

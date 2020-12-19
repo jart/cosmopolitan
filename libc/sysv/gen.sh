@@ -22,7 +22,7 @@ rm -f $dir/*.s $dir/*.S
 
 scall() {
   {
-    echo ".include \"o/libc/sysv/macros.inc\""
+    echo ".include \"o/libc/sysv/macros.internal.inc\""
     echo ".scall" "$@"
   } >"$dir/${1/$/-}.s"
 }
@@ -36,7 +36,7 @@ syscon() {
 
 sysstr() {
   {
-    echo ".include \"o/libc/sysv/macros.inc\""
+    echo ".include \"o/libc/sysv/macros.internal.inc\""
     echo ".sysstr $1 \"$2\""
   } >"$dir/${1/$/-}.s"
 }

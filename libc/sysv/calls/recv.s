@@ -1,2 +1,2 @@
-.include "o/libc/sysv/macros.inc"
+.include "o/libc/sysv/macros.internal.inc"
 .scall recv 0xffff0066ffffffff globl
