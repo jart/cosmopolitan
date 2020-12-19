@@ -26,6 +26,7 @@
 /	@see	setgid(), getauxval(AT_SECURE)
 setegid:push	%rbp
 	mov	%rsp,%rbp
+	.profilable
 	mov	%edi,%esi
 	mov	$-1,%edi
 	call	setregid

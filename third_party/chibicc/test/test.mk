@@ -79,7 +79,6 @@ o/$(MODE)/third_party/chibicc/test/%.com.dbg:					\
 		$(THIRD_PARTY_CHIBICC_TEST_A)					\
 		o/$(MODE)/third_party/chibicc/test/%.chibicc.o			\
 		$(THIRD_PARTY_CHIBICC_TEST_A).pkg				\
-		$(LIBC_TESTMAIN)						\
 		$(CRT)								\
 		$(APE)
 	@$(APELINK)
@@ -89,7 +88,6 @@ o/$(MODE)/third_party/chibicc/test/%2.com.dbg:					\
 		$(THIRD_PARTY_CHIBICC_TEST2_A)					\
 		o/$(MODE)/third_party/chibicc/test/%.chibicc2.o			\
 		$(THIRD_PARTY_CHIBICC_TEST2_A).pkg				\
-		$(LIBC_TESTMAIN)						\
 		$(CRT)								\
 		$(APE)
 	@$(APELINK)

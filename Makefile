@@ -71,13 +71,13 @@ GNUMAKEFLAGS += --output-sync
 .PHONY: all o bins check test depend tags
 
 all:	o
-o:	o/$(MODE)/ape				\
-	o/$(MODE)/dsp				\
-	o/$(MODE)/net				\
-	o/$(MODE)/libc				\
-	o/$(MODE)/test				\
-	o/$(MODE)/tool				\
-	o/$(MODE)/examples			\
+o:	o/$(MODE)/ape		\
+	o/$(MODE)/dsp		\
+	o/$(MODE)/net		\
+	o/$(MODE)/libc		\
+	o/$(MODE)/test		\
+	o/$(MODE)/tool		\
+	o/$(MODE)/examples	\
 	o/$(MODE)/third_party
 
 PKGS =
@@ -137,8 +137,6 @@ include dsp/tty/tty.mk				# ├──online
 include libc/dns/dns.mk				# │
 include libc/crypto/crypto.mk			# │
 include net/http/http.mk			#─┘
-include third_party/chibicc/chibicc.mk
-include third_party/chibicc/test/test.mk
 include third_party/lemon/lemon.mk
 include third_party/linenoise/linenoise.mk
 include third_party/editline/editline.mk
@@ -155,6 +153,8 @@ include third_party/m4/m4.mk
 include third_party/lz4cli/lz4cli.mk
 include third_party/bzip2/bzip2.mk
 include tool/build/lib/buildlib.mk
+include third_party/chibicc/chibicc.mk
+include third_party/chibicc/test/test.mk
 include tool/build/emucrt/emucrt.mk
 include tool/build/emubin/emubin.mk
 include tool/build/build.mk

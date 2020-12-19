@@ -17,16 +17,12 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/elf/def.h"
-#include "tool/build/lib/elfwriter.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 
-void elfwriter_cargoculting(struct ElfWriter *elf) {
-  elfwriter_startsection(elf, "", SHT_NULL, 0);
-  elfwriter_finishsection(elf);
-  elfwriter_startsection(elf, ".text", SHT_PROGBITS, SHF_ALLOC | SHF_EXECINSTR);
-  elfwriter_finishsection(elf);
-  elfwriter_startsection(elf, ".data", SHT_PROGBITS, SHF_ALLOC | SHF_WRITE);
-  elfwriter_finishsection(elf);
-  elfwriter_startsection(elf, ".bss", SHT_NOBITS, SHF_ALLOC | SHF_WRITE);
-  elfwriter_finishsection(elf);
+/**
+ * Creates session and sets the process group id.
+ */
+uint32_t getsid(int pid) {
+  return getsid$sysv(pid);
 }

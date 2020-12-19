@@ -27,6 +27,32 @@ TEST(strcpy, test) {
   EXPECT_STREQ("hello there what's up", strcpy(buf, "hello there what's up"));
 }
 
+TEST(strncpy, test) {
+  char b[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+  strncpy(b, "key", 8);
+  ASSERT_EQ('k', b[0]);
+  ASSERT_EQ('e', b[1]);
+  ASSERT_EQ('y', b[2]);
+  ASSERT_EQ('\0', b[3]);
+  ASSERT_EQ('\0', b[4]);
+  ASSERT_EQ('\0', b[5]);
+  ASSERT_EQ('\0', b[6]);
+  ASSERT_EQ('\0', b[7]);
+}
+
+TEST(strncpy, testSameLength_isNotNulTerminated) {
+  char b[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+  strncpy(b, "keyword", 7);
+  ASSERT_EQ('k', b[0]);
+  ASSERT_EQ('e', b[1]);
+  ASSERT_EQ('y', b[2]);
+  ASSERT_EQ('w', b[3]);
+  ASSERT_EQ('o', b[4]);
+  ASSERT_EQ('r', b[5]);
+  ASSERT_EQ('d', b[6]);
+  ASSERT_EQ(7, b[7]);
+}
+
 BENCH(strcpy, bench) {
   extern char *strcpy_(char *, const char *) asm("strcpy");
   static char buf[1024], buf2[1024];

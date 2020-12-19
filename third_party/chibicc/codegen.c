@@ -1770,9 +1770,9 @@ void gen_expr(Node *node) {
           println("\tdiv\t%s", di);
         } else {
           if (node->lhs->ty->size == 8) {
-            emitlin("\tcqo");
+            emitlin("\tcqto");
           } else {
-            emitlin("\tcdq");
+            emitlin("\tcltd");
           }
           println("\tidiv\t%s", di);
         }

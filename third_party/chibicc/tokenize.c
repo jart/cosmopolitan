@@ -128,7 +128,7 @@ static int read_ident(char *start) {
   for (;;) {
     char *q;
     c = decode_utf8(&q, p);
-    if (!('a' <= c && c <= 'f') && !is_ident2(c)) {
+    if (!is_ident2(c)) {
       return p - start;
     }
     p = q;
@@ -142,13 +142,14 @@ static int from_hex(char c) {
 }
 
 // Read a punctuator token from p and returns its length.
-static int read_punct(char *p) {
-  static char *kw[] = {"<<=", ">>=", "...", "==", "!=", "<=", ">=", "->",
-                       "+=",  "-=",  "*=",  "/=", "++", "--", "%=", "&=",
-                       "|=",  "^=",  "&&",  "||", "<<", ">>", "##"};
+int read_punct(char *p) {
+  static char kw[][4] = {"<<=", ">>=", "...", "==", "!=", "<=", ">=", "->",
+                         "+=",  "-=",  "*=",  "/=", "++", "--", "%=", "&=",
+                         "|=",  "^=",  "&&",  "||", "<<", ">>", "##"};
   for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++) {
-    if (startswith(p, kw[i])) {
-      return strlen(kw[i]);
+    for (int j = 0;;) {
+      if (p[j] != kw[i][j]) break;
+      if (!kw[i][++j]) return j;
     }
   }
   return ispunct(*p) ? 1 : 0;
@@ -181,7 +182,7 @@ static bool is_keyword(Token *tok) {
   return hashmap_get2(&map, tok->loc, tok->len);
 }
 
-static int read_escaped_char(char **new_pos, char *p) {
+int read_escaped_char(char **new_pos, char *p) {
   if ('0' <= *p && *p <= '7') {
     // Read an octal number.
     unsigned c = *p++ - '0';
@@ -592,7 +593,7 @@ Token *tokenize(File *file) {
 }
 
 // Returns the contents of a given file.
-static char *read_file(char *path) {
+char *read_file(char *path) {
   FILE *fp;
   if (strcmp(path, "-") == 0) {
     // By convention, read from stdin if a given filename is "-".
@@ -639,7 +640,7 @@ File *new_file(char *name, int file_no, char *contents) {
 }
 
 // Replaces \r or \r\n with \n.
-static void canonicalize_newline(char *p) {
+void canonicalize_newline(char *p) {
   int i = 0, j = 0;
   while (p[i]) {
     if (p[i] == '\r' && p[i + 1] == '\n') {
@@ -656,7 +657,7 @@ static void canonicalize_newline(char *p) {
 }
 
 // Removes backslashes followed by a newline.
-static void remove_backslash_newline(char *p) {
+void remove_backslash_newline(char *p) {
   int i = 0, j = 0;
   // We want to keep the number of newline characters so that
   // the logical line number matches the physical one.

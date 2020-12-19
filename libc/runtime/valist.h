@@ -4,13 +4,13 @@
 COSMOPOLITAN_C_START_
 
 struct __va {
-  unsigned int gp_offset;
-  unsigned int fp_offset;
+  uint32_t gp_offset;
+  uint32_t fp_offset;
   void *overflow_arg_area;
   void *reg_save_area;
 };
 
-void *__va_arg(struct __va *, unsigned long, unsigned, unsigned);
+void *__va_arg(struct __va *, size_t, unsigned, unsigned);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

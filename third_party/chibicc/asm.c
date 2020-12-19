@@ -20,6 +20,8 @@
 
 #define PRECIOUS 0b1111000000101000  // bx,bp,r12-r15
 
+StaticAsm *staticasms;
+
 static const char kGreg[4][16][5] = {
     {"al", "cl", "dl", "bl", "spl", "bpl", "sil", "dil", "r8b", "r9b", "r10b",
      "r11b", "r12b", "r13b", "r14b", "r15b"},
@@ -30,8 +32,6 @@ static const char kGreg[4][16][5] = {
     {"rax", "rcx", "rdx", "rbx", "rsp", "rbp", "rsi", "rdi", "r8", "r9", "r10",
      "r11", "r12", "r13", "r14", "r15"},
 };
-
-StaticAsm *staticasms;
 
 static void DecodeAsmConstraints(AsmOperand *op) {
   int i;

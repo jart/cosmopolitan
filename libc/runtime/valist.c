@@ -17,16 +17,16 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/macros.h"
 #include "libc/runtime/valist.h"
 
-static void *__va_arg_mem(struct __va *ap, unsigned long sz, unsigned align) {
-  void *r = ap->overflow_arg_area;
-  if (align > 8) r = (void *)(((unsigned long)r + 15) / 16 * 16);
-  ap->overflow_arg_area = (void *)(((unsigned long)r + sz + 7) / 8 * 8);
+static void *__va_arg_mem(struct __va *ap, size_t sz, size_t align) {
+  void *r = (void *)ROUNDUP((intptr_t)ap->overflow_arg_area, align);
+  ap->overflow_arg_area = (void *)ROUNDUP((intptr_t)r + sz, 8);
   return r;
 }
 
-void *__va_arg(struct __va *ap, unsigned long sz, unsigned align, unsigned k) {
+void *__va_arg(struct __va *ap, size_t sz, unsigned align, unsigned k) {
   void *r;
   switch (k) {
     case 0:

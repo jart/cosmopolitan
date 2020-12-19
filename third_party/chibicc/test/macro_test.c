@@ -5,6 +5,8 @@ char *main_filename1 = __FILE__;
 int main_line1 = __LINE__;
 #define LINE() __LINE__
 int main_line2 = LINE();
+#define add2 add2
+#define add6(a, b, c, d, e, f) add6(a, b, c, d, e, f)
 
 #
 

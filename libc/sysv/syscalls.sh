@@ -145,8 +145,8 @@ scall	'getuid$sysv'		0x0018001820180066	globl hidden
 scall	'getgid$sysv'		0x002f002f202f0068	globl hidden
 scall	'getppid$sysv'		0x002700272027006e	globl hidden
 scall	getpgrp			0x005100512051006f	globl
-scall	setsid			0x0093009320930070	globl
-scall	getsid			0x00ff01362136007c	globl
+scall	'setsid$sysv'		0x0093009320930070	globl hidden
+scall	'getsid$sysv'		0x00ff01362136007c	globl hidden
 scall	getpgid			0x00cf00cf20970079	globl
 scall	setpgid			0x005200522052006d	globl
 scall	geteuid			0x001900192019006b	globl

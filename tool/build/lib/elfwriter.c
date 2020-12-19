@@ -129,7 +129,7 @@ static size_t FlushStrtab(struct ElfWriter *elf, const char *name,
                           struct Interner *strtab) {
   size_t size = strtab->i * sizeof(strtab->p[0]);
   elfwriter_align(elf, 1, 0);
-  AppendSection(elf, ".strtab", SHT_STRTAB, 0);
+  AppendSection(elf, name, SHT_STRTAB, 0);
   mempcpy(elfwriter_reserve(elf, size), strtab->p, size);
   elfwriter_commit(elf, size);
   return FinishSection(elf);
@@ -172,6 +172,9 @@ struct ElfWriter *elfwriter_open(const char *path, int mode) {
   elf->ehdr = memcpy(elf->map, &kObjHeader, (elf->wrote = sizeof(kObjHeader)));
   elf->strtab = newinterner();
   elf->shstrtab = newinterner();
+  intern(elf->strtab, "");
+  intern(elf->shstrtab, "");
+  intern(elf->shstrtab, ".shstrtab");
   return elf;
 }
 

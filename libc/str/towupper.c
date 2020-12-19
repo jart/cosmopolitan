@@ -19,6 +19,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
+/**
+ * Converts wide character to upper case.
+ */
 wint_t towupper(wint_t wc) {
   return toupper(wc);
 }

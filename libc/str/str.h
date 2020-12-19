@@ -238,9 +238,6 @@ char *strsignal(int) returnsnonnull libcesque;
 ╚────────────────────────────────────────────────────────────────────────────│*/
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 
-char *__strncpy(char *, const char *, size_t) memcpyesque;
-#define strncpy(DEST, SRC, N) __strncpy(DEST, SRC, N) /* pacify bad warning */
-
 #define explicit_bzero(STR, BYTES)                                          \
   do {                                                                      \
     void *Str;                                                              \

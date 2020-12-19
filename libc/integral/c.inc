@@ -920,6 +920,9 @@ typedef uint64_t uintmax_t;
 #pragma GCC diagnostic ignored /* tidy */ "-Wunused-but-set-variable"
 #pragma GCC diagnostic ignored /* tidy */ "-Wunused-but-set-parameter"
 #endif /* GCC6+ */
+#if __GNUC__ >= 8
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+#endif /* GCC8+ */
 #if __GNUC__ + 0 >= 9
 #pragma GCC diagnostic ignored /* "always true" breaks dce */ "-Waddress"
 #endif /* GCC9+ */

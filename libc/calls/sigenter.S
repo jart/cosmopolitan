@@ -34,20 +34,15 @@
 __sigenter:
 	push	%rbp
 	mov	%rsp,%rbp
-	push	%rbx
-	push	%rbx
-	ezlea	_base,bx
 	.profilable
-	ezlea	g_sighandrvas,ax
 	and	$NSIG-1,%edi
-	mov	(%rax,%rdi,4),%eax
+	mov	g_sighandrvas(,%rdi,4),%eax
 	cmp	$kSigactionMinRva,%eax
 	jl	2f
-	add	%rbx,%rax
+	lea	_base(%rax),%eax
 	call	*%rax
 	mov	$1,%eax
-1:	pop	%rbx
-	leave
+1:	leave
 	ret
 2:	xor	%eax,%eax
 	jmp	1b

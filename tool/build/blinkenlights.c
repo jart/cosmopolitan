@@ -2497,7 +2497,8 @@ static void Exec(void) {
       KeepGoing:
         CheckFramePointer();
         if (action & ALARM) {
-          DrawDisplayOnly(&pan.display);
+          /* TODO(jart): Fix me */
+          /* DrawDisplayOnly(&pan.display); */
           action &= ~ALARM;
         }
         if (action & EXIT) {

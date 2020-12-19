@@ -26,6 +26,7 @@
 /	@see	setuid(), getauxval(AT_SECURE)
 seteuid:push	%rbp
 	mov	%rsp,%rbp
+	.profilable
 	mov	%edi,%esi
 	mov	$-1,%edi
 	call	setreuid

@@ -19,6 +19,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
+/**
+ * Converts wide character to lower case.
+ */
 wint_t towlower(wint_t wc) {
   return tolower(wc);
 }

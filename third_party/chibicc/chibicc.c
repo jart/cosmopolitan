@@ -590,7 +590,7 @@ static void run_linker(StringArray *inputs, char *output) {
   run_subprocess(arr.data);
 }
 
-int main(int argc, char **argv) {
+int chibicc(int argc, char **argv) {
   showcrashreports();
   atexit(cleanup);
   init_macros();

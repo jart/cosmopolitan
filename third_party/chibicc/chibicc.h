@@ -120,6 +120,10 @@ Token *tokenize_string_literal(Token *, Type *);
 bool consume(Token **, Token *, char *, size_t);
 bool equal(Token *, char *, size_t);
 void convert_pp_tokens(Token *);
+void remove_backslash_newline(char *);
+void canonicalize_newline(char *);
+char *read_file(char *);
+int read_escaped_char(char **, char *);
 
 #define UNREACHABLE()    error("internal error at %s:%d", __FILE__, __LINE__)
 #define EQUAL(T, S)      equal(T, S, strlen(S))
@@ -562,6 +566,8 @@ extern bool opt_sse3;
 extern bool opt_sse4;
 extern bool opt_verbose;
 extern char *base_file;
+
+int chibicc(int, char **);
 
 //
 // alloc.c

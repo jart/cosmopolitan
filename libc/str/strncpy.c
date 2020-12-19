@@ -33,10 +33,11 @@
  * @see stpncpy(), memccpy()
  * @asyncsignalsafe
  */
-char *(strncpy)(char *dest, const char *src, size_t stride) {
-  char *p;
-  if ((p = memccpy(dest, src, '\0', stride))) {
-    memset(p, 0, dest + stride - p);
+char *strncpy(char *dest, const char *src, size_t stride) {
+  size_t i;
+  for (i = 0; i < stride; ++i) {
+    if (!(dest[i] = src[i])) break;
   }
+  memset(dest + i, 0, stride - i);
   return dest;
 }
