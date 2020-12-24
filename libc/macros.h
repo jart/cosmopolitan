@@ -13,6 +13,9 @@
 #define TRUE  1
 #define FALSE 0
 
+#define alignas(x) _Alignas(x)
+#define static_assert(x) _Static_assert(x, #x)
+
 #define ROUNDUP(X, K)       (((X) + (K)-1) & -(K))
 #define ROUNDDOWN(X, K)     ((X) & -(K))
 #define ABS(X)              ((X) >= 0 ? (X) : -(X))
@@ -20,7 +23,7 @@
 #define MAX(X, Y)           ((Y) < (X) ? (X) : (Y))
 #define PASTE(A, B)         __PASTE(A, B)
 #define STRINGIFY(A)        __STRINGIFY(A)
-#define EQUIVALENT(X, Y)    (isconstant((X) == (Y)) && ((X) == (Y)))
+#define EQUIVALENT(X, Y)    (__builtin_constant_p((X) == (Y)) && ((X) == (Y)))
 #define TYPE_BIT(type)      (sizeof(type) * CHAR_BIT)
 #define TYPE_SIGNED(type)   (((type)-1) < 0)
 #define TYPE_INTEGRAL(type) (((type)0.5) != 0.5)

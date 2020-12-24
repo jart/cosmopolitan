@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,30 +17,36 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/fmt/conv.h"
-#include "libc/mem/mem.h"
-#include "libc/testlib/testlib.h"
+#include "libc/macros.h"
 
-TEST(basename, test) {
-  EXPECT_STREQ("", basename(""));
-  EXPECT_STREQ("/", basename("/"));
-  EXPECT_STREQ("hello", basename("hello"));
-  EXPECT_STREQ("there", basename("hello/there"));
-  EXPECT_STREQ("yo", basename("hello/there/yo"));
-}
-
-TEST(basename, testTrailingSlash_isIgnored) {
-  /* should be "foo" but basename() doesn't allocate memory */
-  EXPECT_STREQ("foo/", basename("foo/"));
-  EXPECT_STREQ("foo//", basename("foo//"));
-}
-
-TEST(basename, testOnlySlashes_oneSlashOnlyVasily) {
-  EXPECT_STREQ("/", basename("///"));
-}
-
-TEST(basename, testWindows_isGrantedRespect) {
-  EXPECT_STREQ("there", basename("hello\\there"));
-  EXPECT_STREQ("yo", basename("hello\\there\\yo"));
-}
+/	Returns length of NUL-terminated string.
+/
+/	@param	rdi is non-null NUL-terminated string pointer
+/	@return	rax is number of bytes (excluding NUL)
+/	@clob	ax,dx,cx,xmm3,xmm4
+/	@note	h/t agner fog
+/	@asyncsignalsafe
+strlen:	.leafprologue
+	.profilable
+	mov	%rdi,%rax
+	mov	%edi,%ecx
+	and	$15,%ecx
+	and	$-16,%rax
+	pxor	%xmm4,%xmm4
+	movdqa	(%rax),%xmm3
+	pcmpeqb	%xmm4,%xmm3
+	pmovmskb %xmm3,%edx
+	shr	%cl,%edx
+	shl	%cl,%edx
+	bsf	%edx,%edx
+	jnz	2f
+1:	lea	16(%rax),%rax
+	movdqa	(%rax),%xmm3
+	pcmpeqb	%xmm4,%xmm3
+	pmovmskb %xmm3,%edx
+	bsf	%edx,%edx
+	jz	1b
+2:	add	%rdx,%rax
+	sub	%rdi,%rax
+	.leafepilogue
+	.endfn	strlen,globl

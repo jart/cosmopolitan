@@ -20,6 +20,9 @@
 #include "libc/str/str.h"
 #include "libc/str/utf16.h"
 
+/**
+ * Helps runtime decode UTF-16 with slightly smaller code size.
+ */
 wint_t DecodeNtsUtf16(const char16_t **s) {
   wint_t x, y;
   for (;;) {

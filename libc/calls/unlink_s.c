@@ -21,7 +21,7 @@
 #include "libc/calls/calls.h"
 
 /**
- * Deletes file, the Cosmopolitan way.
+ * Deletes file.
  *
  * The caller's variable is made NULL. Note that we define unlink(NULL)
  * as a no-op.

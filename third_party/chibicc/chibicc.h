@@ -16,6 +16,7 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsf.h"
 #include "libc/nexgen32e/bsr.h"
+#include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/stdio/temp.h"
@@ -126,8 +127,8 @@ char *read_file(char *);
 int read_escaped_char(char **, char *);
 
 #define UNREACHABLE()    error("internal error at %s:%d", __FILE__, __LINE__)
-#define EQUAL(T, S)      equal(T, S, strlen(S))
-#define CONSUME(R, T, S) consume(R, T, S, strlen(S))
+#define EQUAL(T, S)      equal(T, S, sizeof(S) - 1)
+#define CONSUME(R, T, S) consume(R, T, S, sizeof(S) - 1)
 
 //
 // preprocess.c

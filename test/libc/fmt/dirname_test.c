@@ -17,34 +17,18 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/intrin/pcmpeqb.h"
-#include "libc/intrin/pmovmskb.h"
-#include "libc/nexgen32e/bsf.h"
-#include "libc/str/str.h"
+#include "libc/fmt/conv.h"
+#include "libc/fmt/fmt.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/gc.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Returns length of NUL-terminated string.
- *
- * @param s is non-null NUL-terminated string pointer
- * @return number of bytes (excluding NUL)
- * @asyncsignalsafe
- */
-size_t strlen(const char *s) {
-  const char *p;
-  unsigned k, m;
-  uint8_t v1[16], vz[16];
-  k = (uintptr_t)s & 15;
-  p = (const char *)((uintptr_t)s & -16);
-  memset(vz, 0, 16);
-  memcpy(v1, p, 16);
-  pcmpeqb(v1, v1, vz);
-  m = pmovmskb(v1) >> k << k;
-  while (!m) {
-    p += 16;
-    memcpy(v1, p, 16);
-    pcmpeqb(v1, v1, vz);
-    m = pmovmskb(v1);
-  }
-  return p + bsf(m) - s;
+TEST(dirname, test) {
+  EXPECT_STREQ("/usr", dirname(gc(strdup("/usr/lib"))));
+  EXPECT_STREQ("usr", dirname(gc(strdup("usr/lib"))));
+  EXPECT_STREQ("/", dirname(gc(strdup("/usr/"))));
+  EXPECT_STREQ("/", dirname(gc(strdup("/"))));
+  EXPECT_STREQ(".", dirname(gc(strdup("hello"))));
+  EXPECT_STREQ(".", dirname(gc(strdup("."))));
+  EXPECT_STREQ(".", dirname(gc(strdup(".."))));
 }

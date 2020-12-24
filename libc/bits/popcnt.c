@@ -20,7 +20,6 @@
 #include "libc/bits/popcnt.h"
 
 uint64_t(popcnt)(uint64_t x) {
-  uint32_t r;
   x = x - ((x >> 1) & 0x5555555555555555);
   x = ((x >> 2) & 0x3333333333333333) + (x & 0x3333333333333333);
   x = (x + (x >> 4)) & 0x0f0f0f0f0f0f0f0f;

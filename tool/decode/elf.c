@@ -32,6 +32,7 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/x/x.h"
 #include "tool/decode/lib/asmcodegen.h"
 #include "tool/decode/lib/elfidnames.h"
 #include "tool/decode/lib/flagger.h"
@@ -249,10 +250,10 @@ static char *getelfsymbolname(const Elf64_Ehdr *elf, size_t mapsize,
 
 static void printelfrelocations(void) {
   int sym;
-  size_t i, j;
+  size_t i, j, count;
   const Elf64_Sym *syms;
   const Elf64_Rela *rela;
-  const Elf64_Shdr *shdr, *boop;
+  const Elf64_Shdr *shdr, *symtab;
   char *strtab, *shstrtab, *symbolname;
   strtab = GetElfStringTable(elf, st->st_size);
   shstrtab = GetElfSectionNameStringTable(elf, st->st_size);
@@ -266,11 +267,16 @@ static void printelfrelocations(void) {
                    min((uintptr_t)elf + st->st_size,
                        (uintptr_t)elf + shdr->sh_offset + shdr->sh_size));
            ++rela, ++j) {
-        boop = GetElfSectionHeaderAddress(elf, st->st_size, shdr->sh_link);
-        syms = GetElfSectionAddress(elf, st->st_size, boop);
+        symtab = GetElfSectionHeaderAddress(elf, st->st_size, shdr->sh_link);
+        count = symtab->sh_size / symtab->sh_entsize;
+        syms = GetElfSectionAddress(elf, st->st_size, symtab);
         sym = ELF64_R_SYM(rela->r_info);
-        symbolname =
-            getelfsymbolname(elf, st->st_size, strtab, shstrtab, &syms[sym]);
+        if (0 <= sym && sym < count) {
+          symbolname =
+              getelfsymbolname(elf, st->st_size, strtab, shstrtab, syms + sym);
+        } else {
+          symbolname = xasprintf("bad-sym-%d", sym);
+        }
         printf("/\t%s+%#lx → %s%c%#lx\n",
                GetElfString(
                    elf, st->st_size, shstrtab,
@@ -297,7 +303,7 @@ static void printelfrelocations(void) {
 int main(int argc, char *argv[]) {
   showcrashreports();
   if (argc != 2) {
-    fprintf(stderr, "usage: %`s FILE: %s\n", argv[0]);
+    fprintf(stderr, "usage: %s FILE\n", argv[0]);
     return 1;
   }
   path = argv[1];

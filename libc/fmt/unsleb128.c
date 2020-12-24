@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/conv.h"
+#include "libc/fmt/leb128.h"
 
 /**
  * Decodes a GNU-style varint from a buffer.
@@ -25,9 +25,9 @@
  * The GNU Assembler is able to encode numbers this way, since it's used
  * by the DWARF debug format.
  */
-int unsleb128(const void *buf, size_t size, int64_t *out) {
+int unsleb128(const void *buf, size_t size, int128_t *out) {
   int b;
-  int64_t r, w;
+  int128_t r, w;
   unsigned char c;
   const unsigned char *p, *pe;
   pe = (p = buf) + size;

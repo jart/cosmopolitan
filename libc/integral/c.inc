@@ -806,36 +806,6 @@ typedef uint64_t uintmax_t;
   do {            \
   } while (0)
 
-#ifndef likely
-#define likely(expr) __builtin_expect(!!(expr), 1)
-#endif
-
-#ifndef unlikely
-#define unlikely(expr) __builtin_expect(!!(expr), 0)
-#endif
-
-/**
- * Evaluates ternary expression without type promotion.
- */
-#ifndef chooseexpr
-#define chooseexpr(pred, a, b) __builtin_choose_expr(pred, a, b)
-#endif
-
-/**
- * Returns true if expression can be evaluated at compile-time.
- */
-#ifndef isconstant
-#define isconstant(expr) __builtin_constant_p(expr)
-#endif
-
-#ifndef static_assert
-#define static_assert(expr) _Static_assert(expr, #expr)
-#endif
-
-#ifndef typescompatible
-#define typescompatible(a, b) __builtin_types_compatible_p(a, b)
-#endif
-
 #ifndef __STRICT_ANSI__
 #define testonly    noinline _Section(".test")
 #define textstartup _Section(".text.startup") noinstrument
@@ -871,10 +841,6 @@ typedef uint64_t uintmax_t;
 #define offsetof(type, member) ((unsigned long)&((type *)0)->member)
 #else
 #define offsetof(type, member) __builtin_offsetof(type, member)
-#endif
-
-#ifndef alignas
-#define alignas(x) _Alignas(x)
 #endif
 
 #ifndef _Section
@@ -1029,15 +995,15 @@ typedef uint64_t uintmax_t;
  * Pulls another module, by symbol, into linkage.
  * @note nop is discarded by ape/ape.lds
  */
-#define YOINK(SYMBOL)                                              \
-  do {                                                             \
-    _Static_assert(!typescompatible(typeof(SYMBOL), char[]),       \
-                   "Please YOINK(symbol), not YOINK(\"symbol\")"); \
-    asm(".pushsection .yoink\n\t"                                  \
-        "nop\t%a0\n\t"                                             \
-        ".popsection"                                              \
-        : /* no outputs */                                         \
-        : "X"(SYMBOL));                                            \
+#define YOINK(SYMBOL)                                                     \
+  do {                                                                    \
+    _Static_assert(!__builtin_types_compatible_p(typeof(SYMBOL), char[]), \
+                   "Please YOINK(symbol), not YOINK(\"symbol\")");        \
+    asm(".pushsection .yoink\n\t"                                         \
+        "nop\t%a0\n\t"                                                    \
+        ".popsection"                                                     \
+        : /* no outputs */                                                \
+        : "X"(SYMBOL));                                                   \
   } while (0)
 
 /**

@@ -19,6 +19,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
+/**
+ * Returns nonzero if c is printable ascii including space.
+ */
 int isprint(int c) {
   return 0x20 <= c && c <= 0x7E;
 }

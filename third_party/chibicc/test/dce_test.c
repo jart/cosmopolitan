@@ -1,42 +1,26 @@
 #include "third_party/chibicc/test/test.h"
 
-int x;
+#define CRASH    \
+  ({             \
+    asm(".err"); \
+    666;         \
+  })
 
 int main(void) {
+
   if (0) {
-    asm(".error \"the assembler shall fail\"");
+    return CRASH;
   }
 
-  x = 1 ? 777 : ({
-    asm(".error \"the system is down\"");
-    666;
-  });
-  ASSERT(777, x);
+  if (1) {
+  } else {
+    return CRASH;
+  }
 
-  x = 0;
-  x = 777 ?: ({
-    asm(".error \"the system is down\"");
-    666;
-  });
-
-  x = 0;
-  x = __builtin_popcount(strlen("hihi")) == 1 ? 777 : ({
-    asm(".error \"the system is down\"");
-    666;
-  });
-  ASSERT(777, x);
-
-  x = 0;
-  x = strpbrk("hihi", "ei") ? 777 : ({
-    asm(".error \"the system is down!\"");
-    666;
-  });
-  ASSERT(777, x);
-
-  x = 0;
-  x = !__builtin_strpbrk("HELLO\n", "bxdinupo") ? 777 : ({
-    asm(".error \"the system is down\"");
-    666;
-  });
-  ASSERT(777, x);
+  ASSERT(777, 777 ?: CRASH);
+  ASSERT(777, 1 ? 777 : CRASH);
+  ASSERT(777, 0 ? CRASH : 777);
+  ASSERT(777, __builtin_popcount(__builtin_strlen("hihi")) == 1 ? 777 : CRASH);
+  ASSERT(777, !__builtin_strpbrk("HELLO\n", "bxdinupo") ? 777 : CRASH);
+  ASSERT(777, strpbrk("hihi", "ei") ? 777 : CRASH);
 }

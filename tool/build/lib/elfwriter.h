@@ -61,6 +61,7 @@ struct ElfWriterSymRef elfwriter_linksym(struct ElfWriter *, const char *, int,
 struct ElfWriterSymRef elfwriter_appendsym(struct ElfWriter *, const char *,
                                            int, int, size_t, size_t);
 void elfwriter_yoink(struct ElfWriter *, const char *);
+void elfwriter_setsection(struct ElfWriter *, struct ElfWriterSymRef, uint16_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

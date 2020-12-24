@@ -56,8 +56,9 @@ bool isrunningundermake(void);
 
 extern unsigned g_loglevel; /* log level for runtime check */
 
-#define LOGGABLE(LEVEL) \
-  ((!isconstant(LEVEL) || (LEVEL) <= LOGGABLELEVEL) && (LEVEL) <= g_loglevel)
+#define LOGGABLE(LEVEL)                                          \
+  ((!__builtin_constant_p(LEVEL) || (LEVEL) <= LOGGABLELEVEL) && \
+   (LEVEL) <= g_loglevel)
 
 #define LOGF(FMT, ...)                                               \
   do {                                                               \

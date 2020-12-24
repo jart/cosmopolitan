@@ -121,11 +121,11 @@ static void sigaction$native2cosmo(union metasigaction *sa) {
  * @asyncsignalsafe
  */
 int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
-  static_assert(sizeof(struct sigaction) > sizeof(struct sigaction$linux) &&
-                sizeof(struct sigaction) > sizeof(struct sigaction$xnu_in) &&
-                sizeof(struct sigaction) > sizeof(struct sigaction$xnu_out) &&
-                sizeof(struct sigaction) > sizeof(struct sigaction$freebsd) &&
-                sizeof(struct sigaction) > sizeof(struct sigaction$openbsd));
+  _Static_assert(sizeof(struct sigaction) > sizeof(struct sigaction$linux) &&
+                 sizeof(struct sigaction) > sizeof(struct sigaction$xnu_in) &&
+                 sizeof(struct sigaction) > sizeof(struct sigaction$xnu_out) &&
+                 sizeof(struct sigaction) > sizeof(struct sigaction$freebsd) &&
+                 sizeof(struct sigaction) > sizeof(struct sigaction$openbsd));
   int rc, rva, oldrva;
   struct sigaction *ap, copy;
   if (!(0 < sig && sig < NSIG) || sig == SIGKILL || sig == SIGSTOP) {

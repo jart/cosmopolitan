@@ -19,7 +19,6 @@ long labs(long) libcesque pureconst;
 long long llabs(long long) libcesque pureconst;
 char *ltpcpy(char *, long) paramsnonnull() libcesque nocallback;
 int llog10(unsigned long) libcesque pureconst;
-int unsleb128(const void *, size_t, int64_t *);
 int atoi(const char *) paramsnonnull() libcesque;
 long atol(const char *) paramsnonnull() libcesque;
 long long atoll(const char *) paramsnonnull() libcesque;

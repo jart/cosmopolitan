@@ -46,7 +46,7 @@
 #define ___PFLINK(FMT, FN, C) 1
 #else
 #define ___PFLINK(FMT, FN, C) \
-  !isconstant(FMT) || ((FMT) && __builtin_##FN(FMT, C) != NULL)
+  !__builtin_constant_p(FMT) || ((FMT) && __builtin_##FN(FMT, C) != NULL)
 #endif
 
 #if defined(__GNUC__) && __GNUC__ < 6

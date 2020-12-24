@@ -17,30 +17,37 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/fmt/conv.h"
-#include "libc/mem/mem.h"
-#include "libc/testlib/testlib.h"
+#include "libc/stdio/internal.h"
+#include "libc/stdio/stdio.h"
 
-TEST(basename, test) {
-  EXPECT_STREQ("", basename(""));
-  EXPECT_STREQ("/", basename("/"));
-  EXPECT_STREQ("hello", basename("hello"));
-  EXPECT_STREQ("there", basename("hello/there"));
-  EXPECT_STREQ("yo", basename("hello/there/yo"));
+static noinline int slowpath(int c, FILE *f) {
+  if (f->beg < f->size) {
+    c &= 0xff;
+    f->buf[f->beg++] = c;
+    if (f->beg == f->size) {
+      if (f->writer) {
+        if (f->writer(f) == -1) return -1;
+      } else if (f->beg == f->size) {
+        f->beg = 0;
+      }
+    }
+    return c;
+  } else {
+    return __fseteof(f);
+  }
 }
 
-TEST(basename, testTrailingSlash_isIgnored) {
-  /* should be "foo" but basename() doesn't allocate memory */
-  EXPECT_STREQ("foo/", basename("foo/"));
-  EXPECT_STREQ("foo//", basename("foo//"));
-}
-
-TEST(basename, testOnlySlashes_oneSlashOnlyVasily) {
-  EXPECT_STREQ("/", basename("///"));
-}
-
-TEST(basename, testWindows_isGrantedRespect) {
-  EXPECT_STREQ("there", basename("hello\\there"));
-  EXPECT_STREQ("yo", basename("hello\\there\\yo"));
+/**
+ * Writes byte to stream.
+ *
+ * @return c (as unsigned char) if written or -1 w/ errno
+ */
+noinstrument int fputcfb(int c, FILE *f) {
+  if (f->beg + 1 < f->size) {
+    c &= 0xff;
+    f->buf[f->beg++] = c;
+    return c;
+  } else {
+    return slowpath(c, f);
+  }
 }

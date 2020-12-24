@@ -16,6 +16,7 @@
 // So it is very easy to lookahead arbitrary number of tokens in this
 // parser.
 
+#include "libc/testlib/testlib.h"
 #include "third_party/chibicc/chibicc.h"
 
 typedef struct InitDesg InitDesg;
@@ -577,6 +578,8 @@ static Token *thing_attributes(Token *tok, void *arg) {
   error_tok(tok, "unknown function attribute");
 }
 
+Token *to;
+
 // declspec = ("void" | "_Bool" | "char" | "short" | "int" | "long"
 //             | "typedef" | "static" | "extern" | "inline"
 //             | "_Thread_local" | "__thread"
@@ -641,6 +644,7 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr) {
       if (attr->is_typedef &&
           attr->is_static + attr->is_extern + attr->is_inline + attr->is_tls >
               1) {
+        to = tok;
         error_tok(tok, "typedef may not be used together with static,"
                        " extern, inline, __thread or _Thread_local");
       }
@@ -2577,8 +2581,9 @@ static Node *unary(Token **rest, Token *tok) {
   if (EQUAL(tok, "&")) {
     Node *lhs = cast(rest, tok->next);
     add_type(lhs);
-    if (lhs->kind == ND_MEMBER && lhs->member->is_bitfield)
+    if (lhs->kind == ND_MEMBER && lhs->member->is_bitfield) {
       error_tok(tok, "cannot take address of bitfield");
+    }
     return new_unary(ND_ADDR, lhs, tok);
   }
   if (EQUAL(tok, "*")) {
@@ -2995,13 +3000,13 @@ static Node *primary(Token **rest, Token *tok) {
     if (node->ty->kind == TY_VLA) return new_var_node(node->ty->vla_size, tok);
     return new_ulong(node->ty->size, tok);
   }
-  if (EQUAL(tok, "_Alignof") && EQUAL(tok->next, "(") &&
-      is_typename(tok->next->next)) {
+  if ((EQUAL(tok, "_Alignof") || EQUAL(tok, "__alignof__")) &&
+      EQUAL(tok->next, "(") && is_typename(tok->next->next)) {
     Type *ty = typename(&tok, tok->next->next);
     *rest = skip(tok, ')');
     return new_ulong(ty->align, tok);
   }
-  if (EQUAL(tok, "_Alignof")) {
+  if (EQUAL(tok, "_Alignof") || EQUAL(tok, "__alignof__")) {
     Node *node = unary(rest, tok->next);
     add_type(node);
     return new_ulong(node->ty->align, tok);
@@ -3338,7 +3343,7 @@ static Token *function(Token *tok, Type *basety, VarAttr *attr) {
     fn->asmname = ConsumeStringLiteral(&tok, tok);
     tok = skip(tok, ')');
   }
-  tok = attribute_list(tok, &attr, thing_attributes);
+  tok = attribute_list(tok, attr, thing_attributes);
   if (CONSUME(&tok, tok, ";")) return tok;
   current_fn = fn;
   locals = NULL;

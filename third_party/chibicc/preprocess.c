@@ -686,7 +686,7 @@ static char *detect_include_guard(Token *tok) {
   char *macro = strndup(tok->loc, tok->len);
   tok = tok->next;
   if (!is_hash(tok) || !EQUAL(tok->next, "define") ||
-      !EQUAL(tok->next->next, macro))
+      !equal(tok->next->next, macro, strlen(macro)))
     return NULL;
   // Read until the end of the file.
   while (tok->kind != TK_EOF) {

@@ -21,14 +21,8 @@
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 
-/**
- * Writes byte to stream.
- *
- * @return c (as unsigned char) if written or -1 w/ errno
- */
-noinstrument int fputc(int c, FILE *f) {
+static noinline int __fputcg(int c, FILE *f) {
   if (f->beg < f->size) {
-    c &= 0xff;
     f->buf[f->beg++] = c;
     if (f->beg == f->size || f->bufmode == _IONBF ||
         (f->bufmode == _IOLBF && c == '\n')) {
@@ -38,8 +32,22 @@ noinstrument int fputc(int c, FILE *f) {
         f->beg = 0;
       }
     }
-    return c;
+    return c & 0xff;
   } else {
     return __fseteof(f);
+  }
+}
+
+/**
+ * Writes byte to stream.
+ * @return c (as unsigned char) if written or -1 w/ errno
+ * @see putc() if called within loop
+ */
+noinstrument int fputc(int c, FILE *f) {
+  if (f->beg + 1 < f->size && f->bufmode == _IOFBF) {
+    f->buf[f->beg++] = c;
+    return c & 0xff;
+  } else {
+    return __fputcg(c, f);
   }
 }

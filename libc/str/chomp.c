@@ -25,7 +25,7 @@
  * @param line is NULL-propagating
  * @see getline
  */
-char *(chomp)(char *line) {
+char *chomp(char *line) {
   size_t i;
   for (i = strlen(line); i--;) {
     if (line[i] == '\r' || line[i] == '\n') {

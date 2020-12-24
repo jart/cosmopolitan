@@ -30,6 +30,7 @@ local bug fixes
 - fix 64-bit bug in generated code for struct bitfields
 - fix bug where last statement in statement expression couldn't have label
 - print_tokens (chibicc -E) now works in the case of adjacent string literals
+- make enums unsigned (like gcc) so we don't suffer the msvc enum bitfield bug
 
 local changes
 

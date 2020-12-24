@@ -227,9 +227,9 @@ uint32_t gettid(void) nosideeffect;
 uint32_t getuid(void) nosideeffect;
 uint32_t umask(int32_t);
 
-#define getcwd(BUF, SIZE)                                          \
-  (isconstant(BUF) && (&(BUF)[0] == NULL) ? get_current_dir_name() \
-                                          : getcwd(BUF, SIZE))
+#define getcwd(BUF, SIZE)                                                    \
+  (__builtin_constant_p(BUF) && (&(BUF)[0] == NULL) ? get_current_dir_name() \
+                                                    : getcwd(BUF, SIZE))
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § system calls » formatting                                 ─╬─│┼
@@ -249,7 +249,7 @@ void _init_wincrash(void);
 #define __SIGACTION(FN, SIG, ...)          \
   ({                                       \
     if (SupportsWindows()) {               \
-      if (isconstant(SIG)) {               \
+      if (__builtin_constant_p(SIG)) {     \
         switch (SIG) {                     \
           case SIGINT:                     \
           case SIGQUIT:                    \

@@ -74,6 +74,7 @@ static struct SamplingSolution *NewSamplingSolution(long n, long s) {
   ss->indices = xcalloc(n * s, sizeof(short));
   return ss;
 }
+
 static bool IsNormalized(int n, double A[n]) {
   int i;
   double x;

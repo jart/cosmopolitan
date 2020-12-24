@@ -24,7 +24,7 @@
  * @see strerror_r()
  */
 char *strerror(int err) {
-  alignas(1) static char buf[512];
+  _Alignas(1) static char buf[512];
   strerror_r(err, buf, sizeof(buf));
   return buf;
 }

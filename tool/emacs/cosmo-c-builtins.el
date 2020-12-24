@@ -1280,8 +1280,7 @@
            "MACHINE_CODE_ANALYSIS_END_"))
 
         (cosmopolitan-builtin-functions
-         '("typescompatible"
-           "DebugBreak"
+         '("DebugBreak"
            "VEIL"
            "CONCEAL"
            "EXPROPRIATE"
@@ -1289,8 +1288,6 @@
            "STATIC_YOINK"
            "STATIC_YOINK_SOURCE"
            "STRINGIFY"
-           "isconstant"
-           "chooseexpr"
            "likely"
            "unlikely"))
 

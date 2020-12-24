@@ -38,7 +38,7 @@ int fputs(const char *s, FILE *f) {
   int i, n, m;
   n = strlen(s);
   for (i = 0; i < n; ++i) {
-    if (fputc(s[i], f) == -1) {
+    if (putc(s[i], f) == -1) {
       if (ferror(f) == EINTR) continue;
       if (feof(f)) errno = f->state = EPIPE;
       return -1;

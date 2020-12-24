@@ -441,7 +441,7 @@
   (cond ((not (eq 0 (logand 8 arg)))
          (cosmo--assembly (setq arg (logand (lognot 8)))
                           "SILENT=0 COPTS='-Os'"))
-        (t (cosmo--assembly arg "SILENT=0 COPTS='-Os' TARGET_ARCH='-march=znver2 -mdispatch-scheduler' CPPFLAGS='-DSTACK_FRAME_UNLIMITED'"))))
+        (t (cosmo--assembly arg "SILENT=0 COPTS='-Os' TARGET_ARCH='-mdispatch-scheduler' CPPFLAGS='-DSTACK_FRAME_UNLIMITED'"))))
 
 (defun cosmo-assembly-native (arg)
   (interactive "P")

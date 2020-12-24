@@ -113,7 +113,9 @@ Type *vla_of(Type *base, Node *len) {
 }
 
 Type *enum_type(void) {
-  return new_type(TY_ENUM, 4, 4);
+  Type *ty = new_type(TY_ENUM, 4, 4);
+  ty->is_unsigned = true;
+  return ty;
 }
 
 Type *struct_type(void) {

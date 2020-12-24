@@ -22,7 +22,7 @@
 #include "libc/testlib/testlib.h"
 #include "net/http/uri.h"
 
-alignas(32) const char kWinsockIcoPngBase64[] = "\
+_Alignas(32) const char kWinsockIcoPngBase64[] = "\
 base64,iVBORw0KGgoAAAANSUhEUgAAAJcAAACXCAYAAAAYn8l5AAAABmJLR0QA/\
 wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4woLByMP6uwgW\
 QAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAMeSURBVHja7\

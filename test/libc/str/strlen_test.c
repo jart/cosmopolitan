@@ -71,11 +71,15 @@ TEST(strnlen, testconst) {
 }
 
 TEST(strlen, testnonconst) {
+  /* this test case is a great example of why we need:
+       "m"(*(char(*)[0x7fffffff])StR)
+     rather than:
+       "m"(*StR) */
   char buf[256];
   unsigned i;
-  for (i = 0; i < 255; ++i) buf[i] = i + 1;
+  for (i = 0; i < 250; ++i) buf[i] = i + 1;
   buf[i] = '\0';
-  ASSERT_EQ(255, strlen(buf));
+  ASSERT_EQ(250, strlen(buf));
 }
 
 TEST(strnlen_s, null_ReturnsZero) {

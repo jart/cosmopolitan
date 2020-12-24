@@ -21,6 +21,8 @@
 #include "libc/str/tpenc.h"
 #include "libc/str/tpencode.internal.h"
 
+/* TODO: DELETE */
+
 /**
  * Thompson-Pike Varint Encoder.
  *

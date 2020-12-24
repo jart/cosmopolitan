@@ -19,6 +19,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
+/**
+ * Converts ASCII hexadecimal character to integer case-insensitively.
+ * @return integer or 0 if c ∉ [0-9A-Fa-f]
+ */
 int hextoint(int c) {
   if ('0' <= c && c <= '9') {
     return c - '0';

@@ -109,5 +109,9 @@ int main() {
 
   ASSERT(1, sizeof(main));
 
+  ASSERT(1, sizeof(""));
+  ASSERT(2, sizeof("h"));
+  ASSERT(6, sizeof("hello"));
+
   return 0;
 }

@@ -17,30 +17,25 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/fmt/conv.h"
-#include "libc/mem/mem.h"
+#include "libc/nexgen32e/bsr.h"
+#include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-TEST(basename, test) {
-  EXPECT_STREQ("", basename(""));
-  EXPECT_STREQ("/", basename("/"));
-  EXPECT_STREQ("hello", basename("hello"));
-  EXPECT_STREQ("there", basename("hello/there"));
-  EXPECT_STREQ("yo", basename("hello/there/yo"));
+static unsigned Bsr(unsigned x) {
+  static const char kDebruijn[32] = {
+      0, 9,  1,  10, 13, 21, 2,  29, 11, 14, 16, 18, 22, 25, 3, 30,
+      8, 12, 20, 28, 15, 17, 24, 7,  19, 27, 23, 6,  26, 5,  4, 31,
+  };
+  x |= x >> 1;
+  x |= x >> 2;
+  x |= x >> 4;
+  x |= x >> 8;
+  x |= x >> 16;
+  x *= 0x07c4acdd;
+  x >>= 27;
+  return kDebruijn[x];
 }
 
-TEST(basename, testTrailingSlash_isIgnored) {
-  /* should be "foo" but basename() doesn't allocate memory */
-  EXPECT_STREQ("foo/", basename("foo/"));
-  EXPECT_STREQ("foo//", basename("foo//"));
-}
-
-TEST(basename, testOnlySlashes_oneSlashOnlyVasily) {
-  EXPECT_STREQ("/", basename("///"));
-}
-
-TEST(basename, testWindows_isGrantedRespect) {
-  EXPECT_STREQ("there", basename("hello\\there"));
-  EXPECT_STREQ("yo", basename("hello\\there\\yo"));
+TEST(bsr, test) {
+  ASSERT_EQ(bsr(0xffffffff), Bsr(0xffffffff));
 }

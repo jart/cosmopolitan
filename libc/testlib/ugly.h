@@ -14,9 +14,9 @@
 #define __BENCH_ARRAY(S) \
   _Section(".piro.relo.sort.bench.2." #S ",\"aw\",@init_array #")
 
-#define __TEST_PROTOTYPE(S, N, A, K)                             \
-  testonly void S##_##N(void);                                   \
-  alignas(8) const void *const S##_##N##_ptr[] A(S) = {S##_##N}; \
+#define __TEST_PROTOTYPE(S, N, A, K)                                 \
+  testonly void S##_##N(void);                                       \
+  _Alignas(long) const void *const S##_##N##_ptr[] A(S) = {S##_##N}; \
   testonly K void S##_##N(void)
 
 #define __TEST_SECTION(NAME, CONTENT) \

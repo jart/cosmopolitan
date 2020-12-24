@@ -17,30 +17,12 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
 #include "libc/fmt/conv.h"
-#include "libc/mem/mem.h"
-#include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
-TEST(basename, test) {
-  EXPECT_STREQ("", basename(""));
-  EXPECT_STREQ("/", basename("/"));
-  EXPECT_STREQ("hello", basename("hello"));
-  EXPECT_STREQ("there", basename("hello/there"));
-  EXPECT_STREQ("yo", basename("hello/there/yo"));
-}
-
-TEST(basename, testTrailingSlash_isIgnored) {
-  /* should be "foo" but basename() doesn't allocate memory */
-  EXPECT_STREQ("foo/", basename("foo/"));
-  EXPECT_STREQ("foo//", basename("foo//"));
-}
-
-TEST(basename, testOnlySlashes_oneSlashOnlyVasily) {
-  EXPECT_STREQ("/", basename("///"));
-}
-
-TEST(basename, testWindows_isGrantedRespect) {
-  EXPECT_STREQ("there", basename("hello\\there"));
-  EXPECT_STREQ("yo", basename("hello\\there\\yo"));
+/**
+ * Returns directory portion of path.
+ */
+char *xdirname(const char *path) {
+  return dirname(xstrdup(path));
 }

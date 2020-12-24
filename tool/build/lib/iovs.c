@@ -33,7 +33,7 @@ int AppendIovs(struct Iovs *ib, void *base, size_t len) {
     if (i && (intptr_t)base == (intptr_t)p[i - 1].iov_base + p[i - 1].iov_len) {
       p[i - 1].iov_len += len;
     } else {
-      if (unlikely(i == n)) {
+      if (__builtin_expect(i == n, 0)) {
         n += n >> 1;
         if (p == ib->init) {
           if (!(p = malloc(sizeof(struct iovec) * n))) return -1;

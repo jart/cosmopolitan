@@ -190,7 +190,10 @@ void elfwriter_close(struct ElfWriter *elf) {
   freeinterner(elf->strtab);
   free(elf->shdrs->p);
   free(elf->relas->p);
-  for (i = 0; i < ARRAYLEN(elf->syms); ++i) free(elf->syms[i]->p);
+  free(elf->path);
+  for (i = 0; i < ARRAYLEN(elf->syms); ++i) {
+    free(elf->syms[i]->p);
+  }
   free(elf);
 }
 
@@ -237,6 +240,14 @@ void elfwriter_finishsection(struct ElfWriter *elf) {
   if (elf->relas->j < elf->relas->i) MakeRelaSection(elf, section);
 }
 
+/**
+ * Appends symbol.
+ *
+ * This function should be called between elfwriter_startsection() and
+ * elfwriter_finishsection(). If that's not possible, then this can be
+ * called after elfwriter_open() and then elfwriter_setsection() can be
+ * called later to fix-up the section id.
+ */
 struct ElfWriterSymRef elfwriter_appendsym(struct ElfWriter *elf,
                                            const char *name, int st_info,
                                            int st_other, size_t st_value,
@@ -245,6 +256,11 @@ struct ElfWriterSymRef elfwriter_appendsym(struct ElfWriter *elf,
       elf, name, st_info, st_other, st_value, st_size, elf->shdrs->i - 1,
       ELF64_ST_BIND(st_info) == STB_LOCAL ? kElfWriterSymLocal
                                           : kElfWriterSymGlobal);
+}
+
+void elfwriter_setsection(struct ElfWriter *elf, struct ElfWriterSymRef sym,
+                          uint16_t st_shndx) {
+  elf->syms[sym.slg]->p[sym.sym].st_shndx = st_shndx;
 }
 
 struct ElfWriterSymRef elfwriter_linksym(struct ElfWriter *elf,

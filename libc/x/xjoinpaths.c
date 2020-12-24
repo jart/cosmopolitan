@@ -22,14 +22,25 @@
 #include "libc/x/x.h"
 
 /**
- * Joins paths.
+ * Joins paths, e.g.
+ *
+ *   "a"  + "b"  → "a/b"
+ *   "a/" + "b"  → "a/b"
+ *   "a"  + "b/" → "a/b/"
+ *   "a"  + "/b" → "/b"
+ *   "."  + "b"  → "b"
+ *   ""   + "b"  → "b"
+ *
+ * @return newly allocated string of resulting path
  */
 char *xjoinpaths(const char *path, const char *other) {
   if (!*other) {
     return xstrdup(path);
-  } else if (startswith(other, "/") || strcmp(path, ".") == 0) {
+  } else if (!*path) {
     return xstrdup(other);
-  } else if (endswith(other, "/")) {
+  } else if (startswith(other, "/") || !strcmp(path, ".")) {
+    return xstrdup(other);
+  } else if (endswith(path, "/")) {
     return xstrcat(path, other);
   } else {
     return xstrcat(path, '/', other);

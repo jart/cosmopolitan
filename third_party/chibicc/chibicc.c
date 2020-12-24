@@ -41,6 +41,7 @@ static bool opt_c;
 static bool opt_cc1;
 static bool opt_hash_hash_hash;
 static bool opt_static;
+static bool opt_save_temps;
 static char *opt_MF;
 static char *opt_MT;
 static char *opt_o;
@@ -140,6 +141,7 @@ static char *quote_makefile(char *s) {
 
 static void PrintMemoryUsage(void) {
   struct mallinfo mi;
+  malloc_trim(0);
   mi = mallinfo();
   fprintf(stderr, "\n");
   fprintf(stderr, "allocated %,ld bytes of memory\n", mi.arena);
@@ -342,7 +344,7 @@ static char *replace_extn(char *tmpl, char *extn) {
 }
 
 static void cleanup(void) {
-  if (tmpfiles) {
+  if (tmpfiles && !opt_save_temps) {
     for (int i = 0; tmpfiles[i]; i++) {
       unlink(tmpfiles[i]);
     }
@@ -350,7 +352,7 @@ static void cleanup(void) {
 }
 
 static char *create_tmpfile(void) {
-  char *path = xstrcat(kTmpPath, "chibicc-XXXXXX");
+  char *path = xjoinpaths(kTmpPath, "chibicc-XXXXXX");
   int fd = mkstemp(path);
   if (fd == -1) error("mkstemp failed: %s", strerror(errno));
   close(fd);
@@ -383,6 +385,7 @@ static void run_subprocess(char **argv) {
     }
   }
   if (status != 0) {
+    opt_save_temps = true;
     exit(1);
   }
 }
@@ -545,6 +548,7 @@ static void cc1(void) {
 static void assemble(char *input, char *output) {
   char *as = getenv("AS");
   if (!as || !*as) as = "as";
+  /* as = "o//third_party/chibicc/as.com"; */
   StringArray arr = {};
   strarray_push(&arr, as);
   strarray_push(&arr, "-W");

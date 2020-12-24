@@ -24,7 +24,7 @@
 static const char kSig[4] = "SIG";
 static const char kUnknown[8] = "UNKNOWN";
 
-alignas(1) static const char kStrSignals[][8] = {
+_Alignas(char) static const char kStrSignals[][8] = {
     "EXIT",   "HUP",  "INT",    "QUIT", "ILL",   "TRAP", "ABRT", "BUS",
     "FPE",    "KILL", "USR1",   "SEGV", "USR2",  "PIPE", "ALRM", "TERM",
     "STKFLT", "CHLD", "CONT",   "STOP", "TSTP",  "TTIN", "TTOU", "URG",

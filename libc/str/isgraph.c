@@ -19,6 +19,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
+/**
+ * Returns nonzero if c is printable ascii that isn't space.
+ */
 int isgraph(int c) {
   return 0x21 <= c && c <= 0x7E;
 }

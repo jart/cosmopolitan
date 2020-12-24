@@ -17,30 +17,20 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/fmt/conv.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/gc.h"
+#include "libc/stdio/stdio.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 
-TEST(basename, test) {
-  EXPECT_STREQ("", basename(""));
-  EXPECT_STREQ("/", basename("/"));
-  EXPECT_STREQ("hello", basename("hello"));
-  EXPECT_STREQ("there", basename("hello/there"));
-  EXPECT_STREQ("yo", basename("hello/there/yo"));
-}
-
-TEST(basename, testTrailingSlash_isIgnored) {
-  /* should be "foo" but basename() doesn't allocate memory */
-  EXPECT_STREQ("foo/", basename("foo/"));
-  EXPECT_STREQ("foo//", basename("foo//"));
-}
-
-TEST(basename, testOnlySlashes_oneSlashOnlyVasily) {
-  EXPECT_STREQ("/", basename("///"));
-}
-
-TEST(basename, testWindows_isGrantedRespect) {
-  EXPECT_STREQ("there", basename("hello\\there"));
-  EXPECT_STREQ("yo", basename("hello\\there\\yo"));
+BENCH(fputs, bench) {
+  FILE *f;
+  char *buf = gc(malloc(kHyperionSize));
+  char *buf2 = gc(malloc(kHyperionSize));
+  buf2 = gc(malloc(kHyperionSize));
+  f = fmemopen(buf, kHyperionSize, "r+");
+  ASSERT_EQ(kHyperionSize, fread(buf2, 1, kHyperionSize, f));
+  EZBENCH2("fread", f = fmemopen(buf, kHyperionSize, "r+"),
+           fread(buf2, 1, kHyperionSize, f));
 }

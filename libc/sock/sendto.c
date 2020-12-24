@@ -47,7 +47,7 @@
  */
 ssize_t sendto(int fd, const void *buf, size_t size, uint32_t flags,
                const void *opt_addr, uint32_t addrsize) {
-  static_assert(sizeof(struct sockaddr_in) == sizeof(struct sockaddr_in$bsd));
+  _Static_assert(sizeof(struct sockaddr_in) == sizeof(struct sockaddr_in$bsd));
   if (!IsWindows()) {
     if (!IsBsd() || !opt_addr) {
       return sendto$sysv(fd, buf, size, flags, opt_addr, addrsize);

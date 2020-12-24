@@ -18,6 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
+#include "libc/macros.h"
 #include "libc/str/str.h"
 
 /**
@@ -34,7 +35,7 @@ size_t strlcpy(char *d, const char *s, size_t n) {
   size_t slen, actual;
   slen = strlen(s);
   if (n) {
-    actual = min(n, slen);
+    actual = MIN(n, slen);
     memcpy(d, s, actual);
     d[actual] = '\0';
   }

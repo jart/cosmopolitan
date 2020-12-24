@@ -47,7 +47,7 @@ static void rehash(struct InternerObject *it) {
     if (!p[i].hash) continue;
     step = 0;
     do {
-      j = (p[i].hash + step * (step + 1) / 2) & (it->n - 1);
+      j = (p[i].hash + step * ((step + 1) >> 1)) & (it->n - 1);
       step++;
     } while (it->p[j].hash);
     memcpy(&it->p[j], &p[i], sizeof(p[i]));
@@ -103,7 +103,7 @@ size_t internobj(struct Interner *t, const void *data, size_t size) {
   hash = max(1, KnuthMultiplicativeHash32(data, size));
   do {
     /* it is written that triangle probe halts iff i<n/2 && popcnt(n)==1 */
-    i = (hash + step * (step + 1) / 2) & (it->n - 1);
+    i = (hash + step * ((step + 1) >> 1)) & (it->n - 1);
     if (it->p[i].hash == hash && it->p[i].index + size <= it->pool.n &&
         memcmp(item, &it->pool.p[it->p[i].index], size) == 0) {
       return it->p[i].index;
@@ -114,7 +114,7 @@ size_t internobj(struct Interner *t, const void *data, size_t size) {
     rehash(it);
     step = 0;
     do {
-      i = (hash + step * (step + 1) / 2) & (it->n - 1);
+      i = (hash + step * ((step + 1) >> 1)) & (it->n - 1);
       step++;
     } while (it->p[i].hash);
   }

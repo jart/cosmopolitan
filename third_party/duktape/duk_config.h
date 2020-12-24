@@ -800,8 +800,8 @@
  * because of bugs in gcc-4.4
  * (http://lists.debian.org/debian-gcc/2010/04/msg00000.html)
  */
-#define DUK_LIKELY(x)   likely(x)
-#define DUK_UNLIKELY(x) unlikely(x)
+#define DUK_LIKELY(x)   __builtin_expect(!!(x), 1)
+#define DUK_UNLIKELY(x) __builtin_expect(!!(x), 0)
 #endif
 /* XXX: equivalent of clang __builtin_unpredictable? */
 

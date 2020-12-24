@@ -25,7 +25,7 @@
 #include "libc/str/internal.h"
 
 /**
- * Reads data to stream.
+ * Reads data from stream.
  *
  * @param stride specifies the size of individual items
  * @param count is the number of strides to fetch
@@ -36,7 +36,7 @@ size_t fread(void *buf, size_t stride, size_t count, FILE *f) {
   size_t i, n;
   unsigned char *p;
   for (n = stride * count, p = buf, i = 0; i < n; ++i) {
-    if ((c = fgetc(f)) != -1) {
+    if ((c = getc(f)) != -1) {
       p[i] = c & 0xff;
     } else if (!(i % stride)) {
       return i / stride;

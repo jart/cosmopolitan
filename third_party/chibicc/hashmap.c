@@ -35,8 +35,9 @@ static void rehash(HashMap *map) {
   map2.capacity = cap;
   for (int i = 0; i < map->capacity; i++) {
     HashEntry *ent = &map->buckets[i];
-    if (ent->key && ent->key != TOMBSTONE)
+    if (ent->key && ent->key != TOMBSTONE) {
       hashmap_put2(&map2, ent->key, ent->keylen, ent->val);
+    }
   }
   assert(map2.used == nkeys);
   *map = map2;

@@ -263,11 +263,12 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
  * @return LOCALVAR[0]
  * @see xchg()
  */
-#define lockxchg(MEMORY, LOCALVAR)                                          \
-  ({                                                                        \
-    static_assert(typescompatible(typeof(*(MEMORY)), typeof(*(LOCALVAR)))); \
-    asm("xchg\t%0,%1" : "+%m"(*(MEMORY)), "+r"(*(LOCALVAR)));               \
-    *(LOCALVAR);                                                            \
+#define lockxchg(MEMORY, LOCALVAR)                                             \
+  ({                                                                           \
+    _Static_assert(                                                            \
+        __builtin_types_compatible_p(typeof(*(MEMORY)), typeof(*(LOCALVAR)))); \
+    asm("xchg\t%0,%1" : "+%m"(*(MEMORY)), "+r"(*(LOCALVAR)));                  \
+    *(LOCALVAR);                                                               \
   })
 
 /**
@@ -376,7 +377,7 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
 #define __BitOp(OP, BIT, MEM)                                  \
   ({                                                           \
     bool OldBit;                                               \
-    if (isconstant(BIT)) {                                     \
+    if (__builtin_constant_p(BIT)) {                           \
       asm(CFLAG_ASM(OP "%z1\t%2,%1")                           \
           : CFLAG_CONSTRAINT(OldBit),                          \
             "+m"((MEM)[(BIT) / (sizeof((MEM)[0]) * CHAR_BIT)]) \

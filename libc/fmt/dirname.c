@@ -22,6 +22,10 @@
 
 #define ISDELIM(c) (c == '/' || c == '\\' || c == '.')
 
+/**
+ * Returns directory portion of path.
+ * @param s is mutated
+ */
 char *dirname(char *s) {
   size_t i, n;
   if (!(n = strlen(s))) return s;

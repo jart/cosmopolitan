@@ -24,7 +24,7 @@
 
 compatfn int mbtowc(wchar_t *wc, const char *s, size_t n) {
   if (!s) return 0;
-  alignas(8) char alt[ROUNDUP(MB_CUR_MAX, 8)];
+  _Alignas(8) char alt[ROUNDUP(MB_CUR_MAX, 8)];
   if (n < MB_CUR_MAX) {
     memset(alt, 0, sizeof(alt));
     memcpy(alt, s, n);

@@ -679,8 +679,7 @@ static void StoreAsmOutputs(Asm *a) {
             println("\tmov\t%%%s,(%%rax)", kGreg[z][a->ops[i].reg]);
           } else {
             println("\tpush\t%%rbx");
-            push();
-            pop("%rbx");
+            println("\tmov\t%%rax,%%rbx");
             gen_addr(a->ops[i].node);
             println("\tmov\t%%%s,(%%rax)", kGreg[z][3]);
             println("\tpop\t%%rbx");

@@ -63,7 +63,7 @@ int clock_gettime(int clockid, struct timespec *out_ts) {
       return clock_gettime$sysv(clockid, out_ts);
     } else {
       int rc;
-      static_assert(sizeof(struct timeval) == sizeof(struct timespec));
+      _Static_assert(sizeof(struct timeval) == sizeof(struct timespec));
       if (out_ts) {
         out_ts->tv_sec = 0;
         out_ts->tv_nsec = 0;

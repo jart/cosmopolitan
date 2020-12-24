@@ -33,7 +33,7 @@
 
 #define kBufSize    1024
 #define kProcStatus "/proc/self/status"
-alignas(16) static const char kGdbPid[] = "TracerPid:\t";
+_Alignas(16) static const char kGdbPid[] = "TracerPid:\t";
 
 /**
  * Determines if gdb, strace, windbg, etc. is controlling process.

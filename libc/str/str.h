@@ -233,37 +233,21 @@ int iswctype(wint_t, wctype_t) pureconst;
 
 char *strsignal(int) returnsnonnull libcesque;
 
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § strings » optimizations                                   ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 
-#define explicit_bzero(STR, BYTES)                                          \
-  do {                                                                      \
-    void *Str;                                                              \
-    size_t Bytes;                                                           \
-    asm volatile("call\texplicit_bzero"                                     \
-                 : "=D"(Str), "=S"(Bytes)                                   \
-                 : "0"(STR), "1"(BYTES)                                     \
-                 : "rax", "rcx", "rdx", "r8", "r9", "r10", "r11", "memory", \
-                   "cc", "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5");   \
-  } while (0)
+#define __memcpy_isgoodsize(SIZE)                                        \
+  (__builtin_constant_p(SIZE) && ((SIZE) <= __BIGGEST_ALIGNMENT__ * 2 && \
+                                  __builtin_popcountl((unsigned)(SIZE)) == 1))
 
-#ifdef UNBLOAT_STDARG
-#define __STR_XMM_CLOBBER
-#else
-#define __STR_XMM_CLOBBER "xmm3", "xmm4",
-#endif
-
-#define __memcpy_isgoodsize(SIZE)                              \
-  (isconstant(SIZE) && ((SIZE) <= __BIGGEST_ALIGNMENT__ * 2 && \
-                        __builtin_popcountl((unsigned)(SIZE)) == 1))
-
-#define __memset_isgoodsize(SIZE)                                       \
-  (isconstant(SIZE) && (((SIZE) <= __BIGGEST_ALIGNMENT__ &&             \
-                         __builtin_popcountl((unsigned)(SIZE)) == 1) || \
-                        ((SIZE) % __BIGGEST_ALIGNMENT__ == 0 &&         \
-                         (SIZE) / __BIGGEST_ALIGNMENT__ <= 3)))
+#define __memset_isgoodsize(SIZE)                   \
+  (__builtin_constant_p(SIZE) &&                    \
+   (((SIZE) <= __BIGGEST_ALIGNMENT__ &&             \
+     __builtin_popcountl((unsigned)(SIZE)) == 1) || \
+    ((SIZE) % __BIGGEST_ALIGNMENT__ == 0 &&         \
+     (SIZE) / __BIGGEST_ALIGNMENT__ <= 3)))
 
 #define memcpy(DEST, SRC, SIZE)                                  \
   (__memcpy_isgoodsize(SIZE) ? __builtin_memcpy(DEST, SRC, SIZE) \
@@ -273,7 +257,18 @@ char *strsignal(int) returnsnonnull libcesque;
   (__memset_isgoodsize(SIZE) ? __builtin_memset(DEST, BYTE, SIZE) \
                              : __memset(DEST, BYTE, SIZE))
 
-#if defined(__STDC_HOSTED__) && (defined(__SSE2__) || defined(UNBLOAT_STDARG))
+#if defined(__STDC_HOSTED__) && defined(__SSE2__)
+
+#define strlen(STR)                                       \
+  (__builtin_constant_p(STR) ? __builtin_strlen(STR) : ({ \
+    size_t LeN;                                           \
+    const char *StR = (STR);                              \
+    asm("call\tstrlen"                                    \
+        : "=a"(LeN)                                       \
+        : "D"(StR), "m"(*(char(*)[0x7fffffff])StR)        \
+        : "rcx", "rdx", "xmm3", "xmm4", "cc");            \
+    LeN;                                                  \
+  }))
 
 #define memmove(DEST, SRC, SIZE) __memcpy("MemMove", (DEST), (SRC), (SIZE))
 
@@ -291,7 +286,7 @@ char *strsignal(int) returnsnonnull libcesque;
     asm("call\t" FN                                                        \
         : "=m"(*(char(*)[SiZe])(DeSt))                                     \
         : "D"(DeSt), "S"(SrC), "d"(SiZe), "m"(*(const char(*)[SiZe])(SrC)) \
-        : __STR_XMM_CLOBBER "rcx", "cc");                                  \
+        : "xmm3", "xmm4", "rcx", "cc");                                    \
     DeSt;                                                                  \
   })
 
@@ -302,11 +297,22 @@ char *strsignal(int) returnsnonnull libcesque;
     asm("call\tMemSet"                    \
         : "=m"(*(char(*)[SiZe])(DeSt))    \
         : "D"(DeSt), "S"(BYTE), "d"(SiZe) \
-        : __STR_XMM_CLOBBER "rcx", "cc"); \
+        : "xmm3", "xmm4", "rcx", "cc");   \
     DeSt;                                 \
   })
 
-#else /* hosted/sse2/unbloat */
+#define explicit_bzero(STR, BYTES)                                          \
+  do {                                                                      \
+    void *Str;                                                              \
+    size_t Bytes;                                                           \
+    asm volatile("call\texplicit_bzero"                                     \
+                 : "=D"(Str), "=S"(Bytes)                                   \
+                 : "0"(STR), "1"(BYTES)                                     \
+                 : "rax", "rcx", "rdx", "r8", "r9", "r10", "r11", "memory", \
+                   "cc", "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5");   \
+  } while (0)
+
+#else /* hosted+sse2 */
 
 #define mempcpy(DEST, SRC, SIZE)                                           \
   ({                                                                       \
@@ -347,7 +353,6 @@ char *strsignal(int) returnsnonnull libcesque;
   })
 
 #endif /* hosted/sse2/unbloat */
-
 #endif /* __GNUC__ && !__STRICT_ANSI__ */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

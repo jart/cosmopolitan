@@ -1,5 +1,7 @@
 #include "third_party/chibicc/test/test.h"
 
+#define TYPE_SIGNED(type) (((type)-1) < 0)
+
 struct {
   char a;
   int b : 5;
@@ -7,6 +9,27 @@ struct {
 } g45 = {1, 2, 3}, g46 = {};
 
 int main() {
+
+  /* NOTE: Consistent w/ GCC (but MSVC would fail this) */
+  ASSERT(1, 2 == ({
+              struct {
+                enum { a, b, c } e : 2;
+              } x = {
+                  .e = 2,
+              };
+              x.e;
+            }));
+
+  /* NOTE: GCC forbids typeof(bitfield). */
+  ASSERT(0, ({
+           struct {
+             enum { a, b, c } e : 2;
+           } x = {
+               .e = 2,
+           };
+           TYPE_SIGNED(typeof(x.e));
+         }));
+
   ASSERT(4, sizeof(struct { int x : 1; }));
   ASSERT(8, sizeof(struct { long x : 1; }));
 

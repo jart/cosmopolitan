@@ -144,6 +144,9 @@
 #include "third_party/gdtoa/gdtoa.h"
 #include "third_party/musl/passwd.h"
 
+#define likely(expr)   __builtin_expect(!!(expr), 1)
+#define unlikely(expr) __builtin_expect(!!(expr), 0)
+
 #undef CEOF
 #undef rflag
 

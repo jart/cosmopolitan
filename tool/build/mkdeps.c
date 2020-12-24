@@ -66,7 +66,7 @@
  * Only the first 64kb of each source file is considered.
  */
 
-alignas(16) const char kIncludePrefix[] = "include \"";
+_Alignas(16) const char kIncludePrefix[] = "include \"";
 
 const char kSourceExts[][5] = {".s", ".S", ".c", ".cc", ".cpp"};
 

@@ -28,7 +28,8 @@ int connect$sysv(int fd, const void *addr, uint32_t addrsize) {
     return __connect$sysv(fd, addr, addrsize);
   } else {
     struct sockaddr_in$bsd addr2;
-    static_assert(sizeof(struct sockaddr_in) == sizeof(struct sockaddr_in$bsd));
+    _Static_assert(sizeof(struct sockaddr_in) ==
+                   sizeof(struct sockaddr_in$bsd));
     memcpy(&addr2, addr, sizeof(struct sockaddr_in));
     sockaddr2bsd(&addr2);
     return connect$sysv(fd, &addr2, addrsize);

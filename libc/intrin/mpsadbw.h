@@ -10,11 +10,12 @@ void mpsadbw(uint16_t[8], const uint8_t[16], const uint8_t[16], uint8_t);
 __intrin_xmm_t __mpsadbws(__intrin_xmm_t, __intrin_xmm_t);
 #define mpsadbw(C, B, A, I)                                                   \
   do {                                                                        \
-    if (likely(!IsModeDbg() && X86_NEED(SSE) && X86_HAVE(SSE4_1))) {          \
+    if (__builtin_expect(!IsModeDbg() && X86_NEED(SSE) && X86_HAVE(SSE4_1),   \
+                         1)) {                                                \
       __intrin_xmm_t *Xmm0 = (void *)(C);                                     \
       const __intrin_xmm_t *Xmm1 = (const __intrin_xmm_t *)(B);               \
       const __intrin_xmm_t *Xmm2 = (const __intrin_xmm_t *)(A);               \
-      if (isconstant(I)) {                                                    \
+      if (__builtin_constant_p(I)) {                                          \
         if (!X86_NEED(AVX)) {                                                 \
           asm("mpsadbw\t%2,%1,%0"                                             \
               : "=x"(*Xmm0)                                                   \

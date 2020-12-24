@@ -616,11 +616,9 @@ static bool has_flonum2(Type *ty) {
 static void push_struct(Type *ty) {
   int sz = ROUNDUP(ty->size, 8);
   println("\tsub\t$%d,%%rsp", sz);
+  println("\tmov\t%%rsp,%%rdi");
   depth += sz / 8;
-  for (int i = 0; i < ty->size; i++) {
-    println("\tmov\t%d(%%rax),%%r10b", i);
-    println("\tmov\t%%r10b,%d(%%rsp)", i);
-  }
+  gen_memcpy(ty->size);
 }
 
 static void push_args2(Node *args, bool first_pass) {
@@ -781,7 +779,7 @@ static void copy_ret_buffer(Obj *var) {
       }
     } else {
       char *reg1 = (gp == 0) ? "%al" : "%dl";
-      char *reg2 = (gp == 0) ? "%rax" : "%rdx";
+      char *reg2 = (gp == 0) ? "%rax" : "%rdx"; /* TODO: isn't ax clobbered? */
       for (int i = 8; i < MIN(16, ty->size); i++) {
         println("\tmov\t%s,%d(%%rbp)", reg1, var->offset + i);
         println("\tshr\t$8,%s", reg2);
@@ -2241,7 +2239,7 @@ static void emit_data(Obj *prog) {
       }
       print_align(align);
       println("\t.type\t%s,@object", nameof(var));
-      println("\t.size\t%s,%d", nameof(var), var->ty->size);
+      /* println("\t.size\t%s,%d", nameof(var), var->ty->size); */
       println("%s:", nameof(var));
       if (var->init_data) {
         int pos = 0;
@@ -2425,7 +2423,7 @@ static void emit_text(Obj *prog) {
       emitlin("\tleave");
       emitlin("\tret");
     }
-    println("\t.size\t%s,.-%s", nameof(fn), nameof(fn));
+    /* println("\t.size\t%s,.-%s", nameof(fn), nameof(fn)); */
     if (fn->is_constructor) {
       emitlin("\t.section .ctors,\"aw\",@progbits");
       emitlin("\t.align\t8");
@@ -2448,6 +2446,7 @@ static void emit_staticasms(StaticAsm *a) {
 void codegen(Obj *prog, FILE *out) {
   output_stream = out;
   File **files = get_input_files();
+  println("# -*- mode:unix-assembly -*-");
   for (int i = 0; files[i]; i++) {
     println("\t.file\t%d %`'s", files[i]->file_no, files[i]->name);
   }

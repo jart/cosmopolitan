@@ -1,6 +1,6 @@
 #include "third_party/chibicc/chibicc.h"
 
-#define LOOKINGAT(TOK, OP) (!memcmp(TOK, OP, strlen(OP)))
+#define LOOKINGAT(TOK, OP) (!memcmp(TOK, OP, sizeof(OP) - 1))
 
 // Input file
 static File *current_file;
