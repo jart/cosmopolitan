@@ -23,9 +23,17 @@
 #include "libc/macros.h"
 #include "libc/nt/accounting.h"
 #include "libc/runtime/runtime.h"
-#include "libc/str/knuthmultiplicativehash.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
+
+static uint32_t KnuthMultiplicativeHash32(const void *buf, size_t size) {
+  size_t i;
+  uint32_t h;
+  const uint32_t kPhiPrime = 0x9e3779b1;
+  const unsigned char *p = (const unsigned char *)buf;
+  for (h = i = 0; i < size; i++) h = (p[i] + h) * kPhiPrime;
+  return h;
+}
 
 static textwindows noinline uint32_t GetUserNameHash(void) {
   char16_t buf[257];

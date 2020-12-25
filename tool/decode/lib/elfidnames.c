@@ -221,6 +221,7 @@ const struct IdName kElfSpecialSectionNames[] = {
 };
 
 const struct IdName kElfNexgen32eRelocationNames[] = {
+    {R_X86_64_NONE, "NONE"},
     {R_X86_64_64, "64"},
     {R_X86_64_PC32, "PC32"},
     {R_X86_64_GOT32, "GOT32"},

@@ -156,6 +156,7 @@ struct As {
   int inpath;    // strings
   int outpath;   // strings
   int counter;
+  int pcrelative;
   bool inhibiterr;
   bool inhibitwarn;
   struct Ints {
@@ -1320,14 +1321,14 @@ static int ParseEquality(struct As *a, int *rest, int i) {
     if (IsPunct(a, i, '=' << 8 | '=')) {
       y = ParseRelational(a, &i, i + 1);
       if (a->exprs.p[x].kind == EX_INT || a->exprs.p[y].kind == EX_INT) {
-        a->exprs.p[x].x = a->exprs.p[x].x == a->exprs.p[y].x & 63;
+        a->exprs.p[x].x = a->exprs.p[x].x == a->exprs.p[y].x;
       } else {
         x = NewBinary(a, EX_EQ, x, y);
       }
     } else if (IsPunct(a, i, '!' << 8 | '=')) {
       y = ParseRelational(a, &i, i + 1);
       if (a->exprs.p[x].kind == EX_INT || a->exprs.p[y].kind == EX_INT) {
-        a->exprs.p[x].x = a->exprs.p[x].x != a->exprs.p[y].x & 63;
+        a->exprs.p[x].x = a->exprs.p[x].x != a->exprs.p[y].x;
       } else {
         x = NewBinary(a, EX_NE, x, y);
       }
@@ -1878,73 +1879,44 @@ static void OnSize(struct As *a, struct Slice s) {
   a->symbols.p[i].size = GetInt(a);
 }
 
-static void OnInternal(struct As *a, struct Slice s) {
+static void OpVisibility(struct As *a, int visibility) {
   int i;
   while (IsSlice(a, a->i)) {
     i = GetSymbol(a, a->things.p[a->i++].i);
-    a->symbols.p[i].stv = STV_INTERNAL;
+    a->symbols.p[i].stv = visibility;
   }
+}
+
+static void OnInternal(struct As *a, struct Slice s) {
+  OpVisibility(a, STV_INTERNAL);
 }
 
 static void OnHidden(struct As *a, struct Slice s) {
-  int i;
-  while (IsSlice(a, a->i)) {
-    i = GetSymbol(a, a->things.p[a->i++].i);
-    a->symbols.p[i].stv = STV_HIDDEN;
-  }
+  OpVisibility(a, STV_HIDDEN);
 }
 
 static void OnProtected(struct As *a, struct Slice s) {
+  OpVisibility(a, STV_PROTECTED);
+}
+
+static void OpBind(struct As *a, int bind) {
   int i;
   while (IsSlice(a, a->i)) {
     i = GetSymbol(a, a->things.p[a->i++].i);
-    a->symbols.p[i].stv = STV_PROTECTED;
+    a->symbols.p[i].stb = bind;
   }
 }
 
 static void OnLocal(struct As *a, struct Slice s) {
-  int i;
-  while (IsSlice(a, a->i)) {
-    i = GetSymbol(a, a->things.p[a->i++].i);
-    a->symbols.p[i].stb = STB_LOCAL;
-  }
+  OpBind(a, STB_LOCAL);
 }
 
 static void OnWeak(struct As *a, struct Slice s) {
-  int i;
-  while (IsSlice(a, a->i)) {
-    i = GetSymbol(a, a->things.p[a->i++].i);
-    a->symbols.p[i].stb = STB_WEAK;
-  }
+  OpBind(a, STB_WEAK);
 }
 
 static void OnGlobal(struct As *a, struct Slice s) {
-  int i;
-  while (IsSlice(a, a->i)) {
-    i = GetSymbol(a, a->things.p[a->i++].i);
-    a->symbols.p[i].stb = STB_GLOBAL;
-  }
-}
-
-static bool IsSizableOp(const char *op, struct Slice s) {
-  int n = strlen(op);
-  if (n == s.n) return !memcmp(op, s.p, n);
-  if (n + 1 == s.n && !memcmp(op, s.p, n)) {
-    switch (s.p[n]) {
-      case 'b':
-      case 'B':
-      case 'w':
-      case 'W':
-      case 'l':
-      case 'L':
-      case 'q':
-      case 'Q':
-        return true;
-      default:
-        break;
-    }
-  }
-  return false;
+  OpBind(a, STB_GLOBAL);
 }
 
 static int GetOpSize(struct As *a, struct Slice s, int modrm, int i) {
@@ -2183,18 +2155,21 @@ static void EmitModrm(struct As *a, int reg, int modrm, int disp) {
   if (modrm & ISREG) {
     EmitByte(a, 0300 | reg | modrm & 7);
   } else {
-    if (modrm & (HASBASE | HASINDEX)) {
-      if (modrm & ISRIP) {
-        EmitByte(a, 005 | reg);
-      } else {
-        EmitByte(a, 0204 | reg);  // suboptimal
-        EmitByte(a, modrm);
-      }
+    if (modrm & ISRIP) {
+      EmitByte(a, 005 | reg);
+    } else if (modrm & (HASBASE | HASINDEX)) {
+      EmitByte(a, 0204 | reg);  // suboptimal
+      EmitByte(a, modrm);
     } else {
       EmitByte(a, 004 | reg);
       EmitByte(a, 045);
     }
-    EmitExpr(a, disp, R_X86_64_32S, EmitLong);
+    EmitExpr(
+        a, disp,
+        a->pcrelative && ((modrm & ISRIP) || !(modrm & (HASBASE | HASINDEX)))
+            ? a->pcrelative
+            : R_X86_64_32S,
+        EmitLong);
   }
 }
 
@@ -2691,7 +2666,9 @@ static void OnCall(struct As *a, struct Slice s) {
   if (IsPunct(a, a->i, '*')) ++a->i;
   modrm = RemoveRexw(ParseModrm(a, &disp));
   if (modrm & (ISREG | ISRIP | HASINDEX | HASBASE)) {
+    if (modrm & ISRIP) a->pcrelative = R_X86_64_GOTPCRELX;
     EmitRexOpModrm(a, 0xFF, 2, modrm, disp, 0);
+    a->pcrelative = 0;
   } else {
     EmitByte(a, 0xE8);
     EmitExpr(a, disp, R_X86_64_PC32, EmitLong);
@@ -2703,7 +2680,12 @@ static noinline void OpJmpImpl(struct As *a, int cc) {
   if (IsPunct(a, a->i, '*')) ++a->i;
   modrm = RemoveRexw(ParseModrm(a, &disp));
   if (cc == -1) {
+    if ((modrm & ISRIP) || !(modrm & (HASBASE | HASINDEX))) {
+      modrm |= ISRIP;
+      a->pcrelative = R_X86_64_GOTPCRELX;
+    }
     EmitRexOpModrm(a, 0xFF, 4, modrm, disp, 0);
+    a->pcrelative = 0;
   } else {
     EmitByte(a, 0x0F);
     EmitByte(a, 0x80 + cc);
@@ -3795,6 +3777,15 @@ static void Write32(char b[4], int x) {
   b[3] = x >> 030;
 }
 
+static void MarkUndefinedSymbolsGlobal(struct As *a) {
+  int i;
+  for (i = 0; i < a->symbols.n; ++i) {
+    if (!a->symbols.p[i].section && a->symbols.p[i].stb == STB_LOCAL) {
+      a->symbols.p[i].stb = STB_GLOBAL;
+    }
+  }
+}
+
 static void MarkUsedSymbols(struct As *a, int i) {
   if (i == -1) return;
   MarkUsedSymbols(a, a->exprs.p[i].lhs);
@@ -3939,7 +3930,9 @@ void Assembler(int argc, char *argv[]) {
   /* PrintThings(a); */
   Assemble(a);
   Evaluate(a);
+  MarkUndefinedSymbolsGlobal(a);
   Objectify(a, a->outpath);
+  malloc_stats();
   FreeAssembler(a);
 }
 

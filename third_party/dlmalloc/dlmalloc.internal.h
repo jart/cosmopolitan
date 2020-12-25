@@ -17,7 +17,7 @@ COSMOPOLITAN_C_START_
 #define DLMALLOC_VERSION 20806
 
 #ifndef FOOTERS
-#define FOOTERS !IsTrustworthy()
+#define FOOTERS !NoDebug()
 #endif
 
 #define HAVE_MMAP              1

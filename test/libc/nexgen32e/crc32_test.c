@@ -20,7 +20,6 @@
 #include "libc/macros.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/str/knuthmultiplicativehash.internal.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
@@ -48,10 +47,4 @@ TEST(crc32, testBigText) {
 BENCH(crc32c, bench) {
   EZBENCH2("crc32c", donothing,
            EXPROPRIATE(crc32c(0, VEIL("r", TESTSTR), sizeof(TESTSTR) - 1)));
-}
-
-BENCH(KnuthMultiplicativeHash32, bench) {
-  EZBENCH2("KMP", donothing,
-           EXPROPRIATE(KnuthMultiplicativeHash32(VEIL("r", TESTSTR),
-                                                 sizeof(TESTSTR) - 1)));
 }

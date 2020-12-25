@@ -21,7 +21,7 @@
 #include "libc/alg/arraylist2.internal.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/str/knuthmultiplicativehash.internal.h"
+#include "libc/nexgen32e/crc32.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
 #include "tool/build/lib/interner.h"
@@ -100,7 +100,7 @@ size_t internobj(struct Interner *t, const void *data, size_t size) {
   step = 0;
   item = data;
   it = (struct InternerObject *)t;
-  hash = max(1, KnuthMultiplicativeHash32(data, size));
+  hash = max(1, crc32c(0, data, size));
   do {
     /* it is written that triangle probe halts iff i<n/2 && popcnt(n)==1 */
     i = (hash + step * ((step + 1) >> 1)) & (it->n - 1);

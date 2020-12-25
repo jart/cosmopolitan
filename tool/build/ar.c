@@ -163,7 +163,6 @@ int main(int argc, char *argv[]) {
     CONCAT(&filenames.p, &filenames.i, &filenames.n, "/\n", 2);
     CHECK_NE(MAP_FAILED,
              (elf = mmap(NULL, st->st_size, PROT_READ, MAP_PRIVATE, fd, 0)));
-    madvise(elf, st->st_size, MADV_WILLNEED);
     CHECK(IsElf64Binary(elf, st->st_size));
     CHECK_NOTNULL((strs = GetElfStringTable(elf, st->st_size)));
     CHECK_NOTNULL((syms = GetElfSymbolTable(elf, st->st_size, &symcount)));
