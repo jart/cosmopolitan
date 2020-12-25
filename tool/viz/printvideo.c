@@ -94,8 +94,6 @@
 #include "libc/time/time.h"
 #include "libc/unicode/unicode.h"
 #include "libc/x/x.h"
-#include "net/http/http.h"
-#include "net/http/uri.h"
 #include "third_party/avir/lanczos.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/stb/stb_image_resize.h"
@@ -112,12 +110,8 @@
 #define MAX_FRAMERATE (1 / 60.)
 
 #define USAGE \
-  " [FLAGS] [URI]\n\
+  " [FLAGS] MPG\n\
 Renders motion picture to teletypewriters.\n\
-\n\
-Arguments:\n\
-  - URI can be file.mpg\n\
-  - URI can be zip://αpε-embedded-object.mpg\n\
 \n\
 Flags & Keyboard Shortcuts:\n\
   -s         stats\n\
@@ -240,12 +234,6 @@ static const struct itimerval kTimerHalfSecordSingleShot = {
     {0, 500000},
 };
 
-static const struct addrinfo kResolvHints = {
-    .ai_family = AF_INET,
-    .ai_socktype = SOCK_STREAM,
-    .ai_protocol = IPPROTO_TCP,
-};
-
 static const struct NamedVector kPrimaries[] = {
     {"BT.601", &kBt601Primaries},
     {"BT.709", &kBt709Primaries},
@@ -268,7 +256,6 @@ static FILE *fsock_;
 static float gamma_;
 static int volscale_;
 static enum Blur blur_;
-static struct Uri uri_;
 static enum Sharp sharp_;
 static jmp_buf jb_, jbi_;
 static double pary_, parx_;
@@ -277,20 +264,18 @@ static struct YCbCr *ycbcr_;
 static bool emboss_, sobel_;
 static volatile int playpid_;
 static struct winsize wsize_;
-static enum UriScheme scheme_;
 static float hue_, sat_, lit_;
 static struct FrameBuffer fb0_;
 static unsigned chans_, srate_;
 static volatile bool ignoresigs_;
 static size_t dh_, dw_, framecount_;
-static struct UriSlice urisegmem_[8];
 static struct FrameCountRing fcring_;
 static volatile bool resized_, piped_;
 static int lumakernel_, chromakernel_;
 static openspeaker_f tryspeakerfns_[4];
 static int primaries_, lighting_, swing_;
 static uint64_t t1, t2, t3, t4, t5, t6, t8;
-static const char *sox_, *ffplay_, *uriarg_;
+static const char *sox_, *ffplay_, *patharg_;
 static struct GuardedBuffer xtcodes_, audio_;
 static struct VtFrame vtframe_[2], *f1_, *f2_;
 static struct Graphic graphic_[2], *g1_, *g2_;
@@ -301,8 +286,8 @@ static int16_t pcm_[PLM_AUDIO_SAMPLES_PER_FRAME * 2 / 8][8];
 static int16_t pcmscale_[PLM_AUDIO_SAMPLES_PER_FRAME * 2 / 8][8];
 static bool fullclear_, historyclear_, tuned_, yonly_, gotvideo_;
 static int homerow_, lastrow_, playfd_, infd_, outfd_, nullfd_, speakerfails_;
-static char host_[DNS_NAME_MAX + 1], port_[8], path_[PATH_MAX], status_[7][200],
-    logpath_[PATH_MAX], fifopath_[PATH_MAX], chansstr_[16], sratestr_[16];
+static char host_[DNS_NAME_MAX + 1], status_[7][200], logpath_[PATH_MAX],
+    fifopath_[PATH_MAX], chansstr_[16], sratestr_[16], port_[8];
 
 static void OnCtrlC(void) {
   longjmp(jb_, 1);
@@ -863,112 +848,11 @@ static void OnVideo(plm_t *mpeg, plm_frame_t *pf, void *user) {
   }
 }
 
-static void ParseUriOrDie(const char *uristr) {
-  static bool once;
-  if (!once) {
-    uri_.segs.n = ARRAYLEN(urisegmem_);
-    uri_.segs.p = urisegmem_;
-  }
-  CHECK_NE(-1, uriparse(&uri_, uristr, strlen(uristr)));
-  scheme_ = urischeme(uri_.scheme, uristr);
-  urislice2cstr(host_, sizeof(host_), uri_.host, uristr, NULL);
-  urislice2cstr(port_, sizeof(port_), uri_.port, uristr, "80");
-  urislice2cstr(path_, sizeof(path_), uripath(&uri_), uristr, NULL);
-}
-
-static int Rebuffer(FILE *f) {
-  ssize_t rc;
-  size_t got;
-  struct iovec iov[2];
-  if (f->beg == f->end) {
-    f->beg = f->end = 0;
-  }
-  if (f->beg <= f->end) {
-    if (f->beg) {
-      iov[0].iov_base = f->buf + f->end;
-      iov[0].iov_len = f->size - f->end;
-      iov[1].iov_base = f->buf;
-      iov[1].iov_len = f->beg - 1;
-      rc = readv(f->fd, iov, 2);
-    } else {
-      rc = read(f->fd, f->buf, f->size - (f->end - f->beg) - 1);
-    }
-  } else {
-    if (f->end + 1 == f->beg) return 0;
-    rc = read(f->fd, f->buf + f->end, f->beg - f->end - 1);
-  }
-  if (rc != -1) {
-    if (rc) {
-      got = rc;
-      f->end = (f->end + got) & (f->size - 1);
-      return got;
-    } else {
-      return __fseteof(f);
-    }
-  } else if (errno == EINTR || errno == EAGAIN) {
-    return 0;
-  } else {
-    return __fseterrno(f);
-  }
-}
-
-static FILE *OpenVideoHttp(void) {
-  FILE *f;
-  int sock;
-  const char *req;
-  char resp[1500];
-  struct addrinfo *ai;
-  uint32_t reqsize, respsize, resphdrsize;
-  CHECK_EQ(0, getaddrinfo(host_, port_, &kResolvHints, &ai));
-  CHECK_NE(-1, (sock = socketconnect(ai, O_CLOEXEC /* | O_NONBLOCK */)));
-  freeaddrinfo(ai);
-  respsize = sizeof(resp);
-  reqsize = strlen((req = gc(xstrcat("GET ", path_,
-                                     " HTTP/1.1\r\n"
-                                     "Host: ",
-                                     host_,
-                                     "\r\n"
-                                     "Connection: close\r\n"
-                                     "Content-Length: 0\r\n"
-                                     "User-Agent: printvideo/1.o\r\n"
-                                     "\r\n"))));
-  CHECK_NE(-1, NegotiateHttpRequest(sock, req, &reqsize, resp, &respsize,
-                                    &resphdrsize, true, 2));
-  CHECK_NOTNULL(strstr(resp, "200 OK"));
-  CHECK_NOTNULL(strstr(resp, "Content-Type: video/mpeg"));
-  f = xcalloc(1, sizeof(FILE));
-  f->buf = memcpy(xvalloc((f->size = NETBUFSIZ)), resp + resphdrsize,
-                  (f->end = respsize - resphdrsize));
-  f->bufmode = _IOFBF;
-  f->iomode = O_RDONLY;
-  f->reader = Rebuffer;
-  f->fd = sock;
-  fsock_ = f;
-  do {
-    snprintf(status_[1], sizeof(status_[1]), VEIL("r", "\r\e[K%,d\r"),
-             favail(fsock_));
-    if (ttymode_) ttysend(outfd_, status_[1]);
-    if (freplenish(fsock_) <= 0) break;
-  } while (favail(fsock_) < HALF(NETBUFSIZ));
-  if (ttymode_) ttysend(outfd_, "\r\e[K");
-  f->state = 0;
-  return f;
-}
-
 static void OpenVideo(void) {
   size_t yn, xn;
   playfd_ = -1;
-  switch (scheme_) {
-    case kUriSchemeHttps:
-      FATALF("no https support");
-    case kUriSchemeHttp:
-      CHECK_NOTNULL((plm_ = plm_create_with_file(OpenVideoHttp(), true)));
-      break;
-    default:
-      LOGF("%s(%`'s)", "OpenVideo", path_);
-      CHECK_NOTNULL((plm_ = plm_create_with_filename(path_)));
-      break;
-  }
+  LOGF("%s(%`'s)", "OpenVideo", patharg_);
+  CHECK_NOTNULL((plm_ = plm_create_with_filename(patharg_)));
   swing_ = 219;
   xn = plm_get_width(plm_);
   yn = plm_get_height(plm_);
@@ -1606,7 +1490,7 @@ int main(int argc, char *argv[]) {
   GetOpts(argc, argv);
   if (!tuned_) PickDefaults();
   if (optind == argc) PrintUsage(EX_USAGE, stderr);
-  uriarg_ = argv[optind];
+  patharg_ = argv[optind];
   sox_ = commandvenv("SOX", "sox");
   ffplay_ = commandvenv("FFPLAY", "ffplay");
   infd_ = STDIN_FILENO;
@@ -1632,7 +1516,6 @@ int main(int argc, char *argv[]) {
     TryToOpenFrameBuffer();
     RenounceSpecialPrivileges();
     if (t2 > t1) longjmp(jb_, 1);
-    ParseUriOrDie(uriarg_);
     OpenVideo();
     DimensionDisplay();
     starttime_ = nowl();
