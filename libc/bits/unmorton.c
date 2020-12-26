@@ -35,6 +35,7 @@ static unsigned long GetOddBits(unsigned long x) {
  * @param 𝑖 is interleaved index
  * @return deinterleaved coordinate {ax := 𝑦, dx := 𝑥}
  * @see en.wikipedia.org/wiki/Z-order_curve
+ * @see morton()
  */
 axdx_t(unmorton)(unsigned long i) {
   return (axdx_t){GetOddBits(i >> 1), GetOddBits(i)};

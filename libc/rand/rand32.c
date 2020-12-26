@@ -35,7 +35,7 @@ nodebuginfo uint32_t(rand32)(void) {
     } else {
       devrand(&res, sizeof(res));
     }
-    hidden extern uint32_t g_rando32;
+    extern uint32_t g_rando32 hidden;
     res ^= MarsagliaXorshift32(&g_rando32);
   }
   return res;

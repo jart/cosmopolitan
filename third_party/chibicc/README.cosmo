@@ -16,18 +16,22 @@ local enhancements
 - support __builtin_constant_p, __builtin_likely, etc.
 - support __builtin_isunordered, __builtin_islessgreater, etc.
 - support __builtin_ctz, __builtin_bswap, __builtin_popcount, etc.
+- support __force_align_arg_pointer__, __no_caller_saved_registers__, etc.
 - support __constructor__, __section__, __cold__, -ffunction-sections, etc.
 - support building -x assembler-with-cpp a.k.a. .S files
 - support profiling w/ -mcount / -mfentry / -mnop-mcount
 - improve error messages to trace macro expansions
 - reduce #lines of generated assembly by a third
 - reduce #bytes of generated binary by a third
+- report divide errors in constexprs
 
 local bug fixes
 
 - allow casted values to be lvalues
+- permit remainder operator in constexprs
 - permit parentheses around string-initializer
 - fix 64-bit bug in generated code for struct bitfields
+- fix struct_designator() so it won't crash on anonymous union members
 - fix bug where last statement in statement expression couldn't have label
 - print_tokens (chibicc -E) now works in the case of adjacent string literals
 - make enums unsigned (like gcc) so we don't suffer the msvc enum bitfield bug
@@ -35,6 +39,8 @@ local bug fixes
 local changes
 
 - use tabs in generated output
+- parse javadoc-style markdown comments
+- don't fold backslash newline in comments
 - generated code no longer assumes red zone
 - emit .size directives for function definitions
 - use fisttp long double conversions if built w/ -msse3

@@ -227,13 +227,13 @@ static int GlobPredicate(const void *a, const void *b) {
  *
  * For example:
  *
- *   glob_t g = {.gl_offs = 2};
- *   glob("*.*", GLOB_DOOFFS, NULL, &g);
- *   glob("../.*", GLOB_DOOFFS | GLOB_APPEND, NULL, &g);
- *   g.gl_pathv[0] = "ls";
- *   g.gl_pathv[1] = "-l";
- *   execvp("ls", &g.gl_pathv[0]);
- *   globfree(g);
+ *     glob_t g = {.gl_offs = 2};
+ *     glob("*.*", GLOB_DOOFFS, NULL, &g);
+ *     glob("../.*", GLOB_DOOFFS | GLOB_APPEND, NULL, &g);
+ *     g.gl_pathv[0] = "ls";
+ *     g.gl_pathv[1] = "-l";
+ *     execvp("ls", &g.gl_pathv[0]);
+ *     globfree(g);
  *
  * @param pat can have star wildcard see fnmatch()
  * @param g will receive matching entries and needs globfree()

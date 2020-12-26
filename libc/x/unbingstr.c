@@ -24,7 +24,7 @@
 /**
  * Decodes human-readable CP437 glyphs into binary, e.g.
  *
- *   CHECK_EQ(0, memcmp(gc(unbingstr(u" ☺☻♥♦")), "\0\1\2\3\4", 5));
+ *     CHECK_EQ(0, memcmp(gc(unbingstr(u" ☺☻♥♦")), "\0\1\2\3\4", 5));
  *
  * @param buf is caller owned
  * @param size is byte length of buf

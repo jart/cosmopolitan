@@ -12,7 +12,8 @@ __attribute__((__nonnull__(1))) void cate2(char *);
 __attribute__((__section__(".data.var"))) int var2;
 __attribute__((__section__(".data.var"))) int ar2[4];
 
-int main() {
+__attribute__((__force_align_arg_pointer__, __no_caller_saved_registers__)) int
+main() {
   int2 a;
   ASSERT(64, _Alignof(int2));
   ASSERT(64, _Alignof(a));

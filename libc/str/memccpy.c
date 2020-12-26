@@ -28,17 +28,17 @@
  *
  * For example, strictly:
  *
- *   char buf[16];
- *   CHECK_NOTNULL(memccpy(buf, s, '\0', sizeof(buf)));
+ *     char buf[16];
+ *     CHECK_NOTNULL(memccpy(buf, s, '\0', sizeof(buf)));
  *
  * Or unstrictly:
  *
- *   if (!memccpy(buf, s, '\0', sizeof(buf))) strcpy(buf, "?");
+ *     if (!memccpy(buf, s, '\0', sizeof(buf))) strcpy(buf, "?");
  *
  * Are usually more sensible than the following:
  *
- *   char cstrbuf[16];
- *   snprintf(cstrbuf, sizeof(cstrbuf), "%s", CSTR);
+ *     char cstrbuf[16];
+ *     snprintf(cstrbuf, sizeof(cstrbuf), "%s", CSTR);
  *
  * @return 𝑑 + idx(𝑐) + 1, or NULL if 𝑐 ∉ 𝑠₀․․ₙ₋₁
  * @note 𝑑 and 𝑠 can't overlap

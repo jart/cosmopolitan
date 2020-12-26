@@ -4,19 +4,28 @@
 /**
  * Returns (by copy) a struct containing various summary statistics:
  *
- * arena:     current total non-mmapped bytes allocated from system
- * ordblks:   the number of free chunks
- * smblks:    always zero.
- * hblks:     current number of mmapped regions
- * hblkhd:    total bytes held in mmapped regions
- * usmblks:   the maximum total allocated space. This will be greater
- *            than current total if trimming has occurred.
- * fsmblks:   always zero
- * uordblks:  current total allocated space (normal or mmapped)
- * fordblks:  total free space
- * keepcost:  the maximum number of bytes that could ideally be released
- *            back to system via malloc_trim. ("ideally" means that
- *            it ignores page restrictions etc.)
+ * - arena: current total non-mmapped bytes allocated from system
+ *
+ * - ordblks: the number of free chunks
+ *
+ * - smblks: always zero.
+ *
+ * - hblks: current number of mmapped regions
+ *
+ * - hblkhd: total bytes held in mmapped regions
+ *
+ * - usmblks: the maximum total allocated space. This will be greater
+ *   than current total if trimming has occurred.
+ *
+ * - fsmblks: always zero
+ *
+ * - uordblks: current total allocated space (normal or mmapped)
+ *
+ * - fordblks: total free space
+ *
+ * - keepcost: the maximum number of bytes that could ideally be
+ *   released back to system via malloc_trim. ("ideally" means that it
+ *   ignores page restrictions etc.)
  *
  * Because these fields are ints, but internal bookkeeping may
  * be kept as longs, the reported values may wrap around zero and

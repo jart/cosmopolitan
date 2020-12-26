@@ -20,6 +20,9 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/bswap.h"
 
+/**
+ * Reverses bits in 64-bit word.
+ */
 uint64_t bitreverse64(uint64_t x) {
   x = bswap_64(x);
   x = ((x & 0xaaaaaaaaaaaaaaaa) >> 1) | ((x & 0x5555555555555555) << 1);

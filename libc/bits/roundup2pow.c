@@ -24,7 +24,7 @@
  * Returns 𝑥 rounded up to next two power.
  *
  * @define (𝑥>0→2^⌈log₂x⌉, x=0→0, 𝑇→⊥)
- * @see rounddown2pow)()
+ * @see rounddown2pow()
  */
 unsigned long roundup2pow(unsigned long x) {
   return x > 1 ? 1ul << (bsrl(x - 1) + 1) : x ? 1 : 0;

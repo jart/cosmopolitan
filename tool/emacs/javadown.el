@@ -43,6 +43,27 @@
               "\\)*>")
      0 ,c-doc-markup-face-name prepend nil)))
 
+;; (defconst javadown-font-lock-doc-comments
+;;   `(("{@[a-z]+[^}\n\r]*}"		; "{@foo ...}" markup.
+;;      0 ,c-doc-markup-face-name prepend nil)
+;;     ("^\\(/\\*\\)?\\(\\s \\|\\*\\)*\\(@[a-z]+\\)" ; "@foo ..." markup.
+;;      3 ,c-doc-markup-face-name prepend nil)
+;;     (,(concat "</?\\sw"			; HTML tags.
+;; 	      "\\("
+;; 	      (concat "\\sw\\|\\s \\|[=\n\r*.:]\\|"
+;; 		      "\"[^\"]*\"\\|'[^']*'")
+;; 	      "\\)*>")
+;;      0 ,c-doc-markup-face-name prepend nil)
+;;     ;; ("&\\(\\sw\\|[.:]\\)+;"		; HTML entities.
+;;     ;;  0 ,c-doc-markup-face-name prepend nil)
+;;     ;; Fontify remaining markup characters as invalid.  Note
+;;     ;; that the Javadoc spec is hazy about when "@" is
+;;     ;; allowed in non-markup use. [jart: we like markdown]
+;;     ;; (,(lambda (limit)
+;;     ;;     (c-find-invalid-doc-markup "[<>&]\\|{@" limit))
+;;     ;;  0 'font-lock-warning-face prepend nil)
+;;     ))
+
 (defconst javadown-font-lock-keywords
   `((,(lambda (limit)
 	(c-font-lock-doc-comments "/\\*\\*" limit

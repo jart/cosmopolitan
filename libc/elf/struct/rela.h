@@ -10,7 +10,7 @@ typedef struct Elf64_Rela {
    * ELF64_R_TYPE(r_info) → R_X86_64_{64,PC32,GOTPCRELX,...}
    * ELF64_R_INFO(sym, type) → r_info
    */
-  /*u64*/ Elf64_Xword r_info; /** @see ELF64_R_{SYM,SIZE,INFO} */
+  /*u64*/ Elf64_Xword r_info; /* ELF64_R_{SYM,SIZE,INFO} */
   /*i64*/ Elf64_Sxword r_addend;
 } Elf64_Rela;
 

@@ -30,7 +30,7 @@
  * @see xasprintf() for a better API
  */
 int(vasprintf)(char **strp, const char *fmt, va_list va) {
-  /**
+  /*
    * This implementation guarantees the smallest possible allocation,
    * using an optimistic approach w/o changing asymptotic complexity.
    */

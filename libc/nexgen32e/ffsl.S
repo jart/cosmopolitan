@@ -38,8 +38,8 @@
 /	@asyncsignalsafe
 ffsl:	.leafprologue
 	.profilable
-	bsf	%rdi,%rax
 	or	$-1,%edx
+	bsf	%rdi,%rax
 	cmovz	%edx,%eax
 	inc	%eax
 	.leafepilogue

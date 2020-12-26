@@ -27,10 +27,10 @@
 /**
  * Decodes human-readable CP437 glyphs into binary, e.g.
  *
- *   char binged[5];
- *   char golden[5] = "\0\1\2\3\4";
- *   unbingbuf(binged, sizeof(binged), u" ☺☻♥♦", -1);
- *   CHECK_EQ(0, memcmp(binged, golden, 5));
+ *     char binged[5];
+ *     char golden[5] = "\0\1\2\3\4";
+ *     unbingbuf(binged, sizeof(binged), u" ☺☻♥♦", -1);
+ *     CHECK_EQ(0, memcmp(binged, golden, 5));
  *
  * @param buf is caller owned
  * @param size is byte length of buf

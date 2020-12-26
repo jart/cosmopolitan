@@ -17,5 +17,12 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/safemacros.internal.h"
 
-const char *nulltoempty(const char *s) { return s ? s : ""; }
+/**
+ * Returns 𝑠 converting null to empty string.
+ * @see emptytonull()
+ */
+const char *(nulltoempty)(const char *s) {
+  return s ? s : "";
+}

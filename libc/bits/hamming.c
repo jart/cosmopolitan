@@ -21,6 +21,7 @@
 
 /**
  * Counts number of different bits.
+ * @see https://en.wikipedia.org/wiki/Hamming_code
  */
 unsigned long hamming(unsigned long x, unsigned long y) {
   return popcnt(x ^ y);

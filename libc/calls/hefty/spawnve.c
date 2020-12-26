@@ -27,18 +27,18 @@
 /**
  * Launches program, e.g.
  *
- *  char buf[2];
- *  int ws, pid, fds[3] = {-1, -1, STDERR_FILENO};
- *  CHECK_NE(-1, (pid = spawnve(0, fds, commandv("ssh"),
- *                              (char *const[]){"ssh", hostname, "cat", NULL},
- *                              environ)));
- *  CHECK_EQ(+2, write(fds[0], "hi", 2));
- *  CHECK_NE(-1, close(fds[0]));
- *  CHECK_EQ(+2, read(fds[1], buf, 2)));
- *  CHECK_NE(-1, close(fds[1]));
- *  CHECK_EQ(+0, memcmp(buf, "hi", 2)));
- *  CHECK_NE(-1, waitpid(pid, &ws, 0));
- *  CHECK_EQ(+0, WEXITSTATUS(ws));
+ *     char buf[2];
+ *     int ws, pid, fds[3] = {-1, -1, STDERR_FILENO};
+ *     CHECK_NE(-1, (pid = spawnve(0, fds, commandv("ssh"),
+ *                                 (char *const[]){"ssh", hostname, "cat", 0},
+ *                                 environ)));
+ *     CHECK_EQ(+2, write(fds[0], "hi", 2));
+ *     CHECK_NE(-1, close(fds[0]));
+ *     CHECK_EQ(+2, read(fds[1], buf, 2)));
+ *     CHECK_NE(-1, close(fds[1]));
+ *     CHECK_EQ(+0, memcmp(buf, "hi", 2)));
+ *     CHECK_NE(-1, waitpid(pid, &ws, 0));
+ *     CHECK_EQ(+0, WEXITSTATUS(ws));
  *
  * @param stdiofds may optionally be passed to customize standard i/o
  * @param stdiofds[𝑖] may be -1 to receive a pipe() fd
@@ -49,6 +49,7 @@
  * @param envp[0,n-2] specifies "foo=bar" environment variables
  * @param envp[n-1] is NULL
  * @return pid of child, or -1 w/ errno
+ * @deprecated just use vfork() and execve()
  */
 int spawnve(unsigned flags, int stdiofds[3], const char *program,
             char *const argv[], char *const envp[]) {

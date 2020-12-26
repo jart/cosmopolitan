@@ -26,8 +26,8 @@
 /**
  * Installs handler for kernel interrupt, e.g.:
  *
- *   onctrlc(sig) { exit(128+sig); }
- *   CHECK_NE(-1, xsigaction(SIGINT, onctrlc, SA_RESETHAND, 0, 0));
+ *     onctrlc(sig) { exit(128+sig); }
+ *     CHECK_NE(-1, xsigaction(SIGINT, onctrlc, SA_RESETHAND, 0, 0));
  *
  * @param sig can be SIGINT, SIGTERM, etc.
  * @param handler is SIG_DFL, SIG_IGN, or a pointer to a 0≤arity≤3

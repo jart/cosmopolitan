@@ -21,12 +21,8 @@
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-/* clang-format off */
 
-static void KnuthMorrisPrattInit(m, T, W)
-  ssize_t m, T[m + 1];
-  const char W[m];
-{
+static void KnuthMorrisPrattInit(ssize_t m, ssize_t *T, const char *W) {
   ssize_t i = 2;
   ssize_t j = 0;
   T[0] = -1;
@@ -43,10 +39,8 @@ static void KnuthMorrisPrattInit(m, T, W)
   T[m] = 0;
 }
 
-static size_t KnuthMorrisPratt(m, T, W, n, S)
-  const long n, m, T[m + 1];
-  const char W[m], S[n];
-{
+static size_t KnuthMorrisPratt(long m, const long *T, const char *W, long n,
+                               const char *S) {
   long i = 0, j = 0;
   while (i + j < n) {
     if (W[i] == S[i + j]) {
@@ -59,8 +53,6 @@ static size_t KnuthMorrisPratt(m, T, W, n, S)
   }
   return j;
 }
-
-/* clang-format on */
 
 /**
  * Searches for fixed-length substring in memory region.

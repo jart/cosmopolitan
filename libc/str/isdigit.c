@@ -19,6 +19,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
+/**
+ * Returns nonzero if c is decimal digit.
+ */
 int isdigit(int c) {
   return '0' <= c && c <= '9';
 }

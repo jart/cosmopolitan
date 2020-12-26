@@ -19,6 +19,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 
+/**
+ * Returns gray code for x.
+ * @see https://en.wikipedia.org/wiki/Gray_code
+ * @see ungray()
+ */
 uint32_t gray(uint32_t x) {
   return x ^ (x >> 1);
 }

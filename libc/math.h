@@ -289,11 +289,6 @@ void sincosl(long double, long double *, long double *);
 │ cosmopolitan § mathematics » x87                                         ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#if 0
-/**
- * Asks FPU to push well-known numbers to its own stack.
- */
-#endif
 #define fldz()   __X87_CONST(fldz, 0x0p+0)
 #define fld1()   __X87_CONST(fld1, 0x8p-3)
 #define fldpi()  __X87_CONST(fldpi, M_PI)

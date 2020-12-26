@@ -2265,7 +2265,7 @@ static void emit_data(Obj *prog) {
   }
 }
 
-static void store_fp(int r, int offset, int sz) {
+static void store_fp(Obj *fn, int r, int offset, int sz) {
   switch (sz) {
     case 4:
       println("\tmovss\t%%xmm%d,%d(%%rbp)", r, offset);
@@ -2274,7 +2274,8 @@ static void store_fp(int r, int offset, int sz) {
       println("\tmovsd\t%%xmm%d,%d(%%rbp)", r, offset);
       return;
     case 16:
-      println("\tmovaps\t%%xmm%d,%d(%%rbp)", r, offset);
+      println("\t%s\t%%xmm%d,%d(%%rbp)",
+              fn->is_force_align_arg_pointer ? "movups" : "movaps", r, offset);
       return;
   }
   UNREACHABLE();
@@ -2381,13 +2382,13 @@ static void emit_text(Obj *prog) {
         case TY_UNION:
           assert(ty->size <= 16);
           if (has_flonum(ty, 0, 8, 0)) {
-            store_fp(fp++, var->offset, MIN(8, ty->size));
+            store_fp(fn, fp++, var->offset, MIN(8, ty->size));
           } else {
             store_gp(gp++, var->offset, MIN(8, ty->size));
           }
           if (ty->size > 8) {
             if (has_flonum(ty, 8, 16, 0)) {
-              store_fp(fp++, var->offset + 8, ty->size - 8);
+              store_fp(fn, fp++, var->offset + 8, ty->size - 8);
             } else {
               store_gp(gp++, var->offset + 8, ty->size - 8);
             }
@@ -2395,7 +2396,7 @@ static void emit_text(Obj *prog) {
           break;
         case TY_FLOAT:
         case TY_DOUBLE:
-          store_fp(fp++, var->offset, ty->size);
+          store_fp(fn, fp++, var->offset, ty->size);
           break;
         case TY_INT128:
           store_gp(gp++, var->offset + 0, 8);
@@ -2404,6 +2405,20 @@ static void emit_text(Obj *prog) {
         default:
           store_gp(gp++, var->offset, ty->size);
       }
+    }
+    if (fn->is_force_align_arg_pointer) {
+      emitlin("\tand\t$-16,%rsp");
+    }
+    if (fn->is_no_caller_saved_registers) {
+      emitlin("\
+\tpush\t%rdi\n\
+\tpush\t%rsi\n\
+\tpush\t%rdx\n\
+\tpush\t%rcx\n\
+\tpush\t%r8\n\
+\tpush\t%r9\n\
+\tpush\t%r10\n\
+\tpush\t%r11");
     }
     // Emit code
     gen_stmt(fn->body);
@@ -2420,6 +2435,17 @@ static void emit_text(Obj *prog) {
     if (fn->is_noreturn) {
       emitlin("\tud2");
     } else {
+      if (fn->is_no_caller_saved_registers) {
+        emitlin("\
+\tpop\t%r11\n\
+\tpop\t%r10\n\
+\tpop\t%r9\n\
+\tpop\t%r8\n\
+\tpop\t%rcx\n\
+\tpop\t%rdx\n\
+\tpop\t%rsi\n\
+\tpop\t%rdi");
+      }
       emitlin("\tleave");
       emitlin("\tret");
     }

@@ -2387,10 +2387,10 @@ static reg_errcode_t tre_ast_to_tnfa(tre_ast_node_t *node,
 /**
  * Compiles regular expression, e.g.
  *
- *   regex_t rx;
- *   EXPECT_EQ(REG_OK, regcomp(&rx, "^[A-Za-z\x7f-\uFFFF]{2}$", REG_EXTENDED));
- *   EXPECT_EQ(REG_OK, regexec(&rx, "→A", 0, NULL, 0));
- *   regfree(&rx);
+ *     regex_t rx;
+ *     EXPECT_EQ(REG_OK, regcomp(&rx, "^[A-Za-z]{2}$", REG_EXTENDED));
+ *     EXPECT_EQ(REG_OK, regexec(&rx, "→A", 0, NULL, 0));
+ *     regfree(&rx);
  *
  * @param preg points to state, and needs regfree() afterwards
  * @param regex is utf-8 regular expression string

@@ -26,11 +26,7 @@
 
 typedef struct CondIncl CondIncl;
 typedef struct Hideset Hideset;
-typedef struct Macro Macro;
 typedef struct MacroArg MacroArg;
-typedef struct MacroParam MacroParam;
-
-typedef Token *macro_handler_fn(Token *);
 
 typedef enum {
   STR_NONE,
@@ -40,25 +36,11 @@ typedef enum {
   STR_WIDE,
 } StringKind;
 
-struct MacroParam {
-  MacroParam *next;
-  char *name;
-};
-
 struct MacroArg {
   MacroArg *next;
   char *name;
   bool is_va_args;
   Token *tok;
-};
-
-struct Macro {
-  char *name;
-  bool is_objlike;  // Object-like or function-like
-  MacroParam *params;
-  char *va_args_name;
-  Token *body;
-  macro_handler_fn *handler;
 };
 
 // `#if` can be nested, so we use a stack to manage nested `#if`s.
@@ -74,7 +56,8 @@ struct Hideset {
   char *name;
 };
 
-static HashMap macros;
+HashMap macros;
+
 static CondIncl *cond_incl;
 static HashMap pragma_once;
 static int include_next_idx;
@@ -338,21 +321,24 @@ static MacroParam *read_macro_params(Token **rest, Token *tok,
   return head.next;
 }
 
-static void read_macro_definition(Token **rest, Token *tok) {
+static Macro *read_macro_definition(Token **rest, Token *tok) {
+  Macro *m;
+  char *name;
   if (tok->kind != TK_IDENT) error_tok(tok, "macro name must be an identifier");
-  char *name = strndup(tok->loc, tok->len);
+  name = strndup(tok->loc, tok->len);
   tok = tok->next;
   if (!tok->has_space && EQUAL(tok, "(")) {
     // Function-like macro
     char *va_args_name = NULL;
     MacroParam *params = read_macro_params(&tok, tok->next, &va_args_name);
-    Macro *m = add_macro(name, false, copy_line(rest, tok));
+    m = add_macro(name, false, copy_line(rest, tok));
     m->params = params;
     m->va_args_name = va_args_name;
   } else {
     // Object-like macro
-    add_macro(name, true, copy_line(rest, tok));
+    m = add_macro(name, true, copy_line(rest, tok));
   }
+  return m;
 }
 
 static MacroArg *read_macro_arg_one(Token **rest, Token *tok, bool read_rest) {
@@ -742,6 +728,12 @@ static Token *preprocess2(Token *tok) {
   while (tok->kind != TK_EOF) {
     // If it is a macro, expand it.
     if (expand_macro(&tok, tok)) continue;
+    // make sure javadown is removed if it's for a macro definition
+    if (tok->kind == TK_JAVADOWN && is_hash(tok->next) &&
+        EQUAL(tok->next->next, "define")) {
+      read_macro_definition(&tok, tok->next->next->next)->javadown = tok;
+      continue;
+    }
     // Pass through if it is not a "#".
     if (!is_hash(tok)) {
       tok->line_delta = tok->file->line_delta;
@@ -936,6 +928,8 @@ __GNUC_PATCHLEVEL__\000\
 0\000\
 __NO_INLINE__\000\
 16\000\
+__GNUC_STDC_INLINE__\000\
+1\000\
 __BIGGEST_ALIGNMENT__\000\
 16\000\
 __C99_MACRO_WITH_VA_ARGS\000\
@@ -1009,6 +1003,10 @@ __INT32_MAX__\000\
 __UINT32_MAX__\000\
 0xffffffffu\000\
 __INT64_MAX__\000\
+0x7fffffffffffffffl\000\
+__LONG_MAX__\000\
+0x7fffffffffffffffl\000\
+__LONG_LONG_MAX__\000\
 0x7fffffffffffffffl\000\
 __UINT64_MAX__\000\
 0xfffffffffffffffful\000\

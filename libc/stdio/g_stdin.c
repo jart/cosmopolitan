@@ -22,7 +22,11 @@
 
 STATIC_YOINK("_init_g_stdin");
 
+/**
+ * Pointer to standard input stream.
+ */
 FILE *stdin;
+
 hidden FILE g_stdin;
 hidden unsigned char g_stdin_buf[BUFSIZ] forcealign(PAGESIZE);
 

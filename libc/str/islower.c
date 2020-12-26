@@ -19,6 +19,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
+/**
+ * Returns nonzero if c is lowercase alpha ascii character.
+ */
 int islower(int c) {
   return 'a' <= c && c <= 'z';
 }

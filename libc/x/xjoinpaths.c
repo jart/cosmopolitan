@@ -24,12 +24,12 @@
 /**
  * Joins paths, e.g.
  *
- *   "a"  + "b"  → "a/b"
- *   "a/" + "b"  → "a/b"
- *   "a"  + "b/" → "a/b/"
- *   "a"  + "/b" → "/b"
- *   "."  + "b"  → "b"
- *   ""   + "b"  → "b"
+ *     "a"  + "b"  → "a/b"
+ *     "a/" + "b"  → "a/b"
+ *     "a"  + "b/" → "a/b/"
+ *     "a"  + "/b" → "/b"
+ *     "."  + "b"  → "b"
+ *     ""   + "b"  → "b"
  *
  * @return newly allocated string of resulting path
  */

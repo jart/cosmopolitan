@@ -19,6 +19,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
+/**
+ * Returns nonzero if c is C0 ASCII control code or DEL.
+ */
 int iscntrl(int c) {
   return (0x00 <= c && c <= 0x1F) || c == 0x7F;
 }

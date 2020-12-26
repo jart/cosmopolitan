@@ -26,6 +26,7 @@
 #include "libc/unicode/unicode.h"
 #include "libc/x/x.h"
 #include "third_party/gdtoa/gdtoa.h"
+#include "tool/build/lib/javadown.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -35,7 +36,10 @@ typedef struct Asm Asm;
 typedef struct AsmOperand AsmOperand;
 typedef struct File File;
 typedef struct FpClassify FpClassify;
+typedef struct HashMap HashMap;
 typedef struct Hideset Hideset;
+typedef struct Macro Macro;
+typedef struct MacroParam MacroParam;
 typedef struct Member Member;
 typedef struct Node Node;
 typedef struct Obj Obj;
@@ -46,6 +50,8 @@ typedef struct StringArray StringArray;
 typedef struct Token Token;
 typedef struct TokenStack TokenStack;
 typedef struct Type Type;
+
+typedef Token *macro_handler_fn(Token *);
 
 //
 // strarray.c
@@ -64,13 +70,14 @@ void strarray_push(StringArray *, char *);
 //
 
 typedef enum {
-  TK_IDENT,    // Identifiers
-  TK_PUNCT,    // Punctuators
-  TK_KEYWORD,  // Keywords
-  TK_STR,      // String literals
-  TK_NUM,      // Numeric literals
-  TK_PP_NUM,   // Preprocessing numbers
-  TK_EOF,      // End-of-file markers
+  TK_IDENT,     // Identifiers
+  TK_PUNCT,     // Punctuators
+  TK_KEYWORD,   // Keywords
+  TK_STR,       // String literals
+  TK_NUM,       // Numeric literals
+  TK_PP_NUM,    // Preprocessing numbers
+  TK_JAVADOWN,  // /** ... */ comments
+  TK_EOF,       // End-of-file markers
 } TokenKind;
 
 struct File {
@@ -80,6 +87,7 @@ struct File {
   // For #line directive
   char *display_name;
   int line_delta;
+  struct Javadown *javadown;
 };
 
 struct thatispacked Token {
@@ -96,6 +104,7 @@ struct thatispacked Token {
   char *filename;    // Filename
   Hideset *hideset;  // For macro expansion
   Token *origin;     // If this is expanded from a macro, the original token
+  struct Javadown *javadown;
   union {
     int64_t val;       // If kind is TK_NUM, its value
     long double fval;  // If kind is TK_NUM, its value
@@ -133,6 +142,23 @@ int read_escaped_char(char **, char *);
 //
 // preprocess.c
 //
+
+struct MacroParam {
+  MacroParam *next;
+  char *name;
+};
+
+struct Macro {
+  char *name;
+  bool is_objlike;  // Object-like or function-like
+  MacroParam *params;
+  char *va_args_name;
+  Token *body;
+  macro_handler_fn *handler;
+  Token *javadown;
+};
+
+extern HashMap macros;
 
 char *search_include_paths(char *);
 void init_macros(void);
@@ -232,6 +258,7 @@ struct Obj {
   char *asmname;
   char *section;
   char *visibility;
+  Token *javadown;
   // Global variable
   bool is_tentative;
   bool is_string_literal;
@@ -244,6 +271,9 @@ struct Obj {
   bool is_noreturn;
   bool is_destructor;
   bool is_constructor;
+  bool is_ms_abi; /* TODO */
+  bool is_force_align_arg_pointer;
+  bool is_no_caller_saved_registers;
   int stack_size;
   Obj *params;
   Node *body;
@@ -419,6 +449,7 @@ struct Type {
   int align;         // alignment
   bool is_unsigned;  // unsigned or signed
   bool is_atomic;    // true if _Atomic
+  bool is_ms_abi;    // microsoft abi
   Type *origin;      // for type compatibility check
   // Pointer-to or array-of type. We intentionally use the same member
   // to represent pointer/array duality in C.
@@ -534,11 +565,11 @@ typedef struct {
   void *val;
 } HashEntry;
 
-typedef struct {
+struct HashMap {
   HashEntry *buckets;
   int capacity;
   int used;
-} HashMap;
+};
 
 void *hashmap_get(HashMap *, char *);
 void *hashmap_get2(HashMap *, char *, int);
@@ -583,6 +614,13 @@ Node *alloc_node(void);
 Token *alloc_token(void);
 Obj *alloc_obj(void);
 Type *alloc_type(void);
+
+//
+// javadown.c
+//
+
+void output_javadown(const char *, Obj *);
+void drop_dox(const StringArray *, const char *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

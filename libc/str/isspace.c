@@ -19,6 +19,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
+/**
+ * Returns true if c is space, \t, \r, \n, \f, or \v.
+ */
 int isspace(int c) {
   return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f' ||
          c == '\v';

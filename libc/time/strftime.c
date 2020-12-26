@@ -370,13 +370,13 @@ static char *strftime_timefmt(char *p, const char *pe, const char *format,
 /**
  * Converts time to string, e.g.
  *
- *   char b[64];
- *   int64_t sec;
- *   struct tm tm;
- *   time(&sec);
- *   localtime_r(&sec, &tm);
- *   strftime(b, sizeof(b), "%Y-%m-%dT%H:%M:%S%z", &tm);       // ISO8601
- *   strftime(b, sizeof(b), "%a, %d %b %Y %H:%M:%S %Z", &tm);  // RFC1123
+ *     char b[64];
+ *     int64_t sec;
+ *     struct tm tm;
+ *     time(&sec);
+ *     localtime_r(&sec, &tm);
+ *     strftime(b, sizeof(b), "%Y-%m-%dT%H:%M:%S%z", &tm);       // ISO8601
+ *     strftime(b, sizeof(b), "%a, %d %b %Y %H:%M:%S %Z", &tm);  // RFC1123
  *
  * @return bytes copied excluding nul, or 0 on error
  */

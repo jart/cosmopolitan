@@ -21,38 +21,37 @@
 #include "libc/calls/kntprioritycombos.internal.h"
 #include "libc/limits.h"
 #include "libc/macros.h"
+#include "libc/nexgen32e/ffs.h"
 #include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/enum/threadpriority.h"
 
-#define FFS(x) __builtin_ffs(x)
-
 const struct NtPriorityCombo kNtPriorityCombos[] = {
-    {-20, FFS(kNtHighPriorityClass), kNtThreadPriorityHighest, 15},
-    {-18, FFS(kNtHighPriorityClass), kNtThreadPriorityTimeCritical, 15},
-    {-17, FFS(kNtNormalPriorityClass), kNtThreadPriorityTimeCritical, 15},
-    {-15, FFS(kNtIdlePriorityClass), kNtThreadPriorityTimeCritical, 15},
-    {-13, FFS(kNtHighPriorityClass), kNtThreadPriorityAboveNormal, 14},
-    {-11, FFS(kNtHighPriorityClass), kNtThreadPriorityNormal, 13},
-    {-9, FFS(kNtHighPriorityClass), kNtThreadPriorityBelowNormal, 12},
-    {-7, FFS(kNtNormalPriorityClass), kNtThreadPriorityHighest, 11},
-    {-5, FFS(kNtHighPriorityClass), kNtThreadPriorityLowest, 11},
-    {-3, FFS(kNtNormalPriorityClass), kNtThreadPriorityAboveNormal, 10},
-    {-1, FFS(kNtNormalPriorityClass), kNtThreadPriorityHighest, 9},
-    {0, FFS(kNtNormalPriorityClass), kNtThreadPriorityNormal, 9},
-    {1, FFS(kNtNormalPriorityClass), kNtThreadPriorityAboveNormal, 8},
-    {2, FFS(kNtNormalPriorityClass), kNtThreadPriorityBelowNormal, 8},
-    {3, FFS(kNtNormalPriorityClass), kNtThreadPriorityNormal, 7},
-    {4, FFS(kNtNormalPriorityClass), kNtThreadPriorityLowest, 7},
-    {5, FFS(kNtIdlePriorityClass), kNtThreadPriorityHighest, 6},
-    {6, FFS(kNtNormalPriorityClass), kNtThreadPriorityBelowNormal, 6},
-    {7, FFS(kNtIdlePriorityClass), kNtThreadPriorityAboveNormal, 5},
-    {9, FFS(kNtNormalPriorityClass), kNtThreadPriorityLowest, 5},
-    {11, FFS(kNtIdlePriorityClass), kNtThreadPriorityNormal, 4},
-    {13, FFS(kNtIdlePriorityClass), kNtThreadPriorityBelowNormal, 3},
-    {15, FFS(kNtIdlePriorityClass), kNtThreadPriorityLowest, 2},
-    {17, FFS(kNtHighPriorityClass), kNtThreadPriorityIdle, 1},
-    {18, FFS(kNtNormalPriorityClass), kNtThreadPriorityIdle, 1},
-    {19, FFS(kNtIdlePriorityClass), kNtThreadPriorityIdle, 1},
+    {-20, ffs(kNtHighPriorityClass), kNtThreadPriorityHighest, 15},
+    {-18, ffs(kNtHighPriorityClass), kNtThreadPriorityTimeCritical, 15},
+    {-17, ffs(kNtNormalPriorityClass), kNtThreadPriorityTimeCritical, 15},
+    {-15, ffs(kNtIdlePriorityClass), kNtThreadPriorityTimeCritical, 15},
+    {-13, ffs(kNtHighPriorityClass), kNtThreadPriorityAboveNormal, 14},
+    {-11, ffs(kNtHighPriorityClass), kNtThreadPriorityNormal, 13},
+    {-9, ffs(kNtHighPriorityClass), kNtThreadPriorityBelowNormal, 12},
+    {-7, ffs(kNtNormalPriorityClass), kNtThreadPriorityHighest, 11},
+    {-5, ffs(kNtHighPriorityClass), kNtThreadPriorityLowest, 11},
+    {-3, ffs(kNtNormalPriorityClass), kNtThreadPriorityAboveNormal, 10},
+    {-1, ffs(kNtNormalPriorityClass), kNtThreadPriorityHighest, 9},
+    {0, ffs(kNtNormalPriorityClass), kNtThreadPriorityNormal, 9},
+    {1, ffs(kNtNormalPriorityClass), kNtThreadPriorityAboveNormal, 8},
+    {2, ffs(kNtNormalPriorityClass), kNtThreadPriorityBelowNormal, 8},
+    {3, ffs(kNtNormalPriorityClass), kNtThreadPriorityNormal, 7},
+    {4, ffs(kNtNormalPriorityClass), kNtThreadPriorityLowest, 7},
+    {5, ffs(kNtIdlePriorityClass), kNtThreadPriorityHighest, 6},
+    {6, ffs(kNtNormalPriorityClass), kNtThreadPriorityBelowNormal, 6},
+    {7, ffs(kNtIdlePriorityClass), kNtThreadPriorityAboveNormal, 5},
+    {9, ffs(kNtNormalPriorityClass), kNtThreadPriorityLowest, 5},
+    {11, ffs(kNtIdlePriorityClass), kNtThreadPriorityNormal, 4},
+    {13, ffs(kNtIdlePriorityClass), kNtThreadPriorityBelowNormal, 3},
+    {15, ffs(kNtIdlePriorityClass), kNtThreadPriorityLowest, 2},
+    {17, ffs(kNtHighPriorityClass), kNtThreadPriorityIdle, 1},
+    {18, ffs(kNtNormalPriorityClass), kNtThreadPriorityIdle, 1},
+    {19, ffs(kNtIdlePriorityClass), kNtThreadPriorityIdle, 1},
 };
 
 const unsigned kNtPriorityCombosLen = ARRAYLEN(kNtPriorityCombos);

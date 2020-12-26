@@ -22,7 +22,11 @@
 
 STATIC_YOINK("_init_g_stderr");
 
+/**
+ * Pointer to standard error stream.
+ */
 FILE *stderr;
+
 hidden FILE g_stderr;
 hidden unsigned char g_stderr_buf[BUFSIZ] forcealign(PAGESIZE);
 

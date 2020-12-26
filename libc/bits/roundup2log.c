@@ -22,7 +22,7 @@
 
 /**
  * Returns 𝑥 rounded up to next two power and log'd.
- * @see roundup2pow
+ * @see roundup2pow()
  */
 unsigned long roundup2log(unsigned long x) {
   return x > 1 ? (bsrl(x - 1) + 1) : x ? 1 : 0;

@@ -157,29 +157,29 @@ static textwindows wontreturn void WinMainNew(void) {
  * The Cosmopolitan Runtime provides the following services, which aim
  * to bring Windows NT behavior closer in harmony with System Five:
  *
- *   1. We configure CMD.EXE for UTF-8 and enable ANSI colors on Win10.
+ * 1. We configure CMD.EXE for UTF-8 and enable ANSI colors on Win10.
  *
- *   2. Command line arguments are passed as a blob of UTF-16 text. We
- *      chop them up into an char *argv[] UTF-8 data structure, in
- *      accordance with the DOS conventions for argument quoting.
+ * 2. Command line arguments are passed as a blob of UTF-16 text. We
+ *    chop them up into an char *argv[] UTF-8 data structure, in
+ *    accordance with the DOS conventions for argument quoting.
  *
- *   3. Environment variables are passed to us as a sorted UTF-16 double
- *      NUL terminated list. We translate this to char ** using UTF-8.
+ * 3. Environment variables are passed to us as a sorted UTF-16 double
+ *    NUL terminated list. We translate this to char ** using UTF-8.
  *
- *   4. Allocates new stack at a high address. NT likes to choose a
- *      stack address that's beneath the program image. We want to be
- *      able to assume that stack addresses are located at higher
- *      addresses than heap and program memory.
+ * 4. Allocates new stack at a high address. NT likes to choose a
+ *    stack address that's beneath the program image. We want to be
+ *    able to assume that stack addresses are located at higher
+ *    addresses than heap and program memory.
  *
- *   5. Windows users are afraid of "drive-by downloads" where someone
- *      might accidentally an evil DLL to their Downloads folder which
- *      then overrides the behavior of a legitimate EXE being run from
- *      the downloads folder. Since we don't even use dynamic linking,
- *      we've cargo culted some API calls, that may harden against it.
+ * 5. Windows users are afraid of "drive-by downloads" where someone
+ *    might accidentally an evil DLL to their Downloads folder which
+ *    then overrides the behavior of a legitimate EXE being run from
+ *    the downloads folder. Since we don't even use dynamic linking,
+ *    we've cargo culted some API calls, that may harden against it.
  *
- *   6. Finally, we need fork. Microsoft designed Windows to prevent us
- *      from having fork() so we pass pipe handles in an environment
- *      variable literally copy all the memory.
+ * 6. Finally, we need fork. Microsoft designed Windows to prevent us
+ *    from having fork() so we pass pipe handles in an environment
+ *    variable literally copy all the memory.
  *
  * @param hInstance call GetModuleHandle(NULL) from main if you need it
  */

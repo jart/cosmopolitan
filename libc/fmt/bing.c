@@ -26,23 +26,23 @@
  *
  * Cosmopolitan displays RADIX-256 numbers using these digits:
  *
- *    0123456789abcdef
- *   0 ☺☻♥♦♣♠•◘○◙♂♀♪♫☼
- *   1►◄↕‼¶§▬↨↑↓→←∟↔▲▼
- *   2 !"#$%&'()*+,-./
- *   30123456789:;<=>?
- *   4@ABCDEFGHIJKLMNO
- *   5PQRSTUVWXYZ[\]^_
- *   6`abcdefghijklmno
- *   7pqrstuvwxyz{|}~⌂
- *   8ÇüéâäàåçêëèïîìÄÅ
- *   9ÉæÆôöòûùÿÖÜ¢£¥€ƒ
- *   aáíóúñÑªº¿⌐¬½¼¡«»
- *   b░▒▓│┤╡╢╖╕╣║╗╝╜╛┐
- *   c└┴┬├─┼╞╟╚╔╩╦╠═╬╧
- *   d╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀
- *   eαßΓπΣσμτΦΘΩδ∞φε∩
- *   f≡±≥≤⌠⌡÷≈°∙·√ⁿ²■λ
+ *      0123456789abcdef
+ *     0 ☺☻♥♦♣♠•◘○◙♂♀♪♫☼
+ *     1►◄↕‼¶§▬↨↑↓→←∟↔▲▼
+ *     2 !"#$%&'()*+,-./
+ *     30123456789:;<=>?
+ *     4@ABCDEFGHIJKLMNO
+ *     5PQRSTUVWXYZ[\]^_
+ *     6`abcdefghijklmno
+ *     7pqrstuvwxyz{|}~⌂
+ *     8ÇüéâäàåçêëèïîìÄÅ
+ *     9ÉæÆôöòûùÿÖÜ¢£¥€ƒ
+ *     aáíóúñÑªº¿⌐¬½¼¡«»
+ *     b░▒▓│┤╡╢╖╕╣║╗╝╜╛┐
+ *     c└┴┬├─┼╞╟╚╔╩╦╠═╬╧
+ *     d╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀
+ *     eαßΓπΣσμτΦΘΩδ∞φε∩
+ *     f≡±≥≤⌠⌡÷≈°∙·√ⁿ²■λ
  *
  * IBM designed these glyphs for the PC to map onto the display bytes at
  * (char *)0xb8000. Because IBM authorized buyers of its PCs to inspect

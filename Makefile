@@ -303,6 +303,7 @@ COSMOPOLITAN_HEADERS =		\
 	THIRD_PARTY_GDTOA	\
 	THIRD_PARTY_GETOPT	\
 	THIRD_PARTY_MUSL	\
+	THIRD_PARTY_ZLIB	\
 	THIRD_PARTY_REGEX
 
 o/$(MODE)/cosmopolitan.a: $(filter-out o/libc/stubs/exit11.o,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_OBJS)))
@@ -311,6 +312,10 @@ o/cosmopolitan.h:				\
 		libc/integral/normalize.inc	\
 		$(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS))
 	@ACTION=ROLLUP TARGET=$@ build/do $^ >$@
+
+o/cosmopolitan.html:				\
+		o//third_party/chibicc/chibicc.com.dbg
+	o//third_party/chibicc/chibicc.com.dbg -J -fno-common -include libc/integral/normalize.inc -o $@ $(filter %.c,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))
 
 # UNSPECIFIED PREREQUISITES TUTORIAL
 #

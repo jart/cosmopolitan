@@ -16,6 +16,7 @@
 // So it is very easy to lookahead arbitrary number of tokens in this
 // parser.
 
+#include "libc/nexgen32e/ffs.h"
 #include "libc/testlib/testlib.h"
 #include "third_party/chibicc/chibicc.h"
 
@@ -50,11 +51,14 @@ typedef struct {
   bool is_const;
   bool is_tls;
   bool is_weak;
+  bool is_ms_abi;
   bool is_aligned;
   bool is_noreturn;
   bool is_destructor;
   bool is_constructor;
   bool is_externally_visible;
+  bool is_force_align_arg_pointer;
+  bool is_no_caller_saved_registers;
   int align;
   char *section;
   char *visibility;
@@ -112,6 +116,8 @@ static char *cont_label;
 static Node *current_switch;
 
 static Obj *builtin_alloca;
+
+static Token *current_javadown;
 
 static Initializer *initializer(Token **, Token *, Type *, Type **);
 static Member *get_struct_member(Type *, Token *);
@@ -382,6 +388,10 @@ static Token *type_attributes(Token *tok, void *arg) {
     ty->is_packed = true;
     return tok;
   }
+  if (consume_attribute(&tok, tok, "ms_abi")) {
+    ty->is_ms_abi = true;
+    return tok;
+  }
   if (consume_attribute(&tok, tok, "aligned")) {
     ty->is_aligned = true;
     if (CONSUME(&tok, tok, "(")) {
@@ -464,6 +474,18 @@ static Token *thing_attributes(Token *tok, void *arg) {
   }
   if (consume_attribute(&tok, tok, "externally_visible")) {
     attr->is_externally_visible = true;
+    return tok;
+  }
+  if (consume_attribute(&tok, tok, "force_align_arg_pointer")) {
+    attr->is_force_align_arg_pointer = true;
+    return tok;
+  }
+  if (consume_attribute(&tok, tok, "no_caller_saved_registers")) {
+    attr->is_no_caller_saved_registers = true;
+    return tok;
+  }
+  if (consume_attribute(&tok, tok, "ms_abi")) {
+    attr->is_ms_abi = true;
     return tok;
   }
   if (consume_attribute(&tok, tok, "constructor")) {
@@ -1080,6 +1102,7 @@ static Node *declaration(Token **rest, Token *tok, Type *basety,
     // even if ty is not VLA because ty may be a pointer to VLA
     // (e.g. int (*foo)[n][m] where n and m are variables.)
     cur = cur->next = new_unary(ND_EXPR_STMT, compute_vla_size(ty, tok), tok);
+    tok = attribute_list(tok, attr, thing_attributes);
     if (ty->kind == TY_VLA) {
       if (EQUAL(tok, "="))
         error_tok(tok, "variable-sized object may not be initialized");
@@ -1198,7 +1221,8 @@ static Member *struct_designator(Token **rest, Token *tok, Type *ty) {
   if (tok->kind != TK_IDENT) error_tok(tok, "expected a field designator");
   for (Member *mem = ty->members; mem; mem = mem->next) {
     // Anonymous struct member
-    if (mem->ty->kind == TY_STRUCT && !mem->name) {
+    if ((mem->ty->kind == TY_STRUCT || mem->ty->kind == TY_UNION) &&
+        !mem->name) {
       if (get_struct_member(mem->ty, tok)) {
         *rest = start;
         return mem;
@@ -1920,6 +1944,7 @@ int64_t eval(Node *node) {
 // number. The latter form is accepted only as an initialization
 // expression for a global variable.
 int64_t eval2(Node *node, char ***label) {
+  int64_t x, y;
   add_type(node);
   if (is_flonum(node->ty)) return eval_double(node);
   switch (node->kind) {
@@ -1930,15 +1955,25 @@ int64_t eval2(Node *node, char ***label) {
     case ND_MUL:
       return eval(node->lhs) * eval(node->rhs);
     case ND_DIV:
-      if (node->ty->is_unsigned)
-        return (uint64_t)eval(node->lhs) / eval(node->rhs);
-      return eval(node->lhs) / eval(node->rhs);
+      y = eval(node->rhs);
+      if (!y) error_tok(node->rhs->tok, "constexpr div by zero");
+      if (node->ty->is_unsigned) {
+        return (uint64_t)eval(node->lhs) / y;
+      }
+      x = eval(node->lhs);
+      if (x == 0x8000000000000000 && y == -1) {
+        error_tok(node->rhs->tok, "constexpr divide error");
+      }
+      return x / y;
     case ND_NEG:
       return -eval(node->lhs);
     case ND_REM:
-      if (node->ty->is_unsigned)
-        return (uint64_t)eval(node->lhs) % eval(node->rhs);
-      return eval(node->lhs) % eval(node->rhs);
+      y = eval(node->rhs);
+      if (!y) error_tok(node->rhs->tok, "constexpr rem by zero");
+      if (node->ty->is_unsigned) {
+        return (uint64_t)eval(node->lhs) % y;
+      }
+      return eval(node->lhs) % y;
     case ND_BINAND:
       return eval(node->lhs) & eval(node->rhs);
     case ND_BINOR:
@@ -2044,8 +2079,9 @@ int64_t eval2(Node *node, char ***label) {
 static int64_t eval_rval(Node *node, char ***label) {
   switch (node->kind) {
     case ND_VAR:
-      if (node->var->is_local)
+      if (node->var->is_local) {
         error_tok(node->tok, "not a compile-time constant");
+      }
       *label = &node->var->name;
       return 0;
     case ND_DEREF:
@@ -2063,6 +2099,7 @@ bool is_const_expr(Node *node) {
     case ND_SUB:
     case ND_MUL:
     case ND_DIV:
+    case ND_REM:
     case ND_BINAND:
     case ND_BINOR:
     case ND_BINXOR:
@@ -2884,8 +2921,9 @@ static Node *postfix(Token **rest, Token *tok) {
 static Node *funcall(Token **rest, Token *tok, Node *fn) {
   add_type(fn);
   if (fn->ty->kind != TY_FUNC &&
-      (fn->ty->kind != TY_PTR || fn->ty->base->kind != TY_FUNC))
+      (fn->ty->kind != TY_PTR || fn->ty->base->kind != TY_FUNC)) {
     error_tok(fn->tok, "not a function");
+  }
   Type *ty = (fn->ty->kind == TY_FUNC) ? fn->ty : fn->ty->base;
   Type *param_ty = ty->params;
   Node head = {};
@@ -2896,8 +2934,9 @@ static Node *funcall(Token **rest, Token *tok, Node *fn) {
     add_type(arg);
     if (!param_ty && !ty->is_variadic) error_tok(tok, "too many arguments");
     if (param_ty) {
-      if (param_ty->kind != TY_STRUCT && param_ty->kind != TY_UNION)
+      if (param_ty->kind != TY_STRUCT && param_ty->kind != TY_UNION) {
         arg = new_cast(arg, param_ty);
+      }
       param_ty = param_ty->next;
     } else if (arg->ty->kind == TY_FLOAT) {
       // If parameter type is omitted (e.g. in "..."), float
@@ -2914,8 +2953,9 @@ static Node *funcall(Token **rest, Token *tok, Node *fn) {
   node->args = head.next;
   // If a function returns a struct, it is caller's responsibility
   // to allocate a space for the return value.
-  if (node->ty->kind == TY_STRUCT || node->ty->kind == TY_UNION)
+  if (node->ty->kind == TY_STRUCT || node->ty->kind == TY_UNION) {
     node->ret_buffer = new_lvar("", node->ty);
+  }
   return node;
 }
 
@@ -3138,13 +3178,37 @@ static Node *primary(Token **rest, Token *tok) {
       *rest = skip(tok, ')');
       return node;
     }
-    if (EQUAL(tok, "__builtin_popcount") || EQUAL(tok, "__builtin_popcountl") ||
+    if (EQUAL(tok, "__builtin_popcount")) {
+      Token *t = skip(tok->next, '(');
+      Node *node = assign(&t, t);
+      if (is_const_expr(node)) {
+        *rest = skip(t, ')');
+        return new_num(__builtin_popcount(eval(node)), t);
+      }
+    }
+    if (EQUAL(tok, "__builtin_popcountl") ||
         EQUAL(tok, "__builtin_popcountll")) {
       Token *t = skip(tok->next, '(');
       Node *node = assign(&t, t);
       if (is_const_expr(node)) {
         *rest = skip(t, ')');
-        return new_num(popcnt(eval(node)), t);
+        return new_num(__builtin_popcountl(eval(node)), t);
+      }
+    }
+    if (EQUAL(tok, "__builtin_ffs")) {
+      Token *t = skip(tok->next, '(');
+      Node *node = assign(&t, t);
+      if (is_const_expr(node)) {
+        *rest = skip(t, ')');
+        return new_num(__builtin_ffs(eval(node)), t);
+      }
+    }
+    if (EQUAL(tok, "__builtin_ffsl") || EQUAL(tok, "__builtin_ffsll")) {
+      Token *t = skip(tok->next, '(');
+      Node *node = assign(&t, t);
+      if (is_const_expr(node)) {
+        *rest = skip(t, ')');
+        return new_num(__builtin_ffsl(eval(node)), t);
       }
     }
   }
@@ -3328,15 +3392,19 @@ static Token *function(Token *tok, Type *basety, VarAttr *attr) {
     fn->is_static = attr->is_static || (attr->is_inline && !attr->is_extern);
     fn->is_inline = attr->is_inline;
     fn->is_weak = attr->is_weak;
+    fn->is_ms_abi = attr->is_ms_abi;
     fn->is_aligned = attr->is_aligned;
     fn->is_noreturn = attr->is_noreturn;
     fn->is_destructor = attr->is_destructor;
     fn->is_constructor = attr->is_constructor;
     fn->is_externally_visible = attr->is_externally_visible;
+    fn->is_force_align_arg_pointer = attr->is_force_align_arg_pointer;
+    fn->is_no_caller_saved_registers = attr->is_no_caller_saved_registers;
     fn->align = attr->align;
     fn->section = attr->section;
     fn->visibility = attr->visibility;
   }
+  fn->javadown = fn->javadown ?: current_javadown;
   fn->is_root = !(fn->is_static && fn->is_inline);
   if (consume_attribute(&tok, tok, "asm")) {
     tok = skip(tok, '(');
@@ -3352,11 +3420,13 @@ static Token *function(Token *tok, Type *basety, VarAttr *attr) {
   // A buffer for a struct/union return value is passed
   // as the hidden first parameter.
   Type *rty = ty->return_ty;
-  if ((rty->kind == TY_STRUCT || rty->kind == TY_UNION) && rty->size > 16)
+  if ((rty->kind == TY_STRUCT || rty->kind == TY_UNION) && rty->size > 16) {
     new_lvar("", pointer_to(rty));
+  }
   fn->params = locals;
-  if (ty->is_variadic)
+  if (ty->is_variadic) {
     fn->va_area = new_lvar("__va_area__", array_of(ty_char, 136));
+  }
   fn->alloca_bottom = new_lvar("__alloca_size__", pointer_to(ty_char));
   tok = skip(tok, '{');
   // [https://www.sigbus.info/n1570#6.4.2.2p1] "__func__" is
@@ -3382,6 +3452,7 @@ static Token *global_variable(Token *tok, Type *basety, VarAttr *attr) {
     Type *ty = declarator(&tok, tok, basety);
     if (!ty->name) error_tok(ty->name_pos, "variable name omitted");
     Obj *var = new_gvar(get_ident(ty->name), ty);
+    var->javadown = current_javadown;
     if (consume_attribute(&tok, tok, "asm")) {
       tok = skip(tok, '(');
       var->asmname = ConsumeStringLiteral(&tok, tok);
@@ -3527,6 +3598,12 @@ Obj *parse(Token *tok) {
     if (EQUAL(tok, "_Static_assert")) {
       tok = static_assertion(tok);
       continue;
+    }
+    if (tok->kind == TK_JAVADOWN) {
+      current_javadown = tok;
+      tok = tok->next;
+    } else {
+      current_javadown = NULL;
     }
     VarAttr attr = {};
     tok = attribute_list(tok, &attr, thing_attributes);

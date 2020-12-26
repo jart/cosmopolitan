@@ -118,13 +118,13 @@ static textwindows noinline struct dirent *readdir$nt(DIR *dir) {
 /**
  * Opens directory, e.g.
  *
- *   DIR *d;
- *   struct dirent *e;
- *   CHECK((d = opendir(path)));
- *   while ((e = readdir(d))) {
- *     printf("%s/%s\n", path, e->d_name);
- *   }
- *   LOGIFNEG1(closedir(d));
+ *     DIR *d;
+ *     struct dirent *e;
+ *     CHECK((d = opendir(path)));
+ *     while ((e = readdir(d))) {
+ *       printf("%s/%s\n", path, e->d_name);
+ *     }
+ *     LOGIFNEG1(closedir(d));
  *
  * @returns newly allocated DIR object, or NULL w/ errno
  * @errors ENOENT, ENOTDIR, EACCES, EMFILE, ENFILE, ENOMEM

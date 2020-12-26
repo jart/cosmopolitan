@@ -19,6 +19,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/runtime.h"
 
+/**
+ * Returns a or b or aborts if both are null.
+ */
 const char *(firstnonnull)(const char *a, const char *b) {
   if (a) return a;
   if (b) return b;

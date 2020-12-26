@@ -20,6 +20,9 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/bswap.h"
 
+/**
+ * Reverses bits in 32-bit word.
+ */
 uint32_t(bitreverse32)(uint32_t x) {
   x = bswap_32(x);
   x = ((x & 0xaaaaaaaa) >> 1) | ((x & 0x55555555) << 1);

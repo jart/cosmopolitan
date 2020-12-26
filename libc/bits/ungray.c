@@ -19,6 +19,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 
+/**
+ * Decodes gray code.
+ * @see https://en.wikipedia.org/wiki/Gray_code
+ * @see gray()
+ */
 uint32_t ungray(uint32_t x) {
   x ^= x >> 16;
   x ^= x >> 8;

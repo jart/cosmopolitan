@@ -19,6 +19,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 
+/**
+ * Reverses bits in 8-bit word.
+ */
 uint8_t(bitreverse8)(uint8_t x) {
   return kReverseBits[x];
 }

@@ -19,6 +19,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
+/**
+ * Returns nonzero if c is space or tab.
+ */
 int isblank(int c) {
   return c == ' ' || c == '\t';
 }

@@ -17,11 +17,29 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/str.h"
+#include "libc/nexgen32e/ffs.h"
+#include "libc/nexgen32e/nexgen32e.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Returns nonzero if c is ascii.
- */
-int isascii(int c) {
-  return 0x00 <= c && c <= 0x7F;
+TEST(ffs, test) {
+  EXPECT_EQ(__builtin_ffs(0), (ffs)(0));
+  EXPECT_EQ(__builtin_ffs(1), (ffs)(1));
+  EXPECT_EQ(__builtin_ffs(0x00100000), (ffs)(0x00100000));
+  EXPECT_EQ(__builtin_ffs(-1), (ffs)(-1));
+}
+
+TEST(ffsl, test) {
+  EXPECT_EQ(__builtin_ffsl(0), (ffsl)(0));
+  EXPECT_EQ(__builtin_ffsl(1), (ffsl)(1));
+  EXPECT_EQ(__builtin_ffsl(0x00100000), (ffsl)(0x00100000));
+  EXPECT_EQ(__builtin_ffsl(0x0010000000000000), (ffsl)(0x0010000000000000));
+  EXPECT_EQ(__builtin_ffsl(-1), (ffsl)(-1));
+}
+
+TEST(ffsll, test) {
+  EXPECT_EQ(__builtin_ffsll(0), (ffsll)(0));
+  EXPECT_EQ(__builtin_ffsll(1), (ffsll)(1));
+  EXPECT_EQ(__builtin_ffsll(0x00100000), (ffsll)(0x00100000));
+  EXPECT_EQ(__builtin_ffsll(0x0010000000000000), (ffsll)(0x0010000000000000));
+  EXPECT_EQ(__builtin_ffsll(-1), (ffsll)(-1));
 }

@@ -21,6 +21,8 @@
 
 /**
  * Interleaves bits.
+ * @see https://en.wikipedia.org/wiki/Z-order_curve
+ * @see unmorton()
  */
 unsigned long(morton)(unsigned long y, unsigned long x) {
   x = (x | x << 020) & 0x0000FFFF0000FFFF;

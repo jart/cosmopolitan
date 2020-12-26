@@ -1,12 +1,3 @@
-/**
- * @fileoverview Cosmopolitan Preprocessor / Language Normalization.
- *
- * This is our lowest-level header file. You don't need to include it,
- * since we require that compilers be configured to do so automatically,
- * and the -include flag is the safest bet. Further note polyfills here
- * shouldn't be taken as indicators of intent to support.
- */
-
 #define __COSMOPOLITAN__ 1
 
 #ifndef __COUNTER__

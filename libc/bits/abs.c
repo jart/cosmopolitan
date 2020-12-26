@@ -20,6 +20,9 @@
 #include "libc/fmt/conv.h"
 #include "libc/macros.h"
 
+/**
+ * Returns absolute value of x.
+ */
 int(abs)(int x) {
   return ABS(x);
 }

@@ -24,7 +24,7 @@
 /**
  * Does things with file descriptor, via re-imagined hourglass api, e.g.
  *
- *   CHECK_NE(-1, fcntl(fd, F_SETFD, FD_CLOEXEC));
+ *     CHECK_NE(-1, fcntl(fd, F_SETFD, FD_CLOEXEC));
  *
  * @param cmd can be F_{GET,SET}{FD,FL}, etc.
  * @param arg can be FD_CLOEXEC, etc. depending

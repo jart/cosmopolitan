@@ -36,7 +36,8 @@ static axdx_t RotateQuadrant(long n, long y, long x, long ry, long rx) {
 /**
  * Generates Hilbert space-filling curve.
  *
- * @see morton()
+ * @see https://en.wikipedia.org/wiki/Hilbert_curve
+ * @see unhilbert()
  */
 long hilbert(long n, long y, long x) {
   axdx_t m;
@@ -56,7 +57,8 @@ long hilbert(long n, long y, long x) {
 /**
  * Decodes Hilbert space-filling curve.
  *
- * @see unmorton()
+ * @see https://en.wikipedia.org/wiki/Hilbert_curve
+ * @see hilbert()
  */
 axdx_t unhilbert(long n, long i) {
   axdx_t m;

@@ -19,6 +19,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
+/**
+ * Returns nonzero if wc is C0 or C1 control code.
+ */
 int iswcntrl(wint_t wc) {
   return (0x00 <= wc && wc <= 0x1F) || (0x7F <= wc && wc <= 0x9F);
 }

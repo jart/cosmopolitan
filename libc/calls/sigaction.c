@@ -112,10 +112,10 @@ static void sigaction$native2cosmo(union metasigaction *sa) {
 /**
  * Installs handler for kernel interrupt, e.g.:
  *
- *   void GotCtrlC(int sig, siginfo_t *si, ucontext_t *ctx);
- *   struct sigaction sa = {.sa_sigaction = GotCtrlC,
- *                          .sa_flags = SA_RESETHAND|SA_RESTART|SA_SIGINFO};
- *   CHECK_NE(-1, sigaction(SIGINT, &sa, NULL));
+ *     void GotCtrlC(int sig, siginfo_t *si, ucontext_t *ctx);
+ *     struct sigaction sa = {.sa_sigaction = GotCtrlC,
+ *                            .sa_flags = SA_RESETHAND|SA_RESTART|SA_SIGINFO};
+ *     CHECK_NE(-1, sigaction(SIGINT, &sa, NULL));
  *
  * @see xsigaction() for a much better api
  * @asyncsignalsafe

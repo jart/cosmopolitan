@@ -1,3 +1,4 @@
+#include "libc/macros.h"
 #include "third_party/chibicc/test/test.h"
 
 int main() {
@@ -5,6 +6,11 @@ int main() {
            int n = 5;
            int x[n];
            sizeof(x);
+         }));
+  ASSERT(5, ({
+           int n = 5;
+           int x[n];
+           ARRAYLEN(x);
          }));
   ASSERT((5 + 1) * (8 * 2) * 4, ({
            int m = 5, n = 8;

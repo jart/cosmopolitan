@@ -28,27 +28,28 @@
  *
  * Raise SIGALRM every 1.5s:
  *
- *   CHECK_NE(-1, sigaction(SIGALRM,
- *                          &(struct sigaction){.sa_sigaction = missingno},
- *                          NULL));
- *   CHECK_NE(-1, setitimer(ITIMER_REAL,
- *                          &(const struct itimerval){{1, 500000}, {1, 500000}},
- *                          NULL));
+ *     CHECK_NE(-1, sigaction(SIGALRM,
+ *                            &(struct sigaction){.sa_sigaction = missingno},
+ *                            NULL));
+ *     CHECK_NE(-1, setitimer(ITIMER_REAL,
+ *                            &(const struct itimerval){{1, 500000},
+ *                                                      {1, 500000}},
+ *                            NULL));
  *
  * Set single-shot 50ms timer callback to interrupt laggy connect():
  *
- *   CHECK_NE(-1, sigaction(SIGALRM,
- *                          &(struct sigaction){.sa_sigaction = missingno,
- *                                              .sa_flags = SA_RESETHAND},
- *                          NULL));
- *   CHECK_NE(-1, setitimer(ITIMER_REAL,
- *                          &(const struct itimerval){{0, 0}, {0, 50000}},
- *                          NULL));
- *   if (connect(...) == -1 && errno == EINTR) { ... }
+ *     CHECK_NE(-1, sigaction(SIGALRM,
+ *                            &(struct sigaction){.sa_sigaction = missingno,
+ *                                                .sa_flags = SA_RESETHAND},
+ *                            NULL));
+ *     CHECK_NE(-1, setitimer(ITIMER_REAL,
+ *                            &(const struct itimerval){{0, 0}, {0, 50000}},
+ *                            NULL));
+ *     if (connect(...) == -1 && errno == EINTR) { ... }
  *
  * Disarm timer:
  *
- *   CHECK_NE(-1, setitimer(ITIMER_REAL, &(const struct itimerval){0}, NULL));
+ *     CHECK_NE(-1, setitimer(ITIMER_REAL, &(const struct itimerval){0}, NULL));
  *
  * Be sure to check for EINTR on your i/o calls, for best low latency.
  *

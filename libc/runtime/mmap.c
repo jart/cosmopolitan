@@ -42,9 +42,9 @@
 /**
  * Beseeches system for page-table entries.
  *
- *   char *p = mmap(NULL, 65536, PROT_READ | PROT_WRITE,
- *                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
- *   munmap(p, 65536);
+ *     char *p = mmap(NULL, 65536, PROT_READ | PROT_WRITE,
+ *                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+ *     munmap(p, 65536);
  *
  * @param addr optionally requests a particular virtual base address,
  *     which needs to be 64kb aligned if passed (for NT compatibility)

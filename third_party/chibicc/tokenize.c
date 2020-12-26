@@ -470,6 +470,7 @@ Token *tokenize(File *file) {
   char *p = file->contents;
   Token head = {};
   Token *cur = &head;
+  struct Javadown *javadown;
   at_bol = true;
   has_space = false;
   while (*p) {
@@ -477,6 +478,22 @@ Token *tokenize(File *file) {
     if (LOOKINGAT(p, "//")) {
       p += 2;
       while (*p != '\n') p++;
+      has_space = true;
+      continue;
+    }
+    // Javadoc-style markdown comments.
+    if (LOOKINGAT(p, "/**") && p[3] != '/' && p[3] != '*') {
+      char *q = strstr(p + 3, "*/");
+      if (!q) error_at(p, "unclosed javadown");
+      javadown = ParseJavadown(p + 3, q - p - 3 - 2);
+      if (javadown->isfileoverview) {
+        FreeJavadown(file->javadown);
+        file->javadown = javadown;
+      } else {
+        cur = cur->next = new_token(TK_JAVADOWN, p, q + 2);
+        cur->javadown = javadown;
+      }
+      p = q + 2;
       has_space = true;
       continue;
     }
@@ -505,12 +522,13 @@ Token *tokenize(File *file) {
     if (isdigit(*p) || (*p == '.' && isdigit(p[1]))) {
       char *q = p++;
       for (;;) {
-        if (p[0] && p[1] && strchr("eEpP", p[0]) && strchr("+-", p[1]))
+        if (p[0] && p[1] && strchr("eEpP", p[0]) && strchr("+-", p[1])) {
           p += 2;
-        else if (isalnum(*p) || *p == '.')
+        } else if (isalnum(*p) || *p == '.') {
           p++;
-        else
+        } else {
           break;
+        }
       }
       cur = cur->next = new_token(TK_PP_NUM, q, p);
       continue;
@@ -663,7 +681,30 @@ void remove_backslash_newline(char *p) {
   // the logical line number matches the physical one.
   // This counter maintain the number of newlines we have removed.
   int n = 0;
+  bool instring = false;
   while (p[i]) {
+    if (instring) {
+      if (p[i] == '"' && p[i - 1] != '\\') {
+        instring = false;
+      }
+    } else {
+      if (p[i] == '"') {
+        instring = true;
+      } else if (p[i] == '/' && p[i + 1] == '*') {
+        p[j++] = p[i++];
+        p[j++] = p[i++];
+        while (p[i]) {
+          if (p[i] == '*' && p[i + 1] == '/') {
+            p[j++] = p[i++];
+            p[j++] = p[i++];
+            break;
+          } else {
+            p[j++] = p[i++];
+          }
+        }
+        continue;
+      }
+    }
     if (p[i] == '\\' && p[i + 1] == '\n') {
       i += 2;
       n++;

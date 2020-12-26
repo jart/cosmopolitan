@@ -177,8 +177,8 @@ struct As {
   struct Sauces {
     unsigned long n;
     struct Sauce {
-      int path;  // strings
-      int line;  // 1-indexed
+      unsigned path;  // strings
+      unsigned line;  // 1-indexed
     } * p;
   } sauces;
   struct Things {
@@ -192,14 +192,14 @@ struct As {
         TT_FORWARD,
         TT_BACKWARD,
       } t : 4;
-      int s : 28;  // sauces
-      int i;       // identity,ints,floats,slices
+      unsigned s : 28;  // sauces
+      unsigned i;       // identity,ints,floats,slices
     } * p;
   } things;
   struct Sections {
     unsigned long n;
     struct Section {
-      int name;  // strings
+      unsigned name;  // strings
       int flags;
       int type;
       int align;
@@ -210,11 +210,11 @@ struct As {
     unsigned long n;
     struct Symbol {
       bool isused;
-      int name;     // slices
-      int section;  // sections
-      int stb;      // STB_*
-      int stv;      // STV_*
-      int type;     // STT_*
+      unsigned char stb;   // STB_*
+      unsigned char stv;   // STV_*
+      unsigned char type;  // STT_*
+      unsigned name;       // slices
+      unsigned section;    // sections
       long offset;
       long size;
       struct ElfWriterSymRef ref;
@@ -223,25 +223,25 @@ struct As {
   struct HashTable {
     unsigned i, n;
     struct HashEntry {
-      int h;
-      int i;
+      unsigned h;
+      unsigned i;
     } * p;
   } symbolindex;
   struct Labels {
     unsigned long n;
     struct Label {
-      int id;
-      int tok;     // things
-      int symbol;  // symbols
+      unsigned id;
+      unsigned tok;     // things
+      unsigned symbol;  // symbols
     } * p;
   } labels;
   struct Relas {
     unsigned long n;
     struct Rela {
       bool isdead;
-      int kind;     // R_X86_64_{16,32,64,PC8,PC32,PLT32,GOTPCRELX,...}
-      int expr;     // exprs
-      int section;  // sections
+      int kind;          // R_X86_64_{16,32,64,PC8,PC32,PLT32,GOTPCRELX,...}
+      unsigned expr;     // exprs
+      unsigned section;  // sections
       long offset;
       long addend;
     } * p;
@@ -251,7 +251,7 @@ struct As {
     struct Expr {
       enum ExprKind {
         EX_INT,     // integer
-        EX_SYM,     // slice, forward, backward, then symbol
+        EX_SYM,     // things (then symbols after eval)
         EX_NEG,     // unary -
         EX_NOT,     // unary !
         EX_BITNOT,  // unary ~
@@ -276,7 +276,7 @@ struct As {
         EM_DTPOFF,
         EM_TPOFF,
       } em;
-      int tok;
+      unsigned tok;
       int lhs;
       int rhs;
       long x;
@@ -456,7 +456,7 @@ static bool EndsWith(const char *s, const char *suffix) {
   n = strlen(s);
   m = strlen(suffix);
   if (m > n) return false;
-  return memcmp(s + n - m, suffix, m) == 0;
+  return !memcmp(s + n - m, suffix, m);
 }
 
 static char *Format(const char *fmt, ...) {
@@ -1192,21 +1192,21 @@ static int ParseMul(struct As *a, int *rest, int i) {
   for (;;) {
     if (IsPunct(a, i, '*')) {
       y = ParseUnary(a, &i, i + 1);
-      if (a->exprs.p[x].kind == EX_INT || a->exprs.p[y].kind == EX_INT) {
+      if (a->exprs.p[x].kind == EX_INT && a->exprs.p[y].kind == EX_INT) {
         a->exprs.p[x].x *= a->exprs.p[y].x;
       } else {
         x = NewBinary(a, EX_MUL, x, y);
       }
     } else if (IsPunct(a, i, '/')) {
       y = ParseUnary(a, &i, i + 1);
-      if (a->exprs.p[x].kind == EX_INT || a->exprs.p[y].kind == EX_INT) {
+      if (a->exprs.p[x].kind == EX_INT && a->exprs.p[y].kind == EX_INT) {
         a->exprs.p[x].x /= a->exprs.p[y].x;
       } else {
         x = NewBinary(a, EX_DIV, x, y);
       }
     } else if (IsPunct(a, i, '%')) {
       y = ParseUnary(a, &i, i + 1);
-      if (a->exprs.p[x].kind == EX_INT || a->exprs.p[y].kind == EX_INT) {
+      if (a->exprs.p[x].kind == EX_INT && a->exprs.p[y].kind == EX_INT) {
         a->exprs.p[x].x %= a->exprs.p[y].x;
       } else {
         x = NewBinary(a, EX_REM, x, y);
@@ -1225,14 +1225,14 @@ static int ParseAdd(struct As *a, int *rest, int i) {
   for (;;) {
     if (IsPunct(a, i, '+')) {
       y = ParseMul(a, &i, i + 1);
-      if (a->exprs.p[x].kind == EX_INT || a->exprs.p[y].kind == EX_INT) {
+      if (a->exprs.p[x].kind == EX_INT && a->exprs.p[y].kind == EX_INT) {
         a->exprs.p[x].x += a->exprs.p[y].x;
       } else {
         x = NewBinary(a, EX_ADD, x, y);
       }
     } else if (IsPunct(a, i, '-')) {
       y = ParseMul(a, &i, i + 1);
-      if (a->exprs.p[x].kind == EX_INT || a->exprs.p[y].kind == EX_INT) {
+      if (a->exprs.p[x].kind == EX_INT && a->exprs.p[y].kind == EX_INT) {
         a->exprs.p[x].x -= a->exprs.p[y].x;
       } else if (a->exprs.p[y].kind == EX_INT) {
         a->exprs.p[y].x = -a->exprs.p[y].x;
@@ -1254,14 +1254,14 @@ static int ParseShift(struct As *a, int *rest, int i) {
   for (;;) {
     if (IsPunct(a, i, '<' << 8 | '<')) {
       y = ParseAdd(a, &i, i + 1);
-      if (a->exprs.p[x].kind == EX_INT || a->exprs.p[y].kind == EX_INT) {
+      if (a->exprs.p[x].kind == EX_INT && a->exprs.p[y].kind == EX_INT) {
         a->exprs.p[x].x <<= a->exprs.p[y].x & 63;
       } else {
         x = NewBinary(a, EX_SHL, x, y);
       }
     } else if (IsPunct(a, i, '>' << 8 | '>')) {
       y = ParseAdd(a, &i, i + 1);
-      if (a->exprs.p[x].kind == EX_INT || a->exprs.p[y].kind == EX_INT) {
+      if (a->exprs.p[x].kind == EX_INT && a->exprs.p[y].kind == EX_INT) {
         a->exprs.p[x].x >>= a->exprs.p[y].x & 63;
       } else {
         x = NewBinary(a, EX_SHR, x, y);
@@ -1280,28 +1280,28 @@ static int ParseRelational(struct As *a, int *rest, int i) {
   for (;;) {
     if (IsPunct(a, i, '<')) {
       y = ParseShift(a, &i, i + 1);
-      if (a->exprs.p[x].kind == EX_INT || a->exprs.p[y].kind == EX_INT) {
+      if (a->exprs.p[x].kind == EX_INT && a->exprs.p[y].kind == EX_INT) {
         a->exprs.p[x].x = a->exprs.p[x].x < a->exprs.p[y].x;
       } else {
         x = NewBinary(a, EX_LT, x, y);
       }
     } else if (IsPunct(a, i, '>')) {
       y = ParseShift(a, &i, i + 1);
-      if (a->exprs.p[x].kind == EX_INT || a->exprs.p[y].kind == EX_INT) {
+      if (a->exprs.p[x].kind == EX_INT && a->exprs.p[y].kind == EX_INT) {
         a->exprs.p[x].x = a->exprs.p[y].x < a->exprs.p[x].x;
       } else {
         x = NewBinary(a, EX_LT, y, x);
       }
     } else if (IsPunct(a, i, '<' << 8 | '=')) {
       y = ParseShift(a, &i, i + 1);
-      if (a->exprs.p[x].kind == EX_INT || a->exprs.p[y].kind == EX_INT) {
+      if (a->exprs.p[x].kind == EX_INT && a->exprs.p[y].kind == EX_INT) {
         a->exprs.p[x].x = a->exprs.p[x].x <= a->exprs.p[y].x;
       } else {
         x = NewBinary(a, EX_LE, x, y);
       }
     } else if (IsPunct(a, i, '>' << 8 | '=')) {
       y = ParseShift(a, &i, i + 1);
-      if (a->exprs.p[x].kind == EX_INT || a->exprs.p[y].kind == EX_INT) {
+      if (a->exprs.p[x].kind == EX_INT && a->exprs.p[y].kind == EX_INT) {
         a->exprs.p[x].x = a->exprs.p[y].x <= a->exprs.p[x].x;
       } else {
         x = NewBinary(a, EX_LE, y, x);
@@ -1320,14 +1320,14 @@ static int ParseEquality(struct As *a, int *rest, int i) {
   for (;;) {
     if (IsPunct(a, i, '=' << 8 | '=')) {
       y = ParseRelational(a, &i, i + 1);
-      if (a->exprs.p[x].kind == EX_INT || a->exprs.p[y].kind == EX_INT) {
+      if (a->exprs.p[x].kind == EX_INT && a->exprs.p[y].kind == EX_INT) {
         a->exprs.p[x].x = a->exprs.p[x].x == a->exprs.p[y].x;
       } else {
         x = NewBinary(a, EX_EQ, x, y);
       }
     } else if (IsPunct(a, i, '!' << 8 | '=')) {
       y = ParseRelational(a, &i, i + 1);
-      if (a->exprs.p[x].kind == EX_INT || a->exprs.p[y].kind == EX_INT) {
+      if (a->exprs.p[x].kind == EX_INT && a->exprs.p[y].kind == EX_INT) {
         a->exprs.p[x].x = a->exprs.p[x].x != a->exprs.p[y].x;
       } else {
         x = NewBinary(a, EX_NE, x, y);
@@ -1346,7 +1346,7 @@ static int ParseAnd(struct As *a, int *rest, int i) {
   for (;;) {
     if (IsPunct(a, i, '&')) {
       y = ParseEquality(a, &i, i + 1);
-      if (a->exprs.p[x].kind == EX_INT || a->exprs.p[y].kind == EX_INT) {
+      if (a->exprs.p[x].kind == EX_INT && a->exprs.p[y].kind == EX_INT) {
         a->exprs.p[x].x &= a->exprs.p[y].x;
       } else {
         x = NewBinary(a, EX_AND, x, y);
@@ -1365,7 +1365,7 @@ static int ParseXor(struct As *a, int *rest, int i) {
   for (;;) {
     if (IsPunct(a, i, '^')) {
       y = ParseAnd(a, &i, i + 1);
-      if (a->exprs.p[x].kind == EX_INT || a->exprs.p[y].kind == EX_INT) {
+      if (a->exprs.p[x].kind == EX_INT && a->exprs.p[y].kind == EX_INT) {
         a->exprs.p[x].x ^= a->exprs.p[y].x;
       } else {
         x = NewBinary(a, EX_XOR, x, y);
@@ -1384,7 +1384,7 @@ static int ParseOr(struct As *a, int *rest, int i) {
   for (;;) {
     if (IsPunct(a, i, '|')) {
       y = ParseXor(a, &i, i + 1);
-      if (a->exprs.p[x].kind == EX_INT || a->exprs.p[y].kind == EX_INT) {
+      if (a->exprs.p[x].kind == EX_INT && a->exprs.p[y].kind == EX_INT) {
         a->exprs.p[x].x |= a->exprs.p[y].x;
       } else {
         x = NewBinary(a, EX_OR, x, y);
@@ -3745,8 +3745,7 @@ static int ResolveSymbol(struct As *a, int i) {
     case TT_FORWARD:
       return FindLabelForward(a, a->ints.p[a->things.p[i].i]);
     default:
-      DebugBreak();
-      Fail(a, "this corruption");
+      Fail(a, "this corruption %d", a->things.p[i].t);
   }
 }
 
@@ -3775,15 +3774,6 @@ static void Write32(char b[4], int x) {
   b[1] = x >> 010;
   b[2] = x >> 020;
   b[3] = x >> 030;
-}
-
-static void MarkUndefinedSymbolsGlobal(struct As *a) {
-  int i;
-  for (i = 0; i < a->symbols.n; ++i) {
-    if (!a->symbols.p[i].section && a->symbols.p[i].stb == STB_LOCAL) {
-      a->symbols.p[i].stb = STB_GLOBAL;
-    }
-  }
 }
 
 static void MarkUsedSymbols(struct As *a, int i) {
@@ -3818,6 +3808,16 @@ static void Evaluate(struct As *a) {
   }
 }
 
+static void MarkUndefinedSymbolsGlobal(struct As *a) {
+  int i;
+  for (i = 0; i < a->symbols.n; ++i) {
+    if (a->symbols.p[i].isused && !a->symbols.p[i].section &&
+        a->symbols.p[i].stb == STB_LOCAL) {
+      a->symbols.p[i].stb = STB_GLOBAL;
+    }
+  }
+}
+
 static bool IsLocal(struct As *a, int name) {
   if (name < 0) return true;
   return a->slices.p[name].n >= 2 && !memcmp(a->slices.p[name].p, ".L", 2);
@@ -3829,17 +3829,18 @@ static bool IsLiveSymbol(struct As *a, int i) {
 }
 
 static void Objectify(struct As *a, int path) {
-  int i, j, s;
+  char *p;
+  int i, j, s, e;
   struct ElfWriter *elf;
   elf = elfwriter_open(a->strings.p[path], 0644);
   for (i = 0; i < a->symbols.n; ++i) {
     if (!IsLiveSymbol(a, i)) continue;
+    p = strndup(a->slices.p[a->symbols.p[i].name].p,
+                a->slices.p[a->symbols.p[i].name].n);
     a->symbols.p[i].ref = elfwriter_appendsym(
-        elf,
-        strndup(a->slices.p[a->symbols.p[i].name].p,
-                a->slices.p[a->symbols.p[i].name].n),
-        ELF64_ST_INFO(a->symbols.p[i].stb, a->symbols.p[i].type),
+        elf, p, ELF64_ST_INFO(a->symbols.p[i].stb, a->symbols.p[i].type),
         a->symbols.p[i].stv, a->symbols.p[i].offset, a->symbols.p[i].size);
+    free(p);
   }
   for (i = 0; i < a->sections.n; ++i) {
     elfwriter_align(elf, a->sections.p[i].align, 0);
@@ -3853,24 +3854,24 @@ static void Objectify(struct As *a, int path) {
     for (j = 0; j < a->relas.n; ++j) {
       if (a->relas.p[j].isdead) continue;
       if (a->relas.p[j].section != i) continue;
-      a->i = a->exprs.p[a->relas.p[j].expr].tok;
-      switch (a->exprs.p[a->relas.p[j].expr].kind) {
+      e = a->relas.p[j].expr;
+      a->i = a->exprs.p[e].tok;
+      switch (a->exprs.p[e].kind) {
         case EX_INT:
           break;
         case EX_SYM:
-          elfwriter_appendrela(
-              elf, a->relas.p[j].offset,
-              a->symbols.p[a->exprs.p[a->relas.p[j].expr].x].ref,
-              a->relas.p[j].kind, a->relas.p[j].addend);
+          elfwriter_appendrela(elf, a->relas.p[j].offset,
+                               a->symbols.p[a->exprs.p[e].x].ref,
+                               a->relas.p[j].kind, a->relas.p[j].addend);
           break;
         case EX_ADD:
-          if (a->exprs.p[a->exprs.p[j].lhs].kind == EX_SYM &&
-              a->exprs.p[a->exprs.p[j].rhs].kind == EX_INT) {
+          if (a->exprs.p[a->exprs.p[e].lhs].kind == EX_SYM &&
+              a->exprs.p[a->exprs.p[e].rhs].kind == EX_INT) {
             elfwriter_appendrela(
                 elf, a->relas.p[j].offset,
-                a->symbols.p[a->exprs.p[a->exprs.p[j].lhs].x].ref,
+                a->symbols.p[a->exprs.p[a->exprs.p[e].lhs].x].ref,
                 a->relas.p[j].kind,
-                a->relas.p[j].addend + a->exprs.p[a->exprs.p[j].rhs].x);
+                a->relas.p[j].addend + a->exprs.p[a->exprs.p[e].rhs].x);
           } else {
             Fail(a, "bad addend");
           }
@@ -3885,6 +3886,58 @@ static void Objectify(struct As *a, int path) {
     elfwriter_finishsection(elf);
   }
   elfwriter_close(elf);
+}
+
+static void CheckIntegrity(struct As *a) {
+  int i;
+  for (i = 0; i < a->things.n; ++i) {
+    CHECK_LT((int)a->things.p[i].s, a->sauces.n);
+    switch (a->things.p[i].t) {
+      case TT_INT:
+      case TT_FORWARD:
+      case TT_BACKWARD:
+        CHECK_LT(a->things.p[i].i, a->ints.n);
+        break;
+      case TT_FLOAT:
+        CHECK_LT(a->things.p[i].i, a->floats.n);
+        break;
+      case TT_SLICE:
+        CHECK_LT(a->things.p[i].i, a->slices.n);
+        break;
+      default:
+        break;
+    }
+  }
+  for (i = 0; i < a->sections.n; ++i) {
+    CHECK_LT(a->sections.p[i].name, a->strings.n);
+  }
+  for (i = 0; i < a->symbols.n; ++i) {
+    CHECK_LT(a->symbols.p[i].name, a->slices.n);
+    CHECK_LT(a->symbols.p[i].section, a->sections.n);
+  }
+  for (i = 0; i < a->labels.n; ++i) {
+    CHECK_LT(a->labels.p[i].tok, a->things.n);
+    CHECK_LT(a->labels.p[i].symbol, a->symbols.n);
+  }
+  for (i = 0; i < a->relas.n; ++i) {
+    CHECK_LT(a->relas.p[i].expr, a->exprs.n);
+    CHECK_LT(a->relas.p[i].section, a->sections.n);
+  }
+  for (i = 0; i < a->exprs.n; ++i) {
+    CHECK_LT(a->exprs.p[i].tok, a->things.n);
+    if (a->exprs.p[i].lhs != -1) CHECK_LT(a->exprs.p[i].lhs, a->exprs.n);
+    if (a->exprs.p[i].rhs != -1) CHECK_LT(a->exprs.p[i].rhs, a->exprs.n);
+    switch (a->exprs.p[i].kind) {
+      case EX_SYM:
+        CHECK_LT(a->exprs.p[i].x, a->things.n);
+        CHECK(a->things.p[a->exprs.p[i].x].t == TT_SLICE ||
+              a->things.p[a->exprs.p[i].x].t == TT_FORWARD ||
+              a->things.p[a->exprs.p[i].x].t == TT_BACKWARD);
+        break;
+      default:
+        break;
+    }
+  }
 }
 
 static void PrintThings(struct As *a) {
@@ -3929,17 +3982,18 @@ void Assembler(int argc, char *argv[]) {
   Tokenize(a, a->inpath);
   /* PrintThings(a); */
   Assemble(a);
+  /* CheckIntegrity(a); */
   Evaluate(a);
   MarkUndefinedSymbolsGlobal(a);
   Objectify(a, a->outpath);
-  malloc_stats();
+  /* malloc_stats(); */
   FreeAssembler(a);
 }
 
 int main(int argc, char *argv[]) {
   showcrashreports();
   if (argc == 1) {
-    system("o//third_party/chibicc/as.com -o /tmp/o third_party/chibicc/hog.s");
+    system("o//third_party/chibicc/as.com -o /tmp/o /home/jart/trash/hog.s");
     system("objdump -xwd /tmp/o");
     exit(0);
   }

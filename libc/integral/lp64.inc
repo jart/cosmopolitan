@@ -67,4 +67,4 @@
 #define __INT_FAST64_TYPE__   __INT64_TYPE__
 #define __UINT_FAST64_TYPE__  __UINT64_TYPE__
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif

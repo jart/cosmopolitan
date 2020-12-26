@@ -18,10 +18,6 @@
 #define __far
 #endif
 
-/**
- * Gets type of expression.
- * @see autotype() which is a better alternative for certain use cases
- */
 #if !defined(__GNUC__) && __cplusplus + 0 >= 201103L
 #define typeof(x) decltype(x)
 #elif (defined(__STRICT_ANSI__) || !defined(__GNUC__)) && \
@@ -143,35 +139,10 @@ typedef __UINT32_TYPE__ uint32_t;
 typedef __INT64_TYPE__ int64_t;
 typedef __UINT64_TYPE__ uint64_t;
 
-/**
- * AX:DX register pair.
- *
- * Every ABI we support permits functions to return two machine words.
- * Normally it's best to define a one-off struct. Sometimes we don't
- * want the boilerplate.
- *
- * @see System V Application Binary Interface NexGen32e Architecture
- *     Processor Supplement, Version 1.0, December 5th, 2018
- * @see agner.org/optimize/calling_conventions.pdf (chapter 6)
- * @see LISP primitives CONS[CAR,CDR] w/ IBM 704 naming
- * @see int128_t
- */
 typedef struct {
   intptr_t ax, dx;
 } axdx_t;
 
-/*
- * GCC, Clang, and System V ABI all incorrectly define intmax_t.
- *
- *   “[intmax_t] designates a signed integer type capable of
- *    representing any value of any signed integer type.”
- *    ──Quoth ISO/IEC 9899:201x 7.20.1.5
- *
- * This surprising contradiction is most likely due to Linux distro
- * practices of using dynamic shared objects which needs to change.
- *
- * http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2303.pdf
- */
 #ifdef __SIZEOF_INTMAX__
 #undef __SIZEOF_INTMAX__
 #endif
@@ -210,11 +181,6 @@ typedef uint64_t uintmax_t;
 #define mallocesque  reallocesque returnspointerwithnoaliases
 #define interruptfn  nocallersavedregisters forcealignargpointer
 
-/**
- * Declares combinator, i.e. never reads/writes global memory.
- * Thus enabling LICM, CSE, DCE, etc. optimizations.
- * @see nosideeffect
- */
 #ifndef pureconst
 #ifndef __STRICT_ANSI__
 #define pureconst __attribute__((__const__))
@@ -223,9 +189,6 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Aligns automatic or static variable.
- */
 #ifndef forcealign
 #ifndef __STRICT_ANSI__
 #define forcealign(bytes) __attribute__((__aligned__(bytes)))
@@ -234,21 +197,12 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Disables alignment.
- * @param opt_bytes defaults to __BIGGEST_ALIGNMENT__
- * @see nosideeffect
- */
 #ifndef __STRICT_ANSI__
 #define thatispacked __attribute__((__packed__))
 #else
 #define thatispacked
 #endif
 
-/**
- * Declares prototype as using well-known format string DSL.
- * Thereby allowing compiler to identify certain bugs.
- */
 #ifndef __STRICT_ANSI__
 #define printfesque(n)   __attribute__((__format__(__gnu_printf__, n, n + 1)))
 #define scanfesque(n)    __attribute__((__format__(__gnu_scanf__, n, n + 1)))
@@ -297,11 +251,6 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Declares prototype as never mutating global memory.
- * Thus enabling CSE, DCE, LICM [clang-only?], etc. optimizations.
- * @see pureconst
- */
 #ifndef nosideeffect
 #if !defined(__STRICT_ANSI__) &&  \
     (__has_attribute(__pure__) || \
@@ -332,18 +281,6 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Makes function behave as much like macro as possible, meaning:
- *
- *   1. always inlined, i.e. even with -fno-inline
- *   2. unlinkable, i.e. elf data is not generated
- *   3. steppable, i.e. dwarf data is generated
- *   4. unprofilable
- *   5. unhookable
- *
- * @note consider static or writing a macro
- * @see externinline
- */
 #ifndef forceinline
 #ifdef __cplusplus
 #define forceinline inline
@@ -372,19 +309,6 @@ typedef uint64_t uintmax_t;
 #endif /* __cplusplus */
 #endif /* forceinline */
 
-/**
- * Permits untyped or punned memory manipulation w/o asm.
- *
- *   “The fundamental problem is that it is not possible to write real
- *    programs using the X3J11 definition of C. The committee has created
- *    an unreal language that no one can or will actually use. While the
- *    problems of `const' may owe to careless drafting of the
- *    specification, `noalias' is an altogether mistaken notion, and must
- *    not survive.” ──Dennis Ritchie in 1988-03-20.
- *
- * @see asm(), memcpy(), memset(), read32be(), etc.
- * @see unsigned char
- */
 #ifndef mayalias
 #if !defined(__STRICT_ANSI__) &&       \
     (__has_attribute(__may_alias__) || \
@@ -395,11 +319,6 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Declares prototype as returning freeable resource.
- * Compilation will fail if caller ignores return value.
- * @see gc(), free(), close(), etc.
- */
 #ifndef nodiscard
 #if !defined(__STRICT_ANSI__) &&                           \
     ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 304 || \
@@ -410,10 +329,6 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Declares variadic function as needing NULL sentinel argument.
- * @see execl() for example
- */
 #ifndef nullterminated
 #if !defined(__STRICT_ANSI__) && \
     (__has_attribute(__sentinel__) || __GNUC__ >= 4)
@@ -448,10 +363,6 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Relocates function to .text.unlikely section of binary.
- * @note can be used to minimize page-faults and improve locality
- */
 #ifndef relegated
 #if !defined(__STRICT_ANSI__) &&  \
     (__has_attribute(__cold__) || \
@@ -470,11 +381,6 @@ typedef uint64_t uintmax_t;
 #define warnifused(s)
 #endif
 
-/**
- * Relocates function to .text.hot section of binary.
- * @note can be used to minimize page-faults w/ improved locality
- * @note most appropriately automated by profile-guided opts
- */
 #ifndef firstclass
 #if !defined(__STRICT_ANSI__) && \
     (__has_attribute(__hot__) || \
@@ -485,12 +391,6 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Declares all or specific parameters as never receiving NULL.
- *
- * This can be checked at both compile-time (only for constexprs) and
- * runtime too (only in MODE=dbg mode) by synthetic Ubsan code.
- */
 #ifndef paramsnonnull
 #if !defined(__STRICT_ANSI__) &&     \
     (__has_attribute(__nonnull__) || \
@@ -501,22 +401,12 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Declares array argument w/ minimum size contract, e.g.
- *
- *   int foo(int bar[hasatleast 2]) { ... }
- */
 #if __STDC_VERSION__ + 0 >= 199901L
 #define hasatleast static
 #else
 #define hasatleast
 #endif
 
-/**
- * Qualifies char pointer so it's treated like every other type.
- *
- *   int foo(int bar[hasatleast 2]) { ... }
- */
 #if __STDC_VERSION__ + 0 < 199901L && !defined(restrict)
 #if !defined(__STRICT_ANSI__) && !defined(__cplusplus) && \
     ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 301 || defined(_MSC_VER))
@@ -527,10 +417,6 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Declares prototype that can't mutate caller's static variables.
- * @note consider more .c files or declare in function
- */
 #ifndef nocallback
 #if !defined(__STRICT_ANSI__) &&  \
     (__has_attribute(__leaf__) || \
@@ -554,11 +440,6 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Asks compiler to not optimize function definition.
- *
- * @todo this is dangerous delete?
- */
 #ifndef nooptimize
 #ifndef __STRICT_ANSI__
 #if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
@@ -572,13 +453,6 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Asks compiler to generate as little code as possible for function.
- *
- * This does the same thing as relegated, but without relocation.
- *
- * @todo this is dangerous delete?
- */
 #ifndef optimizesize
 #ifndef __STRICT_ANSI__
 #if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
@@ -592,15 +466,6 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Asks compiler to always heavily optimize function.
- *
- * This keyword provides an alternative to build flag tuning, in cases
- * where the compiler is reluctant to vectorize mathematical code that's
- * written in standards-compliant C rather than GCC extensions.
- *
- * @todo this is dangerous delete?
- */
 #ifndef optimizespeed
 #if !defined(__STRICT_ANSI__) &&                           \
     ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
@@ -611,9 +476,6 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Declares prototype that behaves similar to setjmp() or vfork().
- */
 #ifndef returnstwice
 #if !defined(__STRICT_ANSI__) &&           \
     (__has_attribute(__returns_twice__) || \
@@ -624,10 +486,6 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Asks compiler to not emit DWARF assembly for function.
- * @see artificial
- */
 #ifndef nodebuginfo
 #if !defined(__STRICT_ANSI__) && \
     (__has_attribute(__nodebug__) || defined(__llvm__))
@@ -637,10 +495,6 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Associates debug information with call site.
- * @see nodebuginfo
- */
 #ifndef artificial
 #if !defined(__STRICT_ANSI__) &&        \
     (__has_attribute(__artificial__) || \
@@ -651,11 +505,6 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Defines function as specially compiled for newer cpu model.
- * @see -ftree-vectorize and consider assembly
- * @see libc/dce.h
- */
 #ifndef microarchitecture
 #if !defined(__STRICT_ANSI__) &&    \
     (__has_attribute(__target__) || \
@@ -666,10 +515,6 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Compiles function multiple times for different cpu models.
- * @see libc/dce.h
- */
 #ifndef targetclones
 #if !defined(__STRICT_ANSI__) && \
     (__has_attribute(__target_clones__) || __GNUC__ >= 6)
@@ -679,10 +524,6 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Defines function with prologue that fixes misaligned stack.
- * @see nocallersavedregisters and consider assembly
- */
 #if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 408 || \
     __has_attribute(__force_align_arg_pointer__)
 #define forcealignargpointer __attribute__((__force_align_arg_pointer__))
@@ -690,12 +531,6 @@ typedef uint64_t uintmax_t;
 #define forcealignargpointer "need modern compiler"
 #endif
 
-/**
- * Declares prototype as never returning NULL.
- *
- * This is checked at compile-time for constexprs. It'll be checked at
- * runtime too by synthetic code, only in MODE=dbg mode.
- */
 #ifndef returnsnonnull
 #if !defined(__STRICT_ANSI__) &&             \
     (__has_attribute(__returns_nonnull__) || \
@@ -706,13 +541,6 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Attests return value is aligned.
- *
- * @param (alignment)
- * @param (alignment, misalignment)
- * @see attributeallocalign(), returnspointerwithnoaliases, mallocesque
- */
 #if !defined(__STRICT_ANSI__) &&            \
     (__has_attribute(__assume_aligned__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 409)
@@ -721,10 +549,6 @@ typedef uint64_t uintmax_t;
 #define returnsaligned(x)
 #endif
 
-/**
- * Declares prototype as behaving similar to malloc().
- * @see attributeallocsize(), attributeallocalign()
- */
 #ifndef returnspointerwithnoaliases
 #if !defined(__STRICT_ANSI__) &&    \
     (__has_attribute(__malloc__) || \
@@ -757,20 +581,6 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-/**
- * Defines variable as having same type as right-hand side.
- *
- * This enables safe, backwards-compatible, non-explosive macros, e.g.:
- *
- *   #define bar(FOO)                \
- *     ({                            \
- *       autotype(FOO) Foo = (FOO);  \
- *       Foo + Foo * 2;              \
- *     })
- *
- * @param x must be identical to rhs
- * @note typeof goes back to gcc 2.x
- */
 #if __cplusplus + 0 >= 201103L
 #define autotype(x) auto
 #elif ((__has_builtin(auto_type) || defined(__llvm__) ||       \
@@ -781,27 +591,16 @@ typedef uint64_t uintmax_t;
 #define autotype(x) typeof(x)
 #endif
 
-/**
- * Defines interrupt handler that can call non-interrupt functions.
- * @see forcealignargpointer, -mgeneral-regs-only and consider assembly
- */
 #if __GNUC__ >= 7 || __has_attribute(__no_caller_saved_registers__)
 #define nocallersavedregisters __attribute__((__no_caller_saved_registers__))
 #else
 #define nocallersavedregisters "need modern compiler"
 #endif
 
-/**
- * Attests that execution of statement is impossible.
- */
 #ifndef unreachable
 #define unreachable __builtin_unreachable()
 #endif
 
-/**
- * Statement that does nothing.
- * @note can help avoid drama w/ linters, warnings, formatters, etc.
- */
 #define donothing \
   do {            \
   } while (0)
@@ -857,9 +656,6 @@ typedef uint64_t uintmax_t;
 #define initarray _Section(".init_array")
 #endif
 
-/**
- * Systemic suppressions.
- */
 #ifndef __STRICT_ANSI__
 #if defined(__GNUC__) || defined(__llvm__)
 #pragma GCC diagnostic ignored "-Wsign-compare"      /* lint needs to change  */
@@ -908,17 +704,6 @@ typedef uint64_t uintmax_t;
 #endif /* !GCC && LLVM */
 #endif /* ANSI */
 
-/**
- * Elevate warnings of material consequence.
- *
- * These aren't stylistic in nature; but are perfectly fine to disable,
- * assuming we're ok with the compiler simply generating a runtime crash
- * instead. Otherwise what usually happens with these is that a weakness
- * is introduced, important optimizations can't be performed; or worst
- * of all: the code will need patching if ported to a toy or any machine
- * designed by an engineer who hadn't understood John von Neumann at the
- * time, e.g. 1's complement, big endian, under 32bit word size, etc.
- */
 #ifndef __W__
 #ifndef __STRICT_ANSI__
 #if defined(__GNUC__) || defined(__llvm__)
@@ -965,10 +750,6 @@ typedef uint64_t uintmax_t;
 #endif /* ANSI */
 #endif /* -w */
 
-/**
- * Sets manual breakpoint.
- * @see showcrashreports() for auto gdb attach
- */
 #define DebugBreak() asm("int3")
 
 #define VEIL(CONSTRAINT, EXPRESSION)                             \
@@ -991,10 +772,6 @@ typedef uint64_t uintmax_t;
     0;                                             \
   })
 
-/**
- * Pulls another module, by symbol, into linkage.
- * @note nop is discarded by ape/ape.lds
- */
 #define YOINK(SYMBOL)                                                     \
   do {                                                                    \
     _Static_assert(!__builtin_types_compatible_p(typeof(SYMBOL), char[]), \
@@ -1006,29 +783,15 @@ typedef uint64_t uintmax_t;
         : "X"(SYMBOL));                                                   \
   } while (0)
 
-/**
- * Pulls another module into linkage from top-level scope.
- * @note nop is discarded by ape/ape.lds
- */
 #define STATIC_YOINK(SYMBOLSTR) \
   asm(".pushsection .yoink\n\tnop\t\"" SYMBOLSTR "\"\n\t.popsection")
 
-/**
- * Pulls source file into ZIP portion of binary.
- * @see build/rules.mk which defines the wildcard build rule %.zip.o
- */
 #if !defined(IM_FEELING_NAUGHTY) && !defined(__STRICT_ANSI__)
 #define STATIC_YOINK_SOURCE(PATH) STATIC_YOINK(PATH)
 #else
 #define STATIC_YOINK_SOURCE(PATH)
 #endif
 
-/**
- * Pulls source of object being compiled into zip.
- * @note automates most compliance with gpl terms
- * @see libc/zipos/zipcentraldir.S
- * @see ape/ape.lds
- */
 #ifdef __BASE_FILE__
 STATIC_YOINK_SOURCE(__BASE_FILE__);
 #endif

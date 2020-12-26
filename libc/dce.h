@@ -5,6 +5,7 @@
 │ cosmopolitan § autotune » dead code elimination                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 
+#ifndef SUPPORT_VECTOR
 /**
  * Supported Platforms Tuning Knob (Runtime & Compile-Time)
  *
@@ -17,7 +18,6 @@
  * offer marginal improvements in terms of code size and performance, at
  * the cost of portability.
  */
-#ifndef SUPPORT_VECTOR
 #define SUPPORT_VECTOR 0b11111111
 #endif
 #define LINUX   1

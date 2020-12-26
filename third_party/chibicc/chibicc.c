@@ -32,6 +32,7 @@ bool opt_verbose;
 
 static bool opt_A;
 static bool opt_E;
+static bool opt_J;
 static bool opt_M;
 static bool opt_MD;
 static bool opt_MMD;
@@ -202,6 +203,8 @@ static void parse_args(int argc, char **argv) {
       opt_c = true;
     } else if (!strcmp(argv[i], "-E")) {
       opt_E = true;
+    } else if (!strcmp(argv[i], "-J")) {
+      opt_J = true;
     } else if (!strcmp(argv[i], "-A")) {
       opt_A = true;
     } else if (!strcmp(argv[i], "-I")) {
@@ -364,7 +367,14 @@ static char *create_tmpfile(void) {
   return path;
 }
 
-static void run_subprocess(char **argv) {
+static void handle_exit(bool ok) {
+  if (!ok) {
+    opt_save_temps = true;
+    exit(1);
+  }
+}
+
+static bool run_subprocess(char **argv) {
   // If -### is given, dump the subprocess's command line.
   if (opt_hash_hash_hash) {
     fprintf(stderr, "%s", argv[0]);
@@ -384,13 +394,10 @@ static void run_subprocess(char **argv) {
       break;
     }
   }
-  if (status != 0) {
-    opt_save_temps = true;
-    exit(1);
-  }
+  return !status;
 }
 
-static void run_cc1(int argc, char **argv, char *input, char *output) {
+static bool run_cc1(int argc, char **argv, char *input, char *output) {
   char **args = calloc(argc + 10, sizeof(char *));
   memcpy(args, argv, argc * sizeof(char *));
   args[argc++] = "-cc1";
@@ -402,7 +409,7 @@ static void run_cc1(int argc, char **argv, char *input, char *output) {
     args[argc++] = "-cc1-output";
     args[argc++] = output;
   }
-  run_subprocess(args);
+  return run_subprocess(args);
 }
 
 static void print_token(FILE *out, Token *tok) {
@@ -540,6 +547,10 @@ static void cc1(void) {
     print_ast(stdout, prog);
     return;
   }
+  if (opt_J) {
+    output_javadown(output_file, prog);
+    return;
+  }
   FILE *out = open_file(output_file);
   codegen(prog, out);
   fclose(out);
@@ -561,7 +572,7 @@ static void assemble(char *input, char *output) {
   strarray_push(&arr, "-o");
   strarray_push(&arr, output);
   strarray_push(&arr, NULL);
-  run_subprocess(arr.data);
+  handle_exit(run_subprocess(arr.data));
 }
 
 static void run_linker(StringArray *inputs, char *output) {
@@ -591,7 +602,7 @@ static void run_linker(StringArray *inputs, char *output) {
     strarray_push(&arr, inputs->data[i]);
   }
   strarray_push(&arr, NULL);
-  run_subprocess(arr.data);
+  handle_exit(run_subprocess(arr.data));
 }
 
 int chibicc(int argc, char **argv) {
@@ -608,6 +619,7 @@ int chibicc(int argc, char **argv) {
     error("cannot specify '-o' with '-c,' '-S' or '-E' with multiple files");
   }
   StringArray ld_args = {};
+  StringArray dox_args = {};
   for (int i = 0; i < input_paths.len; i++) {
     char *input = input_paths.data[i];
     if (!strncmp(input, "-l", 2)) {
@@ -647,31 +659,42 @@ int chibicc(int argc, char **argv) {
     assert(type == FILE_C || type == FILE_ASM_CPP);
     // Just preprocess
     if (opt_E || opt_M) {
-      run_cc1(argc, argv, input, NULL);
+      handle_exit(run_cc1(argc, argv, input, NULL));
       continue;
     }
     // Compile
     if (opt_S) {
-      run_cc1(argc, argv, input, output);
+      handle_exit(run_cc1(argc, argv, input, output));
       continue;
     }
     // Compile and assemble
     if (opt_c) {
       char *tmp = create_tmpfile();
-      run_cc1(argc, argv, input, tmp);
+      handle_exit(run_cc1(argc, argv, input, tmp));
       assemble(tmp, output);
+      continue;
+    }
+    // Dox
+    if (opt_J) {
+      char *tmp = create_tmpfile();
+      if (run_cc1(argc, argv, input, tmp)) {
+        strarray_push(&dox_args, tmp);
+      }
       continue;
     }
     // Compile, assemble and link
     char *tmp1 = create_tmpfile();
     char *tmp2 = create_tmpfile();
-    run_cc1(argc, argv, input, tmp1);
+    handle_exit(run_cc1(argc, argv, input, tmp1));
     assemble(tmp1, tmp2);
     strarray_push(&ld_args, tmp2);
     continue;
   }
   if (ld_args.len > 0) {
     run_linker(&ld_args, opt_o ? opt_o : "a.out");
+  }
+  if (dox_args.len > 0) {
+    drop_dox(&dox_args, opt_o ? opt_o : "/dev/stdout");
   }
   return 0;
 }

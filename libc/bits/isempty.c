@@ -18,4 +18,9 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 
-bool isempty(const char *s) { return !s || !*s; }
+/**
+ * Returns true if s is empty string or null.
+ */
+bool isempty(const char *s) {
+  return !s || !*s;
+}

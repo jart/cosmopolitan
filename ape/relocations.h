@@ -19,23 +19,23 @@
 #define IMAGE_BASE_PHYSICAL 0x100000
 #endif
 
+#ifndef REAL_SCRATCH_AREA
 /**
  * Location of anything goes memory for real mode.
  *
  * The MBR won't load program content beyond this address, so we have
  * room for buffers, page tables, etc. before we reach the stack frame.
  */
-#ifndef REAL_SCRATCH_AREA
 #define REAL_SCRATCH_AREA 0x40000
 #endif
 
+#ifndef REAL_STACK_FRAME
 /**
  * Location of real mode 64kb stack frame.
  *
  * This address was chosen because memory beyond 0x80000 can't be
  * accessed safely without consulting e820.
  */
-#ifndef REAL_STACK_FRAME
 #define REAL_STACK_FRAME 0x70000
 #endif
 

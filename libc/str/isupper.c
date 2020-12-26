@@ -19,6 +19,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
+/**
+ * Returns nonzero if c is uppercase alpha ascii character.
+ */
 int isupper(int c) {
   return 'A' <= c && c <= 'Z';
 }

@@ -25,7 +25,9 @@
  * Returns monospace display width of UTF-8 string.
  *
  * - Control codes are discounted
+ *
  * - ANSI escape sequences are discounted
+ *
  * - East asian glyphs, emoji, etc. count as two
  *
  * @param s is NUL-terminated string

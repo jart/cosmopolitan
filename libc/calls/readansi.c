@@ -29,11 +29,11 @@
  * how long each sequence is, so that each read consumes a single thing
  * from the underlying file descriptor, e.g.
  *
- *   "a"               ALFA
- *   "\316\261"        ALPHA
- *   "\033[A"          CURSOR UP
- *   "\033[38;5;202m"  ORANGERED
- *   "\eOP"            PF1
+ *     "a"               ALFA
+ *     "\316\261"        ALPHA
+ *     "\033[A"          CURSOR UP
+ *     "\033[38;5;202m"  ORANGERED
+ *     "\eOP"            PF1
  *
  * This routine generalizes to ascii, utf-8, chorded modifier keys,
  * function keys, color codes, c0/c1 control codes, cursor movement,
@@ -48,9 +48,9 @@
  * tokenized as a single read. Lastly note, this function has limited
  * support for UNICODE representations of C0/C1 control codes, e.g.
  *
- *   "\000"            NUL
- *   "\300\200"        NUL
- *   "\302\233A"       CURSOR UP
+ *     "\000"            NUL
+ *     "\300\200"        NUL
+ *     "\302\233A"       CURSOR UP
  *
  * @param buf is guaranteed to receive a NUL terminator if size>0
  * @return number of bytes read (helps differentiate "\0" vs. "")

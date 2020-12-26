@@ -29,13 +29,6 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-/**
- * Globally precomputed x86 CPUID values.
- *
- * @note Referencing Is Initialization (RII)
- * @note Protected with PIRO
- * @see X86_HAVE()
- */
 extern const unsigned kCpuids[KCPUIDS_LEN][4];
 
 COSMOPOLITAN_C_END_

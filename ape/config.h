@@ -3,11 +3,7 @@
 #include "ape/relocations.h"
 #include "libc/macros.h"
 
-/**
- * @fileverview αcτµαlly pδrταblε εxεcµταblε configuration.
- */
-
-/**
+/*
  * Post-Initialization Read-Only Code Size Threshold.
  *
  * An executable needs to have at least this much code, before the
@@ -22,9 +18,6 @@
 #endif
 #endif
 
-/**
- * PC Standard I/O Configuration.
- */
 #ifndef METAL_STDIN
 #define METAL_STDIN COM1
 #endif
@@ -35,11 +28,6 @@
 #define METAL_STDERR COM1
 #endif
 
-/**
- * PC Display Configuration (MDA/CGA)
- * @see www.lammertbies.nl/comm/info/serial-uart.html
- * @see ape/lib/vidya.internal.h
- */
 #ifndef VIDYA_MODE
 #define VIDYA_MODE VIDYA_MODE_CGA
 #endif
@@ -66,10 +54,6 @@
 #define X87_DEFAULT X87_NORMAL
 #endif
 
-/**
- * Serial Line Configuration (8250 UART 16550)
- * @see ape/lib/uart.h
- */
 #ifndef UART_BAUD_RATE
 #define UART_BAUD_RATE 9600 /* bits per second ∈ [50,115200] */
 #endif
@@ -93,9 +77,6 @@
 #define UART_CONF_LCR 0b01000011
 #endif
 
-/**
- * eXtreme Low Memory.
- */
 #define XLM(VAR)                            (XLM_BASE_REAL + XLM_##VAR)
 #define XLMV(VAR)                           (__xlm + XLM_##VAR)
 #define XLM_BASE_REAL                       0x1000

@@ -3,13 +3,13 @@
 #include "libc/macros.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
+#if !defined(__GNUC__) || defined(__STRICT_ANSI__)
+#define pushpop(x) (x)
+#else
 /**
  * PushPop
  * An elegant weapon for a more civilized age.
  */
-#if !defined(__GNUC__) || defined(__STRICT_ANSI__)
-#define pushpop(x) (x)
-#else
 #define pushpop(x)                                          \
   ({                                                        \
     typeof(x) Popped;                                       \
