@@ -11,7 +11,7 @@
                * http://csrc.nist.gov/publications/fips/fips180-2/fips180-2withchangenotice.pdf
               This implementation uses little endian byte order.
 *********************************************************************/
-#include "libc/bits/safemacros.internal.h"
+#include "libc/bits/safemacros.h"
 #include "libc/dce.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/internal.h"

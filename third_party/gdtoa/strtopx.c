@@ -32,7 +32,7 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- extern UShort NanDflt_ldus_D2A[5];
+ extern UShort __gdtoa_NanDflt_ldus[5];
 
 #undef _0
 #undef _1
@@ -54,12 +54,8 @@ THIS SOFTWARE.
 #define _4 0
 #endif
 
- int
-#ifdef KR_headers
-strtopx(s, sp, V) CONST char *s; char **sp; void *V;
-#else
+int
 strtopx(CONST char *s, char **sp, void *V)
-#endif
 {
 	const static FPI fpi0 = { 64, 1-16383-64+1, 32766 - 16383 - 64 + 1, 1, SI, 0 /*unused*/ };
 	ULong bits[2];
@@ -100,11 +96,11 @@ strtopx(CONST char *s, char **sp, void *V)
 		break;
 
 	  case STRTOG_NaN:
-		L[_4] = NanDflt_ldus_D2A[0];
-		L[_3] = NanDflt_ldus_D2A[1];
-		L[_2] = NanDflt_ldus_D2A[2];
-		L[_1] = NanDflt_ldus_D2A[3];
-		L[_0] = NanDflt_ldus_D2A[4];
+		L[_4] = __gdtoa_NanDflt_ldus[0];
+		L[_3] = __gdtoa_NanDflt_ldus[1];
+		L[_2] = __gdtoa_NanDflt_ldus[2];
+		L[_1] = __gdtoa_NanDflt_ldus[3];
+		L[_0] = __gdtoa_NanDflt_ldus[4];
 	  }
 	if (k & STRTOG_Neg)
 		L[_0] |= 0x8000;

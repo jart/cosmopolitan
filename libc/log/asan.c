@@ -17,7 +17,7 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.internal.h"
+#include "libc/bits/safemacros.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/itoa.h"
@@ -44,13 +44,13 @@ STATIC_YOINK("_init_asan");
  * so it can emit fast code, that checks the validity of each memory op
  * with byte granularity, by probing shadow memory.
  *
- *   AddressSanitizer dedicates one-eighth of the virtual address space
+ * - AddressSanitizer dedicates one-eighth of the virtual address space
  *   to its shadow memory and uses a direct mapping with a scale and
  *   offset to translate an application address to its corresponding
  *   shadow address. Given the application memory address Addr, the
  *   address of the shadow byte is computed as (Addr>>3)+Offset."
  *
- *   We use the following encoding for each shadow byte: 0 means that
+ * - We use the following encoding for each shadow byte: 0 means that
  *   all 8 bytes of the corresponding application memory region are
  *   addressable; k (1 ≤ k ≤ 7) means that the first k bytes are
  *   addressible; any negative value indicates that the entire 8-byte
@@ -60,11 +60,11 @@ STATIC_YOINK("_init_asan");
  *
  * Here's what the generated code looks like for 64-bit reads:
  *
- *   movq %addr,%tmp
- *   shrq $3,%tmp
- *   cmpb $0,0x7fff8000(%tmp)
- *   jnz  abort
- *   movq (%addr),%dst
+ *     movq %addr,%tmp
+ *     shrq $3,%tmp
+ *     cmpb $0,0x7fff8000(%tmp)
+ *     jnz  abort
+ *     movq (%addr),%dst
  */
 
 #define HOOK(HOOK, IMPL)  \
@@ -142,7 +142,6 @@ static const char *__asan_describe_access_poison(int c) {
     case kAsanUnscoped:
       return "unscoped";
     default:
-      DebugBreak();
       return "poisoned";
   }
 }
@@ -399,9 +398,8 @@ void __asan_map_shadow(void *p, size_t n) {
   b = ROUNDUP(SHADOW(ROUNDUP((uintptr_t)p + n, 8)), 1 << 16) >> 16;
   for (; a < b; ++a) {
     if (!__asan_is_mapped(a)) {
-      sm = DirectMap((void *)((uintptr_t)a << 16), 1 << 16,
-                     PROT_READ | PROT_WRITE,
-                     MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
+      sm = __mmap((void *)((uintptr_t)a << 16), 1 << 16, PROT_READ | PROT_WRITE,
+                  MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
       if (sm.addr == MAP_FAILED ||
           TrackMemoryInterval(&_mmi, a, a, sm.maphandle, PROT_READ | PROT_WRITE,
                               MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED) == -1) {
@@ -412,7 +410,8 @@ void __asan_map_shadow(void *p, size_t n) {
 }
 
 static char *__asan_get_stack_base(void) {
-  register uintptr_t rsp asm("rsp");
+  uintptr_t rsp;
+  asm("mov\t%%rsp,%0" : "=r"(rsp));
   return (char *)ROUNDDOWN(ROUNDDOWN(rsp, STACKSIZE), FRAMESIZE);
 }
 

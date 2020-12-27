@@ -36,12 +36,12 @@
 /
 /	Please note that p is NOT free()'d should realloc() fail, thus:
 /
-/	  if ((p2 = realloc(p, n2))) {
-/	    p = p2;
-/	    ...
-/	  } else {
-/	    ...
-/	  }
+/	    if ((p2 = realloc(p, n2))) {
+/	      p = p2;
+/	      ...
+/	    } else {
+/	      ...
+/	    }
 /
 /	if n is for fewer bytes than already held by p, the newly unused
 /	space is lopped off and freed if possible.

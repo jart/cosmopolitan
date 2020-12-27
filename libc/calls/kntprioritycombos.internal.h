@@ -10,8 +10,8 @@ struct NtPriorityCombo {
   int8_t prio;
 };
 
-extern const unsigned kNtPriorityCombosLen;
-extern const struct NtPriorityCombo kNtPriorityCombos[];
+hidden extern const unsigned kNtPriorityCombosLen;
+hidden extern const struct NtPriorityCombo kNtPriorityCombos[];
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

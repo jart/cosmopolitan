@@ -32,12 +32,8 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- int
-#ifdef KR_headers
-strtoIx(s, sp, a, b) CONST char *s; char **sp; void *a; void *b;
-#else
+int
 strtoIx(CONST char *s, char **sp, void *a, void *b)
-#endif
 {
 	static const FPI fpi = { 64, 1-16383-64+1, 32766 - 16383 - 64 + 1, 1, SI, 0 /*unused*/ };
 	Long exp[2];

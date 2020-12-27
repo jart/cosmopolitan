@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=8 sts=2 sw=2 fenc=utf-8                                :vi│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,21 +17,20 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/nt/ntdll.h"
-#include "libc/nt/struct/ldr.h"
-#include "libc/nt/struct/ldrdatatableentry.h"
-#include "libc/nt/struct/linkedlist.h"
-#include "libc/nt/struct/teb.h"
-#include "libc/str/str.h"
+#include "libc/tinymath/tinymath.h"
 
-textwindows const struct NtLdrDataTableEntry *NtGetModule(
-    const char *basename) {
-  struct NtLinkedList *head = &NtGetPeb()->Ldr->InLoadOrderModuleList;
-  struct NtLinkedList *ldr = head->Next;
-  do {
-    const struct NtLdrDataTableEntry *dll =
-        (const struct NtLdrDataTableEntry *)ldr;
-    if (strcasecmp8to16(basename, dll->BaseDllName.Data) == 0) return dll;
-  } while ((ldr = ldr->Next) && ldr != head);
-  return NULL;
+/**
+ * Returns minimum of two floats.
+ *
+ * If one argument is NAN then the other is returned.
+ * This function is designed to do the right thing with
+ * signed zeroes.
+ */
+float fmin(float x, float y) {
+  if (__builtin_isnan(x)) return y;
+  if (__builtin_isnan(y)) return x;
+  if (__builtin_signbitf(x) != __builtin_signbitf(y)) {
+    return __builtin_signbitf(x) ? x : y; /* C99 Annex F.9.9.2 */
+  }
+  return x < y ? x : y;
 }

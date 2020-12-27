@@ -17,59 +17,20 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/limits.h"
-#include "libc/macros.h"
-#include "libc/runtime/ring.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/prot.h"
+#include "libc/tinymath/tinymath.h"
 
 /**
- * Allocates ring buffer.
+ * Returns maximum of two floats.
  *
- * Reads/writes wrap around on overflow.
- *
- *     ┌────────────┐
- *     │  𝑓₀..𝑓ₙ₋₁  │
- *     └┬┬──────────┘
- *      │└────────────┐
- *     ┌┴────────────┬┴────────────┐
- *     │   𝑣₀..𝑣ₙ₋₁  │  𝑣ₙ..𝑣ₙ*₂₋₁ │
- *     └─────────────┴─────────────┘
- *
- * @param r is metadata object owned by caller, initialized to zero
- * @param n is byte length
- * @return r->p, or NULL w/ errno
- * @see ringfree(), balloc()
+ * If one argument is NAN then the other is returned.
+ * This function is designed to do the right thing with
+ * signed zeroes.
  */
-void *ringalloc(struct RingBuffer *r, size_t n) {
-  void *a2;
-  int fd, rc;
-  size_t grain;
-  assert(!r->p);
-  assert(n > 0);
-  assert(n <= (INT_MAX - FRAMESIZE + 1) / 2);
-  if ((fd = openanon("ring", 0)) != -1) {
-    grain = ROUNDUP(n, FRAMESIZE);
-    rc = ftruncate(fd, grain * 2);
-    assert(rc != -1);
-    r->_size = grain * 2;
-    r->_addr = mmap(NULL, grain, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (r->_addr != MAP_FAILED) {
-      a2 = mmap(r->_addr + grain, grain, PROT_READ | PROT_WRITE,
-                MAP_SHARED | MAP_FIXED, fd, grain - n);
-      assert(a2 != MAP_FAILED);
-      r->p = r->_addr + grain - n;
-      if (IsWindows()) {
-        memset(r->p, 0, n); /* @see ftruncate() */
-      }
-    }
+float fmaxf(float x, float y) {
+  if (__builtin_isnan(x)) return y;
+  if (__builtin_isnan(y)) return x;
+  if (__builtin_signbitf(x) != __builtin_signbitf(y)) {
+    return __builtin_signbitf(x) ? y : x; /* C99 Annex F.9.9.2 */
   }
-  rc = close(fd);
-  assert(rc != -1);
-  return r->p;
+  return x < y ? y : x;
 }

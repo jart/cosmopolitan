@@ -26,7 +26,9 @@
 #include "libc/sysv/consts/fileno.h"
 
 /**
- * Aborts process after printing details on its current state.
+ * Aborts process after printing a backtrace.
+ *
+ * If a debugger is present then this will trigger a breakpoint.
  */
 relegated wontreturn void __die(void) {
   static bool once;

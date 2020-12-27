@@ -61,6 +61,11 @@
 │ cosmopolitan § bell system five » system call support                    ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+	.initbss 300,_init_systemfive
+__hostos:
+	.quad	0
+	.endobj	__hostos,globl,hidden
+
 /	Performs System Five System Call.
 /
 /	Cosmopolitan is designed to delegate all function calls into the
@@ -83,10 +88,6 @@
 /	@return	%rax:%rdx is result, or -1 w/ errno on error
 /	@clob	%rcx,%r10,%r11
 /	@see	syscalls.sh
-	.initbss 300,_init_systemfive
-__hostos:
-	.quad	0
-	.endobj	__hostos,globl,hidden
 __systemfive:
 	.quad	0
 	.endobj	__systemfive,globl,hidden

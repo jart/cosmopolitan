@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/bits/progn.internal.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/bits/safemacros.h"
 #include "libc/errno.h"
 #include "libc/fmt/bing.internal.h"
 #include "libc/limits.h"

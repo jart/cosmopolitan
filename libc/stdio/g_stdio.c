@@ -19,4 +19,4 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/internal.h"
 
-FILE g_stdio[3];
+hidden FILE g_stdio[3];

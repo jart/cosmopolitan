@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/arraylist.internal.h"
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"

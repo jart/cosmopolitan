@@ -27,40 +27,20 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
+/* TODO(jart): DELETE */
+
 #define GUARANTEE_TERMINATOR 1
 #define INITIAL_CAPACITY     (32 - GUARANTEE_TERMINATOR)
 
 /**
- * Grows array, The Cosmopolitan Way.
- *
- * This function may be called once an array has run out of space. If p
- * is NULL, a new array is allocated; otherwise, the array's made 1.5x
- * bigger. It has been written that this amortizes list appends down to
- * constant-time. Extended memory is zeroed. Growth is monotonic.
- *
- * If p points to to static memory or something on the stack, it'll be
- * converted to dynamic memory automatically. This can make algorithms
- * faster when the average case is a small amount of data. It also means
- * functions using this (and free_s()) won't have a hard-requirement on
- * malloc().
- *
- * Consider trying the higher-level append() and concat() APIs (defined
- * in libc/alg/arraylist.h) as an alternative to directly using grow().
- *
- * @param pp points to pointer holding memory address
- * @param capacity tracks maximum items that can be stored in p
- *     can only be 0 if p is NULL (see reallocarray() for non-monotonic)
- * @param itemsize is the sizeof each item
- * @return true on success, or false w/ errno and *p is NOT free()'d
- * @error ENOMEM if realloc() not linked or mmap() failed
- * @note tiny programs might need to explicitly YOINK(realloc)
- * @see test/libc/runtime/grow_test.c
+ * Grows array.
+ * @deprecated favor realloc
  */
 bool __grow(void *pp, size_t *capacity, size_t itemsize, size_t extra) {
   void **p, *p1, *p2;
-  size_t n1, n2;                 /* item counts */
-  size_t t1, t2;                 /* byte counts */
-  extra += GUARANTEE_TERMINATOR; /* p ⊃ p[𝑖]==0 */
+  size_t n1, n2;
+  size_t t1, t2;
+  extra += GUARANTEE_TERMINATOR;
   p = (void **)pp;
   assert(itemsize);
   assert((*p && *capacity) || (!*p && !*capacity));

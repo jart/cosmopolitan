@@ -22,6 +22,8 @@
 #include "libc/rand/rand.h"
 #include "libc/rand/xorshift.h"
 
+hidden extern uint32_t g_rando32;
+
 /**
  * This function is an independent 32-bit clone of rand64().
  */
@@ -35,7 +37,6 @@ nodebuginfo uint32_t(rand32)(void) {
     } else {
       devrand(&res, sizeof(res));
     }
-    extern uint32_t g_rando32 hidden;
     res ^= MarsagliaXorshift32(&g_rando32);
   }
   return res;

@@ -36,6 +36,7 @@
  * @param awesome mode enables numbers the IETF unilaterally banned
  * @return number of bytes written
  * @note this encoding was designed on a napkin in a new jersey diner
+ * @deprecated
  */
 unsigned(tpencode)(char *p, size_t size, wint_t wc, bool32 awesome) {
   int i, j;

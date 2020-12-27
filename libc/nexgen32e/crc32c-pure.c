@@ -19,11 +19,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nexgen32e/crc32.h"
 
+extern const uint32_t kCrc32cTab[256];
+
 /**
  * Computes Castagnoli CRC-32 on old computers.
  */
 uint32_t crc32c$pure(uint32_t init, const void *data, size_t size) {
-  extern const uint32_t kCrc32cTab[256];
   const unsigned char *p = data;
   uint32_t h = init ^ 0xffffffff;
   unsigned i;

@@ -25,6 +25,7 @@
  * Returns how much CPU program has consumed on time-sharing system.
  *
  * @return value that can be divided by CLOCKS_PER_SEC, or -1 w/ errno
+ * @see clock_gettime()
  */
 int64_t clock(void) {
   struct timespec ts;

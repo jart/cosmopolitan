@@ -20,7 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/nt/struct/securityattributes.h"
 
-const struct NtSecurityAttributes kNtIsInheritable = {
+hidden const struct NtSecurityAttributes kNtIsInheritable = {
     sizeof(struct NtSecurityAttributes),
     NULL,
     true,

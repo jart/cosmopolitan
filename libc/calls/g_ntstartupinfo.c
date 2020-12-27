@@ -21,10 +21,6 @@
 #include "libc/nt/startupinfo.h"
 #include "libc/nt/struct/startupinfo.h"
 
-/**
- * GetStartupInfo() singleton.
- * @see libc/runtime/winmain.c
- */
-struct NtStartupInfo g_ntstartupinfo;
+hidden struct NtStartupInfo g_ntstartupinfo;
 
 STATIC_YOINK("_init_g_ntstartupinfo");

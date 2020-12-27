@@ -32,12 +32,8 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- int
-#ifdef KR_headers
-strtoIg(s00, se, fpi, exp, B, rvp) CONST char *s00; char **se; CONST FPI *fpi; Long *exp; Bigint **B; int *rvp;
-#else
+int
 strtoIg(CONST char *s00, char **se, CONST FPI *fpi, Long *exp, Bigint **B, int *rvp)
-#endif
 {
 	Bigint *b, *b1;
 	int i, nb, nw, nw1, rv, rv1, swap;

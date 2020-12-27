@@ -33,23 +33,19 @@ THIS SOFTWARE.
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
 #if 0
- unsigned char hexdig[256];
+unsigned char hexdig[256];
 
- static void
-#ifdef KR_headers
-htinit(h, s, inc) unsigned char *h; unsigned char *s; int inc;
-#else
+static void
 htinit(unsigned char *h, unsigned char *s, int inc)
-#endif
 {
 	int i, j;
 	for(i = 0; (j = s[i]) !=0; i++)
 		h[j] = i + inc;
 	}
 
- void
-hexdig_init_D2A(Void)	/* Use of hexdig_init omitted 20121220 to avoid a */
-			/* race condition when multiple threads are used. */
+void
+__gdtoa_hexdig_init(Void)	/* Use of hexdig_init omitted 20121220 to avoid a */
+	 			/* race condition when multiple threads are used. */
 {
 #define USC (unsigned char *)
 	htinit(hexdig, USC "0123456789", 0x10);
@@ -57,7 +53,7 @@ hexdig_init_D2A(Void)	/* Use of hexdig_init omitted 20121220 to avoid a */
 	htinit(hexdig, USC "ABCDEF", 0x10 + 10);
 	}
 #else
- const unsigned char hexdig[256] = {
+const unsigned char hexdig[256] = {
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

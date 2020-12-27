@@ -21,12 +21,7 @@
 #include "libc/nexgen32e/pcmpstr.inc"
 #include "libc/nexgen32e/strstr.inc"
 
-/	Searches for substring.
-/
-/	@param	rdi is NUL-terminated haystack string
-/	@param	rsi is NUL-terminated needle string (16-byte aligned)
-/	@return	rax is pointer to substring or NULL
-/	@asyncsignalsafe
+/	TODO(jart): Fix me.
 strstr$sse42:
 	.leafprologue
 	mov	%rdi,%rax

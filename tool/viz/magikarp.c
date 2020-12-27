@@ -41,8 +41,6 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
-#include "third_party/avir/lanczos1b.h"
-#include "third_party/avir/lanczos1f.h"
 #include "third_party/gdtoa/gdtoa.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/stb/stb_image.h"
@@ -590,34 +588,6 @@ void ProcessImageMagikarp(unsigned yn, unsigned xn,
                    yn, xn, lround(r_));
 }
 
-void *ProcessImageLanczosImpl(unsigned dyn, unsigned dxn,
-                              float dst[4][dyn][dxn], unsigned syn,
-                              unsigned sxn, float src[4][syn][sxn]) {
-  unsigned k;
-  struct lanczos1f scaler = {0};
-  lanczos1finit(&scaler);
-  for (k = 0; k < 4; ++k) {
-    lanczos1f(&scaler, dyn, dxn, dst[k], syn, sxn, sxn, src[k], r_, r_, 0, 0);
-  }
-  lanczos1ffree(&scaler);
-  return dst;
-}
-
-void ProcessImageLanczos(unsigned yn, unsigned xn,
-                         unsigned char img[yn][xn][4]) {
-  unsigned dyn, dxn;
-  dyn = lround(yn / r_);
-  dxn = lround(xn / r_);
-  PrintImage2(
-      dyn, dxn,
-      f2b(dyn * dxn * 4, gc(xmalloc(dyn * dxn * 4)),
-          ProcessImageLanczosImpl(
-              dyn, dxn, gc(xmalloc(dyn * dxn * 4 * 4)), yn, xn,
-              b2f(yn * xn * 4, gc(xmalloc(yn * xn * 4 * 4)),
-                  DeblinterlaceRgba2(yn, xn, gc(xmalloc(yn * xn * 4)), img)))),
-      dyn, dxn);
-}
-
 noinline void WithImageFile(const char *path,
                             void fn(unsigned yn, unsigned xn,
                                     unsigned char img[yn][xn][4])) {
@@ -657,9 +627,6 @@ int main(int argc, char *argv[]) {
       case 's':
       case 'S':
         scaler = ProcessImageGyarados;
-        break;
-      case 'l':
-        scaler = ProcessImageLanczos;
         break;
       case 'b':
         scaler = ProcessImageBilinear;

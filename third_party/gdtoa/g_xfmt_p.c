@@ -32,7 +32,7 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- extern UShort NanDflt_ldus_D2A[5];
+extern UShort __gdtoa_NanDflt_ldus[5];
 
 #undef _0
 #undef _1
@@ -54,12 +54,8 @@ THIS SOFTWARE.
 #define _4 0
 #endif
 
- char*
-#ifdef KR_headers
-g_xfmt_p(buf, V, ndig, bufsize, nik) char *buf; char *V; int ndig; size_t bufsize; int nik;
-#else
+char*
 g_xfmt_p(char *buf, void *V, int ndig, size_t bufsize, int nik)
-#endif
 {
 	static const FPI fpi0 = { 64, 1-16383-64+1, 32766 - 16383 - 64 + 1, 1, 0, Int_max };
 	char *b, *s, *se;
@@ -98,10 +94,10 @@ g_xfmt_p(char *buf, void *V, int ndig, size_t bufsize, int nik)
 					*b++ = '-';
 				b = strcp(b, NanName[nik%3]);
 				if (nik > 5 && (nik < 12
-						|| L[_1] != NanDflt_ldus_D2A[3]
-						|| L[_2] != NanDflt_ldus_D2A[2]
-						|| L[_3] != NanDflt_ldus_D2A[1]
-						|| L[_4] != NanDflt_ldus_D2A[0])) {
+						|| L[_1] != __gdtoa_NanDflt_ldus[3]
+						|| L[_2] != __gdtoa_NanDflt_ldus[2]
+						|| L[_3] != __gdtoa_NanDflt_ldus[1]
+						|| L[_4] != __gdtoa_NanDflt_ldus[0])) {
 					bits[1] &= 0x7fffffff;
 					b = add_nanbits(b, bufsize - (b-buf), bits, 2);
 					}

@@ -272,6 +272,7 @@ struct Obj {
   bool is_destructor;
   bool is_constructor;
   bool is_ms_abi; /* TODO */
+  bool is_no_instrument_function;
   bool is_force_align_arg_pointer;
   bool is_no_caller_saved_registers;
   int stack_size;
@@ -616,10 +617,16 @@ Obj *alloc_obj(void);
 Type *alloc_type(void);
 
 //
-// javadown.c
+// dox1.c
 //
 
 void output_javadown(const char *, Obj *);
+void output_javadown_asm(const char *, const char *);
+
+//
+// dox2.c
+//
+
 void drop_dox(const StringArray *, const char *);
 
 COSMOPOLITAN_C_END_

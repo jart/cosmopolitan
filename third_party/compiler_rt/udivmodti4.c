@@ -71,7 +71,7 @@ forceinline du_int udiv128by64to64default(du_int u1, du_int u0, du_int v,
 forceinline du_int udiv128by64to64(du_int u1, du_int u0, du_int v, du_int *r) {
 #ifdef __x86_64__
   du_int result;
-  asm("div\t%2" : "=a"(result), "=d"(*r) : "r"(v), "a"(u0), "d"(u1) : "cc");
+  asm("div\t%2" : "=a"(result), "=d"(*r) : "r"(v), "0"(u0), "1"(u1) : "cc");
   return result;
 #else
   return udiv128by64to64default(u1, u0, v, r);

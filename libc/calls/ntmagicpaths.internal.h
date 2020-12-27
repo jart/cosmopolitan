@@ -9,7 +9,7 @@ struct NtMagicPaths {
 #undef TAB
 };
 
-extern const struct NtMagicPaths kNtMagicPaths;
+hidden extern const struct NtMagicPaths kNtMagicPaths;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

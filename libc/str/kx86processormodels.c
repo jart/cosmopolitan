@@ -21,7 +21,7 @@
 #include "libc/macros.h"
 #include "libc/nexgen32e/x86info.h"
 
-const struct X86ProcessorModel kX86ProcessorModels[] = {
+hidden const struct X86ProcessorModel kX86ProcessorModels[] = {
     /* <SORTED> */
     {0x060F, X86_MARCH_CORE2, X86_GRADE_CLIENT},
     {0x0616, X86_MARCH_CORE2, X86_GRADE_MOBILE},
@@ -80,4 +80,4 @@ const struct X86ProcessorModel kX86ProcessorModels[] = {
     /* </SORTED> */
 };
 
-const size_t kX86ProcessorModelCount = ARRAYLEN(kX86ProcessorModels);
+hidden const size_t kX86ProcessorModelCount = ARRAYLEN(kX86ProcessorModels);

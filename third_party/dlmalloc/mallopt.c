@@ -13,10 +13,10 @@
  * use in this malloc, so setting them has no effect. But this malloc
  * also supports other options in mallopt:
  *
- * Symbol            param #  default    allowed param values
- * M_TRIM_THRESHOLD     -1   2*1024*1024   any   (-1U disables trimming)
- * M_GRANULARITY        -2     page size   any power of 2 >= page size
- * M_MMAP_THRESHOLD     -3      256*1024   any   (or 0 if no MMAP support)
+ *     Symbol            param #  default    allowed param values
+ *     M_TRIM_THRESHOLD     -1   2*1024*1024   any   (-1U disables trimming)
+ *     M_GRANULARITY        -2     page size   any power of 2 >= page size
+ *     M_MMAP_THRESHOLD     -3      256*1024   any   (or 0 if no MMAP support)
  */
 bool32 mallopt(int param_number, int value) {
   size_t val;

@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_SYMBOLS_H_
 #define COSMOPOLITAN_LIBC_SYMBOLS_H_
 #include "libc/elf/elf.h"
-#include "libc/runtime/ezmap.h"
+#include "libc/runtime/ezmap.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

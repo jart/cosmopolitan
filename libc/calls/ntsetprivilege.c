@@ -17,19 +17,21 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
 #include "libc/nt/privilege.h"
 #include "libc/nt/struct/tokenprivileges.h"
-#include "libc/calls/internal.h"
 
 /**
  * Sets NT permission thing, e.g.
  *
- * int64_t htoken;
- * if (OpenProcessToken(GetCurrentProcess(),
- *                      kNtTokenAdjustPrivileges | kNtTokenQuery, &htoken)) {
- *   ntsetprivilege(htoken, u"SeManageVolumePrivilege", kNtSePrivilegeEnabled);
- *   CloseHandle(htoken);
- * }
+ *     int64_t htoken;
+ *     if (OpenProcessToken(GetCurrentProcess(),
+ *                          kNtTokenAdjustPrivileges | kNtTokenQuery,
+ *                          &htoken)) {
+ *       ntsetprivilege(htoken, u"SeManageVolumePrivilege",
+ *                      kNtSePrivilegeEnabled);
+ *       CloseHandle(htoken);
+ *     }
  */
 textwindows bool32 ntsetprivilege(int64_t token, const char16_t *name,
                                   uint32_t attrs) {

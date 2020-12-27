@@ -19,10 +19,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/elf/def.h"
 #include "libc/elf/elf.h"
-#include "libc/runtime/ezmap.h"
+#include "libc/runtime/ezmap.internal.h"
 #include "libc/runtime/internal.h"
 
-Elf64_Ehdr *MapElfRead(const char *filename, struct MappedFile *mf) {
+hidden Elf64_Ehdr *MapElfRead(const char *filename, struct MappedFile *mf) {
   if (MapFileRead(filename, mf) != -1 && IsElf64Binary(mf->addr, mf->size)) {
     return mf->addr;
   } else {

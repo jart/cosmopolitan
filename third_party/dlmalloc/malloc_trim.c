@@ -3,7 +3,7 @@
 
 /**
  * If possible, gives memory back to the system (via negative arguments
- * to sbrk) if there is unused memory at the `high' end of the malloc
+ * to sbrk) if there is unused memory at the `high` end of the malloc
  * pool or in unused MMAP segments. You can call this after freeing
  * large blocks of memory to potentially reduce the system-level memory
  * requirements of a program. However, it cannot guarantee to reduce
@@ -11,7 +11,7 @@
  * memory will be locked between two used chunks, so they cannot be
  * given back to the system.
  *
- * The `pad' argument to malloc_trim represents the amount of free
+ * The `pad` argument to malloc_trim represents the amount of free
  * trailing space to leave untrimmed. If this argument is zero, only the
  * minimum amount of memory to maintain internal data structures will be
  * left. Non-zero arguments can be supplied to maintain enough trailing

@@ -31,12 +31,8 @@ THIS SOFTWARE.
 
 /* Please send bug reports to David M. Gay (dmg@acm.org). */
 
- char *
-#ifdef KR_headers
-g_ddfmt(buf, dd0, ndig, bufsize) char *buf; double *dd0; int ndig; size_t bufsize;
-#else
+char *
 g_ddfmt(char *buf, double *dd0, int ndig, size_t bufsize)
-#endif
 {
 	FPI fpi;
 	char *b, *s, *se;

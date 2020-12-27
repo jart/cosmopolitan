@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/bisectcarleft.internal.h"
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.h"
@@ -100,15 +100,14 @@ privileged interruptfn void ftrace_hook(void) {
 }
 
 /**
- * Enables plaintext function tracing if --ftrace flag passed.
+ * Enables plaintext function tracing if `--ftrace` flag is passed.
  *
- * The --ftrace CLI arg is removed before main() is called. This
- * code is intended for diagnostic purposes and assumes binaries
- * are trustworthy and stack isn't corrupted. Logging plain text
- * allows program structure to easily be visualized and hotspots
- * identified w/ sed | sort | uniq -c | sort. A compressed trace
- * can be made by appending --ftrace 2>&1 | gzip -4 >trace.gz to
- * the CLI arguments. Have fun.
+ * The `--ftrace` CLI arg is removed before main() is called. This code
+ * is intended for diagnostic purposes and assumes binaries are
+ * trustworthy and stack isn't corrupted. Logging plain text allows
+ * program structure to easily be visualized and hotspots identified w/
+ * `sed | sort | uniq -c | sort`. A compressed trace can be made by
+ * appending `--ftrace 2>&1 | gzip -4 >trace.gz` to the CLI arguments.
  *
  * @see libc/runtime/_init.S for documentation
  */

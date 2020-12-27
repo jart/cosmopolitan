@@ -17,12 +17,12 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.internal.h"
+#include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/log/check.h"
 #include "libc/nexgen32e/kompressor.h"
 #include "libc/nexgen32e/lz4.h"
-#include "libc/runtime/ezmap.h"
+#include "libc/runtime/ezmap.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"

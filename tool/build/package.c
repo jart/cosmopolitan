@@ -23,7 +23,7 @@
 #include "libc/alg/bisectcarleft.internal.h"
 #include "libc/assert.h"
 #include "libc/bits/bswap.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/elf/def.h"

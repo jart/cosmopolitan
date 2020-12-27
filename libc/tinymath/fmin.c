@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,24 +17,20 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.h"
-.source	__FILE__
+#include "libc/tinymath/tinymath.h"
 
-/	Returns minimum of two long doubles.
-/
-/	@param	𝑥 is long double passed on stack in 16-bytes
-/	@param	𝑦 is also pushed on stack, in reverse order
-/	@return	result in %st0
-tinymath_fminl:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable
-	fldt	32(%rbp)
-	fldt	16(%rbp)
-	fcomi	%st(1),%st
-	fcmovnbe %st(1),%st
-	fstp	%st(1)
-	pop	%rbp
-	ret
-	.endfn	tinymath_fminl,globl
-	.alias	tinymath_fminl,fminl
+/**
+ * Returns minimum of two doubles.
+ *
+ * If one argument is NAN then the other is returned.
+ * This function is designed to do the right thing with
+ * signed zeroes.
+ */
+double fmin(double x, double y) {
+  if (__builtin_isnan(x)) return y;
+  if (__builtin_isnan(y)) return x;
+  if (__builtin_signbit(x) != __builtin_signbit(y)) {
+    return __builtin_signbit(x) ? x : y; /* C99 Annex F.9.9.2 */
+  }
+  return x < y ? x : y;
+}

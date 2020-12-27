@@ -25,9 +25,9 @@
  *
  * To read a line of data from a well-formed trustworthy file:
  *
- *   int x, y;
- *   char text[256];
- *   fscanf(f, "%d %d %s\n", &x, &y, text);
+ *     int x, y;
+ *     char text[256];
+ *     fscanf(f, "%d %d %s\n", &x, &y, text);
  *
  * Please note that this function is brittle by default, which makes it
  * a good fit for yolo coding. With some toil it can be used in a way

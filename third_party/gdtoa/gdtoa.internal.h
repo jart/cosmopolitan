@@ -137,7 +137,6 @@ THIS SOFTWARE.
  *	something other than "long long", #define Llong to be the name,
  *	and if "unsigned Llong" does not work as an unsigned version of
  *	Llong, #define #ULLong to be the corresponding unsigned type.
- * #define KR_headers for old-style C function headers.
  * #define Bad_float_h if your system lacks a float.h or if it does not
  *	define some or all of DBL_DIG, DBL_MAX_10_EXP, DBL_MAX_EXP,
  *	FLT_RADIX, FLT_ROUNDS, and DBL_MAX.
@@ -220,16 +219,6 @@ THIS SOFTWARE.
  * #define USE_LOCALE to use the current locale's decimal_point value.
  */
 
-#ifndef ANSI
-#ifdef KR_headers
-#define ANSI(x) ()
-#define Void    /*nothing*/
-#else
-#define ANSI(x) x
-#define Void    void
-#endif
-#endif /* ANSI */
-
 #ifndef Long
 #define Long int
 #endif
@@ -241,11 +230,7 @@ typedef unsigned short UShort;
 #endif
 
 #ifndef CONST
-#ifdef KR_headers
-#define CONST /* blank */
-#else
 #define CONST const
-#endif
 #endif /* CONST */
 
 #ifdef DEBUG
@@ -256,20 +241,20 @@ typedef unsigned short UShort;
   }
 #endif
 
-#ifdef KR_headers
-#define Char char
-#else
+/* #ifdef KR_headers */
+/* #define Char char */
+/* #else */
 #define Char void
-#endif
+/* #endif */
 
 #ifdef MALLOC
-extern Char *MALLOC ANSI((size_t));
+extern Char *MALLOC(size_t);
 #else
 #define MALLOC malloc
 #endif
 
 #ifdef REALLOC
-extern Char *REALLOC ANSI((Char *, size_t));
+extern Char *REALLOC(Char *, size_t);
 #else
 #define REALLOC realloc
 #endif
@@ -476,11 +461,7 @@ Exactly one of IEEE_8087, IEEE_MC68k, VAX, or IBM should be defined.
 #ifdef RND_PRODQUOT
 #define rounded_product(a, b)  a = rnd_prod(a, b)
 #define rounded_quotient(a, b) a = rnd_quot(a, b)
-#ifdef KR_headers
-extern double rnd_prod(), rnd_quot();
-#else
 extern double rnd_prod(double, double), rnd_quot(double, double);
-#endif
 #else
 #define rounded_product(a, b)  a *= b
 #define rounded_quotient(a, b) a /= b
@@ -531,9 +512,9 @@ extern double rnd_prod(double, double), rnd_quot(double, double);
 #define MTb , &TI
 #define MTd , ThInfo **PTI
 #define MTk ThInfo **PTI;
-extern void ACQUIRE_DTOA_LOCK ANSI((unsigned int));
-extern void FREE_DTOA_LOCK ANSI((unsigned int));
-extern unsigned int dtoa_get_threadno ANSI((void));
+extern void ACQUIRE_DTOA_LOCK(unsigned int);
+extern void FREE_DTOA_LOCK(unsigned int);
+extern unsigned int dtoa_get_threadno(void);
 #else                        /*}{*/
 #define ACQUIRE_DTOA_LOCK(n) /*nothing*/
 #define FREE_DTOA_LOCK(n)    /*nothing*/
@@ -562,111 +543,114 @@ typedef struct ThInfo {
 #ifdef DECLARE_SIZE_T
 typedef unsigned int size_t;
 #endif
-extern void memcpy_D2A ANSI((void *, const void *, size_t));
+extern void __gdtoa_memcpy(void *, const void *, size_t);
 #define Bcopy(x, y) \
-  memcpy_D2A(&x->sign, &y->sign, y->wds * sizeof(ULong) + 2 * sizeof(int))
+  __gdtoa_memcpy(&x->sign, &y->sign, y->wds * sizeof(ULong) + 2 * sizeof(int))
 #else /* !NO_STRING_H */
 #define Bcopy(x, y) \
   memcpy(&x->sign, &y->sign, y->wds * sizeof(ULong) + 2 * sizeof(int))
 #endif /* NO_STRING_H */
 
-#define Balloc      Balloc_D2A
-#define Bfree       Bfree_D2A
-#define InfName     InfName_D2A
-#define NanName     NanName_D2A
-#define ULtoQ       ULtoQ_D2A
-#define ULtof       ULtof_D2A
-#define ULtod       ULtod_D2A
-#define ULtodd      ULtodd_D2A
-#define ULtox       ULtox_D2A
-#define ULtoxL      ULtoxL_D2A
-#define add_nanbits add_nanbits_D2A
-#define any_on      any_on_D2A
-#define b2d         b2d_D2A
-#define bigtens     bigtens_D2A
-#define cmp         cmp_D2A
-#define copybits    copybits_D2A
-#define d2b         d2b_D2A
-#define decrement   decrement_D2A
-#define diff        diff_D2A
-#define dtoa_result dtoa_result_D2A
-#define g__fmt      g__fmt_D2A
-#define gethex      gethex_D2A
-#define hexdig      hexdig_D2A
-#define hexnan      hexnan_D2A
-#define hi0bits(x)  hi0bits_D2A((ULong)(x))
-#define i2b         i2b_D2A
-#define increment   increment_D2A
-#define lo0bits     lo0bits_D2A
-#define lshift      lshift_D2A
-#define match       match_D2A
-#define mult        mult_D2A
-#define multadd     multadd_D2A
-#define nrv_alloc   nrv_alloc_D2A
-#define pow5mult    pow5mult_D2A
-#define quorem      quorem_D2A
-#define ratio       ratio_D2A
-#define rshift      rshift_D2A
-#define rv_alloc    rv_alloc_D2A
-#define s2b         s2b_D2A
-#define set_ones    set_ones_D2A
-#define strcp       strcp_D2A
-#define strtoIg     strtoIg_D2A
-#define sum         sum_D2A
-#define tens        tens_D2A
-#define tinytens    tinytens_D2A
-#define tinytens    tinytens_D2A
-#define trailz      trailz_D2A
-#define ulp         ulp_D2A
+#define Balloc      __gdtoa_Balloc
+#define Bfree       __gdtoa_Bfree
+#define InfName     __gdtoa_InfName
+#define NanName     __gdtoa_NanName
+#define ULtoQ       __gdtoa_ULtoQ
+#define ULtof       __gdtoa_ULtof
+#define ULtod       __gdtoa_ULtod
+#define ULtodd      __gdtoa_ULtodd
+#define ULtox       __gdtoa_ULtox
+#define ULtoxL      __gdtoa_ULtoxL
+#define add_nanbits __gdtoa_add_nanbits
+#define any_on      __gdtoa_any_on
+#define b2d         __gdtoa_b2d
+#define bigtens     __gdtoa_bigtens
+#define cmp         __gdtoa_cmp
+#define copybits    __gdtoa_copybits
+#define d2b         __gdtoa_d2b
+#define decrement   __gdtoa_decrement
+#define diff        __gdtoa_diff
+#define dtoa_result __gdtoa_dtoa_result
+#define g__fmt      __gdtoa_g__fmt
+#define gethex      __gdtoa_gethex
+#define hexdig      __gdtoa_hexdig
+#define hexnan      __gdtoa_hexnan
+#define hi0bits(x)  __gdtoa_hi0bits((ULong)(x))
+#define i2b         __gdtoa_i2b
+#define increment   __gdtoa_increment
+#define lo0bits     __gdtoa_lo0bits
+#define lshift      __gdtoa_lshift
+#define match       __gdtoa_match
+#define mult        __gdtoa_mult
+#define multadd     __gdtoa_multadd
+#define nrv_alloc   __gdtoa_nrv_alloc
+#define pow5mult    __gdtoa_pow5mult
+#define quorem      __gdtoa_quorem
+#define ratio       __gdtoa_ratio
+#define rshift      __gdtoa_rshift
+#define rv_alloc    __gdtoa_rv_alloc
+#define s2b         __gdtoa_s2b
+#define set_ones    __gdtoa_set_ones
+#define strcp       __gdtoa_strcp
+#define strtoIg     __gdtoa_strtoIg
+#define sum         __gdtoa_sum
+#define tens        __gdtoa_tens
+#define tinytens    __gdtoa_tinytens
+#define tinytens    __gdtoa_tinytens
+#define trailz      __gdtoa_trailz
+#define ulp         __gdtoa_ulp
 
-extern char *add_nanbits ANSI((char *, size_t, ULong *, int));
-extern char *dtoa_result;
-extern CONST double bigtens[], tens[], tinytens[];
-extern const unsigned char hexdig[];
-extern const char *const InfName[6], *const NanName[3];
+extern char *add_nanbits(char *, size_t, ULong *, int);
 
-extern Bigint *Balloc ANSI((int MTd));
-extern void Bfree ANSI((Bigint * MTd));
-extern void ULtof ANSI((ULong *, ULong *, Long, int));
-extern void ULtod ANSI((ULong *, ULong *, Long, int));
-extern void ULtodd ANSI((ULong *, ULong *, Long, int));
-extern void ULtoQ ANSI((ULong *, ULong *, Long, int));
-extern void ULtox ANSI((UShort *, ULong *, Long, int));
-extern void ULtoxL ANSI((ULong *, ULong *, Long, int));
-extern ULong any_on ANSI((Bigint *, int));
-extern double b2d ANSI((Bigint *, int *));
-extern int cmp ANSI((Bigint *, Bigint *));
-extern void copybits ANSI((ULong *, int, Bigint *));
-extern Bigint *d2b ANSI((double, int *, int *MTd));
-extern void decrement ANSI((Bigint *));
-extern Bigint *diff ANSI((Bigint *, Bigint *MTd));
-extern char *g__fmt ANSI((char *, char *, char *, int, ULong, size_t));
-extern int gethex ANSI((CONST char **, CONST FPI *, Long *, Bigint **,
-                        int MTd));
-extern void hexdig_init_D2A(Void);
-extern int hexnan ANSI((CONST char **, CONST FPI *, ULong *));
-extern int hi0bits_D2A ANSI((ULong));
-extern Bigint *i2b ANSI((int MTd));
-extern Bigint *increment ANSI((Bigint * MTd));
-extern int lo0bits ANSI((ULong *));
-extern Bigint *lshift ANSI((Bigint *, int MTd));
-extern int match ANSI((CONST char **, char *));
-extern Bigint *mult ANSI((Bigint *, Bigint *MTd));
-extern Bigint *multadd ANSI((Bigint *, int, int MTd));
-extern char *nrv_alloc ANSI((char *, char **, int MTd));
-extern Bigint *pow5mult ANSI((Bigint *, int MTd));
-extern int quorem ANSI((Bigint *, Bigint *));
-extern double ratio ANSI((Bigint *, Bigint *));
-extern void rshift ANSI((Bigint *, int));
-extern char *rv_alloc ANSI((int MTd));
-extern Bigint *s2b ANSI((CONST char *, int, int, ULong, int MTd));
-extern Bigint *set_ones ANSI((Bigint *, int MTd));
-extern char *strcp ANSI((char *, const char *));
-extern int strtoIg ANSI((CONST char *, char **, CONST FPI *, Long *, Bigint **,
-                         int *));
-extern Bigint *sum ANSI((Bigint *, Bigint *MTd));
-extern int trailz ANSI((Bigint *));
-extern double ulp ANSI((U *));
+hidden extern char *dtoa_result;
+hidden extern CONST double bigtens[];
+hidden extern CONST double tens[];
+hidden extern CONST double tinytens[];
+hidden extern const unsigned char hexdig[];
+hidden extern const char *const InfName[6];
+hidden extern const char *const NanName[3];
+
+extern Bigint *Balloc(int MTd);
+extern void Bfree(Bigint *MTd);
+extern void ULtof(ULong *, ULong *, Long, int);
+extern void ULtod(ULong *, ULong *, Long, int);
+extern void ULtodd(ULong *, ULong *, Long, int);
+extern void ULtoQ(ULong *, ULong *, Long, int);
+extern void ULtox(UShort *, ULong *, Long, int);
+extern void ULtoxL(ULong *, ULong *, Long, int);
+extern ULong any_on(Bigint *, int);
+extern double b2d(Bigint *, int *);
+extern int cmp(Bigint *, Bigint *);
+extern void copybits(ULong *, int, Bigint *);
+extern Bigint *d2b(double, int *, int *MTd);
+extern void decrement(Bigint *);
+extern Bigint *diff(Bigint *, Bigint *MTd);
+extern char *g__fmt(char *, char *, char *, int, ULong, size_t);
+extern int gethex(CONST char **, CONST FPI *, Long *, Bigint **, int MTd);
+extern void __gdtoa_hexdig_init(void);
+extern int hexnan(CONST char **, CONST FPI *, ULong *);
+extern int __gdtoa_hi0bits(ULong);
+extern Bigint *i2b(int MTd);
+extern Bigint *increment(Bigint *MTd);
+extern int lo0bits(ULong *);
+extern Bigint *lshift(Bigint *, int MTd);
+extern int match(CONST char **, char *);
+extern Bigint *mult(Bigint *, Bigint *MTd);
+extern Bigint *multadd(Bigint *, int, int MTd);
+extern char *nrv_alloc(char *, char **, int MTd);
+extern Bigint *pow5mult(Bigint *, int MTd);
+extern int quorem(Bigint *, Bigint *);
+extern double ratio(Bigint *, Bigint *);
+extern void rshift(Bigint *, int);
+extern char *rv_alloc(int MTd);
+extern Bigint *s2b(CONST char *, int, int, ULong, int MTd);
+extern Bigint *set_ones(Bigint *, int MTd);
+extern char *strcp(char *, const char *);
+extern int strtoIg(CONST char *, char **, CONST FPI *, Long *, Bigint **,
+                   int *);
+extern Bigint *sum(Bigint *, Bigint *MTd);
+extern int trailz(Bigint *);
+extern double ulp(U *);
 
 #ifdef __cplusplus
 }

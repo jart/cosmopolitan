@@ -25,7 +25,7 @@
 #include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/enum/threadpriority.h"
 
-const struct NtPriorityCombo kNtPriorityCombos[] = {
+hidden const struct NtPriorityCombo kNtPriorityCombos[] = {
     {-20, ffs(kNtHighPriorityClass), kNtThreadPriorityHighest, 15},
     {-18, ffs(kNtHighPriorityClass), kNtThreadPriorityTimeCritical, 15},
     {-17, ffs(kNtNormalPriorityClass), kNtThreadPriorityTimeCritical, 15},
@@ -54,4 +54,4 @@ const struct NtPriorityCombo kNtPriorityCombos[] = {
     {19, ffs(kNtIdlePriorityClass), kNtThreadPriorityIdle, 1},
 };
 
-const unsigned kNtPriorityCombosLen = ARRAYLEN(kNtPriorityCombos);
+hidden const unsigned kNtPriorityCombosLen = ARRAYLEN(kNtPriorityCombos);

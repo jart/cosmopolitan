@@ -64,8 +64,8 @@ static const char kGodHatesFlags[12] forcealign(1) = "CVPRAKZSTIDO";
 static const char kCrashSigNames[8][5] forcealign(1) = {
     "QUIT", "FPE", "ILL", "SEGV", "TRAP", "ABRT", "BUS"};
 
-int kCrashSigs[8];
-struct sigaction g_oldcrashacts[8];
+hidden int kCrashSigs[8];
+hidden struct sigaction g_oldcrashacts[8];
 
 relegated static const char *TinyStrSignal(int sig) {
   size_t i;

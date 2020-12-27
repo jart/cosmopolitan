@@ -1,3 +1,5 @@
+#include "libc/calls/struct/siginfo.h"
+#include "libc/calls/ucontext.h"
 #include "third_party/chibicc/chibicc.h"
 
 asm(".ident\t\"\\n\\n\
@@ -381,10 +383,9 @@ static bool run_subprocess(char **argv) {
     for (int i = 1; argv[i]; i++) fprintf(stderr, " %s", argv[i]);
     fprintf(stderr, "\n");
   }
-  if (fork() == 0) {
+  if (!vfork()) {
     // Child process. Run a new command.
     execvp(argv[0], argv);
-    fprintf(stderr, "exec failed: %s: %s\n", argv[0], strerror(errno));
     _exit(1);
   }
   // Wait for the child process to finish.
@@ -503,7 +504,7 @@ static Token *append_tokens(Token *tok1, Token *tok2) {
   return tok1;
 }
 
-static FileType get_file_type(char *filename) {
+static FileType get_file_type(const char *filename) {
   if (opt_x != FILE_NONE) return opt_x;
   if (endswith(filename, ".a")) return FILE_AR;
   if (endswith(filename, ".o")) return FILE_OBJ;
@@ -514,7 +515,13 @@ static FileType get_file_type(char *filename) {
 }
 
 static void cc1(void) {
+  FileType ft;
   Token *tok = NULL;
+  ft = get_file_type(base_file);
+  if (opt_J && (ft == FILE_ASM || ft == FILE_ASM_CPP)) {
+    output_javadown_asm(output_file, base_file);
+    return;
+  }
   // Process -include option
   for (int i = 0; i < opt_include.len; i++) {
     char *incl = opt_include.data[i];
@@ -538,7 +545,7 @@ static void cc1(void) {
     if (opt_M) return;
   }
   // If -E is given, print out preprocessed C code as a result.
-  if (opt_E || get_file_type(base_file) == FILE_ASM_CPP) {
+  if (opt_E || ft == FILE_ASM_CPP) {
     print_tokens(tok);
     return;
   }
@@ -605,8 +612,13 @@ static void run_linker(StringArray *inputs, char *output) {
   handle_exit(run_subprocess(arr.data));
 }
 
+static void OnCtrlC(int sig, siginfo_t *si, ucontext_t *ctx) {
+  exit(1);
+}
+
 int chibicc(int argc, char **argv) {
   showcrashreports();
+  sigaction(SIGINT, &(struct sigaction){.sa_sigaction = OnCtrlC}, NULL);
   atexit(cleanup);
   init_macros();
   parse_args(argc, argv);
@@ -649,6 +661,18 @@ int chibicc(int argc, char **argv) {
       strarray_push(&ld_args, input);
       continue;
     }
+    // Dox
+    if (opt_J) {
+      if (opt_c) {
+        handle_exit(run_cc1(argc, argv, input, output));
+      } else {
+        char *tmp = create_tmpfile();
+        if (run_cc1(argc, argv, input, tmp)) {
+          strarray_push(&dox_args, tmp);
+        }
+      }
+      continue;
+    }
     // Handle .s
     if (type == FILE_ASM) {
       if (!opt_S) {
@@ -657,6 +681,11 @@ int chibicc(int argc, char **argv) {
       continue;
     }
     assert(type == FILE_C || type == FILE_ASM_CPP);
+    // Just print ast.
+    if (opt_A) {
+      handle_exit(run_cc1(argc, argv, input, NULL));
+      continue;
+    }
     // Just preprocess
     if (opt_E || opt_M) {
       handle_exit(run_cc1(argc, argv, input, NULL));
@@ -672,14 +701,6 @@ int chibicc(int argc, char **argv) {
       char *tmp = create_tmpfile();
       handle_exit(run_cc1(argc, argv, input, tmp));
       assemble(tmp, output);
-      continue;
-    }
-    // Dox
-    if (opt_J) {
-      char *tmp = create_tmpfile();
-      if (run_cc1(argc, argv, input, tmp)) {
-        strarray_push(&dox_args, tmp);
-      }
       continue;
     }
     // Compile, assemble and link

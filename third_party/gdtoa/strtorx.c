@@ -52,14 +52,10 @@ THIS SOFTWARE.
 #define _4 0
 #endif
 
- extern UShort NanDflt_ldus_D2A[5];
+extern UShort __gdtoa_NanDflt_ldus[5];
 
- void
-#ifdef KR_headers
-ULtox(L, bits, exp, k) UShort *L; ULong *bits; Long exp; int k;
-#else
+void
 ULtox(UShort *L, ULong *bits, Long exp, int k)
-#endif
 {
 	switch(k & STRTOG_Retmask) {
 	  case STRTOG_NoNumber:
@@ -88,22 +84,18 @@ ULtox(UShort *L, ULong *bits, Long exp, int k)
 		break;
 
 	  case STRTOG_NaN:
-		L[_4] = NanDflt_ldus_D2A[0];
-		L[_3] = NanDflt_ldus_D2A[1];
-		L[_2] = NanDflt_ldus_D2A[2];
-		L[_1] = NanDflt_ldus_D2A[3];
-		L[_0] = NanDflt_ldus_D2A[4];
+		L[_4] = __gdtoa_NanDflt_ldus[0];
+		L[_3] = __gdtoa_NanDflt_ldus[1];
+		L[_2] = __gdtoa_NanDflt_ldus[2];
+		L[_1] = __gdtoa_NanDflt_ldus[3];
+		L[_0] = __gdtoa_NanDflt_ldus[4];
 	  }
 	if (k & STRTOG_Neg)
 		L[_0] |= 0x8000;
 	}
 
- int
-#ifdef KR_headers
-strtorx(s, sp, rounding, L) CONST char *s; char **sp; int rounding; void *L;
-#else
+int
 strtorx(CONST char *s, char **sp, int rounding, void *L)
-#endif
 {
 	static const FPI fpi0 = { 64, 1-16383-64+1, 32766 - 16383 - 64 + 1, 1, SI, 0 /*unused*/ };
 	FPI *fpi, fpi1;

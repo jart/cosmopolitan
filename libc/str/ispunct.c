@@ -20,7 +20,7 @@
 #include "libc/str/str.h"
 
 /**
- * Returns nonzero if c ∈ !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~
+ * Returns nonzero if ``c ∈ !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~``
  */
 int ispunct(int c) {
   return (0x21 <= c && c <= 0x7E) && !('0' <= c && c <= '9') &&

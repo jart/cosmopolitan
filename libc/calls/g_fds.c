@@ -25,9 +25,9 @@
 
 STATIC_YOINK("_init_g_fds");
 
-struct Fds g_fds;
+hidden struct Fds g_fds;
 
-void InitializeFileDescriptors(void) {
+hidden void InitializeFileDescriptors(void) {
   struct Fds *fds;
   fds = VEIL("r", &g_fds);
   pushmov(&fds->f, 3ul);

@@ -32,14 +32,10 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- extern ULong NanDflt_d_D2A[2];
+ extern ULong __gdtoa_NanDflt_d[2];
 
- void
-#ifdef KR_headers
-ULtod(L, bits, exp, k) ULong *L; ULong *bits; Long exp; int k;
-#else
+void
 ULtod(ULong *L, ULong *bits, Long exp, int k)
-#endif
 {
 	switch(k & STRTOG_Retmask) {
 	  case STRTOG_NoNumber:
@@ -64,19 +60,15 @@ ULtod(ULong *L, ULong *bits, Long exp, int k)
 		break;
 
 	  case STRTOG_NaN:
-		L[_0] = NanDflt_d_D2A[1];
-		L[_1] = NanDflt_d_D2A[0];
+		L[_0] = __gdtoa_NanDflt_d[1];
+		L[_1] = __gdtoa_NanDflt_d[0];
 	  }
 	if (k & STRTOG_Neg)
 		L[_0] |= 0x80000000L;
 	}
 
- int
-#ifdef KR_headers
-strtord(s, sp, rounding, d) CONST char *s; char **sp; int rounding; double *d;
-#else
+int
 strtord(CONST char *s, char **sp, int rounding, double *d)
-#endif
 {
 	static const FPI fpi0 = { 53, 1-1023-53+1, 2046-1023-53+1, 1, SI, 0 /*unused*/ };
 	FPI *fpi, fpi1;

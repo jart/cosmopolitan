@@ -84,7 +84,7 @@ void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
     }
     addr = (void *)(intptr_t)((int64_t)x << 16);
   }
-  dm = DirectMap(addr, size, prot, flags | MAP_FIXED, fd, off);
+  dm = __mmap(addr, size, prot, flags | MAP_FIXED, fd, off);
   if (dm.addr == MAP_FAILED || dm.addr != addr) {
     return MAP_FAILED;
   }

@@ -41,15 +41,15 @@
  * It's a common antipattern to check isatty(STDERR_FILENO), since that
  * usually makes colors harder to get than they are to remove:
  *
- *    sed 's/\x1b\[[;[:digit:]]*m//g' <color.txt >uncolor.txt
+ *      sed 's/\x1b\[[;[:digit:]]*m//g' <color.txt >uncolor.txt
  *
  * Ideally, all software should be updated to understand color, since
  * it's been formally standardized nearly as long as ASCII. Even old
  * MS-DOS supports it (but Windows didn't until Windows 10) yet even
  * tools like less may need wrapper scripts, e.g.:
  *
- *    #!/bin/sh
- *    LESSCHARSET=UTF-8 exec /usr/bin/less -RS "$@"
+ *      #!/bin/sh
+ *      LESSCHARSET=UTF-8 exec /usr/bin/less -RS "$@"
  *
  * It's that easy fam.
  */

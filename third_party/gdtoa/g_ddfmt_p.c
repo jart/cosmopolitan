@@ -31,14 +31,10 @@ THIS SOFTWARE.
 
 /* Please send bug reports to David M. Gay (dmg@acm.org). */
 
- extern ULong NanDflt_d_D2A[2];
+extern ULong __gdtoa_NanDflt_d[2];
 
- char *
-#ifdef KR_headers
-g_ddfmt_p(buf, dd0, ndig, bufsize, nik) char *buf; double *dd0; int ndig; size_t bufsize; int nik;
-#else
+char *
 g_ddfmt_p(char *buf, double *dd0, int ndig, size_t bufsize, int nik)
-#endif
 {
 	FPI fpi;
 	char *b, *s, *se;
@@ -82,10 +78,10 @@ g_ddfmt_p(char *buf, double *dd0, int ndig, size_t bufsize, int nik)
 				*b++ = '-';
 			b = strcp(b, NanName[nik%3]);
 			if (nik > 5 && (nik < 12
-					|| L[_1] != NanDflt_d_D2A[0]
-					|| (L[_0] ^ NanDflt_d_D2A[1]) & 0xfffff
-					||  L[2+_1] != NanDflt_d_D2A[0]
-					|| (L[2+_0] ^ NanDflt_d_D2A[1]) & 0xfffff)) {
+					|| L[_1] != __gdtoa_NanDflt_d[0]
+					|| (L[_0] ^ __gdtoa_NanDflt_d[1]) & 0xfffff
+					||  L[2+_1] != __gdtoa_NanDflt_d[0]
+					|| (L[2+_0] ^ __gdtoa_NanDflt_d[1]) & 0xfffff)) {
 				bits0[0] = L[2+_1];
 				bits0[1] = (L[2+_0] & 0xfffff) | (L[_1] << 20);
 				bits0[2] = (L[_1] >> 12) | (L[_0] << 20);

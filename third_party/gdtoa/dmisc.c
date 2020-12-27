@@ -36,12 +36,8 @@ THIS SOFTWARE.
  char *dtoa_result;
 #endif
 
- char *
-#ifdef KR_headers
-rv_alloc(i MTa) int i; MTk
-#else
+char *
 rv_alloc(int i MTd)
-#endif
 {
 	int j, k, *r;
 
@@ -59,12 +55,8 @@ rv_alloc(int i MTd)
 		(char *)(r+1);
 	}
 
- char *
-#ifdef KR_headers
-nrv_alloc(s, rve, n MTa) char *s, **rve; int n; MTk
-#else
+char *
 nrv_alloc(char *s, char **rve, int n MTd)
-#endif
 {
 	char *rv, *t;
 
@@ -82,12 +74,8 @@ nrv_alloc(char *s, char **rve, int n MTd)
  * when MULTIPLE_THREADS is not defined.
  */
 
- void
-#ifdef KR_headers
-freedtoa(s) char *s;
-#else
+void
 freedtoa(char *s)
-#endif
 {
 #ifdef MULTIPLE_THREADS
 	ThInfo *TI = 0;
@@ -101,13 +89,8 @@ freedtoa(char *s)
 #endif
 	}
 
- int
-quorem
-#ifdef KR_headers
-	(b, S) Bigint *b, *S;
-#else
-	(Bigint *b, Bigint *S)
-#endif
+int
+quorem(Bigint *b, Bigint *S)
 {
 	int n;
 	ULong *bx, *bxe, q, *sx, *sxe;

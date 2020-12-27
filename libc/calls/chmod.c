@@ -26,15 +26,15 @@
 /**
  * Changes permissions on file, e.g.:
  *
- *   CHECK_NE(-1, chmod("foo/bar.txt", 0644));
- *   CHECK_NE(-1, chmod("o/default/program.com", 0755));
- *   CHECK_NE(-1, chmod("privatefolder/", 0700));
+ *     CHECK_NE(-1, chmod("foo/bar.txt", 0644));
+ *     CHECK_NE(-1, chmod("o/default/program.com", 0755));
+ *     CHECK_NE(-1, chmod("privatefolder/", 0700));
  *
  * The esoteric bits generally available on System Five are:
  *
- *   CHECK_NE(-1, chmod("/opt/", 01000));          // sticky bit
- *   CHECK_NE(-1, chmod("/usr/bin/sudo", 04755));  // setuid bit
- *   CHECK_NE(-1, chmod("/usr/bin/wall", 02755));  // setgid bit
+ *     CHECK_NE(-1, chmod("/opt/", 01000));          // sticky bit
+ *     CHECK_NE(-1, chmod("/usr/bin/sudo", 04755));  // setuid bit
+ *     CHECK_NE(-1, chmod("/usr/bin/wall", 02755));  // setgid bit
  *
  * This works on Windows NT if you ignore the error ;-)
  *
@@ -43,6 +43,7 @@
  * @errors ENOENT, ENOTDIR, ENOSYS
  * @asyncsignalsafe
  * @see fchmod()
+ * @syscall
  */
 int chmod(const char *pathname, uint32_t mode) {
   if (!pathname) return efault();

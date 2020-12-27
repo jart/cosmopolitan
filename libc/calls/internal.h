@@ -68,7 +68,6 @@ hidden extern const struct NtSecurityAttributes kNtIsInheritable;
 ssize_t __getemptyfd(void) hidden;
 int __ensurefds(int) hidden;
 void __removefd(int) hidden;
-enum FdKind fdkind(int) hidden nosideeffect;
 bool __isfdopen(int) hidden nosideeffect;
 bool __isfdkind(int, enum FdKind) hidden nosideeffect;
 

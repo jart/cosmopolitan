@@ -29,6 +29,7 @@
  * @return 0 on success, or -1 w/ errno
  * @see /etc/passwd for user ids
  * @see /etc/group for group ids
+ * @syscall
  */
 int fchown(int fd, uint32_t uid, uint32_t gid) {
   /* TODO(jart): Windows? */

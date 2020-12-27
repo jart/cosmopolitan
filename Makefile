@@ -140,7 +140,6 @@ include net/http/http.mk			#─┘
 include third_party/lemon/lemon.mk
 include third_party/duktape/duktape.mk
 include third_party/regex/regex.mk
-include third_party/avir/avir.mk
 include third_party/ctags/ctags.mk
 include third_party/third_party.mk
 include libc/testlib/testlib.mk
@@ -313,9 +312,8 @@ o/cosmopolitan.h:				\
 		$(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS))
 	@ACTION=ROLLUP TARGET=$@ build/do $^ >$@
 
-o/cosmopolitan.html:				\
-		o//third_party/chibicc/chibicc.com.dbg
-	o//third_party/chibicc/chibicc.com.dbg -J -fno-common -include libc/integral/normalize.inc -o $@ $(filter %.c,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))
+o/cosmopolitan.html: o/$(MODE)/third_party/chibicc/chibicc.com.dbg
+	o/$(MODE)/third_party/chibicc/chibicc.com.dbg -J -fno-common -include libc/integral/normalize.inc -o $@ $(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))
 
 # UNSPECIFIED PREREQUISITES TUTORIAL
 #

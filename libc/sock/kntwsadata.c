@@ -31,7 +31,7 @@
  * Berkeley Socket wrappers are linked. The latest version of Winsock
  * was introduced alongside x64, so this should never fail.
  */
-struct NtWsaData kNtWsaData;
+hidden struct NtWsaData kNtWsaData;
 
 textwindows static void winsockfini(void) {
   WSACleanup();

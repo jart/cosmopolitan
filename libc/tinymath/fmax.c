@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -17,13 +17,20 @@
 │ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA                │
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.h"
-.source	__FILE__
+#include "libc/tinymath/tinymath.h"
 
-tinymath_fmaxf:
-	.leafprologue
-	.profilable
-	maxss	%xmm1,%xmm0
-	.leafepilogue
-	.endfn	tinymath_fmaxf,globl
-	.alias	tinymath_fmaxf,fmaxf
+/**
+ * Returns maximum of two doubles.
+ *
+ * If one argument is NAN then the other is returned.
+ * This function is designed to do the right thing with
+ * signed zeroes.
+ */
+double fmax(double x, double y) {
+  if (__builtin_isnan(x)) return y;
+  if (__builtin_isnan(y)) return x;
+  if (__builtin_signbit(x) != __builtin_signbit(y)) {
+    return __builtin_signbit(x) ? y : x; /* C99 Annex F.9.9.2 */
+  }
+  return x < y ? y : x;
+}

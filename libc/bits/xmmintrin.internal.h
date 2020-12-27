@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_BITS_XMMINTRIN_H_
 #define COSMOPOLITAN_LIBC_BITS_XMMINTRIN_H_
 #include "libc/bits/emmintrin.internal.h"
-#include "libc/bits/mmintrin.internal.h"
 #include "libc/bits/progn.internal.h"
 #include "libc/dce.h"
 

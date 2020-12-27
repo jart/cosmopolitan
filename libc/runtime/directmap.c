@@ -21,12 +21,20 @@
 #include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.h"
 
-struct DirectMap DirectMap(void *addr, size_t size, unsigned prot,
-                           unsigned flags, int fd, int64_t off) {
+/**
+ * Obtains memory mapping directly from system.
+ *
+ * The mmap() function needs to track memory mappings in order to
+ * support Windows NT and Address Sanitizer. That memory tracking can be
+ * bypassed by calling this function. However the caller is responsible
+ * for passing the magic memory handle on Windows NT to CloseHandle().
+ */
+struct DirectMap __mmap(void *addr, size_t size, unsigned prot, unsigned flags,
+                        int fd, int64_t off) {
   if (!IsWindows()) {
     return (struct DirectMap){mmap$sysv(addr, size, prot, flags, fd, off),
                               kNtInvalidHandleValue};
   } else {
-    return DirectMapNt(addr, size, prot, flags, fd, off);
+    return __mmap$nt(addr, size, prot, flags, fd, off);
   }
 }

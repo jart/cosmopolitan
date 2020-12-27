@@ -20,7 +20,7 @@
 #include "libc/alg/alg.h"
 #include "libc/alg/arraylist.internal.h"
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/hefty/ntspawn.h"
 #include "libc/calls/internal.h"

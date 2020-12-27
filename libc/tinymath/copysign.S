@@ -24,19 +24,19 @@ tinymath_copysign:
 	.leafprologue
 	.profilable
 	movapd	%xmm1,%xmm2
-	andpd	.L1(%rip),%xmm0
-	andpd	.L2(%rip),%xmm2
+	andpd	.Lnan(%rip),%xmm0
+	andpd	.Lneg0(%rip),%xmm2
 	orpd	%xmm2,%xmm0
 	.leafepilogue
 	.endfn	tinymath_copysign,globl
 	.alias	tinymath_copysign,copysign
 
 	.rodata.cst16
-.L1:	.long	4294967295
-	.long	2147483647
+.Lnan:	.long	0xffffffff
+	.long	0x7fffffff
 	.long	0
 	.long	0
-.L2:	.long	0
+.Lneg0:	.long	0
 	.long	-2147483648
 	.long	0
 	.long	0

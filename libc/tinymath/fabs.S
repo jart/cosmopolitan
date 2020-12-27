@@ -20,6 +20,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
+/	Returns absolute value of double.
+/
+/	@param	xmm0 has double in lower half
+/	@return	xmm0 has result in lower half
 fabs:	.leafprologue
 	.profilable
 	mov	$0x7fffffffffffffff,%rax

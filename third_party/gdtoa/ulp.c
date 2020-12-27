@@ -32,13 +32,8 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- double
-ulp
-#ifdef KR_headers
-	(x) U *x;
-#else
-	(U *x)
-#endif
+double
+ulp(U *x)
 {
 	Long L;
 	U a;

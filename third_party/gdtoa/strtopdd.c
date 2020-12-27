@@ -32,12 +32,8 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- int
-#ifdef KR_headers
-strtopdd(s, sp, dd) CONST char *s; char **sp; double *dd;
-#else
+int
 strtopdd(CONST char *s, char **sp, double *dd)
-#endif
 {
 #ifdef Sudden_Underflow
 	static const FPI fpi0 = { 106, 1-1023, 2046-1023-106+1, 1, 1, 0 /*unused*/ };

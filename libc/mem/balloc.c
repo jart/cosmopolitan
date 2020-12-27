@@ -20,17 +20,11 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/buffer.h"
 
-/* TODO(jart): Delete */
-
 #define kGuard PAGESIZE
 #define kGrain FRAMESIZE
 
 /**
  * Allocates page-guarded buffer.
- *
- *     ┌─────────────────────────────────────┬s─i─g─s─e─g─v┐
- *     │   𝑣₀..𝑣ₙ₋₁                          │𝑣ₙ..𝑣ₙ₊₄₀₉₆₋₁│
- *     └─────────────────────────────────────┴s─i─g─s─e─g─v┘
  *
  * @param b is metadata object owned by caller, initialized to zero for
  *     first call; subsequent calls will resize
@@ -38,6 +32,7 @@
  * @param n is buffer size in bytes
  * @return b->p
  * @see ralloc()
+ * @deprecated
  */
 void *balloc(struct GuardedBuffer *b, unsigned a, size_t n) {
   return (b->p = memalign(a, n));

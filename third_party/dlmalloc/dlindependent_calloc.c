@@ -146,20 +146,20 @@ static void **ialloc(mstate m, size_t n_elements, size_t *sizes, int opts,
  * but the number is not known at compile time, and some of the nodes
  * may later need to be freed. For example:
  *
- *   struct Node { int item; struct Node* next; };
- *   struct Node* build_list() {
- *     struct Node **pool;
- *     int n = read_number_of_nodes_needed();
- *     if (n <= 0) return 0;
- *     pool = (struct Node**)(independent_calloc(n, sizeof(struct Node), 0);
- *     if (pool == 0) __die();
- *     // organize into a linked list...
- *     struct Node* first = pool[0];
- *     for (i = 0; i < n-1; ++i)
- *     pool[i]->next = pool[i+1];
- *     free(pool); * // Can now free the array (or not, if it is needed later)
- *     return first;
- *   }
+ *     struct Node { int item; struct Node* next; };
+ *     struct Node* build_list() {
+ *       struct Node **pool;
+ *       int n = read_number_of_nodes_needed();
+ *       if (n <= 0) return 0;
+ *       pool = (struct Node**)(independent_calloc(n, sizeof(struct Node), 0);
+ *       if (pool == 0) __die();
+ *       // organize into a linked list...
+ *       struct Node* first = pool[0];
+ *       for (i = 0; i < n-1; ++i)
+ *       pool[i]->next = pool[i+1];
+ *       free(pool); * // Can now free the array (or not, if it is needed later)
+ *       return first;
+ *     }
  */
 void **dlindependent_calloc(size_t n_elements, size_t elem_size,
                             void *chunks[]) {
@@ -199,19 +199,18 @@ void **dlindependent_calloc(size_t n_elements, size_t elem_size,
  * where several structs or objects must always be allocated at the
  * same time.  For example:
  *
- *   struct Head { ... }
- *   struct Foot { ... }
- *
- *   void send_message(char* msg) {
- *     int msglen = strlen(msg);
- *     size_t sizes[3] = { sizeof(struct Head), msglen, sizeof(struct Foot) };
- *     void* chunks[3];
- *     if (independent_comalloc(3, sizes, chunks) == 0) __die();
- *     struct Head* head = (struct Head*)(chunks[0]);
- *     char*        body = (char*)(chunks[1]);
- *     struct Foot* foot = (struct Foot*)(chunks[2]);
- *     // ...
- *   }
+ *     struct Head { ... }
+ *     struct Foot { ... }
+ *     void send_message(char* msg) {
+ *       int msglen = strlen(msg);
+ *       size_t sizes[3] = { sizeof(struct Head), msglen, sizeof(struct Foot) };
+ *       void* chunks[3];
+ *       if (independent_comalloc(3, sizes, chunks) == 0) __die();
+ *       struct Head* head = (struct Head*)(chunks[0]);
+ *       char*        body = (char*)(chunks[1]);
+ *       struct Foot* foot = (struct Foot*)(chunks[2]);
+ *       // ...
+ *     }
  *
  * In general though, independent_comalloc is worth using only for
  * larger values of n_elements. For small values, you probably won't

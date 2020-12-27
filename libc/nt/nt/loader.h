@@ -37,8 +37,6 @@ struct NtAnsiString;
 struct NtLdrDataTableEntry;
 struct NtUnicodeString;
 
-const struct NtLdrDataTableEntry *NtGetModule(const char *basename) nothrow;
-
 NtStatus LdrLoadDll(const char16_t *opt_PathToFile, uint32_t *opt_Flags,
                     struct NtUnicodeString *ModuleFileName,
                     void **out_ModuleHandle);

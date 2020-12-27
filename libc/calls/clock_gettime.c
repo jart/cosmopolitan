@@ -18,7 +18,7 @@
 │ 02110-1301 USA                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/timespec.h"
@@ -51,6 +51,7 @@
  *     errno isn't restored to its original value, to detect prec. loss
  * @see strftime(), gettimeofday()
  * @asyncsignalsafe
+ * @syscall
  */
 int clock_gettime(int clockid, struct timespec *out_ts) {
   /* TODO(jart): Just ignore O/S for MONOTONIC and measure RDTSC on start */

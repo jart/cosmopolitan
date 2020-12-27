@@ -48,20 +48,16 @@ THIS SOFTWARE.
 #define ldus_QNAN4 0
 #endif
 
- const char *const InfName[6] = { "Infinity", "infinity", "INFINITY", "Inf", "inf", "INF" };
- const char *const NanName[3] = { "NaN", "nan", "NAN" };
- const ULong NanDflt_Q_D2A[4] = { 0xffffffff, 0xffffffff, 0xffffffff, 0x7fffffff };
- const ULong NanDflt_d_D2A[2] = { d_QNAN1, d_QNAN0 };
- const ULong NanDflt_f_D2A[1] = { f_QNAN };
- const ULong NanDflt_xL_D2A[3] = { 1, 0x80000000, 0x7fff0000 };
- const UShort NanDflt_ldus_D2A[5] = { ldus_QNAN4, ldus_QNAN3, ldus_QNAN2, ldus_QNAN1, ldus_QNAN0 };
+const char *const InfName[6] = { "Infinity", "infinity", "INFINITY", "Inf", "inf", "INF" };
+const char *const NanName[3] = { "NaN", "nan", "NAN" };
+const ULong __gdtoa_NanDflt_Q[4] = { 0xffffffff, 0xffffffff, 0xffffffff, 0x7fffffff };
+const ULong __gdtoa_NanDflt_d[2] = { d_QNAN1, d_QNAN0 };
+const ULong __gdtoa_NanDflt_f[1] = { f_QNAN };
+const ULong __gdtoa_NanDflt_xL[3] = { 1, 0x80000000, 0x7fff0000 };
+const UShort __gdtoa_NanDflt_ldus[5] = { ldus_QNAN4, ldus_QNAN3, ldus_QNAN2, ldus_QNAN1, ldus_QNAN0 };
 
- char *
-#ifdef KR_headers
-g__fmt(b, s, se, decpt, sign, blen) char *b; char *s; char *se; int decpt; ULong sign; size_t blen;
-#else
+char *
 g__fmt(char *b, char *s, char *se, int decpt, ULong sign, size_t blen)
-#endif
 {
 	int i, j, k;
 	char *be, *s0;
@@ -168,7 +164,7 @@ g__fmt(char *b, char *s, char *se, int decpt, ULong sign, size_t blen)
  	}
 
  char *
-add_nanbits_D2A(char *b, size_t blen, ULong *bits, int nb)
+__gdtoa_add_nanbits(char *b, size_t blen, ULong *bits, int nb)
 {
 	ULong t;
 	char *rv;

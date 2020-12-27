@@ -3,7 +3,7 @@
 #ifndef __STRICT_ANSI__
 #include "libc/dce.h"
 #include "libc/elf/struct/ehdr.h"
-#include "libc/runtime/ezmap.h"
+#include "libc/runtime/ezmap.internal.h"
 #include "libc/runtime/runtime.h"
 
 #define STACK_CEIL 0x700000000000ul

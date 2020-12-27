@@ -20,7 +20,7 @@
 #include "libc/calls/calls.h"
 
 /**
- * Formats string directly to system i/o device.
+ * Formats string directly to file descriptor.
  */
 int(dprintf)(int fd, const char *fmt, ...) {
   int rc;

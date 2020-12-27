@@ -228,3 +228,53 @@ laborum\n";
   EXPECT_STREQ("asyncsignalsafe", jd->tags.p[3].tag);
   FreeJavadown(jd);
 }
+
+TEST(ParseJavadown, testAsmSyntax) {
+  const char *comment = "\
+/\tParses javadown    \n\
+/\tand that is the bottom line.\n\
+/\n\
+/\tLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do\n\
+/\t\teiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim \n\
+/\t\tad minim veniam, quis nostrud exercitation ullamco laboris nisi ut\n\
+/\t\taliquip ex ea commodo consequat.\n\
+/\n\
+/\tDuis aute irure dolor in reprehenderit in voluptate velit esse cillum\n\
+/\tdolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat\n\
+/\tnon proident, sunt in culpa qui officia deserunt mollit anim id est\n\
+/\tlaborum\n\
+/\n\
+/\t@param data should point to text inside the slash star markers\n\
+/\t\tlorem ipsum dolla dollaz yo\n\
+/\t@param size is length of data in bytes\n\
+/\t@return object that should be passed to FreeJavadown()\n\
+/\t@asyncsignalsafe\n";
+  const char *title = "Parses javadown and that is the bottom line.";
+  const char *description = "\
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do\n\
+\teiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim\n\
+\tad minim veniam, quis nostrud exercitation ullamco laboris nisi ut\n\
+\taliquip ex ea commodo consequat.\n\
+\n\
+Duis aute irure dolor in reprehenderit in voluptate velit esse cillum\n\
+dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat\n\
+non proident, sunt in culpa qui officia deserunt mollit anim id est\n\
+laborum\n";
+  struct Javadown *jd;
+  jd = ParseJavadown(comment, strlen(comment));
+  EXPECT_FALSE(jd->isfileoverview);
+  EXPECT_STREQ(title, jd->title);
+  EXPECT_STREQ(description, jd->text);
+  EXPECT_EQ(4, jd->tags.n);
+  EXPECT_STREQ("param", jd->tags.p[0].tag);
+  EXPECT_STREQ("data should point to text inside the slash star markers\n"
+               "lorem ipsum dolla dollaz yo",
+               jd->tags.p[0].text);
+  EXPECT_STREQ("param", jd->tags.p[1].tag);
+  EXPECT_STREQ("size is length of data in bytes", jd->tags.p[1].text);
+  EXPECT_STREQ("return", jd->tags.p[2].tag);
+  EXPECT_STREQ("object that should be passed to FreeJavadown()",
+               jd->tags.p[2].text);
+  EXPECT_STREQ("asyncsignalsafe", jd->tags.p[3].tag);
+  FreeJavadown(jd);
+}

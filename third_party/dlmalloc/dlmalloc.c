@@ -1,5 +1,5 @@
 #include "libc/bits/initializer.internal.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/bits/safemacros.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/dce.h"
@@ -21,8 +21,8 @@ STATIC_YOINK("_init_dlmalloc");
 #define OOM_WARNING  "warning: running out of physical memory\n"
 #define is_global(M) ((M) == g_dlmalloc)
 
-struct MallocState g_dlmalloc[1];
-struct MallocParams g_mparams;
+hidden struct MallocState g_dlmalloc[1];
+hidden struct MallocParams g_mparams;
 
 /**
  * Acquires more system memory for dlmalloc.

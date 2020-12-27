@@ -46,7 +46,6 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/x/x.h"
-#include "third_party/avir/lanczos.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/stb/stb_image.h"
 #include "third_party/stb/stb_image_resize.h"

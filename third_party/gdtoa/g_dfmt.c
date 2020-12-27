@@ -32,12 +32,8 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- char*
-#ifdef KR_headers
-g_dfmt(buf, d, ndig, bufsize) char *buf; double *d; int ndig; size_t bufsize;
-#else
+char*
 g_dfmt(char *buf, double *d, int ndig, size_t bufsize)
-#endif
 {
 	static const FPI fpi0 = { 53, 1-1023-53+1, 2046-1023-53+1, 1, 0, Int_max };
 	char *b, *s, *se;

@@ -2707,15 +2707,6 @@ static noinline void OpFpu1(struct As *a, int op, int reg) {
   OpFpu1Impl(a, op, reg);
 }
 
-static void OnFucomi(struct As *a, struct Slice s) {
-  int reg, rm;
-  rm = !IsPunct(a, a->i, ';') ? GetRegisterRm(a) : 1;
-  reg = !IsPunct(a, a->i, ';') ? GetRegisterReg(a) : 0;
-  if (reg & 7) Fail(a, "bad register");
-  EmitByte(a, 0xDB);
-  EmitByte(a, 0350 | rm & 7);
-}
-
 static void OnFxch(struct As *a, struct Slice s) {
   int rm;
   rm = !IsPunct(a, a->i, ';') ? GetRegisterRm(a) : 1;
@@ -2729,6 +2720,18 @@ static void OnBswap(struct As *a, struct Slice s) {
   EmitRex(a, srm);
   EmitByte(a, 0x0F);
   EmitByte(a, 0310 | srm & 7);
+}
+
+static noinline void OpFcomImpl(struct As *a, int op) {
+  int reg, rm;
+  rm = !IsPunct(a, a->i, ';') ? GetRegisterRm(a) : 1;
+  reg = !IsPunct(a, a->i, ';') ? GetRegisterReg(a) : 0;
+  if (reg & 7) Fail(a, "bad register");
+  EmitVarword(a, op | rm & 7);
+}
+
+static noinline void OpFcom(struct As *a, int op) {
+  OpFcomImpl(a, op);
 }
 
 // clang-format off
@@ -2803,13 +2806,22 @@ static void OnDivps(struct As *a, struct Slice s) { OpSse(a, 0x0F5E); }
 static void OnDivsd(struct As *a, struct Slice s) { OpSse(a, 0xF20F5E); }
 static void OnDivss(struct As *a, struct Slice s) { OpSse(a, 0xF30F5E); }
 static void OnDppd(struct As *a, struct Slice s) { OpSse(a, 0x660F3A41); }
-static void OnFabs(struct As *a, struct Slice s) { EmitVarword(a, 0xd9e1); }
+static void OnFabs(struct As *a, struct Slice s) { EmitVarword(a, 0xD9E1); }
 static void OnFaddl(struct As *a, struct Slice s) { OpFpu1(a, 0xDC, 0); }
-static void OnFaddp(struct As *a, struct Slice s) { EmitVarword(a, 0xdec1); }
+static void OnFaddp(struct As *a, struct Slice s) { EmitVarword(a, 0xDEC1); }
 static void OnFadds(struct As *a, struct Slice s) { OpFpu1(a, 0xD8, 0); }
-static void OnFchs(struct As *a, struct Slice s) { EmitVarword(a, 0xd9e0); }
-static void OnFcomip(struct As *a, struct Slice s) { EmitVarword(a, 0xdff1); }
-static void OnFdivrp(struct As *a, struct Slice s) { EmitVarword(a, 0xdef9); }
+static void OnFchs(struct As *a, struct Slice s) { EmitVarword(a, 0xD9E0); }
+static void OnFcmovb(struct As *a, struct Slice s) { OpFcom(a, 0xDAC0); }
+static void OnFcmovbe(struct As *a, struct Slice s) { OpFcom(a, 0xDAD0); }
+static void OnFcmove(struct As *a, struct Slice s) { OpFcom(a, 0xDAC8); }
+static void OnFcmovnb(struct As *a, struct Slice s) { OpFcom(a, 0xDBC0); }
+static void OnFcmovnbe(struct As *a, struct Slice s) { OpFcom(a, 0xDBD0); }
+static void OnFcmovne(struct As *a, struct Slice s) { OpFcom(a, 0xDBC8); }
+static void OnFcmovnu(struct As *a, struct Slice s) { OpFcom(a, 0xDBD8); }
+static void OnFcmovu(struct As *a, struct Slice s) { OpFcom(a, 0xDAD8); }
+static void OnFcomi(struct As *a, struct Slice s) { OpFcom(a, 0xDBF0); }
+static void OnFcomip(struct As *a, struct Slice s) { OpFcom(a, 0xDFF0); }
+static void OnFdivrp(struct As *a, struct Slice s) { EmitVarword(a, 0xDEF9); }
 static void OnFildl(struct As *a, struct Slice s) { OpFpu1(a, 0xDB, 0); }
 static void OnFildll(struct As *a, struct Slice s) { OpFpu1(a, 0xDF, 5); }
 static void OnFildq(struct As *a, struct Slice s) { OpFpu1(a, 0xDF, 5); }
@@ -2837,9 +2849,11 @@ static void OnFstps(struct As *a, struct Slice s) { OpFpu1(a, 0xD9, 3); }
 static void OnFstpt(struct As *a, struct Slice s) { OpFpu1(a, 0xDB, 7); }
 static void OnFsubrp(struct As *a, struct Slice s) { EmitVarword(a, 0xDEE9); }
 static void OnFtst(struct As *a, struct Slice s) { EmitVarword(a, 0xD9E4); }
-static void OnFucomip(struct As *a, struct Slice s) { EmitVarword(a, 0xDFE9); }
+static void OnFucomi(struct As *a, struct Slice s) { OpFcom(a, 0xDBE8); }
+static void OnFucomip(struct As *a, struct Slice s) { OpFcom(a, 0xDFE8); }
 static void OnFwait(struct As *a, struct Slice s) { EmitByte(a, 0x9B); }
-static void OnFxam(struct As *a, struct Slice s) { EmitVarword(a, 0xd9e5); }
+static void OnFxam(struct As *a, struct Slice s) { EmitVarword(a, 0xD9E5); }
+static void OnFxtract(struct As *a, struct Slice s) { EmitVarword(a, 0xD9F4); }
 static void OnHaddpd(struct As *a, struct Slice s) { OpSse(a, 0x660F7C); }
 static void OnHaddps(struct As *a, struct Slice s) { OpSse(a, 0xF20F7C); }
 static void OnHlt(struct As *a, struct Slice s) { EmitByte(a, 0xF4); }
@@ -3211,6 +3225,15 @@ static const struct Directive8 {
     {"faddp", OnFaddp},        //
     {"fadds", OnFadds},        //
     {"fchs", OnFchs},          //
+    {"fcmovb", OnFcmovb},      //
+    {"fcmovbe", OnFcmovbe},    //
+    {"fcmove", OnFcmove},      //
+    {"fcmovnb", OnFcmovnb},    //
+    {"fcmovnbe", OnFcmovnbe},  //
+    {"fcmovne", OnFcmovne},    //
+    {"fcmovnu", OnFcmovnu},    //
+    {"fcmovu", OnFcmovu},      //
+    {"fcomi", OnFcomi},        //
     {"fcomip", OnFcomip},      //
     {"fdivrp", OnFdivrp},      //
     {"fildl", OnFildl},        //
@@ -3246,6 +3269,7 @@ static const struct Directive8 {
     {"fwait", OnFwait},        //
     {"fxam", OnFxam},          //
     {"fxch", OnFxch},          //
+    {"fxtract", OnFxtract},    //
     {"haddpd", OnHaddpd},      //
     {"haddps", OnHaddps},      //
     {"hlt", OnHlt},            //

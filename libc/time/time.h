@@ -8,11 +8,11 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const char kWeekdayNameShort[7][4];
-extern const char kWeekdayName[7][10];
-extern const char kMonthNameShort[12][4];
-extern const char kMonthName[12][10];
-extern const unsigned short kMonthYearDay[2][12];
+hidden extern const char kWeekdayNameShort[7][4];
+hidden extern const char kWeekdayName[7][10];
+hidden extern const char kMonthNameShort[12][4];
+hidden extern const char kMonthName[12][10];
+hidden extern const unsigned short kMonthYearDay[2][12];
 
 extern char *tzname[2];
 extern long CLOCKS_PER_SEC;

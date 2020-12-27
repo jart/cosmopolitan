@@ -19,7 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
 #include "libc/alg/arraylist2.internal.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/bits/safemacros.h"
 #include "libc/fmt/bing.internal.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"

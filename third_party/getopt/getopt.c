@@ -3,7 +3,6 @@ getopt (BSD-3)\\n\
 Copyright 1987, 1993, 1994 The Regents of the University of California\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-/* clang-format off */
 /*	$NetBSD: getopt.c,v 1.26 2003/08/07 16:43:40 agc Exp $	*/
 
 /*
@@ -36,105 +35,122 @@ asm(".include \"libc/disclaimer.inc\"");
  *
  * @(#)getopt.c	8.3 (Berkeley) 4/27/95
  * $FreeBSD: src/lib/libc/stdlib/getopt.c,v 1.8 2007/01/09 00:28:10 imp Exp $
- * $DragonFly: src/lib/libc/stdlib/getopt.c,v 1.7 2005/11/20 12:37:48 swildner Exp $
+ * $DragonFly: src/lib/libc/stdlib/getopt.c,v 1.7 2005/11/20 12:37:48 swildner
+ *Exp $
  */
 
-#include "libc/str/str.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 STATIC_YOINK("_init_getopt");
 
-#define	BADCH	(int)'?'
-#define	BADARG	(int)':'
+#define BADCH  (int)'?'
+#define BADARG (int)':'
 
-int	opterr,			/* if error message should be printed */
-	optind,			/* index into parent argv vector */
-	optopt,			/* character checked for validity */
-	optreset;		/* reset getopt */
-char	*optarg;		/* argument associated with option */
-char *getopt_place;		/* option letter processing */
-char kGetoptEmsg[1];
-
-/*
- * getopt --
- *	Parse argc/argv argument vector.
+/**
+ * If error message should be printed.
  */
-int
-getopt(int nargc, char * const nargv[], const char *ostr)
-{
-	char *oli;				/* option letter list index */
+int opterr;
 
-	/*
-	 * Some programs like cvs expect optind = 0 to trigger
-	 * a reset of getopt.
-	 */
-	if (optind == 0)
-		optind = 1;
+/**
+ * Index into parent argv vector.
+ */
+int optind;
 
-	if (optreset || *getopt_place == 0) {		/* update scanning pointer */
-		optreset = 0;
-		getopt_place = nargv[optind];
-		if (optind >= nargc || *getopt_place++ != '-') {
-			/* Argument is absent or is not an option */
-			getopt_place = kGetoptEmsg;
-			return (-1);
-		}
-		optopt = *getopt_place++;
-		if (optopt == '-' && *getopt_place == 0) {
-			/* "--" => end of options */
-			++optind;
-			getopt_place = kGetoptEmsg;
-			return (-1);
-		}
-		if (optopt == 0) {
-			/* Solitary '-', treat as a '-' option
-			   if the program (eg su) is looking for it. */
-			getopt_place = kGetoptEmsg;
-			if (strchr(ostr, '-') == NULL)
-				return (-1);
-			optopt = '-';
-		}
-	} else
-		optopt = *getopt_place++;
+/**
+ * Character checked for validity.
+ */
+int optopt;
 
-	/* See if option letter is one the caller wanted... */
-	if (optopt == ':' || (oli = strchr(ostr, optopt)) == NULL) {
-		if (*getopt_place == 0)
-			++optind;
-		if (opterr && *ostr != ':')
-			fprintf(stderr,
-			    "%s: illegal option -- %c\n", program_invocation_name,
-			    optopt);
-		return (BADCH);
-	}
+/**
+ * Reset getopt.
+ */
+int optreset;
 
-	/* Does this option need an argument? */
-	if (oli[1] != ':') {
-		/* don't need argument */
-		optarg = NULL;
-		if (*getopt_place == 0)
-			++optind;
-	} else {
-		/* Option-argument is either the rest of this argument or the
-		   entire next argument. */
-		if (*getopt_place)
-			optarg = getopt_place;
-		else if (nargc > ++optind)
-			optarg = nargv[optind];
-		else {
-			/* option-argument absent */
-			getopt_place = kGetoptEmsg;
-			if (*ostr == ':')
-				return (BADARG);
-			if (opterr)
-				fprintf(stderr,
-				    "%s: option requires an argument -- %c\n",
-				    program_invocation_name, optopt);
-			return (BADCH);
-		}
-		getopt_place = kGetoptEmsg;
-		++optind;
-	}
-	return (optopt);			/* return option letter */
+/**
+ * Argument associated with option.
+ */
+char *optarg;
+
+/**
+ * Option letter processing.
+ */
+char *getopt_place;
+
+char kGetoptEmsg[1] hidden;
+
+/**
+ * Parses argc/argv argument vector.
+ */
+int getopt(int nargc, char *const nargv[], const char *ostr) {
+  char *oli; /* option letter list index */
+
+  /*
+   * Some programs like cvs expect optind = 0 to trigger
+   * a reset of getopt.
+   */
+  if (optind == 0) optind = 1;
+
+  if (optreset || *getopt_place == 0) { /* update scanning pointer */
+    optreset = 0;
+    getopt_place = nargv[optind];
+    if (optind >= nargc || *getopt_place++ != '-') {
+      /* Argument is absent or is not an option */
+      getopt_place = kGetoptEmsg;
+      return -1;
+    }
+    optopt = *getopt_place++;
+    if (optopt == '-' && *getopt_place == 0) {
+      /* "--" => end of options */
+      ++optind;
+      getopt_place = kGetoptEmsg;
+      return -1;
+    }
+    if (optopt == 0) {
+      /* Solitary '-', treat as a '-' option
+         if the program (eg su) is looking for it. */
+      getopt_place = kGetoptEmsg;
+      if (strchr(ostr, '-') == NULL) return -1;
+      optopt = '-';
+    }
+  } else {
+    optopt = *getopt_place++;
+  }
+
+  /* See if option letter is one the caller wanted... */
+  if (optopt == ':' || (oli = strchr(ostr, optopt)) == NULL) {
+    if (*getopt_place == 0) ++optind;
+    if (opterr && *ostr != ':') {
+      fprintf(stderr, "%s: illegal option -- %c\n", program_invocation_name,
+              optopt);
+    }
+    return (BADCH);
+  }
+
+  /* Does this option need an argument? */
+  if (oli[1] != ':') {
+    /* don't need argument */
+    optarg = NULL;
+    if (*getopt_place == 0) ++optind;
+  } else {
+    /* Option-argument is either the rest of this argument or the
+       entire next argument. */
+    if (*getopt_place) {
+      optarg = getopt_place;
+    } else if (nargc > ++optind) {
+      optarg = nargv[optind];
+    } else {
+      /* option-argument absent */
+      getopt_place = kGetoptEmsg;
+      if (*ostr == ':') return (BADARG);
+      if (opterr)
+        fprintf(stderr, "%s: option requires an argument -- %c\n",
+                program_invocation_name, optopt);
+      return (BADCH);
+    }
+    getopt_place = kGetoptEmsg;
+    ++optind;
+  }
+  return (optopt); /* return option letter */
 }

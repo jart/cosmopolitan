@@ -4,7 +4,7 @@
 #include "libc/elf/struct/phdr.h"
 #include "libc/elf/struct/shdr.h"
 #include "libc/elf/struct/sym.h"
-#include "libc/runtime/ezmap.h"
+#include "libc/runtime/ezmap.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

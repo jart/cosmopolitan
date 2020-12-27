@@ -26,11 +26,11 @@
 hidden uint32_t g_rando32;
 
 textstartup static void g_rando32_init() {
-  register intptr_t *auxv asm("r15"); /* @see libc/crt/crt.S */
-  asm volatile("" : "=r"(auxv));
+  intptr_t *auxvp;
   if (!IsXnu() && !IsWindows()) {
-    for (intptr_t *auxvp = auxv; auxvp[0]; auxvp += 2) {
-      if (auxvp[0] == AT_RANDOM) {
+    asm("mov\t%%r15,%0" : "=r"(auxvp)); /* libc/crt/crt.S */
+    for (; *auxvp; auxvp += 2) {
+      if (*auxvp == AT_RANDOM) {
         uint8_t(*sysrandseed)[16] = (uint8_t(*)[16])auxvp[1];
         if (sysrandseed) g_rando32 ^= read32le(&(*sysrandseed)[8]);
         return;

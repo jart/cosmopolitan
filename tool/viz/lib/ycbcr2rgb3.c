@@ -46,7 +46,6 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
-#include "third_party/avir/lanczos.h"
 #include "tool/viz/lib/graphic.h"
 #include "tool/viz/lib/knobs.h"
 #include "tool/viz/lib/ycbcr.h"

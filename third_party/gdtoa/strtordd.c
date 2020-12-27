@@ -32,14 +32,10 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- extern ULong NanDflt_d_D2A[2];
+ extern ULong __gdtoa_NanDflt_d[2];
 
- void
-#ifdef KR_headers
-ULtodd(L, bits, exp, k) ULong *L; ULong *bits; Long exp; int k;
-#else
+void
 ULtodd(ULong *L, ULong *bits, Long exp, int k)
-#endif
 {
 	int i, j;
 
@@ -156,8 +152,8 @@ ULtodd(ULong *L, ULong *bits, Long exp, int k)
 		break;
 
 	  case STRTOG_NaN:
-		L[_0] = L[_0+2] = NanDflt_d_D2A[1];
-		L[_1] = L[_1+2] = NanDflt_d_D2A[0];
+		L[_0] = L[_0+2] = __gdtoa_NanDflt_d[1];
+		L[_1] = L[_1+2] = __gdtoa_NanDflt_d[0];
 		break;
 
 	  case STRTOG_NaNbits:
@@ -174,12 +170,8 @@ ULtodd(ULong *L, ULong *bits, Long exp, int k)
 		}
 	}
 
- int
-#ifdef KR_headers
-strtordd(s, sp, rounding, dd) CONST char *s; char **sp; int rounding; double *dd;
-#else
+int
 strtordd(CONST char *s, char **sp, int rounding, double *dd)
-#endif
 {
 #ifdef Sudden_Underflow
 	static const FPI fpi0 = { 106, 1-1023, 2046-1023-106+1, 1, 1, 0 /*unused*/ };

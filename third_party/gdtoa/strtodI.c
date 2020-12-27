@@ -32,12 +32,8 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- static double
-#ifdef KR_headers
-ulpdown(d) U *d;
-#else
+static double
 ulpdown(U *d)
-#endif
 {
 	double u;
 	ULong *L = d->L;
@@ -49,12 +45,8 @@ ulpdown(U *d)
 	return u;
 	}
 
- int
-#ifdef KR_headers
-strtodI(s, sp, dd) CONST char *s; char **sp; double *dd;
-#else
+int
 strtodI(CONST char *s, char **sp, double *dd)
-#endif
 {
 	static const FPI fpi = { 53, 1-1023-53+1, 2046-1023-53+1, 1, SI, 0 /*unused*/ };
 	ULong bits[2], sign;

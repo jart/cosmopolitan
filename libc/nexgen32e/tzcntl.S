@@ -21,10 +21,6 @@
 
 /	Finds lowest set bit in 𝑥.
 /
-/	@param	rdi is 64-bit unsigned 𝑥 value
-/	@return	rax number in range [0,64) or 64 if 𝑥 is 0
-/	@see	also treasure trove of nearly identical functions
-/
 /	      uint32 𝑥   bsf(𝑥) tzcnt(𝑥)   ffs(𝑥)   bsr(𝑥) lzcnt(𝑥)
 /	    0x00000000      wut       32        0      wut       32
 /	    0x00000001        0        0        1        0       31
@@ -35,6 +31,9 @@
 /	    0x08000000       27       27       28       27        4
 /	    0xffffffff        0        0        1       31        0
 /
+/	@param	rdi is 64-bit unsigned 𝑥 value
+/	@return	rax number in range [0,64) or 64 if 𝑥 is 0
+/	@see	also treasure trove of nearly identical functions
 tzcntl:	.leafprologue
 	.profilable
 	mov	$64,%esi

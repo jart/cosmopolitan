@@ -22,6 +22,16 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 
+/**
+ * Helper function for allocating anonymous mapping.
+ *
+ * This function is equivalent to:
+ *
+ *     mmap(NULL, mapsize, PROT_READ | PROT_WRITE,
+ *          MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+ *
+ * Except it offers a small saving on code size.
+ */
 void *mapanon(size_t mapsize) {
   return mmap(NULL, mapsize, PROT_READ | PROT_WRITE,
               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);

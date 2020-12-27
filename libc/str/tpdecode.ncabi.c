@@ -33,6 +33,7 @@ forceinline int getbyte(void *arg, uint32_t i) {
  * @return number of bytes successfully consumed or -1 w/ errno
  * @note synchronization is performed
  * @see libc/str/tpdecodecb.internal.h (for implementation)
+ * @deprecated
  */
 int(tpdecode)(const char *s, wint_t *out) {
   return tpdecodecb(out, (unsigned char)s[0], getbyte, (void *)s);

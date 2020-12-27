@@ -22,8 +22,6 @@
 .source	__FILE__
 
 /	Embeds ASCII names for errno constants into binary.
-/
-/	@see	libc/sysv/consts.sh
 	.section .rodata,"aS",@progbits
 kErrnoNames:
 /	<SORTED-ORDER-C>

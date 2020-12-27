@@ -17,7 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/gc.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/prot.h"
 #include "third_party/chibicc/chibicc.h"
+#include "tool/build/lib/asmdown.h"
 
 #define APPEND(L) L.p = realloc(L.p, ++L.n * sizeof(*L.p))
 
@@ -101,36 +105,46 @@ static char *DescribeType(struct Type *ty) {
       return DescribeScalar(ty, "double");
     case TY_LDOUBLE:
       return DescribeScalar(ty, "long double");
+    case TY_FUNC:
+      return xasprintf("%s(*)()", gc(DescribeType(ty->return_ty)));
     case TY_PTR:
-      return xasprintf("%s*", gc(DescribeType(ty->base)));
+      if (ty->base->kind == TY_FUNC) {
+        return DescribeType(ty->base);
+      } else {
+        return xasprintf("%s*", gc(DescribeType(ty->base)));
+      }
     case TY_ARRAY:
       return xasprintf("%s[%d]", gc(DescribeType(ty->base)), ty->array_len);
     case TY_ENUM:
-      if (ty->name_pos) {
-        return xasprintf("enum %.*s", ty->name_pos->len, ty->name_pos->loc);
+      if (ty->name) {
+        return xasprintf("enum %.*s", ty->name->len, ty->name->loc);
       } else {
         return strdup("ANONYMOUS-ENUM");
       }
     case TY_STRUCT:
-      if (ty->name_pos) {
-        return xasprintf("struct %.*s", ty->name_pos->len, ty->name_pos->loc);
+      if (ty->name) {
+        return xasprintf("struct %.*s", ty->name->len, ty->name->loc);
       } else {
         return strdup("ANONYMOUS-STRUCT");
       }
     case TY_UNION:
-      if (ty->name_pos) {
-        return xasprintf("union %.*s", ty->name_pos->len, ty->name_pos->loc);
+      if (ty->name) {
+        return xasprintf("union %.*s", ty->name->len, ty->name->loc);
       } else {
         return strdup("ANONYMOUS-UNION");
       }
-    case TY_FUNC:
-      return xasprintf("%s(*)()", gc(DescribeType(ty->return_ty)));
     default:
       return "UNKNOWN";
   }
 }
 
 static int CountParams(Obj *params) {
+  int n;
+  for (n = 0; params; params = params->next) ++n;
+  return n;
+}
+
+static int CountMacroParams(struct MacroParam *params) {
   int n;
   for (n = 0; params; params = params->next) ++n;
   return n;
@@ -155,7 +169,9 @@ static void SerializeDox(struct DoxWriter *dox, Obj *prog) {
   MacroParam *mparam;
   SerializeInt(&dox->buf, dox->objects.n);
   for (i = 0; i < dox->objects.n; ++i) {
-    s = DescribeType(dox->objects.p[i]->ty);
+    s = DescribeType(dox->objects.p[i]->is_function
+                         ? dox->objects.p[i]->ty->return_ty
+                         : dox->objects.p[i]->ty);
     SerializeStr(&dox->buf, s);
     free(s);
     SerializeStr(&dox->buf, dox->objects.p[i]->name);
@@ -170,7 +186,10 @@ static void SerializeDox(struct DoxWriter *dox, Obj *prog) {
     SerializeInt(&dox->buf, dox->objects.p[i]->is_force_align_arg_pointer);
     SerializeInt(&dox->buf, dox->objects.p[i]->is_no_caller_saved_registers);
     SerializeStr(&dox->buf, dox->objects.p[i]->visibility);
-    SerializeJavadown(&dox->buf, dox->objects.p[i]->javadown->javadown);
+    SerializeInt(&dox->buf, !!dox->objects.p[i]->javadown);
+    if (dox->objects.p[i]->javadown) {
+      SerializeJavadown(&dox->buf, dox->objects.p[i]->javadown->javadown);
+    }
     SerializeInt(&dox->buf, CountParams(dox->objects.p[i]->params));
     for (param = dox->objects.p[i]->params; param; param = param->next) {
       s = DescribeType(param->ty);
@@ -184,8 +203,72 @@ static void SerializeDox(struct DoxWriter *dox, Obj *prog) {
     SerializeStr(&dox->buf, dox->macros.p[i]->name);
     SerializeStr(&dox->buf, dox->macros.p[i]->javadown->file->name);
     SerializeInt(&dox->buf, dox->macros.p[i]->javadown->line_no);
-    SerializeJavadown(&dox->buf, dox->macros.p[i]->javadown->javadown);
+    SerializeInt(&dox->buf, dox->macros.p[i]->is_objlike);
+    SerializeStr(&dox->buf, dox->macros.p[i]->va_args_name);
+    SerializeInt(&dox->buf, !!dox->macros.p[i]->javadown);
+    if (dox->macros.p[i]->javadown) {
+      SerializeJavadown(&dox->buf, dox->macros.p[i]->javadown->javadown);
+    }
+    SerializeInt(&dox->buf, CountMacroParams(dox->macros.p[i]->params));
+    for (mparam = dox->macros.p[i]->params; mparam; mparam = mparam->next) {
+      SerializeStr(&dox->buf, mparam->name);
+    }
   }
+  SerializeInt(&dox->buf, 31337);
+}
+
+static int IsJavadownParam(struct JavadownTag *jt) {
+  return !strcmp(jt->tag, "param") && strchr(jt->text, ' ');
+}
+
+static char *ExtractJavadownParamName(const char *text) {
+  char *space;
+  space = strchr(text, ' ');
+  return strndup(text, space - text);
+}
+
+static int CountJavadownParams(struct Javadown *jd) {
+  int i, n;
+  for (n = i = 0; i < jd->tags.n; ++i) {
+    if (IsJavadownParam(jd->tags.p + i)) {
+      ++n;
+    }
+  }
+  return n;
+}
+
+static void SerializeAsmdown(struct DoxWriter *dox, struct Asmdown *ad,
+                             const char *filename) {
+  char *s;
+  int i, j;
+  SerializeInt(&dox->buf, ad->symbols.n);
+  for (i = 0; i < ad->symbols.n; ++i) {
+    SerializeStr(&dox->buf, "");  // type
+    SerializeStr(&dox->buf, ad->symbols.p[i].name);
+    SerializeStr(&dox->buf, filename);
+    SerializeInt(&dox->buf, ad->symbols.p[i].line);
+    SerializeInt(&dox->buf, true);   // TODO: is_function
+    SerializeInt(&dox->buf, false);  // TODO: is_weak
+    SerializeInt(&dox->buf, false);  // is_inline
+    SerializeInt(&dox->buf, false);  // is_noreturn
+    SerializeInt(&dox->buf, false);  // is_destructor
+    SerializeInt(&dox->buf, false);  // is_constructor
+    SerializeInt(&dox->buf, false);  // is_force_align_arg_pointer
+    SerializeInt(&dox->buf, false);  // is_no_caller_saved_registers
+    SerializeStr(&dox->buf, "");     // TODO: visibility
+    SerializeInt(&dox->buf, true);   // has_javadown
+    SerializeJavadown(&dox->buf, ad->symbols.p[i].javadown);
+    SerializeInt(&dox->buf, CountJavadownParams(ad->symbols.p[i].javadown));
+    for (j = 0; j < ad->symbols.p[i].javadown->tags.n; ++j) {
+      if (IsJavadownParam(ad->symbols.p[i].javadown->tags.p + j)) {
+        SerializeStr(&dox->buf, "");  // type
+        s = ExtractJavadownParamName(ad->symbols.p[i].javadown->tags.p[j].text);
+        SerializeStr(&dox->buf, s);  // name
+        free(s);
+      }
+    }
+  }
+  SerializeInt(&dox->buf, 0);  // macros
   SerializeInt(&dox->buf, 31337);
 }
 
@@ -194,12 +277,19 @@ static void LoadPublicDefinitions(struct DoxWriter *dox, Obj *prog) {
   Obj *obj;
   Macro *macro;
   for (obj = prog; obj; obj = obj->next) {
+    if (!obj->javadown) {
+      if (*obj->name == '_') continue;
+      if (strchr(obj->name, '$')) continue;
+      if (startswith(obj->name, "__gdtoa_")) continue;
+      if (obj->visibility && !strcmp(obj->visibility, "hidden")) continue;
+      if (!obj->is_definition && (!obj->is_function || !obj->params ||
+                                  !obj->params->name || !*obj->params->name)) {
+        continue;
+      }
+    }
     if (obj->is_static) continue;
-    if (*obj->name == '_') continue;
-    if (!obj->javadown) continue;
     if (obj->is_string_literal) continue;
-    if (obj->visibility && !strcmp(obj->visibility, "hidden")) continue;
-    if (strchr(obj->name, '$')) continue;
+    if (obj->section && startswith(obj->section, ".init_array")) continue;
     APPEND(dox->objects);
     dox->objects.p[dox->objects.n - 1] = obj;
   }
@@ -209,8 +299,8 @@ static void LoadPublicDefinitions(struct DoxWriter *dox, Obj *prog) {
     macro = macros.buckets[i].val;
     if (!macro->javadown) continue;
     if (!macro->javadown->javadown) continue;
-    if (*macro->name == '_') continue;
-    if (strchr(macro->name, '$')) continue;
+    /* if (*macro->name == '_') continue; */
+    /* if (strchr(macro->name, '$')) continue; */
     APPEND(dox->macros);
     dox->macros.p[dox->macros.n - 1] = macro;
   }
@@ -237,7 +327,7 @@ static void WriteDox(struct DoxWriter *dox, const char *path) {
 }
 
 /**
- * Emits documentation datum for compilation unit just parsed.
+ * Emits documentation data for compilation unit just parsed.
  */
 void output_javadown(const char *path, Obj *prog) {
   struct DoxWriter *dox = NewDoxWriter();
@@ -245,4 +335,31 @@ void output_javadown(const char *path, Obj *prog) {
   SerializeDox(dox, prog);
   WriteDox(dox, path);
   FreeDoxWriter(dox);
+}
+
+/**
+ * Emits documentation data for assembly source file.
+ */
+void output_javadown_asm(const char *path, const char *source) {
+  int fd;
+  void *map;
+  struct stat st;
+  struct Asmdown *ad;
+  struct DoxWriter *dox;
+  CHECK_NE(-1, (fd = open(source, O_RDONLY)));
+  CHECK_NE(-1, fstat(fd, &st));
+  if (st.st_size) {
+    CHECK_NE(MAP_FAILED,
+             (map = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0)));
+    ad = ParseAsmdown(map, st.st_size);
+    munmap(map, st.st_size);
+  } else {
+    ad = ParseAsmdown("", 0);
+  }
+  close(fd);
+  dox = NewDoxWriter();
+  SerializeAsmdown(dox, ad, source);
+  WriteDox(dox, path);
+  FreeDoxWriter(dox);
+  FreeAsmdown(ad);
 }

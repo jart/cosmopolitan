@@ -32,12 +32,8 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- int
-#ifdef KR_headers
-strtoIf(s, sp, f0, f1) CONST char *s; char **sp; float *f0, *f1;
-#else
+int
 strtoIf(CONST char *s, char **sp, float *f0, float *f1)
-#endif
 {
 	static const FPI fpi = { 24, 1-127-24+1,  254-127-24+1, 1, SI, 0 /*unused*/ };
 	Long exp[2];

@@ -91,27 +91,27 @@ static int ppatoi(const char **str) {
  *
  * Precision Modifiers
  *
- *   - `%.8s`  supplied byte length (obeys nul terminator)
- *   - `%.*s`  supplied byte length argument (obeys nul terminator)
- *   - `%`.*s` supplied byte length argument c escaped (ignores nul terminator)
- *   - `%#.*s` supplied byte length argument visualized (ignores nul terminator)
- *   - `%.*hs` supplied char16_t length argument (obeys nul terminator)
- *   - `%.*ls` supplied wchar_t length argument (obeys nul terminator)
+ *   - `%.8s`    supplied byte length (obeys nul terminator)
+ *   - `%.*s`    supplied byte length argument (obeys nul terminator)
+ *   - ``%`.*s`` supplied byte length argument c escaped (ignores nul term)
+ *   - `%#.*s`   supplied byte length argument visualized (ignores nul term)
+ *   - `%.*hs`   supplied char16_t length argument (obeys nul terminator)
+ *   - `%.*ls`   supplied wchar_t length argument (obeys nul terminator)
  *
  * Formatting Modifiers
  *
- *   - `%,d`  thousands separators
- *   - `%'s`  escaped c string literal
- *   - `%`c`  c escaped character
- *   - `%`'c` c escaped character quoted
- *   - `%`s`  c escaped string
- *   - `%`'s` c escaped string quoted
- *   - `%`s`  escaped double quoted c string literal
- *   - `%`c`  escaped double quoted c character literal
- *   - `%+d`  plus leftpad if positive (aligns w/ negatives)
- *   - `% d`  space leftpad if positive (aligns w/ negatives)
- *   - `%#s`  datum (radix 256 null-terminated ibm cp437)
- *   - `%#x`  int (radix 16 hexadecimal w/ 0x prefix if not zero)
+ *   - `%,d`    thousands separators
+ *   - `%'s`    escaped c string literal
+ *   - ``%`c``  c escaped character
+ *   - ``%`'c`` c escaped character quoted
+ *   - ``%`s``  c escaped string
+ *   - ``%`'s`` c escaped string quoted
+ *   - ``%`s``  escaped double quoted c string literal
+ *   - ``%`c``  escaped double quoted c character literal
+ *   - `%+d`    plus leftpad if positive (aligns w/ negatives)
+ *   - `% d`    space leftpad if positive (aligns w/ negatives)
+ *   - `%#s`    datum (radix 256 null-terminated ibm cp437)
+ *   - `%#x`    int (radix 16 hexadecimal w/ 0x prefix if not zero)
  *
  * @note implementation detail of printf(), snprintf(), etc.
  * @see printf() for wordier documentation

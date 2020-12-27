@@ -23,8 +23,8 @@
 #include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.h"
 
-textwindows struct DirectMap DirectMapNt(void *addr, size_t size, unsigned prot,
-                                         unsigned flags, int fd, int64_t off) {
+textwindows struct DirectMap __mmap$nt(void *addr, size_t size, unsigned prot,
+                                       unsigned flags, int fd, int64_t off) {
   int64_t handle;
   struct DirectMap res;
   if (fd != -1) {

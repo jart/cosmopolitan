@@ -166,7 +166,7 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
 │ cosmopolitan § bits » some assembly required                             ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-/**
+/*
  * Constraints for virtual machine flags.
  * @note we beseech clang devs for flag constraints
  */

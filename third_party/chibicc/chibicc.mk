@@ -116,15 +116,6 @@ o/$(MODE)/third_party/chibicc/as.com.dbg:				\
 		$(THIRD_PARTY_CHIBICC_A).pkg
 	@$(APELINK)
 
-o/$(MODE)/third_party/chibicc/hello.com.dbg:				\
-		$(THIRD_PARTY_CHIBICC_A_DEPS)				\
-		$(THIRD_PARTY_CHIBICC_A)				\
-		$(APE)							\
-		$(CRT)							\
-		o/$(MODE)/third_party/chibicc/hello.chibicc.o		\
-		$(THIRD_PARTY_CHIBICC_A).pkg
-	@$(APELINK)
-
 o/$(MODE)/third_party/chibicc/chibicc.o:				\
 		CPPFLAGS += $(THIRD_PARTY_CHIBICC_DEFINES)
 

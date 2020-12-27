@@ -32,12 +32,8 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- int
-#ifdef KR_headers
-strtopf(s, sp, f) CONST char *s; char **sp; float *f;
-#else
+int
 strtopf(CONST char *s, char **sp, float *f)
-#endif
 {
 	static const FPI fpi0 = { 24, 1-127-24+1,  254-127-24+1, 1, SI, 0 /*unused*/ };
 	ULong bits[1], *L;

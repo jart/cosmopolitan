@@ -21,7 +21,7 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/hilbert.h"
 #include "libc/bits/morton.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/sigaction.h"

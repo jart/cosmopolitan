@@ -32,13 +32,8 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- Bigint *
-s2b
-#ifdef KR_headers
-	(s, nd0, nd, y9, dplen MTa) CONST char *s; int dplen, nd0, nd; ULong y9; MTk
-#else
-	(CONST char *s, int nd0, int nd, ULong y9, int dplen MTd)
-#endif
+Bigint *
+s2b(CONST char *s, int nd0, int nd, ULong y9, int dplen MTd)
 {
 	Bigint *b;
 	int i, k;
@@ -70,13 +65,8 @@ s2b
 	return b;
 	}
 
- double
-ratio
-#ifdef KR_headers
-	(a, b) Bigint *a, *b;
-#else
-	(Bigint *a, Bigint *b)
-#endif
+double
+ratio(Bigint *a, Bigint *b)
 {
 	U da, db;
 	int k, ka, kb;
@@ -109,13 +99,8 @@ ratio
 
 #ifdef INFNAN_CHECK
 
- int
-match
-#ifdef KR_headers
-	(sp, t) char **sp, *t;
-#else
-	(CONST char **sp, char *t)
-#endif
+int
+match(CONST char **sp, char *t)
 {
 	int c, d;
 	CONST char *s = *sp;
@@ -131,12 +116,8 @@ match
 	}
 #endif /* INFNAN_CHECK */
 
- void
-#ifdef KR_headers
-copybits(c, n, b) ULong *c; int n; Bigint *b;
-#else
+void
 copybits(ULong *c, int n, Bigint *b)
-#endif
 {
 	ULong *ce, *x, *xe;
 #ifdef Pack_16
@@ -161,12 +142,8 @@ copybits(ULong *c, int n, Bigint *b)
 		*c++ = 0;
 	}
 
- ULong
-#ifdef KR_headers
-any_on(b, k) Bigint *b; int k;
-#else
+ULong
 any_on(Bigint *b, int k)
-#endif
 {
 	int n, nwds;
 	ULong *x, *x0, x1, x2;

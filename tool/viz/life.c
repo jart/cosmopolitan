@@ -21,7 +21,7 @@
 #include "dsp/scale/scale.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/popcnt.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/bits/safemacros.h"
 #include "libc/bits/xchg.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"

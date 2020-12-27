@@ -41,6 +41,7 @@
  * @errors ENOSYS
  * @asyncsignalsafe
  * @see chmod()
+ * @syscall
  */
 int fchmod(int fd, uint32_t mode) {
   /* TODO(jart): Windows */

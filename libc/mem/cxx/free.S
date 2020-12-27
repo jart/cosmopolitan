@@ -22,9 +22,9 @@
 
 /	Frees memory the C++ way.
 /
-/	@param	%rdi is pointer, or NULL for no-op
-/	@param	%rsi is ignored
-/	@param	%rdx is ignored
+/	\param	%rdi is pointer, or NULL for no-op
+/	\param	%rsi is ignored
+/	\param	%rdx is ignored
 _ZdlPvSt11align_val_tRKSt9nothrow_t:
 /	operator delete(void*, std::align_val_t, std::nothrow_t const&)
 	nop

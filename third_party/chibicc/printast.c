@@ -119,7 +119,6 @@ static void PrintType(FILE *f, int l, const char *s, Type *t) {
       PrintInt(f, l + 2, "align: ", t->align);
       PrintBool(f, l + 2, "is_unsigned: ", t->is_unsigned);
       PrintBool(f, l + 2, "is_atomic: ", t->is_atomic);
-      PrintType(f, l + 2, "origin: ", t->origin);
       PrintType(f, l + 2, "base: ", t->base);
       PrintTokStr(f, l + 2, "name: ", t->name);
       PrintTokStr(f, l + 2, "name_pos: ", t->name_pos);
@@ -231,6 +230,13 @@ static void PrintObj(FILE *f, int l, const char *s, Obj *o) {
   PrintBool(f, l + 2, "is_noreturn: ", o->is_noreturn);
   PrintBool(f, l + 2, "is_destructor: ", o->is_destructor);
   PrintBool(f, l + 2, "is_constructor: ", o->is_constructor);
+  PrintBool(f, l + 2, "is_externally_visible: ", o->is_externally_visible);
+  PrintBool(f, l + 2,
+            "is_no_instrument_function: ", o->is_no_instrument_function);
+  PrintBool(f, l + 2,
+            "is_force_align_arg_pointer: ", o->is_force_align_arg_pointer);
+  PrintBool(f, l + 2,
+            "is_no_caller_saved_registers: ", o->is_no_caller_saved_registers);
   PrintInt(f, l + 2, "stack_size: ", o->stack_size);
   PrintObj(f, l + 2, "params: ", o->params);
   PrintNode(f, l + 2, "body: ", o->body);

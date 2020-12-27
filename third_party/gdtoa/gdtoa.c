@@ -32,12 +32,8 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- static Bigint *
-#ifdef KR_headers
-bitstob(bits, nbits, bbits MTa) ULong *bits; int nbits; int *bbits; MTk
-#else
+static Bigint *
 bitstob(ULong *bits, int nbits, int *bbits MTd)
-#endif
 {
 	int i, k;
 	Bigint *b;
@@ -109,15 +105,8 @@ bitstob(ULong *bits, int nbits, int *bbits MTd)
  *	   calculation.
  */
 
- char *
-gdtoa
-#ifdef KR_headers
-	(fpi, be, bits, kindp, mode, ndigits, decpt, rve)
-	CONST FPI *fpi; int be; ULong *bits;
-	int *kindp, mode, ndigits, *decpt; char **rve;
-#else
-	(CONST FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, int *decpt, char **rve)
-#endif
+char *
+gdtoa(CONST FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, int *decpt, char **rve)
 {
  /*	Arguments ndigits and decpt are similar to the second and third
 	arguments of ecvt and fcvt; trailing zeros are suppressed from

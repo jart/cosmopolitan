@@ -38,12 +38,8 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- double
-#ifdef KR_headers
-strtod(s, sp) CONST char *s; char **sp;
-#else
+double
 strtod(CONST char *s, char **sp)
-#endif
 {
 	static const FPI fpi = { 53, 1-1023-53+1, 2046-1023-53+1, 1, SI, 0 /*unused*/ };
 	ULong bits[2];

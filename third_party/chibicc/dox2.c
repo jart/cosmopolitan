@@ -65,10 +65,34 @@ struct Dox {
       } params;
     } * p;
   } objects;
-  struct {
+  struct DoxMacros {
     size_t n;
-    int *p;
-  } objectindex;
+    struct DoxMacro {
+      bool ignore;
+      char *name;
+      char *path;
+      int line;
+      bool is_objlike;
+      char *va_args_name;
+      struct Javadown *javadown;
+      struct DoxMacroParams {
+        size_t n;
+        struct DoxMacroParam {
+          char *name;
+        } * p;
+      } params;
+    } * p;
+  } macros;
+  struct DoxIndex {
+    size_t n;
+    struct DoxIndexEntry {
+      enum DoxIndexType {
+        kObject,
+        kMacro,
+      } t;
+      int i;
+    } * p;
+  } index;
 };
 
 static unsigned Hash(const void *p, unsigned long n) {
@@ -93,6 +117,8 @@ static void FreeDox(struct Dox *dox) {
     free(dox->names.p);
     free(dox->freelist.p);
     free(dox->objects.p);
+    free(dox->macros.p);
+    free(dox->index.p);
     free(dox);
   }
 }
@@ -124,18 +150,23 @@ static char *DeserializeStr(struct Dox *dox) {
 
 static struct Javadown *DeserializeJavadown(struct Dox *dox) {
   int i;
+  bool present;
   struct Javadown *jd;
-  jd = FreeLater(dox, calloc(1, sizeof(struct Javadown)));
-  jd->isfileoverview = DeserializeInt(dox);
-  jd->title = DeserializeStr(dox);
-  jd->text = DeserializeStr(dox);
-  jd->tags.n = DeserializeInt(dox);
-  jd->tags.p = FreeLater(dox, malloc(jd->tags.n * sizeof(*jd->tags.p)));
-  for (i = 0; i < jd->tags.n; ++i) {
-    jd->tags.p[i].tag = DeserializeStr(dox);
-    jd->tags.p[i].text = DeserializeStr(dox);
+  if (DeserializeInt(dox)) {
+    jd = FreeLater(dox, calloc(1, sizeof(struct Javadown)));
+    jd->isfileoverview = DeserializeInt(dox);
+    jd->title = DeserializeStr(dox);
+    jd->text = DeserializeStr(dox);
+    jd->tags.n = DeserializeInt(dox);
+    jd->tags.p = FreeLater(dox, malloc(jd->tags.n * sizeof(*jd->tags.p)));
+    for (i = 0; i < jd->tags.n; ++i) {
+      jd->tags.p[i].tag = DeserializeStr(dox);
+      jd->tags.p[i].text = DeserializeStr(dox);
+    }
+    return jd;
+  } else {
+    return NULL;
   }
-  return jd;
 }
 
 static void DeserializeObject(struct Dox *dox, struct DoxObject *o) {
@@ -163,6 +194,22 @@ static void DeserializeObject(struct Dox *dox, struct DoxObject *o) {
   }
 }
 
+static void DeserializeMacro(struct Dox *dox, struct DoxMacro *m) {
+  int i;
+  m->ignore = false;
+  m->name = DeserializeStr(dox);
+  m->path = DeserializeStr(dox);
+  m->line = DeserializeInt(dox);
+  m->is_objlike = DeserializeInt(dox);
+  m->va_args_name = DeserializeStr(dox);
+  m->javadown = DeserializeJavadown(dox);
+  m->params.n = DeserializeInt(dox);
+  m->params.p = FreeLater(dox, malloc(m->params.n * sizeof(*m->params.p)));
+  for (i = 0; i < m->params.n; ++i) {
+    m->params.p[i].name = DeserializeStr(dox);
+  }
+}
+
 static void DeserializeDox(struct Dox *dox) {
   int i, j, n;
   i = dox->objects.n;
@@ -172,7 +219,16 @@ static void DeserializeDox(struct Dox *dox) {
   for (j = 0; j < n; ++j) {
     DeserializeObject(dox, dox->objects.p + i + j);
   }
+  i = dox->macros.n;
   dox->objects.n += n;
+  n = DeserializeInt(dox);
+  dox->macros.p =
+      realloc(dox->macros.p, (dox->macros.n + n) * sizeof(*dox->macros.p));
+  for (j = 0; j < n; ++j) {
+    DeserializeMacro(dox, dox->macros.p + i + j);
+  }
+  dox->macros.n += n;
+  CHECK_EQ(31337, DeserializeInt(dox));
 }
 
 static void ReadDox(struct Dox *dox, const StringArray *files) {
@@ -210,43 +266,66 @@ static bool AddSet(struct Set *set, char *s) {
   }
 }
 
-static int CompareObjectNames(const void *a, const void *b, void *arg) {
-  int *i1, *i2;
+static int CompareDoxIndexEntry(const void *p1, const void *p2, void *arg) {
   struct Dox *dox;
-  i1 = a, i2 = b, dox = arg;
-  return strcmp(dox->objects.p[*i1].name, dox->objects.p[*i2].name);
+  const char *s1, *s2;
+  struct DoxIndexEntry *a, *b;
+  dox = arg, a = p1, b = p2;
+  s1 = a->t == kObject ? dox->objects.p[a->i].name : dox->macros.p[a->i].name;
+  s2 = b->t == kObject ? dox->objects.p[b->i].name : dox->macros.p[b->i].name;
+  while (*s1 == '_') ++s1;
+  while (*s2 == '_') ++s2;
+  return strcasecmp(s1, s2);
 }
 
 static void IndexDox(struct Dox *dox) {
   size_t i, j, n;
-  dox->names.n = roundup2pow(dox->objects.n) << 1;
+  dox->names.n = roundup2pow(dox->objects.n + dox->macros.n) << 1;
   dox->names.p = calloc(dox->names.n, sizeof(*dox->names.p));
-  for (n = i = 0; i < dox->objects.n; ++i) {
+  n = 0;
+  for (i = 0; i < dox->objects.n; ++i) {
     if (AddSet(&dox->names, dox->objects.p[i].name)) {
       ++n;
     } else {
       dox->objects.p[i].ignore = true;
     }
   }
-  dox->objectindex.n = n;
-  dox->objectindex.p = malloc(n * sizeof(*dox->objectindex.p));
-  for (j = i = 0; i < dox->objects.n; ++i) {
-    if (dox->objects.p[i].ignore) continue;
-    dox->objectindex.p[j++] = i;
+  for (i = 0; i < dox->macros.n; ++i) {
+    if (AddSet(&dox->names, dox->macros.p[i].name)) {
+      ++n;
+    } else {
+      dox->macros.p[i].ignore = true;
+    }
   }
-  qsort_r(dox->objectindex.p, dox->objectindex.n, sizeof(*dox->objectindex.p),
-          CompareObjectNames, dox);
+  dox->index.n = n;
+  dox->index.p = malloc(n * sizeof(*dox->index.p));
+  j = 0;
+  for (i = 0; i < dox->objects.n; ++i) {
+    if (dox->objects.p[i].ignore) continue;
+    dox->index.p[j].t = kObject;
+    dox->index.p[j].i = i;
+    ++j;
+  }
+  for (i = 0; i < dox->macros.n; ++i) {
+    if (dox->macros.p[i].ignore) continue;
+    dox->index.p[j].t = kMacro;
+    dox->index.p[j].i = i;
+    ++j;
+  }
+  CHECK_EQ(n, j);
+  qsort_r(dox->index.p, dox->index.n, sizeof(*dox->index.p),
+          CompareDoxIndexEntry, dox);
 }
 
 static void PrintText(FILE *f, const char *s) {
   int c;
-  bool bol, pre;
-  for (pre = false, bol = true;;) {
+  bool bol, pre, ul0, ul2, bt1, bt2;
+  for (bt1 = bt2 = ul2 = ul0 = pre = false, bol = true;;) {
     switch ((c = *s++)) {
       case '\0':
-        if (pre) {
-          fprintf(f, "</pre>");
-        }
+        if (bt1 || bt2) fprintf(f, "</code>");
+        if (pre) fprintf(f, "</pre>");
+        if (ul0 || ul2) fprintf(f, "</ul>");
         return;
       case '&':
         fprintf(f, "&amp;");
@@ -268,25 +347,79 @@ static void PrintText(FILE *f, const char *s) {
         fprintf(f, "&apos;");
         bol = false;
         break;
-      case '\n':
-        if (!pre && *s == '\n') {
+      case '`':
+        if (!pre && !bt1 && !bt2 && *s != '`') {
+          fprintf(f, "<code>");
+          bt1 = true;
+        } else if (!pre && !bt1 && !bt2 && *s == '`') {
+          fprintf(f, "<code>");
+          bt2 = true;
           ++s;
+        } else if (bt1) {
+          fprintf(f, "</code>");
+          bt1 = false;
+        } else if (bt2 && *s == '`') {
+          fprintf(f, "</code>");
+          bt2 = false;
+          ++s;
+        } else {
+          fprintf(f, "`");
+        }
+        bol = false;
+        break;
+      case '\n':
+        if (!pre && !ul0 && !ul2 && *s == '\n') {
           fprintf(f, "\n<p>");
-        } else if (pre &&
+          bol = true;
+        } else if (pre && s[0] != '\n' &&
                    (s[0] != ' ' || s[1] != ' ' || s[2] != ' ' || s[3] != ' ')) {
           fprintf(f, "</pre>\n");
           pre = false;
+          bol = true;
+        } else if (ul0 && s[0] == '-' && s[1] == ' ') {
+          fprintf(f, "\n<li>");
+          s += 2;
+          bol = false;
+        } else if (ul2 && s[0] == ' ' && s[1] == ' ' && s[2] == '-' &&
+                   s[3] == ' ') {
+          fprintf(f, "\n<li>");
+          s += 4;
+          bol = false;
+        } else if (ul0 && s[0] != '\n' && (s[0] != ' ' || s[1] != ' ')) {
+          fprintf(f, "\n</ul>\n");
+          bol = true;
+          ul0 = false;
+        } else if (ul2 && s[0] != '\n' &&
+                   (s[0] != ' ' || s[1] != ' ' || s[2] != ' ' || s[3] != ' ')) {
+          fprintf(f, "\n</ul>\n");
+          bol = true;
+          ul2 = false;
         } else {
           fprintf(f, "\n");
+          bol = true;
         }
-        bol = true;
+        break;
+      case '-':
+        if (bol && !ul0 && !ul2 && s[0] == ' ') {
+          ul0 = true;
+          fprintf(f, "<ul><li>");
+        } else {
+          fprintf(f, "-");
+        }
+        bol = false;
         break;
       case ' ':
         if (bol && !pre && s[0] == ' ' && s[1] == ' ' && s[2] == ' ') {
           pre = true;
-          fprintf(f, "<pre>");
+          fprintf(f, "<pre> ");
+        } else if (bol && !ul0 && !ul2 && s[0] == ' ' && s[1] == '-' &&
+                   s[2] == ' ') {
+          ul2 = true;
+          fprintf(f, "<ul><li>");
+          s += 3;
+        } else {
+          fprintf(f, " ");
         }
-        fprintf(f, " ");
         bol = false;
         break;
       default:
@@ -297,83 +430,364 @@ static void PrintText(FILE *f, const char *s) {
   }
 }
 
+static bool HasTag(struct Javadown *jd, const char *tag) {
+  int k;
+  if (jd) {
+    for (k = 0; k < jd->tags.n; ++k) {
+      if (!strcmp(jd->tags.p[k].tag, tag)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+static bool IsNoReturn(struct DoxObject *o) {
+  return o->is_noreturn || HasTag(o->javadown, "noreturn");
+}
+
 static void PrintDox(struct Dox *dox, FILE *f) {
   int i, j, k;
   char *prefix;
+  bool was_outputted;
+  struct DoxMacro *m;
   struct DoxObject *o;
+
+  // header
   fprintf(f, "\
 <!doctype html>\n\
+<html lang=\"en\">\n\
 <meta charset=\"utf-8\">\n\
+<script async src=\"https://www.googletagmanager.com/gtag/js?id=UA-43182592-5\"></script>\n\
+<script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'UA-43182592-5');</script>\n\
+<title>Cosmopolitan C Library</title>\n\
+<meta name=\"viewport\" content=\"width=1024\">\n\
+<link rel=\"canonical\" href=\"https://justine.lol/cosmopolitan/documentation.html\">\n\
+<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Roboto&display=swap\">\n\
+<link rel=\"stylesheet\" href=\"style.css\">\n\
 <style>\n\
-.indent {\n\
-  padding-left: 1em;\n\
-}\n\
+  .nav {\n\
+    margin-bottom: 0;\n\
+  }\n\
+  .toc a {\n\
+    text-decoration: none;\n\
+  }\n\
+  h3 a {\n\
+    color: inherit;\n\
+    text-decoration: none;\n\
+  }\n\
+  pre {\n\
+    margin-left: 0;\n\
+    padding: 12px;\n\
+    background: #f6f6f6;\n\
+    width: 100%;\n\
+    overflow-x: auto;\n\
+    border-radius: 5px;\n\
+  }\n\
+  code {\n\
+    padding: 2px 4px;\n\
+    background: #e4e6e8;\n\
+    border-radius: 3px;\n\
+  }\n\
+  hr {\n\
+    height: 1px;\n\
+    margin-bottom: 16px;\n\
+    color: #d6d9dc;\n\
+    background: #d6d9dc;\n\
+    border: 0;\n\
+  }\n\
+  .category {\n\
+    font-weight: bold;\n\
+  }\n\
+  .tagname {\n\
+    font-size: 12pt;\n\
+    font-weight: bold;\n\
+  }\n\
+  .tag {\n\
+    margin-top: .5em;\n\
+  }\n\
+  .tag dl {\n\
+    margin-top: .5em;\n\
+    margin-bottom: .5em;\n\
+    margin-left: 1em;\n\
+  }\n\
 </style>\n\
 \n\
-<table width=\"100%%\"><tr><td width=\"33%%\" valign=\"top\">\n\
-<p class=\"toc\">\n\
+<header>\n\
+  <img width=\"196\" height=\"105\" src=\"//storage.googleapis.com/justine/cosmopolitan/cosmopolitan.png\" alt=\"honeybadger\">\n\
+  <h1>cosmopolitan libc</h1>\n\
+  <span>build-once run-anywhere c without devops</span>\n\
+</header>\n\
+\n\
+<nav class=\"nav\">\n\
+  <ul>\n\
+    <li><a href=\"index.html\">Intro</a>\n\
+    <li><a href=\"download.html\">Download</a>\n\
+    <li><a class=\"active\" href=\"documentation.html\">Documentation</a>\n\
+    <li><a href=\"sources.html\">Sources</a>\n\
+    <li><a href=\"https://github.com/jart/cosmopolitan\">GitHub</a>\n\
+    <li><a href=\"license.html\">License</a>\n\
+    <li class=\"right\"><a href=\"../index.html\">» jart's web page</a>\n\
+  </ul>\n\
+</nav>\n\
+\n\
+<table class=\"dox\" width=\"960\">\n\
+<tr>\n\
+<td width=\"320\" valign=\"top\" class=\"toc\">\n\
 ");
-  for (i = 0; i < dox->objectindex.n; ++i) {
-    o = dox->objects.p + dox->objectindex.p[i];
-    if (o->ignore || !o->is_function) continue;
+
+  /* // lefthand index: objects */
+  /* fprintf(f, "<p><span class=\"category\">macro objects</span>\n"); */
+  /* fprintf(f, "<p>\n"); */
+  /* for (i = 0; i < dox->index.n; ++i) { */
+  /*   if (dox->index.p[i].t != kMacro) continue; */
+  /*   m = dox->macros.p + dox->index.p[i].i; */
+  /*   if (m->ignore) continue; */
+  /*   if (!m->is_objlike) continue; */
+  /*   fprintf(f, "<a href=\"#%s\">%s</a><br>\n", m->name, m->name); */
+  /* } */
+
+  /* // lefthand index: functions */
+  /* fprintf(f, "<p><span class=\"category\">macro functions</span>\n"); */
+  /* fprintf(f, "<p>\n"); */
+  /* for (i = 0; i < dox->index.n; ++i) { */
+  /*   if (dox->index.p[i].t != kMacro) continue; */
+  /*   m = dox->macros.p + dox->index.p[i].i; */
+  /*   if (m->ignore) continue; */
+  /*   if (m->is_objlike) continue; */
+  /*   fprintf(f, "<a href=\"#%s\">%s</a><br>\n", m->name, m->name); */
+  /* } */
+
+  // lefthand index: objects
+  fprintf(f, "<p><span class=\"category\">objects</span>\n");
+  fprintf(f, "<p>\n");
+  for (i = 0; i < dox->index.n; ++i) {
+    if (dox->index.p[i].t != kObject) continue;
+    o = dox->objects.p + dox->index.p[i].i;
+    if (o->ignore) continue;
+    if (o->is_function) continue;
     fprintf(f, "<a href=\"#%s\">%s</a><br>\n", o->name, o->name);
-    fprintf(f, "<br>\n");
   }
-  fprintf(f, "<td width=\"67%%\" valign=\"top\">\n");
-  for (i = 0; i < dox->objectindex.n; ++i) {
-    o = dox->objects.p + dox->objectindex.p[i];
-    if (o->ignore || !o->is_function) continue;
-    fprintf(f, "\n<div id=\"%s\" class=\"func\">\n", o->name, o->name);
-    fprintf(f, "<h3><a href=\"#%s\">", o->name);
-    fprintf(f, "<strong class=\"name\">%s</strong></a></h3>", o->name);
-    fprintf(f, "<p>");
-    PrintText(f, o->javadown->title);
-    fprintf(f, "\n");
-    if (*o->javadown->text) {
-      fprintf(f, "<p>");
-      PrintText(f, o->javadown->text);
+
+  // lefthand index: functions
+  fprintf(f, "<p><span class=\"category\">functions</span>\n");
+  fprintf(f, "<p>\n");
+  for (i = 0; i < dox->index.n; ++i) {
+    if (dox->index.p[i].t != kObject) continue;
+    o = dox->objects.p + dox->index.p[i].i;
+    if (o->ignore) continue;
+    if (!o->is_function) continue;
+    fprintf(f, "<a href=\"#%s\">%s</a><br>\n", o->name, o->name);
+  }
+
+  // righthand contents
+  fprintf(f, "<td width=\"640\" valign=\"top\">\n");
+  for (i = 0; i < dox->index.n; ++i) {
+    if (dox->index.p[i].t == kObject) {
+      o = dox->objects.p + dox->index.p[i].i;
+      if (o->ignore) continue;
       fprintf(f, "\n");
-    }
-    fprintf(f, "<p><strong>@param</strong>\n");
-    fprintf(f, "<div class=\"params indent\">\n");
-    if (o->params.n) {
-      fprintf(f, "<dl>\n");
-      for (j = 0; j < o->params.n; ++j) {
-        fprintf(f, "<dt>");
-        PrintText(f, o->params.p[j].type);
-        fprintf(f, " <em>");
-        PrintText(f, o->params.p[j].name);
-        fprintf(f, "</em>\n");
-        prefix = xasprintf("%s ", o->params.p[j].name);
-        for (k = 0; k < o->javadown->tags.n; ++k) {
-          if (!strcmp(o->javadown->tags.p[k].tag, "param") &&
-              startswith(o->javadown->tags.p[k].text, prefix)) {
-            fprintf(f, "<dd>");
-            PrintText(f, o->javadown->tags.p[k].text + strlen(prefix));
-            fprintf(f, "\n");
-            break;
-          }
-        }
-        free(prefix);
-      }
-      fprintf(f, "</dl>\n");
-    } else {
-      fprintf(f, "<p>None.\n");
-    }
-    fprintf(f, "</div>\n");
-    for (k = 0; k < o->javadown->tags.n; ++k) {
-      if (!strcmp(o->javadown->tags.p[k].tag, "param")) continue;
-      fprintf(f, "<p><strong>@");
-      PrintText(f, o->javadown->tags.p[k].tag);
-      fprintf(f, "</strong>\n");
-      if (*o->javadown->tags.p[k].text) {
-        PrintText(f, o->javadown->tags.p[k].text);
+      if (i) fprintf(f, "<hr>");
+      fprintf(f, "<div id=\"%s\" class=\"api\">\n", o->name);
+      fprintf(f, "<h3><a href=\"#%s\">%s</a></h3>", o->name, o->name);
+
+      // title
+      if (o->javadown && *o->javadown->title) {
+        fprintf(f, "<p>");
+        PrintText(f, o->javadown->title);
         fprintf(f, "\n");
       }
+
+      // text
+      if (o->javadown && *o->javadown->text) {
+        fprintf(f, "<p>");
+        PrintText(f, o->javadown->text);
+        fprintf(f, "\n");
+      }
+
+      // parameters
+      if (o->is_function && (o->params.n || HasTag(o->javadown, "param"))) {
+        fprintf(f, "<div class=\"tag\">\n");
+        fprintf(f, "<span class=\"tagname\">@param</span>\n");
+        fprintf(f, "<dl>\n");
+        if (o->params.n) {
+          for (j = 0; j < o->params.n; ++j) {
+            fprintf(f, "<dt>");
+            PrintText(f, o->params.p[j].type);
+            fprintf(f, " <em>");
+            PrintText(f, o->params.p[j].name);
+            fprintf(f, "</em>\n");
+            if (o->javadown) {
+              prefix = xasprintf("%s ", o->params.p[j].name);
+              for (k = 0; k < o->javadown->tags.n; ++k) {
+                if (!strcmp(o->javadown->tags.p[k].tag, "param") &&
+                    startswith(o->javadown->tags.p[k].text, prefix)) {
+                  fprintf(f, "<dd>");
+                  PrintText(f, o->javadown->tags.p[k].text + strlen(prefix));
+                  fprintf(f, "\n");
+                  break;
+                }
+              }
+              free(prefix);
+            }
+          }
+        } else {
+          for (k = 0; k < o->javadown->tags.n; ++k) {
+            if (!strcmp(o->javadown->tags.p[k].tag, "param")) {
+              fprintf(f, "<dd>");
+              PrintText(f, o->javadown->tags.p[k].text);
+              fprintf(f, "\n");
+              break;
+            }
+          }
+        }
+        fprintf(f, "</dl>\n");
+        fprintf(f, "</div>\n");  // .tag
+      }
+
+      // return
+      if (o->is_function) {
+        fprintf(f, "<div class=\"tag\">\n");
+        if (IsNoReturn(o)) {
+          fprintf(f, "<span class=\"tagname\">@noreturn</span>\n");
+        } else {
+          fprintf(f, "<span class=\"tagname\">@return</span>\n");
+          was_outputted = false;
+          fprintf(f, "<dl>\n");
+          if (o->javadown) {
+            for (k = 0; k < o->javadown->tags.n; ++k) {
+              if (strcmp(o->javadown->tags.p[k].tag, "return")) continue;
+              if (!was_outputted) {
+                fprintf(f, "<dt>");
+                PrintText(f, o->type);
+                was_outputted = true;
+              }
+              fprintf(f, "\n<dd>");
+              PrintText(f, o->javadown->tags.p[k].text);
+              fprintf(f, "\n");
+            }
+          }
+          if (!was_outputted) {
+            fprintf(f, "<dt>");
+            PrintText(f, o->type);
+          }
+          fprintf(f, "</dl>\n");
+          fprintf(f, "</div>\n");  // .tag
+        }
+      }
+
+      // tags
+      if (o->javadown) {
+        for (k = 0; k < o->javadown->tags.n; ++k) {
+          if (!strcmp(o->javadown->tags.p[k].tag, "param")) continue;
+          if (!strcmp(o->javadown->tags.p[k].tag, "return")) continue;
+          if (!strcmp(o->javadown->tags.p[k].tag, "noreturn")) continue;
+          fprintf(f, "<div class=\"tag\">\n");
+          fprintf(f, "<span class=\"tagname\">@");
+          PrintText(f, o->javadown->tags.p[k].tag);
+          fprintf(f, "</span>\n");
+          if (*o->javadown->tags.p[k].text) {
+            PrintText(f, o->javadown->tags.p[k].text);
+            fprintf(f, "\n");
+          }
+          fprintf(f, "</div>\n");  // .tag
+        }
+      }
+
+      // sauce
+      if (strcmp(o->path, "missingno.c")) {
+        fprintf(f, "<div class=\"tag\">\n");
+        fprintf(f,
+                "<span class=\"tagname\">@see</span> <a "
+                "href=\"https://github.com/jart/cosmopolitan/blob/master/"
+                "%s#L%d\">%s</a>",
+                o->path, o->line, o->path);
+        fprintf(f, "</div>\n");  // .tag
+      }
+
+      fprintf(f, "</div>\n"); /* class=".api" */
+    } else {
+      continue;
+      m = dox->macros.p + dox->index.p[i].i;
+      if (m->ignore) continue;
+      fprintf(f, "\n");
+      if (i) fprintf(f, "<hr>");
+      fprintf(f, "<div id=\"%s\" class=\"api\">\n", m->name);
+      fprintf(f, "<h3><a href=\"#%s\">%s</a></h3>", m->name, m->name);
+
+      // title
+      if (m->javadown && *m->javadown->title) {
+        fprintf(f, "<p>");
+        PrintText(f, m->javadown->title);
+        fprintf(f, "\n");
+      }
+
+      // text
+      if (m->javadown && *m->javadown->text) {
+        fprintf(f, "<p>");
+        PrintText(f, m->javadown->text);
+        fprintf(f, "\n");
+      }
+
+      // parameters
+      if (!m->is_objlike && (m->params.n || HasTag(m->javadown, "param"))) {
+        fprintf(f, "<div class=\"tag\">\n");
+        fprintf(f, "<span class=\"tagname\">@param</span>\n");
+        fprintf(f, "<dl>\n");
+        if (m->params.n) {
+          for (j = 0; j < m->params.n; ++j) {
+            fprintf(f, "<dt>");
+            fprintf(f, "<em>");
+            PrintText(f, m->params.p[j].name);
+            fprintf(f, "</em>\n");
+            if (m->javadown) {
+              prefix = xasprintf("%s ", m->params.p[j].name);
+              for (k = 0; k < m->javadown->tags.n; ++k) {
+                if (!strcmp(m->javadown->tags.p[k].tag, "param") &&
+                    startswith(m->javadown->tags.p[k].text, prefix)) {
+                  fprintf(f, "<dd>");
+                  PrintText(f, m->javadown->tags.p[k].text + strlen(prefix));
+                  fprintf(f, "\n");
+                  break;
+                }
+              }
+              free(prefix);
+            }
+          }
+        } else {
+          for (k = 0; k < m->javadown->tags.n; ++k) {
+            if (!strcmp(m->javadown->tags.p[k].tag, "param")) {
+              fprintf(f, "<dd>");
+              PrintText(f, m->javadown->tags.p[k].text);
+              fprintf(f, "\n");
+              break;
+            }
+          }
+        }
+        fprintf(f, "</dl>\n");
+        fprintf(f, "</div>\n");  // .tag
+      }
+
+      fprintf(f, "</div>\n"); /* class=".api" */
     }
-    fprintf(f, "</div>\n");
   }
   fprintf(f, "</table>\n");
+
+  // footer
+  fprintf(f, "\
+\n\
+<footer>\n\
+  <p>\n\
+    <div style=\"float:right;text-align:right\">\n\
+      Free Libre &amp; Open Source<br>\n\
+      <a href=\"https://github.com/jart\">github.com/jart/cosmopolitan</a>\n\
+    </div>\n\
+    Feedback<br>\n\
+    jtunney@gmail.com\n\
+  </p>\n\
+  <div style=\"clear:both\"></div>\n\
+</footer>\n\
+");
 }
 
 /**

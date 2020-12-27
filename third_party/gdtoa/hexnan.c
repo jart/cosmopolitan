@@ -32,12 +32,8 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- static void
-#ifdef KR_headers
-L_shift(x, x1, i) ULong *x; ULong *x1; int i;
-#else
+static void
 L_shift(ULong *x, ULong *x1, int i)
-#endif
 {
 	int j;
 
@@ -50,19 +46,14 @@ L_shift(ULong *x, ULong *x1, int i)
 		} while(++x < x1);
 	}
 
- int
-#ifdef KR_headers
-hexnan(sp, fpi, x0)
-	CONST char **sp; CONST FPI *fpi; ULong *x0;
-#else
+int
 hexnan( CONST char **sp, CONST FPI *fpi, ULong *x0)
-#endif
 {
 	ULong c, h, *x, *x1, *xe;
 	CONST char *s;
 	int havedig, hd0, i, nbits;
 
-	/**** if (!hexdig['0']) hexdig_init_D2A(); ****/
+	/**** if (!hexdig['0']) __gdtoa_hexdig_init(); ****/
 	nbits = fpi->nbits;
 	x = x0 + (nbits >> kshift);
 	if (nbits & kmask)

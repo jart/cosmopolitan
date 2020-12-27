@@ -1,3 +1,4 @@
+#include "libc/math.h"
 #include "third_party/chibicc/test/test.h"
 
 #define FPNAN       0
@@ -113,6 +114,31 @@ void test_fpclassify(void) {
   ASSERT(FPNAN, FPCLASSIFY(__builtin_nanf("")));
   ASSERT(FPNAN, FPCLASSIFY(__builtin_nan("")));
   ASSERT(FPNAN, FPCLASSIFY(__builtin_nanl("")));
+}
+
+void test_logb(void) {
+  ASSERT(6, __builtin_logbl(123.456));
+  ASSERT(logbl(123.456L), __builtin_logbl(123.456L));
+  ASSERT(logbl(__LDBL_MIN__), __builtin_logbl(__LDBL_MIN__));
+  ASSERT(logbl(__LDBL_MAX__), __builtin_logbl(__LDBL_MAX__));
+}
+
+void test_fmax(void) {
+  ASSERT(fmaxl(1, 2), __builtin_fmaxl(1, 2));
+  ASSERT(2, __builtin_fmaxl(__builtin_nanl(""), 2));
+  ASSERT(1, __builtin_fmaxl(1, __builtin_nanl("")));
+  ASSERT(2, fmaxl(nanl(""), 2));
+  ASSERT(1, fmaxl(1, nanl("")));
+  ASSERT(fmaxf(1, 2), __builtin_fmaxf(1, 2));
+  ASSERT(2, __builtin_fmaxf(__builtin_nanl(""), 2));
+  ASSERT(1, __builtin_fmaxf(1, __builtin_nanl("")));
+  ASSERT(2, fmaxf(nanl(""), 2));
+  ASSERT(1, fmaxf(1, nanl("")));
+  ASSERT(fmax(1, 2), __builtin_fmax(1, 2));
+  ASSERT(2, __builtin_fmax(__builtin_nanl(""), 2));
+  ASSERT(1, __builtin_fmax(1, __builtin_nanl("")));
+  ASSERT(2, fmax(nanl(""), 2));
+  ASSERT(1, fmax(1, nanl("")));
 }
 
 void test_strlen(void) {
@@ -414,5 +440,7 @@ int main() {
   test_strchr();
   test_strpbrk();
   test_strstr();
+  test_logb();
+  test_fmax();
   return 0;
 }

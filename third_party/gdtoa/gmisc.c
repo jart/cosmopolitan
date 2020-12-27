@@ -32,12 +32,8 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- void
-#ifdef KR_headers
-rshift(b, k) Bigint *b; int k;
-#else
+void
 rshift(Bigint *b, int k)
-#endif
 {
 	ULong *x, *x1, *xe, y;
 	int n;
@@ -65,12 +61,8 @@ rshift(Bigint *b, int k)
 		b->x[0] = 0;
 	}
 
- int
-#ifdef KR_headers
-trailz(b) Bigint *b;
-#else
+int
 trailz(Bigint *b)
-#endif
 {
 	ULong L, *x, *xe;
 	int n = 0;

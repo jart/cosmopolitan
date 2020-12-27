@@ -3,7 +3,6 @@
 
 .PHONY:	o/$(MODE)/third_party
 o/$(MODE)/third_party:				\
-	o/$(MODE)/third_party/avir		\
 	o/$(MODE)/third_party/blas		\
 	o/$(MODE)/third_party/chibicc		\
 	o/$(MODE)/third_party/compiler_rt	\

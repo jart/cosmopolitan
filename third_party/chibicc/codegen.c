@@ -973,6 +973,12 @@ static bool gen_builtin_funcall(Node *node, const char *name) {
       pop("%rax");
       return true;
     }
+  } else if (!strcmp(name, "logbl")) {
+    gen_expr(node->args);
+    emitlin("\
+\tfxtract\n\
+\tfstp\t%st");
+    return true;
   } else if (!strcmp(name, "isgreater")) {
     gen_comis(node, "comisd", 1, 0, "a");
     return true;
@@ -1010,17 +1016,17 @@ static bool gen_builtin_funcall(Node *node, const char *name) {
 \tflds\t(%rsp)\n\
 \tpop\t%rax");
     return true;
-  } else if (!strcmp(name, "inff")) {
+  } else if (!strcmp(name, "inff") || !strcmp(name, "huge_valf")) {
     emitlin("\
 \tmov\t$0x7f800000,%eax\n\
 \tmovd\t%eax,%xmm0");
     return true;
-  } else if (!strcmp(name, "inf")) {
+  } else if (!strcmp(name, "inf") || !strcmp(name, "huge_val")) {
     emitlin("\
 \tmov\t$0x7ff0000000000000,%rax\n\
 \tmovq\t%rax,%xmm0");
     return true;
-  } else if (!strcmp(name, "infl")) {
+  } else if (!strcmp(name, "infl") || !strcmp(name, "huge_vall")) {
     emitlin("\
 \tpush\t$0x7f800000\n\
 \tflds\t(%rsp)\n\
@@ -2304,6 +2310,42 @@ static void store_gp(int r, int offset, int sz) {
   }
 }
 
+static void emit_function_hook(void) {
+  if (opt_nop_mcount) {
+    print_profiling_nop();
+  } else if (opt_fentry) {
+    emitlin("\tcall\t__fentry__@gotpcrel(%rip)");
+  } else if (opt_pg) {
+    emitlin("\tcall\tmcount@gotpcrel(%rip)");
+  } else {
+    print_profiling_nop();
+  }
+}
+
+static void save_caller_saved_registers(void) {
+  emitlin("\
+\tpush\t%rdi\n\
+\tpush\t%rsi\n\
+\tpush\t%rdx\n\
+\tpush\t%rcx\n\
+\tpush\t%r8\n\
+\tpush\t%r9\n\
+\tpush\t%r10\n\
+\tpush\t%r11");
+}
+
+static void restore_caller_saved_registers(void) {
+  emitlin("\
+\tpop\t%r11\n\
+\tpop\t%r10\n\
+\tpop\t%r9\n\
+\tpop\t%r8\n\
+\tpop\t%rcx\n\
+\tpop\t%rdx\n\
+\tpop\t%rsi\n\
+\tpop\t%rdi");
+}
+
 static void emit_text(Obj *prog) {
   for (Obj *fn = prog; fn; fn = fn->next) {
     if (!fn->is_function || !fn->is_definition) continue;
@@ -2327,14 +2369,8 @@ static void emit_text(Obj *prog) {
     // Prologue
     emitlin("\tpush\t%rbp");
     emitlin("\tmov\t%rsp,%rbp");
-    if (opt_nop_mcount) {
-      print_profiling_nop();
-    } else if (opt_fentry) {
-      emitlin("\tcall\t__fentry__@gotpcrel(%rip)");
-    } else if (opt_pg) {
-      emitlin("\tcall\tmcount@gotpcrel(%rip)");
-    } else {
-      print_profiling_nop();
+    if (!fn->is_no_instrument_function) {
+      emit_function_hook();
     }
     println("\tsub\t$%d,%%rsp", fn->stack_size);
     println("\tmov\t%%rsp,%d(%%rbp)", fn->alloca_bottom->offset);
@@ -2410,15 +2446,7 @@ static void emit_text(Obj *prog) {
       emitlin("\tand\t$-16,%rsp");
     }
     if (fn->is_no_caller_saved_registers) {
-      emitlin("\
-\tpush\t%rdi\n\
-\tpush\t%rsi\n\
-\tpush\t%rdx\n\
-\tpush\t%rcx\n\
-\tpush\t%r8\n\
-\tpush\t%r9\n\
-\tpush\t%r10\n\
-\tpush\t%r11");
+      save_caller_saved_registers();
     }
     // Emit code
     gen_stmt(fn->body);
@@ -2436,15 +2464,7 @@ static void emit_text(Obj *prog) {
       emitlin("\tud2");
     } else {
       if (fn->is_no_caller_saved_registers) {
-        emitlin("\
-\tpop\t%r11\n\
-\tpop\t%r10\n\
-\tpop\t%r9\n\
-\tpop\t%r8\n\
-\tpop\t%rcx\n\
-\tpop\t%rdx\n\
-\tpop\t%rsi\n\
-\tpop\t%rdi");
+        restore_caller_saved_registers();
       }
       emitlin("\tleave");
       emitlin("\tret");

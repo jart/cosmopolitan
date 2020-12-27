@@ -875,7 +875,7 @@ static void tre_fill_pmatch(size_t nmatch, regmatch_t pmatch[], int cflags,
  * @return 0 or REG_NOMATCH
  */
 int regexec(const regex_t *preg, const char *string, size_t nmatch,
-            regmatch_t pmatch[nmatch], int eflags) {
+            regmatch_t *pmatch, int eflags) {
   tre_tnfa_t *tnfa = (void *)preg->TRE_REGEX_T_FIELD;
   reg_errcode_t status;
   regoff_t *tags = NULL, eo;

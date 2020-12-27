@@ -126,7 +126,6 @@ TRADITIONAL =								\
 DEFAULT_CCFLAGS =							\
 	-Wall								\
 	-Werror								\
-	-fmerge-all-constants						\
 	-fdebug-prefix-map="$(PWD)"=					\
 	-frecord-gcc-switches
 
@@ -142,7 +141,6 @@ DEFAULT_COPTS =								\
 	-fno-ident							\
 	-fno-common							\
 	-fno-gnu-unique							\
-	-fmerge-constants						\
 	-fstrict-aliasing						\
 	-fstrict-overflow						\
 	-fno-omit-frame-pointer						\

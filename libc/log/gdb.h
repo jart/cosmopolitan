@@ -44,12 +44,12 @@ int attachdebugger(intptr_t);
   ({                                                                  \
     int64_t WaAx;                                                     \
     if (!IsWindows()) {                                               \
-      register void *Reg10 asm("r10") = (OPT_OUT_RUSAGE);             \
-      asm volatile("syscall"                                          \
+      asm volatile("mov\t%5,%%r10\n\t"                                \
+                   "syscall"                                          \
                    : "=a"(WaAx)                                       \
                    : "0"(__NR_wait4), "D"(PID), "S"(OPT_OUT_WSTATUS), \
-                     "d"(OPTIONS), "r"(Reg10)                         \
-                   : "rcx", "r11", "cc", "memory");                   \
+                     "d"(OPTIONS), "g"(OPT_OUT_RUSAGE)                \
+                   : "rcx", "r10", "r11", "cc", "memory");            \
     } else {                                                          \
       WaAx = wait4$nt(PID, OPT_OUT_WSTATUS, OPTIONS, OPT_OUT_RUSAGE); \
     }                                                                 \

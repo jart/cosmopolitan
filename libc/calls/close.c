@@ -28,8 +28,12 @@
 /**
  * Closes file descriptor.
  *
+ * This function may be used for file descriptors returned by socket,
+ * accept, epoll_create, and zipos file descriptors too.
+ *
  * @return 0 on success, or -1 w/ errno
  * @asyncsignalsafe
+ * @syscall
  */
 int close(int fd) {
   int rc;

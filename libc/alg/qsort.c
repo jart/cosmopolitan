@@ -226,6 +226,7 @@ static noinline void smoothsort(
  * @param width is the size of each item
  * @param cmp is a callback returning <0, 0, or >0
  * @param arg will optionally be passed as the third argument to cmp
+ * @see qsort()
  */
 void qsort_r(void *base, size_t count, size_t width, cmpfun cmp, void *arg) {
   unsigned lp[12 * sizeof(unsigned)];
@@ -235,7 +236,12 @@ void qsort_r(void *base, size_t count, size_t width, cmpfun cmp, void *arg) {
 
 /**
  * Sorts array.
- * @see qsort_r() for further details
+ *
+ * @param base points to an array to sort in-place
+ * @param count is the item count
+ * @param width is the size of each item
+ * @param cmp is a callback returning <0, 0, or >0
+ * @see qsort_r()
  */
 void qsort(void *base, size_t count, size_t width,
            int cmp(const void *, const void *)) {

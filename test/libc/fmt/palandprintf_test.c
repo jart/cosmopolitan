@@ -26,7 +26,7 @@
 └─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/progn.internal.h"
 #include "libc/bits/pushpop.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/bits/safemacros.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"

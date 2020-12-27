@@ -22,6 +22,8 @@
 #include "libc/rand/rand.h"
 #include "libc/rand/xorshift.h"
 
+hidden extern uint64_t g_rando64;
+
 /**
  * Returns nondeterministic random number.
  *
@@ -42,7 +44,6 @@ nodebuginfo uint64_t(rand64)(void) {
     } else {
       devrand(&res, sizeof(res));
     }
-    hidden extern uint64_t g_rando64;
     res ^= MarsagliaXorshift64(&g_rando64);
   }
   return res;

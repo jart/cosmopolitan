@@ -19,5 +19,5 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/internal.h"
 
-_Alignas(PAGESIZE) unsigned char g_stdoutbuf[BUFSIZ];
-_Alignas(PAGESIZE) unsigned char g_stderrbuf[BUFSIZ];
+unsigned char g_stdoutbuf[BUFSIZ] hidden;
+unsigned char g_stderrbuf[BUFSIZ] hidden;

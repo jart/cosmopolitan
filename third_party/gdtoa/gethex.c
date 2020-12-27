@@ -33,13 +33,8 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- int
-#ifdef KR_headers
-gethex(sp, fpi, exp, bp, sign MTa)
-	CONST char **sp; CONST FPI *fpi; Long *exp; Bigint **bp; int sign; MTk
-#else
+int
 gethex( CONST char **sp, CONST FPI *fpi, Long *exp, Bigint **bp, int sign MTd)
-#endif
 {
 	Bigint *b;
 	CONST unsigned char *decpt, *s0, *s, *s1;
@@ -64,7 +59,7 @@ gethex( CONST char **sp, CONST FPI *fpi, Long *exp, Bigint **bp, int sign MTd)
 #endif
 #endif
 
-	/**** if (!hexdig['0']) hexdig_init_D2A(); ****/
+	/**** if (!hexdig['0']) __gdtoa_hexdig_init(); ****/
 	*bp = 0;
 	havedig = 0;
 	s0 = *(CONST unsigned char **)sp + 2;

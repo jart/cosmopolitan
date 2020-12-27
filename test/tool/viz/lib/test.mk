@@ -39,8 +39,7 @@ TEST_TOOL_VIZ_LIB_DIRECTDEPS =				\
 	LIBC_TINYMATH					\
 	LIBC_TESTLIB					\
 	LIBC_X						\
-	TOOL_VIZ_LIB					\
-	THIRD_PARTY_AVIR
+	TOOL_VIZ_LIB
 
 TEST_TOOL_VIZ_LIB_DEPS :=				\
 	$(call uniq,$(foreach x,$(TEST_TOOL_VIZ_LIB_DIRECTDEPS),$($(x))))

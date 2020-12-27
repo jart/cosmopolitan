@@ -25,6 +25,7 @@
 /**
  * Sets current directory.
  * @asyncsignalsafe
+ * @syscall
  */
 int chdir(const char *path) {
   if (!path) return efault();

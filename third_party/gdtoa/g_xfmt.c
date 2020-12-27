@@ -52,12 +52,8 @@ THIS SOFTWARE.
 #define _4 0
 #endif
 
- char*
-#ifdef KR_headers
-g_xfmt(buf, V, ndig, bufsize) char *buf; char *V; int ndig; size_t bufsize;
-#else
+char*
 g_xfmt(char *buf, void *V, int ndig, size_t bufsize)
-#endif
 {
 	static const FPI fpi0 = { 64, 1-16383-64+1, 32766 - 16383 - 64 + 1, 1, 0, Int_max };
 	char *b, *s, *se;

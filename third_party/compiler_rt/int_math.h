@@ -45,7 +45,7 @@
 #  define crt_isfinite(x) __builtin_isfinite((x))
 #elif defined(__GNUC__)
 #  define crt_isfinite(x) \
-  __extension__(({ \
+  (({ \
       __typeof((x)) x_ = (x); \
       !crt_isinf(x_) && !crt_isnan(x_); \
     }))

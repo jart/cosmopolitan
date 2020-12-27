@@ -32,6 +32,7 @@
  * @param flags can be R_OK, W_OK, X_OK, F_OK
  * @return 0 if ok, or -1 and sets errno
  * @asyncsignalsafe
+ * @syscall
  */
 int faccessat(int dirfd, const char *path, int mode, uint32_t flags) {
   if (!path) return efault();

@@ -32,7 +32,6 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
-#include "third_party/avir/resize.h"
 #include "third_party/zlib/zlib.h"
 
 void ProcessFile(const char *path) {

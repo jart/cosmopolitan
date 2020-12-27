@@ -22,8 +22,10 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/buffer.h"
 
-/* TODO(jart): Delete */
-
+/**
+ * Frees memory return by balloc().
+ * @deprecated
+ */
 void bfree(struct GuardedBuffer *b) {
   free(b->p);
 }

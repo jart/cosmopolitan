@@ -22,10 +22,10 @@
 
 /	Allocates aligned memory the C++ way.
 /
-/	@param	%rdi is bytes to allocate
-/	@param	%rsi is byte alignment
-/	@param	%rdx is ignored
-/	@return	new memory or NULL on OOM
+/	\param	%rdi is bytes to allocate
+/	\param	%rsi is byte alignment
+/	\param	%rdx is ignored
+/	\return	new memory or NULL on OOM
 _ZnamSt11align_val_tRKSt9nothrow_t:
 /	operator new[](unsigned long, std::align_val_t, std::nothrow_t const&)
 	nop

@@ -29,7 +29,8 @@
  */
 bool isheap(void *p) {
   int x, i;
-  register uintptr_t rsp asm("rsp");
+  uintptr_t rsp;
+  asm("mov\t%%rsp,%0" : "=r"(rsp));
   if (ROUNDDOWN(rsp, STACKSIZE) == ROUNDDOWN((intptr_t)p, STACKSIZE)) {
     return false;
   } else {

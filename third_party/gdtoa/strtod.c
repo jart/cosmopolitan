@@ -50,13 +50,8 @@ static CONST double tinytens[] = { 1e-16, 1e-32, 1e-64, 1e-128,
 #endif
 
 #ifdef Avoid_Underflow /*{*/
- static double
-sulp
-#ifdef KR_headers
-	(x, scale) U *x; int scale;
-#else
-	(U *x, int scale)
-#endif
+static double
+sulp(U *x, int scale)
 {
 	U u;
 	double rv;
@@ -71,13 +66,8 @@ sulp
 	}
 #endif /*}*/
 
- double
-strtod
-#ifdef KR_headers
-	(s00, se) CONST char *s00; char **se;
-#else
-	(CONST char *s00, char **se)
-#endif
+double
+strtod(CONST char *s00, char **se)
 {
 #ifdef Avoid_Underflow
 	int scale;

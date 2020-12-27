@@ -38,6 +38,7 @@
  * @param length is how much physical space to reserve / commit
  * @return 0 on success, or -1 w/ errno
  * @see ftruncate()
+ * @syscall
  */
 int fallocate(int fd, int32_t mode, int64_t offset, int64_t length) {
   int rc;

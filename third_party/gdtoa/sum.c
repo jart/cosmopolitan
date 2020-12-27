@@ -32,12 +32,8 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- Bigint *
-#ifdef KR_headers
-sum(a, b MTa) Bigint *a; Bigint *b; MTk
-#else
+Bigint *
 sum(Bigint *a, Bigint *b MTd)
-#endif
 {
 	Bigint *c;
 	ULong carry, *xc, *xa, *xb, *xe, y;

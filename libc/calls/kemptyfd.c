@@ -19,4 +19,4 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 
-const struct Fd kEmptyFd;
+hidden const struct Fd kEmptyFd;

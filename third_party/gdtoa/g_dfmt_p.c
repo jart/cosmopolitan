@@ -32,14 +32,10 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
- extern ULong NanDflt_d_D2A[2];
+extern ULong __gdtoa_NanDflt_d[2];
 
- char*
-#ifdef KR_headers
-g_dfmt_p(buf, d, ndig, bufsize, nik) char *buf; double *d; int ndig; size_t bufsize; int nik;
-#else
+char*
 g_dfmt_p(char *buf, double *d, int ndig, size_t bufsize, int nik)
-#endif
 {
 	static const FPI fpi0 = { 53, 1-1023-53+1, 2046-1023-53+1, 1, 0, Int_max };
 	char *b, *s, *se;
@@ -70,8 +66,8 @@ g_dfmt_p(char *buf, double *d, int ndig, size_t bufsize, int nik)
 				*b++ = '-';
 			b = strcp(b, NanName[nik%3]);
 			if (nik > 5 && (nik < 12
-					|| bits[0] != NanDflt_d_D2A[0]
-					|| (bits[1] ^ NanDflt_d_D2A[1]) & 0xfffff)) {
+					|| bits[0] != __gdtoa_NanDflt_d[0]
+					|| (bits[1] ^ __gdtoa_NanDflt_d[1]) & 0xfffff)) {
 				bits[0] = L[_1];
 				bits[1] = L[_0] & 0xfffff;
 				b = add_nanbits(b, bufsize - (b-buf), bits, 2);

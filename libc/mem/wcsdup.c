@@ -20,6 +20,9 @@
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 
+/**
+ * Allocates copy of wide string.
+ */
 wchar_t *wcsdup(const wchar_t *s) {
   size_t len = wcslen(s);
   char *s2 = malloc(len * sizeof(wchar_t) + 1);

@@ -38,6 +38,14 @@ static void UpdateXmmSizes(struct Machine *m, struct XmmType *xt, int regsize,
 
 void UpdateXmmType(struct Machine *m, struct XmmType *xt) {
   switch (m->xedd->op.dispatch) {
+    case 0x110:
+    case 0x111:  // MOVSS,MOVSD
+      if (Rep(m->xedd->op.rde) == 3) {
+        UpdateXmmTypes(m, xt, kXmmFloat, kXmmFloat);
+      } else if (Rep(m->xedd->op.rde) == 2) {
+        UpdateXmmTypes(m, xt, kXmmDouble, kXmmDouble);
+      }
+      break;
     case 0x12E:  // UCOMIS
     case 0x12F:  // COMIS
     case 0x151:  // SQRT

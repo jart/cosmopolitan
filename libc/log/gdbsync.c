@@ -19,4 +19,4 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/gdb.h"
 
-volatile int g_gdbsync;
+volatile int g_gdbsync hidden;

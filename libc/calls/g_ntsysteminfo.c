@@ -21,10 +21,6 @@
 #include "libc/nt/struct/systeminfo.h"
 #include "libc/nt/systeminfo.h"
 
-/**
- * GetSystemInfo() singleton.
- * @see libc/runtime/winmain.c
- */
-struct NtSystemInfo g_ntsysteminfo;
+hidden struct NtSystemInfo g_ntsysteminfo;
 
 STATIC_YOINK("_init_g_ntsysteminfo");

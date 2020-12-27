@@ -22,9 +22,9 @@
 
 /	Allocates memory the C++ way.
 /
-/	@param	%rdi is bytes to allocate
-/	@param	%rsi is ignored
-/	@return	new memory or NULL on OOM
+/	\param	%rdi is bytes to allocate
+/	\param	%rsi is ignored
+/	\return	new memory or NULL on OOM
 _ZnamRKSt9nothrow_t:
 /	operator new[](unsigned long, std::nothrow_t const&)
 	nop

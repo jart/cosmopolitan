@@ -57,6 +57,7 @@ typedef struct {
   bool is_destructor;
   bool is_constructor;
   bool is_externally_visible;
+  bool is_no_instrument_function;
   bool is_force_align_arg_pointer;
   bool is_no_caller_saved_registers;
   int align;
@@ -476,6 +477,10 @@ static Token *thing_attributes(Token *tok, void *arg) {
     attr->is_externally_visible = true;
     return tok;
   }
+  if (consume_attribute(&tok, tok, "no_instrument_function")) {
+    attr->is_no_instrument_function = true;
+    return tok;
+  }
   if (consume_attribute(&tok, tok, "force_align_arg_pointer")) {
     attr->is_force_align_arg_pointer = true;
     return tok;
@@ -555,7 +560,6 @@ static Token *thing_attributes(Token *tok, void *arg) {
       consume_attribute(&tok, tok, "no_split_stack") ||
       consume_attribute(&tok, tok, "no_stack_limit") ||
       consume_attribute(&tok, tok, "no_sanitize_undefined") ||
-      consume_attribute(&tok, tok, "no_instrument_function") ||
       consume_attribute(&tok, tok, "no_profile_instrument_function")) {
     return tok;
   }
@@ -1018,6 +1022,7 @@ static Type *enum_specifier(Token **rest, Token *tok) {
     *rest = tok;
     return ty;
   }
+  ty->name = tag;
   tok = skip(tok, '{');
   // Read an enum-list.
   int i = 0;
@@ -2066,8 +2071,9 @@ int64_t eval2(Node *node, char ***label) {
         }
         error_tok(node->tok, "not a compile-time constant");
       }
-      if (node->var->ty->kind != TY_ARRAY && node->var->ty->kind != TY_FUNC)
+      if (node->var->ty->kind != TY_ARRAY && node->var->ty->kind != TY_FUNC) {
         error_tok(node->tok, "invalid initializer");
+      }
       *label = &node->var->name;
       return 0;
     case ND_NUM:
@@ -2727,6 +2733,7 @@ static Type *struct_union_decl(Token **rest, Token *tok) {
     push_tag_scope(tag, ty);
     return ty;
   }
+  ty->name = tag;
   tok = skip(tok, '{');
   // Construct a struct object.
   struct_members(&tok, tok, ty);
@@ -3361,10 +3368,12 @@ static Obj *find_func(char *name) {
 }
 
 static void mark_live(Obj *var) {
+  int i;
+  Obj *fn;
   if (!var->is_function || var->is_live) return;
   var->is_live = true;
-  for (int i = 0; i < var->refs.len; i++) {
-    Obj *fn = find_func(var->refs.data[i]);
+  for (i = 0; i < var->refs.len; i++) {
+    fn = find_func(var->refs.data[i]);
     if (fn) mark_live(fn);
   }
 }
@@ -3385,25 +3394,28 @@ static Token *function(Token *tok, Type *basety, VarAttr *attr) {
     fn->is_definition = fn->is_definition || EQUAL(tok, "{");
     fn->is_weak |= attr->is_weak;
     fn->is_noreturn |= attr->is_noreturn;
+    fn->tok = ty->name;
   } else {
     fn = new_gvar(name_str, ty);
+    fn->tok = ty->name;
     fn->is_function = true;
     fn->is_definition = EQUAL(tok, "{");
     fn->is_static = attr->is_static || (attr->is_inline && !attr->is_extern);
     fn->is_inline = attr->is_inline;
-    fn->is_weak = attr->is_weak;
-    fn->is_ms_abi = attr->is_ms_abi;
-    fn->is_aligned = attr->is_aligned;
-    fn->is_noreturn = attr->is_noreturn;
-    fn->is_destructor = attr->is_destructor;
-    fn->is_constructor = attr->is_constructor;
-    fn->is_externally_visible = attr->is_externally_visible;
-    fn->is_force_align_arg_pointer = attr->is_force_align_arg_pointer;
-    fn->is_no_caller_saved_registers = attr->is_no_caller_saved_registers;
-    fn->align = attr->align;
-    fn->section = attr->section;
-    fn->visibility = attr->visibility;
   }
+  fn->align = MAX(fn->align, attr->align);
+  fn->is_weak |= attr->is_weak;
+  fn->section = fn->section ?: attr->section;
+  fn->is_ms_abi |= attr->is_ms_abi;
+  fn->visibility = fn->visibility ?: attr->visibility;
+  fn->is_aligned |= attr->is_aligned;
+  fn->is_noreturn |= attr->is_noreturn;
+  fn->is_destructor |= attr->is_destructor;
+  fn->is_constructor |= attr->is_constructor;
+  fn->is_externally_visible |= attr->is_externally_visible;
+  fn->is_no_instrument_function |= attr->is_no_instrument_function;
+  fn->is_force_align_arg_pointer |= attr->is_force_align_arg_pointer;
+  fn->is_no_caller_saved_registers |= attr->is_no_caller_saved_registers;
   fn->javadown = fn->javadown ?: current_javadown;
   fn->is_root = !(fn->is_static && fn->is_inline);
   if (consume_attribute(&tok, tok, "asm")) {
@@ -3452,6 +3464,7 @@ static Token *global_variable(Token *tok, Type *basety, VarAttr *attr) {
     Type *ty = declarator(&tok, tok, basety);
     if (!ty->name) error_tok(ty->name_pos, "variable name omitted");
     Obj *var = new_gvar(get_ident(ty->name), ty);
+    if (!var->tok) var->tok = ty->name;
     var->javadown = current_javadown;
     if (consume_attribute(&tok, tok, "asm")) {
       tok = skip(tok, '(');
@@ -3459,9 +3472,16 @@ static Token *global_variable(Token *tok, Type *basety, VarAttr *attr) {
       tok = skip(tok, ')');
     }
     tok = attribute_list(tok, attr, thing_attributes);
+    var->align = MAX(var->align, attr->align);
+    var->is_weak = attr->is_weak;
+    var->section = attr->section;
+    var->visibility = attr->visibility;
+    var->is_aligned = var->is_aligned | attr->is_aligned;
+    var->is_externally_visible = attr->is_externally_visible;
     var->is_definition = !attr->is_extern;
     var->is_static = attr->is_static;
     var->is_tls = attr->is_tls;
+    var->section = attr->section;
     if (attr->align) var->align = attr->align;
     if (EQUAL(tok, "=")) {
       gvar_initializer(&tok, tok->next, var);
@@ -3535,15 +3555,30 @@ static Obj *declare3(char *s, Type *r, Type *a, Type *b, Type *c) {
   return new_gvar(xstrcat("__builtin_", s), ty);
 }
 
+static void math0(char *name) {
+  declare0(name, ty_double);
+  declare0(xstrcat(name, 'f'), ty_float);
+  declare0(xstrcat(name, 'l'), ty_ldouble);
+}
+
+static void math1(char *name) {
+  declare1(name, ty_double, ty_double);
+  declare1(xstrcat(name, 'f'), ty_float, ty_float);
+  declare1(xstrcat(name, 'l'), ty_ldouble, ty_ldouble);
+}
+
+static void math2(char *name) {
+  declare2(name, ty_double, ty_double, ty_double);
+  declare2(xstrcat(name, 'f'), ty_float, ty_float, ty_float);
+  declare2(xstrcat(name, 'l'), ty_ldouble, ty_ldouble, ty_ldouble);
+}
+
 void declare_builtin_functions(void) {
   Type *pvoid = pointer_to(ty_void);
   Type *pchar = pointer_to(ty_char);
   builtin_alloca = declare1("alloca", pointer_to(ty_void), ty_int);
   declare0("trap", ty_int);
   declare0("unreachable", ty_int);
-  declare0("inff", ty_float);
-  declare0("inf", ty_double);
-  declare0("infl", ty_ldouble);
   declare1("ctz", ty_int, ty_int);
   declare1("ctzl", ty_long, ty_long);
   declare1("ctzll", ty_long, ty_long);
@@ -3581,6 +3616,16 @@ void declare_builtin_functions(void) {
   declare2("strchr", pchar, pchar, ty_int);
   declare2("strstr", pchar, pchar, pchar);
   declare1("frame_address", pvoid, ty_int);
+  declare2("scalbnf", ty_float, ty_float, ty_int);
+  declare2("scalbn", ty_double, ty_double, ty_int);
+  declare2("scalbnl", ty_ldouble, ty_ldouble, ty_int);
+  math0("inf");
+  math0("huge_val");
+  math1("fabs");
+  math1("logb");
+  math2("fmax");
+  math2("fmin");
+  math2("copysign");
 }
 
 // program = (typedef | function-definition | global-variable)*

@@ -20,7 +20,7 @@
 #include "libc/str/str.h"
 #include "libc/zipos/zipos.internal.h"
 
-const char kZiposSchemePrefix[4] = "zip:";
+const char kZiposSchemePrefix[4] hidden = "zip:";
 
 /**
  * Extracts information about ZIP URI if it is one.

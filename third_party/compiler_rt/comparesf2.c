@@ -83,10 +83,11 @@ __lesf2(fp_t a, fp_t b) {
     }
 }
 
-#if defined(__ELF__)
 // Alias for libgcc compatibility
-FNALIAS(__cmpsf2, __lesf2);
-#endif
+COMPILER_RT_ABI enum LE_RESULT
+__cmpsf2(fp_t a, fp_t b) {
+  return __lesf2(a, b);
+}
 
 enum GE_RESULT {
     GE_LESS      = -1,
