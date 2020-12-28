@@ -1,4 +1,5 @@
 #include "third_party/chibicc/chibicc.h"
+#include "third_party/chibicc/file.h"
 
 #define LOOKINGAT(TOK, OP) (!memcmp(TOK, OP, sizeof(OP) - 1))
 
@@ -610,40 +611,6 @@ Token *tokenize(File *file) {
   return head.next;
 }
 
-// Returns the contents of a given file.
-char *read_file(char *path) {
-  FILE *fp;
-  if (strcmp(path, "-") == 0) {
-    // By convention, read from stdin if a given filename is "-".
-    fp = stdin;
-  } else {
-    fp = fopen(path, "r");
-    if (!fp) return NULL;
-  }
-  int buflen = 4096;
-  int nread = 0;
-  char *buf = calloc(1, buflen);
-  // Read the entire file.
-  for (;;) {
-    int end = buflen - 2;  // extra 2 bytes for the trailing "\n\0"
-    int n = fread(buf + nread, 1, end - nread, fp);
-    if (n == 0) break;
-    nread += n;
-    if (nread == end) {
-      buflen *= 2;
-      buf = realloc(buf, buflen);
-    }
-  }
-  if (fp != stdin) fclose(fp);
-  // Make sure that the last logical line is properly terminated with '\n'.
-  if (nread > 0 && buf[nread - 1] == '\\')
-    buf[nread - 1] = '\n';
-  else if (nread == 0 || buf[nread - 1] != '\n')
-    buf[nread++] = '\n';
-  buf[nread] = '\0';
-  return buf;
-}
-
 File **get_input_files(void) {
   return input_files;
 }
@@ -655,68 +622,6 @@ File *new_file(char *name, int file_no, char *contents) {
   file->file_no = file_no;
   file->contents = contents;
   return file;
-}
-
-// Replaces \r or \r\n with \n.
-void canonicalize_newline(char *p) {
-  int i = 0, j = 0;
-  while (p[i]) {
-    if (p[i] == '\r' && p[i + 1] == '\n') {
-      i += 2;
-      p[j++] = '\n';
-    } else if (p[i] == '\r') {
-      i++;
-      p[j++] = '\n';
-    } else {
-      p[j++] = p[i++];
-    }
-  }
-  p[j] = '\0';
-}
-
-// Removes backslashes followed by a newline.
-void remove_backslash_newline(char *p) {
-  int i = 0, j = 0;
-  // We want to keep the number of newline characters so that
-  // the logical line number matches the physical one.
-  // This counter maintain the number of newlines we have removed.
-  int n = 0;
-  bool instring = false;
-  while (p[i]) {
-    if (instring) {
-      if (p[i] == '"' && p[i - 1] != '\\') {
-        instring = false;
-      }
-    } else {
-      if (p[i] == '"') {
-        instring = true;
-      } else if (p[i] == '/' && p[i + 1] == '*') {
-        p[j++] = p[i++];
-        p[j++] = p[i++];
-        while (p[i]) {
-          if (p[i] == '*' && p[i + 1] == '/') {
-            p[j++] = p[i++];
-            p[j++] = p[i++];
-            break;
-          } else {
-            p[j++] = p[i++];
-          }
-        }
-        continue;
-      }
-    }
-    if (p[i] == '\\' && p[i + 1] == '\n') {
-      i += 2;
-      n++;
-    } else if (p[i] == '\n') {
-      p[j++] = p[i++];
-      for (; n > 0; n--) p[j++] = '\n';
-    } else {
-      p[j++] = p[i++];
-    }
-  }
-  for (; n > 0; n--) p[j++] = '\n';
-  p[j] = '\0';
 }
 
 static uint32_t read_universal_char(char *p, int len) {
@@ -761,11 +666,7 @@ static void convert_universal_chars(char *p) {
 Token *tokenize_file(char *path) {
   char *p = read_file(path);
   if (!p) return NULL;
-  // UTF-8 texts may start with a 3-byte "BOM" marker sequence.
-  // If exists, just skip them because they are useless bytes.
-  // (It is actually not recommended to add BOM markers to UTF-8
-  // texts, but it's not uncommon particularly on Windows.)
-  if (!memcmp(p, "\xef\xbb\xbf", 3)) p += 3;
+  p = skip_bom(p);
   canonicalize_newline(p);
   remove_backslash_newline(p);
   convert_universal_chars(p);

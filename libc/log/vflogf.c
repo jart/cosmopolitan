@@ -73,7 +73,7 @@ void vflogf_onfail(FILE *f) {
     fseek(f, SEEK_SET, 0);
     f->beg = f->end = 0;
     clearerr(f);
-    (fprintf)(f, "performed emergency log truncation: %s\r\n", strerror(err));
+    (fprintf)(f, "performed emergency log truncation: %s\n", strerror(err));
   }
 }
 
@@ -112,10 +112,10 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   }
   (vfprintf)(f, fmt, va);
   va_end(va);
-  fputs("\r\n", f);
+  fputs("\n", f);
   if (level == kLogFatal) {
     __start_fatal(file, line);
-    (dprintf)(STDERR_FILENO, "fatal error see logfile\r\n");
+    (dprintf)(STDERR_FILENO, "fatal error see logfile\n");
     __die();
     unreachable;
   }

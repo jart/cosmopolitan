@@ -86,7 +86,6 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/shut.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/splice.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/consts/w.h"
@@ -251,7 +250,6 @@ static const struct NamedVector kLightings[] = {
 };
 
 static plm_t *plm_;
-static FILE *fsock_;
 static float gamma_;
 static int volscale_;
 static enum Blur blur_;
@@ -1210,8 +1208,6 @@ static void PerformBestEffortIo(void) {
   struct pollfd fds[] = {
       {infd_, POLLIN},
       {outfd_, f1_ && f1_->n ? POLLOUT : 0},
-      {fsock_ ? fileno(fsock_) : -1,
-       fsock_ && favail(fsock_) < (NETBUFSIZ >> 1) ? POLLIN : 0},
   };
   pollms = MAX(0, AsMilliseconds(GetGraceTime()));
   DEBUGF("poll() ms=%,d", pollms);
@@ -1221,12 +1217,6 @@ static void PerformBestEffortIo(void) {
     if (toto) {
       if (fds[0].revents & (POLLIN | POLLERR)) ReadKeyboard();
       if (fds[1].revents & (POLLOUT | POLLERR)) WriteVideo();
-      if (fds[2].revents & (POLLHUP | POLLERR)) {
-        LOGIFNEG1(shutdown(fsock_->fd, SHUT_RD));
-        fsock_ = NULL; /* plm destroys it */
-      } else if (fds[2].revents & POLLIN) {
-        freplenish(fsock_);
-      }
     }
   } else if (errno == EINTR) {
     DEBUGF("poll() → EINTR");

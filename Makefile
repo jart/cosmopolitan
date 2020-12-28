@@ -312,8 +312,12 @@ o/cosmopolitan.h:				\
 		$(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS))
 	@ACTION=ROLLUP TARGET=$@ build/do $^ >$@
 
-o/cosmopolitan.html: o/$(MODE)/third_party/chibicc/chibicc.com.dbg
-	o/$(MODE)/third_party/chibicc/chibicc.com.dbg -J -fno-common -include libc/integral/normalize.inc -o $@ $(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))
+o/cosmopolitan.html:							\
+		o/$(MODE)/third_party/chibicc/chibicc.com.dbg		\
+		$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))
+	o/$(MODE)/third_party/chibicc/chibicc.com.dbg -J		\
+		-fno-common -include libc/integral/normalize.inc -o $@	\
+		$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))
 
 # UNSPECIFIED PREREQUISITES TUTORIAL
 #

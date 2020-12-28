@@ -48,7 +48,6 @@ typedef struct {
   bool is_static;
   bool is_extern;
   bool is_inline;
-  bool is_const;
   bool is_tls;
   bool is_weak;
   bool is_ms_abi;
@@ -233,6 +232,8 @@ static Node *new_ulong(long val, Token *tok) {
 }
 
 static Node *new_var_node(Obj *var, Token *tok) {
+  if (!var) DebugBreak();
+  CHECK_NOTNULL(var);
   Node *node = new_node(ND_VAR, tok);
   node->var = var;
   return node;
@@ -647,6 +648,7 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr) {
   };
   Type *ty = copy_type(ty_int);
   int counter = 0;
+  bool is_const = false;
   bool is_atomic = false;
   while (is_typename(tok)) {
     // Handle storage class specifiers.
@@ -682,7 +684,7 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr) {
       goto Continue;
     }
     if (CONSUME(&tok, tok, "const")) {
-      if (attr) attr->is_const = true;
+      is_const = true;
       goto Continue;
     }
     // These keywords are recognized but ignored.
@@ -841,6 +843,10 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr) {
     ty = copy_type(ty);
     ty->is_atomic = true;
   }
+  /* if (attr && is_const) { */
+  /*   ty = copy_type(ty); */
+  /*   ty->is_const = true; */
+  /* } */
   *rest = tok;
   return ty;
 }
@@ -873,6 +879,7 @@ static Type *func_params(Token **rest, Token *tok, Type *ty) {
   Type head = {};
   Type *cur = &head;
   bool is_variadic = false;
+  enter_scope();
   while (!EQUAL(tok, ")")) {
     if (cur != &head) tok = skip(tok, ',');
     if (EQUAL(tok, "...")) {
@@ -884,6 +891,9 @@ static Type *func_params(Token **rest, Token *tok, Type *ty) {
     Type *ty2 = declspec(&tok, tok, NULL);
     ty2 = declarator(&tok, tok, ty2);
     Token *name = ty2->name;
+    if (name) {
+      new_lvar(strndup(name->loc, name->len), ty2);
+    }
     if (ty2->kind == TY_ARRAY) {
       // "array of T" is converted to "pointer to T" only in the parameter
       // context. For example, *argv[] is converted to **argv by this.
@@ -897,6 +907,7 @@ static Type *func_params(Token **rest, Token *tok, Type *ty) {
     }
     cur = cur->next = copy_type(ty2);
   }
+  leave_scope();
   if (cur == &head) is_variadic = true;
   ty = func_type(ty);
   ty->params = head.next;
@@ -2471,6 +2482,16 @@ static Node *shift(Token **rest, Token *tok) {
   }
 }
 
+static Node *get_vla_size(Type *ty, Token *tok) {
+  if (ty->vla_size) {
+    return new_var_node(ty->vla_size, tok);
+  } else {
+    Node *lhs = compute_vla_size(ty, tok);
+    Node *rhs = new_var_node(ty->vla_size, tok);
+    return new_binary(ND_COMMA, lhs, rhs, tok);
+  }
+}
+
 // In C, `+` operator is overloaded to perform the pointer arithmetic.
 // If p is a pointer, p+n adds not n but sizeof(*p)*n to the value of p,
 // so that p+n points to the location n elements (not bytes) ahead of p.
@@ -2491,8 +2512,7 @@ static Node *new_add(Node *lhs, Node *rhs, Token *tok) {
   }
   // VLA + num
   if (lhs->ty->base->kind == TY_VLA) {
-    rhs = new_binary(ND_MUL, rhs, new_var_node(lhs->ty->base->vla_size, tok),
-                     tok);
+    rhs = new_binary(ND_MUL, rhs, get_vla_size(lhs->ty->base, tok), tok);
     return new_binary(ND_ADD, lhs, rhs, tok);
   }
   // ptr + num
@@ -2509,8 +2529,7 @@ static Node *new_sub(Node *lhs, Node *rhs, Token *tok) {
     return new_binary(ND_SUB, lhs, rhs, tok);
   // VLA + num
   if (lhs->ty->base->kind == TY_VLA) {
-    rhs = new_binary(ND_MUL, rhs, new_var_node(lhs->ty->base->vla_size, tok),
-                     tok);
+    rhs = new_binary(ND_MUL, rhs, get_vla_size(lhs->ty->base, tok), tok);
     add_type(rhs);
     Node *node = new_binary(ND_SUB, lhs, rhs, tok);
     node->ty = lhs->ty;
@@ -3044,7 +3063,9 @@ static Node *primary(Token **rest, Token *tok) {
   if (EQUAL(tok, "sizeof")) {
     Node *node = unary(rest, tok->next);
     add_type(node);
-    if (node->ty->kind == TY_VLA) return new_var_node(node->ty->vla_size, tok);
+    if (node->ty->kind == TY_VLA) {
+      return get_vla_size(node->ty, tok);
+    }
     return new_ulong(node->ty->size, tok);
   }
   if ((EQUAL(tok, "_Alignof") || EQUAL(tok, "__alignof__")) &&
@@ -3416,8 +3437,9 @@ static Token *function(Token *tok, Type *basety, VarAttr *attr) {
   fn->is_no_instrument_function |= attr->is_no_instrument_function;
   fn->is_force_align_arg_pointer |= attr->is_force_align_arg_pointer;
   fn->is_no_caller_saved_registers |= attr->is_no_caller_saved_registers;
-  fn->javadown = fn->javadown ?: current_javadown;
   fn->is_root = !(fn->is_static && fn->is_inline);
+  fn->javadown = fn->javadown ?: current_javadown;
+  current_javadown = NULL;
   if (consume_attribute(&tok, tok, "asm")) {
     tok = skip(tok, '(');
     fn->asmname = ConsumeStringLiteral(&tok, tok);
@@ -3526,16 +3548,20 @@ static void scan_globals(void) {
   globals = head.next;
 }
 
+static char *prefix_builtin(const char *name) {
+  return xstrcat("__builtin_", name);
+}
+
 static Obj *declare0(char *name, Type *ret) {
   if (!opt_no_builtin) new_gvar(name, func_type(ret));
-  return new_gvar(xstrcat("__builtin_", name), func_type(ret));
+  return new_gvar(prefix_builtin(name), func_type(ret));
 }
 
 static Obj *declare1(char *name, Type *ret, Type *p1) {
   Type *ty = func_type(ret);
   ty->params = copy_type(p1);
   if (!opt_no_builtin) new_gvar(name, ty);
-  return new_gvar(xstrcat("__builtin_", name), ty);
+  return new_gvar(prefix_builtin(name), ty);
 }
 
 static Obj *declare2(char *name, Type *ret, Type *p1, Type *p2) {
@@ -3543,7 +3569,7 @@ static Obj *declare2(char *name, Type *ret, Type *p1, Type *p2) {
   ty->params = copy_type(p1);
   ty->params->next = copy_type(p2);
   if (!opt_no_builtin) new_gvar(name, ty);
-  return new_gvar(xstrcat("__builtin_", name), ty);
+  return new_gvar(prefix_builtin(name), ty);
 }
 
 static Obj *declare3(char *s, Type *r, Type *a, Type *b, Type *c) {
@@ -3552,7 +3578,7 @@ static Obj *declare3(char *s, Type *r, Type *a, Type *b, Type *c) {
   ty->params->next = copy_type(b);
   ty->params->next->next = copy_type(c);
   if (!opt_no_builtin) new_gvar(s, ty);
-  return new_gvar(xstrcat("__builtin_", s), ty);
+  return new_gvar(prefix_builtin(s), ty);
 }
 
 static void math0(char *name) {

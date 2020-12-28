@@ -20,13 +20,13 @@
 #include "libc/macros.h"
 #include "libc/runtime/valist.h"
 
-static void *__va_arg_mem(struct __va *ap, size_t sz, size_t align) {
+static void *__va_arg_mem(struct __va_list *ap, size_t sz, size_t align) {
   void *r = (void *)ROUNDUP((intptr_t)ap->overflow_arg_area, align);
   ap->overflow_arg_area = (void *)ROUNDUP((intptr_t)r + sz, 8);
   return r;
 }
 
-void *__va_arg(struct __va *ap, size_t sz, unsigned align, unsigned k) {
+void *__va_arg(struct __va_list *ap, size_t sz, unsigned align, unsigned k) {
   void *r;
   switch (k) {
     case 0:

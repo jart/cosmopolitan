@@ -285,28 +285,6 @@ void sincos(double, double *, double *);
 void sincosf(float, float *, float *);
 void sincosl(long double, long double *, long double *);
 
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § mathematics » x87                                         ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
-#define fldz()   __X87_CONST(fldz, 0x0p+0)
-#define fld1()   __X87_CONST(fld1, 0x8p-3)
-#define fldpi()  __X87_CONST(fldpi, M_PI)
-#define fldl2t() __X87_CONST(fldl2t, M_LOG2_10)
-#define fldlg2() __X87_CONST(fldlg2, M_LOG10_2)
-#define fldln2() __X87_CONST(fldln2, M_LN2)
-#define fldl2e() __X87_CONST(fldl2e, M_LOG2E)
-#ifdef __x86__
-#define __X87_CONST(OP, VALUE) \
-  ({                           \
-    long double St0##OP;       \
-    asm(#OP : "=t"(St0##OP));  \
-    St0##OP;                   \
-  })
-#else
-#define __X87_CONST(OP, VALUE) VALUE
-#endif
-
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_MATH_H_ */

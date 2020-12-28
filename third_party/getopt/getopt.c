@@ -1,10 +1,4 @@
-asm(".ident\t\"\\n\\n\
-getopt (BSD-3)\\n\
-Copyright 1987, 1993, 1994 The Regents of the University of California\"");
-asm(".include \"libc/disclaimer.inc\"");
-
 /*	$NetBSD: getopt.c,v 1.26 2003/08/07 16:43:40 agc Exp $	*/
-
 /*
  * Copyright (c) 1987, 1993, 1994
  *	The Regents of the University of California.  All rights reserved.
@@ -36,12 +30,15 @@ asm(".include \"libc/disclaimer.inc\"");
  * @(#)getopt.c	8.3 (Berkeley) 4/27/95
  * $FreeBSD: src/lib/libc/stdlib/getopt.c,v 1.8 2007/01/09 00:28:10 imp Exp $
  * $DragonFly: src/lib/libc/stdlib/getopt.c,v 1.7 2005/11/20 12:37:48 swildner
- *Exp $
  */
-
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+
+asm(".ident\t\"\\n\\n\
+getopt (BSD-3)\\n\
+Copyright 1987, 1993, 1994 The Regents of the University of California\"");
+asm(".include \"libc/disclaimer.inc\"");
 
 STATIC_YOINK("_init_getopt");
 
@@ -50,48 +47,65 @@ STATIC_YOINK("_init_getopt");
 
 /**
  * If error message should be printed.
+ * @see getopt()
  */
 int opterr;
 
 /**
  * Index into parent argv vector.
+ * @see getopt()
  */
 int optind;
 
 /**
  * Character checked for validity.
+ * @see getopt()
  */
 int optopt;
 
 /**
  * Reset getopt.
+ * @see getopt()
  */
 int optreset;
 
 /**
  * Argument associated with option.
+ * @see getopt()
  */
 char *optarg;
 
-/**
- * Option letter processing.
- */
-char *getopt_place;
-
+hidden char *getopt_place;
 char kGetoptEmsg[1] hidden;
 
 /**
- * Parses argc/argv argument vector.
+ * Parses argc/argv argument vector, e.g.
+ *
+ *     while ((opt = getopt(argc, argv, "hvx:")) != -1) {
+ *       switch (opt) {
+ *         case 'x':
+ *           x = atoi(optarg);
+ *           break;
+ *         case 'v':
+ *           ++verbose;
+ *           break;
+ *         case 'h':
+ *           PrintUsage(EXIT_SUCCESS, stdout);
+ *         default:
+ *           PrintUsage(EX_USAGE, stderr);
+ *       }
+ *     }
+ *
+ * @see optind
+ * @see optarg
  */
 int getopt(int nargc, char *const nargv[], const char *ostr) {
   char *oli; /* option letter list index */
-
   /*
    * Some programs like cvs expect optind = 0 to trigger
    * a reset of getopt.
    */
   if (optind == 0) optind = 1;
-
   if (optreset || *getopt_place == 0) { /* update scanning pointer */
     optreset = 0;
     getopt_place = nargv[optind];
@@ -117,7 +131,6 @@ int getopt(int nargc, char *const nargv[], const char *ostr) {
   } else {
     optopt = *getopt_place++;
   }
-
   /* See if option letter is one the caller wanted... */
   if (optopt == ':' || (oli = strchr(ostr, optopt)) == NULL) {
     if (*getopt_place == 0) ++optind;
@@ -127,7 +140,6 @@ int getopt(int nargc, char *const nargv[], const char *ostr) {
     }
     return (BADCH);
   }
-
   /* Does this option need an argument? */
   if (oli[1] != ':') {
     /* don't need argument */
@@ -152,5 +164,5 @@ int getopt(int nargc, char *const nargv[], const char *ostr) {
     getopt_place = kGetoptEmsg;
     ++optind;
   }
-  return (optopt); /* return option letter */
+  return optopt; /* return option letter */
 }

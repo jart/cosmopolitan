@@ -25,6 +25,5 @@
 	pop	%rax
 	mov	%eax,opterr(%rip)
 	mov	%eax,optind(%rip)
-	lea	kGetoptEmsg(%rip),%rax
-	mov	%rax,getopt_place(%rip)
+	movl	$kGetoptEmsg,getopt_place(%rip)
 	.init.end 201,_init_getopt

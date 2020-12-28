@@ -1,7 +1,30 @@
 #include "libc/macros.h"
 #include "third_party/chibicc/test/test.h"
 
+int index1d(int xn, int p[xn], int x) {
+  return p[x];
+}
+
+int index2d(int yn, int xn, int (*p)[yn][xn], int y, int x) {
+  return (*p)[y][x];
+}
+
 int main() {
+
+  ASSERT(30, ({
+           int a[5] = {00, 10, 20, 30, 40, 50};
+           index1d(5, a, 3);
+         }));
+
+  /* ASSERT(210, ({ */
+  /*          int a[3][3] = { */
+  /*              {000, 010, 020}, */
+  /*              {100, 110, 120}, */
+  /*              {200, 210, 220}, */
+  /*          }; */
+  /*          index2d(3, 3, a, 2, 1); */
+  /*        })); */
+
   ASSERT(20, ({
            int n = 5;
            int x[n];

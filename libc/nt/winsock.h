@@ -409,7 +409,7 @@ int WSARecvFrom(uint64_t s, const struct NtIovec *out_lpBuffers,
                 uint32_t *inout_fromsockaddrlen,
                 struct NtOverlapped *opt_inout_lpOverlapped,
                 const NtWsaOverlappedCompletionRoutine opt_lpCompletionRoutine)
-    paramsnonnull((2, 5, 6, 7));
+    paramsnonnull((2, 5));
 
 int WSARecvDisconnect(uint64_t s,
                       const struct NtIovec *opt_lpInboundDisconnectData);

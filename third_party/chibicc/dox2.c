@@ -47,6 +47,7 @@ struct Dox {
       char *path;
       int line;
       bool is_function;
+      bool is_variadic;
       bool is_weak;
       bool is_inline;
       bool is_noreturn;
@@ -177,6 +178,7 @@ static void DeserializeObject(struct Dox *dox, struct DoxObject *o) {
   o->path = DeserializeStr(dox);
   o->line = DeserializeInt(dox);
   o->is_function = DeserializeInt(dox);
+  o->is_variadic = DeserializeInt(dox);
   o->is_weak = DeserializeInt(dox);
   o->is_inline = DeserializeInt(dox);
   o->is_noreturn = DeserializeInt(dox);
@@ -210,7 +212,7 @@ static void DeserializeMacro(struct Dox *dox, struct DoxMacro *m) {
   }
 }
 
-static void DeserializeDox(struct Dox *dox) {
+static void DeserializeDox(struct Dox *dox, const char *path) {
   int i, j, n;
   i = dox->objects.n;
   n = DeserializeInt(dox);
@@ -242,7 +244,7 @@ static void ReadDox(struct Dox *dox, const StringArray *files) {
       CHECK_NE(MAP_FAILED,
                (map = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0)));
       dox->p = map;
-      DeserializeDox(dox);
+      DeserializeDox(dox, files->data[i]);
       munmap(map, st.st_size);
     }
     close(fd);
@@ -317,15 +319,19 @@ static void IndexDox(struct Dox *dox) {
           CompareDoxIndexEntry, dox);
 }
 
+/**
+ * Escapes HTML entities and interprets basic Markdown syntax.
+ */
 static void PrintText(FILE *f, const char *s) {
   int c;
-  bool bol, pre, ul0, ul2, bt1, bt2;
-  for (bt1 = bt2 = ul2 = ul0 = pre = false, bol = true;;) {
+  bool bol, pre, ul0, ul2, ol0, ol2, bt1, bt2;
+  for (bt1 = bt2 = ul2 = ul0 = ol2 = ol0 = pre = false, bol = true;;) {
     switch ((c = *s++)) {
       case '\0':
         if (bt1 || bt2) fprintf(f, "</code>");
         if (pre) fprintf(f, "</pre>");
         if (ul0 || ul2) fprintf(f, "</ul>");
+        if (ol0 || ol2) fprintf(f, "</ol>");
         return;
       case '&':
         fprintf(f, "&amp;");
@@ -368,14 +374,19 @@ static void PrintText(FILE *f, const char *s) {
         bol = false;
         break;
       case '\n':
-        if (!pre && !ul0 && !ul2 && *s == '\n') {
+        if (!pre && !ul0 && !ul2 && !ol0 && !ol2 && *s == '\n') {
           fprintf(f, "\n<p>");
           bol = true;
-        } else if (pre && s[0] != '\n' &&
-                   (s[0] != ' ' || s[1] != ' ' || s[2] != ' ' || s[3] != ' ')) {
-          fprintf(f, "</pre>\n");
-          pre = false;
-          bol = true;
+        } else if (pre && s[0] != '\n') {
+          if (s[0] != ' ' || s[1] != ' ' || s[2] != ' ' || s[3] != ' ') {
+            fprintf(f, "</pre>\n");
+            pre = false;
+            bol = true;
+          } else {
+            fprintf(f, "\n");
+            bol = false;
+            s += 4;
+          }
         } else if (ul0 && s[0] == '-' && s[1] == ' ') {
           fprintf(f, "\n<li>");
           s += 2;
@@ -394,29 +405,65 @@ static void PrintText(FILE *f, const char *s) {
           fprintf(f, "\n</ul>\n");
           bol = true;
           ul2 = false;
+        } else if (ol0 && ('0' <= s[0] && s[0] <= '9') && s[1] == '.' &&
+                   s[2] == ' ') {
+          fprintf(f, "\n<li>");
+          s += 3;
+          bol = false;
+        } else if (ol2 && s[0] == ' ' && s[1] == ' ' &&
+                   ('0' <= s[2] && s[2] <= '9') && s[3] == '.' && s[3] == ' ') {
+          fprintf(f, "\n<li>");
+          s += 5;
+          bol = false;
+        } else if (ol0 && s[0] != '\n' && (s[0] != ' ' || s[1] != ' ')) {
+          fprintf(f, "\n</ol>\n");
+          bol = true;
+          ol0 = false;
+        } else if (ol2 && s[0] != '\n' &&
+                   (s[0] != ' ' || s[1] != ' ' || s[2] != ' ' || s[3] != ' ')) {
+          fprintf(f, "\n</ol>\n");
+          bol = true;
+          ol2 = false;
         } else {
           fprintf(f, "\n");
           bol = true;
         }
         break;
       case '-':
-        if (bol && !ul0 && !ul2 && s[0] == ' ') {
+        if (bol && !ul0 && !ul2 && !ol0 && !ol2 && s[0] == ' ') {
           ul0 = true;
           fprintf(f, "<ul><li>");
+          ++s;
         } else {
           fprintf(f, "-");
+        }
+        bol = false;
+        break;
+      case '1':
+        if (bol && !ol0 && !ol2 && !ul0 && !ul2 && s[0] == '.' && s[1] == ' ') {
+          ol0 = true;
+          fprintf(f, "<ol><li>");
+          s += 2;
+        } else {
+          fprintf(f, "1");
         }
         bol = false;
         break;
       case ' ':
         if (bol && !pre && s[0] == ' ' && s[1] == ' ' && s[2] == ' ') {
           pre = true;
-          fprintf(f, "<pre> ");
-        } else if (bol && !ul0 && !ul2 && s[0] == ' ' && s[1] == '-' &&
-                   s[2] == ' ') {
+          fprintf(f, "<pre>");
+          s += 3;
+        } else if (bol && !ul0 && !ul2 && !ol0 && !ol2 && s[0] == ' ' &&
+                   s[1] == '-' && s[2] == ' ') {
           ul2 = true;
           fprintf(f, "<ul><li>");
           s += 3;
+        } else if (bol && !ul0 && !ul2 && !ol0 && !ol2 && s[0] == ' ' &&
+                   ('0' <= s[1] && s[1] <= '9') && s[2] == '.' && s[3] == ' ') {
+          ol2 = true;
+          fprintf(f, "<ol><li>");
+          s += 4;
         } else {
           fprintf(f, " ");
         }
@@ -469,6 +516,9 @@ static void PrintDox(struct Dox *dox, FILE *f) {
   .nav {\n\
     margin-bottom: 0;\n\
   }\n\
+  .toc {\n\
+    overflow-x: auto;\n\
+  }\n\
   .toc a {\n\
     text-decoration: none;\n\
   }\n\
@@ -514,7 +564,10 @@ static void PrintDox(struct Dox *dox, FILE *f) {
 </style>\n\
 \n\
 <header>\n\
-  <img width=\"196\" height=\"105\" src=\"//storage.googleapis.com/justine/cosmopolitan/cosmopolitan.png\" alt=\"honeybadger\">\n\
+  <img width=\"196\" height=\"105\"\n\
+       src=\"//storage.googleapis.com/justine/cosmopolitan/cosmopolitan.png\"\n\
+       title=\"cosmopolitan honeybadger\"\n\
+       alt=\"honeybadger\">\n\
   <h1>cosmopolitan libc</h1>\n\
   <span>build-once run-anywhere c without devops</span>\n\
 </header>\n\
@@ -533,7 +586,7 @@ static void PrintDox(struct Dox *dox, FILE *f) {
 \n\
 <table class=\"dox\" width=\"960\">\n\
 <tr>\n\
-<td width=\"320\" valign=\"top\" class=\"toc\">\n\
+<td width=\"283\" valign=\"top\" class=\"toc\">\n\
 ");
 
   /* // lefthand index: objects */
@@ -581,7 +634,7 @@ static void PrintDox(struct Dox *dox, FILE *f) {
   }
 
   // righthand contents
-  fprintf(f, "<td width=\"640\" valign=\"top\">\n");
+  fprintf(f, "<td width=\"667\" valign=\"top\">\n");
   for (i = 0; i < dox->index.n; ++i) {
     if (dox->index.p[i].t == kObject) {
       o = dox->objects.p + dox->index.p[i].i;
@@ -606,7 +659,8 @@ static void PrintDox(struct Dox *dox, FILE *f) {
       }
 
       // parameters
-      if (o->is_function && (o->params.n || HasTag(o->javadown, "param"))) {
+      if (o->is_function &&
+          (o->is_variadic || o->params.n || HasTag(o->javadown, "param"))) {
         fprintf(f, "<div class=\"tag\">\n");
         fprintf(f, "<span class=\"tagname\">@param</span>\n");
         fprintf(f, "<dl>\n");
@@ -641,6 +695,9 @@ static void PrintDox(struct Dox *dox, FILE *f) {
             }
           }
         }
+        if (o->is_variadic) {
+          fprintf(f, "<dt>...\n");
+        }
         fprintf(f, "</dl>\n");
         fprintf(f, "</div>\n");  // .tag
       }
@@ -674,6 +731,17 @@ static void PrintDox(struct Dox *dox, FILE *f) {
           fprintf(f, "</dl>\n");
           fprintf(f, "</div>\n");  // .tag
         }
+      }
+
+      // type
+      if (!o->is_function) {
+        fprintf(f, "<div class=\"tag\">\n");
+        fprintf(f, "<span class=\"tagname\">@type</span>\n");
+        fprintf(f, "<dl>\n");
+        fprintf(f, "<dt>");
+        PrintText(f, o->type);
+        fprintf(f, "</dl>\n");
+        fprintf(f, "</div>\n");  // .tag
       }
 
       // tags
@@ -714,21 +782,18 @@ static void PrintDox(struct Dox *dox, FILE *f) {
       if (i) fprintf(f, "<hr>");
       fprintf(f, "<div id=\"%s\" class=\"api\">\n", m->name);
       fprintf(f, "<h3><a href=\"#%s\">%s</a></h3>", m->name, m->name);
-
       // title
       if (m->javadown && *m->javadown->title) {
         fprintf(f, "<p>");
         PrintText(f, m->javadown->title);
         fprintf(f, "\n");
       }
-
       // text
       if (m->javadown && *m->javadown->text) {
         fprintf(f, "<p>");
         PrintText(f, m->javadown->text);
         fprintf(f, "\n");
       }
-
       // parameters
       if (!m->is_objlike && (m->params.n || HasTag(m->javadown, "param"))) {
         fprintf(f, "<div class=\"tag\">\n");
@@ -767,7 +832,6 @@ static void PrintDox(struct Dox *dox, FILE *f) {
         fprintf(f, "</dl>\n");
         fprintf(f, "</div>\n");  // .tag
       }
-
       fprintf(f, "</div>\n"); /* class=".api" */
     }
   }

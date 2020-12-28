@@ -27,6 +27,8 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/x/x.h"
+#include "third_party/chibicc/file.h"
 #include "third_party/gdtoa/gdtoa.h"
 #include "tool/build/lib/elfwriter.h"
 
@@ -443,49 +445,6 @@ static unsigned Hash(const void *p, unsigned long n) {
   return MAX(1, h);
 }
 
-static bool StartsWith(const char *s, const char *prefix) {
-  for (;;) {
-    if (!*prefix) return true;
-    if (!*s) return false;
-    if (*s++ != *prefix++) return false;
-  }
-}
-
-static bool EndsWith(const char *s, const char *suffix) {
-  size_t n, m;
-  n = strlen(s);
-  m = strlen(suffix);
-  if (m > n) return false;
-  return !memcmp(s + n - m, suffix, m);
-}
-
-static char *Format(const char *fmt, ...) {
-  char *res;
-  va_list va;
-  va_start(va, fmt);
-  vasprintf(&res, fmt, va);
-  va_end(va);
-  return res;
-}
-
-static char *DirName(const char *path) {
-  return dirname(strdup(path));
-}
-
-static char *JoinPaths(const char *path, const char *other) {
-  if (!*other) {
-    return strdup(path);
-  } else if (!*path) {
-    return strdup(other);
-  } else if (StartsWith(other, "/") || !strcmp(path, ".")) {
-    return strdup(other);
-  } else if (EndsWith(path, "/")) {
-    return Format("%s%s", path, other);
-  } else {
-    return Format("%s/%s", path, other);
-  }
-}
-
 static bool IsPunctMergeable(int c) {
   switch (c) {
     case ';':
@@ -613,11 +572,11 @@ static void ReadFlags(struct As *a, int argc, char *argv[]) {
   for (i = 1; i < argc; ++i) {
     if (!strcmp(argv[i], "-o")) {
       a->outpath = StrDup(a, argv[++i]);
-    } else if (StartsWith(argv[i], "-o")) {
+    } else if (startswith(argv[i], "-o")) {
       a->outpath = StrDup(a, argv[i] + 2);
     } else if (!strcmp(argv[i], "-I")) {
       SaveString(&a->incpaths, strdup(argv[++i]));
-    } else if (StartsWith(argv[i], "-I")) {
+    } else if (startswith(argv[i], "-I")) {
       SaveString(&a->incpaths, strdup(argv[i] + 2));
     } else if (!strcmp(argv[i], "-Z")) {
       a->inhibiterr = true;
@@ -677,72 +636,6 @@ static int ReadCharLiteral(struct Slice *buf, int c, char *p, int *i) {
   }
 }
 
-static void CanonicalizeNewline(char *p) {
-  int i = 0, j = 0;
-  while (p[i]) {
-    if (p[i] == '\r' && p[i + 1] == '\n') {
-      i += 2;
-      p[j++] = '\n';
-    } else if (p[i] == '\r') {
-      i++;
-      p[j++] = '\n';
-    } else {
-      p[j++] = p[i++];
-    }
-  }
-  p[j] = '\0';
-}
-
-static void RemoveBackslashNewline(char *p) {
-  int i, j, n;
-  for (i = j = n = 0; p[i];) {
-    if (p[i] == '\\' && p[i + 1] == '\n') {
-      i += 2;
-      n++;
-    } else if (p[i] == '\n') {
-      p[j++] = p[i++];
-      for (; n > 0; n--) p[j++] = '\n';
-    } else {
-      p[j++] = p[i++];
-    }
-  }
-  for (; n > 0; n--) p[j++] = '\n';
-  p[j] = '\0';
-}
-
-static char *ReadFile(const char *path) {
-  char *p;
-  FILE *fp;
-  int buflen, nread, end, n;
-  if (!strcmp(path, "-")) {
-    fp = stdin;
-  } else {
-    fp = fopen(path, "r");
-    if (!fp) return NULL;
-  }
-  buflen = 4096;
-  nread = 0;
-  p = calloc(1, buflen);
-  for (;;) {
-    end = buflen - 2;
-    n = fread(p + nread, 1, end - nread, fp);
-    if (n == 0) break;
-    nread += n;
-    if (nread == end) {
-      buflen *= 2;
-      p = realloc(p, buflen);
-    }
-  }
-  if (fp != stdin) fclose(fp);
-  if (nread > 0 && p[nread - 1] == '\\') {
-    p[nread - 1] = '\n';
-  } else if (nread == 0 || p[nread - 1] != '\n') {
-    p[nread++] = '\n';
-  }
-  p[nread] = '\0';
-  return p;
-}
-
 static void PrintLocation(struct As *a) {
   fprintf(stderr,
           "%s:%d:: ", a->strings.p[a->sauces.p[a->things.p[a->i].s].path],
@@ -768,7 +661,7 @@ static char *FindInclude(struct As *a, const char *file) {
   char *path;
   struct stat st;
   for (i = 0; i < a->incpaths.n; ++i) {
-    path = JoinPaths(a->incpaths.p[i], file);
+    path = xjoinpaths(a->incpaths.p[i], file);
     if (stat(path, &st) != -1 && S_ISREG(st.st_mode)) return path;
     free(path);
   }
@@ -780,10 +673,10 @@ static void Tokenize(struct As *a, int path) {
   char *p, *path2;
   struct Slice buf;
   bool bol, isfloat, isfpu;
-  p = SaveString(&a->strings, ReadFile(a->strings.p[path]));
-  if (!memcmp(p, "\357\273\277", 3)) p += 3;
-  CanonicalizeNewline(p);
-  RemoveBackslashNewline(p);
+  p = SaveString(&a->strings, read_file(a->strings.p[path]));
+  p = skip_bom(p);
+  canonicalize_newline(p);
+  remove_backslash_newline(p);
   line = 1;
   bol = true;
   while ((c = *p)) {
@@ -1031,7 +924,7 @@ static void OnSymbol(struct As *a, int name) {
 static void OnLocalLabel(struct As *a, int id) {
   int i;
   char *name;
-  name = Format(".Label.%d", a->counter++);
+  name = xasprintf(".Label.%d", a->counter++);
   SaveString(&a->strings, name);
   AppendSlice(a);
   a->slices.p[a->slices.n - 1].p = name;
@@ -1796,13 +1689,13 @@ static int GrabSection(struct As *a, int name, int flags, int type) {
 static void OnSection(struct As *a, struct Slice s) {
   int name, flags, type;
   name = SliceDup(a, GetSlice(a));
-  if (StartsWith(a->strings.p[name], ".text")) {
+  if (startswith(a->strings.p[name], ".text")) {
     flags = SHF_ALLOC | SHF_EXECINSTR;
     type = SHT_PROGBITS;
-  } else if (StartsWith(a->strings.p[name], ".data")) {
+  } else if (startswith(a->strings.p[name], ".data")) {
     flags = SHF_ALLOC | SHF_WRITE;
     type = SHT_PROGBITS;
-  } else if (StartsWith(a->strings.p[name], ".bss")) {
+  } else if (startswith(a->strings.p[name], ".bss")) {
     flags = SHF_ALLOC | SHF_WRITE;
     type = SHT_NOBITS;
   } else {
@@ -2372,12 +2265,16 @@ static noinline void OpBsu(struct As *a, struct Slice opname, int op) {
   OpBsuImpl(a, opname, op);
 }
 
-static int OpF6(struct As *a, struct Slice s, int reg) {
+static noinline int OpF6Impl(struct As *a, struct Slice s, int reg) {
   int modrm, imm, disp;
   modrm = ParseModrm(a, &disp);
   reg |= GetOpSize(a, s, modrm, 1) << 3;
   EmitRexOpModrm(a, 0xF6, reg, modrm, disp, 1);
   return reg;
+}
+
+static noinline int OpF6(struct As *a, struct Slice s, int reg) {
+  return OpF6Impl(a, s, reg);
 }
 
 static void OnTest(struct As *a, struct Slice s) {
@@ -2571,8 +2468,8 @@ static bool HasXmmOnLine(struct As *a) {
   int i;
   for (i = 0; !IsPunct(a, a->i + i, ';'); ++i) {
     if (IsSlice(a, a->i + i) && a->slices.p[a->things.p[a->i + i].i].n >= 4 &&
-        (StartsWith(a->slices.p[a->things.p[a->i + i].i].p, "xmm") ||
-         StartsWith(a->slices.p[a->things.p[a->i + i].i].p, "%xmm"))) {
+        (startswith(a->slices.p[a->things.p[a->i + i].i].p, "xmm") ||
+         startswith(a->slices.p[a->things.p[a->i + i].i].p, "%xmm"))) {
       return true;
     }
   }
@@ -4002,7 +3899,7 @@ void Assembler(int argc, char *argv[]) {
   a = NewAssembler();
   ReadFlags(a, argc, argv);
   SaveString(&a->incpaths, strdup("."));
-  SaveString(&a->incpaths, DirName(a->strings.p[a->inpath]));
+  SaveString(&a->incpaths, xdirname(a->strings.p[a->inpath]));
   Tokenize(a, a->inpath);
   /* PrintThings(a); */
   Assemble(a);

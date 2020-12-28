@@ -79,7 +79,8 @@ static void SerializeJavadown(struct Buffer *buf, struct Javadown *jd) {
 }
 
 static char *DescribeScalar(struct Type *ty, char *name) {
-  return xasprintf("%s%s%s", ty->is_atomic ? "_Atomic " : "",
+  return xasprintf("%s%s%s%s", ty->is_atomic ? "_Atomic " : "",
+                   ty->is_const ? "const " : "",
                    ty->is_unsigned ? "unsigned " : "", name);
 }
 
@@ -134,7 +135,7 @@ static char *DescribeType(struct Type *ty) {
         return strdup("ANONYMOUS-UNION");
       }
     default:
-      return "UNKNOWN";
+      return strdup("UNKNOWN");
   }
 }
 
@@ -178,6 +179,7 @@ static void SerializeDox(struct DoxWriter *dox, Obj *prog) {
     SerializeStr(&dox->buf, GetFileName(dox->objects.p[i]));
     SerializeInt(&dox->buf, GetLine(dox->objects.p[i]));
     SerializeInt(&dox->buf, dox->objects.p[i]->is_function);
+    SerializeInt(&dox->buf, dox->objects.p[i]->ty->is_variadic);
     SerializeInt(&dox->buf, dox->objects.p[i]->is_weak);
     SerializeInt(&dox->buf, dox->objects.p[i]->is_inline);
     SerializeInt(&dox->buf, dox->objects.p[i]->is_noreturn);
@@ -248,6 +250,7 @@ static void SerializeAsmdown(struct DoxWriter *dox, struct Asmdown *ad,
     SerializeStr(&dox->buf, filename);
     SerializeInt(&dox->buf, ad->symbols.p[i].line);
     SerializeInt(&dox->buf, true);   // TODO: is_function
+    SerializeInt(&dox->buf, false);  // is_variadic
     SerializeInt(&dox->buf, false);  // TODO: is_weak
     SerializeInt(&dox->buf, false);  // is_inline
     SerializeInt(&dox->buf, false);  // is_noreturn
