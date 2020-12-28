@@ -784,7 +784,7 @@ typedef uint64_t uintmax_t;
   } while (0)
 
 #define STATIC_YOINK(SYMBOLSTR) \
-  asm(".pushsection .yoink\n\tnop\t\"" SYMBOLSTR "\"\n\t.popsection")
+  asm(".pushsection .yoink\n\tnopl\t\"" SYMBOLSTR "\"\n\t.popsection")
 
 #if !defined(IM_FEELING_NAUGHTY) && !defined(__STRICT_ANSI__)
 #define STATIC_YOINK_SOURCE(PATH) STATIC_YOINK(PATH)

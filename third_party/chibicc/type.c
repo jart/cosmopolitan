@@ -242,10 +242,14 @@ void add_type(Node *node) {
         node->ty = node->lhs->ty;
       } else {
 #endif
-      if (!node->lhs->ty->base)
+      if (!node->lhs->ty->base) {
         error_tok(node->tok, "invalid pointer dereference");
-      if (node->lhs->ty->base->kind == TY_VOID)
+      }
+      if (node->lhs->ty->base->kind == TY_VOID) {
+        /* TODO(jart): Does standard permit this? */
+        /* https://lkml.org/lkml/2018/3/20/845    */
         error_tok(node->tok, "dereferencing a void pointer");
+      }
       node->ty = node->lhs->ty->base;
 #if 0
       }

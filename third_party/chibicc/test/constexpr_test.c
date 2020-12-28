@@ -3,7 +3,7 @@
 float g40 = 1.5;
 double g41 = 0.0 ? 55 : (0, 1 + 1 * 5.0 / 2 * (double)2 * (int)2.0);
 
-int main() {
+int main(int argc, char *argv[]) {
   ASSERT(10, ({
            enum { ten = 1 + 2 + 3 + 4 };
            ten;
@@ -129,15 +129,15 @@ int main() {
            sizeof(x);
          }));
   ASSERT(8, ({
-           char x[(int*)0 + 2];
+           char x[(int *)0 + 2];
            sizeof(x);
          }));
   ASSERT(12, ({
-           char x[(int*)16 - 1];
+           char x[(int *)16 - 1];
            sizeof(x);
          }));
   ASSERT(3, ({
-           char x[(int*)16 - (int*)4];
+           char x[(int *)16 - (int *)4];
            sizeof(x);
          }));
 

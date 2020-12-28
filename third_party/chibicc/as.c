@@ -22,7 +22,9 @@
 #include "libc/fmt/conv.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
+#include "libc/macros.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/bsr.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -133,12 +135,10 @@
 #define ISRIP    0x00080000
 #define ISREG    0x00100000
 
-#define APPEND(L)     L.p = realloc(L.p, ++L.n * sizeof(*L.p))
-#define IS(P, N, S)   (N == sizeof(S) - 1 && !strncasecmp(P, S, sizeof(S) - 1))
-#define BSR(I)        (__builtin_clz(I) ^ 31)
-#define ROUNDUP(X, K) (((X) + (K)-1) & -(K))
-#define MAX(X, Y)     ((Y) < (X) ? (X) : (Y))
-#define LOAD128BE(S)  ((unsigned __int128)LOAD64BE(S) << 64 | LOAD64BE((S) + 8))
+#define APPEND(L)    L.p = realloc(L.p, ++L.n * sizeof(*L.p))
+#define IS(P, N, S)  (N == sizeof(S) - 1 && !strncasecmp(P, S, sizeof(S) - 1))
+#define MAX(X, Y)    ((Y) < (X) ? (X) : (Y))
+#define LOAD128BE(S) ((unsigned __int128)LOAD64BE(S) << 64 | LOAD64BE((S) + 8))
 #define LOAD64BE(S)                                  \
   ((unsigned long)((unsigned char *)(S))[0] << 070 | \
    (unsigned long)((unsigned char *)(S))[1] << 060 | \
@@ -148,8 +148,6 @@
    (unsigned long)((unsigned char *)(S))[5] << 020 | \
    (unsigned long)((unsigned char *)(S))[6] << 010 | \
    (unsigned long)((unsigned char *)(S))[7] << 000)
-#define ARRAYLEN(A) \
-  ((sizeof(A) / sizeof(*(A))) / ((unsigned)!(sizeof(A) % sizeof(*(A)))))
 
 struct As {
   int i;         // things
@@ -2011,7 +2009,7 @@ static int ParseModrm(struct As *a, int *disp) {
         modrm |= reg & 0xff00;                         // rex
         if (((reg & 070) >> 3) == 2) modrm |= HASASZ;  // asz
         if (!IsPunct(a, a->i, ')')) {
-          modrm |= (BSR(GetInt(a)) & 3) << 6;
+          modrm |= (bsr(GetInt(a)) & 3) << 6;
         }
       } else {
         modrm |= 4 << 3;  // puttin' on the riz
@@ -2118,23 +2116,23 @@ static void OnMov(struct As *a, struct Slice s) {
       switch ((reg & 070) >> 3) {
         case 0:
           EmitRex(a, reg);
-          EmitByte(a, 0xb0 + (reg & 7));
+          EmitByte(a, 0xB0 + (reg & 7));
           EmitExpr(a, imm, R_X86_64_8, EmitByte);
           break;
         case 1:
           EmitRex(a, reg);
           EmitByte(a, OSZ);
-          EmitByte(a, 0xb8 + (reg & 7));
+          EmitByte(a, 0xB8 + (reg & 7));
           EmitExpr(a, imm, R_X86_64_16, EmitWord);
           break;
         case 2:
           EmitRex(a, reg);
-          EmitByte(a, 0xb8 + (reg & 7));
+          EmitByte(a, 0xB8 + (reg & 7));
           EmitExpr(a, imm, R_X86_64_32, EmitLong);
           break;
         case 3:
           EmitRex(a, reg);
-          EmitByte(a, 0xb8 + (reg & 7));  // suboptimal
+          EmitByte(a, 0xB8 + (reg & 7));  // suboptimal
           EmitExpr(a, imm, R_X86_64_64, EmitQuad);
           break;
         default:
@@ -2145,26 +2143,26 @@ static void OnMov(struct As *a, struct Slice s) {
       switch (GetOpSize(a, s, modrm, 1)) {
         case 0:
           EmitRex(a, modrm);
-          EmitByte(a, 0xc6);
+          EmitByte(a, 0xC6);
           EmitModrm(a, 0, modrm, disp);
           EmitExpr(a, imm, R_X86_64_8, EmitByte);
           break;
         case 1:
           EmitByte(a, OSZ);
           EmitRex(a, modrm);
-          EmitByte(a, 0xc7);
+          EmitByte(a, 0xC7);
           EmitModrm(a, 0, modrm, disp);
           EmitExpr(a, imm, R_X86_64_16, EmitWord);
           break;
         case 2:
           EmitRex(a, modrm);
-          EmitByte(a, 0xc7);
+          EmitByte(a, 0xC7);
           EmitModrm(a, 0, modrm, disp);
           EmitExpr(a, imm, R_X86_64_32, EmitLong);
           break;
         case 3:
           EmitRex(a, modrm | REXW << 8);
-          EmitByte(a, 0xc7);  // suboptimal
+          EmitByte(a, 0xC7);  // suboptimal
           EmitModrm(a, 0, modrm, disp);
           EmitExpr(a, imm, R_X86_64_32, EmitLong);
           break;
