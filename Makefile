@@ -140,7 +140,6 @@ include net/http/http.mk			#─┘
 include third_party/lemon/lemon.mk
 include third_party/duktape/duktape.mk
 include third_party/regex/regex.mk
-include third_party/ctags/ctags.mk
 include third_party/third_party.mk
 include libc/testlib/testlib.mk
 include tool/viz/lib/vizlib.mk

@@ -2,16 +2,16 @@
 Cosmopolitan\n\
 Copyright 2020 Justine Alexandra Roberts Tunney\n\
 \n\
-This program is free software; you can redistribute it and/or modify\n\
-it under the terms of the GNU General Public License as published by\n\
-the Free Software Foundation; version 2 of the License.\n\
+Permission to use, copy, modify, and/or distribute this software for\n\
+any purpose with or without fee is hereby granted, provided that the\n\
+above copyright notice and this permission notice appear in all copies.\n\
 \n\
-This program is distributed in the hope that it will be useful, but\n\
-WITHOUT ANY WARRANTY; without even the implied warranty of\n\
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU\n\
-General Public License for more details.\n\
-\n\
-You should have received a copy of the GNU General Public License\n\
-along with this program; if not, write to the Free Software\n\
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA\n\
-02110-1301 USA"
+THE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL\n\
+WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED\n\
+WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE\n\
+AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL\n\
+DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR\n\
+PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER\n\
+TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR\n\
+PERFORMANCE OF THIS SOFTWARE.\n\
+"

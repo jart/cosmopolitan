@@ -792,9 +792,5 @@ typedef uint64_t uintmax_t;
 #define STATIC_YOINK_SOURCE(PATH)
 #endif
 
-#ifdef __BASE_FILE__
-STATIC_YOINK_SOURCE(__BASE_FILE__);
-#endif
-
 #define MACHINE_CODE_ANALYSIS_BEGIN_
 #define MACHINE_CODE_ANALYSIS_END_
