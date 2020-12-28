@@ -30,38 +30,38 @@ imp	'AbortPath'						AbortPath						gdi32		1012
 imp	'AbortSystemShutdownA'					AbortSystemShutdownA					advapi32	1005
 imp	'AbortSystemShutdown'					AbortSystemShutdownW					advapi32	1006
 imp	'AcceptEx'						AcceptEx						MsWSock		1	8
-imp	'AccessCheck'						AccessCheck						KernelBase	2	8
-imp	'AccessCheckAndAuditAlarm'				AccessCheckAndAuditAlarmW				KernelBase	3
+imp	'AccessCheck'						AccessCheck						advapi32	0	8	# KernelBase
+imp	'AccessCheckAndAuditAlarm'				AccessCheckAndAuditAlarmW				advapi32	0		# KernelBase
 imp	'AccessCheckAndAuditAlarmA'				AccessCheckAndAuditAlarmA				advapi32	1008
-imp	'AccessCheckByType'					AccessCheckByType					KernelBase	4
-imp	'AccessCheckByTypeAndAuditAlarm'			AccessCheckByTypeAndAuditAlarmW				KernelBase	5
+imp	'AccessCheckByType'					AccessCheckByType					advapi32	0		# KernelBase
+imp	'AccessCheckByTypeAndAuditAlarm'			AccessCheckByTypeAndAuditAlarmW				advapi32	0		# KernelBase
 imp	'AccessCheckByTypeAndAuditAlarmA'			AccessCheckByTypeAndAuditAlarmA				advapi32	1011
-imp	'AccessCheckByTypeResultList'				AccessCheckByTypeResultList				KernelBase	6
-imp	'AccessCheckByTypeResultListAndAuditAlarm'		AccessCheckByTypeResultListAndAuditAlarmW		KernelBase	8
+imp	'AccessCheckByTypeResultList'				AccessCheckByTypeResultList				advapi32	0		# KernelBase
+imp	'AccessCheckByTypeResultListAndAuditAlarm'		AccessCheckByTypeResultListAndAuditAlarmW		advapi32	0		# KernelBase
 imp	'AccessCheckByTypeResultListAndAuditAlarmA'		AccessCheckByTypeResultListAndAuditAlarmA		advapi32	1014
-imp	'AccessCheckByTypeResultListAndAuditAlarmByHandle'	AccessCheckByTypeResultListAndAuditAlarmByHandleW	KernelBase	7
+imp	'AccessCheckByTypeResultListAndAuditAlarmByHandle'	AccessCheckByTypeResultListAndAuditAlarmByHandleW	advapi32	0		# KernelBase
 imp	'AccessCheckByTypeResultListAndAuditAlarmByHandleA'	AccessCheckByTypeResultListAndAuditAlarmByHandleA	advapi32	1015
 imp	'AcquireStateLock'					AcquireStateLock					KernelBase	11
-imp	'ActivateActCtx'					ActivateActCtx						KernelBase	12
+imp	'ActivateActCtx'					ActivateActCtx						kernel32	0		# KernelBase
 imp	'ActivateActCtxWorker'					ActivateActCtxWorker					kernel32	4
 imp	'ActivateKeyboardLayout'				ActivateKeyboardLayout					user32		1505
-imp	'AddAccessAllowedAce'					AddAccessAllowedAce					KernelBase	13
-imp	'AddAccessAllowedAceEx'					AddAccessAllowedAceEx					KernelBase	14
-imp	'AddAccessAllowedObjectAce'				AddAccessAllowedObjectAce				KernelBase	15
-imp	'AddAccessDeniedAce'					AddAccessDeniedAce					KernelBase	16
-imp	'AddAccessDeniedAceEx'					AddAccessDeniedAceEx					KernelBase	17
-imp	'AddAccessDeniedObjectAce'				AddAccessDeniedObjectAce				KernelBase	18
-imp	'AddAce'						AddAce							KernelBase	19
+imp	'AddAccessAllowedAce'					AddAccessAllowedAce					advapi32	0		# KernelBase
+imp	'AddAccessAllowedAceEx'					AddAccessAllowedAceEx					advapi32	0		# KernelBase
+imp	'AddAccessAllowedObjectAce'				AddAccessAllowedObjectAce				advapi32	0		# KernelBase
+imp	'AddAccessDeniedAce'					AddAccessDeniedAce					advapi32	0		# KernelBase
+imp	'AddAccessDeniedAceEx'					AddAccessDeniedAceEx					advapi32	0		# KernelBase
+imp	'AddAccessDeniedObjectAce'				AddAccessDeniedObjectAce				advapi32	0		# KernelBase
+imp	'AddAce'						AddAce							advapi32	0		# KernelBase
 imp	'AddAtomA'						AddAtomA						kernel32	5
 imp	'AddAtom'						AddAtomW						kernel32	6
-imp	'AddAuditAccessAce'					AddAuditAccessAce					KernelBase	20
-imp	'AddAuditAccessAceEx'					AddAuditAccessAceEx					KernelBase	21
-imp	'AddAuditAccessObjectAce'				AddAuditAccessObjectAce					KernelBase	22
+imp	'AddAuditAccessAce'					AddAuditAccessAce					advapi32	0		# KernelBase
+imp	'AddAuditAccessAceEx'					AddAuditAccessAceEx					advapi32	0		# KernelBase
+imp	'AddAuditAccessObjectAce'				AddAuditAccessObjectAce					advapi32	0		# KernelBase
 imp	'AddClipboardFormatListener'				AddClipboardFormatListener				user32		1506
 imp	'AddConditionalAce'					AddConditionalAce					advapi32	1028
-imp	'AddConsoleAliasA'					AddConsoleAliasA					KernelBase	23
-imp	'AddConsoleAlias'					AddConsoleAliasW					KernelBase	24
-imp	'AddDllDirectory'					AddDllDirectory						KernelBase	25
+imp	'AddConsoleAliasA'					AddConsoleAliasA					kernel32	0		# KernelBase
+imp	'AddConsoleAlias'					AddConsoleAliasW					kernel32	0		# KernelBase
+imp	'AddDllDirectory'					AddDllDirectory						kernel32	0		# KernelBase
 imp	'AddExtensionProgId'					AddExtensionProgId					KernelBase	26
 imp	'AddFontMemResourceEx'					AddFontMemResourceEx					gdi32		1017
 imp	'AddFontResourceA'					AddFontResourceA					gdi32		1018
@@ -73,32 +73,32 @@ imp	'AddIntegrityLabelToBoundaryDescriptor'			AddIntegrityLabelToBoundaryDescrip
 imp	'AddLocalAlternateComputerNameA'			AddLocalAlternateComputerNameA				kernel32	11
 imp	'AddLocalAlternateComputerName'				AddLocalAlternateComputerNameW				kernel32	12
 imp	'AddMIMEFileTypesPS'					AddMIMEFileTypesPS					url		102
-imp	'AddMandatoryAce'					AddMandatoryAce						KernelBase	27
+imp	'AddMandatoryAce'					AddMandatoryAce						advapi32	0		# KernelBase
 imp	'AddPackageToFamilyXref'				AddPackageToFamilyXref					KernelBase	28
-imp	'AddRefActCtx'						AddRefActCtx						KernelBase	29
+imp	'AddRefActCtx'						AddRefActCtx						kernel32	0		# KernelBase
 imp	'AddRefActCtxWorker'					AddRefActCtxWorker					kernel32	14
-imp	'AddResourceAttributeAce'				AddResourceAttributeAce					KernelBase	30
-imp	'AddSIDToBoundaryDescriptor'				AddSIDToBoundaryDescriptor				KernelBase	31
-imp	'AddScopedPolicyIDAce'					AddScopedPolicyIDAce					KernelBase	32
+imp	'AddResourceAttributeAce'				AddResourceAttributeAce					kernel32	0		# KernelBase
+imp	'AddSIDToBoundaryDescriptor'				AddSIDToBoundaryDescriptor				kernel32	0		# KernelBase
+imp	'AddScopedPolicyIDAce'					AddScopedPolicyIDAce					kernel32	0		# KernelBase
 imp	'AddSecureMemoryCacheCallback'				AddSecureMemoryCacheCallback				kernel32	18
 imp	'AddUsersToEncryptedFile'				AddUsersToEncryptedFile					advapi32	1030
 imp	'AddUsersToEncryptedFileEx'				AddUsersToEncryptedFileEx				advapi32	1031
-imp	'AddVectoredExceptionHandler'				AddVectoredExceptionHandler				KernelBase	34	2
-imp	'AddVectoredContinueHandler'				AddVectoredContinueHandler				KernelBase	33	2
-imp	'RemoveVectoredExceptionHandler'			RemoveVectoredExceptionHandler				KernelBase	1407	1
-imp	'RemoveVectoredContinueHandler'				RemoveVectoredContinueHandler				KernelBase	1406	1
+imp	'AddVectoredExceptionHandler'				AddVectoredExceptionHandler				kernel32	0	2	# KernelBase
+imp	'AddVectoredContinueHandler'				AddVectoredContinueHandler				kernel32	0	2	# KernelBase
+imp	'RemoveVectoredExceptionHandler'			RemoveVectoredExceptionHandler				kernel32	0	1	# KernelBase
+imp	'RemoveVectoredContinueHandler'				RemoveVectoredContinueHandler				kernel32	0	1	# KernelBase
 imp	'AdjustCalendarDate'					AdjustCalendarDate					kernel32	21
-imp	'AdjustTokenGroups'					AdjustTokenGroups					KernelBase	35
-imp	'AdjustTokenPrivileges'					AdjustTokenPrivileges					KernelBase	36	6
+imp	'AdjustTokenGroups'					AdjustTokenGroups					advapi32	0		# KernelBase
+imp	'AdjustTokenPrivileges'					AdjustTokenPrivileges					advapi32	0	6	# KernelBase
 imp	'AdjustWindowRect'					AdjustWindowRect					user32		1507
 imp	'AdjustWindowRectEx'					AdjustWindowRectEx					user32		1508
 imp	'AdjustWindowRectExForDpi'				AdjustWindowRectExForDpi				user32		1509
 imp	'AlignRects'						AlignRects						user32		1510
-imp	'AllocConsole'						AllocConsole						KernelBase	37	0
-imp	'AllocateAndInitializeSid'				AllocateAndInitializeSid				KernelBase	38
-imp	'AllocateLocallyUniqueId'				AllocateLocallyUniqueId					KernelBase	39
-imp	'AllocateUserPhysicalPages'				AllocateUserPhysicalPages				KernelBase	40
-imp	'AllocateUserPhysicalPagesNuma'				AllocateUserPhysicalPagesNuma				KernelBase	41
+imp	'AllocConsole'						AllocConsole						kernel32	0	0	# KernelBase
+imp	'AllocateAndInitializeSid'				AllocateAndInitializeSid				advapi32	0		# KernelBase
+imp	'AllocateLocallyUniqueId'				AllocateLocallyUniqueId					advapi32	0		# KernelBase
+imp	'AllocateUserPhysicalPages'				AllocateUserPhysicalPages				kernel32	0		# KernelBase
+imp	'AllocateUserPhysicalPagesNuma'				AllocateUserPhysicalPagesNuma				kernel32	0		# KernelBase
 imp	'AllowForegroundActivation'				AllowForegroundActivation				user32		1511
 imp	'AllowSetForegroundWindow'				AllowSetForegroundWindow				user32		1512
 imp	'AlpcAdjustCompletionListConcurrencyCount'		AlpcAdjustCompletionListConcurrencyCount		ntdll		12
@@ -157,17 +157,17 @@ imp	'ApplicationRecoveryInProgress'				ApplicationRecoveryInProgress				kernel32
 imp	'ApplicationUserModelIdFromProductId'			ApplicationUserModelIdFromProductId			KernelBase	69
 imp	'Arc'							Arc							gdi32		1026
 imp	'ArcTo'							ArcTo							gdi32		1027
-imp	'AreAllAccessesGranted'					AreAllAccessesGranted					KernelBase	70
-imp	'AreAnyAccessesGranted'					AreAnyAccessesGranted					KernelBase	71
+imp	'AreAllAccessesGranted'					AreAllAccessesGranted					advapi32	0		# KernelBase
+imp	'AreAnyAccessesGranted'					AreAnyAccessesGranted					advapi32	0		# KernelBase
 imp	'AreDpiAwarenessContextsEqual'				AreDpiAwarenessContextsEqual				user32		1517
-imp	'AreFileApisANSI'					AreFileApisANSI						KernelBase	72
+imp	'AreFileApisANSI'					AreFileApisANSI						kernel32	0		# KernelBase
 imp	'AreThereVisibleLogoffScriptsInternal'			AreThereVisibleLogoffScriptsInternal			KernelBase	73
 imp	'AreThereVisibleShutdownScriptsInternal'		AreThereVisibleShutdownScriptsInternal			KernelBase	74
 imp	'ArrangeIconicWindows'					ArrangeIconicWindows					user32		1518
 imp	'AssignProcessToJobObject'				AssignProcessToJobObject				kernel32	37
 imp	'AssocCreateForClasses'					AssocCreateForClasses					shell32		263
 imp	'AssocGetDetailsOfPropKey'				AssocGetDetailsOfPropKey				shell32		267
-imp	'AttachConsole'						AttachConsole						KernelBase	75	1
+imp	'AttachConsole'						AttachConsole						kernel32	0	1	# KernelBase
 imp	'AttachThreadInput'					AttachThreadInput					user32		1519
 imp	'AuditComputeEffectivePolicyBySid'			AuditComputeEffectivePolicyBySid			advapi32	1038
 imp	'AuditComputeEffectivePolicyByToken'			AuditComputeEffectivePolicyByToken			advapi32	1039
@@ -284,7 +284,7 @@ imp	'BasepReleaseAppXContext'				BasepReleaseAppXContext					kernel32	98
 imp	'BasepReleaseSxsCreateProcessUtilityStruct'		BasepReleaseSxsCreateProcessUtilityStruct		kernel32	99
 imp	'BasepReportFault'					BasepReportFault					kernel32	100
 imp	'BasepSetFileEncryptionCompression'			BasepSetFileEncryptionCompression			kernel32	101
-imp	'Beep'							Beep							KernelBase	96
+imp	'Beep'							Beep							kernel32	0		# KernelBase
 imp	'BeginDeferWindowPos'					BeginDeferWindowPos					user32		1520
 imp	'BeginGdiRendering'					BeginGdiRendering					gdi32		1032
 imp	'BeginPaint'						BeginPaint						user32		1521	2
@@ -332,24 +332,24 @@ imp	'CalculatePopupWindowPosition'				CalculatePopupWindowPosition				user32		15
 imp	'CallEnclave'						CallEnclave						KernelBase	98
 imp	'CallMsgFilter'						CallMsgFilterW						user32		1534
 imp	'CallMsgFilterA'					CallMsgFilterA						user32		1533
-imp	'CallNamedPipe'						CallNamedPipeW						KernelBase	99	7
+imp	'CallNamedPipe'						CallNamedPipeW						kernel32	0	7	# KernelBase
 imp	'CallNamedPipeA'					CallNamedPipeA						kernel32	110	7
 imp	'CallNextHookEx'					CallNextHookEx						user32		1535	4
 imp	'CallWindowProcA'					CallWindowProcA						user32		1536
 imp	'CallWindowProc'					CallWindowProcW						user32		1537
-imp	'CallbackMayRunLong'					CallbackMayRunLong					KernelBase	100
+imp	'CallbackMayRunLong'					CallbackMayRunLong					kernel32	0		# KernelBase
 imp	'CancelDC'						CancelDC						gdi32		1038
 imp	'CancelDeviceWakeupRequest'				CancelDeviceWakeupRequest				kernel32	113
-imp	'CancelIo'						CancelIo						KernelBase	101	1
-imp	'CancelIoEx'						CancelIoEx						KernelBase	102	2
+imp	'CancelIo'						CancelIo						kernel32	0	1	# KernelBase
+imp	'CancelIoEx'						CancelIoEx						kernel32	0	2	# KernelBase
 imp	'CancelOverlappedAccess'				CancelOverlappedAccess					advapi32	1091
 imp	'CancelShutdown'					CancelShutdown						user32		1538
-imp	'CancelSynchronousIo'					CancelSynchronousIo					KernelBase	103	1
+imp	'CancelSynchronousIo'					CancelSynchronousIo					kernel32	0	1	# KernelBase
 imp	'CancelTimerQueueTimer'					CancelTimerQueueTimer					kernel32	118
-imp	'CancelWaitableTimer'					CancelWaitableTimer					KernelBase	105
+imp	'CancelWaitableTimer'					CancelWaitableTimer					kernel32	0		# KernelBase
 imp	'CascadeChildWindows'					CascadeChildWindows					user32		1539
 imp	'CascadeWindows'					CascadeWindows						user32		1540
-imp	'CeipIsOptedIn'						CeipIsOptedIn						KernelBase	106
+imp	'CeipIsOptedIn'						CeipIsOptedIn						kernel32	0		# KernelBase
 imp	'ChangeClipboardChain'					ChangeClipboardChain					user32		1541
 imp	'ChangeDisplaySettingsA'				ChangeDisplaySettingsA					user32		1542
 imp	'ChangeDisplaySettingsExA'				ChangeDisplaySettingsExA				user32		1543
@@ -361,7 +361,7 @@ imp	'ChangeServiceConfig2A'					ChangeServiceConfig2A					advapi32	1092
 imp	'ChangeServiceConfig2W'					ChangeServiceConfig2W					advapi32	1093
 imp	'ChangeServiceConfigA'					ChangeServiceConfigA					advapi32	1094
 imp	'ChangeServiceConfig'					ChangeServiceConfigW					advapi32	1095
-imp	'ChangeTimerQueueTimer'					ChangeTimerQueueTimer					KernelBase	107
+imp	'ChangeTimerQueueTimer'					ChangeTimerQueueTimer					kernel32	0		# KernelBase
 imp	'ChangeWindowMessageFilter'				ChangeWindowMessageFilter				user32		1548
 imp	'ChangeWindowMessageFilterEx'				ChangeWindowMessageFilterEx				user32		1549
 imp	'CharLowerA'						CharLowerA						KernelBase	108
@@ -401,10 +401,10 @@ imp	'CheckNameLegalDOS8Dot3W'				CheckNameLegalDOS8Dot3W					kernel32	128
 imp	'CheckProcessForClipboardAccess'			CheckProcessForClipboardAccess				user32		1577
 imp	'CheckProcessSession'					CheckProcessSession					user32		1578
 imp	'CheckRadioButton'					CheckRadioButton					user32		1579
-imp	'CheckRemoteDebuggerPresent'				CheckRemoteDebuggerPresent				KernelBase	125	2
-imp	'CheckTokenCapability'					CheckTokenCapability					KernelBase	126
-imp	'CheckTokenMembership'					CheckTokenMembership					KernelBase	127
-imp	'CheckTokenMembershipEx'				CheckTokenMembershipEx					KernelBase	128
+imp	'CheckRemoteDebuggerPresent'				CheckRemoteDebuggerPresent				kernel32	0	2	# KernelBase
+imp	'CheckTokenCapability'					CheckTokenCapability					kernel32	0		# KernelBase
+imp	'CheckTokenMembership'					CheckTokenMembership					advapi32	0		# KernelBase
+imp	'CheckTokenMembershipEx'				CheckTokenMembershipEx					kernel32	0		# KernelBase
 imp	'CheckWindowThreadDesktop'				CheckWindowThreadDesktop				user32		1580
 imp	'ChildWindowFromPoint'					ChildWindowFromPoint					user32		1581
 imp	'ChildWindowFromPointEx'				ChildWindowFromPointEx					user32		1582
@@ -418,8 +418,8 @@ imp	'ChrCmpIA'						ChrCmpIA						KernelBase	129
 imp	'ChrCmpIW'						ChrCmpIW						KernelBase	130
 imp	'ClearBitmapAttributes'					ClearBitmapAttributes					gdi32		1042
 imp	'ClearBrushAttributes'					ClearBrushAttributes					gdi32		1043
-imp	'ClearCommBreak'					ClearCommBreak						KernelBase	131
-imp	'ClearCommError'					ClearCommError						KernelBase	132
+imp	'ClearCommBreak'					ClearCommBreak						kernel32	0		# KernelBase
+imp	'ClearCommError'					ClearCommError						kernel32	0		# KernelBase
 imp	'ClearEventLogA'					ClearEventLogA						advapi32	1098
 imp	'ClearEventLog'						ClearEventLogW						advapi32	1099
 imp	'CliImmSetHotKey'					CliImmSetHotKey						user32		1583
@@ -436,10 +436,10 @@ imp	'CloseEventLog'						CloseEventLog						advapi32	1102
 imp	'CloseFigure'						CloseFigure						gdi32		1045
 imp	'CloseGestureInfoHandle'				CloseGestureInfoHandle					user32		1589
 imp	'CloseGlobalizationUserSettingsKey'			CloseGlobalizationUserSettingsKey			KernelBase	133
-imp	'CloseHandle'						CloseHandle						KernelBase	134	1
+imp	'CloseHandle'						CloseHandle						kernel32	0	1	# KernelBase
 imp	'CloseMetaFile'						CloseMetaFile						gdi32		1046
-imp	'ClosePackageInfo'					ClosePackageInfo					KernelBase	135
-imp	'ClosePrivateNamespace'					ClosePrivateNamespace					KernelBase	136
+imp	'ClosePackageInfo'					ClosePackageInfo					kernel32	0		# KernelBase
+imp	'ClosePrivateNamespace'					ClosePrivateNamespace					kernel32	0		# KernelBase
 imp	'CloseProfileUserMapping'				CloseProfileUserMapping					kernel32	138
 imp	'CloseServiceHandle'					CloseServiceHandle					advapi32	1103
 imp	'CloseState'						CloseState						KernelBase	137
@@ -464,18 +464,18 @@ imp	'CommandLineFromMsiDescriptor'				CommandLineFromMsiDescriptor				advapi32	1
 imp	'CommandLineToArgv'					CommandLineToArgvW					shell32		269
 imp	'CommitStateAtom'					CommitStateAtom						KernelBase	149
 imp	'CompareCalendarDates'					CompareCalendarDates					kernel32	150
-imp	'CompareFileTime'					CompareFileTime						KernelBase	150
+imp	'CompareFileTime'					CompareFileTime						kernel32	0		# KernelBase
 imp	'CompareObjectHandles'					CompareObjectHandles					KernelBase	151
-imp	'CompareStringA'					CompareStringA						KernelBase	152
-imp	'CompareStringEx'					CompareStringEx						KernelBase	153
-imp	'CompareStringOrdinal'					CompareStringOrdinal					KernelBase	154
-imp	'CompareString'						CompareStringW						KernelBase	155
+imp	'CompareStringA'					CompareStringA						kernel32	0		# KernelBase
+imp	'CompareStringEx'					CompareStringEx						kernel32	0		# KernelBase
+imp	'CompareStringOrdinal'					CompareStringOrdinal					kernel32	0		# KernelBase
+imp	'CompareString'						CompareStringW						kernel32	0		# KernelBase
 imp	'ComputeAccessTokenFromCodeAuthzLevel'			ComputeAccessTokenFromCodeAuthzLevel			advapi32	1107
 imp	'ConfigureOPMProtectedOutput'				ConfigureOPMProtectedOutput				gdi32		1051
-imp	'ConnectNamedPipe'					ConnectNamedPipe					KernelBase	156	2
+imp	'ConnectNamedPipe'					ConnectNamedPipe					kernel32	0	2	# KernelBase
 imp	'ConsoleControl'					ConsoleControl						user32		1593
 imp	'ConsoleMenuControl'					ConsoleMenuControl					kernel32	157
-imp	'ContinueDebugEvent'					ContinueDebugEvent					KernelBase	157	3
+imp	'ContinueDebugEvent'					ContinueDebugEvent					kernel32	0	3	# KernelBase
 imp	'ControlMagnification'					ControlMagnification					user32		1594
 imp	'ControlService'					ControlService						advapi32	1108
 imp	'ControlServiceExA'					ControlServiceExA					advapi32	1109
@@ -490,8 +490,8 @@ imp	'ConvertAccessToSecurityDescriptorA'			ConvertAccessToSecurityDescriptorA			
 imp	'ConvertAccessToSecurityDescriptor'			ConvertAccessToSecurityDescriptorW			advapi32	1114
 imp	'ConvertAuxiliaryCounterToPerformanceCounter'		ConvertAuxiliaryCounterToPerformanceCounter		KernelBase	158
 imp	'ConvertCalDateTimeToSystemTime'			ConvertCalDateTimeToSystemTime				kernel32	159
-imp	'ConvertDefaultLocale'					ConvertDefaultLocale					KernelBase	159
-imp	'ConvertFiberToThread'					ConvertFiberToThread					KernelBase	160
+imp	'ConvertDefaultLocale'					ConvertDefaultLocale					kernel32	0		# KernelBase
+imp	'ConvertFiberToThread'					ConvertFiberToThread					kernel32	0		# KernelBase
 imp	'ConvertNLSDayOfWeekToWin32DayOfWeek'			ConvertNLSDayOfWeekToWin32DayOfWeek			kernel32	162
 imp	'ConvertPerformanceCounterToAuxiliaryCounter'		ConvertPerformanceCounterToAuxiliaryCounter		KernelBase	161
 imp	'ConvertSDToStringSDDomain'				ConvertSDToStringSDDomainW				advapi32	1115
@@ -514,18 +514,18 @@ imp	'ConvertStringSecurityDescriptorToSecurityDescriptor'	ConvertStringSecurityD
 imp	'ConvertStringSidToSidA'				ConvertStringSidToSidA					advapi32	1132
 imp	'ConvertStringSidToSid'					ConvertStringSidToSidW					advapi32	1133
 imp	'ConvertSystemTimeToCalDateTime'			ConvertSystemTimeToCalDateTime				kernel32	163
-imp	'ConvertThreadToFiber'					ConvertThreadToFiber					KernelBase	162
-imp	'ConvertThreadToFiberEx'				ConvertThreadToFiberEx					KernelBase	163
-imp	'ConvertToAutoInheritPrivateObjectSecurity'		ConvertToAutoInheritPrivateObjectSecurity		KernelBase	164
+imp	'ConvertThreadToFiber'					ConvertThreadToFiber					kernel32	0		# KernelBase
+imp	'ConvertThreadToFiberEx'				ConvertThreadToFiberEx					kernel32	0		# KernelBase
+imp	'ConvertToAutoInheritPrivateObjectSecurity'		ConvertToAutoInheritPrivateObjectSecurity		advapi32	0		# KernelBase
 imp	'CopyAcceleratorTable'					CopyAcceleratorTableW					user32		1596
 imp	'CopyAcceleratorTableA'					CopyAcceleratorTableA					user32		1595
-imp	'CopyContext'						CopyContext						KernelBase	165
+imp	'CopyContext'						CopyContext						kernel32	0		# KernelBase
 imp	'CopyEnhMetaFile'					CopyEnhMetaFileW					gdi32		1053
 imp	'CopyEnhMetaFileA'					CopyEnhMetaFileA					gdi32		1052
-imp	'CopyFile2'						CopyFile2						KernelBase	166
-imp	'CopyFile'						CopyFileW						KernelBase	168	3
+imp	'CopyFile2'						CopyFile2						kernel32	0		# KernelBase
+imp	'CopyFile'						CopyFileW						kernel32	0	3	# KernelBase
 imp	'CopyFileA'						CopyFileA						kernel32	168	3
-imp	'CopyFileEx'						CopyFileExW						KernelBase	167
+imp	'CopyFileEx'						CopyFileExW						kernel32	0		# KernelBase
 imp	'CopyFileExA'						CopyFileExA						kernel32	169
 imp	'CopyFileTransacted'					CopyFileTransactedW					kernel32	172
 imp	'CopyFileTransactedA'					CopyFileTransactedA					kernel32	171
@@ -535,13 +535,13 @@ imp	'CopyLZFile'						CopyLZFile						kernel32	174
 imp	'CopyMetaFileA'						CopyMetaFileA						gdi32		1054
 imp	'CopyMetaFile'						CopyMetaFileW						gdi32		1055
 imp	'CopyRect'						CopyRect						user32		1599
-imp	'CopySid'						CopySid							KernelBase	170
+imp	'CopySid'						CopySid							advapi32	0		# KernelBase
 imp	'CouldMultiUserAppsBehaviorBePossibleForPackage'	CouldMultiUserAppsBehaviorBePossibleForPackage		KernelBase	171
 imp	'CountClipboardFormats'					CountClipboardFormats					user32		1600
 imp	'CreateAcceleratorTableA'				CreateAcceleratorTableA					user32		1601
 imp	'CreateAcceleratorTable'				CreateAcceleratorTableW					user32		1602
 imp	'CreateActCtxA'						CreateActCtxA						kernel32	175
-imp	'CreateActCtx'						CreateActCtxW						KernelBase	172
+imp	'CreateActCtx'						CreateActCtxW						kernel32	0		# KernelBase
 imp	'CreateActCtxWWorker'					CreateActCtxWWorker					kernel32	177
 imp	'CreateAppContainerToken'				CreateAppContainerToken					KernelBase	173
 imp	'CreateAppContainerTokenForUser'			CreateAppContainerTokenForUser				KernelBase	174
@@ -550,7 +550,7 @@ imp	'CreateBitmapFromDxSurface'				CreateBitmapFromDxSurface				gdi32		1057
 imp	'CreateBitmapFromDxSurface2'				CreateBitmapFromDxSurface2				gdi32		1058
 imp	'CreateBitmapIndirect'					CreateBitmapIndirect					gdi32		1059
 imp	'CreateBoundaryDescriptorA'				CreateBoundaryDescriptorA				kernel32	178
-imp	'CreateBoundaryDescriptor'				CreateBoundaryDescriptorW				KernelBase	175
+imp	'CreateBoundaryDescriptor'				CreateBoundaryDescriptorW				kernel32	0		# KernelBase
 imp	'CreateBrushIndirect'					CreateBrushIndirect					gdi32		1060
 imp	'CreateCaret'						CreateCaret						user32		1603
 imp	'CreateCodeAuthzLevel'					CreateCodeAuthzLevel					advapi32	1136
@@ -558,7 +558,7 @@ imp	'CreateColorSpaceA'					CreateColorSpaceA					gdi32		1061
 imp	'CreateColorSpace'					CreateColorSpaceW					gdi32		1062
 imp	'CreateCompatibleBitmap'				CreateCompatibleBitmap					gdi32		1063	3
 imp	'CreateCompatibleDC'					CreateCompatibleDC					gdi32		1064	1
-imp	'CreateConsoleScreenBuffer'				CreateConsoleScreenBuffer				KernelBase	176
+imp	'CreateConsoleScreenBuffer'				CreateConsoleScreenBuffer				kernel32	0		# KernelBase
 imp	'CreateCursor'						CreateCursor						user32		1604
 imp	'CreateDCA'						CreateDCA						gdi32		1065
 imp	'CreateDCEx'						CreateDCExW						gdi32		2000
@@ -578,10 +578,10 @@ imp	'CreateDialogIndirectParamAor'				CreateDialogIndirectParamAorW				user32		1
 imp	'CreateDialogIndirectParam'				CreateDialogIndirectParamW				user32		1612
 imp	'CreateDialogParamA'					CreateDialogParamA					user32		1613
 imp	'CreateDialogParam'					CreateDialogParamW					user32		1614
-imp	'CreateDirectory'					CreateDirectoryW					KernelBase	179	2
-imp	'CreateDirectoryA'					CreateDirectoryA					KernelBase	177	2
+imp	'CreateDirectory'					CreateDirectoryW					kernel32	0	2	# KernelBase
+imp	'CreateDirectoryA'					CreateDirectoryA					kernel32	0	2	# KernelBase
 imp	'CreateDirectoryExA'					CreateDirectoryExA					kernel32	182
-imp	'CreateDirectoryEx'					CreateDirectoryExW					KernelBase	178
+imp	'CreateDirectoryEx'					CreateDirectoryExW					kernel32	0		# KernelBase
 imp	'CreateDirectoryTransactedA'				CreateDirectoryTransactedA				kernel32	184
 imp	'CreateDirectoryTransacted'				CreateDirectoryTransactedW				kernel32	185
 imp	'CreateDiscardableBitmap'				CreateDiscardableBitmap					gdi32		1072
@@ -590,22 +590,22 @@ imp	'CreateEllipticRgnIndirect'				CreateEllipticRgnIndirect				gdi32		1074
 imp	'CreateEnclave'						CreateEnclave						KernelBase	180
 imp	'CreateEnhMetaFileA'					CreateEnhMetaFileA					gdi32		1075
 imp	'CreateEnhMetaFile'					CreateEnhMetaFileW					gdi32		1076
-imp	'CreateEventA'						CreateEventA						KernelBase	181
-imp	'CreateEventExA'					CreateEventExA						KernelBase	182
-imp	'CreateEventEx'						CreateEventExW						KernelBase	183
-imp	'CreateEvent'						CreateEventW						KernelBase	184
-imp	'CreateFiber'						CreateFiber						KernelBase	185
-imp	'CreateFiberEx'						CreateFiberEx						KernelBase	186
-imp	'CreateFile'						CreateFileW						KernelBase	192	7
-imp	'CreateFileA'						CreateFileA						KernelBase	188	7
-imp	'CreateFileMappingNuma'					CreateFileMappingNumaW					KernelBase	190	7
+imp	'CreateEventA'						CreateEventA						kernel32	0		# KernelBase
+imp	'CreateEventExA'					CreateEventExA						kernel32	0		# KernelBase
+imp	'CreateEventEx'						CreateEventExW						kernel32	0		# KernelBase
+imp	'CreateEvent'						CreateEventW						kernel32	0		# KernelBase
+imp	'CreateFiber'						CreateFiber						kernel32	0		# KernelBase
+imp	'CreateFiberEx'						CreateFiberEx						kernel32	0		# KernelBase
+imp	'CreateFile'						CreateFileW						kernel32	0	7	# KernelBase
+imp	'CreateFileA'						CreateFileA						kernel32	0	7	# KernelBase
+imp	'CreateFileMappingNuma'					CreateFileMappingNumaW					kernel32	0	7	# Kernelbase
 imp	'CreateFileMappingNumaA'				CreateFileMappingNumaA					kernel32	198	7
-imp	'CreateFileMapping'					CreateFileMappingW					KernelBase	191	7
+imp	'CreateFileMapping'					CreateFileMappingW					kernel32	0	7	# KernelBase
 imp	'CreateFileMappingA'					CreateFileMappingA					kernel32	196	7
 imp	'CreateFileTransacted'					CreateFileTransactedW					kernel32	202
 imp	'CreateFileTransactedA'					CreateFileTransactedA					kernel32	201
-imp	'CreateFile2'						CreateFile2						KernelBase	187
-imp	'CreateFileMappingFromApp'				CreateFileMappingFromApp				KernelBase	189
+imp	'CreateFile2'						CreateFile2						kernel32	0		# KernelBase
+imp	'CreateFileMappingFromApp'				CreateFileMappingFromApp				kernel32	0		# KernelBase
 imp	'CreateFontA'						CreateFontA						gdi32		1077
 imp	'CreateFontIndirectA'					CreateFontIndirectA					gdi32		1078
 imp	'CreateFontIndirectExA'					CreateFontIndirectExA					gdi32		1079
@@ -613,8 +613,8 @@ imp	'CreateFontIndirectEx'					CreateFontIndirectExW					gdi32		1080
 imp	'CreateFontIndirect'					CreateFontIndirectW					gdi32		1081
 imp	'CreateFont'						CreateFontW						gdi32		1082
 imp	'CreateHalftonePalette'					CreateHalftonePalette					gdi32		1083
-imp	'CreateHardLink'					CreateHardLinkW						KernelBase	194	3
-imp	'CreateHardLinkA'					CreateHardLinkA						KernelBase	193	3
+imp	'CreateHardLink'					CreateHardLinkW						kernel32	0	3	# KernelBase
+imp	'CreateHardLinkA'					CreateHardLinkA						kernel32	0	3	# KernelBase
 imp	'CreateHardLinkTransactedA'				CreateHardLinkTransactedA				kernel32	205
 imp	'CreateHardLinkTransacted'				CreateHardLinkTransactedW				kernel32	206
 imp	'CreateHatchBrush'					CreateHatchBrush					gdi32		1084
@@ -624,7 +624,7 @@ imp	'CreateIcon'						CreateIcon						user32		1615
 imp	'CreateIconFromResource'				CreateIconFromResource					user32		1616
 imp	'CreateIconFromResourceEx'				CreateIconFromResourceEx				user32		1617
 imp	'CreateIconIndirect'					CreateIconIndirect					user32		1618
-imp	'CreateIoCompletionPort'				CreateIoCompletionPort					KernelBase	195	4
+imp	'CreateIoCompletionPort'				CreateIoCompletionPort					kernel32	0	4	# KernelBase
 imp	'CreateJobObjectA'					CreateJobObjectA					kernel32	209
 imp	'CreateJobObject'					CreateJobObjectW					kernel32	210
 imp	'CreateJobSet'						CreateJobSet						kernel32	211
@@ -632,15 +632,15 @@ imp	'CreateMDIWindowA'					CreateMDIWindowA					user32		1619
 imp	'CreateMDIWindow'					CreateMDIWindowW					user32		1620
 imp	'CreateMailslotA'					CreateMailslotA						kernel32	212
 imp	'CreateMailslot'					CreateMailslotW						kernel32	213
-imp	'CreateMemoryResourceNotification'			CreateMemoryResourceNotification			KernelBase	196
+imp	'CreateMemoryResourceNotification'			CreateMemoryResourceNotification			kernel32	0		# KernelBase
 imp	'CreateMenu'						CreateMenu						user32		1621	0
 imp	'CreateMetaFileA'					CreateMetaFileA						gdi32		1087
 imp	'CreateMetaFile'					CreateMetaFileW						gdi32		1088
-imp	'CreateMutex'						CreateMutexW						KernelBase	200
-imp	'CreateMutexA'						CreateMutexA						KernelBase	197
-imp	'CreateMutexEx'						CreateMutexExW						KernelBase	199
-imp	'CreateMutexExA'					CreateMutexExA						KernelBase	198
-imp	'CreateNamedPipe'					CreateNamedPipeW					KernelBase	201	8
+imp	'CreateMutex'						CreateMutexW						kernel32	0		# KernelBase
+imp	'CreateMutexA'						CreateMutexA						kernel32	0		# KernelBase
+imp	'CreateMutexEx'						CreateMutexExW						kernel32	0		# KernelBase
+imp	'CreateMutexExA'					CreateMutexExA						kernel32	0		# KernelBase
+imp	'CreateNamedPipe'					CreateNamedPipeW					kernel32	0	8	# KernelBase
 imp	'CreateNamedPipeA'					CreateNamedPipeA					kernel32	219	8
 imp	'CreateOPMProtectedOutput'				CreateOPMProtectedOutput				gdi32		1089
 imp	'CreateOPMProtectedOutputs'				CreateOPMProtectedOutputs				gdi32		1090
@@ -649,35 +649,35 @@ imp	'CreatePalmRejectionDelayZone'				CreatePalmRejectionDelayZone				user32		15
 imp	'CreatePatternBrush'					CreatePatternBrush					gdi32		1092
 imp	'CreatePen'						CreatePen						gdi32		1093
 imp	'CreatePenIndirect'					CreatePenIndirect					gdi32		1094
-imp	'CreatePipe'						CreatePipe						KernelBase	202	4
+imp	'CreatePipe'						CreatePipe						kernel32	0	4	# KernelBase
 imp	'CreatePolyPolygonRgn'					CreatePolyPolygonRgn					gdi32		1095
 imp	'CreatePolygonRgn'					CreatePolygonRgn					gdi32		1096
 imp	'CreatePopupMenu'					CreatePopupMenu						user32		1622	0
 imp	'CreatePrivateNamespaceA'				CreatePrivateNamespaceA					kernel32	222
-imp	'CreatePrivateNamespace'				CreatePrivateNamespaceW					KernelBase	203
-imp	'CreatePrivateObjectSecurity'				CreatePrivateObjectSecurity				KernelBase	204
-imp	'CreatePrivateObjectSecurityEx'				CreatePrivateObjectSecurityEx				KernelBase	205
-imp	'CreatePrivateObjectSecurityWithMultipleInheritance'	CreatePrivateObjectSecurityWithMultipleInheritance	KernelBase	206
-imp	'CreateProcessA'					CreateProcessA						KernelBase	207	10
-imp	'CreateProcess'						CreateProcessW						KernelBase	212	10
-imp	'CreateProcessAsUserA'					CreateProcessAsUserA					KernelBase	208
-imp	'CreateProcessAsUser'					CreateProcessAsUserW					KernelBase	209
+imp	'CreatePrivateNamespace'				CreatePrivateNamespaceW					kernel32	0		# KernelBase
+imp	'CreatePrivateObjectSecurity'				CreatePrivateObjectSecurity				advapi32	0		# KernelBase
+imp	'CreatePrivateObjectSecurityEx'				CreatePrivateObjectSecurityEx				advapi32	0		# KernelBase
+imp	'CreatePrivateObjectSecurityWithMultipleInheritance'	CreatePrivateObjectSecurityWithMultipleInheritance	advapi32	0		# KernelBase
+imp	'CreateProcessA'					CreateProcessA						kernel32	0	10	# KernelBase
+imp	'CreateProcess'						CreateProcessW						kernel32	0	10	# KernelBase
+imp	'CreateProcessAsUserA'					CreateProcessAsUserA					advapi32	0	11	# KernelBase
+imp	'CreateProcessAsUser'					CreateProcessAsUserW					advapi32	0	11	# KernelBase
 imp	'CreateProcessInternal'					CreateProcessInternalW					KernelBase	211
 imp	'CreateProcessInternalA'				CreateProcessInternalA					KernelBase	210
 imp	'CreateProcessWithLogon'				CreateProcessWithLogonW					advapi32	1142
 imp	'CreateProcessWithToken'				CreateProcessWithTokenW					advapi32	1143
 imp	'CreateRectRgn'						CreateRectRgn						gdi32		1097
 imp	'CreateRectRgnIndirect'					CreateRectRgnIndirect					gdi32		1098
-imp	'CreateRemoteThread'					CreateRemoteThread					KernelBase	213
-imp	'CreateRemoteThreadEx'					CreateRemoteThreadEx					KernelBase	214
-imp	'CreateRestrictedToken'					CreateRestrictedToken					KernelBase	215
+imp	'CreateRemoteThread'					CreateRemoteThread					kernel32	0		# KernelBase
+imp	'CreateRemoteThreadEx'					CreateRemoteThreadEx					kernel32	0		# KernelBase
+imp	'CreateRestrictedToken'					CreateRestrictedToken					advapi32	0		# KernelBase
 imp	'CreateRoundRectRgn'					CreateRoundRectRgn					gdi32		1099
 imp	'CreateScalableFontResourceA'				CreateScalableFontResourceA				gdi32		1100
 imp	'CreateScalableFontResource'				CreateScalableFontResourceW				gdi32		1101
 imp	'CreateSemaphoreA'					CreateSemaphoreA					kernel32	232
 imp	'CreateSemaphoreExA'					CreateSemaphoreExA					kernel32	233
-imp	'CreateSemaphoreEx'					CreateSemaphoreExW					KernelBase	216
-imp	'CreateSemaphore'					CreateSemaphoreW					KernelBase	217
+imp	'CreateSemaphoreEx'					CreateSemaphoreExW					kernel32	0		# KernelBase
+imp	'CreateSemaphore'					CreateSemaphoreW					kernel32	0		# KernelBase
 imp	'CreateServiceA'					CreateServiceA						advapi32	1145
 imp	'CreateServiceEx'					CreateServiceEx						advapi32	1146
 imp	'CreateService'						CreateServiceW						advapi32	1147
@@ -695,29 +695,29 @@ imp	'CreateStorageItemFromShellItem_FullTrustCaller'	CreateStorageItemFromShellI
 imp	'CreateStorageItemFromShellItem_FullTrustCaller_ForPackage'	CreateStorageItemFromShellItem_FullTrustCaller_ForPackage	shell32		925
 imp	'CreateStorageItemFromShellItem_FullTrustCaller_ForPackage_WithProcessHandle'	CreateStorageItemFromShellItem_FullTrustCaller_ForPackage_WithProcessHandle	shell32		929
 imp	'CreateStorageItemFromShellItem_FullTrustCaller_UseImplicitFlagsAndPackage'	CreateStorageItemFromShellItem_FullTrustCaller_UseImplicitFlagsAndPackage	shell32		931
-imp	'CreateSymbolicLink'					CreateSymbolicLinkW					KernelBase	223	3
-imp	'CreateSymbolicLinkA'					CreateSymbolicLinkA					kernel32	236	3
+imp	'CreateSymbolicLink'					CreateSymbolicLinkW					kernel32	0	3	# KernelBase
+imp	'CreateSymbolicLinkA'					CreateSymbolicLinkA					kernel32	0	3	# KernelBase
 imp	'CreateSymbolicLinkTransactedA'				CreateSymbolicLinkTransactedA				kernel32	237
 imp	'CreateSymbolicLinkTransacted'				CreateSymbolicLinkTransactedW				kernel32	238
 imp	'CreateSystemThreads'					CreateSystemThreads					user32		1623
 imp	'CreateTapePartition'					CreateTapePartition					kernel32	240
-imp	'CreateThread'						CreateThread						KernelBase	224	6
-imp	'CreateThreadpool'					CreateThreadpool					KernelBase	225
-imp	'CreateThreadpoolCleanupGroup'				CreateThreadpoolCleanupGroup				KernelBase	226
-imp	'CreateThreadpoolIo'					CreateThreadpoolIo					KernelBase	227
-imp	'CreateThreadpoolTimer'					CreateThreadpoolTimer					KernelBase	228
-imp	'CreateThreadpoolWait'					CreateThreadpoolWait					KernelBase	229
-imp	'CreateThreadpoolWork'					CreateThreadpoolWork					KernelBase	230
-imp	'CreateTimerQueue'					CreateTimerQueue					KernelBase	231
-imp	'CreateTimerQueueTimer'					CreateTimerQueueTimer					KernelBase	232
+imp	'CreateThread'						CreateThread						kernel32	0	6	# KernelBase
+imp	'CreateThreadpool'					CreateThreadpool					kernel32	0		# KernelBase
+imp	'CreateThreadpoolCleanupGroup'				CreateThreadpoolCleanupGroup				kernel32	0		# KernelBase
+imp	'CreateThreadpoolIo'					CreateThreadpoolIo					kernel32	0		# KernelBase
+imp	'CreateThreadpoolTimer'					CreateThreadpoolTimer					kernel32	0		# KernelBase
+imp	'CreateThreadpoolWait'					CreateThreadpoolWait					kernel32	0		# KernelBase
+imp	'CreateThreadpoolWork'					CreateThreadpoolWork					kernel32	0		# KernelBase
+imp	'CreateTimerQueue'					CreateTimerQueue					kernel32	0		# KernelBase
+imp	'CreateTimerQueueTimer'					CreateTimerQueueTimer					kernel32	0		# KernelBase
 imp	'CreateToolhelp32Snapshot'				CreateToolhelp32Snapshot				kernel32	250
 imp	'CreateUmsCompletionList'				CreateUmsCompletionList					kernel32	251
 imp	'CreateUmsThreadContext'				CreateUmsThreadContext					kernel32	252
-imp	'CreateWaitableTimerA'					CreateWaitableTimerA					kernel32	253
-imp	'CreateWaitableTimerExA'				CreateWaitableTimerExA					kernel32	254
-imp	'CreateWaitableTimerEx'					CreateWaitableTimerExW					KernelBase	233
-imp	'CreateWaitableTimer'					CreateWaitableTimerW					KernelBase	234	3
-imp	'CreateWellKnownSid'					CreateWellKnownSid					KernelBase	235
+imp	'CreateWaitableTimerA'					CreateWaitableTimerA					kernel32	253	3
+imp	'CreateWaitableTimerExA'				CreateWaitableTimerExA					kernel32	254	4
+imp	'CreateWaitableTimerEx'					CreateWaitableTimerExW					kernel32	0	4	# KernelBase
+imp	'CreateWaitableTimer'					CreateWaitableTimerW					kernel32	0	3	# KernelBase
+imp	'CreateWellKnownSid'					CreateWellKnownSid					advapi32	0		# KernelBase
 imp	'CreateWindowEx'					CreateWindowExW						user32		1625	12
 imp	'CreateWindowExA'					CreateWindowExA						user32		1624	12
 imp	'CreateWindowInBand'					CreateWindowInBand					user32		1626
@@ -1168,10 +1168,10 @@ imp	'DdeSetQualityOfService'				DdeSetQualityOfService					user32		1666
 imp	'DdeSetUserHandle'					DdeSetUserHandle					user32		1667
 imp	'DdeUnaccessData'					DdeUnaccessData						user32		1668
 imp	'DdeUninitialize'					DdeUninitialize						user32		1669
-imp	'DeactivateActCtx'					DeactivateActCtx					KernelBase	238
+imp	'DeactivateActCtx'					DeactivateActCtx					kernel32	0		# KernelBase
 imp	'DeactivateActCtxWorker'				DeactivateActCtxWorker					kernel32	259
-imp	'DebugActiveProcess'					DebugActiveProcess					KernelBase	239	1
-imp	'DebugActiveProcessStop'				DebugActiveProcessStop					KernelBase	240	1
+imp	'DebugActiveProcess'					DebugActiveProcess					kernel32	0	1	# KernelBase
+imp	'DebugActiveProcessStop'				DebugActiveProcessStop					kernel32	0	1	# KernelBase
 imp	'DebugBreakProcess'					DebugBreakProcess					kernel32	263	1
 imp	'DebugSetProcessKillOnExit'				DebugSetProcessKillOnExit				kernel32	264
 imp	'DecryptFileA'						DecryptFileA						advapi32	1235
@@ -1184,38 +1184,38 @@ imp	'DefRawInputProc'					DefRawInputProc						user32		1676
 imp	'DeferWindowPos'					DeferWindowPos						user32		1679
 imp	'DeferWindowPosAndBand'					DeferWindowPosAndBand					user32		1680
 imp	'DefineDosDeviceA'					DefineDosDeviceA					kernel32	267
-imp	'DefineDosDevice'					DefineDosDeviceW					KernelBase	245
+imp	'DefineDosDevice'					DefineDosDeviceW					kernel32	0		# KernelBase
 imp	'DelayLoadFailureHook'					DelayLoadFailureHook					KernelBase	246
 imp	'DelayLoadFailureHookLookup'				DelayLoadFailureHookLookup				KernelBase	247
 imp	'DelegateInput'						DelegateInput						user32		2503
-imp	'DeleteAce'						DeleteAce						KernelBase	248
+imp	'DeleteAce'						DeleteAce						advapi32	0		# KernelBase
 imp	'DeleteAtom'						DeleteAtom						kernel32	270
-imp	'DeleteBoundaryDescriptor'				DeleteBoundaryDescriptor				KernelBase	249
+imp	'DeleteBoundaryDescriptor'				DeleteBoundaryDescriptor				kernel32	0		# KernelBase
 imp	'DeleteColorSpace'					DeleteColorSpace					gdi32		1383
 imp	'DeleteDC'						DeleteDC						gdi32		1384	1
 imp	'DeleteEnclave'						DeleteEnclave						KernelBase	251
 imp	'DeleteEnhMetaFile'					DeleteEnhMetaFile					gdi32		1385
-imp	'DeleteFiber'						DeleteFiber						KernelBase	252
-imp	'DeleteFile'						DeleteFileW						KernelBase	254	1
-imp	'DeleteFileA'						DeleteFileA						KernelBase	253	1
+imp	'DeleteFiber'						DeleteFiber						kernel32	0		# KernelBase
+imp	'DeleteFile'						DeleteFileW						kernel32	0	1	# KernelBase
+imp	'DeleteFileA'						DeleteFileA						kernel32	0	1	# KernelBase
 imp	'DeleteFileTransactedA'					DeleteFileTransactedA					kernel32	275
 imp	'DeleteFileTransacted'					DeleteFileTransactedW					kernel32	276
 imp	'DeleteMenu'						DeleteMenu						user32		1681	3
 imp	'DeleteMetaFile'					DeleteMetaFile						gdi32		1386
 imp	'DeleteObject'						DeleteObject						gdi32		1387	1
-imp	'DeleteProcThreadAttributeList'				DeleteProcThreadAttributeList				KernelBase	255	1
+imp	'DeleteProcThreadAttributeList'				DeleteProcThreadAttributeList				kernel32	0	1	# KernelBase
 imp	'DeleteService'						DeleteService						advapi32	1238
 imp	'DeleteStateAtomValue'					DeleteStateAtomValue					KernelBase	256
 imp	'DeleteStateContainer'					DeleteStateContainer					KernelBase	257
 imp	'DeleteStateContainerValue'				DeleteStateContainerValue				KernelBase	258
 imp	'DeleteSynchronizationBarrier'				DeleteSynchronizationBarrier				kernel32	279
 imp	'DeleteTimerQueue'					DeleteTimerQueue					kernel32	280
-imp	'DeleteTimerQueueEx'					DeleteTimerQueueEx					KernelBase	260
-imp	'DeleteTimerQueueTimer'					DeleteTimerQueueTimer					KernelBase	261
+imp	'DeleteTimerQueueEx'					DeleteTimerQueueEx					kernel32	0		# KernelBase
+imp	'DeleteTimerQueueTimer'					DeleteTimerQueueTimer					kernel32	0		# KernelBase
 imp	'DeleteUmsCompletionList'				DeleteUmsCompletionList					kernel32	283
 imp	'DeleteUmsThreadContext'				DeleteUmsThreadContext					kernel32	284
 imp	'DeleteVolumeMountPointA'				DeleteVolumeMountPointA					kernel32	285
-imp	'DeleteVolumeMountPoint'				DeleteVolumeMountPointW					KernelBase	262
+imp	'DeleteVolumeMountPoint'				DeleteVolumeMountPointW					kernel32	0		# KernelBase
 imp	'DequeueUmsCompletionListItems'				DequeueUmsCompletionListItems				kernel32	287
 imp	'DeregisterEventSource'					DeregisterEventSource					advapi32	1239
 imp	'DeregisterShellHookWindow'				DeregisterShellHookWindow				user32		1682
@@ -1230,11 +1230,11 @@ imp	'DestroyMenu'						DestroyMenu						user32		1688	1
 imp	'DestroyOPMProtectedOutput'				DestroyOPMProtectedOutput				gdi32		1389
 imp	'DestroyPalmRejectionDelayZone'				DestroyPalmRejectionDelayZone				user32		1504
 imp	'DestroyPhysicalMonitorInternal'			DestroyPhysicalMonitorInternal				gdi32		1390
-imp	'DestroyPrivateObjectSecurity'				DestroyPrivateObjectSecurity				KernelBase	264
+imp	'DestroyPrivateObjectSecurity'				DestroyPrivateObjectSecurity				advapi32	0		# KernelBase
 imp	'DestroyReasons'					DestroyReasons						user32		1689
 imp	'DestroyWindow'						DestroyWindow						user32		1690	1
 imp	'DeviceCapabilitiesExA'					DeviceCapabilitiesExA					gdi32		1391
-imp	'DeviceIoControl'					DeviceIoControl						KernelBase	265	8
+imp	'DeviceIoControl'					DeviceIoControl						kernel32	0	8	# KernelBase
 imp	'DialogBoxIndirectParamA'				DialogBoxIndirectParamA					user32		1691
 imp	'DialogBoxIndirectParamAor'				DialogBoxIndirectParamAorW				user32		1692
 imp	'DialogBoxIndirectParam'				DialogBoxIndirectParamW					user32		1693
@@ -1242,10 +1242,10 @@ imp	'DialogBoxParamA'					DialogBoxParamA						user32		1694
 imp	'DialogBoxParam'					DialogBoxParamW						user32		1695
 imp	'DisablePredefinedHandleTableInternal'			DisablePredefinedHandleTableInternal			KernelBase	266
 imp	'DisableProcessWindowsGhosting'				DisableProcessWindowsGhosting				user32		1696
-imp	'DisableThreadLibraryCalls'				DisableThreadLibraryCalls				KernelBase	267
+imp	'DisableThreadLibraryCalls'				DisableThreadLibraryCalls				kernel32	0		# KernelBase
 imp	'DisableThreadProfiling'				DisableThreadProfiling					kernel32	290
-imp	'DiscardVirtualMemory'					DiscardVirtualMemory					KernelBase	269
-imp	'DisconnectNamedPipe'					DisconnectNamedPipe					KernelBase	270	1
+imp	'DiscardVirtualMemory'					DiscardVirtualMemory					kernel32	0		# KernelBase
+imp	'DisconnectNamedPipe'					DisconnectNamedPipe					kernel32	0	1	# KernelBase
 imp	'DispatchMessage'					DispatchMessageW					user32		1698	1
 imp	'DispatchMessageA'					DispatchMessageA					user32		1697	1
 imp	'DisplayConfigGetDeviceInfo'				DisplayConfigGetDeviceInfo				user32		1699
@@ -1318,11 +1318,11 @@ imp	'DsWriteNgcKey'						DsWriteNgcKeyW						KernelBase	282
 imp	'DuplicateConsoleHandle'				DuplicateConsoleHandle					kernel32	300
 imp	'DuplicateEncryptionInfoFile'				DuplicateEncryptionInfoFile				advapi32	1241
 imp	'DuplicateEncryptionInfoFileExt'			DuplicateEncryptionInfoFileExt				kernel32	301
-imp	'DuplicateHandle'					DuplicateHandle						KernelBase	283	7
+imp	'DuplicateHandle'					DuplicateHandle						kernel32	0	7	# KernelBase
 imp	'DuplicateIcon'						DuplicateIcon						shell32		292
 imp	'DuplicateStateContainerHandle'				DuplicateStateContainerHandle				KernelBase	284
-imp	'DuplicateToken'					DuplicateToken						KernelBase	285	3
-imp	'DuplicateTokenEx'					DuplicateTokenEx					KernelBase	286	6
+imp	'DuplicateToken'					DuplicateToken						advapi32	0	3	# KernelBase
+imp	'DuplicateTokenEx'					DuplicateTokenEx					advapi32	0	6	# KernelBase
 imp	'DwmCreatedBitmapRemotingOutput'			DwmCreatedBitmapRemotingOutput				gdi32		1014
 imp	'DwmGetDxRgn'						DwmGetDxRgn						user32		1553
 imp	'DwmGetDxSharedSurface'					DwmGetDxSharedSurface					user32		1732
@@ -1435,20 +1435,20 @@ imp	'EngUnlockSurface'					EngUnlockSurface					gdi32		1446
 imp	'EngWideCharToMultiByte'				EngWideCharToMultiByte					gdi32		1447
 imp	'EnterCriticalPolicySectionInternal'			EnterCriticalPolicySectionInternal			KernelBase	291
 imp	'EnterReaderModeHelper'					EnterReaderModeHelper					user32		1754
-imp	'EnterSynchronizationBarrier'				EnterSynchronizationBarrier				KernelBase	293
+imp	'EnterSynchronizationBarrier'				EnterSynchronizationBarrier				kernel32	0		# KernelBase
 imp	'EnterUmsSchedulingMode'				EnterUmsSchedulingMode					kernel32	310
 imp	'EnumCalendarInfoA'					EnumCalendarInfoA					kernel32	311
 imp	'EnumCalendarInfoExA'					EnumCalendarInfoExA					kernel32	312
-imp	'EnumCalendarInfoExEx'					EnumCalendarInfoExEx					KernelBase	294
-imp	'EnumCalendarInfoEx'					EnumCalendarInfoExW					KernelBase	295
-imp	'EnumCalendarInfo'					EnumCalendarInfoW					KernelBase	296
+imp	'EnumCalendarInfoExEx'					EnumCalendarInfoExEx					kernel32	0		# KernelBase
+imp	'EnumCalendarInfoEx'					EnumCalendarInfoExW					kernel32	0		# KernelBase
+imp	'EnumCalendarInfo'					EnumCalendarInfoW					kernel32	0		# KernelBase
 imp	'EnumChildWindows'					EnumChildWindows					user32		1755	3
 imp	'EnumClipboardFormats'					EnumClipboardFormats					user32		1756
 imp	'EnumDateFormatsA'					EnumDateFormatsA					kernel32	316
 imp	'EnumDateFormatsExA'					EnumDateFormatsExA					kernel32	317
-imp	'EnumDateFormatsExEx'					EnumDateFormatsExEx					KernelBase	297
-imp	'EnumDateFormatsEx'					EnumDateFormatsExW					KernelBase	298
-imp	'EnumDateFormats'					EnumDateFormatsW					KernelBase	299
+imp	'EnumDateFormatsExEx'					EnumDateFormatsExEx					kernel32	0		# KernelBase
+imp	'EnumDateFormatsEx'					EnumDateFormatsExW					kernel32	0		# KernelBase
+imp	'EnumDateFormats'					EnumDateFormatsW					kernel32	0		# KernelBase
 imp	'EnumDependentServicesA'				EnumDependentServicesA					advapi32	1272
 imp	'EnumDependentServices'					EnumDependentServicesW					advapi32	1273
 imp	'EnumDesktopWindows'					EnumDesktopWindows					user32		1757
@@ -1473,7 +1473,7 @@ imp	'EnumFonts'						EnumFontsW						gdi32		1454
 imp	'EnumICMProfilesA'					EnumICMProfilesA					gdi32		1455
 imp	'EnumICMProfiles'					EnumICMProfilesW					gdi32		1456
 imp	'EnumLanguageGroupLocalesA'				EnumLanguageGroupLocalesA				kernel32	321
-imp	'EnumLanguageGroupLocales'				EnumLanguageGroupLocalesW				KernelBase	302
+imp	'EnumLanguageGroupLocales'				EnumLanguageGroupLocalesW				kernel32	0		# KernelBase
 imp	'EnumMetaFile'						EnumMetaFile						gdi32		1457
 imp	'EnumObjects'						EnumObjects						gdi32		1458
 imp	'EnumPageFilesA'					EnumPageFilesA						KernelBase	303
@@ -1486,16 +1486,16 @@ imp	'EnumPropsExA'						EnumPropsExA						user32		1768
 imp	'EnumPropsEx'						EnumPropsExW						user32		1769
 imp	'EnumProps'						EnumPropsW						user32		1770
 imp	'EnumResourceLanguagesA'				EnumResourceLanguagesA					kernel32	323
-imp	'EnumResourceLanguagesExA'				EnumResourceLanguagesExA				KernelBase	308
-imp	'EnumResourceLanguagesEx'				EnumResourceLanguagesExW				KernelBase	309
+imp	'EnumResourceLanguagesExA'				EnumResourceLanguagesExA				kernel32	0		# KernelBase
+imp	'EnumResourceLanguagesEx'				EnumResourceLanguagesExW				kernel32	0		# KernelBase
 imp	'EnumResourceLanguages'					EnumResourceLanguagesW					kernel32	326
 imp	'EnumResourceNamesA'					EnumResourceNamesA					kernel32	327
-imp	'EnumResourceNamesExA'					EnumResourceNamesExA					KernelBase	310
-imp	'EnumResourceNamesEx'					EnumResourceNamesExW					KernelBase	311
-imp	'EnumResourceNames'					EnumResourceNamesW					KernelBase	312
+imp	'EnumResourceNamesExA'					EnumResourceNamesExA					kernel32	0		# KernelBase
+imp	'EnumResourceNamesEx'					EnumResourceNamesExW					kernel32	0		# KernelBase
+imp	'EnumResourceNames'					EnumResourceNamesW					kernel32	0		# KernelBase
 imp	'EnumResourceTypesA'					EnumResourceTypesA					kernel32	331
-imp	'EnumResourceTypesExA'					EnumResourceTypesExA					KernelBase	313
-imp	'EnumResourceTypesEx'					EnumResourceTypesExW					KernelBase	314
+imp	'EnumResourceTypesExA'					EnumResourceTypesExA					kernel32	0		# KernelBase
+imp	'EnumResourceTypesEx'					EnumResourceTypesExW					kernel32	0		# KernelBase
 imp	'EnumResourceTypes'					EnumResourceTypesW					kernel32	334
 imp	'EnumServiceGroup'					EnumServiceGroupW					advapi32	1275
 imp	'EnumServicesStatusA'					EnumServicesStatusA					advapi32	1276
@@ -1503,21 +1503,21 @@ imp	'EnumServicesStatusExA'					EnumServicesStatusExA					advapi32	1277
 imp	'EnumServicesStatusEx'					EnumServicesStatusExW					advapi32	1278
 imp	'EnumServicesStatus'					EnumServicesStatusW					advapi32	1279
 imp	'EnumSystemCodePagesA'					EnumSystemCodePagesA					kernel32	335
-imp	'EnumSystemCodePages'					EnumSystemCodePagesW					KernelBase	315
-imp	'EnumSystemFirmwareTables'				EnumSystemFirmwareTables				KernelBase	316
-imp	'EnumSystemGeoID'					EnumSystemGeoID						KernelBase	317
+imp	'EnumSystemCodePages'					EnumSystemCodePagesW					kernel32	0		# KernelBase
+imp	'EnumSystemFirmwareTables'				EnumSystemFirmwareTables				kernel32	0		# KernelBase
+imp	'EnumSystemGeoID'					EnumSystemGeoID						kernel32	0		# KernelBase
 imp	'EnumSystemGeoNames'					EnumSystemGeoNames					KernelBase	318
 imp	'EnumSystemLanguageGroupsA'				EnumSystemLanguageGroupsA				kernel32	340
-imp	'EnumSystemLanguageGroups'				EnumSystemLanguageGroupsW				KernelBase	319
-imp	'EnumSystemLocalesA'					EnumSystemLocalesA					KernelBase	320
-imp	'EnumSystemLocalesEx'					EnumSystemLocalesEx					KernelBase	321
-imp	'EnumSystemLocales'					EnumSystemLocalesW					KernelBase	322
+imp	'EnumSystemLanguageGroups'				EnumSystemLanguageGroupsW				kernel32	0		# KernelBase
+imp	'EnumSystemLocalesA'					EnumSystemLocalesA					kernel32	0		# KernelBase
+imp	'EnumSystemLocalesEx'					EnumSystemLocalesEx					kernel32	0		# KernelBase
+imp	'EnumSystemLocales'					EnumSystemLocalesW					kernel32	0		# KernelBase
 imp	'EnumThreadWindows'					EnumThreadWindows					user32		1771
 imp	'EnumTimeFormatsA'					EnumTimeFormatsA					kernel32	345
-imp	'EnumTimeFormatsEx'					EnumTimeFormatsEx					KernelBase	323
-imp	'EnumTimeFormats'					EnumTimeFormatsW					KernelBase	324
+imp	'EnumTimeFormatsEx'					EnumTimeFormatsEx					kernel32	0		# KernelBase
+imp	'EnumTimeFormats'					EnumTimeFormatsW					kernel32	0		# KernelBase
 imp	'EnumUILanguagesA'					EnumUILanguagesA					kernel32	348
-imp	'EnumUILanguages'					EnumUILanguagesW					KernelBase	325
+imp	'EnumUILanguages'					EnumUILanguagesW					kernel32	0		# KernelBase
 imp	'EnumWindowStationsA'					EnumWindowStationsA					user32		1772
 imp	'EnumWindowStations'					EnumWindowStationsW					user32		1773
 imp	'EnumWindows'						EnumWindows						user32		1774
@@ -1528,14 +1528,14 @@ imp	'EnumerateStateAtomValues'				EnumerateStateAtomValues				KernelBase	327
 imp	'EnumerateStateContainerItems'				EnumerateStateContainerItems				KernelBase	328
 imp	'EnumerateTraceGuids'					EnumerateTraceGuids					advapi32	1280
 imp	'EnumerateTraceGuidsEx'					EnumerateTraceGuidsEx					advapi32	1281
-imp	'EqualDomainSid'					EqualDomainSid						KernelBase	329
-imp	'EqualPrefixSid'					EqualPrefixSid						KernelBase	330
+imp	'EqualDomainSid'					EqualDomainSid						advapi32	0		# KernelBase
+imp	'EqualPrefixSid'					EqualPrefixSid						advapi32	0		# KernelBase
 imp	'EqualRect'						EqualRect						user32		1775
 imp	'EqualRgn'						EqualRgn						gdi32		1459
-imp	'EqualSid'						EqualSid						KernelBase	331
+imp	'EqualSid'						EqualSid						advapi32	0		# KernelBase
 imp	'EraseTape'						EraseTape						kernel32	352
 imp	'Escape'						Escape							gdi32		1460
-imp	'EscapeCommFunction'					EscapeCommFunction					KernelBase	332
+imp	'EscapeCommFunction'					EscapeCommFunction					kernel32	0		# KernelBase
 imp	'EtwCheckCoverage'					EtwCheckCoverage					ntdll		60
 imp	'EtwCreateTraceInstanceId'				EtwCreateTraceInstanceId				ntdll		61
 imp	'EtwDeliverDataBlock'					EtwDeliverDataBlock					ntdll		62
@@ -1586,14 +1586,14 @@ imp	'EvtIntReportEventAndSourceAsync'			EvtIntReportEventAndSourceAsync				ntdll
 imp	'ExcludeClipRect'					ExcludeClipRect						gdi32		1463
 imp	'ExcludeUpdateRgn'					ExcludeUpdateRgn					user32		1778
 imp	'ExecuteUmsThread'					ExecuteUmsThread					kernel32	354
-imp	'ExitProcess'						ExitProcess						KernelBase	1343	1 # a.k.a. RtlExitUserProcess
+imp	'ExitProcess'						ExitProcess						kernel32	0	1	# a.k.a. RtlExitUserProcess	# KernelBase
 imp	'ExitVDM'						ExitVDM							kernel32	357
 imp	'ExitWindowsEx'						ExitWindowsEx						user32		1779
 imp	'ExpInterlockedPopEntrySListEnd'			ExpInterlockedPopEntrySListEnd				ntdll		100
 imp	'ExpInterlockedPopEntrySListFault'			ExpInterlockedPopEntrySListFault			ntdll		101
 imp	'ExpInterlockedPopEntrySListResume'			ExpInterlockedPopEntrySListResume			ntdll		102
-imp	'ExpandEnvironmentStringsA'				ExpandEnvironmentStringsA				KernelBase	345
-imp	'ExpandEnvironmentStrings'				ExpandEnvironmentStringsW				KernelBase	346
+imp	'ExpandEnvironmentStringsA'				ExpandEnvironmentStringsA				kernel32	0		# KernelBase
+imp	'ExpandEnvironmentStrings'				ExpandEnvironmentStringsW				kernel32	0		# KernelBase
 imp	'ExpungeConsoleCommandHistoryA'				ExpungeConsoleCommandHistoryA				KernelBase	347
 imp	'ExpungeConsoleCommandHistory'				ExpungeConsoleCommandHistoryW				KernelBase	348
 imp	'ExtCreatePen'						ExtCreatePen						gdi32		1464
@@ -1620,70 +1620,70 @@ imp	'FONTOBJ_pifi'						FONTOBJ_pifi						gdi32		1475
 imp	'FONTOBJ_pvTrueTypeFontFile'				FONTOBJ_pvTrueTypeFontFile				gdi32		1476
 imp	'FONTOBJ_pxoGetXform'					FONTOBJ_pxoGetXform					gdi32		1477
 imp	'FONTOBJ_vGetInfo'					FONTOBJ_vGetInfo					gdi32		1478
-imp	'FatalAppExitA'						FatalAppExitA						KernelBase	350
-imp	'FatalAppExit'						FatalAppExitW						KernelBase	351
+imp	'FatalAppExitA'						FatalAppExitA						kernel32	0		# KernelBase
+imp	'FatalAppExit'						FatalAppExitW						kernel32	0		# KernelBase
 imp	'FatalExit'						FatalExit						kernel32	364	1
 imp	'FileEncryptionStatusA'					FileEncryptionStatusA					advapi32	1300
 imp	'FileEncryptionStatus'					FileEncryptionStatusW					advapi32	1301
 imp	'FileProtocolHandler'					FileProtocolHandler					url		104
 imp	'FileProtocolHandlerA'					FileProtocolHandlerA					url		105
 imp	'FileTimeToDosDateTime'					FileTimeToDosDateTime					kernel32	365
-imp	'FileTimeToLocalFileTime'				FileTimeToLocalFileTime					KernelBase	352
-imp	'FileTimeToSystemTime'					FileTimeToSystemTime					KernelBase	353
-imp	'FillConsoleOutputAttribute'				FillConsoleOutputAttribute				KernelBase	354	5
-imp	'FillConsoleOutputCharacter'				FillConsoleOutputCharacterW				KernelBase	356	5
-imp	'FillConsoleOutputCharacterA'				FillConsoleOutputCharacterA				KernelBase	355	5
+imp	'FileTimeToLocalFileTime'				FileTimeToLocalFileTime					kernel32	0		# KernelBase
+imp	'FileTimeToSystemTime'					FileTimeToSystemTime					kernel32	0		# KernelBase
+imp	'FillConsoleOutputAttribute'				FillConsoleOutputAttribute				kernel32	0	5	# KernelBase
+imp	'FillConsoleOutputCharacter'				FillConsoleOutputCharacterW				kernel32	0	5	# KernelBase
+imp	'FillConsoleOutputCharacterA'				FillConsoleOutputCharacterA				kernel32	0	5	# KernelBase
 imp	'FillPath'						FillPath						gdi32		1479
 imp	'FillRect'						FillRect						user32		1780	3
 imp	'FillRgn'						FillRgn							gdi32		1480
-imp	'FindActCtxSectionGuid'					FindActCtxSectionGuid					KernelBase	357
+imp	'FindActCtxSectionGuid'					FindActCtxSectionGuid					kernel32	0		# KernelBase
 imp	'FindActCtxSectionGuidWorker'				FindActCtxSectionGuidWorker				kernel32	372
 imp	'FindActCtxSectionStringA'				FindActCtxSectionStringA				kernel32	373
-imp	'FindActCtxSectionString'				FindActCtxSectionStringW				KernelBase	358
+imp	'FindActCtxSectionString'				FindActCtxSectionStringW				kernel32	0		# KernelBase
 imp	'FindActCtxSectionStringWWorker'			FindActCtxSectionStringWWorker				kernel32	375
 imp	'FindAtomA'						FindAtomA						kernel32	376
 imp	'FindAtom'						FindAtomW						kernel32	377
-imp	'FindClose'						FindClose						KernelBase	359	1
-imp	'FindCloseChangeNotification'				FindCloseChangeNotification				KernelBase	360
+imp	'FindClose'						FindClose						kernel32	0	1	# KernelBase
+imp	'FindCloseChangeNotification'				FindCloseChangeNotification				kernel32	0		# KernelBase
 imp	'FindExecutableA'					FindExecutableA						shell32		302
 imp	'FindExecutable'					FindExecutableW						shell32		303
-imp	'FindFirstChangeNotificationA'				FindFirstChangeNotificationA				KernelBase	361
-imp	'FindFirstChangeNotification'				FindFirstChangeNotificationW				KernelBase	362
-imp	'FindFirstFile'						FindFirstFileW						KernelBase	367	2
-imp	'FindFirstFileA'					FindFirstFileA						KernelBase	363	2
-imp	'FindFirstFileEx'					FindFirstFileExW					KernelBase	365	6
-imp	'FindFirstFileExA'					FindFirstFileExA					KernelBase	364	6
+imp	'FindFirstChangeNotificationA'				FindFirstChangeNotificationA				kernel32	0		# KernelBase
+imp	'FindFirstChangeNotification'				FindFirstChangeNotificationW				kernel32	0		# KernelBase
+imp	'FindFirstFile'						FindFirstFileW						kernel32	0	2	# KernelBase
+imp	'FindFirstFileA'					FindFirstFileA						kernel32	0	2	# KernelBase
+imp	'FindFirstFileEx'					FindFirstFileExW					kernel32	0	6	# KernelBase
+imp	'FindFirstFileExA'					FindFirstFileExA					kernel32	0	6	# KernelBase
 imp	'FindFirstFileNameTransacted'				FindFirstFileNameTransactedW				kernel32	385
-imp	'FindFirstFileName'					FindFirstFileNameW					KernelBase	366
+imp	'FindFirstFileName'					FindFirstFileNameW					kernel32	0		# KernelBase
 imp	'FindFirstFileTransactedA'				FindFirstFileTransactedA				kernel32	387
 imp	'FindFirstFileTransacted'				FindFirstFileTransactedW				kernel32	388
-imp	'FindFirstFreeAce'					FindFirstFreeAce					KernelBase	368
-imp	'FindFirstStream'					FindFirstStreamW					KernelBase	369
+imp	'FindFirstFreeAce'					FindFirstFreeAce					advapi32	0		# KernelBase
+imp	'FindFirstStream'					FindFirstStreamW					kernel32	0		# KernelBase
 imp	'FindFirstStreamTransacted'				FindFirstStreamTransactedW				kernel32	390
-imp	'FindFirstVolume'					FindFirstVolumeW					KernelBase	370	2
+imp	'FindFirstVolume'					FindFirstVolumeW					kernel32	0	2	# KernelBase
 imp	'FindFirstVolumeA'					FindFirstVolumeA					kernel32	392	2
 imp	'FindFirstVolumeMountPointA'				FindFirstVolumeMountPointA				kernel32	393
 imp	'FindFirstVolumeMountPoint'				FindFirstVolumeMountPointW				kernel32	394
-imp	'FindNLSString'						FindNLSString						KernelBase	371
-imp	'FindNLSStringEx'					FindNLSStringEx						KernelBase	372
-imp	'FindNextChangeNotification'				FindNextChangeNotification				KernelBase	373
-imp	'FindNextFile'						FindNextFileW						KernelBase	376	2
-imp	'FindNextFileA'						FindNextFileA						KernelBase	374	2
-imp	'FindNextFileName'					FindNextFileNameW					KernelBase	375
-imp	'FindNextStream'					FindNextStreamW						KernelBase	377
-imp	'FindNextVolume'					FindNextVolumeW						KernelBase	378	3
+imp	'FindNLSString'						FindNLSString						kernel32	0		# KernelBase
+imp	'FindNLSStringEx'					FindNLSStringEx						kernel32	0		# KernelBase
+imp	'FindNextChangeNotification'				FindNextChangeNotification				kernel32	0		# KernelBase
+imp	'FindNextFile'						FindNextFileW						kernel32	0	2	# KernelBase
+imp	'FindNextFileA'						FindNextFileA						kernel32	0	2	# KernelBase
+imp	'FindNextFileName'					FindNextFileNameW					kernel32	0		# KernelBase
+imp	'FindNextStream'					FindNextStreamW						kernel32	0		# KernelBase
+imp	'FindNextVolume'					FindNextVolumeW						kernel32	0	3	# KernelBase
 imp	'FindNextVolumeA'					FindNextVolumeA						kernel32	403	3
 imp	'FindNextVolumeMountPointA'				FindNextVolumeMountPointA				kernel32	404
 imp	'FindNextVolumeMountPoint'				FindNextVolumeMountPointW				kernel32	405
-imp	'FindPackagesByPackageFamily'				FindPackagesByPackageFamily				KernelBase	379
+imp	'FindPackagesByPackageFamily'				FindPackagesByPackageFamily				kernel32	0		# KernelBase
 imp	'FindResourceA'						FindResourceA						kernel32	408
 imp	'FindResourceExA'					FindResourceExA						kernel32	409
-imp	'FindResourceEx'					FindResourceExW						KernelBase	380
-imp	'FindResource'						FindResourceW						KernelBase	381
-imp	'FindStringOrdinal'					FindStringOrdinal					KernelBase	382
+imp	'FindResourceEx'					FindResourceExW						kernel32	0		# KernelBase
+imp	'FindResource'						FindResourceW						kernel32	0		# KernelBase
+imp	'FindStringOrdinal'					FindStringOrdinal					kernel32	0		# KernelBase
 imp	'FindTextA'						FindTextA						comdlg32	109
 imp	'FindText'						FindTextW						comdlg32	110
-imp	'FindVolumeClose'					FindVolumeClose						KernelBase	383	1
+imp	'FindVolumeClose'					FindVolumeClose						kernel32	0	1	# KernelBase
 imp	'FindVolumeMountPointClose'				FindVolumeMountPointClose				kernel32	414
 imp	'FindWindow'						FindWindowW						user32		1784	2
 imp	'FindWindowA'						FindWindowA						user32		1781	2
@@ -1694,46 +1694,46 @@ imp	'FlashWindow'						FlashWindow						user32		1785
 imp	'FlashWindowEx'						FlashWindowEx						user32		1786
 imp	'FlattenPath'						FlattenPath						gdi32		1482
 imp	'FloodFill'						FloodFill						gdi32		1483
-imp	'FlsAlloc'						FlsAlloc						KernelBase	384
-imp	'FlsFree'						FlsFree							KernelBase	385
-imp	'FlsGetValue'						FlsGetValue						KernelBase	386
-imp	'FlsSetValue'						FlsSetValue						KernelBase	387
-imp	'FlushConsoleInputBuffer'				FlushConsoleInputBuffer					KernelBase	388	1
+imp	'FlsAlloc'						FlsAlloc						kernel32	0		# KernelBase
+imp	'FlsFree'						FlsFree							kernel32	0		# KernelBase
+imp	'FlsGetValue'						FlsGetValue						kernel32	0		# KernelBase
+imp	'FlsSetValue'						FlsSetValue						kernel32	0		# KernelBase
+imp	'FlushConsoleInputBuffer'				FlushConsoleInputBuffer					kernel32	0	1	# KernelBase
 imp	'FlushEfsCache'						FlushEfsCache						advapi32	1303
-imp	'FlushFileBuffers'					FlushFileBuffers					KernelBase	389	1
-imp	'FlushInstructionCache'					FlushInstructionCache					KernelBase	390
+imp	'FlushFileBuffers'					FlushFileBuffers					kernel32	0	1	# KernelBase
+imp	'FlushInstructionCache'					FlushInstructionCache					kernel32	0		# KernelBase
 imp	'FlushTraceA'						FlushTraceA						advapi32	1304
 imp	'FlushTrace'						FlushTraceW						advapi32	1305
-imp	'FlushViewOfFile'					FlushViewOfFile						KernelBase	392	2
+imp	'FlushViewOfFile'					FlushViewOfFile						kernel32	0	2	# KernelBase
 imp	'FoldStringA'						FoldStringA						kernel32	424
-imp	'FoldString'						FoldStringW						KernelBase	393
+imp	'FoldString'						FoldStringW						kernel32	0		# KernelBase
 imp	'FontIsLinked'						FontIsLinked						gdi32		1484
 imp	'ForceSyncFgPolicyInternal'				ForceSyncFgPolicyInternal				KernelBase	394
-imp	'FormatApplicationUserModelId'				FormatApplicationUserModelId				KernelBase	395
+imp	'FormatApplicationUserModelId'				FormatApplicationUserModelId				kernel32	0		# KernelBase
 imp	'FormatApplicationUserModelIdA'				FormatApplicationUserModelIdA				KernelBase	396
-imp	'FormatMessage'						FormatMessageW						KernelBase	398	7
-imp	'FormatMessageA'					FormatMessageA						KernelBase	397	7
+imp	'FormatMessage'						FormatMessageW						kernel32	0	7	# KernelBase
+imp	'FormatMessageA'					FormatMessageA						kernel32	0	7	# KernelBase
 imp	'FrameRect'						FrameRect						user32		1787
 imp	'FrameRgn'						FrameRgn						gdi32		1485
 imp	'FreeAddrInfoEx'					FreeAddrInfoExW						ws2_32		26
 imp	'FreeAddrInfo'						FreeAddrInfoW						ws2_32		27
-imp	'FreeConsole'						FreeConsole						KernelBase	399	0
+imp	'FreeConsole'						FreeConsole						kernel32	0	0	# KernelBase
 imp	'FreeDDElParam'						FreeDDElParam						user32		1788
 imp	'FreeEncryptedFileKeyInfo'				FreeEncryptedFileKeyInfo				advapi32	1306
 imp	'FreeEncryptedFileMetadata'				FreeEncryptedFileMetadata				advapi32	1307
 imp	'FreeEncryptionCertificateHashList'			FreeEncryptionCertificateHashList			advapi32	1308
-imp	'FreeEnvironmentStrings'				FreeEnvironmentStringsW					KernelBase	401	1
-imp	'FreeEnvironmentStringsA'				FreeEnvironmentStringsA					KernelBase	400	1
+imp	'FreeEnvironmentStrings'				FreeEnvironmentStringsW					kernel32	0	1	# KernelBase
+imp	'FreeEnvironmentStringsA'				FreeEnvironmentStringsA					kernel32	0	1	# KernelBase
 imp	'FreeGPOListInternalA'					FreeGPOListInternalA					KernelBase	402
 imp	'FreeGPOListInternal'					FreeGPOListInternalW					KernelBase	403
 imp	'FreeIconList'						FreeIconList						shell32		304
 imp	'FreeInheritedFromArray'				FreeInheritedFromArray					advapi32	1309
-imp	'FreeLibrary'						FreeLibrary						KernelBase	404	1
-imp	'FreeLibraryAndExitThread'				FreeLibraryAndExitThread				KernelBase	405
+imp	'FreeLibrary'						FreeLibrary						kernel32	0	1	# KernelBase
+imp	'FreeLibraryAndExitThread'				FreeLibraryAndExitThread				kernel32	0		# KernelBase
 imp	'FreeMemoryJobObject'					FreeMemoryJobObject					kernel32	435
-imp	'FreeResource'						FreeResource						KernelBase	407	1
-imp	'FreeSid'						FreeSid							KernelBase	408
-imp	'FreeUserPhysicalPages'					FreeUserPhysicalPages					KernelBase	409
+imp	'FreeResource'						FreeResource						kernel32	0	1	# KernelBase
+imp	'FreeSid'						FreeSid							advapi32	0		# KernelBase
+imp	'FreeUserPhysicalPages'					FreeUserPhysicalPages					kernel32	0		# KernelBase
 imp	'FrostCrashedWindow'					FrostCrashedWindow					user32		1789
 imp	'Gdi32DllInitialize'					Gdi32DllInitialize					gdi32		1486
 imp	'GdiAddFontResource'					GdiAddFontResourceW					gdi32		1487
@@ -1838,16 +1838,16 @@ imp	'GdiTrackHCreate'					GdiTrackHCreate						gdi32		1585
 imp	'GdiTrackHDelete'					GdiTrackHDelete						gdi32		1586
 imp	'GdiTransparentBlt'					GdiTransparentBlt					gdi32		1587
 imp	'GdiValidateHandle'					GdiValidateHandle					gdi32		1588
-imp	'GenerateConsoleCtrlEvent'				GenerateConsoleCtrlEvent				KernelBase	410	2
+imp	'GenerateConsoleCtrlEvent'				GenerateConsoleCtrlEvent				kernel32	0	2	# KernelBase
 imp	'GenerateGPNotificationInternal'			GenerateGPNotificationInternal				KernelBase	411
-imp	'GetACP'						GetACP							KernelBase	412
+imp	'GetACP'						GetACP							kernel32	0		# KernelBase
 imp	'GetAcceptExSockaddrs'					GetAcceptExSockaddrs					MsWSock		4	8
 imp	'GetAcceptLanguagesA'					GetAcceptLanguagesA					KernelBase	413
 imp	'GetAcceptLanguages'					GetAcceptLanguagesW					KernelBase	414
 imp	'GetAccessPermissionsForObjectA'			GetAccessPermissionsForObjectA				advapi32	1311
 imp	'GetAccessPermissionsForObject'				GetAccessPermissionsForObjectW				advapi32	1312
-imp	'GetAce'						GetAce							KernelBase	415
-imp	'GetAclInformation'					GetAclInformation					KernelBase	416
+imp	'GetAce'						GetAce							advapi32	0		# KernelBase
+imp	'GetAclInformation'					GetAclInformation					advapi32	0		# KernelBase
 imp	'GetActiveProcessorCount'				GetActiveProcessorCount					kernel32	440
 imp	'GetActiveProcessorGroupCount'				GetActiveProcessorGroupCount				kernel32	441
 imp	'GetActiveWindow'					GetActiveWindow						user32		1790
@@ -1864,14 +1864,14 @@ imp	'GetAncestor'						GetAncestor						user32		1794
 imp	'GetAppCompatFlags'					GetAppCompatFlags					user32		1795
 imp	'GetAppCompatFlags2'					GetAppCompatFlags2					user32		1796
 imp	'GetAppContainerAce'					GetAppContainerAce					KernelBase	419
-imp	'GetAppContainerNamedObjectPath'			GetAppContainerNamedObjectPath				KernelBase	420
+imp	'GetAppContainerNamedObjectPath'			GetAppContainerNamedObjectPath				kernel32	0		# KernelBase
 imp	'GetAppDataFolder'					GetAppDataFolder					KernelBase	421
 imp	'GetAppModelVersion'					GetAppModelVersion					KernelBase	422
-imp	'GetApplicationRecoveryCallback'			GetApplicationRecoveryCallback				KernelBase	423
+imp	'GetApplicationRecoveryCallback'			GetApplicationRecoveryCallback				kernel32	0		# KernelBase
 imp	'GetApplicationRecoveryCallbackWorker'			GetApplicationRecoveryCallbackWorker			kernel32	445
-imp	'GetApplicationRestartSettings'				GetApplicationRestartSettings				KernelBase	424
+imp	'GetApplicationRestartSettings'				GetApplicationRestartSettings				kernel32	0		# KernelBase
 imp	'GetApplicationRestartSettingsWorker'			GetApplicationRestartSettingsWorker			kernel32	447
-imp	'GetApplicationUserModelId'				GetApplicationUserModelId				KernelBase	425
+imp	'GetApplicationUserModelId'				GetApplicationUserModelId				kernel32	0		# KernelBase
 imp	'GetApplicationUserModelIdFromToken'			GetApplicationUserModelIdFromToken			KernelBase	426
 imp	'GetAppliedGPOListInternalA'				GetAppliedGPOListInternalA				KernelBase	427
 imp	'GetAppliedGPOListInternal'				GetAppliedGPOListInternalW				KernelBase	428
@@ -1899,9 +1899,9 @@ imp	'GetCIMSSM'						GetCIMSSM						user32		1800
 imp	'GetCOPPCompatibleOPMInformation'			GetCOPPCompatibleOPMInformation				gdi32		1600
 imp	'GetCPFileNameFromRegistry'				GetCPFileNameFromRegistry				KernelBase	429
 imp	'GetCPHashNode'						GetCPHashNode						KernelBase	430
-imp	'GetCPInfo'						GetCPInfo						KernelBase	431
+imp	'GetCPInfo'						GetCPInfo						kernel32	0		# KernelBase
 imp	'GetCPInfoExA'						GetCPInfoExA						kernel32	455
-imp	'GetCPInfoEx'						GetCPInfoExW						KernelBase	432
+imp	'GetCPInfoEx'						GetCPInfoExW						kernel32	0		# KernelBase
 imp	'GetCachedSigningLevel'					GetCachedSigningLevel					KernelBase	433
 imp	'GetCalendar'						GetCalendar						KernelBase	434
 imp	'GetCalendarDateFormat'					GetCalendarDateFormat					kernel32	458
@@ -1909,8 +1909,8 @@ imp	'GetCalendarDateFormatEx'				GetCalendarDateFormatEx					kernel32	459
 imp	'GetCalendarDaysInMonth'				GetCalendarDaysInMonth					kernel32	460
 imp	'GetCalendarDifferenceInDays'				GetCalendarDifferenceInDays				kernel32	461
 imp	'GetCalendarInfoA'					GetCalendarInfoA					kernel32	462
-imp	'GetCalendarInfoEx'					GetCalendarInfoEx					KernelBase	435
-imp	'GetCalendarInfo'					GetCalendarInfoW					KernelBase	436
+imp	'GetCalendarInfoEx'					GetCalendarInfoEx					kernel32	0		# KernelBase
+imp	'GetCalendarInfo'					GetCalendarInfoW					kernel32	0		# KernelBase
 imp	'GetCalendarMonthsInYear'				GetCalendarMonthsInYear					kernel32	465
 imp	'GetCalendarSupportedDateRange'				GetCalendarSupportedDateRange				kernel32	466
 imp	'GetCalendarWeekNumber'					GetCalendarWeekNumber					kernel32	467
@@ -1963,73 +1963,73 @@ imp	'GetColorAdjustment'					GetColorAdjustment					gdi32		1623
 imp	'GetColorSpace'						GetColorSpace						gdi32		1624
 imp	'GetComPlusPackageInstallStatus'			GetComPlusPackageInstallStatus				kernel32	468
 imp	'GetComboBoxInfo'					GetComboBoxInfo						user32		1824
-imp	'GetCommConfig'						GetCommConfig						KernelBase	437
-imp	'GetCommMask'						GetCommMask						KernelBase	438
-imp	'GetCommModemStatus'					GetCommModemStatus					KernelBase	439
+imp	'GetCommConfig'						GetCommConfig						kernel32	0		# KernelBase
+imp	'GetCommMask'						GetCommMask						kernel32	0		# KernelBase
+imp	'GetCommModemStatus'					GetCommModemStatus					kernel32	0		# KernelBase
 imp	'GetCommPorts'						GetCommPorts						KernelBase	440
-imp	'GetCommProperties'					GetCommProperties					KernelBase	441
-imp	'GetCommState'						GetCommState						KernelBase	442
-imp	'GetCommTimeouts'					GetCommTimeouts						KernelBase	443
-imp	'GetCommandLine'					GetCommandLineW						KernelBase	445	0
-imp	'GetCommandLineA'					GetCommandLineA						KernelBase	444	0
-imp	'GetCompressedFileSize'					GetCompressedFileSizeW					KernelBase	447	2
-imp	'GetCompressedFileSizeA'				GetCompressedFileSizeA					KernelBase	446	2
+imp	'GetCommProperties'					GetCommProperties					kernel32	0		# KernelBase
+imp	'GetCommState'						GetCommState						kernel32	0		# KernelBase
+imp	'GetCommTimeouts'					GetCommTimeouts						kernel32	0		# KernelBase
+imp	'GetCommandLine'					GetCommandLineW						kernel32	0	0	# KernelBase
+imp	'GetCommandLineA'					GetCommandLineA						kernel32	0	0	# KernelBase
+imp	'GetCompressedFileSize'					GetCompressedFileSizeW					kernel32	0	2	# KernelBase
+imp	'GetCompressedFileSizeA'				GetCompressedFileSizeA					kernel32	0	2	# KernelBase
 imp	'GetCompressedFileSizeTransactedA'			GetCompressedFileSizeTransactedA			kernel32	478
 imp	'GetCompressedFileSizeTransacted'			GetCompressedFileSizeTransactedW			kernel32	479
 imp	'GetComputerNameA'					GetComputerNameA					kernel32	481
-imp	'GetComputerNameExA'					GetComputerNameExA					KernelBase	448
-imp	'GetComputerNameEx'					GetComputerNameExW					KernelBase	449	3
+imp	'GetComputerNameExA'					GetComputerNameExA					kernel32	0	3	# KernelBase
+imp	'GetComputerNameEx'					GetComputerNameExW					kernel32	0	3	# KernelBase
 imp	'GetComputerName'					GetComputerNameW					kernel32	484
-imp	'GetConsoleAliasA'					GetConsoleAliasA					KernelBase	450
-imp	'GetConsoleAliasExesA'					GetConsoleAliasExesA					KernelBase	451
-imp	'GetConsoleAliasExesLengthA'				GetConsoleAliasExesLengthA				KernelBase	452
-imp	'GetConsoleAliasExesLength'				GetConsoleAliasExesLengthW				KernelBase	453
-imp	'GetConsoleAliasExes'					GetConsoleAliasExesW					KernelBase	454
-imp	'GetConsoleAlias'					GetConsoleAliasW					KernelBase	455
-imp	'GetConsoleAliasesA'					GetConsoleAliasesA					KernelBase	456
-imp	'GetConsoleAliasesLengthA'				GetConsoleAliasesLengthA				KernelBase	457
-imp	'GetConsoleAliasesLength'				GetConsoleAliasesLengthW				KernelBase	458
-imp	'GetConsoleAliases'					GetConsoleAliasesW					KernelBase	459
-imp	'GetConsoleCP'						GetConsoleCP						KernelBase	460	0
+imp	'GetConsoleAliasA'					GetConsoleAliasA					kernel32	0		# KernelBase
+imp	'GetConsoleAliasExesA'					GetConsoleAliasExesA					kernel32	0		# KernelBase
+imp	'GetConsoleAliasExesLengthA'				GetConsoleAliasExesLengthA				kernel32	0		# KernelBase
+imp	'GetConsoleAliasExesLength'				GetConsoleAliasExesLengthW				kernel32	0		# KernelBase
+imp	'GetConsoleAliasExes'					GetConsoleAliasExesW					kernel32	0		# KernelBase
+imp	'GetConsoleAlias'					GetConsoleAliasW					kernel32	0		# KernelBase
+imp	'GetConsoleAliasesA'					GetConsoleAliasesA					kernel32	0		# KernelBase
+imp	'GetConsoleAliasesLengthA'				GetConsoleAliasesLengthA				kernel32	0		# KernelBase
+imp	'GetConsoleAliasesLength'				GetConsoleAliasesLengthW				kernel32	0		# KernelBase
+imp	'GetConsoleAliases'					GetConsoleAliasesW					kernel32	0		# KernelBase
+imp	'GetConsoleCP'						GetConsoleCP						kernel32	0	0	# KernelBase
 imp	'GetConsoleCharType'					GetConsoleCharType					kernel32	496
 imp	'GetConsoleCommandHistoryA'				GetConsoleCommandHistoryA				KernelBase	461
 imp	'GetConsoleCommandHistoryLengthA'			GetConsoleCommandHistoryLengthA				KernelBase	462
 imp	'GetConsoleCommandHistoryLength'			GetConsoleCommandHistoryLengthW				KernelBase	463
 imp	'GetConsoleCommandHistory'				GetConsoleCommandHistoryW				KernelBase	464
-imp	'GetConsoleCursorInfo'					GetConsoleCursorInfo					KernelBase	465	2
+imp	'GetConsoleCursorInfo'					GetConsoleCursorInfo					kernel32	0	2	# KernelBase
 imp	'GetConsoleCursorMode'					GetConsoleCursorMode					kernel32	502
-imp	'GetConsoleDisplayMode'					GetConsoleDisplayMode					KernelBase	466
+imp	'GetConsoleDisplayMode'					GetConsoleDisplayMode					kernel32	0		# KernelBase
 imp	'GetConsoleFontInfo'					GetConsoleFontInfo					kernel32	504
-imp	'GetConsoleFontSize'					GetConsoleFontSize					KernelBase	467
+imp	'GetConsoleFontSize'					GetConsoleFontSize					kernel32	0		# KernelBase
 imp	'GetConsoleHardwareState'				GetConsoleHardwareState					kernel32	506
-imp	'GetConsoleHistoryInfo'					GetConsoleHistoryInfo					KernelBase	468
+imp	'GetConsoleHistoryInfo'					GetConsoleHistoryInfo					kernel32	0		# KernelBase
 imp	'GetConsoleInputExeNameA'				GetConsoleInputExeNameA					KernelBase	469
 imp	'GetConsoleInputExeName'				GetConsoleInputExeNameW					KernelBase	470
 imp	'GetConsoleInputWaitHandle'				GetConsoleInputWaitHandle				kernel32	510
 imp	'GetConsoleKeyboardLayoutNameA'				GetConsoleKeyboardLayoutNameA				kernel32	511
 imp	'GetConsoleKeyboardLayoutName'				GetConsoleKeyboardLayoutNameW				kernel32	512
-imp	'GetConsoleMode'					GetConsoleMode						KernelBase	471	2
+imp	'GetConsoleMode'					GetConsoleMode						kernel32	0	2	# KernelBase
 imp	'GetConsoleNlsMode'					GetConsoleNlsMode					kernel32	514
-imp	'GetConsoleOriginalTitleA'				GetConsoleOriginalTitleA				KernelBase	472
-imp	'GetConsoleOriginalTitle'				GetConsoleOriginalTitleW				KernelBase	473
-imp	'GetConsoleOutputCP'					GetConsoleOutputCP					KernelBase	474	0
-imp	'GetConsoleProcessList'					GetConsoleProcessList					KernelBase	475
-imp	'GetConsoleScreenBufferInfo'				GetConsoleScreenBufferInfo				KernelBase	476	2
-imp	'GetConsoleScreenBufferInfoEx'				GetConsoleScreenBufferInfoEx				KernelBase	477	2
-imp	'GetConsoleSelectionInfo'				GetConsoleSelectionInfo					KernelBase	478	1
-imp	'GetConsoleTitleA'					GetConsoleTitleA					KernelBase	479	2
-imp	'GetConsoleTitle'					GetConsoleTitleW					KernelBase	480
-imp	'GetConsoleWindow'					GetConsoleWindow					KernelBase	481	0
+imp	'GetConsoleOriginalTitleA'				GetConsoleOriginalTitleA				kernel32	0		# KernelBase
+imp	'GetConsoleOriginalTitle'				GetConsoleOriginalTitleW				kernel32	0		# KernelBase
+imp	'GetConsoleOutputCP'					GetConsoleOutputCP					kernel32	0	0	# KernelBase
+imp	'GetConsoleProcessList'					GetConsoleProcessList					kernel32	0		# KernelBase
+imp	'GetConsoleScreenBufferInfo'				GetConsoleScreenBufferInfo				kernel32	0	2	# KernelBase
+imp	'GetConsoleScreenBufferInfoEx'				GetConsoleScreenBufferInfoEx				kernel32	0	2	# KernelBase
+imp	'GetConsoleSelectionInfo'				GetConsoleSelectionInfo					kernel32	0	1	# KernelBase
+imp	'GetConsoleTitleA'					GetConsoleTitleA					kernel32	0	2	# KernelBase
+imp	'GetConsoleTitle'					GetConsoleTitleW					kernel32	0	2	# KernelBase
+imp	'GetConsoleWindow'					GetConsoleWindow					kernel32	0	0	# KernelBase
 imp	'GetCurrencyFormatA'					GetCurrencyFormatA					kernel32	525
-imp	'GetCurrencyFormatEx'					GetCurrencyFormatEx					KernelBase	482
-imp	'GetCurrencyFormat'					GetCurrencyFormatW					KernelBase	483
-imp	'GetCurrentActCtx'					GetCurrentActCtx					KernelBase	484
+imp	'GetCurrencyFormatEx'					GetCurrencyFormatEx					kernel32	0		# KernelBase
+imp	'GetCurrencyFormat'					GetCurrencyFormatW					kernel32	0		# KernelBase
+imp	'GetCurrentActCtx'					GetCurrentActCtx					kernel32	0		# KernelBase
 imp	'GetCurrentActCtxWorker'				GetCurrentActCtxWorker					kernel32	529
-imp	'GetCurrentApplicationUserModelId'			GetCurrentApplicationUserModelId			KernelBase	485
-imp	'GetCurrentConsoleFont'					GetCurrentConsoleFont					KernelBase	486
-imp	'GetCurrentConsoleFontEx'				GetCurrentConsoleFontEx					KernelBase	487
-imp	'GetCurrentDirectory'					GetCurrentDirectoryW					KernelBase	489	2
-imp	'GetCurrentDirectoryA'					GetCurrentDirectoryA					KernelBase	488	2
+imp	'GetCurrentApplicationUserModelId'			GetCurrentApplicationUserModelId			kernel32	0		# KernelBase
+imp	'GetCurrentConsoleFont'					GetCurrentConsoleFont					kernel32	0		# KernelBase
+imp	'GetCurrentConsoleFontEx'				GetCurrentConsoleFontEx					kernel32	0		# KernelBase
+imp	'GetCurrentDirectory'					GetCurrentDirectoryW					kernel32	0	2	# KernelBase
+imp	'GetCurrentDirectoryA'					GetCurrentDirectoryA					kernel32	0	2	# KernelBase
 imp	'GetCurrentDpiInfo'					GetCurrentDpiInfo					gdi32		1625
 imp	'GetCurrentHwProfileA'					GetCurrentHwProfileA					advapi32	1317
 imp	'GetCurrentHwProfile'					GetCurrentHwProfileW					advapi32	1318
@@ -2038,21 +2038,21 @@ imp	'GetCurrentObject'					GetCurrentObject					gdi32		1626
 imp	'GetCurrentPackageApplicationContext'			GetCurrentPackageApplicationContext			KernelBase	490
 imp	'GetCurrentPackageApplicationResourcesContext'		GetCurrentPackageApplicationResourcesContext		KernelBase	491
 imp	'GetCurrentPackageContext'				GetCurrentPackageContext				KernelBase	492
-imp	'GetCurrentPackageFamilyName'				GetCurrentPackageFamilyName				KernelBase	493
-imp	'GetCurrentPackageFullName'				GetCurrentPackageFullName				KernelBase	494
-imp	'GetCurrentPackageId'					GetCurrentPackageId					KernelBase	495
-imp	'GetCurrentPackageInfo'					GetCurrentPackageInfo					KernelBase	496
-imp	'GetCurrentPackagePath'					GetCurrentPackagePath					KernelBase	497
+imp	'GetCurrentPackageFamilyName'				GetCurrentPackageFamilyName				kernel32	0		# KernelBase
+imp	'GetCurrentPackageFullName'				GetCurrentPackageFullName				kernel32	0		# KernelBase
+imp	'GetCurrentPackageId'					GetCurrentPackageId					kernel32	0		# KernelBase
+imp	'GetCurrentPackageInfo'					GetCurrentPackageInfo					kernel32	0		# KernelBase
+imp	'GetCurrentPackagePath'					GetCurrentPackagePath					kernel32	0		# KernelBase
 imp	'GetCurrentPackageResourcesContext'			GetCurrentPackageResourcesContext			KernelBase	498
 imp	'GetCurrentPackageSecurityContext'			GetCurrentPackageSecurityContext			KernelBase	499
 imp	'GetCurrentPositionEx'					GetCurrentPositionEx					gdi32		1627
-imp	'GetCurrentProcess'					GetCurrentProcess					KernelBase	500	0
+imp	'GetCurrentProcess'					GetCurrentProcess					kernel32	0	0	# KernelBase
 imp	'GetCurrentProcessExplicitAppUserModelID'		GetCurrentProcessExplicitAppUserModelID			shell32		305
-imp	'GetCurrentProcessId'					GetCurrentProcessId					KernelBase	501	0
+imp	'GetCurrentProcessId'					GetCurrentProcessId					kernel32	0	0	# KernelBase
 imp	'GetCurrentTargetPlatformContext'			GetCurrentTargetPlatformContext				KernelBase	504
-imp	'GetCurrentThread'					GetCurrentThread					KernelBase	505	0
-imp	'GetCurrentThreadId'					GetCurrentThreadId					KernelBase	506	0
-imp	'GetCurrentThreadStackLimits'				GetCurrentThreadStackLimits				KernelBase	507
+imp	'GetCurrentThread'					GetCurrentThread					kernel32	0	0	# KernelBase
+imp	'GetCurrentThreadId'					GetCurrentThreadId					kernel32	0	0	# KernelBase
+imp	'GetCurrentThreadStackLimits'				GetCurrentThreadStackLimits				kernel32	0		# KernelBase
 imp	'GetCurrentUmsThread'					GetCurrentUmsThread					kernel32	547
 imp	'GetCursor'						GetCursor						user32		1826	0
 imp	'GetCursorFrameInfo'					GetCursorFrameInfo					user32		1827
@@ -2066,10 +2066,10 @@ imp	'GetDCOrgEx'						GetDCOrgEx						gdi32		1630
 imp	'GetDCPenColor'						GetDCPenColor						gdi32		1631
 imp	'GetDIBColorTable'					GetDIBColorTable					gdi32		1632
 imp	'GetDIBits'						GetDIBits						gdi32		1633
-imp	'GetDateFormatA'					GetDateFormatA						KernelBase	508
+imp	'GetDateFormatA'					GetDateFormatA						kernel32	0		# KernelBase
 imp	'GetDateFormatAWorker'					GetDateFormatAWorker					kernel32	549
-imp	'GetDateFormatEx'					GetDateFormatEx						KernelBase	509
-imp	'GetDateFormat'						GetDateFormatW						KernelBase	510
+imp	'GetDateFormatEx'					GetDateFormatEx						kernel32	0		# KernelBase
+imp	'GetDateFormat'						GetDateFormatW						kernel32	0		# KernelBase
 imp	'GetDateFormatWWorker'					GetDateFormatWWorker					kernel32	552
 imp	'GetDefaultCommConfigA'					GetDefaultCommConfigA					kernel32	553
 imp	'GetDefaultCommConfig'					GetDefaultCommConfigW					kernel32	554
@@ -2085,10 +2085,10 @@ imp	'GetDevicePowerState'					GetDevicePowerState					kernel32	555
 imp	'GetDialogBaseUnits'					GetDialogBaseUnits					user32		1834
 imp	'GetDialogControlDpiChangeBehavior'			GetDialogControlDpiChangeBehavior			user32		1835
 imp	'GetDialogDpiChangeBehavior'				GetDialogDpiChangeBehavior				user32		1836
-imp	'GetDiskFreeSpaceA'					GetDiskFreeSpaceA					KernelBase	515
-imp	'GetDiskFreeSpaceExA'					GetDiskFreeSpaceExA					KernelBase	516
-imp	'GetDiskFreeSpaceEx'					GetDiskFreeSpaceExW					KernelBase	517
-imp	'GetDiskFreeSpace'					GetDiskFreeSpaceW					KernelBase	518
+imp	'GetDiskFreeSpaceA'					GetDiskFreeSpaceA					kernel32	0		# KernelBase
+imp	'GetDiskFreeSpaceExA'					GetDiskFreeSpaceExA					kernel32	0		# KernelBase
+imp	'GetDiskFreeSpaceEx'					GetDiskFreeSpaceExW					kernel32	0		# KernelBase
+imp	'GetDiskFreeSpace'					GetDiskFreeSpaceW					kernel32	0		# KernelBase
 imp	'GetDisplayAutoRotationPreferences'			GetDisplayAutoRotationPreferences			user32		1837
 imp	'GetDisplayConfigBufferSizes'				GetDisplayConfigBufferSizes				user32		1838
 imp	'GetDlgCtrlID'						GetDlgCtrlID						user32		1839
@@ -2103,11 +2103,11 @@ imp	'GetDpiForMonitorInternal'				GetDpiForMonitorInternal				user32		1845
 imp	'GetDpiForSystem'					GetDpiForSystem						user32		1846
 imp	'GetDpiForWindow'					GetDpiForWindow						user32		1847
 imp	'GetDpiFromDpiAwarenessContext'				GetDpiFromDpiAwarenessContext				user32		1848
-imp	'GetDriveTypeA'						GetDriveTypeA						KernelBase	519
-imp	'GetDriveType'						GetDriveTypeW						KernelBase	520
+imp	'GetDriveTypeA'						GetDriveTypeA						kernel32	0		# KernelBase
+imp	'GetDriveType'						GetDriveTypeW						kernel32	0		# KernelBase
 imp	'GetDurationFormat'					GetDurationFormat					kernel32	564
-imp	'GetDurationFormatEx'					GetDurationFormatEx					KernelBase	521
-imp	'GetDynamicTimeZoneInformation'				GetDynamicTimeZoneInformation				KernelBase	522
+imp	'GetDurationFormatEx'					GetDurationFormatEx					kernel32	0		# KernelBase
+imp	'GetDynamicTimeZoneInformation'				GetDynamicTimeZoneInformation				kernel32	0		# KernelBase
 imp	'GetDynamicTimeZoneInformationEffectiveYears'		GetDynamicTimeZoneInformationEffectiveYears		KernelBase	523
 imp	'GetETM'						GetETM							gdi32		1636
 imp	'GetEUDCTimeStamp'					GetEUDCTimeStamp					gdi32		1637
@@ -2118,7 +2118,7 @@ imp	'GetEffectiveRightsFromAclA'				GetEffectiveRightsFromAclA				advapi32	1320
 imp	'GetEffectiveRightsFromAcl'				GetEffectiveRightsFromAclW				advapi32	1321
 imp	'GetEightBitStringToUnicodeSizeRoutine'			GetEightBitStringToUnicodeSizeRoutine			KernelBase	526
 imp	'GetEightBitStringToUnicodeStringRoutine'		GetEightBitStringToUnicodeStringRoutine			KernelBase	527
-imp	'GetEnabledXStateFeatures'				GetEnabledXStateFeatures				KernelBase	528
+imp	'GetEnabledXStateFeatures'				GetEnabledXStateFeatures				kernel32	0		# KernelBase
 imp	'GetEncryptedFileMetadata'				GetEncryptedFileMetadata				advapi32	1322
 imp	'GetEncryptedFileVersionExt'				GetEncryptedFileVersionExt				kernel32	568
 imp	'GetEnhMetaFileA'					GetEnhMetaFileA						gdi32		1639
@@ -2129,15 +2129,15 @@ imp	'GetEnhMetaFileHeader'					GetEnhMetaFileHeader					gdi32		1643
 imp	'GetEnhMetaFilePaletteEntries'				GetEnhMetaFilePaletteEntries				gdi32		1644
 imp	'GetEnhMetaFilePixelFormat'				GetEnhMetaFilePixelFormat				gdi32		1645
 imp	'GetEnhMetaFile'					GetEnhMetaFileW						gdi32		1646
-imp	'GetEnvironmentStrings'					GetEnvironmentStringsW					KernelBase	531	1
-imp	'GetEnvironmentStringsA'				GetEnvironmentStringsA					KernelBase	530	1
-imp	'GetEnvironmentVariable'				GetEnvironmentVariableW					KernelBase	533	3
-imp	'GetEnvironmentVariableA'				GetEnvironmentVariableA					KernelBase	532	3
+imp	'GetEnvironmentStrings'					GetEnvironmentStringsW					kernel32	0	1	# KernelBase
+imp	'GetEnvironmentStringsA'				GetEnvironmentStringsA					kernel32	0	1	# KernelBase
+imp	'GetEnvironmentVariable'				GetEnvironmentVariableW					kernel32	0	3	# KernelBase
+imp	'GetEnvironmentVariableA'				GetEnvironmentVariableA					kernel32	0	3	# KernelBase
 imp	'GetEraNameCountedString'				GetEraNameCountedString					KernelBase	534
-imp	'GetErrorMode'						GetErrorMode						KernelBase	535
+imp	'GetErrorMode'						GetErrorMode						kernel32	0		# KernelBase
 imp	'GetEventLogInformation'				GetEventLogInformation					advapi32	1323
-imp	'GetExitCodeProcess'					GetExitCodeProcess					KernelBase	536	2
-imp	'GetExitCodeThread'					GetExitCodeThread					KernelBase	537	2
+imp	'GetExitCodeProcess'					GetExitCodeProcess					kernel32	0	2	# KernelBase
+imp	'GetExitCodeThread'					GetExitCodeThread					kernel32	0	2	# KernelBase
 imp	'GetExpandedNameA'					GetExpandedNameA					kernel32	578
 imp	'GetExpandedName'					GetExpandedNameW					kernel32	579
 imp	'GetExplicitEntriesFromAclA'				GetExplicitEntriesFromAclA				advapi32	1324
@@ -2147,26 +2147,26 @@ imp	'GetExtensionProgIds'					GetExtensionProgIds					KernelBase	539
 imp	'GetExtensionProperty'					GetExtensionProperty					KernelBase	540
 imp	'GetExtensionProperty2'					GetExtensionProperty2					KernelBase	541
 imp	'GetFallbackDisplayName'				GetFallbackDisplayName					KernelBase	542
-imp	'GetFileAttributesA'					GetFileAttributesA					KernelBase	543	1
-imp	'GetFileAttributes'					GetFileAttributesW					KernelBase	546	1
-imp	'GetFileAttributesExA'					GetFileAttributesExA					KernelBase	544	3
-imp	'GetFileAttributesEx'					GetFileAttributesExW					KernelBase	545	3
+imp	'GetFileAttributesA'					GetFileAttributesA					kernel32	0	1	# KernelBase
+imp	'GetFileAttributes'					GetFileAttributesW					kernel32	0	1	# KernelBase
+imp	'GetFileAttributesExA'					GetFileAttributesExA					kernel32	0	3	# KernelBase
+imp	'GetFileAttributesEx'					GetFileAttributesExW					kernel32	0	3	# KernelBase
 imp	'GetFileAttributesTransactedA'				GetFileAttributesTransactedA				kernel32	583
 imp	'GetFileAttributesTransacted'				GetFileAttributesTransactedW				kernel32	584
 imp	'GetFileBandwidthReservation'				GetFileBandwidthReservation				kernel32	586
-imp	'GetFileInformationByHandle'				GetFileInformationByHandle				KernelBase	547	2
-imp	'GetFileInformationByHandleEx'				GetFileInformationByHandleEx				KernelBase	548	4
-imp	'GetFileMUIInfo'					GetFileMUIInfo						KernelBase	549
-imp	'GetFileMUIPath'					GetFileMUIPath						KernelBase	550
+imp	'GetFileInformationByHandle'				GetFileInformationByHandle				kernel32	0	2	# KernelBase
+imp	'GetFileInformationByHandleEx'				GetFileInformationByHandleEx				kernel32	0	4	# KernelBase
+imp	'GetFileMUIInfo'					GetFileMUIInfo						kernel32	0		# KernelBase
+imp	'GetFileMUIPath'					GetFileMUIPath						kernel32	0		# KernelBase
 imp	'GetFileNameFromBrowse'					GetFileNameFromBrowse					shell32		63
-imp	'GetFileSecurity'					GetFileSecurityW					KernelBase	551	5
+imp	'GetFileSecurity'					GetFileSecurityW					advapi32	0	5	# KernelBase
 imp	'GetFileSecurityA'					GetFileSecurityA					advapi32	1326	5
-imp	'GetFileSize'						GetFileSize						KernelBase	552	m
-imp	'GetFileSizeEx'						GetFileSizeEx						KernelBase	553	m
-imp	'GetFileTime'						GetFileTime						KernelBase	554	4
+imp	'GetFileSize'						GetFileSize						kernel32	0	2	# KernelBase
+imp	'GetFileSizeEx'						GetFileSizeEx						kernel32	0	2	# KernelBase
+imp	'GetFileTime'						GetFileTime						kernel32	0	4	# KernelBase
 imp	'GetFileTitleA'						GetFileTitleA						comdlg32	111	3
 imp	'GetFileTitle'						GetFileTitleW						comdlg32	112	3
-imp	'GetFileType'						GetFileType						KernelBase	555	1
+imp	'GetFileType'						GetFileType						kernel32	0	1	# KernelBase
 imp	'GetFileVersionInfoA'					GetFileVersionInfoA					KernelBase	556
 imp	'GetFileVersionInfoByHandle'				GetFileVersionInfoByHandle				KernelBase	557
 imp	'GetFileVersionInfoExA'					GetFileVersionInfoExA					KernelBase	558
@@ -2176,8 +2176,8 @@ imp	'GetFileVersionInfoSizeExA'				GetFileVersionInfoSizeExA				KernelBase	561
 imp	'GetFileVersionInfoSizeEx'				GetFileVersionInfoSizeExW				KernelBase	562
 imp	'GetFileVersionInfoSize'				GetFileVersionInfoSizeW					KernelBase	563
 imp	'GetFileVersionInfo'					GetFileVersionInfoW					KernelBase	564
-imp	'GetFinalPathNameByHandleA'				GetFinalPathNameByHandleA				KernelBase	565
-imp	'GetFinalPathNameByHandle'				GetFinalPathNameByHandleW				KernelBase	566
+imp	'GetFinalPathNameByHandleA'				GetFinalPathNameByHandleA				kernel32	0		# KernelBase
+imp	'GetFinalPathNameByHandle'				GetFinalPathNameByHandleW				kernel32	0		# KernelBase
 imp	'GetFirmwareEnvironmentVariableA'			GetFirmwareEnvironmentVariableA				kernel32	597
 imp	'GetFirmwareEnvironmentVariableExA'			GetFirmwareEnvironmentVariableExA			kernel32	598
 imp	'GetFirmwareEnvironmentVariableEx'			GetFirmwareEnvironmentVariableExW			kernel32	599
@@ -2193,17 +2193,17 @@ imp	'GetFontRealizationInfo'				GetFontRealizationInfo					gdi32		1652
 imp	'GetFontResourceInfo'					GetFontResourceInfoW					gdi32		1653
 imp	'GetFontUnicodeRanges'					GetFontUnicodeRanges					gdi32		1654
 imp	'GetForegroundWindow'					GetForegroundWindow					user32		1850
-imp	'GetFullPathNameA'					GetFullPathNameA					KernelBase	567
+imp	'GetFullPathNameA'					GetFullPathNameA					kernel32	0		# KernelBase
 imp	'GetFullPathNameTransactedA'				GetFullPathNameTransactedA				kernel32	603
 imp	'GetFullPathNameTransacted'				GetFullPathNameTransactedW				kernel32	604
-imp	'GetFullPathName'					GetFullPathNameW					KernelBase	568
+imp	'GetFullPathName'					GetFullPathNameW					kernel32	0		# KernelBase
 imp	'GetGPOListInternalA'					GetGPOListInternalA					KernelBase	569
 imp	'GetGPOListInternal'					GetGPOListInternalW					KernelBase	570
 imp	'GetGUIThreadInfo'					GetGUIThreadInfo					user32		1851
 imp	'GetGamingDeviceModelInformation'			GetGamingDeviceModelInformation				KernelBase	571
 imp	'GetGeoInfoA'						GetGeoInfoA						kernel32	606
 imp	'GetGeoInfoEx'						GetGeoInfoEx						KernelBase	572
-imp	'GetGeoInfo'						GetGeoInfoW						KernelBase	573
+imp	'GetGeoInfo'						GetGeoInfoW						kernel32	0		# KernelBase
 imp	'GetGestureConfig'					GetGestureConfig					user32		1852
 imp	'GetGestureExtraArgs'					GetGestureExtraArgs					user32		1853
 imp	'GetGestureInfo'					GetGestureInfo						user32		1854
@@ -2215,7 +2215,7 @@ imp	'GetGlyphOutlineWow'					GetGlyphOutlineWow					gdi32		1660
 imp	'GetGraphicsMode'					GetGraphicsMode						gdi32		1661
 imp	'GetGuiResources'					GetGuiResources						user32		1855
 imp	'GetHFONT'						GetHFONT						gdi32		1662
-imp	'GetHandleInformation'					GetHandleInformation					KernelBase	574	2
+imp	'GetHandleInformation'					GetHandleInformation					kernel32	0	2	# KernelBase
 imp	'GetHivePath'						GetHivePath						KernelBase	575
 imp	'GetHostName'						GetHostNameW						ws2_32		33
 imp	'GetICMProfileA'					GetICMProfileA						gdi32		1663
@@ -2234,7 +2234,7 @@ imp	'GetIntegratedDisplaySize'				GetIntegratedDisplaySize				KernelBase	576
 imp	'GetInternalWindowPos'					GetInternalWindowPos					user32		1862
 imp	'GetIsEdpEnabled'					GetIsEdpEnabled						KernelBase	577
 imp	'GetKBCodePage'						GetKBCodePage						user32		1863
-imp	'GetKernelObjectSecurity'				GetKernelObjectSecurity					KernelBase	578
+imp	'GetKernelObjectSecurity'				GetKernelObjectSecurity					advapi32	0		# KernelBase
 imp	'GetKerningPairsA'					GetKerningPairsA					gdi32		1666
 imp	'GetKerningPairs'					GetKerningPairsW					gdi32		1667
 imp	'GetKeyNameTextA'					GetKeyNameTextA						user32		1864
@@ -2246,33 +2246,33 @@ imp	'GetKeyboardLayoutNameA'				GetKeyboardLayoutNameA					user32		1869
 imp	'GetKeyboardLayoutName'					GetKeyboardLayoutNameW					user32		1870
 imp	'GetKeyboardState'					GetKeyboardState					user32		1871
 imp	'GetKeyboardType'					GetKeyboardType						user32		1872
-imp	'GetLargePageMinimum'					GetLargePageMinimum					KernelBase	579
-imp	'GetLargestConsoleWindowSize'				GetLargestConsoleWindowSize				KernelBase	580	1
+imp	'GetLargePageMinimum'					GetLargePageMinimum					kernel32	0		# KernelBase
+imp	'GetLargestConsoleWindowSize'				GetLargestConsoleWindowSize				kernel32	0	1	# KernelBase
 imp	'GetLastActivePopup'					GetLastActivePopup					user32		1873
-imp	'GetLastError'						GetLastError						KernelBase	581	0
+imp	'GetLastError'						GetLastError						kernel32	0	0	# KernelBase
 imp	'GetLastInputInfo'					GetLastInputInfo					user32		1874
 imp	'GetLayeredWindowAttributes'				GetLayeredWindowAttributes				user32		1875
 imp	'GetLayout'						GetLayout						gdi32		1668
-imp	'GetLengthSid'						GetLengthSid						KernelBase	582
+imp	'GetLengthSid'						GetLengthSid						advapi32	0		# KernelBase
 imp	'GetListBoxInfo'					GetListBoxInfo						user32		1876
 imp	'GetLocalManagedApplicationData'			GetLocalManagedApplicationData				advapi32	1334
 imp	'GetLocalManagedApplications'				GetLocalManagedApplications				advapi32	1335
-imp	'GetLocalTime'						GetLocalTime						KernelBase	583
-imp	'GetLocaleInfoA'					GetLocaleInfoA						KernelBase	584
-imp	'GetLocaleInfoEx'					GetLocaleInfoEx						KernelBase	585
+imp	'GetLocalTime'						GetLocalTime						kernel32	0		# KernelBase
+imp	'GetLocaleInfoA'					GetLocaleInfoA						kernel32	0		# KernelBase
+imp	'GetLocaleInfoEx'					GetLocaleInfoEx						kernel32	0		# KernelBase
 imp	'GetLocaleInfoHelper'					GetLocaleInfoHelper					KernelBase	586
-imp	'GetLocaleInfo'						GetLocaleInfoW						KernelBase	587
+imp	'GetLocaleInfo'						GetLocaleInfoW						kernel32	0		# KernelBase
 imp	'GetLogColorSpaceA'					GetLogColorSpaceA					gdi32		1669
 imp	'GetLogColorSpace'					GetLogColorSpaceW					gdi32		1670
 imp	'GetLogicalDriveStringsA'				GetLogicalDriveStringsA					kernel32	617
-imp	'GetLogicalDriveStrings'				GetLogicalDriveStringsW					KernelBase	588
-imp	'GetLogicalDrives'					GetLogicalDrives					KernelBase	589	0
-imp	'GetLogicalProcessorInformation'			GetLogicalProcessorInformation				KernelBase	590
-imp	'GetLogicalProcessorInformationEx'			GetLogicalProcessorInformationEx			KernelBase	591
-imp	'GetLongPathNameA'					GetLongPathNameA					KernelBase	592
+imp	'GetLogicalDriveStrings'				GetLogicalDriveStringsW					kernel32	0		# KernelBase
+imp	'GetLogicalDrives'					GetLogicalDrives					kernel32	0	0	# KernelBase
+imp	'GetLogicalProcessorInformation'			GetLogicalProcessorInformation				kernel32	0		# KernelBase
+imp	'GetLogicalProcessorInformationEx'			GetLogicalProcessorInformationEx			kernel32	0		# KernelBase
+imp	'GetLongPathNameA'					GetLongPathNameA					kernel32	0		# KernelBase
 imp	'GetLongPathNameTransactedA'				GetLongPathNameTransactedA				kernel32	623
 imp	'GetLongPathNameTransacted'				GetLongPathNameTransactedW				kernel32	624
-imp	'GetLongPathName'					GetLongPathNameW					KernelBase	593
+imp	'GetLongPathName'					GetLongPathNameW					kernel32	0		# KernelBase
 imp	'GetMagnificationDesktopColorEffect'			GetMagnificationDesktopColorEffect			user32		1877
 imp	'GetMagnificationDesktopMagnification'			GetMagnificationDesktopMagnification			user32		1878
 imp	'GetMagnificationDesktopSamplingMode'			GetMagnificationDesktopSamplingMode			user32		1879
@@ -2285,7 +2285,7 @@ imp	'GetMappedFileNameA'					GetMappedFileNameA					KernelBase	594
 imp	'GetMappedFileName'					GetMappedFileNameW					KernelBase	595
 imp	'GetMaximumProcessorCount'				GetMaximumProcessorCount				kernel32	627
 imp	'GetMaximumProcessorGroupCount'				GetMaximumProcessorGroupCount				kernel32	628
-imp	'GetMemoryErrorHandlingCapabilities'			GetMemoryErrorHandlingCapabilities			KernelBase	596
+imp	'GetMemoryErrorHandlingCapabilities'			GetMemoryErrorHandlingCapabilities			kernel32	0		# KernelBase
 imp	'GetMenu'						GetMenu							user32		1881	1
 imp	'GetMenuBarInfo'					GetMenuBarInfo						user32		1882
 imp	'GetMenuCheckMarkDimensions'				GetMenuCheckMarkDimensions				user32		1883
@@ -2312,14 +2312,14 @@ imp	'GetMetaRgn'						GetMetaRgn						gdi32		1675
 imp	'GetMiterLimit'						GetMiterLimit						gdi32		1676
 imp	'GetModuleBaseNameA'					GetModuleBaseNameA					KernelBase	597
 imp	'GetModuleBaseName'					GetModuleBaseNameW					KernelBase	598
-imp	'GetModuleFileName'					GetModuleFileNameW					KernelBase	602	3
-imp	'GetModuleFileNameA'					GetModuleFileNameA					KernelBase	599	3
+imp	'GetModuleFileName'					GetModuleFileNameW					kernel32	0	3	# KernelBase
+imp	'GetModuleFileNameA'					GetModuleFileNameA					kernel32	0	3	# KernelBase
 imp	'GetModuleFileNameExA'					GetModuleFileNameExA					KernelBase	600
 imp	'GetModuleFileNameEx'					GetModuleFileNameExW					KernelBase	601
-imp	'GetModuleHandle'					GetModuleHandleA					KernelBase	603	1
-imp	'GetModuleHandleW'					GetModuleHandleW					KernelBase	606	1
-imp	'GetModuleHandleExA'					GetModuleHandleExA					KernelBase	604
-imp	'GetModuleHandleEx'					GetModuleHandleExW					KernelBase	605
+imp	'GetModuleHandle'					GetModuleHandleA					kernel32	0	1	# KernelBase
+imp	'GetModuleHandleW'					GetModuleHandleW					kernel32	0	1	# KernelBase
+imp	'GetModuleHandleExA'					GetModuleHandleExA					kernel32	0	3	# KernelBase
+imp	'GetModuleHandleEx'					GetModuleHandleExW					kernel32	0	3	# KernelBase
 imp	'GetModuleInformation'					GetModuleInformation					KernelBase	607
 imp	'GetMonitorInfoA'					GetMonitorInfoA						user32		1900
 imp	'GetMonitorInfo'					GetMonitorInfoW						user32		1901
@@ -2328,25 +2328,25 @@ imp	'GetMultipleTrusteeA'					GetMultipleTrusteeA					advapi32	1338
 imp	'GetMultipleTrusteeOperationA'				GetMultipleTrusteeOperationA				advapi32	1339
 imp	'GetMultipleTrusteeOperation'				GetMultipleTrusteeOperationW				advapi32	1340
 imp	'GetMultipleTrustee'					GetMultipleTrusteeW					advapi32	1341
-imp	'GetNLSVersion'						GetNLSVersion						KernelBase	608
-imp	'GetNLSVersionEx'					GetNLSVersionEx						KernelBase	609
+imp	'GetNLSVersion'						GetNLSVersion						kernel32	0		# KernelBase
+imp	'GetNLSVersionEx'					GetNLSVersionEx						kernel32	0		# KernelBase
 imp	'GetNameInfo'						GetNameInfoW						ws2_32		34
 imp	'GetNamedLocaleHashNode'				GetNamedLocaleHashNode					KernelBase	610
 imp	'GetNamedPipeAttribute'					GetNamedPipeAttribute					KernelBase	611
 imp	'GetNamedPipeClientComputerNameA'			GetNamedPipeClientComputerNameA				kernel32	639
-imp	'GetNamedPipeClientComputerName'			GetNamedPipeClientComputerNameW				KernelBase	612
+imp	'GetNamedPipeClientComputerName'			GetNamedPipeClientComputerNameW				kernel32	0		# KernelBase
 imp	'GetNamedPipeClientProcessId'				GetNamedPipeClientProcessId				kernel32	641
 imp	'GetNamedPipeClientSessionId'				GetNamedPipeClientSessionId				kernel32	642
 imp	'GetNamedPipeHandleStateA'				GetNamedPipeHandleStateA				kernel32	643
-imp	'GetNamedPipeHandleState'				GetNamedPipeHandleStateW				KernelBase	613
-imp	'GetNamedPipeInfo'					GetNamedPipeInfo					KernelBase	614
+imp	'GetNamedPipeHandleState'				GetNamedPipeHandleStateW				kernel32	0		# KernelBase
+imp	'GetNamedPipeInfo'					GetNamedPipeInfo					kernel32	0		# KernelBase
 imp	'GetNamedPipeServerProcessId'				GetNamedPipeServerProcessId				kernel32	646
 imp	'GetNamedPipeServerSessionId'				GetNamedPipeServerSessionId				kernel32	647
 imp	'GetNamedSecurityInfoA'					GetNamedSecurityInfoA					advapi32	1342
 imp	'GetNamedSecurityInfoExA'				GetNamedSecurityInfoExA					advapi32	1343
 imp	'GetNamedSecurityInfoEx'				GetNamedSecurityInfoExW					advapi32	1344
 imp	'GetNamedSecurityInfo'					GetNamedSecurityInfoW					advapi32	1345
-imp	'GetNativeSystemInfo'					GetNativeSystemInfo					KernelBase	615
+imp	'GetNativeSystemInfo'					GetNativeSystemInfo					kernel32	0		# KernelBase
 imp	'GetNearestColor'					GetNearestColor						gdi32		1677
 imp	'GetNearestPaletteIndex'				GetNearestPaletteIndex					gdi32		1678
 imp	'GetNextDlgGroupItem'					GetNextDlgGroupItem					user32		1903
@@ -2356,23 +2356,23 @@ imp	'GetNextUmsListItem'					GetNextUmsListItem					kernel32	649
 imp	'GetNextVDMCommand'					GetNextVDMCommand					kernel32	650
 imp	'GetNumaAvailableMemoryNode'				GetNumaAvailableMemoryNode				kernel32	651
 imp	'GetNumaAvailableMemoryNodeEx'				GetNumaAvailableMemoryNodeEx				kernel32	652
-imp	'GetNumaHighestNodeNumber'				GetNumaHighestNodeNumber				KernelBase	617
+imp	'GetNumaHighestNodeNumber'				GetNumaHighestNodeNumber				kernel32	0		# KernelBase
 imp	'GetNumaNodeNumberFromHandle'				GetNumaNodeNumberFromHandle				kernel32	654
 imp	'GetNumaNodeProcessorMask'				GetNumaNodeProcessorMask				kernel32	655
-imp	'GetNumaNodeProcessorMaskEx'				GetNumaNodeProcessorMaskEx				KernelBase	618
+imp	'GetNumaNodeProcessorMaskEx'				GetNumaNodeProcessorMaskEx				kernel32	0		# KernelBase
 imp	'GetNumaProcessorNode'					GetNumaProcessorNode					kernel32	657
 imp	'GetNumaProcessorNodeEx'				GetNumaProcessorNodeEx					kernel32	658
 imp	'GetNumaProximityNode'					GetNumaProximityNode					kernel32	659
-imp	'GetNumaProximityNodeEx'				GetNumaProximityNodeEx					KernelBase	619
+imp	'GetNumaProximityNodeEx'				GetNumaProximityNodeEx					kernel32	0		# KernelBase
 imp	'GetNumberFormatA'					GetNumberFormatA					kernel32	661
-imp	'GetNumberFormatEx'					GetNumberFormatEx					KernelBase	620
-imp	'GetNumberFormat'					GetNumberFormatW					KernelBase	621
+imp	'GetNumberFormatEx'					GetNumberFormatEx					kernel32	0		# KernelBase
+imp	'GetNumberFormat'					GetNumberFormatW					kernel32	0		# KernelBase
 imp	'GetNumberOfConsoleFonts'				GetNumberOfConsoleFonts					kernel32	664
-imp	'GetNumberOfConsoleInputEvents'				GetNumberOfConsoleInputEvents				KernelBase	622	2
-imp	'GetNumberOfConsoleMouseButtons'			GetNumberOfConsoleMouseButtons				KernelBase	623	1
+imp	'GetNumberOfConsoleInputEvents'				GetNumberOfConsoleInputEvents				kernel32	0	2	# KernelBase
+imp	'GetNumberOfConsoleMouseButtons'			GetNumberOfConsoleMouseButtons				kernel32	0	1	# KernelBase
 imp	'GetNumberOfEventLogRecords'				GetNumberOfEventLogRecords				advapi32	1346
 imp	'GetNumberOfPhysicalMonitors'				GetNumberOfPhysicalMonitors				gdi32		1679
-imp	'GetOEMCP'						GetOEMCP						KernelBase	624
+imp	'GetOEMCP'						GetOEMCP						kernel32	0		# KernelBase
 imp	'GetOPMInformation'					GetOPMInformation					gdi32		1680
 imp	'GetOPMRandomNumber'					GetOPMRandomNumber					gdi32		1681
 imp	'GetObjectA'						GetObjectA						gdi32		1682
@@ -2387,25 +2387,25 @@ imp	'GetOsSafeBootMode'					GetOsSafeBootMode					KernelBase	626
 imp	'GetOutlineTextMetricsA'				GetOutlineTextMetricsA					gdi32		1685
 imp	'GetOutlineTextMetrics'					GetOutlineTextMetricsW					gdi32		1686
 imp	'GetOverlappedAccessResults'				GetOverlappedAccessResults				advapi32	1348
-imp	'GetOverlappedResult'					GetOverlappedResult					KernelBase	627
-imp	'GetOverlappedResultEx'					GetOverlappedResultEx					KernelBase	628
+imp	'GetOverlappedResult'					GetOverlappedResult					kernel32	0		# KernelBase
+imp	'GetOverlappedResultEx'					GetOverlappedResultEx					kernel32	0		# KernelBase
 imp	'GetPackageApplicationContext'				GetPackageApplicationContext				KernelBase	629
-imp	'GetPackageApplicationIds'				GetPackageApplicationIds				KernelBase	630
+imp	'GetPackageApplicationIds'				GetPackageApplicationIds				kernel32	0		# KernelBase
 imp	'GetPackageApplicationProperty'				GetPackageApplicationProperty				KernelBase	631
 imp	'GetPackageApplicationPropertyString'			GetPackageApplicationPropertyString			KernelBase	632
 imp	'GetPackageApplicationResourcesContext'			GetPackageApplicationResourcesContext			KernelBase	633
 imp	'GetPackageContext'					GetPackageContext					KernelBase	634
-imp	'GetPackageFamilyName'					GetPackageFamilyName					KernelBase	635
+imp	'GetPackageFamilyName'					GetPackageFamilyName					kernel32	0		# KernelBase
 imp	'GetPackageFamilyNameFromProgId'			GetPackageFamilyNameFromProgId				KernelBase	636
 imp	'GetPackageFamilyNameFromToken'				GetPackageFamilyNameFromToken				KernelBase	637
-imp	'GetPackageFullName'					GetPackageFullName					KernelBase	638
+imp	'GetPackageFullName'					GetPackageFullName					kernel32	0		# KernelBase
 imp	'GetPackageFullNameFromToken'				GetPackageFullNameFromToken				KernelBase	639
-imp	'GetPackageId'						GetPackageId						KernelBase	640
-imp	'GetPackageInfo'					GetPackageInfo						KernelBase	641
+imp	'GetPackageId'						GetPackageId						kernel32	0		# KernelBase
+imp	'GetPackageInfo'					GetPackageInfo						kernel32	0		# KernelBase
 imp	'GetPackageInstallTime'					GetPackageInstallTime					KernelBase	642
 imp	'GetPackageOSMaxVersionTested'				GetPackageOSMaxVersionTested				KernelBase	643
-imp	'GetPackagePath'					GetPackagePath						KernelBase	644
-imp	'GetPackagePathByFullName'				GetPackagePathByFullName				KernelBase	645
+imp	'GetPackagePath'					GetPackagePath						kernel32	0		# KernelBase
+imp	'GetPackagePathByFullName'				GetPackagePathByFullName				kernel32	0		# KernelBase
 imp	'GetPackagePathOnVolume'				GetPackagePathOnVolume					KernelBase	646
 imp	'GetPackageProperty'					GetPackageProperty					KernelBase	647
 imp	'GetPackagePropertyString'				GetPackagePropertyString				KernelBase	648
@@ -2418,7 +2418,7 @@ imp	'GetPackageStatusForUser'				GetPackageStatusForUser					KernelBase	654
 imp	'GetPackageStatusForUserSid'				GetPackageStatusForUserSid				KernelBase	655
 imp	'GetPackageTargetPlatformProperty'			GetPackageTargetPlatformProperty			KernelBase	656
 imp	'GetPackageVolumeSisPath'				GetPackageVolumeSisPath					KernelBase	657
-imp	'GetPackagesByPackageFamily'				GetPackagesByPackageFamily				KernelBase	658
+imp	'GetPackagesByPackageFamily'				GetPackagesByPackageFamily				kernel32	0		# KernelBase
 imp	'GetPaletteEntries'					GetPaletteEntries					gdi32		1687
 imp	'GetParent'						GetParent						user32		1906	1
 imp	'GetPath'						GetPath							gdi32		1688
@@ -2429,7 +2429,7 @@ imp	'GetPersistedRegistryValue'				GetPersistedRegistryValueW				KernelBase	662
 imp	'GetPhysicalCursorPos'					GetPhysicalCursorPos					user32		1907
 imp	'GetPhysicalMonitorDescription'				GetPhysicalMonitorDescription				gdi32		1689
 imp	'GetPhysicalMonitors'					GetPhysicalMonitors					gdi32		1690
-imp	'GetPhysicallyInstalledSystemMemory'			GetPhysicallyInstalledSystemMemory			KernelBase	663
+imp	'GetPhysicallyInstalledSystemMemory'			GetPhysicallyInstalledSystemMemory			kernel32	0		# KernelBase
 imp	'GetPixel'						GetPixel						gdi32		1691	3
 imp	'GetPixelFormat'					GetPixelFormat						gdi32		1692
 imp	'GetPointerCursorId'					GetPointerCursorId					user32		1908
@@ -2455,9 +2455,9 @@ imp	'GetPointerTouchInfoHistory'				GetPointerTouchInfoHistory				user32		1927
 imp	'GetPointerType'					GetPointerType						user32		1928
 imp	'GetPolyFillMode'					GetPolyFillMode						gdi32		1693
 imp	'GetPreviousFgPolicyRefreshInfoInternal'		GetPreviousFgPolicyRefreshInfoInternal			KernelBase	664
-imp	'GetPriorityClass'					GetPriorityClass					KernelBase	665	1
+imp	'GetPriorityClass'					GetPriorityClass					kernel32	0	1	# KernelBase
 imp	'GetPriorityClipboardFormat'				GetPriorityClipboardFormat				user32		1929
-imp	'GetPrivateObjectSecurity'				GetPrivateObjectSecurity				KernelBase	666
+imp	'GetPrivateObjectSecurity'				GetPrivateObjectSecurity				advapi32	0		# KernelBase
 imp	'GetPrivateProfileIntA'					GetPrivateProfileIntA					kernel32	680
 imp	'GetPrivateProfileInt'					GetPrivateProfileIntW					kernel32	681
 imp	'GetPrivateProfileSectionA'				GetPrivateProfileSectionA				kernel32	682
@@ -2468,37 +2468,37 @@ imp	'GetPrivateProfileStringA'				GetPrivateProfileStringA				kernel32	686
 imp	'GetPrivateProfileString'				GetPrivateProfileStringW				kernel32	687
 imp	'GetPrivateProfileStructA'				GetPrivateProfileStructA				kernel32	688
 imp	'GetPrivateProfileStruct'				GetPrivateProfileStructW				kernel32	689
-imp	'GetProcAddress'					GetProcAddress						KernelBase	667	2
+imp	'GetProcAddress'					GetProcAddress						kernel32	0	2	# KernelBase
 imp	'GetProcAddressForCaller'				GetProcAddressForCaller					KernelBase	668
-imp	'GetProcessAffinityMask'				GetProcessAffinityMask					kernel32	691	3
+imp	'GetProcessAffinityMask'				GetProcessAffinityMask					kernel32	0	3	# KernelBase
 imp	'GetProcessDEPPolicy'					GetProcessDEPPolicy					kernel32	692
-imp	'GetProcessDefaultCpuSets'				GetProcessDefaultCpuSets				KernelBase	669
+imp	'GetProcessDefaultCpuSets'				GetProcessDefaultCpuSets				kernel32	0		# KernelBase
 imp	'GetProcessDefaultLayout'				GetProcessDefaultLayout					user32		1930
 imp	'GetProcessDpiAwarenessInternal'			GetProcessDpiAwarenessInternal				user32		1931
-imp	'GetProcessGroupAffinity'				GetProcessGroupAffinity					KernelBase	670
-imp	'GetProcessHandleCount'					GetProcessHandleCount					KernelBase	671	2
-imp	'GetProcessHeap'					GetProcessHeap						KernelBase	672
-imp	'GetProcessHeaps'					GetProcessHeaps						KernelBase	673
-imp	'GetProcessId'						GetProcessId						KernelBase	674	1
-imp	'GetProcessIdOfThread'					GetProcessIdOfThread					KernelBase	675
+imp	'GetProcessGroupAffinity'				GetProcessGroupAffinity					kernel32	0		# KernelBase
+imp	'GetProcessHandleCount'					GetProcessHandleCount					kernel32	0	2	# KernelBase
+imp	'GetProcessHeap'					GetProcessHeap						kernel32	0		# KernelBase
+imp	'GetProcessHeaps'					GetProcessHeaps						kernel32	0		# KernelBase
+imp	'GetProcessId'						GetProcessId						kernel32	0	1	# KernelBase
+imp	'GetProcessIdOfThread'					GetProcessIdOfThread					kernel32	0	1	# KernelBase
 imp	'GetProcessImageFileNameA'				GetProcessImageFileNameA				KernelBase	676
 imp	'GetProcessImageFileName'				GetProcessImageFileNameW				KernelBase	677
-imp	'GetProcessInformation'					GetProcessInformation					KernelBase	678
+imp	'GetProcessInformation'					GetProcessInformation					kernel32	0	4	# KernelBase
 imp	'GetProcessIoCounters'					GetProcessIoCounters					kernel32	701	2
 imp	'GetProcessMemoryInfo'					GetProcessMemoryInfo					KernelBase	679
-imp	'GetProcessMitigationPolicy'				GetProcessMitigationPolicy				KernelBase	680
-imp	'GetProcessPreferredUILanguages'			GetProcessPreferredUILanguages				KernelBase	681
-imp	'GetProcessPriorityBoost'				GetProcessPriorityBoost					KernelBase	682	2
+imp	'GetProcessMitigationPolicy'				GetProcessMitigationPolicy				kernel32	0		# KernelBase
+imp	'GetProcessPreferredUILanguages'			GetProcessPreferredUILanguages				kernel32	0		# KernelBase
+imp	'GetProcessPriorityBoost'				GetProcessPriorityBoost					kernel32	0	2	# KernelBase
 imp	'GetProcessSessionFonts'				GetProcessSessionFonts					gdi32		1694
-imp	'GetProcessShutdownParameters'				GetProcessShutdownParameters				KernelBase	683
-imp	'GetProcessTimes'					GetProcessTimes						KernelBase	684	5
+imp	'GetProcessShutdownParameters'				GetProcessShutdownParameters				kernel32	0		# KernelBase
+imp	'GetProcessTimes'					GetProcessTimes						kernel32	0	5	# KernelBase
 imp	'GetProcessUIContextInformation'			GetProcessUIContextInformation				user32		2521
-imp	'GetProcessVersion'					GetProcessVersion					KernelBase	685
+imp	'GetProcessVersion'					GetProcessVersion					kernel32	0		# KernelBase
 imp	'GetProcessWindowStation'				GetProcessWindowStation					user32		1932
 imp	'GetProcessWorkingSetSize'				GetProcessWorkingSetSize				kernel32	708	3
-imp	'GetProcessWorkingSetSizeEx'				GetProcessWorkingSetSizeEx				KernelBase	686	4
-imp	'GetProcessorSystemCycleTime'				GetProcessorSystemCycleTime				KernelBase	687
-imp	'GetProductInfo'					GetProductInfo						KernelBase	688
+imp	'GetProcessWorkingSetSizeEx'				GetProcessWorkingSetSizeEx				kernel32	0	4	# KernelBase
+imp	'GetProcessorSystemCycleTime'				GetProcessorSystemCycleTime				kernel32	0		# KernelBase
+imp	'GetProductInfo'					GetProductInfo						kernel32	0		# KernelBase
 imp	'GetProfileIntA'					GetProfileIntA						kernel32	712
 imp	'GetProfileInt'						GetProfileIntW						kernel32	713
 imp	'GetProfileSectionA'					GetProfileSectionA					kernel32	714
@@ -2515,8 +2515,8 @@ imp	'GetPtrCalDataArray'					GetPtrCalDataArray					KernelBase	692
 imp	'GetPublisherCacheFolder'				GetPublisherCacheFolder					KernelBase	693
 imp	'GetPublisherRootFolder'				GetPublisherRootFolder					KernelBase	694
 imp	'GetQueueStatus'					GetQueueStatus						user32		1936
-imp	'GetQueuedCompletionStatus'				GetQueuedCompletionStatus				KernelBase	695	5
-imp	'GetQueuedCompletionStatusEx'				GetQueuedCompletionStatusEx				KernelBase	696	6
+imp	'GetQueuedCompletionStatus'				GetQueuedCompletionStatus				kernel32	0	5	# KernelBase
+imp	'GetQueuedCompletionStatusEx'				GetQueuedCompletionStatusEx				kernel32	0	6	# KernelBase
 imp	'GetROP2'						GetROP2							gdi32		1695
 imp	'GetRandomRgn'						GetRandomRgn						gdi32		1696
 imp	'GetRasterizerCaps'					GetRasterizerCaps					gdi32		1697
@@ -2541,13 +2541,13 @@ imp	'GetScrollInfo'						GetScrollInfo						user32		1946
 imp	'GetScrollPos'						GetScrollPos						user32		1947
 imp	'GetScrollRange'					GetScrollRange						user32		1948
 imp	'GetSecureSystemAppDataFolder'				GetSecureSystemAppDataFolder				KernelBase	700
-imp	'GetSecurityDescriptorControl'				GetSecurityDescriptorControl				KernelBase	701
-imp	'GetSecurityDescriptorDacl'				GetSecurityDescriptorDacl				KernelBase	702
-imp	'GetSecurityDescriptorGroup'				GetSecurityDescriptorGroup				KernelBase	703
-imp	'GetSecurityDescriptorLength'				GetSecurityDescriptorLength				KernelBase	704
-imp	'GetSecurityDescriptorOwner'				GetSecurityDescriptorOwner				KernelBase	705
-imp	'GetSecurityDescriptorRMControl'			GetSecurityDescriptorRMControl				KernelBase	706
-imp	'GetSecurityDescriptorSacl'				GetSecurityDescriptorSacl				KernelBase	707
+imp	'GetSecurityDescriptorControl'				GetSecurityDescriptorControl				advapi32	0		# KernelBase
+imp	'GetSecurityDescriptorDacl'				GetSecurityDescriptorDacl				advapi32	0		# KernelBase
+imp	'GetSecurityDescriptorGroup'				GetSecurityDescriptorGroup				advapi32	0		# KernelBase
+imp	'GetSecurityDescriptorLength'				GetSecurityDescriptorLength				advapi32	0		# KernelBase
+imp	'GetSecurityDescriptorOwner'				GetSecurityDescriptorOwner				advapi32	0		# KernelBase
+imp	'GetSecurityDescriptorRMControl'			GetSecurityDescriptorRMControl				advapi32	0		# KernelBase
+imp	'GetSecurityDescriptorSacl'				GetSecurityDescriptorSacl				advapi32	0		# KernelBase
 imp	'GetSecurityInfo'					GetSecurityInfo						advapi32	1357
 imp	'GetSecurityInfoExA'					GetSecurityInfoExA					advapi32	1358
 imp	'GetSecurityInfoEx'					GetSecurityInfoExW					advapi32	1359
@@ -2560,14 +2560,14 @@ imp	'GetServiceKeyName'					GetServiceKeyNameW					advapi32	1363
 imp	'GetSharedLocalFolder'					GetSharedLocalFolder					KernelBase	709
 imp	'GetShellWindow'					GetShellWindow						user32		1950	0
 imp	'GetShortPathNameA'					GetShortPathNameA					kernel32	720
-imp	'GetShortPathName'					GetShortPathNameW					KernelBase	710
-imp	'GetSidIdentifierAuthority'				GetSidIdentifierAuthority				KernelBase	711
-imp	'GetSidLengthRequired'					GetSidLengthRequired					KernelBase	712
-imp	'GetSidSubAuthority'					GetSidSubAuthority					KernelBase	713
-imp	'GetSidSubAuthorityCount'				GetSidSubAuthorityCount					KernelBase	714
+imp	'GetShortPathName'					GetShortPathNameW					kernel32	0		# KernelBase
+imp	'GetSidIdentifierAuthority'				GetSidIdentifierAuthority				advapi32	0		# KernelBase
+imp	'GetSidLengthRequired'					GetSidLengthRequired					advapi32	0		# KernelBase
+imp	'GetSidSubAuthority'					GetSidSubAuthority					advapi32	0		# KernelBase
+imp	'GetSidSubAuthorityCount'				GetSidSubAuthorityCount					advapi32	0		# KernelBase
 imp	'GetStagedPackageOrigin'				GetStagedPackageOrigin					KernelBase	715
-imp	'GetStagedPackagePathByFullName'			GetStagedPackagePathByFullName				KernelBase	716
-imp	'GetStartupInfo'					GetStartupInfoW						KernelBase	717	1
+imp	'GetStagedPackagePathByFullName'			GetStagedPackagePathByFullName				kernel32	0		# KernelBase
+imp	'GetStartupInfo'					GetStartupInfoW						kernel32	0	1	# KernelBase
 imp	'GetStartupInfoA'					GetStartupInfoA						kernel32	723	1
 imp	'GetStateContainerDepth'				GetStateContainerDepth					KernelBase	718
 imp	'GetStateFolder'					GetStateFolder						KernelBase	719
@@ -2575,36 +2575,36 @@ imp	'GetStateRootFolder'					GetStateRootFolder					KernelBase	720
 imp	'GetStateRootFolderBase'				GetStateRootFolderBase					KernelBase	721
 imp	'GetStateSettingsFolder'				GetStateSettingsFolder					KernelBase	722
 imp	'GetStateVersion'					GetStateVersion						KernelBase	723
-imp	'GetStdHandle'						GetStdHandle						KernelBase	724	1
+imp	'GetStdHandle'						GetStdHandle						kernel32	0	1	# KernelBase
 imp	'GetStockObject'					GetStockObject						gdi32		1701
 imp	'GetStretchBltMode'					GetStretchBltMode					gdi32		1702
 imp	'GetStringBitmapA'					GetStringBitmapA					gdi32		1703
 imp	'GetStringBitmap'					GetStringBitmapW					gdi32		1704
 imp	'GetStringConditionFromBinary'				GetStringConditionFromBinary				advapi32	1368
-imp	'GetStringScripts'					GetStringScripts					KernelBase	725
+imp	'GetStringScripts'					GetStringScripts					kernel32	0		# KernelBase
 imp	'GetStringTableEntry'					GetStringTableEntry					KernelBase	726
-imp	'GetStringTypeA'					GetStringTypeA						KernelBase	727
+imp	'GetStringTypeA'					GetStringTypeA						kernel32	0		# KernelBase
 imp	'GetStringTypeExA'					GetStringTypeExA					kernel32	729
-imp	'GetStringTypeEx'					GetStringTypeExW					KernelBase	728
-imp	'GetStringType'						GetStringTypeW						KernelBase	729
+imp	'GetStringTypeEx'					GetStringTypeExW					kernel32	0		# KernelBase
+imp	'GetStringType'						GetStringTypeW						kernel32	0		# KernelBase
 imp	'GetSubMenu'						GetSubMenu						user32		1951
 imp	'GetSuggestedOPMProtectedOutputArraySize'		GetSuggestedOPMProtectedOutputArraySize			gdi32		1705
 imp	'GetSysColor'						GetSysColor						user32		1952
 imp	'GetSysColorBrush'					GetSysColorBrush					user32		1953
 imp	'GetSystemAppDataFolder'				GetSystemAppDataFolder					KernelBase	730
 imp	'GetSystemAppDataKey'					GetSystemAppDataKey					KernelBase	731
-imp	'GetSystemCpuSetInformation'				GetSystemCpuSetInformation				KernelBase	732
+imp	'GetSystemCpuSetInformation'				GetSystemCpuSetInformation				kernel32	0		# KernelBase
 imp	'GetSystemDEPPolicy'					GetSystemDEPPolicy					kernel32	734
-imp	'GetSystemDefaultLCID'					GetSystemDefaultLCID					KernelBase	733
-imp	'GetSystemDefaultLangID'				GetSystemDefaultLangID					KernelBase	734
-imp	'GetSystemDefaultLocaleName'				GetSystemDefaultLocaleName				KernelBase	735
-imp	'GetSystemDefaultUILanguage'				GetSystemDefaultUILanguage				KernelBase	736
-imp	'GetSystemDirectory'					GetSystemDirectoryW					KernelBase	738	2
-imp	'GetSystemDirectoryA'					GetSystemDirectoryA					KernelBase	737	2
+imp	'GetSystemDefaultLCID'					GetSystemDefaultLCID					kernel32	0		# KernelBase
+imp	'GetSystemDefaultLangID'				GetSystemDefaultLangID					kernel32	0		# KernelBase
+imp	'GetSystemDefaultLocaleName'				GetSystemDefaultLocaleName				kernel32	0		# KernelBase
+imp	'GetSystemDefaultUILanguage'				GetSystemDefaultUILanguage				kernel32	0		# KernelBase
+imp	'GetSystemDirectory'					GetSystemDirectoryW					kernel32	0	2	# KernelBase
+imp	'GetSystemDirectoryA'					GetSystemDirectoryA					kernel32	0	2	# KernelBase
 imp	'GetSystemDpiForProcess'				GetSystemDpiForProcess					user32		1954
-imp	'GetSystemFileCacheSize'				GetSystemFileCacheSize					KernelBase	739
-imp	'GetSystemFirmwareTable'				GetSystemFirmwareTable					KernelBase	740
-imp	'GetSystemInfo'						GetSystemInfo						KernelBase	741	1
+imp	'GetSystemFileCacheSize'				GetSystemFileCacheSize					kernel32	0		# KernelBase
+imp	'GetSystemFirmwareTable'				GetSystemFirmwareTable					kernel32	0		# KernelBase
+imp	'GetSystemInfo'						GetSystemInfo						kernel32	0	1	# KernelBase
 imp	'GetSystemMenu'						GetSystemMenu						user32		1955	2
 imp	'GetSystemMetadataPath'					GetSystemMetadataPath					KernelBase	742
 imp	'GetSystemMetadataPathForPackage'			GetSystemMetadataPathForPackage				KernelBase	743
@@ -2615,21 +2615,21 @@ imp	'GetSystemPaletteEntries'				GetSystemPaletteEntries					gdi32		1706
 imp	'GetSystemPaletteUse'					GetSystemPaletteUse					gdi32		1707
 imp	'GetSystemPersistedStorageItemList'			GetSystemPersistedStorageItemList			shell32		919
 imp	'GetSystemPowerStatus'					GetSystemPowerStatus					kernel32	744
-imp	'GetSystemPreferredUILanguages'				GetSystemPreferredUILanguages				KernelBase	745
+imp	'GetSystemPreferredUILanguages'				GetSystemPreferredUILanguages				kernel32	0		# KernelBase
 imp	'GetSystemRegistryQuota'				GetSystemRegistryQuota					kernel32	746
 imp	'GetSystemStateRootFolder'				GetSystemStateRootFolder				KernelBase	746
-imp	'GetSystemTime'						GetSystemTime						KernelBase	747	1
-imp	'GetSystemTimeAdjustment'				GetSystemTimeAdjustment					KernelBase	748
+imp	'GetSystemTime'						GetSystemTime						kernel32	0	1	# KernelBase
+imp	'GetSystemTimeAdjustment'				GetSystemTimeAdjustment					kernel32	0		# KernelBase
 imp	'GetSystemTimeAdjustmentPrecise'			GetSystemTimeAdjustmentPrecise				KernelBase	749
-imp	'GetSystemTimeAsFileTime'				GetSystemTimeAsFileTime					KernelBase	750	1
-imp	'GetSystemTimePreciseAsFileTime'			GetSystemTimePreciseAsFileTime				KernelBase	751	1
-imp	'GetSystemTimes'					GetSystemTimes						KernelBase	752
-imp	'GetSystemWindowsDirectoryA'				GetSystemWindowsDirectoryA				KernelBase	753
-imp	'GetSystemWindowsDirectory'				GetSystemWindowsDirectoryW				KernelBase	754
+imp	'GetSystemTimeAsFileTime'				GetSystemTimeAsFileTime					kernel32	0	1	# KernelBase
+imp	'GetSystemTimePreciseAsFileTime'			GetSystemTimePreciseAsFileTime				kernel32	0	1	# KernelBase
+imp	'GetSystemTimes'					GetSystemTimes						kernel32	0		# KernelBase
+imp	'GetSystemWindowsDirectoryA'				GetSystemWindowsDirectoryA				kernel32	0		# KernelBase
+imp	'GetSystemWindowsDirectory'				GetSystemWindowsDirectoryW				kernel32	0		# KernelBase
 imp	'GetSystemWow64Directory2A'				GetSystemWow64Directory2A				KernelBase	755
 imp	'GetSystemWow64Directory2W'				GetSystemWow64Directory2W				KernelBase	756
-imp	'GetSystemWow64DirectoryA'				GetSystemWow64DirectoryA				KernelBase	757
-imp	'GetSystemWow64Directory'				GetSystemWow64DirectoryW				KernelBase	758
+imp	'GetSystemWow64DirectoryA'				GetSystemWow64DirectoryA				kernel32	0		# KernelBase
+imp	'GetSystemWow64Directory'				GetSystemWow64DirectoryW				kernel32	0		# KernelBase
 imp	'GetTabbedTextExtentA'					GetTabbedTextExtentA					user32		1958
 imp	'GetTabbedTextExtent'					GetTabbedTextExtentW					user32		1959
 imp	'GetTapeParameters'					GetTapeParameters					kernel32	756
@@ -2637,10 +2637,10 @@ imp	'GetTapePosition'					GetTapePosition						kernel32	757
 imp	'GetTapeStatus'						GetTapeStatus						kernel32	758
 imp	'GetTargetPlatformContext'				GetTargetPlatformContext				KernelBase	759
 imp	'GetTaskmanWindow'					GetTaskmanWindow					user32		1960
-imp	'GetTempFileNameA'					GetTempFileNameA					KernelBase	760
-imp	'GetTempFileName'					GetTempFileNameW					KernelBase	761
-imp	'GetTempPath'						GetTempPathW						KernelBase	763	2
-imp	'GetTempPathA'						GetTempPathA						KernelBase	762	2
+imp	'GetTempFileNameA'					GetTempFileNameA					kernel32	0		# KernelBase
+imp	'GetTempFileName'					GetTempFileNameW					kernel32	0		# KernelBase
+imp	'GetTempPath'						GetTempPathW						kernel32	0	2	# KernelBase
+imp	'GetTempPathA'						GetTempPathA						kernel32	0	2	# KernelBase
 imp	'GetTextAlign'						GetTextAlign						gdi32		1708
 imp	'GetTextCharacterExtra'					GetTextCharacterExtra					gdi32		1709
 imp	'GetTextCharset'					GetTextCharset						gdi32		1710
@@ -2660,37 +2660,37 @@ imp	'GetTextFaceAlias'					GetTextFaceAliasW					gdi32		1723
 imp	'GetTextFace'						GetTextFaceW						gdi32		1724
 imp	'GetTextMetricsA'					GetTextMetricsA						gdi32		1725
 imp	'GetTextMetrics'					GetTextMetricsW						gdi32		1726
-imp	'GetThreadContext'					GetThreadContext					KernelBase	764
+imp	'GetThreadContext'					GetThreadContext					kernel32	0		# KernelBase
 imp	'GetThreadDescription'					GetThreadDescription					KernelBase	765
 imp	'GetThreadDesktop'					GetThreadDesktop					user32		1961
 imp	'GetThreadDpiAwarenessContext'				GetThreadDpiAwarenessContext				user32		1962
 imp	'GetThreadDpiHostingBehavior'				GetThreadDpiHostingBehavior				user32		1963
-imp	'GetThreadErrorMode'					GetThreadErrorMode					KernelBase	766
-imp	'GetThreadGroupAffinity'				GetThreadGroupAffinity					KernelBase	767
-imp	'GetThreadIOPendingFlag'				GetThreadIOPendingFlag					KernelBase	768	2
-imp	'GetThreadId'						GetThreadId						KernelBase	769	1
-imp	'GetThreadIdealProcessorEx'				GetThreadIdealProcessorEx				KernelBase	770
-imp	'GetThreadInformation'					GetThreadInformation					KernelBase	771
-imp	'GetThreadLocale'					GetThreadLocale						KernelBase	772
-imp	'GetThreadPreferredUILanguages'				GetThreadPreferredUILanguages				KernelBase	773
-imp	'GetThreadPriority'					GetThreadPriority					KernelBase	774	1
-imp	'GetThreadPriorityBoost'				GetThreadPriorityBoost					KernelBase	775	2
-imp	'GetThreadSelectedCpuSets'				GetThreadSelectedCpuSets				KernelBase	776
+imp	'GetThreadErrorMode'					GetThreadErrorMode					kernel32	0		# KernelBase
+imp	'GetThreadGroupAffinity'				GetThreadGroupAffinity					kernel32	0		# KernelBase
+imp	'GetThreadIOPendingFlag'				GetThreadIOPendingFlag					kernel32	0	2	# KernelBase
+imp	'GetThreadId'						GetThreadId						kernel32	0	1	# KernelBase
+imp	'GetThreadIdealProcessorEx'				GetThreadIdealProcessorEx				kernel32	0		# KernelBase
+imp	'GetThreadInformation'					GetThreadInformation					kernel32	0		# KernelBase
+imp	'GetThreadLocale'					GetThreadLocale						kernel32	0		# KernelBase
+imp	'GetThreadPreferredUILanguages'				GetThreadPreferredUILanguages				kernel32	0		# KernelBase
+imp	'GetThreadPriority'					GetThreadPriority					kernel32	0	1	# KernelBase
+imp	'GetThreadPriorityBoost'				GetThreadPriorityBoost					kernel32	0	2	# KernelBase
+imp	'GetThreadSelectedCpuSets'				GetThreadSelectedCpuSets				kernel32	0		# KernelBase
 imp	'GetThreadSelectorEntry'				GetThreadSelectorEntry					kernel32	776
-imp	'GetThreadTimes'					GetThreadTimes						KernelBase	777	5
-imp	'GetThreadUILanguage'					GetThreadUILanguage					KernelBase	778
+imp	'GetThreadTimes'					GetThreadTimes						kernel32	0	5	# KernelBase
+imp	'GetThreadUILanguage'					GetThreadUILanguage					kernel32	0		# KernelBase
 imp	'GetThreadWaitChain'					GetThreadWaitChain					advapi32	1369
-imp	'GetTickCount'						GetTickCount						KernelBase	779
-imp	'GetTickCount64'					GetTickCount64						KernelBase	780	0
-imp	'GetTimeFormatA'					GetTimeFormatA						KernelBase	781
+imp	'GetTickCount'						GetTickCount						kernel32	0		# KernelBase
+imp	'GetTickCount64'					GetTickCount64						kernel32	0	0	# KernelBase
+imp	'GetTimeFormatA'					GetTimeFormatA						kernel32	0		# KernelBase
 imp	'GetTimeFormatAWorker'					GetTimeFormatAWorker					kernel32	782
-imp	'GetTimeFormatEx'					GetTimeFormatEx						KernelBase	782
-imp	'GetTimeFormat'						GetTimeFormatW						KernelBase	783
+imp	'GetTimeFormatEx'					GetTimeFormatEx						kernel32	0		# KernelBase
+imp	'GetTimeFormat'						GetTimeFormatW						kernel32	0		# KernelBase
 imp	'GetTimeFormatWWorker'					GetTimeFormatWWorker					kernel32	785
-imp	'GetTimeZoneInformation'				GetTimeZoneInformation					KernelBase	784
-imp	'GetTimeZoneInformationForYear'				GetTimeZoneInformationForYear				KernelBase	785
+imp	'GetTimeZoneInformation'				GetTimeZoneInformation					kernel32	0		# KernelBase
+imp	'GetTimeZoneInformationForYear'				GetTimeZoneInformationForYear				kernel32	0		# KernelBase
 imp	'GetTitleBarInfo'					GetTitleBarInfo						user32		1964
-imp	'GetTokenInformation'					GetTokenInformation					KernelBase	786
+imp	'GetTokenInformation'					GetTokenInformation					advapi32	0		# KernelBase
 imp	'GetTopLevelWindow'					GetTopLevelWindow					user32		1965
 imp	'GetTopWindow'						GetTopWindow						user32		1966
 imp	'GetTouchInputInfo'					GetTouchInputInfo					user32		1967
@@ -2701,7 +2701,7 @@ imp	'GetTrusteeNameA'					GetTrusteeNameA						advapi32	1376
 imp	'GetTrusteeName'					GetTrusteeNameW						advapi32	1377
 imp	'GetTrusteeTypeA'					GetTrusteeTypeA						advapi32	1378
 imp	'GetTrusteeType'					GetTrusteeTypeW						advapi32	1379
-imp	'GetUILanguageInfo'					GetUILanguageInfo					KernelBase	790
+imp	'GetUILanguageInfo'					GetUILanguageInfo					kernel32	0		# KernelBase
 imp	'GetUmsCompletionListEvent'				GetUmsCompletionListEvent				kernel32	789
 imp	'GetUmsSystemThreadInformation'				GetUmsSystemThreadInformation				kernel32	790
 imp	'GetUnicodeStringToEightBitSizeRoutine'			GetUnicodeStringToEightBitSizeRoutine			KernelBase	791
@@ -2711,11 +2711,11 @@ imp	'GetUpdateRect'						GetUpdateRect						user32		1969
 imp	'GetUpdateRgn'						GetUpdateRgn						user32		1970
 imp	'GetUpdatedClipboardFormats'				GetUpdatedClipboardFormats				user32		1971
 imp	'GetUserDefaultGeoName'					GetUserDefaultGeoName					KernelBase	793
-imp	'GetUserDefaultLCID'					GetUserDefaultLCID					KernelBase	794
-imp	'GetUserDefaultLangID'					GetUserDefaultLangID					KernelBase	795
-imp	'GetUserDefaultLocaleName'				GetUserDefaultLocaleName				KernelBase	796
-imp	'GetUserDefaultUILanguage'				GetUserDefaultUILanguage				KernelBase	797
-imp	'GetUserGeoID'						GetUserGeoID						KernelBase	798
+imp	'GetUserDefaultLCID'					GetUserDefaultLCID					kernel32	0		# KernelBase
+imp	'GetUserDefaultLangID'					GetUserDefaultLangID					kernel32	0		# KernelBase
+imp	'GetUserDefaultLocaleName'				GetUserDefaultLocaleName				kernel32	0		# KernelBase
+imp	'GetUserDefaultUILanguage'				GetUserDefaultUILanguage				kernel32	0		# KernelBase
+imp	'GetUserGeoID'						GetUserGeoID						kernel32	0		# KernelBase
 imp	'GetUserInfo'						GetUserInfo						KernelBase	799
 imp	'GetUserInfoWord'					GetUserInfoWord						KernelBase	800
 imp	'GetUserName'						GetUserNameW						advapi32	1381	2
@@ -2725,22 +2725,22 @@ imp	'GetUserObjectInformation'				GetUserObjectInformationW				user32		1973
 imp	'GetUserObjectSecurity'					GetUserObjectSecurity					user32		1974
 imp	'GetUserOverrideString'					GetUserOverrideString					KernelBase	801
 imp	'GetUserOverrideWord'					GetUserOverrideWord					KernelBase	802
-imp	'GetUserPreferredUILanguages'				GetUserPreferredUILanguages				KernelBase	803
+imp	'GetUserPreferredUILanguages'				GetUserPreferredUILanguages				kernel32	0		# KernelBase
 imp	'GetVDMCurrentDirectories'				GetVDMCurrentDirectories				kernel32	798
-imp	'GetVersion'						GetVersion						KernelBase	804
-imp	'GetVersionExA'						GetVersionExA						KernelBase	805
-imp	'GetVersionEx'						GetVersionExW						KernelBase	806
+imp	'GetVersion'						GetVersion						kernel32	0		# KernelBase
+imp	'GetVersionExA'						GetVersionExA						kernel32	0		# KernelBase
+imp	'GetVersionEx'						GetVersionExW						kernel32	0		# KernelBase
 imp	'GetViewportExtEx'					GetViewportExtEx					gdi32		1728
 imp	'GetViewportOrgEx'					GetViewportOrgEx					gdi32		1729
-imp	'GetVolumeInformationA'					GetVolumeInformationA					KernelBase	807
-imp	'GetVolumeInformationByHandle'				GetVolumeInformationByHandleW				KernelBase	808
-imp	'GetVolumeInformation'					GetVolumeInformationW					KernelBase	809
+imp	'GetVolumeInformationA'					GetVolumeInformationA					kernel32	0		# KernelBase
+imp	'GetVolumeInformationByHandle'				GetVolumeInformationByHandleW				kernel32	0		# KernelBase
+imp	'GetVolumeInformation'					GetVolumeInformationW					kernel32	0		# KernelBase
 imp	'GetVolumeNameForVolumeMountPointA'			GetVolumeNameForVolumeMountPointA			kernel32	805
-imp	'GetVolumeNameForVolumeMountPoint'			GetVolumeNameForVolumeMountPointW			KernelBase	810
+imp	'GetVolumeNameForVolumeMountPoint'			GetVolumeNameForVolumeMountPointW			kernel32	0		# KernelBase
 imp	'GetVolumePathNameA'					GetVolumePathNameA					kernel32	807
-imp	'GetVolumePathName'					GetVolumePathNameW					KernelBase	811
+imp	'GetVolumePathName'					GetVolumePathNameW					kernel32	0		# KernelBase
 imp	'GetVolumePathNamesForVolumeNameA'			GetVolumePathNamesForVolumeNameA			kernel32	809
-imp	'GetVolumePathNamesForVolumeName'			GetVolumePathNamesForVolumeNameW			KernelBase	812
+imp	'GetVolumePathNamesForVolumeName'			GetVolumePathNamesForVolumeNameW			kernel32	0		# KernelBase
 imp	'GetWinMetaFileBits'					GetWinMetaFileBits					gdi32		1730
 imp	'GetWinStationInfo'					GetWinStationInfo					user32		1975
 imp	'GetWindow'						GetWindow						user32		1976	2
@@ -2775,33 +2775,33 @@ imp	'GetWindowTextLengthA'					GetWindowTextLengthA					user32		2004
 imp	'GetWindowTextLength'					GetWindowTextLengthW					user32		2006
 imp	'GetWindowThreadProcessId'				GetWindowThreadProcessId				user32		2008
 imp	'GetWindowWord'						GetWindowWord						user32		2009
-imp	'GetWindowsAccountDomainSid'				GetWindowsAccountDomainSid				KernelBase	813
-imp	'GetWindowsDirectory'					GetWindowsDirectoryW					KernelBase	815	2
-imp	'GetWindowsDirectoryA'					GetWindowsDirectoryA					KernelBase	814	2
+imp	'GetWindowsAccountDomainSid'				GetWindowsAccountDomainSid				advapi32	0		# KernelBase
+imp	'GetWindowsDirectory'					GetWindowsDirectoryW					kernel32	0	2	# KernelBase
+imp	'GetWindowsDirectoryA'					GetWindowsDirectoryA					kernel32	0	2	# KernelBase
 imp	'GetWorldTransform'					GetWorldTransform					gdi32		1733
-imp	'GetWriteWatch'						GetWriteWatch						KernelBase	816
+imp	'GetWriteWatch'						GetWriteWatch						kernel32	0		# KernelBase
 imp	'GetWsChanges'						GetWsChanges						KernelBase	817
 imp	'GetWsChangesEx'					GetWsChangesEx						KernelBase	818
-imp	'GetXStateFeaturesMask'					GetXStateFeaturesMask					KernelBase	819
+imp	'GetXStateFeaturesMask'					GetXStateFeaturesMask					kernel32	0		# KernelBase
 imp	'GhostWindowFromHungWindow'				GhostWindowFromHungWindow				user32		2011
 imp	'GlobalAddAtomA'					GlobalAddAtomA						kernel32	815
 imp	'GlobalAddAtomExA'					GlobalAddAtomExA					kernel32	816
 imp	'GlobalAddAtomEx'					GlobalAddAtomExW					kernel32	817
 imp	'GlobalAddAtom'						GlobalAddAtomW						kernel32	818
-imp	'GlobalAlloc'						GlobalAlloc						KernelBase	820
+imp	'GlobalAlloc'						GlobalAlloc						kernel32	0		# KernelBase
 imp	'GlobalCompact'						GlobalCompact						kernel32	820
 imp	'GlobalDeleteAtom'					GlobalDeleteAtom					kernel32	821
 imp	'GlobalFindAtomA'					GlobalFindAtomA						kernel32	822
 imp	'GlobalFindAtom'					GlobalFindAtomW						kernel32	823
 imp	'GlobalFix'						GlobalFix						kernel32	824
 imp	'GlobalFlags'						GlobalFlags						kernel32	825
-imp	'GlobalFree'						GlobalFree						KernelBase	821
+imp	'GlobalFree'						GlobalFree						kernel32	0		# KernelBase
 imp	'GlobalGetAtomNameA'					GlobalGetAtomNameA					kernel32	827
 imp	'GlobalGetAtomName'					GlobalGetAtomNameW					kernel32	828
 imp	'GlobalHandle'						GlobalHandle						kernel32	829
 imp	'GlobalLock'						GlobalLock						kernel32	830
 imp	'GlobalMemoryStatus'					GlobalMemoryStatus					kernel32	831
-imp	'GlobalMemoryStatusEx'					GlobalMemoryStatusEx					KernelBase	822	1
+imp	'GlobalMemoryStatusEx'					GlobalMemoryStatusEx					kernel32	0	1	# KernelBase
 imp	'GlobalReAlloc'						GlobalReAlloc						kernel32	833
 imp	'GlobalSize'						GlobalSize						kernel32	834
 imp	'GlobalUnWire'						GlobalUnWire						kernel32	835
@@ -2820,17 +2820,17 @@ imp	'Heap32First'						Heap32First						kernel32	839
 imp	'Heap32ListFirst'					Heap32ListFirst						kernel32	840
 imp	'Heap32ListNext'					Heap32ListNext						kernel32	841
 imp	'Heap32Next'						Heap32Next						kernel32	842
-imp	'HeapCompact'						HeapCompact						KernelBase	827
-imp	'HeapCreate'						HeapCreate						KernelBase	828
-imp	'HeapDestroy'						HeapDestroy						KernelBase	829
+imp	'HeapCompact'						HeapCompact						kernel32	0		# KernelBase
+imp	'HeapCreate'						HeapCreate						kernel32	0		# KernelBase
+imp	'HeapDestroy'						HeapDestroy						kernel32	0		# KernelBase
 imp	'HeapFree'						HeapFree						kernel32	847
-imp	'HeapLock'						HeapLock						KernelBase	831
-imp	'HeapQueryInformation'					HeapQueryInformation					KernelBase	832
-imp	'HeapSetInformation'					HeapSetInformation					KernelBase	834
+imp	'HeapLock'						HeapLock						kernel32	0		# KernelBase
+imp	'HeapQueryInformation'					HeapQueryInformation					kernel32	0		# KernelBase
+imp	'HeapSetInformation'					HeapSetInformation					kernel32	0		# KernelBase
 imp	'HeapSummary'						HeapSummary						KernelBase	836
-imp	'HeapUnlock'						HeapUnlock						KernelBase	837
-imp	'HeapValidate'						HeapValidate						KernelBase	838
-imp	'HeapWalk'						HeapWalk						KernelBase	839
+imp	'HeapUnlock'						HeapUnlock						kernel32	0		# KernelBase
+imp	'HeapValidate'						HeapValidate						kernel32	0		# KernelBase
+imp	'HeapWalk'						HeapWalk						kernel32	0		# KernelBase
 imp	'HideCaret'						HideCaret						user32		2014
 imp	'HiliteMenuItem'					HiliteMenuItem						user32		2015
 imp	'HungWindowFromGhostWindow'				HungWindowFromGhostWindow				user32		2016
@@ -2862,14 +2862,14 @@ imp	'I_ScReparseServiceDatabase'				I_ScReparseServiceDatabase				advapi32	1388
 imp	'I_ScSetServiceBitsA'					I_ScSetServiceBitsA					advapi32	1391
 imp	'I_ScSetServiceBits'					I_ScSetServiceBitsW					advapi32	1392
 imp	'IdentifyCodeAuthzLevel'				IdentifyCodeAuthzLevelW					advapi32	1394
-imp	'IdnToAscii'						IdnToAscii						KernelBase	840
-imp	'IdnToNameprepUnicode'					IdnToNameprepUnicode					KernelBase	841
-imp	'IdnToUnicode'						IdnToUnicode						KernelBase	842
-imp	'ImpersonateAnonymousToken'				ImpersonateAnonymousToken				KernelBase	843
+imp	'IdnToAscii'						IdnToAscii						kernel32	0		# KernelBase
+imp	'IdnToNameprepUnicode'					IdnToNameprepUnicode					kernel32	0		# KernelBase
+imp	'IdnToUnicode'						IdnToUnicode						kernel32	0		# KernelBase
+imp	'ImpersonateAnonymousToken'				ImpersonateAnonymousToken				advapi32	0		# KernelBase
 imp	'ImpersonateDdeClientWindow'				ImpersonateDdeClientWindow				user32		2023
-imp	'ImpersonateLoggedOnUser'				ImpersonateLoggedOnUser					KernelBase	844
-imp	'ImpersonateNamedPipeClient'				ImpersonateNamedPipeClient				KernelBase	845
-imp	'ImpersonateSelf'					ImpersonateSelf						KernelBase	846
+imp	'ImpersonateLoggedOnUser'				ImpersonateLoggedOnUser					advapi32	0		# KernelBase
+imp	'ImpersonateNamedPipeClient'				ImpersonateNamedPipeClient				advapi32	0		# KernelBase
+imp	'ImpersonateSelf'					ImpersonateSelf						advapi32	0		# KernelBase
 imp	'InSendMessage'						InSendMessage						user32		2024
 imp	'InSendMessageEx'					InSendMessageEx						user32		2025
 imp	'IncrementPackageStatusVersion'				IncrementPackageStatusVersion				KernelBase	847
@@ -2881,24 +2881,24 @@ imp	'InheritWindowMonitor'					InheritWindowMonitor					user32		2027
 imp	'InitAtomTable'						InitAtomTable						kernel32	860
 imp	'InitDManipHook'					InitDManipHook						user32		2028
 imp	'InitNetworkAddressControl'				InitNetworkAddressControl				shell32		306
-imp	'InitOnceBeginInitialize'				InitOnceBeginInitialize					KernelBase	848
-imp	'InitOnceComplete'					InitOnceComplete					KernelBase	849
-imp	'InitOnceExecuteOnce'					InitOnceExecuteOnce					KernelBase	850
-imp	'InitializeAcl'						InitializeAcl						KernelBase	852
-imp	'InitializeContext'					InitializeContext					KernelBase	854
-imp	'InitializeCriticalSectionAndSpinCount'			InitializeCriticalSectionAndSpinCount			KernelBase	856	2
-imp	'InitializeCriticalSectionEx'				InitializeCriticalSectionEx				KernelBase	857
+imp	'InitOnceBeginInitialize'				InitOnceBeginInitialize					kernel32	0		# KernelBase
+imp	'InitOnceComplete'					InitOnceComplete					kernel32	0		# KernelBase
+imp	'InitOnceExecuteOnce'					InitOnceExecuteOnce					kernel32	0		# KernelBase
+imp	'InitializeAcl'						InitializeAcl						advapi32	0		# KernelBase
+imp	'InitializeContext'					InitializeContext					kernel32	0		# KernelBase
+imp	'InitializeCriticalSectionAndSpinCount'			InitializeCriticalSectionAndSpinCount			kernel32	0	2	# KernelBase
+imp	'InitializeCriticalSectionEx'				InitializeCriticalSectionEx				kernel32	0		# KernelBase
 imp	'InitializeEnclave'					InitializeEnclave					KernelBase	858
 imp	'InitializeGenericHidInjection'				InitializeGenericHidInjection				user32		2029
 imp	'InitializeInputDeviceInjection'			InitializeInputDeviceInjection				user32		2030
 imp	'InitializeLpkHooks'					InitializeLpkHooks					user32		2031
 imp	'InitializePointerDeviceInjection'			InitializePointerDeviceInjection			user32		2032
 imp	'InitializePointerDeviceInjectionEx'			InitializePointerDeviceInjectionEx			user32		2033
-imp	'InitializeProcThreadAttributeList'			InitializeProcThreadAttributeList			KernelBase	859	4
+imp	'InitializeProcThreadAttributeList'			InitializeProcThreadAttributeList			kernel32	0	4	# KernelBase
 imp	'InitializeProcessForWsWatch'				InitializeProcessForWsWatch				KernelBase	860
-imp	'InitializeSecurityDescriptor'				InitializeSecurityDescriptor				KernelBase	863
-imp	'InitializeSid'						InitializeSid						KernelBase	864
-imp	'InitializeSynchronizationBarrier'			InitializeSynchronizationBarrier			KernelBase	865
+imp	'InitializeSecurityDescriptor'				InitializeSecurityDescriptor				advapi32	0		# KernelBase
+imp	'InitializeSid'						InitializeSid						advapi32	0		# KernelBase
+imp	'InitializeSynchronizationBarrier'			InitializeSynchronizationBarrier			kernel32	0		# KernelBase
 imp	'InitializeTouchInjection'				InitializeTouchInjection				user32		2034
 imp	'InitiateShutdownA'					InitiateShutdownA					advapi32	1402
 imp	'InitiateShutdown'					InitiateShutdownW					advapi32	1403
@@ -2917,7 +2917,7 @@ imp	'InsertMenuItemA'					InsertMenuItemA						user32		2042
 imp	'InsertMenuItem'					InsertMenuItemW						user32		2043
 imp	'InsertMenu'						InsertMenuW						user32		2044	5
 imp	'InstallApplication'					InstallApplication					advapi32	1408
-imp	'InstallELAMCertificateInfo'				InstallELAMCertificateInfo				KernelBase	866
+imp	'InstallELAMCertificateInfo'				InstallELAMCertificateInfo				kernel32	0		# KernelBase
 imp	'InternalDeleteDC'					InternalDeleteDC					gdi32		1736
 imp	'InternalExtractIconListA'				InternalExtractIconListA				shell32		307
 imp	'InternalExtractIconList'				InternalExtractIconListW				shell32		308
@@ -2971,8 +2971,8 @@ imp	'IsCharUpper'						IsCharUpperW						KernelBase	899
 imp	'IsCharXDigit'						IsCharXDigitW						KernelBase	900
 imp	'IsChild'						IsChild							user32		2059	2
 imp	'IsClipboardFormatAvailable'				IsClipboardFormatAvailable				user32		2060
-imp	'IsDBCSLeadByte'					IsDBCSLeadByte						KernelBase	901
-imp	'IsDBCSLeadByteEx'					IsDBCSLeadByteEx					KernelBase	902
+imp	'IsDBCSLeadByte'					IsDBCSLeadByte						kernel32	0		# KernelBase
+imp	'IsDBCSLeadByteEx'					IsDBCSLeadByteEx					kernel32	0		# KernelBase
 imp	'IsDebuggerPresent$nt'					IsDebuggerPresent					KernelBase	903
 imp	'IsDesktopExplorerProcess'				IsDesktopExplorerProcess				shell32		942
 imp	'IsDeveloperModeEnabled'				IsDeveloperModeEnabled					KernelBase	904
@@ -2992,17 +2992,17 @@ imp	'IsLFNDriveA'						IsLFNDriveA						shell32		41
 imp	'IsLFNDrive'						IsLFNDriveW						shell32		42
 imp	'IsMenu'						IsMenu							user32		2070	1
 imp	'IsMouseInPointerEnabled'				IsMouseInPointerEnabled					user32		2071
-imp	'IsNLSDefinedString'					IsNLSDefinedString					KernelBase	909
+imp	'IsNLSDefinedString'					IsNLSDefinedString					kernel32	0		# KernelBase
 imp	'IsNativeVhdBoot'					IsNativeVhdBoot						kernel32	897
 imp	'IsNetDrive'						IsNetDrive						shell32		66
-imp	'IsNormalizedString'					IsNormalizedString					KernelBase	910
+imp	'IsNormalizedString'					IsNormalizedString					kernel32	0		# KernelBase
 imp	'IsOnDemandRegistrationSupportedForExtensionCategory'	IsOnDemandRegistrationSupportedForExtensionCategory	KernelBase	911
 imp	'IsOneCoreTransformMode'				IsOneCoreTransformMode					user32		2072
 imp	'IsProcessAnExplorer'					IsProcessAnExplorer					shell32		941
-imp	'IsProcessCritical'					IsProcessCritical					KernelBase	912
+imp	'IsProcessCritical'					IsProcessCritical					kernel32	0		# KernelBase
 imp	'IsProcessDPIAware'					IsProcessDPIAware					user32		2073
-imp	'IsProcessInJob'					IsProcessInJob						KernelBase	913
-imp	'IsProcessorFeaturePresent'				IsProcessorFeaturePresent				KernelBase	914
+imp	'IsProcessInJob'					IsProcessInJob						kernel32	0		# KernelBase
+imp	'IsProcessorFeaturePresent'				IsProcessorFeaturePresent				kernel32	0		# KernelBase
 imp	'IsQueueAttached'					IsQueueAttached						user32		2074
 imp	'IsRectEmpty'						IsRectEmpty						user32		2075
 imp	'IsSETEnabled'						IsSETEnabled						user32		2076
@@ -3012,30 +3012,30 @@ imp	'IsSideloadingPolicyApplied'				IsSideloadingPolicyApplied				KernelBase	916
 imp	'IsSyncForegroundPolicyRefresh'				IsSyncForegroundPolicyRefresh				KernelBase	917
 imp	'IsSystemResumeAutomatic'				IsSystemResumeAutomatic					kernel32	902
 imp	'IsTextUnicode'						IsTextUnicode						advapi32	1409
-imp	'IsThreadAFiber'					IsThreadAFiber						KernelBase	918
+imp	'IsThreadAFiber'					IsThreadAFiber						kernel32	0		# KernelBase
 imp	'IsThreadDesktopComposited'				IsThreadDesktopComposited				user32		2078
 imp	'IsThreadMessageQueueAttached'				IsThreadMessageQueueAttached				user32		2528
 imp	'IsThreadTSFEventAware'					IsThreadTSFEventAware					user32		2079
 imp	'IsTimeZoneRedirectionEnabled'				IsTimeZoneRedirectionEnabled				KernelBase	920
-imp	'IsTokenRestricted'					IsTokenRestricted					KernelBase	921
+imp	'IsTokenRestricted'					IsTokenRestricted					advapi32	0		# KernelBase
 imp	'IsTokenUntrusted'					IsTokenUntrusted					advapi32	1411
 imp	'IsTopLevelWindow'					IsTopLevelWindow					user32		2080
 imp	'IsTouchWindow'						IsTouchWindow						user32		2081
 imp	'IsUserAnAdmin'						IsUserAnAdmin						shell32		680
-imp	'IsValidAcl'						IsValidAcl						KernelBase	922
+imp	'IsValidAcl'						IsValidAcl						advapi32	0		# KernelBase
 imp	'IsValidCalDateTime'					IsValidCalDateTime					kernel32	905
-imp	'IsValidCodePage'					IsValidCodePage						KernelBase	923
+imp	'IsValidCodePage'					IsValidCodePage						kernel32	0		# KernelBase
 imp	'IsValidDpiAwarenessContext'				IsValidDpiAwarenessContext				user32		2082
 imp	'IsValidEnhMetaRecord'					IsValidEnhMetaRecord					gdi32		1739
 imp	'IsValidEnhMetaRecordOffExt'				IsValidEnhMetaRecordOffExt				gdi32		1740
-imp	'IsValidLanguageGroup'					IsValidLanguageGroup					KernelBase	924
-imp	'IsValidLocale'						IsValidLocale						KernelBase	925
-imp	'IsValidLocaleName'					IsValidLocaleName					KernelBase	926
-imp	'IsValidNLSVersion'					IsValidNLSVersion					KernelBase	927
+imp	'IsValidLanguageGroup'					IsValidLanguageGroup					kernel32	0		# KernelBase
+imp	'IsValidLocale'						IsValidLocale						kernel32	0		# KernelBase
+imp	'IsValidLocaleName'					IsValidLocaleName					kernel32	0		# KernelBase
+imp	'IsValidNLSVersion'					IsValidNLSVersion					kernel32	0		# KernelBase
 imp	'IsValidRelativeSecurityDescriptor'			IsValidRelativeSecurityDescriptor			KernelBase	928
-imp	'IsValidSecurityDescriptor'				IsValidSecurityDescriptor				KernelBase	929
-imp	'IsValidSid'						IsValidSid						KernelBase	930
-imp	'IsWellKnownSid'					IsWellKnownSid						KernelBase	931
+imp	'IsValidSecurityDescriptor'				IsValidSecurityDescriptor				advapi32	0		# KernelBase
+imp	'IsValidSid'						IsValidSid						advapi32	0		# KernelBase
+imp	'IsWellKnownSid'					IsWellKnownSid						advapi32	0		# KernelBase
 imp	'IsWinEventHookInstalled'				IsWinEventHookInstalled					user32		2083
 imp	'IsWindow'						IsWindow						user32		2084	1
 imp	'IsWindowArranged'					IsWindowArranged					user32		2085
@@ -3046,36 +3046,36 @@ imp	'IsWindowUnicode'					IsWindowUnicode						user32		2089
 imp	'IsWindowVisible'					IsWindowVisible						user32		2090	1
 imp	'IsWow64GuestMachineSupported'				IsWow64GuestMachineSupported				KernelBase	932
 imp	'IsWow64Message'					IsWow64Message						user32		2091
-imp	'IsWow64Process'					IsWow64Process						KernelBase	933
+imp	'IsWow64Process'					IsWow64Process						kernel32	0		# KernelBase
 imp	'IsWow64Process2'					IsWow64Process2						KernelBase	934
 imp	'IsZoomed'						IsZoomed						user32		2092	1
-imp	'K32EmptyWorkingSet'					K32EmptyWorkingSet					KernelBase	935
-imp	'K32EnumDeviceDrivers'					K32EnumDeviceDrivers					KernelBase	936
-imp	'K32EnumPageFilesA'					K32EnumPageFilesA					KernelBase	937
-imp	'K32EnumPageFiles'					K32EnumPageFilesW					KernelBase	938
-imp	'K32EnumProcessModules'					K32EnumProcessModules					KernelBase	939
-imp	'K32EnumProcessModulesEx'				K32EnumProcessModulesEx					KernelBase	940
-imp	'K32EnumProcesses'					K32EnumProcesses					KernelBase	941
-imp	'K32GetDeviceDriverBaseNameA'				K32GetDeviceDriverBaseNameA				KernelBase	942
-imp	'K32GetDeviceDriverBaseName'				K32GetDeviceDriverBaseNameW				KernelBase	943
-imp	'K32GetDeviceDriverFileNameA'				K32GetDeviceDriverFileNameA				KernelBase	944
-imp	'K32GetDeviceDriverFileName'				K32GetDeviceDriverFileNameW				KernelBase	945
-imp	'K32GetMappedFileNameA'					K32GetMappedFileNameA					KernelBase	946
-imp	'K32GetMappedFileName'					K32GetMappedFileNameW					KernelBase	947
-imp	'K32GetModuleBaseNameA'					K32GetModuleBaseNameA					KernelBase	948
-imp	'K32GetModuleBaseName'					K32GetModuleBaseNameW					KernelBase	949
-imp	'K32GetModuleFileNameExA'				K32GetModuleFileNameExA					KernelBase	950
-imp	'K32GetModuleFileNameEx'				K32GetModuleFileNameExW					KernelBase	951
-imp	'K32GetModuleInformation'				K32GetModuleInformation					KernelBase	952
-imp	'K32GetPerformanceInfo'					K32GetPerformanceInfo					KernelBase	953
-imp	'K32GetProcessImageFileNameA'				K32GetProcessImageFileNameA				KernelBase	954
-imp	'K32GetProcessImageFileName'				K32GetProcessImageFileNameW				KernelBase	955
-imp	'K32GetProcessMemoryInfo'				K32GetProcessMemoryInfo					KernelBase	956
-imp	'K32GetWsChanges'					K32GetWsChanges						KernelBase	957
-imp	'K32GetWsChangesEx'					K32GetWsChangesEx					KernelBase	958
-imp	'K32InitializeProcessForWsWatch'			K32InitializeProcessForWsWatch				KernelBase	959
-imp	'K32QueryWorkingSet'					K32QueryWorkingSet					KernelBase	960
-imp	'K32QueryWorkingSetEx'					K32QueryWorkingSetEx					KernelBase	961
+imp	'K32EmptyWorkingSet'					K32EmptyWorkingSet					kernel32	0		# KernelBase
+imp	'K32EnumDeviceDrivers'					K32EnumDeviceDrivers					kernel32	0		# KernelBase
+imp	'K32EnumPageFilesA'					K32EnumPageFilesA					kernel32	0		# KernelBase
+imp	'K32EnumPageFiles'					K32EnumPageFilesW					kernel32	0		# KernelBase
+imp	'K32EnumProcessModules'					K32EnumProcessModules					kernel32	0		# KernelBase
+imp	'K32EnumProcessModulesEx'				K32EnumProcessModulesEx					kernel32	0		# KernelBase
+imp	'K32EnumProcesses'					K32EnumProcesses					kernel32	0		# KernelBase
+imp	'K32GetDeviceDriverBaseNameA'				K32GetDeviceDriverBaseNameA				kernel32	0		# KernelBase
+imp	'K32GetDeviceDriverBaseName'				K32GetDeviceDriverBaseNameW				kernel32	0		# KernelBase
+imp	'K32GetDeviceDriverFileNameA'				K32GetDeviceDriverFileNameA				kernel32	0		# KernelBase
+imp	'K32GetDeviceDriverFileName'				K32GetDeviceDriverFileNameW				kernel32	0		# KernelBase
+imp	'K32GetMappedFileNameA'					K32GetMappedFileNameA					kernel32	0		# KernelBase
+imp	'K32GetMappedFileName'					K32GetMappedFileNameW					kernel32	0		# KernelBase
+imp	'K32GetModuleBaseNameA'					K32GetModuleBaseNameA					kernel32	0		# KernelBase
+imp	'K32GetModuleBaseName'					K32GetModuleBaseNameW					kernel32	0		# KernelBase
+imp	'K32GetModuleFileNameExA'				K32GetModuleFileNameExA					kernel32	0		# KernelBase
+imp	'K32GetModuleFileNameEx'				K32GetModuleFileNameExW					kernel32	0		# KernelBase
+imp	'K32GetModuleInformation'				K32GetModuleInformation					kernel32	0		# KernelBase
+imp	'K32GetPerformanceInfo'					K32GetPerformanceInfo					kernel32	0		# KernelBase
+imp	'K32GetProcessImageFileNameA'				K32GetProcessImageFileNameA				kernel32	0		# KernelBase
+imp	'K32GetProcessImageFileName'				K32GetProcessImageFileNameW				kernel32	0		# KernelBase
+imp	'K32GetProcessMemoryInfo'				K32GetProcessMemoryInfo					kernel32	0		# KernelBase
+imp	'K32GetWsChanges'					K32GetWsChanges						kernel32	0		# KernelBase
+imp	'K32GetWsChangesEx'					K32GetWsChangesEx					kernel32	0		# KernelBase
+imp	'K32InitializeProcessForWsWatch'			K32InitializeProcessForWsWatch				kernel32	0		# KernelBase
+imp	'K32QueryWorkingSet'					K32QueryWorkingSet					kernel32	0		# KernelBase
+imp	'K32QueryWorkingSetEx'					K32QueryWorkingSetEx					kernel32	0		# KernelBase
 imp	'KernelBaseGetGlobalData'				KernelBaseGetGlobalData					KernelBase	962
 imp	'KernelbasePostInit'					KernelbasePostInit					KernelBase	963
 imp	'KiRaiseUserExceptionDispatcher'			KiRaiseUserExceptionDispatcher				ntdll		103
@@ -3084,10 +3084,10 @@ imp	'KiUserCallbackDispatcher'				KiUserCallbackDispatcher				ntdll		105
 imp	'KiUserExceptionDispatcher'				KiUserExceptionDispatcher				ntdll		106
 imp	'KiUserInvertedFunctionTable'				KiUserInvertedFunctionTable				ntdll		107
 imp	'KillTimer'						KillTimer						user32		2093	2
-imp	'LCIDToLocaleName'					LCIDToLocaleName					KernelBase	964
-imp	'LCMapStringA'						LCMapStringA						KernelBase	965
-imp	'LCMapStringEx'						LCMapStringEx						KernelBase	966
-imp	'LCMapString'						LCMapStringW						KernelBase	967
+imp	'LCIDToLocaleName'					LCIDToLocaleName					kernel32	0		# KernelBase
+imp	'LCMapStringA'						LCMapStringA						kernel32	0		# KernelBase
+imp	'LCMapStringEx'						LCMapStringEx						kernel32	0		# KernelBase
+imp	'LCMapString'						LCMapStringW						kernel32	0		# KernelBase
 imp	'LPtoDP'						LPtoDP							gdi32		1741
 imp	'LZClose'						LZClose							kernel32	945
 imp	'LZCloseFile'						LZCloseFile						kernel32	946
@@ -3204,40 +3204,40 @@ imp	'LoadImage'						LoadImageW						user32		2105	6
 imp	'LoadKeyboardLayoutA'					LoadKeyboardLayoutA					user32		2106
 imp	'LoadKeyboardLayoutEx'					LoadKeyboardLayoutEx					user32		2107
 imp	'LoadKeyboardLayout'					LoadKeyboardLayoutW					user32		2108
-imp	'LoadLibrary'						LoadLibraryW						KernelBase	978	1
-imp	'LoadLibraryA'						LoadLibraryA						KernelBase	975	1
-imp	'LoadLibraryExA'					LoadLibraryExA						KernelBase	976	3
-imp	'LoadLibraryEx'						LoadLibraryExW						KernelBase	977
+imp	'LoadLibrary'						LoadLibraryW						kernel32	0	1	# KernelBase
+imp	'LoadLibraryA'						LoadLibraryA						kernel32	0	1	# KernelBase
+imp	'LoadLibraryExA'					LoadLibraryExA						kernel32	0	3	# KernelBase
+imp	'LoadLibraryEx'						LoadLibraryExW						kernel32	0	3	# KernelBase
 imp	'LoadLocalFonts'					LoadLocalFonts						user32		2109
 imp	'LoadMenuA'						LoadMenuA						user32		2110
 imp	'LoadMenuIndirectA'					LoadMenuIndirectA					user32		2111
 imp	'LoadMenuIndirect'					LoadMenuIndirectW					user32		2112
 imp	'LoadMenu'						LoadMenuW						user32		2113
 imp	'LoadModule'						LoadModule						kernel32	964
-imp	'LoadPackagedLibrary'					LoadPackagedLibrary					KernelBase	979
+imp	'LoadPackagedLibrary'					LoadPackagedLibrary					kernel32	0		# KernelBase
 imp	'LoadRemoteFonts'					LoadRemoteFonts						user32		2114
-imp	'LoadResource'						LoadResource						KernelBase	980	2
+imp	'LoadResource'						LoadResource						kernel32	0	2	# KernelBase
 imp	'LoadStringA'						LoadStringA						KernelBase	981
 imp	'LoadStringBaseEx'					LoadStringBaseExW					KernelBase	982
 imp	'LoadStringBase'					LoadStringBaseW						kernel32	968
 imp	'LoadStringByReference'					LoadStringByReference					KernelBase	983
 imp	'LoadString'						LoadStringW						KernelBase	984
-imp	'LocalAlloc'						LocalAlloc						KernelBase	985
+imp	'LocalAlloc'						LocalAlloc						kernel32	0		# KernelBase
 imp	'LocalCompact'						LocalCompact						kernel32	970
-imp	'LocalFileTimeToFileTime'				LocalFileTimeToFileTime					KernelBase	986
+imp	'LocalFileTimeToFileTime'				LocalFileTimeToFileTime					kernel32	0		# KernelBase
 imp	'LocalFlags'						LocalFlags						kernel32	972
-imp	'LocalFree'						LocalFree						KernelBase	987
+imp	'LocalFree'						LocalFree						kernel32	0		# KernelBase
 imp	'LocalHandle'						LocalHandle						kernel32	974
-imp	'LocalLock'						LocalLock						KernelBase	988
-imp	'LocalReAlloc'						LocalReAlloc						KernelBase	989
+imp	'LocalLock'						LocalLock						kernel32	0		# KernelBase
+imp	'LocalReAlloc'						LocalReAlloc						kernel32	0		# KernelBase
 imp	'LocalShrink'						LocalShrink						kernel32	977
 imp	'LocalSize'						LocalSize						kernel32	978
-imp	'LocalUnlock'						LocalUnlock						KernelBase	990
-imp	'LocaleNameToLCID'					LocaleNameToLCID					KernelBase	991
-imp	'LocateXStateFeature'					LocateXStateFeature					KernelBase	992
-imp	'LockFile'						LockFile						KernelBase	993	5
-imp	'LockFileEx'						LockFileEx						KernelBase	994	6
-imp	'LockResource'						LockResource						KernelBase	995	1
+imp	'LocalUnlock'						LocalUnlock						kernel32	0		# KernelBase
+imp	'LocaleNameToLCID'					LocaleNameToLCID					kernel32	0		# KernelBase
+imp	'LocateXStateFeature'					LocateXStateFeature					kernel32	0		# KernelBase
+imp	'LockFile'						LockFile						kernel32	0	5	# KernelBase
+imp	'LockFileEx'						LockFileEx						kernel32	0	6	# KernelBase
+imp	'LockResource'						LockResource						kernel32	0	1	# KernelBase
 imp	'LockServiceDatabase'					LockServiceDatabase					advapi32	1417
 imp	'LockSetForegroundWindow'				LockSetForegroundWindow					user32		2117
 imp	'LockWindowStation'					LockWindowStation					user32		2118
@@ -3373,21 +3373,21 @@ imp	'MSChapSrvChangePassword'				MSChapSrvChangePassword					advapi32	1508
 imp	'MSChapSrvChangePassword2'				MSChapSrvChangePassword2				advapi32	1509
 imp	'MailToProtocolHandler'					MailToProtocolHandler					url		109
 imp	'MailToProtocolHandlerA'				MailToProtocolHandlerA					url		110
-imp	'MakeAbsoluteSD'					MakeAbsoluteSD						KernelBase	996
+imp	'MakeAbsoluteSD'					MakeAbsoluteSD						advapi32	0		# KernelBase
 imp	'MakeAbsoluteSD2'					MakeAbsoluteSD2						KernelBase	997
-imp	'MakeSelfRelativeSD'					MakeSelfRelativeSD					KernelBase	998
+imp	'MakeSelfRelativeSD'					MakeSelfRelativeSD					advapi32	0		# KernelBase
 imp	'MakeThreadTSFEventAware'				MakeThreadTSFEventAware					user32		2151
 imp	'MapDialogRect'						MapDialogRect						user32		2152
-imp	'MapGenericMask'					MapGenericMask						KernelBase	999	2
+imp	'MapGenericMask'					MapGenericMask						advapi32	0	2	# KernelBase
 imp	'MapPredefinedHandleInternal'				MapPredefinedHandleInternal				KernelBase	1000
-imp	'MapUserPhysicalPages'					MapUserPhysicalPages					KernelBase	1001
+imp	'MapUserPhysicalPages'					MapUserPhysicalPages					kernel32	0		# KernelBase
 imp	'MapUserPhysicalPagesScatter'				MapUserPhysicalPagesScatter				kernel32	986
-imp	'MapViewOfFile'						MapViewOfFile						KernelBase	1002
+imp	'MapViewOfFile'						MapViewOfFile						kernel32	0		# KernelBase
 imp	'MapViewOfFile3'					MapViewOfFile3						KernelBase	1003
 imp	'MapViewOfFile3FromApp'					MapViewOfFile3FromApp					KernelBase	1004
-imp	'MapViewOfFileEx'					MapViewOfFileEx						KernelBase	1005
-imp	'MapViewOfFileExNuma'					MapViewOfFileExNuma					KernelBase	1006	7
-imp	'MapViewOfFileFromApp'					MapViewOfFileFromApp					KernelBase	1007
+imp	'MapViewOfFileEx'					MapViewOfFileEx						kernel32	0		# KernelBase
+imp	'MapViewOfFileExNuma'					MapViewOfFileExNuma					kernel32	0	7	# KernelBase
+imp	'MapViewOfFileFromApp'					MapViewOfFileFromApp					kernel32	0		# KernelBase
 imp	'MapViewOfFileNuma2'					MapViewOfFileNuma2					KernelBase	1008
 imp	'MapVirtualKeyA'					MapVirtualKeyA						user32		2153
 imp	'MapVirtualKeyExA'					MapVirtualKeyExA					user32		2154
@@ -3420,24 +3420,24 @@ imp	'MonitorFromRect'					MonitorFromRect						user32		2174
 imp	'MonitorFromWindow'					MonitorFromWindow					user32		2175
 imp	'MoveFile'						MoveFileW						kernel32	1000	2
 imp	'MoveFileA'						MoveFileA						kernel32	995	2
-imp	'MoveFileEx'						MoveFileExW						KernelBase	1009	3
+imp	'MoveFileEx'						MoveFileExW						kernel32	0	3	# KernelBase
 imp	'MoveFileExA'						MoveFileExA						kernel32	996	3
 imp	'MoveFileTransactedA'					MoveFileTransactedA					kernel32	998
 imp	'MoveFileTransacted'					MoveFileTransactedW					kernel32	999
 imp	'MoveFileWithProgressA'					MoveFileWithProgressA					kernel32	1001
 imp	'MoveFileWithProgressTransacted'			MoveFileWithProgressTransactedW				KernelBase	1010
-imp	'MoveFileWithProgress'					MoveFileWithProgressW					KernelBase	1011
+imp	'MoveFileWithProgress'					MoveFileWithProgressW					kernel32	0		# KernelBase
 imp	'MoveToEx'						MoveToEx						gdi32		1761
 imp	'MoveWindow'						MoveWindow						user32		2176	6
 imp	'MsgWaitForMultipleObjects'				MsgWaitForMultipleObjects				user32		2177
 imp	'MsgWaitForMultipleObjectsEx'				MsgWaitForMultipleObjectsEx				user32		2178
-imp	'MulDiv'						MulDiv							KernelBase	1012
-imp	'MultiByteToWideChar'					MultiByteToWideChar					KernelBase	1013
+imp	'MulDiv'						MulDiv							kernel32	0		# KernelBase
+imp	'MultiByteToWideChar'					MultiByteToWideChar					kernel32	0		# KernelBase
 imp	'NamedEscape'						NamedEscape						gdi32		1762
 imp	'NamedPipeEventEnum'					NamedPipeEventEnum					KernelBase	1014
 imp	'NamedPipeEventSelect'					NamedPipeEventSelect					KernelBase	1015
-imp	'NeedCurrentDirectoryForExePathA'			NeedCurrentDirectoryForExePathA				KernelBase	1016
-imp	'NeedCurrentDirectoryForExePath'			NeedCurrentDirectoryForExePathW				KernelBase	1017
+imp	'NeedCurrentDirectoryForExePathA'			NeedCurrentDirectoryForExePathA				kernel32	0		# KernelBase
+imp	'NeedCurrentDirectoryForExePath'			NeedCurrentDirectoryForExePathW				kernel32	0		# KernelBase
 imp	'NetAccessAdd'						NetAccessAdd						netapi32	71
 imp	'NetAccessDel'						NetAccessDel						netapi32	72
 imp	'NetAccessEnum'						NetAccessEnum						netapi32	73
@@ -3520,7 +3520,7 @@ imp	'NlsUpdateLocale'					NlsUpdateLocale						KernelBase	1024
 imp	'NlsUpdateSystemLocale'					NlsUpdateSystemLocale					KernelBase	1025
 imp	'NlsValidateLocale'					NlsValidateLocale					KernelBase	1026
 imp	'NlsWriteEtwEvent'					NlsWriteEtwEvent					KernelBase	1027
-imp	'NormalizeString'					NormalizeString						KernelBase	1028
+imp	'NormalizeString'					NormalizeString						kernel32	0		# KernelBase
 imp	'NotifyBootConfigStatus'				NotifyBootConfigStatus					advapi32	1514
 imp	'NotifyChangeEventLog'					NotifyChangeEventLog					advapi32	1515
 imp	'NotifyMountMgr'					NotifyMountMgr						KernelBase	1029
@@ -4003,19 +4003,19 @@ imp	'NtdllDialogWndProc_A'					NtdllDialogWndProc_A					ntdll		662
 imp	'NtdllDialogWndProc_W'					NtdllDialogWndProc_W					ntdll		663
 imp	'OOBEComplete'						OOBEComplete						kernel32	1017
 imp	'ObjectCloseAuditAlarmA'				ObjectCloseAuditAlarmA					advapi32	1520
-imp	'ObjectCloseAuditAlarm'					ObjectCloseAuditAlarmW					KernelBase	1031
+imp	'ObjectCloseAuditAlarm'					ObjectCloseAuditAlarmW					advapi32	0		# KernelBase
 imp	'ObjectDeleteAuditAlarmA'				ObjectDeleteAuditAlarmA					advapi32	1522
-imp	'ObjectDeleteAuditAlarm'				ObjectDeleteAuditAlarmW					KernelBase	1032
+imp	'ObjectDeleteAuditAlarm'				ObjectDeleteAuditAlarmW					advapi32	0		# KernelBase
 imp	'ObjectOpenAuditAlarmA'					ObjectOpenAuditAlarmA					advapi32	1524
-imp	'ObjectOpenAuditAlarm'					ObjectOpenAuditAlarmW					KernelBase	1033
+imp	'ObjectOpenAuditAlarm'					ObjectOpenAuditAlarmW					advapi32	0		# KernelBase
 imp	'ObjectPrivilegeAuditAlarmA'				ObjectPrivilegeAuditAlarmA				advapi32	1526
-imp	'ObjectPrivilegeAuditAlarm'				ObjectPrivilegeAuditAlarmW				KernelBase	1034
+imp	'ObjectPrivilegeAuditAlarm'				ObjectPrivilegeAuditAlarmW				advapi32	0		# KernelBase
 imp	'OemKeyScan'						OemKeyScan						user32		2181
 imp	'OemToCharA'						OemToCharA						user32		2182
 imp	'OemToCharBuffA'					OemToCharBuffA						user32		2183
 imp	'OemToCharBuff'						OemToCharBuffW						user32		2184
 imp	'OemToChar'						OemToCharW						user32		2185
-imp	'OfferVirtualMemory'					OfferVirtualMemory					KernelBase	1035	3
+imp	'OfferVirtualMemory'					OfferVirtualMemory					kernel32	0	3	# KernelBase
 imp	'OffsetClipRgn'						OffsetClipRgn						gdi32		1763
 imp	'OffsetRect'						OffsetRect						user32		2186
 imp	'OffsetRgn'						OffsetRgn						gdi32		1764
@@ -4034,35 +4034,35 @@ imp	'OpenDesktopA'						OpenDesktopA						user32		2188
 imp	'OpenDesktop'						OpenDesktopW						user32		2189
 imp	'OpenEncryptedFileRawA'					OpenEncryptedFileRawA					advapi32	1530
 imp	'OpenEncryptedFileRaw'					OpenEncryptedFileRawW					advapi32	1531
-imp	'OpenEventA'						OpenEventA						KernelBase	1037
+imp	'OpenEventA'						OpenEventA						kernel32	0		# KernelBase
 imp	'OpenEventLogA'						OpenEventLogA						advapi32	1532
 imp	'OpenEventLog'						OpenEventLogW						advapi32	1533
-imp	'OpenEvent'						OpenEventW						KernelBase	1038
+imp	'OpenEvent'						OpenEventW						kernel32	0		# KernelBase
 imp	'OpenFile'						OpenFile						kernel32	1023
-imp	'OpenFileById'						OpenFileById						KernelBase	1039
+imp	'OpenFileById'						OpenFileById						kernel32	0		# KernelBase
 imp	'OpenFileMappingA'					OpenFileMappingA					kernel32	1025
 imp	'OpenFileMappingFromApp'				OpenFileMappingFromApp					KernelBase	1040
-imp	'OpenFileMapping'					OpenFileMappingW					KernelBase	1041
+imp	'OpenFileMapping'					OpenFileMappingW					kernel32	0		# KernelBase
 imp	'OpenGlobalizationUserSettingsKey'			OpenGlobalizationUserSettingsKey			KernelBase	1042
 imp	'OpenIcon'						OpenIcon						user32		2190
 imp	'OpenInputDesktop'					OpenInputDesktop					user32		2191
 imp	'OpenJobObjectA'					OpenJobObjectA						kernel32	1027
 imp	'OpenJobObject'						OpenJobObjectW						kernel32	1028
 imp	'OpenMutexA'						OpenMutexA						kernel32	1029
-imp	'OpenMutex'						OpenMutexW						KernelBase	1043
-imp	'OpenPackageInfoByFullName'				OpenPackageInfoByFullName				KernelBase	1044
+imp	'OpenMutex'						OpenMutexW						kernel32	0		# KernelBase
+imp	'OpenPackageInfoByFullName'				OpenPackageInfoByFullName				kernel32	0		# KernelBase
 imp	'OpenPackageInfoByFullNameForUser'			OpenPackageInfoByFullNameForUser			KernelBase	1045
 imp	'OpenPrivateNamespaceA'					OpenPrivateNamespaceA					kernel32	1032
-imp	'OpenPrivateNamespace'					OpenPrivateNamespaceW					KernelBase	1046
-imp	'OpenProcess'						OpenProcess						KernelBase	1047	3
-imp	'OpenProcessToken'					OpenProcessToken					KernelBase	1048	3  # NOTE: MSDN says ADVAPI32 but we're not going to add milliseconds of startup latency to every binary that calls access() just for a jump slot
-imp	'OpenProfileUserMapping'				OpenProfileUserMapping					kernel32	1036       # TODO: Do old versions of Windows actually require we get it from there?
+imp	'OpenPrivateNamespace'					OpenPrivateNamespaceW					kernel32	0		# KernelBase
+imp	'OpenProcess'						OpenProcess						kernel32	0	3	# KernelBase
+imp	'OpenProcessToken'					OpenProcessToken					advapi32	0	3	# KernelBase
+imp	'OpenProfileUserMapping'				OpenProfileUserMapping					kernel32	1036
 imp	'OpenRegKey'						OpenRegKey						KernelBase	1049
 imp	'OpenRegStream'						OpenRegStream						shell32		85
 imp	'OpenSCManagerA'					OpenSCManagerA						advapi32	1535
 imp	'OpenSCManager'						OpenSCManagerW						advapi32	1536
 imp	'OpenSemaphoreA'					OpenSemaphoreA						kernel32	1037
-imp	'OpenSemaphore'						OpenSemaphoreW						KernelBase	1050
+imp	'OpenSemaphore'						OpenSemaphoreW						kernel32	0		# KernelBase
 imp	'OpenServiceA'						OpenServiceA						advapi32	1537
 imp	'OpenService'						OpenServiceW						advapi32	1538
 imp	'OpenState'						OpenState						KernelBase	1051
@@ -4070,16 +4070,16 @@ imp	'OpenStateAtom'						OpenStateAtom						KernelBase	1052
 imp	'OpenStateExplicit'					OpenStateExplicit					KernelBase	1053
 imp	'OpenStateExplicitForUserSid'				OpenStateExplicitForUserSid				KernelBase	1054
 imp	'OpenStateExplicitForUserSidString'			OpenStateExplicitForUserSidString			KernelBase	1055
-imp	'OpenThread'						OpenThread						KernelBase	1056	3
+imp	'OpenThread'						OpenThread						kernel32	0	3	# KernelBase
 imp	'OpenThreadDesktop'					OpenThreadDesktop					user32		2192
-imp	'OpenThreadToken'					OpenThreadToken						KernelBase	1057
+imp	'OpenThreadToken'					OpenThreadToken						advapi32	0	4	# KernelBase
 imp	'OpenThreadWaitChainSession'				OpenThreadWaitChainSession				advapi32	1540
 imp	'OpenTraceA'						OpenTraceA						advapi32	1541
 imp	'OpenTrace'						OpenTraceW						advapi32	1542
 imp	'OpenURL'						OpenURL							url		111
 imp	'OpenURLA'						OpenURLA						url		112
 imp	'OpenWaitableTimerA'					OpenWaitableTimerA					kernel32	1043
-imp	'OpenWaitableTimer'					OpenWaitableTimerW					KernelBase	1058
+imp	'OpenWaitableTimer'					OpenWaitableTimerW					kernel32	0		# KernelBase
 imp	'OpenWindowStationA'					OpenWindowStationA					user32		2193
 imp	'OpenWindowStation'					OpenWindowStationW					user32		2194
 imp	'OperationEnd'						OperationEnd						advapi32	1543
@@ -4087,8 +4087,8 @@ imp	'OperationStart'					OperationStart						advapi32	1544
 imp	'Options_RunDLL'					Options_RunDLL						shell32		310
 imp	'Options_RunDLLA'					Options_RunDLLA						shell32		311
 imp	'Options_RunDLLW'					Options_RunDLLW						shell32		312
-imp	'OutputDebugStringA'					OutputDebugStringA					KernelBase	1059
-imp	'OutputDebugString'					OutputDebugStringW					KernelBase	1060
+imp	'OutputDebugStringA'					OutputDebugStringA					kernel32	0		# KernelBase
+imp	'OutputDebugString'					OutputDebugStringW					kernel32	0		# KernelBase
 imp	'OverrideRoamingDataModificationTimesInRange'		OverrideRoamingDataModificationTimesInRange		KernelBase	1061
 imp	'PATHOBJ_bEnum'						PATHOBJ_bEnum						gdi32		1767
 imp	'PATHOBJ_bEnumClipLines'				PATHOBJ_bEnumClipLines					gdi32		1768
@@ -4097,18 +4097,18 @@ imp	'PATHOBJ_vEnumStartClipLines'				PATHOBJ_vEnumStartClipLines				gdi32		1770
 imp	'PATHOBJ_vGetBounds'					PATHOBJ_vGetBounds					gdi32		1771
 imp	'PackDDElParam'						PackDDElParam						user32		2195
 imp	'PackTouchHitTestingProximityEvaluation'		PackTouchHitTestingProximityEvaluation			user32		2196
-imp	'PackageFamilyNameFromFullName'				PackageFamilyNameFromFullName				KernelBase	1062
+imp	'PackageFamilyNameFromFullName'				PackageFamilyNameFromFullName				kernel32	0		# KernelBase
 imp	'PackageFamilyNameFromFullNameA'			PackageFamilyNameFromFullNameA				KernelBase	1063
-imp	'PackageFamilyNameFromId'				PackageFamilyNameFromId					KernelBase	1064
+imp	'PackageFamilyNameFromId'				PackageFamilyNameFromId					kernel32	0		# KernelBase
 imp	'PackageFamilyNameFromIdA'				PackageFamilyNameFromIdA				KernelBase	1065
 imp	'PackageFamilyNameFromProductId'			PackageFamilyNameFromProductId				KernelBase	1066
-imp	'PackageFullNameFromId'					PackageFullNameFromId					KernelBase	1067
+imp	'PackageFullNameFromId'					PackageFullNameFromId					kernel32	0		# KernelBase
 imp	'PackageFullNameFromIdA'				PackageFullNameFromIdA					KernelBase	1068
 imp	'PackageFullNameFromProductId'				PackageFullNameFromProductId				KernelBase	1069
-imp	'PackageIdFromFullName'					PackageIdFromFullName					KernelBase	1070
+imp	'PackageIdFromFullName'					PackageIdFromFullName					kernel32	0		# KernelBase
 imp	'PackageIdFromFullNameA'				PackageIdFromFullNameA					KernelBase	1071
 imp	'PackageIdFromProductId'				PackageIdFromProductId					KernelBase	1072
-imp	'PackageNameAndPublisherIdFromFamilyName'		PackageNameAndPublisherIdFromFamilyName			KernelBase	1073
+imp	'PackageNameAndPublisherIdFromFamilyName'		PackageNameAndPublisherIdFromFamilyName			kernel32	0		# KernelBase
 imp	'PackageNameAndPublisherIdFromFamilyNameA'		PackageNameAndPublisherIdFromFamilyNameA		KernelBase	1074
 imp	'PackageRelativeApplicationIdFromProductId'		PackageRelativeApplicationIdFromProductId		KernelBase	1075
 imp	'PackageSidFromFamilyName'				PackageSidFromFamilyName				KernelBase	1076
@@ -4119,7 +4119,7 @@ imp	'PaintDesktop'						PaintDesktop						user32		2197
 imp	'PaintMenuBar'						PaintMenuBar						user32		2198
 imp	'PaintMonitor'						PaintMonitor						user32		2199
 imp	'PaintRgn'						PaintRgn						gdi32		1772
-imp	'ParseApplicationUserModelId'				ParseApplicationUserModelId				KernelBase	1077
+imp	'ParseApplicationUserModelId'				ParseApplicationUserModelId				kernel32	0		# KernelBase
 imp	'ParseApplicationUserModelIdA'				ParseApplicationUserModelIdA				KernelBase	1078
 imp	'ParseURLA'						ParseURLA						KernelBase	1079
 imp	'ParseURLW'						ParseURLW						KernelBase	1080
@@ -4256,40 +4256,40 @@ imp	'PcwSendNotification'					PcwSendNotification					KernelBase	1199
 imp	'PcwSendStatelessNotification'				PcwSendStatelessNotification				KernelBase	1200
 imp	'PcwSetCounterSetSecurity'				PcwSetCounterSetSecurity				KernelBase	1201
 imp	'PcwSetQueryItemUserData'				PcwSetQueryItemUserData					KernelBase	1202
-imp	'PeekConsoleInput'					PeekConsoleInputW					KernelBase	1204	4
-imp	'PeekConsoleInputA'					PeekConsoleInputA					KernelBase	1203	4
+imp	'PeekConsoleInput'					PeekConsoleInputW					kernel32	0	4	# KernelBase
+imp	'PeekConsoleInputA'					PeekConsoleInputA					kernel32	0	4	# KernelBase
 imp	'PeekMessageA'						PeekMessageA						user32		2200
 imp	'PeekMessage'						PeekMessageW						user32		2201
-imp	'PeekNamedPipe'						PeekNamedPipe						KernelBase	1205	6
+imp	'PeekNamedPipe'						PeekNamedPipe						kernel32	0	6	# KernelBase
 imp	'PerfAddCounters'					PerfAddCounters						advapi32	1545
 imp	'PerfCloseQueryHandle'					PerfCloseQueryHandle					advapi32	1546
-imp	'PerfCreateInstance'					PerfCreateInstance					KernelBase	1206
-imp	'PerfDecrementULongCounterValue'			PerfDecrementULongCounterValue				KernelBase	1207
-imp	'PerfDecrementULongLongCounterValue'			PerfDecrementULongLongCounterValue			KernelBase	1208
+imp	'PerfCreateInstance'					PerfCreateInstance					advapi32	0		# KernelBase
+imp	'PerfDecrementULongCounterValue'			PerfDecrementULongCounterValue				advapi32	0		# KernelBase
+imp	'PerfDecrementULongLongCounterValue'			PerfDecrementULongLongCounterValue			advapi32	0		# KernelBase
 imp	'PerfDeleteCounters'					PerfDeleteCounters					advapi32	1550
-imp	'PerfDeleteInstance'					PerfDeleteInstance					KernelBase	1209
+imp	'PerfDeleteInstance'					PerfDeleteInstance					advapi32	0		# KernelBase
 imp	'PerfEnumerateCounterSet'				PerfEnumerateCounterSet					advapi32	1552
 imp	'PerfEnumerateCounterSetInstances'			PerfEnumerateCounterSetInstances			advapi32	1553
-imp	'PerfIncrementULongCounterValue'			PerfIncrementULongCounterValue				KernelBase	1210
-imp	'PerfIncrementULongLongCounterValue'			PerfIncrementULongLongCounterValue			KernelBase	1211
+imp	'PerfIncrementULongCounterValue'			PerfIncrementULongCounterValue				advapi32	0		# KernelBase
+imp	'PerfIncrementULongLongCounterValue'			PerfIncrementULongLongCounterValue			advapi32	0		# KernelBase
 imp	'PerfOpenQueryHandle'					PerfOpenQueryHandle					advapi32	1556
 imp	'PerfQueryCounterData'					PerfQueryCounterData					advapi32	1557
 imp	'PerfQueryCounterInfo'					PerfQueryCounterInfo					advapi32	1558
 imp	'PerfQueryCounterSetRegistrationInfo'			PerfQueryCounterSetRegistrationInfo			advapi32	1559
-imp	'PerfQueryInstance'					PerfQueryInstance					KernelBase	1212
+imp	'PerfQueryInstance'					PerfQueryInstance					advapi32	0		# KernelBase
 imp	'PerfRegCloseKey'					PerfRegCloseKey						advapi32	1561
 imp	'PerfRegEnumKey'					PerfRegEnumKey						advapi32	1562
 imp	'PerfRegEnumValue'					PerfRegEnumValue					advapi32	1563
 imp	'PerfRegQueryInfoKey'					PerfRegQueryInfoKey					advapi32	1564
 imp	'PerfRegQueryValue'					PerfRegQueryValue					advapi32	1565
 imp	'PerfRegSetValue'					PerfRegSetValue						advapi32	1566
-imp	'PerfSetCounterRefValue'				PerfSetCounterRefValue					KernelBase	1213
-imp	'PerfSetCounterSetInfo'					PerfSetCounterSetInfo					KernelBase	1214
-imp	'PerfSetULongCounterValue'				PerfSetULongCounterValue				KernelBase	1215
-imp	'PerfSetULongLongCounterValue'				PerfSetULongLongCounterValue				KernelBase	1216
-imp	'PerfStartProvider'					PerfStartProvider					KernelBase	1217
-imp	'PerfStartProviderEx'					PerfStartProviderEx					KernelBase	1218
-imp	'PerfStopProvider'					PerfStopProvider					KernelBase	1219
+imp	'PerfSetCounterRefValue'				PerfSetCounterRefValue					advapi32	0		# KernelBase
+imp	'PerfSetCounterSetInfo'					PerfSetCounterSetInfo					advapi32	0		# KernelBase
+imp	'PerfSetULongCounterValue'				PerfSetULongCounterValue				advapi32	0		# KernelBase
+imp	'PerfSetULongLongCounterValue'				PerfSetULongLongCounterValue				advapi32	0		# KernelBase
+imp	'PerfStartProvider'					PerfStartProvider					advapi32	0		# KernelBase
+imp	'PerfStartProviderEx'					PerfStartProviderEx					advapi32	0		# KernelBase
+imp	'PerfStopProvider'					PerfStopProvider					advapi32	0		# KernelBase
 imp	'PfxFindPrefix'						PfxFindPrefix						ntdll		664
 imp	'PfxInitialize'						PfxInitialize						ntdll		665
 imp	'PfxInsertPrefix'					PfxInsertPrefix						ntdll		666
@@ -4321,14 +4321,14 @@ imp	'PolylineTo'						PolylineTo						gdi32		1791
 imp	'PoolPerAppKeyStateInternal'				PoolPerAppKeyStateInternal				KernelBase	1220
 imp	'PostMessageA'						PostMessageA						user32		2204
 imp	'PostMessage'						PostMessageW						user32		2205
-imp	'PostQueuedCompletionStatus'				PostQueuedCompletionStatus				KernelBase	1221	4
+imp	'PostQueuedCompletionStatus'				PostQueuedCompletionStatus				kernel32	0	4	# KernelBase
 imp	'PostQuitMessage'					PostQuitMessage						user32		2206	1
 imp	'PostThreadMessageA'					PostThreadMessageA					user32		2207
 imp	'PostThreadMessage'					PostThreadMessageW					user32		2208
 imp	'PowerClearRequest'					PowerClearRequest					kernel32	1057
 imp	'PowerCreateRequest'					PowerCreateRequest					kernel32	1058
 imp	'PowerSetRequest'					PowerSetRequest						kernel32	1059
-imp	'PrefetchVirtualMemory'					PrefetchVirtualMemory					KernelBase	1222	4
+imp	'PrefetchVirtualMemory'					PrefetchVirtualMemory					kernel32	0	4	# KernelBase
 imp	'PrepareDiscForBurnRunDll'				PrepareDiscForBurnRunDllW				shell32		135
 imp	'PrepareTape'						PrepareTape						kernel32	1061
 imp	'PrintDlgA'						PrintDlgA						comdlg32	120	1
@@ -4346,12 +4346,12 @@ imp	'PrivateExtractIconEx'					PrivateExtractIconExW					user32		2211
 imp	'PrivateExtractIconsA'					PrivateExtractIconsA					user32		2212
 imp	'PrivateExtractIcons'					PrivateExtractIconsW					user32		2213
 imp	'PrivateRegisterICSProc'				PrivateRegisterICSProc					user32		2214
-imp	'PrivilegeCheck'					PrivilegeCheck						KernelBase	1224
+imp	'PrivilegeCheck'					PrivilegeCheck						advapi32	0		# KernelBase
 imp	'PrivilegedServiceAuditAlarmA'				PrivilegedServiceAuditAlarmA				advapi32	1575
-imp	'PrivilegedServiceAuditAlarm'				PrivilegedServiceAuditAlarmW				KernelBase	1225
+imp	'PrivilegedServiceAuditAlarm'				PrivilegedServiceAuditAlarmW				advapi32	0		# KernelBase
 imp	'Process32First'					Process32FirstW						kernel32	1065
 imp	'Process32Next'						Process32NextW						kernel32	1067
-imp	'ProcessIdToSessionId'					ProcessIdToSessionId					KernelBase	1226
+imp	'ProcessIdToSessionId'					ProcessIdToSessionId					kernel32	0		# KernelBase
 imp	'ProcessIdleTasks'					ProcessIdleTasksW					advapi32	1578
 imp	'ProcessTrace'						ProcessTrace						advapi32	1579
 imp	'ProductIdFromPackageFamilyName'			ProductIdFromPackageFamilyName				KernelBase	1227
@@ -4366,9 +4366,9 @@ imp	'PsmGetPackageFullNameFromKey'				PsmGetPackageFullNameFromKey				KernelBase
 imp	'PsmIsChildKey'						PsmIsChildKey						KernelBase	1236
 imp	'PsmIsDynamicKey'					PsmIsDynamicKey						KernelBase	1237
 imp	'PsmIsValidKey'						PsmIsValidKey						KernelBase	1238
-imp	'PssCaptureSnapshot'					PssCaptureSnapshot					KernelBase	1239
-imp	'PssDuplicateSnapshot'					PssDuplicateSnapshot					KernelBase	1240
-imp	'PssFreeSnapshot'					PssFreeSnapshot						KernelBase	1241
+imp	'PssCaptureSnapshot'					PssCaptureSnapshot					kernel32	0		# KernelBase
+imp	'PssDuplicateSnapshot'					PssDuplicateSnapshot					kernel32	0		# KernelBase
+imp	'PssFreeSnapshot'					PssFreeSnapshot						kernel32	0		# KernelBase
 imp	'PssNtCaptureSnapshot'					PssNtCaptureSnapshot					ntdll		668
 imp	'PssNtDuplicateSnapshot'				PssNtDuplicateSnapshot					ntdll		669
 imp	'PssNtFreeRemoteSnapshot'				PssNtFreeRemoteSnapshot					ntdll		670
@@ -4377,26 +4377,26 @@ imp	'PssNtFreeWalkMarker'					PssNtFreeWalkMarker					ntdll		672
 imp	'PssNtQuerySnapshot'					PssNtQuerySnapshot					ntdll		673
 imp	'PssNtValidateDescriptor'				PssNtValidateDescriptor					ntdll		674
 imp	'PssNtWalkSnapshot'					PssNtWalkSnapshot					ntdll		675
-imp	'PssQuerySnapshot'					PssQuerySnapshot					KernelBase	1242
-imp	'PssWalkMarkerCreate'					PssWalkMarkerCreate					KernelBase	1243
-imp	'PssWalkMarkerFree'					PssWalkMarkerFree					KernelBase	1244
-imp	'PssWalkMarkerGetPosition'				PssWalkMarkerGetPosition				KernelBase	1245
+imp	'PssQuerySnapshot'					PssQuerySnapshot					kernel32	0		# KernelBase
+imp	'PssWalkMarkerCreate'					PssWalkMarkerCreate					kernel32	0		# KernelBase
+imp	'PssWalkMarkerFree'					PssWalkMarkerFree					kernel32	0		# KernelBase
+imp	'PssWalkMarkerGetPosition'				PssWalkMarkerGetPosition				kernel32	0		# KernelBase
 imp	'PssWalkMarkerRewind'					PssWalkMarkerRewind					kernel32	1076
 imp	'PssWalkMarkerSeek'					PssWalkMarkerSeek					kernel32	1077
-imp	'PssWalkMarkerSeekToBeginning'				PssWalkMarkerSeekToBeginning				KernelBase	1246
-imp	'PssWalkMarkerSetPosition'				PssWalkMarkerSetPosition				KernelBase	1247
+imp	'PssWalkMarkerSeekToBeginning'				PssWalkMarkerSeekToBeginning				kernel32	0		# KernelBase
+imp	'PssWalkMarkerSetPosition'				PssWalkMarkerSetPosition				kernel32	0		# KernelBase
 imp	'PssWalkMarkerTell'					PssWalkMarkerTell					kernel32	1080
-imp	'PssWalkSnapshot'					PssWalkSnapshot						KernelBase	1248
+imp	'PssWalkSnapshot'					PssWalkSnapshot						kernel32	0		# KernelBase
 imp	'PtInRect'						PtInRect						user32		2215
 imp	'PtInRegion'						PtInRegion						gdi32		1792
 imp	'PtVisible'						PtVisible						gdi32		1793
 imp	'PublishStateChangeNotification'			PublishStateChangeNotification				KernelBase	1249
-imp	'PulseEvent'						PulseEvent						KernelBase	1250	1
-imp	'PurgeComm'						PurgeComm						KernelBase	1251
+imp	'PulseEvent'						PulseEvent						kernel32	0	1	# KernelBase
+imp	'PurgeComm'						PurgeComm						kernel32	0		# KernelBase
 imp	'QISearch'						QISearch						KernelBase	1252
-imp	'QueryActCtxSettings'					QueryActCtxSettingsW					KernelBase	1253
+imp	'QueryActCtxSettings'					QueryActCtxSettingsW					kernel32	0		# KernelBase
 imp	'QueryActCtxSettingsWWorker'				QueryActCtxSettingsWWorker				kernel32	1085
-imp	'QueryActCtx'						QueryActCtxW						KernelBase	1254
+imp	'QueryActCtx'						QueryActCtxW						kernel32	0		# KernelBase
 imp	'QueryActCtxWWorker'					QueryActCtxWWorker					kernel32	1087
 imp	'QueryAllTracesA'					QueryAllTracesA						advapi32	1580
 imp	'QueryAllTraces'					QueryAllTracesW						advapi32	1581
@@ -4404,26 +4404,26 @@ imp	'QueryAuxiliaryCounterFrequency'			QueryAuxiliaryCounterFrequency				KernelB
 imp	'QueryBSDRWindow'					QueryBSDRWindow						user32		2216
 imp	'QueryDisplayConfig'					QueryDisplayConfig					user32		2217
 imp	'QueryDosDeviceA'					QueryDosDeviceA						kernel32	1089
-imp	'QueryDosDevice'					QueryDosDeviceW						KernelBase	1257
+imp	'QueryDosDevice'					QueryDosDeviceW						kernel32	0		# KernelBase
 imp	'QueryFontAssocStatus'					QueryFontAssocStatus					gdi32		1794
-imp	'QueryFullProcessImageNameA'				QueryFullProcessImageNameA				KernelBase	1258
-imp	'QueryFullProcessImageName'				QueryFullProcessImageNameW				KernelBase	1259
-imp	'QueryIdleProcessorCycleTime'				QueryIdleProcessorCycleTime				KernelBase	1260
-imp	'QueryIdleProcessorCycleTimeEx'				QueryIdleProcessorCycleTimeEx				KernelBase	1261
+imp	'QueryFullProcessImageNameA'				QueryFullProcessImageNameA				kernel32	0		# KernelBase
+imp	'QueryFullProcessImageName'				QueryFullProcessImageNameW				kernel32	0		# KernelBase
+imp	'QueryIdleProcessorCycleTime'				QueryIdleProcessorCycleTime				kernel32	0		# KernelBase
+imp	'QueryIdleProcessorCycleTimeEx'				QueryIdleProcessorCycleTimeEx				kernel32	0		# KernelBase
 imp	'QueryInformationJobObject'				QueryInformationJobObject				kernel32	1095
 imp	'QueryInterruptTime'					QueryInterruptTime					KernelBase	1262
 imp	'QueryInterruptTimePrecise'				QueryInterruptTimePrecise				KernelBase	1263
 imp	'QueryIoRateControlInformationJobObject'		QueryIoRateControlInformationJobObject			kernel32	1096
 imp	'QueryLocalUserServiceName'				QueryLocalUserServiceName				advapi32	1582
-imp	'QueryMemoryResourceNotification'			QueryMemoryResourceNotification				KernelBase	1264
+imp	'QueryMemoryResourceNotification'			QueryMemoryResourceNotification				kernel32	0		# KernelBase
 imp	'QueryOptionalDelayLoadedAPI'				QueryOptionalDelayLoadedAPI				KernelBase	1265
 imp	'QueryPerformanceCounter'				QueryPerformanceCounter					kernel32	1098
 imp	'QueryPerformanceFrequency'				QueryPerformanceFrequency				kernel32	1099
-imp	'QueryProcessAffinityUpdateMode'			QueryProcessAffinityUpdateMode				KernelBase	1268
-imp	'QueryProcessCycleTime'					QueryProcessCycleTime					KernelBase	1269
-imp	'QueryProtectedPolicy'					QueryProtectedPolicy					KernelBase	1270
+imp	'QueryProcessAffinityUpdateMode'			QueryProcessAffinityUpdateMode				kernel32	0		# KernelBase
+imp	'QueryProcessCycleTime'					QueryProcessCycleTime					kernel32	0		# KernelBase
+imp	'QueryProtectedPolicy'					QueryProtectedPolicy					kernel32	0		# KernelBase
 imp	'QueryRecoveryAgentsOnEncryptedFile'			QueryRecoveryAgentsOnEncryptedFile			advapi32	1583
-imp	'QuerySecurityAccessMask'				QuerySecurityAccessMask					KernelBase	1271
+imp	'QuerySecurityAccessMask'				QuerySecurityAccessMask					advapi32	0		# KernelBase
 imp	'QuerySendMessage'					QuerySendMessage					user32		2218
 imp	'QueryServiceConfig2A'					QueryServiceConfig2A					advapi32	1585
 imp	'QueryServiceConfig2W'					QueryServiceConfig2W					advapi32	1586
@@ -4438,9 +4438,9 @@ imp	'QueryServiceStatusEx'					QueryServiceStatusEx					advapi32	1594
 imp	'QueryStateAtomValueInfo'				QueryStateAtomValueInfo					KernelBase	1272
 imp	'QueryStateContainerCreatedNew'				QueryStateContainerCreatedNew				KernelBase	1273
 imp	'QueryStateContainerItemInfo'				QueryStateContainerItemInfo				KernelBase	1274
-imp	'QueryThreadCycleTime'					QueryThreadCycleTime					KernelBase	1275
+imp	'QueryThreadCycleTime'					QueryThreadCycleTime					kernel32	0		# KernelBase
 imp	'QueryThreadProfiling'					QueryThreadProfiling					kernel32	1104
-imp	'QueryThreadpoolStackInformation'			QueryThreadpoolStackInformation				KernelBase	1276
+imp	'QueryThreadpoolStackInformation'			QueryThreadpoolStackInformation				kernel32	0		# KernelBase
 imp	'QueryTraceA'						QueryTraceA						advapi32	1595
 imp	'QueryTraceProcessingHandle'				QueryTraceProcessingHandle				advapi32	1596
 imp	'QueryTrace'						QueryTraceW						advapi32	1597
@@ -4453,8 +4453,8 @@ imp	'QueryUsersOnEncryptedFile'				QueryUsersOnEncryptedFile				advapi32	1600
 imp	'QueryVirtualMemoryInformation'				QueryVirtualMemoryInformation				KernelBase	1279
 imp	'QueryWorkingSet'					QueryWorkingSet						KernelBase	1280
 imp	'QueryWorkingSetEx'					QueryWorkingSetEx					KernelBase	1281
-imp	'QueueUserAPC'						QueueUserAPC						KernelBase	1282
-imp	'QueueUserWorkItem'					QueueUserWorkItem					KernelBase	1283
+imp	'QueueUserAPC'						QueueUserAPC						kernel32	0		# KernelBase
+imp	'QueueUserWorkItem'					QueueUserWorkItem					kernel32	0		# KernelBase
 imp	'QuirkGetData'						QuirkGetData						KernelBase	1284
 imp	'QuirkGetData2'						QuirkGetData2						KernelBase	1285
 imp	'QuirkGetData2Worker'					QuirkGetData2Worker					kernel32	1110
@@ -4496,31 +4496,31 @@ imp	'RIMSetTestModeStatus'					RIMSetTestModeStatus					user32		2236
 imp	'RIMUnregisterForInput'					RIMUnregisterForInput					user32		2237
 imp	'RIMUpdateInputObserverRegistration'			RIMUpdateInputObserverRegistration			user32		2238
 imp	'RaiseCustomSystemEventTrigger'				RaiseCustomSystemEventTrigger				KernelBase	1294
-imp	'RaiseException'					RaiseException						KernelBase	1295
-imp	'RaiseFailFastException'				RaiseFailFastException					KernelBase	1296
+imp	'RaiseException'					RaiseException						kernel32	0		# KernelBase
+imp	'RaiseFailFastException'				RaiseFailFastException					kernel32	0		# KernelBase
 imp	'RaiseInvalid16BitExeError'				RaiseInvalid16BitExeError				kernel32	1122
-imp	'ReOpenFile'						ReOpenFile						KernelBase	1297	4
+imp	'ReOpenFile'						ReOpenFile						kernel32	0	4	# TODO(jart): 6.2 and higher	# KernelBase
 imp	'ReadCabinetState'					ReadCabinetState					shell32		654
-imp	'ReadConsole'						ReadConsoleW						KernelBase	1308	5
-imp	'ReadConsoleA'						ReadConsoleA						KernelBase	1298	5
-imp	'ReadConsoleInput'					ReadConsoleInputW					KernelBase	1302	4
-imp	'ReadConsoleInputA'					ReadConsoleInputA					KernelBase	1299	4
+imp	'ReadConsole'						ReadConsoleW						kernel32	0	5	# KernelBase
+imp	'ReadConsoleA'						ReadConsoleA						kernel32	0	5	# KernelBase
+imp	'ReadConsoleInput'					ReadConsoleInputW					kernel32	0	4	# KernelBase
+imp	'ReadConsoleInputA'					ReadConsoleInputA					kernel32	0	4	# KernelBase
 imp	'ReadConsoleInputExA'					ReadConsoleInputExA					KernelBase	1300
 imp	'ReadConsoleInputEx'					ReadConsoleInputExW					KernelBase	1301
-imp	'ReadConsoleOutput'					ReadConsoleOutputW					KernelBase	1307	5
-imp	'ReadConsoleOutputA'					ReadConsoleOutputA					KernelBase	1303	5
-imp	'ReadConsoleOutputAttribute'				ReadConsoleOutputAttribute				KernelBase	1304	5
-imp	'ReadConsoleOutputCharacter'				ReadConsoleOutputCharacterW				KernelBase	1306	5
-imp	'ReadConsoleOutputCharacterA'				ReadConsoleOutputCharacterA				KernelBase	1305	5
+imp	'ReadConsoleOutput'					ReadConsoleOutputW					kernel32	0	5	# KernelBase
+imp	'ReadConsoleOutputA'					ReadConsoleOutputA					kernel32	0	5	# KernelBase
+imp	'ReadConsoleOutputAttribute'				ReadConsoleOutputAttribute				kernel32	0	5	# KernelBase
+imp	'ReadConsoleOutputCharacter'				ReadConsoleOutputCharacterW				kernel32	0	5	# KernelBase
+imp	'ReadConsoleOutputCharacterA'				ReadConsoleOutputCharacterA				kernel32	0	5	# KernelBase
 imp	'ReadDirectoryChangesEx'				ReadDirectoryChangesExW					KernelBase	1309
-imp	'ReadDirectoryChanges'					ReadDirectoryChangesW					KernelBase	1310
+imp	'ReadDirectoryChanges'					ReadDirectoryChangesW					kernel32	0		# KernelBase
 imp	'ReadEncryptedFileRaw'					ReadEncryptedFileRaw					advapi32	1601
 imp	'ReadEventLogA'						ReadEventLogA						advapi32	1602
 imp	'ReadEventLog'						ReadEventLogW						advapi32	1603
-imp	'ReadFile'						ReadFile						KernelBase	1311	5
-imp	'ReadFileEx'						ReadFileEx						KernelBase	1312	5
-imp	'ReadFileScatter'					ReadFileScatter						KernelBase	1313	5
-imp	'ReadProcessMemory'					ReadProcessMemory					KernelBase	1314
+imp	'ReadFile'						ReadFile						kernel32	0	5	# KernelBase
+imp	'ReadFileEx'						ReadFileEx						kernel32	0	5	# KernelBase
+imp	'ReadFileScatter'					ReadFileScatter						kernel32	0	5	# KernelBase
+imp	'ReadProcessMemory'					ReadProcessMemory					kernel32	0		# KernelBase
 imp	'ReadStateAtomValue'					ReadStateAtomValue					KernelBase	1315
 imp	'ReadStateContainerValue'				ReadStateContainerValue					KernelBase	1316
 imp	'ReadThreadProfilingData'				ReadThreadProfilingData					kernel32	1141
@@ -4535,7 +4535,7 @@ imp	'RealShellExecute'					RealShellExecuteW					shell32		226
 imp	'RealizePalette'					RealizePalette						gdi32		1795
 imp	'ReasonCodeNeedsBugID'					ReasonCodeNeedsBugID					user32		2243
 imp	'ReasonCodeNeedsComment'				ReasonCodeNeedsComment					user32		2244
-imp	'ReclaimVirtualMemory'					ReclaimVirtualMemory					KernelBase	1317
+imp	'ReclaimVirtualMemory'					ReclaimVirtualMemory					kernel32	0		# KernelBase
 imp	'RecordShutdownReason'					RecordShutdownReason					user32		2245
 imp	'RectInRegion'						RectInRegion						gdi32		1796
 imp	'RectVisible'						RectVisible						gdi32		1797
@@ -4544,49 +4544,49 @@ imp	'RedrawWindow'						RedrawWindow						user32		2246	4
 imp	'RefreshPackageInfo'					RefreshPackageInfo					KernelBase	1318
 imp	'RefreshPolicyExInternal'				RefreshPolicyExInternal					KernelBase	1319
 imp	'RefreshPolicyInternal'					RefreshPolicyInternal					KernelBase	1320
-imp	'RegCloseKey'						RegCloseKey						KernelBase	1321	1
+imp	'RegCloseKey'						RegCloseKey						advapi32	0	1	# KernelBase
 imp	'RegConnectRegistry'					RegConnectRegistryW					advapi32	1608	3
 imp	'RegConnectRegistryA'					RegConnectRegistryA					advapi32	1605	3
 imp	'RegConnectRegistryEx'					RegConnectRegistryExW					advapi32	1607	4
 imp	'RegConnectRegistryExA'					RegConnectRegistryExA					advapi32	1606	4
 imp	'RegCopyTreeA'						RegCopyTreeA						advapi32	1609
-imp	'RegCopyTree'						RegCopyTreeW						KernelBase	1322
+imp	'RegCopyTree'						RegCopyTreeW						advapi32	0		# KernelBase
 imp	'RegCreateKey'						RegCreateKeyW						advapi32	1616	3
 imp	'RegCreateKeyA'						RegCreateKeyA						advapi32	1611	3
-imp	'RegCreateKeyEx'					RegCreateKeyExW						KernelBase	1326	9
-imp	'RegCreateKeyExA'					RegCreateKeyExA						KernelBase	1323	9
+imp	'RegCreateKeyEx'					RegCreateKeyExW						advapi32	0	9	# KernelBase
+imp	'RegCreateKeyExA'					RegCreateKeyExA						advapi32	0	9	# KernelBase
 imp	'RegCreateKeyExInternalA'				RegCreateKeyExInternalA					KernelBase	1324
 imp	'RegCreateKeyExInternal'				RegCreateKeyExInternalW					KernelBase	1325
 imp	'RegCreateKeyTransactedA'				RegCreateKeyTransactedA					advapi32	1614
 imp	'RegCreateKeyTransacted'				RegCreateKeyTransactedW					advapi32	1615
 imp	'RegDeleteKey'						RegDeleteKeyW						advapi32	1624	2
 imp	'RegDeleteKeyA'						RegDeleteKeyA						advapi32	1617	2
-imp	'RegDeleteKeyEx'					RegDeleteKeyExW						KernelBase	1330	4
-imp	'RegDeleteKeyExA'					RegDeleteKeyExA						KernelBase	1327	4
+imp	'RegDeleteKeyEx'					RegDeleteKeyExW						advapi32	0	4	# KernelBase
+imp	'RegDeleteKeyExA'					RegDeleteKeyExA						advapi32	0	4	# KernelBase
 imp	'RegDeleteKeyExInternalA'				RegDeleteKeyExInternalA					KernelBase	1328
 imp	'RegDeleteKeyExInternal'				RegDeleteKeyExInternalW					KernelBase	1329
 imp	'RegDeleteKeyTransactedA'				RegDeleteKeyTransactedA					advapi32	1620
 imp	'RegDeleteKeyTransacted'				RegDeleteKeyTransactedW					advapi32	1621
-imp	'RegDeleteKeyValueA'					RegDeleteKeyValueA					KernelBase	1331
-imp	'RegDeleteKeyValue'					RegDeleteKeyValueW					KernelBase	1332
-imp	'RegDeleteTree'						RegDeleteTreeW						KernelBase	1334	2
-imp	'RegDeleteTreeA'					RegDeleteTreeA						KernelBase	1333	2
-imp	'RegDeleteValue'					RegDeleteValueW						KernelBase	1336	2
-imp	'RegDeleteValueA'					RegDeleteValueA						KernelBase	1335	2
+imp	'RegDeleteKeyValueA'					RegDeleteKeyValueA					advapi32	0		# KernelBase
+imp	'RegDeleteKeyValue'					RegDeleteKeyValueW					advapi32	0		# KernelBase
+imp	'RegDeleteTree'						RegDeleteTreeW						advapi32	0	2	# KernelBase
+imp	'RegDeleteTreeA'					RegDeleteTreeA						advapi32	0	2	# KernelBase
+imp	'RegDeleteValue'					RegDeleteValueW						advapi32	0	2	# KernelBase
+imp	'RegDeleteValueA'					RegDeleteValueA						advapi32	0	2	# KernelBase
 imp	'RegDisablePredefinedCache'				RegDisablePredefinedCache				advapi32	1629	1
-imp	'RegDisablePredefinedCacheEx'				RegDisablePredefinedCacheEx				KernelBase	1337
+imp	'RegDisablePredefinedCacheEx'				RegDisablePredefinedCacheEx				kernel32	0		# KernelBase
 imp	'RegDisableReflectionKey'				RegDisableReflectionKey					advapi32	1631	1
 imp	'RegEnableReflectionKey'				RegEnableReflectionKey					advapi32	1632	1
 imp	'RegEnumKey'						RegEnumKeyW						advapi32	1636	4
 imp	'RegEnumKeyA'						RegEnumKeyA						advapi32	1633	4
-imp	'RegEnumKeyEx'						RegEnumKeyExW						KernelBase	1339	8
-imp	'RegEnumKeyExA'						RegEnumKeyExA						KernelBase	1338	8
-imp	'RegEnumValue'						RegEnumValueW						KernelBase	1341	8
-imp	'RegEnumValueA'						RegEnumValueA						KernelBase	1340	8
-imp	'RegFlushKey'						RegFlushKey						KernelBase	1342	1
-imp	'RegGetKeySecurity'					RegGetKeySecurity					KernelBase	1343	4
-imp	'RegGetValue'						RegGetValueW						KernelBase	1345	7
-imp	'RegGetValueA'						RegGetValueA						KernelBase	1344	7
+imp	'RegEnumKeyEx'						RegEnumKeyExW						advapi32	0	8	# KernelBase
+imp	'RegEnumKeyExA'						RegEnumKeyExA						advapi32	0	8	# KernelBase
+imp	'RegEnumValue'						RegEnumValueW						advapi32	0	8	# KernelBase
+imp	'RegEnumValueA'						RegEnumValueA						advapi32	0	8	# KernelBase
+imp	'RegFlushKey'						RegFlushKey						advapi32	0	1	# KernelBase
+imp	'RegGetKeySecurity'					RegGetKeySecurity					advapi32	0	4	# KernelBase
+imp	'RegGetValue'						RegGetValueW						advapi32	0	7	# KernelBase
+imp	'RegGetValueA'						RegGetValueA						advapi32	0	7	# KernelBase
 imp	'RegKrnGetAppKeyEventAddressInternal'			RegKrnGetAppKeyEventAddressInternal			KernelBase	1346
 imp	'RegKrnGetAppKeyLoaded'					RegKrnGetAppKeyLoaded					KernelBase	1347
 imp	'RegKrnGetClassesEnumTableAddressInternal'		RegKrnGetClassesEnumTableAddressInternal		KernelBase	1348
@@ -4595,56 +4595,56 @@ imp	'RegKrnGetTermsrvRegistryExtensionFlags'		RegKrnGetTermsrvRegistryExtensionF
 imp	'RegKrnResetAppKeyLoaded'				RegKrnResetAppKeyLoaded					KernelBase	1351
 imp	'RegKrnSetDllHasThreadStateGlobal'			RegKrnSetDllHasThreadStateGlobal			KernelBase	1352
 imp	'RegKrnSetTermsrvRegistryExtensionFlags'		RegKrnSetTermsrvRegistryExtensionFlags			KernelBase	1353
-imp	'RegLoadAppKeyA'					RegLoadAppKeyA						KernelBase	1354
-imp	'RegLoadAppKey'						RegLoadAppKeyW						KernelBase	1355
-imp	'RegLoadKey'						RegLoadKeyW						KernelBase	1357	3
-imp	'RegLoadKeyA'						RegLoadKeyA						KernelBase	1356	3
-imp	'RegLoadMUIStringA'					RegLoadMUIStringA					KernelBase	1358
-imp	'RegLoadMUIString'					RegLoadMUIStringW					KernelBase	1359
-imp	'RegNotifyChangeKeyValue'				RegNotifyChangeKeyValue					KernelBase	1360	5
-imp	'RegOpenCurrentUser'					RegOpenCurrentUser					KernelBase	1361	2
+imp	'RegLoadAppKeyA'					RegLoadAppKeyA						advapi32	0		# KernelBase
+imp	'RegLoadAppKey'						RegLoadAppKeyW						advapi32	0		# KernelBase
+imp	'RegLoadKey'						RegLoadKeyW						advapi32	0	3	# KernelBase
+imp	'RegLoadKeyA'						RegLoadKeyA						advapi32	0	3	# KernelBase
+imp	'RegLoadMUIStringA'					RegLoadMUIStringA					kernel32	0		# KernelBase
+imp	'RegLoadMUIString'					RegLoadMUIStringW					advapi32	0		# KernelBase
+imp	'RegNotifyChangeKeyValue'				RegNotifyChangeKeyValue					advapi32	0	5	# KernelBase
+imp	'RegOpenCurrentUser'					RegOpenCurrentUser					advapi32	0	2	# KernelBase
 imp	'RegOpenKeyA'						RegOpenKeyA						advapi32	1651	3
-imp	'RegOpenKeyEx'						RegOpenKeyExW						KernelBase	1365	5
-imp	'RegOpenKeyExA'						RegOpenKeyExA						KernelBase	1362	5
+imp	'RegOpenKeyEx'						RegOpenKeyExW						advapi32	0	5	# KernelBase
+imp	'RegOpenKeyExA'						RegOpenKeyExA						advapi32	0	5	# KernelBase
 imp	'RegOpenKeyExInternalA'					RegOpenKeyExInternalA					KernelBase	1363
 imp	'RegOpenKeyExInternal'					RegOpenKeyExInternalW					KernelBase	1364
 imp	'RegOpenKeyTransactedA'					RegOpenKeyTransactedA					advapi32	1654
 imp	'RegOpenKeyTransacted'					RegOpenKeyTransactedW					advapi32	1655
 imp	'RegOpenKey'						RegOpenKeyW						advapi32	1656
-imp	'RegOpenUserClassesRoot'				RegOpenUserClassesRoot					KernelBase	1366	4
+imp	'RegOpenUserClassesRoot'				RegOpenUserClassesRoot					advapi32	0	4	# KernelBase
 imp	'RegOverridePredefKey'					RegOverridePredefKey					advapi32	1658	2
-imp	'RegQueryInfoKey'					RegQueryInfoKeyW					KernelBase	1368	12
-imp	'RegQueryInfoKeyA'					RegQueryInfoKeyA					KernelBase	1367	12
-imp	'RegQueryMultipleValues'				RegQueryMultipleValuesW					KernelBase	1370	5
-imp	'RegQueryMultipleValuesA'				RegQueryMultipleValuesA					KernelBase	1369	5
+imp	'RegQueryInfoKey'					RegQueryInfoKeyW					advapi32	0	12	# KernelBase
+imp	'RegQueryInfoKeyA'					RegQueryInfoKeyA					advapi32	0	12	# KernelBase
+imp	'RegQueryMultipleValues'				RegQueryMultipleValuesW					advapi32	0	5	# KernelBase
+imp	'RegQueryMultipleValuesA'				RegQueryMultipleValuesA					advapi32	0	5	# KernelBase
 imp	'RegQueryReflectionKey'					RegQueryReflectionKey					advapi32	1663	2
 imp	'RegQueryValue'						RegQueryValueW						advapi32	1667	4
 imp	'RegQueryValueA'					RegQueryValueA						advapi32	1664	4
-imp	'RegQueryValueEx'					RegQueryValueExW					KernelBase	1372	6
-imp	'RegQueryValueExA'					RegQueryValueExA					KernelBase	1371	6
+imp	'RegQueryValueEx'					RegQueryValueExW					advapi32	0	6	# KernelBase
+imp	'RegQueryValueExA'					RegQueryValueExA					advapi32	0	6	# KernelBase
 imp	'RegRenameKey'						RegRenameKey						advapi32	1668
 imp	'RegReplaceKey'						RegReplaceKeyW						advapi32	1670	4
 imp	'RegReplaceKeyA'					RegReplaceKeyA						advapi32	1669	4
-imp	'RegRestoreKey'						RegRestoreKeyW						KernelBase	1374	3
-imp	'RegRestoreKeyA'					RegRestoreKeyA						KernelBase	1373	3
+imp	'RegRestoreKey'						RegRestoreKeyW						advapi32	0	3	# KernelBase
+imp	'RegRestoreKeyA'					RegRestoreKeyA						advapi32	0	3	# KernelBase
 imp	'RegSaveKey'						RegSaveKeyW						advapi32	1676	3
 imp	'RegSaveKeyA'						RegSaveKeyA						advapi32	1673	3
-imp	'RegSaveKeyExA'						RegSaveKeyExA						KernelBase	1375
-imp	'RegSaveKeyEx'						RegSaveKeyExW						KernelBase	1376
-imp	'RegSetKeySecurity'					RegSetKeySecurity					KernelBase	1377	3
-imp	'RegSetKeyValueA'					RegSetKeyValueA						KernelBase	1378
-imp	'RegSetKeyValue'					RegSetKeyValueW						KernelBase	1379
+imp	'RegSaveKeyExA'						RegSaveKeyExA						kernel32	0		# KernelBase
+imp	'RegSaveKeyEx'						RegSaveKeyExW						advapi32	0		# KernelBase
+imp	'RegSetKeySecurity'					RegSetKeySecurity					advapi32	0	3	# KernelBase
+imp	'RegSetKeyValueA'					RegSetKeyValueA						advapi32	0		# KernelBase
+imp	'RegSetKeyValue'					RegSetKeyValueW						advapi32	0		# KernelBase
 imp	'RegSetValue'						RegSetValueW						advapi32	1683	5
 imp	'RegSetValueA'						RegSetValueA						advapi32	1680	5
-imp	'RegSetValueEx'						RegSetValueExW						KernelBase	1381	6
-imp	'RegSetValueExA'					RegSetValueExA						KernelBase	1380	6
-imp	'RegUnLoadKey'						RegUnLoadKeyW						KernelBase	1383	2
-imp	'RegUnLoadKeyA'						RegUnLoadKeyA						KernelBase	1382	2
+imp	'RegSetValueEx'						RegSetValueExW						advapi32	0	6	# KernelBase
+imp	'RegSetValueExA'					RegSetValueExA						advapi32	0	6	# KernelBase
+imp	'RegUnLoadKey'						RegUnLoadKeyW						advapi32	0	2	# KernelBase
+imp	'RegUnLoadKeyA'						RegUnLoadKeyA						advapi32	0	2	# KernelBase
 imp	'RegenerateUserEnvironment'				RegenerateUserEnvironment				shell32		313
 imp	'RegisterApplicationRecoveryCallback'			RegisterApplicationRecoveryCallback			kernel32	1184
 imp	'RegisterApplicationRestart'				RegisterApplicationRestart				kernel32	1185
 imp	'RegisterBSDRWindow'					RegisterBSDRWindow					user32		2247
-imp	'RegisterBadMemoryNotification'				RegisterBadMemoryNotification				KernelBase	1384
+imp	'RegisterBadMemoryNotification'				RegisterBadMemoryNotification				kernel32	0		# KernelBase
 imp	'RegisterClassA'					RegisterClassA						user32		2248	1
 imp	'RegisterClassExA'					RegisterClassExA					user32		2249	1
 imp	'RegisterClassEx'					RegisterClassExW					user32		2250	1
@@ -4696,13 +4696,13 @@ imp	'RegisterWindowMessageA'				RegisterWindowMessageA					user32		2277
 imp	'RegisterWindowMessage'					RegisterWindowMessageW					user32		2278
 imp	'RegisterWowBaseHandlers'				RegisterWowBaseHandlers					kernel32	1194
 imp	'RegisterWowExec'					RegisterWowExec						kernel32	1195
-imp	'ReleaseActCtx'						ReleaseActCtx						KernelBase	1390
+imp	'ReleaseActCtx'						ReleaseActCtx						kernel32	0		# KernelBase
 imp	'ReleaseActCtxWorker'					ReleaseActCtxWorker					kernel32	1197
 imp	'ReleaseCapture'					ReleaseCapture						user32		2279	0
 imp	'ReleaseDC'						ReleaseDC						user32		2280
 imp	'ReleaseDwmHitTestWaiters'				ReleaseDwmHitTestWaiters				user32		2281
-imp	'ReleaseMutex'						ReleaseMutex						KernelBase	1391	1
-imp	'ReleaseSemaphore'					ReleaseSemaphore					KernelBase	1395	3
+imp	'ReleaseMutex'						ReleaseMutex						kernel32	0	1	# KernelBase
+imp	'ReleaseSemaphore'					ReleaseSemaphore					kernel32	0	3	# KernelBase
 imp	'ReleaseStateLock'					ReleaseStateLock					KernelBase	1397
 imp	'RemapPredefinedHandleInternal'				RemapPredefinedHandleInternal				KernelBase	1398
 imp	'RemoteRegEnumKeyWrapper'				RemoteRegEnumKeyWrapper					advapi32	1696
@@ -4712,11 +4712,11 @@ imp	'RemoteRegQueryMultipleValues2Wrapper'			RemoteRegQueryMultipleValues2Wrappe
 imp	'RemoteRegQueryMultipleValuesWrapper'			RemoteRegQueryMultipleValuesWrapper			advapi32	1700
 imp	'RemoteRegQueryValueWrapper'				RemoteRegQueryValueWrapper				advapi32	1701
 imp	'RemoveClipboardFormatListener'				RemoveClipboardFormatListener				user32		2282
-imp	'RemoveDirectory'					RemoveDirectoryW					KernelBase	1400	1
-imp	'RemoveDirectoryA'					RemoveDirectoryA					KernelBase	1399	1
+imp	'RemoveDirectory'					RemoveDirectoryW					kernel32	0	1	# KernelBase
+imp	'RemoveDirectoryA'					RemoveDirectoryA					kernel32	0	1	# KernelBase
 imp	'RemoveDirectoryTransactedA'				RemoveDirectoryTransactedA				kernel32	1205
 imp	'RemoveDirectoryTransacted'				RemoveDirectoryTransactedW				kernel32	1206
-imp	'RemoveDllDirectory'					RemoveDllDirectory					KernelBase	1401
+imp	'RemoveDllDirectory'					RemoveDllDirectory					kernel32	0		# KernelBase
 imp	'RemoveExtensionProgIds'				RemoveExtensionProgIds					KernelBase	1402
 imp	'RemoveFontMemResourceEx'				RemoveFontMemResourceEx					gdi32		1799
 imp	'RemoveFontResourceA'					RemoveFontResourceA					gdi32		1800
@@ -4738,7 +4738,7 @@ imp	'RemoveThreadTSFEventAwareness'				RemoveThreadTSFEventAwareness				user32		
 imp	'RemoveUsersFromEncryptedFile'				RemoveUsersFromEncryptedFile				advapi32	1703
 imp	'ReplaceFileA'						ReplaceFileA						kernel32	1215
 imp	'ReplaceFileExInternal'					ReplaceFileExInternal					KernelBase	1408
-imp	'ReplaceFile'						ReplaceFileW						KernelBase	1409
+imp	'ReplaceFile'						ReplaceFileW						kernel32	0		# KernelBase
 imp	'ReplacePartitionUnit'					ReplacePartitionUnit					kernel32	1217
 imp	'ReplaceTextA'						ReplaceTextA						comdlg32	124	1
 imp	'ReplaceText'						ReplaceTextW						comdlg32	125	1
@@ -4750,20 +4750,20 @@ imp	'RequestDeviceWakeup'					RequestDeviceWakeup					kernel32	1218
 imp	'RequestWakeupLatency'					RequestWakeupLatency					kernel32	1219
 imp	'ResetDCA'						ResetDCA						gdi32		1805
 imp	'ResetDCW'						ResetDCW						gdi32		1806
-imp	'ResetEvent'						ResetEvent						KernelBase	1410	1
+imp	'ResetEvent'						ResetEvent						kernel32	0	1	# KernelBase
 imp	'ResetState'						ResetState						KernelBase	1411
-imp	'ResetWriteWatch'					ResetWriteWatch						KernelBase	1412
+imp	'ResetWriteWatch'					ResetWriteWatch						kernel32	0		# KernelBase
 imp	'ResizePalette'						ResizePalette						gdi32		1807
-imp	'ResolveDelayLoadedAPI'					ResolveDelayLoadedAPI					KernelBase	1413
-imp	'ResolveDelayLoadsFromDll'				ResolveDelayLoadsFromDll				KernelBase	1414
+imp	'ResolveDelayLoadedAPI'					ResolveDelayLoadedAPI					kernel32	0		# KernelBase
+imp	'ResolveDelayLoadsFromDll'				ResolveDelayLoadsFromDll				kernel32	0		# KernelBase
 imp	'ResolveDesktopForWOW'					ResolveDesktopForWOW					user32		2289
-imp	'ResolveLocaleName'					ResolveLocaleName					KernelBase	1415
+imp	'ResolveLocaleName'					ResolveLocaleName					kernel32	0		# KernelBase
 imp	'RestartDialog'						RestartDialog						shell32		59
 imp	'RestartDialogEx'					RestartDialogEx						shell32		730
 imp	'RestoreDC'						RestoreDC						gdi32		1808	2
-imp	'ResumeThread'						ResumeThread						KernelBase	1417
+imp	'ResumeThread'						ResumeThread						kernel32	0		# KernelBase
 imp	'ReuseDDElParam'					ReuseDDElParam						user32		2290
-imp	'RevertToSelf'						RevertToSelf						KernelBase	1418
+imp	'RevertToSelf'						RevertToSelf						advapi32	0		# KernelBase
 imp	'RoundRect'						RoundRect						gdi32		1809
 imp	'RsopLoggingEnabledInternal'				RsopLoggingEnabledInternal				KernelBase	1419
 imp	'RtlAbortRXact'						RtlAbortRXact						ntdll		676
@@ -6070,13 +6070,13 @@ imp	'ScaleViewportExtEx'					ScaleViewportExtEx					gdi32		1818
 imp	'ScaleWindowExtEx'					ScaleWindowExtEx					gdi32		1819
 imp	'ScreenToClient'					ScreenToClient						user32		2291
 imp	'ScrollChildren'					ScrollChildren						user32		2292
-imp	'ScrollConsoleScreenBufferA'				ScrollConsoleScreenBufferA				KernelBase	1453
-imp	'ScrollConsoleScreenBuffer'				ScrollConsoleScreenBufferW				KernelBase	1454
+imp	'ScrollConsoleScreenBufferA'				ScrollConsoleScreenBufferA				kernel32	0		# KernelBase
+imp	'ScrollConsoleScreenBuffer'				ScrollConsoleScreenBufferW				kernel32	0		# KernelBase
 imp	'ScrollDC'						ScrollDC						user32		2293
 imp	'ScrollWindow'						ScrollWindow						user32		2294
 imp	'ScrollWindowEx'					ScrollWindowEx						user32		2295
-imp	'SearchPathA'						SearchPathA						KernelBase	1455
-imp	'SearchPath'						SearchPathW						KernelBase	1456
+imp	'SearchPathA'						SearchPathA						kernel32	0		# KernelBase
+imp	'SearchPath'						SearchPathW						kernel32	0		# KernelBase
 imp	'SelectBrushLocal'					SelectBrushLocal					gdi32		1860
 imp	'SelectClipPath'					SelectClipPath						gdi32		1861
 imp	'SelectClipRgn'						SelectClipRgn						gdi32		1862
@@ -6097,7 +6097,7 @@ imp	'SendMessage'						SendMessageW						user32		2306	4
 imp	'SendNotifyMessageA'					SendNotifyMessageA					user32		2307
 imp	'SendNotifyMessage'					SendNotifyMessageW					user32		2308
 imp	'SetAbortProc'						SetAbortProc						gdi32		1866
-imp	'SetAclInformation'					SetAclInformation					KernelBase	1457
+imp	'SetAclInformation'					SetAclInformation					advapi32	0		# KernelBase
 imp	'SetActiveWindow'					SetActiveWindow						user32		2309
 imp	'SetAddrInfoExA'					SetAddrInfoExA						ws2_32		37
 imp	'SetAddrInfoEx'						SetAddrInfoExW						ws2_32		38
@@ -6112,7 +6112,7 @@ imp	'SetBrushAttributes'					SetBrushAttributes					gdi32		1874
 imp	'SetBrushOrgEx'						SetBrushOrgEx						gdi32		1875
 imp	'SetCachedSigningLevel'					SetCachedSigningLevel					KernelBase	1458
 imp	'SetCalendarInfoA'					SetCalendarInfoA					kernel32	1249
-imp	'SetCalendarInfo'					SetCalendarInfoW					KernelBase	1459
+imp	'SetCalendarInfo'					SetCalendarInfoW					kernel32	0		# KernelBase
 imp	'SetCapture'						SetCapture						user32		2310	1
 imp	'SetCaretBlinkTime'					SetCaretBlinkTime					user32		2311
 imp	'SetCaretPos'						SetCaretPos						user32		2312
@@ -6129,27 +6129,27 @@ imp	'SetCoalescableTimer'					SetCoalescableTimer					user32		2320
 imp	'SetColorAdjustment'					SetColorAdjustment					gdi32		1876
 imp	'SetColorSpace'						SetColorSpace						gdi32		1877
 imp	'SetComPlusPackageInstallStatus'			SetComPlusPackageInstallStatus				kernel32	1251
-imp	'SetCommBreak'						SetCommBreak						KernelBase	1462
-imp	'SetCommConfig'						SetCommConfig						KernelBase	1463
-imp	'SetCommMask'						SetCommMask						KernelBase	1464
-imp	'SetCommState'						SetCommState						KernelBase	1465
-imp	'SetCommTimeouts'					SetCommTimeouts						KernelBase	1466
-imp	'SetComputerNameA'					SetComputerNameA					KernelBase	1467
+imp	'SetCommBreak'						SetCommBreak						kernel32	0		# KernelBase
+imp	'SetCommConfig'						SetCommConfig						kernel32	0		# KernelBase
+imp	'SetCommMask'						SetCommMask						kernel32	0		# KernelBase
+imp	'SetCommState'						SetCommState						kernel32	0		# KernelBase
+imp	'SetCommTimeouts'					SetCommTimeouts						kernel32	0		# KernelBase
+imp	'SetComputerNameA'					SetComputerNameA					kernel32	0		# KernelBase
 imp	'SetComputerNameEx2W'					SetComputerNameEx2W					KernelBase	1468
-imp	'SetComputerNameExA'					SetComputerNameExA					KernelBase	1469
-imp	'SetComputerNameEx'					SetComputerNameExW					KernelBase	1470
-imp	'SetComputerName'					SetComputerNameW					KernelBase	1471
-imp	'SetConsoleActiveScreenBuffer'				SetConsoleActiveScreenBuffer				KernelBase	1472	1
-imp	'SetConsoleCP'						SetConsoleCP						KernelBase	1473	1
-imp	'SetConsoleCtrlHandler'					SetConsoleCtrlHandler					KernelBase	1474	2
+imp	'SetComputerNameExA'					SetComputerNameExA					kernel32	0		# KernelBase
+imp	'SetComputerNameEx'					SetComputerNameExW					kernel32	0		# KernelBase
+imp	'SetComputerName'					SetComputerNameW					kernel32	0		# KernelBase
+imp	'SetConsoleActiveScreenBuffer'				SetConsoleActiveScreenBuffer				kernel32	0	1	# TODO(jart): 6.2 and higher	# KernelBase
+imp	'SetConsoleCP'						SetConsoleCP						kernel32	0	1	# TODO(jart): 6.2 and higher	# KernelBase
+imp	'SetConsoleCtrlHandler'					SetConsoleCtrlHandler					kernel32	0	2	# KernelBase
 imp	'SetConsoleCursor'					SetConsoleCursor					kernel32	1265
-imp	'SetConsoleCursorInfo'					SetConsoleCursorInfo					KernelBase	1475	2
+imp	'SetConsoleCursorInfo'					SetConsoleCursorInfo					kernel32	0	2	# KernelBase
 imp	'SetConsoleCursorMode'					SetConsoleCursorMode					kernel32	1267
-imp	'SetConsoleCursorPosition'				SetConsoleCursorPosition				KernelBase	1476	2
-imp	'SetConsoleDisplayMode'					SetConsoleDisplayMode					KernelBase	1477
+imp	'SetConsoleCursorPosition'				SetConsoleCursorPosition				kernel32	0	2	# KernelBase
+imp	'SetConsoleDisplayMode'					SetConsoleDisplayMode					kernel32	0		# KernelBase
 imp	'SetConsoleFont'					SetConsoleFont						kernel32	1270
 imp	'SetConsoleHardwareState'				SetConsoleHardwareState					kernel32	1271
-imp	'SetConsoleHistoryInfo'					SetConsoleHistoryInfo					KernelBase	1478
+imp	'SetConsoleHistoryInfo'					SetConsoleHistoryInfo					kernel32	0		# KernelBase
 imp	'SetConsoleIcon'					SetConsoleIcon						kernel32	1273
 imp	'SetConsoleInputExeNameA'				SetConsoleInputExeNameA					KernelBase	1479
 imp	'SetConsoleInputExeName'				SetConsoleInputExeNameW					KernelBase	1480
@@ -6157,23 +6157,23 @@ imp	'SetConsoleKeyShortcuts'				SetConsoleKeyShortcuts					kernel32	1276
 imp	'SetConsoleLocalEUDC'					SetConsoleLocalEUDC					kernel32	1277
 imp	'SetConsoleMaximumWindowSize'				SetConsoleMaximumWindowSize				kernel32	1278
 imp	'SetConsoleMenuClose'					SetConsoleMenuClose					kernel32	1279
-imp	'SetConsoleMode'					SetConsoleMode						KernelBase	1481	2
+imp	'SetConsoleMode'					SetConsoleMode						kernel32	0	2	# KernelBase
 imp	'SetConsoleNlsMode'					SetConsoleNlsMode					kernel32	1281
 imp	'SetConsoleNumberOfCommandsA'				SetConsoleNumberOfCommandsA				KernelBase	1482
 imp	'SetConsoleNumberOfCommands'				SetConsoleNumberOfCommandsW				KernelBase	1483
 imp	'SetConsoleOS2OemFormat'				SetConsoleOS2OemFormat					kernel32	1284
-imp	'SetConsoleOutputCP'					SetConsoleOutputCP					KernelBase	1484	1
+imp	'SetConsoleOutputCP'					SetConsoleOutputCP					kernel32	0	1	# KernelBase
 imp	'SetConsolePalette'					SetConsolePalette					kernel32	1286
-imp	'SetConsoleScreenBufferInfoEx'				SetConsoleScreenBufferInfoEx				KernelBase	1485	2
-imp	'SetConsoleScreenBufferSize'				SetConsoleScreenBufferSize				KernelBase	1486	2
-imp	'SetConsoleTextAttribute'				SetConsoleTextAttribute					KernelBase	1487
-imp	'SetConsoleTitle'					SetConsoleTitleW					KernelBase	1489	1
-imp	'SetConsoleTitleA'					SetConsoleTitleA					KernelBase	1488	1
-imp	'SetConsoleWindowInfo'					SetConsoleWindowInfo					KernelBase	1490	3
+imp	'SetConsoleScreenBufferInfoEx'				SetConsoleScreenBufferInfoEx				kernel32	0	2	# KernelBase
+imp	'SetConsoleScreenBufferSize'				SetConsoleScreenBufferSize				kernel32	0	2	# KernelBase
+imp	'SetConsoleTextAttribute'				SetConsoleTextAttribute					kernel32	0		# KernelBase
+imp	'SetConsoleTitle'					SetConsoleTitleW					kernel32	0	1	# KernelBase
+imp	'SetConsoleTitleA'					SetConsoleTitleA					kernel32	0	1	# KernelBase
+imp	'SetConsoleWindowInfo'					SetConsoleWindowInfo					kernel32	0	3	# KernelBase
 imp	'SetCoreWindow'						SetCoreWindow						user32		2571
-imp	'SetCurrentConsoleFontEx'				SetCurrentConsoleFontEx					KernelBase	1492
-imp	'SetCurrentDirectory'					SetCurrentDirectoryW					KernelBase	1494	1
-imp	'SetCurrentDirectoryA'					SetCurrentDirectoryA					KernelBase	1493	1
+imp	'SetCurrentConsoleFontEx'				SetCurrentConsoleFontEx					kernel32	0		# KernelBase
+imp	'SetCurrentDirectory'					SetCurrentDirectoryW					kernel32	0	1	# KernelBase
+imp	'SetCurrentDirectoryA'					SetCurrentDirectoryA					kernel32	0	1	# KernelBase
 imp	'SetCurrentProcessExplicitAppUserModelID'		SetCurrentProcessExplicitAppUserModelID			shell32		569
 imp	'SetCursor'						SetCursor						user32		2321	1
 imp	'SetCursorContents'					SetCursorContents					user32		2322
@@ -6187,7 +6187,7 @@ imp	'SetDIBitsToDevice'					SetDIBitsToDevice					gdi32		1883
 imp	'SetDebugErrorLevel'					SetDebugErrorLevel					user32		2324
 imp	'SetDefaultCommConfigA'					SetDefaultCommConfigA					kernel32	1297
 imp	'SetDefaultCommConfig'					SetDefaultCommConfigW					kernel32	1298
-imp	'SetDefaultDllDirectories'				SetDefaultDllDirectories				KernelBase	1495	1
+imp	'SetDefaultDllDirectories'				SetDefaultDllDirectories				kernel32	0	1	# KernelBase
 imp	'SetDeskWallpaper'					SetDeskWallpaper					user32		2325
 imp	'SetDesktopColorTransform'				SetDesktopColorTransform				user32		2326
 imp	'SetDeviceGammaRamp'					SetDeviceGammaRamp					gdi32		1884
@@ -6201,9 +6201,9 @@ imp	'SetDlgItemText'					SetDlgItemTextW						user32		2333
 imp	'SetDllDirectoryA'					SetDllDirectoryA					kernel32	1300
 imp	'SetDllDirectory'					SetDllDirectoryW					kernel32	1301
 imp	'SetDoubleClickTime'					SetDoubleClickTime					user32		2334
-imp	'SetDynamicTimeZoneInformation'				SetDynamicTimeZoneInformation				KernelBase	1496
+imp	'SetDynamicTimeZoneInformation'				SetDynamicTimeZoneInformation				kernel32	0		# KernelBase
 imp	'SetEncryptedFileMetadata'				SetEncryptedFileMetadata				advapi32	1725
-imp	'SetEndOfFile'						SetEndOfFile						KernelBase	1497	1
+imp	'SetEndOfFile'						SetEndOfFile						kernel32	0	1	# KernelBase
 imp	'SetEnhMetaFileBits'					SetEnhMetaFileBits					gdi32		1885
 imp	'SetEntriesInAccessListA'				SetEntriesInAccessListA					advapi32	1726
 imp	'SetEntriesInAccessList'				SetEntriesInAccessListW					advapi32	1727
@@ -6213,30 +6213,30 @@ imp	'SetEntriesInAuditListA'				SetEntriesInAuditListA					advapi32	1730
 imp	'SetEntriesInAuditList'					SetEntriesInAuditListW					advapi32	1731
 imp	'SetEnvironmentStrings'					SetEnvironmentStringsW					KernelBase	1498	1
 imp	'SetEnvironmentStringsA'				SetEnvironmentStringsA					kernel32	1304	1
-imp	'SetEnvironmentVariable'				SetEnvironmentVariableW					KernelBase	1500	2
-imp	'SetEnvironmentVariableA'				SetEnvironmentVariableA					KernelBase	1499	2
-imp	'SetErrorMode'						SetErrorMode						KernelBase	1501	1
-imp	'SetEvent'						SetEvent						KernelBase	1502	1
+imp	'SetEnvironmentVariable'				SetEnvironmentVariableW					kernel32	0	2	# KernelBase
+imp	'SetEnvironmentVariableA'				SetEnvironmentVariableA					kernel32	0	2	# KernelBase
+imp	'SetErrorMode'						SetErrorMode						kernel32	0	1	# KernelBase
+imp	'SetEvent'						SetEvent						kernel32	0	1	# KernelBase
 imp	'SetExtensionProperty'					SetExtensionProperty					KernelBase	1504
 imp	'SetFeatureReportResponse'				SetFeatureReportResponse				user32		2335
-imp	'SetFileApisToANSI'					SetFileApisToANSI					KernelBase	1505
-imp	'SetFileApisToOEM'					SetFileApisToOEM					KernelBase	1506
-imp	'SetFileAttributes'					SetFileAttributesW					KernelBase	1508	2
-imp	'SetFileAttributesA'					SetFileAttributesA					KernelBase	1507	2
+imp	'SetFileApisToANSI'					SetFileApisToANSI					kernel32	0		# KernelBase
+imp	'SetFileApisToOEM'					SetFileApisToOEM					kernel32	0		# KernelBase
+imp	'SetFileAttributes'					SetFileAttributesW					kernel32	0	2	# KernelBase
+imp	'SetFileAttributesA'					SetFileAttributesA					kernel32	0	2	# KernelBase
 imp	'SetFileAttributesTransactedA'				SetFileAttributesTransactedA				kernel32	1314
 imp	'SetFileAttributesTransacted'				SetFileAttributesTransactedW				kernel32	1315
 imp	'SetFileBandwidthReservation'				SetFileBandwidthReservation				kernel32	1317
 imp	'SetFileCompletionNotificationModes'			SetFileCompletionNotificationModes			kernel32	1318	2
-imp	'SetFileInformationByHandle'				SetFileInformationByHandle				KernelBase	1509
-imp	'SetFileIoOverlappedRange'				SetFileIoOverlappedRange				KernelBase	1510
-imp	'SetFilePointer'					SetFilePointer						KernelBase	1511	4
-imp	'SetFilePointerEx'					SetFilePointerEx					KernelBase	1512	4
+imp	'SetFileInformationByHandle'				SetFileInformationByHandle				kernel32	0		# KernelBase
+imp	'SetFileIoOverlappedRange'				SetFileIoOverlappedRange				kernel32	0		# KernelBase
+imp	'SetFilePointer'					SetFilePointer						kernel32	0	4	# KernelBase
+imp	'SetFilePointerEx'					SetFilePointerEx					kernel32	0	4	# KernelBase
 imp	'SetFileSecurityA'					SetFileSecurityA					advapi32	1732
-imp	'SetFileSecurity'					SetFileSecurityW					KernelBase	1513
+imp	'SetFileSecurity'					SetFileSecurityW					advapi32	0		# KernelBase
 imp	'SetFileShortNameA'					SetFileShortNameA					kernel32	1323
 imp	'SetFileShortName'					SetFileShortNameW					kernel32	1324
-imp	'SetFileTime'						SetFileTime						KernelBase	1514	4
-imp	'SetFileValidData'					SetFileValidData					KernelBase	1515	2
+imp	'SetFileTime'						SetFileTime						kernel32	0	4	# KernelBase
+imp	'SetFileValidData'					SetFileValidData					kernel32	0	2	# KernelBase
 imp	'SetFirmwareEnvironmentVariableA'			SetFirmwareEnvironmentVariableA				kernel32	1327
 imp	'SetFirmwareEnvironmentVariableExA'			SetFirmwareEnvironmentVariableExA			kernel32	1328
 imp	'SetFirmwareEnvironmentVariableEx'			SetFirmwareEnvironmentVariableExW			kernel32	1329
@@ -6246,8 +6246,8 @@ imp	'SetFontEnumeration'					SetFontEnumeration					gdi32		1886
 imp	'SetForegroundWindow'					SetForegroundWindow					user32		2337
 imp	'SetGestureConfig'					SetGestureConfig					user32		2338
 imp	'SetGraphicsMode'					SetGraphicsMode						gdi32		1887
-imp	'SetHandleCount'					SetHandleCount						KernelBase	1516	1
-imp	'SetHandleInformation'					SetHandleInformation					KernelBase	1517	3
+imp	'SetHandleCount'					SetHandleCount						kernel32	0	1	# KernelBase
+imp	'SetHandleInformation'					SetHandleInformation					kernel32	0	3	# KernelBase
 imp	'SetICMMode'						SetICMMode						gdi32		1888
 imp	'SetICMProfileA'					SetICMProfileA						gdi32		1889
 imp	'SetICMProfile'						SetICMProfileW						gdi32		1890
@@ -6258,7 +6258,7 @@ imp	'SetInternalWindowPos'					SetInternalWindowPos					user32		2339
 imp	'SetIoRateControlInformationJobObject'			SetIoRateControlInformationJobObject			kernel32	1334
 imp	'SetIsDeveloperModeEnabled'				SetIsDeveloperModeEnabled				KernelBase	1518
 imp	'SetIsSideloadingEnabled'				SetIsSideloadingEnabled					KernelBase	1519
-imp	'SetKernelObjectSecurity'				SetKernelObjectSecurity					KernelBase	1520
+imp	'SetKernelObjectSecurity'				SetKernelObjectSecurity					advapi32	0		# KernelBase
 imp	'SetKeyboardState'					SetKeyboardState					user32		2340
 imp	'SetLastConsoleEventActive'				SetLastConsoleEventActive				KernelBase	1521
 imp	'SetLastError'						SetLastError						kernel32	1336	1
@@ -6268,9 +6268,9 @@ imp	'SetLayout'						SetLayout						gdi32		1891
 imp	'SetLayoutWidth'					SetLayoutWidth						gdi32		1892
 imp	'SetLocalPrimaryComputerNameA'				SetLocalPrimaryComputerNameA				kernel32	1337
 imp	'SetLocalPrimaryComputerName'				SetLocalPrimaryComputerNameW				kernel32	1338
-imp	'SetLocalTime'						SetLocalTime						KernelBase	1523
+imp	'SetLocalTime'						SetLocalTime						kernel32	0		# KernelBase
 imp	'SetLocaleInfoA'					SetLocaleInfoA						kernel32	1340
-imp	'SetLocaleInfo'						SetLocaleInfoW						KernelBase	1524
+imp	'SetLocaleInfo'						SetLocaleInfoW						kernel32	0		# KernelBase
 imp	'SetMagicColors'					SetMagicColors						gdi32		1893
 imp	'SetMagnificationDesktopColorEffect'			SetMagnificationDesktopColorEffect			user32		2343
 imp	'SetMagnificationDesktopMagnification'			SetMagnificationDesktopMagnification			user32		2344
@@ -6294,7 +6294,7 @@ imp	'SetMetaRgn'						SetMetaRgn						gdi32		1897
 imp	'SetMirrorRendering'					SetMirrorRendering					user32		2356
 imp	'SetMiterLimit'						SetMiterLimit						gdi32		1898
 imp	'SetNamedPipeAttribute'					SetNamedPipeAttribute					kernel32	1344
-imp	'SetNamedPipeHandleState'				SetNamedPipeHandleState					KernelBase	1525	4
+imp	'SetNamedPipeHandleState'				SetNamedPipeHandleState					kernel32	0	4	# KernelBase
 imp	'SetNamedSecurityInfoA'					SetNamedSecurityInfoA					advapi32	1737
 imp	'SetNamedSecurityInfoExA'				SetNamedSecurityInfoExA					advapi32	1738
 imp	'SetNamedSecurityInfoEx'				SetNamedSecurityInfoExW					advapi32	1739
@@ -6307,32 +6307,32 @@ imp	'SetPixel'						SetPixel						gdi32		1901	4
 imp	'SetPixelFormat'					SetPixelFormat						gdi32		1902
 imp	'SetPixelV'						SetPixelV						gdi32		1903
 imp	'SetPolyFillMode'					SetPolyFillMode						gdi32		1904
-imp	'SetPriorityClass'					SetPriorityClass					KernelBase	1526	2
-imp	'SetPrivateObjectSecurity'				SetPrivateObjectSecurity				KernelBase	1527
-imp	'SetPrivateObjectSecurityEx'				SetPrivateObjectSecurityEx				KernelBase	1528
+imp	'SetPriorityClass'					SetPriorityClass					kernel32	0	2	# KernelBase
+imp	'SetPrivateObjectSecurity'				SetPrivateObjectSecurity				advapi32	0		# KernelBase
+imp	'SetPrivateObjectSecurityEx'				SetPrivateObjectSecurityEx				advapi32	0		# KernelBase
 imp	'SetProcessAffinityMask'				SetProcessAffinityMask					kernel32	1347	2
-imp	'SetProcessAffinityUpdateMode'				SetProcessAffinityUpdateMode				KernelBase	1529
+imp	'SetProcessAffinityUpdateMode'				SetProcessAffinityUpdateMode				kernel32	0		# KernelBase
 imp	'SetProcessDEPPolicy'					SetProcessDEPPolicy					kernel32	1349
 imp	'SetProcessDPIAware'					SetProcessDPIAware					user32		2359
-imp	'SetProcessDefaultCpuSets'				SetProcessDefaultCpuSets				KernelBase	1530
+imp	'SetProcessDefaultCpuSets'				SetProcessDefaultCpuSets				kernel32	0		# KernelBase
 imp	'SetProcessDefaultLayout'				SetProcessDefaultLayout					user32		2360
 imp	'SetProcessDpiAwarenessContext'				SetProcessDpiAwarenessContext				user32		2361
 imp	'SetProcessDpiAwarenessInternal'			SetProcessDpiAwarenessInternal				user32		2362
 imp	'SetProcessGroupAffinity'				SetProcessGroupAffinity					KernelBase	1531
-imp	'SetProcessInformation'					SetProcessInformation					KernelBase	1532
-imp	'SetProcessMitigationPolicy'				SetProcessMitigationPolicy				KernelBase	1533
-imp	'SetProcessPreferredUILanguages'			SetProcessPreferredUILanguages				KernelBase	1534
-imp	'SetProcessPriorityBoost'				SetProcessPriorityBoost					KernelBase	1535	2
+imp	'SetProcessInformation'					SetProcessInformation					kernel32	0		# KernelBase
+imp	'SetProcessMitigationPolicy'				SetProcessMitigationPolicy				kernel32	0		# KernelBase
+imp	'SetProcessPreferredUILanguages'			SetProcessPreferredUILanguages				kernel32	0		# KernelBase
+imp	'SetProcessPriorityBoost'				SetProcessPriorityBoost					kernel32	0	2	# KernelBase
 imp	'SetProcessRestrictionExemption'			SetProcessRestrictionExemption				user32		2363
-imp	'SetProcessShutdownParameters'				SetProcessShutdownParameters				KernelBase	1536
+imp	'SetProcessShutdownParameters'				SetProcessShutdownParameters				kernel32	0		# KernelBase
 imp	'SetProcessValidCallTargets'				SetProcessValidCallTargets				KernelBase	1537
 imp	'SetProcessWindowStation'				SetProcessWindowStation					user32		2364
 imp	'SetProcessWorkingSetSize'				SetProcessWorkingSetSize				kernel32	1356	3
-imp	'SetProcessWorkingSetSizeEx'				SetProcessWorkingSetSizeEx				KernelBase	1538	4
+imp	'SetProcessWorkingSetSizeEx'				SetProcessWorkingSetSizeEx				kernel32	0	4	# KernelBase
 imp	'SetProgmanWindow'					SetProgmanWindow					user32		2365
 imp	'SetPropA'						SetPropA						user32		2366
 imp	'SetProp'						SetPropW						user32		2367
-imp	'SetProtectedPolicy'					SetProtectedPolicy					KernelBase	1539
+imp	'SetProtectedPolicy'					SetProtectedPolicy					kernel32	0		# KernelBase
 imp	'SetProtocolProperty'					SetProtocolProperty					KernelBase	1540
 imp	'SetROP2'						SetROP2							gdi32		1905
 imp	'SetRect'						SetRect							user32		2368
@@ -6344,13 +6344,13 @@ imp	'SetScrollInfo'						SetScrollInfo						user32		2370
 imp	'SetScrollPos'						SetScrollPos						user32		2371
 imp	'SetScrollRange'					SetScrollRange						user32		2372
 imp	'SetSearchPathMode'					SetSearchPathMode					kernel32	1359
-imp	'SetSecurityAccessMask'					SetSecurityAccessMask					KernelBase	1542
-imp	'SetSecurityDescriptorControl'				SetSecurityDescriptorControl				KernelBase	1543
-imp	'SetSecurityDescriptorDacl'				SetSecurityDescriptorDacl				KernelBase	1544
-imp	'SetSecurityDescriptorGroup'				SetSecurityDescriptorGroup				KernelBase	1545
-imp	'SetSecurityDescriptorOwner'				SetSecurityDescriptorOwner				KernelBase	1546
-imp	'SetSecurityDescriptorRMControl'			SetSecurityDescriptorRMControl				KernelBase	1547
-imp	'SetSecurityDescriptorSacl'				SetSecurityDescriptorSacl				KernelBase	1548
+imp	'SetSecurityAccessMask'					SetSecurityAccessMask					advapi32	0		# KernelBase
+imp	'SetSecurityDescriptorControl'				SetSecurityDescriptorControl				advapi32	0		# KernelBase
+imp	'SetSecurityDescriptorDacl'				SetSecurityDescriptorDacl				advapi32	0		# KernelBase
+imp	'SetSecurityDescriptorGroup'				SetSecurityDescriptorGroup				advapi32	0		# KernelBase
+imp	'SetSecurityDescriptorOwner'				SetSecurityDescriptorOwner				advapi32	0		# KernelBase
+imp	'SetSecurityDescriptorRMControl'			SetSecurityDescriptorRMControl				advapi32	0		# KernelBase
+imp	'SetSecurityDescriptorSacl'				SetSecurityDescriptorSacl				advapi32	0		# KernelBase
 imp	'SetSecurityInfo'					SetSecurityInfo						advapi32	1750
 imp	'SetSecurityInfoExA'					SetSecurityInfoExA					advapi32	1751
 imp	'SetSecurityInfoEx'					SetSecurityInfoExW					advapi32	1752
@@ -6360,18 +6360,18 @@ imp	'SetServiceStatus'					SetServiceStatus					advapi32	1755
 imp	'SetShellWindow'					SetShellWindow						user32		2373
 imp	'SetShellWindowEx'					SetShellWindowEx					user32		2374
 imp	'SetStateVersion'					SetStateVersion						KernelBase	1549
-imp	'SetStdHandle'						SetStdHandle						KernelBase	1550	2
+imp	'SetStdHandle'						SetStdHandle						kernel32	0	2	# KernelBase
 imp	'SetStdHandleEx'					SetStdHandleEx						KernelBase	1551
 imp	'SetStretchBltMode'					SetStretchBltMode					gdi32		1908
 imp	'SetSysColors'						SetSysColors						user32		2375
 imp	'SetSysColorsTemp'					SetSysColorsTemp					user32		2376
 imp	'SetSystemCursor'					SetSystemCursor						user32		2377
-imp	'SetSystemFileCacheSize'				SetSystemFileCacheSize					KernelBase	1552
+imp	'SetSystemFileCacheSize'				SetSystemFileCacheSize					kernel32	0		# KernelBase
 imp	'SetSystemMenu'						SetSystemMenu						user32		2378
 imp	'SetSystemPaletteUse'					SetSystemPaletteUse					gdi32		1909
 imp	'SetSystemPowerState'					SetSystemPowerState					kernel32	1363
-imp	'SetSystemTime'						SetSystemTime						KernelBase	1553
-imp	'SetSystemTimeAdjustment'				SetSystemTimeAdjustment					KernelBase	1554
+imp	'SetSystemTime'						SetSystemTime						kernel32	0		# KernelBase
+imp	'SetSystemTimeAdjustment'				SetSystemTimeAdjustment					kernel32	0		# KernelBase
 imp	'SetSystemTimeAdjustmentPrecise'			SetSystemTimeAdjustmentPrecise				KernelBase	1555
 imp	'SetTapeParameters'					SetTapeParameters					kernel32	1366
 imp	'SetTapePosition'					SetTapePosition						kernel32	1367
@@ -6382,37 +6382,37 @@ imp	'SetTextCharacterExtra'					SetTextCharacterExtra					gdi32		1911
 imp	'SetTextColor'						SetTextColor						gdi32		1912	2
 imp	'SetTextJustification'					SetTextJustification					gdi32		1913	3
 imp	'SetThreadAffinityMask'					SetThreadAffinityMask					kernel32	1369	2
-imp	'SetThreadContext'					SetThreadContext					KernelBase	1556
+imp	'SetThreadContext'					SetThreadContext					kernel32	0		# KernelBase
 imp	'SetThreadDescription'					SetThreadDescription					KernelBase	1557
 imp	'SetThreadDesktop'					SetThreadDesktop					user32		2380
 imp	'SetThreadDpiAwarenessContext'				SetThreadDpiAwarenessContext				user32		2381
 imp	'SetThreadDpiHostingBehavior'				SetThreadDpiHostingBehavior				user32		2382
-imp	'SetThreadErrorMode'					SetThreadErrorMode					KernelBase	1558
+imp	'SetThreadErrorMode'					SetThreadErrorMode					kernel32	0		# KernelBase
 imp	'SetThreadExecutionState'				SetThreadExecutionState					kernel32	1373
-imp	'SetThreadGroupAffinity'				SetThreadGroupAffinity					KernelBase	1559
-imp	'SetThreadIdealProcessor'				SetThreadIdealProcessor					KernelBase	1560
-imp	'SetThreadIdealProcessorEx'				SetThreadIdealProcessorEx				KernelBase	1561
-imp	'SetThreadInformation'					SetThreadInformation					KernelBase	1562
+imp	'SetThreadGroupAffinity'				SetThreadGroupAffinity					kernel32	0		# KernelBase
+imp	'SetThreadIdealProcessor'				SetThreadIdealProcessor					kernel32	0		# KernelBase
+imp	'SetThreadIdealProcessorEx'				SetThreadIdealProcessorEx				kernel32	0		# KernelBase
+imp	'SetThreadInformation'					SetThreadInformation					kernel32	0		# KernelBase
 imp	'SetThreadInputBlocked'					SetThreadInputBlocked					user32		2383
-imp	'SetThreadLocale'					SetThreadLocale						KernelBase	1563
-imp	'SetThreadPreferredUILanguages'				SetThreadPreferredUILanguages				KernelBase	1564
-imp	'SetThreadPriority'					SetThreadPriority					KernelBase	1565	2
-imp	'SetThreadPriorityBoost'				SetThreadPriorityBoost					KernelBase	1566	2
-imp	'SetThreadSelectedCpuSets'				SetThreadSelectedCpuSets				KernelBase	1567
-imp	'SetThreadStackGuarantee'				SetThreadStackGuarantee					KernelBase	1568
-imp	'SetThreadToken'					SetThreadToken						KernelBase	1569
-imp	'SetThreadUILanguage'					SetThreadUILanguage					KernelBase	1570
-imp	'SetThreadpoolStackInformation'				SetThreadpoolStackInformation				KernelBase	1571
-imp	'SetThreadpoolThreadMinimum'				SetThreadpoolThreadMinimum				KernelBase	1573
-imp	'SetTimeZoneInformation'				SetTimeZoneInformation					KernelBase	1578
+imp	'SetThreadLocale'					SetThreadLocale						kernel32	0		# KernelBase
+imp	'SetThreadPreferredUILanguages'				SetThreadPreferredUILanguages				kernel32	0		# KernelBase
+imp	'SetThreadPriority'					SetThreadPriority					kernel32	0	2	# KernelBase
+imp	'SetThreadPriorityBoost'				SetThreadPriorityBoost					kernel32	0	2	# KernelBase
+imp	'SetThreadSelectedCpuSets'				SetThreadSelectedCpuSets				kernel32	0		# KernelBase
+imp	'SetThreadStackGuarantee'				SetThreadStackGuarantee					kernel32	0		# KernelBase
+imp	'SetThreadToken'					SetThreadToken						advapi32	0		# KernelBase
+imp	'SetThreadUILanguage'					SetThreadUILanguage					kernel32	0		# KernelBase
+imp	'SetThreadpoolStackInformation'				SetThreadpoolStackInformation				kernel32	0		# KernelBase
+imp	'SetThreadpoolThreadMinimum'				SetThreadpoolThreadMinimum				kernel32	0		# KernelBase
+imp	'SetTimeZoneInformation'				SetTimeZoneInformation					kernel32	0		# KernelBase
 imp	'SetTimer'						SetTimer						user32		2384	4
 imp	'SetTimerQueueTimer'					SetTimerQueueTimer					kernel32	1394
-imp	'SetTokenInformation'					SetTokenInformation					KernelBase	1579
+imp	'SetTokenInformation'					SetTokenInformation					advapi32	0		# KernelBase
 imp	'SetUmsThreadInformation'				SetUmsThreadInformation					kernel32	1395
-imp	'SetUnhandledExceptionFilter'				SetUnhandledExceptionFilter				KernelBase	1580	1
+imp	'SetUnhandledExceptionFilter'				SetUnhandledExceptionFilter				kernel32	0	1	# KernelBase
 imp	'SetUserFileEncryptionKey'				SetUserFileEncryptionKey				advapi32	1759
 imp	'SetUserFileEncryptionKeyEx'				SetUserFileEncryptionKeyEx				advapi32	1760
-imp	'SetUserGeoID'						SetUserGeoID						KernelBase	1581
+imp	'SetUserGeoID'						SetUserGeoID						kernel32	0		# KernelBase
 imp	'SetUserGeoName'					SetUserGeoName						KernelBase	1582
 imp	'SetUserObjectInformationA'				SetUserObjectInformationA				user32		2385
 imp	'SetUserObjectInformation'				SetUserObjectInformationW				user32		2386
@@ -6426,8 +6426,8 @@ imp	'SetVolumeLabel'					SetVolumeLabelW						kernel32	1401
 imp	'SetVolumeMountPointA'					SetVolumeMountPointA					kernel32	1402
 imp	'SetVolumeMountPoint'					SetVolumeMountPointW					kernel32	1403
 imp	'SetVolumeMountPointWStub'				SetVolumeMountPointWStub				kernel32	1404
-imp	'SetWaitableTimer'					SetWaitableTimer					KernelBase	1583	6
-imp	'SetWaitableTimerEx'					SetWaitableTimerEx					KernelBase	1584
+imp	'SetWaitableTimer'					SetWaitableTimer					kernel32	0	6	# KernelBase
+imp	'SetWaitableTimerEx'					SetWaitableTimerEx					kernel32	0		# KernelBase
 imp	'SetWinEventHook'					SetWinEventHook						user32		2388
 imp	'SetWinMetaFileBits'					SetWinMetaFileBits					gdi32		1917
 imp	'SetWindowBand'						SetWindowBand						user32		2389
@@ -6455,8 +6455,8 @@ imp	'SetWindowsHookA'					SetWindowsHookA						user32		2407	2
 imp	'SetWindowsHookEx'					SetWindowsHookExW					user32		2409	4
 imp	'SetWindowsHookExA'					SetWindowsHookExA					user32		2408	4
 imp	'SetWorldTransform'					SetWorldTransform					gdi32		1920
-imp	'SetXStateFeaturesMask'					SetXStateFeaturesMask					KernelBase	1585
-imp	'SetupComm'						SetupComm						KernelBase	1586
+imp	'SetXStateFeaturesMask'					SetXStateFeaturesMask					kernel32	0		# KernelBase
+imp	'SetupComm'						SetupComm						kernel32	0		# KernelBase
 imp	'SharedLocalIsEnabled'					SharedLocalIsEnabled					KernelBase	1587
 imp	'SheChangeDirA'						SheChangeDirA						shell32		570
 imp	'SheChangeDirEx'					SheChangeDirExW						shell32		571
@@ -6496,14 +6496,14 @@ imp	'ShutdownBlockReasonCreate'				ShutdownBlockReasonCreate				user32		2419
 imp	'ShutdownBlockReasonDestroy'				ShutdownBlockReasonDestroy				user32		2420
 imp	'ShutdownBlockReasonQuery'				ShutdownBlockReasonQuery				user32		2421
 imp	'SignalFileOpen'					SignalFileOpen						shell32		103
-imp	'SignalObjectAndWait'					SignalObjectAndWait					KernelBase	1588
+imp	'SignalObjectAndWait'					SignalObjectAndWait					kernel32	0		# KernelBase
 imp	'SignalRedirectionStartComplete'			SignalRedirectionStartComplete				user32		2422
-imp	'SizeofResource'					SizeofResource						KernelBase	1589
+imp	'SizeofResource'					SizeofResource						kernel32	0		# KernelBase
 imp	'SkipPointerFrameMessages'				SkipPointerFrameMessages				user32		2423
-imp	'Sleep'							Sleep							KernelBase	1590	1
-imp	'SleepConditionVariableCS'				SleepConditionVariableCS				KernelBase	1591
-imp	'SleepConditionVariableSRW'				SleepConditionVariableSRW				KernelBase	1592
-imp	'SleepEx'						SleepEx							KernelBase	1593	2
+imp	'Sleep'							Sleep							kernel32	0	1	# KernelBase
+imp	'SleepConditionVariableCS'				SleepConditionVariableCS				kernel32	0		# KernelBase
+imp	'SleepConditionVariableSRW'				SleepConditionVariableSRW				kernel32	0		# KernelBase
+imp	'SleepEx'						SleepEx							kernel32	0	2	# KernelBase
 imp	'SoftModalMessageBox'					SoftModalMessageBox					user32		2424
 imp	'SortCloseHandle'					SortCloseHandle						kernel32	1416
 imp	'SortGetHandle'						SortGetHandle						kernel32	1417
@@ -6604,31 +6604,31 @@ imp	'StrokePath'						StrokePath						gdi32		1928
 imp	'SubscribeEdpEnabledStateChange'			SubscribeEdpEnabledStateChange				KernelBase	1665
 imp	'SubscribeStateChangeNotification'			SubscribeStateChangeNotification			KernelBase	1666
 imp	'SubtractRect'						SubtractRect						user32		2426
-imp	'SuspendThread'						SuspendThread						KernelBase	1667
+imp	'SuspendThread'						SuspendThread						kernel32	0		# KernelBase
 imp	'SwapBuffers'						SwapBuffers						gdi32		1929
 imp	'SwapMouseButton'					SwapMouseButton						user32		2427
 imp	'SwitchDesktop'						SwitchDesktop						user32		2428
 imp	'SwitchDesktopWithFade'					SwitchDesktopWithFade					user32		2429
-imp	'SwitchToFiber'						SwitchToFiber						KernelBase	1668
+imp	'SwitchToFiber'						SwitchToFiber						kernel32	0		# KernelBase
 imp	'SwitchToThisWindow'					SwitchToThisWindow					user32		2430
-imp	'SwitchToThread'					SwitchToThread						KernelBase	1669
+imp	'SwitchToThread'					SwitchToThread						kernel32	0		# KernelBase
 imp	'SystemFunction017'					SystemFunction017					advapi32	1785
 imp	'SystemFunction019'					SystemFunction019					advapi32	1787
 imp	'SystemParametersInfoA'					SystemParametersInfoA					user32		2431
 imp	'SystemParametersInfoForDpi'				SystemParametersInfoForDpi				user32		2432
 imp	'SystemParametersInfo'					SystemParametersInfoW					user32		2433
-imp	'SystemTimeToFileTime'					SystemTimeToFileTime					KernelBase	1670	2
-imp	'SystemTimeToTzSpecificLocalTime'			SystemTimeToTzSpecificLocalTime				KernelBase	1671
-imp	'SystemTimeToTzSpecificLocalTimeEx'			SystemTimeToTzSpecificLocalTimeEx			KernelBase	1672
+imp	'SystemTimeToFileTime'					SystemTimeToFileTime					kernel32	0	2	# KernelBase
+imp	'SystemTimeToTzSpecificLocalTime'			SystemTimeToTzSpecificLocalTime				kernel32	0		# KernelBase
+imp	'SystemTimeToTzSpecificLocalTimeEx'			SystemTimeToTzSpecificLocalTimeEx			kernel32	0		# KernelBase
 imp	'TabbedTextOutA'					TabbedTextOutA						user32		2434
 imp	'TabbedTextOut'						TabbedTextOutW						user32		2435
 imp	'TelnetProtocolHandler'					TelnetProtocolHandler					url		113
 imp	'TelnetProtocolHandlerA'				TelnetProtocolHandlerA					url		114
 imp	'TerminateEnclave'					TerminateEnclave					KernelBase	1673
 imp	'TerminateJobObject'					TerminateJobObject					kernel32	1426
-imp	'TerminateProcess'					TerminateProcess					KernelBase	1674	2
+imp	'TerminateProcess'					TerminateProcess					kernel32	0	2	# KernelBase
 imp	'TerminateProcessOnMemoryExhaustion'			TerminateProcessOnMemoryExhaustion			KernelBase	1675
-imp	'TerminateThread'					TerminateThread						KernelBase	1676
+imp	'TerminateThread'					TerminateThread						kernel32	0		# KernelBase
 imp	'TermsrvAppInstallMode'					TermsrvAppInstallMode					kernel32	1429
 imp	'TermsrvConvertSysRootToUserDir'			TermsrvConvertSysRootToUserDir				kernel32	1430
 imp	'TermsrvCreateRegEntry'					TermsrvCreateRegEntry					kernel32	1431
@@ -6649,10 +6649,10 @@ imp	'Thread32First'						Thread32First						kernel32	1443
 imp	'Thread32Next'						Thread32Next						kernel32	1444
 imp	'TileChildWindows'					TileChildWindows					user32		2436
 imp	'TileWindows'						TileWindows						user32		2437
-imp	'TlsAlloc'						TlsAlloc						KernelBase	1677
-imp	'TlsFree'						TlsFree							KernelBase	1678
-imp	'TlsGetValue'						TlsGetValue						KernelBase	1679
-imp	'TlsSetValue'						TlsSetValue						KernelBase	1680
+imp	'TlsAlloc'						TlsAlloc						kernel32	0		# KernelBase
+imp	'TlsFree'						TlsFree							kernel32	0		# KernelBase
+imp	'TlsGetValue'						TlsGetValue						kernel32	0		# KernelBase
+imp	'TlsSetValue'						TlsSetValue						kernel32	0		# KernelBase
 imp	'ToAscii'						ToAscii							user32		2438
 imp	'ToAsciiEx'						ToAsciiEx						user32		2439
 imp	'ToUnicode'						ToUnicode						user32		2440
@@ -6724,7 +6724,7 @@ imp	'TraceSetInformation'					TraceSetInformation					advapi32	1812
 imp	'TrackMouseEvent'					TrackMouseEvent						user32		2442
 imp	'TrackPopupMenu'					TrackPopupMenu						user32		2443	7
 imp	'TrackPopupMenuEx'					TrackPopupMenuEx					user32		2444
-imp	'TransactNamedPipe'					TransactNamedPipe					KernelBase	1684	7
+imp	'TransactNamedPipe'					TransactNamedPipe					kernel32	0	7	# KernelBase
 imp	'TranslateAcceleratorA'					TranslateAcceleratorA					user32		2446
 imp	'TranslateAccelerator'					TranslateAcceleratorW					user32		2447
 imp	'TranslateCharsetInfo'					TranslateCharsetInfo					gdi32		1932
@@ -6734,23 +6734,23 @@ imp	'TranslateMessageEx'					TranslateMessageEx					user32		2450
 imp	'TranslateURLA'						TranslateURLA						url		115
 imp	'TranslateURLW'						TranslateURLW						url		116
 imp	'TransmitFile'						TransmitFile						MsWSock		53	7
-imp	'TransmitCommChar'					TransmitCommChar					KernelBase	1685
+imp	'TransmitCommChar'					TransmitCommChar					kernel32	0		# KernelBase
 imp	'TreeResetNamedSecurityInfoA'				TreeResetNamedSecurityInfoA				advapi32	1813
 imp	'TreeResetNamedSecurityInfo'				TreeResetNamedSecurityInfoW				advapi32	1814
 imp	'TreeSetNamedSecurityInfoA'				TreeSetNamedSecurityInfoA				advapi32	1815
 imp	'TreeSetNamedSecurityInfo'				TreeSetNamedSecurityInfoW				advapi32	1816
 imp	'TrusteeAccessToObjectA'				TrusteeAccessToObjectA					advapi32	1817
 imp	'TrusteeAccessToObject'					TrusteeAccessToObjectW					advapi32	1818
-imp	'TrySubmitThreadpoolCallback'				TrySubmitThreadpoolCallback				KernelBase	1689
-imp	'TzSpecificLocalTimeToSystemTime'			TzSpecificLocalTimeToSystemTime				KernelBase	1690
-imp	'TzSpecificLocalTimeToSystemTimeEx'			TzSpecificLocalTimeToSystemTimeEx			KernelBase	1691
+imp	'TrySubmitThreadpoolCallback'				TrySubmitThreadpoolCallback				kernel32	0		# KernelBase
+imp	'TzSpecificLocalTimeToSystemTime'			TzSpecificLocalTimeToSystemTime				kernel32	0		# KernelBase
+imp	'TzSpecificLocalTimeToSystemTimeEx'			TzSpecificLocalTimeToSystemTimeEx			kernel32	0		# KernelBase
 imp	'URLAssociationDialogA'					URLAssociationDialogA					url		117
 imp	'URLAssociationDialog'					URLAssociationDialogW					url		118
 imp	'UTRegister'						UTRegister						kernel32	1458
 imp	'UTUnRegister'						UTUnRegister						kernel32	1459
 imp	'UmsThreadYield'					UmsThreadYield						kernel32	1460
 imp	'UndelegateInput'					UndelegateInput						user32		2504
-imp	'UnhandledExceptionFilter'				UnhandledExceptionFilter				KernelBase	1692
+imp	'UnhandledExceptionFilter'				UnhandledExceptionFilter				kernel32	0		# KernelBase
 imp	'UnhookWinEvent'					UnhookWinEvent						user32		2451
 imp	'UnhookWindowsHook'					UnhookWindowsHook					user32		2452	2
 imp	'UnhookWindowsHookEx'					UnhookWindowsHookEx					user32		2453	1
@@ -6758,18 +6758,18 @@ imp	'UninstallApplication'					UninstallApplication					advapi32	1819
 imp	'UnionRect'						UnionRect						user32		2454
 imp	'UnloadKeyboardLayout'					UnloadKeyboardLayout					user32		2455
 imp	'UnloadNetworkFonts'					UnloadNetworkFonts					gdi32		1933
-imp	'UnlockFile'						UnlockFile						KernelBase	1693	5
-imp	'UnlockFileEx'						UnlockFileEx						KernelBase	1694	5
+imp	'UnlockFile'						UnlockFile						kernel32	0	5	# KernelBase
+imp	'UnlockFileEx'						UnlockFileEx						kernel32	0	5	# KernelBase
 imp	'UnlockServiceDatabase'					UnlockServiceDatabase					advapi32	1820
 imp	'UnlockWindowStation'					UnlockWindowStation					user32		2456
-imp	'UnmapViewOfFile'					UnmapViewOfFile						KernelBase	1695	1
+imp	'UnmapViewOfFile'					UnmapViewOfFile						kernel32	0	1	# KernelBase
 imp	'UnmapViewOfFile2'					UnmapViewOfFile2					KernelBase	1696
 imp	'UnmapViewOfFileEx'					UnmapViewOfFileEx					KernelBase	1697
 imp	'UnpackDDElParam'					UnpackDDElParam						user32		2457
 imp	'UnrealizeObject'					UnrealizeObject						gdi32		1934
 imp	'UnregisterApplicationRecoveryCallback'			UnregisterApplicationRecoveryCallback			kernel32	1466
 imp	'UnregisterApplicationRestart'				UnregisterApplicationRestart				kernel32	1467
-imp	'UnregisterBadMemoryNotification'			UnregisterBadMemoryNotification				KernelBase	1698
+imp	'UnregisterBadMemoryNotification'			UnregisterBadMemoryNotification				kernel32	0		# KernelBase
 imp	'UnregisterClassA'					UnregisterClassA					user32		2458
 imp	'UnregisterClass'					UnregisterClassW					user32		2459
 imp	'UnregisterConsoleIME'					UnregisterConsoleIME					kernel32	1469
@@ -6788,7 +6788,7 @@ imp	'UnregisterSuspendResumeNotification'			UnregisterSuspendResumeNotification	
 imp	'UnregisterTouchWindow'					UnregisterTouchWindow					user32		2468
 imp	'UnregisterUserApiHook'					UnregisterUserApiHook					user32		2469
 imp	'UnregisterWait'					UnregisterWait						kernel32	1470
-imp	'UnregisterWaitEx'					UnregisterWaitEx					KernelBase	1703
+imp	'UnregisterWaitEx'					UnregisterWaitEx					kernel32	0		# KernelBase
 imp	'UnregisterWaitUntilOOBECompleted'			UnregisterWaitUntilOOBECompleted			kernel32	1472
 imp	'UnsubscribeEdpEnabledStateChange'			UnsubscribeEdpEnabledStateChange			KernelBase	1704
 imp	'UnsubscribeStateChangeNotification'			UnsubscribeStateChangeNotification			KernelBase	1705
@@ -6803,7 +6803,7 @@ imp	'UpdatePackageStatus'					UpdatePackageStatus					KernelBase	1706
 imp	'UpdatePackageStatusForUser'				UpdatePackageStatusForUser				KernelBase	1707
 imp	'UpdatePackageStatusForUserSid'				UpdatePackageStatusForUserSid				KernelBase	1708
 imp	'UpdatePerUserSystemParameters'				UpdatePerUserSystemParameters				user32		2473
-imp	'UpdateProcThreadAttribute'				UpdateProcThreadAttribute				KernelBase	1709	7
+imp	'UpdateProcThreadAttribute'				UpdateProcThreadAttribute				kernel32	0	7	# KernelBase
 imp	'UpdateResourceA'					UpdateResourceA						kernel32	1475
 imp	'UpdateResource'					UpdateResourceW						kernel32	1476
 imp	'UpdateTraceA'						UpdateTraceA						advapi32	1823
@@ -6855,8 +6855,8 @@ imp	'ValidateRect'						ValidateRect						user32		2485
 imp	'ValidateRgn'						ValidateRgn						user32		2486
 imp	'VerFindFileA'						VerFindFileA						KernelBase	1737
 imp	'VerFindFile'						VerFindFileW						KernelBase	1738
-imp	'VerLanguageNameA'					VerLanguageNameA					KernelBase	1739
-imp	'VerLanguageName'					VerLanguageNameW					KernelBase	1740
+imp	'VerLanguageNameA'					VerLanguageNameA					kernel32	0		# KernelBase
+imp	'VerLanguageName'					VerLanguageNameW					kernel32	0		# KernelBase
 imp	'VerQueryValueA'					VerQueryValueA						KernelBase	1741
 imp	'VerQueryValue'						VerQueryValueW						KernelBase	1742
 imp	'VerSetConditionMask'					VerSetConditionMask					ntdll		1678
@@ -6871,24 +6871,24 @@ imp	'VerifyPackageId'					VerifyPackageId						KernelBase	1750
 imp	'VerifyPackageIdA'					VerifyPackageIdA					KernelBase	1751
 imp	'VerifyPackageRelativeApplicationId'			VerifyPackageRelativeApplicationId			KernelBase	1752
 imp	'VerifyPackageRelativeApplicationIdA'			VerifyPackageRelativeApplicationIdA			KernelBase	1753
-imp	'VerifyScripts'						VerifyScripts						KernelBase	1754
+imp	'VerifyScripts'						VerifyScripts						kernel32	0		# KernelBase
 imp	'VerifyVersionInfoA'					VerifyVersionInfoA					kernel32	1484
 imp	'VerifyVersionInfo'					VerifyVersionInfoW					kernel32	1485
-imp	'VirtualAlloc'						VirtualAlloc						KernelBase	1755	4
+imp	'VirtualAlloc'						VirtualAlloc						kernel32	0	4	# KernelBase
 imp	'VirtualAlloc2'						VirtualAlloc2						KernelBase	1756
 imp	'VirtualAlloc2FromApp'					VirtualAlloc2FromApp					KernelBase	1757
-imp	'VirtualAllocEx'					VirtualAllocEx						KernelBase	1758	5
-imp	'VirtualAllocExNuma'					VirtualAllocExNuma					KernelBase	1759
+imp	'VirtualAllocEx'					VirtualAllocEx						kernel32	0	5	# KernelBase
+imp	'VirtualAllocExNuma'					VirtualAllocExNuma					kernel32	0		# KernelBase
 imp	'VirtualAllocFromApp'					VirtualAllocFromApp					KernelBase	1760
-imp	'VirtualFree'						VirtualFree						KernelBase	1761	3
-imp	'VirtualFreeEx'						VirtualFreeEx						KernelBase	1762
-imp	'VirtualLock'						VirtualLock						KernelBase	1763
-imp	'VirtualProtect'					VirtualProtect						KernelBase	1764	4
-imp	'VirtualProtectEx'					VirtualProtectEx					KernelBase	1765
+imp	'VirtualFree'						VirtualFree						kernel32	0	3	# KernelBase
+imp	'VirtualFreeEx'						VirtualFreeEx						kernel32	0		# KernelBase
+imp	'VirtualLock'						VirtualLock						kernel32	0		# KernelBase
+imp	'VirtualProtect'					VirtualProtect						kernel32	0	4	# KernelBase
+imp	'VirtualProtectEx'					VirtualProtectEx					kernel32	0		# KernelBase
 imp	'VirtualProtectFromApp'					VirtualProtectFromApp					KernelBase	1766
-imp	'VirtualQuery'						VirtualQuery						KernelBase	1767	3
-imp	'VirtualQueryEx'					VirtualQueryEx						KernelBase	1768
-imp	'VirtualUnlock'						VirtualUnlock						KernelBase	1769
+imp	'VirtualQuery'						VirtualQuery						kernel32	0	3	# KernelBase
+imp	'VirtualQueryEx'					VirtualQueryEx						kernel32	0		# KernelBase
+imp	'VirtualUnlock'						VirtualUnlock						kernel32	0		# KernelBase
 imp	'VirtualUnlockEx'					VirtualUnlockEx						KernelBase	1770
 imp	'VkKeyScanA'						VkKeyScanA						user32		2487
 imp	'VkKeyScanExA'						VkKeyScanExA						user32		2488
@@ -7048,49 +7048,49 @@ imp	'WahReferenceContextByHandle'				WahReferenceContextByHandle				ws2_32		186
 imp	'WahRemoveHandleContext'				WahRemoveHandleContext					ws2_32		187
 imp	'WahWaitForNotification'				WahWaitForNotification					ws2_32		188
 imp	'WahWriteLSPEvent'					WahWriteLSPEvent					ws2_32		189
-imp	'WaitCommEvent'						WaitCommEvent						KernelBase	1773
-imp	'WaitForDebugEvent'					WaitForDebugEvent					KernelBase	1774
+imp	'WaitCommEvent'						WaitCommEvent						kernel32	0		# KernelBase
+imp	'WaitForDebugEvent'					WaitForDebugEvent					kernel32	0		# KernelBase
 imp	'WaitForDebugEventEx'					WaitForDebugEventEx					KernelBase	1775
 imp	'WaitForExplorerRestart'				WaitForExplorerRestartW					shell32		617
 imp	'WaitForInputIdle'					WaitForInputIdle					user32		2495	2
 imp	'WaitForMachinePolicyForegroundProcessingInternal'	WaitForMachinePolicyForegroundProcessingInternal	KernelBase	1776
-imp	'WaitForMultipleObjects'				WaitForMultipleObjects					KernelBase	1777	4
-imp	'WaitForMultipleObjectsEx'				WaitForMultipleObjectsEx				KernelBase	1778	5
+imp	'WaitForMultipleObjects'				WaitForMultipleObjects					kernel32	0	4	# KernelBase
+imp	'WaitForMultipleObjectsEx'				WaitForMultipleObjectsEx				kernel32	0	5	# KernelBase
 imp	'WaitForRedirectionStartComplete'			WaitForRedirectionStartComplete				user32		2496
-imp	'WaitForSingleObject'					WaitForSingleObject					KernelBase	1779	2
-imp	'WaitForSingleObjectEx'					WaitForSingleObjectEx					KernelBase	1780	3
+imp	'WaitForSingleObject'					WaitForSingleObject					kernel32	0	2	# KernelBase
+imp	'WaitForSingleObjectEx'					WaitForSingleObjectEx					kernel32	0	3	# KernelBase
 imp	'WaitForUserPolicyForegroundProcessingInternal'		WaitForUserPolicyForegroundProcessingInternal		KernelBase	1785
 imp	'WaitMessage'						WaitMessage						user32		2497
 imp	'WaitNamedPipeA'					WaitNamedPipeA						kernel32	1509	2
-imp	'WaitNamedPipe'						WaitNamedPipeW						KernelBase	1786
+imp	'WaitNamedPipe'						WaitNamedPipeW						kernel32	0		# KernelBase
 imp	'WaitOnAddress'						WaitOnAddress						KernelBase	1787
 imp	'WaitServiceState'					WaitServiceState					advapi32	1827
 imp	'WantArrows'						WantArrows						comdlg32	127
-imp	'WerGetFlags'						WerGetFlags						KernelBase	1792
+imp	'WerGetFlags'						WerGetFlags						kernel32	0		# KernelBase
 imp	'WerGetFlagsWorker'					WerGetFlagsWorker					kernel32	1514
 imp	'WerRegisterAdditionalProcess'				WerRegisterAdditionalProcess				KernelBase	1793
 imp	'WerRegisterAppLocalDump'				WerRegisterAppLocalDump					KernelBase	1794
 imp	'WerRegisterCustomMetadata'				WerRegisterCustomMetadata				KernelBase	1795
 imp	'WerRegisterExcludedMemoryBlock'			WerRegisterExcludedMemoryBlock				KernelBase	1796
-imp	'WerRegisterFile'					WerRegisterFile						KernelBase	1797
+imp	'WerRegisterFile'					WerRegisterFile						kernel32	0		# KernelBase
 imp	'WerRegisterFileWorker'					WerRegisterFileWorker					kernel32	1520
-imp	'WerRegisterMemoryBlock'				WerRegisterMemoryBlock					KernelBase	1798
+imp	'WerRegisterMemoryBlock'				WerRegisterMemoryBlock					kernel32	0		# KernelBase
 imp	'WerRegisterMemoryBlockWorker'				WerRegisterMemoryBlockWorker				kernel32	1522
-imp	'WerRegisterRuntimeExceptionModule'			WerRegisterRuntimeExceptionModule			KernelBase	1799
+imp	'WerRegisterRuntimeExceptionModule'			WerRegisterRuntimeExceptionModule			kernel32	0		# KernelBase
 imp	'WerRegisterRuntimeExceptionModuleWorker'		WerRegisterRuntimeExceptionModuleWorker			kernel32	1524
 imp	'WerReportExceptionWorker'				WerReportExceptionWorker				ntdll		1679
 imp	'WerReportSQMEvent'					WerReportSQMEvent					ntdll		1680
-imp	'WerSetFlags'						WerSetFlags						KernelBase	1800
+imp	'WerSetFlags'						WerSetFlags						kernel32	0		# KernelBase
 imp	'WerSetFlagsWorker'					WerSetFlagsWorker					kernel32	1526
 imp	'WerUnregisterAdditionalProcess'			WerUnregisterAdditionalProcess				KernelBase	1801
 imp	'WerUnregisterAppLocalDump'				WerUnregisterAppLocalDump				KernelBase	1802
 imp	'WerUnregisterCustomMetadata'				WerUnregisterCustomMetadata				KernelBase	1803
 imp	'WerUnregisterExcludedMemoryBlock'			WerUnregisterExcludedMemoryBlock			KernelBase	1804
-imp	'WerUnregisterFile'					WerUnregisterFile					KernelBase	1805
+imp	'WerUnregisterFile'					WerUnregisterFile					kernel32	0		# KernelBase
 imp	'WerUnregisterFileWorker'				WerUnregisterFileWorker					kernel32	1532
-imp	'WerUnregisterMemoryBlock'				WerUnregisterMemoryBlock				KernelBase	1806
+imp	'WerUnregisterMemoryBlock'				WerUnregisterMemoryBlock				kernel32	0		# KernelBase
 imp	'WerUnregisterMemoryBlockWorker'			WerUnregisterMemoryBlockWorker				kernel32	1534
-imp	'WerUnregisterRuntimeExceptionModule'			WerUnregisterRuntimeExceptionModule			KernelBase	1807
+imp	'WerUnregisterRuntimeExceptionModule'			WerUnregisterRuntimeExceptionModule			kernel32	0		# KernelBase
 imp	'WerUnregisterRuntimeExceptionModuleWorker'		WerUnregisterRuntimeExceptionModuleWorker		kernel32	1536
 imp	'WerpGetDebugger'					WerpGetDebugger						kernel32	1537
 imp	'WerpInitiateRemoteRecovery'				WerpInitiateRemoteRecovery				kernel32	1538
@@ -7099,7 +7099,7 @@ imp	'WerpNotifyLoadStringResource'				WerpNotifyLoadStringResource				KernelBase
 imp	'WerpNotifyLoadStringResourceWorker'			WerpNotifyLoadStringResourceWorker			kernel32	1540
 imp	'WerpNotifyUseStringResource'				WerpNotifyUseStringResource				KernelBase	1809
 imp	'WerpNotifyUseStringResourceWorker'			WerpNotifyUseStringResourceWorker			kernel32	1541
-imp	'WideCharToMultiByte'					WideCharToMultiByte					KernelBase	1810
+imp	'WideCharToMultiByte'					WideCharToMultiByte					kernel32	0		# KernelBase
 imp	'WidenPath'						WidenPath						gdi32		1941
 imp	'Win32DeleteFile'					Win32DeleteFile						shell32		164
 imp	'WinExec'						WinExec							kernel32	1543
@@ -7167,37 +7167,37 @@ imp	'WmiSetSingleInstanceA'					WmiSetSingleInstanceA					advapi32	1853
 imp	'WmiSetSingleInstance'					WmiSetSingleInstanceW					advapi32	1854
 imp	'WmiSetSingleItemA'					WmiSetSingleItemA					advapi32	1855
 imp	'WmiSetSingleItem'					WmiSetSingleItemW					advapi32	1856
-imp	'Wow64DisableWow64FsRedirection'			Wow64DisableWow64FsRedirection				KernelBase	1811
+imp	'Wow64DisableWow64FsRedirection'			Wow64DisableWow64FsRedirection				kernel32	0		# KernelBase
 imp	'Wow64EnableWow64FsRedirection'				Wow64EnableWow64FsRedirection				kernel32	1545
 imp	'Wow64GetThreadContext'					Wow64GetThreadContext					kernel32	1546
 imp	'Wow64GetThreadSelectorEntry'				Wow64GetThreadSelectorEntry				kernel32	1547
-imp	'Wow64RevertWow64FsRedirection'				Wow64RevertWow64FsRedirection				KernelBase	1812
+imp	'Wow64RevertWow64FsRedirection'				Wow64RevertWow64FsRedirection				kernel32	0		# KernelBase
 imp	'Wow64SetThreadContext'					Wow64SetThreadContext					kernel32	1549
 imp	'Wow64SetThreadDefaultGuestMachine'			Wow64SetThreadDefaultGuestMachine			KernelBase	1813
 imp	'Wow64SuspendThread'					Wow64SuspendThread					kernel32	1550
 imp	'WriteCabinetState'					WriteCabinetState					shell32		652
-imp	'WriteConsole'						WriteConsoleW						KernelBase	1822	5
-imp	'WriteConsoleA'						WriteConsoleA						KernelBase	1814	5
-imp	'WriteConsoleInput'					WriteConsoleInputW					KernelBase	1816	4
-imp	'WriteConsoleInputA'					WriteConsoleInputA					KernelBase	1815	4
+imp	'WriteConsole'						WriteConsoleW						kernel32	0	5	# KernelBase
+imp	'WriteConsoleA'						WriteConsoleA						kernel32	0	5	# KernelBase
+imp	'WriteConsoleInput'					WriteConsoleInputW					kernel32	0	4	# KernelBase
+imp	'WriteConsoleInputA'					WriteConsoleInputA					kernel32	0	4	# KernelBase
 imp	'WriteConsoleInputVDMA'					WriteConsoleInputVDMA					kernel32	1553
 imp	'WriteConsoleInputVDMW'					WriteConsoleInputVDMW					kernel32	1554
-imp	'WriteConsoleOutput'					WriteConsoleOutputW					KernelBase	1821
-imp	'WriteConsoleOutputA'					WriteConsoleOutputA					KernelBase	1817
-imp	'WriteConsoleOutputAttribute'				WriteConsoleOutputAttribute				KernelBase	1818	5
-imp	'WriteConsoleOutputCharacter'				WriteConsoleOutputCharacterW				KernelBase	1820	5
-imp	'WriteConsoleOutputCharacterA'				WriteConsoleOutputCharacterA				KernelBase	1819	5
+imp	'WriteConsoleOutput'					WriteConsoleOutputW					kernel32	0		# KernelBase
+imp	'WriteConsoleOutputA'					WriteConsoleOutputA					kernel32	0		# KernelBase
+imp	'WriteConsoleOutputAttribute'				WriteConsoleOutputAttribute				kernel32	0	5	# KernelBase
+imp	'WriteConsoleOutputCharacter'				WriteConsoleOutputCharacterW				kernel32	0	5	# KernelBase
+imp	'WriteConsoleOutputCharacterA'				WriteConsoleOutputCharacterA				kernel32	0	5	# KernelBase
 imp	'WriteEncryptedFileRaw'					WriteEncryptedFileRaw					advapi32	1857
-imp	'WriteFile'						WriteFile						KernelBase	1823	5
-imp	'WriteFileEx'						WriteFileEx						KernelBase	1824	5
-imp	'WriteFileGather'					WriteFileGather						KernelBase	1825	5
+imp	'WriteFile'						WriteFile						kernel32	0	5	# KernelBase
+imp	'WriteFileEx'						WriteFileEx						kernel32	0	5	# KernelBase
+imp	'WriteFileGather'					WriteFileGather						kernel32	0	5	# KernelBase
 imp	'WritePrivateProfileSectionA'				WritePrivateProfileSectionA				kernel32	1565
 imp	'WritePrivateProfileSection'				WritePrivateProfileSectionW				kernel32	1566
 imp	'WritePrivateProfileStringA'				WritePrivateProfileStringA				kernel32	1567
 imp	'WritePrivateProfileString'				WritePrivateProfileStringW				kernel32	1568
 imp	'WritePrivateProfileStructA'				WritePrivateProfileStructA				kernel32	1569
 imp	'WritePrivateProfileStruct'				WritePrivateProfileStructW				kernel32	1570
-imp	'WriteProcessMemory'					WriteProcessMemory					KernelBase	1826
+imp	'WriteProcessMemory'					WriteProcessMemory					kernel32	0		# KernelBase
 imp	'WriteProfileSectionA'					WriteProfileSectionA					kernel32	1572
 imp	'WriteProfileSection'					WriteProfileSectionW					kernel32	1573
 imp	'WriteProfileStringA'					WriteProfileStringA					kernel32	1574
@@ -7211,7 +7211,7 @@ imp	'XLATEOBJ_cGetPalette'					XLATEOBJ_cGetPalette					gdi32		1944
 imp	'XLATEOBJ_hGetColorTransform'				XLATEOBJ_hGetColorTransform				gdi32		1945
 imp	'XLATEOBJ_iXlate'					XLATEOBJ_iXlate						gdi32		1946
 imp	'XLATEOBJ_piVector'					XLATEOBJ_piVector					gdi32		1947
-imp	'ZombifyActCtx'						ZombifyActCtx						KernelBase	1829
+imp	'ZombifyActCtx'						ZombifyActCtx						kernel32	0		# KernelBase
 imp	'ZombifyActCtxWorker'					ZombifyActCtxWorker					kernel32	1578
 imp	'ZwAcceptConnectPort'					ZwAcceptConnectPort					ntdll		1711
 imp	'ZwAccessCheck'						ZwAccessCheck						ntdll		1712
@@ -7850,16 +7850,16 @@ imp	'log$nt'						log							ntdll		2283
 imp	'longjmp$nt'						longjmp							ntdll		2284
 imp	'lstrcatA'						lstrcatA						kernel32	1592
 imp	'lstrcat'						lstrcatW						kernel32	1593
-imp	'lstrcmpA'						lstrcmpA						KernelBase	1854
-imp	'lstrcmp'						lstrcmpW						KernelBase	1855
-imp	'lstrcmpiA'						lstrcmpiA						KernelBase	1857
-imp	'lstrcmpi'						lstrcmpiW						KernelBase	1858
+imp	'lstrcmpA'						lstrcmpA						kernel32	0		# KernelBase
+imp	'lstrcmp'						lstrcmpW						kernel32	0		# KernelBase
+imp	'lstrcmpiA'						lstrcmpiA						kernel32	0		# KernelBase
+imp	'lstrcmpi'						lstrcmpiW						kernel32	0		# KernelBase
 imp	'lstrcpyA'						lstrcpyA						kernel32	1601
 imp	'lstrcpy'						lstrcpyW						kernel32	1602
-imp	'lstrcpynA'						lstrcpynA						KernelBase	1860
-imp	'lstrcpyn'						lstrcpynW						KernelBase	1861
-imp	'lstrlenA'						lstrlenA						KernelBase	1863
-imp	'lstrlen'						lstrlenW						KernelBase	1864
+imp	'lstrcpynA'						lstrcpynA						kernel32	0		# KernelBase
+imp	'lstrcpyn'						lstrcpynW						kernel32	0		# KernelBase
+imp	'lstrlenA'						lstrlenA						kernel32	0		# KernelBase
+imp	'lstrlen'						lstrlenW						kernel32	0		# KernelBase
 imp	'mbstowcs$nt'						mbstowcs						ntdll		2285
 imp	'memchr$nt'						memchr							ntdll		2286
 imp	'memcmp$nt'						memcmp							ntdll		2287
@@ -7970,18 +7970,18 @@ imp	'wsprintf'						wsprintfW						user32		2601
 imp	'wvsprintfA'						wvsprintfA						user32		2602
 imp	'wvsprintf'						wvsprintfW						user32		2603
 
-imp	'InitializeCriticalSection'				InitializeCriticalSection				KernelBase	0	1
-imp	'EnterCriticalSection'					EnterCriticalSection					KernelBase	0	1
-imp	'LeaveCriticalSection'					LeaveCriticalSection					KernelBase	0	1
-imp	'TryEnterCriticalSection'				TryEnterCriticalSection					KernelBase	0	1
-imp	'DeleteCriticalSection'					DeleteCriticalSection					KernelBase	0	1
-imp	'InitializeCriticalSectionAndSpinCount'			InitializeCriticalSectionAndSpinCount			KernelBase	0	2
-imp	'SetCriticalSectionSpinCount'				SetCriticalSectionSpinCount				KernelBase	0	2
+imp	'InitializeCriticalSection'				InitializeCriticalSection				kernel32	0	1	# KernelBase
+imp	'EnterCriticalSection'					EnterCriticalSection					kernel32	0	1	# KernelBase
+imp	'LeaveCriticalSection'					LeaveCriticalSection					kernel32	0	1	# KernelBase
+imp	'TryEnterCriticalSection'				TryEnterCriticalSection					kernel32	0	1	# KernelBase
+imp	'DeleteCriticalSection'					DeleteCriticalSection					kernel32	0	1	# KernelBase
+imp	'InitializeCriticalSectionAndSpinCount'			InitializeCriticalSectionAndSpinCount			kernel32	0	2	# KernelBase
+imp	'SetCriticalSectionSpinCount'				SetCriticalSectionSpinCount				kernel32	0	2	# KernelBase
 
-imp	'InitializeSRWLock'					InitializeSRWLock					KernelBase	1128	1
-imp	'AcquireSRWLockExclusive'				AcquireSRWLockExclusive					KernelBase	683	1
-imp	'AcquireSRWLockShared'					AcquireSRWLockShared					KernelBase	684	1
-imp	'ReleaseSRWLockExclusive'				ReleaseSRWLockExclusive					KernelBase	1341	1
-imp	'ReleaseSRWLockShared'					ReleaseSRWLockShared					KernelBase	1342	1
-imp	'TryAcquireSRWLockExclusive'				TryAcquireSRWLockExclusive				KernelBase	1467	1
-imp	'TryAcquireSRWLockShared'				TryAcquireSRWLockShared					KernelBase	1468	1
+imp	'InitializeSRWLock'					InitializeSRWLock					kernel32	0	1	# KernelBase
+imp	'AcquireSRWLockExclusive'				AcquireSRWLockExclusive					kernel32	0	1	# KernelBase
+imp	'AcquireSRWLockShared'					AcquireSRWLockShared					kernel32	0	1	# KernelBase
+imp	'ReleaseSRWLockExclusive'				ReleaseSRWLockExclusive					kernel32	0	1	# KernelBase
+imp	'ReleaseSRWLockShared'					ReleaseSRWLockShared					kernel32	0	1	# KernelBase
+imp	'TryAcquireSRWLockExclusive'				TryAcquireSRWLockExclusive				kernel32	0	1	# KernelBase
+imp	'TryAcquireSRWLockShared'				TryAcquireSRWLockShared					kernel32	0	1	# KernelBase

@@ -1,5 +1,5 @@
 .include "o/libc/nt/codegen.inc"
-.imp	kernel32,__imp_CreateSymbolicLinkA,CreateSymbolicLinkA,236
+.imp	kernel32,__imp_CreateSymbolicLinkA,CreateSymbolicLinkA,0
 
 	.text.windows
 CreateSymbolicLinkA:

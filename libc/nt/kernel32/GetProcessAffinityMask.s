@@ -1,5 +1,5 @@
 .include "o/libc/nt/codegen.inc"
-.imp	kernel32,__imp_GetProcessAffinityMask,GetProcessAffinityMask,691
+.imp	kernel32,__imp_GetProcessAffinityMask,GetProcessAffinityMask,0
 
 	.text.windows
 GetProcessAffinityMask:

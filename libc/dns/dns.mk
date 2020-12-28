@@ -37,7 +37,8 @@ LIBC_DNS_A_DIRECTDEPS =				\
 	LIBC_STUBS				\
 	LIBC_STR				\
 	LIBC_SYSV				\
-	LIBC_NT_KERNELBASE
+	LIBC_NT_ADVAPI32			\
+	LIBC_NT_KERNEL32
 
 LIBC_DNS_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(LIBC_DNS_A_DIRECTDEPS),$($(x))))
