@@ -34,7 +34,7 @@ size_t strlcpy(char *d, const char *s, size_t n) {
   size_t slen, actual;
   slen = strlen(s);
   if (n) {
-    actual = MIN(n, slen);
+    actual = MIN(n - 1, slen);
     memcpy(d, s, actual);
     d[actual] = '\0';
   }
