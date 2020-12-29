@@ -174,6 +174,7 @@ char16_t *memset16(char16_t *, char16_t, size_t) memcpyesque;
 compatfn wchar_t *wmemcpy(wchar_t *, const wchar_t *, size_t) memcpyesque;
 compatfn wchar_t *wmempcpy(wchar_t *, const wchar_t *, size_t) memcpyesque;
 compatfn wchar_t *wmemmove(wchar_t *, const wchar_t *, size_t) memcpyesque;
+int timingsafe_memcmp(const void *, const void *, size_t);
 
 char *tinystrstr(const char *, const char *) strlenesque;
 char16_t *tinystrstr16(const char16_t *, const char16_t *) strlenesque;
