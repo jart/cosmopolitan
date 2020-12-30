@@ -112,7 +112,7 @@ o/$(MODE)/third_party/chibicc/as.com.dbg:				\
 		$(THIRD_PARTY_CHIBICC_A)				\
 		$(APE)							\
 		$(CRT)							\
-		o/$(MODE)/third_party/chibicc/as.o			\
+		o/$(MODE)/third_party/chibicc/as.main.o			\
 		$(THIRD_PARTY_CHIBICC_A).pkg
 	@$(APELINK)
 

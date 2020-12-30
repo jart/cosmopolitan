@@ -20,11 +20,6 @@
 
 int main(int argc, char *argv[]) {
   showcrashreports();
-  if (argc == 1) {
-    system("o//third_party/chibicc/as.com -o /tmp/o /home/jart/trash/hog.s");
-    system("objdump -xwd /tmp/o");
-    exit(0);
-  }
   Assembler(argc, argv);
   return 0;
 }

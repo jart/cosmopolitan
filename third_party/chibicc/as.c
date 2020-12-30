@@ -2014,7 +2014,6 @@ static int ParseModrm(struct As *a, int *disp) {
                ││││││       │ ┌index or size
                ││││││       │ │  ┌base or reg
                │││││├──────┐├┐├─┐├─┐
-               000100000000000100101
   0b00000000000000000000000000000000*/
   struct Slice str;
   int reg, scale, modrm = 0;
@@ -2866,6 +2865,7 @@ static void OnFildl(struct As *a, struct Slice s) { OpFpu1(a, 0xDB, 0); }
 static void OnFildll(struct As *a, struct Slice s) { OpFpu1(a, 0xDF, 5); }
 static void OnFildq(struct As *a, struct Slice s) { OpFpu1(a, 0xDF, 5); }
 static void OnFilds(struct As *a, struct Slice s) { OpFpu1(a, 0xDF, 0); }
+static void OnFistpq(struct As *a, struct Slice s) { OpFpu1(a, 0xDF, 7); }
 static void OnFisttpq(struct As *a, struct Slice s) { OpFpu1(a, 0xDD, 1); }
 static void OnFisttps(struct As *a, struct Slice s) { OpFpu1(a, 0xDF, 1); }
 static void OnFld(struct As *a, struct Slice s) { OpFpu1(a, 0xD9, 0); }
@@ -3280,6 +3280,8 @@ static const struct Directive8 {
     {"fildll", OnFildll},      //
     {"fildq", OnFildq},        //
     {"filds", OnFilds},        //
+    {"fistpq", OnFistpq},      //
+    {"fistpll", OnFistpq},     //
     {"fisttpll", OnFisttpq},   //
     {"fisttpq", OnFisttpq},    //
     {"fisttps", OnFisttps},    //
