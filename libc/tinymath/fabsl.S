@@ -19,6 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
+/	Returns absolute value of 𝑥.
+/
+/	@param	𝑥 long double passed on stack
+/	@return	absolute value in %st
 fabsl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

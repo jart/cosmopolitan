@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
-#include "libc/fmt/strlol.internal.h"
 #include "libc/limits.h"
 
 /**
@@ -29,5 +28,9 @@
  *     flexibility in terms of inputs
  */
 int atoi(const char *s) {
-  return STRLOL(s, NULL, 10, INT_MIN, INT_MAX);
+  int res;
+  res = strtoimax(s, NULL, 10);
+  if (res < INT_MIN) return INT_MIN;
+  if (res > INT_MAX) return INT_MAX;
+  return res;
 }

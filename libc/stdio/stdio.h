@@ -59,7 +59,6 @@ FILE *fmemopen(void *, size_t, const char *) paramsnonnull((3)) nodiscard;
 FILE *freopen(const char *, const char *, FILE *) paramsnonnull((2, 3));
 size_t fread(void *, size_t, size_t, FILE *) paramsnonnull();
 size_t fwrite(const void *, size_t, size_t, FILE *) paramsnonnull();
-int freplenish(FILE *) paramsnonnull();
 int fclose(FILE *);
 int fclose_s(FILE **) paramsnonnull();
 long fseek(FILE *, long, int) paramsnonnull();

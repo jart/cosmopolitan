@@ -17,9 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
-#include "libc/fmt/strlol.internal.h"
 #include "libc/limits.h"
 
 unsigned long strtoul(const char *s, char **endptr, int optional_base) {
-  return STRLOL(s, endptr, optional_base, ULONG_MIN, ULONG_MAX);
+  unsigned long long res;
+  res = strtoimax(s, endptr, optional_base);
+  if (res < ULONG_MIN) return ULONG_MIN;
+  if (res > ULONG_MAX) return ULONG_MAX;
+  return res;
 }

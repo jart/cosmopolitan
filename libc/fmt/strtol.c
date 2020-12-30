@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
-#include "libc/fmt/strlol.internal.h"
 #include "libc/limits.h"
 
 /**
@@ -26,5 +25,9 @@
  * @param optional_base is recommended as 0 for flexidecimal
  */
 long strtol(const char *s, char **opt_out_end, int optional_base) {
-  return STRLOL(s, opt_out_end, optional_base, LONG_MIN, LONG_MAX);
+  long res;
+  res = strtoimax(s, opt_out_end, optional_base);
+  if (res < LONG_MIN) return LONG_MIN;
+  if (res > LONG_MAX) return LONG_MAX;
+  return res;
 }

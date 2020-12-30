@@ -49,3 +49,7 @@ TEST(strtoimax, testTwosBane) {
   EXPECT_EQ(((uintmax_t)0x8000000000000000) << 64 | 0x0000000000000000,
             strtoimax("0x80000000000000000000000000000000", NULL, 0));
 }
+
+TEST(strtol, neghex) {
+  ASSERT_EQ(-16, strtol("0xfffffffffffffff0", NULL, 0));
+}

@@ -19,6 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
+/	Returns absolute value of 𝑥.
+/
+/	@param	𝑥 is float passed in lower quarter on %xmm0
+/	@return	absolute value in %xmm0
 fabsf:	.leafprologue
 	.profilable
 	movd	%xmm0,%eax

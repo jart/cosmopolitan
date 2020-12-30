@@ -19,14 +19,19 @@
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 
+static noinline int __fgetc(FILE *f) {
+  if (!f->reader) return __fseteof(f);
+  if (f->reader(f) == -1) return -1;
+  return f->buf[f->beg++];
+}
+
 /**
  * Reads uint8_t from stream.
  */
 int fgetc(FILE *f) {
-  int c;
-  if (f->beg >= f->end) {
-    if (!f->reader) return __fseteof(f);
-    if (f->reader(f) == -1) return -1;
+  if (f->beg < f->end) {
+    return f->buf[f->beg++];
+  } else {
+    return __fgetc(f);
   }
-  return f->buf[f->beg++];
 }

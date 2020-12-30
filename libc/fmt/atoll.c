@@ -17,9 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
-#include "libc/fmt/strlol.internal.h"
 #include "libc/limits.h"
 
 long long atoll(const char *s) {
-  return STRLOL(s, NULL, 10, LONG_LONG_MIN, LONG_LONG_MAX);
+  long long res;
+  res = strtoimax(s, NULL, 10);
+  if (res < LONG_LONG_MIN) return LONG_LONG_MIN;
+  if (res > LONG_LONG_MAX) return LONG_LONG_MAX;
+  return res;
 }

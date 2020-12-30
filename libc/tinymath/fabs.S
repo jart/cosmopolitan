@@ -19,15 +19,14 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns absolute value of double.
+/	Returns absolute value of 𝑥.
 /
-/	@param	xmm0 has double in lower half
-/	@return	xmm0 has result in lower half
+/	@param	𝑥 is double passed in lower half on %xmm0
+/	@return	absolute value in %xmm0
 fabs:	.leafprologue
 	.profilable
 	mov	$0x7fffffffffffffff,%rax
-	movq	%xmm0,%rdx
-	and	%rax,%rdx
-	movq	%rdx,%xmm0
+	movq	%rax,%xmm1
+	pand	%xmm1,%xmm0
 	.leafepilogue
 	.endfn	fabs,globl
