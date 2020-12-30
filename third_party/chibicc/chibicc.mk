@@ -95,7 +95,7 @@ o/$(MODE)/third_party/chibicc/chibicc.com.dbg:				\
 		$(THIRD_PARTY_CHIBICC_A)				\
 		$(APE)							\
 		$(CRT)							\
-		o/$(MODE)/third_party/chibicc/main.o			\
+		o/$(MODE)/third_party/chibicc/chibicc.main.o		\
 		$(THIRD_PARTY_CHIBICC_A).pkg
 	@$(APELINK)
 o/$(MODE)/third_party/chibicc/chibicc2.com.dbg:				\
@@ -103,7 +103,7 @@ o/$(MODE)/third_party/chibicc/chibicc2.com.dbg:				\
 		$(THIRD_PARTY_CHIBICC2_A)				\
 		$(APE)							\
 		$(CRT)							\
-		o/$(MODE)/third_party/chibicc/main.chibicc.o		\
+		o/$(MODE)/third_party/chibicc/chibicc.main.chibicc.o	\
 		$(THIRD_PARTY_CHIBICC2_A).pkg
 	@$(APELINK)
 

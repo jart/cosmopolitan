@@ -627,6 +627,12 @@ void output_javadown_asm(const char *, const char *);
 
 void drop_dox(const StringArray *, const char *);
 
+//
+// as.c
+//
+
+void Assembler(int, char **);
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_CHIBICC_CHIBICC_H_ */

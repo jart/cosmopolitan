@@ -563,10 +563,15 @@ static void cc1(void) {
   fclose(out);
 }
 
+static int CountArgv(char **argv) {
+  int n = 0;
+  while (*argv++) ++n;
+  return n;
+}
+
 static void assemble(char *input, char *output) {
   char *as = getenv("AS");
   if (!as || !*as) as = "as";
-  /* as = "o//third_party/chibicc/as.com"; */
   StringArray arr = {};
   strarray_push(&arr, as);
   strarray_push(&arr, "-W");
@@ -579,7 +584,11 @@ static void assemble(char *input, char *output) {
   strarray_push(&arr, "-o");
   strarray_push(&arr, output);
   strarray_push(&arr, NULL);
-  handle_exit(run_subprocess(arr.data));
+  if (1) {
+    Assembler(CountArgv(arr.data), arr.data);
+  } else {
+    handle_exit(run_subprocess(arr.data));
+  }
 }
 
 static void run_linker(StringArray *inputs, char *output) {
