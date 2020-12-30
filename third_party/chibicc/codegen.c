@@ -1314,7 +1314,7 @@ void gen_expr(Node *node) {
       gen_expr(node->lhs);
       cmp_zero(node->lhs->ty);
       emitlin("\tsete\t%al");
-      emitlin("\tmovzbl\t%al,%rax");
+      emitlin("\tmovzbq\t%al,%rax");
       return;
     case ND_BITNOT:
       gen_expr(node->lhs);
