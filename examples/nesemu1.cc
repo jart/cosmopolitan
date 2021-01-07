@@ -1842,7 +1842,7 @@ int SelectGameFromZip(void) {
   rc = 0;
   if ((line = GetLine())) {
     i = MAX(0, MIN(zipgames_.i - 1, atoi(line)));
-    uri = xasprintf("zip:%s", zipgames_.p[i]);
+    uri = xasprintf("%s", zipgames_.p[i]);
     rc = PlayGame(uri, NULL);
     free(uri);
   } else {
