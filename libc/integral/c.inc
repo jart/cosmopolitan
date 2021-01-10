@@ -776,15 +776,15 @@ typedef uint64_t uintmax_t;
   do {                                                                    \
     _Static_assert(!__builtin_types_compatible_p(typeof(SYMBOL), char[]), \
                    "Please YOINK(symbol), not YOINK(\"symbol\")");        \
-    asm(".pushsection .yoink\n\t"                                         \
+    asm(".section .yoink\n\t"                                             \
         "nop\t%a0\n\t"                                                    \
-        ".popsection"                                                     \
+        ".previous"                                                       \
         : /* no outputs */                                                \
         : "X"(SYMBOL));                                                   \
   } while (0)
 
 #define STATIC_YOINK(SYMBOLSTR) \
-  asm(".pushsection .yoink\n\tnopl\t\"" SYMBOLSTR "\"\n\t.popsection")
+  asm(".section .yoink\n\tnopl\t\"" SYMBOLSTR "\"\n\t.previous")
 
 #if !defined(IM_FEELING_NAUGHTY) && !defined(__STRICT_ANSI__)
 #define STATIC_YOINK_SOURCE(PATH) STATIC_YOINK(PATH)

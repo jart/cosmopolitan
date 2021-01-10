@@ -253,25 +253,25 @@
 .macro	.hookable
 /	nopl 0x00(%rax,%rax,1)
 83457:	.byte	0x0f,0x1f,0x44,0x00,0x00
- .pushsection __mcount_loc,"a",@progbits
+ .section __mcount_loc,"a",@progbits
   .quad	83457b
- .popsection
+ .previous
 .endm
 
 /	Puts initialized data in uninitialized data section.
 .macro	.bsdata	name:req expr:req bnd vis
-  .pushsection .initbss.300._init_\name,"aw",@nobits
+  .section .initbss.300._init_\name,"aw",@nobits
 \name:	.quad	0
 	.endobj	\name,\bnd,\vis
-  .popsection
-  .pushsection .initro.300._init_\name,"a",@progbits
+  .previous
+  .section .initro.300._init_\name,"a",@progbits
 	.quad	\expr
-  .popsection
-  .pushsection .init.300._init_\name,"ax",@progbits
+  .previous
+  .section .init.300._init_\name,"ax",@progbits
 _init_\name:
 	movsq
 	.endfn	_init_\name
-  .popsection
+  .previous
 .endm
 
 /	ICE Breakpoint.
@@ -304,14 +304,14 @@ _init_\name:
 /	In order for this technique to work with --gc-sections, another
 /	module somewhere might want to weakly reference whats yoinked.
 .macro	yoink	symbol:req
-	.pushsection .yoink
+	.section .yoink
 	nop	"\symbol"
-	.popsection
+	.previous
 .endm
 .macro	.yoink	symbol:req
-	.pushsection .yoink
+	.section .yoink
 	nop	"\symbol"
-	.popsection
+	.previous
 .endm
 
 /	Calls Windows function.

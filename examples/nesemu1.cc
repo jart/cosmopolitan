@@ -170,7 +170,7 @@ static unsigned char pixels_[3][DYN][DXN];
 static unsigned char palette_[3][64][512][3];
 static int joy_current_[2], joy_next_[2], joypos_[2];
 
-static int keyframes_ = 20;
+static int keyframes_ = 10;
 static enum TtyBlocksSelection blocks_ = kTtyBlocksUnicode;
 static enum TtyQuantizationAlgorithm quant_ = kTtyQuantTrue;
 

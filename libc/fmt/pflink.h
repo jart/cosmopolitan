@@ -65,7 +65,7 @@
 #else
 #define PFLINK(FMT) FMT
 #define SFLINK(FMT) FMT
-asm(".pushsection .yoink\n\t"
+asm(".section .yoink\n\t"
     "nop\tntoa(%rip)\n\t"
     "nop\tftoa(%rip)\n\t"
     "nop\tkCp437(%rip)\n\t"
@@ -77,7 +77,7 @@ asm(".pushsection .yoink\n\t"
     "nop\tcalloc(%rip)\n\t"
     "nop\tfree_s(%rip)\n\t"
     "nop\t__grow(%rip)\n\t"
-    ".popsection");
+    ".previous");
 #endif /* __STRICT_ANSI__ */
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_FMT_PFLINK_H_ */

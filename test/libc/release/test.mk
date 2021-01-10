@@ -24,6 +24,7 @@ o/$(MODE)/test/libc/release/smoke.com:				\
 		-fno-pie					\
 		-nostdlib					\
 		-nostdinc					\
+		-mno-red-zone					\
 		-Wl,--gc-sections				\
 		-Wl,--oformat=binary				\
 		-Wl,-z,max-page-size=0x1000			\

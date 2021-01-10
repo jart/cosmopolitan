@@ -129,9 +129,9 @@
 	.byte	0x0f,0x1f,0x44,0x00,0x00
 #endif
 #if defined(__MRECORD_MCOUNT__) && !defined(__MFENTRY__)
- .pushsection	__mcount_loc,"a",@progbits
+ .section	__mcount_loc,"a",@progbits
   .quad	1382b
- .popsection
+ .previous
 #endif
 #endif
 .endm
@@ -139,10 +139,10 @@
 /	Pushes RVA on stack of linktime mergeable string literal.
 /	@see	popstr
 .macro	pushstr	text
-	.pushsection .rodata.str1.1,"aSM",@progbits,1
+	.section .rodata.str1.1,"aSM",@progbits,1
 .Lstr\@: .asciz	"\text"
 	.endobj	.Lstr\@
-	.popsection
+	.previous
 	push	$.Lstr\@ - IMAGE_BASE_VIRTUAL
 .endm
 
@@ -155,12 +155,12 @@
 
 /	Loads address of linktime mergeable string literal into register.
 .macro	getstr	text:req reg64:req reg32 regsz64 regsz32 bias=0
- .pushsection .rodata.str1.1,"aSM",@progbits,1
+ .section .rodata.str1.1,"aSM",@progbits,1
   .type	.Lstr\@,@object
 .Lstr\@: .asciz	"\text"
 .Lstr\@.size = .-.Lstr\@ - 1
   .size	.Lstr\@,.-.Lstr\@
- .popsection
+ .previous
 	plea	.Lstr\@,\reg64,\reg32
  .ifnb	\regsz64
 #ifdef	__OPTIMIZE_SIZE__
@@ -178,12 +178,12 @@
 /	TODO(jart): delete
 /	Loads address of linktime mergeable string literal into register.
 .macro	loadstr	text:req reg:req regsz bias=0
- .pushsection .rodata.str1.1,"aSM",@progbits,1
+ .section .rodata.str1.1,"aSM",@progbits,1
   .type	.Lstr\@,@object
 .Lstr\@: .asciz	"\text"
 .Lstr\@.size = .-.Lstr\@ - 1
   .size	.Lstr\@,.-.Lstr\@
- .popsection
+ .previous
 	ezlea	.Lstr\@,\reg
  .ifnb	\regsz
 #ifdef	__OPTIMIZE_SIZE__

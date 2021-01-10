@@ -8,9 +8,9 @@
  * Teleports code fragment inside _init().
  */
 #define INITIALIZER(PRI, NAME, CODE)                               \
-  asm(".pushsection .init." #PRI "." #NAME ",\"ax\",@progbits\n\t" \
+  asm(".section .init." #PRI "." #NAME ",\"ax\",@progbits\n\t"     \
       "call\t" #NAME "\n\t"                                        \
-      ".popsection");                                              \
+      ".previous");                                                \
   textstartup optimizesize void NAME(char *rdi, const char *rsi) { \
     CODE;                                                          \
     asm volatile("" : /* no outputs */ : "D"(rdi), "S"(rsi));      \

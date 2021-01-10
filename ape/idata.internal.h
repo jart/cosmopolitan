@@ -85,10 +85,10 @@ idata.iat.\name:
 	*/.section .piro.data.sort.iat.2.\name\().3,"awG",\name,comdat
 	.quad	0
   .previous
-  .pushsection .rodata.str1.1,"aSM",@progbits,1
+  .section .rodata.str1.1,"aSM",@progbits,1
 .Lidata.str.\name:
 	.asciz	"\name\().dll"
-  .popsection
+  .previous
 .endm
 
 /* clang-format on */

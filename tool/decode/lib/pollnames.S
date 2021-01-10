@@ -23,9 +23,9 @@
 	.Lrows = 0			# w/ 2 cols
 
 	.macro	.tab	sym:req str
-	.pushsection .rodata.str1.1,"aSM",@progbits,1
+	.section .rodata.str1.1,"aSM",@progbits,1
 .L\@:	.asciz	"\str"
-	.popsection
+	.previous
 	.long	RVA(\sym)
 	.long	RVA(.L\@)
 	.Lrows = .Lrows + 1

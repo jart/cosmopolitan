@@ -16,45 +16,34 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Returns true if ANSI terminal colors are appropriate.
- *
- * We take an optimistic approach here. We use colors, unless we see the
- * environment variable TERM=dumb, which is set by software like Emacs.
- * It's a common antipattern to check isatty(STDERR_FILENO), since that
- * usually makes colors harder to get than they are to remove:
- *
- *      sed 's/\x1b\[[;[:digit:]]*m//g' <color.txt >uncolor.txt
- *
- * Ideally, all software should be updated to understand color, since
- * it's been formally standardized nearly as long as ASCII. Even old
- * MS-DOS supports it (but Windows didn't until Windows 10) yet even
- * tools like less may need wrapper scripts, e.g.:
- *
- *      #!/bin/sh
- *      LESSCHARSET=UTF-8 exec /usr/bin/less -RS "$@"
- *
- * It's that easy fam.
- */
-bool cancolor(void) {
-  static bool once;
-  static bool result;
-  const char *term;
-  if (!once) {
-    if (!result) {
-      if ((term = getenv("TERM"))) {
-        /* anything but emacs basically */
-        result = strcmp(term, "dumb") != 0;
-      } else {
-        /* TODO(jart): Why does Mac bash login shell exec nuke TERM? */
-        result = IsXnu();
-      }
-    }
-    once = true;
-  }
-  return result;
+TEST(strcspn, test) {
+  EXPECT_EQ(0, strcspn("abcdefg", "ae"));
+  EXPECT_EQ(0, strcspn("abcdefg", "aeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"));
+  EXPECT_EQ(4, strcspn("abcdefg", "ze"));
+  EXPECT_EQ(4, strcspn("abcdefg", "zeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"));
+  EXPECT_EQ(5, strcspn("abcdfzg", "ze"));
+  EXPECT_EQ(5, strcspn("abcdfzg", "zeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"));
+  EXPECT_EQ(7, strcspn("abcdEfg", "ze"));
+  EXPECT_EQ(7, strcspn("abcdEfg", "zeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"));
+  EXPECT_EQ(31, strcspn("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOp", "abcdefghijklmnp"));
+  EXPECT_EQ(31, strcspn("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOp",
+                        "abcdefghijklmnpabcdefghijklmnp"));
+}
+
+BENCH(strcspn, bench) {
+  EZBENCH2("strcspn", donothing,
+           EXPROPRIATE(
+               strcspn("pABCDEFGHIJKLMNOPABCDEFGHIJKLMNO", "abcdefghijklmnp")));
+  EZBENCH2("strcspn", donothing,
+           EXPROPRIATE(
+               strcspn("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOp", "abcdefghijklmnp")));
+  EZBENCH2(
+      "strcspn", donothing,
+      EXPROPRIATE(strcspn(
+          "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOABCDEFGHIJKLMNOPABCDEFGHIJKLMNOp",
+          "abcdefghijklmnp")));
 }
