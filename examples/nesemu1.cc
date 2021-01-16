@@ -47,6 +47,8 @@
 #include "third_party/getopt/getopt.h"
 #include "tool/viz/lib/knobs.h"
 
+STATIC_YOINK("zip_uri_support");
+
 #define USAGE \
   " [ROM] [FMV]\n\
 \n\
@@ -1818,12 +1820,13 @@ size_t FindZipGames(void) {
     for (i = 0, cf = ZIP_CDIR_OFFSET(zipos->cdir);
          i < ZIP_CDIR_RECORDS(zipos->cdir);
          ++i, cf += ZIP_CFILE_HDRSIZE(zipos->map + cf)) {
-      if ((name = strndup(ZIP_CFILE_NAME(zipos->map + cf),
-                          ZIP_CFILE_NAMESIZE(zipos->map + cf))) &&
-          endswith(name, ".nes")) {
+      if (ZIP_CFILE_NAMESIZE(zipos->map + cf) > 4 &&
+          !memcmp((ZIP_CFILE_NAME(zipos->map + cf) +
+                   ZIP_CFILE_NAMESIZE(zipos->map + cf) - 4),
+                  ".nes", 4) &&
+          (name = xasprintf("zip:%.*s", ZIP_CFILE_NAMESIZE(zipos->map + cf),
+                            ZIP_CFILE_NAME(zipos->map + cf)))) {
         APPEND(&zipgames_.p, &zipgames_.i, &zipgames_.n, &name);
-      } else {
-        free(name);
       }
     }
   }
@@ -1842,7 +1845,7 @@ int SelectGameFromZip(void) {
   rc = 0;
   if ((line = GetLine())) {
     i = MAX(0, MIN(zipgames_.i - 1, atoi(line)));
-    uri = xasprintf("zip:%s", zipgames_.p[i]);
+    uri = zipgames_.p[i];
     rc = PlayGame(uri, NULL);
     free(uri);
   } else {
