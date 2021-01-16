@@ -7,7 +7,6 @@ TEST_LIBC_UNICODE_SRCS := $(wildcard test/libc/unicode/*.c)
 TEST_LIBC_UNICODE_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_UNICODE_SRCS))
 
 TEST_LIBC_UNICODE_OBJS =				\
-	$(TEST_LIBC_UNICODE_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_UNICODE_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_LIBC_UNICODE_COMS =				\
@@ -24,6 +23,7 @@ TEST_LIBC_UNICODE_CHECKS =				\
 	$(TEST_LIBC_UNICODE_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
 
 TEST_LIBC_UNICODE_DIRECTDEPS =				\
+	LIBC_INTRIN					\
 	LIBC_NEXGEN32E					\
 	LIBC_STR					\
 	LIBC_STUBS					\

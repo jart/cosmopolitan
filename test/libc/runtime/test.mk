@@ -7,7 +7,6 @@ TEST_LIBC_RUNTIME_SRCS := $(wildcard test/libc/runtime/*.c)
 TEST_LIBC_RUNTIME_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_RUNTIME_SRCS))
 
 TEST_LIBC_RUNTIME_OBJS =					\
-	$(TEST_LIBC_RUNTIME_SRCS:%=o/$(MODE)/%.zip.o)		\
 	$(TEST_LIBC_RUNTIME_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_LIBC_RUNTIME_COMS =					\
@@ -28,18 +27,19 @@ TEST_LIBC_RUNTIME_DIRECTDEPS =					\
 	LIBC_CALLS						\
 	LIBC_CALLS_HEFTY					\
 	LIBC_FMT						\
+	LIBC_INTRIN						\
+	LIBC_LOG						\
+	LIBC_LOG_ASAN						\
 	LIBC_MEM						\
-	LIBC_TINYMATH						\
 	LIBC_NEXGEN32E						\
 	LIBC_RAND						\
 	LIBC_RUNTIME						\
 	LIBC_STDIO						\
-	LIBC_LOG						\
-	LIBC_LOG_ASAN						\
 	LIBC_STR						\
 	LIBC_STUBS						\
 	LIBC_SYSV						\
 	LIBC_TESTLIB						\
+	LIBC_TINYMATH						\
 	LIBC_X							\
 	THIRD_PARTY_XED
 

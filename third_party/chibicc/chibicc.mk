@@ -37,10 +37,8 @@ THIRD_PARTY_CHIBICC_BINS =						\
 	o/$(MODE)/third_party/chibicc/chibicc2.com
 
 THIRD_PARTY_CHIBICC_A_OBJS =						\
-	$(THIRD_PARTY_CHIBICC_A_SRCS:%=o/$(MODE)/%.zip.o)		\
 	$(THIRD_PARTY_CHIBICC_A_SRCS:%.c=o/$(MODE)/%.o)
 THIRD_PARTY_CHIBICC2_A_OBJS =						\
-	$(THIRD_PARTY_CHIBICC_A_SRCS:%=o/$(MODE)/%.zip.o)		\
 	$(THIRD_PARTY_CHIBICC_A_SRCS:%.c=o/$(MODE)/%.chibicc.o)
 
 THIRD_PARTY_CHIBICC_A_CHECKS =						\
@@ -54,21 +52,22 @@ THIRD_PARTY_CHIBICC_A_DIRECTDEPS =					\
 	LIBC_CALLS							\
 	LIBC_CALLS_HEFTY						\
 	LIBC_FMT							\
+	LIBC_INTRIN							\
+	LIBC_LOG							\
 	LIBC_LOG							\
 	LIBC_MEM							\
 	LIBC_NEXGEN32E							\
 	LIBC_RUNTIME							\
 	LIBC_STDIO							\
-	LIBC_LOG							\
 	LIBC_STR							\
 	LIBC_STUBS							\
+	LIBC_SYSV							\
 	LIBC_TIME							\
 	LIBC_UNICODE							\
-	LIBC_SYSV							\
 	LIBC_X								\
-	TOOL_BUILD_LIB							\
 	THIRD_PARTY_COMPILER_RT						\
 	THIRD_PARTY_DLMALLOC						\
+	TOOL_BUILD_LIB							\
 	THIRD_PARTY_GDTOA
 
 THIRD_PARTY_CHIBICC_A_DEPS :=						\

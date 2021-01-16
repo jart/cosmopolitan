@@ -20,7 +20,6 @@ TOOL_BUILD_LIB_A_SRCS =					\
 	$(TOOL_BUILD_LIB_A_SRCS_C)
 
 TOOL_BUILD_LIB_A_OBJS =					\
-	$(TOOL_BUILD_LIB_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TOOL_BUILD_LIB_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(TOOL_BUILD_LIB_A_SRCS_C:%.c=o/$(MODE)/%.o)
 

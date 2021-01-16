@@ -7,7 +7,6 @@ TEST_LIBC_SOCK_SRCS := $(wildcard test/libc/sock/*.c)
 TEST_LIBC_SOCK_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_SOCK_SRCS))
 
 TEST_LIBC_SOCK_OBJS =						\
-	$(TEST_LIBC_SOCK_SRCS:%=o/$(MODE)/%.zip.o)		\
 	$(TEST_LIBC_SOCK_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_LIBC_SOCK_COMS =						\
@@ -26,11 +25,12 @@ TEST_LIBC_SOCK_CHECKS =						\
 TEST_LIBC_SOCK_DIRECTDEPS =					\
 	LIBC_CALLS						\
 	LIBC_CALLS_HEFTY					\
-	LIBC_STDIO						\
 	LIBC_FMT						\
+	LIBC_INTRIN						\
 	LIBC_NEXGEN32E						\
 	LIBC_RUNTIME						\
 	LIBC_SOCK						\
+	LIBC_STDIO						\
 	LIBC_STUBS						\
 	LIBC_SYSV						\
 	LIBC_TESTLIB						\

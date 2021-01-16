@@ -7,7 +7,6 @@ TEST_LIBC_DNS_SRCS := $(wildcard test/libc/dns/*.c)
 TEST_LIBC_DNS_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_DNS_SRCS))
 
 TEST_LIBC_DNS_OBJS =					\
-	$(TEST_LIBC_DNS_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_DNS_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_LIBC_DNS_COMS =					\
@@ -27,6 +26,7 @@ TEST_LIBC_DNS_DIRECTDEPS =				\
 	LIBC_CALLS_HEFTY				\
 	LIBC_DNS					\
 	LIBC_FMT					\
+	LIBC_INTRIN					\
 	LIBC_LOG					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\

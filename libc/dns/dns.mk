@@ -16,7 +16,6 @@ LIBC_DNS_A_SRCS =				\
 	$(LIBC_DNS_A_SRCS_C)
 
 LIBC_DNS_A_OBJS =				\
-	$(LIBC_DNS_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(LIBC_DNS_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(LIBC_DNS_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
@@ -34,6 +33,7 @@ LIBC_DNS_A_DIRECTDEPS =				\
 	LIBC_RUNTIME				\
 	LIBC_SOCK				\
 	LIBC_STDIO				\
+	LIBC_INTRIN				\
 	LIBC_STUBS				\
 	LIBC_STR				\
 	LIBC_SYSV				\

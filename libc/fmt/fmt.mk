@@ -25,7 +25,6 @@ LIBC_FMT_A_SRCS =				\
 	$(LIBC_FMT_A_SRCS_C)
 
 LIBC_FMT_A_OBJS =				\
-	$(LIBC_FMT_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(LIBC_FMT_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(LIBC_FMT_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
@@ -37,6 +36,7 @@ LIBC_FMT_A_DIRECTDEPS =				\
 	LIBC_NEXGEN32E				\
 	LIBC_NT_KERNEL32			\
 	LIBC_STR				\
+	LIBC_INTRIN				\
 	LIBC_STUBS				\
 	LIBC_SYSV				\
 	LIBC_TINYMATH				\

@@ -8,7 +8,6 @@ TEST_DSP_TTY_SRCS_TEST = $(filter %_test.c,$(TEST_DSP_TTY_SRCS))
 TEST_DSP_TTY_BINS = $(TEST_DSP_TTY_COMS) $(TEST_DSP_TTY_COMS:%=%.dbg)
 
 TEST_DSP_TTY_OBJS =					\
-	$(TEST_DSP_TTY_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_DSP_TTY_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_DSP_TTY_COMS =					\
@@ -22,14 +21,15 @@ TEST_DSP_TTY_CHECKS =					\
 
 TEST_DSP_TTY_DIRECTDEPS =				\
 	DSP_TTY						\
-	LIBC_TINYMATH					\
+	LIBC_INTRIN					\
 	LIBC_LOG					\
 	LIBC_MEM					\
-	LIBC_RUNTIME					\
-	LIBC_RAND					\
 	LIBC_NEXGEN32E					\
+	LIBC_RAND					\
+	LIBC_RUNTIME					\
 	LIBC_STR					\
 	LIBC_STUBS					\
+	LIBC_TINYMATH					\
 	LIBC_TESTLIB
 
 TEST_DSP_TTY_DEPS :=					\

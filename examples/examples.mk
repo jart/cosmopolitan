@@ -19,7 +19,6 @@ EXAMPLES_MAINS =						\
 	$(EXAMPLES_MAINS_CC)
 
 EXAMPLES_OBJS =							\
-	$(EXAMPLES_SRCS:%=o/$(MODE)/%.zip.o)			\
 	$(EXAMPLES_MAINS_S:%.S=o/$(MODE)/%.o)			\
 	$(EXAMPLES_MAINS_C:%.c=o/$(MODE)/%.o)			\
 	$(EXAMPLES_MAINS_CC:%.cc=o/$(MODE)/%.o)
@@ -47,6 +46,7 @@ EXAMPLES_DIRECTDEPS =						\
 	LIBC_CALLS						\
 	LIBC_CALLS_HEFTY					\
 	LIBC_FMT						\
+	LIBC_INTRIN						\
 	LIBC_LOG						\
 	LIBC_LOG_ASAN						\
 	LIBC_MEM						\

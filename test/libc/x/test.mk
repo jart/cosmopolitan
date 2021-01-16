@@ -7,7 +7,6 @@ TEST_LIBC_X_SRCS := $(wildcard test/libc/x/*.c)
 TEST_LIBC_X_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_X_SRCS))
 
 TEST_LIBC_X_OBJS =				\
-	$(TEST_LIBC_X_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_X_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_LIBC_X_COMS =				\
@@ -26,14 +25,15 @@ TEST_LIBC_X_CHECKS =				\
 TEST_LIBC_X_DIRECTDEPS =			\
 	LIBC_CALLS				\
 	LIBC_FMT				\
+	LIBC_INTRIN				\
 	LIBC_MEM				\
-	LIBC_STDIO				\
-	LIBC_STR				\
 	LIBC_NEXGEN32E				\
 	LIBC_RUNTIME				\
-	LIBC_X					\
+	LIBC_STDIO				\
+	LIBC_STR				\
 	LIBC_STUBS				\
 	LIBC_TESTLIB				\
+	LIBC_X					\
 	THIRD_PARTY_GDTOA
 
 TEST_LIBC_X_DEPS :=				\

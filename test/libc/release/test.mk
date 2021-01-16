@@ -7,9 +7,13 @@ o/$(MODE)/test/libc/release/cosmopolitan.zip:			\
 		o/$(MODE)/libc/crt/crt.o			\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/cosmopolitan.a
-	zip -j $@ $^
+	@zip -j $@ $^
 
 o/$(MODE)/test/libc/release/smoke.com:				\
+		o/$(MODE)/test/libc/release/smoke.com.dbg
+	@objcopy -SO binary $< $@
+
+o/$(MODE)/test/libc/release/smoke.com.dbg:			\
 		test/libc/release/smoke.c			\
 		o/cosmopolitan.h				\
 		o/$(MODE)/ape/ape.lds				\
@@ -26,7 +30,6 @@ o/$(MODE)/test/libc/release/smoke.com:				\
 		-nostdinc					\
 		-mno-red-zone					\
 		-Wl,--gc-sections				\
-		-Wl,--oformat=binary				\
 		-Wl,-z,max-page-size=0x1000			\
 		-Wl,-T,o/$(MODE)/ape/ape.lds			\
 		-include o/cosmopolitan.h			\

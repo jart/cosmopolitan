@@ -11,7 +11,6 @@ LIBC_SOCK_A_HDRS = $(filter %.h,$(LIBC_SOCK_A_FILES))
 LIBC_SOCK_A_SRCS = $(filter %.c,$(LIBC_SOCK_A_FILES))
 
 LIBC_SOCK_A_OBJS =				\
-	$(LIBC_SOCK_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(LIBC_SOCK_A_SRCS:%.c=o/$(MODE)/%.o)
 
 LIBC_SOCK_A_CHECKS =				\
@@ -22,6 +21,7 @@ LIBC_SOCK_A_DIRECTDEPS =			\
 	LIBC_BITS				\
 	LIBC_CALLS				\
 	LIBC_FMT				\
+	LIBC_INTRIN				\
 	LIBC_MEM				\
 	LIBC_NEXGEN32E				\
 	LIBC_NT_KERNEL32			\

@@ -57,8 +57,7 @@ EXAMPLES_PACKAGE_LIB_A_SRCS =					\
 # Change suffixes of different languages extensions into object names.
 EXAMPLES_PACKAGE_LIB_A_OBJS =					\
 	$(EXAMPLES_PACKAGE_LIB_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
-	$(EXAMPLES_PACKAGE_LIB_A_SRCS_C:%.c=o/$(MODE)/%.o)	\
-	$(EXAMPLES_PACKAGE_LIB_A_SRCS:%=o/$(MODE)/%.zip.o)
+	$(EXAMPLES_PACKAGE_LIB_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
 # Does the two most important things for C/C++ code sustainability.
 # 1. Guarantees each header builds, i.e. includes symbols it needs.
@@ -71,6 +70,7 @@ EXAMPLES_PACKAGE_LIB_A_CHECKS =					\
 # Note that linking stubs is always a good idea due to synthetic code.
 EXAMPLES_PACKAGE_LIB_A_DIRECTDEPS =				\
 	LIBC_STDIO						\
+	LIBC_NEXGEN32E						\
 	LIBC_STUBS
 
 # Evaluates variable as set of transitive package dependencies.

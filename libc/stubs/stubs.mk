@@ -27,7 +27,6 @@ LIBC_STUBS_A_SRCS =					\
 	$(filter %.S,$(LIBC_STUBS_A_FILES))
 
 LIBC_STUBS_A_OBJS = 					\
-	$(LIBC_STUBS_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(LIBC_STUBS_A_SRCS:%.S=o/$(MODE)/%.o)
 
 LIBC_STUBS_A_CHECKS =					\

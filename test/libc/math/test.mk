@@ -7,7 +7,6 @@ TEST_LIBC_MATH_SRCS := $(wildcard test/libc/math/*.c)
 TEST_LIBC_MATH_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_MATH_SRCS))
 
 TEST_LIBC_MATH_OBJS =					\
-	$(TEST_LIBC_MATH_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_MATH_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_LIBC_MATH_COMS =					\
@@ -25,8 +24,10 @@ TEST_LIBC_MATH_CHECKS =					\
 TEST_LIBC_MATH_DIRECTDEPS =				\
 	LIBC_CALLS_HEFTY				\
 	LIBC_FMT					\
+	LIBC_INTRIN					\
 	LIBC_MATH					\
 	LIBC_MEM					\
+	LIBC_NEXGEN32E					\
 	LIBC_RUNTIME					\
 	LIBC_STUBS					\
 	LIBC_TESTLIB					\

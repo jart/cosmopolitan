@@ -25,7 +25,7 @@ LIBC_SYSV_A_SRCS_S = $(filter %.S,$(LIBC_SYSV_A_FILES))
 LIBC_SYSV_A_CHECKS = $(LIBC_SYSV_A).pkg
 
 LIBC_SYSV_A_DIRECTDEPS =				\
-	LIBC_STUBS
+	LIBC_NEXGEN32E
 
 LIBC_SYSV_A_FILES :=					\
 	libc/sysv/macros.internal.h			\
@@ -34,7 +34,6 @@ LIBC_SYSV_A_FILES :=					\
 	libc/sysv/restorert.S				\
 	libc/sysv/syscall.S				\
 	libc/sysv/systemfive.S				\
-	$(wildcard libc/sysv/stubs/*)			\
 	$(wildcard libc/sysv/consts/*)			\
 	$(wildcard libc/sysv/errfuns/*)
 
@@ -44,17 +43,14 @@ LIBC_SYSV_A_SRCS =					\
 
 LIBC_SYSV_A_OBJS =					\
 	$(LIBC_SYSV_A_SRCS_A:%.s=o/$(MODE)/%.o)		\
-	$(LIBC_SYSV_A_SRCS_S:%.S=o/$(MODE)/%.o)		\
-	o/$(MODE)/libc/sysv/g_syscount.S.zip.o		\
-	o/$(MODE)/libc/sysv/restorert.S.zip.o		\
-	o/$(MODE)/libc/sysv/syscall.S.zip.o		\
-	o/$(MODE)/libc/sysv/systemfive.S.zip.o
+	$(LIBC_SYSV_A_SRCS_S:%.S=o/$(MODE)/%.o)
 
 LIBC_SYSV_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(LIBC_SYSV_A_DIRECTDEPS),$($(x))))
 
 $(LIBC_SYSV_A):	libc/sysv/				\
 		libc/sysv/consts/			\
+		libc/sysv/errfuns/			\
 		$(LIBC_SYSV_A).pkg			\
 		$(LIBC_SYSV_A_OBJS)
 

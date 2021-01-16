@@ -16,7 +16,6 @@ LIBC_RAND_A_SRCS =				\
 	$(LIBC_RAND_A_SRCS_C)
 
 LIBC_RAND_A_OBJS =				\
-	$(LIBC_RAND_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(LIBC_RAND_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(LIBC_RAND_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
@@ -26,6 +25,7 @@ LIBC_RAND_A_CHECKS =				\
 
 LIBC_RAND_A_DIRECTDEPS =			\
 	LIBC_STUBS				\
+	LIBC_INTRIN				\
 	LIBC_TINYMATH				\
 	LIBC_NEXGEN32E				\
 	LIBC_NT_KERNEL32			\

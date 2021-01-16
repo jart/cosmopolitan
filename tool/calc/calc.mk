@@ -11,7 +11,6 @@ TOOL_CALC_SRCS = $(filter %.c,$(TOOL_CALC_FILES))
 TOOL_CALC_HDRS = $(filter %.h,$(TOOL_CALC_FILES))
 
 TOOL_CALC_OBJS =				\
-	$(TOOL_CALC_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TOOL_CALC_SRCS:%.c=o/$(MODE)/%.o)
 
 TOOL_CALC_COMS =				\
@@ -28,6 +27,7 @@ TOOL_CALC_DIRECTDEPS =				\
 	LIBC_BITS				\
 	LIBC_CALLS				\
 	LIBC_FMT				\
+	LIBC_INTRIN				\
 	LIBC_LOG				\
 	LIBC_MEM				\
 	LIBC_NEXGEN32E				\

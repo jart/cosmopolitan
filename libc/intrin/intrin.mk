@@ -16,7 +16,6 @@ LIBC_INTRIN_A_FILES :=					\
 	$(wildcard libc/intrin/*)
 
 LIBC_INTRIN_A_OBJS =					\
-	$(LIBC_INTRIN_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(LIBC_INTRIN_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(LIBC_INTRIN_A_SRCS_C:%.c=o/$(MODE)/%.o)
 

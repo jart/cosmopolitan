@@ -7,7 +7,6 @@ THIRD_PARTY_LEMON = o/$(MODE)/third_party/lemon/lemon.com.dbg
 
 THIRD_PARTY_LEMON_OBJS =					\
 	o/$(MODE)/third_party/lemon/lemon.o			\
-	o/$(MODE)/third_party/lemon/lemon.c.zip.o		\
 	o/$(MODE)/third_party/lemon/lempar.c.txt.zip.o
 
 THIRD_PARTY_LEMON_COMS =					\
@@ -23,6 +22,7 @@ THIRD_PARTY_LEMON_DIRECTDEPS =					\
 	LIBC_ALG						\
 	LIBC_CALLS						\
 	LIBC_FMT						\
+	LIBC_INTRIN						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
 	LIBC_RUNTIME						\

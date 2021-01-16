@@ -18,7 +18,6 @@ LIBC_UNICODE_A_SRCS =						\
 	$(LIBC_UNICODE_A_SRCS_C)
 
 LIBC_UNICODE_A_OBJS =						\
-	$(LIBC_UNICODE_A_SRCS:%=o/$(MODE)/%.zip.o)		\
 	$(LIBC_UNICODE_A_SRCS_A:%.s=o/$(MODE)/%.o)		\
 	$(LIBC_UNICODE_A_SRCS_S:%.S=o/$(MODE)/%.o)		\
 	$(LIBC_UNICODE_A_SRCS_C:%.c=o/$(MODE)/%.o)
@@ -28,10 +27,11 @@ LIBC_UNICODE_A_CHECKS =						\
 	$(LIBC_UNICODE_A_HDRS:%=o/$(MODE)/%.ok)
 
 LIBC_UNICODE_A_DIRECTDEPS =					\
-	LIBC_STUBS						\
+	LIBC_INTRIN						\
 	LIBC_NEXGEN32E						\
 	LIBC_RUNTIME						\
 	LIBC_STR						\
+	LIBC_STUBS						\
 	LIBC_SYSV
 
 LIBC_UNICODE_A_DEPS :=						\

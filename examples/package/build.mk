@@ -35,8 +35,7 @@ EXAMPLES_PACKAGE_BINS =					\
 # Remaps source file names to object names.
 # Also asks a wildcard rule to automatically run tool/build/zipobj.c
 EXAMPLES_PACKAGE_OBJS =					\
-	$(EXAMPLES_PACKAGE_SRCS:%.c=o/$(MODE)/%.o)	\
-	$(EXAMPLES_PACKAGE_SRCS:%=o/$(MODE)/%.zip.o)
+	$(EXAMPLES_PACKAGE_SRCS:%.c=o/$(MODE)/%.o)
 
 # Lists packages whose symbols are or may be directly referenced here.
 # Note that linking stubs is always a good idea due to synthetic code.

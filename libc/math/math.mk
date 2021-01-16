@@ -17,7 +17,6 @@ LIBC_MATH_A_SRCS =					\
 	$(LIBC_MATH_A_SRCS_C)
 
 LIBC_MATH_A_OBJS =					\
-	$(LIBC_MATH_A_SRCS:%=o/$(MODE)/%.zip.o)		\
 	$(LIBC_MATH_A_SRCS_A:%.s=o/$(MODE)/%.o)		\
 	$(LIBC_MATH_A_SRCS_S:%.S=o/$(MODE)/%.o)		\
 	$(LIBC_MATH_A_SRCS_C:%.c=o/$(MODE)/%.o)
@@ -25,8 +24,9 @@ LIBC_MATH_A_OBJS =					\
 LIBC_MATH_A_CHECKS = $(LIBC_MATH_A).pkg
 
 LIBC_MATH_A_DIRECTDEPS =				\
-	LIBC_STUBS					\
-	LIBC_NEXGEN32E
+	LIBC_INTRIN					\
+	LIBC_NEXGEN32E					\
+	LIBC_STUBS
 
 LIBC_MATH_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(LIBC_MATH_A_DIRECTDEPS),$($(x))))

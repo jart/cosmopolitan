@@ -24,7 +24,6 @@ THIRD_PARTY_XED_A_SRCS =				\
 	$(THIRD_PARTY_XED_A_SRCS_C)
 
 THIRD_PARTY_XED_A_OBJS =				\
-	$(THIRD_PARTY_XED_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(THIRD_PARTY_XED_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(THIRD_PARTY_XED_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
@@ -33,9 +32,10 @@ THIRD_PARTY_XED_A_CHECKS =				\
 	$(THIRD_PARTY_XED_A_HDRS:%=o/$(MODE)/%.ok)
 
 THIRD_PARTY_XED_A_DIRECTDEPS =				\
+	LIBC_INTRIN					\
 	LIBC_NEXGEN32E					\
-	LIBC_STUBS					\
-	LIBC_STR
+	LIBC_STR					\
+	LIBC_STUBS
 
 THIRD_PARTY_XED_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_XED_A_DIRECTDEPS),$($(x))))

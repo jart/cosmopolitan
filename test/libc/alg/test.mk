@@ -7,7 +7,6 @@ TEST_LIBC_ALG_SRCS := $(wildcard test/libc/alg/*.c)
 TEST_LIBC_ALG_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_ALG_SRCS))
 
 TEST_LIBC_ALG_OBJS =					\
-	$(TEST_LIBC_ALG_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_ALG_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_LIBC_ALG_COMS =					\
@@ -24,14 +23,15 @@ TEST_LIBC_ALG_CHECKS =					\
 
 TEST_LIBC_ALG_DIRECTDEPS =				\
 	LIBC_ALG					\
-	LIBC_RAND					\
-	LIBC_LOG					\
-	LIBC_STDIO					\
 	LIBC_CALLS_HEFTY				\
 	LIBC_FMT					\
+	LIBC_INTRIN					\
+	LIBC_LOG					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
+	LIBC_RAND					\
 	LIBC_RUNTIME					\
+	LIBC_STDIO					\
 	LIBC_STR					\
 	LIBC_STUBS					\
 	LIBC_SYSV					\

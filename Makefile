@@ -236,40 +236,44 @@ loc: o/$(MODE)/tool/build/summy.com
 	$(XARGS) wc -l | grep total | awk '{print $$1}' | $<
 
 COSMOPOLITAN_OBJECTS =		\
-	APE_LIB			\
-	LIBC			\
-	LIBC_ALG		\
-	LIBC_BITS		\
-	LIBC_CALLS		\
-	LIBC_CALLS_HEFTY	\
 	LIBC_CRYPTO		\
 	LIBC_DNS		\
-	LIBC_ELF		\
-	LIBC_FMT		\
-	LIBC_INTRIN		\
-	LIBC_LOG		\
-	LIBC_MEM		\
-	LIBC_NEXGEN32E		\
-	LIBC_NT			\
-	LIBC_OHMYPLUS		\
-	LIBC_RAND		\
-	LIBC_RUNTIME		\
 	LIBC_SOCK		\
-	LIBC_STDIO		\
-	LIBC_STR		\
-	LIBC_STUBS		\
-	LIBC_SYSV		\
-	LIBC_TIME		\
-	LIBC_TINYMATH		\
-	LIBC_UNICODE		\
+	LIBC_NT_WS2_32		\
+	LIBC_NT_MSWSOCK		\
+	LIBC_OHMYPLUS		\
 	LIBC_X			\
-	LIBC_ZIPOS		\
-	THIRD_PARTY_COMPILER_RT	\
-	THIRD_PARTY_DLMALLOC	\
 	THIRD_PARTY_GDTOA	\
 	THIRD_PARTY_GETOPT	\
+	LIBC_LOG		\
+	LIBC_UNICODE		\
+	LIBC_TIME		\
+	LIBC_ZIPOS		\
+	THIRD_PARTY_ZLIB	\
+	APE_LIB			\
 	THIRD_PARTY_MUSL	\
-	THIRD_PARTY_REGEX
+	LIBC_STDIO		\
+	LIBC_CALLS_HEFTY	\
+	THIRD_PARTY_REGEX	\
+	LIBC_ALG		\
+	LIBC_MEM		\
+	THIRD_PARTY_DLMALLOC	\
+	LIBC_BITS		\
+	LIBC_RUNTIME		\
+	LIBC_ELF		\
+	LIBC_CALLS		\
+	LIBC_RAND		\
+	LIBC_SYSV_CALLS		\
+	LIBC_NT_NTDLL		\
+	LIBC_NT_ADVAPI32	\
+	LIBC_FMT		\
+	THIRD_PARTY_COMPILER_RT	\
+	LIBC_TINYMATH		\
+	LIBC_SYSV		\
+	LIBC_STR		\
+	LIBC_INTRIN		\
+	LIBC_NT_KERNEL32	\
+	LIBC_NEXGEN32E
 
 COSMOPOLITAN_HEADERS =		\
 	LIBC			\
@@ -304,7 +308,9 @@ COSMOPOLITAN_HEADERS =		\
 	THIRD_PARTY_ZLIB	\
 	THIRD_PARTY_REGEX
 
-o/$(MODE)/cosmopolitan.a: $(filter-out o/libc/stubs/exit11.o,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_OBJS)))
+o/$(MODE)/cosmopolitan.a.txt:
+	printf "%s\n" $(call reverse,$(call uniq,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)))))
+o/$(MODE)/cosmopolitan.a: $(filter-out o/libc/stubs/exit11.o,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_A_OBJS)))
 o/cosmopolitan.h:				\
 		o/$(MODE)/tool/build/rollup.com	\
 		libc/integral/normalize.inc	\

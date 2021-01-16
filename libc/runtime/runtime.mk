@@ -25,7 +25,6 @@ LIBC_RUNTIME_A_SRCS =					\
 	$(LIBC_RUNTIME_A_SRCS_C)
 
 LIBC_RUNTIME_A_OBJS =					\
-	$(LIBC_RUNTIME_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(LIBC_RUNTIME_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(LIBC_RUNTIME_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
@@ -37,6 +36,7 @@ LIBC_RUNTIME_A_DIRECTDEPS =				\
 	LIBC_CALLS					\
 	LIBC_ELF					\
 	LIBC_FMT					\
+	LIBC_INTRIN					\
 	LIBC_NEXGEN32E					\
 	LIBC_NT_KERNEL32				\
 	LIBC_STR					\

@@ -16,7 +16,6 @@ LIBC_ELF_A_SRCS =				\
 	$(LIBC_ELF_A_SRCS_C)
 
 LIBC_ELF_A_OBJS =				\
-	$(LIBC_ELF_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(LIBC_ELF_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(LIBC_ELF_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
@@ -25,6 +24,7 @@ LIBC_ELF_A_CHECKS =				\
 	$(LIBC_ELF_A_HDRS:%=o/$(MODE)/%.ok)
 
 LIBC_ELF_A_DIRECTDEPS =				\
+	LIBC_INTRIN				\
 	LIBC_NEXGEN32E				\
 	LIBC_STR				\
 	LIBC_STUBS

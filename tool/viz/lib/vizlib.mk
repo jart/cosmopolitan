@@ -20,7 +20,6 @@ TOOL_VIZ_LIB_A_SRCS =					\
 	$(TOOL_VIZ_LIB_A_SRCS_C)
 
 TOOL_VIZ_LIB_A_OBJS =					\
-	$(TOOL_VIZ_LIB_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TOOL_VIZ_LIB_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(TOOL_VIZ_LIB_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
@@ -46,8 +45,8 @@ TOOL_VIZ_LIB_A_DIRECTDEPS =				\
 	LIBC_TINYMATH					\
 	LIBC_UNICODE					\
 	LIBC_X						\
-	THIRD_PARTY_GDTOA				\
-	THIRD_PARTY_DLMALLOC
+	THIRD_PARTY_DLMALLOC				\
+	THIRD_PARTY_GDTOA
 
 TOOL_VIZ_LIB_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(TOOL_VIZ_LIB_A_DIRECTDEPS),$($(x))))

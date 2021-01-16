@@ -19,7 +19,6 @@ LIBC_ZIPOS_A_SRCS =					\
 	$(LIBC_ZIPOS_A_SRCS_C)
 
 LIBC_ZIPOS_A_OBJS =					\
-	$(LIBC_ZIPOS_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(LIBC_ZIPOS_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(LIBC_ZIPOS_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
@@ -28,12 +27,14 @@ LIBC_ZIPOS_A_CHECKS =					\
 	$(LIBC_ZIPOS_A_HDRS:%=o/$(MODE)/%.ok)
 
 LIBC_ZIPOS_A_DIRECTDEPS =				\
+	APE_LIB						\
 	LIBC_CALLS					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
 	LIBC_RUNTIME					\
 	LIBC_SYSV					\
 	LIBC_STR					\
+	LIBC_INTRIN					\
 	LIBC_STUBS					\
 	LIBC_SYSV_CALLS					\
 	LIBC_NT_KERNEL32				\

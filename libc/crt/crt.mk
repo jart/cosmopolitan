@@ -23,7 +23,7 @@ CRT_ARTIFACTS += CRT
 CRT = o/$(MODE)/libc/crt/crt.o
 CRT_FILES = libc/crt/crt.S
 CRT_SRCS = libc/crt/crt.S
-CRT_OBJS = o/$(MODE)/libc/crt/crt.o o/$(MODE)/libc/crt/crt.S.zip.o
+CRT_OBJS = o/$(MODE)/libc/crt/crt.o
 $(CRT_OBJS): $(BUILD_FILES) libc/crt/crt.mk
 
 .PHONY: o/$(MODE)/libc/crt

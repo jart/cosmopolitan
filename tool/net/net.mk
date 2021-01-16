@@ -8,7 +8,6 @@ TOOL_NET_SRCS = $(filter %.c,$(TOOL_NET_FILES))
 TOOL_NET_HDRS = $(filter %.h,$(TOOL_NET_FILES))
 
 TOOL_NET_OBJS =							\
-	$(TOOL_NET_SRCS:%=o/$(MODE)/%.zip.o)			\
 	$(TOOL_NET_SRCS:%.c=o/$(MODE)/%.o)
 
 TOOL_NET_COMS =							\
@@ -19,12 +18,14 @@ TOOL_NET_BINS =							\
 	$(TOOL_NET_COMS:%=%.dbg)
 
 TOOL_NET_DIRECTDEPS =						\
+	APE_LIB							\
 	LIBC_ALG						\
 	LIBC_BITS						\
 	LIBC_CALLS						\
 	LIBC_CALLS_HEFTY					\
 	LIBC_DNS						\
 	LIBC_FMT						\
+	LIBC_INTRIN						\
 	LIBC_LOG						\
 	LIBC_LOG_ASAN						\
 	LIBC_MEM						\

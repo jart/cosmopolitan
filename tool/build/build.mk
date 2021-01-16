@@ -11,7 +11,6 @@ TOOL_BUILD_BINS = $(TOOL_BUILD_COMS) $(TOOL_BUILD_COMS:%=%.dbg)
 TOOL_BUILD_CALCULATOR = o/$(MODE)/tool/build/calculator.com
 
 TOOL_BUILD_OBJS =					\
-	$(TOOL_BUILD_SRCS:%=o/$(MODE)/%.zip.o)		\
 	$(TOOL_BUILD_SRCS:%.c=o/$(MODE)/%.o)
 
 TOOL_BUILD_COMS =					\
@@ -51,13 +50,13 @@ TOOL_BUILD_DIRECTDEPS =					\
 	LIBC_TINYMATH					\
 	LIBC_UNICODE					\
 	LIBC_X						\
-	TOOL_BUILD_LIB					\
 	THIRD_PARTY_COMPILER_RT				\
 	THIRD_PARTY_GDTOA				\
 	THIRD_PARTY_GETOPT				\
+	THIRD_PARTY_STB					\
 	THIRD_PARTY_XED					\
 	THIRD_PARTY_ZLIB				\
-	THIRD_PARTY_STB
+	TOOL_BUILD_LIB
 
 TOOL_BUILD_DEPS :=					\
 	$(call uniq,$(foreach x,$(TOOL_BUILD_DIRECTDEPS),$($(x))))

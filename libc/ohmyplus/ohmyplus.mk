@@ -18,7 +18,6 @@ LIBC_OHMYPLUS_A_SRCS =					\
 	$(LIBC_OHMYPLUS_A_SRCS_CXX)
 
 LIBC_OHMYPLUS_A_OBJS =					\
-	$(LIBC_OHMYPLUS_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(LIBC_OHMYPLUS_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(LIBC_OHMYPLUS_A_SRCS_C:%.c=o/$(MODE)/%.o)	\
 	$(LIBC_OHMYPLUS_A_SRCS_CXX:%.cc=o/$(MODE)/%.o)
@@ -29,8 +28,10 @@ LIBC_OHMYPLUS_A_CHECKS =				\
 
 LIBC_OHMYPLUS_A_DIRECTDEPS =				\
 	LIBC_BITS					\
+	LIBC_INTRIN					\
 	LIBC_MEM					\
-	LIBC_STUBS
+	LIBC_STUBS					\
+	LIBC_NEXGEN32E
 
 LIBC_OHMYPLUS_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(LIBC_OHMYPLUS_A_DIRECTDEPS),$($(x))))

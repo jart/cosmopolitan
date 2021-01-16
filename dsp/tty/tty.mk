@@ -16,7 +16,6 @@ DSP_TTY_A_SRCS =				\
 	$(DSP_TTY_A_SRCS_C)
 
 DSP_TTY_A_OBJS =				\
-	$(DSP_TTY_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(DSP_TTY_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(DSP_TTY_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
@@ -29,6 +28,7 @@ DSP_TTY_A_DIRECTDEPS =				\
 	LIBC_ALG				\
 	LIBC_CALLS				\
 	LIBC_FMT				\
+	LIBC_INTRIN				\
 	LIBC_LOG				\
 	LIBC_RUNTIME				\
 	LIBC_MEM				\

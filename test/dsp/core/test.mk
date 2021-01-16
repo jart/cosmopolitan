@@ -8,7 +8,6 @@ TEST_DSP_CORE_SRCS_TEST = $(filter %_test.c,$(TEST_DSP_CORE_SRCS))
 TEST_DSP_CORE_BINS = $(TEST_DSP_CORE_COMS) $(TEST_DSP_CORE_COMS:%=%.dbg)
 
 TEST_DSP_CORE_OBJS =						\
-	$(TEST_DSP_CORE_SRCS:%=o/$(MODE)/%.zip.o)		\
 	$(TEST_DSP_CORE_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_DSP_CORE_COMS =						\

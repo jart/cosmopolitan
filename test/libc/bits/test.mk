@@ -7,7 +7,6 @@ TEST_LIBC_BITS_SRCS := $(wildcard test/libc/bits/*.c)
 TEST_LIBC_BITS_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_BITS_SRCS))
 
 TEST_LIBC_BITS_OBJS =					\
-	$(TEST_LIBC_BITS_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_BITS_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_LIBC_BITS_COMS =					\
@@ -24,11 +23,12 @@ TEST_LIBC_BITS_CHECKS =					\
 	$(TEST_LIBC_BITS_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
 
 TEST_LIBC_BITS_DIRECTDEPS =				\
-	LIBC_X						\
 	LIBC_BITS					\
+	LIBC_INTRIN					\
 	LIBC_NEXGEN32E					\
 	LIBC_STUBS					\
 	LIBC_TESTLIB					\
+	LIBC_X						\
 	THIRD_PARTY_COMPILER_RT
 
 TEST_LIBC_BITS_DEPS :=					\

@@ -7,7 +7,6 @@ TEST_LIBC_STDIO_SRCS := $(wildcard test/libc/stdio/*.c)
 TEST_LIBC_STDIO_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_STDIO_SRCS))
 
 TEST_LIBC_STDIO_OBJS =					\
-	$(TEST_LIBC_STDIO_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_STDIO_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_LIBC_STDIO_COMS =					\
@@ -28,6 +27,8 @@ TEST_LIBC_STDIO_DIRECTDEPS =				\
 	LIBC_CALLS					\
 	LIBC_CALLS_HEFTY				\
 	LIBC_FMT					\
+	LIBC_INTRIN					\
+	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
 	LIBC_RUNTIME					\
 	LIBC_STDIO					\

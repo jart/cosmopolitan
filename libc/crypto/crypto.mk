@@ -18,7 +18,6 @@ LIBC_CRYPTO_A_SRCS =					\
 	$(LIBC_CRYPTO_A_SRCS_C)
 
 LIBC_CRYPTO_A_OBJS =					\
-	$(LIBC_CRYPTO_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(LIBC_CRYPTO_A_SRCS_A:%.s=o/$(MODE)/%.o)	\
 	$(LIBC_CRYPTO_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(LIBC_CRYPTO_A_SRCS_C:%.c=o/$(MODE)/%.o)
@@ -28,6 +27,7 @@ LIBC_CRYPTO_A_CHECKS =					\
 	$(LIBC_CRYPTO_A_HDRS:%=o/$(MODE)/%.ok)
 
 LIBC_CRYPTO_A_DIRECTDEPS =				\
+	LIBC_INTRIN					\
 	LIBC_STUBS					\
 	LIBC_NEXGEN32E
 

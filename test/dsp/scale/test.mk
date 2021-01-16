@@ -8,7 +8,6 @@ TEST_DSP_SCALE_SRCS_TEST = $(filter %_test.c,$(TEST_DSP_SCALE_SRCS))
 TEST_DSP_SCALE_BINS = $(TEST_DSP_SCALE_COMS) $(TEST_DSP_SCALE_COMS:%=%.dbg)
 
 TEST_DSP_SCALE_OBJS =					\
-	$(TEST_DSP_SCALE_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_DSP_SCALE_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_DSP_SCALE_COMS =					\
@@ -23,18 +22,19 @@ TEST_DSP_SCALE_CHECKS =					\
 TEST_DSP_SCALE_DIRECTDEPS =				\
 	DSP_CORE					\
 	DSP_SCALE					\
-	LIBC_TINYMATH					\
-	LIBC_LOG					\
-	LIBC_RUNTIME					\
 	LIBC_FMT					\
+	LIBC_INTRIN					\
+	LIBC_LOG					\
 	LIBC_MEM					\
-	LIBC_STDIO					\
-	LIBC_X						\
-	LIBC_RAND					\
 	LIBC_NEXGEN32E					\
+	LIBC_RAND					\
+	LIBC_RUNTIME					\
+	LIBC_STDIO					\
 	LIBC_STR					\
-	TOOL_VIZ_LIB					\
 	LIBC_STUBS					\
+	LIBC_TINYMATH					\
+	LIBC_X						\
+	TOOL_VIZ_LIB					\
 	LIBC_TESTLIB
 
 TEST_DSP_SCALE_DEPS :=					\

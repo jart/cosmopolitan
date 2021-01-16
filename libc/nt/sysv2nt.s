@@ -16,8 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.h"
-.text.windows
+.section .text.windows,"ax",@progbits
 
 /	Epilogues for calling functions w/ Microsoft x64 convention.
 /
@@ -32,18 +31,38 @@
 __sysv2nt14:
 	pushq	72(%rbp)
 	pushq	64(%rbp)
+	.type	__sysv2nt14,@function
+	.size	__sysv2nt14,.-__sysv2nt14
+	.globl	__sysv2nt14
+	.hidden	__sysv2nt14
 __sysv2nt12:
 	pushq	56(%rbp)
 	pushq	48(%rbp)
+	.type	__sysv2nt12,@function
+	.size	__sysv2nt12,.-__sysv2nt12
+	.globl	__sysv2nt12
+	.hidden	__sysv2nt12
 __sysv2nt10:
 	pushq	40(%rbp)
 	pushq	32(%rbp)
+	.type	__sysv2nt10,@function
+	.size	__sysv2nt10,.-__sysv2nt10
+	.globl	__sysv2nt10
+	.hidden	__sysv2nt10
 __sysv2nt8:
 	pushq	24(%rbp)
 	pushq	16(%rbp)
+	.type	__sysv2nt8,@function
+	.size	__sysv2nt8,.-__sysv2nt8
+	.globl	__sysv2nt8
+	.hidden	__sysv2nt8
 __sysv2nt6:
 	push	%r9
 	push	%r8
+	.type	__sysv2nt6,@function
+	.size	__sysv2nt6,.-__sysv2nt6
+	.globl	__sysv2nt6
+	.hidden	__sysv2nt6
 __sysv2nt:
 	mov	%rdx,%r8
 	mov	%rcx,%r9
@@ -53,10 +72,7 @@ __sysv2nt:
 	call	*%rax
 	leave
 	ret
-	.endfn	__sysv2nt,globl,hidden
-	.endfn	__sysv2nt6,globl,hidden
-	.endfn	__sysv2nt8,globl,hidden
-	.endfn	__sysv2nt10,globl,hidden
-	.endfn	__sysv2nt12,globl,hidden
-	.endfn	__sysv2nt14,globl,hidden
-	.source	__FILE__
+	.type	__sysv2nt,@function
+	.size	__sysv2nt,.-__sysv2nt
+	.globl	__sysv2nt
+	.hidden	__sysv2nt

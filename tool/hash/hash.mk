@@ -6,7 +6,6 @@ PKGS += TOOL_HASH
 TOOL_HASH_SRCS := $(wildcard tool/hash/*.c)
 
 TOOL_HASH_OBJS =				\
-	$(TOOL_HASH_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TOOL_HASH_SRCS:%.c=o/$(MODE)/%.o)
 
 TOOL_HASH_COMS =				\
@@ -18,11 +17,12 @@ TOOL_HASH_BINS =				\
 
 TOOL_HASH_DIRECTDEPS =				\
 	LIBC_FMT				\
+	LIBC_INTRIN				\
 	LIBC_NEXGEN32E				\
 	LIBC_RUNTIME				\
+	LIBC_STDIO				\
 	LIBC_STR				\
-	LIBC_STUBS				\
-	LIBC_STDIO
+	LIBC_STUBS
 
 TOOL_HASH_DEPS :=				\
 	$(call uniq,$(foreach x,$(TOOL_HASH_DIRECTDEPS),$($(x))))

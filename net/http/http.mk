@@ -18,7 +18,6 @@ NET_HTTP_A_SRCS =				\
 	$(NET_HTTP_A_SRCS_R)
 
 NET_HTTP_A_OBJS =				\
-	$(NET_HTTP_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(NET_HTTP_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(NET_HTTP_A_SRCS_C:%.c=o/$(MODE)/%.o)	\
 	$(NET_HTTP_A_SRCS_R:%.rl=o/$(MODE)/%.o)
@@ -31,6 +30,7 @@ NET_HTTP_A_DIRECTDEPS =				\
 	LIBC_ALG				\
 	LIBC_CALLS				\
 	LIBC_FMT				\
+	LIBC_INTRIN				\
 	LIBC_LOG				\
 	LIBC_LOG_ASAN				\
 	LIBC_NEXGEN32E				\

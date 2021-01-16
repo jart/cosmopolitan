@@ -16,7 +16,6 @@ LIBC_ALG_A_SRCS =				\
 	$(LIBC_ALG_A_SRCS_C)
 
 LIBC_ALG_A_OBJS =				\
-	$(LIBC_ALG_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(LIBC_ALG_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(LIBC_ALG_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
@@ -29,6 +28,7 @@ LIBC_ALG_A_DIRECTDEPS =				\
 	LIBC_NEXGEN32E				\
 	LIBC_RUNTIME				\
 	LIBC_STR				\
+	LIBC_INTRIN				\
 	LIBC_STUBS				\
 	LIBC_SYSV
 

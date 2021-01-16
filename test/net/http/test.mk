@@ -8,7 +8,6 @@ TEST_NET_HTTP_SRCS_TEST = $(filter %_test.c,$(TEST_NET_HTTP_SRCS))
 TEST_NET_HTTP_BINS = $(TEST_NET_HTTP_COMS) $(TEST_NET_HTTP_COMS:%=%.dbg)
 
 TEST_NET_HTTP_OBJS =						\
-	$(TEST_NET_HTTP_SRCS:%=o/$(MODE)/%.zip.o)		\
 	$(TEST_NET_HTTP_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_NET_HTTP_COMS =						\

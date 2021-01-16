@@ -16,7 +16,6 @@ LIBC_BITS_A_SRCS =				\
 	$(LIBC_BITS_A_SRCS_C)
 
 LIBC_BITS_A_OBJS =				\
-	$(LIBC_BITS_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(LIBC_BITS_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(LIBC_BITS_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
@@ -26,6 +25,7 @@ LIBC_BITS_A_CHECKS =				\
 
 LIBC_BITS_A_DIRECTDEPS =			\
 	LIBC_STUBS				\
+	LIBC_INTRIN				\
 	LIBC_NEXGEN32E
 
 LIBC_BITS_A_DEPS :=				\

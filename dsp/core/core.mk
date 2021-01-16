@@ -16,7 +16,6 @@ DSP_CORE_A_SRCS =				\
 	$(DSP_CORE_A_SRCS_C)
 
 DSP_CORE_A_OBJS =				\
-	$(DSP_CORE_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(DSP_CORE_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(DSP_CORE_A_SRCS_C:%.c=o/$(MODE)/%.o)
 

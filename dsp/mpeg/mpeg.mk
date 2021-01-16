@@ -16,7 +16,6 @@ DSP_MPEG_A_SRCS =				\
 	$(DSP_MPEG_A_SRCS_C)
 
 DSP_MPEG_A_OBJS =				\
-	$(DSP_MPEG_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(DSP_MPEG_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(DSP_MPEG_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
@@ -26,19 +25,20 @@ DSP_MPEG_A_CHECKS =				\
 
 DSP_MPEG_A_DIRECTDEPS =				\
 	LIBC_CALLS				\
-	LIBC_LOG				\
-	LIBC_RUNTIME				\
-	LIBC_TINYMATH				\
-	LIBC_TIME				\
-	LIBC_STUBS				\
-	LIBC_STR				\
-	LIBC_NEXGEN32E				\
-	LIBC_STDIO				\
-	LIBC_SYSV				\
-	LIBC_MEM				\
-	LIBC_LOG				\
 	LIBC_FMT				\
-	LIBC_UNICODE				\
+	LIBC_INTRIN				\
+	LIBC_LOG				\
+	LIBC_LOG				\
+	LIBC_MEM				\
+	LIBC_NEXGEN32E				\
+	LIBC_RUNTIME				\
+	LIBC_STDIO				\
+	LIBC_STR				\
+	LIBC_STUBS				\
+	LIBC_SYSV				\
+	LIBC_TIME				\
+	LIBC_TINYMATH				\
+	LIBC_UNICODE
 
 DSP_MPEG_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(DSP_MPEG_A_DIRECTDEPS),$($(x))))

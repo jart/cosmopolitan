@@ -6,7 +6,6 @@ PKGS += TOOL_VIZ
 TOOL_VIZ_SRCS := $(wildcard tool/viz/*.c)
 
 TOOL_VIZ_OBJS =					\
-	$(TOOL_VIZ_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TOOL_VIZ_SRCS:%.c=o/$(MODE)/%.o)
 
 TOOL_VIZ_COMS =					\
@@ -26,6 +25,7 @@ TOOL_VIZ_DIRECTDEPS =				\
 	LIBC_CALLS_HEFTY			\
 	LIBC_DNS				\
 	LIBC_FMT				\
+	LIBC_INTRIN				\
 	LIBC_LOG				\
 	LIBC_MEM				\
 	LIBC_NEXGEN32E				\
@@ -52,9 +52,9 @@ TOOL_VIZ_DIRECTDEPS =				\
 	THIRD_PARTY_GETOPT			\
 	THIRD_PARTY_STB				\
 	THIRD_PARTY_XED				\
+	THIRD_PARTY_ZLIB			\
 	TOOL_DECODE_LIB				\
-	TOOL_VIZ_LIB				\
-	THIRD_PARTY_ZLIB
+	TOOL_VIZ_LIB
 
 TOOL_VIZ_DEPS :=				\
 	$(call uniq,$(foreach x,$(TOOL_VIZ_DIRECTDEPS),$($(x))))

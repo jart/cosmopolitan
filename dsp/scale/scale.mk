@@ -16,7 +16,6 @@ DSP_SCALE_A_SRCS =				\
 	$(DSP_SCALE_A_SRCS_C)
 
 DSP_SCALE_A_OBJS =				\
-	$(DSP_SCALE_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(DSP_SCALE_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(DSP_SCALE_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
@@ -27,14 +26,15 @@ DSP_SCALE_A_CHECKS =				\
 DSP_SCALE_A_DIRECTDEPS =			\
 	DSP_CORE				\
 	LIBC_INTRIN				\
-	LIBC_NEXGEN32E				\
-	LIBC_TINYMATH				\
-	LIBC_TIME				\
-	LIBC_RUNTIME				\
 	LIBC_LOG				\
 	LIBC_MEM				\
-	LIBC_X					\
-	LIBC_STUBS
+	LIBC_NEXGEN32E				\
+	LIBC_RUNTIME				\
+	LIBC_STUBS				\
+	LIBC_STUBS				\
+	LIBC_TIME				\
+	LIBC_TINYMATH				\
+	LIBC_X
 
 DSP_SCALE_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(DSP_SCALE_A_DIRECTDEPS),$($(x))))

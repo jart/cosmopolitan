@@ -17,7 +17,6 @@ LIBC_TIME_A_SRCS =				\
 	$(LIBC_TIME_A_SRCS_C)
 
 LIBC_TIME_A_OBJS =				\
-	$(LIBC_TIME_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(LIBC_TIME_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(LIBC_TIME_A_SRCS_C:%.c=o/$(MODE)/%.o)	\
 	$(LIBC_TIME_A_SRCS_C:%.c=o/$(MODE)/%.o)	\
@@ -29,6 +28,7 @@ LIBC_TIME_A_CHECKS =				\
 
 LIBC_TIME_A_DIRECTDEPS =			\
 	LIBC_CALLS				\
+	LIBC_INTRIN				\
 	LIBC_FMT				\
 	LIBC_MEM				\
 	LIBC_NEXGEN32E				\

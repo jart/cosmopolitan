@@ -24,15 +24,7 @@ THIRD_PARTY_LZ4CLI_OBJS =				\
 	o/$(MODE)/third_party/lz4cli/lz4hc.o		\
 	o/$(MODE)/third_party/lz4cli/lz4frame.o		\
 	o/$(MODE)/third_party/lz4cli/datagen.o		\
-	o/$(MODE)/third_party/lz4cli/xxhash.o		\
-	o/$(MODE)/third_party/lz4cli/bench.c.zip.o	\
-	o/$(MODE)/third_party/lz4cli/lz4.c.zip.o	\
-	o/$(MODE)/third_party/lz4cli/lz4cli.c.zip.o	\
-	o/$(MODE)/third_party/lz4cli/lz4io.c.zip.o	\
-	o/$(MODE)/third_party/lz4cli/lz4hc.c.zip.o	\
-	o/$(MODE)/third_party/lz4cli/lz4frame.c.zip.o	\
-	o/$(MODE)/third_party/lz4cli/datagen.c.zip.o	\
-	o/$(MODE)/third_party/lz4cli/xxhash.c.zip.o
+	o/$(MODE)/third_party/lz4cli/xxhash.o
 
 o/$(MODE)/third_party/lz4cli/lz4.o			\
 o/$(MODE)/third_party/lz4cli/lz4io.o			\
@@ -43,9 +35,10 @@ o/$(MODE)/third_party/lz4cli/datagen.o:			\
 		-DSTACK_FRAME_UNLIMITED
 
 THIRD_PARTY_LZ4CLI_DIRECTDEPS =				\
+	LIBC_CALLS_HEFTY				\
+	LIBC_INTRIN					\
 	LIBC_STDIO					\
 	LIBC_TIME					\
-	LIBC_CALLS_HEFTY				\
 	LIBC_UNICODE
 
 THIRD_PARTY_LZ4CLI_DEPS :=				\

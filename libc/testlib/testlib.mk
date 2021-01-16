@@ -74,7 +74,6 @@ LIBC_TESTLIB_A_SRCS =						\
 	$(LIBC_TESTLIB_A_SRCS_C)
 
 LIBC_TESTLIB_A_OBJS =						\
-	$(LIBC_TESTLIB_A_SRCS:%=o/$(MODE)/%.zip.o)		\
 	$(LIBC_TESTLIB_A_SRCS_C:%.c=o/$(MODE)/%.o)		\
 	$(LIBC_TESTLIB_A_SRCS_S:%.S=o/$(MODE)/%.o)		\
 	$(LIBC_TESTLIB_A_ASSETS:%=o/$(MODE)/%.zip.o)
@@ -84,6 +83,7 @@ LIBC_TESTLIB_A_DIRECTDEPS =					\
 	LIBC_ALG						\
 	LIBC_CALLS						\
 	LIBC_FMT						\
+	LIBC_INTRIN						\
 	LIBC_LOG						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
@@ -92,10 +92,10 @@ LIBC_TESTLIB_A_DIRECTDEPS =					\
 	LIBC_RUNTIME						\
 	LIBC_STDIO						\
 	LIBC_STR						\
-	LIBC_TIME						\
-	LIBC_TINYMATH						\
 	LIBC_STUBS						\
 	LIBC_SYSV_CALLS						\
+	LIBC_TIME						\
+	LIBC_TINYMATH						\
 	LIBC_UNICODE						\
 	LIBC_X							\
 	LIBC_ZIPOS						\
@@ -122,13 +122,13 @@ LIBC_TESTLIB_RUNNER_A_SRCS = libc/testlib/runner.c
 LIBC_TESTLIB_RUNNER_A_CHECKS = $(LIBC_TESTLIB_RUNNER_A).pkg
 
 LIBC_TESTLIB_RUNNER_A_OBJS =					\
-	$(LIBC_TESTLIB_RUNNER_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(LIBC_TESTLIB_RUNNER_A_SRCS:%.c=o/$(MODE)/%.o)
 
 LIBC_TESTLIB_RUNNER_A_DIRECTDEPS =				\
 	LIBC_FMT						\
-	LIBC_RUNTIME						\
+	LIBC_INTRIN						\
 	LIBC_NEXGEN32E						\
+	LIBC_RUNTIME						\
 	LIBC_STDIO						\
 	LIBC_STR						\
 	LIBC_STUBS						\
@@ -161,11 +161,11 @@ LIBC_TESTMAIN_SRCS =						\
 	libc/testlib/testmain.c
 
 LIBC_TESTMAIN_OBJS =						\
-	$(LIBC_TESTMAIN_SRCS:%=o/$(MODE)/%.zip.o)		\
 	o/$(MODE)/libc/testlib/testmain.o
 
 LIBC_TESTMAIN_DIRECTDEPS =					\
 	LIBC_CALLS						\
+	LIBC_INTRIN						\
 	LIBC_LOG						\
 	LIBC_NEXGEN32E						\
 	LIBC_RUNTIME						\

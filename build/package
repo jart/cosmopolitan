@@ -5,8 +5,8 @@
 if [ "$TOOL_BUILD_PACKAGE" ]; then
   set -- "$TOOL_BUILD_PACKAGE" "$@"
 else
-  if [ -x "o/tool/build/package.com" ]; then
-    set -- "o/tool/build/package.com" "$@"
+  if [ -x "o/tool/build/package.com.dbg" ]; then
+    set -- "o/tool/build/package.com.dbg" "$@"
   else
     MKDIR=${MKDIR:-$(command -v mkdir) -p} || exit
     CP=${CP:-$(command -v cp) -f} || exit

@@ -22,10 +22,10 @@ TEST_LIBC_XED_TESTLIB_A = o/$(MODE)/test/libc/xed/testlib.a
 TEST_LIBC_XED_TESTLIB_A_SRCS = $(filter %_lib.c,$(TEST_LIBC_XED_FILES))
 
 TEST_LIBC_XED_TESTLIB_A_OBJS =					\
-	$(TEST_LIBC_XED_TESTLIB_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_XED_TESTLIB_A_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_LIBC_XED_TESTLIB_A_DIRECTDEPS =				\
+	LIBC_INTRIN						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
 	LIBC_RUNTIME						\
@@ -53,7 +53,6 @@ PKGS += TEST_LIBC_XED
 TEST_LIBC_XED_SRCS = $(filter %_test.c,$(TEST_LIBC_XED_FILES))
 
 TEST_LIBC_XED_OBJS =						\
-	$(TEST_LIBC_XED_SRCS:%=o/$(MODE)/%.zip.o)		\
 	$(TEST_LIBC_XED_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_LIBC_XED_COMS =						\
@@ -71,6 +70,7 @@ TEST_LIBC_XED_CHECKS =						\
 
 TEST_LIBC_XED_DIRECTDEPS =					\
 	LIBC_CALLS_HEFTY					\
+	LIBC_INTRIN						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
 	LIBC_RUNTIME						\

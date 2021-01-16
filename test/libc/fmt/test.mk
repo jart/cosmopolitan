@@ -9,7 +9,6 @@ TEST_LIBC_FMT_BINS = $(TEST_LIBC_FMT_COMS) $(TEST_LIBC_FMT_COMS:%=%.dbg)
 TEST_LIBC_FMT_TESTS = $(TEST_LIBC_FMT_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
 
 TEST_LIBC_FMT_OBJS =					\
-	$(TEST_LIBC_FMT_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_FMT_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_LIBC_FMT_COMS =					\
@@ -22,11 +21,12 @@ TEST_LIBC_FMT_DIRECTDEPS =				\
 	LIBC_ALG					\
 	LIBC_CALLS_HEFTY				\
 	LIBC_FMT					\
+	LIBC_INTRIN					\
+	LIBC_LOG					\
+	LIBC_LOG_ASAN					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
 	LIBC_RUNTIME					\
-	LIBC_LOG					\
-	LIBC_LOG_ASAN					\
 	LIBC_STDIO					\
 	LIBC_STR					\
 	LIBC_STUBS					\

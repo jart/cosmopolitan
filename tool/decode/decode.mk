@@ -8,7 +8,6 @@ TOOL_DECODE_HDRS = $(filter %.h,$(TOOL_DECODE_FILES))
 TOOL_DECODE_SRCS = $(filter %.c,$(TOOL_DECODE_FILES))
 
 TOOL_DECODE_OBJS =					\
-	$(TOOL_DECODE_SRCS:%=o/$(MODE)/%.zip.o)		\
 	$(TOOL_DECODE_SRCS:%.c=o/$(MODE)/%.o)
 
 TOOL_DECODE_COMS =					\
@@ -25,6 +24,7 @@ TOOL_DECODE_DIRECTDEPS =				\
 	LIBC_CALLS					\
 	LIBC_ELF					\
 	LIBC_FMT					\
+	LIBC_INTRIN					\
 	LIBC_LOG					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
@@ -41,8 +41,8 @@ TOOL_DECODE_DIRECTDEPS =				\
 	LIBC_X						\
 	THIRD_PARTY_GDTOA				\
 	THIRD_PARTY_GETOPT				\
-	TOOL_DECODE_LIB					\
-	THIRD_PARTY_XED
+	THIRD_PARTY_XED					\
+	TOOL_DECODE_LIB
 
 TOOL_DECODE_DEPS :=					\
 	$(call uniq,$(foreach x,$(TOOL_DECODE_DIRECTDEPS),$($(x))))

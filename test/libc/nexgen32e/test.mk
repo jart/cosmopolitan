@@ -9,7 +9,6 @@ TEST_LIBC_NEXGEN32E_SRCS_TEST =					\
 	$(filter %_test.c,$(TEST_LIBC_NEXGEN32E_SRCS))
 
 TEST_LIBC_NEXGEN32E_OBJS =					\
-	$(TEST_LIBC_NEXGEN32E_SRCS:%=o/$(MODE)/%.zip.o)		\
 	$(TEST_LIBC_NEXGEN32E_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_LIBC_NEXGEN32E_COMS =					\
@@ -30,16 +29,17 @@ TEST_LIBC_NEXGEN32E_DIRECTDEPS =				\
 	LIBC_CALLS						\
 	LIBC_CALLS_HEFTY					\
 	LIBC_FMT						\
+	LIBC_INTRIN						\
 	LIBC_LOG						\
-	LIBC_STDIO						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
 	LIBC_RAND						\
 	LIBC_RUNTIME						\
-	LIBC_STUBS						\
+	LIBC_STDIO						\
 	LIBC_STR						\
-	LIBC_UNICODE						\
+	LIBC_STUBS						\
 	LIBC_TESTLIB						\
+	LIBC_UNICODE						\
 	LIBC_X							\
 	TOOL_VIZ_LIB
 

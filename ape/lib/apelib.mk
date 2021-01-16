@@ -17,14 +17,10 @@ APE_LIB_A_SRCS =					\
 
 APE_LIB_A_OBJS =					\
 	$(APE_LIB_A_SRCS_S:%.S=o/$(MODE)/%.o)		\
-	$(APE_LIB_A_SRCS_C:%.c=o/$(MODE)/%.o)		\
-	$(APE_LIB_A_SRCS:%=o/$(MODE)/%.zip.o)		\
-	o/$(MODE)/ape/ape.lds.zip.o			\
-	o/$(MODE)/ape/ape.S.zip.o			\
-	o/$(MODE)/NOTICE.zip.o
+	$(APE_LIB_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
 APE_LIB_A_CHECKS = $(APE_LIB_A_HDRS:%=o/$(MODE)/%.ok)
-APE_LIB_A_DIRECTDEPS = LIBC_STR LIBC_STUBS
+APE_LIB_A_DIRECTDEPS = LIBC_STR LIBC_NEXGEN32E LIBC_STUBS
 APE_LIB_A_DEPS = $(call uniq,$(foreach x,$(APE_LIB_A_DIRECTDEPS),$($(x))))
 
 $(APE_LIB_A): ape/lib/ $(APE_LIB_A).pkg $(APE_LIB_A_OBJS)

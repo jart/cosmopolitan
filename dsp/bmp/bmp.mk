@@ -16,7 +16,6 @@ DSP_BMP_A_SRCS =				\
 	$(DSP_BMP_A_SRCS_C)
 
 DSP_BMP_A_OBJS =				\
-	$(DSP_BMP_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(DSP_BMP_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(DSP_BMP_A_SRCS_C:%.c=o/$(MODE)/%.o)
 

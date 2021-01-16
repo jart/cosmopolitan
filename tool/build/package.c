@@ -235,6 +235,8 @@ void GetOpts(struct Package *pkg, struct Packages *deps, int argc,
       case 'd':
         AddDependency(deps, optarg);
         break;
+      case 'h':
+        exit(0);
       default:
         fprintf(stderr, "%s: %s [%s %s] [%s %s] %s\n", "Usage",
                 program_invocation_name, "-o", "OUTPACKAGE", "-d", "DEPPACKAGE",

@@ -7,7 +7,6 @@ TEST_LIBC_INTRIN_SRCS := $(wildcard test/libc/intrin/*.c)
 TEST_LIBC_INTRIN_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_INTRIN_SRCS))
 
 TEST_LIBC_INTRIN_OBJS =					\
-	$(TEST_LIBC_INTRIN_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(TEST_LIBC_INTRIN_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_LIBC_INTRIN_COMS =					\
@@ -26,14 +25,14 @@ TEST_LIBC_INTRIN_CHECKS =				\
 TEST_LIBC_INTRIN_DIRECTDEPS =				\
 	LIBC_FMT					\
 	LIBC_INTRIN					\
+	LIBC_LOG					\
 	LIBC_NEXGEN32E					\
 	LIBC_RAND					\
-	LIBC_LOG					\
-	LIBC_STUBS					\
+	LIBC_RUNTIME					\
 	LIBC_STR					\
+	LIBC_STUBS					\
 	LIBC_TESTLIB					\
 	LIBC_TINYMATH					\
-	LIBC_RUNTIME					\
 	LIBC_X						\
 	TOOL_VIZ_LIB
 

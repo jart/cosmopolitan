@@ -25,7 +25,6 @@ LIBC_X_A_SRCS =					\
 	$(LIBC_X_A_SRCS_C)
 
 LIBC_X_A_OBJS =					\
-	$(LIBC_X_A_SRCS:%=o/$(MODE)/%.zip.o)	\
 	$(LIBC_X_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(LIBC_X_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
@@ -36,6 +35,7 @@ LIBC_X_A_CHECKS =				\
 LIBC_X_A_DIRECTDEPS =				\
 	LIBC_CALLS				\
 	LIBC_FMT				\
+	LIBC_INTRIN				\
 	LIBC_MEM				\
 	LIBC_NEXGEN32E				\
 	LIBC_RUNTIME				\
