@@ -16,57 +16,51 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/errno.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/macros.h"
 
 /**
  * Copies data between file descriptors the slow way.
  *
- * @return -1 on error/interrupt, 0 on eof, or [1..uptobytes] on success
+ * @return -1 on error/interrupt, 0 on eof, or [1..size] on success
  * @see copy_file_range() for file ↔ file
  * @see sendfile() for seekable → socket
  * @see splice() for fd ↔ pipe
  */
-ssize_t copyfd(int infd, int64_t *inopt_out_inoffset, int to_fd,
-               int64_t *inopt_out_outoffset, size_t uptobytes, uint32_t flags) {
-  size_t i;
-  int64_t offset;
-  ssize_t got, wrote;
-  static unsigned char buf[1024 * 64];
-  /* unsigned char buf[1024 * 3]; */
-  uptobytes = min(sizeof(buf), uptobytes);
-  if (inopt_out_inoffset) {
-    got = pread(infd, buf, uptobytes, *inopt_out_inoffset);
-  } else {
-    got = read(infd, buf, uptobytes);
-  }
-  if (got == -1) return -1;
-  offset = inopt_out_outoffset ? *inopt_out_outoffset : -1;
-  for (i = 0; i < got; i += wrote) {
-  tryagain:
-    if (inopt_out_outoffset) {
-      wrote = pwrite(to_fd, buf, got - i, offset + i);
+ssize_t copyfd(int infd, int64_t *inoutopt_inoffset, int outfd,
+               int64_t *inoutopt_outoffset, size_t size, uint32_t flags) {
+  ssize_t rc;
+  char buf[2048];
+  size_t i, j, n;
+  for (i = 0; i < size; i += j) {
+    n = MIN(size - i, sizeof(buf));
+    if (inoutopt_inoffset) {
+      rc = pread(infd, buf, n, *inoutopt_inoffset);
     } else {
-      wrote = write(to_fd, buf, got - i);
+      rc = read(infd, buf, n);
     }
-    if (wrote != -1) continue;
-    if (errno == EINTR) {
-      if (inopt_out_inoffset != NULL) {
+    if (!rc) return i;
+    if (rc == -1) {
+      if (i) return i;
+      return -1;
+    }
+    n = rc;
+    for (j = 0; j < n; j += rc) {
+    TryAgain:
+      if (inoutopt_outoffset) {
+        rc = pwrite(outfd, buf + j, n - j, *inoutopt_outoffset);
+      } else {
+        rc = write(outfd, buf + j, n - j);
+      }
+      if (rc == -1) {
+        if (errno == EINTR) goto TryAgain;
+        if (errno == EWOULDBLOCK) goto TryAgain; /* suboptimal */
         return -1;
       }
-      goto tryagain;
+      if (inoutopt_inoffset) *inoutopt_inoffset += rc;
+      if (inoutopt_outoffset) *inoutopt_outoffset += rc;
     }
-    if (errno == EWOULDBLOCK) {
-      assert(inopt_out_inoffset != NULL); /* or caller is nuts */
-    }
-    return -1;
   }
-  if (inopt_out_inoffset) *inopt_out_inoffset += got;
-  if (inopt_out_outoffset) *inopt_out_outoffset += got;
-  return got;
+  return i;
 }
