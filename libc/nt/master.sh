@@ -6187,7 +6187,7 @@ imp	'SetDIBitsToDevice'					SetDIBitsToDevice					gdi32		1883
 imp	'SetDebugErrorLevel'					SetDebugErrorLevel					user32		2324
 imp	'SetDefaultCommConfigA'					SetDefaultCommConfigA					kernel32	1297
 imp	'SetDefaultCommConfig'					SetDefaultCommConfigW					kernel32	1298
-imp	'SetDefaultDllDirectories'				SetDefaultDllDirectories				kernel32	0	1	# KernelBase
+imp	'SetDefaultDllDirectories'				SetDefaultDllDirectories				kernel32	0	1	# KernelBase, Windows 8+, KB2533623 on Windows 7
 imp	'SetDeskWallpaper'					SetDeskWallpaper					user32		2325
 imp	'SetDesktopColorTransform'				SetDesktopColorTransform				user32		2326
 imp	'SetDeviceGammaRamp'					SetDeviceGammaRamp					gdi32		1884

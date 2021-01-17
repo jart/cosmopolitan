@@ -184,7 +184,6 @@ static textwindows wontreturn void WinMainNew(void) {
  */
 textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
                             const char *lpCmdLine, int nCmdShow) {
-  SetDefaultDllDirectories(kNtLoadLibrarySearchSearchSystem32);
   if (weaken(winsockinit)) weaken(winsockinit)();
   if (weaken(WinMainForked)) weaken(WinMainForked)();
   WinMainNew();
