@@ -31,7 +31,7 @@ forceinline typeof(PrefetchVirtualMemory) *GetPrefetchVirtualMemory(void) {
   if (!once) {
     once = true;
     PrefetchVirtualMemory_ = /* win8.1+ */
-        GetProcAddressModule("KernelBase.dll", "PrefetchVirtualMemory");
+        GetProcAddressModule("Kernel32.dll", "PrefetchVirtualMemory");
   }
   return PrefetchVirtualMemory_;
 }
@@ -42,7 +42,7 @@ forceinline typeof(OfferVirtualMemory) *GetOfferVirtualMemory(void) {
   if (!once) {
     once = true;
     OfferVirtualMemory_ = /* win8.1+ */
-        GetProcAddressModule("KernelBase.dll", "OfferVirtualMemory");
+        GetProcAddressModule("Kernel32.dll", "OfferVirtualMemory");
   }
   return OfferVirtualMemory_;
 }

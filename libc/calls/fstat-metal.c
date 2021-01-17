@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,21 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/lib/pc.h"
-#include "ape/relocations.h"
-#include "libc/runtime/runtime.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/sysv/errfuns.h"
 
-textreal static void __map_segment(uint64_t k, uint64_t a, uint64_t b) {
-  uint64_t *e;
-  for (; a < b; a += 0x1000) {
-    e = __getpagetableentry(IMAGE_BASE_VIRTUAL + a, 3, &g_pml4t, &g_ptsp_xlm);
-    *e = (IMAGE_BASE_REAL + a) | k;
+int fstat$metal(int fd, struct stat *st) {
+  if (fd < 0) return einval();
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdSerial) {
+    memset(st, 0, sizeof(*st));
+    st->st_dev = g_fds.p[fd].handle;
+    st->st_rdev = g_fds.p[fd].handle;
+    st->st_nlink = 1;
+    st->st_mode = S_IFCHR | 0600;
+    st->st_blksize = 1;
+    return 0;
+  } else {
+    return ebadf();
   }
-}
-
-textreal void __map_image(void) {
-  __map_segment(PAGE_V | PAGE_U, 0, (uintptr_t)_etext - IMAGE_BASE_VIRTUAL);
-  __map_segment(PAGE_V | PAGE_U | PAGE_RW,
-                (uintptr_t)_etext - IMAGE_BASE_VIRTUAL,
-                (uintptr_t)_end - IMAGE_BASE_VIRTUAL);
 }

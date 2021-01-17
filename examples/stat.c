@@ -11,6 +11,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/log/check.h"
 #include "libc/runtime/gc.h"
 #include "libc/stdio/stdio.h"
 #include "libc/x/x.h"
@@ -23,32 +24,29 @@
 
 void PrintFileMetadata(const char *pathname, struct stat *st) {
   printf("\n%s:", pathname);
-  if (stat(pathname, st) != -1) {
-    printf(
-        "\n"
-        "%-32s%,ld\n"
-        "%-32s%,ld\n"
-        "%-32s%#lx\n"
-        "%-32s%#lx\n"
-        "%-32s%ld\n"
-        "%-32s%#o\n"
-        "%-32s%d\n"
-        "%-32s%d\n"
-        "%-32s%d\n"
-        "%-32s%ld\n"
-        "%-32s%s\n"
-        "%-32s%s\n"
-        "%-32s%s\n",
-        "bytes in file", st->st_size, "physical bytes", st->st_blocks * 512,
-        "device id w/ file", st->st_dev, "inode", st->st_ino, "hard link count",
-        st->st_nlink, "mode / permissions", st->st_mode, "owner id", st->st_uid,
-        "group id", st->st_gid, "device id (if special)", st->st_rdev,
-        "block size", st->st_blksize, "access time", gc(xiso8601(&st->st_atim)),
-        "modified time", gc(xiso8601(&st->st_mtim)), "c[omplicated]time",
-        gc(xiso8601(&st->st_ctim)));
-  } else {
-    printf(" %s\n", strerror(errno));
-  }
+  CHECK_NE(-1, stat(pathname, st));
+  printf("\n"
+         "%-32s%,ld\n"
+         "%-32s%,ld\n"
+         "%-32s%#lx\n"
+         "%-32s%#lx\n"
+         "%-32s%ld\n"
+         "%-32s%#o\n"
+         "%-32s%d\n"
+         "%-32s%d\n"
+         "%-32s%d\n"
+         "%-32s%ld\n"
+         "%-32s%s\n"
+         "%-32s%s\n"
+         "%-32s%s\n",
+         "bytes in file", st->st_size, "physical bytes", st->st_blocks * 512,
+         "device id w/ file", st->st_dev, "inode", st->st_ino,
+         "hard link count", st->st_nlink, "mode / permissions", st->st_mode,
+         "owner id", st->st_uid, "group id", st->st_gid,
+         "device id (if special)", st->st_rdev, "block size", st->st_blksize,
+         "access time", gc(xiso8601(&st->st_atim)), "modified time",
+         gc(xiso8601(&st->st_mtim)), "c[omplicated]time",
+         gc(xiso8601(&st->st_ctim)));
 }
 
 int main(int argc, char *argv[]) {

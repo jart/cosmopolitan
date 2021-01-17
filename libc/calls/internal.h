@@ -268,6 +268,12 @@ int __mkntpath(const char *, char16_t[hasatleast PATH_MAX - 16]) hidden;
 int __mkntpath2(const char *, char16_t[hasatleast PATH_MAX - 16], int) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
+│ cosmopolitan § syscalls » metal                                          ─╬─│┼
+╚────────────────────────────────────────────────────────────────────────────│*/
+
+int fstat$metal(int, struct stat *);
+
+/*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » drivers                                        ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 

@@ -32,7 +32,11 @@ int fstat(int fd, struct stat *st) {
     return weaken(__zipos_fstat)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, st);
   } else if (!IsWindows()) {
-    return fstat$sysv(fd, st);
+    if (!IsMetal()) {
+      return fstat$sysv(fd, st);
+    } else {
+      return fstat$metal(fd, st);
+    }
   } else {
     if (!__isfdkind(fd, kFdFile)) return ebadf();
     return fstat$nt(g_fds.p[fd].handle, st);

@@ -141,32 +141,36 @@ int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
     return efault();
   }
   if (!IsWindows()) {
-    if (act) {
-      memcpy(&copy, act, sizeof(copy));
-      ap = &copy;
-      if (IsXnu()) {
-        ap->sa_restorer = (void *)&xnutrampoline;
-        ap->sa_handler = (void *)&xnutrampoline;
-      } else {
-        if (IsLinux()) {
-          if (!(ap->sa_flags & SA_RESTORER)) {
-            ap->sa_flags |= SA_RESTORER;
-            ap->sa_restorer = &__restore_rt;
+    if (!IsMetal()) {
+      if (act) {
+        memcpy(&copy, act, sizeof(copy));
+        ap = &copy;
+        if (IsXnu()) {
+          ap->sa_restorer = (void *)&xnutrampoline;
+          ap->sa_handler = (void *)&xnutrampoline;
+        } else {
+          if (IsLinux()) {
+            if (!(ap->sa_flags & SA_RESTORER)) {
+              ap->sa_flags |= SA_RESTORER;
+              ap->sa_restorer = &__restore_rt;
+            }
+          }
+          if (rva >= kSigactionMinRva) {
+            ap->sa_sigaction = (sigaction_f)__sigenter;
           }
         }
-        if (rva >= kSigactionMinRva) {
-          ap->sa_sigaction = (sigaction_f)__sigenter;
-        }
+        sigaction$cosmo2native((union metasigaction *)ap);
+      } else {
+        ap = NULL;
       }
-      sigaction$cosmo2native((union metasigaction *)ap);
+      rc = sigaction$sysv(
+          sig, ap, oldact,
+          (!IsXnu() ? 8 /* or linux whines */
+                    : (int64_t)(intptr_t)oldact /* from go code */));
+      if (rc != -1) sigaction$native2cosmo((union metasigaction *)oldact);
     } else {
-      ap = NULL;
+      return enosys(); /* TODO: Signals on Metal */
     }
-    rc = sigaction$sysv(
-        sig, ap, oldact,
-        (!IsXnu() ? 8 /* or linux whines */
-                  : (int64_t)(intptr_t)oldact /* from go code */));
-    if (rc != -1) sigaction$native2cosmo((union metasigaction *)oldact);
   } else {
     if (oldact) {
       memset(oldact, 0, sizeof(*oldact));

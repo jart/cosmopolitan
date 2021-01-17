@@ -27,10 +27,14 @@
 int nanosleep(const struct timespec *req, struct timespec *rem) {
   if (!req) return efault();
   if (!IsWindows()) {
-    if (!IsXnu()) {
-      return nanosleep$sysv(req, rem);
+    if (!IsMetal()) {
+      if (!IsXnu()) {
+        return nanosleep$sysv(req, rem);
+      } else {
+        return nanosleep$xnu(req, rem);
+      }
     } else {
-      return nanosleep$xnu(req, rem);
+      return enosys(); /* TODO: Sleep on Metal */
     }
   } else {
     return nanosleep$nt(req, rem);

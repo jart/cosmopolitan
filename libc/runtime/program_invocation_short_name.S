@@ -28,7 +28,10 @@ program_invocation_short_name:
 
 	.init.start 400,_init_program_invocation_short_name
 	push	%rsi
-	mov	(%r13),%rsi
+	xor	%eax,%eax
+	test	%r12d,%r12d		# argc
+	jz	2f
+	mov	(%r13),%rsi		# argv[0]
 	mov	%rsi,%rcx
 1:	lodsb
 	cmp	$'/,%al
@@ -39,5 +42,5 @@ program_invocation_short_name:
 	jnz	1b
 	xchg	%rcx,%rax
 	pop	%rsi
-	stosq
+2:	stosq
 	.init.end 400,_init_program_invocation_short_name

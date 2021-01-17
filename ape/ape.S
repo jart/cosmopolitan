@@ -239,18 +239,17 @@ pc:	cld
 /	can have an understanding of physical locality, which deeply
 /	impacts the latency of operations.
 /
-/	 - 160KB:  1 head  × 40 cylinders ×  8 sectors × 512 =   163,840
-/	 - 180KB:  1 head  × 40 cylinders ×  9 sectors × 512 =   184,320
-/	 - 320KB:  2 heads × 40 cylinders ×  8 sectors × 512 =   327,680
-/	 - 360KB:  2 heads × 40 cylinders ×  9 sectors × 512 =   368,640
-/	 - 720KB:  2 heads × 80 cylinders ×  9 sectors × 512 =   737,280
-/	 - 1.2MB:  2 heads × 80 cylinders × 15 sectors × 512 = 1,228,800
-/	 - 1.44MB: 2 heads × 80 cylinders × 18 sectors × 512 = 1,474,560
+/	 - 160KB:  40 cylinders × 1 head  ×  8 sectors × 512 =   163,840
+/	 - 180KB:  40 cylinders × 1 head  ×  9 sectors × 512 =   184,320
+/	 - 320KB:  40 cylinders × 2 heads ×  8 sectors × 512 =   327,680
+/	 - 360KB:  40 cylinders × 2 heads ×  9 sectors × 512 =   368,640
+/	 - 720KB:  80 cylinders × 2 heads ×  9 sectors × 512 =   737,280
+/	 - 1.2MB:  80 cylinders × 2 heads × 15 sectors × 512 = 1,228,800
+/	 - 1.44MB: 80 cylinders × 2 heads × 18 sectors × 512 = 1,474,560
 /
 /	Terminology
 /
-/	 - Cylinder / Tracks should mean the same thing
-/	 - Heads / Sides / Spindles should mean the same thing
+/	 - Heads are also known as Tracks
 /
 /	Disk Base Table
 /
@@ -341,18 +340,18 @@ pcread:	push	%ax
 	pop	%cx
 	pop	%ax
 	jc	9f
-	mov	%es,%si
+	mov	%es,%si			# addr += 512
 	add	$512>>4,%si
 	mov	%si,%es
-	inc	%al
+	inc	%al			# ++sector
 	cmp	XLM(DRIVE_LAST_SECTOR),%al
 	jbe	2f
 	mov	$1,%al
-	inc	%cx
-	cmp	XLM(DRIVE_LAST_CYLINDER),%cx
-	jbe	2f
-	xor	%cx,%cx
-	inc	%dh
+	inc	%dh			# ++head
+	cmp	XLM(DRIVE_LAST_HEAD),%cx
+	jb	2f
+	xor	%dh,%dh
+	inc	%cx			# ++cylinder
 2:	ret
 9:	push	%ax
 	xor	%ax,%ax			# try disk reset on error

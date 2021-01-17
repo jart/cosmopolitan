@@ -1789,14 +1789,14 @@ static void OnDiskServiceBadCommand(void) {
 }
 
 static void OnDiskServiceGetParams(void) {
-  size_t lastsector, lasttrack, lasthead;
-  lasthead = GetLastIndex(elf->mapsize, 512 * 63 * 1024, 0, 255);
-  lasttrack = GetLastIndex(elf->mapsize, 512 * 63, 0, 1023);
+  size_t lastsector, lastcylinder, lasthead;
+  lastcylinder = GetLastIndex(elf->mapsize, 512 * 63 * 255, 0, 1023);
+  lasthead = GetLastIndex(elf->mapsize, 512 * 63, 0, 255);
   lastsector = GetLastIndex(elf->mapsize, 512, 1, 63);
   m->dx[0] = 1;
   m->dx[1] = lasthead;
-  m->cx[0] = lasttrack >> 8 << 6 | lastsector;
-  m->cx[1] = lasttrack;
+  m->cx[0] = lastcylinder >> 8 << 6 | lastsector;
+  m->cx[1] = lastcylinder;
   m->ax[1] = 0;
   Write64(m->es, 0);
   Write16(m->di, 0);
@@ -1806,18 +1806,17 @@ static void OnDiskServiceGetParams(void) {
 static void OnDiskServiceReadSectors(void) {
   static int x;
   uint64_t addr, size;
-  int64_t sectors, drive, head, track, sector, offset;
+  int64_t sectors, drive, head, cylinder, sector, offset;
   sectors = m->ax[0];
   drive = m->dx[0];
   head = m->dx[1];
-  track = (m->cx[0] & 0b11000000) << 2 | m->cx[1];
+  cylinder = (m->cx[0] & 0b11000000) << 2 | m->cx[1];
   sector = (m->cx[0] & 0b00111111) - 1;
-  offset = head * track * sector * 512;
   size = sectors * 512;
-  offset = sector * 512 + track * 512 * 63 + head * 512 * 63 * 1024;
+  offset = sector * 512 + head * 512 * 63 + cylinder * 512 * 63 * 255;
   VERBOSEF("bios read sectors %d "
-           "@ sector %ld track %ld head %ld drive %ld offset %#lx",
-           sectors, sector, track, head, drive, offset);
+           "@ sector %ld cylinder %ld head %ld drive %ld offset %#lx",
+           sectors, sector, cylinder, head, drive, offset);
   if (0 <= sector && offset + size <= elf->mapsize) {
     addr = Read64(m->es) + Read16(m->bx);
     if (addr + size <= m->real.n) {

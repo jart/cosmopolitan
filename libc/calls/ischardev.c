@@ -30,16 +30,11 @@
 textstartup bool32 ischardev(int fd) {
   int olderr;
   struct stat st;
-  if (!IsWindows()) {
-    olderr = errno;
-    if (fstat$sysv(fd, &st) != -1) {
-      return S_ISCHR(st.st_mode);
-    } else {
-      errno = olderr;
-      return false;
-    }
+  olderr = errno;
+  if (fstat(fd, &st) != -1) {
+    return S_ISCHR(st.st_mode);
   } else {
-    return __isfdkind(fd, kFdFile) &&
-           GetFileType(g_fds.p[fd].handle) == kNtFileTypeChar;
+    errno = olderr;
+    return false;
   }
 }
