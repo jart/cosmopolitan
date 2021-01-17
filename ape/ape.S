@@ -730,7 +730,7 @@ ape.macho:
 /	     ││││││││││┌5:HIGH_ENTROPY_VA
 /	     │││││││││││rrrrr
 .LDLLSTD = 0b0000000100100000
-.LDLLPIE = 0b0000000001000000
+.LDLLPIE = 0b0000000001100000
 .LDLLEXE = .LDLLSTD
 
 /	     ┌31:Writeable                        ┌─────────────────────────┐

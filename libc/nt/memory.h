@@ -29,7 +29,7 @@
 │ cosmopolitan § new technology » memory                                   ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#define kNtNumaNoPreferredNode 0xffffffff
+#define kNtNumaNoPreferredNode 0xffffffffu
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
