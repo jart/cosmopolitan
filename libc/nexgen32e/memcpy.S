@@ -70,8 +70,8 @@ MemCpy:	.leafprologue
 	cmp	%rcx,%rdx
 	ja	0b
 	vmovdqu	%ymm4,-32(%rdi,%rdx)
-	vpxor	%ymm4,%ymm4,%ymm4
-	vpxor	%ymm3,%ymm3,%ymm3
+	vxorps	%ymm4,%ymm4,%ymm4
+	vxorps	%ymm3,%ymm3,%ymm3
 	jmp	.L0
 .L16r:	cmp	$1024,%rdx
 	jae	.Lerms
