@@ -24,6 +24,8 @@
 #include "libc/sysv/errfuns.h"
 #include "net/http/uri.h"
 
+/* TODO(jart): Rewrite in C */
+
 #define static
 
 /* clang-format off */

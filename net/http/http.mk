@@ -58,23 +58,11 @@ o/$(MODE)/net/http/formathttpdatetime.o:	\
 		OVERRIDE_CFLAGS +=		\
 			-O3
 
-# ifeq (,$(MODE))
-# $(NET_HTTP_A_OBJS):				\
-# 		OVERRIDE_CFLAGS +=		\
-# 			-fsanitize=address
-# endif
-
 NET_HTTP_LIBS = $(foreach x,$(NET_HTTP_ARTIFACTS),$($(x)))
 NET_HTTP_SRCS = $(foreach x,$(NET_HTTP_ARTIFACTS),$($(x)_SRCS))
 NET_HTTP_HDRS = $(foreach x,$(NET_HTTP_ARTIFACTS),$($(x)_HDRS))
 NET_HTTP_CHECKS = $(foreach x,$(NET_HTTP_ARTIFACTS),$($(x)_CHECKS))
 NET_HTTP_OBJS = $(foreach x,$(NET_HTTP_ARTIFACTS),$($(x)_OBJS))
-
-.PRECIOUS:					\
-	$(NET_HTTP_A_SRCS_R:%.rl=o/$(MODE)/%.c)	\
-	o/$(MODE)/net/http/uricspn.s		\
-	o/$(MODE)/net/http/uricspn.i		\
-	o/$(MODE)/net/http/uricspn.c
 
 .PHONY: o/$(MODE)/net/http
 o/$(MODE)/net/http:				\

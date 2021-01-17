@@ -53,7 +53,6 @@ SILENT ?= 1
 ZFLAGS ?=
 XARGS ?= xargs -P4 -rs8000
 NICE ?= build/actuallynice
-RAGEL ?= ragel
 DOT ?= dot
 GZ ?= gzip
 CLANG = clang-10

@@ -86,16 +86,3 @@ o/$(MODE)/%-clang.asm: %.f; @ACTION=OBJECTIFY.f build/compile $(OBJECTIFY.f) -S 
 o/$(MODE)/%-gcc.asm: %.F; @ACTION=OBJECTIFY.F build/compile $(OBJECTIFY.F) -S -g0 $(OUTPUT_OPTION) $<
 o/$(MODE)/%-clang.asm: CC = $(CLANG)
 o/$(MODE)/%-clang.asm: %.F; @ACTION=OBJECTIFY.F build/compile $(OBJECTIFY.F) -S -g0 $(OUTPUT_OPTION) $< || echo / need $(CLANG) >$@
-
-# ragel state machine compiler
-.PRECIOUS: build/bootstrap/%.c.gz
-o/$(MODE)/%.c: %.rl build/bootstrap/%.c.gz
-	@mkdir -p $(dir $@)
-	@$(GZ) $(ZFLAGS) -dc $(<:%.rl=build/bootstrap/%.c.gz) >$@
-	-@ACTION=RAGEL build/do $(RAGEL) $(RAGELFLAGS) $(OUTPUT_OPTION) $<
-build/bootstrap/%.c.gz: %.rl
-	@mkdir -p $(dir $@)
-	@$(RAGEL) -o $(@:%.gz=%) $<
-	@$(GZ) $(ZFLAGS) -f $(@:%.gz=%)
-%.svgz: %.rl
-	@$(RAGEL) -V -p $< | $(DOT) -Tsvg | $(GZ) $(ZFLAGS) >$@
