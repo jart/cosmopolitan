@@ -36,8 +36,8 @@ memeqmask:
 	movdqa	16(%rsi,%rax,8),%xmm1
 	pcmpeqb	(%rdx,%rax,8),%xmm0
 	pcmpeqb	16(%rdx,%rax,8),%xmm1
-	vpmovmskb %xmm0,%r8d
-	vpmovmskb %xmm1,%r9d
+	pmovmskb %xmm0,%r8d
+	pmovmskb %xmm1,%r9d
 	mov	%r8w,(%rdi,%rax)
 	mov	%r9w,2(%rdi,%rax)
 	add	$4,%eax
