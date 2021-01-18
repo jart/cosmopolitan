@@ -510,7 +510,7 @@ static void PrintDox(struct Dox *dox, FILE *f) {
 <title>Cosmopolitan C Library</title>\n\
 <meta name=\"viewport\" content=\"width=1024\">\n\
 <link rel=\"canonical\" href=\"https://justine.lol/cosmopolitan/documentation.html\">\n\
-<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Roboto&display=swap\">\n\
+<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Roboto&family=Roboto+Mono&display=swap\">\n\
 <link rel=\"stylesheet\" href=\"style.css\">\n\
 <style>\n\
   .nav {\n\
@@ -533,11 +533,6 @@ static void PrintDox(struct Dox *dox, FILE *f) {
     width: 100%;\n\
     overflow-x: auto;\n\
     border-radius: 5px;\n\
-  }\n\
-  code {\n\
-    padding: 2px 4px;\n\
-    background: #e4e6e8;\n\
-    border-radius: 3px;\n\
   }\n\
   hr {\n\
     height: 1px;\n\
@@ -569,7 +564,7 @@ static void PrintDox(struct Dox *dox, FILE *f) {
        title=\"cosmopolitan honeybadger\"\n\
        alt=\"honeybadger\">\n\
   <h1>cosmopolitan libc</h1>\n\
-  <span>build-once run-anywhere c without devops</span>\n\
+  <span>your build-once run-anywhere c library</span>\n\
 </header>\n\
 \n\
 <nav class=\"nav\">\n\
@@ -577,7 +572,7 @@ static void PrintDox(struct Dox *dox, FILE *f) {
     <li><a href=\"index.html\">Intro</a>\n\
     <li><a href=\"download.html\">Download</a>\n\
     <li><a class=\"active\" href=\"documentation.html\">Documentation</a>\n\
-    <li><a href=\"sources.html\">Sources</a>\n\
+    <<li><a href=\"tutorials.html\">Tutorials</a>\n\
     <li><a href=\"https://github.com/jart/cosmopolitan\">GitHub</a>\n\
     <li><a href=\"license.html\">License</a>\n\
     <li class=\"right\"><a href=\"../index.html\">» jart's web page</a>\n\
