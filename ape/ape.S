@@ -348,8 +348,8 @@ pcread:	push	%ax
 	jbe	2f
 	mov	$1,%al
 	inc	%dh			# ++head
-	cmp	XLM(DRIVE_LAST_HEAD),%cx
-	jb	2f
+	cmp	XLM(DRIVE_LAST_HEAD),%dh
+	jbe	2f
 	xor	%dh,%dh
 	inc	%cx			# ++cylinder
 2:	ret
