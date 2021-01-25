@@ -23,4 +23,4 @@
 pwrite$sysv:
 	mov	%rcx,%r8			# openbsd:pad
 	jmp	__pwrite$sysv
-	.endfn	pwrite$sysv,globl
+	.endfn	pwrite$sysv,globl,hidden

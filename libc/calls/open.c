@@ -35,6 +35,8 @@
  *     ignored if O_CREAT or O_TMPFILE weren't passed
  * @return number needing close(), or -1 w/ errno
  * @note don't call open() from signal handlers
+ * @asyncsignalsafe
+ * @vforksafe
  */
 nodiscard int open(const char *file, int flags, ...) {
   va_list va;

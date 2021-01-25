@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
 #include "libc/calls/calls.h"
 #include "libc/macros.h"
 #include "libc/math.h"
 #include "libc/sock/sock.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/shut.h"
 #include "libc/sysv/errfuns.h"

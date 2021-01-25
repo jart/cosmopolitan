@@ -311,6 +311,11 @@ static void *__asan_pvalloc(size_t n) {
   return __asan_valloc(ROUNDUP(n, PAGESIZE));
 }
 
+static int __asan_malloc_trim(size_t pad) {
+  __asan_morgue_flush();
+  return dlmalloc_trim(pad);
+}
+
 void __asan_register_globals(struct AsanGlobal g[], int n) {
   unsigned i;
   for (i = 0; i < n; ++i) {
@@ -382,6 +387,7 @@ void __asan_install_malloc_hooks(void) {
   HOOK(hook$pvalloc, __asan_pvalloc);
   HOOK(hook$realloc, __asan_realloc);
   HOOK(hook$memalign, __asan_memalign);
+  HOOK(hook$malloc_trim, __asan_malloc_trim);
   HOOK(hook$malloc_usable_size, __asan_malloc_usable_size);
 }
 

@@ -42,9 +42,13 @@ static textwindows int64_t open$nt$impl(const char *file, uint32_t flags,
   if (__mkntpath2(file, file16, flags) == -1) return -1;
   if ((handle = CreateFile(
            file16,
-           (flags & 0xf000000f) | (/* this is needed if we mmap(rwx+cow)
-                                      nt is choosy about open() access */
-                                   kNtGenericExecute | kNtFileGenericWrite),
+           (flags & 0xf000000f) |
+               (/* this is needed if we mmap(rwx+cow)
+                   nt is choosy about open() access */
+                (flags & O_ACCMODE) == O_RDONLY
+                    ? kNtGenericExecute | kNtFileGenericRead
+                    : kNtGenericExecute | kNtFileGenericRead |
+                          kNtFileGenericWrite),
            (flags & O_EXCL)
                ? kNtFileShareExclusive
                : kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,

@@ -115,6 +115,8 @@ static int ppatoi(const char **str) {
  *
  * @note implementation detail of printf(), snprintf(), etc.
  * @see printf() for wordier documentation
+ * @asyncsignalsafe
+ * @vforksafe
  */
 hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
   void *p;

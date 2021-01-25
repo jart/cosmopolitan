@@ -28,7 +28,7 @@
  *     unless it's equal to oldfd, in which case dup2() is a no-op
  * @return new file descriptor, or -1 w/ errno
  * @asyncsignalsafe
- * @syscall
+ * @vforksafe
  */
 int dup2(int oldfd, int newfd) {
   if (oldfd == newfd) return newfd;

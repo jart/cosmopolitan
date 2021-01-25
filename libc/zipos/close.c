@@ -35,7 +35,9 @@ int __zipos_close(int fd) {
   } else {
     CloseHandle(h->handle);
   }
-  free(h->freeme);
-  free(h);
+  if (!__vforked) {
+    free(h->freeme);
+    free(h);
+  }
   return 0;
 }

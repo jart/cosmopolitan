@@ -32,14 +32,19 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
-struct dirent$freebsd {
-  uint32_t d_fileno;
-  uint16_t d_reclen;
-  uint8_t d_type;
-  uint8_t d_namlen;
-  char d_name[256];
-};
+/**
+ * @fileoverview Directory Streams for Linux+Mac+Windows+FreeBSD+OpenBSD.
+ *
+ * System interfaces for listing the contents of file system directories
+ * are famously incompatible across platforms. Most native projects that
+ * have been around a long time implement wrappers for this. Normally it
+ * will only be for DOS or Windows support. So this is the first time it
+ * has been done for five platforms, having a remarkably tiny footprint.
+ */
 
+/**
+ * Directory stream object.
+ */
 struct dirstream {
   int64_t tell;
   int64_t fd;
@@ -55,6 +60,17 @@ struct dirstream {
       struct NtWin32FindData windata;
     };
   };
+};
+
+/**
+ * FreeBSD getdents() and XNU getdirentries() ABI.
+ */
+struct dirent$bsd {
+  uint32_t d_fileno;
+  uint16_t d_reclen;
+  uint8_t d_type;
+  uint8_t d_namlen;
+  char d_name[256];
 };
 
 static textwindows noinline DIR *opendir$nt(const char *name) {
@@ -132,17 +148,14 @@ static textwindows noinline struct dirent *readdir$nt(DIR *dir) {
 DIR *opendir(const char *name) {
   int fd;
   DIR *res;
-  if (!IsWindows() && !IsXnu()) {
+  if (!IsWindows()) {
     res = NULL;
     if ((fd = open(name, O_RDONLY | O_DIRECTORY | O_CLOEXEC)) != -1) {
       if (!(res = fdopendir(fd))) close(fd);
     }
     return res;
-  } else if (IsWindows()) {
-    return opendir$nt(name);
   } else {
-    enosys(); /* TODO(jart): Implement me! */
-    return NULL;
+    return opendir$nt(name);
   }
 }
 
@@ -156,7 +169,7 @@ DIR *opendir(const char *name) {
  */
 DIR *fdopendir(int fd) {
   DIR *dir;
-  if (!IsWindows() && !IsXnu()) {
+  if (!IsWindows()) {
     if ((dir = calloc(1, sizeof(*dir)))) {
       dir->fd = fd;
       return dir;
@@ -168,7 +181,7 @@ DIR *fdopendir(int fd) {
 }
 
 /**
- * Reads next entry from DIR.
+ * Reads next entry from directory stream.
  *
  * This API doesn't define any particular ordering.
  *
@@ -178,31 +191,30 @@ DIR *fdopendir(int fd) {
  */
 struct dirent *readdir(DIR *dir) {
   int rc;
+  long basep;
   struct dirent *ent;
-  struct dirent$freebsd *freebsd;
+  struct dirent$bsd *bsd;
   if (!IsWindows()) {
     if (dir->buf_pos >= dir->buf_end) {
-      if (!(rc = getdents(dir->fd, dir->buf,
-                          sizeof(dir->buf) - sizeof(dir->ent.d_name))) ||
-          rc == -1) {
-        return NULL;
-      }
+      basep = dir->tell; /* <- what does xnu do */
+      rc = getdents(dir->fd, dir->buf, sizeof(dir->buf) - 256, &basep);
+      if (!rc || rc == -1) return NULL;
       dir->buf_pos = 0;
       dir->buf_end = rc;
     }
-    if (IsLinux()) {
+    if (IsLinux() || IsOpenbsd()) {
       ent = (struct dirent *)(dir->buf + dir->buf_pos);
       dir->buf_pos += ent->d_reclen;
       dir->tell = ent->d_off;
     } else {
-      freebsd = (struct dirent$freebsd *)(dir->buf + dir->buf_pos);
-      dir->buf_pos += freebsd->d_reclen;
+      bsd = (struct dirent$bsd *)(dir->buf + dir->buf_pos);
+      dir->buf_pos += bsd->d_reclen;
       ent = &dir->ent;
-      ent->d_ino = freebsd->d_fileno;
-      ent->d_off = dir->tell++;
-      ent->d_reclen = freebsd->d_reclen;
-      ent->d_type = freebsd->d_type;
-      memcpy(ent->d_name, freebsd->d_name, freebsd->d_namlen + 1);
+      ent->d_ino = bsd->d_fileno;
+      ent->d_off = IsXnu() ? (dir->tell = basep) : dir->tell++;
+      ent->d_reclen = bsd->d_reclen;
+      ent->d_type = bsd->d_type;
+      memcpy(ent->d_name, bsd->d_name, bsd->d_namlen + 1);
     }
     return ent;
   } else {

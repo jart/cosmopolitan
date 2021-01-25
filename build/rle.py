@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
 # OVERVIEW
 #
 #   Run Length Decoder Scratch Pad

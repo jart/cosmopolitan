@@ -36,16 +36,6 @@ textwindows void ntcontext2linux(ucontext_t *ctx, const struct NtContext *cr) {
   ctx->uc_mcontext.cs = cr->SegCs;
   ctx->uc_mcontext.gs = cr->SegGs;
   ctx->uc_mcontext.fs = cr->SegFs;
-  ctx->uc_mcontext.fpregs = &ctx->fpustate;
-  ctx->fpustate.cwd = cr->FltSave.ControlWord;
-  ctx->fpustate.swd = cr->FltSave.StatusWord;
-  ctx->fpustate.mxcsr = cr->FltSave.MxCsr;
-  ctx->fpustate.mxcr_mask = cr->FltSave.MxCsr_Mask;
-  /* copy r8,r9,r10,r11,r12,r13,r15 */
-  memcpy(&ctx->uc_mcontext.r8, &cr->R8, 8 * sizeof(int64_t));
-  /* copy st0-st7 as well as xmm0-xmm15 */
-  memcpy(ctx->fpustate.st, &cr->FltSave.FloatRegisters,
-         sizeof(ctx->fpustate.st) + sizeof(ctx->fpustate.xmm));
-  memcpy(ctx->fpustate.st, &cr->FltSave.FloatRegisters,
-         sizeof(ctx->fpustate.st) + sizeof(ctx->fpustate.xmm));
+  ctx->uc_mcontext.fpregs = &ctx->__fpustate;
+  memcpy(&ctx->__fpustate, &cr->FltSave, sizeof(ctx->__fpustate));
 }

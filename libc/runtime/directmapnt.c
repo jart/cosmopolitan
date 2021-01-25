@@ -17,33 +17,33 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.h"
+#include "libc/sysv/consts/prot.h"
 
 textwindows struct DirectMap __mmap$nt(void *addr, size_t size, unsigned prot,
-                                       unsigned flags, int fd, int64_t off) {
-  int64_t handle;
-  struct DirectMap res;
-  if (fd != -1) {
-    handle = g_fds.p[fd].handle;
-  } else {
-    handle = kNtInvalidHandleValue;
-  }
-  if ((res.maphandle = CreateFileMappingNuma(
-           handle, NULL, kNtPageExecuteReadwrite, size >> 32, size, NULL,
-           kNtNumaNoPreferredNode))) {
-    if (!(res.addr = MapViewOfFileExNuma(res.maphandle, fprot2nt(prot, flags),
-                                         off >> 32, off, size, addr,
-                                         kNtNumaNoPreferredNode))) {
-      CloseHandle(res.maphandle);
-      res.maphandle = kNtInvalidHandleValue;
-      res.addr = (void *)(intptr_t)__winerr();
+                                       int64_t handle, int64_t off) {
+  struct DirectMap dm;
+  if ((dm.maphandle = CreateFileMappingNuma(
+           handle, &kNtIsInheritable,
+           (prot & PROT_WRITE) ? kNtPageExecuteReadwrite : kNtPageExecuteRead,
+           size >> 32, size, NULL, kNtNumaNoPreferredNode))) {
+    if (!(dm.addr = MapViewOfFileExNuma(
+              dm.maphandle,
+              (prot & PROT_WRITE)
+                  ? kNtFileMapWrite | kNtFileMapExecute | kNtFileMapRead
+                  : kNtFileMapExecute | kNtFileMapRead,
+              off >> 32, off, size, addr, kNtNumaNoPreferredNode))) {
+      CloseHandle(dm.maphandle);
+      dm.maphandle = kNtInvalidHandleValue;
+      dm.addr = (void *)(intptr_t)__winerr();
     }
   } else {
-    res.maphandle = kNtInvalidHandleValue;
-    res.addr = (void *)(intptr_t)__winerr();
+    dm.maphandle = kNtInvalidHandleValue;
+    dm.addr = (void *)(intptr_t)__winerr();
   }
-  return res;
+  return dm;
 }

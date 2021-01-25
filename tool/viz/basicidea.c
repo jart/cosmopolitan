@@ -19,7 +19,6 @@
 #include "dsp/core/core.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/hefty/spawn.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/dce.h"
@@ -35,6 +34,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/x/x.h"
@@ -216,8 +216,8 @@ static void ReadAll(int fd, void *buf, size_t n) {
 
 static void LoadImageOrDie(const char *path, size_t size, long yn, long xn,
                            unsigned char RGB[yn][xn][4]) {
-  int pid, ws, fds[3];
-  char *convert, pathbuf[PATH_MAX];
+  int pid, ws, pipefds[2];
+  char *convert, dim[64], pathbuf[PATH_MAX];
   if (isempty((convert = getenv("CONVERT"))) &&
       !(IsWindows() && access((convert = "\\msys64\\mingw64\\bin\\convert.exe"),
                               X_OK) != -1) &&
@@ -227,18 +227,20 @@ static void LoadImageOrDie(const char *path, size_t size, long yn, long xn,
           stderr);
     exit(1);
   }
-  fds[0] = STDIN_FILENO;
-  fds[1] = -1;
-  fds[2] = STDERR_FILENO;
-  pid = spawnve(0, fds, convert,
-                (char *const[]){"convert", path, "-resize",
-                                gc(xasprintf("%ux%u!", xn, yn)), "-colorspace",
-                                "RGB", "-depth", "8", "rgba:-", NULL},
-                environ);
-  CHECK_NE(-1, pid);
-  ReadAll(fds[1], RGB, size);
-  CHECK_NE(-1, close(fds[1]));
+  sprintf(dim, "%ux%u!", xn, yn);
+  CHECK_NE(-1, pipe2(pipefds, O_CLOEXEC));
+  if (!(pid = vfork())) {
+    dup2(pipefds[1], 1);
+    execv(convert,
+          (char *const[]){"convert", path, "-resize", dim, "-colorspace", "RGB",
+                          "-depth", "8", "rgba:-", NULL});
+    abort();
+  }
+  close(pipefds[1]);
+  ReadAll(pipefds[0], RGB, size);
+  close(pipefds[0]);
   CHECK_NE(-1, waitpid(pid, &ws, 0));
+  CHECK(WIFEXITED(ws));
   CHECK_EQ(0, WEXITSTATUS(ws));
 }
 

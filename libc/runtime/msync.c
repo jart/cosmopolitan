@@ -26,7 +26,8 @@
 /**
  * Synchronize memory mapping changes to disk.
  *
- * Without this, there's no guarantee memory is written back to disk.
+ * Without this, there's no guarantee memory is written back to disk. In
+ * practice, what that means is just Windows NT.
  *
  * @param flags needs MS_ASYNC or MS_SYNC and can have MS_INVALIDATE
  * @return 0 on success or -1 w/ errno

@@ -28,7 +28,8 @@ struct SprintfStr {
   size_t n;
 };
 
-static int vsnprintfputchar(unsigned char c, struct SprintfStr *str) {
+static noinstrument int vsnprintfputchar(unsigned char c,
+                                         struct SprintfStr *str) {
   if (str->i < str->n) str->p[str->i] = c;
   str->i++;
   return 0;
@@ -44,6 +45,8 @@ static int vsnprintfputchar(unsigned char c, struct SprintfStr *str) {
  *     if the output buffer wasn't passed, or was too short, then the
  *     number of characters that *would* have been written is returned
  * @see palandprintf() and printf() for detailed documentation
+ * @asyncsignalsafe
+ * @vforksafe
  */
 int(vsnprintf)(char *buf, size_t size, const char *fmt, va_list va) {
   struct SprintfStr str = {buf, 0, size};

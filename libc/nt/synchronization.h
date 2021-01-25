@@ -50,6 +50,8 @@ COSMOPOLITAN_C_START_
 typedef void (*NtTimerapcroutine)(void *lpArgToCompletionRoutine,
                                   uint32_t dwTimerLowValue,
                                   uint32_t dwTimerHighValue);
+typedef void (*NtWaitOrTimerCallback)(void *lpParameter,
+                                      bool32 TimerOrWaitFired);
 
 void Sleep(uint32_t dwMilliseconds);
 uint32_t SleepEx(uint32_t dwMilliseconds, bool32 bAlertable);
@@ -68,6 +70,10 @@ uint32_t WaitForSingleObjectEx(int64_t hHandle, uint32_t dwMilliseconds,
 uint32_t WaitForMultipleObjectsEx(unsigned int nCount, const int64_t *lpHandles,
                                   bool32 bWaitAll, uint32_t dwMilliseconds,
                                   bool32 bAlertable);
+bool32 RegisterWaitForSingleObject(int64_t *phNewWaitObject, int64_t hObject,
+                                   NtWaitOrTimerCallback Callback,
+                                   void *Context, uint32_t dwMilliseconds,
+                                   uint32_t dwFlags);
 
 int64_t CreateWaitableTimer(struct NtSecurityAttributes *lpTimerAttributes,
                             bool32 bManualReset, const char16_t *lpTimerName);

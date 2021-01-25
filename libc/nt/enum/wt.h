@@ -1,0 +1,10 @@
+#ifndef COSMOPOLITAN_LIBC_NT_ENUM_WT_H_
+#define COSMOPOLITAN_LIBC_NT_ENUM_WT_H_
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+#define kNtWtExecuteonlyonce 8
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_LIBC_NT_ENUM_WT_H_ */

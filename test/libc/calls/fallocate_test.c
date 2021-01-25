@@ -38,13 +38,16 @@ TEST(fallocate_000, setup) {
 }
 
 TEST(fallocate_010, testBadFileDescriptor) {
-  if (IsFreebsd()) return; /* TODO: FreeBSD failing to set carry flag bug */
-  ASSERT_EQ(-1, fallocate(/*RHEL*/ 5, 0, 0, 1));
-  if (errno == ENOSYS) exit(0);
+  if (IsOpenbsd()) return; /* ENOSYS */
+  if (IsFreebsd()) return; /* TODO: Where's my carry flag FreeBSD? */
+  close(70);               /* just in case */
+  ASSERT_EQ(-1, fallocate(/*RHEL*/ 70, 0, 0, 1));
+  if (errno == ENOSYS) exit(0); /* RHEL5 */
   EXPECT_EQ(EBADF, errno);
 }
 
 TEST(fallocate_020, test) {
+  if (IsOpenbsd()) return; /* ENOSYS */
   path = gc(xasprintf("o/tmp/%s.%d", program_invocation_short_name));
   ASSERT_NE(-1, (fd = creat(path, 0755)));
   ASSERT_EQ(5, write(fd, "hello", 5));
@@ -60,6 +63,8 @@ TEST(fallocate_020, test) {
 }
 
 TEST(fallocate_020, testSparseFile) {
+  if (IsOpenbsd()) return; /* ENOSYS */
+  if (IsWindows()) return; /* TODO */
   ASSERT_NE(-1, stat("o", &st));
   emptyspace = rounddown(6 * 1000 * 1000 * 1000, st.st_blksize);
   physicalspace = roundup(4096, st.st_blksize);

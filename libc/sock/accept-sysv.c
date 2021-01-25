@@ -21,7 +21,7 @@
 
 int accept$sysv(int server, void *addr, uint32_t *addrsize) {
   int client;
-  if ((client = __accept$sysv(server, addr, addrsize)) != -1 && IsBsd()) {
+  if ((client = __accept$sysv(server, addr, addrsize, 0)) != -1 && IsBsd()) {
     sockaddr2linux(addr);
   }
   return client;

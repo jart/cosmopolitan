@@ -25,27 +25,30 @@
 
 textwindows int fcntl$nt(int fd, int cmd, unsigned arg) {
   uint32_t flags;
-  if (!__isfdkind(fd, kFdFile)) return ebadf();
-  switch (cmd) {
-    case F_GETFL:
-      return g_fds.p[fd].flags;
-    case F_SETFL:
-      return (g_fds.p[fd].flags = arg);
-    case F_GETFD:
-      if (g_fds.p[fd].flags & O_CLOEXEC) {
-        return FD_CLOEXEC;
-      } else {
-        return 0;
-      }
-    case F_SETFD:
-      if (arg & O_CLOEXEC) {
-        g_fds.p[fd].flags |= O_CLOEXEC;
-        return FD_CLOEXEC;
-      } else {
-        g_fds.p[fd].flags &= ~O_CLOEXEC;
-        return 0;
-      }
-    default:
-      return 0; /* TODO(jart): Implement me. */
+  if (__isfdkind(fd, kFdFile) || __isfdkind(fd, kFdSocket)) {
+    switch (cmd) {
+      case F_GETFL:
+        return g_fds.p[fd].flags;
+      case F_SETFL:
+        return (g_fds.p[fd].flags = arg);
+      case F_GETFD:
+        if (g_fds.p[fd].flags & O_CLOEXEC) {
+          return FD_CLOEXEC;
+        } else {
+          return 0;
+        }
+      case F_SETFD:
+        if (arg & O_CLOEXEC) {
+          g_fds.p[fd].flags |= O_CLOEXEC;
+          return FD_CLOEXEC;
+        } else {
+          g_fds.p[fd].flags &= ~O_CLOEXEC;
+          return 0;
+        }
+      default:
+        return 0; /* TODO(jart): Implement me. */
+    }
+  } else {
+    return ebadf();
   }
 }

@@ -23,4 +23,4 @@
 pread$sysv:
 	mov	%rcx,%r8			# openbsd:pad
 	jmp	__pread$sysv
-	.endfn	pread$sysv,globl
+	.endfn	pread$sysv,globl,hidden

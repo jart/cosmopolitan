@@ -37,6 +37,8 @@
  * @return [1..size] bytes on success, 0 on EOF, or -1 w/ errno; with
  *     exception of size==0, in which case return zero means no error
  * @see pwrite(), write()
+ * @asyncsignalsafe
+ * @vforksafe
  */
 ssize_t pread(int fd, void *buf, size_t size, int64_t offset) {
   ssize_t rc;

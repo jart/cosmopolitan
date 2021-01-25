@@ -19,15 +19,16 @@
 #include "libc/macros.h"
 
 /	Returns prefix length, consisting of chars not in reject.
-/	a.k.a. Return index of first byte that's in charset.
 /
 /	@param	rdi is string
 /	@param	rsi is reject nul-terminated character set
+/	@return	rax is index of first byte in charset
 /	@see	strspn(), strtok_r()
 /	@asyncsignalsafe
 strcspn:
 	push	%rbp
 	mov	%rsp,%rbp
+	.profilable
 	sub	$16,%rsp
 	push	%rdi
 	mov	%rsi,%rdi

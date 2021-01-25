@@ -22,28 +22,50 @@
 /	Forks process without copying page tables.
 /
 /	This is the same as fork() except it's optimized for the case
-/	where the caller invokes exec() immediately afterwards.
+/	where the caller invokes execve() immediately afterwards. You
+/	can also call functions like close(), dup2(), etc. You cannot
+/	call read() safely but you can call pread(). Call _exit() but
+/	don't call exit(). Look for the vforksafe function annotation
 /
 /	@return	pid of child process or 0 if forked process
 /	@returnstwice
-vfork:	testb	IsWindows()
+/	@vforksafe
+vfork:
+#if SupportsWindows()
+	testb	IsWindows()
 	jnz	fork$nt
+#endif
 	mov	__NR_vfork(%rip),%eax
-	cmp	$-1,%eax
-	je	systemfive.enosys
-	pop	%rsi
+	pop	%rsi			# saves return address in a register
+#if SupportsBsd()
 	testb	IsBsd()
 	jnz	vfork.bsd
+#endif
 	syscall
-	push	%rsi
-	cmp	$-4095,%rax
+	push	%rsi			# note it happens twice in same page
+	cmp	$-4095,%eax
 	jae	systemfive.error
-	ret
+0:	ezlea	__vforked,di
+	test	%eax,%eax
+	jz	1f
+	decl	(%rdi)
+	jns	2f			# openbsd doesn't actually share mem
+1:	incl	(%rdi)
+2:	ret
 	.endfn	vfork,globl
 
+#if SupportsBsd()
 vfork.bsd:
 	syscall
 	push	%rsi
 	jc	systemfive.errno
-	ret
+#if SupportsXnu()
+	testb	IsXnu()
+	jz	0b
+	neg	%edx			# edx is 0 for parent and 1 for child
+	not	%edx			# eax always returned with childs pid
+	and	%edx,%eax
+#endif /* XNU */
+	jmp	0b
 	.endfn	vfork.bsd
+#endif /* BSD */

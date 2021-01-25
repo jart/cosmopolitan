@@ -16,9 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
-#include "libc/nexgen32e/x86feature.h"
-#include "libc/str/internal.h"
 #include "libc/str/str.h"
 
 /**
@@ -31,29 +28,5 @@
  * @see memmem()
  */
 char *strstr(const char *haystack, const char *needle) {
-  size_t i;
-  if (needle[0]) {
-    if (needle[1]) {
-      for (;;) {
-#if 0 /* todo: fix me */
-        if (!((uintptr_t)haystack & 15) && X86_HAVE(SSE4_2) &&
-            (((uintptr_t)needle + strlen(needle)) & 0xfff) <= 0xff0) {
-          return strstr$sse42(haystack, needle);
-        }
-#endif
-        for (i = 0;;) {
-          if (!needle[i]) return haystack;
-          if (!haystack[i]) break;
-          if (needle[i] != haystack[i]) break;
-          ++i;
-        }
-        if (!*haystack++) break;
-      }
-      return NULL;
-    } else {
-      return strchr(haystack, needle[0]);
-    }
-  } else {
-    return haystack;
-  }
+  return memmem(haystack, strlen(haystack), needle, strlen(needle));
 }

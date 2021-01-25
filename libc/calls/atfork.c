@@ -29,9 +29,10 @@ static struct AtFork {
 } g_atfork;
 
 /**
- * Registers function to be called when PID changes.
+ * Registers function to be called by fork() in child.
  *
  * @return 0 on success, or -1 w/ errno
+ * @note vfork() won't invoke callbacks
  */
 int atfork(void *fn, void *arg) {
   if (g_atfork.i == ARRAYLEN(g_atfork.p)) return enomem();
@@ -40,9 +41,9 @@ int atfork(void *fn, void *arg) {
 }
 
 /**
- * Triggers atfork() callbacks.
+ * Triggers callbacks registered by atfork().
  *
- * Only fork() should call this.
+ * @note only fork() should call this
  */
 void __onfork(void) {
   size_t i;

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/macros.h"
 #include "libc/nt/struct/pollfd.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
@@ -24,9 +25,10 @@
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int poll$nt(struct pollfd *fds, uint64_t nfds, int32_t timeout_ms) {
+textwindows int poll$nt(struct pollfd *fds, uint64_t nfds, uint64_t timeoutms) {
   int got;
   size_t i;
+  uint64_t waitfor;
   struct pollfd$nt ntfds[64];
   if (nfds > 64) return einval();
   for (i = 0; i < nfds; ++i) {
@@ -34,12 +36,16 @@ textwindows int poll$nt(struct pollfd *fds, uint64_t nfds, int32_t timeout_ms) {
     ntfds[i].handle = g_fds.p[fds[i].fd].handle;
     ntfds[i].events = fds[i].events & (POLLPRI | POLLIN | POLLOUT);
   }
-  if ((got = WSAPoll(ntfds, nfds, timeout_ms)) != -1) {
-    for (i = 0; i < nfds; ++i) {
-      fds[i].revents = ntfds[i].revents;
+  for (;;) {
+    waitfor = MIN(1000, timeoutms); /* for ctrl+c */
+    if ((got = WSAPoll(ntfds, nfds, waitfor)) != -1) {
+      if (!got && (timeoutms -= waitfor)) continue;
+      for (i = 0; i < nfds; ++i) {
+        fds[i].revents = ntfds[i].revents;
+      }
+      return got;
+    } else {
+      return __winsockerr();
     }
-    return got;
-  } else {
-    return __winsockerr();
   }
 }

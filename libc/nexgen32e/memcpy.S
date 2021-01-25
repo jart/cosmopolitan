@@ -55,6 +55,7 @@ memcpy:	mov	%rdi,%rax
 /	@mode	long
 	.align	16
 MemCpy:	.leafprologue
+	.profilable
 	mov	$.Lmemcpytab.ro.size,%ecx
 	cmp	%rcx,%rdx
 	cmovb	%rdx,%rcx

@@ -153,6 +153,7 @@ MATHEMATICAL =								\
 DEFAULT_CPPFLAGS =							\
 	-DIMAGE_BASE_VIRTUAL=$(IMAGE_BASE_VIRTUAL)			\
 	-nostdinc							\
+	-iquote -							\
 	-iquote .
 
 DEFAULT_CFLAGS =							\

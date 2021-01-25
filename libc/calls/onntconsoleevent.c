@@ -45,5 +45,6 @@ textwindows bool32 onntconsoleevent(uint32_t CtrlType) {
   }
   memset(&info, 0, sizeof(info));
   info.si_signo = sig;
-  return __sigenter(sig, &info, NULL);
+  __sigenter(sig, &info, NULL);
+  return true;
 }

@@ -27,6 +27,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
 STATIC_YOINK("__isfdkind");
@@ -41,10 +42,14 @@ const char *testlib_showerror_symbol;
 testonly void testlib_showerror_(int line, const char *wantcode,
                                  const char *gotcode, char *FREED_want,
                                  char *FREED_got, const char *fmt, ...) {
+  int err;
   va_list va;
+  char hostname[32];
+  err = errno;
 
-  getpid$sysv(); /* make strace easier to read */
-  getpid$sysv();
+  /* make strace easier to read */
+  getpid();
+  getpid();
 
   fflush(stdout);
   fflush(stderr);
@@ -77,10 +82,12 @@ testonly void testlib_showerror_(int line, const char *wantcode,
     fputc('\n', stderr);
   }
 
+  strcpy(hostname, "unknown");
+  gethostname(hostname, sizeof(hostname));
   fprintf(stderr,
           "\t%s%s\n"
-          "\t%s%s\n",
-          SUBTLE, strerror(errno), program_invocation_name, RESET);
+          "\t%s @ %s%s\n",
+          SUBTLE, strerror(err), program_invocation_name, hostname, RESET);
 
   free_s(&FREED_want);
   free_s(&FREED_got);

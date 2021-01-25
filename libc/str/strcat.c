@@ -26,4 +26,6 @@
  * @return 𝑑
  * @asyncsignalsafe
  */
-char *strcat(char *d, const char *s) { return strcpy(d + strlen(d), s); }
+char *strcat(char *d, const char *s) {
+  return strcpy(d + strlen(d), s);
+}

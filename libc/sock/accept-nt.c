@@ -16,35 +16,39 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/nt/files.h"
+#include "libc/nt/struct/pollfd.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/yoink.inc"
 #include "libc/sysv/consts/fio.h"
+#include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int accept$nt(struct Fd *fd, void *addr, uint32_t *addrsize,
                           int flags) {
+  int64_t h;
   int client;
   uint32_t yes;
-  assert(fd->kind == kFdSocket);
-  if ((client = __getemptyfd()) == -1) return -1;
-  if ((g_fds.p[client].handle = WSAAccept(fd->handle, addr, (int32_t *)addrsize,
-                                          NULL, NULL)) != -1) {
-    if (flags & SOCK_NONBLOCK) {
-      yes = 1;
-      if (__ioctlsocket$nt(g_fds.p[client].handle, FIONBIO, &yes) == -1) {
-        __closesocket$nt(g_fds.p[client].handle);
-        return __winsockerr();
+  for (;;) {
+    if (!WSAPoll(&(struct pollfd$nt){fd->handle, POLLIN}, 1, 1000)) continue;
+    if ((client = __getemptyfd()) == -1) return -1;
+    if ((h = WSAAccept(fd->handle, addr, (int32_t *)addrsize, 0, 0)) != -1) {
+      if (flags & SOCK_NONBLOCK) {
+        yes = 1;
+        if (__ioctlsocket$nt(g_fds.p[client].handle, FIONBIO, &yes) == -1) {
+          __closesocket$nt(g_fds.p[client].handle);
+          return __winsockerr();
+        }
       }
+      g_fds.p[client].kind = kFdSocket;
+      g_fds.p[client].flags = flags;
+      g_fds.p[client].handle = h;
+      return client;
+    } else {
+      return __winsockerr();
     }
-    g_fds.p[client].kind = kFdSocket;
-    g_fds.p[client].flags = flags;
-    return client;
-  } else {
-    return __winsockerr();
   }
 }

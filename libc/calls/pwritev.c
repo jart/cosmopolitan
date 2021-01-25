@@ -38,6 +38,8 @@
  * @param count is recommended to be 16 or fewer; if it exceeds IOV_MAX
  *     then the extra buffers are simply ignored
  * @return number of bytes actually sent, or -1 w/ errno
+ * @asyncsignalsafe
+ * @vforksafe
  */
 ssize_t pwritev(int fd, const struct iovec *iovec, int count, int64_t off) {
   static bool once, demodernize;

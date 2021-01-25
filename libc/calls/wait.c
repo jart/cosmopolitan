@@ -25,6 +25,7 @@
  *     may be inspected using WEEXITSTATUS(), etc.
  * @return process id of terminated child or -1 w/ errno
  * @asyncsignalsafe
+ * @vforksafe
  */
 int wait(int *opt_out_wstatus) {
   return wait4(-1, opt_out_wstatus, 0, NULL);

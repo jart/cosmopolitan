@@ -27,7 +27,6 @@ NET_HTTP_A_CHECKS =				\
 	$(NET_HTTP_A_HDRS:%=o/$(MODE)/%.ok)
 
 NET_HTTP_A_DIRECTDEPS =				\
-	LIBC_ALG				\
 	LIBC_CALLS				\
 	LIBC_FMT				\
 	LIBC_INTRIN				\

@@ -18,11 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/errno.h"
+#include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
-
-#define GETDELIM_MAX 65536
 
 /**
  * Reads string from stream.
@@ -42,6 +41,8 @@ ssize_t getdelim(char **line, size_t *n, int delim, FILE *f) {
   assert((*line && *n) || (!*line && !*n));
   ssize_t rc = -1;
   size_t i = 0;
+  char *p2;
+  size_t n2;
   int c;
   for (;;) {
     if ((c = getc(f)) == -1) {
@@ -49,9 +50,16 @@ ssize_t getdelim(char **line, size_t *n, int delim, FILE *f) {
       if (feof(f) && i) rc = i;
       break;
     }
-    if (i + 2 >= *n && !__grow(line, n, 1, 0)) {
-      __fseterrno(f);
-      break;
+    if (i + 2 > *n) {
+      n2 = MAX(11, *n);
+      n2 += n2 >> 1;
+      if ((p2 = realloc(*line, n2))) {
+        *line = p2;
+        *n = n2;
+      } else {
+        __fseterrno(f);
+        break;
+      }
     }
     if (((*line)[i++] = c) == delim) {
       rc = i;

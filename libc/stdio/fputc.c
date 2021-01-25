@@ -20,7 +20,7 @@
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 
-static noinline int __fputc(int c, FILE *f) {
+static noinstrument noinline int __fputc(int c, FILE *f) {
   if (f->beg < f->size) {
     f->buf[f->beg++] = c;
     if (f->beg == f->size || f->bufmode == _IONBF ||

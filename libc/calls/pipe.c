@@ -22,7 +22,7 @@
 #include "libc/sysv/errfuns.h"
 
 /**
- * Creates file-less file descriptors for inter-process communication.
+ * Creates file-less file descriptors for interprocess communication.
  *
  * @param fd is (reader, writer)
  * @return 0 on success or -1 w/ errno

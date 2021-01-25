@@ -4689,7 +4689,7 @@ imp	'RegisterTouchWindow'					RegisterTouchWindow					user32		2275
 imp	'RegisterUserApiHook'					RegisterUserApiHook					user32		2276
 imp	'RegisterWaitChainCOMCallback'				RegisterWaitChainCOMCallback				advapi32	1695
 imp	'RegisterWaitForInputIdle'				RegisterWaitForInputIdle				kernel32	1190
-imp	'RegisterWaitForSingleObject'				RegisterWaitForSingleObject				kernel32	1191
+imp	'RegisterWaitForSingleObject'				RegisterWaitForSingleObject				kernel32	1191	6
 imp	'RegisterWaitForSingleObjectEx'				RegisterWaitForSingleObjectEx				KernelBase	1389
 imp	'RegisterWaitUntilOOBECompleted'			RegisterWaitUntilOOBECompleted				kernel32	1193
 imp	'RegisterWindowMessageA'				RegisterWindowMessageA					user32		2277

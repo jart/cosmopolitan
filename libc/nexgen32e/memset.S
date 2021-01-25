@@ -46,17 +46,15 @@ memset:	mov	%rdi,%rax
 /	@mode	long
 MemSet:	.leafprologue
 	.profilable
-	push	%rbx
-	movd	%esi,%xmm3
 	mov	$.Lmemsettab.ro.size,%ecx
 	cmp	%rcx,%rdx
 	cmovb	%rdx,%rcx
-	ezlea	memsettab,bx
-	jmp	*(%rbx,%rcx,8)
+	jmp	*memsettab(,%rcx,8)
 .Lanchorpoint:
 .L32r:	cmp	$1024,%rdx
 	jae	.Lerms
-.L32:	vpbroadcastb %xmm3,%ymm3
+.L32:	vmovd	%esi,%xmm3
+	vpbroadcastb %xmm3,%ymm3
 	mov	$32,%ecx
 1:	lea	32(%rcx),%rcx
 	vmovdqu	%ymm3,-64(%rdi,%rcx)
@@ -67,7 +65,8 @@ MemSet:	.leafprologue
 	jmp	.L0
 .L16r:	cmp	$1024,%rdx
 	jae	.Lerms
-.L16:	pbroadcastb %xmm3
+.L16:	movd	%esi,%xmm3
+	pbroadcastb %xmm3
 	mov	$16,%ecx
 1:	lea	16(%rcx),%rcx
 	movdqu	%xmm3,-32(%rdi,%rcx)
@@ -75,19 +74,16 @@ MemSet:	.leafprologue
 	ja	1b
 	movdqu	%xmm3,-16(%rdi,%rdx)
 	pxor	%xmm3,%xmm3
-.L0:	pop	%rbx
-	.leafepilogue
-.L8:	movzbq	%sil,%rbx
-	mov	$0x0101010101010101,%rcx
-	imul	%rcx,%rbx
-	mov	%rbx,(%rdi)
-	mov	%rbx,-8(%rdi,%rdx)
+.L0:	.leafepilogue
+.L8:	movzbl	%sil,%ecx
+	imul	.Lb8(%rip),%rcx
+	mov	%rcx,(%rdi)
+	mov	%rcx,-8(%rdi,%rdx)
 	jmp	.L0
-.L4:	movzbl	%sil,%ebx
-	mov	$0x01010101,%ecx
-	imul	%ecx,%ebx
-	mov	%ebx,(%rdi)
-	mov	%ebx,-4(%rdi,%rdx)
+.L4:	movzbl	%sil,%ecx
+	imul	$0x01010101,%ecx,%ecx
+	mov	%ecx,(%rdi)
+	mov	%ecx,-4(%rdi,%rdx)
 	jmp	.L0
 .L3:	mov	%sil,2(%rdi)
 .L2:	mov	%sil,1(%rdi)
@@ -102,6 +98,10 @@ MemSet:	.leafprologue
 	pop	%rax
 	jmp	.L0
 	.endfn	MemSet,globl,hidden
+
+	.rodata.cst8
+.Lb8:	.quad	0x0101010101010101
+	.previous
 
 	.initro 300,_init_memset
 memsettab.ro:

@@ -30,7 +30,6 @@
 #include "libc/bits/safemacros.h"
 #include "libc/bits/xchg.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/hefty/spawn.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/sigbits.h"
@@ -483,22 +482,18 @@ static int WriteAudio(int fd, const void *data, size_t size, int deadlinems) {
 }
 
 static bool TrySpeaker(const char *prog, char *const *args) {
-  int rc;
-  int fds[3];
-  fds[0] = -1;
-  fds[1] = fileno(g_logfile);
-  fds[2] = fileno(g_logfile);
-  LOGF("spawning %s", prog);
-  if ((rc = spawnve(0, fds, prog, args, environ)) != -1) {
-    playpid_ = rc;
-    playfd_ = fds[0];
-    /* CHECK_NE(-1, fcntl(playfd_, F_SETFL, O_NONBLOCK)); */
-    LOGF("spawned %s pid=%d fd=%d", prog, playpid_, playfd_);
-    return true;
-  } else {
-    WARNF("couldn't spawn %s", prog);
-    return false;
+  int pipefds[2];
+  CHECK_NE(-1, pipe2(pipefds, O_CLOEXEC));
+  if (!(playpid_ = fork())) {
+    dup2(pipefds[0], 0);
+    dup2(fileno(g_logfile), 1);
+    dup2(fileno(g_logfile), 2);
+    close(fileno(g_logfile));
+    execv(prog, args);
+    abort();
   }
+  playfd_ = pipefds[1];
+  return true;
 }
 
 static bool TrySox(void) {
@@ -1340,7 +1335,6 @@ static void OnExit(void) {
   ttyidentclear(&ti_);
   close_s(&infd_);
   close_s(&outfd_);
-  close_s(&nullfd_);
   bfree(&graphic_[0].b);
   bfree(&graphic_[1].b);
   bfree(&vtframe_[0].b);
@@ -1483,7 +1477,6 @@ int main(int argc, char *argv[]) {
   ffplay_ = commandvenv("FFPLAY", "ffplay");
   infd_ = STDIN_FILENO;
   outfd_ = STDOUT_FILENO;
-  nullfd_ = open("/dev/null", O_APPEND | O_RDWR);
   if (!setjmp(jb_)) {
     xsigaction(SIGINT, OnCtrlC, 0, 0, NULL);
     xsigaction(SIGHUP, OnCtrlC, 0, 0, NULL);

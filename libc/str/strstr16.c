@@ -16,22 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
-#include "libc/dce.h"
-#include "libc/str/internal.h"
 #include "libc/str/str.h"
 
-#undef memmem
-#undef strlen
-#undef strstr
-#undef strchr
-
-#define char char16_t
-#define memmem memmem16
-#define strlen strlen16
-#define strstr strstr16
-#define strchr strchr16
-#define strstr$sse42 strstr16$sse42
-#define tinystrstr tinystrstr16
-
-#include "libc/str/strstr.c"
+/**
+ * Searches for substring.
+ *
+ * @param haystack is the search area, as a NUL-terminated string
+ * @param needle is the desired substring, also NUL-terminated
+ * @return pointer to first substring within haystack, or NULL
+ * @asyncsignalsafe
+ * @see memmem()
+ */
+char16_t *strstr16(const char16_t *haystack, const char16_t *needle) {
+  return memmem(haystack, strlen16(haystack) * sizeof(char16_t), needle,
+                strlen16(needle) * sizeof(char16_t));
+}

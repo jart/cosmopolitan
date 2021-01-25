@@ -240,6 +240,7 @@ TEST(mul64, test) {
 }
 
 TEST(idiv8, test) {
+  if (IsWindows()) return; /* TODO */
   static const uint8_t A[] = {0x00, 0x01, 0x80, 0x7F, 0x81, 0x7E, 0xFF, 0xBF};
   uint16_t remquo;
   bool gotthrow, gotsigfpe;
@@ -279,6 +280,7 @@ TEST(idiv8, test) {
 }
 
 TEST(idiv16, test) {
+  if (IsWindows()) return; /* TODO */
   static const uint16_t A[] = {0x0000, 0x0001, 0x8000, 0x7FFF,
                                0x8001, 0x7FFE, 0xFFFF, 0xBeef};
   bool gotthrow, gotsigfpe;
@@ -316,6 +318,7 @@ TEST(idiv16, test) {
 }
 
 TEST(idiv32, test) {
+  if (IsWindows()) return; /* TODO */
   static const uint32_t A[] = {0x00000000, 0x00000001, 0x80000000, 0x7FFFFFFF,
                                0x80000001, 0x7FFFFFFE, 0xFFFFFFFF, 0xDeadBeef};
   bool gotthrow, gotsigfpe;
@@ -353,6 +356,7 @@ TEST(idiv32, test) {
 }
 
 TEST(idiv64, test) {
+  if (IsWindows()) return; /* TODO */
   static const uint64_t A[] = {0x0000000000000000, 0x0000000000000001,
                                0x8000000000000000, 0x7FFFFFFFFFFFFFFF,
                                0x8000000000000001, 0x7FFFFFFFFFFFFFFE,
@@ -392,6 +396,7 @@ TEST(idiv64, test) {
 }
 
 TEST(div, test) {
+  if (IsWindows()) return; /* TODO */
   static const uint8_t A[] = {0x00, 0x01, 0x80, 0x7F, 0x81, 0x7E, 0xFF, 0xBF};
   uint16_t remquo;
   bool gotthrow, gotsigfpe;
@@ -431,6 +436,7 @@ TEST(div, test) {
 }
 
 TEST(div16, test) {
+  if (IsWindows()) return; /* TODO */
   static const uint16_t A[] = {0x0000, 0x0001, 0x8000, 0x7FFF,
                                0x8001, 0x7FFE, 0xFFFF, 0xBeef};
   bool gotthrow, gotsigfpe;
@@ -468,6 +474,7 @@ TEST(div16, test) {
 }
 
 TEST(div32, test) {
+  if (IsWindows()) return; /* TODO */
   static const uint32_t A[] = {0x00000000, 0x00000001, 0x80000000, 0x7FFFFFFF,
                                0x80000001, 0x7FFFFFFE, 0xFFFFFFFF, 0xDeadBeef};
   bool gotthrow, gotsigfpe;
@@ -505,6 +512,7 @@ TEST(div32, test) {
 }
 
 TEST(div64, test) {
+  if (IsWindows()) return; /* TODO */
   static const uint64_t A[] = {0x0000000000000000, 0x0000000000000001,
                                0x8000000000000000, 0x7FFFFFFFFFFFFFFF,
                                0x8000000000000001, 0x7FFFFFFFFFFFFFFE,

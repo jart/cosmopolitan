@@ -31,16 +31,11 @@ int32_t dup3$sysv(int32_t oldfd, int32_t newfd, int flags) {
     if ((fd == -1 && errno == ENOSYS) || fd == __NR_dup3_linux) {
       demodernize = true;
       errno = olderr;
-      goto OldSkool;
+    } else {
+      return fd;
     }
-  } else if (demodernize) {
-    goto OldSkool;
-  } else {
-    fd = __dup3$sysv(oldfd, newfd, flags);
+  } else if (!demodernize) {
+    return __dup3$sysv(oldfd, newfd, flags);
   }
-  return fd;
-OldSkool:
-  fd = dup2$sysv(oldfd, newfd);
-  if (flags) fd = fixupnewfd$sysv(fd, flags);
-  return fd;
+  return fixupnewfd$sysv(dup2$sysv(oldfd, newfd), flags);
 }

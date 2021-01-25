@@ -16,13 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/stat.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/sysv/consts/s.h"
 
 /**
  * Returns true if file exists and is executable.
+ *
  * @see access(exe, X_OK) which is more accurate on NT
+ * @asyncsignalsafe
  */
 bool isexecutable(const char *path) {
   struct stat st;

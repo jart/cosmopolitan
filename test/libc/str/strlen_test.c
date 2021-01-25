@@ -136,7 +136,7 @@ TEST(tinystrnlen16, test) {
 
 BENCH(strlen, bench) {
   extern size_t strlen_(const char *) asm("strlen");
-  static char b[1024];
+  static char b[2048];
   memset(b, -1, sizeof(b) - 1);
   EZBENCH2("strlen 1", donothing, strlen_(""));
   EZBENCH2("strlen 2", donothing, strlen_("1"));

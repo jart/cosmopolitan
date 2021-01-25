@@ -115,7 +115,11 @@ relegated static void ShowGeneralRegisters(int fd, ucontext_t *ctx) {
               ctx->uc_mcontext.gregs[(unsigned)kGregOrder[i]]);
     if (++j == 3) {
       j = 0;
-      memcpy(&st, (char *)&ctx->fpustate.st[k], sizeof(st));
+      if (ctx->uc_mcontext.fpregs) {
+        memcpy(&st, (char *)&ctx->uc_mcontext.fpregs->st[k], sizeof(st));
+      } else {
+        memset(&st, 0, sizeof(st));
+      }
       (dprintf)(fd, " %s(%zu) %Lf", "ST", k, st);
       ++k;
       write(fd, "\r\n", 2);
@@ -126,12 +130,15 @@ relegated static void ShowGeneralRegisters(int fd, ucontext_t *ctx) {
 
 relegated static void ShowSseRegisters(int fd, ucontext_t *ctx) {
   size_t i;
-  write(fd, "\r\n\r\n", 4);
-  for (i = 0; i < 8; ++i) {
-    (dprintf)(fd, VEIL("r", "%s%-2zu %016lx%016lx %s%-2d %016lx%016lx\r\n"),
-              "XMM", i + 0, ctx->fpustate.xmm[i + 0].u64[0],
-              ctx->fpustate.xmm[i + 0].u64[1], "XMM", i + 8,
-              ctx->fpustate.xmm[i + 8].u64[0], ctx->fpustate.xmm[i + 8].u64[1]);
+  if (ctx->uc_mcontext.fpregs) {
+    write(fd, "\r\n\r\n", 4);
+    for (i = 0; i < 8; ++i) {
+      (dprintf)(fd, VEIL("r", "%s%-2zu %016lx%016lx %s%-2d %016lx%016lx\r\n"),
+                "XMM", i + 0, ctx->uc_mcontext.fpregs->xmm[i + 0].u64[1],
+                ctx->uc_mcontext.fpregs->xmm[i + 0].u64[0], "XMM", i + 8,
+                ctx->uc_mcontext.fpregs->xmm[i + 8].u64[1],
+                ctx->uc_mcontext.fpregs->xmm[i + 8].u64[0]);
+    }
   }
 }
 
@@ -153,10 +160,14 @@ relegated static void ShowMemoryMappings(int outfd) {
 relegated static void ShowCrashReport(int err, int fd, int sig,
                                       ucontext_t *ctx) {
   int i;
+  char hostname[64];
   struct utsname names;
-  (dprintf)(fd, VEIL("r", "\r\n%serror%s: Uncaught SIG%s\r\n  %s\r\n  %s\r\n"),
-            RED2, RESET, TinyStrSignal(sig), getauxval(AT_EXECFN),
-            strerror(err));
+  strcpy(hostname, "unknown");
+  gethostname(hostname, sizeof(hostname));
+  (dprintf)(
+      fd, VEIL("r", "\r\n%serror%s: Uncaught SIG%s on %s\r\n  %s\r\n  %s\r\n"),
+      RED2, RESET, TinyStrSignal(sig), hostname, getauxval(AT_EXECFN),
+      strerror(err));
   if (uname(&names) != -1) {
     (dprintf)(fd, VEIL("r", "  %s %s %s %s\r\n"), names.sysname, names.nodename,
               names.release, names.version);

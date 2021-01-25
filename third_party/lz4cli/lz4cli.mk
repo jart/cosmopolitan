@@ -35,7 +35,6 @@ o/$(MODE)/third_party/lz4cli/datagen.o:			\
 		-DSTACK_FRAME_UNLIMITED
 
 THIRD_PARTY_LZ4CLI_DIRECTDEPS =				\
-	LIBC_CALLS_HEFTY				\
 	LIBC_INTRIN					\
 	LIBC_STDIO					\
 	LIBC_TIME					\

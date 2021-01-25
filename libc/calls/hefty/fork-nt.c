@@ -17,18 +17,24 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/hefty/ntspawn.h"
-#include "libc/calls/hefty/spawn.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/ntspawn.h"
 #include "libc/fmt/itoa.h"
+#include "libc/nexgen32e/nt2sysv.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/enum/startf.h"
+#include "libc/nt/enum/wt.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/signals.h"
+#include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
+#include "libc/runtime/directmap.h"
 #include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -71,9 +77,11 @@ textwindows void WinMainForked(void) {
   jmp_buf jb;
   char16_t *p;
   uint64_t size;
+  uint32_t i, varlen;
+  struct DirectMap dm;
   char16_t var[21 + 1 + 21 + 1];
-  uint32_t i, varlen, protect, access, oldprot;
   varlen = GetEnvironmentVariable(u"_FORK", var, ARRAYLEN(var));
+  SetEnvironmentVariable(u"_FORK", NULL);
   if (!varlen || varlen >= ARRAYLEN(var)) return;
   p = var;
   h = ParseInt(&p);
@@ -84,39 +92,27 @@ textwindows void WinMainForked(void) {
     ReadAll(h, &_mmi.p[i], sizeof(_mmi.p[i]));
     addr = (void *)((uint64_t)_mmi.p[i].x << 16);
     size = ((uint64_t)(_mmi.p[i].y - _mmi.p[i].x) << 16) + FRAMESIZE;
-    switch (_mmi.p[i].prot & (PROT_READ | PROT_WRITE | PROT_EXEC)) {
-      case PROT_READ | PROT_WRITE | PROT_EXEC:
-        protect = kNtPageExecuteReadwrite;
-        access = kNtFileMapRead | kNtFileMapWrite | kNtFileMapExecute;
-        break;
-      case PROT_READ | PROT_WRITE:
-        protect = kNtPageReadwrite;
-        access = kNtFileMapRead | kNtFileMapWrite;
-        break;
-      case PROT_READ:
-        protect = kNtPageReadonly;
-        access = kNtFileMapRead;
-        break;
-      default:
-        protect = kNtPageNoaccess;
-        access = 0;
-        break;
-    }
     if (_mmi.p[i].flags & MAP_PRIVATE) {
-      MapViewOfFileExNuma((_mmi.p[i].h = CreateFileMappingNuma(
-                               -1, NULL, kNtPageExecuteReadwrite, 0, size, NULL,
-                               kNtNumaNoPreferredNode)),
-                          kNtFileMapRead | kNtFileMapWrite | kNtFileMapExecute,
-                          0, 0, size, addr, kNtNumaNoPreferredNode);
+      CloseHandle(_mmi.p[i].h);
+      _mmi.p[i].h =
+          __mmap$nt(addr, size, PROT_READ | PROT_WRITE | PROT_EXEC, -1, 0)
+              .maphandle;
       ReadAll(h, addr, size);
-      VirtualProtect(addr, size, protect, &oldprot);
     } else {
-      MapViewOfFileExNuma(_mmi.p[i].h, access, 0, 0, size, addr,
-                          kNtNumaNoPreferredNode);
+      MapViewOfFileExNuma(
+          _mmi.p[i].h,
+          (_mmi.p[i].prot & PROT_WRITE)
+              ? kNtFileMapWrite | kNtFileMapExecute | kNtFileMapRead
+              : kNtFileMapExecute | kNtFileMapRead,
+          0, 0, size, addr, kNtNumaNoPreferredNode);
     }
   }
   ReadAll(h, _edata, _end - _edata);
   CloseHandle(h);
+  unsetenv("_FORK");
+  if (weaken(__wincrash$nt)) {
+    AddVectoredExceptionHandler(1, (void *)weaken(__wincrash$nt));
+  }
   longjmp(jb, 1);
 }
 
@@ -141,13 +137,18 @@ textwindows int fork$nt(void) {
       startinfo.hStdInput = g_fds.p[0].handle;
       startinfo.hStdOutput = g_fds.p[1].handle;
       startinfo.hStdError = g_fds.p[2].handle;
-      if (ntspawn(g_argv[0], g_argv, environ, &kNtIsInheritable, NULL, true, 0,
-                  NULL, &startinfo, &procinfo) != -1) {
+      if (ntspawn(g_argv, environ, &kNtIsInheritable, NULL, true, 0, NULL,
+                  &startinfo, &procinfo) != -1) {
         CloseHandle(reader);
         CloseHandle(procinfo.hThread);
-        g_fds.p[pid].kind = kFdProcess;
-        g_fds.p[pid].handle = procinfo.hProcess;
-        g_fds.p[pid].flags = O_CLOEXEC;
+        if (weaken(g_sighandrvas) &&
+            weaken(g_sighandrvas)[SIGCHLD] == SIG_IGN) {
+          CloseHandle(procinfo.hProcess);
+        } else {
+          g_fds.p[pid].kind = kFdProcess;
+          g_fds.p[pid].handle = procinfo.hProcess;
+          g_fds.p[pid].flags = O_CLOEXEC;
+        }
         WriteAll(writer, jb, sizeof(jb));
         WriteAll(writer, &_mmi.i, sizeof(_mmi.i));
         for (i = 0; i < _mmi.i; ++i) {

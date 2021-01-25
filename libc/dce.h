@@ -24,7 +24,7 @@
 #define METAL   2
 #define WINDOWS 4
 #define XNU     8
-#define OPENBSD 16 /* 2019-12-11: new openbsd drm might thwart syscall */
+#define OPENBSD 16
 #define FREEBSD 32
 /* #define YOUR_CLOUD_PLATFORM_HERE 64  /\* jtunney@gmail.com *\/ */
 /* #define YOUR_CLOUD_PLATFORM_HERE 128 /\* jtunney@gmail.com *\/ */
@@ -89,6 +89,7 @@
 #define SupportsXnu()     ((SUPPORT_VECTOR & XNU) == XNU)
 #define SupportsFreebsd() ((SUPPORT_VECTOR & FREEBSD) == FREEBSD)
 #define SupportsOpenbsd() ((SUPPORT_VECTOR & OPENBSD) == OPENBSD)
+#define SupportsBsd()     (!!(SUPPORT_VECTOR & (XNU | FREEBSD | OPENBSD)))
 #define SupportsSystemv() \
   ((SUPPORT_VECTOR & (LINUX | METAL | XNU | OPENBSD | FREEBSD)) != 0)
 

@@ -51,6 +51,8 @@ static int vdprintfputchar(int c, struct VdprintfState *df) {
 
 /**
  * Formats string directly to system i/o device.
+ * @asyncsignalsafe
+ * @vforksafe
  */
 int(vdprintf)(int fd, const char *fmt, va_list va) {
   struct VdprintfState df;

@@ -107,6 +107,7 @@
        "note"
        "protip"
        "nxbitsafe"
+       "vforksafe"
        "preinitsafe"
        "asyncsignalsafe"
        "notasyncsignalsafe"

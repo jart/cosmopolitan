@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/hefty/spawn.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/paths.h"
@@ -34,18 +33,18 @@
  *     status that can be accessed using macros like WEXITSTATUS(s)
  */
 int system(const char *cmdline) {
+  int pid, wstatus;
   char comspec[128];
-  int rc, pid, wstatus;
   const char *prog, *arg;
   if (weaken(fflush)) weaken(fflush)(NULL);
   if (cmdline) {
-    if ((pid = fork()) == -1) return -1;
+    if ((pid = vfork()) == -1) return -1;
     if (!pid) {
       strcpy(comspec, kNtSystemDirectory);
       strcat(comspec, "cmd.exe");
       prog = !IsWindows() ? _PATH_BSHELL : comspec;
       arg = !IsWindows() ? "-c" : "/C";
-      execve(prog, (char *const[]){prog, arg, cmdline, NULL}, environ);
+      execv(prog, (char *const[]){prog, arg, cmdline, NULL});
       _exit(errno);
     } else if (wait4(pid, &wstatus, 0, NULL) != -1) {
       return wstatus;

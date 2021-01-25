@@ -86,7 +86,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   long double t2;
   const char *prog;
   int64_t secs, nsec, dots;
-  char timebuf[32], *timebufp;
+  char buf32[32], *buf32p;
   if (!f) f = g_logfile;
   if (fileno(f) == -1) return;
   t2 = nowl();
@@ -94,17 +94,17 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   nsec = rem1000000000int64(t2 * 1e9L);
   if (secs > ts.tv_sec) {
     localtime_r(&secs, &tm);
-    strftime(timebuf, sizeof(timebuf), "%Y-%m-%dT%H:%M:%S.", &tm);
-    timebufp = timebuf;
+    strftime(buf32, sizeof(buf32), "%Y-%m-%dT%H:%M:%S.", &tm);
+    buf32p = buf32;
     dots = nsec;
   } else {
-    timebufp = "--------------------";
+    buf32p = "--------------------";
     dots = nsec - ts.tv_nsec;
   }
   ts.tv_sec = secs;
   ts.tv_nsec = nsec;
   prog = basename(program_invocation_name);
-  if ((fprintf)(f, "%c%s%06ld:%s:%d:%.*s:%d] ", loglevel2char(level), timebufp,
+  if ((fprintf)(f, "%c%s%06ld:%s:%d:%.*s:%d] ", loglevel2char(level), buf32p,
                 rem1000000int64(div1000int64(dots)), file, line,
                 strchrnul(prog, '.') - prog, prog, getpid()) <= 0) {
     vflogf_onfail(f);
@@ -114,7 +114,9 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   fputs("\n", f);
   if (level == kLogFatal) {
     __start_fatal(file, line);
-    (dprintf)(STDERR_FILENO, "fatal error see logfile\n");
+    strcpy(buf32, "unknown");
+    gethostname(buf32, sizeof(buf32));
+    (dprintf)(STDERR_FILENO, "fatality %s pid %d\n", buf32, getpid());
     __die();
     unreachable;
   }

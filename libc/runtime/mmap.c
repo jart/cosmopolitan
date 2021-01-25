@@ -66,6 +66,7 @@ void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   if (!(!!(flags & MAP_ANONYMOUS) ^ (fd != -1))) return VIP(einval());
   if (!(!!(flags & MAP_PRIVATE) ^ !!(flags & MAP_SHARED))) return VIP(einval());
   if (fd == -1) size = ROUNDUP(size, FRAMESIZE);
+  if (IsWindows() && fd == -1) prot |= PROT_WRITE;
   if (flags & MAP_FIXED) {
     if (UntrackMemoryIntervals(addr, size) == -1) {
       return MAP_FAILED;

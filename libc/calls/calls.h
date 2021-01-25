@@ -43,7 +43,7 @@
 #define WEXITSTATUS(s)  (((s)&0xff00) >> 8)
 #define WIFCONTINUED(s) ((s) == 0xffff)
 #define WIFEXITED(s)    (!WTERMSIG(s))
-#define WIFSIGNALED(s)  (((s)&0xffff) - 1U < 0xffu)
+#define WIFSIGNALED(s)  (((s)&0xffff) - 1u < 0xffu)
 #define WIFSTOPPED(s)   ((short)((((s)&0xffff) * 0x10001) >> 8) > 0x7f00)
 #define WSTOPSIG(s)     WEXITSTATUS(s)
 #define WTERMSIG(s)     ((s)&0x7f)
@@ -148,8 +148,8 @@ int openanon(char *, unsigned) nodiscard;
 int openat(int, const char *, int, ...);
 int pause(void);
 int personality(uint64_t);
-int pipe(int[hasatleast 2]) nodiscard;
-int pipe2(int[hasatleast 2], int) nodiscard;
+int pipe(int[hasatleast 2]);
+int pipe2(int[hasatleast 2], int);
 int posix_fadvise(int, uint64_t, uint64_t, int);
 int posix_fallocate(int, int64_t, int64_t);
 int posix_madvise(void *, uint64_t, int);
@@ -226,6 +226,10 @@ uint32_t getsid(int) nosideeffect;
 uint32_t gettid(void) nosideeffect;
 uint32_t getuid(void) nosideeffect;
 uint32_t umask(int32_t);
+long ptrace(int, int, void *, void *);
+int chroot(const char *);
+int prctl();
+int sysctl(const int *, unsigned, void *, size_t *, void *, size_t);
 
 #define getcwd(BUF, SIZE)                                                    \
   (__builtin_constant_p(BUF) && (&(BUF)[0] == NULL) ? get_current_dir_name() \

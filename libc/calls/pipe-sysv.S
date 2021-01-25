@@ -30,12 +30,14 @@
 pipe$sysv:
 	push	%rbp
 	mov	%rsp,%rbp
-	xor	%esi,%esi			# FreeBSD is pipe2()
+#if SupportsFreebsd()
+	xor	%esi,%esi
+#endif
 	call	__pipe$sysv
 #if SupportsXnu()
-	testb	IsXnu()				# XNU has special needs
+	testb	IsXnu()
 	jz	1f
-	cmp	$-1,%eax
+	cmp	$-1,%rax
 	je	1f
 	mov	%eax,(%rdi)
 	mov	%edx,4(%rdi)

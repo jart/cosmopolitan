@@ -27,9 +27,9 @@
  */
 int fixupnewfd$sysv(int fd, int flags) {
   if (fd != -1) {
-    if (flags & O_CLOEXEC) fcntl$sysv(fd, F_SETFD, FD_CLOEXEC);
-    fcntl$sysv(fd, F_SETFL,
-               (fcntl$sysv(fd, F_GETFL, 0) ^ (flags & O_NONBLOCK)));
+    if (flags & O_CLOEXEC) {
+      fcntl$sysv(fd, F_SETFD, FD_CLOEXEC);
+    }
   }
   return fd;
 }

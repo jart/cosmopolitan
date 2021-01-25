@@ -19,6 +19,52 @@
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/testlib/testlib.h"
 
+void *_memset(void *, int, size_t) asm("memset");
+
+TEST(memset, size0_doesNothing) {
+  _memset(NULL, 0, 0);
+}
+
+TEST(memset, size1) {
+  char *b = tgc(tmalloc(1));
+  _memset(b, 7, 1);
+  EXPECT_EQ(7, b[0]);
+}
+
+TEST(memset, size2) {
+  char *b = tgc(tmalloc(2));
+  _memset(b, 7, 2);
+  EXPECT_EQ(7, b[0]);
+  EXPECT_EQ(7, b[1]);
+}
+
+TEST(memset, size3) {
+  char *b = tgc(tmalloc(3));
+  _memset(b, 7, 3);
+  EXPECT_EQ(7, b[0]);
+  EXPECT_EQ(7, b[1]);
+  EXPECT_EQ(7, b[2]);
+}
+
+TEST(memset, size4) {
+  char *b = tgc(tmalloc(4));
+  _memset(b, 7, 4);
+  EXPECT_EQ(7, b[0]);
+  EXPECT_EQ(7, b[1]);
+  EXPECT_EQ(7, b[2]);
+  EXPECT_EQ(7, b[3]);
+}
+
+TEST(memset, size5) {
+  char *b = tgc(tmalloc(5));
+  _memset(b, 7, 5);
+  EXPECT_EQ(7, b[0]);
+  EXPECT_EQ(7, b[1]);
+  EXPECT_EQ(7, b[2]);
+  EXPECT_EQ(7, b[3]);
+  EXPECT_EQ(7, b[4]);
+}
+
 TEST(memset, testMulTrick4) {
   long i, j;
   unsigned long x;

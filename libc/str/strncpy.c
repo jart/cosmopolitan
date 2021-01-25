@@ -22,7 +22,6 @@
  * Prepares static search buffer.
  *
  * 1. If SRC is too long, it's truncated and *not* NUL-terminated.
- *
  * 2. If SRC is too short, the remainder is zero-filled.
  *
  * Please note this function isn't designed to prevent untrustworthy

@@ -23,4 +23,4 @@
 __wincrash$nt:
 	ezlea	__wincrash,ax
 	jmp	__nt2sysv
-	.endfn	__wincrash$nt,globl
+	.endfn	__wincrash$nt,globl,hidden

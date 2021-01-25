@@ -46,7 +46,6 @@ textwindows int fstat$nt(int64_t handle, struct stat *st) {
         break;
       case kNtFileTypeDisk:
         if (GetFileInformationByHandle(handle, &wst)) {
-          dprintf(1, "handle = %ld\n", handle);
           st->st_mode =
               (S_IRUSR | S_IXUSR |
                (!(wst.dwFileAttributes & kNtFileAttributeReadonly) ? S_IWUSR

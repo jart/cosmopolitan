@@ -28,6 +28,7 @@
  * Reads data to multiple buffers.
  *
  * @return number of bytes actually read, or -1 w/ errno
+ * @asyncsignalsafe
  */
 ssize_t readv(int fd, const struct iovec *iov, int iovlen) {
   if (fd < 0) return einval();

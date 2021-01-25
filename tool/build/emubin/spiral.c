@@ -40,7 +40,7 @@ static const unsigned char kBlocks[] = {
     [0b0001] = 0xdf,  // ▀
 };
 
-forceinline void *memset(void *di, int al, unsigned long cx) {
+forceinline void *SetMemory(void *di, int al, unsigned long cx) {
   asm("rep stosb"
       : "=D"(di), "=c"(cx), "=m"(*(char(*)[cx])di)
       : "0"(di), "1"(cx), "a"(al));
@@ -130,9 +130,9 @@ int main() {
   SetVideoMode(3);
   for (g = 0;; ++g) {
     SetEs(0);
-    memset((void *)(0x7c00 + 512), 0, 25 * 80);
+    SetMemory((void *)(0x7c00 + 512), 0, 25 * 80);
     SetEs(0xb8000 >> 4);
-    /* memset((void *)0, 0, 25 * 80 * 2); */
+    /* SetMemory((void *)0, 0, 25 * 80 * 2); */
     spiral((void *)0, (void *)(0x7c00 + 512), g);
   }
 }

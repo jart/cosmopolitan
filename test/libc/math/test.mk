@@ -22,7 +22,6 @@ TEST_LIBC_MATH_CHECKS =					\
 	$(TEST_LIBC_MATH_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
 
 TEST_LIBC_MATH_DIRECTDEPS =				\
-	LIBC_CALLS_HEFTY				\
 	LIBC_FMT					\
 	LIBC_INTRIN					\
 	LIBC_MATH					\

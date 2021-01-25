@@ -20,19 +20,21 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
 #include "libc/mem/mem.h"
+#include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
 int __ensurefds(int fd) {
-  size_t i, n;
+  size_t n;
   struct Fd *p;
   if (fd < g_fds.n) return fd;
-  if (weaken(realloc)) {
-    if ((p = weaken(realloc)(
-             g_fds.p != g_fds.__init_p ? g_fds.p : NULL,
-             (n = MAX(fd + 1, (i = g_fds.n) << 1)) * sizeof(*p)))) {
-      do {
-        p[i++].kind = kFdEmpty;
-      } while (i < n);
+  if (weaken(malloc)) {
+    n = MAX(fd + 1, g_fds.n + (g_fds.n << 1));
+    if ((p = weaken(malloc)(n * sizeof(*p)))) {
+      memcpy(p, g_fds.p, g_fds.n * sizeof(*p));
+      memset(p + g_fds.n, 0, (n - g_fds.n) * sizeof(*p));
+      if (g_fds.p != g_fds.__init_p && weaken(free)) {
+        weaken(free)(g_fds.p);
+      }
       g_fds.p = p;
       g_fds.n = n;
       return fd;

@@ -26,11 +26,13 @@
  */
 char *chomp(char *line) {
   size_t i;
-  for (i = strlen(line); i--;) {
-    if (line[i] == '\r' || line[i] == '\n') {
-      line[i] = '\0';
-    } else {
-      break;
+  if (line) {
+    for (i = strlen(line); i--;) {
+      if (line[i] == '\r' || line[i] == '\n') {
+        line[i] = '\0';
+      } else {
+        break;
+      }
     }
   }
   return line;

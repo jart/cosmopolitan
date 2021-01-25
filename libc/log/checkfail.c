@@ -46,18 +46,22 @@ relegated void __check_fail(const char *suffix, const char *opstr,
   size_t i;
   va_list va;
   char sufbuf[8];
+  char hostname[32];
   int lasterr = errno;
   __start_fatal(file, line);
 
   if (!memccpy(sufbuf, suffix, '\0', sizeof(sufbuf))) strcpy(sufbuf, "?");
   strtoupper(sufbuf);
+  strcpy(hostname, "unknown");
+  gethostname(hostname, sizeof(hostname));
 
   (dprintf)(STDERR_FILENO,
-            "check failed\r\n"
+            "check failed on %s pid %d\r\n"
             "\tCHECK_%s(%s, %s);\r\n"
             "\t\t → %#lx (%s)\r\n"
             "\t\t%s %#lx (%s)\r\n",
-            sufbuf, wantstr, gotstr, want, wantstr, opstr, got, gotstr);
+            hostname, getpid(), sufbuf, wantstr, gotstr, want, wantstr, opstr,
+            got, gotstr);
 
   if (!isempty(fmt)) {
     (dprintf)(STDERR_FILENO, "\t");

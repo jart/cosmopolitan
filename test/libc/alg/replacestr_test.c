@@ -20,20 +20,20 @@
 #include "libc/errno.h"
 #include "libc/testlib/testlib.h"
 
-#define S(x)       x
-#define REPLACESTR replacestr
-#include "test/libc/alg/replacestr_test.inc"
-#undef REPLACESTR
-#undef S
+TEST(replacestr, demo) {
+  EXPECT_STREQ("hello friends", replacestr("hello world", "world", "friends"));
+  EXPECT_STREQ("bbbbbbbb", replacestr("aaaa", "a", "bb"));
+}
 
-#define S(x)       u##x
-#define REPLACESTR replacestr16
-#include "test/libc/alg/replacestr_test.inc"
-#undef REPLACESTR
-#undef S
+TEST(replacestr, emptyString) {
+  EXPECT_STREQ("", replacestr("", "x", "y"));
+}
 
-/* #define S(x) L##x */
-/* #define REPLACESTR replacewcs */
-/* #include "test/libc/alg/replacestr_test.inc" */
-/* #undef REPLACESTR */
-/* #undef S */
+TEST(replacestr, emptyNeedle) {
+  EXPECT_EQ(NULL, replacestr("a", "", "a"));
+  EXPECT_EQ(EINVAL, errno);
+}
+
+TEST(replacestr, needleInReplacement_doesntExplode) {
+  EXPECT_STREQ("xxxxxxx", replacestr("x", "x", "xxxxxxx"));
+}

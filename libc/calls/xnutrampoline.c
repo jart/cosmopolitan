@@ -439,6 +439,7 @@ wontreturn void xnutrampoline(void *fn, int infostyle, int sig,
     g.uc.uc_stack.ss_sp = xnuctx->uc_stack.ss_sp;
     g.uc.uc_stack.ss_flags = xnuctx->uc_stack.ss_flags;
     g.uc.uc_stack.ss_size = xnuctx->uc_stack.ss_size;
+    g.uc.uc_mcontext.fpregs = &g.uc.__fpustate;
     if (xnuctx->uc_mcontext) {
       if (xnuctx->uc_mcsize >= sizeof(struct __darwin_x86_exception_state64)) {
         xnuexceptionstate2linux(&g.uc.uc_mcontext, &xnuctx->uc_mcontext->__es);
@@ -449,7 +450,7 @@ wontreturn void xnutrampoline(void *fn, int infostyle, int sig,
                              &xnuctx->uc_mcontext->__ss);
       }
       if (xnuctx->uc_mcsize >= sizeof(struct __darwin_mcontext64)) {
-        xnussefpustate2linux(&g.uc.fpustate, &xnuctx->uc_mcontext->__fs);
+        xnussefpustate2linux(&g.uc.__fpustate, &xnuctx->uc_mcontext->__fs);
       }
     }
   }

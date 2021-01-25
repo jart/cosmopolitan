@@ -11,6 +11,7 @@ extern void *(*hook$realloc)(void *, size_t);
 extern void *(*hook$realloc_in_place)(void *, size_t);
 extern void *(*hook$valloc)(size_t);
 extern void *(*hook$pvalloc)(size_t);
+extern int (*hook$malloc_trim)(size_t);
 extern size_t (*hook$malloc_usable_size)(const void *);
 
 COSMOPOLITAN_C_END_

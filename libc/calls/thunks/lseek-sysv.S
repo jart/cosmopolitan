@@ -29,7 +29,7 @@ lseek$sysv:
 	cmovnz	.Lzero(%rip),%rsi
 #endif
 	jmp	__lseek$sysv
-	.endfn	lseek$sysv,globl
+	.endfn	lseek$sysv,globl,hidden
 
 	.rodata.cst8
 .Lzero:	.quad	0

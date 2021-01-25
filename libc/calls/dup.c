@@ -26,7 +26,7 @@
  * @param fd remains open afterwards
  * @return some arbitrary new number for fd
  * @asyncsignalsafe
- * @syscall
+ * @vforksafe
  */
 nodiscard int dup(int fd) {
   if (!IsWindows()) {

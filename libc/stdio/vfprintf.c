@@ -26,7 +26,7 @@ struct state {
   int n;
 };
 
-static int vfprintfputchar(int c, struct state *st) {
+static noinstrument int vfprintfputchar(int c, struct state *st) {
   st->n++;
   return fputc(c, st->f);
 }

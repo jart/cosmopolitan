@@ -69,7 +69,6 @@ TEST_LIBC_XED_CHECKS =						\
 	$(TEST_LIBC_XED_SRCS:%.c=o/$(MODE)/%.com.runs)
 
 TEST_LIBC_XED_DIRECTDEPS =					\
-	LIBC_CALLS_HEFTY					\
 	LIBC_INTRIN						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\

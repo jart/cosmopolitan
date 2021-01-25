@@ -29,7 +29,6 @@
  * @param mode can be R_OK, W_OK, X_OK, F_OK
  * @return 0 if ok, or -1 and sets errno
  * @asyncsignalsafe
- * @syscall
  */
 int access(const char *path, int mode) {
   char16_t path16[PATH_MAX];

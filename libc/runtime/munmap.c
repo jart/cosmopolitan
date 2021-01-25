@@ -30,19 +30,20 @@
 /**
  * Releases memory pages.
  *
+ * This function may be used to punch holes in existing mappings, but your
+ * mileage may vary on Windows.
+ *
  * @param addr is a pointer within any memory mapped region the process
  *     has permission to control, such as address ranges returned by
  *     mmap(), the program image itself, etc.
- * @param size is the amount of memory to unmap, which needn't be a
- *     multiple of FRAMESIZE, and may be a subset of that which was
- *     mapped previously, and may punch holes in existing mappings,
- *     but your mileage may vary on windows
+ * @param size is the amount of memory to unmap, which needs to be a
+ *     multiple of FRAMESIZE for anonymous mappings, because windows
+ *     and for files size needs to be perfect to the byte bc openbsd
  * @return 0 on success, or -1 w/ errno
  */
 int munmap(void *addr, size_t size) {
   int rc;
   if (!ALIGNED(addr) || !CANONICAL(addr) || !size) return einval();
-  size = ROUNDUP(size, FRAMESIZE);
   if (UntrackMemoryIntervals(addr, size) == -1) return -1;
   if (IsWindows()) return 0;
   return munmap$sysv(addr, size);

@@ -19,7 +19,6 @@
 #include "dsp/tty/itoa8.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/hefty/spawn.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/termios.h"
@@ -486,23 +485,25 @@ static int ReadAll(int fd, void *data, size_t size) {
 static void LoadFileViaImageMagick(const char *path, unsigned yn, unsigned xn,
                                    unsigned char rgb[yn][YS][xn][XS][CN]) {
   const char *convert;
-  char pathbuf[PATH_MAX];
-  int pid, ws, fds[3] = {STDIN_FILENO, -1, STDERR_FILENO};
+  int pid, ws, pipefds[2];
+  char pathbuf[PATH_MAX], dim[32];
   if (!(convert = commandv("convert", pathbuf))) {
     fputs("error: `convert` command not found\n"
           "try: apt-get install imagemagick\n",
           stderr);
     exit(EXIT_FAILURE);
   }
-  CHECK_NE(-1,
-           (pid = spawnve(
-                0, fds, convert,
-                (char *const[]){"convert", path, "-resize",
-                                xasprintf("%ux%u!", xn * XS, yn * YS), "-depth",
-                                "8", "-colorspace", "sRGB", "rgb:-", NULL},
-                environ)));
-  CHECK_NE(-1, ReadAll(fds[STDOUT_FILENO], rgb, yn * YS * xn * XS * CN));
-  CHECK_NE(-1, close(fds[STDOUT_FILENO]));
+  sprintf(dim, "%ux%u!", xn * XS, yn * YS);
+  CHECK_NE(-1, pipe2(pipefds, O_CLOEXEC));
+  if (!(pid = vfork())) {
+    dup2(pipefds[1], 1);
+    execv(convert, (char *const[]){"convert", path, "-resize", dim, "-depth",
+                                   "8", "-colorspace", "sRGB", "rgb:-", NULL});
+    abort();
+  }
+  CHECK_NE(-1, close(pipefds[1]));
+  CHECK_NE(-1, ReadAll(pipefds[0], rgb, yn * YS * xn * XS * CN));
+  CHECK_NE(-1, close(pipefds[0]));
   CHECK_NE(-1, waitpid(pid, &ws, 0));
   CHECK_EQ(0, WEXITSTATUS(ws));
 }

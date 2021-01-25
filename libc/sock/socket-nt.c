@@ -31,8 +31,7 @@ textwindows int socket$nt(int family, int type, int protocol) {
   uint32_t yes;
   if ((fd = __getemptyfd()) == -1) return -1;
   if ((g_fds.p[fd].handle = WSASocket(family, type & ~(CLOEXEC | NONBLOCK),
-                                      protocol, NULL, 0, (type & CLOEXEC))) !=
-      -1) {
+                                      protocol, NULL, 0, 0)) != -1) {
     if (type & NONBLOCK) {
       yes = 1;
       if (__ioctlsocket$nt(g_fds.p[fd].handle, FIONBIO, &yes) == -1) {

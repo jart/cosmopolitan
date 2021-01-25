@@ -5,9 +5,9 @@
 struct NtM128A {
   uint64_t Low;
   int64_t High;
-} forcealign(16);
+};
 
-struct NtXmmSaveArea32 {
+struct NtXmmSaveArea32 { /* basically same as struct FpuState */
   uint16_t ControlWord;
   uint16_t StatusWord;
   uint8_t TagWord;
@@ -53,7 +53,7 @@ struct NtContext {
   uint64_t LastBranchFromRip;
   uint64_t LastExceptionToRip;
   uint64_t LastExceptionFromRip;
-} forcealign(16);
+};
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_CONTEXT_H_ */

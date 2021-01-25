@@ -22,14 +22,14 @@ dir=libc/sysv/calls
 #       The Fifth Bell System Interface, Community Edition     ┌─────────────────────────┐
 #	» so many numbers                                      │ legend                  │
 #	                                                       ├─────────────────────────┤
-#	                                 Systemd┐              │ ffff │ unavailable      │
+#	                             GNU/Systemd┐              │ ffff │ unavailable      │
 # 	                                 2.6.18+│              │    $ │ wrapped          │
 #	                            Mac OS X┐   │              │   __ │ wrapped twice    │
 #	                               15.6+│   │              └─────────────────────────┘
 #	                         FreeBSD┐   │   │
 #	                             12+│ ┌─│───│── XnuClass{1:Mach,2:Unix}
 #	                     OpenBSD┐   │ │ │   │
-#	                         6.4│   │ │ │   │
+#	                        6.4+│   │ │ │   │
 #	Symbol                    ┌─┴┐┌─┴┐│┬┴┐┌─┴┐      Directives & Commentary
 scall	'exit$sysv'		0x00010001200100e7	globl hidden # a.k.a. exit_group
 scall	'read$sysv'		0x0003000320030000	globl hidden
@@ -76,7 +76,7 @@ scall	'getpid$sysv'		0x0014001420140027	globl hidden
 scall	'sendfile$sysv'		0xffff018921510028	globl hidden # Linux vs. XNU/BSD ABIs very different
 scall	'__socket$sysv'		0x0061006120610029	globl hidden
 scall	'__connect$sysv'	0x006200622062002a	globl hidden
-scall	'__accept$sysv'		0x001e0063201e002b	globl hidden
+scall	'__accept$sysv'		0x001e021d201e002b	globl hidden # accept4 on freebsd
 scall	'sendto$sysv'		0x008500852085002c	globl hidden
 scall	'recvfrom$sysv'		0x001d001d201d002d	globl hidden
 scall	'sendmsg$sysv'		0x001c001c201c002e	globl hidden
@@ -89,10 +89,10 @@ scall	'__getpeername$sysv'	0x001f008d201f0034	globl hidden
 scall	'socketpair$sysv'	0x0087008720870035	globl hidden
 scall	'setsockopt$sysv'	0x0069006920690036	globl hidden
 scall	'getsockopt$sysv'	0x0076007620760037	globl hidden
-scall	'fork$sysv'		0x0002000220020039	globl hidden
-#scall	vfork			0x004200422042003a	globl # needs to be called via vfork.S
+scall	'__fork$sysv'		0x0002000220020039	globl hidden # xnu needs eax=~-edx b/c eax always holds pid and edx is 0 for parent and 1 for child
+#scall	vfork			0x004200422042003a	globl        # this syscall is from the moon so we implement it by hand in libc/calls/hefty/vfork.S
 scall	posix_spawn		0xffffffff20f4ffff	globl hidden # TODO: put in spawnve()
-scall	'execve$sysv'		0x003b003b203b003b	globl hidden
+scall	'__execve$sysv'		0x003b003b203b003b	globl hidden
 scall	'wait4$sysv'		0x000b00072007003d	globl hidden
 scall	'kill$sysv'		0x007a00252025003e	globl hidden # kill(pid, sig, 1) b/c xnu
 scall	'killpg$sysv'		0xffff0092ffffffff	globl hidden
@@ -138,7 +138,7 @@ scall	'getrlimit$sysv'	0x00c200c220c20061	globl hidden
 scall	'getrusage$sysv'	0x0013007520750062	globl hidden
 scall	'sysinfo$sysv'		0xffffffffffff0063	globl hidden
 scall	'times$sysv'		0xffffffffffff0064	globl hidden
-scall	ptrace			0x001a001a201a0065	globl
+scall	'ptrace$sysv'		0x001a001a201a0065	globl hidden
 scall	syslog			0xffffffffffff0067	globl
 scall	'getuid$sysv'		0x0018001820180066	globl hidden
 scall	'getgid$sysv'		0x002f002f202f0068	globl hidden
@@ -242,7 +242,7 @@ scall	lookup_dcookie		0xffffffffffff00d4	globl
 scall	'epoll_create$sysv'	0xffffffffffff00d5	globl
 scall	'epoll_wait$sysv'	0xffffffffffff00e8	globl
 scall	'epoll_ctl$sysv'	0xffffffffffff00e9	globl
-scall	getdents		0x00630110ffff00d9	globl hidden # getdents64 on linux
+scall	getdents		0x0063011020c400d9	globl hidden # four args b/c xnu, getdirentries on xnu, 32-bit on xnu/freebsd, getdents64 on linux, 64-bit on openbsd
 scall	set_tid_address		0xffffffffffff00da	globl
 scall	restart_syscall		0xffffffffffff00db	globl
 scall	semtimedop		0xffffffffffff00dc	globl
@@ -299,12 +299,12 @@ scall	'sync_file_range$sysv'	0xffffffffffff0115	globl hidden # Linux 2.6.17+
 scall	'vmsplice$sysv'		0xffffffffffff0116	globl hidden
 scall	migrate_pages		0xffffffffffff0100	globl        # numa numa yay
 scall	move_pages		0xffffffffffff0117	globl        # NOTE: We view Red Hat versions as "epochs" for all distros.
-#──────────────────────RHEL 5.0 LIMIT────────────────────────        # ←┬─ last gplv2 distro w/ sysv init was rhel5 c. 2007
-scall	'__preadv$sysv'		0x010b0121ffff0127	globl hidden #  ├─ cosmopolitan at minimum requires rhel5
-scall	'__pwritev$sysv'	0x010c0122ffff0128	globl hidden #  ├─ python modules need to work on this (pep513)
-scall	'__utimensat$sysv'	0x00540223ffff0118	globl hidden #  └─ end of life 2020-11-30 (extended)
-scall	'fallocate$sysv'	0xffffffffffff011d	globl hidden
-scall	'posix_fallocate$sysv'	0xffff0212ffffffff	globl hidden
+#──────────────────────RHEL 5.0 LIMIT────────────────────────        # ←┬─ last distro with gplv2 licensed compiler c. 2007
+scall	'__preadv$sysv'		0x010b0121ffff0127	globl hidden #  ├─ last distro with system v shell script init
+scall	'__pwritev$sysv'	0x010c0122ffff0128	globl hidden #  ├─ rob landley unleashes busybox gpl lawsuits
+scall	'__utimensat$sysv'	0x00540223ffff0118	globl hidden #  ├─ python modules need this due to pep513
+scall	'fallocate$sysv'	0xffffffffffff011d	globl hidden #  ├─ end of life 2020-11-30 (extended)
+scall	'posix_fallocate$sysv'	0xffff0212ffffffff	globl hidden #  └─ cosmopolitan supports rhel5+
 scall	'__accept4$sysv'	0x005d021dffff0120	globl hidden # Linux 2.6.28+
 scall	'__dup3$sysv'		0x0066ffffffff0124	globl hidden # Linux 2.6.27+
 scall	'__pipe2$sysv'		0x0065021effff0125	globl hidden # Linux 2.6.27+
@@ -320,10 +320,10 @@ scall	eventfd2		0xffffffffffff0122	globl # won't polyfill; see INTON/INTOFF tuto
 scall	timerfd_create		0xffffffffffff011b	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
 scall	timerfd_settime		0xffffffffffff011e	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
 scall	timerfd_gettime		0xffffffffffff011f	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
-#──────────────────────RHEL 6.0 LIMIT──────────────────────── # ←┬─ modern glibc at minimum requires rhel6+
-scall	recvmmsg		0xffffffffffff012b	globl #  └─ end of life 2024-06-30 (extended)
-scall	fanotify_init		0xffffffffffff012c	globl
-scall	fanotify_mark		0xffffffffffff012d	globl
+#──────────────────────RHEL 6.0 LIMIT──────────────────────── # ←┬─ modern glibc needs rhel6+ c. 2011
+scall	recvmmsg		0xffffffffffff012b	globl #  ├─ end of life 2024-06-30 (extended)
+scall	fanotify_init		0xffffffffffff012c	globl #  ├─ last distro with the original gnome desktop
+scall	fanotify_mark		0xffffffffffff012d	globl #  └─ apple and google condemn the gplv3/gccrtev3
 scall	prlimit			0xffffffffffff012e	globl
 scall	name_to_handle_at	0xffffffffffff012f	globl
 scall	open_by_handle_at	0xffffffffffff0130	globl
@@ -336,10 +336,10 @@ scall	process_vm_readv	0xffffffffffff0136	globl
 scall	process_vm_writev	0xffffffffffff0137	globl
 scall	kcmp			0xffffffffffff0138	globl
 scall	finit_module		0xffffffffffff0139	globl
-#──────────────────────RHEL 7.0 LIMIT──────────────────────── # ←┬─ distros switched to systemd
-scall	sched_setattr		0xffffffffffff013a	globl #  └─ C++11 needs this
-scall	sched_getattr		0xffffffffffff013b	globl
-scall	renameat2		0xffffffffffff013c	globl
+#──────────────────────RHEL 7.0 LIMIT──────────────────────── # ←┬─ anything that links or uses c++11 code needs rhel7+ c. 2014
+scall	sched_setattr		0xffffffffffff013a	globl #  ├─ desktop replaced with tablet-first gui inspired by mac os x
+scall	sched_getattr		0xffffffffffff013b	globl #  ├─ karen sandler requires systemd init and boot for tablet gui
+scall	renameat2		0xffffffffffff013c	globl #  └─ debian founder ian murdock found strangled with vacuum cord
 scall	seccomp			0xffffffffffff013d	globl
 scall	'getrandom$sysv'	0x0007023321f4013e	globl hidden  # Linux 3.17+ and getentropy() on XNU/OpenBSD
 scall	memfd_create		0xffffffffffff013f	globl # wut
@@ -349,7 +349,7 @@ scall	execveat		0xffffffffffff0142	globl
 scall	userfaultfd		0xffffffffffff0143	globl # Linux 4.3+ (c. 2015)
 scall	membarrier		0xffffffffffff0144	globl # Linux 4.3+ (c. 2015)
 scall	mlock2			0xffffffffffff0145	globl # Linux 4.5+ (c. 2016)
-scall	'copy_file_range$sysv'	0xffffffffffff0146	globl hidden # Linux 4.5+ (c. 2016)
+scall	'copy_file_range$sysv'	0xffff0239ffff0146	globl hidden # Linux 4.5+ (c. 2016), FreeBSD 13+
 scall	preadv2			0xffffffffffff0147	globl
 scall	pwritev2		0xffffffffffff0148	globl
 scall	pkey_mprotect		0xffffffffffff0149	globl
@@ -358,12 +358,13 @@ scall	pkey_free		0xffffffffffff014b	globl
 scall	statx			0xffffffffffff014c	globl # lool https://lkml.org/lkml/2010/7/22/249
 scall	io_pgetevents		0xffffffffffff014d	globl
 scall	rseq			0xffffffffffff014e	globl # Linux 4.18+ (c. 2018)
-#──────────────────────LINUX 4.18 LIMIT────────────────────── # ← last kernel buildable w/ gplv2 libraries
-scall	pidfd_send_signal	0xffffffffffff01a8	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
-scall	io_uring_setup		0xffffffffffff01a9	globl # Linux 5.1+ (c. 2019)
-scall	io_uring_enter		0xffffffffffff01aa	globl # Linux 5.1+ (c. 2019)
-scall	io_uring_register	0xffffffffffff01ab	globl # Linux 5.1+ (c. 2019)
-scall	pledge			0x006cffffffffffff	globl # it's cross-platorm if you ignore the return code
+#──────────────────────LINUX 4.18 LIMIT────────────────────── # ←┬─ last version of linux kernel buildable with only gplv2
+scall	pidfd_send_signal	0xffffffffffff01a8	globl #  ├─ linux conferences ban linux founder linus torvalds
+scall	io_uring_setup		0xffffffffffff01a9	globl #  └─ gnu founder richard stallman publicly disgraced
+scall	io_uring_enter		0xffffffffffff01aa	globl
+scall	io_uring_register	0xffffffffffff01ab	globl
+#────────────────────────RHEL CLOUD────────────────────────── # ←┬─ red hat terminates community release of enterprise linux circa 2020
+scall	pledge			0x006cffffffffffff	globl #  └─ online linux services ban the president of united states of america
 
 #	The Fifth Bell System Interface, Community Edition
 #	» besiyata dishmaya
@@ -391,7 +392,7 @@ scall	unmount			0x00160016209fffff	globl
 scall	issetugid		0x00fd00fd2147ffff	globl
 scall	minherit		0x00fa00fa20faffff	globl
 scall	pathconf		0x00bf00bf20bfffff	globl
-scall	sysctl			0x00caffff20caffff	globl
+scall	sysctl			0x00ca00ca20caffff	globl
 #───────────────────────XNU & FREEBSD────────────────────────
 scall	ntp_adjtime		0xffff00b0220fffff	globl
 scall	ntp_gettime		0xffff00f82210ffff	globl
@@ -415,7 +416,7 @@ scall	setauid			0xffff01c02162ffff	globl
 scall	audit			0xffff01bd215effff	globl
 scall	auditctl		0xffff01c52167ffff	globl
 scall	getaudit_addr		0xffff01c32165ffff	globl
-scall	getdirentries		0xffff022a2158ffff	globl
+scall	getdirentries		0xffff022a20c4ffff	globl # xnu getdirentries64 is 0x158
 scall	lio_listio		0xffff01402140ffff	globl
 scall	setaudit_addr		0xffff01c42166ffff	globl
 scall	getauid			0xffff01bf2161ffff	globl

@@ -21,6 +21,6 @@
 
 /	Directly calls truncate() impl on host o/s if available.
 truncate$sysv:
-	mov	%rsp,%rdx			# openbsd:pad
+	mov	%rsi,%rdx			# openbsd:pad
 	jmp	__truncate$sysv
-	.endfn	truncate$sysv,globl
+	.endfn	truncate$sysv,globl,hidden

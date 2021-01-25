@@ -19,42 +19,46 @@
 #include "libc/assert.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/hefty/spawn.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/o.h"
 #include "tool/build/lib/demangle.h"
 
 struct CxxFilt {
   int pid;
-  int fds[3];
+  int reader;
+  int writer;
 } g_cxxfilt;
 
 void CloseCxxFilt(void) {
-  close(g_cxxfilt.fds[0]);
-  close(g_cxxfilt.fds[1]);
+  close(g_cxxfilt.reader);
+  close(g_cxxfilt.writer);
   g_cxxfilt.pid = -1;
 }
 
 void SpawnCxxFilt(void) {
-  int pid;
+  int pipefds[2][2];
   const char *cxxfilt;
   char path[PATH_MAX];
-  cxxfilt = firstnonnull(getenv("CXXFILT"), "c++filt");
+  cxxfilt = firstnonnull(emptytonull(getenv("CXXFILT")), "c++filt");
   if (commandv(cxxfilt, path)) {
-    g_cxxfilt.fds[0] = -1;
-    g_cxxfilt.fds[1] = -1;
-    g_cxxfilt.fds[2] = 2;
-    if ((pid = spawnve(0, g_cxxfilt.fds, path, (char *const[]){cxxfilt, NULL},
-                       environ)) != -1) {
-      atexit(CloseCxxFilt);
+    pipe2(pipefds[0], O_CLOEXEC);
+    pipe2(pipefds[1], O_CLOEXEC);
+    if (!(g_cxxfilt.pid = vfork())) {
+      dup2(pipefds[1][0], 0);
+      dup2(pipefds[0][1], 1);
+      execv(path, (char *const[]){cxxfilt, NULL});
+      abort();
     }
+    g_cxxfilt.reader = pipefds[0][0];
+    g_cxxfilt.writer = pipefds[1][1];
+    atexit(CloseCxxFilt);
   } else {
-    pid = -1;
+    g_cxxfilt.pid = -1;
   }
-  g_cxxfilt.pid = pid;
 }
 
 char *CopySymbol(char *p, size_t pn, const char *s, size_t sn) {
@@ -90,8 +94,8 @@ char *DemangleCxxFilt(char *p, size_t pn, const char *s, size_t sn) {
   iov[0].iov_len = sn;
   iov[1].iov_base = buf;
   iov[1].iov_len = 1;
-  writev(g_cxxfilt.fds[0], iov, ARRAYLEN(iov));
-  if ((rc = read(g_cxxfilt.fds[1], buf, sizeof(buf))) != -1) {
+  writev(g_cxxfilt.writer, iov, ARRAYLEN(iov));
+  if ((rc = read(g_cxxfilt.reader, buf, sizeof(buf))) != -1) {
     got = rc;
     if (got >= 2 && buf[got - 1] == '\n') {
       if (buf[got - 2] == '\r') --got;

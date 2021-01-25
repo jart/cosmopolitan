@@ -71,15 +71,18 @@ static void RunTrackMemoryIntervalTest(const struct MemoryIntervals t[2], int x,
   free(mm);
 }
 
-static void RunReleaseMemoryIntervalsTest(const struct MemoryIntervals t[2],
-                                          int x, int y) {
+static int RunReleaseMemoryIntervalsTest(const struct MemoryIntervals t[2],
+                                         int x, int y) {
+  int rc;
   struct MemoryIntervals *mm;
   mm = memcpy(memalign(alignof(*t), sizeof(*t)), t, sizeof(*t));
   CheckMemoryIntervalsAreOk(mm);
-  CHECK_NE(-1, ReleaseMemoryIntervals(mm, x, y, NULL));
-  CheckMemoryIntervalsAreOk(mm);
-  CheckMemoryIntervalsEqual(t + 1, mm);
+  if ((rc = ReleaseMemoryIntervals(mm, x, y, NULL)) != -1) {
+    CheckMemoryIntervalsAreOk(mm);
+    CheckMemoryIntervalsEqual(t + 1, mm);
+  }
   free(mm);
+  return rc;
 }
 
 TEST(TrackMemoryInterval, TestEmpty) {
@@ -182,7 +185,7 @@ TEST(ReleaseMemoryIntervals, TestEmpty) {
       {0, {}},
       {0, {}},
   };
-  RunReleaseMemoryIntervalsTest(mm, 2, 2);
+  EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 2, 2));
 }
 
 TEST(ReleaseMemoryIntervals, TestRemoveElement_UsesInclusiveRange) {
@@ -190,7 +193,7 @@ TEST(ReleaseMemoryIntervals, TestRemoveElement_UsesInclusiveRange) {
       {3, {{0, 0}, {2, 2}, {4, 4}}},
       {2, {{0, 0}, {4, 4}}},
   };
-  RunReleaseMemoryIntervalsTest(mm, 2, 2);
+  EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 2, 2));
 }
 
 TEST(ReleaseMemoryIntervals, TestPunchHole) {
@@ -198,39 +201,43 @@ TEST(ReleaseMemoryIntervals, TestPunchHole) {
       {1, {{0, 9}}},
       {2, {{0, 3}, {6, 9}}},
   };
-  RunReleaseMemoryIntervalsTest(mm, 4, 5);
+  EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 4, 5));
 }
 
 TEST(ReleaseMemoryIntervals, TestShortenLeft) {
+  if (IsWindows()) return;
   static const struct MemoryIntervals mm[2] = {
       {1, {{0, 9}}},
       {1, {{0, 7}}},
   };
-  RunReleaseMemoryIntervalsTest(mm, 8, 9);
+  EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 8, 9));
 }
 
 TEST(ReleaseMemoryIntervals, TestShortenRight) {
+  if (IsWindows()) return;
   static const struct MemoryIntervals mm[2] = {
       {1, {{0, 9}}},
       {1, {{3, 9}}},
   };
-  RunReleaseMemoryIntervalsTest(mm, 0, 2);
+  EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 0, 2));
 }
 
 TEST(ReleaseMemoryIntervals, TestShortenLeft2) {
+  if (IsWindows()) return;
   static const struct MemoryIntervals mm[2] = {
       {1, {{0, 9}}},
       {1, {{0, 7}}},
   };
-  RunReleaseMemoryIntervalsTest(mm, 8, 11);
+  EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 8, 11));
 }
 
 TEST(ReleaseMemoryIntervals, TestShortenRight2) {
+  if (IsWindows()) return;
   static const struct MemoryIntervals mm[2] = {
       {1, {{0, 9}}},
       {1, {{3, 9}}},
   };
-  RunReleaseMemoryIntervalsTest(mm, -3, 2);
+  EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, -3, 2));
 }
 
 TEST(ReleaseMemoryIntervals, TestZeroZero) {
@@ -238,7 +245,7 @@ TEST(ReleaseMemoryIntervals, TestZeroZero) {
       {1, {{3, 9}}},
       {1, {{3, 9}}},
   };
-  RunReleaseMemoryIntervalsTest(mm, 0, 0);
+  EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 0, 0));
 }
 
 TEST(ReleaseMemoryIntervals, TestNoopLeft) {
@@ -246,7 +253,7 @@ TEST(ReleaseMemoryIntervals, TestNoopLeft) {
       {1, {{3, 9}}},
       {1, {{3, 9}}},
   };
-  RunReleaseMemoryIntervalsTest(mm, 1, 2);
+  EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 1, 2));
 }
 
 TEST(ReleaseMemoryIntervals, TestNoopRight) {
@@ -254,7 +261,7 @@ TEST(ReleaseMemoryIntervals, TestNoopRight) {
       {1, {{3, 9}}},
       {1, {{3, 9}}},
   };
-  RunReleaseMemoryIntervalsTest(mm, 10, 10);
+  EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 10, 10));
 }
 
 TEST(ReleaseMemoryIntervals, TestBigFree) {
@@ -262,7 +269,7 @@ TEST(ReleaseMemoryIntervals, TestBigFree) {
       {2, {{0, 3}, {6, 9}}},
       {0, {}},
   };
-  RunReleaseMemoryIntervalsTest(mm, INT_MIN, INT_MAX);
+  EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, INT_MIN, INT_MAX));
 }
 
 TEST(ReleaseMemoryIntervals, TestWeirdGap) {
@@ -270,7 +277,7 @@ TEST(ReleaseMemoryIntervals, TestWeirdGap) {
       {3, {{10, 10}, {20, 20}, {30, 30}}},
       {2, {{10, 10}, {30, 30}}},
   };
-  RunReleaseMemoryIntervalsTest(mm, 15, 25);
+  EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 15, 25));
 }
 
 TEST(ReleaseMemoryIntervals, TestOutOfMemory) {

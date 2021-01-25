@@ -32,7 +32,7 @@
  *
  * @return 0 on success, or -1 w/ errno
  * @asyncsignalsafe
- * @syscall
+ * @vforksafe
  */
 int close(int fd) {
   int rc;
@@ -52,7 +52,7 @@ int close(int fd) {
   } else {
     rc = ebadf();
   }
-  if (fd < g_fds.n) {
+  if (!__vforked && fd < g_fds.n) {
     g_fds.p[fd].kind = kFdEmpty;
     g_fds.f = MIN(g_fds.f, fd);
   }

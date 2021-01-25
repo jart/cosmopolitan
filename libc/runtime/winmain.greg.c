@@ -36,6 +36,7 @@
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/teb.h"
+#include "libc/runtime/directmap.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
@@ -50,52 +51,34 @@
 #define ADDRESS 0x77700000 /*0000*/
 
 struct WinArgs {
-  char *argv[512];
-  char *envp[512];
-  long auxv[1][2];
+  char *argv[4096];
+  char *envp[4096];
   char argblock[ARG_MAX];
-  char envblock[ENV_MAX];
+  char envblock[ARG_MAX];
 };
-
-static struct CmdExe {
-  bool result;
-  struct OldNtConsole {
-    uint32_t codepage;
-    uint32_t mode;
-    int64_t handle;
-  } oldin, oldout;
-} g_cmdexe;
-
-static textwindows void RestoreCmdExe(void) {
-  if (g_cmdexe.oldin.handle) {
-    SetConsoleCP(g_cmdexe.oldin.codepage);
-    SetConsoleMode(g_cmdexe.oldin.handle, g_cmdexe.oldin.mode);
-  }
-  if (g_cmdexe.oldout.handle) {
-    SetConsoleOutputCP(g_cmdexe.oldout.codepage);
-    SetConsoleMode(g_cmdexe.oldout.handle, g_cmdexe.oldout.mode);
-  }
-}
 
 static textwindows void SetTrueColor(void) {
   SetEnvironmentVariable(u"TERM", u"xterm-truecolor");
 }
 
+static textwindows void MakeLongDoubleLongAgain(void) {
+  int x87cw = 0x037f; /* let's hope win32 won't undo this */
+  asm volatile("fldcw\t%0" : /* no outputs */ : "m"(x87cw));
+}
+
 static textwindows void NormalizeCmdExe(void) {
+  uint32_t mode;
   int64_t handle, hstdin, hstdout, hstderr;
   if ((int)weakaddr("v_ntsubsystem") == kNtImageSubsystemWindowsCui &&
       NtGetVersion() >= kNtVersionWindows10) {
-    atexit(RestoreCmdExe);
     hstdin = GetStdHandle(pushpop(kNtStdInputHandle));
     hstdout = GetStdHandle(pushpop(kNtStdOutputHandle));
     hstderr = GetStdHandle(pushpop(kNtStdErrorHandle));
     if (GetFileType((handle = hstdin)) == kNtFileTypeChar) {
       SetTrueColor();
-      g_cmdexe.oldin.handle = handle;
-      g_cmdexe.oldin.codepage = GetConsoleCP();
       SetConsoleCP(kNtCpUtf8);
-      GetConsoleMode(handle, &g_cmdexe.oldin.mode);
-      SetConsoleMode(handle, g_cmdexe.oldin.mode | kNtEnableProcessedInput |
+      GetConsoleMode(handle, &mode);
+      SetConsoleMode(handle, mode | kNtEnableProcessedInput |
                                  kNtEnableEchoInput | kNtEnableLineInput |
                                  kNtEnableWindowInput |
                                  kNtEnableVirtualTerminalInput);
@@ -103,11 +86,9 @@ static textwindows void NormalizeCmdExe(void) {
     if (GetFileType((handle = hstdout)) == kNtFileTypeChar ||
         GetFileType((handle = hstderr)) == kNtFileTypeChar) {
       SetTrueColor();
-      g_cmdexe.oldout.handle = handle;
-      g_cmdexe.oldout.codepage = GetConsoleOutputCP();
       SetConsoleOutputCP(kNtCpUtf8);
-      GetConsoleMode(handle, &g_cmdexe.oldout.mode);
-      SetConsoleMode(handle, g_cmdexe.oldout.mode | kNtEnableProcessedOutput |
+      GetConsoleMode(handle, &mode);
+      SetConsoleMode(handle, mode | kNtEnableProcessedOutput |
                                  kNtEnableWrapAtEolOutput |
                                  (NtGetVersion() >= kNtVersionWindows10
                                       ? kNtEnableVirtualTerminalProcessing
@@ -116,44 +97,38 @@ static textwindows void NormalizeCmdExe(void) {
   }
 }
 
-static textwindows char *AllocateMemory(void *addr, size_t size, int64_t *h) {
-  return MapViewOfFileExNuma(
-      (*h = CreateFileMappingNuma(-1, NULL, pushpop(kNtPageExecuteReadwrite), 0,
-                                  size, NULL, kNtNumaNoPreferredNode)),
-      kNtFileMapRead | kNtFileMapWrite, 0, 0, size, addr,
-      kNtNumaNoPreferredNode);
-}
-
 static textwindows wontreturn void WinMainNew(void) {
   int64_t h;
   size_t size;
   int i, count;
-  uint64_t data;
+  long auxv[1][2];
   struct WinArgs *wa;
   const char16_t *env16;
   NormalizeCmdExe();
   *(/*unconst*/ int *)&__hostos = WINDOWS;
   size = ROUNDUP(STACKSIZE + sizeof(struct WinArgs), FRAMESIZE);
-  data = (intptr_t)AllocateMemory((char *)ADDRESS, size, &_mmi.p[0].h);
-  _mmi.p[0].x = data >> 16;
-  _mmi.p[0].y = (data >> 16) + ((size >> 16) - 1);
-  _mmi.p[0].prot = PROT_READ | PROT_WRITE;
+  _mmi.p[0].h = __mmap$nt((char *)ADDRESS, size,
+                          PROT_READ | PROT_WRITE | PROT_EXEC, -1, 0)
+                    .maphandle;
+  _mmi.p[0].x = ADDRESS >> 16;
+  _mmi.p[0].y = (ADDRESS >> 16) + ((size >> 16) - 1);
+  _mmi.p[0].prot = PROT_READ | PROT_WRITE | PROT_EXEC;
   _mmi.p[0].flags = MAP_PRIVATE | MAP_ANONYMOUS;
   _mmi.i = pushpop(1L);
-  wa = (struct WinArgs *)(data + size - sizeof(struct WinArgs));
-  count = GetDosArgv(GetCommandLine(), wa->argblock, ARG_MAX, wa->argv, 512);
+  wa = (struct WinArgs *)(ADDRESS + size - sizeof(struct WinArgs));
+  count = GetDosArgv(GetCommandLine(), wa->argblock, ARG_MAX, wa->argv, 4096);
   for (i = 0; wa->argv[0][i]; ++i) {
     if (wa->argv[0][i] == '\\') {
       wa->argv[0][i] = '/';
     }
   }
   env16 = GetEnvironmentStrings();
-  GetDosEnviron(env16, wa->envblock, ENV_MAX, wa->envp, 512);
+  GetDosEnviron(env16, wa->envblock, ARG_MAX, wa->envp, 4096);
   FreeEnvironmentStrings(env16);
-  wa->auxv[0][0] = pushpop(0L);
-  wa->auxv[0][1] = pushpop(0L);
-  _jmpstack((char *)data + STACKSIZE, _executive, count, wa->argv, wa->envp,
-            wa->auxv);
+  auxv[0][0] = pushpop(0L);
+  auxv[0][1] = pushpop(0L);
+  _jmpstack((char *)ADDRESS + STACKSIZE, _executive, count, wa->argv, wa->envp,
+            auxv);
 }
 
 /**
@@ -182,7 +157,9 @@ static textwindows wontreturn void WinMainNew(void) {
  *    the downloads folder. Since we don't even use dynamic linking,
  *    we've cargo culted some API calls, that may harden against it.
  *
- * 6. Finally, we need fork. Microsoft designed Windows to prevent us
+ * 6. Reconfigure x87 FPU so long double is actually long (80 bits).
+ *
+ * 7. Finally, we need fork. Microsoft designed Windows to prevent us
  *    from having fork() so we pass pipe handles in an environment
  *    variable literally copy all the memory.
  *
@@ -190,6 +167,7 @@ static textwindows wontreturn void WinMainNew(void) {
  */
 textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
                             const char *lpCmdLine, int nCmdShow) {
+  MakeLongDoubleLongAgain();
   if (weaken(winsockinit)) weaken(winsockinit)();
   if (weaken(WinMainForked)) weaken(WinMainForked)();
   WinMainNew();

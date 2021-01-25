@@ -21,7 +21,6 @@
 #include "libc/bits/safemacros.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/hefty/spawn.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
@@ -32,6 +31,7 @@
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/o.h"
 
 #define kBacktraceMaxFrames 128
 #define kBacktraceBufSize   ((kBacktraceMaxFrames - 1) * (16 + 1))
@@ -40,7 +40,7 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   ssize_t got;
   intptr_t addr;
   size_t i, j, gi;
-  int rc, pid, tubes[3];
+  int rc, pid, pipefds[2];
   struct Garbages *garbage;
   const struct StackFrame *frame;
   const char *debugbin, *p1, *p2, *p3, *addr2line;
@@ -67,13 +67,16 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
     j += snprintf(&buf[j], 17, "%#x", addr - 1) + 1;
   }
   argv[i++] = NULL;
-  tubes[0] = STDIN_FILENO;
-  tubes[1] = -1;
-  tubes[2] = STDERR_FILENO;
-  if ((pid = spawnve(0, tubes, addr2line, argv, environ)) == -1) {
-    return -1;
+  pipe(pipefds);
+  if (!(pid = vfork())) {
+    dup2(pipefds[1], 1);
+    close(pipefds[0]);
+    close(pipefds[1]);
+    execvp(addr2line, argv);
+    abort();
   }
-  while ((got = read(tubes[1], buf, kBacktraceBufSize)) > 0) {
+  close(pipefds[1]);
+  while ((got = read(pipefds[0], buf, kBacktraceBufSize)) > 0) {
     for (p1 = buf; got;) {
       /*
        * remove racist output from gnu tooling, that can't be disabled
@@ -95,7 +98,7 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
       }
     }
   }
-  close(tubes[1]);
+  close(pipefds[0]);
   if (waitpid(pid, &rc, 0) == -1) return -1;
   if (WEXITSTATUS(rc) != 0) return -1;
   return 0;

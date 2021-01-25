@@ -19,7 +19,6 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/hefty/spawn.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
@@ -54,6 +53,7 @@
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
+#include "libc/sysv/consts/w.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.h"
@@ -99,6 +99,7 @@
 jmp_buf g_jb;
 char *g_exepath;
 volatile bool g_childterm;
+volatile int g_childstatus;
 struct sockaddr_in g_servaddr;
 unsigned char g_buf[PAGESIZE];
 bool g_daemonize, g_sendready;
@@ -110,14 +111,18 @@ void OnInterrupt(int sig) {
   once = true;
   kill(0, sig);
   for (;;) {
-    if (waitpid(-1, NULL, 0) == -1) break;
+    if (waitpid(-1, NULL, 0) == -1) {
+      break;
+    }
   }
   gclongjmp(g_jb, sig);
   unreachable;
 }
 
 void OnChildTerminated(int sig) {
-  g_childterm = true;
+  while (waitpid(-1, &g_childstatus, WNOHANG) > 0) {
+    g_childterm = true;
+  }
 }
 
 wontreturn void ShowUsage(FILE *f, int rc) {
@@ -125,10 +130,6 @@ wontreturn void ShowUsage(FILE *f, int rc) {
           "[-d] [-r] [-l LISTENIP] [-p PORT] [-t TIMEOUTMS]");
   exit(rc);
 }
-
-/\
-* hi
-*/
 
 void GetOpts(int argc, char *argv[]) {
   int opt;
@@ -175,8 +176,8 @@ void StartTcpServer(void) {
   int yes = true;
   uint32_t asize;
   CHECK_NE(-1, (g_servfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)));
-  setsockopt(g_servfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
-  setsockopt(g_servfd, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(yes));
+  LOGIFNEG1(setsockopt(g_servfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)));
+  LOGIFNEG1(setsockopt(g_servfd, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(yes)));
   if (bind(g_servfd, &g_servaddr, sizeof(g_servaddr)) == -1) {
     if (g_servaddr.sin_port != 0) {
       g_servaddr.sin_port = 0;
@@ -192,6 +193,7 @@ void StartTcpServer(void) {
   if (g_sendready) {
     printf("ready %hu\n", ntohs(g_servaddr.sin_port));
     fflush(stdout);
+    fclose(stdout);
     stdout->fd = g_devnullfd;
   }
   CHECK_NE(-1, fcntl(g_servfd, F_SETFD, FD_CLOEXEC));
@@ -240,13 +242,17 @@ void HandleClient(void) {
   ssize_t got, wrote;
   struct sockaddr_in addr;
   char *addrstr, *exename;
-  int wstatus, child, stdiofds[3];
+  int rc, wstatus, child, pipefds[2];
   uint32_t addrsize, namesize, filesize, remaining;
 
   /* read request to run program */
   addrsize = sizeof(addr);
   CHECK_NE(-1, (g_clifd = accept4(g_servfd, &addr, &addrsize, SOCK_CLOEXEC)));
-  defer(close_s, &g_clifd);
+  if (fork()) {
+    close(g_clifd);
+    return;
+  }
+  g_childterm = false;
   addrstr = gc(DescribeAddress(&addr));
   DEBUGF("%s %s %s", gc(DescribeAddress(&g_servaddr)), "accepted", addrstr);
   got = recv(g_clifd, (p = &g_buf[0]), sizeof(g_buf), 0);
@@ -270,8 +276,6 @@ void HandleClient(void) {
   /* write the file to disk */
   remaining = filesize;
   CHECK_NE(-1, (g_exefd = creat(g_exepath, 0700)));
-  defer(unlink_s, &g_exepath);
-  defer(close_s, &g_exefd);
   ftruncate(g_exefd, filesize);
   if (got) {
     CHECK_EQ(got, write(g_exefd, p, got));
@@ -284,7 +288,8 @@ void HandleClient(void) {
     if (!got) {
       LOGF("%s %s %,u/%,u %s", addrstr, "sent", remaining, filesize,
            "bytes before hangup");
-      return;
+      unlink(g_exepath);
+      _exit(0);
     }
     remaining -= got;
     p = &g_buf[0];
@@ -293,68 +298,86 @@ void HandleClient(void) {
       CHECK_LE(wrote, got);
     } while ((got -= wrote));
   }
-  /* CHECK_NE(-1, shutdown(g_clifd, SHUT_RD)); */
-  CHECK_NE(-1, close_s(&g_exefd));
+  LOGIFNEG1(shutdown(g_clifd, SHUT_RD));
+  LOGIFNEG1(close(g_exefd));
 
   /* run program, tee'ing stderr to both log and client */
   DEBUGF("spawning %s", exename);
-  g_childterm = false;
-  stdiofds[0] = g_devnullfd;
-  stdiofds[1] = g_devnullfd;
-  stdiofds[2] = -1;
-  CHECK_NE(-1, (child = spawnve(0, stdiofds, g_exepath,
-                                (char *const[]){g_exepath, NULL}, environ)));
+  CHECK_NE(-1, pipe2(pipefds, O_CLOEXEC));
+  if (!(child = vfork())) {
+    dup2(pipefds[1], 2);
+    execv(g_exepath, (char *const[]){g_exepath, NULL});
+    abort();
+  }
+  close(pipefds[1]);
   DEBUGF("communicating %s[%d]", exename, child);
   for (;;) {
-    CHECK_NE(-1, (got = read(stdiofds[2], g_buf, sizeof(g_buf))));
+    CHECK_NE(-1, (got = read(pipefds[0], g_buf, sizeof(g_buf))));
     if (!got) {
-      close_s(&stdiofds[2]);
+      close(pipefds[0]);
       break;
     }
     fwrite(g_buf, got, 1, stderr);
     SendOutputFragmentMessage(g_clifd, kRunitStderr, g_buf, got);
   }
-  if (!g_childterm) {
-    CHECK_NE(-1, waitpid(child, &wstatus, 0));
+
+  if ((rc = waitpid(child, &wstatus, 0)) != -1) {
+    g_childstatus = wstatus;
+  } else {
+    CHECK_EQ(ECHILD, errno);
+    CHECK(g_childterm);
   }
-  DEBUGF("exited %s[%d] → %d", exename, child, WEXITSTATUS(wstatus));
+  if (WIFSIGNALED(g_childstatus)) {
+    rc = 128 + WTERMSIG(g_childstatus);
+  } else {
+    rc = WEXITSTATUS(g_childstatus);
+  }
+  DEBUGF("exited %s[%d] -> %d", exename, child, rc);
 
   /* let client know how it went */
-  SendExitMessage(g_clifd, WEXITSTATUS(wstatus));
-  /* CHECK_NE(-1, shutdown(g_clifd, SHUT_RDWR)); */
-  CHECK_NE(-1, close(g_clifd));
+  LOGIFNEG1(unlink(g_exepath));
+  SendExitMessage(g_clifd, rc);
+  LOGIFNEG1(shutdown(g_clifd, SHUT_RDWR));
+  LOGIFNEG1(close(g_clifd));
+  _exit(0);
 }
 
 int Poll(void) {
-  int i, evcount;
-  struct pollfd fds[] = {{g_servfd, POLLIN}};
+  int i, wait, evcount;
+  struct pollfd fds[1];
 TryAgain:
-  evcount = poll(fds, ARRAYLEN(fds), g_timeout);
+  fds[0].fd = g_servfd;
+  fds[0].events = POLLIN;
+  wait = MIN(1000, g_timeout);
+  evcount = poll(fds, ARRAYLEN(fds), wait);
+  if (!evcount) g_timeout -= wait;
   if (evcount == -1 && errno == EINTR) goto TryAgain;
   CHECK_NE(-1, evcount);
   for (i = 0; i < evcount; ++i) {
     CHECK(fds[i].revents & POLLIN);
     HandleClient();
   }
+  /* manually do this because of nt */
+  while (waitpid(-1, NULL, WNOHANG) > 0) donothing;
   return evcount;
 }
 
 int Serve(void) {
   int rc;
   const struct sigaction onsigint = {.sa_handler = (void *)OnInterrupt,
-                                     .sa_flags = SA_RESETHAND};
+                                     .sa_flags = SA_NODEFER};
   const struct sigaction onsigterm = {.sa_handler = (void *)OnInterrupt,
-                                      .sa_flags = SA_RESETHAND};
-  const struct sigaction onsigchld = {.sa_handler = SIG_IGN,
-                                      .sa_flags = SA_RESETHAND | SA_RESTART};
+                                      .sa_flags = SA_NODEFER};
+  const struct sigaction onsigchld = {.sa_handler = (void *)OnChildTerminated,
+                                      .sa_flags = SA_RESTART};
   StartTcpServer();
   defer(close_s, &g_servfd);
   if (!(rc = setjmp(g_jb))) {
     sigaction(SIGINT, &onsigint, NULL);
     sigaction(SIGTERM, &onsigterm, NULL);
     sigaction(SIGCHLD, &onsigchld, NULL);
-    while (g_servfd != -1) {
-      if (!Poll()) break;
+    for (;;) {
+      if (!Poll() && !g_timeout) break;
     }
     LOGF("timeout expired, shutting down");
   } else {

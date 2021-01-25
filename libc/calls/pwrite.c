@@ -34,6 +34,8 @@
  * @return [1..size] bytes on success, or -1 w/ errno; noting zero is
  *     impossible unless size was passed as zero to do an error check
  * @see pread(), write()
+ * @asyncsignalsafe
+ * @vforksafe
  */
 ssize_t pwrite(int fd, const void *buf, size_t size, int64_t offset) {
   ssize_t rc;

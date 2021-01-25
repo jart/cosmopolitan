@@ -36,6 +36,7 @@
  * @param mode can be 0, FALLOC_xxx
  * @param length is how much physical space to reserve / commit
  * @return 0 on success, or -1 w/ errno
+ * @note limited availability on rhel5 and openbsd
  * @see ftruncate()
  * @syscall
  */
@@ -68,7 +69,7 @@ int fallocate(int fd, int32_t mode, int64_t offset, int64_t length) {
        */
       return ftruncate$nt(fd, length);
     } else {
-      return eopnotsupp();
+      return enosys();
     }
   } else {
     return enosys();

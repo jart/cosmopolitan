@@ -51,7 +51,7 @@ struct msghdr$bsd {
 
 errno_t MapDosErrorToErrno(uint32_t);
 
-int32_t __accept$sysv(int32_t, void *, uint32_t *) nodiscard hidden;
+int32_t __accept$sysv(int32_t, void *, uint32_t *, int) nodiscard hidden;
 int32_t __accept4$sysv(int32_t, void *, uint32_t *, int) nodiscard hidden;
 int32_t __connect$sysv(int32_t, const void *, uint32_t) hidden;
 int32_t __socket$sysv(int32_t, int32_t, int32_t) hidden;
@@ -82,7 +82,7 @@ int32_t epoll_create$sysv(int32_t) hidden;
 int32_t epoll_ctl$sysv(int32_t, int32_t, int32_t, void *) hidden;
 int32_t epoll_wait$sysv(int32_t, void *, int32_t, int32_t) hidden;
 
-int poll$nt(struct pollfd *, uint64_t, int32_t) hidden;
+int poll$nt(struct pollfd *, uint64_t, uint64_t) hidden;
 int getsockopt$nt(struct Fd *, int, int, void *, uint32_t *) hidden;
 int getsockname$nt(struct Fd *, void *, uint32_t *) hidden;
 int getpeername$nt(struct Fd *, void *, uint32_t *) hidden;

@@ -15,7 +15,6 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/hefty/spawn.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/errno.h"
@@ -148,7 +147,6 @@ struct ZipGames {
 static int frame_;
 static int drain_;
 static int playfd_;
-static int devnull_;
 static int playpid_;
 static bool exited_;
 static bool timeout_;
@@ -306,21 +304,6 @@ void GetTermSize(void) {
   InitFrame(&vf_[0]);
   InitFrame(&vf_[1]);
   WriteStringNow("\e[0m\e[H\e[J");
-}
-
-bool TrySpeaker(const char* prog, char* const* args) {
-  int rc;
-  int fds[3];
-  fds[0] = -1;
-  fds[1] = devnull_;
-  fds[2] = devnull_;
-  if ((rc = spawnve(0, fds, prog, args, environ)) != -1) {
-    playpid_ = rc;
-    playfd_ = fds[0];
-    return true;
-  } else {
-    return false;
-  }
 }
 
 void IoInit(void) {
@@ -1700,6 +1683,8 @@ char* GetLine(void) {
 
 int PlayGame(const char* romfile, const char* opt_tasfile) {
   FILE* fp;
+  int devnull;
+  int pipefds[2];
   inputfn_ = opt_tasfile;
 
   if (!(fp = fopen(romfile, "rb"))) {
@@ -1716,13 +1701,23 @@ int PlayGame(const char* romfile, const char* opt_tasfile) {
 
   // open speaker
   // todo: this needs plenty of work
-  devnull_ = open("/dev/null", O_WRONLY);
   if ((ffplay_ = commandvenv("FFPLAY", "ffplay"))) {
-    const char* args[] = {
-        "ffplay", "-nodisp", "-loglevel", "quiet", "-fflags", "nobuffer", "-ac",
-        "1",      "-ar",     "1789773",   "-f",    "s16le",   "pipe:",    NULL,
-    };
-    TrySpeaker(ffplay_, (char* const*)args);
+    devnull = open("/dev/null", O_WRONLY | O_CLOEXEC);
+    pipe2(pipefds, O_CLOEXEC);
+    if (!(playpid_ = vfork())) {
+      const char* const args[] = {
+          "ffplay",   "-nodisp", "-loglevel", "quiet", "-fflags",
+          "nobuffer", "-ac",     "1",         "-ar",   "1789773",
+          "-f",       "s16le",   "pipe:",     NULL,
+      };
+      dup2(pipefds[0], 0);
+      dup2(devnull, 1);
+      dup2(devnull, 2);
+      execv(ffplay_, (char* const*)args);
+      abort();
+    }
+    close(pipefds[0]);
+    playfd_ = pipefds[1];
   } else {
     fputs("\nWARNING\n\
 \n\

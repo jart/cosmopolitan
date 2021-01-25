@@ -24,6 +24,8 @@
  *
  * @see palandprintf() and printf() for detailed documentation
  * @see snprintf() for same w/ buf size param
+ * @asyncsignalsafe
+ * @vforksafe
  */
 int(sprintf)(char *buf, const char *fmt, ...) {
   int rc;

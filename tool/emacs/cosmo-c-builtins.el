@@ -1287,9 +1287,7 @@
            "YOINK"
            "STATIC_YOINK"
            "STATIC_YOINK_SOURCE"
-           "STRINGIFY"
-           "likely"
-           "unlikely"))
+           "STRINGIFY"))
 
 )
     (concat "\\_<"

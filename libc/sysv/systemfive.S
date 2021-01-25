@@ -68,19 +68,27 @@ __hostos:
 /	Performs System Five System Call.
 /
 /	Cosmopolitan is designed to delegate all function calls into the
-/	Linux, FreeBSD, OpenBSD, and XNU kernels through this function,
-/	with few exceptions. This function is intended to be called via
+/	Linux, FreeBSD, OpenBSD, and XNU kernels via this function, with
+/	few exceptions. This function should generally only be called by
 /	generated thunks in the libc/sysv/syscalls/ directory.
 /
-/	It's safe to call this function on Windows, where it'll always
-/	return -1 w/ errno == ENOSYS. Further note that -1 is the only
+/	It's safe to call this function on Windows, where it will always
+/	return -1 with errno == ENOSYS. Further note that -1 is the only
 /	return value that means error, a common anti-pattern is to check
 /	for values less than 0 (which is more problematic on 32-bit).
 /
-/	It's important to consider that system calls are an order of a
+/	It is important to consider that system calls are one order of a
 /	magnitude more expensive than normal function calls. For example
 /	getpid() on Linux usually takes 500ns, and cached i/o calls will
-/	take 1µs or more.
+/	take 1µs or more. So we don't need to inline them like Chromium.
+/
+/	Another thing to consider is that BSDs only loosely follow the
+/	System Five ABI for the SYSCALL instruction. For example Linux
+/	always follows the six argument limit but the FreeBSD sendfile
+/	system call accepts a seventh argument that is passed on stack
+/	and OpenBSD modifies functions like mmap so that the sixth arg
+/	is passed on the stack. There's also the carry flag convention
+/	that XNU, FreeBSD, and OpenBSD inherited from 386BSD aka Jolix
 /
 /	@param	%rax function ordinal supplied by jump slot
 /	@param	%rdi,%rsi,%rdx,%rcx,%r8,%r9 and rest on stack
@@ -93,16 +101,16 @@ __systemfive:
 	.previous
 .Lanchorpoint:
 systemfive.linux:
-	movswl	%ax,%eax
-	test	%eax,%eax
-	js	systemfive.enosys
-	mov	%rcx,%r10
-	push	%rbp
-	mov	%rsp,%rbp
-	syscall
-	pop	%rbp
-	cmp	$-4095,%rax
-	jae	systemfive.error
+	movswl	%ax,%eax		# gnu/systemd ordinal is first word
+	test	%eax,%eax		# sign extend to optimize code size
+	js	systemfive.enosys	# test for syscalls.sh ordinal ffff
+	mov	%rcx,%r10		# syscall instruction clobbers %rcx
+	push	%rbp			# linux never reads args from stack
+	mov	%rsp,%rbp		# having frame will help backtraces
+	syscall				# this is known as a context switch
+	pop	%rbp			# next we check to see if it failed
+	cmp	$-4095,%rax		# system five nexgen32e abi § A.2.1
+	jae	systemfive.error	# encodes errno as neg return value
 	ret
 	.endfn	systemfive.linux,globl,hidden
 systemfive.error:
@@ -110,10 +118,9 @@ systemfive.error:
 /	𝑠𝑙𝑖𝑑𝑒
 	.endfn	systemfive.error,globl,hidden
 systemfive.errno:
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	stc
+	mov	%eax,errno(%rip)	# normalize to c library convention
+	push	$-1			# negative one is only error result
+	pop	%rax			# the push pop is to save code size
 	ret
 	.endfn	systemfive.errno,globl,hidden
 systemfive.enosys:
@@ -132,20 +139,16 @@ systemfive.freebsd:
 systemfive.bsd:
 	cmp	$0xfff,%ax
 	jae	systemfive.enosys
-	mov	%rcx,%r10
-	push	%rbp
-	mov	%rsp,%rbp
-	syscall
-	pop	%rbp
-	jc	systemfive.errno
+	mov	%rcx,%r10		# note: we do not create a stack frame
+	syscall				# bsd will need arg on stack sometimes
+	jc	systemfive.errno	# bsd sets carry flag if %rax is errno
 	ret
 	.endfn	systemfive.bsd
 systemfive.xnu:
-/	do this to rax
-/	0x????????2153????
+/	0x????????2153????		# how syscalls.sh encodes xnu ordinals
 /	          │└┴┴─┐
 /	          └┐   ├┬┐
-/	0x0000000002000153
+/	0x0000000002000153		# how xnu wants ordinals to be encoded
 	mov	%eax,%r11d
 	shr	$4*7,%r11d
 	shl	$4*6,%r11d

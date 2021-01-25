@@ -32,7 +32,8 @@ int accept4$sysv(int server, void *addr, uint32_t *addrsize, int flags) {
   if (client == -1 && errno == ENOSYS) {
     errno = olderr;
   TriedAndTrue:
-    client = fixupnewsockfd$sysv(__accept$sysv(server, addr, addrsize), flags);
+    client =
+        fixupnewsockfd$sysv(__accept$sysv(server, addr, addrsize, 0), flags);
   } else if (SupportsLinux() && !once) {
     once = true;
     if (client == __NR_accept4_linux) {

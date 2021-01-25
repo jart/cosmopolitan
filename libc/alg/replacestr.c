@@ -29,7 +29,7 @@
  * @return newly allocated memory that must be free()'d or NULL w/ errno
  * @error ENOMEM, EINVAL
  */
-char *(replacestr)(const char *s, const char *needle, const char *replacement) {
+char *replacestr(const char *s, const char *needle, const char *replacement) {
   char *p1, *p2, *res_p;
   size_t left, nlen, rlen, res_i, res_n;
   if (*needle) {

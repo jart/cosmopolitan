@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/hefty/spawn.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/gdb.h"
 #include "libc/log/log.h"
@@ -52,12 +51,12 @@
  * @note this is called via eponymous spinlock macro wrapper
  */
 relegated int(attachdebugger)(intptr_t continuetoaddr) {
-  int ttyfd;
+  int pid, ttyfd;
   struct StackFrame *bp;
   char pidstr[11], breakcmd[40];
   const char *se, *elf, *gdb, *rewind, *layout;
   if (IsGenuineCosmo() || !(gdb = GetGdbPath()) ||
-      (ttyfd = open(_PATH_TTY, O_RDWR, 0)) == -1) {
+      (ttyfd = open(_PATH_TTY, O_RDWR | O_CLOEXEC)) == -1) {
     return -1;
   }
   write(ttyfd, RESTORE_TTY, strlen(RESTORE_TTY));
@@ -81,20 +80,24 @@ relegated int(attachdebugger)(intptr_t continuetoaddr) {
     rewind = NULL;
     breakcmd[0] = '\0';
   }
-  return spawnve(0, (int[3]){ttyfd, ttyfd, STDERR_FILENO}, gdb,
-                 (char *const[]){
-                     "gdb",    "--tui",
-                     "-p",     pidstr,
-                     se,       elf,
-                     "-ex",    "set osabi GNU/Linux",
-                     "-ex",    "set complaints 0",
-                     "-ex",    "set confirm off",
-                     "-ex",    layout,
-                     "-ex",    "layout reg",
-                     "-ex",    "set var g_gdbsync = 1",
-                     "-q",     rewind,
-                     breakcmd, "-ex",
-                     "c",      NULL,
-                 },
-                 environ);
+  if (!(pid = vfork())) {
+    dup2(ttyfd, 0);
+    dup2(ttyfd, 1);
+    execv(gdb, (char *const[]){
+                   "gdb",    "--tui",
+                   "-p",     pidstr,
+                   se,       elf,
+                   "-ex",    "set osabi GNU/Linux",
+                   "-ex",    "set complaints 0",
+                   "-ex",    "set confirm off",
+                   "-ex",    layout,
+                   "-ex",    "layout reg",
+                   "-ex",    "set var g_gdbsync = 1",
+                   "-q",     rewind,
+                   breakcmd, "-ex",
+                   "c",      NULL,
+               });
+    abort();
+  }
+  return pid;
 }

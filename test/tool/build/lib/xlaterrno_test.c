@@ -23,5 +23,4 @@
 TEST(xlaterrno, test) {
   EXPECT_EQ(95, XlatErrno(EOPNOTSUPP));
   EXPECT_EQ(90, XlatErrno(EMSGSIZE));
-  EXPECT_EQ(133, XlatErrno(EHWPOISON));
 }

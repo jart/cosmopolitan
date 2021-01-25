@@ -45,7 +45,7 @@ TEST(strerror, einval) {
 }
 
 TEST(strerror, symbolizingTheseNumbersAsErrorsIsHeresyInUnixStyle) {
-  EXPECT_STARTSWITH("E?/err=0/errno:0/GetLastError:0", strerror(0));
+  EXPECT_STARTSWITH("E?", strerror(0));
   EXPECT_STARTSWITH("E?", strerror(-1));
 }
 

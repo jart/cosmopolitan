@@ -144,9 +144,9 @@ struct ucontext {
   };
   struct ucontext *uc_link;
   stack_t uc_stack;
-  mcontext_t uc_mcontext;
-  uint8_t uc_sigmask[128 + 16]; /* ?!? wut */
-  struct FpuState fpustate;
+  mcontext_t uc_mcontext; /* use this */
+  sigset_t uc_sigmask;
+  struct FpuState __fpustate; /* for cosmo on non-linux */
 };
 
 typedef struct ucontext ucontext_t;

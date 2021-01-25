@@ -34,6 +34,8 @@ struct DirectMap __mmap(void *addr, size_t size, unsigned prot, unsigned flags,
     return (struct DirectMap){mmap$sysv(addr, size, prot, flags, fd, off),
                               kNtInvalidHandleValue};
   } else {
-    return __mmap$nt(addr, size, prot, flags, fd, off);
+    return __mmap$nt(addr, size, prot,
+                     fd != -1 ? g_fds.p[fd].handle : kNtInvalidHandleValue,
+                     off);
   }
 }

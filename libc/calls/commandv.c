@@ -19,79 +19,41 @@
 #include "libc/bits/progn.internal.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/fmt/conv.h"
-#include "libc/nt/ntdll.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/ok.h"
 #include "libc/sysv/errfuns.h"
 
-static int accessexe(char pathname[hasatleast PATH_MAX], size_t len,
-                     const char *ext) {
-  len = stpcpy(&pathname[len], ext) - &pathname[0];
-  if (isexecutable(pathname)) {
-    return len;
-  } else {
-    return -1;
-  }
-}
-
-static int accesscmd(char pathname[hasatleast PATH_MAX], const char *path,
-                     const char *name, size_t namelen) { /* cf. %PATHEXT% */
-  int rc;
-  char *p;
-  bool hasdot;
-  size_t pathlen, len;
-  pathlen = strlen(path);
+static bool AccessCommand(char path[hasatleast PATH_MAX], const char *name,
+                          size_t namelen, size_t pathlen) {
   if (pathlen + 1 + namelen + 1 + 4 + 1 > PATH_MAX) return -1;
-  p = mempcpy(pathname, path, pathlen);
-  if (pathlen && pathname[pathlen - 1] != '/') *p++ = '/';
-  p = mempcpy(p, name, namelen);
-  len = p - &pathname[0];
-  hasdot = !!memchr(basename(name), '.', namelen);
-  if ((hasdot && (rc = accessexe(pathname, len, "")) != -1) ||
-      (!hasdot &&
-       ((rc = accessexe(pathname, len, ".com")) != -1 ||
-        (IsWindows() && (rc = accessexe(pathname, len, ".exe")) != -1) ||
-        (!IsWindows() && (rc = accessexe(pathname, len, "")) != -1)))) {
-    return rc;
-  } else {
-    return -1;
+  if (pathlen && (path[pathlen - 1] != '/' && path[pathlen - 1] != '\\')) {
+    path[pathlen++] = '/';
   }
+  memcpy(path + pathlen, name, namelen + 1);
+  if (isexecutable(path)) return true;
+  memcpy(path + pathlen + namelen, ".com", 5);
+  if (isexecutable(path)) return true;
+  memcpy(path + pathlen + namelen, ".exe", 5);
+  if (isexecutable(path)) return true;
+  return false;
 }
 
-static int searchcmdpath(char pathname[hasatleast PATH_MAX], const char *name,
-                         size_t namelen) {
-  int rc;
-  char *path, *pathtok, ep[PATH_MAX];
-  rc = -1;
-  if (!memccpy(ep,
-               firstnonnull(emptytonull(getenv("PATH")),
-                            "/bin:/usr/local/bin:/usr/bin"),
-               '\0', sizeof(ep))) {
-    return enomem();
-  }
-  pathtok = ep;
-  while ((path = strsep(&pathtok, IsWindows() ? ";" : ":"))) {
-    if (strchr(path, '=')) continue;
-    if ((rc = accesscmd(pathname, path, name, namelen)) != -1) {
-      break;
+static bool SearchPath(char path[hasatleast PATH_MAX], const char *name,
+                       size_t namelen) {
+  size_t i;
+  const char *p;
+  p = firstnonnull(emptytonull(getenv("PATH")), "/bin:/usr/local/bin:/usr/bin");
+  for (;; p += i) {
+    while (*p == ':' || *p == ';') ++p;
+    if (!*p) break;
+    for (i = 0; i < PATH_MAX && p[i] && p[i] != ':' && p[i] != ';'; ++i) {
+      path[i] = p[i];
+    }
+    if (AccessCommand(path, name, namelen, i)) {
+      return true;
     }
   }
-  return rc;
-}
-
-static char *mkcmdquery(const char *name, size_t namelen,
-                        char scratch[hasatleast PATH_MAX]) {
-  char *p;
-  if (namelen + 1 + 1 > PATH_MAX) return NULL;
-  p = mempcpy(scratch, name, namelen);
-  *p++ = '=';
-  *p++ = '\0';
-  if (IsWindows() || IsXnu()) strntolower(scratch, namelen);
-  return &scratch[0];
+  return false;
 }
 
 /**
@@ -100,20 +62,27 @@ static char *mkcmdquery(const char *name, size_t namelen,
  * @return execve()'able path, or NULL w/ errno
  * @errno ENOENT, EACCES, ENOMEM
  * @see free(), execvpe()
+ * @asyncsignalsafe
+ * @vforksafe
  */
 char *commandv(const char *name, char pathbuf[hasatleast PATH_MAX]) {
   char *p;
-  size_t len;
+  size_t namelen;
   int rc, olderr;
+  if (!(namelen = strlen(name))) return PROGN(enoent(), NULL);
+  if (namelen + 1 > PATH_MAX) return PROGN(enametoolong(), NULL);
+  if (name[0] == '/' || name[0] == '\\') {
+    memcpy(pathbuf, name, namelen + 1);
+    return pathbuf;
+  }
   olderr = errno;
-  if (!(len = strlen(name))) return PROGN(enoent(), NULL);
-  if (memchr(name, '=', len)) return PROGN(einval(), NULL);
   if ((IsWindows() &&
-       ((rc = accesscmd(pathbuf, kNtSystemDirectory, name, len)) != -1 ||
-        (rc = accesscmd(pathbuf, kNtWindowsDirectory, name, len)) != -1)) ||
-      (rc = accesscmd(pathbuf, "", name, len)) != -1 ||
-      (!strpbrk(name, "/\\") &&
-       (rc = searchcmdpath(pathbuf, name, len)) != -1)) {
+       (AccessCommand(pathbuf, name, namelen,
+                      stpcpy(pathbuf, kNtSystemDirectory) - pathbuf) ||
+        AccessCommand(pathbuf, name, namelen,
+                      stpcpy(pathbuf, kNtWindowsDirectory) - pathbuf))) ||
+      AccessCommand(strcpy(pathbuf, ""), name, namelen, 0) ||
+      SearchPath(pathbuf, name, namelen)) {
     errno = olderr;
     return pathbuf;
   } else {

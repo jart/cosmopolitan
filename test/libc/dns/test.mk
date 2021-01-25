@@ -23,7 +23,6 @@ TEST_LIBC_DNS_CHECKS =					\
 	$(TEST_LIBC_DNS_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
 
 TEST_LIBC_DNS_DIRECTDEPS =				\
-	LIBC_CALLS_HEFTY				\
 	LIBC_DNS					\
 	LIBC_FMT					\
 	LIBC_INTRIN					\

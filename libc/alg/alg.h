@@ -21,13 +21,6 @@ void qsort_r(void *, size_t, size_t,
 int tarjan(int, const int (*)[2], int, int[], int[], int *)
     paramsnonnull((2, 4)) nocallback nothrow;
 
-void *memmem(const void *, size_t, const void *, size_t)
-    paramsnonnull() nothrow nocallback nosideeffect;
-void *memmem16(const void *, size_t, const void *, size_t)
-    paramsnonnull() nothrow nocallback nosideeffect;
-void *wmemmem(const void *, size_t, const void *, size_t)
-    paramsnonnull() nothrow nocallback nosideeffect;
-
 #define __algalloc returnspointerwithnoaliases nothrow nocallback nodiscard
 
 char *replacestr(const char *, const char *, const char *)

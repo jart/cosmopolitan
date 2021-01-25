@@ -9,6 +9,7 @@
 #include "libc/dce.h"
 #include "libc/limits.h"
 #include "libc/macros.h"
+#include "libc/nt/struct/ntexceptionpointers.h"
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/struct/startupinfo.h"
 #include "libc/nt/struct/systeminfo.h"
@@ -37,7 +38,7 @@ struct IoctlPtmGet {
 };
 
 struct Fds {
-  size_t f;  // arbitrary free slot start search index
+  size_t f;  // lowest free slot
   size_t n;  // monotonic capacity
   struct Fd {
     int64_t handle;
@@ -59,6 +60,7 @@ struct Fds {
 
 extern const struct Fd kEmptyFd;
 
+hidden extern int __vforked;
 hidden extern int g_sighandrvas[NSIG];
 hidden extern struct Fds g_fds;
 hidden extern struct NtSystemInfo g_ntsysteminfo;
@@ -91,6 +93,7 @@ forceinline size_t clampio(size_t size) {
 
 char *getcwd$sysv(char *, u64) hidden;
 i32 __dup3$sysv(i32, i32, i32) hidden;
+i32 __execve$sysv(const char *, char *const[], char *const[]) hidden;
 i32 __fstat$sysv(i32, struct stat *) hidden;
 i32 __fstatat$sysv(i32, const char *, struct stat *, i32) hidden;
 i32 __pipe2$sysv(i32[hasatleast 2], u32) hidden;
@@ -119,7 +122,8 @@ i32 fsync$sysv(i32) hidden;
 i32 ftruncate$sysv(i32, i64) hidden;
 i32 futimes$sysv(i32, const struct timeval *) hidden;
 i32 futimesat$sysv(i32, const char *, const struct timeval *) hidden;
-i32 getdents(i32, char *, u32) hidden;
+i32 getdents(i32, char *, u32, i64 *) hidden;
+i32 getitimer$sysv(i32, struct itimerval *) hidden;
 i32 getppid$sysv(void) hidden;
 i32 getpriority$sysv(i32, u32) hidden;
 i32 getrlimit$sysv(i32, struct rlimit *) hidden;
@@ -150,7 +154,10 @@ i32 sched_setaffinity$sysv(i32, u64, const void *) hidden;
 i32 sched_yield$sysv(void) hidden;
 i32 setitimer$sysv(i32, const struct itimerval *, struct itimerval *) hidden;
 i32 setpriority$sysv(i32, u32, i32) hidden;
+i32 setresgid$sysv(uint32_t, uint32_t, uint32_t) hidden;
+i32 setresuid$sysv(uint32_t, uint32_t, uint32_t) hidden;
 i32 setrlimit$sysv(i32, const struct rlimit *) hidden;
+i32 setsid$sysv(void) hidden;
 i32 sigaction$sysv(i32, const void *, void *, i64) hidden;
 i32 sigprocmask$sysv(i32, const sigset *, sigset *, u64) hidden;
 i32 sigsuspend$sysv(const sigset *, u64) hidden;
@@ -169,6 +176,7 @@ i64 copy_file_range$sysv(i32, long *, i32, long *, u64, u32) hidden;
 i64 getrandom$sysv(void *, u64, u32) hidden;
 i64 pread$sysv(i32, void *, u64, i64) hidden;
 i64 preadv$sysv(i32, struct iovec *, i32, i64) hidden;
+i64 ptrace$sysv(int, i32, void *, void *) hidden;
 i64 pwrite$sysv(i32, const void *, u64, i64) hidden;
 i64 pwritev$sysv(i32, const struct iovec *, i32, i64) hidden;
 i64 read$sysv(i32, void *, u64) hidden;
@@ -176,10 +184,6 @@ i64 sendfile$sysv(i32, i32, i64 *, u64) hidden;
 i64 splice$sysv(i32, i64 *, i32, i64 *, u64, u32) hidden;
 i64 vmsplice$sysv(i32, const struct iovec *, i64, u32) hidden;
 i64 write$sysv(i32, const void *, u64) hidden;
-int getitimer$sysv(i32, struct itimerval *) hidden;
-int setresgid$sysv(uint32_t, uint32_t, uint32_t) hidden;
-int setresuid$sysv(uint32_t, uint32_t, uint32_t) hidden;
-int setsid$sysv(void) hidden;
 u32 getgid$sysv(void) hidden;
 u32 getpid$sysv(void) hidden;
 u32 getsid$sysv(int) hidden;
@@ -248,6 +252,8 @@ int utimensat$nt(int, const char *, const struct timespec *, int) hidden;
 int getrusage$nt(int, struct rusage *) hidden;
 int setitimer$nt(int, const struct itimerval *, struct itimerval *) hidden;
 int nanosleep$nt(const struct timespec *, struct timespec *) hidden;
+int faccessat$nt(int, const char *, int, uint32_t) hidden;
+int execve$nt(const char *, char *const[], char *const[]) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » windows nt » support                           ─╬─│┼
@@ -266,6 +272,7 @@ int ntaccesscheck(const char16_t *, u32) paramsnonnull() hidden;
 int64_t __winerr(void) nocallback privileged;
 int __mkntpath(const char *, char16_t[hasatleast PATH_MAX - 16]) hidden;
 int __mkntpath2(const char *, char16_t[hasatleast PATH_MAX - 16], int) hidden;
+unsigned __wincrash$nt(struct NtExceptionPointers *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » metal                                          ─╬─│┼

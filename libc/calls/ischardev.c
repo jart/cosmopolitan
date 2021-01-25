@@ -17,12 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/nt/enum/filetype.h"
-#include "libc/nt/files.h"
 
 /**
  * Returns true if file descriptor is backed by character i/o.

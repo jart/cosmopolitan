@@ -512,6 +512,10 @@ static void PrintDox(struct Dox *dox, FILE *f) {
 <link rel=\"canonical\" href=\"https://justine.lol/cosmopolitan/documentation.html\">\n\
 <link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Roboto&family=Roboto+Mono&display=swap\">\n\
 <link rel=\"stylesheet\" href=\"style.css\">\n\
+<link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/apple-touch-icon.png\">\n\
+<link rel=\"icon\" type=\"image/png\" sizes=\"32x32\" href=\"/favicon-32x32.png\">\n\
+<link rel=\"icon\" type=\"image/png\" sizes=\"16x16\" href=\"/favicon-16x16.png\">\n\
+<link rel=\"manifest\" href=\"/site.webmanifest\">\n\
 <style>\n\
   .nav {\n\
     margin-bottom: 0;\n\
@@ -572,7 +576,7 @@ static void PrintDox(struct Dox *dox, FILE *f) {
     <li><a href=\"index.html\">Intro</a>\n\
     <li><a href=\"download.html\">Download</a>\n\
     <li><a class=\"active\" href=\"documentation.html\">Documentation</a>\n\
-    <<li><a href=\"tutorials.html\">Tutorials</a>\n\
+    <li><a href=\"tutorials.html\">Tutorials</a>\n\
     <li><a href=\"https://github.com/jart/cosmopolitan\">GitHub</a>\n\
     <li><a href=\"license.html\">License</a>\n\
     <li class=\"right\"><a href=\"../index.html\">» jart's web page</a>\n\

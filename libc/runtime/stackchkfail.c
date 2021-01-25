@@ -44,7 +44,7 @@ void __stack_chk_fail(void) {
                    : "rcx", "r11", "cc", "memory");
       asm volatile("syscall"
                    : "=a"(ax)
-                   : "0"(__NR_exit), "D"(pushpop(23))
+                   : "0"(__NR_exit_group), "D"(pushpop(23))
                    : "rcx", "r11", "cc", "memory");
     }
     asm volatile("rep outsb"

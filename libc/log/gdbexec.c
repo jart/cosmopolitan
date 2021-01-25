@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/hefty/spawn.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/gdb.h"
 #include "libc/log/log.h"
@@ -30,8 +29,8 @@
  * Attachs GDB temporarilly, to do something like print a variable.
  */
 int(gdbexec)(const char *cmd) {
-  int ttyin, ttyout;
   struct StackFrame *bp;
+  int pid, ttyin, ttyout;
   intptr_t continuetoaddr;
   const char *se, *elf, *gdb;
   char pidstr[11], breakcmd[40];
@@ -45,33 +44,34 @@ int(gdbexec)(const char *cmd) {
   }
   bp = __builtin_frame_address(0);
   continuetoaddr = bp->addr;
-  snprintf(breakcmd, sizeof(breakcmd), "%s *%#p", "break", bp->addr);
-
-  char *const args[] = {
-      "gdb",
-      "--nx",
-      "--nh",
-      "-p",
-      pidstr,
-      se,
-      elf,
-      "-ex",
-      "set osabi GNU/Linux",
-      "-ex",
-      "set complaints 0",
-      "-ex",
-      "set confirm off",
-      "-ex",
-      "set var g_gdbsync = 1",
-      "-q",
-      "-ex",
-      breakcmd,
-      "-ex",
-      cmd,
-      "-ex",
-      "quit",
-      NULL,
-  };
-
-  return SYNCHRONIZE_DEBUGGER(spawnve(0, NULL, gdb, args, environ));
+  sprintf(breakcmd, "%s *%#p", "break", bp->addr);
+  if (!(pid = vfork())) {
+    execv(gdb, (char *const[]){
+                   "gdb",
+                   "--nx",
+                   "--nh",
+                   "-p",
+                   pidstr,
+                   se,
+                   elf,
+                   "-ex",
+                   "set osabi GNU/Linux",
+                   "-ex",
+                   "set complaints 0",
+                   "-ex",
+                   "set confirm off",
+                   "-ex",
+                   "set var g_gdbsync = 1",
+                   "-q",
+                   "-ex",
+                   breakcmd,
+                   "-ex",
+                   cmd,
+                   "-ex",
+                   "quit",
+                   NULL,
+               });
+    abort();
+  }
+  return SYNCHRONIZE_DEBUGGER(pid);
 }

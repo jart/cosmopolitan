@@ -30,13 +30,13 @@
 
 static privileged void __print$nt(const void *data, size_t len) {
   int64_t hand;
+  char xmm[256];
   uint32_t wrote;
-  char xmm[256] forcealign(16);
-  savexmm(&xmm[128]);
+  savexmm(xmm + 128);
   hand = __imp_GetStdHandle(kNtStdErrorHandle);
   __imp_WriteFile(hand, data, len, &wrote, NULL);
   __imp_FlushFileBuffers(hand);
-  loadxmm(&xmm[128]);
+  loadxmm(xmm + 128);
 }
 
 /**

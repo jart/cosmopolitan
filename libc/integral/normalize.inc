@@ -63,9 +63,7 @@
 #define BUFSIZ      0x1000  /* best stdio default */
 #define CACHELINE   0x40    /* nexgen32e */
 #define CHAR_BIT    8       /* b/c von neumann */
-#define ENV_MAX     0x7fff  /* b/c windows */
-#define ARG_MAX     0x3fff  /* b/c windows */
-#define CMD_MAX     0x4000  /* b/c windows */
+#define ARG_MAX     0x8000  /* b/c windows */
 #define PATH_MAX    248     /* b/c win32 apis limit ~248..260 */
 #define NAME_MAX    63      /* b/c dns */
 #define CHILD_MAX   25      /* only if malloc isn't linked */

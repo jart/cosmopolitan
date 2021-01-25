@@ -20,10 +20,11 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/hefty/spawn.h"
+#include "libc/calls/struct/flock.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/dns/dns.h"
 #include "libc/errno.h"
@@ -43,10 +44,14 @@
 #include "libc/sysv/consts/ai.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/itimer.h"
+#include "libc/sysv/consts/lock.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/shut.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/sock.h"
@@ -109,9 +114,14 @@ char *g_prog;
 char *g_runitd;
 jmp_buf g_jmpbuf;
 uint16_t g_sshport;
-uint16_t g_runitdport;
 char g_ssh[PATH_MAX];
 char g_hostname[128];
+uint16_t g_runitdport;
+volatile bool alarmed;
+
+static void OnAlarm(void) {
+  alarmed = true;
+}
 
 forceinline pureconst size_t GreatestTwoDivisor(size_t x) {
   return x & (~x + 1);
@@ -154,74 +164,104 @@ void Upload(int pipe, int fd, struct stat *st) {
 }
 
 void DeployEphemeralRunItDaemonRemotelyViaSsh(struct addrinfo *ai) {
+  int lock;
   size_t got;
+  char *args[7];
   struct stat st;
   char linebuf[32];
-  int sshpid, wstatus, binfd, sshfds[3];
-  DEBUGF("spawning %s on %s:%hu", g_runitd, g_hostname, g_runitdport);
-  CHECK_NE(-1, (binfd = open(g_runitd, O_RDONLY | O_CLOEXEC)));
-  CHECK_NE(-1, fstat(binfd, &st));
-  sshfds[0] = -1;
-  sshfds[1] = -1;
-  sshfds[2] = STDERR_FILENO;
-  CHECK_NE(-1, (sshpid = spawnve(
-                    0, sshfds, g_ssh,
-                    (char *const[]){"ssh", "-C", "-p",
-                                    gc(xasprintf("%hu", g_sshport)), g_hostname,
-                                    gc(MakeDeployScript(ai, st.st_size)), NULL},
-                    environ)));
-  Upload(sshfds[0], binfd, &st);
-  CHECK_NE(-1, close(sshfds[0]));
-  CHECK_NE(-1, (got = read(sshfds[1], linebuf, sizeof(linebuf))));
-  CHECK_GT(got, 0);
-  linebuf[sizeof(linebuf) - 1] = '\0';
-  if (strncmp(linebuf, "ready ", 6) != 0) {
-    FATALF("expected ready response but got %`'.*s", got, linebuf);
+  struct timeval now, then;
+  int sshpid, wstatus, binfd, pipefds[2][2];
+  mkdir("o", 0755);
+  CHECK_NE(-1, (lock = open(gc(xasprintf("o/lock.%s", g_hostname)),
+                            O_RDWR | O_CREAT, 0644)));
+  CHECK_NE(-1, flock(lock, LOCK_EX));
+  CHECK_NE(-1, gettimeofday(&now, 0));
+  if (!read(lock, &then, 16) || ((now.tv_sec * 1000 + now.tv_usec / 1000) -
+                                 (then.tv_sec * 1000 + then.tv_usec / 1000)) >=
+                                    (RUNITD_TIMEOUT_MS >> 1)) {
+    DEBUGF("spawning %s on %s:%hu", g_runitd, g_hostname, g_runitdport);
+    CHECK_NE(-1, (binfd = open(g_runitd, O_RDONLY | O_CLOEXEC)));
+    CHECK_NE(-1, fstat(binfd, &st));
+    args[0] = "ssh";
+    args[1] = "-C";
+    args[2] = "-p";
+    args[3] = gc(xasprintf("%hu", g_sshport));
+    args[4] = g_hostname;
+    args[5] = gc(MakeDeployScript(ai, st.st_size));
+    args[6] = NULL;
+    CHECK_NE(-1, pipe2(pipefds[0], O_CLOEXEC));
+    CHECK_NE(-1, pipe2(pipefds[1], O_CLOEXEC));
+    if (!(sshpid = vfork())) {
+      dup2(pipefds[0][0], 0);
+      dup2(pipefds[1][1], 1);
+      execv(g_ssh, args);
+      abort();
+    }
+    close(pipefds[0][0]);
+    close(pipefds[1][1]);
+    Upload(pipefds[0][1], binfd, &st);
+    LOGIFNEG1(close(pipefds[0][1]));
+    CHECK_NE(-1, (got = read(pipefds[1][0], linebuf, sizeof(linebuf))));
+    CHECK_GT(got, 0, "on host %s", g_hostname);
+    linebuf[sizeof(linebuf) - 1] = '\0';
+    if (strncmp(linebuf, "ready ", 6) != 0) {
+      FATALF("expected ready response but got %`'.*s", got, linebuf);
+    } else {
+      DEBUGF("got ready response");
+    }
+    g_runitdport = (uint16_t)atoi(&linebuf[6]);
+    LOGIFNEG1(close(pipefds[1][0]));
+    CHECK_NE(-1, waitpid(sshpid, &wstatus, 0));
+    CHECK_EQ(0, WEXITSTATUS(wstatus));
+    CHECK_NE(-1, gettimeofday(&now, 0));
+    CHECK_NE(-1, lseek(lock, 0, SEEK_SET));
+    CHECK_NE(-1, write(lock, &now, 16));
+  } else {
+    DEBUGF("nospawn %s on %s:%hu", g_runitd, g_hostname, g_runitdport);
   }
-  g_runitdport = (uint16_t)atoi(&linebuf[6]);
-  CHECK_NE(-1, close(sshfds[1]));
-  CHECK_NE(-1, waitpid(sshpid, &wstatus, 0));
-  CHECK_EQ(0, WEXITSTATUS(wstatus));
+  LOGIFNEG1(close(lock));
 }
 
 void SetDeadline(int micros) {
   setitimer(ITIMER_REAL, &(const struct itimerval){{0, 0}, {0, micros}}, NULL);
 }
 
-void Connect(int attempt) {
-  int rc, olderr;
+void Connect(void) {
   const char *ip4;
+  int rc, err, expo;
   struct addrinfo *ai;
   if ((rc = getaddrinfo(g_hostname, gc(xasprintf("%hu", g_runitdport)),
                         &kResolvHints, &ai)) != 0) {
     FATALF("%s:%hu: EAI_%s %m", g_hostname, g_runitdport, eai2str(rc));
     unreachable;
   }
+  ip4 = (const char *)&ai->ai_addr4->sin_addr;
   if (ispublicip(ai->ai_family, &ai->ai_addr4->sin_addr)) {
-    ip4 = (const char *)&ai->ai_addr4->sin_addr;
     FATALF("%s points to %hhu.%hhu.%hhu.%hhu"
            " which isn't part of a local/private/testing subnet",
            g_hostname, ip4[0], ip4[1], ip4[2], ip4[3]);
     unreachable;
   }
-  CHECK_NE(-1, (g_sock = socket(ai->ai_family, ai->ai_socktype | SOCK_CLOEXEC,
-                                ai->ai_protocol)));
-  SetDeadline(50000);
-  olderr = errno;
+  DEBUGF("connecting to %s (%hhu.%hhu.%hhu.%hhu) to run %s", g_hostname, ip4[0],
+         ip4[1], ip4[2], ip4[3], g_prog);
+  CHECK_NE(-1,
+           (g_sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol)));
+  expo = 1;
+TryAgain:
+  alarmed = false;
+  SetDeadline(100000);
   rc = connect(g_sock, ai->ai_addr, ai->ai_addrlen);
+  err = errno;
   SetDeadline(0);
   if (rc == -1) {
-    if (!attempt &&
-        (errno == ECONNREFUSED || errno == EHOSTUNREACH || errno == EINTR)) {
-      errno = olderr;
+    if ((err == ECONNREFUSED || err == EHOSTUNREACH || err == ECONNRESET ||
+         err == EINTR)) {
+      usleep((expo *= 2));
       DeployEphemeralRunItDaemonRemotelyViaSsh(ai);
-      Connect(1);
-    } else if (errno == EINTR) {
-      fprintf(stderr, "%s(%s:%hu): %s\n", "connect", g_hostname, g_runitdport,
-              "offline, icmp misconfigured, or too slow; tune make HOSTS=...");
-      exit(1);
+      goto TryAgain;
     } else {
-      FATALF("%s(%s:%hu): %m", "connect", g_hostname, g_runitdport);
+      FATALF("%s(%s:%hu): %s", "connect", g_hostname, g_runitdport,
+             strerror(err));
       unreachable;
     }
   }
@@ -268,10 +308,15 @@ int ReadResponse(void) {
   size_t n, m;
   unsigned char *p;
   enum RunitCommand cmd;
+  static long backoff;
   static unsigned char msg[512];
   res = -1;
   for (;;) {
-    CHECK_NE(-1, (rc = recv(g_sock, msg, sizeof(msg), 0)));
+    if ((rc = recv(g_sock, msg, sizeof(msg), 0)) == -1) {
+      CHECK_EQ(ECONNRESET, errno);
+      usleep((backoff = (backoff + 1000) * 2));
+      break;
+    }
     p = &msg[0];
     n = (size_t)rc;
     if (!n) break;
@@ -283,7 +328,9 @@ int ReadResponse(void) {
       switch (cmd) {
         case kRunitExit:
           CHECK_GE(n, 1);
-          res = *p;
+          if ((res = *p & 0xff)) {
+            WARNF("%s on %s exited with %d", g_prog, g_hostname, res);
+          }
           goto drop;
         case kRunitStderr:
           CHECK_GE(n, 4);
@@ -312,6 +359,7 @@ drop:
 }
 
 int RunOnHost(char *spec) {
+  int rc;
   char *p;
   for (p = spec; *p; ++p) {
     if (*p == ':') *p = ' ';
@@ -319,9 +367,12 @@ int RunOnHost(char *spec) {
   CHECK_GE(sscanf(spec, "%100s %hu %hu", g_hostname, &g_runitdport, &g_sshport),
            1);
   if (!strchr(g_hostname, '.')) strcat(g_hostname, ".test.");
-  Connect(0);
-  SendRequest();
-  return ReadResponse();
+  do {
+    Connect();
+    SendRequest();
+    rc = ReadResponse();
+  } while (rc == -1);
+  return rc;
 }
 
 bool IsParallelBuild(void) {
@@ -384,8 +435,8 @@ int RunRemoteTestsInParallel(char *hosts[], int count) {
 
 int main(int argc, char *argv[]) {
   showcrashreports();
-  g_loglevel = kLogDebug;
-  const struct sigaction onsigalrm = {.sa_handler = (void *)missingno};
+  /* g_loglevel = kLogDebug; */
+  const struct sigaction onsigalrm = {.sa_handler = (void *)OnAlarm};
   if (argc > 1 &&
       (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)) {
     ShowUsage(stdout, 0);

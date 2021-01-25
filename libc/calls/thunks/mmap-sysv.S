@@ -27,4 +27,4 @@ mmap$sysv:
 	call	__mmap$sysv
 	leave
 	ret
-	.endfn	mmap$sysv,globl
+	.endfn	mmap$sysv,globl,hidden

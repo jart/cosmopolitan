@@ -19,7 +19,6 @@
 #include "libc/intrin/pcmpeqb.h"
 #include "libc/intrin/pmovmskb.h"
 #include "libc/limits.h"
-#include "libc/nexgen32e/bsf.h"
 #include "libc/str/str.h"
 
 /**

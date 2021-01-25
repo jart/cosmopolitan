@@ -28,11 +28,12 @@
 
 typedef int (*emit_f)(int (*)(long, void *), void *, wint_t);
 
-static int StoaEmitByte(int f(long, void *), void *a, wint_t c) {
+static noinstrument int StoaEmitByte(int f(long, void *), void *a, wint_t c) {
   return f(c, a);
 }
 
-static int StoaEmitWordEncodedString(int f(long, void *), void *a, uint64_t w) {
+static noinstrument int StoaEmitWordEncodedString(int f(long, void *), void *a,
+                                                  uint64_t w) {
   do {
     if (f(w & 0xff, a) == -1) {
       return -1;
@@ -41,7 +42,8 @@ static int StoaEmitWordEncodedString(int f(long, void *), void *a, uint64_t w) {
   return 0;
 }
 
-static int StoaEmitUnicode(int f(long, void *), void *a, wint_t c) {
+static noinstrument int StoaEmitUnicode(int f(long, void *), void *a,
+                                        wint_t c) {
   if (isascii(c)) {
     return f(c, a);
   } else {
@@ -49,7 +51,7 @@ static int StoaEmitUnicode(int f(long, void *), void *a, wint_t c) {
   }
 }
 
-static int StoaEmitQuoted(int f(long, void *), void *a, wint_t c) {
+static noinstrument int StoaEmitQuoted(int f(long, void *), void *a, wint_t c) {
   if (isascii(c)) {
     return StoaEmitWordEncodedString(f, a, cescapec(c));
   } else {
@@ -57,12 +59,14 @@ static int StoaEmitQuoted(int f(long, void *), void *a, wint_t c) {
   }
 }
 
-static int StoaEmitVisualized(int f(long, void *), void *a, wint_t c) {
+static noinstrument int StoaEmitVisualized(int f(long, void *), void *a,
+                                           wint_t c) {
   return StoaEmitUnicode(f, a, (*weaken(kCp437))[c]);
 }
 
-static int StoaEmitQuote(int out(long, void *), void *arg, unsigned flags,
-                         char ch, unsigned char signbit) {
+static noinstrument int StoaEmitQuote(int out(long, void *), void *arg,
+                                      unsigned flags, char ch,
+                                      unsigned char signbit) {
   if (flags & FLAGS_REPR) {
     if (signbit == 63) {
       if (out('L', arg) == -1) return -1;

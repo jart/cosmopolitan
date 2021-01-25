@@ -8,7 +8,6 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/calls/calls.h"
-#include "libc/calls/hefty/spawn.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -23,26 +22,30 @@ void Show(const char *name, long measurement, const char *unit) {
   fprintf(stderr, "%-*s%,*d %s\n", 32, name, 32, measurement, unit);
 }
 
-long TvToUs(struct timeval tv) {
-  return 1000000l * tv.tv_usec + tv.tv_sec;
+long TvToNs(struct timeval tv) {
+  return tv.tv_sec * 1000000000 + tv.tv_usec * 1000;
 }
 
 int main(int argc, char *argv[]) {
-  const char *exe;
   int pid, wstatus;
   long double ts1, ts2;
   struct rusage rusage;
-  char pathbuf[PATH_MAX];
+  if (argc < 2) {
+    fprintf(stderr, "Usage: %s PROG [ARGS...]\n", argv[0]);
+    return 1;
+  }
   memset(&rusage, -1, sizeof(rusage));
   CHECK_GT(argc, 1);
-  CHECK_NOTNULL((exe = commandv(argv[1], pathbuf)));
   ts1 = nowl();
-  CHECK_NE(-1, (pid = spawnve(0, NULL, exe, &argv[1], environ)));
+  if (!(pid = vfork())) {
+    execvp(argv[1], argv + 1);
+    abort();
+  }
   CHECK_NE(-1, wait4(pid, &wstatus, 0, &rusage));
   ts2 = nowl();
   Show("wall time", lroundl((ts2 - ts1) * 1e9l), "ns");
-  Show("user time", TvToUs(rusage.ru_utime), "µs");
-  Show("sys time", TvToUs(rusage.ru_stime), "µs");
+  Show("user time", TvToNs(rusage.ru_utime), "ns");
+  Show("sys time", TvToNs(rusage.ru_stime), "ns");
   Show("maximum resident set size", rusage.ru_maxrss, "");
   Show("integral shared memory size", rusage.ru_ixrss, "");
   Show("integral unshared data size", rusage.ru_idrss, "");
@@ -57,5 +60,9 @@ int main(int argc, char *argv[]) {
   Show("signals received", rusage.ru_nsignals, "");
   Show("voluntary context switches", rusage.ru_nvcsw, "");
   Show("involuntary context switches", rusage.ru_nivcsw, "");
-  return WEXITSTATUS(wstatus);
+  if (WIFEXITED(wstatus)) {
+    return WEXITSTATUS(wstatus);
+  } else {
+    return 128 + WTERMSIG(wstatus);
+  }
 }

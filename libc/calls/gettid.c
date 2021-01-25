@@ -26,8 +26,8 @@
  * @asyncsignalsafe
  */
 uint32_t gettid(void) {
+  uint32_t res;
   if (!IsWindows()) {
-    uint32_t res;
     res = gettid$sysv();
     if (res <= 0) {
       res = getpid();
