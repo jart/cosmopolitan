@@ -19,12 +19,15 @@
 #include "libc/bits/pushpop.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/siginfo.h"
+#include "libc/calls/typedef/sigaction_f.h"
 #include "libc/nt/enum/ctrlevent.h"
+#include "libc/nt/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
 
 textwindows bool32 __onntconsoleevent(uint32_t CtrlType) {
   int sig;
+  unsigned rva;
   siginfo_t info;
   switch (CtrlType) {
     case kNtCtrlCEvent:
@@ -43,8 +46,19 @@ textwindows bool32 __onntconsoleevent(uint32_t CtrlType) {
     default:
       return false;
   }
-  memset(&info, 0, sizeof(info));
-  info.si_signo = sig;
-  __sigenter(sig, &info, NULL);
-  return true;
+  switch ((rva = __sighandrvas[sig])) {
+    case (uintptr_t)SIG_DFL:
+      dprintf(2, "__onntconsoleevent ExitProcess\n");
+      ExitProcess(128 + sig);
+    case (uintptr_t)SIG_IGN:
+      dprintf(2, "__onntconsoleevent SIG_IGN\n");
+      return true;
+    default:
+      dprintf(2, "__onntconsoleevent %#x\n", rva);
+      memset(&info, 0, sizeof(info));
+      info.si_signo = sig;
+      ((sigaction_f)(_base + rva))(sig, &info, NULL);
+      __interrupted = true;
+      return true;
+  }
 }

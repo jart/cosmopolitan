@@ -60,8 +60,9 @@ struct Fds {
 
 extern const struct Fd kEmptyFd;
 
+hidden extern volatile bool __interrupted;
 hidden extern int __vforked;
-hidden extern int g_sighandrvas[NSIG];
+hidden extern unsigned __sighandrvas[NSIG];
 hidden extern struct Fds g_fds;
 hidden extern struct NtSystemInfo g_ntsysteminfo;
 hidden extern struct NtStartupInfo g_ntstartupinfo;

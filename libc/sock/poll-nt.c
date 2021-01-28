@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/calls/internal.h"
 #include "libc/macros.h"
 #include "libc/nt/struct/pollfd.h"
@@ -37,6 +38,7 @@ textwindows int poll$nt(struct pollfd *fds, uint64_t nfds, uint64_t timeoutms) {
     ntfds[i].events = fds[i].events & (POLLPRI | POLLIN | POLLOUT);
   }
   for (;;) {
+    if (cmpxchg(&__interrupted, true, false)) return eintr();
     waitfor = MIN(1000, timeoutms); /* for ctrl+c */
     if ((got = WSAPoll(ntfds, nfds, waitfor)) != -1) {
       if (!got && (timeoutms -= waitfor)) continue;

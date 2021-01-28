@@ -98,10 +98,15 @@
 #define kLogMaxBytes (2 * 1000 * 1000)
 
 char *g_exepath;
+volatile bool g_interrupted;
 struct sockaddr_in g_servaddr;
 unsigned char g_buf[PAGESIZE];
 bool g_daemonize, g_sendready;
 int g_timeout, g_devnullfd, g_servfd, g_clifd, g_exefd;
+
+void OnInterrupt(int sig) {
+  g_interrupted = true;
+}
 
 void OnChildTerminated(int sig) {
   int ws, pid;
@@ -359,6 +364,7 @@ int Poll(void) {
   int i, wait, evcount;
   struct pollfd fds[1];
 TryAgain:
+  if (g_interrupted) return 0;
   fds[0].fd = g_servfd;
   fds[0].events = POLLIN;
   wait = MIN(1000, g_timeout);
@@ -377,12 +383,14 @@ TryAgain:
 
 int Serve(void) {
   StartTcpServer();
+  sigaction(SIGINT, (&(struct sigaction){.sa_handler = (void *)OnInterrupt}),
+            NULL);
   sigaction(SIGCHLD,
             (&(struct sigaction){.sa_handler = (void *)OnChildTerminated,
                                  .sa_flags = SA_RESTART}),
             NULL);
   for (;;) {
-    if (!Poll() && !g_timeout) break;
+    if (!Poll() && (!g_timeout || g_interrupted)) break;
   }
   close(g_servfd);
   LOGF("timeout expired, shutting down");

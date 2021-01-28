@@ -179,12 +179,12 @@ int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
   }
   if (rc != -1) {
     if (oldact) {
-      oldrva = g_sighandrvas[sig];
+      oldrva = __sighandrvas[sig];
       oldact->sa_sigaction = (sigaction_f)(
           oldrva < kSigactionMinRva ? oldrva : (intptr_t)&_base + oldrva);
     }
     if (act) {
-      g_sighandrvas[sig] = rva;
+      __sighandrvas[sig] = rva;
     }
   }
   return rc;

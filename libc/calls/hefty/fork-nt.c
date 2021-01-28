@@ -141,8 +141,8 @@ textwindows int fork$nt(void) {
                   &startinfo, &procinfo) != -1) {
         CloseHandle(reader);
         CloseHandle(procinfo.hThread);
-        if (weaken(g_sighandrvas) &&
-            weaken(g_sighandrvas)[SIGCHLD] == SIG_IGN) {
+        if (weaken(__sighandrvas) &&
+            weaken(__sighandrvas)[SIGCHLD] == SIG_IGN) {
           CloseHandle(procinfo.hProcess);
         } else {
           g_fds.p[pid].kind = kFdProcess;

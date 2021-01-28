@@ -18,4 +18,4 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 
-hidden int g_sighandrvas[NSIG];
+unsigned __sighandrvas[NSIG];
