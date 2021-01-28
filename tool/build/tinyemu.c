@@ -43,6 +43,7 @@ int main(int argc, char *argv[]) {
     return EX_USAGE;
   }
   m = NewMachine();
+  m->mode = XED_MACHINE_MODE_LONG_64;
   LoadProgram(m, argv[1], argv + 2, environ, &elf);
   m->fds.p = xcalloc((m->fds.n = 8), sizeof(struct MachineFd));
   AddHostFd(m, STDIN_FILENO);
