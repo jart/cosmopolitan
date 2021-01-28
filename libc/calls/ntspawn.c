@@ -84,8 +84,7 @@ textwindows int ntspawn(
         mkntenvblock(block->envvars, envp) != -1) {
       if (CreateProcess(NULL, block->cmdline, opt_lpProcessAttributes,
                         opt_lpThreadAttributes, bInheritHandles,
-                        dwCreationFlags | kNtCreateNewProcessGroup |
-                            kNtCreateUnicodeEnvironment,
+                        dwCreationFlags | kNtCreateUnicodeEnvironment,
                         block->envvars, opt_lpCurrentDirectory, lpStartupInfo,
                         opt_out_lpProcessInformation)) {
         rc = 0;
