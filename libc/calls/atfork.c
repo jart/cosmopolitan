@@ -16,12 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/errfuns.h"
 
 static struct AtFork {
-  size_t i;
+  volatile size_t i;
   struct AtForkCallback {
     void (*fn)(void *);
     void *arg;
@@ -33,17 +34,25 @@ static struct AtFork {
  *
  * @return 0 on success, or -1 w/ errno
  * @note vfork() won't invoke callbacks
+ * @asyncsignalsafe
  */
 int atfork(void *fn, void *arg) {
-  if (g_atfork.i == ARRAYLEN(g_atfork.p)) return enomem();
-  g_atfork.p[g_atfork.i++] = (struct AtForkCallback){.fn = fn, .arg = arg};
-  return 0;
+  size_t i;
+  for (;;) {
+    i = g_atfork.i;
+    if (i == ARRAYLEN(g_atfork.p)) return enomem();
+    if (cmpxchg(&g_atfork.i, i, i + 1)) {
+      g_atfork.p[i] = (struct AtForkCallback){.fn = fn, .arg = arg};
+      return 0;
+    }
+  }
 }
 
 /**
  * Triggers callbacks registered by atfork().
  *
  * @note only fork() should call this
+ * @asyncsignalsafe
  */
 void __onfork(void) {
   size_t i;

@@ -56,6 +56,5 @@ abort:	push	%rbp
 	mov	SIGABRT,%esi
 	mov	__NR_kill,%eax
 	syscall					# avoid hook and less bt noise
-2:	mov	$134,%edi			# exit(128+SIGABRT) [bash-ism]
-	call	_Exit
+2:	call	abort$nt
 	.endfn	abort,globl,protected

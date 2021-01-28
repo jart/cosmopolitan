@@ -27,6 +27,9 @@
 /	call read() safely but you can call pread(). Call _exit() but
 /	don't call exit(). Look for the vforksafe function annotation
 /
+/	Do not make the assumption that the parent is suspended until
+/	the child terminates since this impl calls fork() on Windows.
+/
 /	@return	pid of child process or 0 if forked process
 /	@returnstwice
 /	@vforksafe

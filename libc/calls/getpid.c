@@ -17,15 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/nt/process.h"
 #include "libc/runtime/runtime.h"
 
-static int g_pid;
+static int __pid;
 
-static int __get_pid(void) {
+static int __getpid(void) {
   if (!IsWindows()) {
     return getpid$sysv();
   } else {
@@ -33,20 +34,25 @@ static int __get_pid(void) {
   }
 }
 
-static void __update_pid(void) {
-  g_pid = __get_pid();
+static void __updatepid(void) {
+  __pid = __getpid();
 }
 
 /**
  * Returns process id.
  * @asyncsignalsafe
+ * @vforksafe
  */
 int getpid(void) {
   static bool once;
-  if (!once) {
-    __update_pid();
-    atfork(__update_pid, NULL);
-    once = true;
+  if (__vforked) {
+    return getpid$sysv();
   }
-  return g_pid;
+  if (!once) {
+    __updatepid();
+    if (cmpxchg(&once, false, true)) {
+      atfork(__updatepid, NULL);
+    }
+  }
+  return __pid;
 }

@@ -23,7 +23,7 @@ extern unsigned char _base[] forcealign(PAGESIZE);  /* αpε */
 extern unsigned char _ehead[] forcealign(PAGESIZE); /* αpε */
 extern unsigned char _etext[] forcealign(PAGESIZE); /* αpε */
 extern unsigned char _edata[] forcealign(PAGESIZE); /* αpε */
-extern unsigned char _end[] forcealign(PAGESIZE);   /* αpε */
+extern unsigned char _end[] forcealign(FRAMESIZE);  /* αpε */
 extern unsigned char _ereal;                        /* αpε */
 extern unsigned char __privileged_start;            /* αpε */
 extern unsigned char __test_start;                  /* αpε */
@@ -70,6 +70,8 @@ int msync(void *, size_t, int);
 void __print(const void *, size_t);
 void __print_string(const char *);
 void __fast_math(void);
+void *sbrk(intptr_t);
+int brk(void *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § runtime » optimizations                                   ─╬─│┼

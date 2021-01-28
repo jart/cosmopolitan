@@ -20,6 +20,7 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/sigaction.h"
@@ -119,7 +120,7 @@ char g_hostname[128];
 uint16_t g_runitdport;
 volatile bool alarmed;
 
-static void OnAlarm(void) {
+static void OnAlarm(int sig) {
   alarmed = true;
 }
 
@@ -170,7 +171,9 @@ void DeployEphemeralRunItDaemonRemotelyViaSsh(struct addrinfo *ai) {
   struct stat st;
   char linebuf[32];
   struct timeval now, then;
+  sigset_t chldmask, savemask;
   int sshpid, wstatus, binfd, pipefds[2][2];
+  struct sigaction ignore, saveint, savequit;
   mkdir("o", 0755);
   CHECK_NE(-1, (lock = open(gc(xasprintf("o/lock.%s", g_hostname)),
                             O_RDWR | O_CREAT, 0644)));
@@ -179,7 +182,7 @@ void DeployEphemeralRunItDaemonRemotelyViaSsh(struct addrinfo *ai) {
   if (!read(lock, &then, 16) || ((now.tv_sec * 1000 + now.tv_usec / 1000) -
                                  (then.tv_sec * 1000 + then.tv_usec / 1000)) >=
                                     (RUNITD_TIMEOUT_MS >> 1)) {
-    DEBUGF("spawning %s on %s:%hu", g_runitd, g_hostname, g_runitdport);
+    DEBUGF("ssh %s:%hu to spawn %s", g_hostname, g_runitdport, g_runitd);
     CHECK_NE(-1, (binfd = open(g_runitd, O_RDONLY | O_CLOEXEC)));
     CHECK_NE(-1, fstat(binfd, &st));
     args[0] = "ssh";
@@ -189,16 +192,28 @@ void DeployEphemeralRunItDaemonRemotelyViaSsh(struct addrinfo *ai) {
     args[4] = g_hostname;
     args[5] = gc(MakeDeployScript(ai, st.st_size));
     args[6] = NULL;
+    ignore.sa_flags = 0;
+    ignore.sa_handler = SIG_IGN;
+    LOGIFNEG1(sigemptyset(&ignore.sa_mask));
+    LOGIFNEG1(sigaction(SIGINT, &ignore, &saveint));
+    LOGIFNEG1(sigaction(SIGQUIT, &ignore, &savequit));
+    LOGIFNEG1(sigemptyset(&chldmask));
+    LOGIFNEG1(sigaddset(&chldmask, SIGCHLD));
+    LOGIFNEG1(sigprocmask(SIG_BLOCK, &chldmask, &savemask));
     CHECK_NE(-1, pipe2(pipefds[0], O_CLOEXEC));
     CHECK_NE(-1, pipe2(pipefds[1], O_CLOEXEC));
-    if (!(sshpid = vfork())) {
+    CHECK_NE(-1, (sshpid = fork()));
+    if (!sshpid) {
+      sigaction(SIGINT, &saveint, NULL);
+      sigaction(SIGQUIT, &savequit, NULL);
+      sigprocmask(SIG_SETMASK, &savemask, NULL);
       dup2(pipefds[0][0], 0);
       dup2(pipefds[1][1], 1);
       execv(g_ssh, args);
-      abort();
+      _exit(127);
     }
-    close(pipefds[0][0]);
-    close(pipefds[1][1]);
+    LOGIFNEG1(close(pipefds[0][0]));
+    LOGIFNEG1(close(pipefds[1][1]));
     Upload(pipefds[0][1], binfd, &st);
     LOGIFNEG1(close(pipefds[0][1]));
     CHECK_NE(-1, (got = read(pipefds[1][0], linebuf, sizeof(linebuf))));
@@ -212,7 +227,16 @@ void DeployEphemeralRunItDaemonRemotelyViaSsh(struct addrinfo *ai) {
     g_runitdport = (uint16_t)atoi(&linebuf[6]);
     LOGIFNEG1(close(pipefds[1][0]));
     CHECK_NE(-1, waitpid(sshpid, &wstatus, 0));
-    CHECK_EQ(0, WEXITSTATUS(wstatus));
+    LOGIFNEG1(sigaction(SIGINT, &saveint, NULL));
+    LOGIFNEG1(sigaction(SIGQUIT, &savequit, NULL));
+    LOGIFNEG1(sigprocmask(SIG_SETMASK, &savemask, NULL));
+    if (WIFEXITED(wstatus)) {
+      DEBUGF("ssh %s exited with %d", g_hostname, WEXITSTATUS(wstatus));
+    } else {
+      DEBUGF("ssh %s terminated with %s", g_hostname,
+             strsignal(WTERMSIG(wstatus)));
+    }
+    CHECK(WIFEXITED(wstatus) && !WEXITSTATUS(wstatus), "wstatus=%#x", wstatus);
     CHECK_NE(-1, gettimeofday(&now, 0));
     CHECK_NE(-1, lseek(lock, 0, SEEK_SET));
     CHECK_NE(-1, write(lock, &now, 16));
@@ -223,7 +247,11 @@ void DeployEphemeralRunItDaemonRemotelyViaSsh(struct addrinfo *ai) {
 }
 
 void SetDeadline(int micros) {
-  setitimer(ITIMER_REAL, &(const struct itimerval){{0, 0}, {0, micros}}, NULL);
+  alarmed = false;
+  LOGIFNEG1(
+      sigaction(SIGALRM, &(struct sigaction){.sa_handler = OnAlarm}, NULL));
+  LOGIFNEG1(setitimer(ITIMER_REAL,
+                      &(const struct itimerval){{0, 0}, {0, micros}}, NULL));
 }
 
 void Connect(void) {
@@ -242,28 +270,32 @@ void Connect(void) {
            g_hostname, ip4[0], ip4[1], ip4[2], ip4[3]);
     unreachable;
   }
-  DEBUGF("connecting to %s (%hhu.%hhu.%hhu.%hhu) to run %s", g_hostname, ip4[0],
-         ip4[1], ip4[2], ip4[3], g_prog);
   CHECK_NE(-1,
            (g_sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol)));
   expo = 1;
-TryAgain:
-  alarmed = false;
+Reconnect:
+  DEBUGF("connecting to %s (%hhu.%hhu.%hhu.%hhu) to run %s", g_hostname, ip4[0],
+         ip4[1], ip4[2], ip4[3], g_prog);
   SetDeadline(100000);
+TryAgain:
   rc = connect(g_sock, ai->ai_addr, ai->ai_addrlen);
   err = errno;
   SetDeadline(0);
   if (rc == -1) {
-    if ((err == ECONNREFUSED || err == EHOSTUNREACH || err == ECONNRESET ||
-         err == EINTR)) {
+    if (err == EINTR) goto TryAgain;
+    if (err == ECONNREFUSED || err == EHOSTUNREACH || err == ECONNRESET) {
+      DEBUGF("got %s from %s (%hhu.%hhu.%hhu.%hhu)", strerror(err), g_hostname,
+             ip4[0], ip4[1], ip4[2], ip4[3]);
       usleep((expo *= 2));
       DeployEphemeralRunItDaemonRemotelyViaSsh(ai);
-      goto TryAgain;
+      goto Reconnect;
     } else {
       FATALF("%s(%s:%hu): %s", "connect", g_hostname, g_runitdport,
              strerror(err));
       unreachable;
     }
+  } else {
+    DEBUGF("connected to %s", g_hostname);
   }
   freeaddrinfo(ai);
 }
@@ -275,6 +307,7 @@ void SendRequest(void) {
   const char *name;
   unsigned char *hdr;
   size_t progsize, namesize, hdrsize;
+  DEBUGF("running %s on %s", g_prog, g_hostname);
   CHECK_NE(-1, (fd = open(g_prog, O_RDONLY)));
   CHECK_NE(-1, fstat(fd, &st));
   CHECK_LE((namesize = strlen((name = basename(g_prog)))), PATH_MAX);
@@ -370,8 +403,7 @@ int RunOnHost(char *spec) {
   do {
     Connect();
     SendRequest();
-    rc = ReadResponse();
-  } while (rc == -1);
+  } while ((rc = ReadResponse()) == -1);
   return rc;
 }
 
@@ -384,59 +416,56 @@ bool ShouldRunInParralel(void) {
   return !IsWindows() && IsParallelBuild();
 }
 
-int RunRemoteTestsInSerial(char *hosts[], int count) {
-  int i, exitcode;
-  for (i = 0; i < count; ++i) {
-    if ((exitcode = RunOnHost(hosts[i]))) {
-      return exitcode;
-    }
-  }
-  return 0;
-}
-
-void OnInterrupt(int sig) {
-  static bool once;
-  if (!once) {
-    once = true;
-    gclongjmp(g_jmpbuf, 128 + sig);
-  } else {
-    abort();
-  }
-}
-
 int RunRemoteTestsInParallel(char *hosts[], int count) {
-  const struct sigaction onsigterm = {.sa_handler = (void *)OnInterrupt};
-  struct sigaction onsigint = {.sa_handler = (void *)OnInterrupt};
-  int i, rc, exitcode;
-  int64_t leader, *pids;
-  leader = getpid();
-  pids = gc(xcalloc(count, sizeof(char *)));
-  if (!(exitcode = setjmp(g_jmpbuf))) {
-    sigaction(SIGINT, &onsigint, NULL);
-    sigaction(SIGTERM, &onsigterm, NULL);
-    for (i = 0; i < count; ++i) {
-      CHECK_NE(-1, (pids[i] = fork()));
-      if (!pids[i]) {
-        return RunOnHost(hosts[i]);
-      }
+  sigset_t chldmask, savemask;
+  int i, rc, ws, pid, *pids, exitcode;
+  struct sigaction ignore, saveint, savequit;
+  pids = calloc(count, sizeof(char *));
+  ignore.sa_flags = 0;
+  ignore.sa_handler = SIG_IGN;
+  LOGIFNEG1(sigemptyset(&ignore.sa_mask));
+  LOGIFNEG1(sigaction(SIGINT, &ignore, &saveint));
+  LOGIFNEG1(sigaction(SIGQUIT, &ignore, &savequit));
+  LOGIFNEG1(sigemptyset(&chldmask));
+  LOGIFNEG1(sigaddset(&chldmask, SIGCHLD));
+  LOGIFNEG1(sigprocmask(SIG_BLOCK, &chldmask, &savemask));
+  for (i = 0; i < count; ++i) {
+    CHECK_NE(-1, (pids[i] = fork()));
+    if (!pids[i]) {
+      sigaction(SIGINT, &saveint, NULL);
+      sigaction(SIGQUIT, &savequit, NULL);
+      sigprocmask(SIG_SETMASK, &savemask, NULL);
+      _exit(RunOnHost(hosts[i]));
     }
-    for (i = 0; i < count; ++i) {
-      CHECK_NE(-1, waitpid(pids[i], &rc, 0));
-      exitcode |= WEXITSTATUS(rc);
-    }
-  } else if (getpid() == leader) {
-    onsigint.sa_handler = SIG_IGN;
-    sigaction(SIGINT, &onsigint, NULL);
-    kill(0, SIGINT);
-    while (waitpid(-1, NULL, 0) > 0) donothing;
   }
+  for (exitcode = 0;;) {
+    if ((pid = wait(&ws)) == -1) {
+      if (errno == EINTR) continue;
+      if (errno == ECHILD) break;
+      FATALF("wait failed");
+    }
+    for (i = 0; i < count; ++i) {
+      if (pids[i] != pid) continue;
+      if (WIFEXITED(ws)) {
+        DEBUGF("%s exited with %d", hosts[i], WEXITSTATUS(ws));
+        if (!exitcode) exitcode = WEXITSTATUS(ws);
+      } else {
+        DEBUGF("%s terminated with %s", hosts[i], strsignal(WTERMSIG(ws)));
+        if (!exitcode) exitcode = 128 + WTERMSIG(ws);
+      }
+      break;
+    }
+  }
+  LOGIFNEG1(sigaction(SIGINT, &saveint, NULL));
+  LOGIFNEG1(sigaction(SIGQUIT, &savequit, NULL));
+  LOGIFNEG1(sigprocmask(SIG_SETMASK, &savemask, NULL));
+  free(pids);
   return exitcode;
 }
 
 int main(int argc, char *argv[]) {
   showcrashreports();
   /* g_loglevel = kLogDebug; */
-  const struct sigaction onsigalrm = {.sa_handler = (void *)OnAlarm};
   if (argc > 1 &&
       (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)) {
     ShowUsage(stdout, 0);
@@ -447,9 +476,7 @@ int main(int argc, char *argv[]) {
   CheckExists((g_runitd = argv[1]));
   CheckExists((g_prog = argv[2]));
   if (argc == 1 + 2) return 0; /* hosts list empty */
-  sigaction(SIGALRM, &onsigalrm, NULL);
   g_sshport = 22;
   g_runitdport = RUNITD_PORT;
-  return (ShouldRunInParralel() ? RunRemoteTestsInParallel
-                                : RunRemoteTestsInSerial)(&argv[3], argc - 3);
+  return RunRemoteTestsInParallel(&argv[3], argc - 3);
 }

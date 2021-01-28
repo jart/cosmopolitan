@@ -25,14 +25,14 @@
 /**
  * Blocks until SIG ∉ MASK is delivered to process.
  *
- * @param mask is a bitset of signals to block temporarily
+ * @param ignore is a bitset of signals to block temporarily
  * @return -1 w/ EINTR
  * @asyncsignalsafe
  */
-int sigsuspend(const sigset_t *mask) {
-  if (!mask) return efault();
+int sigsuspend(const sigset_t *ignore) {
+  if (!ignore) return efault();
   if (!IsWindows()) {
-    return sigsuspend$sysv(mask, 8);
+    return sigsuspend$sysv(ignore, 8);
   } else {
     return enosys(); /* TODO(jart): Implement me! */
   }

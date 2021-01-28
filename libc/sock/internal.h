@@ -58,8 +58,6 @@ int32_t __socket$sysv(int32_t, int32_t, int32_t) hidden;
 int32_t __getsockname$sysv(int32_t, void *, uint32_t *) hidden;
 int32_t __getpeername$sysv(int32_t, void *, uint32_t *) hidden;
 
-int32_t setsockopt$sysv(int32_t, int32_t, int32_t, const void *,
-                        uint32_t) hidden;
 int32_t accept4$sysv(int32_t, void *, uint32_t *, int) nodiscard hidden;
 int32_t accept$sysv(int32_t, void *, uint32_t *) hidden;
 int32_t bind$sysv(int32_t, const void *, uint32_t) hidden;
@@ -78,6 +76,7 @@ ssize_t sendto$sysv(int, const void *, size_t, int, const void *,
                     uint32_t) hidden;
 int32_t select$sysv(int32_t, fd_set *, fd_set *, fd_set *,
                     struct timeval *) hidden;
+int setsockopt$sysv(int, int, int, const void *, uint32_t) hidden;
 int32_t epoll_create$sysv(int32_t) hidden;
 int32_t epoll_ctl$sysv(int32_t, int32_t, int32_t, void *) hidden;
 int32_t epoll_wait$sysv(int32_t, void *, int32_t, int32_t) hidden;
@@ -93,6 +92,7 @@ int accept$nt(struct Fd *, void *, uint32_t *, int) hidden;
 int closesocket$nt(int) hidden;
 int socket$nt(int, int, int) hidden;
 int select$nt(int, fd_set *, fd_set *, fd_set *, struct timeval *) hidden;
+int shutdown$nt(struct Fd *, int) hidden;
 
 size_t iovec2nt(struct NtIovec[hasatleast 16], const struct iovec *,
                 size_t) hidden;

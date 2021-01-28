@@ -19,6 +19,7 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
@@ -96,32 +97,30 @@
 #define kLogFile     "o/runitd.log"
 #define kLogMaxBytes (2 * 1000 * 1000)
 
-jmp_buf g_jb;
 char *g_exepath;
-volatile bool g_childterm;
-volatile int g_childstatus;
 struct sockaddr_in g_servaddr;
 unsigned char g_buf[PAGESIZE];
 bool g_daemonize, g_sendready;
 int g_timeout, g_devnullfd, g_servfd, g_clifd, g_exefd;
 
-void OnInterrupt(int sig) {
-  static bool once;
-  if (once) abort();
-  once = true;
-  kill(0, sig);
-  for (;;) {
-    if (waitpid(-1, NULL, 0) == -1) {
-      break;
-    }
-  }
-  gclongjmp(g_jb, sig);
-  unreachable;
-}
-
 void OnChildTerminated(int sig) {
-  while (waitpid(-1, &g_childstatus, WNOHANG) > 0) {
-    g_childterm = true;
+  int ws, pid;
+  for (;;) {
+    if ((pid = waitpid(-1, &ws, WNOHANG)) != -1) {
+      if (pid) {
+        if (WIFEXITED(ws)) {
+          DEBUGF("worker %d exited with %d", pid, WEXITSTATUS(ws));
+        } else {
+          DEBUGF("worker %d terminated with %s", pid, strsignal(WTERMSIG(ws)));
+        }
+      } else {
+        break;
+      }
+    } else {
+      if (errno == EINTR) continue;
+      if (errno == ECHILD) break;
+      FATALF("waitpid failed in sigchld");
+    }
   }
 }
 
@@ -190,14 +189,14 @@ void StartTcpServer(void) {
   CHECK_NE(-1, listen(g_servfd, 10));
   asize = sizeof(g_servaddr);
   CHECK_NE(-1, getsockname(g_servfd, &g_servaddr, &asize));
+  CHECK_NE(-1, fcntl(g_servfd, F_SETFD, FD_CLOEXEC));
+  LOGF("%s:%s", "listening on tcp", gc(DescribeAddress(&g_servaddr)));
   if (g_sendready) {
     printf("ready %hu\n", ntohs(g_servaddr.sin_port));
     fflush(stdout);
     fclose(stdout);
-    stdout->fd = g_devnullfd;
+    dup2(g_devnullfd, stdout->fd);
   }
-  CHECK_NE(-1, fcntl(g_servfd, F_SETFD, FD_CLOEXEC));
-  LOGF("%s:%s", "listening on tcp", gc(DescribeAddress(&g_servaddr)));
 }
 
 void SendExitMessage(int sock, int rc) {
@@ -242,7 +241,9 @@ void HandleClient(void) {
   ssize_t got, wrote;
   struct sockaddr_in addr;
   char *addrstr, *exename;
-  int rc, wstatus, child, pipefds[2];
+  sigset_t chldmask, savemask;
+  int exitcode, wstatus, child, pipefds[2];
+  struct sigaction ignore, saveint, savequit;
   uint32_t addrsize, namesize, filesize, remaining;
 
   /* read request to run program */
@@ -252,7 +253,6 @@ void HandleClient(void) {
     close(g_clifd);
     return;
   }
-  g_childterm = false;
   addrstr = gc(DescribeAddress(&addr));
   DEBUGF("%s %s %s", gc(DescribeAddress(&g_servaddr)), "accepted", addrstr);
   got = recv(g_clifd, (p = &g_buf[0]), sizeof(g_buf), 0);
@@ -303,13 +303,25 @@ void HandleClient(void) {
 
   /* run program, tee'ing stderr to both log and client */
   DEBUGF("spawning %s", exename);
+  ignore.sa_flags = 0;
+  ignore.sa_handler = SIG_IGN;
+  LOGIFNEG1(sigemptyset(&ignore.sa_mask));
+  LOGIFNEG1(sigaction(SIGINT, &ignore, &saveint));
+  LOGIFNEG1(sigaction(SIGQUIT, &ignore, &savequit));
+  LOGIFNEG1(sigemptyset(&chldmask));
+  LOGIFNEG1(sigaddset(&chldmask, SIGCHLD));
+  LOGIFNEG1(sigprocmask(SIG_BLOCK, &chldmask, &savemask));
   CHECK_NE(-1, pipe2(pipefds, O_CLOEXEC));
-  if (!(child = vfork())) {
+  CHECK_NE(-1, (child = fork()));
+  if (!child) {
+    sigaction(SIGINT, &saveint, NULL);
+    sigaction(SIGQUIT, &savequit, NULL);
+    sigprocmask(SIG_SETMASK, &savemask, NULL);
     dup2(pipefds[1], 2);
     execv(g_exepath, (char *const[]){g_exepath, NULL});
-    abort();
+    _exit(127);
   }
-  close(pipefds[1]);
+  LOGIFNEG1(close(pipefds[1]));
   DEBUGF("communicating %s[%d]", exename, child);
   for (;;) {
     CHECK_NE(-1, (got = read(pipefds[0], g_buf, sizeof(g_buf))));
@@ -320,23 +332,24 @@ void HandleClient(void) {
     fwrite(g_buf, got, 1, stderr);
     SendOutputFragmentMessage(g_clifd, kRunitStderr, g_buf, got);
   }
-
-  if ((rc = waitpid(child, &wstatus, 0)) != -1) {
-    g_childstatus = wstatus;
-  } else {
-    CHECK_EQ(ECHILD, errno);
-    CHECK(g_childterm);
+  while (waitpid(child, &wstatus, 0) == -1) {
+    if (errno == EINTR) continue;
+    FATALF("waitpid failed");
   }
-  if (WIFSIGNALED(g_childstatus)) {
-    rc = 128 + WTERMSIG(g_childstatus);
+  if (WIFEXITED(wstatus)) {
+    DEBUGF("%s exited with %d", exename, WEXITSTATUS(wstatus));
+    exitcode = WEXITSTATUS(wstatus);
   } else {
-    rc = WEXITSTATUS(g_childstatus);
+    DEBUGF("%s terminated with %s", exename, strsignal(WTERMSIG(wstatus)));
+    exitcode = 128 + WTERMSIG(wstatus);
   }
-  DEBUGF("exited %s[%d] -> %d", exename, child, rc);
+  LOGIFNEG1(sigaction(SIGINT, &saveint, NULL));
+  LOGIFNEG1(sigaction(SIGQUIT, &savequit, NULL));
+  LOGIFNEG1(sigprocmask(SIG_SETMASK, &savemask, NULL));
 
   /* let client know how it went */
   LOGIFNEG1(unlink(g_exepath));
-  SendExitMessage(g_clifd, rc);
+  SendExitMessage(g_clifd, exitcode);
   LOGIFNEG1(shutdown(g_clifd, SHUT_RDWR));
   LOGIFNEG1(close(g_clifd));
   _exit(0);
@@ -363,29 +376,17 @@ TryAgain:
 }
 
 int Serve(void) {
-  int rc;
-  const struct sigaction onsigint = {.sa_handler = (void *)OnInterrupt,
-                                     .sa_flags = SA_NODEFER};
-  const struct sigaction onsigterm = {.sa_handler = (void *)OnInterrupt,
-                                      .sa_flags = SA_NODEFER};
-  const struct sigaction onsigchld = {.sa_handler = (void *)OnChildTerminated,
-                                      .sa_flags = SA_RESTART};
   StartTcpServer();
-  defer(close_s, &g_servfd);
-  if (!(rc = setjmp(g_jb))) {
-    sigaction(SIGINT, &onsigint, NULL);
-    sigaction(SIGTERM, &onsigterm, NULL);
-    sigaction(SIGCHLD, &onsigchld, NULL);
-    for (;;) {
-      if (!Poll() && !g_timeout) break;
-    }
-    LOGF("timeout expired, shutting down");
-  } else {
-    if (isatty(fileno(stderr))) fputc('\r', stderr);
-    LOGF("got %s, shutting down", strsignal(rc));
-    rc += 128;
+  sigaction(SIGCHLD,
+            (&(struct sigaction){.sa_handler = (void *)OnChildTerminated,
+                                 .sa_flags = SA_RESTART}),
+            NULL);
+  for (;;) {
+    if (!Poll() && !g_timeout) break;
   }
-  return rc;
+  close(g_servfd);
+  LOGF("timeout expired, shutting down");
+  return 0;
 }
 
 void Daemonize(void) {
@@ -393,15 +394,17 @@ void Daemonize(void) {
   if (fork() > 0) _exit(0);
   setsid();
   if (fork() > 0) _exit(0);
-  stdin->fd = g_devnullfd;
-  if (!g_sendready) stdout->fd = g_devnullfd;
-  if (stat(kLogFile, &st) != -1 && st.st_size > kLogMaxBytes) unlink(kLogFile);
-  freopen(kLogFile, "a", stderr);
+  dup2(g_devnullfd, stdin->fd);
+  if (!g_sendready) dup2(g_devnullfd, stdout->fd);
+  freopen(kLogFile, "ae", stderr);
+  if (fstat(fileno(stderr), &st) != -1 && st.st_size > kLogMaxBytes) {
+    ftruncate(fileno(stderr), 0);
+  }
 }
 
 int main(int argc, char *argv[]) {
   showcrashreports();
-  g_loglevel = kLogDebug;
+  /* g_loglevel = kLogDebug; */
   GetOpts(argc, argv);
   CHECK_NE(-1, (g_devnullfd = open("/dev/null", O_RDWR)));
   defer(close_s, &g_devnullfd);

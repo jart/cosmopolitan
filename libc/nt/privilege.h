@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_NT_PRIVILEGE_H_
 #define COSMOPOLITAN_LIBC_NT_PRIVILEGE_H_
 #include "libc/nt/struct/luid.h"
+#include "libc/nt/struct/tokenprivileges.h"
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
                       ▒▒▒▒░░░▒▒▒▒▒▒▓▓▓▓▓▓░
@@ -33,9 +34,6 @@
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-struct NtLuid;
-struct NtTokenPrivileges;
 
 bool32 LookupPrivilegeValue(const char16_t *opt_lpSystemName,
                             const char16_t *lpName, struct NtLuid *out_lpLuid);

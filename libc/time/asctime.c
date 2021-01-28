@@ -20,4 +20,12 @@
 
 static char g_asctime_buf[64];
 
-char *asctime(const struct tm *date) { return asctime_r(date, g_asctime_buf); }
+/**
+ * Converts date time to string.
+ *
+ * @return date time string in statically allocated buffer
+ * @see asctime_r for reentrant version
+ */
+char *asctime(const struct tm *date) {
+  return asctime_r(date, g_asctime_buf);
+}

@@ -20,7 +20,7 @@
 .text.windows
 .source	__FILE__
 
-onntconsoleevent$nt:
-	ezlea	onntconsoleevent,ax
+__onntconsoleevent$nt:
+	ezlea	__onntconsoleevent,ax
 	jmp	__nt2sysv
-	.endfn	onntconsoleevent$nt,globl,hidden
+	.endfn	__onntconsoleevent$nt,globl,hidden

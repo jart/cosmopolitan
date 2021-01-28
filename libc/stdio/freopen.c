@@ -17,18 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/nt/enum/accessmask.h"
-#include "libc/nt/enum/fileflagandattributes.h"
-#include "libc/nt/enum/filesharemode.h"
-#include "libc/nt/files.h"
-#include "libc/nt/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
-#include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 
 /**
@@ -52,42 +43,16 @@ FILE *freopen(const char *pathname, const char *mode, FILE *stream) {
   if (pathname) {
     /* open new stream, overwriting existing alloc */
     if ((fd = open(pathname, flags, 0666)) != -1) {
-      if (!IsWindows()) {
-        dup3(fd, stream->fd, (flags & O_CLOEXEC));
-        close(fd);
-      } else {
-        g_fds.p[stream->fd].handle = g_fds.p[fd].handle;
-        g_fds.p[fd].kind = kFdEmpty;
-      }
+      dup3(fd, stream->fd, flags & O_CLOEXEC);
+      close(fd);
       stream->iomode = flags;
       return stream;
     } else {
       return NULL;
     }
   } else {
-    /* change mode of open file */
-    if (!IsWindows()) {
-      if (flags & O_CLOEXEC) {
-        if (fcntl$sysv(stream->fd, F_SETFD, FD_CLOEXEC) == -1) return NULL;
-        flags &= ~O_CLOEXEC;
-      }
-      if (flags) {
-        if (fcntl$sysv(stream->fd, F_SETFL, flags) == -1) return NULL;
-      }
-      return stream;
-    } else {
-      if (ReOpenFile(
-              stream->fd,
-              (flags & O_RDWR) == O_RDWR ? kNtGenericWrite : kNtGenericRead,
-              (flags & O_EXCL) == O_EXCL
-                  ? kNtFileShareExclusive
-                  : kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,
-              kNtFileAttributeNormal)) {
-        return stream;
-      } else {
-        __winerr();
-        return NULL;
-      }
-    }
+    fcntl(stream->fd, F_SETFD, !!(flags & O_CLOEXEC));
+    fcntl(stream->fd, F_SETFL, flags & ~O_CLOEXEC);
+    return stream;
   }
 }

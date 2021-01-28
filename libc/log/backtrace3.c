@@ -50,7 +50,6 @@ int PrintBacktraceUsingSymbols(int fd, const struct StackFrame *bp,
   char buf[256], ibuf[21];
   const struct Symbol *symbol;
   const struct StackFrame *frame;
-  if (!st) return -1;
   if (!bp) bp = __builtin_frame_address(0);
   garbage = weaken(__garbage);
   gi = garbage ? garbage->i : 0;
@@ -66,8 +65,9 @@ int PrintBacktraceUsingSymbols(int fd, const struct StackFrame *bp,
     *p++ = ' ';
     p = mempcpy(p, ibuf, uint64toarray_fixed16(addr, ibuf, 48));
     *p++ = ' ';
-    if (st->count && ((intptr_t)addr >= (intptr_t)&_base &&
-                      (intptr_t)addr <= (intptr_t)&_end)) {
+    if (st && st->count &&
+        ((intptr_t)addr >= (intptr_t)&_base &&
+         (intptr_t)addr <= (intptr_t)&_end)) {
       symbol = &st->symbols[bisectcarleft((const int32_t(*)[2])st->symbols,
                                           st->count, addr - st->addr_base - 1)];
       p = stpcpy(p, &st->name_base[symbol->name_rva]);

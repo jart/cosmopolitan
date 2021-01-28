@@ -14,7 +14,8 @@ CHIBICC = o/$(MODE)/third_party/chibicc/chibicc.com.dbg
 CHIBICC2 = o/$(MODE)/third_party/chibicc/chibicc2.com.dbg
 CHIBICC_FLAGS =								\
 	-fno-common							\
-	-include libc/integral/normalize.inc
+	-include libc/integral/normalize.inc				\
+	-DIMAGE_BASE_VIRTUAL=$(IMAGE_BASE_VIRTUAL)
 
 PKGS += THIRD_PARTY_CHIBICC
 THIRD_PARTY_CHIBICC_ARTIFACTS += THIRD_PARTY_CHIBICC_A

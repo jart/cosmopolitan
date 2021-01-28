@@ -23,7 +23,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
 
-textwindows bool32 onntconsoleevent(uint32_t CtrlType) {
+textwindows bool32 __onntconsoleevent(uint32_t CtrlType) {
   int sig;
   siginfo_t info;
   switch (CtrlType) {

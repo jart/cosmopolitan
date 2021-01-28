@@ -1,5 +1,6 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/ucontext.h"
+#include "libc/x/x.h"
 #include "third_party/chibicc/chibicc.h"
 
 asm(".ident\t\"\\n\\n\
@@ -606,7 +607,7 @@ static void run_linker(StringArray *inputs, char *output) {
   strarray_push(&arr, "--gc-sections");
   strarray_push(&arr, "--build-id=none");
   strarray_push(&arr, "--no-dynamic-linker");
-  strarray_push(&arr, "-Ttext-segment=0x400000");
+  strarray_push(&arr, xasprintf("-Ttext-segment=%#x", IMAGE_BASE_VIRTUAL));
   strarray_push(&arr, "-T");
   strarray_push(&arr, LDS);
   strarray_push(&arr, APE);

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,8 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
+#include "libc/calls/calls.h"
+#include "libc/stdio/fflush.internal.h"
+#include "libc/stdio/stdio_ext.h"
 
-bool __isfdkind(int fd, enum FdKind kind) {
-  return 0 <= fd && fd < g_fds.n && g_fds.p[fd].kind == kind;
+/**
+ * Flushes all line-buffered streams.
+ */
+void _flushlbf(void) {
+  int i;
+  for (i = 0; i < g_fflush.handles.i; ++i) {
+    if (g_fflush.handles.p[i]->bufmode == _IOLBF) {
+      fflush(g_fflush.handles.p[i]);
+    }
+  }
 }

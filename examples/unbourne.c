@@ -617,10 +617,10 @@
 
 #define setlocate(l, s) 0
 #define equal(s1, s2)   (strcmp(s1, s2) == 0)
-#define getenv(p)       bltinlookup((p), 0)
-#define isodigit(c)     ((c) >= '0' && (c) <= '7')
-#define octtobin(c)     ((c) - '0')
-#define scopy(s1, s2)   ((void)strcpy(s2, s1))
+/* #define getenv(p)       bltinlookup((p), 0) */
+#define isodigit(c)   ((c) >= '0' && (c) <= '7')
+#define octtobin(c)   ((c) - '0')
+#define scopy(s1, s2) ((void)strcpy(s2, s1))
 
 #define TRACE(param)
 /* #define TRACE(param)   \ */

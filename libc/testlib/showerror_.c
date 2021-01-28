@@ -30,8 +30,6 @@
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-STATIC_YOINK("__isfdkind");
-
 const char *testlib_showerror_errno;
 const char *testlib_showerror_file;
 const char *testlib_showerror_func;
@@ -85,9 +83,10 @@ testonly void testlib_showerror_(int line, const char *wantcode,
   strcpy(hostname, "unknown");
   gethostname(hostname, sizeof(hostname));
   fprintf(stderr,
-          "\t%s%s\n"
-          "\t%s @ %s%s\n",
-          SUBTLE, strerror(err), program_invocation_name, hostname, RESET);
+          "\t%s%s%s\n"
+          "\t%s%s @ %s%s\n",
+          SUBTLE, strerror(err), RESET, SUBTLE, program_invocation_name,
+          hostname, RESET);
 
   free_s(&FREED_want);
   free_s(&FREED_got);

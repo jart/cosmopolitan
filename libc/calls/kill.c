@@ -19,7 +19,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
-#include "libc/sysv/errfuns.h"
 
 /**
  * Sends signal to process.
@@ -39,15 +38,9 @@
  * @asyncsignalsafe
  */
 int kill(int pid, int sig) {
-  int me;
   if (!IsWindows()) {
     return kill$sysv(pid, sig, 1);
   } else {
-    me = getpid();
-    if (!pid || pid == me || pid == -me) {
-      return raise(sig);
-    } else {
-      return enosys();
-    }
+    return kill$nt(pid, sig);
   }
 }

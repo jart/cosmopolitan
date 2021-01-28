@@ -18,18 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
-#include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/errfuns.h"
-
-static int shutdown$nt(struct Fd *fd, int how) {
-  if (__shutdown$nt(fd->handle, how) != -1) {
-    return 0;
-  } else {
-    return __winsockerr();
-  }
-}
 
 /**
  * Disables sends or receives on a socket, without closing.
@@ -41,12 +32,7 @@ static int shutdown$nt(struct Fd *fd, int how) {
  */
 int shutdown(int fd, int how) {
   if (!IsWindows()) {
-    if (!IsXnu()) {
-      return shutdown$sysv(fd, how);
-    } else {
-      /* TODO(jart): What's wrong with XNU shutdown()? */
-      return 0;
-    }
+    return shutdown$sysv(fd, how);
   } else if (__isfdkind(fd, kFdSocket)) {
     return shutdown$nt(&g_fds.p[fd], how);
   } else {

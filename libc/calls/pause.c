@@ -25,15 +25,18 @@
 /**
  * Waits for signal.
  *
- * @return should be -1 w/ EINTR
+ * This suspends execution until an unmasked signal is delivered
+ * and its callback function has been called. It's a better idea
+ * to use sigsuspend() w/ sigprocmask() to avoid race conditions
+ *
+ * @return should always be -1 w/ EINTR
  * @see sigsuspend()
  */
 int pause(void) {
   int rc, olderr;
   sigset_t oldmask;
   olderr = errno;
-  rc = pause$sysv();
-  if (rc == -1 && errno == ENOSYS) {
+  if ((rc = pause$sysv()) == -1 && errno == ENOSYS) {
     errno = olderr;
     if (sigprocmask(SIG_BLOCK, NULL, &oldmask) == -1) return -1;
     rc = sigsuspend(&oldmask);

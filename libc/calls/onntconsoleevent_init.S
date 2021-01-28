@@ -20,7 +20,7 @@
 .source	__FILE__
 
 	.init.start 300,_init_onntconsoleevent
-	ezlea	onntconsoleevent$nt,cx
+	ezlea	__onntconsoleevent$nt,cx
 	pushpop	1,%rdx
 	ntcall	__imp_SetConsoleCtrlHandler
 	.init.end 300,_init_onntconsoleevent,globl,hidden

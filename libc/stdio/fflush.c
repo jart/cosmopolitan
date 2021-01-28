@@ -23,21 +23,10 @@
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/fflush.internal.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/o.h"
-
-struct StdioFlushHandles {
-  size_t i, n;
-  FILE **p;
-};
-
-struct StdioFlush {
-  struct StdioFlushHandles handles;
-  FILE *handles_initmem[8];
-};
-
-static struct StdioFlush g_fflush;
 
 /**
  * Blocks until data from stream buffer is written out.

@@ -41,7 +41,9 @@ STATIC_YOINK("ntoa");
 STATIC_YOINK("stoa");
 STATIC_YOINK("ftoa");
 
-static int loglevel2char(unsigned level) {
+static struct timespec vflogf_ts;
+
+static int vflogf_loglevel2char(unsigned level) {
   switch (level) {
     case kLogInfo:
       return 'I';
@@ -78,34 +80,46 @@ void vflogf_onfail(FILE *f) {
 
 /**
  * Writes formatted message w/ timestamp to log.
+ *
+ * Timestamps are hyphenated out when multiple events happen within the
+ * same second in the same process. When timestamps are crossed out, it
+ * will display microseconsd as a delta elapsed time. This is useful if
+ * you do something like:
+ *
+ *     LOGF("connecting to foo");
+ *     connect(...)
+ *     LOGF("connected to foo");
+ *
+ * In that case, the second log entry will always display the amount of
+ * time that it took to connect. This is great in forking applications.
  */
 void(vflogf)(unsigned level, const char *file, int line, FILE *f,
              const char *fmt, va_list va) {
-  static struct timespec ts;
   struct tm tm;
   long double t2;
   const char *prog;
-  int64_t secs, nsec, dots;
+  bool issamesecond;
   char buf32[32], *buf32p;
+  int64_t secs, nsec, dots;
   if (!f) f = g_logfile;
   if (fileno(f) == -1) return;
   t2 = nowl();
   secs = t2;
-  nsec = rem1000000000int64(t2 * 1e9L);
-  if (secs > ts.tv_sec) {
+  nsec = (t2 - secs) * 1e9L;
+  issamesecond = secs == vflogf_ts.tv_sec;
+  dots = issamesecond ? nsec - vflogf_ts.tv_nsec : nsec;
+  vflogf_ts.tv_sec = secs;
+  vflogf_ts.tv_nsec = nsec;
+  if (!issamesecond) {
     localtime_r(&secs, &tm);
     strftime(buf32, sizeof(buf32), "%Y-%m-%dT%H:%M:%S.", &tm);
     buf32p = buf32;
-    dots = nsec;
   } else {
     buf32p = "--------------------";
-    dots = nsec - ts.tv_nsec;
   }
-  ts.tv_sec = secs;
-  ts.tv_nsec = nsec;
   prog = basename(program_invocation_name);
-  if ((fprintf)(f, "%c%s%06ld:%s:%d:%.*s:%d] ", loglevel2char(level), buf32p,
-                rem1000000int64(div1000int64(dots)), file, line,
+  if ((fprintf)(f, "%c%s%06ld:%s:%d:%.*s:%d] ", vflogf_loglevel2char(level),
+                buf32p, rem1000000int64(div1000int64(dots)), file, line,
                 strchrnul(prog, '.') - prog, prog, getpid()) <= 0) {
     vflogf_onfail(f);
   }

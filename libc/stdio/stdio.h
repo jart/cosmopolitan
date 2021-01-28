@@ -22,6 +22,7 @@ typedef struct FILE {
   uint32_t nofree;               // 0x24
   int (*reader)(struct FILE *);  // 0x28
   int (*writer)(struct FILE *);  // 0x30
+  int pid;                       // 0x34
 } FILE;
 
 extern FILE *stdin;
@@ -69,6 +70,8 @@ unsigned favail(FILE *);
 void setbuf(FILE *, char *);
 void setbuffer(FILE *, char *, size_t);
 int setvbuf(FILE *, char *, int, size_t);
+FILE *popen(const char *, const char *);
+int pclose(FILE *);
 
 typedef uint64_t fpos_t;
 compatfn char *gets(char *) paramsnonnull();
@@ -78,6 +81,7 @@ compatfn int64_t fseeko(FILE *, long, int) paramsnonnull();
 compatfn int64_t ftello(FILE *) paramsnonnull();
 
 int system(const char *);
+int systemexec(const char *);
 int systemecho(const char *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗

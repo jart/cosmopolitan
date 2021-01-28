@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,8 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
+#include "libc/stdio/stdio_ext.h"
+#include "libc/sysv/consts/o.h"
 
-bool __isfdopen(int fd) {
-  return 0 <= fd && fd < g_fds.n && g_fds.p[fd].kind != kFdEmpty;
+/**
+ * Returns nonzero if stream allows reading.
+ */
+int __fwritable(FILE *f) {
+  return (f->iomode & O_ACCMODE) == O_WRONLY ||
+         (f->iomode & O_ACCMODE) == O_RDWR;
 }

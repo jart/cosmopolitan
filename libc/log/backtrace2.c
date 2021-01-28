@@ -22,6 +22,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/backtrace.internal.h"
@@ -40,7 +41,7 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   ssize_t got;
   intptr_t addr;
   size_t i, j, gi;
-  int rc, pid, pipefds[2];
+  int ws, pid, pipefds[2];
   struct Garbages *garbage;
   const struct StackFrame *frame;
   const char *debugbin, *p1, *p2, *p3, *addr2line;
@@ -73,7 +74,7 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
     close(pipefds[0]);
     close(pipefds[1]);
     execvp(addr2line, argv);
-    abort();
+    _exit(127);
   }
   close(pipefds[1]);
   while ((got = read(pipefds[0], buf, kBacktraceBufSize)) > 0) {
@@ -99,9 +100,15 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
     }
   }
   close(pipefds[0]);
-  if (waitpid(pid, &rc, 0) == -1) return -1;
-  if (WEXITSTATUS(rc) != 0) return -1;
-  return 0;
+  while (waitpid(pid, &ws, 0) == -1) {
+    if (errno == EINTR) continue;
+    return -1;
+  }
+  if (WIFEXITED(ws) && !WEXITSTATUS(ws)) {
+    return 0;
+  } else {
+    return -1;
+  }
 }
 
 static int PrintBacktrace(int fd, const struct StackFrame *bp) {

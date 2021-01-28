@@ -18,13 +18,21 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
-#include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 
+/**
+ * Writes error messages to standard error.
+ */
 void perror(const char *message) {
-  fprintf(stderr, "%s%s%s: %s: %s: %s\r\n", RED2, "error", RESET,
-          program_invocation_name, strerror(errno), message);
+  int err;
+  err = errno;
+  if (message && *message) {
+    fputs(message, stderr);
+    fputs(": ", stderr);
+  }
+  fputs(strerror(err), stderr);
+  fputc('\n', stderr);
 }

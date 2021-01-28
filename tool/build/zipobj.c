@@ -23,6 +23,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/elf/def.h"
+#include "libc/fmt/conv.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -68,6 +69,7 @@
 char *symbol_;
 char *outpath_;
 char *yoink_;
+int64_t image_base_;
 
 const size_t kMinCompressSize = 32;
 const char kNoCompressExts[][8] = {".gz",  ".xz",  ".jpg",  ".png",
@@ -83,7 +85,8 @@ wontreturn void PrintUsage(int rc, FILE *f) {
 void GetOpts(int *argc, char ***argv) {
   int opt;
   yoink_ = "__zip_start";
-  while ((opt = getopt(*argc, *argv, "?ho:s:y:")) != -1) {
+  image_base_ = IMAGE_BASE_VIRTUAL;
+  while ((opt = getopt(*argc, *argv, "?ho:s:y:b:")) != -1) {
     switch (opt) {
       case 'o':
         outpath_ = optarg;
@@ -93,6 +96,9 @@ void GetOpts(int *argc, char ***argv) {
         break;
       case 'y':
         yoink_ = optarg;
+        break;
+      case 'b':
+        image_base_ = strtol(optarg, NULL, 0);
         break;
       case '?':
       case 'h':
@@ -261,7 +267,7 @@ void EmitZip(struct ElfWriter *elf, const char *name, size_t namesize,
                       ELF64_ST_INFO(STB_LOCAL, STT_OBJECT), STV_DEFAULT, 0,
                       kZipCdirHdrLinkableSize);
   elfwriter_appendrela(elf, kZipCfileOffsetOffset, lfilesym, R_X86_64_32,
-                       -IMAGE_BASE_VIRTUAL);
+                       -image_base_);
   elfwriter_commit(elf, kZipCdirHdrLinkableSize);
   elfwriter_finishsection(elf);
 }

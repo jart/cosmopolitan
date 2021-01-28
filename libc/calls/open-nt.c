@@ -45,10 +45,12 @@ static textwindows int64_t open$nt$impl(const char *file, uint32_t flags,
            (flags & 0xf000000f) |
                (/* this is needed if we mmap(rwx+cow)
                    nt is choosy about open() access */
-                (flags & O_ACCMODE) == O_RDONLY
-                    ? kNtGenericExecute | kNtFileGenericRead
-                    : kNtGenericExecute | kNtFileGenericRead |
-                          kNtFileGenericWrite),
+                (flags & O_APPEND)
+                    ? kNtFileAppendData
+                    : (flags & O_ACCMODE) == O_RDONLY
+                          ? kNtGenericExecute | kNtFileGenericRead
+                          : kNtGenericExecute | kNtFileGenericRead |
+                                kNtFileGenericWrite),
            (flags & O_EXCL)
                ? kNtFileShareExclusive
                : kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,

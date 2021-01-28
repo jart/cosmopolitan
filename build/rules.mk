@@ -34,7 +34,7 @@ o/%.pkg:; @build/package $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) $(f
 o/%.h.ok: %.h; @ACTION=CHECK.h build/compile $(COMPILE.c) -x c -g0 -o $@ $<
 o/%.h.okk: %.h; @ACTION=CHECK.h build/compile $(COMPILE.cxx) -x c++ -g0 -o $@ $<
 o/%.greg.o: %.greg.c; @ACTION=OBJECTIFY.greg build/compile $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
-o/%.zip.o: o/%; @build/zipobj $(OUTPUT_OPTION) $<
+o/%.zip.o: o/%; @build/zipobj $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
 
 o/$(MODE)/%.a:; @$(ARCHIVE) $@ $^
 o/$(MODE)/%: o/$(MODE)/%.dbg; @ACTION=OBJCOPY TARGET=$@ build/do $(OBJCOPY) -SO binary $< $@
@@ -75,7 +75,7 @@ o/$(MODE)/%.ncabi.o: %.ncabi.c; @ACTION=OBJECTIFY.nc build/compile $(OBJECTIFY.n
 o/$(MODE)/%.real.o: %.c; @ACTION=OBJECTIFY.real build/compile $(OBJECTIFY.real.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.runs: o/$(MODE)/%; @ACTION=CHECK.runs TARGET=$< build/runcom $< $(TESTARGS) && touch $@
 o/$(MODE)/%.pkg:; @build/package $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) $(filter %.o,$^)
-o/$(MODE)/%.zip.o: %; @build/zipobj $(OUTPUT_OPTION) $<
+o/$(MODE)/%.zip.o: %; @build/zipobj $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
 
 o/$(MODE)/%-gcc.asm: %.c; @ACTION=OBJECTIFY.c build/compile $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
 o/$(MODE)/%-clang.asm: CC = $(CLANG)

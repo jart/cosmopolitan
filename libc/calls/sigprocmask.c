@@ -34,11 +34,12 @@
  * @param oldset will receive the old mask (optional) and can't overlap
  * @return 0 on success, or -1 w/ errno
  * @asyncsignalsafe
+ * @vforksafe
  */
 int sigprocmask(int how, const sigset_t *opt_set, sigset_t *opt_out_oldset) {
   if (!IsWindows()) {
     return sigprocmask$sysv(how, opt_set, opt_out_oldset, 8);
   } else {
-    return enosys(); /* TODO(jart): Implement me! */
+    return 0; /* TODO(jart): Implement me! */
   }
 }

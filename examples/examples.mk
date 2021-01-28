@@ -51,6 +51,7 @@ EXAMPLES_DIRECTDEPS =						\
 	LIBC_LOG_ASAN						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
+	LIBC_NT_KERNEL32					\
 	LIBC_NT_NTDLL						\
 	LIBC_NT_USER32						\
 	LIBC_NT_WS2_32						\

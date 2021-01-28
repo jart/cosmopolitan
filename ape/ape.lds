@@ -425,6 +425,7 @@ SECTIONS {
     *(.xlm)
     . = ALIGN(0x1000);
 
+    . = ALIGN(0x10000); /* for brk()/sbrk() allocation */
     HIDDEN(_end = .);
     PROVIDE_HIDDEN(end = .);
   } AT>SmallCode :Ram

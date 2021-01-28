@@ -180,21 +180,21 @@ syscon	sig	SIGXFSZ					25			25			25			25			25			# unix consensus & faked on nt
 syscon	sig	SIGVTALRM				26			26			26			26			26			# unix consensus & faked on nt
 syscon	sig	SIGPROF					27			27			27			27			27			# unix consensus & faked on nt
 syscon	sig	SIGWINCH				28			28			28			28			28			# unix consensus & faked on nt
-syscon	sig	SIGBUS					7			10			10			10			0			# bsd consensus
-syscon	sig	SIGUSR1					10			30			30			30			0			# bsd consensus
-syscon	sig	SIGCHLD					17			20			20			20			0			# bsd consensus
-syscon	sig	SIGCONT					18			19			19			19			0			# bsd consensus
-syscon	sig	SIGIO					29			23			23			23			0			# bsd consensus
-syscon	sig	SIGSTOP					19			17			17			17			0			# bsd consensus
-syscon	sig	SIGSYS					31			12			12			12			0			# bsd consensus
-syscon	sig	SIGTSTP					20			18			18			18			0			# bsd consensus
-syscon	sig	SIGURG					23			0x10			0x10			0x10			0			# bsd consensus
-syscon	sig	SIGUSR2					12			31			31			31			0			# bsd consensus
-syscon	sig	SIGSTKSZ				0x2000			0x020000		0x8800			0x7000			0
-syscon	sig	SIGPOLL					29			0			0			0			0
-syscon	sig	SIGPWR					30			0			0			0			0
-syscon	sig	SIGSTKFLT				0x10			0			0			0			0
-syscon	sig	SIGUNUSED				31			0			0			0			0
+syscon	sig	SIGBUS					7			10			10			10			7			# bsd consensus
+syscon	sig	SIGUSR1					10			30			30			30			10			# bsd consensus
+syscon	sig	SIGCHLD					17			20			20			20			17			# bsd consensus
+syscon	sig	SIGCONT					18			19			19			19			18			# bsd consensus
+syscon	sig	SIGIO					29			23			23			23			29			# bsd consensus
+syscon	sig	SIGSTOP					19			17			17			17			19			# bsd consensus
+syscon	sig	SIGSYS					31			12			12			12			31			# bsd consensus
+syscon	sig	SIGTSTP					20			18			18			18			20			# bsd consensus
+syscon	sig	SIGURG					23			0x10			0x10			0x10			23			# bsd consensus
+syscon	sig	SIGUSR2					12			31			31			31			12			# bsd consensus
+syscon	sig	SIGSTKSZ				0x2000			0x020000		0x8800			0x7000			0x2000
+syscon	sig	SIGPOLL					29			0			0			0			29
+syscon	sig	SIGPWR					30			0			0			0			30
+syscon	sig	SIGSTKFLT				0x10			0			0			0			0x10
+syscon	sig	SIGUNUSED				31			0			0			0			31
 syscon	sig	SIGRTMAX				0			0			126			0			0
 syscon	sig	SIGRTMIN				0			0			65			0			0
 

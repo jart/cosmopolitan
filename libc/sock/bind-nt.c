@@ -23,16 +23,6 @@
 #include "libc/sock/yoink.inc"
 #include "libc/sysv/errfuns.h"
 
-/**
- * Assigns local address and port number to socket.
- *
- * @param fd is the file descriptor returned by socket()
- * @param addr is usually the binary-encoded ip:port on which to listen
- * @param addrsize is the byte-length of addr's true polymorphic form
- * @return socket file descriptor or -1 w/ errno
- * @error ENETDOWN, EPFNOSUPPORT, etc.
- * @asyncsignalsafe
- */
 textwindows int bind$nt(struct Fd *fd, const void *addr, uint32_t addrsize) {
   assert(fd->kind == kFdSocket);
   if (__bind$nt(fd->handle, addr, addrsize) != -1) {

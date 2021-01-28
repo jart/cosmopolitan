@@ -18,12 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/sigbits.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/sig.h"
 
 /**
  * Launches program with system command interpreter.
@@ -34,26 +37,36 @@
  */
 int system(const char *cmdline) {
   int pid, wstatus;
-  char comspec[128];
-  const char *prog, *arg;
-  if (weaken(fflush)) weaken(fflush)(NULL);
-  if (cmdline) {
-    if ((pid = vfork()) == -1) return -1;
-    if (!pid) {
-      strcpy(comspec, kNtSystemDirectory);
-      strcat(comspec, "cmd.exe");
-      prog = !IsWindows() ? _PATH_BSHELL : comspec;
-      arg = !IsWindows() ? "-c" : "/C";
-      execv(prog, (char *const[]){prog, arg, cmdline, NULL});
-      _exit(errno);
-    } else if (wait4(pid, &wstatus, 0, NULL) != -1) {
-      return wstatus;
-    } else {
-      return -1;
+  sigset_t chldmask, savemask;
+  struct sigaction ignore, saveint, savequit;
+  if (!cmdline) return 1;
+  ignore.sa_flags = 0;
+  ignore.sa_handler = SIG_IGN;
+  sigemptyset(&ignore.sa_mask);
+  sigaction(SIGINT, &ignore, &saveint);
+  sigaction(SIGQUIT, &ignore, &savequit);
+  sigemptyset(&chldmask);
+  sigaddset(&chldmask, SIGCHLD);
+  sigprocmask(SIG_BLOCK, &chldmask, &savemask);
+  pid = fork();
+  if (!pid) {
+    sigaction(SIGINT, &saveint, NULL);
+    sigaction(SIGQUIT, &savequit, NULL);
+    sigprocmask(SIG_SETMASK, &savemask, NULL);
+    systemexec(cmdline);
+    _exit(127);
+  } else if (pid != -1) {
+    while (wait4(pid, &wstatus, 0, NULL) == -1) {
+      if (errno != EINTR) {
+        wstatus = -1;
+        break;
+      }
     }
-  } else if (IsWindows()) {
-    return true;
   } else {
-    return fileexists(_PATH_BSHELL);
+    wstatus = -1;
   }
+  sigaction(SIGINT, &saveint, NULL);
+  sigaction(SIGQUIT, &savequit, NULL);
+  sigprocmask(SIG_SETMASK, &savemask, NULL);
+  return wstatus;
 }

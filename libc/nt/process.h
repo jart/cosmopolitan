@@ -43,8 +43,8 @@ bool32 CreateProcess(const char16_t *opt_lpApplicationName,
                      struct NtProcessInformation *opt_out_lpProcessInformation)
     paramsnonnull((2, 9));
 
-uint32_t GetThreadId(int64_t Thread);   /* cf. NT_TID */
-uint32_t GetProcessId(int64_t Process); /* cf. NT_PID */
+uint32_t GetThreadId(int64_t hThread);   /* cf. NT_TID */
+uint32_t GetProcessId(int64_t hProcess); /* cf. NT_PID */
 void SetLastError(uint32_t dwErrCode);
 uint32_t FormatMessage(uint32_t dwFlags, const void *lpSource,
                        uint32_t dwMessageId, uint32_t dwLanguageId,

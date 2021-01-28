@@ -17,6 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/nt/enum/accessmask.h"
+#include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/files.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
@@ -30,7 +33,22 @@ textwindows int fcntl$nt(int fd, int cmd, unsigned arg) {
       case F_GETFL:
         return g_fds.p[fd].flags;
       case F_SETFL:
-        return (g_fds.p[fd].flags = arg);
+        if (ReOpenFile(
+                g_fds.p[fd].handle,
+                (arg & O_APPEND)
+                    ? kNtFileAppendData
+                    : (arg & O_ACCMODE) == O_RDONLY
+                          ? kNtGenericExecute | kNtFileGenericRead
+                          : kNtGenericExecute | kNtFileGenericRead |
+                                kNtFileGenericWrite,
+                (arg & O_EXCL) == O_EXCL
+                    ? kNtFileShareExclusive
+                    : kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,
+                kNtFileAttributeNotContentIndexed | kNtFileAttributeNormal)) {
+          return (g_fds.p[fd].flags = arg);
+        } else {
+          return __winerr();
+        }
       case F_GETFD:
         if (g_fds.p[fd].flags & O_CLOEXEC) {
           return FD_CLOEXEC;
@@ -38,7 +56,7 @@ textwindows int fcntl$nt(int fd, int cmd, unsigned arg) {
           return 0;
         }
       case F_SETFD:
-        if (arg & O_CLOEXEC) {
+        if (arg & FD_CLOEXEC) {
           g_fds.p[fd].flags |= O_CLOEXEC;
           return FD_CLOEXEC;
         } else {

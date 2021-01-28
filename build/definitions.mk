@@ -185,6 +185,9 @@ DEFAULT_LDFLAGS =							\
 	-z max-page-size=0x1000						\
 	-Ttext-segment=$(IMAGE_BASE_VIRTUAL)
 
+ZIPOBJ_FLAGS =								\
+	 -b$(IMAGE_BASE_VIRTUAL)
+
 ASONLYFLAGS =								\
 	-g								\
 	--debug-prefix-map="$(PWD)"=

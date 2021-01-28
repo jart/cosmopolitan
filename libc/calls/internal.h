@@ -70,8 +70,14 @@ hidden extern const struct NtSecurityAttributes kNtIsInheritable;
 ssize_t __getemptyfd(void) hidden;
 int __ensurefds(int) hidden;
 void __removefd(int) hidden;
-bool __isfdopen(int) hidden nosideeffect;
-bool __isfdkind(int, enum FdKind) hidden nosideeffect;
+
+forceinline bool __isfdopen(int fd) {
+  return 0 <= fd && fd < g_fds.n && g_fds.p[fd].kind != kFdEmpty;
+}
+
+forceinline bool __isfdkind(int fd, enum FdKind kind) {
+  return 0 <= fd && fd < g_fds.n && g_fds.p[fd].kind == kind;
+}
 
 forceinline size_t clampio(size_t size) {
   if (!IsTrustworthy()) {
@@ -214,46 +220,46 @@ void xnutrampoline(void *, i32, i32, const struct __darwin_siginfo *,
 │ cosmopolitan § syscalls » windows nt » veneers                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-int gettimeofday$nt(struct timeval *, struct timezone *) hidden;
 bool32 isatty$nt(int) hidden;
 char *getcwd$nt(char *, size_t) hidden;
-int fork$nt(void) hidden;
+i64 lseek$nt(int, i64, int) hidden;
 int chdir$nt(const char *) hidden;
 int close$nt(int) hidden;
 int dup$nt(int, int, int) hidden;
+int execve$nt(const char *, char *const[], char *const[]) hidden;
+int faccessat$nt(int, const char *, int, uint32_t) hidden;
 int fadvise$nt(int, u64, u64, int) hidden;
 int fcntl$nt(int, int, unsigned) hidden;
-int getpriority$nt(int) hidden;
-int setpriority$nt(int) hidden;
 int fdatasync$nt(int) hidden;
 int flock$nt(int, int) hidden;
+int fork$nt(void) hidden;
 int fstat$nt(i64, struct stat *) hidden;
 int ftruncate$nt(int, u64) hidden;
-int kill$nt(i64, int) hidden;
+int getpriority$nt(int) hidden;
+int getrusage$nt(int, struct rusage *) hidden;
+int gettimeofday$nt(struct timeval *, struct timezone *) hidden;
+int kill$nt(int, int) hidden;
 int link$nt(const char *, const char *) hidden;
 int lstat$nt(const char *, struct stat *) hidden;
 int madvise$nt(void *, size_t, int) hidden;
 int msync$nt(void *, size_t, int) hidden;
-ssize_t open$nt(const char *, u32, i32) nodiscard hidden;
+int nanosleep$nt(const struct timespec *, struct timespec *) hidden;
 int pipe$nt(int[hasatleast 2], unsigned) hidden;
 int rename$nt(const char *, const char *) hidden;
 int rmdir$nt(const char *) hidden;
 int sched_yield$nt(void) hidden;
+int setitimer$nt(int, const struct itimerval *, struct itimerval *) hidden;
+int setpriority$nt(int) hidden;
 int stat$nt(const char *, struct stat *) hidden;
-int sync$nt(void) hidden;
 int symlink$nt(const char *, const char *) hidden;
+int sync$nt(void) hidden;
 int sysinfo$nt(struct sysinfo *) hidden;
 int truncate$nt(const char *, u64) hidden;
 int unlink$nt(const char *) hidden;
-i64 lseek$nt(int, i64, int) hidden;
+int utimensat$nt(int, const char *, const struct timespec *, int) hidden;
+ssize_t open$nt(const char *, u32, i32) nodiscard hidden;
 ssize_t read$nt(struct Fd *, const struct iovec *, size_t, ssize_t) hidden;
 ssize_t write$nt(struct Fd *, const struct iovec *, size_t, ssize_t) hidden;
-int utimensat$nt(int, const char *, const struct timespec *, int) hidden;
-int getrusage$nt(int, struct rusage *) hidden;
-int setitimer$nt(int, const struct itimerval *, struct itimerval *) hidden;
-int nanosleep$nt(const struct timespec *, struct timespec *) hidden;
-int faccessat$nt(int, const char *, int, uint32_t) hidden;
-int execve$nt(const char *, char *const[], char *const[]) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » windows nt » support                           ─╬─│┼
@@ -266,7 +272,6 @@ int getsetpriority$nt(int, unsigned, int, int (*)(int));
 void ntcontext2linux(struct ucontext *, const struct NtContext *) hidden;
 struct NtOverlapped *offset2overlap(int64_t, struct NtOverlapped *) hidden;
 bool32 ntsetprivilege(i64, const char16_t *, u32) hidden;
-bool32 onntconsoleevent$nt(u32) hidden;
 void __winalarm(void *, uint32_t, uint32_t) hidden;
 int ntaccesscheck(const char16_t *, u32) paramsnonnull() hidden;
 int64_t __winerr(void) nocallback privileged;

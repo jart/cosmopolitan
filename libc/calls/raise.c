@@ -23,7 +23,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/sig.h"
 
-static uint32_t GetCtrlEvent(int sig) {
+static textwindows uint32_t GetCtrlEvent(int sig) {
   switch (sig) {
     case SIGINT:
       return kNtCtrlCEvent;

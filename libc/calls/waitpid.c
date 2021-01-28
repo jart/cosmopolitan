@@ -17,9 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/calls/wait4.h"
-#include "libc/dce.h"
 
 /**
  * Waits for status to change on process.
@@ -33,9 +30,5 @@
  * @asyncsignalsafe
  */
 int waitpid(int pid, int *opt_out_wstatus, int options) {
-  if (!IsWindows()) {
-    return wait4$sysv(pid, opt_out_wstatus, options, NULL);
-  } else {
-    return wait4$nt(pid, opt_out_wstatus, options, NULL);
-  }
+  return wait4(pid, opt_out_wstatus, options, NULL);
 }

@@ -169,6 +169,7 @@ bool endswith(const char *, const char *) strlenesque;
 bool endswith16(const char16_t *, const char16_t *) strlenesque;
 bool wcsendswith(const wchar_t *, const wchar_t *) strlenesque;
 const char *IndexDoubleNulString(const char *, unsigned) strlenesque;
+int strverscmp(const char *, const char *);
 wchar_t *wmemset(wchar_t *, wchar_t, size_t) memcpyesque;
 char16_t *memset16(char16_t *, char16_t, size_t) memcpyesque;
 compatfn wchar_t *wmemcpy(wchar_t *, const wchar_t *, size_t) memcpyesque;
