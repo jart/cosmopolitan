@@ -73,6 +73,19 @@ struct dirent$bsd {
   char d_name[256];
 };
 
+/**
+ * OpenBSD getdents() ABI.
+ */
+struct dirent$openbsd {
+  uint64_t d_fileno;
+  int64_t d_off;
+  uint16_t d_reclen;
+  uint8_t d_type;
+  uint8_t d_namlen;
+  uint8_t __zomg[4];
+  char d_name[256];
+};
+
 static textwindows noinline DIR *opendir$nt(const char *name) {
   int len;
   DIR *res;
@@ -194,6 +207,7 @@ struct dirent *readdir(DIR *dir) {
   long basep;
   struct dirent *ent;
   struct dirent$bsd *bsd;
+  struct dirent$openbsd *obsd;
   if (!IsWindows()) {
     if (dir->buf_pos >= dir->buf_end) {
       basep = dir->tell; /* <- what does xnu do */
@@ -202,10 +216,19 @@ struct dirent *readdir(DIR *dir) {
       dir->buf_pos = 0;
       dir->buf_end = rc;
     }
-    if (IsLinux() || IsOpenbsd()) {
+    if (IsLinux()) {
       ent = (struct dirent *)(dir->buf + dir->buf_pos);
       dir->buf_pos += ent->d_reclen;
       dir->tell = ent->d_off;
+    } else if (IsOpenbsd()) {
+      obsd = (struct dirent$openbsd *)(dir->buf + dir->buf_pos);
+      dir->buf_pos += obsd->d_reclen;
+      ent = &dir->ent;
+      ent->d_ino = obsd->d_fileno;
+      ent->d_off = obsd->d_off;
+      ent->d_reclen = obsd->d_reclen;
+      ent->d_type = obsd->d_type;
+      memcpy(ent->d_name, obsd->d_name, obsd->d_namlen + 1);
     } else {
       bsd = (struct dirent$bsd *)(dir->buf + dir->buf_pos);
       dir->buf_pos += bsd->d_reclen;
