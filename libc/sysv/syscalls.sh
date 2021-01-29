@@ -91,7 +91,7 @@ scall	'setsockopt$sysv'	0x0069006920690036	globl hidden
 scall	'getsockopt$sysv'	0x0076007620760037	globl hidden
 scall	'__fork$sysv'		0x0002000220020039	globl hidden # xnu needs eax=~-edx b/c eax always holds pid and edx is 0 for parent and 1 for child
 #scall	vfork			0x004200422042003a	globl        # this syscall is from the moon so we implement it by hand in libc/calls/hefty/vfork.S
-scall	posix_spawn		0xffffffff20f4ffff	globl hidden # TODO: put in spawnve()
+scall	'posix_spawn$sysv'	0xffffffff20f4ffff	globl hidden # good luck figuring out how xnu defines this
 scall	'__execve$sysv'		0x003b003b203b003b	globl hidden
 scall	'wait4$sysv'		0x000b00072007003d	globl hidden
 scall	'kill$sysv'		0x007a00252025003e	globl hidden # kill(pid, sig, 1) b/c xnu

@@ -280,18 +280,6 @@ syscon	madv	MADV_HWPOISON				100			0			0			0			0			# TODO(jart): what is it?
 syscon	madv	MADV_REMOVE				9			0			0			0			0			# TODO(jart): what is it?
 syscon	fadv	POSIX_FADV_NOREUSE			5			0			5			0			0			# wut
 
-#	posix_spawn()
-#	only native on xnu
-#
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			XENIX			Commentary
-syscon	spawn	POSIX_SPAWN_RESETIDS			1			1			1			1			0			# unix consensus
-syscon	spawn	POSIX_SPAWN_SETPGROUP			2			2			2			2			0			# unix consensus
-syscon	spawn	POSIX_SPAWN_SETSIGDEF			4			4			0x10			0x10			0
-syscon	spawn	POSIX_SPAWN_SETSIGMASK			8			8			0x20			0x20			0
-syscon	spawn	POSIX_SPAWN_SETSCHEDPARAM		0x10			0			4			4			0
-syscon	spawn	POSIX_SPAWN_SETSCHEDULER		0x20			0			8			8			0
-syscon	spawn	POSIX_SPAWN_USEVFORK			0x40			0			0			0			0
-
 #	mmap(), mprotect(), etc.
 #	digital restrictions management for the people
 #
