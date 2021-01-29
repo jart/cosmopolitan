@@ -48,13 +48,10 @@ textwindows bool32 __onntconsoleevent(uint32_t CtrlType) {
   }
   switch ((rva = __sighandrvas[sig])) {
     case (uintptr_t)SIG_DFL:
-      dprintf(2, "__onntconsoleevent ExitProcess\n");
       ExitProcess(128 + sig);
     case (uintptr_t)SIG_IGN:
-      dprintf(2, "__onntconsoleevent SIG_IGN\n");
       return true;
     default:
-      dprintf(2, "__onntconsoleevent %#x\n", rva);
       memset(&info, 0, sizeof(info));
       info.si_signo = sig;
       ((sigaction_f)(_base + rva))(sig, &info, NULL);
