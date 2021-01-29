@@ -34,6 +34,7 @@ LIBC_X_A_CHECKS =				\
 
 LIBC_X_A_DIRECTDEPS =				\
 	LIBC_CALLS				\
+	LIBC_CALLS_HEFTY			\
 	LIBC_FMT				\
 	LIBC_INTRIN				\
 	LIBC_MEM				\

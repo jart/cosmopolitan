@@ -393,7 +393,11 @@ int Serve(void) {
     if (!Poll() && (!g_timeout || g_interrupted)) break;
   }
   close(g_servfd);
-  LOGF("timeout expired, shutting down");
+  if (!g_timeout) {
+    LOGF("timeout expired, shutting down");
+  } else {
+    LOGF("got ctrl-c, shutting down");
+  }
   return 0;
 }
 

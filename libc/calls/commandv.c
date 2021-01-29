@@ -27,7 +27,9 @@ static bool AccessCommand(char path[hasatleast PATH_MAX], const char *name,
                           size_t namelen, size_t pathlen) {
   if (pathlen + 1 + namelen + 1 + 4 + 1 > PATH_MAX) return -1;
   if (pathlen && (path[pathlen - 1] != '/' && path[pathlen - 1] != '\\')) {
-    path[pathlen++] = '/';
+    path[pathlen] =
+        !IsWindows() ? '/' : memchr(path, '\\', pathlen) ? '\\' : '/';
+    pathlen++;
   }
   memcpy(path + pathlen, name, namelen + 1);
   if (isexecutable(path)) return true;
@@ -43,14 +45,17 @@ static bool SearchPath(char path[hasatleast PATH_MAX], const char *name,
   size_t i;
   const char *p;
   p = firstnonnull(emptytonull(getenv("PATH")), "/bin:/usr/local/bin:/usr/bin");
-  for (;; p += i) {
-    while (*p == ':' || *p == ';') ++p;
-    if (!*p) break;
-    for (i = 0; i < PATH_MAX && p[i] && p[i] != ':' && p[i] != ';'; ++i) {
-      path[i] = p[i];
+  for (;;) {
+    for (i = 0; p[i] && p[i] != ':' && p[i] != ';'; ++i) {
+      if (i < PATH_MAX) path[i] = p[i];
     }
     if (AccessCommand(path, name, namelen, i)) {
       return true;
+    }
+    if (p[i] == ':' || p[i] == ';') {
+      p += i + 1;
+    } else {
+      break;
     }
   }
   return false;
@@ -71,9 +76,12 @@ char *commandv(const char *name, char pathbuf[hasatleast PATH_MAX]) {
   int rc, olderr;
   if (!(namelen = strlen(name))) return PROGN(enoent(), NULL);
   if (namelen + 1 > PATH_MAX) return PROGN(enametoolong(), NULL);
-  if (name[0] == '/' || name[0] == '\\') {
-    memcpy(pathbuf, name, namelen + 1);
-    return pathbuf;
+  if (strchr(name, '/') || strchr(name, '\\')) {
+    if (AccessCommand(strcpy(pathbuf, ""), name, namelen, 0)) {
+      return pathbuf;
+    } else {
+      return NULL;
+    }
   }
   olderr = errno;
   if ((IsWindows() &&
@@ -81,7 +89,6 @@ char *commandv(const char *name, char pathbuf[hasatleast PATH_MAX]) {
                       stpcpy(pathbuf, kNtSystemDirectory) - pathbuf) ||
         AccessCommand(pathbuf, name, namelen,
                       stpcpy(pathbuf, kNtWindowsDirectory) - pathbuf))) ||
-      AccessCommand(strcpy(pathbuf, ""), name, namelen, 0) ||
       SearchPath(pathbuf, name, namelen)) {
     errno = olderr;
     return pathbuf;

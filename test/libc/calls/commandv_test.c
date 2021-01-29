@@ -16,52 +16,81 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/dirent.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
+#include "libc/log/check.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/dt.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
 uint64_t i;
 char pathbuf[PATH_MAX];
-const char *oldpath, *bindir, *homedir, *binsh, *sh;
+const char *testdir, *oldpath;
 
-TEST(commandv_00, todo) { /* TODO(jart): Improve this on Windows. */
-  if (IsWindows()) exit(0);
-}
-
-TEST(commandv_001, setupFiles) {
+void SetUp(void) {
   mkdir("o", 0755);
   mkdir("o/tmp", 0755);
-  oldpath = strdup(getenv("PATH"));
-  homedir = xasprintf("o/tmp/home.%d", getpid());
-  bindir = xasprintf("o/tmp/bin.%d", getpid());
-  binsh = xasprintf("%s/sh.com", bindir);
-  ASSERT_NE(-1, mkdir(homedir, 0755));
-  ASSERT_NE(-1, mkdir(bindir, 0755));
-  ASSERT_NE(-1, touch(binsh, 0755));
-  ASSERT_NE(-1, setenv("PATH", bindir, true));
+  testdir = xasprintf("o/tmp/%s.%d", program_invocation_short_name, getpid());
+  mkdir(testdir, 0755);
+  CHECK_NE(-1, chdir(testdir));
+  mkdir("bin", 0755);
+  mkdir("home", 0755);
+  oldpath = strdup(nulltoempty(getenv("PATH")));
+  CHECK_NE(-1, setenv("PATH", "bin", true));
 }
 
-TEST(commandv_010, testSlashes_wontSearchPath_butChecksAccess) {
-  sh = defer(unlink, gc(xasprintf("%s/sh.com", homedir)));
-  EXPECT_NE(-1, touch(sh, 0755));
+void TearDown(void) {
+  CHECK_NE(-1, setenv("PATH", oldpath, true));
+  CHECK_NE(-1, chdir("../../.."));
+  CHECK_NE(-1, rmrf(testdir));
+}
+
+TEST(commandv, testPathSearch) {
+  EXPECT_NE(-1, touch("bin/sh", 0755));
+  EXPECT_STREQ("bin/sh", commandv("sh", pathbuf));
+}
+
+TEST(commandv, testPathSearch_appendsComExtension) {
+  EXPECT_NE(-1, touch("bin/sh.com", 0755));
+  EXPECT_STREQ("bin/sh.com", commandv("sh", pathbuf));
+}
+
+TEST(commandv, testSlashes_wontSearchPath_butChecksAccess) {
+  EXPECT_NE(-1, touch("home/sh", 0755));
   i = g_syscount;
-  EXPECT_STREQ(sh, commandv(sh, pathbuf));
-  if (!IsWindows()) EXPECT_EQ(i + 1 /* access() */, g_syscount);
+  EXPECT_STREQ("home/sh", commandv("home/sh", pathbuf));
+  if (!IsWindows()) EXPECT_EQ(i + 1, g_syscount);
 }
 
-TEST(commandv_999, teardown) {
-  setenv("PATH", oldpath, true);
-  unlink(binsh);
-  rmdir(bindir);
-  rmdir(homedir);
-  free(bindir);
-  free(binsh);
-  free(homedir);
-  free(oldpath);
+TEST(commandv, testSlashes_wontSearchPath_butStillAppendsComExtension) {
+  EXPECT_NE(-1, touch("home/sh.com", 0755));
+  i = g_syscount;
+  EXPECT_STREQ("home/sh.com", commandv("home/sh", pathbuf));
+  if (!IsWindows()) EXPECT_EQ(i + 2, g_syscount);
+}
+
+TEST(commandv, testSameDir_doesntHappenByDefault) {
+  EXPECT_NE(-1, touch("bog", 0755));
+  EXPECT_EQ(NULL, commandv("bog", pathbuf));
+}
+
+TEST(commandv, testSameDir_willHappenWithColonBlank) {
+  CHECK_NE(-1, setenv("PATH", "bin:", true));
+  EXPECT_NE(-1, touch("bog", 0755));
+  EXPECT_STREQ("bog", commandv("bog", pathbuf));
+}
+
+TEST(commandv, testSameDir_willHappenWithColonBlank2) {
+  CHECK_NE(-1, setenv("PATH", ":bin", true));
+  EXPECT_NE(-1, touch("bog", 0755));
+  EXPECT_STREQ("bog", commandv("bog", pathbuf));
 }

@@ -46,6 +46,8 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   const struct StackFrame *frame;
   const char *debugbin, *p1, *p2, *p3, *addr2line;
   char buf[kBacktraceBufSize], *argv[kBacktraceMaxFrames];
+  if (IsOpenbsd()) return -1;
+  if (IsWindows()) return -1;
   if (!(debugbin = FindDebugBinary()) || !(addr2line = GetAddr2linePath())) {
     return -1;
   }
