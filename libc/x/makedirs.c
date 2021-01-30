@@ -17,44 +17,31 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/dirent.h"
-#include "libc/calls/struct/stat.h"
+#include "libc/errno.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/dt.h"
 #include "libc/x/x.h"
 
-static int rmrfdir(const char *dirpath) {
-  int rc;
-  DIR *d;
-  char *path;
-  struct dirent *e;
-  if (!(d = opendir(dirpath))) return -1;
-  while ((e = readdir(d))) {
-    if (!strcmp(e->d_name, ".")) continue;
-    if (!strcmp(e->d_name, "..")) continue;
-    if (strchr(e->d_name, '/')) abort();
-    path = xjoinpaths(dirpath, e->d_name);
-    if ((e->d_type == DT_DIR ? rmrfdir(path) : unlink(path)) == -1) {
-      free(path);
-      closedir(d);
-      return -1;
-    }
-    free(path);
-  }
-  rc = closedir(d);
-  rc |= rmdir(dirpath);
-  return rc;
-}
-
 /**
- * Recursively removes file or directory.
+ * Recursively creates directory a.k.a. folder.
+ *
+ * @param path is a UTF-8 string, preferably relative w/ forward slashes
+ * @param mode can be, for example, 0755
+ * @return 0 on success or -1 w/ errno
+ * @see mkdir()
  */
-int rmrf(const char *path) {
-  struct stat st;
-  if (stat(path, &st) == -1) return -1;
-  if (!S_ISDIR(st.st_mode)) return unlink(path);
-  return rmrfdir(path);
+int makedirs(const char *path, unsigned mode) {
+  int rc;
+  char *dir;
+  if (mkdir(path, mode) != -1) return 0;
+  if (errno != ENOENT) return -1;
+  dir = xdirname(path);
+  if (strcmp(dir, path)) {
+    rc = makedirs(dir, mode);
+  } else {
+    rc = -1;
+  }
+  free(dir);
+  if (rc == -1) return -1;
+  return mkdir(path, mode);
 }

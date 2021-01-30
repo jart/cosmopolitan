@@ -19,11 +19,26 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/errfuns.h"
 
-int mkdirat(int dirfd, const char *pathname, unsigned mode) {
-  if (dirfd == AT_FDCWD) {
-    return mkdir(pathname, mode);
+/**
+ * Creates directory a.k.a. folder.
+ *
+ * @param dirfd is normally AT_FDCWD
+ * @param path is a UTF-8 string, preferably relative w/ forward slashes
+ * @param mode can be, for example, 0755
+ * @return 0 on success or -1 w/ errno
+ * @error EEXIST, ENOTDIR, ENAMETOOLONG, EACCES, ENOENT
+ * @asyncsignalsafe
+ * @see makedirs()
+ */
+int mkdirat(int dirfd, const char *path, unsigned mode) {
+  if (!path) return efault();
+  if (!IsWindows()) {
+    return mkdirat$sysv(dirfd, path, mode);
+  } else if (dirfd == AT_FDCWD) {
+    return mkdir$nt(path, mode);
   } else {
-    return mkdirat$sysv(dirfd, pathname, mode);
+    return einval();
   }
 }

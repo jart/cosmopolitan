@@ -30,4 +30,5 @@ TEST(dirname, test) {
   EXPECT_STREQ(".", dirname(gc(strdup("hello"))));
   EXPECT_STREQ(".", dirname(gc(strdup("."))));
   EXPECT_STREQ(".", dirname(gc(strdup(".."))));
+  EXPECT_STREQ("", dirname(gc(strdup(""))));
 }

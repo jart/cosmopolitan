@@ -52,6 +52,7 @@ char *xinet_ntop(int, const void *) _XPNN _XMAL;
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 int rmrf(const char *);
+int makedirs(const char *, unsigned);
 char *xdirname(const char *) paramsnonnull() _XMAL;
 char *xjoinpaths(const char *, const char *) paramsnonnull() _XMAL;
 

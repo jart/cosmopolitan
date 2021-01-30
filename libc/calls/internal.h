@@ -243,6 +243,7 @@ int kill$nt(int, int) hidden;
 int link$nt(const char *, const char *) hidden;
 int lstat$nt(const char *, struct stat *) hidden;
 int madvise$nt(void *, size_t, int) hidden;
+int mkdir$nt(const char *, uint32_t) hidden;
 int msync$nt(void *, size_t, int) hidden;
 int nanosleep$nt(const struct timespec *, struct timespec *) hidden;
 int pipe$nt(int[hasatleast 2], unsigned) hidden;

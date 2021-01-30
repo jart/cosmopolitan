@@ -25,7 +25,7 @@ dir=libc/sysv/consts
 #	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			XENIX			Commentary
 syscon	errno	ENOSYS					38			78			78			78			1			# bsd consensus & kNtErrorInvalidFunction
 syscon	errno	EPERM					1			1			1			1			12			# unix consensus & kNtErrorInvalidAccess (should be kNtErrorNotOwner but is that mutex only??)
-syscon	errno	ENOENT					2			2			2			2			2			# unix consensus & kNtErrorFileNot_FOUND
+syscon	errno	ENOENT					2			2			2			2			2			# unix consensus & kNtErrorFileNotFound
 syscon	errno	ESRCH					3			3			3			3			566			# "no such process" & kNtErrorThreadNotInProcess (cf. kNtErrorInvalidHandle)
 syscon	errno	EINTR					4			4			4			4			10004			# unix consensus & WSAEINTR
 syscon	errno	EIO					5			5			5			5			1117			# unix consensus & kNtErrorIoDevice
@@ -44,7 +44,7 @@ syscon	errno	EBUSY					16			16			16			16			170			# unix consensus & kNtErrorBusy
 syscon	errno	EEXIST					17			17			17			17			183			# unix consensus & kNtErrorAlreadyExists (should be kNtErrorFileExists too)
 syscon	errno	EXDEV					18			18			18			18			17			# unix consensus & kNtErrorNotSameDevice
 syscon	errno	ENODEV					19			19			19			19			1200			# unix consensus & kNtErrorBadDevice
-syscon	errno	ENOTDIR					20			20			20			20			3			# unix consensus & kNtErrorPathNotFound (TODO)
+syscon	errno	ENOTDIR					20			20			20			20			3			# unix consensus & kNtErrorPathNotFound
 syscon	errno	EISDIR					21			21			21			21			267			# unix consensus & kNtErrorDirectoryNotSupported
 syscon	errno	EINVAL					22			22			22			22			87			# unix consensus & kNtErrorInvalidParameter
 syscon	errno	ENFILE					23			23			23			23			331			# unix consensus & kNtErrorTooManyDescriptors

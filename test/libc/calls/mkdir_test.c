@@ -17,44 +17,54 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/dirent.h"
-#include "libc/calls/struct/stat.h"
-#include "libc/mem/mem.h"
+#include "libc/errno.h"
+#include "libc/fmt/fmt.h"
+#include "libc/log/check.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/dt.h"
+#include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-static int rmrfdir(const char *dirpath) {
-  int rc;
-  DIR *d;
-  char *path;
-  struct dirent *e;
-  if (!(d = opendir(dirpath))) return -1;
-  while ((e = readdir(d))) {
-    if (!strcmp(e->d_name, ".")) continue;
-    if (!strcmp(e->d_name, "..")) continue;
-    if (strchr(e->d_name, '/')) abort();
-    path = xjoinpaths(dirpath, e->d_name);
-    if ((e->d_type == DT_DIR ? rmrfdir(path) : unlink(path)) == -1) {
-      free(path);
-      closedir(d);
-      return -1;
-    }
-    free(path);
-  }
-  rc = closedir(d);
-  rc |= rmdir(dirpath);
-  return rc;
+char testdir[PATH_MAX];
+
+void SetUp(void) {
+  sprintf(testdir, "o/tmp/%s.%d", program_invocation_short_name, getpid());
+  makedirs(testdir, 0755);
+  CHECK_NE(-1, chdir(testdir));
 }
 
-/**
- * Recursively removes file or directory.
- */
-int rmrf(const char *path) {
-  struct stat st;
-  if (stat(path, &st) == -1) return -1;
-  if (!S_ISDIR(st.st_mode)) return unlink(path);
-  return rmrfdir(path);
+void TearDown(void) {
+  CHECK_NE(-1, chdir("../../.."));
+  CHECK_NE(-1, rmrf(testdir));
+}
+
+TEST(mkdir, testNothingExists_ENOENT) {
+  EXPECT_EQ(-1, mkdir("yo/yo/yo", 0755));
+  EXPECT_EQ(ENOENT, errno);
+}
+
+TEST(mkdir, testDirectoryComponentIsFile_ENOTDIR) {
+  EXPECT_NE(-1, touch("yo", 0644));
+  EXPECT_EQ(-1, mkdir("yo/yo/yo", 0755));
+  EXPECT_EQ(ENOTDIR, errno);
+}
+
+TEST(mkdir, testPathIsFile_EEXIST) {
+  EXPECT_NE(-1, mkdir("yo", 0755));
+  EXPECT_NE(-1, mkdir("yo/yo", 0755));
+  EXPECT_NE(-1, touch("yo/yo/yo", 0644));
+  EXPECT_EQ(-1, mkdir("yo/yo/yo", 0755));
+  EXPECT_EQ(EEXIST, errno);
+}
+
+TEST(mkdir, testPathIsDirectory_EEXIST) {
+  EXPECT_NE(-1, mkdir("yo", 0755));
+  EXPECT_NE(-1, mkdir("yo/yo", 0755));
+  EXPECT_NE(-1, mkdir("yo/yo/yo", 0755));
+  EXPECT_EQ(-1, mkdir("yo/yo/yo", 0755));
+  EXPECT_EQ(EEXIST, errno);
+}
+
+TEST(makedirs, testEmptyString_ENOENT) {
+  EXPECT_EQ(-1, makedirs("", 0755));
+  EXPECT_EQ(ENOENT, errno);
 }

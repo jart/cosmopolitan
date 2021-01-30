@@ -24,26 +24,23 @@
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
 
-static textwindows noinline int mkdir$nt(const char *path, uint32_t mode) {
-  uint16_t path16[PATH_MAX];
-  if (__mkntpath(path, path16) == -1) return -1;
-  if (CreateDirectory(path16, NULL)) {
-    return 0;
-  } else {
-    return __winerr();
-  }
-}
-
 /**
  * Creates directory a.k.a. folder.
+ *
+ *     mkdir o               →  0
+ *     mkdir o/yo/yo/yo      → -1 w/ ENOENT
+ *     if o/yo is file       → -1 w/ ENOTDIR
+ *     if o/yo/yo/yo is dir  → -1 w/ EEXIST
+ *     if o/yo/yo/yo is file → -1 w/ EEXIST
  *
  * @param path is a UTF-8 string, preferably relative w/ forward slashes
  * @param mode can be, for example, 0755
  * @return 0 on success or -1 w/ errno
  * @error EEXIST, ENOTDIR, ENAMETOOLONG, EACCES
  * @asyncsignalsafe
+ * @see makedirs()
  */
-int mkdir(const char *path, uint32_t mode) {
+int mkdir(const char *path, unsigned mode) {
   if (!path) return efault();
   if (!IsWindows()) {
     return mkdirat$sysv(AT_FDCWD, path, mode);

@@ -21,6 +21,7 @@
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
+#include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"
@@ -33,14 +34,11 @@
 #include "libc/x/x.h"
 
 uint64_t i;
-char pathbuf[PATH_MAX];
-const char *testdir, *oldpath;
+char pathbuf[PATH_MAX], testdir[PATH_MAX], *oldpath;
 
 void SetUp(void) {
-  mkdir("o", 0755);
-  mkdir("o/tmp", 0755);
-  testdir = xasprintf("o/tmp/%s.%d", program_invocation_short_name, getpid());
-  mkdir(testdir, 0755);
+  sprintf(testdir, "o/tmp/%s.%d", program_invocation_short_name, getpid());
+  makedirs(testdir, 0755);
   CHECK_NE(-1, chdir(testdir));
   mkdir("bin", 0755);
   mkdir("home", 0755);
