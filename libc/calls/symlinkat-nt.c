@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,34 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/errno.h"
-#include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/files.h"
-#include "libc/nt/runtime.h"
-#include "libc/str/str.h"
 
-static textwindows bool SubpathExistsThatsNotDirectory(char16_t *path) {
-  char16_t *p;
-  uint32_t attrs;
-  while ((p = strrchr16(path, '\\'))) {
-    *p = u'\0';
-    if ((attrs = GetFileAttributes(path)) != -1u) {
-      if (attrs & kNtFileAttributeDirectory) return false;
-      return true;
-    }
+textwindows int symlinkat$nt(const char *target, int newdirfd,
+                             const char *linkpath) {
+  uint32_t flags;
+  char16_t target16[PATH_MAX];
+  char16_t linkpath16[PATH_MAX];
+  flags = isdirectory(target) ? kNtSymbolicLinkFlagDirectory : 0;
+  if (__mkntpathat(newdirfd, linkpath, 0, linkpath16) == -1) return -1;
+  if (__mkntpath(target, target16) == -1) return -1;
+  if (CreateSymbolicLink(linkpath16, target16, flags)) {
+    return 0;
+  } else {
+    return __winerr();
   }
-  return false;
-}
-
-textwindows int mkdir$nt(const char *path, uint32_t mode) {
-  int e;
-  char16_t *p, path16[PATH_MAX];
-  if (__mkntpath(path, path16) == -1) return -1;
-  if (CreateDirectory(path16, NULL)) return 0;
-  e = GetLastError();
-  /* WIN32 doesn't distinguish between ENOTDIR and ENOENT */
-  if (e == ENOTDIR && !SubpathExistsThatsNotDirectory(path16)) e = ENOENT;
-  errno = e;
-  return -1;
 }

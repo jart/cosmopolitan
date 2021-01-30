@@ -18,12 +18,22 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/dce.h"
 #include "libc/sysv/consts/at.h"
 
-int unlinkat(int dirfd, const char *pathname, int flags) {
-  if (dirfd == AT_FDCWD) {
-    return unlink(pathname);
+/**
+ * Deletes inode and maybe the file too.
+ *
+ * @param dirfd is normally AT_FDCWD but if it's an open directory and
+ *     path is relative, then path becomes relative to dirfd
+ * @param path is the thing to delete
+ * @param flags can have AT_REMOVEDIR
+ * @return 0 on success, or -1 w/ errno
+ */
+int unlinkat(int dirfd, const char *path, int flags) {
+  if (!IsWindows()) {
+    return unlinkat$sysv(dirfd, path, flags);
   } else {
-    return unlinkat$sysv(dirfd, pathname, flags);
+    return unlinkat$nt(dirfd, path, flags);
   }
 }

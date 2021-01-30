@@ -16,9 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/nt/enum/movefileexflags.h"
+#include "libc/nt/files.h"
+#include "libc/nt/runtime.h"
+#include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
 
-textwindows int lstat$nt(const char *pathname, struct stat *st) {
-  return stat$nt(pathname, st); /* todo(jart) */
+textwindows int renameat$nt(int olddirfd, const char *oldpath, int newdirfd,
+                            const char *newpath) {
+  char16_t oldpath16[PATH_MAX];
+  char16_t newpath16[PATH_MAX];
+  if (__mkntpathat(olddirfd, oldpath, 0, oldpath16) == -1 ||
+      __mkntpathat(newdirfd, newpath, 0, newpath16) == -1) {
+    return -1;
+  }
+  if (MoveFileEx(oldpath16, newpath16, kNtMovefileReplaceExisting)) {
+    return 0;
+  } else {
+    return __winerr();
+  }
 }

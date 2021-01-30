@@ -24,7 +24,8 @@
 /**
  * Creates directory a.k.a. folder.
  *
- * @param dirfd is normally AT_FDCWD
+ * @param dirfd is normally AT_FDCWD but if it's an open directory and
+ *     path is relative, then path becomes relative to dirfd
  * @param path is a UTF-8 string, preferably relative w/ forward slashes
  * @param mode can be, for example, 0755
  * @return 0 on success or -1 w/ errno
@@ -33,12 +34,9 @@
  * @see makedirs()
  */
 int mkdirat(int dirfd, const char *path, unsigned mode) {
-  if (!path) return efault();
   if (!IsWindows()) {
     return mkdirat$sysv(dirfd, path, mode);
-  } else if (dirfd == AT_FDCWD) {
-    return mkdir$nt(path, mode);
   } else {
-    return einval();
+    return mkdirat$nt(dirfd, path, mode);
   }
 }

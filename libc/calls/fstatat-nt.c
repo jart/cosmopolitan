@@ -26,11 +26,12 @@
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
 
-textwindows int stat$nt(const char *path, struct stat *st) {
+textwindows int fstatat$nt(int dirfd, const char *path, struct stat *st,
+                           uint32_t flags) {
   int rc;
   int64_t fh;
   uint16_t path16[PATH_MAX];
-  if (__mkntpath(path, path16) == -1) return -1;
+  if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
   if ((fh = CreateFile(
            path16, kNtFileReadAttributes,
            kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, NULL,

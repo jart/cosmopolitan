@@ -25,12 +25,13 @@
 /**
  * Checks if effective user can access path in particular ways.
  *
- * @param dirfd is usually AT_FDCWD
+ * @param dirfd is normally AT_FDCWD but if it's an open directory and
+ *     file is a relative path, then file is opened relative to dirfd
  * @param path is a filename or directory
- * @param flags can be R_OK, W_OK, X_OK, F_OK
+ * @param mode can be R_OK, W_OK, X_OK, F_OK
+ * @param flags should be 0
  * @return 0 if ok, or -1 and sets errno
  * @asyncsignalsafe
- * @syscall
  */
 int faccessat(int dirfd, const char *path, int mode, uint32_t flags) {
   if (!path) return efault();

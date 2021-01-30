@@ -17,6 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/dce.h"
 #include "libc/sysv/consts/at.h"
 
 /**
@@ -32,6 +34,10 @@
  * @note Windows NT only lets admins do this
  * @asyncsignalsafe
  */
-int symlink(const char *target, const char *linkpath) {
-  return symlinkat(target, AT_FDCWD, linkpath);
+int symlinkat(const char *target, int newdirfd, const char *linkpath) {
+  if (!IsWindows()) {
+    return symlinkat$sysv(target, newdirfd, linkpath);
+  } else {
+    return symlinkat$nt(target, newdirfd, linkpath);
+  }
 }

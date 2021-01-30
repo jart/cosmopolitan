@@ -151,6 +151,7 @@ int strcasecmpzbw(const uint16_t *, const char *) strlenesque;
 char *stpcpy(char *, const char *) memcpyesque;
 char *stpncpy(char *, const char *, size_t) memcpyesque;
 char *strcat(char *, const char *) memcpyesque;
+char16_t *strcat16(char16_t *, const char16_t *);
 size_t strlcpy(char *, const char *, size_t);
 size_t strlcat(char *, const char *, size_t);
 char *strcpy(char *, const char *) memcpyesque;

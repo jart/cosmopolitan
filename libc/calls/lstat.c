@@ -16,8 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/calls.h"
 #include "libc/sysv/consts/at.h"
 
@@ -26,9 +24,5 @@
  * @asyncsignalsafe
  */
 int lstat(const char *pathname, struct stat *st) {
-  if (!IsWindows()) {
-    return fstatat$sysv(AT_FDCWD, pathname, st, AT_SYMLINK_NOFOLLOW);
-  } else {
-    return lstat$nt(pathname, st);
-  }
+  return fstatat(AT_FDCWD, pathname, st, AT_SYMLINK_NOFOLLOW);
 }

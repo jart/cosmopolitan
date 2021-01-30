@@ -23,11 +23,11 @@
 
 /**
  * Sets current directory.
+ *
  * @asyncsignalsafe
- * @syscall
+ * @see fchdir()
  */
 int chdir(const char *path) {
-  if (!path) return efault();
   if (!IsWindows()) {
     return chdir$sysv(path);
   } else {

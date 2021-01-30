@@ -16,11 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/nt/files.h"
-#include "libc/str/str.h"
-#include "libc/calls/internal.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/calls/calls.h"
 #include "libc/sysv/consts/at.h"
 
 /**
@@ -29,10 +25,5 @@
  * @return 0 on success or -1 w/ errno on error
  */
 int rmdir(const char *path) {
-  if (!path) return efault();
-  if (!IsWindows()) {
-    return unlinkat$sysv(AT_FDCWD, path, AT_REMOVEDIR);
-  } else {
-    return rmdir$nt(path);
-  }
+  return unlinkat(AT_FDCWD, path, AT_REMOVEDIR);
 }

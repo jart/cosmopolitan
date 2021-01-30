@@ -19,16 +19,23 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Renames files relative to directories.
+ *
+ * @param olddirfd is normally AT_FDCWD but if it's an open directory
+ *     and oldpath is relative, then oldpath become relative to dirfd
+ * @param newdirfd is normally AT_FDCWD but if it's an open directory
+ *     and newpath is relative, then newpath become relative to dirfd
+ * @return 0 on success, or -1 w/ errno
  */
 int renameat(int olddirfd, const char *oldpath, int newdirfd,
              const char *newpath) {
-  unsigned mode;
-  if (olddirfd == AT_FDCWD && newdirfd == AT_FDCWD) {
-    return rename(oldpath, newpath);
-  } else {
+  if (!oldpath || !newpath) return efault();
+  if (!IsWindows()) {
     return renameat$sysv(olddirfd, oldpath, newdirfd, newpath);
+  } else {
+    return renameat$nt(olddirfd, oldpath, newdirfd, newpath);
   }
 }

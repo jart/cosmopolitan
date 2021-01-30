@@ -31,10 +31,8 @@
  * @see /etc/passwd for user ids
  * @see /etc/group for group ids
  * @asyncsignalsafe
- * @syscall
  */
 int fchownat(int dirfd, const char *pathname, uint32_t uid, uint32_t gid,
              uint32_t flags) {
-  /* TODO(jart): Windows? */
   return fchownat$sysv(dirfd, pathname, uid, gid, flags);
 }

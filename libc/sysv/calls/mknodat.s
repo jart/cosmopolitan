@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall mknodat 0x014022ffffff0103 globl
+.scall mknodat 0x0140022fffff0103 globl

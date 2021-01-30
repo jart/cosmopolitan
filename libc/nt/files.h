@@ -200,13 +200,13 @@ bool32 WriteFileGather(int64_t hFileOpenedWithOverlappedAndNoBuffering,
                        struct NtOverlapped inout_lpOverlapped) paramsnonnull();
 
 #define kNtFileNameNormalized 0x0
-#define kNtVolumeNameDos      0x0
-#define kNtVolumeNameGuid     0x1
-#define kNtVolumeNameNt       0x2
-#define kNtVolumeNameNone     0x4
 #define kNtFileNameOpened     0x8
+#define kNtVolumeNameDos      0x0 /* e.g. \\?\C:\Users\jart */
+#define kNtVolumeNameGuid     0x1 /* e.g. \\?\Volume{ea38-etc.}\Users\jart */
+#define kNtVolumeNameNt       0x2 /* e.g. \Device\HarddiskVolume4\Users\jart */
+#define kNtVolumeNameNone     0x4 /* e.g. \Users\jart */
 uint32_t GetFinalPathNameByHandle(int64_t hFile, char16_t *out_path,
-                                  uint32_t size, uint32_t flags);
+                                  uint32_t arraylen, uint32_t flags);
 
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/files.inc"

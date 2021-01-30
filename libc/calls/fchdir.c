@@ -17,21 +17,19 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/sysv/consts/at.h"
+#include "libc/calls/internal.h"
+#include "libc/dce.h"
 
 /**
- * Creates symbolic link.
+ * Sets current directory based on file descriptor.
  *
- * This is like link() but adds a tiny indirection to make the fact that
- * the file is a link obvious. It also enables certain other features,
- * like the ability to be broken.
- *
- * @param target can be relative and needn't exist
- * @param linkpath is what gets created
- * @return 0 on success, or -1 w/ errno
- * @note Windows NT only lets admins do this
+ * @see open(path, O_DIRECTORY)
  * @asyncsignalsafe
  */
-int symlink(const char *target, const char *linkpath) {
-  return symlinkat(target, AT_FDCWD, linkpath);
+int fchdir(int dirfd) {
+  if (!IsWindows()) {
+    return fchdir$sysv(dirfd);
+  } else {
+    return fchdir$nt(dirfd);
+  }
 }

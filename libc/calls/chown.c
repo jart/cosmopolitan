@@ -32,9 +32,7 @@
  * @see /etc/passwd for user ids
  * @see /etc/group for group ids
  * @asyncsignalsafe
- * @syscall
  */
 int chown(const char *pathname, uint32_t uid, uint32_t gid) {
-  if (!pathname) return efault();
   return fchownat$sysv(AT_FDCWD, pathname, uid, gid, 0);
 }

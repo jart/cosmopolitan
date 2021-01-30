@@ -16,21 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/nt/enum/movefileexflags.h"
+#include "libc/dce.h"
 #include "libc/nt/files.h"
-#include "libc/nt/runtime.h"
-#include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int rename$nt(const char *oldpath, const char *newpath) {
-  char16_t oldpath16[PATH_MAX];
-  char16_t newpath16[PATH_MAX];
-  if (__mkntpath(oldpath, oldpath16) == -1 ||
-      __mkntpath(newpath, newpath16) == -1) {
-    return -1;
+textwindows int fchdir$nt(int dirfd) {
+  uint32_t len;
+  char16_t dir[PATH_MAX];
+  if (!__isfdkind(dirfd, kFdFile)) return ebadf();
+  len = GetFinalPathNameByHandle(g_fds.p[dirfd].handle, dir, ARRAYLEN(dir),
+                                 kNtFileNameNormalized | kNtVolumeNameDos);
+  if (len + 1 + 1 > ARRAYLEN(dir)) return enametoolong();
+  if (dir[len - 1] != u'\\') {
+    dir[len + 0] = u'\\';
+    dir[len + 1] = u'\0';
   }
-  if (MoveFileEx(oldpath16, newpath16, kNtMovefileReplaceExisting)) {
+  if (SetCurrentDirectory(dir)) {
     return 0;
   } else {
     return __winerr();

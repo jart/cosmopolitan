@@ -17,20 +17,25 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/errno.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/sysv/consts/at.h"
 
-textwindows int rmdir$nt(const char *path) {
-  int e, ms, len;
-  char16_t path16[PATH_MAX];
-  if ((len = __mkntpath(path, path16)) == -1) return -1;
-  while (path16[len - 1] == u'\\') path16[--len] = u'\0';
-  if (len + 2 + 1 > PATH_MAX) return enametoolong();
+static textwindows int unlink$nt(const char16_t *path) {
+  if (DeleteFile(path)) {
+    return 0;
+  } else {
+    return __winerr();
+  }
+}
+
+static textwindows int rmdir$nt(const char16_t *path) {
+  int e, ms;
   for (ms = 1;; ms *= 2) {
-    if (RemoveDirectory(path16)) return 0;
+    if (RemoveDirectory(path)) return 0;
     /*
      * Files can linger, for absolutely no reason.
      * Possibly some Windows Defender bug on Win7.
@@ -47,4 +52,14 @@ textwindows int rmdir$nt(const char *path) {
   }
   errno = e;
   return -1;
+}
+
+textwindows int unlinkat$nt(int dirfd, const char *path, int flags) {
+  uint16_t path16[PATH_MAX];
+  if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
+  if (flags & AT_REMOVEDIR) {
+    return rmdir$nt(path16);
+  } else {
+    return unlink$nt(path16);
+  }
 }

@@ -17,10 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/dce.h"
 #include "libc/sysv/consts/at.h"
-#include "libc/sysv/errfuns.h"
 
 /**
  * Checks if effective user can access path in particular ways.
@@ -31,12 +28,5 @@
  * @asyncsignalsafe
  */
 int access(const char *path, int mode) {
-  char16_t path16[PATH_MAX];
-  if (!path) return efault();
-  if (!IsWindows()) {
-    return faccessat$sysv(AT_FDCWD, path, mode, 0);
-  } else {
-    if (__mkntpath(path, path16) == -1) return -1;
-    return ntaccesscheck(path16, mode);
-  }
+  return faccessat(AT_FDCWD, path, mode, 0);
 }

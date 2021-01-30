@@ -16,15 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/dce.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/zipos/zipos.internal.h"
 
 /**
- * Opens file, the modern way.
+ * Opens file.
  *
- * @param dirfd is normally AT_FDCWD or an open relative directory thing
+ * @param dirfd is normally AT_FDCWD but if it's an open directory and
+ *     file is a relative path, then file is opened relative to dirfd
  * @param file is a UTF-8 string, preferably relative w/ forward slashes
  * @param flags should be O_RDONLY, O_WRONLY, or O_RDWR, and can be or'd
  *     with O_CREAT, O_TRUNC, O_APPEND, O_EXCL, O_CLOEXEC, O_TMPFILE
@@ -33,16 +38,23 @@
  * @return number needing close(), or -1 w/ errno
  * @asyncsignalsafe
  */
-int openat(int dirfd, const char *pathname, int flags, ...) {
+nodiscard int openat(int dirfd, const char *file, int flags, ...) {
   va_list va;
   unsigned mode;
+  struct ZiposUri zipname;
   va_start(va, flags);
   mode = va_arg(va, unsigned);
   va_end(va);
-  if (!pathname) return efault();
-  if (dirfd == AT_FDCWD) {
-    return open(pathname, flags, mode);
+  if (!file) return efault();
+  if (weaken(__zipos_open) && weaken(__zipos_parseuri)(file, &zipname) != -1) {
+    if (dirfd == AT_FDCWD) {
+      return weaken(__zipos_open)(&zipname, flags, mode);
+    } else {
+      return eopnotsupp(); /* TODO */
+    }
+  } else if (!IsWindows()) {
+    return openat$sysv(dirfd, file, flags, mode);
   } else {
-    return openat$sysv(dirfd, pathname, flags, mode);
+    return open$nt(dirfd, file, flags, mode);
   }
 }

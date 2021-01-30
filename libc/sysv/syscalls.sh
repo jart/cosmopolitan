@@ -118,7 +118,7 @@ scall	'__truncate$sysv'	0x00c801df20c8004c	globl hidden # openbsd:pad
 scall	'__ftruncate$sysv'	0x00c901e020c9004d	globl hidden # openbsd:pad
 scall	'getcwd$sysv'		0x01300146ffff004f	globl hidden
 scall	'chdir$sysv'		0x000c000c200c0050	globl hidden
-scall	fchdir			0x000d000d200d0051	globl
+scall	'fchdir$sysv'		0x000d000d200d0051	globl hidden
 scall	'rename$sysv'		0x0080008020800052	globl hidden
 scall	'mkdir$sysv'		0x0088008820880053	globl hidden
 scall	'rmdir$sysv'		0x0089008920890054	globl hidden
@@ -164,7 +164,7 @@ scall	sigpending		0x003400342034007f	globl
 scall	'sigsuspend$sysv'	0x006f0155206f0082	globl hidden
 scall	sigaltstack		0x0120003520350083	globl
 scall	'mknod$sysv'		0x000e000e200e0085	globl hidden
-scall	mknodat			0x014022ffffff0103	globl # FreeBSD 12+
+scall	mknodat			0x0140022fffff0103	globl # FreeBSD 12+
 scall	'mkfifo$sysv'		0x008400842084ffff	globl hidden
 scall	mkfifoat		0x013f01f1ffffffff	globl
 scall	statfs			0x003f022b21590089	globl

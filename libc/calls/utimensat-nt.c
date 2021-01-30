@@ -35,25 +35,12 @@ textwindows int utimensat$nt(int dirfd, const char *path,
                              const struct timespec ts[2], int flags) {
   int i, rc;
   int64_t fh;
-  bool closeme;
   uint16_t path16[PATH_MAX];
   struct NtFileTime ft[2], *ftp[2];
-  if (flags) return einval();
-  if (path) {
-    if (dirfd == AT_FDCWD) {
-      if (__mkntpath(path, path16) == -1) return -1;
-      if ((fh = CreateFile(path16, kNtFileWriteAttributes, kNtFileShareRead,
-                           NULL, kNtOpenExisting, kNtFileAttributeNormal, 0)) !=
-          -1) {
-        closeme = true;
-      } else {
-        return __winerr();
-      }
-    } else {
-      return einval();
-    }
-  } else {
-    return ebadf();
+  if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
+  if ((fh = CreateFile(path16, kNtFileWriteAttributes, kNtFileShareRead, NULL,
+                       kNtOpenExisting, kNtFileAttributeNormal, 0)) == -1) {
+    return __winerr();
   }
   if (!ts || ts[0].tv_nsec == UTIME_NOW || ts[1].tv_nsec == UTIME_NOW) {
     GetSystemTimeAsFileTime(ft);
@@ -78,8 +65,6 @@ textwindows int utimensat$nt(int dirfd, const char *path,
   } else {
     rc = __winerr();
   }
-  if (closeme) {
-    CloseHandle(fh);
-  }
+  CloseHandle(fh);
   return rc;
 }

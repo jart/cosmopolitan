@@ -41,10 +41,5 @@
  * @see makedirs()
  */
 int mkdir(const char *path, unsigned mode) {
-  if (!path) return efault();
-  if (!IsWindows()) {
-    return mkdirat$sysv(AT_FDCWD, path, mode);
-  } else {
-    return mkdir$nt(path, mode);
-  }
+  return mkdirat(AT_FDCWD, path, mode);
 }

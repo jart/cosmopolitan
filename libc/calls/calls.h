@@ -230,6 +230,7 @@ long ptrace(int, int, void *, void *);
 int chroot(const char *);
 int prctl();
 int sysctl(const int *, unsigned, void *, size_t *, void *, size_t);
+int fchdir(int);
 
 #define getcwd(BUF, SIZE)                                                    \
   (__builtin_constant_p(BUF) && (&(BUF)[0] == NULL) ? get_current_dir_name() \

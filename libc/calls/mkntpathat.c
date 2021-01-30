@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,18 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/macros.h"
 #include "libc/nt/files.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/at.h"
+#include "libc/sysv/errfuns.h"
 
-textwindows int symlink$nt(const char *target, const char *linkpath) {
-  char16_t linkpath16[PATH_MAX], target16[PATH_MAX];
-  uint32_t flags = isdirectory(target) ? kNtSymbolicLinkFlagDirectory : 0;
-  if (__mkntpath(linkpath, linkpath16) == -1) return -1;
-  if (__mkntpath(target, target16) == -1) return -1;
-  if (CreateSymbolicLink(linkpath16, target16, flags)) {
-    return 0;
+int __mkntpathat(int dirfd, const char *path, int flags,
+                 char16_t file[PATH_MAX]) {
+  char16_t dir[PATH_MAX];
+  uint32_t dirlen, filelen;
+  if ((filelen = __mkntpath2(path, file, flags)) == -1) return -1;
+  if (file[0] != u'\\' && dirfd != AT_FDCWD) { /* ProTip: \\?\C:\foo */
+    if (!__isfdkind(dirfd, kFdFile)) return ebadf();
+    dirlen = GetFinalPathNameByHandle(g_fds.p[dirfd].handle, dir, ARRAYLEN(dir),
+                                      kNtFileNameNormalized | kNtVolumeNameDos);
+    if (!dirlen) return __winerr();
+    if (dirlen + 1 + filelen + 1 > ARRAYLEN(dir)) return enametoolong();
+    dir[dirlen] = u'\\';
+    memcpy(dir + dirlen + 1, file, (filelen + 1) * sizeof(char16_t));
+    memcpy(file, dir, (dirlen + 1 + filelen + 1) * sizeof(char16_t));
+    return dirlen + 1 + filelen;
   } else {
-    return __winerr();
+    return filelen;
   }
 }

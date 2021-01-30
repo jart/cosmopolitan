@@ -16,14 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/dce.h"
-#include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.internal.h"
 
 /**
  * Opens file.
@@ -34,23 +28,14 @@
  * @param mode is an octal user/group/other permission signifier, that's
  *     ignored if O_CREAT or O_TMPFILE weren't passed
  * @return number needing close(), or -1 w/ errno
- * @note don't call open() from signal handlers
  * @asyncsignalsafe
  * @vforksafe
  */
 nodiscard int open(const char *file, int flags, ...) {
   va_list va;
   unsigned mode;
-  struct ZiposUri zipname;
   va_start(va, flags);
   mode = va_arg(va, unsigned);
   va_end(va);
-  if (!file) return efault();
-  if (weaken(__zipos_open) && weaken(__zipos_parseuri)(file, &zipname) != -1) {
-    return weaken(__zipos_open)(&zipname, flags, mode);
-  } else if (!IsWindows()) {
-    return openat$sysv(AT_FDCWD, file, flags, mode);
-  } else {
-    return open$nt(file, flags, mode);
-  }
+  return openat(AT_FDCWD, file, flags, mode);
 }

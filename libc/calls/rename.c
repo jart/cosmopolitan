@@ -17,10 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/dce.h"
 #include "libc/sysv/consts/at.h"
-#include "libc/sysv/errfuns.h"
 
 /**
  * Moves file the Unix way.
@@ -29,10 +26,5 @@
  * @asyncsignalsafe
  */
 int rename(const char *oldpathname, const char *newpathname) {
-  if (!oldpathname || !newpathname) return efault();
-  if (!IsWindows()) {
-    return renameat$sysv(AT_FDCWD, oldpathname, AT_FDCWD, newpathname);
-  } else {
-    return rename$nt(oldpathname, newpathname);
-  }
+  return renameat(AT_FDCWD, oldpathname, AT_FDCWD, newpathname);
 }

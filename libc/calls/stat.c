@@ -16,29 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/dce.h"
-#include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.internal.h"
 
 /**
  * Returns information about thing.
  *
+ * @param st is where result is stored
  * @see S_ISDIR(st.st_mode), S_ISREG(), etc.
  * @asyncsignalsafe
  */
-int stat(const char *pathname, struct stat *st) {
-  struct ZiposUri zipname;
-  if (weaken(__zipos_stat) &&
-      weaken(__zipos_parseuri)(pathname, &zipname) != -1) {
-    return weaken(__zipos_stat)(&zipname, st);
-  } else if (!IsWindows()) {
-    return fstatat$sysv(AT_FDCWD, pathname, st, 0);
-  } else {
-    return stat$nt(pathname, st);
-  }
+int stat(const char *path, struct stat *st) {
+  return fstatat(AT_FDCWD, path, st, 0);
 }

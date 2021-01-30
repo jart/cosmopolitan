@@ -16,22 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/sysv/consts/at.h"
+#include "libc/str/str.h"
 
 /**
- * Creates symbolic link.
+ * Appends 𝑠 to 𝑑.
  *
- * This is like link() but adds a tiny indirection to make the fact that
- * the file is a link obvious. It also enables certain other features,
- * like the ability to be broken.
- *
- * @param target can be relative and needn't exist
- * @param linkpath is what gets created
- * @return 0 on success, or -1 w/ errno
- * @note Windows NT only lets admins do this
+ * @param 𝑑 is a NUL-terminated 16-bit string buffer
+ * @param 𝑠 is a NUL-terminated 16-bit string
+ * @return 𝑑
  * @asyncsignalsafe
  */
-int symlink(const char *target, const char *linkpath) {
-  return symlinkat(target, AT_FDCWD, linkpath);
+char16_t *strcat16(char16_t *d, const char16_t *s) {
+  return strcpy16(d + strlen16(d), s);
 }

@@ -16,33 +16,31 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/errno.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/zipos/zipos.internal.h"
 
 /**
- * Performs stat() w/ features for threaded apps.
+ * Returns information about thing.
  *
- * @param dirfd can be AT_FDCWD or an open directory descriptor, and is
- *     ignored if pathname is absolute
+ * @param dirfd is normally AT_FDCWD but if it's an open directory and
+ *     file is a relative path, then file becomes relative to dirfd
+ * @param st is where result is stored
  * @param flags can have AT_{EMPTY_PATH,NO_AUTOMOUNT,SYMLINK_NOFOLLOW}
  * @return 0 on success, or -1 w/ errno
+ * @see S_ISDIR(st.st_mode), S_ISREG()
  * @asyncsignalsafe
  */
-int fstatat(int dirfd, const char *pathname, struct stat *st, uint32_t flags) {
-  int olderr = errno;
-  int rc = fstatat$sysv(dirfd, pathname, st, flags);
-  if (rc != -1) {
-    stat2linux(st);
-  } else if (errno == ENOSYS && dirfd == AT_FDCWD) {
-    if (!flags) {
-      errno = olderr;
-      rc = stat(pathname, st);
-    } else if (flags == AT_SYMLINK_NOFOLLOW) {
-      errno = olderr;
-      rc = lstat(pathname, st);
-    }
+int fstatat(int dirfd, const char *path, struct stat *st, uint32_t flags) {
+  struct ZiposUri zipname;
+  if (weaken(__zipos_stat) && weaken(__zipos_parseuri)(path, &zipname) != -1) {
+    return weaken(__zipos_stat)(&zipname, st);
+  } else if (!IsWindows()) {
+    return fstatat$sysv(dirfd, path, st, flags);
+  } else {
+    return fstatat$nt(dirfd, path, st, flags);
   }
-  return rc;
 }

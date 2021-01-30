@@ -17,12 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/nt/errors.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/synchronization.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int chdir$nt(const char *path) {
-  int len;
+  int e, ms, len;
   char16_t path16[PATH_MAX];
   if ((len = __mkntpath(path, path16)) == -1) return -1;
   if (path16[len - 1] != u'\\') {
@@ -30,9 +32,24 @@ textwindows int chdir$nt(const char *path) {
     path16[len + 0] = u'\\';
     path16[len + 1] = u'\0';
   }
-  if (SetCurrentDirectory(path16)) {
-    return 0;
-  } else {
-    return __winerr();
+  /*
+   * chdir() seems flaky on windows 7
+   * in a similar way to rmdir() sigh
+   */
+  for (ms = 1;; ms *= 2) {
+    if (SetCurrentDirectory(path16)) {
+      return 0;
+    } else {
+      e = GetLastError();
+      if (ms <= 512 &&
+          (e == kNtErrorFileNotFound || e == kNtErrorAccessDenied)) {
+        Sleep(ms);
+        continue;
+      } else {
+        break;
+      }
+    }
   }
+  errno = e;
+  return -1;
 }

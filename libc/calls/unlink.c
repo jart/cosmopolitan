@@ -16,12 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/dce.h"
-#include "libc/nt/files.h"
-#include "libc/str/str.h"
+#include "libc/calls/calls.h"
 #include "libc/sysv/consts/at.h"
-#include "libc/sysv/errfuns.h"
 
 /**
  * Deletes file.
@@ -35,10 +31,5 @@
  * @asyncsignalsafe
  */
 int unlink(const char *name) {
-  if (!name) return efault();
-  if (!IsWindows()) {
-    return unlinkat$sysv(AT_FDCWD, name, 0);
-  } else {
-    return unlink$nt(name);
-  }
+  return unlinkat(AT_FDCWD, name, 0);
 }

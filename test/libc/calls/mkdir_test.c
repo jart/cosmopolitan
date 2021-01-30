@@ -21,6 +21,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -67,4 +68,14 @@ TEST(mkdir, testPathIsDirectory_EEXIST) {
 TEST(makedirs, testEmptyString_ENOENT) {
   EXPECT_EQ(-1, makedirs("", 0755));
   EXPECT_EQ(ENOENT, errno);
+}
+
+TEST(mkdirat, testRelativePath_opensRelativeToDirFd) {
+  int dirfd;
+  ASSERT_NE(-1, mkdir("foo", 0755));
+  ASSERT_NE(-1, (dirfd = open("foo", O_RDONLY | O_DIRECTORY)));
+  EXPECT_NE(-1, mkdirat(dirfd, "bar", 0755));
+  EXPECT_TRUE(isdirectory("foo/bar"));
+  EXPECT_EQ(-1, makedirs("", 0755));
+  EXPECT_NE(-1, close(dirfd));
 }
