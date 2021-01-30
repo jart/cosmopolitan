@@ -783,8 +783,8 @@ ape.pe:	.ascin	"PE",4
 	.long	0			# Checksum
 	.short	v_ntsubsystem		# Subsystem: 0=Neutral,2=GUI,3=Console
 	.short	.LDLLEXE		# DllCharacteristics
-	.quad	0x0000000000020000	# StackReserve
-	.quad	0x0000000000020000	# StackCommit
+	.quad	0x0000000000100000	# StackReserve
+	.quad	0x00000000000fc000	# StackCommit
 	.quad	0			# HeapReserve
 	.quad	0			# HeapCommit
 	.long	0			# LoaderFlags

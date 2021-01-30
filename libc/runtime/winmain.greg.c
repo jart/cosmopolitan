@@ -49,6 +49,8 @@
  * TODO: How can we ensure we never overlap with KERNEL32.DLL?
  */
 
+#define WINSTACK 0x100000
+
 struct WinArgs {
   char *argv[4096];
   char *envp[4096];
@@ -107,7 +109,7 @@ static textwindows wontreturn void WinMainNew(void) {
   NormalizeCmdExe();
   *(/*unconst*/ int *)&__hostos = WINDOWS;
   addr = NtGetVersion() < kNtVersionWindows10 ? 0xff00000 : 0x777000000000;
-  size = ROUNDUP(STACKSIZE + sizeof(struct WinArgs), FRAMESIZE);
+  size = ROUNDUP(WINSTACK + sizeof(struct WinArgs), FRAMESIZE);
   _mmi.p[0].h =
       __mmap$nt((char *)addr, size, PROT_READ | PROT_WRITE | PROT_EXEC, -1, 0)
           .maphandle;
@@ -128,7 +130,7 @@ static textwindows wontreturn void WinMainNew(void) {
   FreeEnvironmentStrings(env16);
   auxv[0][0] = pushpop(0L);
   auxv[0][1] = pushpop(0L);
-  _jmpstack((char *)addr + STACKSIZE, _executive, count, wa->argv, wa->envp,
+  _jmpstack((char *)addr + WINSTACK, _executive, count, wa->argv, wa->envp,
             auxv);
 }
 
