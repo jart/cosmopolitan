@@ -232,10 +232,6 @@ int prctl();
 int sysctl(const int *, unsigned, void *, size_t *, void *, size_t);
 int fchdir(int);
 
-#define getcwd(BUF, SIZE)                                                    \
-  (__builtin_constant_p(BUF) && (&(BUF)[0] == NULL) ? get_current_dir_name() \
-                                                    : getcwd(BUF, SIZE))
-
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § system calls » formatting                                 ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
@@ -247,6 +243,10 @@ int vdprintf(int, const char *, va_list) paramsnonnull();
 │ cosmopolitan § system calls » link-time optimizations                    ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+
+#define getcwd(BUF, SIZE)                                       \
+  (__builtin_constant_p(BUF) && !(BUF) ? get_current_dir_name() \
+                                       : getcwd(BUF, SIZE))
 
 void _init_onntconsoleevent(void);
 void _init_wincrash(void);

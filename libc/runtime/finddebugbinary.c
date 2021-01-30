@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/macros.h"
@@ -31,19 +32,31 @@
  * @return path to debug binary, or -1 w/ errno
  */
 const char *FindDebugBinary(void) {
-  static char buf[PATH_MAX];
-  if (buf[0]) return &buf[0];
-  const char *const trybins[] = {program_invocation_name,
-                                 (const char *)getauxval(AT_EXECFN)};
-  for (unsigned i = 0; i < ARRAYLEN(trybins); ++i) {
-    const char *res = trybins[i];
-    unsigned len = strlen(res);
-    if (4 < len && len < sizeof(buf) - 5) {
-      if (strcmp(res + len - 4, ".dbg") == 0) return res;
-      /* try suffixing extension, e.g. .com → .com.dbg */
-      memcpy(mempcpy(buf, res, len), ".dbg", 5);
-      if (fileexists(buf)) return &buf[0];
-      buf[0] = '\0';
+  unsigned i, len;
+  char buf[2][PATH_MAX];
+  static char res[PATH_MAX];
+  const char *bins[4], *pwd;
+  bins[0] = program_invocation_name;
+  bins[1] = (const char *)getauxval(AT_EXECFN);
+  pwd = emptytonull(getenv("PWD"));
+  for (i = 0; i < 2; ++i) {
+    if (pwd && bins[i] && bins[i][0] != '/' && bins[i][0] != '\\' &&
+        strlen(pwd) + 1 + strlen(bins[i]) + 1 <= ARRAYLEN(buf[0])) {
+      strcpy(buf[i], pwd);
+      strcat(buf[i], "/");
+      strcat(buf[i], bins[i]);
+      bins[i + 2] = buf[i];
+    }
+  }
+  for (i = 0; i < 4; ++i) {
+    if (!bins[i]) continue;
+    len = strlen(bins[i]);
+    memcpy(res, bins[i], len + 1);
+    if (!endswith(res, ".dbg") && len + 3 + 1 <= ARRAYLEN(res)) {
+      strcat(res, ".dbg");
+    }
+    if (fileexists(res)) {
+      return res;
     }
   }
   errno = ENOENT;

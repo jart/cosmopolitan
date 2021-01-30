@@ -99,6 +99,7 @@ forceinline size_t clampio(size_t size) {
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 char *getcwd$sysv(char *, u64) hidden;
+char *getcwd$xnu(char *, u64) hidden;
 i32 __dup3$sysv(i32, i32, i32) hidden;
 i32 __execve$sysv(const char *, char *const[], char *const[]) hidden;
 i32 __fstat$sysv(i32, struct stat *) hidden;
@@ -120,7 +121,7 @@ i32 fchmod$sysv(i32, u32) hidden;
 i32 fchmodat$sysv(i32, const char *, u32, u32) hidden;
 i32 fchown$sysv(i64, u32, u32) hidden;
 i32 fchownat$sysv(i32, const char *, u32, u32, u32) hidden;
-i32 fcntl$sysv(i32, i32, i32) hidden;
+i32 fcntl$sysv(i32, i32, ...) hidden;
 i32 fdatasync$sysv(i32) hidden;
 i32 flock$sysv(i32, i32) hidden;
 i32 fork$sysv(void) hidden;
@@ -151,7 +152,7 @@ i32 mprotect$sysv(void *, u64, i32) hidden;
 i32 msync$sysv(void *, u64, i32) hidden;
 i32 munmap$sysv(void *, u64) hidden;
 i32 nanosleep$sysv(const struct timespec *, struct timespec *) hidden;
-i32 openat$sysv(i32, const char *, i32, i32) hidden;
+i32 openat$sysv(i32, const char *, i32, ...) hidden;
 i32 pause$sysv(void) hidden;
 i32 pipe$sysv(i32[hasatleast 2]) hidden;
 i32 pipe2$sysv(i32[hasatleast 2], u32) hidden;

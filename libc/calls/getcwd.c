@@ -19,8 +19,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/sysv/errfuns.h"
 
 /**
  * Returns current working directory.
@@ -34,28 +32,16 @@
  * @error ERANGE, EINVAL
  */
 char *(getcwd)(char *buf, size_t size) {
-  if (buf) {
-    buf[0] = '\0';
-    if (!IsWindows()) {
-      int olderr = errno;
-      if (getcwd$sysv(buf, size) != NULL) {
-        return buf;
-      } else if (IsXnu() && errno == ENOSYS) {
-        if (size >= 2) {
-          buf[0] = '.'; /* XXX: could put forth more effort */
-          buf[1] = '\0';
-          errno = olderr;
-          return buf;
-        } else {
-          erange();
-        }
-      }
-      return NULL;
+  if (buf && size) buf[0] = '\0';
+  if (!IsWindows()) {
+    if (IsXnu()) {
+      return getcwd$xnu(buf, size);
+    } else if (getcwd$sysv(buf, size) != (void *)-1) {
+      return buf;
     } else {
-      return getcwd$nt(buf, size);
+      return NULL;
     }
   } else {
-    efault();
-    return NULL;
+    return getcwd$nt(buf, size);
   }
 }

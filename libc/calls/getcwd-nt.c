@@ -23,12 +23,12 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows char *getcwd$nt(char *buf, size_t size) {
-  uint16_t name16[PATH_MAX + 1];
+  uint16_t name16[PATH_MAX];
   if (GetCurrentDirectory(ARRAYLEN(name16), name16)) {
     tprecode16to8(buf, size, name16);
     return buf;
   } else {
     __winerr();
+    return NULL;
   }
-  return NULL;
 }

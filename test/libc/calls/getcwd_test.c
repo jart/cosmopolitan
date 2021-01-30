@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,23 +16,40 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/errno.h"
+#include "libc/fmt/conv.h"
+#include "libc/fmt/fmt.h"
+#include "libc/log/check.h"
+#include "libc/macros.h"
+#include "libc/runtime/gc.h"
+#include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
-/**
- * Returns current working directory.
- *
- * If the PWD environment variable is set, that'll be returned (since
- * it's faster than issuing a system call).
- *
- * @return pointer that must be free()'d, or NULL w/ errno
- */
-nodiscard char *get_current_dir_name(void) {
-  char *buf, *res;
-  if (!(buf = malloc(PATH_MAX))) return NULL;
-  if (!(res = (getcwd)(buf, PATH_MAX))) free(buf);
-  return res;
+char basedir[PATH_MAX];
+char testdir[PATH_MAX];
+
+void SetUp(void) {
+  getcwd(basedir, ARRAYLEN(basedir));
+  sprintf(testdir, "o/tmp/%s.%d", program_invocation_short_name, getpid());
+  makedirs(testdir, 0755);
+  CHECK_NE(-1, chdir(testdir));
+}
+
+void TearDown(void) {
+  CHECK_NE(-1, chdir(basedir));
+  CHECK_NE(-1, rmrf(testdir));
+}
+
+TEST(getcwd, test) {
+  char buf[PATH_MAX];
+  EXPECT_NE(-1, mkdir("subdir", 0755));
+  EXPECT_NE(-1, chdir("subdir"));
+  EXPECT_STREQ("subdir", basename(getcwd(buf, ARRAYLEN(buf))));
+}
+
+TEST(getcwd, testNullBuf_allocatesResult) {
+  EXPECT_NE(-1, mkdir("subdir", 0755));
+  EXPECT_NE(-1, chdir("subdir"));
+  EXPECT_STREQ("subdir", basename(gc(getcwd(NULL, 0))));
 }

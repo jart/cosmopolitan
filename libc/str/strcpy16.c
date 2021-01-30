@@ -28,5 +28,5 @@
  * @return original dest
  */
 char16_t *strcpy16(char16_t *dest, const char16_t *src) {
-  return memcpy(dest, src, (strlen16(src) + 1) << 1);
+  return memcpy(dest, src, (strlen16(src) + 1) * sizeof(char16_t));
 }

@@ -52,8 +52,6 @@ int putchar(int);
 int puts(const char *) paramsnonnull();
 ssize_t getline(char **, size_t *, FILE *) paramsnonnull();
 ssize_t getdelim(char **, size_t *, int, FILE *) paramsnonnull();
-int fputhex(int, FILE *) paramsnonnull();
-int fgethex(FILE *) paramsnonnull();
 FILE *fopen(const char *, const char *) paramsnonnull() nodiscard;
 FILE *fdopen(int, const char *) paramsnonnull() nodiscard;
 FILE *fmemopen(void *, size_t, const char *) paramsnonnull((3)) nodiscard;

@@ -24,7 +24,7 @@
  * This API was thought to be nearly extinct until recent versions
  * of Clang (c. 2019) started generating synthetic calls to it.
  *
- * @return unsigned char subtraction at stop index
+ * @return 0 if a and b have equal contents, otherwise non-zero
  * @asyncsignalsafe
  */
 int bcmp(const void *a, const void *b, size_t n) {

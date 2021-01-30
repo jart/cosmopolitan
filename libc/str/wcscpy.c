@@ -16,24 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/sysv/errfuns.h"
 
-int fgethex(FILE *f) {
-  int o, t = -1;
-  while (!((o = fgetc(f)) & ~0xFF)) {
-    switch (t) {
-      case -1:
-        t = isxdigit(o) ? hextoint(o) : -1;
-        break;
-      default:
-        if (isxdigit(o)) {
-          return t * 16 + hextoint(o);
-        }
-        break;
-    }
-  }
-  if (t >= 0) return einval();
-  return -1;
+/**
+ * Copies NUL-terminated wide character string.
+ *
+ * 𝑑 and 𝑠 must not overlap unless 𝑑 ≤ 𝑠.
+ *
+ * @param 𝑑 is destination memory
+ * @param 𝑠 is a NUL-terminated string
+ * @return original dest
+ * @asyncsignalsafe
+ */
+wchar_t *wcscpy(wchar_t *d, const wchar_t *s) {
+  return memcpy(d, s, (wcslen(s) + 1) * sizeof(wchar_t));
 }

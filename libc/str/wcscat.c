@@ -16,11 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
-int fputhex(int c, FILE *f) {
-  return (fputc("0123456789ABCDEF"[(c / 16) & 0xF], f) >= 0 &&
-          fputc("0123456789ABCDEF"[(c % 16) & 0xF], f) >= 0)
-             ? c
-             : -1;
+/**
+ * Appends 𝑠 to 𝑑.
+ *
+ * @param 𝑑 is a NUL-terminated 32-bit string
+ * @param 𝑠 is a NUL-terminated 32-bit string
+ * @return 𝑑
+ * @asyncsignalsafe
+ */
+wchar_t *wcscat(wchar_t *d, const wchar_t *s) {
+  return wcscpy(d + wcslen(d), s);
 }
