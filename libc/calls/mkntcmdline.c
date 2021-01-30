@@ -30,24 +30,28 @@
  * GetDosArgv() or GetDosArgv(). This function does NOT escape
  * command interpreter syntax, e.g. $VAR (sh), %VAR% (cmd).
  *
+ * @param cmdline is output buffer
+ * @param prog is used as argv[0]
  * @param argv is an a NULL-terminated array of UTF-8 strings
  * @return freshly allocated lpCommandLine or NULL w/ errno
  * @kudos Daniel Colascione for teaching how to quote
  * @see libc/runtime/dosargv.c
  */
-textwindows int mkntcmdline(char16_t cmdline[ARG_MAX], char *const argv[]) {
+textwindows int mkntcmdline(char16_t cmdline[ARG_MAX], const char *prog,
+                            char *const argv[]) {
+  char *arg;
   uint64_t w;
   wint_t x, y;
   int slashes, n;
   size_t i, j, k;
   bool needsquote;
   char16_t cbuf[2];
-  for (k = i = 0; argv[i]; ++i) {
+  for (arg = prog, k = i = 0; arg; arg = argv[++i]) {
     if (i) {
       cmdline[k++] = u' ';
       if (k == ARG_MAX) return e2big();
     }
-    needsquote = !*argv[i] || argv[i][strcspn(argv[i], " \t\n\v\"")];
+    needsquote = !arg[0] || arg[strcspn(arg, " \t\n\v\"")];
     if (needsquote) {
       cmdline[k++] = u'"';
       if (k == ARG_MAX) return e2big();
@@ -55,20 +59,20 @@ textwindows int mkntcmdline(char16_t cmdline[ARG_MAX], char *const argv[]) {
     for (j = 0;;) {
       if (needsquote) {
         slashes = 0;
-        while (argv[i][j] && argv[i][j] == '\\') slashes++, j++;
+        while (arg[j] && arg[j] == '\\') slashes++, j++;
         slashes <<= 1;
-        if (argv[i][j] == '"') slashes++;
+        if (arg[j] == '"') slashes++;
         while (slashes--) {
           cmdline[k++] = u'\\';
           if (k == ARG_MAX) return e2big();
         }
       }
-      x = argv[i][j++] & 0xff;
+      x = arg[j++] & 0xff;
       if (x >= 0300) {
         n = ThomPikeLen(x);
         x = ThomPikeByte(x);
         while (--n) {
-          if ((y = argv[i][j++] & 0xff)) {
+          if ((y = arg[j++] & 0xff)) {
             x = ThomPikeMerge(x, y);
           } else {
             x = 0;

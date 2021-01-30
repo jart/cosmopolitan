@@ -27,49 +27,49 @@ char16_t cmdline[ARG_MAX];
 
 TEST(mkntcmdline, emptyArgvList_isEmpty) {
   char *argv[] = {NULL};
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv));
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv[0], argv));
   EXPECT_STREQ(u"", cmdline);
 }
 
 TEST(mkntcmdline, emptyArg_getsQuoted) {
   char *argv[] = {"", NULL};
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv));
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv[0], argv));
   EXPECT_STREQ(u"\"\"", cmdline);
 }
 
 TEST(mkntcmdline, ignoranceIsBliss) {
   char *argv[] = {"echo", "hello", "world", NULL};
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv));
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv[0], argv));
   EXPECT_STREQ(u"echo hello world", cmdline);
 }
 
 TEST(mkntcmdline, spaceInArgument_getQuotesWrappedAround) {
   char *argv[] = {"echo", "hello there", "world", NULL};
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv));
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv[0], argv));
   EXPECT_STREQ(u"echo \"hello there\" world", cmdline);
 }
 
 TEST(mkntcmdline, justQuote) {
   char *argv[] = {"\"", NULL};
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv));
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv[0], argv));
   EXPECT_STREQ(u"\"\\\"\"", cmdline);
 }
 
 TEST(mkntcmdline, justSlash) {
   char *argv[] = {"\\", NULL};
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv));
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv[0], argv));
   EXPECT_STREQ(u"\\", cmdline);
 }
 
 TEST(mkntcmdline, justSlashQuote) {
   char *argv[] = {"\\\"", NULL};
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv));
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv[0], argv));
   EXPECT_STREQ(u"\"\\\\\\\"\"" /* "\\\"" */, cmdline);
 }
 
 TEST(mkntcmdline, basicQuoting) {
   char *argv[] = {"a\"b c", "d", NULL};
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv));
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv[0], argv));
   EXPECT_STREQ(u"\"a\\\"b c\" d" /* "a\"b c" d */, cmdline);
 }
 
@@ -79,7 +79,7 @@ TEST(mkntcmdline, testUnicode) {
       strdup("要依法治国是赞美那些谁是公义的和惩罚恶人。 - 韩非"),
       NULL,
   };
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv1));
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv1[0], argv1));
   EXPECT_STREQ(u"(╯°□°)╯ \"要依法治国是赞美那些谁是公义的和惩罚恶人。 - 韩非\"",
                cmdline);
 }

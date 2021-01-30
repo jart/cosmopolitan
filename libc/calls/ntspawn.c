@@ -58,7 +58,7 @@ struct SpawnBlock {
  * @see spawnve() which abstracts this function
  */
 textwindows int ntspawn(
-    char *const argv[], char *const envp[],
+    const char *prog, char *const argv[], char *const envp[],
     struct NtSecurityAttributes *opt_lpProcessAttributes,
     struct NtSecurityAttributes *opt_lpThreadAttributes, bool32 bInheritHandles,
     uint32_t dwCreationFlags, const char16_t *opt_lpCurrentDirectory,
@@ -80,7 +80,7 @@ textwindows int ntspawn(
       (block =
            MapViewOfFileExNuma(handle, kNtFileMapRead | kNtFileMapWrite, 0, 0,
                                blocksize, NULL, kNtNumaNoPreferredNode))) {
-    if (mkntcmdline(block->cmdline, argv) != -1 &&
+    if (mkntcmdline(block->cmdline, prog, argv) != -1 &&
         mkntenvblock(block->envvars, envp) != -1) {
       if (CreateProcess(NULL, block->cmdline, opt_lpProcessAttributes,
                         opt_lpThreadAttributes, bInheritHandles,

@@ -137,8 +137,8 @@ textwindows int fork$nt(void) {
       startinfo.hStdInput = g_fds.p[0].handle;
       startinfo.hStdOutput = g_fds.p[1].handle;
       startinfo.hStdError = g_fds.p[2].handle;
-      if (ntspawn(g_argv, environ, &kNtIsInheritable, NULL, true, 0, NULL,
-                  &startinfo, &procinfo) != -1) {
+      if (ntspawn(g_argv[0], g_argv, environ, &kNtIsInheritable, NULL, true, 0,
+                  NULL, &startinfo, &procinfo) != -1) {
         CloseHandle(reader);
         CloseHandle(procinfo.hThread);
         if (weaken(__sighandrvas) &&
