@@ -37,7 +37,12 @@ static int rmrfdir(const char *dirpath) {
     if (!strcmp(e->d_name, "..")) continue;
     if (strchr(e->d_name, '/')) abort();
     path = xjoinpaths(dirpath, e->d_name);
-    if ((e->d_type == DT_DIR ? rmrfdir(path) : unlink(path)) == -1) {
+    if (e->d_type == DT_DIR) {
+      rc = rmrfdir(path);
+    } else {
+      rc = unlink(path);
+    }
+    if (rc == -1) {
       free(path);
       closedir(d);
       return -1;

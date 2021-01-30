@@ -25,8 +25,9 @@ textwindows int chdir$nt(const char *path) {
   int len;
   char16_t path16[PATH_MAX];
   if ((len = __mkntpath(path, path16)) == -1) return -1;
-  if (path16[len - 1] != u'/' && path16[len - 1] != u'\\') {
-    path16[len + 0] = u'/';
+  if (path16[len - 1] != u'\\') {
+    if (len + 1 + 1 > PATH_MAX) return enametoolong();
+    path16[len + 0] = u'\\';
     path16[len + 1] = u'\0';
   }
   if (SetCurrentDirectory(path16)) {

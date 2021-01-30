@@ -92,10 +92,8 @@ static textwindows noinline DIR *opendir$nt(const char *name) {
   char16_t name16[PATH_MAX];
   if ((len = __mkntpath(name, name16)) == -1) return NULL;
   if (len + 2 + 1 > PATH_MAX) return PROGN(enametoolong(), NULL);
-  if (name16[len - 1] == u'/' || name16[len - 1] == u'\\') {
-    name16[--len] = u'\0';
-  }
-  name16[len++] = u'/';
+  while (name16[len - 1] == u'\\') name16[--len] = u'\0';
+  name16[len++] = u'\\';
   name16[len++] = u'*';
   name16[len] = u'\0';
   if (!(res = calloc(1, sizeof(DIR)))) return NULL;

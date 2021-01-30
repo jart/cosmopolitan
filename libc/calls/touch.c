@@ -30,6 +30,5 @@
 int touch(const char *file, uint32_t mode) {
   int fd;
   if ((fd = open(file, O_CREAT | O_WRONLY, mode)) == -1) return -1;
-  fsync(fd); /* TODO(jart): do we need it? */
   return close(fd);
 }

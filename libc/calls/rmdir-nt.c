@@ -17,15 +17,34 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/nt/errors.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/synchronization.h"
+#include "libc/sysv/errfuns.h"
 
 textwindows int rmdir$nt(const char *path) {
-  uint16_t path16[PATH_MAX];
-  if (__mkntpath(path, path16) == -1) return -1;
-  if (RemoveDirectory(path16)) {
-    return 0;
-  } else {
-    return __winerr();
+  int e, ms, len;
+  char16_t path16[PATH_MAX];
+  if ((len = __mkntpath(path, path16)) == -1) return -1;
+  while (path16[len - 1] == u'\\') path16[--len] = u'\0';
+  if (len + 2 + 1 > PATH_MAX) return enametoolong();
+  for (ms = 1;; ms *= 2) {
+    if (RemoveDirectory(path16)) return 0;
+    /*
+     * Files can linger, for absolutely no reason.
+     * Possibly some Windows Defender bug on Win7.
+     * Sleep for up to one second w/ expo backoff.
+     * Alternative is use Microsoft internal APIs.
+     * Never could have imagined it'd be this bad.
+     */
+    if ((e = GetLastError()) == kNtErrorDirNotEmpty && ms <= 512) {
+      Sleep(ms);
+      continue;
+    } else {
+      break;
+    }
   }
+  errno = e;
+  return -1;
 }

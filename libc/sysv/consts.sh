@@ -63,7 +63,7 @@ syscon	errno	ERANGE					34			34			34			34			-1			# bsd consensus
 syscon	errno	EDEADLK					35			11			11			11			1131			# bsd consensus & kNtErrorPossibleDeadlock
 syscon	errno	ENAMETOOLONG				36			63			63			63			0x274f			# bsd consensus & WSAENAMETOOLONG
 syscon	errno	ENOLCK					37			77			77			77			-1			# bsd consensus
-syscon	errno	ENOTEMPTY				39			66			66			66			0x2752			# bsd consensus & WSAENOTEMPTY
+syscon	errno	ENOTEMPTY				39			66			66			66			145			# bsd consensus & kNtErrorDirNotEmpty (TODO: What is WSAENOTEMPTY? 0x2752)
 syscon	errno	ELOOP					40			62			62			62			0x274e			# bsd consensus & WSAELOOP
 syscon	errno	ENOMSG					42			91			83			90			-1
 syscon	errno	EIDRM					43			90			82			89			-1
