@@ -2176,8 +2176,8 @@ imp	'GetFileVersionInfoSizeExA'				GetFileVersionInfoSizeExA				KernelBase	561
 imp	'GetFileVersionInfoSizeEx'				GetFileVersionInfoSizeExW				KernelBase	562
 imp	'GetFileVersionInfoSize'				GetFileVersionInfoSizeW					KernelBase	563
 imp	'GetFileVersionInfo'					GetFileVersionInfoW					KernelBase	564
-imp	'GetFinalPathNameByHandleA'				GetFinalPathNameByHandleA				kernel32	0		# KernelBase
-imp	'GetFinalPathNameByHandle'				GetFinalPathNameByHandleW				kernel32	0		# KernelBase
+imp	'GetFinalPathNameByHandleA'				GetFinalPathNameByHandleA				kernel32	0	4	# KernelBase
+imp	'GetFinalPathNameByHandle'				GetFinalPathNameByHandleW				kernel32	0	4	# KernelBase
 imp	'GetFirmwareEnvironmentVariableA'			GetFirmwareEnvironmentVariableA				kernel32	597
 imp	'GetFirmwareEnvironmentVariableExA'			GetFirmwareEnvironmentVariableExA			kernel32	598
 imp	'GetFirmwareEnvironmentVariableEx'			GetFirmwareEnvironmentVariableExW			kernel32	599

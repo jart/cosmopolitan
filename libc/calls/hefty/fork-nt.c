@@ -22,7 +22,9 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/ntspawn.h"
 #include "libc/fmt/itoa.h"
+#include "libc/macros.h"
 #include "libc/nexgen32e/nt2sysv.h"
+#include "libc/nt/dll.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/enum/startf.h"
@@ -119,6 +121,7 @@ textwindows void WinMainForked(void) {
 textwindows int fork$nt(void) {
   jmp_buf jb;
   int i, rc, pid;
+  char exe[PATH_MAX];
   int64_t reader, writer;
   char *p, buf[21 + 1 + 21 + 1];
   struct NtStartupInfo startinfo;
@@ -137,8 +140,9 @@ textwindows int fork$nt(void) {
       startinfo.hStdInput = g_fds.p[0].handle;
       startinfo.hStdOutput = g_fds.p[1].handle;
       startinfo.hStdError = g_fds.p[2].handle;
-      if (ntspawn(g_argv[0], g_argv, environ, &kNtIsInheritable, NULL, true, 0,
-                  NULL, &startinfo, &procinfo) != -1) {
+      GetModuleFileNameA(0, exe, ARRAYLEN(exe));
+      if (ntspawn(exe, g_argv, environ, &kNtIsInheritable, NULL, true, 0, NULL,
+                  &startinfo, &procinfo) != -1) {
         CloseHandle(reader);
         CloseHandle(procinfo.hThread);
         if (weaken(__sighandrvas) &&

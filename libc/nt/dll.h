@@ -32,6 +32,7 @@ int64_t LoadLibraryEx(const char16_t *lpLibFileName, int64_t hFile,
                       uint32_t dwFlags);
 uint32_t GetModuleFileName(int64_t hModule, char16_t *lpFilename,
                            uint32_t nSize);
+uint32_t GetModuleFileNameA(int64_t hModule, char *lpFilename, uint32_t nSize);
 intptr_t GetModuleHandle(const char *opt_lpModuleName);
 intptr_t GetModuleHandleW(const char16_t *opt_lpModuleName);
 void *GetProcAddress(int64_t hModule, const char *lpProcName);

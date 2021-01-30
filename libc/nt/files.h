@@ -199,6 +199,15 @@ bool32 WriteFileGather(int64_t hFileOpenedWithOverlappedAndNoBuffering,
                        uint32_t nNumberOfBytesToWrite, uint32_t *lpReserved,
                        struct NtOverlapped inout_lpOverlapped) paramsnonnull();
 
+#define kNtFileNameNormalized 0x0
+#define kNtVolumeNameDos      0x0
+#define kNtVolumeNameGuid     0x1
+#define kNtVolumeNameNt       0x2
+#define kNtVolumeNameNone     0x4
+#define kNtFileNameOpened     0x8
+uint32_t GetFinalPathNameByHandle(int64_t hFile, char16_t *out_path,
+                                  uint32_t size, uint32_t flags);
+
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/files.inc"
 #endif /* ShouldUseMsabiAttribute() */
