@@ -26,8 +26,6 @@
 /	@return	remainder ∈ (-|𝑦|,|𝑦|) in %xmm0
 /	@define	𝑥-trunc(𝑥/𝑦)*𝑦
 /	@see	emod()
-tinymath_fmod:
-	ezlea	tinymath_fmodl,ax
+fmod:	ezlea	fmodl,ax
 	jmp	_d2ld2
-	.endfn	tinymath_fmod,globl
-	.alias	tinymath_fmod,fmod
+	.endfn	fmod,globl

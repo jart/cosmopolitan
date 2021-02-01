@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_significand:
+significand:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -32,5 +32,4 @@ tinymath_significand:
 	movsd	(%rsp),%xmm0
 	leave
 	ret
-	.endfn	tinymath_significand,globl
-	.alias	tinymath_significand,significand
+	.endfn	significand,globl

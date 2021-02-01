@@ -24,8 +24,7 @@
 /	@param	𝑥 is float passed in %xmm0
 /	@param	𝑦 is exponent via %edi
 /	@return	float in %xmm0
-tinymath_ldexpf:
-	push	%rbp
+ldexpf:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	push	%rdi
@@ -38,7 +37,6 @@ tinymath_ldexpf:
 	movss	(%rsp),%xmm0
 	leave
 	ret
-	.endfn	tinymath_ldexpf,globl
-	.alias	tinymath_ldexpf,ldexpf
-	.alias	tinymath_ldexpf,scalbnf
-	.alias	tinymath_ldexpf,scalblnf
+	.endfn	ldexpf,globl
+	.alias	ldexpf,scalbnf
+	.alias	ldexpf,scalblnf

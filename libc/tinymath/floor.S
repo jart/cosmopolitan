@@ -21,8 +21,7 @@
 
 /	vroundsd $_MM_FROUND_TO_NEG_INF|_MM_FROUND_NO_EXC,%xmm0,%xmm0,%xmm0
 
-tinymath_floor:
-	.leafprologue
+floor:	.leafprologue
 	.profilable
 	movsd	4f(%rip),%xmm1
 	movsd	3f(%rip),%xmm2
@@ -40,8 +39,7 @@ tinymath_floor:
 	subsd	%xmm0,%xmm1
 	movapd	%xmm1,%xmm0
 1:	.leafepilogue
-	.endfn	tinymath_floor,globl
-	.alias	tinymath_floor,floor
+	.endfn	floor,globl
 
 	.rodata.cst8
 2:	.double	1

@@ -20,7 +20,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_lroundl:
+lroundl:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -37,9 +37,8 @@ tinymath_lroundl:
 	neg	%rax
 1:	leave
 	ret
-	.endfn	tinymath_lroundl,globl
-	.alias	tinymath_lroundl,lroundl
-	.alias	tinymath_lroundl,llroundl
+	.endfn	lroundl,globl
+	.alias	lroundl,llroundl
 
 	.rodata.cst4
 .Lhalf:	.float	.5

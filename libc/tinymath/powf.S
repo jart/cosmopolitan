@@ -24,9 +24,7 @@
 /	@param	𝑦 is float scalar in low quarter of %xmm0
 /	@param	𝑥 is float scalar in low quarter of %xmm1
 /	@return	float scalar in low quarter of %xmm0
-tinymath_powf:
-	ezlea	tinymath_powl,ax
+powf:	ezlea	powl,ax
 	jmp	_f2ld2
-	.endfn	tinymath_powf,globl
-	.alias	tinymath_powf,powf
-	.alias	tinymath_powf,__powf_finite
+	.endfn	powf,globl
+	.alias	powf,__powf_finite

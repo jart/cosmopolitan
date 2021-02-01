@@ -24,8 +24,6 @@
 /	@param	𝑥 is float scalar in low quarter of %xmm0
 /	@return	float scalar in low quarter of %xmm0
 /	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
-tinymath_sinf:
-	ezlea	tinymath_sinl,ax
+sinf:	ezlea	sinl,ax
 	jmp	_f2ld2
-	.endfn	tinymath_sinf,globl
-	.alias	tinymath_sinf,sinf
+	.endfn	sinf,globl

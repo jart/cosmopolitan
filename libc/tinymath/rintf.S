@@ -19,8 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_rintf:
-	.leafprologue
+rintf:	.leafprologue
 	.profilable
 	movaps	%xmm0,%xmm1
 	movss	.LC8(%rip),%xmm2
@@ -34,8 +33,7 @@ tinymath_rintf:
 	subss	%xmm3,%xmm1
 	orps	%xmm1,%xmm0
 1:	.leafepilogue
-	.endfn	tinymath_rintf,globl
-	.alias	tinymath_rintf,rintf
+	.endfn	rintf,globl
 
 	.rodata.cst4
 .LC7:	.long	1258291200

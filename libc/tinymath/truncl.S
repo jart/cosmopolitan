@@ -19,8 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_truncl:
-	.profilable
+truncl:	.profilable
 	sub	$24,%rsp
 	fldt	32(%rsp)
 	fnstcw	14(%rsp)
@@ -32,5 +31,4 @@ tinymath_truncl:
 	fldcw	14(%rsp)
 	add	$24,%rsp
 	ret
-	.endfn	tinymath_truncl,globl
-	.alias	tinymath_truncl,truncl
+	.endfn	truncl,globl

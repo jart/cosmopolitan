@@ -10,7 +10,6 @@ o/$(MODE)/test/libc:					\
 		o/$(MODE)/test/libc/dns			\
 		o/$(MODE)/test/libc/fmt			\
 		o/$(MODE)/test/libc/intrin		\
-		o/$(MODE)/test/libc/math		\
 		o/$(MODE)/test/libc/mem			\
 		o/$(MODE)/test/libc/nexgen32e		\
 		o/$(MODE)/test/libc/rand		\

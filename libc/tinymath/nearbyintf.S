@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_nearbyintf:
+nearbyintf:
 	.profilable
 	sub	$8,%rsp
 	movss	%xmm0,(%rsp)
@@ -36,5 +36,4 @@ tinymath_nearbyintf:
 	movss	(%rsp),%xmm0
 	add	$8,%rsp
 	ret
-	.endfn	tinymath_nearbyintf,globl
-	.alias	tinymath_nearbyintf,nearbyintf
+	.endfn	nearbyintf,globl

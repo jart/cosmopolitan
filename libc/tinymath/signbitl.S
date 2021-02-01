@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_signbitl:
+signbitl:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -31,5 +31,4 @@ tinymath_signbitl:
 	seta	%al
 	pop	%rbp
 	ret
-	.endfn	tinymath_signbitl,globl
-	.alias	tinymath_signbitl,signbitl
+	.endfn	signbitl,globl

@@ -19,8 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_truncf:
-	.leafprologue
+truncf:	.leafprologue
 	.profilable
 	movss	3f(%rip),%xmm1
 	andps	%xmm0,%xmm1
@@ -31,8 +30,7 @@ tinymath_truncf:
 	pxor	%xmm0,%xmm0
 	cvtsi2ss %eax,%xmm0
 1:	.leafepilogue
-	.endfn	tinymath_truncf,globl
-	.alias	tinymath_truncf,truncf
+	.endfn	truncf,globl
 
 	.rodata.cst4
 2:	.long	0x4b000000

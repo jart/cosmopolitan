@@ -23,8 +23,7 @@
 /
 /	@param	𝑥 is double scalar in low quarter of %xmm0
 /	@return	float scalar in low quarter of %xmm0
-tinymath_log10f:
-	ezlea	tinymath_log10l,ax
+log10f:
+	ezlea	log10l,ax
 	jmp	_f2ld2
-	.endfn	tinymath_log10f,globl
-	.alias	tinymath_log10f,log10f
+	.endfn	log10f,globl

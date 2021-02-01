@@ -19,8 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_ceilf:
-	.leafprologue
+ceilf:	.leafprologue
 	.profilable
 	movss	.L3(%rip),%xmm1
 	andps	%xmm0,%xmm1
@@ -35,8 +34,7 @@ tinymath_ceilf:
 	andps	%xmm2,%xmm0
 	addss	%xmm1,%xmm0
 1:	.leafepilogue
-	.endfn	tinymath_ceilf,globl
-	.alias	tinymath_ceilf,ceilf
+	.endfn	ceilf,globl
 
 	.rodata.cst4
 .L1:	.float	1.0

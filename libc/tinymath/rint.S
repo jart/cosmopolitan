@@ -26,12 +26,12 @@
 /	@param	is double passed in %xmm0
 /	@return	double in %xmm0
 /	@note	rounding behavior can be changed in mxcsr
-tinymath_rint:
+rint:
 #if !X86_NEED(SSE4_2)
 	testb	X86_HAVE(SSE4_2)+kCpuids(%rip)
-	jz	tinymath_rint$k8
+	jz	rint$k8
 	.text.antiquity
-tinymath_rint$k8:
+rint$k8:
 0:	movq	%xmm0,%rax
 	movq	%xmm0,%rdx
 	shr	$52,%rdx
@@ -56,7 +56,7 @@ tinymath_rint$k8:
 	jmp	1b
 4:	pxor	%xmm0,%xmm0
 	ret
-	.endfn	tinymath_rint$k8,globl,hidden
+	.endfn	rint$k8,globl,hidden
 	.previous
 	.rodata.cst8
 sgn:	.quad	0x8000000000000000
@@ -65,5 +65,4 @@ mmm:	.quad	0x4330000000000000
 #endif
 	roundsd $_MM_FROUND_RINT,%xmm0,%xmm0
 	ret
-	.endfn	tinymath_rint,globl
-	.alias	tinymath_rint,rint
+	.endfn	rint,globl

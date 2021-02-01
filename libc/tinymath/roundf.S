@@ -25,12 +25,12 @@
 /
 /	@param	𝑥 is float scalar in low quarter of %xmm0
 /	@return	float scalar in low quarter of %xmm0
-tinymath_roundf:
+roundf:
 #if !X86_NEED(SSE4_2)
 	testb	X86_HAVE(SSE4_2)+kCpuids(%rip)
-	jz	tinymath_roundf$k8
+	jz	roundf$k8
 	.text.antiquity
-tinymath_roundf$k8:
+roundf$k8:
 	.leafprologue
 	.profilable
 	movaps	%xmm0,%xmm1
@@ -47,7 +47,7 @@ tinymath_roundf$k8:
 	movaps	%xmm2,%xmm0
 	orps	%xmm1,%xmm0
 2:	.leafepilogue
-	.endfn	tinymath_roundf$k8,globl,hidden
+	.endfn	roundf$k8,globl,hidden
 	.previous
 	.rodata.cst16
 C:	.long	0x4b000000,0,0,0
@@ -60,8 +60,7 @@ D:	.long	0x7fffffff,0,0,0
 	addss	%xmm1,%xmm0
 	roundss $_MM_FROUND_TO_ZERO,%xmm0,%xmm0
 	ret
-	.endfn	tinymath_roundf,globl
-	.alias	tinymath_roundf,roundf
+	.endfn	roundf,globl
 
 	.rodata.cst16
 A:	.long	0x3effffff,0,0,0

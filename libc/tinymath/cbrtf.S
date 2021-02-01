@@ -22,14 +22,12 @@
 /
 /	@param	%xmm0 holds binary32 number
 /	@return	%xmm0 holds binary32 result
-tinymath_cbrtf:
-	pushq	%rbp
+cbrtf:	pushq	%rbp
 	mov	%rsp,%rbp
 	cvtss2sd %xmm0,%xmm0
 	call	__cbrt
 	cvtsd2ss %xmm0,%xmm0
 	popq	%rbp
 	ret
-	.endfn	tinymath_cbrtf,globl
-	.alias	tinymath_cbrtf,cbrtf
+	.endfn	cbrtf,globl
 	.source	__FILE__

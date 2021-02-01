@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_signbitf:
+signbitf:
 	.leafprologue
 	.profilable
 	pxor	%xmm1,%xmm1
@@ -27,5 +27,4 @@ tinymath_signbitf:
 	comiss	%xmm0,%xmm1
 	seta	%al
 	.leafepilogue
-	.endfn	tinymath_signbitf,globl
-	.alias	tinymath_signbitf,signbitf
+	.endfn	signbitf,globl

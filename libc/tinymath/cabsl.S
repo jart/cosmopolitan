@@ -19,8 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_cabsl:
-	push	%rbp
+cabsl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	32(%rbp)
@@ -32,5 +31,4 @@ tinymath_cabsl:
 	fsqrt
 	pop	%rbp
 	ret
-	.endfn	tinymath_cabsl,globl
-	.alias	tinymath_cabsl,cabsl
+	.endfn	cabsl,globl

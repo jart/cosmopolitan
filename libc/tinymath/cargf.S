@@ -19,8 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_cargf:
-	push	%rbp
+cargf:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	sub	$16,%rsp
@@ -32,5 +31,4 @@ tinymath_cargf:
 	movss	4(%rsp),%xmm0
 	leave
 	ret
-	.endfn	tinymath_cargf,globl
-	.alias	tinymath_cargf,cargf
+	.endfn	cargf,globl

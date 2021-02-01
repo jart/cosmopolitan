@@ -23,8 +23,7 @@
 /
 /	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
 /	@return	result on FPU stack in %st
-tinymath_logl:
-	push	%rbp
+logl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldln2
@@ -32,5 +31,4 @@ tinymath_logl:
 	fyl2x
 	pop	%rbp
 	ret
-	.endfn	tinymath_logl,globl
-	.alias	tinymath_logl,logl
+	.endfn	logl,globl

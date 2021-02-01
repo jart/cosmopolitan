@@ -23,10 +23,8 @@
 /
 /	@param	𝑥 is an double passed in %xmm0
 /	@return	result in %xmm0
-tinymath_sqrt:
-	.leafprologue
+sqrt:	.leafprologue
 	.profilable
 	sqrtsd	%xmm0,%xmm0
 	.leafepilogue
-	.endfn	tinymath_sqrt,globl
-	.alias	tinymath_sqrt,sqrt
+	.endfn	sqrt,globl

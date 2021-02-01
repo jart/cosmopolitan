@@ -24,8 +24,6 @@
 /	@param	𝑥 is float scalar in low quarter of %xmm0
 /	@return	float scalar in low quarter of %xmm0
 /	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
-tinymath_tanf:
-	ezlea	tinymath_tanl,ax
+tanf:	ezlea	tanl,ax
 	jmp	_f2ld2
-	.endfn	tinymath_tanf,globl
-	.alias	tinymath_tanf,tanf
+	.endfn	tanf,globl

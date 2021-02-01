@@ -92,8 +92,7 @@ include libc/stubs/stubs.mk			#─┘
 include libc/nexgen32e/nexgen32e.mk		#─┐
 include libc/intrin/intrin.mk			# │
 include libc/linux/linux.mk			# │
-include libc/math/math.mk			# ├──metal
-include libc/tinymath/tinymath.mk		# │
+include libc/tinymath/tinymath.mk		# ├──metal
 include third_party/compiler_rt/compiler_rt.mk	# │
 include libc/bits/bits.mk			# │
 include libc/str/str.mk				# │
@@ -160,7 +159,6 @@ include tool/viz/viz.mk
 include tool/tool.mk
 include test/libc/alg/test.mk
 include test/libc/tinymath/test.mk
-include test/libc/math/test.mk
 include test/libc/intrin/test.mk
 include test/libc/mem/test.mk
 include test/libc/nexgen32e/test.mk

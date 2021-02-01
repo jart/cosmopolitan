@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_copysign:
+copysign:
 	.leafprologue
 	.profilable
 	movapd	%xmm1,%xmm2
@@ -27,8 +27,7 @@ tinymath_copysign:
 	andpd	.Lneg0(%rip),%xmm2
 	orpd	%xmm2,%xmm0
 	.leafepilogue
-	.endfn	tinymath_copysign,globl
-	.alias	tinymath_copysign,copysign
+	.endfn	copysign,globl
 
 	.rodata.cst16
 .Lnan:	.long	0xffffffff

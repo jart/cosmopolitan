@@ -20,7 +20,5 @@
 .source	__FILE__
 
 /	Returns absolute value of complex number.
-tinymath_cabs:
-	jmp	tinymath_hypot
-	.endfn	tinymath_cabs,globl
-	.alias	tinymath_cabs,cabs
+cabs:	jmp	hypot
+	.endfn	cabs,globl

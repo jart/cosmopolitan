@@ -20,8 +20,7 @@
 .source	__FILE__
 
 /	Returns euclidean distance in 2d space.
-tinymath_hypotl:
-	push	%rbp
+hypotl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	32(%rbp)
@@ -32,5 +31,4 @@ tinymath_hypotl:
 	faddp
 	pop	%rbp
 	ret
-	.endfn	tinymath_hypotl,globl
-	.alias	tinymath_hypotl,hypotl
+	.endfn	hypotl,globl

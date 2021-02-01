@@ -19,8 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_ceill:
-	.profilable
+ceill:	.profilable
 	sub	$24,%rsp
 	fldt	32(%rsp)
 	fnstcw	14(%rsp)
@@ -33,5 +32,4 @@ tinymath_ceill:
 	fldcw	14(%rsp)
 	add	$24,%rsp
 	ret
-	.endfn	tinymath_ceill,globl
-	.alias	tinymath_ceill,ceill
+	.endfn	ceill,globl

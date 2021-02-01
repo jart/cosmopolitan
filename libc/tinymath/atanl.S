@@ -28,8 +28,7 @@
 /	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
 /	@return	result of computation on FPU stack in %st
 /	@define	atan(𝑥) = Σₙ₌₀₋∞ 2²ⁿ(𝑛!)²/(𝟸𝑛+𝟷)!(𝑥²ⁿ⁺¹/(𝑥²+𝟷)ⁿ⁺¹)
-tinymath_atanl:
-	push	%rbp
+atanl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
@@ -37,5 +36,4 @@ tinymath_atanl:
 	fpatan
 	pop	%rbp
 	ret
-	.endfn	tinymath_atanl,globl
-	.alias	tinymath_atanl,atanl
+	.endfn	atanl,globl

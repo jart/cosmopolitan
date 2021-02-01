@@ -23,7 +23,7 @@
 /
 /	@param	𝑥 is double scalar in low half of %xmm0
 /	@return	double scalar in low half of %xmm0
-tinymath_log1p:
+log1p:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -52,8 +52,7 @@ tinymath_log1p:
 	fstpl	(%rsp)
 	vmovsd	(%rsp),%xmm0
 	jmp	0b
-	.endfn	tinymath_log1p,globl
-	.alias	tinymath_log1p,log1p
+	.endfn	log1p,globl
 
 	.rodata.cst16
 .LC16:	.long	205731576

@@ -19,8 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_carg:
-	push	%rbp
+carg:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	sub	$16,%rsp
@@ -34,5 +33,4 @@ tinymath_carg:
 	movsd	-16(%rbp),%xmm0
 	leave
 	ret
-	.endfn	tinymath_carg,globl
-	.alias	tinymath_carg,carg
+	.endfn	carg,globl

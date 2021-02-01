@@ -24,8 +24,7 @@
 /	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
 /	@param	𝑦 is an 80-bit long double passed on stack in 16-bytes
 /	@return	result of computation on FPU stack in %st
-tinymath_atan2l:
-	push	%rbp
+atan2l:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
@@ -33,5 +32,4 @@ tinymath_atan2l:
 	fpatan
 	pop	%rbp
 	ret
-	.endfn	tinymath_atan2l,globl
-	.alias	tinymath_atan2l,atan2l
+	.endfn	atan2l,globl

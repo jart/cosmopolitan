@@ -24,8 +24,6 @@
 /	@param	𝑥 is float scalar in low quarter of %xmm0
 /	@return	float scalar in low quarter of %xmm0
 /	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
-tinymath_cosf:
-	ezlea	tinymath_cosl,ax
+cosf:	ezlea	cosl,ax
 	jmp	_f2ld2
-	.endfn	tinymath_cosf,globl
-	.alias	tinymath_cosf,cosf
+	.endfn	cosf,globl

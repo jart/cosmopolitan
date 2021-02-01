@@ -24,8 +24,7 @@
 /
 /	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
 /	@return	%st stores result
-tinymath_tanl:
-	push	%rbp
+tanl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
@@ -34,8 +33,7 @@ tinymath_tanl:
 	fstp	%st
 	pop	%rbp
 	ret
-	.endfn	tinymath_tanl,globl
-	.alias	tinymath_tanl,tanl
+	.endfn	tanl,globl
 
 fptan:	.leafprologue
 	.profilable

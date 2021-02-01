@@ -23,8 +23,6 @@
 /
 /	@param	𝑥 is float scalar in low quarter of %xmm0
 /	@return	float scalar in low quarter of %xmm0
-tinymath_expm1f:
-	ezlea	tinymath_expm1l,ax
+expm1f:	ezlea	expm1l,ax
 	jmp	_f2ld2
-	.endfn	tinymath_expm1f,globl
-	.alias	tinymath_expm1f,expm1f
+	.endfn	expm1f,globl

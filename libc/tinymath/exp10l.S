@@ -23,7 +23,7 @@
 /
 /	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
 /	@return	result of exponentiation on FPU stack in %st
-tinymath_exp10l:
+exp10l:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -41,6 +41,5 @@ tinymath_exp10l:
 	fstp	%st(1)
 	pop	%rbp
 	ret
-	.endfn	tinymath_exp10l,globl
-	.alias	tinymath_exp10l,exp10l
-	.alias	tinymath_exp10l,pow10l
+	.endfn	exp10l,globl
+	.alias	exp10l,pow10l

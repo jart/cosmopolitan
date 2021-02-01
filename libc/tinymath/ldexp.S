@@ -24,8 +24,7 @@
 /	@param	𝑥 is double passed in %xmm0
 /	@param	𝑦 is exponent via %edi
 /	@return	double in %xmm0
-tinymath_ldexp:
-	push	%rbp
+ldexp:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	push	%rdi
@@ -38,7 +37,6 @@ tinymath_ldexp:
 	movsd	(%rsp),%xmm0
 	leave
 	ret
-	.endfn	tinymath_ldexp,globl
-	.alias	tinymath_ldexp,ldexp
-	.alias	tinymath_ldexp,scalbn
-	.alias	tinymath_ldexp,scalbln
+	.endfn	ldexp,globl
+	.alias	ldexp,scalbn
+	.alias	ldexp,scalbln

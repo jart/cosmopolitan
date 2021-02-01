@@ -19,8 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_conjl:
-	.profilable
+conjl:	.profilable
 	sub	$24,%rsp
 	fldt	32(%rsp)
 	fnstcw	14(%rsp)
@@ -41,5 +40,4 @@ tinymath_conjl:
 	add	$24,%rsp
 	mov	%rcx,%rdx
 	ret
-	.endfn	tinymath_conjl,globl
-	.alias	tinymath_conjl,conjl
+	.endfn	conjl,globl

@@ -24,8 +24,7 @@
 /	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
 /	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
 /	@return	%st stores result
-tinymath_sinl:
-	push	%rbp
+sinl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
@@ -33,8 +32,7 @@ tinymath_sinl:
 	call	c2rangr
 	pop	%rbp
 	ret
-	.endfn	tinymath_sinl,globl
-	.alias	tinymath_sinl,sinl
+	.endfn	sinl,globl
 
 fsin:	.leafprologue
 	.profilable

@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_copysignf:
+copysignf:
 	.leafprologue
 	.profilable
 	movaps	%xmm1,%xmm2
@@ -27,8 +27,7 @@ tinymath_copysignf:
 	andps	.LC10(%rip),%xmm2
 	orps	%xmm2,%xmm0
 	.leafepilogue
-	.endfn	tinymath_copysignf,globl
-	.alias	tinymath_copysignf,copysignf
+	.endfn	copysignf,globl
 
 	.rodata.cst16
 .LC8:	.long	2147483647

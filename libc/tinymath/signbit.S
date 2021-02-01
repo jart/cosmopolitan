@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_signbit:
+signbit:
 	.leafprologue
 	.profilable
 	pxor	%xmm1,%xmm1
@@ -27,5 +27,4 @@ tinymath_signbit:
 	comisd	%xmm0,%xmm1
 	seta	%al
 	.leafepilogue
-	.endfn	tinymath_signbit,globl
-	.alias	tinymath_signbit,signbit
+	.endfn	signbit,globl

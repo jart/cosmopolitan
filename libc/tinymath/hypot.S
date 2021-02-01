@@ -20,13 +20,11 @@
 .source	__FILE__
 
 /	Returns euclidean distance in 2d space.
-tinymath_hypot:
-	.leafprologue
+hypot:	.leafprologue
 	.profilable
 	mulsd	%xmm1,%xmm1
 	mulsd	%xmm0,%xmm0
 	addsd	%xmm1,%xmm0
 	sqrtsd	%xmm0,%xmm0
 	.leafepilogue
-	.endfn	tinymath_hypot,globl
-	.alias	tinymath_hypot,hypot
+	.endfn	hypot,globl

@@ -23,8 +23,7 @@
 /	@param	𝑥 is float passed in %xmm0
 /	@return	result in %eax
 /	@note	needs sse3
-tinymath_ilogbf:
-	push	%rbp
+ilogbf:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	push	%rax
@@ -36,6 +35,5 @@ tinymath_ilogbf:
 	mov	(%rsp),%eax
 	leave
 	ret
-	.endfn	tinymath_ilogbf,globl
-	.alias	tinymath_ilogbf,ilogbf
+	.endfn	ilogbf,globl
 	.source	__FILE__

@@ -19,8 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_conjf:
-	.profilable
+conjf:	.profilable
 	sub	$16,%rsp
 	movq	%xmm0,8(%rsp)
 	movss	12(%rsp),%xmm0
@@ -31,8 +30,7 @@ tinymath_conjf:
 	movq	(%rsp),%xmm0
 	add	$16,%rsp
 	ret
-	.endfn	tinymath_conjf,globl
-	.alias	tinymath_conjf,conjf
+	.endfn	conjf,globl
 
 	.rodata.cst16
 .L1:	.long	2147483648

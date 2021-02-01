@@ -22,8 +22,6 @@
 /
 /	@param	%xmm0 holds binary64 number
 /	@return	%xmm0 holds binary64 result
-tinymath_cbrt:
-	jmp	__cbrt
-	.endfn	tinymath_cbrt,globl
-	.alias	tinymath_cbrt,cbrt
+cbrt:	jmp	__cbrt
+	.endfn	cbrt,globl
 	.source	__FILE__

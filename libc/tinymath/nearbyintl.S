@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_nearbyintl:
+nearbyintl:
 	.profilable
 	sub	$24,%rsp
 	fldt	32(%rsp)
@@ -33,5 +33,4 @@ tinymath_nearbyintl:
 	fldcw	14(%rsp)
 	add	$24,%rsp
 	ret
-	.endfn	tinymath_nearbyintl,globl
-	.alias	tinymath_nearbyintl,nearbyintl
+	.endfn	nearbyintl,globl

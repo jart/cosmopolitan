@@ -23,10 +23,8 @@
 /
 /	@param	𝑥 is an float passed in %xmm0
 /	@return	result in %xmm0
-tinymath_sqrtf:
-	.leafprologue
+sqrtf:	.leafprologue
 	.profilable
 	sqrtss	%xmm0,%xmm0
 	.leafepilogue
-	.endfn	tinymath_sqrtf,globl
-	.alias	tinymath_sqrtf,sqrtf
+	.endfn	sqrtf,globl

@@ -26,9 +26,8 @@
 /	@return	remainder ∈ (-|𝑦|,|𝑦|) in %xmm0
 /	@define	𝑥-rint(𝑥/𝑦)*𝑦
 /	@see	fmod(), emod(), operator%
-tinymath_remainder:
-	ezlea	tinymath_remainderl,ax
+remainder:
+	ezlea	remainderl,ax
 	jmp	_d2ld2
-	.endfn	tinymath_remainder,globl
-	.alias	tinymath_remainder,remainder
-	.alias	tinymath_remainder,drem
+	.endfn	remainder,globl
+	.alias	remainder,drem

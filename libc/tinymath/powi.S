@@ -23,8 +23,6 @@
 /	@param	𝑥 is double scalar in low half of %xmm0
 /	@param	𝑦 is int passed in %edi
 /	@return	double scalar in low half of %xmm0
-tinymath_powi:
-	cvtsi2sd %edi,%xmm1
-	jmp	tinymath_pow
-	.endfn	tinymath_powi,globl
-	.alias	tinymath_powi,powi
+powi:	cvtsi2sd %edi,%xmm1
+	jmp	pow
+	.endfn	powi,globl

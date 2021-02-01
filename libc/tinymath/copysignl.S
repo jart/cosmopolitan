@@ -20,7 +20,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_copysignl:
+copysignl:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -35,5 +35,4 @@ tinymath_copysignl:
 	fchs
 1:	pop	%rbp
 	ret
-	.endfn	tinymath_copysignl,globl
-	.alias	tinymath_copysignl,copysignl
+	.endfn	copysignl,globl

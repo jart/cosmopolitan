@@ -23,8 +23,7 @@
 /	@param	𝑥 is long double passed on stack
 /	@return	result in %eax
 /	@note	needs sse3
-tinymath_ilogbl:
-	push	%rbp
+ilogbl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
@@ -35,6 +34,5 @@ tinymath_ilogbl:
 	mov	(%rsp),%eax
 	leave
 	ret
-	.endfn	tinymath_ilogbl,globl
-	.alias	tinymath_ilogbl,ilogbl
+	.endfn	ilogbl,globl
 	.source	__FILE__

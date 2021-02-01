@@ -23,7 +23,7 @@
 /
 /	@param	𝑥 is a float passed in the lower quarter of %xmm0
 /	@return	result in lower quarter of %xmm0
-tinymath_log2f:
+log2f:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -36,5 +36,4 @@ tinymath_log2f:
 	movss	4(%rsp),%xmm0
 	leave
 	ret
-	.endfn	tinymath_log2f,globl
-	.alias	tinymath_log2f,log2f
+	.endfn	log2f,globl

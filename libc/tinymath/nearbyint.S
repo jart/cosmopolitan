@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_nearbyint:
+nearbyint:
 	.profilable
 	sub	$16,%rsp
 	movsd	%xmm0,(%rsp)
@@ -36,5 +36,4 @@ tinymath_nearbyint:
 	movsd	(%rsp),%xmm0
 	add	$16,%rsp
 	ret
-	.endfn	tinymath_nearbyint,globl
-	.alias	tinymath_nearbyint,nearbyint
+	.endfn	nearbyint,globl

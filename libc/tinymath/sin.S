@@ -24,8 +24,6 @@
 /	@param	𝑥 is double scalar in low half of %xmm0
 /	@return	double scalar in low half of %xmm0
 /	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
-tinymath_sin:
-	ezlea	tinymath_sinl,ax
+sin:	ezlea	sinl,ax
 	jmp	_d2ld2
-	.endfn	tinymath_sin,globl
-	.alias	tinymath_sin,sin
+	.endfn	sin,globl

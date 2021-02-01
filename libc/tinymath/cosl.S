@@ -24,8 +24,7 @@
 /	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
 /	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
 /	@return	%st stores result
-tinymath_cosl:
-	push	%rbp
+cosl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
@@ -33,8 +32,7 @@ tinymath_cosl:
 	call	c2rangr
 	pop	%rbp
 	ret
-	.endfn	tinymath_cosl,globl
-	.alias	tinymath_cosl,cosl
+	.endfn	cosl,globl
 
 _cos:	.leafprologue
 	.profilable

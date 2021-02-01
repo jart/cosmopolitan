@@ -27,12 +27,12 @@
 /	@return	double scalar in low half of %xmm0
 /	@define	round(𝑥) = copysign(trunc(fabs(𝑥)+.5),𝑥)
 /		round(𝑥) = trunc(𝑥+copysign(.5,𝑥))
-tinymath_round:
+round:
 #if !X86_NEED(SSE4_2)
 	testb	X86_HAVE(SSE4_2)+kCpuids(%rip)
-	jz	tinymath_round$k8
+	jz	round$k8
 	.text.antiquity
-tinymath_round$k8:
+round$k8:
 	.leafprologue
 	.profilable
 	movapd	%xmm0,%xmm1
@@ -49,7 +49,7 @@ tinymath_round$k8:
 	cvtsi2sdq %rax,%xmm1
 	orpd	%xmm1,%xmm0
 2:	.leafepilogue
-	.endfn	tinymath_round$k8,globl,hidden
+	.endfn	round$k8,globl,hidden
 	.previous
 	.rodata.cst16
 C:	.quad	0x4330000000000000,0
@@ -62,8 +62,7 @@ D:	.quad	0x7fffffffffffffff,0
 	addsd	%xmm1,%xmm0
 	roundsd $_MM_FROUND_TO_ZERO,%xmm0,%xmm0
 	ret
-	.endfn	tinymath_round,globl
-	.alias	tinymath_round,round
+	.endfn	round,globl
 
 	.rodata.cst16
 A:	.quad	0x3fdfffffffffffff,0

@@ -25,8 +25,7 @@
 /	@param	𝑦 is long double passed on stack
 /	@return	result in %st0
 /	@see	ldexpl()
-tinymath_scalbl:
-	push	%rbp
+scalbl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	32(%rbp)
@@ -35,5 +34,4 @@ tinymath_scalbl:
 	fstp	%st(1)
 	pop	%rbp
 	ret
-	.endfn	tinymath_scalbl,globl
-	.alias	tinymath_scalbl,scalbl
+	.endfn	scalbl,globl

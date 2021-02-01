@@ -25,8 +25,6 @@
 /	@param	𝑦 is float passed in %xmm1, which is truncated
 /	@return	result in %xmm0
 /	@see	ldexpf()
-tinymath_scalbf:
-	cvttss2si %xmm1,%edi
-	jmp	tinymath_ldexpf
-	.endfn	tinymath_scalbf,globl
-	.alias	tinymath_scalbf,scalbf
+scalbf:	cvttss2si %xmm1,%edi
+	jmp	ldexpf
+	.endfn	scalbf,globl

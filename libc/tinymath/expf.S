@@ -23,8 +23,6 @@
 /
 /	@param	𝑥 is double scalar in low half of %xmm0
 /	@return	double scalar in low half of %xmm0
-tinymath_expf:
-	ezlea	tinymath_expl,ax
+expf:	ezlea	expl,ax
 	jmp	_f2ld2
-	.endfn	tinymath_expf,globl
-	.alias	tinymath_expf,expf
+	.endfn	expf,globl

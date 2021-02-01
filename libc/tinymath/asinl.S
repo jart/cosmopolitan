@@ -26,8 +26,7 @@
 /	@define	atan2(𝑥,sqrt((1-𝑥)*(1+𝑥)))
 /	@domain	-1 ≤ 𝑥 ≤ 1
 /	@mode	long,legacy
-tinymath_asinl:
-	push	%rbp
+asinl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldl    16(%rbp)
@@ -46,8 +45,7 @@ tinymath_asinl:
         fpatan
 	pop	%rbp
 	ret
-	.endfn	tinymath_asinl,globl
-	.alias	tinymath_asinl,asinl
+	.endfn	asinl,globl
 
 	.rodata.cst4
 .Lone:	.float	1.0

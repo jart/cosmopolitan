@@ -24,7 +24,7 @@
 /	@param	𝑥 is float scalar in low quarter of %xmm0
 /	@return	64-bit signed integer in %rax
 /	@see	round()
-tinymath_lroundf:
+lroundf:
 	.leafprologue
 	.profilable
 	movss	A(%rip),%xmm1
@@ -34,9 +34,8 @@ tinymath_lroundf:
 	addss	%xmm0,%xmm1
 	cvttss2siq %xmm1,%rax
 	.leafepilogue
-	.endfn	tinymath_lroundf,globl
-	.alias	tinymath_lroundf,lroundf
-	.alias	tinymath_lroundf,llroundf
+	.endfn	lroundf,globl
+	.alias	lroundf,llroundf
 
 	.rodata.cst4
 A:	.long	0x3effffff

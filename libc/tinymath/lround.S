@@ -24,8 +24,7 @@
 /	@param	𝑥 is double scalar in low half of %xmm0
 /	@return	64-bit signed integer in %rax
 /	@see	round(), lrint()
-tinymath_lround:
-	.leafprologue
+lround:	.leafprologue
 	.profilable
 	movsd	A(%rip),%xmm2
 	movsd	B(%rip),%xmm1
@@ -34,9 +33,8 @@ tinymath_lround:
 	addsd	%xmm0,%xmm1
 	cvttsd2siq %xmm1,%rax
 	.leafepilogue
-	.endfn	tinymath_lround,globl
-	.alias	tinymath_lround,lround
-	.alias	tinymath_lround,llround
+	.endfn	lround,globl
+	.alias	lround,llround
 
 	.rodata.cst16
 A:	.quad	0x8000000000000000,0

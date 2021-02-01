@@ -23,8 +23,7 @@
 /
 /	@param	𝑥 is float scalar in low quarter of %xmm0
 /	@return	float scalar in low quarter of %xmm0
-tinymath_log1pf:
-	push	%rbp
+log1pf:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	push	%rax
@@ -50,8 +49,7 @@ tinymath_log1pf:
 	fxch
 	fyl2x
 	jmp	1b
-	.endfn	tinymath_log1pf,globl
-	.alias	tinymath_log1pf,log1pf
+	.endfn	log1pf,globl
 
 	.rodata.cst16
 .LC16:	.long	205731576

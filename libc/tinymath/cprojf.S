@@ -19,8 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_cprojf:
-	push	%rbp
+cprojf:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	sub	$16,%rsp
@@ -32,5 +31,4 @@ tinymath_cprojf:
 	movq	(%rsp),%xmm0
 	leave
 	ret
-	.endfn	tinymath_cprojf,globl
-	.alias	tinymath_cprojf,cprojf
+	.endfn	cprojf,globl

@@ -19,8 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_cabsf:
-	push	%rbp
+cabsf:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	sub	$16,%rsp
@@ -35,5 +34,4 @@ tinymath_cabsf:
 	sqrtss	%xmm0,%xmm0
 	leave
 	ret
-	.endfn	tinymath_cabsf,globl
-	.alias	tinymath_cabsf,cabsf
+	.endfn	cabsf,globl

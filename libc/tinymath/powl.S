@@ -25,8 +25,7 @@
 /	@param	𝑦 is the power, also pushed on stack, in reverse order
 /	@return	result of exponentiation on FPU stack in %st
 /	@note	Sun's fdlibm needs 2kLOC to do this for RISC lool
-tinymath_powl:
-	push	%rbp
+powl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	32(%rbp)
@@ -42,6 +41,5 @@ tinymath_powl:
 	fstp	%st
 	pop	%rbp
 	ret
-	.endfn	tinymath_powl,globl
-	.alias	tinymath_powl,powl
-	.alias	tinymath_powl,__powl_finite
+	.endfn	powl,globl
+	.alias	powl,__powl_finite

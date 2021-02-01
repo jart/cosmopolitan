@@ -23,8 +23,7 @@
 /
 /	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
 /	@return	result of exponentiation on FPU stack in %st
-tinymath_expl:
-	push	%rbp
+expl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
@@ -41,5 +40,4 @@ tinymath_expl:
 	fstp	%st(1)
 	pop	%rbp
 	ret
-	.endfn	tinymath_expl,globl
-	.alias	tinymath_expl,expl
+	.endfn	expl,globl

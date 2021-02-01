@@ -25,8 +25,7 @@
 /	@param	%rdi is double *out_sin
 /	@param	%rsi is double *out_cos
 /	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
-tinymath_sincos:
-	push	%rbp
+sincos:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	push	%rax
@@ -38,5 +37,4 @@ tinymath_sincos:
 	fstpl	(%rsi)
 	leave
 	ret
-	.endfn	tinymath_sincos,globl
-	.alias	tinymath_sincos,sincos
+	.endfn	sincos,globl

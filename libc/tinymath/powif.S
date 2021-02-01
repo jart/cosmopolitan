@@ -23,8 +23,6 @@
 /	@param	𝑥 is float scalar in low quarter of %xmm0
 /	@param	𝑦 is int passed in %edi
 /	@return	double scalar in low half of %xmm0
-tinymath_powif:
-	cvtsi2ss %edi,%xmm1
-	jmp	tinymath_pow
-	.endfn	tinymath_powif,globl
-	.alias	tinymath_powif,powif
+powif:	cvtsi2ss %edi,%xmm1
+	jmp	pow
+	.endfn	powif,globl

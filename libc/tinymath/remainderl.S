@@ -20,7 +20,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_remainderl:
+remainderl:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -33,6 +33,5 @@ tinymath_remainderl:
 	fstp	%st(1)
 	pop	%rbp
 	ret
-	.endfn	tinymath_remainderl,globl
-	.alias	tinymath_remainderl,remainderl
-	.alias	tinymath_remainderl,dreml
+	.endfn	remainderl,globl
+	.alias	remainderl,dreml

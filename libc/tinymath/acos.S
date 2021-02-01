@@ -23,8 +23,6 @@
 /
 /	@param	𝑥 is double scalar in low half of %xmm0
 /	@return	double scalar in low half of %xmm0
-tinymath_acos:
-	ezlea	tinymath_acosl,ax
+acos:	ezlea	acosl,ax
 	jmp	_d2ld2
-	.endfn	tinymath_acos,globl
-	.alias	tinymath_acos,acos
+	.endfn	acos,globl

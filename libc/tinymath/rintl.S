@@ -24,13 +24,11 @@
 /	@param	is long double passed on stack
 /	@return	long double in %st
 /	@note	rounding behavior can be changed in control word
-tinymath_rintl:
-	push	%rbp
+rintl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
 	frndint
 	pop	%rbp
 	ret
-	.endfn	tinymath_rintl,globl
-	.alias	tinymath_rintl,rintl
+	.endfn	rintl,globl

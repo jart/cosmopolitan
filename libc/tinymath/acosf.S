@@ -23,8 +23,6 @@
 /
 /	@param	𝑥 is float scalar in low quarter of %xmm0
 /	@return	float scalar in low quarter of %xmm0
-tinymath_acosf:
-	ezlea	tinymath_acosl,ax
+acosf:	ezlea	acosl,ax
 	jmp	_f2ld2
-	.endfn	tinymath_acosf,globl
-	.alias	tinymath_acosf,acosf
+	.endfn	acosf,globl

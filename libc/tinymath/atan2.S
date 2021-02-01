@@ -25,8 +25,6 @@
 /	@param	𝑥 is double scalar in low half of %xmm1
 /	@return	double scalar in low half of %xmm0
 /	@note	the greatest of all libm functions
-tinymath_atan2:
-	ezlea	tinymath_atan2l,ax
+atan2:	ezlea	atan2l,ax
 	jmp	_d2ld2
-	.endfn	tinymath_atan2,globl
-	.alias	tinymath_atan2,atan2
+	.endfn	atan2,globl

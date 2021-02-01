@@ -20,8 +20,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_fmodl:
-	push	%rbp
+fmodl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	32(%rbp)
@@ -33,5 +32,4 @@ tinymath_fmodl:
 	fstp	%st(1)
 	pop	%rbp
 	ret
-	.endfn	tinymath_fmodl,globl
-	.alias	tinymath_fmodl,fmodl
+	.endfn	fmodl,globl

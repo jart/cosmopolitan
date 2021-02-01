@@ -19,13 +19,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_conj:
-	.leafprologue
+conj:	.leafprologue
 	.profilable
 	xorpd	.L1(%rip),%xmm1
 	.leafepilogue
-	.endfn	tinymath_conj,globl
-	.alias	tinymath_conj,conj
+	.endfn	conj,globl
 
 	.rodata.cst16
 .L1:	.long	0

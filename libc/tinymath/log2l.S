@@ -24,7 +24,7 @@
 /	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
 /	@return	result in %st
 /	@see	ilogbl()
-tinymath_log2l:
+log2l:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -33,5 +33,4 @@ tinymath_log2l:
 	fyl2x
 	pop	%rbp
 	ret
-	.endfn	tinymath_log2l,globl
-	.alias	tinymath_log2l,log2l
+	.endfn	log2l,globl

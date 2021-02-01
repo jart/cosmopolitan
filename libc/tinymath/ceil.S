@@ -19,8 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_ceil:
-	.leafprologue
+ceil:	.leafprologue
 	.profilable
 	movsd	nan(%rip),%xmm1
 	movsd	sig(%rip),%xmm2
@@ -35,8 +34,7 @@ tinymath_ceil:
 	andpd	%xmm2,%xmm0
 	addsd	%xmm1,%xmm0
 1:	.leafepilogue
-	.endfn	tinymath_ceil,globl
-	.alias	tinymath_ceil,ceil
+	.endfn	ceil,globl
 
 	.rodata.cst8
 nan:	.double	nan

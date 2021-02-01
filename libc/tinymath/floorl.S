@@ -19,8 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_floorl:
-	.profilable
+floorl:	.profilable
 	fldt	8(%rsp)
 	mov	$7,%al
 	fstcw	8(%rsp)
@@ -31,5 +30,4 @@ tinymath_floorl:
 	mov	%ah,9(%rsp)
 	fldcw	8(%rsp)
 	ret
-	.endfn	tinymath_floorl,globl
-	.alias	tinymath_floorl,floorl
+	.endfn	floorl,globl

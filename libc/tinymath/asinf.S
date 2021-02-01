@@ -23,8 +23,6 @@
 /
 /	@param	𝑥 is float scalar in low quarter of %xmm0
 /	@return	float scalar in low quarter of %xmm0
-tinymath_asinf:
-	ezlea	tinymath_asinl,ax
+asinf:	ezlea	asinl,ax
 	jmp	_f2ld2
-	.endfn	tinymath_asinf,globl
-	.alias	tinymath_asinf,asinf
+	.endfn	asinf,globl

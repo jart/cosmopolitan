@@ -23,8 +23,7 @@
 /
 /	@param	z is complex long double passed on stack
 /	@note	needs sse3
-tinymath_cprojl:
-	.profilable
+cprojl:	.profilable
 	sub	$24,%rsp
 	fldt	32(%rsp)
 	fisttpq	8(%rsp)
@@ -36,5 +35,4 @@ tinymath_cprojl:
 	add	$24,%rsp
 	mov	%rcx,%rdx
 	ret
-	.endfn	tinymath_cprojl,globl
-	.alias	tinymath_cprojl,cprojl
+	.endfn	cprojl,globl

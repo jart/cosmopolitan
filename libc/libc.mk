@@ -18,7 +18,6 @@ o/$(MODE)/libc:	o/$(MODE)/libc/alg		\
 		o/$(MODE)/libc/intrin		\
 		o/$(MODE)/libc/linux		\
 		o/$(MODE)/libc/log		\
-		o/$(MODE)/libc/math		\
 		o/$(MODE)/libc/mem		\
 		o/$(MODE)/libc/nexgen32e	\
 		o/$(MODE)/libc/nt		\

@@ -23,8 +23,7 @@
 /	@param	𝑥 is long double passed on stack
 /	@param	𝑦 is int passed in %edi
 /	@return	%st
-tinymath_powil:
-	push	%rbp
+powil:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	sub	$32,%rsp
@@ -33,8 +32,7 @@ tinymath_powil:
 	fstpt	(%rsp)
 	push	16+8(%rbp)
 	push	16+0(%rbp)
-	call	tinymath_powl
+	call	powl
 	leave
 	ret
-	.endfn	tinymath_powil,globl
-	.alias	tinymath_powil,powil
+	.endfn	powil,globl

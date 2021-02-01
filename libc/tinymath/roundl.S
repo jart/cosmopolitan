@@ -23,8 +23,7 @@
 /
 /	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
 /	@return	result of exponentiation on FPU stack in %st
-tinymath_roundl:
-	push	%rbp
+roundl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	push	%rax
@@ -44,8 +43,7 @@ tinymath_roundl:
 	fchs
 1:	leave
 	ret
-	.endfn	tinymath_roundl,globl
-	.alias	tinymath_roundl,roundl
+	.endfn	roundl,globl
 	.source	__FILE__
 
 	.rodata.cst4

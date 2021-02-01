@@ -23,7 +23,7 @@
 /
 /	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
 /	@return	result of exponentiation on FPU stack in %st
-tinymath_log1pl:
+log1pl:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -46,8 +46,7 @@ tinymath_log1pl:
 	fxch
 	fyl2x
 	jmp	0b
-	.endfn	tinymath_log1pl,globl
-	.alias	tinymath_log1pl,log1pl
+	.endfn	log1pl,globl
 
 	.rodata.cst16
 .LC16:	.long	205731576

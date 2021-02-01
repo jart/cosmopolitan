@@ -24,9 +24,8 @@
 /	@param	𝑥 is double scalar in low half of %xmm0
 /	@return	double scalar in low half of %xmm0
 /	@see	pow(), exp()
-tinymath_exp10:
-	ezlea	tinymath_exp10l,ax
+exp10:
+	ezlea	exp10l,ax
 	jmp	_d2ld2
-	.endfn	tinymath_exp10,globl
-	.alias	tinymath_exp10,exp10
-	.alias	tinymath_exp10,pow10
+	.endfn	exp10,globl
+	.alias	exp10,pow10

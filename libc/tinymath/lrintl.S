@@ -19,8 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_lrintl:
-	push	%rbp
+lrintl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
@@ -28,6 +27,5 @@ tinymath_lrintl:
 	mov	16(%rbp),%rax
 	pop	%rbp
 	ret
-	.endfn	tinymath_lrintl,globl
-	.alias	tinymath_lrintl,lrintl
-	.alias	tinymath_lrintl,llrintl
+	.endfn	lrintl,globl
+	.alias	lrintl,llrintl

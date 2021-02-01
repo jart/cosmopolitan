@@ -24,8 +24,6 @@
 /	@param	𝑦 is float scalar in low quarter of %xmm0
 /	@param	𝑥 is float scalar in low quarter of %xmm1
 /	@return	float scalar in low quarter of %xmm0
-tinymath_atan2f:
-	ezlea	tinymath_atan2l,ax
+atan2f:	ezlea	atan2l,ax
 	jmp	_f2ld2
-	.endfn	tinymath_atan2f,globl
-	.alias	tinymath_atan2f,atan2f
+	.endfn	atan2f,globl

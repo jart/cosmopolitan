@@ -19,8 +19,6 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_fmodf:
-	ezlea	tinymath_fmodl,ax
+fmodf:	ezlea	fmodl,ax
 	jmp	_f2ld2
-	.endfn	tinymath_fmodf,globl
-	.alias	tinymath_fmodf,fmodf
+	.endfn	fmodf,globl

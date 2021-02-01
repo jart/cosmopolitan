@@ -26,8 +26,7 @@
 /	@define	trunc(𝑥+copysign(.5,𝑥))
 /	@see	round(),rint(),nearbyint()
 /	@see	roundsd $_MM_FROUND_TO_ZERO|_MM_FROUND_NO_EXC,%xmm0,%xmm0
-tinymath_trunc:
-	.leafprologue
+trunc:	.leafprologue
 	.profilable
 	movsd	3f(%rip),%xmm1
 	movsd	2f(%rip),%xmm2
@@ -38,8 +37,7 @@ tinymath_trunc:
 	pxor	%xmm0,%xmm0
 	cvtsi2sdq %rax,%xmm0
 1:	.leafepilogue
-	.endfn	tinymath_trunc,globl
-	.alias	tinymath_trunc,trunc
+	.endfn	trunc,globl
 
 	.rodata.cst8
 2:	.double	0x0010000000000000

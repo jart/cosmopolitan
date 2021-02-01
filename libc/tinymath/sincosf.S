@@ -25,7 +25,7 @@
 /	@param	%rdi is float *out_sin
 /	@param	%rsi is float *out_cos
 /	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
-tinymath_sincosf:
+sincosf:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -38,5 +38,4 @@ tinymath_sincosf:
 	fstps	(%rsi)
 	leave
 	ret
-	.endfn	tinymath_sincosf,globl
-	.alias	tinymath_sincosf,sincosf
+	.endfn	sincosf,globl

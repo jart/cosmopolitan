@@ -22,8 +22,7 @@
 /
 /	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
 /	@return	result of computation on FPU stack in %st
-tinymath_cbrtl:
-	pushq	%rbp
+cbrtl:	pushq	%rbp
 	mov	%rsp,%rbp
 	sub	$16,%rsp
 	fldt	16(%rbp)
@@ -34,6 +33,5 @@ tinymath_cbrtl:
 	fldl	-8(%rbp)
 	leave
 	ret
-	.endfn	tinymath_cbrtl,globl
-	.alias	tinymath_cbrtl,cbrtl
+	.endfn	cbrtl,globl
 	.source	__FILE__

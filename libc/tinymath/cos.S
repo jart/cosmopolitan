@@ -24,8 +24,6 @@
 /	@param	𝑥 is double scalar in low half of %xmm0
 /	@return	double scalar in low half of %xmm0
 /	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
-tinymath_cos:
-	ezlea	tinymath_cosl,ax
+cos:	ezlea	cosl,ax
 	jmp	_d2ld2
-	.endfn	tinymath_cos,globl
-	.alias	tinymath_cos,cos
+	.endfn	cos,globl

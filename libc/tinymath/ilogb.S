@@ -23,8 +23,7 @@
 /	@param	𝑥 is double passed in %xmm0
 /	@return	result in %eax
 /	@note	needs sse3
-tinymath_ilogb:
-	push	%rbp
+ilogb:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	push	%rax
@@ -36,6 +35,5 @@ tinymath_ilogb:
 	mov	(%rsp),%eax
 	leave
 	ret
-	.endfn	tinymath_ilogb,globl
-	.alias	tinymath_ilogb,ilogb
+	.endfn	ilogb,globl
 	.source	__FILE__

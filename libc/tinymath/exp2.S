@@ -23,8 +23,7 @@
 /
 /	@param	𝑥 is a double passed in the lower quadword of %xmm0
 /	@return	result in lower quadword of %xmm0
-tinymath_exp2:
-	ezlea	tinymath_exp2l,ax
+exp2:
+	ezlea	exp2l,ax
 	jmp	_d2ld2
-	.endfn	tinymath_exp2,globl
-	.alias	tinymath_exp2,exp2
+	.endfn	exp2,globl

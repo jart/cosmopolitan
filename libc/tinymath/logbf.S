@@ -22,9 +22,7 @@
 /
 /	@param	𝑥 is float passed in %xmm0
 /	@return	result in %xmm0
-tinymath_logbf:
-	ezlea	tinymath_logbl,ax
+logbf:	ezlea	logbl,ax
 	jmp	_f2ld2
-	.endfn	tinymath_logbf,globl
-	.alias	tinymath_logbf,logbf
+	.endfn	logbf,globl
 	.source	__FILE__

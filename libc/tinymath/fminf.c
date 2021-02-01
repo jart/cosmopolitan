@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/tinymath/tinymath.h"
+#include "libc/math.h"
 
 /**
  * Returns minimum of two floats.
@@ -25,7 +25,7 @@
  * This function is designed to do the right thing with
  * signed zeroes.
  */
-float fmin(float x, float y) {
+float fminf(float x, float y) {
   if (__builtin_isnan(x)) return y;
   if (__builtin_isnan(y)) return x;
   if (__builtin_signbitf(x) != __builtin_signbitf(y)) {

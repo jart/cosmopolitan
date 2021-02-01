@@ -24,8 +24,7 @@
 /	@param	𝑥 is long double passed on stack
 /	@param	𝑦 is exponent via %edi
 /	@return	result in %st0
-tinymath_ldexpl:
-	push	%rbp
+ldexpl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	push	%rdi
@@ -35,7 +34,6 @@ tinymath_ldexpl:
 	fstp	%st(1)
 	leave
 	ret
-	.endfn	tinymath_ldexpl,globl
-	.alias	tinymath_ldexpl,ldexpl
-	.alias	tinymath_ldexpl,scalbnl
-	.alias	tinymath_ldexpl,scalblnl
+	.endfn	ldexpl,globl
+	.alias	ldexpl,scalbnl
+	.alias	ldexpl,scalblnl

@@ -19,8 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_frexp:
-	.leafprologue
+frexp:	.leafprologue
 	push	%rbx
 	push	%rdx
 	mov	%rdi,%rbx
@@ -53,8 +52,7 @@ tinymath_frexp:
 5:	pop	%rax
 	pop	%rbx
 	.leafepilogue
-	.endfn	tinymath_frexp,globl
-	.alias	tinymath_frexp,frexp
+	.endfn	frexp,globl
 
 	.rodata.cst8
 6:	.long	0,0x43f00000

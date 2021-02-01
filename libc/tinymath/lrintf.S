@@ -19,9 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_lrintf:
-	cvtss2siq %xmm0,%rax
+lrintf:	cvtss2siq %xmm0,%rax
 	ret
-	.endfn	tinymath_lrintf,globl
-	.alias	tinymath_lrintf,lrintf
-	.alias	tinymath_lrintf,llrintf
+	.endfn	lrintf,globl
+	.alias	lrintf,llrintf

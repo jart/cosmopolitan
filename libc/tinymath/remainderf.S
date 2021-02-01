@@ -19,9 +19,8 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_remainderf:
-	ezlea	tinymath_remainderl,ax
+remainderf:
+	ezlea	remainderl,ax
 	jmp	_f2ld2
-	.endfn	tinymath_remainderf,globl
-	.alias	tinymath_remainderf,remainderf
-	.alias	tinymath_remainderf,dremf
+	.endfn	remainderf,globl
+	.alias	remainderf,dremf

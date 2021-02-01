@@ -24,9 +24,7 @@
 /	@param	𝑥 is double scalar in low half of %xmm0
 /	@param	𝑦 is double scalar in low half of %xmm1
 /	@return	double scalar in low half of %xmm0
-tinymath_pow:
-	ezlea	tinymath_powl,ax
+pow:	ezlea	powl,ax
 	jmp	_d2ld2
-	.endfn	tinymath_pow,globl
-	.alias	tinymath_pow,pow
-	.alias	tinymath_pow,__pow_finite
+	.endfn	pow,globl
+	.alias	pow,__pow_finite

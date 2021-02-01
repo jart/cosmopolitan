@@ -19,8 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_cargl:
-	push	%rbp
+cargl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	32(%rbp)
@@ -28,5 +27,4 @@ tinymath_cargl:
 	fpatan
 	pop	%rbp
 	ret
-	.endfn	tinymath_cargl,globl
-	.alias	tinymath_cargl,cargl
+	.endfn	cargl,globl

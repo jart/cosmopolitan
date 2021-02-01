@@ -23,13 +23,11 @@
 /
 /	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
 /	@return	result on FPU stack in %st
-tinymath_sqrtl:
-	push	%rbp
+sqrtl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
 	fsqrt
 	pop	%rbp
 	ret
-	.endfn	tinymath_sqrtl,globl
-	.alias	tinymath_sqrtl,sqrtl
+	.endfn	sqrtl,globl

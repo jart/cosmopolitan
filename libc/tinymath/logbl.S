@@ -22,8 +22,7 @@
 /
 /	@param	𝑥 is long double passed on stack
 /	@return	result in %st0
-tinymath_logbl:
-	push	%rbp
+logbl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
@@ -31,6 +30,5 @@ tinymath_logbl:
 	fstp	%st
 	pop	%rbp
 	ret
-	.endfn	tinymath_logbl,globl
-	.alias	tinymath_logbl,logbl
+	.endfn	logbl,globl
 	.source	__FILE__

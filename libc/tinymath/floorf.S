@@ -19,8 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-tinymath_floorf:
-	.leafprologue
+floorf:	.leafprologue
 	.profilable
 	movss	.LC8(%rip),%xmm1
 	andps	%xmm0,%xmm1
@@ -38,8 +37,7 @@ tinymath_floorf:
 	subss	%xmm0,%xmm1
 	movaps	%xmm1,%xmm0
 1:	.leafepilogue
-	.endfn	tinymath_floorf,globl
-	.alias	tinymath_floorf,floorf
+	.endfn	floorf,globl
 
 	.rodata.cst4
 .LC3:	.float	1.0
