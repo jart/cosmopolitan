@@ -17,5 +17,6 @@ bool32 GetComputerNameEx(/* enum/computernameformat.h */ int NameType,
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/systeminfo.inc"
 #endif /* ShouldUseMsabiAttribute() */
+COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_INFO_H_ */
