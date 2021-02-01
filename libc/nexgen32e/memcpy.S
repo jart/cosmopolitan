@@ -40,10 +40,9 @@
 /	@return	original rdi copied to rax
 /	@mode	long
 /	@asyncsignalsafe
-	.align	16
-	.source	__FILE__
 memcpy:	mov	%rdi,%rax
 /	𝑠𝑙𝑖𝑑𝑒
+	.align	16
 	.endfn	memcpy,globl
 
 /	Copies memory w/ minimal impact ABI.
@@ -53,7 +52,6 @@ memcpy:	mov	%rdi,%rax
 /	@param	rdx is number of bytes
 /	@clob	flags,rcx,xmm3,xmm4
 /	@mode	long
-	.align	16
 MemCpy:	.leafprologue
 	.profilable
 	mov	$.Lmemcpytab.ro.size,%ecx
@@ -141,6 +139,7 @@ MemCpy:	.leafprologue
 	pxor	%xmm3,%xmm3
 	jmp	.L0
 	.endfn	MemCpy,globl,hidden
+	.source	__FILE__
 
 	.initro 300,_init_memcpy
 memcpytab.ro:

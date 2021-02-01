@@ -18,12 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
 #include "libc/bits/bits.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
 TEST(comparator, testByteCompare) {
-  char *b1 = tmalloc(1);
-  char *b2 = tmalloc(1);
+  char *b1 = malloc(1);
+  char *b2 = malloc(1);
   /* sign doesn't matter */
   EXPECT_EQ(cmpsb(memcpy(b1, "a", 1), memcpy(b2, "a", 1)), 0);
   EXPECT_LT(cmpsb(memcpy(b1, "a", 1), memcpy(b2, "z", 1)), 0);
@@ -41,26 +42,26 @@ TEST(comparator, testByteCompare) {
   /* two's complement bane */
   EXPECT_GT(cmpsb(memcpy(b1, "\x7f", 1), memcpy(b2, "\x80", 1)), 0);
   EXPECT_LT(cmpub(memcpy(b1, "\x7f", 1), memcpy(b2, "\x80", 1)), 0);
-  tfree(b2);
-  tfree(b1);
+  free(b2);
+  free(b1);
 }
 
 TEST(comparator, testWordCompare) {
-  char *b1 = tmalloc(2);
-  char *b2 = tmalloc(2);
+  char *b1 = malloc(2);
+  char *b2 = malloc(2);
   EXPECT_EQ(cmpsw(memcpy(b1, "\x00\x80", 2), memcpy(b2, "\x00\x80", 2)), 0);
   EXPECT_GT(cmpsw(memcpy(b1, "\x00\x7f", 2), memcpy(b2, "\x00\x80", 2)), 0);
   EXPECT_LT(cmpsw(memcpy(b1, "\x00\x80", 2), memcpy(b2, "\x00\x7f", 2)), 0);
   EXPECT_EQ(cmpuw(memcpy(b1, "\x00\x80", 2), memcpy(b2, "\x00\x80", 2)), 0);
   EXPECT_LT(cmpuw(memcpy(b1, "\x00\x7f", 2), memcpy(b2, "\x00\x80", 2)), 0);
   EXPECT_GT(cmpuw(memcpy(b1, "\x00\x80", 2), memcpy(b2, "\x00\x7f", 2)), 0);
-  tfree(b2);
-  tfree(b1);
+  free(b2);
+  free(b1);
 }
 
 TEST(comparator, testDoublewordCompare) {
-  char *b1 = tmalloc(4);
-  char *b2 = tmalloc(4);
+  char *b1 = malloc(4);
+  char *b2 = malloc(4);
   EXPECT_EQ(cmpsl(memcpy(b1, "\x00\x00\x00\x80", 4),
                   memcpy(b2, "\x00\x00\x00\x80", 4)),
             0);
@@ -79,13 +80,13 @@ TEST(comparator, testDoublewordCompare) {
   EXPECT_GT(cmpul(memcpy(b1, "\x00\x00\x00\x80", 4),
                   memcpy(b2, "\x00\x00\x00\x7f", 4)),
             0);
-  tfree(b2);
-  tfree(b1);
+  free(b2);
+  free(b1);
 }
 
 TEST(comparator, testQuadwordCompare) {
-  char *b1 = tmalloc(8);
-  char *b2 = tmalloc(8);
+  char *b1 = malloc(8);
+  char *b2 = malloc(8);
   EXPECT_EQ(cmpsq(memcpy(b1, "\x00\x00\x00\x00\x00\x00\x00\x80", 8),
                   memcpy(b2, "\x00\x00\x00\x00\x00\x00\x00\x80", 8)),
             0);
@@ -104,6 +105,6 @@ TEST(comparator, testQuadwordCompare) {
   EXPECT_GT(cmpuq(memcpy(b1, "\x00\x00\x00\x00\x00\x00\x00\x80", 8),
                   memcpy(b2, "\x00\x00\x00\x00\x00\x00\x00\x7f", 8)),
             0);
-  tfree(b2);
-  tfree(b1);
+  free(b2);
+  free(b1);
 }

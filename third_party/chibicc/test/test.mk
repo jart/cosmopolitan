@@ -21,8 +21,13 @@ THIRD_PARTY_CHIBICC_TEST_HDRS = $(filter %.h,$(THIRD_PARTY_CHIBICC_TEST_FILES))
 THIRD_PARTY_CHIBICC_TEST_TESTS = $(THIRD_PARTY_CHIBICC_TEST_COMS:%=%.ok)
 
 THIRD_PARTY_CHIBICC_TEST_COMS =							\
-	$(THIRD_PARTY_CHIBICC_TEST_SRCS_TEST:%.c=o/$(MODE)/%.com)		\
+	$(THIRD_PARTY_CHIBICC_TEST_SRCS_TEST:%.c=o/$(MODE)/%.com)
+
+# TODO(jart): make chibicc compiled chibicc work with asan runtime
+ifneq ($(MODE),dbg)
+THIRD_PARTY_CHIBICC_TEST_COMS +=						\
 	$(THIRD_PARTY_CHIBICC_TEST_SRCS_TEST:%.c=o/$(MODE)/%2.com)
+endif
 
 THIRD_PARTY_CHIBICC_TEST_OBJS =							\
 	$(THIRD_PARTY_CHIBICC_TEST_SRCS:%.c=o/$(MODE)/%.chibicc.o)

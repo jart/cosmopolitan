@@ -33,10 +33,8 @@
  *     unless it's equal to oldfd, in which case dup2() is a no-op
  * @flags can have O_CLOEXEC
  * @see dup(), dup2()
- * @syscall
  */
 int dup3(int oldfd, int newfd, int flags) {
-  if (oldfd == newfd) return einval();
   if (!IsWindows()) {
     return dup3$sysv(oldfd, newfd, flags);
   } else {

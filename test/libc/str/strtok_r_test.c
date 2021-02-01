@@ -16,49 +16,50 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
 TEST(strtok_r, testEmpty) {
   static const char *const kInput = "";
   static const char *const kSeparators = "/";
-  char *s = strcpy(tmalloc(strlen(kInput) + 1), kInput);
+  char *s = strcpy(malloc(strlen(kInput) + 1), kInput);
   char *state;
   EXPECT_EQ(NULL, strtok_r(s, kSeparators, &state));
-  tfree(s);
+  free(s);
 }
 
 TEST(strtok_r, test) {
   static const char *const kInput = ".,lol..cat..";
   static const char *const kSeparators = ".,";
-  char *s = strcpy(tmalloc(strlen(kInput) + 1), kInput);
+  char *s = strcpy(malloc(strlen(kInput) + 1), kInput);
   char *state;
   EXPECT_STREQ("lol", strtok_r(s, kSeparators, &state));
   EXPECT_STREQ("cat", strtok_r(NULL, kSeparators, &state));
   EXPECT_EQ(NULL, strtok_r(NULL, kSeparators, &state));
   EXPECT_EQ(NULL, strtok_r(NULL, kSeparators, &state));
-  tfree(s);
+  free(s);
 }
 
 TEST(strtok, test) {
   static const char *const kInput = ".,lol..cat..";
   static const char *const kSeparators = ".,";
-  char *s = strcpy(tmalloc(strlen(kInput) + 1), kInput);
+  char *s = strcpy(malloc(strlen(kInput) + 1), kInput);
   EXPECT_STREQ("lol", strtok(s, kSeparators));
   EXPECT_STREQ("cat", strtok(NULL, kSeparators));
   EXPECT_EQ(NULL, strtok(NULL, kSeparators));
   EXPECT_EQ(NULL, strtok(NULL, kSeparators));
-  tfree(s);
+  free(s);
 }
 
 TEST(strtok_r, testHostsTxtLine) {
   static const char *const kInput = "203.0.113.1     lol.example. lol";
   static const char *const kSeparators = " \t";
-  char *s = strcpy(tmalloc(strlen(kInput) + 1), kInput);
+  char *s = strcpy(malloc(strlen(kInput) + 1), kInput);
   char *state;
   EXPECT_STREQ("203.0.113.1", strtok_r(s, kSeparators, &state));
   EXPECT_STREQ("lol.example.", strtok_r(NULL, kSeparators, &state));
   EXPECT_STREQ("lol", strtok_r(NULL, kSeparators, &state));
   EXPECT_EQ(NULL, strtok_r(NULL, kSeparators, &state));
-  tfree(s);
+  free(s);
 }

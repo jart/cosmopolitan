@@ -17,16 +17,17 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/lib/pc.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
 TEST(smapsort, testEmpty_doesntOverrunBuffer) {
-  struct SmapEntry *smap = tmalloc(sizeof(struct SmapEntry));
+  struct SmapEntry *smap = malloc(sizeof(struct SmapEntry));
   memset(smap, 0, sizeof(struct SmapEntry));
   smapsort(smap);
   EXPECT_EQ(0, smap[0].addr);
   EXPECT_EQ(0, smap[0].size);
-  tfree(smap);
+  free(smap);
 }
 
 /* TEST(smapsort, testSorted_doesNothing) { */

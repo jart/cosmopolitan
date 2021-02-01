@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,65 +16,62 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/gc.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/math.h"
+#include "libc/stdio/stdio.h"
 
-/* TODO(jart): calling malloc_usable_size was a terrible idea */
+#define N 8
 
-TEST(todo_jart, broken_in_opt_native_mode) {
-  (void)0;
-  (void)0;
+#define SQR(X) ((X) * (X))
+
+static const uint8_t kXtermCube[6] = {0, 0137, 0207, 0257, 0327, 0377};
+
+static int rgb2xterm256(int r, int g, int b) {
+  int cerr, gerr, ir, ig, ib, gray, grai, cr, cg, cb, gv;
+  gray = round(r * .299 + g * .587 + b * .114);
+  grai = gray > 238 ? 23 : (gray - 3) / 10;
+  ir = r < 48 ? 0 : r < 115 ? 1 : (r - 35) / 40;
+  ig = g < 48 ? 0 : g < 115 ? 1 : (g - 35) / 40;
+  ib = b < 48 ? 0 : b < 115 ? 1 : (b - 35) / 40;
+  cr = kXtermCube[ir];
+  cg = kXtermCube[ig];
+  cb = kXtermCube[ib];
+  gv = 8 + 10 * grai;
+  cerr = SQR(cr - r) + SQR(cg - g) + SQR(cb - b);
+  gerr = SQR(gv - r) + SQR(gv - g) + SQR(gv - b);
+  if (cerr <= gerr) {
+    return 16 + 36 * ir + 6 * ig + ib;
+  } else {
+    return 232 + grai;
+  }
 }
 
-int64_t fd;
+int main(int argc, char *argv[]) {
+  double d;
+  int i, j, x;
+  int r, g, b;
+  double G[N][3];
+  double rgb[2][3] = {
+      {1, 0, 0},
+      {0, 1, 0},
+  };
 
-TEST(gc, usageExample_c11) {
-  fd = open("/dev/null", O_WRONLY);
-  defer(close_s, &fd);
-  char *msg = gc(xasprintf("%d + %d = %d", 2, 2, 2 + 2));
-  write(fd, msg, strlen(msg));
-}
+  for (i = 0; i < N; ++i) {
+    for (j = 0; j < 3; ++j) {
+      d = (rgb[1][j] - rgb[0][j]) / (N - 1);
+      G[i][j] = rgb[0][j] + d * i;
+    }
+  }
 
-TEST(gc, checkMallocUsableSizeWorksTheWayWeHopeItDoes) {
-  char *p = malloc(32);
-  EXPECT_GE(malloc_usable_size(p), 32);
-  free(p);
-  EXPECT_GE(malloc_usable_size(p), 0);
-}
+  for (i = 0; i < N; ++i) {
+    r = round(G[i][0] * 255);
+    g = round(G[i][1] * 255);
+    b = round(G[i][2] * 255);
+    x = rgb2xterm256(r, g, b);
+    printf("\e[38;5;232;48;5;%dmabcdefg       \e[0m %3d "
+           "\e[38;5;232;48;2;%d;%d;%dmabcdgefg      \e[0m "
+           "%3d %3d %3d %f %f %f\n",
+           x, x, r, g, b, r, g, b, G[i][0], G[i][1], G[i][2]);
+  }
 
-noinline void function1of1(char *p) {
-  EXPECT_GE(malloc_usable_size(gc(p)), 32);
-}
-TEST(gc, testOne) {
-  char *p = malloc(32);
-  function1of1(p);
-  EXPECT_EQ(malloc_usable_size(p), 0);
-}
-
-noinline void function2of2(char *p1, char *p2) {
-  EXPECT_GE(malloc_usable_size(p1), 32);
-  EXPECT_GE(malloc_usable_size(p2), 64);
-  gc(p2);
-  EXPECT_GE(malloc_usable_size(p1), 32);
-  EXPECT_GE(malloc_usable_size(p2), 64);
-}
-noinline void function1of2(char *p1, char *p2) {
-  EXPECT_GE(malloc_usable_size(p1), 32);
-  EXPECT_GE(malloc_usable_size(p2), 64);
-  function2of2(gc(p1), p2);
-  EXPECT_GE(malloc_usable_size(p1), 32);
-  EXPECT_GE(malloc_usable_size(p2), 0);
-}
-TEST(gc, testTwo) {
-  char *p1 = malloc(32);
-  char *p2 = malloc(64);
-  function1of2(p1, p2);
-  EXPECT_GE(malloc_usable_size(p1), 0);
-  EXPECT_GE(malloc_usable_size(p2), 0);
+  return 0;
 }

@@ -90,6 +90,7 @@ void *memeqmask(void *, const void *, const void *, size_t) memcpyesque;
 size_t strlen(const char *) strlenesque;
 size_t strnlen(const char *, size_t) strlenesque;
 size_t strnlen_s(const char *, size_t);
+size_t strlen$pure(const char *) strlenesque;
 char *strchr(const char *, int) strlenesque;
 char *index(const char *, int) strlenesque;
 void *memchr(const void *, int, size_t) strlenesque;
@@ -360,6 +361,17 @@ char *strsignal(int) returnsnonnull libcesque;
   })
 
 #endif /* hosted/sse2/unbloat */
+#ifdef __FSANITIZE_ADDRESS__
+/*───────────────────────────────────────────────────────────────────────────│─╗
+│ cosmopolitan § strings » address sanitizer                               ─╬─│┼
+╚────────────────────────────────────────────────────────────────────────────│*/
+
+#ifdef strlen
+#undef strlen
+#endif
+#define strlen(s) strlen$pure(s)
+
+#endif /* __FSANITIZE_ADDRESS__ */
 #endif /* __GNUC__ && !__STRICT_ANSI__ */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

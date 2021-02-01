@@ -24,6 +24,6 @@
 /**
  * Checks if we're probably running inside Emacs.
  */
-bool isterminalinarticulate(void) {
+bool IsTerminalInarticulate(void) {
   return strcmp(nulltoempty(getenv("TERM")), "dumb") == 0;
 }

@@ -52,10 +52,6 @@ o/$(MODE)/test/libc/intrin/%.com.dbg:			\
 		$(APE)
 	@$(APELINK)
 
-# $(TEST_LIBC_INTRIN_OBJS):				\
-# 		OVERRIDE_CFLAGS +=			\
-# 			-fsanitize=address
-
 .PHONY: o/$(MODE)/test/libc/intrin
 o/$(MODE)/test/libc/intrin:				\
 		$(TEST_LIBC_INTRIN_BINS)		\

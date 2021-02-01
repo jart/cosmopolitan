@@ -42,8 +42,8 @@ $(LIBC_STR_A).pkg:						\
 		$(LIBC_STR_A_OBJS)				\
 		$(foreach x,$(LIBC_STR_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/libc/str/memmem.o:				\
-		OVERRIDE_CPPFLAGS +=			\
+o/$(MODE)/libc/str/memmem.o:					\
+		OVERRIDE_CPPFLAGS +=				\
 			-DSTACK_FRAME_UNLIMITED
 
 LIBC_STR_LIBS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)))

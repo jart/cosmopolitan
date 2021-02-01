@@ -18,61 +18,62 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/dns.h"
 #include "libc/errno.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
 TEST(pascalifydnsname, testEmpty) {
-  uint8_t *buf = tmalloc(1);
-  char *name = tstrdup("");
+  uint8_t *buf = malloc(1);
+  char *name = strdup("");
   EXPECT_EQ(0, pascalifydnsname(buf, 1, name));
   EXPECT_BINEQ(u" ", buf);
-  tfree(name);
-  tfree(buf);
+  free(name);
+  free(buf);
 }
 
 TEST(pascalifydnsname, testOneLabel) {
-  uint8_t *buf = tmalloc(1 + 3 + 1);
-  char *name = tstrdup("foo");
+  uint8_t *buf = malloc(1 + 3 + 1);
+  char *name = strdup("foo");
   EXPECT_EQ(1 + 3, pascalifydnsname(buf, 1 + 3 + 1, name));
   EXPECT_BINEQ(u"♥foo ", buf);
-  tfree(name);
-  tfree(buf);
+  free(name);
+  free(buf);
 }
 
 TEST(pascalifydnsname, testTwoLabels) {
-  uint8_t *buf = tmalloc(1 + 3 + 1 + 3 + 1);
-  char *name = tstrdup("foo.bar");
+  uint8_t *buf = malloc(1 + 3 + 1 + 3 + 1);
+  char *name = strdup("foo.bar");
   EXPECT_EQ(1 + 3 + 1 + 3, pascalifydnsname(buf, 1 + 3 + 1 + 3 + 1, name));
   EXPECT_BINEQ(u"♥foo♥bar ", buf);
-  tfree(name);
-  tfree(buf);
+  free(name);
+  free(buf);
 }
 
 TEST(pascalifydnsname, testFqdnDot_isntIncluded) {
-  uint8_t *buf = tmalloc(1 + 3 + 1 + 3 + 1);
-  char *name = tstrdup("foo.bar.");
+  uint8_t *buf = malloc(1 + 3 + 1 + 3 + 1);
+  char *name = strdup("foo.bar.");
   EXPECT_EQ(1 + 3 + 1 + 3, pascalifydnsname(buf, 1 + 3 + 1 + 3 + 1, name));
   EXPECT_BINEQ(u"♥foo♥bar ", buf);
-  tfree(name);
-  tfree(buf);
+  free(name);
+  free(buf);
 }
 
 TEST(pascalifydnsname, testTooLong) {
-  uint8_t *buf = tmalloc(1);
-  char *name = tmalloc(1000);
+  uint8_t *buf = malloc(1);
+  char *name = malloc(1000);
   memset(name, '.', 999);
   name[999] = '\0';
   EXPECT_EQ(-1, pascalifydnsname(buf, 1, name));
   EXPECT_EQ(ENAMETOOLONG, errno);
-  tfree(name);
-  tfree(buf);
+  free(name);
+  free(buf);
 }
 
 TEST(pascalifydnsname, testNoSpace) {
-  uint8_t *buf = tmalloc(1);
-  char *name = tstrdup("foo");
+  uint8_t *buf = malloc(1);
+  char *name = strdup("foo");
   EXPECT_EQ(-1, pascalifydnsname(buf, 1, name));
   EXPECT_EQ(ENOSPC, errno);
-  tfree(name);
-  tfree(buf);
+  free(name);
+  free(buf);
 }

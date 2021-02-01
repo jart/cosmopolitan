@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,47 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/mem.h"
-#include "libc/nexgen32e/nexgen32e.h"
-#include "libc/rand/rand.h"
-#include "libc/str/str.h"
-#include "libc/testlib/ezbench.h"
-#include "libc/testlib/testlib.h"
+#include "libc/calls/internal.h"
+#include "libc/dce.h"
+#include "libc/nt/nt/process.h"
+#include "libc/nt/ntdll.h"
+#include "libc/nt/process.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/struct/processbasicinformation.h"
 
-TEST(strtolower, testAligned) {
-  EXPECT_STREQ("azcdabcdabcdabcd", strtolower(gc(strdup("AZCDabcdABCDabcd"))));
-  EXPECT_STREQ("azcdabcdabcdabcdabcdabcdabcdabcd",
-               strtolower(gc(strdup("AZCDabcdABCDabcdABCDabcdABCDabcd"))));
-}
-
-TEST(strtolower, testUnaligned) {
-  EXPECT_STREQ("1", strtolower(gc(strdup("1"))));
-  EXPECT_STREQ(
-      "zcdabcdabcdabcdabcdabcdabcdabc",
-      strtolower((char *)gc(strdup("AZCDabcdABCDabcdABCDabcdABCDabc")) + 1));
-}
-
-TEST(strtoupper, testAligned) {
-  EXPECT_STREQ("AZCDABCDABCDABCD", strtoupper(gc(strdup("AZCDabcdABCDabcd"))));
-  EXPECT_STREQ("AZCDABCDABCDABCDABCDABCDABCDABCD",
-               strtoupper(gc(strdup("AZCDabcdABCDabcdABCDabcdABCDabcd"))));
-}
-
-TEST(strtoupper, testUnaligned) {
-  EXPECT_STREQ("1", strtoupper(gc(strdup("1"))));
-  EXPECT_STREQ(
-      "ZCDABCDABCDABCDABCDABCDABCDABC",
-      strtoupper((char *)gc(strdup("AZCDabcdABCDabcdABCDabcdABCDabc")) + 1));
-}
-
-BENCH(strtolower, bench) {
-  size_t size = FRAMESIZE;
-  char *data = gc(malloc(size));
-  EZBENCH2(
-      "strtolower",
-      {
-        rngset(data, size, rand64, -1);
-        data[size - 1] = 0;
-      },
-      strtolower(data));
+textwindows int getppid$nt(void) {
+  struct NtProcessBasicInformation ProcessInformation;
+  uint32_t gotsize = 0;
+  if (!NtError(
+          NtQueryInformationProcess(GetCurrentProcess(), 0, &ProcessInformation,
+                                    sizeof(ProcessInformation), &gotsize)) &&
+      gotsize >= sizeof(ProcessInformation) &&
+      ProcessInformation.InheritedFromUniqueProcessId) {
+    /* TODO(jart): Fix type mismatch and do we need to close this? */
+    return ProcessInformation.InheritedFromUniqueProcessId;
+  }
+  return GetCurrentProcessId();
 }

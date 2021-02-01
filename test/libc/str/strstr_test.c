@@ -26,7 +26,7 @@
 #include "libc/testlib/testlib.h"
 
 #define MAKESTRING(NAME, VALUE) \
-  char *NAME = strcpy(tmalloc(sizeof(VALUE) + 16), VALUE)
+  char *NAME = strcpy(malloc(sizeof(VALUE) + 16), VALUE)
 
 char *strstr$kmp(const char *haystak, const char *needle) {
   return memmem(haystak, strlen(haystak), needle, strlen(needle));
@@ -44,40 +44,40 @@ TEST(strstr, test_emptyString_isFoundAtBeginning) {
   MAKESTRING(haystack, "abc123def");
   ASSERT_STREQ(&haystack[0], strstri(haystack, gc(strdup(""))));
   ASSERT_STREQ(&haystack[0], strstr(haystack, gc(strdup(""))));
-  tfree(haystack);
+  free(haystack);
 }
 
 TEST(strstr, test_notFound) {
   MAKESTRING(haystack, "abc123def");
   ASSERT_EQ(NULL, strstri(haystack, gc(strdup("xyz"))));
   ASSERT_EQ(NULL, strstr(haystack, gc(strdup("xyz"))));
-  tfree(haystack);
+  free(haystack);
 }
 
 TEST(strstr, test_middleOfString) {
   MAKESTRING(haystack, "abc123def");
   ASSERT_STREQ(&haystack[3], strstri(haystack, gc(strdup("123"))));
   ASSERT_STREQ(&haystack[3], strstr(haystack, gc(strdup("123"))));
-  tfree(haystack);
+  free(haystack);
 }
 
 TEST(strstr, test_endOfString) {
   MAKESTRING(haystack, "abc123def");
   ASSERT_STREQ(&haystack[8], strstri(haystack, gc(strdup("f"))));
   ASSERT_STREQ(&haystack[8], strstr(haystack, gc(strdup("f"))));
-  tfree(haystack);
+  free(haystack);
 }
 
 TEST(strstr, test_secondXmmWord) {
   MAKESTRING(haystack, "eeeeeeeeeeeeeeeebbbbbbbbbbb123");
   ASSERT_STREQ(&haystack[27], strstri(haystack, gc(strdup("123"))));
   ASSERT_STREQ(&haystack[27], strstr(haystack, gc(strdup("123"))));
-  tfree(haystack);
+  free(haystack);
 }
 
 TEST(strstr, test_overlapsXmmWords) {
   MAKESTRING(haystack, "eeeeeeeeeeeeeeeebbbbbbbbbbbbbbb");
   ASSERT_STREQ(&haystack[15], strstri(haystack, gc(strdup("eb"))));
   ASSERT_STREQ(&haystack[15], strstr(haystack, gc(strdup("eb"))));
-  tfree(haystack);
+  free(haystack);
 }

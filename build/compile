@@ -86,6 +86,9 @@ for x; do
     -mno-vzeroupper)
       set -- "$@" "$x" -Wa,-msse2avx -D__MNO_VZEROUPPER__
       ;;
+    -fsanitize=address)
+      set -- "$@" "$x" -D__FSANITIZE_ADDRESS__
+      ;;
     -fsanitize=undefined)
       set -- "$@" "$x" -D__FSANITIZE_UNDEFINED__
       COUNTERMAND="$COUNTERMAND -fno-data-sections"  # sqlite.o

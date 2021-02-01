@@ -671,7 +671,7 @@ void CleanupTerminal(void) {
 }
 
 void StartInteractive(void) {
-  if (!interactive && !isterminalinarticulate() && isatty(fileno(stdin)) &&
+  if (!interactive && !IsTerminalInarticulate() && isatty(fileno(stdin)) &&
       isatty(fileno(stdout)) && cancolor()) {
     interactive = true;
   }

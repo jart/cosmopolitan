@@ -56,7 +56,23 @@ $(LIBC_RUNTIME_A).pkg:					\
 		$(LIBC_RUNTIME_A_OBJS)			\
 		$(foreach x,$(LIBC_RUNTIME_A_DIRECTDEPS),$($(x)_A).pkg)
 
-$(LIBC_RUNTIME_A_OBJS):					\
+o/$(MODE)/libc/runtime/abort-nt.o			\
+o/$(MODE)/libc/runtime/assertfail.o			\
+o/$(MODE)/libc/runtime/memtrack.o			\
+o/$(MODE)/libc/runtime/memtracknt.o			\
+o/$(MODE)/libc/runtime/findmemoryinterval.o		\
+o/$(MODE)/libc/runtime/arememoryintervalsok.o		\
+o/$(MODE)/libc/runtime/isheap.o				\
+o/$(MODE)/libc/runtime/directmap.o			\
+o/$(MODE)/libc/runtime/directmapnt.o			\
+o/$(MODE)/libc/runtime/stackchkfail.o			\
+o/$(MODE)/libc/runtime/stackchkfaillocal.o		\
+o/$(MODE)/libc/runtime/hook.greg.o			\
+o/$(MODE)/libc/runtime/print.greg.o			\
+o/$(MODE)/libc/runtime/ftrace.greg.o			\
+o/$(MODE)/libc/runtime/getdosargv.o			\
+o/$(MODE)/libc/runtime/getdosenviron.o			\
+o/$(MODE)/libc/runtime/winmain.greg.o:			\
 		OVERRIDE_CFLAGS +=			\
 			$(NO_MAGIC)
 

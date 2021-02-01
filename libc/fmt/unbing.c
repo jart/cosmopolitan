@@ -43,6 +43,7 @@ static const int kCp437iMultimappings[] = {
     u'∈' << 8 | 0xEE,    // ELEMENT-OF SIGN
     u'β' << 8 | 0xE1,    // GREEK SMALL BETA
     u'ſ' << 8 | 0xF4,    // LATIN SMALL LETTER LONG S
+    u'·' << 8 | 0xFA     // MIDDLE DOT
 };
 
 static int g_cp437i[256 + ARRAYLEN(kCp437iMultimappings)];

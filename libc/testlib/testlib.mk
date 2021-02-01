@@ -56,7 +56,6 @@ LIBC_TESTLIB_A_SRCS_C =						\
 	libc/testlib/shoulddebugbreak.c				\
 	libc/testlib/showerror.c				\
 	libc/testlib/showerror_.c				\
-	libc/testlib/testmem.c					\
 	libc/testlib/strequals.c				\
 	libc/testlib/startswith.c				\
 	libc/testlib/endswith.c					\

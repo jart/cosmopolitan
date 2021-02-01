@@ -19,6 +19,7 @@
 #include "libc/alg/alg.h"
 #include "libc/bits/bits.h"
 #include "libc/macros.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
@@ -29,9 +30,9 @@ TEST(qsort, test) {
   const int32_t B[][2] = {{-31, 'd'}, {0, 'e'},  {1, 'j'},  {2, 'c'},
                           {2, 'g'},   {4, 'a'},  {65, 'b'}, {83, 'h'},
                           {99, 'f'},  {782, 'i'}};
-  int32_t(*M)[2] = tmalloc(sizeof(A));
+  int32_t(*M)[2] = malloc(sizeof(A));
   memcpy(M, B, sizeof(A));
   qsort(M, ARRAYLEN(A), sizeof(*M), cmpsl);
   EXPECT_EQ(0, memcmp(M, B, sizeof(B)));
-  tfree(M);
+  free(M);
 }

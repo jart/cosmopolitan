@@ -234,71 +234,6 @@ COSMOPOLITAN_C_START_
   expectLongDoubleLessThan(VAL, GOT, #VAL " < " #GOT, false)
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § testing library » hardware-accelerated memory safety      ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
-typedef void (*testfn_t)(void);
-
-struct TestFixture {
-  const char *group;
-  const char *name;
-  testfn_t fn;
-};
-
-struct TestAllocation {
-  void *mapaddr;
-  size_t mapsize;
-  void *useraddr;
-  size_t usersize;
-};
-
-struct TestMemoryStack {
-  size_t i;
-  size_t n;
-  struct TestAllocation *p;
-};
-
-extern struct TestMemoryStack g_testmem;
-
-void tfree(void *) paramsnonnull();
-void *tmalloc(size_t) returnsnonnull returnspointerwithnoaliases nodiscard
-    attributeallocsize((1)) returnsaligned((1));
-void *tmemalign(size_t,
-                size_t) returnsnonnull returnspointerwithnoaliases nodiscard
-    attributeallocsize((2)) libcesque attributeallocalign((1));
-char *tstrdup(const char *) returnsnonnull returnspointerwithnoaliases nodiscard
-    returnsaligned((1));
-void *tunbing(const char16_t *)
-    paramsnonnull() returnsnonnull returnspointerwithnoaliases nodiscard
-    returnsaligned((1));
-void *tunbinga(size_t, const char16_t *)
-    paramsnonnull() returnsnonnull returnspointerwithnoaliases nodiscard
-    attributeallocalign((1));
-void testlib_clearxmmregisters(void);
-
-#define tgc(TMEM)                            \
-  ({                                         \
-    void *Res;                               \
-    /* volatile b/c testmem only lifo atm */ \
-    asm volatile("" ::: "memory");           \
-    Res = defer((tfree), (TMEM));            \
-    asm volatile("" ::: "memory");           \
-    Res;                                     \
-  })
-
-#define tfree(P)      \
-  do {                \
-    __tfree_check(P); \
-    (tfree)(P);       \
-  } while (0)
-
-#define __tfree_check(P)                                          \
-  ASSERT_BETWEEN(g_testmem.p[g_testmem.i - 1].useraddr,           \
-                 ((char *)g_testmem.p[g_testmem.i - 1].useraddr + \
-                  g_testmem.p[g_testmem.i - 1].usersize),         \
-                 P)
-
-/*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § testing library » implementation details                  ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
@@ -309,6 +244,14 @@ void testlib_clearxmmregisters(void);
 #define FILIFU_FIELDS \
   const char *file;   \
   int line
+
+typedef void (*testfn_t)(void);
+
+struct TestFixture {
+  const char *group;
+  const char *name;
+  testfn_t fn;
+};
 
 extern char g_fixturename[256];
 extern bool g_testlib_shoulddebugbreak;     /* set by testmain */
@@ -374,6 +317,7 @@ void testlib_formatbinaryasglyphs(const char16_t *, const void *, size_t,
                                   char **, char **);
 bool testlib_almostequallongdouble(long double, long double);
 void testlib_incrementfailed(void);
+void testlib_clearxmmregisters(void);
 
 forceinline void testlib_ontest() {
   YOINK(__testcase_start);

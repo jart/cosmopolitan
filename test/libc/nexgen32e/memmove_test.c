@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
@@ -30,14 +31,14 @@ char *b1, *b2;
 TEST(memmove, overlapping) {
   for (i = 0; i < N; i += S) {
     for (j = 10; j < N; j += S) {
-      b1 = tmalloc(N);
-      b2 = tmalloc(N);
+      b1 = malloc(N);
+      b2 = malloc(N);
       n = min(N - i, N - j);
       memcpy(b2, b1 + i, n);
       ASSERT_EQ(b1 + j, memmove(b1 + j, b1 + i, n));
       ASSERT_EQ(0, memcmp(b1 + j, b2, n));
-      tfree(b2);
-      tfree(b1);
+      free(b2);
+      free(b1);
     }
   }
 }
@@ -45,14 +46,14 @@ TEST(memmove, overlapping) {
 TEST(memmove, overlappingDirect) {
   for (i = 0; i < N; i += S) {
     for (j = 10; j < N; j += S) {
-      b1 = tmalloc(N);
-      b2 = tmalloc(N);
+      b1 = malloc(N);
+      b2 = malloc(N);
       n = min(N - i, N - j);
       memcpy(b2, b1 + i, n);
       ASSERT_EQ(b1 + j, (memmove)(b1 + j, b1 + i, n));
       ASSERT_EQ(0, memcmp(b1 + j, b2, n));
-      tfree(b2);
-      tfree(b1);
+      free(b2);
+      free(b1);
     }
   }
 }

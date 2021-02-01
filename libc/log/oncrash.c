@@ -182,8 +182,9 @@ relegated static void ShowCrashReport(int err, int fd, int sig,
   write(fd, "\r\n", 2);
   for (i = 0; i < g_argc; ++i) {
     write(fd, g_argv[i], strlen(g_argv[i]));
-    write(fd, "\r\n", 2);
+    write(fd, " ", 1);
   }
+  write(fd, "\r\n", 2);
 }
 
 relegated static void RestoreDefaultCrashSignalHandlers(void) {
@@ -221,9 +222,9 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
   rip = ctx ? ctx->uc_mcontext.rip : 0;
   if ((gdbpid = IsDebuggerPresent(true))) {
     DebugBreak();
-  } else if (isterminalinarticulate() || isrunningundermake()) {
+  } else if (IsTerminalInarticulate() || IsRunningUnderMake()) {
     gdbpid = -1;
-  } else {
+  } else if (FindDebugBinary()) {
     RestoreDefaultCrashSignalHandlers();
     gdbpid =
         attachdebugger(((sig == SIGTRAP || sig == SIGQUIT) &&

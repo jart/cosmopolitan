@@ -26,6 +26,7 @@ DSP_CORE_A_CHECKS =				\
 DSP_CORE_A_DIRECTDEPS =				\
 	LIBC_NEXGEN32E				\
 	LIBC_MEM				\
+	LIBC_INTRIN				\
 	LIBC_TINYMATH				\
 	LIBC_STUBS
 
@@ -56,12 +57,6 @@ o/tiny/dsp/core/scalevolume.o:			\
 o/$(MODE)/dsp/core/det3.o:			\
 		OVERRIDE_CFLAGS +=		\
 			-ffast-math
-
-# ifeq (,$(MODE))
-# $(DSP_CORE_OBJS):				\
-# 		OVERRIDE_CFLAGS +=		\
-# 			-fsanitize=address
-# endif
 
 DSP_CORE_LIBS = $(foreach x,$(DSP_CORE_ARTIFACTS),$($(x)))
 DSP_CORE_SRCS = $(foreach x,$(DSP_CORE_ARTIFACTS),$($(x)_SRCS))

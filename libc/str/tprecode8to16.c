@@ -24,6 +24,25 @@
 #include "libc/str/thompike.h"
 #include "libc/str/utf16.h"
 
+/* 34x speedup for ascii */
+static noasan axdx_t tprecode8to16$sse2(char16_t *dst, size_t dstsize,
+                                        const char *src, axdx_t r) {
+  uint8_t v1[16], v2[16], vz[16];
+  memset(vz, 0, 16);
+  while (r.ax + 16 < dstsize) {
+    memcpy(v1, src + r.dx, 16);
+    pcmpgtb((int8_t *)v2, (int8_t *)v1, (int8_t *)vz);
+    if (pmovmskb(v2) != 0xFFFF) break;
+    punpcklbw(v2, v1, vz);
+    punpckhbw(v1, v1, vz);
+    memcpy(dst + r.ax + 0, v2, 16);
+    memcpy(dst + r.ax + 8, v1, 16);
+    r.ax += 16;
+    r.dx += 16;
+  }
+  return r;
+}
+
 /**
  * Transcodes UTF-8 to UTF-16.
  *
@@ -38,24 +57,11 @@ axdx_t tprecode8to16(char16_t *dst, size_t dstsize, const char *src) {
   unsigned n;
   uint64_t w;
   wint_t x, y;
-  uint8_t v1[16], v2[16], vz[16];
   r.ax = 0;
   r.dx = 0;
   for (;;) {
     if (!IsTiny() && !((uintptr_t)(src + r.dx) & 15)) {
-      /* 34x speedup for ascii */
-      memset(vz, 0, 16);
-      while (r.ax + 16 < dstsize) {
-        memcpy(v1, src + r.dx, 16);
-        pcmpgtb((int8_t *)v2, (int8_t *)v1, (int8_t *)vz);
-        if (pmovmskb(v2) != 0xFFFF) break;
-        punpcklbw(v2, v1, vz);
-        punpckhbw(v1, v1, vz);
-        memcpy(dst + r.ax + 0, v2, 16);
-        memcpy(dst + r.ax + 8, v1, 16);
-        r.ax += 16;
-        r.dx += 16;
-      }
+      tprecode8to16$sse2(dst, dstsize, src, r);
     }
     x = src[r.dx++] & 0xff;
     if (ThomPikeCont(x)) continue;

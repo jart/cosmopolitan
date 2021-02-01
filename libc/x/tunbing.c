@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,47 +16,28 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/mem.h"
-#include "libc/nexgen32e/nexgen32e.h"
-#include "libc/rand/rand.h"
+#include "libc/fmt/bing.internal.h"
 #include "libc/str/str.h"
-#include "libc/testlib/ezbench.h"
-#include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
-TEST(strtolower, testAligned) {
-  EXPECT_STREQ("azcdabcdabcdabcd", strtolower(gc(strdup("AZCDabcdABCDabcd"))));
-  EXPECT_STREQ("azcdabcdabcdabcdabcdabcdabcdabcd",
-               strtolower(gc(strdup("AZCDabcdABCDabcdABCDabcdABCDabcd"))));
+/**
+ * Same as xunbing() w/ alignment guarantee.
+ */
+void *xunbinga(size_t a, const char16_t *binglyphs) {
+  size_t size;
+  size = strlen16(binglyphs);
+  return unbingbuf(xmemalign(a, size), size, binglyphs, -1);
 }
 
-TEST(strtolower, testUnaligned) {
-  EXPECT_STREQ("1", strtolower(gc(strdup("1"))));
-  EXPECT_STREQ(
-      "zcdabcdabcdabcdabcdabcdabcdabc",
-      strtolower((char *)gc(strdup("AZCDabcdABCDabcdABCDabcdABCDabc")) + 1));
-}
-
-TEST(strtoupper, testAligned) {
-  EXPECT_STREQ("AZCDABCDABCDABCD", strtoupper(gc(strdup("AZCDabcdABCDabcd"))));
-  EXPECT_STREQ("AZCDABCDABCDABCDABCDABCDABCDABCD",
-               strtoupper(gc(strdup("AZCDabcdABCDabcdABCDabcdABCDabcd"))));
-}
-
-TEST(strtoupper, testUnaligned) {
-  EXPECT_STREQ("1", strtoupper(gc(strdup("1"))));
-  EXPECT_STREQ(
-      "ZCDABCDABCDABCDABCDABCDABCDABC",
-      strtoupper((char *)gc(strdup("AZCDabcdABCDabcdABCDabcdABCDabc")) + 1));
-}
-
-BENCH(strtolower, bench) {
-  size_t size = FRAMESIZE;
-  char *data = gc(malloc(size));
-  EZBENCH2(
-      "strtolower",
-      {
-        rngset(data, size, rand64, -1);
-        data[size - 1] = 0;
-      },
-      strtolower(data));
+/**
+ * Decodes CP437 glyphs to bounds-checked binary buffer, e.g.
+ *
+ *   char *mem = xunbing(u" ☺☻♥♦");
+ *   EXPECT_EQ(0, memcmp("\0\1\2\3\4", mem, 5));
+ *   tfree(mem);
+ *
+ * @see xunbing(), unbingstr(), unbing()
+ */
+void *xunbing(const char16_t *binglyphs) {
+  return xunbinga(1, binglyphs);
 }

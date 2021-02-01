@@ -53,7 +53,7 @@ _start:	test	%rdi,%rdi
 	repnz scasq
 	mov	%rdi,%rcx			# auxv
 	mov	%ebx,%edi
-	call	_executive
+	call	cosmo
 9:	ud2
 	.endfn	_start,weak,hidden
 

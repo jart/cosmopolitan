@@ -16,47 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/mem.h"
-#include "libc/nexgen32e/nexgen32e.h"
-#include "libc/rand/rand.h"
-#include "libc/str/str.h"
-#include "libc/testlib/ezbench.h"
+#include "libc/math.h"
 #include "libc/testlib/testlib.h"
 
-TEST(strtolower, testAligned) {
-  EXPECT_STREQ("azcdabcdabcdabcd", strtolower(gc(strdup("AZCDabcdABCDabcd"))));
-  EXPECT_STREQ("azcdabcdabcdabcdabcdabcdabcdabcd",
-               strtolower(gc(strdup("AZCDabcdABCDabcdABCDabcdABCDabcd"))));
-}
-
-TEST(strtolower, testUnaligned) {
-  EXPECT_STREQ("1", strtolower(gc(strdup("1"))));
-  EXPECT_STREQ(
-      "zcdabcdabcdabcdabcdabcdabcdabc",
-      strtolower((char *)gc(strdup("AZCDabcdABCDabcdABCDabcdABCDabc")) + 1));
-}
-
-TEST(strtoupper, testAligned) {
-  EXPECT_STREQ("AZCDABCDABCDABCD", strtoupper(gc(strdup("AZCDabcdABCDabcd"))));
-  EXPECT_STREQ("AZCDABCDABCDABCDABCDABCDABCDABCD",
-               strtoupper(gc(strdup("AZCDabcdABCDabcdABCDabcdABCDabcd"))));
-}
-
-TEST(strtoupper, testUnaligned) {
-  EXPECT_STREQ("1", strtoupper(gc(strdup("1"))));
-  EXPECT_STREQ(
-      "ZCDABCDABCDABCDABCDABCDABCDABC",
-      strtoupper((char *)gc(strdup("AZCDabcdABCDabcdABCDabcdABCDabc")) + 1));
-}
-
-BENCH(strtolower, bench) {
-  size_t size = FRAMESIZE;
-  char *data = gc(malloc(size));
-  EZBENCH2(
-      "strtolower",
-      {
-        rngset(data, size, rand64, -1);
-        data[size - 1] = 0;
-      },
-      strtolower(data));
+TEST(ilogb, test) {
+  /* TODO(jart): this */
+  /* EXPECT_EQ(0x7fffffff, ilogb(INFINITY)); */
+  EXPECT_EQ(0, ilogb(1));
+  EXPECT_EQ(1, ilogb(2));
+  EXPECT_EQ(2, ilogb(4));
+  EXPECT_EQ(63, ilogb(1e19));
 }

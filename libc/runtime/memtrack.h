@@ -23,7 +23,7 @@ COSMOPOLITAN_C_START_
 #define kFixedmapStart MEMTRACK_ADDRESS(_kFixedmapStart, 0x40000000)
 
 struct MemoryIntervals {
-  int i;
+  long i;
   struct MemoryInterval {
     int x;
     int y;

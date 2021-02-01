@@ -19,7 +19,6 @@
 #include "libc/limits.h"
 #include "libc/math.h"
 #include "libc/testlib/testlib.h"
-#include "libc/tinymath/tinymath.h"
 
 TEST(ilogb, yolo) {
   EXPECT_EQ(0, ilogb(1));

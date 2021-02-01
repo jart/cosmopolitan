@@ -39,7 +39,7 @@ void meminfo(int);                     /* shows malloc statistics &c. */
 void memsummary(int);                  /* light version of same thing */
 uint16_t getttycols(uint16_t);
 int getttysize(int, struct winsize *) paramsnonnull();
-bool isterminalinarticulate(void) nosideeffect;
+bool IsTerminalInarticulate(void) nosideeffect;
 char *commandvenv(const char *, const char *) nodiscard;
 const char *GetAddr2linePath(void);
 const char *GetGdbPath(void);
@@ -47,7 +47,7 @@ const char *GetGdbPath(void);
 void showcrashreports(void);
 void callexitontermination(struct sigset *);
 bool32 IsDebuggerPresent(bool);
-bool isrunningundermake(void);
+bool IsRunningUnderMake(void);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § liblog » logging                                          ─╬─│┼

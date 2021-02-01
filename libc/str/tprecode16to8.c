@@ -27,6 +27,25 @@
 
 static const int16_t kDel16[8] = {127, 127, 127, 127, 127, 127, 127, 127};
 
+/* 10x speedup for ascii */
+static noasan axdx_t tprecode16to8$sse2(char *dst, size_t dstsize,
+                                        const char16_t *src, axdx_t r) {
+  int16_t v1[8], v2[8], v3[8], vz[8];
+  memset(vz, 0, 16);
+  while (r.ax + 8 < dstsize) {
+    memcpy(v1, src + r.dx, 16);
+    pcmpgtw(v2, v1, vz);
+    pcmpgtw(v3, v1, kDel16);
+    pandn((void *)v2, (void *)v3, (void *)v2);
+    if (pmovmskb((void *)v2) != 0xFFFF) break;
+    packsswb((void *)v1, v1, v1);
+    memcpy(dst + r.ax, v1, 8);
+    r.ax += 8;
+    r.dx += 8;
+  }
+  return r;
+}
+
 /**
  * Transcodes UTF-16 to UTF-8.
  *
@@ -40,24 +59,11 @@ axdx_t tprecode16to8(char *dst, size_t dstsize, const char16_t *src) {
   axdx_t r;
   uint64_t w;
   wint_t x, y;
-  int16_t v1[8], v2[8], v3[8], vz[8];
   r.ax = 0;
   r.dx = 0;
   for (;;) {
     if (!IsTiny() && !((uintptr_t)(src + r.dx) & 15)) {
-      /* 10x speedup for ascii */
-      memset(vz, 0, 16);
-      while (r.ax + 8 < dstsize) {
-        memcpy(v1, src + r.dx, 16);
-        pcmpgtw(v2, v1, vz);
-        pcmpgtw(v3, v1, kDel16);
-        pandn((void *)v2, (void *)v3, (void *)v2);
-        if (pmovmskb((void *)v2) != 0xFFFF) break;
-        packsswb((void *)v1, v1, v1);
-        memcpy(dst + r.ax, v1, 8);
-        r.ax += 8;
-        r.dx += 8;
-      }
+      r = tprecode16to8$sse2(dst, dstsize, src, r);
     }
     if (!(x = src[r.dx++])) break;
     if (IsUtf16Cont(x)) continue;

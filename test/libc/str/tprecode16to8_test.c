@@ -47,11 +47,11 @@ TEST(tprecode16to8, testTooLittle_stillNulTerminates) {
 
 TEST(tprecode16to8, testAscii_vectorSpeedupWorks) {
   size_t size = 32;
-  char *buf = tmalloc(size);
+  char *buf = malloc(size);
   EXPECT_EQ(31,
             tprecode16to8(buf, size, u"babaaaaaaaaaaaaaaaaaaaaaaaaaaaaa").ax);
   EXPECT_STREQ("babaaaaaaaaaaaaaaaaaaaaaaaaaaaa", buf);
-  tfree(buf);
+  free(buf);
 }
 
 BENCH(tprecode16to8, bench) {

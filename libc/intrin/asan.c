@@ -1,0 +1,805 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│                                                                              │
+│ Permission to use, copy, modify, and/or distribute this software for         │
+│ any purpose with or without fee is hereby granted, provided that the         │
+│ above copyright notice and this permission notice appear in all copies.      │
+│                                                                              │
+│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
+│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
+│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
+│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
+│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
+│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
+│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
+│ PERFORMANCE OF THIS SOFTWARE.                                                │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/alg/reverse.h"
+#include "libc/bits/bits.h"
+#include "libc/bits/weaken.h"
+#include "libc/calls/calls.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/linux/exit.h"
+#include "libc/linux/write.h"
+#include "libc/log/log.h"
+#include "libc/macros.h"
+#include "libc/mem/hook/hook.h"
+#include "libc/runtime/directmap.h"
+#include "libc/runtime/memtrack.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
+
+STATIC_YOINK("_init_asan");
+
+/**
+ * @fileoverview Cosmopolitan Address Sanitizer Runtime.
+ *
+ * Someone brilliant at Google figured out a way to improve upon memory
+ * protection. Rather than invent another Java or Rust they changed GCC
+ * so it can emit fast code, that checks the validity of each memory op
+ * with byte granularity, by probing shadow memory.
+ *
+ * - AddressSanitizer dedicates one-eighth of the virtual address space
+ *   to its shadow memory and uses a direct mapping with a scale and
+ *   offset to translate an application address to its corresponding
+ *   shadow address. Given the application memory address Addr, the
+ *   address of the shadow byte is computed as (Addr>>3)+Offset."
+ *
+ * - We use the following encoding for each shadow byte: 0 means that
+ *   all 8 bytes of the corresponding application memory region are
+ *   addressable; k (1 ≤ k ≤ 7) means that the first k bytes are
+ *   addressible; any negative value indicates that the entire 8-byte
+ *   word is unaddressable. We use different negative values to
+ *   distinguish between different kinds of unaddressable memory (heap
+ *   redzones, stack redzones, global redzones, freed memory).
+ *
+ * Here's what the generated code looks like for 64-bit reads:
+ *
+ *     movq %addr,%tmp
+ *     shrq $3,%tmp
+ *     cmpb $0,0x7fff8000(%tmp)
+ *     jnz  abort
+ *     movq (%addr),%dst
+ */
+
+#define HOOK(HOOK, IMPL)    \
+  do {                      \
+    if (weaken(HOOK)) {     \
+      *weaken(HOOK) = IMPL; \
+    }                       \
+  } while (0)
+
+#define REQUIRE(FUNC)                                \
+  do {                                               \
+    if (!weaken(FUNC)) {                             \
+      __asan_write_string("asan needs " #FUNC "\n"); \
+      __asan_exit(100);                              \
+    }                                                \
+  } while (0)
+
+struct AsanSourceLocation {
+  const char *filename;
+  int line;
+  int column;
+};
+
+struct AsanAccessInfo {
+  const uintptr_t addr;
+  const uintptr_t first_bad_addr;
+  size_t size;
+  bool iswrite;
+  unsigned long ip;
+};
+
+struct AsanGlobal {
+  const uintptr_t addr;
+  size_t size;
+  size_t size_with_redzone;
+  const void *name;
+  const void *module_name;
+  unsigned long has_cxx_init;
+  struct AsanSourceLocation *location;
+  char *odr_indicator;
+};
+
+struct AsanMorgue {
+  unsigned i;
+  void *p[16];
+};
+
+static struct AsanMorgue __asan_morgue;
+
+static uint64_t __asan_bsrl(uint64_t x) {
+  return __builtin_clzll(x) ^ 63;
+}
+
+static uint64_t __asan_roundup2pow(uint64_t x) {
+  return x > 1 ? 1ull << (__asan_bsrl(x - 1) + 1) : x ? 1 : 0;
+}
+
+static uint64_t __asan_rounddown2pow(uint64_t x) {
+  return x ? 1ull << __asan_bsrl(x) : 0;
+}
+
+static size_t __asan_strlen(const char *s) {
+  size_t n = 0;
+  while (*s++) ++n;
+  return n;
+}
+
+static int __asan_strcmp(const char *l, const char *r) {
+  size_t i = 0;
+  while (l[i] == r[i] && r[i]) ++i;
+  return (l[i] & 0xff) - (r[i] & 0xff);
+}
+
+static char *__asan_stpcpy(char *d, const char *s) {
+  size_t i;
+  for (i = 0;; ++i) {
+    if (!(d[i] = s[i])) {
+      return d + i;
+    }
+  }
+}
+
+static void *__asan_repstosb(void *di, int al, size_t cx) {
+  asm("rep stosb"
+      : "=D"(di), "=c"(cx), "=m"(*(char(*)[cx])di)
+      : "0"(di), "1"(cx), "a"(al));
+  return di;
+}
+
+static void *__asan_memset(void *p, int c, size_t n) {
+  char *b;
+  size_t i;
+  uint64_t x;
+  b = p;
+  x = 0x0101010101010101 * (c & 0xff);
+  switch (n) {
+    case 0:
+      return p;
+    case 1:
+      __builtin_memcpy(b, &x, 1);
+      return p;
+    case 2:
+      __builtin_memcpy(b, &x, 2);
+      return p;
+    case 3:
+      __builtin_memcpy(b, &x, 2);
+      __builtin_memcpy(b + 1, &x, 2);
+      return p;
+    case 4:
+      __builtin_memcpy(b, &x, 4);
+      return p;
+    case 5:
+    case 6:
+    case 7:
+      __builtin_memcpy(b, &x, 4);
+      __builtin_memcpy(b + n - 4, &x, 4);
+      return p;
+    case 8:
+      __builtin_memcpy(b, &x, 8);
+      return p;
+    case 9:
+    case 10:
+    case 11:
+    case 12:
+    case 13:
+    case 14:
+    case 15:
+    case 16:
+      __builtin_memcpy(b, &x, 8);
+      __builtin_memcpy(b + n - 8, &x, 8);
+      return p;
+    default:
+      if (n <= 64) {
+        i = 0;
+        do {
+          __builtin_memcpy(b + i, &x, 8);
+          asm volatile("" ::: "memory");
+          __builtin_memcpy(b + i + 8, &x, 8);
+        } while ((i += 16) + 16 <= n);
+        for (; i < n; ++i) b[i] = x;
+      } else {
+        __asan_repstosb(p, c, n);
+      }
+      return p;
+  }
+}
+
+static void *__asan_mempcpy(void *dst, const void *src, size_t n) {
+  size_t i;
+  char *d, *s;
+  uint64_t a, b;
+  d = dst;
+  s = src;
+  switch (n) {
+    case 0:
+      return d;
+    case 1:
+      *d = *s;
+      return d + 1;
+    case 2:
+      __builtin_memcpy(&a, s, 2);
+      __builtin_memcpy(d, &a, 2);
+      return d + 2;
+    case 3:
+      __builtin_memcpy(&a, s, 2);
+      __builtin_memcpy(&b, s + 1, 2);
+      __builtin_memcpy(d, &a, 2);
+      __builtin_memcpy(d + 1, &b, 2);
+      return d + 3;
+    case 4:
+      __builtin_memcpy(&a, s, 4);
+      __builtin_memcpy(d, &a, 4);
+      return d + 4;
+    case 5:
+    case 6:
+    case 7:
+      __builtin_memcpy(&a, s, 4);
+      __builtin_memcpy(&b, s + n - 4, 4);
+      __builtin_memcpy(d, &a, 4);
+      __builtin_memcpy(d + n - 4, &b, 4);
+      return d + n;
+    case 8:
+      __builtin_memcpy(&a, s, 8);
+      __builtin_memcpy(d, &a, 8);
+      return d + 8;
+    case 9:
+    case 10:
+    case 11:
+    case 12:
+    case 13:
+    case 14:
+    case 15:
+    case 16:
+      __builtin_memcpy(&a, s, 8);
+      __builtin_memcpy(&b, s + n - 8, 8);
+      __builtin_memcpy(d, &a, 8);
+      __builtin_memcpy(d + n - 8, &b, 8);
+      return d + n;
+    default:
+      i = 0;
+      do {
+        __builtin_memcpy(&a, s + i, 8);
+        asm volatile("" ::: "memory");
+        __builtin_memcpy(d + i, &a, 8);
+      } while ((i += 8) + 8 <= n);
+      for (; i < n; ++i) d[i] = s[i];
+      return d + i;
+  }
+}
+
+static void *__asan_memcpy(void *dst, const void *src, size_t n) {
+  __asan_mempcpy(dst, src, n);
+  return dst;
+}
+
+static void *__asan_memrchr(void *p, int c, size_t n) {
+  uint8_t *b;
+  for (c &= 0xff, b = p; n--;) {
+    if (b[n] == c) {
+      return b + n;
+    }
+  }
+  return NULL;
+}
+
+static size_t __asan_int2hex(uint64_t x, char b[17], uint8_t k) {
+  int i;
+  char *p;
+  for (p = b; k > 0;) {
+    *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
+  }
+  *p = '\0';
+  return p - b;
+}
+
+static size_t __asan_uint2str(uint64_t i, char *a) {
+  size_t j;
+  j = 0;
+  do {
+    a[j++] = i % 10 + '0';
+    i /= 10;
+  } while (i > 0);
+  a[j] = '\0';
+  reverse(a, j);
+  return j;
+}
+
+static size_t __asan_int2str(int64_t i, char *a) {
+  if (i >= 0) return __asan_uint2str(i, a);
+  *a++ = '-';
+  return 1 + __asan_uint2str(-i, a);
+}
+
+void __asan_poison(uintptr_t p, size_t n, int kind) {
+  int k;
+  char *s;
+  if (!n) return;
+  if (p & 7) {
+    k = MIN(8 - (p & 7), n);
+    s = SHADOW(p);
+    if (*s == 0 || *s > (p & 7)) {
+      *s = p & 7;
+    }
+    n -= k;
+    p += k;
+  }
+  __asan_memset(SHADOW(p), kind, n >> 3);
+  if ((k = n & 7)) {
+    s = SHADOW(p + n);
+    if (*s < 0 || (*s > 0 && *s >= k)) {
+      *s = kind;
+    }
+  }
+}
+
+void __asan_unpoison(uintptr_t p, size_t n) {
+  int k;
+  char *s;
+  if (!n) return;
+  if (p & 7) {
+    k = MIN(8 - (p & 7), n);
+    s = SHADOW(p);
+    *s = 0;
+    n -= k;
+    p += k;
+  }
+  __asan_memset(SHADOW(p), 0, n >> 3);
+  if ((k = n & 7)) {
+    s = SHADOW(p + n);
+    if (*s && *s < k) {
+      *s = k;
+    }
+  }
+}
+
+static const char *__asan_dscribe_heap_poison(long c) {
+  switch (c) {
+    case kAsanHeapFree:
+      return "heap double free";
+    case kAsanStackFree:
+      return "stack double free";
+    case kAsanRelocated:
+      return "free after relocate";
+    default:
+      return "this corruption";
+  }
+}
+
+static const char *__asan_describe_access_poison(int c) {
+  switch (c) {
+    case kAsanHeapFree:
+      return "heap use after free";
+    case kAsanStackFree:
+      return "stack use after release";
+    case kAsanRelocated:
+      return "heap use after relocate";
+    case kAsanHeapUnderrun:
+      return "heap underrun";
+    case kAsanHeapOverrun:
+      return "heap overrun";
+    case kAsanGlobalOverrun:
+      return "global overrun";
+    case kAsanGlobalUnregistered:
+      return "global unregistered";
+    case kAsanStackUnderrun:
+      return "stack underflow";
+    case kAsanStackOverrun:
+      return "stack overflow";
+    case kAsanAllocaUnderrun:
+      return "alloca underflow";
+    case kAsanAllocaOverrun:
+      return "alloca overflow";
+    case kAsanUnscoped:
+      return "unscoped";
+    case kAsanUnmapped:
+      return "unmapped";
+    default:
+      return "poisoned";
+  }
+}
+
+static ssize_t __asan_write(const void *data, size_t size) {
+  ssize_t rc;
+  if (weaken(write)) {
+    if ((rc = weaken(write)(2, data, size)) != -1) {
+      return rc;
+    }
+  }
+  return LinuxWrite(2, data, size);
+}
+
+static ssize_t __asan_write_string(const char *s) {
+  return __asan_write(s, __asan_strlen(s));
+}
+
+static wontreturn void __asan_exit(int rc) {
+  if (weaken(_Exit)) {
+    weaken(_Exit)(rc);
+  } else {
+    LinuxExit(rc);
+  }
+  for (;;) asm("hlt");
+}
+
+static wontreturn void __asan_abort(void) {
+  if (weaken(abort)) weaken(abort)();
+  __asan_exit(134);
+}
+
+static wontreturn void __asan_die(const char *msg) {
+  __asan_write_string(msg);
+  if (weaken(__die)) weaken(__die)();
+  __asan_abort();
+}
+
+static char *__asan_report_start(char *p) {
+  bool ansi;
+  const char *term;
+  term = weaken(getenv) ? weaken(getenv)("TERM") : NULL;
+  ansi = !term || __asan_strcmp(term, "dumb") != 0;
+  if (ansi) p = __asan_stpcpy(p, "\r\e[J\e[1;91m");
+  p = __asan_stpcpy(p, "asan error");
+  if (ansi) p = __asan_stpcpy(p, "\e[0m");
+  return __asan_stpcpy(p, ": ");
+}
+
+static wontreturn void __asan_report_heap_fault(void *addr, long c) {
+  char *p, ibuf[21], buf[256];
+  p = __asan_report_start(buf);
+  p = __asan_stpcpy(p, __asan_dscribe_heap_poison(c));
+  p = __asan_stpcpy(p, " ");
+  p = __asan_mempcpy(p, ibuf, __asan_int2str(c, ibuf));
+  p = __asan_stpcpy(p, " at 0x");
+  p = __asan_mempcpy(p, ibuf, __asan_int2hex((intptr_t)addr, ibuf, 48));
+  p = __asan_stpcpy(p, " shadow 0x");
+  p = __asan_mempcpy(p, ibuf, __asan_int2hex((intptr_t)SHADOW(addr), ibuf, 48));
+  p = __asan_stpcpy(p, "\r\n");
+  __asan_die(buf);
+}
+
+static wontreturn void __asan_report_memory_fault(uint8_t *addr, int size,
+                                                  const char *kind) {
+  char *p, ibuf[21], buf[256];
+  p = __asan_report_start(buf);
+  p = __asan_stpcpy(p, __asan_describe_access_poison(*SHADOW(addr)));
+  p = __asan_stpcpy(p, " ");
+  p = __asan_mempcpy(p, ibuf, __asan_int2str(size, ibuf));
+  p = __asan_stpcpy(p, "-byte ");
+  p = __asan_stpcpy(p, kind);
+  p = __asan_stpcpy(p, " at 0x");
+  p = __asan_mempcpy(p, ibuf, __asan_int2hex((intptr_t)addr, ibuf, 48));
+  p = __asan_stpcpy(p, " shadow 0x");
+  p = __asan_mempcpy(p, ibuf, __asan_int2hex((intptr_t)SHADOW(addr), ibuf, 48));
+  p = __asan_stpcpy(p, "\r\n");
+  __asan_die(buf);
+}
+
+const void *__asan_morgue_add(void *p) {
+  void *r;
+  unsigned i, j;
+  for (;;) {
+    i = __asan_morgue.i;
+    j = (i + 1) & (ARRAYLEN(__asan_morgue.p) - 1);
+    if (cmpxchg(&__asan_morgue.i, i, j)) {
+      r = __asan_morgue.p[i];
+      __asan_morgue.p[i] = p;
+      return r;
+    }
+  }
+}
+
+static void __asan_morgue_flush(void) {
+  void *p;
+  unsigned i;
+  for (i = 0; i < ARRAYLEN(__asan_morgue.p); ++i) {
+    p = __asan_morgue.p[i];
+    if (cmpxchg(__asan_morgue.p + i, p, NULL)) {
+      if (weaken(dlfree)) {
+        weaken(dlfree)(p);
+      }
+    }
+  }
+}
+
+static size_t __asan_heap_size(size_t n) {
+  if (n < -8) {
+    return __asan_roundup2pow(ROUNDUP(n, 8) + 8);
+  } else {
+    return -1;
+  }
+}
+
+static void *__asan_allocate(size_t a, size_t n, int underrun, int overrun) {
+  char *p;
+  size_t c;
+  if ((p = weaken(dlmemalign)(a, __asan_heap_size(n)))) {
+    c = weaken(dlmalloc_usable_size)(p);
+    __asan_unpoison((uintptr_t)p, n);
+    __asan_poison((uintptr_t)p - 16, 16, underrun); /* see dlmalloc design */
+    __asan_poison((uintptr_t)p + n, c - n, overrun);
+    WRITE64BE(p + c - sizeof(n), n);
+  }
+  return p;
+}
+
+static size_t __asan_malloc_usable_size(const void *p) {
+  size_t c, n;
+  if ((c = weaken(dlmalloc_usable_size)(p)) >= 8) {
+    if ((n = READ64BE((char *)p + c - sizeof(n))) <= c) {
+      return n;
+    } else {
+      __asan_report_heap_fault(p, n);
+    }
+  } else {
+    __asan_report_heap_fault(p, 0);
+  }
+}
+
+static void __asan_deallocate(char *p, long kind) {
+  size_t c, n;
+  if ((c = weaken(dlmalloc_usable_size)(p)) >= 8) {
+    if ((n = READ64BE((char *)p + c - sizeof(n))) <= c) {
+      WRITE64BE((char *)p + c - sizeof(n), kind);
+      __asan_poison((uintptr_t)p, n, kind);
+      if (weaken(dlfree)) {
+        weaken(dlfree)(__asan_morgue_add(p));
+      }
+    } else {
+      __asan_report_heap_fault(p, n);
+    }
+  } else {
+    __asan_report_heap_fault(p, 0);
+  }
+}
+
+static void __asan_free(void *p) {
+  if (!p) return;
+  __asan_deallocate(p, kAsanHeapFree);
+}
+
+static void *__asan_memalign(size_t align, size_t size) {
+  return __asan_allocate(align, size, kAsanHeapUnderrun, kAsanHeapOverrun);
+}
+
+static void *__asan_malloc(size_t size) {
+  return __asan_memalign(16, size);
+}
+
+static void *__asan_calloc(size_t nelem, size_t elsize) {
+  char *p;
+  size_t n;
+  if (__builtin_mul_overflow(nelem, elsize, &n)) n = -1;
+  if ((p = __asan_malloc(n))) __asan_memset(p, 0, n);
+  return p;
+}
+
+static void *__asan_realloc(void *p, size_t n) {
+  char *p2;
+  size_t c, m;
+  if (p) {
+    if (n) {
+      if ((c = weaken(dlmalloc_usable_size)(p)) < 8)
+        __asan_report_heap_fault(p, 0);
+      if ((m = READ64BE((char *)p + c - sizeof(n))) > c)
+        __asan_report_heap_fault(p, m);
+      if (n <= m) { /* shrink */
+        __asan_poison((uintptr_t)p + n, m - n, kAsanHeapOverrun);
+        WRITE64BE((char *)p + c - sizeof(n), n);
+        p2 = p;
+      } else if (n <= c - 8) { /* small growth */
+        __asan_unpoison((uintptr_t)p + m, n - m);
+        WRITE64BE((char *)p + c - sizeof(n), n);
+        p2 = p;
+      } else if ((p2 = __asan_malloc(n))) { /* exponential growth */
+        __asan_memcpy(p2, p, m);
+        __asan_deallocate(p, kAsanRelocated);
+      }
+    } else {
+      __asan_free(p);
+      p2 = NULL;
+    }
+  } else {
+    p2 = __asan_malloc(n);
+  }
+  return p2;
+}
+
+static void *__asan_valloc(size_t n) {
+  return __asan_memalign(PAGESIZE, n);
+}
+
+static void *__asan_pvalloc(size_t n) {
+  return __asan_valloc(ROUNDUP(n, PAGESIZE));
+}
+
+static int __asan_malloc_trim(size_t pad) {
+  __asan_morgue_flush();
+  if (weaken(dlmalloc_trim)) {
+    return weaken(dlmalloc_trim)(pad);
+  } else {
+    return 0;
+  }
+}
+
+void *__asan_stack_malloc(size_t size, int classid) {
+  return __asan_allocate(32, size, kAsanStackUnderrun, kAsanStackOverrun);
+}
+
+void __asan_stack_free(char *p, size_t size, int classid) {
+  __asan_deallocate(p, kAsanStackFree);
+}
+
+void __asan_handle_no_return_impl(uintptr_t rsp) {
+  __asan_unpoison(rsp, ROUNDUP(rsp, STACKSIZE) - rsp);
+}
+
+void __asan_register_globals(struct AsanGlobal g[], int n) {
+  int i;
+  for (i = 0; i < n; ++i) {
+    __asan_unpoison(g[i].addr, g[i].size);
+    __asan_poison(g[i].addr + g[i].size, g[i].size_with_redzone - g[i].size,
+                  kAsanGlobalOverrun);
+  }
+}
+
+void __asan_unregister_globals(struct AsanGlobal g[], int n) {
+  int i;
+  for (i = 0; i < n; ++i) {
+    __asan_poison(g[i].addr, g[i].size_with_redzone, kAsanGlobalUnregistered);
+  }
+}
+
+void __asan_report_load_impl(uint8_t *addr, int size) {
+  __asan_report_memory_fault(addr, size, "load");
+}
+
+void __asan_report_store_impl(uint8_t *addr, int size) {
+  __asan_report_memory_fault(addr, size, "store");
+}
+
+void __asan_alloca_poison(uintptr_t addr, size_t size) {
+  /* TODO(jart): Make sense of this function. */
+  /* __asan_poison(addr - 32, 32, kAsanAllocaUnderrun); */
+  __asan_poison(ROUNDUP(addr + size, 32), 32, kAsanAllocaOverrun);
+  __asan_unpoison(addr, ROUNDUP(addr + size, 32) - (addr + size) + 32 + size);
+}
+
+void __asan_allocas_unpoison(uintptr_t x, uintptr_t y) {
+  if (x && x > y) __asan_unpoison(x, y - x);
+}
+
+void *__asan_addr_is_in_fake_stack(void *fakestack, void *addr, void **beg,
+                                   void **end) {
+  return NULL;
+}
+
+void *__asan_get_current_fake_stack(void) {
+  return NULL;
+}
+
+void __asan_install_malloc_hooks(void) {
+  HOOK(hook$free, __asan_free);
+  HOOK(hook$malloc, __asan_malloc);
+  HOOK(hook$calloc, __asan_calloc);
+  HOOK(hook$valloc, __asan_valloc);
+  HOOK(hook$pvalloc, __asan_pvalloc);
+  HOOK(hook$realloc, __asan_realloc);
+  HOOK(hook$memalign, __asan_memalign);
+  HOOK(hook$malloc_trim, __asan_malloc_trim);
+  HOOK(hook$malloc_usable_size, __asan_malloc_usable_size);
+}
+
+static bool __asan_is_mapped(int x) {
+  int i;
+  struct MemoryIntervals *m;
+  m = weaken(_mmi);
+  i = weaken(FindMemoryInterval)(m, x);
+  return i < m->i && x >= m->p[i].x && x <= m->p[i].y;
+}
+
+void __asan_map_shadow(uintptr_t p, size_t n) {
+  int i, x, a, b;
+  struct DirectMap sm;
+  struct MemoryIntervals *m;
+  if (0x7fff8000 <= p && p < 0x100080000000) {
+    __asan_die("asan error: mmap can't shadow a shadow\r\n");
+  }
+  m = weaken(_mmi);
+  a = (uintptr_t)SHADOW(p) >> 16;
+  b = ROUNDUP((uintptr_t)SHADOW(ROUNDUP((uintptr_t)p + n, 8)), 1 << 16) >> 16;
+  for (; a < b; ++a) {
+    if (!__asan_is_mapped(a)) {
+      sm = weaken(__mmap)(
+          (void *)((uintptr_t)a << 16), 1 << 16, PROT_READ | PROT_WRITE,
+          MAP_PRIVATE | *weaken(MAP_ANONYMOUS) | MAP_FIXED, -1, 0);
+      if (sm.addr == MAP_FAILED ||
+          weaken(TrackMemoryInterval)(
+              m, a, a, sm.maphandle, PROT_READ | PROT_WRITE,
+              MAP_PRIVATE | *weaken(MAP_ANONYMOUS) | MAP_FIXED) == -1) {
+        __asan_abort();
+      }
+      __asan_repstosb((void *)((uintptr_t)a << 16), kAsanUnmapped, 1 << 16);
+    }
+  }
+  __asan_unpoison((uintptr_t)p, n);
+}
+
+static textstartup void __asan_shadow_string(char *s) {
+  __asan_map_shadow((uintptr_t)s, __asan_strlen(s) + 1);
+}
+
+static textstartup void __asan_shadow_auxv(intptr_t *auxv) {
+  size_t i;
+  for (i = 0; auxv[i]; i += 2) {
+    if (weaken(AT_RANDOM) && auxv[i] == *weaken(AT_RANDOM)) {
+      __asan_map_shadow(auxv[i + 1], 16);
+    } else if (weaken(AT_EXECFN) && auxv[i] == *weaken(AT_EXECFN)) {
+      __asan_shadow_string((char *)auxv[i + 1]);
+    } else if (weaken(AT_PLATFORM) && auxv[i] == *weaken(AT_PLATFORM)) {
+      __asan_shadow_string((char *)auxv[i + 1]);
+    }
+  }
+  __asan_map_shadow((uintptr_t)auxv, (i + 2) * sizeof(intptr_t));
+}
+
+static textstartup void __asan_shadow_string_list(char **list) {
+  size_t i;
+  for (i = 0; list[i]; ++i) {
+    __asan_shadow_string(list[i]);
+  }
+  __asan_map_shadow((uintptr_t)list, (i + 1) * sizeof(char *));
+}
+
+static textstartup void __asan_shadow_existing_mappings(void) {
+  size_t i;
+  struct MemoryIntervals m;
+  __asan_memcpy(&m, weaken(_mmi), sizeof(m));
+  for (i = 0; i < m.i; ++i) {
+    __asan_map_shadow((uintptr_t)m.p[i].x << 16,
+                      (uintptr_t)(m.p[i].y - m.p[i].x + 1) << 16);
+  }
+}
+
+static textstartup bool IsMemoryManagementRuntimeLinked(void) {
+  return weaken(_mmi) && weaken(__mmap) && weaken(MAP_ANONYMOUS) &&
+         weaken(FindMemoryInterval) && weaken(TrackMemoryInterval);
+}
+
+textstartup void __asan_init(int argc, char **argv, char **envp,
+                             intptr_t *auxv) {
+  static bool once;
+  if (!cmpxchg(&once, false, true)) return;
+  REQUIRE(_mmi);
+  REQUIRE(__mmap);
+  REQUIRE(MAP_ANONYMOUS);
+  REQUIRE(FindMemoryInterval);
+  REQUIRE(TrackMemoryInterval);
+  if (weaken(hook$malloc) || weaken(hook$calloc) || weaken(hook$realloc) ||
+      weaken(hook$pvalloc) || weaken(hook$valloc) || weaken(hook$free) ||
+      weaken(hook$malloc_usable_size)) {
+    REQUIRE(dlmemalign);
+    REQUIRE(dlmalloc_usable_size);
+  }
+  __asan_shadow_existing_mappings();
+  __asan_map_shadow((uintptr_t)_base, _end - _base);
+  __asan_shadow_string_list(argv);
+  __asan_shadow_string_list(envp);
+  __asan_shadow_auxv(auxv);
+  __asan_install_malloc_hooks();
+}
+
+static textstartup void __asan_ctor(void) {
+  if (weaken(__cxa_atexit)) {
+    weaken(__cxa_atexit)(__asan_morgue_flush, NULL, NULL);
+  }
+}
+
+const void *const g_asan_ctor[] initarray = {__asan_ctor};

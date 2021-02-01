@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/core/q.h"
 #include "libc/intrin/pmulhrsw.h"
+#include "libc/log/check.h"
 #include "libc/macros.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
@@ -108,6 +109,15 @@ TEST(pmulhrsw, testFakeFloat) {
   } /* clang-format on */;
   FOR88(QD[y][x] = F2Q(15, D[y][x]));
   FOR88(QM[y][x] = F2Q(15, M[y][x]));
+  /* for (y = 0; y < 8; ++y) { */
+  /*   for (x = 0; x < 8; ++x) { */
+  /*     CHECK_NE(8, x); */
+  /*     CHECK_NE(8, y); */
+  /*     QM[y][x] = F2Q(15, M[y][x]); */
+  /*     CHECK_NE(8, x); */
+  /*     CHECK_NE(8, y); */
+  /*   } */
+  /* } */
   FOR8(pmulhrsw(QQ[y], QD[y], QM[y]));
   FOR88(Q[y][x] = Q2F(15, QQ[y][x]));
   FOR88(R[y][x] = D[y][x] * M[y][x]);

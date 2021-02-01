@@ -20,26 +20,8 @@
 #include "libc/intrin/pmovmskb.h"
 #include "libc/str/str.h"
 
-/**
- * Copies bytes from 𝑠 to 𝑑 until a NUL is encountered.
- *
- * @param 𝑑 is destination memory
- * @param 𝑠 is a NUL-terminated string
- * @note 𝑑 and 𝑠 can't overlap
- * @return pointer to nul byte
- * @see strcpy(), memccpy()
- * @asyncsignalsafe
- */
-char *stpcpy(char *d, const char *s) {
-  size_t i;
+static noasan size_t stpcpy$sse2(char *d, const char *s, size_t i) {
   uint8_t v1[16], v2[16], vz[16];
-  i = 0;
-  while (((uintptr_t)(s + i) & 15)) {
-    if (!(d[i] = s[i])) {
-      return d + i;
-    }
-    ++i;
-  }
   for (;;) {
     memset(vz, 0, 16);
     memcpy(v1, s + i, 16);
@@ -51,6 +33,26 @@ char *stpcpy(char *d, const char *s) {
       break;
     }
   }
+  return i;
+}
+
+/**
+ * Copies bytes from 𝑠 to 𝑑 until a NUL is encountered.
+ *
+ * @param 𝑑 is destination memory
+ * @param 𝑠 is a NUL-terminated string
+ * @note 𝑑 and 𝑠 can't overlap
+ * @return pointer to nul byte
+ * @asyncsignalsafe
+ */
+char *stpcpy(char *d, const char *s) {
+  size_t i;
+  for (i = 0; (uintptr_t)(s + i) & 15; ++i) {
+    if (!(d[i] = s[i])) {
+      return d + i;
+    }
+  }
+  i = stpcpy$sse2(d, s, i);
   for (;;) {
     if (!(d[i] = s[i])) {
       return d + i;

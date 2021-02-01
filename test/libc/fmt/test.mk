@@ -22,7 +22,6 @@ TEST_LIBC_FMT_DIRECTDEPS =				\
 	LIBC_FMT					\
 	LIBC_INTRIN					\
 	LIBC_LOG					\
-	LIBC_LOG_ASAN					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
 	LIBC_RUNTIME					\

@@ -86,9 +86,9 @@ int main(int argc, char *argv[]) {
                "movd\t%rax,%xmm14\n\t"
                "mov\t$0xffffffffffffffff,%rax\n\t"
                "movd\t%rax,%xmm15\n\t"
-               "fldpi\n\t");
-
-  res = *(int *)(intptr_t)boo / boo;
+               "fldpi\n\t"
+               "xor\t%eax,%eax\n\t"
+               "div\t%eax\n\t");
 
   return res;
 }

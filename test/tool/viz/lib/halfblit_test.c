@@ -16,16 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/bing.internal.h"
+#include "libc/runtime/gc.h"
 #include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 #include "tool/viz/lib/halfblit.h"
 
 TEST(halfblit, test_4x4_to_2x2) {
   EXPECT_BINEQ(u" ☺"
                u"►◄",
-               halfblit(2, tgc(tunbing(u" ☺☻♥"
-                                       u"►◄↕‼"
-                                       u"♀♪♫☼"
-                                       u"∟↔▲▼"))));
+               halfblit(2, gc(xunbing(u" ☺☻♥"
+                                      u"►◄↕‼"
+                                      u"♀♪♫☼"
+                                      u"∟↔▲▼"))));
 }
 
 TEST(halfblit, test_8x8_to_4x4) {
@@ -33,12 +36,12 @@ TEST(halfblit, test_8x8_to_4x4) {
                u"►◄↕‼"
                u"◘○◙♂"
                u"↑↓→←",
-               halfblit(4, tgc(tunbing(u" ☺☻♥♦♣♠•"
-                                       u"►◄↕‼¶§▬↨"
-                                       u"◘○◙♂♀♪♫☼"
-                                       u"↑↓→←∟↔▲▼"
-                                       u"01234567"
-                                       u"░▒▓│┤╡╢╖"
-                                       u"╕╣║╗╝╜╛┐"
-                                       u"89:;<=>?"))));
+               halfblit(4, gc(xunbing(u" ☺☻♥♦♣♠•"
+                                      u"►◄↕‼¶§▬↨"
+                                      u"◘○◙♂♀♪♫☼"
+                                      u"↑↓→←∟↔▲▼"
+                                      u"01234567"
+                                      u"░▒▓│┤╡╢╖"
+                                      u"╕╣║╗╝╜╛┐"
+                                      u"89:;<=>?"))));
 }

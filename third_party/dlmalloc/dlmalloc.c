@@ -1,9 +1,11 @@
 #include "libc/bits/initializer.internal.h"
 #include "libc/bits/safemacros.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/limits.h"
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
@@ -34,20 +36,12 @@ hidden struct MallocParams g_mparams;
  * Note that contiguous allocations are what Doug Lea recommends.
  */
 static void *dlmalloc_requires_more_vespene_gas(size_t size) {
-  if (0) {
-    size_t need = mallinfo().arena + size;
-    if (need > 8 * 1024 * 1024) {
-      struct sysinfo info;
-      if (sysinfo(&info) != -1) {
-        if (info.freeram < (info.totalram >> 1) &&
-            need > info.totalram * info.mem_unit / 2) {
-          write(STDERR_FILENO, OOM_WARNING, strlen(OOM_WARNING));
-          return NULL;
-        }
-      }
-    }
+  char *p;
+  p = mapanon(size);
+  if (weaken(__asan_poison)) {
+    weaken(__asan_poison)((uintptr_t)p, size, kAsanHeapFree);
   }
-  return mapanon(size);
+  return p;
 }
 
 /* ─────────────────────────── mspace management ─────────────────────────── */
@@ -826,6 +820,14 @@ void dlfree(void *mem) {
 #endif /* FOOTERS */
 }
 
+size_t dlmalloc_usable_size(const void *mem) {
+  if (mem != 0) {
+    mchunkptr p = mem2chunk(mem);
+    if (is_inuse(p)) return chunksize(p) - overhead_for(p);
+  }
+  return 0;
+}
+
 textstartup void dlmalloc_init(void) {
 #ifdef NEED_GLOBAL_LOCK_INIT
   if (malloc_global_mutex_status <= 0) init_malloc_global_mutex();
@@ -867,4 +869,76 @@ textstartup void dlmalloc_init(void) {
     (*(volatile size_t *)(&(g_mparams.magic))) = magic;
   }
   RELEASE_MALLOC_GLOBAL_LOCK();
+}
+
+void *dlmemalign$impl(mstate m, size_t alignment, size_t bytes) {
+  void *mem = 0;
+  if (alignment < MIN_CHUNK_SIZE) { /* must be at least a minimum chunk size */
+    alignment = MIN_CHUNK_SIZE;     /* is 32 bytes on NexGen32e */
+  }
+  if ((alignment & (alignment - SIZE_T_ONE)) != 0) { /* Ensure a power of 2 */
+    alignment = roundup2pow(alignment);
+  }
+  if (bytes >= MAX_REQUEST - alignment) {
+    if (m != 0) { /* Test isn't needed but avoids compiler warning */
+      enomem();
+    }
+  } else {
+    size_t nb = request2size(bytes);
+    size_t req = nb + alignment + MIN_CHUNK_SIZE - CHUNK_OVERHEAD;
+    mem = dlmalloc(req);
+    if (mem != 0) {
+      mchunkptr p = mem2chunk(mem);
+      if (PREACTION(m)) return 0;
+      if ((((size_t)(mem)) & (alignment - 1)) != 0) { /* misaligned */
+        /*
+          Find an aligned spot inside chunk.  Since we need to give
+          back leading space in a chunk of at least MIN_CHUNK_SIZE, if
+          the first calculation places us at a spot with less than
+          MIN_CHUNK_SIZE leader, we can move to the next aligned spot.
+          We've allocated enough total room so that this is always
+          possible.
+        */
+        char *br = (char *)mem2chunk((size_t)(
+            ((size_t)((char *)mem + alignment - SIZE_T_ONE)) & -alignment));
+        char *pos = ((size_t)(br - (char *)(p)) >= MIN_CHUNK_SIZE)
+                        ? br
+                        : br + alignment;
+        mchunkptr newp = (mchunkptr)pos;
+        size_t leadsize = pos - (char *)(p);
+        size_t newsize = chunksize(p) - leadsize;
+        if (is_mmapped(p)) { /* For mmapped chunks, just adjust offset */
+          newp->prev_foot = p->prev_foot + leadsize;
+          newp->head = newsize;
+        } else { /* Otherwise, give back leader, use the rest */
+          set_inuse(m, newp, newsize);
+          set_inuse(m, p, leadsize);
+          dlmalloc_dispose_chunk(m, p, leadsize);
+        }
+        p = newp;
+      }
+      /* Give back spare room at the end */
+      if (!is_mmapped(p)) {
+        size_t size = chunksize(p);
+        if (size > nb + MIN_CHUNK_SIZE) {
+          size_t remainder_size = size - nb;
+          mchunkptr remainder = chunk_plus_offset(p, nb);
+          set_inuse(m, p, nb);
+          set_inuse(m, remainder, remainder_size);
+          dlmalloc_dispose_chunk(m, remainder, remainder_size);
+        }
+      }
+      mem = chunk2mem(p);
+      assert(chunksize(p) >= nb);
+      assert(((size_t)mem & (alignment - 1)) == 0);
+      check_inuse_chunk(m, p);
+      POSTACTION(m);
+    }
+  }
+  return ADDRESS_BIRTH_ACTION(mem);
+}
+
+void *dlmemalign(size_t alignment, size_t bytes) {
+  if (alignment <= MALLOC_ALIGNMENT) return dlmalloc(bytes);
+  return dlmemalign$impl(g_dlmalloc, alignment, bytes);
 }

@@ -25,6 +25,7 @@
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
+#include "libc/runtime/gc.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
@@ -40,9 +41,9 @@ TEST(magikarp, testConvolve) {
       u"λλ  λλ  λλ  λλ  "
       u"λλ  λλ  λλ  λλ  ",
       cDecimate2xUint8x8(32 * 3,
-                         tgc(tunbing(u"λλλλ    λλλλ    λλλλ    λλλλ    "
-                                     u"λλλλ    λλλλ    λλλλ    λλλλ    "
-                                     u"λλλλ    λλλλ    λλλλ    λλλλ    ")),
+                         gc(xunbing(u"λλλλ    λλλλ    λλλλ    λλλλ    "
+                                    u"λλλλ    λλλλ    λλλλ    λλλλ    "
+                                    u"λλλλ    λλλλ    λλλλ    λλλλ    ")),
                          K));
 }
 
@@ -53,9 +54,9 @@ TEST(magikarp, testConvolveMin1) {
       u"λλ  λλ  λλ  λλ  "
       u"λλ  λλ  λλ  λλ  ",
       cDecimate2xUint8x8(32 * 3 - 1,
-                         tgc(tunbing(u"λλλλ    λλλλ    λλλλ    λλλλ    "
-                                     u"λλλλ    λλλλ    λλλλ    λλλλ    "
-                                     u"λλλλ    λλλλ    λλλλ    λλλλ   ")),
+                         gc(xunbing(u"λλλλ    λλλλ    λλλλ    λλλλ    "
+                                    u"λλλλ    λλλλ    λλλλ    λλλλ    "
+                                    u"λλλλ    λλλλ    λλλλ    λλλλ   ")),
                          K));
 }
 
@@ -71,14 +72,14 @@ TEST(magikarp, testConvolve2) {
       u"┴├┼╟╔╦═╧╤╙╒╫┘█▌▀"
       u"ßπστΘδφ∩±≤⌡≈∙√²λ",
       cDecimate2xUint8x8(256,
-                         tgc(tunbing(u" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼"
-                                     u" !“#$%&‘()*+,-./0123456789:;<=>⁇"
-                                     u"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
-                                     u"`abcdefghijklmnopqrstuvwxyz{|}~⌂"
-                                     u"ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥€ƒ"
-                                     u"áíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐"
-                                     u"└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀"
-                                     u"αßΓπΣσμτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■λ")),
+                         gc(xunbing(u" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼"
+                                    u" !“#$%&‘()*+,-./0123456789:;<=>⁇"
+                                    u"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
+                                    u"`abcdefghijklmnopqrstuvwxyz{|}~⌂"
+                                    u"ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥€ƒ"
+                                    u"áíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐"
+                                    u"└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀"
+                                    u"αßΓπΣσμτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙×√ⁿ²■λ")),
                          K));
 }
 
@@ -147,8 +148,8 @@ noopopppqqqqqqqqqqqqqqqppoooonn",
 BENCH(magikarp, bench) { /* 30ms */
   unsigned char kMagkern[16] = {4, 12, 12, 4};
   signed char kMagikarp[16] = {-1, -3, 3, 17, 17, 3, -3, -1};
-  unsigned char(*Me)[HDY][HDX] = tgc(tmalloc((HDX + 1) * (HDY + 1)));
-  unsigned char(*Mo)[HDY][HDX] = tgc(tmalloc((HDX + 1) * (HDY + 1)));
+  unsigned char(*Me)[HDY][HDX] = gc(malloc((HDX + 1) * (HDY + 1)));
+  unsigned char(*Mo)[HDY][HDX] = gc(malloc((HDX + 1) * (HDY + 1)));
   if (X86_HAVE(AVX)) {
     EZBENCH2("Decimate2xUint8x8", donothing,
              cDecimate2xUint8x8((HDX * HDY - 16 - 8) / 2 / 8 * 8, (void *)Me,

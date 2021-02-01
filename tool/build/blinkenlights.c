@@ -34,6 +34,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/pcmpeqb.h"
 #include "libc/intrin/pmovmskb.h"
 #include "libc/log/check.h"
@@ -436,6 +437,25 @@ static int VirtualBing(int64_t v) {
     }
   } else {
     rc = u'⋅';
+  }
+  onbusted = NULL;
+  return rc;
+}
+
+static int VirtualShadow(int64_t v) {
+  int rc;
+  char *p;
+  jmp_buf busted;
+  if (0x7fff8000 <= v && v < 0x100080000000) return -2;
+  onbusted = busted;
+  if ((p = FindReal(m, (v >> 3) + 0x7fff8000))) {
+    if (!setjmp(busted)) {
+      rc = p[0] & 0xff;
+    } else {
+      rc = -1;
+    }
+  } else {
+    rc = -1;
   }
   onbusted = NULL;
   return rc;
@@ -1260,7 +1280,8 @@ static void DrawMemoryZoomed(struct Panel *p, struct MemoryView *view,
 
 static void DrawMemoryUnzoomed(struct Panel *p, struct MemoryView *view,
                                long histart, long hiend) {
-  long i, j, k, c;
+  long i, j, k;
+  int c, s, x, sc;
   bool high, changed;
   high = false;
   for (i = 0; i < p->bottom - p->top; ++i) {
@@ -1268,6 +1289,35 @@ static void DrawMemoryUnzoomed(struct Panel *p, struct MemoryView *view,
     for (j = 0; j < DUMPWIDTH; ++j) {
       k = (view->start + i) * DUMPWIDTH + j;
       c = VirtualBing(k);
+      s = VirtualShadow(k);
+      if (s != -1) {
+        if (s == -2) {
+          /* grey for shadow memory */
+          x = 235;
+        } else {
+          sc = (signed char)s;
+          if (sc > 7) {
+            x = 129; /* PURPLE: shadow corruption */
+          } else if (sc == kAsanHeapFree) {
+            x = 17; /* NAVYBLUE: heap freed */
+          } else if (sc == kAsanRelocated) {
+            x = 18; /* DARKBLUE: heap relocated */
+          } else if (sc == kAsanHeapUnderrun || sc == kAsanAllocaUnderrun) {
+            x = 53; /* RED+PURPLETINGE: heap underrun */
+          } else if (sc == kAsanHeapOverrun || sc == kAsanAllocaOverrun) {
+            x = 52; /* RED: heap overrun */
+          } else if (sc < 0) {
+            x = 52; /* RED: uncategorized invalid */
+          } else if (sc > 0 && (k & 7) >= sc) {
+            x = 54; /* REDPURP: invalid address (skew) */
+          } else if (!sc || (sc > 0 && (k & 7) < sc)) {
+            x = 22; /* GREEN: valid address */
+          } else {
+            abort();
+          }
+        }
+        AppendFmt(&p->lines[i], "\e[38;5;253;48;5;%dm", x);
+      }
       changed = histart <= k && k < hiend;
       if (changed && !high) {
         high = true;
@@ -1277,6 +1327,9 @@ static void DrawMemoryUnzoomed(struct Panel *p, struct MemoryView *view,
         high = false;
       }
       AppendWide(&p->lines[i], c);
+      if (s != -1) {
+        AppendStr(&p->lines[i], "\e[39;49m");
+      }
     }
     if (high) {
       AppendStr(&p->lines[i], "\e[27m");

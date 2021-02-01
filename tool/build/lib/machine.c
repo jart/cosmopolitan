@@ -449,6 +449,7 @@ static void OpCmpxchg16b(struct Machine *m, uint32_t rde) {
 
 static void OpRdrand(struct Machine *m, uint32_t rde) {
   WriteRegister(rde, RegRexbRm(m, rde), rand64());
+  m->flags = SetFlag(m->flags, FLAGS_CF, true);
 }
 
 static void OpRdseed(struct Machine *m, uint32_t rde) {

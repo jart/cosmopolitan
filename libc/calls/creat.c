@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
 
 /**
@@ -35,5 +36,5 @@
  * @asyncsignalsafe
  */
 nodiscard int creat(const char *file, uint32_t mode) {
-  return open(file, O_CREAT | O_WRONLY | O_TRUNC, mode);
+  return openat(AT_FDCWD, file, O_CREAT | O_WRONLY | O_TRUNC, mode);
 }

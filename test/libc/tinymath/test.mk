@@ -50,8 +50,8 @@ o/$(MODE)/test/libc/tinymath/%.com.dbg:				\
 	@$(APELINK)
 
 $(TEST_LIBC_TINYMATH_OBJS):					\
-	DEFAULT_CCFLAGS +=					\
-		-fno-builtin
+		DEFAULT_CCFLAGS +=				\
+			-fno-builtin
 
 .PHONY: o/$(MODE)/test/libc/tinymath
 o/$(MODE)/test/libc/tinymath:					\

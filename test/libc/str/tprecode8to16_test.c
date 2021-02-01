@@ -25,10 +25,10 @@
 
 TEST(tprecode8to16, test) {
   size_t size = 8;
-  char16_t *buf = tmalloc(size * sizeof(char16_t));
+  char16_t *buf = malloc(size * sizeof(char16_t));
   EXPECT_EQ(7, tprecode8to16(buf, size, "hello☻♥").ax);
   EXPECT_STREQ(u"hello☻♥", buf);
-  tfree(buf);
+  free(buf);
 }
 
 TEST(tprecode8to16, testEmptyOut_doesNothingButStillCountsSrcLength) {
@@ -65,11 +65,11 @@ TEST(tprecode8to16, test2) {
 
 TEST(tprecode8to16, testAscii_vectorSpeedupWorks) {
   size_t size = 32;
-  char16_t *buf = tmalloc(size * sizeof(char16_t));
+  char16_t *buf = malloc(size * sizeof(char16_t));
   EXPECT_EQ(31,
             tprecode8to16(buf, size, "babaaaaaaaaaaaaaaaaaaaaaaaaaaaaa").ax);
   EXPECT_STREQ(u"babaaaaaaaaaaaaaaaaaaaaaaaaaaaa", buf);
-  tfree(buf);
+  free(buf);
 }
 
 BENCH(tprecode8to16, bench) {

@@ -27,7 +27,6 @@ TOOL_NET_DIRECTDEPS =						\
 	LIBC_FMT						\
 	LIBC_INTRIN						\
 	LIBC_LOG						\
-	LIBC_LOG_ASAN						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
 	LIBC_RAND						\
@@ -84,12 +83,6 @@ o/$(MODE)/tool/net/greenbean.com.dbg:				\
 		$(CRT)						\
 		$(APE)
 	@$(APELINK)
-
-# ifeq (,$(MODE))
-# $(TOOL_NET_OBJS):						\
-# 		OVERRIDE_CFLAGS +=				\
-# 			-fsanitize=address
-# endif
 
 .PHONY: o/$(MODE)/tool/net
 o/$(MODE)/tool/net:						\

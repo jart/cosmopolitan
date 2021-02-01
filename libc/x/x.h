@@ -46,6 +46,8 @@ char *xstrndup(const char *, size_t) _XPNN _XMAL;
 char *xstrcat(const char *, ...) paramsnonnull((1)) nullterminated() _XMAL;
 char *xstrmul(const char *, size_t) paramsnonnull((1)) _XMAL;
 char *xinet_ntop(int, const void *) _XPNN _XMAL;
+void *xunbinga(size_t, const char16_t *) attributeallocalign((1)) _XMAL _XRET;
+void *xunbing(const char16_t *) _XMAL _XRET;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § eXtended apis » files                                     ─╬─│┼

@@ -626,17 +626,17 @@ TEST(xasprintf, twosBane) {
 
 TEST(snprintf, testFixedWidthString_wontOverrunInput) {
   const int N = 2;
-  char *buf = tmalloc(N + 1);
-  char *inp = memcpy(tmalloc(N), "hi", N);
+  char *buf = malloc(N + 1);
+  char *inp = memcpy(malloc(N), "hi", N);
   EXPECT_EQ(2, snprintf(buf, N + 1, "%.*s", N, inp));
   EXPECT_BINEQ(u"hi ", buf);
-  tfree(inp);
-  tfree(buf);
+  free(inp);
+  free(buf);
 }
 
 TEST(snprintf, testFixedWidthStringIsNull_wontOverrunBuffer) {
   int N = 3;
-  char *buf = tmalloc(N + 1);
+  char *buf = malloc(N + 1);
   EXPECT_EQ(6, snprintf(buf, N + 1, "%.*s", pushpop(N), pushpop(NULL)));
   EXPECT_BINEQ(u"(nu ", buf);
   EXPECT_EQ(6, snprintf(buf, N + 1, "%#.*s", pushpop(N), pushpop(NULL)));
@@ -645,12 +645,12 @@ TEST(snprintf, testFixedWidthStringIsNull_wontOverrunBuffer) {
   EXPECT_BINEQ(u"NUL ", buf);
   EXPECT_EQ(4, snprintf(buf, N + 1, "%`#.*s", pushpop(N), pushpop(NULL)));
   EXPECT_BINEQ(u"NUL ", buf);
-  tfree(buf);
+  free(buf);
 }
 
 TEST(snprintf, testFixedWidthStringIsNull_wontLeakMemory) {
   int N = 16;
-  char *buf = tmalloc(N + 1);
+  char *buf = malloc(N + 1);
   memset(buf, 0, N + 1);
   EXPECT_EQ(6, snprintf(buf, N + 1, "%.*s", pushpop(N), pushpop(NULL)));
   EXPECT_BINEQ(u"(null)           ", buf);
@@ -663,7 +663,7 @@ TEST(snprintf, testFixedWidthStringIsNull_wontLeakMemory) {
   memset(buf, 0, N + 1);
   EXPECT_EQ(4, snprintf(buf, N + 1, "%`#.*s", pushpop(N), pushpop(NULL)));
   EXPECT_BINEQ(u"NULL             ", buf);
-  tfree(buf);
+  free(buf);
 }
 
 TEST(snprintf, twosBaneWithTypePromotion) {

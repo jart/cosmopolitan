@@ -169,6 +169,7 @@
            "nodebuginfo"
            "frownedupon"
            "wontreturn"
+           "noasan"
            "initarray"
            "mayalias"
            "noinstrument"

@@ -17,6 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/nr.h"
+#include "libc/sysv/consts/map.h"
 #include "libc/macros.h"
 .source	__FILE__
 
@@ -161,9 +164,10 @@ systemfive.xnu:
 
 /	Initializes System Five system call support.
 /
-/	  (1) Extracts parameters passed by kernel,
-/	  (2) Detects O/S without issuing system calls,
-/	  (3) Unpacks numbers.
+/	  (1) Extracts parameters passed by kernel
+/	  (2) Detects OS without issuing system calls
+/	  (3) Unpacks magnums from libc/sysv/consts.sh
+/	  (4) Replaces stack with one we control
 /
 /	@param	%r15 is auxv
 /	@note	OpenBSD devs: let us know if you start using auxv
@@ -219,26 +223,17 @@ systemfive.init.os:
 	pop	%rax
 	add	%rcx,%rax
 	stosq	#→ __systemfive
+/	𝑠𝑙𝑖𝑑𝑒
+systemfive.init.magnums:
 	push	%rdi
 	ezlea	syscon.start,di
 	ezlea	syscon.end,bx
-	call	systemfive.sleb128unpacker
-	pop	%rdi
-/	𝑠𝑙𝑖𝑑𝑒
-systemfive.init.done:
-	pop	%rsi
-	pop	%rbx
-	.init.end 300,_init_systemfive,globl,hidden
-
-	.text.startup
-systemfive.sleb128unpacker:
-	.leafprologue
 	or	$-1,%r9
 2:	cmp	%rbx,%rdi
 	jnb	5f
 	xor	%ecx,%ecx
 	xor	%edx,%edx
-3:	lodsb
+3:	lodsb						# decodes sleb128
 	mov	%rax,%r8
 	and	$127,%r8d
 	sal	%cl,%r8
@@ -252,14 +247,66 @@ systemfive.sleb128unpacker:
 	sal	%cl,%rax
 	or	%rax,%rdx
 4:	mov	%rdx,%rax
-	cmpq	$0,(%rdi)		# don't change consts already set
-	cmovne	(%rdi),%rax		# @see WinMain() for example
+	cmpq	$0,(%rdi)				# dont change if set
+	cmovne	(%rdi),%rax				# @see WinMain()
 	stosq
 	jmp	2b
-5:	.leafepilogue
-	.previous
+5:	pop	%rdi
+	pop	%rsi
+	pop	%rbx
+/	𝑠𝑙𝑖𝑑𝑒
+#ifndef TINY
+systemfive.init.stack:
+	testb	IsWindows()				# already did this
+	jnz	systemfive.init.done
+	testb	IsOpenbsd()				# todo fix openbsd
+	jnz	systemfive.init.done
+	push	%rdi
+	push	%rsi
+	mov	__NR_mmap,%eax
+	mov	$0x700000000000-STACKSIZE,%rdi
+	mov	$STACKSIZE,%esi
+	mov	$PROT_READ|PROT_WRITE,%edx
+	mov	$MAP_PRIVATE|MAP_FIXED,%r10d
+	or	MAP_ANONYMOUS,%r10d
+	or	MAP_GROWSDOWN,%r10d
+	or	$-1,%r8
+	xor	%r9d,%r9d
+	push	%r9					# openbsd:pad
+/	clc
+	syscall
+	pop	%r9
+	jnc	2f
+1:	mov	%eax,%edi
+	mov	__NR_exit_group,%eax
+	syscall
+2:	test	%rax,%rax
+	js	1b
+	.weak	_mmi
+	ezlea	_mmi,cx
+	test	%rcx,%rcx
+	jz	3f
+	movb	$1,(%rcx)				# _mmi.i
+	movl	$(0x700000000000-STACKSIZE)>>16,8(%rcx)	# _mmi.p[0].x
+	movl	$(0x700000000000-1)>>16,12(%rcx)	# _mmi.p[0].y
+	mov	%edx,20(%rcx)				# _mmi.p[0].prot
+	mov	%r10d,24(%rcx)				# _mmi.p[0].flags
+3:	pop	%rsi
+	pop	%rdi
+	leave
+	pop	%rcx
+	lea	STACKSIZE(%rax),%rsp
+	push	%rcx
+	xor	%ebp,%ebp
+	push	%rbp
+	mov	%rsp,%rbp
+/	𝑠𝑙𝑖𝑑𝑒
+#endif /* TINY */
+systemfive.init.done:
+	nop
+	.init.end 300,_init_systemfive,globl,hidden
 
-/	Sections for varint encoded numbers.
+/	Sections for varint encoded magic numbers.
 /
 /	These sections are all ordered by (group_name, constant_name).
 /	They're populated by modules simply referencing the symbols.

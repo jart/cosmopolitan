@@ -597,6 +597,13 @@ typedef uint64_t uintmax_t;
 #define nocallersavedregisters "need modern compiler"
 #endif
 
+#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 408 || \
+    __has_attribute(__no_sanitize_address__)
+#define noasan __attribute__((__no_sanitize_address__))
+#else
+#define noasan
+#endif
+
 #ifndef unreachable
 #define unreachable __builtin_unreachable()
 #endif

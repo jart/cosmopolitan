@@ -21,7 +21,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
-#include "libc/log/asan.internal.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/macros.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/directmap.h"
@@ -94,7 +94,7 @@ void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
     abort();
   }
   if (weaken(__asan_map_shadow)) {
-    weaken(__asan_map_shadow)(dm.addr, size);
+    weaken(__asan_map_shadow)((uintptr_t)dm.addr, size);
   }
   return dm.addr;
 }

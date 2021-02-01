@@ -77,10 +77,6 @@ __asan_load32:
 	ud2
 	.endfn	__asan_load32,weak
 
-__asan_noreentry:
-	ud2
-	.endfn	__asan_noreentry,weak
-
 __asan_option_detect_stack_use_after_return:
 	ud2
 	.endfn	__asan_option_detect_stack_use_after_return,weak

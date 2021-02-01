@@ -34,7 +34,7 @@
  * @returns -1 on error or something else on success
  */
 int getttysize(int fd, struct winsize *out) {
-  if (isterminalinarticulate()) {
+  if (IsTerminalInarticulate()) {
     out->ws_col = strtoimax(firstnonnull(getenv("COLUMNS"), "80"), NULL, 0);
     out->ws_row = strtoimax(firstnonnull(getenv("ROWS"), "40"), NULL, 0);
     out->ws_xpixel = 0;

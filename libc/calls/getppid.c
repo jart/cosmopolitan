@@ -16,28 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/dce.h"
-#include "libc/nt/nt/process.h"
-#include "libc/nt/ntdll.h"
-#include "libc/nt/process.h"
-#include "libc/nt/runtime.h"
-#include "libc/nt/struct/processbasicinformation.h"
-
-static textwindows noinline int32_t getppid$nt(void) {
-  struct NtProcessBasicInformation ProcessInformation;
-  uint32_t gotsize = 0;
-  if (!NtError(
-          NtQueryInformationProcess(GetCurrentProcess(), 0, &ProcessInformation,
-                                    sizeof(ProcessInformation), &gotsize)) &&
-      gotsize >= sizeof(ProcessInformation) &&
-      ProcessInformation.InheritedFromUniqueProcessId) {
-    /* TODO(jart): Fix type mismatch and do we need to close this? */
-    return ProcessInformation.InheritedFromUniqueProcessId;
-  }
-  return GetCurrentProcessId();
-}
 
 /**
  * Returns parent process id.

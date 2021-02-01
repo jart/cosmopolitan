@@ -28,7 +28,6 @@ TEST_LIBC_RUNTIME_DIRECTDEPS =					\
 	LIBC_FMT						\
 	LIBC_INTRIN						\
 	LIBC_LOG						\
-	LIBC_LOG_ASAN						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
 	LIBC_RAND						\
@@ -61,12 +60,6 @@ o/$(MODE)/test/libc/runtime/%.com.dbg:				\
 $(TEST_LIBC_RUNTIME_OBJS):					\
 	DEFAULT_CCFLAGS +=					\
 		-fno-builtin
-
-# ifeq (,$(MODE))
-# $(TEST_LIBC_RUNTIME_OBJS):				\
-# 		OVERRIDE_CFLAGS +=			\
-# 			-fsanitize=address
-# endif
 
 o/$(MODE)/test/libc/runtime/getenv_test.com.runs:		\
 		o/$(MODE)/test/libc/runtime/getenv_test.com

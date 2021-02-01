@@ -38,10 +38,6 @@ o/$(MODE)/test/net/http/%.com.dbg:				\
 		$(APE)
 	@$(APELINK)
 
-# $(TEST_NET_HTTP_OBJS):						\
-# 		OVERRIDE_CFLAGS +=				\
-# 			-fsanitize=address
-
 .PHONY: o/$(MODE)/test/net/http
 o/$(MODE)/test/net/http:					\
 		$(TEST_NET_HTTP_BINS)				\

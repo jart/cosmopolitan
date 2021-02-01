@@ -22,4 +22,6 @@
 /**
  * Returns true if current process was spawned by GNU Make.
  */
-bool isrunningundermake(void) { return !!getenv("MAKEFLAGS"); }
+bool IsRunningUnderMake(void) {
+  return !!getenv("MAKEFLAGS");
+}

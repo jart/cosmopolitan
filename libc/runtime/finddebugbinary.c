@@ -36,6 +36,7 @@ const char *FindDebugBinary(void) {
   char buf[2][PATH_MAX];
   static char res[PATH_MAX];
   const char *bins[4], *pwd;
+  if (res[0]) return res;
   bins[0] = program_invocation_name;
   bins[1] = (const char *)getauxval(AT_EXECFN);
   pwd = emptytonull(getenv("PWD"));
@@ -59,6 +60,7 @@ const char *FindDebugBinary(void) {
       return res;
     }
   }
+  res[0] = '\0';
   errno = ENOENT;
   return NULL;
 }

@@ -26,6 +26,7 @@ TEST_APE_LIB_DIRECTDEPS =				\
 	APE_LIB						\
 	LIBC_INTRIN					\
 	LIBC_LOG					\
+	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
 	LIBC_RUNTIME					\
 	LIBC_STR					\

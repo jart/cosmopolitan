@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.privileged
 .source	__FILE__
 
 /	@fileoverview Address Sanitizer Thunks
@@ -48,9 +47,12 @@ __asan_report_load16:
 	.endfn	__asan_report_load16,globl
 OnReportLoad:
 	pop	%rsi
-	ezlea	__asan_report_load_n,ax
-	jmp	__asan_report_noreentry
+/	𝑠𝑙𝑖𝑑𝑒
 	.endfn	OnReportLoad
+__asan_report_load_n:
+	lea	__asan_report_load_impl(%rip),%r11
+	jmp	__asan_report_noreentry
+	.endfn	__asan_report_load_n,globl
 
 __asan_report_store1:
 	push	$1
@@ -78,21 +80,24 @@ __asan_report_store32:
 	.endfn	__asan_report_store32,globl
 ReportStore:
 	pop	%rsi
-	ezlea	__asan_report_store_n,ax
 /	𝑠𝑙𝑖𝑑𝑒
 	.endfn	ReportStore
+__asan_report_store_n:
+	lea	__asan_report_store_impl(%rip),%r11
+/	𝑠𝑙𝑖𝑑𝑒
+	.endfn	__asan_report_store_n,globl
 
 __asan_report_noreentry:
 	push	%rbp
 	mov	%rsp,%rbp
-	cmpb	$0,noreentry(%rip)
+	xor	%eax,%eax
+	mov	$1,%r10b
+	cmpxchg	%r10b,__asan_noreentry(%rip)
 	jnz	2f
-	incb	noreentry(%rip)
-	call	*%rax
-	decb	noreentry(%rip)
-	pop	%rbp
+	call	*%r11
+	decb	__asan_noreentry(%rip)
+2:	pop	%rbp
 	ret
-2:	call	abort
 	.endfn	__asan_report_noreentry
 
 __asan_stack_free_0:
@@ -194,14 +199,27 @@ OnStackMalloc:
 	.endfn	OnStackMalloc
 
 __asan_handle_no_return:
+	push	%rbp
+	mov	%rsp,%rbp
+	lea	8(%rsp),%rdi
+	call	__asan_handle_no_return_impl
+	pop	%rbp
 	ret
 	.endfn	__asan_handle_no_return,globl
 
 __asan_before_dynamic_init:
+	push	%rbp
+	mov	%rsp,%rbp
+	ud2
+	pop	%rbp
 	ret
 	.endfn	__asan_before_dynamic_init,globl
 
 __asan_after_dynamic_init:
+	push	%rbp
+	mov	%rsp,%rbp
+	ud2
+	pop	%rbp
 	ret
 	.endfn	__asan_after_dynamic_init,globl
 
@@ -229,7 +247,7 @@ __asan_option_detect_stack_use_after_return:
 	.previous
 
 	.bss
-noreentry:
+__asan_noreentry:
 	.byte	0
-	.endobj	noreentry
+	.endobj	__asan_noreentry
 	.previous

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
+#include "libc/mem/mem.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
@@ -44,12 +45,12 @@ TEST(inet_ntop, testBadFamily) {
 }
 
 TEST(inet_ntop, testNoSpace) {
-  char *buf = memcpy(tmalloc(16), "hi", 3);
+  char *buf = memcpy(malloc(16), "hi", 3);
   uint8_t localhost[4] = {127, 0, 0, 1};
   ASSERT_EQ(NULL, inet_ntop(AF_INET, localhost, buf, 0));
   EXPECT_EQ(ENOSPC, errno);
   ASSERT_STREQ("hi", buf);
   ASSERT_EQ(NULL, inet_ntop(AF_INET, localhost, buf, 7));
   ASSERT_STREQ("", buf);
-  tfree(buf);
+  free(buf);
 }

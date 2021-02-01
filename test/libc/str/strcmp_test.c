@@ -19,9 +19,11 @@
 #include "libc/bits/bits.h"
 #include "libc/dce.h"
 #include "libc/macros.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/cachesize.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/rand/rand.h"
+#include "libc/runtime/gc.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
@@ -64,27 +66,27 @@ TEST(wcscasecmp, emptyString) {
 }
 
 TEST(strncmp, emptyString) {
-  char *s1 = strcpy(tmalloc(1), "");
-  char *s2 = strcpy(tmalloc(1), "");
+  char *s1 = strcpy(malloc(1), "");
+  char *s2 = strcpy(malloc(1), "");
   ASSERT_EQ(0, strncmp(s1, s2, 0));
   ASSERT_EQ(0, strncmp(s1, s2, 1));
   ASSERT_EQ(0, strncmp(s1, s2, -1));
   ASSERT_EQ(0, strncmp(s1, s1, -1));
   ASSERT_EQ(0, strncmp(s2, s2, -1));
-  tfree(s2);
-  tfree(s1);
+  free(s2);
+  free(s1);
 }
 
 TEST(strncasecmp, emptyString) {
-  char *s1 = strcpy(tmalloc(1), "");
-  char *s2 = strcpy(tmalloc(1), "");
+  char *s1 = strcpy(malloc(1), "");
+  char *s2 = strcpy(malloc(1), "");
   ASSERT_EQ(0, strncasecmp(s1, s2, 0));
   ASSERT_EQ(0, strncasecmp(s1, s2, 1));
   ASSERT_EQ(0, strncasecmp(s1, s2, -1));
   ASSERT_EQ(0, strncasecmp(s1, s1, -1));
   ASSERT_EQ(0, strncasecmp(s2, s2, -1));
-  tfree(s2);
-  tfree(s1);
+  free(s2);
+  free(s1);
 }
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -92,13 +94,13 @@ TEST(strncasecmp, emptyString) {
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 TEST(strncmp, testInequality) {
-  char *s1 = strcpy(tmalloc(2), "1");
-  char *s2 = strcpy(tmalloc(1), "");
+  char *s1 = strcpy(malloc(2), "1");
+  char *s2 = strcpy(malloc(1), "");
   ASSERT_EQ(0, strncmp(s1, s2, 0));
   ASSERT_EQ('1', strncmp(s1, s2, 1));
   ASSERT_EQ(-'1', strncmp(s2, s1, 1));
-  tfree(s2);
-  tfree(s1);
+  free(s2);
+  free(s1);
 }
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -318,8 +320,8 @@ TEST(strcasecmp8to16, testItWorksCase) {
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 TEST(strncmp, testEqualManyNs) {
-  char *s1 = tmalloc(PAGESIZE);
-  char *s2 = tmalloc(PAGESIZE);
+  char *s1 = malloc(PAGESIZE);
+  char *s2 = malloc(PAGESIZE);
   memset(s1, 7, PAGESIZE);
   memset(s2, 7, PAGESIZE);
   s1[PAGESIZE - 1] = '\0';
@@ -328,13 +330,13 @@ TEST(strncmp, testEqualManyNs) {
     ASSERT_EQ(0, strncmp(s1 + PAGESIZE - i, s2 + PAGESIZE - i, i + 0));
     ASSERT_EQ(0, strncmp(s1 + PAGESIZE - i, s2 + PAGESIZE - i, i + 1));
   }
-  tfree(s2);
-  tfree(s1);
+  free(s2);
+  free(s1);
 }
 
 TEST(strncmp, testNotEqualManyNs) {
-  char *s1 = tmalloc(PAGESIZE);
-  char *s2 = tmalloc(PAGESIZE);
+  char *s1 = malloc(PAGESIZE);
+  char *s2 = malloc(PAGESIZE);
   for (unsigned i = 1; i <= 128; ++i) {
     memset(s1, 7, PAGESIZE);
     memset(s2, 7, PAGESIZE);
@@ -343,8 +345,8 @@ TEST(strncmp, testNotEqualManyNs) {
     ASSERT_EQ(-255, strncmp(s1 + PAGESIZE - i, s2 + PAGESIZE - i, i + 0));
     ASSERT_EQ(-255, strncmp(s1 + PAGESIZE - i, s2 + PAGESIZE - i, i + 1));
   }
-  tfree(s2);
-  tfree(s1);
+  free(s2);
+  free(s1);
 }
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -354,40 +356,40 @@ TEST(strncmp, testNotEqualManyNs) {
 TEST(strncmp, testStringNulTerminatesBeforeExplicitLength) {
   const char kRdi[] = "";
   const char kRsi[] = "TZ=America/Los_Angeles";
-  char *rdi = memcpy(tmalloc(sizeof(kRdi)), kRdi, sizeof(kRdi));
-  char *rsi = memcpy(tmalloc(sizeof(kRsi)), kRsi, sizeof(kRsi));
+  char *rdi = memcpy(malloc(sizeof(kRdi)), kRdi, sizeof(kRdi));
+  char *rsi = memcpy(malloc(sizeof(kRsi)), kRsi, sizeof(kRsi));
   size_t rdx = 3;
   EXPECT_EQ(strncmp(rdi, rdi, rdx), 0);
   EXPECT_LT(strncmp(rdi, rsi, rdx), 0);
   EXPECT_GT(strncmp(rsi, rdi, rdx), 0);
-  tfree(rsi);
-  tfree(rdi);
+  free(rsi);
+  free(rdi);
 }
 
 TEST(strncasecmp, testStringNulTerminatesBeforeExplicitLength) {
   const char kRdi[] = "";
   const char kRsi[] = "TZ=America/Los_Angeles";
-  char *rdi = memcpy(tmalloc(sizeof(kRdi)), kRdi, sizeof(kRdi));
-  char *rsi = memcpy(tmalloc(sizeof(kRsi)), kRsi, sizeof(kRsi));
+  char *rdi = memcpy(malloc(sizeof(kRdi)), kRdi, sizeof(kRdi));
+  char *rsi = memcpy(malloc(sizeof(kRsi)), kRsi, sizeof(kRsi));
   size_t rdx = 3;
   EXPECT_EQ(strncasecmp(rdi, rdi, rdx), 0);
   EXPECT_LT(strncasecmp(rdi, rsi, rdx), 0);
   EXPECT_GT(strncasecmp(rsi, rdi, rdx), 0);
-  tfree(rsi);
-  tfree(rdi);
+  free(rsi);
+  free(rdi);
 }
 
 TEST(strncmp16, testStringNulTerminatesBeforeExplicitLength) {
   const char16_t kRdi[] = u"";
   const char16_t kRsi[] = u"TZ=America/Los_Angeles";
-  char16_t *rdi = memcpy(tmalloc(sizeof(kRdi)), kRdi, sizeof(kRdi));
-  char16_t *rsi = memcpy(tmalloc(sizeof(kRsi)), kRsi, sizeof(kRsi));
+  char16_t *rdi = memcpy(malloc(sizeof(kRdi)), kRdi, sizeof(kRdi));
+  char16_t *rsi = memcpy(malloc(sizeof(kRsi)), kRsi, sizeof(kRsi));
   size_t rdx = 3;
   EXPECT_EQ(strncmp16(rdi, rdi, rdx), 0);
   EXPECT_LT(strncmp16(rdi, rsi, rdx), 0);
   EXPECT_GT(strncmp16(rsi, rdi, rdx), 0);
-  tfree(rsi);
-  tfree(rdi);
+  free(rsi);
+  free(rdi);
 }
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -422,33 +424,33 @@ TEST(memcmp, testTwosComplementBane_unsignedBehavior) {
 }
 
 TEST(strcmp16, testTwosComplementBane_hasUnsignedBehavior) {
-  char16_t *B1 = tmalloc(8);
-  char16_t *B2 = tmalloc(8);
+  char16_t *B1 = malloc(8);
+  char16_t *B2 = malloc(8);
   B1[1] = L'\0';
   B2[1] = L'\0';
   EXPECT_EQ(strcmp16(memcpy(B1, "\x00\x80", 2), memcpy(B2, "\x00\x80", 2)), 0);
   EXPECT_LT(strcmp16(memcpy(B1, "\xff\x7f", 2), memcpy(B2, "\x00\x80", 2)), 0);
   EXPECT_GT(strcmp16(memcpy(B1, "\x00\x80", 2), memcpy(B2, "\xff\x7f", 2)), 0);
-  tfree(B2);
-  tfree(B1);
+  free(B2);
+  free(B1);
 }
 
 TEST(strncmp16, testTwosComplementBane_hasUnsignedBehavior) {
-  char16_t *B1 = tmalloc(4);
-  char16_t *B2 = tmalloc(4);
+  char16_t *B1 = malloc(4);
+  char16_t *B2 = malloc(4);
   EXPECT_EQ(strncmp16(memcpy(B1, "\x00\x80", 2), memcpy(B2, "\x00\x80", 2), 1),
             0);
   EXPECT_LT(strncmp16(memcpy(B1, "\xff\x7f", 2), memcpy(B2, "\x00\x80", 2), 1),
             0);
   EXPECT_GT(strncmp16(memcpy(B1, "\x00\x80", 2), memcpy(B2, "\xff\x7f", 2), 1),
             0);
-  tfree(B2);
-  tfree(B1);
+  free(B2);
+  free(B1);
 }
 
 TEST(wcscmp, testTwosComplementBane) {
-  wchar_t *B1 = tmalloc(8);
-  wchar_t *B2 = tmalloc(8);
+  wchar_t *B1 = malloc(8);
+  wchar_t *B2 = malloc(8);
   B1[1] = L'\0';
   B2[1] = L'\0';
   EXPECT_EQ(wcscmp(memcpy(B1, "\x00\x00\x00\x80", 4),
@@ -459,13 +461,13 @@ TEST(wcscmp, testTwosComplementBane) {
   EXPECT_EQ(wcscmp(memcpy(B1, "\x00\x00\x00\x80", 4),
                    memcpy(B2, "\xff\xff\xff\x7f", 4)),
             1);
-  tfree(B2);
-  tfree(B1);
+  free(B2);
+  free(B1);
 }
 
 TEST(wcsncmp, testTwosComplementBane) {
-  wchar_t *B1 = tmalloc(4);
-  wchar_t *B2 = tmalloc(4);
+  wchar_t *B1 = malloc(4);
+  wchar_t *B2 = malloc(4);
   EXPECT_EQ(wcsncmp(memcpy(B1, "\x00\x00\x00\x80", 4),
                     memcpy(B2, "\x00\x00\x00\x80", 4), 1),
             0);
@@ -475,8 +477,8 @@ TEST(wcsncmp, testTwosComplementBane) {
   EXPECT_EQ(wcsncmp(memcpy(B1, "\x00\x00\x00\x80", 4),
                     memcpy(B2, "\xff\xff\xff\x7f", 4), 1),
             1);
-  tfree(B2);
-  tfree(B1);
+  free(B2);
+  free(B1);
 }
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -530,8 +532,8 @@ BENCH(bench_00_strcmp, bench) {
   char *dupe, *data;
   size = ROUNDDOWN(MAX(FRAMESIZE, getcachesize(kCpuCacheTypeData, 1)) / 2,
                    PAGESIZE);
-  data = tgc(tmalloc(size));
-  dupe = tgc(tmalloc(size));
+  data = gc(malloc(size));
+  dupe = gc(malloc(size));
 
   fprintf(stderr, "\n");
   EZBENCH2("strcmp [identity]", longstringislong(size, data),
@@ -579,8 +581,8 @@ BENCH(bench_01_strcasecmp, bench) {
   char *dupe, *data;
   size = ROUNDDOWN(MAX(FRAMESIZE, getcachesize(kCpuCacheTypeData, 1)) / 2,
                    PAGESIZE);
-  data = tgc(tmalloc(size));
-  dupe = tgc(tmalloc(size));
+  data = gc(malloc(size));
+  dupe = gc(malloc(size));
 
   fprintf(stderr, "\n");
   EZBENCH2("strcasecmp [identity]", longstringislong(size, data),

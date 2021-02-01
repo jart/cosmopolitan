@@ -240,6 +240,7 @@ int fork$nt(void) hidden;
 int fstat$nt(i64, struct stat *) hidden;
 int fstatat$nt(int, const char *, struct stat *, uint32_t) hidden;
 int ftruncate$nt(int, u64) hidden;
+int getppid$nt(void) hidden;
 int getpriority$nt(int) hidden;
 int getrusage$nt(int, struct rusage *) hidden;
 int gettimeofday$nt(struct timeval *, struct timezone *) hidden;

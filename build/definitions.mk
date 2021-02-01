@@ -104,14 +104,15 @@ FTRACE =								\
 
 SANITIZER =								\
 	-fsanitize=leak							\
-	-fsanitize=undefined						\
+	-fsanitize=address						\
 	-fsanitize=implicit-signed-integer-truncation			\
 	-fsanitize=implicit-integer-sign-change
 
 NO_MAGIC =								\
 	-mno-fentry							\
 	-fno-stack-protector						\
-	-fno-sanitize=all
+	-fno-sanitize=all						\
+	-fwrapv
 
 OLD_CODE =								\
 	-fno-strict-aliasing						\

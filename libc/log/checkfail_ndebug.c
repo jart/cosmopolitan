@@ -46,5 +46,5 @@ relegated void ___check_fail_ndebug(uint64_t want, uint64_t got,
   __print(bx, uint64toarray_radix16(got, bx));
   __print_string(" (");
   __print(bx, int64toarray_radix10(lasterr, bx));
-  __print_string(")\n");
+  __print_string(")\r\n");
 }

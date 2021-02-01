@@ -16,47 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/mem.h"
-#include "libc/nexgen32e/nexgen32e.h"
-#include "libc/rand/rand.h"
-#include "libc/str/str.h"
-#include "libc/testlib/ezbench.h"
+#include "libc/math.h"
 #include "libc/testlib/testlib.h"
 
-TEST(strtolower, testAligned) {
-  EXPECT_STREQ("azcdabcdabcdabcd", strtolower(gc(strdup("AZCDabcdABCDabcd"))));
-  EXPECT_STREQ("azcdabcdabcdabcdabcdabcdabcdabcd",
-               strtolower(gc(strdup("AZCDabcdABCDabcdABCDabcdABCDabcd"))));
+TEST(pow10, testLdbl) {
+  EXPECT_LDBL_EQ(1, pow10l(0));
+  EXPECT_LDBL_EQ(10, pow10l(1));
+  EXPECT_LDBL_EQ(100, pow10l(2));
 }
 
-TEST(strtolower, testUnaligned) {
-  EXPECT_STREQ("1", strtolower(gc(strdup("1"))));
-  EXPECT_STREQ(
-      "zcdabcdabcdabcdabcdabcdabcdabc",
-      strtolower((char *)gc(strdup("AZCDabcdABCDabcdABCDabcdABCDabc")) + 1));
+TEST(pow10, testDouble) {
+  EXPECT_DOUBLE_EQ(1, pow10(0));
+  EXPECT_DOUBLE_EQ(10, pow10(1));
+  EXPECT_DOUBLE_EQ(100, pow10(2));
 }
 
-TEST(strtoupper, testAligned) {
-  EXPECT_STREQ("AZCDABCDABCDABCD", strtoupper(gc(strdup("AZCDabcdABCDabcd"))));
-  EXPECT_STREQ("AZCDABCDABCDABCDABCDABCDABCDABCD",
-               strtoupper(gc(strdup("AZCDabcdABCDabcdABCDabcdABCDabcd"))));
-}
-
-TEST(strtoupper, testUnaligned) {
-  EXPECT_STREQ("1", strtoupper(gc(strdup("1"))));
-  EXPECT_STREQ(
-      "ZCDABCDABCDABCDABCDABCDABCDABC",
-      strtoupper((char *)gc(strdup("AZCDabcdABCDabcdABCDabcdABCDabc")) + 1));
-}
-
-BENCH(strtolower, bench) {
-  size_t size = FRAMESIZE;
-  char *data = gc(malloc(size));
-  EZBENCH2(
-      "strtolower",
-      {
-        rngset(data, size, rand64, -1);
-        data[size - 1] = 0;
-      },
-      strtolower(data));
+TEST(pow10, testFloat) {
+  EXPECT_FLOAT_EQ(1, pow10f(0));
+  EXPECT_FLOAT_EQ(10, pow10f(1));
+  EXPECT_FLOAT_EQ(100, pow10f(2));
 }

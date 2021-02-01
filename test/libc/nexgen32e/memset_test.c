@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/testlib/testlib.h"
 
@@ -26,20 +27,20 @@ TEST(memset, size0_doesNothing) {
 }
 
 TEST(memset, size1) {
-  char *b = tgc(tmalloc(1));
+  char *b = gc(malloc(1));
   _memset(b, 7, 1);
   EXPECT_EQ(7, b[0]);
 }
 
 TEST(memset, size2) {
-  char *b = tgc(tmalloc(2));
+  char *b = gc(malloc(2));
   _memset(b, 7, 2);
   EXPECT_EQ(7, b[0]);
   EXPECT_EQ(7, b[1]);
 }
 
 TEST(memset, size3) {
-  char *b = tgc(tmalloc(3));
+  char *b = gc(malloc(3));
   _memset(b, 7, 3);
   EXPECT_EQ(7, b[0]);
   EXPECT_EQ(7, b[1]);
@@ -47,7 +48,7 @@ TEST(memset, size3) {
 }
 
 TEST(memset, size4) {
-  char *b = tgc(tmalloc(4));
+  char *b = gc(malloc(4));
   _memset(b, 7, 4);
   EXPECT_EQ(7, b[0]);
   EXPECT_EQ(7, b[1]);
@@ -56,7 +57,7 @@ TEST(memset, size4) {
 }
 
 TEST(memset, size5) {
-  char *b = tgc(tmalloc(5));
+  char *b = gc(malloc(5));
   _memset(b, 7, 5);
   EXPECT_EQ(7, b[0]);
   EXPECT_EQ(7, b[1]);
@@ -70,7 +71,7 @@ TEST(memset, testMulTrick4) {
   unsigned long x;
   long di, si, dx, ax;
   volatile uint8_t *b;
-  b = tgc(tmalloc(4));
+  b = gc(malloc(4));
   for (i = 0; i < 255; ++i) {
     for (j = -1; j < 1; ++j) {
       x = j;
@@ -93,7 +94,7 @@ TEST(memset, testMulTrick8) {
   unsigned long x;
   long di, si, dx, ax;
   volatile uint8_t *b;
-  b = tgc(tmalloc(8));
+  b = gc(malloc(8));
   for (i = 0; i < 255; ++i) {
     for (j = -1; j < 1; ++j) {
       x = j;

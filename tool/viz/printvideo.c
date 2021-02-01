@@ -1467,7 +1467,7 @@ int main(int argc, char *argv[]) {
   sigaddset(&wut, SIGCHLD);
   sigaddset(&wut, SIGPIPE);
   sigprocmask(SIG_SETMASK, &wut, NULL);
-  if (!NoDebug()) showcrashreports();
+  showcrashreports();
   fullclear_ = true;
   GetOpts(argc, argv);
   if (!tuned_) PickDefaults();

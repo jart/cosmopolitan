@@ -23,7 +23,6 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nexgen32e/macros.h"
 #include "libc/macros.h"
-.source	__FILE__
 
 /	Sets memory.
 /
@@ -34,7 +33,8 @@
 /	@mode	long
 /	@asyncsignalsafe
 memset:	mov	%rdi,%rax
-/	fallthrough
+/	𝑠𝑙𝑖𝑑𝑒
+	.align	16
 	.endfn	memset,globl
 
 /	Sets memory w/ minimal-impact ABI.
@@ -98,6 +98,7 @@ MemSet:	.leafprologue
 	pop	%rax
 	jmp	.L0
 	.endfn	MemSet,globl,hidden
+	.source	__FILE__
 
 	.rodata.cst8
 .Lb8:	.quad	0x0101010101010101

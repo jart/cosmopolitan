@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/dns.h"
 #include "libc/dns/dnsheader.h"
+#include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
@@ -28,20 +29,20 @@ TEST(serializednsheader, test) {
   header.id = 255;
   header.bf1 = true;
   header.qdcount = 1;
-  uint8_t *buf = tmalloc(12);
+  uint8_t *buf = malloc(12);
   ASSERT_EQ(12, serializednsheader(buf, 12, header));
   EXPECT_BINEQ(u" λ☺  ☺      ", buf);
-  tfree(buf);
+  free(buf);
 }
 
 TEST(serializednsheader, fuzzSymmetry) {
-  uint8_t *buf = tmalloc(12);
-  struct DnsHeader *in = tmalloc(sizeof(struct DnsHeader));
-  struct DnsHeader *out = tmalloc(sizeof(struct DnsHeader));
+  uint8_t *buf = malloc(12);
+  struct DnsHeader *in = malloc(sizeof(struct DnsHeader));
+  struct DnsHeader *out = malloc(sizeof(struct DnsHeader));
   ASSERT_EQ(12, serializednsheader(buf, 12, *in));
   ASSERT_EQ(12, deserializednsheader(out, buf, 12));
   ASSERT_EQ(0, memcmp(in, out, 12));
-  tfree(out);
-  tfree(in);
-  tfree(buf);
+  free(out);
+  free(in);
+  free(buf);
 }

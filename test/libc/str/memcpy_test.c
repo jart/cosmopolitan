@@ -24,61 +24,61 @@
 TEST(memcpy, memcpy) {
   char *b1, *b2;
   for (unsigned n = 0; n < 1026; ++n) {
-    b1 = tmalloc(n);
-    b2 = tmalloc(n);
+    b1 = malloc(n);
+    b2 = malloc(n);
     ASSERT_EQ(b1, memcpy(b1, b2, n));
     ASSERT_EQ(0, memcmp(b1, b2, n));
-    tfree(b2);
-    tfree(b1);
+    free(b2);
+    free(b1);
   }
 }
 
 TEST(memcpy, memcpyDirect) {
   char *b1, *b2;
   for (unsigned n = 0; n < 1026; ++n) {
-    b1 = tmalloc(n);
-    b2 = tmalloc(n);
+    b1 = malloc(n);
+    b2 = malloc(n);
     ASSERT_EQ(b1, (memcpy)(b1, b2, n));
     ASSERT_EQ(0, memcmp(b1, b2, n));
-    tfree(b2);
-    tfree(b1);
+    free(b2);
+    free(b1);
   }
 }
 
 TEST(memcpy, mempcpy) {
   char *b1, *b2;
   for (unsigned n = 0; n < 1026; ++n) {
-    b1 = tmalloc(n);
-    b2 = tmalloc(n);
+    b1 = malloc(n);
+    b2 = malloc(n);
     ASSERT_EQ(b1 + n, mempcpy(b1, b2, n));
     ASSERT_EQ(0, memcmp(b1, b2, n));
-    tfree(b2);
-    tfree(b1);
+    free(b2);
+    free(b1);
   }
 }
 
 TEST(memcpy, mempcpyDirect) {
   char *b1, *b2;
   for (unsigned n = 0; n < 1026; ++n) {
-    b1 = tmalloc(n);
-    b2 = tmalloc(n);
+    b1 = malloc(n);
+    b2 = malloc(n);
     ASSERT_EQ(b1 + n, (mempcpy)(b1, b2, n));
     ASSERT_EQ(0, memcmp(b1, b2, n));
-    tfree(b2);
-    tfree(b1);
+    free(b2);
+    free(b1);
   }
 }
 
 TEST(memcpy, overlapping_isFineIfCopyingBackwards) {
   for (size_t i = 0; i < 32; ++i) {
-    char *b1 = tmalloc(64 + i);
-    char *b2 = tmalloc(64 + i);
+    char *b1 = malloc(64 + i);
+    char *b2 = malloc(64 + i);
     memcpy(b1, b2, 64);
     memcpy(b1, b1 + i, 64 - i);
     memmove(b2, b2 + i, 64 - i);
     ASSERT_EQ(0, memcmp(b1, b2, 64));
-    tfree(b2);
-    tfree(b1);
+    free(b2);
+    free(b1);
   }
 }
 

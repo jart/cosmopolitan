@@ -69,8 +69,8 @@ static const struct DeflateConsts {
     {{144, 8}, {112, 9}, {24, 7}, {8, 8}, {32, 5}, {0, 0}},
 };
 
-static uint32_t undeflatetree(struct DeflateState *ds, uint32_t *tree,
-                              const uint8_t *lens, size_t symcount) {
+static noasan uint32_t undeflatetree(struct DeflateState *ds, uint32_t *tree,
+                                     const uint8_t *lens, size_t symcount) {
   size_t i, len;
   uint32_t code, slot;
   uint16_t codes[16], first[16], counts[16];
@@ -96,10 +96,10 @@ static uint32_t undeflatetree(struct DeflateState *ds, uint32_t *tree,
   return first[15];
 }
 
-static struct DeflateHold undeflatesymbol(struct DeflateHold hold,
-                                          const uint32_t *tree,
-                                          size_t treecount,
-                                          uint32_t *out_symbol) {
+static noasan struct DeflateHold undeflatesymbol(struct DeflateHold hold,
+                                                 const uint32_t *tree,
+                                                 size_t treecount,
+                                                 uint32_t *out_symbol) {
   size_t left, right, m;
   uint32_t search, key;
   left = 0;
@@ -122,17 +122,20 @@ static struct DeflateHold undeflatesymbol(struct DeflateHold hold,
   return hold;
 }
 
+/* TODO(jart): Do we really need noasan? */
+
 /**
  * Decompresses raw DEFLATE data.
  *
  * This is 10x smaller and 10x slower than chromium zlib.
  *
  * @param output should be followed by a single guard page, and have
- *     36kb of guard pages preceding it too
+ *     36kb of guard pages preceding it too because buffer overflows
+ *     are part of the design of this algorithm
  * @note h/t Phil Katz, David Huffman, Claude Shannon
  */
-ssize_t undeflate(void *output, size_t outputsize, void *input,
-                  size_t inputsize, struct DeflateState *ds) {
+noasan ssize_t undeflate(void *output, size_t outputsize, void *input,
+                         size_t inputsize, struct DeflateState *ds) {
   struct DeflateHold hold;
   bool isfinalblock;
   size_t i, nlit, ndist;

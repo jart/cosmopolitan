@@ -21,7 +21,9 @@
 #include "libc/bits/bits.h"
 #include "libc/limits.h"
 #include "libc/macros.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
+#include "libc/runtime/gc.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
@@ -54,12 +56,12 @@ const short kW3[64] forcealign(32) = {
     1730, 2041,   7707, 5096, 6876, 1324, 1242, 7,    0x7fff,
 };
 
-#define TestIt(impl, index, value, n, array)                    \
-  ({                                                            \
-    short *a = memcpy(tgc(tmemalign(32, n * 2)), array, n * 2); \
-    unsigned res = impl(array, n);                              \
-    ASSERT_EQ(index, res);                                      \
-    ASSERT_EQ(value, a[res]);                                   \
+#define TestIt(impl, index, value, n, array)                  \
+  ({                                                          \
+    short *a = memcpy(gc(memalign(32, n * 2)), array, n * 2); \
+    unsigned res = impl(array, n);                            \
+    ASSERT_EQ(index, res);                                    \
+    ASSERT_EQ(value, a[res]);                                 \
   })
 
 TEST(windex, testRealWorldPicks) {

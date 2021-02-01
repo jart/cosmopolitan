@@ -522,6 +522,7 @@ static int AppendSection(struct As *a, int name, int flags, int type) {
   int i;
   APPEND(a->sections);
   i = a->sections.n - 1;
+  CHECK_LT(i, SHN_LORESERVE);
   a->sections.p[i].name = name;
   a->sections.p[i].flags = flags;
   a->sections.p[i].type = type;
@@ -1803,6 +1804,15 @@ static void OnSize(struct As *a, struct Slice s) {
   i = GetSymbol(a, a->things.p[a->i++].i);
   ConsumeComma(a);
   a->symbols.p[i].size = GetInt(a);
+}
+
+static void OnComm(struct As *a, struct Slice s) {
+  int i;
+  i = GetSymbol(a, a->things.p[a->i++].i);
+  ConsumeComma(a);
+  a->symbols.p[i].size = GetInt(a);
+  a->symbols.p[i].type = STT_COMMON;
+  a->symbols.p[i].section = SHN_COMMON;
 }
 
 static void OpVisibility(struct As *a, int visibility) {
@@ -3118,6 +3128,7 @@ static const struct Directive8 {
     {".balign", OnAlign},      //
     {".bss", OnBss},           //
     {".byte", OnByte},         //
+    {".comm", OnComm},         //
     {".data", OnData},         //
     {".double", OnDouble},     //
     {".err", OnErr},           //
@@ -3280,8 +3291,8 @@ static const struct Directive8 {
     {"fildll", OnFildll},      //
     {"fildq", OnFildq},        //
     {"filds", OnFilds},        //
-    {"fistpq", OnFistpq},      //
     {"fistpll", OnFistpq},     //
+    {"fistpq", OnFistpq},      //
     {"fisttpll", OnFisttpq},   //
     {"fisttpq", OnFisttpq},    //
     {"fisttps", OnFisttps},    //
@@ -3906,6 +3917,9 @@ static void Objectify(struct As *a, int path) {
     a->symbols.p[i].ref = elfwriter_appendsym(
         elf, p, ELF64_ST_INFO(a->symbols.p[i].stb, a->symbols.p[i].type),
         a->symbols.p[i].stv, a->symbols.p[i].offset, a->symbols.p[i].size);
+    if (a->symbols.p[i].section >= SHN_LORESERVE) {
+      elfwriter_setsection(elf, a->symbols.p[i].ref, a->symbols.p[i].section);
+    }
     free(p);
   }
   for (i = 0; i < a->sections.n; ++i) {

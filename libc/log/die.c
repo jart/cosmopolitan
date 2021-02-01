@@ -17,12 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/bits/weaken.h"
+#include "libc/dce.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/log.h"
-#include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/exit.h"
-#include "libc/sysv/consts/fileno.h"
 
 /**
  * Aborts process after printing a backtrace.
@@ -31,15 +31,14 @@
  */
 relegated wontreturn void __die(void) {
   static bool once;
-  if (!once) {
-    once = true;
+  if (cmpxchg(&once, false, true)) {
+    if (weaken(fflush)) {
+      weaken(fflush)(NULL);
+    }
     if (!IsTiny()) {
       if (IsDebuggerPresent(false)) DebugBreak();
-      ShowBacktrace(STDERR_FILENO, NULL);
+      ShowBacktrace(2, NULL);
     }
-    exit(EXIT_FAILURE);
-    unreachable;
   }
-  abort();
-  unreachable;
+  _exit(77);
 }

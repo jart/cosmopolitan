@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/mem/mem.h"
+#include "libc/rand/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
@@ -40,19 +42,30 @@ TEST(memccpy, testZeroLength_doesNothing) {
 }
 
 TEST(memccpy, memcpy) {
-  unsigned n, n2;
+  unsigned n, n1, n2;
   char *b1, *b2, *b3, *e1, *e2;
   for (n = 0; n < 1026; ++n) {
-    b1 = tmalloc(n);
-    b2 = tmalloc(n);
-    b3 = tmalloc(n);
+    b1 = calloc(1, n);
+    b2 = calloc(1, n);
+    b3 = calloc(1, n);
+    rngset(b1, n, rand64, -1);
     e1 = tinymemccpy(b2, b1, 31337, n);
     e2 = memccpy(b3, b1, 31337, n);
-    n2 = e1 ? e1 - b1 : n;
-    ASSERT_EQ(e1, e2);
+    n1 = e1 ? e1 - b2 : n;
+    n2 = e2 ? e2 - b3 : n;
+    ASSERT_LE(n1, n);
+    ASSERT_LE(n2, n);
+    ASSERT_EQ(n1, n2,
+              "n=%ld\r\n\t"
+              "n1=%8ld e1=%p b2=%p %p\r\n\t"
+              "n2=%8ld e2=%p b3=%p %p\r\n\t"
+              "%#.*s\r\n\t"
+              "%#.*s\r\n\t"
+              "%#.*s",
+              n, n1, e1, b2, e1 - b2, n2, e2, b3, e2 - b3, n, b1, n, b2, n, b3);
     ASSERT_EQ(0, memcmp(b2, b3, n2));
-    tfree(b3);
-    tfree(b2);
-    tfree(b1);
+    free(b3);
+    free(b2);
+    free(b1);
   }
 }

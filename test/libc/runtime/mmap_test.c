@@ -43,7 +43,7 @@ TEST(mmap, testMapFile) {
   EXPECT_EQ(5, write(fd, "hello", 5));
   EXPECT_NE(-1, fdatasync(fd));
   EXPECT_NE(MAP_FAILED, (p = mmap(NULL, 5, PROT_READ, MAP_PRIVATE, fd, 0)));
-  EXPECT_STREQ("hello", p);
+  EXPECT_STREQN("hello", p, 5);
   EXPECT_NE(-1, munmap(p, 5));
   EXPECT_NE(-1, close(fd));
   EXPECT_NE(-1, unlink(path));
@@ -59,7 +59,7 @@ TEST(mmap, testMapFile_fdGetsClosed_makesNoDifference) {
   EXPECT_NE(MAP_FAILED,
             (p = mmap(NULL, 5, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)));
   EXPECT_NE(-1, close(fd));
-  EXPECT_STREQ("hello", p);
+  EXPECT_STREQN("hello", p, 5);
   p[1] = 'a';
   EXPECT_NE(-1, msync(p, PAGESIZE, MS_SYNC));
   ASSERT_NE(-1, (fd = open(path, O_RDONLY)));

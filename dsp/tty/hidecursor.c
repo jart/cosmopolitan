@@ -30,7 +30,7 @@
 static int ttysetcursor(int fd, bool visible) {
   struct NtConsoleCursorInfo ntcursor;
   char code[8] = "\e[?25l";
-  if (isterminalinarticulate()) return 0;
+  if (IsTerminalInarticulate()) return 0;
   if (visible) code[5] = 'h';
   if (SupportsWindows()) {
     GetConsoleCursorInfo(GetStdHandle(kNtStdOutputHandle), &ntcursor);

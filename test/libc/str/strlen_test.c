@@ -18,7 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/macros.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/tinystrlen.internal.h"
+#include "libc/rand/rand.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
@@ -88,10 +90,10 @@ TEST(strnlen_s, null_ReturnsZero) {
 TEST(strnlen, nulNotFound_ReturnsSize) {
   int sizes[] = {1, 2, 7, 8, 15, 16, 31, 32, 33};
   for (unsigned i = 0; i < ARRAYLEN(sizes); ++i) {
-    char *buf = tmalloc(sizes[i]);
+    char *buf = malloc(sizes[i]);
     memset(buf, ' ', sizes[i]);
     ASSERT_EQ(sizes[i], strnlen(buf, sizes[i]), "%d", sizes[i]);
-    tfree(buf);
+    free(buf);
   }
 }
 
@@ -134,15 +136,38 @@ TEST(tinystrnlen16, test) {
   EXPECT_EQ(3, tinystrnlen16(u"123", 4));
 }
 
+TEST(strlen, fuzz) {
+  char *b;
+  size_t n, n1, n2;
+  for (n = 2; n < 1026; ++n) {
+    b = rngset(calloc(1, n), n - 1, rand64, -1);
+    n1 = strlen(b);
+    n2 = strlen$pure(b);
+    ASSERT_EQ(n1, n2);
+    n1 = strlen(b + 1);
+    n2 = strlen$pure(b + 1);
+    ASSERT_EQ(n1, n2);
+    free(b);
+  }
+}
+
 BENCH(strlen, bench) {
   extern size_t strlen_(const char *) asm("strlen");
+  extern size_t strlen$pure_(const char *) asm("strlen$pure");
   static char b[2048];
   memset(b, -1, sizeof(b) - 1);
   EZBENCH2("strlen 1", donothing, strlen_(""));
+  EZBENCH2("strlen$pure 1", donothing, strlen$pure_(""));
   EZBENCH2("strlen 2", donothing, strlen_("1"));
+  EZBENCH2("strlen$pure 2", donothing, strlen$pure_("1"));
   EZBENCH2("strlen 7", donothing, strlen_("123456"));
+  EZBENCH2("strlen$pure 7", donothing, strlen$pure_("123456"));
   EZBENCH2("strlen 8", donothing, strlen_("1234567"));
+  EZBENCH2("strlen$pure 8", donothing, strlen$pure_("1234567"));
   EZBENCH2("strlen 9", donothing, strlen_("12345678"));
+  EZBENCH2("strlen$pure 9", donothing, strlen$pure_("12345678"));
   EZBENCH2("strlen 16", donothing, strlen_("123456781234567"));
+  EZBENCH2("strlen$pure 16", donothing, strlen$pure_("123456781234567"));
   EZBENCH2("strlen 1023", donothing, strlen_(b));
+  EZBENCH2("strlen$pure 1023", donothing, strlen$pure_(b));
 }

@@ -17,21 +17,22 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/dns.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
 TEST(dnsnamecmp, testEmpty) {
-  char *A = strcpy(tmalloc(1), "");
-  char *B = strcpy(tmalloc(1), "");
+  char *A = strcpy(malloc(1), "");
+  char *B = strcpy(malloc(1), "");
   EXPECT_EQ(dnsnamecmp(A, B), 0);
   EXPECT_EQ(dnsnamecmp(A, A), 0);
-  tfree(B);
-  tfree(A);
+  free(B);
+  free(A);
 }
 
 TEST(dnsnamecmp, testDotless_caseInsensitiveBehavior) {
-  char *A = tmalloc(2);
-  char *B = tmalloc(2);
+  char *A = malloc(2);
+  char *B = malloc(2);
   EXPECT_EQ(dnsnamecmp(strcpy(A, "a"), strcpy(B, "a")), 0);
   EXPECT_EQ(dnsnamecmp(A, A), 0);
   EXPECT_EQ(dnsnamecmp(strcpy(A, "a"), strcpy(B, "A")), 0);
@@ -39,13 +40,13 @@ TEST(dnsnamecmp, testDotless_caseInsensitiveBehavior) {
   EXPECT_LT(dnsnamecmp(strcpy(A, "a"), strcpy(B, "b")), 0);
   EXPECT_LT(dnsnamecmp(strcpy(A, "a"), strcpy(B, "B")), 0);
   EXPECT_GT(dnsnamecmp(strcpy(A, "d"), strcpy(B, "a")), 0);
-  tfree(B);
-  tfree(A);
+  free(B);
+  free(A);
 }
 
 TEST(dnsnamecmp, testMultiLabel_lexiReverse) {
-  char *A = tmalloc(16);
-  char *B = tmalloc(16);
+  char *A = malloc(16);
+  char *B = malloc(16);
   EXPECT_EQ(dnsnamecmp(strcpy(A, "a.example"), strcpy(B, "a.example")), 0);
   EXPECT_GT(dnsnamecmp(strcpy(A, "b.example"), strcpy(B, "a.example")), 0);
   EXPECT_LT(dnsnamecmp(strcpy(A, "b.example"), strcpy(B, "a.examplz")), 0);
@@ -53,48 +54,48 @@ TEST(dnsnamecmp, testMultiLabel_lexiReverse) {
   EXPECT_EQ(dnsnamecmp(strcpy(A, "c.a.example"), strcpy(B, "c.a.example")), 0);
   EXPECT_GT(dnsnamecmp(strcpy(A, "d.a.example"), strcpy(B, "c.a.example")), 0);
   EXPECT_LT(dnsnamecmp(strcpy(A, "cat.example"), strcpy(B, "lol.example")), 0);
-  tfree(B);
-  tfree(A);
+  free(B);
+  free(A);
 }
 
 TEST(dnsnamecmp, testTldDotQualifier_canBeEqualToDottedNames) {
-  char *A = tmalloc(16);
-  char *B = tmalloc(16);
+  char *A = malloc(16);
+  char *B = malloc(16);
   EXPECT_EQ(dnsnamecmp(strcpy(B, "aaa.example."), strcpy(A, "aaa.example")), 0);
-  tfree(B);
-  tfree(A);
+  free(B);
+  free(A);
 }
 
 TEST(dnsnamecmp, testFullyQualified_alwaysComesFirst) {
-  char *A = tmalloc(16);
-  char *B = tmalloc(16);
+  char *A = malloc(16);
+  char *B = malloc(16);
   EXPECT_LT(dnsnamecmp(strcpy(B, "aaa.example."), strcpy(A, "zzz")), 0);
   EXPECT_LT(dnsnamecmp(strcpy(B, "zzz.example."), strcpy(A, "aaa")), 0);
   EXPECT_GT(dnsnamecmp(strcpy(A, "zzz"), strcpy(B, "aaa.example.")), 0);
   EXPECT_GT(dnsnamecmp(strcpy(A, "aaa"), strcpy(B, "zzz.example.")), 0);
-  tfree(B);
-  tfree(A);
+  free(B);
+  free(A);
 }
 
 TEST(dnsnamecmp, testLikelySld_alwaysComesBeforeLocalName) {
-  char *A = tmalloc(16);
-  char *B = tmalloc(16);
+  char *A = malloc(16);
+  char *B = malloc(16);
   EXPECT_LT(dnsnamecmp(strcpy(B, "z.e"), strcpy(A, "a")), 0);
   EXPECT_LT(dnsnamecmp(strcpy(B, "aaa.example"), strcpy(A, "zzz")), 0);
   EXPECT_LT(dnsnamecmp(strcpy(B, "zzz.example"), strcpy(A, "aaa")), 0);
   EXPECT_GT(dnsnamecmp(strcpy(A, "zzz"), strcpy(B, "aaa.example")), 0);
   EXPECT_GT(dnsnamecmp(strcpy(A, "aaa"), strcpy(B, "zzz.example")), 0);
-  tfree(B);
-  tfree(A);
+  free(B);
+  free(A);
 }
 
 TEST(dnsnamecmp, testLikelySubdomain_alwaysComesAfterSld) {
-  char *A = tmalloc(16);
-  char *B = tmalloc(16);
+  char *A = malloc(16);
+  char *B = malloc(16);
   EXPECT_LT(dnsnamecmp(strcpy(B, "a.e"), strcpy(A, "z.a.e")), 0);
   EXPECT_GT(dnsnamecmp(strcpy(A, "z.a.e"), strcpy(B, "a.e")), 0);
   EXPECT_LT(dnsnamecmp(strcpy(B, "b.e"), strcpy(A, "a.b.e")), 0);
   EXPECT_GT(dnsnamecmp(strcpy(A, "a.b.e"), strcpy(B, "b.e")), 0);
-  tfree(B);
-  tfree(A);
+  free(B);
+  free(A);
 }

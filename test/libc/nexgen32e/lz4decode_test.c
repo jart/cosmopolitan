@@ -19,6 +19,7 @@
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/log/check.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/kompressor.h"
 #include "libc/nexgen32e/lz4.h"
 #include "libc/runtime/ezmap.internal.h"
@@ -30,13 +31,13 @@ TEST(lz4, decompress_emptyStringWithoutChecksum) {
   /* lz4 -9 --content-size --no-frame-crc /tmp/empty - | hexdump -C */
   static char kLz4Data[] = {0x04, 0x22, 0x4d, 0x18, 0x60, 0x40,
                             0x82, 0x00, 0x00, 0x00, 0x00};
-  char *src = memcpy(tmalloc(sizeof(kLz4Data)), kLz4Data, sizeof(kLz4Data));
-  char *dst = tmalloc(1);
+  char *src = memcpy(malloc(sizeof(kLz4Data)), kLz4Data, sizeof(kLz4Data));
+  char *dst = malloc(1);
   *dst = 'z';
   ASSERT_EQ(dst, lz4decode(dst, src));
   ASSERT_EQ('z', *dst);
-  tfree(dst);
-  tfree(src);
+  free(dst);
+  free(src);
 }
 
 TEST(lz4, decompress_oneLetterWithoutChecksum) {
@@ -45,12 +46,12 @@ TEST(lz4, decompress_oneLetterWithoutChecksum) {
   static char kLz4Data[] = {0x04, 0x22, 0x4d, 0x18, 0x68, 0x40, 0x01, 0x00,
                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x2c, 0x01,
                             0x00, 0x00, 0x80, 0x61, 0x00, 0x00, 0x00, 0x00};
-  char *src = memcpy(tmalloc(sizeof(kLz4Data)), kLz4Data, sizeof(kLz4Data));
-  char *dst = tmalloc(1);
+  char *src = memcpy(malloc(sizeof(kLz4Data)), kLz4Data, sizeof(kLz4Data));
+  char *dst = malloc(1);
   ASSERT_EQ(dst + 1, lz4decode(dst, src));
   ASSERT_EQ('a', *dst);
-  tfree(dst);
-  tfree(src);
+  free(dst);
+  free(src);
 }
 
 TEST(lz4, decompress_runLengthDecode) {
@@ -60,13 +61,13 @@ TEST(lz4, decompress_runLengthDecode) {
       0x04, 0x22, 0x4d, 0x18, 0x68, 0x40, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00,
       0x00, 0x00, 0x30, 0x0b, 0x00, 0x00, 0x00, 0x1f, 0x61, 0x01, 0x00, 0x07,
       0x50, 0x61, 0x61, 0x61, 0x61, 0x61, 0x00, 0x00, 0x00, 0x00};
-  char *src = memcpy(tmalloc(sizeof(kLz4Data)), kLz4Data, sizeof(kLz4Data));
+  char *src = memcpy(malloc(sizeof(kLz4Data)), kLz4Data, sizeof(kLz4Data));
   const char *want = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-  char *dst = tmalloc(strlen(want));
+  char *dst = malloc(strlen(want));
   ASSERT_EQ(dst + strlen(want), lz4decode(dst, src));
   ASSERT_STREQN(want, dst, strlen(want));
-  tfree(dst);
-  tfree(src);
+  free(dst);
+  free(src);
 }
 
 TEST(lz4, zoneFileGmt) {

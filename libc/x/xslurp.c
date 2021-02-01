@@ -38,7 +38,7 @@ char *xslurp(const char *path, size_t *opt_out_size) {
   struct stat st;
   res = NULL;
   if ((fd = open(path, O_RDONLY)) != -1) {
-    if (fstat(fd, &st) != -1 && (res = valloc(st.st_size))) {
+    if (fstat(fd, &st) != -1 && (res = valloc(st.st_size + 1))) {
       if (st.st_size > 2 * 1024 * 1024) {
         fadvise(fd, 0, st.st_size, MADV_SEQUENTIAL);
       }

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "libc/mem/mem.h"
 #include "libc/rand/rand.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
@@ -24,8 +25,8 @@
 TEST(devrand, test) {
   if (IsWindows()) return;
   const size_t kSize = 8;
-  void *A = tmalloc(kSize);
-  void *B = tmalloc(kSize);
+  void *A = malloc(kSize);
+  void *B = malloc(kSize);
   memset(A, 0, kSize);
   memset(B, 0, kSize);
   EXPECT_EQ(0, devrand(A, kSize));
@@ -33,6 +34,6 @@ TEST(devrand, test) {
   EXPECT_BINNE(u"        ", A);
   EXPECT_BINNE(u"        ", B);
   EXPECT_NE(0, memcmp(A, B, kSize));
-  tfree(B);
-  tfree(A);
+  free(B);
+  free(A);
 }

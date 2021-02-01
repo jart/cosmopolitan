@@ -19,7 +19,7 @@ extern hidden void *g_stacktop;
 void _init(void) hidden;
 void _piro(int) hidden;
 void *__cxa_finalize(void *) hidden;
-void _executive(int, char **, char **, long (*)[2]) hidden wontreturn;
+void cosmo(int, char **, char **, long (*)[2]) hidden wontreturn;
 void __stack_chk_fail(void) wontreturn relegated;
 void __stack_chk_fail_local(void) wontreturn relegated hidden;
 void _jmpstack(void *, void *, ...) hidden wontreturn;

@@ -25,22 +25,29 @@
 .text.startup
 .source	__FILE__
 
-/	Stack frame that owns process from spawn to exit.
+/	Cosmopolitan runtime.
 /
 /	@param	edi is argc
 /	@param	rsi is argv
 /	@param	rdx is environ
 /	@param	rcx is auxv
 /	@noreturn
-_executive:
-	push	%rbp
+cosmo:	push	%rbp
 	mov	%rsp,%rbp
 	ezlea	_base,bx
 	mov	%edi,%r12d
 	mov	%rsi,%r13
 	mov	%rdx,%r14
 	mov	%rcx,%r15
-	call	_spawn
+#ifdef __FAST_MATH__
+	call	__fast_math
+#endif
+	call	_init
+	call	_construct
+#if !IsTrustworthy()
+	mov	$PROT_READ,%edi
+	call	_piro
+#endif
 	mov	%r12d,%edi
 	mov	%r13,%rsi
 	mov	%r14,%rdx
@@ -49,7 +56,7 @@ _executive:
 	call	main
 	xchg	%eax,%edi
 	call	exit
-	.endfn	_executive,weak,hidden
+	.endfn	cosmo,weak,hidden
 	ud2
 
 #ifdef __PG__

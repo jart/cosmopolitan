@@ -437,28 +437,28 @@ syscon	utime	UTIME_OMIT				0x3ffffffe		0x3ffffffe		-2			-1			0x3ffffffe		# polyf
 #	getauxval() keys
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			XENIX			Commentary
-syscon	auxv	AT_EXECFD				2			0			2			0			0
-syscon	auxv	AT_PHDR					3			0			3			0			0
+syscon	auxv	AT_EXECFD				2			0			2			0			0			# file descriptor of program
+syscon	auxv	AT_PHDR					3			0			3			0			0			# address of program headers of executable
 syscon	auxv	AT_PHENT				4			0			4			0			0
 syscon	auxv	AT_PHNUM				5			0			5			0			0
 syscon	auxv	AT_PAGESZ				6			0			6			0			0
-syscon	auxv	AT_BASE					7			0			7			0			0
-syscon	auxv	AT_ENTRY				9			0			9			0			0
+syscon	auxv	AT_BASE					7			0			7			0			0			# address of program interpreter
+syscon	auxv	AT_ENTRY				9			0			9			0			0			# entry address of executable
 syscon	auxv	AT_NOTELF				10			0			10			0			0
 syscon	auxv	AT_OSRELDATE				0			0			18			0			0
 syscon	auxv	AT_UID					11			0			0			0			0
 syscon	auxv	AT_EUID					12			0			0			0			0
 syscon	auxv	AT_GID					13			0			0			0			0
 syscon	auxv	AT_EGID					14			0			0			0			0
-syscon	auxv	AT_PLATFORM				15			0			0			0			0			# RHEL5.0 limit
+syscon	auxv	AT_PLATFORM				15			0			0			0			0			# address of string with hardware platform for rpath interpretation [RHEL5.0 LIMIT]
 syscon	auxv	AT_CLKTCK				17			0			0			0			0
 syscon	auxv	AT_DCACHEBSIZE				19			0			0			0			0
 syscon	auxv	AT_ICACHEBSIZE				20			0			0			0			0
 syscon	auxv	AT_UCACHEBSIZE				21			0			0			0			0
 syscon	auxv	AT_SECURE				23			0			0			0			0
 syscon	auxv	AT_BASE_PLATFORM			24			0			0			0			0
-syscon	auxv	AT_RANDOM				25			0			0			0			0
-syscon	auxv	AT_EXECFN				31			999			999			999			999			# faked on non-linux
+syscon	auxv	AT_RANDOM				25			0			0			0			0			# address of sixteen bytes of random data
+syscon	auxv	AT_EXECFN				31			999			999			999			999			# address of string containing first argument passed to execve() used when running program [faked on non-linux]
 syscon	auxv	AT_SYSINFO_EHDR				33			0			0			0			0
 syscon	auxv	AT_NO_AUTOMOUNT				0x0800			0			0			0			0
 

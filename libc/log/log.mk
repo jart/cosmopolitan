@@ -58,15 +58,21 @@ $(LIBC_LOG_A).pkg:					\
 		$(LIBC_LOG_A_OBJS)			\
 		$(foreach x,$(LIBC_LOG_A_DIRECTDEPS),$($(x)_A).pkg)
 
-$(LIBC_LOG_A_OBJS):					\
+o/$(MODE)/libc/log/attachdebugger.o			\
+o/$(MODE)/libc/log/backtrace2.o				\
+o/$(MODE)/libc/log/backtrace3.o				\
+o/$(MODE)/libc/log/checkaligned.o			\
+o/$(MODE)/libc/log/checkfail.o				\
+o/$(MODE)/libc/log/checkfail_ndebug.o			\
+o/$(MODE)/libc/log/getsymboltable.o			\
+o/$(MODE)/libc/log/oncrash.o				\
+o/$(MODE)/libc/log/onkill.o				\
+o/$(MODE)/libc/log/startfatal.o				\
+o/$(MODE)/libc/log/startfatal_ndebug.o			\
+o/$(MODE)/libc/log/ubsan.o				\
+o/$(MODE)/libc/log/die.o:				\
 		OVERRIDE_CFLAGS +=			\
-			$(NO_MAGIC)			\
-			-fwrapv
-
-# ifeq (,$(MODE))
-# LIBC_LOG_ASAN = o/$(MODE)/libc/log/asan.o
-# endif
-LIBC_LOG_ASAN_A = o/$(MODE)/libc/log/log.a
+			$(NO_MAGIC)
 
 LIBC_LOG_LIBS = $(foreach x,$(LIBC_LOG_ARTIFACTS),$($(x)))
 LIBC_LOG_SRCS = $(foreach x,$(LIBC_LOG_ARTIFACTS),$($(x)_SRCS))

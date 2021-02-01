@@ -20,35 +20,31 @@
 #include "libc/runtime/gc.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/tinymath/tinymath.h"
 #include "libc/x/x.h"
 
 TEST(powl, testLongDouble) {
   /* .4248496805467504836322459796959084815827285786480897 */
   EXPECT_STARTSWITH(".4248496805467504", gc(xdtoa(powl(0.7, 2.4))));
-  EXPECT_STARTSWITH(".4248496805467504", gc(xdtoa(tinymath_powl(0.7, 2.4))));
 }
 
 TEST(powl, testDouble) {
   EXPECT_STARTSWITH(".4248496805467504", gc(xdtoa(pow(0.7, 2.4))));
-  EXPECT_STARTSWITH(".4248496805467504", gc(xdtoa(tinymath_pow(0.7, 2.4))));
 }
 
 TEST(powl, testFloat) {
   EXPECT_STARTSWITH(".4248496", gc(xdtoa(powf(0.7f, 2.4f))));
-  EXPECT_STARTSWITH(".4248496", gc(xdtoa(tinymath_powf(0.7f, 2.4f))));
 }
 
 static long double do_powl(void) {
-  return CONCEAL("t", tinymath_powl(CONCEAL("t", 0.7), CONCEAL("t", 0.2)));
+  return CONCEAL("t", powl(CONCEAL("t", 0.7), CONCEAL("t", 0.2)));
 }
 
 static double do_pow(void) {
-  return CONCEAL("x", tinymath_pow(CONCEAL("x", 0.7), CONCEAL("x", 0.2)));
+  return CONCEAL("x", pow(CONCEAL("x", 0.7), CONCEAL("x", 0.2)));
 }
 
 static float do_powf(void) {
-  return CONCEAL("x", tinymath_powf(CONCEAL("x", 0.7f), CONCEAL("x", 0.2f)));
+  return CONCEAL("x", powf(CONCEAL("x", 0.7f), CONCEAL("x", 0.2f)));
 }
 
 BENCH(powl, bench) {

@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,40 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/sysv/consts/prot.h"
-#include "libc/macros.h"
+#include "libc/math.h"
+#include "libc/runtime/gc.h"
+#include "libc/stdio/stdio.h"
+#include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
-/	Self-bootstraps process upon existence before calling main.
-/
-/	@param	r12 is argc
-/	@param	r13 is argv
-/	@param	r14 is environ
-/	@param	r15 is auxv
-_spawn:	push	%rbp
-	mov	%rsp,%rbp
-
-/	Tune FPU settings if -ffast-math is somehow used systemically.
-#ifdef __FAST_MATH__
-	call	__fast_math
-#endif
-
-/	Call decentralized initialization assembly.
-	call	_init
-#if IsModeDbg()
-	call	_init				# _init() is idempotent
-#endif
-
-/	Call global initialization functions.
-	call	_construct
-
-/	Restricts .initbss memory so it's read-only after initialization.
-/	TODO: Delete this unless there's measurable performance advantage.
-#if !IsTrustworthy()
-	mov	$PROT_READ,%edi
-	call	_piro
-#endif
-
-	pop	%rbp
-	ret
-	.endfn	_spawn,globl
+TEST(exp, test) {
+  ASSERT_STREQ("7.389056", gc(xasprintf("%f", exp(2.0))));
+  ASSERT_STREQ("6.389056", gc(xasprintf("%f", expm1(2.0))));
+  ASSERT_STREQ("6.389056", gc(xasprintf("%f", exp(2.0) - 1.0)));
+}

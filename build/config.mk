@@ -94,14 +94,12 @@ CONFIG_CPPFLAGS +=		\
 CONFIG_CCFLAGS +=		\
 	$(BACKTRACES)		\
 	$(FTRACE)		\
+	-O1			\
 	-fno-inline
 
 CONFIG_COPTS +=			\
 	$(SECURITY_BLANKETS)	\
 	$(SANITIZER)
-
-CONFIG_COPTS +=			\
-	-ftrapv
 
 TARGET_ARCH ?=			\
 	-msse3

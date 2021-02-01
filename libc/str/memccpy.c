@@ -45,7 +45,8 @@
  */
 void *memccpy(void *d, const void *s, int c, size_t n) {
   const char *p, *pe;
-  if ((pe = memchr((p = s), c, n))) {
+  p = s;
+  if ((pe = memchr(p, c, n))) {
     return mempcpy(d, s, pe - p + 1);
   } else {
     memcpy(d, s, n);
