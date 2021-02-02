@@ -27,7 +27,7 @@ forceinline int tpdecodecb(wint_t *out, int first,
       if ((cb & 0b11000000) == 0b10000000) {
         wc = wc << 6 | (cb & 0b00111111);
       } else {
-        if (out) *out = u'�';
+        if (out) *out = u'\xFFFD';
         return -1;
       }
     }

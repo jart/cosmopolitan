@@ -205,6 +205,7 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
  * @see Intel's Six-Thousand Page Manual V.3A §8.2.3.1
  * @see atomic_store()
  */
+#ifndef atomic_load
 #define atomic_load(MEM)                       \
   ({                                           \
     autotype(MEM) Mem = (MEM);                 \
@@ -212,6 +213,7 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
     asm("mov\t%1,%0" : "=r"(Reg) : "m"(*Mem)); \
     Reg;                                       \
   })
+#endif /* atomic_load */
 
 /**
  * Saves scalar to memory w/ one operation.
@@ -229,6 +231,7 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
  * @see Intel Six-Thousand Page Manual Manual V.3A §8.2.3.1
  * @see atomic_load()
  */
+#ifndef atomic_store
 #define atomic_store(MEM, VAL)                    \
   ({                                              \
     autotype(VAL) Val = (VAL);                    \
@@ -236,6 +239,7 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
     asm("mov%z1\t%1,%0" : "=m"(*Mem) : "r"(Val)); \
     Val;                                          \
   })
+#endif /* atomic_store */
 
 #define bts(MEM, BIT)     __BitOp("bts", BIT, MEM) /** bit test and set */
 #define btr(MEM, BIT)     __BitOp("btr", BIT, MEM) /** bit test and reset */
@@ -263,6 +267,7 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
  * @return LOCALVAR[0]
  * @see xchg()
  */
+#ifndef lockxchg
 #define lockxchg(MEMORY, LOCALVAR)                                             \
   ({                                                                           \
     _Static_assert(                                                            \
@@ -270,6 +275,7 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
     asm("xchg\t%0,%1" : "+%m"(*(MEMORY)), "+r"(*(LOCALVAR)));                  \
     *(LOCALVAR);                                                               \
   })
+#endif /* lockxchg */
 
 /**
  * Compares and exchanges.
@@ -278,6 +284,7 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
  * @return true if value was exchanged, otherwise false
  * @see lockcmpxchg()
  */
+#ifndef cmpxchg
 #define cmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)                        \
   ({                                                                          \
     bool DidIt;                                                               \
@@ -290,6 +297,7 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
                  : "cc");                                                     \
     DidIt;                                                                    \
   })
+#endif /* cmpxchg */
 
 /**
  * Compares and exchanges w/ one operation.
@@ -298,6 +306,7 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
  * @return true if value was exchanged, otherwise false
  * @see lockcmpxchg()
  */
+#ifndef lockcmpxchg
 #define lockcmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)                    \
   ({                                                                          \
     bool DidIt;                                                               \
@@ -310,27 +319,32 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
                  : "cc");                                                     \
     DidIt;                                                                    \
   })
+#endif /* lockcmpxchg */
 
 /**
  * Gets value of extended control register.
  */
+#ifndef xgetbv
 #define xgetbv(xcr_register_num)                               \
   ({                                                           \
     unsigned hi, lo;                                           \
     asm("xgetbv" : "=d"(hi), "=a"(lo) : "c"(cr_register_num)); \
     (uint64_t) hi << 32 | lo;                                  \
   })
+#endif /* xgetbv */
 
 /**
  * Reads model-specific register.
  * @note programs running as guests won't have authorization
  */
+#ifndef rdmsr
 #define rdmsr(msr)                                         \
   ({                                                       \
     uint32_t lo, hi;                                       \
     asm volatile("rdmsr" : "=a"(lo), "=d"(hi) : "c"(msr)); \
     (uint64_t) hi << 32 | lo;                              \
   })
+#endif rdmsr
 
 /**
  * Writes model-specific register.

@@ -3,6 +3,7 @@
 #include "libc/str/str.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
+#ifndef tinystrstr
 #define tinystrstr(HAYSTACK, NEEDLE)          \
   ({                                          \
     autotype(HAYSTACK) Haystack = (HAYSTACK); \
@@ -21,6 +22,7 @@
   Found:                                      \
     Haystack;                                 \
   })
+#endif /* tinystrstr */
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_STR_TINYSTRSTR_H_ */

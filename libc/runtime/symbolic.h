@@ -6,9 +6,6 @@
 #define SYMBOLIC(NAME) NAME(%rip)
 #define LITERALLY(NAME) $NAME
 /* clang-format on */
-#elif defined(__VSCODE_INTELLISENSE__)
-#define SYMBOLIC(NAME) 1
-#define LITERALLY(NAME) 1
 #else
 #define SYMBOLIC(NAME) NAME
 #define LITERALLY(NAME) NAME

@@ -72,6 +72,7 @@ void ttyquantsetup(enum TtyQuantizationAlgorithm, enum TtyQuantizationChannels,
 extern char *ttyraster(char *, const struct TtyRgb *, size_t, size_t,
                        struct TtyRgb, struct TtyRgb);
 
+#ifndef ttyquant
 #define ttyquant()    (&g_ttyquant_)
 #define TTYQUANT()    VEIL("r", &g_ttyquant_)
 #define rgb2tty(...)  (ttyquant()->rgb2tty(__VA_ARGS__))
@@ -81,6 +82,7 @@ extern char *ttyraster(char *, const struct TtyRgb *, size_t, size_t,
 #define setbg(...)    (ttyquant()->setbg(__VA_ARGS__))
 #define setfg(...)    (ttyquant()->setfg(__VA_ARGS__))
 #define setbgfg(...)  (ttyquant()->setbgfg(__VA_ARGS__))
+#endif /* ttyquant */
 
 forceinline bool ttyeq(struct TtyRgb x, struct TtyRgb y) {
   return x.r == y.r && x.g == y.g && x.b == y.b;

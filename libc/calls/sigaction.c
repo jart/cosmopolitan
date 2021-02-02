@@ -45,6 +45,7 @@ union metasigaction {
   struct sigaction$xnu_out xnu_out;
 };
 
+#ifndef SWITCHEROO
 #define SWITCHEROO(S1, S2, A, B, C, D)                     \
   do {                                                     \
     autotype((S2).A) a = (typeof((S2).A))(S1).A;           \
@@ -59,6 +60,7 @@ union metasigaction {
     memset(&((S2).D), 0, sizeof((S2).D));                  \
     memcpy(&((S2).D), &d, MIN(sizeof(d), sizeof((S2).D))); \
   } while (0);
+#endif
 
 static void sigaction$cosmo2native(union metasigaction *sa) {
   if (!sa) return;

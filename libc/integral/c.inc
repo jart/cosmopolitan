@@ -759,12 +759,14 @@ typedef uint64_t uintmax_t;
 
 #define DebugBreak() asm("int3")
 
+#ifndef VEIL
 #define VEIL(CONSTRAINT, EXPRESSION)                             \
   ({                                                             \
     autotype(EXPRESSION) VeiledValue = (EXPRESSION);             \
     asm("" : "=" CONSTRAINT ""(VeiledValue) : "0"(VeiledValue)); \
     VeiledValue;                                                 \
   })
+#endif /* VEIL */
 
 #define CONCEAL(CONSTRAINT, EXPRESSION)                                   \
   ({                                                                      \

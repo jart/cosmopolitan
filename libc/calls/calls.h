@@ -251,6 +251,7 @@ int vdprintf(int, const char *, va_list) paramsnonnull();
 void _init_onntconsoleevent(void);
 void _init_wincrash(void);
 
+#ifndef __SIGACTION
 #define __SIGACTION(FN, SIG, ...)          \
   ({                                       \
     if (SupportsWindows()) {               \
@@ -279,6 +280,7 @@ void _init_wincrash(void);
     }                                      \
     (FN)(SIG, __VA_ARGS__);                \
   })
+#endif
 
 #define dprintf(FD, FMT, ...)    (dprintf)(FD, PFLINK(FMT), ##__VA_ARGS__)
 #define sigaction(SIG, ACT, OLD) __SIGACTION(sigaction, SIG, ACT, OLD)

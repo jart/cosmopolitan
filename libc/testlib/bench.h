@@ -8,6 +8,7 @@ COSMOPOLITAN_C_START_
  * @fileoverview Microbenchmarking tools.
  */
 
+#ifndef BENCHLOOP
 #define BENCHLOOP(START, STOP, N, INIT, EXPR)                        \
   ({                                                                 \
     unsigned long Iter, Count;                                       \
@@ -22,6 +23,7 @@ COSMOPOLITAN_C_START_
     }                                                                \
     Average;                                                         \
   })
+#endif /* BENCHLOOP */
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
