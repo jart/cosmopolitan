@@ -16,7 +16,8 @@ const char *emptytonull(const char *);
 const char *firstnonnull(const char *, const char *);
 uint64_t(unsignedsubtract)(uint64_t, uint64_t) pureconst;
 
-#if !defined(__STRICT_ANSI__) && defined(__GNUC__)
+#if !defined(__STRICT_ANSI__) && defined(__GNUC__) && \
+!defined(__VSCODE_INTELLISENSE__)
 
 #define min(x, y)              \
   ({                           \

@@ -47,6 +47,9 @@ COSMOPOLITAN_C_START_
     VAR = (typeof(VAR))__builtin_assume_aligned(VAR, BYTES); \
   } while (0)
 
+#if defined(__VSCODE_INTELLISENSE__)
+#define __CHK(...)
+#else
 #define __CHK(SUFFIX, OP, WANT, WANTSTR, GOT, GOTSTR, ...)                   \
   do {                                                                       \
     autotype(GOT) Got = (GOT);                                               \
@@ -61,7 +64,11 @@ COSMOPOLITAN_C_START_
       unreachable;                                                           \
     }                                                                        \
   } while (0)
+#endif /* defined(__VSCODE_INTELLISENSE__) */
 
+#if defined(__VSCODE_INTELLISENSE__)
+#define __DCHK(...)
+#else
 #ifdef NDEBUG
 #define __DCHK(SUFFIX, OP, WANT, WANTSTR, GOT, ...) \
   do {                                              \
@@ -74,7 +81,8 @@ COSMOPOLITAN_C_START_
 #else
 #define __DCHK(SUFFIX, OP, WANT, WANTSTR, GOT, GOTSTR, ...) \
   __CHK(SUFFIX, OP, WANT, WANTSTR, GOT, GOTSTR, __VA_ARGS__)
-#endif
+#endif /* NDEBUG */
+#endif /* defined(__VSCODE_INTELLISENSE__) */
 
 #ifdef NDEBUG
 #define __DCHK_ALIGNED(BYTES, VAR)
