@@ -154,6 +154,13 @@ static void *__asan_repstosb(void *di, int al, size_t cx) {
   return di;
 }
 
+static void *__asan_repmovsb(void *di, void *si, size_t cx) {
+  asm("rep movsb"
+      : "=D"(di), "=S"(si), "=c"(cx), "=m"(*(char(*)[cx])di)
+      : "0"(di), "1"(si), "2"(cx), "m"(*(char(*)[cx])si));
+  return di;
+}
+
 static void *__asan_memset(void *p, int c, size_t n) {
   char *b;
   size_t i;
@@ -264,30 +271,24 @@ static void *__asan_mempcpy(void *dst, const void *src, size_t n) {
       __builtin_memcpy(d + n - 8, &b, 8);
       return d + n;
     default:
-      i = 0;
-      do {
-        __builtin_memcpy(&a, s + i, 8);
-        asm volatile("" ::: "memory");
-        __builtin_memcpy(d + i, &a, 8);
-      } while ((i += 8) + 8 <= n);
-      for (; i < n; ++i) d[i] = s[i];
-      return d + i;
+      if (n <= 64) {
+        i = 0;
+        do {
+          __builtin_memcpy(&a, s + i, 8);
+          asm volatile("" ::: "memory");
+          __builtin_memcpy(d + i, &a, 8);
+        } while ((i += 8) + 8 <= n);
+        for (; i < n; ++i) d[i] = s[i];
+        return d + i;
+      } else {
+        return __asan_repmovsb(d, s, n);
+      }
   }
 }
 
 static void *__asan_memcpy(void *dst, const void *src, size_t n) {
   __asan_mempcpy(dst, src, n);
   return dst;
-}
-
-static void *__asan_memrchr(void *p, int c, size_t n) {
-  uint8_t *b;
-  for (c &= 0xff, b = p; n--;) {
-    if (b[n] == c) {
-      return b + n;
-    }
-  }
-  return NULL;
 }
 
 static size_t __asan_int2hex(uint64_t x, char b[17], uint8_t k) {
@@ -455,8 +456,6 @@ static wontreturn void __asan_report_heap_fault(void *addr, long c) {
   char *p, ibuf[21], buf[256];
   p = __asan_report_start(buf);
   p = __asan_stpcpy(p, __asan_dscribe_heap_poison(c));
-  p = __asan_stpcpy(p, " ");
-  p = __asan_mempcpy(p, ibuf, __asan_int2str(c, ibuf));
   p = __asan_stpcpy(p, " at 0x");
   p = __asan_mempcpy(p, ibuf, __asan_int2hex((intptr_t)addr, ibuf, 48));
   p = __asan_stpcpy(p, " shadow 0x");
@@ -709,7 +708,9 @@ void __asan_map_shadow(uintptr_t p, size_t n) {
   int i, x, a, b;
   struct DirectMap sm;
   struct MemoryIntervals *m;
-  if (0x7fff8000 <= p && p < 0x100080000000) {
+  if ((0x7fff8000 <= p && p < 0x100080000000) ||
+      (0x7fff8000 <= p + n && p + n < 0x100080000000) ||
+      (p < 0x7fff8000 && 0x100080000000 <= p + n)) {
     __asan_die("asan error: mmap can't shadow a shadow\r\n");
   }
   m = weaken(_mmi);

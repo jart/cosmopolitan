@@ -90,7 +90,6 @@ void *memeqmask(void *, const void *, const void *, size_t) memcpyesque;
 size_t strlen(const char *) strlenesque;
 size_t strnlen(const char *, size_t) strlenesque;
 size_t strnlen_s(const char *, size_t);
-size_t strlen$pure(const char *) strlenesque;
 char *strchr(const char *, int) strlenesque;
 char *index(const char *, int) strlenesque;
 void *memchr(const void *, int, size_t) strlenesque;
@@ -246,8 +245,8 @@ char *strsignal(int) returnsnonnull libcesque;
 │ cosmopolitan § strings » optimizations                                   ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#define __memcpy_isgoodsize(SIZE)                                        \
-  (__builtin_constant_p(SIZE) && ((SIZE) <= __BIGGEST_ALIGNMENT__ * 2 && \
+#define __memcpy_isgoodsize(SIZE)                                    \
+  (__builtin_constant_p(SIZE) && ((SIZE) <= __BIGGEST_ALIGNMENT__ && \
                                   __builtin_popcountl((unsigned)(SIZE)) == 1))
 
 #define __memset_isgoodsize(SIZE)                   \
@@ -361,15 +360,44 @@ char *strsignal(int) returnsnonnull libcesque;
   })
 
 #endif /* hosted/sse2/unbloat */
-#ifdef __FSANITIZE_ADDRESS__
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § strings » address sanitizer                               ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
+void *memset$pure(void *, int, size_t) memcpyesque;
+void *memmove$pure(void *, const void *, size_t) memcpyesque;
+size_t strlen$pure(const char *) strlenesque;
+size_t strcspn$pure(const char *, const char *) strlenesque;
+#if defined(__FSANITIZE_ADDRESS__)
 
-#ifdef strlen
+#define strcspn(STR, REJECT) strcspn$pure(STR, REJECT)
+
 #undef strlen
-#endif
-#define strlen(s) strlen$pure(s)
+#define strlen(STR) \
+  (__builtin_constant_p(STR) ? __builtin_strlen(STR) : strlen$pure(STR))
+
+#undef memset
+#define memset(DST, CHAR, SIZE)                                  \
+  (__memcpy_isgoodsize(SIZE) ? __builtin_memset(DST, CHAR, SIZE) \
+                             : memset$pure(DST, CHAR, SIZE))
+
+#undef memmove
+#define memmove(DST, SRC, SIZE)                                  \
+  (__memcpy_isgoodsize(SIZE) ? __builtin_memmove(DST, SRC, SIZE) \
+                             : memmove$pure(DST, SRC, SIZE))
+
+#undef memcpy
+#define memcpy(DST, SRC, SIZE)                                  \
+  (__memcpy_isgoodsize(SIZE) ? __builtin_memcpy(DST, SRC, SIZE) \
+                             : memmove$pure(DST, SRC, SIZE))
+
+#undef mempcpy
+#define mempcpy(DST, SRC, SIZE)                                       \
+  (__memcpy_isgoodsize(SIZE) ? __builtin_mempcpy(DST, SRC, SIZE) : ({ \
+    void *DsT = (DST);                                                \
+    size_t SiZe = (SIZE);                                             \
+    memmove$pure(DsT, SRC, SiZe);                                     \
+    (void *)((char *)DsT + SiZe);                                     \
+  }))
 
 #endif /* __FSANITIZE_ADDRESS__ */
 #endif /* __GNUC__ && !__STRICT_ANSI__ */

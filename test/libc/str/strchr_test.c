@@ -17,7 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/mem/mem.h"
+#include "libc/rand/rand.h"
 #include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
 TEST(strchr, blank) {
@@ -65,4 +68,100 @@ TEST(strchrnul, notFound_returnsPointerToNulByte) {
   char buf[] = "hi";
   EXPECT_STREQ("", strchrnul(buf, 'z'));
   EXPECT_EQ(&buf[2], strchrnul(buf, 'z'));
+}
+
+char *strchr$pure(const char *s, int c) {
+  char *r;
+  for (c &= 0xff;; ++s) {
+    if ((*s & 0xff) == c) return (char *)s;
+    if (!*s) return NULL;
+  }
+}
+
+TEST(strchr, fuzz) {
+  char *p;
+  int i, j;
+  p = calloc(1, 64);
+  for (i = -2; i < 257; ++i) {
+    for (j = 0; j < 17; ++j) {
+      rngset(p, 63, rand64, -1);
+      ASSERT_EQ(strchr(p + j, i), strchr$pure(p + j, i));
+    }
+  }
+  free(p);
+}
+
+BENCH(strchr, bench) {
+  EZBENCH2("strchr 0", donothing, EXPROPRIATE(strchr(VEIL("r", ""), 0)));
+  EZBENCH2("strchr 5", donothing, EXPROPRIATE(strchr(VEIL("r", "hello"), 'o')));
+  EZBENCH2("strchr 8", donothing,
+           EXPROPRIATE(strchr(VEIL("r", "hellzzzo"), 'o')));
+  EZBENCH2("strchr 17", donothing,
+           EXPROPRIATE(strchr(VEIL("r", "hellzzzhellzzzeeo"), 'o')));
+  EZBENCH2("strchr 34", donothing,
+           EXPROPRIATE(
+               strchr(VEIL("r", "hellzzzhellzzzeeAhellzzzhellzzzeeo"), 'o')));
+}
+
+char *memchr$pure(const char *m, int c, size_t n) {
+  const unsigned char *p, *pe;
+  for (c &= 0xff, p = (const unsigned char *)m, pe = p + n; p < pe; ++p) {
+    if (*p == c) return p;
+  }
+  return NULL;
+}
+
+TEST(memchr, fuzz) {
+  char *p;
+  int i, j;
+  p = malloc(64);
+  for (i = -2; i < 257; ++i) {
+    for (j = 0; j < 17; ++j) {
+      rngset(p, 64, rand64, -1);
+      ASSERT_EQ(memchr(p + j, i, 64 - j), memchr$pure(p + j, i, 64 - j));
+    }
+  }
+  free(p);
+}
+
+char *strchrnul$pure(const char *s, int c) {
+  char *r;
+  for (c &= 0xff;; ++s) {
+    if ((*s & 0xff) == c) return (char *)s;
+    if (!*s) return s;
+  }
+}
+
+TEST(strchrnul, fuzz) {
+  char *p;
+  int i, j;
+  p = calloc(1, 64);
+  for (i = -2; i < 257; ++i) {
+    for (j = 0; j < 17; ++j) {
+      rngset(p, 63, rand64, -1);
+      ASSERT_EQ(strchrnul(p + j, i), strchrnul$pure(p + j, i));
+    }
+  }
+  free(p);
+}
+
+void *rawmemchr$pure(const void *m, int c) {
+  const unsigned char *s;
+  for (c &= 255, s = m;; ++s) {
+    if (*s == c) return s;
+  }
+}
+
+TEST(rawmemchr, fuzz) {
+  char *p;
+  int i, j;
+  p = malloc(64);
+  for (i = -2; i < 257; ++i) {
+    for (j = 0; j < 17; ++j) {
+      rngset(p, 63, rand64, -1);
+      p[63] = i;
+      ASSERT_EQ(rawmemchr(p + j, i), rawmemchr$pure(p + j, i));
+    }
+  }
+  free(p);
 }

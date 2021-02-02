@@ -199,6 +199,7 @@ include test/test.mk
 OBJS	= $(foreach x,$(PKGS),$($(x)_OBJS))
 SRCS	= $(foreach x,$(PKGS),$($(x)_SRCS))
 HDRS	= $(foreach x,$(PKGS),$($(x)_HDRS))
+INCS	= $(foreach x,$(PKGS),$($(x)_INCS))
 BINS	= $(foreach x,$(PKGS),$($(x)_BINS))
 TESTS	= $(foreach x,$(PKGS),$($(x)_TESTS))
 CHECKS	= $(foreach x,$(PKGS),$($(x)_CHECKS))
@@ -215,10 +216,10 @@ o/$(MODE)/.x:
 o/$(MODE)/srcs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(SRCS),$(dir $(x))))
 	$(file >$@) $(foreach x,$(SRCS),$(file >>$@,$(x)))
 
-o/$(MODE)/hdrs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS),$(dir $(x))))
-	$(file >$@) $(foreach x,$(HDRS),$(file >>$@,$(x)))
+o/$(MODE)/hdrs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS) $(INCS),$(dir $(x))))
+	$(file >$@) $(foreach x,$(HDRS) $(INCS),$(file >>$@,$(x)))
 
-o/$(MODE)/depend: o/$(MODE)/.x o/$(MODE)/srcs.txt o/$(MODE)/hdrs.txt $(SRCS) $(HDRS)
+o/$(MODE)/depend: o/$(MODE)/.x o/$(MODE)/srcs.txt o/$(MODE)/hdrs.txt $(SRCS) $(HDRS) $(INCS)
 	@build/mkdeps -o $@ -r o/$(MODE)/ o/$(MODE)/srcs.txt o/$(MODE)/hdrs.txt
 
 TAGS:	o/$(MODE)/srcs.txt $(SRCS)
@@ -351,6 +352,7 @@ o/cosmopolitan.html:							\
 ~/.cosmo.mk:
 $(SRCS):
 $(HDRS):
+$(INCS):
 .DEFAULT:
 	@echo >&2
 	@echo NOTE: deleting o/$(MODE)/depend because of an unspecified prerequisite: $@ >&2

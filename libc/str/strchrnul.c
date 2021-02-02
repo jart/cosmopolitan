@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,20 +16,54 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/math.h"
-#include "libc/stdio/stdio.h"
-#include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
+#include "libc/assert.h"
+#include "libc/str/str.h"
 
-STATIC_YOINK("ntoa");
-STATIC_YOINK("stoa");
-STATIC_YOINK("strnwidth");
+noasan static const unsigned char *strchrnul$x64(const unsigned char *p,
+                                                 uint64_t c) {
+  unsigned a, b;
+  uint64_t w, x, y;
+  for (c *= 0x0101010101010101;; p += 8) {
+    w = (uint64_t)p[7] << 070 | (uint64_t)p[6] << 060 | (uint64_t)p[5] << 050 |
+        (uint64_t)p[4] << 040 | (uint64_t)p[3] << 030 | (uint64_t)p[2] << 020 |
+        (uint64_t)p[1] << 010 | (uint64_t)p[0] << 000;
+    if ((x = ~(w ^ c) & ((w ^ c) - 0x0101010101010101) & 0x8080808080808080) |
+        (y = ~w & (w - 0x0101010101010101) & 0x8080808080808080)) {
+      if (x) {
+        a = __builtin_ctzll(x);
+        if (y) {
+          b = __builtin_ctzll(y);
+          if (a <= b) {
+            return p + (a >> 3);
+          } else {
+            return p + (b >> 3);
+          }
+        } else {
+          return p + (a >> 3);
+        }
+      } else {
+        b = __builtin_ctzll(y);
+        return p + (b >> 3);
+      }
+    }
+  }
+}
 
-void __testlib_ezbenchreport(const char *form, uint64_t c1, uint64_t c2) {
-  uint64_t ns1, ns2;
-  ns1 = rintl(ConvertTicksToNanos(c1));
-  ns2 = rintl(ConvertTicksToNanos(c2));
-  (fprintf)(stderr,
-            VEIL("r", "%-30s l: %,10lu𝑐 %,10lu𝑛𝑠   m: %,10lu𝑐 %,10lu𝑛𝑠\n"),
-            form, c1, ns1, c2, ns2);
+/**
+ * Returns pointer to first instance of character.
+ *
+ * @param s is a NUL-terminated string
+ * @param c is masked with 255 as byte to search for
+ * @return pointer to first instance of c, or pointer to
+ *     NUL terminator if c is not found
+ */
+char *strchrnul(const char *s, int c) {
+  char *r;
+  for (c &= 0xff; (uintptr_t)s & 7; ++s) {
+    if ((*s & 0xff) == c) return s;
+    if (!*s) return s;
+  }
+  r = (char *)strchrnul$x64((const unsigned char *)s, c);
+  assert((*r & 0xff) == c || !*r);
+  return r;
 }

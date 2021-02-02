@@ -18,38 +18,54 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/nexgen32e.h"
+#include "libc/rand/rand.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
-TEST(memcpy, memcpy) {
+TEST(memcpy, test) {
   char *b1, *b2;
   for (unsigned n = 0; n < 1026; ++n) {
     b1 = malloc(n);
     b2 = malloc(n);
-    ASSERT_EQ(b1, memcpy(b1, b2, n));
+    rngset(b1, n, rand64, -1);
+    rngset(b2, n, rand64, -1);
+    ASSERT_EQ(b1, memcpy(b1, b2, n), "%ld\n\t%#.*s\n\t%#.*s", n, n, b1, n, b2);
+    ASSERT_EQ(0, memcmp(b1, b2, n));
+    free(b2);
+    free(b1);
+  }
+  for (unsigned n = kHalfCache3 - 1; n < kHalfCache3 + 2; ++n) {
+    b1 = malloc(n);
+    b2 = malloc(n);
+    rngset(b1, n, rand64, -1);
+    rngset(b2, n, rand64, -1);
+    ASSERT_EQ(b1, memcpy(b1, b2, n), "%ld\n\t%#.*s\n\t%#.*s", n, n, b1, n, b2);
     ASSERT_EQ(0, memcmp(b1, b2, n));
     free(b2);
     free(b1);
   }
 }
 
-TEST(memcpy, memcpyDirect) {
+TEST(mempcpy, test) {
   char *b1, *b2;
   for (unsigned n = 0; n < 1026; ++n) {
     b1 = malloc(n);
     b2 = malloc(n);
-    ASSERT_EQ(b1, (memcpy)(b1, b2, n));
+    rngset(b1, n, rand64, -1);
+    rngset(b2, n, rand64, -1);
+    ASSERT_EQ(b1 + n, mempcpy(b1, b2, n));
     ASSERT_EQ(0, memcmp(b1, b2, n));
     free(b2);
     free(b1);
   }
-}
-
-TEST(memcpy, mempcpy) {
-  char *b1, *b2;
-  for (unsigned n = 0; n < 1026; ++n) {
+  for (unsigned n = kHalfCache3 - 1; n < kHalfCache3 + 2; ++n) {
     b1 = malloc(n);
     b2 = malloc(n);
+    rngset(b1, n, rand64, -1);
+    rngset(b2, n, rand64, -1);
     ASSERT_EQ(b1 + n, mempcpy(b1, b2, n));
     ASSERT_EQ(0, memcmp(b1, b2, n));
     free(b2);
@@ -57,11 +73,49 @@ TEST(memcpy, mempcpy) {
   }
 }
 
-TEST(memcpy, mempcpyDirect) {
+TEST(memcpy, direct) {
   char *b1, *b2;
   for (unsigned n = 0; n < 1026; ++n) {
     b1 = malloc(n);
     b2 = malloc(n);
+    rngset(b1, n, rand64, -1);
+    rngset(b2, n, rand64, -1);
+    ASSERT_EQ(b1, (memcpy)(b1, b2, n), "%ld\n\t%#.*s\n\t%#.*s", n, n, b1, n,
+              b2);
+    ASSERT_EQ(0, memcmp(b1, b2, n));
+    free(b2);
+    free(b1);
+  }
+  for (unsigned n = kHalfCache3 - 1; n < kHalfCache3 + 2; ++n) {
+    b1 = malloc(n);
+    b2 = malloc(n);
+    rngset(b1, n, rand64, -1);
+    rngset(b2, n, rand64, -1);
+    ASSERT_EQ(b1, (memcpy)(b1, b2, n), "%ld\n\t%#.*s\n\t%#.*s", n, n, b1, n,
+              b2);
+    ASSERT_EQ(0, memcmp(b1, b2, n));
+    free(b2);
+    free(b1);
+  }
+}
+
+TEST(mempcpy, direct) {
+  char *b1, *b2;
+  for (unsigned n = 0; n < 1026; ++n) {
+    b1 = malloc(n);
+    b2 = malloc(n);
+    rngset(b1, n, rand64, -1);
+    rngset(b2, n, rand64, -1);
+    ASSERT_EQ(b1 + n, (mempcpy)(b1, b2, n));
+    ASSERT_EQ(0, memcmp(b1, b2, n));
+    free(b2);
+    free(b1);
+  }
+  for (unsigned n = kHalfCache3 - 1; n < kHalfCache3 + 2; ++n) {
+    b1 = malloc(n);
+    b2 = malloc(n);
+    rngset(b1, n, rand64, -1);
+    rngset(b2, n, rand64, -1);
     ASSERT_EQ(b1 + n, (mempcpy)(b1, b2, n));
     ASSERT_EQ(0, memcmp(b1, b2, n));
     free(b2);
@@ -104,4 +158,45 @@ TEST(memcpy, testBackwardsOverlap3) {
   EXPECT_EQ('[', c[0]);
   EXPECT_EQ('C', c[1]);
   free(c);
+}
+
+void *MemCpy(void *, const void *, size_t);
+
+#define B(F, N)                                              \
+  do {                                                       \
+    char *d = rngset(malloc(N), N, rand64, -1);              \
+    char *s = rngset(malloc(N), N, rand64, -1);              \
+    EZBENCH2(#F " " #N, donothing,                           \
+             EXPROPRIATE(F(VEIL("r", d), VEIL("r", s), N))); \
+    free(d);                                                 \
+    free(s);                                                 \
+  } while (0)
+
+#define BB(N)              \
+  do {                     \
+    B(memmove$pure, N);    \
+    B(memcpy, N);          \
+    B(MemCpy, N);          \
+    fprintf(stderr, "\n"); \
+  } while (0)
+
+BENCH(memcpy, bench) {
+  BB(0);
+  BB(1);
+  BB(2);
+  BB(3);
+  BB(7);
+  BB(8);
+  BB(15);
+  BB(16);
+  BB(31);
+  BB(32);
+  BB(63);
+  BB(64);
+  BB(255);
+  BB(256);
+  BB(1023);
+  BB(1024);
+  BB(PAGESIZE);
+  BB(FRAMESIZE);
 }

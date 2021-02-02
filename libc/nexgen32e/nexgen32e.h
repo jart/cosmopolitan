@@ -3,6 +3,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+extern long kHalfCache3;
+
 void imapxlatab(void *);
 void insertionsort(int32_t *, size_t);
 

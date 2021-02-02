@@ -1011,6 +1011,10 @@ static int OpMkdir(struct Machine *m, int64_t path, int mode) {
   return mkdir(LoadStr(m, path), mode);
 }
 
+static int OpMkdirat(struct Machine *m, int dirfd, int64_t path, int mode) {
+  return mkdirat(XlatAfd(m, dirfd), LoadStr(m, path), mode);
+}
+
 static int OpMknod(struct Machine *m, int64_t path, uint32_t mode,
                    uint64_t dev) {
   return mknod(LoadStr(m, path), mode, dev);
@@ -1024,8 +1028,18 @@ static int OpUnlink(struct Machine *m, int64_t path) {
   return unlink(LoadStr(m, path));
 }
 
+static int OpUnlinkat(struct Machine *m, int dirfd, int64_t path, int flags) {
+  return unlinkat(XlatAfd(m, dirfd), LoadStr(m, path), XlatAtf(flags));
+}
+
 static int OpRename(struct Machine *m, int64_t src, int64_t dst) {
   return rename(LoadStr(m, src), LoadStr(m, dst));
+}
+
+static int OpRenameat(struct Machine *m, int srcdirfd, int64_t src,
+                      int dstdirfd, int64_t dst) {
+  return renameat(XlatAfd(m, srcdirfd), LoadStr(m, src), XlatAfd(m, dstdirfd),
+                  LoadStr(m, dst));
 }
 
 static int OpTruncate(struct Machine *m, int64_t path, uint64_t length) {
@@ -1384,12 +1398,12 @@ void OpSyscall(struct Machine *m, uint32_t rde) {
     SYSCALL(0x0DD, OpFadvise(m, di, si, dx, r0));
     SYSCALL(0x0E4, OpClockGettime(m, di, si));
     SYSCALL(0x101, OpOpenat(m, di, si, dx, r0));
-    SYSCALL(0x102, mkdirat(XlatAfd(m, di), P(si), dx));
+    SYSCALL(0x102, OpMkdirat(m, di, si, dx));
     SYSCALL(0x104, fchownat(XlatAfd(m, di), P(si), dx, r0, XlatAtf(r8)));
     SYSCALL(0x105, futimesat(XlatAfd(m, di), P(si), P(dx)));
     SYSCALL(0x106, OpFstatat(m, di, si, dx, r0));
-    SYSCALL(0x107, unlinkat(XlatAfd(m, di), P(si), XlatAtf(dx)));
-    SYSCALL(0x108, renameat(XlatAfd(m, di), P(si), XlatAfd(m, dx), P(r0)));
+    SYSCALL(0x107, OpUnlinkat(m, di, si, dx));
+    SYSCALL(0x108, OpRenameat(m, di, si, dx, r0));
     SYSCALL(0x10D, OpFaccessat(m, di, si, dx, r0));
     SYSCALL(0x113, splice(di, P(si), dx, P(r0), r8, XlatAtf(r9)));
     SYSCALL(0x115, sync_file_range(di, si, dx, XlatAtf(r0)));

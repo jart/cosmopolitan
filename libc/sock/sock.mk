@@ -8,6 +8,7 @@ LIBC_SOCK = $(LIBC_SOCK_A_DEPS) $(LIBC_SOCK_A)
 LIBC_SOCK_A = o/$(MODE)/libc/sock/sock.a
 LIBC_SOCK_A_FILES := $(wildcard libc/sock/*)
 LIBC_SOCK_A_HDRS = $(filter %.h,$(LIBC_SOCK_A_FILES))
+LIBC_SOCK_A_INCS = $(filter %.inc,$(LIBC_SOCK_A_FILES))
 LIBC_SOCK_A_SRCS = $(filter %.c,$(LIBC_SOCK_A_FILES))
 
 LIBC_SOCK_A_OBJS =				\
@@ -31,6 +32,7 @@ LIBC_SOCK_A_DIRECTDEPS =			\
 	LIBC_NT_WS2_32				\
 	LIBC_RUNTIME				\
 	LIBC_STDIO				\
+	LIBC_STR				\
 	LIBC_STUBS				\
 	LIBC_SYSV_CALLS				\
 	LIBC_SYSV
@@ -49,6 +51,7 @@ $(LIBC_SOCK_A).pkg:				\
 LIBC_SOCK_LIBS = $(foreach x,$(LIBC_SOCK_ARTIFACTS),$($(x)))
 LIBC_SOCK_SRCS = $(foreach x,$(LIBC_SOCK_ARTIFACTS),$($(x)_SRCS))
 LIBC_SOCK_HDRS = $(foreach x,$(LIBC_SOCK_ARTIFACTS),$($(x)_HDRS))
+LIBC_SOCK_INCS = $(foreach x,$(LIBC_SOCK_ARTIFACTS),$($(x)_INCS))
 LIBC_SOCK_CHECKS = $(foreach x,$(LIBC_SOCK_ARTIFACTS),$($(x)_CHECKS))
 LIBC_SOCK_OBJS = $(foreach x,$(LIBC_SOCK_ARTIFACTS),$($(x)_OBJS))
 $(LIBC_SOCK_OBJS): $(BUILD_FILES) libc/sock/sock.mk

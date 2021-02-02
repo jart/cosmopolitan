@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,20 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/math.h"
-#include "libc/stdio/stdio.h"
-#include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
+#include "libc/str/str.h"
 
-STATIC_YOINK("ntoa");
-STATIC_YOINK("stoa");
-STATIC_YOINK("strnwidth");
-
-void __testlib_ezbenchreport(const char *form, uint64_t c1, uint64_t c2) {
-  uint64_t ns1, ns2;
-  ns1 = rintl(ConvertTicksToNanos(c1));
-  ns2 = rintl(ConvertTicksToNanos(c2));
-  (fprintf)(stderr,
-            VEIL("r", "%-30s l: %,10lu𝑐 %,10lu𝑛𝑠   m: %,10lu𝑐 %,10lu𝑛𝑠\n"),
-            form, c1, ns1, c2, ns2);
+/**
+ * Returns pointer to first instance of character, the BSD way.
+ *
+ * @param s is a NUL-terminated string
+ * @param is masked with 255 as byte to search for
+ * @return is pointer to first instance of c or NULL if not found,
+ *     noting that c being NUL will return a pointer to terminator
+ */
+char *index(const char *s, int c) {
+  return strchr(s, c);
 }

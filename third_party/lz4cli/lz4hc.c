@@ -51,7 +51,7 @@
 
 /*===    Dependency    ===*/
 #define LZ4_HC_STATIC_LINKING_ONLY
-#include "lz4hc.h"
+#include "third_party/lz4cli/lz4hc.h"
 
 
 /*===   Common LZ4 definitions   ===*/
@@ -63,7 +63,7 @@
 #endif
 
 #define LZ4_COMMONDEFS_ONLY
-#include "lz4.c"   /* LZ4_count, constants, mem */
+#include "third_party/lz4cli/lz4.c"   /* LZ4_count, constants, mem */
 
 
 /*===   Constants   ===*/

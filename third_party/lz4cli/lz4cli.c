@@ -36,17 +36,17 @@ asm(".include \"third_party/lz4cli/COPYING\"");
 /****************************
 *  Includes
 *****************************/
-#include "platform.h" /* Compiler options, IS_CONSOLE */
-#include "util.h"     /* UTIL_HAS_CREATEFILELIST, UTIL_createFileList */
+#include "third_party/lz4cli/platform.h" /* Compiler options, IS_CONSOLE */
+#include "third_party/lz4cli/util.h"     /* UTIL_HAS_CREATEFILELIST, UTIL_createFileList */
 #include "libc/stdio/stdio.h"    /* fprintf, getchar */
 #include "libc/mem/mem.h"   /* exit, calloc, free */
 #include "libc/str/str.h"   /* strcmp, strlen */
-#include "bench.h"    /* BMK_benchFile, BMK_SetNbIterations, BMK_SetBlocksize, BMK_SetPause */
-#include "lz4io.h"    /* LZ4IO_compressFilename, LZ4IO_decompressFilename, LZ4IO_compressMultipleFilenames */
-#include "lz4hc.h"    /* LZ4HC_CLEVEL_MAX */
+#include "third_party/lz4cli/bench.h"    /* BMK_benchFile, BMK_SetNbIterations, BMK_SetBlocksize, BMK_SetPause */
+#include "third_party/lz4cli/lz4io.h"    /* LZ4IO_compressFilename, LZ4IO_decompressFilename, LZ4IO_compressMultipleFilenames */
+#include "third_party/lz4cli/lz4hc.h"    /* LZ4HC_CLEVEL_MAX */
 #include "libc/runtime/runtime.h"
 #include "libc/log/log.h"
-#include "lz4.h"      /* LZ4_VERSION_STRING */
+#include "third_party/lz4cli/lz4.h"      /* LZ4_VERSION_STRING */
 
 
 /*****************************

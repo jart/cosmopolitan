@@ -46,7 +46,8 @@ $(LIBC_INTRIN_A_OBJS):					\
 
 o/$(MODE)/libc/intrin/asan.o:				\
 		OVERRIDE_CFLAGS +=			\
-			-mgeneral-regs-only
+			-mgeneral-regs-only		\
+			-O2
 
 LIBC_INTRIN_LIBS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)))
 LIBC_INTRIN_HDRS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_HDRS))

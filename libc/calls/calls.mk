@@ -21,6 +21,7 @@ LIBC_CALLS_A_FILES :=					\
 	$(wildcard libc/calls/struct/*)			\
 	$(wildcard libc/calls/*)
 LIBC_CALLS_A_HDRS = $(filter %.h,$(LIBC_CALLS_A_FILES))
+LIBC_CALLS_A_INCS = $(filter %.inc,$(LIBC_CALLS_A_FILES))
 LIBC_CALLS_A_SRCS_S = $(filter %.S,$(LIBC_CALLS_A_FILES))
 LIBC_CALLS_A_SRCS_C = $(filter %.c,$(LIBC_CALLS_A_FILES))
 
@@ -86,6 +87,7 @@ o/$(MODE)/libc/calls/mkntenvblock.o:			\
 LIBC_CALLS_LIBS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)))
 LIBC_CALLS_SRCS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)_SRCS))
 LIBC_CALLS_HDRS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)_HDRS))
+LIBC_CALLS_INCS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)_INCS))
 LIBC_CALLS_BINS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)_BINS))
 LIBC_CALLS_CHECKS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)_CHECKS))
 LIBC_CALLS_OBJS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)_OBJS))

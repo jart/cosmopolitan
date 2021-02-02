@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,20 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/math.h"
-#include "libc/stdio/stdio.h"
-#include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
+#include "libc/str/str.h"
 
-STATIC_YOINK("ntoa");
-STATIC_YOINK("stoa");
-STATIC_YOINK("strnwidth");
-
-void __testlib_ezbenchreport(const char *form, uint64_t c1, uint64_t c2) {
-  uint64_t ns1, ns2;
-  ns1 = rintl(ConvertTicksToNanos(c1));
-  ns2 = rintl(ConvertTicksToNanos(c2));
-  (fprintf)(stderr,
-            VEIL("r", "%-30s l: %,10lu𝑐 %,10lu𝑛𝑠   m: %,10lu𝑐 %,10lu𝑛𝑠\n"),
-            form, c1, ns1, c2, ns2);
+/**
+ * Returns pointer to first instance of character.
+ *
+ * @param m is memory to search
+ * @param c is search byte which is masked with 255
+ * @param n is byte length of p
+ * @return is pointer to first instance of c or NULL if not found
+ * @asyncsignalsafe
+ */
+void *memchr(const void *m, int c, size_t n) {
+  uint64_t v, w;
+  const unsigned char *p, *pe;
+  c &= 255;
+  v = 0x0101010101010101 * c;
+  for (p = (const unsigned char *)m, pe = p + n; p + 8 <= pe; p += 8) {
+    w = (uint64_t)p[7] << 070 | (uint64_t)p[6] << 060 | (uint64_t)p[5] << 050 |
+        (uint64_t)p[4] << 040 | (uint64_t)p[3] << 030 | (uint64_t)p[2] << 020 |
+        (uint64_t)p[1] << 010 | (uint64_t)p[0] << 000;
+    if ((w = ~(w ^ v) & ((w ^ v) - 0x0101010101010101) & 0x8080808080808080)) {
+      return p + ((unsigned)__builtin_ctzll(w) >> 3);
+    }
+  }
+  for (; p < pe; ++p) {
+    if (*p == c) return p;
+  }
+  return NULL;
 }

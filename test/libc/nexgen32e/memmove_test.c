@@ -17,77 +17,117 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
+#include "libc/macros.h"
 #include "libc/mem/mem.h"
+#include "libc/rand/rand.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-#define N 256
-#define S 7
+#define N 65
+#define S 1
 
 long i, j, n;
-char *b1, *b2;
+char *b0, *b1, *b2;
+
+noinline char *PosixMemmove(char *dst, const char *src, size_t n) {
+  char *tmp;
+  tmp = malloc(n);
+  memcpy(tmp, src, n);
+  memcpy(dst, tmp, n);
+  free(tmp);
+  return dst;
+}
 
 TEST(memmove, overlapping) {
   for (i = 0; i < N; i += S) {
-    for (j = 10; j < N; j += S) {
-      b1 = malloc(N);
-      b2 = malloc(N);
-      n = min(N - i, N - j);
-      memcpy(b2, b1 + i, n);
-      ASSERT_EQ(b1 + j, memmove(b1 + j, b1 + i, n));
-      ASSERT_EQ(0, memcmp(b1 + j, b2, n));
-      free(b2);
-      free(b1);
+    for (j = 0; j < N; j += S) {
+      for (n = MIN(N - i, N - j) + 1; n--;) {
+        b0 = rngset(malloc(N), N, rand64, -1);
+        b1 = memcpy(malloc(N), b0, N);
+        b2 = memcpy(malloc(N), b0, N);
+        ASSERT_EQ(b1 + j, memmove(b1 + j, b1 + i, n));
+        ASSERT_EQ(b2 + j, PosixMemmove(b2 + j, b2 + i, n));
+        ASSERT_EQ(0, memcmp(b1, b2, N),
+                  "j=%ld i=%ld n=%ld\n"
+                  "\t%#.*s data\n"
+                  "\t%#.*s memmove\n"
+                  "\t%#.*s posix",
+                  j, i, n, n, b0, n, b1, n, b2);
+        free(b2);
+        free(b1);
+        free(b0);
+      }
+    }
+  }
+}
+
+TEST(memmove$pure, overlapping) {
+  for (i = 0; i < N; i += S) {
+    for (j = 0; j < N; j += S) {
+      for (n = MIN(N - i, N - j) + 1; n--;) {
+        b0 = rngset(malloc(N), N, rand64, -1);
+        b1 = memcpy(malloc(N), b0, N);
+        b2 = memcpy(malloc(N), b0, N);
+        ASSERT_EQ(b1 + j, memmove$pure(b1 + j, b1 + i, n));
+        ASSERT_EQ(b2 + j, PosixMemmove(b2 + j, b2 + i, n));
+        ASSERT_EQ(0, memcmp(b1, b2, N),
+                  "j=%ld i=%ld n=%ld\n"
+                  "\t%#.*s data\n"
+                  "\t%#.*s memmove\n"
+                  "\t%#.*s posix",
+                  j, i, n, n, b0, n, b1, n, b2);
+        free(b2);
+        free(b1);
+        free(b0);
+      }
+    }
+  }
+}
+
+TEST(memcpy, overlapping) {
+  for (i = 0; i < N; i += S) {
+    for (j = 0; j < N; j += S) {
+      for (n = MIN(N - i, N - j) + 1; n--;) {
+        if (j <= i) {
+          b0 = rngset(malloc(N), N, rand64, -1);
+          b1 = memcpy(malloc(N), b0, N);
+          b2 = memcpy(malloc(N), b0, N);
+          ASSERT_EQ(b1 + j, memcpy(b1 + j, b1 + i, n));
+          ASSERT_EQ(b2 + j, PosixMemmove(b2 + j, b2 + i, n));
+          ASSERT_EQ(0, memcmp(b1, b2, N),
+                    "j=%ld i=%ld n=%ld\n"
+                    "\t%#.*s data\n"
+                    "\t%#.*s memmove\n"
+                    "\t%#.*s posix",
+                    j, i, n, n, b0, n, b1, n, b2);
+          free(b2);
+          free(b1);
+          free(b0);
+        }
+      }
     }
   }
 }
 
 TEST(memmove, overlappingDirect) {
   for (i = 0; i < N; i += S) {
-    for (j = 10; j < N; j += S) {
-      b1 = malloc(N);
-      b2 = malloc(N);
-      n = min(N - i, N - j);
-      memcpy(b2, b1 + i, n);
-      ASSERT_EQ(b1 + j, (memmove)(b1 + j, b1 + i, n));
-      ASSERT_EQ(0, memcmp(b1 + j, b2, n));
-      free(b2);
-      free(b1);
+    for (j = 0; j < N; j += S) {
+      for (n = MIN(N - i, N - j) + 1; n--;) {
+        b0 = rngset(malloc(N), N, rand64, -1);
+        b1 = memcpy(malloc(N), b0, N);
+        b2 = memcpy(malloc(N), b0, N);
+        ASSERT_EQ(b1 + j, (memmove)(b1 + j, b1 + i, n));
+        ASSERT_EQ(b2 + j, PosixMemmove(b2 + j, b2 + i, n));
+        ASSERT_EQ(0, memcmp(b1, b2, N),
+                  "j=%ld i=%ld n=%ld\n"
+                  "\t%#.*s data\n"
+                  "\t%#.*s memmove\n"
+                  "\t%#.*s posix",
+                  j, i, n, n, b0, n, b1, n, b2);
+        free(b2);
+        free(b1);
+        free(b0);
+      }
     }
   }
-}
-
-char *MoveMemory(char *dst, const char *src, size_t n) {
-  size_t i;
-  for (i = 0; i < n; ++i) {
-    dst[i] = src[i];
-  }
-  return dst;
-}
-
-TEST(memmove, overlappingBackwards_isGenerallySafe) {
-  char buf[32];
-  strcpy(buf, "abcdefghijklmnopqrstuvwxyz");
-  ASSERT_STREQ("cdefghijklmnopqrstuvwxyzyz", MoveMemory(buf, buf + 2, 24));
-  strcpy(buf, "abcdefghijklmnopqrstuvwxyz");
-  ASSERT_STREQ("cdefghijklmnopqrstuvwxyzyz", memmove(buf, buf + 2, 24));
-  strcpy(buf, "abcdefghijklmnopqrstuvwxyz");
-  ASSERT_STREQ("cdefghijklmnopqrstuvwxyzyz", memcpy(buf, buf + 2, 24));
-}
-
-TEST(memmove, overlappingForwards_avoidsRunLengthDecodeBehavior) {
-  volatile char buf[32];
-  strcpy(buf, "abc");
-  MoveMemory(buf + 1, buf, 2);
-  ASSERT_STREQ("aaa", buf);
-  strcpy(buf, "abc");
-  (memmove)(buf + 1, buf, 2);
-  ASSERT_STREQ("aab", buf);
-  strcpy(buf, "abcdefghijklmnopqrstuvwxyz");
-  MoveMemory(buf + 2, buf, 24);
-  ASSERT_STREQ("ababababababababababababab", buf);
-  strcpy(buf, "abcdefghijklmnopqrstuvwxyz");
-  memmove(buf + 2, buf, 24);
-  ASSERT_STREQ("ababcdefghijklmnopqrstuvwx", buf);
 }

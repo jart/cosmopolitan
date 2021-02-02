@@ -27,7 +27,7 @@ STATIC_YOINK("_init_g_stderr");
 FILE *stderr;
 
 hidden FILE g_stderr;
-hidden unsigned char g_stderr_buf[BUFSIZ] forcealign(PAGESIZE);
+hidden unsigned char g_stderr_buf[BUFSIZ];
 
 static textstartup void _init_g_stderr2() {
   _fflushregister(stderr);

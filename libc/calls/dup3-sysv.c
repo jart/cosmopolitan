@@ -25,13 +25,14 @@ int32_t dup3$sysv(int32_t oldfd, int32_t newfd, int flags) {
   static bool once, demodernize;
   int olderr, fd;
   if (!once) {
-    once = true;
     olderr = errno;
     fd = __dup3$sysv(oldfd, newfd, flags);
     if ((fd == -1 && errno == ENOSYS) || fd == __NR_dup3_linux) {
       demodernize = true;
+      once = true;
       errno = olderr;
     } else {
+      once = true;
       return fd;
     }
   } else if (!demodernize) {

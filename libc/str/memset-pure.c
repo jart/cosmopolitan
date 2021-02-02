@@ -16,35 +16,85 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/str/str.h"
 
-static noasan size_t strlen$pure$x64(const char *s, size_t i) {
-  uint64_t w;
-  const unsigned char *p;
-  for (;;) {
-    p = (const unsigned char *)s + i;
-    w = (uint64_t)p[7] << 070 | (uint64_t)p[6] << 060 | (uint64_t)p[5] << 050 |
-        (uint64_t)p[4] << 040 | (uint64_t)p[3] << 030 | (uint64_t)p[2] << 020 |
-        (uint64_t)p[1] << 010 | (uint64_t)p[0] << 000;
-    if ((w = ~w & (w - 0x0101010101010101) & 0x8080808080808080)) {
-      return i + ((unsigned)__builtin_ctzll(w) >> 3);
-    } else {
-      i += 8;
-    }
-  }
-}
-
 /**
- * Returns length of NUL-terminated string.
+ * Sets memory.
+ *
+ * @param p is memory address
+ * @param c is masked with 255 and used as repeated byte
+ * @param n is byte length
+ * @return p
+ * @asyncsignalsafe
  */
-size_t strlen$pure(const char *s) {
-  size_t i;
-  for (i = 0; (uintptr_t)(s + i) & 7; ++i) {
-    if (!s[i]) return i;
+void *memset$pure(void *p, int c, size_t n) {
+  char *b;
+  uint64_t x;
+  b = p;
+  x = 0x0101010101010101 * (c & 0xff);
+  switch (n) {
+    case 0:
+      return p;
+    case 1:
+      __builtin_memcpy(b, &x, 1);
+      return p;
+    case 2:
+      __builtin_memcpy(b, &x, 2);
+      return p;
+    case 3:
+      __builtin_memcpy(b, &x, 2);
+      __builtin_memcpy(b + 1, &x, 2);
+      return p;
+    case 4:
+      __builtin_memcpy(b, &x, 4);
+      return p;
+    case 5 ... 7:
+      __builtin_memcpy(b, &x, 4);
+      __builtin_memcpy(b + n - 4, &x, 4);
+      return p;
+    case 8:
+      __builtin_memcpy(b, &x, 8);
+      return p;
+    case 9 ... 16:
+      __builtin_memcpy(b, &x, 8);
+      __builtin_memcpy(b + n - 8, &x, 8);
+      return p;
+    default:
+      do {
+        n -= 16;
+        __builtin_memcpy(b + n, &x, 8);
+        asm volatile("" ::: "memory");
+        __builtin_memcpy(b + n + 8, &x, 8);
+      } while (n >= 16);
+      switch (n) {
+        case 0:
+          return p;
+        case 1:
+          __builtin_memcpy(b, &x, 1);
+          return p;
+        case 2:
+          __builtin_memcpy(b, &x, 2);
+          return p;
+        case 3:
+          __builtin_memcpy(b, &x, 2);
+          __builtin_memcpy(b + 1, &x, 2);
+          return p;
+        case 4:
+          __builtin_memcpy(b, &x, 4);
+          return p;
+        case 5 ... 7:
+          __builtin_memcpy(b, &x, 4);
+          __builtin_memcpy(b + n - 4, &x, 4);
+          return p;
+        case 8:
+          __builtin_memcpy(b, &x, 8);
+          return p;
+        case 9 ... 15:
+          __builtin_memcpy(b, &x, 8);
+          __builtin_memcpy(b + n - 8, &x, 8);
+          return p;
+        default:
+          unreachable;
+      }
   }
-  i = strlen$pure$x64(s, i);
-  assert(!i || s[0]);
-  assert(!s[i]);
-  return i;
 }

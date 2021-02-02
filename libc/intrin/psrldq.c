@@ -29,6 +29,6 @@
 void(psrldq)(uint8_t b[16], const uint8_t a[16], unsigned long n) {
   unsigned i;
   if (n > 16) n = 16;
-  memcpy(b, a + n, 16 - n);
-  memset(b + (16 - n), 0, n);
+  __builtin_memcpy(b, a + n, 16 - n);
+  __builtin_memset(b + (16 - n), 0, n);
 }

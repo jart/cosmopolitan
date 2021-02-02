@@ -245,6 +245,10 @@ static long rombase;
 static long codesize;
 static int64_t opstart;
 static int64_t mapsstart;
+static uint64_t readaddr;
+static uint64_t readsize;
+static uint64_t writeaddr;
+static uint64_t writesize;
 static int64_t framesstart;
 static int64_t breakpointsstart;
 static uint64_t last_opcount;
@@ -424,6 +428,10 @@ static void OnSigBusted(void) {
   longjmp(onbusted, 1);
 }
 
+static bool IsShadow(int64_t v) {
+  return 0x7fff8000 <= v && v < 0x100080000000;
+}
+
 static int VirtualBing(int64_t v) {
   int rc;
   uint8_t *p;
@@ -446,7 +454,7 @@ static int VirtualShadow(int64_t v) {
   int rc;
   char *p;
   jmp_buf busted;
-  if (0x7fff8000 <= v && v < 0x100080000000) return -2;
+  if (IsShadow(v)) return -2;
   onbusted = busted;
   if ((p = FindReal(m, (v >> 3) + 0x7fff8000))) {
     if (!setjmp(busted)) {
@@ -1171,11 +1179,12 @@ static void DrawSse(struct Panel *p) {
 }
 
 static void ScrollMemoryView(struct Panel *p, struct MemoryView *v, int64_t a) {
-  long i, n;
+  long i, n, w;
+  w = DUMPWIDTH * (1ull << v->zoom);
   n = p->bottom - p->top;
-  i = a / (DUMPWIDTH * (1ull << v->zoom));
+  i = a / w;
   if (!(v->start <= i && i < v->start + n)) {
-    v->start = i;
+    v->start = i - n / 4;
   }
 }
 
@@ -1194,8 +1203,8 @@ static void ZoomMemoryView(struct MemoryView *v, long y, long x, int dy) {
 
 static void ScrollMemoryViews(void) {
   ScrollMemoryView(&pan.code, &codeview, GetIp());
-  ScrollMemoryView(&pan.readdata, &readview, m->readaddr);
-  ScrollMemoryView(&pan.writedata, &writeview, m->writeaddr);
+  ScrollMemoryView(&pan.readdata, &readview, readaddr);
+  ScrollMemoryView(&pan.writedata, &writeview, writeaddr);
   ScrollMemoryView(&pan.stack, &stackview, GetSp());
 }
 
@@ -1299,9 +1308,9 @@ static void DrawMemoryUnzoomed(struct Panel *p, struct MemoryView *view,
           if (sc > 7) {
             x = 129; /* PURPLE: shadow corruption */
           } else if (sc == kAsanHeapFree) {
-            x = 17; /* NAVYBLUE: heap freed */
+            x = 20; /* BLUE: heap freed */
           } else if (sc == kAsanRelocated) {
-            x = 18; /* DARKBLUE: heap relocated */
+            x = 16; /* BLACK: heap relocated */
           } else if (sc == kAsanHeapUnderrun || sc == kAsanAllocaUnderrun) {
             x = 53; /* RED+PURPLETINGE: heap underrun */
           } else if (sc == kAsanHeapOverrun || sc == kAsanAllocaOverrun) {
@@ -1309,7 +1318,7 @@ static void DrawMemoryUnzoomed(struct Panel *p, struct MemoryView *view,
           } else if (sc < 0) {
             x = 52; /* RED: uncategorized invalid */
           } else if (sc > 0 && (k & 7) >= sc) {
-            x = 54; /* REDPURP: invalid address (skew) */
+            x = 88; /* BRIGHTRED: invalid address (skew) */
           } else if (!sc || (sc > 0 && (k & 7) < sc)) {
             x = 22; /* GREEN: valid address */
           } else {
@@ -1529,6 +1538,14 @@ static void PreventBufferbloat(void) {
 
 static void Redraw(void) {
   int i, j;
+  if (!IsShadow(m->readaddr) && !IsShadow(m->readaddr + m->readsize)) {
+    readaddr = m->readaddr;
+    readsize = m->readsize;
+  }
+  if (!IsShadow(m->writeaddr) && !IsShadow(m->writeaddr + m->writesize)) {
+    writeaddr = m->writeaddr;
+    writesize = m->writesize;
+  }
   ScrollOp(&pan.disassembly, GetDisIndex());
   if (last_opcount) {
     ips = unsignedsubtract(opcount, last_opcount) / (nowl() - last_seconds);
@@ -1555,9 +1572,8 @@ static void Redraw(void) {
   DrawFrames(&pan.frames);
   DrawBreakpoints(&pan.breakpoints);
   DrawMemory(&pan.code, &codeview, GetIp(), GetIp() + m->xedd->length);
-  DrawMemory(&pan.readdata, &readview, m->readaddr, m->readaddr + m->readsize);
-  DrawMemory(&pan.writedata, &writeview, m->writeaddr,
-             m->writeaddr + m->writesize);
+  DrawMemory(&pan.readdata, &readview, readaddr, readaddr + readsize);
+  DrawMemory(&pan.writedata, &writeview, writeaddr, writeaddr + writesize);
   DrawMemory(&pan.stack, &stackview, GetSp(), GetSp() + GetPointerWidth());
   DrawStatus(&pan.status);
   PreventBufferbloat();

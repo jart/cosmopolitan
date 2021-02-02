@@ -30,7 +30,7 @@ STATIC_YOINK("_init_g_stdout");
 FILE *stdout;
 
 hidden FILE g_stdout;
-hidden unsigned char g_stdout_buf[BUFSIZ] forcealign(PAGESIZE);
+hidden unsigned char g_stdout_buf[BUFSIZ];
 
 static textstartup void _init_g_stdout2() {
   struct FILE *sf;

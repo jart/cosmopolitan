@@ -8,6 +8,7 @@ LIBC_ALG = $(LIBC_ALG_A_DEPS) $(LIBC_ALG_A)
 LIBC_ALG_A = o/$(MODE)/libc/alg/alg.a
 LIBC_ALG_A_FILES := $(wildcard libc/alg/*)
 LIBC_ALG_A_HDRS = $(filter %.h,$(LIBC_ALG_A_FILES))
+LIBC_ALG_A_INCS = $(filter %.inc,$(LIBC_ALG_A_FILES))
 LIBC_ALG_A_SRCS_S = $(filter %.S,$(LIBC_ALG_A_FILES))
 LIBC_ALG_A_SRCS_C = $(filter %.c,$(LIBC_ALG_A_FILES))
 
@@ -51,6 +52,7 @@ o/$(MODE)/libc/alg/critbit0.o:			\
 LIBC_ALG_LIBS = $(foreach x,$(LIBC_ALG_ARTIFACTS),$($(x)))
 LIBC_ALG_SRCS = $(foreach x,$(LIBC_ALG_ARTIFACTS),$($(x)_SRCS))
 LIBC_ALG_HDRS = $(foreach x,$(LIBC_ALG_ARTIFACTS),$($(x)_HDRS))
+LIBC_ALG_INCS = $(foreach x,$(LIBC_ALG_ARTIFACTS),$($(x)_INCS))
 LIBC_ALG_CHECKS = $(foreach x,$(LIBC_ALG_ARTIFACTS),$($(x)_CHECKS))
 LIBC_ALG_OBJS = $(foreach x,$(LIBC_ALG_ARTIFACTS),$($(x)_OBJS))
 $(LIBC_ALG_OBJS): $(BUILD_FILES) libc/alg/alg.mk

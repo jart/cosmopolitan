@@ -16,14 +16,47 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/pcmpeqb.h"
+#include "libc/intrin/pmovmskb.h"
+#include "libc/intrin/pshufd.h"
+#include "libc/intrin/punpcklbw.h"
+#include "libc/intrin/punpcklwd.h"
+#include "libc/nexgen32e/hascharacter.internal.h"
 #include "libc/str/str.h"
 
-void *tinymemccpy(void *dst, const void *src, int termchar, size_t limit) {
-  size_t i;
-  unsigned char *d;
-  const unsigned char *s;
-  for (termchar &= 0xff, d = dst, s = src, i = 0; i < limit; ++i) {
-    if ((d[i] = s[i]) == termchar) return d + i + 1;
+#define V(p) (void *)(p)
+
+/**
+ * Returns prefix length, consisting of chars not in reject.
+ * a.k.a. Return index of first byte that's in charset.
+ *
+ * @param reject is nul-terminated character set
+ * @see strspn(), strtok_r()
+ * @asyncsignalsafe
+ */
+size_t strcspn$pure(const char *s, const char *reject) {
+  size_t i, n;
+  unsigned m;
+  char cv[16], sv[16];
+  if ((n = strlen(reject)) < 16) {
+    memset(sv, 0, 16);
+    memcpy(sv, reject, n);
+    for (i = 0;; ++i) {
+      cv[0] = s[i];
+      punpcklbw(V(cv), V(cv), V(cv));
+      punpcklwd(V(cv), V(cv), V(cv));
+      pshufd(V(cv), V(cv), 0);
+      pcmpeqb(V(cv), V(cv), V(sv));
+      if ((m = pmovmskb(V(cv)))) {
+        break;
+      }
+    }
+    return i;
   }
-  return NULL;
+  for (i = 0; s[i]; ++i) {
+    if (HasCharacter(s[i], reject)) {
+      break;
+    }
+  }
+  return i;
 }

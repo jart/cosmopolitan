@@ -13,6 +13,10 @@
 
 PKGS += THIRD_PARTY_LZ4CLI
 
+THIRD_PARTY_LZ4CLI_FILES := $(wildcard third_party/lz4cli/*)
+THIRD_PARTY_LZ4CLI_SRCS = $(filter %.c,$(THIRD_PARTY_LZ4CLI_FILES))
+THIRD_PARTY_LZ4CLI_HDRS = $(filter %.h,$(THIRD_PARTY_LZ4CLI_FILES))
+
 THIRD_PARTY_LZ4CLI =					\
 	o/$(MODE)/third_party/lz4cli/lz4cli.com
 

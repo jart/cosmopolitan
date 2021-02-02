@@ -33,6 +33,7 @@ APELINK =				\
 
 APE_FILES := $(wildcard ape/*.*)
 APE_HDRS = $(filter %.h,$(APE_FILES))
+APE_INCS = $(filter %.inc,$(APE_FILES))
 APE_SRCS = $(filter %.S,$(APE_FILES))
 APE_OBJS = $(APE_SRCS:%.S=o/$(MODE)/%.o)
 APE_DEPS = $(APE_LIB)

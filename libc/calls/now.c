@@ -23,6 +23,7 @@
 #include "libc/dce.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/x86feature.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/time/time.h"
 
@@ -55,19 +56,21 @@ static long double MeasureNanosPerCycle(void) {
 }
 
 static void InitTime(void) {
-  g_now.cpn = MeasureNanosPerCycle();
-  g_now.r0 = dtime(CLOCK_REALTIME);
-  g_now.k0 = rdtsc();
-  g_now.once = true;
+  struct Now now;
+  now.cpn = MeasureNanosPerCycle();
+  now.r0 = dtime(CLOCK_REALTIME);
+  now.k0 = rdtsc();
+  now.once = true;
+  memcpy(&g_now, &now, sizeof(now));
 }
 
-long double converttickstonanos(uint64_t ticks) {
+long double ConvertTicksToNanos(uint64_t ticks) {
   if (!g_now.once) InitTime();
   return ticks * g_now.cpn; /* pico scale */
 }
 
-long double converttickstoseconds(uint64_t ticks) {
-  return 1 / 1e9 * converttickstonanos(ticks);
+static long double ConvertTicksToSeconds(uint64_t ticks) {
+  return 1 / 1e9 * ConvertTicksToNanos(ticks);
 }
 
 long double nowl$sys(void) {
@@ -78,5 +81,5 @@ long double nowl$art(void) {
   uint64_t ticks;
   if (!g_now.once) InitTime();
   ticks = unsignedsubtract(rdtsc(), g_now.k0);
-  return g_now.r0 + converttickstoseconds(ticks);
+  return g_now.r0 + ConvertTicksToSeconds(ticks);
 }

@@ -19,8 +19,10 @@
 #include "libc/bits/bits.h"
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/tinystrlen.internal.h"
 #include "libc/rand/rand.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
@@ -30,6 +32,8 @@ char16_t u16[] = u"utf16 ☻";
 wchar_t u32[] = L"utf32 ☻";
 
 TEST(strlen, usageExample_c11) {
+  _Alignas(16) char ugh[] = "eeeeeeeeeeeeeee\017";
+  EXPECT_EQ(1, strlen$pure(ugh + 15));
   EXPECT_EQ(6 + 3, strlen(u8));
   EXPECT_EQ(7, strlen16(u16));
   EXPECT_EQ(7, wcslen(u32));
@@ -143,7 +147,7 @@ TEST(strlen, fuzz) {
     b = rngset(calloc(1, n), n - 1, rand64, -1);
     n1 = strlen(b);
     n2 = strlen$pure(b);
-    ASSERT_EQ(n1, n2);
+    ASSERT_EQ(n1, n2, "%#.*s", n, b);
     n1 = strlen(b + 1);
     n2 = strlen$pure(b + 1);
     ASSERT_EQ(n1, n2);
@@ -166,8 +170,14 @@ BENCH(strlen, bench) {
   EZBENCH2("strlen$pure 8", donothing, strlen$pure_("1234567"));
   EZBENCH2("strlen 9", donothing, strlen_("12345678"));
   EZBENCH2("strlen$pure 9", donothing, strlen$pure_("12345678"));
+  EZBENCH2("strlen 11", donothing, strlen_("12345678aa"));
+  EZBENCH2("strlen$pure 11", donothing, strlen$pure_("12345678aa"));
+  EZBENCH2("strlen 13", donothing, strlen_("12345678aabb"));
+  EZBENCH2("strlen$pure 13", donothing, strlen$pure_("12345678aabb"));
   EZBENCH2("strlen 16", donothing, strlen_("123456781234567"));
   EZBENCH2("strlen$pure 16", donothing, strlen$pure_("123456781234567"));
+  EZBENCH2("strlen 17", donothing, strlen_("123456781234567e"));
+  EZBENCH2("strlen$pure 17", donothing, strlen$pure_("123456781234567e"));
   EZBENCH2("strlen 1023", donothing, strlen_(b));
   EZBENCH2("strlen$pure 1023", donothing, strlen$pure_(b));
 }

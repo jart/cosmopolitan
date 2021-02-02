@@ -17,6 +17,7 @@ LIBC_FMT = $(LIBC_FMT_A_DEPS) $(LIBC_FMT_A)
 LIBC_FMT_A = o/$(MODE)/libc/fmt/fmt.a
 LIBC_FMT_A_FILES := $(wildcard libc/fmt/*)
 LIBC_FMT_A_HDRS = $(filter %.h,$(LIBC_FMT_A_FILES))
+LIBC_FMT_A_INCS = $(filter %.inc,$(LIBC_FMT_A_FILES))
 LIBC_FMT_A_SRCS_S = $(filter %.S,$(LIBC_FMT_A_FILES))
 LIBC_FMT_A_SRCS_C = $(filter %.c,$(LIBC_FMT_A_FILES))
 
@@ -75,6 +76,7 @@ o/$(MODE)/libc/fmt/itoa128radix10.greg.o:	\
 LIBC_FMT_LIBS = $(foreach x,$(LIBC_FMT_ARTIFACTS),$($(x)))
 LIBC_FMT_SRCS = $(foreach x,$(LIBC_FMT_ARTIFACTS),$($(x)_SRCS))
 LIBC_FMT_HDRS = $(foreach x,$(LIBC_FMT_ARTIFACTS),$($(x)_HDRS))
+LIBC_FMT_INCS = $(foreach x,$(LIBC_FMT_ARTIFACTS),$($(x)_INCS))
 LIBC_FMT_CHECKS = $(foreach x,$(LIBC_FMT_ARTIFACTS),$($(x)_CHECKS))
 LIBC_FMT_OBJS = $(foreach x,$(LIBC_FMT_ARTIFACTS),$($(x)_OBJS))
 $(LIBC_FMT_OBJS): $(BUILD_FILES) libc/fmt/fmt.mk
