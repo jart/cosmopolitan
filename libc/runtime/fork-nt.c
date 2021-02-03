@@ -46,7 +46,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
-static textwindows char16_t *ParseInt(char16_t *p, int64_t *x) {
+static textwindows noasan char16_t *ParseInt(char16_t *p, int64_t *x) {
   *x = 0;
   while (*p == ' ') p++;
   while ('0' <= *p && *p <= '9') {
@@ -56,8 +56,8 @@ static textwindows char16_t *ParseInt(char16_t *p, int64_t *x) {
   return p;
 }
 
-static noinline textwindows void ForkIo(int64_t h, void *buf, size_t n,
-                                        bool32 (*f)()) {
+static noinline textwindows noasan void ForkIo(int64_t h, void *buf, size_t n,
+                                               bool32 (*f)()) {
   char *p;
   size_t i;
   uint32_t x;
@@ -66,15 +66,17 @@ static noinline textwindows void ForkIo(int64_t h, void *buf, size_t n,
   }
 }
 
-static noinline textwindows void WriteAll(int64_t h, void *buf, size_t n) {
+static noinline textwindows noasan void WriteAll(int64_t h, void *buf,
+                                                 size_t n) {
   ForkIo(h, buf, n, WriteFile);
 }
 
-static noinline textwindows void ReadAll(int64_t h, void *buf, size_t n) {
+static textwindows noinline noasan void ReadAll(int64_t h, void *buf,
+                                                size_t n) {
   ForkIo(h, buf, n, ReadFile);
 }
 
-textwindows void WinMainForked(void) {
+textwindows noasan void WinMainForked(void) {
   void *addr;
   jmp_buf jb;
   uint64_t size;
@@ -117,13 +119,13 @@ textwindows void WinMainForked(void) {
 
 textwindows int fork$nt(void) {
   jmp_buf jb;
-  int i, rc, pid;
   char exe[PATH_MAX];
   int64_t reader, writer;
+  int i, rc, pid, releaseme;
   char *p, forkvar[6 + 21 + 1 + 21 + 1];
   struct NtStartupInfo startinfo;
   struct NtProcessInformation procinfo;
-  if ((pid = __getemptyfd()) == -1) return -1;
+  if ((pid = releaseme = __reservefd()) == -1) return -1;
   if (!setjmp(jb)) {
     if (CreatePipe(&reader, &writer, &kNtIsInheritable, 0)) {
       p = stpcpy(forkvar, "_FORK=");
@@ -148,6 +150,7 @@ textwindows int fork$nt(void) {
           g_fds.p[pid].kind = kFdProcess;
           g_fds.p[pid].handle = procinfo.hProcess;
           g_fds.p[pid].flags = O_CLOEXEC;
+          releaseme = -1;
         }
         WriteAll(writer, jb, sizeof(jb));
         WriteAll(writer, &_mmi.i, sizeof(_mmi.i));
@@ -169,6 +172,9 @@ textwindows int fork$nt(void) {
     }
   } else {
     rc = 0;
+  }
+  if (releaseme != -1) {
+    __releasefd(releaseme);
   }
   return rc;
 }

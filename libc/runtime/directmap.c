@@ -28,8 +28,8 @@
  * bypassed by calling this function. However the caller is responsible
  * for passing the magic memory handle on Windows NT to CloseHandle().
  */
-struct DirectMap __mmap(void *addr, size_t size, unsigned prot, unsigned flags,
-                        int fd, int64_t off) {
+noasan struct DirectMap __mmap(void *addr, size_t size, unsigned prot,
+                               unsigned flags, int fd, int64_t off) {
   if (!IsWindows()) {
     return (struct DirectMap){mmap$sysv(addr, size, prot, flags, fd, off),
                               kNtInvalidHandleValue};

@@ -52,6 +52,7 @@ struct Fds {
       kFdSerial,
       kFdZip,
       kFdEpoll,
+      kFdReserved,
     } kind;
     unsigned flags;
   } * p;
@@ -68,7 +69,8 @@ hidden extern struct NtSystemInfo g_ntsysteminfo;
 hidden extern struct NtStartupInfo g_ntstartupinfo;
 hidden extern const struct NtSecurityAttributes kNtIsInheritable;
 
-ssize_t __getemptyfd(void) hidden;
+int __reservefd(void) hidden;
+void __releasefd(int) hidden;
 int __ensurefds(int) hidden;
 void __removefd(int) hidden;
 

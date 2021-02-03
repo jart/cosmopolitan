@@ -33,7 +33,7 @@ hidden extern uint64_t g_rando64;
  *
  * @see rngset()
  */
-nodebuginfo uint64_t(rand64)(void) {
+nodebuginfo uint64_t rand64(void) {
   uint64_t res;
   if (X86_HAVE(RDRND)) {
     res = rdrand();

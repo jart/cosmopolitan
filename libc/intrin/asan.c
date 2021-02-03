@@ -20,17 +20,19 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/linux/exit.h"
-#include "libc/linux/write.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"
 #include "libc/mem/hook/hook.h"
+#include "libc/nt/enum/version.h"
+#include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.h"
 #include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
 #include "third_party/dlmalloc/dlmalloc.internal.h"
 
@@ -409,27 +411,38 @@ static const char *__asan_describe_access_poison(char *p) {
   }
 }
 
+static textsyscall wontreturn void __asan_exit(int rc) {
+  if (!IsWindows()) {
+    asm volatile("syscall"
+                 : /* no outputs */
+                 : "a"(__NR_exit_group), "D"(rc)
+                 : "memory");
+    unreachable;
+  } else {
+    ExitProcess(rc);
+  }
+}
+
 static textsyscall ssize_t __asan_write(const void *data, size_t size) {
   ssize_t rc;
-  if (weaken(write)) {
-    if ((rc = weaken(write)(2, data, size)) != -1) {
-      return rc;
+  uint32_t wrote;
+  if (!IsWindows()) {
+    asm volatile("syscall"
+                 : "=a"(rc)
+                 : "0"(__NR_write), "D"(2), "S"(data), "d"(size)
+                 : "rcx", "r11", "memory");
+    return rc;
+  } else {
+    if (WriteFile(GetStdHandle(kNtStdErrorHandle), data, size, &wrote, 0)) {
+      return wrote;
+    } else {
+      return -1;
     }
   }
-  return LinuxWrite(2, data, size);
 }
 
 static ssize_t __asan_write_string(const char *s) {
   return __asan_write(s, __asan_strlen(s));
-}
-
-static textsyscall wontreturn void __asan_exit(int rc) {
-  if (weaken(_Exit)) {
-    weaken(_Exit)(rc);
-  } else {
-    LinuxExit(rc);
-  }
-  for (;;) asm("hlt");
 }
 
 static wontreturn void __asan_abort(void) {
@@ -640,7 +653,9 @@ void __asan_stack_free(char *p, size_t size, int classid) {
   __asan_deallocate(p, kAsanStackFree);
 }
 
-void __asan_handle_no_return_impl(uintptr_t rsp) {
+void __asan_handle_no_return(void) {
+  uintptr_t rsp;
+  rsp = (uintptr_t)__builtin_frame_address(0);
   __asan_unpoison(rsp, ROUNDUP(rsp, STACKSIZE) - rsp);
 }
 
@@ -660,11 +675,11 @@ void __asan_unregister_globals(struct AsanGlobal g[], int n) {
   }
 }
 
-void __asan_report_load_impl(uint8_t *addr, int size) {
+void __asan_report_load(uint8_t *addr, int size) {
   __asan_report_memory_fault(addr, size, "load");
 }
 
-void __asan_report_store_impl(uint8_t *addr, int size) {
+void __asan_report_store(uint8_t *addr, int size) {
   __asan_report_memory_fault(addr, size, "store");
 }
 
@@ -790,6 +805,10 @@ textstartup void __asan_init(int argc, char **argv, char **envp,
                              intptr_t *auxv) {
   static bool once;
   if (!cmpxchg(&once, false, true)) return;
+  if (IsWindows() && NtGetVersion() < kNtVersionWindows10) {
+    __asan_write_string("error: asan binaries require windows10\n");
+    __asan_exit(0); /* So `make MODE=dbg test` passes w/ Windows7 */
+  }
   REQUIRE(_mmi);
   REQUIRE(__mmap);
   REQUIRE(MAP_ANONYMOUS);

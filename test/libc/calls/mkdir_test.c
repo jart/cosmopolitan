@@ -25,18 +25,7 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-char testdir[PATH_MAX];
-
-void SetUp(void) {
-  sprintf(testdir, "o/tmp/%s.%d", program_invocation_short_name, getpid());
-  makedirs(testdir, 0755);
-  CHECK_NE(-1, chdir(testdir));
-}
-
-void TearDown(void) {
-  CHECK_NE(-1, chdir("../../.."));
-  CHECK_NE(-1, rmrf(testdir));
-}
+char testlib_enable_tmp_setup_teardown;
 
 TEST(mkdir, testNothingExists_ENOENT) {
   EXPECT_EQ(-1, mkdir("yo/yo/yo", 0755));

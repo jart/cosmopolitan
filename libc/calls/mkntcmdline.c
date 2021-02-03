@@ -37,8 +37,8 @@
  * @kudos Daniel Colascione for teaching how to quote
  * @see libc/runtime/dosargv.c
  */
-textwindows int mkntcmdline(char16_t cmdline[ARG_MAX], const char *prog,
-                            char *const argv[]) {
+textwindows noasan int mkntcmdline(char16_t cmdline[ARG_MAX], const char *prog,
+                                   char *const argv[]) {
   char *arg;
   uint64_t w;
   wint_t x, y;

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
 #include "libc/mem/mem.h"
@@ -24,24 +25,29 @@
 #include "libc/sysv/errfuns.h"
 
 int __ensurefds(int fd) {
-  size_t n;
-  struct Fd *p;
-  if (fd < g_fds.n) return fd;
-  if (weaken(malloc)) {
-    n = MAX(fd + 1, g_fds.n + (g_fds.n << 1));
-    if ((p = weaken(malloc)(n * sizeof(*p)))) {
-      memcpy(p, g_fds.p, g_fds.n * sizeof(*p));
-      memset(p + g_fds.n, 0, (n - g_fds.n) * sizeof(*p));
-      if (g_fds.p != g_fds.__init_p && weaken(free)) {
-        weaken(free)(g_fds.p);
+  size_t n1, n2;
+  struct Fd *p1, *p2;
+  for (;;) {
+    p1 = g_fds.p;
+    n1 = g_fds.n;
+    if (fd < n1) return fd;
+    if (weaken(malloc)) {
+      n2 = MAX(fd + 1, n1 + (n1 << 1));
+      if ((p2 = weaken(malloc)(n2 * sizeof(*p1)))) {
+        memcpy(p2, p1, n1 * sizeof(*p1));
+        memset(p2 + n1, 0, (n2 - n1) * sizeof(*p1));
+        if (p1 != g_fds.__init_p && weaken(free)) weaken(free)(p1);
+        if (cmpxchg(&g_fds.p, p1, p2)) {
+          g_fds.n = n2;
+          return fd;
+        } else if (weaken(free)) {
+          weaken(free)(p2);
+        }
+      } else {
+        return enomem();
       }
-      g_fds.p = p;
-      g_fds.n = n;
-      return fd;
     } else {
-      return enomem();
+      return emfile();
     }
-  } else {
-    return emfile();
   }
 }

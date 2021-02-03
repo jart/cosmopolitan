@@ -35,7 +35,6 @@ static void __print$nt(const void *data, size_t len) {
   savexmm(xmm + 128);
   hand = __imp_GetStdHandle(kNtStdErrorHandle);
   __imp_WriteFile(hand, data, len, &wrote, NULL);
-  __imp_FlushFileBuffers(hand);
   loadxmm(xmm + 128);
 }
 

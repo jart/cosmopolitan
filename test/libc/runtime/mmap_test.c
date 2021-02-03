@@ -34,6 +34,8 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
+char testlib_enable_tmp_setup_teardown;
+
 TEST(mmap, testMapFile) {
   int fd;
   char *p;
@@ -107,10 +109,6 @@ TEST(mmap, customStackMemory_isAuthorized) {
 TEST(mmap, fileOffset) {
   int fd;
   char *map;
-  char testdir[PATH_MAX];
-  sprintf(testdir, "o/tmp/%s.%d", program_invocation_short_name, getpid());
-  ASSERT_NE(-1, makedirs(testdir, 0755));
-  ASSERT_NE(-1, chdir(testdir));
   ASSERT_NE(-1, (fd = open("foo", O_CREAT | O_RDWR, 0644)));
   EXPECT_NE(-1, ftruncate(fd, FRAMESIZE * 2));
   EXPECT_NE(-1, pwrite(fd, "hello", 5, FRAMESIZE * 0));
@@ -120,8 +118,6 @@ TEST(mmap, fileOffset) {
   EXPECT_EQ(0, memcmp(map, "there", 5), "%#.*s", 5, map);
   EXPECT_NE(-1, munmap(map, FRAMESIZE));
   EXPECT_NE(-1, close(fd));
-  ASSERT_NE(-1, chdir("../../.."));
-  ASSERT_NE(-1, rmrf(testdir));
 }
 
 TEST(isheap, nullPtr) {

@@ -30,17 +30,18 @@
  */
 textwindows int dup$nt(int oldfd, int newfd, int flags) {
   int64_t proc;
-  if (!__isfdkind(oldfd, kFdFile)) return ebadf();
+  if (oldfd < 0) return einval();
+  if (oldfd >= g_fds.n ||
+      (g_fds.p[oldfd].kind != kFdFile && g_fds.p[oldfd].kind != kFdSocket &&
+       g_fds.p[oldfd].kind != kFdConsole)) {
+    return ebadf();
+  }
   if (newfd == -1) {
-    if ((newfd = __getemptyfd()) == -1) {
-      return -1;
-    }
-  } else if (__ensurefds(newfd) != -1) {
-    if (g_fds.p[newfd].kind != kFdEmpty) {
-      close(newfd);
-    }
+    if ((newfd = __reservefd()) == -1) return -1;
   } else {
-    return -1;
+    if (__ensurefds(newfd) == -1) return -1;
+    if (g_fds.p[newfd].kind) close(newfd);
+    g_fds.p[newfd].kind = kFdReserved;
   }
   proc = GetCurrentProcess();
   if (DuplicateHandle(proc, g_fds.p[oldfd].handle, proc, &g_fds.p[newfd].handle,
@@ -49,6 +50,7 @@ textwindows int dup$nt(int oldfd, int newfd, int flags) {
     g_fds.p[newfd].flags = flags;
     return newfd;
   } else {
+    __releasefd(newfd);
     return __winerr();
   }
 }

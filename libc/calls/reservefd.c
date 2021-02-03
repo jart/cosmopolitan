@@ -16,37 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
+#include "libc/bits/bits.h"
 #include "libc/calls/internal.h"
-#include "libc/nt/enum/filemapflags.h"
-#include "libc/nt/enum/pageflags.h"
-#include "libc/nt/memory.h"
-#include "libc/nt/runtime.h"
-#include "libc/runtime/directmap.h"
-#include "libc/sysv/consts/prot.h"
+#include "libc/mem/mem.h"
+#include "libc/sysv/errfuns.h"
 
-textwindows noasan struct DirectMap __mmap$nt(void *addr, size_t size,
-                                              unsigned prot, int64_t handle,
-                                              int64_t off) {
-  struct DirectMap dm;
-  if ((dm.maphandle = CreateFileMappingNuma(
-           handle, &kNtIsInheritable,
-           (prot & PROT_WRITE) ? kNtPageExecuteReadwrite : kNtPageExecuteRead,
-           handle != -1 ? 0 : size >> 32, handle != -1 ? 0 : size, NULL,
-           kNtNumaNoPreferredNode))) {
-    if (!(dm.addr = MapViewOfFileExNuma(
-              dm.maphandle,
-              (prot & PROT_WRITE)
-                  ? kNtFileMapWrite | kNtFileMapExecute | kNtFileMapRead
-                  : kNtFileMapExecute | kNtFileMapRead,
-              off >> 32, off, size, addr, kNtNumaNoPreferredNode))) {
-      CloseHandle(dm.maphandle);
-      dm.maphandle = kNtInvalidHandleValue;
-      dm.addr = (void *)(intptr_t)__winerr();
+/**
+ * Finds open file descriptor slot.
+ */
+int __reservefd(void) {
+  int fd;
+  for (;;) {
+    fd = g_fds.f;
+    if (fd >= g_fds.n) {
+      if (__ensurefds(fd) == -1) return -1;
     }
-  } else {
-    dm.maphandle = kNtInvalidHandleValue;
-    dm.addr = (void *)(intptr_t)__winerr();
+    cmpxchg(&g_fds.f, fd, fd + 1);
+    if (cmpxchg(&g_fds.p[fd].kind, kFdEmpty, kFdReserved)) {
+      return fd;
+    }
   }
-  return dm;
 }

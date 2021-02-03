@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -18,17 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/calls/internal.h"
-#include "libc/mem/mem.h"
-#include "libc/sysv/errfuns.h"
 
-/**
- * Finds open file descriptor slot.
- */
-ssize_t __getemptyfd(void) {
-  for (; g_fds.f < g_fds.n; ++g_fds.f) {
-    if (g_fds.p[g_fds.f].kind == kFdEmpty) {
-      return g_fds.f;
-    }
-  }
-  return __ensurefds(g_fds.f);
+void __releasefd(int fd) {
+  int x;
+  g_fds.p[fd].kind = kFdEmpty;
+  do {
+    x = g_fds.f;
+    if (fd >= x) break;
+  } while (!cmpxchg(&g_fds.f, x, fd));
 }

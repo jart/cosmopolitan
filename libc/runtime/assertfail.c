@@ -17,38 +17,83 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
-#include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"
 #include "libc/mem/alloca.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/fileno.h"
+#include "libc/nt/runtime.h"
+#include "libc/sysv/consts/nr.h"
+
+static noasan size_t __assert_strlen(const char *s) {
+  size_t i = 0;
+  while (s[i]) ++i;
+  return i;
+}
+
+static noasan char *__assert_stpcpy(char *d, const char *s) {
+  size_t i;
+  for (i = 0;; ++i) {
+    if (!(d[i] = s[i])) {
+      return d + i;
+    }
+  }
+}
+
+static textsyscall noasan wontreturn void __assert_exit(int rc) {
+  if (!IsWindows()) {
+    asm volatile("syscall"
+                 : /* no outputs */
+                 : "a"(__NR_exit_group), "D"(rc)
+                 : "memory");
+    unreachable;
+  } else {
+    ExitProcess(rc);
+  }
+}
+
+static textsyscall noasan ssize_t __assert_write(const void *data,
+                                                 size_t size) {
+  ssize_t rc;
+  uint32_t wrote;
+  if (!IsWindows()) {
+    asm volatile("syscall"
+                 : "=a"(rc)
+                 : "0"(__NR_write), "D"(2), "S"(data), "d"(size)
+                 : "rcx", "r11", "memory");
+    return rc;
+  } else {
+    if (WriteFile(GetStdHandle(kNtStdErrorHandle), data, size, &wrote, 0)) {
+      return wrote;
+    } else {
+      return -1;
+    }
+  }
+}
 
 /**
  * Handles failure of assert() macro.
  */
-relegated void __assert_fail(const char *expr, const char *file, int line) {
+relegated wontreturn noasan void __assert_fail(const char *expr,
+                                               const char *file, int line) {
   static bool once;
   char *msg, *p, linebuf[16];
   unsigned i, exprlen, filelen;
-  if (!once) {
-    once = true;
-    exprlen = expr ? strlen(expr) : 0;
-    filelen = file ? strlen(file) : 0;
+  if (cmpxchg(&once, false, true)) {
+    exprlen = expr ? __assert_strlen(expr) : 0;
+    filelen = file ? __assert_strlen(file) : 0;
     p = msg = alloca(MIN(512, exprlen + filelen + 64));
-    p = mempcpy(p, file, filelen);
-    p = stpcpy(p, ":");
+    p = __assert_stpcpy(p, file);
+    p = __assert_stpcpy(p, ":");
     if (line < 1) line = 1;
     for (i = 0; line; line /= 10) linebuf[i++] = '0' + line % 10;
     while (i) *p++ = linebuf[--i];
-    p = stpcpy(p, ":");
-    p = mempcpy(p, expr, exprlen);
-    p = stpcpy(p, "\r\n");
-    write(STDERR_FILENO, msg, p - msg);
+    p = __assert_stpcpy(p, ":");
+    p = __assert_stpcpy(p, expr);
+    p = __assert_stpcpy(p, "\r\n");
+    __assert_write(msg, p - msg);
     if (weaken(__die)) weaken(__die)();
   }
-  abort();
-  unreachable;
+  __assert_exit(23);
 }

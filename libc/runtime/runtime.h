@@ -72,6 +72,7 @@ void __print_string(const char *);
 void __fast_math(void);
 void *sbrk(intptr_t);
 int brk(void *);
+int NtGetVersion(void);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § runtime » optimizations                                   ─╬─│┼

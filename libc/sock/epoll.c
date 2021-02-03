@@ -1323,15 +1323,20 @@ static textwindows noinline int epoll_create1$nt(uint32_t flags) {
   int64_t ephnd;
   struct PortState *port_state;
   struct TsTreeNode *tree_node;
-  if ((fd = __getemptyfd()) == -1) return -1;
   if (wepoll_init() < 0) return -1;
+  if ((fd = __reservefd()) == -1) return -1;
   port_state = port_new(&ephnd);
-  if (!port_state) return -1;
+  if (!port_state) {
+    __releasefd(fd);
+    return -1;
+  }
   tree_node = port_state_to_handle_tree_node(port_state);
   if (ts_tree_add(&epoll__handle_tree, tree_node, (uintptr_t)ephnd) < 0) {
     /* This should never happen. */
     port_delete(port_state);
-    RETURN_SET_ERROR(-1, kNtErrorAlreadyExists);
+    err_set_win_error(kNtErrorAlreadyExists);
+    __releasefd(fd);
+    return -1;
   }
   g_fds.p[fd].kind = kFdEpoll;
   g_fds.p[fd].handle = ephnd;

@@ -53,8 +53,7 @@ int close(int fd) {
     rc = ebadf();
   }
   if (!__vforked && fd < g_fds.n) {
-    g_fds.p[fd].kind = kFdEmpty;
-    g_fds.f = MIN(g_fds.f, fd);
+    __releasefd(fd);
   }
   return rc;
 }

@@ -34,12 +34,13 @@ textwindows int accept$nt(struct Fd *fd, void *addr, uint32_t *addrsize,
   uint32_t yes;
   for (;;) {
     if (!WSAPoll(&(struct pollfd$nt){fd->handle, POLLIN}, 1, 1000)) continue;
-    if ((client = __getemptyfd()) == -1) return -1;
+    if ((client = __reservefd()) == -1) return -1;
     if ((h = WSAAccept(fd->handle, addr, (int32_t *)addrsize, 0, 0)) != -1) {
       if (flags & SOCK_NONBLOCK) {
         yes = 1;
         if (__ioctlsocket$nt(g_fds.p[client].handle, FIONBIO, &yes) == -1) {
           __closesocket$nt(g_fds.p[client].handle);
+          __releasefd(client);
           return __winsockerr();
         }
       }
@@ -48,6 +49,7 @@ textwindows int accept$nt(struct Fd *fd, void *addr, uint32_t *addrsize,
       g_fds.p[client].handle = h;
       return client;
     } else {
+      __releasefd(client);
       return __winsockerr();
     }
   }

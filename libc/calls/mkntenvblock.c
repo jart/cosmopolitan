@@ -29,21 +29,18 @@
 #include "libc/str/utf16.h"
 #include "libc/sysv/errfuns.h"
 
-static int CompareStrings(const char *l, const char *r) {
+static noasan int CompareStrings(const char *l, const char *r) {
   size_t i = 0;
   while (l[i] == r[i] && r[i]) ++i;
   return (l[i] & 0xff) - (r[i] & 0xff);
 }
 
-static void SortStrings(char **a, size_t n) {
-  char *t;
-  size_t i, j;
-  for (i = 1; i < n; ++i) {
-    for (t = a[i], j = i; j > 0 && CompareStrings(t, a[j - 1]) < 0; --j) {
-      a[j] = a[j - 1];
-    }
-    a[j] = t;
+static noasan void InsertString(char **a, size_t i, char *s) {
+  size_t j;
+  for (j = i; j > 0 && CompareStrings(s, a[j - 1]) < 0; --j) {
+    a[j] = a[j - 1];
   }
+  a[j] = s;
 }
 
 /**
@@ -57,8 +54,9 @@ static void SortStrings(char **a, size_t n) {
  * @return 0 on success, or -1 w/ errno
  * @error E2BIG if total number of shorts exceeded ARG_MAX (0x8000)
  */
-textwindows int mkntenvblock(char16_t envvars[ARG_MAX], char *const envp[],
-                             const char *extravar) {
+textwindows noasan int mkntenvblock(char16_t envvars[ARG_MAX],
+                                    char *const envp[], const char *extravar) {
+  char *t;
   axdx_t rc;
   uint64_t w;
   char **vars;
@@ -66,9 +64,8 @@ textwindows int mkntenvblock(char16_t envvars[ARG_MAX], char *const envp[],
   size_t i, j, k, n, m;
   for (n = 0; envp[n];) n++;
   vars = alloca((n + 1) * sizeof(char *));
-  memcpy(vars, envp, n * sizeof(char *));
-  if (extravar) vars[n++] = extravar;
-  SortStrings(vars, n);
+  for (i = 0; i < n; ++i) InsertString(vars, i, envp[i]);
+  if (extravar) InsertString(vars, n++, extravar);
   for (k = i = 0; i < n; ++i) {
     j = 0;
     do {

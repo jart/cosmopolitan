@@ -35,7 +35,6 @@
 #include "libc/nt/pedef.internal.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/struct/teb.h"
 #include "libc/runtime/directmap.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.h"
@@ -56,16 +55,16 @@ struct WinArgs {
   char envblock[ARG_MAX];
 };
 
-static textwindows void SetTrueColor(void) {
+static noasan textwindows void SetTrueColor(void) {
   SetEnvironmentVariable(u"TERM", u"xterm-truecolor");
 }
 
-static textwindows void MakeLongDoubleLongAgain(void) {
+static noasan textwindows void MakeLongDoubleLongAgain(void) {
   int x87cw = 0x037f; /* let's hope win32 won't undo this */
   asm volatile("fldcw\t%0" : /* no outputs */ : "m"(x87cw));
 }
 
-static textwindows void NormalizeCmdExe(void) {
+static noasan textwindows void NormalizeCmdExe(void) {
   uint32_t mode;
   int64_t handle, hstdin, hstdout, hstderr;
   if ((int)weakaddr("v_ntsubsystem") == kNtImageSubsystemWindowsCui &&
@@ -96,7 +95,7 @@ static textwindows void NormalizeCmdExe(void) {
   }
 }
 
-static textwindows wontreturn void WinMainNew(void) {
+static noasan textwindows wontreturn void WinMainNew(void) {
   int64_t h;
   size_t size;
   int i, count;
@@ -165,8 +164,8 @@ static textwindows wontreturn void WinMainNew(void) {
  *
  * @param hInstance call GetModuleHandle(NULL) from main if you need it
  */
-textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
-                            const char *lpCmdLine, int nCmdShow) {
+noasan textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
+                                   const char *lpCmdLine, int nCmdShow) {
   MakeLongDoubleLongAgain();
   if (weaken(winsockinit)) weaken(winsockinit)();
   if (weaken(WinMainForked)) weaken(WinMainForked)();

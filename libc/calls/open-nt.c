@@ -112,11 +112,16 @@ static textwindows ssize_t open$nt$file(int dirfd, const char *file,
 
 textwindows ssize_t open$nt(int dirfd, const char *file, uint32_t flags,
                             int32_t mode) {
-  size_t fd;
-  if ((fd = __getemptyfd()) == -1) return -1;
+  int fd;
+  ssize_t rc;
+  if ((fd = __reservefd()) == -1) return -1;
   if ((flags & O_ACCMODE) == O_RDWR && !strcmp(file, kNtMagicPaths.devtty)) {
-    return open$nt$console(dirfd, &kNtMagicPaths, flags, mode, fd);
+    rc = open$nt$console(dirfd, &kNtMagicPaths, flags, mode, fd);
   } else {
-    return open$nt$file(dirfd, file, flags, mode, fd);
+    rc = open$nt$file(dirfd, file, flags, mode, fd);
   }
+  if (rc == -1) {
+    __releasefd(fd);
+  }
+  return rc;
 }
