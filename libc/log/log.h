@@ -40,7 +40,7 @@ void memsummary(int);                  /* light version of same thing */
 uint16_t getttycols(uint16_t);
 int getttysize(int, struct winsize *) paramsnonnull();
 bool IsTerminalInarticulate(void) nosideeffect;
-char *commandvenv(const char *, const char *) nodiscard;
+const char *commandvenv(const char *, const char *);
 const char *GetAddr2linePath(void);
 const char *GetGdbPath(void);
 

@@ -51,18 +51,23 @@ static void SortStrings(char **a, size_t n) {
  *
  * This is designed to meet the requirements of CreateProcess().
  *
+ * @param envvars receives sorted double-NUL terminated string list
  * @param envp is an a NULL-terminated array of UTF-8 strings
- * @return freshly allocated lpEnvironment or NULL w/ errno
+ * @param extravar is a VAR=val string we consider part of envp or NULL
+ * @return 0 on success, or -1 w/ errno
+ * @error E2BIG if total number of shorts exceeded ARG_MAX (0x8000)
  */
-textwindows int mkntenvblock(char16_t envvars[ARG_MAX], char *const envp[]) {
+textwindows int mkntenvblock(char16_t envvars[ARG_MAX], char *const envp[],
+                             const char *extravar) {
   axdx_t rc;
   uint64_t w;
   char **vars;
   wint_t x, y;
   size_t i, j, k, n, m;
   for (n = 0; envp[n];) n++;
-  vars = alloca(n * sizeof(char *));
+  vars = alloca((n + 1) * sizeof(char *));
   memcpy(vars, envp, n * sizeof(char *));
+  if (extravar) vars[n++] = extravar;
   SortStrings(vars, n);
   for (k = i = 0; i < n; ++i) {
     j = 0;

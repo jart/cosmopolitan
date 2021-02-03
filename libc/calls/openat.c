@@ -37,6 +37,7 @@
  *     ignored if O_CREAT or O_TMPFILE weren't passed
  * @return number needing close(), or -1 w/ errno
  * @asyncsignalsafe
+ * @vforksafe
  */
 nodiscard int openat(int dirfd, const char *file, int flags, ...) {
   va_list va;
@@ -47,11 +48,9 @@ nodiscard int openat(int dirfd, const char *file, int flags, ...) {
   va_end(va);
   if (!file) return efault();
   if (weaken(__zipos_open) && weaken(__zipos_parseuri)(file, &zipname) != -1) {
-    if (dirfd == AT_FDCWD) {
-      return weaken(__zipos_open)(&zipname, flags, mode);
-    } else {
-      return eopnotsupp(); /* TODO */
-    }
+    if (__vforked) return einval();
+    if (dirfd != AT_FDCWD) return einval();
+    return weaken(__zipos_open)(&zipname, flags, mode);
   } else if (!IsWindows()) {
     return openat$sysv(dirfd, file, flags, mode);
   } else {

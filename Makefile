@@ -116,7 +116,6 @@ include libc/zipos/zipos.mk			# │
 include third_party/gdtoa/gdtoa.mk		# │
 include libc/time/time.mk			# │
 include libc/alg/alg.mk				# │
-include libc/calls/hefty/hefty.mk		# │
 include libc/stdio/stdio.mk			# │
 include third_party/f2c/f2c.mk			# │
 include third_party/blas/blas.mk		# │
@@ -252,7 +251,6 @@ COSMOPOLITAN_OBJECTS =		\
 	APE_LIB			\
 	THIRD_PARTY_MUSL	\
 	LIBC_STDIO		\
-	LIBC_CALLS_HEFTY	\
 	THIRD_PARTY_REGEX	\
 	LIBC_ALG		\
 	LIBC_MEM		\

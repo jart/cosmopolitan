@@ -118,6 +118,7 @@ static void sigaction$native2cosmo(union metasigaction *sa) {
  *
  * @see xsigaction() for a much better api
  * @asyncsignalsafe
+ * @vforksafe
  */
 int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
   _Static_assert(sizeof(struct sigaction) > sizeof(struct sigaction$linux) &&

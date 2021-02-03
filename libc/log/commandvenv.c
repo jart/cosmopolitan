@@ -25,19 +25,30 @@
 
 /**
  * Finds full executable path in overridable way.
+ *
+ * This is a higher level version of the commandv() function. Programs
+ * that spawn subprocesses can use this function to determine the path
+ * at startup.
+ *
+ * @param var is environment variable which may be used to override
+ *     PATH search, and it can force a NULL result if it's empty
+ * @param cmd is name of program, which is returned asap if it's an
+ *     absolute path
+ * @return pointer to exe path string, or NULL if it couldn't be found
+ *     or the environment variable was empty; noting that the caller
+ *     should copy this string before saving it
  */
-nodiscard char *commandvenv(const char *var, const char *cmd) {
+const char *commandvenv(const char *var, const char *cmd) {
   const char *exepath;
-  char pathbuf[PATH_MAX];
+  static char pathbuf[PATH_MAX];
+  if (*cmd == '/' || *cmd == '\\') return cmd;
   if ((exepath = getenv(var))) {
-    if (!isempty(exepath) && access(exepath, X_OK) != -1) {
-      return strdup(exepath);
+    if (isempty(exepath)) return NULL;
+    if (access(exepath, X_OK) != -1) {
+      return exepath;
     } else {
       return NULL;
     }
-  } else if ((exepath = commandv(cmd, pathbuf))) {
-    return strdup(exepath);
-  } else {
-    return NULL;
   }
+  return commandv(cmd, pathbuf);
 }

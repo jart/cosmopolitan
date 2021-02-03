@@ -44,7 +44,6 @@ EXAMPLES_DIRECTDEPS =						\
 	LIBC_ALG						\
 	LIBC_BITS						\
 	LIBC_CALLS						\
-	LIBC_CALLS_HEFTY					\
 	LIBC_FMT						\
 	LIBC_INTRIN						\
 	LIBC_LOG						\

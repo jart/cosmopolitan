@@ -28,7 +28,6 @@ LIBC_LOG_A_CHECKS =					\
 LIBC_LOG_A_DIRECTDEPS =					\
 	LIBC_ALG					\
 	LIBC_CALLS					\
-	LIBC_CALLS_HEFTY				\
 	LIBC_ELF					\
 	LIBC_FMT					\
 	LIBC_INTRIN					\

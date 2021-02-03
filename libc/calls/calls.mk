@@ -94,6 +94,4 @@ LIBC_CALLS_OBJS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)_OBJS))
 LIBC_CALLS_TESTS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)_TESTS))
 
 .PHONY: o/$(MODE)/libc/calls
-o/$(MODE)/libc/calls:					\
-		o/$(MODE)/libc/calls/hefty		\
-		$(LIBC_CALLS_CHECKS)
+o/$(MODE)/libc/calls: $(LIBC_CALLS_CHECKS)

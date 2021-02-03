@@ -48,7 +48,6 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   struct Garbages *garbage;
   sigset_t chldmask, savemask;
   const struct StackFrame *frame;
-  struct sigaction ignore, saveint, savequit;
   const char *debugbin, *p1, *p2, *p3, *addr2line;
   char buf[kBacktraceBufSize], *argv[kBacktraceMaxFrames];
   if (IsOpenbsd()) return -1;
@@ -77,18 +76,11 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
     j += uint64toarray_radix16(addr - 1, buf + j) + 1;
   }
   argv[i++] = NULL;
-  ignore.sa_flags = 0;
-  ignore.sa_handler = SIG_IGN;
-  sigemptyset(&ignore.sa_mask);
-  sigaction(SIGINT, &ignore, &saveint);
-  sigaction(SIGQUIT, &ignore, &savequit);
   sigemptyset(&chldmask);
   sigaddset(&chldmask, SIGCHLD);
   sigprocmask(SIG_BLOCK, &chldmask, &savemask);
   pipe(pipefds);
   if (!(pid = vfork())) {
-    sigaction(SIGINT, &saveint, NULL);
-    sigaction(SIGQUIT, &savequit, NULL);
     sigprocmask(SIG_SETMASK, &savemask, NULL);
     dup2(pipefds[1], 1);
     close(pipefds[0]);
@@ -124,8 +116,6 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
     if (errno == EINTR) continue;
     return -1;
   }
-  sigaction(SIGINT, &saveint, NULL);
-  sigaction(SIGQUIT, &savequit, NULL);
   sigprocmask(SIG_SETMASK, &savemask, NULL);
   if (WIFEXITED(ws) && !WEXITSTATUS(ws)) {
     return 0;
