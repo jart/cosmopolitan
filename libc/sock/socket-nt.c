@@ -29,7 +29,7 @@
 textwindows int socket$nt(int family, int type, int protocol) {
   int fd;
   uint32_t yes;
-  if ((fd = __getemptyfd()) == -1) return -1;
+  if ((fd = __reservefd()) == -1) return -1;
   if ((g_fds.p[fd].handle = WSASocket(family, type & ~(CLOEXEC | NONBLOCK),
                                       protocol, NULL, 0, 0)) != -1) {
     if (type & NONBLOCK) {

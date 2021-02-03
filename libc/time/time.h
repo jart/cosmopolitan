@@ -60,8 +60,7 @@ int futimesat(int, const char *, const struct timeval[2]);
 long double dtime(int);
 long double dsleep(long double);
 extern long double (*nowl)(void);
-long double converttickstonanos(uint64_t);
-long double converttickstoseconds(uint64_t);
+long double ConvertTicksToNanos(uint64_t);
 
 double difftime(int64_t, int64_t) nothrow pureconst;
 

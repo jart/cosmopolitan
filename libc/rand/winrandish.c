@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nt/dll.h"
 #include "libc/nt/events.h"
 #include "libc/nt/struct/point.h"
-#include "libc/nt/struct/teb.h"
 #include "libc/rand/rand.h"
 
 /**
@@ -29,7 +29,7 @@
 textwindows int64_t winrandish(void) {
   int64_t res;
   struct NtPoint point;
-  res = ((int64_t)NtGetPid() << 17) ^ NtGetTid() ^ rdtsc();
+  res = ((int64_t)getpid() << 17) ^ gettid() ^ rdtsc();
   /*
    * This function is intended for older CPUs built before 2012, so
    * let's avoid having our CUI apps yoink USER32.DLL until we're

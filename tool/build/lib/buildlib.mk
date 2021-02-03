@@ -27,7 +27,6 @@ TOOL_BUILD_LIB_A_DIRECTDEPS =				\
 	LIBC_ALG					\
 	LIBC_BITS					\
 	LIBC_CALLS					\
-	LIBC_CALLS_HEFTY				\
 	LIBC_ELF					\
 	LIBC_FMT					\
 	LIBC_INTRIN					\

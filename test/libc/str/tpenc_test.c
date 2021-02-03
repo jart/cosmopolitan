@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/limits.h"
+#include "libc/rand/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/str/tpenc.h"
@@ -45,7 +46,7 @@ TEST(tpenc, testBeyondTheStandard) {
 }
 
 uint64_t Tpenc(int x) {
-  return (v = tpenc(VEIL("r", x)));
+  return (v = EXPROPRIATE(tpenc(VEIL("r", x))));
 }
 
 BENCH(tpenc, bench) {

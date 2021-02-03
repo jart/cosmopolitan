@@ -42,7 +42,6 @@ textwindows ssize_t write$nt(struct Fd *fd, const struct iovec *iov,
                 iovlen ? clampio(iov[0].iov_len) : 0, &wrote,
                 offset2overlap(opt_offset, &overlap))) {
     if (!wrote) assert(!SumIovecLen(iov, iovlen));
-    FlushFileBuffers(fd->handle);
     return wrote;
   } else {
     return __winerr();

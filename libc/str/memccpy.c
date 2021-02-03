@@ -18,8 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
+static inline noasan uint64_t UncheckedAlignedRead64(unsigned char *p) {
+  return (uint64_t)p[7] << 070 | (uint64_t)p[6] << 060 | (uint64_t)p[5] << 050 |
+         (uint64_t)p[4] << 040 | (uint64_t)p[3] << 030 | (uint64_t)p[2] << 020 |
+         (uint64_t)p[1] << 010 | (uint64_t)p[0] << 000;
+}
+
 /**
- * Copies at most 𝑛 bytes from 𝑠 to 𝑑 until 𝑐 is encountered.
+ * Copies at most N bytes from SRC to DST until 𝑐 is encountered.
  *
  * This is little-known C Standard Library approach, dating back to the
  * Fourth Edition of System Five, for copying a C strings to fixed-width
@@ -39,17 +45,46 @@
  *     char cstrbuf[16];
  *     snprintf(cstrbuf, sizeof(cstrbuf), "%s", CSTR);
  *
- * @return 𝑑 + idx(𝑐) + 1, or NULL if 𝑐 ∉ 𝑠₀․․ₙ₋₁
- * @note 𝑑 and 𝑠 can't overlap
+ * @param c is search character and is masked with 255
+ * @return DST + idx(c) + 1, or NULL if 𝑐 ∉ 𝑠₀․․ₙ₋₁
+ * @note DST and SRC can't overlap
  * @asyncsignalsafe
  */
-void *memccpy(void *d, const void *s, int c, size_t n) {
-  const char *p, *pe;
-  p = s;
-  if ((pe = memchr(p, c, n))) {
-    return mempcpy(d, s, pe - p + 1);
-  } else {
-    memcpy(d, s, n);
-    return NULL;
+void *memccpy(void *dst, const void *src, int c, size_t n) {
+  size_t i;
+  uint64_t v, w;
+  unsigned char *d;
+  unsigned char *pd;
+  const unsigned char *s;
+  i = 0;
+  d = dst;
+  s = src;
+  c &= 255;
+  v = 0x0101010101010101 * c;
+  for (; (uintptr_t)(s + i) & 7; ++i) {
+    if (i == n) return NULL;
+    if ((d[i] = s[i]) == c) return d + i + 1;
   }
+  for (; i + 8 <= n; i += 8) {
+    w = UncheckedAlignedRead64(s + i);
+    if (~(w ^ v) & ((w ^ v) - 0x0101010101010101) & 0x8080808080808080) {
+      break;
+    } else {
+      pd = d + i;
+      pd[0] = (w >> 000) & 255;
+      pd[1] = (w >> 010) & 255;
+      pd[2] = (w >> 020) & 255;
+      pd[3] = (w >> 030) & 255;
+      pd[4] = (w >> 040) & 255;
+      pd[5] = (w >> 050) & 255;
+      pd[6] = (w >> 060) & 255;
+      pd[7] = (w >> 070) & 255;
+    }
+  }
+  for (; i < n; ++i) {
+    if ((d[i] = s[i]) == c) {
+      return d + i + 1;
+    }
+  }
+  return NULL;
 }

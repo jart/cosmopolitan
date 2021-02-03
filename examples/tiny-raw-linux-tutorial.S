@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
+.text.syscall
 
 /	Tiny Raw Linux Binary Tutorial
 /	

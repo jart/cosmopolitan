@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
@@ -24,13 +25,15 @@
 #include "libc/runtime/directmap.h"
 #include "libc/sysv/consts/prot.h"
 
-textwindows struct DirectMap __mmap$nt(void *addr, size_t size, unsigned prot,
-                                       int64_t handle, int64_t off) {
+textwindows noasan struct DirectMap __mmap$nt(void *addr, size_t size,
+                                              unsigned prot, int64_t handle,
+                                              int64_t off) {
   struct DirectMap dm;
   if ((dm.maphandle = CreateFileMappingNuma(
            handle, &kNtIsInheritable,
            (prot & PROT_WRITE) ? kNtPageExecuteReadwrite : kNtPageExecuteRead,
-           size >> 32, size, NULL, kNtNumaNoPreferredNode))) {
+           handle != -1 ? 0 : size >> 32, handle != -1 ? 0 : size, NULL,
+           kNtNumaNoPreferredNode))) {
     if (!(dm.addr = MapViewOfFileExNuma(
               dm.maphandle,
               (prot & PROT_WRITE)

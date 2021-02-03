@@ -29,7 +29,6 @@
  * @param arg can be FD_CLOEXEC, etc. depending
  * @return 0 on success, or -1 w/ errno
  * @asyncsignalsafe
- * @syscall
  */
 int fcntl(int fd, int cmd, ...) {
   va_list va;

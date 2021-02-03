@@ -17,15 +17,17 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/errno.h"
+#include "libc/fmt/fmt.h"
+#include "libc/log/check.h"
 #include "libc/macros.h"
 #include "libc/nt/process.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
-
-void SetUp(void);
-void TearDown(void);
+#include "libc/x/x.h"
 
 void testlib_finish(void) {
   if (g_testlib_failed) {
@@ -60,8 +62,18 @@ testonly void testlib_runtestcases(testfn_t *start, testfn_t *end,
    *
    * @see ape/ape.lds
    */
+  int x;
+  char cwd[PATH_MAX];
+  char tmp[PATH_MAX];
   const testfn_t *fn;
-  for (fn = start; fn != end; ++fn) {
+  for (x = 0, fn = start; fn != end; ++fn) {
+    if (weaken(testlib_enable_tmp_setup_teardown)) {
+      CHECK_NOTNULL(getcwd(cwd, sizeof(cwd)));
+      snprintf(tmp, sizeof(tmp), "o/tmp/%s.%d.%d",
+               program_invocation_short_name, getpid(), x++);
+      CHECK_NE(-1, makedirs(tmp, 0755), "tmp=%s", tmp);
+      CHECK_NE(-1, chdir(tmp), "tmp=%s", tmp);
+    }
     if (weaken(SetUp)) weaken(SetUp)();
     errno = 0;
     SetLastError(0);
@@ -71,5 +83,9 @@ testonly void testlib_runtestcases(testfn_t *start, testfn_t *end,
     (*fn)();
     getpid$sysv();
     if (weaken(TearDown)) weaken(TearDown)();
+    if (weaken(testlib_enable_tmp_setup_teardown)) {
+      CHECK_NE(-1, chdir(cwd));
+      CHECK_NE(-1, rmrf(tmp));
+    }
   }
 }

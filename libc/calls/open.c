@@ -31,7 +31,7 @@
  * @asyncsignalsafe
  * @vforksafe
  */
-nodiscard int open(const char *file, int flags, ...) {
+int open(const char *file, int flags, ...) {
   va_list va;
   unsigned mode;
   va_start(va, flags);

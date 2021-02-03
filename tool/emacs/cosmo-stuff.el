@@ -441,7 +441,7 @@
   (cond ((not (eq 0 (logand 8 arg)))
          (cosmo--assembly (setq arg (logand (lognot 8)))
                           "SILENT=0 OVERRIDE_COPTS='-fverbose-asm -fsanitize=address'"))
-        (t (cosmo--assembly arg "SILENT=0 OVERRIDE_COPTS='-fverbose-asm -fsanitize=address' CPPFLAGS='-DSTACK_FRAME_UNLIMITED'"))))
+        (t (cosmo--assembly arg "SILENT=0 OVERRIDE_COPTS='' CPPFLAGS='-DSTACK_FRAME_UNLIMITED'"))))
 
 (defun cosmo-assembly-native (arg)
   (interactive "P")

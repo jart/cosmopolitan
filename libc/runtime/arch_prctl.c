@@ -95,7 +95,7 @@ static int arch_prctl$freebsd(int code, int64_t addr) {
   }
 }
 
-static int arch_prctl$xnu(int code, int64_t addr) {
+static textsyscall int arch_prctl$xnu(int code, int64_t addr) {
   int ax;
   switch (code) {
     case ARCH_SET_GS:
@@ -113,7 +113,7 @@ static int arch_prctl$xnu(int code, int64_t addr) {
   }
 }
 
-static int arch_prctl$openbsd(int code, int64_t addr) {
+static textsyscall int arch_prctl$openbsd(int code, int64_t addr) {
   int64_t rax;
   switch (code) {
     case ARCH_GET_FS:

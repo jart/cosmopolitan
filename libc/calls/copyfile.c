@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/hefty/copyfile.h"
+#include "libc/calls/copyfile.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"

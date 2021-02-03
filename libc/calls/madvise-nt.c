@@ -29,9 +29,9 @@ forceinline typeof(PrefetchVirtualMemory) *GetPrefetchVirtualMemory(void) {
   static bool once;
   static typeof(PrefetchVirtualMemory) *PrefetchVirtualMemory_;
   if (!once) {
-    once = true;
     PrefetchVirtualMemory_ = /* win8.1+ */
         GetProcAddressModule("Kernel32.dll", "PrefetchVirtualMemory");
+    once = true;
   }
   return PrefetchVirtualMemory_;
 }
@@ -40,9 +40,9 @@ forceinline typeof(OfferVirtualMemory) *GetOfferVirtualMemory(void) {
   static bool once;
   static typeof(OfferVirtualMemory) *OfferVirtualMemory_;
   if (!once) {
-    once = true;
     OfferVirtualMemory_ = /* win8.1+ */
         GetProcAddressModule("Kernel32.dll", "OfferVirtualMemory");
+    once = true;
   }
   return OfferVirtualMemory_;
 }

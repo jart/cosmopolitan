@@ -36,8 +36,8 @@
 /* *************************************
 *  Includes
 ***************************************/
-#include "platform.h"    /* Compiler options */
-#include "util.h"        /* UTIL_GetFileSize, UTIL_sleep */
+#include "third_party/lz4cli/platform.h"    /* Compiler options */
+#include "third_party/lz4cli/util.h"        /* UTIL_GetFileSize, UTIL_sleep */
 #include "libc/mem/mem.h"      /* malloc, free */
 #include "libc/str/str.h"      /* memset */
 #include "libc/stdio/stdio.h"       /* fprintf, fopen, ftello */
@@ -46,17 +46,17 @@
 #include "libc/bits/initializer.internal.h"
 #include "libc/runtime/runtime.h"      /* assert */
 
-#include "datagen.h"     /* RDG_genBuffer */
-#include "xxhash.h"
+#include "third_party/lz4cli/datagen.h"     /* RDG_genBuffer */
+#include "third_party/lz4cli/xxhash.h"
 
 
-#include "lz4.h"
+#include "third_party/lz4cli/lz4.h"
 #define COMPRESSOR0 LZ4_compress_local
 static int LZ4_compress_local(const char* src, char* dst, int srcSize, int dstSize, int clevel) {
   int const acceleration = (clevel < 0) ? -clevel + 1 : 1;
   return LZ4_compress_fast(src, dst, srcSize, dstSize, acceleration);
 }
-#include "lz4hc.h"
+#include "third_party/lz4cli/lz4hc.h"
 #define COMPRESSOR1 LZ4_compress_HC
 #define DEFAULTCOMPRESSOR COMPRESSOR0
 #define LZ4_isError(errcode) (errcode==0)

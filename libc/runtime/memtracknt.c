@@ -22,14 +22,14 @@
 #include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
 
-static void *GetFrameAddr(int f) {
+static noasan void *GetFrameAddr(int f) {
   intptr_t a;
   a = f;
   a *= FRAMESIZE;
   return (void *)a;
 }
 
-void ReleaseMemoryNt(struct MemoryIntervals *mm, int l, int r) {
+noasan void ReleaseMemoryNt(struct MemoryIntervals *mm, int l, int r) {
   int i, ok;
   for (i = l; i <= r; ++i) {
     ok = UnmapViewOfFile(GetFrameAddr(mm->p[i].x));

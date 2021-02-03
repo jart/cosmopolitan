@@ -28,14 +28,13 @@
 #define WasImported(SLOT) \
   ((void *)*SLOT && *SLOT != (void *)&missingno /* see libc/crt/crt.S */)
 
-static privileged void __print$nt(const void *data, size_t len) {
+static void __print$nt(const void *data, size_t len) {
   int64_t hand;
   char xmm[256];
   uint32_t wrote;
   savexmm(xmm + 128);
   hand = __imp_GetStdHandle(kNtStdErrorHandle);
   __imp_WriteFile(hand, data, len, &wrote, NULL);
-  __imp_FlushFileBuffers(hand);
   loadxmm(xmm + 128);
 }
 
@@ -49,7 +48,7 @@ static privileged void __print$nt(const void *data, size_t len) {
  * @param len can be computed w/ tinystrlen()
  * @clob nothing except flags
  */
-privileged void __print(const void *data, size_t len) {
+textsyscall void __print(const void *data, size_t len) {
   int64_t ax, ordinal;
   if (WasImported(__imp_WriteFile)) {
     __print$nt(data, len);
@@ -68,7 +67,7 @@ privileged void __print(const void *data, size_t len) {
   }
 }
 
-privileged void __print_string(const char *s) {
+void __print_string(const char *s) {
   size_t n = 0;
   while (s[n]) ++n;
   __print(s, n);

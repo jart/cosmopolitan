@@ -19,6 +19,7 @@
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction-freebsd.internal.h"
 #include "libc/calls/struct/sigaction-linux.internal.h"
 #include "libc/calls/struct/sigaction-openbsd.internal.h"
@@ -120,6 +121,7 @@ static void sigaction$native2cosmo(union metasigaction *sa) {
  *
  * @see xsigaction() for a much better api
  * @asyncsignalsafe
+ * @vforksafe
  */
 int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
   _Static_assert(sizeof(struct sigaction) > sizeof(struct sigaction$linux) &&
@@ -129,9 +131,8 @@ int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
                  sizeof(struct sigaction) > sizeof(struct sigaction$openbsd));
   int rc, rva, oldrva;
   struct sigaction *ap, copy;
-  if (!(0 < sig && sig < NSIG) || sig == SIGKILL || sig == SIGSTOP) {
-    return einval();
-  }
+  if (!(0 < sig && sig < NSIG)) return einval();
+  if (sig == SIGKILL || sig == SIGSTOP) return einval();
   if (!act) {
     rva = (int32_t)(intptr_t)SIG_DFL;
   } else if ((intptr_t)act->sa_handler < kSigactionMinRva) {
@@ -142,6 +143,9 @@ int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
   } else {
     return efault();
   }
+  if (__vforked && rva != (intptr_t)SIG_DFL && rva != (intptr_t)SIG_IGN) {
+    return einval();
+  }
   if (!IsWindows()) {
     if (!IsMetal()) {
       if (act) {
@@ -150,16 +154,13 @@ int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
         if (IsXnu()) {
           ap->sa_restorer = (void *)&xnutrampoline;
           ap->sa_handler = (void *)&xnutrampoline;
-        } else {
-          if (IsLinux()) {
-            if (!(ap->sa_flags & SA_RESTORER)) {
-              ap->sa_flags |= SA_RESTORER;
-              ap->sa_restorer = &__restore_rt;
-            }
+        } else if (IsLinux()) {
+          if (!(ap->sa_flags & SA_RESTORER)) {
+            ap->sa_flags |= SA_RESTORER;
+            ap->sa_restorer = &__restore_rt;
           }
-          if (rva >= kSigactionMinRva) {
-            ap->sa_sigaction = (sigaction_f)__sigenter;
-          }
+        } else if (rva >= kSigactionMinRva) {
+          ap->sa_sigaction = (sigaction_f)__sigenter;
         }
         sigaction$cosmo2native((union metasigaction *)ap);
       } else {
@@ -179,7 +180,7 @@ int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
     }
     rc = 0;
   }
-  if (rc != -1) {
+  if (rc != -1 && !__vforked) {
     if (oldact) {
       oldrva = __sighandrvas[sig];
       oldact->sa_sigaction = (sigaction_f)(

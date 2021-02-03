@@ -1473,8 +1473,8 @@ int main(int argc, char *argv[]) {
   if (!tuned_) PickDefaults();
   if (optind == argc) PrintUsage(EX_USAGE, stderr);
   patharg_ = argv[optind];
-  sox_ = commandvenv("SOX", "sox");
-  ffplay_ = commandvenv("FFPLAY", "ffplay");
+  sox_ = strdup(commandvenv("SOX", "sox"));
+  ffplay_ = strdup(commandvenv("FFPLAY", "ffplay"));
   infd_ = STDIN_FILENO;
   outfd_ = STDOUT_FILENO;
   if (!setjmp(jb_)) {

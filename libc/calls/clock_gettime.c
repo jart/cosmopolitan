@@ -50,7 +50,6 @@
  *     errno isn't restored to its original value, to detect prec. loss
  * @see strftime(), gettimeofday()
  * @asyncsignalsafe
- * @syscall
  */
 int clock_gettime(int clockid, struct timespec *out_ts) {
   /* TODO(jart): Just ignore O/S for MONOTONIC and measure RDTSC on start */

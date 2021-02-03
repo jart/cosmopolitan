@@ -22,7 +22,6 @@
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/nt/enum/version.h"
-#include "libc/nt/struct/teb.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"

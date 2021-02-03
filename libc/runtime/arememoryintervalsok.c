@@ -19,7 +19,7 @@
 #include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
 
-bool AreMemoryIntervalsOk(const struct MemoryIntervals *mm) {
+noasan bool AreMemoryIntervalsOk(const struct MemoryIntervals *mm) {
   int i;
   for (i = 0; i < mm->i; ++i) {
     if (mm->p[i].y < mm->p[i].x) return false;

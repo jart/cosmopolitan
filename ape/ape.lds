@@ -282,6 +282,9 @@ SECTIONS {
     KEEP(*(.textwindowsepilogue))
     *(SORT_BY_ALIGNMENT(.text.modernity))
     *(SORT_BY_ALIGNMENT(.text.modernity.*))
+    HIDDEN(__text_syscall_start = .);
+    *(.text.syscall .text.syscall.*)
+    HIDDEN(__text_syscall_end = .);
     *(SORT_BY_ALIGNMENT(.text.hot))
     *(SORT_BY_ALIGNMENT(.text.hot.*))
     KEEP(*(.keep.text))
@@ -482,6 +485,10 @@ PFSTUB4(.Lape.elf.shstrndx, 0);
 SHSTUB2(.Lape.macho.dd.skip, RVA(ape.macho) / 8);
 SHSTUB2(.Lape.macho.dd.count, (.Lape.macho.end - ape.macho) / 8);
 PFSTUB4(.Lape.pe.offset, ape.pe - ape.mz);
+
+HIDDEN(__text_syscall_addr = ROUNDDOWN(__text_syscall_start, PAGESIZE)); 
+HIDDEN(__text_syscall_size = (ROUNDUP(__text_syscall_end, PAGESIZE) -
+                              ROUNDDOWN(__text_syscall_start, PAGESIZE))); 
 
 HIDDEN(.Lape.pe.optsz = .Lape.pe.sections - (ape.pe + 24));
 HIDDEN(.Lape.pe.shnum = (.Lape.pe.sections_end - .Lape.pe.sections) / 40);

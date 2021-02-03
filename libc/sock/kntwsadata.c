@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "libc/nt/runtime.h"
 #include "libc/nt/winsock.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/internal.h"
@@ -32,15 +33,15 @@
  */
 hidden struct NtWsaData kNtWsaData;
 
-textwindows static void winsockfini(void) {
+static textwindows void winsockfini(void) {
   WSACleanup();
 }
 
-textwindows void winsockinit(void) {
+textwindows noasan void winsockinit(void) {
   int rc;
   atexit(winsockfini);
   if ((rc = WSAStartup(VERSION, &kNtWsaData)) != 0 ||
       kNtWsaData.wVersion != VERSION) {
-    abort();
+    ExitProcess(123);
   }
 }

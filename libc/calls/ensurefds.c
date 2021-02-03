@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,59 +16,38 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/macros.h"
+#include "libc/assert.h"
+#include "libc/bits/bits.h"
+#include "libc/bits/weaken.h"
+#include "libc/calls/internal.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
 
-/	Forks process without copying page tables.
-/
-/	This is the same as fork() except it's optimized for the case
-/	where the caller invokes execve() immediately afterwards. You
-/	can also call functions like close(), dup2(), etc. You cannot
-/	call read() safely but you can call pread(). Call _exit() but
-/	don't call exit(). Look for the vforksafe function annotation
-/
-/	Do not make the assumption that the parent is suspended until
-/	the child terminates since this impl calls fork() on Windows.
-/
-/	@return	pid of child process or 0 if forked process
-/	@returnstwice
-/	@vforksafe
-vfork:
-#if SupportsWindows()
-	testb	IsWindows()
-	jnz	fork$nt
-#endif
-	mov	__NR_vfork(%rip),%eax
-	pop	%rsi			# saves return address in a register
-#if SupportsBsd()
-	testb	IsBsd()
-	jnz	vfork.bsd
-#endif
-	syscall
-	push	%rsi			# note it happens twice in same page
-	cmp	$-4095,%eax
-	jae	systemfive.error
-0:	ezlea	__vforked,di
-	test	%eax,%eax
-	jz	1f
-	decl	(%rdi)
-	jns	2f			# openbsd doesn't actually share mem
-1:	incl	(%rdi)
-2:	ret
-	.endfn	vfork,globl
-
-#if SupportsBsd()
-vfork.bsd:
-	syscall
-	push	%rsi
-	jc	systemfive.errno
-#if SupportsXnu()
-	testb	IsXnu()
-	jz	0b
-	neg	%edx			# edx is 0 for parent and 1 for child
-	not	%edx			# eax always returned with childs pid
-	and	%edx,%eax
-#endif /* XNU */
-	jmp	0b
-	.endfn	vfork.bsd
-#endif /* BSD */
+int __ensurefds(int fd) {
+  size_t n1, n2;
+  struct Fd *p1, *p2;
+  for (;;) {
+    p1 = g_fds.p;
+    n1 = g_fds.n;
+    if (fd < n1) return fd;
+    if (weaken(malloc)) {
+      n2 = MAX(fd + 1, n1 + (n1 << 1));
+      if ((p2 = weaken(malloc)(n2 * sizeof(*p1)))) {
+        memcpy(p2, p1, n1 * sizeof(*p1));
+        memset(p2 + n1, 0, (n2 - n1) * sizeof(*p1));
+        if (p1 != g_fds.__init_p && weaken(free)) weaken(free)(p1);
+        if (cmpxchg(&g_fds.p, p1, p2)) {
+          g_fds.n = n2;
+          return fd;
+        } else if (weaken(free)) {
+          weaken(free)(p2);
+        }
+      } else {
+        return enomem();
+      }
+    } else {
+      return emfile();
+    }
+  }
+}

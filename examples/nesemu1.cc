@@ -154,7 +154,6 @@ static bool resized_;
 static size_t vtsize_;
 static bool artifacts_;
 static long tyn_, txn_;
-static const char* ffplay_;
 static struct Frame vf_[2];
 static struct Audio audio_;
 static const char* inputfn_;
@@ -1685,6 +1684,7 @@ int PlayGame(const char* romfile, const char* opt_tasfile) {
   FILE* fp;
   int devnull;
   int pipefds[2];
+  const char* ffplay;
   inputfn_ = opt_tasfile;
 
   if (!(fp = fopen(romfile, "rb"))) {
@@ -1701,7 +1701,7 @@ int PlayGame(const char* romfile, const char* opt_tasfile) {
 
   // open speaker
   // todo: this needs plenty of work
-  if ((ffplay_ = commandvenv("FFPLAY", "ffplay"))) {
+  if ((ffplay = commandvenv("FFPLAY", "ffplay"))) {
     devnull = open("/dev/null", O_WRONLY | O_CLOEXEC);
     pipe2(pipefds, O_CLOEXEC);
     if (!(playpid_ = vfork())) {
@@ -1713,7 +1713,7 @@ int PlayGame(const char* romfile, const char* opt_tasfile) {
       dup2(pipefds[0], 0);
       dup2(devnull, 1);
       dup2(devnull, 2);
-      execv(ffplay_, (char* const*)args);
+      execv(ffplay, (char* const*)args);
       abort();
     }
     close(pipefds[0]);

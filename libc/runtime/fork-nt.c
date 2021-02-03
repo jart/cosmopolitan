@@ -46,17 +46,18 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
-static textwindows int64_t ParseInt(char16_t **p) {
-  uint64_t x = 0;
-  while ('0' <= **p && **p <= '9') {
-    x *= 10;
-    x += *(*p)++ - '0';
+static textwindows noasan char16_t *ParseInt(char16_t *p, int64_t *x) {
+  *x = 0;
+  while (*p == ' ') p++;
+  while ('0' <= *p && *p <= '9') {
+    *x *= 10;
+    *x += *p++ - '0';
   }
-  return x;
+  return p;
 }
 
-static noinline textwindows void ForkIo(int64_t h, void *buf, size_t n,
-                                        bool32 (*f)()) {
+static noinline textwindows noasan void ForkIo(int64_t h, void *buf, size_t n,
+                                               bool32 (*f)()) {
   char *p;
   size_t i;
   uint32_t x;
@@ -65,41 +66,39 @@ static noinline textwindows void ForkIo(int64_t h, void *buf, size_t n,
   }
 }
 
-static noinline textwindows void WriteAll(int64_t h, void *buf, size_t n) {
+static noinline textwindows noasan void WriteAll(int64_t h, void *buf,
+                                                 size_t n) {
   ForkIo(h, buf, n, WriteFile);
 }
 
-static noinline textwindows void ReadAll(int64_t h, void *buf, size_t n) {
+static textwindows noinline noasan void ReadAll(int64_t h, void *buf,
+                                                size_t n) {
   ForkIo(h, buf, n, ReadFile);
 }
 
-textwindows void WinMainForked(void) {
-  int64_t h;
+textwindows noasan void WinMainForked(void) {
   void *addr;
   jmp_buf jb;
-  char16_t *p;
   uint64_t size;
   uint32_t i, varlen;
   struct DirectMap dm;
+  int64_t reader, writer;
   char16_t var[21 + 1 + 21 + 1];
   varlen = GetEnvironmentVariable(u"_FORK", var, ARRAYLEN(var));
+  if (!varlen) return;
+  if (varlen >= ARRAYLEN(var)) ExitProcess(123);
   SetEnvironmentVariable(u"_FORK", NULL);
-  if (!varlen || varlen >= ARRAYLEN(var)) return;
-  p = var;
-  h = ParseInt(&p);
-  if (*p++ == ' ') CloseHandle(ParseInt(&p));
-  ReadAll(h, jb, sizeof(jb));
-  ReadAll(h, &_mmi.i, sizeof(_mmi.i));
+  ParseInt(ParseInt(var, &reader), &writer);
+  ReadAll(reader, jb, sizeof(jb));
+  ReadAll(reader, &_mmi.i, sizeof(_mmi.i));
   for (i = 0; i < _mmi.i; ++i) {
-    ReadAll(h, &_mmi.p[i], sizeof(_mmi.p[i]));
+    ReadAll(reader, &_mmi.p[i], sizeof(_mmi.p[i]));
     addr = (void *)((uint64_t)_mmi.p[i].x << 16);
     size = ((uint64_t)(_mmi.p[i].y - _mmi.p[i].x) << 16) + FRAMESIZE;
     if (_mmi.p[i].flags & MAP_PRIVATE) {
       CloseHandle(_mmi.p[i].h);
-      _mmi.p[i].h =
-          __mmap$nt(addr, size, PROT_READ | PROT_WRITE | PROT_EXEC, -1, 0)
-              .maphandle;
-      ReadAll(h, addr, size);
+      _mmi.p[i].h = __mmap$nt(addr, size, _mmi.p[i].prot, -1, 0).maphandle;
+      ReadAll(reader, addr, size);
     } else {
       MapViewOfFileExNuma(
           _mmi.p[i].h,
@@ -109,9 +108,9 @@ textwindows void WinMainForked(void) {
           0, 0, size, addr, kNtNumaNoPreferredNode);
     }
   }
-  ReadAll(h, _edata, _end - _edata);
-  CloseHandle(h);
-  unsetenv("_FORK");
+  ReadAll(reader, _edata, _end - _edata);
+  CloseHandle(reader);
+  CloseHandle(writer);
   if (weaken(__wincrash$nt)) {
     AddVectoredExceptionHandler(1, (void *)weaken(__wincrash$nt));
   }
@@ -120,20 +119,19 @@ textwindows void WinMainForked(void) {
 
 textwindows int fork$nt(void) {
   jmp_buf jb;
-  int i, rc, pid;
   char exe[PATH_MAX];
   int64_t reader, writer;
-  char *p, buf[21 + 1 + 21 + 1];
+  int i, rc, pid, releaseme;
+  char *p, forkvar[6 + 21 + 1 + 21 + 1];
   struct NtStartupInfo startinfo;
   struct NtProcessInformation procinfo;
-  if ((pid = __getemptyfd()) == -1) return -1;
+  if ((pid = releaseme = __reservefd()) == -1) return -1;
   if (!setjmp(jb)) {
     if (CreatePipe(&reader, &writer, &kNtIsInheritable, 0)) {
-      p = buf;
+      p = stpcpy(forkvar, "_FORK=");
       p += uint64toarray_radix10(reader, p);
       *p++ = ' ';
       p += uint64toarray_radix10(writer, p);
-      setenv("_FORK", buf, true);
       memset(&startinfo, 0, sizeof(startinfo));
       startinfo.cb = sizeof(struct NtStartupInfo);
       startinfo.dwFlags = kNtStartfUsestdhandles;
@@ -141,8 +139,8 @@ textwindows int fork$nt(void) {
       startinfo.hStdOutput = g_fds.p[1].handle;
       startinfo.hStdError = g_fds.p[2].handle;
       GetModuleFileNameA(0, exe, ARRAYLEN(exe));
-      if (ntspawn(exe, g_argv, environ, &kNtIsInheritable, NULL, true, 0, NULL,
-                  &startinfo, &procinfo) != -1) {
+      if (ntspawn(exe, g_argv, environ, forkvar, &kNtIsInheritable, NULL, true,
+                  0, NULL, &startinfo, &procinfo) != -1) {
         CloseHandle(reader);
         CloseHandle(procinfo.hThread);
         if (weaken(__sighandrvas) &&
@@ -152,6 +150,7 @@ textwindows int fork$nt(void) {
           g_fds.p[pid].kind = kFdProcess;
           g_fds.p[pid].handle = procinfo.hProcess;
           g_fds.p[pid].flags = O_CLOEXEC;
+          releaseme = -1;
         }
         WriteAll(writer, jb, sizeof(jb));
         WriteAll(writer, &_mmi.i, sizeof(_mmi.i));
@@ -167,13 +166,15 @@ textwindows int fork$nt(void) {
       } else {
         rc = -1;
       }
-      unsetenv("_FORK");
       rc = pid;
     } else {
       rc = __winerr();
     }
   } else {
     rc = 0;
+  }
+  if (releaseme != -1) {
+    __releasefd(releaseme);
   }
   return rc;
 }

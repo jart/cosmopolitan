@@ -37,6 +37,8 @@ export LC_ALL=C
 MKDIR=${MKDIR:-$(command -v mkdir) -p} || exit
 
 GZME=
+ASAN=
+UBSAN=
 PLAT="${1%% *}"
 FDIAGNOSTIC_COLOR=
 CCNAME=${CCNAME:-gcc}
@@ -87,11 +89,21 @@ for x; do
       set -- "$@" "$x" -Wa,-msse2avx -D__MNO_VZEROUPPER__
       ;;
     -fsanitize=address)
-      set -- "$@" "$x" -D__FSANITIZE_ADDRESS__
+      ASAN="$x -D__FSANITIZE_ADDRESS__"
       ;;
     -fsanitize=undefined)
-      set -- "$@" "$x" -D__FSANITIZE_UNDEFINED__
-      COUNTERMAND="$COUNTERMAND -fno-data-sections"  # sqlite.o
+      # UBSAN w/ -fdata-sections exceeds ELF's 65,280 section limit
+      UBSAN="$x -fno-data-sections"
+      ;;
+    -fno-sanitize=address)
+      ASAN=
+      ;;
+    -fno-sanitize=ubsan)
+      UBSAN=
+      ;;
+    -fno-sanitize=all)
+      ASAN=
+      UBSAN=
       ;;
     -mnop-mcount)
       if [ "$CCNAME" = "gcc" ] && [ "$CCVERSION" -ge 6 ]; then
@@ -256,7 +268,7 @@ else
   done
 fi
 
-set -- "$@" -no-canonical-prefixes $FDIAGNOSTIC_COLOR $COUNTERMAND
+set -- "$@" -no-canonical-prefixes $FDIAGNOSTIC_COLOR $ASAN $UBSAN $COUNTERMAND
 
 if [ "$SILENT" = "0" ]; then
   printf "%s\n" "$*" >&2

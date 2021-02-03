@@ -25,7 +25,9 @@ LIBC_INTRIN_A_CHECKS =					\
 
 LIBC_INTRIN_A_DIRECTDEPS =				\
 	LIBC_STUBS					\
-	LIBC_NEXGEN32E
+	LIBC_SYSV					\
+	LIBC_NEXGEN32E					\
+	LIBC_NT_KERNEL32
 
 LIBC_INTRIN_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(LIBC_INTRIN_A_DIRECTDEPS),$($(x))))
@@ -46,7 +48,8 @@ $(LIBC_INTRIN_A_OBJS):					\
 
 o/$(MODE)/libc/intrin/asan.o:				\
 		OVERRIDE_CFLAGS +=			\
-			-mgeneral-regs-only
+			-mgeneral-regs-only		\
+			-O2
 
 LIBC_INTRIN_LIBS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)))
 LIBC_INTRIN_HDRS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_HDRS))

@@ -18,16 +18,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
+/**
+ * Mutates string to ASCII uppercase w/ limit.
+ *
+ * @praam s is string
+ * @praam n is max bytes to consider
+ * @return string
+ */
 char *strntoupper(char *s, size_t n) {
-  unsigned char *p = (unsigned char *)s;
-  for (;;) {
-    if (n-- && *p) {
-      if ('a' <= *p && *p <= 'z') {
-        *p -= 'a' - 'A';
-      }
-      ++p;
-    } else {
-      break;
+  size_t i;
+  for (i = 0; s[i] && i < n; ++i) {
+    if ('a' <= s[i] && s[i] <= 'z') {
+      s[i] -= 'a' - 'A';
     }
   }
   return s;

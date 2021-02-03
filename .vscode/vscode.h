@@ -121,6 +121,7 @@ typedef struct { int ax, dx; } axdx_t;
 
 #define _Vector_size(x) __attribute__(( vector_size( x ) ))
 
+#define IMAGE_BASE_VIRTUAL 0x400000
 #define __SIGACTION(...) (0)
 #define VEIL(x, y) (y)
 #define STATIC_YOINK(x)
@@ -133,9 +134,12 @@ typedef struct { int ax, dx; } axdx_t;
 #define reverse(x, y) 0
 #define atomic_load(...) 0
 #define atomic_store(...) 0
+#define autotype(x) int
 
 #define _Generic_(...) (void*)(0)
 #define _Generic(...) _Generic_
+#define _Alignas(...)
+#define _Section(...)
 
 #define offsetof(x, y) 0
 #define cmpxchg(...) 0

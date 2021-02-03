@@ -17,13 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int close$nt(int fd) {
   bool32 ok;
-  if (g_fds.p[fd].kind == kFdFile) {
+  if (g_fds.p[fd].kind == kFdFile &&
+      GetFileType(g_fds.p[fd].handle) == kNtFileTypeDisk) {
     /*
      * Like Linux, closing a file on Windows doesn't guarantee it's
      * immediately synced to disk. But unlike Linux, this could cause
@@ -32,6 +34,8 @@ textwindows int close$nt(int fd) {
     FlushFileBuffers(g_fds.p[fd].handle);
   }
   ok = CloseHandle(g_fds.p[fd].handle);
-  if (g_fds.p[fd].kind == kFdConsole) ok &= CloseHandle(g_fds.p[fd].extra);
+  if (g_fds.p[fd].kind == kFdConsole) {
+    ok &= CloseHandle(g_fds.p[fd].extra);
+  }
   return ok ? 0 : __winerr();
 }

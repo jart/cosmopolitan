@@ -24,7 +24,8 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-static void RemoveMemoryIntervals(struct MemoryIntervals *mm, int i, int n) {
+static noasan void RemoveMemoryIntervals(struct MemoryIntervals *mm, int i,
+                                         int n) {
   assert(i >= 0);
   assert(i + n <= mm->i);
   memcpy(mm->p + i, mm->p + i + n,
@@ -32,7 +33,7 @@ static void RemoveMemoryIntervals(struct MemoryIntervals *mm, int i, int n) {
   mm->i -= n;
 }
 
-static void CreateMemoryInterval(struct MemoryIntervals *mm, int i) {
+static noasan void CreateMemoryInterval(struct MemoryIntervals *mm, int i) {
   assert(i >= 0);
   assert(i <= mm->i);
   assert(mm->i < ARRAYLEN(mm->p));
@@ -41,7 +42,7 @@ static void CreateMemoryInterval(struct MemoryIntervals *mm, int i) {
   ++mm->i;
 }
 
-static int PunchHole(struct MemoryIntervals *mm, int x, int y, int i) {
+static noasan int PunchHole(struct MemoryIntervals *mm, int x, int y, int i) {
   if (mm->i == ARRAYLEN(mm->p)) return enomem();
   CreateMemoryInterval(mm, i);
   mm->p[i].y = x - 1;
@@ -49,8 +50,8 @@ static int PunchHole(struct MemoryIntervals *mm, int x, int y, int i) {
   return 0;
 }
 
-int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
-                           void wincb(struct MemoryIntervals *, int, int)) {
+noasan int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
+                                  void wf(struct MemoryIntervals *, int, int)) {
   unsigned l, r;
   assert(y >= x);
   assert(AreMemoryIntervalsOk(mm));
@@ -81,16 +82,16 @@ int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
     --r;
   }
   if (l <= r) {
-    if (IsWindows() && wincb) {
-      wincb(mm, l, r);
+    if (IsWindows() && wf) {
+      wf(mm, l, r);
     }
     RemoveMemoryIntervals(mm, l, r - l + 1);
   }
   return 0;
 }
 
-int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h,
-                        int prot, int flags) {
+noasan int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h,
+                               int prot, int flags) {
   unsigned i;
   assert(y >= x);
   assert(AreMemoryIntervalsOk(mm));

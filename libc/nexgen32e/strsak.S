@@ -21,71 +21,6 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns pointer to first instance of character.
-/
-/	@param	rdi is a non-null NUL-terminated string pointer
-/	@param	esi is the search byte
-/	@return	rax points to character, or to NUL byte if not found
-/	@note	this won't return NULL if search character is NUL
-strchrnul:
-	.leafprologue
-	.profilable
-	or	$-1,%r9
-	jmp	0f
-	.endfn	strchrnul,globl
-
-/	Returns pointer to first instance of character, the BSD way.
-/
-/	@param	rdi is a non-null NUL-terminated string pointer
-/	@param	esi is the search byte
-/	@return	rax points to first result, or NULL if not found
-/	@note	this won't return NULL if search character is NUL
-index:	nop
-/	𝑠𝑙𝑖𝑑𝑒
-	.endfn	index,globl
-
-/	Returns pointer to first instance of character.
-/
-/	@param	rdi is a non-null NUL-terminated string pointer
-/	@param	esi is the search byte
-/	@return	rax points to first result, or NULL if not found
-/	@note	this won't return NULL if search character is NUL
-/	@asyncsignalsafe
-strchr:	.leafprologue
-	.profilable
-	xor	%r9d,%r9d
-0:	movzbl	%sil,%edx
-	or	$-1,%rsi
-	xor	%r8,%r8
-	jmp	strsak
-	.endfn	strchr,globl
-
-/	Returns pointer to first instance of character in range.
-/
-/	@param	rdi is a non-null pointer to memory
-/	@param	esi is the search byte
-/	@return	rax points to byte if found, or else undefined behavior
-rawmemchr:
-	or	$-1,%rdx
-/	𝑠𝑙𝑖𝑑𝑒
-	.endfn	rawmemchr,globl
-
-/	Returns pointer to first instance of character in range.
-/
-/	@param	rdi is a non-null pointer to memory
-/	@param	esi is the search byte
-/	@param	rdx is length of memory in bytes
-/	@return	rax points to byte if found or NULL
-/	@asyncsignalsafe
-memchr:	.leafprologue
-	.profilable
-	xchg	%rsi,%rdx
-	mov	%dl,%dh
-	xor	%r8,%r8
-	xor	%r10,%r10
-	jmp	strsak
-	.endfn	memchr,globl
-
 /	Returns length of NUL-terminated string w/ security blankets.
 /
 /	This is like strnlen() except it'll return 0 if (1) RDI is NULL
@@ -102,24 +37,13 @@ strnlen_s:
 	test	%rdi,%rdi
 	jnz	0f
 	.leafepilogue
-	.endfn	strnlen_s,globl
-
-/	Returns length of NUL-terminated memory, with limit.
-/
-/	@param	rdi is non-null memory
-/	@param	rsi is the maximum number of bytes to consider
-/	@return	rax is the number of bytes, excluding the NUL
-/	@asyncsignalsafe
-strnlen:.leafprologue
-	.profilable
-	or	$-1,%r10
 0:	xor	%edx,%edx
 	mov	%rdi,%r8
 /	𝑠𝑙𝑖𝑑𝑒
-	.endfn	strnlen,globl
+	.endfn	strnlen_s,globl
 
 /	Swiss army knife of string character scanning.
-/	Fourteen fast functions in one.
+/	Used to be fourteen fast functions in one.
 /
 /	@param	rdi is non-null string memory
 /	@param	rsi is max number of bytes to consider

@@ -42,16 +42,7 @@ static textwindows int64_t open$nt$impl(int dirfd, const char *path,
   char16_t path16[PATH_MAX];
   if (__mkntpathat(dirfd, path, flags, path16) == -1) return -1;
   if ((handle = CreateFile(
-           path16,
-           (flags & 0xf000000f) |
-               (/* this is needed if we mmap(rwx+cow)
-                   nt is choosy about open() access */
-                (flags & O_APPEND)
-                    ? kNtFileAppendData
-                    : (flags & O_ACCMODE) == O_RDONLY
-                          ? kNtGenericExecute | kNtFileGenericRead
-                          : kNtGenericExecute | kNtFileGenericRead |
-                                kNtFileGenericWrite),
+           path16, flags & 0xf000000f, /* see consts.sh */
            (flags & O_EXCL)
                ? kNtFileShareExclusive
                : kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,
@@ -75,14 +66,6 @@ static textwindows int64_t open$nt$impl(int dirfd, const char *path,
                        kNtFileFlagBackupSemantics | kNtFileFlagPosixSemantics |
                        kNtFileAttributeTemporary)))),
            0)) != -1) {
-    if (flags & O_SPARSE) {
-      /*
-       * TODO(jart): Can all files be sparse files? That seems to be the
-       *             way Linux behaves out of the box.
-       * TODO(jart): Wow why does sparse wreak havoc?
-       */
-      DeviceIoControl(handle, kNtFsctlSetSparse, NULL, 0, NULL, 0, &br, NULL);
-    }
     return handle;
   } else if (GetLastError() == kNtErrorFileExists &&
              ((flags & O_CREAT) &&
@@ -129,11 +112,16 @@ static textwindows ssize_t open$nt$file(int dirfd, const char *file,
 
 textwindows ssize_t open$nt(int dirfd, const char *file, uint32_t flags,
                             int32_t mode) {
-  size_t fd;
-  if ((fd = __getemptyfd()) == -1) return -1;
+  int fd;
+  ssize_t rc;
+  if ((fd = __reservefd()) == -1) return -1;
   if ((flags & O_ACCMODE) == O_RDWR && !strcmp(file, kNtMagicPaths.devtty)) {
-    return open$nt$console(dirfd, &kNtMagicPaths, flags, mode, fd);
+    rc = open$nt$console(dirfd, &kNtMagicPaths, flags, mode, fd);
   } else {
-    return open$nt$file(dirfd, file, flags, mode, fd);
+    rc = open$nt$file(dirfd, file, flags, mode, fd);
   }
+  if (rc == -1) {
+    __releasefd(fd);
+  }
+  return rc;
 }

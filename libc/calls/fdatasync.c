@@ -26,7 +26,6 @@
  * @return 0 on success, or -1 w/ errno
  * @see fsync(), sync_file_range()
  * @asyncsignalsafe
- * @syscall
  */
 int fdatasync(int fd) {
   if (!IsWindows()) {

@@ -51,7 +51,7 @@ static struct CxaAtexitBlocks {
  * @return 0 on success or nonzero w/ errno
  * @note folks have forked libc in past just to unbloat atexit()
  */
-int __cxa_atexit(void *fp, void *arg, void *pred) {
+noasan int __cxa_atexit(void *fp, void *arg, void *pred) {
   unsigned i;
   struct CxaAtexitBlock *b, *b2;
   b = __cxa_blocks.p;
@@ -83,7 +83,7 @@ int __cxa_atexit(void *fp, void *arg, void *pred) {
  *
  * @param pred can be null to match all
  */
-void __cxa_finalize(void *pred) {
+noasan void __cxa_finalize(void *pred) {
   unsigned i;
   unsigned long mask;
   struct CxaAtexitBlock *b, *b2;

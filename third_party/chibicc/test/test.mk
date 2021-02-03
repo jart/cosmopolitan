@@ -21,13 +21,8 @@ THIRD_PARTY_CHIBICC_TEST_HDRS = $(filter %.h,$(THIRD_PARTY_CHIBICC_TEST_FILES))
 THIRD_PARTY_CHIBICC_TEST_TESTS = $(THIRD_PARTY_CHIBICC_TEST_COMS:%=%.ok)
 
 THIRD_PARTY_CHIBICC_TEST_COMS =							\
-	$(THIRD_PARTY_CHIBICC_TEST_SRCS_TEST:%.c=o/$(MODE)/%.com)
-
-# TODO(jart): make chibicc compiled chibicc work with asan runtime
-ifneq ($(MODE),dbg)
-THIRD_PARTY_CHIBICC_TEST_COMS +=						\
-	$(THIRD_PARTY_CHIBICC_TEST_SRCS_TEST:%.c=o/$(MODE)/%2.com)
-endif
+	$(THIRD_PARTY_CHIBICC_TEST_SRCS_TEST:%_test.c=o/$(MODE)/%_test.com)	\
+	$(THIRD_PARTY_CHIBICC_TEST_SRCS_TEST:%_test.c=o/$(MODE)/%_test2.com)
 
 THIRD_PARTY_CHIBICC_TEST_OBJS =							\
 	$(THIRD_PARTY_CHIBICC_TEST_SRCS:%.c=o/$(MODE)/%.chibicc.o)
@@ -62,21 +57,19 @@ THIRD_PARTY_CHIBICC_TEST_DEPS :=						\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_CHIBICC_TEST_DIRECTDEPS),$($(x))))
 
 $(THIRD_PARTY_CHIBICC_TEST_A):							\
-		third_party/chibicc/test/					\
 		$(THIRD_PARTY_CHIBICC_TEST_A).pkg				\
-		$(THIRD_PARTY_CHIBICC_TEST_OBJS)
+		o/$(MODE)/third_party/chibicc/test/common.chibicc.o
 
 $(THIRD_PARTY_CHIBICC_TEST2_A):							\
-		third_party/chibicc/test/					\
 		$(THIRD_PARTY_CHIBICC_TEST2_A).pkg				\
-		$(THIRD_PARTY_CHIBICC_TEST2_OBJS)
+		o/$(MODE)/third_party/chibicc/test/common.chibicc2.o
 
 $(THIRD_PARTY_CHIBICC_TEST_A).pkg:						\
-		$(THIRD_PARTY_CHIBICC_TEST_OBJS)				\
+		o/$(MODE)/third_party/chibicc/test/common.chibicc.o		\
 		$(foreach x,$(THIRD_PARTY_CHIBICC_TEST_DIRECTDEPS),$($(x)_A).pkg)
 
 $(THIRD_PARTY_CHIBICC_TEST2_A).pkg:						\
-		$(THIRD_PARTY_CHIBICC_TEST2_OBJS)				\
+		o/$(MODE)/third_party/chibicc/test/common.chibicc2.o		\
 		$(foreach x,$(THIRD_PARTY_CHIBICC_TEST_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/third_party/chibicc/test/%.com.dbg:					\

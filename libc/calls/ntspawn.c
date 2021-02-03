@@ -48,6 +48,7 @@ struct SpawnBlock {
  *     don't need to be passed in sorted order; however, this function
  *     goes faster the closer they are to sorted
  * @param envp[m-1] is NULL
+ * @param extravar is added to envp to avoid setenv() in caller
  * @param bInheritHandles means handles already marked inheritable will
  *     be inherited; which, assuming the System V wrapper functions are
  *     being used, should mean (1) all files and sockets that weren't
@@ -59,7 +60,7 @@ struct SpawnBlock {
  */
 textwindows int ntspawn(
     const char *prog, char *const argv[], char *const envp[],
-    struct NtSecurityAttributes *opt_lpProcessAttributes,
+    const char *extravar, struct NtSecurityAttributes *opt_lpProcessAttributes,
     struct NtSecurityAttributes *opt_lpThreadAttributes, bool32 bInheritHandles,
     uint32_t dwCreationFlags, const char16_t *opt_lpCurrentDirectory,
     const struct NtStartupInfo *lpStartupInfo,
@@ -81,7 +82,7 @@ textwindows int ntspawn(
            MapViewOfFileExNuma(handle, kNtFileMapRead | kNtFileMapWrite, 0, 0,
                                blocksize, NULL, kNtNumaNoPreferredNode))) {
     if (mkntcmdline(block->cmdline, prog, argv) != -1 &&
-        mkntenvblock(block->envvars, envp) != -1) {
+        mkntenvblock(block->envvars, envp, extravar) != -1) {
       if (CreateProcess(NULL, block->cmdline, opt_lpProcessAttributes,
                         opt_lpThreadAttributes, bInheritHandles,
                         dwCreationFlags | kNtCreateUnicodeEnvironment,

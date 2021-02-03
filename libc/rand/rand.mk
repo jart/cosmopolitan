@@ -24,14 +24,14 @@ LIBC_RAND_A_CHECKS =				\
 	$(LIBC_RAND_A_HDRS:%=o/$(MODE)/%.ok)
 
 LIBC_RAND_A_DIRECTDEPS =			\
-	LIBC_STUBS				\
-	LIBC_INTRIN				\
-	LIBC_TINYMATH				\
+	LIBC_CALLS				\
 	LIBC_NEXGEN32E				\
 	LIBC_NT_KERNEL32			\
 	LIBC_STR				\
+	LIBC_STUBS				\
+	LIBC_SYSV				\
 	LIBC_SYSV_CALLS				\
-	LIBC_SYSV
+	LIBC_TINYMATH
 
 LIBC_RAND_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(LIBC_RAND_A_DIRECTDEPS),$($(x))))

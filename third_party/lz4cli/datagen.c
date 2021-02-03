@@ -27,8 +27,8 @@
 /**************************************
 *  Includes
 **************************************/
-#include "platform.h"  /* Compiler options, SET_BINARY_MODE */
-#include "util.h"      /* U32 */
+#include "third_party/lz4cli/platform.h"  /* Compiler options, SET_BINARY_MODE */
+#include "third_party/lz4cli/util.h"      /* U32 */
 #include "libc/mem/mem.h"    /* malloc */
 #include "libc/stdio/stdio.h"     /* FILE, fwrite */
 #include "libc/str/str.h"    /* memcpy */

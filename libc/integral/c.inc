@@ -331,7 +331,7 @@ typedef uint64_t uintmax_t;
 
 #ifndef nullterminated
 #if !defined(__STRICT_ANSI__) && \
-    (__has_attribute(__sentinel__) || __GNUC__ >= 4)
+    (__has_attribute(__sentinel__) || __GNUC__ + 0 >= 4)
 #define nullterminated(x) __attribute__((__sentinel__ x))
 #else
 #define nullterminated(x)
@@ -618,6 +618,7 @@ typedef uint64_t uintmax_t;
 #define textexit    _Section(".text.exit") noinstrument
 #define textreal    _Section(".text.real")
 #define textwindows _Section(".text.windows")
+#define textsyscall _Section(".text.syscall") noinline
 #define antiquity   _Section(".text.antiquity")
 #else
 #define testonly

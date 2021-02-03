@@ -22,7 +22,6 @@ TOOL_VIZ_DIRECTDEPS =				\
 	DSP_TTY					\
 	LIBC_BITS				\
 	LIBC_CALLS				\
-	LIBC_CALLS_HEFTY			\
 	LIBC_DNS				\
 	LIBC_FMT				\
 	LIBC_INTRIN				\

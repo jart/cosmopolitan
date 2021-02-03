@@ -20,7 +20,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	System Five signal handler.
+/	BSD signal handler.
 /
 /	This is needed because (1) a signal is allowed to trigger at
 /	just about any time, and leaf functions (e.g. memcpy) aren't

@@ -34,6 +34,8 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
+char testlib_enable_tmp_setup_teardown;
+
 TEST(mmap, testMapFile) {
   int fd;
   char *p;
@@ -86,6 +88,36 @@ TEST(mmap, testMapFixed_destroysEverythingInItsPath) {
                              MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
   ASSERT_GT(_mmi.i, m1);
   EXPECT_NE(-1, munmap((void *)kFixedmapStart, FRAMESIZE * 3));
+}
+
+TEST(mmap, customStackMemory_isAuthorized) {
+  char *stack;
+  uintptr_t w, r;
+  ASSERT_NE(MAP_FAILED,
+            (stack = mmap(NULL, STACKSIZE, PROT_READ | PROT_WRITE,
+                          MAP_ANONYMOUS | MAP_PRIVATE | MAP_GROWSDOWN, -1, 0)));
+  asm("mov\t%%rsp,%0\n\t"
+      "mov\t%2,%%rsp\n\t"
+      "push\t%3\n\t"
+      "pop\t%1\n\t"
+      "mov\t%0,%%rsp"
+      : "=&r"(w), "=&r"(r)
+      : "rm"(stack + STACKSIZE - 8), "i"(123));
+  ASSERT_EQ(123, r);
+}
+
+TEST(mmap, fileOffset) {
+  int fd;
+  char *map;
+  ASSERT_NE(-1, (fd = open("foo", O_CREAT | O_RDWR, 0644)));
+  EXPECT_NE(-1, ftruncate(fd, FRAMESIZE * 2));
+  EXPECT_NE(-1, pwrite(fd, "hello", 5, FRAMESIZE * 0));
+  EXPECT_NE(-1, pwrite(fd, "there", 5, FRAMESIZE * 1));
+  ASSERT_NE(MAP_FAILED, (map = mmap(NULL, FRAMESIZE, PROT_READ, MAP_PRIVATE, fd,
+                                    FRAMESIZE)));
+  EXPECT_EQ(0, memcmp(map, "there", 5), "%#.*s", 5, map);
+  EXPECT_NE(-1, munmap(map, FRAMESIZE));
+  EXPECT_NE(-1, close(fd));
 }
 
 TEST(isheap, nullPtr) {

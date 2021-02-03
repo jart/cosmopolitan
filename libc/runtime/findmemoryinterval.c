@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/memtrack.h"
 
-unsigned FindMemoryInterval(const struct MemoryIntervals *mm, int x) {
+noasan unsigned FindMemoryInterval(const struct MemoryIntervals *mm, int x) {
   unsigned l, m, r;
   l = 0;
   r = mm->i;

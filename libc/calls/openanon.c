@@ -67,8 +67,8 @@ static int openanon$impl(const char *name, unsigned flags,
     }
     return fd;
   } else {
-    if ((fd = __getemptyfd()) != -1 &&
-        (g_fds.p[fd].handle = CreateFileA(
+    if ((fd = __reservefd()) == -1) return -1;
+    if ((g_fds.p[fd].handle = CreateFileA(
              pathbuf, kNtGenericRead | kNtGenericWrite, kNtFileShareExclusive,
              &kNtIsInheritable, kNtCreateAlways,
              (kNtFileAttributeNotContentIndexed | kNtFileAttributeNormal |
@@ -78,6 +78,7 @@ static int openanon$impl(const char *name, unsigned flags,
       g_fds.p[fd].flags = flags;
       return fd;
     } else {
+      __releasefd(fd);
       return __winerr();
     }
   }

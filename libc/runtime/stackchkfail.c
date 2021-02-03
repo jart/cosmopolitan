@@ -19,7 +19,6 @@
 #include "libc/bits/pushpop.h"
 #include "libc/nt/enum/version.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/struct/teb.h"
 #include "libc/runtime/internal.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/nr.h"
@@ -29,7 +28,7 @@
 /**
  * Aborts program under enemy fire to avoid being taken alive.
  */
-void __stack_chk_fail(void) {
+textsyscall noasan void __stack_chk_fail(void) {
   size_t len;
   const char *msg;
   int64_t ax, cx, si;

@@ -5,6 +5,7 @@ PKGS += LIBC_NT
 
 LIBC_NT_LIBS = $(foreach x,$(LIBC_NT_ARTIFACTS),$($(x)))
 LIBC_NT_HDRS = $(foreach x,$(LIBC_NT_ARTIFACTS),$($(x)_HDRS))
+LIBC_NT_INCS = $(foreach x,$(LIBC_NT_ARTIFACTS),$($(x)_INCS))
 LIBC_NT_SRCS = $(foreach x,$(LIBC_NT_ARTIFACTS),$($(x)_SRCS))
 LIBC_NT_OBJS = $(foreach x,$(LIBC_NT_ARTIFACTS),$($(x)_OBJS))
 LIBC_NT_CHECKS = $(foreach x,$(LIBC_NT_ARTIFACTS),$($(x)_CHECKS))
@@ -22,9 +23,8 @@ LIBC_NT_A_FILES :=					\
 	$(wildcard libc/nt/nt/*.*)			\
 	$(wildcard libc/nt/*)
 
-LIBC_NT_A_HDRS =					\
-	$(filter %.h,$(LIBC_NT_A_FILES))
-
+LIBC_NT_A_HDRS = $(filter %.h,$(LIBC_NT_A_FILES))
+LIBC_NT_A_INCS = $(filter %.inc,$(LIBC_NT_A_FILES))
 LIBC_NT_A_CHECKS = $(patsubst %,o/$(MODE)/%.ok,$(filter %.h,$(LIBC_NT_A_HDRS)))
 
 #───────────────────────────────────────────────────────────────────────────────

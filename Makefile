@@ -82,17 +82,19 @@ o:	o/$(MODE)/ape		\
 
 PKGS =
 
--include ~/.cosmo.mk				#──No.1
+-include ~/.cosmo.mk
 include build/functions.mk			#─┐
-include build/definitions.mk			# ├──meta
-include build/config.mk				# │
-include build/rules.mk				# │
+include build/definitions.mk			# ├──META
+include build/config.mk				# │  You can build
+include build/rules.mk				# │  You can topologically order
 include build/online.mk				# │
 include libc/stubs/stubs.mk			#─┘
 include libc/nexgen32e/nexgen32e.mk		#─┐
-include libc/intrin/intrin.mk			# │
-include libc/linux/linux.mk			# │
-include libc/tinymath/tinymath.mk		# ├──metal
+include libc/sysv/sysv.mk			# ├──SYSTEM SUPPORT
+include libc/nt/nt.mk				# │  You can do math
+include libc/intrin/intrin.mk			# │  You can use the stack
+include libc/linux/linux.mk			# │  You can manipulate arrays
+include libc/tinymath/tinymath.mk		# │  You can issue raw system calls
 include third_party/compiler_rt/compiler_rt.mk	# │
 include libc/bits/bits.mk			# │
 include libc/str/str.mk				# │
@@ -100,23 +102,20 @@ include third_party/xed/xed.mk			# │
 include third_party/zlib/zlib.mk		# │
 include libc/elf/elf.mk				# │
 include ape/lib/apelib.mk			# │
-include ape/ape.mk				#─┘
-include libc/sysv/sysv.mk			#─┐
-include libc/nt/nt.mk				# ├──system
-include libc/fmt/fmt.mk				# │
-include libc/rand/rand.mk			#─┘
+include ape/ape.mk				# │
+include libc/fmt/fmt.mk				#─┘
 include libc/calls/calls.mk			#─┐
-include libc/runtime/runtime.mk			# ├──systems
-include libc/crt/crt.mk				# │
+include libc/runtime/runtime.mk			# ├──SYSTEMS RUNTIME
+include libc/crt/crt.mk				# │  You can issue system calls
+include libc/rand/rand.mk			# │
 include libc/unicode/unicode.mk			# │
-include third_party/dlmalloc/dlmalloc.mk	# │
-include libc/mem/mem.mk				# │
-include libc/ohmyplus/ohmyplus.mk		# │
-include libc/zipos/zipos.mk			# │
-include third_party/gdtoa/gdtoa.mk		# │
+include third_party/dlmalloc/dlmalloc.mk	#─┘
+include libc/mem/mem.mk				#─┐
+include libc/ohmyplus/ohmyplus.mk		# ├──DYNAMIC RUNTIME
+include libc/zipos/zipos.mk			# │  You can now use stdio
+include third_party/gdtoa/gdtoa.mk		# │  You can finally call malloc()
 include libc/time/time.mk			# │
 include libc/alg/alg.mk				# │
-include libc/calls/hefty/hefty.mk		# │
 include libc/stdio/stdio.mk			# │
 include third_party/f2c/f2c.mk			# │
 include third_party/blas/blas.mk		# │
@@ -132,8 +131,8 @@ include third_party/musl/musl.mk		# │
 include third_party/getopt/getopt.mk		# │
 include libc/libc.mk				#─┘
 include libc/sock/sock.mk			#─┐
-include dsp/tty/tty.mk				# ├──online
-include libc/dns/dns.mk				# │
+include dsp/tty/tty.mk				# ├──ONLINE RUNTIME
+include libc/dns/dns.mk				# │  You can communicate with the network
 include libc/crypto/crypto.mk			# │
 include net/http/http.mk			#─┘
 include third_party/lemon/lemon.mk
@@ -199,6 +198,7 @@ include test/test.mk
 OBJS	= $(foreach x,$(PKGS),$($(x)_OBJS))
 SRCS	= $(foreach x,$(PKGS),$($(x)_SRCS))
 HDRS	= $(foreach x,$(PKGS),$($(x)_HDRS))
+INCS	= $(foreach x,$(PKGS),$($(x)_INCS))
 BINS	= $(foreach x,$(PKGS),$($(x)_BINS))
 TESTS	= $(foreach x,$(PKGS),$($(x)_TESTS))
 CHECKS	= $(foreach x,$(PKGS),$($(x)_CHECKS))
@@ -215,10 +215,10 @@ o/$(MODE)/.x:
 o/$(MODE)/srcs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(SRCS),$(dir $(x))))
 	$(file >$@) $(foreach x,$(SRCS),$(file >>$@,$(x)))
 
-o/$(MODE)/hdrs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS),$(dir $(x))))
-	$(file >$@) $(foreach x,$(HDRS),$(file >>$@,$(x)))
+o/$(MODE)/hdrs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS) $(INCS),$(dir $(x))))
+	$(file >$@) $(foreach x,$(HDRS) $(INCS),$(file >>$@,$(x)))
 
-o/$(MODE)/depend: o/$(MODE)/.x o/$(MODE)/srcs.txt o/$(MODE)/hdrs.txt $(SRCS) $(HDRS)
+o/$(MODE)/depend: o/$(MODE)/.x o/$(MODE)/srcs.txt o/$(MODE)/hdrs.txt $(SRCS) $(HDRS) $(INCS)
 	@build/mkdeps -o $@ -r o/$(MODE)/ o/$(MODE)/srcs.txt o/$(MODE)/hdrs.txt
 
 TAGS:	o/$(MODE)/srcs.txt $(SRCS)
@@ -251,7 +251,6 @@ COSMOPOLITAN_OBJECTS =		\
 	APE_LIB			\
 	THIRD_PARTY_MUSL	\
 	LIBC_STDIO		\
-	LIBC_CALLS_HEFTY	\
 	THIRD_PARTY_REGEX	\
 	LIBC_ALG		\
 	LIBC_MEM		\
@@ -351,6 +350,7 @@ o/cosmopolitan.html:							\
 ~/.cosmo.mk:
 $(SRCS):
 $(HDRS):
+$(INCS):
 .DEFAULT:
 	@echo >&2
 	@echo NOTE: deleting o/$(MODE)/depend because of an unspecified prerequisite: $@ >&2

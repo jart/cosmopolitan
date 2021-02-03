@@ -32,7 +32,11 @@
 
 #define kBufSize    1024
 #define kProcStatus "/proc/self/status"
-_Alignas(16) static const char kGdbPid[] = "TracerPid:\t";
+#define kPid        "TracerPid:\t"
+
+static noasan int NtBeingDebugged(void) {
+  return NtGetPeb()->BeingDebugged;
+}
 
 /**
  * Determines if gdb, strace, windbg, etc. is controlling process.
@@ -42,19 +46,18 @@ int IsDebuggerPresent(bool force) {
   int fd, res;
   ssize_t got;
   char buf[1024];
-  res = 0;
+  res = false;
   if (!force) {
     if (getenv("HEISENDEBUG")) return false;
     if (IsGenuineCosmo()) return false;
   }
   if (IsWindows()) {
-    res = NtGetPeb()->BeingDebugged;
+    res = NtBeingDebugged();
   } else if (IsLinux()) {
     if ((fd = openat$sysv(AT_FDCWD, kProcStatus, O_RDONLY, 0)) != -1) {
-      if ((got = read$sysv(fd, buf, sizeof(buf) - sizeof(kGdbPid))) != -1) {
+      if ((got = read$sysv(fd, buf, sizeof(buf) - sizeof(kPid))) != -1) {
         buf[got] = '\0';
-        res =
-            atoi(firstnonnull(strstr(buf, kGdbPid), kGdbPid) + strlen(kGdbPid));
+        res = atoi(firstnonnull(strstr(buf, kPid), kPid) + strlen(kPid));
       }
       close$sysv(fd);
     }

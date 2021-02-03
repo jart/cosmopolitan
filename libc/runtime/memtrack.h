@@ -3,7 +3,6 @@
 #include "libc/dce.h"
 #include "libc/macros.h"
 #include "libc/nt/enum/version.h"
-#include "libc/nt/struct/teb.h"
 #include "libc/runtime/runtime.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

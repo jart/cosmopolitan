@@ -19,6 +19,8 @@
 #include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
 
+/* TODO(jart): DELETE */
+
 /**
  * Encodes character to string as UTF-16.
  *

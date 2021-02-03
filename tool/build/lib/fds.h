@@ -4,21 +4,27 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+struct MachineFdClosed {
+  unsigned fd;
+  struct MachineFdClosed *next;
+};
+
+struct MachineFdCb {
+  int (*close)(int);
+  ssize_t (*readv)(int, const struct iovec *, int);
+  ssize_t (*writev)(int, const struct iovec *, int);
+  int (*ioctl)(int, uint64_t, void *);
+};
+
+struct MachineFd {
+  int fd;
+  struct MachineFdCb * cb;
+};
+
 struct MachineFds {
   size_t i, n;
-  struct MachineFd {
-    int fd;
-    struct MachineFdCb {
-      int (*close)(int);
-      ssize_t (*readv)(int, const struct iovec *, int);
-      ssize_t (*writev)(int, const struct iovec *, int);
-      int (*ioctl)(int, uint64_t, void *);
-    } * cb;
-  } * p;
-  struct MachineFdClosed {
-    unsigned fd;
-    struct MachineFdClosed *next;
-  } * closed;
+  struct MachineFd * p;
+  struct MachineFdClosed * closed;
 };
 
 int MachineFdAdd(struct MachineFds *);

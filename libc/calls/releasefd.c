@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,14 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/str.h"
+#include "libc/bits/bits.h"
+#include "libc/calls/internal.h"
 
-void *tinymemccpy(void *dst, const void *src, int termchar, size_t limit) {
-  size_t i;
-  unsigned char *d;
-  const unsigned char *s;
-  for (termchar &= 0xff, d = dst, s = src, i = 0; i < limit; ++i) {
-    if ((d[i] = s[i]) == termchar) return d + i + 1;
-  }
-  return NULL;
+void __releasefd(int fd) {
+  int x;
+  g_fds.p[fd].kind = kFdEmpty;
+  do {
+    x = g_fds.f;
+    if (fd >= x) break;
+  } while (!cmpxchg(&g_fds.f, x, fd));
 }

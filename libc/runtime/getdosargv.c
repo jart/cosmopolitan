@@ -32,7 +32,7 @@ struct DosArgv {
   wint_t wc;
 };
 
-static textwindows wint_t DecodeDosArgv(const char16_t **s) {
+static textwindows noasan wint_t DecodeDosArgv(const char16_t **s) {
   wint_t x, y;
   for (;;) {
     if (!(x = *(*s)++)) break;
@@ -50,7 +50,7 @@ static textwindows wint_t DecodeDosArgv(const char16_t **s) {
   return x;
 }
 
-static textwindows void AppendDosArgv(struct DosArgv *st, wint_t wc) {
+static textwindows noasan void AppendDosArgv(struct DosArgv *st, wint_t wc) {
   uint64_t w;
   w = tpenc(wc);
   do {
@@ -78,8 +78,8 @@ static textwindows void AppendDosArgv(struct DosArgv *st, wint_t wc) {
  * @see libc/runtime/ntspawn.c
  * @note kudos to Simon Tatham for figuring out quoting behavior
  */
-textwindows int GetDosArgv(const char16_t *cmdline, char *buf, size_t size,
-                           char **argv, size_t max) {
+textwindows noasan int GetDosArgv(const char16_t *cmdline, char *buf,
+                                  size_t size, char **argv, size_t max) {
   bool inquote;
   size_t i, argc, slashes, quotes;
   struct DosArgv st;

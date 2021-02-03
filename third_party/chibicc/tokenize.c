@@ -136,21 +136,16 @@ static int read_ident(char *start) {
   }
 }
 
-static int from_hex(char c) {
-  if ('0' <= c && c <= '9') return c - '0';
-  if ('a' <= c && c <= 'f') return c - 'a' + 10;
-  return c - 'A' + 10;
-}
-
 // Read a punctuator token from p and returns its length.
 int read_punct(char *p) {
-  static char kw[][4] = {"<<=", ">>=", "...", "==", "!=", "<=", ">=", "->",
-                         "+=",  "-=",  "*=",  "/=", "++", "--", "%=", "&=",
-                         "|=",  "^=",  "&&",  "||", "<<", ">>", "##"};
-  for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++) {
+  static const char kPunct[][4] = {
+      "<<=", ">>=", "...", "==", "!=", "<=", ">=", "->", "+=", "-=", "*=", "/=",
+      "++",  "--",  "%=",  "&=", "|=", "^=", "&&", "||", "<<", ">>", "##",
+  };
+  for (int i = 0; i < sizeof(kPunct) / sizeof(*kPunct); i++) {
     for (int j = 0;;) {
-      if (p[j] != kw[i][j]) break;
-      if (!kw[i][++j]) return j;
+      if (p[j] != kPunct[i][j]) break;
+      if (!kPunct[i][++j]) return j;
     }
   }
   return ispunct(*p) ? 1 : 0;
@@ -200,7 +195,7 @@ int read_escaped_char(char **new_pos, char *p) {
     if (!isxdigit(*p)) error_at(p, "invalid hex escape sequence");
     unsigned c = 0;
     for (; isxdigit(*p); p++) {
-      c = (c << 4) + from_hex(*p); /* TODO(jart): overflow here unicode_test */
+      c = (c << 4) + hextoint(*p); /* TODO(jart): overflow here unicode_test */
     }
     *new_pos = p;
     return c;
@@ -275,7 +270,7 @@ static Token *read_string_literal(char *start, char *quote) {
 // is called a "surrogate pair".
 static Token *read_utf16_string_literal(char *start, char *quote) {
   char *end = string_literal_end(quote + 1);
-  uint16_t *buf = calloc(2, end - start - 1);
+  uint16_t *buf = calloc(2, end - start);
   int len = 0;
   for (char *p = quote + 1; p < end;) {
     if (*p == '\\') {
@@ -628,7 +623,7 @@ static uint32_t read_universal_char(char *p, int len) {
   uint32_t c = 0;
   for (int i = 0; i < len; i++) {
     if (!isxdigit(p[i])) return 0;
-    c = (c << 4) | from_hex(p[i]);
+    c = (c << 4) | hextoint(p[i]);
   }
   return c;
 }

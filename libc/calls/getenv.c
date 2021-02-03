@@ -16,10 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
 #include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
 
 /**
  * Returns value of environment variable, or NULL if not found.

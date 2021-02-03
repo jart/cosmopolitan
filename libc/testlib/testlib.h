@@ -59,16 +59,31 @@ COSMOPOLITAN_C_START_
 #define EXPECT_LE(C, X) _TEST2("EXPECT_LE", C, <=, (X), #C, " ≤ ", #X, 0)
 #define EXPECT_LT(C, X) _TEST2("EXPECT_LT", C, <, (X), #C, " < ", #X, 0)
 
-#define _TEST2(NAME, WANT, OP, GOT, WANTCODE, OPSTR, GOTCODE, ISFATAL)    \
-  do {                                                                    \
-    autotype(WANT) Want = (WANT);                                         \
-    autotype(GOT) Got = (GOT);                                            \
-    if (!(Want OP Got)) {                                                 \
-      testlib_showerror(FILIFU NAME, OPSTR, WANTCODE OPSTR GOTCODE,       \
-                        testlib_formatint(Want), testlib_formatint(Got)); \
-      testlib_onfail2(ISFATAL);                                           \
-    }                                                                     \
-  } while (0)
+/**
+ * Enables setup and teardown of test directories.
+ *
+ * If the linker says this symbol exists then, regardless of its value,
+ * a unique test directory will be created at the start of each test,
+ * the test will be run with that directory as its working directory,
+ * and if the test succeeds it'll be removed along with any contents.
+ */
+extern char testlib_enable_tmp_setup_teardown;
+
+/**
+ * User-defined test setup function.
+ *
+ * The test runner will call this function before each TEST() if it's
+ * defined by the linkage.
+ */
+void SetUp(void);
+
+/**
+ * User-defined test cleanup function.
+ *
+ * The test runner will call this function after each TEST() if it's
+ * defined by the linkage.
+ */
+void TearDown(void);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § testing library » assert or die                           ─╬─│┼
@@ -87,39 +102,12 @@ COSMOPOLITAN_C_START_
   __TEST_EQ(expect, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, GOT, \
             __VA_ARGS__)
 
-#define __TEST_EQ(KIND, FILE, LINE, FUNC, WANTCODE, GOTCODE, WANT, GOT, ...) \
-  ({                                                                         \
-    autotype(GOT) Got = _I(GOT);                                             \
-    typeof(Got) Want = _I(WANT);                                             \
-    testlib_ontest();                                                        \
-    if (Want != Got) {                                                       \
-      TESTLIB_ONFAIL(FILE, FUNC);                                            \
-      TESTLIB_SHOWERROR(testlib_showerror_##KIND##_eq, LINE, WANTCODE,       \
-                        GOTCODE, testlib_formatint(_I(Want)),                \
-                        testlib_formatint(_I(Got)), "" __VA_ARGS__);         \
-    }                                                                        \
-    (void)0;                                                                 \
-  })
-
 #define ASSERT_NE(WANT, GOT, ...)                                             \
   __TEST_NE(assert, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, GOT, \
             __VA_ARGS__)
 #define EXPECT_NE(WANT, GOT, ...)                                             \
   __TEST_NE(expect, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, GOT, \
             __VA_ARGS__)
-#define __TEST_NE(KIND, FILE, LINE, FUNC, WANTCODE, GOTCODE, WANT, GOT, ...) \
-  ({                                                                         \
-    autotype(GOT) Got = (GOT);                                               \
-    typeof(Got) Want = (WANT);                                               \
-    testlib_ontest();                                                        \
-    if (Want == Got) {                                                       \
-      TESTLIB_ONFAIL(FILE, FUNC);                                            \
-      TESTLIB_SHOWERROR(testlib_showerror_##KIND##_ne, LINE, WANTCODE,       \
-                        GOTCODE, testlib_formatint(_I(Want)),                \
-                        testlib_formatint(_I(Got)), "" __VA_ARGS__);         \
-    }                                                                        \
-    (void)0;                                                                 \
-  })
 
 #define ASSERT_BETWEEN(BEG, END, GOT)             \
   assertBetween(FILIFU _I(BEG), _I(END), _I(GOT), \
@@ -245,6 +233,53 @@ COSMOPOLITAN_C_START_
   const char *file;   \
   int line
 
+#define TESTLIB_ONFAIL(FILE, FUNC)              \
+  if (g_testlib_shoulddebugbreak) DebugBreak(); \
+  testlib_showerror_file = FILE;                \
+  testlib_showerror_func = FUNC
+
+#define TESTLIB_SHOWERROR(THUNK, ...) \
+  (((typeof(&testlib_showerror_))strongaddr(#THUNK)))(__VA_ARGS__)
+
+#define __TEST_EQ(KIND, FILE, LINE, FUNC, WANTCODE, GOTCODE, WANT, GOT, ...) \
+  ({                                                                         \
+    autotype(GOT) Got = _I(GOT);                                             \
+    typeof(Got) Want = _I(WANT);                                             \
+    testlib_ontest();                                                        \
+    if (Want != Got) {                                                       \
+      TESTLIB_ONFAIL(FILE, FUNC);                                            \
+      TESTLIB_SHOWERROR(testlib_showerror_##KIND##_eq, LINE, WANTCODE,       \
+                        GOTCODE, testlib_formatint(_I(Want)),                \
+                        testlib_formatint(_I(Got)), "" __VA_ARGS__);         \
+    }                                                                        \
+    (void)0;                                                                 \
+  })
+
+#define __TEST_NE(KIND, FILE, LINE, FUNC, WANTCODE, GOTCODE, WANT, GOT, ...) \
+  ({                                                                         \
+    autotype(GOT) Got = (GOT);                                               \
+    typeof(Got) Want = (WANT);                                               \
+    testlib_ontest();                                                        \
+    if (Want == Got) {                                                       \
+      TESTLIB_ONFAIL(FILE, FUNC);                                            \
+      TESTLIB_SHOWERROR(testlib_showerror_##KIND##_ne, LINE, WANTCODE,       \
+                        GOTCODE, testlib_formatint(_I(Want)),                \
+                        testlib_formatint(_I(Got)), "" __VA_ARGS__);         \
+    }                                                                        \
+    (void)0;                                                                 \
+  })
+
+#define _TEST2(NAME, WANT, OP, GOT, WANTCODE, OPSTR, GOTCODE, ISFATAL)    \
+  do {                                                                    \
+    autotype(WANT) Want = (WANT);                                         \
+    autotype(GOT) Got = (GOT);                                            \
+    if (!(Want OP Got)) {                                                 \
+      testlib_showerror(FILIFU NAME, OPSTR, WANTCODE OPSTR GOTCODE,       \
+                        testlib_formatint(Want), testlib_formatint(Got)); \
+      testlib_onfail2(ISFATAL);                                           \
+    }                                                                     \
+  } while (0)
+
 typedef void (*testfn_t)(void);
 
 struct TestFixture {
@@ -264,14 +299,6 @@ extern const testfn_t __bench_start[], __bench_end[];
 extern const testfn_t __testcase_start[], __testcase_end[];
 extern const struct TestFixture __fixture_start[], __fixture_end[];
 extern const struct TestFixture __combo_start[], __combo_end[];
-
-#define TESTLIB_ONFAIL(FILE, FUNC)              \
-  if (g_testlib_shoulddebugbreak) DebugBreak(); \
-  testlib_showerror_file = FILE;                \
-  testlib_showerror_func = FUNC
-
-#define TESTLIB_SHOWERROR(THUNK, ...) \
-  (((typeof(&testlib_showerror_))strongaddr(#THUNK)))(__VA_ARGS__)
 
 void testlib_showerror_(int line, const char *wantcode, const char *gotcode,
                         char *FREED_want, char *FREED_got, const char *fmt,

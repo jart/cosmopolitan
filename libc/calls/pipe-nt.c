@@ -58,16 +58,19 @@ textwindows int pipe$nt(int pipefd[2], unsigned flags) {
   int reader, writer;
   char16_t pipename[64];
   CreatePipeName(pipename);
+  if ((reader = __reservefd()) == -1) return -1;
+  if ((writer = __reservefd()) == -1) {
+    __releasefd(reader);
+    return -1;
+  }
   if ((hin = CreateNamedPipe(pipename, kNtPipeAccessInbound,
                              kNtPipeWait | kNtPipeReadmodeByte, 1, 65536, 65536,
                              0, &kNtIsInheritable)) != -1) {
     if ((hout = CreateFile(pipename, kNtGenericWrite, kNtFileShareWrite,
                            &kNtIsInheritable, kNtOpenExisting, 0, 0)) != -1) {
-      reader = __getemptyfd();
       g_fds.p[reader].kind = kFdFile;
       g_fds.p[reader].flags = flags;
       g_fds.p[reader].handle = hin;
-      writer = __getemptyfd();
       g_fds.p[writer].kind = kFdFile;
       g_fds.p[writer].flags = flags;
       g_fds.p[writer].handle = hout;
@@ -78,5 +81,6 @@ textwindows int pipe$nt(int pipefd[2], unsigned flags) {
       CloseHandle(hin);
     }
   }
+  __releasefd(reader);
   return __winerr();
 }

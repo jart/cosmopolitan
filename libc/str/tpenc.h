@@ -6,19 +6,14 @@ COSMOPOLITAN_C_START_
 uint64_t tpenc(int32_t) pureconst;
 
 #ifndef __STRICT_ANSI__
-#define tpenc(CODE)                 \
-  ({                                \
-    long Buf;                       \
-    int32_t Code = (CODE);          \
-    if (0 <= Code && Code <= 127) { \
-      Buf = Code;                   \
-    } else {                        \
-      asm("call\ttpenc"             \
-          : "=a"(Buf), "+D"(Code)   \
-          : /* inputs */            \
-          : "rcx", "rdx", "cc");    \
-    }                               \
-    Buf;                            \
+#define tpenc(CODE)            \
+  ({                           \
+    long Edi, Buf;             \
+    asm("call\ttpenc"          \
+        : "=a"(Buf), "=D"(Edi) \
+        : "1"(CODE)            \
+        : "rcx", "rdx", "cc"); \
+    Buf;                       \
   })
 #endif
 

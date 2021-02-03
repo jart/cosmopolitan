@@ -34,12 +34,13 @@
 #include "libc/x/x.h"
 
 uint64_t i;
-char pathbuf[PATH_MAX], testdir[PATH_MAX], *oldpath;
+char *oldpath;
+char tmp[PATH_MAX];
+char pathbuf[PATH_MAX];
+char testlib_enable_tmp_setup_teardown;
 
 void SetUp(void) {
-  sprintf(testdir, "o/tmp/%s.%d", program_invocation_short_name, getpid());
-  makedirs(testdir, 0755);
-  CHECK_NE(-1, chdir(testdir));
+  static int x;
   mkdir("bin", 0755);
   mkdir("home", 0755);
   oldpath = strdup(nulltoempty(getenv("PATH")));
@@ -48,8 +49,6 @@ void SetUp(void) {
 
 void TearDown(void) {
   CHECK_NE(-1, setenv("PATH", oldpath, true));
-  CHECK_NE(-1, chdir("../../.."));
-  CHECK_NE(-1, rmrf(testdir));
 }
 
 TEST(commandv, testPathSearch) {

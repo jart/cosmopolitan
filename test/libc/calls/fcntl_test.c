@@ -26,20 +26,7 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-char basedir[PATH_MAX];
-char testdir[PATH_MAX];
-
-void SetUp(void) {
-  getcwd(basedir, ARRAYLEN(basedir));
-  sprintf(testdir, "o/tmp/%s.%d", program_invocation_short_name, getpid());
-  makedirs(testdir, 0755);
-  CHECK_NE(-1, chdir(testdir));
-}
-
-void TearDown(void) {
-  CHECK_NE(-1, chdir(basedir));
-  CHECK_NE(-1, rmrf(testdir));
-}
+char testlib_enable_tmp_setup_teardown;
 
 TEST(fcntl_getfl, testRemembersAccessMode) {
   int fd;
