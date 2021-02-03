@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/reverse.h"
 #include "libc/bits/bits.h"
+#include "libc/bits/likely.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
@@ -321,11 +322,11 @@ static size_t __asan_int2str(int64_t i, char *a) {
   return 1 + __asan_uint2str(-i, a);
 }
 
-void __asan_poison(uintptr_t p, size_t n, int kind) {
+flattenout void __asan_poison(uintptr_t p, size_t n, int kind) {
   int k;
   char *s;
   if (!n) return;
-  if (p & 7) {
+  if (UNLIKELY(p & 7)) {
     k = MIN(8 - (p & 7), n);
     s = SHADOW(p);
     if (*s == 0 || *s > (p & 7)) {
@@ -343,11 +344,11 @@ void __asan_poison(uintptr_t p, size_t n, int kind) {
   }
 }
 
-void __asan_unpoison(uintptr_t p, size_t n) {
+flattenout void __asan_unpoison(uintptr_t p, size_t n) {
   int k;
   char *s;
   if (!n) return;
-  if (p & 7) {
+  if (UNLIKELY(p & 7)) {
     k = MIN(8 - (p & 7), n);
     s = SHADOW(p);
     *s = 0;

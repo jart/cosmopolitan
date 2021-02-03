@@ -62,7 +62,6 @@ _start:	test	%rdi,%rdi
 /	@param	rsp is [n,argv₀..argvₙ₋₁,0,envp₀..,0,auxv₀..,0,..]
 /	@note	FreeBSD is special (see freebsd/lib/csu/amd64/...)
 /	@noreturn
-_start_xnu:
-	movb	$XNU,__hostos(%rip)
+_xnu:	movb	$XNU,__hostos(%rip)
 	jmp	0b
-	.endfn	_start_xnu,weak,hidden
+	.endfn	_xnu,weak,hidden

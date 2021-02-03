@@ -127,12 +127,17 @@ Flags & Keyboard Shortcuts:\n\
   CTRL+L     redraw                     [keyboard]\n\
   CTRL+Z     suspend                    [keyboard]\n\
   CTRL+C     exit                       [keyboard]\n\
+  q          quit                       [keyboard]\n\
 \n\
 Effects Shortcuts:\n\
 \n\
-  H          +Hue             ALT+H      -Hue\n\
-  S          +Saturation      ALT+S      -Saturation\n\
-  L          +Lightness       ALT+L      -Lightness\n\
+  S          Toggle Swing (TV, PC)\n\
+  Y          Toggle Black/White Mode\n\
+  p          Toggle Primaries (BT.601, BT.709)\n\
+  g          +Gamma           G          -Gamma\n\
+  l          +Illumination    L          -Illumination\n\
+  k          +LumaKernel      K          -LumaKernel\n\
+  j          +ChromaKernel    J          -ChromaKernel\n\
   CTRL-G     {Unsharp,Sharp}\n\
 \n\
 Environment Variables:\n\
@@ -1018,6 +1023,7 @@ static optimizesize void ReadKeyboard(void) {
             chromakernel_ = MOD(sgn + chromakernel_, ARRAYLEN(kMagkern));
             memcpy(g_magkern, kMagkern[chromakernel_], sizeof(kMagkern[0]));
             break;
+          case 'q':
           case CTRL('C'):
             longjmp(jb_, 1);
             break;
