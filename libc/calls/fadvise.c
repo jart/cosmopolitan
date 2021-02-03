@@ -29,7 +29,6 @@
  * @param len 0 means ‘til end of file
  * @param advice can be MADV_SEQUENTIAL, MADV_RANDOM, etc.
  * @return -1 on error
- * @syscall
  */
 int fadvise(int fd, uint64_t offset, uint64_t len, int advice) {
   if (!IsWindows()) {

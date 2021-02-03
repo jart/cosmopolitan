@@ -17,13 +17,22 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/internal.h"
-#include "libc/str/tinystrstr.internal.h"
 
 /**
  * Naïve substring search implementation.
  * @see libc/str/strstr.c
  * @asyncsignalsafe
  */
-char *(tinystrstr)(const char *haystack, const char *needle) {
-  return (/*unconst*/ char *)tinystrstr(haystack, needle);
+char *tinystrstr(const char *haystack, const char *needle) {
+  size_t i;
+  for (;;) {
+    for (i = 0;;) {
+      if (!needle[i]) return (/*unconst*/ char *)haystack;
+      if (!haystack[i]) break;
+      if (needle[i] != haystack[i]) break;
+      ++i;
+    }
+    if (!*haystack++) break;
+  }
+  return NULL;
 }

@@ -275,7 +275,7 @@ static Token *read_string_literal(char *start, char *quote) {
 // is called a "surrogate pair".
 static Token *read_utf16_string_literal(char *start, char *quote) {
   char *end = string_literal_end(quote + 1);
-  uint16_t *buf = calloc(2, end - start - 1);
+  uint16_t *buf = calloc(2, end - start);
   int len = 0;
   for (char *p = quote + 1; p < end;) {
     if (*p == '\\') {

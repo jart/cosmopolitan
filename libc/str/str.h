@@ -187,7 +187,6 @@ char16_t *tinystrstr16(const char16_t *, const char16_t *) strlenesque;
 void *tinymemmem(const void *, size_t, const void *, size_t) strlenesque;
 void *tinymemccpy(void *, const void *, int, size_t) memcpyesque;
 
-void *memtolower(void *, size_t);
 char *strntolower(char *, size_t);
 char *strtolower(char *) paramsnonnull();
 char *strntoupper(char *, size_t);

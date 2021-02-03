@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/relocations.h"
+#include "libc/macros.h"
 
 /**
  * @fileoverview Cosmopolitan ELF-Normative Linker Script.
@@ -66,6 +67,9 @@ SECTIONS {
   .text : {
     *(SORT_BY_ALIGNMENT(.text.hot))
     KEEP(*(.keep.text))
+    HIDDEN(__text_syscall_start = .);
+    *(.text.syscall .text.syscall.*)
+    HIDDEN(__text_syscall_end = .);
     *(.text .text.*)
     KEEP(*(SORT_BY_NAME(.sort.text.*)))
   }
@@ -207,3 +211,7 @@ SECTIONS {
     *(.*)
   }
 }
+
+HIDDEN(__text_syscall_addr = ROUNDDOWN(__text_syscall_start, PAGESIZE)); 
+HIDDEN(__text_syscall_size = (ROUNDUP(__text_syscall_end, PAGESIZE) -
+                              ROUNDDOWN(__text_syscall_start, PAGESIZE))); 

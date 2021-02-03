@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
+#include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction-linux.internal.h"
@@ -770,6 +771,30 @@ static ssize_t OpRead(struct Machine *m, int fd, int64_t addr, size_t size) {
   return rc;
 }
 
+static int OpGetdents(struct Machine *m, int dirfd, int64_t addr,
+                      uint32_t size) {
+  int rc;
+  DIR *dir;
+  struct dirent *ent;
+  if (size < sizeof(struct dirent)) return einval();
+  if (0 <= dirfd && dirfd < m->fds.i) {
+    if ((dir = fdopendir(m->fds.p[dirfd].fd))) {
+      rc = 0;
+      while (rc + sizeof(struct dirent) <= size) {
+        if (!(ent = readdir(dir))) break;
+        VirtualRecvWrite(m, addr + rc, ent, ent->d_reclen);
+        rc += ent->d_reclen;
+      }
+      free(dir);
+    } else {
+      rc = -1;
+    }
+  } else {
+    rc = ebadf();
+  }
+  return rc;
+}
+
 static ssize_t OpPread(struct Machine *m, int fd, int64_t addr, size_t size,
                        int64_t offset) {
   ssize_t rc;
@@ -1395,6 +1420,7 @@ void OpSyscall(struct Machine *m, uint32_t rde) {
     SYSCALL(0x09E, OpArchPrctl(m, di, si));
     SYSCALL(0x0BA, OpGetTid(m));
     SYSCALL(0x0CB, sched_setaffinity(di, si, P(dx)));
+    SYSCALL(0x0D9, OpGetdents(m, di, si, dx));
     SYSCALL(0x0DD, OpFadvise(m, di, si, dx, r0));
     SYSCALL(0x0E4, OpClockGettime(m, di, si));
     SYSCALL(0x101, OpOpenat(m, di, si, dx, r0));

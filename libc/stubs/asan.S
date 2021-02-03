@@ -22,253 +22,367 @@
 /	@fileoverview Address Sanitizer Linker Poison
 
 __asan_addr_is_in_fake_stack:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_addr_is_in_fake_stack,weak
 
 __asan_after_dynamic_init:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_after_dynamic_init,weak
 
 __asan_alloca_poison:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_alloca_poison,weak
 
 __asan_allocas_unpoison:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_allocas_unpoison,weak
 
 __asan_before_dynamic_init:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_before_dynamic_init,weak
 
 __asan_get_current_fake_stack:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_get_current_fake_stack,weak
 
 __asan_handle_no_return:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_handle_no_return,weak
 
 __asan_init:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_init,weak
 
 __asan_load1:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_load1,weak
 
 __asan_load2:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_load2,weak
 
 __asan_load4:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_load4,weak
 
 __asan_load8:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_load8,weak
 
 __asan_load16:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_load16,weak
 
 __asan_load32:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_load32,weak
 
 __asan_option_detect_stack_use_after_return:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_option_detect_stack_use_after_return,weak
 
-__asan_poison_stack_memory:
-	ud2
-	.endfn	__asan_poison_stack_memory,weak
-
 __asan_register_globals:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_register_globals,weak
 
 __asan_report_load1:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_report_load1,weak
 
 __asan_report_load2:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_report_load2,weak
 
 __asan_report_load4:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_report_load4,weak
 
 __asan_report_load8:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_report_load8,weak
 
 __asan_report_load16:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_report_load16,weak
 
 __asan_report_load_n:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_report_load_n,weak
 
 __asan_report_store1:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_report_store1,weak
 
 __asan_report_store2:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_report_store2,weak
 
 __asan_report_store4:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_report_store4,weak
 
 __asan_report_store8:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_report_store8,weak
 
 __asan_report_store16:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_report_store16,weak
 
 __asan_report_store32:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_report_store32,weak
 
 __asan_report_store_n:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_report_store_n,weak
 
 __asan_stack_free:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_free,weak
 
 __asan_stack_free_0:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_free_0,weak
 
 __asan_stack_free_1:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_free_1,weak
 
 __asan_stack_free_10:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_free_10,weak
 
 __asan_stack_free_2:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_free_2,weak
 
 __asan_stack_free_3:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_free_3,weak
 
 __asan_stack_free_4:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_free_4,weak
 
 __asan_stack_free_5:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_free_5,weak
 
 __asan_stack_free_6:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_free_6,weak
 
 __asan_stack_free_7:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_free_7,weak
 
 __asan_stack_free_8:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_free_8,weak
 
 __asan_stack_free_9:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_free_9,weak
 
 __asan_stack_malloc:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_malloc,weak
 
 __asan_stack_malloc_0:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_malloc_0,weak
 
 __asan_stack_malloc_1:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_malloc_1,weak
 
 __asan_stack_malloc_2:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_malloc_2,weak
 
 __asan_stack_malloc_3:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_malloc_3,weak
 
 __asan_stack_malloc_4:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_malloc_4,weak
 
 __asan_stack_malloc_5:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_malloc_5,weak
 
 __asan_stack_malloc_6:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_malloc_6,weak
 
 __asan_stack_malloc_7:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_malloc_7,weak
 
 __asan_stack_malloc_8:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_malloc_8,weak
 
 __asan_stack_malloc_9:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_malloc_9,weak
 
 __asan_stack_malloc_10:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_stack_malloc_10,weak
 
 __asan_store1:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_store1,weak
 
 __asan_store2:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_store2,weak
 
 __asan_store4:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_store4,weak
 
 __asan_store8:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_store8,weak
 
 __asan_store16:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_store16,weak
 
 __asan_store32:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_store32,weak
 
-__asan_unpoison_stack_memory:
-	ud2
-	.endfn	__asan_unpoison_stack_memory,weak
-
 __asan_unregister_globals:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_unregister_globals,weak
 
 __asan_version_mismatch_check_v8:
+	push	%rbp
+	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_version_mismatch_check_v8,weak

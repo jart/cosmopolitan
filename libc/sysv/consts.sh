@@ -237,8 +237,9 @@ syscon	mmap	MAP_SHARED				1			1			1			1			1			# forced consensus & faked nt
 syscon	mmap	MAP_PRIVATE				2			2			2			2			2			# forced consensus & faked nt
 syscon	mmap	MAP_FIXED				0x10			0x10			0x10			0x10			0x10			# unix consensus; openbsd appears to forbid; faked nt
 syscon	mmap	MAP_ANONYMOUS				0x20			0x1000			0x1000			0x1000			0x20			# bsd consensus; faked nt
+syscon	mmap	MAP_GROWSDOWN				0x0100			0			0x0400			0x4000			0x100000		# mandatory for OpenBSD stacks; MAP_STACK on Free/OpenBSD; MEM_TOP_DOWN on NT
+syscon	mmap	MAP_CONCEAL				0			0			0x20000			0x8000			0			# omit from core dumps; MAP_NOCORE on FreeBSD
 syscon	mmap	MAP_NORESERVE				0x4000			0x40			0			0			0			# Linux calls it "reserve"; NT calls it "commit"? which is default?
-syscon	mmap	MAP_GROWSDOWN				0x0100			0			0x0400			0x0400			0x100000		# MAP_STACK on BSD; MEM_TOP_DOWN on NT
 syscon	mmap	MAP_HUGETLB				0x040000		0			0			0			0x80000000		# kNtSecLargePages
 syscon	mmap	MAP_HUGE_MASK				63			0			0			0			0
 syscon	mmap	MAP_HUGE_SHIFT				26			0			0			0			0
@@ -246,6 +247,8 @@ syscon	mmap	MAP_LOCKED				0x2000			0			0			0			0
 syscon	mmap	MAP_NONBLOCK				0x10000			0			0			0			0
 syscon	mmap	MAP_POPULATE				0x8000			0			0			0			0			# can avoid madvise(MADV_WILLNEED) on private file mapping
 syscon	mmap	MAP_TYPE				15			0			0			0			0			# what is it
+syscon	compat	MAP_STACK				0x0100			0			0x0400			0x4000			0x100000		# use MAP_GROWSDOWN
+syscon	compat	MAP_NOCORE				0			0			0x20000			0x8000			0			# use MAP_CONCEAL
 syscon	compat	MAP_ANON				0x20			0x1000			0x1000			0x1000			0x20			# bsd consensus; faked nt
 syscon	compat	MAP_STACK				0x020000		0			0x0400			0x4000			0x100000
 syscon	compat	MAP_EXECUTABLE				0x1000			0			0			0			0			# ignored
@@ -3112,6 +3115,7 @@ syscon	nr	__NR_io_uring_setup			0x01a9			-1			-1			-1			-1
 syscon	nr	__NR_io_uring_enter			0x01aa			-1			-1			-1			-1
 syscon	nr	__NR_io_uring_register			0x01ab			-1			-1			-1			-1
 syscon	nr	__NR_pledge				-1			-1			-1			0x006c			-1
+syscon	nr	__NR_msyscall				-1			-1			-1			0x0025			-1
 syscon	nr	__NR_ktrace				-1			-1			0x002d			0x002d			-1
 syscon	nr	__NR_kqueue				-1			0x200016a		0x016a			0x010d			-1
 syscon	nr	__NR_kevent				-1			0x2000171		0x0230			0x0048			-1

@@ -17,15 +17,21 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
-#include "libc/str/tinymemmem.internal.h"
 
 /**
  * Naïve substring search implementation.
  * @see libc/alg/memmem.c
  */
-void *tinymemmem(const void *haystk, size_t haystksize, const void *needle,
+void *tinymemmem(const void *haystack, size_t haystacksize, const void *needle,
                  size_t needlesize) {
-  return (/*unconst*/ void *)tinymemmemi(
-      (const unsigned char *)haystk, haystksize, (const unsigned char *)needle,
-      needlesize);
+  size_t i;
+  const char *p, *pe;
+  for (p = haystack, pe = p + haystacksize; p < pe;) {
+    for (++p, i = 0;;) {
+      if (++i > needlesize) return p - 1;
+      if (p == pe) break;
+      if (((const char *)needle)[i - 1] != (p - 1)[i - 1]) break;
+    }
+  }
+  return !haystacksize && !needlesize ? haystack : NULL;
 }

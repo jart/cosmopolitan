@@ -19,7 +19,7 @@
 #include "libc/dce.h"
 #include "libc/runtime/internal.h"
 #include "libc/macros.h"
-.privileged
+.text.syscall
 .source	__FILE__
 
 /	Terminates process, ignoring destructors and atexit() handlers.

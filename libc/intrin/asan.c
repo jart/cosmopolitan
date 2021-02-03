@@ -374,7 +374,9 @@ static const char *__asan_dscribe_heap_poison(long c) {
   }
 }
 
-static const char *__asan_describe_access_poison(int c) {
+static const char *__asan_describe_access_poison(char *p) {
+  int c = p[0];
+  if (1 <= c && c <= 7) c = p[1];
   switch (c) {
     case kAsanHeapFree:
       return "heap use after free";
@@ -407,7 +409,7 @@ static const char *__asan_describe_access_poison(int c) {
   }
 }
 
-static ssize_t __asan_write(const void *data, size_t size) {
+static textsyscall ssize_t __asan_write(const void *data, size_t size) {
   ssize_t rc;
   if (weaken(write)) {
     if ((rc = weaken(write)(2, data, size)) != -1) {
@@ -421,7 +423,7 @@ static ssize_t __asan_write_string(const char *s) {
   return __asan_write(s, __asan_strlen(s));
 }
 
-static wontreturn void __asan_exit(int rc) {
+static textsyscall wontreturn void __asan_exit(int rc) {
   if (weaken(_Exit)) {
     weaken(_Exit)(rc);
   } else {
@@ -431,6 +433,7 @@ static wontreturn void __asan_exit(int rc) {
 }
 
 static wontreturn void __asan_abort(void) {
+  if (weaken(__die)) weaken(__die)();
   if (weaken(abort)) weaken(abort)();
   __asan_exit(134);
 }
@@ -468,7 +471,7 @@ static wontreturn void __asan_report_memory_fault(uint8_t *addr, int size,
                                                   const char *kind) {
   char *p, ibuf[21], buf[256];
   p = __asan_report_start(buf);
-  p = __asan_stpcpy(p, __asan_describe_access_poison(*SHADOW(addr)));
+  p = __asan_stpcpy(p, __asan_describe_access_poison(SHADOW(addr)));
   p = __asan_stpcpy(p, " ");
   p = __asan_mempcpy(p, ibuf, __asan_int2str(size, ibuf));
   p = __asan_stpcpy(p, "-byte ");
@@ -524,6 +527,7 @@ static void *__asan_allocate(size_t a, size_t n, int underrun, int overrun) {
     __asan_unpoison((uintptr_t)p, n);
     __asan_poison((uintptr_t)p - 16, 16, underrun); /* see dlmalloc design */
     __asan_poison((uintptr_t)p + n, c - n, overrun);
+    __asan_memset(p, 0xF9, n);
     WRITE64BE(p + c - sizeof(n), n);
   }
   return p;
@@ -662,6 +666,14 @@ void __asan_report_load_impl(uint8_t *addr, int size) {
 
 void __asan_report_store_impl(uint8_t *addr, int size) {
   __asan_report_memory_fault(addr, size, "store");
+}
+
+void __asan_poison_stack_memory(uintptr_t addr, size_t size) {
+  __asan_poison(addr, size, kAsanStackFree);
+}
+
+void __asan_unpoison_stack_memory(uintptr_t addr, size_t size) {
+  __asan_unpoison(addr, size);
 }
 
 void __asan_alloca_poison(uintptr_t addr, size_t size) {

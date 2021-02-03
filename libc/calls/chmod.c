@@ -42,7 +42,6 @@
  * @errors ENOENT, ENOTDIR, ENOSYS
  * @asyncsignalsafe
  * @see fchmod()
- * @syscall
  */
 int chmod(const char *pathname, uint32_t mode) {
   if (!pathname) return efault();

@@ -16,9 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/math.h"
-#include "libc/nexgen32e/nexgen32e.h"
+#include "libc/str/str.h"
 
-bool ctz(double x, double y) {
-  return __builtin_islessgreater(x, y);
+/**
+ * Mutates string to ASCII uppercase.
+ *
+ * @praam s is string
+ * @return string
+ */
+char *strtoupper(char *s) {
+  size_t i;
+  for (i = 0; s[i]; ++i) {
+    if ('a' <= s[i] && s[i] <= 'z') {
+      s[i] -= 'a' - 'A';
+    }
+  }
+  return s;
 }

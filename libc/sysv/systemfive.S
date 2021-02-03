@@ -102,6 +102,8 @@ __systemfive:
 	.quad	0
 	.endobj	__systemfive,globl,hidden
 	.previous
+
+	.text.syscall
 .Lanchorpoint:
 systemfive.linux:
 	movswl	%ax,%eax		# gnu/systemd ordinal is first word
@@ -256,10 +258,8 @@ systemfive.init.magnums:
 	pop	%rbx
 /	𝑠𝑙𝑖𝑑𝑒
 #ifndef TINY
-systemfive.init.stack:
+systemfive.init.stack:					# determinism ftw!
 	testb	IsWindows()				# already did this
-	jnz	systemfive.init.done
-	testb	IsOpenbsd()				# todo fix openbsd
 	jnz	systemfive.init.done
 	push	%rdi
 	push	%rsi
@@ -269,12 +269,19 @@ systemfive.init.stack:
 	mov	$PROT_READ|PROT_WRITE,%edx
 	mov	$MAP_PRIVATE|MAP_FIXED,%r10d
 	or	MAP_ANONYMOUS,%r10d
-	or	MAP_GROWSDOWN,%r10d
-	or	$-1,%r8
+	or	$-1,%r8d
 	xor	%r9d,%r9d
 	push	%r9					# openbsd:pad
-/	clc
+	push	%r9					# openbsd:align
+	testb	IsOpenbsd()
+	jz	0f
+	syscall						# openbsd:dubstack
+	jc	1f
+	mov	__NR_mmap,%eax
+0:	or	MAP_GROWSDOWN,%r10d			# openbsd:mapstack
+	clc
 	syscall
+	pop	%r9
 	pop	%r9
 	jnc	2f
 1:	mov	%eax,%edi
@@ -295,11 +302,25 @@ systemfive.init.stack:
 	pop	%rdi
 	leave
 	pop	%rcx
-	lea	STACKSIZE(%rax),%rsp
+	lea	STACKSIZE-16(%rax),%rsp			# openbsd:stackbound
 	push	%rcx
 	xor	%ebp,%ebp
 	push	%rbp
 	mov	%rsp,%rbp
+/	𝑠𝑙𝑖𝑑𝑒
+systemfive.init.syscall:
+	mov	__NR_msyscall,%eax			# syscall origin protect
+	test	%eax,%eax				# openbsd is pretty cool
+	js	systemfive.init.done
+	push	%rdi
+	push	%rsi
+	.weak	__text_syscall_addr
+	.weak	__text_syscall_size
+	mov	$__text_syscall_addr,%edi
+	mov	$__text_syscall_size,%esi
+	syscall
+	pop	%rsi
+	pop	%rdi
 /	𝑠𝑙𝑖𝑑𝑒
 #endif /* TINY */
 systemfive.init.done:

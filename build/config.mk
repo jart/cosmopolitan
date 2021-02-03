@@ -94,8 +94,7 @@ CONFIG_CPPFLAGS +=		\
 CONFIG_CCFLAGS +=		\
 	$(BACKTRACES)		\
 	$(FTRACE)		\
-	-O1			\
-	-fno-inline
+	-O2
 
 CONFIG_COPTS +=			\
 	$(SECURITY_BLANKETS)	\

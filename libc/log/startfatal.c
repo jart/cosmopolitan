@@ -17,9 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/fmt/itoa.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 
 /**
@@ -29,6 +31,18 @@
  * @see __start_fatal_ndebug()
  */
 relegated void __start_fatal(const char *file, int line) {
-  dprintf(STDERR_FILENO, "%s%s%s%s:%s:%d:%s%s: ", CLS, RED, "error", BLUE1,
-          file, line, program_invocation_short_name, RESET);
+  char s[16 + 16 + 16 + 16 + PATH_MAX + 16 + NAME_MAX + 16], *p;
+  p = stpcpy(s, CLS);
+  p = stpcpy(p, RED);
+  p = stpcpy(p, "error");
+  p = stpcpy(p, BLUE1);
+  p = stpcpy(p, ":");
+  p = stpcpy(p, file);
+  p = stpcpy(p, ":");
+  p += int64toarray_radix10(line, p);
+  p = stpcpy(p, ":");
+  p = stpcpy(p, program_invocation_short_name);
+  p = stpcpy(p, RESET);
+  p = stpcpy(p, ": ");
+  write(2, s, p - s);
 }

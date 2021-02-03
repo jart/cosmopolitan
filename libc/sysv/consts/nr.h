@@ -332,6 +332,7 @@
 #define __NR_io_uring_enter          SYMBOLIC(__NR_io_uring_enter)
 #define __NR_io_uring_register       SYMBOLIC(__NR_io_uring_register)
 #define __NR_pledge                  SYMBOLIC(__NR_pledge)
+#define __NR_msyscall                SYMBOLIC(__NR_msyscall)
 #define __NR_ktrace                  SYMBOLIC(__NR_ktrace)
 #define __NR_kqueue                  SYMBOLIC(__NR_kqueue)
 #define __NR_kevent                  SYMBOLIC(__NR_kevent)
@@ -1105,6 +1106,7 @@ hidden extern const long __NR_io_uring_setup;
 hidden extern const long __NR_io_uring_enter;
 hidden extern const long __NR_io_uring_register;
 hidden extern const long __NR_pledge;
+hidden extern const long __NR_msyscall;
 hidden extern const long __NR_ktrace;
 hidden extern const long __NR_kqueue;
 hidden extern const long __NR_kevent;

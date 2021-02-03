@@ -19,7 +19,7 @@
 #include "libc/assert.h"
 #include "libc/str/str.h"
 
-static noasan uint64_t UncheckedAlignedRead64(unsigned char *p) {
+static inline noasan uint64_t UncheckedAlignedRead64(unsigned char *p) {
   return (uint64_t)p[7] << 070 | (uint64_t)p[6] << 060 | (uint64_t)p[5] << 050 |
          (uint64_t)p[4] << 040 | (uint64_t)p[3] << 030 | (uint64_t)p[2] << 020 |
          (uint64_t)p[1] << 010 | (uint64_t)p[0] << 000;

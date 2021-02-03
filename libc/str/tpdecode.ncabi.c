@@ -21,6 +21,8 @@
 #include "libc/str/tpdecode.internal.h"
 #include "libc/str/tpdecodecb.internal.h"
 
+/* TODO(jart): DELETE */
+
 forceinline int getbyte(void *arg, uint32_t i) {
   return ((const unsigned char *)arg)[i];
 }
