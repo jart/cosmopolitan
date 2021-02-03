@@ -52,13 +52,14 @@
  * @param flags can have MAP_ANONYMOUS, MAP_SHARED, MAP_PRIVATE, etc.
  * @param fd is an open()'d file descriptor whose contents shall be
  *     mapped, and is ignored if MAP_ANONYMOUS is specified
- * @param offset specifies absolute byte index of fd's file for mapping,
- *     and should be zero if MAP_ANONYMOUS is specified
+ * @param off specifies absolute byte index of fd's file for mapping,
+ *     should be zero if MAP_ANONYMOUS is specified, and sadly needs
+ *     to be 64kb aligned too
  * @return virtual base address of new mapping, or MAP_FAILED w/ errno
  */
 void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
-  int i, x, n, a, b;
   struct DirectMap dm;
+  int i, x, n, a, b, f;
   if (!size) return VIP(einval());
   if (!ALIGNED(off)) return VIP(einval());
   if (!ALIGNED(addr)) return VIP(einval());
@@ -84,7 +85,12 @@ void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
     }
     addr = (void *)(intptr_t)((int64_t)x << 16);
   }
-  dm = __mmap(addr, size, prot, flags | MAP_FIXED, fd, off);
+  f = flags | MAP_FIXED;
+  if (IsOpenbsd() && (f & MAP_GROWSDOWN)) { /* openbsd:dubstack */
+    dm = __mmap(addr, size, prot, f & ~MAP_GROWSDOWN, fd, off);
+    if (dm.addr == MAP_FAILED) return MAP_FAILED;
+  }
+  dm = __mmap(addr, size, prot, f, fd, off);
   if (dm.addr == MAP_FAILED || dm.addr != addr) {
     return MAP_FAILED;
   }

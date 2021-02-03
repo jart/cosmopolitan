@@ -205,10 +205,10 @@ syscon	sig	SIGRTMIN				0			0			65			0			0
 #																			  │││  │ ┌┴───dwDesiredAccess
 #																			N │││  │ │
 #	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			T │││┌─┴┐│		Commentary
-syscon	open	O_RDONLY				0			0			0			0			0x80000000		# unix consensus & kNtGenericRead
+syscon	open	O_RDONLY				0			0			0			0			0xA0000000		# unix consensus & kNtGenericRead|kNtGenericExecute
 syscon	open	O_WRONLY				1			1			1			1			0x40000000		# unix consensus & kNtGenericWrite
-syscon	open	O_RDWR					2			2			2			2			0xc0000000		# unix consensus & kNtGenericRead|kNtGenericWrite
-syscon	open	O_ACCMODE				3			3			3			3			0xc0000000		# O_RDONLY|O_WRONLY|O_RDWR
+syscon	open	O_RDWR					2			2			2			2			0xE0000000		# unix consensus & kNtGenericRead|kNtGenericWrite|kNtGenericExecute
+syscon	open	O_ACCMODE				3			3			3			3			0xE0000000		# O_RDONLY|O_WRONLY|O_RDWR
 syscon	open	O_APPEND				0x0400			8			8			8			0x00000004		# bsd consensus & kNtFileAppendData; won't pose issues w/ mknod(S_IFIFO)
 syscon	open	O_CREAT					0x40			0x0200			0x0200			0x0200			0x00000040		# bsd consensus & NT faked as Linux
 syscon	open	O_EXCL					0x80			0x0800			0x0800			0x0800			0x00000080		# bsd consensus & NT faked as Linux
