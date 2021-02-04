@@ -44,14 +44,14 @@
 #define __FLT_MAX__ 1
 #define __DBL_MAX__ 1
 
-#define __INT_LEAST8_TYPE__ signed char;
-#define __INT_LEAST16_TYPE__ signed short;
-#define __INT_LEAST32_TYPE__ signed int;
-#define __INT_LEAST64_TYPE__ signed long long;
-#define __UINT_LEAST8_TYPE__ unsigned char;
-#define __UINT_LEAST16_TYPE__ unsigned short;
-#define __UINT_LEAST32_TYPE__ unsigned int;
-#define __UINT_LEAST64_TYPE__ unsigned long long;
+#define __INT_LEAST8_TYPE__ signed char
+#define __INT_LEAST16_TYPE__ signed short
+#define __INT_LEAST32_TYPE__ signed int
+#define __INT_LEAST64_TYPE__ signed long long
+#define __UINT_LEAST8_TYPE__ unsigned char
+#define __UINT_LEAST16_TYPE__ unsigned short
+#define __UINT_LEAST32_TYPE__ unsigned int
+#define __UINT_LEAST64_TYPE__ unsigned long long
 
 #define __UINT8_MAX__ __UCHAR_MAX__
 #define __UINT16_MAX__ __USHRT_MAX__
