@@ -6,13 +6,13 @@
 /* clang-format off */
 
 .macro	.ntimp	fn:req
-	yoink	_init_ntdll
-	.initbss 202,_init_ntdll.\fn
+	yoink	sys__init_ntdll
+	.initbss 202,sys__init_ntdll.\fn
 __imp_\fn:
 	.quad	0
 	.endobj	__imp_\fn,globl,hidden
 	.previous
-	.initro 202,_init_ntdll.2.\fn
+	.initro 202,sys__init_ntdll.2.\fn
 	.quad	RVA(.L\fn)
 	.previous
 	.section .rodata.str1.1,"aSM",@progbits,1

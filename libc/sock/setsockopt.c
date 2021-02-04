@@ -33,9 +33,9 @@ static bool setsockopt_polyfill(int *optname) {
   return false;
 }
 
-static textwindows int setsockopt$nt(struct Fd *fd, int level, int optname,
+static textwindows int sys_setsockopt_nt(struct Fd *fd, int level, int optname,
                                      const void *optval, uint32_t optlen) {
-  if (__setsockopt$nt(fd->handle, level, optname, optval, optlen) != -1) {
+  if (__sys_setsockopt_nt(fd->handle, level, optname, optval, optlen) != -1) {
     return 0;
   } else {
     return __winsockerr();
@@ -64,13 +64,13 @@ int setsockopt(int fd, int level, int optname, const void *optval,
   if (optname == -1) return 0;                  /* our sysvconsts definition */
   if (!IsWindows()) {
     do {
-      if (setsockopt$sysv(fd, level, optname, optval, optlen) != -1) {
+      if (sys_setsockopt(fd, level, optname, optval, optlen) != -1) {
         return 0;
       }
     } while (setsockopt_polyfill(&optname));
     return -1;
   } else if (__isfdkind(fd, kFdSocket)) {
-    return setsockopt$nt(&g_fds.p[fd], level, optname, optval, optlen);
+    return sys_setsockopt_nt(&g_fds.p[fd], level, optname, optval, optlen);
   } else {
     return ebadf();
   }

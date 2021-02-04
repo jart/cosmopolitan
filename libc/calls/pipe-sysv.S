@@ -27,13 +27,13 @@
 /	@asyncsignalsafe
 /	@see	libc/sysv/syscalls.sh
 /	@see	pipe2()
-pipe$sysv:
+sys_pipe:
 	push	%rbp
 	mov	%rsp,%rbp
 #if SupportsFreebsd()
 	xor	%esi,%esi
 #endif
-	call	__pipe$sysv
+	call	__sys_pipe
 #if SupportsXnu()
 	testb	IsXnu()
 	jz	1f
@@ -45,4 +45,4 @@ pipe$sysv:
 #endif
 1:	pop	%rbp
 	ret
-	.endfn	pipe$sysv,globl,hidden
+	.endfn	sys_pipe,globl,hidden

@@ -40,15 +40,15 @@ int close(int fd) {
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     rc = weaken(__zipos_close)(fd);
   } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdEpoll) {
-    rc = weaken(close$epoll)(fd);
+    rc = weaken(sys_close_epoll)(fd);
   } else if (!IsWindows()) {
-    rc = close$sysv(fd);
+    rc = sys_close(fd);
   } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdSocket) {
-    rc = weaken(closesocket$nt)(fd);
+    rc = weaken(sys_closesocket_nt)(fd);
   } else if (fd < g_fds.n &&
              (g_fds.p[fd].kind == kFdFile || g_fds.p[fd].kind == kFdConsole ||
               g_fds.p[fd].kind == kFdProcess)) {
-    rc = close$nt(fd);
+    rc = sys_close_nt(fd);
   } else {
     rc = ebadf();
   }

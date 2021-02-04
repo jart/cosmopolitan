@@ -28,7 +28,7 @@
 uint32_t gettid(void) {
   uint32_t res;
   if (!IsWindows()) {
-    res = gettid$sysv();
+    res = sys_gettid();
     if (res <= 0) {
       res = getpid();
     }

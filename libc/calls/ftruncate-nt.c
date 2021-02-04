@@ -21,7 +21,7 @@
 #include "libc/nt/files.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int ftruncate$nt(int fd, uint64_t length) {
+textwindows int sys_ftruncate_nt(int fd, uint64_t length) {
   bool32 ok;
   int64_t tell;
   if (!__isfdkind(fd, kFdFile)) return ebadf();

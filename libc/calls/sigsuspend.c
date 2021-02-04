@@ -32,7 +32,7 @@
 int sigsuspend(const sigset_t *ignore) {
   if (!ignore) return efault();
   if (!IsWindows()) {
-    return sigsuspend$sysv(ignore, 8);
+    return sys_sigsuspend(ignore, 8);
   } else {
     return enosys(); /* TODO(jart): Implement me! */
   }

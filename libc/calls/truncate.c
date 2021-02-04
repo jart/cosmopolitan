@@ -34,8 +34,8 @@
 int truncate(const char *path, uint64_t length) {
   if (!path) return efault();
   if (!IsWindows()) {
-    return truncate$sysv(path, length);
+    return sys_truncate(path, length);
   } else {
-    return truncate$nt(path, length);
+    return sys_truncate_nt(path, length);
   }
 }

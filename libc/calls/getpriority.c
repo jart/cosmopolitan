@@ -29,8 +29,8 @@
  */
 int getpriority(int which, unsigned who) {
   if (!IsWindows()) {
-    return getpriority$sysv(which, who) - 20;
+    return sys_getpriority(which, who) - 20;
   } else {
-    return getsetpriority$nt(which, who, 0, getpriority$nt);
+    return sys_getsetpriority_nt(which, who, 0, sys_getpriority_nt);
   }
 }

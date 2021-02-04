@@ -20,7 +20,7 @@
 .source	__FILE__
 
 /	Directly calls preadv() impl on host o/s if available.
-preadv$sysv:
+sys_preadv:
 	mov	%rcx,%r8			# openbsd:pad
-	jmp	__preadv$sysv
-	.endfn	preadv$sysv,globl,hidden
+	jmp	__sys_preadv
+	.endfn	sys_preadv,globl,hidden

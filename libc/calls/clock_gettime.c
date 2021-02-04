@@ -59,7 +59,7 @@ int clock_gettime(int clockid, struct timespec *out_ts) {
         out_ts->tv_sec = 0;
         out_ts->tv_nsec = 0;
       }
-      return clock_gettime$sysv(clockid, out_ts);
+      return sys_clock_gettime(clockid, out_ts);
     } else {
       int rc;
       _Static_assert(sizeof(struct timeval) == sizeof(struct timespec));
@@ -67,7 +67,7 @@ int clock_gettime(int clockid, struct timespec *out_ts) {
         out_ts->tv_sec = 0;
         out_ts->tv_nsec = 0;
       }
-      rc = gettimeofday$sysv((struct timeval *)out_ts, NULL);
+      rc = sys_gettimeofday((struct timeval *)out_ts, NULL);
       if (out_ts) {
         out_ts->tv_nsec *= 1000;
       }

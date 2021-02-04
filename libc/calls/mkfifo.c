@@ -34,8 +34,8 @@
 int mkfifo(const char *pathname, unsigned mode) {
   /* TODO(jart): Windows? */
   if (IsLinux()) {
-    return mknod$sysv(pathname, mode | S_IFIFO, 0);
+    return sys_mknod(pathname, mode | S_IFIFO, 0);
   } else {
-    return mkfifo$sysv(pathname, mode);
+    return sys_mkfifo(pathname, mode);
   }
 }

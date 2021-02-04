@@ -35,8 +35,8 @@
  */
 int mkdirat(int dirfd, const char *path, unsigned mode) {
   if (!IsWindows()) {
-    return mkdirat$sysv(dirfd, path, mode);
+    return sys_mkdirat(dirfd, path, mode);
   } else {
-    return mkdirat$nt(dirfd, path, mode);
+    return sys_mkdirat_nt(dirfd, path, mode);
   }
 }

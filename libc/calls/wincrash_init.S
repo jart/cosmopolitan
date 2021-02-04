@@ -21,6 +21,6 @@
 
 	.init.start 300,_init_wincrash
 	pushpop	1,%rcx
-	ezlea	__wincrash$nt,dx
+	ezlea	__wincrash_nt,dx
 	ntcall	__imp_AddVectoredExceptionHandler
 	.init.end 300,_init_wincrash,globl,hidden

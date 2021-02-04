@@ -2,11 +2,11 @@
 .imp	ws2_32,__imp_select,select,18
 
 	.text.windows
-__select$nt:
+__sys_select_nt:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	mov	__imp_select(%rip),%rax
 	jmp	__sysv2nt6
-	.endfn	__select$nt,globl
+	.endfn	__sys_select_nt,globl
 	.previous

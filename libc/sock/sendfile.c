@@ -25,7 +25,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-static textwindows ssize_t sendfile$linux2nt(int outfd, int infd,
+static textwindows ssize_t sendfile_linux2nt(int outfd, int infd,
                                              int64_t *inout_opt_inoffset,
                                              size_t uptobytes) {
   struct NtOverlapped Overlapped;
@@ -48,18 +48,18 @@ static textwindows ssize_t sendfile$linux2nt(int outfd, int infd,
   }
 }
 
-static ssize_t sendfile$linux2netflix(int outfd, int infd,
+static ssize_t sendfile_linux2netflix(int outfd, int infd,
                                       int64_t *inout_opt_inoffset,
                                       size_t uptobytes) {
   int sendfile$netflix(int32_t infd, int32_t outfd, int64_t offset,
                        size_t nbytes, const void *opt_hdtr,
                        int64_t *out_opt_sbytes,
-                       int32_t flags) asm("sendfile$sysv") hidden;
+                       int32_t flags) asm("sys_sendfile") hidden;
   int rc;
   int64_t offset, sbytes;
   if (inout_opt_inoffset) {
     offset = *inout_opt_inoffset;
-  } else if ((offset = lseek$sysv(infd, 0, SEEK_CUR)) == -1) {
+  } else if ((offset = sys_lseek(infd, 0, SEEK_CUR)) == -1) {
     return -1;
   }
   if ((rc = sendfile$netflix(infd, outfd, offset, uptobytes, NULL, &sbytes,
@@ -90,11 +90,11 @@ ssize_t sendfile(int outfd, int infd, int64_t *inout_opt_inoffset,
   if (uptobytes > 0x7ffffffe /* Microsoft's off-by-one */) return eoverflow();
   if (IsModeDbg() && uptobytes > 1) uptobytes >>= 1;
   if (IsLinux()) {
-    return sendfile$sysv(outfd, infd, inout_opt_inoffset, uptobytes);
+    return sys_sendfile(outfd, infd, inout_opt_inoffset, uptobytes);
   } else if (IsFreebsd() || IsXnu()) {
-    return sendfile$linux2netflix(outfd, infd, inout_opt_inoffset, uptobytes);
+    return sendfile_linux2netflix(outfd, infd, inout_opt_inoffset, uptobytes);
   } else if (IsWindows()) {
-    return sendfile$linux2nt(outfd, infd, inout_opt_inoffset, uptobytes);
+    return sendfile_linux2nt(outfd, infd, inout_opt_inoffset, uptobytes);
   } else {
     return copyfd(infd, inout_opt_inoffset, outfd, NULL, uptobytes, 0);
   }

@@ -20,7 +20,7 @@
 .source	__FILE__
 
 /	Directly calls truncate() impl on host o/s if available.
-truncate$sysv:
+sys_truncate:
 	mov	%rsi,%rdx			# openbsd:pad
-	jmp	__truncate$sysv
-	.endfn	truncate$sysv,globl,hidden
+	jmp	__sys_truncate
+	.endfn	sys_truncate,globl,hidden

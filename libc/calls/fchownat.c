@@ -34,5 +34,5 @@
  */
 int fchownat(int dirfd, const char *pathname, uint32_t uid, uint32_t gid,
              uint32_t flags) {
-  return fchownat$sysv(dirfd, pathname, uid, gid, flags);
+  return sys_fchownat(dirfd, pathname, uid, gid, flags);
 }

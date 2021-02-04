@@ -28,7 +28,7 @@ static int __pid;
 
 static int __getpid(void) {
   if (!IsWindows()) {
-    return getpid$sysv();
+    return sys_getpid();
   } else {
     return GetCurrentProcessId();
   }
@@ -46,7 +46,7 @@ static void __updatepid(void) {
 int getpid(void) {
   static bool once;
   if (__vforked) {
-    return getpid$sysv();
+    return sys_getpid();
   }
   if (!once) {
     __updatepid();

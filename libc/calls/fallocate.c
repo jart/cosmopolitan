@@ -45,11 +45,11 @@ int fallocate(int fd, int32_t mode, int64_t offset, int64_t length) {
   if (mode == -1 /* our sysvconsts definition */) return eopnotsupp();
   if (!mode && !length) return ftruncate(fd, offset);
   if (IsLinux()) {
-    rc = fallocate$sysv(fd, mode, offset, length);
+    rc = sys_fallocate(fd, mode, offset, length);
     if (rc == 0x011d) rc = enosys(); /*RHEL5:CVE-2010-3301*/
     return rc;
   } else if (!IsWindows()) {
-    return posix_fallocate$sysv(fd, offset, length);
+    return sys_posix_fallocate(fd, offset, length);
   } else if (IsWindows()) {
     if (!__isfdkind(fd, kFdFile)) return ebadf();
     if (mode == FALLOC_FL_ZERO_RANGE) {
@@ -66,7 +66,7 @@ int fallocate(int fd, int32_t mode, int64_t offset, int64_t length) {
        * this should commit physical space
        * but not guaranteed zero'd like linux
        */
-      return ftruncate$nt(fd, length);
+      return sys_ftruncate_nt(fd, length);
     } else {
       return enosys();
     }

@@ -836,7 +836,7 @@ textstartup void dlmalloc_init(void) {
   if (g_mparams.magic == 0) {
     size_t magic;
     size_t psize = PAGESIZE;
-    size_t gsize = MAX(g_ntsysteminfo.dwAllocationGranularity, 64 * 1024);
+    size_t gsize = MAX(__nt_systeminfo.dwAllocationGranularity, 64 * 1024);
     /* Sanity-check configuration:
        size_t must be unsigned and as wide as pointer type.
        ints must be at least 4 bytes.

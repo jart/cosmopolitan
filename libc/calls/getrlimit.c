@@ -31,5 +31,5 @@
  */
 int getrlimit(int resource, struct rlimit *rlim) {
   if (resource == -1) return einval();
-  return getrlimit$sysv(resource, rlim);
+  return sys_getrlimit(resource, rlim);
 }

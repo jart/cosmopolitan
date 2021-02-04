@@ -36,7 +36,7 @@ int posix_openpt(int flags) {
   struct IoctlPtmGet ptm;
   if ((flags & O_ACCMODE) != O_RDWR) return einval();
   if (SupportsFreebsd() &&
-      ((fd = posix_openpt$sysv(flags)) != -1 || errno != ENOSYS)) {
+      ((fd = sys_posix_openpt(flags)) != -1 || errno != ENOSYS)) {
     return fd;
   } else if ((fd = open("/dev/ptmx", flags)) != -1 || errno != ENOENT) {
     return fd;

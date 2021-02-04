@@ -31,7 +31,7 @@ int __zipos_close(int fd) {
   struct ZiposHandle *h;
   h = (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle;
   if (!IsWindows()) {
-    close$sysv(fd);
+    sys_close(fd);
   } else {
     CloseHandle(h->handle);
   }

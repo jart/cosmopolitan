@@ -24,7 +24,7 @@
 #include "libc/nt/process.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int kill$nt(int pid, int sig) {
+textwindows int sys_kill_nt(int pid, int sig) {
   int target;
   uint32_t event;
   if (!pid) return raise(sig);

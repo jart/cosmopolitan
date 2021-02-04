@@ -32,7 +32,7 @@ ssize_t vmsplice(int fd, const struct iovec *chunks, int64_t count,
   int olderr;
   ssize_t wrote;
   olderr = errno;
-  if ((wrote = vmsplice$sysv(fd, chunks, count, flags)) == -1) {
+  if ((wrote = sys_vmsplice(fd, chunks, count, flags)) == -1) {
     errno = olderr;
     if (count) {
       wrote = write(fd, chunks[0].iov_base, chunks[0].iov_len);

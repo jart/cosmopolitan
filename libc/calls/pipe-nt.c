@@ -53,7 +53,7 @@ static char16_t *CreatePipeName(char16_t *a) {
   return a;
 }
 
-textwindows int pipe$nt(int pipefd[2], unsigned flags) {
+textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
   int64_t hin, hout;
   int reader, writer;
   char16_t pipename[64];

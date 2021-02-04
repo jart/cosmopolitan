@@ -27,7 +27,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int fcntl$nt(int fd, int cmd, unsigned arg) {
+textwindows int sys_fcntl_nt(int fd, int cmd, unsigned arg) {
   uint32_t flags;
   if (__isfdkind(fd, kFdFile) || __isfdkind(fd, kFdSocket)) {
     switch (cmd) {

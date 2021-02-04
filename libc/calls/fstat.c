@@ -33,12 +33,12 @@ int fstat(int fd, struct stat *st) {
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, st);
   } else if (!IsWindows()) {
     if (!IsMetal()) {
-      return fstat$sysv(fd, st);
+      return sys_fstat(fd, st);
     } else {
       return fstat$metal(fd, st);
     }
   } else {
     if (!__isfdkind(fd, kFdFile)) return ebadf();
-    return fstat$nt(g_fds.p[fd].handle, st);
+    return sys_fstat_nt(g_fds.p[fd].handle, st);
   }
 }

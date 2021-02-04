@@ -24,7 +24,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/processbasicinformation.h"
 
-textwindows int getppid$nt(void) {
+textwindows int sys_getppid_nt(void) {
   struct NtProcessBasicInformation ProcessInformation;
   uint32_t gotsize = 0;
   if (!NtError(

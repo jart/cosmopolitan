@@ -23,5 +23,5 @@
  * Creates session and sets the process group id.
  */
 uint32_t getsid(int pid) {
-  return getsid$sysv(pid);
+  return sys_getsid(pid);
 }

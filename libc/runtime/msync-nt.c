@@ -22,7 +22,7 @@
 #include "libc/nt/memory.h"
 #include "libc/runtime/memtrack.h"
 
-textwindows int msync$nt(void *addr, size_t size, int flags) {
+textwindows int sys_msync_nt(void *addr, size_t size, int flags) {
   int x, y, l, r, i;
   x = ROUNDDOWN((intptr_t)addr, FRAMESIZE) >> 16;
   y = ROUNDDOWN((intptr_t)addr + size - 1, FRAMESIZE) >> 16;

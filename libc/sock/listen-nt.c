@@ -23,9 +23,9 @@
 #include "libc/sock/yoink.inc"
 #include "libc/sysv/errfuns.h"
 
-textwindows int listen$nt(struct Fd *fd, int backlog) {
+textwindows int sys_listen_nt(struct Fd *fd, int backlog) {
   assert(fd->kind == kFdSocket);
-  if (__listen$nt(fd->handle, backlog) != -1) {
+  if (__sys_listen_nt(fd->handle, backlog) != -1) {
     return 0;
   } else {
     return __winsockerr();

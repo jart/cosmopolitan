@@ -60,7 +60,7 @@ static uint32_t ItimerWorker(void *arg) {
   return 0;
 }
 
-textwindows int setitimer$nt(int which, const struct itimerval *newvalue,
+textwindows int sys_setitimer_nt(int which, const struct itimerval *newvalue,
                              struct itimerval *out_opt_oldvalue) {
   int32_t period;
   int64_t ith, duetime;

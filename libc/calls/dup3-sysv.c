@@ -21,12 +21,12 @@
 
 #define __NR_dup3_linux 0x0124 /*RHEL5:CVE-2010-3301*/
 
-int32_t dup3$sysv(int32_t oldfd, int32_t newfd, int flags) {
+int32_t sys_dup3(int32_t oldfd, int32_t newfd, int flags) {
   static bool once, demodernize;
   int olderr, fd;
   if (!once) {
     olderr = errno;
-    fd = __dup3$sysv(oldfd, newfd, flags);
+    fd = __sys_dup3(oldfd, newfd, flags);
     if ((fd == -1 && errno == ENOSYS) || fd == __NR_dup3_linux) {
       demodernize = true;
       once = true;
@@ -36,7 +36,7 @@ int32_t dup3$sysv(int32_t oldfd, int32_t newfd, int flags) {
       return fd;
     }
   } else if (!demodernize) {
-    return __dup3$sysv(oldfd, newfd, flags);
+    return __sys_dup3(oldfd, newfd, flags);
   }
-  return fixupnewfd$sysv(dup2$sysv(oldfd, newfd), flags);
+  return __fixupnewfd(sys_dup2(oldfd, newfd), flags);
 }

@@ -31,5 +31,5 @@
  * @see /etc/group for group ids
  */
 int lchown(const char *pathname, uint32_t uid, uint32_t gid) {
-  return fchownat$sysv(AT_FDCWD, pathname, uid, gid, AT_SYMLINK_NOFOLLOW);
+  return sys_fchownat(AT_FDCWD, pathname, uid, gid, AT_SYMLINK_NOFOLLOW);
 }

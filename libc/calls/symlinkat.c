@@ -36,8 +36,8 @@
  */
 int symlinkat(const char *target, int newdirfd, const char *linkpath) {
   if (!IsWindows()) {
-    return symlinkat$sysv(target, newdirfd, linkpath);
+    return sys_symlinkat(target, newdirfd, linkpath);
   } else {
-    return symlinkat$nt(target, newdirfd, linkpath);
+    return sys_symlinkat_nt(target, newdirfd, linkpath);
   }
 }

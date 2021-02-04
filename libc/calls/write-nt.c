@@ -33,7 +33,7 @@ static size_t SumIovecLen(const struct iovec *v, size_t n) {
   return sum;
 }
 
-textwindows ssize_t write$nt(struct Fd *fd, const struct iovec *iov,
+textwindows ssize_t sys_write_nt(struct Fd *fd, const struct iovec *iov,
                              size_t iovlen, ssize_t opt_offset) {
   uint32_t wrote;
   struct NtOverlapped overlap;

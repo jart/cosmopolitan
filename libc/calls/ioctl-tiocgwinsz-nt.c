@@ -26,7 +26,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int ioctl$tiocgwinsz$nt(int fd, struct winsize *ws) {
+textwindows int ioctl$sys_tiocgwinsz_nt(int fd, struct winsize *ws) {
   int i, fds[3];
   uint32_t mode;
   struct NtConsoleScreenBufferInfoEx sbinfo;
@@ -42,9 +42,9 @@ textwindows int ioctl$tiocgwinsz$nt(int fd, struct winsize *ws) {
           ws->ws_xpixel = 0;
           ws->ws_ypixel = 0;
           return 0;
-        } else if (g_ntstartupinfo.dwFlags & kNtStartfUsecountchars) {
-          ws->ws_col = g_ntstartupinfo.dwXCountChars;
-          ws->ws_row = g_ntstartupinfo.dwYCountChars;
+        } else if (__nt_startupinfo.dwFlags & kNtStartfUsecountchars) {
+          ws->ws_col = __nt_startupinfo.dwXCountChars;
+          ws->ws_row = __nt_startupinfo.dwYCountChars;
           ws->ws_xpixel = 0;
           ws->ws_ypixel = 0;
           return 0;

@@ -22,18 +22,18 @@
 
 #define __NR_pipe2_linux 0x0125 /*RHEL5:CVE-2010-3301*/
 
-int32_t pipe2$sysv(int pipefd[hasatleast 2], unsigned flags) {
+int32_t sys_pipe2(int pipefd[hasatleast 2], unsigned flags) {
   int rc, olderr;
   if (!flags) goto OldSkool;
   olderr = errno;
-  rc = __pipe2$sysv(pipefd, flags);
+  rc = __sys_pipe2(pipefd, flags);
   if ((rc == -1 && errno == ENOSYS) ||
       (SupportsLinux() && rc == __NR_pipe2_linux)) {
     errno = olderr;
   OldSkool:
-    if ((rc = pipe$sysv(pipefd)) != -1) {
-      fixupnewfd$sysv(pipefd[0], flags);
-      fixupnewfd$sysv(pipefd[1], flags);
+    if ((rc = sys_pipe(pipefd)) != -1) {
+      __fixupnewfd(pipefd[0], flags);
+      __fixupnewfd(pipefd[1], flags);
     }
   }
   return rc;

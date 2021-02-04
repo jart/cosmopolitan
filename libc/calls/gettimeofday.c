@@ -33,8 +33,8 @@
  */
 int gettimeofday(struct timeval *tv, struct timezone *tz) {
   if (!IsWindows()) {
-    return gettimeofday$sysv(tv, tz);
+    return sys_gettimeofday(tv, tz);
   } else {
-    return gettimeofday$nt(tv, tz);
+    return sys_gettimeofday_nt(tv, tz);
   }
 }

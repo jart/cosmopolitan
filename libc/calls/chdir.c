@@ -27,8 +27,8 @@
  */
 int chdir(const char *path) {
   if (!IsWindows()) {
-    return chdir$sysv(path);
+    return sys_chdir(path);
   } else {
-    return chdir$nt(path);
+    return sys_chdir_nt(path);
   }
 }

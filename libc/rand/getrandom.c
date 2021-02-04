@@ -34,7 +34,7 @@
  *     from fallback sources no matter what
  */
 ssize_t getrandom(void *buf, size_t size, unsigned flags) {
-  ssize_t rc = getrandom$sysv(buf, size, flags);
+  ssize_t rc = sys_getrandom(buf, size, flags);
   size_t i = rc == -1 ? 0 : (size_t)rc;
   if (i > size) abort();
   if (i < size) {

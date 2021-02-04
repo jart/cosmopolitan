@@ -30,7 +30,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
 
-textwindows int fstat$nt(int64_t handle, struct stat *st) {
+textwindows int sys_fstat_nt(int64_t handle, struct stat *st) {
   int filetype;
   uint64_t actualsize;
   struct NtFileCompressionInfo fci;

@@ -36,8 +36,8 @@
 int wait4(int pid, int *opt_out_wstatus, int options,
           struct rusage *opt_out_rusage) {
   if (!IsWindows()) {
-    return wait4$sysv(pid, opt_out_wstatus, options, opt_out_rusage);
+    return sys_wait4(pid, opt_out_wstatus, options, opt_out_rusage);
   } else {
-    return wait4$nt(pid, opt_out_wstatus, options, opt_out_rusage);
+    return sys_wait4_nt(pid, opt_out_wstatus, options, opt_out_rusage);
   }
 }

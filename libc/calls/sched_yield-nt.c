@@ -20,7 +20,7 @@
 #include "libc/nt/enum/status.h"
 #include "libc/nt/ntdll.h"
 
-textwindows int sched_yield$nt(void) {
+textwindows int sys_sched_yield_nt(void) {
   size_t i;
   if (NtYieldExecution() == kNtStatusDllNotFound) {
     for (i = 0; i < 16; ++i) asm("pause");

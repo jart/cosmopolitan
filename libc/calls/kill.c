@@ -39,8 +39,8 @@
  */
 int kill(int pid, int sig) {
   if (!IsWindows()) {
-    return kill$sysv(pid, sig, 1);
+    return sys_kill(pid, sig, 1);
   } else {
-    return kill$nt(pid, sig);
+    return sys_kill_nt(pid, sig);
   }
 }

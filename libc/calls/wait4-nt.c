@@ -32,7 +32,7 @@
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int wait4$nt(int pid, int *opt_out_wstatus, int options,
+textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
                          struct rusage *opt_out_rusage) {
   int pids[64];
   int64_t handles[64];

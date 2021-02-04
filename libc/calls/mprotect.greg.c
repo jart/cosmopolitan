@@ -52,7 +52,7 @@ textsyscall int mprotect(void *addr, uint64_t len, int prot) {
     }
     return rc;
   } else {
-    if (__imp_VirtualProtect(addr, len, prot2nt(prot, 0), &oldprot)) {
+    if (__imp_VirtualProtect(addr, len, __prot2nt(prot, 0), &oldprot)) {
       return 0;
     } else {
       return __winerr();

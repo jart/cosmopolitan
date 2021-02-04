@@ -41,7 +41,7 @@ COSMOPOLITAN_C_START_
      Windows to the next, and possibly even between service packs for
      each release.” ──Quoth MSDN */
 
-#define g_nt_system_call_dispatcher (wambda *)0x7ffe0308
+#define __nt_system_call_dispatcher (wambda *)0x7ffe0308
 
 extern const struct NtUnicodeString *const RtlNtdllName;
 

@@ -28,8 +28,8 @@
  * @return effective iovlen
  * @see IOV_MAX
  */
-textwindows size_t iovec2nt(struct NtIovec iovnt[hasatleast 16],
-                            const struct iovec *iov, size_t iovlen) {
+textwindows size_t __iovec2nt(struct NtIovec iovnt[hasatleast 16],
+                              const struct iovec *iov, size_t iovlen) {
   size_t i, limit;
   for (limit = 0x7ffff000, i = 0; i < MIN(16, iovlen); ++i) {
     iovnt[i].buf = iov[i].iov_base;

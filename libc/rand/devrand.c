@@ -38,16 +38,16 @@ int devrand(void *buf, size_t size) {
   unsigned char *p, *pe;
   fd = -1;
   if (IsWindows()) return enosys();
-  if ((fd = openat$sysv(AT_FDCWD, "/dev/urandom", O_RDONLY, 0)) == -1) {
+  if ((fd = sys_openat(AT_FDCWD, "/dev/urandom", O_RDONLY, 0)) == -1) {
     return -1;
   }
   p = buf;
   pe = p + size;
   while (p < pe) {
-    if ((rc = read$sysv(fd, p, pe - p)) == -1) break;
+    if ((rc = sys_read(fd, p, pe - p)) == -1) break;
     if (!(got = (size_t)rc)) break;
     p += got;
   }
-  close$sysv(fd);
+  sys_close(fd);
   return p == pe ? 0 : -1;
 }

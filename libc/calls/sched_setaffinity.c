@@ -28,7 +28,7 @@
 #include "libc/nt/thread.h"
 #include "libc/str/str.h"
 
-static textwindows noinline int sched_setaffinity$nt(int pid,
+static textwindows noinline int sys_sched_setaffinity_nt(int pid,
                                                      uint64_t bitsetsize,
                                                      const void *bitset) {
   int rc;
@@ -69,8 +69,8 @@ static textwindows noinline int sched_setaffinity$nt(int pid,
  */
 int sched_setaffinity(int pid, uint64_t bitsetsize, const void *bitset) {
   if (!IsWindows()) {
-    return sched_setaffinity$sysv(pid, bitsetsize, bitset);
+    return sys_sched_setaffinity(pid, bitsetsize, bitset);
   } else {
-    return sched_setaffinity$nt(pid, bitsetsize, bitset);
+    return sys_sched_setaffinity_nt(pid, bitsetsize, bitset);
   }
 }

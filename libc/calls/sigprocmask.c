@@ -38,7 +38,7 @@
  */
 int sigprocmask(int how, const sigset_t *opt_set, sigset_t *opt_out_oldset) {
   if (!IsWindows()) {
-    return sigprocmask$sysv(how, opt_set, opt_out_oldset, 8);
+    return sys_sigprocmask(how, opt_set, opt_out_oldset, 8);
   } else {
     return 0; /* TODO(jart): Implement me! */
   }

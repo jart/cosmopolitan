@@ -47,7 +47,7 @@ forceinline typeof(OfferVirtualMemory) *GetOfferVirtualMemory(void) {
   return OfferVirtualMemory_;
 }
 
-textwindows int madvise$nt(void *addr, size_t length, int advice) {
+textwindows int sys_madvise_nt(void *addr, size_t length, int advice) {
   uint32_t rangecount;
   struct NtMemoryRangeEntry ranges[1];
   if ((advice & (int)MADV_WILLNEED) == (int)MADV_WILLNEED ||

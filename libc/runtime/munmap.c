@@ -46,5 +46,5 @@ int munmap(void *addr, size_t size) {
   if (!ALIGNED(addr) || !CANONICAL(addr) || !size) return einval();
   if (UntrackMemoryIntervals(addr, size) == -1) return -1;
   if (IsWindows()) return 0;
-  return munmap$sysv(addr, size);
+  return sys_munmap(addr, size);
 }

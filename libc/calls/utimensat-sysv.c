@@ -19,11 +19,11 @@
 #include "libc/calls/internal.h"
 #include "libc/time/time.h"
 
-int utimensat$sysv(int dirfd, const char *path, const struct timespec ts[2],
-                   int flags) {
+int sys_utimensat(int dirfd, const char *path, const struct timespec ts[2],
+                  int flags) {
   if (!IsXnu()) {
-    return __utimensat$sysv(dirfd, path, ts, flags);
+    return __sys_utimensat(dirfd, path, ts, flags);
   } else {
-    return utimensat$xnu(dirfd, path, ts, flags);
+    return sys_utimensat_xnu(dirfd, path, ts, flags);
   }
 }

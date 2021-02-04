@@ -20,7 +20,7 @@
 .source	__FILE__
 
 /	Directly calls pwritev() impl on host o/s if available.
-pwritev$sysv:
+sys_pwritev:
 	mov	%rcx,%r8			# openbsd:pad
-	jmp	__pwritev$sysv
-	.endfn	pwritev$sysv,globl,hidden
+	jmp	__sys_pwritev
+	.endfn	sys_pwritev,globl,hidden

@@ -21,7 +21,7 @@
 #include "libc/dce.h"
 #include "libc/sysv/consts/termios.h"
 
-int ioctl$tiocswinsz$nt(int, const struct winsize *);
+int ioctl$sys_tiocswinsz_nt(int, const struct winsize *);
 
 /**
  * Returns width and height of terminal.
@@ -30,8 +30,8 @@ int ioctl$tiocswinsz$nt(int, const struct winsize *);
  */
 int ioctl$tiocswinsz(int fd, const struct winsize *ws) {
   if (!IsWindows()) {
-    return ioctl$sysv(fd, TIOCSWINSZ, ws);
+    return sys_ioctl(fd, TIOCSWINSZ, ws);
   } else {
-    return ioctl$tiocswinsz$nt(fd, ws);
+    return ioctl$sys_tiocswinsz_nt(fd, ws);
   }
 }

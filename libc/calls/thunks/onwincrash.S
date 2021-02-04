@@ -20,7 +20,7 @@
 .text.windows
 .source	__FILE__
 
-__wincrash$nt:
+__wincrash_nt:
 	ezlea	__wincrash,ax
 	jmp	__nt2sysv
-	.endfn	__wincrash$nt,globl,hidden
+	.endfn	__wincrash_nt,globl,hidden

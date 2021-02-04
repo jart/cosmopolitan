@@ -33,8 +33,8 @@
 int dup2(int oldfd, int newfd) {
   if (oldfd == newfd) return newfd;
   if (!IsWindows()) {
-    return dup3$sysv(oldfd, newfd, 0);
+    return sys_dup3(oldfd, newfd, 0);
   } else {
-    return dup$nt(oldfd, newfd, 0);
+    return sys_dup_nt(oldfd, newfd, 0);
   }
 }

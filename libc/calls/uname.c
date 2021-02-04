@@ -30,7 +30,7 @@ int uname(struct utsname *lool) {
   size_t i, j, len;
   char tmp[sizeof(struct utsname)];
   memset(tmp, 0, sizeof(tmp));
-  if (uname$sysv(tmp) != -1) {
+  if (sys_uname(tmp) != -1) {
     out = (char *)lool;
     i = 0;
     j = 0;

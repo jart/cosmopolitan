@@ -48,7 +48,7 @@ abort:	push	%rbp
 	pop	(%rsi)
 	xor	%edx,%edx			# don't care about old sigmask
 	pushpop	4*4,%r10			# sizeof(sigset_t) for systemd
-	mov	__NR_sigprocmask,%eax		# sigprocmask$sysv is hookable
+	mov	__NR_sigprocmask,%eax		# sys_sigprocmask is hookable
 	syscall
 	mov	__NR_getpid,%eax
 	syscall
@@ -56,5 +56,5 @@ abort:	push	%rbp
 	mov	SIGABRT,%esi
 	mov	__NR_kill,%eax
 	syscall					# avoid hook and less bt noise
-2:	call	abort$nt
+2:	call	sys_abort_nt
 	.endfn	abort,globl,protected

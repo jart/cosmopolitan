@@ -26,7 +26,7 @@
 #define CLOEXEC  0x00080000
 #define NONBLOCK 0x00000800
 
-textwindows int socket$nt(int family, int type, int protocol) {
+textwindows int sys_socket_nt(int family, int type, int protocol) {
   int fd;
   uint32_t yes;
   if ((fd = __reservefd()) == -1) return -1;
@@ -34,8 +34,8 @@ textwindows int socket$nt(int family, int type, int protocol) {
                                       protocol, NULL, 0, 0)) != -1) {
     if (type & NONBLOCK) {
       yes = 1;
-      if (__ioctlsocket$nt(g_fds.p[fd].handle, FIONBIO, &yes) == -1) {
-        __closesocket$nt(g_fds.p[fd].handle);
+      if (__sys_ioctlsocket_nt(g_fds.p[fd].handle, FIONBIO, &yes) == -1) {
+        __sys_closesocket_nt(g_fds.p[fd].handle);
         return __winsockerr();
       }
     }

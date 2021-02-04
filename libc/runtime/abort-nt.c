@@ -23,7 +23,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
 
-textwindows wontreturn void abort$nt(void) {
+textwindows wontreturn void sys_abort_nt(void) {
   siginfo_t info;
   memset(&info, 0, sizeof(info));
   info.si_signo = SIGABRT;

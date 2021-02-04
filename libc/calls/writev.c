@@ -42,12 +42,12 @@ ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
   } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdSerial) {
     return writev$serial(&g_fds.p[fd], iov, iovlen);
   } else if (!IsWindows()) {
-    return writev$sysv(fd, iov, iovlen);
+    return sys_writev(fd, iov, iovlen);
   } else if (fd < g_fds.n &&
              (g_fds.p[fd].kind == kFdFile || g_fds.p[fd].kind == kFdConsole)) {
-    return write$nt(&g_fds.p[fd], iov, iovlen, -1);
+    return sys_write_nt(&g_fds.p[fd], iov, iovlen, -1);
   } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdSocket) {
-    return weaken(sendto$nt)(&g_fds.p[fd], iov, iovlen, 0, NULL, 0);
+    return weaken(sys_sendto_nt)(&g_fds.p[fd], iov, iovlen, 0, NULL, 0);
   } else {
     return ebadf();
   }

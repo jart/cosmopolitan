@@ -37,9 +37,9 @@ int accept4(int fd, void *out_addr, uint32_t *inout_addrsize, int flags) {
   if (!out_addr) return efault();
   if (!inout_addrsize) return efault();
   if (!IsWindows()) {
-    return accept4$sysv(fd, out_addr, inout_addrsize, flags);
+    return sys_accept4(fd, out_addr, inout_addrsize, flags);
   } else if (__isfdkind(fd, kFdSocket)) {
-    return accept$nt(&g_fds.p[fd], out_addr, inout_addrsize, flags);
+    return sys_accept_nt(&g_fds.p[fd], out_addr, inout_addrsize, flags);
   } else {
     return ebadf();
   }

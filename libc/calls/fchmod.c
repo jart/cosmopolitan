@@ -43,5 +43,5 @@
  */
 int fchmod(int fd, uint32_t mode) {
   /* TODO(jart): Windows */
-  return fchmod$sysv(fd, mode);
+  return sys_fchmod(fd, mode);
 }

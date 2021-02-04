@@ -326,16 +326,16 @@ int WSACleanup(void);
 int WSAGetLastError(void);
 void WSASetLastError(int);
 
-int __bind$nt(uint64_t, const void *, int);
-int __closesocket$nt(uint64_t);
-int __getpeername$nt(uint64_t, void *, uint32_t *);
-int __getsockname$nt(uint64_t, void *, uint32_t *);
-int __getsockopt$nt(uint64_t, int, int, void *, uint32_t *);
-int __ioctlsocket$nt(uint64_t, int32_t, uint32_t *);
-int __listen$nt(uint64_t, int);
-int __setsockopt$nt(uint64_t, int, int, const void *, int);
-int __shutdown$nt(uint64_t, int);
-int __select$nt(int, struct NtFdSet *, struct NtFdSet *, struct NtFdSet *,
+int __sys_bind_nt(uint64_t, const void *, int);
+int __sys_closesocket_nt(uint64_t);
+int __sys_getpeername_nt(uint64_t, void *, uint32_t *);
+int __sys_getsockname_nt(uint64_t, void *, uint32_t *);
+int __sys_getsockopt_nt(uint64_t, int, int, void *, uint32_t *);
+int __sys_ioctlsocket_nt(uint64_t, int32_t, uint32_t *);
+int __sys_listen_nt(uint64_t, int);
+int __sys_setsockopt_nt(uint64_t, int, int, const void *, int);
+int __sys_shutdown_nt(uint64_t, int);
+int __sys_select_nt(int, struct NtFdSet *, struct NtFdSet *, struct NtFdSet *,
                 struct NtTimeval *);
 
 uint64_t WSASocket(int af, int type, int protocol,
@@ -393,7 +393,7 @@ int WSASendTo(uint64_t s, const struct NtIovec *lpBuffers,
               const NtWsaOverlappedCompletionRoutine opt_lpCompletionRoutine)
     paramsnonnull((2));
 
-int WSAPoll(struct pollfd$nt *inout_fdArray, uint32_t nfds, signed timeout_ms)
+int WSAPoll(struct sys_pollfd_nt *inout_fdArray, uint32_t nfds, signed timeout_ms)
     paramsnonnull();
 
 int WSARecv(uint64_t s, const struct NtIovec *out_lpBuffers,

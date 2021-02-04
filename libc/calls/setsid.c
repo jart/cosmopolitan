@@ -23,5 +23,5 @@
  * Creates session and sets the process group id.
  */
 int setsid(void) {
-  return setsid$sysv();
+  return sys_setsid();
 }

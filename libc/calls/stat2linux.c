@@ -50,19 +50,19 @@
     (S2).M = m;                                                   \
   } while (0);
 
-forceinline void stat2linux_xnu(union metastat *ms) {
+static textstartup void __stat2linux_xnu(union metastat *ms) {
   SWITCHEROO(ms->xnu, ms->linux, st_dev, st_ino, st_nlink, st_mode, st_uid,
              st_gid, st_rdev, st_size, st_blksize, st_blocks, st_atim, st_mtim,
              st_ctim);
 }
 
-forceinline void stat2linux_freebsd(union metastat *ms) {
+static textstartup void __stat2linux_freebsd(union metastat *ms) {
   SWITCHEROO(ms->freebsd, ms->linux, st_dev, st_ino, st_nlink, st_mode, st_uid,
              st_gid, st_rdev, st_size, st_blksize, st_blocks, st_atim, st_mtim,
              st_ctim);
 }
 
-forceinline void stat2linux_openbsd(union metastat *ms) {
+static textstartup void __stat2linux_openbsd(union metastat *ms) {
   SWITCHEROO(ms->openbsd, ms->linux, st_dev, st_ino, st_nlink, st_mode, st_uid,
              st_gid, st_rdev, st_size, st_blksize, st_blocks, st_atim, st_mtim,
              st_ctim);
@@ -72,14 +72,14 @@ forceinline void stat2linux_openbsd(union metastat *ms) {
  * Transcodes “The Dismal Data Structure” from BSD→Linux ABI.
  * @asyncsignalsafe
  */
-textstartup void stat2linux(void *ms) {
+textstartup void __stat2linux(void *ms) {
   if (ms) {
     if (SupportsXnu() && IsXnu()) {
-      stat2linux_xnu((union metastat *)ms);
+      __stat2linux_xnu((union metastat *)ms);
     } else if (SupportsFreebsd() && IsFreebsd()) {
-      stat2linux_freebsd((union metastat *)ms);
+      __stat2linux_freebsd((union metastat *)ms);
     } else if (SupportsOpenbsd() && IsOpenbsd()) {
-      stat2linux_openbsd((union metastat *)ms);
+      __stat2linux_openbsd((union metastat *)ms);
     }
   }
 }

@@ -42,7 +42,7 @@ int mknod(const char *path, uint32_t mode, uint64_t dev) {
   if (mode & S_IFIFO) return mkfifo(path, mode & ~S_IFIFO);
   if (!IsWindows()) {
     /* TODO(jart): Whys there code out there w/ S_xxx passed via dev? */
-    return mknod$sysv(path, mode, dev);
+    return sys_mknod(path, mode, dev);
   } else {
     return enosys();
   }

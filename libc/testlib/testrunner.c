@@ -77,11 +77,11 @@ testonly void testlib_runtestcases(testfn_t *start, testfn_t *end,
     if (weaken(SetUp)) weaken(SetUp)();
     errno = 0;
     SetLastError(0);
-    getpid$sysv();
+    sys_getpid();
     if (warmup) warmup();
     testlib_clearxmmregisters();
     (*fn)();
-    getpid$sysv();
+    sys_getpid();
     if (weaken(TearDown)) weaken(TearDown)();
     if (weaken(testlib_enable_tmp_setup_teardown)) {
       CHECK_NE(-1, chdir(cwd));

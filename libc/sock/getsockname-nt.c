@@ -24,10 +24,10 @@
 #include "libc/sock/yoink.inc"
 #include "libc/sysv/errfuns.h"
 
-textwindows int getsockname$nt(struct Fd *fd, void *out_addr,
+textwindows int sys_getsockname_nt(struct Fd *fd, void *out_addr,
                                uint32_t *out_addrsize) {
   assert(fd->kind == kFdSocket);
-  if (__getsockname$nt(fd->handle, out_addr, out_addrsize) != -1) {
+  if (__sys_getsockname_nt(fd->handle, out_addr, out_addrsize) != -1) {
     return 0;
   } else {
     return __winsockerr();

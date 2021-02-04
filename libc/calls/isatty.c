@@ -28,8 +28,8 @@
 bool32 isatty(int fd) {
   _Alignas(short) char buf[sizeof(uint16_t) * 4];
   if (!IsWindows()) {
-    return ioctl$sysv(fd, TIOCGWINSZ, &buf) != -1;
+    return sys_ioctl(fd, TIOCGWINSZ, &buf) != -1;
   } else {
-    return isatty$nt(fd);
+    return sys_isatty_nt(fd);
   }
 }

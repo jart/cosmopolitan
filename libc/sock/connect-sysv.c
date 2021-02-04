@@ -21,16 +21,16 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-int connect$sysv(int fd, const void *addr, uint32_t addrsize) {
+int sys_connect(int fd, const void *addr, uint32_t addrsize) {
   if (addrsize != sizeof(struct sockaddr_in)) return einval();
   if (!IsBsd()) {
-    return __connect$sysv(fd, addr, addrsize);
+    return __sys_connect(fd, addr, addrsize);
   } else {
-    struct sockaddr_in$bsd addr2;
+    struct sockaddr_in_bsd addr2;
     _Static_assert(sizeof(struct sockaddr_in) ==
-                   sizeof(struct sockaddr_in$bsd));
+                   sizeof(struct sockaddr_in_bsd));
     memcpy(&addr2, addr, sizeof(struct sockaddr_in));
     sockaddr2bsd(&addr2);
-    return connect$sysv(fd, &addr2, addrsize);
+    return sys_connect(fd, &addr2, addrsize);
   }
 }

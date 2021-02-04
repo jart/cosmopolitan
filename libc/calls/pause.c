@@ -36,7 +36,7 @@ int pause(void) {
   int rc, olderr;
   sigset_t oldmask;
   olderr = errno;
-  if ((rc = pause$sysv()) == -1 && errno == ENOSYS) {
+  if ((rc = sys_pause()) == -1 && errno == ENOSYS) {
     errno = olderr;
     if (sigprocmask(SIG_BLOCK, NULL, &oldmask) == -1) return -1;
     rc = sigsuspend(&oldmask);

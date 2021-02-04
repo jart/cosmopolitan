@@ -21,15 +21,15 @@
 .source	__FILE__
 
 /	Directly calls lseek() impl on host o/s if available.
-lseek$sysv:
+sys_lseek:
 #if SupportsOpenbsd()
 	testb	IsOpenbsd()			# openbsd:evilpad
 	cmovnz	%rdx,%rcx
 	cmovnz	%rsi,%rdx
 	cmovnz	.Lzero(%rip),%rsi
 #endif
-	jmp	__lseek$sysv
-	.endfn	lseek$sysv,globl,hidden
+	jmp	__sys_lseek
+	.endfn	sys_lseek,globl,hidden
 
 	.rodata.cst8
 .Lzero:	.quad	0

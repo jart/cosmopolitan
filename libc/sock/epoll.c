@@ -284,12 +284,12 @@ static int64_t reflock__keyed_event;
 static struct TsTree epoll__handle_tree;
 
 static textwindows void err_map_win_error(void) {
-  errno = MapDosErrorToErrno(GetLastError());
+  errno = __dos2errno(GetLastError());
 }
 
 static textwindows void err_set_win_error(uint32_t error) {
   SetLastError(error);
-  errno = MapDosErrorToErrno(error);
+  errno = __dos2errno(error);
 }
 
 static textwindows int err_check_handle(int64_t handle) {
@@ -1318,7 +1318,7 @@ static textwindows struct PortState *port_state_from_handle_tree_node(
   return CONTAINOF(tree_node, struct PortState, handle_tree_node);
 }
 
-static textwindows noinline int epoll_create1$nt(uint32_t flags) {
+static textwindows noinline int sys_epoll_create1_nt(uint32_t flags) {
   int fd;
   int64_t ephnd;
   struct PortState *port_state;
@@ -1344,13 +1344,13 @@ static textwindows noinline int epoll_create1$nt(uint32_t flags) {
   return fd;
 }
 
-static textwindows noinline int epoll_ctl$nt(int epfd, int op, int fd,
-                                             struct epoll_event *ev) {
+static textwindows noinline int sys_epoll_ctl_nt(int epfd, int op, int fd,
+                                                 struct epoll_event *ev) {
   int r;
   struct PortState *port_state;
   struct TsTreeNode *tree_node;
   if (!IsWindows()) {
-    return epoll_ctl$sysv(epfd, op, fd, ev);
+    return sys_epoll_ctl(epfd, op, fd, ev);
   } else {
     if (wepoll_init() < 0) return -1;
     if (!__isfdopen(fd)) return ebadf();
@@ -1374,9 +1374,10 @@ static textwindows noinline int epoll_ctl$nt(int epfd, int op, int fd,
   }
 }
 
-static textwindows noinline int epoll_wait$nt(int epfd,
-                                              struct epoll_event *events,
-                                              int maxevents, int timeoutms) {
+static textwindows noinline int sys_epoll_wait_nt(int epfd,
+                                                  struct epoll_event *events,
+                                                  int maxevents,
+                                                  int timeoutms) {
   int num_events;
   struct PortState *port_state;
   struct TsTreeNode *tree_node;
@@ -1398,7 +1399,7 @@ err:
   return -1;
 }
 
-static textwindows noinline int close$epoll$nt(int fd) {
+static textwindows noinline int sys_close_epoll_nt(int fd) {
   struct PortState *port_state;
   struct TsTreeNode *tree_node;
   if (wepoll_init() < 0) return -1;
@@ -1416,11 +1417,11 @@ err:
   return -1;
 }
 
-int close$epoll(int fd) {
+int sys_close_epoll(int fd) {
   if (!IsWindows()) {
-    return close$sysv(fd);
+    return sys_close(fd);
   } else {
-    return close$epoll$nt(fd);
+    return sys_close_epoll_nt(fd);
   }
 }
 
@@ -1447,9 +1448,9 @@ int epoll_create1(int flags) {
   int fd;
   if (flags & ~O_CLOEXEC) return einval();
   if (!IsWindows()) {
-    return __ensurefds(fixupnewfd$sysv(epoll_create$sysv(1337), flags));
+    return __ensurefds(__fixupnewfd(sys_epoll_create(1337), flags));
   } else {
-    return epoll_create1$nt(flags);
+    return sys_epoll_create1_nt(flags);
   }
 }
 
@@ -1487,9 +1488,9 @@ int epoll_create1(int flags) {
  */
 int epoll_ctl(int epfd, int op, int fd, struct epoll_event *ev) {
   if (!IsWindows()) {
-    return epoll_ctl$sysv(epfd, op, fd, ev);
+    return sys_epoll_ctl(epfd, op, fd, ev);
   } else {
-    return epoll_ctl$nt(epfd, op, fd, ev);
+    return sys_epoll_ctl_nt(epfd, op, fd, ev);
   }
 }
 
@@ -1504,8 +1505,8 @@ int epoll_ctl(int epfd, int op, int fd, struct epoll_event *ev) {
 int epoll_wait(int epfd, struct epoll_event *events, int maxevents,
                int timeoutms) {
   if (!IsWindows()) {
-    return epoll_wait$sysv(epfd, events, maxevents, timeoutms);
+    return sys_epoll_wait(epfd, events, maxevents, timeoutms);
   } else {
-    return epoll_wait$nt(epfd, events, maxevents, timeoutms);
+    return sys_epoll_wait_nt(epfd, events, maxevents, timeoutms);
   }
 }

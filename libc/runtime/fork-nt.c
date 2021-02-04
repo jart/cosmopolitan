@@ -97,7 +97,7 @@ textwindows noasan void WinMainForked(void) {
     size = ((uint64_t)(_mmi.p[i].y - _mmi.p[i].x) << 16) + FRAMESIZE;
     if (_mmi.p[i].flags & MAP_PRIVATE) {
       CloseHandle(_mmi.p[i].h);
-      _mmi.p[i].h = __mmap$nt(addr, size, _mmi.p[i].prot, -1, 0).maphandle;
+      _mmi.p[i].h = __sys_mmap_nt(addr, size, _mmi.p[i].prot, -1, 0).maphandle;
       ReadAll(reader, addr, size);
     } else {
       MapViewOfFileExNuma(
@@ -111,13 +111,13 @@ textwindows noasan void WinMainForked(void) {
   ReadAll(reader, _edata, _end - _edata);
   CloseHandle(reader);
   CloseHandle(writer);
-  if (weaken(__wincrash$nt)) {
-    AddVectoredExceptionHandler(1, (void *)weaken(__wincrash$nt));
+  if (weaken(__wincrash_nt)) {
+    AddVectoredExceptionHandler(1, (void *)weaken(__wincrash_nt));
   }
   longjmp(jb, 1);
 }
 
-textwindows int fork$nt(void) {
+textwindows int sys_fork_nt(void) {
   jmp_buf jb;
   char exe[PATH_MAX];
   int64_t reader, writer;

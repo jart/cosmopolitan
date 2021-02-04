@@ -23,12 +23,12 @@
 
 /**
  * Applies file descriptor fixups on XNU or old Linux.
- * @see fixupnewsockfd$sysv() for socket file descriptors
+ * @see __fixupnewsockfd() for socket file descriptors
  */
-int fixupnewfd$sysv(int fd, int flags) {
+int __fixupnewfd(int fd, int flags) {
   if (fd != -1) {
     if (flags & O_CLOEXEC) {
-      fcntl$sysv(fd, F_SETFD, FD_CLOEXEC);
+      sys_fcntl(fd, F_SETFD, FD_CLOEXEC);
     }
   }
   return fd;

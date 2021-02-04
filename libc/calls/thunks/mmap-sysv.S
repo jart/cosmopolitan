@@ -20,11 +20,11 @@
 .source	__FILE__
 
 /	Directly calls mmap() on system five host o/s.
-mmap$sysv:
+sys_mmap:
 	push	%rbp
 	mov	%rsp,%rbp
 	push	%r9				# openbsd:pad
-	call	__mmap$sysv
+	call	__sys_mmap
 	leave
 	ret
-	.endfn	mmap$sysv,globl,hidden
+	.endfn	sys_mmap,globl,hidden

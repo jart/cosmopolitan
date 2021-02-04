@@ -27,11 +27,11 @@ int ioctl$default(int fd, uint64_t request, void *memory) {
   int rc;
   int64_t handle;
   if (!IsWindows()) {
-    return ioctl$sysv(fd, request, memory);
+    return sys_ioctl(fd, request, memory);
   } else if (__isfdopen(fd)) {
     if (g_fds.p[fd].kind == kFdSocket) {
       handle = g_fds.p[fd].handle;
-      if ((rc = weaken(__ioctlsocket$nt)(handle, request, memory)) != -1) {
+      if ((rc = weaken(__sys_ioctlsocket_nt)(handle, request, memory)) != -1) {
         return rc;
       } else {
         return weaken(__winsockerr)();

@@ -37,7 +37,7 @@
 vfork:
 #if SupportsWindows()
 	testb	IsWindows()
-	jnz	fork$nt
+	jnz	sys_fork_nt
 #endif
 	mov	__NR_vfork(%rip),%eax
 	pop	%rsi			# saves return address in a register

@@ -27,15 +27,16 @@
  * @param fd must be a socket
  * @return number of bytes received, or -1 w/ errno
  */
-textwindows ssize_t recvfrom$nt(struct Fd *fd, const struct iovec *iov,
-                                size_t iovlen, uint32_t flags,
-                                void *opt_out_srcaddr,
-                                uint32_t *opt_inout_srcaddrsize) {
+textwindows ssize_t sys_recvfrom_nt(struct Fd *fd, const struct iovec *iov,
+                                    size_t iovlen, uint32_t flags,
+                                    void *opt_out_srcaddr,
+                                    uint32_t *opt_inout_srcaddrsize) {
   uint32_t got;
   struct NtIovec iovnt[16];
   got = 0;
-  if (WSARecvFrom(fd->handle, iovnt, iovec2nt(iovnt, iov, iovlen), &got, &flags,
-                  opt_out_srcaddr, opt_inout_srcaddrsize, NULL, NULL) != -1) {
+  if (WSARecvFrom(fd->handle, iovnt, __iovec2nt(iovnt, iov, iovlen), &got,
+                  &flags, opt_out_srcaddr, opt_inout_srcaddrsize, NULL,
+                  NULL) != -1) {
     return got;
   } else {
     return __winsockerr();

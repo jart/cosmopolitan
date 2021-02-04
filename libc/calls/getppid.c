@@ -24,8 +24,8 @@
  */
 int32_t getppid(void) {
   if (!IsWindows()) {
-    return getppid$sysv();
+    return sys_getppid();
   } else {
-    return getppid$nt();
+    return sys_getppid_nt();
   }
 }

@@ -19,9 +19,9 @@
 #include "libc/dce.h"
 #include "libc/sock/internal.h"
 
-int accept$sysv(int server, void *addr, uint32_t *addrsize) {
+int sys_accept(int server, void *addr, uint32_t *addrsize) {
   int client;
-  if ((client = __accept$sysv(server, addr, addrsize, 0)) != -1 && IsBsd()) {
+  if ((client = __sys_accept(server, addr, addrsize, 0)) != -1 && IsBsd()) {
     sockaddr2linux(addr);
   }
   return client;

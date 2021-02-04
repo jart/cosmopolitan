@@ -22,11 +22,11 @@
 /	Makes fork() kernel ABI consistent across UNIX systems.
 /
 /	@return	0 if parent, pid if child, or -1 on error
-fork$sysv:
+sys_fork:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
-	call	__fork$sysv
+	call	__sys_fork
 #if SupportsXnu()
 	testb	IsXnu()
 	jz	1f
@@ -38,4 +38,4 @@ fork$sysv:
 #endif
 1:	pop	%rbp
 	ret
-	.endfn	fork$sysv,globl,hidden
+	.endfn	sys_fork,globl,hidden

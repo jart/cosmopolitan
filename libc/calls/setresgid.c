@@ -29,5 +29,5 @@
  */
 int setresgid(uint32_t real, uint32_t effective, uint32_t saved) {
   if (saved == -1) return setregid(real, effective);
-  return setresgid$sysv(real, effective, saved);
+  return sys_setresgid(real, effective, saved);
 }

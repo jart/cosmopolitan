@@ -35,8 +35,8 @@
 int msync(void *addr, size_t size, int flags) {
   assert(((flags & MS_SYNC) ^ (flags & MS_ASYNC)) || !(MS_SYNC && MS_ASYNC));
   if (!IsWindows()) {
-    return msync$sysv(addr, size, flags);
+    return sys_msync(addr, size, flags);
   } else {
-    return msync$nt(addr, size, flags);
+    return sys_msync_nt(addr, size, flags);
   }
 }

@@ -24,7 +24,7 @@
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/consts/at.h"
 
-static textwindows int unlink$nt(const char16_t *path) {
+static textwindows int sys_unlink_nt(const char16_t *path) {
   if (DeleteFile(path)) {
     return 0;
   } else {
@@ -32,7 +32,7 @@ static textwindows int unlink$nt(const char16_t *path) {
   }
 }
 
-static textwindows int rmdir$nt(const char16_t *path) {
+static textwindows int sys_rmdir_nt(const char16_t *path) {
   int e, ms;
   for (ms = 1;; ms *= 2) {
     if (RemoveDirectory(path)) return 0;
@@ -54,12 +54,12 @@ static textwindows int rmdir$nt(const char16_t *path) {
   return -1;
 }
 
-textwindows int unlinkat$nt(int dirfd, const char *path, int flags) {
+textwindows int sys_unlinkat_nt(int dirfd, const char *path, int flags) {
   uint16_t path16[PATH_MAX];
   if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
   if (flags & AT_REMOVEDIR) {
-    return rmdir$nt(path16);
+    return sys_rmdir_nt(path16);
   } else {
-    return unlink$nt(path16);
+    return sys_unlink_nt(path16);
   }
 }

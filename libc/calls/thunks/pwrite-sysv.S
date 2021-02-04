@@ -20,7 +20,7 @@
 .source	__FILE__
 
 /	Directly calls pwrite() impl on host o/s if available.
-pwrite$sysv:
+sys_pwrite:
 	mov	%rcx,%r8			# openbsd:pad
-	jmp	__pwrite$sysv
-	.endfn	pwrite$sysv,globl,hidden
+	jmp	__sys_pwrite
+	.endfn	sys_pwrite,globl,hidden

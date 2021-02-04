@@ -19,8 +19,8 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-	.init.start 400,_init_g_ntsysteminfo
-	ezlea	g_ntsysteminfo,cx
+	.init.start 400,_init___nt_systeminfo
+	ezlea	__nt_systeminfo,cx
 	mov	%rsp,%rbp
 	ntcall	__imp_GetSystemInfo
-	.init.end 400,_init_g_ntsysteminfo,globl,hidden
+	.init.end 400,_init___nt_systeminfo,globl,hidden

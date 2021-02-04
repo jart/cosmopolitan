@@ -29,7 +29,7 @@
  * @param src is the binary-encoded address, e.g. &addr->sin_addr
  * @return allocated IP address string, which must be free()'d
  */
-char *xinet_ntop(int af, const void *src) {
+char *sys_xinet_ntop(int af, const void *src) {
   char *res, ip[16];
   if (inet_ntop(af, src, ip, sizeof(ip)) && (res = strdup(ip))) {
     return res;

@@ -22,9 +22,6 @@
 # » so many sections
 #
 #	Name							Actual							DLL		Hint	Arity
-imp	'A_SHAInit'						A_SHAInit						ntdll		10
-imp	'A_SHAUpdate'						A_SHAUpdate						ntdll		11
-imp	'A_SHAFinal'						A_SHAFinal						ntdll		9
 imp	'AbortDoc'						AbortDoc						gdi32		1011
 imp	'AbortPath'						AbortPath						gdi32		1012
 imp	'AbortSystemShutdownA'					AbortSystemShutdownA					advapi32	1005
@@ -2973,7 +2970,7 @@ imp	'IsChild'						IsChild							user32		2059	2
 imp	'IsClipboardFormatAvailable'				IsClipboardFormatAvailable				user32		2060
 imp	'IsDBCSLeadByte'					IsDBCSLeadByte						kernel32	0		# KernelBase
 imp	'IsDBCSLeadByteEx'					IsDBCSLeadByteEx					kernel32	0		# KernelBase
-imp	'IsDebuggerPresent$nt'					IsDebuggerPresent					KernelBase	903
+imp	'sys_IsDebuggerPresent_nt'					IsDebuggerPresent					KernelBase	903
 imp	'IsDesktopExplorerProcess'				IsDesktopExplorerProcess				shell32		942
 imp	'IsDeveloperModeEnabled'				IsDeveloperModeEnabled					KernelBase	904
 imp	'IsDeveloperModePolicyApplied'				IsDeveloperModePolicyApplied				KernelBase	905
@@ -3340,9 +3337,6 @@ imp	'MB_GetString'						MB_GetString						user32		2127
 imp	'MD4Final'						MD4Final						ntdll		188
 imp	'MD4Init'						MD4Init							ntdll		189
 imp	'MD4Update'						MD4Update						ntdll		190
-imp	'MD5Final$nt'						MD5Final						ntdll		191
-imp	'MD5Init$nt'						MD5Init							ntdll		192
-imp	'MD5Update$nt'						MD5Update						ntdll		193
 imp	'MIDL_user_free_Ext'					MIDL_user_free_Ext					advapi32	1507
 imp	'MIMEAssociationDialogA'				MIMEAssociationDialogA					url		107
 imp	'MIMEAssociationDialog'					MIMEAssociationDialogW					url		108
@@ -7684,21 +7678,13 @@ imp	'_atoi64'						_atoi64							ntdll		2180
 imp	'_c_exit'						_c_exit							KernelBase	1839
 imp	'_cexit'						_cexit							KernelBase	1840
 imp	'_errno'						_errno							ntdll		2181
-imp	'_exit$nt'						_exit							KernelBase	1841
+imp	'sys__exit_nt'						_exit							KernelBase	1841
 imp	'_fltused'						_fltused						ntdll		2182
 imp	'_hread'						_hread							kernel32	1582
 imp	'_hwrite'						_hwrite							kernel32	1583
-imp	'_i64toa'						_i64toa							ntdll		2183
-imp	'_i64toa_s'						_i64toa_s						ntdll		2184
-imp	'_i64tow'						_i64tow							ntdll		2185
-imp	'_i64tow_s'						_i64tow_s						ntdll		2186
 imp	'_initterm'						_initterm						KernelBase	1842
 imp	'_initterm_e'						_initterm_e						KernelBase	1843
 imp	'_invalid_parameter'					_invalid_parameter					KernelBase	1844
-imp	'_itoa'							_itoa							ntdll		2187
-imp	'_itoa_s'						_itoa_s							ntdll		2188
-imp	'_itow'							_itow							ntdll		2189
-imp	'_itow_s'						_itow_s							ntdll		2190
 imp	'_lclose'						_lclose							kernel32	1584
 imp	'_lcreat'						_lcreat							kernel32	1585
 imp	'_lfind'						_lfind							ntdll		2191
@@ -7706,269 +7692,95 @@ imp	'_llseek'						_llseek							kernel32	1586
 imp	'_local_unwind'						_local_unwind						ntdll		2192
 imp	'_lopen'						_lopen							kernel32	1588
 imp	'_lread'						_lread							kernel32	1589
-imp	'_ltoa'							_ltoa							ntdll		2193
-imp	'_ltoa_s'						_ltoa_s							ntdll		2194
-imp	'_ltow'							_ltow							ntdll		2195
-imp	'_ltow_s'						_ltow_s							ntdll		2196
 imp	'_lwrite'						_lwrite							kernel32	1590
 imp	'_makepath_s'						_makepath_s						ntdll		2197
 imp	'_memccpy'						_memccpy						ntdll		2198
 imp	'_memicmp'						_memicmp						ntdll		2199
 imp	'_onexit'						_onexit							KernelBase	1846
 imp	'_purecall'						_purecall						KernelBase	1847
-imp	'_setjmp$nt'						_setjmp							ntdll		2200
+imp	'sys__setjmp_nt'						_setjmp							ntdll		2200
 imp	'_setjmpex'						_setjmpex						ntdll		2201
-imp	'_snprintf'						_snprintf						ntdll		2202
-imp	'_snprintf_s'						_snprintf_s						ntdll		2203
-imp	'_snscanf_s'						_snscanf_s						ntdll		2204
-imp	'_snwprintf'						_snwprintf						ntdll		2205
-imp	'_snwprintf_s'						_snwprintf_s						ntdll		2206
-imp	'_snwscanf_s'						_snwscanf_s						ntdll		2207
-imp	'_splitpath'						_splitpath						ntdll		2208
-imp	'_splitpath_s'						_splitpath_s						ntdll		2209
-imp	'_strcmpi'						_strcmpi						ntdll		2210
-imp	'_stricmp'						_stricmp						ntdll		2211
-imp	'_strlwr'						_strlwr							ntdll		2212
-imp	'_strlwr_s'						_strlwr_s						ntdll		2213
-imp	'_strnicmp'						_strnicmp						ntdll		2214
-imp	'_strnset_s'						_strnset_s						ntdll		2215
-imp	'_strset_s'						_strset_s						ntdll		2216
-imp	'_strupr'						_strupr							ntdll		2217
-imp	'_strupr_s'						_strupr_s						ntdll		2218
-imp	'_swprintf'						_swprintf						ntdll		2219
 imp	'_time64'						_time64							KernelBase	1848
-imp	'_ui64toa'						_ui64toa						ntdll		2220
-imp	'_ui64toa_s'						_ui64toa_s						ntdll		2221
-imp	'_ui64tow'						_ui64tow						ntdll		2222
-imp	'_ui64tow_s'						_ui64tow_s						ntdll		2223
-imp	'_ultoa'						_ultoa							ntdll		2224
-imp	'_ultoa_s'						_ultoa_s						ntdll		2225
-imp	'_ultow'						_ultow							ntdll		2226
-imp	'_ultow_s'						_ultow_s						ntdll		2227
-imp	'_vscprintf'						_vscprintf						ntdll		2228
-imp	'_vscwprintf'						_vscwprintf						ntdll		2229
-imp	'_vsnprintf'						_vsnprintf						ntdll		2230
-imp	'_vsnprintf_s'						_vsnprintf_s						ntdll		2231
-imp	'_vsnwprintf'						_vsnwprintf						ntdll		2232
-imp	'_vsnwprintf_s'						_vsnwprintf_s						ntdll		2233
-imp	'_vswprintf'						_vswprintf						ntdll		2234
-imp	'_wcsicmp'						_wcsicmp						ntdll		2235
-imp	'_wcslwr'						_wcslwr							ntdll		2236
-imp	'_wcslwr_s'						_wcslwr_s						ntdll		2237
-imp	'_wcsnicmp'						_wcsnicmp						ntdll		2238
-imp	'_wcsnset_s'						_wcsnset_s						ntdll		2239
-imp	'_wcsset_s'						_wcsset_s						ntdll		2240
-imp	'_wcstoi64'						_wcstoi64						ntdll		2241
-imp	'_wcstoui64'						_wcstoui64						ntdll		2242
-imp	'_wcsupr'						_wcsupr							ntdll		2243
-imp	'_wcsupr_s'						_wcsupr_s						ntdll		2244
 imp	'_wmakepath_s'						_wmakepath_s						ntdll		2245
 imp	'_wsplitpath_s'						_wsplitpath_s						ntdll		2246
 imp	'_wtoi'							_wtoi							ntdll		2247
 imp	'_wtoi64'						_wtoi64							ntdll		2248
 imp	'_wtol'							_wtol							ntdll		2249
-imp	'abs$nt'						abs							ntdll		2250
-imp	'__accept$nt'						accept							ws2_32		1
-imp	'atan$nt'						atan							ntdll		2251
-imp	'atan2$nt'						atan2							ntdll		2252
-imp	'atexit$nt'						atexit							KernelBase	1849
-imp	'atoi$nt'						atoi							ntdll		2253
-imp	'atol$nt'						atol							ntdll		2254
+imp	'sys_abs_nt'						abs							ntdll		2250
+imp	'__sys_accept_nt'						accept							ws2_32		1
+imp	'sys_atan_nt'						atan							ntdll		2251
+imp	'sys_atan2_nt'						atan2							ntdll		2252
+imp	'sys_atexit_nt'						atexit							KernelBase	1849
+imp	'sys_atoi_nt'						atoi							ntdll		2253
+imp	'sys_atol_nt'						atol							ntdll		2254
 imp	'bCreateDCW'						bCreateDCW						gdi32		1948
 imp	'bDeleteLDC'						bDeleteLDC						gdi32		1949
 imp	'bInitSystemAndFontsDirectories'			bInitSystemAndFontsDirectoriesW				gdi32		1950
 imp	'bMakePathName'						bMakePathNameW						gdi32		1951
-imp	'__bind$nt'						bind							ws2_32		2	3
-imp	'bsearch$nt'						bsearch							ntdll		2255
+imp	'__sys_bind_nt'						bind							ws2_32		2	3
+imp	'sys_bsearch_nt'						bsearch							ntdll		2255
 imp	'bsearch_s'						bsearch_s						ntdll		2256
 imp	'cGetTTFFromFOT'					cGetTTFFromFOT						gdi32		1952
-imp	'ceil$nt'						ceil							ntdll		2257
-imp	'__closesocket$nt'					closesocket						ws2_32		3	1
-imp	'__connect$nt'						connect							ws2_32		4
-imp	'cos$nt'						cos							ntdll		2258
+imp	'sys_ceil_nt'						ceil							ntdll		2257
+imp	'__sys_closesocket_nt'					closesocket						ws2_32		3	1
+imp	'__sys_connect_nt'						connect							ws2_32		4
+imp	'sys_cos_nt'						cos							ntdll		2258
 imp	'dwLBSubclass'						dwLBSubclass						comdlg32	128
 imp	'dwOKSubclass'						dwOKSubclass						comdlg32	129
-imp	'exit$nt'						exit							KernelBase	1850
-imp	'fabs$nt'						fabs							ntdll		2259
-imp	'floor$nt'						floor							ntdll		2260
+imp	'sys_exit_nt'						exit							KernelBase	1850
+imp	'sys_fabs_nt'						fabs							ntdll		2259
+imp	'sys_floor_nt'						floor							ntdll		2260
 imp	'fpClosePrinter'					fpClosePrinter						gdi32		1953
-imp	'freeaddrinfo$nt'					freeaddrinfo						ws2_32		190
+imp	'sys_freeaddrinfo_nt'					freeaddrinfo						ws2_32		190
 imp	'gMaxGdiHandleCount'					gMaxGdiHandleCount					gdi32		1955
 imp	'gSharedInfo'						gSharedInfo						user32		2547
 imp	'gW32PID'						gW32PID							gdi32		1956
 imp	'g_systemCallFilterId'					g_systemCallFilterId					gdi32		1957
 imp	'gapfnScSendMessage'					gapfnScSendMessage					user32		2562
 imp	'gdiPlaySpoolStream'					gdiPlaySpoolStream					gdi32		1958
-imp	'getaddrinfo$nt'					getaddrinfo						ws2_32		191
-imp	'gethostbyaddr$nt'					gethostbyaddr						ws2_32		51
-imp	'gethostbyname$nt'					gethostbyname						ws2_32		52
-imp	'gethostname$nt'					gethostname						ws2_32		57
-imp	'getnameinfo$nt'					getnameinfo						ws2_32		192
-imp	'__getpeername$nt'					getpeername						ws2_32		5	3
-imp	'getprotobyname$nt'					getprotobyname						ws2_32		53
-imp	'getprotobynumber$nt'					getprotobynumber					ws2_32		54
-imp	'getservbyname$nt'					getservbyname						ws2_32		55
-imp	'getservbyport$nt'					getservbyport						ws2_32		56
-imp	'__getsockname$nt'					getsockname						ws2_32		6	3
-imp	'__getsockopt$nt'					getsockopt						ws2_32		7	5
+imp	'sys_getaddrinfo_nt'					getaddrinfo						ws2_32		191
+imp	'sys_gethostbyaddr_nt'					gethostbyaddr						ws2_32		51
+imp	'sys_gethostbyname_nt'					gethostbyname						ws2_32		52
+imp	'sys_gethostname_nt'					gethostname						ws2_32		57
+imp	'sys_getnameinfo_nt'					getnameinfo						ws2_32		192
+imp	'__sys_getpeername_nt'					getpeername						ws2_32		5	3
+imp	'sys_getprotobyname_nt'					getprotobyname						ws2_32		53
+imp	'sys_getprotobynumber_nt'					getprotobynumber					ws2_32		54
+imp	'sys_getservbyname_nt'					getservbyname						ws2_32		55
+imp	'sys_getservbyport_nt'					getservbyport						ws2_32		56
+imp	'__sys_getsockname_nt'					getsockname						ws2_32		6	3
+imp	'__sys_getsockopt_nt'					getsockopt						ws2_32		7	5
 imp	'ghICM'							ghICM							gdi32		1959
 imp	'hGetPEBHandle'						hGetPEBHandle						gdi32		1960
 imp	'hgets'							hgets							KernelBase	1851
-imp	'htonl$nt'						htonl							ws2_32		8
-imp	'htons$nt'						htons							ws2_32		9
 imp	'hwprintf'						hwprintf						KernelBase	1852
-imp	'inet_addr$nt'						inet_addr						ws2_32		11
-imp	'inet_ntoa$nt'						inet_ntoa						ws2_32		12
-imp	'inet_ntop$nt'						inet_ntop						ws2_32		193
-imp	'inet_pton$nt'						inet_pton						ws2_32		194
-imp	'__ioctlsocket$nt'					ioctlsocket						ws2_32		10	3
-imp	'isalnum$nt'						isalnum							ntdll		2261
-imp	'isalpha$nt'						isalpha							ntdll		2262
-imp	'iscntrl$nt'						iscntrl							ntdll		2263
-imp	'isdigit$nt'						isdigit							ntdll		2264
-imp	'isgraph$nt'						isgraph							ntdll		2265
-imp	'islower$nt'						islower							ntdll		2266
-imp	'isprint$nt'						isprint							ntdll		2267
-imp	'ispunct$nt'						ispunct							ntdll		2268
-imp	'isspace$nt'						isspace							ntdll		2269
-imp	'isupper$nt'						isupper							ntdll		2270
-imp	'iswalnum$nt'						iswalnum						ntdll		2271
-imp	'iswalpha$nt'						iswalpha						ntdll		2272
+imp	'__sys_ioctlsocket_nt'					ioctlsocket						ws2_32		10	3
 imp	'iswascii'						iswascii						ntdll		2273
-imp	'iswctype$nt'						iswctype						ntdll		2274
-imp	'iswdigit$nt'						iswdigit						ntdll		2275
-imp	'iswgraph$nt'						iswgraph						ntdll		2276
-imp	'iswlower$nt'						iswlower						ntdll		2277
-imp	'iswprint$nt'						iswprint						ntdll		2278
-imp	'iswspace$nt'						iswspace						ntdll		2279
-imp	'iswxdigit$nt'						iswxdigit						ntdll		2280
-imp	'isxdigit$nt'						isxdigit						ntdll		2281
 imp	'keybd_event'						keybd_event						user32		2580
-imp	'labs$nt'						labs							ntdll		2282
-imp	'__listen$nt'						listen							ws2_32		13	2
-imp	'log$nt'						log							ntdll		2283
-imp	'longjmp$nt'						longjmp							ntdll		2284
-imp	'lstrcatA'						lstrcatA						kernel32	1592
-imp	'lstrcat'						lstrcatW						kernel32	1593
-imp	'lstrcmpA'						lstrcmpA						kernel32	0		# KernelBase
-imp	'lstrcmp'						lstrcmpW						kernel32	0		# KernelBase
-imp	'lstrcmpiA'						lstrcmpiA						kernel32	0		# KernelBase
-imp	'lstrcmpi'						lstrcmpiW						kernel32	0		# KernelBase
-imp	'lstrcpyA'						lstrcpyA						kernel32	1601
-imp	'lstrcpy'						lstrcpyW						kernel32	1602
-imp	'lstrcpynA'						lstrcpynA						kernel32	0		# KernelBase
-imp	'lstrcpyn'						lstrcpynW						kernel32	0		# KernelBase
-imp	'lstrlenA'						lstrlenA						kernel32	0		# KernelBase
-imp	'lstrlen'						lstrlenW						kernel32	0		# KernelBase
-imp	'mbstowcs$nt'						mbstowcs						ntdll		2285
-imp	'memchr$nt'						memchr							ntdll		2286
-imp	'memcmp$nt'						memcmp							ntdll		2287
-imp	'memcpy$nt'						memcpy							ntdll		2288
-imp	'memcpy_s'						memcpy_s						ntdll		2289
-imp	'memmove$nt'						memmove							ntdll		2290
-imp	'memmove_s'						memmove_s						ntdll		2291
-imp	'memset$nt'						memset							ntdll		2292
+imp	'sys_labs_nt'						labs							ntdll		2282
+imp	'__sys_listen_nt'						listen							ws2_32		13	2
+imp	'sys_log_nt'						log							ntdll		2283
+imp	'sys_longjmp_nt'						longjmp							ntdll		2284
 imp	'mouse_event'						mouse_event						user32		2583
-imp	'ntohl$nt'						ntohl							ws2_32		14
-imp	'ntohs$nt'						ntohs							ws2_32		15
 imp	'pGdiDevCaps'						pGdiDevCaps						gdi32		1961
 imp	'pGdiSharedHandleTable'					pGdiSharedHandleTable					gdi32		1962
 imp	'pGdiSharedMemory'					pGdiSharedMemory					gdi32		1963
 imp	'pldcGet'						pldcGet							gdi32		1964
-imp	'pow$nt'						pow							ntdll		2293
-imp	'qsort$nt'						qsort							ntdll		2294
-imp	'qsort_s$nt'						qsort_s							ntdll		2295
-imp	'recv$nt'						recv							ws2_32		16
-imp	'__recvfrom$nt'						recvfrom						ws2_32		17
-imp	'__select$nt'						select							ws2_32		18	5
+imp	'sys_recv_nt'						recv							ws2_32		16
+imp	'__sys_recvfrom_nt'						recvfrom						ws2_32		17
+imp	'__sys_select_nt'						select							ws2_32		18	5
 imp	'semDxTrimNotification'					semDxTrimNotification					gdi32		1965
-imp	'send$nt'						send							ws2_32		19
-imp	'__sendto$nt'						sendto							ws2_32		20
-imp	'__setsockopt$nt'					setsockopt						ws2_32		21	5
-imp	'__shutdown$nt'						shutdown						ws2_32		22	2
-imp	'sin$nt'						sin							ntdll		2296
-imp	'__socket$nt'						socket							ws2_32		23
-imp	'sprintf$nt'						sprintf							ntdll		2297
-imp	'sprintf_s$nt'						sprintf_s						ntdll		2298
-imp	'sqrt$nt'						sqrt							ntdll		2299
-imp	'sscanf$nt'						sscanf							ntdll		2300
-imp	'sscanf_s$nt'						sscanf_s						ntdll		2301
-imp	'strcat$nt'						strcat							ntdll		2302
-imp	'strcat_s$nt'						strcat_s						ntdll		2303
-imp	'strchr$nt'						strchr							ntdll		2304
-imp	'strcmp$nt'						strcmp							ntdll		2305
-imp	'strcpy$nt'						strcpy							ntdll		2306
-imp	'strcpy_s$nt'						strcpy_s						ntdll		2307
-imp	'strcspn$nt'						strcspn							ntdll		2308
-imp	'strlen$nt'						strlen							ntdll		2309
-imp	'strncat$nt'						strncat							ntdll		2310
-imp	'strncat_s$nt'						strncat_s						ntdll		2311
-imp	'strncmp$nt'						strncmp							ntdll		2312
-imp	'strncpy$nt'						strncpy							ntdll		2313
-imp	'strncpy_s$nt'						strncpy_s						ntdll		2314
-imp	'strnlen$nt'						strnlen							ntdll		2315
-imp	'strpbrk$nt'						strpbrk							ntdll		2316
-imp	'strrchr$nt'						strrchr							ntdll		2317
-imp	'strspn$nt'						strspn							ntdll		2318
-imp	'strstr$nt'						strstr							ntdll		2319
-imp	'strtok_s$nt'						strtok_s						ntdll		2320
-imp	'strtol$nt'						strtol							ntdll		2321
-imp	'strtoul$nt'						strtoul							ntdll		2322
-imp	'swprintf$nt'						swprintf						ntdll		2323
-imp	'swprintf_s'						swprintf_s						ntdll		2324
-imp	'swscanf_s'						swscanf_s						ntdll		2325
-imp	'tan$nt'						tan							ntdll		2326
-imp	'time$nt'						time							KernelBase	1865
+imp	'sys_send_nt'						send							ws2_32		19
+imp	'__sys_sendto_nt'						sendto							ws2_32		20
+imp	'__sys_setsockopt_nt'					setsockopt						ws2_32		21	5
+imp	'__sys_shutdown_nt'						shutdown						ws2_32		22	2
+imp	'sys_sin_nt'						sin							ntdll		2296
+imp	'__sys_socket_nt'						socket							ws2_32		23
 imp	'timeBeginPeriod'					timeBeginPeriod						kernel32	1609
 imp	'timeEndPeriod'						timeEndPeriod						kernel32	1610
 imp	'timeGetDevCaps'					timeGetDevCaps						kernel32	1611
 imp	'timeGetSystemTime'					timeGetSystemTime					kernel32	1612
 imp	'timeGetTime'						timeGetTime						kernel32	1613
-imp	'tolower$nt'						tolower							ntdll		2327
-imp	'toupper$nt'						toupper							ntdll		2328
-imp	'towlower$nt'						towlower						ntdll		2329
-imp	'towupper$nt'						towupper						ntdll		2330
-imp	'uaw_lstrcmp'						uaw_lstrcmpW						kernel32	1614
-imp	'uaw_lstrcmpi'						uaw_lstrcmpiW						kernel32	1615
-imp	'uaw_lstrlen'						uaw_lstrlenW						kernel32	1616
-imp	'uaw_wcschr'						uaw_wcschr						kernel32	1617
-imp	'uaw_wcscpy'						uaw_wcscpy						kernel32	1618
-imp	'uaw_wcsicmp'						uaw_wcsicmp						kernel32	1619
-imp	'uaw_wcslen'						uaw_wcslen						kernel32	1620
-imp	'uaw_wcsrchr'						uaw_wcsrchr						kernel32	1621
-imp	'vDbgPrintEx'						vDbgPrintEx						ntdll		2331
-imp	'vDbgPrintExWithPrefix'					vDbgPrintExWithPrefix					ntdll		2332
-imp	'vSetPldc'						vSetPldc						gdi32		1966
-imp	'vsprintf$nt'						vsprintf						ntdll		2333
-imp	'vsprintf_s'						vsprintf_s						ntdll		2334
-imp	'vswprintf_s'						vswprintf_s						ntdll		2335
-imp	'wcscat$nt'						wcscat							ntdll		2336
-imp	'wcscat_s'						wcscat_s						ntdll		2337
-imp	'wcschr$nt'						wcschr							ntdll		2338
-imp	'wcscmp$nt'						wcscmp							ntdll		2339
-imp	'wcscpy$nt'						wcscpy							ntdll		2340
-imp	'wcscpy_s'						wcscpy_s						ntdll		2341
-imp	'wcscspn$nt'						wcscspn							ntdll		2342
-imp	'wcslen$nt'						wcslen							ntdll		2343
-imp	'wcsncat$nt'						wcsncat							ntdll		2344
-imp	'wcsncat_s'						wcsncat_s						ntdll		2345
-imp	'wcsncmp$nt'						wcsncmp							ntdll		2346
-imp	'wcsncpy$nt'						wcsncpy							ntdll		2347
-imp	'wcsncpy_s'						wcsncpy_s						ntdll		2348
-imp	'wcsnlen$nt'						wcsnlen							ntdll		2349
-imp	'wcspbrk$nt'						wcspbrk							ntdll		2350
-imp	'wcsrchr$nt'						wcsrchr							ntdll		2351
-imp	'wcsspn$nt'						wcsspn							ntdll		2352
-imp	'wcsstr$nt'						wcsstr							ntdll		2353
-imp	'wcstok_s'						wcstok_s						ntdll		2354
-imp	'wcstol$nt'						wcstol							ntdll		2355
-imp	'wcstombs$nt'						wcstombs						ntdll		2356
-imp	'wcstoul$nt'						wcstoul							ntdll		2357
-imp	'wprintf$nt'						wprintf							KernelBase	1866
-imp	'wsprintfA'						wsprintfA						user32		2596
-imp	'wsprintf'						wsprintfW						user32		2601
-imp	'wvsprintfA'						wvsprintfA						user32		2602
-imp	'wvsprintf'						wvsprintfW						user32		2603
 
 imp	'InitializeCriticalSection'				InitializeCriticalSection				kernel32	0	1	# KernelBase
 imp	'EnterCriticalSection'					EnterCriticalSection					kernel32	0	1	# KernelBase

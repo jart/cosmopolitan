@@ -20,7 +20,7 @@
 .text.windows
 .source	__FILE__
 
-__winalarm$nt:
+__winalarm_nt:
 	ezlea	__winalarm,ax
 	jmp	__nt2sysv
-	.endfn	__winalarm$nt,globl,hidden
+	.endfn	__winalarm_nt,globl,hidden

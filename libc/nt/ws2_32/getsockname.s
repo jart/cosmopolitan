@@ -2,11 +2,11 @@
 .imp	ws2_32,__imp_getsockname,getsockname,6
 
 	.text.windows
-__getsockname$nt:
+__sys_getsockname_nt:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	mov	__imp_getsockname(%rip),%rax
 	jmp	__sysv2nt
-	.endfn	__getsockname$nt,globl
+	.endfn	__sys_getsockname_nt,globl
 	.previous

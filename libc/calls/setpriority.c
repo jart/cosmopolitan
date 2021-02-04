@@ -30,8 +30,8 @@
  */
 int setpriority(int which, unsigned who, int value) {
   if (!IsWindows()) {
-    return setpriority$sysv(which, who, value); /* TODO(jart): -20 */
+    return sys_setpriority(which, who, value); /* TODO(jart): -20 */
   } else {
-    return getsetpriority$nt(which, who, value, setpriority$nt);
+    return sys_getsetpriority_nt(which, who, value, sys_setpriority_nt);
   }
 }

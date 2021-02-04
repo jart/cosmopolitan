@@ -62,7 +62,7 @@ static int openanon$impl(const char *name, unsigned flags,
   openanon$genpath(name, state, pathbuf);
   flags |= O_RDWR | O_CREAT | O_EXCL | O_TRUNC;
   if (!IsWindows()) {
-    if ((fd = openat$sysv(AT_FDCWD, pathbuf, flags, 0600)) != -1) {
+    if ((fd = sys_openat(AT_FDCWD, pathbuf, flags, 0600)) != -1) {
       unlink(pathbuf);
     }
     return fd;

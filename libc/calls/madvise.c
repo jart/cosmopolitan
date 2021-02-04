@@ -30,8 +30,8 @@
  */
 int madvise(void *addr, size_t length, int advice) {
   if (!IsWindows()) {
-    return madvise$sysv(addr, length, advice);
+    return sys_madvise(addr, length, advice);
   } else {
-    return madvise$nt(addr, length, advice);
+    return sys_madvise_nt(addr, length, advice);
   }
 }

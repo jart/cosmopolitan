@@ -35,8 +35,8 @@
  */
 int execve(const char *program, char *const argv[], char *const envp[]) {
   if (!IsWindows()) {
-    return execve$sysv(program, argv, envp);
+    return sys_execve(program, argv, envp);
   } else {
-    return execve$nt(program, argv, envp);
+    return sys_execve_nt(program, argv, envp);
   }
 }

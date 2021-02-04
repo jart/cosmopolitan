@@ -92,7 +92,7 @@ static struct NtTimeval *TimevalToNtTimeval(struct timeval *tv,
   }
 }
 
-int select$nt(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
+int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
               struct timeval *timeout) {
   int n, rc;
   struct NtTimeval nttimeout, *nttimeoutp;
@@ -102,7 +102,7 @@ int select$nt(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
   ntwritefds = FdSetToNtFdSet(nfds, writefds);
   ntexceptfds = FdSetToNtFdSet(nfds, exceptfds);
   nttimeoutp = TimevalToNtTimeval(timeout, &nttimeout);
-  rc = __select$nt(0, ntreadfds, ntwritefds, ntexceptfds, nttimeoutp);
+  rc = __sys_select_nt(0, ntreadfds, ntwritefds, ntexceptfds, nttimeoutp);
   NtFdSetToFdSet(nfds, readfds, ntreadfds);
   NtFdSetToFdSet(nfds, writefds, ntwritefds);
   NtFdSetToFdSet(nfds, exceptfds, ntexceptfds);

@@ -25,7 +25,7 @@
 #include "libc/runtime/directmap.h"
 #include "libc/sysv/consts/prot.h"
 
-textwindows noasan struct DirectMap __mmap$nt(void *addr, size_t size,
+textwindows noasan struct DirectMap __sys_mmap_nt(void *addr, size_t size,
                                               unsigned prot, int64_t handle,
                                               int64_t off) {
   struct DirectMap dm;

@@ -9,7 +9,7 @@ struct DirectMap {
 };
 
 struct DirectMap __mmap(void *, size_t, unsigned, unsigned, int, int64_t);
-struct DirectMap __mmap$nt(void *, size_t, unsigned, int64_t, int64_t);
+struct DirectMap __sys_mmap_nt(void *, size_t, unsigned, int64_t, int64_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -39,8 +39,8 @@ int fstatat(int dirfd, const char *path, struct stat *st, uint32_t flags) {
   if (weaken(__zipos_stat) && weaken(__zipos_parseuri)(path, &zipname) != -1) {
     return weaken(__zipos_stat)(&zipname, st);
   } else if (!IsWindows()) {
-    return fstatat$sysv(dirfd, path, st, flags);
+    return sys_fstatat(dirfd, path, st, flags);
   } else {
-    return fstatat$nt(dirfd, path, st, flags);
+    return sys_fstatat_nt(dirfd, path, st, flags);
   }
 }

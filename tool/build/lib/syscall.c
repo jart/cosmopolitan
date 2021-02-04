@@ -466,7 +466,7 @@ static int AppendIovsGuest(struct Machine *m, struct Iovs *iv, int64_t iovaddr,
 }
 
 static struct sigaction *CoerceSigactionToCosmo(
-    struct sigaction *dst, const struct sigaction$linux *src) {
+    struct sigaction *dst, const struct sigaction_linux *src) {
   if (!src) return NULL;
   memset(dst, 0, sizeof(*dst));
   ASSIGN(dst->sa_handler, src->sa_handler);
@@ -476,8 +476,8 @@ static struct sigaction *CoerceSigactionToCosmo(
   return dst;
 }
 
-static struct sigaction$linux *CoerceSigactionToLinux(
-    struct sigaction$linux *dst, const struct sigaction *src) {
+static struct sigaction_linux *CoerceSigactionToLinux(
+    struct sigaction_linux *dst, const struct sigaction *src) {
   if (!dst) return NULL;
   memset(dst, 0, sizeof(*dst));
   ASSIGN(dst->sa_handler, src->sa_handler);
@@ -1145,14 +1145,14 @@ static int OpSigaction(struct Machine *m, int sig, int64_t act, int64_t old) {
   int rc;
   struct OpSigactionMemory {
     struct sigaction act, old;
-    uint8_t b[sizeof(struct sigaction$linux)];
+    uint8_t b[sizeof(struct sigaction_linux)];
     void *p[2];
   } * mem;
   if (!(mem = malloc(sizeof(*mem)))) return enomem();
   if ((rc = sigaction(
            XlatSignal(sig),
            CoerceSigactionToCosmo(
-               &mem->act, LoadBuf(m, act, sizeof(struct sigaction$linux))),
+               &mem->act, LoadBuf(m, act, sizeof(struct sigaction_linux))),
            &mem->old)) != -1) {
     CoerceSigactionToLinux(BeginStoreNp(m, old, sizeof(mem->b), mem->p, mem->b),
                            &mem->old);

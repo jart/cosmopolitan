@@ -19,8 +19,8 @@
 #include "libc/dce.h"
 #include "libc/sock/internal.h"
 
-int getpeername$sysv(int fd, void *out_addr, uint32_t *out_addrsize) {
-  int rc = __getpeername$sysv(fd, out_addr, out_addrsize);
+int sys_getpeername(int fd, void *out_addr, uint32_t *out_addrsize) {
+  int rc = __sys_getpeername(fd, out_addr, out_addrsize);
   if (rc != -1 && IsBsd()) {
     sockaddr2linux(out_addr);
   }

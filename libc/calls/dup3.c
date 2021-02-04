@@ -36,8 +36,8 @@
  */
 int dup3(int oldfd, int newfd, int flags) {
   if (!IsWindows()) {
-    return dup3$sysv(oldfd, newfd, flags);
+    return sys_dup3(oldfd, newfd, flags);
   } else {
-    return dup$nt(oldfd, newfd, flags);
+    return sys_dup_nt(oldfd, newfd, flags);
   }
 }

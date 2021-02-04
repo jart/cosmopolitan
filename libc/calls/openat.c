@@ -52,8 +52,8 @@ nodiscard int openat(int dirfd, const char *file, int flags, ...) {
     if (dirfd != AT_FDCWD) return einval();
     return weaken(__zipos_open)(&zipname, flags, mode);
   } else if (!IsWindows()) {
-    return openat$sysv(dirfd, file, flags, mode);
+    return sys_openat(dirfd, file, flags, mode);
   } else {
-    return open$nt(dirfd, file, flags, mode);
+    return sys_open_nt(dirfd, file, flags, mode);
   }
 }
