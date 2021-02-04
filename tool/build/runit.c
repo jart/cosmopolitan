@@ -367,7 +367,7 @@ int ReadResponse(void) {
           goto drop;
         case kRunitStderr:
           CHECK_GE(n, 4);
-          size = read32be(p), p += 4, n -= 4;
+          size = READ32BE(p), p += 4, n -= 4;
           while (size) {
             if (n) {
               CHECK_NE(-1, (rc = write(STDERR_FILENO, p, min(n, size))));

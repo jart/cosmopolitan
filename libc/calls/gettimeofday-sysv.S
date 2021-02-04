@@ -26,7 +26,7 @@
 /	@return	always zero
 /	@see	clock_gettime() for nanosecond precision
 /	@see	strftime() for string formatting
-gettimeofday$sysv:
+sys_gettimeofday:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -36,7 +36,7 @@ gettimeofday$sysv:
 	pop	(%rsi)
 1:	xor	%esi,%esi			# no one zones this way.
 	xor	%edx,%edx			# i64*mach_absolute_time
-	call	__gettimeofday$sysv
+	call	__sys_gettimeofday
 #if SupportsXnu()
 	testb	IsXnu()				# XNU might do %rax:%rdx
 	jz	1f
@@ -50,4 +50,4 @@ gettimeofday$sysv:
 1:	xor	%eax,%eax			# nevar fail
 	pop	%rbp
 	ret
-	.endfn	gettimeofday$sysv,globl,hidden
+	.endfn	sys_gettimeofday,globl,hidden

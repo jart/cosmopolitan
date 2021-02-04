@@ -20,8 +20,8 @@
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 
-textwindows int shutdown$nt(struct Fd *fd, int how) {
-  if (__shutdown$nt(fd->handle, how) != -1) {
+textwindows int sys_shutdown_nt(struct Fd *fd, int how) {
+  if (__sys_shutdown_nt(fd->handle, how) != -1) {
     return 0;
   } else {
     return __winsockerr();

@@ -25,8 +25,8 @@
  */
 int sched_yield(void) {
   if (!IsWindows()) {
-    return sched_yield$sysv();
+    return sys_sched_yield();
   } else {
-    return sched_yield$nt();
+    return sys_sched_yield_nt();
   }
 }

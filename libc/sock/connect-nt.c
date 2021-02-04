@@ -23,9 +23,10 @@
 #include "libc/sock/yoink.inc"
 #include "libc/sysv/errfuns.h"
 
-textwindows int connect$nt(struct Fd *fd, const void *addr, uint32_t addrsize) {
+textwindows int sys_connect_nt(struct Fd *fd, const void *addr,
+                               uint32_t addrsize) {
   assert(fd->kind == kFdSocket);
-  return winsockblock(
+  return __winsockblock(
       fd->handle, FD_CONNECT_BIT,
       WSAConnect(fd->handle, addr, addrsize, NULL, NULL, NULL, NULL));
 }

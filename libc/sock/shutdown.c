@@ -32,9 +32,9 @@
  */
 int shutdown(int fd, int how) {
   if (!IsWindows()) {
-    return shutdown$sysv(fd, how);
+    return sys_shutdown(fd, how);
   } else if (__isfdkind(fd, kFdSocket)) {
-    return shutdown$nt(&g_fds.p[fd], how);
+    return sys_shutdown_nt(&g_fds.p[fd], how);
   } else {
     return ebadf();
   }

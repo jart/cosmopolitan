@@ -20,7 +20,7 @@
 .source	__FILE__
 
 /	Directly calls pread() impl on host o/s if available.
-pread$sysv:
+sys_pread:
 	mov	%rcx,%r8			# openbsd:pad
-	jmp	__pread$sysv
-	.endfn	pread$sysv,globl,hidden
+	jmp	__sys_pread
+	.endfn	sys_pread,globl,hidden

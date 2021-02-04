@@ -38,8 +38,8 @@
  */
 int poll(struct pollfd *fds, uint64_t nfds, int32_t timeout_ms) {
   if (!IsWindows()) {
-    return poll$sysv(fds, nfds, timeout_ms);
+    return sys_poll(fds, nfds, timeout_ms);
   } else {
-    return poll$nt(fds, nfds, timeout_ms);
+    return sys_poll_nt(fds, nfds, timeout_ms);
   }
 }

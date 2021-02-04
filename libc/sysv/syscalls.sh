@@ -22,86 +22,86 @@ dir=libc/sysv/calls
 #       The Fifth Bell System Interface, Community Edition     ┌─────────────────────────┐
 #	» so many numbers                                      │ legend                  │
 #	                                                       ├─────────────────────────┤
-#	                             GNU/Systemd┐              │ ffff │ unavailable      │
-# 	                                 2.6.18+│              │    $ │ wrapped          │
-#	                            Mac OS X┐   │              │   __ │ wrapped twice    │
+#	                             GNU/Systemd┐              │   ffff │ unavailable    │
+# 	                                 2.6.18+│              │   sys_ │ wrapped        │
+#	                            Mac OS X┐   │              │ __sys_ │ wrapped twice  │
 #	                               15.6+│   │              └─────────────────────────┘
 #	                         FreeBSD┐   │   │
 #	                             12+│ ┌─│───│── XnuClass{1:Mach,2:Unix}
 #	                     OpenBSD┐   │ │ │   │
 #	                        6.4+│   │ │ │   │
 #	Symbol                    ┌─┴┐┌─┴┐│┬┴┐┌─┴┐      Directives & Commentary
-scall	'exit$sysv'		0x00010001200100e7	globl hidden # a.k.a. exit_group
-scall	'read$sysv'		0x0003000320030000	globl hidden
-scall	'write$sysv'		0x0004000420040001	globl hidden
-scall	'open$sysv'		0x0005000520050002	globl hidden
-scall	'close$sysv'		0x0006000620060003	globl hidden
-scall	'__stat$sysv'		0x0026ffff21520004	globl hidden # FreeBSD 11→12 fumble; use fstatat$sysv(); blocked on Android
-scall	'__fstat$sysv'		0x0035022721530005	globl hidden # needs stat2linux()
-scall	'__lstat$sysv'		0x0028002821540006	globl hidden # needs stat2linux(); blocked on Android
-scall	'poll$sysv'		0x00fc00d120e60007	globl hidden
-scall	'ppoll$sysv'		0x006d0221ffff010f	globl hidden # consider INTON/INTOFF tutorial in examples/unbourne.c
-scall	'__lseek$sysv'		0x00c701de20c70008	globl hidden # openbsd:evilpad
-scall	'__mmap$sysv'		0x00c501dd20c50009	globl hidden # openbsd:pad
-scall	'msync$sysv'		0x010000412041001a	globl hidden
-scall	'mprotect$sysv'		0x004a004a204a000a	globl hidden
-scall	'munmap$sysv'		0x004900492049000b	globl hidden
-scall	'sigaction$sysv'	0x002e01a0202e000d	globl hidden # rt_sigaction on Lunix
-scall	'sigprocmask$sysv'	0x003001542030000e	globl hidden # a.k.a. rt_sigprocmask
-scall	'ioctl$sysv'		0x0036003620360010	globl hidden
-scall	'__pread$sysv'		0x00ad01db20990011	globl hidden # a.k.a. pread64; openbsd:pad
-scall	'__pwrite$sysv'		0x00ae01dc209a0012	globl hidden # a.k.a. pwrite64; openbsd:pad
-scall	'readv$sysv'		0x0078007820780013	globl hidden
-scall	'writev$sysv'		0x0079007920790014	globl hidden
-scall	'access$sysv'		0x0021002120210015	globl hidden
-scall	'__pipe$sysv'		0x0107021e202a0016	globl hidden # NOTE: pipe2() on FreeBSD; XNU is pipe(void)→eax:edx
-scall	'select$sysv'		0x0047005d205d0017	globl hidden
+scall	sys_exit		0x00010001200100e7	globl hidden # a.k.a. exit_group
+scall	sys_read		0x0003000320030000	globl hidden
+scall	sys_write		0x0004000420040001	globl hidden
+scall	sys_open		0x0005000520050002	globl hidden
+scall	sys_close		0x0006000620060003	globl hidden
+scall	__sys_stat		0x0026ffff21520004	globl hidden # FreeBSD 11→12 fumble; use sys_fstatat(); blocked on Android
+scall	__sys_fstat		0x0035022721530005	globl hidden # needs __stat2linux()
+scall	__sys_lstat		0x0028002821540006	globl hidden # needs __stat2linux(); blocked on Android
+scall	sys_poll		0x00fc00d120e60007	globl hidden
+scall	sys_ppoll		0x006d0221ffff010f	globl hidden # consider INTON/INTOFF tutorial in examples/unbourne.c
+scall	__sys_lseek		0x00c701de20c70008	globl hidden # openbsd:evilpad
+scall	__sys_mmap		0x00c501dd20c50009	globl hidden # openbsd:pad
+scall	sys_msync		0x010000412041001a	globl hidden
+scall	sys_mprotect		0x004a004a204a000a	globl hidden
+scall	sys_munmap		0x004900492049000b	globl hidden
+scall	sys_sigaction		0x002e01a0202e000d	globl hidden # rt_sigaction on Lunix
+scall	sys_sigprocmask		0x003001542030000e	globl hidden # a.k.a. rt_sigprocmask
+scall	sys_ioctl		0x0036003620360010	globl hidden
+scall	__sys_pread		0x00ad01db20990011	globl hidden # a.k.a. pread64; openbsd:pad
+scall	__sys_pwrite		0x00ae01dc209a0012	globl hidden # a.k.a. pwrite64; openbsd:pad
+scall	sys_readv		0x0078007820780013	globl hidden
+scall	sys_writev		0x0079007920790014	globl hidden
+scall	sys_access		0x0021002120210015	globl hidden
+scall	__sys_pipe		0x0107021e202a0016	globl hidden # NOTE: pipe2() on FreeBSD; XNU is pipe(void)→eax:edx
+scall	sys_select		0x0047005d205d0017	globl hidden
 scall	pselect			0x006e020a218affff	globl
 scall	pselect6		0xffffffffffff010e	globl
-scall	'sched_yield$sysv'	0x012a014b103c0018	globl hidden # swtch() on xnu
-scall	'mremap$sysv'		0xffffffffffff0019	globl hidden
+scall	sys_sched_yield		0x012a014b103c0018	globl hidden # swtch() on xnu
+scall	sys_mremap		0xffffffffffff0019	globl hidden
 scall	mincore			0x004e004e204e001b	globl
-scall	'madvise$sysv'		0x004b004b204b001c	globl hidden
+scall	sys_madvise		0x004b004b204b001c	globl hidden
 scall	shmget			0x012100e72109001d	globl # consider mmap
 scall	shmat			0x00e400e42106001e	globl # consider mmap
 scall	shmctl			0x012802002107001f	globl # consider mmap
-scall	'dup$sysv'		0x0029002920290020	globl hidden
-scall	'dup2$sysv'		0x005a005a205a0021	globl hidden
-scall	'pause$sysv'		0xffffffffffff0022	globl hidden
-scall	'nanosleep$sysv'	0x005b00f0ffff0023	globl hidden
-scall	'getitimer$sysv'	0x0046005620560024	globl hidden
-scall	'setitimer$sysv'	0x0045005320530026	globl hidden
-scall	'alarm$sysv'		0xffffffffffff0025	globl hidden
-scall	'getpid$sysv'		0x0014001420140027	globl hidden
-scall	'sendfile$sysv'		0xffff018921510028	globl hidden # Linux vs. XNU/BSD ABIs very different
-scall	'__socket$sysv'		0x0061006120610029	globl hidden
-scall	'__connect$sysv'	0x006200622062002a	globl hidden
-scall	'__accept$sysv'		0x001e021d201e002b	globl hidden # accept4 on freebsd
-scall	'sendto$sysv'		0x008500852085002c	globl hidden
-scall	'recvfrom$sysv'		0x001d001d201d002d	globl hidden
-scall	'sendmsg$sysv'		0x001c001c201c002e	globl hidden
-scall	'recvmsg$sysv'		0x001b001b201b002f	globl hidden
-scall	'shutdown$sysv'		0x0086008620860030	globl hidden
-scall	'bind$sysv'		0x0068006820680031	globl hidden
-scall	'listen$sysv'		0x006a006a206a0032	globl hidden
-scall	'__getsockname$sysv'	0x0020002020200033	globl hidden
-scall	'__getpeername$sysv'	0x001f008d201f0034	globl hidden
-scall	'socketpair$sysv'	0x0087008720870035	globl hidden
-scall	'setsockopt$sysv'	0x0069006920690036	globl hidden
-scall	'getsockopt$sysv'	0x0076007620760037	globl hidden
-scall	'__fork$sysv'		0x0002000220020039	globl hidden # xnu needs eax=~-edx b/c eax always holds pid and edx is 0 for parent and 1 for child
+scall	sys_dup			0x0029002920290020	globl hidden
+scall	sys_dup2		0x005a005a205a0021	globl hidden
+scall	sys_pause		0xffffffffffff0022	globl hidden
+scall	sys_nanosleep		0x005b00f0ffff0023	globl hidden
+scall	sys_getitimer		0x0046005620560024	globl hidden
+scall	sys_setitimer		0x0045005320530026	globl hidden
+scall	sys_alarm		0xffffffffffff0025	globl hidden
+scall	sys_getpid		0x0014001420140027	globl hidden
+scall	sys_sendfile		0xffff018921510028	globl hidden # Linux vs. XNU/BSD ABIs very different
+scall	__sys_socket		0x0061006120610029	globl hidden
+scall	__sys_connect		0x006200622062002a	globl hidden
+scall	__sys_accept		0x001e021d201e002b	globl hidden # accept4 on freebsd
+scall	sys_sendto		0x008500852085002c	globl hidden
+scall	sys_recvfrom		0x001d001d201d002d	globl hidden
+scall	sys_sendmsg		0x001c001c201c002e	globl hidden
+scall	sys_recvmsg		0x001b001b201b002f	globl hidden
+scall	sys_shutdown		0x0086008620860030	globl hidden
+scall	sys_bind		0x0068006820680031	globl hidden
+scall	sys_listen		0x006a006a206a0032	globl hidden
+scall	__sys_getsockname	0x0020002020200033	globl hidden
+scall	__sys_getpeername	0x001f008d201f0034	globl hidden
+scall	sys_socketpair		0x0087008720870035	globl hidden
+scall	sys_setsockopt		0x0069006920690036	globl hidden
+scall	sys_getsockopt		0x0076007620760037	globl hidden
+scall	__sys_fork		0x0002000220020039	globl hidden # xnu needs eax=~-edx b/c eax always holds pid and edx is 0 for parent and 1 for child
 #scall	vfork			0x004200422042003a	globl        # this syscall is from the moon so we implement it by hand in libc/calls/hefty/vfork.S
-scall	'posix_spawn$sysv'	0xffffffff20f4ffff	globl hidden # good luck figuring out how xnu defines this
-scall	'__execve$sysv'		0x003b003b203b003b	globl hidden
-scall	'wait4$sysv'		0x000b00072007003d	globl hidden
-scall	'kill$sysv'		0x007a00252025003e	globl hidden # kill(pid, sig, 1) b/c xnu
-scall	'killpg$sysv'		0xffff0092ffffffff	globl hidden
+scall	sys_posix_spawn		0xffffffff20f4ffff	globl hidden # good luck figuring out how xnu defines this
+scall	__sys_execve		0x003b003b203b003b	globl hidden
+scall	sys_wait4		0x000b00072007003d	globl hidden
+scall	sys_kill		0x007a00252025003e	globl hidden # kill(pid, sig, 1) b/c xnu
+scall	sys_killpg		0xffff0092ffffffff	globl hidden
 scall	clone			0xffffffffffff0038	globl
 scall	tkill			0xffffffffffff00c8	globl
 scall	futex			0x0053ffffffff00ca	globl
 scall	set_robust_list		0xffffffffffff0111	globl
 scall	get_robust_list		0xffffffffffff0112	globl
-scall	'uname$sysv'		0xffff00a4ffff003f	globl hidden
+scall	sys_uname		0xffff00a4ffff003f	globl hidden
 scall	semget			0x00dd00dd20ff0040	globl # won't polyfill for windows
 scall	semop			0x012200de21000041	globl # won't polyfill for windows
 scall	semctl			0x012701fe20fe0042	globl # won't polyfill for windows
@@ -110,42 +110,42 @@ scall	msgget			0x00e100e121030044	globl # won't polyfill for windows
 scall	msgsnd			0x00e200e221040045	globl # won't polyfill for windows
 scall	msgrcv			0x00e300e321050046	globl # won't polyfill for windows
 scall	msgctl			0x012901ff21020047	globl # won't polyfill for windows
-scall	'fcntl$sysv'		0x005c005c205c0048	globl hidden
-scall	'flock$sysv'		0x0083008320830049	globl hidden
-scall	'fsync$sysv'		0x005f005f205f004a	globl hidden
-scall	'fdatasync$sysv'	0x005f022620bb004b	globl hidden # fsync() on openbsd
-scall	'__truncate$sysv'	0x00c801df20c8004c	globl hidden # openbsd:pad
-scall	'__ftruncate$sysv'	0x00c901e020c9004d	globl hidden # openbsd:pad
-scall	'getcwd$sysv'		0x01300146ffff004f	globl hidden
-scall	'chdir$sysv'		0x000c000c200c0050	globl hidden
-scall	'fchdir$sysv'		0x000d000d200d0051	globl hidden
-scall	'rename$sysv'		0x0080008020800052	globl hidden
-scall	'mkdir$sysv'		0x0088008820880053	globl hidden
-scall	'rmdir$sysv'		0x0089008920890054	globl hidden
-scall	'creat$sysv'		0xffff0008ffff0055	globl hidden
-scall	'link$sysv'		0x0009000920090056	globl hidden
-scall	'unlink$sysv'		0x000a000a200a0057	globl hidden
-scall	'symlink$sysv'		0x0039003920390058	globl hidden
+scall	sys_fcntl		0x005c005c205c0048	globl hidden
+scall	sys_flock		0x0083008320830049	globl hidden
+scall	sys_fsync		0x005f005f205f004a	globl hidden
+scall	sys_fdatasync		0x005f022620bb004b	globl hidden # fsync() on openbsd
+scall	__sys_truncate		0x00c801df20c8004c	globl hidden # openbsd:pad
+scall	__sys_ftruncate		0x00c901e020c9004d	globl hidden # openbsd:pad
+scall	sys_getcwd		0x01300146ffff004f	globl hidden
+scall	sys_chdir		0x000c000c200c0050	globl hidden
+scall	sys_fchdir		0x000d000d200d0051	globl hidden
+scall	sys_rename		0x0080008020800052	globl hidden
+scall	sys_mkdir		0x0088008820880053	globl hidden
+scall	sys_rmdir		0x0089008920890054	globl hidden
+scall	sys_creat		0xffff0008ffff0055	globl hidden
+scall	sys_link		0x0009000920090056	globl hidden
+scall	sys_unlink		0x000a000a200a0057	globl hidden
+scall	sys_symlink		0x0039003920390058	globl hidden
 scall	readlink		0x003a003a203a0059	globl        # usually an anti-pattern
-scall	'chmod$sysv'		0x000f000f200f005a	globl hidden
-scall	'fchmod$sysv'		0x007c007c207c005b	globl hidden
-scall	'chown$sysv'		0x001000102010005c	globl hidden # impl. w/ fchownat() @asyncsignalsafe
-scall	'fchown$sysv'		0x007b007b207b005d	globl hidden # @asyncsignalsafe
-scall	'lchown$sysv'		0x00fe00fe216c005e	globl hidden # impl. w/ fchownat()
+scall	sys_chmod		0x000f000f200f005a	globl hidden
+scall	sys_fchmod		0x007c007c207c005b	globl hidden
+scall	sys_chown		0x001000102010005c	globl hidden # impl. w/ fchownat() @asyncsignalsafe
+scall	sys_fchown		0x007b007b207b005d	globl hidden # @asyncsignalsafe
+scall	sys_lchown		0x00fe00fe216c005e	globl hidden # impl. w/ fchownat()
 scall	umask			0x003c003c203c005f	globl
-scall	'__gettimeofday$sysv'	0x0043007420740060	globl hidden # xnu esi/edx=0
-scall	'getrlimit$sysv'	0x00c200c220c20061	globl hidden
-scall	'getrusage$sysv'	0x0013007520750062	globl hidden
-scall	'sysinfo$sysv'		0xffffffffffff0063	globl hidden
-scall	'times$sysv'		0xffffffffffff0064	globl hidden
-scall	'ptrace$sysv'		0x001a001a201a0065	globl hidden
+scall	__sys_gettimeofday	0x0043007420740060	globl hidden # xnu esi/edx=0
+scall	sys_getrlimit		0x00c200c220c20061	globl hidden
+scall	sys_getrusage		0x0013007520750062	globl hidden
+scall	sys_sysinfo		0xffffffffffff0063	globl hidden
+scall	sys_times		0xffffffffffff0064	globl hidden
+scall	sys_ptrace		0x001a001a201a0065	globl hidden
 scall	syslog			0xffffffffffff0067	globl
-scall	'getuid$sysv'		0x0018001820180066	globl hidden
-scall	'getgid$sysv'		0x002f002f202f0068	globl hidden
-scall	'getppid$sysv'		0x002700272027006e	globl hidden
+scall	sys_getuid		0x0018001820180066	globl hidden
+scall	sys_getgid		0x002f002f202f0068	globl hidden
+scall	sys_getppid		0x002700272027006e	globl hidden
 scall	getpgrp			0x005100512051006f	globl
-scall	'setsid$sysv'		0x0093009320930070	globl hidden
-scall	'getsid$sysv'		0x00ff01362136007c	globl hidden
+scall	sys_setsid		0x0093009320930070	globl hidden
+scall	sys_getsid		0x00ff01362136007c	globl hidden
 scall	getpgid			0x00cf00cf20970079	globl
 scall	setpgid			0x005200522052006d	globl
 scall	geteuid			0x001900192019006b	globl
@@ -156,28 +156,28 @@ scall	setreuid		0x007e007e207e0071	globl
 scall	setregid		0x007f007f207f0072	globl
 scall	setuid			0x0017001720170069	globl
 scall	setgid			0x00b500b520b5006a	globl
-scall	'setresuid$sysv'	0x011a0137ffff0075	globl hidden # polyfilled for xnu
-scall	'setresgid$sysv'	0x011c0138ffff0077	globl hidden # polyfilled for xnu
+scall	sys_setresuid		0x011a0137ffff0075	globl hidden # polyfilled for xnu
+scall	sys_setresgid		0x011c0138ffff0077	globl hidden # polyfilled for xnu
 scall	getresuid		0x01190168ffff0076	globl # semantics aren't well-defined
 scall	getresgid		0x011b0169ffff0078	globl # semantics aren't well-defined
 scall	sigpending		0x003400342034007f	globl
-scall	'sigsuspend$sysv'	0x006f0155206f0082	globl hidden
+scall	sys_sigsuspend		0x006f0155206f0082	globl hidden
 scall	sigaltstack		0x0120003520350083	globl
-scall	'mknod$sysv'		0x000e000e200e0085	globl hidden
+scall	sys_mknod		0x000e000e200e0085	globl hidden
 scall	mknodat			0x0140022fffff0103	globl # FreeBSD 12+
-scall	'mkfifo$sysv'		0x008400842084ffff	globl hidden
+scall	sys_mkfifo		0x008400842084ffff	globl hidden
 scall	mkfifoat		0x013f01f1ffffffff	globl
 scall	statfs			0x003f022b21590089	globl
 scall	fstatfs			0x0040022c215a008a	globl
-scall	'getpriority$sysv'	0x006400642064008c	globl hidden
-scall	'setpriority$sysv'	0x006000602060008d	globl hidden # modern nice()
+scall	sys_getpriority		0x006400642064008c	globl hidden
+scall	sys_setpriority		0x006000602060008d	globl hidden # modern nice()
 scall	mlock			0x00cb00cb20cb0095	globl
 scall	munlock			0x00cc00cc20cc0096	globl
 scall	mlockall		0x010f014421440097	globl
 scall	munlockall		0x0110014521450098	globl
-scall	'setrlimit$sysv'	0x00c300c320c300a0	globl hidden
+scall	sys_setrlimit		0x00c300c320c300a0	globl hidden
 scall	chroot			0x003d003d203d00a1	globl
-scall	'sync$sysv'		0x00240024202400a2	globl hidden
+scall	sys_sync		0x00240024202400a2	globl hidden
 scall	acct			0x00330033203300a3	globl
 scall	settimeofday		0x0044007a207a00a4	globl
 scall	mount			0x0015001520a700a5	globl
@@ -204,7 +204,7 @@ scall	modify_ldt		0xffffffffffff009a	globl
 scall	pivot_root		0xffffffffffff009b	globl
 scall	_sysctl			0xffffffffffff009c	globl
 scall	prctl			0xffffffffffff009d	globl
-scall	'arch_prctl$sysv'	0x00a500a5ffff009e	globl hidden # sysarch() on bsd
+scall	sys_arch_prctl		0x00a500a5ffff009e	globl hidden # sysarch() on bsd
 scall	adjtimex		0xffffffffffff009f	globl
 scall	umount2			0xffffffffffff00a6	globl
 scall	swapon			0xffff0055205500a7	globl
@@ -215,7 +215,7 @@ scall	iopl			0xffffffffffff00ac	globl
 scall	ioperm			0xffffffffffff00ad	globl
 scall	init_module		0xffffffffffff00af	globl
 scall	delete_module		0xffffffffffff00b0	globl
-scall	'gettid$sysv'		0xffffffff211e00ba	globl hidden
+scall	sys_gettid		0xffffffff211e00ba	globl hidden
 scall	readahead		0xffffffffffff00bb	globl # consider fadvise() / madvise()
 scall	setxattr		0xffffffff20ec00bc	globl
 scall	fsetxattr		0xffffffff20ed00be	globl
@@ -229,7 +229,7 @@ scall	lsetxattr		0xffffffffffff00bd	globl
 scall	lgetxattr		0xffffffffffff00c0	globl
 scall	llistxattr		0xffffffffffff00c3	globl
 scall	lremovexattr		0xffffffffffff00c6	globl
-scall  'sched_setaffinity$sysv'	0xffffffffffff00cb	globl hidden
+scall	sys_sched_setaffinity	0xffffffffffff00cb	globl hidden
 scall	sched_getaffinity	0xffffffffffff00cc	globl
 scall	cpuset_getaffinity	0xffff01e7ffffffff	globl
 scall	cpuset_setaffinity	0xffff01e8ffffffff	globl
@@ -239,21 +239,21 @@ scall	io_getevents		0xffffffffffff00d0	globl
 scall	io_submit		0xffffffffffff00d1	globl
 scall	io_cancel		0xffffffffffff00d2	globl
 scall	lookup_dcookie		0xffffffffffff00d4	globl
-scall	'epoll_create$sysv'	0xffffffffffff00d5	globl
-scall	'epoll_wait$sysv'	0xffffffffffff00e8	globl
-scall	'epoll_ctl$sysv'	0xffffffffffff00e9	globl
+scall	sys_epoll_create	0xffffffffffff00d5	globl
+scall	sys_epoll_wait		0xffffffffffff00e8	globl
+scall	sys_epoll_ctl		0xffffffffffff00e9	globl
 scall	getdents		0x0063011020c400d9	globl hidden # four args b/c xnu, getdirentries on xnu, 32-bit on xnu/freebsd, getdents64 on linux, 64-bit on openbsd
 scall	set_tid_address		0xffffffffffff00da	globl
 scall	restart_syscall		0xffffffffffff00db	globl
 scall	semtimedop		0xffffffffffff00dc	globl
-scall	'fadvise$sysv'		0xffff0213ffff00dd	globl hidden
+scall	sys_fadvise		0xffff0213ffff00dd	globl hidden
 scall	timer_create		0xffffffffffff00de	globl
 scall	timer_settime		0xffffffffffff00df	globl
 scall	timer_gettime		0xffffffffffff00e0	globl
 scall	timer_getoverrun	0xffffffffffff00e1	globl
 scall	timer_delete		0xffffffffffff00e2	globl
 scall	clock_settime		0x005800e9ffff00e3	globl
-scall	'clock_gettime$sysv'	0x005700e8ffff00e4	globl hidden # Linux 2.6+ (c. 2003); XNU uses magic address
+scall	sys_clock_gettime	0x005700e8ffff00e4	globl hidden # Linux 2.6+ (c. 2003); XNU uses magic address
 scall	clock_getres		0x005900eaffff00e5	globl
 scall	clock_nanosleep		0xffff00f4ffff00e6	globl
 scall	tgkill			0xffffffffffff00ea	globl
@@ -276,40 +276,40 @@ scall	ioprio_get		0xffffffffffff00fc	globl
 scall	inotify_init		0xffffffffffff00fd	globl # wicked
 scall	inotify_add_watch	0xffffffffffff00fe	globl
 scall	inotify_rm_watch	0xffffffffffff00ff	globl
-scall	'openat$sysv'		0x014101f321cf0101	globl hidden # Linux 2.6.16+ (c. 2007)
-scall	'mkdirat$sysv'		0x013e01f021db0102	globl hidden
-scall	'fchownat$sysv'		0x013b01eb21d40104	globl hidden # @asyncsignalsafe
-scall	'utime$sysv'		0xffffffffffff0084	globl hidden
-scall	'utimes$sysv'		0x004c008a208a00eb	globl hidden
-scall	'futimesat$sysv'	0xffff01eeffff0105	globl hidden # @asyncsignalsafe
-scall	'futimes$sysv'		0x004d00ce208bffff	globl hidden
-scall	'futimens$sysv'		0x00550222ffffffff	globl hidden
-scall	'__fstatat$sysv'	0x002a022821d60106	globl hidden # a.k.a. newfstatat(); FreeBSD 12+; needs stat2linux()
-scall	'unlinkat$sysv'		0x014501f721d80107	globl hidden
-scall	'renameat$sysv'		0x014301f521d10108	globl hidden
-scall	'linkat$sysv'		0x013d01ef21d70109	globl hidden
-scall	'symlinkat$sysv'	0x014401f621da010a	globl hidden
-scall	'readlinkat$sysv'	0x014201f421d9010b	globl hidden
-scall	'fchmodat$sysv'		0x013a01ea21d3010c	globl hidden
-scall	'faccessat$sysv'	0x013901e921d2010d	globl hidden
+scall	sys_openat		0x014101f321cf0101	globl hidden # Linux 2.6.16+ (c. 2007)
+scall	sys_mkdirat		0x013e01f021db0102	globl hidden
+scall	sys_fchownat		0x013b01eb21d40104	globl hidden # @asyncsignalsafe
+scall	sys_utime		0xffffffffffff0084	globl hidden
+scall	sys_utimes		0x004c008a208a00eb	globl hidden
+scall	sys_futimesat		0xffff01eeffff0105	globl hidden # @asyncsignalsafe
+scall	sys_futimes		0x004d00ce208bffff	globl hidden
+scall	sys_futimens		0x00550222ffffffff	globl hidden
+scall	__sys_fstatat		0x002a022821d60106	globl hidden # a.k.a. newfstatat(); FreeBSD 12+; needs __stat2linux()
+scall	sys_unlinkat		0x014501f721d80107	globl hidden
+scall	sys_renameat		0x014301f521d10108	globl hidden
+scall	sys_linkat		0x013d01ef21d70109	globl hidden
+scall	sys_symlinkat		0x014401f621da010a	globl hidden
+scall	sys_readlinkat		0x014201f421d9010b	globl hidden
+scall	sys_fchmodat		0x013a01ea21d3010c	globl hidden
+scall	sys_faccessat		0x013901e921d2010d	globl hidden
 scall	unshare			0xffffffffffff0110	globl
-scall	'splice$sysv'		0xffffffffffff0113	globl hidden # Linux 2.6.17+ (c. 2007)
+scall	sys_splice		0xffffffffffff0113	globl hidden # Linux 2.6.17+ (c. 2007)
 scall	tee			0xffffffffffff0114	globl        # Linux 2.6.17+
-scall	'sync_file_range$sysv'	0xffffffffffff0115	globl hidden # Linux 2.6.17+
-scall	'vmsplice$sysv'		0xffffffffffff0116	globl hidden
+scall	sys_sync_file_range	0xffffffffffff0115	globl hidden # Linux 2.6.17+
+scall	sys_vmsplice		0xffffffffffff0116	globl hidden
 scall	migrate_pages		0xffffffffffff0100	globl        # numa numa yay
 scall	move_pages		0xffffffffffff0117	globl        # NOTE: We view Red Hat versions as "epochs" for all distros.
 #──────────────────────RHEL 5.0 LIMIT────────────────────────        # ←┬─ last distro with gplv2 licensed compiler c. 2007
-scall	'__preadv$sysv'		0x010b0121ffff0127	globl hidden #  ├─ last distro with system v shell script init
-scall	'__pwritev$sysv'	0x010c0122ffff0128	globl hidden #  ├─ rob landley unleashes busybox gpl lawsuits
-scall	'__utimensat$sysv'	0x00540223ffff0118	globl hidden #  ├─ python modules need this due to pep513
-scall	'fallocate$sysv'	0xffffffffffff011d	globl hidden #  ├─ end of life 2020-11-30 (extended)
-scall	'posix_fallocate$sysv'	0xffff0212ffffffff	globl hidden #  └─ cosmopolitan supports rhel5+
-scall	'__accept4$sysv'	0x005d021dffff0120	globl hidden # Linux 2.6.28+
-scall	'__dup3$sysv'		0x0066ffffffff0124	globl hidden # Linux 2.6.27+
-scall	'__pipe2$sysv'		0x0065021effff0125	globl hidden # Linux 2.6.27+
+scall	__sys_preadv		0x010b0121ffff0127	globl hidden #  ├─ last distro with system v shell script init
+scall	__sys_pwritev		0x010c0122ffff0128	globl hidden #  ├─ rob landley unleashes busybox gpl lawsuits
+scall	__sys_utimensat		0x00540223ffff0118	globl hidden #  ├─ python modules need this due to pep513
+scall	sys_fallocate		0xffffffffffff011d	globl hidden #  ├─ end of life 2020-11-30 (extended)
+scall	sys_posix_fallocate	0xffff0212ffffffff	globl hidden #  └─ cosmopolitan supports rhel5+
+scall	__sys_accept4		0x005d021dffff0120	globl hidden # Linux 2.6.28+
+scall	__sys_dup3		0x0066ffffffff0124	globl hidden # Linux 2.6.27+
+scall	__sys_pipe2		0x0065021effff0125	globl hidden # Linux 2.6.27+
 scall	epoll_pwait		0xffffffffffff0119	globl
-scall	'epoll_create1$sysv'	0xffffffffffff0123	globl
+scall	sys_epoll_create1	0xffffffffffff0123	globl
 scall	perf_event_open		0xffffffffffff012a	globl
 scall	inotify_init1		0xffffffffffff0126	globl
 scall	rt_tgsigqueueinfo	0xffffffffffff0129	globl
@@ -341,7 +341,7 @@ scall	sched_setattr		0xffffffffffff013a	globl #  ├─ desktop replaced with ta
 scall	sched_getattr		0xffffffffffff013b	globl #  ├─ karen sandler requires systemd init and boot for tablet gui
 scall	renameat2		0xffffffffffff013c	globl #  └─ debian founder ian murdock found strangled with vacuum cord
 scall	seccomp			0xffffffffffff013d	globl
-scall	'getrandom$sysv'	0x0007023321f4013e	globl hidden  # Linux 3.17+ and getentropy() on XNU/OpenBSD
+scall	sys_getrandom		0x0007023321f4013e	globl hidden  # Linux 3.17+ and getentropy() on XNU/OpenBSD
 scall	memfd_create		0xffffffffffff013f	globl # wut
 scall	kexec_file_load		0xffffffffffff0140	globl
 scall	bpf			0xffffffffffff0141	globl
@@ -349,7 +349,7 @@ scall	execveat		0xffffffffffff0142	globl
 scall	userfaultfd		0xffffffffffff0143	globl # Linux 4.3+ (c. 2015)
 scall	membarrier		0xffffffffffff0144	globl # Linux 4.3+ (c. 2015)
 scall	mlock2			0xffffffffffff0145	globl # Linux 4.5+ (c. 2016)
-scall	'copy_file_range$sysv'	0xffff0239ffff0146	globl hidden # Linux 4.5+ (c. 2016), FreeBSD 13+
+scall	sys_copy_file_range	0xffff0239ffff0146	globl hidden # Linux 4.5+ (c. 2016), FreeBSD 13+
 scall	preadv2			0xffffffffffff0147	globl
 scall	pwritev2		0xffffffffffff0148	globl
 scall	pkey_mprotect		0xffffffffffff0149	globl
@@ -385,8 +385,8 @@ scall	getfsstat		0x003e022d215bffff	globl
 scall	nfssvc			0x009b009b209bffff	globl
 scall	adjtime			0x008c008c208cffff	globl
 scall	fchflags		0x002300232023ffff	globl
-scall	'__seteuid$bsd'		0x00b700b720b7ffff	globl hidden # wrapped via setreuid()
-scall	'__setegid$bsd'		0x00b600b620b6ffff	globl hidden # wrapped via setregid()
+scall	__bsd_seteuid		0x00b700b720b7ffff	globl hidden # wrapped via setreuid()
+scall	__bsd_setegid		0x00b600b620b6ffff	globl hidden # wrapped via setregid()
 scall	fpathconf		0x00c000c020c0ffff	globl
 scall	fhopen			0x0108012a20f8ffff	globl
 scall	unmount			0x00160016209fffff	globl
@@ -656,7 +656,7 @@ scall	gethostid		0xffff008effffffff	globl
 #scall	gethostname		0xffff0057ffffffff	globl
 scall	getkerninfo		0xffff003fffffffff	globl
 scall	getloginclass		0xffff020bffffffff	globl
-scall	'getpagesize$freebsd'	0xffff0040ffffffff	globl hidden
+scall	getpagesize_freebsd	0xffff0040ffffffff	globl hidden
 scall	gssd_syscall		0xffff01f9ffffffff	globl
 scall	jail			0xffff0152ffffffff	globl
 scall	jail_attach		0xffff01b4ffffffff	globl
@@ -711,7 +711,7 @@ scall	nstat			0xffff0116ffffffff	globl
 scall	pdfork			0xffff0206ffffffff	globl
 scall	pdgetpid		0xffff0208ffffffff	globl
 scall	pdkill			0xffff0207ffffffff	globl
-scall	'posix_openpt$sysv'	0xffff01f8ffffffff	globl hidden
+scall	sys_posix_openpt	0xffff01f8ffffffff	globl hidden
 scall	procctl			0xffff0220ffffffff	globl
 scall	psynch_cvwait		0xffffffff2131ffff	globl
 scall	quota			0xffff0095ffffffff	globl

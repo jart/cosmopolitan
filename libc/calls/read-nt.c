@@ -27,7 +27,7 @@
 #include "libc/nt/struct/teb.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows ssize_t read$nt(struct Fd *fd, const struct iovec *iov,
+textwindows ssize_t sys_read_nt(struct Fd *fd, const struct iovec *iov,
                             size_t iovlen, ssize_t opt_offset) {
   uint32_t got;
   struct NtOverlapped overlap;

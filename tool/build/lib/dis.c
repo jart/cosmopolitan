@@ -28,7 +28,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "libc/str/tpencode.internal.h"
+#include "libc/str/tpenc.h"
 #include "third_party/xed/x86.h"
 #include "tool/build/lib/case.h"
 #include "tool/build/lib/demangle.h"
@@ -134,12 +134,18 @@ static char *DisLineCode(struct Dis *d, char *p) {
 
 static char *DisLineData(struct Dis *d, char *p, const uint8_t *b, size_t n) {
   size_t i;
+  uint64_t w;
   p = DisColumn(DisAddr(d, p), p, ADDRLEN);
   p = DisColumn(DisByte(p, b, n), p, 64);
   p = HighStart(p, g_high.comment);
   *p++ = '#';
   *p++ = ' ';
-  for (i = 0; i < n; ++i) p += tpencode(p, 8, bing(b[i], 0), false);
+  for (i = 0; i < n; ++i) {
+    w = tpenc(bing(b[i], 0));
+    do {
+      *p++ = w;
+    } while ((w >>= 8));
+  }
   p = HighEnd(p);
   *p = '\0';
   return p;

@@ -23,13 +23,13 @@
 #include "libc/nt/struct/systeminfo.h"
 #include "libc/nt/systeminfo.h"
 
-textwindows int sysinfo$nt(struct sysinfo *info) {
+textwindows int sys_sysinfo_nt(struct sysinfo *info) {
   struct NtMemoryStatusEx memstat;
   memstat.dwLength = sizeof(struct NtMemoryStatusEx);
   if (GlobalMemoryStatusEx(&memstat)) {
     info->totalram = memstat.ullTotalPhys;
     info->freeram = memstat.ullAvailPhys;
-    info->procs = g_ntsysteminfo.dwNumberOfProcessors;
+    info->procs = __nt_systeminfo.dwNumberOfProcessors;
     info->mem_unit = 1;
     return 0;
   } else {

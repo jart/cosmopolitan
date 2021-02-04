@@ -33,8 +33,8 @@
  */
 int ftruncate(int fd, int64_t length) {
   if (!IsWindows()) {
-    return ftruncate$sysv(fd, length);
+    return sys_ftruncate(fd, length);
   } else {
-    return ftruncate$nt(fd, length);
+    return sys_ftruncate_nt(fd, length);
   }
 }

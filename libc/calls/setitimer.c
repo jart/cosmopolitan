@@ -63,11 +63,11 @@ int setitimer(int which, const struct itimerval *newvalue,
               struct itimerval *out_opt_oldvalue) {
   if (!IsWindows()) {
     if (newvalue) {
-      return setitimer$sysv(which, newvalue, out_opt_oldvalue);
+      return sys_setitimer(which, newvalue, out_opt_oldvalue);
     } else {
-      return getitimer$sysv(which, out_opt_oldvalue);
+      return sys_getitimer(which, out_opt_oldvalue);
     }
   } else {
-    return setitimer$nt(which, newvalue, out_opt_oldvalue);
+    return sys_setitimer_nt(which, newvalue, out_opt_oldvalue);
   }
 }

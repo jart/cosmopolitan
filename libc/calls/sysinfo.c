@@ -37,9 +37,9 @@ int sysinfo(struct sysinfo *info) {
   int rc;
   memset(info, 0, sizeof(*info));
   if (!IsWindows()) {
-    rc = sysinfo$sysv(info);
+    rc = sys_sysinfo(info);
   } else {
-    rc = sysinfo$nt(info);
+    rc = sys_sysinfo_nt(info);
   }
   info->procs = max(1, info->procs);
   info->mem_unit = max(1, info->mem_unit);

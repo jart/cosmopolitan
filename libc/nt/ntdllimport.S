@@ -25,18 +25,18 @@
 /	that ensures executables won't fail to load in the future,
 /	should Microsoft ever choose to delete these APIs.
 
-	.initro 202,_init_ntdll.1
+	.initro 202,sys__init_ntdll.1
 	.type	kNtdllProcRvas,@object
 kNtdllProcRvas:
 	.previous/*
 	...
 	decentralized content
 	...
-	*/.initro 202,_init_ntdll.3
+	*/.initro 202,sys__init_ntdll.3
 	.quad	0
 	.previous
 
-	.init.start 202,_init_ntdll
+	.init.start 202,sys__init_ntdll
 	push	%r12
 	push	%r13
 	lea	ntdllmissingno(%rip),%r13
@@ -57,7 +57,7 @@ kNtdllProcRvas:
 1:	add	$32,%rsp
 	pop	%r13
 	pop	%r12
-	.init.end 202,_init_ntdll,globl,hidden
+	.init.end 202,sys__init_ntdll,globl,hidden
 
 	.text.windows
 ntdllmissingno:

@@ -13,17 +13,17 @@ extern const uint8_t kReverseBits[256];
 
 uint32_t gray(uint32_t) pureconst;
 uint32_t ungray(uint32_t) pureconst;
-
 uint8_t bitreverse8(uint8_t) libcesque pureconst;
 uint16_t bitreverse16(uint16_t) libcesque pureconst;
 uint32_t bitreverse32(uint32_t) libcesque pureconst;
 uint64_t bitreverse64(uint64_t) libcesque pureconst;
-
 unsigned long roundup2pow(unsigned long) libcesque pureconst;
 unsigned long roundup2log(unsigned long) libcesque pureconst;
 unsigned long rounddown2pow(unsigned long) libcesque pureconst;
-
 unsigned long hamming(unsigned long, unsigned long) pureconst;
+intptr_t lockxchg(void *, void *, size_t);
+bool cmpxchg(void *, intptr_t, intptr_t, size_t);
+bool lockcmpxchg(void *, intptr_t, intptr_t, size_t);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § bits » no assembly required                               ─╬─│┼
@@ -69,38 +69,6 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
    (uint64_t)((unsigned char *)(S))[5] << 020 | \
    (uint64_t)((unsigned char *)(S))[6] << 010 | \
    (uint64_t)((unsigned char *)(S))[7] << 000)
-
-#define read16le(S)                            \
-  ({                                           \
-    unsigned char *Str = (unsigned char *)(S); \
-    READ16LE(Str);                             \
-  })
-#define read32le(S)                            \
-  ({                                           \
-    unsigned char *Str = (unsigned char *)(S); \
-    READ32LE(Str);                             \
-  })
-#define read64le(S)                            \
-  ({                                           \
-    unsigned char *Str = (unsigned char *)(S); \
-    READ64LE(Str);                             \
-  })
-
-#define read16be(S)                            \
-  ({                                           \
-    unsigned char *Str = (unsigned char *)(S); \
-    READ16BE(Str);                             \
-  })
-#define read32be(S)                            \
-  ({                                           \
-    unsigned char *Str = (unsigned char *)(S); \
-    READ32BE(Str);                             \
-  })
-#define read64be(S)                            \
-  ({                                           \
-    unsigned char *Str = (unsigned char *)(S); \
-    READ64BE(Str);                             \
-  })
 
 #define WRITE16LE(P, V)             \
   do {                              \
@@ -165,6 +133,7 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § bits » some assembly required                             ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 
 /*
  * Constraints for virtual machine flags.
@@ -416,6 +385,14 @@ unsigned long hamming(unsigned long, unsigned long) pureconst;
     OldBit;                                                    \
   })
 
+#else
+#define cmpxchg(MEM, CMP, VAL) \
+  cmpxchg(MEM, (intptr_t)(CMP), (intptr_t)(VAL), sizeof(*(MEM)))
+#define lockcmpxchg(MEM, CMP, VAL) \
+  lockcmpxchg(MEM, (intptr_t)(CMP), (intptr_t)(VAL), sizeof(*(MEM)))
+#define lockxchg(MEM, VAR) \
+  lockxchg(MEM, VAR, sizeof(*(MEM)) / (sizeof(*(MEM)) == sizeof(*(VAR))))
+#endif /* __GNUC__ && !__STRICT_ANSI__ */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_BITS_H_ */

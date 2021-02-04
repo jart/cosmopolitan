@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_MEM_MEM_H_
 #define COSMOPOLITAN_LIBC_MEM_MEM_H_
-#include "libc/fmt/pflink.h"
 
 #define M_TRIM_THRESHOLD (-1)
 #define M_GRANULARITY    (-2)
@@ -34,10 +33,6 @@ size_t malloc_usable_size(const void *);
 void **independent_calloc(size_t, size_t, void **);
 void **independent_comalloc(size_t, size_t *, void **);
 
-int asprintf(char **, const char *, ...) printfesque(2)
-    paramsnonnull((1, 2)) libcesque;
-int vasprintf(char **, const char *, va_list) paramsnonnull() libcesque;
-
 wchar_t *wcsdup(const wchar_t *) strlenesque nodiscard;
 
 struct mallinfo {
@@ -62,15 +57,6 @@ size_t malloc_footprint_limit(void);
 size_t malloc_set_footprint_limit(size_t);
 void malloc_inspect_all(void (*handler)(void *, void *, size_t, void *),
                         void *);
-
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § dynamic memory » optimizations                            ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-#define asprintf(SP, FMT, ...) (asprintf)(SP, PFLINK(FMT), ##__VA_ARGS__)
-#define vasprintf(SP, FMT, VA) (vasprintf)(SP, PFLINK(FMT), VA)
-#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -5,7 +5,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-struct termios$xnu {
+struct termios_xnu {
   uint64_t c_iflag;
   uint64_t c_oflag;
   uint64_t c_cflag;
@@ -15,7 +15,7 @@ struct termios$xnu {
   uint64_t c_ospeed;
 };
 
-struct termios$bsd {
+struct termios_bsd {
   uint32_t c_iflag;
   uint32_t c_oflag;
   uint32_t c_cflag;
@@ -27,8 +27,8 @@ struct termios$bsd {
 
 union metatermios {
   struct termios linux;
-  struct termios$xnu xnu;
-  struct termios$bsd bsd;
+  struct termios_xnu xnu;
+  struct termios_bsd bsd;
 };
 
 COSMOPOLITAN_C_END_

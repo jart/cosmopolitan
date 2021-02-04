@@ -38,7 +38,7 @@ static textwindows struct NtPriorityCombo findntprio(int nice) {
   return kNtPriorityCombos[max(0, l - 1)];
 }
 
-textwindows int setpriority$nt(int nice) {
+textwindows int sys_setpriority_nt(int nice) {
   uint32_t tier;
   struct NtPriorityCombo p;
   p = findntprio(nice);

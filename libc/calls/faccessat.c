@@ -36,8 +36,8 @@
 int faccessat(int dirfd, const char *path, int mode, uint32_t flags) {
   if (!path) return efault();
   if (!IsWindows()) {
-    return faccessat$sysv(dirfd, path, mode, flags);
+    return sys_faccessat(dirfd, path, mode, flags);
   } else {
-    return faccessat$nt(dirfd, path, mode, flags);
+    return sys_faccessat_nt(dirfd, path, mode, flags);
   }
 }

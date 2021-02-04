@@ -663,7 +663,7 @@ ape.macho:
 	.quad	0				# r13
 	.quad	0				# r14
 	.quad	0				# r15
-	.quad	_start_xnu			# rip
+	.quad	_xnu				# rip
 	.quad	0				# rflags
 	.quad	0				# cs
 	.quad	0				# fs

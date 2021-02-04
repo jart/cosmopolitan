@@ -1,4 +1,8 @@
+#define __VSCODE_INTELLISENSE__ 1
+#define __LP64__ /* TODO: this is a lazy kludge */
+#include "libc/integral/normalize.inc"
 
+#if 0
 #define __VSCODE_INTELLISENSE__ 1
 #define __BIGGEST_ALIGNMENT__ 1
 #define __CHAR_MAX__ 0x7F
@@ -161,3 +165,4 @@ typedef struct { int ax, dx; } axdx_t;
 #endif /* UriKeyval */
 
 #define _Static_assert(...) 0
+#endif /* 0 */

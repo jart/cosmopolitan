@@ -26,8 +26,8 @@
 /	To protect their legacy, all 19 functions have been implemented
 /	in just 17 bytes.
 /
+/	@see	READ32LE(), READ32BE(), etc.
 /	@asyncsignalsafe
-/	@see	read32le(), read32be(), etc.
 
 bswap_64:
 htobe64:

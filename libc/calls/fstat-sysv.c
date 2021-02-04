@@ -22,10 +22,10 @@
  * Supports fstat(), etc. implementations.
  * @asyncsignalsafe
  */
-textstartup int32_t fstat$sysv(int32_t fd, struct stat *st) {
+textstartup int32_t sys_fstat(int32_t fd, struct stat *st) {
   int res;
-  if ((res = __fstat$sysv(fd, st)) != -1) {
-    stat2linux(st);
+  if ((res = __sys_fstat(fd, st)) != -1) {
+    __stat2linux(st);
   }
   return res;
 }

@@ -23,9 +23,9 @@
 #include "libc/sock/yoink.inc"
 #include "libc/sysv/errfuns.h"
 
-textwindows int bind$nt(struct Fd *fd, const void *addr, uint32_t addrsize) {
+textwindows int sys_bind_nt(struct Fd *fd, const void *addr, uint32_t addrsize) {
   assert(fd->kind == kFdSocket);
-  if (__bind$nt(fd->handle, addr, addrsize) != -1) {
+  if (__sys_bind_nt(fd->handle, addr, addrsize) != -1) {
     return 0;
   } else {
     return __winsockerr();

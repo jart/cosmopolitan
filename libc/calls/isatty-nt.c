@@ -21,7 +21,7 @@
 #include "libc/nt/files.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows bool32 isatty$nt(int fd) {
+textwindows bool32 sys_isatty_nt(int fd) {
   if (!__isfdkind(fd, kFdFile)) return ebadf();
   return GetFileType(g_fds.p[fd].handle) == kNtFileTypeChar;
 }

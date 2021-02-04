@@ -30,9 +30,9 @@
 int fork(void) {
   int rc;
   if (!IsWindows()) {
-    rc = fork$sysv();
+    rc = sys_fork();
   } else {
-    rc = fork$nt();
+    rc = sys_fork_nt();
   }
   if (rc == 0) {
     __onfork();

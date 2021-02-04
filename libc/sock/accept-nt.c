@@ -27,19 +27,19 @@
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int accept$nt(struct Fd *fd, void *addr, uint32_t *addrsize,
+textwindows int sys_accept_nt(struct Fd *fd, void *addr, uint32_t *addrsize,
                           int flags) {
   int64_t h;
   int client;
   uint32_t yes;
   for (;;) {
-    if (!WSAPoll(&(struct pollfd$nt){fd->handle, POLLIN}, 1, 1000)) continue;
+    if (!WSAPoll(&(struct sys_pollfd_nt){fd->handle, POLLIN}, 1, 1000)) continue;
     if ((client = __reservefd()) == -1) return -1;
     if ((h = WSAAccept(fd->handle, addr, (int32_t *)addrsize, 0, 0)) != -1) {
       if (flags & SOCK_NONBLOCK) {
         yes = 1;
-        if (__ioctlsocket$nt(g_fds.p[client].handle, FIONBIO, &yes) == -1) {
-          __closesocket$nt(g_fds.p[client].handle);
+        if (__sys_ioctlsocket_nt(g_fds.p[client].handle, FIONBIO, &yes) == -1) {
+          __sys_closesocket_nt(g_fds.p[client].handle);
           __releasefd(client);
           return __winsockerr();
         }

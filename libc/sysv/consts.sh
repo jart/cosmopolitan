@@ -461,7 +461,7 @@ syscon	auxv	AT_UCACHEBSIZE				21			0			0			0			0
 syscon	auxv	AT_SECURE				23			0			0			0			0
 syscon	auxv	AT_BASE_PLATFORM			24			0			0			0			0
 syscon	auxv	AT_RANDOM				25			0			0			0			0			# address of sixteen bytes of random data
-syscon	auxv	AT_EXECFN				31			999			999			999			999			# address of string containing first argument passed to execve() used when running program [faked on non-linux]
+syscon	auxv	AT_EXECFN				31			31			999			999			999			# address of string containing first argument passed to execve() used when running program [faked on non-linux]
 syscon	auxv	AT_SYSINFO_EHDR				33			0			0			0			0
 syscon	auxv	AT_NO_AUTOMOUNT				0x0800			0			0			0			0
 

@@ -34,8 +34,8 @@ int renameat(int olddirfd, const char *oldpath, int newdirfd,
              const char *newpath) {
   if (!oldpath || !newpath) return efault();
   if (!IsWindows()) {
-    return renameat$sysv(olddirfd, oldpath, newdirfd, newpath);
+    return sys_renameat(olddirfd, oldpath, newdirfd, newpath);
   } else {
-    return renameat$nt(olddirfd, oldpath, newdirfd, newpath);
+    return sys_renameat_nt(olddirfd, oldpath, newdirfd, newpath);
   }
 }

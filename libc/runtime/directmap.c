@@ -31,10 +31,10 @@
 noasan struct DirectMap __mmap(void *addr, size_t size, unsigned prot,
                                unsigned flags, int fd, int64_t off) {
   if (!IsWindows()) {
-    return (struct DirectMap){mmap$sysv(addr, size, prot, flags, fd, off),
+    return (struct DirectMap){sys_mmap(addr, size, prot, flags, fd, off),
                               kNtInvalidHandleValue};
   } else {
-    return __mmap$nt(addr, size, prot,
+    return __sys_mmap_nt(addr, size, prot,
                      fd != -1 ? g_fds.p[fd].handle : kNtInvalidHandleValue,
                      off);
   }

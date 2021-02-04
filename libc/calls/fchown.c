@@ -31,5 +31,5 @@
  */
 int fchown(int fd, uint32_t uid, uint32_t gid) {
   /* TODO(jart): Windows? */
-  return fchown$sysv(fd, uid, gid);
+  return sys_fchown(fd, uid, gid);
 }

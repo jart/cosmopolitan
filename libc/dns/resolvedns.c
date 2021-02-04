@@ -94,7 +94,7 @@ int resolvedns(const struct ResolvConf *resolvconf, int af, const char *name,
               rtype = READ16BE(p), p += 2;
               rclass = READ16BE(p), p += 2;
               /* ttl */ p += 4;
-              rdlength = read16be(p), p += 2;
+              rdlength = READ16BE(p), p += 2;
               if (p + rdlength <= pe && rdlength == 4 &&
                   (rtype == DNS_TYPE_A && rclass == DNS_CLASS_IN)) {
                 res = 1;

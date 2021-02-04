@@ -52,7 +52,7 @@ static ssize_t splicer(int infd, int64_t *inoffset, int outfd,
 ssize_t splice(int infd, int64_t *inopt_out_inoffset, int outfd,
                int64_t *inopt_out_outoffset, size_t uptobytes, uint32_t flags) {
   return splicer(infd, inopt_out_inoffset, outfd, inopt_out_outoffset,
-                 uptobytes, flags, splice$sysv);
+                 uptobytes, flags, sys_splice);
 }
 
 /**
@@ -68,5 +68,5 @@ ssize_t copy_file_range(int infd, int64_t *inopt_out_inoffset, int outfd,
                         int64_t *inopt_out_outoffset, size_t uptobytes,
                         uint32_t flags) {
   return splicer(infd, inopt_out_inoffset, outfd, inopt_out_outoffset,
-                 uptobytes, flags, copy_file_range$sysv);
+                 uptobytes, flags, sys_copy_file_range);
 }

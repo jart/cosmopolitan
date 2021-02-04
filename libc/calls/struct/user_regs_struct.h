@@ -39,7 +39,7 @@ struct user_regs_struct {
   uint64_t gs;
 };
 
-struct useregs_struct$freebsd {
+struct useregs_struct_freebsd {
   int64_t r15;
   int64_t r14;
   int64_t r13;

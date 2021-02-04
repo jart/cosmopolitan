@@ -37,8 +37,8 @@ int fcntl(int fd, int cmd, ...) {
   arg = va_arg(va, unsigned);
   va_end(va);
   if (!IsWindows()) {
-    return fcntl$sysv(fd, cmd, arg);
+    return sys_fcntl(fd, cmd, arg);
   } else {
-    return fcntl$nt(fd, cmd, arg);
+    return sys_fcntl_nt(fd, cmd, arg);
   }
 }

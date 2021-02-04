@@ -34,7 +34,7 @@
 int sync_file_range(int fd, int64_t offset, int64_t bytes, unsigned flags) {
   int rc, olderr;
   olderr = errno;
-  if ((rc = sync_file_range$sysv(fd, offset, bytes, flags)) != -1 ||
+  if ((rc = sys_sync_file_range(fd, offset, bytes, flags)) != -1 ||
       errno != ENOSYS) {
     return rc;
   } else {

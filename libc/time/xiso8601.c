@@ -20,6 +20,7 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/mem/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/time/struct/tm.h"

@@ -51,7 +51,7 @@ int attachdebugger(intptr_t);
                      "d"(OPTIONS), "g"(OPT_OUT_RUSAGE)                \
                    : "rcx", "r10", "r11", "cc", "memory");            \
     } else {                                                          \
-      WaAx = wait4$nt(PID, OPT_OUT_WSTATUS, OPTIONS, OPT_OUT_RUSAGE); \
+      WaAx = sys_wait4_nt(PID, OPT_OUT_WSTATUS, OPTIONS, OPT_OUT_RUSAGE); \
     }                                                                 \
     WaAx;                                                             \
   })

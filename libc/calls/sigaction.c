@@ -39,11 +39,11 @@
 
 union metasigaction {
   struct sigaction cosmo;
-  struct sigaction$linux linux;
-  struct sigaction$freebsd freebsd;
-  struct sigaction$openbsd openbsd;
-  struct sigaction$xnu_in xnu_in;
-  struct sigaction$xnu_out xnu_out;
+  struct sigaction_linux linux;
+  struct sigaction_freebsd freebsd;
+  struct sigaction_openbsd openbsd;
+  struct sigaction_xnu_in xnu_in;
+  struct sigaction_xnu_out xnu_out;
 };
 
 #ifndef SWITCHEROO
@@ -124,11 +124,11 @@ static void sigaction$native2cosmo(union metasigaction *sa) {
  * @vforksafe
  */
 int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
-  _Static_assert(sizeof(struct sigaction) > sizeof(struct sigaction$linux) &&
-                 sizeof(struct sigaction) > sizeof(struct sigaction$xnu_in) &&
-                 sizeof(struct sigaction) > sizeof(struct sigaction$xnu_out) &&
-                 sizeof(struct sigaction) > sizeof(struct sigaction$freebsd) &&
-                 sizeof(struct sigaction) > sizeof(struct sigaction$openbsd));
+  _Static_assert(sizeof(struct sigaction) > sizeof(struct sigaction_linux) &&
+                 sizeof(struct sigaction) > sizeof(struct sigaction_xnu_in) &&
+                 sizeof(struct sigaction) > sizeof(struct sigaction_xnu_out) &&
+                 sizeof(struct sigaction) > sizeof(struct sigaction_freebsd) &&
+                 sizeof(struct sigaction) > sizeof(struct sigaction_openbsd));
   int rc, rva, oldrva;
   struct sigaction *ap, copy;
   if (!(0 < sig && sig < NSIG)) return einval();
@@ -152,8 +152,8 @@ int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
         memcpy(&copy, act, sizeof(copy));
         ap = &copy;
         if (IsXnu()) {
-          ap->sa_restorer = (void *)&xnutrampoline;
-          ap->sa_handler = (void *)&xnutrampoline;
+          ap->sa_restorer = (void *)&__xnutrampoline;
+          ap->sa_handler = (void *)&__xnutrampoline;
         } else if (IsLinux()) {
           if (!(ap->sa_flags & SA_RESTORER)) {
             ap->sa_flags |= SA_RESTORER;
@@ -166,7 +166,7 @@ int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
       } else {
         ap = NULL;
       }
-      rc = sigaction$sysv(
+      rc = sys_sigaction(
           sig, ap, oldact,
           (!IsXnu() ? 8 /* or linux whines */
                     : (int64_t)(intptr_t)oldact /* from go code */));

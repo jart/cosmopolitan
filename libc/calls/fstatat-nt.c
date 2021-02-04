@@ -26,7 +26,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
 
-textwindows int fstatat$nt(int dirfd, const char *path, struct stat *st,
+textwindows int sys_fstatat_nt(int dirfd, const char *path, struct stat *st,
                            uint32_t flags) {
   int rc;
   int64_t fh;
@@ -37,7 +37,7 @@ textwindows int fstatat$nt(int dirfd, const char *path, struct stat *st,
            kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, NULL,
            kNtOpenExisting, kNtFileAttributeNormal | kNtFileFlagBackupSemantics,
            0)) != -1) {
-    rc = fstat$nt(fh, st);
+    rc = sys_fstat_nt(fh, st);
     CloseHandle(fh);
     return rc;
   } else {

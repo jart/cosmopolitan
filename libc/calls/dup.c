@@ -30,8 +30,8 @@
  */
 nodiscard int dup(int fd) {
   if (!IsWindows()) {
-    return dup$sysv(fd);
+    return sys_dup(fd);
   } else {
-    return dup$nt(fd, -1, 0);
+    return sys_dup_nt(fd, -1, 0);
   }
 }

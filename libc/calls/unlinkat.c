@@ -32,8 +32,8 @@
  */
 int unlinkat(int dirfd, const char *path, int flags) {
   if (!IsWindows()) {
-    return unlinkat$sysv(dirfd, path, flags);
+    return sys_unlinkat(dirfd, path, flags);
   } else {
-    return unlinkat$nt(dirfd, path, flags);
+    return sys_unlinkat_nt(dirfd, path, flags);
   }
 }

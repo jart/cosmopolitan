@@ -29,5 +29,5 @@
  */
 int setresuid(uint32_t real, uint32_t effective, uint32_t saved) {
   if (saved == -1) return setreuid(real, effective);
-  return setresuid$sysv(real, effective, saved);
+  return sys_setresuid(real, effective, saved);
 }

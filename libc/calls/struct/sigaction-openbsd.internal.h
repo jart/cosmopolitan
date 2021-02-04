@@ -2,11 +2,13 @@
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGACTION_OPENBSD_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
-struct sigaction$openbsd {
+struct sigset_openbsd {
+  uint32_t sig[1];
+};
+
+struct sigaction_openbsd {
   intptr_t sa_handler;
-  struct sigset$openbsd {
-    uint32_t sig[1];
-  } sa_mask;
+  struct sigset_openbsd sa_mask;
   int32_t sa_flags;
 };
 

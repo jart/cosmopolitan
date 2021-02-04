@@ -28,7 +28,7 @@
 /**
  * Implements dup(), dup2(), and dup3() for Windows NT.
  */
-textwindows int dup$nt(int oldfd, int newfd, int flags) {
+textwindows int sys_dup_nt(int oldfd, int newfd, int flags) {
   int64_t proc;
   if (oldfd < 0) return einval();
   if (oldfd >= g_fds.n ||

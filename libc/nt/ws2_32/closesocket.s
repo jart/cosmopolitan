@@ -2,7 +2,7 @@
 .imp	ws2_32,__imp_closesocket,closesocket,3
 
 	.text.windows
-__closesocket$nt:
+__sys_closesocket_nt:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,5 +11,5 @@ __closesocket$nt:
 	call	*__imp_closesocket(%rip)
 	leave
 	ret
-	.endfn	__closesocket$nt,globl
+	.endfn	__sys_closesocket_nt,globl
 	.previous

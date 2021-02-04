@@ -30,8 +30,8 @@ int getrusage(int who, struct rusage *usage) {
   if (who == 99) return enosys(); /* @see libc/sysv/consts.sh */
   if (!usage) return efault();
   if (!IsWindows()) {
-    return getrusage$sysv(who, usage);
+    return sys_getrusage(who, usage);
   } else {
-    return getrusage$nt(who, usage);
+    return sys_getrusage_nt(who, usage);
   }
 }

@@ -26,7 +26,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/rusage.h"
 
-textwindows int getrusage$nt(int who, struct rusage *usage) {
+textwindows int sys_getrusage_nt(int who, struct rusage *usage) {
   struct NtFileTime CreationFileTime;
   struct NtFileTime ExitFileTime;
   struct NtFileTime KernelFileTime;

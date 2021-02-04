@@ -32,7 +32,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/time/time.h"
 
-static textwindows int copyfile$nt(const char *src, const char *dst,
+static textwindows int sys_copyfile_nt(const char *src, const char *dst,
                                    int flags) {
   int64_t fhsrc, fhdst;
   struct NtFileTime accessed, modified;
@@ -58,7 +58,7 @@ static textwindows int copyfile$nt(const char *src, const char *dst,
   }
 }
 
-static int copyfile$sysv(const char *src, const char *dst, int flags) {
+static int sys_copyfile(const char *src, const char *dst, int flags) {
   struct stat st;
   size_t remaining;
   ssize_t transferred;
@@ -66,12 +66,12 @@ static int copyfile$sysv(const char *src, const char *dst, int flags) {
   int64_t inoffset, outoffset;
   int rc, srcfd, dstfd, oflags, omode;
   rc = -1;
-  if ((srcfd = openat$sysv(AT_FDCWD, src, O_RDONLY, 0)) != -1) {
-    if (fstat$sysv(srcfd, &st) != -1) {
+  if ((srcfd = sys_openat(AT_FDCWD, src, O_RDONLY, 0)) != -1) {
+    if (sys_fstat(srcfd, &st) != -1) {
       omode = st.st_mode & 0777;
       oflags = O_WRONLY | O_CREAT;
       if (flags & COPYFILE_NOCLOBBER) oflags |= O_EXCL;
-      if ((dstfd = openat$sysv(AT_FDCWD, dst, oflags, omode)) != -1) {
+      if ((dstfd = sys_openat(AT_FDCWD, dst, oflags, omode)) != -1) {
         remaining = st.st_size;
         ftruncate(dstfd, remaining);
         inoffset = 0;
@@ -86,13 +86,13 @@ static int copyfile$sysv(const char *src, const char *dst, int flags) {
           if (flags & COPYFILE_PRESERVE_TIMESTAMPS) {
             amtime[0] = st.st_atim;
             amtime[1] = st.st_mtim;
-            utimensat$sysv(dstfd, NULL, amtime, 0);
+            sys_utimensat(dstfd, NULL, amtime, 0);
           }
         }
-        rc |= close$sysv(dstfd);
+        rc |= sys_close(dstfd);
       }
     }
-    rc |= close$sysv(srcfd);
+    rc |= sys_close(srcfd);
   }
   return rc;
 }
@@ -102,8 +102,8 @@ static int copyfile$sysv(const char *src, const char *dst, int flags) {
  */
 int copyfile(const char *src, const char *dst, int flags) {
   if (!IsWindows()) {
-    return copyfile$sysv(src, dst, flags);
+    return sys_copyfile(src, dst, flags);
   } else {
-    return copyfile$nt(src, dst, flags);
+    return sys_copyfile_nt(src, dst, flags);
   }
 }

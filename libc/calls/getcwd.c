@@ -35,13 +35,13 @@ char *(getcwd)(char *buf, size_t size) {
   if (buf && size) buf[0] = '\0';
   if (!IsWindows()) {
     if (IsXnu()) {
-      return getcwd$xnu(buf, size);
-    } else if (getcwd$sysv(buf, size) != (void *)-1) {
+      return sys_getcwd_xnu(buf, size);
+    } else if (sys_getcwd(buf, size) != (void *)-1) {
       return buf;
     } else {
       return NULL;
     }
   } else {
-    return getcwd$nt(buf, size);
+    return sys_getcwd_nt(buf, size);
   }
 }

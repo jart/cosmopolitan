@@ -19,6 +19,5 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-_start_xnu:
-	ud2
-	.endfn	_start_xnu,weak
+_xnu:	ud2
+	.endfn	_xnu,weak

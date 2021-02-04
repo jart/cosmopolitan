@@ -21,6 +21,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/macros.h"
+#include "libc/mem/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/str/tpenc.h"

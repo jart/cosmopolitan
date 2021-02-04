@@ -59,8 +59,8 @@ uint32_t SleepEx(uint32_t dwMilliseconds, bool32 bAlertable);
 void GetSystemTime(struct NtSystemTime *lpSystemTime);
 bool32 SystemTimeToFileTime(const struct NtSystemTime *lpSystemTime,
                             struct NtFileTime *lpFileTime);
-void GetSystemTimeAsFileTime(struct NtFileTime *);         // win8+
-void GetSystemTimePreciseAsFileTime(struct NtFileTime *);  // win8+
+void GetSystemTimeAsFileTime(struct NtFileTime *);        /* win8+ */
+void GetSystemTimePreciseAsFileTime(struct NtFileTime *); /* win8+ */
 
 uint32_t WaitForSingleObject(int64_t hHandle, uint32_t dwMilliseconds);
 uint32_t WaitForMultipleObjects(uint32_t nCount, const int64_t *lpHandles,

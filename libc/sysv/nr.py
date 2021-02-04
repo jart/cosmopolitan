@@ -9,9 +9,9 @@ for line in lines:
   if name.startswith("'"): name = name[1:]
   if name.endswith("'"): name = name[:-1]
   if name.startswith("__"): name = name[2:]
-  if name.endswith("$sysv"): name = name[:-5]
-  if name.endswith("$bsd"): name = name[:-4]
-  if name.endswith("$freebsd"): name = name[:-8]
+  if name.startswith("sys_"): name = name[:-5]
+  if name.endswith("_bsd"): name = name[:-4]
+  if name.endswith("_freebsd"): name = name[:-8]
   numbers = int(fields[2][2:], 16)
   systemd = (numbers >> 000) & 0xffff
   xnu     = (numbers >> 020) & 0x0fff | ((numbers >> 28) & 0xf) << 20

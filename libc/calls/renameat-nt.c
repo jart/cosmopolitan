@@ -23,7 +23,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int renameat$nt(int olddirfd, const char *oldpath, int newdirfd,
+textwindows int sys_renameat_nt(int olddirfd, const char *oldpath, int newdirfd,
                             const char *newpath) {
   char16_t oldpath16[PATH_MAX];
   char16_t newpath16[PATH_MAX];

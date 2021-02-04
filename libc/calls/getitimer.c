@@ -29,8 +29,8 @@
  */
 int getitimer(int which, struct itimerval *curvalue) {
   if (!IsWindows()) {
-    return getitimer$sysv(which, curvalue);
+    return sys_getitimer(which, curvalue);
   } else {
-    return setitimer$nt(which, NULL, curvalue);
+    return sys_setitimer_nt(which, NULL, curvalue);
   }
 }

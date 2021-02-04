@@ -20,7 +20,7 @@
 #include "libc/nt/files.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int fdatasync$nt(int fd) {
+textwindows int sys_fdatasync_nt(int fd) {
   if (!__isfdkind(fd, kFdFile)) return ebadf();
   /*
    * XXX: On Windows NT this might be more analagous to fflush() and

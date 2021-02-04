@@ -87,7 +87,7 @@ noasan void PrintStartupInfo(void) {
 ╚──────────────────────────────────────────────────────────────────────────────╝\n\
 \n");
 #define X(D, F) \
-  printf("%s.%-22s= " D "\n", "g_ntstartupinfo", #F, g_ntstartupinfo.F);
+  printf("%s.%-22s= " D "\n", "__nt_startupinfo", #F, __nt_startupinfo.F);
   X("%u", cb);
   X("%p", lpReserved);
   X("%hs", lpDesktop);
@@ -99,8 +99,8 @@ noasan void PrintStartupInfo(void) {
   X("%u", dwXCountChars);
   X("%u", dwYCountChars);
   X("%u", dwFillAttribute);
-  printf("%s.%-22s: %s\n", "g_ntstartupinfo", "dwFlags",
-         RecreateFlags(kNtStartfFlagNames, g_ntstartupinfo.dwFlags));
+  printf("%s.%-22s: %s\n", "__nt_startupinfo", "dwFlags",
+         RecreateFlags(kNtStartfFlagNames, __nt_startupinfo.dwFlags));
   X("%hu", wShowWindow);
   X("%hu", cbReserved2);
   X("%s", lpReserved2);
@@ -117,7 +117,7 @@ void PrintSystemInfo(void) {
 ╚──────────────────────────────────────────────────────────────────────────────╝\n\
 \n");
 #define X(D, F) \
-  printf("%s.%-28s= " D "\n", "g_ntsysteminfo", #F, g_ntsysteminfo.F);
+  printf("%s.%-28s= " D "\n", "__nt_systeminfo", #F, __nt_systeminfo.F);
   X("%08x", dwOemId);
   X("%04hx", wProcessorArchitecture);
   X("%d", dwPageSize);

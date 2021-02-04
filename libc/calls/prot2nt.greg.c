@@ -28,7 +28,7 @@
  * Converts System Five memory protection flags to Windows NT, Part 1.
  * @see libc/sysv/consts.sh
  */
-privileged uint32_t prot2nt(int prot, int flags) {
+privileged uint32_t __prot2nt(int prot, int flags) {
   return (HAS(prot, PROT_READ | PROT_WRITE | PROT_EXEC)
               ? (HAS(flags, MAP_SHARED) || HAS(flags, MAP_ANONYMOUS))
                     ? kNtPageExecuteReadwrite

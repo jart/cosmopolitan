@@ -28,7 +28,7 @@
 #define WasImported(SLOT) \
   ((void *)*SLOT && *SLOT != (void *)&missingno /* see libc/crt/crt.S */)
 
-static void __print$nt(const void *data, size_t len) {
+static void __sys_print_nt(const void *data, size_t len) {
   int64_t hand;
   char xmm[256];
   uint32_t wrote;
@@ -51,7 +51,7 @@ static void __print$nt(const void *data, size_t len) {
 textsyscall void __print(const void *data, size_t len) {
   int64_t ax, ordinal;
   if (WasImported(__imp_WriteFile)) {
-    __print$nt(data, len);
+    __sys_print_nt(data, len);
   } else {
     ordinal = __NR_write > 0 ? __NR_write : IsXnu() ? 0x2000004 : 4;
     asm volatile("syscall"

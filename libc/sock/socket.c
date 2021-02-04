@@ -45,8 +45,8 @@ int socket(int family, int type, int protocol) {
     return epfnosupport();
   }
   if (!IsWindows()) {
-    return socket$sysv(family, type, protocol);
+    return sys_socket(family, type, protocol);
   } else {
-    return socket$nt(family, type, protocol);
+    return sys_socket_nt(family, type, protocol);
   }
 }

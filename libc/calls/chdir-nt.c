@@ -23,7 +23,7 @@
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int chdir$nt(const char *path) {
+textwindows int sys_chdir_nt(const char *path) {
   int e, ms, len;
   char16_t path16[PATH_MAX];
   if ((len = __mkntpath(path, path16)) == -1) return -1;

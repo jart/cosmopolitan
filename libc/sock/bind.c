@@ -38,17 +38,17 @@ int bind(int fd, const void *addr, uint32_t addrsize) {
   if (addrsize == sizeof(struct sockaddr_in)) {
     if (!IsWindows()) {
       if (!IsBsd()) {
-        return bind$sysv(fd, addr, addrsize);
+        return sys_bind(fd, addr, addrsize);
       } else {
-        struct sockaddr_in$bsd addr2;
+        struct sockaddr_in_bsd addr2;
         _Static_assert(sizeof(struct sockaddr_in) ==
-                       sizeof(struct sockaddr_in$bsd));
+                       sizeof(struct sockaddr_in_bsd));
         memcpy(&addr2, addr, sizeof(struct sockaddr_in));
         sockaddr2bsd(&addr2);
-        return bind$sysv(fd, &addr2, addrsize);
+        return sys_bind(fd, &addr2, addrsize);
       }
     } else if (__isfdkind(fd, kFdSocket)) {
-      return bind$nt(&g_fds.p[fd], addr, addrsize);
+      return sys_bind_nt(&g_fds.p[fd], addr, addrsize);
     } else {
       return ebadf();
     }

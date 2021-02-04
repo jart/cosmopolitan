@@ -34,8 +34,8 @@
 int link(const char *existingpath, const char *newpath) {
   if (!existingpath || !newpath) return efault();
   if (!IsWindows()) {
-    return linkat$sysv(AT_FDCWD, existingpath, AT_FDCWD, newpath, 0);
+    return sys_linkat(AT_FDCWD, existingpath, AT_FDCWD, newpath, 0);
   } else {
-    return link$nt(existingpath, newpath);
+    return sys_link_nt(existingpath, newpath);
   }
 }

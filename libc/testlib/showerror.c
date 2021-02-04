@@ -26,14 +26,15 @@
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
 testonly void testlib_showerror(const char *file, int line, const char *func,
                                 const char *method, const char *symbol,
                                 const char *code, char *v1, char *v2) {
   /* TODO(jart): Pay off tech debt re duplication */
-  getpid$sysv(); /* make strace easier to read */
-  getpid$sysv();
+  sys_getpid(); /* make strace easier to read */
+  sys_getpid();
   fprintf(stderr,
           "%s%s%s%s:%s:%d%s: %s() %s %s(%s)\n"
           "\t%s\n"

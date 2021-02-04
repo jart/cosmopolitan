@@ -36,7 +36,7 @@ static textwindows bool SubpathExistsThatsNotDirectory(char16_t *path) {
   return false;
 }
 
-textwindows int mkdirat$nt(int dirfd, const char *path, uint32_t mode) {
+textwindows int sys_mkdirat_nt(int dirfd, const char *path, uint32_t mode) {
   int e;
   char16_t *p, path16[PATH_MAX];
   if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;

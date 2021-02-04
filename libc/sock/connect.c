@@ -35,9 +35,9 @@
 int connect(int fd, const void *addr, uint32_t addrsize) {
   if (!addr) return efault();
   if (!IsWindows()) {
-    return connect$sysv(fd, addr, addrsize);
+    return sys_connect(fd, addr, addrsize);
   } else if (__isfdkind(fd, kFdSocket)) {
-    return connect$nt(&g_fds.p[fd], addr, addrsize);
+    return sys_connect_nt(&g_fds.p[fd], addr, addrsize);
   } else {
     return ebadf();
   }

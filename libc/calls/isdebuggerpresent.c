@@ -54,12 +54,12 @@ int IsDebuggerPresent(bool force) {
   if (IsWindows()) {
     res = NtBeingDebugged();
   } else if (IsLinux()) {
-    if ((fd = openat$sysv(AT_FDCWD, kProcStatus, O_RDONLY, 0)) != -1) {
-      if ((got = read$sysv(fd, buf, sizeof(buf) - sizeof(kPid))) != -1) {
+    if ((fd = sys_openat(AT_FDCWD, kProcStatus, O_RDONLY, 0)) != -1) {
+      if ((got = sys_read(fd, buf, sizeof(buf) - sizeof(kPid))) != -1) {
         buf[got] = '\0';
         res = atoi(firstnonnull(strstr(buf, kPid), kPid) + strlen(kPid));
       }
-      close$sysv(fd);
+      sys_close(fd);
     }
   }
   return res;

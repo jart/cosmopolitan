@@ -19,8 +19,8 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-	.init.start 400,_init_g_ntstartupinfo
-	ezlea	g_ntstartupinfo,cx
+	.init.start 400,_init___nt_startupinfo
+	ezlea	__nt_startupinfo,cx
 	mov	%rsp,%rbp
 	ntcall	__imp_GetStartupInfoW
-	.init.end 400,_init_g_ntstartupinfo,globl,hidden
+	.init.end 400,_init___nt_startupinfo,globl,hidden

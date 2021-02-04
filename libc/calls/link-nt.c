@@ -21,7 +21,7 @@
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 
-textwindows int link$nt(const char *existingpath, const char *newpath) {
+textwindows int sys_link_nt(const char *existingpath, const char *newpath) {
   char16_t newpath16[PATH_MAX];
   char16_t existingpath16[PATH_MAX];
   if (__mkntpath(existingpath, existingpath16) != -1 &&

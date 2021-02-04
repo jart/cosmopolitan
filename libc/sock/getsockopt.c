@@ -37,9 +37,9 @@ int getsockopt(int fd, int level, int optname, void *out_opt_optval,
   if (!level || !optname) return enoprotoopt(); /* our sysvconsts definition */
   if (optname == -1) return 0;                  /* our sysvconsts definition */
   if (!IsWindows()) {
-    return getsockopt$sysv(fd, level, optname, out_opt_optval, out_optlen);
+    return sys_getsockopt(fd, level, optname, out_opt_optval, out_optlen);
   } else if (__isfdkind(fd, kFdSocket)) {
-    return getsockopt$nt(&g_fds.p[fd], level, optname, out_opt_optval,
+    return sys_getsockopt_nt(&g_fds.p[fd], level, optname, out_opt_optval,
                          out_optlen);
   } else {
     return ebadf();

@@ -70,6 +70,7 @@ EXAMPLES_PACKAGE_LIB_A_CHECKS =					\
 # Note that linking stubs is always a good idea due to synthetic code.
 EXAMPLES_PACKAGE_LIB_A_DIRECTDEPS =				\
 	LIBC_STDIO						\
+	LIBC_INTRIN						\
 	LIBC_NEXGEN32E						\
 	LIBC_STUBS
 

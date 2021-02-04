@@ -22,9 +22,9 @@
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/sock/internal.h"
 
-int nanosleep$xnu(const struct timespec *req, struct timespec *rem) {
+int sys_nanosleep_xnu(const struct timespec *req, struct timespec *rem) {
   long millis;
   millis = div1000int64(req->tv_nsec);
   millis = MAX(1, millis);
-  return select$sysv(0, 0, 0, 0, &(struct timeval){req->tv_sec, millis});
+  return sys_select(0, 0, 0, 0, &(struct timeval){req->tv_sec, millis});
 }

@@ -63,7 +63,7 @@ static uint32_t getuidgid(int at, uint32_t impl(void)) {
  * @asyncsignalsafe
  */
 uint32_t getuid(void) {
-  return getuidgid(AT_UID, getuid$sysv);
+  return getuidgid(AT_UID, sys_getuid);
 }
 
 /**
@@ -76,5 +76,5 @@ uint32_t getuid(void) {
  * @asyncsignalsafe
  */
 uint32_t getgid(void) {
-  return getuidgid(AT_GID, getgid$sysv);
+  return getuidgid(AT_GID, sys_getgid);
 }

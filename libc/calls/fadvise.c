@@ -32,8 +32,8 @@
  */
 int fadvise(int fd, uint64_t offset, uint64_t len, int advice) {
   if (!IsWindows()) {
-    return fadvise$sysv(fd, offset, len, advice); /* linux & freebsd */
+    return sys_fadvise(fd, offset, len, advice); /* linux & freebsd */
   } else {
-    return fadvise$nt(fd, offset, len, advice);
+    return sys_fadvise_nt(fd, offset, len, advice);
   }
 }

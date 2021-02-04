@@ -30,12 +30,12 @@
  * @param fd must be a socket
  * @return number of bytes handed off, or -1 w/ errno
  */
-textwindows ssize_t sendto$nt(struct Fd *fd, const struct iovec *iov,
-                              size_t iovlen, uint32_t flags, void *opt_in_addr,
-                              uint32_t in_addrsize) {
+textwindows ssize_t sys_sendto_nt(struct Fd *fd, const struct iovec *iov,
+                                  size_t iovlen, uint32_t flags,
+                                  void *opt_in_addr, uint32_t in_addrsize) {
   uint32_t sent;
   struct NtIovec iovnt[16];
-  if (WSASendTo(fd->handle, iovnt, iovec2nt(iovnt, iov, iovlen), &sent, flags,
+  if (WSASendTo(fd->handle, iovnt, __iovec2nt(iovnt, iov, iovlen), &sent, flags,
                 opt_in_addr, in_addrsize, NULL, NULL) != -1) {
     return sent;
   } else {

@@ -23,10 +23,10 @@
 #include "libc/sock/yoink.inc"
 #include "libc/sysv/errfuns.h"
 
-textwindows int closesocket$nt(int fd) {
+textwindows int sys_closesocket_nt(int fd) {
   int rc;
   if (!__isfdkind(fd, kFdSocket)) return ebadf();
-  if (__closesocket$nt(g_fds.p[fd].handle) != -1) {
+  if (__sys_closesocket_nt(g_fds.p[fd].handle) != -1) {
     rc = 0;
   } else {
     rc = __winsockerr();

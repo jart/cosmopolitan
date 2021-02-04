@@ -26,11 +26,11 @@
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int poll$nt(struct pollfd *fds, uint64_t nfds, uint64_t timeoutms) {
+textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t timeoutms) {
   int got;
   size_t i;
   uint64_t waitfor;
-  struct pollfd$nt ntfds[64];
+  struct sys_pollfd_nt ntfds[64];
   if (nfds > 64) return einval();
   for (i = 0; i < nfds; ++i) {
     if (!__isfdkind(fds[i].fd, kFdSocket)) return ebadf();

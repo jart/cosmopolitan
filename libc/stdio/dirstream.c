@@ -65,7 +65,7 @@ struct dirstream {
 /**
  * FreeBSD getdents() and XNU getdirentries() ABI.
  */
-struct dirent$bsd {
+struct dirent_bsd {
   uint32_t d_fileno;
   uint16_t d_reclen;
   uint8_t d_type;
@@ -76,7 +76,7 @@ struct dirent$bsd {
 /**
  * OpenBSD getdents() ABI.
  */
-struct dirent$openbsd {
+struct dirent_openbsd {
   uint64_t d_fileno;
   int64_t d_off;
   uint16_t d_reclen;
@@ -86,7 +86,7 @@ struct dirent$openbsd {
   char d_name[256];
 };
 
-static textwindows noinline DIR *opendir$nt(const char *name) {
+static textwindows noinline DIR *opendir_nt(const char *name) {
   int len;
   DIR *res;
   char16_t name16[PATH_MAX];
@@ -106,7 +106,7 @@ static textwindows noinline DIR *opendir$nt(const char *name) {
   }
 }
 
-static textwindows noinline struct dirent *readdir$nt(DIR *dir) {
+static textwindows noinline struct dirent *readdir_nt(DIR *dir) {
   if (!dir->isdone) {
     memset(&dir->ent, 0, sizeof(dir->ent));
     dir->ent.d_ino = 0;
@@ -166,7 +166,7 @@ DIR *opendir(const char *name) {
     }
     return res;
   } else {
-    return opendir$nt(name);
+    return opendir_nt(name);
   }
 }
 
@@ -204,8 +204,8 @@ struct dirent *readdir(DIR *dir) {
   int rc;
   long basep;
   struct dirent *ent;
-  struct dirent$bsd *bsd;
-  struct dirent$openbsd *obsd;
+  struct dirent_bsd *bsd;
+  struct dirent_openbsd *obsd;
   if (!IsWindows()) {
     if (dir->buf_pos >= dir->buf_end) {
       basep = dir->tell; /* <- what does xnu do */
@@ -219,7 +219,7 @@ struct dirent *readdir(DIR *dir) {
       dir->buf_pos += ent->d_reclen;
       dir->tell = ent->d_off;
     } else if (IsOpenbsd()) {
-      obsd = (struct dirent$openbsd *)(dir->buf + dir->buf_pos);
+      obsd = (struct dirent_openbsd *)(dir->buf + dir->buf_pos);
       dir->buf_pos += obsd->d_reclen;
       ent = &dir->ent;
       ent->d_ino = obsd->d_fileno;
@@ -228,7 +228,7 @@ struct dirent *readdir(DIR *dir) {
       ent->d_type = obsd->d_type;
       memcpy(ent->d_name, obsd->d_name, obsd->d_namlen + 1);
     } else {
-      bsd = (struct dirent$bsd *)(dir->buf + dir->buf_pos);
+      bsd = (struct dirent_bsd *)(dir->buf + dir->buf_pos);
       dir->buf_pos += bsd->d_reclen;
       ent = &dir->ent;
       ent->d_ino = bsd->d_fileno;
@@ -239,7 +239,7 @@ struct dirent *readdir(DIR *dir) {
     }
     return ent;
   } else {
-    return readdir$nt(dir);
+    return readdir_nt(dir);
   }
 }
 

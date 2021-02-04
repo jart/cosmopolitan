@@ -31,8 +31,8 @@
  */
 int64_t lseek(int fd, int64_t offset, int whence) {
   if (!IsWindows()) {
-    return lseek$sysv(fd, offset, whence);
+    return sys_lseek(fd, offset, whence);
   } else {
-    return lseek$nt(fd, offset, whence);
+    return sys_lseek_nt(fd, offset, whence);
   }
 }

@@ -23,7 +23,7 @@
 /**
  * Translates Windows error using superset of consts.sh.
  */
-textwindows errno_t MapDosErrorToErrno(uint32_t error) {
+textwindows errno_t __dos2errno(uint32_t error) {
   switch (error) {
     case kNtErrorModNotFound:
       return ENOSYS;

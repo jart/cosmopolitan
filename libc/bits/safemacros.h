@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_BITS_SAFEMACROS_H_
 #define COSMOPOLITAN_LIBC_BITS_SAFEMACROS_H_
-#ifndef __STRICT_ANSI__
 #include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -84,5 +83,4 @@ uint64_t(unsignedsubtract)(uint64_t, uint64_t) pureconst;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* !ANSI */
 #endif /* COSMOPOLITAN_LIBC_BITS_SAFEMACROS_H_ */

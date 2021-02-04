@@ -135,7 +135,6 @@ include dsp/tty/tty.mk				# ├──ONLINE RUNTIME
 include libc/dns/dns.mk				# │  You can communicate with the network
 include libc/crypto/crypto.mk			# │
 include net/http/http.mk			#─┘
-include third_party/lemon/lemon.mk
 include third_party/duktape/duktape.mk
 include third_party/regex/regex.mk
 include third_party/third_party.mk
@@ -149,7 +148,6 @@ include third_party/chibicc/test/test.mk
 include tool/build/emucrt/emucrt.mk
 include tool/build/emubin/emubin.mk
 include tool/build/build.mk
-include tool/calc/calc.mk
 include tool/decode/lib/decodelib.mk
 include tool/decode/decode.mk
 include tool/hash/hash.mk
@@ -327,6 +325,14 @@ o/cosmopolitan.html:							\
 	o/$(MODE)/third_party/chibicc/chibicc.com.dbg -J		\
 		-fno-common -include libc/integral/normalize.inc -o $@	\
 		$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))
+
+$(SRCS):					\
+	libc/integral/normalize.inc		\
+	libc/integral/c.inc			\
+	libc/integral/cxx.inc			\
+	libc/integral/cxxtypescompat.inc	\
+	libc/integral/lp64arg.inc		\
+	libc/integral/lp64.inc
 
 # UNSPECIFIED PREREQUISITES TUTORIAL
 #

@@ -32,7 +32,7 @@
 int setrlimit(int resource, const struct rlimit *rlim) {
   if (resource == -1) return einval();
   if (!IsWindows()) {
-    return setrlimit$sysv(resource, rlim);
+    return sys_setrlimit(resource, rlim);
   } else {
     return enosys(); /* TODO(jart): Implement me! */
   }

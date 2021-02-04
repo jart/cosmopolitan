@@ -26,7 +26,7 @@
  *
  * @param fd of -1 means no-op
  */
-int fixupnewsockfd$sysv(int fd, int flags) {
-  return fixupnewfd$sysv(fd, (((flags & SOCK_CLOEXEC) ? O_CLOEXEC : 0) |
-                              ((flags & SOCK_NONBLOCK) ? O_NONBLOCK : 0)));
+int __fixupnewsockfd(int fd, int flags) {
+  return __fixupnewfd(fd, (((flags & SOCK_CLOEXEC) ? O_CLOEXEC : 0) |
+                           ((flags & SOCK_NONBLOCK) ? O_NONBLOCK : 0)));
 }

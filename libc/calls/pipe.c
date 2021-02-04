@@ -32,8 +32,8 @@
 int pipe(int pipefd[hasatleast 2]) {
   if (!pipefd) return efault();
   if (!IsWindows()) {
-    return pipe$sysv(pipefd);
+    return sys_pipe(pipefd);
   } else {
-    return pipe$nt(pipefd, 0);
+    return sys_pipe_nt(pipefd, 0);
   }
 }

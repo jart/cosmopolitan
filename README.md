@@ -1,3 +1,5 @@
+![Cosmopolitan Honeybadger](usr/share/img/honeybadger.png)
+
 # Cosmopolitan
 
 [Cosmopolitan Libc](https://justine.lol/cosmopolitan/index.html) makes C

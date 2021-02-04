@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/log.h"
+#include "libc/mem/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/x/x.h"
 

@@ -31,7 +31,7 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
 
-textwindows int utimensat$nt(int dirfd, const char *path,
+textwindows int sys_utimensat_nt(int dirfd, const char *path,
                              const struct timespec ts[2], int flags) {
   int i, rc;
   int64_t fh;

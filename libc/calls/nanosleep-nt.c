@@ -25,7 +25,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int nanosleep$nt(const struct timespec *req, struct timespec *rem) {
+textwindows int sys_nanosleep_nt(const struct timespec *req, struct timespec *rem) {
   int64_t millis, hectonanos, relasleep;
   if (rem) memcpy(rem, req, sizeof(*rem));
   hectonanos = req->tv_sec * 10000000ull + div100int64(req->tv_nsec);

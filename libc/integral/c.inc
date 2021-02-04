@@ -10,10 +10,6 @@
 #define COSMOPOLITAN_CXX_USING_
 #endif
 
-#ifdef __STRICT_ANSI__
-#define asm __asm__
-#endif
-
 #ifndef __ia16__
 #define __far
 #endif
@@ -605,7 +601,13 @@ typedef uint64_t uintmax_t;
 #endif
 
 #ifndef unreachable
+#if defined(__GNUC__) && !defined(__STRICT_ANSI)
 #define unreachable __builtin_unreachable()
+#else
+#define unreachable \
+  do {              \
+  } while (1)
+#endif
 #endif
 
 #define donothing \
@@ -758,30 +760,45 @@ typedef uint64_t uintmax_t;
 #endif /* ANSI */
 #endif /* -w */
 
+#ifndef __STRICT_ANSI__
 #define DebugBreak() asm("int3")
+#else
+#define DebugBreak() (void)0
+#endif
 
-#ifndef VEIL
+#ifndef __STRICT_ANSI__
 #define VEIL(CONSTRAINT, EXPRESSION)                             \
   ({                                                             \
     autotype(EXPRESSION) VeiledValue = (EXPRESSION);             \
     asm("" : "=" CONSTRAINT ""(VeiledValue) : "0"(VeiledValue)); \
     VeiledValue;                                                 \
   })
-#endif /* VEIL */
+#else
+#define VEIL(CONSTRAINT, EXPRESSION) (EXPRESSION)
+#endif
 
+#ifndef __STRICT_ANSI__
 #define CONCEAL(CONSTRAINT, EXPRESSION)                                   \
   ({                                                                      \
     autotype(EXPRESSION) VeiledValue = (EXPRESSION);                      \
     asm volatile("" : "=" CONSTRAINT ""(VeiledValue) : "0"(VeiledValue)); \
     VeiledValue;                                                          \
   })
+#else
+#define CONCEAL(CONSTRAINT, EXPRESSION) (EXPRESSION)
+#endif
 
+#ifndef __STRICT_ANSI__
 #define EXPROPRIATE(EXPRESSION)                    \
   ({                                               \
     asm volatile("" ::"g"(EXPRESSION) : "memory"); \
     0;                                             \
   })
+#else
+#define EXPROPRIATE(EXPRESSION) (EXPRESSION)
+#endif
 
+#ifndef __STRICT_ANSI__
 #define YOINK(SYMBOL)                                                     \
   do {                                                                    \
     _Static_assert(!__builtin_types_compatible_p(typeof(SYMBOL), char[]), \
@@ -792,11 +809,18 @@ typedef uint64_t uintmax_t;
         : /* no outputs */                                                \
         : "X"(SYMBOL));                                                   \
   } while (0)
+#else
+#define YOINK(SYMBOL) (void)0
+#endif
 
+#ifndef __STRICT_ANSI__
 #define STATIC_YOINK(SYMBOLSTR) \
   asm(".section .yoink\n\tnopl\t\"" SYMBOLSTR "\"\n\t.previous")
+#else
+#define STATIC_YOINK(SYMBOLSTR)
+#endif
 
-#if !defined(IM_FEELING_NAUGHTY) && !defined(__STRICT_ANSI__)
+#if !defined(IM_FEELING_NAUGHTY)
 #define STATIC_YOINK_SOURCE(PATH) STATIC_YOINK(PATH)
 #else
 #define STATIC_YOINK_SOURCE(PATH)

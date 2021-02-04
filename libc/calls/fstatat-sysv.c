@@ -22,11 +22,11 @@
  * Supports stat(), lstat(), fstatat(), etc. implementations.
  * @asyncsignalsafe
  */
-int32_t fstatat$sysv(int32_t dirfd, const char *pathname, struct stat *st,
-                     int32_t flags) {
+int32_t sys_fstatat(int32_t dirfd, const char *pathname, struct stat *st,
+                    int32_t flags) {
   int32_t rc;
-  if ((rc = __fstatat$sysv(dirfd, pathname, st, flags)) != -1) {
-    stat2linux(st);
+  if ((rc = __sys_fstatat(dirfd, pathname, st, flags)) != -1) {
+    __stat2linux(st);
   }
   return rc;
 }

@@ -23,7 +23,7 @@
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
 
-textwindows int64_t winsockblock(int64_t fh, unsigned eventbit, int64_t rc) {
+textwindows int64_t __winsockblock(int64_t fh, unsigned eventbit, int64_t rc) {
   int64_t eh;
   struct NtWsaNetworkEvents ev;
   if (rc != -1) return rc;

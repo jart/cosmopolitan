@@ -263,12 +263,12 @@ void HandleClient(void) {
   got = recv(g_clifd, (p = &g_buf[0]), sizeof(g_buf), 0);
   CHECK_GE(got, kMinMsgSize);
   CHECK_LE(got, sizeof(g_buf));
-  CHECK_EQ(RUNITD_MAGIC, read32be(p));
+  CHECK_EQ(RUNITD_MAGIC, READ32BE(p));
   p += 4, got -= 4;
   CHECK_EQ(kRunitExecute, *p++);
   got--;
-  namesize = read32be(p), p += 4, got -= 4;
-  filesize = read32be(p), p += 4, got -= 4;
+  namesize = READ32BE(p), p += 4, got -= 4;
+  filesize = READ32BE(p), p += 4, got -= 4;
   CHECK_GE(got, namesize);
   CHECK_LE(namesize, kMaxNameSize);
   CHECK_LE(filesize, kMaxFileSize);

@@ -29,8 +29,8 @@
  */
 int fdatasync(int fd) {
   if (!IsWindows()) {
-    return fdatasync$sysv(fd);
+    return sys_fdatasync(fd);
   } else {
-    return fdatasync$nt(fd);
+    return sys_fdatasync_nt(fd);
   }
 }

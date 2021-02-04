@@ -22,12 +22,12 @@
 #include "libc/dce.h"
 #include "libc/sysv/consts/termios.h"
 
-int ioctl$tcsets$nt(int, uint64_t, const struct termios *);
+int ioctl$sys_tcsets_nt(int, uint64_t, const struct termios *);
 
-static int ioctl$tcsets$sysv(int fd, uint64_t request,
+static int ioctl$sys_tcsets(int fd, uint64_t request,
                              const struct termios *tio) {
   union metatermios t;
-  return ioctl$sysv(fd, request, termios2host(&t, tio));
+  return sys_ioctl(fd, request, termios2host(&t, tio));
 }
 
 /**
@@ -39,8 +39,8 @@ static int ioctl$tcsets$sysv(int fd, uint64_t request,
  */
 int ioctl$tcsets(int fd, uint64_t request, const struct termios *tio) {
   if (!IsWindows()) {
-    return ioctl$tcsets$sysv(fd, request, tio);
+    return ioctl$sys_tcsets(fd, request, tio);
   } else {
-    return ioctl$tcsets$nt(fd, request, tio);
+    return ioctl$sys_tcsets_nt(fd, request, tio);
   }
 }

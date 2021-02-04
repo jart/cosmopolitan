@@ -63,7 +63,7 @@ ssize_t pwritev(int fd, const struct iovec *iovec, int count, int64_t off) {
       demodernize = true;
     } else {
       olderr = errno;
-      rc = pwritev$sysv(fd, iovec, count, off);
+      rc = sys_pwritev(fd, iovec, count, off);
       if (rc == -1 && errno == ENOSYS) {
         errno = olderr;
         demodernize = true;
@@ -77,7 +77,7 @@ ssize_t pwritev(int fd, const struct iovec *iovec, int count, int64_t off) {
   }
 
   if (!demodernize) {
-    return pwritev$sysv(fd, iovec, count, off);
+    return sys_pwritev(fd, iovec, count, off);
   } else {
     return pwrite(fd, iovec[0].iov_base, iovec[0].iov_len, off);
   }

@@ -58,7 +58,7 @@ ssize_t preadv(int fd, struct iovec *iovec, int count, int64_t off) {
       demodernize = true;
     } else {
       olderr = errno;
-      rc = preadv$sysv(fd, iovec, count, off);
+      rc = sys_preadv(fd, iovec, count, off);
       if (rc == -1 && errno == ENOSYS) {
         errno = olderr;
         demodernize = true;
@@ -71,7 +71,7 @@ ssize_t preadv(int fd, struct iovec *iovec, int count, int64_t off) {
   }
 
   if (!demodernize) {
-    return preadv$sysv(fd, iovec, count, off);
+    return sys_preadv(fd, iovec, count, off);
   } else {
     return pread(fd, iovec[0].iov_base, iovec[0].iov_len, off);
   }

@@ -21,16 +21,16 @@
 #include "libc/sock/internal.h"
 #include "libc/sysv/consts/sock.h"
 
-int socket$sysv(int family, int type, int protocol) {
+int sys_socket(int family, int type, int protocol) {
   int rc, olderr, modernflags;
   olderr = errno;
-  rc = __socket$sysv(family, type, protocol);
+  rc = __sys_socket(family, type, protocol);
   if ((SupportsLinux() || SupportsXnu()) &&
       (rc == -1 && errno == EINVAL /* rhel5 behavior */) &&
       (modernflags = (type & (SOCK_CLOEXEC | SOCK_NONBLOCK)))) {
     errno = olderr;
-    rc = fixupnewsockfd$sysv(
-        __socket$sysv(family, type & ~modernflags, protocol), modernflags);
+    rc = __fixupnewsockfd(__sys_socket(family, type & ~modernflags, protocol),
+                          modernflags);
   }
   return rc;
 }

@@ -54,7 +54,7 @@ int raise(int sig) {
     return 0;
   }
   if (!IsWindows()) {
-    return kill$sysv(getpid(), sig, 1);
+    return sys_kill(getpid(), sig, 1);
   } else {
     if (GenerateConsoleCtrlEvent(GetCtrlEvent(sig), 0)) {
       return 0;

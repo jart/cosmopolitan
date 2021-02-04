@@ -29,13 +29,13 @@ int ioctl(int, uint64_t, void *);
   } while (0)
 
 int ioctl$tcgets(int, void *);
-int ioctl$tcgets$nt(int, void *);
+int ioctl$sys_tcgets_nt(int, void *);
 int ioctl$tcsets(int, uint64_t, void *);
-int ioctl$tcsets$nt(int, uint64_t, void *);
+int ioctl$sys_tcsets_nt(int, uint64_t, void *);
 int ioctl$tiocgwinsz(int, void *);
-int ioctl$tiocgwinsz$nt(int, void *);
+int ioctl$sys_tiocgwinsz_nt(int, void *);
 int ioctl$tiocswinsz(int, void *);
-int ioctl$tiocswinsz$nt(int, void *);
+int ioctl$sys_tiocswinsz_nt(int, void *);
 int ioctl$default(int, uint64_t, void *);
 
 forceinline int ioctl$dispatch(int fd, uint64_t request, void *memory) {

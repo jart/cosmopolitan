@@ -100,7 +100,7 @@ static void Print(void) {
   arsize = atoi((char *)(data + 8 + 48));
   CHECK_LE(4, arsize);
   CHECK_LE(8 + 60 + arsize, size);
-  entries = read32be(data + 8 + 60);
+  entries = READ32BE(data + 8 + 60);
   CHECK_LE(4 + entries * 4 + 1, arsize);
   printf("\t# %'s\n", path);
   PrintString(data, 8, "file signature");
@@ -110,7 +110,7 @@ static void Print(void) {
   printf("\t.long\t%u\t\t\t# %s\n", entries, "symbol table entries");
   table = 8 + 60 + 4;
   for (i = 0; i < entries; ++i) {
-    printf("\t.long\t%#x\t\t\t\t# %u\n", read32be(data + table + i * 4), i);
+    printf("\t.long\t%#x\t\t\t\t# %u\n", READ32BE(data + table + i * 4), i);
   }
   symbols = table + entries * 4;
   symbolslen = arsize - (4 + entries * 4);

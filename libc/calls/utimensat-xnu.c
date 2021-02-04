@@ -23,8 +23,8 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
 
-int utimensat$xnu(int dirfd, const char *path, const struct timespec ts[2],
-                  int flags) {
+int sys_utimensat_xnu(int dirfd, const char *path, const struct timespec ts[2],
+                      int flags) {
   int i;
   struct timeval now, tv[2];
   if (flags) return einval();
@@ -48,13 +48,13 @@ int utimensat$xnu(int dirfd, const char *path, const struct timespec ts[2],
   }
   if (path) {
     if (dirfd == AT_FDCWD) {
-      return utimes$sysv(path, tv);
+      return sys_utimes(path, tv);
     } else {
       return enosys();
     }
   } else {
     if (dirfd != AT_FDCWD) {
-      return futimes$sysv(dirfd, tv);
+      return sys_futimes(dirfd, tv);
     } else {
       return einval();
     }

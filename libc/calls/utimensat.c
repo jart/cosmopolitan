@@ -29,8 +29,8 @@
 int utimensat(int dirfd, const char *path,
               const struct timespec ts[hasatleast 2], int flags) {
   if (!IsWindows()) {
-    return utimensat$sysv(dirfd, path, ts, flags);
+    return sys_utimensat(dirfd, path, ts, flags);
   } else {
-    return utimensat$nt(dirfd, path, ts, flags);
+    return sys_utimensat_nt(dirfd, path, ts, flags);
   }
 }

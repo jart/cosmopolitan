@@ -34,6 +34,13 @@
 #define __x86__ 1
 #endif
 
+#ifdef _MSC_VER
+#define __STRICT_ANSI__
+#ifndef __STDC__
+#define __STDC__
+#endif
+#endif
+
 #ifndef __has_attribute
 #define __has_attribute(x) 0
 #endif

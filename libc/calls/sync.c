@@ -25,8 +25,8 @@
  */
 void sync(void) {
   if (!IsWindows()) {
-    sync$sysv();
+    sys_sync();
   } else {
-    sync$nt();
+    sys_sync_nt();
   }
 }

@@ -7,8 +7,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define _kAutomapStart  0x0000100080000000  // asan can't spread its poison here
-#define _kAutomapSize   0x00000fff80000000
+#define _kAutomapStart  0x0000100080000000 /* asan can't spread its poison */
+#define _kAutomapSize   0x00000fff80000000 /* beyond the above mem address */
 #define _kFixedmapStart 0x0000200000000000
 
 /*

@@ -29,7 +29,7 @@
 /**
  * Flushes all open file handles and, if possible, all disk drives.
  */
-int sync$nt(void) {
+int sys_sync_nt(void) {
   unsigned i;
   int64_t volume;
   uint32_t drives;

@@ -28,8 +28,8 @@
  */
 int fchdir(int dirfd) {
   if (!IsWindows()) {
-    return fchdir$sysv(dirfd);
+    return sys_fchdir(dirfd);
   } else {
-    return fchdir$nt(dirfd);
+    return sys_fchdir_nt(dirfd);
   }
 }

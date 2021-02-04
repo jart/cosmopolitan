@@ -52,17 +52,29 @@ _start:	test	%rdi,%rdi
 	mov	%rdx,%rdi
 	repnz scasq
 	mov	%rdi,%rcx			# auxv
-	mov	%ebx,%edi
+#if SupportsXnu()
+	testb	IsXnu()
+	jz	1f				# polyfill xnu auxv
+	push	$0				# auxv[1][1]=0
+	push	$0				# auxv[1][0]=0
+	mov	(%rcx),%rax			# executable_path=BIN
+	lea	16(%rax),%rax			# BIN
+	push	%rax				# auxv[0][0]=BIN
+	push	$31				# auxv[0][0]=AT_EXECFN
+	mov	%rsp,%rcx			# auxv
+#endif
+1:	mov	%ebx,%edi
 	call	cosmo
 9:	ud2
 	.endfn	_start,weak,hidden
 
+#if SupportsXnu()
 /	Macintosh userspace program entrypoint.
 /
 /	@param	rsp is [n,argv₀..argvₙ₋₁,0,envp₀..,0,auxv₀..,0,..]
 /	@note	FreeBSD is special (see freebsd/lib/csu/amd64/...)
 /	@noreturn
-_start_xnu:
-	movb	$XNU,__hostos(%rip)
+_xnu:	movb	$XNU,__hostos(%rip)
 	jmp	0b
-	.endfn	_start_xnu,weak,hidden
+	.endfn	_xnu,weak,hidden
+#endif

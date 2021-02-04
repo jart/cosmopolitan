@@ -28,5 +28,5 @@
 long ptrace(int request, int pid, void *addr, void *data) {
   /* TODO(jart): FreeBSD addr and data args are different */
   if (request == -1) return einval(); /* see consts.sh */
-  return ptrace$sysv(request, pid, addr, data);
+  return sys_ptrace(request, pid, addr, data);
 }

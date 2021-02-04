@@ -20,6 +20,6 @@
 #include "libc/nt/struct/systeminfo.h"
 #include "libc/nt/systeminfo.h"
 
-hidden struct NtSystemInfo g_ntsysteminfo;
+hidden struct NtSystemInfo __nt_systeminfo;
 
-STATIC_YOINK("_init_g_ntsysteminfo");
+STATIC_YOINK("_init___nt_systeminfo");

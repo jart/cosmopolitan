@@ -21,7 +21,7 @@
 #include "libc/sysv/consts/prio.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int getsetpriority$nt(int which, unsigned who, int value,
+textwindows int sys_getsetpriority_nt(int which, unsigned who, int value,
                                   int (*impl)(int)) {
   if (which != PRIO_PROCESS && which != PRIO_PGRP) return einval();
   if (who && abs(who) != getpid() && abs(who) != gettid()) return eopnotsupp();

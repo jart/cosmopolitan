@@ -29,9 +29,9 @@
  */
 int getsockname(int fd, void *out_addr, uint32_t *out_addrsize) {
   if (!IsWindows()) {
-    return getsockname$sysv(fd, out_addr, out_addrsize);
+    return sys_getsockname(fd, out_addr, out_addrsize);
   } else if (__isfdkind(fd, kFdSocket)) {
-    return getsockname$nt(&g_fds.p[fd], out_addr, out_addrsize);
+    return sys_getsockname_nt(&g_fds.p[fd], out_addr, out_addrsize);
   } else {
     return ebadf();
   }

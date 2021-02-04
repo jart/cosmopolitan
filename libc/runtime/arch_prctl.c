@@ -40,9 +40,9 @@
  * operating systems.
  */
 
-int arch_prctl$sysv(int, int64_t) hidden;
+int sys_arch_prctl(int, int64_t) hidden;
 
-static inline int arch_prctl$fsgsbase(int code, int64_t addr) {
+static inline int arch_prctl_fsgsbase(int code, int64_t addr) {
   switch (code) {
     case ARCH_SET_GS:
       asm volatile("wrgsbase\t%0" : /* no outputs */ : "r"(addr));
@@ -61,7 +61,7 @@ static inline int arch_prctl$fsgsbase(int code, int64_t addr) {
   }
 }
 
-static int arch_prctl$msr(int code, int64_t addr) {
+static int arch_prctl_msr(int code, int64_t addr) {
   switch (code) {
     case ARCH_SET_GS:
       wrmsr(MSR_IA32_GS_BASE, addr);
@@ -80,22 +80,22 @@ static int arch_prctl$msr(int code, int64_t addr) {
   }
 }
 
-static int arch_prctl$freebsd(int code, int64_t addr) {
+static int arch_prctl_freebsd(int code, int64_t addr) {
   switch (code) {
     case ARCH_GET_FS:
-      return arch_prctl$sysv(128, addr);
+      return sys_arch_prctl(128, addr);
     case ARCH_SET_FS:
-      return arch_prctl$sysv(129, addr);
+      return sys_arch_prctl(129, addr);
     case ARCH_GET_GS:
-      return arch_prctl$sysv(130, addr);
+      return sys_arch_prctl(130, addr);
     case ARCH_SET_GS:
-      return arch_prctl$sysv(131, addr);
+      return sys_arch_prctl(131, addr);
     default:
       return einval();
   }
 }
 
-static textsyscall int arch_prctl$xnu(int code, int64_t addr) {
+static textsyscall int arch_prctl_xnu(int code, int64_t addr) {
   int ax;
   switch (code) {
     case ARCH_SET_GS:
@@ -113,7 +113,7 @@ static textsyscall int arch_prctl$xnu(int code, int64_t addr) {
   }
 }
 
-static textsyscall int arch_prctl$openbsd(int code, int64_t addr) {
+static textsyscall int arch_prctl_openbsd(int code, int64_t addr) {
   int64_t rax;
   switch (code) {
     case ARCH_GET_FS:
@@ -144,7 +144,7 @@ static struct InterruptibleCall g_fsgs_icall;
  * Don't bother.
  */
 int arch_prctl(int code, int64_t addr) {
-  void *fn = arch_prctl$fsgsbase;
+  void *fn = arch_prctl_fsgsbase;
   if (!g_fsgs_once) {
     g_fsgs_once = true;
     if (X86_HAVE(FSGSBASE)) {
@@ -162,21 +162,21 @@ int arch_prctl(int code, int64_t addr) {
     }
   }
   if (g_fsgs_once == 2) {
-    return arch_prctl$fsgsbase(code, addr);
+    return arch_prctl_fsgsbase(code, addr);
   }
   switch (__hostos) {
     case METAL:
-      return arch_prctl$msr(code, addr);
+      return arch_prctl_msr(code, addr);
     case FREEBSD:
       /* claims support but it appears not */
-      return arch_prctl$freebsd(code, addr);
+      return arch_prctl_freebsd(code, addr);
     case OPENBSD:
-      return arch_prctl$openbsd(code, addr);
+      return arch_prctl_openbsd(code, addr);
     case LINUX:
-      return arch_prctl$sysv(code, addr);
+      return sys_arch_prctl(code, addr);
     case XNU:
       /* probably won't work */
-      return arch_prctl$xnu(code, addr);
+      return arch_prctl_xnu(code, addr);
     default:
       return enosys();
   }

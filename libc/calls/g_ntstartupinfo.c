@@ -20,6 +20,6 @@
 #include "libc/nt/startupinfo.h"
 #include "libc/nt/struct/startupinfo.h"
 
-hidden struct NtStartupInfo g_ntstartupinfo;
+hidden struct NtStartupInfo __nt_startupinfo;
 
-STATIC_YOINK("_init_g_ntstartupinfo");
+STATIC_YOINK("_init___nt_startupinfo");

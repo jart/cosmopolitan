@@ -25,7 +25,7 @@
 #include "libc/sysv/consts/lock.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int flock$nt(int fd, int op) {
+textwindows int sys_flock_nt(int fd, int op) {
   struct NtOverlapped ov;
   struct NtByHandleFileInformation info;
   if (!__isfdkind(fd, kFdFile)) return ebadf();

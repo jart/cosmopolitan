@@ -23,17 +23,16 @@
 
 #define __NR_accept4_linux 0x0120 /* rhel5:enosysevil */
 
-int accept4$sysv(int server, void *addr, uint32_t *addrsize, int flags) {
+int sys_accept4(int server, void *addr, uint32_t *addrsize, int flags) {
   static bool once, demodernize;
   int olderr, client;
   if (!flags || demodernize) goto TriedAndTrue;
   olderr = errno;
-  client = __accept4$sysv(server, addr, addrsize, flags);
+  client = __sys_accept4(server, addr, addrsize, flags);
   if (client == -1 && errno == ENOSYS) {
     errno = olderr;
   TriedAndTrue:
-    client =
-        fixupnewsockfd$sysv(__accept$sysv(server, addr, addrsize, 0), flags);
+    client = __fixupnewsockfd(__sys_accept(server, addr, addrsize, 0), flags);
   } else if (SupportsLinux() && !once) {
     once = true;
     if (client == __NR_accept4_linux) {

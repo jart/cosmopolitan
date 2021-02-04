@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_SOCK_INTERNAL_H_
-#ifndef __STRICT_ANSI__
 #include "libc/bits/bits.h"
+#include "libc/calls/internal.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/select.h"
 #include "libc/sock/sock.h"
@@ -21,17 +21,13 @@ COSMOPOLITAN_C_START_
 #define FD_CLOSE       (1 << FD_CLOSE_BIT)
 #define FD_CLOSE_BIT   5
 
-struct Fd;
-struct iovec;
-struct timeval;
-
-struct sockaddr$bsd {
+struct sockaddr_bsd {
   uint8_t sa_len;    /* « different type */
   uint8_t sa_family; /* « different type */
   char sa_data[14];
 };
 
-struct sockaddr_in$bsd {
+struct sockaddr_in_bsd {
   uint8_t sin_len;    /* « different type */
   uint8_t sin_family; /* « different type */
   uint16_t sin_port;
@@ -39,7 +35,7 @@ struct sockaddr_in$bsd {
   uint8_t sin_zero[8];
 };
 
-struct msghdr$bsd {
+struct msghdr_bsd {
   void *msg_name;
   uint32_t msg_namelen;
   struct iovec *msg_iov;
@@ -49,83 +45,81 @@ struct msghdr$bsd {
   uint32_t msg_flags; /* « different type */
 };
 
-errno_t MapDosErrorToErrno(uint32_t);
+errno_t __dos2errno(uint32_t);
 
-int32_t __accept$sysv(int32_t, void *, uint32_t *, int) nodiscard hidden;
-int32_t __accept4$sysv(int32_t, void *, uint32_t *, int) nodiscard hidden;
-int32_t __connect$sysv(int32_t, const void *, uint32_t) hidden;
-int32_t __socket$sysv(int32_t, int32_t, int32_t) hidden;
-int32_t __getsockname$sysv(int32_t, void *, uint32_t *) hidden;
-int32_t __getpeername$sysv(int32_t, void *, uint32_t *) hidden;
+int32_t __sys_accept(int32_t, void *, uint32_t *, int) nodiscard hidden;
+int32_t __sys_accept4(int32_t, void *, uint32_t *, int) nodiscard hidden;
+int32_t __sys_connect(int32_t, const void *, uint32_t) hidden;
+int32_t __sys_socket(int32_t, int32_t, int32_t) hidden;
+int32_t __sys_getsockname(int32_t, void *, uint32_t *) hidden;
+int32_t __sys_getpeername(int32_t, void *, uint32_t *) hidden;
 
-int32_t accept4$sysv(int32_t, void *, uint32_t *, int) nodiscard hidden;
-int32_t accept$sysv(int32_t, void *, uint32_t *) hidden;
-int32_t bind$sysv(int32_t, const void *, uint32_t) hidden;
-int32_t connect$sysv(int32_t, const void *, uint32_t) hidden;
-int32_t getsockopt$sysv(int32_t, int32_t, int32_t, void *, uint32_t *) hidden;
-int32_t listen$sysv(int32_t, int32_t) hidden;
-int32_t getsockname$sysv(int32_t, void *, uint32_t *) hidden;
-int32_t getpeername$sysv(int32_t, void *, uint32_t *) hidden;
-int32_t poll$sysv(struct pollfd *, uint64_t, signed) hidden;
-int32_t shutdown$sysv(int32_t, int32_t) hidden;
-int32_t socket$sysv(int32_t, int32_t, int32_t) hidden;
-int64_t readv$sysv(int32_t, const struct iovec *, int32_t) hidden;
-int64_t writev$sysv(int32_t, const struct iovec *, int32_t) hidden;
-ssize_t recvfrom$sysv(int, void *, size_t, int, void *, uint32_t *) hidden;
-ssize_t sendto$sysv(int, const void *, size_t, int, const void *,
-                    uint32_t) hidden;
-int32_t select$sysv(int32_t, fd_set *, fd_set *, fd_set *,
-                    struct timeval *) hidden;
-int setsockopt$sysv(int, int, int, const void *, uint32_t) hidden;
-int32_t epoll_create$sysv(int32_t) hidden;
-int32_t epoll_ctl$sysv(int32_t, int32_t, int32_t, void *) hidden;
-int32_t epoll_wait$sysv(int32_t, void *, int32_t, int32_t) hidden;
+int32_t sys_accept4(int32_t, void *, uint32_t *, int) nodiscard hidden;
+int32_t sys_accept(int32_t, void *, uint32_t *) hidden;
+int32_t sys_bind(int32_t, const void *, uint32_t) hidden;
+int32_t sys_connect(int32_t, const void *, uint32_t) hidden;
+int32_t sys_getsockopt(int32_t, int32_t, int32_t, void *, uint32_t *) hidden;
+int32_t sys_listen(int32_t, int32_t) hidden;
+int32_t sys_getsockname(int32_t, void *, uint32_t *) hidden;
+int32_t sys_getpeername(int32_t, void *, uint32_t *) hidden;
+int32_t sys_poll(struct pollfd *, uint64_t, signed) hidden;
+int32_t sys_shutdown(int32_t, int32_t) hidden;
+int32_t sys_socket(int32_t, int32_t, int32_t) hidden;
+int64_t sys_readv(int32_t, const struct iovec *, int32_t) hidden;
+int64_t sys_writev(int32_t, const struct iovec *, int32_t) hidden;
+ssize_t sys_recvfrom(int, void *, size_t, int, void *, uint32_t *) hidden;
+ssize_t sys_sendto(int, const void *, size_t, int, const void *,
+                   uint32_t) hidden;
+int32_t sys_select(int32_t, fd_set *, fd_set *, fd_set *,
+                   struct timeval *) hidden;
+int sys_setsockopt(int, int, int, const void *, uint32_t) hidden;
+int32_t sys_epoll_create(int32_t) hidden;
+int32_t sys_epoll_ctl(int32_t, int32_t, int32_t, void *) hidden;
+int32_t sys_epoll_wait(int32_t, void *, int32_t, int32_t) hidden;
 
-int poll$nt(struct pollfd *, uint64_t, uint64_t) hidden;
-int getsockopt$nt(struct Fd *, int, int, void *, uint32_t *) hidden;
-int getsockname$nt(struct Fd *, void *, uint32_t *) hidden;
-int getpeername$nt(struct Fd *, void *, uint32_t *) hidden;
-int listen$nt(struct Fd *, int) hidden;
-int connect$nt(struct Fd *, const void *, uint32_t) hidden;
-int bind$nt(struct Fd *, const void *, uint32_t);
-int accept$nt(struct Fd *, void *, uint32_t *, int) hidden;
-int closesocket$nt(int) hidden;
-int socket$nt(int, int, int) hidden;
-int select$nt(int, fd_set *, fd_set *, fd_set *, struct timeval *) hidden;
-int shutdown$nt(struct Fd *, int) hidden;
+int sys_poll_nt(struct pollfd *, uint64_t, uint64_t) hidden;
+int sys_getsockopt_nt(struct Fd *, int, int, void *, uint32_t *) hidden;
+int sys_getsockname_nt(struct Fd *, void *, uint32_t *) hidden;
+int sys_getpeername_nt(struct Fd *, void *, uint32_t *) hidden;
+int sys_listen_nt(struct Fd *, int) hidden;
+int sys_connect_nt(struct Fd *, const void *, uint32_t) hidden;
+int sys_bind_nt(struct Fd *, const void *, uint32_t);
+int sys_accept_nt(struct Fd *, void *, uint32_t *, int) hidden;
+int sys_closesocket_nt(int) hidden;
+int sys_socket_nt(int, int, int) hidden;
+int sys_select_nt(int, fd_set *, fd_set *, fd_set *, struct timeval *) hidden;
+int sys_shutdown_nt(struct Fd *, int) hidden;
 
-size_t iovec2nt(struct NtIovec[hasatleast 16], const struct iovec *,
-                size_t) hidden;
-ssize_t sendto$nt(struct Fd *, const struct iovec *, size_t, uint32_t, void *,
-                  uint32_t) hidden;
-ssize_t recvfrom$nt(struct Fd *, const struct iovec *, size_t, uint32_t, void *,
-                    uint32_t *) hidden;
+size_t __iovec2nt(struct NtIovec[hasatleast 16], const struct iovec *,
+                  size_t) hidden;
+ssize_t sys_sendto_nt(struct Fd *, const struct iovec *, size_t, uint32_t,
+                      void *, uint32_t) hidden;
+ssize_t sys_recvfrom_nt(struct Fd *, const struct iovec *, size_t, uint32_t,
+                        void *, uint32_t *) hidden;
 
-void winsockinit(void) hidden;
+void __winsockinit(void) hidden;
 int64_t __winsockerr(void) nocallback hidden;
-int fixupnewsockfd$sysv(int, int) hidden;
-ssize_t WinSendRecv(int64_t, void *, size_t, uint32_t, struct sockaddr *,
-                    uint32_t *, bool) hidden;
-int64_t winsockblock(int64_t, unsigned, int64_t) hidden;
+int __fixupnewsockfd(int, int) hidden;
+int64_t __winsockblock(int64_t, unsigned, int64_t) hidden;
 
-int close$epoll(int) hidden;
+int sys_close_epoll(int) hidden;
 
 /**
- * Converts sockaddr (Linux/Windows) → sockaddr$bsd (XNU/BSD).
+ * Converts sockaddr (Linux/Windows) → sockaddr_bsd (XNU/BSD).
  */
 forceinline void sockaddr2bsd(void *saddr) {
   uint8_t *p;
   uint16_t fam;
   if (saddr) {
     p = saddr;
-    fam = read16le(p);
-    p[0] = sizeof(struct sockaddr_in$bsd);
+    fam = READ16LE(p);
+    p[0] = sizeof(struct sockaddr_in_bsd);
     p[1] = fam;
   }
 }
 
 /**
- * Converts sockaddr_in$bsd (XNU/BSD) → sockaddr (Linux/Windows).
+ * Converts sockaddr_in_bsd (XNU/BSD) → sockaddr (Linux/Windows).
  */
 forceinline void sockaddr2linux(void *saddr) {
   uint8_t *p, fam;
@@ -138,5 +132,4 @@ forceinline void sockaddr2linux(void *saddr) {
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* !ANSI */
 #endif /* COSMOPOLITAN_LIBC_SOCK_INTERNAL_H_ */

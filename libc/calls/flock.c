@@ -29,8 +29,8 @@
  */
 int flock(int fd, int op) {
   if (!IsWindows()) {
-    return flock$sysv(fd, op);
+    return sys_flock(fd, op);
   } else {
-    return flock$nt(fd, op);
+    return sys_flock_nt(fd, op);
   }
 }

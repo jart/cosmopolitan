@@ -28,8 +28,8 @@
 int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
            struct timeval *timeout) {
   if (!IsWindows()) {
-    return select$sysv(nfds, readfds, writefds, exceptfds, timeout);
+    return sys_select(nfds, readfds, writefds, exceptfds, timeout);
   } else {
-    return select$nt(nfds, readfds, writefds, exceptfds, timeout);
+    return sys_select_nt(nfds, readfds, writefds, exceptfds, timeout);
   }
 }

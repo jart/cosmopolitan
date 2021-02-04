@@ -27,7 +27,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-static textwindows noinline int ttyname$nt(int fd, char *buf, size_t size) {
+static textwindows noinline int sys_ttyname_nt(int fd, char *buf, size_t size) {
   uint32_t mode;
   if (GetConsoleMode(g_fds.p[fd].handle, &mode)) {
     if (mode & kNtEnableVirtualTerminalInput) {
@@ -42,7 +42,7 @@ static textwindows noinline int ttyname$nt(int fd, char *buf, size_t size) {
   }
 }
 
-static int ttyname$freebsd(int fd, char *buf, size_t size) {
+static int ttyname_freebsd(int fd, char *buf, size_t size) {
   const unsigned FIODGNAME = 2148558456;
   struct fiodgname_arg {
     int len;
@@ -50,11 +50,11 @@ static int ttyname$freebsd(int fd, char *buf, size_t size) {
   } fg;
   fg.buf = buf;
   fg.len = size;
-  if (ioctl$sysv(fd, FIODGNAME, &fg) != -1) return 0;
+  if (sys_ioctl(fd, FIODGNAME, &fg) != -1) return 0;
   return enotty();
 }
 
-static int ttyname$linux(int fd, char *buf, size_t size) {
+static int ttyname_linux(int fd, char *buf, size_t size) {
   struct stat st1, st2;
   if (!isatty(fd)) return errno;
   char name[PATH_MAX];
@@ -71,12 +71,12 @@ static int ttyname$linux(int fd, char *buf, size_t size) {
 
 int ttyname_r(int fd, char *buf, size_t size) {
   if (IsLinux()) {
-    return ttyname$linux(fd, buf, size);
+    return ttyname_linux(fd, buf, size);
   } else if (IsFreebsd()) {
-    return ttyname$freebsd(fd, buf, size);
+    return ttyname_freebsd(fd, buf, size);
   } else if (IsWindows()) {
     if (__isfdkind(fd, kFdFile)) {
-      return ttyname$nt(fd, buf, size);
+      return sys_ttyname_nt(fd, buf, size);
     } else {
       return ebadf();
     }

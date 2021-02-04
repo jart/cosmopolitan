@@ -22,7 +22,7 @@
 #include "libc/nt/files.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int fchdir$nt(int dirfd) {
+textwindows int sys_fchdir_nt(int dirfd) {
   uint32_t len;
   char16_t dir[PATH_MAX];
   if (!__isfdkind(dirfd, kFdFile)) return ebadf();

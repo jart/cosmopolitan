@@ -31,7 +31,7 @@
 #include "libc/sysv/consts/prio.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int getpriority$nt(int ignored) {
+textwindows int sys_getpriority_nt(int ignored) {
   size_t i;
   uint32_t tier, lg2tier, wut;
   if ((tier = GetPriorityClass(GetCurrentProcess())) != 0 &&

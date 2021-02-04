@@ -22,7 +22,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int close$nt(int fd) {
+textwindows int sys_close_nt(int fd) {
   bool32 ok;
   if (g_fds.p[fd].kind == kFdFile &&
       GetFileType(g_fds.p[fd].handle) == kNtFileTypeDisk) {

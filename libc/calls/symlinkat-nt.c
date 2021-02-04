@@ -20,7 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/nt/files.h"
 
-textwindows int symlinkat$nt(const char *target, int newdirfd,
+textwindows int sys_symlinkat_nt(const char *target, int newdirfd,
                              const char *linkpath) {
   uint32_t flags;
   char16_t target16[PATH_MAX];

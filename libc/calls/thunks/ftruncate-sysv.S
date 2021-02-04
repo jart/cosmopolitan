@@ -20,7 +20,7 @@
 .source	__FILE__
 
 /	Directly calls ftruncate() impl on host o/s if available.
-ftruncate$sysv:
+sys_ftruncate:
 	mov	%rsi,%rdx			# openbsd:pad
-	jmp	__ftruncate$sysv
-	.endfn	ftruncate$sysv,globl,hidden
+	jmp	__sys_ftruncate
+	.endfn	sys_ftruncate,globl,hidden
