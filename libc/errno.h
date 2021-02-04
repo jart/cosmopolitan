@@ -6,137 +6,137 @@
  * @see libc/sysv/consts.sh for numbers
  */
 
-#define EPERM           EPERM            // operation not permitted
-#define ENOENT          ENOENT           // no such file or directory
-#define ESRCH           ESRCH            // no such process
-#define EINTR           EINTR            // interrupted system call
-#define EIO             EIO              // input/output error
-#define ENXIO           ENXIO            // no such device or address
-#define E2BIG           E2BIG            // argument list too long
-#define ENOEXEC         ENOEXEC          // exec format error
-#define EBADF           EBADF            // bad file descriptor
-#define ECHILD          ECHILD           // no child processes
-#define EAGAIN          EAGAIN           // resource temporarily unavailable
-#define ENOMEM          ENOMEM           // not enough space
-#define EACCES          EACCES           // permission denied
-#define EFAULT          EFAULT           // bad address
-#define ENOTBLK         ENOTBLK          // block device required
-#define EBUSY           EBUSY            // device or resource busy
-#define EEXIST          EEXIST           // file exists
-#define EXDEV           EXDEV            // improper link
-#define ENODEV          ENODEV           // no such device
-#define ENOTDIR         ENOTDIR          // not a directory
-#define EISDIR          EISDIR           // is a directory
-#define EINVAL          EINVAL           // invalid argument
-#define ENFILE          ENFILE           // too many open files in system
-#define EMFILE          EMFILE           // too many open files
-#define ENOTTY          ENOTTY           // inappropriate I/O control op
-#define ETXTBSY         ETXTBSY          // text file busy
-#define EFBIG           EFBIG            // file too large
-#define ENOSPC          ENOSPC           // no space left on device
-#define ESPIPE          ESPIPE           // invalid seek
-#define EROFS           EROFS            // read-only filesystem
-#define EMLINK          EMLINK           // too many links
-#define EPIPE           EPIPE            // broken pipe
-#define EDOM            EDOM             // argument out of function domain
-#define ERANGE          ERANGE           // result too large
-#define EDEADLK         EDEADLK          // resource deadlock avoided
-#define ENAMETOOLONG    ENAMETOOLONG     // filename too long
-#define ENOLCK          ENOLCK           // no locks available
-#define ENOSYS          ENOSYS           // system call not implemented
-#define ENOTEMPTY       ENOTEMPTY        // directory not empty
-#define ELOOP           ELOOP            // too many levels of symbolic links
-#define ENOMSG          ENOMSG           // no message of the desired type
-#define EIDRM           EIDRM            // identifier removed
-#define ECHRNG          ECHRNG           // channel number out of range
-#define EL2NSYNC        EL2NSYNC         // level 2 not synchronized
-#define EL3HLT          EL3HLT           // level 3 halted
-#define EL3RST          EL3RST           // level 3 halted
-#define ELNRNG          ELNRNG           // link number out of range
-#define EUNATCH         EUNATCH          // protocol driver not attached
-#define ENOCSI          ENOCSI           // no csi structure available
-#define EL2HLT          EL2HLT           // level 2 halted
-#define EBADE           EBADE            // invalid exchange
-#define EBADR           EBADR            // invalid request descriptor
-#define EXFULL          EXFULL           // exchange full
-#define ENOANO          ENOANO           // no anode
-#define EBADRQC         EBADRQC          // invalid request code
-#define EBADSLT         EBADSLT          // invalid slot
-#define ENOSTR          ENOSTR           // no string
-#define ENODATA         ENODATA          // no data
-#define ETIME           ETIME            // timer expired
-#define ENOSR           ENOSR            // out of streams resources
-#define ENONET          ENONET           // no network
-#define ENOPKG          ENOPKG           // package not installed
-#define EREMOTE         EREMOTE          // object is remote
-#define ENOLINK         ENOLINK          // link severed
-#define EADV            EADV             // todo
-#define ESRMNT          ESRMNT           // todo
-#define ECOMM           ECOMM            // communication error on send
-#define EPROTO          EPROTO           // protocol error
-#define EMULTIHOP       EMULTIHOP        // multihop attempted
-#define EDOTDOT         EDOTDOT          // todo
-#define EBADMSG         EBADMSG          // bad message
-#define EOVERFLOW       EOVERFLOW        // value too large for type
-#define ENOTUNIQ        ENOTUNIQ         // name not unique on network
-#define EBADFD          EBADFD           // fd in bad *state* (cf. EBADF)
-#define EREMCHG         EREMCHG          // remote address changed
-#define ELIBACC         ELIBACC          // cannot access dso
-#define ELIBBAD         ELIBBAD          // corrupted shared library
-#define ELIBSCN         ELIBSCN          // a.out section corrupted
-#define ELIBMAX         ELIBMAX          // too many shared libraries
-#define ELIBEXEC        ELIBEXEC         // cannot exec a dso directly
-#define EILSEQ          EILSEQ           // invalid wide character
-#define ERESTART        ERESTART         // please restart syscall
-#define ESTRPIPE        ESTRPIPE         // streams pipe error
-#define EUSERS          EUSERS           // too many users
-#define ENOTSOCK        ENOTSOCK         // not a socket
-#define EDESTADDRREQ    EDESTADDRREQ     // dest address needed
-#define EMSGSIZE        EMSGSIZE         // message too long
-#define EPROTOTYPE      EPROTOTYPE       // protocol wrong for socket
-#define ENOPROTOOPT     ENOPROTOOPT      // protocol not available
-#define EPROTONOSUPPORT EPROTONOSUPPORT  // protocol not supported
-#define ESOCKTNOSUPPORT ESOCKTNOSUPPORT  // socket type not supported
-#define EOPNOTSUPP      EOPNOTSUPP       // operation not supported on socket
-#define EPFNOSUPPORT    EPFNOSUPPORT     // protocol family not supported
-#define EAFNOSUPPORT    EAFNOSUPPORT     // address family not supported
-#define EADDRINUSE      EADDRINUSE       // address already in use
-#define EADDRNOTAVAIL   EADDRNOTAVAIL    // address not available
-#define ENETDOWN        ENETDOWN         // network is down
-#define ENETUNREACH     ENETUNREACH      // network unreachable
-#define ENETRESET       ENETRESET        // connection aborted by network
-#define ECONNABORTED    ECONNABORTED     // connection aborted
-#define ECONNRESET      ECONNRESET       // connection reset
-#define ENOBUFS         ENOBUFS          // no buffer space available
-#define EISCONN         EISCONN          // socket is connected
-#define ENOTCONN        ENOTCONN         // the socket is not connected
-#define ESHUTDOWN       ESHUTDOWN        // no send after endpoint shutdown
-#define ETOOMANYREFS    ETOOMANYREFS     // too many refs
-#define ETIMEDOUT       ETIMEDOUT        // connection timed out
-#define ECONNREFUSED    ECONNREFUSED     // connection refused
-#define EHOSTDOWN       EHOSTDOWN        // host is down
-#define EHOSTUNREACH    EHOSTUNREACH     // host is unreachable
-#define EALREADY        EALREADY         // connection already in progress
-#define EINPROGRESS     EINPROGRESS      // operation in progress
-#define ESTALE          ESTALE           // stale file handle
-#define EUCLEAN         EUCLEAN          // structure needs cleaning
-#define ENOTNAM         ENOTNAM          // todo
-#define ENAVAIL         ENAVAIL          // todo
-#define EISNAM          EISNAM           // is a named type file
-#define EREMOTEIO       EREMOTEIO        // remote i/o error
-#define EDQUOT          EDQUOT           // disk quota exceeded
-#define ENOMEDIUM       ENOMEDIUM        // no medium found
-#define EMEDIUMTYPE     EMEDIUMTYPE      // wrong medium type
-#define ECANCELED       ECANCELED        // operation canceled
-#define ENOKEY          ENOKEY           // required key not available
-#define EKEYEXPIRED     EKEYEXPIRED      // key has expired
-#define EKEYREVOKED     EKEYREVOKED      // key has been revoked
-#define EKEYREJECTED    EKEYREJECTED     // key was rejected by service
-#define EOWNERDEAD      EOWNERDEAD       // owner died
-#define ENOTRECOVERABLE ENOTRECOVERABLE  // state not recoverable
-#define ERFKILL         ERFKILL          // can't op b/c RF-kill
-#define EHWPOISON       EHWPOISON        // mempage has h/w error
-#define EWOULDBLOCK     EAGAIN           // poll fd and try again
+#define EPERM           EPERM            /* operation not permitted */
+#define ENOENT          ENOENT           /* no such file or directory */
+#define ESRCH           ESRCH            /* no such process */
+#define EINTR           EINTR            /* interrupted system call */
+#define EIO             EIO              /* input/output error */
+#define ENXIO           ENXIO            /* no such device or address */
+#define E2BIG           E2BIG            /* argument list too long */
+#define ENOEXEC         ENOEXEC          /* exec format error */
+#define EBADF           EBADF            /* bad file descriptor */
+#define ECHILD          ECHILD           /* no child processes */
+#define EAGAIN          EAGAIN           /* resource temporarily unavailable */
+#define ENOMEM          ENOMEM           /* not enough space */
+#define EACCES          EACCES           /* permission denied */
+#define EFAULT          EFAULT           /* bad address */
+#define ENOTBLK         ENOTBLK          /* block device required */
+#define EBUSY           EBUSY            /* device or resource busy */
+#define EEXIST          EEXIST           /* file exists */
+#define EXDEV           EXDEV            /* improper link */
+#define ENODEV          ENODEV           /* no such device */
+#define ENOTDIR         ENOTDIR          /* not a directory */
+#define EISDIR          EISDIR           /* is a directory */
+#define EINVAL          EINVAL           /* invalid argument */
+#define ENFILE          ENFILE           /* too many open files in system */
+#define EMFILE          EMFILE           /* too many open files */
+#define ENOTTY          ENOTTY           /* inappropriate I/O control op */
+#define ETXTBSY         ETXTBSY          /* text file busy */
+#define EFBIG           EFBIG            /* file too large */
+#define ENOSPC          ENOSPC           /* no space left on device */
+#define ESPIPE          ESPIPE           /* invalid seek */
+#define EROFS           EROFS            /* read-only filesystem */
+#define EMLINK          EMLINK           /* too many links */
+#define EPIPE           EPIPE            /* broken pipe */
+#define EDOM            EDOM             /* argument out of function domain */
+#define ERANGE          ERANGE           /* result too large */
+#define EDEADLK         EDEADLK          /* resource deadlock avoided */
+#define ENAMETOOLONG    ENAMETOOLONG     /* filename too long */
+#define ENOLCK          ENOLCK           /* no locks available */
+#define ENOSYS          ENOSYS           /* system call not implemented */
+#define ENOTEMPTY       ENOTEMPTY        /* directory not empty */
+#define ELOOP           ELOOP            /* too many levels of symbolic links */
+#define ENOMSG          ENOMSG           /* no message of the desired type */
+#define EIDRM           EIDRM            /* identifier removed */
+#define ECHRNG          ECHRNG           /* channel number out of range */
+#define EL2NSYNC        EL2NSYNC         /* level 2 not synchronized */
+#define EL3HLT          EL3HLT           /* level 3 halted */
+#define EL3RST          EL3RST           /* level 3 halted */
+#define ELNRNG          ELNRNG           /* link number out of range */
+#define EUNATCH         EUNATCH          /* protocol driver not attached */
+#define ENOCSI          ENOCSI           /* no csi structure available */
+#define EL2HLT          EL2HLT           /* level 2 halted */
+#define EBADE           EBADE            /* invalid exchange */
+#define EBADR           EBADR            /* invalid request descriptor */
+#define EXFULL          EXFULL           /* exchange full */
+#define ENOANO          ENOANO           /* no anode */
+#define EBADRQC         EBADRQC          /* invalid request code */
+#define EBADSLT         EBADSLT          /* invalid slot */
+#define ENOSTR          ENOSTR           /* no string */
+#define ENODATA         ENODATA          /* no data */
+#define ETIME           ETIME            /* timer expired */
+#define ENOSR           ENOSR            /* out of streams resources */
+#define ENONET          ENONET           /* no network */
+#define ENOPKG          ENOPKG           /* package not installed */
+#define EREMOTE         EREMOTE          /* object is remote */
+#define ENOLINK         ENOLINK          /* link severed */
+#define EADV            EADV             /* todo */
+#define ESRMNT          ESRMNT           /* todo */
+#define ECOMM           ECOMM            /* communication error on send */
+#define EPROTO          EPROTO           /* protocol error */
+#define EMULTIHOP       EMULTIHOP        /* multihop attempted */
+#define EDOTDOT         EDOTDOT          /* todo */
+#define EBADMSG         EBADMSG          /* bad message */
+#define EOVERFLOW       EOVERFLOW        /* value too large for type */
+#define ENOTUNIQ        ENOTUNIQ         /* name not unique on network */
+#define EBADFD          EBADFD           /* fd in bad *state* (cf. EBADF) */
+#define EREMCHG         EREMCHG          /* remote address changed */
+#define ELIBACC         ELIBACC          /* cannot access dso */
+#define ELIBBAD         ELIBBAD          /* corrupted shared library */
+#define ELIBSCN         ELIBSCN          /* a.out section corrupted */
+#define ELIBMAX         ELIBMAX          /* too many shared libraries */
+#define ELIBEXEC        ELIBEXEC         /* cannot exec a dso directly */
+#define EILSEQ          EILSEQ           /* invalid wide character */
+#define ERESTART        ERESTART         /* please restart syscall */
+#define ESTRPIPE        ESTRPIPE         /* streams pipe error */
+#define EUSERS          EUSERS           /* too many users */
+#define ENOTSOCK        ENOTSOCK         /* not a socket */
+#define EDESTADDRREQ    EDESTADDRREQ     /* dest address needed */
+#define EMSGSIZE        EMSGSIZE         /* message too long */
+#define EPROTOTYPE      EPROTOTYPE       /* protocol wrong for socket */
+#define ENOPROTOOPT     ENOPROTOOPT      /* protocol not available */
+#define EPROTONOSUPPORT EPROTONOSUPPORT  /* protocol not supported */
+#define ESOCKTNOSUPPORT ESOCKTNOSUPPORT  /* socket type not supported */
+#define EOPNOTSUPP      EOPNOTSUPP       /* operation not supported on socket */
+#define EPFNOSUPPORT    EPFNOSUPPORT     /* protocol family not supported */
+#define EAFNOSUPPORT    EAFNOSUPPORT     /* address family not supported */
+#define EADDRINUSE      EADDRINUSE       /* address already in use */
+#define EADDRNOTAVAIL   EADDRNOTAVAIL    /* address not available */
+#define ENETDOWN        ENETDOWN         /* network is down */
+#define ENETUNREACH     ENETUNREACH      /* network unreachable */
+#define ENETRESET       ENETRESET        /* connection aborted by network */
+#define ECONNABORTED    ECONNABORTED     /* connection aborted */
+#define ECONNRESET      ECONNRESET       /* connection reset */
+#define ENOBUFS         ENOBUFS          /* no buffer space available */
+#define EISCONN         EISCONN          /* socket is connected */
+#define ENOTCONN        ENOTCONN         /* the socket is not connected */
+#define ESHUTDOWN       ESHUTDOWN        /* no send after endpoint shutdown */
+#define ETOOMANYREFS    ETOOMANYREFS     /* too many refs */
+#define ETIMEDOUT       ETIMEDOUT        /* connection timed out */
+#define ECONNREFUSED    ECONNREFUSED     /* connection refused */
+#define EHOSTDOWN       EHOSTDOWN        /* host is down */
+#define EHOSTUNREACH    EHOSTUNREACH     /* host is unreachable */
+#define EALREADY        EALREADY         /* connection already in progress */
+#define EINPROGRESS     EINPROGRESS      /* operation in progress */
+#define ESTALE          ESTALE           /* stale file handle */
+#define EUCLEAN         EUCLEAN          /* structure needs cleaning */
+#define ENOTNAM         ENOTNAM          /* todo */
+#define ENAVAIL         ENAVAIL          /* todo */
+#define EISNAM          EISNAM           /* is a named type file */
+#define EREMOTEIO       EREMOTEIO        /* remote i/o error */
+#define EDQUOT          EDQUOT           /* disk quota exceeded */
+#define ENOMEDIUM       ENOMEDIUM        /* no medium found */
+#define EMEDIUMTYPE     EMEDIUMTYPE      /* wrong medium type */
+#define ECANCELED       ECANCELED        /* operation canceled */
+#define ENOKEY          ENOKEY           /* required key not available */
+#define EKEYEXPIRED     EKEYEXPIRED      /* key has expired */
+#define EKEYREVOKED     EKEYREVOKED      /* key has been revoked */
+#define EKEYREJECTED    EKEYREJECTED     /* key was rejected by service */
+#define EOWNERDEAD      EOWNERDEAD       /* owner died */
+#define ENOTRECOVERABLE ENOTRECOVERABLE  /* state not recoverable */
+#define ERFKILL         ERFKILL          /* can't op b/c RF-kill */
+#define EHWPOISON       EHWPOISON        /* mempage has h/w error */
+#define EWOULDBLOCK     EAGAIN           /* poll fd and try again */
 #define ENOTSUP         ENOTSUP
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)

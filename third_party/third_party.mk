@@ -11,7 +11,6 @@ o/$(MODE)/third_party:				\
 	o/$(MODE)/third_party/duktape		\
 	o/$(MODE)/third_party/f2c		\
 	o/$(MODE)/third_party/getopt		\
-	o/$(MODE)/third_party/lemon		\
 	o/$(MODE)/third_party/lz4cli		\
 	o/$(MODE)/third_party/musl		\
 	o/$(MODE)/third_party/regex		\

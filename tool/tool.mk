@@ -4,7 +4,6 @@
 .PHONY:	o/$(MODE)/tool
 o/$(MODE)/tool:			\
 	o/$(MODE)/tool/build	\
-	o/$(MODE)/tool/calc	\
 	o/$(MODE)/tool/decode	\
 	o/$(MODE)/tool/hash	\
 	o/$(MODE)/tool/net	\

@@ -20,6 +20,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/log/log.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 void __logerrno(const char *file, int line, const char *form) {
   flogf(kLogWarn, file, line, NULL, PFLINK("%s → %s"), form, strerror(errno));

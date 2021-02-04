@@ -601,7 +601,13 @@ typedef uint64_t uintmax_t;
 #endif
 
 #ifndef unreachable
+#if defined(__GNUC__) && !defined(__STRICT_ANSI)
 #define unreachable __builtin_unreachable()
+#else
+#define unreachable \
+  do {              \
+  } while (1)
+#endif
 #endif
 
 #define donothing \
@@ -754,13 +760,13 @@ typedef uint64_t uintmax_t;
 #endif /* ANSI */
 #endif /* -w */
 
-#ifdef __STRICT_ANSI__
+#ifndef __STRICT_ANSI__
 #define DebugBreak() asm("int3")
 #else
 #define DebugBreak() (void)0
 #endif
 
-#ifdef __STRICT_ANSI__
+#ifndef __STRICT_ANSI__
 #define VEIL(CONSTRAINT, EXPRESSION)                             \
   ({                                                             \
     autotype(EXPRESSION) VeiledValue = (EXPRESSION);             \
@@ -771,7 +777,7 @@ typedef uint64_t uintmax_t;
 #define VEIL(CONSTRAINT, EXPRESSION) (EXPRESSION)
 #endif
 
-#ifdef __STRICT_ANSI__
+#ifndef __STRICT_ANSI__
 #define CONCEAL(CONSTRAINT, EXPRESSION)                                   \
   ({                                                                      \
     autotype(EXPRESSION) VeiledValue = (EXPRESSION);                      \
@@ -782,7 +788,7 @@ typedef uint64_t uintmax_t;
 #define CONCEAL(CONSTRAINT, EXPRESSION) (EXPRESSION)
 #endif
 
-#ifdef __STRICT_ANSI__
+#ifndef __STRICT_ANSI__
 #define EXPROPRIATE(EXPRESSION)                    \
   ({                                               \
     asm volatile("" ::"g"(EXPRESSION) : "memory"); \
@@ -792,7 +798,7 @@ typedef uint64_t uintmax_t;
 #define EXPROPRIATE(EXPRESSION) (EXPRESSION)
 #endif
 
-#ifdef __STRICT_ANSI__
+#ifndef __STRICT_ANSI__
 #define YOINK(SYMBOL)                                                     \
   do {                                                                    \
     _Static_assert(!__builtin_types_compatible_p(typeof(SYMBOL), char[]), \
@@ -807,7 +813,7 @@ typedef uint64_t uintmax_t;
 #define YOINK(SYMBOL) (void)0
 #endif
 
-#ifdef __STRICT_ANSI__
+#ifndef __STRICT_ANSI__
 #define STATIC_YOINK(SYMBOLSTR) \
   asm(".section .yoink\n\tnopl\t\"" SYMBOLSTR "\"\n\t.previous")
 #else

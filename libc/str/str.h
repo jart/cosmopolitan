@@ -181,6 +181,7 @@ compatfn wchar_t *wmemmove(wchar_t *, const wchar_t *, size_t) memcpyesque;
 int timingsafe_memcmp(const void *, const void *, size_t);
 void *memmem(const void *, size_t, const void *, size_t)
     paramsnonnull() nothrow nocallback nosideeffect;
+char *strerror(int) returnsnonnull nothrow nocallback;
 
 char *tinystrstr(const char *, const char *) strlenesque;
 char16_t *tinystrstr16(const char16_t *, const char16_t *) strlenesque;

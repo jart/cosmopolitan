@@ -26,6 +26,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
 testonly void testlib_showerror(const char *file, int line, const char *func,
