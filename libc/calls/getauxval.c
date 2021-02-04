@@ -36,26 +36,10 @@ unsigned long getauxval(unsigned long at) {
   if (at != -1) {
     if (!IsWindows()) {
       if (!g_auxv) return 0;
-      if (IsXnu()) {
-        if (at) {
-          const char *name =
-              at == AT_EXECFN ? "executable_path" : (const char *)at;
-          const char **auxv = (const char **)g_auxv;
-          unsigned namelen = strlen(name);
-          for (int i = 0; auxv[i]; ++i) {
-            if (strncmp(auxv[i], name, namelen) == 0 &&
-                auxv[i][namelen] == '=') {
-              res = (intptr_t)&auxv[i][namelen + 1];
-              break;
-            }
-          }
-        }
-      } else {
-        for (const unsigned long *ap = g_auxv; *ap; ap += 2) {
-          if (ap[0] == at) {
-            res = ap[1];
-            break;
-          }
+      for (const unsigned long *ap = g_auxv; *ap; ap += 2) {
+        if (ap[0] == at) {
+          res = ap[1];
+          break;
         }
       }
     } else {

@@ -67,7 +67,7 @@ static noasan textwindows void MakeLongDoubleLongAgain(void) {
 static noasan textwindows void NormalizeCmdExe(void) {
   uint32_t mode;
   int64_t handle, hstdin, hstdout, hstderr;
-  if ((int)weakaddr("sys_v_ntsubsystem") == kNtImageSubsystemWindowsCui &&
+  if ((int)weakaddr("v_ntsubsystem") == kNtImageSubsystemWindowsCui &&
       NtGetVersion() >= kNtVersionWindows10) {
     hstdin = GetStdHandle(pushpop(kNtStdInputHandle));
     hstdout = GetStdHandle(pushpop(kNtStdOutputHandle));

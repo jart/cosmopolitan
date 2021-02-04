@@ -77,12 +77,11 @@ STATIC_YOINK("_init_asan");
     }                       \
   } while (0)
 
-#define REQUIRE(FUNC)                                \
-  do {                                               \
-    if (!weaken(FUNC)) {                             \
-      __asan_write_string("asan needs " #FUNC "\n"); \
-      __asan_exit(100);                              \
-    }                                                \
+#define REQUIRE(FUNC)                              \
+  do {                                             \
+    if (!weaken(FUNC)) {                           \
+      __asan_die("error: asan needs " #FUNC "\n"); \
+    }                                              \
   } while (0)
 
 struct AsanSourceLocation {
@@ -448,7 +447,6 @@ static ssize_t __asan_write_string(const char *s) {
 
 static wontreturn void __asan_abort(void) {
   if (weaken(__die)) weaken(__die)();
-  if (weaken(abort)) weaken(abort)();
   __asan_exit(134);
 }
 
@@ -753,7 +751,7 @@ void __asan_map_shadow(uintptr_t p, size_t n) {
           weaken(TrackMemoryInterval)(
               m, a, a, sm.maphandle, PROT_READ | PROT_WRITE,
               MAP_PRIVATE | *weaken(MAP_ANONYMOUS) | MAP_FIXED) == -1) {
-        __asan_abort();
+        __asan_die("error: could not map asan shadow memory\n");
       }
       __asan_repstosb((void *)((uintptr_t)a << 16), kAsanUnmapped, 1 << 16);
     }
