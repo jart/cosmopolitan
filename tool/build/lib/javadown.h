@@ -3,17 +3,21 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+struct JavadownTag {
+  char *tag;
+  char *text;
+};
+
+struct JavadownTags {
+  size_t n;
+  struct JavadownTag * p;
+};
+
 struct Javadown {
   bool isfileoverview;
   char *title;
   char *text;
-  struct JavadownTags {
-    size_t n;
-    struct JavadownTag {
-      char *tag;
-      char *text;
-    } * p;
-  } tags;
+  struct JavadownTags tags;
 };
 
 struct Javadown *ParseJavadown(const char *, size_t);

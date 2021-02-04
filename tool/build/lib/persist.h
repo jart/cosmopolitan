@@ -3,16 +3,18 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+struct ObjectArrayParam {
+  size_t len;
+  size_t size;
+  void *pp;
+};
+
 struct ObjectParam {
   size_t size;
   void *p;
   uint32_t *magic;
   int32_t *abi;
-  struct ObjectArrayParam {
-    size_t len;
-    size_t size;
-    void *pp;
-  } * arrays;
+  struct ObjectArrayParam * arrays;
 };
 
 void PersistObject(const char *, size_t, const struct ObjectParam *);

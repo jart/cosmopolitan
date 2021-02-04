@@ -30,6 +30,7 @@ void gclongjmp(jmp_buf, int) nothrow wontreturn paramsnonnull();
 /**
  * Calls FN(ARG) when function returns.
  */
+#ifndef __VSCODE_INTELLISENSE__
 #define defer(FN, ARG)                                                 \
   ({                                                                   \
     autotype(ARG) Arg = (ARG);                                         \
@@ -39,6 +40,7 @@ void gclongjmp(jmp_buf, int) nothrow wontreturn paramsnonnull();
     asm volatile("" : "+g"(Arg) : : "memory");                         \
     Arg;                                                               \
   })
+#endif /* __VSCODE_INTELLISENSE__ */
 
 void __defer(struct StackFrame *, void *, void *) hidden paramsnonnull((1, 2));
 

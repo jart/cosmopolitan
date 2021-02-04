@@ -174,6 +174,7 @@ bool lockcmpxchg(void *, intptr_t, intptr_t, size_t);
  * @see Intel's Six-Thousand Page Manual V.3A §8.2.3.1
  * @see atomic_store()
  */
+#ifndef atomic_load
 #define atomic_load(MEM)                       \
   ({                                           \
     autotype(MEM) Mem = (MEM);                 \
@@ -181,6 +182,7 @@ bool lockcmpxchg(void *, intptr_t, intptr_t, size_t);
     asm("mov\t%1,%0" : "=r"(Reg) : "m"(*Mem)); \
     Reg;                                       \
   })
+#endif /* atomic_load */
 
 /**
  * Saves scalar to memory w/ one operation.
@@ -198,6 +200,7 @@ bool lockcmpxchg(void *, intptr_t, intptr_t, size_t);
  * @see Intel Six-Thousand Page Manual Manual V.3A §8.2.3.1
  * @see atomic_load()
  */
+#ifndef atomic_store
 #define atomic_store(MEM, VAL)                    \
   ({                                              \
     autotype(VAL) Val = (VAL);                    \
@@ -205,6 +208,7 @@ bool lockcmpxchg(void *, intptr_t, intptr_t, size_t);
     asm("mov%z1\t%1,%0" : "=m"(*Mem) : "r"(Val)); \
     Val;                                          \
   })
+#endif /* atomic_store */
 
 #define bts(MEM, BIT)     __BitOp("bts", BIT, MEM) /** bit test and set */
 #define btr(MEM, BIT)     __BitOp("btr", BIT, MEM) /** bit test and reset */
@@ -232,6 +236,7 @@ bool lockcmpxchg(void *, intptr_t, intptr_t, size_t);
  * @return LOCALVAR[0]
  * @see xchg()
  */
+#ifndef lockxchg
 #define lockxchg(MEMORY, LOCALVAR)                                             \
   ({                                                                           \
     _Static_assert(                                                            \
@@ -239,7 +244,16 @@ bool lockcmpxchg(void *, intptr_t, intptr_t, size_t);
     asm("xchg\t%0,%1" : "+%m"(*(MEMORY)), "+r"(*(LOCALVAR)));                  \
     *(LOCALVAR);                                                               \
   })
+#endif /* lockxchg */
 
+/**
+ * Compares and exchanges.
+ *
+ * @param IFTHING is uint𝑘_t[hasatleast 1] where 𝑘 ∈ {8,16,32,64}
+ * @return true if value was exchanged, otherwise false
+ * @see lockcmpxchg()
+ */
+#ifndef cmpxchg
 #define cmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)                        \
   ({                                                                          \
     bool DidIt;                                                               \
@@ -252,7 +266,16 @@ bool lockcmpxchg(void *, intptr_t, intptr_t, size_t);
                  : "cc");                                                     \
     DidIt;                                                                    \
   })
+#endif /* cmpxchg */
 
+/**
+ * Compares and exchanges w/ one operation.
+ *
+ * @param IFTHING is uint𝑘_t[hasatleast 1] where 𝑘 ∈ {8,16,32,64}
+ * @return true if value was exchanged, otherwise false
+ * @see lockcmpxchg()
+ */
+#ifndef lockcmpxchg
 #define lockcmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)                    \
   ({                                                                          \
     bool DidIt;                                                               \
@@ -265,27 +288,32 @@ bool lockcmpxchg(void *, intptr_t, intptr_t, size_t);
                  : "cc");                                                     \
     DidIt;                                                                    \
   })
+#endif /* lockcmpxchg */
 
 /**
  * Gets value of extended control register.
  */
+#ifndef xgetbv
 #define xgetbv(xcr_register_num)                               \
   ({                                                           \
     unsigned hi, lo;                                           \
     asm("xgetbv" : "=d"(hi), "=a"(lo) : "c"(cr_register_num)); \
     (uint64_t) hi << 32 | lo;                                  \
   })
+#endif /* xgetbv */
 
 /**
  * Reads model-specific register.
  * @note programs running as guests won't have authorization
  */
+#ifndef rdmsr
 #define rdmsr(msr)                                         \
   ({                                                       \
     uint32_t lo, hi;                                       \
     asm volatile("rdmsr" : "=a"(lo), "=d"(hi) : "c"(msr)); \
     (uint64_t) hi << 32 | lo;                              \
   })
+#endif rdmsr
 
 /**
  * Writes model-specific register.

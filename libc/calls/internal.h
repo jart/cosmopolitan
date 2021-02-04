@@ -36,25 +36,29 @@ struct IoctlPtmGet {
   char workername[16];
 };
 
+enum FdKind {
+  kFdEmpty,
+  kFdFile,
+  kFdSocket,
+  kFdProcess,
+  kFdConsole,
+  kFdSerial,
+  kFdZip,
+  kFdEpoll,
+  kFdReserved
+};
+
+struct Fd {
+  int64_t handle;
+  int64_t extra;
+  int kind;
+  unsigned flags;
+};
+
 struct Fds {
   size_t f;  // lowest free slot
   size_t n;  // monotonic capacity
-  struct Fd {
-    int64_t handle;
-    int64_t extra;
-    enum FdKind {
-      kFdEmpty,
-      kFdFile,
-      kFdSocket,
-      kFdProcess,
-      kFdConsole,
-      kFdSerial,
-      kFdZip,
-      kFdEpoll,
-      kFdReserved,
-    } kind;
-    unsigned flags;
-  } * p;
+  struct Fd * p;
   struct Fd __init_p[OPEN_MAX];
 };
 
@@ -77,7 +81,7 @@ forceinline bool __isfdopen(int fd) {
   return 0 <= fd && fd < g_fds.n && g_fds.p[fd].kind != kFdEmpty;
 }
 
-forceinline bool __isfdkind(int fd, enum FdKind kind) {
+forceinline bool __isfdkind(int fd, int kind) {
   return 0 <= fd && fd < g_fds.n && g_fds.p[fd].kind == kind;
 }
 

@@ -10,6 +10,7 @@ COSMOPOLITAN_C_START_
 #define APPEND(LIST_P, LIST_I, LIST_N, ITEM) \
   CONCAT(LIST_P, LIST_I, LIST_N, ITEM, 1)
 
+#ifndef CONCAT
 #define CONCAT(LIST_P, LIST_I, LIST_N, ITEM, COUNT)                     \
   ({                                                                    \
     autotype(LIST_P) ListP = (LIST_P);                                  \
@@ -31,6 +32,7 @@ COSMOPOLITAN_C_START_
     }                                                                   \
     Entry;                                                              \
   })
+#endif /* CONCAT */
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

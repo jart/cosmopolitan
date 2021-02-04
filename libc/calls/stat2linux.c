@@ -20,6 +20,7 @@
 #include "libc/calls/struct/metastat.internal.h"
 #include "libc/dce.h"
 
+#ifndef SWITCHEROO
 #define SWITCHEROO(S1, S2, A, B, C, D, E, F, G, H, I, J, K, L, M) \
   do {                                                            \
     autotype((S2).A) a = (typeof((S2).A))(S1).A;                  \
@@ -49,6 +50,7 @@
     (S2).L = l;                                                   \
     (S2).M = m;                                                   \
   } while (0);
+#endif
 
 static textstartup void __stat2linux_xnu(union metastat *ms) {
   SWITCHEROO(ms->xnu, ms->linux, st_dev, st_ino, st_nlink, st_mode, st_uid,

@@ -28,6 +28,7 @@
 
 #define append(ARRAYLIST, ITEM) concat((ARRAYLIST), (ITEM), 1)
 
+#ifndef concat
 #define concat(ARRAYLIST, ITEM, COUNT)                                      \
   ({                                                                        \
     autotype(ARRAYLIST) List = (ARRAYLIST);                                 \
@@ -43,6 +44,7 @@
     }                                                                       \
     (ssize_t)(Idx);                                                         \
   })
+#endif /* concat */
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_ALG_ARRAYLIST_H_ */

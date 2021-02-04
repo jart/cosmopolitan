@@ -7,6 +7,7 @@
 /**
  * Teleports code fragment inside _init().
  */
+#ifndef INITIALIZER
 #define INITIALIZER(PRI, NAME, CODE)                               \
   asm(".section .init." #PRI "." #NAME ",\"ax\",@progbits\n\t"     \
       "call\t" #NAME "\n\t"                                        \
@@ -15,6 +16,7 @@
     CODE;                                                          \
     asm volatile("" : /* no outputs */ : "D"(rdi), "S"(rsi));      \
   }
+#endif /* INITIALIZER */
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_BITS_INITIALIZER_H_ */

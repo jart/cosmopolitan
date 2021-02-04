@@ -8,6 +8,29 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+struct ElfWriterSyms {
+  size_t i, n;
+  Elf64_Sym *p;
+};
+
+enum ElfWriterSymOrder {
+  kElfWriterSymSection,
+  kElfWriterSymLocal,
+  kElfWriterSymGlobal
+};
+
+struct ElfWriterSymRef {
+  int slg;
+  uint32_t sym;
+};
+
+struct ElfWriterRela {
+  uint64_t offset;
+  struct ElfWriterSymRef symkey;
+  uint32_t type;
+  int64_t addend;
+};
+
 struct ElfWriter {
   char *path;
   char *tmppath;
@@ -22,25 +45,10 @@ struct ElfWriter {
     size_t i, n;
     Elf64_Shdr *p;
   } shdrs[1];
-  struct ElfWriterSyms {
-    size_t i, n;
-    Elf64_Sym *p;
-  } syms[3][1];
+  struct ElfWriterSyms syms[3][1];
   struct {
     size_t i, j, n;
-    struct ElfWriterRela {
-      uint64_t offset;
-      struct ElfWriterSymRef {
-        enum ElfWriterSymOrder {
-          kElfWriterSymSection,
-          kElfWriterSymLocal,
-          kElfWriterSymGlobal
-        } slg;
-        uint32_t sym;
-      } symkey;
-      uint32_t type;
-      int64_t addend;
-    } * p;
+    struct ElfWriterRela * p;
   } relas[1];
   struct Interner *strtab;
   struct Interner *shstrtab;

@@ -18,17 +18,42 @@ enum UriScheme {
   kUriSchemeS3
 };
 
+struct UriSlice {
+  /*
+   * !i && !n means absent
+   *  i && !n means empty
+   */
+  unsigned i, n;
+};
+
+struct UriSlices {
+  unsigned i, n;
+  struct UriSlice *p;
+};
+
+struct UriKeyval {
+  struct UriSlice k, v;
+};
+
+struct UriKeyvals {
+  unsigned i, n;
+  struct UriKeyval * p;
+};
+
+struct UriRef {
+  unsigned r;
+};
+
+struct UriRefs {
+  unsigned i, n;
+  struct UriRef * p;
+};
+
 struct Uri {
   /*
    * e.g. "", "http", "sip", "http", "dns+http", etc.
    */
-  struct UriSlice {
-    /*
-     * !i && !n means absent
-     *  i && !n means empty
-     */
-    unsigned i, n;
-  } scheme;
+  struct UriSlice scheme;
 
   /*
    * Holds remainder for exotic URI schemes, e.g. data.
@@ -60,18 +85,10 @@ struct Uri {
    * - memcmp("/dir", p + segs.p[0].i, segs.p[0].n) == 0
    * - memcmp("/index.html", p + segs.p[1].i, segs.p[1].n) == 0
    */
-  struct UriSlices {
-    unsigned i, n;
-    struct UriSlice *p;
-  } segs;
+  struct UriSlices segs;
 
   /* e.g. ;lr;isup-oli=00;day=tuesday */
-  struct UriKeyvals {
-    unsigned i, n;
-    struct UriKeyval {
-      struct UriSlice k, v;
-    } * p;
-  } params;
+  struct UriKeyvals params;
 
   /*
    * e.g. /dir;super=rare/index.html
@@ -79,12 +96,7 @@ struct Uri {
    * let 𝑖 ∈ [0,params.i)
    * paramsegs.p[𝑖].r ∈ [0,segs.i]
    */
-  struct UriRefs {
-    unsigned i, n;
-    struct UriRef {
-      unsigned r;
-    } * p;
-  } paramsegs;
+  struct UriRefs paramsegs;
 
   /* e.g. ?boop&subject=project%20x&lol=cat */
   struct UriKeyvals queries;
