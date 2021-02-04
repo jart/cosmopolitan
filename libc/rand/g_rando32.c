@@ -31,7 +31,7 @@ textstartup static void g_rando32_init() {
     for (; *auxvp; auxvp += 2) {
       if (*auxvp == AT_RANDOM) {
         uint8_t(*sysrandseed)[16] = (uint8_t(*)[16])auxvp[1];
-        if (sysrandseed) g_rando32 ^= read32le(&(*sysrandseed)[8]);
+        if (sysrandseed) g_rando32 ^= READ32LE(&(*sysrandseed)[8]);
         return;
       }
     }

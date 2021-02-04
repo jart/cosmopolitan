@@ -27,7 +27,7 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § lz4 » frames                                              ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#define LZ4_MAGIC(FRAME)                      read32le(FRAME)
+#define LZ4_MAGIC(FRAME)                      READ32LE(FRAME)
 #define LZ4_FRAME_VERSION(FRAME)              ((_LZ4_FRAME_FLG(FRAME) >> 6) & 0b11)
 #define LZ4_FRAME_BLOCKINDEPENDENCE(FRAME)    ((_LZ4_FRAME_FLG(FRAME) >> 5) & 1)
 #define LZ4_FRAME_BLOCKCHECKSUMFLAG(FRAME)    ((_LZ4_FRAME_FLG(FRAME) >> 4) & 1)
@@ -40,10 +40,10 @@ COSMOPOLITAN_C_START_
 #define LZ4_FRAME_RESERVED2(FRAME)        ((_LZ4_FRAME_BD(FRAME) >> 7) & 1)
 #define LZ4_FRAME_RESERVED3(FRAME)        ((_LZ4_FRAME_BD(FRAME) >> 0) & 0b1111)
 #define LZ4_FRAME_BLOCKCONTENTSIZE(FRAME) \
-  (LZ4_FRAME_BLOCKCONTENTSIZEFLAG(FRAME) ? read64le((FRAME) + 4 + 1 + 1) : 0)
+  (LZ4_FRAME_BLOCKCONTENTSIZEFLAG(FRAME) ? READ64LE((FRAME) + 4 + 1 + 1) : 0)
 #define LZ4_FRAME_DICTIONARYID(FRAME)                          \
   (LZ4_FRAME_DICTIONARYIDFLAG(FRAME)                           \
-       ? read32le(((FRAME) + 4 + 1 + 1 +                       \
+       ? READ32LE(((FRAME) + 4 + 1 + 1 +                       \
                    8 * LZ4_FRAME_BLOCKCONTENTSIZEFLAG(FRAME))) \
        : 0)
 #define LZ4_FRAME_HEADERCHECKSUM(FRAME)                                \
@@ -60,9 +60,9 @@ COSMOPOLITAN_C_START_
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 #define LZ4_BLOCK_DATA(block)         (block + sizeof(uint32_t))
-#define LZ4_BLOCK_DATASIZE(block)     (read32le(block) & 0x7fffffff)
-#define LZ4_BLOCK_ISEOF(block)        (read32le(block) == LZ4_EOF)
-#define LZ4_BLOCK_ISCOMPRESSED(block) ((read32le(block) & 0x80000000) == 0)
+#define LZ4_BLOCK_DATASIZE(block)     (READ32LE(block) & 0x7fffffff)
+#define LZ4_BLOCK_ISEOF(block)        (READ32LE(block) == LZ4_EOF)
+#define LZ4_BLOCK_ISCOMPRESSED(block) ((READ32LE(block) & 0x80000000) == 0)
 #define LZ4_BLOCK_SIZE(frame, block)              \
   (sizeof(uint32_t) + LZ4_BLOCK_DATASIZE(block) + \
    (LZ4_FRAME_BLOCKCHECKSUMFLAG(frame) ? sizeof(uint8_t) : 0))

@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_INTERNAL_H_
-#ifndef __STRICT_ANSI__
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/itimerval.h"
@@ -307,5 +306,4 @@ ssize_t writev$serial(struct Fd *, const struct iovec *, int) hidden;
 #undef u64
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* !ANSI */
 #endif /* COSMOPOLITAN_LIBC_CALLS_INTERNAL_H_ */

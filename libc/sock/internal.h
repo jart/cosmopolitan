@@ -118,7 +118,7 @@ forceinline void sockaddr2bsd(void *saddr) {
   uint16_t fam;
   if (saddr) {
     p = saddr;
-    fam = read16le(p);
+    fam = READ16LE(p);
     p[0] = sizeof(struct sockaddr_in$bsd);
     p[1] = fam;
   }

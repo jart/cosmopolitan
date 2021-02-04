@@ -94,22 +94,22 @@ void showcompressmethod(uint16_t compressmethod) {
 void showextrantfs(uint8_t *ntfs) {
   struct timespec mtime, atime, ctime;
   mtime = FileTimeToTimeSpec(
-      (struct NtFileTime){read32le(ntfs + 8), read32le(ntfs + 12)});
+      (struct NtFileTime){READ32LE(ntfs + 8), READ32LE(ntfs + 12)});
   atime = FileTimeToTimeSpec(
-      (struct NtFileTime){read32le(ntfs + 16), read32le(ntfs + 20)});
+      (struct NtFileTime){READ32LE(ntfs + 16), READ32LE(ntfs + 20)});
   ctime = FileTimeToTimeSpec(
-      (struct NtFileTime){read32le(ntfs + 24), read32le(ntfs + 28)});
-  show(".long", gc(xasprintf("%d", read32le(ntfs))), "ntfs reserved");
-  show(".short", gc(xasprintf("0x%04x", read16le(ntfs + 4))),
+      (struct NtFileTime){READ32LE(ntfs + 24), READ32LE(ntfs + 28)});
+  show(".long", gc(xasprintf("%d", READ32LE(ntfs))), "ntfs reserved");
+  show(".short", gc(xasprintf("0x%04x", READ16LE(ntfs + 4))),
        "ntfs attribute tag value #1");
-  show(".short", gc(xasprintf("%hu", read16le(ntfs + 6))),
+  show(".short", gc(xasprintf("%hu", READ16LE(ntfs + 6))),
        "ntfs attribute tag size");
-  show(".quad", gc(xasprintf("%lu", read64le(ntfs + 8))),
+  show(".quad", gc(xasprintf("%lu", READ64LE(ntfs + 8))),
        gc(xasprintf("%s (%s)", "ntfs last modified time",
                     gc(xiso8601(&mtime)))));
-  show(".quad", gc(xasprintf("%lu", read64le(ntfs + 16))),
+  show(".quad", gc(xasprintf("%lu", READ64LE(ntfs + 16))),
        gc(xasprintf("%s (%s)", "ntfs last access time", gc(xiso8601(&atime)))));
-  show(".quad", gc(xasprintf("%lu", read64le(ntfs + 24))),
+  show(".quad", gc(xasprintf("%lu", READ64LE(ntfs + 24))),
        gc(xasprintf("%s (%s)", "ntfs creation time", gc(xiso8601(&ctime)))));
 }
 

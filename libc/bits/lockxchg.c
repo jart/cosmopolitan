@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,63 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.h"
+#include "libc/bits/bits.h"
 
-/	@fileoverview Byte-order conversion functions.
-/
-/	Endianness is deceptively complicated to the uninitiated. Many
-/	helpers have been written by our top minds to address perceived
-/	difficulties. These ones got through standardization processes.
-/	To protect their legacy, all 19 functions have been implemented
-/	in just 17 bytes.
-/
-/	@see	READ32LE(), READ32BE(), etc.
-/	@asyncsignalsafe
-
-bswap_64:
-htobe64:
-htole64:
-be64toh:
-le64toh:mov	%rdi,%rax
-	bswap	%rax
-	ret
-	.endfn	le64toh,globl
-	.endfn	be64toh,globl
-	.endfn	htole64,globl
-	.endfn	htobe64,globl
-	.endfn	bswap_64,globl
-
-bswap_32:
-htobe32:
-htole32:
-be32toh:
-le32toh:
-ntohl:	
-htonl:	mov	%edi,%eax
-	bswap	%eax
-	ret
-	.endfn	htonl,globl
-	.endfn	htole32,globl
-	.endfn	le32toh,globl
-	.endfn	be32toh,globl
-	.endfn	htobe32,globl
-	.endfn	ntohl,globl
-	.endfn	bswap_32,globl
-
-bswap_16:
-htobe16:
-htole16:
-be16toh:
-le16toh:
-ntohs:	
-htons:	movzwl	%di,%eax
-	xchg	%al,%ah
-	ret
-	.endfn	htobe16,globl
-	.endfn	htons,globl
-	.endfn	le16toh,globl
-	.endfn	be16toh,globl
-	.endfn	htole16,globl
-	.endfn	ntohs,globl
-	.endfn	bswap_16,globl
-	.source	__FILE__
+/**
+ * Compares and exchanges w/ lock prefix.
+ *
+ * @param memory is uint𝑘_t[hasatleast 1] where 𝑘 ∈ {8,16,32,64}
+ * @param size is automatically supplied by macro wrapper
+ * @return true if value was exchanged, otherwise false
+ * @see xchg()
+ */
+intptr_t(lockxchg)(void *memory, void *localvar, size_t size) {
+  switch (size) {
+    case 1:
+      return lockxchg((int8_t *)memory, (int8_t *)localvar);
+    case 2:
+      return lockxchg((int16_t *)memory, (int16_t *)localvar);
+    case 4:
+      return lockxchg((int32_t *)memory, (int32_t *)localvar);
+    case 8:
+      return lockxchg((int64_t *)memory, (int64_t *)localvar);
+    default:
+      return false;
+  }
+}

@@ -45,7 +45,7 @@ textstartup void *lz4cpy(void *dest, const void *blockdata, size_t blocksize) {
     }
     repmovsb(&op, &ip, length);
     if (ip >= ipe) break;
-    offset = read16le(ip);
+    offset = READ16LE(ip);
     matchlen = token & fifteen;
     ip += 2;
     if (matchlen == fifteen) {

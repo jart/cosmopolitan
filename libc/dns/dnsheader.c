@@ -52,12 +52,12 @@ int serializednsheader(uint8_t *buf, size_t size,
 int deserializednsheader(struct DnsHeader *header, const uint8_t *buf,
                          size_t size) {
   if (size < 12) return ebadmsg();
-  header->id = read16be(buf + 0);
+  header->id = READ16BE(buf + 0);
   header->bf1 = buf[2];
   header->bf2 = buf[3];
-  header->qdcount = read16be(buf + 4);
-  header->ancount = read16be(buf + 6);
-  header->nscount = read16be(buf + 8);
-  header->arcount = read16be(buf + 10);
+  header->qdcount = READ16BE(buf + 4);
+  header->ancount = READ16BE(buf + 6);
+  header->nscount = READ16BE(buf + 8);
+  header->arcount = READ16BE(buf + 10);
   return 12;
 }
