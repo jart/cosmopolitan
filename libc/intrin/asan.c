@@ -321,7 +321,7 @@ static size_t __asan_int2str(int64_t i, char *a) {
   return 1 + __asan_uint2str(-i, a);
 }
 
-flattenout void __asan_poison(uintptr_t p, size_t n, int kind) {
+void __asan_poison(uintptr_t p, size_t n, int kind) {
   int k;
   char *s;
   if (!n) return;
@@ -343,7 +343,7 @@ flattenout void __asan_poison(uintptr_t p, size_t n, int kind) {
   }
 }
 
-flattenout void __asan_unpoison(uintptr_t p, size_t n) {
+void __asan_unpoison(uintptr_t p, size_t n) {
   int k;
   char *s;
   if (!n) return;

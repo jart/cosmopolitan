@@ -50,6 +50,7 @@
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "libc/str/tpdecode.internal.h"
+#include "libc/str/tpenc.h"
 #include "libc/str/tpencode.internal.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/ex.h"
@@ -1957,12 +1958,16 @@ static int GetVidyaByte(unsigned char b) {
 }
 
 static void OnVidyaServiceWriteCharacter(void) {
+  uint64_t w;
   int i, n, y, x;
   char *p, buf[32];
   p = buf;
   p += FormatCga(m->bx[0], p);
   p = stpcpy(p, "\e7");
-  p += tpencode(p, 8, GetVidyaByte(m->ax[0]), false);
+  w = tpenc(GetVidyaByte(m->ax[0]));
+  do {
+    *p++ = w;
+  } while ((w >>= 8));
   p = stpcpy(p, "\e8");
   for (i = Read16(m->cx); i--;) {
     PtyWrite(pty, buf, p - buf);
@@ -1984,9 +1989,13 @@ static char16_t VidyaServiceXlatTeletype(uint8_t c) {
 
 static void OnVidyaServiceTeletypeOutput(void) {
   int n;
+  uint64_t w;
   char buf[12];
   n = FormatCga(m->bx[0], buf);
-  n += tpencode(buf + n, 6, VidyaServiceXlatTeletype(m->ax[0]), false);
+  w = tpenc(VidyaServiceXlatTeletype(m->ax[0]));
+  do {
+    buf[n++] = w;
+  } while ((w >>= 8));
   PtyWrite(pty, buf, n);
 }
 
