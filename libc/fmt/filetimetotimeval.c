@@ -21,7 +21,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/nt/struct/filetime.h"
 
-void FileTimeToTimeVal(struct timeval *tv, struct NtFileTime ft) {
+textwindows void FileTimeToTimeVal(struct timeval *tv, struct NtFileTime ft) {
   uint64_t x;
   x = ft.dwHighDateTime;
   x <<= 32;

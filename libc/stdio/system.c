@@ -26,6 +26,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/sig.h"
 
 /**
@@ -39,7 +40,11 @@ int system(const char *cmdline) {
   int pid, wstatus;
   sigset_t chldmask, savemask;
   struct sigaction ignore, saveint, savequit;
-  if (!cmdline) return 1;
+  if (!cmdline) {
+    if (IsWindows()) return 1;
+    if (access(_PATH_BSHELL, X_OK) == 0) return 1;
+    return 0;
+  }
   ignore.sa_flags = 0;
   ignore.sa_handler = SIG_IGN;
   sigemptyset(&ignore.sa_mask);

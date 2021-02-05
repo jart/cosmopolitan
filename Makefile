@@ -61,7 +61,7 @@
 #   build/config.mk
 
 SHELL         = /bin/sh
-HOSTS        ?= freebsd openbsd rhel7 rhel5 xnu win7 win10
+HOSTS        ?= freebsd openbsd netbsd rhel7 rhel5 xnu win7 win10
 SANITY       := $(shell build/sanitycheck $$PPID)
 GNUMAKEFLAGS += --output-sync
 

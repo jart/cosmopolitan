@@ -147,7 +147,7 @@ struct Client {
   struct Client *next;
   int fd;
   int iovlen;
-  bool close;
+  bool closeit;
   uint32_t insize;
   uint32_t addrsize;
   uint8_t gzip_footer[8];
@@ -921,7 +921,7 @@ bool HandleRequest(struct Client *c) {
   content = "";
   gzipped = false;
   contentlength = -1;
-  c->close = false;
+  c->closeit = false;
   if ((msgsize = ParseHttpRequest(&c->req, c->inbuf, c->insize)) != -1) {
     if (!msgsize) return false;
     if (logmessages) {
@@ -929,13 +929,13 @@ bool HandleRequest(struct Client *c) {
            c->req.length - 4, c->inbuf);
     }
     version = GetHttpVersion(c);
-    if (version < 101) c->close = true, legacyhttp = true;
+    if (version < 101) c->closeit = true, legacyhttp = true;
     if (version <= 101) {
-      if (IsConnectionClose(c)) c->close = true;
+      if (IsConnectionClose(c)) c->closeit = true;
       path = c->inbuf + c->req.uri.a;
       pathlen = c->req.uri.b - c->req.uri.a;
       if (c->req.method == kHttpGet || c->req.method == kHttpHead) {
-        if (ParseContentLength(&c->req, c->inbuf)) c->close = true;
+        if (ParseContentLength(&c->req, c->inbuf)) c->closeit = true;
         VERBOSEF(
             "%s %s %.*s referer %.*s", c->addrstr, kHttpMethod[c->req.method],
             pathlen, path,
@@ -1026,7 +1026,7 @@ bool HandleRequest(struct Client *c) {
         p = AppendStatus(p, 405, "method not allowed");
         p = AppendContentTypeTextPlain(p);
         content = "Method Not Allowed\r\n";
-        c->close = true;
+        c->closeit = true;
       }
     } else {
       WARNF("%s http version not supported %`'.*s", c->addrstr,
@@ -1034,19 +1034,19 @@ bool HandleRequest(struct Client *c) {
       p = AppendStatus(p, 505, "HTTP Version Not Supported");
       p = AppendContentTypeTextPlain(p);
       content = "HTTP Version Not Supported\r\n";
-      c->close = true;
+      c->closeit = true;
     }
   } else {
     WARNF("%s parse error %s", c->addrstr, strerror(errno));
     p = AppendStatus(p, 400, "Bad Request");
     p = AppendContentTypeTextPlain(p);
     content = "Bad Request\r\n";
-    c->close = true;
+    c->closeit = true;
   }
   p = AppendDate(p);
   p = AppendNosniff(p);
   p = AppendServer(p);
-  if (c->close) p = AppendConnectionClose(p);
+  if (c->closeit) p = AppendConnectionClose(p);
   if (contentlength == -1) contentlength = strlen(content);
   actualcontentlength = contentlength;
   if (gzipped) {
@@ -1081,11 +1081,11 @@ bool HandleRequest(struct Client *c) {
   /* LogRequestLatency(); */
   if (WriteSome(c->fd, c->iov, c->iovlen) == -1) {
     VERBOSEF("%s send error %s", c->addrstr, strerror(errno));
-    c->close = true;
+    c->closeit = true;
     c->insize = 0;
     c->iovlen = 0;
   }
-  if (!c->close) {
+  if (!c->closeit) {
     memcpy(c->inbuf, c->inbuf + msgsize, c->insize - msgsize);
     c->insize -= msgsize;
   }
@@ -1118,7 +1118,7 @@ static void ProcessInbuf(struct Client *c) {
         CHECK_NE(-1, epoll_ctl(epfd, EPOLL_CTL_MOD, c->fd,
                                &(struct epoll_event){EPOLLOUT, {c}}));
       } else {
-        if (c->close && !c->insize) {
+        if (c->closeit && !c->insize) {
           DeleteClient(c);
         } else if (c->insize) {
           continue;
@@ -1156,7 +1156,7 @@ static void ProcessRead(struct Client *c) {
 static void ProcessWrite(struct Client *c) {
   if (WriteSome(c->fd, c->iov, c->iovlen) != -1) {
     if (!GetIovSize(c->iov, c->iovlen)) {
-      if (!c->close) {
+      if (!c->closeit) {
         CHECK_NE(-1, epoll_ctl(epfd, EPOLL_CTL_MOD, c->fd,
                                &(struct epoll_event){EPOLLIN, {c}}));
         ProcessInbuf(c);
@@ -1181,7 +1181,7 @@ static void ProcessConnect(void) {
     c->next = clients;
     c->insize = 0;
     c->iovlen = 0;
-    c->close = false;
+    c->closeit = false;
     c->startconnection = nowl();
     c->startrequest = c->startconnection;
     DescribeAddress(c->addrstr, &c->addr);

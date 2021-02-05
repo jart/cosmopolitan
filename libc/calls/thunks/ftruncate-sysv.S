@@ -21,6 +21,6 @@
 
 /	Directly calls ftruncate() impl on host o/s if available.
 sys_ftruncate:
-	mov	%rsi,%rdx			# openbsd:pad
+	mov	%rsi,%rdx			# netbsd+openbsd:pad
 	jmp	__sys_ftruncate
 	.endfn	sys_ftruncate,globl,hidden

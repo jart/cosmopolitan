@@ -21,6 +21,6 @@
 
 /	Directly calls pread() impl on host o/s if available.
 sys_pread:
-	mov	%rcx,%r8			# openbsd:pad
+	mov	%rcx,%r8			# netbsd+openbsd:pad
 	jmp	__sys_pread
 	.endfn	sys_pread,globl,hidden

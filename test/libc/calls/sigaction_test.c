@@ -32,6 +32,10 @@ void OnSigInt(int sig) {
   gotsigint = true;
 }
 
+void SetUp(void) {
+  gotsigint = false;
+}
+
 TEST(sigaction, test) {
   /* TODO(jart): Why does RHEL5 behave differently? */
   /* TODO(jart): Windows needs huge signal overhaul */
@@ -60,4 +64,13 @@ TEST(sigaction, test) {
   EXPECT_EQ(0, WEXITSTATUS(status));
   EXPECT_EQ(0, WTERMSIG(status));
   EXPECT_NE(-1, sigprocmask(SIG_BLOCK, &oldmask, NULL));
+}
+
+TEST(sigaction, raise) {
+  if (IsWindows()) return;
+  struct sigaction saint = {.sa_handler = OnSigInt};
+  EXPECT_NE(-1, sigaction(SIGINT, &saint, NULL));
+  ASSERT_FALSE(gotsigint);
+  EXPECT_NE(-1, raise(SIGINT));
+  ASSERT_TRUE(gotsigint);
 }

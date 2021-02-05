@@ -21,6 +21,6 @@
 
 /	Directly calls preadv() impl on host o/s if available.
 sys_preadv:
-	mov	%rcx,%r8			# openbsd:pad
+	mov	%rcx,%r8			# netbsd+openbsd:pad
 	jmp	__sys_preadv
 	.endfn	sys_preadv,globl,hidden

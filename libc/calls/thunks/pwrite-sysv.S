@@ -21,6 +21,6 @@
 
 /	Directly calls pwrite() impl on host o/s if available.
 sys_pwrite:
-	mov	%rcx,%r8			# openbsd:pad
+	mov	%rcx,%r8			# netbsd+openbsd:pad
 	jmp	__sys_pwrite
 	.endfn	sys_pwrite,globl,hidden

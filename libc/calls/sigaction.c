@@ -22,6 +22,7 @@
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction-freebsd.internal.h"
 #include "libc/calls/struct/sigaction-linux.internal.h"
+#include "libc/calls/struct/sigaction-netbsd.h"
 #include "libc/calls/struct/sigaction-openbsd.internal.h"
 #include "libc/calls/struct/sigaction-xnu.internal.h"
 #include "libc/calls/struct/sigaction.h"
@@ -42,6 +43,7 @@ union metasigaction {
   struct sigaction_linux linux;
   struct sigaction_freebsd freebsd;
   struct sigaction_openbsd openbsd;
+  struct sigaction_netbsd netbsd;
   struct sigaction_xnu_in xnu_in;
   struct sigaction_xnu_out xnu_out;
 };
@@ -63,7 +65,7 @@ union metasigaction {
   } while (0);
 #endif
 
-static void sigaction$cosmo2native(union metasigaction *sa) {
+static void sigaction_cosmo2native(union metasigaction *sa) {
   if (!sa) return;
   switch (__hostos) {
     case LINUX:
@@ -82,12 +84,16 @@ static void sigaction$cosmo2native(union metasigaction *sa) {
       SWITCHEROO(sa->cosmo, sa->openbsd, sa_handler, sa_flags, sa_flags,
                  sa_mask);
       break;
+    case NETBSD:
+      SWITCHEROO(sa->cosmo, sa->netbsd, sa_handler, sa_flags, sa_flags,
+                 sa_mask);
+      break;
     default:
       break;
   }
 }
 
-static void sigaction$native2cosmo(union metasigaction *sa) {
+static void sigaction_native2cosmo(union metasigaction *sa) {
   if (!sa) return;
   switch (__hostos) {
     case LINUX:
@@ -104,6 +110,10 @@ static void sigaction$native2cosmo(union metasigaction *sa) {
       break;
     case OPENBSD:
       SWITCHEROO(sa->openbsd, sa->cosmo, sa_handler, sa_flags, sa_flags,
+                 sa_mask);
+      break;
+    case NETBSD:
+      SWITCHEROO(sa->netbsd, sa->cosmo, sa_handler, sa_flags, sa_flags,
                  sa_mask);
       break;
     default:
@@ -128,9 +138,12 @@ int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
                  sizeof(struct sigaction) > sizeof(struct sigaction_xnu_in) &&
                  sizeof(struct sigaction) > sizeof(struct sigaction_xnu_out) &&
                  sizeof(struct sigaction) > sizeof(struct sigaction_freebsd) &&
-                 sizeof(struct sigaction) > sizeof(struct sigaction_openbsd));
+                 sizeof(struct sigaction) > sizeof(struct sigaction_openbsd) &&
+                 sizeof(struct sigaction) > sizeof(struct sigaction_netbsd));
+  int64_t arg4, arg5;
   int rc, rva, oldrva;
   struct sigaction *ap, copy;
+  if (IsMetal()) return enosys(); /* TODO: Signals on Metal */
   if (!(0 < sig && sig < NSIG)) return einval();
   if (sig == SIGKILL || sig == SIGSTOP) return einval();
   if (!act) {
@@ -147,32 +160,43 @@ int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
     return einval();
   }
   if (!IsWindows()) {
-    if (!IsMetal()) {
-      if (act) {
-        memcpy(&copy, act, sizeof(copy));
-        ap = &copy;
-        if (IsXnu()) {
-          ap->sa_restorer = (void *)&__xnutrampoline;
-          ap->sa_handler = (void *)&__xnutrampoline;
-        } else if (IsLinux()) {
-          if (!(ap->sa_flags & SA_RESTORER)) {
-            ap->sa_flags |= SA_RESTORER;
-            ap->sa_restorer = &__restore_rt;
-          }
-        } else if (rva >= kSigactionMinRva) {
-          ap->sa_sigaction = (sigaction_f)__sigenter;
+    if (act) {
+      memcpy(&copy, act, sizeof(copy));
+      ap = &copy;
+      if (IsXnu()) {
+        ap->sa_restorer = (void *)&__xnutrampoline;
+        ap->sa_handler = (void *)&__xnutrampoline;
+      } else if (IsLinux()) {
+        if (!(ap->sa_flags & SA_RESTORER)) {
+          ap->sa_flags |= SA_RESTORER;
+          ap->sa_restorer = &__restore_rt;
         }
-        sigaction$cosmo2native((union metasigaction *)ap);
-      } else {
-        ap = NULL;
+      } else if (IsNetbsd()) {
+        ap->sa_sigaction = act->sa_sigaction;
+      } else if (rva >= kSigactionMinRva) {
+        ap->sa_sigaction = (sigaction_f)__sigenter;
       }
-      rc = sys_sigaction(
-          sig, ap, oldact,
-          (!IsXnu() ? 8 /* or linux whines */
-                    : (int64_t)(intptr_t)oldact /* from go code */));
-      if (rc != -1) sigaction$native2cosmo((union metasigaction *)oldact);
+      sigaction_cosmo2native((union metasigaction *)ap);
     } else {
-      return enosys(); /* TODO: Signals on Metal */
+      ap = NULL;
+    }
+    if (IsXnu()) {
+      arg4 = (int64_t)(intptr_t)oldact; /* from go code */
+      arg5 = 0;
+    } else if (IsNetbsd()) {
+      if (ap) {
+        arg4 = (int64_t)(intptr_t)&__restore_rt_netbsd;
+        arg5 = 2; /* netbsd/lib/libc/arch/x86_64/sys/__sigtramp2.S */
+      } else {
+        arg4 = 0;
+        arg5 = 0; /* netbsd/lib/libc/arch/x86_64/sys/__sigtramp2.S */
+      }
+    } else {
+      arg4 = 8; /* or linux whines */
+      arg5 = 0;
+    }
+    if ((rc = sys_sigaction(sig, ap, oldact, arg4, arg5)) != -1) {
+      sigaction_native2cosmo((union metasigaction *)oldact);
     }
   } else {
     if (oldact) {

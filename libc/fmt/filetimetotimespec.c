@@ -23,7 +23,7 @@
 /**
  * Converts Windows COBOL timestamp to UNIX epoch in nanoseconds.
  */
-struct timespec FileTimeToTimeSpec(struct NtFileTime ft) {
+textwindows struct timespec FileTimeToTimeSpec(struct NtFileTime ft) {
   uint64_t x;
   x = ft.dwHighDateTime;
   x <<= 32;

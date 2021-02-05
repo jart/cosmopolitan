@@ -22,9 +22,9 @@
 
 /	Directly calls lseek() impl on host o/s if available.
 sys_lseek:
-#if SupportsOpenbsd()
-	testb	IsOpenbsd()			# openbsd:evilpad
-	cmovnz	%rdx,%rcx
+#if SupportsOpenbsd() || SupportsNetbsd()
+	testb	$OPENBSD|NETBSD,__hostos(%rip)
+	cmovnz	%rdx,%rcx			# openbsd:evilpad
 	cmovnz	%rsi,%rdx
 	cmovnz	.Lzero(%rip),%rsi
 #endif

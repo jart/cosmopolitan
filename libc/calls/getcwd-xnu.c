@@ -24,8 +24,9 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
-#define XNU_F_GETPATH  50
-#define XNU_MAXPATHLEN 1024
+#define NETBSD_F_GETPATH 15
+#define XNU_F_GETPATH    50
+#define XNU_MAXPATHLEN   1024
 
 char *sys_getcwd_xnu(char *res, size_t size) {
   int fd;

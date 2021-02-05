@@ -43,16 +43,16 @@ scall	__sys_fstat		0x1b80352272153005	globl hidden # needs __stat2linux()
 scall	__sys_lstat		0x1b90280282154006	globl hidden # needs __stat2linux(); blocked on Android
 scall	sys_poll		0x0d10fc0d120e6007	globl hidden
 scall	sys_ppoll		0xfff06d221ffff10f	globl hidden # consider INTON/INTOFF tutorial in examples/unbourne.c
-scall	__sys_lseek		0x0c70c71de20c7008	globl hidden # openbsd:evilpad
-scall	__sys_mmap		0x0c50c51dd20c5009	globl hidden # openbsd:pad
+scall	__sys_lseek		0x0c70c71de20c7008	globl hidden # netbsd+openbsd:evilpad
+scall	__sys_mmap		0x0c50c51dd20c5009	globl hidden # netbsd+openbsd:pad
 scall	sys_msync		0x115100041204101a	globl hidden
 scall	sys_mprotect		0x04a04a04a204a00a	globl hidden
 scall	sys_munmap		0x049049049204900b	globl hidden
-scall	sys_sigaction		0xfff02e1a0202e00d	globl hidden # rt_sigaction on Lunix
+scall	sys_sigaction		0x15402e1a0202e00d	globl hidden # rt_sigaction on Lunix; it's complicated on NetBSD
 scall	sys_sigprocmask		0x125030154203000e	globl hidden # a.k.a. rt_sigprocmask
 scall	sys_ioctl		0x0360360362036010	globl hidden
-scall	__sys_pread		0x0ad0ad1db2099011	globl hidden # a.k.a. pread64; openbsd:pad
-scall	__sys_pwrite		0x0ae0ae1dc209a012	globl hidden # a.k.a. pwrite64; openbsd:pad
+scall	__sys_pread		0x0ad0ad1db2099011	globl hidden # a.k.a. pread64; netbsd+openbsd:pad
+scall	__sys_pwrite		0x0ae0ae1dc209a012	globl hidden # a.k.a. pwrite64; netbsd+openbsd:pad
 scall	sys_readv		0x0780780782078013	globl hidden
 scall	sys_writev		0x0790790792079014	globl hidden
 scall	sys_access		0x0210210212021015	globl hidden
@@ -74,7 +74,7 @@ scall	sys_nanosleep		0x1ae05b0f0ffff023	globl hidden
 scall	sys_getitimer		0x1aa0460562056024	globl hidden
 scall	sys_setitimer		0x1a90450532053026	globl hidden
 scall	sys_alarm		0xfffffffffffff025	globl hidden
-scall	sys_getpid		0xfff0140142014027	globl hidden
+scall	sys_getpid		0x0140140142014027	globl hidden # netbsd returns ppid in edx
 scall	sys_sendfile		0xffffff1892151028	globl hidden # Linux vs. XNU/BSD ABIs very different
 scall	__sys_socket		0x18a0610612061029	globl hidden
 scall	__sys_connect		0x062062062206202a	globl hidden
@@ -116,9 +116,9 @@ scall	sys_fcntl		0x05c05c05c205c048	globl hidden
 scall	sys_flock		0x0830830832083049	globl hidden
 scall	sys_fsync		0x05f05f05f205f04a	globl hidden
 scall	sys_fdatasync		0x0f105f22620bb04b	globl hidden # fsync() on openbsd
-scall	__sys_truncate		0x0c80c81df20c804c	globl hidden # openbsd:pad
-scall	__sys_ftruncate		0x0c90c91e020c904d	globl hidden # openbsd:pad
-scall	sys_getcwd		0xfff130146ffff04f	globl hidden
+scall	__sys_truncate		0x0c80c81df20c804c	globl hidden # netbsd+openbsd:pad
+scall	__sys_ftruncate		0x0c90c91e020c904d	globl hidden # netbsd+openbsd:pad
+scall	sys_getcwd		0x128130146ffff04f	globl hidden
 scall	sys_chdir		0x00c00c00c200c050	globl hidden
 scall	sys_fchdir		0x00d00d00d200d051	globl hidden
 scall	sys_rename		0x0800800802080052	globl hidden
@@ -142,9 +142,9 @@ scall	sys_sysinfo		0xfffffffffffff063	globl hidden
 scall	sys_times		0xfffffffffffff064	globl hidden
 scall	sys_ptrace		0x01a01a01a201a065	globl hidden
 scall	syslog			0xfffffffffffff067	globl
-scall	sys_getuid		0xfff0180182018066	globl hidden
-scall	sys_getgid		0xfff02f02f202f068	globl hidden
-scall	sys_getppid		0xfff027027202706e	globl hidden
+scall	sys_getuid		0x0180180182018066	globl hidden
+scall	sys_getgid		0x02f02f02f202f068	globl hidden
+scall	sys_getppid		0xfff027027202706e	globl hidden # see sys_getpid()→edx for netbsd
 scall	getpgrp			0x051051051205106f	globl
 scall	sys_setsid		0x0930930932093070	globl hidden
 scall	sys_getsid		0x11e0ff136213607c	globl hidden
@@ -396,7 +396,7 @@ scall	unmount			0x016016016209ffff	globl
 scall	issetugid		0xfff0fd0fd2147fff	globl
 scall	minherit		0x1110fa0fa20fafff	globl
 scall	pathconf		0x0bf0bf0bf20bffff	globl
-scall	sysctl			0xfff0ca0ca20cafff	globl
+scall	sysctl			0x0ca0ca0ca20cafff	globl
 #───────────────────────XNU & FREEBSD────────────────────────
 scall	ntp_adjtime		0x0b0fff0b0220ffff	globl
 scall	ntp_gettime		0x1c0fff0f82210fff	globl

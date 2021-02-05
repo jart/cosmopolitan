@@ -33,7 +33,7 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
-                         struct rusage *opt_out_rusage) {
+                             struct rusage *opt_out_rusage) {
   int pids[64];
   int64_t handles[64];
   uint32_t dwExitCode;

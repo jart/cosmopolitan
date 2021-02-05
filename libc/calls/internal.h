@@ -58,7 +58,7 @@ struct Fd {
 struct Fds {
   size_t f;  // lowest free slot
   size_t n;  // monotonic capacity
-  struct Fd * p;
+  struct Fd *p;
   struct Fd __init_p[OPEN_MAX];
 };
 
@@ -172,7 +172,7 @@ i32 sys_setresgid(uint32_t, uint32_t, uint32_t) hidden;
 i32 sys_setresuid(uint32_t, uint32_t, uint32_t) hidden;
 i32 sys_setrlimit(i32, const struct rlimit *) hidden;
 i32 sys_setsid(void) hidden;
-i32 sys_sigaction(i32, const void *, void *, i64) hidden;
+i32 sys_sigaction(i32, const void *, void *, i64, i64) hidden;
 i32 sys_sigprocmask(i32, const sigset *, sigset *, u64) hidden;
 i32 sys_sigsuspend(const sigset *, u64) hidden;
 i32 sys_symlinkat(const char *, i32, const char *) hidden;
@@ -199,7 +199,7 @@ i64 sys_splice(i32, i64 *, i32, i64 *, u64, u32) hidden;
 i64 sys_vmsplice(i32, const struct iovec *, i64, u32) hidden;
 i64 sys_write(i32, const void *, u64) hidden;
 u32 sys_getgid(void) hidden;
-u32 sys_getpid(void) hidden;
+axdx_t sys_getpid(void) hidden;
 u32 sys_getsid(int) hidden;
 u32 sys_gettid(void) hidden;
 u32 sys_getuid(void) hidden;
@@ -219,6 +219,7 @@ void __sigenter_xnu(void *, i32, i32, void *, void *) hidden wontreturn;
 int sys_utimensat_xnu(int, const char *, const struct timespec *, int) hidden;
 int sys_nanosleep_xnu(const struct timespec *, struct timespec *) hidden;
 void __stat2linux(void *) hidden;
+void __restore_rt_netbsd(void) hidden;
 void __xnutrampoline(void *, i32, i32, const struct __darwin_siginfo *,
                      const struct __darwin_ucontext *) hidden wontreturn;
 

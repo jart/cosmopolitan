@@ -1,7 +1,7 @@
 /*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
 │vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,10 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.source	__FILE__
+.text.syscall
 
-/	Directly calls pwritev() impl on host o/s if available.
-sys_pwritev:
-	mov	%rcx,%r8			# netbsd+openbsd:pad
-	jmp	__sys_pwritev
-	.endfn	sys_pwritev,globl,hidden
+__restore_rt_netbsd:
+	mov	%r15,%rdi
+	mov	$308,%rax			# setcontext
+	syscall
+	mov	$-1,%edi
+	mov	$1,%rax				# exit
+	syscall
+	.endfn	__restore_rt_netbsd,globl,hidden

@@ -23,7 +23,7 @@
 sys_mmap:
 	push	%rbp
 	mov	%rsp,%rbp
-	push	%r9				# openbsd:pad
+	push	%r9				# netbsd+openbsd:pad
 	call	__sys_mmap
 	leave
 	ret

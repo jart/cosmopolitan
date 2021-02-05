@@ -21,6 +21,6 @@
 
 /	Directly calls truncate() impl on host o/s if available.
 sys_truncate:
-	mov	%rsi,%rdx			# openbsd:pad
+	mov	%rsi,%rdx			# netbsd+openbsd:pad
 	jmp	__sys_truncate
 	.endfn	sys_truncate,globl,hidden

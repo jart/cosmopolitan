@@ -1,6 +1,6 @@
 import sys
 
-H = '/home/jart/vendor/netbsd/sys/sys/ioctl.h'
+H = '/home/jart/vendor/netbsd/sys/sys/spawn.h'
 G = 'errno'
 
 MAGNUMS = {}

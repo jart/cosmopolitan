@@ -19,7 +19,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/nt/struct/filetime.h"
 
-int64_t filetimetotime(struct NtFileTime ft) {
+textwindows int64_t filetimetotime(struct NtFileTime ft) {
   uint64_t t = (uint64_t)ft.dwHighDateTime << 32 | ft.dwLowDateTime;
   return (t - MODERNITYSECONDS * HECTONANOSECONDS) / HECTONANOSECONDS;
 }

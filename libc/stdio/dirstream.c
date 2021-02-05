@@ -21,6 +21,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/dce.h"
+#include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filetype.h"
@@ -84,6 +85,17 @@ struct dirent_openbsd {
   uint8_t d_namlen;
   uint8_t __zomg[4];
   char d_name[256];
+};
+
+/**
+ * NetBSD getdents().
+ */
+struct dirent_netbsd {
+  uint64_t d_fileno;
+  uint16_t d_reclen;
+  uint16_t d_namlen;
+  uint8_t d_type;
+  char d_name[512];
 };
 
 static textwindows noinline DIR *opendir_nt(const char *name) {
@@ -205,6 +217,7 @@ struct dirent *readdir(DIR *dir) {
   long basep;
   struct dirent *ent;
   struct dirent_bsd *bsd;
+  struct dirent_netbsd *nbsd;
   struct dirent_openbsd *obsd;
   if (!IsWindows()) {
     if (dir->buf_pos >= dir->buf_end) {
@@ -227,6 +240,15 @@ struct dirent *readdir(DIR *dir) {
       ent->d_reclen = obsd->d_reclen;
       ent->d_type = obsd->d_type;
       memcpy(ent->d_name, obsd->d_name, obsd->d_namlen + 1);
+    } else if (IsNetbsd()) {
+      nbsd = (struct dirent_netbsd *)(dir->buf + dir->buf_pos);
+      dir->buf_pos += nbsd->d_reclen;
+      ent = &dir->ent;
+      ent->d_ino = nbsd->d_fileno;
+      ent->d_off = dir->tell++;
+      ent->d_reclen = nbsd->d_reclen;
+      ent->d_type = nbsd->d_type;
+      memcpy(ent->d_name, nbsd->d_name, MAX(256, nbsd->d_namlen + 1));
     } else {
       bsd = (struct dirent_bsd *)(dir->buf + dir->buf_pos);
       dir->buf_pos += bsd->d_reclen;

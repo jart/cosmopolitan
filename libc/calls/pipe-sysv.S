@@ -34,8 +34,8 @@ sys_pipe:
 	xor	%esi,%esi
 #endif
 	call	__sys_pipe
-#if SupportsXnu()
-	testb	IsXnu()
+#if SupportsXnu() || SupportsNetbsd()
+	testb	$XNU|NETBSD,__hostos(%rip)
 	jz	1f
 	cmp	$-1,%rax
 	je	1f

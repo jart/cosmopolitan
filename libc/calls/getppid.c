@@ -24,7 +24,11 @@
  */
 int32_t getppid(void) {
   if (!IsWindows()) {
-    return sys_getppid();
+    if (!IsNetbsd()) {
+      return sys_getppid();
+    } else {
+      return sys_getpid().dx;
+    }
   } else {
     return sys_getppid_nt();
   }
