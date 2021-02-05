@@ -107,9 +107,10 @@ static noasan textwindows wontreturn void WinMainNew(void) {
   *(/*unconst*/ int *)&__hostos = WINDOWS;
   addr = NtGetVersion() < kNtVersionWindows10 ? 0xff00000 : 0x777000000000;
   size = ROUNDUP(STACKSIZE + sizeof(struct WinArgs), FRAMESIZE);
-  _mmi.p[0].h = __sys_mmap_nt((char *)addr, size,
-                              PROT_READ | PROT_WRITE | PROT_EXEC, -1, 0)
-                    .maphandle;
+  _mmi.p[0].h =
+      sys_mmap_nt((char *)addr, size, PROT_READ | PROT_WRITE | PROT_EXEC,
+                  MAP_PRIVATE, -1, 0)
+          .maphandle;
   _mmi.p[0].x = addr >> 16;
   _mmi.p[0].y = (addr >> 16) + ((size >> 16) - 1);
   _mmi.p[0].prot = PROT_READ | PROT_WRITE | PROT_EXEC;

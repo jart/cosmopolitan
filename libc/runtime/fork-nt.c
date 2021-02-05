@@ -97,7 +97,9 @@ textwindows noasan void WinMainForked(void) {
     size = ((uint64_t)(_mmi.p[i].y - _mmi.p[i].x) << 16) + FRAMESIZE;
     if (_mmi.p[i].flags & MAP_PRIVATE) {
       CloseHandle(_mmi.p[i].h);
-      _mmi.p[i].h = __sys_mmap_nt(addr, size, _mmi.p[i].prot, -1, 0).maphandle;
+      _mmi.p[i].h =
+          sys_mmap_nt(addr, size, _mmi.p[i].prot, _mmi.p[i].flags, -1, 0)
+              .maphandle;
       ReadAll(reader, addr, size);
     } else {
       MapViewOfFileExNuma(

@@ -18,35 +18,70 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/macros.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/struct/overlapped.h"
 #include "libc/runtime/directmap.h"
+#include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 
-textwindows noasan struct DirectMap __sys_mmap_nt(void *addr, size_t size,
-                                              unsigned prot, int64_t handle,
-                                              int64_t off) {
+textwindows noasan struct DirectMap sys_mmap_nt(void *addr, size_t size,
+                                                int prot, int flags,
+                                                int64_t handle, int64_t off) {
+  uint32_t got;
+  size_t i, upsize;
   struct DirectMap dm;
-  if ((dm.maphandle = CreateFileMappingNuma(
-           handle, &kNtIsInheritable,
-           (prot & PROT_WRITE) ? kNtPageExecuteReadwrite : kNtPageExecuteRead,
-           handle != -1 ? 0 : size >> 32, handle != -1 ? 0 : size, NULL,
-           kNtNumaNoPreferredNode))) {
-    if (!(dm.addr = MapViewOfFileExNuma(
-              dm.maphandle,
-              (prot & PROT_WRITE)
-                  ? kNtFileMapWrite | kNtFileMapExecute | kNtFileMapRead
-                  : kNtFileMapExecute | kNtFileMapRead,
-              off >> 32, off, size, addr, kNtNumaNoPreferredNode))) {
+  struct NtOverlapped op;
+  if ((prot & PROT_WRITE) && (flags & MAP_PRIVATE) && handle != -1) {
+    /*
+     * WIN32 claims it can do COW mappings but we still haven't found a
+     * combination of flags, that'll cause Windows to actually do this!
+     */
+    upsize = ROUNDUP(size, FRAMESIZE);
+    if ((dm.maphandle = CreateFileMappingNuma(
+             -1, &kNtIsInheritable, kNtPageExecuteReadwrite, upsize >> 32,
+             upsize, NULL, kNtNumaNoPreferredNode))) {
+      if ((dm.addr = MapViewOfFileExNuma(
+               dm.maphandle, kNtFileMapWrite | kNtFileMapExecute, 0, 0, upsize,
+               addr, kNtNumaNoPreferredNode))) {
+        for (i = 0; i < size; i += got) {
+          got = 0;
+          op.Internal = 0;
+          op.InternalHigh = 0;
+          op.Pointer = (void *)(uintptr_t)i;
+          op.hEvent = 0;
+          if (!ReadFile(handle, (char *)dm.addr + i, size - i, &got, &op)) {
+            break;
+          }
+        }
+        if (i == size) {
+          return dm;
+        }
+        UnmapViewOfFile(dm.addr);
+      }
       CloseHandle(dm.maphandle);
-      dm.maphandle = kNtInvalidHandleValue;
-      dm.addr = (void *)(intptr_t)__winerr();
     }
   } else {
-    dm.maphandle = kNtInvalidHandleValue;
-    dm.addr = (void *)(intptr_t)__winerr();
+    if ((dm.maphandle = CreateFileMappingNuma(
+             handle, &kNtIsInheritable,
+             (prot & PROT_WRITE) ? kNtPageExecuteReadwrite : kNtPageExecuteRead,
+             handle != -1 ? 0 : size >> 32, handle != -1 ? 0 : size, NULL,
+             kNtNumaNoPreferredNode))) {
+      if ((dm.addr = MapViewOfFileExNuma(
+               dm.maphandle,
+               (prot & PROT_WRITE) ? kNtFileMapWrite | kNtFileMapExecute
+                                   : kNtFileMapRead | kNtFileMapExecute,
+               off >> 32, off, size, addr, kNtNumaNoPreferredNode))) {
+        return dm;
+      } else {
+        CloseHandle(dm.maphandle);
+      }
+    }
   }
+  dm.maphandle = kNtInvalidHandleValue;
+  dm.addr = (void *)(intptr_t)__winerr();
   return dm;
 }

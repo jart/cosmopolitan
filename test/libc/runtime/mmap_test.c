@@ -120,6 +120,22 @@ TEST(mmap, fileOffset) {
   EXPECT_NE(-1, close(fd));
 }
 
+TEST(mmap, mapPrivate_writesDontChangeFile) {
+  int fd;
+  char *map, buf[5];
+  ASSERT_NE(-1, (fd = open("foo", O_CREAT | O_RDWR, 0644)));
+  EXPECT_NE(-1, ftruncate(fd, FRAMESIZE));
+  EXPECT_NE(-1, pwrite(fd, "hello", 5, 0));
+  ASSERT_NE(MAP_FAILED, (map = mmap(NULL, FRAMESIZE, PROT_READ | PROT_WRITE,
+                                    MAP_PRIVATE, fd, 0)));
+  memcpy(map, "there", 5);
+  EXPECT_NE(-1, msync(map, FRAMESIZE, MS_SYNC));
+  EXPECT_NE(-1, munmap(map, FRAMESIZE));
+  EXPECT_NE(-1, pread(fd, buf, 5, 0));
+  EXPECT_EQ(0, memcmp(buf, "hello", 5), "%#.*s", 5, buf);
+  EXPECT_NE(-1, close(fd));
+}
+
 TEST(isheap, nullPtr) {
   ASSERT_FALSE(isheap(NULL));
 }
