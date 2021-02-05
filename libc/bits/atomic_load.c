@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,11 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/lib/pc.h"
+#include "libc/bits/bits.h"
+#include "libc/macros.h"
+#include "libc/str/str.h"
 
-textreal void pageunmap(int64_t vaddr) {
-  uint64_t *entry;
-  entry = __getpagetableentry(vaddr, 3, &g_pml4t, &g_ptsp_xlm);
-  *entry &= ~PAGE_V;
-  asm volatile("invlpg\t(%0)" : /* no outputs */ : "r"(vaddr) : "memory");
+/**
+ * Atomically loads value.
+ *
+ * This macro is intended to prevent things like compiler load tearing
+ * optimizations.
+ */
+intptr_t(atomic_load)(void *p, size_t n) {
+  intptr_t x;
+  x = 0;
+  memcpy(&x, p, MAX(n, sizeof(x)));
+  return x;
 }

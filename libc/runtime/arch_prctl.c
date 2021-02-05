@@ -40,6 +40,22 @@
  * operating systems.
  */
 
+#define rdmsr(msr)                                         \
+  ({                                                       \
+    uint32_t lo, hi;                                       \
+    asm volatile("rdmsr" : "=a"(lo), "=d"(hi) : "c"(msr)); \
+    (uint64_t) hi << 32 | lo;                              \
+  })
+
+#define wrmsr(msr, val)                           \
+  do {                                            \
+    uint64_t val_ = (val);                        \
+    asm volatile("wrmsr"                          \
+                 : /* no outputs */               \
+                 : "c"(msr), "a"((uint32_t)val_), \
+                   "d"((uint32_t)(val_ >> 32)));  \
+  } while (0)
+
 int sys_arch_prctl(int, int64_t) hidden;
 
 static inline int arch_prctl_fsgsbase(int code, int64_t addr) {
