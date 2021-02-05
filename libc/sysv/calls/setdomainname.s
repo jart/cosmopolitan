@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall setdomainname 0xffff00a3ffff00ab globl
+.scall setdomainname 0xffffff0a3ffff0ab globl

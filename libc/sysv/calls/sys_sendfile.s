@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall sys_sendfile 0xffff018921510028 globl hidden
+.scall sys_sendfile 0xffffff1892151028 globl hidden

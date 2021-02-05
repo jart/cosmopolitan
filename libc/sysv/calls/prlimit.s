@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall prlimit 0xffffffffffff012e globl
+.scall prlimit 0xfffffffffffff12e globl

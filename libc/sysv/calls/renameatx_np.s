@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall renameatx_np 0xffffffff21e8ffff globl
+.scall renameatx_np 0xfffffffff21e8fff globl

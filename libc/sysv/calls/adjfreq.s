@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall adjfreq 0x0131ffffffffffff globl
+.scall adjfreq 0xfff131ffffffffff globl

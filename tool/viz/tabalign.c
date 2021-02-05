@@ -137,7 +137,7 @@ void processfile(void) {
     if (len < USHRT_MAX) {
       if ((p = strstr(line_, delim_))) {
         off = p - line_;
-        col = strnwidth(line_, off);
+        col = strnwidth(line_, off, 0);
         if (col < USHRT_MAX) {
           col_ = max(col_, col);
           append(&lines_, &((struct Line){.line = s, .off = off, .col = col}));

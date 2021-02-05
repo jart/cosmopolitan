@@ -1,2 +1,2 @@
 .include "libc/sysv/consts/syscon.inc"
-.syscon nr __NR_obreak -1 -1 -1 0x0011 -1
+.syscon nr __NR_obreak -1 -1 -1 0x0011 0x011 -1

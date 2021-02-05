@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall getegid 0x002b002b202b006c globl
+.scall getegid 0xfff02b02b202b06c globl

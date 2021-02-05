@@ -227,6 +227,7 @@ SECTIONS {
     . = ALIGN(. != 0 ? __SIZEOF_POINTER__ : 1);
     HIDDEN(.Lape.note = .);
     KEEP(*(.note.openbsd.ident))
+    KEEP(*(.note.netbsd.ident))
     HIDDEN(.Lape.note.end = .);
     . += 1;
 

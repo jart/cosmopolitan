@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall __sys_pwrite 0x00ae01dc209a0012 globl hidden
+.scall __sys_pwrite 0x0ae0ae1dc209a012 globl hidden

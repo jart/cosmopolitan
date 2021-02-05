@@ -726,20 +726,20 @@ static void RenderIt(void) {
     if (HasAdjustments()) {
       DescribeAdjustments(status_[6]);
       p += sprintf(p, "\e[%d;%dH%s", lastrow_ - 7,
-                   HALF(xn) - strwidth(status_[6]), status_[6]);
+                   HALF(xn) - strwidth(status_[6], 0), status_[6]);
     }
     p += sprintf(p, "\e[%d;%dH%s", lastrow_ - 6,
-                 HALF(xn) - strwidth(status_[4]), status_[4]);
+                 HALF(xn) - strwidth(status_[4], 0), status_[4]);
     p += sprintf(p, "\e[%d;%dH%s", lastrow_ - 5,
-                 HALF(xn) - strwidth(status_[5]), status_[5]);
+                 HALF(xn) - strwidth(status_[5], 0), status_[5]);
     p += sprintf(p, "\e[%d;%dH%s", lastrow_ - 4,
-                 HALF(xn) - strwidth(status_[1]), status_[1]);
+                 HALF(xn) - strwidth(status_[1], 0), status_[1]);
     p += sprintf(p, "\e[%d;%dH%s", lastrow_ - 3,
-                 HALF(xn) - strwidth(status_[0]), status_[0]);
+                 HALF(xn) - strwidth(status_[0], 0), status_[0]);
     p += sprintf(p, "\e[%d;%dH%30s", lastrow_ - 2,
-                 HALF(xn) - strwidth(status_[2]), status_[2]);
+                 HALF(xn) - strwidth(status_[2], 0), status_[2]);
     p += sprintf(p, "\e[%d;%dH%s", lastrow_ - 1,
-                 HALF(xn) - strwidth(status_[3]), status_[3]);
+                 HALF(xn) - strwidth(status_[3], 0), status_[3]);
     p += sprintf(p, "\e[%d;%dH %s %s ", lastrow_ - 2, 2,
                  program_invocation_name, "");
     p += sprintf(p, "\e[%d;%dH %s ", lastrow_ - 1, 2,

@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall extattrctl 0xffff0163ffffffff globl
+.scall extattrctl 0x168fff163fffffff globl

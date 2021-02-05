@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall setns 0xffffffffffff0134 globl
+.scall setns 0xfffffffffffff134 globl

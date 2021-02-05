@@ -1,2 +1,2 @@
 .include "libc/sysv/consts/syscon.inc"
-.syscon sig SIGCONT 18 19 19 19 18
+.syscon sig SIGCONT 18 19 19 19 19 18

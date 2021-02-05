@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall sys_fchmodat 0x013a01ea21d3010c globl hidden
+.scall sys_fchmodat 0x1cf13a1ea21d310c globl hidden

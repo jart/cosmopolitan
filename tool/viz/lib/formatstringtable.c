@@ -35,7 +35,7 @@ static unsigned GetBiggestCellWidth(long yn, long xn,
   long w, y, x;
   for (w = y = 0; y < yn; ++y) {
     for (x = 0; x < xn; ++x) {
-      w = max(w, strwidth(T[y][x]));
+      w = max(w, strwidth(T[y][x], 0));
     }
   }
   return w;
@@ -50,7 +50,7 @@ void *FormatStringTable(long yn, long xn, const char *const T[yn][xn],
     emit(startrow, a);
     for (x = 0; x < xn; ++x) {
       if (x) emit(comma, a);
-      for (n = w - strwidth(T[y][x]), i = 0; i < n; ++i) emit(" ", a);
+      for (n = w - strwidth(T[y][x], 0), i = 0; i < n; ++i) emit(" ", a);
       emit(T[y][x], a);
     }
     emit(endrow, a);

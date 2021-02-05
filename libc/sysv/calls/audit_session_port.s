@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall audit_session_port 0xffffffff21b0ffff globl
+.scall audit_session_port 0xfffffffff21b0fff globl

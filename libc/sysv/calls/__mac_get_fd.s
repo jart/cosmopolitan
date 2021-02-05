@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall __mac_get_fd 0xffff01822184ffff globl
+.scall __mac_get_fd 0xffffff1822184fff globl

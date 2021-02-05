@@ -1,2 +1,2 @@
 .include "libc/sysv/consts/syscon.inc"
-.syscon errno EDOM 33 33 33 33 -1
+.syscon errno EDOM 33 33 33 33 33 -1

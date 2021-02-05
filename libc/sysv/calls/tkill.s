@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall tkill 0xffffffffffff00c8 globl
+.scall tkill 0xfffffffffffff0c8 globl

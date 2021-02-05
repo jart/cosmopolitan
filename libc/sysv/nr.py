@@ -9,7 +9,7 @@ for line in lines:
   if name.startswith("'"): name = name[1:]
   if name.endswith("'"): name = name[:-1]
   if name.startswith("__"): name = name[2:]
-  if name.startswith("sys_"): name = name[:-5]
+  if name.startswith("sys_"): name = name[4:]
   if name.endswith("_bsd"): name = name[:-4]
   if name.endswith("_freebsd"): name = name[:-8]
   numbers = int(fields[2][2:], 16)

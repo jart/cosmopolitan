@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall sfi_ctl 0xffffffff21c8ffff globl
+.scall sfi_ctl 0xfffffffff21c8fff globl

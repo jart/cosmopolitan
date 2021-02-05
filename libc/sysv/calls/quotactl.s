@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall quotactl 0x0094009420a500b3 globl
+.scall quotactl 0xfff09409420a50b3 globl

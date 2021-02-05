@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall getattrlistat 0xffffffff21dcffff globl
+.scall getattrlistat 0xfffffffff21dcfff globl

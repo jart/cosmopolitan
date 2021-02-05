@@ -23,6 +23,6 @@
 /**
  * Returns monospace display width of UTF-16 or UCS-2 string.
  */
-int strwidth16(const char16_t *s) {
-  return strnwidth16(s, SIZE_MAX);
+int strwidth16(const char16_t *s, size_t o) {
+  return strnwidth16(s, SIZE_MAX, o);
 }

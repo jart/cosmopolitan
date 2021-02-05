@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall sys_fcntl 0x005c005c205c0048 globl hidden
+.scall sys_fcntl 0x05c05c05c205c048 globl hidden

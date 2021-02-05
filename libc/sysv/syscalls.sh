@@ -24,803 +24,807 @@ dir=libc/sysv/calls
 #	                                                       ├─────────────────────────┤
 #	                             GNU/Systemd┐              │   ffff │ unavailable    │
 # 	                                 2.6.18+│              │   sys_ │ wrapped        │
-#	                            Mac OS X┐   │              │ __sys_ │ wrapped twice  │
-#	                               15.6+│   │              └─────────────────────────┘
-#	                         FreeBSD┐   │   │
-#	                             12+│ ┌─│───│── XnuClass{1:Mach,2:Unix}
-#	                     OpenBSD┐   │ │ │   │
-#	                        6.4+│   │ │ │   │
-#	Symbol                    ┌─┴┐┌─┴┐│┬┴┐┌─┴┐      Directives & Commentary
-scall	sys_exit		0x00010001200100e7	globl hidden # a.k.a. exit_group
-scall	sys_read		0x0003000320030000	globl hidden
-scall	sys_write		0x0004000420040001	globl hidden
-scall	sys_open		0x0005000520050002	globl hidden
-scall	sys_close		0x0006000620060003	globl hidden
-scall	__sys_stat		0x0026ffff21520004	globl hidden # FreeBSD 11→12 fumble; use sys_fstatat(); blocked on Android
-scall	__sys_fstat		0x0035022721530005	globl hidden # needs __stat2linux()
-scall	__sys_lstat		0x0028002821540006	globl hidden # needs __stat2linux(); blocked on Android
-scall	sys_poll		0x00fc00d120e60007	globl hidden
-scall	sys_ppoll		0x006d0221ffff010f	globl hidden # consider INTON/INTOFF tutorial in examples/unbourne.c
-scall	__sys_lseek		0x00c701de20c70008	globl hidden # openbsd:evilpad
-scall	__sys_mmap		0x00c501dd20c50009	globl hidden # openbsd:pad
-scall	sys_msync		0x010000412041001a	globl hidden
-scall	sys_mprotect		0x004a004a204a000a	globl hidden
-scall	sys_munmap		0x004900492049000b	globl hidden
-scall	sys_sigaction		0x002e01a0202e000d	globl hidden # rt_sigaction on Lunix
-scall	sys_sigprocmask		0x003001542030000e	globl hidden # a.k.a. rt_sigprocmask
-scall	sys_ioctl		0x0036003620360010	globl hidden
-scall	__sys_pread		0x00ad01db20990011	globl hidden # a.k.a. pread64; openbsd:pad
-scall	__sys_pwrite		0x00ae01dc209a0012	globl hidden # a.k.a. pwrite64; openbsd:pad
-scall	sys_readv		0x0078007820780013	globl hidden
-scall	sys_writev		0x0079007920790014	globl hidden
-scall	sys_access		0x0021002120210015	globl hidden
-scall	__sys_pipe		0x0107021e202a0016	globl hidden # NOTE: pipe2() on FreeBSD; XNU is pipe(void)→eax:edx
-scall	sys_select		0x0047005d205d0017	globl hidden
-scall	pselect			0x006e020a218affff	globl
-scall	pselect6		0xffffffffffff010e	globl
-scall	sys_sched_yield		0x012a014b103c0018	globl hidden # swtch() on xnu
-scall	sys_mremap		0xffffffffffff0019	globl hidden
-scall	mincore			0x004e004e204e001b	globl
-scall	sys_madvise		0x004b004b204b001c	globl hidden
-scall	shmget			0x012100e72109001d	globl # consider mmap
-scall	shmat			0x00e400e42106001e	globl # consider mmap
-scall	shmctl			0x012802002107001f	globl # consider mmap
-scall	sys_dup			0x0029002920290020	globl hidden
-scall	sys_dup2		0x005a005a205a0021	globl hidden
-scall	sys_pause		0xffffffffffff0022	globl hidden
-scall	sys_nanosleep		0x005b00f0ffff0023	globl hidden
-scall	sys_getitimer		0x0046005620560024	globl hidden
-scall	sys_setitimer		0x0045005320530026	globl hidden
-scall	sys_alarm		0xffffffffffff0025	globl hidden
-scall	sys_getpid		0x0014001420140027	globl hidden
-scall	sys_sendfile		0xffff018921510028	globl hidden # Linux vs. XNU/BSD ABIs very different
-scall	__sys_socket		0x0061006120610029	globl hidden
-scall	__sys_connect		0x006200622062002a	globl hidden
-scall	__sys_accept		0x001e021d201e002b	globl hidden # accept4 on freebsd
-scall	sys_sendto		0x008500852085002c	globl hidden
-scall	sys_recvfrom		0x001d001d201d002d	globl hidden
-scall	sys_sendmsg		0x001c001c201c002e	globl hidden
-scall	sys_recvmsg		0x001b001b201b002f	globl hidden
-scall	sys_shutdown		0x0086008620860030	globl hidden
-scall	sys_bind		0x0068006820680031	globl hidden
-scall	sys_listen		0x006a006a206a0032	globl hidden
-scall	__sys_getsockname	0x0020002020200033	globl hidden
-scall	__sys_getpeername	0x001f008d201f0034	globl hidden
-scall	sys_socketpair		0x0087008720870035	globl hidden
-scall	sys_setsockopt		0x0069006920690036	globl hidden
-scall	sys_getsockopt		0x0076007620760037	globl hidden
-scall	__sys_fork		0x0002000220020039	globl hidden # xnu needs eax=~-edx b/c eax always holds pid and edx is 0 for parent and 1 for child
-#scall	vfork			0x004200422042003a	globl        # this syscall is from the moon so we implement it by hand in libc/calls/hefty/vfork.S
-scall	sys_posix_spawn		0xffffffff20f4ffff	globl hidden # good luck figuring out how xnu defines this
-scall	__sys_execve		0x003b003b203b003b	globl hidden
-scall	sys_wait4		0x000b00072007003d	globl hidden
-scall	sys_kill		0x007a00252025003e	globl hidden # kill(pid, sig, 1) b/c xnu
-scall	sys_killpg		0xffff0092ffffffff	globl hidden
-scall	clone			0xffffffffffff0038	globl
-scall	tkill			0xffffffffffff00c8	globl
-scall	futex			0x0053ffffffff00ca	globl
-scall	set_robust_list		0xffffffffffff0111	globl
-scall	get_robust_list		0xffffffffffff0112	globl
-scall	sys_uname		0xffff00a4ffff003f	globl hidden
-scall	semget			0x00dd00dd20ff0040	globl # won't polyfill for windows
-scall	semop			0x012200de21000041	globl # won't polyfill for windows
-scall	semctl			0x012701fe20fe0042	globl # won't polyfill for windows
-scall	shmdt			0x00e600e621080043	globl # won't polyfill for windows
-scall	msgget			0x00e100e121030044	globl # won't polyfill for windows
-scall	msgsnd			0x00e200e221040045	globl # won't polyfill for windows
-scall	msgrcv			0x00e300e321050046	globl # won't polyfill for windows
-scall	msgctl			0x012901ff21020047	globl # won't polyfill for windows
-scall	sys_fcntl		0x005c005c205c0048	globl hidden
-scall	sys_flock		0x0083008320830049	globl hidden
-scall	sys_fsync		0x005f005f205f004a	globl hidden
-scall	sys_fdatasync		0x005f022620bb004b	globl hidden # fsync() on openbsd
-scall	__sys_truncate		0x00c801df20c8004c	globl hidden # openbsd:pad
-scall	__sys_ftruncate		0x00c901e020c9004d	globl hidden # openbsd:pad
-scall	sys_getcwd		0x01300146ffff004f	globl hidden
-scall	sys_chdir		0x000c000c200c0050	globl hidden
-scall	sys_fchdir		0x000d000d200d0051	globl hidden
-scall	sys_rename		0x0080008020800052	globl hidden
-scall	sys_mkdir		0x0088008820880053	globl hidden
-scall	sys_rmdir		0x0089008920890054	globl hidden
-scall	sys_creat		0xffff0008ffff0055	globl hidden
-scall	sys_link		0x0009000920090056	globl hidden
-scall	sys_unlink		0x000a000a200a0057	globl hidden
-scall	sys_symlink		0x0039003920390058	globl hidden
-scall	readlink		0x003a003a203a0059	globl        # usually an anti-pattern
-scall	sys_chmod		0x000f000f200f005a	globl hidden
-scall	sys_fchmod		0x007c007c207c005b	globl hidden
-scall	sys_chown		0x001000102010005c	globl hidden # impl. w/ fchownat() @asyncsignalsafe
-scall	sys_fchown		0x007b007b207b005d	globl hidden # @asyncsignalsafe
-scall	sys_lchown		0x00fe00fe216c005e	globl hidden # impl. w/ fchownat()
-scall	umask			0x003c003c203c005f	globl
-scall	__sys_gettimeofday	0x0043007420740060	globl hidden # xnu esi/edx=0
-scall	sys_getrlimit		0x00c200c220c20061	globl hidden
-scall	sys_getrusage		0x0013007520750062	globl hidden
-scall	sys_sysinfo		0xffffffffffff0063	globl hidden
-scall	sys_times		0xffffffffffff0064	globl hidden
-scall	sys_ptrace		0x001a001a201a0065	globl hidden
-scall	syslog			0xffffffffffff0067	globl
-scall	sys_getuid		0x0018001820180066	globl hidden
-scall	sys_getgid		0x002f002f202f0068	globl hidden
-scall	sys_getppid		0x002700272027006e	globl hidden
-scall	getpgrp			0x005100512051006f	globl
-scall	sys_setsid		0x0093009320930070	globl hidden
-scall	sys_getsid		0x00ff01362136007c	globl hidden
-scall	getpgid			0x00cf00cf20970079	globl
-scall	setpgid			0x005200522052006d	globl
-scall	geteuid			0x001900192019006b	globl
-scall	getegid			0x002b002b202b006c	globl
-scall	getgroups		0x004f004f204f0073	globl
-scall	setgroups		0x0050005020500074	globl
-scall	setreuid		0x007e007e207e0071	globl
-scall	setregid		0x007f007f207f0072	globl
-scall	setuid			0x0017001720170069	globl
-scall	setgid			0x00b500b520b5006a	globl
-scall	sys_setresuid		0x011a0137ffff0075	globl hidden # polyfilled for xnu
-scall	sys_setresgid		0x011c0138ffff0077	globl hidden # polyfilled for xnu
-scall	getresuid		0x01190168ffff0076	globl # semantics aren't well-defined
-scall	getresgid		0x011b0169ffff0078	globl # semantics aren't well-defined
-scall	sigpending		0x003400342034007f	globl
-scall	sys_sigsuspend		0x006f0155206f0082	globl hidden
-scall	sigaltstack		0x0120003520350083	globl
-scall	sys_mknod		0x000e000e200e0085	globl hidden
-scall	mknodat			0x0140022fffff0103	globl # FreeBSD 12+
-scall	sys_mkfifo		0x008400842084ffff	globl hidden
-scall	mkfifoat		0x013f01f1ffffffff	globl
-scall	statfs			0x003f022b21590089	globl
-scall	fstatfs			0x0040022c215a008a	globl
-scall	sys_getpriority		0x006400642064008c	globl hidden
-scall	sys_setpriority		0x006000602060008d	globl hidden # modern nice()
-scall	mlock			0x00cb00cb20cb0095	globl
-scall	munlock			0x00cc00cc20cc0096	globl
-scall	mlockall		0x010f014421440097	globl
-scall	munlockall		0x0110014521450098	globl
-scall	sys_setrlimit		0x00c300c320c300a0	globl hidden
-scall	chroot			0x003d003d203d00a1	globl
-scall	sys_sync		0x00240024202400a2	globl hidden
-scall	acct			0x00330033203300a3	globl
-scall	settimeofday		0x0044007a207a00a4	globl
-scall	mount			0x0015001520a700a5	globl
-scall	reboot			0x00370037203700a9	globl
-scall	quotactl		0x0094009420a500b3	globl
-scall	setfsuid		0xffffffffffff007a	globl
-scall	setfsgid		0xffffffffffff007b	globl
-scall	capget			0xffffffffffff007d	globl
-scall	capset			0xffffffffffff007e	globl
-scall	sigtimedwait		0xffff0159ffff0080	globl
-scall	rt_sigqueueinfo		0xffffffffffff0081	globl
-scall	personality		0xffffffffffff0087	globl
-scall	ustat			0xffffffffffff0088	globl
-scall	sysfs			0xffffffffffff008b	globl
-scall	sched_setparam		0xffff0147ffff008e	globl
-scall	sched_getparam		0xffff0148ffff008f	globl
-scall	sched_setscheduler	0xffff0149ffff0090	globl
-scall	sched_getscheduler	0xffff014affff0091	globl
-scall	sched_get_priority_max	0xffff014cffff0092	globl
-scall	sched_get_priority_min	0xffff014dffff0093	globl
-scall	sched_rr_get_interval	0xffff014effff0094	globl
-scall	vhangup			0xffffffffffff0099	globl
-scall	modify_ldt		0xffffffffffff009a	globl
-scall	pivot_root		0xffffffffffff009b	globl
-scall	_sysctl			0xffffffffffff009c	globl
-scall	prctl			0xffffffffffff009d	globl
-scall	sys_arch_prctl		0x00a500a5ffff009e	globl hidden # sysarch() on bsd
-scall	adjtimex		0xffffffffffff009f	globl
-scall	umount2			0xffffffffffff00a6	globl
-scall	swapon			0xffff0055205500a7	globl
-scall	swapoff			0xffff01a8ffff00a8	globl
-scall	sethostname		0xffff0058ffff00aa	globl
-scall	setdomainname		0xffff00a3ffff00ab	globl
-scall	iopl			0xffffffffffff00ac	globl
-scall	ioperm			0xffffffffffff00ad	globl
-scall	init_module		0xffffffffffff00af	globl
-scall	delete_module		0xffffffffffff00b0	globl
-scall	sys_gettid		0xffffffff211e00ba	globl hidden
-scall	readahead		0xffffffffffff00bb	globl # consider fadvise() / madvise()
-scall	setxattr		0xffffffff20ec00bc	globl
-scall	fsetxattr		0xffffffff20ed00be	globl
-scall	getxattr		0xffffffff20ea00bf	globl
-scall	fgetxattr		0xffffffff20eb00c1	globl
-scall	listxattr		0xffffffff20f000c2	globl
-scall	flistxattr		0xffffffff20f100c4	globl
-scall	removexattr		0xffffffff20ee00c5	globl
-scall	fremovexattr		0xffffffff20ef00c7	globl
-scall	lsetxattr		0xffffffffffff00bd	globl
-scall	lgetxattr		0xffffffffffff00c0	globl
-scall	llistxattr		0xffffffffffff00c3	globl
-scall	lremovexattr		0xffffffffffff00c6	globl
-scall	sys_sched_setaffinity	0xffffffffffff00cb	globl hidden
-scall	sched_getaffinity	0xffffffffffff00cc	globl
-scall	cpuset_getaffinity	0xffff01e7ffffffff	globl
-scall	cpuset_setaffinity	0xffff01e8ffffffff	globl
-scall	io_setup		0xffffffffffff00ce	globl
-scall	io_destroy		0xffffffffffff00cf	globl
-scall	io_getevents		0xffffffffffff00d0	globl
-scall	io_submit		0xffffffffffff00d1	globl
-scall	io_cancel		0xffffffffffff00d2	globl
-scall	lookup_dcookie		0xffffffffffff00d4	globl
-scall	sys_epoll_create	0xffffffffffff00d5	globl
-scall	sys_epoll_wait		0xffffffffffff00e8	globl
-scall	sys_epoll_ctl		0xffffffffffff00e9	globl
-scall	getdents		0x0063011020c400d9	globl hidden # four args b/c xnu, getdirentries on xnu, 32-bit on xnu/freebsd, getdents64 on linux, 64-bit on openbsd
-scall	set_tid_address		0xffffffffffff00da	globl
-scall	restart_syscall		0xffffffffffff00db	globl
-scall	semtimedop		0xffffffffffff00dc	globl
-scall	sys_fadvise		0xffff0213ffff00dd	globl hidden
-scall	timer_create		0xffffffffffff00de	globl
-scall	timer_settime		0xffffffffffff00df	globl
-scall	timer_gettime		0xffffffffffff00e0	globl
-scall	timer_getoverrun	0xffffffffffff00e1	globl
-scall	timer_delete		0xffffffffffff00e2	globl
-scall	clock_settime		0x005800e9ffff00e3	globl
-scall	sys_clock_gettime	0x005700e8ffff00e4	globl hidden # Linux 2.6+ (c. 2003); XNU uses magic address
-scall	clock_getres		0x005900eaffff00e5	globl
-scall	clock_nanosleep		0xffff00f4ffff00e6	globl
-scall	tgkill			0xffffffffffff00ea	globl
-scall	mbind			0xffffffffffff00ed	globl
-scall	set_mempolicy		0xffffffffffff00ee	globl
-scall	get_mempolicy		0xffffffffffff00ef	globl
-scall	mq_open			0xffffffffffff00f0	globl # won't polyfill
-scall	mq_unlink		0xffffffffffff00f1	globl # won't polyfill
-scall	mq_timedsend		0xffffffffffff00f2	globl # won't polyfill
-scall	mq_timedreceive		0xffffffffffff00f3	globl # won't polyfill
-scall	mq_notify		0xffffffffffff00f4	globl # won't polyfill
-scall	mq_getsetattr		0xffffffffffff00f5	globl # won't polyfill
-scall	kexec_load		0xffffffffffff00f6	globl
-scall	waitid			0xffffffff20ad00f7	globl # Linux 2.6.9+
-scall	add_key			0xffffffffffff00f8	globl
-scall	request_key		0xffffffffffff00f9	globl
-scall	keyctl			0xffffffffffff00fa	globl
-scall	ioprio_set		0xffffffffffff00fb	globl
-scall	ioprio_get		0xffffffffffff00fc	globl
-scall	inotify_init		0xffffffffffff00fd	globl # wicked
-scall	inotify_add_watch	0xffffffffffff00fe	globl
-scall	inotify_rm_watch	0xffffffffffff00ff	globl
-scall	sys_openat		0x014101f321cf0101	globl hidden # Linux 2.6.16+ (c. 2007)
-scall	sys_mkdirat		0x013e01f021db0102	globl hidden
-scall	sys_fchownat		0x013b01eb21d40104	globl hidden # @asyncsignalsafe
-scall	sys_utime		0xffffffffffff0084	globl hidden
-scall	sys_utimes		0x004c008a208a00eb	globl hidden
-scall	sys_futimesat		0xffff01eeffff0105	globl hidden # @asyncsignalsafe
-scall	sys_futimes		0x004d00ce208bffff	globl hidden
-scall	sys_futimens		0x00550222ffffffff	globl hidden
-scall	__sys_fstatat		0x002a022821d60106	globl hidden # a.k.a. newfstatat(); FreeBSD 12+; needs __stat2linux()
-scall	sys_unlinkat		0x014501f721d80107	globl hidden
-scall	sys_renameat		0x014301f521d10108	globl hidden
-scall	sys_linkat		0x013d01ef21d70109	globl hidden
-scall	sys_symlinkat		0x014401f621da010a	globl hidden
-scall	sys_readlinkat		0x014201f421d9010b	globl hidden
-scall	sys_fchmodat		0x013a01ea21d3010c	globl hidden
-scall	sys_faccessat		0x013901e921d2010d	globl hidden
-scall	unshare			0xffffffffffff0110	globl
-scall	sys_splice		0xffffffffffff0113	globl hidden # Linux 2.6.17+ (c. 2007)
-scall	tee			0xffffffffffff0114	globl        # Linux 2.6.17+
-scall	sys_sync_file_range	0xffffffffffff0115	globl hidden # Linux 2.6.17+
-scall	sys_vmsplice		0xffffffffffff0116	globl hidden
-scall	migrate_pages		0xffffffffffff0100	globl        # numa numa yay
-scall	move_pages		0xffffffffffff0117	globl        # NOTE: We view Red Hat versions as "epochs" for all distros.
+#	                             Mac OS X┐  │              │ __sys_ │ wrapped twice  │
+#	                                15.6+│  │              └─────────────────────────┘
+#	                          FreeBSD┐   │  │
+#	                              12+│ ┌─│──│── XnuClass{1:Mach,2:Unix}
+#	                       OpenBSD┐  │ │ │  │
+#	                          6.4+│  │ │ │  │
+#	                     NetBSD┐  │  │ │ │  │
+#	                       9.1+│  │  │ │ │  │
+#	Symbol                    ┌┴┐┌┴┐┌┴┐│┬┴┐┌┴┐      Directives & Commentary
+scall	sys_exit		0x00100100120010e7	globl hidden # a.k.a. exit_group
+scall	sys_read		0x0030030032003000	globl hidden
+scall	sys_write		0x0040040042004001	globl hidden
+scall	sys_open		0x0050050052005002	globl hidden
+scall	sys_close		0x0060060062006003	globl hidden
+scall	__sys_stat		0x1b7026fff2152004	globl hidden # FreeBSD 11→12 fumble; use sys_fstatat(); blocked on Android
+scall	__sys_fstat		0x1b80352272153005	globl hidden # needs __stat2linux()
+scall	__sys_lstat		0x1b90280282154006	globl hidden # needs __stat2linux(); blocked on Android
+scall	sys_poll		0x0d10fc0d120e6007	globl hidden
+scall	sys_ppoll		0xfff06d221ffff10f	globl hidden # consider INTON/INTOFF tutorial in examples/unbourne.c
+scall	__sys_lseek		0x0c70c71de20c7008	globl hidden # openbsd:evilpad
+scall	__sys_mmap		0x0c50c51dd20c5009	globl hidden # openbsd:pad
+scall	sys_msync		0x115100041204101a	globl hidden
+scall	sys_mprotect		0x04a04a04a204a00a	globl hidden
+scall	sys_munmap		0x049049049204900b	globl hidden
+scall	sys_sigaction		0xfff02e1a0202e00d	globl hidden # rt_sigaction on Lunix
+scall	sys_sigprocmask		0x125030154203000e	globl hidden # a.k.a. rt_sigprocmask
+scall	sys_ioctl		0x0360360362036010	globl hidden
+scall	__sys_pread		0x0ad0ad1db2099011	globl hidden # a.k.a. pread64; openbsd:pad
+scall	__sys_pwrite		0x0ae0ae1dc209a012	globl hidden # a.k.a. pwrite64; openbsd:pad
+scall	sys_readv		0x0780780782078013	globl hidden
+scall	sys_writev		0x0790790792079014	globl hidden
+scall	sys_access		0x0210210212021015	globl hidden
+scall	__sys_pipe		0x02a10721e202a016	globl hidden # NOTE: pipe2() on FreeBSD; XNU is pipe(void)→eax:edx
+scall	sys_select		0x1a104705d205d017	globl hidden
+scall	pselect			0x1b406e20a218afff	globl
+scall	pselect6		0xfffffffffffff10e	globl
+scall	sys_sched_yield		0x15e12a14b103c018	globl hidden # swtch() on xnu
+scall	sys_mremap		0x19bffffffffff019	globl hidden
+scall	mincore			0x04e04e04e204e01b	globl
+scall	sys_madvise		0x04b04b04b204b01c	globl hidden
+scall	shmget			0x0e71210e7210901d	globl # consider mmap
+scall	shmat			0x0e40e40e4210601e	globl # consider mmap
+scall	shmctl			0x1bb128200210701f	globl # consider mmap
+scall	sys_dup			0x0290290292029020	globl hidden
+scall	sys_dup2		0x05a05a05a205a021	globl hidden
+scall	sys_pause		0xfffffffffffff022	globl hidden
+scall	sys_nanosleep		0x1ae05b0f0ffff023	globl hidden
+scall	sys_getitimer		0x1aa0460562056024	globl hidden
+scall	sys_setitimer		0x1a90450532053026	globl hidden
+scall	sys_alarm		0xfffffffffffff025	globl hidden
+scall	sys_getpid		0xfff0140142014027	globl hidden
+scall	sys_sendfile		0xffffff1892151028	globl hidden # Linux vs. XNU/BSD ABIs very different
+scall	__sys_socket		0x18a0610612061029	globl hidden
+scall	__sys_connect		0x062062062206202a	globl hidden
+scall	__sys_accept		0x01e01e21d201e02b	globl hidden # accept4 on freebsd
+scall	sys_sendto		0x085085085208502c	globl hidden
+scall	sys_recvfrom		0x01d01d01d201d02d	globl hidden
+scall	sys_sendmsg		0x01c01c01c201c02e	globl hidden
+scall	sys_recvmsg		0x01b01b01b201b02f	globl hidden
+scall	sys_shutdown		0x0860860862086030	globl hidden
+scall	sys_bind		0x0680680682068031	globl hidden
+scall	sys_listen		0x06a06a06a206a032	globl hidden
+scall	__sys_getsockname	0x0200200202020033	globl hidden
+scall	__sys_getpeername	0x01f01f08d201f034	globl hidden
+scall	sys_socketpair		0x0870870872087035	globl hidden
+scall	sys_setsockopt		0x0690690692069036	globl hidden
+scall	sys_getsockopt		0x0760760762076037	globl hidden
+scall	__sys_fork		0x0020020022002039	globl hidden # xnu needs eax=~-edx b/c eax always holds pid and edx is 0 for parent and 1 for child
+#scall	vfork			0x042042042204203a	globl        # this syscall is from the moon so we implement it by hand in libc/calls/hefty/vfork.S
+scall	sys_posix_spawn		0xfffffffff20f4fff	globl hidden # good luck figuring out how xnu defines this
+scall	__sys_execve		0x03b03b03b203b03b	globl hidden
+scall	sys_wait4		0x1c100b007200703d	globl hidden
+scall	sys_kill		0x02507a025202503e	globl hidden # kill(pid, sig, 1) b/c xnu
+scall	sys_killpg		0xffffff092fffffff	globl hidden
+scall	clone			0xfffffffffffff038	globl
+scall	tkill			0xfffffffffffff0c8	globl
+scall	futex			0xfff053fffffff0ca	globl
+scall	set_robust_list		0xfffffffffffff111	globl
+scall	get_robust_list		0xfffffffffffff112	globl
+scall	sys_uname		0xffffff0a4ffff03f	globl hidden
+scall	semget			0x0dd0dd0dd20ff040	globl # won't polyfill for windows
+scall	semop			0x0de1220de2100041	globl # won't polyfill for windows
+scall	semctl			0xfff1271fe20fe042	globl # won't polyfill for windows
+scall	shmdt			0x0e60e60e62108043	globl # won't polyfill for windows
+scall	msgget			0x0e10e10e12103044	globl # won't polyfill for windows
+scall	msgsnd			0x0e20e20e22104045	globl # won't polyfill for windows
+scall	msgrcv			0x0e30e30e32105046	globl # won't polyfill for windows
+scall	msgctl			0x1bc1291ff2102047	globl # won't polyfill for windows
+scall	sys_fcntl		0x05c05c05c205c048	globl hidden
+scall	sys_flock		0x0830830832083049	globl hidden
+scall	sys_fsync		0x05f05f05f205f04a	globl hidden
+scall	sys_fdatasync		0x0f105f22620bb04b	globl hidden # fsync() on openbsd
+scall	__sys_truncate		0x0c80c81df20c804c	globl hidden # openbsd:pad
+scall	__sys_ftruncate		0x0c90c91e020c904d	globl hidden # openbsd:pad
+scall	sys_getcwd		0xfff130146ffff04f	globl hidden
+scall	sys_chdir		0x00c00c00c200c050	globl hidden
+scall	sys_fchdir		0x00d00d00d200d051	globl hidden
+scall	sys_rename		0x0800800802080052	globl hidden
+scall	sys_mkdir		0x0880880882088053	globl hidden
+scall	sys_rmdir		0x0890890892089054	globl hidden
+scall	sys_creat		0xffffff008ffff055	globl hidden
+scall	sys_link		0x0090090092009056	globl hidden
+scall	sys_unlink		0x00a00a00a200a057	globl hidden
+scall	sys_symlink		0x0390390392039058	globl hidden
+scall	readlink		0x03a03a03a203a059	globl        # usually an anti-pattern
+scall	sys_chmod		0x00f00f00f200f05a	globl hidden
+scall	sys_fchmod		0x07c07c07c207c05b	globl hidden
+scall	sys_chown		0x010010010201005c	globl hidden # impl. w/ fchownat() @asyncsignalsafe
+scall	sys_fchown		0x07b07b07b207b05d	globl hidden # @asyncsignalsafe
+scall	sys_lchown		0x1130fe0fe216c05e	globl hidden # impl. w/ fchownat()
+scall	umask			0x03c03c03c203c05f	globl
+scall	__sys_gettimeofday	0x1a20430742074060	globl hidden # xnu esi/edx=0
+scall	sys_getrlimit		0x0c20c20c220c2061	globl hidden
+scall	sys_getrusage		0x1bd0130752075062	globl hidden
+scall	sys_sysinfo		0xfffffffffffff063	globl hidden
+scall	sys_times		0xfffffffffffff064	globl hidden
+scall	sys_ptrace		0x01a01a01a201a065	globl hidden
+scall	syslog			0xfffffffffffff067	globl
+scall	sys_getuid		0xfff0180182018066	globl hidden
+scall	sys_getgid		0xfff02f02f202f068	globl hidden
+scall	sys_getppid		0xfff027027202706e	globl hidden
+scall	getpgrp			0x051051051205106f	globl
+scall	sys_setsid		0x0930930932093070	globl hidden
+scall	sys_getsid		0x11e0ff136213607c	globl hidden
+scall	getpgid			0x0cf0cf0cf2097079	globl
+scall	setpgid			0x052052052205206d	globl
+scall	geteuid			0xfff019019201906b	globl
+scall	getegid			0xfff02b02b202b06c	globl
+scall	getgroups		0x04f04f04f204f073	globl
+scall	setgroups		0x0500500502050074	globl
+scall	setreuid		0x07e07e07e207e071	globl
+scall	setregid		0x07f07f07f207f072	globl
+scall	setuid			0x0170170172017069	globl
+scall	setgid			0x0b50b50b520b506a	globl
+scall	sys_setresuid		0xfff11a137ffff075	globl hidden # polyfilled for xnu
+scall	sys_setresgid		0xfff11c138ffff077	globl hidden # polyfilled for xnu
+scall	getresuid		0xfff119168ffff076	globl # semantics aren't well-defined
+scall	getresgid		0xfff11b169ffff078	globl # semantics aren't well-defined
+scall	sigpending		0x124034034203407f	globl
+scall	sys_sigsuspend		0x12606f155206f082	globl hidden
+scall	sigaltstack		0x1191200352035083	globl
+scall	sys_mknod		0x1c200e00e200e085	globl hidden
+scall	mknodat			0x1cc14022fffff103	globl # FreeBSD 12+
+scall	sys_mkfifo		0x0840840842084fff	globl hidden
+scall	mkfifoat		0x1cb13f1f1fffffff	globl
+scall	statfs			0xfff03f22b2159089	globl
+scall	fstatfs			0xfff04022c215a08a	globl
+scall	sys_getpriority		0x064064064206408c	globl hidden
+scall	sys_setpriority		0x060060060206008d	globl hidden # modern nice()
+scall	mlock			0x0cb0cb0cb20cb095	globl
+scall	munlock			0x0cc0cc0cc20cc096	globl
+scall	mlockall		0x0f210f1442144097	globl
+scall	munlockall		0x0f31101452145098	globl
+scall	sys_setrlimit		0x0c30c30c320c30a0	globl hidden
+scall	chroot			0x03d03d03d203d0a1	globl
+scall	sys_sync		0xfff02402420240a2	globl hidden
+scall	acct			0x03303303320330a3	globl
+scall	settimeofday		0x1a304407a207a0a4	globl
+scall	mount			0x19a01501520a70a5	globl
+scall	reboot			0x0d003703720370a9	globl
+scall	quotactl		0xfff09409420a50b3	globl
+scall	setfsuid		0xfffffffffffff07a	globl
+scall	setfsgid		0xfffffffffffff07b	globl
+scall	capget			0xfffffffffffff07d	globl
+scall	capset			0xfffffffffffff07e	globl
+scall	sigtimedwait		0xffffff159ffff080	globl
+scall	rt_sigqueueinfo		0xfffffffffffff081	globl
+scall	personality		0xfffffffffffff087	globl
+scall	ustat			0xfffffffffffff088	globl
+scall	sysfs			0xfffffffffffff08b	globl
+scall	sched_setparam		0xffffff147ffff08e	globl
+scall	sched_getparam		0xffffff148ffff08f	globl
+scall	sched_setscheduler	0xffffff149ffff090	globl
+scall	sched_getscheduler	0xffffff14affff091	globl
+scall	sched_get_priority_max	0xffffff14cffff092	globl
+scall	sched_get_priority_min	0xffffff14dffff093	globl
+scall	sched_rr_get_interval	0xffffff14effff094	globl
+scall	vhangup			0xfffffffffffff099	globl
+scall	modify_ldt		0xfffffffffffff09a	globl
+scall	pivot_root		0xfffffffffffff09b	globl
+scall	_sysctl			0xfffffffffffff09c	globl
+scall	prctl			0xfffffffffffff09d	globl
+scall	sys_arch_prctl		0xfff0a50a5ffff09e	globl hidden # sysarch() on bsd
+scall	adjtimex		0xfffffffffffff09f	globl
+scall	umount2			0xfffffffffffff0a6	globl
+scall	swapon			0xffffff05520550a7	globl
+scall	swapoff			0xffffff1a8ffff0a8	globl
+scall	sethostname		0xffffff058ffff0aa	globl
+scall	setdomainname		0xffffff0a3ffff0ab	globl
+scall	iopl			0xfffffffffffff0ac	globl
+scall	ioperm			0xfffffffffffff0ad	globl
+scall	init_module		0xfffffffffffff0af	globl
+scall	delete_module		0xfffffffffffff0b0	globl
+scall	sys_gettid		0xfffffffff211e0ba	globl hidden
+scall	readahead		0xfffffffffffff0bb	globl # consider fadvise() / madvise()
+scall	setxattr		0x177ffffff20ec0bc	globl
+scall	fsetxattr		0x179ffffff20ed0be	globl
+scall	getxattr		0x17affffff20ea0bf	globl
+scall	fgetxattr		0x17cffffff20eb0c1	globl
+scall	listxattr		0x17dffffff20f00c2	globl
+scall	flistxattr		0x17fffffff20f10c4	globl
+scall	removexattr		0x180ffffff20ee0c5	globl
+scall	fremovexattr		0x182ffffff20ef0c7	globl
+scall	lsetxattr		0x178ffffffffff0bd	globl
+scall	lgetxattr		0x17bffffffffff0c0	globl
+scall	llistxattr		0x17effffffffff0c3	globl
+scall	lremovexattr		0x181ffffffffff0c6	globl
+scall	sys_sched_setaffinity	0xfffffffffffff0cb	globl hidden
+scall	sched_getaffinity	0xfffffffffffff0cc	globl
+scall	cpuset_getaffinity	0xffffff1e7fffffff	globl
+scall	cpuset_setaffinity	0xffffff1e8fffffff	globl
+scall	io_setup		0xfffffffffffff0ce	globl
+scall	io_destroy		0xfffffffffffff0cf	globl
+scall	io_getevents		0xfffffffffffff0d0	globl
+scall	io_submit		0xfffffffffffff0d1	globl
+scall	io_cancel		0xfffffffffffff0d2	globl
+scall	lookup_dcookie		0xfffffffffffff0d4	globl
+scall	sys_epoll_create	0xfffffffffffff0d5	globl
+scall	sys_epoll_wait		0xfffffffffffff0e8	globl
+scall	sys_epoll_ctl		0xfffffffffffff0e9	globl
+scall	getdents		0x18606311020c40d9	globl hidden # four args b/c xnu, getdirentries on xnu, 32-bit on xnu/freebsd, getdents64 on linux, 64-bit on openbsd
+scall	set_tid_address		0xfffffffffffff0da	globl
+scall	restart_syscall		0xfffffffffffff0db	globl
+scall	semtimedop		0xfffffffffffff0dc	globl
+scall	sys_fadvise		0xffffff213ffff0dd	globl hidden
+scall	timer_create		0x0ebffffffffff0de	globl
+scall	timer_settime		0x1beffffffffff0df	globl
+scall	timer_gettime		0x1bfffffffffff0e0	globl
+scall	timer_getoverrun	0x0efffffffffff0e1	globl
+scall	timer_delete		0x0ecffffffffff0e2	globl
+scall	clock_settime		0x1ac0580e9ffff0e3	globl
+scall	sys_clock_gettime	0x1ab0570e8ffff0e4	globl hidden # Linux 2.6+ (c. 2003); XNU uses magic address
+scall	clock_getres		0x1ad0590eaffff0e5	globl
+scall	clock_nanosleep		0xffffff0f4ffff0e6	globl
+scall	tgkill			0xfffffffffffff0ea	globl
+scall	mbind			0xfffffffffffff0ed	globl
+scall	set_mempolicy		0xfffffffffffff0ee	globl
+scall	get_mempolicy		0xfffffffffffff0ef	globl
+scall	mq_open			0x101ffffffffff0f0	globl # won't polyfill
+scall	mq_unlink		0x103ffffffffff0f1	globl # won't polyfill
+scall	mq_timedsend		0x1b0ffffffffff0f2	globl # won't polyfill
+scall	mq_timedreceive		0x1b1ffffffffff0f3	globl # won't polyfill
+scall	mq_notify		0x106ffffffffff0f4	globl # won't polyfill
+scall	mq_getsetattr		0xfffffffffffff0f5	globl # won't polyfill
+scall	kexec_load		0xfffffffffffff0f6	globl
+scall	waitid			0xfffffffff20ad0f7	globl # Linux 2.6.9+
+scall	add_key			0xfffffffffffff0f8	globl
+scall	request_key		0xfffffffffffff0f9	globl
+scall	keyctl			0xfffffffffffff0fa	globl
+scall	ioprio_set		0xfffffffffffff0fb	globl
+scall	ioprio_get		0xfffffffffffff0fc	globl
+scall	inotify_init		0xfffffffffffff0fd	globl # wicked
+scall	inotify_add_watch	0xfffffffffffff0fe	globl
+scall	inotify_rm_watch	0xfffffffffffff0ff	globl
+scall	sys_openat		0x1d41411f321cf101	globl hidden # Linux 2.6.16+ (c. 2007)
+scall	sys_mkdirat		0x1cd13e1f021db102	globl hidden
+scall	sys_fchownat		0x1d013b1eb21d4104	globl hidden # @asyncsignalsafe
+scall	sys_utime		0xfffffffffffff084	globl hidden
+scall	sys_utimes		0x1a404c08a208a0eb	globl hidden
+scall	sys_futimesat		0xffffff1eeffff105	globl hidden # @asyncsignalsafe
+scall	sys_futimes		0x1a704d0ce208bfff	globl hidden
+scall	sys_futimens		0x1d8055222fffffff	globl hidden
+scall	__sys_fstatat		0x1d202a22821d6106	globl hidden # a.k.a. newfstatat(); FreeBSD 12+; needs __stat2linux()
+scall	sys_unlinkat		0x1d71451f721d8107	globl hidden
+scall	sys_renameat		0x1ca1431f521d1108	globl hidden
+scall	sys_linkat		0x1c913d1ef21d7109	globl hidden
+scall	sys_symlinkat		0x1d61441f621da10a	globl hidden
+scall	sys_readlinkat		0x1d51421f421d910b	globl hidden
+scall	sys_fchmodat		0x1cf13a1ea21d310c	globl hidden
+scall	sys_faccessat		0x1ce1391e921d210d	globl hidden
+scall	unshare			0xfffffffffffff110	globl
+scall	sys_splice		0xfffffffffffff113	globl hidden # Linux 2.6.17+ (c. 2007)
+scall	tee			0xfffffffffffff114	globl        # Linux 2.6.17+
+scall	sys_sync_file_range	0xfffffffffffff115	globl hidden # Linux 2.6.17+
+scall	sys_vmsplice		0xfffffffffffff116	globl hidden
+scall	migrate_pages		0xfffffffffffff100	globl        # numa numa yay
+scall	move_pages		0xfffffffffffff117	globl        # NOTE: We view Red Hat versions as "epochs" for all distros.
 #──────────────────────RHEL 5.0 LIMIT────────────────────────        # ←┬─ last distro with gplv2 licensed compiler c. 2007
-scall	__sys_preadv		0x010b0121ffff0127	globl hidden #  ├─ last distro with system v shell script init
-scall	__sys_pwritev		0x010c0122ffff0128	globl hidden #  ├─ rob landley unleashes busybox gpl lawsuits
-scall	__sys_utimensat		0x00540223ffff0118	globl hidden #  ├─ python modules need this due to pep513
-scall	sys_fallocate		0xffffffffffff011d	globl hidden #  ├─ end of life 2020-11-30 (extended)
-scall	sys_posix_fallocate	0xffff0212ffffffff	globl hidden #  └─ cosmopolitan supports rhel5+
-scall	__sys_accept4		0x005d021dffff0120	globl hidden # Linux 2.6.28+
-scall	__sys_dup3		0x0066ffffffff0124	globl hidden # Linux 2.6.27+
-scall	__sys_pipe2		0x0065021effff0125	globl hidden # Linux 2.6.27+
-scall	epoll_pwait		0xffffffffffff0119	globl
-scall	sys_epoll_create1	0xffffffffffff0123	globl
-scall	perf_event_open		0xffffffffffff012a	globl
-scall	inotify_init1		0xffffffffffff0126	globl
-scall	rt_tgsigqueueinfo	0xffffffffffff0129	globl
-scall	signalfd		0xffffffffffff011a	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
-scall	signalfd4		0xffffffffffff0121	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
-scall	eventfd			0xffffffffffff011c	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
-scall	eventfd2		0xffffffffffff0122	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
-scall	timerfd_create		0xffffffffffff011b	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
-scall	timerfd_settime		0xffffffffffff011e	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
-scall	timerfd_gettime		0xffffffffffff011f	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
+scall	__sys_preadv		0x12110b121ffff127	globl hidden #  ├─ last distro with system v shell script init
+scall	__sys_pwritev		0x12210c122ffff128	globl hidden #  ├─ rob landley unleashes busybox gpl lawsuits
+scall	__sys_utimensat		0x1d3054223ffff118	globl hidden #  ├─ python modules need this due to pep513
+scall	sys_fallocate		0xfffffffffffff11d	globl hidden #  ├─ end of life 2020-11-30 (extended)
+scall	sys_posix_fallocate	0xffffff212fffffff	globl hidden #  └─ cosmopolitan supports rhel5+
+scall	__sys_accept4		0xfff05d21dffff120	globl hidden # Linux 2.6.28+
+scall	__sys_dup3		0x1c6066fffffff124	globl hidden # Linux 2.6.27+
+scall	__sys_pipe2		0x1c506521effff125	globl hidden # Linux 2.6.27+
+scall	epoll_pwait		0xfffffffffffff119	globl
+scall	sys_epoll_create1	0xfffffffffffff123	globl
+scall	perf_event_open		0xfffffffffffff12a	globl
+scall	inotify_init1		0xfffffffffffff126	globl
+scall	rt_tgsigqueueinfo	0xfffffffffffff129	globl
+scall	signalfd		0xfffffffffffff11a	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
+scall	signalfd4		0xfffffffffffff121	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
+scall	eventfd			0xfffffffffffff11c	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
+scall	eventfd2		0xfffffffffffff122	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
+scall	timerfd_create		0xfffffffffffff11b	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
+scall	timerfd_settime		0xfffffffffffff11e	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
+scall	timerfd_gettime		0xfffffffffffff11f	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
 #──────────────────────RHEL 6.0 LIMIT──────────────────────── # ←┬─ modern glibc needs rhel6+ c. 2011
-scall	recvmmsg		0xffffffffffff012b	globl #  ├─ end of life 2024-06-30 (extended)
-scall	fanotify_init		0xffffffffffff012c	globl #  ├─ last distro with the original gnome desktop
-scall	fanotify_mark		0xffffffffffff012d	globl #  └─ apple and google condemn the gplv3/gccrtev3
-scall	prlimit			0xffffffffffff012e	globl
-scall	name_to_handle_at	0xffffffffffff012f	globl
-scall	open_by_handle_at	0xffffffffffff0130	globl
-scall	clock_adjtime		0xffffffffffff0131	globl
-scall	syncfs			0xffffffffffff0132	globl
-scall	sendmmsg		0xffffffffffff0133	globl
-scall	setns			0xffffffffffff0134	globl
-scall	getcpu			0xffffffffffff0135	globl
-scall	process_vm_readv	0xffffffffffff0136	globl
-scall	process_vm_writev	0xffffffffffff0137	globl
-scall	kcmp			0xffffffffffff0138	globl
-scall	finit_module		0xffffffffffff0139	globl
+scall	recvmmsg		0x1dbffffffffff12b	globl #  ├─ end of life 2024-06-30 (extended)
+scall	fanotify_init		0xfffffffffffff12c	globl #  ├─ last distro with the original gnome desktop
+scall	fanotify_mark		0xfffffffffffff12d	globl #  └─ apple and google condemn the gplv3/gccrtev3
+scall	prlimit			0xfffffffffffff12e	globl
+scall	name_to_handle_at	0xfffffffffffff12f	globl
+scall	open_by_handle_at	0xfffffffffffff130	globl
+scall	clock_adjtime		0xfffffffffffff131	globl
+scall	syncfs			0xfffffffffffff132	globl
+scall	sendmmsg		0x1dcffffffffff133	globl
+scall	setns			0xfffffffffffff134	globl
+scall	getcpu			0xfffffffffffff135	globl
+scall	process_vm_readv	0xfffffffffffff136	globl
+scall	process_vm_writev	0xfffffffffffff137	globl
+scall	kcmp			0xfffffffffffff138	globl
+scall	finit_module		0xfffffffffffff139	globl
 #──────────────────────RHEL 7.0 LIMIT──────────────────────── # ←┬─ anything that links or uses c++11 code needs rhel7+ c. 2014
-scall	sched_setattr		0xffffffffffff013a	globl #  ├─ desktop replaced with tablet-first gui inspired by mac os x
-scall	sched_getattr		0xffffffffffff013b	globl #  ├─ karen sandler requires systemd init and boot for tablet gui
-scall	renameat2		0xffffffffffff013c	globl #  └─ debian founder ian murdock found strangled with vacuum cord
-scall	seccomp			0xffffffffffff013d	globl
-scall	sys_getrandom		0x0007023321f4013e	globl hidden  # Linux 3.17+ and getentropy() on XNU/OpenBSD
-scall	memfd_create		0xffffffffffff013f	globl # wut
-scall	kexec_file_load		0xffffffffffff0140	globl
-scall	bpf			0xffffffffffff0141	globl
-scall	execveat		0xffffffffffff0142	globl
-scall	userfaultfd		0xffffffffffff0143	globl # Linux 4.3+ (c. 2015)
-scall	membarrier		0xffffffffffff0144	globl # Linux 4.3+ (c. 2015)
-scall	mlock2			0xffffffffffff0145	globl # Linux 4.5+ (c. 2016)
-scall	sys_copy_file_range	0xffff0239ffff0146	globl hidden # Linux 4.5+ (c. 2016), FreeBSD 13+
-scall	preadv2			0xffffffffffff0147	globl
-scall	pwritev2		0xffffffffffff0148	globl
-scall	pkey_mprotect		0xffffffffffff0149	globl
-scall	pkey_alloc		0xffffffffffff014a	globl
-scall	pkey_free		0xffffffffffff014b	globl
-scall	statx			0xffffffffffff014c	globl # lool https://lkml.org/lkml/2010/7/22/249
-scall	io_pgetevents		0xffffffffffff014d	globl
-scall	rseq			0xffffffffffff014e	globl # Linux 4.18+ (c. 2018)
+scall	sched_setattr		0xfffffffffffff13a	globl #  ├─ desktop replaced with tablet-first gui inspired by mac os x
+scall	sched_getattr		0xfffffffffffff13b	globl #  ├─ karen sandler requires systemd init and boot for tablet gui
+scall	renameat2		0xfffffffffffff13c	globl #  └─ debian founder ian murdock found strangled with vacuum cord
+scall	seccomp			0xfffffffffffff13d	globl
+scall	sys_getrandom		0x05b00723321f413e	globl hidden  # Linux 3.17+ and getentropy() on XNU/OpenBSD
+scall	memfd_create		0xfffffffffffff13f	globl # wut
+scall	kexec_file_load		0xfffffffffffff140	globl
+scall	bpf			0xfffffffffffff141	globl
+scall	execveat		0xfffffffffffff142	globl
+scall	userfaultfd		0xfffffffffffff143	globl # Linux 4.3+ (c. 2015)
+scall	membarrier		0xfffffffffffff144	globl # Linux 4.3+ (c. 2015)
+scall	mlock2			0xfffffffffffff145	globl # Linux 4.5+ (c. 2016)
+scall	sys_copy_file_range	0xffffff239ffff146	globl hidden # Linux 4.5+ (c. 2016), FreeBSD 13+
+scall	preadv2			0xfffffffffffff147	globl
+scall	pwritev2		0xfffffffffffff148	globl
+scall	pkey_mprotect		0xfffffffffffff149	globl
+scall	pkey_alloc		0xfffffffffffff14a	globl
+scall	pkey_free		0xfffffffffffff14b	globl
+scall	statx			0xfffffffffffff14c	globl # lool https://lkml.org/lkml/2010/7/22/249
+scall	io_pgetevents		0xfffffffffffff14d	globl
+scall	rseq			0xfffffffffffff14e	globl # Linux 4.18+ (c. 2018)
 #──────────────────────LINUX 4.18 LIMIT────────────────────── # ←┬─ last version of linux kernel buildable with only gplv2
-scall	pidfd_send_signal	0xffffffffffff01a8	globl #  ├─ linux conferences ban linux founder linus torvalds
-scall	io_uring_setup		0xffffffffffff01a9	globl #  └─ gnu founder richard stallman publicly disgraced
-scall	io_uring_enter		0xffffffffffff01aa	globl
-scall	io_uring_register	0xffffffffffff01ab	globl
+scall	pidfd_send_signal	0xfffffffffffff1a8	globl #  ├─ linux conferences ban linux founder linus torvalds
+scall	io_uring_setup		0xfffffffffffff1a9	globl #  └─ gnu founder richard stallman publicly disgraced
+scall	io_uring_enter		0xfffffffffffff1aa	globl
+scall	io_uring_register	0xfffffffffffff1ab	globl
 #────────────────────────RHEL CLOUD────────────────────────── # ←┬─ red hat terminates community release of enterprise linux circa 2020
-scall	pledge			0x006cffffffffffff	globl #  └─ online linux services ban the president of united states of america
-scall	msyscall		0x0025ffffffffffff	globl
+scall	pledge			0xfff06cffffffffff	globl #  └─ online linux services ban the president of united states of america
+scall	msyscall		0xfff025ffffffffff	globl
 
 #	The Fifth Bell System Interface, Community Edition
 #	» besiyata dishmaya
 #	                             GNU/Systemd┐
-#	                            Mac OS X┐   │
-#	                         FreeBSD┐   │   │
-#	                     OpenBSD┐   │ ┌─│───│── XnuClass{1:Mach,2:Unix}
-#	                          ┌─┴┐┌─┴┐│┌┴┐┌─┴┐
-scall	ktrace			0x002d002dffffffff	globl
-scall	kqueue			0x010d016a216affff	globl
-scall	kevent			0x004802302171ffff	globl
-scall	revoke			0x003800382038ffff	globl
-scall	setlogin		0x003200322032ffff	globl
-scall	getfh			0x00a100a120a1ffff	globl
-scall	chflags			0x002200222022ffff	globl
-scall	getfsstat		0x003e022d215bffff	globl
-scall	nfssvc			0x009b009b209bffff	globl
-scall	adjtime			0x008c008c208cffff	globl
-scall	fchflags		0x002300232023ffff	globl
-scall	__bsd_seteuid		0x00b700b720b7ffff	globl hidden # wrapped via setreuid()
-scall	__bsd_setegid		0x00b600b620b6ffff	globl hidden # wrapped via setregid()
-scall	fpathconf		0x00c000c020c0ffff	globl
-scall	fhopen			0x0108012a20f8ffff	globl
-scall	unmount			0x00160016209fffff	globl
-scall	issetugid		0x00fd00fd2147ffff	globl
-scall	minherit		0x00fa00fa20faffff	globl
-scall	pathconf		0x00bf00bf20bfffff	globl
-scall	sysctl			0x00ca00ca20caffff	globl
+#	                             Mac OS X┐  │
+#	                          FreeBSD┐   │  │
+#	                       OpenBSD┐  │ ┌─│──│── XnuClass{1:Mach,2:Unix}
+#	                     NetBSD┐  │  │ │ │  │
+#	Symbol                    ┌┴┐┌┴┐┌┴┐│┬┴┐┌┴┐      Directives & Commentary
+scall	ktrace			0x02d02d02dfffffff	globl
+scall	kqueue			0x15810d16a216afff	globl
+scall	kevent			0x1b30482302171fff	globl
+scall	revoke			0x0380380382038fff	globl
+scall	setlogin		0xfff0320322032fff	globl
+scall	getfh			0x18b0a10a120a1fff	globl
+scall	chflags			0x0220220222022fff	globl
+scall	getfsstat		0xfff03e22d215bfff	globl
+scall	nfssvc			0x09b09b09b209bfff	globl
+scall	adjtime			0x1a508c08c208cfff	globl
+scall	fchflags		0x0230230232023fff	globl
+scall	__bsd_seteuid		0xfff0b70b720b7fff	globl hidden # wrapped via setreuid()
+scall	__bsd_setegid		0xfff0b60b620b6fff	globl hidden # wrapped via setregid()
+scall	fpathconf		0x0c00c00c020c0fff	globl
+scall	fhopen			0x18c10812a20f8fff	globl
+scall	unmount			0x016016016209ffff	globl
+scall	issetugid		0xfff0fd0fd2147fff	globl
+scall	minherit		0x1110fa0fa20fafff	globl
+scall	pathconf		0x0bf0bf0bf20bffff	globl
+scall	sysctl			0xfff0ca0ca20cafff	globl
 #───────────────────────XNU & FREEBSD────────────────────────
-scall	ntp_adjtime		0xffff00b0220fffff	globl
-scall	ntp_gettime		0xffff00f82210ffff	globl
-scall	shm_unlink		0xffff01e3210bffff	globl
-scall	shm_open		0xffff01e2210affff	globl
-scall	aio_read		0xffff013e213effff	globl
-scall	aio_suspend		0xffff013b213bffff	globl
-scall	aio_cancel		0xffff013c213cffff	globl
-scall	aio_fsync		0xffff01d12139ffff	globl
-scall	aio_error		0xffff013d213dffff	globl
-scall	aio_return		0xffff013a213affff	globl
-scall	aio_write		0xffff013f213fffff	globl
-scall	aio_waitcomplete	0xffff0167ffffffff	globl
-scall	aio_suspend_nocancel	0xffffffff21a5ffff	globl
-scall	aio_mlock		0xffff021fffffffff	globl
-scall	sigwait			0xffff01ad214affff	globl
-scall	undelete		0xffff00cd20cdffff	globl
-scall	getlogin		0xffff00312031ffff	globl
-scall	getdtablesize		0xffff00592059ffff	globl
-scall	setauid			0xffff01c02162ffff	globl
-scall	audit			0xffff01bd215effff	globl
-scall	auditctl		0xffff01c52167ffff	globl
-scall	getaudit_addr		0xffff01c32165ffff	globl
-scall	getdirentries		0xffff022a20c4ffff	globl # xnu getdirentries64 is 0x158
-scall	lio_listio		0xffff01402140ffff	globl
-scall	setaudit_addr		0xffff01c42166ffff	globl
-scall	getauid			0xffff01bf2161ffff	globl
-scall	semsys			0xffff00a920fbffff	globl
-scall	auditon			0xffff01be215fffff	globl
-scall	msgsys			0xffff00aa20fcffff	globl
-scall	shmsys			0xffff00ab20fdffff	globl
+scall	ntp_adjtime		0x0b0fff0b0220ffff	globl
+scall	ntp_gettime		0x1c0fff0f82210fff	globl
+scall	shm_unlink		0xffffff1e3210bfff	globl
+scall	shm_open		0xffffff1e2210afff	globl
+scall	aio_read		0x192fff13e213efff	globl
+scall	aio_suspend		0x1b6fff13b213bfff	globl
+scall	aio_cancel		0x18ffff13c213cfff	globl
+scall	aio_fsync		0x191fff1d12139fff	globl
+scall	aio_error		0x190fff13d213dfff	globl
+scall	aio_return		0x193fff13a213afff	globl
+scall	aio_write		0x195fff13f213ffff	globl
+scall	aio_waitcomplete	0xffffff167fffffff	globl
+scall	aio_suspend_nocancel	0xfffffffff21a5fff	globl
+scall	aio_mlock		0xffffff21ffffffff	globl
+scall	sigwait			0xffffff1ad214afff	globl
+scall	undelete		0x0cdfff0cd20cdfff	globl
+scall	getlogin		0xffffff0312031fff	globl
+scall	getdtablesize		0xffffff0592059fff	globl
+scall	setauid			0xffffff1c02162fff	globl
+scall	audit			0xffffff1bd215efff	globl
+scall	auditctl		0xffffff1c52167fff	globl
+scall	getaudit_addr		0xffffff1c32165fff	globl
+scall	getdirentries		0xffffff22a20c4fff	globl # xnu getdirentries64 is 0x158
+scall	lio_listio		0x196fff1402140fff	globl
+scall	setaudit_addr		0xffffff1c42166fff	globl
+scall	getauid			0xffffff1bf2161fff	globl
+scall	semsys			0xffffff0a920fbfff	globl
+scall	auditon			0xffffff1be215ffff	globl
+scall	msgsys			0xffffff0aa20fcfff	globl
+scall	shmsys			0xffffff0ab20fdfff	globl
 #─────────────────────FREEBSD & OPENBSD──────────────────────
-scall	fhstat			0x01260229ffffffff	globl
-scall	chflagsat		0x006b021cffffffff	globl
-scall	profil			0x002c002cffffffff	globl
-scall	fhstatfs		0x0041022effffffff	globl
-scall	utrace			0x00d1014fffffffff	globl
-scall	closefrom		0x011f01fdffffffff	globl
+scall	fhstat			0x1c3126229fffffff	globl
+scall	chflagsat		0xfff06b21cfffffff	globl
+scall	profil			0x02c02c02cfffffff	globl
+scall	fhstatfs		0xfff04122efffffff	globl
+scall	utrace			0x1320d114ffffffff	globl
+scall	closefrom		0xfff11f1fdfffffff	globl
 #───────────────────────────XNU──────────────────────────────
-scall	__pthread_markcancel	0xffffffff214cffff	globl
-scall	__pthread_kill		0xffffffff2148ffff	globl
-scall	__pthread_fchdir	0xffffffff215dffff	globl
-scall	__pthread_sigmask	0xffffffff2149ffff	globl
-scall	__pthread_chdir		0xffffffff215cffff	globl
-scall	__pthread_canceled	0xffffffff214dffff	globl
-scall	__disable_threadsignal	0xffffffff214bffff	globl
-scall	abort_with_payload	0xffffffff2209ffff	globl
-scall	accept_nocancel		0xffffffff2194ffff	globl
-scall	access_extended		0xffffffff211cffff	globl
-scall	audit_session_join	0xffffffff21adffff	globl
-scall	audit_session_port	0xffffffff21b0ffff	globl
-scall	audit_session_self	0xffffffff21acffff	globl
-scall	bsdthread_create	0xffffffff2168ffff	globl
-scall	bsdthread_ctl		0xffffffff21deffff	globl
-scall	bsdthread_register	0xffffffff216effff	globl
-scall	bsdthread_terminate	0xffffffff2169ffff	globl
-scall	change_fdguard_np	0xffffffff21bcffff	globl
-scall	chmod_extended		0xffffffff211affff	globl
-scall	clonefileat		0xffffffff21ceffff	globl
-scall	close_nocancel		0xffffffff218fffff	globl
-scall	coalition		0xffffffff21caffff	globl
-scall	coalition_info		0xffffffff21cbffff	globl
-scall	connect_nocancel	0xffffffff2199ffff	globl
-scall	connectx		0xffffffff21bfffff	globl
-scall	copyfile		0xffffffff20e3ffff	globl
-scall	csops			0xffffffff20a9ffff	globl
-scall	csops_audittoken	0xffffffff20aaffff	globl
-scall	csrctl			0xffffffff21e3ffff	globl
-scall	delete			0xffffffff20e2ffff	globl
-scall	disconnectx		0xffffffff21c0ffff	globl
-scall	exchangedata		0xffffffff20dfffff	globl
-scall	fchmod_extended		0xffffffff211bffff	globl
-scall	fclonefileat		0xffffffff2205ffff	globl
-scall	fcntl_nocancel		0xffffffff2196ffff	globl
-scall	ffsctl			0xffffffff20f5ffff	globl
-scall	fgetattrlist		0xffffffff20e4ffff	globl
-scall	fileport_makefd		0xffffffff21afffff	globl
-scall	fileport_makeport	0xffffffff21aeffff	globl
-scall	fmount			0xffffffff220effff	globl
-scall	fs_snapshot		0xffffffff2206ffff	globl
-scall	fsctl			0xffffffff20f2ffff	globl
-scall	fsetattrlist		0xffffffff20e5ffff	globl
-scall	fstat_extended		0xffffffff2119ffff	globl
-scall	fsync_nocancel		0xffffffff2198ffff	globl
-scall	getattrlist		0xffffffff20dcffff	globl
-scall	getattrlistat		0xffffffff21dcffff	globl
-scall	getattrlistbulk		0xffffffff21cdffff	globl
-scall	getdirentriesattr	0xffffffff20deffff	globl
-scall	gethostuuid		0xffffffff208effff	globl
-scall	getsgroups		0xffffffff2120ffff	globl
-scall	getwgroups		0xffffffff2122ffff	globl
-scall	grab_pgo_data		0xffffffff21edffff	globl
-scall	guarded_close_np	0xffffffff21baffff	globl
-scall	guarded_kqueue_np	0xffffffff21bbffff	globl
-scall	guarded_open_np		0xffffffff21b9ffff	globl
-scall	guarded_pwrite_np	0xffffffff21e6ffff	globl
-scall	guarded_write_np	0xffffffff21e5ffff	globl
-scall	guarded_writev_np	0xffffffff21e7ffff	globl
-scall	identitysvc		0xffffffff2125ffff	globl
-scall	initgroups		0xffffffff20f3ffff	globl
-scall	iopolicysys		0xffffffff2142ffff	globl
-scall	kas_info		0xffffffff21b7ffff	globl
-scall	kdebug_trace		0xffffffff20b3ffff	globl
-scall	kdebug_trace_string	0xffffffff20b2ffff	globl
-scall	kdebug_typefilter	0xffffffff20b1ffff	globl
-scall	kevent_id		0xffffffff2177ffff	globl
-scall	kevent_qos		0xffffffff2176ffff	globl
-scall	ledger			0xffffffff2175ffff	globl
-scall	lstat_extended		0xffffffff2156ffff	globl
-scall	memorystatus_control	0xffffffff21b8ffff	globl
-scall	memorystatus_get_level	0xffffffff21c5ffff	globl
-scall	microstackshot		0xffffffff21ecffff	globl
-scall	mkdir_extended		0xffffffff2124ffff	globl
-scall	mkfifo_extended		0xffffffff2123ffff	globl
-scall	modwatch		0xffffffff20e9ffff	globl
-scall	mremap_encrypted	0xffffffff21e9ffff	globl
-scall	msgrcv_nocancel		0xffffffff21a3ffff	globl
-scall	msgsnd_nocancel		0xffffffff21a2ffff	globl
-scall	msync_nocancel		0xffffffff2195ffff	globl
-scall	necp_client_action	0xffffffff21f6ffff	globl
-scall	necp_match_policy	0xffffffff21ccffff	globl
-scall	necp_open		0xffffffff21f5ffff	globl
-scall	necp_session_action	0xffffffff220bffff	globl
-scall	necp_session_open	0xffffffff220affff	globl
-scall	net_qos_guideline	0xffffffff220dffff	globl
-scall	netagent_trigger	0xffffffff21eaffff	globl
-scall	nfsclnt			0xffffffff20f7ffff	globl
-scall	open_dprotected_np	0xffffffff20d8ffff	globl
-scall	open_extended		0xffffffff2115ffff	globl
-scall	open_nocancel		0xffffffff218effff	globl
-scall	openat_nocancel		0xffffffff21d0ffff	globl
-scall	openbyid_np		0xffffffff21dfffff	globl
-scall	os_fault_with_payload	0xffffffff2211ffff	globl
-scall	peeloff			0xffffffff21c1ffff	globl
-scall	persona			0xffffffff21eeffff	globl
-scall	pid_hibernate		0xffffffff21b3ffff	globl
-scall	pid_resume		0xffffffff21b2ffff	globl
-scall	pid_shutdown_sockets	0xffffffff21b4ffff	globl
-scall	pid_suspend		0xffffffff21b1ffff	globl
-scall	poll_nocancel		0xffffffff21a1ffff	globl
-scall	pread_nocancel		0xffffffff219effff	globl
-scall	proc_info		0xffffffff2150ffff	globl
-scall	proc_rlimit_control	0xffffffff21beffff	globl
-scall	proc_trace_log		0xffffffff21ddffff	globl
-scall	proc_uuid_policy	0xffffffff21c4ffff	globl
-scall	process_policy		0xffffffff2143ffff	globl
-scall	pselect_nocancel	0xffffffff218bffff	globl
-scall	psynch_cvbroad		0xffffffff212fffff	globl
-scall	psynch_cvclrprepost	0xffffffff2138ffff	globl
-scall	psynch_cvsignal		0xffffffff2130ffff	globl
-scall	psynch_mutexdrop	0xffffffff212effff	globl
-scall	psynch_mutexwait	0xffffffff212dffff	globl
-scall	psynch_rw_downgrade	0xffffffff212bffff	globl
-scall	psynch_rw_longrdlock	0xffffffff2129ffff	globl
-scall	psynch_rw_rdlock	0xffffffff2132ffff	globl
-scall	psynch_rw_unlock	0xffffffff2134ffff	globl
-scall	psynch_rw_unlock2	0xffffffff2135ffff	globl
-scall	psynch_rw_upgrade	0xffffffff212cffff	globl
-scall	psynch_rw_wrlock	0xffffffff2133ffff	globl
-scall	psynch_rw_yieldwrlock	0xffffffff212affff	globl
-scall	pwrite_nocancel		0xffffffff219fffff	globl
-scall	read_nocancel		0xffffffff218cffff	globl
-scall	readv_nocancel		0xffffffff219bffff	globl
-scall	recvfrom_nocancel	0xffffffff2193ffff	globl
-scall	recvmsg_nocancel	0xffffffff2191ffff	globl
-scall	recvmsg_x		0xffffffff21e0ffff	globl
-scall	renameatx_np		0xffffffff21e8ffff	globl
-scall	searchfs		0xffffffff20e1ffff	globl
-scall	select_nocancel		0xffffffff2197ffff	globl
-scall	sem_close		0xffffffff210dffff	globl
-scall	sem_open		0xffffffff210cffff	globl
-scall	sem_post		0xffffffff2111ffff	globl
-scall	sem_trywait		0xffffffff2110ffff	globl
-scall	sem_unlink		0xffffffff210effff	globl
-scall	sem_wait		0xffffffff210fffff	globl
-scall	sem_wait_nocancel	0xffffffff21a4ffff	globl
-scall	sendmsg_nocancel	0xffffffff2192ffff	globl
-scall	sendmsg_x		0xffffffff21e1ffff	globl
-scall	sendto_nocancel		0xffffffff219dffff	globl
-scall	setattrlist		0xffffffff20ddffff	globl
-scall	setattrlistat		0xffffffff220cffff	globl
-scall	setprivexec		0xffffffff2098ffff	globl
-scall	setsgroups		0xffffffff211fffff	globl
-scall	settid			0xffffffff211dffff	globl
-scall	settid_with_pid		0xffffffff2137ffff	globl
-scall	setwgroups		0xffffffff2121ffff	globl
-scall	sfi_ctl			0xffffffff21c8ffff	globl
-scall	sfi_pidctl		0xffffffff21c9ffff	globl
-scall	shared_region_check_np	0xffffffff2126ffff	globl
-scall	sigsuspend_nocancel	0xffffffff219affff	globl
-scall	socket_delegate		0xffffffff21c2ffff	globl
-scall	stat_extended		0xffffffff2155ffff	globl
-scall	sysctlbyname		0xffffffff2112ffff	globl
-scall	system_override		0xffffffff21c6ffff	globl
-scall	telemetry		0xffffffff21c3ffff	globl
-scall	terminate_with_payload	0xffffffff2208ffff	globl
-scall	thread_selfcounts	0xffffffff20baffff	globl
-scall	thread_selfid		0xffffffff2174ffff	globl
-scall	thread_selfusage	0xffffffff21e2ffff	globl
-scall	ulock_wait		0xffffffff2203ffff	globl
-scall	ulock_wake		0xffffffff2204ffff	globl
-scall	umask_extended		0xffffffff2116ffff	globl
-scall	usrctl			0xffffffff21bdffff	globl
-scall	vfs_purge		0xffffffff21c7ffff	globl
-scall	vm_pressure_monitor	0xffffffff2128ffff	globl
-scall	wait4_nocancel		0xffffffff2190ffff	globl
-scall	waitevent		0xffffffff20e8ffff	globl
-scall	waitid_nocancel		0xffffffff21a0ffff	globl
-scall	watchevent		0xffffffff20e7ffff	globl
-scall	work_interval_ctl	0xffffffff21f3ffff	globl
-scall	workq_kernreturn	0xffffffff2170ffff	globl
-scall	workq_open		0xffffffff216fffff	globl
-scall	write_nocancel		0xffffffff218dffff	globl
-scall	writev_nocancel		0xffffffff219cffff	globl
+scall	__pthread_markcancel	0xfffffffff214cfff	globl
+scall	__pthread_kill		0xfffffffff2148fff	globl
+scall	__pthread_fchdir	0xfffffffff215dfff	globl
+scall	__pthread_sigmask	0xfffffffff2149fff	globl
+scall	__pthread_chdir		0xfffffffff215cfff	globl
+scall	__pthread_canceled	0xfffffffff214dfff	globl
+scall	__disable_threadsignal	0xfffffffff214bfff	globl
+scall	abort_with_payload	0xfffffffff2209fff	globl
+scall	accept_nocancel		0xfffffffff2194fff	globl
+scall	access_extended		0xfffffffff211cfff	globl
+scall	audit_session_join	0xfffffffff21adfff	globl
+scall	audit_session_port	0xfffffffff21b0fff	globl
+scall	audit_session_self	0xfffffffff21acfff	globl
+scall	bsdthread_create	0xfffffffff2168fff	globl
+scall	bsdthread_ctl		0xfffffffff21defff	globl
+scall	bsdthread_register	0xfffffffff216efff	globl
+scall	bsdthread_terminate	0xfffffffff2169fff	globl
+scall	change_fdguard_np	0xfffffffff21bcfff	globl
+scall	chmod_extended		0xfffffffff211afff	globl
+scall	clonefileat		0xfffffffff21cefff	globl
+scall	close_nocancel		0xfffffffff218ffff	globl
+scall	coalition		0xfffffffff21cafff	globl
+scall	coalition_info		0xfffffffff21cbfff	globl
+scall	connect_nocancel	0xfffffffff2199fff	globl
+scall	connectx		0xfffffffff21bffff	globl
+scall	copyfile		0xfffffffff20e3fff	globl
+scall	csops			0xfffffffff20a9fff	globl
+scall	csops_audittoken	0xfffffffff20aafff	globl
+scall	csrctl			0xfffffffff21e3fff	globl
+scall	delete			0xfffffffff20e2fff	globl
+scall	disconnectx		0xfffffffff21c0fff	globl
+scall	exchangedata		0xfffffffff20dffff	globl
+scall	fchmod_extended		0xfffffffff211bfff	globl
+scall	fclonefileat		0xfffffffff2205fff	globl
+scall	fcntl_nocancel		0xfffffffff2196fff	globl
+scall	ffsctl			0xfffffffff20f5fff	globl
+scall	fgetattrlist		0xfffffffff20e4fff	globl
+scall	fileport_makefd		0xfffffffff21affff	globl
+scall	fileport_makeport	0xfffffffff21aefff	globl
+scall	fmount			0xfffffffff220efff	globl
+scall	fs_snapshot		0xfffffffff2206fff	globl
+scall	fsctl			0xfffffffff20f2fff	globl
+scall	fsetattrlist		0xfffffffff20e5fff	globl
+scall	fstat_extended		0xfffffffff2119fff	globl
+scall	fsync_nocancel		0xfffffffff2198fff	globl
+scall	getattrlist		0xfffffffff20dcfff	globl
+scall	getattrlistat		0xfffffffff21dcfff	globl
+scall	getattrlistbulk		0xfffffffff21cdfff	globl
+scall	getdirentriesattr	0xfffffffff20defff	globl
+scall	gethostuuid		0xfffffffff208efff	globl
+scall	getsgroups		0xfffffffff2120fff	globl
+scall	getwgroups		0xfffffffff2122fff	globl
+scall	grab_pgo_data		0xfffffffff21edfff	globl
+scall	guarded_close_np	0xfffffffff21bafff	globl
+scall	guarded_kqueue_np	0xfffffffff21bbfff	globl
+scall	guarded_open_np		0xfffffffff21b9fff	globl
+scall	guarded_pwrite_np	0xfffffffff21e6fff	globl
+scall	guarded_write_np	0xfffffffff21e5fff	globl
+scall	guarded_writev_np	0xfffffffff21e7fff	globl
+scall	identitysvc		0xfffffffff2125fff	globl
+scall	initgroups		0xfffffffff20f3fff	globl
+scall	iopolicysys		0xfffffffff2142fff	globl
+scall	kas_info		0xfffffffff21b7fff	globl
+scall	kdebug_trace		0xfffffffff20b3fff	globl
+scall	kdebug_trace_string	0xfffffffff20b2fff	globl
+scall	kdebug_typefilter	0xfffffffff20b1fff	globl
+scall	kevent_id		0xfffffffff2177fff	globl
+scall	kevent_qos		0xfffffffff2176fff	globl
+scall	ledger			0xfffffffff2175fff	globl
+scall	lstat_extended		0xfffffffff2156fff	globl
+scall	memorystatus_control	0xfffffffff21b8fff	globl
+scall	memorystatus_get_level	0xfffffffff21c5fff	globl
+scall	microstackshot		0xfffffffff21ecfff	globl
+scall	mkdir_extended		0xfffffffff2124fff	globl
+scall	mkfifo_extended		0xfffffffff2123fff	globl
+scall	modwatch		0xfffffffff20e9fff	globl
+scall	mremap_encrypted	0xfffffffff21e9fff	globl
+scall	msgrcv_nocancel		0xfffffffff21a3fff	globl
+scall	msgsnd_nocancel		0xfffffffff21a2fff	globl
+scall	msync_nocancel		0xfffffffff2195fff	globl
+scall	necp_client_action	0xfffffffff21f6fff	globl
+scall	necp_match_policy	0xfffffffff21ccfff	globl
+scall	necp_open		0xfffffffff21f5fff	globl
+scall	necp_session_action	0xfffffffff220bfff	globl
+scall	necp_session_open	0xfffffffff220afff	globl
+scall	net_qos_guideline	0xfffffffff220dfff	globl
+scall	netagent_trigger	0xfffffffff21eafff	globl
+scall	nfsclnt			0xfffffffff20f7fff	globl
+scall	open_dprotected_np	0xfffffffff20d8fff	globl
+scall	open_extended		0xfffffffff2115fff	globl
+scall	open_nocancel		0xfffffffff218efff	globl
+scall	openat_nocancel		0xfffffffff21d0fff	globl
+scall	openbyid_np		0xfffffffff21dffff	globl
+scall	os_fault_with_payload	0xfffffffff2211fff	globl
+scall	peeloff			0xfffffffff21c1fff	globl
+scall	persona			0xfffffffff21eefff	globl
+scall	pid_hibernate		0xfffffffff21b3fff	globl
+scall	pid_resume		0xfffffffff21b2fff	globl
+scall	pid_shutdown_sockets	0xfffffffff21b4fff	globl
+scall	pid_suspend		0xfffffffff21b1fff	globl
+scall	poll_nocancel		0xfffffffff21a1fff	globl
+scall	pread_nocancel		0xfffffffff219efff	globl
+scall	proc_info		0xfffffffff2150fff	globl
+scall	proc_rlimit_control	0xfffffffff21befff	globl
+scall	proc_trace_log		0xfffffffff21ddfff	globl
+scall	proc_uuid_policy	0xfffffffff21c4fff	globl
+scall	process_policy		0xfffffffff2143fff	globl
+scall	pselect_nocancel	0xfffffffff218bfff	globl
+scall	psynch_cvbroad		0xfffffffff212ffff	globl
+scall	psynch_cvclrprepost	0xfffffffff2138fff	globl
+scall	psynch_cvsignal		0xfffffffff2130fff	globl
+scall	psynch_mutexdrop	0xfffffffff212efff	globl
+scall	psynch_mutexwait	0xfffffffff212dfff	globl
+scall	psynch_rw_downgrade	0xfffffffff212bfff	globl
+scall	psynch_rw_longrdlock	0xfffffffff2129fff	globl
+scall	psynch_rw_rdlock	0xfffffffff2132fff	globl
+scall	psynch_rw_unlock	0xfffffffff2134fff	globl
+scall	psynch_rw_unlock2	0xfffffffff2135fff	globl
+scall	psynch_rw_upgrade	0xfffffffff212cfff	globl
+scall	psynch_rw_wrlock	0xfffffffff2133fff	globl
+scall	psynch_rw_yieldwrlock	0xfffffffff212afff	globl
+scall	pwrite_nocancel		0xfffffffff219ffff	globl
+scall	read_nocancel		0xfffffffff218cfff	globl
+scall	readv_nocancel		0xfffffffff219bfff	globl
+scall	recvfrom_nocancel	0xfffffffff2193fff	globl
+scall	recvmsg_nocancel	0xfffffffff2191fff	globl
+scall	recvmsg_x		0xfffffffff21e0fff	globl
+scall	renameatx_np		0xfffffffff21e8fff	globl
+scall	searchfs		0xfffffffff20e1fff	globl
+scall	select_nocancel		0xfffffffff2197fff	globl
+scall	sem_close		0xfffffffff210dfff	globl
+scall	sem_open		0xfffffffff210cfff	globl
+scall	sem_post		0xfffffffff2111fff	globl
+scall	sem_trywait		0xfffffffff2110fff	globl
+scall	sem_unlink		0xfffffffff210efff	globl
+scall	sem_wait		0xfffffffff210ffff	globl
+scall	sem_wait_nocancel	0xfffffffff21a4fff	globl
+scall	sendmsg_nocancel	0xfffffffff2192fff	globl
+scall	sendmsg_x		0xfffffffff21e1fff	globl
+scall	sendto_nocancel		0xfffffffff219dfff	globl
+scall	setattrlist		0xfffffffff20ddfff	globl
+scall	setattrlistat		0xfffffffff220cfff	globl
+scall	setprivexec		0xfffffffff2098fff	globl
+scall	setsgroups		0xfffffffff211ffff	globl
+scall	settid			0xfffffffff211dfff	globl
+scall	settid_with_pid		0xfffffffff2137fff	globl
+scall	setwgroups		0xfffffffff2121fff	globl
+scall	sfi_ctl			0xfffffffff21c8fff	globl
+scall	sfi_pidctl		0xfffffffff21c9fff	globl
+scall	shared_region_check_np	0xfffffffff2126fff	globl
+scall	sigsuspend_nocancel	0xfffffffff219afff	globl
+scall	socket_delegate		0xfffffffff21c2fff	globl
+scall	stat_extended		0xfffffffff2155fff	globl
+scall	sysctlbyname		0xfffffffff2112fff	globl
+scall	system_override		0xfffffffff21c6fff	globl
+scall	telemetry		0xfffffffff21c3fff	globl
+scall	terminate_with_payload	0xfffffffff2208fff	globl
+scall	thread_selfcounts	0xfffffffff20bafff	globl
+scall	thread_selfid		0xfffffffff2174fff	globl
+scall	thread_selfusage	0xfffffffff21e2fff	globl
+scall	ulock_wait		0xfffffffff2203fff	globl
+scall	ulock_wake		0xfffffffff2204fff	globl
+scall	umask_extended		0xfffffffff2116fff	globl
+scall	usrctl			0xfffffffff21bdfff	globl
+scall	vfs_purge		0xfffffffff21c7fff	globl
+scall	vm_pressure_monitor	0xfffffffff2128fff	globl
+scall	wait4_nocancel		0xfffffffff2190fff	globl
+scall	waitevent		0xfffffffff20e8fff	globl
+scall	waitid_nocancel		0xfffffffff21a0fff	globl
+scall	watchevent		0xfffffffff20e7fff	globl
+scall	work_interval_ctl	0xfffffffff21f3fff	globl
+scall	workq_kernreturn	0xfffffffff2170fff	globl
+scall	workq_open		0xfffffffff216ffff	globl
+scall	write_nocancel		0xfffffffff218dfff	globl
+scall	writev_nocancel		0xfffffffff219cfff	globl
 #──────────────────────────FREEBSD───────────────────────────
-scall	abort2			0xffff01cfffffffff	globl
-scall	afs3_syscall		0xffff0179ffffffff	globl
-scall	bindat			0xffff021affffffff	globl
-scall	break			0xffff0011ffffffff	globl
-scall	cap_enter		0xffff0204ffffffff	globl
-scall	cap_fcntls_get		0xffff0219ffffffff	globl
-scall	cap_fcntls_limit	0xffff0218ffffffff	globl
-scall	cap_getmode		0xffff0205ffffffff	globl
-scall	cap_ioctls_get		0xffff0217ffffffff	globl
-scall	cap_ioctls_limit	0xffff0216ffffffff	globl
-scall	cap_rights_limit	0xffff0215ffffffff	globl
-scall	clock_getcpuclockid2	0xffff00f7ffffffff	globl
-scall	connectat		0xffff021bffffffff	globl
-scall	cpuset			0xffff01e4ffffffff	globl
-scall	cpuset_getdomain	0xffff0231ffffffff	globl
-scall	cpuset_getid		0xffff01e6ffffffff	globl
-scall	cpuset_setdomain	0xffff0232ffffffff	globl
-scall	cpuset_setid		0xffff01e5ffffffff	globl
-scall	eaccess			0xffff0178ffffffff	globl
-scall	extattr_delete_fd	0xffff0175ffffffff	globl
-scall	extattr_delete_file	0xffff0166ffffffff	globl
-scall	extattr_delete_link	0xffff019effffffff	globl
-scall	extattr_get_fd		0xffff0174ffffffff	globl
-scall	extattr_get_file	0xffff0165ffffffff	globl
-scall	extattr_get_link	0xffff019dffffffff	globl
-scall	extattr_list_fd		0xffff01b5ffffffff	globl
-scall	extattr_list_file	0xffff01b6ffffffff	globl
-scall	extattr_list_link	0xffff01b7ffffffff	globl
-scall	extattr_set_fd		0xffff0173ffffffff	globl
-scall	extattr_set_file	0xffff0164ffffffff	globl
-scall	extattr_set_link	0xffff019cffffffff	globl
-scall	extattrctl		0xffff0163ffffffff	globl
-scall	fexecve			0xffff01ecffffffff	globl
-scall	ffclock_getcounter	0xffff00f1ffffffff	globl
-scall	ffclock_getestimate	0xffff00f3ffffffff	globl
-scall	ffclock_setestimate	0xffff00f2ffffffff	globl
-scall	fhlink			0xffff0235ffffffff	globl
-scall	fhlinkat		0xffff0236ffffffff	globl
-scall	fhreadlink		0xffff0237ffffffff	globl
-scall	getaudit		0xffff01c1ffffffff	globl
-scall	getcontext		0xffff01a5ffffffff	globl
+scall	abort2			0xffffff1cffffffff	globl
+scall	afs3_syscall		0xffffff179fffffff	globl
+scall	bindat			0xffffff21afffffff	globl
+scall	break			0xffffff011fffffff	globl
+scall	cap_enter		0xffffff204fffffff	globl
+scall	cap_fcntls_get		0xffffff219fffffff	globl
+scall	cap_fcntls_limit	0xffffff218fffffff	globl
+scall	cap_getmode		0xffffff205fffffff	globl
+scall	cap_ioctls_get		0xffffff217fffffff	globl
+scall	cap_ioctls_limit	0xffffff216fffffff	globl
+scall	cap_rights_limit	0xffffff215fffffff	globl
+scall	clock_getcpuclockid2	0x1e2fff0f7fffffff	globl
+scall	connectat		0xffffff21bfffffff	globl
+scall	cpuset			0xffffff1e4fffffff	globl
+scall	cpuset_getdomain	0xffffff231fffffff	globl
+scall	cpuset_getid		0xffffff1e6fffffff	globl
+scall	cpuset_setdomain	0xffffff232fffffff	globl
+scall	cpuset_setid		0xffffff1e5fffffff	globl
+scall	eaccess			0xffffff178fffffff	globl
+scall	extattr_delete_fd	0x16efff175fffffff	globl
+scall	extattr_delete_file	0x16bfff166fffffff	globl
+scall	extattr_delete_link	0x171fff19efffffff	globl
+scall	extattr_get_fd		0x16dfff174fffffff	globl
+scall	extattr_get_file	0x16afff165fffffff	globl
+scall	extattr_get_link	0x170fff19dfffffff	globl
+scall	extattr_list_fd		0x172fff1b5fffffff	globl
+scall	extattr_list_file	0x173fff1b6fffffff	globl
+scall	extattr_list_link	0x174fff1b7fffffff	globl
+scall	extattr_set_fd		0x16cfff173fffffff	globl
+scall	extattr_set_file	0x169fff164fffffff	globl
+scall	extattr_set_link	0x16ffff19cfffffff	globl
+scall	extattrctl		0x168fff163fffffff	globl
+scall	fexecve			0x1d1fff1ecfffffff	globl
+scall	ffclock_getcounter	0xffffff0f1fffffff	globl
+scall	ffclock_getestimate	0xffffff0f3fffffff	globl
+scall	ffclock_setestimate	0xffffff0f2fffffff	globl
+scall	fhlink			0xffffff235fffffff	globl
+scall	fhlinkat		0xffffff236fffffff	globl
+scall	fhreadlink		0xffffff237fffffff	globl
+scall	getaudit		0xffffff1c1fffffff	globl
+scall	getcontext		0x133fff1a5fffffff	globl
 #scall	getdomainname		0xffff00a2ffffffff	globl
-scall	getfhat			0xffff0234ffffffff	globl
-scall	gethostid		0xffff008effffffff	globl
+scall	getfhat			0xffffff234fffffff	globl
+scall	gethostid		0xffffff08efffffff	globl
 #scall	gethostname		0xffff0057ffffffff	globl
-scall	getkerninfo		0xffff003fffffffff	globl
-scall	getloginclass		0xffff020bffffffff	globl
-scall	getpagesize_freebsd	0xffff0040ffffffff	globl hidden
-scall	gssd_syscall		0xffff01f9ffffffff	globl
-scall	jail			0xffff0152ffffffff	globl
-scall	jail_attach		0xffff01b4ffffffff	globl
-scall	jail_get		0xffff01faffffffff	globl
-scall	jail_remove		0xffff01fcffffffff	globl
-scall	jail_set		0xffff01fbffffffff	globl
-scall	kenv			0xffff0186ffffffff	globl
-scall	kldfind			0xffff0132ffffffff	globl
-scall	kldfirstmod		0xffff0135ffffffff	globl
-scall	kldload			0xffff0130ffffffff	globl
-scall	kldnext			0xffff0133ffffffff	globl
-scall	kldstat			0xffff0134ffffffff	globl
-scall	kldsym			0xffff0151ffffffff	globl
-scall	kldunload		0xffff0131ffffffff	globl
-scall	kldunloadf		0xffff01bcffffffff	globl
-scall	kmq_notify		0xffff01cdffffffff	globl
-scall	kmq_setattr		0xffff01caffffffff	globl
-scall	kmq_timedreceive	0xffff01cbffffffff	globl
-scall	kmq_timedsend		0xffff01ccffffffff	globl
-scall	kmq_unlink		0xffff01ceffffffff	globl
-scall	ksem_close		0xffff0190ffffffff	globl
-scall	ksem_destroy		0xffff0198ffffffff	globl
-scall	ksem_getvalue		0xffff0197ffffffff	globl
-scall	ksem_init		0xffff0194ffffffff	globl
-scall	ksem_open		0xffff0195ffffffff	globl
-scall	ksem_post		0xffff0191ffffffff	globl
-scall	ksem_timedwait		0xffff01b9ffffffff	globl
-scall	ksem_trywait		0xffff0193ffffffff	globl
-scall	ksem_unlink		0xffff0196ffffffff	globl
-scall	ksem_wait		0xffff0192ffffffff	globl
-scall	ktimer_create		0xffff00ebffffffff	globl
-scall	ktimer_delete		0xffff00ecffffffff	globl
-scall	ktimer_getoverrun	0xffff00efffffffff	globl
-scall	ktimer_gettime		0xffff00eeffffffff	globl
-scall	ktimer_settime		0xffff00edffffffff	globl
-scall	lchflags		0xffff0187ffffffff	globl
-scall	lchmod			0xffff0112ffffffff	globl
-scall	lgetfh			0xffff00a0ffffffff	globl
-scall	lpathconf		0xffff0201ffffffff	globl
-scall	lutimes			0xffff0114ffffffff	globl
-scall	mac_syscall		0xffff018affffffff	globl
-scall	modfind			0xffff012fffffffff	globl
-scall	modfnext		0xffff012effffffff	globl
-scall	modnext			0xffff012cffffffff	globl
-scall	modstat			0xffff012dffffffff	globl
-scall	nfstat			0xffff0117ffffffff	globl
-scall	nlm_syscall		0xffff009affffffff	globl
-scall	nlstat			0xffff0118ffffffff	globl
-scall	nmount			0xffff017affffffff	globl
-scall	nnpfs_syscall		0xffff0153ffffffff	globl
-scall	nstat			0xffff0116ffffffff	globl
-scall	pdfork			0xffff0206ffffffff	globl
-scall	pdgetpid		0xffff0208ffffffff	globl
-scall	pdkill			0xffff0207ffffffff	globl
-scall	sys_posix_openpt	0xffff01f8ffffffff	globl hidden
-scall	procctl			0xffff0220ffffffff	globl
-scall	psynch_cvwait		0xffffffff2131ffff	globl
-scall	quota			0xffff0095ffffffff	globl
-scall	rctl_add_rule		0xffff0210ffffffff	globl
-scall	rctl_get_limits		0xffff020fffffffff	globl
-scall	rctl_get_racct		0xffff020dffffffff	globl
-scall	rctl_get_rules		0xffff020effffffff	globl
-scall	rctl_remove_rule	0xffff0211ffffffff	globl
-scall	recv			0xffff0066ffffffff	globl
-scall	rfork			0xffff00fbffffffff	globl
-scall	rtprio			0xffff00a6ffffffff	globl
-scall	rtprio_thread		0xffff01d2ffffffff	globl
-scall	send			0xffff0065ffffffff	globl
-scall	setaudit		0xffff01c2ffffffff	globl
-scall	setcontext		0xffff01a6ffffffff	globl
-scall	setfib			0xffff00afffffffff	globl
-scall	sethostid		0xffff008fffffffff	globl
-scall	setloginclass		0xffff020cffffffff	globl
-scall	sigblock		0xffff006dffffffff	globl
-scall	sigqueue		0xffff01c8ffffffff	globl
-scall	sigsetmask		0xffff006effffffff	globl
-scall	sigstack		0xffff0070ffffffff	globl
-scall	sigvec			0xffff006cffffffff	globl
-scall	sigwaitinfo		0xffff015affffffff	globl
-scall	sstk			0xffff0046ffffffff	globl
-scall	swapcontext		0xffff01a7ffffffff	globl
-scall	thr_create		0xffff01aeffffffff	globl
-scall	thr_exit		0xffff01afffffffff	globl
-scall	thr_kill		0xffff01b1ffffffff	globl
-scall	thr_kill2		0xffff01e1ffffffff	globl
-scall	thr_new			0xffff01c7ffffffff	globl
-scall	thr_self		0xffff01b0ffffffff	globl
-scall	thr_set_name		0xffff01d0ffffffff	globl
-scall	thr_suspend		0xffff01baffffffff	globl
-scall	thr_wake		0xffff01bbffffffff	globl
-scall	uuidgen			0xffff0188ffffffff	globl
-scall	vadvise			0xffff0048ffffffff	globl
-scall	wait			0xffff0054ffffffff	globl
-scall	wait6			0xffff0214ffffffff	globl
-scall	yield			0xffff0141ffffffff	globl
+scall	getkerninfo		0xffffff03ffffffff	globl
+scall	getloginclass		0xffffff20bfffffff	globl
+scall	getpagesize_freebsd	0xffffff040fffffff	globl hidden
+scall	gssd_syscall		0xffffff1f9fffffff	globl
+scall	jail			0xffffff152fffffff	globl
+scall	jail_attach		0xffffff1b4fffffff	globl
+scall	jail_get		0xffffff1fafffffff	globl
+scall	jail_remove		0xffffff1fcfffffff	globl
+scall	jail_set		0xffffff1fbfffffff	globl
+scall	kenv			0xffffff186fffffff	globl
+scall	kldfind			0xffffff132fffffff	globl
+scall	kldfirstmod		0xffffff135fffffff	globl
+scall	kldload			0xffffff130fffffff	globl
+scall	kldnext			0xffffff133fffffff	globl
+scall	kldstat			0xffffff134fffffff	globl
+scall	kldsym			0xffffff151fffffff	globl
+scall	kldunload		0xffffff131fffffff	globl
+scall	kldunloadf		0xffffff1bcfffffff	globl
+scall	kmq_notify		0xffffff1cdfffffff	globl
+scall	kmq_setattr		0xffffff1cafffffff	globl
+scall	kmq_timedreceive	0xffffff1cbfffffff	globl
+scall	kmq_timedsend		0xffffff1ccfffffff	globl
+scall	kmq_unlink		0xffffff1cefffffff	globl
+scall	ksem_close		0xffffff190fffffff	globl
+scall	ksem_destroy		0xffffff198fffffff	globl
+scall	ksem_getvalue		0xffffff197fffffff	globl
+scall	ksem_init		0xffffff194fffffff	globl
+scall	ksem_open		0xffffff195fffffff	globl
+scall	ksem_post		0xffffff191fffffff	globl
+scall	ksem_timedwait		0xffffff1b9fffffff	globl
+scall	ksem_trywait		0xffffff193fffffff	globl
+scall	ksem_unlink		0xffffff196fffffff	globl
+scall	ksem_wait		0xffffff192fffffff	globl
+scall	ktimer_create		0xffffff0ebfffffff	globl
+scall	ktimer_delete		0xffffff0ecfffffff	globl
+scall	ktimer_getoverrun	0xffffff0effffffff	globl
+scall	ktimer_gettime		0xffffff0eefffffff	globl
+scall	ktimer_settime		0xffffff0edfffffff	globl
+scall	lchflags		0x130fff187fffffff	globl
+scall	lchmod			0x112fff112fffffff	globl
+scall	lgetfh			0xffffff0a0fffffff	globl
+scall	lpathconf		0x1f3fff201fffffff	globl
+scall	lutimes			0x1a8fff114fffffff	globl
+scall	mac_syscall		0xffffff18afffffff	globl
+scall	modfind			0xffffff12ffffffff	globl
+scall	modfnext		0xffffff12efffffff	globl
+scall	modnext			0xffffff12cfffffff	globl
+scall	modstat			0xffffff12dfffffff	globl
+scall	nfstat			0xffffff117fffffff	globl
+scall	nlm_syscall		0xffffff09afffffff	globl
+scall	nlstat			0xffffff118fffffff	globl
+scall	nmount			0xffffff17afffffff	globl
+scall	nnpfs_syscall		0xffffff153fffffff	globl
+scall	nstat			0xffffff116fffffff	globl
+scall	pdfork			0xffffff206fffffff	globl
+scall	pdgetpid		0xffffff208fffffff	globl
+scall	pdkill			0xffffff207fffffff	globl
+scall	sys_posix_openpt	0xffffff1f8fffffff	globl hidden
+scall	procctl			0xffffff220fffffff	globl
+scall	psynch_cvwait		0xfffffffff2131fff	globl
+scall	quota			0xffffff095fffffff	globl
+scall	rctl_add_rule		0xffffff210fffffff	globl
+scall	rctl_get_limits		0xffffff20ffffffff	globl
+scall	rctl_get_racct		0xffffff20dfffffff	globl
+scall	rctl_get_rules		0xffffff20efffffff	globl
+scall	rctl_remove_rule	0xffffff211fffffff	globl
+scall	recv			0xffffff066fffffff	globl
+scall	rfork			0xffffff0fbfffffff	globl
+scall	rtprio			0xffffff0a6fffffff	globl
+scall	rtprio_thread		0xffffff1d2fffffff	globl
+scall	send			0xffffff065fffffff	globl
+scall	setaudit		0xffffff1c2fffffff	globl
+scall	setcontext		0x134fff1a6fffffff	globl
+scall	setfib			0xffffff0affffffff	globl
+scall	sethostid		0xffffff08ffffffff	globl
+scall	setloginclass		0xffffff20cfffffff	globl
+scall	sigblock		0xffffff06dfffffff	globl
+scall	sigqueue		0xffffff1c8fffffff	globl
+scall	sigsetmask		0xffffff06efffffff	globl
+scall	sigstack		0xffffff070fffffff	globl
+scall	sigvec			0xffffff06cfffffff	globl
+scall	sigwaitinfo		0xffffff15afffffff	globl
+scall	sstk			0xffffff046fffffff	globl
+scall	swapcontext		0xffffff1a7fffffff	globl
+scall	thr_create		0xffffff1aefffffff	globl
+scall	thr_exit		0xffffff1affffffff	globl
+scall	thr_kill		0xffffff1b1fffffff	globl
+scall	thr_kill2		0xffffff1e1fffffff	globl
+scall	thr_new			0xffffff1c7fffffff	globl
+scall	thr_self		0xffffff1b0fffffff	globl
+scall	thr_set_name		0xffffff1d0fffffff	globl
+scall	thr_suspend		0xffffff1bafffffff	globl
+scall	thr_wake		0xffffff1bbfffffff	globl
+scall	uuidgen			0x163fff188fffffff	globl
+scall	vadvise			0xffffff048fffffff	globl
+scall	wait			0xffffff054fffffff	globl
+scall	wait6			0x1e1fff214fffffff	globl
+scall	yield			0xffffff141fffffff	globl
 #──────────────────────────OPENBSD───────────────────────────
-scall	__tfork			0x0008ffffffffffff	globl
-scall	__thrsleep		0x005effffffffffff	globl
-scall	__thrwakeup		0x012dffffffffffff	globl
-scall	__threxit		0x012effffffffffff	globl
-scall	__thrsigdivert		0x012fffffffffffff	globl
-scall	__set_tcb		0x0149ffffffffffff	globl
-scall	__get_tcb		0x014affffffffffff	globl
-scall	adjfreq			0x0131ffffffffffff	globl
-scall	getdtablecount		0x0012ffffffffffff	globl
-scall	getlogin_r		0x008dffffffffffff	globl
-scall	getrtable		0x0137ffffffffffff	globl
-scall	getthrid		0x012bffffffffffff	globl
-scall	kbind			0x0056ffffffffffff	globl
-scall	mquery			0x011effffffffffff	globl # openbsd:pad
-scall	obreak			0x0011ffffffffffff	globl
-scall	sendsyslog		0x0070ffffffffffff	globl
-scall	setrtable		0x0136ffffffffffff	globl
-scall	swapctl			0x00c1ffffffffffff	globl
-scall	thrkill			0x0077ffffffffffff	globl
-scall	unveil			0x0072ffffffffffff	globl
+scall	__tfork			0xfff008ffffffffff	globl
+scall	__thrsleep		0xfff05effffffffff	globl
+scall	__thrwakeup		0xfff12dffffffffff	globl
+scall	__threxit		0xfff12effffffffff	globl
+scall	__thrsigdivert		0xfff12fffffffffff	globl
+scall	__set_tcb		0xfff149ffffffffff	globl
+scall	__get_tcb		0xfff14affffffffff	globl
+scall	adjfreq			0xfff131ffffffffff	globl
+scall	getdtablecount		0xfff012ffffffffff	globl
+scall	getlogin_r		0xfff08dffffffffff	globl
+scall	getrtable		0xfff137ffffffffff	globl
+scall	getthrid		0xfff12bffffffffff	globl
+scall	kbind			0xfff056ffffffffff	globl
+scall	mquery			0xfff11effffffffff	globl # openbsd:pad
+scall	obreak			0x011011ffffffffff	globl
+scall	sendsyslog		0xfff070ffffffffff	globl
+scall	setrtable		0xfff136ffffffffff	globl
+scall	swapctl			0x10f0c1ffffffffff	globl
+scall	thrkill			0xfff077ffffffffff	globl
+scall	unveil			0xfff072ffffffffff	globl
 
 #	The Fifth Bell System Interface, Community Edition
 #	» beyond the pale
 #	                             GNU/Systemd┐
-#	                            Mac OS X┐   │
-#	                         FreeBSD┐   │   │
-#	                     OpenBSD┐   │ ┌─│───│── XnuClass{1:Mach,2:Unix}
-#	                          ┌─┴┐┌─┴┐│┌┴┐┌─┴┐
-scall	__mac_get_link		0xffff019a2180ffff	globl
-scall	__mac_set_link		0xffff019b2181ffff	globl
-scall	__mac_get_fd		0xffff01822184ffff	globl
-scall	__mac_get_file		0xffff0183217effff	globl
-scall	__mac_get_proc		0xffff01802182ffff	globl
-scall	__mac_set_fd		0xffff01842185ffff	globl
-scall	__mac_get_pid		0xffff01992186ffff	globl
-scall	__mac_set_proc		0xffff01812183ffff	globl
-scall	__mac_set_file		0xffff0185217fffff	globl
-scall	__mac_execve		0xffff019f217cffff	globl
-scall	__acl_get_link		0xffff01a9ffffffff	globl
-scall	__sigwait_nocancel	0xffffffff21a6ffff	globl
-scall	__cap_rights_get	0xffff0203ffffffff	globl
-scall	__semwait_signal	0xffffffff214effff	globl
-scall	__acl_set_link		0xffff01aaffffffff	globl
-scall	__acl_set_fd		0xffff015effffffff	globl
-scall	__old_semwait_signal	0xffffffff2172ffff	globl
-scall	__setugid		0xffff0176ffffffff	globl
-scall	__acl_aclcheck_fd	0xffff0162ffffffff	globl
-scall	__acl_get_fd		0xffff015dffffffff	globl
-scall	__sysctl		0xffff00caffffffff	globl
-scall	__mac_getfsstat		0xffffffff21aaffff	globl
-scall	__mac_get_mount		0xffffffff21a9ffff	globl
-scall	__acl_delete_link	0xffff01abffffffff	globl
-scall	__mac_mount		0xffffffff21a8ffff	globl
-scall	__acl_get_file		0xffff015bffffffff	globl
-scall	__acl_aclcheck_file	0xffff0161ffffffff	globl
-scall	__acl_delete_fd		0xffff0160ffffffff	globl
-scall	__acl_aclcheck_link	0xffff01acffffffff	globl
-scall	__mac_syscall		0xffffffff217dffff	globl
-scall	__acl_set_file		0xffff015cffffffff	globl
-scall	__acl_delete_file	0xffff015fffffffff	globl
-scall	__syscall		0x00c6ffffffffffff	globl
-scall	_umtx_op		0xffff01c6ffffffff	globl
-scall	__semwait_signal_nocancel	0xffffffff21a7ffff	globl
-scall	__old_semwait_signal_nocancel	0xffffffff2173ffff	globl
-scall	sctp_peeloff			0xffff01d7ffffffff	globl
-scall	sctp_generic_recvmsg		0xffff01daffffffff	globl
-scall	sctp_generic_sendmsg		0xffff01d8ffffffff	globl
-scall	sctp_generic_sendmsg_iov	0xffff01d9ffffffff	globl
-scall	shared_region_map_and_slide_np	0xffffffff21b6ffff	globl
-scall	guarded_open_dprotected_np	0xffffffff21e4ffff	globl
-scall	stack_snapshot_with_config	0xffffffff21ebffff	globl
+#	                             Mac OS X┐  │
+#	                          FreeBSD┐   │  │
+#	                       OpenBSD┐  │ ┌─│──│── XnuClass{1:Mach,2:Unix}
+#	                     NetBSD┐  │  │ │ │  │
+#	Symbol                    ┌┴┐┌┴┐┌┴┐│┬┴┐┌┴┐      Directives & Commentary
+scall	__mac_get_link		0xffffff19a2180fff	globl
+scall	__mac_set_link		0xffffff19b2181fff	globl
+scall	__mac_get_fd		0xffffff1822184fff	globl
+scall	__mac_get_file		0xffffff183217efff	globl
+scall	__mac_get_proc		0xffffff1802182fff	globl
+scall	__mac_set_fd		0xffffff1842185fff	globl
+scall	__mac_get_pid		0xffffff1992186fff	globl
+scall	__mac_set_proc		0xffffff1812183fff	globl
+scall	__mac_set_file		0xffffff185217ffff	globl
+scall	__mac_execve		0xffffff19f217cfff	globl
+scall	__acl_get_link		0xffffff1a9fffffff	globl
+scall	__sigwait_nocancel	0xfffffffff21a6fff	globl
+scall	__cap_rights_get	0xffffff203fffffff	globl
+scall	__semwait_signal	0xfffffffff214efff	globl
+scall	__acl_set_link		0xffffff1aafffffff	globl
+scall	__acl_set_fd		0xffffff15efffffff	globl
+scall	__old_semwait_signal	0xfffffffff2172fff	globl
+scall	__setugid		0xffffff176fffffff	globl
+scall	__acl_aclcheck_fd	0xffffff162fffffff	globl
+scall	__acl_get_fd		0xffffff15dfffffff	globl
+scall	__sysctl		0xffffff0cafffffff	globl
+scall	__mac_getfsstat		0xfffffffff21aafff	globl
+scall	__mac_get_mount		0xfffffffff21a9fff	globl
+scall	__acl_delete_link	0xffffff1abfffffff	globl
+scall	__mac_mount		0xfffffffff21a8fff	globl
+scall	__acl_get_file		0xffffff15bfffffff	globl
+scall	__acl_aclcheck_file	0xffffff161fffffff	globl
+scall	__acl_delete_fd		0xffffff160fffffff	globl
+scall	__acl_aclcheck_link	0xffffff1acfffffff	globl
+scall	__mac_syscall		0xfffffffff217dfff	globl
+scall	__acl_set_file		0xffffff15cfffffff	globl
+scall	__acl_delete_file	0xffffff15ffffffff	globl
+scall	__syscall		0xfff0c6ffffffffff	globl
+scall	_umtx_op		0xffffff1c6fffffff	globl
+scall	__semwait_signal_nocancel	0xfffffffff21a7fff	globl
+scall	__old_semwait_signal_nocancel	0xfffffffff2173fff	globl
+scall	sctp_peeloff			0xffffff1d7fffffff	globl
+scall	sctp_generic_recvmsg		0xffffff1dafffffff	globl
+scall	sctp_generic_sendmsg		0xffffff1d8fffffff	globl
+scall	sctp_generic_sendmsg_iov	0xffffff1d9fffffff	globl
+scall	shared_region_map_and_slide_np	0xfffffffff21b6fff	globl
+scall	guarded_open_dprotected_np	0xfffffffff21e4fff	globl
+scall	stack_snapshot_with_config	0xfffffffff21ebfff	globl

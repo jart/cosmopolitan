@@ -26,8 +26,9 @@
  * - East asian glyphs, emoji, etc. count as two
  *
  * @param s is NUL-terminated string
+ * @param o is string offset for computing tab widths
  * @return monospace display width
  */
-int strwidth(const char *s) {
-  return strnwidth(s, -1);
+int strwidth(const char *s, size_t o) {
+  return strnwidth(s, -1, 0);
 }

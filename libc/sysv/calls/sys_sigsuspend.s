@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall sys_sigsuspend 0x006f0155206f0082 globl hidden
+.scall sys_sigsuspend 0x12606f155206f082 globl hidden

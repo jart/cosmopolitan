@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall thr_self 0xffff01b0ffffffff globl
+.scall thr_self 0xffffff1b0fffffff globl

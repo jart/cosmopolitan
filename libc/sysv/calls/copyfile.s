@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall copyfile 0xffffffff20e3ffff globl
+.scall copyfile 0xfffffffff20e3fff globl

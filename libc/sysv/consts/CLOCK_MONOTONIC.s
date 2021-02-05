@@ -1,2 +1,2 @@
 .include "libc/sysv/consts/syscon.inc"
-.syscon clock CLOCK_MONOTONIC 1 1 4 3 1
+.syscon clock CLOCK_MONOTONIC 1 1 4 3 3 1

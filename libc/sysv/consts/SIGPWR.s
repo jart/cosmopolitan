@@ -1,2 +1,2 @@
 .include "libc/sysv/consts/syscon.inc"
-.syscon sig SIGPWR 30 0 0 0 30
+.syscon sig SIGPWR 30 0 0 0 32 30

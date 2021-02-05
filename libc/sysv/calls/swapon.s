@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall swapon 0xffff0055205500a7 globl
+.scall swapon 0xffffff05520550a7 globl

@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall ksem_post 0xffff0191ffffffff globl
+.scall ksem_post 0xffffff191fffffff globl

@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall kmq_unlink 0xffff01ceffffffff globl
+.scall kmq_unlink 0xffffff1cefffffff globl

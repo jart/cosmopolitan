@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall yield 0xffff0141ffffffff globl
+.scall yield 0xffffff141fffffff globl

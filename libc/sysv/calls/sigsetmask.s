@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall sigsetmask 0xffff006effffffff globl
+.scall sigsetmask 0xffffff06efffffff globl

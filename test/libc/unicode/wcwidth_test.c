@@ -24,9 +24,9 @@
 
 TEST(strwidth, testCjkWidesAndCombiningLowLines_withThompsonPikeEncoding) {
   /*───────────────────────────────────────────────────┬─*/
-  EXPECT_EQ(20, strwidth(/**/ "𐌰𐌱𐌲𐌳𐌴𐌵𐌶𐌷▒▒▒▒▒▒▒▒▒▒▒▒" /*│*/));
-  EXPECT_EQ(20, strwidth(/**/ "(╯°□°)╯𐄻︵ ̲┻̲━̲┻▒▒▒▒▒▒" /*│*/));
-  EXPECT_EQ(20, strwidth(/**/ "ちゃぶ台返し▒▒▒▒▒▒▒▒" /*│*/));
+  EXPECT_EQ(20, strwidth(/**/ "𐌰𐌱𐌲𐌳𐌴𐌵𐌶𐌷▒▒▒▒▒▒▒▒▒▒▒▒" /*│*/, 0));
+  EXPECT_EQ(20, strwidth(/**/ "(╯°□°)╯𐄻︵ ̲┻̲━̲┻▒▒▒▒▒▒" /*│*/, 0));
+  EXPECT_EQ(20, strwidth(/**/ "ちゃぶ台返し▒▒▒▒▒▒▒▒" /*│*/, 0));
   EXPECT_EQ(20, strclen(/*─*/ "𐌰𐌱𐌲𐌳𐌴𐌵𐌶𐌷▒▒▒▒▒▒▒▒▒▒▒▒" /*│*/));
   EXPECT_EQ(22, strclen(/*─*/ "(╯°□°)╯𐄻︵ ̲┻̲━̲┻▒▒▒▒▒▒" /*│*/));
   EXPECT_EQ(14, strclen(/*─*/ "ちゃぶ台返し▒▒▒▒▒▒▒▒" /*│*/));
@@ -38,9 +38,9 @@ TEST(strwidth, testCjkWidesAndCombiningLowLines_withThompsonPikeEncoding) {
 
 TEST(strwidth16, testCjkWidesAndCombiningLowLines_lengthIsNotShorts) {
   /*──────────────────────────────────────────────────────┬─*/
-  EXPECT_EQ(20, strwidth16(/**/ u"𐌰𐌱𐌲𐌳𐌴𐌵𐌶𐌷▒▒▒▒▒▒▒▒▒▒▒▒" /*│*/));
-  EXPECT_EQ(20, strwidth16(/**/ u"(╯°□°)╯𐄻︵ ̲┻̲━̲┻▒▒▒▒▒▒" /*│*/));
-  EXPECT_EQ(20, strwidth16(/**/ u"ちゃぶ台返し▒▒▒▒▒▒▒▒" /*│*/));
+  EXPECT_EQ(20, strwidth16(/**/ u"𐌰𐌱𐌲𐌳𐌴𐌵𐌶𐌷▒▒▒▒▒▒▒▒▒▒▒▒" /*│*/, 0));
+  EXPECT_EQ(20, strwidth16(/**/ u"(╯°□°)╯𐄻︵ ̲┻̲━̲┻▒▒▒▒▒▒" /*│*/, 0));
+  EXPECT_EQ(20, strwidth16(/**/ u"ちゃぶ台返し▒▒▒▒▒▒▒▒" /*│*/, 0));
   EXPECT_EQ(20, strclen16(/*─*/ u"𐌰𐌱𐌲𐌳𐌴𐌵𐌶𐌷▒▒▒▒▒▒▒▒▒▒▒▒" /*│*/));
   EXPECT_EQ(22, strclen16(/*─*/ u"(╯°□°)╯𐄻︵ ̲┻̲━̲┻▒▒▒▒▒▒" /*│*/));
   EXPECT_EQ(14, strclen16(/*─*/ u"ちゃぶ台返し▒▒▒▒▒▒▒▒" /*│*/));
@@ -52,9 +52,9 @@ TEST(strwidth16, testCjkWidesAndCombiningLowLines_lengthIsNotShorts) {
 
 TEST(wcwidth, testCjkWidesAndCombiningLowLines_widthIsNotLength) {
   /*────────────────────────────────────────────────────┬─*/
-  EXPECT_EQ(20, wcswidth(/**/ L"Table flip▒▒▒▒▒▒▒▒▒▒" /*│*/));
-  EXPECT_EQ(20, wcswidth(/**/ L"(╯°□°)╯︵ ̲┻̲━̲┻▒▒▒▒▒▒▒" /*│*/));
-  EXPECT_EQ(20, wcswidth(/**/ L"ちゃぶ台返し▒▒▒▒▒▒▒▒" /*│*/));
+  EXPECT_EQ(20, wcswidth(/**/ L"Table flip▒▒▒▒▒▒▒▒▒▒" /*│*/, 0));
+  EXPECT_EQ(20, wcswidth(/**/ L"(╯°□°)╯︵ ̲┻̲━̲┻▒▒▒▒▒▒▒" /*│*/, 0));
+  EXPECT_EQ(20, wcswidth(/**/ L"ちゃぶ台返し▒▒▒▒▒▒▒▒" /*│*/, 0));
   EXPECT_EQ(20, wcslen(/*──*/ L"Table flip▒▒▒▒▒▒▒▒▒▒" /*│*/));
   EXPECT_EQ(22, wcslen(/*──*/ L"(╯°□°)╯︵ ̲┻̲━̲┻▒▒▒▒▒▒▒" /*│*/));
   EXPECT_EQ(14, wcslen(/*──*/ L"ちゃぶ台返し▒▒▒▒▒▒▒▒" /*│*/));
@@ -66,8 +66,8 @@ TEST(wcwidth, block) {
 }
 
 TEST(strwidth, testTextDelimitingControlCodes_dontHaveSubstance) {
-  EXPECT_EQ(0, strwidth("\0"));
-  EXPECT_EQ(0, strwidth("\1"));
+  EXPECT_EQ(0, strwidth("\0", 0));
+  EXPECT_EQ(0, strwidth("\1", 0));
 }
 
 BENCH(wcwidth, bench) {

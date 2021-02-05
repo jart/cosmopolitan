@@ -16,7 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/pcmpgtb.h"
+#include "libc/intrin/pmovmskb.h"
+#include "libc/intrin/psubb.h"
 #include "libc/macros.h"
+#include "libc/nexgen32e/bsf.h"
+#include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "libc/unicode/unicode.h"
 
@@ -24,25 +29,31 @@
  * Returns monospace display width of UTF-8 string.
  *
  * - Control codes are discounted
- *
  * - ANSI escape sequences are discounted
- *
  * - East asian glyphs, emoji, etc. count as two
  *
  * @param s is NUL-terminated string
  * @param n is max bytes to consider
+ * @param o is offset for doing tabs
  * @return monospace display width
  */
-int strnwidth(const char *s, size_t n) {
+int strnwidth(const char *s, size_t n, size_t o) {
+  size_t i;
   wint_t c, w;
-  unsigned l, r;
+  unsigned l, r, k;
   enum { kAscii, kUtf8, kEsc, kCsi } t;
-  for (w = r = t = l = 0; n--;) {
-    if ((c = *s++ & 0xff)) {
+  for (w = r = t = l = i = 0; i < n;) {
+    if ((c = s[i++] & 0xff)) {
       switch (t) {
         case kAscii:
-          if (0x20 <= c && c <= 0x7E || c == '\t') {
+          if (0x20 <= c && c <= 0x7E) {
             ++l;
+          } else if (c == '\t') {
+            if ((k = (o + i - 1) & 7)) {
+              l += 8 - k;
+            } else {
+              l += 8;
+            }
           } else if (c == 033) {
             t = kEsc;
           } else if (c >= 0300) {

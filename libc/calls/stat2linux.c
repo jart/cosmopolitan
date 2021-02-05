@@ -70,6 +70,12 @@ static textstartup void __stat2linux_openbsd(union metastat *ms) {
              st_ctim);
 }
 
+static textstartup void __stat2linux_netbsd(union metastat *ms) {
+  SWITCHEROO(ms->netbsd, ms->linux, st_dev, st_ino, st_nlink, st_mode, st_uid,
+             st_gid, st_rdev, st_size, st_blksize, st_blocks, st_atim, st_mtim,
+             st_ctim);
+}
+
 /**
  * Transcodes “The Dismal Data Structure” from BSD→Linux ABI.
  * @asyncsignalsafe
@@ -82,6 +88,8 @@ textstartup void __stat2linux(void *ms) {
       __stat2linux_freebsd((union metastat *)ms);
     } else if (SupportsOpenbsd() && IsOpenbsd()) {
       __stat2linux_openbsd((union metastat *)ms);
+    } else if (SupportsNetbsd() && IsNetbsd()) {
+      __stat2linux_netbsd((union metastat *)ms);
     }
   }
 }

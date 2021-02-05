@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall cpuset_setaffinity 0xffff01e8ffffffff globl
+.scall cpuset_setaffinity 0xffffff1e8fffffff globl

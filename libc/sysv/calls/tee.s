@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall tee 0xffffffffffff0114 globl
+.scall tee 0xfffffffffffff114 globl

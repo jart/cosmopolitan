@@ -144,14 +144,14 @@ int stoa(int out(long, void *), void *arg, void *data, unsigned long flags,
     w = precision;
     if (signbit == 63) {
       if (weaken(wcsnwidth)) {
-        w = weaken(wcsnwidth)((const wchar_t *)p, precision);
+        w = weaken(wcsnwidth)((const wchar_t *)p, precision, 0);
       }
     } else if (signbit == 15) {
       if (weaken(strnwidth16)) {
-        w = weaken(strnwidth16)((const char16_t *)p, precision);
+        w = weaken(strnwidth16)((const char16_t *)p, precision, 0);
       }
     } else if (weaken(strnwidth)) {
-      w = weaken(strnwidth)(p, precision);
+      w = weaken(strnwidth)(p, precision, 0);
     }
     if (w < width) {
       pad = width - w;

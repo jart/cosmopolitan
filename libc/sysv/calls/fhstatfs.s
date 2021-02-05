@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall fhstatfs 0x0041022effffffff globl
+.scall fhstatfs 0xfff04122efffffff globl

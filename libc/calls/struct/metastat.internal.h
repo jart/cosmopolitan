@@ -47,11 +47,24 @@ struct stat_openbsd {
   struct timespec __st_birthtim;
 };
 
+struct stat_netbsd {
+  uint64_t st_dev;
+  uint32_t st_mode;
+  uint64_t st_ino;
+  uint32_t st_nlink, st_uid, st_gid;
+  uint64_t st_rdev;
+  struct timespec st_atim, st_mtim, st_ctim, st_birthtim;
+  int64_t st_size, st_blocks;
+  int32_t st_blksize;
+  uint32_t st_flags, st_gen, st_spare[2];
+};
+
 union metastat {
   struct stat linux;
   struct stat_xnu xnu;
   struct stat_freebsd freebsd;
   struct stat_openbsd openbsd;
+  struct stat_netbsd netbsd;
 };
 
 COSMOPOLITAN_C_END_

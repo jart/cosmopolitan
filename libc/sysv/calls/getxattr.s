@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall getxattr 0xffffffff20ea00bf globl
+.scall getxattr 0x17affffff20ea0bf globl

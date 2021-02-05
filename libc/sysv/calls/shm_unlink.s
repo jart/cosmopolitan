@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall shm_unlink 0xffff01e3210bffff globl
+.scall shm_unlink 0xffffff1e3210bfff globl

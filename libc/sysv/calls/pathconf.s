@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall pathconf 0x00bf00bf20bfffff globl
+.scall pathconf 0x0bf0bf0bf20bffff globl

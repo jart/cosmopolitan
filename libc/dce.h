@@ -8,26 +8,18 @@
 #ifndef SUPPORT_VECTOR
 /**
  * Supported Platforms Tuning Knob (Runtime & Compile-Time)
- *
- * Cosmopolitan's design allows us to support eight platforms. We enable
- * them all by default, since we're able to do eight so efficiently. We
- * can't do more, due to the way the 80x86 instruction set is encoded.
- *
- * The user may optionally tune this bitmask, which effectively asks the
- * compiler to leave out system call polyfills for a platform, which may
- * offer marginal improvements in terms of code size and performance, at
- * the cost of portability.
+ * Tuning this bitmask will remove platform polyfills at compile-time.
  */
 #define SUPPORT_VECTOR 0b11111111
 #endif
+
 #define LINUX   1
 #define METAL   2
 #define WINDOWS 4
 #define XNU     8
 #define OPENBSD 16
 #define FREEBSD 32
-/* #define YOUR_CLOUD_PLATFORM_HERE 64  /\* jtunney@gmail.com *\/ */
-/* #define YOUR_CLOUD_PLATFORM_HERE 128 /\* jtunney@gmail.com *\/ */
+#define NETBSD  64
 
 #ifdef NDEBUG
 #define NoDebug() 1
@@ -89,28 +81,31 @@
 #define SupportsXnu()     ((SUPPORT_VECTOR & XNU) == XNU)
 #define SupportsFreebsd() ((SUPPORT_VECTOR & FREEBSD) == FREEBSD)
 #define SupportsOpenbsd() ((SUPPORT_VECTOR & OPENBSD) == OPENBSD)
-#define SupportsBsd()     (!!(SUPPORT_VECTOR & (XNU | FREEBSD | OPENBSD)))
+#define SupportsNetbsd()  ((SUPPORT_VECTOR & NETBSD) == NETBSD)
+#define SupportsBsd()     (!!(SUPPORT_VECTOR & (XNU | FREEBSD | OPENBSD | NETBSD)))
 #define SupportsSystemv() \
-  ((SUPPORT_VECTOR & (LINUX | METAL | XNU | OPENBSD | FREEBSD)) != 0)
+  ((SUPPORT_VECTOR & (LINUX | METAL | XNU | OPENBSD | FREEBSD | NETBSD)) != 0)
 
 #ifndef __ASSEMBLER__
 #define __HOSTOS    (__hostos & SUPPORT_VECTOR)
 #define IsLinux()   ((__HOSTOS & LINUX) == LINUX)
 #define IsMetal()   ((__HOSTOS & METAL) == METAL)
 #define IsWindows() ((__HOSTOS & WINDOWS) == WINDOWS)
-#define IsBsd()     ((__HOSTOS & (XNU | FREEBSD | OPENBSD)) != 0)
+#define IsBsd()     ((__HOSTOS & (XNU | FREEBSD | OPENBSD | NETBSD)) != 0)
 #define IsXnu()     ((__HOSTOS & XNU) == XNU)
 #define IsFreebsd() ((__HOSTOS & FREEBSD) == FREEBSD)
 #define IsOpenbsd() ((__HOSTOS & OPENBSD) == OPENBSD)
+#define IsNetbsd()  ((__HOSTOS & NETBSD) == NETBSD)
 #else
 /* clang-format off */
 #define IsLinux() $LINUX,__hostos(%rip)
 #define IsMetal() $METAL,__hostos(%rip)
 #define IsWindows() $WINDOWS,__hostos(%rip)
-#define IsBsd() $XNU|FREEBSD|OPENBSD,__hostos(%rip)
+#define IsBsd() $XNU|FREEBSD|OPENBSD|NETBSD,__hostos(%rip)
 #define IsXnu() $XNU,__hostos(%rip)
 #define IsFreebsd() $FREEBSD,__hostos(%rip)
 #define IsOpenbsd() $OPENBSD,__hostos(%rip)
+#define IsNetbsd() $NETBSD,__hostos(%rip)
 /* clang-format on */
 #endif
 

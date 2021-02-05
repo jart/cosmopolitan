@@ -1057,7 +1057,7 @@ static void Draw(void) {
   AppendStr("\e[0;7m");
   GenerateStatusLine();
   AppendStr(statusline);
-  n = txn - strwidth(statusline);
+  n = txn - strwidth(statusline, 0);
   for (i = 0; i < n; ++i) {
     AppendStr(" ");
   }

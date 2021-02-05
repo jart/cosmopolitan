@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall rfork 0xffff00fbffffffff globl
+.scall rfork 0xffffff0fbfffffff globl

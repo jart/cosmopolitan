@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall sigqueue 0xffff01c8ffffffff globl
+.scall sigqueue 0xffffff1c8fffffff globl

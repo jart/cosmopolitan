@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall swapcontext 0xffff01a7ffffffff globl
+.scall swapcontext 0xffffff1a7fffffff globl

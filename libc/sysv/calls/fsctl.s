@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall fsctl 0xffffffff20f2ffff globl
+.scall fsctl 0xfffffffff20f2fff globl

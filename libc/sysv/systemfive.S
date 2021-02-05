@@ -106,9 +106,9 @@ __systemfive:
 	.text.syscall
 .Lanchorpoint:
 systemfive.linux:
-	movswl	%ax,%eax		# gnu/systemd ordinal is first word
-	test	%eax,%eax		# sign extend to optimize code size
-	js	systemfive.enosys	# test for syscalls.sh ordinal ffff
+	and	$0xfff,%eax
+	cmp	$0xfff,%eax
+	je	systemfive.enosys
 	mov	%rcx,%r10		# syscall instruction clobbers %rcx
 	push	%rbp			# linux never reads args from stack
 	mov	%rsp,%rbp		# having frame will help backtraces
@@ -132,33 +132,40 @@ systemfive.enosys:
 	mov	ENOSYS(%rip),%eax
 	jmp	systemfive.errno
 	.endfn	systemfive.enosys,globl,hidden
+systemfive.netbsd:
+	shr	$4*13,%rax
+	jmp	systemfive.bsdscrub
+	.endfn	systemfive.openbsd,globl,hidden
 systemfive.openbsd:
-	shr	$48,%rax
-	jmp	systemfive.bsd
+	shr	$4*10,%rax
+	jmp	systemfive.bsdscrub
 	.endfn	systemfive.openbsd,globl,hidden
 systemfive.freebsd:
-	shr	$32,%rax
+	shr	$4*7,%rax
 	movzwl	%ax,%eax
 /	𝑠𝑙𝑖𝑑𝑒
 	.endfn	systemfive.freebsd,globl,hidden
+systemfive.bsdscrub:
+	and	$0xfff,%eax
+/	𝑠𝑙𝑖𝑑𝑒
+	.endfn	systemfive.bsdscrub,globl,hidden
 systemfive.bsd:
 	cmp	$0xfff,%ax
-	jae	systemfive.enosys
+	je	systemfive.enosys
 	mov	%rcx,%r10		# note: we do not create a stack frame
 	syscall				# bsd will need arg on stack sometimes
 	jc	systemfive.errno	# bsd sets carry flag if %rax is errno
 	ret
 	.endfn	systemfive.bsd
 systemfive.xnu:
-/	0x????????2153????		# how syscalls.sh encodes xnu ordinals
-/	          │└┴┴─┐
-/	          └┐   ├┬┐
+/	0x?????????2153???		# how syscalls.sh encodes xnu ordinals
+/	           │└┴┴┐
+/	           │   ├┬┐
 /	0x0000000002000153		# how xnu wants ordinals to be encoded
 	mov	%eax,%r11d
-	shr	$4*7,%r11d
-	shl	$4*6,%r11d
-	shl	$4*1,%eax
-	shr	$4*5,%eax
+	and	$0x0f000000,%r11d
+	shl	$8,%eax
+	shr	$20,%eax
 	or	%r11d,%eax
 	jmp	systemfive.bsd
 	.endfn	systemfive.xnu,globl,hidden
@@ -186,6 +193,12 @@ systemfive.xnu:
 	jnz	systemfive.init.windows
 	cmpq	$0,(%r15)			# OpenBSD doesn't have auxv
 	je	systemfive.init.openbsd
+	xor	%eax,%eax
+0:	cmpq	$2014,(%r15,%rax,8)		# NetBSD's distinctive AT_EXECFN
+	je	systemfive.init.netbsd
+	cmpq	$0,(%r15,%rax,8)
+	lea	2(%eax),%eax
+	jnz	0b
 /	default state is safe state
 /	𝑠𝑙𝑖𝑑𝑒
 systemfive.init.linux:
@@ -212,6 +225,11 @@ systemfive.init.openbsd:
 	pushb	systemfive.openbsd-.Lanchorpoint
 	push	$OPENBSD
 	ezlea	syscon.openbsd,si
+	jmp	systemfive.init.os
+systemfive.init.netbsd:
+	pushb	systemfive.netbsd-.Lanchorpoint
+	push	$NETBSD
+	ezlea	syscon.netbsd,si
 	jmp	systemfive.init.os
 systemfive.init.xnu:
 	pushb	systemfive.xnu-.Lanchorpoint
@@ -362,6 +380,11 @@ syscon.freebsd:/*
 syscon.openbsd:/*
 	...decentralized leb128...
 	*/.previous
+	.section .sort.rodata.syscon.netbsd.1,"a",@progbits
+	.align	1
+syscon.netbsd:/*
+	...decentralized leb128...
+	*/.previous
 	.section .sort.rodata.syscon.windows.1,"a",@progbits
 	.align	1
 syscon.windows:/*
@@ -374,6 +397,7 @@ syscon.windows:/*
 	.type	syscon.xnu,@object
 	.type	syscon.freebsd,@object
 	.type	syscon.openbsd,@object
+	.type	syscon.netbsd,@object
 	.type	syscon.windows,@object
 
 	.globl	syscon.start
@@ -382,4 +406,5 @@ syscon.windows:/*
 	.globl	syscon.xnu
 	.globl	syscon.freebsd
 	.globl	syscon.openbsd
+	.globl	syscon.netbsd
 	.globl	syscon.windows

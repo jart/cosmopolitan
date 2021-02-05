@@ -88,9 +88,9 @@ static long __pflink(long x) {
   x |= kCp437[0];
   x |= ntoa(0, 0, 0, 0, 0, 0, 0, 0, 0);
   x |= ftoa(0, 0, 0, 0, 0, 0);
-  x |= strnwidth(0, 0);
-  x |= strnwidth16(0, 0);
-  x |= wcsnwidth(0, 0);
+  x |= strnwidth(0, 0, 0);
+  x |= strnwidth16(0, 0, 0);
+  x |= wcsnwidth(0, 0, 0);
   x |= malloc(0);
   x |= __grow(0, 0, 0, 0);
   x |= (intptr_t)strerror(0);

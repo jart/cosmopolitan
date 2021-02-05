@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall openat_nocancel 0xffffffff21d0ffff globl
+.scall openat_nocancel 0xfffffffff21d0fff globl

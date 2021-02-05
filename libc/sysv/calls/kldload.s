@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall kldload 0xffff0130ffffffff globl
+.scall kldload 0xffffff130fffffff globl

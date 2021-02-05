@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall getlogin 0xffff00312031ffff globl
+.scall getlogin 0xffffff0312031fff globl

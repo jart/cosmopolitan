@@ -1,0 +1,554 @@
+0	INDIR		{ int|sys||syscall(int code, ... register_t args[SYS_MAXSYSARGS]); }
+1	STD		{ void|sys||exit(int rval); }
+2	STD		{ int|sys||fork(void); }
+3	STD	RUMP	{ ssize_t|sys||read(int fd, void *buf, size_t nbyte); }
+4	STD	RUMP	{ ssize_t|sys||write(int fd, const void *buf, size_t nbyte); }
+5	STD	RUMP	{ int|sys||open(const char *path, int flags, ... mode_t mode); }
+6	STD	RUMP	{ int|sys||close(int fd); }
+7	COMPAT_50 MODULAR compat_50 { int|sys||wait4(pid_t pid, int *status, int options, struct rusage50 *rusage); }
+8	COMPAT_43 MODULAR compat_43			{ int|sys||creat(const char *path, mode_t mode); } ocreat
+9	STD	RUMP	{ int|sys||link(const char *path, const char *link); }
+10	STD	RUMP	{ int|sys||unlink(const char *path); }
+11	OBSOL		execv
+12	STD	RUMP	{ int|sys||chdir(const char *path); }
+13	STD	RUMP	{ int|sys||fchdir(int fd); }
+14	COMPAT_50 MODULAR compat_50 RUMP			{ int|sys||mknod(const char *path, mode_t mode, uint32_t dev); }
+15	STD	RUMP	{ int|sys||chmod(const char *path, mode_t mode); }
+16	STD	RUMP	{ int|sys||chown(const char *path, uid_t uid, gid_t gid); }
+17	STD		{ int|sys||obreak(char *nsize); } break
+18	COMPAT_20 MODULAR compat_20 { int|sys||getfsstat(struct statfs12 *buf, long bufsize, int flags); }
+19	COMPAT_43 MODULAR compat_43			{ long|sys||lseek(int fd, long offset, int whence); } olseek
+20	NOERR	RUMP	{ pid_t|sys||getpid_with_ppid(void); } getpid
+21	COMPAT_40 MODULAR compat_40			{ int|sys||mount(const char *type, const char *path, int flags, void *data); }
+22	STD	RUMP	{ int|sys||unmount(const char *path, int flags); }
+23	STD	RUMP	{ int|sys||setuid(uid_t uid); }
+24	NOERR	RUMP	{ uid_t|sys||getuid_with_euid(void); } getuid
+25	NOERR	RUMP	{ uid_t|sys||geteuid(void); }
+26	STD	MODULAR ptrace				{ int|sys||ptrace(int req, pid_t pid, void *addr, int data); }
+27	STD	RUMP	{ ssize_t|sys||recvmsg(int s, struct msghdr *msg, int flags); }
+28	STD	RUMP	{ ssize_t|sys||sendmsg(int s, const struct msghdr *msg, int flags); }
+29	STD	RUMP	{ ssize_t|sys||recvfrom(int s, void *buf, size_t len, int flags, struct sockaddr *from, socklen_t *fromlenaddr); }
+30	STD	RUMP	{ int|sys||accept(int s, struct sockaddr *name, socklen_t *anamelen); }
+31	STD	RUMP	{ int|sys||getpeername(int fdes, struct sockaddr *asa, socklen_t *alen); }
+32	STD	RUMP	{ int|sys||getsockname(int fdes, struct sockaddr *asa, socklen_t *alen); }
+33	STD	RUMP	{ int|sys||access(const char *path, int flags); }
+34	STD	RUMP	{ int|sys||chflags(const char *path, u_long flags); }
+35	STD	RUMP	{ int|sys||fchflags(int fd, u_long flags); }
+36	NOERR	RUMP	{ void|sys||sync(void); }
+37	STD		{ int|sys||kill(pid_t pid, int signum); }
+38	COMPAT_43 MODULAR compat_43			{ int|sys||stat(const char *path, struct stat43 *ub); } stat43
+39	NOERR	RUMP	{ pid_t|sys||getppid(void); }
+40	COMPAT_43 MODULAR compat_43			{ int|sys||lstat(const char *path, struct stat43 *ub); } lstat43
+41	STD	RUMP	{ int|sys||dup(int fd); }
+42	STD	RUMP	{ int|sys||pipe(void); }
+43	NOERR	RUMP	{ gid_t|sys||getegid(void); }
+44	STD		{ int|sys||profil(char *samples, size_t size, u_long offset, u_int scale); }
+45	STD	RUMP	{ int|sys||ktrace(const char *fname, int ops, int facs, pid_t pid); }
+46	COMPAT_13 MODULAR compat_13 { int|sys||sigaction(int signum, const struct sigaction13 *nsa, struct sigaction13 *osa); } sigaction13
+47	NOERR	RUMP	{ gid_t|sys||getgid_with_egid(void); } getgid
+48	COMPAT_13 MODULAR compat_13 { int|sys||sigprocmask(int how, int mask); } sigprocmask13
+49	STD	RUMP	{ int|sys||__getlogin(char *namebuf, size_t namelen); }
+50	STD	RUMP	{ int|sys||__setlogin(const char *namebuf); }
+51	STD		{ int|sys||acct(const char *path); }
+52	COMPAT_13 MODULAR compat_13 { int|sys||sigpending(void); } sigpending13
+53	COMPAT_13 MODULAR compat_13 { int|sys||sigaltstack( const struct sigaltstack13 *nss, struct sigaltstack13 *oss); } sigaltstack13
+54	STD	RUMP	{ int|sys||ioctl(int fd, u_long com, ... void *data); }
+55	COMPAT_12 MODULAR compat_12 { int|sys||reboot(int opt); } oreboot
+56	STD	RUMP	{ int|sys||revoke(const char *path); }
+57	STD	RUMP	{ int|sys||symlink(const char *path, const char *link); }
+58	STD	RUMP	{ ssize_t|sys||readlink(const char *path, char *buf, size_t count); }
+59	STD		{ int|sys||execve(const char *path, char * const *argp, char * const *envp); }
+60	STD	RUMP	{ mode_t|sys||umask(mode_t newmask); }
+61	STD	RUMP	{ int|sys||chroot(const char *path); }
+62	COMPAT_43 MODULAR compat_43			{ int|sys||fstat(int fd, struct stat43 *sb); } fstat43
+63	COMPAT_43 MODULAR compat_43			{ int|sys||getkerninfo(int op, char *where, int *size, int arg); } ogetkerninfo
+64	COMPAT_43 MODULAR compat_43			{ int|sys||getpagesize(void); } ogetpagesize
+65	COMPAT_12 MODULAR compat_12 { int|sys||msync(void *addr, size_t len); }
+; XXX COMPAT_??? for 4.4BSD-compatible vfork(2)?
+66	STD		{ int|sys||vfork(void); }
+67	OBSOL		vread
+68	OBSOL		vwrite
+69	OBSOL		sbrk
+70	OBSOL		sstk
+71	COMPAT_43 MODULAR compat_43			{ int|sys||mmap(void *addr, size_t len, int prot, int flags, int fd, long pos); } ommap
+72	STD		{ int|sys||ovadvise(int anom); } vadvise
+73	STD		{ int|sys||munmap(void *addr, size_t len); }
+74	STD		{ int|sys||mprotect(void *addr, size_t len, int prot); }
+75	STD		{ int|sys||madvise(void *addr, size_t len, int behav); }
+76	OBSOL		vhangup
+77	OBSOL		vlimit
+78	STD		{ int|sys||mincore(void *addr, size_t len, char *vec); }
+79	STD	RUMP	{ int|sys||getgroups(int gidsetsize, gid_t *gidset); }
+80	STD	RUMP	{ int|sys||setgroups(int gidsetsize, const gid_t *gidset); }
+81	STD	RUMP	{ int|sys||getpgrp(void); }
+82	STD	RUMP	{ int|sys||setpgid(pid_t pid, pid_t pgid); }
+83	COMPAT_50 MODULAR compat_50 { int|sys||setitimer(int which, const struct itimerval50 *itv, struct itimerval50 *oitv); }
+84	COMPAT_43 MODULAR compat_43 { int|sys||wait(void); } owait
+85	COMPAT_12 MODULAR compat_12 { int|sys||swapon(const char *name); } oswapon
+86	COMPAT_50 MODULAR compat_50 { int|sys||getitimer(int which, struct itimerval50 *itv); }
+87	COMPAT_43 MODULAR compat_43			{ int|sys||gethostname(char *hostname, u_int len); } ogethostname
+88	COMPAT_43 MODULAR compat_43			{ int|sys||sethostname(char *hostname, u_int len); } osethostname
+89	COMPAT_43 MODULAR compat_43			{ int|sys||getdtablesize(void); } ogetdtablesize
+90	STD	RUMP	{ int|sys||dup2(int from, int to); }
+91	STD	RUMP	{ ssize_t|sys||getrandom(void *buf, size_t buflen, unsigned int flags); }
+92	STD	RUMP	{ int|sys||fcntl(int fd, int cmd, ... void *arg); }
+93	COMPAT_50 MODULAR compat_50 RUMP			{ int|sys||select(int nd, fd_set *in, fd_set *ou, fd_set *ex, struct timeval50 *tv); }
+94	UNIMPL		setdopt
+95	STD	RUMP	{ int|sys||fsync(int fd); }
+96	STD		{ int|sys||setpriority(int which, id_t who, int prio); }
+97	COMPAT_30 MODULAR compat_30			{ int|sys||socket(int domain, int type, int protocol); }
+98	STD	RUMP	{ int|sys||connect(int s, const struct sockaddr *name, socklen_t namelen); }
+99	COMPAT_43 MODULAR compat_43			{ int|sys||accept(int s, void *name, socklen_t *anamelen); } oaccept
+100	STD		{ int|sys||getpriority(int which, id_t who); }
+101	COMPAT_43 MODULAR compat_43 { int|sys||send(int s, void *buf, int len, int flags); } osend
+102	COMPAT_43 MODULAR compat_43 { int|sys||recv(int s, void *buf, int len, int flags); } orecv
+103	COMPAT_13 MODULAR compat_13			{ int|sys||sigreturn(struct sigcontext13 *sigcntxp); } sigreturn13
+104	STD	RUMP	{ int|sys||bind(int s, const struct sockaddr *name, socklen_t namelen); }
+105	STD	RUMP	{ int|sys||setsockopt(int s, int level, int name, const void *val, socklen_t valsize); }
+106	STD	RUMP	{ int|sys||listen(int s, int backlog); }
+107	OBSOL		vtimes
+108	COMPAT_43 MODULAR compat_43			{ int|sys||sigvec(int signum, struct sigvec *nsv, struct sigvec *osv); } osigvec
+109	COMPAT_43 MODULAR compat { int|sys||sigblock(int mask); } osigblock
+110	COMPAT_43 MODULAR compat { int|sys||sigsetmask(int mask); } osigsetmask
+111	COMPAT_13 MODULAR compat { int|sys||sigsuspend(int mask); } sigsuspend13
+112	COMPAT_43 MODULAR compat_43 { int|sys||sigstack(struct sigstack *nss, struct sigstack *oss); } osigstack
+113	COMPAT_43 MODULAR compat_43			{ int|sys||recvmsg(int s, struct omsghdr *msg, int flags); } orecvmsg
+114	COMPAT_43 MODULAR compat_43			{ int|sys||sendmsg(int s, void *msg, int flags); } osendmsg
+115	OBSOL		vtrace
+116	COMPAT_50 MODULAR compat_50			{ int|sys||gettimeofday(struct timeval50 *tp, void *tzp); }
+117	COMPAT_50 MODULAR compat_50			{ int|sys||getrusage(int who, struct rusage50 *rusage); }
+118	STD	RUMP	{ int|sys||getsockopt(int s, int level, int name, void *val, socklen_t *avalsize); }
+119	OBSOL		resuba
+120	STD	RUMP	{ ssize_t|sys||readv(int fd, const struct iovec *iovp, int iovcnt); }
+121	STD	RUMP	{ ssize_t|sys||writev(int fd, const struct iovec *iovp, int iovcnt); }
+122	COMPAT_50 MODULAR compat_50			{ int|sys||settimeofday(const struct timeval50 *tv, const void *tzp); }
+123	STD	RUMP	{ int|sys||fchown(int fd, uid_t uid, gid_t gid); }
+124	STD	RUMP	{ int|sys||fchmod(int fd, mode_t mode); }
+125	COMPAT_43 MODULAR compat_43			{ int|sys||recvfrom(int s, void *buf, size_t len, int flags, void *from, socklen_t *fromlenaddr); } orecvfrom
+126	STD	RUMP	{ int|sys||setreuid(uid_t ruid, uid_t euid); }
+127	STD	RUMP	{ int|sys||setregid(gid_t rgid, gid_t egid); }
+128	STD	RUMP	{ int|sys||rename(const char *from, const char *to); }
+129	COMPAT_43 MODULAR compat_43			{ int|sys||truncate(const char *path, long length); } otruncate
+130	COMPAT_43 MODULAR compat_43			{ int|sys||ftruncate(int fd, long length); } oftruncate
+131	STD	RUMP	{ int|sys||flock(int fd, int how); }
+132	STD	RUMP	{ int|sys||mkfifo(const char *path, mode_t mode); }
+133	STD	RUMP	{ ssize_t|sys||sendto(int s, const void *buf, size_t len, int flags, const struct sockaddr *to, socklen_t tolen); }
+134	STD	RUMP	{ int|sys||shutdown(int s, int how); }
+135	STD	RUMP	{ int|sys||socketpair(int domain, int type, int protocol, int *rsv); }
+136	STD	RUMP	{ int|sys||mkdir(const char *path, mode_t mode); }
+137	STD	RUMP	{ int|sys||rmdir(const char *path); }
+138	COMPAT_50 MODULAR compat_50 RUMP { int|sys||utimes(const char *path, const struct timeval50 *tptr); }
+139	OBSOL		4.2 sigreturn
+140	COMPAT_50 MODULAR compat_50			{ int|sys||adjtime(const struct timeval50 *delta, struct timeval50 *olddelta); }
+141	COMPAT_43 MODULAR compat_43			{ int|sys||getpeername(int fdes, void *asa, socklen_t *alen); } ogetpeername
+142	COMPAT_43 MODULAR compat_43			{ int32_t|sys||gethostid(void); } ogethostid
+143	COMPAT_43 MODULAR compat_43			{ int|sys||sethostid(int32_t hostid); } osethostid
+144	COMPAT_43 MODULAR compat_43			{ int|sys||getrlimit(int which, struct orlimit *rlp); } ogetrlimit
+145	COMPAT_43 MODULAR compat_43 { int|sys||setrlimit(int which, const struct orlimit *rlp); } osetrlimit
+146	COMPAT_43 MODULAR compat_43			{ int|sys||killpg(int pgid, int signum); } okillpg
+147	STD	RUMP	{ int|sys||setsid(void); }
+148	COMPAT_50 MODULAR compat_50_quota			{ int|sys||quotactl(const char *path, int cmd, int uid, void *arg); }
+149	COMPAT_43 MODULAR compat_43 { int|sys||quota(void); } oquota
+150	COMPAT_43 MODULAR compat_43 { int|sys||getsockname(int fdec, void *asa, socklen_t *alen); } ogetsockname
+
+; Syscalls 151-180 inclusive are reserved for vendor-specific
+; system calls.  (This includes various calls added for compatibity
+; with other Unix variants.)
+; Some of these calls are now supported by BSD...
+151	UNIMPL
+152	UNIMPL
+153	UNIMPL
+154	UNIMPL
+155	STD MODULAR nfsserver RUMP  { int|sys||nfssvc(int flag, void *argp); }
+156	COMPAT_43 MODULAR compat_43			{ int|sys||getdirentries(int fd, char *buf, u_int count, long *basep); } ogetdirentries
+157	COMPAT_20 MODULAR compat_20 { int|sys||statfs(const char *path, struct statfs12 *buf); }
+158	COMPAT_20 MODULAR compat_20			{ int|sys||fstatfs(int fd, struct statfs12 *buf); }
+159	UNIMPL
+160	UNIMPL
+161	COMPAT_30 MODULAR compat_30 { int|sys||getfh(const char *fname, struct compat_30_fhandle *fhp); }
+162	COMPAT_09 MODULAR compat_09			{ int|sys||getdomainname(char *domainname, int len); } ogetdomainname
+163	COMPAT_09 MODULAR compat_09			{ int|sys||setdomainname(char *domainname, int len); } osetdomainname
+164	COMPAT_09 MODULAR compat			{ int|sys||uname(struct outsname *name); } ouname
+165	STD		{ int|sys||sysarch(int op, void *parms); }
+166	STD		{ int|sys||__futex(int *uaddr, int op, int val, const struct timespec *timeout, int *uaddr2, int val2, int val3); }
+167	STD		{ int|sys||__futex_set_robust_list(void *head, size_t len); }
+168	STD		{ int|sys||__futex_get_robust_list(lwpid_t lwpid, void **headp, size_t *lenp); }
+; XXX more generally, never on machines where sizeof(void *) != sizeof(int)
+#if !defined(_LP64)
+169	COMPAT_10 MODULAR compat_sysv_10			{ int|sys||semsys(int which, int a2, int a3, int a4, int a5); } osemsys
+#else
+169	EXCL		1.0 semsys
+#endif
+; XXX more generally, never on machines where sizeof(void *) != sizeof(int)
+#if !defined(_LP64)
+170	COMPAT_10 MODULAR compat_sysv_10			{ int|sys||msgsys(int which, int a2, int a3, int a4, int a5, int a6); } omsgsys
+#else
+170	EXCL		1.0 msgsys
+#endif
+; XXX more generally, never on machines where sizeof(void *) != sizeof(int)
+#if !defined(_LP64)
+171	COMPAT_10 MODULAR compat_sysv_10			{ int|sys||shmsys(int which, int a2, int a3, int a4); } oshmsys
+#else
+171	EXCL		1.0 shmsys
+#endif
+172	UNIMPL
+173	STD	RUMP	{ ssize_t|sys||pread(int fd, void *buf, size_t nbyte, int PAD, off_t offset); }
+174	STD	RUMP	{ ssize_t|sys||pwrite(int fd, const void *buf, size_t nbyte, int PAD, off_t offset); }
+; For some reason, ntp_gettime doesn't want to raise SIGSYS when it's excluded.
+175	COMPAT_30 MODULAR compat_30				{ int|sys||ntp_gettime(struct ntptimeval30 *ntvp); }
+#if defined(NTP) || !defined(_KERNEL_OPT)
+176	STD		{ int|sys||ntp_adjtime(struct timex *tp); }
+#else
+176	EXCL		ntp_adjtime
+#endif
+177	UNIMPL
+178	UNIMPL
+179	UNIMPL
+180	UNIMPL
+
+; Syscalls 180-199 are used by/reserved for BSD
+181	STD	RUMP	{ int|sys||setgid(gid_t gid); }
+182	STD	RUMP	{ int|sys||setegid(gid_t egid); }
+183	STD	RUMP	{ int|sys||seteuid(uid_t euid); }
+184	STD MODULAR lfs	{ int|sys||lfs_bmapv(fsid_t *fsidp, struct block_info *blkiov, int blkcnt); }
+185	STD MODULAR lfs	{ int|sys||lfs_markv(fsid_t *fsidp, struct block_info *blkiov, int blkcnt); }
+186	STD MODULAR lfs	{ int|sys||lfs_segclean(fsid_t *fsidp, u_long segment); }
+187	COMPAT_50 MODULAR compat_50 { int|sys||lfs_segwait(fsid_t *fsidp, struct timeval50 *tv); }
+188	COMPAT_12 MODULAR compat_12			{ int|sys||stat(const char *path, struct stat12 *ub); } stat12
+189	COMPAT_12 MODULAR compat_12			{ int|sys||fstat(int fd, struct stat12 *sb); } fstat12
+190	COMPAT_12 MODULAR compat_12 { int|sys||lstat(const char *path, struct stat12 *ub); } lstat12
+191	STD	RUMP	{ long|sys||pathconf(const char *path, int name); }
+192	STD	RUMP	{ long|sys||fpathconf(int fd, int name); }
+193	STD	RUMP	{ int|sys||getsockopt2(int s, int level, int name, void *val, socklen_t *avalsize); }
+194	STD	RUMP	{ int|sys||getrlimit(int which, struct rlimit *rlp); }
+195	STD	RUMP	{ int|sys||setrlimit(int which, const struct rlimit *rlp); }
+196	COMPAT_12 MODULAR compat_12			{ int|sys||getdirentries(int fd, char *buf, u_int count, long *basep); }
+197	STD		{ void *|sys||mmap(void *addr, size_t len, int prot, int flags, int fd, long PAD, off_t pos); }
+198	INDIR		{ quad_t|sys||__syscall(quad_t code, ... register_t args[SYS_MAXSYSARGS]); }
+199	STD	RUMP	{ off_t|sys||lseek(int fd, int PAD, off_t offset, int whence); }
+200	STD	RUMP	{ int|sys||truncate(const char *path, int PAD, off_t length); }
+201	STD	RUMP	{ int|sys||ftruncate(int fd, int PAD, off_t length); }
+202	STD	RUMP	{ int|sys||__sysctl(const int *name, u_int namelen, void *oldv, size_t *oldlenp, const void *newv, size_t newlen); }
+203	STD		{ int|sys||mlock(const void *addr, size_t len); }
+204	STD		{ int|sys||munlock(const void *addr, size_t len); }
+205	STD		{ int|sys||undelete(const char *path); }
+206	COMPAT_50 MODULAR compat_50 RUMP { int|sys||futimes(int fd, const struct timeval50 *tptr); }
+207	STD	RUMP	{ pid_t|sys||getpgid(pid_t pid); }
+208	STD	RUMP	{ int|sys||reboot(int opt, char *bootstr); }
+209	STD	RUMP	{ int|sys||poll(struct pollfd *fds, u_int nfds, int timeout); }
+;
+; Syscalls 210-219 are reserved for dynamically loaded syscalls
+;
+210	EXTERN	MODULAR openafs { int|sys||afssys(long id, long a1, long a2, long a3, long a4, long a5, long a6); }
+211	UNIMPL
+212	UNIMPL
+213	UNIMPL
+214	UNIMPL
+215	UNIMPL
+216	UNIMPL
+217	UNIMPL
+218	UNIMPL
+219	UNIMPL
+; System calls 220-300 are reserved for use by NetBSD
+220	COMPAT_14 MODULAR compat_sysv_14			{ int|sys||__semctl(int semid, int semnum, int cmd, union __semun *arg); }
+221	STD MODULAR sysv_ipc { int|sys||semget(key_t key, int nsems, int semflg); }
+222	STD MODULAR sysv_ipc { int|sys||semop(int semid, struct sembuf *sops, size_t nsops); }
+223	STD MODULAR sysv_ipc { int|sys||semconfig(int flag); }
+224	COMPAT_14 MODULAR compat_sysv_14 { int|sys||msgctl(int msqid, int cmd, struct msqid_ds14 *buf); }
+225	STD MODULAR sysv_ipc { int|sys||msgget(key_t key, int msgflg); }
+226	STD MODULAR sysv_ipc { int|sys||msgsnd(int msqid, const void *msgp, size_t msgsz, int msgflg); }
+227	STD MODULAR sysv_ipc { ssize_t|sys||msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp, int msgflg); }
+228	STD MODULAR sysv_ipc { void *|sys||shmat(int shmid, const void *shmaddr, int shmflg); }
+229	COMPAT_14 MODULAR compat_sysv_14 { int|sys||shmctl(int shmid, int cmd, struct shmid_ds14 *buf); }
+230	STD MODULAR sysv_ipc { int|sys||shmdt(const void *shmaddr); }
+231	STD MODULAR sysv_ipc { int|sys||shmget(key_t key, size_t size, int shmflg); }
+232	COMPAT_50 MODULAR compat_50			{ int|sys||clock_gettime(clockid_t clock_id, struct timespec50 *tp); }
+233	COMPAT_50 MODULAR compat_50			{ int|sys||clock_settime(clockid_t clock_id, const struct timespec50 *tp); }
+234	COMPAT_50 MODULAR compat_50			{ int|sys||clock_getres(clockid_t clock_id, struct timespec50 *tp); }
+235	STD	RUMP	{ int|sys||timer_create(clockid_t clock_id, struct sigevent *evp, timer_t *timerid); }
+236	STD	RUMP	{ int|sys||timer_delete(timer_t timerid); }
+237	COMPAT_50 MODULAR compat_50 { int|sys||timer_settime(timer_t timerid, int flags, const struct itimerspec50 *value, struct itimerspec50 *ovalue); }
+238	COMPAT_50 MODULAR compat_50 { int|sys||timer_gettime(timer_t timerid, struct itimerspec50 *value); }
+239	STD	RUMP	{ int|sys||timer_getoverrun(timer_t timerid); }
+;
+; Syscalls 240-269 are reserved for other IEEE Std1003.1b syscalls
+;
+240	COMPAT_50 MODULAR compat_50			{ int|sys||nanosleep(const struct timespec50 *rqtp, struct timespec50 *rmtp); }
+241	STD	RUMP	{ int|sys||fdatasync(int fd); }
+242	STD		{ int|sys||mlockall(int flags); }
+243	STD		{ int|sys||munlockall(void); }
+244	COMPAT_50 MODULAR compat_50			{ int|sys||__sigtimedwait(const sigset_t *set, siginfo_t *info, struct timespec50 *timeout); }
+245	STD		{ int|sys||sigqueueinfo(pid_t pid, const siginfo_t *info); }
+246	STD	RUMP	{ int|sys||modctl(int cmd, void *arg); }
+247	STD MODULAR ksem RUMP { int|sys||_ksem_init(unsigned int value, intptr_t *idp); }
+248	STD MODULAR ksem RUMP { int|sys||_ksem_open(const char *name, int oflag, mode_t mode, unsigned int value, intptr_t *idp); }
+249	STD MODULAR ksem RUMP { int|sys||_ksem_unlink(const char *name); }
+250	STD MODULAR ksem RUMP { int|sys||_ksem_close(intptr_t id); }
+251	STD MODULAR ksem RUMP { int|sys||_ksem_post(intptr_t id); }
+252	STD MODULAR ksem RUMP { int|sys||_ksem_wait(intptr_t id); }
+253	STD MODULAR ksem RUMP { int|sys||_ksem_trywait(intptr_t id); }
+254	STD MODULAR ksem RUMP { int|sys||_ksem_getvalue(intptr_t id, unsigned int *value); }
+255	STD MODULAR ksem RUMP { int|sys||_ksem_destroy(intptr_t id); }
+256	STD MODULAR ksem RUMP { int|sys||_ksem_timedwait(intptr_t id, const struct timespec *abstime); }
+257	STD MODULAR mqueue				{ mqd_t|sys||mq_open(const char * name, int oflag, mode_t mode, struct mq_attr *attr); }
+258	STD MODULAR mqueue	{ int|sys||mq_close(mqd_t mqdes); }
+259	STD MODULAR mqueue	{ int|sys||mq_unlink(const char *name); }
+260	STD MODULAR mqueue				{ int|sys||mq_getattr(mqd_t mqdes, struct mq_attr *mqstat); }
+261	STD MODULAR mqueue				{ int|sys||mq_setattr(mqd_t mqdes, const struct mq_attr *mqstat, struct mq_attr *omqstat); }
+262	STD MODULAR mqueue				{ int|sys||mq_notify(mqd_t mqdes, const struct sigevent *notification); }
+263	STD MODULAR mqueue				{ int|sys||mq_send(mqd_t mqdes, const char *msg_ptr, size_t msg_len, unsigned msg_prio); }
+264	STD MODULAR mqueue				{ ssize_t|sys||mq_receive(mqd_t mqdes, char *msg_ptr, size_t msg_len, unsigned *msg_prio); }
+265	COMPAT_50 MODULAR compat_50			{ int|sys||mq_timedsend(mqd_t mqdes, const char *msg_ptr, size_t msg_len, unsigned msg_prio, const struct timespec50 *abs_timeout); }
+266	COMPAT_50 MODULAR compat_50			{ ssize_t|sys||mq_timedreceive(mqd_t mqdes, char *msg_ptr, size_t msg_len, unsigned *msg_prio, const struct timespec50 *abs_timeout); }
+267	UNIMPL
+268	UNIMPL
+269	UNIMPL
+270	STD	RUMP	{ int|sys||__posix_rename(const char *from, const char *to); }
+271	STD		{ int|sys||swapctl(int cmd, void *arg, int misc); }
+272	COMPAT_30 MODULAR compat_30			{ int|sys||getdents(int fd, char *buf, size_t count); }
+273	STD		{ int|sys||minherit(void *addr, size_t len, int inherit); }
+274	STD	RUMP	{ int|sys||lchmod(const char *path, mode_t mode); }
+275	STD	RUMP	{ int|sys||lchown(const char *path, uid_t uid, gid_t gid); }
+276	COMPAT_50 MODULAR compat_50 RUMP { int|sys||lutimes(const char *path, const struct timeval50 *tptr); }
+277	STD		{ int|sys|13|msync(void *addr, size_t len, int flags); }
+278	COMPAT_30 MODULAR compat_30			{ int|sys|13|stat(const char *path, struct stat13 *ub); }
+279	COMPAT_30 MODULAR compat_30			{ int|sys|13|fstat(int fd, struct stat13 *sb); }
+280	COMPAT_30 MODULAR compat_30			{ int|sys|13|lstat(const char *path, struct stat13 *ub); }
+281	STD		{ int|sys|14|sigaltstack( const struct sigaltstack *nss, struct sigaltstack *oss); }
+282	STD		{ int|sys|14|vfork(void); }
+283	STD	RUMP	{ int|sys||__posix_chown(const char *path, uid_t uid, gid_t gid); }
+284	STD	RUMP	{ int|sys||__posix_fchown(int fd, uid_t uid, gid_t gid); }
+285	STD	RUMP	{ int|sys||__posix_lchown(const char *path, uid_t uid, gid_t gid); }
+286	STD	RUMP	{ pid_t|sys||getsid(pid_t pid); }
+287	STD		{ pid_t|sys||__clone(int flags, void *stack); }
+288	STD	RUMP	{ int|sys||fktrace(int fd, int ops, int facs, pid_t pid); }
+289	STD	RUMP	{ ssize_t|sys||preadv(int fd, const struct iovec *iovp, int iovcnt, int PAD, off_t offset); }
+290	STD	RUMP	{ ssize_t|sys||pwritev(int fd, const struct iovec *iovp, int iovcnt, int PAD, off_t offset); }
+291	COMPAT_16 MODULAR compat_16 { int|sys|14|sigaction(int signum, const struct sigaction *nsa, struct sigaction *osa); }
+292	STD		{ int|sys|14|sigpending(sigset_t *set); }
+293	STD		{ int|sys|14|sigprocmask(int how, const sigset_t *set, sigset_t *oset); }
+294	STD		{ int|sys|14|sigsuspend(const sigset_t *set); }
+295	COMPAT_16 MODULAR compat_16			{ int|sys|14|sigreturn(struct sigcontext *sigcntxp); }
+296	STD	RUMP	{ int|sys||__getcwd(char *bufp, size_t length); }
+297	STD	RUMP	{ int|sys||fchroot(int fd); }
+298	COMPAT_30 MODULAR compat_30			{ int|sys||fhopen(const struct compat_30_fhandle *fhp, int flags); }
+299	COMPAT_30 MODULAR compat_30			{ int|sys||fhstat(const struct compat_30_fhandle *fhp, struct stat13 *sb); }
+300	COMPAT_20 MODULAR compat_20			{ int|sys||fhstatfs(const struct compat_30_fhandle *fhp, struct statfs12 *buf); }
+301	COMPAT_50 MODULAR compat_sysv_50			{ int|sys|13|__semctl(int semid, int semnum, int cmd, ... union __semun *arg); }
+302	COMPAT_50 MODULAR compat_sysv_50			{ int|sys|13|msgctl(int msqid, int cmd, struct msqid_ds *buf); }
+303	COMPAT_50 MODULAR compat_sysv_50			{ int|sys|13|shmctl(int shmid, int cmd, struct shmid_ds13 *buf); }
+304	STD	RUMP	{ int|sys||lchflags(const char *path, u_long flags); }
+305	NOERR	RUMP	{ int|sys||issetugid(void); }
+306	STD	RUMP	{ int|sys||utrace(const char *label, void *addr, size_t len); }
+307	STD		{ int|sys||getcontext(struct __ucontext *ucp); }
+308	STD		{ int|sys||setcontext(const struct __ucontext *ucp); }
+309	STD		{ int|sys||_lwp_create(const struct __ucontext *ucp, u_long flags, lwpid_t *new_lwp); }
+310	STD		{ int|sys||_lwp_exit(void); }
+311	STD		{ lwpid_t|sys||_lwp_self(void); }
+312	STD		{ int|sys||_lwp_wait(lwpid_t wait_for, lwpid_t *departed); }
+313	STD		{ int|sys||_lwp_suspend(lwpid_t target); }
+314	STD		{ int|sys||_lwp_continue(lwpid_t target); }
+315	STD		{ int|sys||_lwp_wakeup(lwpid_t target); }
+316	STD		{ void *|sys||_lwp_getprivate(void); }
+317	STD		{ void|sys||_lwp_setprivate(void *ptr); }
+318	STD		{ int|sys||_lwp_kill(lwpid_t target, int signo); }
+319	STD		{ int|sys||_lwp_detach(lwpid_t target); }
+320	COMPAT_50 MODULAR compat_50			{ int|sys||_lwp_park(const struct timespec50 *ts, lwpid_t unpark, const void *hint, const void *unparkhint); }
+321	STD		{ int|sys||_lwp_unpark(lwpid_t target, const void *hint); }
+322	STD		{ ssize_t|sys||_lwp_unpark_all(const lwpid_t *targets, size_t ntargets, const void *hint); }
+323	STD		{ int|sys||_lwp_setname(lwpid_t target, const char *name); }
+324	STD		{ int|sys||_lwp_getname(lwpid_t target, char *name, size_t len); }
+325	STD		{ int|sys||_lwp_ctl(int features, struct lwpctl **address); }
+; Syscalls 326-339 reserved for LWP syscalls.
+326	UNIMPL
+327	UNIMPL
+328	UNIMPL
+329	UNIMPL
+; SA system calls.
+330	COMPAT_60 MODULAR compat_60				{ int|sys||sa_register(void *newv, void **oldv, int flags, ssize_t stackinfo_offset); }
+331	COMPAT_60 MODULAR compat_60				{ int|sys||sa_stacks(int num, stack_t *stacks); }
+332	COMPAT_60 MODULAR compat_60				{ int|sys||sa_enable(void); }
+333	COMPAT_60 MODULAR compat_60				{ int|sys||sa_setconcurrency(int concurrency); }
+334	COMPAT_60 MODULAR compat_60				{ int|sys||sa_yield(void); }
+335	COMPAT_60 MODULAR compat_60				{ int|sys||sa_preempt(int sa_id); }
+336	OBSOL		sys_sa_unblockyield
+;
+; Syscalls 337-339 are reserved for other scheduler activation syscalls.
+;
+337	UNIMPL
+338	UNIMPL
+339	UNIMPL
+340	STD		{ int|sys||__sigaction_sigtramp(int signum, const struct sigaction *nsa, struct sigaction *osa, const void *tramp, int vers); }
+341	OBSOL		sys_pmc_get_info
+342	OBSOL		sys_pmc_control
+343	STD		{ int|sys||rasctl(void *addr, size_t len, int op); }
+344	STD	RUMP	{ int|sys||kqueue(void); }
+345	COMPAT_50 MODULAR compat_50 RUMP { int|sys||kevent(int fd, const struct kevent *changelist, size_t nchanges, struct kevent *eventlist, size_t nevents, const struct timespec50 *timeout); }
+
+; Scheduling system calls.
+346	STD		{ int|sys||_sched_setparam(pid_t pid, lwpid_t lid, int policy, const struct sched_param *params); }
+347	STD		{ int|sys||_sched_getparam(pid_t pid, lwpid_t lid, int *policy, struct sched_param *params); }
+348	STD		{ int|sys||_sched_setaffinity(pid_t pid, lwpid_t lid, size_t size, const cpuset_t *cpuset); }
+349	STD		{ int|sys||_sched_getaffinity(pid_t pid, lwpid_t lid, size_t size, cpuset_t *cpuset); }
+350	STD		{ int|sys||sched_yield(void); }
+351	STD		{ int|sys||_sched_protect(int priority); } 
+352	UNIMPL
+353	UNIMPL
+
+354	STD	RUMP	{ int|sys||fsync_range(int fd, int flags, off_t start, off_t length); }
+355	STD		{ int|sys||uuidgen(struct uuid *store, int count); }
+356	COMPAT_90 MODULAR compat_90 { int|sys||getvfsstat(struct statvfs90 *buf, size_t bufsize, int flags); }
+357	COMPAT_90 MODULAR compat_90 { int|sys||statvfs1(const char *path, struct statvfs90 *buf, int flags); }
+358	COMPAT_90 MODULAR compat_90 { int|sys||fstatvfs1(int fd, struct statvfs90 *buf, int flags); }
+359	COMPAT_30 MODULAR compat_30 { int|sys||fhstatvfs1( const struct compat_30_fhandle *fhp, struct statvfs90 *buf, int flags); }
+360	STD	RUMP	{ int|sys||extattrctl(const char *path, int cmd, const char *filename, int attrnamespace, const char *attrname); }
+361	STD	RUMP	{ int|sys||extattr_set_file(const char *path, int attrnamespace, const char *attrname, const void *data, size_t nbytes); }
+362	STD	RUMP	{ ssize_t|sys||extattr_get_file(const char *path, int attrnamespace, const char *attrname, void *data, size_t nbytes); }
+363	STD	RUMP	{ int|sys||extattr_delete_file(const char *path, int attrnamespace, const char *attrname); }
+364	STD	RUMP	{ int|sys||extattr_set_fd(int fd, int attrnamespace, const char *attrname, const void *data, size_t nbytes); }
+365	STD	RUMP	{ ssize_t|sys||extattr_get_fd(int fd, int attrnamespace, const char *attrname, void *data, size_t nbytes); }
+366	STD	RUMP	{ int|sys||extattr_delete_fd(int fd, int attrnamespace, const char *attrname); }
+367	STD	RUMP	{ int|sys||extattr_set_link(const char *path, int attrnamespace, const char *attrname, const void *data, size_t nbytes); }
+368	STD	RUMP	{ ssize_t|sys||extattr_get_link(const char *path, int attrnamespace, const char *attrname, void *data, size_t nbytes); }
+369	STD	RUMP	{ int|sys||extattr_delete_link(const char *path, int attrnamespace, const char *attrname); }
+370	STD	RUMP	{ ssize_t|sys||extattr_list_fd(int fd, int attrnamespace, void *data, size_t nbytes); }
+371	STD	RUMP	{ ssize_t|sys||extattr_list_file(const char *path, int attrnamespace, void *data, size_t nbytes); }
+372	STD	RUMP	{ ssize_t|sys||extattr_list_link(const char *path, int attrnamespace, void *data, size_t nbytes); }
+373	COMPAT_50 MODULAR compat_50 RUMP			{ int|sys||pselect(int nd, fd_set *in, fd_set *ou, fd_set *ex, const struct timespec50 *ts, const sigset_t *mask); }
+374	COMPAT_50 MODULAR compat_50 RUMP			{ int|sys||pollts(struct pollfd *fds, u_int nfds, const struct timespec50 *ts, const sigset_t *mask); }
+375	STD	RUMP	{ int|sys||setxattr(const char *path, const char *name, const void *value, size_t size, int flags); }
+376	STD	RUMP	{ int|sys||lsetxattr(const char *path, const char *name, const void *value, size_t size, int flags); }
+377	STD	RUMP	{ int|sys||fsetxattr(int fd, const char *name, const void *value, size_t size, int flags); }
+378	STD	RUMP	{ int|sys||getxattr(const char *path, const char *name, void *value, size_t size); }
+379	STD	RUMP	{ int|sys||lgetxattr(const char *path, const char *name, void *value, size_t size); }
+380	STD	RUMP	{ int|sys||fgetxattr(int fd, const char *name, void *value, size_t size); }
+381	STD	RUMP	{ int|sys||listxattr(const char *path, char *list, size_t size); }
+382	STD	RUMP	{ int|sys||llistxattr(const char *path, char *list, size_t size); }
+383	STD	RUMP	{ int|sys||flistxattr(int fd, char *list, size_t size); }
+384	STD	RUMP	{ int|sys||removexattr(const char *path, const char *name); }
+385	STD	RUMP	{ int|sys||lremovexattr(const char *path, const char *name); }
+386	STD	RUMP	{ int|sys||fremovexattr(int fd, const char *name); }
+387	COMPAT_50 MODULAR compat_50 RUMP			{ int|sys|30|stat(const char *path, struct stat30 *ub); }
+388	COMPAT_50 MODULAR compat_50 RUMP			{ int|sys|30|fstat(int fd, struct stat30 *sb); }
+389	COMPAT_50 MODULAR compat_50 RUMP			{ int|sys|30|lstat(const char *path, struct stat30 *ub); }
+390	STD	RUMP	{ int|sys|30|getdents(int fd, char *buf, size_t count); }
+391	IGNORED		old posix_fadvise
+392	COMPAT_30 MODULAR compat_30			{ int|sys|30|fhstat(const struct compat_30_fhandle *fhp, struct stat30 *sb); }
+393	COMPAT_50 MODULAR compat_30			{ int|sys|30|ntp_gettime(struct ntptimeval50 *ntvp); }
+394	STD	RUMP	{ int|sys|30|socket(int domain, int type, int protocol); }
+395	STD	RUMP	{ int|sys|30|getfh(const char *fname, void *fhp, size_t *fh_size); }
+396	STD	RUMP	{ int|sys|40|fhopen(const void *fhp, size_t fh_size, int flags); }
+397	COMPAT_90 MODULAR compat_90 { int|sys||fhstatvfs1(const void *fhp, size_t fh_size, struct statvfs90 *buf, int flags); }
+398	COMPAT_50 MODULAR compat_50 RUMP { int|sys|40|fhstat(const void *fhp, size_t fh_size, struct stat30 *sb); }
+
+; Asynchronous I/O system calls
+399	STD MODULAR aio RUMP			{ int|sys||aio_cancel(int fildes, struct aiocb *aiocbp); }
+400	STD MODULAR aio RUMP			{ int|sys||aio_error(const struct aiocb *aiocbp); }
+401	STD MODULAR aio RUMP			{ int|sys||aio_fsync(int op, struct aiocb *aiocbp); }
+402	STD MODULAR aio RUMP			{ int|sys||aio_read(struct aiocb *aiocbp); }
+403	STD MODULAR aio RUMP			{ int|sys||aio_return(struct aiocb *aiocbp); }
+404	COMPAT_50 MODULAR compat			{ int|sys||aio_suspend(const struct aiocb *const *list, int nent, const struct timespec50 *timeout); }
+405	STD MODULAR aio RUMP			{ int|sys||aio_write(struct aiocb *aiocbp); }
+406	STD MODULAR aio RUMP			{ int|sys||lio_listio(int mode, struct aiocb *const *list, int nent, struct sigevent *sig); }
+
+407	UNIMPL
+408	UNIMPL
+409	UNIMPL
+
+410	STD	RUMP	{ int|sys|50|mount(const char *type, const char *path, int flags, void *data, size_t data_len); }
+411	STD		{ void *|sys||mremap(void *old_address, size_t old_size, void *new_address, size_t new_size, int flags); }
+
+; Processor-sets system calls
+412	STD		{ int|sys||pset_create(psetid_t *psid); }
+413	STD		{ int|sys||pset_destroy(psetid_t psid); }
+414	STD		{ int|sys||pset_assign(psetid_t psid, cpuid_t cpuid, psetid_t *opsid); }
+415	STD		{ int|sys||_pset_bind(idtype_t idtype, id_t first_id, id_t second_id, psetid_t psid, psetid_t *opsid); }
+416	NOERR	RUMP	{ int|sys|50|posix_fadvise(int fd, int PAD, off_t offset, off_t len, int advice); }
+417	STD	RUMP	{ int|sys|50|select(int nd, fd_set *in, fd_set *ou, fd_set *ex, struct timeval *tv); }
+418	STD	RUMP	{ int|sys|50|gettimeofday(struct timeval *tp, void *tzp); }
+419	STD	RUMP	{ int|sys|50|settimeofday(const struct timeval *tv, const void *tzp); }
+420	STD	RUMP	{ int|sys|50|utimes(const char *path, const struct timeval *tptr); }
+421	STD	RUMP	{ int|sys|50|adjtime(const struct timeval *delta, struct timeval *olddelta); }
+422	STD  MODULAR lfs { int|sys|50|lfs_segwait(fsid_t *fsidp, struct timeval *tv); }
+423	STD	RUMP	{ int|sys|50|futimes(int fd, const struct timeval *tptr); }
+424	STD	RUMP	{ int|sys|50|lutimes(const char *path, const struct timeval *tptr); }
+425	STD	RUMP	{ int|sys|50|setitimer(int which, const struct itimerval *itv, struct itimerval *oitv); }
+426	STD	RUMP	{ int|sys|50|getitimer(int which, struct itimerval *itv); }
+427	STD	RUMP	{ int|sys|50|clock_gettime(clockid_t clock_id, struct timespec *tp); }
+428	STD	RUMP	{ int|sys|50|clock_settime(clockid_t clock_id, const struct timespec *tp); }
+429	STD	RUMP	{ int|sys|50|clock_getres(clockid_t clock_id, struct timespec *tp); }
+430	STD	RUMP	{ int|sys|50|nanosleep(const struct timespec *rqtp, struct timespec *rmtp); }
+431	STD		{ int|sys|50|__sigtimedwait(const sigset_t *set, siginfo_t *info, struct timespec *timeout); }
+432	STD MODULAR mqueue			{ int|sys|50|mq_timedsend(mqd_t mqdes, const char *msg_ptr, size_t msg_len, unsigned msg_prio, const struct timespec *abs_timeout); }
+433	STD MODULAR mqueue			{ ssize_t|sys|50|mq_timedreceive(mqd_t mqdes, char *msg_ptr, size_t msg_len, unsigned *msg_prio, const struct timespec *abs_timeout); }
+434	COMPAT_60 MODULAR compat_60 		{ int|sys||_lwp_park(const struct timespec *ts, lwpid_t unpark, const void *hint, const void *unparkhint); }
+435	STD	RUMP	{ int|sys|50|kevent(int fd, const struct kevent *changelist, size_t nchanges, struct kevent *eventlist, size_t nevents, const struct timespec *timeout); }
+436	STD	RUMP	{ int|sys|50|pselect(int nd, fd_set *in, fd_set *ou, fd_set *ex, const struct timespec *ts, const sigset_t *mask); }
+437	STD	RUMP	{ int|sys|50|pollts(struct pollfd *fds, u_int nfds, const struct timespec *ts, const sigset_t *mask); }
+438	STD MODULAR aio RUMP { int|sys|50|aio_suspend( const struct aiocb *const *list, int nent, const struct timespec *timeout); }
+439	STD	RUMP	{ int|sys|50|stat(const char *path, struct stat *ub); }
+440	STD	RUMP	{ int|sys|50|fstat(int fd, struct stat *sb); }
+441	STD	RUMP	{ int|sys|50|lstat(const char *path, struct stat *ub); }
+442	STD MODULAR sysv_ipc { int|sys|50|__semctl(int semid, int semnum, int cmd, ... union __semun *arg); }
+443	STD MODULAR sysv_ipc { int|sys|50|shmctl(int shmid, int cmd, struct shmid_ds *buf); }
+444	STD MODULAR sysv_ipc { int|sys|50|msgctl(int msqid, int cmd, struct msqid_ds *buf); }
+445	STD		{ int|sys|50|getrusage(int who, struct rusage *rusage); }
+446	STD	RUMP	{ int|sys|50|timer_settime(timer_t timerid, int flags, const struct itimerspec *value, struct itimerspec *ovalue); }
+447	STD	RUMP	{ int|sys|50|timer_gettime(timer_t timerid, struct itimerspec *value); }
+#if defined(NTP) || !defined(_KERNEL_OPT)
+448	STD		{ int|sys|50|ntp_gettime(struct ntptimeval *ntvp); }
+#else
+448	EXCL		___ntp_gettime50
+#endif
+449	STD		{ int|sys|50|wait4(pid_t pid, int *status, int options, struct rusage *rusage); }
+450	STD	RUMP	{ int|sys|50|mknod(const char *path, mode_t mode, dev_t dev); }
+451	STD	RUMP	{ int|sys|50|fhstat(const void *fhp, size_t fh_size, struct stat *sb); }
+; 452 only ever appeared in 5.99.x and can be reused after netbsd-7
+452	OBSOL		5.99 quotactl
+453	STD	RUMP	{ int|sys||pipe2(int *fildes, int flags); }
+454	STD	RUMP	{ int|sys||dup3(int from, int to, int flags); }
+455	STD	RUMP	{ int|sys||kqueue1(int flags); }
+456	STD	RUMP	{ int|sys||paccept(int s, struct sockaddr *name, socklen_t *anamelen, const sigset_t *mask, int flags); }
+457	STD	RUMP	{ int|sys||linkat(int fd1, const char *name1, int fd2, const char *name2, int flags); }
+458	STD	RUMP	{ int|sys||renameat(int fromfd, const char *from, int tofd, const char *to); }
+459	STD	RUMP	{ int|sys||mkfifoat(int fd, const char *path, mode_t mode); }
+460	STD	RUMP	{ int|sys||mknodat(int fd, const char *path, mode_t mode, int PAD, dev_t dev); }
+461	STD	RUMP	{ int|sys||mkdirat(int fd, const char *path, mode_t mode); }
+462	STD	RUMP	{ int|sys||faccessat(int fd, const char *path, int amode, int flag); }
+463	STD	RUMP	{ int|sys||fchmodat(int fd, const char *path, mode_t mode, int flag); }
+464	STD	RUMP	{ int|sys||fchownat(int fd, const char *path, uid_t owner, gid_t group, int flag); }
+465	STD		{ int|sys||fexecve(int fd, char * const *argp, char * const *envp); }
+466	STD	RUMP	{ int|sys||fstatat(int fd, const char *path, struct stat *buf, int flag); }
+467	STD	RUMP	{ int|sys||utimensat(int fd, const char *path, const struct timespec *tptr, int flag); }
+468	STD	RUMP	{ int|sys||openat(int fd, const char *path, int oflags, ... mode_t mode); }
+469	STD	RUMP	{ ssize_t|sys||readlinkat(int fd, const char *path, char *buf, size_t bufsize); }
+470	STD	RUMP	{ int|sys||symlinkat(const char *path1, int fd, const char *path2); }
+471	STD	RUMP	{ int|sys||unlinkat(int fd, const char *path, int flag); }
+472	STD	RUMP	{ int|sys||futimens(int fd, const struct timespec *tptr); }
+473	STD	RUMP	{ int|sys||__quotactl(const char *path, struct quotactl_args *args); }
+474	NOERR		{ int|sys||posix_spawn(pid_t *pid, const char *path, const struct posix_spawn_file_actions *file_actions, const struct posix_spawnattr *attrp, char *const *argv, char *const *envp); }
+475	STD	RUMP	{ int|sys||recvmmsg(int s, struct mmsghdr *mmsg, unsigned int vlen, unsigned int flags, struct timespec *timeout); }
+476	STD	RUMP	{ int|sys||sendmmsg(int s, struct mmsghdr *mmsg, unsigned int vlen, unsigned int flags); }
+477	NOERR	RUMP	{ int|sys||clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *rqtp, struct timespec *rmtp); }
+478	STD		{ int|sys|60|_lwp_park(clockid_t clock_id, int flags, struct timespec *ts, lwpid_t unpark, const void *hint, const void *unparkhint); }
+479	NOERR	RUMP	{ int|sys||posix_fallocate(int fd, int PAD, off_t pos, off_t len); }
+480	STD	RUMP	{ int|sys||fdiscard(int fd, int PAD, off_t pos, off_t len); }
+481	STD		{ int|sys||wait6(idtype_t idtype, id_t id, int *status, int options, struct wrusage *wru, siginfo_t *info); }
+482	STD	RUMP	{ int|sys||clock_getcpuclockid2(idtype_t idtype, id_t id, clockid_t *clock_id); }
+483	STD	RUMP	{ int|sys|90|getvfsstat(struct statvfs *buf, size_t bufsize, int flags); }
+484	STD	RUMP	{ int|sys|90|statvfs1(const char *path, struct statvfs *buf, int flags); }
+485	STD	RUMP	{ int|sys|90|fstatvfs1(int fd, struct statvfs *buf, int flags); }
+486	STD	RUMP	{ int|sys|90|fhstatvfs1(const void *fhp, size_t fh_size, struct statvfs *buf, int flags); }
+487	STD		{ int|sys||__acl_get_link(const char *path, acl_type_t type, struct acl *aclp); }
+488	STD		{ int|sys||__acl_set_link(const char *path, acl_type_t type, struct acl *aclp); }
+489	STD		{ int|sys||__acl_delete_link(const char *path, acl_type_t type); }
+490	STD		{ int|sys||__acl_aclcheck_link(const char *path, acl_type_t type, struct acl *aclp); }
+491	STD		{ int|sys||__acl_get_file(const char *path, acl_type_t type, struct acl *aclp); }
+492	STD		{ int|sys||__acl_set_file(const char *path, acl_type_t type, struct acl *aclp); }
+493	STD		{ int|sys||__acl_get_fd(int filedes, acl_type_t type, struct acl *aclp); }
+494	STD		{ int|sys||__acl_set_fd(int filedes, acl_type_t type, struct acl *aclp); }
+495	STD		{ int|sys||__acl_delete_file(const char *path, acl_type_t type); }
+496	STD		{ int|sys||__acl_delete_fd(int filedes, acl_type_t type); }
+497	STD		{ int|sys||__acl_aclcheck_file(const char *path, acl_type_t type, struct acl *aclp); }
+498	STD		{ int|sys||__acl_aclcheck_fd(int filedes, acl_type_t type, struct acl *aclp); }
+499	STD	RUMP	{ long|sys||lpathconf(const char *path, int name); }

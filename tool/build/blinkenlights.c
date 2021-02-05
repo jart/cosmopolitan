@@ -958,7 +958,7 @@ static void DrawHr(struct Panel *p, const char *s) {
   long i, wp, ws, wl, wr;
   if (p->bottom - p->top < 1) return;
   wp = p->right - p->left;
-  ws = strwidth(s);
+  ws = strwidth(s, 0);
   wl = wp / 4 - ws / 2;
   wr = wp - (wl + ws);
   for (i = 0; i < wl; ++i) AppendWide(&p->lines[0], u'─');

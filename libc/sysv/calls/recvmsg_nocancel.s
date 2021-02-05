@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall recvmsg_nocancel 0xffffffff2191ffff globl
+.scall recvmsg_nocancel 0xfffffffff2191fff globl

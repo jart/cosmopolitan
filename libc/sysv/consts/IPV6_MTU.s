@@ -1,2 +1,2 @@
 .include "libc/sysv/consts/syscon.inc"
-.syscon ipv6 IPV6_MTU 24 0 0 0 72
+.syscon ipv6 IPV6_MTU 24 0 0 0 0 72

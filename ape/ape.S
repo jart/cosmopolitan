@@ -518,7 +518,7 @@ ape.phdrs:
 	.quad	0				# p_memsz
 	.quad	16				# p_align
 	.align	__SIZEOF_POINTER__
-	.long	PT_NOTE				# openbsd note
+	.long	PT_NOTE				# notes
 	.long	PF_R
 	.stub	.Lape.note.offset,quad
 	.stub	.Lape.note.vaddr,quad
@@ -530,13 +530,26 @@ ape.phdrs:
 
 	.section .note.openbsd.ident,"a",@progbits
 .Lopenbsd.ident:
-	.long	8
-	.long	4
-	.long	0x1
-	.asciz	"OpenBSD"
-	.long	0
-	.size	.Lopenbsd.ident,.-.Lopenbsd.ident
+	.long	2f-1f
+	.long	4f-3f
+	.long	1
+1:	.asciz	"OpenBSD"
+2:	.align	4
+3:	.long	0
+4:	.size	.Lopenbsd.ident,.-.Lopenbsd.ident
 	.type	.Lopenbsd.ident,@object
+	.previous
+
+	.section .note.netbsd.ident,"a",@progbits
+.Lnetbsd.ident:
+	.long	2f-1f
+	.long	4f-3f
+	.long	1
+1:	.asciz	"NetBSD"
+2:	.align	4
+3:	.long	901000000
+4:	.size	.Lnetbsd.ident,.-.Lnetbsd.ident
+	.type	.Lnetbsd.ident,@object
 	.previous
 
 /*	                                      ▄▄███▄

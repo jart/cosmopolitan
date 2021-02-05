@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall sigaltstack 0x0120003520350083 globl
+.scall sigaltstack 0x1191200352035083 globl

@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall fhopen 0x0108012a20f8ffff globl
+.scall fhopen 0x18c10812a20f8fff globl

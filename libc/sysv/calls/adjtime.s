@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall adjtime 0x008c008c208cffff globl
+.scall adjtime 0x1a508c08c208cfff globl

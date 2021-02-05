@@ -1,2 +1,2 @@
 .include "libc/sysv/consts/syscon.inc"
-.syscon misc FUTEX_WAKE 0 0 0 2 0
+.syscon misc FUTEX_WAKE 0 0 0 2 2 0

@@ -19,7 +19,7 @@
 /* clang-format off */
 .include "libc/macros.internal.inc"
 
-.macro	.syscon	group:req name:req linux:req xnu:req freebsd:req openbsd:req windows:req
+.macro	.syscon	group:req name:req linux:req xnu:req freebsd:req openbsd:req netbsd:req windows:req
 	yoink	_init_systemfive
  .section .piro.bss.sort.syscon.2.\group\().\name,"aw",@nobits
 \name:	.quad	0
@@ -36,6 +36,9 @@
  .previous
  .section .sort.rodata.syscon.openbsd.2.\group\().\name,"a",@progbits
 	.sleb128 \openbsd
+ .previous
+ .section .sort.rodata.syscon.netbsd.2.\group\().\name,"a",@progbits
+	.sleb128 \netbsd
  .previous
  .section .sort.rodata.syscon.windows.2.\group\().\name,"a",@progbits
 	.sleb128 \windows

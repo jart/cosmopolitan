@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall sys_setresuid 0x011a0137ffff0075 globl hidden
+.scall sys_setresuid 0xfff11a137ffff075 globl hidden

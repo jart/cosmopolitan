@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall sem_close 0xffffffff210dffff globl
+.scall sem_close 0xfffffffff210dfff globl

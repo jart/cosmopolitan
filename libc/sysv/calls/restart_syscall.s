@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall restart_syscall 0xffffffffffff00db globl
+.scall restart_syscall 0xfffffffffffff0db globl

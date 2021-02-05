@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall sctp_peeloff 0xffff01d7ffffffff globl
+.scall sctp_peeloff 0xffffff1d7fffffff globl

@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall eaccess 0xffff0178ffffffff globl
+.scall eaccess 0xffffff178fffffff globl

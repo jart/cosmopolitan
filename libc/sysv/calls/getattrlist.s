@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall getattrlist 0xffffffff20dcffff globl
+.scall getattrlist 0xfffffffff20dcfff globl

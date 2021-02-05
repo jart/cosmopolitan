@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall connectat 0xffff021bffffffff globl
+.scall connectat 0xffffff21bfffffff globl
