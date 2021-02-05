@@ -27,6 +27,20 @@
  * optimizations.
  */
 intptr_t(atomic_store)(void *p, intptr_t x, size_t n) {
-  memcpy(p, &x, MAX(n, sizeof(x)));
-  return x;
+  switch (n) {
+    case 1:
+      __builtin_memcpy(p, &x, 1);
+      return x;
+    case 2:
+      __builtin_memcpy(p, &x, 2);
+      return x;
+    case 4:
+      __builtin_memcpy(p, &x, 4);
+      return x;
+    case 8:
+      __builtin_memcpy(p, &x, 8);
+      return x;
+    default:
+      return 0;
+  }
 }

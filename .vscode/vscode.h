@@ -1,5 +1,4 @@
 #define __VSCODE_INTELLISENSE__ 1
-#define __LP64__                /* TODO: this is a lazy kludge */
 #include "libc/integral/normalize.inc"
 
 #if 0

@@ -27,8 +27,21 @@
  * optimizations.
  */
 intptr_t(atomic_load)(void *p, size_t n) {
-  intptr_t x;
-  x = 0;
-  memcpy(&x, p, MAX(n, sizeof(x)));
-  return x;
+  intptr_t x = 0;
+  switch (n) {
+    case 1:
+      __builtin_memcpy(&x, p, 1);
+      return x;
+    case 2:
+      __builtin_memcpy(&x, p, 2);
+      return x;
+    case 4:
+      __builtin_memcpy(&x, p, 4);
+      return x;
+    case 8:
+      __builtin_memcpy(&x, p, 8);
+      return x;
+    default:
+      return 0;
+  }
 }
