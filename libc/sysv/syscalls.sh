@@ -49,7 +49,7 @@ scall	sys_msync		0x115100041204101a	globl hidden
 scall	sys_mprotect		0x04a04a04a204a00a	globl hidden
 scall	sys_munmap		0x049049049204900b	globl hidden
 scall	sys_sigaction		0x15402e1a0202e00d	globl hidden # rt_sigaction on Lunix; it's complicated on NetBSD
-scall	sys_sigprocmask		0x125030154203000e	globl hidden # a.k.a. rt_sigprocmask
+scall	__sys_sigprocmask	0x125030154203000e	globl hidden # a.k.a. rt_sigprocmask, openbsd:byvalue
 scall	sys_ioctl		0x0360360362036010	globl hidden
 scall	__sys_pread		0x0ad0ad1db2099011	globl hidden # a.k.a. pread64; netbsd+openbsd:pad
 scall	__sys_pwrite		0x0ae0ae1dc209a012	globl hidden # a.k.a. pwrite64; netbsd+openbsd:pad
@@ -163,7 +163,7 @@ scall	sys_setresgid		0xfff11c138ffff077	globl hidden # polyfilled for xnu
 scall	getresuid		0xfff119168ffff076	globl # semantics aren't well-defined
 scall	getresgid		0xfff11b169ffff078	globl # semantics aren't well-defined
 scall	sigpending		0x124034034203407f	globl
-scall	sys_sigsuspend		0x12606f155206f082	globl hidden
+scall	__sys_sigsuspend	0x12606f155206f082	globl hidden # openbsd:byvalue
 scall	sigaltstack		0x1191200352035083	globl
 scall	sys_mknod		0x1c200e00e200e085	globl hidden
 scall	mknodat			0x1cc14022fffff103	globl # FreeBSD 12+

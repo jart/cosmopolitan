@@ -46,6 +46,7 @@
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/inaddr.h"
 #include "libc/sysv/consts/ipproto.h"
+#include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sa.h"
@@ -56,6 +57,7 @@
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/testlib/testlib.h"
+#include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.h"
 #include "tool/build/runit.h"
@@ -101,7 +103,7 @@ char *g_exepath;
 volatile bool g_interrupted;
 struct sockaddr_in g_servaddr;
 unsigned char g_buf[PAGESIZE];
-bool g_daemonize, g_sendready;
+bool g_daemonize, g_sendready, g_alarmed;
 int g_timeout, g_devnullfd, g_servfd, g_clifd, g_exefd;
 
 void OnInterrupt(int sig) {
@@ -238,6 +240,18 @@ void SendOutputFragmentMessage(int sock, enum RunitCommand kind,
   }
 }
 
+void OnAlarm(int sig) {
+  g_alarmed = true;
+}
+
+void SetDeadline(int seconds, int micros) {
+  g_alarmed = false;
+  LOGIFNEG1(
+      sigaction(SIGALRM, &(struct sigaction){.sa_handler = OnAlarm}, NULL));
+  LOGIFNEG1(setitimer(
+      ITIMER_REAL, &(const struct itimerval){{0, 0}, {seconds, micros}}, NULL));
+}
+
 void HandleClient(void) {
   const size_t kMinMsgSize = 4 + 1 + 4 + 4;
   const size_t kMaxNameSize = 32;
@@ -308,6 +322,7 @@ void HandleClient(void) {
 
   /* run program, tee'ing stderr to both log and client */
   DEBUGF("spawning %s", exename);
+  SetDeadline(1, 0);
   ignore.sa_flags = 0;
   ignore.sa_handler = SIG_IGN;
   LOGIFNEG1(sigemptyset(&ignore.sa_mask));
@@ -338,7 +353,13 @@ void HandleClient(void) {
     SendOutputFragmentMessage(g_clifd, kRunitStderr, g_buf, got);
   }
   while (waitpid(child, &wstatus, 0) == -1) {
-    if (errno == EINTR) continue;
+    if (errno == EINTR) {
+      if (g_alarmed) {
+        WARNF("killing %s which timed out");
+        LOGIFNEG1(kill(child, SIGKILL));
+      }
+      continue;
+    }
     FATALF("waitpid failed");
   }
   if (WIFEXITED(wstatus)) {
