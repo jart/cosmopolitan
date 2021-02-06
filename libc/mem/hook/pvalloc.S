@@ -20,9 +20,9 @@
 .source	__FILE__
 
 	.initbss 202,_init_pvalloc
-hook$pvalloc:
+hook_pvalloc:
 	.quad	0
-	.endobj	hook$pvalloc,globl,hidden
+	.endobj	hook_pvalloc,globl,hidden
 	.previous
 
 	.init.start 202,_init_pvalloc

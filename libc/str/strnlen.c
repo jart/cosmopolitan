@@ -19,7 +19,7 @@
 #include "libc/assert.h"
 #include "libc/str/str.h"
 
-static noasan size_t strnlen$x64(const char *s, size_t n, size_t i) {
+static noasan size_t strnlen_x64(const char *s, size_t n, size_t i) {
   uint64_t w;
   const unsigned char *p;
   for (; i + 8 < n; i += 8) {
@@ -48,7 +48,7 @@ size_t strnlen(const char *s, size_t n) {
   for (i = 0; (uintptr_t)(s + i) & 7; ++i) {
     if (i == n || !s[i]) return i;
   }
-  i = strnlen$x64(s, n, i);
+  i = strnlen_x64(s, n, i);
   for (;; ++i) {
     if (i == n || !s[i]) break;
   }

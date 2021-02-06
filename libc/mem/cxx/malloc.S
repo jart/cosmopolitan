@@ -44,5 +44,5 @@ _Znwm:
 	test	%rdi,%rdi
 	jne	1f
 	mov	$1,%edi
-1:	jmp	*hook$malloc(%rip)
+1:	jmp	*hook_malloc(%rip)
 	.endfn	_Znwm,weak

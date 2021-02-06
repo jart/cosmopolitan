@@ -21,17 +21,17 @@
 #include "libc/dce.h"
 #include "libc/sysv/consts/termios.h"
 
-int ioctl$sys_tiocgwinsz_nt(int, struct winsize *);
+int ioctl_tiocgwinsz_nt(int, struct winsize *);
 
 /**
  * Returns width and height of terminal.
  *
  * @see ioctl(fd, TIOCGWINSZ, ws) dispatches here
  */
-int ioctl$tiocgwinsz(int fd, struct winsize *ws) {
+int ioctl_tiocgwinsz(int fd, struct winsize *ws) {
   if (!IsWindows()) {
     return sys_ioctl(fd, TIOCGWINSZ, ws);
   } else {
-    return ioctl$sys_tiocgwinsz_nt(fd, ws);
+    return ioctl_tiocgwinsz_nt(fd, ws);
   }
 }

@@ -81,5 +81,5 @@ _ZdaPv:
 	.endfn	_ZdaPv,weak
 _ZdlPv:
 /	operator delete(void*)
-	jmp	*hook$free(%rip)
+	jmp	*hook_free(%rip)
 	.endfn	_ZdlPv,weak

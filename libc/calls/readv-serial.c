@@ -34,7 +34,7 @@ static int GetFirstIov(struct iovec *iov, int iovlen) {
   return -1;
 }
 
-ssize_t readv$serial(struct Fd *fd, const struct iovec *iov, int iovlen) {
+ssize_t readv_serial(struct Fd *fd, const struct iovec *iov, int iovlen) {
   size_t i, j, got = 0;
   if ((i = GetFirstIov(iov, iovlen)) != -1) {
     while (!IsDataAvailable(fd)) asm("pause");

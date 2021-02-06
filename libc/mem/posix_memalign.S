@@ -32,5 +32,5 @@
 /	@param	rdx is size_t size
 /	@return	eax
 posix_memalign:
-	jmp	*hook$posix_memalign(%rip)
+	jmp	*hook_posix_memalign(%rip)
 	.endfn	posix_memalign,globl

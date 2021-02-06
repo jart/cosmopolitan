@@ -22,7 +22,7 @@
 #include "libc/nexgen32e/cachesize.h"
 #include "libc/nexgen32e/cpuid4.internal.h"
 
-static unsigned getcachesize$cpuid4(int type, int level) {
+static unsigned getcachesize_cpuid4(int type, int level) {
   unsigned i, k;
   static int once;
   static unsigned char kCacheKey[8];
@@ -53,5 +53,5 @@ static unsigned getcachesize$cpuid4(int type, int level) {
 unsigned getcachesize(int type, int level) {
   assert(1 <= type && type <= 3);
   assert(level >= 1);
-  return getcachesize$cpuid4(type, level);
+  return getcachesize_cpuid4(type, level);
 }

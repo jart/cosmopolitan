@@ -20,9 +20,9 @@
 .source	__FILE__
 
 	.initbss 202,_init_malloc_usable_size
-hook$malloc_usable_size:
+hook_malloc_usable_size:
 	.quad	0
-	.endobj	hook$malloc_usable_size,globl,hidden
+	.endobj	hook_malloc_usable_size,globl,hidden
 	.previous
 
 	.init.start 202,_init_malloc_usable_size

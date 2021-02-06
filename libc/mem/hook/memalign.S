@@ -20,9 +20,9 @@
 .source	__FILE__
 
 	.initbss 202,_init_memalign
-hook$memalign:
+hook_memalign:
 	.quad	0
-	.endobj	hook$memalign,globl,hidden
+	.endobj	hook_memalign,globl,hidden
 	.previous
 
 	.init.start 202,_init_memalign

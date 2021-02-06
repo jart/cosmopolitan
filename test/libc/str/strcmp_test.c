@@ -485,14 +485,14 @@ TEST(wcsncmp, testTwosComplementBane) {
 │ test/libc/str/strcmp_test.c § benchmarks                                 ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-testonly noinline int strcmp$pure(const char *a, const char *b) {
+testonly noinline int strcmp_pure(const char *a, const char *b) {
   for (; *a == *b; a++, b++) {
     if (!*a) break;
   }
   return (*a & 0xff) - (*b & 0xff);
 }
 
-testonly noinline int strcasecmp$pure(const char *a, const char *b) {
+testonly noinline int strcasecmp_pure(const char *a, const char *b) {
   for (; *a && *b; a++, b++) {
     if (!(*a == *b || tolower(*a & 0xff) == tolower(*b & 0xff))) {
       break;
@@ -542,38 +542,38 @@ BENCH(bench_00_strcmp, bench) {
   fprintf(stderr, "\n");
   EZBENCH2("strcmp [2 diff]", donothing,
            EXPROPRIATE(strcmp(VEIL("r", "hi"), VEIL("r", "there"))));
-  EZBENCH2("strcmp$pure [2 diff]", donothing,
-           EXPROPRIATE(strcmp$pure(VEIL("r", "hi"), VEIL("r", "there"))));
+  EZBENCH2("strcmp_pure [2 diff]", donothing,
+           EXPROPRIATE(strcmp_pure(VEIL("r", "hi"), VEIL("r", "there"))));
 
   fprintf(stderr, "\n");
   EZBENCH2("strcmp [2 dupe]", randomize_buf2str_dupe(2, data, dupe),
            EXPROPRIATE(strcmp(VEIL("r", data), VEIL("r", dupe))));
-  EZBENCH2("strcmp$pure [2 dupe]", randomize_buf2str_dupe(2, data, dupe),
-           EXPROPRIATE(strcmp$pure(VEIL("r", data), VEIL("r", dupe))));
+  EZBENCH2("strcmp_pure [2 dupe]", randomize_buf2str_dupe(2, data, dupe),
+           EXPROPRIATE(strcmp_pure(VEIL("r", data), VEIL("r", dupe))));
 
   fprintf(stderr, "\n");
   EZBENCH2("strcmp [4 dupe]", randomize_buf2str_dupe(4, data, dupe),
            EXPROPRIATE(strcmp(VEIL("r", data), VEIL("r", dupe))));
-  EZBENCH2("strcmp$pure [4 dupe]", randomize_buf2str_dupe(4, data, dupe),
-           EXPROPRIATE(strcmp$pure(VEIL("r", data), VEIL("r", dupe))));
+  EZBENCH2("strcmp_pure [4 dupe]", randomize_buf2str_dupe(4, data, dupe),
+           EXPROPRIATE(strcmp_pure(VEIL("r", data), VEIL("r", dupe))));
 
   fprintf(stderr, "\n");
   EZBENCH2("strcmp [8 dupe]", randomize_buf2str_dupe(8, data, dupe),
            EXPROPRIATE(strcmp(VEIL("r", data), VEIL("r", dupe))));
-  EZBENCH2("strcmp$pure [8 dupe]", randomize_buf2str_dupe(8, data, dupe),
-           EXPROPRIATE(strcmp$pure(VEIL("r", data), VEIL("r", dupe))));
+  EZBENCH2("strcmp_pure [8 dupe]", randomize_buf2str_dupe(8, data, dupe),
+           EXPROPRIATE(strcmp_pure(VEIL("r", data), VEIL("r", dupe))));
 
   fprintf(stderr, "\n");
   EZBENCH2("strcmp [short dupe]", randomize_buf2str_dupe(size, data, dupe),
            EXPROPRIATE(strcmp(VEIL("r", data), VEIL("r", dupe))));
-  EZBENCH2("strcmp$pure [short dupe]", randomize_buf2str_dupe(size, data, dupe),
-           EXPROPRIATE(strcmp$pure(VEIL("r", data), VEIL("r", dupe))));
+  EZBENCH2("strcmp_pure [short dupe]", randomize_buf2str_dupe(size, data, dupe),
+           EXPROPRIATE(strcmp_pure(VEIL("r", data), VEIL("r", dupe))));
 
   fprintf(stderr, "\n");
   EZBENCH2("strcmp [long dupe]", longstringislong_dupe(size, data, dupe),
            EXPROPRIATE(strcmp(VEIL("r", data), VEIL("r", dupe))));
-  EZBENCH2("strcmp$pure [long dupe]", longstringislong_dupe(size, data, dupe),
-           EXPROPRIATE(strcmp$pure(VEIL("r", data), VEIL("r", dupe))));
+  EZBENCH2("strcmp_pure [long dupe]", longstringislong_dupe(size, data, dupe),
+           EXPROPRIATE(strcmp_pure(VEIL("r", data), VEIL("r", dupe))));
 }
 
 BENCH(bench_01_strcasecmp, bench) {
@@ -591,14 +591,14 @@ BENCH(bench_01_strcasecmp, bench) {
   fprintf(stderr, "\n");
   EZBENCH2("strcasecmp [short dupe]", randomize_buf2str_dupe(size, data, dupe),
            EXPROPRIATE(strcasecmp(VEIL("r", data), VEIL("r", dupe))));
-  EZBENCH2("strcasecmp$pure [short dupe]",
+  EZBENCH2("strcasecmp_pure [short dupe]",
            randomize_buf2str_dupe(size, data, dupe),
-           EXPROPRIATE(strcasecmp$pure(VEIL("r", data), VEIL("r", dupe))));
+           EXPROPRIATE(strcasecmp_pure(VEIL("r", data), VEIL("r", dupe))));
 
   fprintf(stderr, "\n");
   EZBENCH2("strcasecmp [long dupe]", longstringislong_dupe(size, data, dupe),
            EXPROPRIATE(strcasecmp(VEIL("r", data), VEIL("r", dupe))));
-  EZBENCH2("strcasecmp$pure [long dupe]",
+  EZBENCH2("strcasecmp_pure [long dupe]",
            longstringislong_dupe(size, data, dupe),
-           EXPROPRIATE(strcasecmp$pure(VEIL("r", data), VEIL("r", dupe))));
+           EXPROPRIATE(strcasecmp_pure(VEIL("r", data), VEIL("r", dupe))));
 }

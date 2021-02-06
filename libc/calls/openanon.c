@@ -34,7 +34,7 @@
 
 static struct OpenAnon { int count; } g_openanon;
 
-static void openanon$genpath(const char *name, struct OpenAnon *state,
+static void openanon_genpath(const char *name, struct OpenAnon *state,
                              char pathbuf[hasatleast PATH_MAX]) {
   char c;
   size_t i;
@@ -55,11 +55,11 @@ static void openanon$genpath(const char *name, struct OpenAnon *state,
   assert(p < pe);
 }
 
-static int openanon$impl(const char *name, unsigned flags,
+static int openanon_impl(const char *name, unsigned flags,
                          struct OpenAnon *state,
                          char pathbuf[hasatleast PATH_MAX]) {
   int fd;
-  openanon$genpath(name, state, pathbuf);
+  openanon_genpath(name, state, pathbuf);
   flags |= O_RDWR | O_CREAT | O_EXCL | O_TRUNC;
   if (!IsWindows()) {
     if ((fd = sys_openat(AT_FDCWD, pathbuf, flags, 0600)) != -1) {
@@ -95,5 +95,5 @@ static int openanon$impl(const char *name, unsigned flags,
  */
 int openanon(char *name, unsigned flags) {
   char pathbuf[PATH_MAX];
-  return openanon$impl(name, flags, &g_openanon, pathbuf);
+  return openanon_impl(name, flags, &g_openanon, pathbuf);
 }

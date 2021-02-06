@@ -27,7 +27,7 @@
  * @return p
  * @asyncsignalsafe
  */
-void *memset$pure(void *p, int c, size_t n) {
+void *memset_pure(void *p, int c, size_t n) {
   char *b;
   uint64_t x;
   b = p;

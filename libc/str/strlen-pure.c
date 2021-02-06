@@ -19,7 +19,7 @@
 #include "libc/assert.h"
 #include "libc/str/str.h"
 
-static noasan size_t strlen$pure$x64(const char *s, size_t i) {
+static noasan size_t strlen_pure_x64(const char *s, size_t i) {
   uint64_t w;
   const unsigned char *p;
   for (;;) {
@@ -38,12 +38,12 @@ static noasan size_t strlen$pure$x64(const char *s, size_t i) {
 /**
  * Returns length of NUL-terminated string.
  */
-size_t strlen$pure(const char *s) {
+size_t strlen_pure(const char *s) {
   size_t i;
   for (i = 0; (uintptr_t)(s + i) & 7; ++i) {
     if (!s[i]) return i;
   }
-  i = strlen$pure$x64(s, i);
+  i = strlen_pure_x64(s, i);
   assert(!i || s[0]);
   assert(!s[i]);
   return i;

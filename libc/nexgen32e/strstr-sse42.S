@@ -21,7 +21,7 @@
 #include "libc/nexgen32e/strstr.inc"
 
 /	TODO(jart): Fix me.
-strstr$sse42:
+strstr_sse42:
 	.leafprologue
 	mov	%rdi,%rax
 	xor	%ecx,%ecx
@@ -38,5 +38,5 @@ strstr$sse42:
 	jmp	5f	# youtu.be/nVk1DjMtLWs
 4:	xor	%eax,%eax
 5:	.leafepilogue
-	.endfn	strstr$sse42,globl,hidden
+	.endfn	strstr_sse42,globl,hidden
 	.source	__FILE__

@@ -24,7 +24,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int ioctl$sys_tiocswinsz_nt(int fd, const struct winsize *ws) {
+textwindows int ioctl_tiocswinsz_nt(int fd, const struct winsize *ws) {
   uint32_t mode;
   struct NtCoord coord;
   if (!ws) return efault();

@@ -33,7 +33,7 @@ wchar_t u32[] = L"utf32 ☻";
 
 TEST(strlen, usageExample_c11) {
   _Alignas(16) char ugh[] = "eeeeeeeeeeeeeee\017";
-  EXPECT_EQ(1, strlen$pure(ugh + 15));
+  EXPECT_EQ(1, strlen_pure(ugh + 15));
   EXPECT_EQ(6 + 3, strlen(u8));
   EXPECT_EQ(7, strlen16(u16));
   EXPECT_EQ(7, wcslen(u32));
@@ -146,10 +146,10 @@ TEST(strlen, fuzz) {
   for (n = 2; n < 1026; ++n) {
     b = rngset(calloc(1, n), n - 1, rand64, -1);
     n1 = strlen(b);
-    n2 = strlen$pure(b);
+    n2 = strlen_pure(b);
     ASSERT_EQ(n1, n2, "%#.*s", n, b);
     n1 = strlen(b + 1);
-    n2 = strlen$pure(b + 1);
+    n2 = strlen_pure(b + 1);
     ASSERT_EQ(n1, n2);
     free(b);
   }
@@ -157,27 +157,27 @@ TEST(strlen, fuzz) {
 
 BENCH(strlen, bench) {
   extern size_t strlen_(const char *) asm("strlen");
-  extern size_t strlen$pure_(const char *) asm("strlen$pure");
+  extern size_t strlen_pure_(const char *) asm("strlen_pure");
   static char b[2048];
   memset(b, -1, sizeof(b) - 1);
   EZBENCH2("strlen 1", donothing, strlen_(""));
-  EZBENCH2("strlen$pure 1", donothing, strlen$pure_(""));
+  EZBENCH2("strlen_pure 1", donothing, strlen_pure_(""));
   EZBENCH2("strlen 2", donothing, strlen_("1"));
-  EZBENCH2("strlen$pure 2", donothing, strlen$pure_("1"));
+  EZBENCH2("strlen_pure 2", donothing, strlen_pure_("1"));
   EZBENCH2("strlen 7", donothing, strlen_("123456"));
-  EZBENCH2("strlen$pure 7", donothing, strlen$pure_("123456"));
+  EZBENCH2("strlen_pure 7", donothing, strlen_pure_("123456"));
   EZBENCH2("strlen 8", donothing, strlen_("1234567"));
-  EZBENCH2("strlen$pure 8", donothing, strlen$pure_("1234567"));
+  EZBENCH2("strlen_pure 8", donothing, strlen_pure_("1234567"));
   EZBENCH2("strlen 9", donothing, strlen_("12345678"));
-  EZBENCH2("strlen$pure 9", donothing, strlen$pure_("12345678"));
+  EZBENCH2("strlen_pure 9", donothing, strlen_pure_("12345678"));
   EZBENCH2("strlen 11", donothing, strlen_("12345678aa"));
-  EZBENCH2("strlen$pure 11", donothing, strlen$pure_("12345678aa"));
+  EZBENCH2("strlen_pure 11", donothing, strlen_pure_("12345678aa"));
   EZBENCH2("strlen 13", donothing, strlen_("12345678aabb"));
-  EZBENCH2("strlen$pure 13", donothing, strlen$pure_("12345678aabb"));
+  EZBENCH2("strlen_pure 13", donothing, strlen_pure_("12345678aabb"));
   EZBENCH2("strlen 16", donothing, strlen_("123456781234567"));
-  EZBENCH2("strlen$pure 16", donothing, strlen$pure_("123456781234567"));
+  EZBENCH2("strlen_pure 16", donothing, strlen_pure_("123456781234567"));
   EZBENCH2("strlen 17", donothing, strlen_("123456781234567e"));
-  EZBENCH2("strlen$pure 17", donothing, strlen$pure_("123456781234567e"));
+  EZBENCH2("strlen_pure 17", donothing, strlen_pure_("123456781234567e"));
   EZBENCH2("strlen 1023", donothing, strlen_(b));
-  EZBENCH2("strlen$pure 1023", donothing, strlen$pure_(b));
+  EZBENCH2("strlen_pure 1023", donothing, strlen_pure_(b));
 }

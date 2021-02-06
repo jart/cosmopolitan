@@ -19,7 +19,7 @@
 #include "dsp/tty/tty.h"
 #include "libc/assert.h"
 
-unsigned windex$k8(short *a, size_t n) {
+unsigned windex_k8(short *a, size_t n) {
   unsigned short min, res, i;
   res = 0;
   min = a[0];

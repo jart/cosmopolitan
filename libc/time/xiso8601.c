@@ -34,7 +34,7 @@ STATIC_YOINK("ntoa");
  * @fileoverview Timestamps in One True Format w/o toil.
  */
 
-static char *xiso8601$impl(struct timespec *opt_ts, int sswidth) {
+static char *xiso8601_impl(struct timespec *opt_ts, int sswidth) {
   char *p;
   struct tm tm;
   struct timespec ts;
@@ -69,13 +69,13 @@ static char *xiso8601$impl(struct timespec *opt_ts, int sswidth) {
  * Returns allocated string representation of nanosecond timestamp.
  */
 char *xiso8601ts(struct timespec *opt_ts) {
-  return xiso8601$impl(opt_ts, 9);
+  return xiso8601_impl(opt_ts, 9);
 }
 
 /**
  * Returns allocated string representation of microsecond timestamp.
  */
 char *xiso8601tv(struct timeval *opt_tv) {
-  return xiso8601$impl(
+  return xiso8601_impl(
       opt_tv ? &(struct timespec){opt_tv->tv_sec, opt_tv->tv_usec} : NULL, 6);
 }

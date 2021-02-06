@@ -29,8 +29,8 @@ nowl:	.quad	0
 	.previous
 
 	.init.start 202,_init_nowl
-	ezlea	nowl$sys,ax
-	ezlea	nowl$art,cx
+	ezlea	nowl_sys,ax
+	ezlea	nowl_art,cx
 	testb	X86_HAVE(INVTSC)+kCpuids(%rip)
 	cmovnz	%rcx,%rax
 	stosq

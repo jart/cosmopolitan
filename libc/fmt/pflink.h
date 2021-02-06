@@ -66,17 +66,17 @@
 #define SFLINK(FMT) FMT
 #ifdef __GNUC__
 __asm__(".section .yoink\n\t"
-        "nop\tntoa(%rip)\n\t"
-        "nop\tftoa(%rip)\n\t"
-        "nop\tkCp437(%rip)\n\t"
-        "nop\tstrerror(%rip)\n\t"
-        "nop\tstrnwidth(%rip)\n\t"
-        "nop\tstrnwidth16(%rip)\n\t"
-        "nop\twcsnwidth(%rip)\n\t"
-        "nop\tmalloc(%rip)\n\t"
-        "nop\tcalloc(%rip)\n\t"
-        "nop\tfree_s(%rip)\n\t"
-        "nop\t__grow(%rip)\n\t"
+        "nopl\tntoa(%rip)\n\t"
+        "nopl\tftoa(%rip)\n\t"
+        "nopl\tkCp437(%rip)\n\t"
+        "nopl\tstrerror(%rip)\n\t"
+        "nopl\tstrnwidth(%rip)\n\t"
+        "nopl\tstrnwidth16(%rip)\n\t"
+        "nopl\twcsnwidth(%rip)\n\t"
+        "nopl\tmalloc(%rip)\n\t"
+        "nopl\tcalloc(%rip)\n\t"
+        "nopl\tfree_s(%rip)\n\t"
+        "nopl\t__grow(%rip)\n\t"
         ".previous");
 #else
 #include "libc/fmt/palandprintf.internal.h"

@@ -20,9 +20,9 @@
 .source	__FILE__
 
 	.initbss 202,_init_free
-hook$free:
+hook_free:
 	.quad	0
-	.endobj	hook$free,globl,hidden
+	.endobj	hook_free,globl,hidden
 	.previous
 
 	.init.start 202,_init_free

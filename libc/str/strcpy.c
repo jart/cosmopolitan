@@ -20,7 +20,7 @@
 #include "libc/intrin/pmovmskb.h"
 #include "libc/str/str.h"
 
-static noasan size_t strcpy$sse2(char *d, const char *s, size_t i) {
+static noasan size_t strcpy_sse2(char *d, const char *s, size_t i) {
   uint8_t v1[16], v2[16], vz[16];
   for (;;) {
     memset(vz, 0, 16);
@@ -52,7 +52,7 @@ char *strcpy(char *d, const char *s) {
       return d;
     }
   }
-  i = strcpy$sse2(d, s, i);
+  i = strcpy_sse2(d, s, i);
   for (;;) {
     if (!(d[i] = s[i])) {
       return d;

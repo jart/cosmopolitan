@@ -27,7 +27,7 @@ typedef uint32_t vbitmask_t;
 /**
  * Returns how many bytes the utf16 string would be as utf8.
  */
-int strcmp$avx2(const char *s1, const char *s2) {
+int strcmp_avx2(const char *s1, const char *s2) {
   if (s1 == s2) return 0;
   const unsigned char *p1 = (const unsigned char *)s1;
   const unsigned char *p2 = (const unsigned char *)s2;

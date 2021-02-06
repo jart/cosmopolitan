@@ -26,7 +26,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 
-static void *filecmp$mmap(int fd, size_t size) {
+static void *filecmp_mmap(int fd, size_t size) {
   return size ? mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0) : NULL;
 }
 
@@ -49,8 +49,8 @@ int filecmp(const char *pathname1, const char *pathname2) {
       (fd2 = open(pathname2, O_RDONLY)) != -1 &&
       (size1 = getfiledescriptorsize(fd1)) != -1 &&
       (size2 = getfiledescriptorsize(fd2)) != -1 &&
-      (addr1 = filecmp$mmap(fd1, size1)) != MAP_FAILED &&
-      (addr2 = filecmp$mmap(fd2, size2)) != MAP_FAILED) {
+      (addr1 = filecmp_mmap(fd1, size1)) != MAP_FAILED &&
+      (addr2 = filecmp_mmap(fd2, size2)) != MAP_FAILED) {
     olderr = errno;
     madvise(addr1, size1, MADV_WILLNEED | MADV_SEQUENTIAL);
     madvise(addr2, size2, MADV_WILLNEED | MADV_SEQUENTIAL);

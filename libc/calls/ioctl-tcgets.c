@@ -21,9 +21,9 @@
 #include "libc/calls/termios.internal.h"
 #include "libc/sysv/consts/termios.h"
 
-int ioctl$sys_tcgets_nt(int, struct termios *);
+int ioctl_tcgets_nt(int, struct termios *) hidden;
 
-static int ioctl$sys_tcgets(int fd, struct termios *tio) {
+static int ioctl_tcgets_sysv(int fd, struct termios *tio) {
   int rc;
   union metatermios t;
   if ((rc = sys_ioctl(fd, TCGETS, &t)) != -1) {
@@ -39,10 +39,10 @@ static int ioctl$sys_tcgets(int fd, struct termios *tio) {
  * @see ioctl(fd, TCGETS, tio) dispatches here
  * @see ioctl(fd, TIOCGETA, tio) dispatches here
  */
-int ioctl$tcgets(int fd, struct termios *tio) {
+int ioctl_tcgets(int fd, struct termios *tio) {
   if (!IsWindows()) {
-    return ioctl$sys_tcgets(fd, tio);
+    return ioctl_tcgets_sysv(fd, tio);
   } else {
-    return ioctl$sys_tcgets_nt(fd, tio);
+    return ioctl_tcgets_nt(fd, tio);
   }
 }

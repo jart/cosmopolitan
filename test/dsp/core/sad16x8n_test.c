@@ -26,7 +26,7 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
-void addsw$pure(size_t n, short x[n][8], const short y[n][8]) {
+void addsw_pure(size_t n, short x[n][8], const short y[n][8]) {
   size_t i, j;
   for (i = 0; i < n; ++i) {
     for (j = 0; j < 8; ++j) {
@@ -94,7 +94,7 @@ void sad16x8n_sse2(void) {
   sad16x8n(PLM_AUDIO_SAMPLES_PER_FRAME / 8, (void *)pcm1, (void *)pcm2);
 }
 void sad16x8n_pure(void) {
-  addsw$pure(PLM_AUDIO_SAMPLES_PER_FRAME / 8, (void *)pcm1, (void *)pcm2);
+  addsw_pure(PLM_AUDIO_SAMPLES_PER_FRAME / 8, (void *)pcm1, (void *)pcm2);
 }
 
 BENCH(sad16x8n, audioframe) {

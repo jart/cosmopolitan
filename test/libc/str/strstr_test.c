@@ -28,15 +28,15 @@
 #define MAKESTRING(NAME, VALUE) \
   char *NAME = strcpy(malloc(sizeof(VALUE) + 16), VALUE)
 
-char *strstr$kmp(const char *haystak, const char *needle) {
+char *strstr_kmp(const char *haystak, const char *needle) {
   return memmem(haystak, strlen(haystak), needle, strlen(needle));
 }
 
-char *(*strstri)(const char *, const char *) = strstr$kmp;
+char *(*strstri)(const char *, const char *) = strstr_kmp;
 
-FIXTURE(strstr, sse42) {
+FIXTURE(strstr, sse42_) {
   if (X86_HAVE(SSE4_2)) {
-    strstri = strstr$sse42;
+    strstri = strstr_sse42;
   }
 }
 

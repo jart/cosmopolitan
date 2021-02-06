@@ -20,7 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/nexgen32e/uart.internal.h"
 
-ssize_t writev$serial(struct Fd *fd, const struct iovec *iov, int iovlen) {
+ssize_t writev_serial(struct Fd *fd, const struct iovec *iov, int iovlen) {
   size_t i, j, wrote = 0;
   for (i = 0; i < iovlen; ++i) {
     for (j = 0; j < iov[i].iov_len; ++j) {

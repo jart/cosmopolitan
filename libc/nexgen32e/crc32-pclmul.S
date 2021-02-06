@@ -30,7 +30,7 @@
 /	@see	“Fast CRC Computation for Generic Polynomials Using
 /		 PCLMULQDQ Instruction” V. Gopal, E. Ozturk, et al.,
 /		 2009, intel.ly/2ySEwL0
-crc32$pclmul:
+crc32_pclmul:
 	.leafprologue
 	.profilable
 	movdqu	(%rsi),%xmm7
@@ -136,7 +136,8 @@ crc32$pclmul:
 	pxor	%xmm1,%xmm0
 	pextrd	$1,%xmm0,%eax
 	.leafepilogue
-	.endfn	crc32$pclmul,globl,hidden
+	.endfn	crc32_pclmul,globl,hidden
+	.source	__FILE__
 
 /	Definitions of the bit-reflected domain constants k1,k2,k3, etc.
 /	and the CRC32+Barrett polynomials given at the end of the paper.
@@ -259,4 +260,3 @@ crc32$pclmul:
 	4194304            7.025         7.059         7.030     462
 	8388607            7.082         6.980         6.997     464
 	8388608            7.051         6.985         6.999     464 */
-	.source	__FILE__

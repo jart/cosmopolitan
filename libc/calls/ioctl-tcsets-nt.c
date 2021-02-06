@@ -26,7 +26,7 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int ioctl$sys_tcsets_nt(int ignored, uint64_t request,
+textwindows int ioctl_tcsets_nt(int ignored, uint64_t request,
                                 const struct termios *tio) {
   int64_t in, out;
   bool32 inok, outok;

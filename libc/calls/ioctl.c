@@ -29,5 +29,5 @@
  */
 int(ioctl)(int fd, uint64_t request, void *memory) {
   __IOCTL_DISPATCH(EQUAL, fd, request, memory);
-  return ioctl$default(fd, request, memory);
+  return ioctl_default(fd, request, memory);
 }

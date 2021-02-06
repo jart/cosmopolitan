@@ -42,7 +42,7 @@ uint32_t crc32_z(uint32_t h, const void *data, size_t size) {
   if (data) {
     h ^= 0xffffffff;
     if (size >= 64 && X86_HAVE(PCLMUL)) {
-      h = crc32$pclmul(h, data, size); /* 51x faster */
+      h = crc32_pclmul(h, data, size); /* 51x faster */
       skip = rounddown(size, 16);
     } else {
       skip = 0;

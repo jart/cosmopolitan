@@ -34,5 +34,5 @@
 /	@return	rax is result, or NULL w/ errno
 /	@see	dlrealloc_in_place()
 realloc_in_place:
-	jmp	*hook$realloc_in_place(%rip)
+	jmp	*hook_realloc_in_place(%rip)
 	.endfn	realloc_in_place,globl

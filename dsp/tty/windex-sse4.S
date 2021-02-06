@@ -24,7 +24,7 @@
 /	@param	rdi points to nonempty array
 /	@param	esi is 16-byte aligned 8+ / 8 multiple array item count
 /	@note	needs sse4 (nehalem+)
-windex$sse4:
+windex_sse4:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -54,7 +54,7 @@ windex$sse4:
 	movzwl	-32(%rbp,%rax,2),%eax
 	leave
 	ret
-	.endfn	windex$sse4,globl
+	.endfn	windex_sse4,globl
 
 	.rodata.cst16
 .Lidx:	.short	0,1,2,3,4,5,6,7

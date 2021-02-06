@@ -36,5 +36,5 @@
 /	@return	new memory, or NULL w/ errno
 /	@note	malloc(0) → malloc(32)
 /	@see	dlmalloc()
-malloc:	jmp	*hook$malloc(%rip)
+malloc:	jmp	*hook_malloc(%rip)
 	.endfn	malloc,globl

@@ -25,7 +25,7 @@
 #include "libc/str/utf16.h"
 
 /* 34x speedup for ascii */
-static noasan axdx_t tprecode8to16$sse2(char16_t *dst, size_t dstsize,
+static noasan axdx_t tprecode8to16_sse2(char16_t *dst, size_t dstsize,
                                         const char *src, axdx_t r) {
   uint8_t v1[16], v2[16], vz[16];
   memset(vz, 0, 16);
@@ -61,7 +61,7 @@ axdx_t tprecode8to16(char16_t *dst, size_t dstsize, const char *src) {
   r.dx = 0;
   for (;;) {
     if (!IsTiny() && !((uintptr_t)(src + r.dx) & 15)) {
-      tprecode8to16$sse2(dst, dstsize, src, r);
+      tprecode8to16_sse2(dst, dstsize, src, r);
     }
     x = src[r.dx++] & 0xff;
     if (ThomPikeCont(x)) continue;

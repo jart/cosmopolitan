@@ -20,14 +20,14 @@
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/x86feature.h"
 
-void djbsort$avx2(int32_t *, long);
+void djbsort_avx2(int32_t *, long);
 
 /**
  * D.J. Bernstein's outrageously fast integer sorting algorithm.
  */
 void djbsort(int32_t *a, size_t n) {
   if (X86_HAVE(AVX2)) {
-    djbsort$avx2(a, n);
+    djbsort_avx2(a, n);
   } else {
     insertionsort(a, n);
   }

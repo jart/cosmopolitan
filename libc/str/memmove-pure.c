@@ -31,7 +31,7 @@ typedef long long xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
  * @return dst
  * @asyncsignalsafe
  */
-void *memmove$pure(void *dst, const void *src, size_t n) {
+void *memmove_pure(void *dst, const void *src, size_t n) {
   size_t i;
   xmm_t v, w;
   char *d, *r;

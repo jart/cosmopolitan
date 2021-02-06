@@ -24,7 +24,7 @@
 /	@param	rdi points to nonempty array
 /	@param	rsi is item count divisible by 16
 /	@note	needs avx2 (haswell+)
-windex$avx2:
+windex_avx2:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -64,7 +64,7 @@ windex$avx2:
 5:	vzeroupper
 	leave
 	ret
-	.endfn	windex$avx2,globl
+	.endfn	windex_avx2,globl
 
 	.rodata.cst32
 .Lidx:	.short	0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15

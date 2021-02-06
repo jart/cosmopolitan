@@ -311,25 +311,25 @@ static unsigned combinecolors(unsigned char bf[1u << MC][2],
     return r;                                                     \
   }
 
-ADJUDICATE(adjudicate$avx2, microarchitecture("avx2,fma"))
-ADJUDICATE(adjudicate$avx, microarchitecture("avx"))
-ADJUDICATE(adjudicate$default, )
+ADJUDICATE(adjudicate_avx2, microarchitecture("avx2,fma"))
+ADJUDICATE(adjudicate_avx, microarchitecture("avx"))
+ADJUDICATE(adjudicate_default, )
 
-static float (*adjudicate$hook)(unsigned, unsigned, unsigned,
+static float (*adjudicate_hook)(unsigned, unsigned, unsigned,
                                 const float[CN][YS * XS]);
 
 static float adjudicate2(unsigned b, unsigned f, unsigned g,
                          const float lb[CN][YS * XS]) {
-  if (!adjudicate$hook) {
+  if (!adjudicate_hook) {
     if (X86_HAVE(AVX2) && X86_HAVE(FMA)) {
-      adjudicate$hook = adjudicate$avx2;
+      adjudicate_hook = adjudicate_avx2;
     } else if (X86_HAVE(AVX)) {
-      adjudicate$hook = adjudicate$avx;
+      adjudicate_hook = adjudicate_avx;
     } else {
-      adjudicate$hook = adjudicate$default;
+      adjudicate_hook = adjudicate_default;
     }
   }
-  return adjudicate$hook(b, f, g, lb);
+  return adjudicate_hook(b, f, g, lb);
 }
 
 static float adjudicate(unsigned b, unsigned f, unsigned g,

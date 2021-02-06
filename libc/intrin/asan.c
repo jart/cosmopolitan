@@ -25,7 +25,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"
-#include "libc/mem/hook/hook.h"
+#include "libc/mem/hook/hook.internal.h"
 #include "libc/nt/enum/version.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.h"
@@ -711,15 +711,15 @@ void *__asan_get_current_fake_stack(void) {
 }
 
 void __asan_install_malloc_hooks(void) {
-  HOOK(hook$free, __asan_free);
-  HOOK(hook$malloc, __asan_malloc);
-  HOOK(hook$calloc, __asan_calloc);
-  HOOK(hook$valloc, __asan_valloc);
-  HOOK(hook$pvalloc, __asan_pvalloc);
-  HOOK(hook$realloc, __asan_realloc);
-  HOOK(hook$memalign, __asan_memalign);
-  HOOK(hook$malloc_trim, __asan_malloc_trim);
-  HOOK(hook$malloc_usable_size, __asan_malloc_usable_size);
+  HOOK(hook_free, __asan_free);
+  HOOK(hook_malloc, __asan_malloc);
+  HOOK(hook_calloc, __asan_calloc);
+  HOOK(hook_valloc, __asan_valloc);
+  HOOK(hook_pvalloc, __asan_pvalloc);
+  HOOK(hook_realloc, __asan_realloc);
+  HOOK(hook_memalign, __asan_memalign);
+  HOOK(hook_malloc_trim, __asan_malloc_trim);
+  HOOK(hook_malloc_usable_size, __asan_malloc_usable_size);
 }
 
 static bool __asan_is_mapped(int x) {
@@ -813,9 +813,9 @@ textstartup void __asan_init(int argc, char **argv, char **envp,
   REQUIRE(MAP_ANONYMOUS);
   REQUIRE(FindMemoryInterval);
   REQUIRE(TrackMemoryInterval);
-  if (weaken(hook$malloc) || weaken(hook$calloc) || weaken(hook$realloc) ||
-      weaken(hook$pvalloc) || weaken(hook$valloc) || weaken(hook$free) ||
-      weaken(hook$malloc_usable_size)) {
+  if (weaken(hook_malloc) || weaken(hook_calloc) || weaken(hook_realloc) ||
+      weaken(hook_pvalloc) || weaken(hook_valloc) || weaken(hook_free) ||
+      weaken(hook_malloc_usable_size)) {
     REQUIRE(dlmemalign);
     REQUIRE(dlmalloc_usable_size);
   }

@@ -28,9 +28,9 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
-unsigned windex$k8(short *, size_t) hidden;
-unsigned windex$avx2(short *, size_t) hidden;
-unsigned windex$sse4(short *, size_t) hidden;
+unsigned windex_k8(short *, size_t) hidden;
+unsigned windex_avx2(short *, size_t) hidden;
+unsigned windex_sse4(short *, size_t) hidden;
 
 const short kW[64] forcealign(32) = {
     8281, 3883, 1365, 1786, 9006, 3681, 5563, 8013, 5787,   9063, 2923,
@@ -78,9 +78,9 @@ TEST(windex, testRealWorldPicks) {
       0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff,
   };
   /* multiple valid answers are fine if it's deterministic */
-  TestIt(windex$k8, 52, 21, ARRAYLEN(kPicks), kPicks);
-  if (X86_HAVE(AVX2)) TestIt(windex$avx2, 78, 21, ARRAYLEN(kPicks), kPicks);
-  if (X86_HAVE(SSE4_2)) TestIt(windex$sse4, 80, 21, ARRAYLEN(kPicks), kPicks);
+  TestIt(windex_k8, 52, 21, ARRAYLEN(kPicks), kPicks);
+  if (X86_HAVE(AVX2)) TestIt(windex_avx2, 78, 21, ARRAYLEN(kPicks), kPicks);
+  if (X86_HAVE(SSE4_2)) TestIt(windex_sse4, 80, 21, ARRAYLEN(kPicks), kPicks);
 }
 
 TEST(windex, test) {
@@ -89,26 +89,26 @@ TEST(windex, test) {
   TestIt(windex, 62, 7, ARRAYLEN(kW3), kW3);
 }
 
-TEST(windex$avx2, test) {
+TEST(windex_avx2, test) {
   if (X86_HAVE(AVX2)) {
-    TestIt(windex$avx2, 13, 32, ARRAYLEN(kW), kW);
-    TestIt(windex$avx2, 1, 1, ARRAYLEN(kW2), kW2);
-    TestIt(windex$avx2, 62, 7, ARRAYLEN(kW3), kW3);
+    TestIt(windex_avx2, 13, 32, ARRAYLEN(kW), kW);
+    TestIt(windex_avx2, 1, 1, ARRAYLEN(kW2), kW2);
+    TestIt(windex_avx2, 62, 7, ARRAYLEN(kW3), kW3);
   }
 }
 
-TEST(windex$sse4, test) {
+TEST(windex_sse4, test) {
   if (X86_HAVE(SSE4_2)) {
-    TestIt(windex$sse4, 13, 32, ARRAYLEN(kW), kW);
-    TestIt(windex$sse4, 1, 1, ARRAYLEN(kW2), kW2);
-    TestIt(windex$sse4, 62, 7, ARRAYLEN(kW3), kW3);
+    TestIt(windex_sse4, 13, 32, ARRAYLEN(kW), kW);
+    TestIt(windex_sse4, 1, 1, ARRAYLEN(kW2), kW2);
+    TestIt(windex_sse4, 62, 7, ARRAYLEN(kW3), kW3);
   }
 }
 
-TEST(windex$k8, test) {
-  TestIt(windex$k8, 13, 32, ARRAYLEN(kW), kW);
-  TestIt(windex$k8, 1, 1, ARRAYLEN(kW2), kW2);
-  TestIt(windex$k8, 62, 7, ARRAYLEN(kW3), kW3);
+TEST(windex_k8, test) {
+  TestIt(windex_k8, 13, 32, ARRAYLEN(kW), kW);
+  TestIt(windex_k8, 1, 1, ARRAYLEN(kW2), kW2);
+  TestIt(windex_k8, 62, 7, ARRAYLEN(kW3), kW3);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,16 +116,16 @@ TEST(windex$k8, test) {
 BENCH(windex, bench) {
   EZBENCH(donothing, windex(kW, ARRAYLEN(kW)));
 }
-BENCH(windex$k8, bench) {
-  EZBENCH(donothing, windex$k8(kW, ARRAYLEN(kW)));
+BENCH(windex_k8, bench) {
+  EZBENCH(donothing, windex_k8(kW, ARRAYLEN(kW)));
 }
-BENCH(windex$avx2, bench) {
+BENCH(windex_avx2, bench) {
   if (X86_HAVE(AVX2)) {
-    EZBENCH(donothing, windex$avx2(kW, ARRAYLEN(kW)));
+    EZBENCH(donothing, windex_avx2(kW, ARRAYLEN(kW)));
   }
 }
-BENCH(windex$sse4, bench) {
+BENCH(windex_sse4, bench) {
   if (X86_HAVE(SSE4_2)) {
-    EZBENCH(donothing, windex$sse4(kW, ARRAYLEN(kW)));
+    EZBENCH(donothing, windex_sse4(kW, ARRAYLEN(kW)));
   }
 }

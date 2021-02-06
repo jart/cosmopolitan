@@ -37,7 +37,7 @@ TEST(crc32, testBigText) {
     EXPECT_EQ(0xc7adc04f, crc32(0, hyperion, size));
     EXPECT_EQ(0xc7adc04f, crc32_z(0, hyperion, size));
     EXPECT_EQ(0xc7adc04f,
-              0xffffffffu ^ crc32$pclmul(0 ^ 0xffffffffu, hyperion, size));
+              0xffffffffu ^ crc32_pclmul(0 ^ 0xffffffffu, hyperion, size));
   }
 }
 

@@ -290,14 +290,14 @@ unsigned __wincrash_nt(struct NtExceptionPointers *);
 │ cosmopolitan § syscalls » metal                                          ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-int fstat$metal(int, struct stat *);
+int fstat_metal(int, struct stat *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » drivers                                        ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-ssize_t readv$serial(struct Fd *, const struct iovec *, int) hidden;
-ssize_t writev$serial(struct Fd *, const struct iovec *, int) hidden;
+ssize_t readv_serial(struct Fd *, const struct iovec *, int) hidden;
+ssize_t writev_serial(struct Fd *, const struct iovec *, int) hidden;
 
 #undef sigset
 #undef i32

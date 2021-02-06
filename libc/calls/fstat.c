@@ -35,7 +35,7 @@ int fstat(int fd, struct stat *st) {
     if (!IsMetal()) {
       return sys_fstat(fd, st);
     } else {
-      return fstat$metal(fd, st);
+      return fstat_metal(fd, st);
     }
   } else {
     if (!__isfdkind(fd, kFdFile)) return ebadf();

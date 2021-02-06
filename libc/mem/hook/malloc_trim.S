@@ -20,9 +20,9 @@
 .source	__FILE__
 
 	.initbss 202,_init_malloc_trim
-hook$malloc_trim:
+hook_malloc_trim:
 	.quad	0
-	.endobj	hook$malloc_trim,globl,hidden
+	.endobj	hook_malloc_trim,globl,hidden
 	.previous
 
 	.init.start 202,_init_malloc_trim

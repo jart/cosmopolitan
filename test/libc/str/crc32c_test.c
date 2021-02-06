@@ -40,12 +40,12 @@ TEST(crc32c, test) {
                                strlen(hyperion) - strlen(FANATICS)));
 }
 
-FIXTURE(crc32c, pure) {
-  *(void **)(&crc32c) = (void *)crc32c$pure;
+FIXTURE(crc32c, pure_) {
+  *(void **)(&crc32c) = (void *)crc32c_pure;
 }
 
-FIXTURE(crc32c, sse42) {
+FIXTURE(crc32c, sse42_) {
   if (X86_HAVE(SSE4_2)) {
-    *(void **)(&crc32c) = (void *)crc32c$sse42;
+    *(void **)(&crc32c) = (void *)crc32c_sse42;
   }
 }

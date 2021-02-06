@@ -15,11 +15,11 @@ nodebuginfo forceinline bool32 iscont(wint_t c) {
   return (c & 0300) == 0200;
 }
 
-char *strstr$sse42(const char *, const char *) strlenesque hidden;
-char16_t *strstr16$sse42(const char16_t *, const char16_t *) strlenesque hidden;
-void *memmem$sse42(const void *, size_t, const void *,
+char *strstr_sse42(const char *, const char *) strlenesque hidden;
+char16_t *strstr16_sse42(const char16_t *, const char16_t *) strlenesque hidden;
+void *memmem_sse42(const void *, size_t, const void *,
                    size_t) strlenesque hidden;
-void sha256$x86(uint32_t[hasatleast 8], const uint8_t[hasatleast 64],
+void sha256_x86(uint32_t[hasatleast 8], const uint8_t[hasatleast 64],
                 uint32_t) hidden;
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

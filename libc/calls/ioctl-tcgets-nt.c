@@ -27,7 +27,7 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int ioctl$sys_tcgets_nt(int ignored, struct termios *tio) {
+textwindows int ioctl_tcgets_nt(int ignored, struct termios *tio) {
   int64_t in, out;
   bool32 inok, outok;
   uint32_t inmode, outmode;

@@ -49,5 +49,5 @@ _ZnamSt11align_val_t:
 	cmp	%rax,%rsi
 	cmovb	%rax,%rsi
 	xchg	%rdi,%rsi
-	jmp	*hook$memalign(%rip)
+	jmp	*hook_memalign(%rip)
 	.endfn	_ZnamSt11align_val_t,weak

@@ -26,7 +26,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int ioctl$sys_tiocgwinsz_nt(int fd, struct winsize *ws) {
+textwindows int ioctl_tiocgwinsz_nt(int fd, struct winsize *ws) {
   int i, fds[3];
   uint32_t mode;
   struct NtConsoleScreenBufferInfoEx sbinfo;

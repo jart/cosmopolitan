@@ -68,7 +68,7 @@ TEST(memmove$pure, overlapping) {
         b0 = rngset(malloc(N), N, rand64, -1);
         b1 = memcpy(malloc(N), b0, N);
         b2 = memcpy(malloc(N), b0, N);
-        ASSERT_EQ(b1 + j, memmove$pure(b1 + j, b1 + i, n));
+        ASSERT_EQ(b1 + j, memmove_pure(b1 + j, b1 + i, n));
         ASSERT_EQ(b2 + j, PosixMemmove(b2 + j, b2 + i, n));
         ASSERT_EQ(0, memcmp(b1, b2, N),
                   "j=%ld i=%ld n=%ld\n"

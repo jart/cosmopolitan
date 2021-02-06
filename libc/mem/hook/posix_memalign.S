@@ -20,9 +20,9 @@
 .source	__FILE__
 
 	.initbss 202,_init_posix_memalign
-hook$posix_memalign:
+hook_posix_memalign:
 	.quad	0
-	.endobj	hook$posix_memalign,globl,hidden
+	.endobj	hook_posix_memalign,globl,hidden
 	.previous
 
 	.init.start 202,_init_posix_memalign

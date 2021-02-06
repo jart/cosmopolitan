@@ -22,7 +22,7 @@
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
 
-int fstat$metal(int fd, struct stat *st) {
+int fstat_metal(int fd, struct stat *st) {
   if (fd < 0) return einval();
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdSerial) {
     memset(st, 0, sizeof(*st));

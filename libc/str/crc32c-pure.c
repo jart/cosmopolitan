@@ -23,7 +23,7 @@ extern const uint32_t kCrc32cTab[256];
 /**
  * Computes Castagnoli CRC-32 on old computers.
  */
-uint32_t crc32c$pure(uint32_t init, const void *data, size_t size) {
+uint32_t crc32c_pure(uint32_t init, const void *data, size_t size) {
   const unsigned char *p = data;
   uint32_t h = init ^ 0xffffffff;
   unsigned i;
@@ -34,7 +34,7 @@ uint32_t crc32c$pure(uint32_t init, const void *data, size_t size) {
 }
 
 /*
-  bench_crc32c$pure for #c per n where c ≈ 0.293ns
+  bench_crc32c_pure for #c per n where c ≈ 0.293ns
   N                     x1            x8           x64	mBps
   ------------------------------------------------------------
   1               4305.000        91.375        44.203      74

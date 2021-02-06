@@ -22,7 +22,7 @@
  * Hashes data with hardware acceleration at 10GBps.
  * @note needs Nehalem+ c. 2008 or Bulldozer+ c. 2011
  */
-optimizespeed uint32_t crc32c$sse42(uint32_t init, const void *data, size_t n) {
+optimizespeed uint32_t crc32c_sse42(uint32_t init, const void *data, size_t n) {
   const unsigned char *p = (const unsigned char *)data;
   const unsigned char *pe = (const unsigned char *)data + n;
   uint32_t h = init ^ 0xffffffff;
@@ -42,7 +42,7 @@ optimizespeed uint32_t crc32c$sse42(uint32_t init, const void *data, size_t n) {
 }
 
 /*
-  bench_crc32c$sse42 for #c per n where c ≈ 0.293ns
+  bench_crc32c_sse42 for #c per n where c ≈ 0.293ns
   N                     x1            x8           x64	  mBps
   ------------------------------------------------------------
   1                877.000        43.375        40.359      81

@@ -23,7 +23,7 @@
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
 
-int ioctl$default(int fd, uint64_t request, void *memory) {
+int ioctl_default(int fd, uint64_t request, void *memory) {
   int rc;
   int64_t handle;
   if (!IsWindows()) {

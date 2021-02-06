@@ -19,7 +19,7 @@
 #include "libc/assert.h"
 #include "libc/str/str.h"
 
-noasan static const unsigned char *strchr$x64(const unsigned char *p,
+noasan static const unsigned char *strchr_x64(const unsigned char *p,
                                               uint64_t c) {
   unsigned a, b;
   uint64_t w, x, y;
@@ -63,7 +63,7 @@ char *strchr(const char *s, int c) {
     if ((*s & 0xff) == c) return s;
     if (!*s) return NULL;
   }
-  r = (char *)strchr$x64((const unsigned char *)s, c);
+  r = (char *)strchr_x64((const unsigned char *)s, c);
   assert(!r || *r || !c);
   return r;
 }

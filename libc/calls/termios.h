@@ -32,16 +32,16 @@ int posix_openpt(int) nodiscard;
 ╚────────────────────────────────────────────────────────────────────────────│*/
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 
-#define tcsetattr(FD, OPT, TIO) tcsetattr$dispatch(FD, OPT, TIO)
-forceinline int tcsetattr$dispatch(int fd, int opt, const struct termios *tio) {
+#define tcsetattr(FD, OPT, TIO) tcsetattr_dispatch(FD, OPT, TIO)
+forceinline int tcsetattr_dispatch(int fd, int opt, const struct termios *tio) {
   if (EQUIVALENT(opt, TCSANOW)) return ioctl(fd, TCSETS, (void *)tio);
   if (EQUIVALENT(opt, TCSADRAIN)) return ioctl(fd, TCSETSW, (void *)tio);
   if (EQUIVALENT(opt, TCSAFLUSH)) return ioctl(fd, TCSETSF, (void *)tio);
   return (tcsetattr)(fd, opt, tio);
 }
 
-#define tcgetattr(FD, TIO) tcgetattr$dispatch(FD, TIO)
-forceinline int tcgetattr$dispatch(int fd, const struct termios *tio) {
+#define tcgetattr(FD, TIO) tcgetattr_dispatch(FD, TIO)
+forceinline int tcgetattr_dispatch(int fd, const struct termios *tio) {
   return ioctl(fd, TCGETS, (void *)tio);
 }
 

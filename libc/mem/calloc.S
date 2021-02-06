@@ -27,5 +27,5 @@
 /	@return	rax is memory address, or NULL w/ errno
 /	@note	overreliance on memalign is a sure way to fragment space
 /	@see	dlcalloc()
-calloc:	jmp	*hook$calloc(%rip)
+calloc:	jmp	*hook_calloc(%rip)
 	.endfn	calloc,globl

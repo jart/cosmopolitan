@@ -34,7 +34,7 @@
  * @see strspn(), strtok_r()
  * @asyncsignalsafe
  */
-size_t strcspn$pure(const char *s, const char *reject) {
+size_t strcspn_pure(const char *s, const char *reject) {
   size_t i, n;
   unsigned m;
   char cv[16], sv[16];

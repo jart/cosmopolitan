@@ -70,7 +70,7 @@ TEST(strchrnul, notFound_returnsPointerToNulByte) {
   EXPECT_EQ(&buf[2], strchrnul(buf, 'z'));
 }
 
-char *strchr$pure(const char *s, int c) {
+char *strchr_pure(const char *s, int c) {
   char *r;
   for (c &= 0xff;; ++s) {
     if ((*s & 0xff) == c) return (char *)s;
@@ -85,7 +85,7 @@ TEST(strchr, fuzz) {
   for (i = -2; i < 257; ++i) {
     for (j = 0; j < 17; ++j) {
       rngset(p, 63, rand64, -1);
-      ASSERT_EQ(strchr(p + j, i), strchr$pure(p + j, i));
+      ASSERT_EQ(strchr(p + j, i), strchr_pure(p + j, i));
     }
   }
   free(p);
@@ -103,7 +103,7 @@ BENCH(strchr, bench) {
                strchr(VEIL("r", "hellzzzhellzzzeeAhellzzzhellzzzeeo"), 'o')));
 }
 
-char *memchr$pure(const char *m, int c, size_t n) {
+char *memchr_pure(const char *m, int c, size_t n) {
   const unsigned char *p, *pe;
   for (c &= 0xff, p = (const unsigned char *)m, pe = p + n; p < pe; ++p) {
     if (*p == c) return p;
@@ -118,13 +118,13 @@ TEST(memchr, fuzz) {
   for (i = -2; i < 257; ++i) {
     for (j = 0; j < 17; ++j) {
       rngset(p, 64, rand64, -1);
-      ASSERT_EQ(memchr(p + j, i, 64 - j), memchr$pure(p + j, i, 64 - j));
+      ASSERT_EQ(memchr(p + j, i, 64 - j), memchr_pure(p + j, i, 64 - j));
     }
   }
   free(p);
 }
 
-char *strchrnul$pure(const char *s, int c) {
+char *strchrnul_pure(const char *s, int c) {
   char *r;
   for (c &= 0xff;; ++s) {
     if ((*s & 0xff) == c) return (char *)s;
@@ -139,13 +139,13 @@ TEST(strchrnul, fuzz) {
   for (i = -2; i < 257; ++i) {
     for (j = 0; j < 17; ++j) {
       rngset(p, 63, rand64, -1);
-      ASSERT_EQ(strchrnul(p + j, i), strchrnul$pure(p + j, i));
+      ASSERT_EQ(strchrnul(p + j, i), strchrnul_pure(p + j, i));
     }
   }
   free(p);
 }
 
-void *rawmemchr$pure(const void *m, int c) {
+void *rawmemchr_pure(const void *m, int c) {
   const unsigned char *s;
   for (c &= 255, s = m;; ++s) {
     if (*s == c) return s;
@@ -160,7 +160,7 @@ TEST(rawmemchr, fuzz) {
     for (j = 0; j < 17; ++j) {
       rngset(p, 63, rand64, -1);
       p[63] = i;
-      ASSERT_EQ(rawmemchr(p + j, i), rawmemchr$pure(p + j, i));
+      ASSERT_EQ(rawmemchr(p + j, i), rawmemchr_pure(p + j, i));
     }
   }
   free(p);

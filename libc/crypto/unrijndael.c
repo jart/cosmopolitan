@@ -20,7 +20,7 @@
 #include "libc/crypto/rijndael.h"
 #include "libc/nexgen32e/x86feature.h"
 
-forceinline aes_block_t unrijndael$westmere(uint32_t n, aes_block_t x,
+forceinline aes_block_t unrijndael_westmere(uint32_t n, aes_block_t x,
                                             const struct Rijndael *ctx) {
   x ^= ctx->rk[n--].xmm;
   do {
@@ -30,7 +30,7 @@ forceinline aes_block_t unrijndael$westmere(uint32_t n, aes_block_t x,
   return x;
 }
 
-static noinline aes_block_t unrijndael$pure(uint32_t n, aes_block_t x,
+static noinline aes_block_t unrijndael_pure(uint32_t n, aes_block_t x,
                                             const struct Rijndael *ctx) {
   uint32_t j;
   __v16qu b1, b2;
@@ -57,8 +57,8 @@ static noinline aes_block_t unrijndael$pure(uint32_t n, aes_block_t x,
  */
 aes_block_t unrijndael(uint32_t n, aes_block_t x, const struct Rijndael *ctx) {
   if (X86_HAVE(AES)) {
-    return unrijndael$westmere(n, x, ctx);
+    return unrijndael_westmere(n, x, ctx);
   } else {
-    return unrijndael$pure(n, x, ctx);
+    return unrijndael_pure(n, x, ctx);
   }
 }

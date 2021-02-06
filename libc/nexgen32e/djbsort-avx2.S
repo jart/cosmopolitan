@@ -7,7 +7,7 @@
 /	@param	rsi is number of elements in rdi
 /	@note	public domain
 /	@see	en.wikipedia.org/wiki/Sorting_network
-djbsort$avx2:
+djbsort_avx2:
 	push	%rbp
 	mov	%rsp,%rbp
 	push	%r15
@@ -275,7 +275,7 @@ djbsort$avx2:
 	call	int32_sort_2power
 	lea	(%r12,%rbx,4),%rdi
 	mov	%r14,%rsi
-	call	djbsort$avx2
+	call	djbsort_avx2
 .L175:	mov	%rbx,%r14
 	mov	%r13,%rsi
 	mov	%r12,%rdi
@@ -798,7 +798,7 @@ djbsort$avx2:
 	pop	%r15
 	pop	%rbp
 	ret
-	.endfn	djbsort$avx2,globl,hidden
+	.endfn	djbsort_avx2,globl,hidden
 
 minmax_vector:
 	cmp	$7,%rdx

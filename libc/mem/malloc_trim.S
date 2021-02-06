@@ -23,5 +23,5 @@
 /	@param	rdi specifies bytes of memory to leave available
 /	@return	1 if it actually released any memory, else 0
 malloc_trim:
-	jmp	*hook$malloc_trim(%rip)
+	jmp	*hook_malloc_trim(%rip)
 	.endfn	malloc_trim,globl

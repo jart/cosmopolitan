@@ -85,7 +85,7 @@ void sha256_update(struct Sha256Ctx *ctx, const uint8_t *data, size_t size) {
 #if 0
   if (!IsTiny() && size >= 64 &&
       (X86_HAVE(SHA) && X86_HAVE(SSE4_1) && X86_HAVE(SSSE3))) {
-    sha256$x86(ctx->state, data, size);
+    sha256_x86(ctx->state, data, size);
     i += rounddown(size, 16);
   }
 #endif

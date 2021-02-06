@@ -23,7 +23,7 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
-void *memccpy$pure(void *d, const void *s, int c, size_t n) {
+void *memccpy_pure(void *d, const void *s, int c, size_t n) {
   size_t i;
   unsigned char *x;
   const unsigned char *y;
@@ -57,7 +57,7 @@ TEST(memccpy, memcpy) {
     b2 = calloc(1, n);
     b3 = calloc(1, n);
     rngset(b1, n, rand64, -1);
-    e1 = memccpy$pure(b2, b1, 31337, n);
+    e1 = memccpy_pure(b2, b1, 31337, n);
     e2 = memccpy(b3, b1, 31337, n);
     n1 = e1 ? e1 - b2 : n;
     n2 = e2 ? e2 - b3 : n;

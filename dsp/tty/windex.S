@@ -27,14 +27,14 @@ windex:	.quad	0
 	.previous
 
 	.init.start 300,_init_windex
-	ezlea	windex$avx2,ax
+	ezlea	windex_avx2,ax
 #if !X86_NEED(AVX2)
-	ezlea	windex$sse4,dx
+	ezlea	windex_sse4,dx
 	testb	X86_HAVE(AVX2)+kCpuids(%rip)
 	cmovz	%rdx,%rax
 #endif /* AVX2 */
 #if !X86_NEED(SSE4_2)
-	ezlea	windex$k8,dx
+	ezlea	windex_k8,dx
 	testb	X86_HAVE(SSE4_2)+kCpuids(%rip)
 	cmovz	%rdx,%rax
 #endif /* SSE4 */

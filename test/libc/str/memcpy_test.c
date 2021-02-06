@@ -174,7 +174,7 @@ void *MemCpy(void *, const void *, size_t);
 
 #define BB(N)              \
   do {                     \
-    B(memmove$pure, N);    \
+    B(memmove_pure, N);    \
     B(memcpy, N);          \
     B(MemCpy, N);          \
     fprintf(stderr, "\n"); \

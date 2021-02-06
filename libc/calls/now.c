@@ -73,11 +73,11 @@ static long double ConvertTicksToSeconds(uint64_t ticks) {
   return 1 / 1e9 * ConvertTicksToNanos(ticks);
 }
 
-long double nowl$sys(void) {
+long double nowl_sys(void) {
   return dtime(CLOCK_REALTIME);
 }
 
-long double nowl$art(void) {
+long double nowl_art(void) {
   uint64_t ticks;
   if (!g_now.once) InitTime();
   ticks = unsignedsubtract(rdtsc(), g_now.k0);

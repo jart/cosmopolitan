@@ -28,7 +28,7 @@
 static const int16_t kDel16[8] = {127, 127, 127, 127, 127, 127, 127, 127};
 
 /* 10x speedup for ascii */
-static noasan axdx_t tprecode16to8$sse2(char *dst, size_t dstsize,
+static noasan axdx_t tprecode16to8_sse2(char *dst, size_t dstsize,
                                         const char16_t *src, axdx_t r) {
   int16_t v1[8], v2[8], v3[8], vz[8];
   memset(vz, 0, 16);
@@ -63,7 +63,7 @@ axdx_t tprecode16to8(char *dst, size_t dstsize, const char16_t *src) {
   r.dx = 0;
   for (;;) {
     if (!IsTiny() && !((uintptr_t)(src + r.dx) & 15)) {
-      r = tprecode16to8$sse2(dst, dstsize, src, r);
+      r = tprecode16to8_sse2(dst, dstsize, src, r);
     }
     if (!(x = src[r.dx++])) break;
     if (IsUtf16Cont(x)) continue;

@@ -35,8 +35,8 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
-static textwindows int64_t sys_open_nt$impl(int dirfd, const char *path,
-                                        uint32_t flags, int32_t mode) {
+static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
+                                            uint32_t flags, int32_t mode) {
   uint32_t br;
   int64_t handle;
   char16_t path16[PATH_MAX];
@@ -76,19 +76,19 @@ static textwindows int64_t sys_open_nt$impl(int dirfd, const char *path,
   }
 }
 
-static textwindows ssize_t sys_open_nt$console(int dirfd,
-                                           const struct NtMagicPaths *mp,
-                                           uint32_t flags, int32_t mode,
-                                           size_t fd) {
+static textwindows ssize_t sys_open_nt_console(int dirfd,
+                                               const struct NtMagicPaths *mp,
+                                               uint32_t flags, int32_t mode,
+                                               size_t fd) {
   if (GetFileType(g_fds.p[STDIN_FILENO].handle) == kNtFileTypeChar &&
       GetFileType(g_fds.p[STDOUT_FILENO].handle) == kNtFileTypeChar) {
     g_fds.p[fd].handle = g_fds.p[STDIN_FILENO].handle;
     g_fds.p[fd].extra = g_fds.p[STDOUT_FILENO].handle;
-  } else if ((g_fds.p[fd].handle = sys_open_nt$impl(
+  } else if ((g_fds.p[fd].handle = sys_open_nt_impl(
                   dirfd, mp->conin, (flags & ~O_ACCMODE) | O_RDONLY, mode)) !=
              -1) {
-    g_fds.p[fd].extra =
-        sys_open_nt$impl(dirfd, mp->conout, (flags & ~O_ACCMODE) | O_WRONLY, mode);
+    g_fds.p[fd].extra = sys_open_nt_impl(dirfd, mp->conout,
+                                         (flags & ~O_ACCMODE) | O_WRONLY, mode);
     assert(g_fds.p[fd].extra != -1);
   } else {
     return -1;
@@ -98,10 +98,10 @@ static textwindows ssize_t sys_open_nt$console(int dirfd,
   return fd;
 }
 
-static textwindows ssize_t sys_open_nt$file(int dirfd, const char *file,
-                                        uint32_t flags, int32_t mode,
-                                        size_t fd) {
-  if ((g_fds.p[fd].handle = sys_open_nt$impl(dirfd, file, flags, mode)) != -1) {
+static textwindows ssize_t sys_open_nt_file(int dirfd, const char *file,
+                                            uint32_t flags, int32_t mode,
+                                            size_t fd) {
+  if ((g_fds.p[fd].handle = sys_open_nt_impl(dirfd, file, flags, mode)) != -1) {
     g_fds.p[fd].kind = kFdFile;
     g_fds.p[fd].flags = flags;
     return fd;
@@ -111,14 +111,14 @@ static textwindows ssize_t sys_open_nt$file(int dirfd, const char *file,
 }
 
 textwindows ssize_t sys_open_nt(int dirfd, const char *file, uint32_t flags,
-                            int32_t mode) {
+                                int32_t mode) {
   int fd;
   ssize_t rc;
   if ((fd = __reservefd()) == -1) return -1;
   if ((flags & O_ACCMODE) == O_RDWR && !strcmp(file, kNtMagicPaths.devtty)) {
-    rc = sys_open_nt$console(dirfd, &kNtMagicPaths, flags, mode, fd);
+    rc = sys_open_nt_console(dirfd, &kNtMagicPaths, flags, mode, fd);
   } else {
-    rc = sys_open_nt$file(dirfd, file, flags, mode, fd);
+    rc = sys_open_nt_file(dirfd, file, flags, mode, fd);
   }
   if (rc == -1) {
     __releasefd(fd);

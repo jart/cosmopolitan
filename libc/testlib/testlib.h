@@ -137,20 +137,20 @@ void TearDown(void);
 
 #define ASSERT_BINEQ(WANT, GOT)              \
   _Generic((WANT)[0], char                   \
-           : assertBinaryEquals$hex, default \
-           : assertBinaryEquals$cp437)(FILIFU WANT, GOT, -1, #GOT, true)
+           : assertBinaryEquals_hex, default \
+           : assertBinaryEquals_cp437)(FILIFU WANT, GOT, -1, #GOT, true)
 #define ASSERT_BINNE(NOPE, GOT)                 \
   _Generic((NOPE)[0], char                      \
-           : assertBinaryNotEquals$hex, default \
-           : assertBinaryNotEquals$cp437)(FILIFU NOPE, GOT, -1, #GOT, true)
+           : assertBinaryNotEquals_hex, default \
+           : assertBinaryNotEquals_cp437)(FILIFU NOPE, GOT, -1, #GOT, true)
 #define ASSERT_BINEQN(WANT, GOT, N)          \
   _Generic((WANT)[0], char                   \
-           : assertBinaryEquals$hex, default \
-           : assertBinaryEquals$cp437)(FILIFU WANT, GOT, N, #GOT, true)
+           : assertBinaryEquals_hex, default \
+           : assertBinaryEquals_cp437)(FILIFU WANT, GOT, N, #GOT, true)
 #define ASSERT_BINNEN(NOPE, GOT, N)             \
   _Generic((NOPE)[0], char                      \
-           : assertBinaryNotEquals$hex, default \
-           : assertBinaryNotEquals$cp437)(FILIFU NOPE, GOT, -1, #GOT, true)
+           : assertBinaryNotEquals_hex, default \
+           : assertBinaryNotEquals_cp437)(FILIFU NOPE, GOT, -1, #GOT, true)
 
 #define ASSERT_FLOAT_EQ(WANT, GOT) \
   assertLongDoubleEquals(FILIFU WANT, GOT, #GOT, true)
@@ -195,20 +195,20 @@ void TearDown(void);
 
 #define EXPECT_BINEQ(WANT, GOT)              \
   _Generic((WANT)[0], char                   \
-           : assertBinaryEquals$hex, default \
-           : assertBinaryEquals$cp437)(FILIFU WANT, GOT, -1, #GOT, false)
+           : assertBinaryEquals_hex, default \
+           : assertBinaryEquals_cp437)(FILIFU WANT, GOT, -1, #GOT, false)
 #define EXPECT_BINNE(NOPE, GOT)                 \
   _Generic((NOPE)[0], char                      \
-           : assertBinaryNotEquals$hex, default \
-           : assertBinaryNotEquals$cp437)(FILIFU NOPE, GOT, -1, #GOT, false)
+           : assertBinaryNotEquals_hex, default \
+           : assertBinaryNotEquals_cp437)(FILIFU NOPE, GOT, -1, #GOT, false)
 #define EXPECT_BINEQN(WANT, GOT, N)          \
   _Generic((WANT)[0], char                   \
-           : assertBinaryEquals$hex, default \
-           : assertBinaryEquals$cp437)(FILIFU WANT, GOT, N, #GOT, false)
+           : assertBinaryEquals_hex, default \
+           : assertBinaryEquals_cp437)(FILIFU WANT, GOT, N, #GOT, false)
 #define EXPECT_BINNEN(NOPE, GOT, N)             \
   _Generic((NOPE)[0], char                      \
-           : assertBinaryNotEquals$hex, default \
-           : assertBinaryNotEquals$cp437)(FILIFU NOPE, GOT, -1, #GOT, false)
+           : assertBinaryNotEquals_hex, default \
+           : assertBinaryNotEquals_cp437)(FILIFU NOPE, GOT, -1, #GOT, false)
 
 #define EXPECT_FLOAT_EQ(WANT, GOT) \
   assertLongDoubleEquals(FILIFU WANT, GOT, #GOT, false)
@@ -536,7 +536,7 @@ forceinline void assertContains(FILIFU_ARGS size_t cw, const char *needle,
   testlib_onfail2(isfatal);
 }
 
-forceinline void assertBinaryEquals$cp437(FILIFU_ARGS const char16_t *want,
+forceinline void assertBinaryEquals_cp437(FILIFU_ARGS const char16_t *want,
                                           const void *got, size_t n,
                                           const char *gotcode, bool isfatal) {
   ++g_testlib_ran;
@@ -549,7 +549,7 @@ forceinline void assertBinaryEquals$cp437(FILIFU_ARGS const char16_t *want,
   testlib_onfail2(isfatal);
 }
 
-forceinline void assertBinaryEquals$hex(FILIFU_ARGS const char *want,
+forceinline void assertBinaryEquals_hex(FILIFU_ARGS const char *want,
                                         const void *got, size_t n,
                                         const char *gotcode, bool isfatal) {
   ++g_testlib_ran;
@@ -562,7 +562,7 @@ forceinline void assertBinaryEquals$hex(FILIFU_ARGS const char *want,
   testlib_onfail2(isfatal);
 }
 
-forceinline void assertBinaryNotEquals$cp437(FILIFU_ARGS const char16_t *want,
+forceinline void assertBinaryNotEquals_cp437(FILIFU_ARGS const char16_t *want,
                                              const void *got, size_t n,
                                              const char *gotcode,
                                              bool isfatal) {
@@ -576,7 +576,7 @@ forceinline void assertBinaryNotEquals$cp437(FILIFU_ARGS const char16_t *want,
   testlib_onfail2(isfatal);
 }
 
-forceinline void assertBinaryNotEquals$hex(FILIFU_ARGS const char *want,
+forceinline void assertBinaryNotEquals_hex(FILIFU_ARGS const char *want,
                                            const void *got, size_t n,
                                            const char *gotcode, bool isfatal) {
   ++g_testlib_ran;

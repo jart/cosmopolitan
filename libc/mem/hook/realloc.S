@@ -20,9 +20,9 @@
 .source	__FILE__
 
 	.initbss 202,_init_realloc
-hook$realloc:
+hook_realloc:
 	.quad	0
-	.endobj	hook$realloc,globl,hidden
+	.endobj	hook_realloc,globl,hidden
 	.previous
 
 	.init.start 202,_init_realloc

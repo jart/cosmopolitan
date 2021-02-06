@@ -35,5 +35,5 @@
 /	@note	overreliance on memalign is a sure way to fragment space
 /	@see	dlmemalign()
 memalign:
-	jmp	*hook$memalign(%rip)
+	jmp	*hook_memalign(%rip)
 	.endfn	memalign,globl

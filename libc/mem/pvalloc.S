@@ -26,5 +26,5 @@
 /	@param	rdi is number of bytes needed
 /	@return	rax is memory address, or NULL w/ errno
 /	@see	dlpvalloc()
-pvalloc:jmp	*hook$pvalloc(%rip)
+pvalloc:jmp	*hook_pvalloc(%rip)
 	.endfn	pvalloc,globl

@@ -30,7 +30,7 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
-void djbsort$avx2(int32_t *, long);
+void djbsort_avx2(int32_t *, long);
 
 size_t n;
 int32_t *a, *b, *c;
@@ -42,7 +42,7 @@ TEST(djbsort, test4) {
   b = memcpy(gc(malloc(n * 4)), kA, n * 4);
   c = memcpy(gc(malloc(n * 4)), kA, n * 4);
   insertionsort(a, n);
-  djbsort$avx2(b, n);
+  djbsort_avx2(b, n);
   djbsort(c, n);
   ASSERT_EQ(0, memcmp(a, b, n * 4));
   ASSERT_EQ(0, memcmp(a, c, n * 4));
@@ -72,7 +72,7 @@ TEST(djbsort, test64) {
   djbsort(c, n);
   ASSERT_EQ(0, memcmp(a, c, n * 4));
   if (X86_HAVE(AVX2)) {
-    djbsort$avx2(b, n);
+    djbsort_avx2(b, n);
     ASSERT_EQ(0, memcmp(a, b, n * 4));
   }
 }
