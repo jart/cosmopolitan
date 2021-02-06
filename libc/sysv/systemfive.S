@@ -103,7 +103,7 @@ __systemfive:
 	.endobj	__systemfive,globl,hidden
 	.previous
 
-	.text.syscall
+	.privileged
 .Lanchorpoint:
 systemfive.linux:
 	and	$0xfff,%eax
@@ -332,10 +332,10 @@ systemfive.init.syscall:
 	js	systemfive.init.done
 	push	%rdi
 	push	%rsi
-	.weak	__text_syscall_addr
-	.weak	__text_syscall_size
-	mov	$__text_syscall_addr,%edi
-	mov	$__text_syscall_size,%esi
+	.weak	__privileged_addr
+	.weak	__privileged_size
+	mov	$__privileged_addr,%edi
+	mov	$__privileged_size,%esi
 	syscall
 	pop	%rsi
 	pop	%rdi

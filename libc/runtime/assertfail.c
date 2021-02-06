@@ -41,7 +41,7 @@ static noasan char *__assert_stpcpy(char *d, const char *s) {
   }
 }
 
-static textsyscall noasan wontreturn void __assert_exit(int rc) {
+static privileged noinline noasan wontreturn void __assert_exit(int rc) {
   if (!IsWindows()) {
     asm volatile("syscall"
                  : /* no outputs */
@@ -53,8 +53,8 @@ static textsyscall noasan wontreturn void __assert_exit(int rc) {
   }
 }
 
-static textsyscall noasan ssize_t __assert_write(const void *data,
-                                                 size_t size) {
+static privileged noinline noasan ssize_t __assert_write(const void *data,
+                                                         size_t size) {
   ssize_t rc;
   uint32_t wrote;
   if (!IsWindows()) {

@@ -620,7 +620,6 @@ typedef uint64_t uintmax_t;
 #define textexit    _Section(".text.exit") noinstrument
 #define textreal    _Section(".text.real")
 #define textwindows _Section(".text.windows")
-#define textsyscall _Section(".text.syscall") noinline
 #define antiquity   _Section(".text.antiquity")
 #else
 #define testonly

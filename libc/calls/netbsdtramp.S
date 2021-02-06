@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.text.syscall
+.privileged
 
 __restore_rt_netbsd:
 	mov	%r15,%rdi

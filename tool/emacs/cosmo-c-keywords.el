@@ -176,7 +176,6 @@
            "interruptfn"
            "nocallback"
            "textstartup"
-           "textsyscall"
            "warnifused"
            "attributeallocsize"
            "attributeallocalign"

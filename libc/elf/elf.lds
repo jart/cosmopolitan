@@ -67,9 +67,6 @@ SECTIONS {
   .text : {
     *(SORT_BY_ALIGNMENT(.text.hot))
     KEEP(*(.keep.text))
-    HIDDEN(__text_syscall_start = .);
-    *(.text.syscall .text.syscall.*)
-    HIDDEN(__text_syscall_end = .);
     *(.text .text.*)
     KEEP(*(SORT_BY_NAME(.sort.text.*)))
   }
@@ -84,6 +81,7 @@ SECTIONS {
     . = ALIGN(DEFINED(ftrace_init) ? PAGESIZE : 1);
     HIDDEN(__privileged_start = .);
     *(.privileged)
+    HIDDEN(__privileged_end = .);
   }
 
   .rodata : {
@@ -212,6 +210,6 @@ SECTIONS {
   }
 }
 
-HIDDEN(__text_syscall_addr = ROUNDDOWN(__text_syscall_start, PAGESIZE)); 
-HIDDEN(__text_syscall_size = (ROUNDUP(__text_syscall_end, PAGESIZE) -
-                              ROUNDDOWN(__text_syscall_start, PAGESIZE))); 
+HIDDEN(__privileged_addr = ROUNDDOWN(__privileged_start, PAGESIZE)); 
+HIDDEN(__privileged_size = (ROUNDUP(__privileged_end, PAGESIZE) -
+                            ROUNDDOWN(__privileged_start, PAGESIZE))); 

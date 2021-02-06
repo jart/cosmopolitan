@@ -21,7 +21,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/macros.h"
-.text.syscall
+.privileged
 .source	__FILE__
 
 /	Terminates program abnormally.

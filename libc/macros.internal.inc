@@ -33,9 +33,6 @@
 .macro	.text.exit
 	.section .text.exit,"ax",@progbits
 .endm
-.macro	.text.syscall
-	.section .text.syscall,"ax",@progbits
-.endm
 .macro	.firstclass
 	.section .text.hot,"ax",@progbits
 .endm

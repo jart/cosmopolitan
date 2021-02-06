@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.text.syscall
+.privileged
 .source	__FILE__
 
 /	Linux Signal Trampoline (HOLY CODE)

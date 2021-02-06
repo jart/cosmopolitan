@@ -48,7 +48,7 @@ static void __sys_print_nt(const void *data, size_t len) {
  * @param len can be computed w/ tinystrlen()
  * @clob nothing except flags
  */
-textsyscall void __print(const void *data, size_t len) {
+privileged noinline void __print(const void *data, size_t len) {
   int64_t ax, ordinal;
   if (WasImported(__imp_WriteFile)) {
     __sys_print_nt(data, len);

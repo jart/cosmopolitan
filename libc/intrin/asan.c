@@ -411,7 +411,7 @@ static const char *__asan_describe_access_poison(char *p) {
   }
 }
 
-static textsyscall wontreturn void __asan_exit(int rc) {
+static privileged noinline wontreturn void __asan_exit(int rc) {
   if (!IsWindows()) {
     asm volatile("syscall"
                  : /* no outputs */
@@ -423,7 +423,7 @@ static textsyscall wontreturn void __asan_exit(int rc) {
   }
 }
 
-static textsyscall ssize_t __asan_write(const void *data, size_t size) {
+static privileged noinline ssize_t __asan_write(const void *data, size_t size) {
   ssize_t rc;
   uint32_t wrote;
   if (!IsWindows()) {

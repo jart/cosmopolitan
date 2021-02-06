@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/macros.h"
-.text.syscall
+.privileged
 
 /	Forks process without copying page tables.
 /

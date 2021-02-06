@@ -28,7 +28,7 @@
 /**
  * Aborts program under enemy fire to avoid being taken alive.
  */
-textsyscall noasan void __stack_chk_fail(void) {
+privileged noasan void __stack_chk_fail(void) {
   size_t len;
   const char *msg;
   int64_t ax, cx, si;
