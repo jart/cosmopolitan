@@ -19,12 +19,6 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	@fileoverview Address Sanitizer Thunks
-/
-/	This has tiny code size and reduces API surface area
-/	since ASAN has the same stylistic hugeness as UBSAN.
-/	We also guard all the functions, against reentrancy.
-
 	.rodata.cst4
 __asan_option_detect_stack_use_after_return:
 	.long	0

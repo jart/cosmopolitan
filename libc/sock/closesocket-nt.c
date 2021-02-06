@@ -16,21 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
-#include "libc/calls/internal.h"
-#include "libc/nt/winsock.h"
+#include "libc/mem/mem.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/yoink.inc"
-#include "libc/sysv/errfuns.h"
 
-textwindows int sys_closesocket_nt(int fd) {
-  int rc;
-  if (!__isfdkind(fd, kFdSocket)) return ebadf();
-  if (__sys_closesocket_nt(g_fds.p[fd].handle) != -1) {
-    rc = 0;
+/**
+ * Closes socket on Windows.
+ *
+ * This function should only be called by close().
+ */
+textwindows int sys_closesocket_nt(struct Fd *fd) {
+  struct SockFd *sockfd;
+  sockfd = (struct SockFd *)fd->extra;
+  WSACloseEvent(sockfd->event);
+  free(sockfd);
+  if (__sys_closesocket_nt(fd->handle) != -1) {
+    return 0;
   } else {
-    rc = __winsockerr();
+    return __winsockerr();
   }
-  __removefd(fd);
-  return rc;
 }

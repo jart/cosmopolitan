@@ -336,7 +336,7 @@ int __sys_listen_nt(uint64_t, int);
 int __sys_setsockopt_nt(uint64_t, int, int, const void *, int);
 int __sys_shutdown_nt(uint64_t, int);
 int __sys_select_nt(int, struct NtFdSet *, struct NtFdSet *, struct NtFdSet *,
-                struct NtTimeval *);
+                    struct NtTimeval *);
 
 uint64_t WSASocket(int af, int type, int protocol,
                    const struct NtWsaProtocolInfo *opt_lpProtocolInfo,
@@ -393,8 +393,8 @@ int WSASendTo(uint64_t s, const struct NtIovec *lpBuffers,
               const NtWsaOverlappedCompletionRoutine opt_lpCompletionRoutine)
     paramsnonnull((2));
 
-int WSAPoll(struct sys_pollfd_nt *inout_fdArray, uint32_t nfds, signed timeout_ms)
-    paramsnonnull();
+int WSAPoll(struct sys_pollfd_nt *inout_fdArray, uint32_t nfds,
+            signed timeout_ms) paramsnonnull();
 
 int WSARecv(uint64_t s, const struct NtIovec *out_lpBuffers,
             uint32_t dwBufferCount, uint32_t *opt_out_lpNumberOfBytesRecvd,
@@ -529,7 +529,7 @@ bool32 AcceptEx(int64_t sListenSocket, int64_t sAcceptSocket,
                 void *out_lpOutputBuffer /*[recvlen+local+remoteaddrlen]*/,
                 uint32_t dwReceiveDataLength, uint32_t dwLocalAddressLength,
                 uint32_t dwRemoteAddressLength, uint32_t *out_lpdwBytesReceived,
-                struct NtOverlapped inout_lpOverlapped);
+                struct NtOverlapped *inout_lpOverlapped);
 
 void GetAcceptExSockaddrs(
     const void *lpOutputBuffer /*[recvsize+addrsize+addrlen]*/,

@@ -17,32 +17,43 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/mem/mem.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/yoink.inc"
 #include "libc/sysv/consts/fio.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sock.h"
 
-#define CLOEXEC  0x00080000
-#define NONBLOCK 0x00000800
-
 textwindows int sys_socket_nt(int family, int type, int protocol) {
-  int fd;
-  uint32_t yes;
+  int64_t h;
+  struct SockFd *sockfd;
+  int fd, oflags, truetype;
   if ((fd = __reservefd()) == -1) return -1;
-  if ((g_fds.p[fd].handle = WSASocket(family, type & ~(CLOEXEC | NONBLOCK),
-                                      protocol, NULL, 0, 0)) != -1) {
-    if (type & NONBLOCK) {
-      yes = 1;
-      if (__sys_ioctlsocket_nt(g_fds.p[fd].handle, FIONBIO, &yes) == -1) {
-        __sys_closesocket_nt(g_fds.p[fd].handle);
+  truetype = type & ~(SOCK_CLOEXEC | SOCK_NONBLOCK);
+  if ((h = WSASocket(family, truetype, protocol, NULL, 0, 0)) != -1) {
+    oflags = 0;
+    if (type & SOCK_CLOEXEC) oflags |= O_CLOEXEC;
+    if (type & SOCK_NONBLOCK) oflags |= O_NONBLOCK;
+    if (type & SOCK_NONBLOCK) {
+      if (__sys_ioctlsocket_nt(h, FIONBIO, (uint32_t[1]){1}) == -1) {
+        __sys_closesocket_nt(h);
+        __releasefd(fd);
         return __winsockerr();
       }
     }
+    sockfd = calloc(1, sizeof(struct SockFd));
+    sockfd->family = family;
+    sockfd->type = truetype;
+    sockfd->protocol = protocol;
+    sockfd->event = WSACreateEvent();
     g_fds.p[fd].kind = kFdSocket;
-    g_fds.p[fd].flags = type & (CLOEXEC | NONBLOCK);
+    g_fds.p[fd].flags = oflags;
+    g_fds.p[fd].handle = h;
+    g_fds.p[fd].extra = (uintptr_t)sockfd;
     return fd;
   } else {
+    __releasefd(fd);
     return __winsockerr();
   }
 }

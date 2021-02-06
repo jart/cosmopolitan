@@ -44,11 +44,11 @@ int close(int fd) {
   } else if (!IsWindows()) {
     rc = sys_close(fd);
   } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdSocket) {
-    rc = weaken(sys_closesocket_nt)(fd);
+    rc = weaken(sys_closesocket_nt)(g_fds.p + fd);
   } else if (fd < g_fds.n &&
              (g_fds.p[fd].kind == kFdFile || g_fds.p[fd].kind == kFdConsole ||
               g_fds.p[fd].kind == kFdProcess)) {
-    rc = sys_close_nt(fd);
+    rc = sys_close_nt(g_fds.p + fd);
   } else {
     rc = ebadf();
   }

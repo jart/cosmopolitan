@@ -22,20 +22,19 @@
 #include "libc/nt/runtime.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int sys_close_nt(int fd) {
+textwindows int sys_close_nt(struct Fd *fd) {
   bool32 ok;
-  if (g_fds.p[fd].kind == kFdFile &&
-      GetFileType(g_fds.p[fd].handle) == kNtFileTypeDisk) {
+  if (fd->kind == kFdFile && GetFileType(fd->handle) == kNtFileTypeDisk) {
     /*
      * Like Linux, closing a file on Windows doesn't guarantee it's
      * immediately synced to disk. But unlike Linux, this could cause
      * subsequent operations, e.g. unlink() to break w/ access error.
      */
-    FlushFileBuffers(g_fds.p[fd].handle);
+    FlushFileBuffers(fd->handle);
   }
-  ok = CloseHandle(g_fds.p[fd].handle);
-  if (g_fds.p[fd].kind == kFdConsole) {
-    ok &= CloseHandle(g_fds.p[fd].extra);
+  ok = CloseHandle(fd->handle);
+  if (fd->kind == kFdConsole) {
+    ok &= CloseHandle(fd->extra);
   }
   return ok ? 0 : __winerr();
 }

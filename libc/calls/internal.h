@@ -1,17 +1,21 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_INTERNAL_H_
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/itimerval.h"
+#include "libc/calls/struct/sigaction-xnu.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/limits.h"
 #include "libc/macros.h"
+#include "libc/nt/struct/context.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/struct/startupinfo.h"
 #include "libc/nt/struct/systeminfo.h"
+#include "libc/nt/struct/win32fileattributedata.h"
 #include "libc/runtime/runtime.h"
 #include "libc/time/struct/timezone.h"
 #include "libc/time/struct/utimbuf.h"
@@ -22,12 +26,6 @@
 COSMOPOLITAN_C_START_
 
 #define kIoMotion ((const int8_t[3]){1, 0, 0})
-
-struct NtContext;
-struct NtWin32FileAttributeData;
-struct ZiposHandle;
-struct __darwin_siginfo;
-struct __darwin_ucontext;
 
 struct IoctlPtmGet {
   int theduxfd;
@@ -56,8 +54,8 @@ struct Fd {
 };
 
 struct Fds {
-  size_t f;  // lowest free slot
-  size_t n;  // monotonic capacity
+  size_t f; /* lowest free slot */
+  size_t n; /* monotonic capacity */
   struct Fd *p;
   struct Fd __init_p[OPEN_MAX];
 };
@@ -75,7 +73,6 @@ hidden extern const struct NtSecurityAttributes kNtIsInheritable;
 int __reservefd(void) hidden;
 void __releasefd(int) hidden;
 int __ensurefds(int) hidden;
-void __removefd(int) hidden;
 
 forceinline bool __isfdopen(int fd) {
   return 0 <= fd && fd < g_fds.n && g_fds.p[fd].kind != kFdEmpty;
@@ -231,7 +228,7 @@ bool32 sys_isatty_nt(int) hidden;
 char *sys_getcwd_nt(char *, size_t) hidden;
 i64 sys_lseek_nt(int, i64, int) hidden;
 int sys_chdir_nt(const char *) hidden;
-int sys_close_nt(int) hidden;
+int sys_close_nt(struct Fd *) hidden;
 int sys_dup_nt(int, int, int) hidden;
 int sys_execve_nt(const char *, char *const[], char *const[]) hidden;
 int sys_faccessat_nt(int, const char *, int, uint32_t) hidden;

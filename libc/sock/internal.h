@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_SOCK_INTERNAL_H_
 #include "libc/bits/bits.h"
 #include "libc/calls/internal.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/select.h"
 #include "libc/sock/sock.h"
@@ -45,6 +46,22 @@ struct msghdr_bsd {
   uint32_t msg_flags; /* « different type */
 };
 
+struct SockFd {
+  int family;
+  int type;
+  int protocol;
+  int64_t event;
+  bool32 (*AcceptEx)(int64_t sListenSocket, int64_t sAcceptSocket,
+                     void *out_lpOutputBuffer /*[recvlen+local+remoteaddrlen]*/,
+                     uint32_t dwReceiveDataLength,
+                     uint32_t dwLocalAddressLength,
+                     uint32_t dwRemoteAddressLength,
+                     uint32_t *out_lpdwBytesReceived,
+                     struct NtOverlapped *inout_lpOverlapped) __msabi;
+};
+
+hidden extern int64_t __iocp;
+
 errno_t __dos2errno(uint32_t);
 
 int32_t __sys_accept(int32_t, void *, uint32_t *, int) nodiscard hidden;
@@ -85,7 +102,7 @@ int sys_listen_nt(struct Fd *, int) hidden;
 int sys_connect_nt(struct Fd *, const void *, uint32_t) hidden;
 int sys_bind_nt(struct Fd *, const void *, uint32_t);
 int sys_accept_nt(struct Fd *, void *, uint32_t *, int) hidden;
-int sys_closesocket_nt(int) hidden;
+int sys_closesocket_nt(struct Fd *) hidden;
 int sys_socket_nt(int, int, int) hidden;
 int sys_select_nt(int, fd_set *, fd_set *, fd_set *, struct timeval *) hidden;
 int sys_shutdown_nt(struct Fd *, int) hidden;

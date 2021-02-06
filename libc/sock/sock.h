@@ -40,6 +40,14 @@ struct sockaddr_in {   /* Linux+NT ABI */
   uint8_t sin_zero[8];
 };
 
+struct sockaddr_storage {
+  union {
+    uint16_t ss_family;
+    intptr_t __ss_align;
+    char __ss_storage[128];
+  };
+};
+
 struct pollfd {
   int32_t fd;
   int16_t events;
