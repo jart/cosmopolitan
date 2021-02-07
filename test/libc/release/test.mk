@@ -125,6 +125,4 @@ o/$(MODE)/test/libc/release:					\
 		o/$(MODE)/test/libc/release/smokecxx.com	\
 		o/$(MODE)/test/libc/release/smokecxx.com.runs	\
 		o/$(MODE)/test/libc/release/smokeansi.com	\
-		o/$(MODE)/test/libc/release/smokeansi.com.runs	\
-		o/$(MODE)/test/libc/release/smokeclang.com	\
-		o/$(MODE)/test/libc/release/smokeclang.com.runs
+		o/$(MODE)/test/libc/release/smokeansi.com.runs
