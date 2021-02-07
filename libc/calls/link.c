@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/calls.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/calls/internal.h"
+#include "libc/dce.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Creates hard filesystem link.
@@ -32,7 +32,6 @@
  * @asyncsignalsafe
  */
 int link(const char *existingpath, const char *newpath) {
-  if (!existingpath || !newpath) return efault();
   if (!IsWindows()) {
     return sys_linkat(AT_FDCWD, existingpath, AT_FDCWD, newpath, 0);
   } else {

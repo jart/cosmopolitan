@@ -1,7 +1,14 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_SYSCALLS_H_
 #define COSMOPOLITAN_LIBC_CALLS_SYSCALLS_H_
+#include "libc/calls/struct/iovec.h"
+#include "libc/calls/struct/rlimit.h"
+#include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/sysinfo.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/tms.h"
+#include "libc/calls/struct/utsname.h"
 #include "libc/calls/typedef/sighandler_t.h"
 #include "libc/dce.h"
 #include "libc/fmt/pflink.h"
@@ -53,17 +60,6 @@ COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § system calls                                              ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-
-struct dirstream;
-struct iovec;
-struct rlimit;
-struct rusage;
-struct sigaction;
-struct sigset;
-struct stat;
-struct sysinfo;
-struct tms;
-struct utsname;
 
 typedef int sig_atomic_t;
 typedef struct dirstream DIR;
@@ -196,12 +192,12 @@ int wait(int *);
 int wait3(int *, int, struct rusage *);
 int wait4(int, int *, int, struct rusage *);
 int waitpid(int, int *, int);
-int64_t lseek(int, int64_t, int);
-int64_t pread(int, void *, size_t, int64_t);
-int64_t preadv(int, struct iovec *, int, int64_t);
-int64_t pwrite(int, const void *, size_t, int64_t);
-int64_t pwritev(int, const struct iovec *, int, int64_t);
-int64_t syscall();
+ssize_t lseek(int, int64_t, unsigned);
+ssize_t pread(int, void *, size_t, int64_t);
+ssize_t preadv(int, struct iovec *, int, int64_t);
+ssize_t pwrite(int, const void *, size_t, int64_t);
+ssize_t pwritev(int, const struct iovec *, int, int64_t);
+intptr_t syscall(int, ...);
 void sync(void);
 long telldir(DIR *);
 int getpid(void);

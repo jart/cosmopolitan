@@ -33,7 +33,6 @@ if [ "$1" = "clang++-10" ]; then
   fi
 fi
 
-export LC_ALL=C
 MKDIR=${MKDIR:-$(command -v mkdir) -p} || exit
 
 GZME=
@@ -270,10 +269,10 @@ fi
 
 set -- "$@" -no-canonical-prefixes $FDIAGNOSTIC_COLOR $ASAN $UBSAN $COUNTERMAND
 
-if [ "$SILENT" = "0" ]; then
-  printf "%s\n" "$*" >&2
-else
+if [ "$V" = "0" ]; then
   printf "$LOGFMT" "${ACTION:-COMPILE}" "${TARGET:-$OUT}" >&2
+else
+  printf "%s\n" "$*" >&2
 fi
 
 OUTDIR="${OUT%/*}"

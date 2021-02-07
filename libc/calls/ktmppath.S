@@ -35,7 +35,7 @@ kTmpPath:
 	movl	$'/|'t<<010|'m<<020|'p<<030,(%rdi)
 	movw	$'/,4(%rdi)
 	pushpop	kTmpPathMax,%rdx
-	ezlea	GetTempPathA$flunk,ax
+	ezlea	GetTempPathA_flunk,ax
 	call	__getntsyspath
 	.init.end 300,_init_kTmpPath
 	.source	__FILE__

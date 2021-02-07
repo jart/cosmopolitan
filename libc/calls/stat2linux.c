@@ -82,13 +82,13 @@ static textstartup void __stat2linux_netbsd(union metastat *ms) {
  */
 textstartup void __stat2linux(void *ms) {
   if (ms) {
-    if (SupportsXnu() && IsXnu()) {
+    if (IsXnu()) {
       __stat2linux_xnu((union metastat *)ms);
-    } else if (SupportsFreebsd() && IsFreebsd()) {
+    } else if (IsFreebsd()) {
       __stat2linux_freebsd((union metastat *)ms);
-    } else if (SupportsOpenbsd() && IsOpenbsd()) {
+    } else if (IsOpenbsd()) {
       __stat2linux_openbsd((union metastat *)ms);
-    } else if (SupportsNetbsd() && IsNetbsd()) {
+    } else if (IsNetbsd()) {
       __stat2linux_netbsd((union metastat *)ms);
     }
   }

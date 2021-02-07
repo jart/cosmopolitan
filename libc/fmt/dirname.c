@@ -19,7 +19,8 @@
 #include "libc/fmt/conv.h"
 #include "libc/str/str.h"
 
-#define ISDELIM(c) (c == '/' || c == '\\' || c == '.')
+#define ISSLASH(c) (c == '/' || c == '\\')
+#define ISDELIM(c) (ISSLASH(c) || c == '.')
 
 /**
  * Returns directory portion of path.
@@ -30,7 +31,7 @@ char *dirname(char *s) {
   if (!(n = strlen(s))) return s;
   while (n && ISDELIM(s[n - 1])) --n;
   if (n) {
-    while (n && !ISDELIM(s[n - 1])) --n;
+    while (n && !ISSLASH(s[n - 1])) --n;
     if (n) {
       while (n && ISDELIM(s[n - 1])) --n;
       if (!n) ++n;

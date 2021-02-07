@@ -19,7 +19,6 @@ if [ ! -d o/third_party/gcc ]; then
   third_party/gcc/unbundle.sh
 fi
 
-export LC_ALL=C  # very important for ld
 MKDIR=${MKDIR:-$(command -v mkdir) -p} || exit
 
 OUT=
@@ -41,10 +40,10 @@ for x; do
   set -- "$@" "$x"
 done
 
-if [ "$SILENT" = "0" ]; then
-  printf "%s\n" "$*" >&2
-else
+if [ "$V" = "0" ]; then
   printf "$LOGFMT" "${ACTION:-LINK.elf}" "$OUT" >&2
+else
+  printf "%s\n" "$*" >&2
 fi
 
 OUTDIR="${OUT%/*}"

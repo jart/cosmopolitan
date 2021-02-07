@@ -18,19 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/utsname.h"
 #include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/macros.h"
-#include "libc/nt/enum/computernameformat.h"
-#include "libc/nt/errors.h"
-#include "libc/nt/runtime.h"
-#include "libc/nt/systeminfo.h"
-#include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
-
-#define CTL_KERN      1
-#define KERN_HOSTNAME 10
 
 /**
  * Returns name of host system, e.g.
@@ -42,38 +31,12 @@ int gethostname(char *name, size_t len) {
   if (len < 1) return einval();
   if (!name) return efault();
   if (!IsWindows()) {
-    if (IsBsd()) {
-      char *p;
-      int cmd[2];
-      char buf[254];
-      size_t buflen;
-      cmd[0] = CTL_KERN;
-      cmd[1] = KERN_HOSTNAME;
-      buflen = sizeof(buf);
-      if (sysctl(cmd, 2, buf, &buflen, NULL, 0) == -1) {
-        if (errno == ENOMEM) errno = ENAMETOOLONG;
-        return -1;
-      }
-      strncpy(name, buf, len);
-      name[len - 1] = '\0';
-      if ((p = strchr(name, '.'))) *p = '\0';
-      return 0;
+    if (!IsBsd()) {
+      return gethostname_linux(name, len);
     } else {
-      struct utsname u;
-      if (uname(&u) == -1) return -1;
-      memccpy(name, u.nodename, '\0', len);
-      name[len - 1] = '\0';
-      return 0;
+      return gethostname_bsd(name, len);
     }
   } else {
-    uint32_t nSize;
-    char16_t name16[256];
-    nSize = ARRAYLEN(name16);
-    if (GetComputerNameEx(kNtComputerNameDnsHostname, name16, &nSize)) {
-      tprecode16to8(name, len, name16);
-      return 0;
-    } else {
-      return __winerr();
-    }
+    return gethostname_nt(name, len);
   }
 }

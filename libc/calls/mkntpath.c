@@ -71,6 +71,7 @@ textwindows int __mkntpath2(const char *path,
    * 5. Reserve ≥13 for mkdir() i.e. 1+8+3+1, e.g. "\\ffffffff.xxx\0"
    */
   size_t i, n;
+  if (!path) return efault();
   path = FixNtMagicPath(path, flags);
   n = tprecode8to16(path16, PATH_MAX - 16, path).ax;
   if (n == PATH_MAX - 16 - 1) return enametoolong();

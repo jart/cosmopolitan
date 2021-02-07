@@ -76,6 +76,10 @@ o/$(MODE)/libc/runtime/winmain.greg.o:			\
 		OVERRIDE_CFLAGS +=			\
 			$(NO_MAGIC)
 
+o/$(MODE)/libc/runtime/ftrace.greg.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-mgeneral-regs-only
+
 LIBC_RUNTIME_LIBS = $(foreach x,$(LIBC_RUNTIME_ARTIFACTS),$($(x)))
 LIBC_RUNTIME_SRCS = $(foreach x,$(LIBC_RUNTIME_ARTIFACTS),$($(x)_SRCS))
 LIBC_RUNTIME_HDRS = $(foreach x,$(LIBC_RUNTIME_ARTIFACTS),$($(x)_HDRS))

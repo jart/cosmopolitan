@@ -28,15 +28,15 @@ set -- o/build/bootstrap/ar.com "$@"
 OUT=$3
 
 printf "$LOGFMT" "${ACTION:-ARCHIVE.a}" "$OUT" >&2
-# if [ "$SILENT" = "0" ]; then
+# if [ "$V" = "0" ]; then
+#   printf "$LOGFMT" "${ACTION:-ARCHIVE.a}" "$OUT" >&2
+# else
 #   # some of these windows nt archives are quite huge
 #   COLUMNS=${COLUMNS:-80}
 #   COLUMNS=$((COLUMNS - 4))
 #   printf "%s\n" "$*" |
 #     /usr/bin/fold -s -w $COLUMNS |
 #     sed -e '1bb' -e 's/^/  /' -e ':b' -e '$b' -e 's/$/ \\/' >&2
-# else
-#   printf "$LOGFMT" "${ACTION:-ARCHIVE.a}" "$OUT" >&2
 # fi
 
 REASON=failed

@@ -20,6 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
+#include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -37,8 +38,18 @@
  * @vforksafe
  */
 int sigprocmask(int how, const sigset_t *opt_set, sigset_t *opt_out_oldset) {
-  if (!IsWindows()) {
+  int32_t x;
+  if (!IsWindows() && !IsOpenbsd()) {
     return sys_sigprocmask(how, opt_set, opt_out_oldset, 8);
+  } else if (IsOpenbsd()) {
+    if (!opt_set) how = 1;
+    if (opt_set) opt_set = (sigset_t *)(uintptr_t)(*(uint32_t *)opt_set);
+    if ((x = sys_sigprocmask(how, opt_set, 0, 0)) != -1) {
+      if (opt_out_oldset) memcpy(opt_out_oldset, &x, sizeof(x));
+      return 0;
+    } else {
+      return -1;
+    }
   } else {
     return 0; /* TODO(jart): Implement me! */
   }

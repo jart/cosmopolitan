@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,11 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.h"
-.source	__FILE__
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/str/str.h"
 
-/	Directly calls pwritev() impl on host o/s if available.
-sys_pwritev:
-	mov	%rcx,%r8			# netbsd+openbsd:pad
-	jmp	__sys_pwritev
-	.endfn	sys_pwritev,globl,hidden
+#define CTL_KERN      1
+#define KERN_HOSTNAME 10
+
+int gethostname_bsd(char *name, size_t len) {
+  char *p;
+  int cmd[2];
+  char buf[254];
+  size_t buflen;
+  cmd[0] = CTL_KERN;
+  cmd[1] = KERN_HOSTNAME;
+  buflen = sizeof(buf);
+  if (sysctl(cmd, 2, buf, &buflen, NULL, 0) == -1) {
+    if (errno == ENOMEM) errno = ENAMETOOLONG;
+    return -1;
+  }
+  strncpy(name, buf, len);
+  name[len - 1] = '\0';
+  if ((p = strchr(name, '.'))) *p = '\0';
+  return 0;
+}

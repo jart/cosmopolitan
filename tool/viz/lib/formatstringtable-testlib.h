@@ -46,21 +46,23 @@
   EXPECT_MATRIXEQ_(__FILE__, __LINE__, __FUNCTION__, YN, XN, M, #M, WANT, \
                    StringifyMatrixShort, NULL, NULL, NULL)
 
-#define EXPECT_MATRIXEQ_(FILE, LINE, FUNC, YN, XN, M, MC, WANT, F, ...)     \
-  do {                                                                      \
-    char *Got;                                                              \
-    const char *Want;                                                       \
-    Want = (WANT);                                                          \
-    Got = F(YN, XN, M, FormatStringTableForAssertion, __VA_ARGS__);         \
-    if (testlib_strequals(sizeof(char), Want, Got)) {                       \
-      testlib_free(Got);                                                    \
-    } else {                                                                \
-      TESTLIB_ONFAIL(FILE, FUNC);                                           \
-      TESTLIB_SHOWERROR(testlib_showerror_expect_matrixeq, LINE, "...", MC, \
-                        testlib_formatstr(sizeof(char), Want, -1),          \
-                        testlib_formatstr(sizeof(char), Got, -1), "");      \
-    }                                                                       \
+#define EXPECT_MATRIXEQ_(FILE, LINE, FUNC, YN, XN, M, MC, WANT, F, ...) \
+  do {                                                                  \
+    char *Got;                                                          \
+    const char *Want;                                                   \
+    Want = (WANT);                                                      \
+    Got = F(YN, XN, M, FormatStringTableForAssertion, __VA_ARGS__);     \
+    if (testlib_strequals(sizeof(char), Want, Got)) {                   \
+      testlib_free(Got);                                                \
+    } else {                                                            \
+      testlib_showerror_expect_matrixeq(                                \
+          LINE, "...", MC, testlib_formatstr(sizeof(char), Want, -1),   \
+          testlib_formatstr(sizeof(char), Got, -1), "");                \
+    }                                                                   \
   } while (0)
+
+void testlib_showerror_expect_matrixeq(int, const char *, const char *, char *,
+                                       char *, const char *, ...);
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_TOOL_VIZ_LIB_FORMATSTRINGTABLE_TESTLIB_H_ */

@@ -3,20 +3,15 @@
 #include "libc/macros.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
-#if defined(__GNUC__) || defined(__llvm__)
-#pragma GCC diagnostic ignored "-Wpointer-to-int-cast" /* j.f.c. */
-#endif
-#define _I(x) (TYPE_SIGNED(typeof(x)) ? (intmax_t)(x) : (uintmax_t)(x))
-
 #define __TEST_ARRAY(S) \
   _Section(".piro.relo.sort.testcase.2." #S ",\"aw\",@init_array #")
 
 #define __BENCH_ARRAY(S) \
   _Section(".piro.relo.sort.bench.2." #S ",\"aw\",@init_array #")
 
-#define __TEST_PROTOTYPE(S, N, A, K)                                 \
-  testonly void S##_##N(void);                                       \
-  _Alignas(long) const void *const S##_##N##_ptr[] A(S) = {S##_##N}; \
+#define __TEST_PROTOTYPE(S, N, A, K)                  \
+  void S##_##N(void);                                 \
+  const void *const S##_##N##_ptr[] A(S) = {S##_##N}; \
   testonly K void S##_##N(void)
 
 #define __TEST_SECTION(NAME, CONTENT) \

@@ -32,7 +32,7 @@ int PutEnvImpl(char *s, bool overwrite) {
   if (!p) goto fail;
   namelen = p + 1 - s;
   for (i = 0; environ[i]; ++i) {
-    if (strncmp(environ[i], s, namelen) == 0) {
+    if (!strncmp(environ[i], s, namelen)) {
       if (!overwrite) {
         free(s);
         return 0;

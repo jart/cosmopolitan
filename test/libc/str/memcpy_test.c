@@ -172,12 +172,12 @@ void *MemCpy(void *, const void *, size_t);
     free(s);                                                 \
   } while (0)
 
-#define BB(N)              \
-  do {                     \
-    B(memmove_pure, N);    \
-    B(memcpy, N);          \
-    B(MemCpy, N);          \
-    fprintf(stderr, "\n"); \
+#define BB(N)                \
+  do {                       \
+    B(memmove_pure, N);      \
+    B(memcpy, N);            \
+    B(MemCpy, N);            \
+    (fprintf)(stderr, "\n"); \
   } while (0)
 
 BENCH(memcpy, bench) {

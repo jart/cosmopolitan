@@ -31,7 +31,7 @@
 │        be thread safe).                                                      │
 └─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/paland.inc"
-#include "libc/fmt/palandprintf.internal.h"
+#include "libc/fmt/palandprintf.h"
 #include "libc/math.h"
 
 /**

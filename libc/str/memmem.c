@@ -16,41 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.h"
-#include "libc/mem/alloca.h"
 #include "libc/str/str.h"
-
-static void KnuthMorrisPrattInit(ssize_t m, ssize_t *T, const char *W) {
-  ssize_t i = 2;
-  ssize_t j = 0;
-  T[0] = -1;
-  T[1] = 0;
-  while (i < m) {
-    if (W[i - 1] == W[j]) {
-      T[i++] = j++ + 1;
-    } else if (j > 0) {
-      j = T[j];
-    } else {
-      T[i++] = 0;
-    }
-  }
-  T[m] = 0;
-}
-
-static size_t KnuthMorrisPratt(long m, const long *T, const char *W, long n,
-                               const char *S) {
-  long i = 0, j = 0;
-  while (i + j < n) {
-    if (W[i] == S[i + j]) {
-      i++;
-      if (i == m) break;
-    } else {
-      j = j + i - T[i];
-      if (i > 0) i = T[i];
-    }
-  }
-  return j;
-}
 
 /**
  * Searches for fixed-length substring in memory region.
@@ -61,24 +27,16 @@ static size_t KnuthMorrisPratt(long m, const long *T, const char *W, long n,
  * @param needlelen is its character count
  * @return pointer to first result or NULL if not found
  */
-void *memmem(const void *haystackp, size_t haystacklen, const void *needlep,
+void *memmem(const void *haystack, size_t haystacklen, const void *needle,
              size_t needlelen) {
-  long *T;
-  size_t i;
-  const char *haystack, *needle, *h;
-  needle = needlep;
-  haystack = haystackp;
-  if (needlelen > haystacklen) return NULL;
+  size_t i, j;
   if (!needlelen) return haystack;
-  h = memchr(haystack, *needle, haystacklen);
-  if (!h || needlelen == 1) return h;
-  haystacklen -= h - haystack;
-  if (needlelen < haystacklen && memcmp(h, needle, needlelen) == 0) {
-    return h;
-  } else {
-    T = alloca((needlelen + 1) * sizeof(long));
-    KnuthMorrisPrattInit(needlelen, T, needle);
-    i = KnuthMorrisPratt(needlelen, T, needle, haystacklen, h);
-    return i < haystacklen ? h + i : NULL;
+  for (i = 0; i < haystacklen; ++i) {
+    for (j = 0;; ++j) {
+      if (j == needlelen) return (/*unconst*/ char *)haystack + i;
+      if (i + j == haystacklen) break;
+      if (((char *)needle)[j] != ((char *)haystack)[i + j]) break;
+    }
   }
+  return NULL;
 }

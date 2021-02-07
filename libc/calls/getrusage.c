@@ -27,8 +27,6 @@
  * @return 0 on success, or -1 w/ errno
  */
 int getrusage(int who, struct rusage *usage) {
-  if (who == 99) return enosys(); /* @see libc/sysv/consts.sh */
-  if (!usage) return efault();
   if (!IsWindows()) {
     return sys_getrusage(who, usage);
   } else {

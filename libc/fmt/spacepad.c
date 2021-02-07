@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/palandprintf.internal.h"
+#include "libc/fmt/palandprintf.h"
 
 int spacepad(int out(long, void *), void *arg, unsigned long n) {
   int i, rc;

@@ -17,12 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/macros.h"
 #include "libc/sysv/consts/iov.h"
 #include "libc/sysv/errfuns.h"
 
@@ -42,7 +42,7 @@ ssize_t preadv(int fd, struct iovec *iovec, int count, int64_t off) {
   int olderr;
   ssize_t rc;
   if (!count) return 0;
-  if ((count = min(count, IOV_MAX)) < 0) return einval();
+  if ((count = MIN(count, IOV_MAX)) < 0) return einval();
 
   /*
    * NT, XNU, and 2007-era Linux don't support this system call.
@@ -58,7 +58,7 @@ ssize_t preadv(int fd, struct iovec *iovec, int count, int64_t off) {
       demodernize = true;
     } else {
       olderr = errno;
-      rc = sys_preadv(fd, iovec, count, off);
+      rc = sys_preadv(fd, iovec, count, off, off);
       if (rc == -1 && errno == ENOSYS) {
         errno = olderr;
         demodernize = true;
@@ -71,7 +71,7 @@ ssize_t preadv(int fd, struct iovec *iovec, int count, int64_t off) {
   }
 
   if (!demodernize) {
-    return sys_preadv(fd, iovec, count, off);
+    return sys_preadv(fd, iovec, count, off, off);
   } else {
     return pread(fd, iovec[0].iov_base, iovec[0].iov_len, off);
   }

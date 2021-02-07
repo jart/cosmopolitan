@@ -27,7 +27,7 @@ static int ioctl_tcgets_sysv(int fd, struct termios *tio) {
   int rc;
   union metatermios t;
   if ((rc = sys_ioctl(fd, TCGETS, &t)) != -1) {
-    termios2linux(tio, &t);
+    __termios2linux(tio, &t);
   }
   return rc;
 }

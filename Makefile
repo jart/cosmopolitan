@@ -52,7 +52,7 @@
 #
 # TROUBLESHOOTING
 #
-#   make -j8 -O SILENT=0 o//examples/hello.com
+#   make -j8 -O V=1 o//examples/hello.com
 #   make o//examples/life.elf -pn |& less
 #   etc.
 #

@@ -47,7 +47,7 @@ ssize_t pread(int fd, void *buf, size_t size, int64_t offset) {
     rc = weaken(__zipos_read)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, buf, size, offset);
   } else if (!IsWindows()) {
-    rc = sys_pread(fd, buf, size, offset);
+    rc = sys_pread(fd, buf, size, offset, offset);
   } else if (__isfdkind(fd, kFdFile)) {
     rc = sys_read_nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1, offset);
   } else {

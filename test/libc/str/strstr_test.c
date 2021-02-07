@@ -32,52 +32,46 @@ char *strstr_kmp(const char *haystak, const char *needle) {
   return memmem(haystak, strlen(haystak), needle, strlen(needle));
 }
 
-char *(*strstri)(const char *, const char *) = strstr_kmp;
-
-FIXTURE(strstr, sse42_) {
-  if (X86_HAVE(SSE4_2)) {
-    strstri = strstr_sse42;
-  }
-}
-
 TEST(strstr, test_emptyString_isFoundAtBeginning) {
   MAKESTRING(haystack, "abc123def");
-  ASSERT_STREQ(&haystack[0], strstri(haystack, gc(strdup(""))));
   ASSERT_STREQ(&haystack[0], strstr(haystack, gc(strdup(""))));
   free(haystack);
 }
 
 TEST(strstr, test_notFound) {
   MAKESTRING(haystack, "abc123def");
-  ASSERT_EQ(NULL, strstri(haystack, gc(strdup("xyz"))));
   ASSERT_EQ(NULL, strstr(haystack, gc(strdup("xyz"))));
   free(haystack);
 }
 
 TEST(strstr, test_middleOfString) {
   MAKESTRING(haystack, "abc123def");
-  ASSERT_STREQ(&haystack[3], strstri(haystack, gc(strdup("123"))));
   ASSERT_STREQ(&haystack[3], strstr(haystack, gc(strdup("123"))));
   free(haystack);
 }
 
 TEST(strstr, test_endOfString) {
   MAKESTRING(haystack, "abc123def");
-  ASSERT_STREQ(&haystack[8], strstri(haystack, gc(strdup("f"))));
   ASSERT_STREQ(&haystack[8], strstr(haystack, gc(strdup("f"))));
   free(haystack);
 }
 
 TEST(strstr, test_secondXmmWord) {
   MAKESTRING(haystack, "eeeeeeeeeeeeeeeebbbbbbbbbbb123");
-  ASSERT_STREQ(&haystack[27], strstri(haystack, gc(strdup("123"))));
   ASSERT_STREQ(&haystack[27], strstr(haystack, gc(strdup("123"))));
   free(haystack);
 }
 
 TEST(strstr, test_overlapsXmmWords) {
   MAKESTRING(haystack, "eeeeeeeeeeeeeeeebbbbbbbbbbbbbbb");
-  ASSERT_STREQ(&haystack[15], strstri(haystack, gc(strdup("eb"))));
   ASSERT_STREQ(&haystack[15], strstr(haystack, gc(strdup("eb"))));
   free(haystack);
+}
+
+TEST(strstr, test) {
+  ASSERT_EQ(NULL, strstr("x86_64-linux-musl-gcc", "clang"));
+  ASSERT_STREQ("gcc", strstr("x86_64-linux-musl-gcc", "gcc"));
+  ASSERT_EQ(NULL, strstr("-Wl,--gc-sections", "stack-protector"));
+  ASSERT_EQ(NULL, strstr("-Wl,--gc-sections", "sanitize"));
+  ASSERT_STREQ("x", strstr("x", "x"));
 }

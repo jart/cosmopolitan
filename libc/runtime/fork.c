@@ -28,14 +28,22 @@
  * @asyncsignalsafe
  */
 int fork(void) {
-  int rc;
+  axdx_t ad;
+  int ax, dx;
   if (!IsWindows()) {
-    rc = sys_fork();
+    ad = sys_fork();
+    ax = ad.ax;
+    dx = ad.dx;
+    if (IsXnu() && ax != -1) {
+      /* eax always returned with childs pid */
+      /* edx is 0 for parent and 1 for child */
+      ax &= dx - 1;
+    }
   } else {
-    rc = sys_fork_nt();
+    ax = sys_fork_nt();
   }
-  if (rc == 0) {
+  if (!ax) {
     __onfork();
   }
-  return rc;
+  return ax;
 }

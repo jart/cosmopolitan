@@ -32,9 +32,8 @@
  * @error ENOENT
  */
 int truncate(const char *path, uint64_t length) {
-  if (!path) return efault();
   if (!IsWindows()) {
-    return sys_truncate(path, length);
+    return sys_truncate(path, length, length);
   } else {
     return sys_truncate_nt(path, length);
   }

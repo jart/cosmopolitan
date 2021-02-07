@@ -22,10 +22,10 @@
 #include "libc/calls/termios.internal.h"
 #include "libc/dce.h"
 
-void termios2linux(struct termios *lt, const union metatermios *t) {
+void __termios2linux(struct termios *lt, const union metatermios *t) {
   if (IsXnu()) {
     COPY_TERMIOS(lt, &t->xnu);
-  } else if (IsFreebsd() || IsOpenbsd()) {
+  } else if (IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
     COPY_TERMIOS(lt, &t->bsd);
   } else {
     memcpy(lt, &t->linux, sizeof(*lt));

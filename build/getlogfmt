@@ -11,23 +11,19 @@
 #   This program is invoked once by build/definitions.mk to choose the
 #   most appropriate format string when logging command invocations.
 
-if [ "$SILENT" = "0" ]; then
-  printf "''"
-else
-  W1=15
-  if [ "$TERM" = "dumb" ]; then  # e.g. emacs' dismal tty
-    if [ "$COLUMNS" = "" ]; then
-      if TPUT=$(command -v tput); then
-        COLUMNS=$("$TPUT" cols)
-      else
-        COLUMNS=80
-      fi
+W1=15
+if [ "$TERM" = "dumb" ]; then
+  if [ "$COLUMNS" = "" ]; then
+    if TPUT=$(command -v tput); then
+      COLUMNS=$("$TPUT" cols)
+    else
+      COLUMNS=80
     fi
-    COLUMNS=$((COLUMNS - 1))
-    W2=$((COLUMNS - W1))
-    printf '%%-%ds%%-%ds\\r' "$W1" "$W2"
-  else
-    echo ♥cosmo >&2
-    printf '\\033[F\\033[K%%-%ds%%s\\r\\n' "$W1"
   fi
+  COLUMNS=$((COLUMNS - 1))
+  W2=$((COLUMNS - W1))
+  printf '%%-%ds%%-%ds\\r' "$W1" "$W2"
+else
+  echo ♥cosmo >&2
+  printf '\\033[F\\033[K%%-%ds%%s\\r\\n' "$W1"
 fi

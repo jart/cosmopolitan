@@ -21,7 +21,7 @@
 #include "libc/dce.h"
 
 /**
- * Flushes file system changes to disk to the greatest extent possible.
+ * Flushes file system changes to disk by any means necessary.
  */
 void sync(void) {
   if (!IsWindows()) {

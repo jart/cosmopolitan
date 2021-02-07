@@ -13,8 +13,8 @@
 #
 #   When tuning the variables below, please note they're interpreted in
 #   the strictest sense. For example, we don't pass CFLAGS to gcc if we
-#   know it's compiling a .S file. This allows our `make SILENT=0` logs
-#   to be succinct and informative, at the cost of being less forgiving.
+#   know it's compiling a .S file.  This enables our `make V=0` logging
+#   to be succinct and informative at the cost of being less forgiving.
 #
 #   Further note that link order is equally unforgiving in repositories
 #   of this scale. We approach that by over-specifying dependencies, in
@@ -42,6 +42,10 @@
 #     ASFLAGS      assembler flags (don't use -Wa, frontend prefix)
 #     TARGET_ARCH  microarchitecture flags (e.g. -march=native)
 
+V ?= 1
+LC_ALL = C.UTF-8
+SOURCE_DATE_EPOCH = 0
+
 DD ?= /bin/dd
 CP ?= /bin/cp -f
 RM ?= /bin/rm -f
@@ -49,7 +53,6 @@ SED ?= /bin/sed
 MKDIR ?= /bin/mkdir -p
 TAGS ?= /usr/bin/ctags  # emacs source builds or something breaks it
 ARFLAGS = rcsD
-SILENT ?= 0
 ZFLAGS ?=
 XARGS ?= xargs -P4 -rs8000
 NICE ?= build/actuallynice
@@ -77,36 +80,51 @@ PWD := $(shell pwd)
 IMAGE_BASE_VIRTUAL ?= 0x400000
 TMPDIR := $(shell build/findtmp)
 LOGFMT := $(shell build/getlogfmt)
+COMPILE := $(shell build/getcompile)
 CCNAME := $(shell build/getccname $(CC))
 CCVERSION := $(shell build/getccversion $(CC))
 BLAH1 := $(shell build/zipobj 2>/dev/null)
 BLAH2 := $(shell build/package 2>/dev/null)
 
 export ADDR2LINE
-export OBJDUMP
 export CCNAME
 export CCVERSION
 export CP
 export DD
 export GZ
 export IMAGE_BASE_VIRTUAL
+export LC_ALL
 export LOGFMT
 export MKDIR
 export MODE
+export OBJDUMP
 export RM
 export SED
-export SILENT
+export SOURCE_DATE_EPOCH
 export TMPDIR
+export V
 export ZFLAGS
+
+unexport COMPILER_PATH
+unexport CPATH
+unexport CPLUS_INCLUDE_PATH
+unexport C_INCLUDE_PATH
+unexport DEPENDENCIES_OUTPUT
+unexport GCC_COMPARE_DEBUG
+unexport GCC_EXEC_PREFIX
+unexport LANG
+unexport LC_CTYPE
+unexport LC_MESSAGES
+unexport LIBRARY_PATH
+unexport OBJC_INCLUDE_PATH
+unexport SUNPRO_DEPENDENCIES
 
 FTRACE =								\
 	-pg
 
 SANITIZER =								\
 	-fsanitize=leak							\
-	-fsanitize=address						\
-	-fsanitize=implicit-signed-integer-truncation			\
-	-fsanitize=implicit-integer-sign-change
+	-fsanitize=address
 
 NO_MAGIC =								\
 	-mno-fentry							\
@@ -154,8 +172,7 @@ MATHEMATICAL =								\
 DEFAULT_CPPFLAGS =							\
 	-DIMAGE_BASE_VIRTUAL=$(IMAGE_BASE_VIRTUAL)			\
 	-nostdinc							\
-	-iquote -							\
-	-iquote .
+	-iquote.
 
 DEFAULT_CFLAGS =							\
 	-std=gnu2x

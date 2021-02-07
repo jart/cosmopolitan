@@ -24,21 +24,37 @@
 #include "libc/nt/errors.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/overlapped.h"
-#include "libc/nt/struct/teb.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows ssize_t sys_read_nt(struct Fd *fd, const struct iovec *iov,
-                            size_t iovlen, ssize_t opt_offset) {
-  uint32_t got;
+                                size_t iovlen, ssize_t opt_offset) {
+  size_t i, total;
+  uint32_t got, size;
   struct NtOverlapped overlap;
   while (iovlen && !iov[0].iov_len) iov++, iovlen--;
-  if (ReadFile(fd->handle, iovlen ? iov[0].iov_base : NULL,
-               iovlen ? clampio(iov[0].iov_len) : 0, &got,
-               offset2overlap(opt_offset, &overlap))) {
-    return got;
-  } else if (NtGetErr() == kNtErrorBrokenPipe) {
-    return 0; /* read() doesn't EPIPE lool */
+  if (iovlen) {
+    for (total = i = 0; i < iovlen; ++i) {
+      size = clampio(iov[i].iov_len);
+      if (ReadFile(fd->handle, iov[i].iov_base, size, &got,
+                   offset2overlap(opt_offset, &overlap))) {
+        total += got;
+        if (opt_offset != -1) opt_offset += got;
+        if (got < iov[i].iov_len) break;
+      } else if (GetLastError() == kNtErrorBrokenPipe) {
+        break; /* read() doesn't EPIPE lool */
+      } else {
+        return __winerr();
+      }
+    }
+    return total;
   } else {
-    return __winerr();
+    if (ReadFile(fd->handle, NULL, 0, &got,
+                 offset2overlap(opt_offset, &overlap))) {
+      return got;
+    } else if (GetLastError() == kNtErrorBrokenPipe) {
+      return 0;
+    } else {
+      return __winerr();
+    }
   }
 }

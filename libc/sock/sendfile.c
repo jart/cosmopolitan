@@ -59,7 +59,7 @@ static ssize_t sendfile_linux2netflix(int outfd, int infd,
   int64_t offset, sbytes;
   if (inout_opt_inoffset) {
     offset = *inout_opt_inoffset;
-  } else if ((offset = sys_lseek(infd, 0, SEEK_CUR)) == -1) {
+  } else if ((offset = lseek(infd, 0, SEEK_CUR)) == -1) {
     return -1;
   }
   if ((rc = sys_sendfile_netflix(infd, outfd, offset, uptobytes, NULL, &sbytes,

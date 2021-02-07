@@ -28,5 +28,15 @@
  * @see memmem()
  */
 char *strstr(const char *haystack, const char *needle) {
-  return memmem(haystack, strlen(haystack), needle, strlen(needle));
+  size_t i;
+  for (;;) {
+    for (i = 0;;) {
+      if (!needle[i]) return (/*unconst*/ char *)haystack;
+      if (!haystack[i]) break;
+      if (needle[i] != haystack[i]) break;
+      ++i;
+    }
+    if (!*haystack++) break;
+  }
+  return NULL;
 }

@@ -51,12 +51,6 @@
 #define UseSecurityBlankets() 0
 #endif
 
-#ifdef __MGENERAL_REGS_ONLY__
-#define UseGeneralRegsOnly() 1
-#else
-#define UseGeneralRegsOnly() 0
-#endif
-
 #ifdef TINY
 #define IsTiny() 1
 #else
@@ -87,15 +81,14 @@
   ((SUPPORT_VECTOR & (LINUX | METAL | XNU | OPENBSD | FREEBSD | NETBSD)) != 0)
 
 #ifndef __ASSEMBLER__
-#define __HOSTOS    (__hostos & SUPPORT_VECTOR)
-#define IsLinux()   ((__HOSTOS & LINUX) == LINUX)
-#define IsMetal()   ((__HOSTOS & METAL) == METAL)
-#define IsWindows() ((__HOSTOS & WINDOWS) == WINDOWS)
-#define IsBsd()     ((__HOSTOS & (XNU | FREEBSD | OPENBSD | NETBSD)) != 0)
-#define IsXnu()     ((__HOSTOS & XNU) == XNU)
-#define IsFreebsd() ((__HOSTOS & FREEBSD) == FREEBSD)
-#define IsOpenbsd() ((__HOSTOS & OPENBSD) == OPENBSD)
-#define IsNetbsd()  ((__HOSTOS & NETBSD) == NETBSD)
+#define IsLinux()   (SupportsLinux() && (__hostos & LINUX))
+#define IsMetal()   (SupportsMetal() && (__hostos & METAL))
+#define IsWindows() (SupportsWindows() && (__hostos & WINDOWS))
+#define IsXnu()     (SupportsXnu() && (__hostos & XNU))
+#define IsFreebsd() (SupportsFreebsd() && (__hostos & FREEBSD))
+#define IsOpenbsd() (SupportsOpenbsd() && (__hostos & OPENBSD))
+#define IsNetbsd()  (SupportsNetbsd() && (__hostos & NETBSD))
+#define IsBsd()     (IsXnu() || IsFreebsd() || IsOpenbsd() || IsNetbsd())
 #else
 /* clang-format off */
 #define IsLinux() $LINUX,__hostos(%rip)

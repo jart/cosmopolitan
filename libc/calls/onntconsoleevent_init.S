@@ -17,7 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
+.text.windows
 .source	__FILE__
+
+__onntconsoleevent_nt:
+	ezlea	__onntconsoleevent,ax
+	jmp	__nt2sysv
+	.endfn	__onntconsoleevent_nt,globl,hidden
 
 	.init.start 300,_init_onntconsoleevent
 	ezlea	__onntconsoleevent_nt,cx

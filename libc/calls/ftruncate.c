@@ -33,7 +33,7 @@
  */
 int ftruncate(int fd, int64_t length) {
   if (!IsWindows()) {
-    return sys_ftruncate(fd, length);
+    return sys_ftruncate(fd, length, length);
   } else {
     return sys_ftruncate_nt(fd, length);
   }

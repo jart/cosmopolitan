@@ -174,7 +174,7 @@
          (runs (format "o/$m/%s.com.runs TESTARGS=-b" name))
          (buns (format "o/$m/test/%s_test.com.runs TESTARGS=-b" name)))
     (cond ((not (member ext '("c" "cc" "s" "S" "rl" "f")))
-           (format "m=%s; make -j8 -O MODE=$m SILENT=0 o/$m/%s"
+           (format "m=%s; make -j8 -O MODE=$m V=1 o/$m/%s"
                    mode
                    (directory-file-name
                     (file-name-directory
@@ -187,7 +187,7 @@
                 (file-exists-p (format "%s" buddy)))
            (format (cosmo-join
                     " && "
-                    '("m=%s; n=%s; make -j8 -O o/$m/$n%s.o MODE=$m SILENT=0"
+                    '("m=%s; n=%s; make -j8 -O o/$m/$n%s.o MODE=$m V=1"
                       ;; "bloat o/$m/%s.o | head"
                       ;; "nm -C --size o/$m/%s.o | sort -r"
                       "echo"
@@ -199,7 +199,7 @@
             (cosmo-join
              " && "
              `("m=%s; f=o/$m/%s.com"
-               ,(concat "make -j8 -O $f MODE=$m SILENT=0")
+               ,(concat "make -j8 -O $f MODE=$m V=1")
                "./$f"))
             mode name))
           ((and (file-regular-p this)
@@ -210,7 +210,7 @@
             (cosmo-join
              " && "
              `("m=%s; f=o/$m/%s%s.o"
-               ,(concat "make -j8 -O $f MODE=$m SILENT=0")
+               ,(concat "make -j8 -O $f MODE=$m V=1")
                ;; "nm -C --size $f | sort -r"
                "echo"
                "size -A $f | grep '^[.T]' | grep -v 'debug\\|command.line\\|stack' | sort -rnk2"
@@ -419,7 +419,7 @@
           (error "don't know how to show assembly for non c/c++ source file"))
         (let* ((default-directory root)
                (compile-command
-                (format "make %s SILENT=0 -j8 -O MODE=%s %s %s"
+                (format "make %s V=1 -j8 -O MODE=%s %s %s"
                         (or extra-make-flags "") mode asm-gcc asm-clang)))
           (save-buffer)
           (set-visited-file-modtime (current-time))
@@ -440,8 +440,8 @@
   ;; -ffast-math -funsafe-math-optimizations -fsched2-use-superblocks -fjump-tables
   (cond ((not (eq 0 (logand 8 arg)))
          (cosmo--assembly (setq arg (logand (lognot 8)))
-                          "SILENT=0 OVERRIDE_COPTS='-fverbose-asm -fsanitize=address'"))
-        (t (cosmo--assembly arg "SILENT=0 OVERRIDE_COPTS='' CPPFLAGS='-DSTACK_FRAME_UNLIMITED'"))))
+                          "V=1 OVERRIDE_COPTS='-fverbose-asm -fsanitize=address'"))
+        (t (cosmo--assembly arg "V=1 OVERRIDE_COPTS='' CPPFLAGS='-DSTACK_FRAME_UNLIMITED'"))))
 
 (defun cosmo-assembly-native (arg)
   (interactive "P")
@@ -449,11 +449,11 @@
   (cond ((not (eq 0 (logand 8 arg)))
          (cosmo--assembly
           (setq arg (logand (lognot 8)))
-          "SILENT=0 CCFLAGS=--verbose COPTS='$(IEEE_MATH)' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' TARGET_ARCH='-march=k8'"))   ;; znver2
+          "V=1 CCFLAGS=--verbose COPTS='$(IEEE_MATH)' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' TARGET_ARCH='-march=k8'"))   ;; znver2
         (t
          (cosmo--assembly
           arg
-          "SILENT=0 CCFLAGS=--verbose COPTS='$(MATHEMATICAL) -O3' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' TARGET_ARCH='-march=k8'"))))  ;; znver2
+          "V=1 CCFLAGS=--verbose COPTS='$(MATHEMATICAL) -O3' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' TARGET_ARCH='-march=k8'"))))  ;; znver2
 
 (defun cosmo-assembly-icelake (arg)
   (interactive "P")
@@ -461,15 +461,15 @@
   (cond ((not (eq 0 (logand 8 arg)))
          (cosmo--assembly
           (setq arg (logand (lognot 8)))
-          "SILENT=0 CCFLAGS=--verbose COPTS='$(MATHEMATICAL) -O3' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' TARGET_ARCH='-march=icelake-client'"))
+          "V=1 CCFLAGS=--verbose COPTS='$(MATHEMATICAL) -O3' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' TARGET_ARCH='-march=icelake-client'"))
         (t
          (cosmo--assembly
           arg
-          "SILENT=0 CCFLAGS=--verbose COPTS='$(MATHEMATICAL) -O3' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' TARGET_ARCH='-march=icelake-client'"))))
+          "V=1 CCFLAGS=--verbose COPTS='$(MATHEMATICAL) -O3' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' TARGET_ARCH='-march=icelake-client'"))))
 
 (defun cosmo-assembly-balanced (arg)
   (interactive "P")
-  (cosmo--assembly (or arg 5) "CFLAGS='-O2 -ftrapv' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' SILENT=0"))
+  (cosmo--assembly (or arg 5) "CFLAGS='-O2 -ftrapv' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' V=1"))
 
 (defun cosmo-mca (arg)
   (interactive "P")

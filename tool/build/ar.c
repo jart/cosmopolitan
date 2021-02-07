@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/arraylist2.internal.h"
 #include "libc/bits/bits.h"
+#include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/stat.h"
@@ -52,6 +53,11 @@
  * is important because good Makefiles on Linux will generally have the
  * directory be a .a prerequisite so archives rebuild on file deletion.
  */
+
+struct Args {
+  size_t n;
+  char **p;
+};
 
 struct String {
   size_t i, n;
@@ -95,14 +101,18 @@ static void MakeHeader(struct Header *h, const char *name, int ref, int mode,
 }
 
 int main(int argc, char *argv[]) {
+  FILE *f;
   void *elf;
+  char *line;
   char *strs;
   ssize_t rc;
+  size_t wrote;
+  size_t remain;
   struct stat *st;
   uint32_t outpos;
   Elf64_Sym *syms;
+  struct Args args;
   uint64_t outsize;
-  char **objectargs;
   uint8_t *tablebuf;
   struct iovec iov[7];
   const char *symname;
@@ -112,13 +122,31 @@ int main(int argc, char *argv[]) {
   struct String symbols;
   struct String filenames;
   struct Header *header1, *header2;
-  size_t wrote, remain, objectargcount;
   int *offsets, *modes, *sizes, *names;
   int i, j, fd, err, name, outfd, tablebufsize;
 
   if (!(argc > 2 && strcmp(argv[1], "rcsD") == 0)) {
     fprintf(stderr, "%s%s%s\n", "Usage: ", argv[0], " rcsD ARCHIVE FILE...");
     return 1;
+  }
+
+  memset(&args, 0, sizeof(args));
+  for (i = 3; i < argc; ++i) {
+    if (argv[i][0] != '@') {
+      args.p = realloc(args.p, ++args.n * sizeof(*args.p));
+      args.p[args.n - 1] = strdup(argv[i]);
+    } else {
+      CHECK_NOTNULL((f = fopen(argv[i] + 1, "r")));
+      while ((line = chomp(xgetline(f)))) {
+        if (!isempty(line)) {
+          args.p = realloc(args.p, ++args.n * sizeof(*args.p));
+          args.p[args.n - 1] = line;
+        } else {
+          free(line);
+        }
+      }
+      CHECK_NE(-1, fclose(f));
+    }
   }
 
   st = xmalloc(sizeof(struct stat));
@@ -133,32 +161,29 @@ int main(int argc, char *argv[]) {
   symnames.p = xmalloc(symnames.n * sizeof(int));
 
   outpath = argv[2];
-  objectargs = argv + 3;
-  objectargcount = argc - 3;
-  modes = xmalloc(sizeof(int) * objectargcount);
-  names = xmalloc(sizeof(int) * objectargcount);
-  sizes = xmalloc(sizeof(int) * objectargcount);
+  modes = xmalloc(sizeof(int) * args.n);
+  names = xmalloc(sizeof(int) * args.n);
+  sizes = xmalloc(sizeof(int) * args.n);
 
   // load global symbols and populate page cache
-  for (i = 0; i < objectargcount; ++i) {
+  for (i = 0; i < args.n; ++i) {
   TryAgain:
-    CHECK_NE(-1, (fd = open(objectargs[i], O_RDONLY)));
+    CHECK_NE(-1, (fd = open(args.p[i], O_RDONLY)), "%s", args.p[i]);
     CHECK_NE(-1, fstat(fd, st));
     CHECK_LT(st->st_size, 0x7ffff000);
-    if (!st->st_size || S_ISDIR(st->st_mode) ||
-        endswith(objectargs[i], ".pkg")) {
+    if (!st->st_size || S_ISDIR(st->st_mode) || endswith(args.p[i], ".pkg")) {
       close(fd);
-      for (j = i; j + 1 < objectargcount; ++j) {
-        objectargs[j] = objectargs[j + 1];
+      for (j = i; j + 1 < args.n; ++j) {
+        args.p[j] = args.p[j + 1];
       }
-      --objectargcount;
+      --args.n;
       goto TryAgain;
     }
     names[i] = filenames.i;
     sizes[i] = st->st_size;
     modes[i] = st->st_mode;
-    CONCAT(&filenames.p, &filenames.i, &filenames.n, basename(objectargs[i]),
-           strlen(basename(objectargs[i])));
+    CONCAT(&filenames.p, &filenames.i, &filenames.n, basename(args.p[i]),
+           strlen(basename(args.p[i])));
     CONCAT(&filenames.p, &filenames.i, &filenames.n, "/\n", 2);
     CHECK_NE(MAP_FAILED,
              (elf = mmap(NULL, st->st_size, PROT_READ, MAP_PRIVATE, fd, 0)));
@@ -182,7 +207,7 @@ int main(int argc, char *argv[]) {
   outsize = 0;
   tablebufsize = 4 + symnames.i * 4;
   tablebuf = xmalloc(tablebufsize);
-  offsets = xmalloc(objectargcount * 4);
+  offsets = xmalloc(args.n * 4);
   header1 = xmalloc(sizeof(struct Header));
   header2 = xmalloc(sizeof(struct Header));
   iov[0].iov_base = "!<arch>\n";
@@ -199,7 +224,7 @@ int main(int argc, char *argv[]) {
   outsize += (iov[5].iov_len = 60);
   iov[6].iov_base = filenames.p;
   outsize += (iov[6].iov_len = filenames.i);
-  for (i = 0; i < objectargcount; ++i) {
+  for (i = 0; i < args.n; ++i) {
     outsize += outsize & 1;
     offsets[i] = outsize;
     outsize += 60;
@@ -219,8 +244,8 @@ int main(int argc, char *argv[]) {
   CHECK_NE(-1, (outfd = open(outpath, O_WRONLY | O_TRUNC | O_CREAT, 0644)));
   ftruncate(outfd, outsize);
   if ((outsize = writev(outfd, iov, ARRAYLEN(iov))) == -1) goto fail;
-  for (i = 0; i < objectargcount; ++i) {
-    if ((fd = open(objectargs[i], O_RDONLY)) == -1) goto fail;
+  for (i = 0; i < args.n; ++i) {
+    if ((fd = open(args.p[i], O_RDONLY)) == -1) goto fail;
     iov[0].iov_base = "\n";
     outsize += (iov[0].iov_len = outsize & 1);
     iov[1].iov_base = header1;
@@ -233,6 +258,8 @@ int main(int argc, char *argv[]) {
   }
   close(outfd);
 
+  for (i = 0; i < args.n; ++i) free(args.p[i]);
+  free(args.p);
   free(header2);
   free(header1);
   free(offsets);

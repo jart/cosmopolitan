@@ -46,10 +46,10 @@ if [ "$OUT" ]; then
 fi
 
 # Log command.
-if [ "$SILENT" = "0" ]; then
-  printf "%s\n" "$*" >&2
-else
+if [ "$V" = "0" ]; then
   printf "$LOGFMT" "${ACTION:-BUILD}" "$TARGET" >&2
+else
+  printf "%s\n" "$*" >&2
 fi
 
 exec "$@"

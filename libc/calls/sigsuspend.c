@@ -30,8 +30,9 @@
  * @asyncsignalsafe
  */
 int sigsuspend(const sigset_t *ignore) {
-  if (!ignore) return efault();
+  unsigned x;
   if (!IsWindows()) {
+    if (IsOpenbsd()) ignore = (sigset_t *)(uintptr_t)(*(uint32_t *)ignore);
     return sys_sigsuspend(ignore, 8);
   } else {
     return enosys(); /* TODO(jart): Implement me! */

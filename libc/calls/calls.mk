@@ -17,7 +17,6 @@ LIBC_CALLS = $(LIBC_CALLS_A_DEPS) $(LIBC_CALLS_A)
 LIBC_CALLS_A = o/$(MODE)/libc/calls/syscalls.a
 LIBC_CALLS_A_FILES :=					\
 	$(wildcard libc/calls/typedef/*)		\
-	$(wildcard libc/calls/thunks/*)			\
 	$(wildcard libc/calls/struct/*)			\
 	$(wildcard libc/calls/*)
 LIBC_CALLS_A_HDRS = $(filter %.h,$(LIBC_CALLS_A_FILES))

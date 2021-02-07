@@ -25,7 +25,7 @@
 #include "libc/nt/struct/overlapped.h"
 #include "libc/sysv/errfuns.h"
 
-static size_t SumIovecLen(const struct iovec *v, size_t n) {
+static textwindows size_t SumIovecLen(const struct iovec *v, size_t n) {
   size_t i, sum;
   for (sum = i = 0; i < n; ++i) {
     sum += v[i].iov_len;
@@ -34,16 +34,32 @@ static size_t SumIovecLen(const struct iovec *v, size_t n) {
 }
 
 textwindows ssize_t sys_write_nt(struct Fd *fd, const struct iovec *iov,
-                             size_t iovlen, ssize_t opt_offset) {
-  uint32_t wrote;
+                                 size_t iovlen, ssize_t opt_offset) {
+  size_t i, total;
+  uint32_t size, wrote;
   struct NtOverlapped overlap;
   while (iovlen && !iov[0].iov_len) iov++, iovlen--;
-  if (WriteFile(fd->handle, iovlen ? iov[0].iov_base : NULL,
-                iovlen ? clampio(iov[0].iov_len) : 0, &wrote,
-                offset2overlap(opt_offset, &overlap))) {
-    if (!wrote) assert(!SumIovecLen(iov, iovlen));
-    return wrote;
+  if (iovlen) {
+    for (total = i = 0; i < iovlen; ++i) {
+      if (!iov[i].iov_len) continue;
+      size = clampio(iov[0].iov_len);
+      if (WriteFile(fd->handle, iov[i].iov_base, size, &wrote,
+                    offset2overlap(opt_offset, &overlap))) {
+        total += wrote;
+        if (opt_offset != -1) opt_offset += wrote;
+        if (wrote < iov[i].iov_len) break;
+      } else {
+        return __winerr();
+      }
+    }
+    if (!total) assert(!SumIovecLen(iov, iovlen));
+    return total;
   } else {
-    return __winerr();
+    if (WriteFile(fd->handle, NULL, 0, &wrote,
+                  offset2overlap(opt_offset, &overlap))) {
+      return 0;
+    } else {
+      return __winerr();
+    }
   }
 }

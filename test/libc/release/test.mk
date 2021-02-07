@@ -20,7 +20,7 @@ o/$(MODE)/test/libc/release/smoke.com.dbg:			\
 		o/$(MODE)/libc/crt/crt.o			\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/cosmopolitan.a
-	@ACTION=CC build/compile $(CC)				\
+	@ACTION=CC $(COMPILE) $(CC)				\
 		-o $@						\
 		-Os						\
 		-static						\
@@ -49,7 +49,7 @@ o/$(MODE)/test/libc/release/smokecxx.com.dbg:			\
 		o/$(MODE)/libc/crt/crt.o			\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/cosmopolitan.a
-	@ACTION=CXX build/compile $(CXX)			\
+	@ACTION=CXX $(COMPILE) $(CXX)				\
 		-o $@						\
 		-Os						\
 		-static						\
@@ -74,7 +74,7 @@ o/$(MODE)/test/libc/release/smokeansi.com.dbg:			\
 		o/$(MODE)/libc/crt/crt.o			\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/cosmopolitan.a
-	@ACTION=ANSI build/compile $(CC)			\
+	@ACTION=ANSI $(COMPILE) $(CC)				\
 		-o $@						\
 		-Os						\
 		-ansi						\
@@ -100,7 +100,7 @@ o/$(MODE)/test/libc/release/smokeclang.com.dbg:			\
 		o/$(MODE)/libc/crt/crt.o			\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/cosmopolitan.a
-	@ACTION=CLANG build/compile clang			\
+	@ACTION=CLANG $(COMPILE) clang				\
 		-o $@						\
 		-Os						\
 		-static						\
@@ -125,4 +125,6 @@ o/$(MODE)/test/libc/release:					\
 		o/$(MODE)/test/libc/release/smokecxx.com	\
 		o/$(MODE)/test/libc/release/smokecxx.com.runs	\
 		o/$(MODE)/test/libc/release/smokeansi.com	\
-		o/$(MODE)/test/libc/release/smokeansi.com.runs
+		o/$(MODE)/test/libc/release/smokeansi.com.runs	\
+		o/$(MODE)/test/libc/release/smokeclang.com	\
+		o/$(MODE)/test/libc/release/smokeclang.com.runs

@@ -23,13 +23,12 @@ if [ ! -d o/third_party/gcc ]; then
   third_party/gcc/unbundle.sh
 fi
 
-export LC_ALL=C
 MKDIR=${MKDIR:-$(command -v mkdir) -p} || exit
 
-if [ "$SILENT" = "0" ]; then
-  printf "%s\n" "$*" >&2
-else
+if [ "$V" = "0" ]; then
   printf "$LOGFMT" "${ACTION:-OBJECTIFY.s}" "$TARGET" >&2
+else
+  printf "%s\n" "$*" >&2
 fi
 
 if [ "$TARGET" ]; then

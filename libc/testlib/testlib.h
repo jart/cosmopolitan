@@ -15,7 +15,9 @@ COSMOPOLITAN_C_START_
  * Test cases are guaranteed by the linker to be run in order, sorted by
  * the (SUITE, NAME) tuple passed here.
  */
-#define TEST(SUITE, NAME) __TEST_PROTOTYPE(SUITE, NAME, __TEST_ARRAY, )
+#define TEST(SUITE, NAME)           \
+  STATIC_YOINK("__testcase_start"); \
+  __TEST_PROTOTYPE(SUITE, NAME, __TEST_ARRAY, )
 
 /**
  * Declares function that globally modifies program state.
@@ -26,7 +28,9 @@ COSMOPOLITAN_C_START_
  * temorarilly by the runtime while calling fixture functions. Fixtures
  * are also guaranteed by the linker to be run in sorted order.
  */
-#define FIXTURE(SUITE, NAME) __FIXTURE("fixture", SUITE, NAME)
+#define FIXTURE(SUITE, NAME)       \
+  STATIC_YOINK("__fixture_start"); \
+  __FIXTURE("fixture", SUITE, NAME)
 
 /**
  * Registers explosive fixture with linker.
@@ -35,7 +39,9 @@ COSMOPOLITAN_C_START_
  * Cartesian product of groups. That makes this similar to fixture, but
  * more appropriate for testing pure code (i.e. no syscalls) like math.
  */
-#define COMBO(GROUP, ENTRY) __FIXTURE("combo", GROUP, ENTRY)
+#define COMBO(GROUP, ENTRY)      \
+  STATIC_YOINK("__combo_start"); \
+  __FIXTURE("combo", GROUP, ENTRY)
 
 /**
  * Declares benchmark function.
@@ -109,9 +115,8 @@ void TearDown(void);
   __TEST_NE(expect, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, GOT, \
             __VA_ARGS__)
 
-#define ASSERT_BETWEEN(BEG, END, GOT)             \
-  assertBetween(FILIFU _I(BEG), _I(END), _I(GOT), \
-                #BEG " <= " #GOT " <= " #END, true)
+#define ASSERT_BETWEEN(BEG, END, GOT) \
+  assertBetween(FILIFU BEG, END, GOT, #BEG " <= " #GOT " <= " #END, true)
 #define ASSERT_STREQ(WANT, GOT) \
   assertStringEquals(FILIFU sizeof(*(WANT)), WANT, GOT, #GOT, true)
 #define ASSERT_STRNE(NOPE, GOT) \
@@ -167,9 +172,8 @@ void TearDown(void);
 │ cosmopolitan § testing library » assert or log                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#define EXPECT_BETWEEN(BEG, END, GOT)             \
-  assertBetween(FILIFU _I(BEG), _I(END), _I(GOT), \
-                #BEG " <= " #GOT " <= " #END, false)
+#define EXPECT_BETWEEN(BEG, END, GOT) \
+  assertBetween(FILIFU BEG, END, GOT, #BEG " <= " #GOT " <= " #END, false)
 #define EXPECT_STREQ(WANT, GOT) \
   assertStringEquals(FILIFU sizeof(*(WANT)), WANT, GOT, #GOT, false)
 #define EXPECT_STRNE(NOPE, GOT) \
@@ -233,46 +237,43 @@ void TearDown(void);
   const char *file;   \
   int line
 
-#define TESTLIB_ONFAIL(FILE, FUNC)              \
-  if (g_testlib_shoulddebugbreak) DebugBreak(); \
-  testlib_showerror_file = FILE;                \
-  testlib_showerror_func = FUNC
-
-#define TESTLIB_SHOWERROR(THUNK, ...) \
-  (((typeof(&testlib_showerror_))strongaddr(#THUNK)))(__VA_ARGS__)
-
 #define __TEST_EQ(KIND, FILE, LINE, FUNC, WANTCODE, GOTCODE, WANT, GOT, ...) \
-  ({                                                                         \
-    autotype(GOT) Got = _I(GOT);                                             \
-    typeof(Got) Want = _I(WANT);                                             \
-    testlib_ontest();                                                        \
+  do {                                                                       \
+    intptr_t Got, Want;                                                      \
+    ++g_testlib_ran;                                                         \
+    Got = (intptr_t)(GOT);                                                   \
+    Want = (intptr_t)(WANT);                                                 \
     if (Want != Got) {                                                       \
-      TESTLIB_ONFAIL(FILE, FUNC);                                            \
-      TESTLIB_SHOWERROR(testlib_showerror_##KIND##_eq, LINE, WANTCODE,       \
-                        GOTCODE, testlib_formatint(_I(Want)),                \
-                        testlib_formatint(_I(Got)), "" __VA_ARGS__);         \
+      if (g_testlib_shoulddebugbreak) DebugBreak();                          \
+      testlib_showerror_file = FILE;                                         \
+      testlib_showerror_func = FUNC;                                         \
+      testlib_showerror_##KIND##_eq(LINE, WANTCODE, GOTCODE,                 \
+                                    testlib_formatint(Want),                 \
+                                    testlib_formatint(Got), "" __VA_ARGS__); \
     }                                                                        \
     (void)0;                                                                 \
-  })
+  } while (0)
 
 #define __TEST_NE(KIND, FILE, LINE, FUNC, WANTCODE, GOTCODE, WANT, GOT, ...) \
-  ({                                                                         \
-    autotype(GOT) Got = (GOT);                                               \
-    typeof(Got) Want = (WANT);                                               \
-    testlib_ontest();                                                        \
+  do {                                                                       \
+    intptr_t Got, Want;                                                      \
+    ++g_testlib_ran;                                                         \
+    Got = (intptr_t)(GOT);                                                   \
+    Want = (intptr_t)(WANT);                                                 \
     if (Want == Got) {                                                       \
-      TESTLIB_ONFAIL(FILE, FUNC);                                            \
-      TESTLIB_SHOWERROR(testlib_showerror_##KIND##_ne, LINE, WANTCODE,       \
-                        GOTCODE, testlib_formatint(_I(Want)),                \
-                        testlib_formatint(_I(Got)), "" __VA_ARGS__);         \
+      if (g_testlib_shoulddebugbreak) DebugBreak();                          \
+      testlib_showerror_file = FILE;                                         \
+      testlib_showerror_func = FUNC;                                         \
+      testlib_showerror_##KIND##_ne(LINE, WANTCODE, GOTCODE,                 \
+                                    testlib_formatint(Want),                 \
+                                    testlib_formatint(Got), "" __VA_ARGS__); \
     }                                                                        \
-    (void)0;                                                                 \
-  })
+  } while (0)
 
 #define _TEST2(NAME, WANT, OP, GOT, WANTCODE, OPSTR, GOTCODE, ISFATAL)    \
   do {                                                                    \
-    autotype(WANT) Want = (WANT);                                         \
-    autotype(GOT) Got = (GOT);                                            \
+    intptr_t Want = (intptr_t)(WANT);                                     \
+    intptr_t Got = (intptr_t)(GOT);                                       \
     if (!(Want OP Got)) {                                                 \
       testlib_showerror(FILIFU NAME, OPSTR, WANTCODE OPSTR GOTCODE,       \
                         testlib_formatint(Want), testlib_formatint(Got)); \
@@ -300,13 +301,25 @@ extern const testfn_t __testcase_start[], __testcase_end[];
 extern const struct TestFixture __fixture_start[], __fixture_end[];
 extern const struct TestFixture __combo_start[], __combo_end[];
 
-void testlib_showerror_(int line, const char *wantcode, const char *gotcode,
-                        char *FREED_want, char *FREED_got, const char *fmt,
-                        ...) relegated;
+void testlib_showerror_assert_eq(int, const char *, const char *, char *,
+                                 char *, const char *, ...) wontreturn;
+void testlib_showerror_assert_false(int, const char *, const char *, char *,
+                                    char *, const char *, ...) wontreturn;
+void testlib_showerror_assert_ne(int, const char *, const char *, char *,
+                                 char *, const char *, ...) wontreturn;
+void testlib_showerror_assert_true(int, const char *, const char *, char *,
+                                   char *, const char *, ...) wontreturn;
+void testlib_showerror_expect_eq(int, const char *, const char *, char *,
+                                 char *, const char *, ...);
+void testlib_showerror_expect_false(int, const char *, const char *, char *,
+                                    char *, const char *, ...);
+void testlib_showerror_expect_ne(int, const char *, const char *, char *,
+                                 char *, const char *, ...);
+void testlib_showerror_expect_true(int, const char *, const char *, char *,
+                                   char *, const char *, ...);
 
-void testlib_showerror(const char *file, int line, const char *func,
-                       const char *method, const char *symbol, const char *code,
-                       char *v1, char *v2);
+void testlib_showerror(const char *, int, const char *, const char *,
+                       const char *, const char *, char *, char *);
 
 void thrashcodecache(void);
 
@@ -333,9 +346,9 @@ bool testlib_hexequals(const char *, const void *, size_t) nosideeffect;
 bool testlib_startswith(size_t, const void *, const void *) nosideeffect;
 bool testlib_endswith(size_t, const void *, const void *) nosideeffect;
 bool testlib_contains(size_t, const void *, const void *) nosideeffect;
-char *testlib_formatrange(intmax_t, intmax_t) mallocesque;
+char *testlib_formatrange(intptr_t, intptr_t) mallocesque;
 char *testlib_formatstr(size_t, const void *, int) mallocesque;
-char *testlib_formatint(intmax_t) mallocesque;
+char *testlib_formatint(intptr_t) mallocesque;
 char *testlib_formatbool(bool);
 char *testlib_formatfloat(long double) mallocesque;
 void testlib_formatbinaryashex(const char *, const void *, size_t, char **,
@@ -347,9 +360,6 @@ void testlib_incrementfailed(void);
 void testlib_clearxmmregisters(void);
 
 forceinline void testlib_ontest() {
-  YOINK(__testcase_start);
-  YOINK(__fixture_start);
-  YOINK(__combo_start);
   ++g_testlib_ran;
 }
 
@@ -358,7 +368,7 @@ forceinline void testlib_onfail2(bool isfatal) {
   if (isfatal) testlib_abort();
 }
 
-forceinline void assertNotEquals(FILIFU_ARGS intmax_t donotwant, intmax_t got,
+forceinline void assertNotEquals(FILIFU_ARGS intptr_t donotwant, intptr_t got,
                                  const char *gotcode, bool isfatal) {
   ++g_testlib_ran;
   if (got != donotwant) return;
@@ -369,7 +379,7 @@ forceinline void assertNotEquals(FILIFU_ARGS intmax_t donotwant, intmax_t got,
 }
 
 #define assertLongDoubleGreaterThan(a, b, code, isfatal)                   \
-  ({                                                                       \
+  do {                                                                     \
     autotype(a) a_ = (a);                                                  \
     autotype(b) b_ = (b);                                                  \
     if (a_ <= b_) {                                                        \
@@ -378,10 +388,10 @@ forceinline void assertNotEquals(FILIFU_ARGS intmax_t donotwant, intmax_t got,
       testlib_onfail2(isfatal);                                            \
     }                                                                      \
     (void)0;                                                               \
-  })
+  } while (0)
 
 #define assertLongDoubleLessThan(a, b, code, isfatal)                      \
-  ({                                                                       \
+  do {                                                                     \
     autotype(a) a_ = (a);                                                  \
     autotype(b) b_ = (b);                                                  \
     if (a_ >= b_) {                                                        \
@@ -390,10 +400,10 @@ forceinline void assertNotEquals(FILIFU_ARGS intmax_t donotwant, intmax_t got,
       testlib_onfail2(isfatal);                                            \
     }                                                                      \
     (void)0;                                                               \
-  })
+  } while (0)
 
-forceinline void assertBetween(FILIFU_ARGS intmax_t beg, intmax_t end,
-                               intmax_t got, const char *gotcode,
+forceinline void assertBetween(FILIFU_ARGS intptr_t beg, intptr_t end,
+                               intptr_t got, const char *gotcode,
                                bool isfatal) {
   ++g_testlib_ran;
   if (beg <= got && got <= end) return;

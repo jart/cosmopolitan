@@ -20,6 +20,8 @@
 
 /**
  * Returns value of environment variable, or NULL if not found.
+ *
+ * Environment variables can store empty string on Unix but not Windows.
  */
 char *getenv(const char *s) {
   char **p;
@@ -29,7 +31,7 @@ char *getenv(const char *s) {
       for (j = 0;; ++j) {
         if (!s[j]) {
           if (p[i][j] == '=') {
-            return &p[i][j + 1];
+            return p[i] + j + 1;
           }
           break;
         }

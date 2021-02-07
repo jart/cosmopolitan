@@ -3,6 +3,9 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 
+STATIC_YOINK("__mmap");              /* asan needs it */
+STATIC_YOINK("TrackMemoryInterval"); /* asan needs it */
+
 #define ASSERT(x, y)    Assert2(x, y, #y, __FILE__, __LINE__)
 #define ASSERT128(x, y) Assert128(x, y, #y, __FILE__, __LINE__)
 

@@ -16,51 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/bits/progn.internal.h"
-#include "libc/bits/safemacros.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/nt/enum/computernameformat.h"
+#include "libc/nt/systeminfo.h"
 #include "libc/str/str.h"
-#include "libc/str/tpencode.internal.h"
-#include "libc/testlib/testlib.h"
 
-char buf[8];
-
-TEST(tpencode, testNul) {
-  ASSERT_BINEQ(u" ", PROGN(ASSERT_EQ(1, tpencode(buf, 8, 0, false)), buf));
-  ASSERT_BINEQ(u" ", PROGN(ASSERT_EQ(1, (tpencode)(buf, 8, 0, false)), buf));
-}
-
-TEST(tpencode, testSpace) {
-  ASSERT_BINEQ(u" ", PROGN(ASSERT_EQ(1, tpencode(buf, 8, 0x20, false)), buf));
-  ASSERT_BINEQ(u" ", PROGN(ASSERT_EQ(1, (tpencode)(buf, 8, 0x20, false)), buf));
-}
-
-TEST(tpencode, testGlyph) {
-  ASSERT_EQ(3, tpencode(buf, 8, u'→', false));
-  ASSERT_BINEQ(u"ΓåÆ", buf);
-  ASSERT_EQ(3, (tpencode)(buf, 8, u'→', false));
-  ASSERT_BINEQ(u"ΓåÆ", buf);
-}
-
-TEST(tpencode, testMathematicalNotMuhPolicyDrivenBehavior_negativeOne) {
-  ASSERT_BINEQ(u"λ┐┐┐┐┐",
-               PROGN(ASSERT_EQ(6, tpencode(buf, 8, -1, false)), buf));
-  ASSERT_BINEQ(u"λ┐┐┐┐┐",
-               PROGN(ASSERT_EQ(6, (tpencode)(buf, 8, -1, false)), buf));
-}
-
-TEST(tpencode, testMathematicalNotMuhPolicyDrivenBehavior_twosComplementBane) {
-  ASSERT_BINEQ(u"■ÇÇÇÇÇ",
-               PROGN(ASSERT_EQ(6, tpencode(buf, 8, 0x80000000, false)), buf));
-  ASSERT_BINEQ(u"■ÇÇÇÇÇ",
-               PROGN(ASSERT_EQ(6, (tpencode)(buf, 8, 0x80000000, false)), buf));
-}
-
-TEST(tpencode, testMathematicalNotMuhPolicyDrivenBehavior_nonCanonicalNul) {
-  ASSERT_BINEQ(u"└Ç", PROGN(ASSERT_EQ(2, tpencode(buf, 8, 0, true)), buf));
-  ASSERT_BINEQ(u"└Ç", PROGN(ASSERT_EQ(2, (tpencode)(buf, 8, 0, true)), buf));
-}
-
-TEST(tpencode, testC1Csi) {
-  ASSERT_BINEQ(u"┬¢", PROGN(ASSERT_EQ(2, tpencode(buf, 8, 0x9B, false)), buf));
+textwindows int gethostname_nt(char *name, size_t len) {
+  uint32_t nSize;
+  char16_t name16[256];
+  nSize = ARRAYLEN(name16);
+  if (GetComputerNameEx(kNtComputerNameDnsHostname, name16, &nSize)) {
+    tprecode16to8(name, len, name16);
+    return 0;
+  } else {
+    return __winerr();
+  }
 }

@@ -27,7 +27,7 @@
 #include "libc/assert.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/paland.inc"
-#include "libc/fmt/palandprintf.internal.h"
+#include "libc/fmt/palandprintf.h"
 
 uintmax_t __udivmodti4(uintmax_t, uintmax_t, uintmax_t *);
 

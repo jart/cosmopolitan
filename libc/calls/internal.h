@@ -100,6 +100,10 @@ forceinline size_t clampio(size_t size) {
 │ cosmopolitan § syscalls » system five » synthetic jump slots             ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+axdx_t __sys_pipe(i32[hasatleast 2], i32) hidden;
+axdx_t sys_fork(void) hidden;
+axdx_t sys_getpid(void) hidden;
+axdx_t sys_gettimeofday(struct timeval *, struct timezone *, void *) hidden;
 char *sys_getcwd(char *, u64) hidden;
 char *sys_getcwd_xnu(char *, u64) hidden;
 i32 __sys_dup3(i32, i32, i32) hidden;
@@ -127,11 +131,10 @@ i32 sys_fchownat(i32, const char *, u32, u32, u32) hidden;
 i32 sys_fcntl(i32, i32, ...) hidden;
 i32 sys_fdatasync(i32) hidden;
 i32 sys_flock(i32, i32) hidden;
-i32 sys_fork(void) hidden;
 i32 sys_fstat(i32, struct stat *) hidden;
 i32 sys_fstatat(i32, const char *, struct stat *, i32) hidden;
 i32 sys_fsync(i32) hidden;
-i32 sys_ftruncate(i32, i64) hidden;
+i32 sys_ftruncate(i32, i64, i64) hidden;
 i32 sys_futimes(i32, const struct timeval *) hidden;
 i32 sys_futimesat(i32, const char *, const struct timeval *) hidden;
 i32 sys_getitimer(i32, struct itimerval *) hidden;
@@ -139,11 +142,10 @@ i32 sys_getppid(void) hidden;
 i32 sys_getpriority(i32, u32) hidden;
 i32 sys_getrlimit(i32, struct rlimit *) hidden;
 i32 sys_getrusage(i32, struct rusage *) hidden;
-i32 sys_gettimeofday(struct timeval *, struct timezone *) hidden;
 i32 sys_ioctl(i32, u64, void *) hidden;
 i32 sys_kill(i32, i32, i32) hidden;
 i32 sys_linkat(i32, const char *, i32, const char *, i32) hidden;
-i32 sys_lseek(i32, i64, i32) hidden;
+i32 sys_lseek(i32, i64, i64, i64) hidden;
 i32 sys_lutimes(const char *, const struct timeval *) hidden;
 i32 sys_madvise(void *, size_t, i32) hidden;
 i32 sys_memfd_create(const char *, u32) hidden;
@@ -176,7 +178,7 @@ i32 sys_symlinkat(const char *, i32, const char *) hidden;
 i32 sys_sync(void) hidden;
 i32 sys_sync_file_range(i32, i64, i64, u32) hidden;
 i32 sys_sysinfo(struct sysinfo *) hidden;
-i32 sys_truncate(const char *, u64) hidden;
+i32 sys_truncate(const char *, u64, u64) hidden;
 i32 sys_uname(char *) hidden;
 i32 sys_unlinkat(i32, const char *, i32) hidden;
 i32 sys_utime(const char *, const struct utimbuf *) hidden;
@@ -185,22 +187,21 @@ i32 sys_utimes(const char *, const struct timeval *) hidden;
 i32 sys_wait4(i32, i32 *, i32, struct rusage *) hidden;
 i64 sys_copy_file_range(i32, long *, i32, long *, u64, u32) hidden;
 i64 sys_getrandom(void *, u64, u32) hidden;
-i64 sys_pread(i32, void *, u64, i64) hidden;
-i64 sys_preadv(i32, struct iovec *, i32, i64) hidden;
+i64 sys_pread(i32, void *, u64, i64, i64) hidden;
+i64 sys_preadv(i32, struct iovec *, i32, i64, i64) hidden;
 i64 sys_ptrace(int, i32, void *, void *) hidden;
-i64 sys_pwrite(i32, const void *, u64, i64) hidden;
-i64 sys_pwritev(i32, const struct iovec *, i32, i64) hidden;
+i64 sys_pwrite(i32, const void *, u64, i64, i64) hidden;
+i64 sys_pwritev(i32, const struct iovec *, i32, i64, i64) hidden;
 i64 sys_read(i32, void *, u64) hidden;
 i64 sys_sendfile(i32, i32, i64 *, u64) hidden;
 i64 sys_splice(i32, i64 *, i32, i64 *, u64, u32) hidden;
 i64 sys_vmsplice(i32, const struct iovec *, i64, u32) hidden;
 i64 sys_write(i32, const void *, u64) hidden;
 u32 sys_getgid(void) hidden;
-axdx_t sys_getpid(void) hidden;
 u32 sys_getsid(int) hidden;
 u32 sys_gettid(void) hidden;
 u32 sys_getuid(void) hidden;
-void *sys_mmap(void *, u64, u32, u32, i64, i64) hidden;
+void *sys_mmap(void *, u64, u32, u32, i64, i64, i64) hidden;
 void *sys_mremap(void *, u64, u64, i32, void *) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -219,6 +220,9 @@ void __stat2linux(void *) hidden;
 void __restore_rt_netbsd(void) hidden;
 void __xnutrampoline(void *, i32, i32, const struct __darwin_siginfo *,
                      const struct __darwin_ucontext *) hidden wontreturn;
+int gethostname_linux(char *, size_t) hidden;
+int gethostname_bsd(char *, size_t) hidden;
+int gethostname_nt(char *, size_t) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » windows nt » veneers                           ─╬─│┼

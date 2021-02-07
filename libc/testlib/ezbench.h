@@ -6,6 +6,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 #define EZBENCH(INIT, EXPR) EZBENCH2(#EXPR, INIT, EXPR)
+
+#ifndef __STRICT_ANSI__
 #define EZBENCH2(NAME, INIT, EXPR)                                        \
   do {                                                                    \
     uint64_t Control, Speculative, MemoryStrict;                          \
@@ -22,6 +24,11 @@
     __testlib_ezbenchreport(NAME, Speculative - Control,                  \
                             MemoryStrict - Control);                      \
   } while (0)
+#else
+#define EZBENCH2(NAME, INIT, EXPR) \
+  do {                             \
+  } while (0)
+#endif
 
 void __testlib_ezbenchreport(const char *, uint64_t, uint64_t);
 uint64_t __testlib_ezbenchcontrol(void);

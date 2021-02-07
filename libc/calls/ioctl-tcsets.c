@@ -21,13 +21,14 @@
 #include "libc/calls/termios.internal.h"
 #include "libc/dce.h"
 #include "libc/sysv/consts/termios.h"
+#include "libc/sysv/errfuns.h"
 
 int ioctl_tcsets_nt(int, uint64_t, const struct termios *);
 
 static int ioctl_tcsets_sysv(int fd, uint64_t request,
                              const struct termios *tio) {
   union metatermios t;
-  return sys_ioctl(fd, request, termios2host(&t, tio));
+  return sys_ioctl(fd, request, __termios2host(&t, tio));
 }
 
 /**
@@ -38,6 +39,7 @@ static int ioctl_tcsets_sysv(int fd, uint64_t request,
  * @see ioctl(fd, TIOCGETA{,W,F}, tio) dispatches here
  */
 int ioctl_tcsets(int fd, uint64_t request, const struct termios *tio) {
+  if (!tio) return efault();
   if (!IsWindows()) {
     return ioctl_tcsets_sysv(fd, request, tio);
   } else {

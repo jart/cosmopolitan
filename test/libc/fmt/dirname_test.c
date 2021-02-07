@@ -23,6 +23,8 @@
 #include "libc/testlib/testlib.h"
 
 TEST(dirname, test) {
+  EXPECT_STREQ("/usr/lib", dirname(gc(strdup("/usr/lib/foo.bar"))));
+  EXPECT_STREQ("/usr", dirname(gc(strdup("/usr/lib"))));
   EXPECT_STREQ("/usr", dirname(gc(strdup("/usr/lib"))));
   EXPECT_STREQ("usr", dirname(gc(strdup("usr/lib"))));
   EXPECT_STREQ("/", dirname(gc(strdup("/usr/"))));

@@ -13,7 +13,5 @@
 #   environment variable. Many programs use it under the hood, e.g. gcc,
 #   so it grants many small performance improvements.
 
-MKDIR=${MKDIR:-$(command -v mkdir) -p} || exit
-
-$MKDIR o/tmp
+mkdir -p o/tmp
 echo o/tmp

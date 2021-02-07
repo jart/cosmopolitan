@@ -16,9 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/time/struct/timezone.h"
 #include "libc/time/time.h"
 
@@ -32,8 +34,15 @@
  * @see	strftime() for string formatting
  */
 int gettimeofday(struct timeval *tv, struct timezone *tz) {
+  axdx_t ad;
   if (!IsWindows()) {
-    return sys_gettimeofday(tv, tz);
+    ad = sys_gettimeofday(tv, tz, NULL);
+    assert(ad.ax != -1);
+    if (SupportsXnu() && ad.ax && tv) {
+      tv->tv_sec = ad.ax;
+      tv->tv_usec = ad.dx;
+    }
+    return 0;
   } else {
     return sys_gettimeofday_nt(tv, tz);
   }

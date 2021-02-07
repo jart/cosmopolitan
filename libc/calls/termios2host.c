@@ -22,14 +22,14 @@
 #include "libc/calls/termios.internal.h"
 #include "libc/dce.h"
 
-void *termios2host(union metatermios *t, const struct termios *lt) {
-  if (IsXnu()) {
+void *__termios2host(union metatermios *t, const struct termios *lt) {
+  if (!IsXnu() && !IsFreebsd() && !IsOpenbsd() && !IsNetbsd()) {
+    return lt;
+  } else if (IsXnu()) {
     COPY_TERMIOS(&t->xnu, lt);
     return &t->xnu;
-  } else if (IsFreebsd() || IsOpenbsd()) {
+  } else {
     COPY_TERMIOS(&t->bsd, lt);
     return &t->bsd;
-  } else {
-    return lt;
   }
 }

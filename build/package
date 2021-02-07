@@ -20,14 +20,14 @@ else
 fi
 
 printf "$LOGFMT" "${ACTION:-PACKAGE}" "$3" >&2
-# if [ "$SILENT" = "0" ]; then
+# if [ "$V" = "0" ]; then
+#   printf "$LOGFMT" "${ACTION:-PACKAGE}" "$3" >&2
+# else
 #   COLUMNS=${COLUMNS:-80}
 #   COLUMNS=$((COLUMNS - 4))
 #   printf "%s\n" "$*" |
 #     /usr/bin/fold -s -w $COLUMNS |
 #     sed -e '1bb' -e 's/^/  /' -e ':b' -e '$b' -e 's/$/ \\/' >&2
-# else
-#   printf "$LOGFMT" "${ACTION:-PACKAGE}" "$3" >&2
 # fi
 
 exec "$@"

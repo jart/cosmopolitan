@@ -32,7 +32,6 @@
  */
 int renameat(int olddirfd, const char *oldpath, int newdirfd,
              const char *newpath) {
-  if (!oldpath || !newpath) return efault();
   if (!IsWindows()) {
     return sys_renameat(olddirfd, oldpath, newdirfd, newpath);
   } else {

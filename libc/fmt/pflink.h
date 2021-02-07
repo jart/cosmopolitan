@@ -1,6 +1,10 @@
 #ifndef COSMOPOLITAN_LIBC_FMT_PFLINK_H_
 #define COSMOPOLITAN_LIBC_FMT_PFLINK_H_
 #include "libc/dce.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
+#include "libc/unicode/unicode.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 #ifndef __STRICT_ANSI__
 
@@ -79,11 +83,6 @@ __asm__(".section .yoink\n\t"
         "nopl\t__grow(%rip)\n\t"
         ".previous");
 #else
-#include "libc/fmt/palandprintf.internal.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
-#include "libc/unicode/unicode.h"
 static long __pflink(long x) {
   x |= kCp437[0];
   x |= ntoa(0, 0, 0, 0, 0, 0, 0, 0, 0);

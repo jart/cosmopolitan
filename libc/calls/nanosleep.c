@@ -26,16 +26,12 @@
  */
 int nanosleep(const struct timespec *req, struct timespec *rem) {
   if (!req) return efault();
-  if (!IsWindows()) {
-    if (!IsMetal()) {
-      if (!IsXnu()) {
-        return sys_nanosleep(req, rem);
-      } else {
-        return sys_nanosleep_xnu(req, rem);
-      }
-    } else {
-      return enosys(); /* TODO: Sleep on Metal */
-    }
+  if (!IsWindows() && !IsMetal() && !IsXnu()) {
+    return sys_nanosleep(req, rem);
+  } else if (IsXnu()) {
+    return sys_nanosleep_xnu(req, rem);
+  } else if (IsMetal()) {
+    return enosys(); /* TODO: Sleep on Metal */
   } else {
     return sys_nanosleep_nt(req, rem);
   }

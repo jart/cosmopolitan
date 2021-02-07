@@ -43,16 +43,16 @@ scall	__sys_fstat		0x1b80352272153005	globl hidden # needs __stat2linux()
 scall	__sys_lstat		0x1b90280282154006	globl hidden # needs __stat2linux(); blocked on Android
 scall	sys_poll		0x0d10fc0d120e6007	globl hidden
 scall	sys_ppoll		0xfff06d221ffff10f	globl hidden # consider INTON/INTOFF tutorial in examples/unbourne.c
-scall	__sys_lseek		0x0c70c71de20c7008	globl hidden # netbsd+openbsd:evilpad
-scall	__sys_mmap		0x0c50c51dd20c5009	globl hidden # netbsd+openbsd:pad
+scall	sys_lseek		0x0c70c71de20c7008	globl hidden # netbsd+openbsd:evilpad
+scall	sys_mmap		0x0c50c51dd20c5009	globl hidden # netbsd+openbsd:pad
 scall	sys_msync		0x115100041204101a	globl hidden
 scall	sys_mprotect		0x04a04a04a204a00a	globl hidden
 scall	sys_munmap		0x049049049204900b	globl hidden
 scall	sys_sigaction		0x15402e1a0202e00d	globl hidden # rt_sigaction on Lunix; it's complicated on NetBSD
-scall	__sys_sigprocmask	0x125030154203000e	globl hidden # a.k.a. rt_sigprocmask, openbsd:byvalue
+scall	sys_sigprocmask		0x125030154203000e	globl hidden # a.k.a. rt_sigprocmask, openbsd:byvalue
 scall	sys_ioctl		0x0360360362036010	globl hidden
-scall	__sys_pread		0x0ad0ad1db2099011	globl hidden # a.k.a. pread64; netbsd+openbsd:pad
-scall	__sys_pwrite		0x0ae0ae1dc209a012	globl hidden # a.k.a. pwrite64; netbsd+openbsd:pad
+scall	sys_pread		0x0ad0ad1db2099011	globl hidden # a.k.a. pread64; netbsd+openbsd:pad
+scall	sys_pwrite		0x0ae0ae1dc209a012	globl hidden # a.k.a. pwrite64; netbsd+openbsd:pad
 scall	sys_readv		0x0780780782078013	globl hidden
 scall	sys_writev		0x0790790792079014	globl hidden
 scall	sys_access		0x0210210212021015	globl hidden
@@ -91,7 +91,7 @@ scall	__sys_getpeername	0x01f01f08d201f034	globl hidden
 scall	sys_socketpair		0x0870870872087035	globl hidden
 scall	sys_setsockopt		0x0690690692069036	globl hidden
 scall	sys_getsockopt		0x0760760762076037	globl hidden
-scall	__sys_fork		0x0020020022002039	globl hidden # xnu needs eax=~-edx b/c eax always holds pid and edx is 0 for parent and 1 for child
+scall	sys_fork		0x0020020022002039	globl hidden # xnu needs eax&=~-edx bc eax always holds pid and edx is 0 for parent and 1 for child
 #scall	vfork			0x042042042204203a	globl        # this syscall is from the moon so we implement it by hand in libc/calls/hefty/vfork.S
 scall	sys_posix_spawn		0xfffffffff20f4fff	globl hidden # good luck figuring out how xnu defines this
 scall	__sys_execve		0x03b03b03b203b03b	globl hidden
@@ -116,8 +116,8 @@ scall	sys_fcntl		0x05c05c05c205c048	globl hidden
 scall	sys_flock		0x0830830832083049	globl hidden
 scall	sys_fsync		0x05f05f05f205f04a	globl hidden
 scall	sys_fdatasync		0x0f105f22620bb04b	globl hidden # fsync() on openbsd
-scall	__sys_truncate		0x0c80c81df20c804c	globl hidden # netbsd+openbsd:pad
-scall	__sys_ftruncate		0x0c90c91e020c904d	globl hidden # netbsd+openbsd:pad
+scall	sys_truncate		0x0c80c81df20c804c	globl hidden # netbsd+openbsd:pad
+scall	sys_ftruncate		0x0c90c91e020c904d	globl hidden # netbsd+openbsd:pad
 scall	sys_getcwd		0x128130146ffff04f	globl hidden
 scall	sys_chdir		0x00c00c00c200c050	globl hidden
 scall	sys_fchdir		0x00d00d00d200d051	globl hidden
@@ -135,7 +135,7 @@ scall	sys_chown		0x010010010201005c	globl hidden # impl. w/ fchownat() @asyncsig
 scall	sys_fchown		0x07b07b07b207b05d	globl hidden # @asyncsignalsafe
 scall	sys_lchown		0x1130fe0fe216c05e	globl hidden # impl. w/ fchownat()
 scall	umask			0x03c03c03c203c05f	globl
-scall	__sys_gettimeofday	0x1a20430742074060	globl hidden # xnu esi/edx=0
+scall	sys_gettimeofday	0x1a20430742074060	globl hidden # xnu esi/edx=0
 scall	sys_getrlimit		0x0c20c20c220c2061	globl hidden
 scall	sys_getrusage		0x1bd0130752075062	globl hidden
 scall	sys_sysinfo		0xfffffffffffff063	globl hidden
@@ -163,7 +163,7 @@ scall	sys_setresgid		0xfff11c138ffff077	globl hidden # polyfilled for xnu
 scall	getresuid		0xfff119168ffff076	globl # semantics aren't well-defined
 scall	getresgid		0xfff11b169ffff078	globl # semantics aren't well-defined
 scall	sigpending		0x124034034203407f	globl
-scall	__sys_sigsuspend	0x12606f155206f082	globl hidden # openbsd:byvalue
+scall	sys_sigsuspend		0x12606f155206f082	globl hidden # openbsd:byvalue
 scall	sigaltstack		0x1191200352035083	globl
 scall	sys_mknod		0x1c200e00e200e085	globl hidden
 scall	mknodat			0x1cc14022fffff103	globl # FreeBSD 12+
@@ -302,8 +302,8 @@ scall	sys_vmsplice		0xfffffffffffff116	globl hidden
 scall	migrate_pages		0xfffffffffffff100	globl        # numa numa yay
 scall	move_pages		0xfffffffffffff117	globl        # NOTE: We view Red Hat versions as "epochs" for all distros.
 #──────────────────────RHEL 5.0 LIMIT────────────────────────        # ←┬─ last distro with gplv2 licensed compiler c. 2007
-scall	__sys_preadv		0x12110b121ffff127	globl hidden #  ├─ last distro with system v shell script init
-scall	__sys_pwritev		0x12210c122ffff128	globl hidden #  ├─ rob landley unleashes busybox gpl lawsuits
+scall	sys_preadv		0x12110b121ffff127	globl hidden #  ├─ last distro with system v shell script init
+scall	sys_pwritev		0x12210c122ffff128	globl hidden #  ├─ rob landley unleashes busybox gpl lawsuits
 scall	__sys_utimensat		0x1d3054223ffff118	globl hidden #  ├─ python modules need this due to pep513
 scall	sys_fallocate		0xfffffffffffff11d	globl hidden #  ├─ end of life 2020-11-30 (extended)
 scall	sys_posix_fallocate	0xffffff212fffffff	globl hidden #  └─ cosmopolitan supports rhel5+

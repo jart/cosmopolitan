@@ -29,9 +29,11 @@
  * @return new position relative to beginning, or -1 on error
  * @asyncsignalsafe
  */
-int64_t lseek(int fd, int64_t offset, int whence) {
-  if (!IsWindows()) {
-    return sys_lseek(fd, offset, whence);
+int64_t lseek(int fd, int64_t offset, unsigned whence) {
+  if (!IsWindows() && !IsOpenbsd() && !IsNetbsd()) {
+    return sys_lseek(fd, offset, whence, 0);
+  } else if (IsOpenbsd() || IsNetbsd()) {
+    return sys_lseek(fd, offset, offset, whence);
   } else {
     return sys_lseek_nt(fd, offset, whence);
   }

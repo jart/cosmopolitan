@@ -18,21 +18,20 @@ libc](https://justine.lol/cosmopolitan/index.html) website. We also have
 
 ## Getting Started
 
-Here's how to get started with the freestanding hermetically-sealed
-monolithic source repository:
+Cosmopolitan can be compiled from source on any Linux distro.
 
 ```sh
-tar xf cosmopolitan-0.1.2.tar.gz  # see our releases page
-cd cosmo
-make -j12
+tar xf cosmopolitan-0.1.2.tar.gz  # see releases page
+cd cosmopolitan-0.1.2
+make -j16
 o//examples/hello.com
+find o -name \*.com | xargs ls -rShal | less
 ```
 
-Here's how to get started with the amalgamated binaries, which let you
-bring your own build system:
+Alternatively you can use the release binaries:
 
 ```sh
-unzip cosmopolitan-amalgamated-0.1.2.zip  # see our releases page
+unzip cosmopolitan-amalgamated-0.1.2.zip  # see releases page
 echo 'main() { printf("hello world\n"); }' >hello.c
 gcc -g -O -static -fno-pie -no-pie -mno-red-zone -nostdlib -nostdinc \
   -o hello.com.dbg hello.c -Wl,--gc-sections -Wl,-z,max-page-size=0x1000 -fuse-ld=bfd \

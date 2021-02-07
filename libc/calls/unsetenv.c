@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,33 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/macros.h"
-.source	__FILE__
+#include "libc/runtime/runtime.h"
 
-/	Creates file descriptors for IPC.
-/
-/	@param	rdi points to int3[2] that gets (reader, writer)
-/	@return 0 on success or -1 w/ errno
-/	@asyncsignalsafe
-/	@see	libc/sysv/syscalls.sh
-/	@see	pipe2()
-sys_pipe:
-	push	%rbp
-	mov	%rsp,%rbp
-#if SupportsFreebsd()
-	xor	%esi,%esi
-#endif
-	call	__sys_pipe
-#if SupportsXnu() || SupportsNetbsd()
-	testb	$XNU|NETBSD,__hostos(%rip)
-	jz	1f
-	cmp	$-1,%rax
-	je	1f
-	mov	%eax,(%rdi)
-	mov	%edx,4(%rdi)
-	xor	%eax,%eax
-#endif
-1:	pop	%rbp
-	ret
-	.endfn	sys_pipe,globl,hidden
+/**
+ * Removes environment variable.
+ */
+int unsetenv(const char *s) {
+  char **p;
+  size_t i, j, k;
+  if (s && (p = environ)) {
+    for (i = 0; p[i]; ++i) {
+      for (j = 0;; ++j) {
+        if (!s[j]) {
+          if (p[i][j] == '=') {
+            k = i + 1;
+            do {
+              p[k - 1] = p[k];
+            } while (p[k++]);
+            return 0;
+          }
+          break;
+        }
+        if (s[j] != p[i][j]) {
+          break;
+        }
+      }
+    }
+  }
+  return 0;
+}

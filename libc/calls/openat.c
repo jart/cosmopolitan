@@ -39,7 +39,7 @@
  * @asyncsignalsafe
  * @vforksafe
  */
-nodiscard int openat(int dirfd, const char *file, int flags, ...) {
+int openat(int dirfd, const char *file, int flags, ...) {
   va_list va;
   unsigned mode;
   struct ZiposUri zipname;

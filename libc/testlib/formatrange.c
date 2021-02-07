@@ -19,6 +19,6 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-nodiscard testonly char *testlib_formatrange(intmax_t beg, intmax_t end) {
-  return xasprintf("[%#jx,%#jx]", beg, end);
+nodiscard testonly char *testlib_formatrange(intptr_t beg, intptr_t end) {
+  return xasprintf("[%#ld,%#ld]", beg, end);
 }

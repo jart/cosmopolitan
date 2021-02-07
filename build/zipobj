@@ -42,10 +42,10 @@ else
   set -- o/build/bootstrap/zipobj.com "$@"
 fi
 
-if [ "$SILENT" = "0" ]; then
-  printf "%s\n" "$*" >&2
-else
+if [ "$V" = "0" ]; then
   printf "$LOGFMT" "${ACTION:-ZIPOBJ}" "$3" >&2
+else
+  printf "%s\n" "$*" >&2
 fi
 
 exec "$@"

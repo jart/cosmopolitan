@@ -25,12 +25,15 @@
 #include "libc/nt/thread.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/rusage.h"
+#include "libc/sysv/errfuns.h"
 
 textwindows int sys_getrusage_nt(int who, struct rusage *usage) {
   struct NtFileTime CreationFileTime;
   struct NtFileTime ExitFileTime;
   struct NtFileTime KernelFileTime;
   struct NtFileTime UserFileTime;
+  if (!usage) return efault();
+  if (who == 99) return enosys(); /* @see libc/sysv/consts.sh */
   memset(usage, 0, sizeof(*usage));
   if ((who == RUSAGE_SELF ? GetProcessTimes : GetThreadTimes)(
           (who == RUSAGE_SELF ? GetCurrentProcess : GetCurrentThread)(),

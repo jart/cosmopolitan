@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/progn.internal.h"
 #include "libc/bits/safemacros.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/af.h"
@@ -25,8 +24,8 @@
 
 TEST(inet_pton, testLocalhost) {
   uint32_t addr;
-  EXPECT_EQ(htonl(INADDR_LOOPBACK),
-            PROGN(ASSERT_EQ(1, inet_pton(AF_INET, "127.0.0.1", &addr)), addr));
+  ASSERT_EQ(1, inet_pton(AF_INET, "127.0.0.1", &addr));
+  EXPECT_EQ(htonl(INADDR_LOOPBACK), addr);
 }
 
 TEST(inet_pton, testBadAddresses) {

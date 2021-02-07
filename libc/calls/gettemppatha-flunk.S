@@ -1,7 +1,7 @@
 /*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
 │vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,26 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
 #include "libc/macros.h"
+.source	__FILE__
 
-/	Makes fork() kernel ABI consistent across UNIX systems.
+/	Calls GetTempPathA() w/ different API.
 /
-/	@return	0 if parent, pid if child, or -1 on error
-sys_fork:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable
-	call	__sys_fork
-#if SupportsXnu()
-	testb	IsXnu()
-	jz	1f
-	cmp	$-1,%rax
-	je	1f
-	neg	%edx			# edx is 0 for parent and 1 for child
-	not	%edx			# eax always returned with childs pid
-	and	%edx,%eax
-#endif
-1:	pop	%rbp
-	ret
-	.endfn	sys_fork,globl,hidden
+/	@see	GetSystemDirectoryA(), GetWindowsDirectoryA()
+GetTempPathA_flunk:
+	xchg	%rcx,%rdx
+	jmp	*__imp_GetTempPathA(%rip)
+	.endfn	GetTempPathA_flunk,globl,hidden

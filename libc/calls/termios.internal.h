@@ -21,8 +21,8 @@ COSMOPOLITAN_C_START_
     (TO)->c_ospeed = (FROM)->c_ospeed;                     \
   } while (0)
 
-void *termios2host(union metatermios *, const struct termios *);
-void termios2linux(struct termios *, const union metatermios *);
+void *__termios2host(union metatermios *, const struct termios *) hidden;
+void __termios2linux(struct termios *, const union metatermios *) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

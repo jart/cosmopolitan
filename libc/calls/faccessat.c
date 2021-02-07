@@ -34,7 +34,6 @@
  * @asyncsignalsafe
  */
 int faccessat(int dirfd, const char *path, int mode, uint32_t flags) {
-  if (!path) return efault();
   if (!IsWindows()) {
     return sys_faccessat(dirfd, path, mode, flags);
   } else {

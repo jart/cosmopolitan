@@ -23,20 +23,15 @@
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-void *(*memmemi)(const void *, size_t, const void *, size_t) = memmem;
-FIXTURE(memmem, tiny) {
-  memmemi = tinymemmem;
-}
-
 #define MakeMemory(SL) memcpy(malloc(sizeof(SL) - 1), SL, sizeof(SL) - 1)
 
 TEST(memmem, test) {
   char *needle = MakeMemory("abcdefgh");
   char *haystk = MakeMemory("acccccccbbbbbbbbabcdefghdddddddd");
-  EXPECT_BINEQ(u"abcdefghdddddddd", memmemi(haystk, 32, needle, 8));
+  EXPECT_BINEQ(u"abcdefghdddddddd", memmem(haystk, 32, needle, 8));
   memcpy(needle, "aaaaaaaa", 8);
   memcpy(haystk, "acccccccbbbbbbbbaaaaaaaadddddddd", 32);
-  EXPECT_BINEQ(u"aaaaaaaadddddddd", memmemi(haystk, 32, needle, 8));
+  EXPECT_BINEQ(u"aaaaaaaadddddddd", memmem(haystk, 32, needle, 8));
   free(haystk);
   free(needle);
 }
@@ -44,7 +39,7 @@ TEST(memmem, test) {
 TEST(memmem, testNoMatch) {
   char *needle = MakeMemory("abcdefzh");
   char *haystk = MakeMemory("acccccccbbbbbbbbabcdefghdddddddd");
-  EXPECT_EQ(NULL, memmemi(haystk, 32, needle, 8));
+  EXPECT_EQ(NULL, memmem(haystk, 32, needle, 8));
   free(haystk);
   free(needle);
 }
@@ -52,7 +47,7 @@ TEST(memmem, testNoMatch) {
 TEST(memmem, testStartOfMemory) {
   char *needle = MakeMemory("acccc");
   char *haystk = MakeMemory("acccccccbbbbbbbbabcdefghdddddddd");
-  EXPECT_EQ(&haystk[0], memmemi(haystk, 32, needle, 5));
+  EXPECT_EQ(&haystk[0], memmem(haystk, 32, needle, 5));
   free(haystk);
   free(needle);
 }
@@ -60,7 +55,7 @@ TEST(memmem, testStartOfMemory) {
 TEST(memmem, testEndOfMemory) {
   char *needle = MakeMemory("123");
   char *haystk = MakeMemory("abc123");
-  EXPECT_EQ(&haystk[3], memmemi(haystk, 6, needle, 3));
+  EXPECT_EQ(&haystk[3], memmem(haystk, 6, needle, 3));
   free(haystk);
   free(needle);
 }
@@ -68,7 +63,7 @@ TEST(memmem, testEndOfMemory) {
 TEST(memmem, testCrossesSseRegister) {
   char *needle = MakeMemory("eeeeeeeeeeeeefffffffffffff");
   char *haystk = MakeMemory("eeeeeeeeeeeeeeeeffffffffffffffffrrrrrrrrrrrrrrrr");
-  EXPECT_EQ(&haystk[3], memmemi(haystk, 16 * 3, needle, 26));
+  EXPECT_EQ(&haystk[3], memmem(haystk, 16 * 3, needle, 26));
   free(haystk);
   free(needle);
 }
@@ -77,7 +72,7 @@ TEST(memmem, testHasNulCharacters) {
   char *needle = MakeMemory("eeeeeeeeeeeee\0ffffffffffff");
   char *haystk =
       MakeMemory("eeeeeeeeeeeeeeee\0fffffffffffffffrrrrrrrrrrrrrrrr");
-  EXPECT_EQ(&haystk[3], memmemi(haystk, 16 * 3, needle, 26));
+  EXPECT_EQ(&haystk[3], memmem(haystk, 16 * 3, needle, 26));
   free(haystk);
   free(needle);
 }
@@ -85,7 +80,7 @@ TEST(memmem, testHasNulCharacters) {
 TEST(memmem, testWeird) {
   char *needle = MakeMemory("-*-+-+-+-+-+-+-+");
   char *haystk = MakeMemory("-+-+-+-+-+-+-+-*-+-+-+-+-+-+-+-+");
-  EXPECT_EQ(14, (intptr_t)memmemi(haystk, 32, needle, 16) - (intptr_t)haystk);
+  EXPECT_EQ(14, (intptr_t)memmem(haystk, 32, needle, 16) - (intptr_t)haystk);
   free(haystk);
   free(needle);
 }
@@ -93,7 +88,7 @@ TEST(memmem, testWeird) {
 TEST(memmem, testEmptyNeedle_matchesStartOfHaystack) {
   char *needle = malloc(0);
   char *haystk = MakeMemory("-+-+-+-+-+-+-+-*-+-+-+-+-+-+-+-+");
-  EXPECT_EQ(0, (intptr_t)memmemi(haystk, 32, needle, 0) - (intptr_t)haystk);
+  EXPECT_EQ(0, (intptr_t)memmem(haystk, 32, needle, 0) - (intptr_t)haystk);
   free(haystk);
   free(needle);
 }
@@ -101,8 +96,8 @@ TEST(memmem, testEmptyNeedle_matchesStartOfHaystack) {
 TEST(memmem, testEmptyHaystack_alwaysReturnsNull) {
   char *needle = MakeMemory("-*-+-+-+-+-+-+-+");
   char *haystk = malloc(0);
-  EXPECT_EQ(NULL, memmemi(haystk, 0, needle, 16));
-  EXPECT_EQ(NULL, memmemi(haystk, 0, needle, 1));
+  EXPECT_EQ(NULL, memmem(haystk, 0, needle, 16));
+  EXPECT_EQ(NULL, memmem(haystk, 0, needle, 1));
   free(haystk);
   free(needle);
 }
@@ -110,7 +105,11 @@ TEST(memmem, testEmptyHaystack_alwaysReturnsNull) {
 TEST(memmem, testEmptyHaystackAndNeedle_returnsHaystack) {
   char *needle = malloc(0);
   char *haystk = malloc(0);
-  EXPECT_EQ(haystk, memmemi(haystk, 0, needle, 0));
+  EXPECT_EQ(haystk, memmem(haystk, 0, needle, 0));
   free(haystk);
   free(needle);
+}
+
+TEST(memmem, testWut) {
+  ASSERT_STREQ("x", memmem("x", 1, "x", 1));
 }

@@ -16,22 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
-#include "libc/calls/calls.h"
+#include "libc/assert.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
-#include "libc/dce.h"
 #include "libc/fmt/conv.h"
-#include "libc/mach.h"
-#include "libc/nt/struct/filetime.h"
-#include "libc/nt/struct/systemtime.h"
 #include "libc/nt/synchronization.h"
-#include "libc/sysv/consts/clock.h"
-#include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/time/time.h"
 
 /**
  * Returns nanosecond time.
@@ -43,40 +33,34 @@
  * @param clockid can be CLOCK_REALTIME, CLOCK_MONOTONIC, etc. noting
  *     that on Linux CLOCK_MONOTONIC is redefined to use the monotonic
  *     clock that's actually monotonic lool
- * @param out_ts is where the nanoseconds are stored if non-NULL
- * @return 0 on success or -1 w/ errno on error
+ * @param ts is where the result is stored
+ * @return 0 on success, or -1 w/ errno
  * @error ENOSYS if clockid isn't available; in which case this function
- *     guarantees an ordinary timestamp is still stored to out_ts; and
+ *     guarantees an ordinary timestamp is still stored to ts; and
  *     errno isn't restored to its original value, to detect prec. loss
  * @see strftime(), gettimeofday()
  * @asyncsignalsafe
  */
-int clock_gettime(int clockid, struct timespec *out_ts) {
-  /* TODO(jart): Just ignore O/S for MONOTONIC and measure RDTSC on start */
+int clock_gettime(int clockid, struct timespec *ts) {
+  int rc;
+  axdx_t ad;
+  struct NtFileTime ft;
+  if (!ts) return efault();
   if (!IsWindows()) {
-    if (!IsXnu()) {
-      if (out_ts) {
-        out_ts->tv_sec = 0;
-        out_ts->tv_nsec = 0;
+    if ((rc = sys_clock_gettime(clockid, ts)) == -1 && errno == ENOSYS) {
+      ad = sys_gettimeofday((struct timeval *)ts, NULL, NULL);
+      assert(ad.ax != -1);
+      if (SupportsXnu() && ad.ax) {
+        ts->tv_sec = ad.ax;
+        ts->tv_nsec = ad.dx;
       }
-      return sys_clock_gettime(clockid, out_ts);
-    } else {
-      int rc;
-      _Static_assert(sizeof(struct timeval) == sizeof(struct timespec));
-      if (out_ts) {
-        out_ts->tv_sec = 0;
-        out_ts->tv_nsec = 0;
-      }
-      rc = sys_gettimeofday((struct timeval *)out_ts, NULL);
-      if (out_ts) {
-        out_ts->tv_nsec *= 1000;
-      }
-      return rc;
+      ts->tv_nsec *= 1000;
+      rc = 0;
     }
+    return rc;
   } else {
-    struct NtFileTime ft;
     GetSystemTimeAsFileTime(&ft);
-    *out_ts = FileTimeToTimeSpec(ft);
+    *ts = FileTimeToTimeSpec(ft);
     return 0;
   }
 }

@@ -41,7 +41,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/paland.inc"
-#include "libc/fmt/palandprintf.internal.h"
+#include "libc/fmt/palandprintf.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/str/str.h"
