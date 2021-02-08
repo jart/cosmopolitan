@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/progn.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/log/check.h"
 #include "libc/runtime/gc.h"
@@ -549,48 +548,4 @@ TEST(div64, test) {
       }
     }
   }
-}
-
-BENCH(imul, bench) {
-  volatile register int8_t x8, y8;
-  volatile register int16_t x16, y16;
-  volatile register int32_t x32, y32;
-  volatile register int64_t x64, y64;
-  EZBENCH2("imul8", PROGN(x8 = 7, y8 = 18), y8 *= x8);
-  EZBENCH2("imul16", PROGN(x16 = 123, y16 = 116), y16 *= x16);
-  EZBENCH2("imul32", PROGN(x32 = 0x238943, y32 = 0x238), y32 *= x32);
-  EZBENCH2("imul64", PROGN(x64 = 0x23894329838932, y64 = 0x238), y64 *= x64);
-}
-
-BENCH(idiv, bench) {
-  volatile register int8_t x8, y8;
-  volatile register int16_t x16, y16;
-  volatile register int32_t x32, y32;
-  volatile register int64_t x64, y64;
-  EZBENCH2("idiv8", PROGN(x8 = 7, y8 = 18), x8 /= y8);
-  EZBENCH2("idiv16", PROGN(x16 = 123, y16 = 116), x16 /= y16);
-  EZBENCH2("idiv32", PROGN(x32 = 0x238943298, y32 = 0x238), x32 /= y32);
-  EZBENCH2("idiv64", PROGN(x64 = 0x23894329838932, y64 = 0x238), x64 /= y64);
-}
-
-BENCH(mul, bench) {
-  volatile register uint8_t x8, y8;
-  volatile register uint16_t x16, y16;
-  volatile register uint32_t x32, y32;
-  volatile register uint64_t x64, y64;
-  EZBENCH2("mul8", PROGN(x8 = 7, y8 = 18), y8 *= x8);
-  EZBENCH2("mul16", PROGN(x16 = 123, y16 = 116), y16 *= x16);
-  EZBENCH2("mul32", PROGN(x32 = 0x238943, y32 = 0x238), y32 *= x32);
-  EZBENCH2("mul64", PROGN(x64 = 0x23894329838932, y64 = 0x238), y64 *= x64);
-}
-
-BENCH(div, bench) {
-  volatile register uint8_t x8, y8;
-  volatile register uint16_t x16, y16;
-  volatile register uint32_t x32, y32;
-  volatile register uint64_t x64, y64;
-  EZBENCH2("div8", PROGN(x8 = 7, y8 = 18), x8 /= y8);
-  EZBENCH2("div16", PROGN(x16 = 123, y16 = 116), x16 /= y16);
-  EZBENCH2("div32", PROGN(x32 = 0x238943298, y32 = 0x238), x32 /= y32);
-  EZBENCH2("div64", PROGN(x64 = 0x23894329838932, y64 = 0x238), x64 /= y64);
 }

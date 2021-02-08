@@ -28,9 +28,9 @@ scall() {
 
 syscon() {
   {
-    echo ".include \"libc/sysv/consts/syscon.inc\""
+    echo "#include \"libc/sysv/consts/syscon.internal.h\""
     echo ".syscon" "$@"
-  } >"$dir/${2/$/-}.s"
+  } >"$dir/${2/$/-}.S"
 }
 
 sysstr() {

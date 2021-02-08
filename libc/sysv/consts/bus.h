@@ -12,12 +12,12 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long BUS_ADRALN;
-hidden extern const long BUS_ADRERR;
-hidden extern const long BUS_DEVICE_RESET;
-hidden extern const long BUS_MCEERR_AO;
-hidden extern const long BUS_MCEERR_AR;
-hidden extern const long BUS_OBJERR;
+extern const long BUS_ADRALN;
+extern const long BUS_ADRERR;
+extern const long BUS_DEVICE_RESET;
+extern const long BUS_MCEERR_AO;
+extern const long BUS_MCEERR_AR;
+extern const long BUS_OBJERR;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

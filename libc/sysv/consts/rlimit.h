@@ -22,22 +22,22 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long RLIMIT_AS;
-hidden extern const long RLIMIT_CORE;
-hidden extern const long RLIMIT_CPU;
-hidden extern const long RLIMIT_DATA;
-hidden extern const long RLIMIT_FSIZE;
-hidden extern const long RLIMIT_LOCKS;
-hidden extern const long RLIMIT_MEMLOCK;
-hidden extern const long RLIMIT_MSGQUEUE;
-hidden extern const long RLIMIT_NICE;
-hidden extern const long RLIMIT_NLIMITS;
-hidden extern const long RLIMIT_NOFILE;
-hidden extern const long RLIMIT_NPROC;
-hidden extern const long RLIMIT_RSS;
-hidden extern const long RLIMIT_RTPRIO;
-hidden extern const long RLIMIT_SIGPENDING;
-hidden extern const long RLIMIT_STACK;
+extern const long RLIMIT_AS;
+extern const long RLIMIT_CORE;
+extern const long RLIMIT_CPU;
+extern const long RLIMIT_DATA;
+extern const long RLIMIT_FSIZE;
+extern const long RLIMIT_LOCKS;
+extern const long RLIMIT_MEMLOCK;
+extern const long RLIMIT_MSGQUEUE;
+extern const long RLIMIT_NICE;
+extern const long RLIMIT_NLIMITS;
+extern const long RLIMIT_NOFILE;
+extern const long RLIMIT_NPROC;
+extern const long RLIMIT_RSS;
+extern const long RLIMIT_RTPRIO;
+extern const long RLIMIT_SIGPENDING;
+extern const long RLIMIT_STACK;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

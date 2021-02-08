@@ -17,17 +17,17 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long ND_NA_FLAG_OVERRIDE;
-hidden extern const long ND_NA_FLAG_ROUTER;
-hidden extern const long ND_NA_FLAG_SOLICITED;
-hidden extern const long ND_NEIGHBOR_ADVERT;
-hidden extern const long ND_NEIGHBOR_SOLICIT;
-hidden extern const long ND_RA_FLAG_HOME_AGENT;
-hidden extern const long ND_RA_FLAG_MANAGED;
-hidden extern const long ND_RA_FLAG_OTHER;
-hidden extern const long ND_REDIRECT;
-hidden extern const long ND_ROUTER_ADVERT;
-hidden extern const long ND_ROUTER_SOLICIT;
+extern const long ND_NA_FLAG_OVERRIDE;
+extern const long ND_NA_FLAG_ROUTER;
+extern const long ND_NA_FLAG_SOLICITED;
+extern const long ND_NEIGHBOR_ADVERT;
+extern const long ND_NEIGHBOR_SOLICIT;
+extern const long ND_RA_FLAG_HOME_AGENT;
+extern const long ND_RA_FLAG_MANAGED;
+extern const long ND_RA_FLAG_OTHER;
+extern const long ND_REDIRECT;
+extern const long ND_ROUTER_ADVERT;
+extern const long ND_ROUTER_SOLICIT;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

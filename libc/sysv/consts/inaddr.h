@@ -9,17 +9,17 @@ COSMOPOLITAN_C_START_
  * These need to be hard-coded as little-endian, so htonl() is needed.
  */
 
-hidden extern const long INADDR_ALLHOSTS_GROUP;
-hidden extern const long INADDR_ALLRTRS_GROUP;
-hidden extern const long INADDR_ANY;
-hidden extern const long INADDR_BROADCAST;
-hidden extern const long INADDR_LOOPBACK;
-hidden extern const long INADDR_MAX_LOCAL_GROUP;
-hidden extern const long INADDR_NONE;
-hidden extern const long INADDR_TESTNET1;
-hidden extern const long INADDR_TESTNET2;
-hidden extern const long INADDR_TESTNET3;
-hidden extern const long INADDR_UNSPEC_GROUP;
+extern const long INADDR_ALLHOSTS_GROUP;
+extern const long INADDR_ALLRTRS_GROUP;
+extern const long INADDR_ANY;
+extern const long INADDR_BROADCAST;
+extern const long INADDR_LOOPBACK;
+extern const long INADDR_MAX_LOCAL_GROUP;
+extern const long INADDR_NONE;
+extern const long INADDR_TESTNET1;
+extern const long INADDR_TESTNET2;
+extern const long INADDR_TESTNET3;
+extern const long INADDR_UNSPEC_GROUP;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

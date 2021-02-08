@@ -4,24 +4,24 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long MAP_32BIT;
-hidden extern const long MAP_ANON;
-hidden extern const long MAP_ANONYMOUS;
-hidden extern const long MAP_DENYWRITE;
-hidden extern const long MAP_EXECUTABLE;
-hidden extern const long MAP_FILE;
-hidden extern const long MAP_FIXED;
-hidden extern const long MAP_GROWSDOWN;
-hidden extern const long MAP_HUGETLB;
-hidden extern const long MAP_HUGE_MASK;
-hidden extern const long MAP_HUGE_SHIFT;
-hidden extern const long MAP_LOCKED;
-hidden extern const long MAP_NONBLOCK;
-hidden extern const long MAP_NORESERVE;
-hidden extern const long MAP_POPULATE;
-hidden extern const long MAP_PRIVATE;
-hidden extern const long MAP_SHARED;
-hidden extern const long MAP_TYPE;
+extern const long MAP_32BIT;
+extern const long MAP_ANON;
+extern const long MAP_ANONYMOUS;
+extern const long MAP_DENYWRITE;
+extern const long MAP_EXECUTABLE;
+extern const long MAP_FILE;
+extern const long MAP_FIXED;
+extern const long MAP_GROWSDOWN;
+extern const long MAP_HUGETLB;
+extern const long MAP_HUGE_MASK;
+extern const long MAP_HUGE_SHIFT;
+extern const long MAP_LOCKED;
+extern const long MAP_NONBLOCK;
+extern const long MAP_NORESERVE;
+extern const long MAP_POPULATE;
+extern const long MAP_PRIVATE;
+extern const long MAP_SHARED;
+extern const long MAP_TYPE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

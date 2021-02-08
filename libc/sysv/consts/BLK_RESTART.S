@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon misc BLK_RESTART 0x10 0x10 0x10 0x10 0x10 0

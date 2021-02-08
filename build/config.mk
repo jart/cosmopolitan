@@ -119,24 +119,132 @@ endif
 #   - No backtraces
 #   - No algorithmics
 #   - YOLO
-
 ifeq ($(MODE), tiny)
-
 CONFIG_CPPFLAGS +=		\
 	-DTINY			\
 	-DNDEBUG		\
 	-DTRUSTWORTHY
-
 CONFIG_CCFLAGS +=		\
 	-Os			\
 	-fno-align-functions	\
 	-fno-align-jumps	\
 	-fno-align-labels	\
 	-fno-align-loops
-
 TARGET_ARCH ?=			\
 	-msse3
+endif
 
+# Linux-Only Tiny Mode
+#
+#   - `make MODE=tiny`
+#   - No checks
+#   - No asserts
+#   - No canaries
+#   - No paranoia
+#   - No avx hooks
+#   - No backtraces
+#   - No portability
+#   - No algorithmics
+#   - YOLO
+ifeq ($(MODE), tinylinux)
+CONFIG_CPPFLAGS +=		\
+	-DTINY			\
+	-DNDEBUG		\
+	-DTRUSTWORTHY		\
+	-DSUPPORT_VECTOR=1
+CONFIG_CCFLAGS +=		\
+	-Os			\
+	-fno-align-functions	\
+	-fno-align-jumps	\
+	-fno-align-labels	\
+	-fno-align-loops
+TARGET_ARCH ?=			\
+	-msse3
+endif
+
+# Linux+BSD Tiny Mode
+#
+#   - `make MODE=tiny`
+#   - No apple
+#   - No checks
+#   - No asserts
+#   - No canaries
+#   - No paranoia
+#   - No microsoft
+#   - No avx hooks
+#   - No backtraces
+#   - No algorithmics
+#   - YOLO
+ifeq ($(MODE), tinylinuxbsd)
+CONFIG_CPPFLAGS +=		\
+	-DTINY			\
+	-DNDEBUG		\
+	-DTRUSTWORTHY		\
+	-DSUPPORT_VECTOR=113
+CONFIG_CCFLAGS +=		\
+	-Os			\
+	-fno-align-functions	\
+	-fno-align-jumps	\
+	-fno-align-labels	\
+	-fno-align-loops
+TARGET_ARCH ?=			\
+	-msse3
+endif
+
+# Unix Tiny Mode
+#
+#   - `make MODE=tiny`
+#   - No checks
+#   - No asserts
+#   - No canaries
+#   - No paranoia
+#   - No microsoft
+#   - No avx hooks
+#   - No backtraces
+#   - No algorithmics
+#   - YOLO
+ifeq ($(MODE), tinysysv)
+CONFIG_CPPFLAGS +=		\
+	-DTINY			\
+	-DNDEBUG		\
+	-DTRUSTWORTHY		\
+	-DSUPPORT_VECTOR=121
+CONFIG_CCFLAGS +=		\
+	-Os			\
+	-fno-align-functions	\
+	-fno-align-jumps	\
+	-fno-align-labels	\
+	-fno-align-loops
+TARGET_ARCH ?=			\
+	-msse3
+endif
+
+# Tiny Metallic Unix Mode
+#
+#   - `make MODE=tiny`
+#   - No checks
+#   - No asserts
+#   - No canaries
+#   - No paranoia
+#   - No microsoft
+#   - No avx hooks
+#   - No backtraces
+#   - No algorithmics
+#   - YOLO
+ifeq ($(MODE), tinynowin)
+CONFIG_CPPFLAGS +=		\
+	-DTINY			\
+	-DNDEBUG		\
+	-DTRUSTWORTHY		\
+	-DSUPPORT_VECTOR=251
+CONFIG_CCFLAGS +=		\
+	-Os			\
+	-fno-align-functions	\
+	-fno-align-jumps	\
+	-fno-align-labels	\
+	-fno-align-loops
+TARGET_ARCH ?=			\
+	-msse3
 endif
 
 # ANSI Mode

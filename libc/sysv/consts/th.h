@@ -12,12 +12,12 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long TH_ACK;
-hidden extern const long TH_FIN;
-hidden extern const long TH_PUSH;
-hidden extern const long TH_RST;
-hidden extern const long TH_SYN;
-hidden extern const long TH_URG;
+extern const long TH_ACK;
+extern const long TH_FIN;
+extern const long TH_PUSH;
+extern const long TH_RST;
+extern const long TH_SYN;
+extern const long TH_URG;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

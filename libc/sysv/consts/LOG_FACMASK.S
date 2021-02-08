@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon log LOG_FACMASK 0x03f8 0x03f8 0x03f8 0x03f8 0x03f8 0

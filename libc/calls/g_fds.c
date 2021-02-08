@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/initializer.internal.h"
 #include "libc/bits/pushpop.h"
 #include "libc/calls/internal.h"
 #include "libc/nt/runtime.h"
@@ -26,13 +25,21 @@ STATIC_YOINK("_init_g_fds");
 
 hidden struct Fds g_fds;
 
-hidden void InitializeFileDescriptors(void) {
+hidden textstartup void InitializeFileDescriptors(void) {
   struct Fds *fds;
   fds = VEIL("r", &g_fds);
-  pushmov(&fds->f, 3ul);
   pushmov(&fds->n, ARRAYLEN(fds->__init_p));
   fds->p = fds->__init_p;
-  if (!IsMetal()) {
+  if (IsMetal()) {
+    pushmov(&fds->f, 3ull);
+    fds->__init_p[STDIN_FILENO].kind = pushpop(kFdSerial);
+    fds->__init_p[STDOUT_FILENO].kind = pushpop(kFdSerial);
+    fds->__init_p[STDERR_FILENO].kind = pushpop(kFdSerial);
+    fds->__init_p[STDIN_FILENO].handle = VEIL("r", 0x3F8ull);
+    fds->__init_p[STDOUT_FILENO].handle = VEIL("r", 0x3F8ull);
+    fds->__init_p[STDERR_FILENO].handle = VEIL("r", 0x3F8ull);
+  } else if (IsWindows()) {
+    pushmov(&fds->f, 3ull);
     fds->__init_p[STDIN_FILENO].kind = pushpop(kFdFile);
     fds->__init_p[STDOUT_FILENO].kind = pushpop(kFdFile);
     fds->__init_p[STDERR_FILENO].kind = pushpop(kFdFile);
@@ -42,12 +49,5 @@ hidden void InitializeFileDescriptors(void) {
         GetStdHandle(pushpop(kNtStdOutputHandle));
     fds->__init_p[STDERR_FILENO].handle =
         GetStdHandle(pushpop(kNtStdErrorHandle));
-  } else {
-    fds->__init_p[STDIN_FILENO].kind = pushpop(kFdSerial);
-    fds->__init_p[STDOUT_FILENO].kind = pushpop(kFdSerial);
-    fds->__init_p[STDERR_FILENO].kind = pushpop(kFdSerial);
-    fds->__init_p[STDIN_FILENO].handle = 0x3F8;
-    fds->__init_p[STDOUT_FILENO].handle = 0x3F8;
-    fds->__init_p[STDERR_FILENO].handle = 0x3F8;
   }
 }

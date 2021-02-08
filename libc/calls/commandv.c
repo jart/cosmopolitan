@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/progn.internal.h"
 #include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/runtime/runtime.h"
@@ -74,8 +73,14 @@ char *commandv(const char *name, char pathbuf[hasatleast PATH_MAX]) {
   char *p;
   size_t namelen;
   int rc, olderr;
-  if (!(namelen = strlen(name))) return PROGN(enoent(), NULL);
-  if (namelen + 1 > PATH_MAX) return PROGN(enametoolong(), NULL);
+  if (!(namelen = strlen(name))) {
+    enoent();
+    return NULL;
+  }
+  if (namelen + 1 > PATH_MAX) {
+    enametoolong();
+    return NULL;
+  }
   if (strchr(name, '/') || strchr(name, '\\')) {
     if (AccessCommand(strcpy(pathbuf, ""), name, namelen, 0)) {
       return pathbuf;

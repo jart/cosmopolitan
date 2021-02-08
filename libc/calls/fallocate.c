@@ -50,7 +50,7 @@ int fallocate(int fd, int32_t mode, int64_t offset, int64_t length) {
     return rc;
   } else if (!IsWindows()) {
     return sys_posix_fallocate(fd, offset, length);
-  } else if (IsWindows()) {
+  } else {
     if (!__isfdkind(fd, kFdFile)) return ebadf();
     if (mode == FALLOC_FL_ZERO_RANGE) {
       if (DeviceIoControl(
@@ -70,7 +70,5 @@ int fallocate(int fd, int32_t mode, int64_t offset, int64_t length) {
     } else {
       return enosys();
     }
-  } else {
-    return enosys();
   }
 }

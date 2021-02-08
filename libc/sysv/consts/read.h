@@ -18,18 +18,18 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long READ_10;
-hidden extern const long READ_12;
-hidden extern const long READ_6;
-hidden extern const long READ_BLOCK_LIMITS;
-hidden extern const long READ_BUFFER;
-hidden extern const long READ_CAPACITY;
-hidden extern const long READ_DEFECT_DATA;
-hidden extern const long READ_ELEMENT_STATUS;
-hidden extern const long READ_LONG;
-hidden extern const long READ_POSITION;
-hidden extern const long READ_REVERSE;
-hidden extern const long READ_TOC;
+extern const long READ_10;
+extern const long READ_12;
+extern const long READ_6;
+extern const long READ_BLOCK_LIMITS;
+extern const long READ_BUFFER;
+extern const long READ_CAPACITY;
+extern const long READ_DEFECT_DATA;
+extern const long READ_ELEMENT_STATUS;
+extern const long READ_LONG;
+extern const long READ_POSITION;
+extern const long READ_REVERSE;
+extern const long READ_TOC;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

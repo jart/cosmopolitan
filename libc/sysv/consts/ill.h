@@ -14,14 +14,14 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long ILL_BADSTK;
-hidden extern const long ILL_COPROC;
-hidden extern const long ILL_ILLADR;
-hidden extern const long ILL_ILLOPC;
-hidden extern const long ILL_ILLOPN;
-hidden extern const long ILL_ILLTRP;
-hidden extern const long ILL_PRVOPC;
-hidden extern const long ILL_PRVREG;
+extern const long ILL_BADSTK;
+extern const long ILL_COPROC;
+extern const long ILL_ILLADR;
+extern const long ILL_ILLOPC;
+extern const long ILL_ILLOPN;
+extern const long ILL_ILLTRP;
+extern const long ILL_PRVOPC;
+extern const long ILL_PRVREG;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -21,19 +21,20 @@
 #include "libc/notice.inc"
 #include "libc/runtime/internal.h"
 .section .start,"ax",@progbits
-.source	__FILE__
-
-	nop
+.align	16
 
 /	System Five userspace program entrypoint.
 /
 /	@param	rsp is [n,argv₀..argvₙ₋₁,0,envp₀..,0,auxv₀..,0,..]
 /	@note	FreeBSD is special (see freebsd/lib/csu/amd64/...)
 /	@noreturn
-_start:	test	%rdi,%rdi
+_start:
+#if SupportsFreebsd()
+	test	%rdi,%rdi
 	cmovnz	%rdi,%rsp
 	jz	0f
 	movb	$FREEBSD,__hostos(%rip)
+#endif
 0:	mov	(%rsp),%ebx			# argc
 	lea	8(%rsp),%rsi			# argv
 	lea	24(%rsp,%rbx,8),%rdx		# envp

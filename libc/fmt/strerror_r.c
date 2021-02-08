@@ -294,7 +294,7 @@ XDEV\000\
 XFULL\000\
 \000";
 
-const char *geterrname(long code) {
+static const char *geterrname(long code) {
   const long *e;
   size_t i, n;
   e = &E2BIG;
@@ -313,17 +313,16 @@ const char *geterrname(long code) {
  */
 int strerror_r(int err, char *buf, size_t size) {
   const char *s;
+  char16_t buf16[100];
+  int winstate, sysvstate;
   if (err == -1 || IsTiny()) {
     s = "?";
   } else {
     s = firstnonnull(geterrname(err), "?");
   }
   if (!SupportsWindows()) {
-    DebugBreak();
     snprintf(buf, size, "E%s[%d]", s, err);
   } else {
-    char16_t buf16[100];
-    int winstate, sysvstate;
     winstate = GetLastError();
     sysvstate = errno;
     if (FormatMessage(

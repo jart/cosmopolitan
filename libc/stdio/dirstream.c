@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/bits/progn.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/dce.h"
@@ -47,8 +46,8 @@
  * Directory stream object.
  */
 struct dirstream {
-  int64_t tell;
   int64_t fd;
+  int64_t tell;
   struct dirent ent;
   union {
     struct {
@@ -98,24 +97,48 @@ struct dirent_netbsd {
   char d_name[512];
 };
 
-static textwindows noinline DIR *opendir_nt(const char *name) {
-  int len;
+static textwindows DIR *opendir_nt_impl(char16_t name[PATH_MAX], size_t len) {
   DIR *res;
-  char16_t name16[PATH_MAX];
-  if ((len = __mkntpath(name, name16)) == -1) return NULL;
-  if (len + 2 + 1 > PATH_MAX) return PROGN(enametoolong(), NULL);
-  while (name16[len - 1] == u'\\') name16[--len] = u'\0';
-  name16[len++] = u'\\';
-  name16[len++] = u'*';
-  name16[len] = u'\0';
-  if (!(res = calloc(1, sizeof(DIR)))) return NULL;
-  if ((res->fd = FindFirstFile(name16, &res->windata)) != -1) {
-    return res;
+  if (len + 2 + 1 <= PATH_MAX) {
+    if (name[len - 1] != u'\\') name[len++] = u'\\';
+    name[len++] = u'*';
+    name[len] = u'\0';
+    if ((res = calloc(1, sizeof(DIR)))) {
+      if ((res->fd = FindFirstFile(name, &res->windata)) != -1) {
+        return res;
+      } else {
+        __winerr();
+      }
+      free(res);
+    }
   } else {
-    __winerr();
-    free(res);
-    return NULL;
+    enametoolong();
   }
+  return NULL;
+}
+
+static textwindows noinline DIR *opendir_nt(const char *path) {
+  int len;
+  char16_t name[PATH_MAX];
+  if ((len = __mkntpath(path, name)) == -1) return NULL;
+  return opendir_nt_impl(name, len);
+}
+
+static textwindows noinline DIR *fdopendir_nt(int fd) {
+  DIR *res;
+  char16_t name[PATH_MAX];
+  if (__isfdkind(fd, kFdFile)) {
+    if ((res = opendir_nt_impl(
+             name, GetFinalPathNameByHandle(
+                       g_fds.p[fd].handle, name, ARRAYLEN(name),
+                       kNtFileNameNormalized | kNtVolumeNameDos)))) {
+      close(fd);
+      return res;
+    }
+  } else {
+    ebadf();
+  }
+  return NULL;
 }
 
 static textwindows noinline struct dirent *readdir_nt(DIR *dir) {
@@ -193,14 +216,12 @@ DIR *opendir(const char *name) {
 DIR *fdopendir(int fd) {
   DIR *dir;
   if (!IsWindows()) {
-    if ((dir = calloc(1, sizeof(*dir)))) {
-      dir->fd = fd;
-      return dir;
-    }
+    if (!(dir = calloc(1, sizeof(*dir)))) return NULL;
+    dir->fd = fd;
+    return dir;
   } else {
-    enosys(); /* TODO(jart): Implement me! */
+    return fdopendir_nt(fd);
   }
-  return NULL;
 }
 
 /**
@@ -221,7 +242,7 @@ struct dirent *readdir(DIR *dir) {
   struct dirent_openbsd *obsd;
   if (!IsWindows()) {
     if (dir->buf_pos >= dir->buf_end) {
-      basep = dir->tell; /* <- what does xnu do */
+      basep = dir->tell; /* TODO(jart): what does xnu do */
       rc = getdents(dir->fd, dir->buf, sizeof(dir->buf) - 256, &basep);
       if (!rc || rc == -1) return NULL;
       dir->buf_pos = 0;
@@ -295,5 +316,6 @@ long telldir(DIR *dir) {
  * Returns file descriptor associated with DIR object.
  */
 int dirfd(DIR *dir) {
+  if (IsWindows()) return eopnotsupp();
   return dir->fd;
 }

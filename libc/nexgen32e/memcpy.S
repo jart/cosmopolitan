@@ -110,7 +110,12 @@ MemCpy:	.leafprologue
 .L1:	mov	(%rsi),%cl
 	mov	%cl,(%rdi)
 	jmp	.L0
-.Lerms:	cmp	kHalfCache3(%rip),%rdx
+.Lerms:
+#ifdef TINY
+	cmp	$1024*1024,%rdx
+#else
+	cmp	kHalfCache3(%rip),%rdx
+#endif
 	ja	.Lnts
 	push	%rdi
 	push	%rsi

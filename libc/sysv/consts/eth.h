@@ -20,20 +20,20 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long ETH_P_CUST;
-hidden extern const long ETH_P_DDCMP;
-hidden extern const long ETH_P_DEC;
-hidden extern const long ETH_P_DIAG;
-hidden extern const long ETH_P_DNA_DL;
-hidden extern const long ETH_P_DNA_RC;
-hidden extern const long ETH_P_DNA_RT;
-hidden extern const long ETH_P_IEEE802154;
-hidden extern const long ETH_P_LAT;
-hidden extern const long ETH_P_LOCALTALK;
-hidden extern const long ETH_P_PPP_MP;
-hidden extern const long ETH_P_RARP;
-hidden extern const long ETH_P_SCA;
-hidden extern const long ETH_P_WAN_PPP;
+extern const long ETH_P_CUST;
+extern const long ETH_P_DDCMP;
+extern const long ETH_P_DEC;
+extern const long ETH_P_DIAG;
+extern const long ETH_P_DNA_DL;
+extern const long ETH_P_DNA_RC;
+extern const long ETH_P_DNA_RT;
+extern const long ETH_P_IEEE802154;
+extern const long ETH_P_LAT;
+extern const long ETH_P_LOCALTALK;
+extern const long ETH_P_PPP_MP;
+extern const long ETH_P_RARP;
+extern const long ETH_P_SCA;
+extern const long ETH_P_WAN_PPP;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

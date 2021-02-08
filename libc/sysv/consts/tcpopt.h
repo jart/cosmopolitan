@@ -13,13 +13,13 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long TCPOPT_EOL;
-hidden extern const long TCPOPT_MAXSEG;
-hidden extern const long TCPOPT_NOP;
-hidden extern const long TCPOPT_SACK;
-hidden extern const long TCPOPT_SACK_PERMITTED;
-hidden extern const long TCPOPT_TIMESTAMP;
-hidden extern const long TCPOPT_WINDOW;
+extern const long TCPOPT_EOL;
+extern const long TCPOPT_MAXSEG;
+extern const long TCPOPT_NOP;
+extern const long TCPOPT_SACK;
+extern const long TCPOPT_SACK_PERMITTED;
+extern const long TCPOPT_TIMESTAMP;
+extern const long TCPOPT_WINDOW;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

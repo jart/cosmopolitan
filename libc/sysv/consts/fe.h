@@ -16,16 +16,16 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long FE_ALL_EXCEPT;
-hidden extern const long FE_DIVBYZERO;
-hidden extern const long FE_DOWNWARD;
-hidden extern const long FE_INEXACT;
-hidden extern const long FE_INVALID;
-hidden extern const long FE_OVERFLOW;
-hidden extern const long FE_TONEAREST;
-hidden extern const long FE_TOWARDZERO;
-hidden extern const long FE_UNDERFLOW;
-hidden extern const long FE_UPWARD;
+extern const long FE_ALL_EXCEPT;
+extern const long FE_DIVBYZERO;
+extern const long FE_DOWNWARD;
+extern const long FE_INEXACT;
+extern const long FE_INVALID;
+extern const long FE_OVERFLOW;
+extern const long FE_TONEAREST;
+extern const long FE_TOWARDZERO;
+extern const long FE_UNDERFLOW;
+extern const long FE_UPWARD;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

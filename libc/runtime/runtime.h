@@ -69,7 +69,6 @@ int mprotect(void *, uint64_t, int) privileged;
 int msync(void *, size_t, int);
 void __print(const void *, size_t);
 void __print_string(const char *);
-void __fast_math(void);
 void *sbrk(intptr_t);
 int brk(void *);
 int NtGetVersion(void);

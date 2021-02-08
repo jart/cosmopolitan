@@ -4,8 +4,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long MREMAP_FIXED;
-hidden extern const long MREMAP_MAYMOVE;
+extern const long MREMAP_FIXED;
+extern const long MREMAP_MAYMOVE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

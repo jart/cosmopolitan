@@ -4,14 +4,14 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long DT_UNKNOWN;
-hidden extern const long DT_FIFO;
-hidden extern const long DT_CHR;
-hidden extern const long DT_DIR;
-hidden extern const long DT_BLK;
-hidden extern const long DT_REG;
-hidden extern const long DT_LNK;
-hidden extern const long DT_SOCK;
+extern const long DT_UNKNOWN;
+extern const long DT_FIFO;
+extern const long DT_CHR;
+extern const long DT_DIR;
+extern const long DT_BLK;
+extern const long DT_REG;
+extern const long DT_LNK;
+extern const long DT_SOCK;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

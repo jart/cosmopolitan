@@ -22,7 +22,6 @@
 #include "libc/sysv/consts/nr.h"
 #include "libc/macros.h"
 .privileged
-.source	__FILE__
 
 /	Terminates program abnormally.
 /
@@ -38,8 +37,10 @@ abort:	push	%rbp
 	mov	%rsp,%rbp
 	and	$-16,%rsp
 	sub	$16,%rsp
+#if SupportsWindows()
 	testb	IsWindows()
-	jnz	2f
+	jnz	sys_abort_nt
+#endif
 	mov	SIG_SETMASK,%edi
 	mov	%rsp,%rsi
 	push	$0xffffffffffffffdf		# all bits blocked but SIGABRT
@@ -56,5 +57,5 @@ abort:	push	%rbp
 	mov	SIGABRT,%esi
 	mov	__NR_kill,%eax
 	syscall					# avoid hook and less bt noise
-2:	call	sys_abort_nt
+	call	_Exit
 	.endfn	abort,globl,protected

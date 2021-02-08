@@ -24,7 +24,6 @@
 │ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN    │
 │ THE SOFTWARE.                                                                │
 └─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/progn.internal.h"
 #include "libc/bits/pushpop.h"
 #include "libc/bits/safemacros.h"
 #include "libc/errno.h"
@@ -40,7 +39,7 @@
 #include "libc/x/x.h"
 
 static char buffer[128];
-#define Format(...) PROGN(snprintf(buffer, sizeof(buffer), __VA_ARGS__), buffer)
+#define Format(...) gc(xasprintf(__VA_ARGS__))
 
 TEST(sprintf, test_space_flag) {
   EXPECT_STREQ(" 42", Format("% d", 42));

@@ -22,6 +22,7 @@
 #include "libc/calls/struct/winsize.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/startf.h"
+#include "libc/nt/startupinfo.h"
 #include "libc/nt/struct/consolescreenbufferinfoex.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
@@ -29,8 +30,10 @@
 textwindows int ioctl_tiocgwinsz_nt(int fd, struct winsize *ws) {
   int i, fds[3];
   uint32_t mode;
+  struct NtStartupInfo startinfo;
   struct NtConsoleScreenBufferInfoEx sbinfo;
   fds[0] = fd, fds[1] = 1, fds[2] = 0;
+  GetStartupInfo(&startinfo);
   for (i = 0; i < ARRAYLEN(fds); ++i) {
     if (__isfdkind(fds[i], kFdFile) || __isfdkind(fds[i], kFdConsole)) {
       if (GetConsoleMode(g_fds.p[fds[i]].handle, &mode)) {
@@ -42,9 +45,9 @@ textwindows int ioctl_tiocgwinsz_nt(int fd, struct winsize *ws) {
           ws->ws_xpixel = 0;
           ws->ws_ypixel = 0;
           return 0;
-        } else if (__nt_startupinfo.dwFlags & kNtStartfUsecountchars) {
-          ws->ws_col = __nt_startupinfo.dwXCountChars;
-          ws->ws_row = __nt_startupinfo.dwYCountChars;
+        } else if (startinfo.dwFlags & kNtStartfUsecountchars) {
+          ws->ws_col = startinfo.dwXCountChars;
+          ws->ws_row = startinfo.dwYCountChars;
           ws->ws_xpixel = 0;
           ws->ws_ypixel = 0;
           return 0;

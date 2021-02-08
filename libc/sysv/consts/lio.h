@@ -11,11 +11,11 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long LIO_NOP;
-hidden extern const long LIO_NOWAIT;
-hidden extern const long LIO_READ;
-hidden extern const long LIO_WAIT;
-hidden extern const long LIO_WRITE;
+extern const long LIO_NOP;
+extern const long LIO_NOWAIT;
+extern const long LIO_READ;
+extern const long LIO_WAIT;
+extern const long LIO_WRITE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

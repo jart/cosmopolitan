@@ -587,7 +587,6 @@ int main(int argc, char *argv[]) {
   size_t size;
   char *option;
   unsigned yd, xd;
-  __fast_math();
   showcrashreports();
   GetOpts(argc, argv);
   // if sizes are given, 2 cases:

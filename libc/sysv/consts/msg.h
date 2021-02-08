@@ -4,31 +4,31 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long MSG_BATCH;
-hidden extern const long MSG_CMSG_CLOEXEC;
-hidden extern const long MSG_CONFIRM;
-hidden extern const long MSG_CTRUNC;
-hidden extern const long MSG_DONTROUTE;
-hidden extern const long MSG_DONTWAIT;
-hidden extern const long MSG_EOR;
-hidden extern const long MSG_ERRQUEUE;
-hidden extern const long MSG_EXCEPT;
-hidden extern const long MSG_FASTOPEN;
-hidden extern const long MSG_FIN;
-hidden extern const long MSG_INFO;
-hidden extern const long MSG_MORE;
-hidden extern const long MSG_NOERROR;
-hidden extern const long MSG_NOSIGNAL;
-hidden extern const long MSG_OOB;
-hidden extern const long MSG_PARITY_ERROR;
-hidden extern const long MSG_PEEK;
-hidden extern const long MSG_PROXY;
-hidden extern const long MSG_RST;
-hidden extern const long MSG_STAT;
-hidden extern const long MSG_SYN;
-hidden extern const long MSG_TRUNC;
-hidden extern const long MSG_WAITALL;
-hidden extern const long MSG_WAITFORONE;
+extern const long MSG_BATCH;
+extern const long MSG_CMSG_CLOEXEC;
+extern const long MSG_CONFIRM;
+extern const long MSG_CTRUNC;
+extern const long MSG_DONTROUTE;
+extern const long MSG_DONTWAIT;
+extern const long MSG_EOR;
+extern const long MSG_ERRQUEUE;
+extern const long MSG_EXCEPT;
+extern const long MSG_FASTOPEN;
+extern const long MSG_FIN;
+extern const long MSG_INFO;
+extern const long MSG_MORE;
+extern const long MSG_NOERROR;
+extern const long MSG_NOSIGNAL;
+extern const long MSG_OOB;
+extern const long MSG_PARITY_ERROR;
+extern const long MSG_PEEK;
+extern const long MSG_PROXY;
+extern const long MSG_RST;
+extern const long MSG_STAT;
+extern const long MSG_SYN;
+extern const long MSG_TRUNC;
+extern const long MSG_WAITALL;
+extern const long MSG_WAITFORONE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

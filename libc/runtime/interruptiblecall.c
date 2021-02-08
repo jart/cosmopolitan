@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/progn.internal.h"
 #include "libc/bits/safemacros.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/interruptiblecall.h"
@@ -53,7 +52,8 @@ intptr_t interruptiblecall(struct InterruptibleCall *icall,
   icall->sa_new.sa_handler = interruptcall;
   icall->sa_new.sa_flags |= SA_RESTART | SA_RESETHAND;
   if ((rc = (sigaction)(icall->sig, &icall->sa_new, &icall->sa_old)) != -1) {
-    g_interruptiblecall = PROGN((icall->prev = g_interruptiblecall), icall);
+    icall->prev = g_interruptiblecall;
+    g_interruptiblecall = icall;
     if (!setjmp(icall->jb)) {
       icall->returnval = rc = callback(p1, p2, p3, p4);
     } else {

@@ -26,26 +26,26 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long C_IRGRP;
-hidden extern const long C_IROTH;
-hidden extern const long C_IRUSR;
-hidden extern const long C_ISBLK;
-hidden extern const long C_ISCHR;
-hidden extern const long C_ISCTG;
-hidden extern const long C_ISDIR;
-hidden extern const long C_ISFIFO;
-hidden extern const long C_ISGID;
-hidden extern const long C_ISLNK;
-hidden extern const long C_ISREG;
-hidden extern const long C_ISSOCK;
-hidden extern const long C_ISUID;
-hidden extern const long C_ISVTX;
-hidden extern const long C_IWGRP;
-hidden extern const long C_IWOTH;
-hidden extern const long C_IWUSR;
-hidden extern const long C_IXGRP;
-hidden extern const long C_IXOTH;
-hidden extern const long C_IXUSR;
+extern const long C_IRGRP;
+extern const long C_IROTH;
+extern const long C_IRUSR;
+extern const long C_ISBLK;
+extern const long C_ISCHR;
+extern const long C_ISCTG;
+extern const long C_ISDIR;
+extern const long C_ISFIFO;
+extern const long C_ISGID;
+extern const long C_ISLNK;
+extern const long C_ISREG;
+extern const long C_ISSOCK;
+extern const long C_ISUID;
+extern const long C_ISVTX;
+extern const long C_IWGRP;
+extern const long C_IWOTH;
+extern const long C_IWUSR;
+extern const long C_IXGRP;
+extern const long C_IXOTH;
+extern const long C_IXUSR;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

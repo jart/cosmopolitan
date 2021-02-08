@@ -81,6 +81,7 @@ const struct IdName kNtStartfFlagNames[] = {
 };
 
 noasan void PrintStartupInfo(void) {
+#if 0
   printf("\n\
 ╔──────────────────────────────────────────────────────────────────────────────╗\n\
 │ new technology § startup info                                                │\n\
@@ -108,9 +109,11 @@ noasan void PrintStartupInfo(void) {
   X("%ld", hStdOutput);
   X("%ld", hStdError);
 #undef X
+#endif
 }
 
 void PrintSystemInfo(void) {
+#if 0
   printf("\n\
 ╔──────────────────────────────────────────────────────────────────────────────╗\n\
 │ new technology § system info                                                 │\n\
@@ -130,6 +133,7 @@ void PrintSystemInfo(void) {
   X("%hu", wProcessorLevel);
   X("%hu", wProcessorRevision);
 #undef X
+#endif
 }
 
 const char *ft2str(int ft) {

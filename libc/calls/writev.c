@@ -39,7 +39,7 @@ ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     return weaken(__zipos_write)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, iov, iovlen, -1);
-  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdSerial) {
+  } else if (SupportsMetal() && fd < g_fds.n && g_fds.p[fd].kind == kFdSerial) {
     return writev_serial(&g_fds.p[fd], iov, iovlen);
   } else if (!IsWindows()) {
     return sys_writev(fd, iov, iovlen);

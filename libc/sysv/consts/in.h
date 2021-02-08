@@ -33,33 +33,33 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long IN_ACCESS;
-hidden extern const long IN_ALL_EVENTS;
-hidden extern const long IN_ATTRIB;
-hidden extern const long IN_CLOEXEC;
-hidden extern const long IN_CLOSE;
-hidden extern const long IN_CLOSE_NOWRITE;
-hidden extern const long IN_CLOSE_WRITE;
-hidden extern const long IN_CREATE;
-hidden extern const long IN_DELETE;
-hidden extern const long IN_DELETE_SELF;
-hidden extern const long IN_DONT_FOLLOW;
-hidden extern const long IN_EXCL_UNLINK;
-hidden extern const long IN_IGNORED;
-hidden extern const long IN_ISDIR;
-hidden extern const long IN_LOOPBACKNET;
-hidden extern const long IN_MASK_ADD;
-hidden extern const long IN_MODIFY;
-hidden extern const long IN_MOVE;
-hidden extern const long IN_MOVED_FROM;
-hidden extern const long IN_MOVED_TO;
-hidden extern const long IN_MOVE_SELF;
-hidden extern const long IN_NONBLOCK;
-hidden extern const long IN_ONESHOT;
-hidden extern const long IN_ONLYDIR;
-hidden extern const long IN_OPEN;
-hidden extern const long IN_Q_OVERFLOW;
-hidden extern const long IN_UNMOUNT;
+extern const long IN_ACCESS;
+extern const long IN_ALL_EVENTS;
+extern const long IN_ATTRIB;
+extern const long IN_CLOEXEC;
+extern const long IN_CLOSE;
+extern const long IN_CLOSE_NOWRITE;
+extern const long IN_CLOSE_WRITE;
+extern const long IN_CREATE;
+extern const long IN_DELETE;
+extern const long IN_DELETE_SELF;
+extern const long IN_DONT_FOLLOW;
+extern const long IN_EXCL_UNLINK;
+extern const long IN_IGNORED;
+extern const long IN_ISDIR;
+extern const long IN_LOOPBACKNET;
+extern const long IN_MASK_ADD;
+extern const long IN_MODIFY;
+extern const long IN_MOVE;
+extern const long IN_MOVED_FROM;
+extern const long IN_MOVED_TO;
+extern const long IN_MOVE_SELF;
+extern const long IN_NONBLOCK;
+extern const long IN_ONESHOT;
+extern const long IN_ONLYDIR;
+extern const long IN_OPEN;
+extern const long IN_Q_OVERFLOW;
+extern const long IN_UNMOUNT;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

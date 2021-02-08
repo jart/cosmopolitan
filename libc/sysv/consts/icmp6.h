@@ -39,36 +39,36 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long ICMP6_DST_UNREACH;
-hidden extern const long ICMP6_DST_UNREACH_ADDR;
-hidden extern const long ICMP6_DST_UNREACH_ADMIN;
-hidden extern const long ICMP6_DST_UNREACH_BEYONDSCOPE;
-hidden extern const long ICMP6_DST_UNREACH_NOPORT;
-hidden extern const long ICMP6_DST_UNREACH_NOROUTE;
-hidden extern const long ICMP6_ECHO_REPLY;
-hidden extern const long ICMP6_ECHO_REQUEST;
-hidden extern const long ICMP6_FILTER;
-hidden extern const long ICMP6_INFOMSG_MASK;
-hidden extern const long ICMP6_PACKET_TOO_BIG;
-hidden extern const long ICMP6_PARAMPROB_HEADER;
-hidden extern const long ICMP6_PARAMPROB_NEXTHEADER;
-hidden extern const long ICMP6_PARAMPROB_OPTION;
-hidden extern const long ICMP6_PARAM_PROB;
-hidden extern const long ICMP6_ROUTER_RENUMBERING;
-hidden extern const long ICMP6_RR_FLAGS_FORCEAPPLY;
-hidden extern const long ICMP6_RR_FLAGS_PREVDONE;
-hidden extern const long ICMP6_RR_FLAGS_REQRESULT;
-hidden extern const long ICMP6_RR_FLAGS_SPECSITE;
-hidden extern const long ICMP6_RR_FLAGS_TEST;
-hidden extern const long ICMP6_RR_PCOUSE_FLAGS_DECRPLTIME;
-hidden extern const long ICMP6_RR_PCOUSE_FLAGS_DECRVLTIME;
-hidden extern const long ICMP6_RR_PCOUSE_RAFLAGS_AUTO;
-hidden extern const long ICMP6_RR_PCOUSE_RAFLAGS_ONLINK;
-hidden extern const long ICMP6_RR_RESULT_FLAGS_FORBIDDEN;
-hidden extern const long ICMP6_RR_RESULT_FLAGS_OOB;
-hidden extern const long ICMP6_TIME_EXCEEDED;
-hidden extern const long ICMP6_TIME_EXCEED_REASSEMBLY;
-hidden extern const long ICMP6_TIME_EXCEED_TRANSIT;
+extern const long ICMP6_DST_UNREACH;
+extern const long ICMP6_DST_UNREACH_ADDR;
+extern const long ICMP6_DST_UNREACH_ADMIN;
+extern const long ICMP6_DST_UNREACH_BEYONDSCOPE;
+extern const long ICMP6_DST_UNREACH_NOPORT;
+extern const long ICMP6_DST_UNREACH_NOROUTE;
+extern const long ICMP6_ECHO_REPLY;
+extern const long ICMP6_ECHO_REQUEST;
+extern const long ICMP6_FILTER;
+extern const long ICMP6_INFOMSG_MASK;
+extern const long ICMP6_PACKET_TOO_BIG;
+extern const long ICMP6_PARAMPROB_HEADER;
+extern const long ICMP6_PARAMPROB_NEXTHEADER;
+extern const long ICMP6_PARAMPROB_OPTION;
+extern const long ICMP6_PARAM_PROB;
+extern const long ICMP6_ROUTER_RENUMBERING;
+extern const long ICMP6_RR_FLAGS_FORCEAPPLY;
+extern const long ICMP6_RR_FLAGS_PREVDONE;
+extern const long ICMP6_RR_FLAGS_REQRESULT;
+extern const long ICMP6_RR_FLAGS_SPECSITE;
+extern const long ICMP6_RR_FLAGS_TEST;
+extern const long ICMP6_RR_PCOUSE_FLAGS_DECRPLTIME;
+extern const long ICMP6_RR_PCOUSE_FLAGS_DECRVLTIME;
+extern const long ICMP6_RR_PCOUSE_RAFLAGS_AUTO;
+extern const long ICMP6_RR_PCOUSE_RAFLAGS_ONLINK;
+extern const long ICMP6_RR_RESULT_FLAGS_FORBIDDEN;
+extern const long ICMP6_RR_RESULT_FLAGS_OOB;
+extern const long ICMP6_TIME_EXCEEDED;
+extern const long ICMP6_TIME_EXCEED_REASSEMBLY;
+extern const long ICMP6_TIME_EXCEED_TRANSIT;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -4,12 +4,12 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long PROT_NONE;
-hidden extern const long PROT_READ;
-hidden extern const long PROT_WRITE;
-hidden extern const long PROT_EXEC;
-hidden extern const long PROT_GROWSDOWN;
-hidden extern const long PROT_GROWSUP;
+extern const long PROT_NONE;
+extern const long PROT_READ;
+extern const long PROT_WRITE;
+extern const long PROT_EXEC;
+extern const long PROT_GROWSDOWN;
+extern const long PROT_GROWSUP;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

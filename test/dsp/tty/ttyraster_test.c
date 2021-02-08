@@ -17,12 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/quant.h"
-#include "libc/bits/progn.internal.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "net/http/csscolor.h"
-
-/*TODO(jart): Re-enable me
 
 static const struct TtyRgb kBlack = {0, 0, 0, 16};
 static const struct TtyRgb kWhite = {255, 255, 255, 231};
@@ -45,8 +42,8 @@ void ttyraster2x2_true(void) {
 
 TEST(ttyraster, testCorner) {
   ttyraster_true_setup();
-  EXPECT_STREQ("\e[48;2;139;0;0;38;2;3;3;3m▝",
-               PROGN(ttyraster2x2_true(), vtbuf));
+  ttyraster2x2_true();
+  EXPECT_STREQ("\e[48;2;139;0;0;38;2;3;3;3m▝", vtbuf);
 }
 
 TEST(ttyraster, testFullBlock_favorsSpace) {
@@ -147,5 +144,3 @@ BENCH(ttyraster_xterm256, bench6) {
   ttyraster_xterm256_setup();
   EZBENCH(donothing, ttyraster6x2_xterm256());
 }
-
-*/

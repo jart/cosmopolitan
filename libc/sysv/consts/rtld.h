@@ -13,13 +13,13 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long RTLD_DI_LINKMAP;
-hidden extern const long RTLD_GLOBAL;
-hidden extern const long RTLD_LAZY;
-hidden extern const long RTLD_LOCAL;
-hidden extern const long RTLD_NODELETE;
-hidden extern const long RTLD_NOLOAD;
-hidden extern const long RTLD_NOW;
+extern const long RTLD_DI_LINKMAP;
+extern const long RTLD_GLOBAL;
+extern const long RTLD_LAZY;
+extern const long RTLD_LOCAL;
+extern const long RTLD_NODELETE;
+extern const long RTLD_NOLOAD;
+extern const long RTLD_NOW;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

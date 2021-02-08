@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/runtime.h"
+#include "libc/dce.h"
 #include "libc/macros.h"
 
 #define kTmpPathMax 80
@@ -34,8 +35,12 @@ kTmpPath:
 	.init.start 300,_init_kTmpPath
 	movl	$'/|'t<<010|'m<<020|'p<<030,(%rdi)
 	movw	$'/,4(%rdi)
+#if SupportsWindows()
 	pushpop	kTmpPathMax,%rdx
 	ezlea	GetTempPathA_flunk,ax
 	call	__getntsyspath
+#else
+	add	$kTmpPathMax,%rdi
+#endif
 	.init.end 300,_init_kTmpPath
 	.source	__FILE__

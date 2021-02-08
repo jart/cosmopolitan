@@ -28,11 +28,7 @@ EXAMPLES_COMS =							\
 	$(EXAMPLES_MAINS_C:%.c=o/$(MODE)/%.com)			\
 	$(EXAMPLES_MAINS_CC:%.cc=o/$(MODE)/%.com)
 
-EXAMPLES_ELFS =							\
-	$(EXAMPLES_OBJS:%.o=%.elf)
-
 EXAMPLES_BINS =							\
-	$(EXAMPLES_ELFS)					\
 	$(EXAMPLES_COMS)					\
 	$(EXAMPLES_COMS:%=%.dbg)
 
@@ -98,21 +94,6 @@ o/$(MODE)/examples/%.com.dbg:					\
 		$(APE)
 	@$(APELINK)
 
-o/$(MODE)/examples/%.elf:					\
-		$(EXAMPLES_DEPS)				\
-		$(THIRD_PARTY_DUKTAPE)				\
-		o/$(MODE)/examples/%.o				\
-		$(CRT)						\
-		$(ELF)
-	@$(ELFLINK)
-
-o/$(MODE)/examples/tiny-raw-linux-tutorial.elf:			\
-		o/$(MODE)/examples/tiny-raw-linux-tutorial.o	\
-		$(ELF)
-	@$(ELFLINK) -N -z max-page-size=0x10
-
-$(EXAMPLES_OBJS): examples/examples.mk
-
 o/$(MODE)/examples/hellojs.com.dbg:				\
 		$(EXAMPLES_DEPS)				\
 		$(THIRD_PARTY_DUKTAPE)				\
@@ -143,6 +124,8 @@ o/$(MODE)/examples/nesemu1.com.dbg:				\
 		$(CRT)						\
 		$(APE)
 	@$(APELINK)
+
+$(EXAMPLES_OBJS): examples/examples.mk
 
 usr/share/dict/words: usr/share/dict/words.gz
 	@$(MKDIR) $(dir $@)

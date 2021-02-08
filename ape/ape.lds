@@ -176,6 +176,7 @@
 #ifdef __LINKER__
 #include "ape/macros.internal.h"
 #include "ape/config.h"
+#include "libc/dce.h"
 #include "libc/nt/pedef.internal.h"
 #include "libc/zip.h"
 
@@ -245,7 +246,7 @@ SECTIONS {
     . += 1;
 
     KEEP(*(.ape.pad.head))
-    . = ALIGN(4096); /* alignments only mandatory when impossible otherwise */
+    . = ALIGN(SupportsWindows() ? PAGESIZE : 16);
     HIDDEN(_ehead = .);
   } AT>SmallCode :Head
 
@@ -345,6 +346,22 @@ SECTIONS {
     KEEP(*(SORT_BY_NAME(.idata.ro.*)))
     . += 1;
 
+    . = ALIGN(__SIZEOF_POINTER__);
+    PROVIDE_HIDDEN(__init_array_start = .);
+    KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*)
+           SORT_BY_INIT_PRIORITY(.ctors.*)))
+    KEEP(*(SORT_NONE(.ctors)))
+    KEEP(*(SORT_NONE(.init_array)))
+    KEEP(*(SORT_NONE(.preinit_array)))
+    PROVIDE_HIDDEN(__init_array_end = .);
+
+    . = ALIGN(__SIZEOF_POINTER__);
+    PROVIDE_HIDDEN(__fini_array_start = .);
+    KEEP(*(SORT_BY_INIT_PRIORITY(.fini_array.*)
+           SORT_BY_INIT_PRIORITY(.dtors.*)))
+    KEEP(*(SORT_NONE(.dtors)))
+    PROVIDE_HIDDEN(__fini_array_end = .);
+
     /* Encoded Data Structures w/ Linear Initialization Order */
     KEEP(*(.initroprologue))
     KEEP(*(SORT_BY_NAME(.initro.*)))
@@ -378,24 +395,6 @@ SECTIONS {
 /*BEGIN: Post-Initialization Read-Only */
     . = ALIGN(.Lape.piro.align);
     HIDDEN(__piro_start = .);
-
-    QUAD(IMAGE_BASE_VIRTUAL);
-
-    PROVIDE_HIDDEN(__init_array_start = .);
-    KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*)
-           SORT_BY_INIT_PRIORITY(.ctors.*)))
-    KEEP(*(SORT_NONE(.ctors)))
-    KEEP(*(SORT_NONE(.init_array)))
-    KEEP(*(SORT_NONE(.preinit_array)))
-    PROVIDE_HIDDEN(__init_array_end = .);
-
-    . += 1;
-    . = ALIGN(__SIZEOF_POINTER__);
-    PROVIDE_HIDDEN(__fini_array_start = .);
-    KEEP(*(SORT_BY_INIT_PRIORITY(.fini_array.*)
-           SORT_BY_INIT_PRIORITY(.dtors.*)))
-    KEEP(*(SORT_NONE(.dtors)))
-    PROVIDE_HIDDEN(__fini_array_end = .);
 
     KEEP(*(SORT_BY_NAME(.piro.relo.sort.*)))
     PROVIDE_HIDDEN(__relo_end = .);
@@ -481,25 +480,17 @@ PFSTUB8(.Lape.elf.shoff, 0);
 PFSTUB4(.Lape.elf.phnum, (.Lape.phdrs.end - ape.phdrs) / 56);
 PFSTUB4(.Lape.elf.shnum, 0);
 PFSTUB4(.Lape.elf.shstrndx, 0);
-SHSTUB2(.Lape.macho.dd.skip, RVA(ape.macho) / 8);
-SHSTUB2(.Lape.macho.dd.count, (.Lape.macho.end - ape.macho) / 8);
-PFSTUB4(.Lape.pe.offset, ape.pe - ape.mz);
 
 HIDDEN(__privileged_addr = ROUNDDOWN(__privileged_start, PAGESIZE)); 
 HIDDEN(__privileged_size = (ROUNDUP(__privileged_end, PAGESIZE) -
                             ROUNDDOWN(__privileged_start, PAGESIZE))); 
-
-HIDDEN(.Lape.pe.optsz = .Lape.pe.sections - (ape.pe + 24));
-HIDDEN(.Lape.pe.shnum = (.Lape.pe.sections_end - .Lape.pe.sections) / 40);
-HIDDEN(.Lidata.idtsize = idata.idtend - idata.idt);
-HIDDEN(.Lidata.iatsize = idata.iatend - idata.iat);
 
 HIDDEN(.Lape.rom.offset = 0);
 HIDDEN(.Lape.rom.vaddr = ADDR(.head));
 HIDDEN(.Lape.rom.paddr = LOADADDR(.head));
 HIDDEN(.Lape.rom.filesz = LOADADDR(.data) - .Lape.rom.paddr);
 HIDDEN(.Lape.rom.memsz = ADDR(.data) - ADDR(.head));
-HIDDEN(.Lape.rom.align = 0x1000);
+HIDDEN(.Lape.rom.align = .Lape.data.align);
 HIDDEN(.Lape.rom.rva = RVA(.Lape.rom.vaddr));
 
 HIDDEN(.Lape.ram.offset = .Lape.rom.offset + .Lape.rom.filesz);
@@ -507,7 +498,7 @@ HIDDEN(.Lape.ram.vaddr = ADDR(.data));
 HIDDEN(.Lape.ram.paddr = LOADADDR(.data));
 HIDDEN(.Lape.ram.filesz = LOADADDR(.bss) - LOADADDR(.data));
 HIDDEN(.Lape.ram.memsz = ADDR(.bss) + SIZEOF(.bss) - .Lape.ram.vaddr);
-HIDDEN(.Lape.ram.align = 0x1000);
+HIDDEN(.Lape.ram.align = .Lape.data.align);
 HIDDEN(.Lape.ram.rva = RVA(.Lape.ram.vaddr));
 
 HIDDEN(.Lape.note.offset = .Lape.rom.offset + (.Lape.note - .Lape.rom.vaddr));
@@ -530,7 +521,7 @@ HIDDEN(.Lape.data.paddr = LOADADDR(.data));
 HIDDEN(.Lape.data.vaddr = ADDR(.data));
 HIDDEN(.Lape.data.filesz = SIZEOF(.data));
 HIDDEN(.Lape.data.memsz = SIZEOF(.data));
-HIDDEN(.Lape.data.align = 0x1000);
+HIDDEN(.Lape.data.align = .Lape.data.align);
 HIDDEN(.Lape.data.rva = RVA(.Lape.data.vaddr));
 
 HIDDEN(.Lape.bss.offset = .Lape.ram.offset + LOADADDR(.bss) - .Lape.ram.paddr);
@@ -540,18 +531,30 @@ HIDDEN(.Lape.bss.filesz = 0);
 HIDDEN(.Lape.bss.memsz = SIZEOF(.bss));
 HIDDEN(.Lape.bss.align = .Lape.data.align);
 
-/* Program Loader Auto-Tune */
+#if SupportsXnu()
+SHSTUB2(.Lape.macho.dd.skip, RVA(ape.macho) / 8);
+SHSTUB2(.Lape.macho.dd.count, (.Lape.macho.end - ape.macho) / 8);
+#endif
+
+#if SupportsWindows()
+PFSTUB4(.Lape.pe.offset, ape.pe - ape.mz);
+HIDDEN(.Lape.pe.optsz = .Lape.pe.sections - (ape.pe + 24));
+HIDDEN(.Lape.pe.shnum = (.Lape.pe.sections_end - .Lape.pe.sections) / 40);
+HIDDEN(.Lidata.idtsize = idata.idtend - idata.idt);
+HIDDEN(.Lidata.iatsize = idata.iatend - idata.iat);
+HIDDEN(v_ntsubsystem = (DEFINED(GetMessage)
+                        ? kNtImageSubsystemWindowsGui
+                        : kNtImageSubsystemWindowsCui));
+#endif
+
+#if SupportsMetal()
 HIDDEN(v_ape_realsectors =
            MIN(REAL_SCRATCH_AREA - IMAGE_BASE_REAL,
                ROUNDUP(RVA(_edata), 4096)) / 512);
 HIDDEN(v_ape_realpages = v_ape_realsectors / (4096 / 512));
 HIDDEN(v_ape_highsectors =
            (ROUNDUP(RVA(_edata), 512) / 512) - v_ape_realsectors);
-
-/* Windows NT Auto-Subsystem Embedding */
-HIDDEN(v_ntsubsystem = (DEFINED(GetMessage)
-                        ? kNtImageSubsystemWindowsGui
-                        : kNtImageSubsystemWindowsCui));
+#endif
 
 /* ZIP End of Central Directory header */
 #define ZIPCONST(NAME, VAL) HIDDEN(NAME = DEFINED(__zip_start) ? VAL : 0);
@@ -560,7 +563,8 @@ ZIPCONST(v_zip_cdirsize, __zip_end - __zip_start);
 ZIPCONST(v_zip_records, v_zip_cdirsize / kZipCdirHdrLinkableSize);
 ZIPCONST(v_zip_commentsize, _edata - __zip_end - kZipCdirHdrMinSize);
 
-/* Generates deterministic ID for Mach-O. */
+#if SupportsXnu()
+/* Generates deterministic ID. */
 #define PHI 0x9e3779b9925d4c17
 #define XOR(X,Y) ((X | Y) - (X & Y))
 #define XORSHIFT(X,Y)    \
@@ -573,14 +577,12 @@ ZIPCONST(v_zip_commentsize, _edata - __zip_end - kZipCdirHdrMinSize);
   X = (X + (Y >> 020) & 0xFF) * PHI; \
   X = (X + (Y >> 030) & 0xFF) * PHI
 #define CHURN(X)        \
-  XORSHIFT(uuid1_, X); \
-  KMH(uuid1_, X);      \
-  XORSHIFT(uuid2_, X); \
-  KMH(uuid2_, X)
-
-HIDDEN(uuid1_ = 88172645463325252);
-HIDDEN(uuid2_ = 88172645463325252);
-
+  XORSHIFT(.Lape.uuid1, X); \
+  KMH(.Lape.uuid1, X);      \
+  XORSHIFT(.Lape.uuid2, X); \
+  KMH(.Lape.uuid2, X)
+HIDDEN(.Lape.uuid1 = 88172645463325252);
+HIDDEN(.Lape.uuid2 = 88172645463325252);
 CHURN(.Lape.bss.align);
 CHURN(.Lape.bss.filesz);
 CHURN(.Lape.bss.memsz);
@@ -608,12 +610,6 @@ CHURN(.Lape.note.memsz);
 CHURN(.Lape.note.offset);
 CHURN(.Lape.note.paddr);
 CHURN(.Lape.note.vaddr);
-CHURN(.Lape.pe.offset);
-CHURN(.Lape.pe.optsz);
-CHURN(.Lape.pe.sections);
-CHURN(.Lape.pe.sections_end);
-CHURN(.Lape.pe.shnum);
-CHURN(.Lape.phdrs.end);
 CHURN(.Lape.ram.align);
 CHURN(.Lape.ram.filesz);
 CHURN(.Lape.ram.memsz);
@@ -636,15 +632,28 @@ CHURN(.Lape.text.paddr);
 CHURN(.Lape.text.rva);
 CHURN(.Lape.text.vaddr);
 CHURN(ADDR(.bss));
-CHURN(WinMain);
 CHURN(_start);
+CHURN(ape.phdrs);
+#if SupportsMetal()
+CHURN(v_ape_realsectors);
+#endif
+#if SupportsXnu()
 CHURN(ape.macho);
+#endif
+#if SupportsWindows()
 CHURN(ape.mz);
 CHURN(ape.pe);
-CHURN(ape.phdrs);
-CHURN(v_ape_realsectors);
+CHURN(.Lape.pe.offset);
+CHURN(.Lape.pe.optsz);
+CHURN(.Lape.pe.sections);
+CHURN(.Lape.pe.sections_end);
+CHURN(.Lape.pe.shnum);
+CHURN(.Lape.phdrs.end);
+CHURN(WinMain);
+#endif /* SupportsWindows() */
+#endif /* SupportsXnu() */
 
-ASSERT(ape.mz == IMAGE_BASE_VIRTUAL, "linker panic");
+ASSERT(DEFINED(ape.mz) ? ape.mz == IMAGE_BASE_VIRTUAL : 1, "linker panic");
 ASSERT((DEFINED(__init_bss_end) ? __init_bss_end : 0) % __SIZEOF_POINTER__ == 0,
        "__init_bss misalign");
 ASSERT(((DEFINED(__init_rodata_end) ? __init_rodata_end : 0) %

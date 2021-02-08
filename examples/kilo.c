@@ -1378,7 +1378,6 @@ void initEditor(void) {
 }
 
 int main(int argc, char **argv) {
-  showcrashreports();
   if (argc != 2) {
     fprintf(stderr, "Usage: kilo <filename>\n");
     exit(1);

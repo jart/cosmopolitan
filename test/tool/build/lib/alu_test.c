@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/progn.internal.h"
 #include "libc/limits.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"

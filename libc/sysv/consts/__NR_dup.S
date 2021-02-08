@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr __NR_dup 0x0020 0x2000029 0x0029 0x0029 0x029 -1

@@ -4,32 +4,32 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long O_ACCMODE;
-hidden extern const long O_APPEND;
-hidden extern const long O_ASYNC;
-hidden extern const long O_CLOEXEC;
-hidden extern const long O_CREAT;
-hidden extern const long O_DIRECT;
-hidden extern const long O_DIRECTORY;
-hidden extern const long O_DSYNC;
-hidden extern const long O_EXCL;
-hidden extern const long O_EXEC;
-hidden extern const long O_LARGEFILE;
-hidden extern const long O_NDELAY;
-hidden extern const long O_NOATIME;
-hidden extern const long O_NOCTTY;
-hidden extern const long O_NOFOLLOW;
-hidden extern const long O_NONBLOCK;
-hidden extern const long O_PATH;
-hidden extern const long O_RDONLY;
-hidden extern const long O_RDWR;
-hidden extern const long O_RSYNC;
-hidden extern const long O_SPARSE;
-hidden extern const long O_SYNC;
-hidden extern const long O_TMPFILE;
-hidden extern const long O_TRUNC;
-hidden extern const long O_TTY_INIT;
-hidden extern const long O_WRONLY;
+extern const long O_ACCMODE;
+extern const long O_APPEND;
+extern const long O_ASYNC;
+extern const long O_CLOEXEC;
+extern const long O_CREAT;
+extern const long O_DIRECT;
+extern const long O_DIRECTORY;
+extern const long O_DSYNC;
+extern const long O_EXCL;
+extern const long O_EXEC;
+extern const long O_LARGEFILE;
+extern const long O_NDELAY;
+extern const long O_NOATIME;
+extern const long O_NOCTTY;
+extern const long O_NOFOLLOW;
+extern const long O_NONBLOCK;
+extern const long O_PATH;
+extern const long O_RDONLY;
+extern const long O_RDWR;
+extern const long O_RSYNC;
+extern const long O_SPARSE;
+extern const long O_SYNC;
+extern const long O_TMPFILE;
+extern const long O_TRUNC;
+extern const long O_TTY_INIT;
+extern const long O_WRONLY;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

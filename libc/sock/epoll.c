@@ -1399,7 +1399,7 @@ err:
   return -1;
 }
 
-static textwindows noinline int sys_close_epoll_nt(int fd) {
+textwindows int sys_close_epoll_nt(int fd) {
   struct PortState *port_state;
   struct TsTreeNode *tree_node;
   if (wepoll_init() < 0) return -1;
@@ -1415,14 +1415,6 @@ static textwindows noinline int sys_close_epoll_nt(int fd) {
 err:
   err_check_handle(g_fds.p[fd].handle);
   return -1;
-}
-
-int sys_close_epoll(int fd) {
-  if (!IsWindows()) {
-    return sys_close(fd);
-  } else {
-    return sys_close_epoll_nt(fd);
-  }
 }
 
 /**
@@ -1448,7 +1440,7 @@ int epoll_create1(int flags) {
   int fd;
   if (flags & ~O_CLOEXEC) return einval();
   if (!IsWindows()) {
-    return __ensurefds(__fixupnewfd(sys_epoll_create(1337), flags));
+    return __fixupnewfd(sys_epoll_create(1337), flags);
   } else {
     return sys_epoll_create1_nt(flags);
   }

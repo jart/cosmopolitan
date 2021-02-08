@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/progn.internal.h"
 #include "libc/intrin/palignr.h"
 #include "libc/rand/rand.h"
 #include "libc/testlib/ezbench.h"
@@ -219,13 +218,4 @@ TEST(palignrc, test32orHigher_clearsOutput) {
   ASSERT_EQ(0, C[1]);
   ASSERT_EQ(0, C[2]);
   ASSERT_EQ(0, C[3]);
-}
-
-BENCH(palignr, bench) {
-  volatile __intrin_xmm_t A;
-  volatile __intrin_xmm_t B;
-  EZBENCH2("palignr const 𝑖", donothing, PROGN(palignr(&A, &A, &B, 7)));
-  EZBENCH2("palignr var 𝑖", donothing,
-           PROGN(palignr(&A, &A, &B, VEIL("r", 7))));
-  EZBENCH2("palignr ansi", donothing, PROGN((palignr)(&A, &A, &B, 7)));
 }

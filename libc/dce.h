@@ -10,7 +10,7 @@
  * Supported Platforms Tuning Knob (Runtime & Compile-Time)
  * Tuning this bitmask will remove platform polyfills at compile-time.
  */
-#define SUPPORT_VECTOR 0b11111111
+#define SUPPORT_VECTOR 255
 #endif
 
 #define LINUX   1
@@ -78,7 +78,7 @@
 #define SupportsNetbsd()  ((SUPPORT_VECTOR & NETBSD) == NETBSD)
 #define SupportsBsd()     (!!(SUPPORT_VECTOR & (XNU | FREEBSD | OPENBSD | NETBSD)))
 #define SupportsSystemv() \
-  ((SUPPORT_VECTOR & (LINUX | METAL | XNU | OPENBSD | FREEBSD | NETBSD)) != 0)
+  (!!(SUPPORT_VECTOR & (LINUX | XNU | OPENBSD | FREEBSD | NETBSD)))
 
 #ifndef __ASSEMBLER__
 #define IsLinux()   (SupportsLinux() && (__hostos & LINUX))

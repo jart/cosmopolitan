@@ -4,17 +4,17 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long ADDR_COMPAT_LAYOUT;
-hidden extern const long READ_IMPLIES_EXEC;
-hidden extern const long ADDR_LIMIT_3GB;
-hidden extern const long FDPIC_FUNCPTRS;
-hidden extern const long STICKY_TIMEOUTS;
-hidden extern const long MMAP_PAGE_ZERO;
-hidden extern const long ADDR_LIMIT_32BIT;
-hidden extern const long WHOLE_SECONDS;
-hidden extern const long ADDR_NO_RANDOMIZE;
-hidden extern const long SHORT_INODE;
-hidden extern const long UNAME26;
+extern const long ADDR_COMPAT_LAYOUT;
+extern const long READ_IMPLIES_EXEC;
+extern const long ADDR_LIMIT_3GB;
+extern const long FDPIC_FUNCPTRS;
+extern const long STICKY_TIMEOUTS;
+extern const long MMAP_PAGE_ZERO;
+extern const long ADDR_LIMIT_32BIT;
+extern const long WHOLE_SECONDS;
+extern const long ADDR_NO_RANDOMIZE;
+extern const long SHORT_INODE;
+extern const long UNAME26;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

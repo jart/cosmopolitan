@@ -42,42 +42,42 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long FAN_ACCESS;
-hidden extern const long FAN_ACCESS_PERM;
-hidden extern const long FAN_ALLOW;
-hidden extern const long FAN_ALL_CLASS_BITS;
-hidden extern const long FAN_ALL_EVENTS;
-hidden extern const long FAN_ALL_INIT_FLAGS;
-hidden extern const long FAN_ALL_MARK_FLAGS;
-hidden extern const long FAN_ALL_OUTGOING_EVENTS;
-hidden extern const long FAN_ALL_PERM_EVENTS;
-hidden extern const long FAN_CLASS_CONTENT;
-hidden extern const long FAN_CLASS_NOTIF;
-hidden extern const long FAN_CLASS_PRE_CONTENT;
-hidden extern const long FAN_CLOEXEC;
-hidden extern const long FAN_CLOSE;
-hidden extern const long FAN_CLOSE_NOWRITE;
-hidden extern const long FAN_CLOSE_WRITE;
-hidden extern const long FAN_DENY;
-hidden extern const long FAN_EVENT_METADATA_LEN;
-hidden extern const long FAN_EVENT_ON_CHILD;
-hidden extern const long FAN_MARK_ADD;
-hidden extern const long FAN_MARK_DONT_FOLLOW;
-hidden extern const long FAN_MARK_FLUSH;
-hidden extern const long FAN_MARK_IGNORED_MASK;
-hidden extern const long FAN_MARK_IGNORED_SURV_MODIFY;
-hidden extern const long FAN_MARK_MOUNT;
-hidden extern const long FAN_MARK_ONLYDIR;
-hidden extern const long FAN_MARK_REMOVE;
-hidden extern const long FAN_MODIFY;
-hidden extern const long FAN_NOFD;
-hidden extern const long FAN_NONBLOCK;
-hidden extern const long FAN_ONDIR;
-hidden extern const long FAN_OPEN;
-hidden extern const long FAN_OPEN_PERM;
-hidden extern const long FAN_Q_OVERFLOW;
-hidden extern const long FAN_UNLIMITED_MARKS;
-hidden extern const long FAN_UNLIMITED_QUEUE;
+extern const long FAN_ACCESS;
+extern const long FAN_ACCESS_PERM;
+extern const long FAN_ALLOW;
+extern const long FAN_ALL_CLASS_BITS;
+extern const long FAN_ALL_EVENTS;
+extern const long FAN_ALL_INIT_FLAGS;
+extern const long FAN_ALL_MARK_FLAGS;
+extern const long FAN_ALL_OUTGOING_EVENTS;
+extern const long FAN_ALL_PERM_EVENTS;
+extern const long FAN_CLASS_CONTENT;
+extern const long FAN_CLASS_NOTIF;
+extern const long FAN_CLASS_PRE_CONTENT;
+extern const long FAN_CLOEXEC;
+extern const long FAN_CLOSE;
+extern const long FAN_CLOSE_NOWRITE;
+extern const long FAN_CLOSE_WRITE;
+extern const long FAN_DENY;
+extern const long FAN_EVENT_METADATA_LEN;
+extern const long FAN_EVENT_ON_CHILD;
+extern const long FAN_MARK_ADD;
+extern const long FAN_MARK_DONT_FOLLOW;
+extern const long FAN_MARK_FLUSH;
+extern const long FAN_MARK_IGNORED_MASK;
+extern const long FAN_MARK_IGNORED_SURV_MODIFY;
+extern const long FAN_MARK_MOUNT;
+extern const long FAN_MARK_ONLYDIR;
+extern const long FAN_MARK_REMOVE;
+extern const long FAN_MODIFY;
+extern const long FAN_NOFD;
+extern const long FAN_NONBLOCK;
+extern const long FAN_ONDIR;
+extern const long FAN_OPEN;
+extern const long FAN_OPEN_PERM;
+extern const long FAN_Q_OVERFLOW;
+extern const long FAN_UNLIMITED_MARKS;
+extern const long FAN_UNLIMITED_QUEUE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -9,9 +9,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long MNT_DETACH;
-hidden extern const long MNT_EXPIRE;
-hidden extern const long MNT_FORCE;
+extern const long MNT_DETACH;
+extern const long MNT_EXPIRE;
+extern const long MNT_FORCE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

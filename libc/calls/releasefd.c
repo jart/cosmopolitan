@@ -21,9 +21,11 @@
 
 void __releasefd(int fd) {
   int x;
-  g_fds.p[fd].kind = kFdEmpty;
-  do {
-    x = g_fds.f;
-    if (fd >= x) break;
-  } while (!cmpxchg(&g_fds.f, x, fd));
+  if (!__vforked && 0 <= fd && fd < g_fds.n) {
+    g_fds.p[fd].kind = kFdEmpty;
+    do {
+      x = g_fds.f;
+      if (fd >= x) break;
+    } while (!cmpxchg(&g_fds.f, x, fd));
+  }
 }

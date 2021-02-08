@@ -4,39 +4,39 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long IPPROTO_AH;
-hidden extern const long IPPROTO_BEETPH;
-hidden extern const long IPPROTO_COMP;
-hidden extern const long IPPROTO_DCCP;
-hidden extern const long IPPROTO_DSTOPTS;
-hidden extern const long IPPROTO_EGP;
-hidden extern const long IPPROTO_ENCAP;
-hidden extern const long IPPROTO_ESP;
-hidden extern const long IPPROTO_FRAGMENT;
-hidden extern const long IPPROTO_GRE;
-hidden extern const long IPPROTO_HOPOPTS;
-hidden extern const long IPPROTO_ICMP;
-hidden extern const long IPPROTO_ICMPV6;
-hidden extern const long IPPROTO_IDP;
-hidden extern const long IPPROTO_IGMP;
-hidden extern const long IPPROTO_IP;
-hidden extern const long IPPROTO_IPIP;
-hidden extern const long IPPROTO_IPV6;
-hidden extern const long IPPROTO_MAX;
-hidden extern const long IPPROTO_MH;
-hidden extern const long IPPROTO_MPLS;
-hidden extern const long IPPROTO_MTP;
-hidden extern const long IPPROTO_NONE;
-hidden extern const long IPPROTO_PIM;
-hidden extern const long IPPROTO_PUP;
-hidden extern const long IPPROTO_RAW;
-hidden extern const long IPPROTO_ROUTING;
-hidden extern const long IPPROTO_RSVP;
-hidden extern const long IPPROTO_SCTP;
-hidden extern const long IPPROTO_TCP;
-hidden extern const long IPPROTO_TP;
-hidden extern const long IPPROTO_UDP;
-hidden extern const long IPPROTO_UDPLITE;
+extern const long IPPROTO_AH;
+extern const long IPPROTO_BEETPH;
+extern const long IPPROTO_COMP;
+extern const long IPPROTO_DCCP;
+extern const long IPPROTO_DSTOPTS;
+extern const long IPPROTO_EGP;
+extern const long IPPROTO_ENCAP;
+extern const long IPPROTO_ESP;
+extern const long IPPROTO_FRAGMENT;
+extern const long IPPROTO_GRE;
+extern const long IPPROTO_HOPOPTS;
+extern const long IPPROTO_ICMP;
+extern const long IPPROTO_ICMPV6;
+extern const long IPPROTO_IDP;
+extern const long IPPROTO_IGMP;
+extern const long IPPROTO_IP;
+extern const long IPPROTO_IPIP;
+extern const long IPPROTO_IPV6;
+extern const long IPPROTO_MAX;
+extern const long IPPROTO_MH;
+extern const long IPPROTO_MPLS;
+extern const long IPPROTO_MTP;
+extern const long IPPROTO_NONE;
+extern const long IPPROTO_PIM;
+extern const long IPPROTO_PUP;
+extern const long IPPROTO_RAW;
+extern const long IPPROTO_ROUTING;
+extern const long IPPROTO_RSVP;
+extern const long IPPROTO_SCTP;
+extern const long IPPROTO_TCP;
+extern const long IPPROTO_TP;
+extern const long IPPROTO_UDP;
+extern const long IPPROTO_UDPLITE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

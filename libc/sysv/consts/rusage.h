@@ -4,9 +4,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long RUSAGE_CHILDREN;
-hidden extern const long RUSAGE_SELF;
-hidden extern const long RUSAGE_THREAD;
+extern const long RUSAGE_CHILDREN;
+extern const long RUSAGE_SELF;
+extern const long RUSAGE_THREAD;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

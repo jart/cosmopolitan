@@ -17,14 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/bits/progn.internal.h"
 #include "libc/bits/safemacros.h"
 #include "libc/fmt/fmt.h"
+#include "libc/runtime/gc.h"
 #include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
 static char buffer[128];
 
-#define Format(...) PROGN(snprintf(buffer, sizeof(buffer), __VA_ARGS__), buffer)
+#define Format(...) gc(xasprintf(__VA_ARGS__))
 
 /**
  * @fileoverview String formatting tests.

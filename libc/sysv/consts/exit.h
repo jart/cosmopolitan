@@ -8,8 +8,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long EXIT_FAILURE;
-hidden extern const long EXIT_SUCCESS;
+extern const long EXIT_FAILURE;
+extern const long EXIT_SUCCESS;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -25,11 +25,13 @@
 
 textwindows int sys_sysinfo_nt(struct sysinfo *info) {
   struct NtMemoryStatusEx memstat;
+  struct NtSystemInfo sysinfo;
+  GetSystemInfo(&sysinfo);
   memstat.dwLength = sizeof(struct NtMemoryStatusEx);
   if (GlobalMemoryStatusEx(&memstat)) {
     info->totalram = memstat.ullTotalPhys;
     info->freeram = memstat.ullAvailPhys;
-    info->procs = __nt_systeminfo.dwNumberOfProcessors;
+    info->procs = sysinfo.dwNumberOfProcessors;
     info->mem_unit = 1;
     return 0;
   } else {

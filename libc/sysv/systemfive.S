@@ -21,7 +21,6 @@
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/macros.h"
-.source	__FILE__
 
 /*                                           ▄▄▄
                        ▄▄▄                    ▀▓▓▒▄
@@ -105,6 +104,7 @@ __systemfive:
 
 	.privileged
 .Lanchorpoint:
+#if SupportsLinux()
 systemfive.linux:
 	and	$0xfff,%eax
 	cmp	$0xfff,%eax
@@ -122,6 +122,7 @@ systemfive.error:
 	neg	%eax
 /	𝑠𝑙𝑖𝑑𝑒
 	.endfn	systemfive.error,globl,hidden
+#endif
 systemfive.errno:
 	mov	%eax,errno(%rip)	# normalize to c library convention
 	push	$-1			# negative one is only error result
@@ -132,19 +133,26 @@ systemfive.enosys:
 	mov	ENOSYS(%rip),%eax
 	jmp	systemfive.errno
 	.endfn	systemfive.enosys,globl,hidden
+#if SupportsNetbsd()
 systemfive.netbsd:
 	shr	$4*13,%rax
 	jmp	systemfive.bsdscrub
 	.endfn	systemfive.openbsd,globl,hidden
+#endif
+#if SupportsOpenbsd()
 systemfive.openbsd:
 	shr	$4*10,%rax
 	jmp	systemfive.bsdscrub
 	.endfn	systemfive.openbsd,globl,hidden
+#endif
+#if SupportsFreebsd()
 systemfive.freebsd:
 	shr	$4*7,%rax
 	movzwl	%ax,%eax
 /	𝑠𝑙𝑖𝑑𝑒
 	.endfn	systemfive.freebsd,globl,hidden
+#endif
+#if SupportsBsd()
 systemfive.bsdscrub:
 	and	$0xfff,%eax
 /	𝑠𝑙𝑖𝑑𝑒
@@ -157,6 +165,8 @@ systemfive.bsd:
 	jc	systemfive.errno	# bsd sets carry flag if %rax is errno
 	ret
 	.endfn	systemfive.bsd
+#endif
+#if SupportsXnu()
 systemfive.xnu:
 /	0x?????????2153???		# how syscalls.sh encodes xnu ordinals
 /	           │└┴┴┐
@@ -169,6 +179,7 @@ systemfive.xnu:
 	or	%r11d,%eax
 	jmp	systemfive.bsd
 	.endfn	systemfive.xnu,globl,hidden
+#endif
 	.previous
 
 /	Initializes System Five system call support.
@@ -183,59 +194,83 @@ systemfive.xnu:
 	.init.start 300,_init_systemfive
 	push	%rbx
 	push	%rsi
+#if SupportsMetal()
 	testb	$METAL,(%rdi)			# @see ape/ape.S
 	jnz	systemfive.init.metal
+#endif
+#if SupportsXnu()
 	testb	$XNU,(%rdi)			# @see libc/crt/crt.S
 	jnz	systemfive.init.xnu
+#endif
+#if SupportsFreebsd()
 	testb	$FREEBSD,(%rdi)			# @see libc/crt/crt.S
 	jnz	systemfive.init.freebsd
+#endif
+#if SupportsWindows()
 	testb	$WINDOWS,(%rdi)			# @see libc/runtime/winmain.c
 	jnz	systemfive.init.windows
+#endif
+#if SupportsOpenbsd()
 	cmpq	$0,(%r15)			# OpenBSD doesn't have auxv
 	je	systemfive.init.openbsd
+#endif
+#if SupportsNetbsd()
 	xor	%eax,%eax
 0:	cmpq	$2014,(%r15,%rax,8)		# NetBSD's distinctive AT_EXECFN
 	je	systemfive.init.netbsd
 	cmpq	$0,(%r15,%rax,8)
 	lea	2(%eax),%eax
 	jnz	0b
-/	default state is safe state
-/	𝑠𝑙𝑖𝑑𝑒
+#endif
+#if SupportsLinux()
 systemfive.init.linux:
 	pushb	systemfive.linux-.Lanchorpoint
 	push	$LINUX
 	ezlea	syscon.linux,si
 	jmp	systemfive.init.os
+#endif
+#if SupportsMetal()
 systemfive.init.metal:
 	pushb	systemfive.linux-.Lanchorpoint
 	push	$METAL
 	ezlea	syscon.linux,si
 	jmp	systemfive.init.os
+#endif
+#if SupportsWindows()
 systemfive.init.windows:
 	pushb	systemfive.enosys-.Lanchorpoint
 	push	$WINDOWS
 	ezlea	syscon.windows,si
 	jmp	systemfive.init.os
+#endif
+#if SupportsFreebsd()
 systemfive.init.freebsd:
 	pushb	systemfive.freebsd-.Lanchorpoint
 	push	$FREEBSD
 	ezlea	syscon.freebsd,si
 	jmp	systemfive.init.os
+#endif
+#if SupportsOpenbsd()
 systemfive.init.openbsd:
 	pushb	systemfive.openbsd-.Lanchorpoint
 	push	$OPENBSD
 	ezlea	syscon.openbsd,si
 	jmp	systemfive.init.os
+#endif
+#if SupportsNetbsd()
 systemfive.init.netbsd:
 	pushb	systemfive.netbsd-.Lanchorpoint
 	push	$NETBSD
 	ezlea	syscon.netbsd,si
 	jmp	systemfive.init.os
+#endif
+#if SupportsXnu()
 systemfive.init.xnu:
 	pushb	systemfive.xnu-.Lanchorpoint
 	push	$XNU
 	ezlea	syscon.xnu,si
 /	𝑠𝑙𝑖𝑑𝑒
+#endif
 systemfive.init.os:
 	ezlea	.Lanchorpoint,cx
 	pop	%rax
@@ -275,10 +310,12 @@ systemfive.init.magnums:
 	pop	%rsi
 	pop	%rbx
 /	𝑠𝑙𝑖𝑑𝑒
-#ifndef TINY
+#if SupportsSystemv() && !defined(TINY)
 systemfive.init.stack:					# determinism ftw!
+#if SupportsWindows()
 	testb	IsWindows()				# already did this
 	jnz	systemfive.init.done
+#endif
 	push	%rdi
 	push	%rsi
 	mov	__NR_mmap,%eax
@@ -291,11 +328,13 @@ systemfive.init.stack:					# determinism ftw!
 	xor	%r9d,%r9d
 	push	%r9					# openbsd:pad
 	push	%r9					# openbsd:align
+#if SupportsOpenbsd()
 	testb	IsOpenbsd()
 	jz	0f
 	syscall						# openbsd:dubstack
 	jc	1f
 	mov	__NR_mmap,%eax
+#endif
 0:	or	MAP_GROWSDOWN,%r10d			# openbsd:mapstack
 	clc
 	syscall
@@ -321,8 +360,8 @@ systemfive.init.stack:					# determinism ftw!
 	leave
 	pop	%rcx
 	lea	STACKSIZE-16(%rax),%rsp			# openbsd:stackbound
+	mov	%rbp,(%rsp)
 	push	%rcx
-	xor	%ebp,%ebp
 	push	%rbp
 	mov	%rsp,%rbp
 /	𝑠𝑙𝑖𝑑𝑒
@@ -360,51 +399,61 @@ syscon.start:/*
 	.section .piro.bss.sort.syscon.3,"aw",@nobits
 syscon.end:
 	.previous
+	.type	syscon.start,@object
+	.type	syscon.end,@object
+	.globl	syscon.start
+	.globl	syscon.end
+#if SupportsLinux()
 	.section .sort.rodata.syscon.linux.1,"a",@progbits
 	.align	1
 syscon.linux:/*
 	...decentralized leb128...
 	*/.previous
+	.type	syscon.linux,@object
+	.globl	syscon.linux
+#endif
+#if SupportsXnu()
 	.section .sort.rodata.syscon.xnu.1,"a",@progbits
 	.align	1
 syscon.xnu:/*
 	...decentralized leb128...
 	*/.previous
+	.type	syscon.xnu,@object
+	.globl	syscon.xnu
+#endif
+#if SupportsFreebsd()
 	.section .sort.rodata.syscon.freebsd.1,"a",@progbits
 	.align	1
 syscon.freebsd:/*
 	...decentralized leb128...
 	*/.previous
+	.type	syscon.freebsd,@object
+	.globl	syscon.freebsd
+#endif
+#if SupportsOpenbsd()
 	.section .sort.rodata.syscon.openbsd.1,"a",@progbits
 	.align	1
 syscon.openbsd:/*
 	...decentralized leb128...
 	*/.previous
+	.type	syscon.openbsd,@object
+	.globl	syscon.openbsd
+#endif
+#if SupportsNetbsd()
 	.section .sort.rodata.syscon.netbsd.1,"a",@progbits
 	.align	1
 syscon.netbsd:/*
 	...decentralized leb128...
 	*/.previous
+	.type	syscon.netbsd,@object
+	.globl	syscon.netbsd
+#endif
+#if SupportsWindows()
 	.section .sort.rodata.syscon.windows.1,"a",@progbits
 	.align	1
 syscon.windows:/*
 	...decentralized leb128...
 	*/.previous
-
-	.type	syscon.start,@object
-	.type	syscon.end,@object
-	.type	syscon.linux,@object
-	.type	syscon.xnu,@object
-	.type	syscon.freebsd,@object
-	.type	syscon.openbsd,@object
-	.type	syscon.netbsd,@object
 	.type	syscon.windows,@object
-
-	.globl	syscon.start
-	.globl	syscon.end
-	.globl	syscon.linux
-	.globl	syscon.xnu
-	.globl	syscon.freebsd
-	.globl	syscon.openbsd
-	.globl	syscon.netbsd
 	.globl	syscon.windows
+#endif

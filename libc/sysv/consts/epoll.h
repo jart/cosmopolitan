@@ -5,27 +5,27 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long EPOLL_CLOEXEC;
+extern const long EPOLL_CLOEXEC;
 
-hidden extern const long EPOLL_CTL_ADD;
-hidden extern const long EPOLL_CTL_DEL;
-hidden extern const long EPOLL_CTL_MOD;
+extern const long EPOLL_CTL_ADD;
+extern const long EPOLL_CTL_DEL;
+extern const long EPOLL_CTL_MOD;
 
-hidden extern const long EPOLLIN;
-hidden extern const long EPOLLPRI;
-hidden extern const long EPOLLOUT;
-hidden extern const long EPOLLERR;
-hidden extern const long EPOLLHUP;
-hidden extern const long EPOLLRDNORM;
-hidden extern const long EPOLLRDBAND;
-hidden extern const long EPOLLWRNORM;
-hidden extern const long EPOLLWRBAND;
-hidden extern const long EPOLLMSG;
-hidden extern const long EPOLLRDHUP;
-hidden extern const long EPOLLEXCLUSIVE;
-hidden extern const long EPOLLWAKEUP;
-hidden extern const long EPOLLONESHOT;
-hidden extern const long EPOLLET;
+extern const long EPOLLIN;
+extern const long EPOLLPRI;
+extern const long EPOLLOUT;
+extern const long EPOLLERR;
+extern const long EPOLLHUP;
+extern const long EPOLLRDNORM;
+extern const long EPOLLRDBAND;
+extern const long EPOLLWRNORM;
+extern const long EPOLLWRBAND;
+extern const long EPOLLMSG;
+extern const long EPOLLRDHUP;
+extern const long EPOLLEXCLUSIVE;
+extern const long EPOLLWAKEUP;
+extern const long EPOLLONESHOT;
+extern const long EPOLLET;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

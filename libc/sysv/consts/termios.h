@@ -4,161 +4,161 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long BRKINT;
-hidden extern const long BSDLY;
-hidden extern const long BUSY;
-hidden extern const long CANBSIZ;
-hidden extern const long CBAUD;
-hidden extern const long CBAUDEX;
-hidden extern const long CBRK;
-hidden extern const long CEOL;
-hidden extern const long CIBAUD;
-hidden extern const long CLOCAL;
-hidden extern const long CMSPAR;
-hidden extern const long CRDLY;
-hidden extern const long CS6;
-hidden extern const long CS7;
-hidden extern const long CS8;
-hidden extern const long CSIZE;
-hidden extern const long ECHO;
-hidden extern const long ECHOCTL;
-hidden extern const long ECHOE;
-hidden extern const long ECHOK;
-hidden extern const long ECHOKE;
-hidden extern const long ECHONL;
-hidden extern const long ECHOPRT;
-hidden extern const long ENDRUNDISC;
-hidden extern const long EXTPROC;
-hidden extern const long FFDLY;
-hidden extern const long FLUSHO;
-hidden extern const long H4DISC;
-hidden extern const long ICANON;
-hidden extern const long ICRNL;
-hidden extern const long IEXTEN;
-hidden extern const long IGNBRK;
-hidden extern const long IGNCR;
-hidden extern const long IGNPAR;
-hidden extern const long IMAXBEL;
-hidden extern const long INLCR;
-hidden extern const long INPCK;
-hidden extern const long ISIG;
-hidden extern const long ISTRIP;
-hidden extern const long IUCLC;
-hidden extern const long IUTF8;
-hidden extern const long IXANY;
-hidden extern const long IXOFF;
-hidden extern const long IXON;
-hidden extern const long NCCS;
-hidden extern const long NETGRAPHDISC;
-hidden extern const long NLDLY;
-hidden extern const long NMEADISC;
-hidden extern const long NOFLSH;
-hidden extern const long OCRNL;
-hidden extern const long OFDEL;
-hidden extern const long OFILL;
-hidden extern const long OLCUC;
-hidden extern const long ONLCR;
-hidden extern const long ONLRET;
-hidden extern const long ONOCR;
-hidden extern const long OPOST;
-hidden extern const long PARENB;
-hidden extern const long PARMRK;
-hidden extern const long PARODD;
-hidden extern const long PENDIN;
-hidden extern const long PPPDISC;
-hidden extern const long SLIPDISC;
-hidden extern const long STRIPDISC;
-hidden extern const long TABDLY;
-hidden extern const long TABLDISC;
-hidden extern const long TCGETS;
-hidden extern const long TCSADRAIN;
-hidden extern const long TCSAFLUSH;
-hidden extern const long TCSANOW;
-hidden extern const long TCSETS;
-hidden extern const long TCSETSF;
-hidden extern const long TCSETSW;
-hidden extern const long TIOCCBRK;
-hidden extern const long TIOCCDTR;
-hidden extern const long TIOCCHKVERAUTH;
-hidden extern const long TIOCCONS;
-hidden extern const long TIOCDRAIN;
-hidden extern const long TIOCEXT;
-hidden extern const long TIOCFLAG_CLOCAL;
-hidden extern const long TIOCFLAG_MDMBUF;
-hidden extern const long TIOCFLAG_PPS;
-hidden extern const long TIOCFLAG_SOFTCAR;
-hidden extern const long TIOCFLUSH;
-hidden extern const long TIOCGDRAINWAIT;
-hidden extern const long TIOCGETD;
-hidden extern const long TIOCGFLAGS;
-hidden extern const long TIOCGPGRP;
-hidden extern const long TIOCGPTN;
-hidden extern const long TIOCGSID;
-hidden extern const long TIOCGTSTAMP;
-hidden extern const long TIOCGWINSZ;
-hidden extern const long TIOCNOTTY;
-hidden extern const long TIOCNXCL;
-hidden extern const long TIOCOUTQ;
-hidden extern const long TIOCPTMASTER;
-hidden extern const long TIOCREMOTE;
-hidden extern const long TIOCSBRK;
-hidden extern const long TIOCSCTTY;
-hidden extern const long TIOCSDRAINWAIT;
-hidden extern const long TIOCSDTR;
-hidden extern const long TIOCSERGETLSR;
-hidden extern const long TIOCSERGETMULTI;
-hidden extern const long TIOCSERSETMULTI;
-hidden extern const long TIOCSER_TEMT;
-hidden extern const long TIOCSETD;
-hidden extern const long TIOCSETVERAUTH;
-hidden extern const long TIOCSFLAGS;
-hidden extern const long TIOCSIG;
-hidden extern const long TIOCSPGRP;
-hidden extern const long TIOCSTART;
-hidden extern const long TIOCSTAT;
-hidden extern const long TIOCSTI;
-hidden extern const long TIOCSTSTAMP;
-hidden extern const long TIOCSWINSZ;
-hidden extern const long TIOCTIMESTAMP;
-hidden extern const long TIOCUCNTL_CBRK;
-hidden extern const long TOSTOP;
-hidden extern const long TTYDISC;
-hidden extern const long VDISCARD;
-hidden extern const long VEOF;
-hidden extern const long VEOL;
-hidden extern const long VEOL2;
-hidden extern const long VERASE;
-hidden extern const long VERIFY;
-hidden extern const long VINTR;
-hidden extern const long VKILL;
-hidden extern const long VLNEXT;
-hidden extern const long VMIN;
-hidden extern const long VQUIT;
-hidden extern const long VREPRINT;
-hidden extern const long VSTART;
-hidden extern const long VSTOP;
-hidden extern const long VSUSP;
-hidden extern const long VSWTC;
-hidden extern const long VTDLY;
-hidden extern const long VTIME;
-hidden extern const long VWERASE;
-hidden extern const long XCASE;
+extern const long BRKINT;
+extern const long BSDLY;
+extern const long BUSY;
+extern const long CANBSIZ;
+extern const long CBAUD;
+extern const long CBAUDEX;
+extern const long CBRK;
+extern const long CEOL;
+extern const long CIBAUD;
+extern const long CLOCAL;
+extern const long CMSPAR;
+extern const long CRDLY;
+extern const long CS6;
+extern const long CS7;
+extern const long CS8;
+extern const long CSIZE;
+extern const long ECHO;
+extern const long ECHOCTL;
+extern const long ECHOE;
+extern const long ECHOK;
+extern const long ECHOKE;
+extern const long ECHONL;
+extern const long ECHOPRT;
+extern const long ENDRUNDISC;
+extern const long EXTPROC;
+extern const long FFDLY;
+extern const long FLUSHO;
+extern const long H4DISC;
+extern const long ICANON;
+extern const long ICRNL;
+extern const long IEXTEN;
+extern const long IGNBRK;
+extern const long IGNCR;
+extern const long IGNPAR;
+extern const long IMAXBEL;
+extern const long INLCR;
+extern const long INPCK;
+extern const long ISIG;
+extern const long ISTRIP;
+extern const long IUCLC;
+extern const long IUTF8;
+extern const long IXANY;
+extern const long IXOFF;
+extern const long IXON;
+extern const long NCCS;
+extern const long NETGRAPHDISC;
+extern const long NLDLY;
+extern const long NMEADISC;
+extern const long NOFLSH;
+extern const long OCRNL;
+extern const long OFDEL;
+extern const long OFILL;
+extern const long OLCUC;
+extern const long ONLCR;
+extern const long ONLRET;
+extern const long ONOCR;
+extern const long OPOST;
+extern const long PARENB;
+extern const long PARMRK;
+extern const long PARODD;
+extern const long PENDIN;
+extern const long PPPDISC;
+extern const long SLIPDISC;
+extern const long STRIPDISC;
+extern const long TABDLY;
+extern const long TABLDISC;
+extern const long TCGETS;
+extern const long TCSADRAIN;
+extern const long TCSAFLUSH;
+extern const long TCSANOW;
+extern const long TCSETS;
+extern const long TCSETSF;
+extern const long TCSETSW;
+extern const long TIOCCBRK;
+extern const long TIOCCDTR;
+extern const long TIOCCHKVERAUTH;
+extern const long TIOCCONS;
+extern const long TIOCDRAIN;
+extern const long TIOCEXT;
+extern const long TIOCFLAG_CLOCAL;
+extern const long TIOCFLAG_MDMBUF;
+extern const long TIOCFLAG_PPS;
+extern const long TIOCFLAG_SOFTCAR;
+extern const long TIOCFLUSH;
+extern const long TIOCGDRAINWAIT;
+extern const long TIOCGETD;
+extern const long TIOCGFLAGS;
+extern const long TIOCGPGRP;
+extern const long TIOCGPTN;
+extern const long TIOCGSID;
+extern const long TIOCGTSTAMP;
+extern const long TIOCGWINSZ;
+extern const long TIOCNOTTY;
+extern const long TIOCNXCL;
+extern const long TIOCOUTQ;
+extern const long TIOCPTMASTER;
+extern const long TIOCREMOTE;
+extern const long TIOCSBRK;
+extern const long TIOCSCTTY;
+extern const long TIOCSDRAINWAIT;
+extern const long TIOCSDTR;
+extern const long TIOCSERGETLSR;
+extern const long TIOCSERGETMULTI;
+extern const long TIOCSERSETMULTI;
+extern const long TIOCSER_TEMT;
+extern const long TIOCSETD;
+extern const long TIOCSETVERAUTH;
+extern const long TIOCSFLAGS;
+extern const long TIOCSIG;
+extern const long TIOCSPGRP;
+extern const long TIOCSTART;
+extern const long TIOCSTAT;
+extern const long TIOCSTI;
+extern const long TIOCSTSTAMP;
+extern const long TIOCSWINSZ;
+extern const long TIOCTIMESTAMP;
+extern const long TIOCUCNTL_CBRK;
+extern const long TOSTOP;
+extern const long TTYDISC;
+extern const long VDISCARD;
+extern const long VEOF;
+extern const long VEOL;
+extern const long VEOL2;
+extern const long VERASE;
+extern const long VERIFY;
+extern const long VINTR;
+extern const long VKILL;
+extern const long VLNEXT;
+extern const long VMIN;
+extern const long VQUIT;
+extern const long VREPRINT;
+extern const long VSTART;
+extern const long VSTOP;
+extern const long VSUSP;
+extern const long VSWTC;
+extern const long VTDLY;
+extern const long VTIME;
+extern const long VWERASE;
+extern const long XCASE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
-#define IGNBRK  LITERALLY(0b0000000000000001)
-#define BRKINT  LITERALLY(0b0000000000000010)
-#define IGNPAR  LITERALLY(0b0000000000000100)
-#define PARMRK  LITERALLY(0b0000000000001000)
-#define INPCK   LITERALLY(0b0000000000010000)
-#define ISTRIP  LITERALLY(0b0000000000100000)
-#define INLCR   LITERALLY(0b0000000001000000)
-#define IGNCR   LITERALLY(0b0000000010000000)
-#define ICRNL   LITERALLY(0b0000000100000000)
-#define IXANY   LITERALLY(0b0000100000000000)
-#define IMAXBEL LITERALLY(0b0010000000000000)
-#define OPOST   LITERALLY(0b0000000000000001)
+#define IGNBRK  LITERALLY(0x01)
+#define BRKINT  LITERALLY(0x02)
+#define IGNPAR  LITERALLY(0x04)
+#define PARMRK  LITERALLY(0x08)
+#define INPCK   LITERALLY(0x10)
+#define ISTRIP  LITERALLY(0x20)
+#define INLCR   LITERALLY(0x40)
+#define IGNCR   LITERALLY(0x80)
+#define ICRNL   LITERALLY(0x0100)
+#define IXANY   LITERALLY(0x0800)
+#define IMAXBEL LITERALLY(0x2000)
+#define OPOST   LITERALLY(0x01)
 
 #define NLDLY  SYMBOLIC(NLDLY)
 #define NL0    LITERALLY(0)

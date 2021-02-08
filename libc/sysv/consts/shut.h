@@ -4,9 +4,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long SHUT_RD;
-hidden extern const long SHUT_RDWR;
-hidden extern const long SHUT_WR;
+extern const long SHUT_RD;
+extern const long SHUT_RDWR;
+extern const long SHUT_WR;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -23,7 +23,6 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/dce.h"
 .text.startup
-.source	__FILE__
 
 /	Cosmopolitan runtime.
 /
@@ -34,30 +33,48 @@
 /	@noreturn
 cosmo:	push	%rbp
 	mov	%rsp,%rbp
-	ezlea	_base,bx
 	mov	%edi,%r12d
 	mov	%rsi,%r13
 	mov	%rdx,%r14
 	mov	%rcx,%r15
 #ifdef __FAST_MATH__
-	call	__fast_math
+	push	%rax
+	stmxcsr	(%rsp)
+	orl	$0x8040,(%rsp)
+	ldmxcsr	(%rsp)
+	pop	%rax
 #endif
 	call	_init
-	call	_construct
+	ezlea	__init_array_start,ax		# static ctors in forward order
+	.weak	__init_array_start		# could be called multiple times
+	ezlea	__init_array_end,cx		# idempotency recommended
+	.weak	__init_array_end		# @see ape/ape.lds
+1:	cmp	%rax,%rcx
+	je	2f
+	push	%rax
+	push	%rcx
+	call	.Largs
+	call	*(%rax)
+	pop	%rcx
+	pop	%rax
+	add	$8,%rax
+	jmp	1b
+2:	nop
 #if !IsTrustworthy()
 	mov	$PROT_READ,%edi
 	call	_piro
 #endif
-	mov	%r12d,%edi
-	mov	%r13,%rsi
-	mov	%r14,%rdx
-	mov	%r15,%rcx
+	call	.Largs
 	.weak	main
 	call	main
 	xchg	%eax,%edi
 	call	exit
-	.endfn	cosmo,weak,hidden
-	ud2
+.Largs:	mov	%r12d,%edi
+	mov	%r13,%rsi
+	mov	%r14,%rdx
+	mov	%r15,%rcx
+	ret
+	.endfn	cosmo,weak
 
 #ifdef __PG__
 	.init.start 800,_init_ftrace

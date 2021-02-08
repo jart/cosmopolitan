@@ -47,9 +47,6 @@
 
 #define USE_SYMBOL_HACK 0
 
-	.source	"NOTICE"
-	.source	"ape/ape.S"
-	.source	"ape/ape.lds"
 	.section .text,"ax",@progbits
 	.align	__SIZEOF_POINTER__
 	.previous
@@ -108,6 +105,8 @@ rlstr:	.endobj	rlstr,globl,hidden		# ←for gdb readibility
 │ αcτµαlly pδrταblε εxεcµταblε § the old technology                            │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 
+#if SupportsWindows() || SupportsXnu()
+
 /	MZ Literally Executable Header
 /
 /	This is the beginning of the program file and it can serve as an
@@ -116,7 +115,7 @@ rlstr:	.endobj	rlstr,globl,hidden		# ←for gdb readibility
 /	a machine, this header may need to morph itself to say the magic
 /	words, e.g. ⌂ELF, which also works fine as a generic entrypoint.
 /
-/	@see	www.delorie.com/djgpp/doc/exe/
+/	@param	dl is drive number
 /	@noreturn
 ape.mz:	.ascii	"MZ"			# Mark 'Zibo' Joseph Zbikowski
 	jno	2f			# MZ: bytes on last page
@@ -136,10 +135,48 @@ ape.mz:	.ascii	"MZ"			# Mark 'Zibo' Joseph Zbikowski
 	.ascii	"JT"			# MZ: OEM identifier
 	.short	0			# MZ: OEM information
 	.org	0x40-4			# MZ: bytes reserved for you
+#if SupportsWindows()
 	.long	RVA(ape.pe)		# PE: the new technology
+#else
+	.long	0
+#endif
 	.endfn	ape.mz,globl,hidden
 
+#else /* !(SupportsWindows() || SupportsXnu()) */
+
+/	ELF Literally Executable Header
+/
+/	If we don't need to support Microsoft or Apple then we can
+/	produce a conventional executable without the shell script
+/
+/	@param	dl is drive number
+/	@noreturn
+	.ascii	"\177ELF"			# 0x0: ⌂ELF
+	.byte	ELFCLASS64			#   4: long mode
+	.byte	ELFDATA2LSB			#   5: little endian
+	.byte	1				#   6: elf v1.o
+	.byte	ELFOSABI_FREEBSD		#   7: FreeBSD
+	.byte	0				#   8: os/abi ver.
+	.align	8,0				#   9: padding
+	.short	ET_EXEC				#  10: εxεcµταblε
+	.short	EM_NEXGEN32E			#  12: NexGen32e
+	.long	1				#  14: elf v1.o
+	.quad	.Lape.elf.entry			#  18: e_entry
+	.quad	.Lape.elf.phoff			#  20: e_phoff
+	.quad	.Lape.elf.shoff			#  28: e_shoff
+	.long	0				#  30: e_flags
+	.short	64				#  34: e_ehsize
+	.short	56				#  36: e_phentsize
+	.short	.Lape.elf.phnum			#  38: e_phnum
+	.short	0				#  3a: e_shentsize
+	.short	.Lape.elf.shnum			#  3c: e_shnum
+	.short	.Lape.elf.shstrndx		#  3e: e_shstrndx
+
+#endif /* SupportsWindows() || SupportsXnu() */
+
 /	Disk Operating System Stub
+/
+/	@param	dl is drive number
 /	@noreturn
 	.org	0x40			# mz/elf header length
 stub:	mov	$0x40,%dl		# *literally* dos
@@ -187,6 +224,7 @@ pc:	cld
 	xor	%cx,%cx
 	mov	%cx,%es
 	rlstack	%di,%cx
+#if SupportsMetal()
 	push	%cs				# memcpy() [relocate this page]
 	pop	%ds
 	call	1f
@@ -391,6 +429,8 @@ ape_disk:
 	.short	BOOTSIG
 	.endobj	ape_disk
 
+#endif /* SupportsMetal() */
+
 /*                                           ▄▄▄
                        ▄▄▄                    ▀▓▓▒▄
                      ▄▓▒▒░                      ▀▓▒▒▒▄
@@ -432,8 +472,10 @@ ape_disk:
 ╚────────────────────────────────────────────────────────────────────────────│─╝
 	the bourne executable & linkable format */
 
+#if SupportsWindows() || SupportsXnu()
 apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	"o=\"$(command -v \"$0\")\"\n"
+#if SupportsXnu()
 	.ascii	"if [ -d /Applications ]; then\n"
 	.ascii	  "dd if=\"$o\""
 	.ascii	    " of=\"$o\""
@@ -443,7 +485,9 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	    "\" count=\""
 	.shstub	    .Lape.macho.dd.count,2
 	.ascii	    "\" conv=notrunc 2>/dev/null\n"
-	.ascii	"elif exec 7<> \"$o\"; then\n"
+	.ascii	"el"
+#endif
+	.ascii	"if exec 7<> \"$o\"; then\n"
 	.ascii	  "printf '"
 	.ascii	    "\\177ELF"			# 0x0: ⌂ELF
 	.ascii	    "\\2"			#   4: long mode
@@ -483,6 +527,7 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	"fi\n"
 	.ascii	"exit $R\n"
 	.endobj	apesh
+#endif /* SupportsWindows() || SupportsXnu() */
 
 	.section .elf.phdrs,"a",@progbits
 	.align	__SIZEOF_POINTER__
@@ -506,6 +551,7 @@ ape.phdrs:
 	.stub	.Lape.ram.filesz,quad
 	.stub	.Lape.ram.memsz,quad
 	.stub	.Lape.ram.align,quad
+#if SupportsLinux()
 /	Linux ignores mprotect() and returns 0 without this lool
 /	It has nothing to do with the stack, which is still exec
 	.align	__SIZEOF_POINTER__
@@ -517,6 +563,8 @@ ape.phdrs:
 	.quad	0				# p_filesz
 	.quad	0				# p_memsz
 	.quad	16				# p_align
+#endif
+#if SupportsOpenbsd() || SupportsNetbsd()
 	.align	__SIZEOF_POINTER__
 	.long	PT_NOTE				# notes
 	.long	PF_R
@@ -526,8 +574,10 @@ ape.phdrs:
 	.stub	.Lape.note.filesz,quad
 	.stub	.Lape.note.memsz,quad
 	.stub	.Lape.note.align,quad
+#endif
 	.previous
 
+#if SupportsOpenbsd()
 	.section .note.openbsd.ident,"a",@progbits
 .Lopenbsd.ident:
 	.long	2f-1f
@@ -539,7 +589,9 @@ ape.phdrs:
 4:	.size	.Lopenbsd.ident,.-.Lopenbsd.ident
 	.type	.Lopenbsd.ident,@object
 	.previous
+#endif /* SupportsOpenbsd() */
 
+#if SupportsNetbsd()
 	.section .note.netbsd.ident,"a",@progbits
 .Lnetbsd.ident:
 	.long	2f-1f
@@ -551,6 +603,7 @@ ape.phdrs:
 4:	.size	.Lnetbsd.ident,.-.Lnetbsd.ident
 	.type	.Lnetbsd.ident,@object
 	.previous
+#endif /* SupportsNetbsd() */
 
 /*	                                      ▄▄███▄
 	                                  ▄▄████████▄
@@ -583,6 +636,7 @@ ape.phdrs:
 	@see	System V Application Binary Interface NexGen32e Architecture
 		Processor Supplement, Version 1.0, December 5th, 2018 */
 
+#if SupportsXnu()
 .section .macho,"a",@progbits
 .align	__SIZEOF_POINTER__
 
@@ -654,8 +708,8 @@ ape.macho:
 	.long	0,0,0				# reserved
 40:	.long	MAC_LC_UUID
 	.long	50f-40b
-	.stub	uuid1_,quad
-	.stub	uuid2_,quad
+	.stub	.Lape.uuid1,quad
+	.stub	.Lape.uuid2,quad
 50:	.long	MAC_LC_UNIXTHREAD
 	.long	60f-50b				# cmdsize
 	.long	MAC_THREAD_NEXGEN32E		# flavaflav
@@ -686,6 +740,7 @@ ape.macho:
 
 .endobj	ape.macho,globl,hidden
 .previous /* .macho */
+#endif /* SupportsXnu() */
 
 /*                             ░░░░
                         ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
@@ -762,6 +817,8 @@ ape.macho:
 .LPETEXT = 0b01110000000000000000000001100000
 .LPEDATA = 0b11000000000000000000000011000000
 .LPEIMPS = 0b11000000000000000000000001000000
+
+#if SupportsWindows()
 
 	.section .pe.header,"a",@progbits
 	.align	__SIZEOF_POINTER__
@@ -849,6 +906,8 @@ ape.pe:	.ascin	"PE",4
 	.long	.LPEDATA		# Flags
 	.previous
 
+#endif /* SupportsWindows() */
+
 	.section .idata.ro.idt.1,"a",@progbits
 	.type	idata.idtend,@object
 	.type	idata.idt,@object
@@ -878,6 +937,7 @@ idata.iat:
 idata.iatend:
 	.previous
 
+#if SupportsMetal()
 /*─────────────────────────────────────────────────────────────────────────────╗
 │ αcτµαlly pδrταblε εxεcµταblε § early-stage read-only data                    │
 ╚──────────────────────────────────────────────────────────────────────────────╝
@@ -1485,6 +1545,8 @@ metal:
 	xor	%edi,%edi
 	jmp	_start
 	.endfn	metal
+
+#endif /* SupportsMetal() */
 
 /	Avoid linker script variables appearing as code in objdump.
 	.macro	.ldsvar	name:req

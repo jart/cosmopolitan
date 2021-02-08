@@ -4,10 +4,10 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long SPLICE_F_GIFT;
-hidden extern const long SPLICE_F_MORE;
-hidden extern const long SPLICE_F_MOVE;
-hidden extern const long SPLICE_F_NONBLOCK;
+extern const long SPLICE_F_GIFT;
+extern const long SPLICE_F_MORE;
+extern const long SPLICE_F_MOVE;
+extern const long SPLICE_F_NONBLOCK;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

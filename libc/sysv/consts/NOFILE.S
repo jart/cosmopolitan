@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon misc NOFILE 0x0100 0x0100 0x40 0x40 0x40 0

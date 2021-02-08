@@ -4,39 +4,39 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long F_DUPFD;
-hidden extern const long F_DUPFD_CLOEXEC;
-hidden extern const long F_GETFD;
-hidden extern const long F_GETFL;
-hidden extern const long F_GETLEASE;
-hidden extern const long F_GETLK64;
-hidden extern const long F_GETLK;
-hidden extern const long F_GETOWN;
-hidden extern const long F_GETOWN_EX;
-hidden extern const long F_GETPIPE_SZ;
-hidden extern const long F_GETSIG;
-hidden extern const long F_LOCK;
-hidden extern const long F_NOTIFY;
-hidden extern const long F_OFD_GETLK;
-hidden extern const long F_OFD_SETLK;
-hidden extern const long F_OFD_SETLKW;
-hidden extern const long F_RDLCK;
-hidden extern const long F_SETFD;
-hidden extern const long F_SETFL;
-hidden extern const long F_SETLEASE;
-hidden extern const long F_SETLK64;
-hidden extern const long F_SETLK;
-hidden extern const long F_SETLKW64;
-hidden extern const long F_SETLKW;
-hidden extern const long F_SETOWN;
-hidden extern const long F_SETOWN_EX;
-hidden extern const long F_SETPIPE_SZ;
-hidden extern const long F_SETSIG;
-hidden extern const long F_TEST;
-hidden extern const long F_TLOCK;
-hidden extern const long F_ULOCK;
-hidden extern const long F_UNLCK;
-hidden extern const long F_WRLCK;
+extern const long F_DUPFD;
+extern const long F_DUPFD_CLOEXEC;
+extern const long F_GETFD;
+extern const long F_GETFL;
+extern const long F_GETLEASE;
+extern const long F_GETLK64;
+extern const long F_GETLK;
+extern const long F_GETOWN;
+extern const long F_GETOWN_EX;
+extern const long F_GETPIPE_SZ;
+extern const long F_GETSIG;
+extern const long F_LOCK;
+extern const long F_NOTIFY;
+extern const long F_OFD_GETLK;
+extern const long F_OFD_SETLK;
+extern const long F_OFD_SETLKW;
+extern const long F_RDLCK;
+extern const long F_SETFD;
+extern const long F_SETFL;
+extern const long F_SETLEASE;
+extern const long F_SETLK64;
+extern const long F_SETLK;
+extern const long F_SETLKW64;
+extern const long F_SETLKW;
+extern const long F_SETOWN;
+extern const long F_SETOWN_EX;
+extern const long F_SETPIPE_SZ;
+extern const long F_SETSIG;
+extern const long F_TEST;
+extern const long F_TLOCK;
+extern const long F_ULOCK;
+extern const long F_UNLCK;
+extern const long F_WRLCK;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

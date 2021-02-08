@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon errno ENOTUNIQ 76 -1 -1 -1 -1 -1

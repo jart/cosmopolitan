@@ -4,30 +4,30 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long AT_BASE;
-hidden extern const long AT_BASE_PLATFORM;
-hidden extern const long AT_CLKTCK;
-hidden extern const long AT_DCACHEBSIZE;
-hidden extern const long AT_EGID;
-hidden extern const long AT_ENTRY;
-hidden extern const long AT_EUID;
-hidden extern const long AT_EXECFD;
-hidden extern const long AT_EXECFN;
-hidden extern const long AT_GID;
-hidden extern const long AT_ICACHEBSIZE;
-hidden extern const long AT_NOTELF;
-hidden extern const long AT_NO_AUTOMOUNT;
-hidden extern const long AT_OSRELDATE;
-hidden extern const long AT_PAGESZ;
-hidden extern const long AT_PHDR;
-hidden extern const long AT_PHENT;
-hidden extern const long AT_PHNUM;
-hidden extern const long AT_PLATFORM;
-hidden extern const long AT_RANDOM;
-hidden extern const long AT_SECURE;
-hidden extern const long AT_SYSINFO_EHDR;
-hidden extern const long AT_UCACHEBSIZE;
-hidden extern const long AT_UID;
+extern const long AT_BASE;
+extern const long AT_BASE_PLATFORM;
+extern const long AT_CLKTCK;
+extern const long AT_DCACHEBSIZE;
+extern const long AT_EGID;
+extern const long AT_ENTRY;
+extern const long AT_EUID;
+extern const long AT_EXECFD;
+extern const long AT_EXECFN;
+extern const long AT_GID;
+extern const long AT_ICACHEBSIZE;
+extern const long AT_NOTELF;
+extern const long AT_NO_AUTOMOUNT;
+extern const long AT_OSRELDATE;
+extern const long AT_PAGESZ;
+extern const long AT_PHDR;
+extern const long AT_PHENT;
+extern const long AT_PHNUM;
+extern const long AT_PLATFORM;
+extern const long AT_RANDOM;
+extern const long AT_SECURE;
+extern const long AT_SYSINFO_EHDR;
+extern const long AT_UCACHEBSIZE;
+extern const long AT_UID;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

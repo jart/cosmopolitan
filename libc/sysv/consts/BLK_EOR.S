@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon misc BLK_EOR 0x80 0x80 0x80 0x80 0x80 0

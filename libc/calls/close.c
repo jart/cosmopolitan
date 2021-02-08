@@ -39,21 +39,23 @@ int close(int fd) {
   if (fd < 0) return einval();
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     rc = weaken(__zipos_close)(fd);
-  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdEpoll) {
-    rc = weaken(sys_close_epoll)(fd);
-  } else if (!IsWindows()) {
-    rc = sys_close(fd);
-  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdSocket) {
-    rc = weaken(sys_closesocket_nt)(g_fds.p + fd);
-  } else if (fd < g_fds.n &&
-             (g_fds.p[fd].kind == kFdFile || g_fds.p[fd].kind == kFdConsole ||
-              g_fds.p[fd].kind == kFdProcess)) {
-    rc = sys_close_nt(g_fds.p + fd);
   } else {
-    rc = ebadf();
+    if (!IsWindows()) {
+      rc = sys_close(fd);
+    } else {
+      if (fd < g_fds.n && g_fds.p[fd].kind == kFdEpoll) {
+        rc = weaken(sys_close_epoll_nt)(fd);
+      } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdSocket) {
+        rc = weaken(sys_closesocket_nt)(g_fds.p + fd);
+      } else if (fd < g_fds.n && (g_fds.p[fd].kind == kFdFile ||
+                                  g_fds.p[fd].kind == kFdConsole ||
+                                  g_fds.p[fd].kind == kFdProcess)) {
+        rc = sys_close_nt(g_fds.p + fd);
+      } else {
+        rc = ebadf();
+      }
+    }
   }
-  if (!__vforked && fd < g_fds.n) {
-    __releasefd(fd);
-  }
+  __releasefd(fd);
   return rc;
 }

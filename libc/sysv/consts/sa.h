@@ -16,16 +16,16 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long SA_NOCLDSTOP;
-hidden extern const long SA_NOCLDWAIT;
-hidden extern const long SA_NODEFER;
-hidden extern const long SA_NOMASK;
-hidden extern const long SA_ONESHOT;
-hidden extern const long SA_ONSTACK;
-hidden extern const long SA_RESETHAND;
-hidden extern const long SA_RESTART;
-hidden extern const long SA_RESTORER;
-hidden extern const long SA_SIGINFO;
+extern const long SA_NOCLDSTOP;
+extern const long SA_NOCLDWAIT;
+extern const long SA_NODEFER;
+extern const long SA_NOMASK;
+extern const long SA_ONESHOT;
+extern const long SA_ONSTACK;
+extern const long SA_RESETHAND;
+extern const long SA_RESTART;
+extern const long SA_RESTORER;
+extern const long SA_SIGINFO;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

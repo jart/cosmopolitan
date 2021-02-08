@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/macros.h"
 .source	__FILE__
 
@@ -31,7 +32,11 @@ kNtSystemDirectory:
 	.previous
 
 	.init.start 300,_init_kNtSystemDirectory
+#if SupportsWindows()
 	pushpop	BYTES,%rdx
 	mov	__imp_GetSystemDirectoryA(%rip),%rax
 	call	__getntsyspath
+#else
+	add	$BYTES,%rdi
+#endif
 	.init.end 300,_init_kNtSystemDirectory

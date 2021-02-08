@@ -21,7 +21,7 @@ APE =	$(APE_DEPS)			\
 
 APELINK =				\
 	ACTION=LINK.ape 		\
-	$(MKDIR) $(@D) &&		\
+	$(COMPILE)			\
 	$(LINK)				\
 	$(LINKARGS)			\
 	$(OUTPUT_OPTION) &&		\
@@ -38,6 +38,13 @@ APE_SRCS = $(filter %.S,$(APE_FILES))
 APE_OBJS = $(APE_SRCS:%.S=o/$(MODE)/%.o)
 APE_DEPS = $(APE_LIB)
 APE_CHECKS = $(APE_HDRS:%=o/%.ok)
+
+o/$(MODE)/ape/ape.lds:			\
+		ape/ape.lds		\
+		ape/config.h		\
+		ape/macros.internal.h	\
+		libc/dce.h		\
+		libc/zip.h
 
 o/ape/idata.inc:			\
 		ape/idata.internal.h	\

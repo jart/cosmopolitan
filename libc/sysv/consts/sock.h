@@ -4,15 +4,15 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long SOCK_CLOEXEC;
-hidden extern const long SOCK_DCCP;
-hidden extern const long SOCK_DGRAM;
-hidden extern const long SOCK_NONBLOCK;
-hidden extern const long SOCK_PACKET;
-hidden extern const long SOCK_RAW;
-hidden extern const long SOCK_RDM;
-hidden extern const long SOCK_SEQPACKET;
-hidden extern const long SOCK_STREAM;
+extern const long SOCK_CLOEXEC;
+extern const long SOCK_DCCP;
+extern const long SOCK_DGRAM;
+extern const long SOCK_NONBLOCK;
+extern const long SOCK_PACKET;
+extern const long SOCK_RAW;
+extern const long SOCK_RDM;
+extern const long SOCK_SEQPACKET;
+extern const long SOCK_STREAM;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

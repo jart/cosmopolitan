@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr __NR_fhopen -1 0x20000f8 0x012a 0x0108 0x18c -1

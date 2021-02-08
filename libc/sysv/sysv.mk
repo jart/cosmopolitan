@@ -61,9 +61,13 @@ $(LIBC_SYSV_A).pkg:					\
 		$(foreach x,$(LIBC_SYSV_A_DIRECTDEPS),$($(x)_A).pkg)
 
 $(LIBC_SYSV_A_OBJS):					\
-		libc/sysv/consts/syscon.inc
+		o/libc/sysv/consts/syscon.internal.inc
 
-libc/sysv/consts/syscon.inc: libc/macros.internal.inc
+o/libc/sysv/consts/syscon.internal.inc:			\
+		libc/sysv/consts/syscon.internal.h	\
+		libc/macros.h				\
+		libc/macros-cpp.internal.inc		\
+		libc/macros.internal.inc
 
 #───────────────────────────────────────────────────────────────────────────────
 

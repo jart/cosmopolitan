@@ -1,2 +1,0 @@
-.include "libc/sysv/consts/syscon.inc"
-.syscon iff IFF_MULTICAST 0x1000 0x8000 0x8000 0x8000 0x8000 0x10

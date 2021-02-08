@@ -47,10 +47,10 @@ enum FdKind {
 };
 
 struct Fd {
+  enum FdKind kind;
+  unsigned flags;
   int64_t handle;
   int64_t extra;
-  int kind;
-  unsigned flags;
 };
 
 struct Fds {
@@ -66,8 +66,6 @@ hidden extern volatile bool __interrupted;
 hidden extern int __vforked;
 hidden extern unsigned __sighandrvas[NSIG];
 hidden extern struct Fds g_fds;
-hidden extern struct NtSystemInfo __nt_systeminfo;
-hidden extern struct NtStartupInfo __nt_startupinfo;
 hidden extern const struct NtSecurityAttributes kNtIsInheritable;
 
 int __reservefd(void) hidden;
@@ -232,6 +230,7 @@ bool32 sys_isatty_nt(int) hidden;
 char *sys_getcwd_nt(char *, size_t) hidden;
 i64 sys_lseek_nt(int, i64, int) hidden;
 int sys_chdir_nt(const char *) hidden;
+int sys_close_epoll_nt(int) hidden;
 int sys_close_nt(struct Fd *) hidden;
 int sys_dup_nt(int, int, int) hidden;
 int sys_execve_nt(const char *, char *const[], char *const[]) hidden;

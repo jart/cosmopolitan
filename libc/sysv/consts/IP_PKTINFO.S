@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon ip IP_PKTINFO 8 26 0 0 0 19

@@ -17,17 +17,17 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long CLOCK_BOOTTIME;
-hidden extern const long CLOCK_BOOTTIME_ALARM;
-hidden extern const long CLOCK_MONOTONIC;
-hidden extern const long CLOCK_MONOTONIC_COARSE;
-hidden extern const long CLOCK_MONOTONIC_RAW;
-hidden extern const long CLOCK_PROCESS_CPUTIME_ID;
-hidden extern const long CLOCK_REALTIME;
-hidden extern const long CLOCK_REALTIME_ALARM;
-hidden extern const long CLOCK_REALTIME_COARSE;
-hidden extern const long CLOCK_TAI;
-hidden extern const long CLOCK_THREAD_CPUTIME_ID;
+extern const long CLOCK_BOOTTIME;
+extern const long CLOCK_BOOTTIME_ALARM;
+extern const long CLOCK_MONOTONIC;
+extern const long CLOCK_MONOTONIC_COARSE;
+extern const long CLOCK_MONOTONIC_RAW;
+extern const long CLOCK_PROCESS_CPUTIME_ID;
+extern const long CLOCK_REALTIME;
+extern const long CLOCK_REALTIME_ALARM;
+extern const long CLOCK_REALTIME_COARSE;
+extern const long CLOCK_TAI;
+extern const long CLOCK_THREAD_CPUTIME_ID;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

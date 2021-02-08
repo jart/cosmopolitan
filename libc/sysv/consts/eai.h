@@ -4,24 +4,24 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long EAI_ADDRFAMILY;
-hidden extern const long EAI_AGAIN;
-hidden extern const long EAI_ALLDONE;
-hidden extern const long EAI_BADFLAGS;
-hidden extern const long EAI_CANCELED;
-hidden extern const long EAI_FAIL;
-hidden extern const long EAI_FAMILY;
-hidden extern const long EAI_IDN_ENCODE;
-hidden extern const long EAI_INPROGRESS;
-hidden extern const long EAI_INTR;
-hidden extern const long EAI_MEMORY;
-hidden extern const long EAI_NODATA;
-hidden extern const long EAI_NONAME;
-hidden extern const long EAI_NOTCANCELED;
-hidden extern const long EAI_OVERFLOW;
-hidden extern const long EAI_SERVICE;
-hidden extern const long EAI_SOCKTYPE;
-hidden extern const long EAI_SYSTEM;
+extern const long EAI_ADDRFAMILY;
+extern const long EAI_AGAIN;
+extern const long EAI_ALLDONE;
+extern const long EAI_BADFLAGS;
+extern const long EAI_CANCELED;
+extern const long EAI_FAIL;
+extern const long EAI_FAMILY;
+extern const long EAI_IDN_ENCODE;
+extern const long EAI_INPROGRESS;
+extern const long EAI_INTR;
+extern const long EAI_MEMORY;
+extern const long EAI_NODATA;
+extern const long EAI_NONAME;
+extern const long EAI_NOTCANCELED;
+extern const long EAI_OVERFLOW;
+extern const long EAI_SERVICE;
+extern const long EAI_SOCKTYPE;
+extern const long EAI_SYSTEM;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

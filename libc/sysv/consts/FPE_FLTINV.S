@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon misc FPE_FLTINV 7 5 7 7 7 0

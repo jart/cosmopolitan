@@ -20,20 +20,20 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long TYPE_A;
-hidden extern const long TYPE_DISK;
-hidden extern const long TYPE_E;
-hidden extern const long TYPE_ENCLOSURE;
-hidden extern const long TYPE_I;
-hidden extern const long TYPE_L;
-hidden extern const long TYPE_MEDIUM_CHANGER;
-hidden extern const long TYPE_MOD;
-hidden extern const long TYPE_NO_LUN;
-hidden extern const long TYPE_PROCESSOR;
-hidden extern const long TYPE_ROM;
-hidden extern const long TYPE_SCANNER;
-hidden extern const long TYPE_TAPE;
-hidden extern const long TYPE_WORM;
+extern const long TYPE_A;
+extern const long TYPE_DISK;
+extern const long TYPE_E;
+extern const long TYPE_ENCLOSURE;
+extern const long TYPE_I;
+extern const long TYPE_L;
+extern const long TYPE_MEDIUM_CHANGER;
+extern const long TYPE_MOD;
+extern const long TYPE_NO_LUN;
+extern const long TYPE_PROCESSOR;
+extern const long TYPE_ROM;
+extern const long TYPE_SCANNER;
+extern const long TYPE_TAPE;
+extern const long TYPE_WORM;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

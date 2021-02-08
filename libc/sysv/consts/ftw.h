@@ -17,17 +17,17 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long FTW_CHDIR;
-hidden extern const long FTW_D;
-hidden extern const long FTW_DEPTH;
-hidden extern const long FTW_DNR;
-hidden extern const long FTW_DP;
-hidden extern const long FTW_F;
-hidden extern const long FTW_MOUNT;
-hidden extern const long FTW_NS;
-hidden extern const long FTW_PHYS;
-hidden extern const long FTW_SL;
-hidden extern const long FTW_SLN;
+extern const long FTW_CHDIR;
+extern const long FTW_D;
+extern const long FTW_DEPTH;
+extern const long FTW_DNR;
+extern const long FTW_DP;
+extern const long FTW_F;
+extern const long FTW_MOUNT;
+extern const long FTW_NS;
+extern const long FTW_PHYS;
+extern const long FTW_SL;
+extern const long FTW_SLN;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -2,12 +2,12 @@
 #define COSMOPOLITAN_LIBC_NEXGEN32E_X86INFO_H_
 #include "libc/nexgen32e/kcpuids.h"
 
-#define kX86CpuStepping    ((KCPUIDS(1H, EAX) >> 0) & 0b1111)
-#define kX86CpuModelid     ((KCPUIDS(1H, EAX) >> 4) & 0b1111)
-#define kX86CpuFamilyid    ((KCPUIDS(1H, EAX) >> 8) & 0b1111)
-#define kX86CpuType        ((KCPUIDS(1H, EAX) >> 12) & 0b11)
-#define kX86CpuExtmodelid  ((KCPUIDS(1H, EAX) >> 16) & 0b1111)
-#define kX86CpuExtfamilyid ((KCPUIDS(1H, EAX) >> 20) & 0b11111111)
+#define kX86CpuStepping    ((KCPUIDS(1H, EAX) >> 0) & 15)
+#define kX86CpuModelid     ((KCPUIDS(1H, EAX) >> 4) & 15)
+#define kX86CpuFamilyid    ((KCPUIDS(1H, EAX) >> 8) & 15)
+#define kX86CpuType        ((KCPUIDS(1H, EAX) >> 12) & 3)
+#define kX86CpuExtmodelid  ((KCPUIDS(1H, EAX) >> 16) & 15)
+#define kX86CpuExtfamilyid ((KCPUIDS(1H, EAX) >> 20) & 255)
 
 #define kX86CpuFamily \
   (kX86CpuFamilyid + (kX86CpuFamily == 15 ? kX86CpuExtfamilyid : 0))

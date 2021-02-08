@@ -4,11 +4,11 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long LOCK_EX;
-hidden extern const long LOCK_NB;
-hidden extern const long LOCK_SH;
-hidden extern const long LOCK_UN;
-hidden extern const long LOCK_UNLOCK_CACHE;
+extern const long LOCK_EX;
+extern const long LOCK_NB;
+extern const long LOCK_SH;
+extern const long LOCK_UN;
+extern const long LOCK_UNLOCK_CACHE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

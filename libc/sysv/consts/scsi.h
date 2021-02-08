@@ -19,19 +19,19 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long SCSI_IOCTL_BENCHMARK_COMMAND;
-hidden extern const long SCSI_IOCTL_DOORLOCK;
-hidden extern const long SCSI_IOCTL_DOORUNLOCK;
-hidden extern const long SCSI_IOCTL_GET_BUS_NUMBER;
-hidden extern const long SCSI_IOCTL_GET_IDLUN;
-hidden extern const long SCSI_IOCTL_PROBE_HOST;
-hidden extern const long SCSI_IOCTL_SEND_COMMAND;
-hidden extern const long SCSI_IOCTL_START_UNIT;
-hidden extern const long SCSI_IOCTL_STOP_UNIT;
-hidden extern const long SCSI_IOCTL_SYNC;
-hidden extern const long SCSI_IOCTL_TAGGED_DISABLE;
-hidden extern const long SCSI_IOCTL_TAGGED_ENABLE;
-hidden extern const long SCSI_IOCTL_TEST_UNIT_READY;
+extern const long SCSI_IOCTL_BENCHMARK_COMMAND;
+extern const long SCSI_IOCTL_DOORLOCK;
+extern const long SCSI_IOCTL_DOORUNLOCK;
+extern const long SCSI_IOCTL_GET_BUS_NUMBER;
+extern const long SCSI_IOCTL_GET_IDLUN;
+extern const long SCSI_IOCTL_PROBE_HOST;
+extern const long SCSI_IOCTL_SEND_COMMAND;
+extern const long SCSI_IOCTL_START_UNIT;
+extern const long SCSI_IOCTL_STOP_UNIT;
+extern const long SCSI_IOCTL_SYNC;
+extern const long SCSI_IOCTL_TAGGED_DISABLE;
+extern const long SCSI_IOCTL_TAGGED_ENABLE;
+extern const long SCSI_IOCTL_TEST_UNIT_READY;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

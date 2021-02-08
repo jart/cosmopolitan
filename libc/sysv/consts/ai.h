@@ -4,13 +4,13 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long AI_ADDRCONFIG;
-hidden extern const long AI_ALL;
-hidden extern const long AI_CANONNAME;
-hidden extern const long AI_NUMERICHOST;
-hidden extern const long AI_NUMERICSERV;
-hidden extern const long AI_PASSIVE;
-hidden extern const long AI_V4MAPPED;
+extern const long AI_ADDRCONFIG;
+extern const long AI_ALL;
+extern const long AI_CANONNAME;
+extern const long AI_NUMERICHOST;
+extern const long AI_NUMERICSERV;
+extern const long AI_PASSIVE;
+extern const long AI_V4MAPPED;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

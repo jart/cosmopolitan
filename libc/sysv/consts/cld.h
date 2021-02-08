@@ -12,12 +12,12 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long CLD_CONTINUED;
-hidden extern const long CLD_DUMPED;
-hidden extern const long CLD_EXITED;
-hidden extern const long CLD_KILLED;
-hidden extern const long CLD_STOPPED;
-hidden extern const long CLD_TRAPPED;
+extern const long CLD_CONTINUED;
+extern const long CLD_DUMPED;
+extern const long CLD_EXITED;
+extern const long CLD_KILLED;
+extern const long CLD_STOPPED;
+extern const long CLD_TRAPPED;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

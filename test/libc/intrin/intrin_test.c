@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/progn.internal.h"
 #include "libc/intrin/mpsadbw.h"
 #include "libc/intrin/pabsb.h"
 #include "libc/intrin/pabsd.h"
@@ -2081,20 +2080,4 @@ TEST(pext, fuzz) {
     y = rand64();
     ASSERT_EQ(pext(x, y), (pext)(x, y));
   }
-}
-
-BENCH(psrldq, bench) {
-  volatile uint8_t A[16];
-  volatile uint8_t B[16];
-  EZBENCH2("psrldq const 𝑖", donothing, PROGN(psrldq(A, B, 7)));
-  EZBENCH2("psrldq var 𝑖", donothing, PROGN(psrldq(A, B, VEIL("r", 7))));
-  EZBENCH2("psrldq ansi", donothing, PROGN((psrldq)(A, B, 7)));
-}
-
-BENCH(pslldq, bench) {
-  volatile uint8_t A[16];
-  volatile uint8_t B[16];
-  EZBENCH2("pslldq const 𝑖", donothing, PROGN(pslldq(A, B, 7)));
-  EZBENCH2("pslldq var 𝑖", donothing, PROGN(pslldq(A, B, VEIL("r", 7))));
-  EZBENCH2("pslldq ansi", donothing, PROGN((pslldq)(A, B, 7)));
 }

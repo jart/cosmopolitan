@@ -20,20 +20,20 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long SHM_DEST;
-hidden extern const long SHM_EXEC;
-hidden extern const long SHM_HUGETLB;
-hidden extern const long SHM_INFO;
-hidden extern const long SHM_LOCK;
-hidden extern const long SHM_LOCKED;
-hidden extern const long SHM_NORESERVE;
-hidden extern const long SHM_R;
-hidden extern const long SHM_RDONLY;
-hidden extern const long SHM_REMAP;
-hidden extern const long SHM_RND;
-hidden extern const long SHM_STAT;
-hidden extern const long SHM_UNLOCK;
-hidden extern const long SHM_W;
+extern const long SHM_DEST;
+extern const long SHM_EXEC;
+extern const long SHM_HUGETLB;
+extern const long SHM_INFO;
+extern const long SHM_LOCK;
+extern const long SHM_LOCKED;
+extern const long SHM_NORESERVE;
+extern const long SHM_R;
+extern const long SHM_RDONLY;
+extern const long SHM_REMAP;
+extern const long SHM_RND;
+extern const long SHM_STAT;
+extern const long SHM_UNLOCK;
+extern const long SHM_W;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

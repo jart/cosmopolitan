@@ -30,23 +30,6 @@
 _construct:
 	push	%rbp
 	mov	%rsp,%rbp
-	ezlea	__init_array_start,ax		# static ctors in forward order
-	.weak	__init_array_start		# could be called multiple times
-	ezlea	__init_array_end,cx		# idempotency recommended
-	.weak	__init_array_end		# @see ape/ape.lds
-1:	cmp	%rax,%rcx
-	je	2f
-	push	%rax
-	push	%rcx
-	mov	%r12,%rdi
-	mov	%r13,%rsi
-	mov	%r14,%rdx
-	mov	%r15,%rcx
-	call	*(%rax)
-	pop	%rcx
-	pop	%rax
-	add	$8,%rax
-	jmp	1b
-2:	pop	%rbp
+	pop	%rbp
 	ret
 	.endfn	_construct,globl

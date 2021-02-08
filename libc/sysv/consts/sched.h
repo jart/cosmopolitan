@@ -12,12 +12,12 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long SCHED_BATCH;
-hidden extern const long SCHED_FIFO;
-hidden extern const long SCHED_IDLE;
-hidden extern const long SCHED_OTHER;
-hidden extern const long SCHED_RESET_ON_FORK;
-hidden extern const long SCHED_RR;
+extern const long SCHED_BATCH;
+extern const long SCHED_FIFO;
+extern const long SCHED_IDLE;
+extern const long SCHED_OTHER;
+extern const long SCHED_RESET_ON_FORK;
+extern const long SCHED_RR;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

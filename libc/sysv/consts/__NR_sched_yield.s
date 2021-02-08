@@ -1,2 +1,0 @@
-.include "libc/sysv/consts/syscon.inc"
-.syscon nr __NR_sched_yield 0x0018 0x010003c 0x014b 0x012a 0x15e -1

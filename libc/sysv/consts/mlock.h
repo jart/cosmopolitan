@@ -4,9 +4,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long MCL_CURRENT;
-hidden extern const long MCL_FUTURE;
-hidden extern const long MCL_ONFAULT;
+extern const long MCL_CURRENT;
+extern const long MCL_FUTURE;
+extern const long MCL_ONFAULT;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -7,7 +7,6 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/bits/progn.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"
 #include "libc/runtime/runtime.h"
@@ -66,11 +65,10 @@ int main(int argc, char *argv[], char **envp) {
   for (i = 0; i < ARRAYLEN(kAuxiliaryValues); ++i) {
     key = *kAuxiliaryValues[i].id;
     val = getauxval(key);
-    printf(PROGN(stpcpy(stpcpy(stpcpy(fmt, "%16s[%p] = "),
-                               kAuxiliaryValues[i].fmt),
-                        "  # %s\n"),
-                 fmt),
-           kAuxiliaryValues[i].name, key, val, kAuxiliaryValues[i].description);
+    stpcpy(stpcpy(stpcpy(fmt, "%16s[%p] = "), kAuxiliaryValues[i].fmt),
+           "  # %s\n");
+    printf(fmt, kAuxiliaryValues[i].name, key, val,
+           kAuxiliaryValues[i].description);
   }
   printf("\nSpecial Directories:\n");
   printf(" ☼ kTmpPath = %`'s\n", kTmpPath);

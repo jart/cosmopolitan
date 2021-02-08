@@ -40,10 +40,6 @@ $(LIBC_ELF_A).pkg:				\
 		$(LIBC_ELF_A_OBJS)		\
 		$(foreach x,$(LIBC_ELF_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/libc/elf/elf.lds:				\
-		libc/elf/elf.lds		\
-		ape/relocations.h
-
 LIBC_ELF_LIBS = $(foreach x,$(LIBC_ELF_ARTIFACTS),$($(x)))
 LIBC_ELF_SRCS = $(foreach x,$(LIBC_ELF_ARTIFACTS),$($(x)_SRCS))
 LIBC_ELF_HDRS = $(foreach x,$(LIBC_ELF_ARTIFACTS),$($(x)_HDRS))

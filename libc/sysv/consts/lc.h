@@ -20,20 +20,20 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long LC_ALL;
-hidden extern const long LC_ALL_MASK;
-hidden extern const long LC_COLLATE;
-hidden extern const long LC_COLLATE_MASK;
-hidden extern const long LC_CTYPE;
-hidden extern const long LC_CTYPE_MASK;
-hidden extern const long LC_MESSAGES;
-hidden extern const long LC_MESSAGES_MASK;
-hidden extern const long LC_MONETARY;
-hidden extern const long LC_MONETARY_MASK;
-hidden extern const long LC_NUMERIC;
-hidden extern const long LC_NUMERIC_MASK;
-hidden extern const long LC_TIME;
-hidden extern const long LC_TIME_MASK;
+extern const long LC_ALL;
+extern const long LC_ALL_MASK;
+extern const long LC_COLLATE;
+extern const long LC_COLLATE_MASK;
+extern const long LC_CTYPE;
+extern const long LC_CTYPE_MASK;
+extern const long LC_MESSAGES;
+extern const long LC_MESSAGES_MASK;
+extern const long LC_MONETARY;
+extern const long LC_MONETARY_MASK;
+extern const long LC_NUMERIC;
+extern const long LC_NUMERIC_MASK;
+extern const long LC_TIME;
+extern const long LC_TIME_MASK;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

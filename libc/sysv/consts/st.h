@@ -18,18 +18,18 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long ST_APPEND;
-hidden extern const long ST_IMMUTABLE;
-hidden extern const long ST_MANDLOCK;
-hidden extern const long ST_NOATIME;
-hidden extern const long ST_NODEV;
-hidden extern const long ST_NODIRATIME;
-hidden extern const long ST_NOEXEC;
-hidden extern const long ST_NOSUID;
-hidden extern const long ST_RDONLY;
-hidden extern const long ST_RELATIME;
-hidden extern const long ST_SYNCHRONOUS;
-hidden extern const long ST_WRITE;
+extern const long ST_APPEND;
+extern const long ST_IMMUTABLE;
+extern const long ST_MANDLOCK;
+extern const long ST_NOATIME;
+extern const long ST_NODEV;
+extern const long ST_NODIRATIME;
+extern const long ST_NOEXEC;
+extern const long ST_NOSUID;
+extern const long ST_RDONLY;
+extern const long ST_RELATIME;
+extern const long ST_SYNCHRONOUS;
+extern const long ST_WRITE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

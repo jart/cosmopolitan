@@ -4,35 +4,35 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long MS_ACTIVE;
-hidden extern const long MS_BIND;
-hidden extern const long MS_DIRSYNC;
-hidden extern const long MS_I_VERSION;
-hidden extern const long MS_KERNMOUNT;
-hidden extern const long MS_LAZYTIME;
-hidden extern const long MS_MANDLOCK;
-hidden extern const long MS_MGC_MSK;
-hidden extern const long MS_MGC_VAL;
-hidden extern const long MS_MOVE;
-hidden extern const long MS_NOATIME;
-hidden extern const long MS_NODEV;
-hidden extern const long MS_NODIRATIME;
-hidden extern const long MS_NOEXEC;
-hidden extern const long MS_NOSUID;
-hidden extern const long MS_NOUSER;
-hidden extern const long MS_POSIXACL;
-hidden extern const long MS_PRIVATE;
-hidden extern const long MS_RDONLY;
-hidden extern const long MS_REC;
-hidden extern const long MS_RELATIME;
-hidden extern const long MS_REMOUNT;
-hidden extern const long MS_RMT_MASK;
-hidden extern const long MS_SHARED;
-hidden extern const long MS_SILENT;
-hidden extern const long MS_SLAVE;
-hidden extern const long MS_STRICTATIME;
-hidden extern const long MS_SYNCHRONOUS;
-hidden extern const long MS_UNBINDABLE;
+extern const long MS_ACTIVE;
+extern const long MS_BIND;
+extern const long MS_DIRSYNC;
+extern const long MS_I_VERSION;
+extern const long MS_KERNMOUNT;
+extern const long MS_LAZYTIME;
+extern const long MS_MANDLOCK;
+extern const long MS_MGC_MSK;
+extern const long MS_MGC_VAL;
+extern const long MS_MOVE;
+extern const long MS_NOATIME;
+extern const long MS_NODEV;
+extern const long MS_NODIRATIME;
+extern const long MS_NOEXEC;
+extern const long MS_NOSUID;
+extern const long MS_NOUSER;
+extern const long MS_POSIXACL;
+extern const long MS_PRIVATE;
+extern const long MS_RDONLY;
+extern const long MS_REC;
+extern const long MS_RELATIME;
+extern const long MS_REMOUNT;
+extern const long MS_RMT_MASK;
+extern const long MS_SHARED;
+extern const long MS_SILENT;
+extern const long MS_SLAVE;
+extern const long MS_STRICTATIME;
+extern const long MS_SYNCHRONOUS;
+extern const long MS_UNBINDABLE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

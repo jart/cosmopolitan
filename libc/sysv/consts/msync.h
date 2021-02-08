@@ -4,9 +4,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long MS_SYNC;
-hidden extern const long MS_ASYNC;
-hidden extern const long MS_INVALIDATE;
+extern const long MS_SYNC;
+extern const long MS_ASYNC;
+extern const long MS_INVALIDATE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

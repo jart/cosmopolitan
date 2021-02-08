@@ -22,22 +22,22 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long N_6PACK;
-hidden extern const long N_AX25;
-hidden extern const long N_HCI;
-hidden extern const long N_HDLC;
-hidden extern const long N_IRDA;
-hidden extern const long N_MASC;
-hidden extern const long N_MOUSE;
-hidden extern const long N_PPP;
-hidden extern const long N_PROFIBUS_FDL;
-hidden extern const long N_R3964;
-hidden extern const long N_SLIP;
-hidden extern const long N_SMSBLOCK;
-hidden extern const long N_STRIP;
-hidden extern const long N_SYNC_PPP;
-hidden extern const long N_TTY;
-hidden extern const long N_X25;
+extern const long N_6PACK;
+extern const long N_AX25;
+extern const long N_HCI;
+extern const long N_HDLC;
+extern const long N_IRDA;
+extern const long N_MASC;
+extern const long N_MOUSE;
+extern const long N_PPP;
+extern const long N_PROFIBUS_FDL;
+extern const long N_R3964;
+extern const long N_SLIP;
+extern const long N_SMSBLOCK;
+extern const long N_STRIP;
+extern const long N_SYNC_PPP;
+extern const long N_TTY;
+extern const long N_X25;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

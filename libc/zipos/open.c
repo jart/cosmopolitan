@@ -112,17 +112,19 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
     errno = EIO;
     h->mem = NULL;
   }
-  if (h->mem && (fd = __ensurefds(dup(zipos->fd))) != -1) {
-    h->handle = g_fds.p[fd].handle;
-    g_fds.p[fd].kind = kFdZip;
-    g_fds.p[fd].handle = (intptr_t)h;
-    g_fds.p[fd].flags = flags;
-    return fd;
-  } else {
-    free(h->freeme);
-    free(h);
-    return -1;
+  if (h->mem) {
+    if (__ensurefds((fd = dup(zipos->fd))) != -1) {
+      h->handle = g_fds.p[fd].handle;
+      g_fds.p[fd].kind = kFdZip;
+      g_fds.p[fd].handle = (intptr_t)h;
+      g_fds.p[fd].flags = flags;
+      return fd;
+    }
+    close(fd);
   }
+  free(h->freeme);
+  free(h);
+  return -1;
 }
 
 /**

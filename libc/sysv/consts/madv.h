@@ -22,22 +22,22 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long MADV_DODUMP;
-hidden extern const long MADV_DOFORK;
-hidden extern const long MADV_DONTDUMP;
-hidden extern const long MADV_DONTFORK;
-hidden extern const long MADV_DONTNEED;
-hidden extern const long MADV_FREE;
-hidden extern const long MADV_HUGEPAGE;
-hidden extern const long MADV_HWPOISON;
-hidden extern const long MADV_MERGEABLE;
-hidden extern const long MADV_NOHUGEPAGE;
-hidden extern const long MADV_NORMAL;
-hidden extern const long MADV_RANDOM;
-hidden extern const long MADV_REMOVE;
-hidden extern const long MADV_SEQUENTIAL;
-hidden extern const long MADV_UNMERGEABLE;
-hidden extern const long MADV_WILLNEED;
+extern const long MADV_DODUMP;
+extern const long MADV_DOFORK;
+extern const long MADV_DONTDUMP;
+extern const long MADV_DONTFORK;
+extern const long MADV_DONTNEED;
+extern const long MADV_FREE;
+extern const long MADV_HUGEPAGE;
+extern const long MADV_HWPOISON;
+extern const long MADV_MERGEABLE;
+extern const long MADV_NOHUGEPAGE;
+extern const long MADV_NORMAL;
+extern const long MADV_RANDOM;
+extern const long MADV_REMOVE;
+extern const long MADV_SEQUENTIAL;
+extern const long MADV_UNMERGEABLE;
+extern const long MADV_WILLNEED;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

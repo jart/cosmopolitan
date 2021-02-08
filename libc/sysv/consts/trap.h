@@ -8,8 +8,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long TRAP_BRKPT;
-hidden extern const long TRAP_TRACE;
+extern const long TRAP_BRKPT;
+extern const long TRAP_TRACE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

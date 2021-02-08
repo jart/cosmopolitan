@@ -8,8 +8,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long SEGV_ACCERR;
-hidden extern const long SEGV_MAPERR;
+extern const long SEGV_ACCERR;
+extern const long SEGV_MAPERR;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

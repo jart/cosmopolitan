@@ -14,14 +14,14 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long IPC_CREAT;
-hidden extern const long IPC_EXCL;
-hidden extern const long IPC_INFO;
-hidden extern const long IPC_NOWAIT;
-hidden extern const long IPC_PRIVATE;
-hidden extern const long IPC_RMID;
-hidden extern const long IPC_SET;
-hidden extern const long IPC_STAT;
+extern const long IPC_CREAT;
+extern const long IPC_EXCL;
+extern const long IPC_INFO;
+extern const long IPC_NOWAIT;
+extern const long IPC_PRIVATE;
+extern const long IPC_RMID;
+extern const long IPC_SET;
+extern const long IPC_STAT;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

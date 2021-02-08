@@ -116,7 +116,7 @@ o/$(MODE)/third_party/chibicc/as.com.dbg:				\
 	@$(APELINK)
 
 o/$(MODE)/third_party/chibicc/chibicc.o:				\
-		CPPFLAGS += $(THIRD_PARTY_CHIBICC_DEFINES)
+		OVERRIDE_CPPFLAGS += $(THIRD_PARTY_CHIBICC_DEFINES)
 
 o/$(MODE)/third_party/chibicc/chibicc.chibicc.o:			\
 		CHIBICC_FLAGS += $(THIRD_PARTY_CHIBICC_DEFINES)

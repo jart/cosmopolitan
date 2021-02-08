@@ -4,8 +4,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long MFD_CLOEXEC;
-hidden extern const long MFD_ALLOW_SEALING;
+extern const long MFD_CLOEXEC;
+extern const long MFD_ALLOW_SEALING;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

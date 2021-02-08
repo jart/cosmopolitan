@@ -4,13 +4,13 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long FALLOC_FL_KEEP_SIZE;
-hidden extern const long FALLOC_FL_PUNCH_HOLE;
-hidden extern const long FALLOC_FL_NO_HIDE_STALE;
-hidden extern const long FALLOC_FL_COLLAPSE_RANGE;
-hidden extern const long FALLOC_FL_ZERO_RANGE;
-hidden extern const long FALLOC_FL_INSERT_RANGE;
-hidden extern const long FALLOC_FL_UNSHARE_RANGE;
+extern const long FALLOC_FL_KEEP_SIZE;
+extern const long FALLOC_FL_PUNCH_HOLE;
+extern const long FALLOC_FL_NO_HIDE_STALE;
+extern const long FALLOC_FL_COLLAPSE_RANGE;
+extern const long FALLOC_FL_ZERO_RANGE;
+extern const long FALLOC_FL_INSERT_RANGE;
+extern const long FALLOC_FL_UNSHARE_RANGE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

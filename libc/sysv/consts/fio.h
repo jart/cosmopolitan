@@ -4,9 +4,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long FIONBIO;
-hidden extern const long FIONREAD;
-hidden extern const long FIOASYNC;
+extern const long FIONBIO;
+extern const long FIONREAD;
+extern const long FIOASYNC;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

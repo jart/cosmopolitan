@@ -32,7 +32,11 @@ kNtWindowsDirectory:
 	.previous
 
 	.init.start 300,_init_kNtWindowsDirectory
+#if SupportsWindows()
 	pushpop	BYTES,%rdx
 	mov	__imp_GetWindowsDirectoryA(%rip),%rax
 	call	__getntsyspath
+#else
+	add	$BYTES,%rdi
+#endif
 	.init.end 300,_init_kNtWindowsDirectory

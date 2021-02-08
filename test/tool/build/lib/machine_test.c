@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/progn.internal.h"
 #include "libc/fmt/bing.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
@@ -161,9 +160,14 @@ BENCH(machine, benchPrimeNumberPrograms) {
   ASSERT_EQ(15, Read32(m->ax));
 }
 
+static void machine_benchFpu_fn(void) {
+  ExecuteUntilHalt(m);
+  FpuPop(m);
+}
+
 BENCH(machine, benchFpu) {
   VirtualRecv(m, 0, kPi80, sizeof(kPi80));
-  EZBENCH2("pi80", m->ip = 0, PROGN(ExecuteUntilHalt(m), FpuPop(m)));
+  EZBENCH2("pi80", m->ip = 0, machine_benchFpu_fn());
 }
 
 BENCH(machine, benchLoadExec2) {
@@ -266,13 +270,18 @@ BENCH(machine, benchLoadExec8) {
   EZBENCH2("fchs", m->ip = 0, ExecuteInstruction(m));
 }
 
+static void machine_benchPushpop_fn(void) {
+  LoadInstruction(m);
+  ExecuteInstruction(m);
+  LoadInstruction(m);
+  ExecuteInstruction(m);
+}
+
 BENCH(machine, benchPushpop) {
   uint8_t kPushpop[] = {0x50, 0x58};
   Write64(m->ax, 0);
   VirtualRecv(m, 0, kPushpop, sizeof(kPushpop));
-  EZBENCH2("pushpop", m->ip = 0,
-           PROGN(LoadInstruction(m), ExecuteInstruction(m), LoadInstruction(m),
-                 ExecuteInstruction(m)));
+  EZBENCH2("pushpop", m->ip = 0, machine_benchPushpop_fn());
 }
 
 BENCH(machine, benchPause) {
@@ -291,14 +300,18 @@ BENCH(machine, benchClc) {
   EZBENCH2("clc", m->ip = 0, ExecuteInstruction(m));
 }
 
+static void machine_benchNop_fn(void) {
+  LoadInstruction(m);
+  ExecuteInstruction(m);
+}
+
 BENCH(machine, benchNop) {
   uint8_t kNop[] = {0x90};
   Write64(m->ax, 0);
   VirtualRecv(m, 0, kNop, sizeof(kNop));
   LoadInstruction(m);
   EZBENCH2("nop", m->ip = 0, ExecuteInstruction(m));
-  EZBENCH2("nop w/ load", m->ip = 0,
-           PROGN(LoadInstruction(m), ExecuteInstruction(m)));
+  EZBENCH2("nop w/ load", m->ip = 0, machine_benchNop_fn());
 }
 
 TEST(x87, fprem1) {

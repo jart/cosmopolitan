@@ -28,28 +28,28 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long BLK_BYTECOUNT;
-hidden extern const long BLK_EOF;
-hidden extern const long BLK_EOR;
-hidden extern const long BLK_ERRORS;
-hidden extern const long BLK_RESTART;
+extern const long BLK_BYTECOUNT;
+extern const long BLK_EOF;
+extern const long BLK_EOR;
+extern const long BLK_ERRORS;
+extern const long BLK_RESTART;
 
-hidden extern const long BLKBSZGET;
-hidden extern const long BLKBSZSET;
-hidden extern const long BLKFLSBUF;
-hidden extern const long BLKFRAGET;
-hidden extern const long BLKFRASET;
-hidden extern const long BLKGETSIZE64;
-hidden extern const long BLKGETSIZE;
-hidden extern const long BLKRAGET;
-hidden extern const long BLKRASET;
-hidden extern const long BLKROGET;
-hidden extern const long BLKROSET;
-hidden extern const long BLKRRPART;
-hidden extern const long BLKSECTGET;
-hidden extern const long BLKSECTSET;
-hidden extern const long BLKSSZGET;
-hidden extern const long BLKTYPE;
+extern const long BLKBSZGET;
+extern const long BLKBSZSET;
+extern const long BLKFLSBUF;
+extern const long BLKFRAGET;
+extern const long BLKFRASET;
+extern const long BLKGETSIZE64;
+extern const long BLKGETSIZE;
+extern const long BLKRAGET;
+extern const long BLKRASET;
+extern const long BLKROGET;
+extern const long BLKROSET;
+extern const long BLKRRPART;
+extern const long BLKSECTGET;
+extern const long BLKSECTSET;
+extern const long BLKSSZGET;
+extern const long BLKTYPE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

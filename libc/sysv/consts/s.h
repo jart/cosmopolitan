@@ -4,32 +4,32 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long S_IEXEC;
-hidden extern const long S_IFBLK;
-hidden extern const long S_IFCHR;
-hidden extern const long S_IFDIR;
-hidden extern const long S_IFIFO;
-hidden extern const long S_IFLNK;
-hidden extern const long S_IFMT;
-hidden extern const long S_IFREG;
-hidden extern const long S_IFSOCK;
-hidden extern const long S_IREAD;
-hidden extern const long S_IRGRP;
-hidden extern const long S_IROTH;
-hidden extern const long S_IRUSR;
-hidden extern const long S_IRWXG;
-hidden extern const long S_IRWXO;
-hidden extern const long S_IRWXU;
-hidden extern const long S_ISGID;
-hidden extern const long S_ISUID;
-hidden extern const long S_ISVTX;
-hidden extern const long S_IWGRP;
-hidden extern const long S_IWOTH;
-hidden extern const long S_IWRITE;
-hidden extern const long S_IWUSR;
-hidden extern const long S_IXGRP;
-hidden extern const long S_IXOTH;
-hidden extern const long S_IXUSR;
+extern const long S_IEXEC;
+extern const long S_IFBLK;
+extern const long S_IFCHR;
+extern const long S_IFDIR;
+extern const long S_IFIFO;
+extern const long S_IFLNK;
+extern const long S_IFMT;
+extern const long S_IFREG;
+extern const long S_IFSOCK;
+extern const long S_IREAD;
+extern const long S_IRGRP;
+extern const long S_IROTH;
+extern const long S_IRUSR;
+extern const long S_IRWXG;
+extern const long S_IRWXO;
+extern const long S_IRWXU;
+extern const long S_ISGID;
+extern const long S_ISUID;
+extern const long S_ISVTX;
+extern const long S_IWGRP;
+extern const long S_IWOTH;
+extern const long S_IWRITE;
+extern const long S_IWUSR;
+extern const long S_IXGRP;
+extern const long S_IXOTH;
+extern const long S_IXUSR;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

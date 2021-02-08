@@ -4,35 +4,35 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const long TCP_CC_INFO;
-hidden extern const long TCP_CONGESTION;
-hidden extern const long TCP_COOKIE_TRANSACTIONS;
-hidden extern const long TCP_CORK;
-hidden extern const long TCP_DEFER_ACCEPT;
-hidden extern const long TCP_FASTOPEN;
-hidden extern const long TCP_INFO;
-hidden extern const long TCP_KEEPCNT;
-hidden extern const long TCP_KEEPIDLE;
-hidden extern const long TCP_KEEPINTVL;
-hidden extern const long TCP_LINGER2;
-hidden extern const long TCP_MAXSEG;
-hidden extern const long TCP_MD5SIG;
-hidden extern const long TCP_MD5SIG_MAXKEYLEN;
-hidden extern const long TCP_NODELAY;
-hidden extern const long TCP_NOTSENT_LOWAT;
-hidden extern const long TCP_QUEUE_SEQ;
-hidden extern const long TCP_QUICKACK;
-hidden extern const long TCP_REPAIR;
-hidden extern const long TCP_REPAIR_OPTIONS;
-hidden extern const long TCP_REPAIR_QUEUE;
-hidden extern const long TCP_SAVED_SYN;
-hidden extern const long TCP_SAVE_SYN;
-hidden extern const long TCP_SYNCNT;
-hidden extern const long TCP_THIN_DUPACK;
-hidden extern const long TCP_THIN_LINEAR_TIMEOUTS;
-hidden extern const long TCP_TIMESTAMP;
-hidden extern const long TCP_USER_TIMEOUT;
-hidden extern const long TCP_WINDOW_CLAMP;
+extern const long TCP_CC_INFO;
+extern const long TCP_CONGESTION;
+extern const long TCP_COOKIE_TRANSACTIONS;
+extern const long TCP_CORK;
+extern const long TCP_DEFER_ACCEPT;
+extern const long TCP_FASTOPEN;
+extern const long TCP_INFO;
+extern const long TCP_KEEPCNT;
+extern const long TCP_KEEPIDLE;
+extern const long TCP_KEEPINTVL;
+extern const long TCP_LINGER2;
+extern const long TCP_MAXSEG;
+extern const long TCP_MD5SIG;
+extern const long TCP_MD5SIG_MAXKEYLEN;
+extern const long TCP_NODELAY;
+extern const long TCP_NOTSENT_LOWAT;
+extern const long TCP_QUEUE_SEQ;
+extern const long TCP_QUICKACK;
+extern const long TCP_REPAIR;
+extern const long TCP_REPAIR_OPTIONS;
+extern const long TCP_REPAIR_QUEUE;
+extern const long TCP_SAVED_SYN;
+extern const long TCP_SAVE_SYN;
+extern const long TCP_SYNCNT;
+extern const long TCP_THIN_DUPACK;
+extern const long TCP_THIN_LINEAR_TIMEOUTS;
+extern const long TCP_TIMESTAMP;
+extern const long TCP_USER_TIMEOUT;
+extern const long TCP_WINDOW_CLAMP;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

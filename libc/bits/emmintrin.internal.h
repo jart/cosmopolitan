@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_BITS_EMMINTRIN_H_
 #define COSMOPOLITAN_LIBC_BITS_EMMINTRIN_H_
-#include "libc/bits/progn.internal.h"
 #include "libc/bits/xmmintrin.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
@@ -170,13 +169,25 @@ struct thatispacked mayalias __usi128ma {
   })
 
 #define _mm_add_sd(M128D_0, M128D_1) \
-  PROGN((M128D_0)[0] += (M128D_1)[0], (M128D_0))
+  ({                                 \
+    (M128D_0)[0] += (M128D_1)[0];    \
+    (M128D_0);                       \
+  })
 #define _mm_sub_sd(M128D_0, M128D_1) \
-  PROGN((M128D_0)[0] -= (M128D_1)[0], (M128D_0))
+  ({                                 \
+    (M128D_0)[0] -= (M128D_1)[0];    \
+    (M128D_0);                       \
+  })
 #define _mm_mul_sd(M128D_0, M128D_1) \
-  PROGN((M128D_0)[0] *= (M128D_1)[0], (M128D_0))
+  ({                                 \
+    (M128D_0)[0] *= (M128D_1)[0];    \
+    (M128D_0);                       \
+  })
 #define _mm_div_sd(M128D_0, M128D_1) \
-  PROGN((M128D_0)[0] /= (M128D_1)[0], (M128D_0))
+  ({                                 \
+    (M128D_0)[0] /= (M128D_1)[0];    \
+    (M128D_0);                       \
+  })
 
 #define _mm_min_sd(M128D_0, M128D_1) \
   __builtin_ia32_minsd((__v2df)(M128D_0), (__v2df)(M128D_1))

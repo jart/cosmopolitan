@@ -89,6 +89,7 @@ BLAH2 := $(shell build/package 2>/dev/null)
 export ADDR2LINE
 export CCNAME
 export CCVERSION
+export COMPILE
 export CP
 export DD
 export GZ

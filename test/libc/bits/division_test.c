@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/bits/progn.internal.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
@@ -27,41 +26,18 @@
 
 TEST(division, testUnsigned) {
   volatile uint128_t x;
-  EXPECT_EQ(U(20769187431582143),
-            PROGN(x = U(1000000000123123123), (U(1125899906842624) << 64) / x));
+  x = U(1000000000123123123);
+  EXPECT_EQ(U(20769187431582143), (U(1125899906842624) << 64) / x);
+  x = U(42);
   EXPECT_EQ((U(26807140639110) << 64) | U(1756832768924719201),
-            PROGN(x = U(42), (U(1125899906842624) << 64) / x));
+            (U(1125899906842624) << 64) / x);
 }
 
 TEST(division, testSigned) {
   volatile int128_t x;
-  EXPECT_EQ(S(20769187431582143),
-            PROGN(x = S(1000000000123123123), (S(1125899906842624) << 64) / x));
+  x = S(1000000000123123123);
+  EXPECT_EQ(S(20769187431582143), (S(1125899906842624) << 64) / x);
+  x = S(42);
   EXPECT_EQ(S(26807140639110) << 64 | S(1756832768924719201),
-            PROGN(x = S(42), (S(1125899906842624) << 64) / x));
-}
-
-BENCH(divmodti4, bench) {
-  volatile int128_t x;
-  EZBENCH2("divmodti4 small / small", donothing,
-           PROGN(x = S(42), x = S(112589990684) / x));
-  EZBENCH2("divmodti4 small / large", donothing,
-           PROGN(x = U(123) << 64 | 123, x = S(112589990684) / x));
-  EZBENCH2("divmodti4 large / small", donothing,
-           PROGN(x = 123, x = (S(1125899906842624) << 64 | 334) / x));
-  EZBENCH2(
-      "divmodti4 large / large", donothing,
-      PROGN(x = U(123) << 64 | 123, x = (S(1125899906842624) << 64 | 334) / x));
-}
-
-BENCH(idiv32, bench) {
-  volatile int32_t x;
-  EZBENCH2("idiv32", donothing,
-           PROGN(x = L(1000000000123123123), x = L(1125899906842624) / x));
-}
-
-BENCH(idiv64, bench) {
-  volatile int64_t x;
-  EZBENCH2("idiv64", donothing,
-           PROGN(x = L(1000000000123123123), x = L(1125899906842624) / x));
+            (S(1125899906842624) << 64) / x);
 }
