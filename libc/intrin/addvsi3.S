@@ -21,12 +21,12 @@
 .privileged
 .alignfunc
 
-/	Returns 𝑥+𝑦, aborting on overflow.
-/
-/	@param	edi is int32 𝑥
-/	@param	esi is int32 𝑦
-/	@return	eax is 𝑥+𝑦
-/	@see	-ftrapv
+//	Returns 𝑥+𝑦, aborting on overflow.
+//
+//	@param	edi is int32 𝑥
+//	@param	esi is int32 𝑦
+//	@return	eax is 𝑥+𝑦
+//	@see	-ftrapv
 __addvsi3:
 	mov	%edi,%eax
 	add	%esi,%eax

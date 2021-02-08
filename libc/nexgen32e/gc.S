@@ -21,17 +21,17 @@
 #include "libc/notice.inc"
 #define INITIAL_CAPACITY 4
 
-/	Invokes deferred function calls.
-/
-/	This offers behavior similar to std::unique_ptr. Functions
-/	overwrite their return addresses jumping here, and pushing
-/	exactly one entry on the shadow stack below. Functions may
-/	repeat that process multiple times, in which case the body
-/	of this gadget loops and unwinds as a natural consequence.
-/
-/	@param	rax,rdx,xmm0,xmm1,st0,st1 is return value
-/	@see	test/libc/runtime/gc_test.c
-/	<LIMBO>
+//	Invokes deferred function calls.
+//
+//	This offers behavior similar to std::unique_ptr. Functions
+//	overwrite their return addresses jumping here, and pushing
+//	exactly one entry on the shadow stack below. Functions may
+//	repeat that process multiple times, in which case the body
+//	of this gadget loops and unwinds as a natural consequence.
+//
+//	@param	rax,rdx,xmm0,xmm1,st0,st1 is return value
+//	@see	test/libc/runtime/gc_test.c
+//	<LIMBO>
 __gc:	decq	__garbage(%rip)
 	mov	__garbage(%rip),%r8
 	mov	__garbage+16(%rip),%r9
@@ -41,7 +41,7 @@ __gc:	decq	__garbage(%rip)
 	mov	8(%r8),%r9
 	mov	16(%r8),%rdi
 	push	24(%r8)
-/	</LIMBO>
+//	</LIMBO>
 	push	%rbp
 	mov	%rsp,%rbp
 	sub	$0x20,%rsp

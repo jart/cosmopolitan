@@ -19,11 +19,11 @@
 #include "libc/macros.h"
 .text.startup
 
-/	Seventeen byte decompressor.
-/
-/	@param	di points to output buffer
-/	@param	si points to uint8_t {len₁,byte₁}, ..., {0,0}
-/	@mode	long,legacy,real
+//	Seventeen byte decompressor.
+//
+//	@param	di points to output buffer
+//	@param	si points to uint8_t {len₁,byte₁}, ..., {0,0}
+//	@mode	long,legacy,real
 rldecode:
 	.leafprologue
 	.profilable

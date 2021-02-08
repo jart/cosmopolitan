@@ -19,11 +19,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns arc tangent of 𝑦/𝑥.
-/
-/	@param	𝑦 is float scalar in low quarter of %xmm0
-/	@param	𝑥 is float scalar in low quarter of %xmm1
-/	@return	float scalar in low quarter of %xmm0
+//	Returns arc tangent of 𝑦/𝑥.
+//
+//	@param	𝑦 is float scalar in low quarter of %xmm0
+//	@param	𝑥 is float scalar in low quarter of %xmm1
+//	@return	float scalar in low quarter of %xmm0
 atan2f:	ezlea	atan2l,ax
 	jmp	_f2ld2
 	.endfn	atan2f,globl

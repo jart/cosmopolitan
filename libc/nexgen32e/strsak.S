@@ -21,14 +21,14 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns length of NUL-terminated string w/ security blankets.
-/
-/	This is like strnlen() except it'll return 0 if (1) RDI is NULL
-/	or (2) a NUL-terminator wasn't found in the first RSI bytes.
-/
-/	@param	rdi is a nullable NUL-terminated string pointer
-/	@param	rsi is the maximum number of bytes to consider
-/	@return	rax is the number of bytes, excluding the NUL
+//	Returns length of NUL-terminated string w/ security blankets.
+//
+//	This is like strnlen() except it'll return 0 if (1) RDI is NULL
+//	or (2) a NUL-terminator wasn't found in the first RSI bytes.
+//
+//	@param	rdi is a nullable NUL-terminated string pointer
+//	@param	rsi is the maximum number of bytes to consider
+//	@return	rax is the number of bytes, excluding the NUL
 strnlen_s:
 	.leafprologue
 	.profilable
@@ -39,20 +39,20 @@ strnlen_s:
 	.leafepilogue
 0:	xor	%edx,%edx
 	mov	%rdi,%r8
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	strnlen_s,globl
 
-/	Swiss army knife of string character scanning.
-/	Used to be fourteen fast functions in one.
-/
-/	@param	rdi is non-null string memory
-/	@param	rsi is max number of bytes to consider
-/	@param	dl is search character #1
-/	@param	dh is search character #2
-/	@param	r8 is subtracted from result (for length vs. pointer)
-/	@param	r9 masks result if DH is found (for NUL vs. NULL)
-/	@param	r10 masks result on bytes exhausted (for length v. NULL)
-/	@return	rax end pointer after r8/r9/r10 modifications
+//	Swiss army knife of string character scanning.
+//	Used to be fourteen fast functions in one.
+//
+//	@param	rdi is non-null string memory
+//	@param	rsi is max number of bytes to consider
+//	@param	dl is search character #1
+//	@param	dh is search character #2
+//	@param	r8 is subtracted from result (for length vs. pointer)
+//	@param	r9 masks result if DH is found (for NUL vs. NULL)
+//	@param	r10 masks result on bytes exhausted (for length v. NULL)
+//	@return	rax end pointer after r8/r9/r10 modifications
 strsak:	lea	-1(%rdi),%rax
 1:	add	$1,%rax
 	sub	$1,%rsi

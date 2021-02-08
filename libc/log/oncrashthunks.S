@@ -19,9 +19,9 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	These function names make it a bit more obvious which signal
-/	caused the crash, particularly in the GDB GUI. They're coded
-/	into an array to pinch pennies on code size registering them.
+//	These function names make it a bit more obvious which signal
+//	caused the crash, particularly in the GDB GUI. They're coded
+//	into an array to pinch pennies on code size registering them.
 
 __oncrash_thunks:
 

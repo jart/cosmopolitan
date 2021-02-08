@@ -22,10 +22,10 @@
 
 #define kTmpPathMax 80
 
-/	RII constant holding /tmp/ directory.
-/
-/	@note	on win32 this is firstNonNull($TMP, $TEMP, $PWD)
-/	@note	guarantees trailing slash if non-empty
+//	RII constant holding /tmp/ directory.
+//
+//	@note	on win32 this is firstNonNull($TMP, $TEMP, $PWD)
+//	@note	guarantees trailing slash if non-empty
 	.initbss 300,_init_kTmpPath
 kTmpPath:
 	.zero	kTmpPathMax
@@ -33,8 +33,8 @@ kTmpPath:
 	.previous
 
 	.init.start 300,_init_kTmpPath
-	movl	$'/|'t<<010|'m<<020|'p<<030,(%rdi)
-	movw	$'/,4(%rdi)
+	movl	$'/'|'t'<<010|'m'<<020|'p'<<030,(%rdi)
+	movw	$'/',4(%rdi)
 #if SupportsWindows()
 	pushpop	kTmpPathMax,%rdx
 	ezlea	GetTempPathA_flunk,ax

@@ -19,21 +19,21 @@
 #include "libc/macros.h"
 #include "libc/notice.inc"
 
-/	Applies no-clobber guarantee to System Five function call.
-/
-/	- Reentrant
-/	- Realigns stack
-/	- Doesn't assume red zone
-/	- Clobbers nothing (except %rax and flags)
-/
-/	This function may be called using an stdcall convention. It's
-/	useful for files named FOO.hookabi.c and BAR.ncabi.c to make
-/	calls into other parts of the system, that don't conform to the
-/	same restricted ABI.
-/
-/	@param	six args and fn addr pushed on stack in reverse order
-/	@return	%rax has function return value, and stack is cleaned up
-/	@see	libc/shadowargs.hook.c for intended use case
+//	Applies no-clobber guarantee to System Five function call.
+//
+//	- Reentrant
+//	- Realigns stack
+//	- Doesn't assume red zone
+//	- Clobbers nothing (except %rax and flags)
+//
+//	This function may be called using an stdcall convention. It's
+//	useful for files named FOO.hookabi.c and BAR.ncabi.c to make
+//	calls into other parts of the system, that don't conform to the
+//	same restricted ABI.
+//
+//	@param	six args and fn addr pushed on stack in reverse order
+//	@return	%rax has function return value, and stack is cleaned up
+//	@see	libc/shadowargs.hook.c for intended use case
 slowcall:
 	#param	%r9		# 0x40 arg6
 	#param	%r8		# 0x38 arg5

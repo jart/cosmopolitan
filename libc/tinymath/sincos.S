@@ -19,12 +19,12 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns sine and cosine of 𝑥.
-/
-/	@param	𝑥 is double scalar in low half of %xmm0
-/	@param	%rdi is double *out_sin
-/	@param	%rsi is double *out_cos
-/	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
+//	Returns sine and cosine of 𝑥.
+//
+//	@param	𝑥 is double scalar in low half of %xmm0
+//	@param	%rdi is double *out_sin
+//	@param	%rsi is double *out_cos
+//	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
 sincos:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

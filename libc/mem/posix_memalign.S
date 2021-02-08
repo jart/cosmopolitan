@@ -19,18 +19,18 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Allocates aligned memory the POSIX way.
-/
-/	Allocates a chunk of n bytes, aligned in accord with the alignment
-/	argument. Differs from memalign only in that it (1) assigns the
-/	allocated memory to *pp rather than returning it, (2) fails and
-/	returns EINVAL if the alignment is not a power of two (3) fails and
-/	returns ENOMEM if memory cannot be allocated.
-/
-/	@param	rdi is void **pp
-/	@param	rsi is size_t align
-/	@param	rdx is size_t size
-/	@return	eax
+//	Allocates aligned memory the POSIX way.
+//
+//	Allocates a chunk of n bytes, aligned in accord with the alignment
+//	argument. Differs from memalign only in that it (1) assigns the
+//	allocated memory to *pp rather than returning it, (2) fails and
+//	returns EINVAL if the alignment is not a power of two (3) fails and
+//	returns ENOMEM if memory cannot be allocated.
+//
+//	@param	rdi is void **pp
+//	@param	rsi is size_t align
+//	@param	rdx is size_t size
+//	@return	eax
 posix_memalign:
 	jmp	*hook_posix_memalign(%rip)
 	.endfn	posix_memalign,globl

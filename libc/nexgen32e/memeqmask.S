@@ -18,14 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Creates bit mask of which bytes are the same.
-/
-/	@param	%rdi points to bit mask (write-only)
-/	@param	%rsi points to first buffer (read-only)
-/	@param	%rdx points to second buffer (read-only)
-/	@param	%rcx is byte length of both %rsi and %rdx
-/	@return	%rax is set to %rdi
-/	@note	buffers should be 128-byte aligned
+//	Creates bit mask of which bytes are the same.
+//
+//	@param	%rdi points to bit mask (write-only)
+//	@param	%rsi points to first buffer (read-only)
+//	@param	%rdx points to second buffer (read-only)
+//	@param	%rcx is byte length of both %rsi and %rdx
+//	@return	%rax is set to %rdi
+//	@note	buffers should be 128-byte aligned
 memeqmask:
 	.leafprologue
 	xor	%eax,%eax

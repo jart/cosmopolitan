@@ -19,8 +19,8 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Reads uint8_t from standard input.
-/	@return	%al has result w/ rest of %rax cleared
+//	Reads uint8_t from standard input.
+//	@return	%al has result w/ rest of %rax cleared
 getchar:mov	stdin(%rip),%rdi
 	jmp	fgetc
 	.endfn	getchar,globl

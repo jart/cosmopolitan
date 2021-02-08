@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Calculates log₂𝑥.
-/
-/	@param	𝑥 is a float passed in the lower quarter of %xmm0
-/	@return	result in lower quarter of %xmm0
+//	Calculates log₂𝑥.
+//
+//	@param	𝑥 is a float passed in the lower quarter of %xmm0
+//	@return	result in lower quarter of %xmm0
 log2f:
 	push	%rbp
 	mov	%rsp,%rbp

@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon nr __NR_sync 0x00a2 0x2000024 0x0024 0x0024 -1 -1
+.syscon nr,__NR_sync,0x00a2,0x2000024,0x0024,0x0024,-1,-1

@@ -60,10 +60,10 @@ __ro:	.endobj	__ro,globl,hidden		# ←for gdb readibility
 	.section .bss,"aw",@nobits
 	.align	__SIZEOF_POINTER__
 	.previous
-	.section .rodata.str1.1,"aMS",@progbits
+	.section .rodata.str1.1,"a",@progbits
 cstr:	.endobj	cstr,globl,hidden		# ←for gdb readibility
 	.previous
-	.section .sort.rodata.real.str1.1,"aMS",@progbits
+	.section .sort.rodata.real.str1.1,"a",@progbits
 rlstr:	.endobj	rlstr,globl,hidden		# ←for gdb readibility
 	.previous
 	.section .head,"ax",@progbits
@@ -107,17 +107,17 @@ rlstr:	.endobj	rlstr,globl,hidden		# ←for gdb readibility
 
 #if SupportsWindows() || SupportsXnu()
 
-/	MZ Literally Executable Header
-/
-/	This is the beginning of the program file and it can serve as an
-/	entrypoint too. It shouldn't matter if the program is running on
-/	Linux, Windows, etc. Please note if the underlying machine isn't
-/	a machine, this header may need to morph itself to say the magic
-/	words, e.g. ⌂ELF, which also works fine as a generic entrypoint.
-/
-/	@param	dl is drive number
-/	@noreturn
-ape.mz:	.ascii	"MZ"			# Mark 'Zibo' Joseph Zbikowski
+//	MZ Literally Executable Header
+//
+//	This is the beginning of the program file and it can serve as an
+//	entrypoint too. It shouldn't matter if the program is running on
+//	Linux, Windows, etc. Please note if the underlying machine isn't
+//	a machine, this header may need to morph itself to say the magic
+//	words, e.g. ⌂ELF, which also works fine as a generic entrypoint.
+//
+//	@param	dl is drive number
+//	@noreturn
+ape_mz:	.ascii	"MZ"			# Mark 'Zibo' Joseph Zbikowski
 	jno	2f			# MZ: bytes on last page
 	jo	2f			# MZ: 512-byte pages in file
 	.ascii	"='"			# MZ: reloc table entry count
@@ -136,21 +136,21 @@ ape.mz:	.ascii	"MZ"			# Mark 'Zibo' Joseph Zbikowski
 	.short	0			# MZ: OEM information
 	.org	0x40-4			# MZ: bytes reserved for you
 #if SupportsWindows()
-	.long	RVA(ape.pe)		# PE: the new technology
+	.long	RVA(ape_pe)		# PE: the new technology
 #else
 	.long	0
 #endif
-	.endfn	ape.mz,globl,hidden
+	.endfn	ape_mz,globl,hidden
 
 #else /* !(SupportsWindows() || SupportsXnu()) */
 
-/	ELF Literally Executable Header
-/
-/	If we don't need to support Microsoft or Apple then we can
-/	produce a conventional executable without the shell script
-/
-/	@param	dl is drive number
-/	@noreturn
+//	ELF Literally Executable Header
+//
+//	If we don't need to support Microsoft or Apple then we can
+//	produce a conventional executable without the shell script
+//
+//	@param	dl is drive number
+//	@noreturn
 	.ascii	"\177ELF"			# 0x0: ⌂ELF
 	.byte	ELFCLASS64			#   4: long mode
 	.byte	ELFDATA2LSB			#   5: little endian
@@ -161,23 +161,23 @@ ape.mz:	.ascii	"MZ"			# Mark 'Zibo' Joseph Zbikowski
 	.short	ET_EXEC				#  10: εxεcµταblε
 	.short	EM_NEXGEN32E			#  12: NexGen32e
 	.long	1				#  14: elf v1.o
-	.quad	.Lape.elf.entry			#  18: e_entry
-	.quad	.Lape.elf.phoff			#  20: e_phoff
-	.quad	.Lape.elf.shoff			#  28: e_shoff
+	.quad	ape_elf_entry			#  18: e_entry
+	.quad	ape_elf_phoff			#  20: e_phoff
+	.quad	ape_elf_shoff			#  28: e_shoff
 	.long	0				#  30: e_flags
 	.short	64				#  34: e_ehsize
 	.short	56				#  36: e_phentsize
-	.short	.Lape.elf.phnum			#  38: e_phnum
+	.short	ape_elf_phnum			#  38: e_phnum
 	.short	0				#  3a: e_shentsize
-	.short	.Lape.elf.shnum			#  3c: e_shnum
-	.short	.Lape.elf.shstrndx		#  3e: e_shstrndx
+	.short	ape_elf_shnum			#  3c: e_shnum
+	.short	ape_elf_shstrndx		#  3e: e_shstrndx
 
 #endif /* SupportsWindows() || SupportsXnu() */
 
-/	Disk Operating System Stub
-/
-/	@param	dl is drive number
-/	@noreturn
+//	Disk Operating System Stub
+//
+//	@param	dl is drive number
+//	@noreturn
 	.org	0x40			# mz/elf header length
 stub:	mov	$0x40,%dl		# *literally* dos
 	jmp	1f			# good bios skips here
@@ -190,7 +190,7 @@ stub:	mov	$0x40,%dl		# *literally* dos
 3:	.byte	0xbd,0,0		# a.k.a. mov imm,%bp
 	jmp	pc			# real mode, is real
 	jmp	_start			# surprise it's unix
-	.endfn	stub
+//	.endfn	stub
 
 /*─────────────────────────────────────────────────────────────────────────────╗
 │ αcτµαlly pδrταblε εxεcµταblε § ibm personal computer                         │
@@ -209,13 +209,13 @@ stub:	mov	$0x40,%dl		# *literally* dos
 	built the last forty years these routines also canonicalize the
 	cpu and program state, as it is written in the System V ABI. */
 
-/	Initializes program and jumps to real mode loader.
-/
-/	@param	dl drive number (use 0x40 to skip bios disk load)
-/	@mode	real
-/	@noreturn
-	.code16
+//	Initializes program and jumps to real mode loader.
+//
+//	@param	dl drive number (use 0x40 to skip bios disk load)
+//	@mode	real
+//	@noreturn
 pc:	cld
+	.code16
 #if USE_SYMBOL_HACK
 	.byte	0x0f,0x1f,0207			# nop rdi binbase
 	.short	(0x7c00-IMAGE_BASE_VIRTUAL)/512
@@ -269,51 +269,51 @@ pc:	cld
 	mov	%es,%ax
 	stosw
 	ljmp	$0,$REAL(realmodeloader)
-	.endfn	pc,globl,hidden
+	.endfn	pc
 
-/	Determines disk geometry.
-/
-/	We use imperial measurements for storage systems so the software
-/	can have an understanding of physical locality, which deeply
-/	impacts the latency of operations.
-/
-/	 - 160KB:  40 cylinders × 1 head  ×  8 sectors × 512 =   163,840
-/	 - 180KB:  40 cylinders × 1 head  ×  9 sectors × 512 =   184,320
-/	 - 320KB:  40 cylinders × 2 heads ×  8 sectors × 512 =   327,680
-/	 - 360KB:  40 cylinders × 2 heads ×  9 sectors × 512 =   368,640
-/	 - 720KB:  80 cylinders × 2 heads ×  9 sectors × 512 =   737,280
-/	 - 1.2MB:  80 cylinders × 2 heads × 15 sectors × 512 = 1,228,800
-/	 - 1.44MB: 80 cylinders × 2 heads × 18 sectors × 512 = 1,474,560
-/
-/	Terminology
-/
-/	 - Heads are also known as Tracks
-/
-/	Disk Base Table
-/
-/	   0: specify byte 1, step-rate time, head unload time
-/	   1: specify byte 2, head load time, DMA mode
-/	   2: timer ticks to wait before disk motor shutoff
-/	   3: bytes per sector code
-/	        0: 128 bytes  2: 512 bytes
-/	        1: 256 bytes  3: 1024 bytes
-/	   4: sectors per track (last sector number)
-/	   5: inter-block gap length/gap between sectors
-/	   6: data length, if sector length not specified
-/	   7: gap length between sectors for format
-/	   8: fill byte for formatted sectors
-/	   9: head settle time in milliseconds
-/	  10: motor startup time in eighths of a second
-/
-/	@param	dl drive number
-/	@return	dl = pc_drive (corrected if clobbered by header)
-/		pc_drive
-/		pc_drive_type
-/		pc_drive_heads
-/		pc_drive_last_cylinder
-/		pc_drive_last_sector
-/	@clob	ax, cx, dx, di, si, es, flags
-/	@since	IBM Personal Computer XT
+//	Determines disk geometry.
+//
+//	We use imperial measurements for storage systems so the software
+//	can have an understanding of physical locality, which deeply
+//	impacts the latency of operations.
+//
+//	 - 160KB:  40 cylinders × 1 head  ×  8 sectors × 512 =   163,840
+//	 - 180KB:  40 cylinders × 1 head  ×  9 sectors × 512 =   184,320
+//	 - 320KB:  40 cylinders × 2 heads ×  8 sectors × 512 =   327,680
+//	 - 360KB:  40 cylinders × 2 heads ×  9 sectors × 512 =   368,640
+//	 - 720KB:  80 cylinders × 2 heads ×  9 sectors × 512 =   737,280
+//	 - 1.2MB:  80 cylinders × 2 heads × 15 sectors × 512 = 1,228,800
+//	 - 1.44MB: 80 cylinders × 2 heads × 18 sectors × 512 = 1,474,560
+//
+//	Terminology
+//
+//	 - Heads are also known as Tracks
+//
+//	Disk Base Table
+//
+//	   0: specify byte 1, step-rate time, head unload time
+//	   1: specify byte 2, head load time, DMA mode
+//	   2: timer ticks to wait before disk motor shutoff
+//	   3: bytes per sector code
+//	        0: 128 bytes  2: 512 bytes
+//	        1: 256 bytes  3: 1024 bytes
+//	   4: sectors per track (last sector number)
+//	   5: inter-block gap length/gap between sectors
+//	   6: data length, if sector length not specified
+//	   7: gap length between sectors for format
+//	   8: fill byte for formatted sectors
+//	   9: head settle time in milliseconds
+//	  10: motor startup time in eighths of a second
+//
+//	@param	dl drive number
+//	@return	dl = pc_drive (corrected if clobbered by header)
+//		pc_drive
+//		pc_drive_type
+//		pc_drive_heads
+//		pc_drive_last_cylinder
+//		pc_drive_last_sector
+//	@clob	ax, cx, dx, di, si, es, flags
+//	@since	IBM Personal Computer XT
 dsknfo:	push	%bx
 1:	push	%dx
 	mov	$0x08,%ah		# get disk params
@@ -357,14 +357,14 @@ dsknfo:	push	%bx
 	jmp	1b
 	.endfn	dsknfo
 
-/	Reads disk sector via BIOS.
-/
-/	@param	al sector number
-/	@param	es destination memory address >> 4
-/	@param	cx cylinder number
-/	@param	dh head number
-/	@param	dl drive number
-/	@return	number of sectors actually read
+//	Reads disk sector via BIOS.
+//
+//	@param	al sector number
+//	@param	es destination memory address >> 4
+//	@param	cx cylinder number
+//	@param	dh head number
+//	@param	dl drive number
+//	@return	number of sectors actually read
 pcread:	push	%ax
 	push	%cx
 	xchg	%cl,%ch
@@ -402,24 +402,24 @@ pcread:	push	%ax
 │ αcτµαlly pδrταblε εxεcµταblε § partition table                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-/	Partition Table.
-.Lape.mbrpad:
+//	Partition Table.
+ape.mbrpad:
 	.org	0x1b4
-	.endobj	.Lape.mbrpad
+	.endobj	ape.mbrpad
 ape_disk:
-	.stub	.Lape.diskid,quad
+	.stub	ape.diskid,quad
 	.org	0x1be,0x00
 	.macro	.partn	x
-	.stub	.Lape.part\x\().status,byte	# 0=absent / 0x80=present
-	.stub	.Lape.part\x\().first.head,byte	# in low 6 bits
-	.stub	.Lape.part\x\().first.cylinder,byte
-	.stub	.Lape.part\x\().first.sector,byte
-	.stub	.Lape.part\x\().filesystem,byte
-	.stub	.Lape.part\x\().last.head,byte
-	.stub	.Lape.part\x\().last.cylinder,byte
-	.stub	.Lape.part\x\().last.sector,byte
-	.stub	.Lape.part\x\().lba,long          # c₀*Cₙ + h₀*Hₙ + s₀*Sₙ
-	.stub	.Lape.part\x\().sector.count,long # sectors are 512 bytes
+	.stub	ape.part\x\().status,byte	# 0=absent / 0x80=present
+	.stub	ape.part\x\().first.head,byte	# in low 6 bits
+	.stub	ape.part\x\().first.cylinder,byte
+	.stub	ape.part\x\().first.sector,byte
+	.stub	ape.part\x\().filesystem,byte
+	.stub	ape.part\x\().last.head,byte
+	.stub	ape.part\x\().last.cylinder,byte
+	.stub	ape.part\x\().last.sector,byte
+	.stub	ape.part\x\().lba,long          # c₀*Cₙ + h₀*Hₙ + s₀*Sₙ
+	.stub	ape.part\x\().sector.count,long # sectors are 512 bytes
 	.endm
 	.partn	1
 	.partn	2
@@ -481,9 +481,9 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	    " of=\"$o\""
 	.ascii	    " bs=8"
 	.ascii	    " skip=\""
-	.shstub	    .Lape.macho.dd.skip,2
+	.shstub	    ape_macho_dd_skip,2
 	.ascii	    "\" count=\""
-	.shstub	    .Lape.macho.dd.count,2
+	.shstub	    ape_macho_dd_count,2
 	.ascii	    "\" conv=notrunc 2>/dev/null\n"
 	.ascii	"el"
 #endif
@@ -500,16 +500,16 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	    "\\2\\0"			#  10: εxεcµταblε
 	.ascii	    "\\076\\0"			#  12: NexGen32e
 	.ascii	    "\\1\\0\\0\\0"		#  14: elf v1.o
-	.shstub	    .Lape.elf.entry,8		#  18: e_entry
-	.shstub	    .Lape.elf.phoff,8		#  20: e_phoff
-	.shstub	    .Lape.elf.shoff,8		#  28: e_shoff
+	.shstub	    ape_elf_entry,8		#  18: e_entry
+	.shstub	    ape_elf_phoff,8		#  20: e_phoff
+	.shstub	    ape_elf_shoff,8		#  28: e_shoff
 	.ascii	    "\\0\\0\\0\\0"		#  30: e_flags
 	.ascii	    "\\100\\0"			#  34: e_ehsize
 	.ascii	    "\\070\\0"			#  36: e_phentsize
-	.shstub	    .Lape.elf.phnum,2		#  38: e_phnum
+	.shstub	    ape_elf_phnum,2		#  38: e_phnum
 	.ascii	    "\\0\\0"			#  3a: e_shentsize
-	.shstub	    .Lape.elf.shnum,2		#  3c: e_shnum
-	.shstub	    .Lape.elf.shstrndx,2	#  3e: e_shstrndx
+	.shstub	    ape_elf_shnum,2		#  3c: e_shnum
+	.shstub	    ape_elf_shstrndx,2	#  3e: e_shstrndx
 	.ascii	    "' >&7\n"
 	.ascii	  "exec 7<&-\n"
 	.ascii	"fi\n"
@@ -531,29 +531,29 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 
 	.section .elf.phdrs,"a",@progbits
 	.align	__SIZEOF_POINTER__
-	.type	ape.phdrs,@object
-	.globl	ape.phdrs
-ape.phdrs:
+	.type	ape_phdrs,@object
+	.globl	ape_phdrs
+ape_phdrs:
 	.long	PT_LOAD				# text segment
 	.long	PF_R|PF_X
-	.stub	.Lape.rom.offset,quad
-	.stub	.Lape.rom.vaddr,quad
-	.stub	.Lape.rom.paddr,quad
-	.stub	.Lape.rom.filesz,quad
-	.stub	.Lape.rom.memsz,quad
-	.stub	.Lape.rom.align,quad
+	.stub	ape_rom_offset,quad
+	.stub	ape_rom_vaddr,quad
+	.stub	ape_rom_paddr,quad
+	.stub	ape_rom_filesz,quad
+	.stub	ape_rom_memsz,quad
+	.stub	ape_rom_align,quad
 	.align	__SIZEOF_POINTER__
 	.long	PT_LOAD				# data segment
 	.long	PF_R|PF_W
-	.stub	.Lape.ram.offset,quad
-	.stub	.Lape.ram.vaddr,quad
-	.stub	.Lape.ram.paddr,quad
-	.stub	.Lape.ram.filesz,quad
-	.stub	.Lape.ram.memsz,quad
-	.stub	.Lape.ram.align,quad
+	.stub	ape_ram_offset,quad
+	.stub	ape_ram_vaddr,quad
+	.stub	ape_ram_paddr,quad
+	.stub	ape_ram_filesz,quad
+	.stub	ape_ram_memsz,quad
+	.stub	ape_ram_align,quad
 #if SupportsLinux()
-/	Linux ignores mprotect() and returns 0 without this lool
-/	It has nothing to do with the stack, which is still exec
+//	Linux ignores mprotect() and returns 0 without this lool
+//	It has nothing to do with the stack, which is still exec
 	.align	__SIZEOF_POINTER__
 	.long	PT_GNU_STACK			# p_type
 	.long	PF_R|PF_W			# p_flags
@@ -568,40 +568,40 @@ ape.phdrs:
 	.align	__SIZEOF_POINTER__
 	.long	PT_NOTE				# notes
 	.long	PF_R
-	.stub	.Lape.note.offset,quad
-	.stub	.Lape.note.vaddr,quad
-	.stub	.Lape.note.paddr,quad
-	.stub	.Lape.note.filesz,quad
-	.stub	.Lape.note.memsz,quad
-	.stub	.Lape.note.align,quad
+	.stub	ape_note_offset,quad
+	.stub	ape_note_vaddr,quad
+	.stub	ape_note_paddr,quad
+	.stub	ape_note_filesz,quad
+	.stub	ape_note_memsz,quad
+	.stub	ape_note_align,quad
 #endif
 	.previous
 
 #if SupportsOpenbsd()
 	.section .note.openbsd.ident,"a",@progbits
-.Lopenbsd.ident:
+openbsd.ident:
 	.long	2f-1f
 	.long	4f-3f
 	.long	1
 1:	.asciz	"OpenBSD"
 2:	.align	4
 3:	.long	0
-4:	.size	.Lopenbsd.ident,.-.Lopenbsd.ident
-	.type	.Lopenbsd.ident,@object
+4:	.size	openbsd.ident,.-openbsd.ident
+	.type	openbsd.ident,@object
 	.previous
 #endif /* SupportsOpenbsd() */
 
 #if SupportsNetbsd()
 	.section .note.netbsd.ident,"a",@progbits
-.Lnetbsd.ident:
+netbsd.ident:
 	.long	2f-1f
 	.long	4f-3f
 	.long	1
 1:	.asciz	"NetBSD"
 2:	.align	4
 3:	.long	901000000
-4:	.size	.Lnetbsd.ident,.-.Lnetbsd.ident
-	.type	.Lnetbsd.ident,@object
+4:	.size	netbsd.ident,.-netbsd.ident
+	.type	netbsd.ident,@object
 	.previous
 #endif /* SupportsNetbsd() */
 
@@ -640,7 +640,7 @@ ape.phdrs:
 .section .macho,"a",@progbits
 .align	__SIZEOF_POINTER__
 
-ape.macho:
+ape_macho:
 	.long	0xFEEDFACE+1
 	.long	MAC_CPU_NEXGEN32E
 	.long	MAC_CPU_NEXGEN32E_ALL
@@ -657,19 +657,19 @@ ape.macho:
 20:	.long	MAC_LC_SEGMENT_64
 	.long	30f-20b
 	.ascin	"__TEXT",16
-	.stub	.Lape.rom.vaddr,quad
-	.stub	.Lape.rom.memsz,quad
-	.stub	.Lape.rom.offset,quad
-	.stub	.Lape.rom.filesz,quad
+	.stub	ape_rom_vaddr,quad
+	.stub	ape_rom_memsz,quad
+	.stub	ape_rom_offset,quad
+	.stub	ape_rom_filesz,quad
 	.long	PROT_EXEC|PROT_READ|PROT_WRITE	# maxprot
 	.long	PROT_EXEC|PROT_READ		# initprot
 	.long	1				# segment section count
 	.long	0				# flags
 210:	.ascin	"__text",16			# section name (.text)
 	.ascin	"__TEXT",16
-	.stub	.Lape.text.vaddr,quad
-	.stub	.Lape.text.memsz,quad
-	.stub	.Lape.text.offset,long
+	.stub	ape_text_vaddr,quad
+	.stub	ape_text_memsz,quad
+	.stub	ape_text_offset,long
 	.long	12				# align 2**12 = 4096
 	.long	0				# reloc table offset
 	.long	0				# relocation count
@@ -678,19 +678,19 @@ ape.macho:
 30:	.long	MAC_LC_SEGMENT_64
 	.long	40f-30b
 	.ascin	"__DATA",16
-	.stub	.Lape.ram.vaddr,quad
-	.stub	.Lape.ram.memsz,quad
-	.stub	.Lape.ram.offset,quad
-	.stub	.Lape.ram.filesz,quad
+	.stub	ape_ram_vaddr,quad
+	.stub	ape_ram_memsz,quad
+	.stub	ape_ram_offset,quad
+	.stub	ape_ram_filesz,quad
 	.long	PROT_EXEC|PROT_READ|PROT_WRITE	# maxprot
 	.long	PROT_READ|PROT_WRITE		# initprot
 	.long	2				# segment section count
 	.long	0				# flags
 310:	.ascin	"__data",16			# section name (.data)
 	.ascin	"__DATA",16
-	.stub	.Lape.data.vaddr,quad
-	.stub	.Lape.data.memsz,quad
-	.stub	.Lape.data.offset,long
+	.stub	ape_data_vaddr,quad
+	.stub	ape_data_memsz,quad
+	.stub	ape_data_offset,long
 	.long	12				# align 2**12 = 4096
 	.long	0				# reloc table offset
 	.long	0				# relocation count
@@ -698,8 +698,8 @@ ape.macho:
 	.long	0,0,0				# reserved
 320:	.ascin	"__bss",16			# section name (.bss)
 	.ascin	"__DATA",16
-	.stub	.Lape.bss.vaddr,quad		# virtual address
-	.stub	.Lape.bss.memsz,quad		# memory size
+	.stub	ape_bss_vaddr,quad		# virtual address
+	.stub	ape_bss_memsz,quad		# memory size
 	.long	0				# file offset
 	.long	12				# align 2**12 = 4096
 	.long	0				# reloc table offset
@@ -708,8 +708,8 @@ ape.macho:
 	.long	0,0,0				# reserved
 40:	.long	MAC_LC_UUID
 	.long	50f-40b
-	.stub	.Lape.uuid1,quad
-	.stub	.Lape.uuid2,quad
+	.stub	ape_uuid1,quad
+	.stub	ape_uuid2,quad
 50:	.long	MAC_LC_UNIXTHREAD
 	.long	60f-50b				# cmdsize
 	.long	MAC_THREAD_NEXGEN32E		# flavaflav
@@ -738,7 +738,7 @@ ape.macho:
 520:
 60:
 
-.endobj	ape.macho,globl,hidden
+.endobj	ape_macho,globl,hidden
 .previous /* .macho */
 #endif /* SupportsXnu() */
 
@@ -772,64 +772,64 @@ ape.macho:
 	@see "The Portable Executable File Format from Top to Bottom",
 	     Randy Kath, Microsoft Developer Network Technology Group. */
 
-/	      ┌14:Uniprocessor Machine            ┌─────────────────────────┐
-/	      │┌13:DLL                            │ PE File Characteristics │
-/	      ││┌12:System                        ├─────────────────────────┤
-/	      │││┌11:If Net Run From Swap         │ r │ reserved            │
-/	      ││││┌10:If Removable Run From Swap  │ d │ deprecated          │
-/	      │││││┌9:Debug Stripped              │ D │ deprecated with     │
-/	      ││││││┌8:32bit Machine              │   │ extreme prejudice   │
-/	      │││││││  ┌5:Large Address Aware     └───┴─────────────────────┘
-/	      │││││││  │   ┌1:Executable
-/	      │││││││  │   │┌0:Relocs Stripped
-/	     d│││││││dr│Ddd││
-.LPEEXE =  0b0000001000100011
+//	      ┌14:Uniprocessor Machine            ┌─────────────────────────┐
+//	      │┌13:DLL                            │ PE File Characteristics │
+//	      ││┌12:System                        ├─────────────────────────┤
+//	      │││┌11:If Net Run From Swap         │ r │ reserved            │
+//	      ││││┌10:If Removable Run From Swap  │ d │ deprecated          │
+//	      │││││┌9:Debug Stripped              │ D │ deprecated with     │
+//	      ││││││┌8:32bit Machine              │   │ extreme prejudice   │
+//	      │││││││  ┌5:Large Address Aware     └───┴─────────────────────┘
+//	      │││││││  │   ┌1:Executable
+//	      │││││││  │   │┌0:Relocs Stripped
+//	     d│││││││dr│Ddd││
+PEEXE =  0b0000001000100011
 
-/	     ┌15:TERMINAL_SERVER_AWARE            ┌─────────────────────────┐
-/	     │┌14:GUARD_CF                        │ PE DLL Characteristics  │
-/	     ││┌13:WDM_DRIVER                     ├─────────────────────────┤
-/	     │││┌12:APPCONTAINER                  │ r │ reserved            │
-/	     ││││┌11:NO_BIND                      └───┴─────────────────────┘
-/	     │││││┌10:NO_SEH
-/	     ││││││┌9:NO_ISOLATION
-/	     │││││││┌8:NX_COMPAT
-/	     ││││││││┌7:FORCE_INTEGRITY
-/	     │││││││││┌6:DYNAMIC_BASE
-/	     ││││││││││┌5:HIGH_ENTROPY_VA
-/	     │││││││││││rrrrr
-.LDLLSTD = 0b0000000100100000
-.LDLLPIE = 0b0000000001100000
-.LDLLEXE = .LDLLSTD
+//	     ┌15:TERMINAL_SERVER_AWARE            ┌─────────────────────────┐
+//	     │┌14:GUARD_CF                        │ PE DLL Characteristics  │
+//	     ││┌13:WDM_DRIVER                     ├─────────────────────────┤
+//	     │││┌12:APPCONTAINER                  │ r │ reserved            │
+//	     ││││┌11:NO_BIND                      └───┴─────────────────────┘
+//	     │││││┌10:NO_SEH
+//	     ││││││┌9:NO_ISOLATION
+//	     │││││││┌8:NX_COMPAT
+//	     ││││││││┌7:FORCE_INTEGRITY
+//	     │││││││││┌6:DYNAMIC_BASE
+//	     ││││││││││┌5:HIGH_ENTROPY_VA
+//	     │││││││││││rrrrr
+DLLSTD = 0b0000000100100000
+DLLPIE = 0b0000000001100000
+DLLEXE = DLLSTD
 
-/	     ┌31:Writeable                        ┌─────────────────────────┐
-/	     │┌30:Readable                        │ PE Section Flags        │
-/	     ││┌29:Executable                     ├─────────────────────────┤
-/	     │││┌28:Shareable                     │ o │ for object files    │
-/	     ││││┌27:Unpageable                   │ r │ reserved            │
-/	     │││││┌26:Uncacheable                 └───┴─────────────────────┘
-/	     ││││││┌25:Discardable
-/	     │││││││┌24:Contains Extended Relocations
-/	     ││││││││        ┌15:Contains Global Pointer (GP) Relative Data
-/	     ││││││││        │       ┌7:Contains Uninitialized Data
-/	     ││││││││        │       │┌6:Contains Initialized Data
-/	     ││││││││ o      │       ││┌5:Contains Code
-/	     ││││││││┌┴─┐rrrr│  ooror│││rorrr
-.LPETEXT = 0b01110000000000000000000001100000
-.LPEDATA = 0b11000000000000000000000011000000
-.LPEIMPS = 0b11000000000000000000000001000000
+//	     ┌31:Writeable                        ┌─────────────────────────┐
+//	     │┌30:Readable                        │ PE Section Flags        │
+//	     ││┌29:Executable                     ├─────────────────────────┤
+//	     │││┌28:Shareable                     │ o │ for object files    │
+//	     ││││┌27:Unpageable                   │ r │ reserved            │
+//	     │││││┌26:Uncacheable                 └───┴─────────────────────┘
+//	     ││││││┌25:Discardable
+//	     │││││││┌24:Contains Extended Relocations
+//	     ││││││││        ┌15:Contains Global Pointer (GP) Relative Data
+//	     ││││││││        │       ┌7:Contains Uninitialized Data
+//	     ││││││││        │       │┌6:Contains Initialized Data
+//	     ││││││││ o      │       ││┌5:Contains Code
+//	     ││││││││┌┴─┐rrrr│  ooror│││rorrr
+PETEXT = 0b01110000000000000000000001100000
+PEDATA = 0b11000000000000000000000011000000
+PEIMPS = 0b11000000000000000000000001000000
 
 #if SupportsWindows()
 
 	.section .pe.header,"a",@progbits
 	.align	__SIZEOF_POINTER__
-ape.pe:	.ascin	"PE",4
+ape_pe:	.ascin	"PE",4
 	.short	kNtImageFileMachineNexgen32e
-	.stub	.Lape.pe.shnum,short	# NumberOfSections
+	.stub	ape_pe_shnum,short	# NumberOfSections
 	.long	0x5c64126b		# TimeDateStamp
 	.long	0			# PointerToSymbolTable
 	.long	0			# NumberOfSymbols
-	.stub	.Lape.pe.optsz,short	# SizeOfOptionalHeader
-	.short	.LPEEXE			# Characteristics
+	.stub	ape_pe_optsz,short	# SizeOfOptionalHeader
+	.short	PEEXE			# Characteristics
 	.short	kNtPe64bit		# Optional Header Magic
 	.byte	14			# MajorLinkerVersion
 	.byte	15			# MinorLinkerVersion
@@ -852,7 +852,7 @@ ape.pe:	.ascin	"PE",4
 	.long	RVA(_ehead)		# SizeOfHeaders
 	.long	0			# Checksum
 	.short	v_ntsubsystem		# Subsystem: 0=Neutral,2=GUI,3=Console
-	.short	.LDLLEXE		# DllCharacteristics
+	.short	DLLEXE			# DllCharacteristics
 	.quad	0x0000000000100000	# StackReserve
 	.quad	0x00000000000fc000	# StackCommit
 	.quad	0			# HeapReserve
@@ -860,8 +860,8 @@ ape.pe:	.ascin	"PE",4
 	.long	0			# LoaderFlags
 	.long	16			# NumberOfDirectoryEntries
 	.long	0,0			# ExportsDirectory
-	.long	RVA(idata.idt)		# ImportsDirectory
-	.stub	.Lidata.idtsize,long	# ImportsDirectorySize
+	.long	RVA(ape_idata_idt)	# ImportsDirectory
+	.stub	ape_idata_idtsize,long	# ImportsDirectorySize
 	.long	0,0			# ResourcesDirectory
 	.long	0,0			# ExceptionsDirectory
 	.long	0,0			# SecurityDirectory
@@ -872,69 +872,69 @@ ape.pe:	.ascin	"PE",4
 	.long	0,0			# ThreadLocalStorage
 	.long	0,0			# LoadConfigurationDirectory
 	.long	0,0			# BoundImportDirectory
-	.long	RVA(idata.iat)		# ImportAddressDirectory
-	.stub	.Lidata.iatsize,long	# ImportAddressDirectorySize
+	.long	RVA(ape_idata_iat)	# ImportAddressDirectory
+	.stub	ape_idata_iatsize,long	# ImportAddressDirectorySize
 	.long	0,0			# DelayImportDescriptor
 	.long	0,0			# ComPlusRuntimeHeader
 	.long	0,0			# Reserved
-	.endobj	ape.pe,globl
+	.endobj	ape_pe,globl
 	.previous
 
 	.section .pe.sections,"a",@progbits
 	.ascin	".text",8		# Section Name
-	.stub	.Lape.text.memsz,long	# Virtual Size or Physical Address
-	.stub	.Lape.text.rva,long	# Relative Virtual Address
-	.stub	.Lape.text.filesz,long	# Physical Size
-	.stub	.Lape.text.offset,long	# Physical Offset
+	.stub	ape_text_memsz,long	# Virtual Size or Physical Address
+	.stub	ape_text_rva,long	# Relative Virtual Address
+	.stub	ape_text_filesz,long	# Physical Size
+	.stub	ape_text_offset,long	# Physical Offset
 	.long	0			# Relocation Table Offset
 	.long	0			# Line Number Table Offset
 	.short	0			# Relocation Count
 	.short	0			# Line Number Count
-	.long	.LPETEXT		# Flags
+	.long	PETEXT		# Flags
 	.previous
 
 	.section .pe.sections,"a",@progbits
 	.ascin	".data",8		# Section Name
-	.stub	.Lape.ram.memsz,long	# Virtual Size or Physical Address
-	.stub	.Lape.ram.rva,long	# Relative Virtual Address
-	.stub	.Lape.ram.filesz,long	# Physical Size
-	.stub	.Lape.ram.offset,long	# Physical Offset
+	.stub	ape_ram_memsz,long	# Virtual Size or Physical Address
+	.stub	ape_ram_rva,long	# Relative Virtual Address
+	.stub	ape_ram_filesz,long	# Physical Size
+	.stub	ape_ram_offset,long	# Physical Offset
 	.long	0			# Relocation Table Offset
 	.long	0			# Line Number Table Offset
 	.short	0			# Relocation Count
 	.short	0			# Line Number Count
-	.long	.LPEDATA		# Flags
+	.long	PEDATA		# Flags
 	.previous
 
 #endif /* SupportsWindows() */
 
 	.section .idata.ro.idt.1,"a",@progbits
-	.type	idata.idtend,@object
-	.type	idata.idt,@object
-	.globl	idata.idt,idata.idtend
-	.hidden	idata.idt,idata.idtend
-idata.idt:
+	.type	ape_idata_idtend,@object
+	.type	ape_idata_idt,@object
+	.globl	ape_idata_idt,ape_idata_idtend
+	.hidden	ape_idata_idt,ape_idata_idtend
+ape_idata_idt:
 	.previous/*
 	...
 	decentralized content
 	...
 	*/.section .idata.ro.idt.3,"a",@progbits
 	.long	0,0,0,0,0
-idata.idtend:
+ape_idata_idtend:
 	.previous
 
 	.section .piro.data.sort.iat.1,"aw",@progbits
-	.type	idata.iatend,@object
-	.type	idata.iat,@object
-	.globl	idata.iat,idata.iatend
-	.hidden	idata.iat,idata.iatend
-idata.iat:
+	.type	ape_idata_iatend,@object
+	.type	ape_idata_iat,@object
+	.globl	ape_idata_iat,ape_idata_iatend
+	.hidden	ape_idata_iat,ape_idata_iatend
+ape_idata_iat:
 	.previous/*
 	...
 	decentralized content
 	...
 	*/.section .piro.data.sort.iat.3,"aw",@progbits
-idata.iatend:
+ape_idata_iatend:
 	.previous
 
 #if SupportsMetal()
@@ -943,90 +943,90 @@ idata.iatend:
 ╚──────────────────────────────────────────────────────────────────────────────╝
 	better code/data separation (.head is rwx[real] rx[long]) */
 
-/	NUL-Terminated Strings.
+//	NUL-Terminated Strings.
 ape.str:
-.Lstr.ape:
+str.ape:
 	.byte	0xe0,0x63,0xe7,0xe6,0xe0,0x6c,0x6c,0x79	#αcτµαlly
 	.byte	0x20,0x70,0xeb,0x72,0xe7,0xe0,0x62,0x6c	# pδrταbl
 	.byte	0xee,0x20,0xee,0x78,0xee,0x63,0xe6,0xe7	#ε εxεcµτ
 	.byte	0xe0,0x62,0x6c,0xee,0x0d,0x0a,0x00	#αblε.
-	.endobj	.Lstr.ape
-.Lstr.error:
+	.endobj	str.ape
+str.error:
 	.asciz	"error: "
-	.endobj	.Lstr.error
-.Lstr.crlf:
+	.endobj	str.error
+str.crlf:
 	.asciz	"\r\n"
-	.endobj	.Lstr.crlf
-.Lstr.cpuid:
+	.endobj	str.crlf
+str.cpuid:
 	.asciz	"cpuid"
-	.endobj	.Lstr.cpuid
-.Lstr.oldskool:
+	.endobj	str.cpuid
+str.oldskool:
 	.asciz	"oldskool"
-	.endobj	.Lstr.oldskool
-.Lstr.dsknfo:
+	.endobj	str.oldskool
+str.dsknfo:
 	.asciz	"dsknfo"
-	.endobj	.Lstr.dsknfo
-.Lstr.e820:
+	.endobj	str.dsknfo
+str.e820:
 	.asciz	"e820"
-	.endobj	.Lstr.e820
-.Lstr.memory:
+	.endobj	str.e820
+str.memory:
 	.asciz	"nomem"
-	.endobj	.Lstr.memory
-.Lstr.long:
+	.endobj	str.memory
+str.long:
 	.asciz	"nolong"
-	.endobj	.Lstr.long
+	.endobj	str.long
 	.endobj	ape.str
 
-/	Serial Line Configuration (8250 UART 16550)
-/	If it's hacked, it'll at least get hacked very slowly.
+//	Serial Line Configuration (8250 UART 16550)
+//	If it's hacked, it'll at least get hacked very slowly.
 sconf:	.short	1843200/*hz*/ / 16/*wut*/ / 9600/*baud*/
-/
-/	          ┌interrupt trigger level {1,4,8,14}
-/	          │ ┌enable 64 byte fifo (UART 16750+)
-/	          │ │ ┌select dma mode
-/	          │ │ │┌clear transmit fifo
-/	          │ │ ││┌clear receive fifo
-/	          ├┐│ │││┌enable fifos
+//
+//	          ┌interrupt trigger level {1,4,8,14}
+//	          │ ┌enable 64 byte fifo (UART 16750+)
+//	          │ │ ┌select dma mode
+//	          │ │ │┌clear transmit fifo
+//	          │ │ ││┌clear receive fifo
+//	          ├┐│ │││┌enable fifos
 	.byte	0b00000000
-/
-/	          ┌dlab: flips configuration mode state
-/	          │┌enable break signal
-/	          ││ ┌parity {none,odd,even,high,low}
-/	          ││ │ ┌extra stop bit
-/	          ││ │ │┌data word length (bits+5)
-/	          ││┌┴┐│├┐
+//
+//	          ┌dlab: flips configuration mode state
+//	          │┌enable break signal
+//	          ││ ┌parity {none,odd,even,high,low}
+//	          ││ │ ┌extra stop bit
+//	          ││ │ │┌data word length (bits+5)
+//	          ││┌┴┐│├┐
 	.byte	0b01000011
 	.endobj	sconf,global,hidden
 
-/	Global Descriptor Table
-/
-/	@note address portion only concern legacy modes
+//	Global Descriptor Table
+//
+//	@note address portion only concern legacy modes
 	.align	8
 gdt:	.short	2f-1f		# table byte length
 	.long	REAL(1f),0	# table address
 	.zero	2
 1:
-/	          ┌G:granularity (1 → limit *= 0x1000)
-/	          │┌D/B:default operation size (0 = 16|64bit, 1 = 32-bit)
-/	          ││┌L:long mode
-/	          │││┌AVL:this bit is thine (1<<52)
-/	          ││││    ┌P:present
-/	          ││││    │┌DPL:privilege
-/	          ││││    ││ ┌─────────data/code(1)
-/	          ││││    ││ │┌────data(0)──────code(1)
-/	          ││││    ││ ││┌───conforming───expand-down
-/	          ││││    ││ │││┌──writeable────readable
-/	          ││││    ││ ││││┌─accessed─────accessed
-/	          ││││    ││ │││││
-/	          ││││ ┌──││─│││││───────────────────────────────┐
-/	      ┌───││││─│──││─│││││───────────┐                   │
-/	  ┌───┴──┐││││┌┴─┐│├┐│││││┌──────────┴───────────┐┌──────┴───────┐
-/	  │      ││││││  ││││││││││          base address││ segment limit│
-/	  │      ││││││  ││││││││││               32 bits││       20 bits│
-/	  │      ││││││  ││││││││││                      ││              │
-/	  6666555555555544444444443333333333222222222211111111110000000000
-/	  3210987654321098765432109876543210987654321098765432109876543210
-/	  │      ││││││  ││││││││││                      ││              │
+//	          ┌G:granularity (1 → limit *= 0x1000)
+//	          │┌D/B:default operation size (0 = 16|64bit, 1 = 32-bit)
+//	          ││┌L:long mode
+//	          │││┌AVL:this bit is thine (1<<52)
+//	          ││││    ┌P:present
+//	          ││││    │┌DPL:privilege
+//	          ││││    ││ ┌─────────data/code(1)
+//	          ││││    ││ │┌────data(0)──────code(1)
+//	          ││││    ││ ││┌───conforming───expand-down
+//	          ││││    ││ │││┌──writeable────readable
+//	          ││││    ││ ││││┌─accessed─────accessed
+//	          ││││    ││ │││││
+//	          ││││ ┌──││─│││││───────────────────────────────┐
+//	      ┌───││││─│──││─│││││───────────┐                   │
+//	  ┌───┴──┐││││┌┴─┐│├┐│││││┌──────────┴───────────┐┌──────┴───────┐
+//	  │      ││││││  ││││││││││          base address││ segment limit│
+//	  │      ││││││  ││││││││││               32 bits││       20 bits│
+//	  │      ││││││  ││││││││││                      ││              │
+//	  6666555555555544444444443333333333222222222211111111110000000000
+//	  3210987654321098765432109876543210987654321098765432109876543210
+//	  │      ││││││  ││││││││││                      ││              │
 .quad	0b0000000000000000000000000000000000000000000000000000000000000000 # 0
 .quad	0b0000000000001111100110100000000000000000000000001111111111111111 # 8
 .quad	0b0000000000001111100100100000000000000000000000001111111111111111 #16
@@ -1046,24 +1046,24 @@ gdt:	.short	2f-1f		# table byte length
 #define GRUB_AOUT (1 << 16)
 #define GRUB_CHECKSUM(FLAGS) (-(GRUB_MAGIC + (FLAGS)) & 0xffffffff)
 
-/	Grub Header.
+//	Grub Header.
 	.align	4
-ape.grub:
+ape_grub:
 	.long	GRUB_MAGIC			# Magic
 	.long	GRUB_AOUT			# Flags
 	.long	GRUB_CHECKSUM(GRUB_AOUT)	# Checksum
-	.long	RVA(ape.grub)			# HeaderPhysicalAddress
+	.long	RVA(ape_grub)			# HeaderPhysicalAddress
 	.long	IMAGE_BASE_PHYSICAL		# TextPhysicalAddress
 	.long	PHYSICAL(_edata)		# LoadEndPhysicalAddress
 	.long	PHYSICAL(_end)			# BssEndPhysicalAddress
-	.long	RVA(ape.grub.entry)		# EntryPhysicalAddress
-	.endobj	ape.grub,globl,hidden
+	.long	RVA(ape_grub_entry)		# EntryPhysicalAddress
+	.endobj	ape_grub,globl
 
-/	Grub Entrypoint.
-/	Takes CPU out of legacy mode and jumps to normal entrypoint.
-/	@noreturn
+//	Grub Entrypoint.
+//	Takes CPU out of legacy mode and jumps to normal entrypoint.
+//	@noreturn
 	.align	4
-ape.grub.entry:
+ape_grub_entry:
 	.code32
 	cmp	$GRUB_EAX,%eax
 	jne	triplf
@@ -1075,7 +1075,7 @@ ape.grub.entry:
 	mov	%eax,%cr0
 	ljmpw	$0,$REAL(pc)
 	.code16
-	.endfn	ape.grub.entry
+	.endfn	ape_grub_entry
 
 /*─────────────────────────────────────────────────────────────────────────────╗
 │ αcτµαlly pδrταblε εxεcµταblε § real mode                                     │
@@ -1087,14 +1087,14 @@ ape.grub.entry:
 	nop
 	nop
 realmodeloader:
-	call	rlinit
-	call	sinit4
-	mov	$REAL(.Lstr.ape),%di
-	call	rvputs
+	call16	rlinit
+	call16	sinit4
+	mov	$REAL(str.ape),%di
+	call16	rvputs
 	.optfn	_start16
-	call	_start16
-	call	longmodeloader
-	.endfn	realmodeloader,globl,hidden
+	call16	_start16
+	call16	longmodeloader
+	.endfn	realmodeloader
 
 	.section .sort.text.real.init.1,"ax",@progbits
 	.type	rlinit,@function
@@ -1106,7 +1106,7 @@ rlinit:	.previous/*
 	ret
 	.previous
 
-/	Initializes present PC serial lines.
+//	Initializes present PC serial lines.
 sinit4:	mov	$4,%cx
 	mov	$kBiosDataAreaXlm+COM1,%si
 0:	lodsw
@@ -1116,19 +1116,19 @@ sinit4:	mov	$4,%cx
 	push	%si
 	xchg	%ax,%di
 	mov	$REAL(sconf),%si
-	call	sinit
+	call16	sinit
 	pop	%si
 	pop	%cx
 1:	loop	0b
 	ret
 	.endfn	sinit4,global,hidden
 
-/	Initializes Serial Line Communications 8250 UART 16550A
-/
-/	@param	word di tty port
-/	@param	char (*{es:,e,r}si)[4] register initial values
-/	@mode	long,legacy,real
-/	@see	www.lammertbies.nl/comm/info/serial-uart.html
+//	Initializes Serial Line Communications 8250 UART 16550A
+//
+//	@param	word di tty port
+//	@param	char (*{es:,e,r}si)[4] register initial values
+//	@mode	long,legacy,real
+//	@see	www.lammertbies.nl/comm/info/serial-uart.html
 sinit:	mov	%di,%dx
 	test	%dx,%dx
 	jz	2f
@@ -1150,10 +1150,10 @@ sinit:	mov	%di,%dx
 2:	ret
 	.endfn	sinit,global,hidden
 
-/	Video put string.
-/
-/	@param	di is the string
-/	@mode	real
+//	Video put string.
+//
+//	@param	di is the string
+//	@mode	real
 rvputs:	push	%bp
 	push	%bx
 	mov	%di,%si
@@ -1167,24 +1167,24 @@ rvputs:	push	%bp
 1:	pop	%bx
 	pop	%bp
 	ret
-	.endfn	rvputs,globl,hidden
+	.endfn	rvputs
 
-/	Abnormally halts startup.
-/
-/	@param	di message
-/	@mode	real
-/	@noreturn
+//	Abnormally halts startup.
+//
+//	@param	di message
+//	@mode	real
+//	@noreturn
 rldie:	push	%di
-	mov	$REAL(.Lstr.error),%di
-	call	rvputs
+	mov	$REAL(str.error),%di
+	call16	rvputs
 	pop	%di
-	call	rvputs
-	mov	$REAL(.Lstr.crlf),%di
-	call	rvputs
+	call16	rvputs
+	mov	$REAL(str.crlf),%di
+	call16	rvputs
 	xor	%ax,%ax				# get keystroke
 	int	$0x16				# keyboard service
-	jmp	triplf
-	.endfn	rldie,globl,hidden
+	call16	triplf
+	.endfn	rldie
 
 /*                                                               █ █▒
                                                                █     █
@@ -1233,21 +1233,21 @@ rldie:	push	%di
 	long mode is long */
 
 longmodeloader:
-	call	lcheck
-	call	a20
+	call16	lcheck
+	call16	a20
 	mov	$XLM(E820),%di
 	mov	$XLM_E820_SIZE,%si
-	call	e820
+	call16	e820
 	jc	9f
-	call	unreal
-/	call	hiload
-	call	pinit
-	jmp	golong
-9:	mov	$REAL(.Lstr.e820),%ax
-	call	rldie
-	.endfn	longmodeloader,globl,hidden
+	call16	unreal
+//	call	hiload
+	call16	pinit
+	call16	golong
+9:	mov	$REAL(str.e820),%ax
+	call16	rldie
+	.endfn	longmodeloader
 
-/	Long Mode Hardware Check
+//	Long Mode Hardware Check
 lcheck:	pushf				# check for i8086 / i8088 / i80186
 	pop	%ax
 	test	$0x80,%ah		# see intel manual volume 1 20.1.2
@@ -1280,24 +1280,24 @@ lcheck:	pushf				# check for i8086 / i8088 / i80186
 	jne	10f
 	xor	%ax,%ax
 1:	ret
-9:	mov	$REAL(.Lstr.oldskool),%ax
+9:	mov	$REAL(str.oldskool),%ax
 	jmp	20f
-10:	mov	$REAL(.Lstr.long),%ax
+10:	mov	$REAL(str.long),%ax
 	jmp	20f
-12:	mov	$REAL(.Lstr.cpuid),%ax
+12:	mov	$REAL(str.cpuid),%ax
 	jmp	20f
-20:	call	rldie
+20:	call16	rldie
 	.endfn	lcheck
 
-/	Gets memory map from BIOS.
-/
-/	@param	di paragraph aligned buffer
-/	@param	si bytes in buffer to fill
-/	@return	number of bytes written or CF on error
-/	@mode	real
+//	Gets memory map from BIOS.
+//
+//	@param	di paragraph aligned buffer
+//	@param	si bytes in buffer to fill
+//	@return	number of bytes written or CF on error
+//	@mode	real
 e820:	push	%bp
 	mov	%sp,%bp
-	pushl	$'S<<24|'M<<16|'A<<8|'P	# magic @ -4(%bp)
+	pushl	$'S'<<24|'M'<<16|'A'<<8|'P'	# magic @ -4(%bp)
 	push	%bx
 	shr	$4,%di
 	mov	%di,%es
@@ -1327,10 +1327,10 @@ e820:	push	%bp
 	ret
 9:	stc
 	jmp	8b
-	.endfn	e820,globl,hidden
+	.endfn	e820
 
-/	Unreal Mode.
-/	Makes 4gb of real memory accessible via %fs segment.
+//	Unreal Mode.
+//	Makes 4gb of real memory accessible via %fs segment.
 unreal:	cli
 	lgdt	REAL(gdt)
 	mov	%cr0,%eax
@@ -1346,7 +1346,7 @@ unreal:	cli
 	ret
 	.endfn	unreal
 
-/	Loads remainder of executable off disk.
+//	Loads remainder of executable off disk.
 hiload:	push	%bx
 	mov	$IMAGE_BASE_REAL,%esi		# relocate, again
 	mov	$IMAGE_BASE_PHYSICAL,%ebx
@@ -1371,7 +1371,7 @@ hiload:	push	%bx
 	mov	%di,%ax
 	push	%bx
 	xor	%bx,%bx
-	call	pcread
+	call16	pcread
 	pop	%bx
 	sub	%ax,%di
 	push	%cx
@@ -1390,14 +1390,14 @@ hiload:	push	%bx
 	ret
 	.endfn	hiload
 
-/	Asks keyboard to grant system 65,519 more bytes of memory.
-/
-/	Yup.
-/
-/	@assume	realmode && df=0
-/	@clob	ax,di,si,es,flags
-/	@mode	real
-/	@see	wiki.osdev.org/A20_Line
+//	Asks keyboard to grant system 65,519 more bytes of memory.
+//
+//	Yup.
+//
+//	@assume	realmode && df=0
+//	@clob	ax,di,si,es,flags
+//	@mode	real
+//	@see	wiki.osdev.org/A20_Line
 a20:	cli
 	push	%ds
 	xor	%ax,%ax
@@ -1420,26 +1420,26 @@ a20:	cli
 	pop	%ds
 	jne	3f
 	mov	$1,%ax
-	call	1f
+	call16	1f
 	mov	$0xad,%al
 	out	%al,$0x64
-	call	1f
+	call16	1f
 	mov	$0xd0,%al
 	out	%al,$0x64
-	call	2f
+	call16	2f
 	in	$0x60,%al
 	push	%ax
-	call	1f
+	call16	1f
 	mov	$0xd1,%al
 	out	%al,$0x64
-	call	1f
+	call16	1f
 	pop	%ax
 	or	$2,%al
 	out	%al,$0x60
-	call	1f
+	call16	1f
 	mov	$0xae,%al
 	out	%al,$0x64
-	call	1f
+	call16	1f
 	jmp	a20
 1:	in	$0x64,%al
 	test	$2,%al
@@ -1451,17 +1451,17 @@ a20:	cli
 	ret
 3:	sti
 5:	ret
-	.endfn	a20,globl,hidden	# obj since waste of objdump space
+	.endfn	a20
 
-/	Initializes long mode paging.
-/
-/	Modern computers access memory via four levels of indirection:
-/
-/	  register char (*(*(*(*ram)[512])[512])[512])[4096] asm(cr3)
-/
-/	Your page tables grow down in memory, starting from the real
-/	stack segment base. This function only defines enough tables
-/	to get us started.
+//	Initializes long mode paging.
+//
+//	Modern computers access memory via four levels of indirection:
+//
+//	  register char (*(*(*(*ram)[512])[512])[512])[4096] asm(cr3)
+//
+//	Your page tables grow down in memory, starting from the real
+//	stack segment base. This function only defines enough tables
+//	to get us started.
 #define	TIP REAL_STACK_FRAME
 pinit:	push	%ds
 	mov	$(TIP-0x4000)>>4,%ax
@@ -1482,11 +1482,11 @@ pinit:	push	%ds
 	mov	$TIP-0x1000,%eax				# PML4T→CR3
 	mov	%eax,%cr3
 	ret
-	.endfn	pinit,globl,hidden
+	.endfn	pinit
 
-/	Switch from Real Mode → Long Mode
-/
-/	@see	Intel Manual V3A §4.1.2
+//	Switch from Real Mode → Long Mode
+//
+//	@see	Intel Manual V3A §4.1.2
 golong:	cli
 	lidt	XLM(BADIDT)
 	mov	%cr4,%eax
@@ -1504,8 +1504,8 @@ golong:	cli
 	ljmp	$GDT_LONG_CODE,$REAL(long)
 	.endfn	golong
 
-/	Long mode is long.
-/	@noreturn
+//	Long mode is long.
+//	@noreturn
 	.code64
 long:	push	$GDT_LONG_DATA
 	pop	%rax
@@ -1521,16 +1521,16 @@ long:	push	$GDT_LONG_DATA
 	jmp	*%rax
 	.endfn	long
 
-/	Long mode in virtual address space.
-/	@noreturn
+//	Long mode in virtual address space.
+//	@noreturn
 metal:
 #if USE_SYMBOL_HACK
 	.byte	0x0f,0x1f,0207			# nop rdi binbase
 	.long	(IMAGE_BASE_VIRTUAL-IMAGE_BASE_REAL)/512
 #endif
 	xor	%eax,%eax			# clear bss
-	mov	$.Lape.bss.vaddr,%edi
-	mov	$.Lape.bss.memsz,%ecx
+	mov	$ape_bss_vaddr,%edi
+	mov	$ape_bss_memsz,%ecx
 	rep stosb
 	.weak	__hostos
 	ezlea	__hostos,ax
@@ -1548,7 +1548,7 @@ metal:
 
 #endif /* SupportsMetal() */
 
-/	Avoid linker script variables appearing as code in objdump.
+//	Avoid linker script variables appearing as code in objdump.
 	.macro	.ldsvar	name:req
 	.type	\name,@object
 	.weak	\name
@@ -1557,17 +1557,17 @@ metal:
 	.ldsvar	_etext
 	.ldsvar	v_ape_realsectors
 	.ldsvar	v_ape_highsectors
-	.ldsvar	idata.ro
-	.ldsvar	ape.pad.rodata
-	.ldsvar	ape.piro
-	.ldsvar	ape.piro.end
-	.type	.Lape.macho.end,@object
-	.type	.Lape.note,@object
-	.type	.Lape.note.end,@object
-	.type	.Lape.note.vaddr,@object
-	.type	.Lape.pe.sections,@object
-	.type	.Lape.pe.sections_end,@object
-	.type	.Lape.text.nops,@object
+	.ldsvar	ape_idata_ro
+	.ldsvar	ape_pad_rodata
+	.ldsvar	ape_piro
+	.ldsvar	ape_piro_end
+	.type	ape_macho_end,@object
+	.type	ape_note,@object
+	.type	ape_note_end,@object
+	.type	ape_note_vaddr,@object
+	.type	ape_pe_sections,@object
+	.type	ape_pe_sections_end,@object
+	.type	ape_text_nops,@object
 	.type	__test_end,@object
 
 	.section .commentprologue,"a",@progbits
@@ -1583,51 +1583,45 @@ kLegalNotices:/*
 	.previous
 
 	.section .ape.pad.head,"a",@progbits
-	.type	ape.pad.head,@object
-	.hidden	ape.pad.head
-ape.pad.head:
+	.type	ape_pad_head,@object
+	.hidden	ape_pad_head
+ape_pad_head:
 	.previous
 
 	.section .ape.pad.text,"a",@progbits
-	.type	ape.pad.text,@object
-	.hidden	ape.pad.text
-ape.pad.text:
+	.type	ape_pad_text,@object
+	.hidden	ape_pad_text
+ape_pad_text:
 	.previous
 
 	.section .ape.pad.privileged,"a",@progbits
-	.type	ape.pad.privileged,@object
-	.hidden	ape.pad.privileged
-ape.pad.privileged:
+	.type	ape_pad_privileged,@object
+	.hidden	ape_pad_privileged
+ape_pad_privileged:
 	.previous
 
 	.section .ape.pad.test,"a",@progbits
-	.type	ape.pad.test,@object
-	.hidden	ape.pad.test
-ape.pad.test:
-	.previous
-
-	.section .ape.pad.test,"a",@progbits
-	.type	ape.pad.test,@object
-	.hidden	ape.pad.test
-ape.pad.test:
+	.type	ape_pad_test,@object
+	.hidden	ape_pad_test
+ape_pad_test:
 	.previous
 
 	.section .ape.pad.rodata,"a",@progbits
-	.type	ape.pad.rodata,@object
-	.hidden	ape.pad.rodata
-ape.pad.rodata:
+	.type	ape_pad_rodata,@object
+	.hidden	ape_pad_rodata
+ape_pad_rodata:
 	.previous
 
 	.section .ape.pad.data,"a",@progbits
-	.type	ape.pad.data,@object
-	.hidden	ape.pad.data
-ape.pad.data:
+	.type	ape_pad_data,@object
+	.hidden	ape_pad_data
+ape_pad_data:
 	.previous
 
 	.section .idata.ro,"a",@progbits
-	.type	idata.ro,@object
-	.hidden	idata.ro
-idata.ro:
+	.type	ape_idata_ro,@object
+	.hidden	ape_idata_ro
+ape_idata_ro:
 	.previous
 
 	.section .dataprologue,"aw",@progbits
@@ -1636,14 +1630,6 @@ idata.ro:
 	.hidden	__data_start
 __data_start:
 	.previous
-
-	.type	__piro_start,@object
-	.hidden	__piro_start
-
-	.type	__ubsan_data_start,@object
-	.type	__ubsan_data_end,@object
-	.type	__ubsan_types_start,@object
-	.type	__ubsan_types_end,@object
 
 .end
 

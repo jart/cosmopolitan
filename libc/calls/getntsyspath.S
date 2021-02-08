@@ -19,13 +19,13 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Obtains WIN32 magic path, e.g. GetTempPathA.
-/
-/	@param	rax is address of ANSI path provider function
-/	@param	rdi is output buffer
-/	@param	rdx is output buffer size in bytes that's >0
-/	@return	eax is string length w/ NUL that's ≤ edx
-/	@return	rdi is rdi+edx
+//	Obtains WIN32 magic path, e.g. GetTempPathA.
+//
+//	@param	rax is address of ANSI path provider function
+//	@param	rdi is output buffer
+//	@param	rdx is output buffer size in bytes that's >0
+//	@return	eax is string length w/ NUL that's ≤ edx
+//	@return	rdi is rdi+edx
 	.text.startup
 __getntsyspath:
 	push	%rbp
@@ -40,14 +40,14 @@ __getntsyspath:
 	cmovbe	%edx,%eax
 	cmp	$1,%eax			# leave empty strings empty
 	jbe	1f
-	cmpb	$'\\,-1(%rdi,%rax)	# guarantee trailing slash
+	cmpb	$'\\',-1(%rdi,%rax)	# guarantee trailing slash
 	je	1f
-	movw	$'\\,(%rdi,%rax)
+	movw	$'\\',(%rdi,%rax)
 	inc	%eax
 1:	inc	%rdi			# change backslash to slash
-	cmpb	$'\\,-1(%rdi)
+	cmpb	$'\\',-1(%rdi)
 	jne	2f
-	movb	$'/,-1(%rdi)
+	movb	$'/',-1(%rdi)
 2:	.loop	1b
 	leave
 	ret

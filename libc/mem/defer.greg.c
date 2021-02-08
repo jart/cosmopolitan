@@ -16,9 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/arraylist.internal.h"
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
+#include "libc/bits/likely.h"
 #include "libc/calls/calls.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/gc.internal.h"
@@ -41,22 +40,26 @@ forceinline bool PointerNotOwnedByParentStackFrame(struct StackFrame *frame,
  * @return arg
  */
 void __defer(struct StackFrame *frame, void *fn, void *arg) {
-  struct StackFrame *frame2;
-  /*
-   * To avoid an API requiring dlmalloc dependency, say:
-   *   defer(free_s, &ptr_not_owned_by_current_frame)
-   * Rather than:
-   *   defer(weak(free), ptr)
-   */
+  size_t n2;
+  struct Garbage *p2;
+  struct StackFrame *f2;
   if (!arg) return;
-  frame2 = __builtin_frame_address(0);
-  assert(frame2->next == frame);
-  assert(PointerNotOwnedByParentStackFrame(frame2, frame, arg));
-  if (append(&__garbage,
-             (&(const struct Garbage){frame->next, (intptr_t)fn, (intptr_t)arg,
-                                      frame->addr})) != -1) {
-    atomic_store(&frame->addr, (intptr_t)&__gc);
-  } else {
-    abort();
+  f2 = __builtin_frame_address(0);
+  assert(__garbage.n);
+  assert(f2->next == frame);
+  assert(PointerNotOwnedByParentStackFrame(f2, frame, arg));
+  if (UNLIKELY(__garbage.i == __garbage.n)) {
+    n2 = __garbage.n + (__garbage.n >> 1);
+    p2 = malloc(n2 * sizeof(*__garbage.p));
+    memcpy(p2, __garbage.p, __garbage.n * sizeof(*__garbage.p));
+    if (__garbage.p != __garbage.initmem) free(__garbage.p);
+    __garbage.p = p2;
+    __garbage.n = n2;
   }
+  __garbage.p[__garbage.i].frame = frame->next;
+  __garbage.p[__garbage.i].fn = (intptr_t)fn;
+  __garbage.p[__garbage.i].arg = (intptr_t)arg;
+  __garbage.p[__garbage.i].ret = frame->addr;
+  __garbage.i++;
+  frame->addr = (intptr_t)__gc;
 }

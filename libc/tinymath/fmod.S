@@ -19,13 +19,13 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	fmod [sic] does (𝑥 rem 𝑦) w/ round()-style rounding.
-/
-/	@param	𝑥 is double passed in lower half of %xmm0
-/	@param	𝑦 is double passed in lower half of %xmm1
-/	@return	remainder ∈ (-|𝑦|,|𝑦|) in %xmm0
-/	@define	𝑥-trunc(𝑥/𝑦)*𝑦
-/	@see	emod()
+//	fmod [sic] does (𝑥 rem 𝑦) w/ round()-style rounding.
+//
+//	@param	𝑥 is double passed in lower half of %xmm0
+//	@param	𝑦 is double passed in lower half of %xmm1
+//	@return	remainder ∈ (-|𝑦|,|𝑦|) in %xmm0
+//	@define	𝑥-trunc(𝑥/𝑦)*𝑦
+//	@see	emod()
 fmod:	ezlea	fmodl,ax
 	jmp	_d2ld2
 	.endfn	fmod,globl

@@ -19,9 +19,9 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Delegates to free().
-/
-/	@note	reduces make dependency toil caused by macros
+//	Delegates to free().
+//
+//	@note	reduces make dependency toil caused by macros
 testlib_free:
 	jmp	free
 	.endfn	testlib_free,globl

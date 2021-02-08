@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Returns 𝑥^𝑦.
-/
-/	@param	𝑥 is long double passed on stack
-/	@param	𝑦 is int passed in %edi
-/	@return	%st
+//	Returns 𝑥^𝑦.
+//
+//	@param	𝑥 is long double passed on stack
+//	@param	𝑦 is int passed in %edi
+//	@return	%st
 powil:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

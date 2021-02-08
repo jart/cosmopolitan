@@ -18,12 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Switches stack.
-/
-/	@param	rdi is new rsp, passed as malloc(size) + size
-/	@param	rsi is function to call in new stack space
-/	@param	rdx,rcx,r8,r9 get passed as args to rsi
-/	@return	rax and happens on original stack
+//	Switches stack.
+//
+//	@param	rdi is new rsp, passed as malloc(size) + size
+//	@param	rsi is function to call in new stack space
+//	@param	rdx,rcx,r8,r9 get passed as args to rsi
+//	@return	rax and happens on original stack
 _setstack:
 	push	%rbp
 	mov	%rsp,%rbp

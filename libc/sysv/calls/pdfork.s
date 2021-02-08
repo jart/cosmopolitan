@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall pdfork 0xffffff206fffffff globl
+.scall pdfork,0xffffff206fffffff,globl

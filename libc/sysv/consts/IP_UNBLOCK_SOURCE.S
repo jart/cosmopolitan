@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon ip IP_UNBLOCK_SOURCE 37 73 73 0 0 18
+.syscon ip,IP_UNBLOCK_SOURCE,37,73,73,0,0,18

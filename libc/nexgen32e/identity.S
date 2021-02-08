@@ -19,8 +19,8 @@
 #include "libc/macros.h"
 #include "libc/notice.inc"
 
-/	The identity() function.
-/	@return	first argument
+//	The identity() function.
+//	@return	first argument
 identity:
 	mov	%rdi,%rax
 	ret

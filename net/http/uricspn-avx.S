@@ -18,12 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Verifies buffer contains only URI characters.
-/
-/	@param	%rdi is data which should be 32-byte aligned
-/	@param	%rsi is byte length of data
-/	@return	number of kosher bytes
-/	@cost	10x faster than fastest Ragel code
+//	Verifies buffer contains only URI characters.
+//
+//	@param	%rdi is data which should be 32-byte aligned
+//	@param	%rsi is byte length of data
+//	@return	number of kosher bytes
+//	@cost	10x faster than fastest Ragel code
 uricspn$avx:
 	.leafprologue
 	.profilable
@@ -49,13 +49,13 @@ uricspn$avx:
 	.endfn	uricspn$avx,globl,hidden
 
 	.rodata.cst16
-.Luric:	.byte	'!,'!
-	.byte	'$,';
-	.byte	'=,'=
-	.byte	'?,'Z
-	.byte	'_,'_
-	.byte	'a,'z
-	.byte	'~,'~
+.Luric:	.byte	'!','!'
+	.byte	'$',';'
+	.byte	'=','='
+	.byte	'?','Z'
+	.byte	'_','_'
+	.byte	'a','z'
+	.byte	'~','~'
 	.byte	0,0
 	.endobj	.Luric
 	.previous

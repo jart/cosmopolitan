@@ -20,12 +20,12 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Computes transcedental trigonometry op w/ reactive scaling.
-/
-/	@param	%rdx points to op function
-/	@param	everything else delegates
-/	@clob	%ax
-/	@see	sin,cos,tan
+//	Computes transcedental trigonometry op w/ reactive scaling.
+//
+//	@param	%rdx points to op function
+//	@param	everything else delegates
+//	@clob	%ax
+//	@see	sin,cos,tan
 c2rangr:push	%rbp
 	mov	%rsp,%rbp
 	.profilable

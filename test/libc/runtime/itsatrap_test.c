@@ -35,6 +35,8 @@
  * @see __addvsi3, __mulvsi3, etc.
  */
 
+#ifndef __llvm__ /* TODO(jart): wut */
+
 volatile bool overflowed_;
 
 void __on_arithmetic_overflow(void) {
@@ -351,3 +353,5 @@ TEST(__mulvti3, testOverflow) {
   x *= 0xb504f333f9de6d29;
   EXPECT_TRUE(overflowed_);
 }
+
+#endif /* __llvm__ */

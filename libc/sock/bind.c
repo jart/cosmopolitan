@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/sock/internal.h"
@@ -41,8 +42,7 @@ int bind(int fd, const void *addr, uint32_t addrsize) {
         return sys_bind(fd, addr, addrsize);
       } else {
         struct sockaddr_in_bsd addr2;
-        _Static_assert(sizeof(struct sockaddr_in) ==
-                       sizeof(struct sockaddr_in_bsd));
+        assert(sizeof(struct sockaddr_in) == sizeof(struct sockaddr_in_bsd));
         memcpy(&addr2, addr, sizeof(struct sockaddr_in));
         sockaddr2bsd(&addr2);
         return sys_bind(fd, &addr2, addrsize);

@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	TODO(jart): pmovzxbw and vpunpcklbw
+//	TODO(jart): pmovzxbw and vpunpcklbw
 strcpyzbw:
 	.leafprologue
 	.profilable

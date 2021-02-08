@@ -1,15 +1,18 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_LOG_H_
 #define COSMOPOLITAN_LIBC_LOG_LOG_H_
+#include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/winsize.h"
+#include "libc/stdio/stdio.h"
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § liblog                                                    ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#define kLogFatal   0u
-#define kLogError   1u
-#define kLogWarn    2u
-#define kLogInfo    3u
-#define kLogVerbose 4u
-#define kLogDebug   5u
+#define kLogFatal   0
+#define kLogError   1
+#define kLogWarn    2
+#define kLogInfo    3
+#define kLogVerbose 4
+#define kLogDebug   5
 
 /**
  * Log level for compile-time DCE.
@@ -26,10 +29,6 @@
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-struct sigset;
-struct winsize;
-typedef struct FILE FILE;
 
 extern FILE *g_logfile;
 

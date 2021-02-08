@@ -19,12 +19,12 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns sine and cosine of 𝑥.
-/
-/	@param	𝑥 is float scalar in low quarter of %xmm0
-/	@param	%rdi is float *out_sin
-/	@param	%rsi is float *out_cos
-/	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
+//	Returns sine and cosine of 𝑥.
+//
+//	@param	𝑥 is float scalar in low quarter of %xmm0
+//	@param	%rdi is float *out_sin
+//	@param	%rsi is float *out_cos
+//	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
 sincosf:
 	push	%rbp
 	mov	%rsp,%rbp

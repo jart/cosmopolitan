@@ -145,12 +145,12 @@ void CheckExists(const char *path) {
 
 nodiscard char *MakeDeployScript(struct addrinfo *remotenic, size_t combytes) {
   const char *ip4 = (const char *)&remotenic->ai_addr4->sin_addr;
-  return xasprintf("mkdir -p o/ &&\n"
-                   "dd bs=%zu count=%zu of=o/runitd.$$.com 2>/dev/null &&\n"
-                   "exec <&- &&\n"
-                   "chmod +x o/runitd.$$.com &&\n"
-                   "o/runitd.$$.com -rdl%hhu.%hhu.%hhu.%hhu -p %hu &&\n"
-                   "rm -f o/runitd.$$.com\n",
+  return xasprintf("mkdir -p o/ && "
+                   "dd bs=%zu count=%zu of=o/runitd.$$.com 2>/dev/null && "
+                   "exec <&- && "
+                   "chmod +x o/runitd.$$.com && "
+                   "o/runitd.$$.com -rdl%hhu.%hhu.%hhu.%hhu -p %hu && "
+                   "rm -f o/runitd.$$.com",
                    GreatestTwoDivisor(combytes),
                    combytes ? combytes / GreatestTwoDivisor(combytes) : 0,
                    ip4[0], ip4[1], ip4[2], ip4[3], g_runitdport);

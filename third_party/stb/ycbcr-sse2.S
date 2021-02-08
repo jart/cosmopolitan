@@ -85,7 +85,7 @@ stbi__YCbCr_to_RGB_row$sse2:
 7:	.short	255,255,255,255,255,255,255,255
 
 	.end
-/	These should be better but need to get them to work
+//	These should be better but need to get them to work
 3:	.short	11485,11485,11485,11485,11485,11485,11485,11485		# J′R m=13 99.964387%
 4:	.short	-11277,-11277,-11277,-11277,-11277,-11277,-11277,-11277	# J′G m=15 99.935941%
 5:	.short	14516,14516,14516,14516,14516,14516,14516,14516		# J′B m=13 99.947219%

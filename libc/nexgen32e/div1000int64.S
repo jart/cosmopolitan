@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Divides 64-bit signed integer by 1,000.
-/
-/	@param	rdi is number to divide
-/	@return	quotient
+//	Divides 64-bit signed integer by 1,000.
+//
+//	@param	rdi is number to divide
+//	@return	quotient
 div1000int64:
 	mov	$0x7,%cl
 	movabs	$0x20c49ba5e353f7cf,%rdx

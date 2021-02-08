@@ -19,11 +19,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns 𝑥^𝑦.
-/
-/	@param	𝑥 is double scalar in low half of %xmm0
-/	@param	𝑦 is double scalar in low half of %xmm1
-/	@return	double scalar in low half of %xmm0
+//	Returns 𝑥^𝑦.
+//
+//	@param	𝑥 is double scalar in low half of %xmm0
+//	@param	𝑦 is double scalar in low half of %xmm1
+//	@return	double scalar in low half of %xmm0
 pow:	ezlea	powl,ax
 	jmp	_d2ld2
 	.endfn	pow,globl

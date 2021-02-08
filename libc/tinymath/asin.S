@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns arc sine of 𝑥.
-/
-/	@param	𝑥 is double scalar in low half of %xmm0
-/	@return	double scalar in low half of %xmm0
+//	Returns arc sine of 𝑥.
+//
+//	@param	𝑥 is double scalar in low half of %xmm0
+//	@return	double scalar in low half of %xmm0
 asin:	ezlea	asinl,ax
 	jmp	_d2ld2
 	.endfn	asin,globl

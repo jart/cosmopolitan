@@ -286,13 +286,11 @@ int vcscanf(int callback(void *), int unget(int, void *), void *arg,
     }
   }
 Done:
-  while (freeme) {
+  while (freeme && weaken(free)) {
     struct FreeMe *entry = freeme;
     freeme = entry->next;
-    if (items == -1) {
-      weaken(free_s)((void **)&entry->ptr);
-    }
-    weaken(free_s)((void **)&entry);
+    if (items == -1) weaken(free)(entry->ptr);
+    weaken(free)(entry);
   }
   return items;
 }

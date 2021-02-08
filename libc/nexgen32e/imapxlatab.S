@@ -20,11 +20,11 @@
 .text.startup
 .align	8
 
-/	Identity maps 256-byte translation table.
-/
-/	@param	char (*rdi)[256]
-/	@speed	90mBps
-/	@mode	long
+//	Identity maps 256-byte translation table.
+//
+//	@param	char (*rdi)[256]
+//	@speed	90mBps
+//	@mode	long
 imapxlatab:
 	.leafprologue
 	.profilable

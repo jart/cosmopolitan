@@ -20,12 +20,8 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 
-/**
- * Frees memory, the Cosmopolitan way.
- *
- * The caller's pointer is zeroed. Stack and static memory is ignored.
- * This doesn't require a dependency on malloc().
- */
+/* TODO(jart): DELETE */
+
 void free_s(void *v) {
   void **pp = (void **)v;
   void *p = NULL;

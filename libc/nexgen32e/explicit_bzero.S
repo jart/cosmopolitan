@@ -18,14 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Sets memory to zero w/ accompanying non-optimizing macro.
-/
-/	This is intended for security-conscious applications. This
-/	implementation also hoses every register the abi allows. A
-/	concomitant prototype (str.h) countermands compiler magic.
-/
-/	@param	rdi is dest
-/	@param	rsi is the number of bytes to set
+//	Sets memory to zero w/ accompanying non-optimizing macro.
+//
+//	This is intended for security-conscious applications. This
+//	implementation also hoses every register the abi allows. A
+//	concomitant prototype (str.h) countermands compiler magic.
+//
+//	@param	rdi is dest
+//	@param	rsi is the number of bytes to set
 explicit_bzero:
 	.leafprologue
 	mov	%rsi,%rcx

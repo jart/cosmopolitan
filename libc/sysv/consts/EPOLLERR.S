@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon epoll EPOLLERR 8 8 8 8 8 8
+.syscon epoll,EPOLLERR,8,8,8,8,8,8

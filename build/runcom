@@ -6,5 +6,6 @@ DD=${DD:-$(command -v dd)} || exit
 $DD if="$1" of="$1.bak" bs=4096 count=1 conv=notrunc 2>/dev/null
 "$@"
 rc=$?
+echo "$1"
 $DD if="$1.bak" of="$1" bs=4096 count=1 conv=notrunc 2>/dev/null
 exit $rc

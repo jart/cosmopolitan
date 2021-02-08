@@ -22,10 +22,10 @@
 .source	__FILE__
 .code16 # ∩ .code32 ∩ .code64
 
-/	Hoses interrupt descriptor table and triple-faults the system.
-/
-/	@see	youtu.be/GIKfEAF2Yhw?t=67
-/	@mode	long,legacy,real
+//	Hoses interrupt descriptor table and triple-faults the system.
+//
+//	@see	youtu.be/GIKfEAF2Yhw?t=67
+//	@mode	long,legacy,real
 triplf:	push	%bp
 	mov	%sp,%bp
 	sub	$8,%sp

@@ -19,9 +19,9 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Thunks free() if it's linked, otherwise do nothing.
-/
-/	@see	free_s() which can ignore static/stack and clear refs
+//	Thunks free() if it's linked, otherwise do nothing.
+//
+//	@see	free_s() which can ignore static/stack and clear refs
 weakfree:
 	push	%rbp
 	mov	%rsp,%rbp

@@ -20,11 +20,11 @@
 .privileged
 .source	__FILE__
 
-/	Terminates process, ignoring destructors and atexit() handlers.
-/
-/	@param	edi is exit code ∈ [0,256)
-/	@asyncsignalsafe
-/	@vforksafe
-/	@noreturn
+//	Terminates process, ignoring destructors and atexit() handlers.
+//
+//	@param	edi is exit code ∈ [0,256)
+//	@asyncsignalsafe
+//	@vforksafe
+//	@noreturn
 _exit:	jmp	_Exit
 	.endfn	_exit,globl,protected

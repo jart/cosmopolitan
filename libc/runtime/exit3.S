@@ -22,12 +22,12 @@
 .privileged
 .source	__FILE__
 
-/	Terminates process, ignoring destructors and atexit() handlers.
-/
-/	@param	edi is exit code ∈ [0,256)
-/	@asyncsignalsafe
-/	@vforksafe
-/	@noreturn
+//	Terminates process, ignoring destructors and atexit() handlers.
+//
+//	@param	edi is exit code ∈ [0,256)
+//	@asyncsignalsafe
+//	@vforksafe
+//	@noreturn
 _Exit:	push	%rbp
 	mov	%rsp,%rbp
 #if SupportsWindows()

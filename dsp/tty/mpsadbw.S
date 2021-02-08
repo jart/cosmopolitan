@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	TODO(jart): write me
+//	TODO(jart): write me
 
 	movdqa	a,%xmm0
 	mpsadbw $0,inv,%xmm0

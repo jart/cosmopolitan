@@ -37,8 +37,7 @@ OVERVIEW\n\
 \n\
 DESCRIPTION\n\
 \n\
-  This launches gcc or clang while filtering out\n\
-  flags they whine about.\n\
+  This launches gcc or clang after scrubbing flags.\n\
 \n\
 EXAMPLE\n\
 \n\
@@ -76,6 +75,87 @@ int ccversion;
 
 struct Flags flags;
 struct Command command;
+
+const char *const kGccOnlyFlags[] = {
+    "--nocompress-debug-sections",
+    "--noexecstack",
+    "-Wa,--nocompress-debug-sections",
+    "-Wa,--noexecstack",
+    "-Wno-unused-but-set-variable",
+    "-Wunsafe-loop-optimizations",
+    "-fbranch-target-load-optimize",
+    "-fcx-limited-range",
+    "-fdelete-dead-exceptions",
+    "-femit-struct-debug-baseonly",
+    "-fipa-pta",
+    "-fivopts",
+    "-flimit-function-alignment",
+    "-fmerge-constants",
+    "-fmodulo-sched",
+    "-fmodulo-sched-allow-regmoves",
+    "-fno-align-jumps",
+    "-fno-align-labels",
+    "-fno-align-loops",
+    "-fno-fp-int-builtin-inexact",
+    "-fno-gnu-unique",
+    "-fno-gnu-unique",
+    "-fno-instrument-functions",
+    "-fno-whole-program",
+    "-fopt-info-vec",
+    "-fopt-info-vec-missed",
+    "-freg-struct-return",
+    "-freschedule-modulo-scheduled-loops",
+    "-frounding-math",
+    "-fsched2-use-superblocks",
+    "-fschedule-insns",
+    "-fschedule-insns2",
+    "-fshrink-wrap",
+    "-fshrink-wrap-separate",
+    "-fsignaling-nans",
+    "-fstack-clash-protection",
+    "-ftracer",
+    "-ftrapv",
+    "-ftree-loop-im",
+    "-ftree-loop-vectorize",
+    "-funsafe-loop-optimizations",
+    "-fversion-loops-for-strides",
+    "-fwhole-program",
+    "-gdescribe-dies",
+    "-gstabs",
+    "-mcall-ms2sysv-xlogues",
+    "-mdispatch-scheduler",
+    "-mfpmath=sse+387",
+    "-mmitigate-rop",
+    "-mno-fentry",
+};
+
+bool IsGccOnlyFlag(const char *s) {
+  int m, l, r, x;
+  l = 0;
+  r = ARRAYLEN(kGccOnlyFlags) - 1;
+  while (l <= r) {
+    m = (l + r) >> 1;
+    x = strcmp(s, kGccOnlyFlags[m]);
+    if (x < 0) {
+      r = m - 1;
+    } else if (x > 0) {
+      l = m + 1;
+    } else {
+      return true;
+    }
+  }
+  if (startswith(s, "-ffixed-")) return true;
+  if (startswith(s, "-fcall-saved")) return true;
+  if (startswith(s, "-fcall-used")) return true;
+  if (startswith(s, "-fgcse-")) return true;
+  if (startswith(s, "-fvect-cost-model=")) return true;
+  if (startswith(s, "-fsimd-cost-model=")) return true;
+  if (startswith(s, "-fopt-info")) return true;
+  if (startswith(s, "-mstringop-strategy=")) return true;
+  if (startswith(s, "-mpreferred-stack-boundary=")) return true;
+  if (startswith(s, "-Wframe-larger-than=")) return true;
+  return false;
+}
 
 void AddFlag(char *s) {
   size_t n;
@@ -123,8 +203,8 @@ int main(int argc, char *argv[]) {
   }
 
   ccversion = atoi(firstnonnull(emptytonull(getenv("CCVERSION")), "4"));
-  isgcc = strstr(basename(cc), "gcc");
-  isclang = strstr(basename(cc), "clang");
+  isgcc = !!strstr(basename(cc), "gcc");
+  isclang = !!strstr(basename(cc), "clang");
   iscc = isgcc | isclang;
 
   for (i = 1; i < argc; ++i) {
@@ -137,8 +217,11 @@ int main(int argc, char *argv[]) {
       AddFlag((outpath = argv[++i]));
       continue;
     }
-    if (iscc) {
+    if (!iscc) {
       AddFlag(argv[i]);
+      continue;
+    }
+    if (isclang && IsGccOnlyFlag(argv[i])) {
       continue;
     }
     if (!strcmp(argv[i], "-w")) {
@@ -207,64 +290,9 @@ int main(int argc, char *argv[]) {
     } else if (startswith(argv[i], "-R") ||
                !strcmp(argv[i], "-fsave-optimization-record")) {
       if (isclang) AddFlag(argv[i]);
-    } else if (isclang &&
-               (!strcmp(argv[i], "-gstabs") || !strcmp(argv[i], "-ftrapv") ||
-                !strcmp(argv[i], "-fsignaling-nans") ||
-                !strcmp(argv[i], "-fcx-limited-range") ||
-                !strcmp(argv[i], "-fno-fp-int-builtin-inexact") ||
-                !strcmp(argv[i], "-Wno-unused-but-set-variable") ||
-                !strcmp(argv[i], "-Wunsafe-loop-optimizations") ||
-                !strcmp(argv[i], "-mdispatch-scheduler") ||
-                !strcmp(argv[i], "-ftracer") ||
-                !strcmp(argv[i], "-frounding-math") ||
-                !strcmp(argv[i], "-fmerge-constants") ||
-                !strcmp(argv[i], "-fmodulo-sched") ||
-                !strcmp(argv[i], "-fopt-info-vec") ||
-                !strcmp(argv[i], "-fopt-info-vec-missed") ||
-                !strcmp(argv[i], "-fmodulo-sched-allow-regmoves") ||
-                !strcmp(argv[i], "-freschedule-modulo-scheduled-loops") ||
-                !strcmp(argv[i], "-fipa-pta") ||
-                !strcmp(argv[i], "-fsched2-use-superblocks") ||
-                !strcmp(argv[i], "-fbranch-target-load-optimize") ||
-                !strcmp(argv[i], "-fdelete-dead-exceptions") ||
-                !strcmp(argv[i], "-funsafe-loop-optimizations") ||
-                !strcmp(argv[i], "-mmitigate-rop") ||
-                !strcmp(argv[i], "-fno-align-jumps") ||
-                !strcmp(argv[i], "-fno-align-labels") ||
-                !strcmp(argv[i], "-fno-align-loops") ||
-                !strcmp(argv[i], "-fivopts") ||
-                !strcmp(argv[i], "-fschedule-insns") ||
-                !strcmp(argv[i], "-fno-semantic-interposition") ||
-                !strcmp(argv[i], "-mno-fentry") ||
-                !strcmp(argv[i], "-fversion-loops-for-strides") ||
-                !strcmp(argv[i], "-femit-struct-debug-baseonly") ||
-                !strcmp(argv[i], "-ftree-loop-vectorize") ||
-                !strcmp(argv[i], "-gdescribe-dies") ||
-                !strcmp(argv[i], "-flimit-function-alignment") ||
-                !strcmp(argv[i], "-ftree-loop-im") ||
-                !strcmp(argv[i], "-fno-instrument-functions") ||
-                !strcmp(argv[i], "-fstack-clash-protection") ||
-                !strcmp(argv[i], "-mfpmath=sse+387") ||
-                !strcmp(argv[i], "-Wa,--noexecstack") ||
-                !strcmp(argv[i], "-freg-struct-return") ||
-                !strcmp(argv[i], "-mcall-ms2sysv-xlogues") ||
-                startswith(argv[i], "-ffixed-") ||
-                startswith(argv[i], "-fcall-saved") ||
-                startswith(argv[i], "-fcall-used") ||
-                startswith(argv[i], "-fgcse-") ||
-                strstr(argv[i], "shrink-wrap") ||
-                strstr(argv[i], "schedule-insns2") ||
-                startswith(argv[i], "-fvect-cost-model=") ||
-                startswith(argv[i], "-fsimd-cost-model=") ||
-                startswith(argv[i], "-fopt-info") ||
-                startswith(argv[i], "-mstringop-strategy=") ||
-                startswith(argv[i], "-mpreferred-stack-boundary=") ||
-                strstr(argv[i], "gnu-unique") ||
-                startswith(argv[i], "-Wframe-larger-than=") ||
-                strstr(argv[i], "whole-program") ||
-                startswith(argv[i], "-Wa,--size-check=") ||
-                startswith(argv[i], "-Wa,--listing"))) {
-      /* ignore flag so clang won't whine */
+    } else if (isclang && startswith(argv[i], "--debug-prefix-map")) {
+      /* llvm doesn't provide a gas interface so simulate w/ clang */
+      AddFlag(xasprintf("-f%s", argv[i] + 2));
     } else {
       AddFlag(argv[i]);
     }
@@ -272,7 +300,7 @@ int main(int argc, char *argv[]) {
 
   if (iscc) {
     if (isclang) {
-      AddFlag("-fno-integrated-as");
+      /* AddFlag("-fno-integrated-as"); */
       AddFlag("-Wno-unused-command-line-argument");
       AddFlag("-Wno-incompatible-pointer-types-discards-qualifiers");
     }
@@ -303,6 +331,9 @@ int main(int argc, char *argv[]) {
     if (wantubsan) {
       AddFlag("-fsanitize=undefined");
       AddFlag("-fno-data-sections");
+    }
+    if (wantframe) {
+      AddFlag("-fno-omit-frame-pointer");
     }
   }
 

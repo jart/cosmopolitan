@@ -23,11 +23,11 @@
 .code16 # ∩ .code32 ∩ .code64
 .source	__FILE__
 
-/	Clears display page.
-/
-/	@param	es:di arbitrary address within video page
-/	@return	es:ax starting address
-/	@mode	long,legacy,real
+//	Clears display page.
+//
+//	@param	es:di arbitrary address within video page
+//	@return	es:ax starting address
+//	@mode	long,legacy,real
 vcls:	xchg	%di,%ax
 	bband	VIDYA_REWIND,%ah,%al
 	xchg	%di,%ax

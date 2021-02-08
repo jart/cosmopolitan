@@ -18,29 +18,29 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Base 36 Decoder Table.
-/
-/	This supports uppercase and lowercase. For encoding, the string
-/	0123456789abcdefghijklmnopqrstuvwxyz can be used, which linkers
-/	are able to deduplicate.
+//	Base 36 Decoder Table.
+//
+//	This supports uppercase and lowercase. For encoding, the string
+//	0123456789abcdefghijklmnopqrstuvwxyz can be used, which linkers
+//	are able to deduplicate.
 	.initbss 300,_init_kBase36
 kBase36:.zero	256
 	.endobj	kBase36,globl,hidden
 	.previous
 
 	.init.start 300,_init_kBase36
-	add	$'0,%rdi
+	add	$'0',%rdi
 	xor	%eax,%eax
 	pushpop	10,%rcx
 0:	inc	%eax
 	stosb
 	.loop	0b
-	add	$'A-1-'9,%rdi
-	pushpop	'Z+1-'A,%rcx
+	add	$'A'-1-'9',%rdi
+	pushpop	'Z'+1-'A',%rcx
 0:	inc	%eax
 	mov	%al,0x20(%rdi)
 	stosb
 	.loop	0b
-	add	$255-'Z,%rdi
+	add	$255-'Z',%rdi
 	.init.end 300,_init_kBase36
 	.source	__FILE__

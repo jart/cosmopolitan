@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 #include "libc/notice.inc"
 
-/	Environment variable pointer list.
+//	Environment variable pointer list.
 	.bss
 	.align	8
 environ:

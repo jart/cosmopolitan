@@ -22,11 +22,11 @@
 .source	__FILE__
 .code16
 
-/	Resets personal computer.
-/
-/	@param	di drive number, e.g. A:\ is 0x00, C:\ is 0x80
-/	@mode	real
-/	@noreturn
+//	Resets personal computer.
+//
+//	@param	di drive number, e.g. A:\ is 0x00, C:\ is 0x80
+//	@mode	real
+//	@noreturn
 bootdr:	push	%bp
 	mov	%sp,%bp
 	mov	%di,%dx

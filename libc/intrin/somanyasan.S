@@ -53,11 +53,11 @@ __asan_report_load16:
 	.endfn	__asan_report_load16,globl
 __asan_report_load32:
 	push	$32
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	__asan_report_load32,globl
 OnReportLoad:
 	pop	%rsi
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	OnReportLoad
 __asan_report_load_n:
 	lea	__asan_report_load(%rip),%r11
@@ -86,15 +86,15 @@ __asan_report_store16:
 	.endfn	__asan_report_store16,globl
 __asan_report_store32:
 	push	$32
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	__asan_report_store32,globl
 ReportStore:
 	pop	%rsi
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	ReportStore
 __asan_report_store_n:
 	lea	__asan_report_store(%rip),%r11
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	__asan_report_store_n,globl
 
 __asan_report_noreentry:
@@ -152,7 +152,7 @@ __asan_stack_free_9:
 	.endfn	__asan_stack_free_9,globl
 __asan_stack_free_10:
 	push	$10
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	__asan_stack_free_10,globl
 OnStackFree:
 	pop	%rdx
@@ -201,7 +201,7 @@ __asan_stack_malloc_9:
 	.endfn	__asan_stack_malloc_9,globl
 __asan_stack_malloc_10:
 	push	$10
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	__asan_stack_malloc_10,globl
 OnStackMalloc:
 	pop	%rsi
@@ -212,7 +212,7 @@ __asan_version_mismatch_check_v8:
 	ret
 	.endfn	__asan_version_mismatch_check_v8,globl
 
-/	Initializes Address Sanitizer runtime earlier if linked.
+//	Initializes Address Sanitizer runtime earlier if linked.
 	.init.start 301,_init_asan
 	push	%rdi
 	push	%rsi

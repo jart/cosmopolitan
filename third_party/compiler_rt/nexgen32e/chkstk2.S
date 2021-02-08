@@ -6,7 +6,7 @@
 #ifdef __x86_64__
 
 	.section .yoink
-	nop	huge_compiler_rt_license
+	nopl	huge_compiler_rt_license(%rip)
 	.previous
 
 // _chkstk (_alloca) routine - probe stack between %rsp and (%rsp-%rax) in 4k increments,

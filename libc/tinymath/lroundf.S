@@ -19,11 +19,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Rounds to nearest integer, away from zero.
-/
-/	@param	𝑥 is float scalar in low quarter of %xmm0
-/	@return	64-bit signed integer in %rax
-/	@see	round()
+//	Rounds to nearest integer, away from zero.
+//
+//	@param	𝑥 is float scalar in low quarter of %xmm0
+//	@return	64-bit signed integer in %rax
+//	@see	round()
 lroundf:
 	.leafprologue
 	.profilable

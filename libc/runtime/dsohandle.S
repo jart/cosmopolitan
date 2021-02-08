@@ -20,7 +20,7 @@
 #include "libc/notice.inc"
 .source	__FILE__
 
-/	Uniquely identifies each artifact linked in an address space.
+//	Uniquely identifies each artifact linked in an address space.
 __dso_handle:
 	.quad	__dso_handle
 	.endobj	__dso_handle,globl,hidden

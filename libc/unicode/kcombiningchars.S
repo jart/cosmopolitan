@@ -42,10 +42,10 @@ kCombiningChars:
 	add	$1208,%rsi
 	.init.end 400,_init_kCombiningChars
 
-/	o/tool/build/lz4toasm.com \
-/	  -o o/libc/str/CombiningChars.s \
-/	  -s kCombiningChars \
-/	  o/libc/str/CombiningChars.bin.lz4
+//	o/tool/build/lz4toasm.com
+//	  -o o/libc/str/CombiningChars.s
+//	  -s kCombiningChars
+//	  o/libc/str/CombiningChars.bin.lz4
 	.initro 400,_init_kCombiningChars
 kCombiningCharsLz4:
 	.byte	0x1f,0x00,0x01,0x00,0x4c,0x19,0xff,0x01	#▼ ☺ L↓λ☺

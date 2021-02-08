@@ -19,14 +19,14 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Copies memory.
-/
-/	DEST and SRC must not overlap unless DEST ≤ SRC.
-/
-/	@param	rdi is dest
-/	@param	rsi is src
-/	@param	rdx is number of bytes
-/	@return	original rdi + rdx copied to rax
+//	Copies memory.
+//
+//	DEST and SRC must not overlap unless DEST ≤ SRC.
+//
+//	@param	rdi is dest
+//	@param	rsi is src
+//	@param	rdx is number of bytes
+//	@return	original rdi + rdx copied to rax
 mempcpy:
 	lea	(%rdi,%rdx),%rax
 	jmp	MemCpy

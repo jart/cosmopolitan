@@ -25,6 +25,8 @@
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/nr.h"
 
+/* TODO(jart): DELETE */
+
 #define WasImported(SLOT) \
   ((void *)*SLOT && *SLOT != (void *)&missingno /* see libc/crt/crt.S */)
 

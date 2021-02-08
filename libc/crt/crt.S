@@ -23,11 +23,11 @@
 .section .start,"ax",@progbits
 .align	16
 
-/	System Five userspace program entrypoint.
-/
-/	@param	rsp is [n,argv₀..argvₙ₋₁,0,envp₀..,0,auxv₀..,0,..]
-/	@note	FreeBSD is special (see freebsd/lib/csu/amd64/...)
-/	@noreturn
+//	System Five userspace program entrypoint.
+//
+//	@param	rsp is [n,argv₀..argvₙ₋₁,0,envp₀..,0,auxv₀..,0,..]
+//	@note	FreeBSD is special (see freebsd/lib/csu/amd64/...)
+//	@noreturn
 _start:
 #if SupportsFreebsd()
 	test	%rdi,%rdi
@@ -39,12 +39,12 @@ _start:
 	lea	8(%rsp),%rsi			# argv
 	lea	24(%rsp,%rbx,8),%rdx		# envp
 	.frame0
-/	bofram	9f
-	.weak	idata.iat
-	.weak	idata.iatend
+//	bofram	9f
+	.weak	ape_idata_iat
+	.weak	ape_idata_iatend
 	ezlea	missingno,ax			# make win32 imps noop
-	ezlea	idata.iat,di
-	ezlea	idata.iatend,cx
+	ezlea	ape_idata_iat,di
+	ezlea	ape_idata_iatend,cx
 	sub	%rdi,%rcx
 	shr	$3,%ecx
 	rep stosq
@@ -70,11 +70,11 @@ _start:
 	.endfn	_start,weak,hidden
 
 #if SupportsXnu()
-/	Macintosh userspace program entrypoint.
-/
-/	@param	rsp is [n,argv₀..argvₙ₋₁,0,envp₀..,0,auxv₀..,0,..]
-/	@note	FreeBSD is special (see freebsd/lib/csu/amd64/...)
-/	@noreturn
+//	Macintosh userspace program entrypoint.
+//
+//	@param	rsp is [n,argv₀..argvₙ₋₁,0,envp₀..,0,auxv₀..,0,..]
+//	@note	FreeBSD is special (see freebsd/lib/csu/amd64/...)
+//	@noreturn
 _xnu:	movb	$XNU,__hostos(%rip)
 	jmp	0b
 	.endfn	_xnu,weak,hidden

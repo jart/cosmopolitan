@@ -19,10 +19,10 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/macros.h"
 
-/	Returns timestamp without needing system calls.
-/
-/	@return	seconds since unix epoch in %st0
-/	@note	uses microsecond scale fallback on k8 or vm
+//	Returns timestamp without needing system calls.
+//
+//	@return	seconds since unix epoch in %st0
+//	@note	uses microsecond scale fallback on k8 or vm
 	.initbss 202,_init_nowl
 nowl:	.quad	0
 	.endobj	nowl,globl

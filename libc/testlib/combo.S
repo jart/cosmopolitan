@@ -19,9 +19,9 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Decentralized section for test combo registration.
-/
-/	@see	ape/ape.lds
+//	Decentralized section for test combo registration.
+//
+//	@see	ape/ape.lds
 	.section .piro.relo.sort.combo.1,"aw",@nobits
 	.type	__combo_start,@object
 	.type	__combo_end,@object

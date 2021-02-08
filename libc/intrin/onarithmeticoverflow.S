@@ -20,8 +20,8 @@
 .privileged
 .source	__FILE__
 
-/	Arithmetic overflow handler.
-/	@see	-ftrapv
+//	Arithmetic overflow handler.
+//	@see	-ftrapv
 __on_arithmetic_overflow:
 	push	%rbp
 	mov	%rsp,%rbp

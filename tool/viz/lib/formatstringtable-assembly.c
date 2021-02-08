@@ -78,7 +78,7 @@ static const char *GetStorageSpecifier(const char *type, int *out_width,
 
 static void EmitSection(long yn, long xn, int w, int arrayalign, int emit(),
                         void *a) {
-  char alignstr[20];
+  char alignstr[21];
   uint64toarray_radix10(arrayalign, alignstr);
   if (arrayalign <= 8 && yn * xn * w == 8) {
     emit("\t.rodata.cst", a);
@@ -105,7 +105,7 @@ void *FormatStringTableAsAssembly(long yn, long xn, const char *const T[yn][xn],
                                   const char *name, const char *scope) {
   int w, align;
   const char *storage;
-  char ynstr[20], xnstr[20];
+  char ynstr[21], xnstr[21];
   name = firstnonnull(name, "M");
   storage = GetStorageSpecifier(firstnonnull(type, "long"), &w, &align);
   uint64toarray_radix10(yn, ynstr);

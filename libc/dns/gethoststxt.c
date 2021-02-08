@@ -54,7 +54,11 @@ static textwindows noinline char *getnthoststxtpath(char *pathbuf,
  * @note yoinking realloc() ensures there's no size limits
  */
 const struct HostsTxt *gethoststxt(void) {
-  struct HostsTxtInitialStaticMemory *init = &g_hoststxt_init;
+  FILE *f;
+  const char *path;
+  char pathbuf[PATH_MAX];
+  struct HostsTxtInitialStaticMemory *init;
+  init = &g_hoststxt_init;
   if (!g_hoststxt) {
     g_hoststxt = &init->ht;
     init->ht.entries.n = pushpop(ARRAYLEN(init->entries));
@@ -62,14 +66,12 @@ const struct HostsTxt *gethoststxt(void) {
     init->ht.strings.n = pushpop(ARRAYLEN(init->strings));
     init->ht.strings.p = init->strings;
     __cxa_atexit(freehoststxt, &g_hoststxt, NULL);
-    char pathbuf[PATH_MAX];
-    const char *path = "/etc/hosts";
+    path = "/etc/hosts";
     if (IsWindows()) {
       path = firstnonnull(getnthoststxtpath(pathbuf, ARRAYLEN(pathbuf)), path);
     }
-    FILE *f;
     if (!(f = fopen(path, "r")) || parsehoststxt(g_hoststxt, f) == -1) {
-      if (!IsTiny()) fprintf(stderr, "%s: %s: %m\n", "warning", path);
+      /* TODO(jart): Elevate robustness. */
     }
     fclose(f);
     sorthoststxt(g_hoststxt);

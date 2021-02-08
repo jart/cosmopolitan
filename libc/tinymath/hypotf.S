@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns euclidean distance in 2d space.
+//	Returns euclidean distance in 2d space.
 hypotf:	.leafprologue
 	.profilable
 	mulss	%xmm1,%xmm1

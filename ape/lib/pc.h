@@ -63,49 +63,49 @@
 #define FPU_C2 0b0000000000000010000000000
 #define FPU_C3 0b0000000000100000000000000
 
-#define CR0_PE (1u << 0)  /* protected mode enabled */
-#define CR0_MP (1u << 1)  /* monitor coprocessor */
-#define CR0_EM (1u << 2)  /* no x87 fpu present if set */
-#define CR0_TS (1u << 3)  /* task switched x87 */
-#define CR0_ET (1u << 4)  /* extension type 287 or 387 */
-#define CR0_NE (1u << 5)  /* enable x87 error reporting */
-#define CR0_WP (1u << 16) /* write protect read-only pages @pl0 */
-#define CR0_AM (1u << 18) /* alignment mask */
-#define CR0_NW (1u << 29) /* global write-through cache disable */
-#define CR0_CD (1u << 30) /* global cache disable */
-#define CR0_PG (1u << 31) /* paging enabled */
+#define CR0_PE 0x01       /* protected mode enabled */
+#define CR0_MP 0x02       /* monitor coprocessor */
+#define CR0_EM 0x04       /* no x87 fpu present if set */
+#define CR0_TS 0x08       /* task switched x87 */
+#define CR0_ET 0x10       /* extension type 287 or 387 */
+#define CR0_NE 0x20       /* enable x87 error reporting */
+#define CR0_WP 0x00010000 /* write protect read-only pages @pl0 */
+#define CR0_AM 0x00040000 /* alignment mask */
+#define CR0_NW 0x20000000 /* global write-through cache disable */
+#define CR0_CD 0x40000000 /* global cache disable */
+#define CR0_PG 0x80000000 /* paging enabled */
 
-#define CR4_VME        (1u << 0)  /* virtual 8086 mode extension */
-#define CR4_PVI        (1u << 1)  /* protected mode virtual interrupts */
-#define CR4_TSD        (1u << 2)  /* time stamp disable (rdtsc) */
-#define CR4_DE         (1u << 3)  /* debugging extensions */
-#define CR4_PSE        (1u << 4)  /* page size extension */
-#define CR4_PAE        (1u << 5)  /* physical address extension */
-#define CR4_MCE        (1u << 6)  /* machine check exception */
-#define CR4_PGE        (1u << 7)  /* page global enabled */
-#define CR4_OSFXSR     (1u << 9)  /* enable SSE and fxsave/fxrestor */
-#define CR4_OSXMMEXCPT (1u << 10) /* enable unmasked SSE exceptions */
-#define CR4_LA57       (1u << 12) /* enable level-5 paging */
-#define CR4_VMXE       (1u << 13) /* enable VMX operations */
-#define CR4_SMXE       (1u << 14) /* enable SMX operations */
-#define CR4_FSGSBASE   (1u << 16) /* enable *FSBASE and *GSBASE instructions */
-#define CR4_PCIDE      (1u << 17) /* enable process-context identifiers */
-#define CR4_OSXSAVE    (1u << 18) /* enable XSAVE */
+#define CR4_VME        0x01       /* virtual 8086 mode extension */
+#define CR4_PVI        0x02       /* protected mode virtual interrupts */
+#define CR4_TSD        0x04       /* time stamp disable (rdtsc) */
+#define CR4_DE         0x08       /* debugging extensions */
+#define CR4_PSE        0x10       /* page size extension */
+#define CR4_PAE        0x20       /* physical address extension */
+#define CR4_MCE        0x40       /* machine check exception */
+#define CR4_PGE        0x80       /* page global enabled */
+#define CR4_OSFXSR     0x0200     /* enable SSE and fxsave/fxrestor */
+#define CR4_OSXMMEXCPT 0x0400     /* enable unmasked SSE exceptions */
+#define CR4_LA57       0x1000     /* enable level-5 paging */
+#define CR4_VMXE       0x2000     /* enable VMX operations */
+#define CR4_SMXE       0x4000     /* enable SMX operations */
+#define CR4_FSGSBASE   0x00010000 /* enable *FSBASE and *GSBASE instructions */
+#define CR4_PCIDE      0x00020000 /* enable process-context identifiers */
+#define CR4_OSXSAVE    0x00040000 /* enable XSAVE */
 
-#define XCR0_X87       (1u << 0)
-#define XCR0_SSE       (1u << 1)
-#define XCR0_AVX       (1u << 2)
-#define XCR0_BNDREG    (1u << 3)
-#define XCR0_BNDCSR    (1u << 4)
-#define XCR0_OPMASK    (1u << 5)
-#define XCR0_ZMM_HI256 (1u << 6)
-#define XCR0_HI16_ZMM  (1u << 7)
+#define XCR0_X87       0x01
+#define XCR0_SSE       0x02
+#define XCR0_AVX       0x04
+#define XCR0_BNDREG    0x08
+#define XCR0_BNDCSR    0x10
+#define XCR0_OPMASK    0x20
+#define XCR0_ZMM_HI256 0x40
+#define XCR0_HI16_ZMM  0x80
 
-#define EFER     0xC0000080 /* extended feature enable register */
-#define EFER_SCE (1u << 0)  /* system call extensions */
-#define EFER_LME (1u << 8)  /* long mode enable */
-#define EFER_LMA (1u << 10) /* long mode active */
-#define EFER_NXE (1u << 11) /* no-execute enable */
+#define EFER     0xc0000080 /* extended feature enable register */
+#define EFER_SCE 0x01       /* system call extensions */
+#define EFER_LME 0x0100     /* long mode enable */
+#define EFER_LMA 0x0400     /* long mode active */
+#define EFER_NXE 0x0800     /* no-execute enable */
 
 #define GDT_REAL_CODE   8
 #define GDT_REAL_DATA   16

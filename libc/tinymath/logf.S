@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns natural logarithm of 𝑥.
-/
-/	@param	𝑥 is double scalar in low quarter of %xmm0
-/	@return	float scalar in low quarter of %xmm0
+//	Returns natural logarithm of 𝑥.
+//
+//	@param	𝑥 is double scalar in low quarter of %xmm0
+//	@return	float scalar in low quarter of %xmm0
 logf:	ezlea	logl,ax
 	jmp	_f2ld2
 	.endfn	logf,globl

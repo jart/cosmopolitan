@@ -20,19 +20,19 @@
 #include "libc/notice.inc"
 .source	__FILE__
 
-/	Resizes the space allocated for p to size n, only if this can be
-/	done without moving p (i.e., only if there is adjacent space
-/	available if n is greater than p's current allocated size, or n
-/	is less than or equal to p's size). This may be used instead of
-/	plain realloc if an alternative allocation strategy is needed
-/	upon failure to expand space, for example, reallocation of a
-/	buffer that must be memory-aligned or cleared. You can use
-/	realloc_in_place to trigger these alternatives only when needed.
-/
-/	@param	rdi (p) is address of current allocation
-/	@param	rsi (newsize) is number of bytes needed
-/	@return	rax is result, or NULL w/ errno
-/	@see	dlrealloc_in_place()
+//	Resizes the space allocated for p to size n, only if this can be
+//	done without moving p (i.e., only if there is adjacent space
+//	available if n is greater than p's current allocated size, or n
+//	is less than or equal to p's size). This may be used instead of
+//	plain realloc if an alternative allocation strategy is needed
+//	upon failure to expand space, for example, reallocation of a
+//	buffer that must be memory-aligned or cleared. You can use
+//	realloc_in_place to trigger these alternatives only when needed.
+//
+//	@param	rdi (p) is address of current allocation
+//	@param	rsi (newsize) is number of bytes needed
+//	@return	rax is result, or NULL w/ errno
+//	@see	dlrealloc_in_place()
 realloc_in_place:
 	jmp	*hook_realloc_in_place(%rip)
 	.endfn	realloc_in_place,globl

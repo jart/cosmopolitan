@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns 2^𝑥.
-/
-/	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
-/	@return	result of exponentiation on FPU stack in %st
+//	Returns 2^𝑥.
+//
+//	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+//	@return	result of exponentiation on FPU stack in %st
 exp2l:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

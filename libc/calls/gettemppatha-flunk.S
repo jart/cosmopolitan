@@ -19,9 +19,9 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Calls GetTempPathA() w/ different API.
-/
-/	@see	GetSystemDirectoryA(), GetWindowsDirectoryA()
+//	Calls GetTempPathA() w/ different API.
+//
+//	@see	GetSystemDirectoryA(), GetWindowsDirectoryA()
 GetTempPathA_flunk:
 	xchg	%rcx,%rdx
 	jmp	*__imp_GetTempPathA(%rip)

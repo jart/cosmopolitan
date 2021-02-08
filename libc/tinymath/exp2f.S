@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns 2^𝑥.
-/
-/	@param	𝑥 is a float passed in the lower quarter of %xmm0
-/	@return	result in lower quarter of %xmm0
+//	Returns 2^𝑥.
+//
+//	@param	𝑥 is a float passed in the lower quarter of %xmm0
+//	@return	result in lower quarter of %xmm0
 exp2f:
 	ezlea	exp2l,ax
 	jmp	_f2ld2

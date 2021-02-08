@@ -21,11 +21,11 @@
 .privileged
 .alignfunc
 
-/	Returns -𝑥, aborting on overflow (two's complement bane).
-/
-/	@param	edi is int32 𝑥
-/	@return	eax is -𝑥
-/	@see	-ftrapv
+//	Returns -𝑥, aborting on overflow (two's complement bane).
+//
+//	@param	edi is int32 𝑥
+//	@return	eax is -𝑥
+//	@see	-ftrapv
 __negvsi2:
 	mov	%edi,%eax
 	neg	%eax

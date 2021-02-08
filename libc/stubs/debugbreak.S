@@ -21,11 +21,11 @@
 .source	__FILE__
 .code16 # ∩ .code32 ∩ .code64
 
-/	Triggers breakpoint in software debugger.
-/
-/	This should work with GDB, Bochs, WinDbg, etc.
-/
-/	@mode	long,legacy,real
+//	Triggers breakpoint in software debugger.
+//
+//	This should work with GDB, Bochs, WinDbg, etc.
+//
+//	@mode	long,legacy,real
 DebugBreak:
 	.softicebp
 	ret

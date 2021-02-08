@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Returns log₂ₓ exponent part of float.
-/
-/	@param	𝑥 is float passed in %xmm0
-/	@return	result in %xmm0
+//	Returns log₂ₓ exponent part of float.
+//
+//	@param	𝑥 is float passed in %xmm0
+//	@return	result in %xmm0
 logbf:	ezlea	logbl,ax
 	jmp	_f2ld2
 	.endfn	logbf,globl

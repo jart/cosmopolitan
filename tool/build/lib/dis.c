@@ -94,10 +94,11 @@ static char *DisError(struct Dis *d, char *p) {
 }
 
 static char *DisAddr(struct Dis *d, char *p) {
-  if (-0x80000000 <= d->addr && d->addr <= 0x7fffffff) {
-    return p + uint64toarray_fixed16(d->addr, p, 32);
+  int64_t x = d->addr;
+  if (-2147483648 <= x && x <= 2147483647) {
+    return p + uint64toarray_fixed16(x, p, 32);
   } else {
-    return p + uint64toarray_fixed16(d->addr, p, 48);
+    return p + uint64toarray_fixed16(x, p, 48);
   }
 }
 

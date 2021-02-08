@@ -17,7 +17,6 @@ COSMOPOLITAN_C_START_
 int abs(int) libcesque pureconst;
 long labs(long) libcesque pureconst;
 long long llabs(long long) libcesque pureconst;
-char *ltpcpy(char *, long) paramsnonnull() libcesque nocallback;
 int llog10(unsigned long) libcesque pureconst;
 int atoi(const char *) paramsnonnull() libcesque;
 long atol(const char *) paramsnonnull() libcesque;

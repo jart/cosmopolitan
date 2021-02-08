@@ -20,13 +20,13 @@
 #include "libc/dce.h"
 #include "libc/macros.h"
 
-/	Searches for last instance of wchar_t in memory region.
-/
-/	@param	rdi points to data to search
-/	@param	esi is treated as int32_t (officially wchar_t)
-/	@param	rdx is short count in rdi
-/	@return	rax is address of last %esi in %rdi, or NULL
-/	@note	AVX2 requires Haswell (2014+) or Excavator (2015+)
+//	Searches for last instance of wchar_t in memory region.
+//
+//	@param	rdi points to data to search
+//	@param	esi is treated as int32_t (officially wchar_t)
+//	@param	rdx is short count in rdi
+//	@return	rax is address of last %esi in %rdi, or NULL
+//	@note	AVX2 requires Haswell (2014+) or Excavator (2015+)
 wmemrchr:
 	.leafprologue
 	.profilable

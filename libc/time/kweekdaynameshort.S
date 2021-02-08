@@ -9,13 +9,13 @@
 #endif
 #include "libc/macros.h"
 
-/	Type #1:
-/	  - Indexable C-String Array
-/	  - extern const char kWeekdayNameShort[7][4];
-/	Type #2:
-/	  - Double-NUL Terminated String
-/	  - extern const char kWeekdayNameShort[];
-	.section .rodata,"aS",@progbits
+//	Type #1:
+//	  - Indexable C-String Array
+//	  - extern const char kWeekdayNameShort[7][4];
+//	Type #2:
+//	  - Double-NUL Terminated String
+//	  - extern const char kWeekdayNameShort[];
+	.section .rodata,"a",@progbits
 kWeekdayNameShort:
 	.asciz	"Sun"
 	.asciz	"Mon"

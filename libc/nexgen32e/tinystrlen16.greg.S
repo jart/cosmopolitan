@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	16-bit strlen that's tiny and near optimal if data's tiny.
-/
-/	@param	RDI is char16_t *s
-/	@param	EAX is unsigned length
-/	@see	libc/nexgen32e/strsak16.S
+//	16-bit strlen that's tiny and near optimal if data's tiny.
+//
+//	@param	RDI is char16_t *s
+//	@param	EAX is unsigned length
+//	@see	libc/nexgen32e/strsak16.S
 tinystrlen16:
 	.leafprologue
 	.profilable

@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns arc tangent of 𝑥.
-/
-/	@param	𝑥 is float scalar in low quarter of %xmm0
-/	@return	float scalar in low quarter of %xmm0
+//	Returns arc tangent of 𝑥.
+//
+//	@param	𝑥 is float scalar in low quarter of %xmm0
+//	@return	float scalar in low quarter of %xmm0
 atanf:	ezlea	atanl,ax
 	jmp	_f2ld2
 	.endfn	atanf,globl

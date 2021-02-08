@@ -132,3 +132,53 @@ tinymath_acos:\n\
 
   FreeAsmdown(ad);
 }
+
+TEST(ParseAsmdown, testClangIsEvil) {
+  struct Asmdown *ad;
+  const char *s = "\
+#include \"libc/macros.h\"\n\
+.source	__FILE__\n\
+\n\
+//	Returns arc cosine of 𝑥.\n\
+//\n\
+//	This is a description.\n\
+//\n\
+//	@param	𝑥 is double scalar in low half of %xmm0\n\
+//	@return	double scalar in low half of %xmm0\n\
+tinymath_acos:\n\
+	ezlea	tinymath_acosl,ax\n\
+	jmp	_d2ld2\n\
+	.endfn	tinymath_acos,globl\n\
+	.alias	tinymath_acos,acos\n\
+";
+  ad = ParseAsmdown(s, strlen(s));
+  ASSERT_EQ(2, ad->symbols.n);
+
+  EXPECT_EQ(4, ad->symbols.p[0].line);
+  EXPECT_STREQ("tinymath_acos", ad->symbols.p[0].name);
+  EXPECT_FALSE(ad->symbols.p[0].javadown->isfileoverview);
+  EXPECT_STREQ("Returns arc cosine of 𝑥.", ad->symbols.p[0].javadown->title);
+  EXPECT_STREQ("This is a description.\n", ad->symbols.p[0].javadown->text);
+  EXPECT_EQ(2, ad->symbols.p[0].javadown->tags.n);
+  EXPECT_STREQ("param", ad->symbols.p[0].javadown->tags.p[0].tag);
+  EXPECT_STREQ("𝑥 is double scalar in low half of %xmm0",
+               ad->symbols.p[0].javadown->tags.p[0].text);
+  EXPECT_STREQ("return", ad->symbols.p[0].javadown->tags.p[1].tag);
+  EXPECT_STREQ("double scalar in low half of %xmm0",
+               ad->symbols.p[0].javadown->tags.p[1].text);
+
+  EXPECT_EQ(4, ad->symbols.p[1].line);
+  EXPECT_STREQ("acos", ad->symbols.p[1].name);
+  EXPECT_FALSE(ad->symbols.p[1].javadown->isfileoverview);
+  EXPECT_STREQ("Returns arc cosine of 𝑥.", ad->symbols.p[1].javadown->title);
+  EXPECT_STREQ("This is a description.\n", ad->symbols.p[1].javadown->text);
+  EXPECT_EQ(2, ad->symbols.p[1].javadown->tags.n);
+  EXPECT_STREQ("param", ad->symbols.p[1].javadown->tags.p[0].tag);
+  EXPECT_STREQ("𝑥 is double scalar in low half of %xmm0",
+               ad->symbols.p[1].javadown->tags.p[0].text);
+  EXPECT_STREQ("return", ad->symbols.p[1].javadown->tags.p[1].tag);
+  EXPECT_STREQ("double scalar in low half of %xmm0",
+               ad->symbols.p[1].javadown->tags.p[1].text);
+
+  FreeAsmdown(ad);
+}

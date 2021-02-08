@@ -19,12 +19,12 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns 𝑥^𝑦.
-/
-/	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
-/	@param	𝑦 is the power, also pushed on stack, in reverse order
-/	@return	result of exponentiation on FPU stack in %st
-/	@note	Sun's fdlibm needs 2kLOC to do this for RISC lool
+//	Returns 𝑥^𝑦.
+//
+//	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+//	@param	𝑦 is the power, also pushed on stack, in reverse order
+//	@return	result of exponentiation on FPU stack in %st
+//	@note	Sun's fdlibm needs 2kLOC to do this for RISC lool
 powl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

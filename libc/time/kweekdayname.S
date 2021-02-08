@@ -9,8 +9,8 @@
 #endif
 #include "libc/macros.h"
 
-/	extern const char kWeekdayName[7][10];
-	.section .rodata,"aS",@progbits
+//	extern const char kWeekdayName[7][10];
+	.section .rodata,"a",@progbits
 kWeekdayName:
 	.ascin	"Sunday",10
 	.ascin	"Monday",10

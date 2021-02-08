@@ -49,7 +49,7 @@ __ubsan_handle_type_mismatch_v1_abort:
 
 __ubsan_handle_add_overflow_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_add_overflow_abort,globl
 __ubsan_handle_add_overflow:
 	loadstr	"add_overflow",si
@@ -58,7 +58,7 @@ __ubsan_handle_add_overflow:
 
 __ubsan_handle_alignment_assumption_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_alignment_assumption_abort,globl
 __ubsan_handle_alignment_assumption:
 	loadstr	"alignment_assumption",si
@@ -67,7 +67,7 @@ __ubsan_handle_alignment_assumption:
 
 __ubsan_handle_builtin_unreachable_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_builtin_unreachable_abort,globl
 __ubsan_handle_builtin_unreachable:
 	loadstr	"builtin_unreachable",si
@@ -76,7 +76,7 @@ __ubsan_handle_builtin_unreachable:
 
 __ubsan_handle_cfi_bad_type_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_cfi_bad_type_abort,globl
 __ubsan_handle_cfi_bad_type:
 	loadstr	"cfi_bad_type",si
@@ -85,7 +85,7 @@ __ubsan_handle_cfi_bad_type:
 
 __ubsan_handle_cfi_check_fail_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_cfi_check_fail_abort,globl
 __ubsan_handle_cfi_check_fail:
 	loadstr	"cfi_check_fail",si
@@ -94,7 +94,7 @@ __ubsan_handle_cfi_check_fail:
 
 __ubsan_handle_divrem_overflow_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_divrem_overflow_abort,globl
 __ubsan_handle_divrem_overflow:
 	loadstr	"divrem_overflow",si
@@ -103,7 +103,7 @@ __ubsan_handle_divrem_overflow:
 
 __ubsan_handle_dynamic_type_cache_miss_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_dynamic_type_cache_miss_abort,globl
 __ubsan_handle_dynamic_type_cache_miss:
 	loadstr	"dynamic_type_cache_miss",si
@@ -112,7 +112,7 @@ __ubsan_handle_dynamic_type_cache_miss:
 
 __ubsan_handle_function_type_mismatch_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_function_type_mismatch_abort,globl
 __ubsan_handle_function_type_mismatch:
 	loadstr	"function_type_mismatch",si
@@ -121,7 +121,7 @@ __ubsan_handle_function_type_mismatch:
 
 __ubsan_handle_implicit_conversion_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_implicit_conversion_abort,globl
 __ubsan_handle_implicit_conversion:
 	loadstr	"implicit_conversion",si
@@ -130,7 +130,7 @@ __ubsan_handle_implicit_conversion:
 
 __ubsan_handle_invalid_builtin_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_invalid_builtin_abort,globl
 __ubsan_handle_invalid_builtin:
 	loadstr	"invalid_builtin",si
@@ -139,7 +139,7 @@ __ubsan_handle_invalid_builtin:
 
 __ubsan_handle_load_invalid_value_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_load_invalid_value_abort,globl
 __ubsan_handle_load_invalid_value:
 	loadstr	"load_invalid_value (try checking for uninitialized variables)",si
@@ -148,7 +148,7 @@ __ubsan_handle_load_invalid_value:
 
 __ubsan_handle_missing_return_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_missing_return_abort,globl
 __ubsan_handle_missing_return:
 	loadstr	"missing_return",si
@@ -157,7 +157,7 @@ __ubsan_handle_missing_return:
 
 __ubsan_handle_mul_overflow_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_mul_overflow_abort,globl
 __ubsan_handle_mul_overflow:
 	loadstr	"mul_overflow",si
@@ -166,7 +166,7 @@ __ubsan_handle_mul_overflow:
 
 __ubsan_handle_negate_overflow_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_negate_overflow_abort,globl
 __ubsan_handle_negate_overflow:
 	loadstr	"negate_overflow",si
@@ -175,7 +175,7 @@ __ubsan_handle_negate_overflow:
 
 __ubsan_handle_nonnull_arg_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_nonnull_arg_abort,globl
 __ubsan_handle_nonnull_arg:
 	loadstr	"nonnull_arg",si
@@ -184,7 +184,7 @@ __ubsan_handle_nonnull_arg:
 
 __ubsan_handle_nonnull_return_v1_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_nonnull_return_v1_abort,globl
 __ubsan_handle_nonnull_return_v1:
 	loadstr	"nonnull_return_v1",si
@@ -197,7 +197,7 @@ __ubsan_hop:
 
 __ubsan_handle_nullability_arg_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_nullability_arg_abort,globl
 __ubsan_handle_nullability_arg:
 	loadstr	"nullability_arg",si
@@ -206,7 +206,7 @@ __ubsan_handle_nullability_arg:
 
 __ubsan_handle_nullability_return_v1_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_nullability_return_v1_abort,globl
 __ubsan_handle_nullability_return_v1:
 	loadstr	"nullability_return_v1",si
@@ -215,7 +215,7 @@ __ubsan_handle_nullability_return_v1:
 
 __ubsan_handle_pointer_overflow_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_pointer_overflow_abort,globl
 __ubsan_handle_pointer_overflow:
 	loadstr	"pointer_overflow",si
@@ -224,7 +224,7 @@ __ubsan_handle_pointer_overflow:
 
 __ubsan_handle_shift_out_of_bounds_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_shift_out_of_bounds_abort,globl
 __ubsan_handle_shift_out_of_bounds:
 	loadstr	"shift_out_of_bounds",si
@@ -233,7 +233,7 @@ __ubsan_handle_shift_out_of_bounds:
 
 __ubsan_handle_sub_overflow_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_sub_overflow_abort,globl
 __ubsan_handle_sub_overflow:
 	loadstr	"sub_overflow",si
@@ -242,7 +242,7 @@ __ubsan_handle_sub_overflow:
 
 __ubsan_handle_vla_bound_not_positive_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_vla_bound_not_positive_abort,globl
 __ubsan_handle_vla_bound_not_positive:
 	loadstr	"vla_bound_not_positive",si
@@ -251,7 +251,7 @@ __ubsan_handle_vla_bound_not_positive:
 
 __ubsan_handle_nonnull_return_abort:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__ubsan_handle_nonnull_return_abort,globl
 __ubsan_handle_nonnull_return:
 	loadstr	"nonnull_return",si

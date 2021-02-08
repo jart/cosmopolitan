@@ -137,6 +137,7 @@
 ;;   M-3 C-c C-c   Compile w/ MODE=rel
 ;;   M-4 C-c C-c   Compile w/ MODE=dbg
 ;;   M-5 C-c C-c   Compile w/ MODE=""
+;;   M-8 C-c C-c   Compile w/ llvm
 ;;   M-9 C-c C-c   Compile w/ chibicc
 
 (defun cosmo-intest (&optional file-name)
@@ -152,6 +153,7 @@
         ((eq arg 3) "rel")
         ((eq arg 4) "dbg")
         ((eq arg 5) "")
+        ((eq arg 8) "llvm")
         (default default)
         ((cosmo-intest) "dbg")
         (t "")))

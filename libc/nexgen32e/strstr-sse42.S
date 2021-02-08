@@ -20,7 +20,7 @@
 #include "libc/nexgen32e/pcmpstr.inc"
 #include "libc/nexgen32e/strstr.inc"
 
-/	TODO(jart): Fix me.
+//	TODO(jart): Fix me.
 strstr_sse42:
 	.leafprologue
 	mov	%rdi,%rax

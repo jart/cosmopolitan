@@ -305,8 +305,8 @@ scall	move_pages		0xfffffffffffff117	globl        # NOTE: We view Red Hat versio
 scall	sys_preadv		0x12110b121ffff127	globl hidden #  ├─ last distro with system v shell script init
 scall	sys_pwritev		0x12210c122ffff128	globl hidden #  ├─ rob landley unleashes busybox gpl lawsuits
 scall	__sys_utimensat		0x1d3054223ffff118	globl hidden #  ├─ python modules need this due to pep513
-scall	sys_fallocate		0xfffffffffffff11d	globl hidden #  ├─ end of life 2020-11-30 (extended)
-scall	sys_posix_fallocate	0xffffff212fffffff	globl hidden #  └─ cosmopolitan supports rhel5+
+scall	fallocate		0xfffffffffffff11d	globl hidden #  ├─ end of life 2020-11-30 (extended)
+scall	posix_fallocate		0xffffff212fffffff	globl hidden #  └─ cosmopolitan supports rhel5+
 scall	__sys_accept4		0xfff05d21dffff120	globl hidden # Linux 2.6.28+
 scall	__sys_dup3		0x1c6066fffffff124	globl hidden # Linux 2.6.27+
 scall	__sys_pipe2		0x1c506521effff125	globl hidden # Linux 2.6.27+

@@ -197,17 +197,15 @@ DEFAULT_LDFLAGS =							\
 	-static								\
 	-nostdlib							\
 	-m elf_x86_64							\
-	--gc-sections							\
 	--build-id=none							\
-	--cref -Map=$@.map						\
 	--no-dynamic-linker						\
-	-z max-page-size=0x1000						\
-	-Ttext-segment=$(IMAGE_BASE_VIRTUAL)
+	-z max-page-size=0x1000
 
 ZIPOBJ_FLAGS =								\
 	 -b$(IMAGE_BASE_VIRTUAL)
 
 ASONLYFLAGS =								\
+	-c								\
 	-g								\
 	--debug-prefix-map="$(PWD)"=
 
@@ -313,7 +311,7 @@ OBJECTIFY.c = $(CC) $(OBJECTIFY.c.flags) -c
 OBJECTIFY.cxx = $(CXX) $(OBJECTIFY.cxx.flags) -c
 PREPROCESS = $(CC) $(PREPROCESS.flags)
 PREPROCESS.lds = $(CC) $(PREPROCESS.lds.flags)
-LINK = build/link $(LD) $(LINK.flags)
+LINK = $(LD) $(LINK.flags)
 ELF = o/libc/elf/elf.lds
 ELFLINK = ACTION=LINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION)
 ARCHIVE = $(AR) $(ARFLAGS)

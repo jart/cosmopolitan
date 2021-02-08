@@ -19,11 +19,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns cosine of 𝑥.
-/
-/	@param	𝑥 is float scalar in low quarter of %xmm0
-/	@return	float scalar in low quarter of %xmm0
-/	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
+//	Returns cosine of 𝑥.
+//
+//	@param	𝑥 is float scalar in low quarter of %xmm0
+//	@return	float scalar in low quarter of %xmm0
+//	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
 cosf:	ezlea	cosl,ax
 	jmp	_f2ld2
 	.endfn	cosf,globl

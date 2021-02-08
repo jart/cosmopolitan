@@ -19,13 +19,13 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns arc sine of 𝑥.
-/
-/	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
-/	@return	result of computation on FPU stack in %st
-/	@define	atan2(𝑥,sqrt((1-𝑥)*(1+𝑥)))
-/	@domain	-1 ≤ 𝑥 ≤ 1
-/	@mode	long,legacy
+//	Returns arc sine of 𝑥.
+//
+//	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+//	@return	result of computation on FPU stack in %st
+//	@define	atan2(𝑥,sqrt((1-𝑥)*(1+𝑥)))
+//	@domain	-1 ≤ 𝑥 ≤ 1
+//	@mode	long,legacy
 asinl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

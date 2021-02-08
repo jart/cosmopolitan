@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns pointer to last instance of character the BSD way.
-/
-/	@param	rdi is a non-null NUL-terminated string pointer
-/	@param	esi is the search byte
-/	@return	rax points to result, or NULL if not found
+//	Returns pointer to last instance of character the BSD way.
+//
+//	@param	rdi is a non-null NUL-terminated string pointer
+//	@param	esi is the search byte
+//	@return	rax points to result, or NULL if not found
 rindex:	jmp	strrchr
 	.endfn	rindex,globl

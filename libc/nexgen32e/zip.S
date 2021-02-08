@@ -20,7 +20,7 @@
 #include "ape/relocations.h"
 #include "libc/zip.h"
 
-/	ZIP Central Directory.
+//	ZIP Central Directory.
 	.section .piro.data.sort.zip.3,"a",@progbits
 	.hidden	__zip_start
 	.globl	__zip_start

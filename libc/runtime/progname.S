@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Provides argv[0] The BSD Way.
+//	Provides argv[0] The BSD Way.
 	.initbss 300,_init___progname
 __progname:
 	.quad	0

@@ -19,11 +19,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns 𝑥 × 2ʸ.
-/
-/	@param	𝑥 is float passed in %xmm0
-/	@param	𝑦 is exponent via %edi
-/	@return	float in %xmm0
+//	Returns 𝑥 × 2ʸ.
+//
+//	@param	𝑥 is float passed in %xmm0
+//	@param	𝑦 is exponent via %edi
+//	@return	float in %xmm0
 ldexpf:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

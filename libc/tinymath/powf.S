@@ -19,11 +19,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns 𝑥^𝑦.
-/
-/	@param	𝑦 is float scalar in low quarter of %xmm0
-/	@param	𝑥 is float scalar in low quarter of %xmm1
-/	@return	float scalar in low quarter of %xmm0
+//	Returns 𝑥^𝑦.
+//
+//	@param	𝑦 is float scalar in low quarter of %xmm0
+//	@param	𝑥 is float scalar in low quarter of %xmm1
+//	@return	float scalar in low quarter of %xmm0
 powf:	ezlea	powl,ax
 	jmp	_f2ld2
 	.endfn	powf,globl

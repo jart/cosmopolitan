@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Stores CPU Timestamp Counter at startup.
-/
-/	It can be useful as an added source of seeding information.
-/
-/	@note	rdtsc is a 25 cycle instruction
+//	Stores CPU Timestamp Counter at startup.
+//
+//	It can be useful as an added source of seeding information.
+//
+//	@note	rdtsc is a 25 cycle instruction
 	.initbss 200,_init_kStartTsc
 kStartTsc:
 	.quad	0

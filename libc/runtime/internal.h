@@ -17,7 +17,6 @@ extern hidden char **g_freebsdhint;
 extern hidden void *g_stacktop;
 
 void _init(void) hidden;
-void _piro(int) hidden;
 void *__cxa_finalize(void *) hidden;
 void cosmo(int, char **, char **, long (*)[2]) hidden wontreturn;
 void __stack_chk_fail(void) wontreturn relegated;

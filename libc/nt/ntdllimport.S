@@ -19,24 +19,24 @@
 #include "libc/nt/enum/status.h"
 #include "libc/macros.h"
 
-/	@fileoverview NTDLL.DLL Non-Mandatory Importer
-/
-/	This module lets us import Microsoft's private APIs in a way
-/	that ensures executables won't fail to load in the future,
-/	should Microsoft ever choose to delete these APIs.
+//	@fileoverview NTDLL.DLL Non-Mandatory Importer
+//
+//	This module lets us import Microsoft's private APIs in a way
+//	that ensures executables won't fail to load in the future,
+//	should Microsoft ever choose to delete these APIs.
 
-	.initro 202,sys__init_ntdll.1
+	.initro 202,_init_ntdll.1
 	.type	kNtdllProcRvas,@object
 kNtdllProcRvas:
 	.previous/*
 	...
 	decentralized content
 	...
-	*/.initro 202,sys__init_ntdll.3
+	*/.initro 202,_init_ntdll.3
 	.quad	0
 	.previous
 
-	.init.start 202,sys__init_ntdll
+	.init.start 202,_init_ntdll
 	push	%r12
 	push	%r13
 	lea	ntdllmissingno(%rip),%r13
@@ -47,7 +47,8 @@ kNtdllProcRvas:
 0:	lodsq
 	test	%rax,%rax
 	jz	1f
-	lea	(%rbx,%rax),%rdx
+	.weak	_base
+	lea	_base(%rax),%rdx
 	mov	%r12,%rcx
 	call	*__imp_GetProcAddress(%rip)
 	test	%rax,%rax
@@ -57,7 +58,7 @@ kNtdllProcRvas:
 1:	add	$32,%rsp
 	pop	%r13
 	pop	%r12
-	.init.end 202,sys__init_ntdll,globl,hidden
+	.init.end 202,_init_ntdll,globl,hidden
 
 	.text.windows
 ntdllmissingno:

@@ -21,12 +21,12 @@
 .text.startup
 .source	__FILE__
 
-/	Calls global initialization functions.
-/
-/	@param	r12 is argc
-/	@param	r13 is argv
-/	@param	r14 is environ
-/	@param	r15 is auxv
+//	Calls global initialization functions.
+//
+//	@param	r12 is argc
+//	@param	r13 is argv
+//	@param	r14 is environ
+//	@param	r15 is auxv
 _construct:
 	push	%rbp
 	mov	%rsp,%rbp

@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Re-initializes FPU.
+//	Re-initializes FPU.
 fpreset:
 _fpreset:
 	.leafprologue

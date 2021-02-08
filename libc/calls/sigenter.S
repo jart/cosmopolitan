@@ -20,16 +20,16 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	BSD signal handler.
-/
-/	This is needed because (1) a signal is allowed to trigger at
-/	just about any time, and leaf functions (e.g. memcpy) aren't
-/	required to leave Cosmopolitan's image base register alone.
-/
-/	@param	%edi is the signal number
-/	@param	%rsi will be passed for sigactions
-/	@param	%rdx will be passed for sigactions
-/	@return	true if handler was invoked
+//	BSD signal handler.
+//
+//	This is needed because (1) a signal is allowed to trigger at
+//	just about any time, and leaf functions (e.g. memcpy) aren't
+//	required to leave Cosmopolitan's image base register alone.
+//
+//	@param	%edi is the signal number
+//	@param	%rsi will be passed for sigactions
+//	@param	%rdx will be passed for sigactions
+//	@return	true if handler was invoked
 __sigenter:
 	push	%rbp
 	mov	%rsp,%rbp

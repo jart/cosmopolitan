@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon posix _POSIX_MEMORY_PROTECTION 0x031069 0x030db0 0x030db0 0x030db0 0x030db0 0
+.syscon posix,_POSIX_MEMORY_PROTECTION,0x031069,0x030db0,0x030db0,0x030db0,0x030db0,0

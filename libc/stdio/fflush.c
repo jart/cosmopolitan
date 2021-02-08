@@ -65,7 +65,6 @@ textstartup int _fflushregister(FILE *f) {
   size_t i;
   struct StdioFlush *sf;
   sf = &g_fflush;
-  sf = sf;
   if (!sf->handles.p) {
     sf->handles.p = &sf->handles_initmem[0];
     pushmov(&sf->handles.n, ARRAYLEN(sf->handles_initmem));

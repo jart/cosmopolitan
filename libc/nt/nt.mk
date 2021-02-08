@@ -296,6 +296,10 @@ $(LIBC_NT_SHELL32_A).pkg:				\
 
 $(LIBC_NT_OBJS): o/libc/nt/codegen.inc
 
+o/libc/nt/codegen.inc:					\
+		ape/idata.internal.h			\
+		ape/macros.internal.h
+
 .PHONY:		o/$(MODE)/libc/nt
 o/$(MODE)/libc/nt:					\
 		$(LIBC_NT_LIBS)				\

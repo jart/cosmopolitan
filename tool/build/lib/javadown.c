@@ -65,7 +65,11 @@ static unsigned GetSpacePrefixLen(const char *p, size_t n) {
 static unsigned GetSpaceStarPrefixLen(const char *p, size_t n) {
   int i;
   i = GetSpacePrefixLen(p, n);
-  return i < n && (p[i] == '*' || p[i] == '/') ? i + 1 : 0;
+  if (i < n && (p[i] == '*' || p[i] == '/')) {
+    return p[i + 1] == '/' ? i + 2 : i + 1;
+  } else {
+    return 0;
+  }
 }
 
 static unsigned GetTagLen(const char *p, size_t n) {

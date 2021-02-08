@@ -20,7 +20,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Loads all pages from program image into memory.
+//	Loads all pages from program image into memory.
 peekall:.leafprologue
 	ezlea	_base,si
 	ezlea	_end,cx

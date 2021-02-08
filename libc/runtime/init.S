@@ -22,30 +22,30 @@
 #include "libc/dce.h"
 .source	__FILE__
 
-/	Decentralized function for process initialization.
-/
-/	Modules may inject cheap data structure initialization code into
-/	this function using the .init.start and .init.end macros. That
-/	code can use the LODS and STOS instructions to initialize memory
-/	that's restricted to read-only after initialization by PIRO.
-/
-/	This is fast, since the linker is able to roll-up initialization
-/	for large codebases comprised of many modules, into a perfectly
-/	linear order. It also enables a common pattern we use, which we
-/	call “Referencing Is Initialization” (RII).
-/
-/	C/C++ code should favor using ordinary constructors, since under
-/	normal circumstances the compiler will clobber RDI and RSI which
-/	are granted special meanings within this function.
-/
-/	@param	r12 is argc (still callee saved)
-/	@param	r13 is argv (still callee saved)
-/	@param	r14 is envp (still callee saved)
-/	@param	r15 is envp (still callee saved)
-/	@note	rdi is __init_bss_start (callee monotonic lockstep)
-/	@note	rsi is __init_rodata_start (callee monotonic lockstep)
-/	@see	.init.start & .init.end (libc/macros.internal.inc)
-/	@see	ape/ape.lds
+//	Decentralized function for process initialization.
+//
+//	Modules may inject cheap data structure initialization code into
+//	this function using the .init.start and .init.end macros. That
+//	code can use the LODS and STOS instructions to initialize memory
+//	that's restricted to read-only after initialization by PIRO.
+//
+//	This is fast, since the linker is able to roll-up initialization
+//	for large codebases comprised of many modules, into a perfectly
+//	linear order. It also enables a common pattern we use, which we
+//	call “Referencing Is Initialization” (RII).
+//
+//	C/C++ code should favor using ordinary constructors, since under
+//	normal circumstances the compiler will clobber RDI and RSI which
+//	are granted special meanings within this function.
+//
+//	@param	r12 is argc (still callee saved)
+//	@param	r13 is argv (still callee saved)
+//	@param	r14 is envp (still callee saved)
+//	@param	r15 is envp (still callee saved)
+//	@note	rdi is __init_bss_start (callee monotonic lockstep)
+//	@note	rsi is __init_rodata_start (callee monotonic lockstep)
+//	@see	.init.start & .init.end (libc/macros.internal.inc)
+//	@see	ape/ape.lds
 	.section .initprologue,"ax",@progbits
 	.type	_init,@function
 	.globl	_init
@@ -75,10 +75,10 @@ _woot:	leave
 	ret
 	.previous
 
-/	Decentralized section for packed data structures & initializers.
-/
-/	@see	.initro (libc/macros.internal.inc)
-/	@see	ape/ape.lds
+//	Decentralized section for packed data structures & initializers.
+//
+//	@see	.initro (libc/macros.internal.inc)
+//	@see	ape/ape.lds
 	.section .initroprologue,"a",@progbits
 	.type	__init_rodata_start,@object
 	.type	__init_rodata_end,@object
@@ -95,13 +95,13 @@ __init_rodata_end:
 	.byte	0x90
 	.previous
 
-/	Decentralized section for unpacked data structures.
-/
-/	Data in this section becomes read-only after initialization.
-/
-/	@see	.piro.bss.init (libc/macros.internal.inc)
-/	@see	libc/runtime/piro.c
-/	@see	ape/ape.lds
+//	Decentralized section for unpacked data structures.
+//
+//	Data in this section becomes read-only after initialization.
+//
+//	@see	.piro.bss.init (libc/macros.internal.inc)
+//	@see	libc/runtime/piro.c
+//	@see	ape/ape.lds
 	.section .piro.bss.init.1,"aw",@nobits
 	.type	__init_bss_start,@object
 	.type	__init_bss_end,@object
@@ -118,14 +118,14 @@ __init_bss_end:
 	.byte	0
 	.previous
 
-/	Special area for Windows NT support code.
-/
-/	Isolating this code adds value for Windows users by minimizing
-/	page faults through improved locality. On System Five the PIRO
-/	runtime can unmap these pages.
-/
-/	@see	libc/runtime/piro.c
-/	@see	ape/ape.lds
+//	Special area for Windows NT support code.
+//
+//	Isolating this code adds value for Windows users by minimizing
+//	page faults through improved locality. On System Five the PIRO
+//	runtime can unmap these pages.
+//
+//	@see	libc/runtime/piro.c
+//	@see	ape/ape.lds
 	.section .textwindowsprologue,"ax",@progbits
 	.type	__text_windows_start,@object
 	.type	__text_windows_end,@object

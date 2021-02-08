@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
@@ -134,15 +135,15 @@ static void sigaction_native2cosmo(union metasigaction *sa) {
  * @vforksafe
  */
 int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
-  _Static_assert(sizeof(struct sigaction) > sizeof(struct sigaction_linux) &&
-                 sizeof(struct sigaction) > sizeof(struct sigaction_xnu_in) &&
-                 sizeof(struct sigaction) > sizeof(struct sigaction_xnu_out) &&
-                 sizeof(struct sigaction) > sizeof(struct sigaction_freebsd) &&
-                 sizeof(struct sigaction) > sizeof(struct sigaction_openbsd) &&
-                 sizeof(struct sigaction) > sizeof(struct sigaction_netbsd));
   int64_t arg4, arg5;
   int rc, rva, oldrva;
   struct sigaction *ap, copy;
+  assert(sizeof(struct sigaction) > sizeof(struct sigaction_linux) &&
+         sizeof(struct sigaction) > sizeof(struct sigaction_xnu_in) &&
+         sizeof(struct sigaction) > sizeof(struct sigaction_xnu_out) &&
+         sizeof(struct sigaction) > sizeof(struct sigaction_freebsd) &&
+         sizeof(struct sigaction) > sizeof(struct sigaction_openbsd) &&
+         sizeof(struct sigaction) > sizeof(struct sigaction_netbsd));
   if (IsMetal()) return enosys(); /* TODO: Signals on Metal */
   if (!(0 < sig && sig < NSIG)) return einval();
   if (sig == SIGKILL || sig == SIGSTOP) return einval();

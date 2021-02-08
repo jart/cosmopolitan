@@ -19,11 +19,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns index of minimum positive int16 in array.
-/
-/	@param	rdi points to nonempty array
-/	@param	esi is 16-byte aligned 8+ / 8 multiple array item count
-/	@note	needs sse4 (nehalem+)
+//	Returns index of minimum positive int16 in array.
+//
+//	@param	rdi points to nonempty array
+//	@param	esi is 16-byte aligned 8+ / 8 multiple array item count
+//	@note	needs sse4 (nehalem+)
 windex_sse4:
 	push	%rbp
 	mov	%rsp,%rbp

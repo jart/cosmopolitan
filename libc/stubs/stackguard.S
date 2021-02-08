@@ -27,7 +27,7 @@
 
 __stack_chk_fail_local:
 	nop
-/	fallthrough
+//	fallthrough
 	.endfn	__stack_chk_fail_local,weak,hidden
 
 __stack_chk_fail:

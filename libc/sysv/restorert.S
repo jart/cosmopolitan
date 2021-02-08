@@ -20,7 +20,7 @@
 .privileged
 .source	__FILE__
 
-/	Linux Signal Trampoline (HOLY CODE)
+//	Linux Signal Trampoline (HOLY CODE)
 	.align	16
 __restore_rt:				# @see gdb/amd64-linux-tdep.c
 	mov	$0x000f,%rax		# [sic]

@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Jump table for psrldq() with non-constexpr immediate parameter.
+//	Jump table for psrldq() with non-constexpr immediate parameter.
 	.align	8
 __psrldqs:
   	psrldq	$0,%xmm0

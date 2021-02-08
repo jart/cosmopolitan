@@ -3,11 +3,13 @@ int main(int argc, char *argv[]) {
   char *s;
   FILE *f;
   s = strdup(argv[0]);
+  s[0] = 'Z';
   f = fopen("/dev/null", "w");
   fprintf(f, "hello world %d %s\n", argc, s);
   fclose(f);
   rc = system("exit 42");
   CHECK_NE(-1, rc);
+  CHECK(WIFEXITED(rc));
   CHECK_EQ(42, WEXITSTATUS(rc));
   free(s);
   return 0;

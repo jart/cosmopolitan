@@ -45,12 +45,10 @@ void xed_get_chip_features(struct XedChipFeatures *p, enum XedChip chip) {
       p->f[0] = xed_chip_features[chip][0];
       p->f[1] = xed_chip_features[chip][1];
       p->f[2] = xed_chip_features[chip][2];
-      p->f[3] = 0;
     } else {
       p->f[0] = 0;
       p->f[1] = 0;
       p->f[2] = 0;
-      p->f[3] = 0;
     }
   }
 }

@@ -20,7 +20,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Dispatches to fastest windex() implementation.
+//	Dispatches to fastest windex() implementation.
 	.initbss 300,_init_windex
 windex:	.quad	0
 	.endobj	windex,globl

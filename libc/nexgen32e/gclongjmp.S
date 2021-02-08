@@ -18,17 +18,17 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Jumps up stack to previous setjmp() invocation.
-/
-/	This is the same as longjmp() but also unwinds the stack to free
-/	memory, etc. that was registered using gc() or defer(). If GC
-/	isn't linked, this behaves the same as longjmp().
-/
-/	@param	rdi points to the jmp_buf which must be the same stack
-/	@param	esi is returned by setjmp() invocation (coerced nonzero)
-/	@assume	system five nexgen32e abi conformant
-/	@see	examples/ctrlc.c
-/	@noreturn
+//	Jumps up stack to previous setjmp() invocation.
+//
+//	This is the same as longjmp() but also unwinds the stack to free
+//	memory, etc. that was registered using gc() or defer(). If GC
+//	isn't linked, this behaves the same as longjmp().
+//
+//	@param	rdi points to the jmp_buf which must be the same stack
+//	@param	esi is returned by setjmp() invocation (coerced nonzero)
+//	@assume	system five nexgen32e abi conformant
+//	@see	examples/ctrlc.c
+//	@noreturn
 gclongjmp:
 	.leafprologue
 	.profilable

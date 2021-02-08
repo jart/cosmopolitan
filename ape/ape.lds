@@ -36,7 +36,7 @@
   entails two steps: (1) create a .com.dbg binary w/ Linux toolchain and
   then (2) unwrap the .com binary embedded within:
 
-    objcopy -SO binary input.com.dbg output.com
+    objcopy -S -O binary input.com.dbg output.com
 
   Both executables will work fine, but only the .com format is portable.
 
@@ -182,21 +182,6 @@
 
 ENTRY(_start)
 
-/* Plans real memory solution at linktime. */
-MEMORY {
-  PageZero :    org = 0x0000000000000000,  len = 0x0000000000001000
-  RealBss :     org = XLM_BASE_REAL,       len = XLM_SIZE
-  RealProgram : org = IMAGE_BASE_REAL,     len = 0x0000000000010000 - IMAGE_BASE_REAL
-  RealScratch : org = REAL_SCRATCH_AREA,   len = REAL_STACK_FRAME - REAL_SCRATCH_AREA
-  RealStack :   org = REAL_STACK_FRAME,    len = 0x0000000000010000
-  EbdaMemory :  org = 0x0000000000080000,  len = 0x0000000000020000
-  VideoMemory : org = 0x00000000000a0000,  len = 0x0000000000020000
-  Romz :        org = 0x00000000000c0000,  len = 0x0000000000030000
-  BiosMemory :  org = 0x00000000000f0000,  len = 0x0000000000010000
-  SmallCode :   org = IMAGE_BASE_PHYSICAL, len = 0x0000000040000000 - IMAGE_BASE_PHYSICAL
-  ZipData :     org = 0x0000000040000000,  len = 0x0000000040000000
-}
-
 PHDRS {
   Head PT_LOAD FLAGS(5);
   Rom PT_LOAD FLAGS(5);
@@ -221,34 +206,34 @@ SECTIONS {
     /* Executable & Linkable Format */
     . = ALIGN(. != 0 ? __SIZEOF_POINTER__ : 1);
     KEEP(*(.elf.phdrs))
-    HIDDEN(.Lape.phdrs.end = .);
+    HIDDEN(ape_phdrs_end = .);
     . += 1;
 
     /* OpenBSD */
     . = ALIGN(. != 0 ? __SIZEOF_POINTER__ : 1);
-    HIDDEN(.Lape.note = .);
+    HIDDEN(ape_note = .);
     KEEP(*(.note.openbsd.ident))
     KEEP(*(.note.netbsd.ident))
-    HIDDEN(.Lape.note.end = .);
+    HIDDEN(ape_note_end = .);
     . += 1;
 
     /* Portable Executable */
     KEEP(*(.pe.header))
-    HIDDEN(.Lape.pe.sections = .);
+    HIDDEN(ape_pe_sections = .);
     KEEP(*(.pe.sections))
-    HIDDEN(.Lape.pe.sections_end = .);
+    HIDDEN(ape_pe_sections_end = .);
     . += 1;
 
     /* Mach-O */
     KEEP(*(.macho))
     . = ALIGN(__SIZEOF_POINTER__);
-    HIDDEN(.Lape.macho.end = .);
+    HIDDEN(ape_macho_end = .);
     . += 1;
 
     KEEP(*(.ape.pad.head))
     . = ALIGN(SupportsWindows() ? PAGESIZE : 16);
     HIDDEN(_ehead = .);
-  } AT>SmallCode :Head
+  } :Head
 
 /*BEGIN: nt addressability guarantee */
 
@@ -266,7 +251,7 @@ SECTIONS {
     *(.start)
     KEEP(*(.initprologue))
     KEEP(*(SORT_BY_NAME(.init.*)))
-    KEEP(*(SORT_NONE(.init)))
+    KEEP(*(.init))
     KEEP(*(.initepilogue))
     KEEP(*(.pltprologue))
     *(.plt)
@@ -290,19 +275,13 @@ SECTIONS {
     *(.text .stub .text.*)
     KEEP(*(SORT_BY_NAME(.sort.text.*)))
 
-    /* Won't support NX bit DRM for tiny executables */
-    HIDDEN(.Lape.piro.align = ABSOLUTE(. > APE_PIRO_THRESHOLD ? 0x1000 : 8));
-
-    /* Code that musn't be mapped in production */
     KEEP(*(.ape.pad.test));
-    . = ALIGN(.Lape.piro.align);
     HIDDEN(__test_start = .);
     *(.test.unlikely)
     *(.test .test.*)
 
     /* Privileged code invulnerable to magic */
     KEEP(*(.ape.pad.privileged));
-    . = ALIGN(.Lape.piro.align);
     HIDDEN(__privileged_start = .);
     HIDDEN(__test_end = .);
     . += 1;
@@ -312,23 +291,10 @@ SECTIONS {
 /*BEGIN: Read Only Data */
 
     KEEP(*(.ape.pad.rodata));
-    . = ALIGN(.Lape.piro.align);
-    . += 1;
 
-    /* Nonspecific Read-Only Data */
     *(.rodata .rodata.*)
-    . += 1;
-
-    /* Undefined Behavior Sanitizer Types */
-    HIDDEN(__ubsan_types_start = .);
     *(.ubsan.types)
-    HIDDEN(__ubsan_types_end = .);
-    . += 1;
-
-    /* Undefined Behavior Sanitizer Data */
-    HIDDEN(__ubsan_data_start = .);
     *(.ubsan.data)
-    HIDDEN(__ubsan_data_end = .);
 
     /* Unit Test & Fixture Registry */
 
@@ -340,7 +306,7 @@ SECTIONS {
     KEEP(*(.comment))
     KEEP(*(.commentepilogue))
 #endif
-
+ 
     /* Windows DLL Import Directory */
     KEEP(*(.idata.ro));
     KEEP(*(SORT_BY_NAME(.idata.ro.*)))
@@ -350,16 +316,16 @@ SECTIONS {
     PROVIDE_HIDDEN(__init_array_start = .);
     KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*)
            SORT_BY_INIT_PRIORITY(.ctors.*)))
-    KEEP(*(SORT_NONE(.ctors)))
-    KEEP(*(SORT_NONE(.init_array)))
-    KEEP(*(SORT_NONE(.preinit_array)))
+    KEEP(*(.ctors))
+    KEEP(*(.init_array))
+    KEEP(*(.preinit_array))
     PROVIDE_HIDDEN(__init_array_end = .);
 
     . = ALIGN(__SIZEOF_POINTER__);
     PROVIDE_HIDDEN(__fini_array_start = .);
     KEEP(*(SORT_BY_INIT_PRIORITY(.fini_array.*)
            SORT_BY_INIT_PRIORITY(.dtors.*)))
-    KEEP(*(SORT_NONE(.dtors)))
+    KEEP(*(.dtors))
     PROVIDE_HIDDEN(__fini_array_end = .);
 
     /* Encoded Data Structures w/ Linear Initialization Order */
@@ -369,13 +335,12 @@ SECTIONS {
     KEEP(*(SORT_BY_NAME(.sort.rodata.*)))
 
     KEEP(*(.ape.pad.text))
-    HIDDEN(.Lape.data.align = ABSOLUTE(PAGESIZE));
-    . = ALIGN(.Lape.data.align);
+    . = ALIGN(PAGESIZE);
     HIDDEN(_etext = .);
     PROVIDE_HIDDEN(etext = .);
 /*END: Read Only Data (only needed for initialization) */
 /*END: Read Only Data */
-  } AT>SmallCode :Rom
+  } :Rom
 
   .data . : {
 /*BEGIN: Read/Write Data */
@@ -393,24 +358,21 @@ SECTIONS {
     KEEP(*(.gotpltepilogue))
 
 /*BEGIN: Post-Initialization Read-Only */
-    . = ALIGN(.Lape.piro.align);
-    HIDDEN(__piro_start = .);
-
+    . = ALIGN(__SIZEOF_POINTER__);
     KEEP(*(SORT_BY_NAME(.piro.relo.sort.*)))
     PROVIDE_HIDDEN(__relo_end = .);
+    . = ALIGN(__SIZEOF_POINTER__);
     KEEP(*(SORT_BY_NAME(.piro.data.sort.*)))
     KEEP(*(.piro.pad.data))
-    . = ALIGN(.Lape.data.align);
+    . = ALIGN(PAGESIZE);
     HIDDEN(_edata = .);
     PROVIDE_HIDDEN(edata = .);
-  } AT>SmallCode :Ram
+  } :Ram
 
   .bss . : {
     KEEP(*(SORT_BY_NAME(.piro.bss.init.*)))
     *(.piro.bss)
     KEEP(*(SORT_BY_NAME(.piro.bss.sort.*)))
-    . += 1;
-    . = ALIGN(.Lape.piro.align);
     HIDDEN(__piro_end = .);
 /*END: Post-Initialization Read-Only */
 
@@ -429,13 +391,16 @@ SECTIONS {
     . = ALIGN(0x10000); /* for brk()/sbrk() allocation */
     HIDDEN(_end = .);
     PROVIDE_HIDDEN(end = .);
-  } AT>SmallCode :Ram
+  } :Ram
 
 /*END: nt addressability guarantee */
 /*END: bsd addressability guarantee */
 /*END: linux addressability guarantee */
 /*END: xnu addressability guarantee */
 
+  .shstrtab            : { *(.shstrtab) }
+  .strtab              : { *(.strtab) }
+  .symtab              : { *(.symtab) }
   .stab              0 : { *(.stab) }
   .stabstr           0 : { *(.stabstr) }
   .stab.excl         0 : { *(.stab.excl) }
@@ -468,80 +433,81 @@ SECTIONS {
   .GCC.command.line  0 : { *(.GCC.command.line) }
 
   /DISCARD/ : {
+    *(__mcount_loc)
     *(.discard)
     *(.yoink)
     *(.*)
   }
 }
 
-PFSTUB8(.Lape.elf.entry, _start);
-PFSTUB8(.Lape.elf.phoff, RVA(ape.phdrs));
-PFSTUB8(.Lape.elf.shoff, 0);
-PFSTUB4(.Lape.elf.phnum, (.Lape.phdrs.end - ape.phdrs) / 56);
-PFSTUB4(.Lape.elf.shnum, 0);
-PFSTUB4(.Lape.elf.shstrndx, 0);
+PFSTUB8(ape_elf_entry, _start);
+PFSTUB8(ape_elf_phoff, RVA(ape_phdrs));
+PFSTUB8(ape_elf_shoff, 0);
+PFSTUB4(ape_elf_phnum, (ape_phdrs_end - ape_phdrs) / 56);
+PFSTUB4(ape_elf_shnum, 0);
+PFSTUB4(ape_elf_shstrndx, 0);
 
 HIDDEN(__privileged_addr = ROUNDDOWN(__privileged_start, PAGESIZE)); 
 HIDDEN(__privileged_size = (ROUNDUP(__privileged_end, PAGESIZE) -
                             ROUNDDOWN(__privileged_start, PAGESIZE))); 
 
-HIDDEN(.Lape.rom.offset = 0);
-HIDDEN(.Lape.rom.vaddr = ADDR(.head));
-HIDDEN(.Lape.rom.paddr = LOADADDR(.head));
-HIDDEN(.Lape.rom.filesz = LOADADDR(.data) - .Lape.rom.paddr);
-HIDDEN(.Lape.rom.memsz = ADDR(.data) - ADDR(.head));
-HIDDEN(.Lape.rom.align = .Lape.data.align);
-HIDDEN(.Lape.rom.rva = RVA(.Lape.rom.vaddr));
+HIDDEN(ape_rom_offset = 0);
+HIDDEN(ape_rom_vaddr = ADDR(.head));
+HIDDEN(ape_rom_paddr = LOADADDR(.head));
+HIDDEN(ape_rom_filesz = LOADADDR(.data) - ape_rom_paddr);
+HIDDEN(ape_rom_memsz = ADDR(.data) - ADDR(.head));
+HIDDEN(ape_rom_align = PAGESIZE);
+HIDDEN(ape_rom_rva = RVA(ape_rom_vaddr));
 
-HIDDEN(.Lape.ram.offset = .Lape.rom.offset + .Lape.rom.filesz);
-HIDDEN(.Lape.ram.vaddr = ADDR(.data));
-HIDDEN(.Lape.ram.paddr = LOADADDR(.data));
-HIDDEN(.Lape.ram.filesz = LOADADDR(.bss) - LOADADDR(.data));
-HIDDEN(.Lape.ram.memsz = ADDR(.bss) + SIZEOF(.bss) - .Lape.ram.vaddr);
-HIDDEN(.Lape.ram.align = .Lape.data.align);
-HIDDEN(.Lape.ram.rva = RVA(.Lape.ram.vaddr));
+HIDDEN(ape_ram_offset = ape_rom_offset + ape_rom_filesz);
+HIDDEN(ape_ram_vaddr = ADDR(.data));
+HIDDEN(ape_ram_paddr = LOADADDR(.data));
+HIDDEN(ape_ram_filesz = LOADADDR(.bss) - LOADADDR(.data));
+HIDDEN(ape_ram_memsz = ADDR(.bss) + SIZEOF(.bss) - ape_ram_vaddr);
+HIDDEN(ape_ram_align = PAGESIZE);
+HIDDEN(ape_ram_rva = RVA(ape_ram_vaddr));
 
-HIDDEN(.Lape.note.offset = .Lape.rom.offset + (.Lape.note - .Lape.rom.vaddr));
-HIDDEN(.Lape.note.vaddr = .Lape.note);
-HIDDEN(.Lape.note.paddr = .Lape.rom.paddr + .Lape.note.offset);
-HIDDEN(.Lape.note.filesz = .Lape.note.end - .Lape.note);
-HIDDEN(.Lape.note.memsz = .Lape.note.filesz);
-HIDDEN(.Lape.note.align = __SIZEOF_POINTER__);
+HIDDEN(ape_note_offset = ape_rom_offset + (ape_note - ape_rom_vaddr));
+HIDDEN(ape_note_vaddr = ape_note);
+HIDDEN(ape_note_paddr = ape_rom_paddr + ape_note_offset);
+HIDDEN(ape_note_filesz = ape_note_end - ape_note);
+HIDDEN(ape_note_memsz = ape_note_filesz);
+HIDDEN(ape_note_align = __SIZEOF_POINTER__);
 
-HIDDEN(.Lape.text.offset = .Lape.rom.offset + LOADADDR(.text) - .Lape.rom.paddr);
-HIDDEN(.Lape.text.paddr = LOADADDR(.text));
-HIDDEN(.Lape.text.vaddr = ADDR(.text));
-HIDDEN(.Lape.text.filesz = SIZEOF(.text));
-HIDDEN(.Lape.text.memsz = SIZEOF(.text));
-HIDDEN(.Lape.text.align = 4096);
-HIDDEN(.Lape.text.rva = RVA(.Lape.text.vaddr));
+HIDDEN(ape_text_offset = ape_rom_offset + LOADADDR(.text) - ape_rom_paddr);
+HIDDEN(ape_text_paddr = LOADADDR(.text));
+HIDDEN(ape_text_vaddr = ADDR(.text));
+HIDDEN(ape_text_filesz = SIZEOF(.text));
+HIDDEN(ape_text_memsz = SIZEOF(.text));
+HIDDEN(ape_text_align = PAGESIZE);
+HIDDEN(ape_text_rva = RVA(ape_text_vaddr));
 
-HIDDEN(.Lape.data.offset = .Lape.ram.offset + LOADADDR(.data) - .Lape.ram.paddr);
-HIDDEN(.Lape.data.paddr = LOADADDR(.data));
-HIDDEN(.Lape.data.vaddr = ADDR(.data));
-HIDDEN(.Lape.data.filesz = SIZEOF(.data));
-HIDDEN(.Lape.data.memsz = SIZEOF(.data));
-HIDDEN(.Lape.data.align = .Lape.data.align);
-HIDDEN(.Lape.data.rva = RVA(.Lape.data.vaddr));
+HIDDEN(ape_data_offset = ape_ram_offset + LOADADDR(.data) - ape_ram_paddr);
+HIDDEN(ape_data_paddr = LOADADDR(.data));
+HIDDEN(ape_data_vaddr = ADDR(.data));
+HIDDEN(ape_data_filesz = SIZEOF(.data));
+HIDDEN(ape_data_memsz = SIZEOF(.data));
+HIDDEN(ape_data_align = PAGESIZE);
+HIDDEN(ape_data_rva = RVA(ape_data_vaddr));
 
-HIDDEN(.Lape.bss.offset = .Lape.ram.offset + LOADADDR(.bss) - .Lape.ram.paddr);
-HIDDEN(.Lape.bss.paddr = LOADADDR(.bss));
-HIDDEN(.Lape.bss.vaddr = ADDR(.bss));
-HIDDEN(.Lape.bss.filesz = 0);
-HIDDEN(.Lape.bss.memsz = SIZEOF(.bss));
-HIDDEN(.Lape.bss.align = .Lape.data.align);
+HIDDEN(ape_bss_offset = ape_ram_offset + LOADADDR(.bss) - ape_ram_paddr);
+HIDDEN(ape_bss_paddr = LOADADDR(.bss));
+HIDDEN(ape_bss_vaddr = ADDR(.bss));
+HIDDEN(ape_bss_filesz = 0);
+HIDDEN(ape_bss_memsz = SIZEOF(.bss));
+HIDDEN(ape_bss_align = PAGESIZE);
 
 #if SupportsXnu()
-SHSTUB2(.Lape.macho.dd.skip, RVA(ape.macho) / 8);
-SHSTUB2(.Lape.macho.dd.count, (.Lape.macho.end - ape.macho) / 8);
+SHSTUB2(ape_macho_dd_skip, RVA(ape_macho) / 8);
+SHSTUB2(ape_macho_dd_count, (ape_macho_end - ape_macho) / 8);
 #endif
 
 #if SupportsWindows()
-PFSTUB4(.Lape.pe.offset, ape.pe - ape.mz);
-HIDDEN(.Lape.pe.optsz = .Lape.pe.sections - (ape.pe + 24));
-HIDDEN(.Lape.pe.shnum = (.Lape.pe.sections_end - .Lape.pe.sections) / 40);
-HIDDEN(.Lidata.idtsize = idata.idtend - idata.idt);
-HIDDEN(.Lidata.iatsize = idata.iatend - idata.iat);
+PFSTUB4(ape_pe_offset, ape_pe - ape_mz);
+HIDDEN(ape_pe_optsz = ape_pe_sections - (ape_pe + 24));
+HIDDEN(ape_pe_shnum = (ape_pe_sections_end - ape_pe_sections) / 40);
+HIDDEN(ape_idata_idtsize = ape_idata_idtend - ape_idata_idt);
+HIDDEN(ape_idata_iatsize = ape_idata_iatend - ape_idata_iat);
 HIDDEN(v_ntsubsystem = (DEFINED(GetMessage)
                         ? kNtImageSubsystemWindowsGui
                         : kNtImageSubsystemWindowsCui));
@@ -577,90 +543,89 @@ ZIPCONST(v_zip_commentsize, _edata - __zip_end - kZipCdirHdrMinSize);
   X = (X + (Y >> 020) & 0xFF) * PHI; \
   X = (X + (Y >> 030) & 0xFF) * PHI
 #define CHURN(X)        \
-  XORSHIFT(.Lape.uuid1, X); \
-  KMH(.Lape.uuid1, X);      \
-  XORSHIFT(.Lape.uuid2, X); \
-  KMH(.Lape.uuid2, X)
-HIDDEN(.Lape.uuid1 = 88172645463325252);
-HIDDEN(.Lape.uuid2 = 88172645463325252);
-CHURN(.Lape.bss.align);
-CHURN(.Lape.bss.filesz);
-CHURN(.Lape.bss.memsz);
-CHURN(.Lape.bss.offset);
-CHURN(.Lape.bss.paddr);
-CHURN(.Lape.data.align);
-CHURN(.Lape.data.filesz);
-CHURN(.Lape.data.memsz);
-CHURN(.Lape.data.offset);
-CHURN(.Lape.data.paddr);
-CHURN(.Lape.data.rva);
-CHURN(.Lape.data.vaddr);
-CHURN(.Lape.elf.entry);
-CHURN(.Lape.elf.phnum);
-CHURN(.Lape.elf.phoff);
-CHURN(.Lape.elf.shnum);
-CHURN(.Lape.elf.shoff);
-CHURN(.Lape.elf.shstrndx);
-CHURN(.Lape.macho.end);
-CHURN(.Lape.note);
-CHURN(.Lape.note.align);
-CHURN(.Lape.note.end);
-CHURN(.Lape.note.filesz);
-CHURN(.Lape.note.memsz);
-CHURN(.Lape.note.offset);
-CHURN(.Lape.note.paddr);
-CHURN(.Lape.note.vaddr);
-CHURN(.Lape.ram.align);
-CHURN(.Lape.ram.filesz);
-CHURN(.Lape.ram.memsz);
-CHURN(.Lape.ram.offset);
-CHURN(.Lape.ram.paddr);
-CHURN(.Lape.ram.rva);
-CHURN(.Lape.ram.vaddr);
-CHURN(.Lape.rom.align);
-CHURN(.Lape.rom.filesz);
-CHURN(.Lape.rom.memsz);
-CHURN(.Lape.rom.offset);
-CHURN(.Lape.rom.paddr);
-CHURN(.Lape.rom.rva);
-CHURN(.Lape.rom.vaddr);
-CHURN(.Lape.text.align);
-CHURN(.Lape.text.filesz);
-CHURN(.Lape.text.memsz);
-CHURN(.Lape.text.offset);
-CHURN(.Lape.text.paddr);
-CHURN(.Lape.text.rva);
-CHURN(.Lape.text.vaddr);
+  XORSHIFT(ape_uuid1, X); \
+  KMH(ape_uuid1, X);      \
+  XORSHIFT(ape_uuid2, X); \
+  KMH(ape_uuid2, X)
+HIDDEN(ape_uuid1 = 88172645463325252);
+HIDDEN(ape_uuid2 = 88172645463325252);
+CHURN(ape_bss_align);
+CHURN(ape_bss_filesz);
+CHURN(ape_bss_memsz);
+CHURN(ape_bss_offset);
+CHURN(ape_bss_paddr);
+CHURN(ape_data_filesz);
+CHURN(ape_data_memsz);
+CHURN(ape_data_offset);
+CHURN(ape_data_paddr);
+CHURN(ape_data_rva);
+CHURN(ape_data_vaddr);
+CHURN(ape_elf_entry);
+CHURN(ape_elf_phnum);
+CHURN(ape_elf_phoff);
+CHURN(ape_elf_shnum);
+CHURN(ape_elf_shoff);
+CHURN(ape_elf_shstrndx);
+CHURN(ape_macho_end);
+CHURN(ape_note);
+CHURN(ape_note_align);
+CHURN(ape_note_end);
+CHURN(ape_note_filesz);
+CHURN(ape_note_memsz);
+CHURN(ape_note_offset);
+CHURN(ape_note_paddr);
+CHURN(ape_note_vaddr);
+CHURN(ape_ram_align);
+CHURN(ape_ram_filesz);
+CHURN(ape_ram_memsz);
+CHURN(ape_ram_offset);
+CHURN(ape_ram_paddr);
+CHURN(ape_ram_rva);
+CHURN(ape_ram_vaddr);
+CHURN(ape_rom_align);
+CHURN(ape_rom_filesz);
+CHURN(ape_rom_memsz);
+CHURN(ape_rom_offset);
+CHURN(ape_rom_paddr);
+CHURN(ape_rom_rva);
+CHURN(ape_rom_vaddr);
+CHURN(ape_text_align);
+CHURN(ape_text_filesz);
+CHURN(ape_text_memsz);
+CHURN(ape_text_offset);
+CHURN(ape_text_paddr);
+CHURN(ape_text_rva);
+CHURN(ape_text_vaddr);
 CHURN(ADDR(.bss));
 CHURN(_start);
-CHURN(ape.phdrs);
+CHURN(ape_phdrs);
 #if SupportsMetal()
 CHURN(v_ape_realsectors);
 #endif
 #if SupportsXnu()
-CHURN(ape.macho);
+CHURN(ape_macho);
 #endif
 #if SupportsWindows()
-CHURN(ape.mz);
-CHURN(ape.pe);
-CHURN(.Lape.pe.offset);
-CHURN(.Lape.pe.optsz);
-CHURN(.Lape.pe.sections);
-CHURN(.Lape.pe.sections_end);
-CHURN(.Lape.pe.shnum);
-CHURN(.Lape.phdrs.end);
+CHURN(ape_mz);
+CHURN(ape_pe);
+CHURN(ape_pe_offset);
+CHURN(ape_pe_optsz);
+CHURN(ape_pe_sections);
+CHURN(ape_pe_sections_end);
+CHURN(ape_pe_shnum);
+CHURN(ape_phdrs_end);
 CHURN(WinMain);
 #endif /* SupportsWindows() */
 #endif /* SupportsXnu() */
 
-ASSERT(DEFINED(ape.mz) ? ape.mz == IMAGE_BASE_VIRTUAL : 1, "linker panic");
+ASSERT(DEFINED(ape_mz) ? ape_mz == IMAGE_BASE_VIRTUAL : 1, "linker panic");
 ASSERT((DEFINED(__init_bss_end) ? __init_bss_end : 0) % __SIZEOF_POINTER__ == 0,
        "__init_bss misalign");
 ASSERT(((DEFINED(__init_rodata_end) ? __init_rodata_end : 0) %
         __SIZEOF_POINTER__ == 0),
        "__init_rodata misalign");
 
-ASSERT((!DEFINED(ape.grub) ? 1 : RVA(ape.grub) < 8192),
+ASSERT((!DEFINED(ape_grub) ? 1 : RVA(ape_grub) < 8192),
        "grub stub needs to be in first 8kb of image");
 
 ASSERT(DEFINED(_start) || DEFINED(_start16),
@@ -672,7 +637,7 @@ ASSERT(!DEFINED(_start16) || REAL(_end) < 65536,
 /* Let's not be like Knight Capital. */
 /* NOCROSSREFS_TO(.test .text) */
 
-/* ASSERT(ape_sysv_start == .Lape.text.vaddr, */
+/* ASSERT(ape_sysv_start == ape_text_vaddr, */
 /*        "ape_sysv_start() must be first in .text"); */
 
 #endif /* __LINKER__ */

@@ -10,5 +10,8 @@ struct dirent {      /* linux getdents64 abi */
   char d_name[256];  /* NUL-terminated basename */
 };
 
+struct dirstream;
+typedef struct dirstream DIR;
+
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_DIRENT_H_ */

@@ -28,7 +28,7 @@
 	.hidden	kBiosDataArea
 	.type	kBiosDataArea,@object
 	.size	kBiosDataArea,XLM_BIOS_DATA_AREA_SIZE
-	kBiosDataArea = ape.xlm + XLM_BIOS_DATA_AREA
+	kBiosDataArea = ape_xlm + XLM_BIOS_DATA_AREA
 
 	.globl	kBiosDataAreaXlm
 	.hidden	kBiosDataAreaXlm

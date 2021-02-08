@@ -37,7 +37,7 @@ o/%.greg.o: %.greg.c; @ACTION=OBJECTIFY.greg $(COMPILE) $(OBJECTIFY.greg.c) $(OU
 o/%.zip.o: o/%; @build/zipobj $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
 
 o/$(MODE)/%.a:; @$(ARCHIVE) $@ $^
-o/$(MODE)/%: o/$(MODE)/%.dbg; @ACTION=OBJCOPY TARGET=$@ $(COMPILE) $(OBJCOPY) -SO binary $< $@
+o/$(MODE)/%: o/$(MODE)/%.dbg; @ACTION=OBJCOPY TARGET=$@ $(COMPILE) $(OBJCOPY) -S -O binary $< $@
 o/$(MODE)/%.o: %.s; @TARGET=$@ $(COMPILE) $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.o: o/$(MODE)/%.s; @TARGET=$@ $(COMPILE) $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.s: %.S; @ACTION=PREPROCESS $(COMPILE) $(PREPROCESS) $(OUTPUT_OPTION) $<

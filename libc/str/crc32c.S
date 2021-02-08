@@ -21,13 +21,13 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/notice.inc"
 
-/	Computes 32-bit Castagnoli Cyclic Redundancy Check.
-/
-/	@param	edi is the initial hash value (0 is fine)
-/	@param	rsi points to the data
-/	@param	rdx is the byte size of data
-/	@return	eax is the new hash value
-/	@note	Used by ISCSI, TensorFlow, etc.
+//	Computes 32-bit Castagnoli Cyclic Redundancy Check.
+//
+//	@param	edi is the initial hash value (0 is fine)
+//	@param	rsi points to the data
+//	@param	rdx is the byte size of data
+//	@return	eax is the new hash value
+//	@note	Used by ISCSI, TensorFlow, etc.
 	.initbss 300,_init_crc32c
 crc32c:	.quad	0
 	.endobj	crc32c,globl

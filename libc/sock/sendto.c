@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
@@ -46,7 +47,7 @@
  */
 ssize_t sendto(int fd, const void *buf, size_t size, uint32_t flags,
                const void *opt_addr, uint32_t addrsize) {
-  _Static_assert(sizeof(struct sockaddr_in) == sizeof(struct sockaddr_in_bsd));
+  assert(sizeof(struct sockaddr_in) == sizeof(struct sockaddr_in_bsd));
   if (!IsWindows()) {
     if (!IsBsd() || !opt_addr) {
       return sys_sendto(fd, buf, size, flags, opt_addr, addrsize);

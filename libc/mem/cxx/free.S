@@ -19,67 +19,67 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Frees memory the C++ way.
-/
-/	\param	%rdi is pointer, or NULL for no-op
-/	\param	%rsi is ignored
-/	\param	%rdx is ignored
+//	Frees memory the C++ way.
+//
+//	\param	%rdi is pointer, or NULL for no-op
+//	\param	%rsi is ignored
+//	\param	%rdx is ignored
 _ZdlPvSt11align_val_tRKSt9nothrow_t:
-/	operator delete(void*, std::align_val_t, std::nothrow_t const&)
+//	operator delete(void*, std::align_val_t, std::nothrow_t const&)
 	nop
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	_ZdlPvSt11align_val_tRKSt9nothrow_t,weak
 _ZdaPvSt11align_val_tRKSt9nothrow_t:
-/	operator delete[](void*, std::align_val_t, std::nothrow_t const&)
+//	operator delete[](void*, std::align_val_t, std::nothrow_t const&)
 	nop
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	_ZdaPvSt11align_val_tRKSt9nothrow_t,weak
 _ZdlPvRKSt9nothrow_t:
-/	operator delete(void*, std::nothrow_t const&)
+//	operator delete(void*, std::nothrow_t const&)
 	nop
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	_ZdlPvRKSt9nothrow_t,weak
 _ZdaPvRKSt9nothrow_t:
-/	operator delete[](void*, std::nothrow_t const&)
+//	operator delete[](void*, std::nothrow_t const&)
 	nop
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	_ZdaPvRKSt9nothrow_t,weak
 _ZdlPvmSt11align_val_t:
-/	operator delete(void*, unsigned long, std::align_val_t)
+//	operator delete(void*, unsigned long, std::align_val_t)
 	nop
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	_ZdlPvmSt11align_val_t,weak
 _ZdaPvmSt11align_val_t:
-/	operator delete[](void*, unsigned long, std::align_val_t)
+//	operator delete[](void*, unsigned long, std::align_val_t)
 	nop
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	_ZdaPvmSt11align_val_t,weak
 _ZdlPvSt11align_val_t:
-/	operator delete(void*, std::align_val_t)
+//	operator delete(void*, std::align_val_t)
 	nop
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	_ZdlPvSt11align_val_t,weak
 _ZdaPvSt11align_val_t:
-/	operator delete[](void*, std::align_val_t)
+//	operator delete[](void*, std::align_val_t)
 	nop
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	_ZdaPvSt11align_val_t,weak
 _ZdaPvm:	
-/	operator delete[](void*, unsigned long):
+//	operator delete[](void*, unsigned long):
 	nop
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	_ZdaPvm,weak
 _ZdlPvm:
-/	operator delete(void*, unsigned long)
+//	operator delete(void*, unsigned long)
 	nop
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	_ZdlPvm,weak
 _ZdaPv:
-/	operator delete[](void*)
+//	operator delete[](void*)
 	nop
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	_ZdaPv,weak
 _ZdlPv:
-/	operator delete(void*)
+//	operator delete(void*)
 	jmp	*hook_free(%rip)
 	.endfn	_ZdlPv,weak

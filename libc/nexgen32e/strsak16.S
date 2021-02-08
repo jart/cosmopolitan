@@ -19,12 +19,12 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/macros.h"
 
-/	Returns pointer to first instance of character.
-/
-/	@param	rdi is a non-null NUL-terminated char16_t string pointer
-/	@param	esi is the search word
-/	@return	rax points to character, or to NUL word if not found
-/	@note	this won't return NULL if search character is NUL
+//	Returns pointer to first instance of character.
+//
+//	@param	rdi is a non-null NUL-terminated char16_t string pointer
+//	@param	esi is the search word
+//	@return	rax points to character, or to NUL word if not found
+//	@note	this won't return NULL if search character is NUL
 strchrnul16:
 	.leafprologue
 	.profilable
@@ -32,13 +32,13 @@ strchrnul16:
 	jmp	0f
 	.endfn	strchrnul16,globl
 
-/	Returns pointer to first instance of character.
-/
-/	@param	rdi is a non-null NUL-terminated char16_t string pointer
-/	@param	esi is the search word
-/	@return	rax points to first result, or NULL if not found
-/	@note	this won't return NULL if search character is NUL
-/	@asyncsignalsafe
+//	Returns pointer to first instance of character.
+//
+//	@param	rdi is a non-null NUL-terminated char16_t string pointer
+//	@param	esi is the search word
+//	@return	rax points to first result, or NULL if not found
+//	@note	this won't return NULL if search character is NUL
+//	@asyncsignalsafe
 strchr16:
 	.leafprologue
 	.profilable
@@ -50,23 +50,23 @@ strchr16:
 	jmp	strsak16
 	.endfn	strchr16,globl
 
-/	Returns pointer to first instance of character in range.
-/
-/	@param	rdi is a non-null pointer to memory
-/	@param	esi is the search word
-/	@return	rax points to word if found, or else undefined behavior
+//	Returns pointer to first instance of character in range.
+//
+//	@param	rdi is a non-null pointer to memory
+//	@param	esi is the search word
+//	@return	rax points to word if found, or else undefined behavior
 rawmemchr16:
 	or	$-1,%rdx
-/	fallthrough
+//	fallthrough
 	.endfn	rawmemchr16,globl
 
-/	Returns pointer to first instance of character in range.
-/
-/	@param	rdi is a non-null pointer to memory
-/	@param	esi is the search word
-/	@param	rdx is length of memory in shorts
-/	@return	rax points to word if found or NULL
-/	@asyncsignalsafe
+//	Returns pointer to first instance of character in range.
+//
+//	@param	rdi is a non-null pointer to memory
+//	@param	esi is the search word
+//	@param	rdx is length of memory in shorts
+//	@return	rax points to word if found or NULL
+//	@asyncsignalsafe
 memchr16:
 	.leafprologue
 	.profilable
@@ -77,14 +77,14 @@ memchr16:
 	jmp	strsak16
 	.endfn	memchr16,globl
 
-/	Returns length of char16_t string w/ security blankets.
-/
-/	This is like strnlen() except it'll return 0 if (1) RDI is NULL
-/	or (2) a NUL-terminator wasn't found in the first RSI shorts.
-/
-/	@param	rdi is a nullable NUL-terminated char16_t string pointer
-/	@param	rsi is the maximum number of shorts to consider
-/	@return	rax is the number of shorts, excluding the NUL
+//	Returns length of char16_t string w/ security blankets.
+//
+//	This is like strnlen() except it'll return 0 if (1) RDI is NULL
+//	or (2) a NUL-terminator wasn't found in the first RSI shorts.
+//
+//	@param	rdi is a nullable NUL-terminated char16_t string pointer
+//	@param	rsi is the maximum number of shorts to consider
+//	@return	rax is the number of shorts, excluding the NUL
 strnlen16_s:
 	.leafprologue
 	.profilable
@@ -95,22 +95,22 @@ strnlen16_s:
 	.leafepilogue
 	.endfn	strnlen16_s,globl
 
-/	Returns length of NUL-terminated char16_t string.
-/
-/	@param	rdi is non-null NUL-terminated char16_t string pointer
-/	@return	rax is the number of shorts, excluding the NUL
-/	@asyncsignalsafe
+//	Returns length of NUL-terminated char16_t string.
+//
+//	@param	rdi is non-null NUL-terminated char16_t string pointer
+//	@return	rax is the number of shorts, excluding the NUL
+//	@asyncsignalsafe
 strlen16:
 	or	$-1,%rsi
-/	fallthrough
+//	fallthrough
 	.endfn	strlen16,globl
 
-/	Returns length of NUL-terminated memory, with limit.
-/
-/	@param	rdi is non-null memory
-/	@param	rsi is the maximum number of shorts to consider
-/	@return	rax is the number of shorts, excluding the NUL
-/	@asyncsignalsafe
+//	Returns length of NUL-terminated memory, with limit.
+//
+//	@param	rdi is non-null memory
+//	@param	rsi is the maximum number of shorts to consider
+//	@return	rax is the number of shorts, excluding the NUL
+//	@asyncsignalsafe
 strnlen16:
 	.leafprologue
 	.profilable
@@ -118,20 +118,20 @@ strnlen16:
 0:	xor	%edx,%edx
 	xor	%r11d,%r11d
 	mov	%rdi,%r8
-/	fallthrough
+//	fallthrough
 	.endfn	strnlen16,globl
 
-/	Swiss Army Knife of string char16_t scanning.
-/	Sixteen fast functions in one.
-/
-/	@param	rdi is non-null string memory
-/	@param	rsi is max number of shorts to consider
-/	@param	dx is search character #1
-/	@param	r11w is search character #2
-/	@param	r8 is subtracted from result (for length vs. pointer)
-/	@param	r9 masks result if DH is found (for NUL vs. NULL)
-/	@param	r10 masks result on shorts exhausted (for length v. NULL)
-/	@return	rax end pointer after r8/r9/r10 modifications
+//	Swiss Army Knife of string char16_t scanning.
+//	Sixteen fast functions in one.
+//
+//	@param	rdi is non-null string memory
+//	@param	rsi is max number of shorts to consider
+//	@param	dx is search character #1
+//	@param	r11w is search character #2
+//	@param	r8 is subtracted from result (for length vs. pointer)
+//	@param	r9 masks result if DH is found (for NUL vs. NULL)
+//	@param	r10 masks result on shorts exhausted (for length v. NULL)
+//	@return	rax end pointer after r8/r9/r10 modifications
 strsak16:
 	lea	-2(%rdi),%rax
 1:	add	$2,%rax

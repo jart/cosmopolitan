@@ -19,12 +19,12 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	RII System Five system call counter.
-/
-/	Referencing this symbol will cause systemfive() to be hooked
-/	for the purpose of counting non-Windows system calls. Please
-/	note wrappers may still short circuit calls sometimes, which
-/	wouldn't impact this counter.
+//	RII System Five system call counter.
+//
+//	Referencing this symbol will cause systemfive() to be hooked
+//	for the purpose of counting non-Windows system calls. Please
+//	note wrappers may still short circuit calls sometimes, which
+//	wouldn't impact this counter.
 	.bss
 	.align	8
 g_syscount:

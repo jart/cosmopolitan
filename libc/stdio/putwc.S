@@ -19,9 +19,9 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Writes wide character to stream.
-/	@param	%edi is the wide character
-/	@param	%rsi is the FILE stream pointer
-/	@return	%eax is set to %edi param or -1 on error
+//	Writes wide character to stream.
+//	@param	%edi is the wide character
+//	@param	%rsi is the FILE stream pointer
+//	@return	%eax is set to %edi param or -1 on error
 putwc:	jmp	fputwc
 	.endfn	putwc,globl

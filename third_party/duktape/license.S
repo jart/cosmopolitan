@@ -3,6 +3,6 @@ kDuktapeLicense:
 	.incbin	"third_party/duktape/license.inc"
 .type	kDuktapeLicense,@object
 .globl	kDuktapeLicense
-.popsection
+.previous
 
 .include "libc/disclaimer.inc"

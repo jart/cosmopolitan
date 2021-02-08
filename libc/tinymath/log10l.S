@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Calculates log₁₀𝑥.
-/
-/	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
-/	@return	result in %st
+//	Calculates log₁₀𝑥.
+//
+//	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+//	@return	result in %st
 log10l:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

@@ -19,11 +19,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns arc tangent of 𝑦/𝑥.
-/
-/	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
-/	@param	𝑦 is an 80-bit long double passed on stack in 16-bytes
-/	@return	result of computation on FPU stack in %st
+//	Returns arc tangent of 𝑦/𝑥.
+//
+//	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+//	@param	𝑦 is an 80-bit long double passed on stack in 16-bytes
+//	@return	result of computation on FPU stack in %st
 atan2l:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

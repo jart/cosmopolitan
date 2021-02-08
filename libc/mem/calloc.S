@@ -20,12 +20,12 @@
 #include "libc/notice.inc"
 .source	__FILE__
 
-/	Allocates n * itemsize bytes, initialized to zero.
-/
-/	@param	rdi is number of items (n)
-/	@param	rsi is size of each item (itemsize)
-/	@return	rax is memory address, or NULL w/ errno
-/	@note	overreliance on memalign is a sure way to fragment space
-/	@see	dlcalloc()
+//	Allocates n * itemsize bytes, initialized to zero.
+//
+//	@param	rdi is number of items (n)
+//	@param	rsi is size of each item (itemsize)
+//	@return	rax is memory address, or NULL w/ errno
+//	@note	overreliance on memalign is a sure way to fragment space
+//	@see	dlcalloc()
 calloc:	jmp	*hook_calloc(%rip)
 	.endfn	calloc,globl

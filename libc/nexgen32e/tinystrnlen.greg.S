@@ -18,12 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	8-bit strnlen that's tiny and near optimal if data's tiny.
-/
-/	@param	RDI is char *s
-/	@param	RSI is size_t n
-/	@param	EAX is unsigned length
-/	@see	libc/nexgen32e/strsak.S
+//	8-bit strnlen that's tiny and near optimal if data's tiny.
+//
+//	@param	RDI is char *s
+//	@param	RSI is size_t n
+//	@param	EAX is unsigned length
+//	@see	libc/nexgen32e/strsak.S
 tinystrnlen:
 	.leafprologue
 	.profilable

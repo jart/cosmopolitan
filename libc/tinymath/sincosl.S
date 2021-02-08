@@ -20,12 +20,12 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns sine and cosine of 𝑥.
-/
-/	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
-/	@param	%rdi is long double *out_sin
-/	@param	%rsi is long double *out_cos
-/	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
+//	Returns sine and cosine of 𝑥.
+//
+//	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+//	@param	%rdi is long double *out_sin
+//	@param	%rsi is long double *out_cos
+//	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
 sincosl:
 	push	%rbp
 	mov	%rsp,%rbp

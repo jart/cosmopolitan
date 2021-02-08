@@ -19,14 +19,14 @@
 #include "libc/macros.h"
 .privileged
 
-/	Loads previously saved processor state.
-/
-/	@param	rdi points to the jmp_buf
-/	@param	esi is returned by setjmp() invocation (coerced nonzero)
-/	@noreturn
-/	@assume	system five nexgen32e abi conformant
-/	@note	code built w/ microsoft abi compiler can't call this
-/	@see	gclongjmp() unwinds gc() destructors
+//	Loads previously saved processor state.
+//
+//	@param	rdi points to the jmp_buf
+//	@param	esi is returned by setjmp() invocation (coerced nonzero)
+//	@noreturn
+//	@assume	system five nexgen32e abi conformant
+//	@note	code built w/ microsoft abi compiler can't call this
+//	@see	gclongjmp() unwinds gc() destructors
 longjmp:mov	%esi,%eax
 	test	%eax,%eax
 	jnz	1f

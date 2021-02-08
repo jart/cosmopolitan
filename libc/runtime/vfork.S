@@ -20,20 +20,20 @@
 #include "libc/macros.h"
 .privileged
 
-/	Forks process without copying page tables.
-/
-/	This is the same as fork() except it's optimized for the case
-/	where the caller invokes execve() immediately afterwards. You
-/	can also call functions like close(), dup2(), etc. You cannot
-/	call read() safely but you can call pread(). Call _exit() but
-/	don't call exit(). Look for the vforksafe function annotation
-/
-/	Do not make the assumption that the parent is suspended until
-/	the child terminates since this impl calls fork() on Windows.
-/
-/	@return	pid of child process or 0 if forked process
-/	@returnstwice
-/	@vforksafe
+//	Forks process without copying page tables.
+//
+//	This is the same as fork() except it's optimized for the case
+//	where the caller invokes execve() immediately afterwards. You
+//	can also call functions like close(), dup2(), etc. You cannot
+//	call read() safely but you can call pread(). Call _exit() but
+//	don't call exit(). Look for the vforksafe function annotation
+//
+//	Do not make the assumption that the parent is suspended until
+//	the child terminates since this impl calls fork() on Windows.
+//
+//	@return	pid of child process or 0 if forked process
+//	@returnstwice
+//	@vforksafe
 vfork:
 #if SupportsWindows()
 	testb	IsWindows()
@@ -48,7 +48,7 @@ vfork:
 	syscall
 	push	%rsi			# note it happens twice in same page
 	cmp	$-4095,%eax
-	jae	systemfive.error
+	jae	systemfive_error
 0:	ezlea	__vforked,di
 	test	%eax,%eax
 	jz	1f
@@ -62,7 +62,7 @@ vfork:
 vfork.bsd:
 	syscall
 	push	%rsi
-	jc	systemfive.errno
+	jc	systemfive_errno
 #if SupportsXnu()
 	testb	IsXnu()
 	jz	0b

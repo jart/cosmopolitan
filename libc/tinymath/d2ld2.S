@@ -19,11 +19,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Thunks double(*fn)(double,double) -> long double fn.
-/
-/	@param	%xmm0[0] contains double param
-/	@return	%xmm0[0] contains double result
-/	@note	100% negligible overhead
+//	Thunks double(*fn)(double,double) -> long double fn.
+//
+//	@param	%xmm0[0] contains double param
+//	@return	%xmm0[0] contains double result
+//	@note	100% negligible overhead
 _d2ld2:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon eai EAI_FAMILY -6 5 5 -6 -6 0x273f
+.syscon eai,EAI_FAMILY,-6,5,5,-6,-6,0x273f

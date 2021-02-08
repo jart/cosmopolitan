@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Compares 8-bit unsigned integers.
-/
-/	@param	rdi points to left integer
-/	@param	rsi points to right integer
-/	@return	<0, 0, or >0 based on comparison
+//	Compares 8-bit unsigned integers.
+//
+//	@param	rdi points to left integer
+//	@param	rsi points to right integer
+//	@return	<0, 0, or >0 based on comparison
 	.align	16
 cmpub:	.leafprologue
 	.profilable

@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns log(𝟷+𝑥).
-/
-/	@param	𝑥 is double scalar in low half of %xmm0
-/	@return	double scalar in low half of %xmm0
+//	Returns log(𝟷+𝑥).
+//
+//	@param	𝑥 is double scalar in low half of %xmm0
+//	@return	double scalar in low half of %xmm0
 log1p:
 	push	%rbp
 	mov	%rsp,%rbp

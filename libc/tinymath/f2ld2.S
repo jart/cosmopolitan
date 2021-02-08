@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Thunks float(*fn)(float,float) -> long double fn.
-/
-/	@param	%xmm0[0] contains float param
-/	@return	%xmm0[0] contains float result
-/	@note	100% negligible overhead
+//	Thunks float(*fn)(float,float) -> long double fn.
+//
+//	@param	%xmm0[0] contains float param
+//	@return	%xmm0[0] contains float result
+//	@note	100% negligible overhead
 _f2ld2:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

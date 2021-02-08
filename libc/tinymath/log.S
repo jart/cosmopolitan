@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns natural logarithm of 𝑥.
-/
-/	@param	𝑥 is double scalar in low half of %xmm0
-/	@return	double scalar in low half of %xmm0
+//	Returns natural logarithm of 𝑥.
+//
+//	@param	𝑥 is double scalar in low half of %xmm0
+//	@return	double scalar in low half of %xmm0
 log:	ezlea	logl,ax
 	jmp	_d2ld2
 	.endfn	log,globl

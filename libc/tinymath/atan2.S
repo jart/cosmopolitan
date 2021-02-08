@@ -19,12 +19,12 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns arc tangent of 𝑦/𝑥.
-/
-/	@param	𝑦 is double scalar in low half of %xmm0
-/	@param	𝑥 is double scalar in low half of %xmm1
-/	@return	double scalar in low half of %xmm0
-/	@note	the greatest of all libm functions
+//	Returns arc tangent of 𝑦/𝑥.
+//
+//	@param	𝑦 is double scalar in low half of %xmm0
+//	@param	𝑥 is double scalar in low half of %xmm1
+//	@return	double scalar in low half of %xmm0
+//	@note	the greatest of all libm functions
 atan2:	ezlea	atan2l,ax
 	jmp	_d2ld2
 	.endfn	atan2,globl

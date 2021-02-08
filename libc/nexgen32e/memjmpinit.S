@@ -20,13 +20,13 @@
 #include "libc/macros.h"
 .text.startup
 
-/	Initializes jump table for memset() and memcpy().
-/
-/	@param	!ZF if required cpu vector extensions are available
-/	@param	rdi is address of 64-bit jump table
-/	@param	rsi is address of 8-bit jump initializers
-/	@param	rdx is address of indirect branch
-/	@param	ecx is size of jump table
+//	Initializes jump table for memset() and memcpy().
+//
+//	@param	!ZF if required cpu vector extensions are available
+//	@param	rdi is address of 64-bit jump table
+//	@param	rsi is address of 8-bit jump initializers
+//	@param	rdx is address of indirect branch
+//	@param	ecx is size of jump table
 memjmpinit:
 	.leafprologue
 	setnz	%r8b

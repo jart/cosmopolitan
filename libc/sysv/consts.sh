@@ -461,7 +461,7 @@ syscon	auxv	AT_UCACHEBSIZE				21			0			0			0			0			0
 syscon	auxv	AT_SECURE				23			0			0			0			0			0
 syscon	auxv	AT_BASE_PLATFORM			24			0			0			0			0			0
 syscon	auxv	AT_RANDOM				25			0			0			0			0			0			# address of sixteen bytes of random data
-syscon	auxv	AT_EXECFN				31			31			999			999			2014			999			# address of string containing first argument passed to execve() used when running program [faked on non-linux]
+syscon	auxv	AT_EXECFN				31			31			999			999			2014			31			# address of string containing first argument passed to execve() used when running program [faked on non-linux]
 syscon	auxv	AT_SYSINFO_EHDR				33			0			0			0			0			0
 syscon	auxv	AT_NO_AUTOMOUNT				0x0800			0			0			0			0			0
 
@@ -2265,7 +2265,7 @@ syscon	misc	EM_LATTICEMICO32			138			0			0			0			0			0
 
 syscon	misc	EXPR_NEST_MAX				0x20			0x20			0x20			0x20			0x20			0			# unix consensus
 
-#	fallocate() flags (posix_fallocate() doesn't have these)
+#	linux fallocate() flags
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	misc	FALLOC_FL_KEEP_SIZE			0x01			-1			-1			-1			-1			-1			# bsd consensus

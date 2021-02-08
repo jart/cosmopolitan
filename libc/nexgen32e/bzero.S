@@ -18,15 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Sets memory to zero.
-/
-/	C code should always favor memset(), since that's the one we've
-/	prototyped with the best optimizations. This definition is used
-/	by old code and sometimes code generators, as a thunk.
-/
-/	@param	rdi is dest
-/	@param	rsi is the number of bytes to set
-/	@see	memset(), explicit_bzero()
+//	Sets memory to zero.
+//
+//	C code should always favor memset(), since that's the one we've
+//	prototyped with the best optimizations. This definition is used
+//	by old code and sometimes code generators, as a thunk.
+//
+//	@param	rdi is dest
+//	@param	rsi is the number of bytes to set
+//	@see	memset(), explicit_bzero()
 bzero:	mov	%rsi,%rdx
 	xor	%esi,%esi
 	jmp	MemSet

@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns 𝑒^x-1.
-/
-/	@param	𝑥 is double scalar in low half of %xmm0
-/	@return	double scalar in low half of %xmm0
+//	Returns 𝑒^x-1.
+//
+//	@param	𝑥 is double scalar in low half of %xmm0
+//	@return	double scalar in low half of %xmm0
 expm1:
 	ezlea	expm1l,ax
 	jmp	_d2ld2

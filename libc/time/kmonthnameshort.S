@@ -9,13 +9,13 @@
 #endif
 #include "libc/macros.h"
 
-/	Type #1:
-/	  - Indexable C-String Array
-/	  - extern const char kMonthNameShort[12][4];
-/	Type #2:
-/	  - Double-NUL Terminated String
-/	  - extern const char kMonthNameShort[];
-	.section .rodata,"aS",@progbits
+//	Type #1:
+//	  - Indexable C-String Array
+//	  - extern const char kMonthNameShort[12][4];
+//	Type #2:
+//	  - Double-NUL Terminated String
+//	  - extern const char kMonthNameShort[];
+	.section .rodata,"a",@progbits
 kMonthNameShort:
 	.ascin	"Jan",4
 	.ascin	"Feb",4

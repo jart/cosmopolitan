@@ -20,7 +20,7 @@
 #include "libc/nexgen32e/pcmpstr.inc"
 #include "libc/nexgen32e/strstr.inc"
 
-/	TODO(jart): Fix me.
+//	TODO(jart): Fix me.
 strstr16$sse42:
 	.strstr	.Lequalorder16
 	.endfn	strstr16$sse42,globl,hidden

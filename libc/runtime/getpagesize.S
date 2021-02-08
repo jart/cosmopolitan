@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns granularity of memory manager.
+//	Returns granularity of memory manager.
 getpagesize:
 	.leafprologue
 	.profilable

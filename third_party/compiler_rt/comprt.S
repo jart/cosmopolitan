@@ -1,6 +1,6 @@
 #include "libc/macros.h"
 
-/	Nop ref this to force pull the license into linkage.
+//	Nop ref this to force pull the license into linkage.
 	.section .yoink
 huge_compiler_rt_license:
 	int3

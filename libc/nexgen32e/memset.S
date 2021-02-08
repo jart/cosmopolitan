@@ -24,26 +24,26 @@
 #include "libc/nexgen32e/macros.h"
 #include "libc/macros.h"
 
-/	Sets memory.
-/
-/	@param	rdi is dest
-/	@param	esi is the byte to set
-/	@param	edx is the number of bytes to set
-/	@return	original rdi copied to rax
-/	@mode	long
-/	@asyncsignalsafe
+//	Sets memory.
+//
+//	@param	rdi is dest
+//	@param	esi is the byte to set
+//	@param	edx is the number of bytes to set
+//	@return	original rdi copied to rax
+//	@mode	long
+//	@asyncsignalsafe
 memset:	mov	%rdi,%rax
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.align	16
 	.endfn	memset,globl
 
-/	Sets memory w/ minimal-impact ABI.
-/
-/	@param	rdi is dest
-/	@param	esi is the byte to set
-/	@param	edx is the number of bytes to set
-/	@clob	flags,rcx,xmm3
-/	@mode	long
+//	Sets memory w/ minimal-impact ABI.
+//
+//	@param	rdi is dest
+//	@param	esi is the byte to set
+//	@param	edx is the number of bytes to set
+//	@clob	flags,rcx,xmm3
+//	@mode	long
 MemSet:	.leafprologue
 	.profilable
 	mov	$.Lmemsettab.ro.size,%ecx

@@ -103,8 +103,9 @@ static noasan textwindows wontreturn void WinMainNew(void) {
   long auxv[1][2];
   struct WinArgs *wa;
   const char16_t *env16;
+  extern char os asm("__hostos");
+  os = WINDOWS; /* madness https://news.ycombinator.com/item?id=21019722 */
   NormalizeCmdExe();
-  *(/*unconst*/ int *)&__hostos = WINDOWS;
   addr = NtGetVersion() < kNtVersionWindows10 ? 0xff00000 : 0x777000000000;
   size = ROUNDUP(STACKSIZE + sizeof(struct WinArgs), FRAMESIZE);
   _mmi.p[0].h =

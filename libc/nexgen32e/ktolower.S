@@ -18,12 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	ASCII uppercase → lowercase translation tables.
-/
-/		char kToLower[256];
-/		char16_t kToLower16[256];
-/
-/	@note	kToLower16 saves 128kb; CMOVcc can't even 8-bit
+//	ASCII uppercase → lowercase translation tables.
+//
+//		char kToLower[256];
+//		char16_t kToLower16[256];
+//
+//	@note	kToLower16 saves 128kb; CMOVcc can't even 8-bit
 	.initbss 300,_init_kToLower
 kToLower:
 	.rept	256
@@ -43,8 +43,8 @@ kToLower16:
 	xchg	%rsi,(%rsp)
 	xor	%ecx,%ecx
 0:	inc	%ecx
-	addb	$0x20,'A-1(%rsi,%rcx)
-	cmp	$'Z-'A,%ecx
+	addb	$0x20,'A'-1(%rsi,%rcx)
+	cmp	$'Z'-'A',%ecx
 	jne	0b
 	xor	%eax,%eax
 	mov	$256,%ecx

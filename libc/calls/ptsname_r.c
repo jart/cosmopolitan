@@ -19,18 +19,19 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/termios.h"
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
+#include "libc/fmt/itoa.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
 errno_t ptsname_r(int fd, char *buf, size_t size) {
   int pty;
+  char tb[32];
   if (size) {
     if (!buf) return einval();
     if (ioctl(fd, TIOCGPTN, &pty) == -1) return errno;
-    if (snprintf(buf, size, "/dev/pts/%d", pty) >= size) {
-      return (errno = ERANGE);
-    }
+    int64toarray_radix10(pty, stpcpy(tb, "/dev/pts/"));
+    if (strlen(tb) + 1 >= size) return (errno = ERANGE);
+    stpcpy(buf, tb);
     /* TODO(jart): OpenBSD OMG */
   }
   return 0;

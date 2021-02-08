@@ -18,13 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Returns prefix length, consisting of chars not in reject.
-/
-/	@param	rdi is string
-/	@param	rsi is reject nul-terminated character set
-/	@return	rax is index of first byte in charset
-/	@see	strspn(), strtok_r()
-/	@asyncsignalsafe
+//	Returns prefix length, consisting of chars not in reject.
+//
+//	@param	rdi is string
+//	@param	rsi is reject nul-terminated character set
+//	@return	rax is index of first byte in charset
+//	@see	strspn(), strtok_r()
+//	@asyncsignalsafe
 strcspn:
 	push	%rbp
 	mov	%rsp,%rbp

@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Returns cube root of 𝑥.
-/
-/	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
-/	@return	result of computation on FPU stack in %st
+//	Returns cube root of 𝑥.
+//
+//	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+//	@return	result of computation on FPU stack in %st
 cbrtl:	pushq	%rbp
 	mov	%rsp,%rbp
 	sub	$16,%rsp

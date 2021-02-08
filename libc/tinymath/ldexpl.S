@@ -19,11 +19,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns 𝑥 × 2ʸ.
-/
-/	@param	𝑥 is long double passed on stack
-/	@param	𝑦 is exponent via %edi
-/	@return	result in %st0
+//	Returns 𝑥 × 2ʸ.
+//
+//	@param	𝑥 is long double passed on stack
+//	@param	𝑦 is exponent via %edi
+//	@return	result in %st0
 ldexpl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

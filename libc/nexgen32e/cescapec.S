@@ -19,19 +19,19 @@
 #include "ape/relocations.h"
 #include "libc/macros.h"
 
-/	Escapes byte for string literal.
-/
-/	This turns stuff like (char)0xFF into \0377. The returned
-/	string is word-encoded, e.g. '\\'|'0'<<010|'3'<<020|etc.
-/
-/	@param	dil contains byte to escape
-/	@see	libc/nexgen32e/cescapec.c
+//	Escapes byte for string literal.
+//
+//	This turns stuff like (char)0xFF into \0377. The returned
+//	string is word-encoded, e.g. '\\'|'0'<<010|'3'<<020|etc.
+//
+//	@param	dil contains byte to escape
+//	@see	libc/nexgen32e/cescapec.c
 cescapec:
 	movzbl	%dil,%edi
 	lea	-7(%rdi),%ecx
 	cmp	$85,%cl
 	ja	1f
-	mov	$'\\,%eax
+	mov	$'\\',%eax
 	movzbl	%cl,%ecx
 	jmp	*cescapectab(,%rcx,8)
 .Lanchorpoint:
@@ -74,7 +74,7 @@ cescapec:
 	shl	$24,%edi
 	or	%ecx,%edi
 	lea	(%rdi,%rax,4),%eax
-	add	$'0<<030|'0<<020|'0<<010|'\\,%eax
+	add	$'0'<<030|'0'<<020|'0'<<010|'\\',%eax
 	ret
 	.endfn	cescapec,globl
 
@@ -87,13 +87,13 @@ cescapectab.ro:
 	.byte	1,.LVT-.Lanchorpoint
 	.byte	1,.LFF-.Lanchorpoint
 	.byte	1,.LCR-.Lanchorpoint
-	.byte	'\"-'\r-1,1b-.Lanchorpoint
+	.byte	20,1b-.Lanchorpoint
 	.byte	1,.LDQ-.Lanchorpoint
-	.byte	'\'-'\"-1,1b-.Lanchorpoint
+	.byte	'\''-'\"'-1,1b-.Lanchorpoint
 	.byte	1,.LSQ-.Lanchorpoint
-	.byte	'?-'\'-1,1b-.Lanchorpoint
+	.byte	'?'-'\''-1,1b-.Lanchorpoint
 	.byte	1,.LQM-.Lanchorpoint
-	.byte	'\\-'?-1,1b-.Lanchorpoint
+	.byte	'\\'-'?'-1,1b-.Lanchorpoint
 	.byte	1,.LBSL-.Lanchorpoint
 	.equ	.Lcescapectab.ro.size,.-cescapectab.ro
 	.org	8 - .Lcescapectab.ro.size % 8 + .
@@ -102,7 +102,7 @@ cescapectab.ro:
 
 	.initbss 300,_init_cescapec
 cescapectab:
-	.rept	'\\-7+1
+	.rept	'\\'-7+1
 	.quad	0
 	.endr
 	.endobj	cescapectab

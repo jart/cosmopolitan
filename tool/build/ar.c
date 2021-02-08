@@ -82,7 +82,7 @@ struct Header {
 static void MakeHeader(struct Header *h, const char *name, int ref, int mode,
                        int size) {
   size_t n;
-  char buf[21];
+  char buf[24];
   memset(h, ' ', sizeof(*h));
   n = strlen(name);
   memcpy(h->name, name, n);

@@ -18,16 +18,16 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	@fileoverview Byte-order conversion functions.
-/
-/	Endianness is deceptively complicated to the uninitiated. Many
-/	helpers have been written by our top minds to address perceived
-/	difficulties. These ones got through standardization processes.
-/	To protect their legacy, all 19 functions have been implemented
-/	in just 17 bytes.
-/
-/	@see	READ32LE(), READ32BE(), etc.
-/	@asyncsignalsafe
+//	@fileoverview Byte-order conversion functions.
+//
+//	Endianness is deceptively complicated to the uninitiated. Many
+//	helpers have been written by our top minds to address perceived
+//	difficulties. These ones got through standardization processes.
+//	To protect their legacy, all 19 functions have been implemented
+//	in just 17 bytes.
+//
+//	@see	READ32LE(), READ32BE(), etc.
+//	@asyncsignalsafe
 
 bswap_64:
 htobe64:

@@ -47,8 +47,8 @@ kPollNamesRo:
 	.endobj	kPollNamesRo,globl,hidden
 	.previous
 
-/	Mapping of poll() flags to their string names.
-/	@see	RecreateFlags()
+//	Mapping of poll() flags to their string names.
+//	@see	RecreateFlags()
 	.initbss 301,_init_kPollNames
 kPollNames:
 	.rept	.Lrows
@@ -62,10 +62,11 @@ kPollNames:
 	.init.start 301,_init_kPollNames
 	pushpop	.Lrows,%rcx		# relocate RO→BSS b/c -fPIE crap
 0:	lodsl
-	mov	(%rbx,%rax),%rax	# read what systemfive.S decoded
+	.weak	_base
+	mov	_base(%rax),%rax	# read what systemfive.S decoded
 	stosq
 	lodsl
-	add	%rbx,%rax		# %rbx is image base (cosmo abi)
+	add	$_base,%rax
 	stosq
 	.loop	0b
 	add	$16,%rdi

@@ -19,13 +19,13 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Rounds to integer, toward zero.
-/
-/	@param	𝑥 is double scalar in low half of %xmm0
-/	@return	double scalar in low half of %xmm0
-/	@define	trunc(𝑥+copysign(.5,𝑥))
-/	@see	round(),rint(),nearbyint()
-/	@see	roundsd $_MM_FROUND_TO_ZERO|_MM_FROUND_NO_EXC,%xmm0,%xmm0
+//	Rounds to integer, toward zero.
+//
+//	@param	𝑥 is double scalar in low half of %xmm0
+//	@return	double scalar in low half of %xmm0
+//	@define	trunc(𝑥+copysign(.5,𝑥))
+//	@see	round(),rint(),nearbyint()
+//	@see	roundsd $_MM_FROUND_TO_ZERO|_MM_FROUND_NO_EXC,%xmm0,%xmm0
 trunc:	.leafprologue
 	.profilable
 	movsd	3f(%rip),%xmm1
@@ -40,5 +40,5 @@ trunc:	.leafprologue
 	.endfn	trunc,globl
 
 	.rodata.cst8
-2:	.double	0x0010000000000000
+2:	.quad	0x0010000000000000
 3:	.double	nan

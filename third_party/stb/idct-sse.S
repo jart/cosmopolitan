@@ -18,9 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Computes inverse discrete cosine transform.
-/
-/	@note	used to decode jpeg
+//	Computes inverse discrete cosine transform.
+//
+//	@note	used to decode jpeg
 	.p2align 4
 stbi__idct_simd$sse:
 	push	%rbp

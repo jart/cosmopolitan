@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Supplies basename(argv[0]) The GNU Way.
+//	Supplies basename(argv[0]) The GNU Way.
 	.initbss 400,_init_program_invocation_short_name
 program_invocation_short_name:
 	.quad	0
@@ -34,9 +34,9 @@ program_invocation_short_name:
 	mov	(%r13),%rsi		# argv[0]
 	mov	%rsi,%rcx
 1:	lodsb
-	cmp	$'/,%al
+	cmp	$'/',%al
 	cmoveq	%rsi,%rcx
-	cmp	$'\\,%al
+	cmp	$'\\',%al
 	cmoveq	%rsi,%rcx
 	test	%al,%al
 	jnz	1b

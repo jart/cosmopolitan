@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Phash tables for instruction length decoding.
-/	@see	build/rle.py for more context here
+//	Phash tables for instruction length decoding.
+//	@see	build/rle.py for more context here
 
 	.initbss 300,_init_x86tab
 xed_prefix_table_bit:

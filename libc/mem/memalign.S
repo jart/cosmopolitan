@@ -20,20 +20,20 @@
 #include "libc/notice.inc"
 .source	__FILE__
 
-/	Allocates aligned memory.
-/
-/	Returns a pointer to a newly allocated chunk of n bytes, aligned in
-/	accord with the alignment argument. The alignment argument should be
-/	a power of two. If the argument is not a power of two, the nearest
-/	greater power is used. 8-byte alignment is guaranteed by normal
-/	malloc calls, so don't bother calling memalign with an argument of 8
-/	or less.
-/
-/	@param	rdi is alignment in bytes
-/	@param	rsi (newsize) is number of bytes needed
-/	@return	rax is memory address, or NULL w/ errno
-/	@note	overreliance on memalign is a sure way to fragment space
-/	@see	dlmemalign()
+//	Allocates aligned memory.
+//
+//	Returns a pointer to a newly allocated chunk of n bytes, aligned in
+//	accord with the alignment argument. The alignment argument should be
+//	a power of two. If the argument is not a power of two, the nearest
+//	greater power is used. 8-byte alignment is guaranteed by normal
+//	malloc calls, so don't bother calling memalign with an argument of 8
+//	or less.
+//
+//	@param	rdi is alignment in bytes
+//	@param	rsi (newsize) is number of bytes needed
+//	@return	rax is memory address, or NULL w/ errno
+//	@note	overreliance on memalign is a sure way to fragment space
+//	@see	dlmemalign()
 memalign:
 	jmp	*hook_memalign(%rip)
 	.endfn	memalign,globl

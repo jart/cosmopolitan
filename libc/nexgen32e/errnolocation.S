@@ -20,8 +20,8 @@
 .source	__FILE__
 .keep.text # gdb needs it
 
-/	Returns address of errno variable.
-/	@note	this isn't a universal definition
+//	Returns address of errno variable.
+//	@note	this isn't a universal definition
 __errno_location:
 	ezlea	errno,ax
 	ret

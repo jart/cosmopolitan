@@ -19,16 +19,16 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Global variable for last error.
-/
-/	The system call wrappers update this with WIN32 error codes.
-/	Unlike traditional libraries, Cosmopolitan error codes are
-/	defined as variables. By convention, system calls and other
-/	functions do not update this variable when nothing's broken.
-/
-/	@see	libc/sysv/consts.sh
-/	@see	libc/sysv/errfuns.h
-/	@see	__errno_location() stable abi
+//	Global variable for last error.
+//
+//	The system call wrappers update this with WIN32 error codes.
+//	Unlike traditional libraries, Cosmopolitan error codes are
+//	defined as variables. By convention, system calls and other
+//	functions do not update this variable when nothing's broken.
+//
+//	@see	libc/sysv/consts.sh
+//	@see	libc/sysv/errfuns.h
+//	@see	__errno_location() stable abi
 	.bss
 	.align	4
 errno:	.long	0

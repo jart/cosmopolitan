@@ -362,7 +362,7 @@ static struct Cell derasterize(unsigned char block[CN][YS * XS]) {
   unsigned char bf[1u << MC][2];
   rgb2lin(CN * YS * XS, lb[0], block[0]);
   n = combinecolors(bf, block);
-  best = -1u;
+  best = FLT_MAX;
   cell.rune = 0;
   for (i = 0; i < n; ++i) {
     b = bf[i][0];

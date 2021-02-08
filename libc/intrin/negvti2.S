@@ -21,11 +21,11 @@
 .privileged
 .alignfunc
 
-/	Returns -𝑥, aborting on overflow.
-/
-/	@param	rdi:rsi is int128 𝑥
-/	@return	rdx:rax is -𝑥
-/	@see	-ftrapv
+//	Returns -𝑥, aborting on overflow.
+//
+//	@param	rdi:rsi is int128 𝑥
+//	@return	rdx:rax is -𝑥
+//	@see	-ftrapv
 __negvti2:
 	mov	%rdi,%rax
 	mov	%rsi,%rdx

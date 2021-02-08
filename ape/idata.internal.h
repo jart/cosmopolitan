@@ -22,15 +22,15 @@
 #include "ape/relocations.h"
 /* clang-format off */
 
-/	Links function from external DLL.
-/
-/	This embeds a function pointer in the binary. The NT Executive
-/	fills its value before control is handed off to the program.
-/
-/	@note	only ELF toolchains are powerful enough to use this
-/	@see	libc/nt/master.sh
-/	@see	ape/ape.lds
-/	@see	winimp
+//	Links function from external DLL.
+//
+//	This embeds a function pointer in the binary. The NT Executive
+//	fills its value before control is handed off to the program.
+//
+//	@note	only ELF toolchains are powerful enough to use this
+//	@see	libc/nt/master.sh
+//	@see	ape/ape.lds
+//	@see	winimp
 .macro	.imp	dll:req fn:req actual:req hint
 	.dll	\dll
 	.section .piro.data.sort.iat.2.\dll\().2.\actual,"aw",@progbits
@@ -63,10 +63,10 @@
 	.previous
 .endm
 
-/	Defines DLL import.
-/	@note	this is an implementation detail of .imp
+//	Defines DLL import.
+//	@note	this is an implementation detail of .imp
 .macro	.dll	name:req
-  .section .idata.ro.idt.2.\name,"aG",\name,comdat
+  .section .idata.ro.idt.2.\name,"aG",@progbits,\name,comdat
 	.equ	.Lidata.idt.\name,.
 	.long	RVA(idata.ilt.\name)		# ImportLookupTable
 	.long	0				# TimeDateStamp
@@ -76,7 +76,7 @@
 	.type	.Lidata.idt.\name,@object
 	.size	.Lidata.idt.\name,.-.Lidata.idt.\name
   .previous
-  .section .idata.ro.ilt.\name\().1,"aG",\name,comdat
+  .section .idata.ro.ilt.\name\().1,"aG",@progbits,\name,comdat
 	.align	__SIZEOF_POINTER__
 	.type	idata.ilt.\name,@object
 idata.ilt.\name:
@@ -84,15 +84,15 @@ idata.ilt.\name:
 	...
 	decentralized content
 	...
-	*/.section .idata.ro.ilt.\name\().3,"aG",\name,comdat
+	*/.section .idata.ro.ilt.\name\().3,"aG",@progbits,\name,comdat
 	.quad	0
   .previous
-  .section .idata.ro.hnt.\name\().1,"aG",\name,comdat
+  .section .idata.ro.hnt.\name\().1,"aG",@progbits,\name,comdat
 	.align	__SIZEOF_POINTER__
 	.type	idata.hnt.\name,@object
 	.equ	idata.hnt.\name,.
   .previous
-  .section .piro.data.sort.iat.2.\name\().1,"awG",\name,comdat
+  .section .piro.data.sort.iat.2.\name\().1,"awG",@progbits,\name,comdat
 	.align	__SIZEOF_POINTER__
 	.type	idata.iat.\name,@object
 idata.iat.\name:
@@ -100,7 +100,7 @@ idata.iat.\name:
 	...
 	decentralized content
 	...
-	*/.section .piro.data.sort.iat.2.\name\().3,"awG",\name,comdat
+	*/.section .piro.data.sort.iat.2.\name\().3,"awG",@progbits,\name,comdat
 	.quad	0
   .previous
   .section .rodata.str1.1,"aSM",@progbits,1

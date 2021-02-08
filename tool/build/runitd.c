@@ -317,7 +317,6 @@ void HandleClient(void) {
       CHECK_LE(wrote, got);
     } while ((got -= wrote));
   }
-  LOGIFNEG1(shutdown(g_clifd, SHUT_RD));
   LOGIFNEG1(close(g_exefd));
 
   /* run program, tee'ing stderr to both log and client */
@@ -376,7 +375,6 @@ void HandleClient(void) {
   /* let client know how it went */
   LOGIFNEG1(unlink(g_exepath));
   SendExitMessage(g_clifd, exitcode);
-  LOGIFNEG1(shutdown(g_clifd, SHUT_RDWR));
   LOGIFNEG1(close(g_clifd));
   _exit(0);
 }

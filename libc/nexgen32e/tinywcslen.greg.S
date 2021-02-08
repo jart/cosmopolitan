@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	32-bit strlen that's tiny and near optimal if data's tiny.
-/
-/	@param	RDI is wchar_t *s
-/	@param	EAX is unsigned length
-/	@see	libc/nexgen32e/strsak32.S
+//	32-bit strlen that's tiny and near optimal if data's tiny.
+//
+//	@param	RDI is wchar_t *s
+//	@param	EAX is unsigned length
+//	@see	libc/nexgen32e/strsak32.S
 tinywcslen:
 	.leafprologue
 	.profilable

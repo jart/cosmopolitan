@@ -21,11 +21,11 @@
 .privileged
 .alignfunc
 
-/	Returns -𝑥, aborting on overflow (two's complement bane).
-/
-/	@param	rdi is int64 𝑥
-/	@return	rax is -𝑥
-/	@see	-ftrapv
+//	Returns -𝑥, aborting on overflow (two's complement bane).
+//
+//	@param	rdi is int64 𝑥
+//	@return	rax is -𝑥
+//	@see	-ftrapv
 __negvdi2:
 	mov	%rdi,%rax
 	neg	%rax

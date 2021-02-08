@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Returns log₂x exponent part of float.
-/
-/	@param	𝑥 is float passed in %xmm0
-/	@return	result in %eax
-/	@note	needs sse3
+//	Returns log₂x exponent part of float.
+//
+//	@param	𝑥 is float passed in %xmm0
+//	@return	result in %eax
+//	@note	needs sse3
 ilogbf:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

@@ -234,12 +234,10 @@ intptr_t atomic_store(void *, intptr_t, size_t);
  * @return LOCALVAR[0]
  * @see xchg()
  */
-#define lockxchg(MEMORY, LOCALVAR)                                             \
-  ({                                                                           \
-    _Static_assert(                                                            \
-        __builtin_types_compatible_p(typeof(*(MEMORY)), typeof(*(LOCALVAR)))); \
-    asm("xchg\t%0,%1" : "+%m"(*(MEMORY)), "+r"(*(LOCALVAR)));                  \
-    *(LOCALVAR);                                                               \
+#define lockxchg(MEMORY, LOCALVAR)                            \
+  ({                                                          \
+    asm("xchg\t%0,%1" : "+%m"(*(MEMORY)), "+r"(*(LOCALVAR))); \
+    *(LOCALVAR);                                              \
   })
 
 /**

@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns square root of 𝑥.
-/
-/	@param	𝑥 is an float passed in %xmm0
-/	@return	result in %xmm0
+//	Returns square root of 𝑥.
+//
+//	@param	𝑥 is an float passed in %xmm0
+//	@return	result in %xmm0
 sqrtf:	.leafprologue
 	.profilable
 	sqrtss	%xmm0,%xmm0

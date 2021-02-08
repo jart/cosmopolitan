@@ -20,22 +20,22 @@
 #include "libc/notice.inc"
 .source	__FILE__
 
-/	Returns the number of bytes you can actually use in
-/	an allocated chunk, which may be more than you requested
-/	(although often not) due to alignment and minimum size
-/	constraints.
-/
-/	You can use this many bytes without worrying about overwriting
-/	other allocated objects. This is not a particularly great
-/	programming practice. malloc_usable_size can be more useful in
-/	debugging and assertions, for example:
-/
-/	    p = malloc(n)
-/	    assert(malloc_usable_size(p) >= 256)
-/
-/	@param	rdi is address of allocation
-/	@return	rax is total number of bytes
-/	@see	dlmalloc_usable_size()
+//	Returns the number of bytes you can actually use in
+//	an allocated chunk, which may be more than you requested
+//	(although often not) due to alignment and minimum size
+//	constraints.
+//
+//	You can use this many bytes without worrying about overwriting
+//	other allocated objects. This is not a particularly great
+//	programming practice. malloc_usable_size can be more useful in
+//	debugging and assertions, for example:
+//
+//	    p = malloc(n)
+//	    assert(malloc_usable_size(p) >= 256)
+//
+//	@param	rdi is address of allocation
+//	@return	rax is total number of bytes
+//	@see	dlmalloc_usable_size()
 malloc_usable_size:
 	jmp	*hook_malloc_usable_size(%rip)
 	.endfn	malloc_usable_size,globl

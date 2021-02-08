@@ -18,12 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 /* clang-format off */
 
-/	Searches for substring.
-/
-/	@param	rdi is NUL-terminated haystack string
-/	@param	rsi is NUL-terminated needle string (16-byte aligned)
-/	@return	rax is pointer to substring or NULL
-/	@todo	10x faster than naïve but could be 100x faster
+//	Searches for substring.
+//
+//	@param	rdi is NUL-terminated haystack string
+//	@param	rsi is NUL-terminated needle string (16-byte aligned)
+//	@return	rax is pointer to substring or NULL
+//	@todo	10x faster than naïve but could be 100x faster
 .macro	.strstr	mode:req
 	push	%rbp
 	mov	%rsp,%rbp

@@ -19,29 +19,29 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Allocates aligned memory the C++ way.
-/
-/	\param	%rdi is bytes to allocate
-/	\param	%rsi is byte alignment
-/	\param	%rdx is ignored
-/	\return	new memory or NULL on OOM
+//	Allocates aligned memory the C++ way.
+//
+//	\param	%rdi is bytes to allocate
+//	\param	%rsi is byte alignment
+//	\param	%rdx is ignored
+//	\return	new memory or NULL on OOM
 _ZnamSt11align_val_tRKSt9nothrow_t:
-/	operator new[](unsigned long, std::align_val_t, std::nothrow_t const&)
+//	operator new[](unsigned long, std::align_val_t, std::nothrow_t const&)
 	nop
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	_ZnamSt11align_val_tRKSt9nothrow_t,weak
 _ZnwmSt11align_val_tRKSt9nothrow_t:
-/	operator new(unsigned long, std::align_val_t, std::nothrow_t const&)
+//	operator new(unsigned long, std::align_val_t, std::nothrow_t const&)
 	nop
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	_ZnwmSt11align_val_tRKSt9nothrow_t,weak
 _ZnwmSt11align_val_t:
-/	operator new(unsigned long, std::align_val_t)
+//	operator new(unsigned long, std::align_val_t)
 	nop
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	_ZnwmSt11align_val_t,weak
 _ZnamSt11align_val_t:
-/	operator new[](unsigned long, std::align_val_t)
+//	operator new[](unsigned long, std::align_val_t)
 	test	%rdi,%rdi
 	jnz	1f
 	mov	$1,%eax

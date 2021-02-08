@@ -19,11 +19,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Rounds to nearest integer, away from zero.
-/
-/	@param	𝑥 is double scalar in low half of %xmm0
-/	@return	64-bit signed integer in %rax
-/	@see	round(), lrint()
+//	Rounds to nearest integer, away from zero.
+//
+//	@param	𝑥 is double scalar in low half of %xmm0
+//	@return	64-bit signed integer in %rax
+//	@see	round(), lrint()
 lround:	.leafprologue
 	.profilable
 	movsd	A(%rip),%xmm2

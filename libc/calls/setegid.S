@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Sets effective group ID.
-/
-/	@param	%edi is group id
-/	@see	setgid(), getauxval(AT_SECURE)
+//	Sets effective group ID.
+//
+//	@param	%edi is group id
+//	@see	setgid(), getauxval(AT_SECURE)
 setegid:push	%rbp
 	mov	%rsp,%rbp
 	.profilable

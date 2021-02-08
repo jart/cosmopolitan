@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Projects into Rienmann sphere.
-/
-/	@param	z is complex long double passed on stack
-/	@note	needs sse3
+//	Projects into Rienmann sphere.
+//
+//	@param	z is complex long double passed on stack
+//	@note	needs sse3
 cprojl:	.profilable
 	sub	$24,%rsp
 	fldt	32(%rsp)

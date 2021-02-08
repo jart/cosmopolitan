@@ -26,6 +26,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
+#include "libc/macros.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
@@ -282,7 +283,7 @@ static void printelfrelocations(void) {
                    GetElfSectionHeaderAddress(elf, st->st_size, shdr->sh_info)
                        ->sh_name),
                rela->r_offset, symbolname, rela->r_addend >= 0 ? '+' : '-',
-               abs(rela->r_addend));
+               ABS(rela->r_addend));
         printf("%s_%zu_%zu:\n", ".Lrela", i, j);
         show(".quad", format(b1, "%#lx", rela->r_offset), "rela->r_offset");
         show(".long",

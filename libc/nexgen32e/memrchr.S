@@ -20,14 +20,14 @@
 #include "libc/dce.h"
 #include "libc/macros.h"
 
-/	Searches for last instance of byte in memory region.
-/
-/	@param	rdi points to data to search
-/	@param	esi is treated as unsigned char
-/	@param	rdx is byte length of rdi
-/	@return	rax is address of last %sil in %rdi, or NULL
-/	@note	AVX2 requires Haswell (2014+) or Excavator (2015+)
-/	@asyncsignalsafe
+//	Searches for last instance of byte in memory region.
+//
+//	@param	rdi points to data to search
+//	@param	esi is treated as unsigned char
+//	@param	rdx is byte length of rdi
+//	@return	rax is address of last %sil in %rdi, or NULL
+//	@note	AVX2 requires Haswell (2014+) or Excavator (2015+)
+//	@asyncsignalsafe
 memrchr:.leafprologue
 	.profilable
 #if !IsTiny()

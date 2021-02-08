@@ -32,6 +32,7 @@ TEST_LIBC_DNS_DIRECTDEPS =				\
 	LIBC_RUNTIME					\
 	LIBC_SOCK					\
 	LIBC_STDIO					\
+	LIBC_RAND					\
 	LIBC_STR					\
 	LIBC_STUBS					\
 	LIBC_SYSV					\

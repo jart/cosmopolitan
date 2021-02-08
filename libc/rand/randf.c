@@ -22,6 +22,6 @@
 #include "libc/rand/rand.h"
 
 float randf(void) {
-  return (float)(int)(KnuthLinearCongruentialGenerator(&g_rando) >> 32) /
+  return (double)(int)(KnuthLinearCongruentialGenerator(&g_rando) >> 32) /
          INT_MAX;
 }

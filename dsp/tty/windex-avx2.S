@@ -19,11 +19,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns index of minimum uint16 in array.
-/
-/	@param	rdi points to nonempty array
-/	@param	rsi is item count divisible by 16
-/	@note	needs avx2 (haswell+)
+//	Returns index of minimum uint16 in array.
+//
+//	@param	rdi points to nonempty array
+//	@param	rsi is item count divisible by 16
+//	@note	needs avx2 (haswell+)
 windex_avx2:
 	push	%rbp
 	mov	%rsp,%rbp

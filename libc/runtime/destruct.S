@@ -20,8 +20,8 @@
 .text.exit
 .source	__FILE__
 
-/	Calls linker registered finalization functions.
-/	@note	functions are called in reverse order
+//	Calls linker registered finalization functions.
+//	@note	functions are called in reverse order
 _destruct:
 	push	%rbp
 	mov	%rsp,%rbp

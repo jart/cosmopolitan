@@ -26,6 +26,9 @@
 #include "libc/nt/runtime.h"
 #include "libc/str/str.h"
 
+STATIC_YOINK("ntoa");
+STATIC_YOINK("stoa");
+
 STATIC_YOINK("E2BIG");
 STATIC_YOINK("EACCES");
 STATIC_YOINK("EADDRINUSE");
@@ -321,7 +324,7 @@ int strerror_r(int err, char *buf, size_t size) {
     s = firstnonnull(geterrname(err), "?");
   }
   if (!SupportsWindows()) {
-    snprintf(buf, size, "E%s[%d]", s, err);
+    (snprintf)(buf, size, "E%s[%d]", s, err);
   } else {
     winstate = GetLastError();
     sysvstate = errno;
@@ -332,8 +335,8 @@ int strerror_r(int err, char *buf, size_t size) {
     } else {
       buf16[0] = u'\0';
     }
-    snprintf(buf, size, "E%s/err=%d/errno:%d/GetLastError:%d%s%hs", s, err,
-             sysvstate, winstate, buf16[0] ? " " : "", buf16);
+    (snprintf)(buf, size, "E%s/err=%d/errno:%d/GetLastError:%d%s%hs", s, err,
+               sysvstate, winstate, buf16[0] ? " " : "", buf16);
   }
   return 0;
 }

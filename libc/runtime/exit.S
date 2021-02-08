@@ -20,10 +20,10 @@
 .text.exit
 .source	__FILE__
 
-/	Exits program with grace.
-/
-/	@param	%dil has exit code
-/	@noreturn
+//	Exits program with grace.
+//
+//	@param	%dil has exit code
+//	@noreturn
 exit:	push	%rbp
 	mov	%rsp,%rbp
 	push	%rdi

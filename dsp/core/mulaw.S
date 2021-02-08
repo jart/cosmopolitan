@@ -20,18 +20,18 @@
 
 #define BIAS 0x84
 
-/	Encodes audio sample with µ-Law.
-/
-/	This is both the highest quality and most widely supported
-/	telephony codec, whose use was phased out in the 2000's in
-/	favor of cost-saving GSM audio compression that was so bad
-/	consumers were willing to pay more cash, for the privilege
-/	of saving telcos even more money w/ text messaging. Mu Law
-/	reduces PCM data to half its original size, by diminishing
-/	audio bands not vocalized by human voice.
-/
-/	@param	%edi is pcm sample
-/	@return	%eax is uint8_t encoded sample
+//	Encodes audio sample with µ-Law.
+//
+//	This is both the highest quality and most widely supported
+//	telephony codec, whose use was phased out in the 2000's in
+//	favor of cost-saving GSM audio compression that was so bad
+//	consumers were willing to pay more cash, for the privilege
+//	of saving telcos even more money w/ text messaging. Mu Law
+//	reduces PCM data to half its original size, by diminishing
+//	audio bands not vocalized by human voice.
+//
+//	@param	%edi is pcm sample
+//	@return	%eax is uint8_t encoded sample
 mulaw:	.leafprologue
 	.profilable
 	mov	$BIAS,%eax

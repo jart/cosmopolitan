@@ -14,7 +14,6 @@
 #define FALSE 0
 
 #define alignas(x) _Alignas(x)
-#define static_assert(x) _Static_assert(x, #x)
 
 #define ROUNDUP(X, K)       (((X) + (K)-1) & -(K))
 #define ROUNDDOWN(X, K)     ((X) & -(K))

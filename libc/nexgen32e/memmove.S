@@ -18,19 +18,19 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Copies memory.
-/
-/	DEST and SRC may overlap.
-/
-/	@param	rdi is dest
-/	@param	rsi is src
-/	@param	rdx is number of bytes
-/	@return	original rdi copied to rax
-/	@clob	flags,rcx
-/	@asyncsignalsafe
+//	Copies memory.
+//
+//	DEST and SRC may overlap.
+//
+//	@param	rdi is dest
+//	@param	rsi is src
+//	@param	rdx is number of bytes
+//	@return	original rdi copied to rax
+//	@clob	flags,rcx
+//	@asyncsignalsafe
 memmove:
 	mov	%rdi,%rax
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	MemMove,globl,hidden
 
 MemMove:

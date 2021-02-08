@@ -19,25 +19,25 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/macros.h"
 
-/	Returns pointer to first instance of character.
-/
-/	@param	rdi is a non-null NUL-terminated wchar_t string pointer
-/	@param	esi is the search word
-/	@return	rax points to character, or to NUL word if not found
-/	@note	this won't return NULL if search character is NUL
+//	Returns pointer to first instance of character.
+//
+//	@param	rdi is a non-null NUL-terminated wchar_t string pointer
+//	@param	esi is the search word
+//	@return	rax points to character, or to NUL word if not found
+//	@note	this won't return NULL if search character is NUL
 wcschrnul:
 	.leafprologue
 	.profilable
 	or	$-1,%r9
 	jmp	0f
 
-/	Returns pointer to first instance of character.
-/
-/	@param	rdi is a non-null NUL-terminated wchar_t string pointer
-/	@param	esi is the search word
-/	@return	rax points to first result, or NULL if not found
-/	@note	this won't return NULL if search character is NUL
-/	@asyncsignalsafe
+//	Returns pointer to first instance of character.
+//
+//	@param	rdi is a non-null NUL-terminated wchar_t string pointer
+//	@param	esi is the search word
+//	@return	rax points to first result, or NULL if not found
+//	@note	this won't return NULL if search character is NUL
+//	@asyncsignalsafe
 wcschr:	.leafprologue
 	.profilable
 	xor	%r9,%r9
@@ -47,14 +47,14 @@ wcschr:	.leafprologue
 	xor	%r8,%r8
 	jmp	wcssak
 
-/	Returns length of wchar_t string w/ security blankets.
-/
-/	This is like wcsnlen() except it'll return 0 if (1) RDI is NULL
-/	or (2) a NUL-terminator wasn't found in the first RSI chars.
-/
-/	@param	rdi is a nullable NUL-terminated wchar_t string pointer
-/	@param	rsi is the maximum number of chars to consider
-/	@return	rax is the number of chars, excluding the NUL
+//	Returns length of wchar_t string w/ security blankets.
+//
+//	This is like wcsnlen() except it'll return 0 if (1) RDI is NULL
+//	or (2) a NUL-terminator wasn't found in the first RSI chars.
+//
+//	@param	rdi is a nullable NUL-terminated wchar_t string pointer
+//	@param	rsi is the maximum number of chars to consider
+//	@return	rax is the number of chars, excluding the NUL
 wcsnlen_s:
 	.leafprologue
 	.profilable
@@ -65,20 +65,20 @@ wcsnlen_s:
 	.leafepilogue
 	.endfn	wcsnlen_s,globl
 
-/	Returns length of NUL-terminated wchar_t string.
-/
-/	@param	rdi is non-null NUL-terminated wchar_t string pointer
-/	@return	rax is the number of chars, excluding the NUL
-/	@asyncsignalsafe
+//	Returns length of NUL-terminated wchar_t string.
+//
+//	@param	rdi is non-null NUL-terminated wchar_t string pointer
+//	@return	rax is the number of chars, excluding the NUL
+//	@asyncsignalsafe
 wcslen:	or	$-1,%rsi
-/	fallthrough
+//	fallthrough
 
-/	Returns length of NUL-terminated memory, with limit.
-/
-/	@param	rdi is non-null memory
-/	@param	rsi is the maximum number of chars to consider
-/	@return	rax is the number of chars, excluding the NUL
-/	@asyncsignalsafe
+//	Returns length of NUL-terminated memory, with limit.
+//
+//	@param	rdi is non-null memory
+//	@param	rsi is the maximum number of chars to consider
+//	@return	rax is the number of chars, excluding the NUL
+//	@asyncsignalsafe
 wcsnlen:.leafprologue
 	.profilable
 	or	$-1,%r10
@@ -87,22 +87,22 @@ wcsnlen:.leafprologue
 	mov	%rdi,%r8
 	jmp	wcssak
 
-/	Returns pointer to first instance of character in range.
-/
-/	@param	rdi is a non-null pointer to memory
-/	@param	esi is the search word
-/	@return	rax points to word if found, or else undefined behavior
+//	Returns pointer to first instance of character in range.
+//
+//	@param	rdi is a non-null pointer to memory
+//	@param	esi is the search word
+//	@return	rax points to word if found, or else undefined behavior
 rawwmemchr:
 	or	$-1,%rdx
-/	fallthrough
+//	fallthrough
 
-/	Returns pointer to first instance of character in range.
-/
-/	@param	rdi is a non-null pointer to memory
-/	@param	esi is the int32_t search word (officially wchar_t)
-/	@param	rdx is length of memory in chars
-/	@return	rax points to word if found or NULL
-/	@asyncsignalsafe
+//	Returns pointer to first instance of character in range.
+//
+//	@param	rdi is a non-null pointer to memory
+//	@param	esi is the int32_t search word (officially wchar_t)
+//	@param	rdx is length of memory in chars
+//	@return	rax points to word if found or NULL
+//	@asyncsignalsafe
 wmemchr:.leafprologue
 	.profilable
 	xor	%r8,%r8
@@ -111,19 +111,19 @@ wmemchr:.leafprologue
 	mov	%esi,%edx
 	mov	%esi,%r11d
 	mov	%rcx,%rsi
-/	fallthrough
+//	fallthrough
 
-/	Swiss army knife of wchar_t string scanning.
-/	Seven fast functions in one.
-/
-/	@param	rdi is non-null wchar_t string memory
-/	@param	rsi is max number of chars to consider
-/	@param	edx is search character #1
-/	@param	r11d is search character #2
-/	@param	r8 is subtracted from result (for length vs. pointer)
-/	@param	r9 masks result if r11w is found (for NUL vs. NULL)
-/	@param	r10 masks result on chars exhausted (for length v. NULL)
-/	@return	rax end pointer after r8/r9/r10 modifications
+//	Swiss army knife of wchar_t string scanning.
+//	Seven fast functions in one.
+//
+//	@param	rdi is non-null wchar_t string memory
+//	@param	rsi is max number of chars to consider
+//	@param	edx is search character #1
+//	@param	r11d is search character #2
+//	@param	r8 is subtracted from result (for length vs. pointer)
+//	@param	r9 masks result if r11w is found (for NUL vs. NULL)
+//	@param	r10 masks result on chars exhausted (for length v. NULL)
+//	@return	rax end pointer after r8/r9/r10 modifications
 wcssak:	lea	-4(%rdi),%rax
 	.align	16
 1:	add	$4,%rax

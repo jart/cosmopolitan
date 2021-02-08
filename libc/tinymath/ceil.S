@@ -38,7 +38,7 @@ ceil:	.leafprologue
 
 	.rodata.cst8
 nan:	.double	nan
-sig:	.double	0x0010000000000000
+sig:	.quad	0x0010000000000000
 one:	.double	1
 
-/	vroundsd $_MM_FROUND_TO_POS_INF|_MM_FROUND_NO_EXC,%xmm0,%xmm0,%xmm0
+//	vroundsd $_MM_FROUND_TO_POS_INF|_MM_FROUND_NO_EXC,%xmm0,%xmm0,%xmm0

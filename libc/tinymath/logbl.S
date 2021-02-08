@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Returns log₂ₓ exponent part of long double.
-/
-/	@param	𝑥 is long double passed on stack
-/	@return	result in %st0
+//	Returns log₂ₓ exponent part of long double.
+//
+//	@param	𝑥 is long double passed on stack
+//	@return	result in %st0
 logbl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

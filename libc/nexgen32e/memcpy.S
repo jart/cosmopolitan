@@ -30,28 +30,28 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/macros.h"
 
-/	Copies memory.
-/
-/	DEST and SRC must not overlap, unless DEST≤SRC.
-/
-/	@param	rdi is dest
-/	@param	rsi is src
-/	@param	rdx is number of bytes
-/	@return	original rdi copied to rax
-/	@mode	long
-/	@asyncsignalsafe
+//	Copies memory.
+//
+//	DEST and SRC must not overlap, unless DEST≤SRC.
+//
+//	@param	rdi is dest
+//	@param	rsi is src
+//	@param	rdx is number of bytes
+//	@return	original rdi copied to rax
+//	@mode	long
+//	@asyncsignalsafe
 memcpy:	mov	%rdi,%rax
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.align	16
 	.endfn	memcpy,globl
 
-/	Copies memory w/ minimal impact ABI.
-/
-/	@param	rdi is dest
-/	@param	rsi is src
-/	@param	rdx is number of bytes
-/	@clob	flags,rcx,xmm3,xmm4
-/	@mode	long
+//	Copies memory w/ minimal impact ABI.
+//
+//	@param	rdi is dest
+//	@param	rsi is src
+//	@param	rdx is number of bytes
+//	@clob	flags,rcx,xmm3,xmm4
+//	@mode	long
 MemCpy:	.leafprologue
 	.profilable
 	mov	$.Lmemcpytab.ro.size,%ecx

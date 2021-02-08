@@ -20,11 +20,11 @@
 #include "libc/notice.inc"
 .source	__FILE__
 
-/	Equivalent to valloc(minimum-page-that-holds(n)), that is,
-/	round up n to nearest pagesize.
-/
-/	@param	rdi is number of bytes needed
-/	@return	rax is memory address, or NULL w/ errno
-/	@see	dlpvalloc()
+//	Equivalent to valloc(minimum-page-that-holds(n)), that is,
+//	round up n to nearest pagesize.
+//
+//	@param	rdi is number of bytes needed
+//	@return	rax is memory address, or NULL w/ errno
+//	@see	dlpvalloc()
 pvalloc:jmp	*hook_pvalloc(%rip)
 	.endfn	pvalloc,globl

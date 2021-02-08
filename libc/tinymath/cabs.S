@@ -19,6 +19,6 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns absolute value of complex number.
+//	Returns absolute value of complex number.
 cabs:	jmp	hypot
 	.endfn	cabs,globl

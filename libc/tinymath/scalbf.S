@@ -19,12 +19,12 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns 𝑥 × 2ʸ.
-/
-/	@param	𝑥 is float passed in %xmm0
-/	@param	𝑦 is float passed in %xmm1, which is truncated
-/	@return	result in %xmm0
-/	@see	ldexpf()
+//	Returns 𝑥 × 2ʸ.
+//
+//	@param	𝑥 is float passed in %xmm0
+//	@param	𝑦 is float passed in %xmm1, which is truncated
+//	@return	result in %xmm0
+//	@see	ldexpf()
 scalbf:	cvttss2si %xmm1,%edi
 	jmp	ldexpf
 	.endfn	scalbf,globl

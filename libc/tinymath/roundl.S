@@ -19,10 +19,10 @@
 #include "ape/lib/pc.h"
 #include "libc/macros.h"
 
-/	Rounds to nearest integer, away from zero.
-/
-/	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
-/	@return	result of exponentiation on FPU stack in %st
+//	Rounds to nearest integer, away from zero.
+//
+//	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+//	@return	result of exponentiation on FPU stack in %st
 roundl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

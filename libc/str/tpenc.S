@@ -19,11 +19,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Encodes Thompson-Pike varint.
-/
-/	@param	edi is int to encode
-/	@return	rax is word-encoded byte buffer
-/	@note	invented on a napkin in a new jersey diner
+//	Encodes Thompson-Pike varint.
+//
+//	@param	edi is int to encode
+//	@return	rax is word-encoded byte buffer
+//	@note	invented on a napkin in a new jersey diner
 tpenc:	.leafprologue
 	.profilable
 	mov	%edi,%edi

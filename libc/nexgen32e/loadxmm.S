@@ -19,11 +19,12 @@
 #include "libc/macros.h"
 .privileged
 
-/	Loads XMM registers from buffer.
-/
-/	@param	%rdi points to &(forcealign(16) uint8_t[256])[128]
-/	@note	modern cpus have out-of-order execution engines
-loadxmm:.leafprologue
+//	Loads XMM registers from buffer.
+//
+//	@param	%rdi points to &(forcealign(16) uint8_t[256])[128]
+//	@note	modern cpus have out-of-order execution engines
+loadxmm:
+	.leafprologue
 	movaps	-0x80(%rdi),%xmm0
 	movaps	-0x70(%rdi),%xmm1
 	movaps	-0x60(%rdi),%xmm2

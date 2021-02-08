@@ -19,9 +19,9 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Decentralized section for test testcase registration.
-/
-/	@see	ape/ape.lds
+//	Decentralized section for test testcase registration.
+//
+//	@see	ape/ape.lds
 	.section .piro.relo.sort.testcase.1,"aw",@nobits
 	.type	__testcase_start,@object
 	.type	__testcase_end,@object

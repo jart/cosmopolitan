@@ -287,7 +287,7 @@ static int16_t pcmscale_[PLM_AUDIO_SAMPLES_PER_FRAME * 2 / 8][8];
 static bool fullclear_, historyclear_, tuned_, yonly_, gotvideo_;
 static int homerow_, lastrow_, playfd_, infd_, outfd_, nullfd_, speakerfails_;
 static char host_[DNS_NAME_MAX + 1], status_[7][200], logpath_[PATH_MAX],
-    fifopath_[PATH_MAX], chansstr_[16], sratestr_[16], port_[8];
+    fifopath_[PATH_MAX], chansstr_[32], sratestr_[32], port_[32];
 
 static void OnCtrlC(void) {
   longjmp(jb_, 1);

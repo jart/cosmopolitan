@@ -18,14 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Saves caller CPU state to cacheline.
-/
-/	@param	rdi points to jmp_buf
-/	@return	rax 0 when set and !0 when longjmp'd
-/	@returnstwice
-/	@assume	system five nexgen32e abi conformant
-/	@note	code built w/ microsoft abi compiler can't call this
-/	@see	longjmp(), gclongjmp()
+//	Saves caller CPU state to cacheline.
+//
+//	@param	rdi points to jmp_buf
+//	@return	rax 0 when set and !0 when longjmp'd
+//	@returnstwice
+//	@assume	system five nexgen32e abi conformant
+//	@note	code built w/ microsoft abi compiler can't call this
+//	@see	longjmp(), gclongjmp()
 setjmp:	lea	8(%rsp),%rax
 	mov	%rax,(%rdi)
 	mov	%rbx,8(%rdi)

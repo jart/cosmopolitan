@@ -32,7 +32,7 @@ const char *FindComBinary(void);
 const char *FindDebugBinary(void);
 struct SymbolTable *OpenSymbolTable(const char *) nodiscard;
 int CloseSymbolTable(struct SymbolTable **);
-void __hook(void (*)(void), struct SymbolTable *);
+void __hook(void *, struct SymbolTable *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

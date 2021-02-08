@@ -24,13 +24,13 @@
 #include "libc/dce.h"
 .text.startup
 
-/	Cosmopolitan runtime.
-/
-/	@param	edi is argc
-/	@param	rsi is argv
-/	@param	rdx is environ
-/	@param	rcx is auxv
-/	@noreturn
+//	Cosmopolitan runtime.
+//
+//	@param	edi is argc
+//	@param	rsi is argv
+//	@param	rdx is environ
+//	@param	rcx is auxv
+//	@noreturn
 cosmo:	push	%rbp
 	mov	%rsp,%rbp
 	mov	%edi,%r12d
@@ -60,10 +60,6 @@ cosmo:	push	%rbp
 	add	$8,%rax
 	jmp	1b
 2:	nop
-#if !IsTrustworthy()
-	mov	$PROT_READ,%edi
-	call	_piro
-#endif
 	call	.Largs
 	.weak	main
 	call	main

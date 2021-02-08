@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Signal mask constant w/ every signal bit set.
+//	Signal mask constant w/ every signal bit set.
 	.initbss 300,_init_kSigsetFull
 kSigsetFull:
 	.rept	NSIG / 64

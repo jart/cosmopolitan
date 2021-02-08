@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns log(𝟷+𝑥).
-/
-/	@param	𝑥 is float scalar in low quarter of %xmm0
-/	@return	float scalar in low quarter of %xmm0
+//	Returns log(𝟷+𝑥).
+//
+//	@param	𝑥 is float scalar in low quarter of %xmm0
+//	@return	float scalar in low quarter of %xmm0
 log1pf:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

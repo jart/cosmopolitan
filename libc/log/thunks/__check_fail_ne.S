@@ -20,7 +20,7 @@
 .text.unlikely
 .source	__FILE__
 
-/	Code-size saving thunk for CHECK_NE() in NDEBUG mode.
+//	Code-size saving thunk for CHECK_NE() in NDEBUG mode.
 __check_fail_ne:
 	loadstr	"!=",dx
 	jmp	__check_fail_ndebug

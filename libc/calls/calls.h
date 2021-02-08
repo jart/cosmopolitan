@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_SYSCALLS_H_
 #define COSMOPOLITAN_LIBC_CALLS_SYSCALLS_H_
+#include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/rusage.h"
@@ -62,7 +63,6 @@ COSMOPOLITAN_C_START_
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 typedef int sig_atomic_t;
-typedef struct dirstream DIR;
 
 extern const struct sigset kSigsetFull;
 extern const struct sigset kSigsetEmpty;
@@ -102,7 +102,6 @@ int execvp(const char *, char *const[]) paramsnonnull();
 int execvpe(const char *, char *const[], char *const[]) paramsnonnull();
 int faccessat(int, const char *, int, uint32_t);
 int fadvise(int, uint64_t, uint64_t, int);
-int fallocate(int, int32_t, int64_t, int64_t);
 int fchmod(int, uint32_t) nothrow;
 int fchmodat(int, const char *, uint32_t, uint32_t);
 int fchown(int, uint32_t, uint32_t);
@@ -147,7 +146,6 @@ int personality(uint64_t);
 int pipe(int[hasatleast 2]);
 int pipe2(int[hasatleast 2], int);
 int posix_fadvise(int, uint64_t, uint64_t, int);
-int posix_fallocate(int, int64_t, int64_t);
 int posix_madvise(void *, uint64_t, int);
 int raise(int);
 int readlink(const char *, char *, size_t);

@@ -21,12 +21,12 @@
 #include "libc/nexgen32e/x86feature.h"
 .source	__FILE__
 
-/	Rounds to nearest integer, away from zero.
-/
-/	@param	𝑥 is double scalar in low half of %xmm0
-/	@return	double scalar in low half of %xmm0
-/	@define	round(𝑥) = copysign(trunc(fabs(𝑥)+.5),𝑥)
-/		round(𝑥) = trunc(𝑥+copysign(.5,𝑥))
+//	Rounds to nearest integer, away from zero.
+//
+//	@param	𝑥 is double scalar in low half of %xmm0
+//	@return	double scalar in low half of %xmm0
+//	@define	round(𝑥) = copysign(trunc(fabs(𝑥)+.5),𝑥)
+//		round(𝑥) = trunc(𝑥+copysign(.5,𝑥))
 round:
 #if !X86_NEED(SSE4_2)
 	testb	X86_HAVE(SSE4_2)+kCpuids(%rip)

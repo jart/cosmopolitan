@@ -23,7 +23,7 @@
 void *FormatStringTableAsCode(long yn, long xn, const char *const T[yn][xn],
                               int emit(), void *arg, const char *type,
                               const char *name, const char *ignored) {
-  char ynstr[20], xnstr[20];
+  char ynstr[21], xnstr[21];
   uint64toarray_radix10(yn, ynstr);
   uint64toarray_radix10(xn, xnstr);
   emit(type, arg);

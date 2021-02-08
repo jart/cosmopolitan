@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Returns cube root of 𝑥.
-/
-/	@param	%xmm0 holds binary32 number
-/	@return	%xmm0 holds binary32 result
+//	Returns cube root of 𝑥.
+//
+//	@param	%xmm0 holds binary32 number
+//	@return	%xmm0 holds binary32 result
 cbrtf:	pushq	%rbp
 	mov	%rsp,%rbp
 	cvtss2sd %xmm0,%xmm0

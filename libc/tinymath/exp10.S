@@ -19,11 +19,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns 10^x.
-/
-/	@param	𝑥 is double scalar in low half of %xmm0
-/	@return	double scalar in low half of %xmm0
-/	@see	pow(), exp()
+//	Returns 10^x.
+//
+//	@param	𝑥 is double scalar in low half of %xmm0
+//	@return	double scalar in low half of %xmm0
+//	@see	pow(), exp()
 exp10:
 	ezlea	exp10l,ax
 	jmp	_d2ld2

@@ -19,8 +19,8 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Reads Thompson-Pike encoded varint from standard input.
-/	@return	%eax has result w/ rest of %rax cleared
+//	Reads Thompson-Pike encoded varint from standard input.
+//	@return	%eax has result w/ rest of %rax cleared
 getwchar:
 	mov	stdin(%rip),%rdi
 	jmp	fgetwc

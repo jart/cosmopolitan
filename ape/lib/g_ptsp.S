@@ -28,7 +28,7 @@
 	.hidden	g_ptsp
 	.type	g_ptsp,@object
 	.size	g_ptsp,XLM_PAGE_TABLE_STACK_POINTER_SIZE
-	g_ptsp = ape.xlm + XLM_PAGE_TABLE_STACK_POINTER
+	g_ptsp = ape_xlm + XLM_PAGE_TABLE_STACK_POINTER
 
 	.globl	g_ptsp_xlm
 	.hidden	g_ptsp_xlm

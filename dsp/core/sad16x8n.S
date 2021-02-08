@@ -19,11 +19,11 @@
 #include "libc/macros.h"
 .align	16
 
-/	Mixes audio.
-/
-/	@param	rdi is # aligned int16[16] sample chunks to process
-/	@param	rsi points to aligned pcm s16le input/output memory
-/	@param	rdx points to aligned pcm s16le [0..1] input memory
+//	Mixes audio.
+//
+//	@param	rdi is # aligned int16[16] sample chunks to process
+//	@param	rsi points to aligned pcm s16le input/output memory
+//	@param	rdx points to aligned pcm s16le [0..1] input memory
 sad16x8n:
 	.leafprologue
 	.profilable

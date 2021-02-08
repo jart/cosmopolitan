@@ -21,12 +21,12 @@
 .privileged
 .alignfunc
 
-/	Returns 𝑥+𝑦, aborting on overflow.
-/
-/	@param	rdi is int64 𝑥
-/	@param	rsi is int64 𝑦
-/	@return	rax is 𝑥+𝑦
-/	@see	-ftrapv
+//	Returns 𝑥+𝑦, aborting on overflow.
+//
+//	@param	rdi is int64 𝑥
+//	@param	rsi is int64 𝑦
+//	@return	rax is 𝑥+𝑦
+//	@see	-ftrapv
 __addvdi3:
 	mov	%rdi,%rax
 	add	%rsi,%rax

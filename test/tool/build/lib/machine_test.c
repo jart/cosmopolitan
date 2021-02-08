@@ -145,10 +145,10 @@ TEST(machine, test) {
 TEST(machine, testFpu) {
   VirtualRecv(m, 0, kPi80, sizeof(kPi80));
   ASSERT_EQ(kMachineHalt, ExecuteUntilHalt(m));
-  ASSERT_TRUE(fabs(3.14159 - FpuPop(m)) < 0.0001);
+  ASSERT_TRUE(fabsl(3.14159 - FpuPop(m)) < 0.0001);
   m->ip = 0;
   ASSERT_EQ(kMachineHalt, ExecuteUntilHalt(m));
-  ASSERT_TRUE(fabs(3.14159 - FpuPop(m)) < 0.0001);
+  ASSERT_TRUE(fabsl(3.14159 - FpuPop(m)) < 0.0001);
 }
 
 BENCH(machine, benchPrimeNumberPrograms) {

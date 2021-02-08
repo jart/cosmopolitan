@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 
 	.initbss 202,_init_kHalfCache3
-/	Half size of level 3 cache in bytes.
+//	Half size of level 3 cache in bytes.
 kHalfCache3:
 	.quad	0
 	.endobj	kHalfCache3,globl

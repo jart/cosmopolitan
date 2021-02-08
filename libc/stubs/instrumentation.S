@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	@fileoverview Function Instrumentation No-Op Runtime
-/
-/	The compiler generates synthetic calls to these functions when
-/	the -finstrument-functions flag is passed.
+//	@fileoverview Function Instrumentation No-Op Runtime
+//
+//	The compiler generates synthetic calls to these functions when
+//	the -finstrument-functions flag is passed.
 
 __cyg_profile_func_enter:
 	ret

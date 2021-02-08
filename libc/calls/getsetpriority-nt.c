@@ -22,8 +22,8 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_getsetpriority_nt(int which, unsigned who, int value,
-                                  int (*impl)(int)) {
+                                      int (*impl)(int)) {
   if (which != PRIO_PROCESS && which != PRIO_PGRP) return einval();
-  if (who && abs(who) != getpid() && abs(who) != gettid()) return eopnotsupp();
+  if (who && who != getpid() && who != gettid()) return eopnotsupp();
   return impl(value);
 }

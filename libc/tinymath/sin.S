@@ -19,11 +19,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns sine of 𝑥.
-/
-/	@param	𝑥 is double scalar in low half of %xmm0
-/	@return	double scalar in low half of %xmm0
-/	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
+//	Returns sine of 𝑥.
+//
+//	@param	𝑥 is double scalar in low half of %xmm0
+//	@return	double scalar in low half of %xmm0
+//	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
 sin:	ezlea	sinl,ax
 	jmp	_d2ld2
 	.endfn	sin,globl

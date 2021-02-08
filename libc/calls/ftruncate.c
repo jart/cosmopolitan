@@ -29,7 +29,6 @@
  *      since the prior extends logically and the latter physically
  * @return 0 on success, or -1 w/ errno
  * @asyncsignalsafe
- * @see fallocate()
  */
 int ftruncate(int fd, int64_t length) {
   if (!IsWindows()) {

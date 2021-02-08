@@ -37,5 +37,5 @@ truncf:	.leafprologue
 	.rodata.cst16
 3:	.long	0x7fffffff,0,0,0
 
-/	TODO(jart)
-/	roundss $_MM_FROUND_TO_ZERO|_MM_FROUND_NO_EXC,%xmm0,%xmm0
+//	TODO(jart)
+//	roundss $_MM_FROUND_TO_ZERO|_MM_FROUND_NO_EXC,%xmm0,%xmm0

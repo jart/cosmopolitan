@@ -42,7 +42,7 @@
  *
  * @see ape/ape.lds
  */
-privileged void __hook(void ifunc(void), struct SymbolTable *symbols) {
+privileged void __hook(void *ifunc, struct SymbolTable *symbols) {
   size_t i;
   intptr_t addr;
   sigset_t oldmask;

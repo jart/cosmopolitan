@@ -18,19 +18,19 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Compares 32-bit signed integers.
-/
-/	@param	rdi points to left integer
-/	@param	rsi points to right integer
-/	@return	<0, 0, or >0 based on comparison
+//	Compares 32-bit signed integers.
+//
+//	@param	rdi points to left integer
+//	@param	rsi points to right integer
+//	@return	<0, 0, or >0 based on comparison
 	.align	16
 cmpsl:	.leafprologue
 	.profilable
 	xor	%eax,%eax
 	cmpsl
-/	mov	(%rdi),%edi
-/	mov	(%rsi),%esi
-/	cmp	%edi,%esi
+//	mov	(%rdi),%edi
+//	mov	(%rsi),%esi
+//	cmp	%edi,%esi
 	setl	%al
 	cmovg	.Lneg1(%rip),%eax
 	.leafepilogue

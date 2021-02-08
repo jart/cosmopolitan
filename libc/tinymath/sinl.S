@@ -19,11 +19,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns sine of 𝑥.
-/
-/	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
-/	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
-/	@return	%st stores result
+//	Returns sine of 𝑥.
+//
+//	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+//	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
+//	@return	%st stores result
 sinl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

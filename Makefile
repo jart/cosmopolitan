@@ -117,8 +117,6 @@ include third_party/gdtoa/gdtoa.mk		# │  You can finally call malloc()
 include libc/time/time.mk			# │
 include libc/alg/alg.mk				# │
 include libc/stdio/stdio.mk			# │
-include third_party/f2c/f2c.mk			# │
-include third_party/blas/blas.mk		# │
 include net/net.mk				# │
 include libc/log/log.mk				# │
 include dsp/core/core.mk			# │
@@ -203,7 +201,7 @@ CHECKS	= $(foreach x,$(PKGS),$($(x)_CHECKS))
 
 bins:	$(BINS)
 check:	$(CHECKS)
-test:	$(TESTS)
+test:	$(TESTS) all
 depend:	o/$(MODE)/depend
 tags:	TAGS HTAGS
 

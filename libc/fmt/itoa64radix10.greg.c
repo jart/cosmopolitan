@@ -26,7 +26,7 @@
  * @param a needs at least 21 bytes
  * @return bytes written w/o nul
  */
-noinline size_t uint64toarray_radix10(uint64_t i, char *a) {
+noinline size_t uint64toarray_radix10(uint64_t i, char a[hasatleast 21]) {
   size_t j;
   j = 0;
   do {
@@ -43,7 +43,7 @@ noinline size_t uint64toarray_radix10(uint64_t i, char *a) {
  * @param a needs at least 21 bytes
  * @return bytes written w/o nul
  */
-size_t int64toarray_radix10(int64_t i, char *a) {
+size_t int64toarray_radix10(int64_t i, char a[hasatleast 21]) {
   if (i >= 0) return uint64toarray_radix10(i, a);
   *a++ = '-';
   return 1 + uint64toarray_radix10(-i, a);

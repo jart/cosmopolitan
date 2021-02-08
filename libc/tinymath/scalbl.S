@@ -19,12 +19,12 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns 𝑥 × 2ʸ.
-/
-/	@param	𝑥 is long double passed on stack
-/	@param	𝑦 is long double passed on stack
-/	@return	result in %st0
-/	@see	ldexpl()
+//	Returns 𝑥 × 2ʸ.
+//
+//	@param	𝑥 is long double passed on stack
+//	@param	𝑦 is long double passed on stack
+//	@return	result in %st0
+//	@see	ldexpl()
 scalbl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

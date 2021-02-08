@@ -19,15 +19,15 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Free memory returned by malloc() & co.
-/
-/	Releases the chunk of memory pointed to by p, that had been
-/	previously allocated using malloc or a related routine such as
-/	realloc. It has no effect if p is null. If p was not malloced or
-/	already freed, free(p) will by default cuase the current program to
-/	abort.
-/
-/	@param	rdi is allocation address, which may be NULL
-/	@see	dlfree()
+//	Free memory returned by malloc() & co.
+//
+//	Releases the chunk of memory pointed to by p, that had been
+//	previously allocated using malloc or a related routine such as
+//	realloc. It has no effect if p is null. If p was not malloced or
+//	already freed, free(p) will by default cuase the current program to
+//	abort.
+//
+//	@param	rdi is allocation address, which may be NULL
+//	@see	dlfree()
 free:	jmp	*hook_free(%rip)
 	.endfn	free,globl

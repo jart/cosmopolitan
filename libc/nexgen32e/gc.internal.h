@@ -4,19 +4,22 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-struct Garbages {
-  size_t i, n;
-  struct Garbage {
-    struct StackFrame *frame;
-    intptr_t fn;
-    intptr_t arg;
-    intptr_t ret;
-  } * p;
+struct Garbage {
+  struct StackFrame *frame;
+  intptr_t fn;
+  intptr_t arg;
+  intptr_t ret;
 };
 
-hidden extern struct Garbages __garbage;
+struct Garbages {
+  size_t i, n;
+  struct Garbage *p;
+  struct Garbage initmem[1];
+};
 
-int64_t __gc(void) hidden;
+extern struct Garbages __garbage;
+
+int64_t __gc(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

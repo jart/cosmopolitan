@@ -67,22 +67,6 @@
   } while (0)
 #endif
 
-#if __STDC_VERSION__ + 0 < 201112
-#define ____Static_assert(x, y) A##B
-#define ___Static_assert(x, y)  ____Static_assert(x, y)
-#ifndef __cplusplus /* todo jart what */
-#define __Static_assert(x) __builtin_choose_expr(__builtin_constant_p(x), x, 1)
-#else
-#define __Static_assert(x) (x)
-#endif
-#define _Static_assert(x, s) /* clang-format off */ do { \
-  __builtin_assume(x);                                   \
-  enum { ___Static_assert(_Assert, __COUNTER__) =        \
-         1 / !!__Static_assert(x)                        \
-  } /*_Unused*/; /* clang-format on */ \
-  } while (0)
-#endif
-
 #if __STDC_VERSION__ + 0 < 201112 && defined(__x86__)
 #define _Atomic(TYPE) TYPE
 #endif
@@ -652,7 +636,7 @@ typedef uint64_t uintmax_t;
 #endif
 
 #ifndef _Section
-#ifndef __STRICT_ANSI__
+#if !defined(__STRICT_ANSI__) && !defined(__APPLE__)
 #define _Section(s) __attribute__((__section__(s)))
 #else
 #define _Section(s)
@@ -667,16 +651,17 @@ typedef uint64_t uintmax_t;
 
 #ifndef __STRICT_ANSI__
 #if defined(__GNUC__) || defined(__llvm__)
-#pragma GCC diagnostic ignored "-Wsign-compare"      /* lint needs to change  */
-#pragma GCC diagnostic ignored "-Wtype-limits"       /* makes macros unsafe  */
-#pragma GCC diagnostic ignored "-Woverflow"          /* also breaks macros  */
-#pragma GCC diagnostic ignored "-Wformat"            /* forces only gnu pf */
-#pragma GCC diagnostic ignored "-Wunused-parameter"  /* extreme prejudice */
-#pragma GCC diagnostic ignored "-Wunused-function"   /* contradicts dce! */
-#pragma GCC diagnostic ignored "-Wunused-variable"   /* belongs in tidy */
+#pragma GCC diagnostic ignored "-Wsign-compare" /* lint needs to change  */
+#pragma GCC diagnostic ignored "-Wtype-limits" /* makes macros unsafe  */
+#pragma GCC diagnostic ignored "-Woverflow" /* also breaks macros  */
+#pragma GCC diagnostic ignored "-Wformat" /* forces only gnu pf */
+#pragma GCC diagnostic ignored "-Wunused-parameter" /* extreme prejudice */
+#pragma GCC diagnostic ignored "-Wunused-function" /* contradicts dce! */
+#pragma GCC diagnostic ignored "-Wunused-variable" /* belongs in tidy */
 #pragma GCC diagnostic ignored "-Wformat-extra-args" /* is also broken */
-#pragma GCC diagnostic ignored "-Wparentheses"       /* annoying tidy */
-#pragma GCC diagnostic ignored "-Wdangling-else"     /* come on tidy */
+#pragma GCC diagnostic ignored "-Wparentheses" /* annoying tidy */
+#pragma GCC diagnostic ignored "-Wdangling-else" /* come on tidy */
+#pragma GCC diagnostic ignored "-Wformat-security" /* come on tidy */
 #ifndef __cplusplus
 #pragma GCC diagnostic ignored "-Wimplicit-int"
 #endif /* C++ */
@@ -704,8 +689,8 @@ typedef uint64_t uintmax_t;
     "-Wincompatible-pointer-types-discards-qualifiers"
 #pragma clang diagnostic ignored "-Wbuiltin-requires-header"
 #pragma clang diagnostic ignored "-Wparentheses-equality" /*-save-temps*/
-#pragma clang diagnostic ignored "-Wunused-value"         /*({-save-temps})*/
-#pragma clang diagnostic ignored "-Wstring-plus-int"      /* special ed */
+#pragma clang diagnostic ignored "-Wunused-value" /*({-save-temps})*/
+#pragma clang diagnostic ignored "-Wstring-plus-int" /* special ed */
 #pragma clang diagnostic ignored "-Wunused-value" /* extreme prejudice */
 #pragma clang diagnostic ignored "-Wbuiltin-requires-header"
 #pragma clang diagnostic ignored \
@@ -797,22 +782,14 @@ typedef uint64_t uintmax_t;
 #define EXPROPRIATE(EXPRESSION) (EXPRESSION)
 #endif
 
-#ifndef __STRICT_ANSI__
-#define YOINK(SYMBOL)                                                     \
-  do {                                                                    \
-    _Static_assert(!__builtin_types_compatible_p(typeof(SYMBOL), char[]), \
-                   "Please YOINK(symbol), not YOINK(\"symbol\")");        \
-    asm(".section .yoink\n\t"                                             \
-        "nop\t%a0\n\t"                                                    \
-        ".previous"                                                       \
-        : /* no outputs */                                                \
-        : "X"(SYMBOL));                                                   \
-  } while (0)
+#if !defined(__STRICT_ANSI__) && !defined(__APPLE__)
+#define YOINK(SYMBOL) \
+  asm(".section .yoink\n\tnopl\t%a0\n\t.previous" : : "X"(SYMBOL))
 #else
 #define YOINK(SYMBOL) (void)0
 #endif
 
-#ifndef __STRICT_ANSI__
+#if !defined(__STRICT_ANSI__) && !defined(__APPLE__)
 #define STATIC_YOINK(SYMBOLSTR) \
   asm(".section .yoink\n\tnopl\t\"" SYMBOLSTR "\"\n\t.previous")
 #else

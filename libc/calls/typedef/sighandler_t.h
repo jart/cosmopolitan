@@ -4,7 +4,5 @@
 
 typedef void (*sighandler_t)(int);
 
-typedef void (*sighandler_t)(int);
-
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_TYPEDEF_SIGHANDLER_T_H_ */

@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Returns cube root of 𝑥.
-/
-/	@param	%xmm0 holds binary64 number
-/	@return	%xmm0 holds binary64 result
+//	Returns cube root of 𝑥.
+//
+//	@param	%xmm0 holds binary64 number
+//	@return	%xmm0 holds binary64 result
 cbrt:	jmp	__cbrt
 	.endfn	cbrt,globl
 	.source	__FILE__

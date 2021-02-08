@@ -19,8 +19,8 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	__cxxabiv1::__function_type_info (?)
-/	Because Clang in MODE=dbg doesn't respect -fno-rtti
+//	__cxxabiv1::__function_type_info (?)
+//	Because Clang in MODE=dbg doesn't respect -fno-rtti
 	.align	8
 _ZTVN10__cxxabiv120__function_type_infoE:
 	.quad	0

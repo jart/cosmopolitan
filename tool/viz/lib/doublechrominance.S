@@ -18,15 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Duplicates chrominance samples horizontally, e.g.
-/
-/	    12345678--------
-/	  → 1122334455667788
-/
-/	@param	%edi is size of %rsi array in bytes
-/	@param	%rsi is char[edi/16][16] output and %rsi==%rdx is OK
-/	@param	%rdx is char[edi/16][8] input
-/	@return	%rax is %rsi
+//	Duplicates chrominance samples horizontally, e.g.
+//
+//	    12345678--------
+//	  → 1122334455667788
+//
+//	@param	%edi is size of %rsi array in bytes
+//	@param	%rsi is char[edi/16][16] output and %rsi==%rdx is OK
+//	@param	%rdx is char[edi/16][8] input
+//	@return	%rax is %rsi
 doublechrominance:
 	.leafprologue
 	.profilable

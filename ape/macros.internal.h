@@ -1,3 +1,21 @@
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 sw=8 fenc=utf-8                                     :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│                                                                              │
+│ Permission to use, copy, modify, and/or distribute this software for         │
+│ any purpose with or without fee is hereby granted, provided that the         │
+│ above copyright notice and this permission notice appear in all copies.      │
+│                                                                              │
+│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
+│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
+│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
+│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
+│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
+│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
+│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
+│ PERFORMANCE OF THIS SOFTWARE.                                                │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #ifndef APE_MACROS_H_
 #define APE_MACROS_H_
 #include "libc/macros.h"
@@ -8,9 +26,16 @@
  * @fileoverview Macros relevant to αcτµαlly pδrταblε εxεcµταblε.
  */
 
-/	Calls near (i.e. pc+pcrel<64kB) FUNCTION.
-/	@mode	long,legacy,real
-/	@cost	9 bytes overhead
+//	Calls function in real mode.
+//	It's needed because LLVM 8 LLD doesn't support R_X86_64_PC16.
+	.macro	call16 name:req
+	mov	$REAL(\name),%ax
+	call	*%ax
+	.endm
+
+//	Calls near (i.e. pc+pcrel<64kB) FUNCTION.
+//	@mode	long,legacy,real
+//	@cost	9 bytes overhead
 .macro	rlcall	function:req
 	.byte	0x50                   	# push %[er]ax
 	.byte	0xb8,0,0		# mov $?,%[e]ax
@@ -25,8 +50,8 @@
 912:
 .endm
 
-/	Loads far (i.e. <1mb) abs constexpr ADDRESS into ES:DI+EDX+RDX.
-/	@mode	long,legacy,real
+//	Loads far (i.e. <1mb) abs constexpr ADDRESS into ES:DI+EDX+RDX.
+//	@mode	long,legacy,real
 .macro	movesdi	address:req
 	.byte	0xbf			# mov $0x????xxxx,%[e]di
 	.short	\address>>4
@@ -39,8 +64,8 @@
 297:	
 .endm
 
-/	Loads 16-bit CONSTEXPR into Qw-register w/ optional zero-extend.
-/	@mode	long,legacy,real
+//	Loads 16-bit CONSTEXPR into Qw-register w/ optional zero-extend.
+//	@mode	long,legacy,real
 .macro	bbmov	constexpr:req abcd abcd.hi:req abcd.lo:req
  .ifnb	\abcd
   .if	(\constexpr)<128 && (\constexpr)>=0
@@ -52,8 +77,8 @@
 	movb	$(\constexpr)&0xff,\abcd.lo
 .endm
 
-/	Compares 16-bit CONSTEXPR with Qw-register.
-/	@mode	long,legacy,real
+//	Compares 16-bit CONSTEXPR with Qw-register.
+//	@mode	long,legacy,real
 .macro	bbcmp	constexpr:req abcd.hi:req abcd.lo:req
 	cmpb	$(\constexpr)>>8&0xff,\abcd.hi
 	jnz	387f
@@ -61,8 +86,8 @@
 387:
 .endm
 
-/	Adds 16-bit CONSTEXPR to Qw-register.
-/	@mode	long,legacy,real
+//	Adds 16-bit CONSTEXPR to Qw-register.
+//	@mode	long,legacy,real
 .macro	bbadd	constexpr:req abcd.hi:req abcd.lo:req
 	addb	$(\constexpr)&0xff,\abcd.lo
  .if	(\constexpr) != 0
@@ -70,8 +95,8 @@
  .endif
 .endm
 
-/	Subtracts 16-bit CONSTEXPR from Qw-register.
-/	@mode	long,legacy,real
+//	Subtracts 16-bit CONSTEXPR from Qw-register.
+//	@mode	long,legacy,real
 .macro	bbsub	constexpr:req abcd.hi:req abcd.lo:req
 	subb	$(\constexpr)&0xff,\abcd.lo
  .if	(\constexpr) != 0
@@ -79,8 +104,8 @@
  .endif
 .endm
 
-/	Ands Qw-register with 16-bit CONSTEXPR.
-/	@mode	long,legacy,real
+//	Ands Qw-register with 16-bit CONSTEXPR.
+//	@mode	long,legacy,real
 .macro	bband	constexpr:req abcd.hi:req abcd.lo:req
  .if	((\constexpr)&0xff) != 0xff || ((\constexpr)>>8&0xff) == 0xff
 	andb	$(\constexpr)&0xff,\abcd.lo
@@ -90,8 +115,8 @@
  .endif
 .endm
 
-/	Ors Qw-register with 16-bit CONSTEXPR.
-/	@mode	long,legacy,real
+//	Ors Qw-register with 16-bit CONSTEXPR.
+//	@mode	long,legacy,real
 .macro	bbor	constexpr:req abcd.hi:req abcd.lo:req
  .if	((\constexpr)&0xff) != 0 || ((\constexpr)>>8&0xff) != 0
 	orb	$(\constexpr)&0xff,\abcd.lo
@@ -101,8 +126,8 @@
  .endif
 .endm
 
-/	Performs ACTION only if in real mode.
-/	@mode	long,legacy,real
+//	Performs ACTION only if in real mode.
+//	@mode	long,legacy,real
 .macro	rlo	clobber:req action:vararg
 990:	mov	$0,\clobber
 	.if	.-990b!=3
@@ -117,10 +142,10 @@
 	.endif
 .endm
 
-/	Initializes real mode stack.
-/	The most holiest of holy code.
-/	@mode	real
-/	@see	www.pcjs.org/pubs/pc/reference/intel/8086/
+//	Initializes real mode stack.
+//	The most holiest of holy code.
+//	@mode	real
+//	@see	www.pcjs.org/pubs/pc/reference/intel/8086/
 .macro	rlstack	seg:req addr:req
 	cli
 	mov	\seg,%ss
@@ -128,7 +153,7 @@
 	sti
 .endm
 
-/	Symbolic Linker-Defined Binary Content.
+//	Symbolic Linker-Defined Binary Content.
 .macro	.stub	name:req kind:req default type=@object
  .ifnb	\default
   .equ	\name,\default
@@ -139,17 +164,17 @@
 .hidden	\name
 .endm
 
-/	Symbolic Linker-Defined Binary-Encoded-Bourne Content.
-/	@param	units is the number of encoded 32-bit values to insert,
-/		e.g. \000 can be encoded as 0x3030305c.
-.macro	.shstub	name:req units:req
+//	Symbolic Linker-Defined Binary-Encoded-Bourne Content.
+//	@param	units is the number of encoded 32-bit values to insert,
+//		e.g. \000 can be encoded as 0x3030305c.
+.macro	.shstub	name:req num:req
  ss	\name,0
- .if	\units>1
+ .if	\num>1
   ss	\name,1
-   .if	\units>2
+   .if	\num>2
     ss	\name,2
     ss	\name,3
-    .if	\units>4
+    .if	\num>4
      ss	\name,4
      ss	\name,5
      ss	\name,6
@@ -166,8 +191,8 @@
 #elif defined(__LINKER__)
 
 #define BCX_NIBBLE(X) ((((X)&0xf) > 0x9) ? ((X)&0xf) + 0x37 : ((X)&0xf) + 0x30)
-#define BCX_OCTET(X) ((BCX_NIBBLE((X) >> 4) << 8) | (BCX_NIBBLE((X) >> 0) << 0))
-#define BCX_INT16(X) ((BCX_OCTET((X) >> 8) << 16) | (BCX_OCTET((X) >> 0) << 0))
+#define BCX_OCTET(X)  ((BCX_NIBBLE((X) >> 4) << 8) | (BCX_NIBBLE((X) >> 0) << 0))
+#define BCX_INT16(X)  ((BCX_OCTET((X) >> 8) << 16) | (BCX_OCTET((X) >> 0) << 0))
 #define BCXSTUB(SYM, X)                      \
   HIDDEN(SYM##_bcx0 = BCX_INT16((X) >> 48)); \
   HIDDEN(SYM##_bcx1 = BCX_INT16((X) >> 32)); \

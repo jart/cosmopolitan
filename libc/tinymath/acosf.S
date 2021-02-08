@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns arc cosine of 𝑥.
-/
-/	@param	𝑥 is float scalar in low quarter of %xmm0
-/	@return	float scalar in low quarter of %xmm0
+//	Returns arc cosine of 𝑥.
+//
+//	@param	𝑥 is float scalar in low quarter of %xmm0
+//	@return	float scalar in low quarter of %xmm0
 acosf:	ezlea	acosl,ax
 	jmp	_f2ld2
 	.endfn	acosf,globl

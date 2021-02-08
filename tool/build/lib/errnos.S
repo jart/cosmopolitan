@@ -24,9 +24,9 @@
 	.long	\linux
 	.endm
 
-/	Lookup table translating errnos between systems.
-/
-/	@see	libc/sysv/systemfive.S
+//	Lookup table translating errnos between systems.
+//
+//	@see	libc/sysv/systemfive.S
 	.rodata
 	.align	8
 kLinuxErrnos:

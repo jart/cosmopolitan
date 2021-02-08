@@ -21,11 +21,11 @@
 .privileged
 .alignfunc
 
-/	Returns 𝑥-𝑦, aborting on overflow.
-/
-/	@param	edi is int32 𝑥
-/	@param	esi is int32 𝑦
-/	@see	-ftrapv
+//	Returns 𝑥-𝑦, aborting on overflow.
+//
+//	@param	edi is int32 𝑥
+//	@param	esi is int32 𝑦
+//	@see	-ftrapv
 __subvsi3:
 	mov	%edi,%eax
 	sub	%esi,%eax

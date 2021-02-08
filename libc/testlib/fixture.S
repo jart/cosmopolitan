@@ -19,9 +19,9 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Decentralized section for test fixture registration.
-/
-/	@see	ape/ape.lds
+//	Decentralized section for test fixture registration.
+//
+//	@see	ape/ape.lds
 	.section .piro.relo.sort.fixture.1,"aw",@nobits
 	.type	__fixture_start,@object
 	.type	__fixture_end,@object

@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Jump table for mpsadbw() with non-constexpr immediate parameter.
-/
-/	@note	needs sse4 cf. core c. 2006 cf. bulldozer c. 2011
-/	@see	mpsadbw()
+//	Jump table for mpsadbw() with non-constexpr immediate parameter.
+//
+//	@note	needs sse4 cf. core c. 2006 cf. bulldozer c. 2011
+//	@see	mpsadbw()
 	.align	8
 __mpsadbws:
 	i = 0

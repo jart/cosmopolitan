@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Computes Phil Katz CRC-32 used by zip/zlib/gzip/etc.
-/
-/	@param	edi is init crc32 value
-/	@param	rsi is nullable pointer to data
-/	@param	edx is int size per zlib interface
+//	Computes Phil Katz CRC-32 used by zip/zlib/gzip/etc.
+//
+//	@param	edi is init crc32 value
+//	@param	rsi is nullable pointer to data
+//	@param	edx is int size per zlib interface
 crc32:	movslq	%edx,%rdx
 	jmp	crc32_z
 	.endfn	crc32,globl

@@ -21,11 +21,11 @@
 .source	__FILE__
 .code16 # ∩ .code32 ∩ .code64
 
-/	Function entry hook stub.
-/
-/	@note	cc -pg -mfentry adds this to the start of every function
-/	@see	libc/log/shadowargs.ncabi.c
-/	@mode	long,legacy,real
+//	Function entry hook stub.
+//
+//	@note	cc -pg -mfentry adds this to the start of every function
+//	@see	libc/log/shadowargs.ncabi.c
+//	@mode	long,legacy,real
 __fentry__:
 	ret
 	.endfn	__fentry__,weak

@@ -14,6 +14,8 @@
 #include "third_party/zlib/deflate.h"
 #include "third_party/zlib/internal.h"
 
+#ifndef __llvm__
+
 asm(".ident\t\"\\n\\n\
 zlib » crc32 parallelized folding (zlib License)\\n\
 Copyright 2013 Intel Corporation\\n\
@@ -477,3 +479,5 @@ unsigned crc_fold_512to32(struct DeflateState *const s) {
   return ~crc;
   CRC_SAVE(s); /* TODO(jart): wut? */
 }
+
+#endif /* __llvm__ */

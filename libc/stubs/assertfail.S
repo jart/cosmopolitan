@@ -21,11 +21,11 @@
 .source	__FILE__
 .code16 # ∩ .code32 ∩ .code64
 
-/	Lightweight universal overridable assert() macro support.
-/
-/	@see	libc/log/__assert_fail.c
-/	@mode	long,legacy,real
-/	@noreturn
+//	Lightweight universal overridable assert() macro support.
+//
+//	@see	libc/log/__assert_fail.c
+//	@mode	long,legacy,real
+//	@noreturn
 __assert_fail:
 	int3
 	push	%bp

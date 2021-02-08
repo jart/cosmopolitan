@@ -80,7 +80,6 @@ compatfn int64_t ftello(FILE *) paramsnonnull();
 
 int system(const char *);
 int systemexec(const char *);
-int systemecho(const char *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § standard i/o » formatting                                 ─╬─│┼

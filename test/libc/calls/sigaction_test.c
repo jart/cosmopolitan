@@ -26,7 +26,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 
-bool gotsigint;
+volatile bool gotsigint;
 
 void OnSigInt(int sig) {
   gotsigint = true;
@@ -63,7 +63,7 @@ TEST(sigaction, test) {
   EXPECT_EQ(1, WIFEXITED(status));
   EXPECT_EQ(0, WEXITSTATUS(status));
   EXPECT_EQ(0, WTERMSIG(status));
-  EXPECT_NE(-1, sigprocmask(SIG_BLOCK, &oldmask, NULL));
+  EXPECT_NE(-1, sigprocmask(SIG_SETMASK, &oldmask, NULL));
 }
 
 TEST(sigaction, raise) {

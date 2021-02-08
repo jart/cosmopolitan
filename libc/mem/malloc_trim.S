@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Releases freed memory back to system.
-/
-/	@param	rdi specifies bytes of memory to leave available
-/	@return	1 if it actually released any memory, else 0
+//	Releases freed memory back to system.
+//
+//	@param	rdi specifies bytes of memory to leave available
+//	@return	1 if it actually released any memory, else 0
 malloc_trim:
 	jmp	*hook_malloc_trim(%rip)
 	.endfn	malloc_trim,globl

@@ -18,18 +18,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Computes Phil Katz CRC-32 w/ carryless multiply isa.
-/
-/	This is support code that's abstracted by crc32_z().
-/
-/	@param	edi is initial value
-/	@param	rsi points to buffer
-/	@param	rdx is bytes in buffer that's >=64 and %16==0
-/	@return	eax is crc32
-/	@note	needs Westmere (c.2010) or Bulldozer (c.2011)
-/	@see	“Fast CRC Computation for Generic Polynomials Using
-/		 PCLMULQDQ Instruction” V. Gopal, E. Ozturk, et al.,
-/		 2009, intel.ly/2ySEwL0
+//	Computes Phil Katz CRC-32 w/ carryless multiply isa.
+//
+//	This is support code that's abstracted by crc32_z().
+//
+//	@param	edi is initial value
+//	@param	rsi points to buffer
+//	@param	rdx is bytes in buffer that's >=64 and %16==0
+//	@return	eax is crc32
+//	@note	needs Westmere (c.2010) or Bulldozer (c.2011)
+//	@see	“Fast CRC Computation for Generic Polynomials Using
+//		 PCLMULQDQ Instruction” V. Gopal, E. Ozturk, et al.,
+//		 2009, intel.ly/2ySEwL0
 crc32_pclmul:
 	.leafprologue
 	.profilable
@@ -139,8 +139,8 @@ crc32_pclmul:
 	.endfn	crc32_pclmul,globl,hidden
 	.source	__FILE__
 
-/	Definitions of the bit-reflected domain constants k1,k2,k3, etc.
-/	and the CRC32+Barrett polynomials given at the end of the paper.
+//	Definitions of the bit-reflected domain constants k1,k2,k3, etc.
+//	and the CRC32+Barrett polynomials given at the end of the paper.
 	.rodata.cst16
 .Lk1k2:	.quad	0x0000000154442bd4
 	.quad	0x00000001c6e41596

@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon nr __NR_ioprio_set 0x00fb -1 -1 -1 -1 -1
+.syscon nr,__NR_ioprio_set,0x00fb,-1,-1,-1,-1,-1

@@ -2478,8 +2478,8 @@ imp	'GetProcessHeap'					GetProcessHeap						kernel32	0		# KernelBase
 imp	'GetProcessHeaps'					GetProcessHeaps						kernel32	0		# KernelBase
 imp	'GetProcessId'						GetProcessId						kernel32	0	1	# KernelBase
 imp	'GetProcessIdOfThread'					GetProcessIdOfThread					kernel32	0	1	# KernelBase
-imp	'GetProcessImageFileNameA'				GetProcessImageFileNameA				KernelBase	676
-imp	'GetProcessImageFileName'				GetProcessImageFileNameW				KernelBase	677
+imp	'GetProcessImageFileNameA'				GetProcessImageFileNameA				kernel32	676	3
+imp	'GetProcessImageFileName'				GetProcessImageFileNameW				kernel32	677	3
 imp	'GetProcessInformation'					GetProcessInformation					kernel32	0	4	# KernelBase
 imp	'GetProcessIoCounters'					GetProcessIoCounters					kernel32	701	2
 imp	'GetProcessMemoryInfo'					GetProcessMemoryInfo					KernelBase	679

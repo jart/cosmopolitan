@@ -21,7 +21,7 @@
 .source	__FILE__
 .code16 # ∩ .code32 ∩ .code64
 
-/	Optional function stub.
+//	Optional function stub.
 missingno:
 	xor	%ax,%ax
 	ret

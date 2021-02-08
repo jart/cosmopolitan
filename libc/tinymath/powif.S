@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Returns 𝑥^𝑦.
-/
-/	@param	𝑥 is float scalar in low quarter of %xmm0
-/	@param	𝑦 is int passed in %edi
-/	@return	double scalar in low half of %xmm0
+//	Returns 𝑥^𝑦.
+//
+//	@param	𝑥 is float scalar in low quarter of %xmm0
+//	@param	𝑦 is int passed in %edi
+//	@return	double scalar in low half of %xmm0
 powif:	cvtsi2ss %edi,%xmm1
 	jmp	pow
 	.endfn	powif,globl

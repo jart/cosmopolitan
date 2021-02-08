@@ -17,17 +17,17 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 
-/	Traditional executable boundaries defined by linker.
-/	@see	man etext
+//	Traditional executable boundaries defined by linker.
+//	@see	man etext
 	_etext = 0
 	_edata = 0
 	_end = 0
 
-/	Cosmopolitan executable boundaries defined by linker script.
-/	@see	libc/elf/elf.lds
-/	@see	ape/ape.lds
+//	Cosmopolitan executable boundaries defined by linker script.
+//	@see	libc/elf/elf.lds
+//	@see	ape/ape.lds
 	_base = 0
-	ape.xlm = 0
+	ape_xlm = 0
 	_ehead = 0
 	_ereal = 0
 	__privileged_start = 0
@@ -37,7 +37,7 @@
 	__relo_end = 0
 
 	.globl	_base
-	.globl	ape.xlm
+	.globl	ape_xlm
 	.globl	__relo_start
 	.globl	__relo_end
 	.globl	__privileged_start
@@ -50,7 +50,7 @@
 	.globl	_etext
 
 	.weak	_base
-	.weak	ape.xlm
+	.weak	ape_xlm
 	.weak	__relo_start
 	.weak	__relo_end
 	.weak	__privileged_start

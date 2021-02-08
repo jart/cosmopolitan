@@ -48,6 +48,6 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < min(64, argc); ++i) g_log.x()[i] += argc;
   printf("%p %d %d %d\n", (void *)(intptr_t)g_log.x(), g_log.x()[0],
          g_log.x()[0], g_log.x()[0]);
-  delete x;
+  delete[] x;
   return 0;
 }

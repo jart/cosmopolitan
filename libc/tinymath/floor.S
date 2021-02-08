@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	vroundsd $_MM_FROUND_TO_NEG_INF|_MM_FROUND_NO_EXC,%xmm0,%xmm0,%xmm0
+//	vroundsd $_MM_FROUND_TO_NEG_INF|_MM_FROUND_NO_EXC,%xmm0,%xmm0,%xmm0
 
 floor:	.leafprologue
 	.profilable
@@ -43,5 +43,5 @@ floor:	.leafprologue
 
 	.rodata.cst8
 2:	.double	1
-3:	.double	0x0010000000000000
+3:	.quad	0x0010000000000000
 4:	.double	nan

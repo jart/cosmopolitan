@@ -18,22 +18,22 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Generates lookup table for computing CRC-32 byte-by-byte.
-/
-/	    void crc32init(uint32_t table[256], uint32_t polynomial) {
-/	      uint32_t d, i, r;
-/	      for (d = 0; d < 256; ++d) {
-/	        r = d;
-/	        for (i = 0; i < 8; ++i) {
-/	          r = r >> 1 ^ (r & 1 ? polynomial : 0);
-/	        }
-/	        table[d] = r;
-/	      }
-/	    }
-/
-/	@param	rdi is pointer to uint32_t[256] array
-/	@param	esi 32-bit binary polynomial config
-/	@note	imposes ~300ns one-time cost
+//	Generates lookup table for computing CRC-32 byte-by-byte.
+//
+//	    void crc32init(uint32_t table[256], uint32_t polynomial) {
+//	      uint32_t d, i, r;
+//	      for (d = 0; d < 256; ++d) {
+//	        r = d;
+//	        for (i = 0; i < 8; ++i) {
+//	          r = r >> 1 ^ (r & 1 ? polynomial : 0);
+//	        }
+//	        table[d] = r;
+//	      }
+//	    }
+//
+//	@param	rdi is pointer to uint32_t[256] array
+//	@param	esi 32-bit binary polynomial config
+//	@note	imposes ~300ns one-time cost
 crc32init:
 	push	%rbp
 	mov	%rsp,%rbp

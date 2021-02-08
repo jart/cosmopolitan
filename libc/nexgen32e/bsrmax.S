@@ -18,21 +18,21 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Returns binary logarithm of integer 𝑥.
-/
-/	      uint32 𝑥   bsf(𝑥) tzcnt(𝑥)   ffs(𝑥)   bsr(𝑥) lzcnt(𝑥)
-/	    0x00000000      wut       32        0      wut       32
-/	    0x00000001        0        0        1        0       31
-/	    0x80000001        0        0        1       31        0
-/	    0x80000000       31       31       32       31        0
-/	    0x00000010        4        4        5        4       27
-/	    0x08000010        4        4        5       27        4
-/	    0x08000000       27       27       28       27        4
-/	    0xffffffff        0        0        1       31        0
-/
-/	@param	rsi:rdi is 128-bit unsigned 𝑥 value
-/	@return	eax number in range [0,128) or undef if 𝑥 is 0
-/	@see	also treasure trove of nearly identical functions
+//	Returns binary logarithm of integer 𝑥.
+//
+//	      uint32 𝑥   bsf(𝑥) tzcnt(𝑥)   ffs(𝑥)   bsr(𝑥) lzcnt(𝑥)
+//	    0x00000000      wut       32        0      wut       32
+//	    0x00000001        0        0        1        0       31
+//	    0x80000001        0        0        1       31        0
+//	    0x80000000       31       31       32       31        0
+//	    0x00000010        4        4        5        4       27
+//	    0x08000010        4        4        5       27        4
+//	    0x08000000       27       27       28       27        4
+//	    0xffffffff        0        0        1       31        0
+//
+//	@param	rsi:rdi is 128-bit unsigned 𝑥 value
+//	@return	eax number in range [0,128) or undef if 𝑥 is 0
+//	@see	also treasure trove of nearly identical functions
 bsrmax:	.leafprologue
 	.profilable
 	bsr	%rsi,%rax

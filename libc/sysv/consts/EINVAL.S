@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon errno EINVAL 22 22 22 22 22 87
+.syscon errno,EINVAL,22,22,22,22,22,87

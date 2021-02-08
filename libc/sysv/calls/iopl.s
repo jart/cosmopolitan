@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall iopl 0xfffffffffffff0ac globl
+.scall iopl,0xfffffffffffff0ac,globl

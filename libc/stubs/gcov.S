@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Magic words to unbreak build if GCOV flags are passed.
+//	Magic words to unbreak build if GCOV flags are passed.
 
 __gcov_init:	
 	ret

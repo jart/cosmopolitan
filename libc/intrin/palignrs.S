@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Jump table for palignr() with non-constexpr immediate parameter.
-/
-/	@note	needs ssse3 cf. prescott c. 2004 cf. bulldozer c. 2011
-/	@see	palignr()
+//	Jump table for palignr() with non-constexpr immediate parameter.
+//
+//	@note	needs ssse3 cf. prescott c. 2004 cf. bulldozer c. 2011
+//	@see	palignr()
 	.align	8
 __palignrs:
   	palignr	$0,%xmm1,%xmm0

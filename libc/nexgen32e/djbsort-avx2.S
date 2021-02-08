@@ -1,12 +1,12 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	D.J. Bernstein's outrageously fast integer sorting algorithm.
-/
-/	@param	rdi is int32 array
-/	@param	rsi is number of elements in rdi
-/	@note	public domain
-/	@see	en.wikipedia.org/wiki/Sorting_network
+//	D.J. Bernstein's outrageously fast integer sorting algorithm.
+//
+//	@param	rdi is int32 array
+//	@param	rsi is number of elements in rdi
+//	@note	public domain
+//	@see	en.wikipedia.org/wiki/Sorting_network
 djbsort_avx2:
 	push	%rbp
 	mov	%rsp,%rbp
@@ -1115,7 +1115,7 @@ int32_sort_2power:
 	vpxor	32(%rdi),%ymm0,%ymm2
 	vpxor	(%rdi),%ymm0,%ymm0
 	vmovdqa	.LC1(%rip),%ymm4
-	cmp	$0,-116(%rbp)
+	cmpl	$0,-116(%rbp)
 	vpunpckldq %ymm2,%ymm0,%ymm1
 	vpunpckhdq %ymm2,%ymm0,%ymm0
 	vpunpcklqdq %ymm0,%ymm1,%ymm3
@@ -1179,7 +1179,7 @@ int32_sort_2power:
 	mov	$16,%esi
 	mov	%r13,%rdi
 	call	int32_sort_2power
-	cmp	$0,-116(%rbp)
+	cmpl	$0,-116(%rbp)
 	vmovdqu	(%r12),%ymm4
 	vmovdqu	32(%r12),%ymm1
 	vmovdqu	64(%r12),%ymm2
@@ -1750,7 +1750,7 @@ int32_sort_2power:
 	vpunpckhdq 160(%rax),%ymm7,%ymm0
 	vpunpcklqdq %ymm2,%ymm12,%ymm8
 	vpunpcklqdq %ymm4,%ymm6,%ymm9
-	cmp	$0,-116(%rbp)
+	cmpl	$0,-116(%rbp)
 	vmovdqu	192(%rax),%ymm7
 	vpunpckhqdq %ymm2,%ymm12,%ymm12
 	vpunpckhqdq %ymm4,%ymm6,%ymm4
@@ -1837,7 +1837,7 @@ int32_sort_2power:
 	vmovdqu	%ymm2,-64(%rax)
 	vmovdqu	%ymm0,-32(%rax)
 	jmp	.L85
-.L142:	cmp	$32,-112(%rbp)
+.L142:	cmpq	$32,-112(%rbp)
 	jne	.L94
 .L93:	mov	-112(%rbp),%rcx
 	sar	$2,%rcx
@@ -1871,7 +1871,7 @@ int32_sort_2power:
 	cmp	%rax,%r15
 	jg	.L92
 	sarq	$3,-112(%rbp)
-.L89:	cmp	$127,-112(%rbp)
+.L89:	cmpq	$127,-112(%rbp)
 	jle	.L142
 	jmp	.L93
 .L92:	cmp	-136(%rbp),%rax
@@ -1925,7 +1925,7 @@ int32_sort_2power:
 	add	%rdx,-136(%rbp)
 	jmp	.L90
 .L145:	sarq	$2,-112(%rbp)
-.L94:	cmp	$15,-112(%rbp)
+.L94:	cmpq	$15,-112(%rbp)
 	jle	.L144
 	mov	-112(%rbp),%rcx
 	xor	%esi,%esi
@@ -1962,7 +1962,7 @@ int32_sort_2power:
 .L146:	add	%rdx,%rsi
 	add	%rdx,%rcx
 	jmp	.L95
-.L144:	cmp	$8,-112(%rbp)
+.L144:	cmpq	$8,-112(%rbp)
 	je	.L111
 .L102:	mov	-152(%rbp),%rdx
 	add	-128(%rbp),%rdx
@@ -1997,7 +1997,7 @@ int32_sort_2power:
 	vpmaxsd	%ymm3,%ymm5,%ymm3
 	vpminsd	(%rdi),%ymm7,%ymm1
 	vpminsd	%ymm2,%ymm4,%ymm10
-	cmp	$0,-116(%rbp)
+	cmpl	$0,-116(%rbp)
 	vpmaxsd	(%rdi),%ymm7,%ymm0
 	vmovdqu	(%rsi),%ymm7
 	vpmaxsd	%ymm2,%ymm4,%ymm2

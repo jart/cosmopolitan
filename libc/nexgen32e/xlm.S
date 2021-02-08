@@ -20,8 +20,8 @@
 #include "libc/notice.inc"
 #include "ape/config.h"
 
-/	eXtreme Low Memory.
-/	@see	ape/config.h
+//	eXtreme Low Memory.
+//	@see	ape/config.h
 	.section .xlm,"aw",@nobits
 	.align	4096
 __xlm:	.rept	XLM_SIZE

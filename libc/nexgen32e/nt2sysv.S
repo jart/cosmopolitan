@@ -19,16 +19,16 @@
 #include "libc/macros.h"
 .text.windows
 
-/	Translates function call from code built w/ MS-style compiler.
-/
-/	This wraps WinMain() and callback functions passed to Win32 API.
-/	Please note an intermediary jump slot is needed to set %rax.
-/
-/	@param	%rax is function address
-/	@param	%rcx,%rdx,%r8,%r9
-/	@return	%rax,%xmm0
-/	@note	slower than __sysv2nt
-/	@see	NT2SYSV() macro
+//	Translates function call from code built w/ MS-style compiler.
+//
+//	This wraps WinMain() and callback functions passed to Win32 API.
+//	Please note an intermediary jump slot is needed to set %rax.
+//
+//	@param	%rax is function address
+//	@param	%rcx,%rdx,%r8,%r9
+//	@return	%rax,%xmm0
+//	@note	slower than __sysv2nt
+//	@see	NT2SYSV() macro
 __nt2sysv:
 	push	%rbp
 	mov	%rsp,%rbp

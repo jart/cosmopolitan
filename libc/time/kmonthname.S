@@ -9,8 +9,8 @@
 #endif
 #include "libc/macros.h"
 
-/	extern const char kMonthName[12][10];
-	.section .rodata,"aS",@progbits
+//	extern const char kMonthName[12][10];
+	.section .rodata,"a",@progbits
 kMonthName:
 	.ascin	"January",10
 	.ascin	"February",10

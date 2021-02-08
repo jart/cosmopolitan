@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon termios TIOCSDTR 0 0x20007479 0x20007479 0x20007479 0x20007479 -1
+.syscon termios,TIOCSDTR,0,0x20007479,0x20007479,0x20007479,0x20007479,-1

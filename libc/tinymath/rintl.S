@@ -19,11 +19,11 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Rounds to nearest integer.
-/
-/	@param	is long double passed on stack
-/	@return	long double in %st
-/	@note	rounding behavior can be changed in control word
+//	Rounds to nearest integer.
+//
+//	@param	is long double passed on stack
+//	@return	long double in %st
+//	@note	rounding behavior can be changed in control word
 rintl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

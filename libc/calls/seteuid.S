@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Sets effective user ID.
-/
-/	@param	%edi is user id
-/	@see	setuid(), getauxval(AT_SECURE)
+//	Sets effective user ID.
+//
+//	@param	%edi is user id
+//	@see	setuid(), getauxval(AT_SECURE)
 seteuid:push	%rbp
 	mov	%rsp,%rbp
 	.profilable

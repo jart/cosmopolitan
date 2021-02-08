@@ -19,19 +19,19 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Performs raw System Five system call.
-/
-/	This function provides a direct path into system call support
-/	that's friendly to C code, since it doesn't need an intermediate
-/	thunk. It only supports arities up to six, since there's no way
-/	to do more safely; this isn't a problem with Linux, although
-/	certain BSD calls may not be available.
-/
-/	@param	%rdi is system call ordinal, which isn't translated,
-/		and must be correct for the underlying host system
-/	@param	%rsi,%rdx,%rcx,%r8,%r9 may supply parameters 1 through 5
-/	@param	sixth is optionally pushed on the stack before call
-/	@return	%rax has result, or -1 w/ errno on failure
+//	Performs raw System Five system call.
+//
+//	This function provides a direct path into system call support
+//	that's friendly to C code, since it doesn't need an intermediate
+//	thunk. It only supports arities up to six, since there's no way
+//	to do more safely; this isn't a problem with Linux, although
+//	certain BSD calls may not be available.
+//
+//	@param	%rdi is system call ordinal, which isn't translated,
+//		and must be correct for the underlying host system
+//	@param	%rsi,%rdx,%rcx,%r8,%r9 may supply parameters 1 through 5
+//	@param	sixth is optionally pushed on the stack before call
+//	@return	%rax has result, or -1 w/ errno on failure
 syscall:mov	%rdi,%rax
 	mov	%rsi,%rdi
 	mov	%rdx,%rsi

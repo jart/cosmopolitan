@@ -160,12 +160,6 @@ static const struct stringpool_t stringpool_contents =
     "data"
   };
 #define stringpool ((const char *) &stringpool_contents)
-#ifdef __GNUC__
-__inline
-#if defined __GNUC_STDC_INLINE__ || defined __GNUC_GNU_INLINE__
-__attribute__ ((__gnu_inline__))
-#endif
-#endif
 const struct UriSchemeSlot *
 in_word_set (register const char *str, register unsigned int len)
 {

@@ -18,14 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Compares strings w/ limit & no-clobber greg abi.
-/
-/	@param	%rdi is first string
-/	@param	%rsi is second string
-/	@param	%rdx is max length
-/	@return	<0, 0, or >0 depending on comparison
-/	@clob	flags only
-/	@asyncsignalsafe
+//	Compares strings w/ limit & no-clobber greg abi.
+//
+//	@param	%rdi is first string
+//	@param	%rsi is second string
+//	@param	%rdx is max length
+//	@return	<0, 0, or >0 depending on comparison
+//	@clob	flags only
+//	@asyncsignalsafe
 tinystrncmp:
 	.leafprologue
 	push	%rbx

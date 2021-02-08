@@ -19,17 +19,19 @@
 mkdir -p $dir
 rm -f $dir/*.s $dir/*.S
 
+IFS=","
+
 scall() {
   {
     echo ".include \"o/libc/sysv/macros.internal.inc\""
-    echo ".scall" "$@"
+    echo ".scall" "$*"
   } >"$dir/${1/$/-}.s"
 }
 
 syscon() {
   {
     echo "#include \"libc/sysv/consts/syscon.internal.h\""
-    echo ".syscon" "$@"
+    echo ".syscon" "$*"
   } >"$dir/${2/$/-}.S"
 }
 

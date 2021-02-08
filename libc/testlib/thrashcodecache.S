@@ -20,19 +20,19 @@
 .source	__FILE__
 .testonly
 
-/	Empties L1 instruction cache.
+//	Empties L1 instruction cache.
 thrashcodecache:
 	.leafprologue
 	push	%rbx
 	xor	%eax,%eax
 	xor	%ecx,%ecx
 	cpuid
-/	pushpop	4,%rcx
+//	pushpop	4,%rcx
 0:	.rept	32768/(8+9)
 	.byte	0x0f,0x1f,0x84,0,0,0,0,0		# fat nop x8
 	.byte	0x66,0x0f,0x1f,0x84,0,0,0,0,0		# fat nop x9
 	.endr
-/	loop	0b
+//	loop	0b
 	xor	%eax,%eax
 	xor	%ecx,%ecx
 	cpuid

@@ -3,17 +3,16 @@
 #───vi: set net ft=sh ts=2 sts=2 fenc=utf-8 :vi─────────────┘
 
 if CLANG=$(command -v clang); then
-  $COMPILE $CLANG                                     \
+  $CLANG                                              \
       -o o/$MODE/test/libc/release/smokeclang.com.dbg \
       -Os                                             \
+      -Wall                                           \
+      -Werror                                         \
       -static                                         \
-      -no-pie                                         \
       -fno-pie                                        \
       -nostdlib                                       \
       -nostdinc                                       \
       -mno-red-zone                                   \
-      -Wl,--gc-sections                               \
-      -Wl,-z,max-page-size=0x1000                     \
       -Wl,-T,o/$MODE/ape/ape.lds                      \
       -include o/cosmopolitan.h                       \
       test/libc/release/smoke.c                       \
@@ -22,3 +21,5 @@ if CLANG=$(command -v clang); then
       o/$MODE/cosmopolitan.a || exit
   o/$MODE/test/libc/release/smokeclang.com.dbg || exit
 fi
+
+touch o/$MODE/test/libc/release/clang.ok

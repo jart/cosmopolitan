@@ -356,7 +356,8 @@ void OpenObject(struct Package *pkg, struct Object *obj, int mode, int prot,
   CHECK_NE(-1, close(fd));
   CHECK(IsElf64Binary(obj->elf, obj->size), "path=%`'s",
         &pkg->strings.p[obj->path]);
-  CHECK_NOTNULL((obj->strs = GetElfStringTable(obj->elf, obj->size)));
+  CHECK_NOTNULL((obj->strs = GetElfStringTable(obj->elf, obj->size)), "on %s",
+                &pkg->strings.p[obj->path]);
   CHECK_NOTNULL(
       (obj->syms = GetElfSymbolTable(obj->elf, obj->size, &obj->symcount)));
   CHECK_NE(0, obj->symcount);

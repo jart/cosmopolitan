@@ -46,6 +46,9 @@
  * into gzip.
  */
 
+void ftrace_hook(void);
+
+static int noreentry;
 static char g_buf[512];
 static const char *g_lastsymbol;
 static struct SymbolTable *g_symbols;
@@ -66,12 +69,14 @@ forceinline int GetNestingLevel(struct StackFrame *frame) {
  * prologues of other functions. We assume those functions behave
  * according to the System Five NexGen32e ABI.
  */
-privileged interruptfn void ftrace_hook(void) {
+privileged void ftrace(void) {
   size_t i, j, nesting;
   const char *symbol;
   struct StackFrame *frame;
+  if (!cmpxchg(&noreentry, 0, 1)) return;
   if (g_symbols) {
     frame = __builtin_frame_address(0);
+    frame = frame->next;
     symbol =
         &g_symbols->name_base[g_symbols
                                   ->symbols[bisectcarleft(
@@ -84,18 +89,21 @@ privileged interruptfn void ftrace_hook(void) {
       i = 2;
       j = 0;
       while (nesting--) {
+        asm volatile("" : : : "memory");
         g_buf[i++] = ' ';
         g_buf[i++] = ' ';
       }
       while (i < ARRAYLEN(g_buf) - 2 && symbol[j]) {
+        asm volatile("" : : : "memory");
         g_buf[i++] = symbol[j++];
       }
       g_buf[i++] = '\r';
       g_buf[i++] = '\n';
-      __print(g_buf, i);
+      write(2, g_buf, i);
     }
     g_lastsymbol = symbol;
   }
+  noreentry = 0;
 }
 
 /**

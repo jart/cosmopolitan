@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	See -mfunction-return=thunk
+//	See -mfunction-return=thunk
 __x86_return_thunk:
 	ret
 	.endfn	__x86_return_thunk,weak

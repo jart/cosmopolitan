@@ -129,7 +129,7 @@ hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
   int w, flags, width, lasterr, precision;
 
   lasterr = errno;
-  out = fn ? fn : (int (*)(int, void *))missingno;
+  out = fn ? fn : (void *)missingno;
 
   while (*format) {
     /* %[flags][width][.precision][length] */
@@ -267,9 +267,8 @@ hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
       case 'u': {
         flags &= ~FLAGS_HASH; /* no hash for dec format */
       DoNumber:
-        if (!weaken(ntoa) ||
-            weaken(ntoa)(out, arg, va, signbit, log2base, precision, width,
-                         flags, alphabet) == -1) {
+        if (ntoa(out, arg, va, signbit, log2base, precision, width, flags,
+                 alphabet) == -1) {
           return -1;
         }
         break;
@@ -282,8 +281,7 @@ hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
         } else {
           ldbl = va_arg(va, double);
         }
-        if (!weaken(ftoa) ||
-            weaken(ftoa)(out, arg, ldbl, precision, width, flags) == -1) {
+        if (ftoa(out, arg, ldbl, precision, width, flags) == -1) {
           return -1;
         }
         break;
@@ -312,8 +310,7 @@ hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
       case 's':
         p = va_arg(va, void *);
       showstr:
-        if (!weaken(stoa) || weaken(stoa)(out, arg, p, flags, precision, width,
-                                          signbit, qchar) == -1) {
+        if (stoa(out, arg, p, flags, precision, width, signbit, qchar) == -1) {
           return -1;
         }
         break;

@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns 𝑒^x-1.
-/
-/	@param	𝑥 is float scalar in low quarter of %xmm0
-/	@return	float scalar in low quarter of %xmm0
+//	Returns 𝑒^x-1.
+//
+//	@param	𝑥 is float scalar in low quarter of %xmm0
+//	@return	float scalar in low quarter of %xmm0
 expm1f:	ezlea	expm1l,ax
 	jmp	_f2ld2
 	.endfn	expm1f,globl

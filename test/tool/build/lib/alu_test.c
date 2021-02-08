@@ -29,16 +29,20 @@
 
 #define ALU_TEST 8
 
-#define NATIVE_ALU2(MODE, INSTRUCTION)                     \
-  asm("pushf\n\t"                                          \
-      "andl\t%3,(%%rsp)\n\t"                               \
-      "orl\t%4,(%%rsp)\n\t"                                \
-      "popf\n\t" INSTRUCTION "\t%" MODE "2,%" MODE "0\n\t" \
-      "pushf\n\t"                                          \
-      "pop\t%q1"                                           \
-      : "+r"(x), "=rm"(*f)                                 \
-      : "r"(y), "i"(~FMASK), "r"(*f & FMASK)               \
-      : "cc")
+#define NATIVE_ALU2(MODE, INSTRUCTION)                       \
+  do {                                                       \
+    intptr_t flags;                                          \
+    asm("pushf\n\t"                                          \
+        "andl\t%3,(%%rsp)\n\t"                               \
+        "orl\t%4,(%%rsp)\n\t"                                \
+        "popf\n\t" INSTRUCTION "\t%" MODE "2,%" MODE "0\n\t" \
+        "pushf\n\t"                                          \
+        "pop\t%q1"                                           \
+        : "+r"(x), "=rm"(flags)                              \
+        : "r"(y), "i"(~FMASK), "r"(*f & FMASK)               \
+        : "cc");                                             \
+    *f = flags;                                              \
+  } while (0)
 
 #define NATIVE_ALU2_ANYBITS(INSTRUCTION, MUTATING) \
   switch (w) {                                     \
@@ -91,13 +95,27 @@ int64_t RunGolden(char w, int h, uint64_t x, uint64_t y, uint32_t *f) {
 }
 
 const uint8_t kAluOps[] = {
-    ALU_ADD, ALU_OR, ALU_ADC, ALU_SBB, ALU_AND, ALU_SUB, ALU_XOR, ALU_CMP, ALU_AND | ALU_TEST,
+    ALU_ADD,             //
+    ALU_OR,              //
+    ALU_ADC,             //
+    ALU_SBB,             //
+    ALU_AND,             //
+    ALU_SUB,             //
+    ALU_XOR,             //
+    ALU_CMP,             //
+    ALU_AND | ALU_TEST,  //
 };
 
 const char *const kAluNames[] = {
-    [ALU_ADD] = "add", [ALU_OR] = "or",   [ALU_ADC] = "adc",
-    [ALU_SBB] = "sbb", [ALU_AND] = "and", [ALU_SUB] = "sub",
-    [ALU_XOR] = "xor", [ALU_CMP] = "cmp", [ALU_AND | ALU_TEST] = "test",
+    [ALU_ADD] = "add",              //
+    [ALU_OR] = "or",                //
+    [ALU_ADC] = "adc",              //
+    [ALU_SBB] = "sbb",              //
+    [ALU_AND] = "and",              //
+    [ALU_SUB] = "sub",              //
+    [ALU_XOR] = "xor",              //
+    [ALU_CMP] = "cmp",              //
+    [ALU_AND | ALU_TEST] = "test",  //
 };
 
 int64_t Alu(int w, int h, uint64_t x, uint64_t y, uint32_t *flags) {

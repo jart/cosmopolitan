@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Supplies argv[0] the GNU way.
+//	Supplies argv[0] the GNU way.
 	.initbss 300,_init_program_invocation_name
 program_invocation_name:
 	.quad	0

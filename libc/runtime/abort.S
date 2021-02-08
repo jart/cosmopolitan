@@ -23,16 +23,16 @@
 #include "libc/macros.h"
 .privileged
 
-/	Terminates program abnormally.
-/
-/	This function first tries to trigger your SIGABRT handler. If
-/	there isn't one or execution resumes, then abort() terminates
-/	the program using an escalating variety methods of increasing
-/	brutality.
-/
-/	@forcealignargpointer
-/	@asyncsignalsafe
-/	@noreturn
+//	Terminates program abnormally.
+//
+//	This function first tries to trigger your SIGABRT handler. If
+//	there isn't one or execution resumes, then abort() terminates
+//	the program using an escalating variety methods of increasing
+//	brutality.
+//
+//	@forcealignargpointer
+//	@asyncsignalsafe
+//	@noreturn
 abort:	push	%rbp
 	mov	%rsp,%rbp
 	and	$-16,%rsp

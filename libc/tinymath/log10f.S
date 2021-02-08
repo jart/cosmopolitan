@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Calculates log₁₀𝑥.
-/
-/	@param	𝑥 is double scalar in low quarter of %xmm0
-/	@return	float scalar in low quarter of %xmm0
+//	Calculates log₁₀𝑥.
+//
+//	@param	𝑥 is double scalar in low quarter of %xmm0
+//	@return	float scalar in low quarter of %xmm0
 log10f:
 	ezlea	log10l,ax
 	jmp	_f2ld2

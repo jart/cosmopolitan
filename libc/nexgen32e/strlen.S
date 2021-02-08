@@ -18,13 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Returns length of NUL-terminated string.
-/
-/	@param	rdi is non-null NUL-terminated string pointer
-/	@return	rax is number of bytes (excluding NUL)
-/	@clob	ax,dx,cx,xmm3,xmm4
-/	@note	h/t agner fog
-/	@asyncsignalsafe
+//	Returns length of NUL-terminated string.
+//
+//	@param	rdi is non-null NUL-terminated string pointer
+//	@return	rax is number of bytes (excluding NUL)
+//	@clob	ax,dx,cx,xmm3,xmm4
+//	@note	h/t agner fog
+//	@asyncsignalsafe
 strlen:	.leafprologue
 	.profilable
 	mov	%rdi,%rax

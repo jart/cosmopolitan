@@ -20,10 +20,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns tangent of 𝑥.
-/
-/	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
-/	@return	%st stores result
+//	Returns tangent of 𝑥.
+//
+//	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+//	@return	%st stores result
 tanl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

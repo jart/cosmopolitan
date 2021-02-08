@@ -20,7 +20,7 @@
 .source	__FILE__
 .rodata
 
-/	Nontrivial NUL-terminated string test vector.
+//	Nontrivial NUL-terminated string test vector.
 	.align	1
 kHyperion:
 0:	.incbin	"libc/testlib/hyperion.txt"

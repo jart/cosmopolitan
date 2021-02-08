@@ -21,6 +21,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
+#include "libc/fmt/itoa.h"
 #include "libc/log/log.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
@@ -58,7 +59,7 @@ static int ttyname_linux(int fd, char *buf, size_t size) {
   struct stat st1, st2;
   if (!isatty(fd)) return errno;
   char name[PATH_MAX];
-  snprintf(name, sizeof(name), "/proc/self/fd/%d", fd);
+  int64toarray_radix10(fd, stpcpy(name, "/proc/self/fd/"));
   ssize_t got;
   got = readlink(name, buf, size);
   if (got == -1) return errno;

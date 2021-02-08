@@ -13,10 +13,8 @@ struct DnsHeader {
   uint16_t arcount; /* additional record count */
 };
 
-int serializednsheader(uint8_t *buf, size_t size,
-                       const struct DnsHeader header);
-int deserializednsheader(struct DnsHeader *header, const uint8_t *buf,
-                         size_t size);
+int serializednsheader(uint8_t *, size_t, const struct DnsHeader);
+int deserializednsheader(struct DnsHeader *, const uint8_t *, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -20,9 +20,9 @@
 .yoink	testlib_runallbenchmarks
 .source	__FILE__
 
-/	Decentralized section for benchmark registration.
-/
-/	@see	ape/ape.lds
+//	Decentralized section for benchmark registration.
+//
+//	@see	ape/ape.lds
 	.section .piro.relo.sort.bench.1,"aw",@nobits
 	.type	__bench_start,@object
 	.type	__bench_end,@object

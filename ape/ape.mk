@@ -24,12 +24,7 @@ APELINK =				\
 	$(COMPILE)			\
 	$(LINK)				\
 	$(LINKARGS)			\
-	$(OUTPUT_OPTION) &&		\
-	$(STRIP)			\
-	-X $@ &&			\
-	$(GZ)				\
-	$(ZFLAGS)			\
-	-f $@.map
+	$(OUTPUT_OPTION)
 
 APE_FILES := $(wildcard ape/*.*)
 APE_HDRS = $(filter %.h,$(APE_FILES))

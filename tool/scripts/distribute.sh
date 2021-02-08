@@ -38,6 +38,6 @@ gcc -O -s -static -nostdlib -nostdinc         \
     -Wl,-T,ape.lds -include cosmopolitan.h \
     -o HELLO.COM.DBG HELLO.C crt.o ape.o cosmopolitan.a
 
-objcopy -SO binary HELLO.COM.DBG HELLO.COM
+objcopy -S -O binary HELLO.COM.DBG HELLO.COM
 ls -hal ./HELLO.COM
 ./HELLO.COM

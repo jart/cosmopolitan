@@ -46,5 +46,5 @@ ceilf:	.leafprologue
 	.long	0
 	.long	0
 
-/	TODO(jart):
-/	vroundss	$10,%xmm0,%xmm0,%xmm0
+//	TODO(jart):
+//	vroundss	$10,%xmm0,%xmm0,%xmm0

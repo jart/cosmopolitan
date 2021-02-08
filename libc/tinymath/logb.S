@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Returns log₂ₓ exponent part of double.
-/
-/	@param	𝑥 is double passed in %xmm0
-/	@return	result in %xmm0
+//	Returns log₂ₓ exponent part of double.
+//
+//	@param	𝑥 is double passed in %xmm0
+//	@return	result in %xmm0
 logb:	ezlea	logbl,ax
 	jmp	_d2ld2
 	.endfn	logb,globl

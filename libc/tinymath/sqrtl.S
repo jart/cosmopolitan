@@ -19,10 +19,10 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns square root of 𝑥.
-/
-/	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
-/	@return	result on FPU stack in %st
+//	Returns square root of 𝑥.
+//
+//	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+//	@return	result on FPU stack in %st
 sqrtl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

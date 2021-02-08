@@ -21,8 +21,8 @@
 .source	__FILE__
 .code16 # ∩ .code32 ∩ .code64
 
-/	Aborts or hard blocks instruction pointer.
-/	@mode	long,legacy,real
+//	Aborts or hard blocks instruction pointer.
+//	@mode	long,legacy,real
 panic:	push	%bp
 	mov	%sp,%bp
 	.softicebp

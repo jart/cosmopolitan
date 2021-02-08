@@ -15,16 +15,16 @@
 #   build/archive rcsD library.a foo.o ...
 
 MKDIR=${MKDIR:-$(command -v mkdir) -p} || exit
-# if [ -x "o/$MODE/tool/build/ar.com" ]; then
-#   set -- "o/$MODE/tool/build/ar.com" "$@"
-# else
-if [ ! -x o/build/bootstrap/ar.com ]; then
-  mkdir -p o/build/bootstrap &&
-  cp -f build/bootstrap/ar.com o/build/bootstrap/ar.com.$$ &&
-  mv -f o/build/bootstrap/ar.com.$$ o/build/bootstrap/ar.com || exit
+if [ -x "o//tool/build/ar.com" ]; then
+  set -- "o//tool/build/ar.com" "$@"
+else
+  if [ ! -x o/build/bootstrap/ar.com ]; then
+    mkdir -p o/build/bootstrap &&
+      cp -f build/bootstrap/ar.com o/build/bootstrap/ar.com.$$ &&
+      mv -f o/build/bootstrap/ar.com.$$ o/build/bootstrap/ar.com || exit
+  fi
+  set -- o/build/bootstrap/ar.com "$@"
 fi
-set -- o/build/bootstrap/ar.com "$@"
-# fi
 OUT=$3
 
 printf "$LOGFMT" "${ACTION:-ARCHIVE.a}" "$OUT" >&2

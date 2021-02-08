@@ -18,16 +18,16 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 .section .text.windows,"ax",@progbits
 
-/	Epilogues for calling functions w/ Microsoft x64 convention.
-/
-/	@param	%rax is address of windows x64 function to call
-/	@param	%rsi is ignored
-/	@param	%rdx,%rcx,%r8,%r9,stack are params (unlimited)
-/	@param	%xmm0,%xmm1,%xmm2 are double params (limited to 3)
-/	@return	is in %rax, %xmm0, or %st
-/	@note	GCC 4.8+ and Clang can avoid this indirection
-/	@note	thunk that jumps here must setup frame
-/	@note	this is so much faster than __nt2sysv()
+//	Epilogues for calling functions w/ Microsoft x64 convention.
+//
+//	@param	%rax is address of windows x64 function to call
+//	@param	%rsi is ignored
+//	@param	%rdx,%rcx,%r8,%r9,stack are params (unlimited)
+//	@param	%xmm0,%xmm1,%xmm2 are double params (limited to 3)
+//	@return	is in %rax, %xmm0, or %st
+//	@note	GCC 4.8+ and Clang can avoid this indirection
+//	@note	thunk that jumps here must setup frame
+//	@note	this is so much faster than __nt2sysv()
 __sysv2nt14:
 	pushq	72(%rbp)
 	pushq	64(%rbp)

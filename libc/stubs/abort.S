@@ -21,9 +21,9 @@
 .source	__FILE__
 .code16 # ∩ .code32 ∩ .code64
 
-/	Most basic tier of program self-termination.
-/
-/	@mode	long,legacy,real
+//	Most basic tier of program self-termination.
+//
+//	@mode	long,legacy,real
 abort:	push	%bp
 	mov	%sp,%bp
 	rlcall	panic

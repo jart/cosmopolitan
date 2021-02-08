@@ -18,15 +18,20 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/elf/def.h"
 #include "libc/elf/elf.h"
+#include "libc/str/str.h"
 
 char *GetElfStringTable(const Elf64_Ehdr *elf, size_t mapsize) {
+  char *name;
   Elf64_Half i;
   Elf64_Shdr *shdr;
-  for (i = elf->e_shnum; i > 0; --i) {
-    if (i - 1 == elf->e_shstrndx) continue;
-    shdr = GetElfSectionHeaderAddress(elf, mapsize, i - 1);
+  for (i = 0; i < elf->e_shnum; ++i) {
+    shdr = GetElfSectionHeaderAddress(elf, mapsize, i);
     if (shdr->sh_type == SHT_STRTAB) {
-      return GetElfSectionAddress(elf, mapsize, shdr);
+      name = GetElfSectionName(elf, mapsize,
+                               GetElfSectionHeaderAddress(elf, mapsize, i));
+      if (name && !strcmp(name, ".strtab")) {
+        return GetElfSectionAddress(elf, mapsize, shdr);
+      }
     }
   }
   return NULL;

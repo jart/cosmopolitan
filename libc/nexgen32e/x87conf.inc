@@ -17,12 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 
-/	Reconfigures transcendental math coprocessor.
-/
-/	@param	\conf can be absent to restore default
-/	@clob	x87 status and control words only
-/	@see	Intel Manual V.1 §8.1.5
-/	@mode	long,legacy
+//	Reconfigures transcendental math coprocessor.
+//
+//	@param	\conf can be absent to restore default
+//	@clob	x87 status and control words only
+//	@see	Intel Manual V.1 §8.1.5
+//	@mode	long,legacy
 	.macro	x87conf	conf=$0x33f
 	push	%ax
 	pushw	\conf

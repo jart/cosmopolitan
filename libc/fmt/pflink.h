@@ -17,22 +17,19 @@
  * format strings are constexprs that only contain directives.
  */
 
-#define PFLINK(FMT)                                                \
-  ({                                                               \
-    if (___PFLINK(FMT, strpbrk, "bxdinupo")) STATIC_YOINK("ntoa"); \
-    if (___PFLINK(FMT, strpbrk, "fFgGaA")) STATIC_YOINK("ftoa");   \
-    if (___PFLINK(FMT, strpbrk, "cmrqs")) {                        \
-      STATIC_YOINK("stoa");                                        \
-      if (___PFLINK(FMT, strchr, '#')) STATIC_YOINK("kCp437");     \
-      if (___PFLINK(FMT, strstr, "%m")) STATIC_YOINK("strerror");  \
-      if (!IsTiny() && (___PFLINK(FMT, strstr, "%*") ||            \
-                        ___PFLINK(FMT, strpbrk, "0123456789"))) {  \
-        STATIC_YOINK("strnwidth");                                 \
-        STATIC_YOINK("strnwidth16");                               \
-        STATIC_YOINK("wcsnwidth");                                 \
-      }                                                            \
-    }                                                              \
-    FMT;                                                           \
+#define PFLINK(FMT)                                               \
+  ({                                                              \
+    if (___PFLINK(FMT, strpbrk, "cmrqs")) {                       \
+      if (___PFLINK(FMT, strchr, '#')) STATIC_YOINK("kCp437");    \
+      if (___PFLINK(FMT, strstr, "%m")) STATIC_YOINK("strerror"); \
+      if (!IsTiny() && (___PFLINK(FMT, strstr, "%*") ||           \
+                        ___PFLINK(FMT, strpbrk, "0123456789"))) { \
+        STATIC_YOINK("strnwidth");                                \
+        STATIC_YOINK("strnwidth16");                              \
+        STATIC_YOINK("wcsnwidth");                                \
+      }                                                           \
+    }                                                             \
+    FMT;                                                          \
   })
 
 #define SFLINK(FMT)                    \
@@ -40,7 +37,7 @@
     if (___PFLINK(FMT, strchr, 'm')) { \
       STATIC_YOINK("malloc");          \
       STATIC_YOINK("calloc");          \
-      STATIC_YOINK("free_s");          \
+      STATIC_YOINK("free");            \
       STATIC_YOINK("__grow");          \
     }                                  \
     FMT;                               \
@@ -70,8 +67,6 @@
 #define SFLINK(FMT) FMT
 #ifdef __GNUC__
 __asm__(".section .yoink\n\t"
-        "nopl\tntoa(%rip)\n\t"
-        "nopl\tftoa(%rip)\n\t"
         "nopl\tkCp437(%rip)\n\t"
         "nopl\tstrerror(%rip)\n\t"
         "nopl\tstrnwidth(%rip)\n\t"
@@ -79,14 +74,11 @@ __asm__(".section .yoink\n\t"
         "nopl\twcsnwidth(%rip)\n\t"
         "nopl\tmalloc(%rip)\n\t"
         "nopl\tcalloc(%rip)\n\t"
-        "nopl\tfree_s(%rip)\n\t"
         "nopl\t__grow(%rip)\n\t"
         ".previous");
 #else
 static long __pflink(long x) {
   x |= kCp437[0];
-  x |= ntoa(0, 0, 0, 0, 0, 0, 0, 0, 0);
-  x |= ftoa(0, 0, 0, 0, 0, 0);
   x |= strnwidth(0, 0, 0);
   x |= strnwidth16(0, 0, 0);
   x |= wcsnwidth(0, 0, 0);
@@ -94,7 +86,6 @@ static long __pflink(long x) {
   x |= __grow(0, 0, 0, 0);
   x |= (intptr_t)strerror(0);
   x |= (intptr_t)calloc(0, 0);
-  free_s(0);
   return x;
 }
 #endif

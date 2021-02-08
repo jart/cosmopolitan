@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall pdgetpid 0xffffff208fffffff globl
+.scall pdgetpid,0xffffff208fffffff,globl

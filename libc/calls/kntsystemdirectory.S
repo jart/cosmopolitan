@@ -22,9 +22,9 @@
 
 #define BYTES 64
 
-/	RII constant holding 'C:/WINDOWS/SYSTEM32' directory.
-/
-/	@note	guarantees trailing slash if non-empty
+//	RII constant holding 'C:/WINDOWS/SYSTEM32' directory.
+//
+//	@note	guarantees trailing slash if non-empty
 	.initbss 300,_init_kNtSystemDirectory
 kNtSystemDirectory:
 	.zero	BYTES

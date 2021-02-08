@@ -28,7 +28,7 @@
 	.hidden	e820map
 	.type	e820map,@object
 	.size	e820map,XLM_E820_SIZE
-	e820map = ape.xlm + XLM_E820
+	e820map = ape_xlm + XLM_E820
 
 	.globl	e820map_xlm
 	.hidden	e820map_xlm

@@ -19,15 +19,15 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Returns arc tangent of 𝑥.
-/
-/	                  1  3   1  5   1  7   1  9    1  11
-/	    atan(𝑥) = 𝑥 - - 𝑥  + - 𝑥  - - 𝑥  + - 𝑥  - -- 𝑥   ...
-/	                  3      5      7      9      11
-/
-/	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
-/	@return	result of computation on FPU stack in %st
-/	@define	atan(𝑥) = Σₙ₌₀₋∞ 2²ⁿ(𝑛!)²/(𝟸𝑛+𝟷)!(𝑥²ⁿ⁺¹/(𝑥²+𝟷)ⁿ⁺¹)
+//	Returns arc tangent of 𝑥.
+//
+//	                  1  3   1  5   1  7   1  9    1  11
+//	    atan(𝑥) = 𝑥 - - 𝑥  + - 𝑥  - - 𝑥  + - 𝑥  - -- 𝑥   ...
+//	                  3      5      7      9      11
+//
+//	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+//	@return	result of computation on FPU stack in %st
+//	@define	atan(𝑥) = Σₙ₌₀₋∞ 2²ⁿ(𝑛!)²/(𝟸𝑛+𝟷)!(𝑥²ⁿ⁺¹/(𝑥²+𝟷)ⁿ⁺¹)
 atanl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

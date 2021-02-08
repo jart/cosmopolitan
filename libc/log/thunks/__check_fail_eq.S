@@ -20,7 +20,7 @@
 .text.unlikely
 .source	__FILE__
 
-/	Code-size saving thunk for CHECK_EQ() in NDEBUG mode.
+//	Code-size saving thunk for CHECK_EQ() in NDEBUG mode.
 __check_fail_eq:
 	loadstr	"==",dx
 	jmp	__check_fail_ndebug

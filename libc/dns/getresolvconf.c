@@ -55,7 +55,7 @@ const struct ResolvConf *getresolvconf(void) {
       rc = getntnameservers(g_resolvconf);
     }
     if (rc == -1 && !IsTiny()) {
-      fprintf(stderr, "%s: %m\n", "nameserver discovery failed");
+      /* TODO(jart): Elevate robustness. */
     }
   }
   return g_resolvconf;

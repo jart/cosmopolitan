@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 .source	__FILE__
 
-/	Did you call a virtual method from a destructor?
+//	Did you call a virtual method from a destructor?
 __cxa_pure_virtual:
 	push	%rbp
 	mov	%rsp,%rbp

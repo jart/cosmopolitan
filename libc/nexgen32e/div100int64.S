@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-/	Divides 64-bit signed integer by 100.
-/
-/	@param	rdi is number to divide
-/	@return	rax has quotient
+//	Divides 64-bit signed integer by 100.
+//
+//	@param	rdi is number to divide
+//	@return	rax has quotient
 div100int64:
 	mov	%rdi,%rax
 	movabs	$-6640827866535438581,%rdx

@@ -20,10 +20,10 @@
 #include "libc/notice.inc"
 .source	__FILE__
 
-/	Equivalent to memalign(4096, n).
-/
-/	@param	rdi is number of bytes needed
-/	@return	rax is memory address, or NULL w/ errno
-/	@see	dlvalloc()
+//	Equivalent to memalign(4096, n).
+//
+//	@param	rdi is number of bytes needed
+//	@return	rax is memory address, or NULL w/ errno
+//	@see	dlvalloc()
 valloc:	jmp	*hook_valloc(%rip)
 	.endfn	valloc,globl

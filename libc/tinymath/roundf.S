@@ -21,10 +21,10 @@
 #include "libc/nexgen32e/x86feature.h"
 .source	__FILE__
 
-/	Rounds to nearest integer, away from zero.
-/
-/	@param	𝑥 is float scalar in low quarter of %xmm0
-/	@return	float scalar in low quarter of %xmm0
+//	Rounds to nearest integer, away from zero.
+//
+//	@param	𝑥 is float scalar in low quarter of %xmm0
+//	@return	float scalar in low quarter of %xmm0
 roundf:
 #if !X86_NEED(SSE4_2)
 	testb	X86_HAVE(SSE4_2)+kCpuids(%rip)
