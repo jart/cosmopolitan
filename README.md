@@ -22,8 +22,8 @@ If you're doing your development work on Linux or BSD then you need just
 five files to get started:
 
 ```sh
-wget https://justine.lol/cosmopolitan/cosmopolitan-amalgamation-0.1.2.zip
-unzip cosmopolitan-amalgamated-0.1.2.zip
+wget https://justine.lol/cosmopolitan/cosmopolitan-amalgamation-0.2.zip
+unzip cosmopolitan-amalgamated-0.2.zip
 echo 'main() { printf("hello world\n"); }' >hello.c
 gcc -g -O -static -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone \
   -o hello.com.dbg hello.c -fuse-ld=bfd -Wl,-T,ape.lds \
@@ -41,9 +41,9 @@ universal binaries possible.
 Cosmopolitan can also be compiled from source on any Linux distro.
 
 ```sh
-wget https://justine.lol/cosmopolitan/cosmopolitan-0.1.2.tar.gz
-tar xf cosmopolitan-0.1.2.tar.gz  # see releases page
-cd cosmopolitan-0.1.2
+wget https://justine.lol/cosmopolitan/cosmopolitan-0.2.tar.gz
+tar xf cosmopolitan-0.2.tar.gz  # see releases page
+cd cosmopolitan-0.2
 make -j16
 o//examples/hello.com
 find o -name \*.com | xargs ls -rShal | less
