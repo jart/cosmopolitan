@@ -201,21 +201,19 @@ SECTIONS {
 
     /* Real Mode */
     KEEP(*(.head))
-    . += 1;
 
     /* Executable & Linkable Format */
-    . = ALIGN(. != 0 ? __SIZEOF_POINTER__ : 1);
+    . = ALIGN(__SIZEOF_POINTER__);
+    HIDDEN(ape_phdrs = .);
     KEEP(*(.elf.phdrs))
     HIDDEN(ape_phdrs_end = .);
-    . += 1;
 
     /* OpenBSD */
-    . = ALIGN(. != 0 ? __SIZEOF_POINTER__ : 1);
+    . = ALIGN(__SIZEOF_POINTER__);
     HIDDEN(ape_note = .);
     KEEP(*(.note.openbsd.ident))
     KEEP(*(.note.netbsd.ident))
     HIDDEN(ape_note_end = .);
-    . += 1;
 
     /* Portable Executable */
     KEEP(*(.pe.header))

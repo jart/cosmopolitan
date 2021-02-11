@@ -199,7 +199,6 @@ long DisFindSymByName(struct Dis *d, const char *s) {
 }
 
 void DisLoadElf(struct Dis *d, struct Elf *elf) {
-  LOGF("DisLoadElf");
   if (!elf || !elf->ehdr) return;
   DisLoadElfLoads(d, elf);
   DisLoadElfSyms(d, elf);

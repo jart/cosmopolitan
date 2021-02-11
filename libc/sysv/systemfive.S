@@ -104,7 +104,7 @@ __systemfive:
 
 	.privileged
 .Lanchorpoint:
-#if SupportsLinux()
+#if SupportsLinux() || SupportsMetal()
 systemfive_linux:
 	and	$0xfff,%eax
 	cmp	$0xfff,%eax
@@ -137,7 +137,7 @@ systemfive_enosys:
 systemfive_netbsd:
 	shr	$4*13,%rax
 	jmp	systemfive_bsdscrub
-	.endfn	systemfive_openbsd,globl,hidden
+	.endfn	systemfive_netbsd,globl,hidden
 #endif
 #if SupportsOpenbsd()
 systemfive_openbsd:
@@ -222,7 +222,7 @@ systemfive_xnu:
 	lea	2(%eax),%eax
 	jnz	0b
 #endif
-#if SupportsLinux()
+#if SupportsLinux() || SupportsMetal()
 _init_systemfive_linux:
 	pushb	systemfive_linux-.Lanchorpoint
 	push	$LINUX
@@ -403,7 +403,7 @@ syscon_end:
 	.type	syscon_end,@object
 	.globl	syscon_start
 	.globl	syscon_end
-#if SupportsLinux()
+#if SupportsLinux() || SupportsMetal()
 	.section .sort.rodata.syscon.linux.1,"a",@progbits
 	.align	1
 syscon_linux:/*

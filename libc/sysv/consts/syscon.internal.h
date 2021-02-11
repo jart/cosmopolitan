@@ -27,7 +27,7 @@
 	.endobj	\name,globl
 	.previous
 
-#if SupportsLinux()
+#if SupportsLinux() || SupportsMetal()
 	.section .sort.rodata.syscon.linux.2.\group\().\name,"a",@progbits
 	.sleb128 \linux
 	.previous

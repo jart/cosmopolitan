@@ -27,7 +27,7 @@
 #include "libc/runtime/runtime.h"
 
 textwindows int sys_fstatat_nt(int dirfd, const char *path, struct stat *st,
-                           uint32_t flags) {
+                               uint32_t flags) {
   int rc;
   int64_t fh;
   uint16_t path16[PATH_MAX];

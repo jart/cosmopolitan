@@ -47,8 +47,10 @@ vfork:
 #endif
 	syscall
 	push	%rsi			# note it happens twice in same page
+#if SupportsLinux()
 	cmp	$-4095,%eax
 	jae	systemfive_error
+#endif
 0:	ezlea	__vforked,di
 	test	%eax,%eax
 	jz	1f

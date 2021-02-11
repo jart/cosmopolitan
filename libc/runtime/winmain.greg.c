@@ -35,6 +35,7 @@
 #include "libc/nt/pedef.internal.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/struct/teb.h"
 #include "libc/runtime/directmap.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.h"
@@ -64,11 +65,11 @@ static noasan textwindows void MakeLongDoubleLongAgain(void) {
   asm volatile("fldcw\t%0" : /* no outputs */ : "m"(x87cw));
 }
 
-static noasan textwindows void NormalizeCmdExe(void) {
+static noasan textwindows void NormalizeCmdExe(int version) {
   uint32_t mode;
   int64_t handle, hstdin, hstdout, hstderr;
   if ((int)weakaddr("v_ntsubsystem") == kNtImageSubsystemWindowsCui &&
-      NtGetVersion() >= kNtVersionWindows10) {
+      version >= 10) {
     hstdin = GetStdHandle(pushpop(kNtStdInputHandle));
     hstdout = GetStdHandle(pushpop(kNtStdOutputHandle));
     hstderr = GetStdHandle(pushpop(kNtStdErrorHandle));
@@ -86,17 +87,16 @@ static noasan textwindows void NormalizeCmdExe(void) {
       SetTrueColor();
       SetConsoleOutputCP(kNtCpUtf8);
       GetConsoleMode(handle, &mode);
-      SetConsoleMode(handle, mode | kNtEnableProcessedOutput |
-                                 kNtEnableWrapAtEolOutput |
-                                 (NtGetVersion() >= kNtVersionWindows10
-                                      ? kNtEnableVirtualTerminalProcessing
-                                      : 0));
+      SetConsoleMode(
+          handle, mode | kNtEnableProcessedOutput | kNtEnableWrapAtEolOutput |
+                      (version >= 10 ? kNtEnableVirtualTerminalProcessing : 0));
     }
   }
 }
 
 static noasan textwindows wontreturn void WinMainNew(void) {
   int64_t h;
+  int version;
   size_t size;
   int i, count;
   uint64_t addr;
@@ -105,13 +105,15 @@ static noasan textwindows wontreturn void WinMainNew(void) {
   const char16_t *env16;
   extern char os asm("__hostos");
   os = WINDOWS; /* madness https://news.ycombinator.com/item?id=21019722 */
-  NormalizeCmdExe();
-  addr = NtGetVersion() < kNtVersionWindows10 ? 0xff00000 : 0x777000000000;
+  version = NtGetPeb()->OSMajorVersion;
+  NormalizeCmdExe(version);
+  addr = version < 10 ? 0xff00000 : 0x777000000000;
   size = ROUNDUP(STACKSIZE + sizeof(struct WinArgs), FRAMESIZE);
-  _mmi.p[0].h =
-      sys_mmap_nt((char *)addr, size, PROT_READ | PROT_WRITE | PROT_EXEC,
-                  MAP_PRIVATE, -1, 0)
-          .maphandle;
+  MapViewOfFileExNuma((_mmi.p[0].h = CreateFileMappingNuma(
+                           -1, &kNtIsInheritable, kNtPageExecuteReadwrite,
+                           size >> 32, size, NULL, kNtNumaNoPreferredNode)),
+                      kNtFileMapWrite | kNtFileMapExecute, 0, 0, size,
+                      (void *)addr, kNtNumaNoPreferredNode);
   _mmi.p[0].x = addr >> 16;
   _mmi.p[0].y = (addr >> 16) + ((size >> 16) - 1);
   _mmi.p[0].prot = PROT_READ | PROT_WRITE | PROT_EXEC;

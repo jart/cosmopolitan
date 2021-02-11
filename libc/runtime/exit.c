@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,29 +16,31 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.h"
-.text.exit
-.source	__FILE__
+#include "libc/bits/weaken.h"
+#include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
 
-//	Calls linker registered finalization functions.
-//	@note	functions are called in reverse order
-_destruct:
-	push	%rbp
-	mov	%rsp,%rbp
-	ezlea	__fini_array_start,cx
-	.weak	__fini_array_start
-	ezlea	__fini_array_end,ax
-	.weak	__fini_array_end
-	cmp	%rax,%rcx
-	je	2f
-1:	sub	$8,%rax
-	push	%rax
-	push	%rcx
-	call	*(%rax)
-	pop	%rcx
-	pop	%rax
-	cmp	%rax,%rcx
-	jne	1b
-2:	pop	%rbp
-	ret
-	.endfn	_destruct,globl
+extern const uintptr_t __fini_array_start[];
+extern const uintptr_t __fini_array_end[];
+
+/**
+ * Exits process with grace.
+ *
+ * This calls functions registered by atexit() before terminating
+ * the current process, and any associated threads. It also calls
+ * all the legacy linker registered destructors in reeverse order
+ *
+ * @param exitcode is masked with 255
+ * @see _Exit()
+ * @noreturn
+ */
+wontreturn void exit(int exitcode) {
+  const uintptr_t *p;
+  if (weaken(__cxa_finalize)) {
+    weaken(__cxa_finalize)(NULL);
+  }
+  for (p = *weaken(__fini_array_end); p-- > *weaken(__fini_array_start);) {
+    ((void (*)(void))p)();
+  }
+  _Exit(exitcode);
+}

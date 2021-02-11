@@ -301,13 +301,14 @@ static void printelfrelocations(void) {
 }
 
 int main(int argc, char *argv[]) {
+  int fd;
   showcrashreports();
   if (argc != 2) {
     fprintf(stderr, "usage: %s FILE\n", argv[0]);
     return 1;
   }
   path = argv[1];
-  int64_t fd = open(path, O_RDONLY);
+  fd = open(path, O_RDONLY);
   if (fd == -1) {
     if (errno == ENOENT) {
       fprintf(stderr, "error: %`s not found\n", path);

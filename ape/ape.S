@@ -117,11 +117,7 @@ rlstr:	.endobj	rlstr,globl,hidden		# ←for gdb readibility
 //
 //	@param	dl is drive number
 //	@noreturn
-ape_mz:	.ascii	"MZ"			# Mark 'Zibo' Joseph Zbikowski
-	jno	2f			# MZ: bytes on last page
-	jo	2f			# MZ: 512-byte pages in file
-	.ascii	"='"			# MZ: reloc table entry count
-	.ascii	"\n\0"			# MZ: data segment file offset / 16
+ape_mz:	.asciz	"MZqFpD='\n"		# Mark 'Zibo' Joseph Zbikowski
 	.short	0x1000			# MZ: lowers upper bound load / 16
 	.short	0xf800			# MZ: roll greed on bss
 	.short	0			# MZ: lower bound on stack segment
@@ -174,6 +170,8 @@ ape_mz:	.ascii	"MZ"			# Mark 'Zibo' Joseph Zbikowski
 
 #endif /* SupportsWindows() || SupportsXnu() */
 
+#if SupportsMetal()
+
 //	Disk Operating System Stub
 //
 //	@param	dl is drive number
@@ -190,7 +188,7 @@ stub:	mov	$0x40,%dl		# *literally* dos
 3:	.byte	0xbd,0,0		# a.k.a. mov imm,%bp
 	jmp	pc			# real mode, is real
 	jmp	_start			# surprise it's unix
-//	.endfn	stub
+	.endfn	stub
 
 /*─────────────────────────────────────────────────────────────────────────────╗
 │ αcτµαlly pδrταblε εxεcµταblε § ibm personal computer                         │
@@ -224,7 +222,6 @@ pc:	cld
 	xor	%cx,%cx
 	mov	%cx,%es
 	rlstack	%di,%cx
-#if SupportsMetal()
 	push	%cs				# memcpy() [relocate this page]
 	pop	%ds
 	call	1f
@@ -472,6 +469,8 @@ ape_disk:
 ╚────────────────────────────────────────────────────────────────────────────│─╝
 	the bourne executable & linkable format */
 
+#if SupportsSystemv()
+
 #if SupportsWindows() || SupportsXnu()
 apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	"o=\"$(command -v \"$0\")\"\n"
@@ -530,10 +529,6 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 #endif /* SupportsWindows() || SupportsXnu() */
 
 	.section .elf.phdrs,"a",@progbits
-	.align	__SIZEOF_POINTER__
-	.type	ape_phdrs,@object
-	.globl	ape_phdrs
-ape_phdrs:
 	.long	PT_LOAD				# text segment
 	.long	PF_R|PF_X
 	.stub	ape_rom_offset,quad
@@ -542,7 +537,6 @@ ape_phdrs:
 	.stub	ape_rom_filesz,quad
 	.stub	ape_rom_memsz,quad
 	.stub	ape_rom_align,quad
-	.align	__SIZEOF_POINTER__
 	.long	PT_LOAD				# data segment
 	.long	PF_R|PF_W
 	.stub	ape_ram_offset,quad
@@ -554,7 +548,6 @@ ape_phdrs:
 #if SupportsLinux()
 //	Linux ignores mprotect() and returns 0 without this lool
 //	It has nothing to do with the stack, which is still exec
-	.align	__SIZEOF_POINTER__
 	.long	PT_GNU_STACK			# p_type
 	.long	PF_R|PF_W			# p_flags
 	.quad	0				# p_offset
@@ -565,7 +558,6 @@ ape_phdrs:
 	.quad	16				# p_align
 #endif
 #if SupportsOpenbsd() || SupportsNetbsd()
-	.align	__SIZEOF_POINTER__
 	.long	PT_NOTE				# notes
 	.long	PF_R
 	.stub	ape_note_offset,quad
@@ -604,6 +596,8 @@ netbsd.ident:
 	.type	netbsd.ident,@object
 	.previous
 #endif /* SupportsNetbsd() */
+
+#endif /* SupportsSystemv() */
 
 /*	                                      ▄▄███▄
 	                                  ▄▄████████▄
@@ -1565,6 +1559,7 @@ metal:
 	.type	ape_note,@object
 	.type	ape_note_end,@object
 	.type	ape_note_vaddr,@object
+	.type	ape_phdrs,@object
 	.type	ape_pe_sections,@object
 	.type	ape_pe_sections_end,@object
 	.type	ape_text_nops,@object

@@ -20,7 +20,6 @@
 #include "libc/runtime/internal.h"
 #include "libc/macros.h"
 .privileged
-.source	__FILE__
 
 //	Terminates process, ignoring destructors and atexit() handlers.
 //
@@ -34,17 +33,13 @@ _Exit:	push	%rbp
 	testb	IsWindows()
 	jz	1f
 	sub	$32,%rsp
-	movzbl	%dil,%ecx		# %ERRORLEVEL% is limitless
-4:	call	*__imp_ExitProcess(%rip)
-	jmp	4b
-0:	int3				# @see setjmp() in WinMain()
+	movzbl	%dil,%ecx			# %ERRORLEVEL% is limitless
+	call	*__imp_ExitProcess(%rip)
 #endif
 1:	mov	__NR_exit_group(%rip),%eax
 	syscall
-	cli
-	lidt	3f
-2:	hlt
-	jmp	2b
-3:	.quad	0
+#if SupportsMetal()
+	call	triplf
+#endif
 	.endfn	_Exit,globl,protected
 	.hidden	__NR_exit_group

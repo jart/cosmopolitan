@@ -8,9 +8,11 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/calls/calls.h"
-#include "libc/str/str.h"
+#include "libc/calls/struct/stat.h"
 
-int main() {
-  write(1, "hello world\n", 12);
-  return 0;
+int main(int argc, char *argv[]) {
+  struct stat st;
+  st.st_size = -1;
+  stat(argv[1], &st);
+  return st.st_size;
 }

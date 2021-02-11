@@ -30,9 +30,11 @@ void LoadDebugSymbols(struct Elf *elf) {
   int fd;
   void *elfmap;
   struct stat st;
+  const char *path;
   if (elf->ehdr) return;
   DCHECK_NOTNULL(elf->prog);
-  if ((fd = open(gc(xstrcat(elf->prog, ".dbg")), O_RDONLY)) != -1) {
+  if ((fd = open(gc(xstrcat(elf->prog, ".dbg")), O_RDONLY)) != -1 ||
+      (fd = open(elf->prog, O_RDONLY))) {
     if (fstat(fd, &st) != -1 &&
         (elfmap = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0)) !=
             MAP_FAILED) {

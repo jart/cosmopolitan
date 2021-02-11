@@ -197,6 +197,7 @@ DEFAULT_LDFLAGS =							\
 	-static								\
 	-nostdlib							\
 	-m elf_x86_64							\
+	--gc-sections							\
 	--build-id=none							\
 	--no-dynamic-linker						\
 	-z max-page-size=0x1000
