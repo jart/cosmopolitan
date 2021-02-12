@@ -10,6 +10,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/log/check.h"
+#include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"
 #include "libc/sysv/consts/o.h"
@@ -39,6 +40,7 @@ int main(int argc, char *argv[]) {
   struct stat st;
   const char *code;
   duk_context *ctx;
+  showcrashreports();
   ctx = duk_create_heap_default();
   duk_push_c_function(ctx, NativePrint, DUK_VARARGS);
   duk_put_global_string(ctx, "NativePrint");
@@ -47,7 +49,7 @@ int main(int argc, char *argv[]) {
 
   CHECK_NE(-1, (fd = open("zip:examples/hello.js", O_RDONLY)));
   CHECK_NE(-1, fstat(fd, &st));
-  CHECK_NOTNULL((code = gc(malloc(st.st_size))));
+  CHECK_NOTNULL((code = gc(calloc(1, st.st_size + 1))));
   CHECK_EQ(st.st_size, read(fd, code, st.st_size));
   CHECK_NE(-1, close(fd));
 

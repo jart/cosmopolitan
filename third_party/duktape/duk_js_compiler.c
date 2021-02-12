@@ -1278,8 +1278,9 @@ DUK_LOCAL void duk__convert_to_func_template(duk_compiler_ctx *comp_ctx) {
   (1u << 12) /* slot B is a target (default: source) */
 #define DUK__EMIT_FLAG_C_IS_TARGET \
   (1u << 13) /* slot C is a target (default: source) */
-#define DUK__EMIT_FLAG_BC_REGCONST (1u << 14) /* slots B and C are reg/const \
-                                               */
+#define DUK__EMIT_FLAG_BC_REGCONST          \
+  (1u << 14) /* slots B and C are reg/const \
+              */
 #define DUK__EMIT_FLAG_RESERVE_JUMPSLOT                                     \
   (1u << 15) /* reserve a jumpslot after instr before target spilling, used \
                for NEXTENUM */
