@@ -84,14 +84,13 @@ int main(int argc, char *argv[]) {
     got = rc;
     CHECK(startswith(buf, "HTTP/1.1 200"), "%`'.*s", got, buf);
     CHECK_NOTNULL((crlfcrlf = memmem(buf, got, "\r\n\r\n", 4)));
-    need =
-        strtol((char *)firstnonnull(
-                   firstnonnull(
-                       memmem(buf, crlfcrlf - buf, "\r\nContent-Length: ", 18),
-                       memmem(buf, crlfcrlf - buf, "\r\ncontent-length: ", 18)),
-                   "\r\nContent-Length: -1") +
-                   18,
-               NULL, 10);
+    need = strtol((char *)firstnonnull(
+                      memmem(buf, crlfcrlf - buf, "\r\nContent-Length: ", 18),
+                      firstnonnull(memmem(buf, crlfcrlf - buf,
+                                          "\r\ncontent-length: ", 18),
+                                   "\r\nContent-Length: -1")) +
+                      18,
+                  NULL, 10);
     got = MIN(got - (crlfcrlf + 4 - buf), need);
     CHECK_EQ(got, write(1, crlfcrlf + 4, got));
     for (toto = got; toto < need; toto += got) {
@@ -100,7 +99,7 @@ int main(int argc, char *argv[]) {
       got = MIN(got, need - toto);
       CHECK_EQ(got, write(1, buf, got));
     }
-    LOGIFNEG1(close(sock));
+    close(sock);
     break;
   }
   return 0;
