@@ -1890,21 +1890,6 @@ syscon	misc	ILL_ILLOPN				2			4			2			2			2			0
 syscon	misc	ILL_ILLTRP				4			2			4			4			4			0
 syscon	misc	ILL_PRVOPC				5			3			5			5			5			0
 
-syscon	misc	LC_CTYPE				0			2			2			2			2			0			# bsd consensus
-syscon	misc	LC_NUMERIC				1			4			4			4			4			0			# bsd consensus
-syscon	misc	LC_CTYPE_MASK				1			0			2			4			4			0
-syscon	misc	LC_TIME					2			5			5			5			5			0			# bsd consensus
-syscon	misc	LC_NUMERIC_MASK				2			0			8			0x10			0x10			0
-syscon	misc	LC_COLLATE				3			1			1			1			1			0			# bsd consensus
-syscon	misc	LC_MONETARY				4			3			3			3			3			0			# bsd consensus
-syscon	misc	LC_TIME_MASK				4			0			0x10			0x20			0x20			0
-syscon	misc	LC_MESSAGES				5			6			6			6			6			0			# bsd consensus
-syscon	misc	LC_ALL					6			0			0			0			0			0
-syscon	misc	LC_COLLATE_MASK				8			0			1			2			2			0
-syscon	misc	LC_MONETARY_MASK			0x10			0			4			8			8			0
-syscon	misc	LC_MESSAGES_MASK			0x20			0			0x20			0x40			0x40			0
-syscon	misc	LC_ALL_MASK				0x1fbf			0			63			126			126			0
-
 syscon	lock	LOCK_UNLOCK_CACHE			54			0			0			0			0			0			# wut
 
 syscon	misc	ARPHRD_ETHER				1			1			1			1			1			0			# unix consensus
