@@ -31,14 +31,21 @@
 #include "tool/decode/lib/socknames.h"
 
 void lookup(const char *name) {
+  int rc;
   struct addrinfo hints = (struct addrinfo){.ai_family = AF_INET,
                                             .ai_socktype = SOCK_STREAM,
                                             .ai_protocol = IPPROTO_TCP,
                                             .ai_flags = AI_NUMERICSERV};
   struct addrinfo *addrs = NULL;
-  if (getaddrinfo(name, "80", &hints, &addrs) == -1) {
-    perror("getaddrinfo");
-    exit(1);
+  switch ((rc = getaddrinfo(name, "80", &hints, &addrs))) {
+    case EAI_SUCCESS:
+      break;
+    case EAI_SYSTEM:
+      perror("getaddrinfo");
+      exit(1);
+    default:
+      fprintf(stderr, "getaddrinfo failed: %d (EAI_%s)\n", rc, eai2str(rc));
+      exit(1);
   }
   if (addrs) {
     for (struct addrinfo *addr = addrs; addr; addr = addr->ai_next) {

@@ -1,10 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_DNS_RESOLVCONF_H_
 #define COSMOPOLITAN_LIBC_DNS_RESOLVCONF_H_
+#include "libc/sock/sock.h"
+#include "libc/stdio/stdio.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-struct FILE;
-struct sockaddr_in;
 
 struct Nameservers {
   size_t i, n;

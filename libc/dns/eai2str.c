@@ -17,30 +17,51 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/dns.h"
-#include "libc/sysv/consts/eai.h"
 
 /**
  * Turns getaddrinfo() return code into string.
  */
 const char *eai2str(int code) {
-  if (code == EAI_ADDRFAMILY) return "ADDRFAMILY";
-  if (code == EAI_AGAIN) return "AGAIN";
-  if (code == EAI_ALLDONE) return "ALLDONE";
-  if (code == EAI_BADFLAGS) return "BADFLAGS";
-  if (code == EAI_CANCELED) return "CANCELED";
-  if (code == EAI_FAIL) return "FAIL";
-  if (code == EAI_FAMILY) return "FAMILY";
-  if (code == EAI_IDN_ENCODE) return "ENCODE";
-  if (code == EAI_INPROGRESS) return "INPROGRESS";
-  if (code == EAI_INTR) return "INTR";
-  if (code == EAI_MEMORY) return "MEMORY";
-  if (code == EAI_NODATA) return "NODATA";
-  if (code == EAI_NONAME) return "NONAME";
-  if (code == EAI_NOTCANCELED) return "NOTCANCELED";
-  if (code == EAI_OVERFLOW) return "OVERFLOW";
-  if (code == EAI_SERVICE) return "SERVICE";
-  if (code == EAI_SOCKTYPE) return "SOCKTYPE";
-  if (code == EAI_SUCCESS) return "SUCCESS";
-  if (code == EAI_SYSTEM) return "SYSTEM";
-  return "???";
+  switch (code) {
+    case EAI_ADDRFAMILY:
+      return "ADDRFAMILY";
+    case EAI_AGAIN:
+      return "AGAIN";
+    case EAI_ALLDONE:
+      return "ALLDONE";
+    case EAI_BADFLAGS:
+      return "BADFLAGS";
+    case EAI_CANCELED:
+      return "CANCELED";
+    case EAI_FAIL:
+      return "FAIL";
+    case EAI_FAMILY:
+      return "FAMILY";
+    case EAI_IDN_ENCODE:
+      return "ENCODE";
+    case EAI_INPROGRESS:
+      return "INPROGRESS";
+    case EAI_INTR:
+      return "INTR";
+    case EAI_MEMORY:
+      return "MEMORY";
+    case EAI_NODATA:
+      return "NODATA";
+    case EAI_NONAME:
+      return "NONAME";
+    case EAI_NOTCANCELED:
+      return "NOTCANCELED";
+    case EAI_OVERFLOW:
+      return "OVERFLOW";
+    case EAI_SERVICE:
+      return "SERVICE";
+    case EAI_SOCKTYPE:
+      return "SOCKTYPE";
+    case EAI_SUCCESS:
+      return "SUCCESS";
+    case EAI_SYSTEM:
+      return "SYSTEM";
+    default:
+      return "???";
+  }
 }

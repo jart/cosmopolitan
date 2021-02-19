@@ -1833,29 +1833,6 @@ syscon	gai	AI_NUMERICSERV				0x0400			0x1000			8			0x10			0x10			8
 syscon	gai	AI_ALL					0x10			0x0100			0x0100			0			0			0x0100
 syscon	gai	AI_V4MAPPED				8			0x0800			0x0800			0			0			0x0800
 
-#	getaddrinfo() return codes
-#
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
-syscon	eai	EAI_SUCCESS				0			0			0			0			0			0
-syscon	eai	EAI_BADFLAGS				-1			3			3			-1			-1			0x2726
-syscon	eai	EAI_NONAME				-2			8			8			-2			-2			0x2af9
-syscon	eai	EAI_AGAIN				-3			2			2			-3			-3			0x2afa
-syscon	eai	EAI_FAIL				-4			4			4			-4			-4			0x2afb
-syscon	eai	EAI_FAMILY				-6			5			5			-6			-6			0x273f
-syscon	eai	EAI_MEMORY				-10			6			6			-10			-10			0x2747
-syscon	eai	EAI_SERVICE				-8			9			9			-8			-8			0x277d
-syscon	eai	EAI_SOCKTYPE				-7			10			10			-7			-7			0x273c
-syscon	eai	EAI_NODATA				-5			7			0			-5			-5			0x2af9
-syscon	eai	EAI_OVERFLOW				-12			14			14			-14			-14			-12
-syscon	eai	EAI_SYSTEM				-11			11			11			-11			-11			-11
-syscon	eai	EAI_ADDRFAMILY				-9			1			0			-9			-9			-9
-syscon	eai	EAI_ALLDONE				-103			-103			-103			-103			-103			-103			# copying from linux
-syscon	eai	EAI_CANCELED				-101			-101			-101			-101			-101			-101			# copying from linux
-syscon	eai	EAI_IDN_ENCODE				-105			-105			-105			-105			-105			-105			# copying from linux
-syscon	eai	EAI_INPROGRESS				-100			-100			-100			-100			-100			-100			# copying from linux
-syscon	eai	EAI_INTR				-104			-104			-104			-104			-104			-104			# copying from linux
-syscon	eai	EAI_NOTCANCELED				-102			-102			-102			-102			-102			-102			# copying from linux
-
 syscon	misc	BLK_BYTECOUNT				2			2			2			2			2			0			# unix consensus
 syscon	misc	BLK_EOF					0x40			0x40			0x40			0x40			0x40			0			# unix consensus
 syscon	misc	BLK_EOR					0x80			0x80			0x80			0x80			0x80			0			# unix consensus

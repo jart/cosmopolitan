@@ -1,15 +1,34 @@
 #ifndef COSMOPOLITAN_LIBC_DNS_DNS_H_
 #define COSMOPOLITAN_LIBC_DNS_DNS_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
+#include "libc/dns/resolvconf.h"
+#include "libc/sock/sock.h"
 
-#define DNS_PORT 53
-#define DNS_NAME_MAX 253
+#define DNS_PORT      53
+#define DNS_NAME_MAX  253
 #define DNS_LABEL_MAX 63
 
-struct sockaddr;
-struct sockaddr_in;
-struct ResolvConf;
+#define EAI_SUCCESS     0
+#define EAI_BADFLAGS    -1
+#define EAI_NONAME      -2
+#define EAI_AGAIN       -3
+#define EAI_FAIL        -4
+#define EAI_NODATA      -5
+#define EAI_FAMILY      -6
+#define EAI_SOCKTYPE    -7
+#define EAI_SERVICE     -8
+#define EAI_ADDRFAMILY  -9
+#define EAI_MEMORY      -10
+#define EAI_OVERFLOW    -12
+#define EAI_SYSTEM      -11
+#define EAI_ALLDONE     -103
+#define EAI_CANCELED    -101
+#define EAI_IDN_ENCODE  -105
+#define EAI_INPROGRESS  -100
+#define EAI_INTR        -104
+#define EAI_NOTCANCELED -102
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
 
 struct addrinfo {
   int32_t ai_flags;    /* AI_XXX */

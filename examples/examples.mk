@@ -40,6 +40,7 @@ EXAMPLES_DIRECTDEPS =						\
 	LIBC_ALG						\
 	LIBC_BITS						\
 	LIBC_CALLS						\
+	LIBC_DNS						\
 	LIBC_FMT						\
 	LIBC_INTRIN						\
 	LIBC_LOG						\
@@ -64,6 +65,7 @@ EXAMPLES_DIRECTDEPS =						\
 	LIBC_UNICODE						\
 	LIBC_X							\
 	LIBC_ZIPOS						\
+	NET_HTTP						\
 	THIRD_PARTY_COMPILER_RT					\
 	THIRD_PARTY_DLMALLOC					\
 	THIRD_PARTY_GDTOA					\

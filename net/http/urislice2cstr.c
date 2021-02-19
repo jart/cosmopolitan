@@ -16,19 +16,30 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/macros.h"
 #include "libc/str/str.h"
 #include "net/http/uri.h"
 
+/* TODO(jart): Unescape */
+
 char *urislice2cstr(char *buf, size_t size, struct UriSlice slice,
                     const char *uristr, const char *defaultval) {
-  /* TODO(jart): Unescape */
-  if (slice.n && slice.n + 1 < size) {
-    memcpy(buf, uristr + slice.i, slice.n);
-  } else if (defaultval) {
-    memcpy(buf, defaultval, (slice.n = strlen(defaultval)));
-  } else {
-    slice.n = 0;
+  size_t n;
+  const char *p;
+  if (size) {
+    if (slice.n) {
+      p = uristr + slice.i;
+      n = slice.n;
+    } else if (defaultval) {
+      p = defaultval;
+      n = strlen(defaultval);
+    } else {
+      p = NULL;
+      n = 0;
+    }
+    n = MIN(n, size - 1);
+    memcpy(buf, p, n);
+    buf[n] = '\0';
   }
-  buf[slice.n] = '\0';
   return buf;
 }
