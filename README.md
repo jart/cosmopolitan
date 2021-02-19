@@ -24,7 +24,7 @@ five files to get started:
 ```sh
 wget https://justine.lol/cosmopolitan/cosmopolitan-amalgamation-0.2.zip
 unzip cosmopolitan-amalgamated-0.2.zip
-echo 'main() { printf("hello world\n"); }' >hello.c
+printf 'main() { printf("hello world\\n"); }\n' >hello.c
 gcc -g -O -static -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone \
   -o hello.com.dbg hello.c -fuse-ld=bfd -Wl,-T,ape.lds \
   -include cosmopolitan.h crt.o ape.o cosmopolitan.a
