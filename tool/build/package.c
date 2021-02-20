@@ -351,8 +351,10 @@ void OpenObject(struct Package *pkg, struct Object *obj, int mode, int prot,
   CHECK_NE(-1, (fd = open(&pkg->strings.p[obj->path], (obj->mode = mode))),
            "path=%`'s", &pkg->strings.p[obj->path]);
   CHECK_NE(-1, fstat(fd, &st));
-  CHECK_NE(MAP_FAILED, (obj->elf = mmap(NULL, (obj->size = st.st_size), prot,
-                                        flags, fd, 0)));
+  CHECK_NE(
+      MAP_FAILED,
+      (obj->elf = mmap(NULL, (obj->size = st.st_size), prot, flags, fd, 0)),
+      "path=%`'s", &pkg->strings.p[obj->path]);
   CHECK_NE(-1, close(fd));
   CHECK(IsElf64Binary(obj->elf, obj->size), "path=%`'s",
         &pkg->strings.p[obj->path]);

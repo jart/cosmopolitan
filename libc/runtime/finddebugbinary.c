@@ -35,7 +35,9 @@ const char *FindDebugBinary(void) {
   unsigned i, len;
   char buf[2][PATH_MAX];
   static char res[PATH_MAX];
-  const char *bins[4], *pwd;
+  const char *bins[4], *pwd, *comdbg;
+  if (res[0]) return res;
+  if ((comdbg = emptytonull(getenv("COMDBG")))) return comdbg;
   if (res[0]) return res;
   bins[0] = program_invocation_name;
   bins[1] = (const char *)getauxval(AT_EXECFN);

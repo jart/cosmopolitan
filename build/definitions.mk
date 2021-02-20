@@ -46,11 +46,6 @@ V ?= 1
 LC_ALL = C
 SOURCE_DATE_EPOCH = 0
 
-DD ?= /bin/dd
-CP ?= /bin/cp -f
-RM ?= /bin/rm -f
-SED ?= /bin/sed
-MKDIR ?= /bin/mkdir -p
 TAGS ?= /usr/bin/ctags  # emacs source builds or something breaks it
 ARFLAGS = rcsD
 ZFLAGS ?=
@@ -83,41 +78,14 @@ PWD := $(shell pwd)
 IMAGE_BASE_VIRTUAL ?= 0x400000
 HELLO := $(shell build/hello)
 TMPDIR := $(shell build/findtmp)
-COMPILE := $(shell build/getcompile)
-CCVERSION := $(shell build/getccversion $(CC))
+COMPILE := $(shell build/getcompile) -V$(shell build/getccversion $(CC))
 
 export ADDR2LINE
-export CCVERSION
-export COMPILE
-export CP
-export DD
-export GZ
-export IMAGE_BASE_VIRTUAL
 export LC_ALL
-export LOGFMT
-export MKDIR
 export MODE
-export OBJDUMP
-export RM
-export SED
 export SOURCE_DATE_EPOCH
 export TMPDIR
 export V
-export ZFLAGS
-
-unexport COMPILER_PATH
-unexport CPATH
-unexport CPLUS_INCLUDE_PATH
-unexport C_INCLUDE_PATH
-unexport DEPENDENCIES_OUTPUT
-unexport GCC_COMPARE_DEBUG
-unexport GCC_EXEC_PREFIX
-unexport LANG
-unexport LC_CTYPE
-unexport LC_MESSAGES
-unexport LIBRARY_PATH
-unexport OBJC_INCLUDE_PATH
-unexport SUNPRO_DEPENDENCIES
 
 FTRACE =								\
 	-pg

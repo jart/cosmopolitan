@@ -39,8 +39,8 @@ wontreturn void exit(int exitcode) {
   if (weaken(__cxa_finalize)) {
     weaken(__cxa_finalize)(NULL);
   }
-  for (p = *weaken(__fini_array_end); p-- > *weaken(__fini_array_start);) {
-    ((void (*)(void))p)();
+  for (p = *weaken(__fini_array_end); p > *weaken(__fini_array_start);) {
+    ((void (*)(void))(*--p))();
   }
   _Exit(exitcode);
 }

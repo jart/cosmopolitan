@@ -130,7 +130,7 @@ o/$(MODE)/examples/nesemu1.com.dbg:				\
 $(EXAMPLES_OBJS): examples/examples.mk
 
 usr/share/dict/words: usr/share/dict/words.gz
-	@$(MKDIR) $(dir $@)
+	@mkdir -p $(@D)
 	@$(GZ) $(ZFLAGS) -d <$< >$@
 
 .PHONY: o/$(MODE)/examples
