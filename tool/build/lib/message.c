@@ -17,30 +17,51 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/check.h"
+#include "libc/macros.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
+#include "libc/unicode/unicode.h"
 #include "tool/build/lib/buffer.h"
+#include "tool/build/lib/lines.h"
 #include "tool/build/lib/panel.h"
 
+static int GetWidthOfLongestLine(struct Lines *lines) {
+  int i, w, m;
+  for (m = i = 0; i < lines->n; ++i) {
+    w = strwidth(lines->p[i], 0);
+    m = MAX(m, w);
+  }
+  return m;
+}
+
 void PrintMessageBox(int fd, const char *msg, long tyn, long txn) {
-  char buf[1];
   struct Buffer b;
   int i, w, h, x, y;
-  h = 2 + 1 + 2;
-  w = 3 + strlen(msg) + 3;
+  struct Lines *lines;
+  lines = NewLines();
+  AppendLines(lines, msg);
+  h = 3 + lines->n + 3;
+  w = 4 + GetWidthOfLongestLine(lines) + 4;
   x = lrint(txn / 2. - w / 2.);
   y = lrint(tyn / 2. - h / 2.);
   memset(&b, 0, sizeof(b));
-  AppendFmt(&b, "\e[%d;%dH╔", y++, x);
-  for (i = 0; i < w - 2; ++i) AppendStr(&b, "═");
-  AppendStr(&b, "╗");
-  AppendFmt(&b, "\e[%d;%dH║  %-*s  ║", y++, x, w - 6, "");
-  AppendFmt(&b, "\e[%d;%dH║  %-*s  ║", y++, x, w - 6, msg);
-  AppendFmt(&b, "\e[%d;%dH║  %-*s  ║", y++, x, w - 6, "");
-  AppendFmt(&b, "\e[%d;%dH╚", y++, x);
-  for (i = 0; i < w - 2; ++i) AppendStr(&b, "═");
-  AppendStr(&b, "╝");
+  AppendFmt(&b, "\e[%d;%dH", y++, x);
+  for (i = 0; i < w; ++i) AppendStr(&b, " ");
+  AppendFmt(&b, "\e[%d;%dH ╔", y++, x);
+  for (i = 0; i < w - 4; ++i) AppendStr(&b, "═");
+  AppendStr(&b, "╗ ");
+  AppendFmt(&b, "\e[%d;%dH ║  %-*s  ║ ", y++, x, w - 8, "");
+  for (i = 0; i < lines->n; ++i) {
+    AppendFmt(&b, "\e[%d;%dH ║  %-*s  ║ ", y++, x, w - 8, lines->p[i]);
+  }
+  FreeLines(lines);
+  AppendFmt(&b, "\e[%d;%dH ║  %-*s  ║ ", y++, x, w - 8, "");
+  AppendFmt(&b, "\e[%d;%dH ╚", y++, x);
+  for (i = 0; i < w - 4; ++i) AppendStr(&b, "═");
+  AppendStr(&b, "╝ ");
+  AppendFmt(&b, "\e[%d;%dH", y++, x);
+  for (i = 0; i < w; ++i) AppendStr(&b, " ");
   CHECK_NE(-1, WriteBuffer(&b, fd));
   free(b.p);
 }

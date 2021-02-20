@@ -140,7 +140,7 @@ void LoadProgram(struct Machine *m, const char *prog, char **args, char **vars,
   size_t i, mappedsize;
   DCHECK_NOTNULL(prog);
   elf->prog = prog;
-  if ((fd = open(prog, O_RDWR)) == -1 ||
+  if ((fd = open(prog, O_RDONLY)) == -1 ||
       (fstat(fd, &st) == -1 || !st.st_size)) {
     fputs(prog, stderr);
     fputs(": not found\n", stderr);

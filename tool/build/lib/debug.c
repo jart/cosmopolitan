@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/elf/elf.h"
 #include "libc/log/check.h"
 #include "libc/runtime/gc.h"
 #include "libc/sysv/consts/map.h"
@@ -28,13 +29,15 @@
 
 void LoadDebugSymbols(struct Elf *elf) {
   int fd;
+  size_t n;
   void *elfmap;
   struct stat st;
   const char *path;
-  if (elf->ehdr) return;
+  if (elf->ehdr && GetElfSymbolTable(elf->ehdr, elf->size, &n) && n) return;
   DCHECK_NOTNULL(elf->prog);
+  fprintf(stderr, "HI %s\n", elf->prog);
   if ((fd = open(gc(xstrcat(elf->prog, ".dbg")), O_RDONLY)) != -1 ||
-      (fd = open(elf->prog, O_RDONLY))) {
+      (fd = open(elf->prog, O_RDONLY)) != -1) {
     if (fstat(fd, &st) != -1 &&
         (elfmap = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0)) !=
             MAP_FAILED) {

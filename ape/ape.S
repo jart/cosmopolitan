@@ -1511,17 +1511,20 @@ long:	push	$GDT_LONG_DATA
 	xor	%ebp,%ebp
 	mov	$REAL_STACK_FRAME+FRAMESIZE,%esp
 	call	__map_image
-	ezlea	metal,ax
+	ezlea	metal.thunk,ax
 	jmp	*%rax
 	.endfn	long
 
 //	Long mode in virtual address space.
 //	@noreturn
-metal:
+metal.thunk:
 #if USE_SYMBOL_HACK
 	.byte	0x0f,0x1f,0207			# nop rdi binbase
 	.long	(IMAGE_BASE_VIRTUAL-IMAGE_BASE_REAL)/512
 #endif
+/	𝑠𝑙𝑖𝑑𝑒
+	.endfn	metal.thunk
+metal:
 	xor	%eax,%eax			# clear bss
 	mov	$ape_bss_vaddr,%edi
 	mov	$ape_bss_memsz,%ecx

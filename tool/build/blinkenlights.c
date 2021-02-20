@@ -126,6 +126,27 @@ FEATURES\n\
   8086, 8087, i386, x86_64, SSE3, SSSE3, POPCNT, MDA, CGA, TTY\n\
 \n"
 
+#define HELP \
+  "\e[1mBLINKENLIGHTS v1.o\e[22m\
+                 https://justine.lol/blinkenlights/\n\
+\n\
+KEYBOARD SHORTCUTS                 CLI FLAGS\n\
+\n\
+ctrl-c  interrupt                  -t       tui mode\n\
+s       step                       -r       real mode\n\
+n       next                       -s       statistics\n\
+c       continue                   -b ADDR  push breakpoint\n\
+q       quit                       -L PATH  log file location\n\
+f       finish                     -R       reactive tui mode\n\
+R       restart                    -H       disable highlighting\n\
+x       hex                        -v       increase verbosity\n\
+?       help                       -?       help\n\
+t       sse type\n\
+w       sse width\n\
+B       pop breakpoint\n\
+ctrl-t  turbo\n\
+alt-t   slowmo"
+
 #define MAXZOOM    16
 #define DUMPWIDTH  64
 #define DISPWIDTH  80
@@ -255,17 +276,18 @@ static int64_t breakpointsstart;
 static uint64_t last_opcount;
 static char *codepath;
 static void *onbusted;
+static char *dialog;
 static char *statusmessage;
 static struct Pty *pty;
 static struct Machine *m;
 
 static struct Panels pan;
+static struct Breakpoints breakpoints;
 static struct MemoryView codeview;
 static struct MemoryView readview;
 static struct MemoryView writeview;
 static struct MemoryView stackview;
 static struct MachineState laststate;
-static struct Breakpoints breakpoints;
 static struct MachineMemstat lastmemstat;
 static struct XmmType xmmtype;
 static struct Elf elf[1];
@@ -424,15 +446,24 @@ static void CopyMachineState(struct MachineState *ms) {
   memcpy(&ms->sse, &m->sse, sizeof(m->sse));
 }
 
+/**
+ * Handles file mapped page faults in valid page but past eof.
+ */
 static void OnSigBusted(void) {
   CHECK(onbusted);
   longjmp(onbusted, 1);
 }
 
+/**
+ * Returns true if 𝑣 is a shadow memory virtual address.
+ */
 static bool IsShadow(int64_t v) {
   return 0x7fff8000 <= v && v < 0x100080000000;
 }
 
+/**
+ * Returns glyph representing byte at virtual address 𝑣.
+ */
 static int VirtualBing(int64_t v) {
   int rc;
   uint8_t *p;
@@ -451,6 +482,9 @@ static int VirtualBing(int64_t v) {
   return rc;
 }
 
+/**
+ * Returns ASAN shadow uint8 concomitant to address 𝑣 or -1.
+ */
 static int VirtualShadow(int64_t v) {
   int rc;
   char *p;
@@ -547,9 +581,7 @@ static void TuiRejuvinate(void) {
 
 static void OnQ(void) {
   LOGF("OnQ");
-  if (action & FAILURE) exit(1);
-  action |= INT;
-  breakpoints.i = 0;
+  action |= EXIT;
 }
 
 static void OnV(void) {
@@ -594,6 +626,7 @@ static void TuiCleanup(void) {
   TtyRestore1();
   DisableMouseTracking();
   tuimode = false;
+  LeaveScreen();
 }
 
 static void ResolveBreakpoints(void) {
@@ -603,8 +636,10 @@ static void ResolveBreakpoints(void) {
       if ((sym = DisFindSymByName(dis, breakpoints.p[i].symbol)) != -1) {
         breakpoints.p[i].addr = dis->syms.p[sym].addr;
       } else {
-        fprintf(stderr, "error: breakpoint not found: %s\n",
-                breakpoints.p[i].symbol);
+        fprintf(
+            stderr,
+            "error: breakpoint not found: %s (out of %,ld loaded symbols)\n",
+            breakpoints.p[i].symbol, dis->syms.i);
         exit(1);
       }
     }
@@ -2155,12 +2190,9 @@ static void OnBinbase(struct Machine *m) {
   int64_t skew;
   skew = m->xedd->op.disp * 512;
   LOGF("skew binbase %,ld @ %p", skew, GetIp());
-  for (i = 0; i < dis->syms.i; ++i) {
-    dis->syms.p[i].addr += skew;
-  }
-  for (i = 0; i < dis->loads.i; ++i) {
-    dis->loads.p[i].addr += skew;
-  }
+  for (i = 0; i < dis->syms.i; ++i) dis->syms.p[i].addr += skew;
+  for (i = 0; i < dis->loads.i; ++i) dis->loads.p[i].addr += skew;
+  for (i = 0; i < breakpoints.i; ++i) breakpoints.p[i].addr += skew;
   Disassemble();
 }
 
@@ -2270,8 +2302,17 @@ static void OnFinish(void) {
   action &= ~CONTINUE;
 }
 
-static void OnContinue(void) {
+static void OnContinueTui(void) {
   action ^= CONTINUE;
+  action &= ~STEP;
+  action &= ~NEXT;
+  action &= ~FINISH;
+  action &= ~FAILURE;
+}
+
+static void OnContinueExec(void) {
+  tuimode = false;
+  action |= CONTINUE;
   action &= ~STEP;
   action &= ~NEXT;
   action &= ~FINISH;
@@ -2394,41 +2435,41 @@ static void OnMouse(char *p) {
     y -= ep->top;
     x -= ep->left;
     switch (e) {
-      case kMouseWheelUp:
-        OnMouseWheelUp(ep, y, x);
-        break;
-      case kMouseWheelDown:
-        OnMouseWheelDown(ep, y, x);
-        break;
-      case kMouseCtrlWheelUp:
-        OnMouseCtrlWheelUp(ep, y, x);
-        break;
-      case kMouseCtrlWheelDown:
-        OnMouseCtrlWheelDown(ep, y, x);
-        break;
+      CASE(kMouseWheelUp, OnMouseWheelUp(ep, y, x));
+      CASE(kMouseWheelDown, OnMouseWheelDown(ep, y, x));
+      CASE(kMouseCtrlWheelUp, OnMouseCtrlWheelUp(ep, y, x));
+      CASE(kMouseCtrlWheelDown, OnMouseCtrlWheelDown(ep, y, x));
       default:
         break;
     }
   }
 }
 
+static void OnHelp(void) {
+  DEBUGF("setting dialog");
+  dialog = HELP;
+}
+
 static void ReadKeyboard(void) {
   char buf[64], *p = buf;
   memset(buf, 0, sizeof(buf));
+  dialog = NULL;
   if (readansi(ttyin, buf, sizeof(buf)) == -1) {
     if (errno == EINTR) {
-      LOGF("readkeyboard interrupted");
+      LOGF("ReadKeyboard interrupted");
       return;
     }
-    FATALF("readkeyboard failed: %s", strerror(errno));
+    FATALF("ReadKeyboard failed: %s", strerror(errno));
   }
   switch (*p++) {
     CASE('q', OnQ());
     CASE('v', OnV());
+    CASE('?', OnHelp());
     CASE('s', OnStep());
     CASE('n', OnNext());
     CASE('f', OnFinish());
-    CASE('c', OnContinue());
+    CASE('c', OnContinueTui());
+    CASE('C', OnContinueExec());
     CASE('R', OnRestart());
     CASE('x', OnXmmDisp());
     CASE('t', OnXmmType());
@@ -2451,57 +2492,26 @@ static void ReadKeyboard(void) {
     CASE(CTRL('T'), OnTurbo());
     case '\e':
       switch (*p++) {
-        CASE('v', OnPageUp());
-        CASE('t', OnSlowmo());
+        CASE('v', OnPageUp()); /* alt+v */
+        CASE('t', OnSlowmo()); /* alt+t */
+        case 'O':
+          switch (*p++) {
+            CASE('P', OnHelp()); /* \eOP is F1 */
+            default:
+              break;
+          }
+          break;
         case '[':
           switch (*p++) {
             CASE('<', OnMouse(p));
-            CASE('A', OnUpArrow());
-            CASE('B', OnDownArrow());
-            CASE('F', OnEnd());
-            CASE('H', OnHome());
-            case '1':
-              switch (*p++) {
-                CASE('~', OnHome());
-                default:
-                  break;
-              }
-              break;
-            case '4':
-              switch (*p++) {
-                CASE('~', OnEnd());
-                default:
-                  break;
-              }
-              break;
-            case '5':
-              switch (*p++) {
-                CASE('~', OnPageUp());
-                default:
-                  break;
-              }
-              break;
-            case '6':
-              switch (*p++) {
-                CASE('~', OnPageDown());
-                default:
-                  break;
-              }
-              break;
-            case '7':
-              switch (*p++) {
-                CASE('~', OnHome());
-                default:
-                  break;
-              }
-              break;
-            case '8':
-              switch (*p++) {
-                CASE('~', OnEnd());
-                default:
-                  break;
-              }
-              break;
+            CASE('A', OnUpArrow());   /* \e[A  is up */
+            CASE('B', OnDownArrow()); /* \e[B  is down */
+            CASE('F', OnEnd());       /* \e[F  is end */
+            CASE('H', OnHome());      /* \e[H  is home */
+            CASE('1', OnHome());      /* \e[1~ is home */
+            CASE('4', OnEnd());       /* \e[1~ is end */
+            CASE('5', OnPageUp());    /* \e[1~ is pgup */
+            CASE('6', OnPageDown());  /* \e[1~ is pgdn */
             default:
               break;
           }
@@ -2609,14 +2619,13 @@ static void Tui(void) {
   SetupDraw();
   ScrollOp(&pan.disassembly, GetDisIndex());
   if (!(interrupt = setjmp(m->onhalt))) {
-    for (;;) {
+    do {
       if (!(action & FAILURE)) {
         LoadInstruction(m);
         if ((action & (FINISH | NEXT | CONTINUE)) &&
             (bp = IsAtBreakpoint(&breakpoints, GetIp())) != -1) {
           action &= ~(FINISH | NEXT | CONTINUE);
           LOGF("BREAK %p", breakpoints.p[bp].addr);
-          break;
         }
       } else {
         m->xedd = (struct XedDecodedInst *)m->icache[0];
@@ -2642,6 +2651,9 @@ static void Tui(void) {
         tick = 0;
         Redraw();
       }
+      if (dialog) {
+        PrintMessageBox(ttyout, dialog, tyn, txn);
+      }
       if (action & FAILURE) {
         LOGF("TUI FAILURE");
         PrintMessageBox(ttyout, systemfailure, tyn, txn);
@@ -2651,8 +2663,9 @@ static void Tui(void) {
           LeaveScreen();
           exit(1);
         }
-      } else if (!IsExecuting() || (!(action & CONTINUE) && !(action & INT) &&
-                                    HasPendingKeyboard())) {
+      } else if (dialog || !IsExecuting() ||
+                 (!(action & CONTINUE) && !(action & INT) &&
+                  HasPendingKeyboard())) {
         ReadKeyboard();
       }
       if (action & INT) {
@@ -2661,13 +2674,11 @@ static void Tui(void) {
         if (action & (CONTINUE | NEXT | FINISH)) {
           action &= ~(CONTINUE | NEXT | FINISH);
         } else {
-          tuimode = false;
-          action |= CONTINUE;
+          action |= EXIT;
           break;
         }
       }
       if (action & EXIT) {
-        LeaveScreen();
         LOGF("TUI EXIT");
         break;
       }
@@ -2723,7 +2734,7 @@ static void Tui(void) {
           }
         }
       }
-    }
+    } while (tuimode);
   } else {
     if (OnHalt(interrupt)) {
       goto KeepGoing;
@@ -2794,42 +2805,37 @@ int Emulator(int argc, char *argv[]) {
   int rc, fd;
   codepath = argv[optind++];
   m->fds.p = xcalloc((m->fds.n = 8), sizeof(struct MachineFd));
-Restart:
-  action = 0;
-  LoadProgram(m, codepath, argv + optind, environ, elf);
-  AddHostFd(STDIN_FILENO);
-  AddHostFd(STDOUT_FILENO);
-  AddHostFd(STDERR_FILENO);
-  if (tuimode) {
-    ttyin = isatty(STDIN_FILENO) ? STDIN_FILENO : OpenDevTty();
-    ttyout = isatty(STDOUT_FILENO) ? STDOUT_FILENO : OpenDevTty();
-  } else {
-    ttyin = -1;
-    ttyout = -1;
-  }
-  if (ttyout != -1) {
-    atexit(TtyRestore1);
-    xsigaction(SIGWINCH, OnSigWinch, 0, 0, 0);
-    tyn = 24;
-    txn = 80;
-    GetTtySize(ttyout);
-    if (isatty(STDIN_FILENO)) m->fds.p[STDIN_FILENO].cb = &kMachineFdCbPty;
-    if (isatty(STDOUT_FILENO)) m->fds.p[STDOUT_FILENO].cb = &kMachineFdCbPty;
-    if (isatty(STDERR_FILENO)) m->fds.p[STDERR_FILENO].cb = &kMachineFdCbPty;
-  }
-  while (!(action & EXIT)) {
-    if (!tuimode) {
-      Exec();
+  do {
+    action = 0;
+    LoadProgram(m, codepath, argv + optind, environ, elf);
+    AddHostFd(0);
+    AddHostFd(1);
+    AddHostFd(2);
+    if (tuimode) {
+      ttyin = isatty(0) ? 0 : OpenDevTty();
+      ttyout = isatty(1) ? 1 : OpenDevTty();
     } else {
-      Tui();
+      ttyin = -1;
+      ttyout = -1;
     }
-    if (action & RESTART) {
-      goto Restart;
+    if (ttyout != -1) {
+      atexit(TtyRestore1);
+      xsigaction(SIGWINCH, OnSigWinch, 0, 0, 0);
+      tyn = 24;
+      txn = 80;
+      GetTtySize(ttyout);
+      if (isatty(0)) m->fds.p[0].cb = &kMachineFdCbPty;
+      if (isatty(1)) m->fds.p[1].cb = &kMachineFdCbPty;
+      if (isatty(2)) m->fds.p[2].cb = &kMachineFdCbPty;
     }
-  }
-  if (tuimode) {
-    LeaveScreen();
-  }
+    do {
+      if (!tuimode) {
+        Exec();
+      } else {
+        Tui();
+      }
+    } while (!(action & (RESTART | EXIT)));
+  } while (action & RESTART);
   if (printstats) {
     fprintf(stderr, "taken:  %,ld\n", taken);
     fprintf(stderr, "ntaken: %,ld\n", ntaken);

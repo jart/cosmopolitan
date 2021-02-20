@@ -203,5 +203,5 @@ void DisLoadElf(struct Dis *d, struct Elf *elf) {
   DisLoadElfLoads(d, elf);
   DisLoadElfSyms(d, elf);
   DisSortSyms(d);
-  DisCanonizeSyms(d);
+  /* DisCanonizeSyms(d); */
 }

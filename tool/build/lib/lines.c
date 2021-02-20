@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,44 +16,39 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "libc/x/x.h"
+#include "tool/build/lib/lines.h"
 
-/**
- * Concatenates strings / chars to newly allocated memory, e.g.
- *
- *     xstrcat("hi", ' ', "there")
- *
- * Or without the C99 helper macro:
- *
- *     (xstrcat)("hi", ' ', "there", NULL)
- *
- * This goes twice as fast as the more powerful xasprintf(). It's not
- * quadratic like strcat(). It's much slower than high-effort stpcpy(),
- * particularly with string literals.
- *
- * @see gc()
- */
-char *(xstrcat)(const char *s, ...) {
-  va_list va;
-  size_t n, m;
-  char *p, b[2];
-  p = NULL;
-  n = 0;
-  va_start(va, s);
-  do {
-    if ((intptr_t)s > 0 && (intptr_t)s <= 255) {
-      b[0] = (unsigned char)(intptr_t)s;
-      b[1] = '\0';
-      s = b;
-      m = 1;
+struct Lines *NewLines(void) {
+  return calloc(1, sizeof(struct Lines));
+}
+
+void FreeLines(struct Lines *lines) {
+  size_t i;
+  for (i = 0; i < lines->n; ++i) {
+    free(lines->p[i]);
+  }
+  free(lines);
+}
+
+void AppendLine(struct Lines *lines, const char *s, size_t n) {
+  lines->p = realloc(lines->p, ++lines->n * sizeof(*lines->p));
+  lines->p[lines->n - 1] = strndup(s, n);
+}
+
+void AppendLines(struct Lines *lines, const char *s) {
+  const char *p;
+  for (;;) {
+    p = strchr(s, '\n');
+    if (p) {
+      AppendLine(lines, s, p - s);
+      s = p + 1;
     } else {
-      m = strlen(s);
+      if (*s) {
+        AppendLine(lines, s, -1);
+      }
+      break;
     }
-    p = xrealloc(p, n + m + 1);
-    memcpy(p + n, s, m + 1);
-    n += m;
-  } while ((s = va_arg(va, const char *)));
-  va_end(va);
-  return p;
+  }
 }
