@@ -43,7 +43,7 @@
 #     TARGET_ARCH  microarchitecture flags (e.g. -march=native)
 
 V ?= 1
-LC_ALL = C.UTF-8
+LC_ALL = C
 SOURCE_DATE_EPOCH = 0
 
 DD ?= /bin/dd
