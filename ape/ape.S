@@ -508,7 +508,7 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.shstub	    ape_elf_phnum,2		#  38: e_phnum
 	.ascii	    "\\0\\0"			#  3a: e_shentsize
 	.shstub	    ape_elf_shnum,2		#  3c: e_shnum
-	.shstub	    ape_elf_shstrndx,2	#  3e: e_shstrndx
+	.shstub	    ape_elf_shstrndx,2		#  3e: e_shstrndx
 	.ascii	    "' >&7\n"
 	.ascii	  "exec 7<&-\n"
 	.ascii	"fi\n"

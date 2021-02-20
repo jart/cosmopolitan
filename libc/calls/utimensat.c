@@ -27,8 +27,8 @@
  * @note no xnu/rhel5 support if dirfd≠AT_FDCWD∨flags≠0
  * @asyncsignalsafe
  */
-int utimensat(int dirfd, const char *path,
-              const struct timespec ts[hasatleast 2], int flags) {
+int utimensat(int dirfd, const char *path, const struct timespec ts[2],
+              int flags) {
   if (!IsWindows()) {
     return sys_utimensat(dirfd, path, ts, flags);
   } else {
