@@ -115,6 +115,7 @@ struct Command command;
 const char *const kSafeEnv[] = {
     "ADDR2LINE",  // needed by GetAddr2linePath
     "MAKEFLAGS",  // needed by IsRunningUnderMake
+    "PATH",       // needed by clang
     "PWD",        // just seems plain needed
     "TERM",       // needed by IsTerminalInarticulate
     "TMPDIR",     // needed by compiler
@@ -433,7 +434,6 @@ int main(int argc, char *argv[]) {
    */
   if (iscc) {
     if (isclang) {
-      /* AddArg("-fno-integrated-as"); */
       AddArg("-Wno-unused-command-line-argument");
       AddArg("-Wno-incompatible-pointer-types-discards-qualifiers");
     }
