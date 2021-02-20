@@ -215,15 +215,15 @@ o/$(MODE)/hdrs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS) $(
 	$(file >$@) $(foreach x,$(HDRS) $(INCS),$(file >>$@,$(x)))
 
 o/$(MODE)/depend: o/$(MODE)/.x o/$(MODE)/srcs.txt o/$(MODE)/hdrs.txt $(SRCS) $(HDRS) $(INCS)
-	@build/mkdeps -o $@ -r o/$(MODE)/ o/$(MODE)/srcs.txt o/$(MODE)/hdrs.txt
+	@$(COMPILE) -AMKDEPS $(MKDEPS) -o $@ -r o/$(MODE)/ o/$(MODE)/srcs.txt o/$(MODE)/hdrs.txt
 
 TAGS:	o/$(MODE)/srcs.txt $(SRCS)
 	@rm -f $@
-	@ACTION=TAGS TARGET=$@ build/do $(TAGS) $(TAGSFLAGS) -L $< -o $@
+	@$(COMPILE) -ATAGS -T$@ $(TAGS) $(TAGSFLAGS) -L $< -o $@
 
 HTAGS:	o/$(MODE)/hdrs.txt $(HDRS)
 	@rm -f $@
-	@ACTION=TAGS TARGET=$@ build/do build/htags -L $< -o $@
+	@$(COMPILE) -ATAGS -T$@ build/htags -L $< -o $@
 
 loc: o/$(MODE)/tool/build/summy.com
 	find -name \*.h -or -name \*.c -or -name \*.S | \
@@ -315,7 +315,7 @@ o/cosmopolitan.h:				\
 		o/$(MODE)/tool/build/rollup.com	\
 		libc/integral/normalize.inc	\
 		$(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS))
-	@ACTION=ROLLUP TARGET=$@ build/do $^ >$@
+	@$(COMPILE) -AROLLUP -T$@ $^ >$@
 
 o/cosmopolitan.html:							\
 		o/$(MODE)/third_party/chibicc/chibicc.com.dbg		\

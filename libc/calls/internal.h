@@ -263,6 +263,7 @@ int sys_sync_nt(void) hidden;
 int sys_sysinfo_nt(struct sysinfo *) hidden;
 int sys_truncate_nt(const char *, u64) hidden;
 int sys_unlinkat_nt(int, const char *, int) hidden;
+int sys_utimes_nt(const char *, const struct timeval[2]) hidden;
 int sys_utimensat_nt(int, const char *, const struct timespec *, int) hidden;
 ssize_t sys_open_nt(int, const char *, u32, i32) nodiscard hidden;
 ssize_t sys_read_nt(struct Fd *, const struct iovec *, size_t, ssize_t) hidden;

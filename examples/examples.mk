@@ -133,10 +133,6 @@ usr/share/dict/words: usr/share/dict/words.gz
 	@$(MKDIR) $(dir $@)
 	@$(GZ) $(ZFLAGS) -d <$< >$@
 
-o/$(MODE)/examples/ugh.ok: o/$(MODE)/examples/wut.com
-	$<
-	touch $@
-
 .PHONY: o/$(MODE)/examples
 o/$(MODE)/examples:						\
 		o/$(MODE)/examples/package			\

@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
+#include "libc/dce.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/time/time.h"
 
@@ -24,17 +26,17 @@
  *
  * @param times is access/modified and NULL means now
  * @return 0 on success or -1 w/ errno
+ * @asyncsignalsafe
  * @see stat()
  */
-int utimes(const char *path, const struct timeval tv[hasatleast 2]) {
-  struct timespec ts[2];
-  if (tv) {
-    ts[0].tv_sec = tv[0].tv_sec;
-    ts[0].tv_nsec = tv[0].tv_usec * 1000;
-    ts[1].tv_sec = tv[1].tv_sec;
-    ts[1].tv_nsec = tv[1].tv_usec * 1000;
-    return utimensat(AT_FDCWD, path, ts, 0);
+int utimes(const char *path, const struct timeval tv[2]) {
+  if (!IsWindows()) {
+    /*
+     * we don't modernize utimes() into utimensat() because the
+     * latter is poorly supported and utimes() works everywhere
+     */
+    return sys_utimes(path, tv);
   } else {
-    return utimensat(AT_FDCWD, path, NULL, 0);
+    return sys_utimes_nt(path, tv);
   }
 }

@@ -5,7 +5,7 @@
 if ! [ o/build/bootstrap/compile.com -nt build/bootstrap/compile.com ]; then
   mkdir -p o/build/bootstrap/
   cp -f build/bootstrap/compile.com o/build/bootstrap/compile.$$.com
-  o/build/bootstrap/compile.$$.com --do-nothing
+  o/build/bootstrap/compile.$$.com -n
   mv -f o/build/bootstrap/compile.$$.com o/build/bootstrap/compile.com
 fi
 

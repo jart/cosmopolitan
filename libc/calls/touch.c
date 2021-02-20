@@ -17,7 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/time/time.h"
 
 /**
  * Creates new file or changes modified time on existing one.
@@ -28,7 +30,12 @@
  * @see creat()
  */
 int touch(const char *file, uint32_t mode) {
-  int fd;
-  if ((fd = open(file, O_CREAT | O_WRONLY, mode)) == -1) return -1;
-  return close(fd);
+  int rc, fd, olderr;
+  olderr = errno;
+  if ((rc = utimes(file, NULL)) == -1 && errno == ENOENT) {
+    errno = olderr;
+    if ((fd = open(file, O_CREAT | O_WRONLY, mode)) == -1) return -1;
+    return close(fd);
+  }
+  return rc;
 }

@@ -24,7 +24,8 @@
  *
  * @param ts is atime/mtime, or null for current time
  * @param flags can have AT_SYMLINK_NOFOLLOW
- * @note no rhel5 support
+ * @note no xnu/rhel5 support if dirfd≠AT_FDCWD∨flags≠0
+ * @asyncsignalsafe
  */
 int utimensat(int dirfd, const char *path,
               const struct timespec ts[hasatleast 2], int flags) {

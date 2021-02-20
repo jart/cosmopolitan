@@ -2,7 +2,6 @@
 
 # smoke test booting on bare metal and printing data to serial uart
 CMD="o/$MODE/tool/build/blinkenlights.com.dbg -r o/$MODE/examples/hello.com"
-printf '%s\n' "$CMD" >&2
 if OUTPUT="$($CMD)"; then
   if [ x"$OUTPUT" = x"hello world" ]; then
     touch o/$MODE/test/libc/release/metal.ok

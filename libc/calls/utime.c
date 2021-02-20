@@ -26,16 +26,17 @@
  *
  * @param times if NULL means now
  * @return 0 on success or -1 w/ errno
+ * @asyncsignalsafe
  */
 int utime(const char *path, const struct utimbuf *times) {
-  struct timespec ts[2];
+  struct timeval tv[2];
   if (times) {
-    ts[0].tv_sec = times->actime;
-    ts[0].tv_nsec = 0;
-    ts[1].tv_sec = times->modtime;
-    ts[1].tv_nsec = 0;
-    return utimensat(AT_FDCWD, path, ts, 0);
+    tv[0].tv_sec = times->actime;
+    tv[0].tv_usec = 0;
+    tv[1].tv_sec = times->modtime;
+    tv[1].tv_usec = 0;
+    return utimes(path, tv);
   } else {
-    return utimensat(AT_FDCWD, path, NULL, 0);
+    return utimes(path, NULL);
   }
 }

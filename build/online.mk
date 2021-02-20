@@ -23,9 +23,8 @@
 #   - tool/build/runitd.c
 
 .PRECIOUS: o/$(MODE)/%.com.ok
-o/$(MODE)/%.com.ok:					\
-		o/$(MODE)/tool/build/runit.com.dbg	\
-		o/$(MODE)/tool/build/runitd.com		\
+o/$(MODE)/%.com.ok:				\
+		o/$(MODE)/tool/build/runit.com	\
+		o/$(MODE)/tool/build/runitd.com	\
 		o/$(MODE)/%.com
-	@ACTION=TEST TARGET=$@ build/do $^ $(HOSTS)
-	@touch $@
+	@$(COMPILE) -ATEST -tT$@ $^ $(HOSTS)

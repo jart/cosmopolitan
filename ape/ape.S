@@ -1522,7 +1522,7 @@ metal.thunk:
 	.byte	0x0f,0x1f,0207			# nop rdi binbase
 	.long	(IMAGE_BASE_VIRTUAL-IMAGE_BASE_REAL)/512
 #endif
-/	𝑠𝑙𝑖𝑑𝑒
+//	𝑠𝑙𝑖𝑑𝑒
 	.endfn	metal.thunk
 metal:
 	xor	%eax,%eax			# clear bss

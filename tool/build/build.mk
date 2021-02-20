@@ -68,9 +68,7 @@ o/$(MODE)/tool/build/build.pkg:				\
 o/$(MODE)/%.ctest.ok:					\
 		%.ctest					\
 		$(TOOL_BUILD_CALCULATOR)
-	@TARGET=$@ ACTION=MKWIDES build/do		\
-	$(TOOL_BUILD_CALCULATOR) $< && \
-	touch $@
+	@$(COMPILE) -AMKWIDES -tT$@ $(TOOL_BUILD_CALCULATOR) $<
 
 o/$(MODE)/tool/build/%.com.dbg:				\
 		$(TOOL_BUILD_DEPS)			\

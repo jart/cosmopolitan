@@ -151,8 +151,6 @@ $(LIBC_NT_NTDLL_A):					\
 		libc/nt/ntdll/				\
 		$(LIBC_NT_NTDLL_A).pkg			\
 		$(LIBC_NT_NTDLL_A_OBJS)
-	@$(file >$@.cmd) $(file >>$@.cmd,$(ARCHIVE) $@ $^ >$(LIBC_NT_NTDLL_A).cmd)
-	@$(ARCHIVE) $@ $^
 
 $(LIBC_NT_NTDLL_A).pkg:					\
 		$(LIBC_NT_NTDLL_A_OBJS)			\

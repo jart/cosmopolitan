@@ -62,12 +62,15 @@ CLANG = clang-10
 FC = gfortran  #/opt/cross9f/bin/x86_64-linux-musl-gfortran
 
 # see build/compile, etc. which run third_party/gcc/unbundle.sh
+AR = build/bootstrap/ar.com
+PKG = build/bootstrap/package.com
+MKDEPS = build/bootstrap/mkdeps.com
+ZIPOBJ = build/bootstrap/zipobj.com
 AS = o/third_party/gcc/bin/x86_64-linux-musl-as
 CC = o/third_party/gcc/bin/x86_64-linux-musl-gcc
 CXX = o/third_party/gcc/bin/x86_64-linux-musl-g++
 CXXFILT = o/third_party/gcc/bin/x86_64-linux-musl-c++filt
 LD = o/third_party/gcc/bin/x86_64-linux-musl-ld.bfd
-AR = build/archive
 NM = o/third_party/gcc/bin/x86_64-linux-musl-nm
 GCC = o/third_party/gcc/bin/x86_64-linux-musl-gcc
 STRIP = o/third_party/gcc/bin/x86_64-linux-musl-strip
@@ -78,16 +81,12 @@ ADDR2LINE = o/third_party/gcc/bin/x86_64-linux-musl-addr2line
 COMMA := ,
 PWD := $(shell pwd)
 IMAGE_BASE_VIRTUAL ?= 0x400000
+HELLO := $(shell build/hello)
 TMPDIR := $(shell build/findtmp)
-LOGFMT := $(shell build/getlogfmt)
 COMPILE := $(shell build/getcompile)
-CCNAME := $(shell build/getccname $(CC))
 CCVERSION := $(shell build/getccversion $(CC))
-BLAH1 := $(shell build/zipobj 2>/dev/null)
-BLAH2 := $(shell build/package 2>/dev/null)
 
 export ADDR2LINE
-export CCNAME
 export CCVERSION
 export COMPILE
 export CP
@@ -314,8 +313,7 @@ PREPROCESS = $(CC) $(PREPROCESS.flags)
 PREPROCESS.lds = $(CC) $(PREPROCESS.lds.flags)
 LINK = $(LD) $(LINK.flags)
 ELF = o/libc/elf/elf.lds
-ELFLINK = ACTION=LINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION)
-ARCHIVE = $(AR) $(ARFLAGS)
+ELFLINK = $(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION)
 LINKARGS = $(patsubst %.lds,-T %.lds,$(call uniqr,$(LD.libs) $(filter-out %.pkg,$^)))
 LOLSAN = build/lolsan -b $(IMAGE_BASE_VIRTUAL)
 

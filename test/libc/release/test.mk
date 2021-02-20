@@ -7,11 +7,11 @@ o/$(MODE)/test/libc/release/cosmopolitan.zip:			\
 		o/$(MODE)/libc/crt/crt.o			\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/cosmopolitan.a
-	@zip -j $@ $^
+	@$(COMPILE) -AZIP -T$@ zip -j $@ $^
 
 o/$(MODE)/test/libc/release/smoke.com:				\
 		o/$(MODE)/test/libc/release/smoke.com.dbg
-	@$(COMPILE) $(OBJCOPY) -S -O binary $< $@
+	@$(COMPILE) -AOBJCOPY -T$< $(OBJCOPY) -S -O binary $< $@
 
 o/$(MODE)/test/libc/release/smoke.com.dbg:			\
 		test/libc/release/smoke.c			\
@@ -20,7 +20,7 @@ o/$(MODE)/test/libc/release/smoke.com.dbg:			\
 		o/$(MODE)/libc/crt/crt.o			\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/cosmopolitan.a
-	@ACTION=CC $(COMPILE) $(CC)				\
+	@$(COMPILE) -ACC $(CC)					\
 		-o $@						\
 		-Os						\
 		-static						\
@@ -38,7 +38,7 @@ o/$(MODE)/test/libc/release/smoke.com.dbg:			\
 
 o/$(MODE)/test/libc/release/smokecxx.com:			\
 		o/$(MODE)/test/libc/release/smokecxx.com.dbg
-	@$(COMPILE) $(OBJCOPY) -S -O binary $< $@
+	@$(COMPILE) -AOBJCOPY -T$< $(OBJCOPY) -S -O binary $< $@
 
 o/$(MODE)/test/libc/release/smokecxx.com.dbg:			\
 		test/libc/release/smokecxx.cc			\
@@ -47,7 +47,7 @@ o/$(MODE)/test/libc/release/smokecxx.com.dbg:			\
 		o/$(MODE)/libc/crt/crt.o			\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/cosmopolitan.a
-	@ACTION=CXX $(COMPILE) $(CXX)				\
+	@$(COMPILE) -ACXX $(CXX)				\
 		-o $@						\
 		-Os						\
 		-static						\
@@ -70,7 +70,7 @@ o/$(MODE)/test/libc/release/smokeansi.com.dbg:			\
 		o/$(MODE)/libc/crt/crt.o			\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/cosmopolitan.a
-	@ACTION=ANSI $(COMPILE) $(CC)				\
+	@$(COMPILE) -AANSI $(CC)				\
 		-o $@						\
 		-Os						\
 		-ansi						\
@@ -95,19 +95,19 @@ o/$(MODE)/test/libc/release/clang.ok:				\
 		o/$(MODE)/libc/crt/crt.o			\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/cosmopolitan.a
-	@$<
+	@$(COMPILE) -ASHTEST -T$< $<
 
 o/$(MODE)/test/libc/release/metal.ok:				\
 		test/libc/release/metal.sh			\
 		o/$(MODE)/examples/hello.com			\
 		o/$(MODE)/tool/build/blinkenlights.com.dbg
-	@$<
+	@$(COMPILE) -ASHTEST -T$< $<
 
 o/$(MODE)/test/libc/release/emulate.ok:				\
 		test/libc/release/emulate.sh			\
 		o/$(MODE)/examples/hello.com			\
 		o/$(MODE)/tool/build/blinkenlights.com.dbg
-	@$<
+	@$(COMPILE) -ASHTEST -T$< $<
 
 .PHONY: o/$(MODE)/test/libc/release
 o/$(MODE)/test/libc/release:					\

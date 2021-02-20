@@ -122,9 +122,9 @@ o/$(MODE)/third_party/chibicc/chibicc.chibicc.o:			\
 		CHIBICC_FLAGS += $(THIRD_PARTY_CHIBICC_DEFINES)
 
 o/$(MODE)/%.chibicc.o: %.c o/$(MODE)/third_party/chibicc/chibicc.com.dbg
-	@ACTION=CHIBICC TARGET=$@ build/do $(CHIBICC) $(CHIBICC_FLAGS) -c -o $@ $<
+	@$(COMPILE) -ACHIBICC -T$@ $(CHIBICC) $(CHIBICC_FLAGS) -c -o $@ $<
 o/$(MODE)/%.chibicc2.o: %.c o/$(MODE)/third_party/chibicc/chibicc2.com.dbg
-	@ACTION=CHIBICC2 TARGET=$@ build/do $(CHIBICC2) $(CHIBICC_FLAGS) -c -o $@ $<
+	@$(COMPILE) -ACHIBICC2 -T$@ $(CHIBICC2) $(CHIBICC_FLAGS) -c -o $@ $<
 
 THIRD_PARTY_CHIBICC_LIBS = $(foreach x,$(THIRD_PARTY_CHIBICC_ARTIFACTS),$($(x)))
 THIRD_PARTY_CHIBICC_SRCS = $(foreach x,$(THIRD_PARTY_CHIBICC_ARTIFACTS),$($(x)_SRCS))

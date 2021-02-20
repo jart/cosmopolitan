@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,54 +17,17 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/fmt/conv.h"
-#include "libc/nt/createfile.h"
-#include "libc/nt/enum/accessmask.h"
-#include "libc/nt/enum/creationdisposition.h"
-#include "libc/nt/enum/fileflagandattributes.h"
-#include "libc/nt/enum/filesharemode.h"
-#include "libc/nt/files.h"
-#include "libc/nt/runtime.h"
-#include "libc/nt/synchronization.h"
 #include "libc/sysv/consts/at.h"
-#include "libc/sysv/consts/utime.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/time/time.h"
 
-textwindows int sys_utimensat_nt(int dirfd, const char *path,
-                                 const struct timespec ts[2], int flags) {
-  int i, rc;
-  int64_t fh;
-  uint16_t path16[PATH_MAX];
-  struct NtFileTime ft[2], *ftp[2];
-  if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
-  if ((fh = CreateFile(path16, kNtFileWriteAttributes, kNtFileShareRead, NULL,
-                       kNtOpenExisting, kNtFileAttributeNormal, 0)) == -1) {
-    return __winerr();
-  }
-  if (!ts || ts[0].tv_nsec == UTIME_NOW || ts[1].tv_nsec == UTIME_NOW) {
-    GetSystemTimeAsFileTime(ft);
-  }
-  if (ts) {
-    for (i = 0; i < 2; ++i) {
-      if (ts[i].tv_nsec == UTIME_NOW) {
-        ftp[i] = ft;
-      } else if (ts[i].tv_nsec == UTIME_OMIT) {
-        ftp[i] = NULL;
-      } else {
-        ft[i] = TimeSpecToFileTime(ts[i]);
-        ftp[i] = &ft[i];
-      }
-    }
+textwindows int sys_utimes_nt(const char *path, const struct timeval tv[2]) {
+  struct timespec ts[2];
+  if (tv) {
+    ts[0].tv_sec = tv[0].tv_sec;
+    ts[0].tv_nsec = tv[0].tv_usec * 1000;
+    ts[1].tv_sec = tv[1].tv_sec;
+    ts[1].tv_nsec = tv[1].tv_usec * 1000;
+    return sys_utimensat_nt(AT_FDCWD, path, ts, 0);
   } else {
-    ftp[0] = ft;
-    ftp[1] = ft;
+    return sys_utimensat_nt(AT_FDCWD, path, NULL, 0);
   }
-  if (SetFileTime(fh, NULL, ftp[0], ftp[1])) {
-    rc = 0;
-  } else {
-    rc = __winerr();
-  }
-  CloseHandle(fh);
-  return rc;
 }

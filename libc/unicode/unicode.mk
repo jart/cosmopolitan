@@ -61,31 +61,25 @@ o/$(MODE)/libc/unicode: $(LIBC_UNICODE) $(LIBC_UNICODE_CHECKS)
 o/$(MODE)/libc/unicode/eastasianwidth.bin:			\
 		libc/unicode/eastasianwidth.txt			\
 		o/$(MODE)/tool/decode/mkwides.com
-	@TARGET=$@ ACTION=MKWIDES build/do			\
-		o/$(MODE)/tool/decode/mkwides.com -o $@ $<
+	@$(COMPILE) -AMKWIDES -T$@ o/$(MODE)/tool/decode/mkwides.com -o $@ $<
 o/$(MODE)/libc/unicode/eastasianwidth.bin.lz4:			\
 		o/$(MODE)/libc/unicode/eastasianwidth.bin	\
 		o/$(MODE)/third_party/lz4cli/lz4cli.com
-	@TARGET=$@ ACTION=LZ4 build/do				\
-		o/$(MODE)/third_party/lz4cli/lz4cli.com -q -f -9 --content-size $< $@
+	@$(COMPILE) -ALZ4 -T$@ o/$(MODE)/third_party/lz4cli/lz4cli.com -q -f -9 --content-size $< $@
 o/$(MODE)/libc/unicode/eastasianwidth.s:			\
 		o/$(MODE)/libc/unicode/eastasianwidth.bin.lz4	\
 		o/$(MODE)/tool/build/lz4toasm.com
-	@TARGET=$@ ACTION=BIN2ASM build/do			\
-		o/$(MODE)/tool/build/lz4toasm.com -s kEastAsianWidth -o $@ $<
+	@$(COMPILE) -ABIN2ASM -T$@ o/$(MODE)/tool/build/lz4toasm.com -s kEastAsianWidth -o $@ $<
 
 o/$(MODE)/libc/unicode/combiningchars.bin:			\
 		libc/unicode/unicodedata.txt			\
 		o/$(MODE)/tool/decode/mkcombos.com
-	@TARGET=$@ ACTION=MKCOMBOS build/do			\
-		o/$(MODE)/tool/decode/mkcombos.com -o $@ $<
+	@$(COMPILE) -AMKCOMBOS -T$@ o/$(MODE)/tool/decode/mkcombos.com -o $@ $<
 o/$(MODE)/libc/unicode/combiningchars.bin.lz4:			\
 		o/$(MODE)/libc/unicode/combiningchars.bin	\
 		o/$(MODE)/third_party/lz4cli/lz4cli.com
-	@TARGET=$@ ACTION=LZ4 build/do				\
-		o/$(MODE)/third_party/lz4cli/lz4cli.com -q -f -9 --content-size $< $@
+	@$(COMPILE) -ALZ4 -T$@ o/$(MODE)/third_party/lz4cli/lz4cli.com -q -f -9 --content-size $< $@
 o/$(MODE)/libc/unicode/combiningchars.s:			\
 		o/$(MODE)/libc/unicode/combiningchars.bin.lz4	\
 		o/$(MODE)/tool/build/lz4toasm.com
-	@TARGET=$@ ACTION=BIN2ASM build/do			\
-		o/$(MODE)/tool/build/lz4toasm.com -s kCombiningChars -o $@ $<
+	@$(COMPILE) -ABIN2ASM -T$@ o/$(MODE)/tool/build/lz4toasm.com -s kCombiningChars -o $@ $<

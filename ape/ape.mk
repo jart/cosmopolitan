@@ -20,8 +20,8 @@ APE =	$(APE_DEPS)			\
 	o/$(MODE)/ape/ape.lds
 
 APELINK =				\
-	ACTION=LINK.ape 		\
 	$(COMPILE)			\
+	-ALINK.ape			\
 	$(LINK)				\
 	$(LINKARGS)			\
 	$(OUTPUT_OPTION)
