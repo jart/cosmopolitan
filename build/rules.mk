@@ -64,6 +64,7 @@ o/$(MODE)/%.lds: %.lds             ; @$(COMPILE) -APREPROCESS $(PREPROCESS.lds) 
 o/$(MODE)/%.h.ok: %.h              ; @$(COMPILE) -ACHECK.h $(COMPILE.c) -x c -g0 -o $@ $<
 o/$(MODE)/%.h.okk: %.h             ; @$(COMPILE) -ACHECK.h $(COMPILE.cxx) -x c++ -g0 -o $@ $<
 o/$(MODE)/%.o: %.greg.c            ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
+o/$(MODE)/%.i386.o: %.i386.c       ; @$(COMPILE) -AOBJECTIFY.i386 $(OBJECTIFY.i386.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.greg.o: %.greg.c       ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.ansi.o: %.ansi.c       ; @$(COMPILE) -AOBJECTIFY.ansi $(OBJECTIFY.ansi.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.ansi.o: %.c            ; @$(COMPILE) -AOBJECTIFY.ansi $(OBJECTIFY.ansi.c) $(OUTPUT_OPTION) $<

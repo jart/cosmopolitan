@@ -23,5 +23,6 @@ bool IsElf64Binary(const Elf64_Ehdr *elf, size_t mapsize) {
   if (mapsize < sizeof(Elf64_Ehdr)) return false;
   if (memcmp(elf->e_ident, ELFMAG, 4)) return false;
   return (elf->e_ident[EI_CLASS] == ELFCLASSNONE ||
-          elf->e_ident[EI_CLASS] == ELFCLASS64);
+          elf->e_ident[EI_CLASS] == ELFCLASS64 ||
+          elf->e_ident[EI_CLASS] == ELFCLASS32);
 }

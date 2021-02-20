@@ -487,6 +487,36 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	"el"
 #endif
 	.ascii	"if exec 7<> \"$o\"; then\n"
+
+//	Writes 32-bit ELF header if --32 is the first argument
+//	This should be changed to check $(uname -m) on ENOEXEC
+	.ascii	  "if [ x\"$1\" = x--32 ]; then\n"
+	.ascii	  "printf '"
+	.ascii	    "\\177ELF"			# 0x0: ⌂ELF
+	.ascii	    "\\1"			#   4: legacy mode
+	.ascii	    "\\1"			#   5: little endian
+	.ascii	    "\\1"			#   6: elf v1.o
+	.ascii	    "\\011"			#   7: FreeBSD
+	.ascii	    "\\0"			#   8: os/abi ver.
+	.ascii	    "\\0\\0\\0"			#   9: padding 3/7
+	.ascii	    "\\0\\0\\0\\0"		#      padding 4/7
+	.ascii	    "\\2\\0"			#  10: εxεcµταblε
+	.ascii	    "\\3\\0"			#  12: i386
+	.ascii	    "\\1\\0\\0\\0"		#  14: elf v1.o
+	.shstub	    ape_elf32_entry,4		#  18: e_entry
+	.shstub	    ape_elf32_phoff,4		#  1c: e_phoff
+	.shstub	    ape_elf32_shoff,4		#  20: e_shoff
+	.ascii	    "\\0\\0\\0\\0"		#  24: e_flags
+	.ascii	    "\\100\\0"			#  28: e_ehsize
+	.ascii	    "\\040\\0"			#  2a: e_phentsize
+	.shstub	    ape_elf32_phnum,2		#  2c: e_phnum
+	.ascii	    "\\0\\0"			#  2e: e_shentsize
+	.shstub	    ape_elf32_shnum,2		#  30: e_shnum
+	.shstub	    ape_elf32_shstrndx,2	#  32: e_shstrndx
+	.ascii	    "' >&7\n"
+	.ascii	  "else\n"
+
+//	Standard 64-bit ELF Header
 	.ascii	  "printf '"
 	.ascii	    "\\177ELF"			# 0x0: ⌂ELF
 	.ascii	    "\\2"			#   4: long mode
@@ -510,6 +540,8 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.shstub	    ape_elf_shnum,2		#  3c: e_shnum
 	.shstub	    ape_elf_shstrndx,2		#  3e: e_shstrndx
 	.ascii	    "' >&7\n"
+	.ascii	  "fi\n"
+
 	.ascii	  "exec 7<&-\n"
 	.ascii	"fi\n"
 	.ascii	"exec \"$0\" \"$@\"\n"		# etxtbsy tail recursion

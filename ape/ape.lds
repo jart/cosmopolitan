@@ -207,6 +207,9 @@ SECTIONS {
     HIDDEN(ape_phdrs = .);
     KEEP(*(.elf.phdrs))
     HIDDEN(ape_phdrs_end = .);
+    HIDDEN(ape_phdrs32 = .);
+    KEEP(*(.elf.phdrs32))
+    HIDDEN(ape_phdrs32_end = .);
 
     /* OpenBSD */
     . = ALIGN(__SIZEOF_POINTER__);
@@ -246,7 +249,7 @@ SECTIONS {
 /*END: realmode addressability guarantee */
 
     /* Normal Code */
-    *(.start)
+    KEEP(*(.start))
     KEEP(*(.initprologue))
     KEEP(*(SORT_BY_NAME(.init.*)))
     KEEP(*(.init))
@@ -444,6 +447,13 @@ PFSTUB8(ape_elf_shoff, 0);
 PFSTUB4(ape_elf_phnum, (ape_phdrs_end - ape_phdrs) / 56);
 PFSTUB4(ape_elf_shnum, 0);
 PFSTUB4(ape_elf_shstrndx, 0);
+
+PFSTUB4(ape_elf32_entry, _start32);
+PFSTUB4(ape_elf32_phoff, RVA(ape_phdrs32));
+PFSTUB4(ape_elf32_shoff, 0);
+PFSTUB4(ape_elf32_phnum, (ape_phdrs32_end - ape_phdrs32) / 32);
+PFSTUB4(ape_elf32_shnum, 0);
+PFSTUB4(ape_elf32_shstrndx, 0);
 
 HIDDEN(__privileged_addr = ROUNDDOWN(__privileged_start, PAGESIZE)); 
 HIDDEN(__privileged_size = (ROUNDUP(__privileged_end, PAGESIZE) -

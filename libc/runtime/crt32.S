@@ -1,7 +1,7 @@
 /*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
 │vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,31 +16,69 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/macros.internal.h"
+#include "libc/dce.h"
+#include "libc/elf/def.h"
 #include "libc/macros.h"
+.section .start,"ax",@progbits
+.code32
 
-//	Returns binary logarithm of integer 𝑥.
+//	@fileoverview 80386 APE UNIX CRT
 //
-//	      uint32 𝑥   bsf(𝑥) tzcnt(𝑥)   ffs(𝑥)   bsr(𝑥) lzcnt(𝑥)
-//	    0x00000000      wut       32        0      wut       32
-//	    0x00000001        0        0        1        0       31
-//	    0x80000001        0        0        1       31        0
-//	    0x80000000       31       31       32       31        0
-//	    0x00000010        4        4        5        4       27
-//	    0x08000010        4        4        5       27        4
-//	    0x08000000       27       27       28       27        4
-//	    0xffffffff        0        0        1       31        0
+//	This module is yoinked by build/i386ify.sh when GNU make
+//	builds source codes that have the .i386.c file extension
+//	thereby avoiding some 386 bloat when it isn't being used
 //
-//	@param	rsi:rdi is 128-bit unsigned 𝑥 value
-//	@return	eax number in range [0,128) or undef if 𝑥 is 0
-//	@see	also treasure trove of nearly identical functions
-//	@mode	legacy,long
-bsrmax:	.leafprologue
-	.profilable
-	bsr	%rsi,%rax
-	jnz	2f
-	bsr	%rdi,%rax
-1:	.leafepilogue
-2:	add	$64,%eax
-	jmp	1b
-	.endfn	bsrmax,globl
-	.source	__FILE__
+//	TODO: Verify we can't use 64-bit ELF with i386 e_machine
+
+_start32:
+	.weak	main32
+	call	main32
+	mov	%eax,%ebx
+	pushpop	1,%eax				# _exit() ordinal
+	push	%ebx				# hybrid calling convention
+	push	%eax				# should work on Linux+BSDs
+	int	$0x80
+	ud2
+	.endfn	_start32,globl,hidden
+
+	.section .elf.phdrs32,"a",@progbits
+	.long	PT_LOAD				# text segment
+	.stub	ape_rom_offset,long
+	.stub	ape_rom_vaddr,long
+	.stub	ape_rom_paddr,long
+	.stub	ape_rom_filesz,long
+	.stub	ape_rom_memsz,long
+	.long	PF_R|PF_X			# <-- wut
+	.stub	ape_rom_align,long
+	.long	PT_LOAD				# data segment
+	.stub	ape_ram_offset,long
+	.stub	ape_ram_vaddr,long
+	.stub	ape_ram_paddr,long
+	.stub	ape_ram_filesz,long
+	.stub	ape_ram_memsz,long
+	.long	PF_R|PF_W
+	.stub	ape_ram_align,long
+#if SupportsLinux()
+//	Linux ignores mprotect() and returns 0 without this lool
+//	It has nothing to do with the stack, which is still exec
+	.long	PT_GNU_STACK			# p_type
+	.long	0				# p_offset
+	.long	0				# p_vaddr
+	.long	0				# p_paddr
+	.long	0				# p_filesz
+	.long	0				# p_memsz
+	.long	PF_R|PF_W			# p_flags
+	.long	16				# p_align
+#endif
+#if SupportsOpenbsd() || SupportsNetbsd()
+	.long	PT_NOTE				# notes
+	.stub	ape_note_offset,long
+	.stub	ape_note_vaddr,long
+	.stub	ape_note_paddr,long
+	.stub	ape_note_filesz,long
+	.stub	ape_note_memsz,long
+	.long	PF_R
+	.stub	ape_note_align,long
+#endif
+	.previous

@@ -299,6 +299,11 @@ OBJECTIFY.greg.c =							\
 	-fno-sanitize=all						\
 	-c
 
+OBJECTIFY.i386.c =							\
+	$(OBJECTIFY.c)							\
+	-m32								\
+	-wrapper build/i386ify.sh
+
 OBJECTIFY.ansi.c = $(CC) $(OBJECTIFY.c.flags) -ansi -Wextra -Werror -pedantic-errors -c
 OBJECTIFY.c99.c = $(CC) $(OBJECTIFY.c.flags) -std=c99 -Wextra -Werror -pedantic-errors -c
 OBJECTIFY.c11.c = $(CC) $(OBJECTIFY.c.flags) -std=c11 -Wextra -Werror -pedantic-errors -c
