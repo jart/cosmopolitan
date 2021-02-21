@@ -126,6 +126,7 @@ const char *const kGccOnlyFlags[] = {
     "--noexecstack",
     "-Wa,--nocompress-debug-sections",
     "-Wa,--noexecstack",
+    "-Wa,-msse2avx",
     "-Wno-unused-but-set-variable",
     "-Wunsafe-loop-optimizations",
     "-fbranch-target-load-optimize",
@@ -386,8 +387,6 @@ int main(int argc, char *argv[]) {
     } else if (!strcmp(argv[i], "-msse2avx")) {
       if (isgcc) {
         AddArg(argv[i]);
-      } else if (isclang) {
-        AddArg("-Wa,-msse2avx");
       }
     } else if (!strcmp(argv[i], "-fsanitize=address")) {
       if (isgcc && ccversion >= 6) wantasan = true;

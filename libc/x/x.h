@@ -29,6 +29,7 @@ int xwrite(int, const void *, uint64_t);
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 void xdie(void) wontreturn;
+char *xdtoaf(float) _XMAL;
 char *xdtoa(long double) _XMAL;
 char *xasprintf(const char *, ...) printfesque(1) paramsnonnull((1)) _XMAL;
 char *xvasprintf(const char *, va_list) _XPNN _XMAL;

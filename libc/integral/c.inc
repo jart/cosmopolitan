@@ -651,17 +651,17 @@ typedef uint64_t uintmax_t;
 
 #ifndef __STRICT_ANSI__
 #if defined(__GNUC__) || defined(__llvm__)
-#pragma GCC diagnostic ignored "-Wsign-compare" /* lint needs to change  */
-#pragma GCC diagnostic ignored "-Wtype-limits" /* makes macros unsafe  */
-#pragma GCC diagnostic ignored "-Woverflow" /* also breaks macros  */
-#pragma GCC diagnostic ignored "-Wformat" /* forces only gnu pf */
-#pragma GCC diagnostic ignored "-Wunused-parameter" /* extreme prejudice */
-#pragma GCC diagnostic ignored "-Wunused-function" /* contradicts dce! */
-#pragma GCC diagnostic ignored "-Wunused-variable" /* belongs in tidy */
+#pragma GCC diagnostic ignored "-Wsign-compare"      /* lint needs to change  */
+#pragma GCC diagnostic ignored "-Wtype-limits"       /* makes macros unsafe  */
+#pragma GCC diagnostic ignored "-Woverflow"          /* also breaks macros  */
+#pragma GCC diagnostic ignored "-Wformat"            /* forces only gnu pf */
+#pragma GCC diagnostic ignored "-Wunused-parameter"  /* extreme prejudice */
+#pragma GCC diagnostic ignored "-Wunused-function"   /* contradicts dce! */
+#pragma GCC diagnostic ignored "-Wunused-variable"   /* belongs in tidy */
 #pragma GCC diagnostic ignored "-Wformat-extra-args" /* is also broken */
-#pragma GCC diagnostic ignored "-Wparentheses" /* annoying tidy */
-#pragma GCC diagnostic ignored "-Wdangling-else" /* come on tidy */
-#pragma GCC diagnostic ignored "-Wformat-security" /* come on tidy */
+#pragma GCC diagnostic ignored "-Wparentheses"       /* annoying tidy */
+#pragma GCC diagnostic ignored "-Wdangling-else"     /* come on tidy */
+#pragma GCC diagnostic ignored "-Wformat-security"   /* come on tidy */
 #ifndef __cplusplus
 #pragma GCC diagnostic ignored "-Wimplicit-int"
 #endif /* C++ */
@@ -678,7 +678,8 @@ typedef uint64_t uintmax_t;
 #endif /* GCC6+ */
 #if __GNUC__ >= 8
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
-#endif /* GCC8+ */
+#pragma GCC diagnostic ignored "-Wstringop-overflow" /* breaks strndup */
+#endif                                               /* GCC8+ */
 #if __GNUC__ + 0 >= 9
 #pragma GCC diagnostic ignored /* "always true" breaks dce */ "-Waddress"
 #endif /* GCC9+ */
@@ -689,8 +690,8 @@ typedef uint64_t uintmax_t;
     "-Wincompatible-pointer-types-discards-qualifiers"
 #pragma clang diagnostic ignored "-Wbuiltin-requires-header"
 #pragma clang diagnostic ignored "-Wparentheses-equality" /*-save-temps*/
-#pragma clang diagnostic ignored "-Wunused-value" /*({-save-temps})*/
-#pragma clang diagnostic ignored "-Wstring-plus-int" /* special ed */
+#pragma clang diagnostic ignored "-Wunused-value"         /*({-save-temps})*/
+#pragma clang diagnostic ignored "-Wstring-plus-int"      /* special ed */
 #pragma clang diagnostic ignored "-Wunused-value" /* extreme prejudice */
 #pragma clang diagnostic ignored "-Wbuiltin-requires-header"
 #pragma clang diagnostic ignored \

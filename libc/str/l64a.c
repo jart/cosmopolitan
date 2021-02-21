@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,15 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.h"
-.source	__FILE__
+#include "libc/str/str.h"
 
-//	Returns euclidean distance in 2d space.
-hypot:	.leafprologue
-	.profilable
-	mulsd	%xmm1,%xmm1
-	mulsd	%xmm0,%xmm0
-	addsd	%xmm1,%xmm0
-	sqrtsd	%xmm0,%xmm0
-	.leafepilogue
-	.endfn	hypot,globl
+/**
+ * Converts 32-bit integer to base64.
+ */
+char *l64a(long x) {
+  static char b[7];
+  uint32_t u, i = 0;
+  for (u = x; u; u >>= 6) {
+    b[i++] = ("./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+              "abcdefghijklmnopqrstuvwxyz")[u & 63];
+  }
+  b[i] = '\0';
+  return b;
+}

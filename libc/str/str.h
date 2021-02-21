@@ -182,6 +182,8 @@ int timingsafe_memcmp(const void *, const void *, size_t);
 void *memmem(const void *, size_t, const void *, size_t)
     paramsnonnull() nothrow nocallback nosideeffect;
 char *strerror(int) returnsnonnull nothrow nocallback;
+long a64l(const char *);
+char *l64a(long);
 
 char *tinystrstr(const char *, const char *) strlenesque;
 char16_t *tinystrstr16(const char16_t *, const char16_t *) strlenesque;

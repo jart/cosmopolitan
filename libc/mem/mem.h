@@ -22,8 +22,7 @@ void *reallocarray(void *, size_t, size_t) nodiscard;
 void *valloc(size_t) attributeallocsize((1)) vallocesque;
 void *pvalloc(size_t) attributeallocsize((1)) mallocesque;
 char *strdup(const char *) paramsnonnull() mallocesque;
-char *strndup(const char *, size_t) paramsnonnull()
-    attributeallocsize((2)) mallocesque;
+char *strndup(const char *, size_t) paramsnonnull() mallocesque;
 int posix_memalign(void **, size_t, size_t); /* wut */
 bool __grow(void *, size_t *, size_t, size_t) paramsnonnull((1, 2)) libcesque;
 
