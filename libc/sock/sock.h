@@ -65,7 +65,10 @@ struct msghdr {            /* Linux+NT ABI */
 };
 
 const char *inet_ntop(int, const void *, char *, uint32_t);
-int inet_pton(int af, const char *, void *);
+int inet_aton(const char *, struct in_addr *);
+int inet_pton(int, const char *, void *);
+uint32_t inet_addr(const char *);
+char *inet_ntoa(struct in_addr);
 int parseport(const char *);
 
 int socket(int, int, int) nodiscard;
