@@ -22,10 +22,13 @@
  * Returns euclidean distance.
  */
 float hypotf(float a, float b) {
-  float r;
+  float r, t;
   if (isinf(a) || isinf(b)) return INFINITY;
   if (isunordered(a, b)) return NAN;
-  if (!a) return 0;
+  a = fabsf(a);
+  b = fabsf(b);
+  if (a < b) t = b, b = a, a = t;
+  if (!a) return b;
   r = b / a;
-  return fabsf(a) * sqrtf(1 + r * r);
+  return a * sqrtf(1 + r * r);
 }

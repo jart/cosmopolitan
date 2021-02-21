@@ -22,10 +22,13 @@
  * Returns euclidean distance.
  */
 double hypot(double a, double b) {
-  double r;
+  double r, t;
   if (isinf(a) || isinf(b)) return INFINITY;
   if (isunordered(a, b)) return NAN;
-  if (!a) return 0;
+  a = fabs(a);
+  b = fabs(b);
+  if (a < b) t = b, b = a, a = t;
+  if (!a) return b;
   r = b / a;
-  return fabs(a) * sqrt(1 + r * r);
+  return a * sqrt(1 + r * r);
 }
