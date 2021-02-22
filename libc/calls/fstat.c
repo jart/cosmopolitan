@@ -31,9 +31,9 @@ int fstat(int fd, struct stat *st) {
   if (__isfdkind(fd, kFdZip)) {
     return weaken(__zipos_fstat)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, st);
-  } else if (!IsWindows() && !IsMetal()) {
+  } else if (!IsWindows() && !IsMetal() && !IsUefi()) {
     return sys_fstat(fd, st);
-  } else if (IsMetal()) {
+  } else if (IsMetal() || IsUefi()) {
     return fstat_metal(fd, st);
   } else {
     if (!__isfdkind(fd, kFdFile)) return ebadf();

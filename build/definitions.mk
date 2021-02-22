@@ -91,7 +91,6 @@ FTRACE =								\
 	-pg
 
 SANITIZER =								\
-	-fsanitize=leak							\
 	-fsanitize=address
 
 NO_MAGIC =								\

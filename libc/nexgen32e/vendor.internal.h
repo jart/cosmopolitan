@@ -59,7 +59,7 @@
 
 #define _KCPUIDS_VENDOR()                               \
   (((kCpuids[KCPUIDS_0H][KCPUIDS_EBX] >> 000) & 0xff) ^ \
-   ((kCpuids[KCPUIDS_0H][KCPUIDS_EDX] >> 010) & 0xff))
+   ((kCpuids[KCPUIDS_0H][KCPUIDS_ECX] >> 010) & 0xff))
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NEXGEN32E_VENDOR_H_ */

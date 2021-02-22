@@ -73,12 +73,6 @@ void *sbrk(intptr_t);
 int brk(void *);
 int NtGetVersion(void);
 
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § runtime » optimizations                                   ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
-#define _exit(RC) _Exit(RC)
-
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_RUNTIME_RUNTIME_H_ */

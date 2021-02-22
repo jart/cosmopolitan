@@ -105,7 +105,7 @@ rlstr:	.endobj	rlstr,globl,hidden		# ←for gdb readibility
 │ αcτµαlly pδrταblε εxεcµταblε § the old technology                            │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 
-#if SupportsWindows() || SupportsXnu()
+#if SupportsWindows() || SupportsUefi() || SupportsXnu()
 
 //	MZ Literally Executable Header
 //
@@ -131,14 +131,14 @@ ape_mz:	.asciz	"MZqFpD='\n"		# Mark 'Zibo' Joseph Zbikowski
 	.ascii	"JT"			# MZ: OEM identifier
 	.short	0			# MZ: OEM information
 	.org	0x40-4			# MZ: bytes reserved for you
-#if SupportsWindows()
+#if SupportsWindows() || SupportsUefi()
 	.long	RVA(ape_pe)		# PE: the new technology
 #else
 	.long	0
 #endif
 	.endfn	ape_mz,globl,hidden
 
-#else /* !(SupportsWindows() || SupportsXnu()) */
+#else /* !(SupportsWindows() || SupportsUefi() || SupportsXnu()) */
 
 //	ELF Literally Executable Header
 //
@@ -168,7 +168,7 @@ ape_mz:	.asciz	"MZqFpD='\n"		# Mark 'Zibo' Joseph Zbikowski
 	.short	ape_elf_shnum			#  3c: e_shnum
 	.short	ape_elf_shstrndx		#  3e: e_shstrndx
 
-#endif /* SupportsWindows() || SupportsXnu() */
+#endif /* SupportsWindows() || SupportsUefi() || SupportsXnu() */
 
 #if SupportsMetal()
 
@@ -471,7 +471,7 @@ ape_disk:
 
 #if SupportsSystemv()
 
-#if SupportsWindows() || SupportsXnu()
+#if SupportsWindows() || SupportsUefi() || SupportsXnu()
 apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	"o=\"$(command -v \"$0\")\"\n"
 #if SupportsXnu()
@@ -526,7 +526,7 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	"fi\n"
 	.ascii	"exit $R\n"
 	.endobj	apesh
-#endif /* SupportsWindows() || SupportsXnu() */
+#endif /* SupportsWindows() || SupportsUefi() || SupportsXnu() */
 
 	.section .elf.phdrs,"a",@progbits
 	.long	PT_LOAD				# text segment
@@ -812,7 +812,7 @@ PETEXT = 0b01110000000000000000000001100000
 PEDATA = 0b11000000000000000000000011000000
 PEIMPS = 0b11000000000000000000000001000000
 
-#if SupportsWindows()
+#if SupportsWindows() || SupportsUefi()
 
 	.section .pe.header,"a",@progbits
 	.align	__SIZEOF_POINTER__
@@ -830,23 +830,27 @@ ape_pe:	.ascin	"PE",4
 	.long	0			# SizeOfCode
 	.long	0			# SizeOfInitializedData
 	.long	0			# SizeOfUninitializedData
-	.long	RVA(WinMain)		# EntryPoint
+	.long	RVA(ape_pe_entry)	# EntryPoint
 	.long	0			# BaseOfCode
 	.quad	IMAGE_BASE_VIRTUAL	# ImageBase
 	.long	4096			# SectionAlignment
 	.long	4096			# FileAlignment
-	.short	6			# MajorOperatingSystemVersion
+	.short	v_ntversion		# MajorOperatingSystemVersion
 	.short	0			# MinorOperatingSystemVersion
 	.short	0			# MajorImageVersion
 	.short	0			# MinorImageVersion
-	.short	6			# MajorSubsystemVersion
+	.short	v_ntsubversion		# MajorSubsystemVersion
 	.short	0			# MinorSubsystemVersion
 	.long	0			# Win32VersionValue
 	.long	RVA(_end)		# SizeOfImage
 	.long	RVA(_ehead)		# SizeOfHeaders
 	.long	0			# Checksum
 	.short	v_ntsubsystem		# Subsystem: 0=Neutral,2=GUI,3=Console
+#if SupportsWindows()
 	.short	DLLEXE			# DllCharacteristics
+#else
+	.short	0			# DllCharacteristics
+#endif
 	.quad	0x0000000000100000	# StackReserve
 	.quad	0x00000000000fc000	# StackCommit
 	.quad	0			# HeapReserve
@@ -854,8 +858,12 @@ ape_pe:	.ascin	"PE",4
 	.long	0			# LoaderFlags
 	.long	16			# NumberOfDirectoryEntries
 	.long	0,0			# ExportsDirectory
+#if SupportsWindows()
 	.long	RVA(ape_idata_idt)	# ImportsDirectory
 	.stub	ape_idata_idtsize,long	# ImportsDirectorySize
+#else
+	.long	0,0			# ImportsDirectory
+#endif
 	.long	0,0			# ResourcesDirectory
 	.long	0,0			# ExceptionsDirectory
 	.long	0,0			# SecurityDirectory
@@ -866,8 +874,12 @@ ape_pe:	.ascin	"PE",4
 	.long	0,0			# ThreadLocalStorage
 	.long	0,0			# LoadConfigurationDirectory
 	.long	0,0			# BoundImportDirectory
+#if SupportsWindows()
 	.long	RVA(ape_idata_iat)	# ImportAddressDirectory
 	.stub	ape_idata_iatsize,long	# ImportAddressDirectorySize
+#else
+	.long	0,0			# ImportAddressDirectory
+#endif
 	.long	0,0			# DelayImportDescriptor
 	.long	0,0			# ComPlusRuntimeHeader
 	.long	0,0			# Reserved
@@ -900,7 +912,7 @@ ape_pe:	.ascin	"PE",4
 	.long	PEDATA		# Flags
 	.previous
 
-#endif /* SupportsWindows() */
+#endif /* SupportsWindows() || SupportsUefi() */
 
 	.section .idata.ro.idt.1,"a",@progbits
 	.type	ape_idata_idtend,@object
@@ -1524,22 +1536,21 @@ metal.thunk:
 #endif
 //	𝑠𝑙𝑖𝑑𝑒
 	.endfn	metal.thunk
-metal:
-	xor	%eax,%eax			# clear bss
+metal:	xor	%eax,%eax			# clear bss
 	mov	$ape_bss_vaddr,%edi
 	mov	$ape_bss_memsz,%ecx
 	rep stosb
-	.weak	__hostos
+0:	.weak	__hostos
 	ezlea	__hostos,ax
 	test	%rax,%rax
 	jz	1f
 	movb	$METAL,(%rax)
-1:	push	$0				# auxv
-	push	$0
-	push	$0				# envp
-	push	$0				# auxv
+1:	push	$0				# auxv[0][1]
+	push	$0				# auxv[0][0]
+	push	$0				# envp[0]
+	push	$0				# argv[0]
 	push	$0				# argc
-	xor	%edi,%edi
+	xor	%edi,%edi			# not freebsd
 	jmp	_start
 	.endfn	metal
 

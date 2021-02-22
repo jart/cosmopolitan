@@ -104,7 +104,7 @@ __systemfive:
 
 	.privileged
 .Lanchorpoint:
-#if SupportsLinux() || SupportsMetal()
+#if SupportsLinux() || SupportsMetal() || SupportsUefi()
 systemfive_linux:
 	and	$0xfff,%eax
 	cmp	$0xfff,%eax
@@ -194,13 +194,17 @@ systemfive_xnu:
 	.init.start 300,_init_systemfive
 	push	%rbx
 	push	%rsi
-#if SupportsMetal()
-	testb	$METAL,(%rdi)			# @see ape/ape.S
-	jnz	_init_systemfive_metal
-#endif
 #if SupportsXnu()
 	testb	$XNU,(%rdi)			# @see libc/crt/crt.S
 	jnz	_init_systemfive_xnu
+#endif
+#if SupportsUefi()
+	testb	$UEFI,(%rdi)			# @see ape/ape.S
+	jnz	_init_systemfive_uefi
+#endif
+#if SupportsMetal()
+	testb	$METAL,(%rdi)			# @see ape/ape.S
+	jnz	_init_systemfive_metal
 #endif
 #if SupportsFreebsd()
 	testb	$FREEBSD,(%rdi)			# @see libc/crt/crt.S
@@ -222,7 +226,7 @@ systemfive_xnu:
 	lea	2(%eax),%eax
 	jnz	0b
 #endif
-#if SupportsLinux() || SupportsMetal()
+#if SupportsLinux()
 _init_systemfive_linux:
 	pushb	systemfive_linux-.Lanchorpoint
 	push	$LINUX
@@ -233,6 +237,13 @@ _init_systemfive_linux:
 _init_systemfive_metal:
 	pushb	systemfive_linux-.Lanchorpoint
 	push	$METAL
+	ezlea	syscon_linux,si
+	jmp	_init_systemfive_os
+#endif
+#if SupportsUefi()
+_init_systemfive_uefi:
+	pushb	systemfive_linux-.Lanchorpoint
+	push	$UEFI
 	ezlea	syscon_linux,si
 	jmp	_init_systemfive_os
 #endif
@@ -312,8 +323,8 @@ _init_systemfive_magnums:
 //	𝑠𝑙𝑖𝑑𝑒
 #if SupportsSystemv() && !defined(TINY)
 _init_systemfive_stack:					# determinism ftw!
-#if SupportsWindows()
-	testb	IsWindows()				# already did this
+#if SupportsWindows() || SupportsMetal() || SupportsUefi()
+	testb	$WINDOWS|METAL|UEFI,__hostos(%rip)
 	jnz	_init_systemfive_done
 #endif
 	push	%rdi
@@ -403,7 +414,7 @@ syscon_end:
 	.type	syscon_end,@object
 	.globl	syscon_start
 	.globl	syscon_end
-#if SupportsLinux() || SupportsMetal()
+#if SupportsLinux() || SupportsMetal() || SupportsUefi()
 	.section .sort.rodata.syscon.linux.1,"a",@progbits
 	.align	1
 syscon_linux:/*

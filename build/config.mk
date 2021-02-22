@@ -95,7 +95,7 @@ CONFIG_COPTS +=			\
 	$(SANITIZER)
 
 TARGET_ARCH ?=			\
-	-msse3
+	-march=native
 
 OVERRIDE_CCFLAGS +=		\
 	-fno-pie

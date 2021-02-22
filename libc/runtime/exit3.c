@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,30 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/efi.h"
+#include "libc/calls/internal.h"
 #include "libc/dce.h"
-#include "libc/runtime/internal.h"
-#include "libc/macros.h"
-.privileged
+#include "libc/nexgen32e/vendor.internal.h"
+#include "libc/nt/runtime.h"
+#include "libc/runtime/runtime.h"
 
-//	Terminates process, ignoring destructors and atexit() handlers.
-//
-//	@param	edi is exit code ∈ [0,256)
-//	@asyncsignalsafe
-//	@vforksafe
-//	@noreturn
-_Exit:	push	%rbp
-	mov	%rsp,%rbp
-#if SupportsWindows()
-	testb	IsWindows()
-	jz	1f
-	sub	$32,%rsp
-	movzbl	%dil,%ecx			# %ERRORLEVEL% is limitless
-	call	*__imp_ExitProcess(%rip)
-#endif
-1:	mov	__NR_exit_group(%rip),%eax
-	syscall
-#if SupportsMetal()
-	call	triplf
-#endif
-	.endfn	_Exit,globl,protected
-	.hidden	__NR_exit_group
+/**
+ * Terminates process, ignoring destructors and atexit() handlers.
+ *
+ * @param rc is exit code ∈ [0,256)
+ * @asyncsignalsafe
+ * @vforksafe
+ * @noreturn
+ */
+wontreturn void _Exit(int rc) {
+  if ((!IsWindows() && !IsMetal() && !IsUefi()) ||
+      (IsMetal() && IsGenuineCosmo())) {
+    sys_exit(rc);
+  } else if (IsUefi()) {
+    __efi_system_table->BootServices->Exit(__efi_image_handle, rc, 0, NULL);
+  } else if (IsWindows()) {
+    ExitProcess(rc & 0xff);
+  }
+  triplf();
+}

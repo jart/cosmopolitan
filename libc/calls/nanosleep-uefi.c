@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,15 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.h"
-.privileged
-.source	__FILE__
+#include "libc/calls/calls.h"
+#include "libc/calls/efi.h"
+#include "libc/nt/efi.h"
+#include "libc/sysv/errfuns.h"
 
-//	Terminates process, ignoring destructors and atexit() handlers.
-//
-//	@param	edi is exit code ∈ [0,256)
-//	@asyncsignalsafe
-//	@vforksafe
-//	@noreturn
-_exit:	jmp	_Exit
-	.endfn	_exit,globl,protected
+int sys_nanosleep_uefi(const struct timespec *req, struct timespec *rem) {
+  if (__efi_system_table->BootServices->Stall(
+          req->tv_sec * 1000000 + req->tv_nsec / 1000) == EFI_SUCCESS) {
+    if (rem) {
+      rem->tv_sec = 0;
+      rem->tv_nsec = 0;
+    }
+    return 0;
+  } else {
+    return eintr();
+  }
+}

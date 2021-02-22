@@ -229,7 +229,7 @@ SECTIONS {
     . += 1;
 
     KEEP(*(.ape.pad.head))
-    . = ALIGN(SupportsWindows() ? PAGESIZE : 16);
+    . = ALIGN(SupportsWindows() || SupportsUefi() ? PAGESIZE : 16);
     HIDDEN(_ehead = .);
   } :Head
 
@@ -500,15 +500,21 @@ SHSTUB2(ape_macho_dd_skip, RVA(ape_macho) / 8);
 SHSTUB2(ape_macho_dd_count, (ape_macho_end - ape_macho) / 8);
 #endif
 
-#if SupportsWindows()
+#if SupportsWindows() || SupportsUefi()
+#define LINK_WINDOWS (SupportsWindows() && !DEFINED(EfiMain))
 PFSTUB4(ape_pe_offset, ape_pe - ape_mz);
 HIDDEN(ape_pe_optsz = ape_pe_sections - (ape_pe + 24));
 HIDDEN(ape_pe_shnum = (ape_pe_sections_end - ape_pe_sections) / 40);
 HIDDEN(ape_idata_idtsize = ape_idata_idtend - ape_idata_idt);
 HIDDEN(ape_idata_iatsize = ape_idata_iatend - ape_idata_iat);
-HIDDEN(v_ntsubsystem = (DEFINED(GetMessage)
-                        ? kNtImageSubsystemWindowsGui
-                        : kNtImageSubsystemWindowsCui));
+HIDDEN(v_ntversion = LINK_WINDOWS ? 6 : 1);
+HIDDEN(v_ntsubversion = LINK_WINDOWS ? 6 : 5);
+HIDDEN(v_ntsubsystem = (LINK_WINDOWS
+                        ? (DEFINED(GetMessage)
+                           ? kNtImageSubsystemWindowsGui
+                           : kNtImageSubsystemWindowsCui)
+                        : kNtImageSubsystemEfiApplication));
+HIDDEN(ape_pe_entry = LINK_WINDOWS ? WinMain : EfiMain);
 #endif
 
 #if SupportsMetal()
@@ -603,7 +609,7 @@ CHURN(v_ape_realsectors);
 #if SupportsXnu()
 CHURN(ape_macho);
 #endif
-#if SupportsWindows()
+#if SupportsWindows() || SupportsUefi()
 CHURN(ape_mz);
 CHURN(ape_pe);
 CHURN(ape_pe_offset);

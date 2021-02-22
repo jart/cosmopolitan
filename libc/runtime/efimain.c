@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,40 +16,57 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/weaken.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/sock/internal.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/calls/efi.h"
+#include "libc/dce.h"
+#include "libc/nt/efi.h"
+#include "libc/nt/thunk/msabi.h"
+#include "libc/runtime/runtime.h"
 
 /**
- * Writes data from multiple buffers.
+ * EFI Application Entrypoint.
  *
- * Please note that it's not an error for a short write to happen. This
- * can happen in the kernel if EINTR happens after some of the write has
- * been committed. It can also happen if we need to polyfill this system
- * call using write().
+ * This entrypoint is mutually exclusive from WinMain since
+ * Windows apps and EFI apps use the same PE binary format.
+ * By default, we build binaries to support Windows. If you
+ * want to your APE executable to boot on UEFI instead then
+ * you need to run the following build command:
  *
- * @return number of bytes actually handed off, or -1 w/ errno
+ *     make -j8 CPPFLAGS=-DSUPPORT_VECTOR=251
+ *
+ * That'll remove all the Windows code and turn EFI on. You
+ * can also remove by BIOS code too, by changing 251 to 249
+ * but it shouldn't matter. Here's how to emulate EFI apps:
+ *
+ *     qemu-system-x86_64 \
+ *       -bios OVMF.fd    \
+ *       -serial stdio    \
+ *       -net none        \
+ *       -drive format=raw,file=fat:rw:o/tool/viz
+ *     FS0:
+ *     deathstar.com
+ *
+ * If you're using the amalgamated release binaries then it
+ * should be possible to enable UEFI mode by having this at
+ * the top of your main source file to hint the APE linker:
+ *
+ *     STATIC_YOINK("EfiMain");
+ *     int main() { ... }
+ *
+ * @see libc/dce.h
  */
-ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
-  if (fd < 0) return einval();
-  if (iovlen < 0) return einval();
-  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-    return weaken(__zipos_write)(
-        (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, iov, iovlen, -1);
-  } else if ((SupportsMetal() || SupportsUefi()) && fd < g_fds.n &&
-             g_fds.p[fd].kind == kFdSerial) {
-    return writev_serial(&g_fds.p[fd], iov, iovlen);
-  } else if (!IsWindows()) {
-    return sys_writev(fd, iov, iovlen);
-  } else if (fd < g_fds.n &&
-             (g_fds.p[fd].kind == kFdFile || g_fds.p[fd].kind == kFdConsole)) {
-    return sys_write_nt(&g_fds.p[fd], iov, iovlen, -1);
-  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdSocket) {
-    return weaken(sys_sendto_nt)(&g_fds.p[fd], iov, iovlen, 0, NULL, 0);
-  } else {
-    return ebadf();
-  }
+__msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
+                                  EFI_SYSTEM_TABLE *SystemTable) {
+  extern char os asm("__hostos");
+  os = UEFI;
+  __efi_image_handle = ImageHandle;
+  __efi_system_table = SystemTable;
+  asm("push\t$0\n\t"
+      "push\t$0\n\t"
+      "push\t$0\n\t"
+      "push\t$0\n\t"
+      "push\t$0\n\t"
+      "xor\t%edi,%edi\n\t"
+      ".weak\t_start\n\t"
+      "jmp\t_start");
+  unreachable;
 }

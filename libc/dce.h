@@ -20,6 +20,7 @@
 #define OPENBSD 16
 #define FREEBSD 32
 #define NETBSD  64
+#define UEFI    128
 
 #ifdef NDEBUG
 #define NoDebug() 1
@@ -72,6 +73,7 @@
 #define SupportsLinux()   ((SUPPORT_VECTOR & LINUX) == LINUX)
 #define SupportsMetal()   ((SUPPORT_VECTOR & METAL) == METAL)
 #define SupportsWindows() ((SUPPORT_VECTOR & WINDOWS) == WINDOWS)
+#define SupportsUefi()    ((SUPPORT_VECTOR & UEFI) == UEFI)
 #define SupportsXnu()     ((SUPPORT_VECTOR & XNU) == XNU)
 #define SupportsFreebsd() ((SUPPORT_VECTOR & FREEBSD) == FREEBSD)
 #define SupportsOpenbsd() ((SUPPORT_VECTOR & OPENBSD) == OPENBSD)
@@ -84,6 +86,7 @@
 #define IsLinux()   (SupportsLinux() && (__hostos & LINUX))
 #define IsMetal()   (SupportsMetal() && (__hostos & METAL))
 #define IsWindows() (SupportsWindows() && (__hostos & WINDOWS))
+#define IsUefi()    (SupportsUefi() && (__hostos & UEFI))
 #define IsXnu()     (SupportsXnu() && (__hostos & XNU))
 #define IsFreebsd() (SupportsFreebsd() && (__hostos & FREEBSD))
 #define IsOpenbsd() (SupportsOpenbsd() && (__hostos & OPENBSD))
@@ -94,6 +97,7 @@
 #define IsLinux() $LINUX,__hostos(%rip)
 #define IsMetal() $METAL,__hostos(%rip)
 #define IsWindows() $WINDOWS,__hostos(%rip)
+#define IsUefi() $UEFI,__hostos(%rip)
 #define IsBsd() $XNU|FREEBSD|OPENBSD|NETBSD,__hostos(%rip)
 #define IsXnu() $XNU,__hostos(%rip)
 #define IsFreebsd() $FREEBSD,__hostos(%rip)

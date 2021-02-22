@@ -144,7 +144,7 @@ int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
          sizeof(struct sigaction) > sizeof(struct sigaction_freebsd) &&
          sizeof(struct sigaction) > sizeof(struct sigaction_openbsd) &&
          sizeof(struct sigaction) > sizeof(struct sigaction_netbsd));
-  if (IsMetal()) return enosys(); /* TODO: Signals on Metal */
+  if (IsMetal() || IsUefi()) return enosys(); /* TODO: Signals on Metal */
   if (!(0 < sig && sig < NSIG)) return einval();
   if (sig == SIGKILL || sig == SIGSTOP) return einval();
   if (!act) {
