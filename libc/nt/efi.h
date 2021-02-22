@@ -91,6 +91,13 @@
 #define EFI_EVT_SIGNAL_VIRTUAL_ADDRESS_CHANGE 0x60000202
 #define EFI_EVT_RUNTIME_CONTEXT               0x20000000
 
+#define LOADED_IMAGE_PROTOCOL                        \
+  {                                                  \
+    0x5B1B31A1, 0x9562, 0x11d2, {                    \
+      0x8E, 0x3F, 0x00, 0xA0, 0xC9, 0x69, 0x72, 0x3B \
+    }                                                \
+  }
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -210,6 +217,12 @@ typedef struct {
   uint32_t Reserved;
 } EFI_TABLE_HEADER;
 
+typedef struct {
+  uint8_t Type;
+  uint8_t SubType;
+  uint8_t Length[2];
+} EFI_DEVICE_PATH_PROTOCOL;
+
 typedef EFI_STATUS(EFIAPI *EFI_EXIT)(EFI_HANDLE ImageHandle,
                                      EFI_STATUS ExitStatus,
                                      uintptr_t ExitDataSize,
@@ -241,6 +254,10 @@ typedef EFI_STATUS(EFIAPI *EFI_GET_MEMORY_MAP)(
     uintptr_t *inout_MemoryMapSize, EFI_MEMORY_DESCRIPTOR *inout_MemoryMap,
     uintptr_t *out_MapKey, uintptr_t *out_DescriptorSize,
     uint32_t *out_DescriptorVersion);
+
+typedef EFI_STATUS(EFIAPI *EFI_ALLOCATE_POOL)(EFI_MEMORY_TYPE PoolType,
+                                              uintptr_t Size, void *out_Buffer);
+typedef EFI_STATUS(EFIAPI *EFI_FREE_POOL)(void *Buffer);
 
 typedef EFI_STATUS(EFIAPI *EFI_CHECK_EVENT)(EFI_EVENT Event);
 typedef EFI_STATUS(EFIAPI *EFI_CLOSE_EVENT)(EFI_EVENT Event);
@@ -318,6 +335,18 @@ typedef EFI_STATUS(EFIAPI *EFI_TEXT_SET_CURSOR_POSITION)(
 typedef EFI_STATUS(EFIAPI *EFI_TEXT_ENABLE_CURSOR)(
     EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This, bool Visible);
 
+typedef EFI_STATUS(EFIAPI *EFI_HANDLE_PROTOCOL)(EFI_HANDLE Handle,
+                                                EFI_GUID *Protocol,
+                                                void *out_Interface);
+
+typedef EFI_STATUS(EFIAPI *EFI_IMAGE_LOAD)(bool BootPolicy,
+                                           EFI_HANDLE ParentImageHandle,
+                                           EFI_DEVICE_PATH_PROTOCOL *DevicePath,
+                                           void *opt_SourceBuffer,
+                                           uintptr_t SourceSize,
+                                           EFI_HANDLE *out_ImageHandle);
+typedef EFI_STATUS(EFIAPI *EFI_IMAGE_UNLOAD)(EFI_HANDLE ImageHandle);
+
 typedef struct {
   EFI_TABLE_HEADER Hdr;
   EFI_GET_TIME GetTime;
@@ -343,8 +372,8 @@ typedef struct {
   EFI_ALLOCATE_PAGES AllocatePages;
   EFI_FREE_PAGES FreePages;
   EFI_GET_MEMORY_MAP GetMemoryMap;
-  void *AllocatePool;
-  void *FreePool;
+  EFI_ALLOCATE_POOL AllocatePool;
+  EFI_FREE_POOL FreePool;
   EFI_CREATE_EVENT CreateEvent;
   EFI_SET_TIMER SetTimer;
   EFI_WAIT_FOR_EVENT WaitForEvent;
@@ -354,16 +383,16 @@ typedef struct {
   void *InstallProtocolInterface;
   void *ReinstallProtocolInterface;
   void *UninstallProtocolInterface;
-  void *HandleProtocol;
+  EFI_HANDLE_PROTOCOL HandleProtocol;
   void *Reserved;
   void *RegisterProtocolNotify;
   void *LocateHandle;
   void *LocateDevicePath;
   void *InstallConfigurationTable;
-  void *LoadImage;
+  EFI_IMAGE_LOAD LoadImage;
   void *StartImage;
   EFI_EXIT Exit;
-  void *UnloadImage;
+  EFI_IMAGE_UNLOAD UnloadImage;
   void *ExitBootServices;
   EFI_GET_NEXT_MONOTONIC_COUNT GetNextMonotonicCount;
   EFI_STALL Stall;
@@ -418,6 +447,22 @@ struct _EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL {
   EFI_TEXT_ENABLE_CURSOR EnableCursor;
   EFI_SIMPLE_TEXT_OUTPUT_MODE *Mode;
 };
+
+typedef struct {
+  uint32_t Revision;
+  EFI_HANDLE ParentHandle;
+  EFI_SYSTEM_TABLE *SystemTable;
+  EFI_HANDLE DeviceHandle;
+  EFI_DEVICE_PATH_PROTOCOL *FilePath;
+  void *Reserved;
+  uint32_t LoadOptionsSize;
+  void *LoadOptions;
+  void *ImageBase;
+  uint64_t ImageSize;
+  EFI_MEMORY_TYPE ImageCodeType;
+  EFI_MEMORY_TYPE ImageDataType;
+  EFI_IMAGE_UNLOAD Unload;
+} EFI_LOADED_IMAGE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

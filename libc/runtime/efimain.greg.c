@@ -18,9 +18,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/efi.h"
 #include "libc/dce.h"
+#include "libc/macros.h"
 #include "libc/nt/efi.h"
 #include "libc/nt/thunk/msabi.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+
+struct EfiArgs {
+  char *args[4096];
+  char argblock[ARG_MAX];
+};
+
+static const EFI_GUID kEfiLoadedImageProtocol = LOADED_IMAGE_PROTOCOL;
 
 /**
  * EFI Application Entrypoint.
@@ -39,7 +48,7 @@
  *
  *     qemu-system-x86_64 \
  *       -bios OVMF.fd    \
- *       -serial stdio    \
+ *       -nographic       \
  *       -net none        \
  *       -drive format=raw,file=fat:rw:o/tool/viz
  *     FS0:
@@ -56,17 +65,30 @@
  */
 __msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
                                   EFI_SYSTEM_TABLE *SystemTable) {
+  intptr_t argc;
+  struct EfiArgs *ea;
+  EFI_LOADED_IMAGE *img;
   extern char os asm("__hostos");
   os = UEFI;
   __efi_image_handle = ImageHandle;
   __efi_system_table = SystemTable;
-  asm("push\t$0\n\t"
-      "push\t$0\n\t"
-      "push\t$0\n\t"
-      "push\t$0\n\t"
-      "push\t$0\n\t"
-      "xor\t%edi,%edi\n\t"
+  SystemTable->BootServices->AllocatePool(EfiConventionalMemory, sizeof(*ea),
+                                          &ea);
+  SystemTable->BootServices->HandleProtocol(ImageHandle,
+                                            &kEfiLoadedImageProtocol, &img);
+  argc = GetDosArgv(img->LoadOptions, ea->argblock, ARG_MAX, ea->args,
+                    ARRAYLEN(ea->args));
+  asm("push\t$0\n\t" /* auxv[0][1] */
+      "push\t$0\n\t" /* auxv[0][0] */
+      "push\t$0\n\t" /* envp[0] */
+      "sub\t%2,%%rsp\n\t"
+      "mov\t%%rsp,%%rdi\n\t"
+      "rep movsb\n\t" /* argv */
+      "push\t%0\n\t"  /* argc */
+      "xor\t%%edi,%%edi\n\t"
       ".weak\t_start\n\t"
-      "jmp\t_start");
+      "jmp\t_start"
+      : /* no outputs */
+      : "a"(argc), "S"(ea->args), "c"((argc + 1) * 8));
   unreachable;
 }

@@ -53,7 +53,7 @@ XARGS ?= xargs -P4 -rs8000
 NICE ?= build/actuallynice
 DOT ?= dot
 GZ ?= gzip
-CLANG = clang-10
+CLANG = clang
 FC = gfortran  #/opt/cross9f/bin/x86_64-linux-musl-gfortran
 
 # see build/compile, etc. which run third_party/gcc/unbundle.sh
