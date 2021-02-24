@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_ktimer_create,-1,-1,0x00eb,-1,-1,-1
+.syscon nr,__NR_ktimer_create,0xfff,0xfff,0x00eb,0xfff,0xfff,0xfff

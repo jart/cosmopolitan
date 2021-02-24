@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_kdebug_trace,-1,0x20000b3,-1,-1,-1,-1
+.syscon nr,__NR_kdebug_trace,0xfff,0x20000b3,0xfff,0xfff,0xfff,0xfff

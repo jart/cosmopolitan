@@ -30,7 +30,7 @@
  * @see libc/sysv/consts.sh
  */
 int setrlimit(int resource, const struct rlimit *rlim) {
-  if (resource == -1) return einval();
+  if (resource == 127) return einval();
   if (!IsWindows()) {
     return sys_setrlimit(resource, rlim);
   } else {

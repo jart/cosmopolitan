@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon errno,ENONET,64,-1,-1,-1,-1,-1
+.syscon errno,ENONET,64,0,0,0,0,0

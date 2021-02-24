@@ -8,10 +8,10 @@ COSMOPOLITAN_C_START_
 
 typedef long jmp_buf[8] forcealign(CACHELINE);
 
-extern int g_argc;                                  /* CRT */
-extern char **g_argv;                               /* CRT */
+extern int __argc;                                  /* CRT */
+extern char **__argv;                               /* CRT */
 extern char **environ;                              /* CRT */
-extern unsigned long *g_auxv;                       /* CRT */
+extern unsigned long *__auxv;                       /* CRT */
 extern char *program_invocation_name;               /* RII */
 extern char *program_invocation_short_name;         /* RII */
 extern uint64_t g_syscount;                         /* RII */

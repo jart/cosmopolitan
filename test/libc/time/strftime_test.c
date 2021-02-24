@@ -59,6 +59,7 @@ TEST(strftime_100, rfc822_ShakaZuluTime) {
 
 TEST(strftime_201, iso8601_GoogleStandardTime) {
   int64_t t = 0x5cd04d0e;
+  ASSERT_STREQ("GST", getenv("TZ"));
   ASSERT_STREQ("2019-05-06T08:04:46PDT",
                FormatTime("%Y-%m-%dT%H:%M:%S%Z", localtime(&t)));
 }

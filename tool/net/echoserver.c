@@ -102,7 +102,7 @@ nodiscard char *DescribeSocket(struct Socket *s) {
 wontreturn void ShowUsageAndExit(bool iserror) {
   FILE *f = iserror ? stderr : stdout;
   int rc = iserror ? EXIT_FAILURE : EXIT_SUCCESS;
-  fprintf(f, "%s: %s %s\n", "Usage", g_argv[0], "PROTOCOL:ADDR:PORT...");
+  fprintf(f, "%s: %s %s\n", "Usage", __argv[0], "PROTOCOL:ADDR:PORT...");
   exit(rc);
 }
 

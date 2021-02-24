@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_finit_module,0x0139,-1,-1,-1,-1,-1
+.syscon nr,__NR_finit_module,0x0139,0xfff,0xfff,0xfff,0xfff,0xfff

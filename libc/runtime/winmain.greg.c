@@ -41,8 +41,12 @@
 #include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/internal.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/prot.h"
+
+#define MAP_ANONYMOUS 32
+#define MAP_PRIVATE   2
+#define PROT_EXEC     4
+#define PROT_READ     1
+#define PROT_WRITE    2
 
 /*
  * TODO: Why can't we allocate addresses above 4GB on Windows 7 x64?
@@ -51,7 +55,8 @@
 
 struct WinArgs {
   char *argv[4096];
-  char *envp[4096];
+  char *envp[4092];
+  intptr_t auxv[2][2];
   char argblock[ARG_MAX];
   char envblock[ARG_MAX];
 };
@@ -100,7 +105,6 @@ static noasan textwindows wontreturn void WinMainNew(void) {
   size_t size;
   int i, count;
   uint64_t addr;
-  long auxv[1][2];
   struct WinArgs *wa;
   const char16_t *env16;
   extern char os asm("__hostos");
@@ -120,18 +124,23 @@ static noasan textwindows wontreturn void WinMainNew(void) {
   _mmi.p[0].flags = MAP_PRIVATE | MAP_ANONYMOUS;
   _mmi.i = pushpop(1L);
   wa = (struct WinArgs *)(addr + size - sizeof(struct WinArgs));
-  count = GetDosArgv(GetCommandLine(), wa->argblock, ARG_MAX, wa->argv, 4096);
+  count = GetDosArgv(GetCommandLine(), wa->argblock, ARRAYLEN(wa->argblock),
+                     wa->argv, ARRAYLEN(wa->argv));
   for (i = 0; wa->argv[0][i]; ++i) {
     if (wa->argv[0][i] == '\\') {
       wa->argv[0][i] = '/';
     }
   }
   env16 = GetEnvironmentStrings();
-  GetDosEnviron(env16, wa->envblock, ARG_MAX, wa->envp, 4096);
+  GetDosEnviron(env16, wa->envblock, ARRAYLEN(wa->envblock), wa->envp,
+                ARRAYLEN(wa->envp));
   FreeEnvironmentStrings(env16);
-  auxv[0][0] = pushpop(0L);
-  auxv[0][1] = pushpop(0L);
-  _jmpstack((char *)addr + STACKSIZE, cosmo, count, wa->argv, wa->envp, auxv);
+  wa->auxv[1][0] = pushpop(0L);
+  wa->auxv[1][1] = pushpop(0L);
+  wa->auxv[0][0] = (intptr_t)wa->argv[0];
+  wa->auxv[0][1] = pushpop(31L);
+  _jmpstack((char *)addr + STACKSIZE, cosmo, count, wa->argv, wa->envp,
+            wa->auxv);
 }
 
 /**

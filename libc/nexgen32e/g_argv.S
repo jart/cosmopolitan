@@ -19,13 +19,13 @@
 #include "libc/macros.h"
 #include "libc/notice.inc"
 
-	.initbss 300,_init_g_argv
-g_argv:	.quad	0
-	.endobj	g_argv,globl,hidden
+	.initbss 300,_init___argv
+/	Global variable holding _start(argv) parameter.
+__argv:	.quad	0
+	.endobj	__argv,globl
 	.previous
 
-	.init.start 300,_init_g_argv
+	.init.start 300,_init___argv
 	mov	%r13,%rax
 	stosq
-	.init.end 300,_init_g_argv
-	.source	__FILE__
+	.init.end 300,_init___argv

@@ -25,9 +25,24 @@
 
 #define MAX_VARS 512
 
+static bool once;
+
+static void PutEnvInit(void) {
+  char **pin, **pout;
+  pin = environ;
+  pout = malloc(sizeof(char *) * MAX_VARS);
+  environ = pout;
+  while (*pin) *pout++ = strdup(*pin++);
+  *pout = NULL;
+}
+
 int PutEnvImpl(char *s, bool overwrite) {
   char *p;
   unsigned i, namelen;
+  if (!once) {
+    PutEnvInit();
+    once = true;
+  }
   p = strchr(s, '=');
   if (!p) goto fail;
   namelen = p + 1 - s;
@@ -58,14 +73,3 @@ fail:
 int putenv(char *string) {
   return PutEnvImpl(strdup(string), true);
 }
-
-textstartup static void putenv_init(void) {
-  char **pin, **pout;
-  pin = environ;
-  pout = malloc(sizeof(char *) * MAX_VARS);
-  environ = pout;
-  while (*pin) *pout++ = strdup(*pin++);
-  *pout = NULL;
-}
-
-const void *const putenv_ctor[] initarray = {putenv_init};

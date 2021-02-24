@@ -32,22 +32,14 @@
  * @asyncsignalsafe
  */
 unsigned long getauxval(unsigned long at) {
-  unsigned long res = 0;
-  if (at != -1) {
-    if (!IsWindows()) {
-      if (!g_auxv) return 0;
-      for (const unsigned long *ap = g_auxv; *ap; ap += 2) {
-        if (ap[0] == at) {
-          res = ap[1];
-          break;
-        }
-      }
-    } else {
-      /* TODO(jart): GetProcessImageFileName */
-    }
-    if (res == 0 && at == AT_EXECFN) {
-      res = (uintptr_t)program_invocation_name;
+  unsigned long res, *ap;
+  for (ap = __auxv; ap[0]; ap += 2) {
+    if (at == ap[0]) {
+      return ap[1];
     }
   }
-  return res;
+  if (at == AT_EXECFN) {
+    return (intptr_t)__argv[0];
+  }
+  return 0;
 }

@@ -58,15 +58,15 @@ syscon	errno	ESPIPE					29			29			29			29			29			25			# unix consensus & kNtErro
 syscon	errno	EROFS					30			30			30			30			30			6009			# unix consensus & kNtErrorFileReadOnly
 syscon	errno	EMLINK					31			31			31			31			31			4			# unix consensus & kNtErrorTooManyLinks
 syscon	errno	EPIPE					32			32			32			32			32			109			# unix consensus & kNtErrorBrokenPipe
-syscon	errno	EDOM					33			33			33			33			33			-1			# bsd consensus
-syscon	errno	ERANGE					34			34			34			34			34			-1			# bsd consensus
+syscon	errno	EDOM					33			33			33			33			33			0			# bsd consensus
+syscon	errno	ERANGE					34			34			34			34			34			0			# bsd consensus
 syscon	errno	EDEADLK					35			11			11			11			11			1131			# bsd consensus & kNtErrorPossibleDeadlock
 syscon	errno	ENAMETOOLONG				36			63			63			63			63			0x274f			# bsd consensus & WSAENAMETOOLONG
-syscon	errno	ENOLCK					37			77			77			77			77			-1			# bsd consensus
+syscon	errno	ENOLCK					37			77			77			77			77			0			# bsd consensus
 syscon	errno	ENOTEMPTY				39			66			66			66			66			145			# bsd consensus & kNtErrorDirNotEmpty (TODO: What is WSAENOTEMPTY? 0x2752)
 syscon	errno	ELOOP					40			62			62			62			62			0x274e			# bsd consensus & WSAELOOP
-syscon	errno	ENOMSG					42			91			83			90			83			-1
-syscon	errno	EIDRM					43			90			82			89			82			-1
+syscon	errno	ENOMSG					42			91			83			90			83			0
+syscon	errno	EIDRM					43			90			82			89			82			0
 syscon	errno	EUSERS					87			68			68			68			68			0x2754			# bsd consensus & WSAEUSERS
 syscon	errno	ENOTSOCK				88			38			38			38			38			0x2736			# bsd consensus & WSAENOTSOCK
 syscon	errno	EDESTADDRREQ				89			39			39			39			39			0x2737			# bsd consensus & WSAEDESTADDRREQ
@@ -98,64 +98,64 @@ syscon	errno	EHOSTUNREACH				113			65			65			65			65			0x2751			# bsd consensus 
 syscon	errno	EALREADY				114			37			37			37			37			0x2735			# bsd consensus & WSAEALREADY
 syscon	errno	EINPROGRESS				115			36			36			36			36			0x2734			# bsd consensus & WSAEINPROGRESS
 syscon	errno	ESTALE					116			70			70			70			70			0x2756			# bsd consensus & WSAESTALE
-syscon	errno	ECHRNG					44			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EL2NSYNC				45			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EL3HLT					46			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EL3RST					47			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	ELNRNG					48			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EUNATCH					49			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	ENOCSI					50			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EL2HLT					51			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EBADE					52			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EBADR					53			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EXFULL					54			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	ENOANO					55			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EBADRQC					56			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EBADSLT					57			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EBFONT					59			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	ENOSTR					60			99			-1			-1			91			-1
-syscon	errno	ENODATA					61			96			-1			-1			89			-1
-syscon	errno	ETIME					62			101			-1			-1			92			-1
-syscon	errno	ENOSR					63			98			-1			-1			90			-1
-syscon	errno	ENONET					64			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	ENOPKG					65			-1			-1			-1			-1			-1			# bsd consensus
+syscon	errno	ECHRNG					44			0			0			0			0			0			# bsd consensus
+syscon	errno	EL2NSYNC				45			0			0			0			0			0			# bsd consensus
+syscon	errno	EL3HLT					46			0			0			0			0			0			# bsd consensus
+syscon	errno	EL3RST					47			0			0			0			0			0			# bsd consensus
+syscon	errno	ELNRNG					48			0			0			0			0			0			# bsd consensus
+syscon	errno	EUNATCH					49			0			0			0			0			0			# bsd consensus
+syscon	errno	ENOCSI					50			0			0			0			0			0			# bsd consensus
+syscon	errno	EL2HLT					51			0			0			0			0			0			# bsd consensus
+syscon	errno	EBADE					52			0			0			0			0			0			# bsd consensus
+syscon	errno	EBADR					53			0			0			0			0			0			# bsd consensus
+syscon	errno	EXFULL					54			0			0			0			0			0			# bsd consensus
+syscon	errno	ENOANO					55			0			0			0			0			0			# bsd consensus
+syscon	errno	EBADRQC					56			0			0			0			0			0			# bsd consensus
+syscon	errno	EBADSLT					57			0			0			0			0			0			# bsd consensus
+syscon	errno	EBFONT					59			0			0			0			0			0			# bsd consensus
+syscon	errno	ENOSTR					60			99			0			0			91			0
+syscon	errno	ENODATA					61			96			0			0			89			0
+syscon	errno	ETIME					62			101			0			0			92			0
+syscon	errno	ENOSR					63			98			0			0			90			0
+syscon	errno	ENONET					64			0			0			0			0			0			# bsd consensus
+syscon	errno	ENOPKG					65			0			0			0			0			0			# bsd consensus
 syscon	errno	EREMOTE					66			71			71			71			71			0x2757			# bsd consensus
-syscon	errno	ENOLINK					67			97			91			-1			95			-1
-syscon	errno	EADV					68			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	ESRMNT					69			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	ECOMM					70			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EPROTO					71			100			92			95			96			-1
-syscon	errno	EMULTIHOP				72			95			90			-1			94			-1
-syscon	errno	EDOTDOT					73			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EBADMSG					74			94			89			92			88			-1
-syscon	errno	EOVERFLOW				75			84			84			87			84			-1
-syscon	errno	ENOTUNIQ				76			-1			-1			-1			-1			-1			# bsd consensus
+syscon	errno	ENOLINK					67			97			91			0			95			0
+syscon	errno	EADV					68			0			0			0			0			0			# bsd consensus
+syscon	errno	ESRMNT					69			0			0			0			0			0			# bsd consensus
+syscon	errno	ECOMM					70			0			0			0			0			0			# bsd consensus
+syscon	errno	EPROTO					71			100			92			95			96			0
+syscon	errno	EMULTIHOP				72			95			90			0			94			0
+syscon	errno	EDOTDOT					73			0			0			0			0			0			# bsd consensus
+syscon	errno	EBADMSG					74			94			89			92			88			0
+syscon	errno	EOVERFLOW				75			84			84			87			84			0
+syscon	errno	ENOTUNIQ				76			0			0			0			0			0			# bsd consensus
 syscon	errno	EBADFD					77			9			9			9			9			6			# file descriptor in bad state; cf. EBADF; fudged on non-Linux
-syscon	errno	EREMCHG					78			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	ELIBACC					79			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	ELIBBAD					80			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	ELIBSCN					81			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	ELIBMAX					82			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	ELIBEXEC				83			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EILSEQ					84			92			86			84			85			-1
-syscon	errno	ERESTART				85			-1			-1			-1			-3			-1			# bsd consensus
-syscon	errno	ESTRPIPE				86			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EUCLEAN					117			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	ENOTNAM					118			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	ENAVAIL					119			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EISNAM					120			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EREMOTEIO				121			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	ENOMEDIUM				123			-1			-1			85			85			-1
-syscon	errno	EMEDIUMTYPE				124			-1			-1			86			86			-1
-syscon	errno	ECANCELED				125			89			85			88			87			-1
-syscon	errno	ENOKEY					126			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EKEYEXPIRED				127			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EKEYREVOKED				128			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EKEYREJECTED				129			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EOWNERDEAD				130			105			96			94			97			-1
-syscon	errno	ENOTRECOVERABLE				131			104			95			93			98			-1
-syscon	errno	ERFKILL					132			-1			-1			-1			-1			-1			# bsd consensus
-syscon	errno	EHWPOISON				133			-1			-1			-1			-1			-1			# bsd consensus
+syscon	errno	EREMCHG					78			0			0			0			0			0			# bsd consensus
+syscon	errno	ELIBACC					79			0			0			0			0			0			# bsd consensus
+syscon	errno	ELIBBAD					80			0			0			0			0			0			# bsd consensus
+syscon	errno	ELIBSCN					81			0			0			0			0			0			# bsd consensus
+syscon	errno	ELIBMAX					82			0			0			0			0			0			# bsd consensus
+syscon	errno	ELIBEXEC				83			0			0			0			0			0			# bsd consensus
+syscon	errno	EILSEQ					84			92			86			84			85			0
+syscon	errno	ERESTART				85			0			0			0			-3			0			# bsd consensus
+syscon	errno	ESTRPIPE				86			0			0			0			0			0			# bsd consensus
+syscon	errno	EUCLEAN					117			0			0			0			0			0			# bsd consensus
+syscon	errno	ENOTNAM					118			0			0			0			0			0			# bsd consensus
+syscon	errno	ENAVAIL					119			0			0			0			0			0			# bsd consensus
+syscon	errno	EISNAM					120			0			0			0			0			0			# bsd consensus
+syscon	errno	EREMOTEIO				121			0			0			0			0			0			# bsd consensus
+syscon	errno	ENOMEDIUM				123			0			0			85			85			0
+syscon	errno	EMEDIUMTYPE				124			0			0			86			86			0
+syscon	errno	ECANCELED				125			89			85			88			87			0
+syscon	errno	ENOKEY					126			0			0			0			0			0			# bsd consensus
+syscon	errno	EKEYEXPIRED				127			0			0			0			0			0			# bsd consensus
+syscon	errno	EKEYREVOKED				128			0			0			0			0			0			# bsd consensus
+syscon	errno	EKEYREJECTED				129			0			0			0			0			0			# bsd consensus
+syscon	errno	EOWNERDEAD				130			105			96			94			97			0
+syscon	errno	ENOTRECOVERABLE				131			104			95			93			98			0
+syscon	errno	ERFKILL					132			0			0			0			0			0			# bsd consensus
+syscon	errno	EHWPOISON				133			0			0			0			0			0			# bsd consensus
 
 #	signals
 #
@@ -531,15 +531,15 @@ syscon	sigact	SA_ONESHOT				0x80000000		0			0			0			0			0
 
 syscon	clock	CLOCK_REALTIME				0			0			0			0			0			0			# consensus
 syscon	clock	CLOCK_MONOTONIC				1			1			4			3			3			1			# XNU/NT faked
-syscon	clock	CLOCK_PROCESS_CPUTIME_ID		2			-1			15			2			0x40000000		0
-syscon	clock	CLOCK_THREAD_CPUTIME_ID			3			-1			14			4			0x20000000		0
+syscon	clock	CLOCK_PROCESS_CPUTIME_ID		2			0			15			2			0x40000000		0
+syscon	clock	CLOCK_THREAD_CPUTIME_ID			3			0			14			4			0x20000000		0
 syscon	clock	CLOCK_MONOTONIC_RAW			4			4			0x4000			0x4000			0x4000			4			# XNU/NT/FreeBSD/OpenBSD faked, not available on RHEL5
-syscon	clock	CLOCK_REALTIME_COARSE			5			-1			0			0			0			0			# bsd consensus
-syscon	clock	CLOCK_MONOTONIC_COARSE			6			-1			0			0			0			0			# bsd consensus
-syscon	clock	CLOCK_BOOTTIME				7			-1			0			6			6			0
-syscon	clock	CLOCK_REALTIME_ALARM			8			-1			0			0			0			0			# bsd consensus
-syscon	clock	CLOCK_BOOTTIME_ALARM			9			-1			0			0			0			0			# bsd consensus
-syscon	clock	CLOCK_TAI				11			-1			0			0			0			0			# bsd consensus
+syscon	clock	CLOCK_REALTIME_COARSE			5			0			0			0			0			0			# bsd consensus
+syscon	clock	CLOCK_MONOTONIC_COARSE			6			0			0			0			0			0			# bsd consensus
+syscon	clock	CLOCK_BOOTTIME				7			0			0			6			6			0
+syscon	clock	CLOCK_REALTIME_ALARM			8			0			0			0			0			0			# bsd consensus
+syscon	clock	CLOCK_BOOTTIME_ALARM			9			0			0			0			0			0			# bsd consensus
+syscon	clock	CLOCK_TAI				11			0			0			0			0			0			# bsd consensus
 
 #	epoll
 #
@@ -571,7 +571,7 @@ syscon	epoll	EPOLLET					0x80000000		0x80000000		0x80000000		0x80000000		0x80000
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	so	SO_REUSEPORT				15			0x0200			0x0200			0x0200			0x0200			4			# bsd consensus (NT calls it SO_REUSEADDR)
-syscon	so	SO_REUSEADDR				2			4			4			4			4			-1			# bsd consensus (default behavior on NT)
+syscon	so	SO_REUSEADDR				2			4			4			4			4			0			# bsd consensus (default behavior on NT)
 syscon	so	SO_KEEPALIVE				9			8			8			8			8			8			# bsd consensus
 syscon	so	SO_DONTROUTE				5			0x10			0x10			0x10			0x10			0x10			# bsd consensus
 syscon	so	SO_BROADCAST				6			0x20			0x20			0x20			0x20			0x20			# bsd consensus
@@ -584,7 +584,7 @@ syscon	so	SO_SNDBUF				7			0x1001			0x1001			0x1001			0x1001			0x1001			# bsd co
 syscon	so	SO_RCVBUF				8			0x1002			0x1002			0x1002			0x1002			0x1002			# bsd consensus
 syscon	so	SO_RCVLOWAT				18			0x1004			0x1004			0x1004			0x1004			0x1004			# bsd consensus
 syscon	so	SO_RCVTIMEO				20			0x1006			0x1006			0x1006			0x100c			0x1006			# bsd consensus
-syscon	so	SO_EXCLUSIVEADDRUSE			-1			-1			-1			-1			-1			0xfffffffb		# hoo boy
+syscon	so	SO_EXCLUSIVEADDRUSE			0			0			0			0			0			0xfffffffb		# hoo boy
 syscon	so	SO_SNDLOWAT				19			0x1003			0x1003			0x1003			0x1003			0x1003			# bsd consensus
 syscon	so	SO_SNDTIMEO				21			0x1005			0x1005			0x1005			0x100b			0x1005			# bsd consensus
 syscon	so	SO_TYPE					3			0x1008			0x1008			0x1008			0x1008			0x1008			# bsd consensus
@@ -1544,22 +1544,22 @@ syscon	nd	ND_ROUTER_ADVERT			134			134			134			134			134			0			# unix consensus
 syscon	nd	ND_ROUTER_SOLICIT			133			133			133			133			133			0			# unix consensus
 syscon	nd	ND_RA_FLAG_HOME_AGENT			0x20			0			0			0			0			0x20			# bsd consensus
 
-syscon	rlim	RLIMIT_CPU				0			0			0			0			0			-1			# unix consensus
-syscon	rlim	RLIMIT_FSIZE				1			1			1			1			1			-1			# unix consensus
-syscon	rlim	RLIMIT_DATA				2			2			2			2			2			-1			# unix consensus
-syscon	rlim	RLIMIT_STACK				3			3			3			3			3			-1			# unix consensus
-syscon	rlim	RLIMIT_CORE				4			4			4			4			4			-1			# unix consensus
-syscon	rlim	RLIMIT_RSS				5			5			5			5			5			-1			# unix consensus
-syscon	rlim	RLIMIT_NPROC				6			7			7			7			7			-1			# bsd consensus
-syscon	rlim	RLIMIT_NOFILE				7			8			8			8			8			-1			# bsd consensus
-syscon	rlim	RLIMIT_MEMLOCK				8			6			6			6			6			-1			# bsd consensus
-syscon	rlim	RLIMIT_AS				9			5			10			-1			-1			-1
-syscon	rlim	RLIMIT_LOCKS				10			-1			-1			-1			-1			-1			# bsd consensus
-syscon	rlim	RLIMIT_SIGPENDING			11			-1			-1			-1			-1			-1			# bsd consensus
-syscon	rlim	RLIMIT_MSGQUEUE				12			-1			-1			-1			-1			-1			# bsd consensus
-syscon	rlim	RLIMIT_NICE				13			-1			-1			-1			-1			-1			# bsd consensus
-syscon	rlim	RLIMIT_RTPRIO				14			-1			-1			-1			-1			-1			# bsd consensus
-syscon	rlim	RLIMIT_NLIMITS				16			-1			-1			-1			-1			-1			# bsd consensus
+syscon	rlim	RLIMIT_CPU				0			0			0			0			0			127			# unix consensus
+syscon	rlim	RLIMIT_FSIZE				1			1			1			1			1			127			# unix consensus
+syscon	rlim	RLIMIT_DATA				2			2			2			2			2			127			# unix consensus
+syscon	rlim	RLIMIT_STACK				3			3			3			3			3			127			# unix consensus
+syscon	rlim	RLIMIT_CORE				4			4			4			4			4			127			# unix consensus
+syscon	rlim	RLIMIT_RSS				5			5			5			5			5			127			# unix consensus
+syscon	rlim	RLIMIT_NPROC				6			7			7			7			7			127			# bsd consensus
+syscon	rlim	RLIMIT_NOFILE				7			8			8			8			8			127			# bsd consensus
+syscon	rlim	RLIMIT_MEMLOCK				8			6			6			6			6			127			# bsd consensus
+syscon	rlim	RLIMIT_AS				9			5			10			127			127			127
+syscon	rlim	RLIMIT_LOCKS				10			127			127			127			127			127			# bsd consensus
+syscon	rlim	RLIMIT_SIGPENDING			11			127			127			127			127			127			# bsd consensus
+syscon	rlim	RLIMIT_MSGQUEUE				12			127			127			127			127			127			# bsd consensus
+syscon	rlim	RLIMIT_NICE				13			127			127			127			127			127			# bsd consensus
+syscon	rlim	RLIMIT_RTPRIO				14			127			127			127			127			127			# bsd consensus
+syscon	rlim	RLIMIT_NLIMITS				16			127			127			127			127			127			# bsd consensus
 
 syscon	misc	TCFLSH					0x540b			0			0			0			0			0
 syscon	misc	TCIFLUSH				0			1			1			1			1			0			# bsd consensus
@@ -1673,17 +1673,17 @@ syscon	sock	SOCK_NONBLOCK				0x0800			0x0800			0x20000000		0x4000			0x20000000		
 syscon	sock	SOCK_DCCP				6			0			0			0			0			0			# what is it?
 syscon	sock	SOCK_PACKET				10			0			0			0			0			0			# what is it?
 
-syscon	prsnlty	ADDR_COMPAT_LAYOUT			0x0200000		-1			-1			-1			-1			-1			# linux only
-syscon	prsnlty	READ_IMPLIES_EXEC			0x0400000		-1			-1			-1			-1			-1			# linux only
-syscon	prsnlty	ADDR_LIMIT_3GB				0x8000000		-1			-1			-1			-1			-1			# linux only
-syscon	prsnlty	FDPIC_FUNCPTRS				0x0080000		-1			-1			-1			-1			-1			# linux only
-syscon	prsnlty	STICKY_TIMEOUTS				0x4000000		-1			-1			-1			-1			-1			# linux only
-syscon	prsnlty	MMAP_PAGE_ZERO				0x0100000		-1			-1			-1			-1			-1			# linux only
-syscon	prsnlty	ADDR_LIMIT_32BIT			0x0800000		-1			-1			-1			-1			-1			# linux only
-syscon	prsnlty	WHOLE_SECONDS				0x2000000		-1			-1			-1			-1			-1			# linux only
-syscon	prsnlty	ADDR_NO_RANDOMIZE			0x0040000		-1			-1			-1			-1			-1			# linux only
-syscon	prsnlty	SHORT_INODE				0x1000000		-1			-1			-1			-1			-1			# linux only
-syscon	prsnlty	UNAME26					0x0020000		-1			-1			-1			-1			-1			# linux only
+syscon	prsnlty	ADDR_COMPAT_LAYOUT			0x0200000		0			0			0			0			0			# linux only
+syscon	prsnlty	READ_IMPLIES_EXEC			0x0400000		0			0			0			0			0			# linux only
+syscon	prsnlty	ADDR_LIMIT_3GB				0x8000000		0			0			0			0			0			# linux only
+syscon	prsnlty	FDPIC_FUNCPTRS				0x0080000		0			0			0			0			0			# linux only
+syscon	prsnlty	STICKY_TIMEOUTS				0x4000000		0			0			0			0			0			# linux only
+syscon	prsnlty	MMAP_PAGE_ZERO				0x0100000		0			0			0			0			0			# linux only
+syscon	prsnlty	ADDR_LIMIT_32BIT			0x0800000		0			0			0			0			0			# linux only
+syscon	prsnlty	WHOLE_SECONDS				0x2000000		0			0			0			0			0			# linux only
+syscon	prsnlty	ADDR_NO_RANDOMIZE			0x0040000		0			0			0			0			0			# linux only
+syscon	prsnlty	SHORT_INODE				0x1000000		0			0			0			0			0			# linux only
+syscon	prsnlty	UNAME26					0x0020000		0			0			0			0			0			# linux only
 
 syscon	misc	INADDR_ANY				0			0			0			0			0			0			# consensus
 syscon	misc	INADDR_BROADCAST			0xffffffff		0xffffffff		0xffffffff		0xffffffff		0xffffffff		0xffffffff		# consensus
@@ -2384,9 +2384,9 @@ syscon	misc	ERA_T_FMT				0x020031		48			48			0			0			0
 #		= TIOCSETA → About  3,110 results (0.41 seconds)
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
-syscon	termios	TCGETS					0x5401			0x40487413		0x402c7413		0x402c7413		0x402c7413		-1			# Gets console settings; tcgetattr(tty, argp) → ioctl(tty, TCGETS, struct termios *argp); polyfilled NT
-syscon	compat	TIOCGETA				0x5401			0x40487413		0x402c7413		0x402c7413		0x402c7413		-1			# Gets console settings; = tcgetattr(tty, struct termios *argp)
-#syscon	compat	TCGETA					0x5405			-1			-1			-1			-1			-1			# Gets console settings; ≈ ioctl(fd, TCGETA, struct termio *argp)
+syscon	termios	TCGETS					0x5401			0x40487413		0x402c7413		0x402c7413		0x402c7413		0			# Gets console settings; tcgetattr(tty, argp) → ioctl(tty, TCGETS, struct termios *argp); polyfilled NT
+syscon	compat	TIOCGETA				0x5401			0x40487413		0x402c7413		0x402c7413		0x402c7413		0			# Gets console settings; = tcgetattr(tty, struct termios *argp)
+#syscon	compat	TCGETA					0x5405			0			0			0			0			0			# Gets console settings; ≈ ioctl(fd, TCGETA, struct termio *argp)
 syscon	termios	TCSANOW					0			0			0			0			0			0			# Sets console settings; tcsetattr(fd, TCSANOW, argp); polyfilled NT
 syscon	termios	TCSETS					0x5402			0x80487414		0x802c7414		0x802c7414		0x802c7414		0x5402			# Sets console settings; = ioctl(tty, TCSETS, const struct termios *argp); polyfilled NT
 syscon	compat	TIOCSETA				0x5402			0x80487414		0x802c7414		0x802c7414		0x802c7414		0x5402			# Sets console settings; = ioctl(tty, TIOCSETA, const struct termios *argp); polyfilled NT
@@ -2401,53 +2401,53 @@ syscon	compat	TIOCSETAF				0x5404			0x80487416		0x802c7416		0x802c7416		0x802c74
 #syscon	compat	TCSETAF					0x5404			0x80487416		0x802c7416		0x802c7416		0x802c7416		0x5402			# Drops input & drains output & sets console settings; ≈ ioctl(tty, TCSETAF, const struct termio *argp); polyfilled NT
 syscon	termios	TIOCGWINSZ				0x5413			1074295912		1074295912		1074295912		1074295912		0x5413			# ioctl(tty, TIOCGWINSZ, struct winsize *argp); polyfilled NT
 syscon	termios	TIOCSWINSZ				0x5414			0x80087467		0x80087467		0x80087467		0x80087467		0x5414			# ioctl(tty, TIOCSWINSZ, const struct winsize *argp) (faked NT)
-syscon	termios	TIOCOUTQ				0x5411			0x40047473		0x40047473		0x40047473		0x40047473		-1			# get # bytes queued in TTY's output buffer ioctl(tty, TIOCSWINSZ, const struct winsize *argp)
-syscon	termios	TIOCCBRK				0x5428			0x2000747a		0x2000747a		0x2000747a		0x2000747a		-1			# boop
-syscon	termios	TIOCCONS				0x541d			0x80047462		0x80047462		0x80047462		0x80047462		-1			# boop
-syscon	termios	TIOCGETD				0x5424			0x4004741a		0x4004741a		0x4004741a		0x4004741a		-1			# boop
-syscon	termios	TIOCGPGRP				0x540f			0x40047477		0x40047477		0x40047477		0x40047477		-1			# boop
-syscon	termios	TIOCNOTTY				0x5422			0x20007471		0x20007471		0x20007471		0x20007471		-1			# boop
-syscon	termios	TIOCNXCL				0x540d			0x2000740e		0x2000740e		0x2000740e		0x2000740e		-1			# boop
-syscon	termios	TIOCSBRK				0x5427			0x2000747b		0x2000747b		0x2000747b		0x2000747b		-1			# boop
-syscon	termios	TIOCSCTTY				0x540e			0x20007461		0x20007461		0x20007461		0x20007461		-1			# boop
-syscon	termios	TIOCSETD				0x5423			0x8004741b		0x8004741b		0x8004741b		0x8004741b		-1			# boop
-syscon	termios	TIOCSIG					0x40045436		0x2000745f		0x2004745f		0x8004745f		0x8004745f		-1			# boop
-syscon	termios	TIOCSPGRP				0x5410			0x80047476		0x80047476		0x80047476		0x80047476		-1			# boop
-syscon	termios	TIOCSTI					0x5412			0x80017472		0x80017472		0			0			-1			# boop
-syscon	termios	TIOCGPTN				0x80045430		0			0x4004740f		0			0			-1			# boop
-syscon	termios	TIOCGSID				0x5429			0			0x40047463		0x40047463		0x40047463		-1			# boop
-syscon	termios	TABLDISC				0			0x3			0			0x3			0x3			-1			# boop
-syscon	termios	SLIPDISC				0			0x4			0x4			0x4			0x4			-1			# boop
-syscon	termios	PPPDISC					0			0x5			0x5			0x5			0x5			-1			# boop
-syscon	termios	TIOCDRAIN				0			0x2000745e		0x2000745e		0x2000745e		0x2000745e		-1			# boop
-syscon	termios	TIOCSTAT				0			0x20007465		0x20007465		0x20007465		0x20007465		-1			# boop
-syscon	termios	TIOCSTART				0			0x2000746e		0x2000746e		0x2000746e		0x2000746e		-1			# boop
-syscon	termios	TIOCCDTR				0			0x20007478		0x20007478		0x20007478		0x20007478		-1			# boop
-syscon	termios	TIOCSDTR				0			0x20007479		0x20007479		0x20007479		0x20007479		-1			# boop
-syscon	termios	TIOCFLUSH				0			0x80047410		0x80047410		0x80047410		0x80047410		-1			# boop
-syscon	termios	TIOCEXT					0			0x80047460		0x80047460		0x80047460		0x80047460		-1			# boop
-syscon	termios	TIOCGDRAINWAIT				0			0x40047456		0x40047456		0			0			-1			# boop
-syscon	termios	TIOCTIMESTAMP				0			0x40107459		0x40107459		0			0			-1			# boop
-syscon	termios	TIOCSDRAINWAIT				0			0x80047457		0x80047457		0			0			-1			# boop
-syscon	termios	TIOCREMOTE				0			0x80047469		0			0x80047469		0x80047469		-1			# boop
-syscon	termios	TTYDISC					0			0			0			0			0			-1			# boop
-syscon	termios	TIOCFLAG_SOFTCAR			0			0			0			0x1			0x1			-1			# boop
-syscon	termios	TIOCFLAG_PPS				0			0			0			0x10			0x10			-1			# boop
-syscon	termios	TIOCFLAG_CLOCAL				0			0			0			0x2			0x2			-1			# boop
-syscon	termios	TIOCCHKVERAUTH				0			0			0			0x2000741e		0x2000741e		-1			# boop
-syscon	termios	TIOCGFLAGS				0			0			0			0x4004745d		0x4004745d		-1			# boop
-syscon	termios	TIOCGTSTAMP				0			0			0			0x4010745b		0x4010745b		-1			# boop
-syscon	termios	STRIPDISC				0			0			0			0x6			0x6			-1			# boop
-syscon	termios	NMEADISC				0			0			0			0x7			0x7			-1			# boop
-syscon	termios	TIOCUCNTL_CBRK				0			0			0			0x7a			0x7a			-1			# boop
-syscon	termios	TIOCFLAG_MDMBUF				0			0			0			0x8			0x8			-1			# boop
-syscon	termios	TIOCSETVERAUTH				0			0			0			0x8004741c		0x8004741c		-1			# boop
-syscon	termios	TIOCSFLAGS				0			0			0			0x8004745c		0x8004745c		-1			# boop
-syscon	termios	TIOCSTSTAMP				0			0			0			0x8008745a		0x8008745a		-1			# boop
-syscon	termios	ENDRUNDISC				0			0			0			0x9			0x9			-1			# boop
-syscon	termios	TIOCPTMASTER				0			0			0x2000741c		0			0			-1			# boop
-syscon	termios	NETGRAPHDISC				0			0			0x6			0			0			-1			# boop
-syscon	termios	H4DISC					0			0			0x7			0			0			-1			# boop
+syscon	termios	TIOCOUTQ				0x5411			0x40047473		0x40047473		0x40047473		0x40047473		0			# get # bytes queued in TTY's output buffer ioctl(tty, TIOCSWINSZ, const struct winsize *argp)
+syscon	termios	TIOCCBRK				0x5428			0x2000747a		0x2000747a		0x2000747a		0x2000747a		0			# boop
+syscon	termios	TIOCCONS				0x541d			0x80047462		0x80047462		0x80047462		0x80047462		0			# boop
+syscon	termios	TIOCGETD				0x5424			0x4004741a		0x4004741a		0x4004741a		0x4004741a		0			# boop
+syscon	termios	TIOCGPGRP				0x540f			0x40047477		0x40047477		0x40047477		0x40047477		0			# boop
+syscon	termios	TIOCNOTTY				0x5422			0x20007471		0x20007471		0x20007471		0x20007471		0			# boop
+syscon	termios	TIOCNXCL				0x540d			0x2000740e		0x2000740e		0x2000740e		0x2000740e		0			# boop
+syscon	termios	TIOCSBRK				0x5427			0x2000747b		0x2000747b		0x2000747b		0x2000747b		0			# boop
+syscon	termios	TIOCSCTTY				0x540e			0x20007461		0x20007461		0x20007461		0x20007461		0			# boop
+syscon	termios	TIOCSETD				0x5423			0x8004741b		0x8004741b		0x8004741b		0x8004741b		0			# boop
+syscon	termios	TIOCSIG					0x40045436		0x2000745f		0x2004745f		0x8004745f		0x8004745f		0			# boop
+syscon	termios	TIOCSPGRP				0x5410			0x80047476		0x80047476		0x80047476		0x80047476		0			# boop
+syscon	termios	TIOCSTI					0x5412			0x80017472		0x80017472		0			0			0			# boop
+syscon	termios	TIOCGPTN				0x80045430		0			0x4004740f		0			0			0			# boop
+syscon	termios	TIOCGSID				0x5429			0			0x40047463		0x40047463		0x40047463		0			# boop
+syscon	termios	TABLDISC				0			0x3			0			0x3			0x3			0			# boop
+syscon	termios	SLIPDISC				0			0x4			0x4			0x4			0x4			0			# boop
+syscon	termios	PPPDISC					0			0x5			0x5			0x5			0x5			0			# boop
+syscon	termios	TIOCDRAIN				0			0x2000745e		0x2000745e		0x2000745e		0x2000745e		0			# boop
+syscon	termios	TIOCSTAT				0			0x20007465		0x20007465		0x20007465		0x20007465		0			# boop
+syscon	termios	TIOCSTART				0			0x2000746e		0x2000746e		0x2000746e		0x2000746e		0			# boop
+syscon	termios	TIOCCDTR				0			0x20007478		0x20007478		0x20007478		0x20007478		0			# boop
+syscon	termios	TIOCSDTR				0			0x20007479		0x20007479		0x20007479		0x20007479		0			# boop
+syscon	termios	TIOCFLUSH				0			0x80047410		0x80047410		0x80047410		0x80047410		0			# boop
+syscon	termios	TIOCEXT					0			0x80047460		0x80047460		0x80047460		0x80047460		0			# boop
+syscon	termios	TIOCGDRAINWAIT				0			0x40047456		0x40047456		0			0			0			# boop
+syscon	termios	TIOCTIMESTAMP				0			0x40107459		0x40107459		0			0			0			# boop
+syscon	termios	TIOCSDRAINWAIT				0			0x80047457		0x80047457		0			0			0			# boop
+syscon	termios	TIOCREMOTE				0			0x80047469		0			0x80047469		0x80047469		0			# boop
+syscon	termios	TTYDISC					0			0			0			0			0			0			# boop
+syscon	termios	TIOCFLAG_SOFTCAR			0			0			0			0x1			0x1			0			# boop
+syscon	termios	TIOCFLAG_PPS				0			0			0			0x10			0x10			0			# boop
+syscon	termios	TIOCFLAG_CLOCAL				0			0			0			0x2			0x2			0			# boop
+syscon	termios	TIOCCHKVERAUTH				0			0			0			0x2000741e		0x2000741e		0			# boop
+syscon	termios	TIOCGFLAGS				0			0			0			0x4004745d		0x4004745d		0			# boop
+syscon	termios	TIOCGTSTAMP				0			0			0			0x4010745b		0x4010745b		0			# boop
+syscon	termios	STRIPDISC				0			0			0			0x6			0x6			0			# boop
+syscon	termios	NMEADISC				0			0			0			0x7			0x7			0			# boop
+syscon	termios	TIOCUCNTL_CBRK				0			0			0			0x7a			0x7a			0			# boop
+syscon	termios	TIOCFLAG_MDMBUF				0			0			0			0x8			0x8			0			# boop
+syscon	termios	TIOCSETVERAUTH				0			0			0			0x8004741c		0x8004741c		0			# boop
+syscon	termios	TIOCSFLAGS				0			0			0			0x8004745c		0x8004745c		0			# boop
+syscon	termios	TIOCSTSTAMP				0			0			0			0x8008745a		0x8008745a		0			# boop
+syscon	termios	ENDRUNDISC				0			0			0			0x9			0x9			0			# boop
+syscon	termios	TIOCPTMASTER				0			0			0x2000741c		0			0			0			# boop
+syscon	termios	NETGRAPHDISC				0			0			0x6			0			0			0			# boop
+syscon	termios	H4DISC					0			0			0x7			0			0			0			# boop
 
 syscon	termios	ISIG					0b0000000000000001	0b0000000010000000	0b0000000010000000	0b0000000010000000	0b0000000010000000	0b0000000000000001	# termios.c_lflag|=ISIG makes Ctrl-C, Ctrl-\, etc. generate signals
 syscon	termios	ICANON					0b0000000000000010	0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000000000010	# termios.c_lflag&=~ICANON disables 1960's version of gnu readline (see also VMIN)
@@ -2750,771 +2750,771 @@ syscon	misc	YESSTR					0x050002		54			54			46			46			0
 #	System Call Numbers.
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX
-syscon	nr	__NR_exit				0x003c			0x2000001          	0x0001        		0x0001          	0x001           	-1
-syscon	nr	__NR_exit_group				0x00e7			0x2000001          	0x0001        		0x0001          	0x001           	-1
-syscon	nr	__NR_read				0x0000			0x2000003		0x0003			0x0003			0x003			-1
-syscon	nr	__NR_write				0x0001			0x2000004		0x0004			0x0004			0x004			-1
-syscon	nr	__NR_open				0x0002			0x2000005		0x0005			0x0005			0x005			-1
-syscon	nr	__NR_close				0x0003			0x2000006		0x0006			0x0006			0x006			-1
-syscon	nr	__NR_stat				0x0004			0x2000152		-1			0x0026			0x1b7			-1
-syscon	nr	__NR_fstat				0x0005			0x2000153		0x0227			0x0035			0x1b8			-1
-syscon	nr	__NR_lstat				0x0006			0x2000154		0x0028			0x0028			0x1b9			-1
-syscon	nr	__NR_poll				0x0007			0x20000e6		0x00d1			0x00fc			0x0d1			-1
-syscon	nr	__NR_ppoll				0x010f			-1			0x0221			0x006d			-1			-1
-syscon	nr	__NR_lseek				0x0008			0x20000c7		0x01de			0x00c7			0x0c7			-1
-syscon	nr	__NR_mmap				0x0009			0x20000c5		0x01dd			0x00c5			0x0c5			-1
-syscon	nr	__NR_msync				0x001a			0x2000041		0x0041			0x0100			0x115			-1
-syscon	nr	__NR_mprotect				0x000a			0x200004a		0x004a			0x004a			0x04a			-1
-syscon	nr	__NR_munmap				0x000b			0x2000049		0x0049			0x0049			0x049			-1
-syscon	nr	__NR_sigaction				0x000d			0x200002e		0x01a0			0x002e			0x154			-1
-syscon	nr	__NR_sigprocmask			0x000e			0x2000030		0x0154			0x0030			0x125			-1
-syscon	nr	__NR_ioctl				0x0010			0x2000036		0x0036			0x0036			0x036			-1
-syscon	nr	__NR_pread				0x0011			0x2000099		0x01db			0x00ad			0x0ad			-1
-syscon	nr	__NR_pwrite				0x0012			0x200009a		0x01dc			0x00ae			0x0ae			-1
-syscon	nr	__NR_readv				0x0013			0x2000078		0x0078			0x0078			0x078			-1
-syscon	nr	__NR_writev				0x0014			0x2000079		0x0079			0x0079			0x079			-1
-syscon	nr	__NR_access				0x0015			0x2000021		0x0021			0x0021			0x021			-1
-syscon	nr	__NR_pipe				0x0016			0x200002a		0x021e			0x0107			0x02a			-1
-syscon	nr	__NR_select				0x0017			0x200005d		0x005d			0x0047			0x1a1			-1
-syscon	nr	__NR_pselect				-1			0x200018a		0x020a			0x006e			0x1b4			-1
-syscon	nr	__NR_pselect6				0x010e			-1			-1			-1			-1			-1
-syscon	nr	__NR_sched_yield			0x0018			0x010003c		0x014b			0x012a			0x15e			-1
-syscon	nr	__NR_mremap				0x0019			-1			-1			-1			0x19b			-1
-syscon	nr	__NR_mincore				0x001b			0x200004e		0x004e			0x004e			0x04e			-1
-syscon	nr	__NR_madvise				0x001c			0x200004b		0x004b			0x004b			0x04b			-1
-syscon	nr	__NR_shmget				0x001d			0x2000109		0x00e7			0x0121			0x0e7			-1
-syscon	nr	__NR_shmat				0x001e			0x2000106		0x00e4			0x00e4			0x0e4			-1
-syscon	nr	__NR_shmctl				0x001f			0x2000107		0x0200			0x0128			0x1bb			-1
-syscon	nr	__NR_dup				0x0020			0x2000029		0x0029			0x0029			0x029			-1
-syscon	nr	__NR_dup2				0x0021			0x200005a		0x005a			0x005a			0x05a			-1
-syscon	nr	__NR_pause				0x0022			-1			-1			-1			-1			-1
-syscon	nr	__NR_nanosleep				0x0023			-1			0x00f0			0x005b			0x1ae			-1
-syscon	nr	__NR_getitimer				0x0024			0x2000056		0x0056			0x0046			0x1aa			-1
-syscon	nr	__NR_setitimer				0x0026			0x2000053		0x0053			0x0045			0x1a9			-1
-syscon	nr	__NR_alarm				0x0025			-1			-1			-1			-1			-1
-syscon	nr	__NR_getpid				0x0027			0x2000014		0x0014			0x0014			0x014			-1
-syscon	nr	__NR_sendfile				0x0028			0x2000151		0x0189			-1			-1			-1
-syscon	nr	__NR_socket				0x0029			0x2000061		0x0061			0x0061			0x18a			-1
-syscon	nr	__NR_connect				0x002a			0x2000062		0x0062			0x0062			0x062			-1
-syscon	nr	__NR_accept				0x002b			0x200001e		0x0063			0x001e			0x01e			-1
-syscon	nr	__NR_sendto				0x002c			0x2000085		0x0085			0x0085			0x085			-1
-syscon	nr	__NR_recvfrom				0x002d			0x200001d		0x001d			0x001d			0x01d			-1
-syscon	nr	__NR_sendmsg				0x002e			0x200001c		0x001c			0x001c			0x01c			-1
-syscon	nr	__NR_recvmsg				0x002f			0x200001b		0x001b			0x001b			0x01b			-1
-syscon	nr	__NR_shutdown				0x0030			0x2000086		0x0086			0x0086			0x086			-1
-syscon	nr	__NR_bind				0x0031			0x2000068		0x0068			0x0068			0x068			-1
-syscon	nr	__NR_listen				0x0032			0x200006a		0x006a			0x006a			0x06a			-1
-syscon	nr	__NR_getsockname			0x0033			0x2000020		0x0020			0x0020			0x020			-1
-syscon	nr	__NR_getpeername			0x0034			0x200001f		0x008d			0x001f			0x01f			-1
-syscon	nr	__NR_socketpair				0x0035			0x2000087		0x0087			0x0087			0x087			-1
-syscon	nr	__NR_setsockopt				0x0036			0x2000069		0x0069			0x0069			0x069			-1
-syscon	nr	__NR_getsockopt				0x0037			0x2000076		0x0076			0x0076			0x076			-1
-syscon	nr	__NR_fork				0x0039			0x2000002		0x0002			0x0002			0x002			-1
-syscon	nr	__NR_vfork				0x003a			0x2000042		0x0042			0x0042          	0x042           	-1
-syscon	nr	__NR_posix_spawn			-1			0x20000f4		-1			-1			-1			-1
-syscon	nr	__NR_execve				0x003b			0x200003b		0x003b			0x003b			0x03b			-1	# DING DING DING DING DING
-syscon	nr	__NR_wait4				0x003d			0x2000007		0x0007			0x000b			0x1c1			-1
-syscon	nr	__NR_kill				0x003e			0x2000025		0x0025			0x007a			0x025			-1
-syscon	nr	__NR_killpg				-1			-1			0x0092			-1			-1			-1
-syscon	nr	__NR_clone				0x0038			-1			-1			-1			-1			-1
-syscon	nr	__NR_tkill				0x00c8			-1			-1			-1			-1			-1
-syscon	nr	__NR_futex				0x00ca			-1			-1			0x0053			-1			-1
-syscon	nr	__NR_set_robust_list			0x0111			-1			-1			-1			-1			-1
-syscon	nr	__NR_get_robust_list			0x0112			-1			-1			-1			-1			-1
-syscon	nr	__NR_uname				0x003f			-1			0x00a4			-1			-1			-1
-syscon	nr	__NR_semget				0x0040			0x20000ff		0x00dd			0x00dd			0x0dd			-1
-syscon	nr	__NR_semop				0x0041			0x2000100		0x00de			0x0122			0x0de			-1
-syscon	nr	__NR_semctl				0x0042			0x20000fe		0x01fe			0x0127			-1			-1
-syscon	nr	__NR_shmdt				0x0043			0x2000108		0x00e6			0x00e6			0x0e6			-1
-syscon	nr	__NR_msgget				0x0044			0x2000103		0x00e1			0x00e1			0x0e1			-1
-syscon	nr	__NR_msgsnd				0x0045			0x2000104		0x00e2			0x00e2			0x0e2			-1
-syscon	nr	__NR_msgrcv				0x0046			0x2000105		0x00e3			0x00e3			0x0e3			-1
-syscon	nr	__NR_msgctl				0x0047			0x2000102		0x01ff			0x0129			0x1bc			-1
-syscon	nr	__NR_fcntl				0x0048			0x200005c		0x005c			0x005c			0x05c			-1
-syscon	nr	__NR_flock				0x0049			0x2000083		0x0083			0x0083			0x083			-1
-syscon	nr	__NR_fsync				0x004a			0x200005f		0x005f			0x005f			0x05f			-1
-syscon	nr	__NR_fdatasync				0x004b			0x20000bb		0x0226			0x005f			0x0f1			-1
-syscon	nr	__NR_truncate				0x004c			0x20000c8		0x01df			0x00c8			0x0c8			-1
-syscon	nr	__NR_ftruncate				0x004d			0x20000c9		0x01e0			0x00c9			0x0c9			-1
-syscon	nr	__NR_getcwd				0x004f			-1			0x0146			0x0130			0x128			-1
-syscon	nr	__NR_chdir				0x0050			0x200000c		0x000c			0x000c			0x00c			-1
-syscon	nr	__NR_fchdir				0x0051			0x200000d		0x000d			0x000d			0x00d			-1
-syscon	nr	__NR_rename				0x0052			0x2000080		0x0080			0x0080			0x080			-1
-syscon	nr	__NR_mkdir				0x0053			0x2000088		0x0088			0x0088			0x088			-1
-syscon	nr	__NR_rmdir				0x0054			0x2000089		0x0089			0x0089			0x089			-1
-syscon	nr	__NR_creat				0x0055			-1			0x0008			-1			-1			-1
-syscon	nr	__NR_link				0x0056			0x2000009		0x0009			0x0009			0x009			-1
-syscon	nr	__NR_unlink				0x0057			0x200000a		0x000a			0x000a			0x00a			-1
-syscon	nr	__NR_symlink				0x0058			0x2000039		0x0039			0x0039			0x039			-1
-syscon	nr	__NR_readlink				0x0059			0x200003a		0x003a			0x003a			0x03a			-1
-syscon	nr	__NR_chmod				0x005a			0x200000f		0x000f			0x000f			0x00f			-1
-syscon	nr	__NR_fchmod				0x005b			0x200007c		0x007c			0x007c			0x07c			-1
-syscon	nr	__NR_chown				0x005c			0x2000010		0x0010			0x0010			0x010			-1
-syscon	nr	__NR_fchown				0x005d			0x200007b		0x007b			0x007b			0x07b			-1
-syscon	nr	__NR_lchown				0x005e			0x200016c		0x00fe			0x00fe			0x113			-1
-syscon	nr	__NR_umask				0x005f			0x200003c		0x003c			0x003c			0x03c			-1
-syscon	nr	__NR_gettimeofday			0x0060			0x2000074		0x0074			0x0043			0x1a2			-1
-syscon	nr	__NR_getrlimit				0x0061			0x20000c2		0x00c2			0x00c2			0x0c2			-1
-syscon	nr	__NR_getrusage				0x0062			0x2000075		0x0075			0x0013			0x1bd			-1
-syscon	nr	__NR_sysinfo				0x0063			-1			-1			-1			-1			-1
-syscon	nr	__NR_times				0x0064			-1			-1			-1			-1			-1
-syscon	nr	__NR_ptrace				0x0065			0x200001a		0x001a			0x001a			0x01a			-1
-syscon	nr	__NR_syslog				0x0067			-1			-1			-1			-1			-1
-syscon	nr	__NR_getuid				0x0066			0x2000018		0x0018			0x0018			0x018			-1
-syscon	nr	__NR_getgid				0x0068			0x200002f		0x002f			0x002f			0x02f			-1
-syscon	nr	__NR_getppid				0x006e			0x2000027		0x0027			0x0027			-1			-1
-syscon	nr	__NR_getpgrp				0x006f			0x2000051		0x0051			0x0051			0x051			-1
-syscon	nr	__NR_setsid				0x0070			0x2000093		0x0093			0x0093			0x093			-1
-syscon	nr	__NR_getsid				0x007c			0x2000136		0x0136			0x00ff			0x11e			-1
-syscon	nr	__NR_getpgid				0x0079			0x2000097		0x00cf			0x00cf			0x0cf			-1
-syscon	nr	__NR_setpgid				0x006d			0x2000052		0x0052			0x0052			0x052			-1
-syscon	nr	__NR_geteuid				0x006b			0x2000019		0x0019			0x0019			-1			-1
-syscon	nr	__NR_getegid				0x006c			0x200002b		0x002b			0x002b			-1			-1
-syscon	nr	__NR_getgroups				0x0073			0x200004f		0x004f			0x004f			0x04f			-1
-syscon	nr	__NR_setgroups				0x0074			0x2000050		0x0050			0x0050			0x050			-1
-syscon	nr	__NR_setreuid				0x0071			0x200007e		0x007e			0x007e			0x07e			-1
-syscon	nr	__NR_setregid				0x0072			0x200007f		0x007f			0x007f			0x07f			-1
-syscon	nr	__NR_setuid				0x0069			0x2000017		0x0017			0x0017			0x017			-1
-syscon	nr	__NR_setgid				0x006a			0x20000b5		0x00b5			0x00b5			0x0b5			-1
-syscon	nr	__NR_setresuid				0x0075			-1			0x0137			0x011a			-1			-1
-syscon	nr	__NR_setresgid				0x0077			-1			0x0138			0x011c			-1			-1
-syscon	nr	__NR_getresuid				0x0076			-1			0x0168			0x0119			-1			-1
-syscon	nr	__NR_getresgid				0x0078			-1			0x0169			0x011b			-1			-1
-syscon	nr	__NR_sigpending				0x007f			0x2000034		0x0034			0x0034			0x124			-1
-syscon	nr	__NR_sigsuspend				0x0082			0x200006f		0x0155			0x006f			0x126			-1
-syscon	nr	__NR_sigaltstack			0x0083			0x2000035		0x0035			0x0120			0x119			-1
-syscon	nr	__NR_mknod				0x0085			0x200000e		0x000e			0x000e			0x1c2			-1
-syscon	nr	__NR_mknodat				0x0103			-1			0x22ff			0x0140			0x1cc			-1
-syscon	nr	__NR_mkfifo				-1			0x2000084		0x0084			0x0084			0x084			-1
-syscon	nr	__NR_mkfifoat				-1			-1			0x01f1			0x013f			0x1cb			-1
-syscon	nr	__NR_statfs				0x0089			0x2000159		0x022b			0x003f			-1			-1
-syscon	nr	__NR_fstatfs				0x008a			0x200015a		0x022c			0x0040			-1			-1
-syscon	nr	__NR_getpriority			0x008c			0x2000064		0x0064			0x0064			0x064			-1
-syscon	nr	__NR_setpriority			0x008d			0x2000060		0x0060			0x0060			0x060			-1
-syscon	nr	__NR_mlock				0x0095			0x20000cb		0x00cb			0x00cb			0x0cb			-1
-syscon	nr	__NR_munlock				0x0096			0x20000cc		0x00cc			0x00cc			0x0cc			-1
-syscon	nr	__NR_mlockall				0x0097			0x2000144		0x0144			0x010f			0x0f2			-1
-syscon	nr	__NR_munlockall				0x0098			0x2000145		0x0145			0x0110			0x0f3			-1
-syscon	nr	__NR_setrlimit				0x00a0			0x20000c3		0x00c3			0x00c3			0x0c3			-1
-syscon	nr	__NR_chroot				0x00a1			0x200003d		0x003d			0x003d			0x03d			-1
-syscon	nr	__NR_sync				0x00a2			0x2000024		0x0024			0x0024			-1			-1
-syscon	nr	__NR_acct				0x00a3			0x2000033		0x0033			0x0033			0x033			-1
-syscon	nr	__NR_settimeofday			0x00a4			0x200007a		0x007a			0x0044			0x1a3			-1
-syscon	nr	__NR_mount				0x00a5			0x20000a7		0x0015			0x0015			0x19a			-1
-syscon	nr	__NR_reboot				0x00a9			0x2000037		0x0037			0x0037			0x0d0			-1
-syscon	nr	__NR_quotactl				0x00b3			0x20000a5		0x0094			0x0094			-1			-1
-syscon	nr	__NR_setfsuid				0x007a			-1			-1			-1			-1			-1
-syscon	nr	__NR_setfsgid				0x007b			-1			-1			-1			-1			-1
-syscon	nr	__NR_capget				0x007d			-1			-1			-1			-1			-1
-syscon	nr	__NR_capset				0x007e			-1			-1			-1			-1			-1
-syscon	nr	__NR_sigtimedwait			0x0080			-1			0x0159			-1			-1			-1
-syscon	nr	__NR_rt_sigqueueinfo			0x0081			-1			-1			-1			-1			-1
-syscon	nr	__NR_personality			0x0087			-1			-1			-1			-1			-1
-syscon	nr	__NR_ustat				0x0088			-1			-1			-1			-1			-1
-syscon	nr	__NR_sysfs				0x008b			-1			-1			-1			-1			-1
-syscon	nr	__NR_sched_setparam			0x008e			-1			0x0147			-1			-1			-1
-syscon	nr	__NR_sched_getparam			0x008f			-1			0x0148			-1			-1			-1
-syscon	nr	__NR_sched_setscheduler			0x0090			-1			0x0149			-1			-1			-1
-syscon	nr	__NR_sched_getscheduler			0x0091			-1			0x014a			-1			-1			-1
-syscon	nr	__NR_sched_get_priority_max		0x0092			-1			0x014c			-1			-1			-1
-syscon	nr	__NR_sched_get_priority_min		0x0093			-1			0x014d			-1			-1			-1
-syscon	nr	__NR_sched_rr_get_interval		0x0094			-1			0x014e			-1			-1			-1
-syscon	nr	__NR_vhangup				0x0099			-1			-1			-1			-1			-1
-syscon	nr	__NR_modify_ldt				0x009a			-1			-1			-1			-1			-1
-syscon	nr	__NR_pivot_root				0x009b			-1			-1			-1			-1			-1
-syscon	nr	__NR__sysctl				0x009c			-1			-1			-1			-1			-1
-syscon	nr	__NR_prctl				0x009d			-1			-1			-1			-1			-1
-syscon	nr	__NR_arch_prctl				0x009e			-1			0x00a5			0x00a5			-1			-1
-syscon	nr	__NR_adjtimex				0x009f			-1			-1			-1			-1			-1
-syscon	nr	__NR_umount2				0x00a6			-1			-1			-1			-1			-1
-syscon	nr	__NR_swapon				0x00a7			0x2000055		0x0055			-1			-1			-1
-syscon	nr	__NR_swapoff				0x00a8			-1			0x01a8			-1			-1			-1
-syscon	nr	__NR_sethostname			0x00aa			-1			0x0058			-1			-1			-1
-syscon	nr	__NR_setdomainname			0x00ab			-1			0x00a3			-1			-1			-1
-syscon	nr	__NR_iopl				0x00ac			-1			-1			-1			-1			-1
-syscon	nr	__NR_ioperm				0x00ad			-1			-1			-1			-1			-1
-syscon	nr	__NR_init_module			0x00af			-1			-1			-1			-1			-1
-syscon	nr	__NR_delete_module			0x00b0			-1			-1			-1			-1			-1
-syscon	nr	__NR_gettid				0x00ba			0x200011e		-1			-1			-1			-1
-syscon	nr	__NR_readahead				0x00bb			-1			-1			-1			-1			-1
-syscon	nr	__NR_setxattr				0x00bc			0x20000ec		-1			-1			0x177			-1
-syscon	nr	__NR_fsetxattr				0x00be			0x20000ed		-1			-1			0x179			-1
-syscon	nr	__NR_getxattr				0x00bf			0x20000ea		-1			-1			0x17a			-1
-syscon	nr	__NR_fgetxattr				0x00c1			0x20000eb		-1			-1			0x17c			-1
-syscon	nr	__NR_listxattr				0x00c2			0x20000f0		-1			-1			0x17d			-1
-syscon	nr	__NR_flistxattr				0x00c4			0x20000f1		-1			-1			0x17f			-1
-syscon	nr	__NR_removexattr			0x00c5			0x20000ee		-1			-1			0x180			-1
-syscon	nr	__NR_fremovexattr			0x00c7			0x20000ef		-1			-1			0x182			-1
-syscon	nr	__NR_lsetxattr				0x00bd			-1			-1			-1			0x178			-1
-syscon	nr	__NR_lgetxattr				0x00c0			-1			-1			-1			0x17b			-1
-syscon	nr	__NR_llistxattr				0x00c3			-1			-1			-1			0x17e			-1
-syscon	nr	__NR_lremovexattr			0x00c6			-1			-1			-1			0x181			-1
-syscon	nr	__NR_sched_setaffinity			0x00cb			-1			-1			-1			-1			-1
-syscon	nr	__NR_sched_getaffinity			0x00cc			-1			-1			-1			-1			-1
-syscon	nr	__NR_cpuset_getaffinity			-1			-1			0x01e7			-1			-1			-1
-syscon	nr	__NR_cpuset_setaffinity			-1			-1			0x01e8			-1			-1			-1
-syscon	nr	__NR_io_setup				0x00ce			-1			-1			-1			-1			-1
-syscon	nr	__NR_io_destroy				0x00cf			-1			-1			-1			-1			-1
-syscon	nr	__NR_io_getevents			0x00d0			-1			-1			-1			-1			-1
-syscon	nr	__NR_io_submit				0x00d1			-1			-1			-1			-1			-1
-syscon	nr	__NR_io_cancel				0x00d2			-1			-1			-1			-1			-1
-syscon	nr	__NR_lookup_dcookie			0x00d4			-1			-1			-1			-1			-1
-syscon	nr	__NR_epoll_create			0x00d5			-1			-1			-1			-1			-1
-syscon	nr	__NR_epoll_wait				0x00e8			-1			-1			-1			-1			-1
-syscon	nr	__NR_epoll_ctl				0x00e9			-1			-1			-1			-1			-1
-syscon	nr	__NR_getdents				0x00d9			-1			0x0110			0x0063			0x186			-1
-syscon	nr	__NR_set_tid_address			0x00da			-1			-1			-1			-1			-1
-syscon	nr	__NR_restart_syscall			0x00db			-1			-1			-1			-1			-1
-syscon	nr	__NR_semtimedop				0x00dc			-1			-1			-1			-1			-1
-syscon	nr	__NR_fadvise				0x00dd			-1			0x0213			-1			-1			-1
-syscon	nr	__NR_timer_create			0x00de			-1			-1			-1			0x0eb			-1
-syscon	nr	__NR_timer_settime			0x00df			-1			-1			-1			0x1be			-1
-syscon	nr	__NR_timer_gettime			0x00e0			-1			-1			-1			0x1bf			-1
-syscon	nr	__NR_timer_getoverrun			0x00e1			-1			-1			-1			0x0ef			-1
-syscon	nr	__NR_timer_delete			0x00e2			-1			-1			-1			0x0ec			-1
-syscon	nr	__NR_clock_settime			0x00e3			-1			0x00e9			0x0058			0x1ac			-1
-syscon	nr	__NR_clock_gettime			0x00e4			-1			0x00e8			0x0057			0x1ab			-1
-syscon	nr	__NR_clock_getres			0x00e5			-1			0x00ea			0x0059			0x1ad			-1
-syscon	nr	__NR_clock_nanosleep			0x00e6			-1			0x00f4			-1			-1			-1
-syscon	nr	__NR_tgkill				0x00ea			-1			-1			-1			-1			-1
-syscon	nr	__NR_mbind				0x00ed			-1			-1			-1			-1			-1
-syscon	nr	__NR_set_mempolicy			0x00ee			-1			-1			-1			-1			-1
-syscon	nr	__NR_get_mempolicy			0x00ef			-1			-1			-1			-1			-1
-syscon	nr	__NR_mq_open				0x00f0			-1			-1			-1			0x101			-1
-syscon	nr	__NR_mq_unlink				0x00f1			-1			-1			-1			0x103			-1
-syscon	nr	__NR_mq_timedsend			0x00f2			-1			-1			-1			0x1b0			-1
-syscon	nr	__NR_mq_timedreceive			0x00f3			-1			-1			-1			0x1b1			-1
-syscon	nr	__NR_mq_notify				0x00f4			-1			-1			-1			0x106			-1
-syscon	nr	__NR_mq_getsetattr			0x00f5			-1			-1			-1			-1			-1
-syscon	nr	__NR_kexec_load				0x00f6			-1			-1			-1			-1			-1
-syscon	nr	__NR_waitid				0x00f7			0x20000ad		-1			-1			-1			-1
-syscon	nr	__NR_add_key				0x00f8			-1			-1			-1			-1			-1
-syscon	nr	__NR_request_key			0x00f9			-1			-1			-1			-1			-1
-syscon	nr	__NR_keyctl				0x00fa			-1			-1			-1			-1			-1
-syscon	nr	__NR_ioprio_set				0x00fb			-1			-1			-1			-1			-1
-syscon	nr	__NR_ioprio_get				0x00fc			-1			-1			-1			-1			-1
-syscon	nr	__NR_inotify_init			0x00fd			-1			-1			-1			-1			-1
-syscon	nr	__NR_inotify_add_watch			0x00fe			-1			-1			-1			-1			-1
-syscon	nr	__NR_inotify_rm_watch			0x00ff			-1			-1			-1			-1			-1
-syscon	nr	__NR_openat				0x0101			0x20001cf		0x01f3			0x0141			0x1d4			-1
-syscon	nr	__NR_mkdirat				0x0102			0x20001db		0x01f0			0x013e			0x1cd			-1
-syscon	nr	__NR_fchownat				0x0104			0x20001d4		0x01eb			0x013b			0x1d0			-1
-syscon	nr	__NR_utime				0x0084			-1			-1			-1			-1			-1
-syscon	nr	__NR_utimes				0x00eb			0x200008a		0x008a			0x004c			0x1a4			-1
-syscon	nr	__NR_futimesat				0x0105			-1			0x01ee			-1			-1			-1
-syscon	nr	__NR_futimes				-1			0x200008b		0x00ce			0x004d			0x1a7			-1
-syscon	nr	__NR_futimens				-1			-1			0x0222			0x0055			0x1d8			-1
-syscon	nr	__NR_fstatat				0x0106			0x20001d6		0x0228			0x002a			0x1d2			-1
-syscon	nr	__NR_unlinkat				0x0107			0x20001d8		0x01f7			0x0145			0x1d7			-1
-syscon	nr	__NR_renameat				0x0108			0x20001d1		0x01f5			0x0143			0x1ca			-1
-syscon	nr	__NR_linkat				0x0109			0x20001d7		0x01ef			0x013d			0x1c9			-1
-syscon	nr	__NR_symlinkat				0x010a			0x20001da		0x01f6			0x0144			0x1d6			-1
-syscon	nr	__NR_readlinkat				0x010b			0x20001d9		0x01f4			0x0142			0x1d5			-1
-syscon	nr	__NR_fchmodat				0x010c			0x20001d3		0x01ea			0x013a			0x1cf			-1
-syscon	nr	__NR_faccessat				0x010d			0x20001d2		0x01e9			0x0139			0x1ce			-1
-syscon	nr	__NR_unshare				0x0110			-1			-1			-1			-1			-1
-syscon	nr	__NR_splice				0x0113			-1			-1			-1			-1			-1
-syscon	nr	__NR_tee				0x0114			-1			-1			-1			-1			-1
-syscon	nr	__NR_sync_file_range			0x0115			-1			-1			-1			-1			-1
-syscon	nr	__NR_vmsplice				0x0116			-1			-1			-1			-1			-1
-syscon	nr	__NR_migrate_pages			0x0100			-1			-1			-1			-1			-1
-syscon	nr	__NR_move_pages				0x0117			-1			-1			-1			-1			-1
-syscon	nr	__NR_preadv				0x0127			-1			0x0121			0x010b			0x121			-1
-syscon	nr	__NR_pwritev				0x0128			-1			0x0122			0x010c			0x122			-1
-syscon	nr	__NR_utimensat				0x0118			-1			0x0223			0x0054			0x1d3			-1
-syscon	nr	__NR_fallocate				0x011d			-1			-1			-1			-1			-1
-syscon	nr	__NR_posix_fallocate			-1			-1			0x0212			-1			-1			-1
-syscon	nr	__NR_accept4				0x0120			-1			0x021d			0x005d			-1			-1
-syscon	nr	__NR_dup3				0x0124			-1			-1			0x0066			0x1c6			-1
-syscon	nr	__NR_pipe2				0x0125			-1			0x021e			0x0065			0x1c5			-1
-syscon	nr	__NR_epoll_pwait			0x0119			-1			-1			-1			-1			-1
-syscon	nr	__NR_epoll_create1			0x0123			-1			-1			-1			-1			-1
-syscon	nr	__NR_perf_event_open			0x012a			-1			-1			-1			-1			-1
-syscon	nr	__NR_inotify_init1			0x0126			-1			-1			-1			-1			-1
-syscon	nr	__NR_rt_tgsigqueueinfo			0x0129			-1			-1			-1			-1			-1
-syscon	nr	__NR_signalfd				0x011a			-1			-1			-1			-1			-1
-syscon	nr	__NR_signalfd4				0x0121			-1			-1			-1			-1			-1
-syscon	nr	__NR_eventfd				0x011c			-1			-1			-1			-1			-1
-syscon	nr	__NR_eventfd2				0x0122			-1			-1			-1			-1			-1
-syscon	nr	__NR_timerfd_create			0x011b			-1			-1			-1			-1			-1
-syscon	nr	__NR_timerfd_settime			0x011e			-1			-1			-1			-1			-1
-syscon	nr	__NR_timerfd_gettime			0x011f			-1			-1			-1			-1			-1
-syscon	nr	__NR_recvmmsg				0x012b			-1			-1			-1			0x1db			-1
-syscon	nr	__NR_fanotify_init			0x012c			-1			-1			-1			-1			-1
-syscon	nr	__NR_fanotify_mark			0x012d			-1			-1			-1			-1			-1
-syscon	nr	__NR_prlimit				0x012e			-1			-1			-1			-1			-1
-syscon	nr	__NR_name_to_handle_at			0x012f			-1			-1			-1			-1			-1
-syscon	nr	__NR_open_by_handle_at			0x0130			-1			-1			-1			-1			-1
-syscon	nr	__NR_clock_adjtime			0x0131			-1			-1			-1			-1			-1
-syscon	nr	__NR_syncfs				0x0132			-1			-1			-1			-1			-1
-syscon	nr	__NR_sendmmsg				0x0133			-1			-1			-1			0x1dc			-1
-syscon	nr	__NR_setns				0x0134			-1			-1			-1			-1			-1
-syscon	nr	__NR_getcpu				0x0135			-1			-1			-1			-1			-1
-syscon	nr	__NR_process_vm_readv			0x0136			-1			-1			-1			-1			-1
-syscon	nr	__NR_process_vm_writev			0x0137			-1			-1			-1			-1			-1
-syscon	nr	__NR_kcmp				0x0138			-1			-1			-1			-1			-1
-syscon	nr	__NR_finit_module			0x0139			-1			-1			-1			-1			-1
-syscon	nr	__NR_sched_setattr			0x013a			-1			-1			-1			-1			-1
-syscon	nr	__NR_sched_getattr			0x013b			-1			-1			-1			-1			-1
-syscon	nr	__NR_renameat2				0x013c			-1			-1			-1			-1			-1
-syscon	nr	__NR_seccomp				0x013d			-1			-1			-1			-1			-1
-syscon	nr	__NR_getrandom				0x013e			0x20001f4		0x0233			0x0007			0x05b			-1
-syscon	nr	__NR_memfd_create			0x013f			-1			-1			-1			-1			-1
-syscon	nr	__NR_kexec_file_load			0x0140			-1			-1			-1			-1			-1
-syscon	nr	__NR_bpf				0x0141			-1			-1			-1			-1			-1
-syscon	nr	__NR_execveat				0x0142			-1			-1			-1			-1			-1
-syscon	nr	__NR_userfaultfd			0x0143			-1			-1			-1			-1			-1
-syscon	nr	__NR_membarrier				0x0144			-1			-1			-1			-1			-1
-syscon	nr	__NR_mlock2				0x0145			-1			-1			-1			-1			-1
-syscon	nr	__NR_copy_file_range			0x0146			-1			-1			-1			-1			-1
-syscon	nr	__NR_preadv2				0x0147			-1			-1			-1			-1			-1
-syscon	nr	__NR_pwritev2				0x0148			-1			-1			-1			-1			-1
-syscon	nr	__NR_pkey_mprotect			0x0149			-1			-1			-1			-1			-1
-syscon	nr	__NR_pkey_alloc				0x014a			-1			-1			-1			-1			-1
-syscon	nr	__NR_pkey_free				0x014b			-1			-1			-1			-1			-1
-syscon	nr	__NR_statx				0x014c			-1			-1			-1			-1			-1
-syscon	nr	__NR_io_pgetevents			0x014d			-1			-1			-1			-1			-1
-syscon	nr	__NR_rseq				0x014e			-1			-1			-1			-1			-1
-syscon	nr	__NR_pidfd_send_signal			0x01a8			-1			-1			-1			-1			-1
-syscon	nr	__NR_io_uring_setup			0x01a9			-1			-1			-1			-1			-1
-syscon	nr	__NR_io_uring_enter			0x01aa			-1			-1			-1			-1			-1
-syscon	nr	__NR_io_uring_register			0x01ab			-1			-1			-1			-1			-1
-syscon	nr	__NR_pledge				-1			-1			-1			0x006c			-1			-1
-syscon	nr	__NR_msyscall				-1			-1			-1			0x0025			-1			-1
-syscon	nr	__NR_ktrace				-1			-1			0x002d			0x002d			0x02d			-1
-syscon	nr	__NR_kqueue				-1			0x200016a		0x016a			0x010d			0x158			-1
-syscon	nr	__NR_kevent				-1			0x2000171		0x0230			0x0048			0x1b3			-1
-syscon	nr	__NR_revoke				-1			0x2000038		0x0038			0x0038			0x038			-1
-syscon	nr	__NR_setlogin				-1			0x2000032		0x0032			0x0032			-1			-1
-syscon	nr	__NR_getfh				-1			0x20000a1		0x00a1			0x00a1			0x18b			-1
-syscon	nr	__NR_chflags				-1			0x2000022		0x0022			0x0022			0x022			-1
-syscon	nr	__NR_getfsstat				-1			0x200015b		0x022d			0x003e			-1			-1
-syscon	nr	__NR_nfssvc				-1			0x200009b		0x009b			0x009b			0x09b			-1
-syscon	nr	__NR_adjtime				-1			0x200008c		0x008c			0x008c			0x1a5			-1
-syscon	nr	__NR_fchflags				-1			0x2000023		0x0023			0x0023			0x023			-1
-syscon	nr	__NR_seteuid				-1			0x20000b7		0x00b7			0x00b7			-1			-1
-syscon	nr	__NR_setegid				-1			0x20000b6		0x00b6			0x00b6			-1			-1
-syscon	nr	__NR_fpathconf				-1			0x20000c0		0x00c0			0x00c0			0x0c0			-1
-syscon	nr	__NR_fhopen				-1			0x20000f8		0x012a			0x0108			0x18c			-1
-syscon	nr	__NR_unmount				-1			0x200009f		0x0016			0x0016			0x016			-1
-syscon	nr	__NR_issetugid				-1			0x2000147		0x00fd			0x00fd			-1			-1
-syscon	nr	__NR_minherit				-1			0x20000fa		0x00fa			0x00fa			0x111			-1
-syscon	nr	__NR_pathconf				-1			0x20000bf		0x00bf			0x00bf			0x0bf			-1
-syscon	nr	__NR_sysctl				-1			0x20000ca		-1			0x00ca			0x0ca			-1
-syscon	nr	__NR_ntp_adjtime			-1			0x200020f		0x00b0			-1			0x0b0			-1
-syscon	nr	__NR_ntp_gettime			-1			0x2000210		0x00f8			-1			0x1c0			-1
-syscon	nr	__NR_shm_unlink				-1			0x200010b		0x01e3			-1			-1			-1
-syscon	nr	__NR_shm_open				-1			0x200010a		0x01e2			-1			-1			-1
-syscon	nr	__NR_aio_read				-1			0x200013e		0x013e			-1			0x192			-1
-syscon	nr	__NR_aio_suspend			-1			0x200013b		0x013b			-1			0x1b6			-1
-syscon	nr	__NR_aio_cancel				-1			0x200013c		0x013c			-1			0x18f			-1
-syscon	nr	__NR_aio_fsync				-1			0x2000139		0x01d1			-1			0x191			-1
-syscon	nr	__NR_aio_error				-1			0x200013d		0x013d			-1			0x190			-1
-syscon	nr	__NR_aio_return				-1			0x200013a		0x013a			-1			0x193			-1
-syscon	nr	__NR_aio_write				-1			0x200013f		0x013f			-1			0x195			-1
-syscon	nr	__NR_aio_waitcomplete			-1			-1			0x0167			-1			-1			-1
-syscon	nr	__NR_aio_suspend_nocancel		-1			0x20001a5		-1			-1			-1			-1
-syscon	nr	__NR_aio_mlock				-1			-1			0x021f			-1			-1			-1
-syscon	nr	__NR_sigwait				-1			0x200014a		0x01ad			-1			-1			-1
-syscon	nr	__NR_undelete				-1			0x20000cd		0x00cd			-1			0x0cd			-1
-syscon	nr	__NR_getlogin				-1			0x2000031		0x0031			-1			-1			-1
-syscon	nr	__NR_getdtablesize			-1			0x2000059		0x0059			-1			-1			-1
-syscon	nr	__NR_setauid				-1			0x2000162		0x01c0			-1			-1			-1
-syscon	nr	__NR_audit				-1			0x200015e		0x01bd			-1			-1			-1
-syscon	nr	__NR_auditctl				-1			0x2000167		0x01c5			-1			-1			-1
-syscon	nr	__NR_getaudit_addr			-1			0x2000165		0x01c3			-1			-1			-1
-syscon	nr	__NR_getdirentries			-1			0x2000158		0x022a			-1			-1			-1
-syscon	nr	__NR_lio_listio				-1			0x2000140		0x0140			-1			0x196			-1
-syscon	nr	__NR_setaudit_addr			-1			0x2000166		0x01c4			-1			-1			-1
-syscon	nr	__NR_getauid				-1			0x2000161		0x01bf			-1			-1			-1
-syscon	nr	__NR_semsys				-1			0x20000fb		0x00a9			-1			-1			-1
-syscon	nr	__NR_auditon				-1			0x200015f		0x01be			-1			-1			-1
-syscon	nr	__NR_msgsys				-1			0x20000fc		0x00aa			-1			-1			-1
-syscon	nr	__NR_shmsys				-1			0x20000fd		0x00ab			-1			-1			-1
-syscon	nr	__NR_fhstat				-1			-1			0x0229			0x0126			0x1c3			-1
-syscon	nr	__NR_chflagsat				-1			-1			0x021c			0x006b			-1			-1
-syscon	nr	__NR_profil				-1			-1			0x002c			0x002c			0x02c			-1
-syscon	nr	__NR_fhstatfs				-1			-1			0x022e			0x0041			-1			-1
-syscon	nr	__NR_utrace				-1			-1			0x014f			0x00d1			0x132			-1
-syscon	nr	__NR_closefrom				-1			-1			0x01fd			0x011f			-1			-1
-syscon	nr	__NR_pthread_markcancel			-1			0x200014c		-1			-1			-1			-1
-syscon	nr	__NR_pthread_kill			-1			0x2000148		-1			-1			-1			-1
-syscon	nr	__NR_pthread_fchdir			-1			0x200015d		-1			-1			-1			-1
-syscon	nr	__NR_pthread_sigmask			-1			0x2000149		-1			-1			-1			-1
-syscon	nr	__NR_pthread_chdir			-1			0x200015c		-1			-1			-1			-1
-syscon	nr	__NR_pthread_canceled			-1			0x200014d		-1			-1			-1			-1
-syscon	nr	__NR_disable_threadsignal		-1			0x200014b		-1			-1			-1			-1
-syscon	nr	__NR_abort_with_payload			-1			0x2000209		-1			-1			-1			-1
-syscon	nr	__NR_accept_nocancel			-1			0x2000194		-1			-1			-1			-1
-syscon	nr	__NR_access_extended			-1			0x200011c		-1			-1			-1			-1
-syscon	nr	__NR_audit_session_join			-1			0x20001ad		-1			-1			-1			-1
-syscon	nr	__NR_audit_session_port			-1			0x20001b0		-1			-1			-1			-1
-syscon	nr	__NR_audit_session_self			-1			0x20001ac		-1			-1			-1			-1
-syscon	nr	__NR_bsdthread_create			-1			0x2000168		-1			-1			-1			-1
-syscon	nr	__NR_bsdthread_ctl			-1			0x20001de		-1			-1			-1			-1
-syscon	nr	__NR_bsdthread_register			-1			0x200016e		-1			-1			-1			-1
-syscon	nr	__NR_bsdthread_terminate		-1			0x2000169		-1			-1			-1			-1
-syscon	nr	__NR_change_fdguard_np			-1			0x20001bc		-1			-1			-1			-1
-syscon	nr	__NR_chmod_extended			-1			0x200011a		-1			-1			-1			-1
-syscon	nr	__NR_clonefileat			-1			0x20001ce		-1			-1			-1			-1
-syscon	nr	__NR_close_nocancel			-1			0x200018f		-1			-1			-1			-1
-syscon	nr	__NR_coalition				-1			0x20001ca		-1			-1			-1			-1
-syscon	nr	__NR_coalition_info			-1			0x20001cb		-1			-1			-1			-1
-syscon	nr	__NR_connect_nocancel			-1			0x2000199		-1			-1			-1			-1
-syscon	nr	__NR_connectx				-1			0x20001bf		-1			-1			-1			-1
-syscon	nr	__NR_copyfile				-1			0x20000e3		-1			-1			-1			-1
-syscon	nr	__NR_csops				-1			0x20000a9		-1			-1			-1			-1
-syscon	nr	__NR_csops_audittoken			-1			0x20000aa		-1			-1			-1			-1
-syscon	nr	__NR_csrctl				-1			0x20001e3		-1			-1			-1			-1
-syscon	nr	__NR_delete				-1			0x20000e2		-1			-1			-1			-1
-syscon	nr	__NR_disconnectx			-1			0x20001c0		-1			-1			-1			-1
-syscon	nr	__NR_exchangedata			-1			0x20000df		-1			-1			-1			-1
-syscon	nr	__NR_fchmod_extended			-1			0x200011b		-1			-1			-1			-1
-syscon	nr	__NR_fclonefileat			-1			0x2000205		-1			-1			-1			-1
-syscon	nr	__NR_fcntl_nocancel			-1			0x2000196		-1			-1			-1			-1
-syscon	nr	__NR_ffsctl				-1			0x20000f5		-1			-1			-1			-1
-syscon	nr	__NR_fgetattrlist			-1			0x20000e4		-1			-1			-1			-1
-syscon	nr	__NR_fileport_makefd			-1			0x20001af		-1			-1			-1			-1
-syscon	nr	__NR_fileport_makeport			-1			0x20001ae		-1			-1			-1			-1
-syscon	nr	__NR_fmount				-1			0x200020e		-1			-1			-1			-1
-syscon	nr	__NR_fs_snapshot			-1			0x2000206		-1			-1			-1			-1
-syscon	nr	__NR_fsctl				-1			0x20000f2		-1			-1			-1			-1
-syscon	nr	__NR_fsetattrlist			-1			0x20000e5		-1			-1			-1			-1
-syscon	nr	__NR_fstat_extended			-1			0x2000119		-1			-1			-1			-1
-syscon	nr	__NR_fsync_nocancel			-1			0x2000198		-1			-1			-1			-1
-syscon	nr	__NR_getattrlist			-1			0x20000dc		-1			-1			-1			-1
-syscon	nr	__NR_getattrlistat			-1			0x20001dc		-1			-1			-1			-1
-syscon	nr	__NR_getattrlistbulk			-1			0x20001cd		-1			-1			-1			-1
-syscon	nr	__NR_getdirentriesattr			-1			0x20000de		-1			-1			-1			-1
-syscon	nr	__NR_gethostuuid			-1			0x200008e		-1			-1			-1			-1
-syscon	nr	__NR_getsgroups				-1			0x2000120		-1			-1			-1			-1
-syscon	nr	__NR_getwgroups				-1			0x2000122		-1			-1			-1			-1
-syscon	nr	__NR_grab_pgo_data			-1			0x20001ed		-1			-1			-1			-1
-syscon	nr	__NR_guarded_close_np			-1			0x20001ba		-1			-1			-1			-1
-syscon	nr	__NR_guarded_kqueue_np			-1			0x20001bb		-1			-1			-1			-1
-syscon	nr	__NR_guarded_open_np			-1			0x20001b9		-1			-1			-1			-1
-syscon	nr	__NR_guarded_pwrite_np			-1			0x20001e6		-1			-1			-1			-1
-syscon	nr	__NR_guarded_write_np			-1			0x20001e5		-1			-1			-1			-1
-syscon	nr	__NR_guarded_writev_np			-1			0x20001e7		-1			-1			-1			-1
-syscon	nr	__NR_identitysvc			-1			0x2000125		-1			-1			-1			-1
-syscon	nr	__NR_initgroups				-1			0x20000f3		-1			-1			-1			-1
-syscon	nr	__NR_iopolicysys			-1			0x2000142		-1			-1			-1			-1
-syscon	nr	__NR_kas_info				-1			0x20001b7		-1			-1			-1			-1
-syscon	nr	__NR_kdebug_trace			-1			0x20000b3		-1			-1			-1			-1
-syscon	nr	__NR_kdebug_trace_string		-1			0x20000b2		-1			-1			-1			-1
-syscon	nr	__NR_kdebug_typefilter			-1			0x20000b1		-1			-1			-1			-1
-syscon	nr	__NR_kevent_id				-1			0x2000177		-1			-1			-1			-1
-syscon	nr	__NR_kevent_qos				-1			0x2000176		-1			-1			-1			-1
-syscon	nr	__NR_ledger				-1			0x2000175		-1			-1			-1			-1
-syscon	nr	__NR_lstat_extended			-1			0x2000156		-1			-1			-1			-1
-syscon	nr	__NR_memorystatus_control		-1			0x20001b8		-1			-1			-1			-1
-syscon	nr	__NR_memorystatus_get_level		-1			0x20001c5		-1			-1			-1			-1
-syscon	nr	__NR_microstackshot			-1			0x20001ec		-1			-1			-1			-1
-syscon	nr	__NR_mkdir_extended			-1			0x2000124		-1			-1			-1			-1
-syscon	nr	__NR_mkfifo_extended			-1			0x2000123		-1			-1			-1			-1
-syscon	nr	__NR_modwatch				-1			0x20000e9		-1			-1			-1			-1
-syscon	nr	__NR_mremap_encrypted			-1			0x20001e9		-1			-1			-1			-1
-syscon	nr	__NR_msgrcv_nocancel			-1			0x20001a3		-1			-1			-1			-1
-syscon	nr	__NR_msgsnd_nocancel			-1			0x20001a2		-1			-1			-1			-1
-syscon	nr	__NR_msync_nocancel			-1			0x2000195		-1			-1			-1			-1
-syscon	nr	__NR_necp_client_action			-1			0x20001f6		-1			-1			-1			-1
-syscon	nr	__NR_necp_match_policy			-1			0x20001cc		-1			-1			-1			-1
-syscon	nr	__NR_necp_open				-1			0x20001f5		-1			-1			-1			-1
-syscon	nr	__NR_necp_session_action		-1			0x200020b		-1			-1			-1			-1
-syscon	nr	__NR_necp_session_open			-1			0x200020a		-1			-1			-1			-1
-syscon	nr	__NR_net_qos_guideline			-1			0x200020d		-1			-1			-1			-1
-syscon	nr	__NR_netagent_trigger			-1			0x20001ea		-1			-1			-1			-1
-syscon	nr	__NR_nfsclnt				-1			0x20000f7		-1			-1			-1			-1
-syscon	nr	__NR_open_dprotected_np			-1			0x20000d8		-1			-1			-1			-1
-syscon	nr	__NR_open_extended			-1			0x2000115		-1			-1			-1			-1
-syscon	nr	__NR_open_nocancel			-1			0x200018e		-1			-1			-1			-1
-syscon	nr	__NR_openat_nocancel			-1			0x20001d0		-1			-1			-1			-1
-syscon	nr	__NR_openbyid_np			-1			0x20001df		-1			-1			-1			-1
-syscon	nr	__NR_os_fault_with_payload		-1			0x2000211		-1			-1			-1			-1
-syscon	nr	__NR_peeloff				-1			0x20001c1		-1			-1			-1			-1
-syscon	nr	__NR_persona				-1			0x20001ee		-1			-1			-1			-1
-syscon	nr	__NR_pid_hibernate			-1			0x20001b3		-1			-1			-1			-1
-syscon	nr	__NR_pid_resume				-1			0x20001b2		-1			-1			-1			-1
-syscon	nr	__NR_pid_shutdown_sockets		-1			0x20001b4		-1			-1			-1			-1
-syscon	nr	__NR_pid_suspend			-1			0x20001b1		-1			-1			-1			-1
-syscon	nr	__NR_poll_nocancel			-1			0x20001a1		-1			-1			-1			-1
-syscon	nr	__NR_pread_nocancel			-1			0x200019e		-1			-1			-1			-1
-syscon	nr	__NR_proc_info				-1			0x2000150		-1			-1			-1			-1
-syscon	nr	__NR_proc_rlimit_control		-1			0x20001be		-1			-1			-1			-1
-syscon	nr	__NR_proc_trace_log			-1			0x20001dd		-1			-1			-1			-1
-syscon	nr	__NR_proc_uuid_policy			-1			0x20001c4		-1			-1			-1			-1
-syscon	nr	__NR_process_policy			-1			0x2000143		-1			-1			-1			-1
-syscon	nr	__NR_pselect_nocancel			-1			0x200018b		-1			-1			-1			-1
-syscon	nr	__NR_psynch_cvbroad			-1			0x200012f		-1			-1			-1			-1
-syscon	nr	__NR_psynch_cvclrprepost		-1			0x2000138		-1			-1			-1			-1
-syscon	nr	__NR_psynch_cvsignal			-1			0x2000130		-1			-1			-1			-1
-syscon	nr	__NR_psynch_mutexdrop			-1			0x200012e		-1			-1			-1			-1
-syscon	nr	__NR_psynch_mutexwait			-1			0x200012d		-1			-1			-1			-1
-syscon	nr	__NR_psynch_rw_downgrade		-1			0x200012b		-1			-1			-1			-1
-syscon	nr	__NR_psynch_rw_longrdlock		-1			0x2000129		-1			-1			-1			-1
-syscon	nr	__NR_psynch_rw_rdlock			-1			0x2000132		-1			-1			-1			-1
-syscon	nr	__NR_psynch_rw_unlock			-1			0x2000134		-1			-1			-1			-1
-syscon	nr	__NR_psynch_rw_unlock2			-1			0x2000135		-1			-1			-1			-1
-syscon	nr	__NR_psynch_rw_upgrade			-1			0x200012c		-1			-1			-1			-1
-syscon	nr	__NR_psynch_rw_wrlock			-1			0x2000133		-1			-1			-1			-1
-syscon	nr	__NR_psynch_rw_yieldwrlock		-1			0x200012a		-1			-1			-1			-1
-syscon	nr	__NR_pwrite_nocancel			-1			0x200019f		-1			-1			-1			-1
-syscon	nr	__NR_read_nocancel			-1			0x200018c		-1			-1			-1			-1
-syscon	nr	__NR_readv_nocancel			-1			0x200019b		-1			-1			-1			-1
-syscon	nr	__NR_recvfrom_nocancel			-1			0x2000193		-1			-1			-1			-1
-syscon	nr	__NR_recvmsg_nocancel			-1			0x2000191		-1			-1			-1			-1
-syscon	nr	__NR_recvmsg_x				-1			0x20001e0		-1			-1			-1			-1
-syscon	nr	__NR_renameatx_np			-1			0x20001e8		-1			-1			-1			-1
-syscon	nr	__NR_searchfs				-1			0x20000e1		-1			-1			-1			-1
-syscon	nr	__NR_select_nocancel			-1			0x2000197		-1			-1			-1			-1
-syscon	nr	__NR_sem_close				-1			0x200010d		-1			-1			-1			-1
-syscon	nr	__NR_sem_open				-1			0x200010c		-1			-1			-1			-1
-syscon	nr	__NR_sem_post				-1			0x2000111		-1			-1			-1			-1
-syscon	nr	__NR_sem_trywait			-1			0x2000110		-1			-1			-1			-1
-syscon	nr	__NR_sem_unlink				-1			0x200010e		-1			-1			-1			-1
-syscon	nr	__NR_sem_wait				-1			0x200010f		-1			-1			-1			-1
-syscon	nr	__NR_sem_wait_nocancel			-1			0x20001a4		-1			-1			-1			-1
-syscon	nr	__NR_sendmsg_nocancel			-1			0x2000192		-1			-1			-1			-1
-syscon	nr	__NR_sendmsg_x				-1			0x20001e1		-1			-1			-1			-1
-syscon	nr	__NR_sendto_nocancel			-1			0x200019d		-1			-1			-1			-1
-syscon	nr	__NR_setattrlist			-1			0x20000dd		-1			-1			-1			-1
-syscon	nr	__NR_setattrlistat			-1			0x200020c		-1			-1			-1			-1
-syscon	nr	__NR_setprivexec			-1			0x2000098		-1			-1			-1			-1
-syscon	nr	__NR_setsgroups				-1			0x200011f		-1			-1			-1			-1
-syscon	nr	__NR_settid				-1			0x200011d		-1			-1			-1			-1
-syscon	nr	__NR_settid_with_pid			-1			0x2000137		-1			-1			-1			-1
-syscon	nr	__NR_setwgroups				-1			0x2000121		-1			-1			-1			-1
-syscon	nr	__NR_sfi_ctl				-1			0x20001c8		-1			-1			-1			-1
-syscon	nr	__NR_sfi_pidctl				-1			0x20001c9		-1			-1			-1			-1
-syscon	nr	__NR_shared_region_check_np		-1			0x2000126		-1			-1			-1			-1
-syscon	nr	__NR_sigsuspend_nocancel		-1			0x200019a		-1			-1			-1			-1
-syscon	nr	__NR_socket_delegate			-1			0x20001c2		-1			-1			-1			-1
-syscon	nr	__NR_stat_extended			-1			0x2000155		-1			-1			-1			-1
-syscon	nr	__NR_sysctlbyname			-1			0x2000112		-1			-1			-1			-1
-syscon	nr	__NR_system_override			-1			0x20001c6		-1			-1			-1			-1
-syscon	nr	__NR_telemetry				-1			0x20001c3		-1			-1			-1			-1
-syscon	nr	__NR_terminate_with_payload		-1			0x2000208		-1			-1			-1			-1
-syscon	nr	__NR_thread_selfcounts			-1			0x20000ba		-1			-1			-1			-1
-syscon	nr	__NR_thread_selfid			-1			0x2000174		-1			-1			-1			-1
-syscon	nr	__NR_thread_selfusage			-1			0x20001e2		-1			-1			-1			-1
-syscon	nr	__NR_ulock_wait				-1			0x2000203		-1			-1			-1			-1
-syscon	nr	__NR_ulock_wake				-1			0x2000204		-1			-1			-1			-1
-syscon	nr	__NR_umask_extended			-1			0x2000116		-1			-1			-1			-1
-syscon	nr	__NR_usrctl				-1			0x20001bd		-1			-1			-1			-1
-syscon	nr	__NR_vfs_purge				-1			0x20001c7		-1			-1			-1			-1
-syscon	nr	__NR_vm_pressure_monitor		-1			0x2000128		-1			-1			-1			-1
-syscon	nr	__NR_wait4_nocancel			-1			0x2000190		-1			-1			-1			-1
-syscon	nr	__NR_waitevent				-1			0x20000e8		-1			-1			-1			-1
-syscon	nr	__NR_waitid_nocancel			-1			0x20001a0		-1			-1			-1			-1
-syscon	nr	__NR_watchevent				-1			0x20000e7		-1			-1			-1			-1
-syscon	nr	__NR_work_interval_ctl			-1			0x20001f3		-1			-1			-1			-1
-syscon	nr	__NR_workq_kernreturn			-1			0x2000170		-1			-1			-1			-1
-syscon	nr	__NR_workq_open				-1			0x200016f		-1			-1			-1			-1
-syscon	nr	__NR_write_nocancel			-1			0x200018d		-1			-1			-1			-1
-syscon	nr	__NR_writev_nocancel			-1			0x200019c		-1			-1			-1			-1
-syscon	nr	__NR_abort2				-1			-1			0x01cf			-1			-1			-1
-syscon	nr	__NR_afs3_syscall			-1			-1			0x0179			-1			-1			-1
-syscon	nr	__NR_bindat				-1			-1			0x021a			-1			-1			-1
-syscon	nr	__NR_break				-1			-1			0x0011			-1			-1			-1
-syscon	nr	__NR_cap_enter				-1			-1			0x0204			-1			-1			-1
-syscon	nr	__NR_cap_fcntls_get			-1			-1			0x0219			-1			-1			-1
-syscon	nr	__NR_cap_fcntls_limit			-1			-1			0x0218			-1			-1			-1
-syscon	nr	__NR_cap_getmode			-1			-1			0x0205			-1			-1			-1
-syscon	nr	__NR_cap_ioctls_get			-1			-1			0x0217			-1			-1			-1
-syscon	nr	__NR_cap_ioctls_limit			-1			-1			0x0216			-1			-1			-1
-syscon	nr	__NR_cap_rights_limit			-1			-1			0x0215			-1			-1			-1
-syscon	nr	__NR_clock_getcpuclockid2		-1			-1			0x00f7			-1			0x1e2			-1
-syscon	nr	__NR_connectat				-1			-1			0x021b			-1			-1			-1
-syscon	nr	__NR_cpuset				-1			-1			0x01e4			-1			-1			-1
-syscon	nr	__NR_cpuset_getdomain			-1			-1			0x0231			-1			-1			-1
-syscon	nr	__NR_cpuset_getid			-1			-1			0x01e6			-1			-1			-1
-syscon	nr	__NR_cpuset_setdomain			-1			-1			0x0232			-1			-1			-1
-syscon	nr	__NR_cpuset_setid			-1			-1			0x01e5			-1			-1			-1
-syscon	nr	__NR_eaccess				-1			-1			0x0178			-1			-1			-1
-syscon	nr	__NR_extattr_delete_fd			-1			-1			0x0175			-1			0x16e			-1
-syscon	nr	__NR_extattr_delete_file		-1			-1			0x0166			-1			0x16b			-1
-syscon	nr	__NR_extattr_delete_link		-1			-1			0x019e			-1			0x171			-1
-syscon	nr	__NR_extattr_get_fd			-1			-1			0x0174			-1			0x16d			-1
-syscon	nr	__NR_extattr_get_file			-1			-1			0x0165			-1			0x16a			-1
-syscon	nr	__NR_extattr_get_link			-1			-1			0x019d			-1			0x170			-1
-syscon	nr	__NR_extattr_list_fd			-1			-1			0x01b5			-1			0x172			-1
-syscon	nr	__NR_extattr_list_file			-1			-1			0x01b6			-1			0x173			-1
-syscon	nr	__NR_extattr_list_link			-1			-1			0x01b7			-1			0x174			-1
-syscon	nr	__NR_extattr_set_fd			-1			-1			0x0173			-1			0x16c			-1
-syscon	nr	__NR_extattr_set_file			-1			-1			0x0164			-1			0x169			-1
-syscon	nr	__NR_extattr_set_link			-1			-1			0x019c			-1			0x16f			-1
-syscon	nr	__NR_extattrctl				-1			-1			0x0163			-1			0x168			-1
-syscon	nr	__NR_fexecve				-1			-1			0x01ec			-1			0x1d1			-1
-syscon	nr	__NR_ffclock_getcounter			-1			-1			0x00f1			-1			-1			-1
-syscon	nr	__NR_ffclock_getestimate		-1			-1			0x00f3			-1			-1			-1
-syscon	nr	__NR_ffclock_setestimate		-1			-1			0x00f2			-1			-1			-1
-syscon	nr	__NR_fhlink				-1			-1			0x0235			-1			-1			-1
-syscon	nr	__NR_fhlinkat				-1			-1			0x0236			-1			-1			-1
-syscon	nr	__NR_fhreadlink				-1			-1			0x0237			-1			-1			-1
-syscon	nr	__NR_getaudit				-1			-1			0x01c1			-1			-1			-1
-syscon	nr	__NR_getcontext				-1			-1			0x01a5			-1			0x133			-1
-syscon	nr	__NR_getfhat				-1			-1			0x0234			-1			-1			-1
-syscon	nr	__NR_gethostid				-1			-1			0x008e			-1			-1			-1
-syscon	nr	__NR_getkerninfo			-1			-1			0x003f			-1			-1			-1
-syscon	nr	__NR_getloginclass			-1			-1			0x020b			-1			-1			-1
-syscon	nr	__NR_getpagesize			-1			-1			0x0040			-1			-1			-1
-syscon	nr	__NR_gssd_syscall			-1			-1			0x01f9			-1			-1			-1
-syscon	nr	__NR_jail				-1			-1			0x0152			-1			-1			-1
-syscon	nr	__NR_jail_attach			-1			-1			0x01b4			-1			-1			-1
-syscon	nr	__NR_jail_get				-1			-1			0x01fa			-1			-1			-1
-syscon	nr	__NR_jail_remove			-1			-1			0x01fc			-1			-1			-1
-syscon	nr	__NR_jail_set				-1			-1			0x01fb			-1			-1			-1
-syscon	nr	__NR_kenv				-1			-1			0x0186			-1			-1			-1
-syscon	nr	__NR_kldfind				-1			-1			0x0132			-1			-1			-1
-syscon	nr	__NR_kldfirstmod			-1			-1			0x0135			-1			-1			-1
-syscon	nr	__NR_kldload				-1			-1			0x0130			-1			-1			-1
-syscon	nr	__NR_kldnext				-1			-1			0x0133			-1			-1			-1
-syscon	nr	__NR_kldstat				-1			-1			0x0134			-1			-1			-1
-syscon	nr	__NR_kldsym				-1			-1			0x0151			-1			-1			-1
-syscon	nr	__NR_kldunload				-1			-1			0x0131			-1			-1			-1
-syscon	nr	__NR_kldunloadf				-1			-1			0x01bc			-1			-1			-1
-syscon	nr	__NR_kmq_notify				-1			-1			0x01cd			-1			-1			-1
-syscon	nr	__NR_kmq_setattr			-1			-1			0x01ca			-1			-1			-1
-syscon	nr	__NR_kmq_timedreceive			-1			-1			0x01cb			-1			-1			-1
-syscon	nr	__NR_kmq_timedsend			-1			-1			0x01cc			-1			-1			-1
-syscon	nr	__NR_kmq_unlink				-1			-1			0x01ce			-1			-1			-1
-syscon	nr	__NR_ksem_close				-1			-1			0x0190			-1			-1			-1
-syscon	nr	__NR_ksem_destroy			-1			-1			0x0198			-1			-1			-1
-syscon	nr	__NR_ksem_getvalue			-1			-1			0x0197			-1			-1			-1
-syscon	nr	__NR_ksem_init				-1			-1			0x0194			-1			-1			-1
-syscon	nr	__NR_ksem_open				-1			-1			0x0195			-1			-1			-1
-syscon	nr	__NR_ksem_post				-1			-1			0x0191			-1			-1			-1
-syscon	nr	__NR_ksem_timedwait			-1			-1			0x01b9			-1			-1			-1
-syscon	nr	__NR_ksem_trywait			-1			-1			0x0193			-1			-1			-1
-syscon	nr	__NR_ksem_unlink			-1			-1			0x0196			-1			-1			-1
-syscon	nr	__NR_ksem_wait				-1			-1			0x0192			-1			-1			-1
-syscon	nr	__NR_ktimer_create			-1			-1			0x00eb			-1			-1			-1
-syscon	nr	__NR_ktimer_delete			-1			-1			0x00ec			-1			-1			-1
-syscon	nr	__NR_ktimer_getoverrun			-1			-1			0x00ef			-1			-1			-1
-syscon	nr	__NR_ktimer_gettime			-1			-1			0x00ee			-1			-1			-1
-syscon	nr	__NR_ktimer_settime			-1			-1			0x00ed			-1			-1			-1
-syscon	nr	__NR_lchflags				-1			-1			0x0187			-1			0x130			-1
-syscon	nr	__NR_lchmod				-1			-1			0x0112			-1			0x112			-1
-syscon	nr	__NR_lgetfh				-1			-1			0x00a0			-1			-1			-1
-syscon	nr	__NR_lpathconf				-1			-1			0x0201			-1			0x1f3			-1
-syscon	nr	__NR_lutimes				-1			-1			0x0114			-1			0x1a8			-1
-syscon	nr	__NR_mac_syscall			-1			-1			0x018a			-1			-1			-1
-syscon	nr	__NR_modfind				-1			-1			0x012f			-1			-1			-1
-syscon	nr	__NR_modfnext				-1			-1			0x012e			-1			-1			-1
-syscon	nr	__NR_modnext				-1			-1			0x012c			-1			-1			-1
-syscon	nr	__NR_modstat				-1			-1			0x012d			-1			-1			-1
-syscon	nr	__NR_nfstat				-1			-1			0x0117			-1			-1			-1
-syscon	nr	__NR_nlm_syscall			-1			-1			0x009a			-1			-1			-1
-syscon	nr	__NR_nlstat				-1			-1			0x0118			-1			-1			-1
-syscon	nr	__NR_nmount				-1			-1			0x017a			-1			-1			-1
-syscon	nr	__NR_nnpfs_syscall			-1			-1			0x0153			-1			-1			-1
-syscon	nr	__NR_nstat				-1			-1			0x0116			-1			-1			-1
-syscon	nr	__NR_pdfork				-1			-1			0x0206			-1			-1			-1
-syscon	nr	__NR_pdgetpid				-1			-1			0x0208			-1			-1			-1
-syscon	nr	__NR_pdkill				-1			-1			0x0207			-1			-1			-1
-syscon	nr	__NR_posix_openpt			-1			-1			0x01f8			-1			-1			-1
-syscon	nr	__NR_procctl				-1			-1			0x0220			-1			-1			-1
-syscon	nr	__NR_psynch_cvwait			-1			0x2000131		-1			-1			-1			-1
-syscon	nr	__NR_quota				-1			-1			0x0095			-1			-1			-1
-syscon	nr	__NR_rctl_add_rule			-1			-1			0x0210			-1			-1			-1
-syscon	nr	__NR_rctl_get_limits			-1			-1			0x020f			-1			-1			-1
-syscon	nr	__NR_rctl_get_racct			-1			-1			0x020d			-1			-1			-1
-syscon	nr	__NR_rctl_get_rules			-1			-1			0x020e			-1			-1			-1
-syscon	nr	__NR_rctl_remove_rule			-1			-1			0x0211			-1			-1			-1
-syscon	nr	__NR_recv				-1			-1			0x0066			-1			-1			-1
-syscon	nr	__NR_rfork				-1			-1			0x00fb			-1			-1			-1
-syscon	nr	__NR_rtprio				-1			-1			0x00a6			-1			-1			-1
-syscon	nr	__NR_rtprio_thread			-1			-1			0x01d2			-1			-1			-1
-syscon	nr	__NR_send				-1			-1			0x0065			-1			-1			-1
-syscon	nr	__NR_setaudit				-1			-1			0x01c2			-1			-1			-1
-syscon	nr	__NR_setcontext				-1			-1			0x01a6			-1			0x134			-1
-syscon	nr	__NR_setfib				-1			-1			0x00af			-1			-1			-1
-syscon	nr	__NR_sethostid				-1			-1			0x008f			-1			-1			-1
-syscon	nr	__NR_setloginclass			-1			-1			0x020c			-1			-1			-1
-syscon	nr	__NR_sigblock				-1			-1			0x006d			-1			-1			-1
-syscon	nr	__NR_sigqueue				-1			-1			0x01c8			-1			-1			-1
-syscon	nr	__NR_sigsetmask				-1			-1			0x006e			-1			-1			-1
-syscon	nr	__NR_sigstack				-1			-1			0x0070			-1			-1			-1
-syscon	nr	__NR_sigvec				-1			-1			0x006c			-1			-1			-1
-syscon	nr	__NR_sigwaitinfo			-1			-1			0x015a			-1			-1			-1
-syscon	nr	__NR_sstk				-1			-1			0x0046			-1			-1			-1
-syscon	nr	__NR_swapcontext			-1			-1			0x01a7			-1			-1			-1
-syscon	nr	__NR_thr_create				-1			-1			0x01ae			-1			-1			-1
-syscon	nr	__NR_thr_exit				-1			-1			0x01af			-1			-1			-1
-syscon	nr	__NR_thr_kill				-1			-1			0x01b1			-1			-1			-1
-syscon	nr	__NR_thr_kill2				-1			-1			0x01e1			-1			-1			-1
-syscon	nr	__NR_thr_new				-1			-1			0x01c7			-1			-1			-1
-syscon	nr	__NR_thr_self				-1			-1			0x01b0			-1			-1			-1
-syscon	nr	__NR_thr_set_name			-1			-1			0x01d0			-1			-1			-1
-syscon	nr	__NR_thr_suspend			-1			-1			0x01ba			-1			-1			-1
-syscon	nr	__NR_thr_wake				-1			-1			0x01bb			-1			-1			-1
-syscon	nr	__NR_uuidgen				-1			-1			0x0188			-1			0x163			-1
-syscon	nr	__NR_vadvise				-1			-1			0x0048			-1			-1			-1
-syscon	nr	__NR_wait				-1			-1			0x0054			-1			-1			-1
-syscon	nr	__NR_wait6				-1			-1			0x0214			-1			0x1e1			-1
-syscon	nr	__NR_yield				-1			-1			0x0141			-1			-1			-1
-syscon	nr	__NR_tfork				-1			-1			-1			0x0008			-1			-1
-syscon	nr	__NR_thrsleep				-1			-1			-1			0x005e			-1			-1
-syscon	nr	__NR_thrwakeup				-1			-1			-1			0x012d			-1			-1
-syscon	nr	__NR_threxit				-1			-1			-1			0x012e			-1			-1
-syscon	nr	__NR_thrsigdivert			-1			-1			-1			0x012f			-1			-1
-syscon	nr	__NR_set_tcb				-1			-1			-1			0x0149			-1			-1
-syscon	nr	__NR_get_tcb				-1			-1			-1			0x014a			-1			-1
-syscon	nr	__NR_adjfreq				-1			-1			-1			0x0131			-1			-1
-syscon	nr	__NR_getdtablecount			-1			-1			-1			0x0012			-1			-1
-syscon	nr	__NR_getlogin_r				-1			-1			-1			0x008d			-1			-1
-syscon	nr	__NR_getrtable				-1			-1			-1			0x0137			-1			-1
-syscon	nr	__NR_getthrid				-1			-1			-1			0x012b			-1			-1
-syscon	nr	__NR_kbind				-1			-1			-1			0x0056			-1			-1
-syscon	nr	__NR_mquery				-1			-1			-1			0x011e			-1			-1
-syscon	nr	__NR_obreak				-1			-1			-1			0x0011			0x011			-1
-syscon	nr	__NR_sendsyslog				-1			-1			-1			0x0070			-1			-1
-syscon	nr	__NR_setrtable				-1			-1			-1			0x0136			-1			-1
-syscon	nr	__NR_swapctl				-1			-1			-1			0x00c1			0x10f			-1
-syscon	nr	__NR_thrkill				-1			-1			-1			0x0077			-1			-1
-syscon	nr	__NR_unveil				-1			-1			-1			0x0072			-1			-1
-syscon	nr	__NR_mac_get_link			-1			0x2000180		0x019a			-1			-1			-1
-syscon	nr	__NR_mac_set_link			-1			0x2000181		0x019b			-1			-1			-1
-syscon	nr	__NR_mac_get_fd				-1			0x2000184		0x0182			-1			-1			-1
-syscon	nr	__NR_mac_get_file			-1			0x200017e		0x0183			-1			-1			-1
-syscon	nr	__NR_mac_get_proc			-1			0x2000182		0x0180			-1			-1			-1
-syscon	nr	__NR_mac_set_fd				-1			0x2000185		0x0184			-1			-1			-1
-syscon	nr	__NR_mac_get_pid			-1			0x2000186		0x0199			-1			-1			-1
-syscon	nr	__NR_mac_set_proc			-1			0x2000183		0x0181			-1			-1			-1
-syscon	nr	__NR_mac_set_file			-1			0x200017f		0x0185			-1			-1			-1
-syscon	nr	__NR_mac_execve				-1			0x200017c		0x019f			-1			-1			-1
-syscon	nr	__NR_acl_get_link			-1			-1			0x01a9			-1			-1			-1
-syscon	nr	__NR_sigwait_nocancel			-1			0x20001a6		-1			-1			-1			-1
-syscon	nr	__NR_cap_rights_get			-1			-1			0x0203			-1			-1			-1
-syscon	nr	__NR_semwait_signal			-1			0x200014e		-1			-1			-1			-1
-syscon	nr	__NR_acl_set_link			-1			-1			0x01aa			-1			-1			-1
-syscon	nr	__NR_acl_set_fd				-1			-1			0x015e			-1			-1			-1
-syscon	nr	__NR_old_semwait_signal			-1			0x2000172		-1			-1			-1			-1
-syscon	nr	__NR_setugid				-1			-1			0x0176			-1			-1			-1
-syscon	nr	__NR_acl_aclcheck_fd			-1			-1			0x0162			-1			-1			-1
-syscon	nr	__NR_acl_get_fd				-1			-1			0x015d			-1			-1			-1
-syscon	nr	__NR___sysctl				-1			-1			0x00ca			-1			-1			-1
-syscon	nr	__NR_mac_getfsstat			-1			0x20001aa		-1			-1			-1			-1
-syscon	nr	__NR_mac_get_mount			-1			0x20001a9		-1			-1			-1			-1
-syscon	nr	__NR_acl_delete_link			-1			-1			0x01ab			-1			-1			-1
-syscon	nr	__NR_mac_mount				-1			0x20001a8		-1			-1			-1			-1
-syscon	nr	__NR_acl_get_file			-1			-1			0x015b			-1			-1			-1
-syscon	nr	__NR_acl_aclcheck_file			-1			-1			0x0161			-1			-1			-1
-syscon	nr	__NR_acl_delete_fd			-1			-1			0x0160			-1			-1			-1
-syscon	nr	__NR_acl_aclcheck_link			-1			-1			0x01ac			-1			-1			-1
-syscon	nr	__NR___mac_syscall			-1			0x200017d		-1			-1			-1			-1
-syscon	nr	__NR_acl_set_file			-1			-1			0x015c			-1			-1			-1
-syscon	nr	__NR_acl_delete_file			-1			-1			0x015f			-1			-1			-1
-syscon	nr	__NR_syscall				-1			-1			-1			0x00c6			-1			-1
-syscon	nr	__NR__umtx_op				-1			-1			0x01c6			-1			-1			-1
-syscon	nr	__NR_semwait_signal_nocancel		-1			0x20001a7		-1			-1			-1			-1
-syscon	nr	__NR_old_semwait_signal_nocancel	-1			0x2000173		-1			-1			-1			-1
-syscon	nr	__NR_sctp_peeloff			-1			-1			0x01d7			-1			-1			-1
-syscon	nr	__NR_sctp_generic_recvmsg		-1			-1			0x01da			-1			-1			-1
-syscon	nr	__NR_sctp_generic_sendmsg		-1			-1			0x01d8			-1			-1			-1
-syscon	nr	__NR_sctp_generic_sendmsg_iov		-1			-1			0x01d9			-1			-1			-1
-syscon	nr	__NR_shared_region_map_and_slide_np	-1			0x20001b6		-1			-1			-1			-1
-syscon	nr	__NR_guarded_open_dprotected_np		-1			0x20001e4		-1			-1			-1			-1
-syscon	nr	__NR_stack_snapshot_with_config		-1			0x20001eb		-1			-1			-1			-1
+syscon	nr	__NR_exit				0x003c			0x2000001          	0x0001        		0x0001          	0x001           	0xfff
+syscon	nr	__NR_exit_group				0x00e7			0x2000001          	0x0001        		0x0001          	0x001           	0xfff
+syscon	nr	__NR_read				0x0000			0x2000003		0x0003			0x0003			0x003			0xfff
+syscon	nr	__NR_write				0x0001			0x2000004		0x0004			0x0004			0x004			0xfff
+syscon	nr	__NR_open				0x0002			0x2000005		0x0005			0x0005			0x005			0xfff
+syscon	nr	__NR_close				0x0003			0x2000006		0x0006			0x0006			0x006			0xfff
+syscon	nr	__NR_stat				0x0004			0x2000152		0xfff			0x0026			0x1b7			0xfff
+syscon	nr	__NR_fstat				0x0005			0x2000153		0x0227			0x0035			0x1b8			0xfff
+syscon	nr	__NR_lstat				0x0006			0x2000154		0x0028			0x0028			0x1b9			0xfff
+syscon	nr	__NR_poll				0x0007			0x20000e6		0x00d1			0x00fc			0x0d1			0xfff
+syscon	nr	__NR_ppoll				0x010f			0xfff			0x0221			0x006d			0xfff			0xfff
+syscon	nr	__NR_lseek				0x0008			0x20000c7		0x01de			0x00c7			0x0c7			0xfff
+syscon	nr	__NR_mmap				0x0009			0x20000c5		0x01dd			0x00c5			0x0c5			0xfff
+syscon	nr	__NR_msync				0x001a			0x2000041		0x0041			0x0100			0x115			0xfff
+syscon	nr	__NR_mprotect				0x000a			0x200004a		0x004a			0x004a			0x04a			0xfff
+syscon	nr	__NR_munmap				0x000b			0x2000049		0x0049			0x0049			0x049			0xfff
+syscon	nr	__NR_sigaction				0x000d			0x200002e		0x01a0			0x002e			0x154			0xfff
+syscon	nr	__NR_sigprocmask			0x000e			0x2000030		0x0154			0x0030			0x125			0xfff
+syscon	nr	__NR_ioctl				0x0010			0x2000036		0x0036			0x0036			0x036			0xfff
+syscon	nr	__NR_pread				0x0011			0x2000099		0x01db			0x00ad			0x0ad			0xfff
+syscon	nr	__NR_pwrite				0x0012			0x200009a		0x01dc			0x00ae			0x0ae			0xfff
+syscon	nr	__NR_readv				0x0013			0x2000078		0x0078			0x0078			0x078			0xfff
+syscon	nr	__NR_writev				0x0014			0x2000079		0x0079			0x0079			0x079			0xfff
+syscon	nr	__NR_access				0x0015			0x2000021		0x0021			0x0021			0x021			0xfff
+syscon	nr	__NR_pipe				0x0016			0x200002a		0x021e			0x0107			0x02a			0xfff
+syscon	nr	__NR_select				0x0017			0x200005d		0x005d			0x0047			0x1a1			0xfff
+syscon	nr	__NR_pselect				0xfff			0x200018a		0x020a			0x006e			0x1b4			0xfff
+syscon	nr	__NR_pselect6				0x010e			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sched_yield			0x0018			0x010003c		0x014b			0x012a			0x15e			0xfff
+syscon	nr	__NR_mremap				0x0019			0xfff			0xfff			0xfff			0x19b			0xfff
+syscon	nr	__NR_mincore				0x001b			0x200004e		0x004e			0x004e			0x04e			0xfff
+syscon	nr	__NR_madvise				0x001c			0x200004b		0x004b			0x004b			0x04b			0xfff
+syscon	nr	__NR_shmget				0x001d			0x2000109		0x00e7			0x0121			0x0e7			0xfff
+syscon	nr	__NR_shmat				0x001e			0x2000106		0x00e4			0x00e4			0x0e4			0xfff
+syscon	nr	__NR_shmctl				0x001f			0x2000107		0x0200			0x0128			0x1bb			0xfff
+syscon	nr	__NR_dup				0x0020			0x2000029		0x0029			0x0029			0x029			0xfff
+syscon	nr	__NR_dup2				0x0021			0x200005a		0x005a			0x005a			0x05a			0xfff
+syscon	nr	__NR_pause				0x0022			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_nanosleep				0x0023			0xfff			0x00f0			0x005b			0x1ae			0xfff
+syscon	nr	__NR_getitimer				0x0024			0x2000056		0x0056			0x0046			0x1aa			0xfff
+syscon	nr	__NR_setitimer				0x0026			0x2000053		0x0053			0x0045			0x1a9			0xfff
+syscon	nr	__NR_alarm				0x0025			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_getpid				0x0027			0x2000014		0x0014			0x0014			0x014			0xfff
+syscon	nr	__NR_sendfile				0x0028			0x2000151		0x0189			0xfff			0xfff			0xfff
+syscon	nr	__NR_socket				0x0029			0x2000061		0x0061			0x0061			0x18a			0xfff
+syscon	nr	__NR_connect				0x002a			0x2000062		0x0062			0x0062			0x062			0xfff
+syscon	nr	__NR_accept				0x002b			0x200001e		0x0063			0x001e			0x01e			0xfff
+syscon	nr	__NR_sendto				0x002c			0x2000085		0x0085			0x0085			0x085			0xfff
+syscon	nr	__NR_recvfrom				0x002d			0x200001d		0x001d			0x001d			0x01d			0xfff
+syscon	nr	__NR_sendmsg				0x002e			0x200001c		0x001c			0x001c			0x01c			0xfff
+syscon	nr	__NR_recvmsg				0x002f			0x200001b		0x001b			0x001b			0x01b			0xfff
+syscon	nr	__NR_shutdown				0x0030			0x2000086		0x0086			0x0086			0x086			0xfff
+syscon	nr	__NR_bind				0x0031			0x2000068		0x0068			0x0068			0x068			0xfff
+syscon	nr	__NR_listen				0x0032			0x200006a		0x006a			0x006a			0x06a			0xfff
+syscon	nr	__NR_getsockname			0x0033			0x2000020		0x0020			0x0020			0x020			0xfff
+syscon	nr	__NR_getpeername			0x0034			0x200001f		0x008d			0x001f			0x01f			0xfff
+syscon	nr	__NR_socketpair				0x0035			0x2000087		0x0087			0x0087			0x087			0xfff
+syscon	nr	__NR_setsockopt				0x0036			0x2000069		0x0069			0x0069			0x069			0xfff
+syscon	nr	__NR_getsockopt				0x0037			0x2000076		0x0076			0x0076			0x076			0xfff
+syscon	nr	__NR_fork				0x0039			0x2000002		0x0002			0x0002			0x002			0xfff
+syscon	nr	__NR_vfork				0x003a			0x2000042		0x0042			0x0042          	0x042           	0xfff
+syscon	nr	__NR_posix_spawn			0xfff			0x20000f4		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_execve				0x003b			0x200003b		0x003b			0x003b			0x03b			0xfff	# DING DING DING DING DING
+syscon	nr	__NR_wait4				0x003d			0x2000007		0x0007			0x000b			0x1c1			0xfff
+syscon	nr	__NR_kill				0x003e			0x2000025		0x0025			0x007a			0x025			0xfff
+syscon	nr	__NR_killpg				0xfff			0xfff			0x0092			0xfff			0xfff			0xfff
+syscon	nr	__NR_clone				0x0038			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_tkill				0x00c8			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_futex				0x00ca			0xfff			0xfff			0x0053			0xfff			0xfff
+syscon	nr	__NR_set_robust_list			0x0111			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_get_robust_list			0x0112			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_uname				0x003f			0xfff			0x00a4			0xfff			0xfff			0xfff
+syscon	nr	__NR_semget				0x0040			0x20000ff		0x00dd			0x00dd			0x0dd			0xfff
+syscon	nr	__NR_semop				0x0041			0x2000100		0x00de			0x0122			0x0de			0xfff
+syscon	nr	__NR_semctl				0x0042			0x20000fe		0x01fe			0x0127			0xfff			0xfff
+syscon	nr	__NR_shmdt				0x0043			0x2000108		0x00e6			0x00e6			0x0e6			0xfff
+syscon	nr	__NR_msgget				0x0044			0x2000103		0x00e1			0x00e1			0x0e1			0xfff
+syscon	nr	__NR_msgsnd				0x0045			0x2000104		0x00e2			0x00e2			0x0e2			0xfff
+syscon	nr	__NR_msgrcv				0x0046			0x2000105		0x00e3			0x00e3			0x0e3			0xfff
+syscon	nr	__NR_msgctl				0x0047			0x2000102		0x01ff			0x0129			0x1bc			0xfff
+syscon	nr	__NR_fcntl				0x0048			0x200005c		0x005c			0x005c			0x05c			0xfff
+syscon	nr	__NR_flock				0x0049			0x2000083		0x0083			0x0083			0x083			0xfff
+syscon	nr	__NR_fsync				0x004a			0x200005f		0x005f			0x005f			0x05f			0xfff
+syscon	nr	__NR_fdatasync				0x004b			0x20000bb		0x0226			0x005f			0x0f1			0xfff
+syscon	nr	__NR_truncate				0x004c			0x20000c8		0x01df			0x00c8			0x0c8			0xfff
+syscon	nr	__NR_ftruncate				0x004d			0x20000c9		0x01e0			0x00c9			0x0c9			0xfff
+syscon	nr	__NR_getcwd				0x004f			0xfff			0x0146			0x0130			0x128			0xfff
+syscon	nr	__NR_chdir				0x0050			0x200000c		0x000c			0x000c			0x00c			0xfff
+syscon	nr	__NR_fchdir				0x0051			0x200000d		0x000d			0x000d			0x00d			0xfff
+syscon	nr	__NR_rename				0x0052			0x2000080		0x0080			0x0080			0x080			0xfff
+syscon	nr	__NR_mkdir				0x0053			0x2000088		0x0088			0x0088			0x088			0xfff
+syscon	nr	__NR_rmdir				0x0054			0x2000089		0x0089			0x0089			0x089			0xfff
+syscon	nr	__NR_creat				0x0055			0xfff			0x0008			0xfff			0xfff			0xfff
+syscon	nr	__NR_link				0x0056			0x2000009		0x0009			0x0009			0x009			0xfff
+syscon	nr	__NR_unlink				0x0057			0x200000a		0x000a			0x000a			0x00a			0xfff
+syscon	nr	__NR_symlink				0x0058			0x2000039		0x0039			0x0039			0x039			0xfff
+syscon	nr	__NR_readlink				0x0059			0x200003a		0x003a			0x003a			0x03a			0xfff
+syscon	nr	__NR_chmod				0x005a			0x200000f		0x000f			0x000f			0x00f			0xfff
+syscon	nr	__NR_fchmod				0x005b			0x200007c		0x007c			0x007c			0x07c			0xfff
+syscon	nr	__NR_chown				0x005c			0x2000010		0x0010			0x0010			0x010			0xfff
+syscon	nr	__NR_fchown				0x005d			0x200007b		0x007b			0x007b			0x07b			0xfff
+syscon	nr	__NR_lchown				0x005e			0x200016c		0x00fe			0x00fe			0x113			0xfff
+syscon	nr	__NR_umask				0x005f			0x200003c		0x003c			0x003c			0x03c			0xfff
+syscon	nr	__NR_gettimeofday			0x0060			0x2000074		0x0074			0x0043			0x1a2			0xfff
+syscon	nr	__NR_getrlimit				0x0061			0x20000c2		0x00c2			0x00c2			0x0c2			0xfff
+syscon	nr	__NR_getrusage				0x0062			0x2000075		0x0075			0x0013			0x1bd			0xfff
+syscon	nr	__NR_sysinfo				0x0063			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_times				0x0064			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_ptrace				0x0065			0x200001a		0x001a			0x001a			0x01a			0xfff
+syscon	nr	__NR_syslog				0x0067			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_getuid				0x0066			0x2000018		0x0018			0x0018			0x018			0xfff
+syscon	nr	__NR_getgid				0x0068			0x200002f		0x002f			0x002f			0x02f			0xfff
+syscon	nr	__NR_getppid				0x006e			0x2000027		0x0027			0x0027			0xfff			0xfff
+syscon	nr	__NR_getpgrp				0x006f			0x2000051		0x0051			0x0051			0x051			0xfff
+syscon	nr	__NR_setsid				0x0070			0x2000093		0x0093			0x0093			0x093			0xfff
+syscon	nr	__NR_getsid				0x007c			0x2000136		0x0136			0x00ff			0x11e			0xfff
+syscon	nr	__NR_getpgid				0x0079			0x2000097		0x00cf			0x00cf			0x0cf			0xfff
+syscon	nr	__NR_setpgid				0x006d			0x2000052		0x0052			0x0052			0x052			0xfff
+syscon	nr	__NR_geteuid				0x006b			0x2000019		0x0019			0x0019			0xfff			0xfff
+syscon	nr	__NR_getegid				0x006c			0x200002b		0x002b			0x002b			0xfff			0xfff
+syscon	nr	__NR_getgroups				0x0073			0x200004f		0x004f			0x004f			0x04f			0xfff
+syscon	nr	__NR_setgroups				0x0074			0x2000050		0x0050			0x0050			0x050			0xfff
+syscon	nr	__NR_setreuid				0x0071			0x200007e		0x007e			0x007e			0x07e			0xfff
+syscon	nr	__NR_setregid				0x0072			0x200007f		0x007f			0x007f			0x07f			0xfff
+syscon	nr	__NR_setuid				0x0069			0x2000017		0x0017			0x0017			0x017			0xfff
+syscon	nr	__NR_setgid				0x006a			0x20000b5		0x00b5			0x00b5			0x0b5			0xfff
+syscon	nr	__NR_setresuid				0x0075			0xfff			0x0137			0x011a			0xfff			0xfff
+syscon	nr	__NR_setresgid				0x0077			0xfff			0x0138			0x011c			0xfff			0xfff
+syscon	nr	__NR_getresuid				0x0076			0xfff			0x0168			0x0119			0xfff			0xfff
+syscon	nr	__NR_getresgid				0x0078			0xfff			0x0169			0x011b			0xfff			0xfff
+syscon	nr	__NR_sigpending				0x007f			0x2000034		0x0034			0x0034			0x124			0xfff
+syscon	nr	__NR_sigsuspend				0x0082			0x200006f		0x0155			0x006f			0x126			0xfff
+syscon	nr	__NR_sigaltstack			0x0083			0x2000035		0x0035			0x0120			0x119			0xfff
+syscon	nr	__NR_mknod				0x0085			0x200000e		0x000e			0x000e			0x1c2			0xfff
+syscon	nr	__NR_mknodat				0x0103			0xfff			0x22ff			0x0140			0x1cc			0xfff
+syscon	nr	__NR_mkfifo				0xfff			0x2000084		0x0084			0x0084			0x084			0xfff
+syscon	nr	__NR_mkfifoat				0xfff			0xfff			0x01f1			0x013f			0x1cb			0xfff
+syscon	nr	__NR_statfs				0x0089			0x2000159		0x022b			0x003f			0xfff			0xfff
+syscon	nr	__NR_fstatfs				0x008a			0x200015a		0x022c			0x0040			0xfff			0xfff
+syscon	nr	__NR_getpriority			0x008c			0x2000064		0x0064			0x0064			0x064			0xfff
+syscon	nr	__NR_setpriority			0x008d			0x2000060		0x0060			0x0060			0x060			0xfff
+syscon	nr	__NR_mlock				0x0095			0x20000cb		0x00cb			0x00cb			0x0cb			0xfff
+syscon	nr	__NR_munlock				0x0096			0x20000cc		0x00cc			0x00cc			0x0cc			0xfff
+syscon	nr	__NR_mlockall				0x0097			0x2000144		0x0144			0x010f			0x0f2			0xfff
+syscon	nr	__NR_munlockall				0x0098			0x2000145		0x0145			0x0110			0x0f3			0xfff
+syscon	nr	__NR_setrlimit				0x00a0			0x20000c3		0x00c3			0x00c3			0x0c3			0xfff
+syscon	nr	__NR_chroot				0x00a1			0x200003d		0x003d			0x003d			0x03d			0xfff
+syscon	nr	__NR_sync				0x00a2			0x2000024		0x0024			0x0024			0xfff			0xfff
+syscon	nr	__NR_acct				0x00a3			0x2000033		0x0033			0x0033			0x033			0xfff
+syscon	nr	__NR_settimeofday			0x00a4			0x200007a		0x007a			0x0044			0x1a3			0xfff
+syscon	nr	__NR_mount				0x00a5			0x20000a7		0x0015			0x0015			0x19a			0xfff
+syscon	nr	__NR_reboot				0x00a9			0x2000037		0x0037			0x0037			0x0d0			0xfff
+syscon	nr	__NR_quotactl				0x00b3			0x20000a5		0x0094			0x0094			0xfff			0xfff
+syscon	nr	__NR_setfsuid				0x007a			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_setfsgid				0x007b			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_capget				0x007d			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_capset				0x007e			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sigtimedwait			0x0080			0xfff			0x0159			0xfff			0xfff			0xfff
+syscon	nr	__NR_rt_sigqueueinfo			0x0081			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_personality			0x0087			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_ustat				0x0088			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sysfs				0x008b			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sched_setparam			0x008e			0xfff			0x0147			0xfff			0xfff			0xfff
+syscon	nr	__NR_sched_getparam			0x008f			0xfff			0x0148			0xfff			0xfff			0xfff
+syscon	nr	__NR_sched_setscheduler			0x0090			0xfff			0x0149			0xfff			0xfff			0xfff
+syscon	nr	__NR_sched_getscheduler			0x0091			0xfff			0x014a			0xfff			0xfff			0xfff
+syscon	nr	__NR_sched_get_priority_max		0x0092			0xfff			0x014c			0xfff			0xfff			0xfff
+syscon	nr	__NR_sched_get_priority_min		0x0093			0xfff			0x014d			0xfff			0xfff			0xfff
+syscon	nr	__NR_sched_rr_get_interval		0x0094			0xfff			0x014e			0xfff			0xfff			0xfff
+syscon	nr	__NR_vhangup				0x0099			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_modify_ldt				0x009a			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_pivot_root				0x009b			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR__sysctl				0x009c			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_prctl				0x009d			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_arch_prctl				0x009e			0xfff			0x00a5			0x00a5			0xfff			0xfff
+syscon	nr	__NR_adjtimex				0x009f			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_umount2				0x00a6			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_swapon				0x00a7			0x2000055		0x0055			0xfff			0xfff			0xfff
+syscon	nr	__NR_swapoff				0x00a8			0xfff			0x01a8			0xfff			0xfff			0xfff
+syscon	nr	__NR_sethostname			0x00aa			0xfff			0x0058			0xfff			0xfff			0xfff
+syscon	nr	__NR_setdomainname			0x00ab			0xfff			0x00a3			0xfff			0xfff			0xfff
+syscon	nr	__NR_iopl				0x00ac			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_ioperm				0x00ad			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_init_module			0x00af			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_delete_module			0x00b0			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_gettid				0x00ba			0x200011e		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_readahead				0x00bb			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_setxattr				0x00bc			0x20000ec		0xfff			0xfff			0x177			0xfff
+syscon	nr	__NR_fsetxattr				0x00be			0x20000ed		0xfff			0xfff			0x179			0xfff
+syscon	nr	__NR_getxattr				0x00bf			0x20000ea		0xfff			0xfff			0x17a			0xfff
+syscon	nr	__NR_fgetxattr				0x00c1			0x20000eb		0xfff			0xfff			0x17c			0xfff
+syscon	nr	__NR_listxattr				0x00c2			0x20000f0		0xfff			0xfff			0x17d			0xfff
+syscon	nr	__NR_flistxattr				0x00c4			0x20000f1		0xfff			0xfff			0x17f			0xfff
+syscon	nr	__NR_removexattr			0x00c5			0x20000ee		0xfff			0xfff			0x180			0xfff
+syscon	nr	__NR_fremovexattr			0x00c7			0x20000ef		0xfff			0xfff			0x182			0xfff
+syscon	nr	__NR_lsetxattr				0x00bd			0xfff			0xfff			0xfff			0x178			0xfff
+syscon	nr	__NR_lgetxattr				0x00c0			0xfff			0xfff			0xfff			0x17b			0xfff
+syscon	nr	__NR_llistxattr				0x00c3			0xfff			0xfff			0xfff			0x17e			0xfff
+syscon	nr	__NR_lremovexattr			0x00c6			0xfff			0xfff			0xfff			0x181			0xfff
+syscon	nr	__NR_sched_setaffinity			0x00cb			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sched_getaffinity			0x00cc			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_cpuset_getaffinity			0xfff			0xfff			0x01e7			0xfff			0xfff			0xfff
+syscon	nr	__NR_cpuset_setaffinity			0xfff			0xfff			0x01e8			0xfff			0xfff			0xfff
+syscon	nr	__NR_io_setup				0x00ce			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_io_destroy				0x00cf			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_io_getevents			0x00d0			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_io_submit				0x00d1			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_io_cancel				0x00d2			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_lookup_dcookie			0x00d4			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_epoll_create			0x00d5			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_epoll_wait				0x00e8			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_epoll_ctl				0x00e9			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_getdents				0x00d9			0xfff			0x0110			0x0063			0x186			0xfff
+syscon	nr	__NR_set_tid_address			0x00da			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_restart_syscall			0x00db			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_semtimedop				0x00dc			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_fadvise				0x00dd			0xfff			0x0213			0xfff			0xfff			0xfff
+syscon	nr	__NR_timer_create			0x00de			0xfff			0xfff			0xfff			0x0eb			0xfff
+syscon	nr	__NR_timer_settime			0x00df			0xfff			0xfff			0xfff			0x1be			0xfff
+syscon	nr	__NR_timer_gettime			0x00e0			0xfff			0xfff			0xfff			0x1bf			0xfff
+syscon	nr	__NR_timer_getoverrun			0x00e1			0xfff			0xfff			0xfff			0x0ef			0xfff
+syscon	nr	__NR_timer_delete			0x00e2			0xfff			0xfff			0xfff			0x0ec			0xfff
+syscon	nr	__NR_clock_settime			0x00e3			0xfff			0x00e9			0x0058			0x1ac			0xfff
+syscon	nr	__NR_clock_gettime			0x00e4			0xfff			0x00e8			0x0057			0x1ab			0xfff
+syscon	nr	__NR_clock_getres			0x00e5			0xfff			0x00ea			0x0059			0x1ad			0xfff
+syscon	nr	__NR_clock_nanosleep			0x00e6			0xfff			0x00f4			0xfff			0xfff			0xfff
+syscon	nr	__NR_tgkill				0x00ea			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_mbind				0x00ed			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_set_mempolicy			0x00ee			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_get_mempolicy			0x00ef			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_mq_open				0x00f0			0xfff			0xfff			0xfff			0x101			0xfff
+syscon	nr	__NR_mq_unlink				0x00f1			0xfff			0xfff			0xfff			0x103			0xfff
+syscon	nr	__NR_mq_timedsend			0x00f2			0xfff			0xfff			0xfff			0x1b0			0xfff
+syscon	nr	__NR_mq_timedreceive			0x00f3			0xfff			0xfff			0xfff			0x1b1			0xfff
+syscon	nr	__NR_mq_notify				0x00f4			0xfff			0xfff			0xfff			0x106			0xfff
+syscon	nr	__NR_mq_getsetattr			0x00f5			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_kexec_load				0x00f6			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_waitid				0x00f7			0x20000ad		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_add_key				0x00f8			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_request_key			0x00f9			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_keyctl				0x00fa			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_ioprio_set				0x00fb			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_ioprio_get				0x00fc			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_inotify_init			0x00fd			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_inotify_add_watch			0x00fe			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_inotify_rm_watch			0x00ff			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_openat				0x0101			0x20001cf		0x01f3			0x0141			0x1d4			0xfff
+syscon	nr	__NR_mkdirat				0x0102			0x20001db		0x01f0			0x013e			0x1cd			0xfff
+syscon	nr	__NR_fchownat				0x0104			0x20001d4		0x01eb			0x013b			0x1d0			0xfff
+syscon	nr	__NR_utime				0x0084			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_utimes				0x00eb			0x200008a		0x008a			0x004c			0x1a4			0xfff
+syscon	nr	__NR_futimesat				0x0105			0xfff			0x01ee			0xfff			0xfff			0xfff
+syscon	nr	__NR_futimes				0xfff			0x200008b		0x00ce			0x004d			0x1a7			0xfff
+syscon	nr	__NR_futimens				0xfff			0xfff			0x0222			0x0055			0x1d8			0xfff
+syscon	nr	__NR_fstatat				0x0106			0x20001d6		0x0228			0x002a			0x1d2			0xfff
+syscon	nr	__NR_unlinkat				0x0107			0x20001d8		0x01f7			0x0145			0x1d7			0xfff
+syscon	nr	__NR_renameat				0x0108			0x20001d1		0x01f5			0x0143			0x1ca			0xfff
+syscon	nr	__NR_linkat				0x0109			0x20001d7		0x01ef			0x013d			0x1c9			0xfff
+syscon	nr	__NR_symlinkat				0x010a			0x20001da		0x01f6			0x0144			0x1d6			0xfff
+syscon	nr	__NR_readlinkat				0x010b			0x20001d9		0x01f4			0x0142			0x1d5			0xfff
+syscon	nr	__NR_fchmodat				0x010c			0x20001d3		0x01ea			0x013a			0x1cf			0xfff
+syscon	nr	__NR_faccessat				0x010d			0x20001d2		0x01e9			0x0139			0x1ce			0xfff
+syscon	nr	__NR_unshare				0x0110			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_splice				0x0113			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_tee				0x0114			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sync_file_range			0x0115			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_vmsplice				0x0116			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_migrate_pages			0x0100			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_move_pages				0x0117			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_preadv				0x0127			0xfff			0x0121			0x010b			0x121			0xfff
+syscon	nr	__NR_pwritev				0x0128			0xfff			0x0122			0x010c			0x122			0xfff
+syscon	nr	__NR_utimensat				0x0118			0xfff			0x0223			0x0054			0x1d3			0xfff
+syscon	nr	__NR_fallocate				0x011d			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_posix_fallocate			0xfff			0xfff			0x0212			0xfff			0xfff			0xfff
+syscon	nr	__NR_accept4				0x0120			0xfff			0x021d			0x005d			0xfff			0xfff
+syscon	nr	__NR_dup3				0x0124			0xfff			0xfff			0x0066			0x1c6			0xfff
+syscon	nr	__NR_pipe2				0x0125			0xfff			0x021e			0x0065			0x1c5			0xfff
+syscon	nr	__NR_epoll_pwait			0x0119			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_epoll_create1			0x0123			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_perf_event_open			0x012a			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_inotify_init1			0x0126			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_rt_tgsigqueueinfo			0x0129			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_signalfd				0x011a			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_signalfd4				0x0121			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_eventfd				0x011c			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_eventfd2				0x0122			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_timerfd_create			0x011b			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_timerfd_settime			0x011e			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_timerfd_gettime			0x011f			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_recvmmsg				0x012b			0xfff			0xfff			0xfff			0x1db			0xfff
+syscon	nr	__NR_fanotify_init			0x012c			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_fanotify_mark			0x012d			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_prlimit				0x012e			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_name_to_handle_at			0x012f			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_open_by_handle_at			0x0130			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_clock_adjtime			0x0131			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_syncfs				0x0132			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sendmmsg				0x0133			0xfff			0xfff			0xfff			0x1dc			0xfff
+syscon	nr	__NR_setns				0x0134			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_getcpu				0x0135			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_process_vm_readv			0x0136			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_process_vm_writev			0x0137			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_kcmp				0x0138			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_finit_module			0x0139			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sched_setattr			0x013a			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sched_getattr			0x013b			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_renameat2				0x013c			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_seccomp				0x013d			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_getrandom				0x013e			0x20001f4		0x0233			0x0007			0x05b			0xfff
+syscon	nr	__NR_memfd_create			0x013f			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_kexec_file_load			0x0140			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_bpf				0x0141			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_execveat				0x0142			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_userfaultfd			0x0143			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_membarrier				0x0144			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_mlock2				0x0145			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_copy_file_range			0x0146			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_preadv2				0x0147			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_pwritev2				0x0148			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_pkey_mprotect			0x0149			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_pkey_alloc				0x014a			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_pkey_free				0x014b			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_statx				0x014c			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_io_pgetevents			0x014d			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_rseq				0x014e			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_pidfd_send_signal			0x01a8			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_io_uring_setup			0x01a9			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_io_uring_enter			0x01aa			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_io_uring_register			0x01ab			0xfff			0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_pledge				0xfff			0xfff			0xfff			0x006c			0xfff			0xfff
+syscon	nr	__NR_msyscall				0xfff			0xfff			0xfff			0x0025			0xfff			0xfff
+syscon	nr	__NR_ktrace				0xfff			0xfff			0x002d			0x002d			0x02d			0xfff
+syscon	nr	__NR_kqueue				0xfff			0x200016a		0x016a			0x010d			0x158			0xfff
+syscon	nr	__NR_kevent				0xfff			0x2000171		0x0230			0x0048			0x1b3			0xfff
+syscon	nr	__NR_revoke				0xfff			0x2000038		0x0038			0x0038			0x038			0xfff
+syscon	nr	__NR_setlogin				0xfff			0x2000032		0x0032			0x0032			0xfff			0xfff
+syscon	nr	__NR_getfh				0xfff			0x20000a1		0x00a1			0x00a1			0x18b			0xfff
+syscon	nr	__NR_chflags				0xfff			0x2000022		0x0022			0x0022			0x022			0xfff
+syscon	nr	__NR_getfsstat				0xfff			0x200015b		0x022d			0x003e			0xfff			0xfff
+syscon	nr	__NR_nfssvc				0xfff			0x200009b		0x009b			0x009b			0x09b			0xfff
+syscon	nr	__NR_adjtime				0xfff			0x200008c		0x008c			0x008c			0x1a5			0xfff
+syscon	nr	__NR_fchflags				0xfff			0x2000023		0x0023			0x0023			0x023			0xfff
+syscon	nr	__NR_seteuid				0xfff			0x20000b7		0x00b7			0x00b7			0xfff			0xfff
+syscon	nr	__NR_setegid				0xfff			0x20000b6		0x00b6			0x00b6			0xfff			0xfff
+syscon	nr	__NR_fpathconf				0xfff			0x20000c0		0x00c0			0x00c0			0x0c0			0xfff
+syscon	nr	__NR_fhopen				0xfff			0x20000f8		0x012a			0x0108			0x18c			0xfff
+syscon	nr	__NR_unmount				0xfff			0x200009f		0x0016			0x0016			0x016			0xfff
+syscon	nr	__NR_issetugid				0xfff			0x2000147		0x00fd			0x00fd			0xfff			0xfff
+syscon	nr	__NR_minherit				0xfff			0x20000fa		0x00fa			0x00fa			0x111			0xfff
+syscon	nr	__NR_pathconf				0xfff			0x20000bf		0x00bf			0x00bf			0x0bf			0xfff
+syscon	nr	__NR_sysctl				0xfff			0x20000ca		0xfff			0x00ca			0x0ca			0xfff
+syscon	nr	__NR_ntp_adjtime			0xfff			0x200020f		0x00b0			0xfff			0x0b0			0xfff
+syscon	nr	__NR_ntp_gettime			0xfff			0x2000210		0x00f8			0xfff			0x1c0			0xfff
+syscon	nr	__NR_shm_unlink				0xfff			0x200010b		0x01e3			0xfff			0xfff			0xfff
+syscon	nr	__NR_shm_open				0xfff			0x200010a		0x01e2			0xfff			0xfff			0xfff
+syscon	nr	__NR_aio_read				0xfff			0x200013e		0x013e			0xfff			0x192			0xfff
+syscon	nr	__NR_aio_suspend			0xfff			0x200013b		0x013b			0xfff			0x1b6			0xfff
+syscon	nr	__NR_aio_cancel				0xfff			0x200013c		0x013c			0xfff			0x18f			0xfff
+syscon	nr	__NR_aio_fsync				0xfff			0x2000139		0x01d1			0xfff			0x191			0xfff
+syscon	nr	__NR_aio_error				0xfff			0x200013d		0x013d			0xfff			0x190			0xfff
+syscon	nr	__NR_aio_return				0xfff			0x200013a		0x013a			0xfff			0x193			0xfff
+syscon	nr	__NR_aio_write				0xfff			0x200013f		0x013f			0xfff			0x195			0xfff
+syscon	nr	__NR_aio_waitcomplete			0xfff			0xfff			0x0167			0xfff			0xfff			0xfff
+syscon	nr	__NR_aio_suspend_nocancel		0xfff			0x20001a5		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_aio_mlock				0xfff			0xfff			0x021f			0xfff			0xfff			0xfff
+syscon	nr	__NR_sigwait				0xfff			0x200014a		0x01ad			0xfff			0xfff			0xfff
+syscon	nr	__NR_undelete				0xfff			0x20000cd		0x00cd			0xfff			0x0cd			0xfff
+syscon	nr	__NR_getlogin				0xfff			0x2000031		0x0031			0xfff			0xfff			0xfff
+syscon	nr	__NR_getdtablesize			0xfff			0x2000059		0x0059			0xfff			0xfff			0xfff
+syscon	nr	__NR_setauid				0xfff			0x2000162		0x01c0			0xfff			0xfff			0xfff
+syscon	nr	__NR_audit				0xfff			0x200015e		0x01bd			0xfff			0xfff			0xfff
+syscon	nr	__NR_auditctl				0xfff			0x2000167		0x01c5			0xfff			0xfff			0xfff
+syscon	nr	__NR_getaudit_addr			0xfff			0x2000165		0x01c3			0xfff			0xfff			0xfff
+syscon	nr	__NR_getdirentries			0xfff			0x2000158		0x022a			0xfff			0xfff			0xfff
+syscon	nr	__NR_lio_listio				0xfff			0x2000140		0x0140			0xfff			0x196			0xfff
+syscon	nr	__NR_setaudit_addr			0xfff			0x2000166		0x01c4			0xfff			0xfff			0xfff
+syscon	nr	__NR_getauid				0xfff			0x2000161		0x01bf			0xfff			0xfff			0xfff
+syscon	nr	__NR_semsys				0xfff			0x20000fb		0x00a9			0xfff			0xfff			0xfff
+syscon	nr	__NR_auditon				0xfff			0x200015f		0x01be			0xfff			0xfff			0xfff
+syscon	nr	__NR_msgsys				0xfff			0x20000fc		0x00aa			0xfff			0xfff			0xfff
+syscon	nr	__NR_shmsys				0xfff			0x20000fd		0x00ab			0xfff			0xfff			0xfff
+syscon	nr	__NR_fhstat				0xfff			0xfff			0x0229			0x0126			0x1c3			0xfff
+syscon	nr	__NR_chflagsat				0xfff			0xfff			0x021c			0x006b			0xfff			0xfff
+syscon	nr	__NR_profil				0xfff			0xfff			0x002c			0x002c			0x02c			0xfff
+syscon	nr	__NR_fhstatfs				0xfff			0xfff			0x022e			0x0041			0xfff			0xfff
+syscon	nr	__NR_utrace				0xfff			0xfff			0x014f			0x00d1			0x132			0xfff
+syscon	nr	__NR_closefrom				0xfff			0xfff			0x01fd			0x011f			0xfff			0xfff
+syscon	nr	__NR_pthread_markcancel			0xfff			0x200014c		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_pthread_kill			0xfff			0x2000148		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_pthread_fchdir			0xfff			0x200015d		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_pthread_sigmask			0xfff			0x2000149		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_pthread_chdir			0xfff			0x200015c		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_pthread_canceled			0xfff			0x200014d		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_disable_threadsignal		0xfff			0x200014b		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_abort_with_payload			0xfff			0x2000209		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_accept_nocancel			0xfff			0x2000194		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_access_extended			0xfff			0x200011c		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_audit_session_join			0xfff			0x20001ad		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_audit_session_port			0xfff			0x20001b0		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_audit_session_self			0xfff			0x20001ac		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_bsdthread_create			0xfff			0x2000168		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_bsdthread_ctl			0xfff			0x20001de		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_bsdthread_register			0xfff			0x200016e		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_bsdthread_terminate		0xfff			0x2000169		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_change_fdguard_np			0xfff			0x20001bc		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_chmod_extended			0xfff			0x200011a		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_clonefileat			0xfff			0x20001ce		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_close_nocancel			0xfff			0x200018f		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_coalition				0xfff			0x20001ca		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_coalition_info			0xfff			0x20001cb		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_connect_nocancel			0xfff			0x2000199		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_connectx				0xfff			0x20001bf		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_copyfile				0xfff			0x20000e3		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_csops				0xfff			0x20000a9		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_csops_audittoken			0xfff			0x20000aa		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_csrctl				0xfff			0x20001e3		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_delete				0xfff			0x20000e2		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_disconnectx			0xfff			0x20001c0		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_exchangedata			0xfff			0x20000df		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_fchmod_extended			0xfff			0x200011b		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_fclonefileat			0xfff			0x2000205		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_fcntl_nocancel			0xfff			0x2000196		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_ffsctl				0xfff			0x20000f5		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_fgetattrlist			0xfff			0x20000e4		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_fileport_makefd			0xfff			0x20001af		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_fileport_makeport			0xfff			0x20001ae		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_fmount				0xfff			0x200020e		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_fs_snapshot			0xfff			0x2000206		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_fsctl				0xfff			0x20000f2		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_fsetattrlist			0xfff			0x20000e5		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_fstat_extended			0xfff			0x2000119		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_fsync_nocancel			0xfff			0x2000198		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_getattrlist			0xfff			0x20000dc		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_getattrlistat			0xfff			0x20001dc		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_getattrlistbulk			0xfff			0x20001cd		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_getdirentriesattr			0xfff			0x20000de		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_gethostuuid			0xfff			0x200008e		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_getsgroups				0xfff			0x2000120		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_getwgroups				0xfff			0x2000122		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_grab_pgo_data			0xfff			0x20001ed		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_guarded_close_np			0xfff			0x20001ba		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_guarded_kqueue_np			0xfff			0x20001bb		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_guarded_open_np			0xfff			0x20001b9		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_guarded_pwrite_np			0xfff			0x20001e6		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_guarded_write_np			0xfff			0x20001e5		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_guarded_writev_np			0xfff			0x20001e7		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_identitysvc			0xfff			0x2000125		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_initgroups				0xfff			0x20000f3		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_iopolicysys			0xfff			0x2000142		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_kas_info				0xfff			0x20001b7		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_kdebug_trace			0xfff			0x20000b3		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_kdebug_trace_string		0xfff			0x20000b2		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_kdebug_typefilter			0xfff			0x20000b1		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_kevent_id				0xfff			0x2000177		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_kevent_qos				0xfff			0x2000176		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_ledger				0xfff			0x2000175		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_lstat_extended			0xfff			0x2000156		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_memorystatus_control		0xfff			0x20001b8		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_memorystatus_get_level		0xfff			0x20001c5		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_microstackshot			0xfff			0x20001ec		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_mkdir_extended			0xfff			0x2000124		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_mkfifo_extended			0xfff			0x2000123		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_modwatch				0xfff			0x20000e9		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_mremap_encrypted			0xfff			0x20001e9		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_msgrcv_nocancel			0xfff			0x20001a3		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_msgsnd_nocancel			0xfff			0x20001a2		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_msync_nocancel			0xfff			0x2000195		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_necp_client_action			0xfff			0x20001f6		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_necp_match_policy			0xfff			0x20001cc		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_necp_open				0xfff			0x20001f5		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_necp_session_action		0xfff			0x200020b		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_necp_session_open			0xfff			0x200020a		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_net_qos_guideline			0xfff			0x200020d		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_netagent_trigger			0xfff			0x20001ea		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_nfsclnt				0xfff			0x20000f7		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_open_dprotected_np			0xfff			0x20000d8		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_open_extended			0xfff			0x2000115		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_open_nocancel			0xfff			0x200018e		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_openat_nocancel			0xfff			0x20001d0		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_openbyid_np			0xfff			0x20001df		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_os_fault_with_payload		0xfff			0x2000211		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_peeloff				0xfff			0x20001c1		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_persona				0xfff			0x20001ee		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_pid_hibernate			0xfff			0x20001b3		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_pid_resume				0xfff			0x20001b2		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_pid_shutdown_sockets		0xfff			0x20001b4		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_pid_suspend			0xfff			0x20001b1		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_poll_nocancel			0xfff			0x20001a1		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_pread_nocancel			0xfff			0x200019e		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_proc_info				0xfff			0x2000150		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_proc_rlimit_control		0xfff			0x20001be		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_proc_trace_log			0xfff			0x20001dd		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_proc_uuid_policy			0xfff			0x20001c4		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_process_policy			0xfff			0x2000143		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_pselect_nocancel			0xfff			0x200018b		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_psynch_cvbroad			0xfff			0x200012f		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_psynch_cvclrprepost		0xfff			0x2000138		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_psynch_cvsignal			0xfff			0x2000130		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_psynch_mutexdrop			0xfff			0x200012e		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_psynch_mutexwait			0xfff			0x200012d		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_psynch_rw_downgrade		0xfff			0x200012b		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_psynch_rw_longrdlock		0xfff			0x2000129		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_psynch_rw_rdlock			0xfff			0x2000132		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_psynch_rw_unlock			0xfff			0x2000134		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_psynch_rw_unlock2			0xfff			0x2000135		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_psynch_rw_upgrade			0xfff			0x200012c		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_psynch_rw_wrlock			0xfff			0x2000133		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_psynch_rw_yieldwrlock		0xfff			0x200012a		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_pwrite_nocancel			0xfff			0x200019f		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_read_nocancel			0xfff			0x200018c		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_readv_nocancel			0xfff			0x200019b		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_recvfrom_nocancel			0xfff			0x2000193		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_recvmsg_nocancel			0xfff			0x2000191		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_recvmsg_x				0xfff			0x20001e0		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_renameatx_np			0xfff			0x20001e8		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_searchfs				0xfff			0x20000e1		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_select_nocancel			0xfff			0x2000197		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sem_close				0xfff			0x200010d		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sem_open				0xfff			0x200010c		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sem_post				0xfff			0x2000111		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sem_trywait			0xfff			0x2000110		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sem_unlink				0xfff			0x200010e		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sem_wait				0xfff			0x200010f		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sem_wait_nocancel			0xfff			0x20001a4		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sendmsg_nocancel			0xfff			0x2000192		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sendmsg_x				0xfff			0x20001e1		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sendto_nocancel			0xfff			0x200019d		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_setattrlist			0xfff			0x20000dd		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_setattrlistat			0xfff			0x200020c		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_setprivexec			0xfff			0x2000098		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_setsgroups				0xfff			0x200011f		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_settid				0xfff			0x200011d		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_settid_with_pid			0xfff			0x2000137		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_setwgroups				0xfff			0x2000121		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sfi_ctl				0xfff			0x20001c8		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sfi_pidctl				0xfff			0x20001c9		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_shared_region_check_np		0xfff			0x2000126		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sigsuspend_nocancel		0xfff			0x200019a		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_socket_delegate			0xfff			0x20001c2		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_stat_extended			0xfff			0x2000155		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sysctlbyname			0xfff			0x2000112		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_system_override			0xfff			0x20001c6		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_telemetry				0xfff			0x20001c3		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_terminate_with_payload		0xfff			0x2000208		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_thread_selfcounts			0xfff			0x20000ba		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_thread_selfid			0xfff			0x2000174		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_thread_selfusage			0xfff			0x20001e2		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_ulock_wait				0xfff			0x2000203		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_ulock_wake				0xfff			0x2000204		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_umask_extended			0xfff			0x2000116		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_usrctl				0xfff			0x20001bd		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_vfs_purge				0xfff			0x20001c7		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_vm_pressure_monitor		0xfff			0x2000128		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_wait4_nocancel			0xfff			0x2000190		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_waitevent				0xfff			0x20000e8		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_waitid_nocancel			0xfff			0x20001a0		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_watchevent				0xfff			0x20000e7		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_work_interval_ctl			0xfff			0x20001f3		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_workq_kernreturn			0xfff			0x2000170		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_workq_open				0xfff			0x200016f		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_write_nocancel			0xfff			0x200018d		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_writev_nocancel			0xfff			0x200019c		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_abort2				0xfff			0xfff			0x01cf			0xfff			0xfff			0xfff
+syscon	nr	__NR_afs3_syscall			0xfff			0xfff			0x0179			0xfff			0xfff			0xfff
+syscon	nr	__NR_bindat				0xfff			0xfff			0x021a			0xfff			0xfff			0xfff
+syscon	nr	__NR_break				0xfff			0xfff			0x0011			0xfff			0xfff			0xfff
+syscon	nr	__NR_cap_enter				0xfff			0xfff			0x0204			0xfff			0xfff			0xfff
+syscon	nr	__NR_cap_fcntls_get			0xfff			0xfff			0x0219			0xfff			0xfff			0xfff
+syscon	nr	__NR_cap_fcntls_limit			0xfff			0xfff			0x0218			0xfff			0xfff			0xfff
+syscon	nr	__NR_cap_getmode			0xfff			0xfff			0x0205			0xfff			0xfff			0xfff
+syscon	nr	__NR_cap_ioctls_get			0xfff			0xfff			0x0217			0xfff			0xfff			0xfff
+syscon	nr	__NR_cap_ioctls_limit			0xfff			0xfff			0x0216			0xfff			0xfff			0xfff
+syscon	nr	__NR_cap_rights_limit			0xfff			0xfff			0x0215			0xfff			0xfff			0xfff
+syscon	nr	__NR_clock_getcpuclockid2		0xfff			0xfff			0x00f7			0xfff			0x1e2			0xfff
+syscon	nr	__NR_connectat				0xfff			0xfff			0x021b			0xfff			0xfff			0xfff
+syscon	nr	__NR_cpuset				0xfff			0xfff			0x01e4			0xfff			0xfff			0xfff
+syscon	nr	__NR_cpuset_getdomain			0xfff			0xfff			0x0231			0xfff			0xfff			0xfff
+syscon	nr	__NR_cpuset_getid			0xfff			0xfff			0x01e6			0xfff			0xfff			0xfff
+syscon	nr	__NR_cpuset_setdomain			0xfff			0xfff			0x0232			0xfff			0xfff			0xfff
+syscon	nr	__NR_cpuset_setid			0xfff			0xfff			0x01e5			0xfff			0xfff			0xfff
+syscon	nr	__NR_eaccess				0xfff			0xfff			0x0178			0xfff			0xfff			0xfff
+syscon	nr	__NR_extattr_delete_fd			0xfff			0xfff			0x0175			0xfff			0x16e			0xfff
+syscon	nr	__NR_extattr_delete_file		0xfff			0xfff			0x0166			0xfff			0x16b			0xfff
+syscon	nr	__NR_extattr_delete_link		0xfff			0xfff			0x019e			0xfff			0x171			0xfff
+syscon	nr	__NR_extattr_get_fd			0xfff			0xfff			0x0174			0xfff			0x16d			0xfff
+syscon	nr	__NR_extattr_get_file			0xfff			0xfff			0x0165			0xfff			0x16a			0xfff
+syscon	nr	__NR_extattr_get_link			0xfff			0xfff			0x019d			0xfff			0x170			0xfff
+syscon	nr	__NR_extattr_list_fd			0xfff			0xfff			0x01b5			0xfff			0x172			0xfff
+syscon	nr	__NR_extattr_list_file			0xfff			0xfff			0x01b6			0xfff			0x173			0xfff
+syscon	nr	__NR_extattr_list_link			0xfff			0xfff			0x01b7			0xfff			0x174			0xfff
+syscon	nr	__NR_extattr_set_fd			0xfff			0xfff			0x0173			0xfff			0x16c			0xfff
+syscon	nr	__NR_extattr_set_file			0xfff			0xfff			0x0164			0xfff			0x169			0xfff
+syscon	nr	__NR_extattr_set_link			0xfff			0xfff			0x019c			0xfff			0x16f			0xfff
+syscon	nr	__NR_extattrctl				0xfff			0xfff			0x0163			0xfff			0x168			0xfff
+syscon	nr	__NR_fexecve				0xfff			0xfff			0x01ec			0xfff			0x1d1			0xfff
+syscon	nr	__NR_ffclock_getcounter			0xfff			0xfff			0x00f1			0xfff			0xfff			0xfff
+syscon	nr	__NR_ffclock_getestimate		0xfff			0xfff			0x00f3			0xfff			0xfff			0xfff
+syscon	nr	__NR_ffclock_setestimate		0xfff			0xfff			0x00f2			0xfff			0xfff			0xfff
+syscon	nr	__NR_fhlink				0xfff			0xfff			0x0235			0xfff			0xfff			0xfff
+syscon	nr	__NR_fhlinkat				0xfff			0xfff			0x0236			0xfff			0xfff			0xfff
+syscon	nr	__NR_fhreadlink				0xfff			0xfff			0x0237			0xfff			0xfff			0xfff
+syscon	nr	__NR_getaudit				0xfff			0xfff			0x01c1			0xfff			0xfff			0xfff
+syscon	nr	__NR_getcontext				0xfff			0xfff			0x01a5			0xfff			0x133			0xfff
+syscon	nr	__NR_getfhat				0xfff			0xfff			0x0234			0xfff			0xfff			0xfff
+syscon	nr	__NR_gethostid				0xfff			0xfff			0x008e			0xfff			0xfff			0xfff
+syscon	nr	__NR_getkerninfo			0xfff			0xfff			0x003f			0xfff			0xfff			0xfff
+syscon	nr	__NR_getloginclass			0xfff			0xfff			0x020b			0xfff			0xfff			0xfff
+syscon	nr	__NR_getpagesize			0xfff			0xfff			0x0040			0xfff			0xfff			0xfff
+syscon	nr	__NR_gssd_syscall			0xfff			0xfff			0x01f9			0xfff			0xfff			0xfff
+syscon	nr	__NR_jail				0xfff			0xfff			0x0152			0xfff			0xfff			0xfff
+syscon	nr	__NR_jail_attach			0xfff			0xfff			0x01b4			0xfff			0xfff			0xfff
+syscon	nr	__NR_jail_get				0xfff			0xfff			0x01fa			0xfff			0xfff			0xfff
+syscon	nr	__NR_jail_remove			0xfff			0xfff			0x01fc			0xfff			0xfff			0xfff
+syscon	nr	__NR_jail_set				0xfff			0xfff			0x01fb			0xfff			0xfff			0xfff
+syscon	nr	__NR_kenv				0xfff			0xfff			0x0186			0xfff			0xfff			0xfff
+syscon	nr	__NR_kldfind				0xfff			0xfff			0x0132			0xfff			0xfff			0xfff
+syscon	nr	__NR_kldfirstmod			0xfff			0xfff			0x0135			0xfff			0xfff			0xfff
+syscon	nr	__NR_kldload				0xfff			0xfff			0x0130			0xfff			0xfff			0xfff
+syscon	nr	__NR_kldnext				0xfff			0xfff			0x0133			0xfff			0xfff			0xfff
+syscon	nr	__NR_kldstat				0xfff			0xfff			0x0134			0xfff			0xfff			0xfff
+syscon	nr	__NR_kldsym				0xfff			0xfff			0x0151			0xfff			0xfff			0xfff
+syscon	nr	__NR_kldunload				0xfff			0xfff			0x0131			0xfff			0xfff			0xfff
+syscon	nr	__NR_kldunloadf				0xfff			0xfff			0x01bc			0xfff			0xfff			0xfff
+syscon	nr	__NR_kmq_notify				0xfff			0xfff			0x01cd			0xfff			0xfff			0xfff
+syscon	nr	__NR_kmq_setattr			0xfff			0xfff			0x01ca			0xfff			0xfff			0xfff
+syscon	nr	__NR_kmq_timedreceive			0xfff			0xfff			0x01cb			0xfff			0xfff			0xfff
+syscon	nr	__NR_kmq_timedsend			0xfff			0xfff			0x01cc			0xfff			0xfff			0xfff
+syscon	nr	__NR_kmq_unlink				0xfff			0xfff			0x01ce			0xfff			0xfff			0xfff
+syscon	nr	__NR_ksem_close				0xfff			0xfff			0x0190			0xfff			0xfff			0xfff
+syscon	nr	__NR_ksem_destroy			0xfff			0xfff			0x0198			0xfff			0xfff			0xfff
+syscon	nr	__NR_ksem_getvalue			0xfff			0xfff			0x0197			0xfff			0xfff			0xfff
+syscon	nr	__NR_ksem_init				0xfff			0xfff			0x0194			0xfff			0xfff			0xfff
+syscon	nr	__NR_ksem_open				0xfff			0xfff			0x0195			0xfff			0xfff			0xfff
+syscon	nr	__NR_ksem_post				0xfff			0xfff			0x0191			0xfff			0xfff			0xfff
+syscon	nr	__NR_ksem_timedwait			0xfff			0xfff			0x01b9			0xfff			0xfff			0xfff
+syscon	nr	__NR_ksem_trywait			0xfff			0xfff			0x0193			0xfff			0xfff			0xfff
+syscon	nr	__NR_ksem_unlink			0xfff			0xfff			0x0196			0xfff			0xfff			0xfff
+syscon	nr	__NR_ksem_wait				0xfff			0xfff			0x0192			0xfff			0xfff			0xfff
+syscon	nr	__NR_ktimer_create			0xfff			0xfff			0x00eb			0xfff			0xfff			0xfff
+syscon	nr	__NR_ktimer_delete			0xfff			0xfff			0x00ec			0xfff			0xfff			0xfff
+syscon	nr	__NR_ktimer_getoverrun			0xfff			0xfff			0x00ef			0xfff			0xfff			0xfff
+syscon	nr	__NR_ktimer_gettime			0xfff			0xfff			0x00ee			0xfff			0xfff			0xfff
+syscon	nr	__NR_ktimer_settime			0xfff			0xfff			0x00ed			0xfff			0xfff			0xfff
+syscon	nr	__NR_lchflags				0xfff			0xfff			0x0187			0xfff			0x130			0xfff
+syscon	nr	__NR_lchmod				0xfff			0xfff			0x0112			0xfff			0x112			0xfff
+syscon	nr	__NR_lgetfh				0xfff			0xfff			0x00a0			0xfff			0xfff			0xfff
+syscon	nr	__NR_lpathconf				0xfff			0xfff			0x0201			0xfff			0x1f3			0xfff
+syscon	nr	__NR_lutimes				0xfff			0xfff			0x0114			0xfff			0x1a8			0xfff
+syscon	nr	__NR_mac_syscall			0xfff			0xfff			0x018a			0xfff			0xfff			0xfff
+syscon	nr	__NR_modfind				0xfff			0xfff			0x012f			0xfff			0xfff			0xfff
+syscon	nr	__NR_modfnext				0xfff			0xfff			0x012e			0xfff			0xfff			0xfff
+syscon	nr	__NR_modnext				0xfff			0xfff			0x012c			0xfff			0xfff			0xfff
+syscon	nr	__NR_modstat				0xfff			0xfff			0x012d			0xfff			0xfff			0xfff
+syscon	nr	__NR_nfstat				0xfff			0xfff			0x0117			0xfff			0xfff			0xfff
+syscon	nr	__NR_nlm_syscall			0xfff			0xfff			0x009a			0xfff			0xfff			0xfff
+syscon	nr	__NR_nlstat				0xfff			0xfff			0x0118			0xfff			0xfff			0xfff
+syscon	nr	__NR_nmount				0xfff			0xfff			0x017a			0xfff			0xfff			0xfff
+syscon	nr	__NR_nnpfs_syscall			0xfff			0xfff			0x0153			0xfff			0xfff			0xfff
+syscon	nr	__NR_nstat				0xfff			0xfff			0x0116			0xfff			0xfff			0xfff
+syscon	nr	__NR_pdfork				0xfff			0xfff			0x0206			0xfff			0xfff			0xfff
+syscon	nr	__NR_pdgetpid				0xfff			0xfff			0x0208			0xfff			0xfff			0xfff
+syscon	nr	__NR_pdkill				0xfff			0xfff			0x0207			0xfff			0xfff			0xfff
+syscon	nr	__NR_posix_openpt			0xfff			0xfff			0x01f8			0xfff			0xfff			0xfff
+syscon	nr	__NR_procctl				0xfff			0xfff			0x0220			0xfff			0xfff			0xfff
+syscon	nr	__NR_psynch_cvwait			0xfff			0x2000131		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_quota				0xfff			0xfff			0x0095			0xfff			0xfff			0xfff
+syscon	nr	__NR_rctl_add_rule			0xfff			0xfff			0x0210			0xfff			0xfff			0xfff
+syscon	nr	__NR_rctl_get_limits			0xfff			0xfff			0x020f			0xfff			0xfff			0xfff
+syscon	nr	__NR_rctl_get_racct			0xfff			0xfff			0x020d			0xfff			0xfff			0xfff
+syscon	nr	__NR_rctl_get_rules			0xfff			0xfff			0x020e			0xfff			0xfff			0xfff
+syscon	nr	__NR_rctl_remove_rule			0xfff			0xfff			0x0211			0xfff			0xfff			0xfff
+syscon	nr	__NR_recv				0xfff			0xfff			0x0066			0xfff			0xfff			0xfff
+syscon	nr	__NR_rfork				0xfff			0xfff			0x00fb			0xfff			0xfff			0xfff
+syscon	nr	__NR_rtprio				0xfff			0xfff			0x00a6			0xfff			0xfff			0xfff
+syscon	nr	__NR_rtprio_thread			0xfff			0xfff			0x01d2			0xfff			0xfff			0xfff
+syscon	nr	__NR_send				0xfff			0xfff			0x0065			0xfff			0xfff			0xfff
+syscon	nr	__NR_setaudit				0xfff			0xfff			0x01c2			0xfff			0xfff			0xfff
+syscon	nr	__NR_setcontext				0xfff			0xfff			0x01a6			0xfff			0x134			0xfff
+syscon	nr	__NR_setfib				0xfff			0xfff			0x00af			0xfff			0xfff			0xfff
+syscon	nr	__NR_sethostid				0xfff			0xfff			0x008f			0xfff			0xfff			0xfff
+syscon	nr	__NR_setloginclass			0xfff			0xfff			0x020c			0xfff			0xfff			0xfff
+syscon	nr	__NR_sigblock				0xfff			0xfff			0x006d			0xfff			0xfff			0xfff
+syscon	nr	__NR_sigqueue				0xfff			0xfff			0x01c8			0xfff			0xfff			0xfff
+syscon	nr	__NR_sigsetmask				0xfff			0xfff			0x006e			0xfff			0xfff			0xfff
+syscon	nr	__NR_sigstack				0xfff			0xfff			0x0070			0xfff			0xfff			0xfff
+syscon	nr	__NR_sigvec				0xfff			0xfff			0x006c			0xfff			0xfff			0xfff
+syscon	nr	__NR_sigwaitinfo			0xfff			0xfff			0x015a			0xfff			0xfff			0xfff
+syscon	nr	__NR_sstk				0xfff			0xfff			0x0046			0xfff			0xfff			0xfff
+syscon	nr	__NR_swapcontext			0xfff			0xfff			0x01a7			0xfff			0xfff			0xfff
+syscon	nr	__NR_thr_create				0xfff			0xfff			0x01ae			0xfff			0xfff			0xfff
+syscon	nr	__NR_thr_exit				0xfff			0xfff			0x01af			0xfff			0xfff			0xfff
+syscon	nr	__NR_thr_kill				0xfff			0xfff			0x01b1			0xfff			0xfff			0xfff
+syscon	nr	__NR_thr_kill2				0xfff			0xfff			0x01e1			0xfff			0xfff			0xfff
+syscon	nr	__NR_thr_new				0xfff			0xfff			0x01c7			0xfff			0xfff			0xfff
+syscon	nr	__NR_thr_self				0xfff			0xfff			0x01b0			0xfff			0xfff			0xfff
+syscon	nr	__NR_thr_set_name			0xfff			0xfff			0x01d0			0xfff			0xfff			0xfff
+syscon	nr	__NR_thr_suspend			0xfff			0xfff			0x01ba			0xfff			0xfff			0xfff
+syscon	nr	__NR_thr_wake				0xfff			0xfff			0x01bb			0xfff			0xfff			0xfff
+syscon	nr	__NR_uuidgen				0xfff			0xfff			0x0188			0xfff			0x163			0xfff
+syscon	nr	__NR_vadvise				0xfff			0xfff			0x0048			0xfff			0xfff			0xfff
+syscon	nr	__NR_wait				0xfff			0xfff			0x0054			0xfff			0xfff			0xfff
+syscon	nr	__NR_wait6				0xfff			0xfff			0x0214			0xfff			0x1e1			0xfff
+syscon	nr	__NR_yield				0xfff			0xfff			0x0141			0xfff			0xfff			0xfff
+syscon	nr	__NR_tfork				0xfff			0xfff			0xfff			0x0008			0xfff			0xfff
+syscon	nr	__NR_thrsleep				0xfff			0xfff			0xfff			0x005e			0xfff			0xfff
+syscon	nr	__NR_thrwakeup				0xfff			0xfff			0xfff			0x012d			0xfff			0xfff
+syscon	nr	__NR_threxit				0xfff			0xfff			0xfff			0x012e			0xfff			0xfff
+syscon	nr	__NR_thrsigdivert			0xfff			0xfff			0xfff			0x012f			0xfff			0xfff
+syscon	nr	__NR_set_tcb				0xfff			0xfff			0xfff			0x0149			0xfff			0xfff
+syscon	nr	__NR_get_tcb				0xfff			0xfff			0xfff			0x014a			0xfff			0xfff
+syscon	nr	__NR_adjfreq				0xfff			0xfff			0xfff			0x0131			0xfff			0xfff
+syscon	nr	__NR_getdtablecount			0xfff			0xfff			0xfff			0x0012			0xfff			0xfff
+syscon	nr	__NR_getlogin_r				0xfff			0xfff			0xfff			0x008d			0xfff			0xfff
+syscon	nr	__NR_getrtable				0xfff			0xfff			0xfff			0x0137			0xfff			0xfff
+syscon	nr	__NR_getthrid				0xfff			0xfff			0xfff			0x012b			0xfff			0xfff
+syscon	nr	__NR_kbind				0xfff			0xfff			0xfff			0x0056			0xfff			0xfff
+syscon	nr	__NR_mquery				0xfff			0xfff			0xfff			0x011e			0xfff			0xfff
+syscon	nr	__NR_obreak				0xfff			0xfff			0xfff			0x0011			0x011			0xfff
+syscon	nr	__NR_sendsyslog				0xfff			0xfff			0xfff			0x0070			0xfff			0xfff
+syscon	nr	__NR_setrtable				0xfff			0xfff			0xfff			0x0136			0xfff			0xfff
+syscon	nr	__NR_swapctl				0xfff			0xfff			0xfff			0x00c1			0x10f			0xfff
+syscon	nr	__NR_thrkill				0xfff			0xfff			0xfff			0x0077			0xfff			0xfff
+syscon	nr	__NR_unveil				0xfff			0xfff			0xfff			0x0072			0xfff			0xfff
+syscon	nr	__NR_mac_get_link			0xfff			0x2000180		0x019a			0xfff			0xfff			0xfff
+syscon	nr	__NR_mac_set_link			0xfff			0x2000181		0x019b			0xfff			0xfff			0xfff
+syscon	nr	__NR_mac_get_fd				0xfff			0x2000184		0x0182			0xfff			0xfff			0xfff
+syscon	nr	__NR_mac_get_file			0xfff			0x200017e		0x0183			0xfff			0xfff			0xfff
+syscon	nr	__NR_mac_get_proc			0xfff			0x2000182		0x0180			0xfff			0xfff			0xfff
+syscon	nr	__NR_mac_set_fd				0xfff			0x2000185		0x0184			0xfff			0xfff			0xfff
+syscon	nr	__NR_mac_get_pid			0xfff			0x2000186		0x0199			0xfff			0xfff			0xfff
+syscon	nr	__NR_mac_set_proc			0xfff			0x2000183		0x0181			0xfff			0xfff			0xfff
+syscon	nr	__NR_mac_set_file			0xfff			0x200017f		0x0185			0xfff			0xfff			0xfff
+syscon	nr	__NR_mac_execve				0xfff			0x200017c		0x019f			0xfff			0xfff			0xfff
+syscon	nr	__NR_acl_get_link			0xfff			0xfff			0x01a9			0xfff			0xfff			0xfff
+syscon	nr	__NR_sigwait_nocancel			0xfff			0x20001a6		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_cap_rights_get			0xfff			0xfff			0x0203			0xfff			0xfff			0xfff
+syscon	nr	__NR_semwait_signal			0xfff			0x200014e		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_acl_set_link			0xfff			0xfff			0x01aa			0xfff			0xfff			0xfff
+syscon	nr	__NR_acl_set_fd				0xfff			0xfff			0x015e			0xfff			0xfff			0xfff
+syscon	nr	__NR_old_semwait_signal			0xfff			0x2000172		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_setugid				0xfff			0xfff			0x0176			0xfff			0xfff			0xfff
+syscon	nr	__NR_acl_aclcheck_fd			0xfff			0xfff			0x0162			0xfff			0xfff			0xfff
+syscon	nr	__NR_acl_get_fd				0xfff			0xfff			0x015d			0xfff			0xfff			0xfff
+syscon	nr	__NR___sysctl				0xfff			0xfff			0x00ca			0xfff			0xfff			0xfff
+syscon	nr	__NR_mac_getfsstat			0xfff			0x20001aa		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_mac_get_mount			0xfff			0x20001a9		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_acl_delete_link			0xfff			0xfff			0x01ab			0xfff			0xfff			0xfff
+syscon	nr	__NR_mac_mount				0xfff			0x20001a8		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_acl_get_file			0xfff			0xfff			0x015b			0xfff			0xfff			0xfff
+syscon	nr	__NR_acl_aclcheck_file			0xfff			0xfff			0x0161			0xfff			0xfff			0xfff
+syscon	nr	__NR_acl_delete_fd			0xfff			0xfff			0x0160			0xfff			0xfff			0xfff
+syscon	nr	__NR_acl_aclcheck_link			0xfff			0xfff			0x01ac			0xfff			0xfff			0xfff
+syscon	nr	__NR___mac_syscall			0xfff			0x200017d		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_acl_set_file			0xfff			0xfff			0x015c			0xfff			0xfff			0xfff
+syscon	nr	__NR_acl_delete_file			0xfff			0xfff			0x015f			0xfff			0xfff			0xfff
+syscon	nr	__NR_syscall				0xfff			0xfff			0xfff			0x00c6			0xfff			0xfff
+syscon	nr	__NR__umtx_op				0xfff			0xfff			0x01c6			0xfff			0xfff			0xfff
+syscon	nr	__NR_semwait_signal_nocancel		0xfff			0x20001a7		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_old_semwait_signal_nocancel	0xfff			0x2000173		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_sctp_peeloff			0xfff			0xfff			0x01d7			0xfff			0xfff			0xfff
+syscon	nr	__NR_sctp_generic_recvmsg		0xfff			0xfff			0x01da			0xfff			0xfff			0xfff
+syscon	nr	__NR_sctp_generic_sendmsg		0xfff			0xfff			0x01d8			0xfff			0xfff			0xfff
+syscon	nr	__NR_sctp_generic_sendmsg_iov		0xfff			0xfff			0x01d9			0xfff			0xfff			0xfff
+syscon	nr	__NR_shared_region_map_and_slide_np	0xfff			0x20001b6		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_guarded_open_dprotected_np		0xfff			0x20001e4		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_stack_snapshot_with_config		0xfff			0x20001eb		0xfff			0xfff			0xfff			0xfff
 
 # https://youtu.be/GUQUD3IMbb4?t=85

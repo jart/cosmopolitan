@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_kldnext,-1,-1,0x0133,-1,-1,-1
+.syscon nr,__NR_kldnext,0xfff,0xfff,0x0133,0xfff,0xfff,0xfff

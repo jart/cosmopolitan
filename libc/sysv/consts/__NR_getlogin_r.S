@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_getlogin_r,-1,-1,-1,0x008d,-1,-1
+.syscon nr,__NR_getlogin_r,0xfff,0xfff,0xfff,0x008d,0xfff,0xfff

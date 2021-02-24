@@ -17,14 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.source	__FILE__
+#include "libc/notice.inc"
 
-	.initbss 300,_init_g_argc
-g_argc:	.quad	0
-	.endobj	g_argc,globl,hidden
+	.initbss 300,_init___argc
+/	Global variable holding _start(argc) parameter.
+__argc:	.quad	0
+	.endobj	__argc,globl
 	.previous
 
-	.init.start 300,_init_g_argc
+	.init.start 300,_init___argc
 	mov	%r12,%rax
 	stosq
-	.init.end 300,_init_g_argc
+	.init.end 300,_init___argc

@@ -318,7 +318,7 @@ int strerror_r(int err, char *buf, size_t size) {
   const char *s;
   char16_t buf16[100];
   int winstate, sysvstate;
-  if (err == -1 || IsTiny()) {
+  if (!err || IsTiny()) {
     s = "?";
   } else {
     s = firstnonnull(geterrname(err), "?");

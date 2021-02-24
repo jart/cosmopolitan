@@ -29,37 +29,37 @@
 
 #if SupportsLinux() || SupportsMetal()
 	.section .sort.rodata.syscon.linux.2.\group\().\name,"a",@progbits
-	.sleb128 \linux
+	.uleb128 \linux
 	.previous
 #endif
 
 #if SupportsXnu()
 	.section .sort.rodata.syscon.xnu.2.\group\().\name,"a",@progbits
-	.sleb128 \xnu
+	.uleb128 \xnu
 	.previous
 #endif
 
 #if SupportsFreebsd()
 	.section .sort.rodata.syscon.freebsd.2.\group\().\name,"a",@progbits
-	.sleb128 \freebsd
+	.uleb128 \freebsd
 	.previous
 #endif
 
 #if SupportsOpenbsd()
 	.section .sort.rodata.syscon.openbsd.2.\group\().\name,"a",@progbits
-	.sleb128 \openbsd
+	.uleb128 \openbsd
 	.previous
 #endif
 
 #if SupportsNetbsd()
 	.section .sort.rodata.syscon.netbsd.2.\group\().\name,"a",@progbits
-	.sleb128 \netbsd
+	.uleb128 \netbsd
 	.previous
 #endif
 
 #if SupportsWindows()
 	.section .sort.rodata.syscon.windows.2.\group\().\name,"a",@progbits
-	.sleb128 \windows
+	.uleb128 \windows
 	.previous
 #endif
 

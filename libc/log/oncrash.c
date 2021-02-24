@@ -180,8 +180,8 @@ relegated static void ShowCrashReport(int err, int fd, int sig,
   write(fd, "\r\n", 2);
   ShowMemoryMappings(fd);
   write(fd, "\r\n", 2);
-  for (i = 0; i < g_argc; ++i) {
-    write(fd, g_argv[i], strlen(g_argv[i]));
+  for (i = 0; i < __argc; ++i) {
+    write(fd, __argv[i], strlen(__argv[i]));
     write(fd, " ", 1);
   }
   write(fd, "\r\n", 2);

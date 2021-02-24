@@ -194,122 +194,120 @@ systemfive_xnu:
 	.init.start 300,_init_systemfive
 	push	%rbx
 	push	%rsi
-#if SupportsXnu()
-	testb	$XNU,(%rdi)			# @see libc/crt/crt.S
-	jnz	_init_systemfive_xnu
-#endif
-#if SupportsMetal()
-	testb	$METAL,(%rdi)			# @see ape/ape.S
-	jnz	_init_systemfive_metal
-#endif
-#if SupportsFreebsd()
-	testb	$FREEBSD,(%rdi)			# @see libc/crt/crt.S
-	jnz	_init_systemfive_freebsd
-#endif
-#if SupportsWindows()
-	testb	$WINDOWS,(%rdi)			# @see libc/runtime/winmain.c
-	jnz	_init_systemfive_windows
-#endif
+	mov	(%rdi),%eax
 #if SupportsOpenbsd()
-	cmpq	$0,(%r15)			# OpenBSD doesn't have auxv
-	je	_init_systemfive_openbsd
+	cmpq	$0,(%r15)			# OpenBSD has no auxv
+	jnz	0f
+	mov	$OPENBSD,%al
+0:
 #endif
 #if SupportsNetbsd()
-	xor	%eax,%eax
-0:	cmpq	$2014,(%r15,%rax,8)		# NetBSD's distinctive AT_EXECFN
-	je	_init_systemfive_netbsd
-	cmpq	$0,(%r15,%rax,8)
-	lea	2(%eax),%eax
+	xor	%ecx,%ecx
+0:	cmpq	$2014,(%r15,%rcx,8)		# NetBSD AT_EXECFN
+	jne	1f
+	mov	$NETBSD,%al
+1:	cmpq	$0,(%r15,%rcx,8)
+	lea	2(%ecx),%ecx
 	jnz	0b
+2:
 #endif
-#if SupportsLinux()
+	test	%eax,%eax
+	jnz	1f
+	mov	$LINUX,%al
+1:	stosq	#→ __hostos
+	bsr	%eax,%eax
+	mov	$_init_systemfive_jmptab,%ebx
+	movzbl	(%rbx,%rax),%eax
+	lea	(%rbx,%rax),%eax
+	jmp	*%rax
+_init_systemfive_jmptab:
+	.byte	_init_systemfive_linux-_init_systemfive_jmptab
+	.byte	_init_systemfive_metal-_init_systemfive_jmptab
+	.byte	_init_systemfive_windows-_init_systemfive_jmptab
+	.byte	_init_systemfive_xnu-_init_systemfive_jmptab
+	.byte	_init_systemfive_openbsd-_init_systemfive_jmptab
+	.byte	_init_systemfive_freebsd-_init_systemfive_jmptab
+	.byte	_init_systemfive_netbsd-_init_systemfive_jmptab
+	.endobj	_init_systemfive_jmptab
 _init_systemfive_linux:
+#if SupportsLinux()
 	pushb	systemfive_linux-.Lanchorpoint
-	push	$LINUX
-	ezlea	syscon_linux,si
+	mov	$syscon_linux,%esi
 	jmp	_init_systemfive_os
 #endif
-#if SupportsMetal()
+	.endfn	_init_systemfive_linux
 _init_systemfive_metal:
+#if SupportsMetal()
 	pushb	systemfive_linux-.Lanchorpoint
-	push	$METAL
-	ezlea	syscon_linux,si
+	mov	$syscon_linux,%esi
 	jmp	_init_systemfive_os
 #endif
-#if SupportsWindows()
+	.endfn	_init_systemfive_metal
 _init_systemfive_windows:
+#if SupportsWindows()
 	pushb	systemfive_enosys-.Lanchorpoint
-	push	$WINDOWS
-	ezlea	syscon_windows,si
+	mov	$syscon_windows,%esi
 	jmp	_init_systemfive_os
 #endif
-#if SupportsFreebsd()
-_init_systemfive_freebsd:
-	pushb	systemfive_freebsd-.Lanchorpoint
-	push	$FREEBSD
-	ezlea	syscon_freebsd,si
-	jmp	_init_systemfive_os
-#endif
-#if SupportsOpenbsd()
-_init_systemfive_openbsd:
-	pushb	systemfive_openbsd-.Lanchorpoint
-	push	$OPENBSD
-	ezlea	syscon_openbsd,si
-	jmp	_init_systemfive_os
-#endif
-#if SupportsNetbsd()
-_init_systemfive_netbsd:
-	pushb	systemfive_netbsd-.Lanchorpoint
-	push	$NETBSD
-	ezlea	syscon_netbsd,si
-	jmp	_init_systemfive_os
-#endif
-#if SupportsXnu()
+	.endfn	_init_systemfive_windows
 _init_systemfive_xnu:
+#if SupportsXnu()
 	pushb	systemfive_xnu-.Lanchorpoint
-	push	$XNU
-	ezlea	syscon_xnu,si
+	mov	$syscon_xnu,%esi
+	jmp	_init_systemfive_os
+#endif
+	.endfn	_init_systemfive_xnu
+_init_systemfive_openbsd:
+#if SupportsOpenbsd()
+	pushb	systemfive_openbsd-.Lanchorpoint
+	mov	$syscon_openbsd,%esi
+	jmp	_init_systemfive_os
+#endif
+	.endfn	_init_systemfive_openbsd
+_init_systemfive_freebsd:
+#if SupportsFreebsd()
+	pushb	systemfive_freebsd-.Lanchorpoint
+	mov	$syscon_freebsd,%esi
+	jmp	_init_systemfive_os
+#endif
+	.endfn	_init_systemfive_freebsd
+_init_systemfive_netbsd:
+#if SupportsNetbsd()
+	pushb	systemfive_netbsd-.Lanchorpoint
+	mov	$syscon_netbsd,%esi
 //	𝑠𝑙𝑖𝑑𝑒
 #endif
+	.endfn	_init_systemfive_netbsd
 _init_systemfive_os:
-	ezlea	.Lanchorpoint,cx
 	pop	%rax
-	stosq	#→ __hostos
-	pop	%rax
-	add	%rcx,%rax
+	add	$.Lanchorpoint,%eax
 	stosq	#→ __systemfive
 //	𝑠𝑙𝑖𝑑𝑒
+	.endfn	_init_systemfive_os
 _init_systemfive_magnums:
 	push	%rdi
-	ezlea	syscon_start,di
-	ezlea	syscon_end,bx
-	or	$-1,%r9
-2:	cmp	%rbx,%rdi
+	mov	$syscon_start,%edi
+2:	cmp	$syscon_end,%edi
 	jnb	5f
+	xor	%ebx,%ebx
 	xor	%ecx,%ecx
 	xor	%edx,%edx
-3:	lodsb						# decodes sleb128
-	mov	%rax,%r8
-	and	$127,%r8d
-	sal	%cl,%r8
-	add	$7,%ecx
-	or	%r8,%rdx
-	test	%al,%al
-	js	3b
-	test	$64,%al
-	je	4f
-	mov	%r9,%rax
-	sal	%cl,%rax
-	or	%rax,%rdx
-4:	mov	%rdx,%rax
-	cmpq	$0,(%rdi)				# dont change if set
-	cmovne	(%rdi),%rax				# @see WinMain()
+3:	lodsb						# decodes uleb128
+	movzbl	%al,%edx
+	and	$127,%dl
+	shl	%cl,%rdx
+	or	%rdx,%rbx
+	add	$7,%cl
+	test	$128,%al
+	jnz	3b
+	xchg	%rbx,%rax
 	stosq
 	jmp	2b
 5:	pop	%rdi
 	pop	%rsi
 	pop	%rbx
 //	𝑠𝑙𝑖𝑑𝑒
+	.endfn	_init_systemfive_magnums
 #if SupportsSystemv() && !defined(TINY)
 _init_systemfive_stack:					# determinism ftw!
 #if SupportsWindows() || SupportsMetal()
@@ -377,8 +375,8 @@ _init_systemfive_stack:					# determinism ftw!
 //	𝑠𝑙𝑖𝑑𝑒
 _init_systemfive_syscall:
 	mov	__NR_msyscall,%eax			# syscall origin protect
-	test	%eax,%eax				# openbsd is pretty cool
-	js	_init_systemfive_done
+	cmp	$0xfff,%ax				# openbsd is pretty cool
+	jae	_init_systemfive_done
 	push	%rdi
 	push	%rsi
 	.weak	__privileged_addr

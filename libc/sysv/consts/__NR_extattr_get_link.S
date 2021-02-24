@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_extattr_get_link,-1,-1,0x019d,-1,0x170,-1
+.syscon nr,__NR_extattr_get_link,0xfff,0xfff,0x019d,0xfff,0x170,0xfff

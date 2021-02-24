@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_mac_getfsstat,-1,0x20001aa,-1,-1,-1,-1
+.syscon nr,__NR_mac_getfsstat,0xfff,0x20001aa,0xfff,0xfff,0xfff,0xfff

@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_system_override,-1,0x20001c6,-1,-1,-1,-1
+.syscon nr,__NR_system_override,0xfff,0x20001c6,0xfff,0xfff,0xfff,0xfff

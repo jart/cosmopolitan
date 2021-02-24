@@ -17,14 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
+#include "libc/notice.inc"
 
-	.initbss 300,_init_g_auxv
-g_auxv:	.quad	0
-	.endobj	g_auxv,globl,hidden
+	.initbss 300,_init___auxv
+/	Global variable holding _start(auxv) parameter.
+__auxv:	.quad	0
+	.endobj	__auxv,globl
 	.previous
 
-	.init.start 300,_init_g_auxv
+	.init.start 300,_init___auxv
 	mov	%r15,%rax
 	stosq
-	.init.end 300,_init_g_auxv
-	.source	__FILE__
+	.init.end 300,_init___auxv

@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_thr_create,-1,-1,0x01ae,-1,-1,-1
+.syscon nr,__NR_thr_create,0xfff,0xfff,0x01ae,0xfff,0xfff,0xfff

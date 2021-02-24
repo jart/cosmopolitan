@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_getcontext,-1,-1,0x01a5,-1,0x133,-1
+.syscon nr,__NR_getcontext,0xfff,0xfff,0x01a5,0xfff,0x133,0xfff

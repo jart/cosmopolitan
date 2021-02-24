@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_lgetfh,-1,-1,0x00a0,-1,-1,-1
+.syscon nr,__NR_lgetfh,0xfff,0xfff,0x00a0,0xfff,0xfff,0xfff

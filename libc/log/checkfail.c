@@ -72,11 +72,11 @@ relegated void __check_fail(const char *suffix, const char *opstr,
   }
 
   (dprintf)(STDERR_FILENO, "\t%s\r\n\t%s%s%s%s\r\n", strerror(lasterr), SUBTLE,
-            getauxval(AT_EXECFN), g_argc > 1 ? " \\" : "", RESET);
+            getauxval(AT_EXECFN), __argc > 1 ? " \\" : "", RESET);
 
-  for (i = 1; i < g_argc; ++i) {
-    (dprintf)(STDERR_FILENO, "\t\t%s%s\r\n", g_argv[i],
-              i < g_argc - 1 ? " \\" : "");
+  for (i = 1; i < __argc; ++i) {
+    (dprintf)(STDERR_FILENO, "\t\t%s%s\r\n", __argv[i],
+              i < __argc - 1 ? " \\" : "");
   }
 
   if (!IsTiny() && lasterr == ENOMEM) {

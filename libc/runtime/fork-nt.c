@@ -141,7 +141,7 @@ textwindows int sys_fork_nt(void) {
       startinfo.hStdOutput = g_fds.p[1].handle;
       startinfo.hStdError = g_fds.p[2].handle;
       GetModuleFileNameA(0, exe, ARRAYLEN(exe));
-      if (ntspawn(exe, g_argv, environ, forkvar, &kNtIsInheritable, NULL, true,
+      if (ntspawn(exe, __argv, environ, forkvar, &kNtIsInheritable, NULL, true,
                   0, NULL, &startinfo, &procinfo) != -1) {
         CloseHandle(reader);
         CloseHandle(procinfo.hThread);
