@@ -21,11 +21,14 @@
 /**
  * Terminates process, ignoring destructors and atexit() handlers.
  *
- * @param rc is exit code ∈ [0,256)
+ * When running on bare metal, this function will reboot your computer
+ * by hosing the interrupt descriptors and triple faulting the system.
+ *
+ * @param exitcode is masked with 255
  * @asyncsignalsafe
  * @vforksafe
  * @noreturn
  */
-wontreturn void _exit(int rc) {
-  _Exit(rc);
+wontreturn void _exit(int exitcode) {
+  _Exit(exitcode);
 }

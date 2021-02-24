@@ -27,7 +27,6 @@ LIBC_ZIPOS_A_CHECKS =					\
 	$(LIBC_ZIPOS_A_HDRS:%=o/$(MODE)/%.ok)
 
 LIBC_ZIPOS_A_DIRECTDEPS =				\
-	APE_LIB						\
 	LIBC_CALLS					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\

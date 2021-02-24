@@ -258,6 +258,9 @@ typedef EFI_STATUS(EFIAPI *EFI_GET_MEMORY_MAP)(
 typedef EFI_STATUS(EFIAPI *EFI_ALLOCATE_POOL)(EFI_MEMORY_TYPE PoolType,
                                               uintptr_t Size, void *out_Buffer);
 typedef EFI_STATUS(EFIAPI *EFI_FREE_POOL)(void *Buffer);
+typedef void(EFIAPI *EFI_SET_MEM)(void *Buffer, uintptr_t Size, uint8_t Value);
+typedef void(EFIAPI *EFI_COPY_MEM)(void *Destination, void *Source,
+                                   uintptr_t Length);
 
 typedef EFI_STATUS(EFIAPI *EFI_CHECK_EVENT)(EFI_EVENT Event);
 typedef EFI_STATUS(EFIAPI *EFI_CLOSE_EVENT)(EFI_EVENT Event);
@@ -346,6 +349,8 @@ typedef EFI_STATUS(EFIAPI *EFI_IMAGE_LOAD)(bool BootPolicy,
                                            uintptr_t SourceSize,
                                            EFI_HANDLE *out_ImageHandle);
 typedef EFI_STATUS(EFIAPI *EFI_IMAGE_UNLOAD)(EFI_HANDLE ImageHandle);
+typedef EFI_STATUS(EFIAPI *EFI_EXIT_BOOT_SERVICES)(EFI_HANDLE ImageHandle,
+                                                   uintptr_t MapKey);
 
 typedef struct {
   EFI_TABLE_HEADER Hdr;
@@ -393,7 +398,7 @@ typedef struct {
   void *StartImage;
   EFI_EXIT Exit;
   EFI_IMAGE_UNLOAD UnloadImage;
-  void *ExitBootServices;
+  EFI_EXIT_BOOT_SERVICES ExitBootServices;
   EFI_GET_NEXT_MONOTONIC_COUNT GetNextMonotonicCount;
   EFI_STALL Stall;
   EFI_SET_WATCHDOG_TIMER SetWatchdogTimer;
@@ -408,8 +413,8 @@ typedef struct {
   void *InstallMultipleProtocolInterfaces;
   void *UninstallMultipleProtocolInterfaces;
   void *CalculateCrc32;
-  void *CopyMem;
-  void *SetMem;
+  EFI_COPY_MEM CopyMem;
+  EFI_SET_MEM SetMem;
   EFI_CREATE_EVENT_EX CreateEventEx;
 } EFI_BOOT_SERVICES;
 

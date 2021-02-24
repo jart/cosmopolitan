@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,40 +16,49 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/config.h"
-#include "ape/lib/pc.h"
-#include "libc/bits/bits.h"
+#include "libc/calls/calls.h"
 #include "libc/macros.h"
+#include "libc/runtime/directmap.internal.h"
+#include "libc/runtime/pc.internal.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/sysv/errfuns.h"
 
-/**
- * Virtualizes physical memory.
- *
- * This function removes memory holes (discovered by e820() earlier) and
- * creates the illusion of flat contiguous memory for as much RAM as the
- * BIOS reports usable. Memory is safe to use and remap afterwards.
- *
- * @see ape/ape.S
- */
-textreal void flattenhighmemory(struct SmapEntry *e820, struct PageTable *pml4t,
-                                uint64_t *ptsp) {
-  uint64_t *entry, paddr, vaddr;
-  struct SmapEntry *smap, *hole;
-  for (smap = hole = e820, vaddr = IMAGE_BASE_VIRTUAL; smap->size; ++smap) {
-    while (smap->size && smap->type != kMemoryUsable) smap++;
-    paddr = ROUNDUP(MAX(IMAGE_BASE_PHYSICAL, smap->addr), PAGESIZE);
-    while (paddr < ROUNDDOWN(smap->addr + smap->size, PAGESIZE)) {
-      while (hole->size &&
-             (hole->type == kMemoryUsable || hole->addr + hole->size < paddr)) {
-        hole++;
-      }
-      if (paddr >= hole->addr && paddr < hole->addr + hole->size) {
-        paddr = ROUNDUP(hole->addr + hole->size, PAGESIZE);
-      } else {
-        entry = __getpagetableentry(vaddr, 3, pml4t, ptsp);
-        *entry = paddr | PAGE_V | PAGE_RW;
-        vaddr += 0x1000;
-        paddr += 0x1000;
+static uint64_t sys_mmap_metal_break;
+
+noasan struct DirectMap sys_mmap_metal(void *paddr, size_t size, int prot,
+                                       int flags, int fd, int64_t off) {
+  size_t i;
+  struct mman *mm;
+  struct DirectMap res;
+  uint64_t addr, page, *pte, *pml4t;
+  mm = (struct mman *)(BANE + 0x0500);
+  pml4t = __get_pml4t();
+  size = ROUNDUP(size, 4096);
+  addr = (uint64_t)paddr;
+  if (!(flags & MAP_FIXED)) {
+    for (i = 0; i < size; i += 4096) {
+      pte = __get_virtual(mm, pml4t, addr, false);
+      if (pte && (*pte & PAGE_V)) {
+        addr = MAX(addr, sys_mmap_metal_break) + i + 4096;
+        i = 0;
       }
     }
+    sys_mmap_metal_break = MAX(addr + size, sys_mmap_metal_break);
   }
+  for (i = 0; i < size; i += 4096) {
+    page = __new_page(mm);
+    pte = __get_virtual(mm, pml4t, addr + i, true);
+    if (pte && page) {
+      __clear_page(BANE + page);
+      *pte = page | ((prot & PROT_WRITE) ? PAGE_RW : 0) | PAGE_U | PAGE_V;
+    } else {
+      addr = -1;
+      break;
+    }
+  }
+  res.addr = (void *)addr;
+  res.maphandle = -1;
+  return res;
 }

@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/nt/runtime.h"
-#include "libc/runtime/directmap.h"
+#include "libc/runtime/directmap.internal.h"
 
 /**
  * Obtains memory mapping directly from system.
@@ -28,11 +28,13 @@
  * bypassed by calling this function. However the caller is responsible
  * for passing the magic memory handle on Windows NT to CloseHandle().
  */
-noasan struct DirectMap __mmap(void *addr, size_t size, int prot, int flags,
-                               int fd, int64_t off) {
-  if (!IsWindows()) {
-    return (struct DirectMap){sys_mmap(addr, size, prot, flags, fd, off, off),
+noasan struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags,
+                                 int fd, int64_t off) {
+  if (!IsWindows() && !IsMetal()) {
+    return (struct DirectMap){__sys_mmap(addr, size, prot, flags, fd, off, off),
                               kNtInvalidHandleValue};
+  } else if (IsMetal()) {
+    return sys_mmap_metal(addr, size, prot, flags, fd, off);
   } else {
     return sys_mmap_nt(addr, size, prot, flags,
                        fd != -1 ? g_fds.p[fd].handle : kNtInvalidHandleValue,

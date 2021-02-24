@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/lib/pc.h"
 #include "libc/calls/internal.h"
 #include "libc/nexgen32e/uart.internal.h"
+#include "libc/runtime/pc.internal.h"
 
 static bool IsDataAvailable(struct Fd *fd) {
   return inb(fd->handle + UART_LSR) & UART_TTYDA;

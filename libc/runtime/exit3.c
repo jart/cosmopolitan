@@ -16,29 +16,36 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/efi.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/nexgen32e/vendor.internal.h"
 #include "libc/nt/runtime.h"
-#include "libc/runtime/runtime.h"
+#include "libc/nt/thunk/msabi.h"
+#include "libc/sysv/consts/nr.h"
 
 /**
  * Terminates process, ignoring destructors and atexit() handlers.
  *
- * @param rc is exit code ∈ [0,256)
+ * When running on bare metal, this function will reboot your computer
+ * by hosing the interrupt descriptors and triple faulting the system.
+ *
+ * @param exitcode is masked with 255
  * @asyncsignalsafe
  * @vforksafe
  * @noreturn
  */
-wontreturn void _Exit(int rc) {
-  if ((!IsWindows() && !IsMetal() && !IsUefi()) ||
-      (IsMetal() && IsGenuineCosmo())) {
-    sys_exit(rc);
-  } else if (IsUefi()) {
-    __efi_system_table->BootServices->Exit(__efi_image_handle, rc, 0, NULL);
+privileged wontreturn void _Exit(int exitcode) {
+  if ((!IsWindows() && !IsMetal()) || (IsMetal() && IsGenuineCosmo())) {
+    asm volatile("syscall"
+                 : /* no outputs */
+                 : "a"(__NR_exit_group), "D"(exitcode)
+                 : "memory");
   } else if (IsWindows()) {
-    ExitProcess(rc & 0xff);
+    extern void(__msabi * __imp_ExitProcess)(uint32_t);
+    __imp_ExitProcess(exitcode & 0xff);
   }
-  triplf();
+  asm("push\t$0\n\t"
+      "cli\n\t"
+      "lidt\t(%rsp)");
+  for (;;) asm("ud2");
 }

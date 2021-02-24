@@ -11,32 +11,14 @@
   In some cases it's necessary to use addend macros that change virtual
   addresses into the other two types: physical and real. */
 
+#define IMAGE_BASE_REAL 0x2000
+
 #ifndef IMAGE_BASE_VIRTUAL
 #define IMAGE_BASE_VIRTUAL 0x400000
 #endif
 
 #ifndef IMAGE_BASE_PHYSICAL
 #define IMAGE_BASE_PHYSICAL 0x100000
-#endif
-
-#ifndef REAL_SCRATCH_AREA
-/**
- * Location of anything goes memory for real mode.
- *
- * The MBR won't load program content beyond this address, so we have
- * room for buffers, page tables, etc. before we reach the stack frame.
- */
-#define REAL_SCRATCH_AREA 0x40000
-#endif
-
-#ifndef REAL_STACK_FRAME
-/**
- * Location of real mode 64kb stack frame.
- *
- * This address was chosen because memory beyond 0x80000 can't be
- * accessed safely without consulting e820.
- */
-#define REAL_STACK_FRAME 0x70000
 #endif
 
 /**

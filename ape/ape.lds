@@ -175,7 +175,7 @@
 
 #ifdef __LINKER__
 #include "ape/macros.internal.h"
-#include "ape/config.h"
+#include "ape/relocations.h"
 #include "libc/dce.h"
 #include "libc/nt/pedef.internal.h"
 #include "libc/zip.h"
@@ -196,11 +196,12 @@ SECTIONS {
 /*BEGIN: linux addressability guarantee */
 /*BEGIN: bsd addressability guarantee */
 
-  .head SEGMENT_START("text-segment", IMAGE_BASE_VIRTUAL) : {
+  .head SEGMENT_START("text-segment", IMAGE_BASE_VIRTUAL) : AT(IMAGE_BASE_REAL) {
     HIDDEN(_base = .);
 
     /* Real Mode */
     KEEP(*(.head))
+    KEEP(*(.text.head))
 
     /* Executable & Linkable Format */
     . = ALIGN(__SIZEOF_POINTER__);
@@ -220,16 +221,14 @@ SECTIONS {
     HIDDEN(ape_pe_sections = .);
     KEEP(*(.pe.sections))
     HIDDEN(ape_pe_sections_end = .);
-    . += 1;
 
     /* Mach-O */
     KEEP(*(.macho))
     . = ALIGN(__SIZEOF_POINTER__);
     HIDDEN(ape_macho_end = .);
-    . += 1;
 
     KEEP(*(.ape.pad.head))
-    . = ALIGN(SupportsWindows() || SupportsUefi() ? PAGESIZE : 16);
+    . = ALIGN(SupportsWindows() || SupportsMetal() ? PAGESIZE : 16);
     HIDDEN(_ehead = .);
   } :Head
 
@@ -239,8 +238,8 @@ SECTIONS {
     /* Code that needs to be addressable in Real Mode */
     *(.text.real)
     KEEP(*(SORT_BY_NAME(.sort.text.real.*)))
-    *(.rodata.real)
-    KEEP(*(SORT_BY_NAME(.sort.rodata.real.*)))
+    /**(.rodata.real)
+    KEEP(*(SORT_BY_NAME(.sort.rodata.real.*)))*/
     HIDDEN(_ereal = .);
 
 /*END: realmode addressability guarantee */
@@ -282,7 +281,6 @@ SECTIONS {
     KEEP(*(.ape.pad.privileged));
     HIDDEN(__privileged_start = .);
     HIDDEN(__test_end = .);
-    . += 1;
     *(.privileged)
     HIDDEN(__privileged_end = .);
 
@@ -308,7 +306,6 @@ SECTIONS {
     /* Windows DLL Import Directory */
     KEEP(*(.idata.ro));
     KEEP(*(SORT_BY_NAME(.idata.ro.*)))
-    . += 1;
 
     . = ALIGN(__SIZEOF_POINTER__);
     PROVIDE_HIDDEN(__init_array_start = .);
@@ -380,11 +377,6 @@ SECTIONS {
     *(COMMON)
 
     KEEP(*(SORT_BY_NAME(.sort.bss.*)))
-
-    /* eXtreme Low Memory w/ Userspace Remapping */
-    . = ALIGN(0x1000);
-    *(.xlm)
-    . = ALIGN(0x1000);
 
     . = ALIGN(0x10000); /* for brk()/sbrk() allocation */
     HIDDEN(_end = .);
@@ -465,6 +457,13 @@ HIDDEN(ape_ram_memsz = ADDR(.bss) + SIZEOF(.bss) - ape_ram_vaddr);
 HIDDEN(ape_ram_align = PAGESIZE);
 HIDDEN(ape_ram_rva = RVA(ape_ram_vaddr));
 
+HIDDEN(ape_stack_offset = ape_ram_offset + ape_ram_filesz);
+HIDDEN(ape_stack_vaddr = 0x700000000000 - STACKSIZE);
+HIDDEN(ape_stack_paddr = ape_ram_paddr + ape_ram_filesz);
+HIDDEN(ape_stack_filesz = 0);
+HIDDEN(ape_stack_memsz = STACKSIZE);
+HIDDEN(ape_stack_align = 16);
+
 HIDDEN(ape_note_offset = ape_rom_offset + (ape_note - ape_rom_vaddr));
 HIDDEN(ape_note_vaddr = ape_note);
 HIDDEN(ape_note_paddr = ape_rom_paddr + ape_note_offset);
@@ -500,14 +499,18 @@ SHSTUB2(ape_macho_dd_skip, RVA(ape_macho) / 8);
 SHSTUB2(ape_macho_dd_count, (ape_macho_end - ape_macho) / 8);
 #endif
 
-#if SupportsWindows() || SupportsUefi()
+#if SupportsWindows() || SupportsMetal()
 #define LINK_WINDOWS (SupportsWindows() && !DEFINED(EfiMain))
 PFSTUB4(ape_pe_offset, ape_pe - ape_mz);
 HIDDEN(ape_pe_optsz = ape_pe_sections - (ape_pe + 24));
 HIDDEN(ape_pe_shnum = (ape_pe_sections_end - ape_pe_sections) / 40);
-HIDDEN(ape_idata_idtsize = ape_idata_idtend - ape_idata_idt);
-HIDDEN(ape_idata_iatsize = ape_idata_iatend - ape_idata_iat);
+HIDDEN(ape_pe_base = IMAGE_BASE_VIRTUAL);
+HIDDEN(ape_idata = LINK_WINDOWS ? RVA(ape_idata_iat) : 0);
+HIDDEN(ape_idata_iatsize = LINK_WINDOWS ? ape_idata_iatend - ape_idata_iat : 0);
+HIDDEN(ape_idata = LINK_WINDOWS ? RVA(ape_idata_idt) : 0);
+HIDDEN(ape_idata_idtsize = LINK_WINDOWS ? ape_idata_idtend - ape_idata_idt : 0);
 HIDDEN(v_ntversion = LINK_WINDOWS ? 6 : 1);
+HIDDEN(v_ntdllchar = LINK_WINDOWS ? 288 : 0);
 HIDDEN(v_ntsubversion = LINK_WINDOWS ? 6 : 5);
 HIDDEN(v_ntsubsystem = (LINK_WINDOWS
                         ? (DEFINED(GetMessage)
@@ -519,7 +522,7 @@ HIDDEN(ape_pe_entry = LINK_WINDOWS ? WinMain : EfiMain);
 
 #if SupportsMetal()
 HIDDEN(v_ape_realsectors =
-           MIN(REAL_SCRATCH_AREA - IMAGE_BASE_REAL,
+           MIN(0x70000 - IMAGE_BASE_REAL,
                ROUNDUP(RVA(_edata), 4096)) / 512);
 HIDDEN(v_ape_realpages = v_ape_realsectors / (4096 / 512));
 HIDDEN(v_ape_highsectors =
@@ -609,7 +612,7 @@ CHURN(v_ape_realsectors);
 #if SupportsXnu()
 CHURN(ape_macho);
 #endif
-#if SupportsWindows() || SupportsUefi()
+#if SupportsWindows() || SupportsMetal()
 CHURN(ape_mz);
 CHURN(ape_pe);
 CHURN(ape_pe_offset);

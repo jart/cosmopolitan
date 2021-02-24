@@ -197,7 +197,7 @@ u32 sys_getgid(void) hidden;
 u32 sys_getsid(int) hidden;
 u32 sys_gettid(void) hidden;
 u32 sys_getuid(void) hidden;
-void *sys_mmap(void *, u64, u32, u32, i64, i64, i64) hidden;
+void *__sys_mmap(void *, u64, u32, u32, i64, i64, i64) hidden;
 void *sys_mremap(void *, u64, u64, i32, void *) hidden;
 void sys_exit(int) hidden;
 
@@ -294,12 +294,6 @@ unsigned __wincrash_nt(struct NtExceptionPointers *);
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 int fstat_metal(int, struct stat *);
-
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § syscalls » uefi                                           ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
-int sys_nanosleep_uefi(const struct timespec *, struct timespec *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » drivers                                        ─╬─│┼

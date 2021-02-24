@@ -31,12 +31,10 @@ APE_HDRS = $(filter %.h,$(APE_FILES))
 APE_INCS = $(filter %.inc,$(APE_FILES))
 APE_SRCS = $(filter %.S,$(APE_FILES))
 APE_OBJS = $(APE_SRCS:%.S=o/$(MODE)/%.o)
-APE_DEPS = $(APE_LIB)
 APE_CHECKS = $(APE_HDRS:%=o/%.ok)
 
 o/$(MODE)/ape/ape.lds:			\
 		ape/ape.lds		\
-		ape/config.h		\
 		ape/macros.internal.h	\
 		libc/dce.h		\
 		libc/zip.h
@@ -49,6 +47,4 @@ $(APE_OBJS):	$(BUILD_FILES)		\
 		ape/ape.mk
 
 .PHONY: o/$(MODE)/ape
-o/$(MODE)/ape:	$(APE)			\
-		$(APE_CHECKS)		\
-		o/$(MODE)/ape/lib
+o/$(MODE)/ape: $(APE) $(APE_CHECKS)

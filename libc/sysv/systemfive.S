@@ -104,7 +104,7 @@ __systemfive:
 
 	.privileged
 .Lanchorpoint:
-#if SupportsLinux() || SupportsMetal() || SupportsUefi()
+#if SupportsLinux() || SupportsMetal()
 systemfive_linux:
 	and	$0xfff,%eax
 	cmp	$0xfff,%eax
@@ -198,10 +198,6 @@ systemfive_xnu:
 	testb	$XNU,(%rdi)			# @see libc/crt/crt.S
 	jnz	_init_systemfive_xnu
 #endif
-#if SupportsUefi()
-	testb	$UEFI,(%rdi)			# @see ape/ape.S
-	jnz	_init_systemfive_uefi
-#endif
 #if SupportsMetal()
 	testb	$METAL,(%rdi)			# @see ape/ape.S
 	jnz	_init_systemfive_metal
@@ -237,13 +233,6 @@ _init_systemfive_linux:
 _init_systemfive_metal:
 	pushb	systemfive_linux-.Lanchorpoint
 	push	$METAL
-	ezlea	syscon_linux,si
-	jmp	_init_systemfive_os
-#endif
-#if SupportsUefi()
-_init_systemfive_uefi:
-	pushb	systemfive_linux-.Lanchorpoint
-	push	$UEFI
 	ezlea	syscon_linux,si
 	jmp	_init_systemfive_os
 #endif
@@ -323,20 +312,22 @@ _init_systemfive_magnums:
 //	𝑠𝑙𝑖𝑑𝑒
 #if SupportsSystemv() && !defined(TINY)
 _init_systemfive_stack:					# determinism ftw!
-#if SupportsWindows() || SupportsMetal() || SupportsUefi()
-	testb	$WINDOWS|METAL|UEFI,__hostos(%rip)
+#if SupportsWindows() || SupportsMetal()
+	testb	$WINDOWS|METAL,__hostos(%rip)
 	jnz	_init_systemfive_done
 #endif
 	push	%rdi
 	push	%rsi
 	mov	__NR_mmap,%eax
-	mov	$0x700000000000-STACKSIZE,%rdi
-	mov	$STACKSIZE,%esi
+	movabs	$ape_stack_vaddr,%rdi
+	mov	$ape_stack_memsz,%esi
 	mov	$PROT_READ|PROT_WRITE,%edx
 	mov	$MAP_PRIVATE|MAP_FIXED,%r10d
 	or	MAP_ANONYMOUS,%r10d
 	or	$-1,%r8d
 	xor	%r9d,%r9d
+	push	%rdi					# vaddr of stack
+	push	%rsi					# size of stack
 	push	%r9					# openbsd:pad
 	push	%r9					# openbsd:align
 #if SupportsOpenbsd()
@@ -351,6 +342,8 @@ _init_systemfive_stack:					# determinism ftw!
 	syscall
 	pop	%r9
 	pop	%r9
+	pop	%r9					# size of stack
+	pop	%r11					# vaddr of stack
 	jnc	2f
 1:	mov	%eax,%edi
 	mov	__NR_exit_group,%eax
@@ -360,17 +353,23 @@ _init_systemfive_stack:					# determinism ftw!
 	.weak	_mmi
 	ezlea	_mmi,cx
 	test	%rcx,%rcx
+	push	%r9					# save the stack size
 	jz	3f
+	lea	-1(%r11,%r9),%r9			# need incl. interval
+	shr	$16,%r11				# for the stack range
+	shr	$16,%r9
 	movb	$1,(%rcx)				# _mmi.i
-	movl	$(0x700000000000-STACKSIZE)>>16,8(%rcx)	# _mmi.p[0].x
-	movl	$(0x700000000000-1)>>16,12(%rcx)	# _mmi.p[0].y
+	mov	%r11d,8(%rcx)				# _mmi.p[0].x
+	mov	%r9d,12(%rcx)				# _mmi.p[0].y
 	mov	%edx,20(%rcx)				# _mmi.p[0].prot
 	mov	%r10d,24(%rcx)				# _mmi.p[0].flags
-3:	pop	%rsi
+3:	pop	%r9					# restore stack size
+	pop	%rsi
 	pop	%rdi
 	leave
 	pop	%rcx
-	lea	STACKSIZE-16(%rax),%rsp			# openbsd:stackbound
+	lea	(%rax,%r9),%rsp
+	sub	$ape_stack_align,%rsp			# openbsd:stackbound
 	mov	%rbp,(%rsp)
 	push	%rcx
 	push	%rbp
@@ -414,7 +413,7 @@ syscon_end:
 	.type	syscon_end,@object
 	.globl	syscon_start
 	.globl	syscon_end
-#if SupportsLinux() || SupportsMetal() || SupportsUefi()
+#if SupportsLinux() || SupportsMetal()
 	.section .sort.rodata.syscon.linux.1,"a",@progbits
 	.align	1
 syscon_linux:/*
@@ -468,3 +467,7 @@ syscon_windows:/*
 	.type	syscon_windows,@object
 	.globl	syscon_windows
 #endif
+
+	.weak	ape_stack_vaddr
+	.weak	ape_stack_memsz
+	.weak	ape_stack_align

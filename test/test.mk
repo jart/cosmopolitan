@@ -2,8 +2,7 @@
 #───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
 
 .PHONY:		o/$(MODE)/test
-o/$(MODE)/test:	o/$(MODE)/test/ape	\
-		o/$(MODE)/test/dsp	\
+o/$(MODE)/test:	o/$(MODE)/test/dsp	\
 		o/$(MODE)/test/libc	\
 		o/$(MODE)/test/net	\
 		o/$(MODE)/test/tool

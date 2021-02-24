@@ -2109,9 +2109,9 @@ static void OnE820(void) {
   if (Read32(m->dx) == 0x534D4150 && Read32(m->cx) == 24 &&
       addr + sizeof(p) <= m->real.n) {
     if (!Read32(m->bx)) {
-      Write64(p + 000, 0);
-      Write64(p + 010, m->real.n);
-      Write32(p + 014, 1);
+      Write64(p + 0, 0);
+      Write64(p + 8, m->real.n);
+      Write32(p + 16, 1);
       memcpy(m->real.p + addr, p, sizeof(p));
       SetWriteAddr(m, addr, sizeof(p));
       Write32(m->cx, sizeof(p));
@@ -2716,6 +2716,7 @@ static void Tui(void) {
           ExecuteInstruction(m);
           ++opcount;
           if (!(action & CONTINUE) || interactive) {
+            if (!(action & CONTINUE)) ReactiveDraw();
             ScrollMemoryViews();
           }
         } else {
@@ -2737,8 +2738,11 @@ static void Tui(void) {
     } while (tuimode);
   } else {
     if (OnHalt(interrupt)) {
+      ReactiveDraw();
+      ScrollMemoryViews();
       goto KeepGoing;
     }
+    ReactiveDraw();
     ScrollOp(&pan.disassembly, GetDisIndex());
   }
   TuiCleanup();

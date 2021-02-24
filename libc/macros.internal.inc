@@ -27,6 +27,9 @@
 .macro	.real
 	.section .text.real,"ax",@progbits
 .endm
+.macro	.head
+	.section .text.head,"ax",@progbits
+.endm
 .macro	.text.startup
 	.section .text.startup,"ax",@progbits
 .endm

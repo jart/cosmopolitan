@@ -32,17 +32,16 @@
 ╠──────────────────────────────────────────────────────▌▀▄─▐──▀▄─▐▄─▐▄▐▄─▐▄─▐▄─│
 │ αcτµαlly pδrταblε εxεcµταblε § program header                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/config.h"
-#include "ape/lib/pc.h"
 #include "ape/macros.internal.h"
 #include "ape/notice.inc"
 #include "ape/relocations.h"
+#include "libc/dce.h"
 #include "libc/elf/def.h"
 #include "libc/macho.internal.h"
 #include "libc/nexgen32e/uart.internal.h"
 #include "libc/nexgen32e/vidya.internal.h"
 #include "libc/nt/pedef.internal.h"
-#include "libc/dce.h"
+#include "libc/runtime/pc.internal.h"
 #include "libc/sysv/consts/prot.h"
 
 #define USE_SYMBOL_HACK 0
@@ -62,9 +61,6 @@ __ro:	.endobj	__ro,globl,hidden		# ←for gdb readibility
 	.previous
 	.section .rodata.str1.1,"a",@progbits
 cstr:	.endobj	cstr,globl,hidden		# ←for gdb readibility
-	.previous
-	.section .sort.rodata.real.str1.1,"a",@progbits
-rlstr:	.endobj	rlstr,globl,hidden		# ←for gdb readibility
 	.previous
 	.section .head,"ax",@progbits
 
@@ -105,7 +101,7 @@ rlstr:	.endobj	rlstr,globl,hidden		# ←for gdb readibility
 │ αcτµαlly pδrταblε εxεcµταblε § the old technology                            │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 
-#if SupportsWindows() || SupportsUefi() || SupportsXnu()
+#if SupportsWindows() || SupportsMetal() || SupportsXnu()
 
 //	MZ Literally Executable Header
 //
@@ -131,14 +127,14 @@ ape_mz:	.asciz	"MZqFpD='\n"		# Mark 'Zibo' Joseph Zbikowski
 	.ascii	"JT"			# MZ: OEM identifier
 	.short	0			# MZ: OEM information
 	.org	0x40-4			# MZ: bytes reserved for you
-#if SupportsWindows() || SupportsUefi()
+#if SupportsWindows() || SupportsMetal()
 	.long	RVA(ape_pe)		# PE: the new technology
 #else
 	.long	0
 #endif
 	.endfn	ape_mz,globl,hidden
 
-#else /* !(SupportsWindows() || SupportsUefi() || SupportsXnu()) */
+#else /* !(SupportsWindows() || SupportsMetal() || SupportsXnu()) */
 
 //	ELF Literally Executable Header
 //
@@ -168,7 +164,7 @@ ape_mz:	.asciz	"MZqFpD='\n"		# Mark 'Zibo' Joseph Zbikowski
 	.short	ape_elf_shnum			#  3c: e_shnum
 	.short	ape_elf_shstrndx		#  3e: e_shstrndx
 
-#endif /* SupportsWindows() || SupportsUefi() || SupportsXnu() */
+#endif /* SupportsWindows() || SupportsMetal() || SupportsXnu() */
 
 #if SupportsMetal()
 
@@ -218,17 +214,17 @@ pc:	cld
 	.byte	0x0f,0x1f,0207			# nop rdi binbase
 	.short	(0x7c00-IMAGE_BASE_VIRTUAL)/512
 #endif
-	mov	$REAL_STACK_FRAME>>4,%di	# we need a stack
-	xor	%cx,%cx
+	mov	$0x70000>>4,%di			# we need a stack
+	xor	%cx,%cx				# 0x7f000-0x80000
 	mov	%cx,%es
 	rlstack	%di,%cx
-	push	%cs				# memcpy() [relocate this page]
-	pop	%ds
-	call	1f
-1:	pop	%si
+	push	%cs				# determine load address
+	pop	%ds				# and relocate this code
+	call	1f				# to a way lower address
+1:	pop	%si				# and we'll make cs zero
 	sub	$RVA(1b),%si
 	mov	$IMAGE_BASE_REAL>>4,%ax
-	push	%ax				# save real base
+	push	%ax				# save IMAGE_BASE_REAL>>4
 	push	%ax
 	pop	%es
 	xor	%di,%di
@@ -238,18 +234,18 @@ pc:	cld
 	.byte	0x0f,0x1f,0207			# nop rdi binbase
 	.short	(IMAGE_BASE_REAL-0x7c00)/512
 #endif
-	ljmp	$0,$REAL(1f)			# longjmp()
-1:	mov	%cx,%ds				# %ds and %cs are now zero
-	mov	$XLM_SIZE,%cx			# memset to clear real bss
-	mov	$XLM_BASE_REAL>>4,%ax
+	ljmp	$0,$REAL(1f)
+1:	mov	%cx,%ds
+	mov	$IMAGE_BASE_REAL-0x0500,%cx	# clears bss
+	mov	$0x0500>>4,%ax			# struct mman
 	mov	%ax,%es
 	xor	%ax,%ax
 	xor	%di,%di
 	rep stosb
-	cmp	$0x40,%dl			# statfs() [disk geometry]
+	cmp	$0x40,%dl
 	je	6f
 	call	dsknfo
-	pop	%es				# restore real base
+	pop	%es				# restore IMAGE_BASE_REAL>>4
 	mov	$1,%al				# current sector
 	xor	%cx,%cx				# current cylinder
 	xor	%dh,%dh				# current head
@@ -257,15 +253,7 @@ pc:	cld
 3:	call	pcread
 	dec	%di
 	jnz	3b
-6:	mov	$XLM(LOADSTATE),%di		# ax,cx,dx,es
-	stosw
-	xchg	%cx,%ax
-	stosw
-	xchg	%dx,%ax
-	stosw
-	mov	%es,%ax
-	stosw
-	ljmp	$0,$REAL(realmodeloader)
+6:	ljmp	$0,$REAL(realmodeloader)
 	.endfn	pc
 
 //	Determines disk geometry.
@@ -326,7 +314,7 @@ dsknfo:	push	%bx
 	movpp	%es,%ds
 	xor	%si,%si
 	mov	%si,%es
-	mov	$XLM(DRIVE_BASE_TABLE),%si
+	mov	$0x1510,%si		# mman::pc_drive_base_table
 	xchg	%si,%di
 	movsw	#→ headunloadtime, headloadtime
 	movsw	#→ shutofftime, bytespersector
@@ -379,11 +367,11 @@ pcread:	push	%ax
 	add	$512>>4,%si
 	mov	%si,%es
 	inc	%al			# ++sector
-	cmp	XLM(DRIVE_LAST_SECTOR),%al
+	cmp	0x151c,%al		# mman::pc_drive_last_sector
 	jbe	2f
 	mov	$1,%al
 	inc	%dh			# ++head
-	cmp	XLM(DRIVE_LAST_HEAD),%dh
+	cmp	0x1520,%dh		# mman::pc_drive_last_head
 	jbe	2f
 	xor	%dh,%dh
 	inc	%cx			# ++cylinder
@@ -394,6 +382,82 @@ pcread:	push	%ax
 	pop	%ax
 	jmp	pcread
 	.endfn	pcread
+
+//	Video put string.
+//
+//	@param	di is the string
+//	@clob	bp,bx
+//	@mode	real
+rvputs:	mov	%di,%si
+0:	lodsb
+	test	%al,%al
+	je	1f
+	mov	$7,%bx				# normal mda/cga style page zero
+	mov	$0x0e,%ah			# teletype output al cp437
+	int	$0x10				# vidya service
+	jmp	0b
+1:	ret
+	.endfn	rvputs
+
+//	Abnormally halts startup.
+//
+//	@param	di message
+//	@mode	real
+//	@noreturn
+rldie:	push	%di
+	mov	$REAL(str.error),%di
+	call	rvputs
+	pop	%di
+	call	rvputs
+	mov	$REAL(str.crlf),%di
+	call	rvputs
+0:	rep nop
+	jmp	0b
+	.endfn	rldie
+
+//	Initializes present PC serial lines.
+sinit4:	mov	$4,%cx
+	mov	$0x400,%si			# BDA.COM1
+0:	lodsw
+	test	%ax,%ax
+	jz	1f
+	push	%cx
+	push	%si
+	xchg	%ax,%di
+	mov	$REAL(sconf),%si
+	call	sinit
+	pop	%si
+	pop	%cx
+1:	loop	0b
+	ret
+	.endfn	sinit4,global,hidden
+
+//	Initializes Serial Line Communications 8250 UART 16550A
+//
+//	@param	word di tty port
+//	@param	char (*{es:,e,r}si)[4] register initial values
+//	@mode	long,legacy,real
+//	@see	www.lammertbies.nl/comm/info/serial-uart.html
+sinit:	mov	%di,%dx
+	test	%dx,%dx
+	jz	2f
+	push	%dx
+	push	%si
+	xor	%cx,%cx
+	mov	$UART_LCR,%cl
+	add	%cx,%dx
+	lodsb	%ds:(%si),%al
+	pop	%si
+	or	$UART_DLAB,%al
+	out	%al,%dx
+	pop	%dx
+1:	lodsb	%ds:(%si),%al
+	out	%al,%dx
+	inc	%dx
+	dec	%cx
+	jns	1b
+2:	ret
+	.endfn	sinit,global,hidden
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ αcτµαlly pδrταblε εxεcµταblε § partition table                           ─╬─│┼
@@ -469,9 +533,7 @@ ape_disk:
 ╚────────────────────────────────────────────────────────────────────────────│─╝
 	the bourne executable & linkable format */
 
-#if SupportsSystemv()
-
-#if SupportsWindows() || SupportsUefi() || SupportsXnu()
+#if SupportsWindows() || SupportsMetal() || SupportsXnu()
 apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	"o=\"$(command -v \"$0\")\"\n"
 #if SupportsXnu()
@@ -526,10 +588,11 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	"fi\n"
 	.ascii	"exit $R\n"
 	.endobj	apesh
-#endif /* SupportsWindows() || SupportsUefi() || SupportsXnu() */
+#endif /* SupportsWindows() || SupportsMetal() || SupportsXnu() */
 
+#if SupportsSystemv() || SupportsMetal()
 	.section .elf.phdrs,"a",@progbits
-	.long	PT_LOAD				# text segment
+	.long	PT_LOAD
 	.long	PF_R|PF_X
 	.stub	ape_rom_offset,quad
 	.stub	ape_rom_vaddr,quad
@@ -537,7 +600,7 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.stub	ape_rom_filesz,quad
 	.stub	ape_rom_memsz,quad
 	.stub	ape_rom_align,quad
-	.long	PT_LOAD				# data segment
+	.long	PT_LOAD
 	.long	PF_R|PF_W
 	.stub	ape_ram_offset,quad
 	.stub	ape_ram_vaddr,quad
@@ -545,20 +608,16 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.stub	ape_ram_filesz,quad
 	.stub	ape_ram_memsz,quad
 	.stub	ape_ram_align,quad
-#if SupportsLinux()
-//	Linux ignores mprotect() and returns 0 without this lool
-//	It has nothing to do with the stack, which is still exec
-	.long	PT_GNU_STACK			# p_type
-	.long	PF_R|PF_W			# p_flags
-	.quad	0				# p_offset
-	.quad	0				# p_vaddr
-	.quad	0				# p_paddr
-	.quad	0				# p_filesz
-	.quad	0				# p_memsz
-	.quad	16				# p_align
-#endif
+	.long	PT_GNU_STACK
+	.long	PF_R|PF_W
+	.stub	ape_stack_offset,quad
+	.stub	ape_stack_vaddr,quad
+	.stub	ape_stack_paddr,quad
+	.stub	ape_stack_filesz,quad
+	.stub	ape_stack_memsz,quad
+	.stub	ape_stack_align,quad
 #if SupportsOpenbsd() || SupportsNetbsd()
-	.long	PT_NOTE				# notes
+	.long	PT_NOTE
 	.long	PF_R
 	.stub	ape_note_offset,quad
 	.stub	ape_note_vaddr,quad
@@ -568,6 +627,7 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.stub	ape_note_align,quad
 #endif
 	.previous
+#endif /* SupportsSystemv() || SupportsMetal() */
 
 #if SupportsOpenbsd()
 	.section .note.openbsd.ident,"a",@progbits
@@ -596,8 +656,6 @@ netbsd.ident:
 	.type	netbsd.ident,@object
 	.previous
 #endif /* SupportsNetbsd() */
-
-#endif /* SupportsSystemv() */
 
 /*	                                      ▄▄███▄
 	                                  ▄▄████████▄
@@ -812,7 +870,7 @@ PETEXT = 0b01110000000000000000000001100000
 PEDATA = 0b11000000000000000000000011000000
 PEIMPS = 0b11000000000000000000000001000000
 
-#if SupportsWindows() || SupportsUefi()
+#if SupportsWindows() || SupportsMetal()
 
 	.section .pe.header,"a",@progbits
 	.align	__SIZEOF_POINTER__
@@ -832,7 +890,7 @@ ape_pe:	.ascin	"PE",4
 	.long	0			# SizeOfUninitializedData
 	.long	RVA(ape_pe_entry)	# EntryPoint
 	.long	0			# BaseOfCode
-	.quad	IMAGE_BASE_VIRTUAL	# ImageBase
+	.quad	ape_pe_base		# ImageBase
 	.long	4096			# SectionAlignment
 	.long	4096			# FileAlignment
 	.short	v_ntversion		# MajorOperatingSystemVersion
@@ -846,11 +904,7 @@ ape_pe:	.ascin	"PE",4
 	.long	RVA(_ehead)		# SizeOfHeaders
 	.long	0			# Checksum
 	.short	v_ntsubsystem		# Subsystem: 0=Neutral,2=GUI,3=Console
-#if SupportsWindows()
-	.short	DLLEXE			# DllCharacteristics
-#else
-	.short	0			# DllCharacteristics
-#endif
+	.stub	v_ntdllchar,short	# DllCharacteristics
 	.quad	0x0000000000100000	# StackReserve
 	.quad	0x00000000000fc000	# StackCommit
 	.quad	0			# HeapReserve
@@ -858,12 +912,8 @@ ape_pe:	.ascin	"PE",4
 	.long	0			# LoaderFlags
 	.long	16			# NumberOfDirectoryEntries
 	.long	0,0			# ExportsDirectory
-#if SupportsWindows()
-	.long	RVA(ape_idata_idt)	# ImportsDirectory
+	.stub	ape_idata,long		# ImportsDirectory
 	.stub	ape_idata_idtsize,long	# ImportsDirectorySize
-#else
-	.long	0,0			# ImportsDirectory
-#endif
 	.long	0,0			# ResourcesDirectory
 	.long	0,0			# ExceptionsDirectory
 	.long	0,0			# SecurityDirectory
@@ -874,12 +924,8 @@ ape_pe:	.ascin	"PE",4
 	.long	0,0			# ThreadLocalStorage
 	.long	0,0			# LoadConfigurationDirectory
 	.long	0,0			# BoundImportDirectory
-#if SupportsWindows()
-	.long	RVA(ape_idata_iat)	# ImportAddressDirectory
+	.stub	ape_idata,long		# ImportAddressDirectory
 	.stub	ape_idata_iatsize,long	# ImportAddressDirectorySize
-#else
-	.long	0,0			# ImportAddressDirectory
-#endif
 	.long	0,0			# DelayImportDescriptor
 	.long	0,0			# ComPlusRuntimeHeader
 	.long	0,0			# Reserved
@@ -896,7 +942,7 @@ ape_pe:	.ascin	"PE",4
 	.long	0			# Line Number Table Offset
 	.short	0			# Relocation Count
 	.short	0			# Line Number Count
-	.long	PETEXT		# Flags
+	.long	PETEXT			# Flags
 	.previous
 
 	.section .pe.sections,"a",@progbits
@@ -909,10 +955,10 @@ ape_pe:	.ascin	"PE",4
 	.long	0			# Line Number Table Offset
 	.short	0			# Relocation Count
 	.short	0			# Line Number Count
-	.long	PEDATA		# Flags
+	.long	PEDATA			# Flags
 	.previous
 
-#endif /* SupportsWindows() || SupportsUefi() */
+#endif /* SupportsWindows() || SupportsMetal() */
 
 	.section .idata.ro.idt.1,"a",@progbits
 	.type	ape_idata_idtend,@object
@@ -950,13 +996,6 @@ ape_idata_iatend:
 	better code/data separation (.head is rwx[real] rx[long]) */
 
 //	NUL-Terminated Strings.
-ape.str:
-str.ape:
-	.byte	0xe0,0x63,0xe7,0xe6,0xe0,0x6c,0x6c,0x79	#αcτµαlly
-	.byte	0x20,0x70,0xeb,0x72,0xe7,0xe0,0x62,0x6c	# pδrταbl
-	.byte	0xee,0x20,0xee,0x78,0xee,0x63,0xe6,0xe7	#ε εxεcµτ
-	.byte	0xe0,0x62,0x6c,0xee,0x0d,0x0a,0x00	#αblε.
-	.endobj	str.ape
 str.error:
 	.asciz	"error: "
 	.endobj	str.error
@@ -969,19 +1008,12 @@ str.cpuid:
 str.oldskool:
 	.asciz	"oldskool"
 	.endobj	str.oldskool
-str.dsknfo:
-	.asciz	"dsknfo"
-	.endobj	str.dsknfo
 str.e820:
 	.asciz	"e820"
 	.endobj	str.e820
-str.memory:
-	.asciz	"nomem"
-	.endobj	str.memory
 str.long:
 	.asciz	"nolong"
 	.endobj	str.long
-	.endobj	ape.str
 
 //	Serial Line Configuration (8250 UART 16550)
 //	If it's hacked, it'll at least get hacked very slowly.
@@ -1071,8 +1103,8 @@ ape_grub:
 	.align	4
 ape_grub_entry:
 	.code32
-	cmp	$GRUB_EAX,%eax
-	jne	triplf
+/	cmp	$GRUB_EAX,%eax
+/	jne	triplf
 	push	$0
 	popf
 	mov	$0x40,%dl
@@ -1088,18 +1120,12 @@ ape_grub_entry:
 ╚──────────────────────────────────────────────────────────────────────────────╝
 	the default mode of operation on modern cpus */
 
-	nop
-	nop
-	nop
-	nop
 realmodeloader:
-	call16	rlinit
-	call16	sinit4
-	mov	$REAL(str.ape),%di
-	call16	rvputs
+	call	rlinit
+	call	sinit4
 	.optfn	_start16
-	call16	_start16
-	call16	longmodeloader
+	call	_start16
+	call	longmodeloader
 	.endfn	realmodeloader
 
 	.section .sort.text.real.init.1,"ax",@progbits
@@ -1111,86 +1137,6 @@ rlinit:	.previous/*
 	*/.section .sort.text.real.init.3,"ax",@progbits
 	ret
 	.previous
-
-//	Initializes present PC serial lines.
-sinit4:	mov	$4,%cx
-	mov	$kBiosDataAreaXlm+COM1,%si
-0:	lodsw
-	test	%ax,%ax
-	jz	1f
-	push	%cx
-	push	%si
-	xchg	%ax,%di
-	mov	$REAL(sconf),%si
-	call16	sinit
-	pop	%si
-	pop	%cx
-1:	loop	0b
-	ret
-	.endfn	sinit4,global,hidden
-
-//	Initializes Serial Line Communications 8250 UART 16550A
-//
-//	@param	word di tty port
-//	@param	char (*{es:,e,r}si)[4] register initial values
-//	@mode	long,legacy,real
-//	@see	www.lammertbies.nl/comm/info/serial-uart.html
-sinit:	mov	%di,%dx
-	test	%dx,%dx
-	jz	2f
-	push	%dx
-	push	%si
-	xorw	%cx,%cx
-	mov	$UART_LCR,%cl
-	add	%cx,%dx
-	lodsb	%ds:(%si),%al
-	pop	%si
-	or	$UART_DLAB,%al
-	out	%al,%dx
-	pop	%dx
-1:	lodsb	%ds:(%si),%al
-	out	%al,%dx
-	add	$1,%dx
-	sub	$1,%cx
-	jns	1b
-2:	ret
-	.endfn	sinit,global,hidden
-
-//	Video put string.
-//
-//	@param	di is the string
-//	@mode	real
-rvputs:	push	%bp
-	push	%bx
-	mov	%di,%si
-0:	lodsb
-	test	%al,%al
-	je	1f
-	mov	$7,%bx				# normal mda/cga style page zero
-	mov	$0x0e,%ah			# teletype output al cp437
-	int	$0x10				# vidya service
-	jmp	0b
-1:	pop	%bx
-	pop	%bp
-	ret
-	.endfn	rvputs
-
-//	Abnormally halts startup.
-//
-//	@param	di message
-//	@mode	real
-//	@noreturn
-rldie:	push	%di
-	mov	$REAL(str.error),%di
-	call16	rvputs
-	pop	%di
-	call16	rvputs
-	mov	$REAL(str.crlf),%di
-	call16	rvputs
-	xor	%ax,%ax				# get keystroke
-	int	$0x16				# keyboard service
-	call16	triplf
-	.endfn	rldie
 
 /*                                                               █ █▒
                                                                █     █
@@ -1239,18 +1185,11 @@ rldie:	push	%di
 	long mode is long */
 
 longmodeloader:
-	call16	lcheck
-	call16	a20
-	mov	$XLM(E820),%di
-	mov	$XLM_E820_SIZE,%si
-	call16	e820
-	jc	9f
-	call16	unreal
-//	call	hiload
-	call16	pinit
-	call16	golong
-9:	mov	$REAL(str.e820),%ax
-	call16	rldie
+	call	lcheck
+	call	a20
+	call	e820
+	call	pinit
+	call	golong
 	.endfn	longmodeloader
 
 //	Long Mode Hardware Check
@@ -1286,35 +1225,25 @@ lcheck:	pushf				# check for i8086 / i8088 / i80186
 	jne	10f
 	xor	%ax,%ax
 1:	ret
-9:	mov	$REAL(str.oldskool),%ax
+9:	mov	$REAL(str.oldskool),%di
 	jmp	20f
-10:	mov	$REAL(str.long),%ax
+10:	mov	$REAL(str.long),%di
 	jmp	20f
-12:	mov	$REAL(str.cpuid),%ax
-	jmp	20f
-20:	call16	rldie
+12:	mov	$REAL(str.cpuid),%di
+20:	call	rldie
 	.endfn	lcheck
 
 //	Gets memory map from BIOS.
-//
-//	@param	di paragraph aligned buffer
-//	@param	si bytes in buffer to fill
-//	@return	number of bytes written or CF on error
-//	@mode	real
-e820:	push	%bp
-	mov	%sp,%bp
-	pushl	$'S'<<24|'M'<<16|'A'<<8|'P'	# magic @ -4(%bp)
-	push	%bx
-	shr	$4,%di
+e820:	mov	$0x0510>>4,%di		# mman::e820
 	mov	%di,%es
 	xor	%edi,%edi		# es:di is destination buffer
 	xor	%ebx,%ebx		# ebx is an api state tracker
 1:	mov	$0xE820,%eax		# magic
 	mov	$8+8+4+4,%ecx		# sizeof(struct SmapEntry)
-	mov	-4(%bp),%edx		# magic
+	mov	$0x534d4150,%edx	# magic number
 	int	$0x15			# ax,bx,cx,dx,di → ax,bx,cx
 	jc	9f			# cf = unsupported or abuse
-	cmp	-4(%bp),%eax		# more magic means success
+	cmp	%edx,%eax		# more magic means success
 	jne	9f
 	test	%cx,%cx			# discard empty results
 	jz	5f
@@ -1324,77 +1253,13 @@ e820:	push	%bp
 	jnz	5f
 4:	add	$8+8+4+4,%di		# keep entry
 5:	test	%ebx,%ebx		# last entry?
-	jz	7f
-	cmp	%si,%di			# out of buf?
+	jz	8f
+	cmp	$0x1000,%di
 	jb	1b
-7:	mov	%di,%ax
-8:	pop	%bx
-	leave
-	ret
-9:	stc
-	jmp	8b
+8:	ret
+9:	mov	$REAL(str.e820),%di
+	call	rldie
 	.endfn	e820
-
-//	Unreal Mode.
-//	Makes 4gb of real memory accessible via %fs segment.
-unreal:	cli
-	lgdt	REAL(gdt)
-	mov	%cr0,%eax
-	or	$CR0_PE,%al
-	mov	%eax,%cr0
-	jmp	1f
-1:	mov	$GDT_LEGACY_DATA,%cx
-	mov	%cx,%fs
-	and	$~CR0_PE,%al
-	mov	%eax,%cr0
-	ljmp	$0,$REAL(1f)
-1:	sti
-	ret
-	.endfn	unreal
-
-//	Loads remainder of executable off disk.
-hiload:	push	%bx
-	mov	$IMAGE_BASE_REAL,%esi		# relocate, again
-	mov	$IMAGE_BASE_PHYSICAL,%ebx
-	mov	$v_ape_realsectors,%ecx
-	shl	$9,%ecx
-	or	$-4,%edx
-0:	add	$4,%edx
-	cmp	%edx,%ecx
-	je	1f
-	mov	%fs:(%esi,%edx),%eax
-	mov	%eax,%fs:(%ebx,%edx)
-	jmp	0b
-1:	lea	(%ebx,%edx),%ebx
-	mov	$v_ape_highsectors,%di		# then copy rest off disk
-	mov	$REAL_SCRATCH_AREA>>4,%ax	# to real memory buffer
-	mov	%ax,%es
-	mov	XLM(LOADSTATE)+0,%ax
-	mov	XLM(LOADSTATE)+2,%cx
-	mov	XLM(LOADSTATE)+4,%dx
-0:	test	%di,%di
-	jz	9f
-	mov	%di,%ax
-	push	%bx
-	xor	%bx,%bx
-	call16	pcread
-	pop	%bx
-	sub	%ax,%di
-	push	%cx
-	mov	%ax,%cx				# copy real buffer to high
-	shl	$9,%cx				# no way bios loaded >64k
-	xor	%si,%si
-1:	mov	%es:(%si),%eax
-	mov	%eax,%fs:(%ebx)
-	add	$4,%ebx
-	add	$4,%si
-	sub	$4,%cx
-	jnz	1b
-	pop	%cx
-	jmp	0b
-9:	pop	%bx
-	ret
-	.endfn	hiload
 
 //	Asks keyboard to grant system 65,519 more bytes of memory.
 //
@@ -1426,26 +1291,26 @@ a20:	cli
 	pop	%ds
 	jne	3f
 	mov	$1,%ax
-	call16	1f
+	call	1f
 	mov	$0xad,%al
 	out	%al,$0x64
-	call16	1f
+	call	1f
 	mov	$0xd0,%al
 	out	%al,$0x64
-	call16	2f
+	call	2f
 	in	$0x60,%al
 	push	%ax
-	call16	1f
+	call	1f
 	mov	$0xd1,%al
 	out	%al,$0x64
-	call16	1f
+	call	1f
 	pop	%ax
 	or	$2,%al
 	out	%al,$0x60
-	call16	1f
+	call	1f
 	mov	$0xae,%al
 	out	%al,$0x64
-	call16	1f
+	call	1f
 	jmp	a20
 1:	in	$0x64,%al
 	test	$2,%al
@@ -1460,33 +1325,26 @@ a20:	cli
 	.endfn	a20
 
 //	Initializes long mode paging.
-//
-//	Modern computers access memory via four levels of indirection:
-//
-//	  register char (*(*(*(*ram)[512])[512])[512])[4096] asm(cr3)
-//
-//	Your page tables grow down in memory, starting from the real
-//	stack segment base. This function only defines enough tables
-//	to get us started.
-#define	TIP REAL_STACK_FRAME
 pinit:	push	%ds
-	mov	$(TIP-0x4000)>>4,%ax
+#define	SEG 0x79000
+	mov	$SEG>>4,%ax
 	mov	%ax,%ds
-	movl	$TIP-0x2000+PAGE_V+PAGE_RW,0x3000		# PML4T→PDPT
-	movl	$TIP-0x3000+PAGE_V+PAGE_RW,0x2000		# PDPT→PDT
-	movl	$TIP-0x4000+PAGE_V+PAGE_RW,0x1000		# PDT→PD
-	mov	$0x100000/0x1000,%cx				# PD→512kb
+	movl	$0x7d000+PAGE_V+PAGE_RW,0x7e000-SEG	# PDPT←PML4T (+)
+	movl	$0x7c000+PAGE_V+PAGE_RW,0x7e800-SEG	# PDPT←PML4T (-)
+	movl	$0x7b000+PAGE_V+PAGE_RW,0x7d000-SEG	# PDT←PDPT   (+)
+	movl	$0x7a000+PAGE_V+PAGE_RW,0x7c000-SEG	# PDT←PDPT   (-)
+	movl	$0x79000+PAGE_V+PAGE_RW,0x7b000-SEG	# PD←PDT     (+)
+	movl	$0x79000+PAGE_V+PAGE_RW,0x7a000-SEG	# PD←PDT     (-)
+	mov	$512,%cx				# PD±2MB
 	mov	$PAGE_V+PAGE_RW,%eax
 	xor	%si,%si
 0:	mov	%eax,(%si)
 	add	$0x1000,%eax
 	add	$8,%si
 	loop	0b
- 	movb	$0,0						# unmap null
-	pop	%ds
-	movl	$TIP-0x4000,XLM(PAGE_TABLE_STACK_POINTER)	# STACK→XLM
-	mov	$TIP-0x1000,%eax				# PML4T→CR3
+	mov	$0x7e000,%eax				# PML4T←CR3
 	mov	%eax,%cr3
+	pop	%ds
 	ret
 	.endfn	pinit
 
@@ -1494,7 +1352,7 @@ pinit:	push	%ds
 //
 //	@see	Intel Manual V3A §4.1.2
 golong:	cli
-	lidt	XLM(BADIDT)
+	lidt	0x1522					# mman::bad_idt
 	mov	%cr4,%eax
 	or	$CR4_PAE|CR4_PGE|CR4_OSFXSR,%eax
 	mov	%eax,%cr4
@@ -1511,7 +1369,6 @@ golong:	cli
 	.endfn	golong
 
 //	Long mode is long.
-//	@noreturn
 	.code64
 long:	push	$GDT_LONG_DATA
 	pop	%rax
@@ -1520,39 +1377,59 @@ long:	push	$GDT_LONG_DATA
 	mov	%eax,%es
 	mov	%eax,%fs
 	mov	%eax,%gs
+	mov	$0x80000,%esp
+	xor	%r12d,%r12d
+	xor	%r13d,%r13d
+	xor	%r14d,%r14d
+	xor	%r15d,%r15d
+	xor	%ebx,%ebx
 	xor	%ebp,%ebp
-	mov	$REAL_STACK_FRAME+FRAMESIZE,%esp
-	call	__map_image
-	ezlea	metal.thunk,ax
+	push	%rbp
+	mov	$0x0500,%rdi			# mman
+	mov	%cr3,%rsi
+	mov	$IMAGE_BASE_REAL,%edx
+	call	__map_phdrs
+	push	$0x037f
+	fldcw	(%rsp)
+	movabs	$1f,%rax
 	jmp	*%rax
-	.endfn	long
-
-//	Long mode in virtual address space.
-//	@noreturn
-metal.thunk:
+1:	movabs	$ape_stack_vaddr,%rsp
+	add	$ape_stack_memsz,%rsp
 #if USE_SYMBOL_HACK
 	.byte	0x0f,0x1f,0207			# nop rdi binbase
 	.long	(IMAGE_BASE_VIRTUAL-IMAGE_BASE_REAL)/512
 #endif
-//	𝑠𝑙𝑖𝑑𝑒
-	.endfn	metal.thunk
-metal:	xor	%eax,%eax			# clear bss
-	mov	$ape_bss_vaddr,%edi
-	mov	$ape_bss_memsz,%ecx
-	rep stosb
-0:	.weak	__hostos
+	movl	$0,0x7b000			# unmap null 2mb
+	.weak	__hostos
 	ezlea	__hostos,ax
 	test	%rax,%rax
 	jz	1f
 	movb	$METAL,(%rax)
-1:	push	$0				# auxv[0][1]
-	push	$0				# auxv[0][0]
-	push	$0				# envp[0]
-	push	$0				# argv[0]
-	push	$0				# argc
-	xor	%edi,%edi			# not freebsd
+1:	xor	%eax,%eax
+	xor	%ecx,%ecx
+	xor	%edx,%edx
+	xor	%edi,%edi
+	xor	%esi,%esi
+	xor	%r8d,%r8d
+	xor	%r9d,%r9d
+	xor	%r10d,%r10d
+	xor	%r11d,%r11d
+	push	$0				# auxv[1][1]
+	push	$0				# auxv[1][0]
+	push	$.Larg0				# auxv[0][1]
+	push	$31				# auxv[0][0] AT_EXECFN
+	push	$0				# envp[1]
+	push	$.Lenv0				# envp[0]
+	push	$0				# argv[1]
+	push	$.Larg0				# argv[0]
+	push	$1				# argc
 	jmp	_start
-	.endfn	metal
+	.endfn	long
+
+	.rodata.str1.1
+.Larg0:	.asciz	"ape.com"
+.Lenv0:	.asciz	"METAL=1"
+	.previous
 
 #endif /* SupportsMetal() */
 

@@ -21,7 +21,6 @@
 #include "libc/notice.inc"
 #include "libc/runtime/internal.h"
 .section .start,"ax",@progbits
-.align	16
 
 //	System Five userspace program entrypoint.
 //
@@ -37,7 +36,7 @@ _start:
 #endif
 0:	mov	(%rsp),%ebx			# argc
 	lea	8(%rsp),%rsi			# argv
-	lea	24(%rsp,%rbx,8),%rdx		# envp
+	lea	16(%rsp,%rbx,8),%rdx		# envp
 	.frame0
 //	bofram	9f
 	.weak	ape_idata_iat

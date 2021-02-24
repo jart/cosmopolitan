@@ -76,6 +76,10 @@ o/$(MODE)/libc/runtime/winmain.greg.o:			\
 		OVERRIDE_CFLAGS +=			\
 			$(NO_MAGIC)
 
+o/$(MODE)/libc/runtime/mman.greg.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-ffreestanding
+
 o/$(MODE)/libc/runtime/ftrace.greg.o:			\
 		OVERRIDE_CFLAGS +=			\
 			-mgeneral-regs-only

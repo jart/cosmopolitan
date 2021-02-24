@@ -26,13 +26,6 @@
  * @fileoverview Macros relevant to αcτµαlly pδrταblε εxεcµταblε.
  */
 
-//	Calls function in real mode.
-//	It's needed because LLVM 8 LLD doesn't support R_X86_64_PC16.
-	.macro	call16 name:req
-	mov	$REAL(\name),%ax
-	call	*%ax
-	.endm
-
 //	Calls near (i.e. pc+pcrel<64kB) FUNCTION.
 //	@mode	long,legacy,real
 //	@cost	9 bytes overhead

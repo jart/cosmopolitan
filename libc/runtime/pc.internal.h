@@ -32,9 +32,12 @@
 ╠──────────────────────────────────────────────────────▌▀▄─▐──▀▄─▐▄─▐▄▐▄─▐▄─▐▄─│
 │ αcτµαlly pδrταblε εxεcµταblε § ibm personal computer                         │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#ifndef APE_LIB_PC_H_
-#define APE_LIB_PC_H_
+#ifndef COSMOPOLITAN_LIBC_RUNTIME_PC_H_
+#define COSMOPOLITAN_LIBC_RUNTIME_PC_H_
+#include "libc/runtime/e820.internal.h"
+#include "libc/runtime/mman.internal.h"
 
+#define BANE              -140737488355328
 #define BOOTSIG           0xaa55 /* master boot record signature */
 #define PC_BIOS_DATA_AREA 0x400
 
@@ -154,35 +157,13 @@
 #define PAGE_4KB /*                                    */ 0b010000000
 #define PAGE_2MB /*                                    */ 0b110000000
 #define PAGE_1GB /*                                    */ 0b110000000
-#define PAGE_TA  0b11111111111111111111111111111111111111000000000000
-#define PAGE_PA2 0b11111111111111111111111111111000000000000000000000
+#define PAGE_TA  0x00007ffffffff000
+#define PAGE_PA2 0x00007fffffe00000
 #define PAGE_XD  0x8000000000000000
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
-#include "ape/config.h"
 
-struct thatispacked GlobalDescriptorTable {
-  uint16_t size;
-  uint64_t *entries;
-};
-
-/**
- * Memory hole map.
- * @see wiki.osdev.org/Detecting_Memory_(x86)
- * @since 2002
- */
-struct SmapEntry {
-  uint64_t addr;
-  uint64_t size;
-  enum {
-    kMemoryUsable = 1,
-    kMemoryUnusable = 2,
-    kMemoryAcpiReclaimable = 3,
-    kMemoryAcpiNvs = 4,
-    kMemoryBad = 5
-  } type;
-  uint32_t __acpi3; /* is abstracted */
-};
+#define invlpg(p) asm volatile("invlpg\t(%0)" : : "r"(p) : "memory")
 
 struct IdtDescriptor {
   uint16_t offset_1; /* offset bits 0..15 */
@@ -194,37 +175,10 @@ struct IdtDescriptor {
   uint32_t zero;     /* reserved */
 };
 
-struct thatispacked PageTable {
-  uint64_t p[512];
-} forcealign(PAGESIZE);
-
-extern struct PageTable g_pml4t;
-extern struct GlobalDescriptorTable gdt;
-
-extern const unsigned char kBiosDataArea[256];
-extern const unsigned char kBiosDataAreaXlm[256];
-
-extern struct SmapEntry e820map[XLM_E820_SIZE / sizeof(struct SmapEntry)];
-extern struct SmapEntry e820map_xlm[XLM_E820_SIZE / sizeof(struct SmapEntry)];
-
-extern uint64_t g_ptsp;
-extern uint64_t g_ptsp_xlm;
-
-void bootdr(char drive) wontreturn;
-
-void smapsort(struct SmapEntry *);
-uint64_t *__getpagetableentry(int64_t, unsigned, struct PageTable *,
-                              uint64_t *);
-void flattenhighmemory(struct SmapEntry *, struct PageTable *, uint64_t *);
-void pageunmap(int64_t);
-
-forceinline unsigned long eflags(void) {
-  unsigned long res;
-  asm("pushf\n\t"
-      "pop\t%0"
-      : "=rm"(res));
-  return res;
-}
+uint64_t *__get_virtual(struct mman *, uint64_t *, int64_t, bool);
+uint64_t __clear_page(uint64_t);
+uint64_t __new_page(struct mman *);
+void __map_phdrs(struct mman *, uint64_t *, uint64_t);
 
 forceinline unsigned char inb(unsigned short port) {
   unsigned char al;
@@ -238,5 +192,22 @@ forceinline void outb(unsigned short port, unsigned char byte) {
                : "a"(byte), "dN"(port));
 }
 
+#define __clear_page(page)                               \
+  ({                                                     \
+    long di, cx;                                         \
+    uintptr_t Page = (uintptr_t)(page);                  \
+    asm("rep stosb"                                      \
+        : "=D"(di), "=c"(cx), "=m"(*(char(*)[4096])Page) \
+        : "0"(Page), "1"(4096), "a"(0));                 \
+    Page;                                                \
+  })
+
+#define __get_pml4t()                 \
+  ({                                  \
+    intptr_t cr3;                     \
+    asm("mov\t%%cr3,%0" : "=r"(cr3)); \
+    (uint64_t *)(BANE + cr3);         \
+  })
+
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* APE_LIB_PC_H_ */
+#endif /* COSMOPOLITAN_LIBC_RUNTIME_PC_H_ */

@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/macros.internal.h"
-#include "ape/config.h"
 .real
 .source	__FILE__
 .code16 # ∩ .code32 ∩ .code64
@@ -26,7 +25,8 @@
 //
 //	@see	youtu.be/GIKfEAF2Yhw?t=67
 //	@mode	long,legacy,real
-triplf:	push	%bp
+triplf:	ud2
+	push	%bp
 	mov	%sp,%bp
 	sub	$8,%sp
 	movpp	%bp,%si

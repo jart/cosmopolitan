@@ -24,7 +24,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/macros.h"
 #include "libc/rand/rand.h"
-#include "libc/runtime/directmap.h"
+#include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -87,10 +87,10 @@ void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   }
   f = flags | MAP_FIXED;
   if (IsOpenbsd() && (f & MAP_GROWSDOWN)) { /* openbsd:dubstack */
-    dm = __mmap(addr, size, prot, f & ~MAP_GROWSDOWN, fd, off);
+    dm = sys_mmap(addr, size, prot, f & ~MAP_GROWSDOWN, fd, off);
     if (dm.addr == MAP_FAILED) return MAP_FAILED;
   }
-  dm = __mmap(addr, size, prot, f, fd, off);
+  dm = sys_mmap(addr, size, prot, f, fd, off);
   if (dm.addr == MAP_FAILED || dm.addr != addr) {
     return MAP_FAILED;
   }

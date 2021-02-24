@@ -603,6 +603,7 @@ typedef uint64_t uintmax_t;
 #define textstartup _Section(".text.startup") noinstrument
 #define textexit    _Section(".text.exit") noinstrument
 #define textreal    _Section(".text.real")
+#define texthead    _Section(".text.head")
 #define textwindows _Section(".text.windows")
 #define antiquity   _Section(".text.antiquity")
 #else
@@ -610,6 +611,7 @@ typedef uint64_t uintmax_t;
 #define textstartup
 #define textexit
 #define textreal
+#define texthead
 #define textwindows
 #define antiquity
 #endif

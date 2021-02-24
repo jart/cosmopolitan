@@ -36,8 +36,7 @@ ssize_t readv(int fd, const struct iovec *iov, int iovlen) {
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     return weaken(__zipos_read)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, iov, iovlen, -1);
-  } else if ((SupportsMetal() || SupportsUefi()) && fd < g_fds.n &&
-             g_fds.p[fd].kind == kFdSerial) {
+  } else if (SupportsMetal() && fd < g_fds.n && g_fds.p[fd].kind == kFdSerial) {
     return readv_serial(&g_fds.p[fd], iov, iovlen);
   } else if (!IsWindows()) {
     return sys_readv(fd, iov, iovlen);

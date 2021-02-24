@@ -18,7 +18,6 @@ TOOL_NET_BINS =							\
 	$(TOOL_NET_COMS:%=%.dbg)
 
 TOOL_NET_DIRECTDEPS =						\
-	APE_LIB							\
 	LIBC_ALG						\
 	LIBC_BITS						\
 	LIBC_CALLS						\

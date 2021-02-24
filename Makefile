@@ -101,7 +101,6 @@ include libc/str/str.mk				# │
 include third_party/xed/xed.mk			# │
 include third_party/zlib/zlib.mk		# │
 include libc/elf/elf.mk				# │
-include ape/lib/apelib.mk			# │
 include ape/ape.mk				# │
 include libc/fmt/fmt.mk				#─┘
 include libc/calls/calls.mk			#─┐
@@ -173,8 +172,6 @@ include test/libc/time/test.mk
 include test/libc/stdio/test.mk
 include test/libc/release/test.mk
 include test/libc/test.mk
-include test/ape/lib/test.mk
-include test/ape/test.mk
 include test/net/http/test.mk
 include test/net/test.mk
 include test/tool/build/lib/test.mk
@@ -244,7 +241,6 @@ COSMOPOLITAN_OBJECTS =		\
 	LIBC_TIME		\
 	LIBC_ZIPOS		\
 	THIRD_PARTY_ZLIB	\
-	APE_LIB			\
 	THIRD_PARTY_MUSL	\
 	LIBC_STDIO		\
 	THIRD_PARTY_REGEX	\

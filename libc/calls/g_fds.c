@@ -30,7 +30,7 @@ hidden textstartup void InitializeFileDescriptors(void) {
   fds = VEIL("r", &g_fds);
   pushmov(&fds->n, ARRAYLEN(fds->__init_p));
   fds->p = fds->__init_p;
-  if (IsMetal() || IsUefi()) {
+  if (IsMetal()) {
     pushmov(&fds->f, 3ull);
     fds->__init_p[STDIN_FILENO].kind = pushpop(kFdSerial);
     fds->__init_p[STDOUT_FILENO].kind = pushpop(kFdSerial);

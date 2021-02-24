@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,31 +16,65 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/lib/pc.h"
+#include "libc/nexgen32e/uart.internal.h"
+#include "libc/runtime/pc.internal.h"
+#include "libc/runtime/runtime.h"
 
-textreal static unsigned smapcount(const struct SmapEntry *se) {
-  unsigned i = 0;
-  while (se[i].size) ++i;
-  return i;
-}
-
-textreal static void smapsorter(size_t n, struct SmapEntry a[n]) {
-  struct SmapEntry t;
-  unsigned i, j;
-  for (i = 1; i < n; ++i) {
-    j = i;
-    t = a[i];
-    while (j > 0 && (intptr_t)t.addr - (intptr_t)a[j - 1].addr) {
-      a[j] = a[j - 1];
-      --j;
-    }
-    a[j] = t;
-  }
-}
+#define PUTC(C)                                      \
+  do {                                               \
+    while (!(inb(0x3F8 + UART_LSR) & UART_TTYTXR)) { \
+      asm("pause");                                  \
+    }                                                \
+    outb(0x3F8, C);                                  \
+  } while (0)
 
 /**
- * Sorts BIOS e820 memory map.
+ * Prints string to serial port.
+ *
+ * This only supports %d and %s. It'll will work even if .rodata hasn't
+ * been loaded into memory yet.
  */
-textreal void smapsort(struct SmapEntry *smap) {
-  smapsorter(smapcount(smap), smap);
+hidden textreal void(MetalPrintf)(const char *fmt, ...) {
+  int i;
+  char c;
+  unsigned u;
+  va_list va;
+  const char *s;
+  unsigned long d;
+  va_start(va, fmt);
+  for (;;) {
+    switch ((c = *fmt++)) {
+      case '\0':
+        va_end(va);
+        return;
+      case '%':
+        switch ((c = *fmt++)) {
+          case 's':
+            for (s = va_arg(va, const char *); s && *s; ++s) {
+              PUTC(*s);
+            }
+            break;
+          case 'd':
+            d = va_arg(va, unsigned long);
+            for (i = 16; i--;) {
+              u = (d >> (i * 4)) & 0xf;
+              if (u < 10) {
+                c = '0' + u;
+              } else {
+                u -= 10;
+                c = 'a' + u;
+              }
+              PUTC(c);
+            }
+            break;
+          default:
+            PUTC(c);
+            break;
+        }
+        break;
+      default:
+        PUTC(c);
+        break;
+    }
+  }
 }

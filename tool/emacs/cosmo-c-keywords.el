@@ -194,6 +194,7 @@
            "forcealign"
            "typeof"
            "textreal"
+           "texthead"
            "autotype"
            "_Section"
            "_Vector_size"))

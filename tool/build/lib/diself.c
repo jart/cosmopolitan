@@ -100,6 +100,7 @@ static void DisLoadElfSyms(struct Dis *d, struct Elf *elf) {
       d->syms.p[j].unique = i;
       d->syms.p[j].size = st[i].st_size;
       d->syms.p[j].name = st[i].st_name;
+      CHECK_GE(st[i].st_value, 0);
       d->syms.p[j].addr = st[i].st_value;
       d->syms.p[j].rank =
           -islocal + -isweak + -isabs + isprotected + isobject + isfunc;
@@ -112,7 +113,14 @@ static void DisLoadElfSyms(struct Dis *d, struct Elf *elf) {
 }
 
 static void DisSortSyms(struct Dis *d) {
+  size_t i, j;
   qsort(d->syms.p, d->syms.i, sizeof(struct DisSym), (void *)DisSymCompare);
+  for (i = 0; i < d->syms.i; ++i) {
+    if (!strcmp("_end", d->syms.stab + d->syms.p[i].name)) {
+      d->syms.i = i;
+      break;
+    }
+  }
 }
 
 static void DisCanonizeSyms(struct Dis *d) {
@@ -177,6 +185,10 @@ long DisFindSym(struct Dis *d, int64_t addr) {
       } else {
         l = m + 1;
       }
+    }
+    if (r && d->syms.p[r - 1].addr < 256) {
+      /* XXX: prevent skewed binbase from doing weirdness */
+      return -1;
     }
     if (r && (addr == d->syms.p[r - 1].addr ||
               (addr > d->syms.p[r - 1].addr &&

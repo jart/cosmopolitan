@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/lib/pc.h"
 #include "libc/calls/internal.h"
 #include "libc/nexgen32e/uart.internal.h"
+#include "libc/runtime/pc.internal.h"
 
 ssize_t writev_serial(struct Fd *fd, const struct iovec *iov, int iovlen) {
   size_t i, j, wrote = 0;

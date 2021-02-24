@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/lib/pc.h"
+#include "libc/runtime/pc.internal.h"
 #include "libc/dce.h"
 #include "libc/macros.h"
 #include "libc/nexgen32e/kcpuids.h"

@@ -36,7 +36,7 @@
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/teb.h"
-#include "libc/runtime/directmap.h"
+#include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
@@ -74,7 +74,7 @@ static noasan textwindows void NormalizeCmdExe(int version) {
     hstdout = GetStdHandle(pushpop(kNtStdOutputHandle));
     hstderr = GetStdHandle(pushpop(kNtStdErrorHandle));
     if (GetFileType((handle = hstdin)) == kNtFileTypeChar) {
-      SetTrueColor();
+      /* SetTrueColor(); */
       SetConsoleCP(kNtCpUtf8);
       GetConsoleMode(handle, &mode);
       SetConsoleMode(handle, mode | kNtEnableProcessedInput |
@@ -84,7 +84,7 @@ static noasan textwindows void NormalizeCmdExe(int version) {
     }
     if (GetFileType((handle = hstdout)) == kNtFileTypeChar ||
         GetFileType((handle = hstderr)) == kNtFileTypeChar) {
-      SetTrueColor();
+      /* SetTrueColor(); */
       SetConsoleOutputCP(kNtCpUtf8);
       GetConsoleMode(handle, &mode);
       SetConsoleMode(

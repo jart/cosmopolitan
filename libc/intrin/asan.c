@@ -28,7 +28,7 @@
 #include "libc/mem/hook/hook.internal.h"
 #include "libc/nt/enum/version.h"
 #include "libc/nt/runtime.h"
-#include "libc/runtime/directmap.h"
+#include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
@@ -744,7 +744,7 @@ void __asan_map_shadow(uintptr_t p, size_t n) {
   b = ROUNDUP((uintptr_t)SHADOW(ROUNDUP((uintptr_t)p + n, 8)), 1 << 16) >> 16;
   for (; a < b; ++a) {
     if (!__asan_is_mapped(a)) {
-      sm = weaken(__mmap)(
+      sm = weaken(sys_mmap)(
           (void *)((uintptr_t)a << 16), 1 << 16, PROT_READ | PROT_WRITE,
           MAP_PRIVATE | *weaken(MAP_ANONYMOUS) | MAP_FIXED, -1, 0);
       if (sm.addr == MAP_FAILED ||
@@ -796,7 +796,7 @@ static textstartup void __asan_shadow_existing_mappings(void) {
 }
 
 static textstartup bool IsMemoryManagementRuntimeLinked(void) {
-  return weaken(_mmi) && weaken(__mmap) && weaken(MAP_ANONYMOUS) &&
+  return weaken(_mmi) && weaken(sys_mmap) && weaken(MAP_ANONYMOUS) &&
          weaken(FindMemoryInterval) && weaken(TrackMemoryInterval);
 }
 
@@ -809,7 +809,7 @@ textstartup void __asan_init(int argc, char **argv, char **envp,
     __asan_exit(0); /* So `make MODE=dbg test` passes w/ Windows7 */
   }
   REQUIRE(_mmi);
-  REQUIRE(__mmap);
+  REQUIRE(sys_mmap);
   REQUIRE(MAP_ANONYMOUS);
   REQUIRE(FindMemoryInterval);
   REQUIRE(TrackMemoryInterval);

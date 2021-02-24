@@ -36,7 +36,7 @@
 #include "libc/nt/signals.h"
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
-#include "libc/runtime/directmap.h"
+#include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"

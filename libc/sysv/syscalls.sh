@@ -44,7 +44,7 @@ scall	__sys_lstat		0x1b90280282154006	globl hidden # needs __stat2linux(); block
 scall	sys_poll		0x0d10fc0d120e6007	globl hidden
 scall	sys_ppoll		0xfff06d221ffff10f	globl hidden # consider INTON/INTOFF tutorial in examples/unbourne.c
 scall	sys_lseek		0x0c70c71de20c7008	globl hidden # netbsd+openbsd:evilpad
-scall	sys_mmap		0x0c50c51dd20c5009	globl hidden # netbsd+openbsd:pad
+scall	__sys_mmap		0x0c50c51dd20c5009	globl hidden # netbsd+openbsd:pad
 scall	sys_msync		0x115100041204101a	globl hidden
 scall	sys_mprotect		0x04a04a04a204a00a	globl hidden
 scall	sys_munmap		0x049049049204900b	globl hidden

@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/lib/pc.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/nexgen32e/msr.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/interruptiblecall.h"
+#include "libc/runtime/pc.internal.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 

@@ -19,6 +19,7 @@
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/macros.h"
+#include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/memtrack.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/errfuns.h"
@@ -46,5 +47,6 @@ int munmap(void *addr, size_t size) {
   if (!ALIGNED(addr) || !CANONICAL(addr) || !size) return einval();
   if (UntrackMemoryIntervals(addr, size) == -1) return -1;
   if (IsWindows()) return 0;
+  if (IsMetal()) sys_munmap_metal(addr, size);
   return sys_munmap(addr, size);
 }

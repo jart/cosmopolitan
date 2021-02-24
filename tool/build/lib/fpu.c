@@ -16,9 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/config.h"
-#include "ape/lib/pc.h"
 #include "libc/math.h"
+#include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "tool/build/lib/case.h"
@@ -988,7 +987,7 @@ static void OpFnop(struct Machine *m) {
 }
 
 void OpFinit(struct Machine *m) {
-  m->fpu.cw = X87_NORMAL;
+  m->fpu.cw = 0x037f;
   m->fpu.sw = 0;
   m->fpu.tw = -1;
 }

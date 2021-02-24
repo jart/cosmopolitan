@@ -281,9 +281,8 @@ int main(int argc, char *argv[]) {
   struct stat st;
   const char *path;
   if (argc == 1) {
-    path = "o/v127/examples/hello2.com.dbg";
-    /* fprintf(stderr, "USAGE: %s ELF\n", program_invocation_name); */
-    /* exit(1); */
+    fprintf(stderr, "USAGE: %s ELF\n", program_invocation_name);
+    exit(1);
   } else {
     path = argv[1];
   }
