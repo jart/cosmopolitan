@@ -35,7 +35,7 @@
  */
 int gettimeofday(struct timeval *tv, struct timezone *tz) {
   axdx_t ad;
-  if (!IsWindows()) {
+  if (!IsWindows() && !IsMetal()) {
     ad = sys_gettimeofday(tv, tz, NULL);
     assert(ad.ax != -1);
     if (SupportsXnu() && ad.ax && tv) {
@@ -43,6 +43,8 @@ int gettimeofday(struct timeval *tv, struct timezone *tz) {
       tv->tv_usec = ad.dx;
     }
     return 0;
+  } else if (IsMetal()) {
+    return enosys();
   } else {
     return sys_gettimeofday_nt(tv, tz);
   }

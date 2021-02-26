@@ -1103,8 +1103,8 @@ ape_grub:
 	.align	4
 ape_grub_entry:
 	.code32
-/	cmp	$GRUB_EAX,%eax
-/	jne	triplf
+//	cmp	$GRUB_EAX,%eax
+//	jne	triplf
 	push	$0
 	popf
 	mov	$0x40,%dl
@@ -1426,7 +1426,7 @@ long:	push	$GDT_LONG_DATA
 	jmp	_start
 	.endfn	long
 
-	.rodata.str1.1
+	.rodata
 .Larg0:	.asciz	"ape.com"
 .Lenv0:	.asciz	"METAL=1"
 	.previous

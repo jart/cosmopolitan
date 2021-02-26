@@ -206,17 +206,15 @@ void sys_exit(int) hidden;
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 void __onfork(void) hidden;
-bool32 __sigenter(i32, struct siginfo *, struct ucontext *) hidden;
 i32 __fixupnewfd(i32, i32) hidden;
 u32 __prot2nt(i32, i32) privileged;
 void __restore_rt() hidden;
-void __sigenter_xnu(void *, i32, i32, void *, void *) hidden wontreturn;
 int sys_utimensat_xnu(int, const char *, const struct timespec *, int) hidden;
 int sys_nanosleep_xnu(const struct timespec *, struct timespec *) hidden;
 void __stat2linux(void *) hidden;
 void __restore_rt_netbsd(void) hidden;
-void __xnutrampoline(void *, i32, i32, const struct __darwin_siginfo *,
-                     const struct __darwin_ucontext *) hidden wontreturn;
+void __sigenter_xnu(void *, i32, i32, struct __darwin_siginfo *,
+                    struct __darwin_ucontext *) hidden;
 int gethostname_linux(char *, size_t) hidden;
 int gethostname_bsd(char *, size_t) hidden;
 int gethostname_nt(char *, size_t) hidden;
@@ -288,19 +286,24 @@ int __mkntpath(const char *, char16_t[hasatleast PATH_MAX - 16]) hidden;
 int __mkntpath2(const char *, char16_t[hasatleast PATH_MAX - 16], int) hidden;
 int __mkntpathat(int, const char *, int, char16_t[PATH_MAX]) hidden;
 unsigned __wincrash_nt(struct NtExceptionPointers *);
+ssize_t sys_readv_nt(struct Fd *, const struct iovec *, int) hidden;
+ssize_t sys_writev_nt(struct Fd *, const struct iovec *, int) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » metal                                          ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-int fstat_metal(int, struct stat *);
+int sys_fstat_metal(int, struct stat *);
+int sys_openat_metal(int, const char *, int, unsigned);
+ssize_t sys_readv_metal(struct Fd *, const struct iovec *, int) hidden;
+ssize_t sys_writev_metal(struct Fd *, const struct iovec *, int) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » drivers                                        ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-ssize_t readv_serial(struct Fd *, const struct iovec *, int) hidden;
-ssize_t writev_serial(struct Fd *, const struct iovec *, int) hidden;
+ssize_t sys_readv_serial(struct Fd *, const struct iovec *, int) hidden;
+ssize_t sys_writev_serial(struct Fd *, const struct iovec *, int) hidden;
 
 #undef sigset
 #undef i32

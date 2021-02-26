@@ -66,7 +66,20 @@ static noasan textwindows void SetTrueColor(void) {
 }
 
 static noasan textwindows void MakeLongDoubleLongAgain(void) {
-  int x87cw = 0x037f; /* let's hope win32 won't undo this */
+  /* 8087 FPU Control Word
+      IM: Invalid Operation ───────────────┐
+      DM: Denormal Operand ───────────────┐│
+      ZM: Zero Divide ───────────────────┐││
+      OM: Overflow ─────────────────────┐│││
+      UM: Underflow ───────────────────┐││││
+      PM: Precision ──────────────────┐│││││
+     PC: Precision Control ────────┐  ││││││
+      {float,∅,double,long double} │  ││││││
+     RC: Rounding Control ───────┐ │  ││││││
+      {even, →-∞, →+∞, →0}       │┌┤  ││││││
+                                ┌┤││  ││││││
+                               d││││rr││││││*/
+  int x87cw = 0b0000000000000000001101111111;
   asm volatile("fldcw\t%0" : /* no outputs */ : "m"(x87cw));
 }
 

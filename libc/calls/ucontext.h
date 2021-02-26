@@ -65,7 +65,7 @@ struct FpuStackEntry {
   uint16_t padding[3];
 };
 
-struct FpuState {
+struct thatispacked FpuState {
   uint16_t cwd;
   uint16_t swd;
   uint16_t ftw;
@@ -122,26 +122,7 @@ struct MachineContext {
 typedef struct MachineContext mcontext_t;
 
 struct ucontext {
-  union {
-    uint64_t uc_flags;
-    struct {
-      unsigned cf : 1;  /* bit  0: carry flag */
-      unsigned vf : 1;  /* bit  1: V flag: was 8085 signed-number overflow */
-      unsigned pf : 1;  /* bit  2: parity flag */
-      unsigned rf : 1;  /* bit  3: always zero [undoc] */
-      unsigned af : 1;  /* bit  4: auxiliary flag */
-      unsigned kf : 1;  /* bit  5: K flag = V flag ⊕ sgn(result) [undoc] */
-      unsigned zf : 1;  /* bit  6: zero flag */
-      unsigned sf : 1;  /* bit  7: sign flag */
-      unsigned tf : 1;  /* bit  8: trap flag */
-      unsigned if_ : 1; /* bit  9: interrupt enable flag */
-      unsigned df : 1;  /* bit 10: direction flag */
-      unsigned of : 1;  /* bit 11: overflow flag */
-      unsigned pl : 2;  /* b12-13: i/o privilege level (80286+) */
-      unsigned nt : 1;  /* bit 14: nested task flag (80286+) */
-      unsigned pc : 1;  /* bit 15: oldskool flag */
-    };
-  };
+  uint64_t uc_flags;
   struct ucontext *uc_link;
   stack_t uc_stack;
   mcontext_t uc_mcontext; /* use this */

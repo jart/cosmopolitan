@@ -16,18 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/runtime/pc.internal.h"
 #include "libc/macros.h"
-.source	__FILE__
 
 //	Returns 𝑒^x-1.
 //
 //	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
 //	@return	result of exponentiation on FPU stack in %st
-expm1l:
-	push	%rbp
+expm1l:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
+	fxam					# isinf(x)
+	fstsw	%ax
+	mov	%ah,%al
+	and	$0x45,%ah
+	cmp	$5,%ah
+	je	1f
 	fldl2e
 	fmulp	%st,%st(1)
 	fld	%st
@@ -40,11 +45,15 @@ expm1l:
 	fxch	%st(2)
 	fscale
 	fstp	%st(1)
-	fsubs	.Lone(%rip)
+	fld1
+	fsubrp
 	faddp	%st,%st(1)
-	pop	%rbp
+0:	pop	%rbp
 	ret
+1:	test	$2,%al				# signbit(x)
+	jz	0b
+	fstp	%st
+	fld1
+3:	fchs
+	jmp	0b
 	.endfn	expm1l,globl
-
-	.rodata.cst4
-.Lone:	.float	1.0

@@ -23,8 +23,12 @@
 
 void __winalarm(void *lpArgToCompletionRoutine, uint32_t dwTimerLowValue,
                 uint32_t dwTimerHighValue) {
+  int rva;
   siginfo_t info;
   memset(&info, 0, sizeof(info));
   info.si_signo = SIGALRM;
-  __sigenter(info.si_signo, &info, NULL);
+  rva = __sighandrvas[SIGALRM];
+  if (rva >= kSigactionMinRva) {
+    ((sigaction_f)(_base + rva))(SIGALRM, &info, NULL);
+  }
 }

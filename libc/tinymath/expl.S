@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.source	__FILE__
 
 //	Returns 𝑒^x.
 //
@@ -27,6 +26,12 @@ expl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
+	fxam					# isinf(x)
+	fstsw	%ax
+	mov	%ah,%al
+	and	$0x45,%ah
+	cmp	$5,%ah
+	je	1f
 	fldl2e
 	fmulp	%st,%st(1)
 	fld	%st
@@ -38,6 +43,11 @@ expl:	push	%rbp
 	faddp
 	fscale
 	fstp	%st(1)
-	pop	%rbp
+0:	pop	%rbp
 	ret
+1:	test	$2,%al				# signbit(x)
+	jz	0b
+	fstp	%st
+	fldz
+	jmp	0b
 	.endfn	expl,globl

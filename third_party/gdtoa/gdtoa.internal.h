@@ -10,10 +10,11 @@ Kudos go to Guy L. Steele, Jr. and Jon L. White\\n\
 Copyright (C) 1997, 1998, 2000 by Lucent Technologies\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-#define IEEE_8087 1
-#define f_QNAN    0x7fc00000
-#define d_QNAN0   0x7ff80000
-#define d_QNAN1   0x0
+#define IEEE_Arith 1
+#define IEEE_8087  1
+#define f_QNAN     0x7fc00000
+#define d_QNAN0    0x7ff80000
+#define d_QNAN1    0x0
 
 #if __NO_MATH_ERRNO__ + 0
 #define NO_ERRNO 1
@@ -270,36 +271,7 @@ extern Char *REALLOC(Char *, size_t);
 
 #ifdef Bad_float_h
 
-#ifdef IEEE_Arith
-#define DBL_DIG        15
-#define DBL_MAX_10_EXP 308
-#define DBL_MAX_EXP    1024
-#define FLT_RADIX      2
-#define DBL_MAX        1.7976931348623157e+308
-#endif
-
-#ifdef IBM
-#define DBL_DIG        16
-#define DBL_MAX_10_EXP 75
-#define DBL_MAX_EXP    63
-#define FLT_RADIX      16
-#define DBL_MAX        7.2370055773322621e+75
-#endif
-
-#ifdef VAX
-#define DBL_DIG        16
-#define DBL_MAX_10_EXP 38
-#define DBL_MAX_EXP    127
-#define FLT_RADIX      2
-#define DBL_MAX        1.7014118346046923e+38
-#define n_bigtens      2
-#endif
-
-#ifndef LONG_MAX
-#define LONG_MAX 2147483647
-#endif
-
-#else  /* ifndef Bad_float_h */
+#else /* ifndef Bad_float_h */
 #endif /* Bad_float_h */
 
 #ifdef IEEE_Arith
@@ -319,11 +291,7 @@ extern Char *REALLOC(Char *, size_t);
 extern "C" {
 #endif
 
-#if defined(IEEE_8087) + defined(IEEE_MC68k) + defined(VAX) + defined(IBM) != 1
-Exactly one of IEEE_8087, IEEE_MC68k, VAX, or IBM should be defined.
-#endif
-
-                                               typedef union {
+typedef union {
   double d;
   ULong L[2];
 } U;
@@ -515,14 +483,14 @@ extern double rnd_prod(double, double), rnd_quot(double, double);
 extern void ACQUIRE_DTOA_LOCK(unsigned int);
 extern void FREE_DTOA_LOCK(unsigned int);
 extern unsigned int dtoa_get_threadno(void);
-#else                        /*}{*/
+#else /*}{*/
 #define ACQUIRE_DTOA_LOCK(n) /*nothing*/
 #define FREE_DTOA_LOCK(n)    /*nothing*/
 #define MTa                  /*nothing*/
 #define MTb                  /*nothing*/
 #define MTd                  /*nothing*/
 #define MTk                  /*nothing*/
-#endif                       /*}}*/
+#endif /*}}*/
 
 #define Kmax 9
 

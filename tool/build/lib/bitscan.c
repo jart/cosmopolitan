@@ -21,48 +21,6 @@
 #include "tool/build/lib/machine.h"
 #include "tool/build/lib/modrm.h"
 
-uint64_t AluBsr(struct Machine *m, uint32_t rde, uint64_t x) {
-  unsigned i;
-  if (Rexw(rde)) {
-    x &= 0xffffffffffffffff;
-    m->flags = SetFlag(m->flags, FLAGS_ZF, !x);
-    if (!x) return 0;
-    return 63 ^ __builtin_clzll(x);
-  } else if (!Osz(rde)) {
-    x &= 0xffffffff;
-    m->flags = SetFlag(m->flags, FLAGS_ZF, !x);
-    if (!x) return 0;
-    return 31 ^ __builtin_clz(x);
-  } else {
-    x &= 0xffff;
-    m->flags = SetFlag(m->flags, FLAGS_ZF, !x);
-    if (!x) return 0;
-    for (i = 15; !(x & 0x8000); --i) x <<= 1;
-    return i;
-  }
-}
-
-uint64_t AluBsf(struct Machine *m, uint32_t rde, uint64_t x) {
-  unsigned i;
-  if (Rexw(rde)) {
-    x &= 0xffffffffffffffff;
-    m->flags = SetFlag(m->flags, FLAGS_ZF, !x);
-    if (!x) return 0;
-    return __builtin_ctzll(x);
-  } else if (!Osz(rde)) {
-    x &= 0xffffffff;
-    m->flags = SetFlag(m->flags, FLAGS_ZF, !x);
-    if (!x) return 0;
-    return __builtin_ctz(x);
-  } else {
-    x &= 0xffff;
-    m->flags = SetFlag(m->flags, FLAGS_ZF, !x);
-    if (!x) return 0;
-    for (i = 0; !(x & 1); ++i) x >>= 1;
-    return i;
-  }
-}
-
 uint64_t AluPopcnt(struct Machine *m, uint32_t rde, uint64_t x) {
   m->flags = SetFlag(m->flags, FLAGS_ZF, !x);
   m->flags = SetFlag(m->flags, FLAGS_CF, false);
@@ -76,4 +34,112 @@ uint64_t AluPopcnt(struct Machine *m, uint32_t rde, uint64_t x) {
   x = x + (x >> 16);
   x = (x + (x >> 8)) & 0x7f;
   return x;
+}
+
+uint64_t AluBsr(struct Machine *m, uint32_t rde, uint64_t x) {
+  unsigned i;
+  if (Rexw(rde)) {
+    x &= 0xffffffffffffffff;
+    if (Rep(rde) == 3) {
+      if (!x) {
+        m->flags = SetFlag(m->flags, FLAGS_CF, true);
+        m->flags = SetFlag(m->flags, FLAGS_ZF, false);
+        return 64;
+      } else {
+        m->flags = SetFlag(m->flags, FLAGS_CF, false);
+        m->flags = SetFlag(m->flags, FLAGS_ZF, x == 1);
+      }
+    } else {
+      m->flags = SetFlag(m->flags, FLAGS_ZF, !x);
+      if (!x) return 0;
+    }
+    return 63 ^ __builtin_clzll(x);
+  } else if (!Osz(rde)) {
+    x &= 0xffffffff;
+    if (Rep(rde) == 3) {
+      if (!x) {
+        m->flags = SetFlag(m->flags, FLAGS_CF, true);
+        m->flags = SetFlag(m->flags, FLAGS_ZF, false);
+        return 32;
+      } else {
+        m->flags = SetFlag(m->flags, FLAGS_CF, false);
+        m->flags = SetFlag(m->flags, FLAGS_ZF, x == 1);
+      }
+    } else {
+      m->flags = SetFlag(m->flags, FLAGS_ZF, !x);
+      if (!x) return 0;
+    }
+    return 31 ^ __builtin_clz(x);
+  } else {
+    x &= 0xffff;
+    if (Rep(rde) == 3) {
+      if (!x) {
+        m->flags = SetFlag(m->flags, FLAGS_CF, true);
+        m->flags = SetFlag(m->flags, FLAGS_ZF, false);
+        return 16;
+      } else {
+        m->flags = SetFlag(m->flags, FLAGS_CF, false);
+        m->flags = SetFlag(m->flags, FLAGS_ZF, x == 1);
+      }
+    } else {
+      m->flags = SetFlag(m->flags, FLAGS_ZF, !x);
+      if (!x) return 0;
+    }
+    for (i = 15; !(x & 0x8000); --i) x <<= 1;
+    return i;
+  }
+}
+
+uint64_t AluBsf(struct Machine *m, uint32_t rde, uint64_t x) {
+  unsigned i;
+  if (Rexw(rde)) {
+    x &= 0xffffffffffffffff;
+    if (Rep(rde) == 3) {
+      if (!x) {
+        m->flags = SetFlag(m->flags, FLAGS_CF, true);
+        m->flags = SetFlag(m->flags, FLAGS_ZF, false);
+        return 64;
+      } else {
+        m->flags = SetFlag(m->flags, FLAGS_CF, false);
+        m->flags = SetFlag(m->flags, FLAGS_ZF, x & 1);
+      }
+    } else {
+      m->flags = SetFlag(m->flags, FLAGS_ZF, !x);
+      if (!x) return 0;
+    }
+    return __builtin_ctzll(x);
+  } else if (!Osz(rde)) {
+    x &= 0xffffffff;
+    if (Rep(rde) == 3) {
+      if (!x) {
+        m->flags = SetFlag(m->flags, FLAGS_CF, true);
+        m->flags = SetFlag(m->flags, FLAGS_ZF, false);
+        return 32;
+      } else {
+        m->flags = SetFlag(m->flags, FLAGS_CF, false);
+        m->flags = SetFlag(m->flags, FLAGS_ZF, x & 1);
+      }
+    } else {
+      m->flags = SetFlag(m->flags, FLAGS_ZF, !x);
+      if (!x) return 0;
+    }
+    return __builtin_ctz(x);
+  } else {
+    x &= 0xffff;
+    if (Rep(rde) == 3) {
+      if (!x) {
+        m->flags = SetFlag(m->flags, FLAGS_CF, true);
+        m->flags = SetFlag(m->flags, FLAGS_ZF, false);
+        return 16;
+      } else {
+        m->flags = SetFlag(m->flags, FLAGS_CF, false);
+        m->flags = SetFlag(m->flags, FLAGS_ZF, x & 1);
+      }
+    } else {
+      m->flags = SetFlag(m->flags, FLAGS_ZF, !x);
+      if (!x) return 0;
+    }
+    for (i = 0; !(x & 1); ++i) x >>= 1;
+    return i;
+  }
 }

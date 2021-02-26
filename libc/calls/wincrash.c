@@ -24,7 +24,7 @@
 #include "libc/str/str.h"
 
 textwindows unsigned __wincrash(struct NtExceptionPointers *ep) {
-  int sig;
+  int sig, rva;
   struct Goodies {
     ucontext_t ctx;
     struct siginfo si;
@@ -69,7 +69,10 @@ textwindows unsigned __wincrash(struct NtExceptionPointers *ep) {
       return kNtExceptionContinueSearch;
   }
   memset(&g, 0, sizeof(g));
-  ntcontext2linux(&g.ctx, ep->ContextRecord);
-  return __sigenter(sig, &g.si, &g.ctx) ? kNtExceptionContinueExecution
-                                        : kNtExceptionContinueSearch;
+  rva = __sighandrvas[sig];
+  if (rva >= kSigactionMinRva) {
+    ntcontext2linux(&g.ctx, ep->ContextRecord);
+    ((sigaction_f)(_base + rva))(sig, &g.si, &g.ctx);
+  }
+  return kNtExceptionContinueExecution;
 }

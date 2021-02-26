@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.source	__FILE__
 
 //	Returns 𝑥^𝑦.
 //
@@ -25,6 +24,7 @@
 //	@param	𝑦 is the power, also pushed on stack, in reverse order
 //	@return	result of exponentiation on FPU stack in %st
 //	@note	Sun's fdlibm needs 2kLOC to do this for RISC lool
+//	@define	exp2l(fmodl(y*log2l(x),1))*exp2l(y)
 powl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable

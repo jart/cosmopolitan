@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
+#include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
@@ -32,6 +33,7 @@
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.h"
+#include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
@@ -39,16 +41,10 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sig.h"
 
-STATIC_YOINK("ftoa");
-STATIC_YOINK("ntoa");
-STATIC_YOINK("stoa");
-
 /**
  * @fileoverview Abnormal termination handling & GUI debugging.
  * @see libc/onkill.c
  */
-
-struct siginfo;
 
 static const char kGregOrder[17] forcealign(1) = {
     13, 11, 8, 14, 12, 9, 10, 15, 16, 0, 1, 2, 3, 4, 5, 6, 7,
@@ -59,7 +55,8 @@ static const char kGregNames[17][4] forcealign(1) = {
     "RSI", "RBP", "RBX", "RDX", "RAX", "RCX", "RSP", "RIP",
 };
 
-static const char kGodHatesFlags[12] forcealign(1) = "CVPRAKZSTIDO";
+static const char kCpuFlags[12] forcealign(1) = "CVPRAKZSTIDO";
+static const char kFpuExceptions[6] forcealign(1) = "IDZOUP";
 static const char kCrashSigNames[8][5] forcealign(1) = {
     "QUIT", "FPE", "ILL", "SEGV", "TRAP", "ABRT", "BUS"};
 
@@ -88,20 +85,36 @@ relegated static void ShowFunctionCalls(int fd, ucontext_t *ctx) {
   }
 }
 
-relegated static void DescribeCpuFlags(int fd, unsigned flags) {
+relegated static char *AddFlag(char *p, int b, const char *s) {
+  if (b) p = stpcpy(p, s);
+  return p;
+}
+
+relegated static void DescribeCpuFlags(int fd, int flags, int x87sw,
+                                       int mxcsr) {
   unsigned i;
   char buf[64], *p;
   p = buf;
-  for (i = 0; i < ARRAYLEN(kGodHatesFlags); ++i) {
+  for (i = 0; i < ARRAYLEN(kCpuFlags); ++i) {
     if (flags & 1) {
       *p++ = ' ';
-      *p++ = kGodHatesFlags[i];
+      *p++ = kCpuFlags[i];
       *p++ = 'F';
     }
     flags >>= 1;
   }
-  p = stpcpy(p, " IOPL");
-  *p++ = '0' + (flags & 3);
+  for (i = 0; i < ARRAYLEN(kFpuExceptions); ++i) {
+    if ((x87sw | mxcsr) & (1 << i)) {
+      *p++ = ' ';
+      *p++ = kFpuExceptions[i];
+      *p++ = 'E';
+    }
+  }
+  p = AddFlag(p, x87sw & FPU_SF, " SF");
+  p = AddFlag(p, x87sw & FPU_C0, " C0");
+  p = AddFlag(p, x87sw & FPU_C1, " C1");
+  p = AddFlag(p, x87sw & FPU_C2, " C2");
+  p = AddFlag(p, x87sw & FPU_C3, " C3");
   write(fd, buf, p - buf);
 }
 
@@ -111,8 +124,8 @@ relegated static void ShowGeneralRegisters(int fd, ucontext_t *ctx) {
   write(fd, "\r\n", 2);
   for (i = 0, j = 0, k = 0; i < ARRAYLEN(kGregNames); ++i) {
     if (j > 0) write(fd, " ", 1);
-    (dprintf)(fd, "%-3s %016lx", kGregNames[(unsigned)kGregOrder[i]],
-              ctx->uc_mcontext.gregs[(unsigned)kGregOrder[i]]);
+    dprintf(fd, "%-3s %016lx", kGregNames[(unsigned)kGregOrder[i]],
+            ctx->uc_mcontext.gregs[(unsigned)kGregOrder[i]]);
     if (++j == 3) {
       j = 0;
       if (ctx->uc_mcontext.fpregs) {
@@ -120,12 +133,15 @@ relegated static void ShowGeneralRegisters(int fd, ucontext_t *ctx) {
       } else {
         memset(&st, 0, sizeof(st));
       }
-      (dprintf)(fd, " %s(%zu) %Lf", "ST", k, st);
+      dprintf(fd, " %s(%zu) %Lf", "ST", k, st);
       ++k;
       write(fd, "\r\n", 2);
     }
   }
-  DescribeCpuFlags(fd, ctx->uc_mcontext.gregs[REG_EFL]);
+  DescribeCpuFlags(
+      fd, ctx->uc_mcontext.gregs[REG_EFL],
+      ctx->uc_mcontext.fpregs ? ctx->uc_mcontext.fpregs->swd : 0,
+      ctx->uc_mcontext.fpregs ? ctx->uc_mcontext.fpregs->mxcsr : 0);
 }
 
 relegated static void ShowSseRegisters(int fd, ucontext_t *ctx) {
@@ -133,11 +149,11 @@ relegated static void ShowSseRegisters(int fd, ucontext_t *ctx) {
   if (ctx->uc_mcontext.fpregs) {
     write(fd, "\r\n\r\n", 4);
     for (i = 0; i < 8; ++i) {
-      (dprintf)(fd, VEIL("r", "%s%-2zu %016lx%016lx %s%-2d %016lx%016lx\r\n"),
-                "XMM", i + 0, ctx->uc_mcontext.fpregs->xmm[i + 0].u64[1],
-                ctx->uc_mcontext.fpregs->xmm[i + 0].u64[0], "XMM", i + 8,
-                ctx->uc_mcontext.fpregs->xmm[i + 8].u64[1],
-                ctx->uc_mcontext.fpregs->xmm[i + 8].u64[0]);
+      dprintf(fd, "%s%-2zu %016lx%016lx %s%-2d %016lx%016lx\r\n", "XMM", i + 0,
+              ctx->uc_mcontext.fpregs->xmm[i + 0].u64[1],
+              ctx->uc_mcontext.fpregs->xmm[i + 0].u64[0], "XMM", i + 8,
+              ctx->uc_mcontext.fpregs->xmm[i + 8].u64[1],
+              ctx->uc_mcontext.fpregs->xmm[i + 8].u64[0]);
     }
   }
 }
@@ -164,13 +180,12 @@ relegated static void ShowCrashReport(int err, int fd, int sig,
   struct utsname names;
   strcpy(hostname, "unknown");
   gethostname(hostname, sizeof(hostname));
-  (dprintf)(
-      fd, VEIL("r", "\r\n%serror%s: Uncaught SIG%s on %s\r\n  %s\r\n  %s\r\n"),
-      RED2, RESET, TinyStrSignal(sig), hostname, getauxval(AT_EXECFN),
-      strerror(err));
+  dprintf(fd, "\r\n%serror%s: Uncaught SIG%s on %s\r\n  %s\r\n  %s\r\n", RED2,
+          RESET, TinyStrSignal(sig), hostname, getauxval(AT_EXECFN),
+          strerror(err));
   if (uname(&names) != -1) {
-    (dprintf)(fd, VEIL("r", "  %s %s %s %s\r\n"), names.sysname, names.nodename,
-              names.release, names.version);
+    dprintf(fd, "  %s %s %s %s\r\n", names.sysname, names.nodename,
+            names.release, names.version);
   }
   ShowFunctionCalls(fd, ctx);
   if (ctx) {

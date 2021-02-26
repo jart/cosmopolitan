@@ -17,13 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.source	__FILE__
 
 //	Returns 2^𝑥.
 //
 //	@param	𝑥 is a double passed in the lower quadword of %xmm0
 //	@return	result in lower quadword of %xmm0
-exp2:
-	ezlea	exp2l,ax
+exp2:	ezlea	exp2l,ax
 	jmp	_d2ld2
 	.endfn	exp2,globl

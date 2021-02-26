@@ -16,17 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/x/x.h"
 #include "third_party/gdtoa/gdtoa.h"
 
 /**
- * Converts double to string w/ high-accuracy the easy way.
+ * Converts double to string the easy way.
  *
  * @return string that needs to be free'd
  */
-char *xdtoa(long double d) {
+char *xdtoa(double d) {
   char *p = xmalloc(32);
-  g_xfmt_p(p, &d, 16, 32, 2);
+  g_dfmt_p(p, &d, DBL_DIG, 32, 2);
   return p;
 }

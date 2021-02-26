@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.source	__FILE__
 
 //	Returns log(𝟷+𝑥).
 //
@@ -27,11 +26,11 @@ log1pf:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	push	%rax
-	vmovss	%xmm0,-4(%rbp)
+	movss	%xmm0,-4(%rbp)
 	flds	-4(%rbp)
 	fld	%st
 	fabs
-	fldt	.LC16(%rip)
+	fldt	.Lnnan(%rip)
 	fxch
 	fcomip	%st(1),%st
 	fstp	%st
@@ -40,7 +39,7 @@ log1pf:	push	%rbp
 	fxch
 	fyl2xp1
 1:	fstps	-4(%rbp)
-	vmovss	-4(%rbp),%xmm0
+	movss	-4(%rbp),%xmm0
 	leave
 	ret
 2:	fld1
@@ -52,7 +51,7 @@ log1pf:	push	%rbp
 	.endfn	log1pf,globl
 
 	.rodata.cst16
-.LC16:	.long	205731576
-	.long	2515933592
-	.long	16381
+.Lnnan:	.long	0x0c4336f8
+	.long	0x95f61998
+	.long	0x3ffd
 	.long	0

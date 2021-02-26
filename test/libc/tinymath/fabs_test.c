@@ -17,9 +17,39 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#include "libc/runtime/gc.h"
 #include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
+
+#define fabsl(x) fabsl(VEIL("t", (long double)(x)))
+#define fabs(x)  fabs(VEIL("x", (double)(x)))
+#define fabsf(x) fabsf(VEIL("x", (float)(x)))
+
+TEST(fabsl, test) {
+  EXPECT_STREQ("0", gc(xdtoal(fabsl(-0.))));
+  EXPECT_STREQ("0", gc(xdtoal(fabsl(-0.))));
+  EXPECT_STREQ("NAN", gc(xdtoal(fabsl(NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(fabsl(INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(fabsl(-INFINITY))));
+}
 
 TEST(fabs, test) {
+  EXPECT_STREQ("0", gc(xdtoa(fabs(-0.))));
+  EXPECT_STREQ("0", gc(xdtoa(fabs(-0.))));
+  EXPECT_STREQ("NAN", gc(xdtoa(fabs(NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(fabs(INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(fabs(-INFINITY))));
+}
+
+TEST(fabsf, test) {
+  EXPECT_STREQ("0", gc(xdtoaf(fabsf(-0.))));
+  EXPECT_STREQ("0", gc(xdtoaf(fabsf(-0.))));
+  EXPECT_STREQ("NAN", gc(xdtoaf(fabsf(NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(fabsf(INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(fabsf(-INFINITY))));
+}
+
+TEST(fabs, stuff) {
   EXPECT_LDBL_EQ(3.14, fabs(3.14));
   EXPECT_LDBL_EQ(3.14, fabs(-3.14));
   EXPECT_EQ(1, !!isnan(fabs(NAN)));

@@ -23,13 +23,16 @@ TEST_LIBC_TINYMATH_CHECKS =					\
 	$(TEST_LIBC_TINYMATH_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
 
 TEST_LIBC_TINYMATH_DIRECTDEPS =					\
+	LIBC_CALLS						\
 	LIBC_FMT						\
 	LIBC_INTRIN						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
+	LIBC_RAND						\
 	LIBC_RUNTIME						\
 	LIBC_STR						\
 	LIBC_STUBS						\
+	LIBC_SYSV						\
 	LIBC_TESTLIB						\
 	LIBC_TINYMATH						\
 	LIBC_UNICODE						\
@@ -52,7 +55,7 @@ o/$(MODE)/test/libc/tinymath/%.com.dbg:				\
 	@$(APELINK)
 
 $(TEST_LIBC_TINYMATH_OBJS):					\
-		DEFAULT_CCFLAGS +=				\
+		OVERRIDE_CFLAGS +=				\
 			-fno-builtin
 
 .PHONY: o/$(MODE)/test/libc/tinymath

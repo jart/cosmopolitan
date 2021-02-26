@@ -49,7 +49,7 @@ struct siginfo {
     };
     char __ignoreme[128 - 2 * sizeof(int32_t) - sizeof(int64_t)];
   };
-} forcealign(8);
+};
 
 typedef struct siginfo siginfo_t;
 

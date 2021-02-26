@@ -245,9 +245,9 @@ int vdprintf(int, const char *, va_list) paramsnonnull();
 void _init_onntconsoleevent(void);
 void _init_wincrash(void);
 
-#ifndef __SIGACTION
-#define __SIGACTION(FN, SIG, ...)          \
-  ({                                       \
+#ifndef __SIGACTION_YOINK
+#define __SIGACTION_YOINK(SIG)             \
+  do {                                     \
     if (SupportsWindows()) {               \
       if (__builtin_constant_p(SIG)) {     \
         switch (SIG) {                     \
@@ -272,14 +272,23 @@ void _init_wincrash(void);
         YOINK(_init_wincrash);             \
       }                                    \
     }                                      \
-    (FN)(SIG, __VA_ARGS__);                \
-  })
+  } while (0)
 #endif
 
-#define dprintf(FD, FMT, ...)    (dprintf)(FD, PFLINK(FMT), ##__VA_ARGS__)
-#define sigaction(SIG, ACT, OLD) __SIGACTION(sigaction, SIG, ACT, OLD)
-#define signal(SIG, HAND)        __SIGACTION(signal, SIG, HAND)
-#define vdprintf(FD, FMT, VA)    (vdprintf)(FD, PFLINK(FMT), VA)
+#define sigaction(SIG, ACT, OLD) \
+  ({                             \
+    __SIGACTION_YOINK(SIG);      \
+    sigaction(SIG, (ACT), OLD);  \
+  })
+
+#define signal(SIG, HAND)   \
+  ({                        \
+    __SIGACTION_YOINK(SIG); \
+    signal(SIG, HAND);      \
+  })
+
+#define dprintf(FD, FMT, ...) (dprintf)(FD, PFLINK(FMT), ##__VA_ARGS__)
+#define vdprintf(FD, FMT, VA) (vdprintf)(FD, PFLINK(FMT), VA)
 
 #endif /* GNU && !ANSI */
 COSMOPOLITAN_C_END_

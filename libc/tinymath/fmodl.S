@@ -18,8 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/pc.internal.h"
 #include "libc/macros.h"
-.source	__FILE__
 
+//	fmod [sic] does (𝑥 rem 𝑦) w/ round()-style rounding.
+//
+//	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+//	@param	𝑦 is the power, also pushed on stack, in reverse order
+//	@return	remainder ∈ (-|𝑦|,|𝑦|) in %st
+//	@define	𝑥-truncl(𝑥/𝑦)*𝑦
+//	@see	emod()
 fmodl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -30,6 +36,9 @@ fmodl:	push	%rbp
 	test	$FPU_C2>>8,%ah
 	jnz	1b
 	fstp	%st(1)
+	pop	%rbp
+	ret
+1:	int3
 	pop	%rbp
 	ret
 	.endfn	fmodl,globl

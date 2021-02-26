@@ -1,5 +1,9 @@
 #!/bin/sh
 
+if [ $MODE = dbg ]; then
+  exit  # TODO
+fi
+
 # smoke test booting on bare metal and printing data to serial uart
 CMD="o/$MODE/tool/build/blinkenlights.com.dbg -r o/$MODE/examples/hello.com"
 if OUTPUT="$($CMD)"; then

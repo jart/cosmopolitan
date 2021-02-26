@@ -503,6 +503,7 @@ const char *DisSpecMap1(struct XedDecodedInst *x, char *p) {
     RCASE(0x74, DisOpPqQqVdqWdq(x, p, "pcmpeqb"));
     RCASE(0x75, DisOpPqQqVdqWdq(x, p, "pcmpeqw"));
     RCASE(0x76, DisOpPqQqVdqWdq(x, p, "pcmpeqd"));
+    RCASE(0x77, "emms");
     RCASE(0x80 ... 0x8f, "jCC Jvds");
     RCASE(0x90 ... 0x9f, "setCC Jvds");
     RCASE(0xA0, "push %fs");
@@ -524,8 +525,6 @@ const char *DisSpecMap1(struct XedDecodedInst *x, char *p) {
     RCASE(0xB7, "movzwWLQ %Gvqp Ew");
     RCASE(0xB9, "ud %Gvqp Evqp");
     RCASE(0xBB, "btc Evqp %Gvqp");
-    RCASE(0xBC, "bsf %Gvqp Evqp");
-    RCASE(0xBD, "bsr %Gvqp Evqp");
     RCASE(0xBE, "movsbWLQ %Gvqp Eb");
     RCASE(0xBF, "movswWLQ %Gvqp Ew");
     RCASE(0xC0, "xadd Eb %Gb");
@@ -577,6 +576,18 @@ const char *DisSpecMap1(struct XedDecodedInst *x, char *p) {
     RCASE(0xFD, DisOpPqQqVdqWdq(x, p, "paddw"));
     RCASE(0xFE, DisOpPqQqVdqWdq(x, p, "paddd"));
     RCASE(0xFF, "ud0 %Gvqp Evqp");
+    case 0xBC:
+      if (Rep(x->op.rde) == 3) {
+        return "tzcnt %Gvqp Evqp";
+      } else {
+        return "bsf %Gvqp Evqp";
+      }
+    case 0xBD:
+      if (Rep(x->op.rde) == 3) {
+        return "lzcnt %Gvqp Evqp";
+      } else {
+        return "bsr %Gvqp Evqp";
+      }
     case 0x01:
       switch (ModrmReg(x->op.rde)) {
         case 0:

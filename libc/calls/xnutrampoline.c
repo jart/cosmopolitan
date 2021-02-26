@@ -50,17 +50,6 @@ struct __darwin_sigaltstack {
   int32_t ss_flags;
 };
 
-struct __darwin_fp_control {
-  uint16_t __invalid : 1, __denorm : 1, __zdiv : 1, __ovrfl : 1, __undfl : 1,
-      __precis : 1, : 2, __pc : 2, __rc : 2, : 1, : 3;
-};
-
-struct __darwin_fp_status {
-  uint16_t __invalid : 1, __denorm : 1, __zdiv : 1, __ovrfl : 1, __undfl : 1,
-      __precis : 1, __stkflt : 1, __errsumm : 1, __c0 : 1, __c1 : 1, __c2 : 1,
-      __tos : 3, __c3 : 1, __busy : 1;
-};
-
 struct __darwin_mmst_reg {
   char __mmst_reg[10];
   char __mmst_rsrv[6];
@@ -116,8 +105,8 @@ struct __darwin_x86_thread_full_state64 {
 
 struct __darwin_x86_float_state64 {
   int32_t __fpu_reserved[2];
-  struct __darwin_fp_control __fpu_fcw;
-  struct __darwin_fp_status __fpu_fsw;
+  uint16_t __fpu_fcw;
+  uint16_t __fpu_fsw;
   uint8_t __fpu_ftw;
   uint8_t __fpu_rsrv1;
   uint16_t __fpu_fop;
@@ -153,14 +142,14 @@ struct __darwin_x86_float_state64 {
   struct __darwin_xmm_reg __fpu_xmm13;
   struct __darwin_xmm_reg __fpu_xmm14;
   struct __darwin_xmm_reg __fpu_xmm15;
-  char __fpu_rsrv4[6 * 16];
+  char __fpu_rsrv4[96];
   int32_t __fpu_reserved1;
 };
 
 struct __darwin_x86_avx_state64 {
   int32_t __fpu_reserved[2];
-  struct __darwin_fp_control __fpu_fcw;
-  struct __darwin_fp_status __fpu_fsw;
+  uint16_t __fpu_fcw;
+  uint16_t __fpu_fsw;
   uint8_t __fpu_ftw;
   uint8_t __fpu_rsrv1;
   uint16_t __fpu_fop;
@@ -219,8 +208,8 @@ struct __darwin_x86_avx_state64 {
 
 struct __darwin_x86_avx512_state64 {
   int32_t __fpu_reserved[2];
-  struct __darwin_fp_control __fpu_fcw;
-  struct __darwin_fp_status __fpu_fsw;
+  uint16_t __fpu_fcw;
+  uint16_t __fpu_fsw;
   uint8_t __fpu_ftw;
   uint8_t __fpu_rsrv1;
   uint16_t __fpu_fop;
@@ -390,6 +379,12 @@ static void xnuexceptionstate2linux(
   mc->err = xnues->__err;
 }
 
+static void linuxexceptionstate2xnu(
+    struct __darwin_x86_exception_state64 *xnues, mcontext_t *mc) {
+  xnues->__trapno = mc->trapno;
+  xnues->__err = mc->err;
+}
+
 static void xnuthreadstate2linux(ucontext_t *uc, mcontext_t *mc,
                                  struct __darwin_x86_thread_state64 *xnuss) {
   mc->rdi = xnuss->__rdi;
@@ -401,7 +396,6 @@ static void xnuthreadstate2linux(ucontext_t *uc, mcontext_t *mc,
   mc->rcx = xnuss->__rcx;
   mc->rsp = xnuss->__rsp;
   mc->rip = xnuss->__rip;
-  /* g.uc.uc_mcontext.rip = xnuctx->uc_mcontext->__es.__faultvaddr; */
   mc->cs = xnuss->__cs;
   mc->gs = xnuss->__gs;
   mc->fs = xnuss->__fs;
@@ -410,10 +404,29 @@ static void xnuthreadstate2linux(ucontext_t *uc, mcontext_t *mc,
   memcpy(&mc->r8, &xnuss->__r8, 8 * sizeof(int64_t));
 }
 
+static void linuxthreadstate2xnu(struct __darwin_x86_thread_state64 *xnuss,
+                                 ucontext_t *uc, mcontext_t *mc) {
+  xnuss->__rdi = mc->rdi;
+  xnuss->__rsi = mc->rsi;
+  xnuss->__rbp = mc->rbp;
+  xnuss->__rbx = mc->rbx;
+  xnuss->__rdx = mc->rdx;
+  xnuss->__rax = mc->rax;
+  xnuss->__rcx = mc->rcx;
+  xnuss->__rsp = mc->rsp;
+  xnuss->__rip = mc->rip;
+  xnuss->__cs = mc->cs;
+  xnuss->__gs = mc->gs;
+  xnuss->__fs = mc->fs;
+  xnuss->__rflags = mc->eflags;
+  xnuss->__rflags = uc->uc_flags;
+  memcpy(&xnuss->__r8, &mc->r8, 8 * sizeof(int64_t));
+}
+
 static void xnussefpustate2linux(struct FpuState *fs,
                                  struct __darwin_x86_float_state64 *xnufs) {
-  memcpy(&fs->cwd, &xnufs->__fpu_fcw, 2);
-  memcpy(&fs->swd, &xnufs->__fpu_fsw, 2);
+  fs->cwd = xnufs->__fpu_fcw;
+  fs->swd = xnufs->__fpu_fsw;
   fs->ftw = xnufs->__fpu_ftw;
   fs->fop = xnufs->__fpu_fop;
   fs->rip = xnufs->__fpu_ip;
@@ -424,49 +437,91 @@ static void xnussefpustate2linux(struct FpuState *fs,
   memcpy(fs->st, &xnufs->__fpu_stmm0, (8 + 16) * sizeof(uint128_t));
 }
 
-wontreturn void __xnutrampoline(void *fn, int infostyle, int sig,
-                                const struct __darwin_siginfo *xnuinfo,
-                                const struct __darwin_ucontext *xnuctx) {
-  /* note: this function impl can't access static memory */
+static void linuxssefpustate2xnu(struct __darwin_x86_float_state64 *xnufs,
+                                 struct FpuState *fs) {
+  xnufs->__fpu_fcw = fs->cwd;
+  xnufs->__fpu_fsw = fs->swd;
+  xnufs->__fpu_ftw = fs->ftw;
+  xnufs->__fpu_fop = fs->fop;
+  xnufs->__fpu_ip = fs->rip;
+  xnufs->__fpu_dp = fs->rdp;
+  xnufs->__fpu_mxcsr = fs->mxcsr;
+  xnufs->__fpu_mxcsrmask = fs->mxcr_mask;
+  /* copy st0-st7 as well as xmm0-xmm15 */
+  memcpy(&xnufs->__fpu_stmm0, fs->st, (8 + 16) * sizeof(uint128_t));
+}
+
+void __sigenter_xnu(void *fn, int infostyle, int sig,
+                    struct __darwin_siginfo *xnuinfo,
+                    struct __darwin_ucontext *xnuctx) {
+  int rva;
   intptr_t ax;
   struct Goodies {
     ucontext_t uc;
     siginfo_t si;
   } g;
-  memset(&g, 0, sizeof(g));
-  if (xnuctx) {
-    /* g.uc.uc_sigmask = xnuctx->uc_sigmask; */
-    g.uc.uc_stack.ss_sp = xnuctx->uc_stack.ss_sp;
-    g.uc.uc_stack.ss_flags = xnuctx->uc_stack.ss_flags;
-    g.uc.uc_stack.ss_size = xnuctx->uc_stack.ss_size;
-    g.uc.uc_mcontext.fpregs = &g.uc.__fpustate;
-    if (xnuctx->uc_mcontext) {
-      if (xnuctx->uc_mcsize >= sizeof(struct __darwin_x86_exception_state64)) {
-        xnuexceptionstate2linux(&g.uc.uc_mcontext, &xnuctx->uc_mcontext->__es);
+  rva = __sighandrvas[sig & (NSIG - 1)];
+  if (rva >= kSigactionMinRva) {
+    memset(&g, 0, sizeof(g));
+    if (xnuctx) {
+      memcpy(&g.uc.uc_sigmask, &xnuctx->uc_sigmask,
+             MIN(sizeof(g.uc.uc_sigmask), sizeof(xnuctx->uc_sigmask)));
+      g.uc.uc_stack.ss_sp = xnuctx->uc_stack.ss_sp;
+      g.uc.uc_stack.ss_flags = xnuctx->uc_stack.ss_flags;
+      g.uc.uc_stack.ss_size = xnuctx->uc_stack.ss_size;
+      g.uc.uc_mcontext.fpregs = &g.uc.__fpustate;
+      if (xnuctx->uc_mcontext) {
+        if (xnuctx->uc_mcsize >=
+            sizeof(struct __darwin_x86_exception_state64)) {
+          xnuexceptionstate2linux(&g.uc.uc_mcontext,
+                                  &xnuctx->uc_mcontext->__es);
+        }
+        if (xnuctx->uc_mcsize >=
+            (sizeof(struct __darwin_x86_exception_state64) +
+             sizeof(struct __darwin_x86_thread_state64))) {
+          xnuthreadstate2linux(&g.uc, &g.uc.uc_mcontext,
+                               &xnuctx->uc_mcontext->__ss);
+        }
+        if (xnuctx->uc_mcsize >= sizeof(struct __darwin_mcontext64)) {
+          xnussefpustate2linux(&g.uc.__fpustate, &xnuctx->uc_mcontext->__fs);
+        }
       }
-      if (xnuctx->uc_mcsize >= (sizeof(struct __darwin_x86_exception_state64) +
-                                sizeof(struct __darwin_x86_thread_state64))) {
-        xnuthreadstate2linux(&g.uc, &g.uc.uc_mcontext,
-                             &xnuctx->uc_mcontext->__ss);
+    }
+    if (xnuinfo) {
+      g.si.si_signo = xnuinfo->si_signo;
+      g.si.si_errno = xnuinfo->si_errno;
+      g.si.si_code = xnuinfo->si_code;
+      if (xnuinfo->si_pid) {
+        g.si.si_pid = xnuinfo->si_pid;
+        g.si.si_uid = xnuinfo->si_uid;
+        g.si.si_status = xnuinfo->si_status;
+      } else {
+        g.si.si_addr = (void *)xnuinfo->si_addr;
       }
-      if (xnuctx->uc_mcsize >= sizeof(struct __darwin_mcontext64)) {
-        xnussefpustate2linux(&g.uc.__fpustate, &xnuctx->uc_mcontext->__fs);
+    }
+    ((sigaction_f)(_base + rva))(sig, &g.si, &g.uc);
+    if (xnuctx) {
+      xnuctx->uc_stack.ss_sp = g.uc.uc_stack.ss_sp;
+      xnuctx->uc_stack.ss_flags = g.uc.uc_stack.ss_flags;
+      xnuctx->uc_stack.ss_size = g.uc.uc_stack.ss_size;
+      if (xnuctx->uc_mcontext) {
+        if (xnuctx->uc_mcsize >=
+            sizeof(struct __darwin_x86_exception_state64)) {
+          linuxexceptionstate2xnu(&xnuctx->uc_mcontext->__es,
+                                  &g.uc.uc_mcontext);
+        }
+        if (xnuctx->uc_mcsize >=
+            (sizeof(struct __darwin_x86_exception_state64) +
+             sizeof(struct __darwin_x86_thread_state64))) {
+          linuxthreadstate2xnu(&xnuctx->uc_mcontext->__ss, &g.uc,
+                               &g.uc.uc_mcontext);
+        }
+        if (xnuctx->uc_mcsize >= sizeof(struct __darwin_mcontext64)) {
+          linuxssefpustate2xnu(&xnuctx->uc_mcontext->__fs, &g.uc.__fpustate);
+        }
       }
     }
   }
-  if (xnuinfo) {
-    g.si.si_signo = xnuinfo->si_signo;
-    g.si.si_errno = xnuinfo->si_errno;
-    g.si.si_code = xnuinfo->si_code;
-    if (xnuinfo->si_pid) {
-      g.si.si_pid = xnuinfo->si_pid;
-      g.si.si_uid = xnuinfo->si_uid;
-      g.si.si_status = xnuinfo->si_status;
-    } else {
-      g.si.si_addr = (void *)xnuinfo->si_addr;
-    }
-  }
-  __sigenter(sig, &g.si, &g.uc);
   asm volatile("syscall"
                : "=a"(ax)
                : "0"(0x20000b8 /* sigreturn */), "D"(xnuctx), "S"(infostyle)

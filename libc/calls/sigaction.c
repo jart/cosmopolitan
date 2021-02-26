@@ -39,16 +39,6 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
-union metasigaction {
-  struct sigaction cosmo;
-  struct sigaction_linux linux;
-  struct sigaction_freebsd freebsd;
-  struct sigaction_openbsd openbsd;
-  struct sigaction_netbsd netbsd;
-  struct sigaction_xnu_in xnu_in;
-  struct sigaction_xnu_out xnu_out;
-};
-
 #ifndef SWITCHEROO
 #define SWITCHEROO(S1, S2, A, B, C, D)                     \
   do {                                                     \
@@ -65,6 +55,20 @@ union metasigaction {
     memcpy(&((S2).D), &d, MIN(sizeof(d), sizeof((S2).D))); \
   } while (0);
 #endif
+
+union metasigaction {
+  struct sigaction cosmo;
+  struct sigaction_linux linux;
+  struct sigaction_freebsd freebsd;
+  struct sigaction_openbsd openbsd;
+  struct sigaction_netbsd netbsd;
+  struct sigaction_xnu_in xnu_in;
+  struct sigaction_xnu_out xnu_out;
+};
+
+void __sigenter_netbsd(int, void *, void *);
+void __sigenter_freebsd(int, void *, void *);
+void __sigenter_openbsd(int, void *, void *);
 
 static void sigaction_cosmo2native(union metasigaction *sa) {
   if (!sa) return;
@@ -165,17 +169,21 @@ int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
       memcpy(&copy, act, sizeof(copy));
       ap = &copy;
       if (IsXnu()) {
-        ap->sa_restorer = (void *)&__xnutrampoline;
-        ap->sa_handler = (void *)&__xnutrampoline;
+        ap->sa_restorer = (void *)&__sigenter_xnu;
+        ap->sa_handler = (void *)&__sigenter_xnu;
       } else if (IsLinux()) {
         if (!(ap->sa_flags & SA_RESTORER)) {
           ap->sa_flags |= SA_RESTORER;
           ap->sa_restorer = &__restore_rt;
         }
       } else if (IsNetbsd()) {
-        ap->sa_sigaction = act->sa_sigaction;
-      } else if (rva >= kSigactionMinRva) {
-        ap->sa_sigaction = (sigaction_f)__sigenter;
+        ap->sa_sigaction = (sigaction_f)__sigenter_netbsd;
+      } else if (IsFreebsd()) {
+        ap->sa_sigaction = (sigaction_f)__sigenter_freebsd;
+      } else if (IsOpenbsd()) {
+        ap->sa_sigaction = (sigaction_f)__sigenter_openbsd;
+      } else {
+        return enosys();
       }
       sigaction_cosmo2native((union metasigaction *)ap);
     } else {

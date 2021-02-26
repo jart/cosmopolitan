@@ -51,8 +51,10 @@ int openat(int dirfd, const char *file, int flags, ...) {
     if (__vforked) return einval();
     if (dirfd != AT_FDCWD) return einval();
     return weaken(__zipos_open)(&zipname, flags, mode);
-  } else if (!IsWindows()) {
+  } else if (!IsWindows() && !IsMetal()) {
     return sys_openat(dirfd, file, flags, mode);
+  } else if (IsMetal()) {
+    return sys_openat_metal(dirfd, file, flags, mode);
   } else {
     return sys_open_nt(dirfd, file, flags, mode);
   }

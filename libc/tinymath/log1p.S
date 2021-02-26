@@ -17,18 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.source	__FILE__
 
 //	Returns log(𝟷+𝑥).
 //
 //	@param	𝑥 is double scalar in low half of %xmm0
 //	@return	double scalar in low half of %xmm0
-log1p:
-	push	%rbp
+log1p:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	push	%rax
-	vmovsd	%xmm0,(%rsp)
+	movsd	%xmm0,(%rsp)
 	fldl	(%rsp)
 	fld	%st
 	fabs
@@ -41,7 +39,7 @@ log1p:
 	fxch
 	fyl2xp1
 	fstpl	(%rsp)
-	vmovsd	(%rsp),%xmm0
+	movsd	(%rsp),%xmm0
 0:	leave
 	ret
 1:	fld1
@@ -50,12 +48,12 @@ log1p:
 	fxch
 	fyl2x
 	fstpl	(%rsp)
-	vmovsd	(%rsp),%xmm0
+	movsd	(%rsp),%xmm0
 	jmp	0b
 	.endfn	log1p,globl
 
 	.rodata.cst16
-.LC16:	.long	205731576
-	.long	2515933592
-	.long	16381
+.LC16:	.long	0x0c4336f8
+	.long	0x95f61998
+	.long	0x3ffd
 	.long	0

@@ -36,16 +36,13 @@ ssize_t readv(int fd, const struct iovec *iov, int iovlen) {
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     return weaken(__zipos_read)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, iov, iovlen, -1);
-  } else if (SupportsMetal() && fd < g_fds.n && g_fds.p[fd].kind == kFdSerial) {
-    return readv_serial(&g_fds.p[fd], iov, iovlen);
-  } else if (!IsWindows()) {
+  } else if (!IsWindows() && !IsMetal()) {
     return sys_readv(fd, iov, iovlen);
-  } else if (fd < g_fds.n &&
-             (g_fds.p[fd].kind == kFdFile || g_fds.p[fd].kind == kFdConsole)) {
-    return sys_read_nt(&g_fds.p[fd], iov, iovlen, -1);
-  } else if (fd < g_fds.n && (g_fds.p[fd].kind == kFdSocket)) {
-    return weaken(sys_recvfrom_nt)(&g_fds.p[fd], iov, iovlen, 0, NULL, 0);
-  } else {
+  } else if (fd >= g_fds.n) {
     return ebadf();
+  } else if (IsMetal()) {
+    return sys_readv_metal(g_fds.p + fd, iov, iovlen);
+  } else {
+    return sys_readv_nt(g_fds.p + fd, iov, iovlen);
   }
 }

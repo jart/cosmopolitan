@@ -19,12 +19,17 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
+#include "third_party/xed/x86.h"
+
+struct sigaction oldsa;
 
 volatile bool gotsigint;
 
@@ -34,12 +39,11 @@ void OnSigInt(int sig) {
 
 void SetUp(void) {
   gotsigint = false;
+  /* TODO(jart): Windows needs huge signal overhaul */
+  if (IsWindows()) exit(0);
 }
 
 TEST(sigaction, test) {
-  /* TODO(jart): Why does RHEL5 behave differently? */
-  /* TODO(jart): Windows needs huge signal overhaul */
-  if (IsWindows()) return;
   int pid, status;
   sigset_t block, ignore, oldmask;
   struct sigaction saint = {.sa_handler = OnSigInt};
@@ -48,7 +52,7 @@ TEST(sigaction, test) {
   EXPECT_NE(-1, sigprocmask(SIG_BLOCK, &block, &oldmask));
   sigfillset(&ignore);
   sigdelset(&ignore, SIGINT);
-  EXPECT_NE(-1, sigaction(SIGINT, &saint, NULL));
+  EXPECT_NE(-1, sigaction(SIGINT, &saint, &oldsa));
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     EXPECT_NE(-1, kill(getppid(), SIGINT));
@@ -64,13 +68,45 @@ TEST(sigaction, test) {
   EXPECT_EQ(0, WEXITSTATUS(status));
   EXPECT_EQ(0, WTERMSIG(status));
   EXPECT_NE(-1, sigprocmask(SIG_SETMASK, &oldmask, NULL));
+  EXPECT_NE(-1, sigaction(SIGINT, &oldsa, NULL));
 }
 
 TEST(sigaction, raise) {
-  if (IsWindows()) return;
   struct sigaction saint = {.sa_handler = OnSigInt};
-  EXPECT_NE(-1, sigaction(SIGINT, &saint, NULL));
+  EXPECT_NE(-1, sigaction(SIGINT, &saint, &oldsa));
   ASSERT_FALSE(gotsigint);
   EXPECT_NE(-1, raise(SIGINT));
   ASSERT_TRUE(gotsigint);
+  EXPECT_NE(-1, sigaction(SIGINT, &oldsa, NULL));
+}
+
+volatile int trapeax;
+
+void OnTrap(int sig, struct siginfo *si, struct ucontext *ctx) {
+  trapeax = ctx->uc_mcontext.rax;
+}
+
+TEST(sigaction, debugBreak_handlerCanReadCpuState) {
+  struct sigaction saint = {.sa_sigaction = OnTrap, .sa_flags = SA_SIGINFO};
+  EXPECT_NE(-1, sigaction(SIGTRAP, &saint, &oldsa));
+  asm("int3" : /* no outputs */ : "a"(0x31337));
+  EXPECT_EQ(0x31337, trapeax);
+  EXPECT_NE(-1, sigaction(SIGTRAP, &oldsa, NULL));
+}
+
+void OnFpe(int sig, struct siginfo *si, struct ucontext *ctx) {
+  struct XedDecodedInst xedd;
+  xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_LONG_64);
+  xed_instruction_length_decode(&xedd, (void *)ctx->uc_mcontext.rip, 15);
+  ctx->uc_mcontext.rip += xedd.length;
+  ctx->uc_mcontext.rax = 42;
+  ctx->uc_mcontext.rdx = 0;
+}
+
+TEST(sigaction, sigFpe_handlerCanEditProcessStateAndRecoverExecution) {
+  struct sigaction saint = {.sa_sigaction = OnFpe, .sa_flags = SA_SIGINFO};
+  EXPECT_NE(-1, sigaction(SIGFPE, &saint, &oldsa));
+  volatile long x = 0;
+  EXPECT_EQ(42, 666 / x); /* systems engineering trumps math */
+  EXPECT_NE(-1, sigaction(SIGFPE, &oldsa, NULL));
 }

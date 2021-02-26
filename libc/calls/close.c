@@ -40,8 +40,10 @@ int close(int fd) {
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     rc = weaken(__zipos_close)(fd);
   } else {
-    if (!IsWindows()) {
+    if (!IsWindows() && !IsMetal()) {
       rc = sys_close(fd);
+    } else if (IsMetal()) {
+      rc = 0;
     } else {
       if (fd < g_fds.n && g_fds.p[fd].kind == kFdEpoll) {
         rc = weaken(sys_close_epoll_nt)(fd);

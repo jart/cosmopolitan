@@ -18,8 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/pc.internal.h"
 #include "libc/macros.h"
-.source	__FILE__
 
+//	Returns 𝑥 with same sign as 𝑦.
+//
+//	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+//	@param	𝑦 is the power, also pushed on stack, in reverse order
+//	@return	result on FPU stack in %st
 copysignl:
 	push	%rbp
 	mov	%rsp,%rbp

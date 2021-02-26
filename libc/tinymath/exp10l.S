@@ -17,17 +17,21 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.source	__FILE__
 
 //	Returns 10^x.
 //
 //	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
 //	@return	result of exponentiation on FPU stack in %st
-exp10l:
-	push	%rbp
+exp10l:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
+	fxam					# isinf(x)
+	fstsw	%ax
+	mov	%ah,%al
+	and	$0x45,%ah
+	cmp	$5,%ah
+	je	1f
 	fldl2t
 	fmulp	%st,%st(1)
 	fld	%st
@@ -38,8 +42,13 @@ exp10l:
 	fld1
 	faddp
 	fscale
-	fstp	%st(1)
+0:	fstp	%st(1)
 	pop	%rbp
 	ret
+1:	test	$2,%al				# signbit(x)
+	jz	0b
+	fstp	%st
+	fldz
+	jmp	0b
 	.endfn	exp10l,globl
 	.alias	exp10l,pow10l

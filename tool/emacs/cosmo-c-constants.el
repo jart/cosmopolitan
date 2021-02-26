@@ -104,10 +104,71 @@
     "FLT_MIN"
     "FLT_MAX"))
 
+(defconst cosmo-c-constants-math
+  '("M_E"
+    "M_LOG2_10"
+    "M_LOG10_2"
+    "M_LOG2E"
+    "M_LOG10E"
+    "M_LN2"
+    "M_LN10"
+    "M_TAU"
+    "M_PI"
+    "M_PI_2"
+    "M_PI_4"
+    "M_1_PI"
+    "M_2_PI"
+    "M_2_SQRTPI"
+    "M_SQRT2"
+    "M_SQRT1_2"
+    "DBL_DECIMAL_DIG"
+    "DBL_DIG"
+    "DBL_EPSILON"
+    "DBL_MANT_DIG"
+    "DBL_MANT_DIG"
+    "DBL_MAX"
+    "DBL_MAX_10_EXP"
+    "DBL_MAX_EXP"
+    "DBL_MIN"
+    "DBL_MIN_10_EXP"
+    "DBL_MIN_EXP"
+    "DECIMAL_DIG"
+    "FLT_DECIMAL_DIG"
+    "FLT_RADIX"
+    "FLT_DIG"
+    "FLT_EPSILON"
+    "FLT_MANT_DIG"
+    "FLT_MANT_DIG"
+    "FLT_MAX"
+    "FLT_MAX_10_EXP"
+    "FLT_MAX_EXP"
+    "FLT_MIN"
+    "FLT_MIN_10_EXP"
+    "FLT_MIN_EXP"
+    "HLF_MAX"
+    "HLF_MIN"
+    "LDBL_DECIMAL_DIG"
+    "LDBL_DIG"
+    "LDBL_EPSILON"
+    "LDBL_MANT_DIG"
+    "LDBL_MANT_DIG"
+    "LDBL_MAX"
+    "LDBL_MAX_10_EXP"
+    "LDBL_MAX_EXP"
+    "LDBL_MIN"
+    "LDBL_MIN_10_EXP"
+    "LDBL_MIN_EXP"
+    "FP_NAN"
+    "FP_INFINITE"
+    "FP_ZERO"
+    "FP_SUBNORMAL"
+    "FP_NORMAL"))
+
 (defconst cosmo-c-constants-regex
   (concat "\\_<"
           (regexp-opt (append cosmo-c-constants-c11
-                              cosmo-c-constants-limits))
+                              cosmo-c-constants-limits
+                              cosmo-c-constants-math))
           "\\_>"))
 
 (provide 'cosmo-c-constants)

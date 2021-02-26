@@ -19,13 +19,13 @@
 #include "libc/macros.h"
 #include "libc/notice.inc"
 
-	.initbss 300,_init___auxv
-/	Global variable holding _start(auxv) parameter.
+	.initbss 300,_init_auxv
+//	Global variable holding _start(auxv) parameter.
 __auxv:	.quad	0
 	.endobj	__auxv,globl
 	.previous
 
-	.init.start 300,_init___auxv
+	.init.start 300,_init_auxv
 	mov	%r15,%rax
 	stosq
-	.init.end 300,_init___auxv
+	.init.end 300,_init_auxv

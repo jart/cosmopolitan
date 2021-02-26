@@ -1,24 +1,11 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_CLD_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_CLD_H_
-#include "libc/runtime/symbolic.h"
 
-#define CLD_CONTINUED SYMBOLIC(CLD_CONTINUED)
-#define CLD_DUMPED SYMBOLIC(CLD_DUMPED)
-#define CLD_EXITED SYMBOLIC(CLD_EXITED)
-#define CLD_KILLED SYMBOLIC(CLD_KILLED)
-#define CLD_STOPPED SYMBOLIC(CLD_STOPPED)
-#define CLD_TRAPPED SYMBOLIC(CLD_TRAPPED)
+#define CLD_CONTINUED 6
+#define CLD_DUMPED    3
+#define CLD_EXITED    1
+#define CLD_KILLED    2
+#define CLD_STOPPED   5
+#define CLD_TRAPPED   4
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
-
-extern const long CLD_CONTINUED;
-extern const long CLD_DUMPED;
-extern const long CLD_EXITED;
-extern const long CLD_KILLED;
-extern const long CLD_STOPPED;
-extern const long CLD_TRAPPED;
-
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_CLD_H_ */

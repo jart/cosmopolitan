@@ -17,15 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.source	__FILE__
 
 //	Calculates log₂𝑥.
 //
 //	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
 //	@return	result in %st
 //	@see	ilogbl()
-log2l:
-	push	%rbp
+log2l:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fld1

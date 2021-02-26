@@ -265,6 +265,7 @@ static int exitcode;
 static long ips;
 static long rombase;
 static long codesize;
+static int64_t oldlen;
 static int64_t opstart;
 static int64_t mapsstart;
 static uint64_t readaddr;
@@ -1574,6 +1575,7 @@ static void PreventBufferbloat(void) {
 
 static void Redraw(void) {
   int i, j;
+  oldlen = m->xedd->length;
   if (!IsShadow(m->readaddr) && !IsShadow(m->readaddr + m->readsize)) {
     readaddr = m->readaddr;
     readsize = m->readsize;
@@ -1624,9 +1626,7 @@ static void Redraw(void) {
 
 static void ReactiveDraw(void) {
   if (tuimode) {
-    m->ip -= m->xedd->length;
     Redraw();
-    m->ip += m->xedd->length;
     tick = speed;
   }
 }

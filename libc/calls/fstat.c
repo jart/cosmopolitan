@@ -34,7 +34,7 @@ int fstat(int fd, struct stat *st) {
   } else if (!IsWindows() && !IsMetal()) {
     return sys_fstat(fd, st);
   } else if (IsMetal()) {
-    return fstat_metal(fd, st);
+    return sys_fstat_metal(fd, st);
   } else {
     if (!__isfdkind(fd, kFdFile)) return ebadf();
     return sys_fstat_nt(g_fds.p[fd].handle, st);

@@ -105,7 +105,7 @@
 //	@note	therefore item/values are reordered w.r.t. link order
 //	@note	therefore no section relative addressing
 .macro	.rodata.str1.1
-	.section .rodata.str1.1,"aSM",@progbits,1
+	.section .rodata.str1.1,"aMS",@progbits,1
 	.align	1
 .endm
 

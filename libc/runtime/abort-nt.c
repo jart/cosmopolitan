@@ -24,9 +24,13 @@
 #include "libc/sysv/consts/sig.h"
 
 textwindows wontreturn void sys_abort_nt(void) {
+  int rva;
   siginfo_t info;
   memset(&info, 0, sizeof(info));
   info.si_signo = SIGABRT;
-  __sigenter(SIGABRT, &info, NULL);
+  rva = __sighandrvas[SIGABRT];
+  if (rva >= kSigactionMinRva) {
+    ((sigaction_f)(_base + rva))(SIGABRT, &info, NULL);
+  }
   _Exit(128 + SIGABRT);
 }

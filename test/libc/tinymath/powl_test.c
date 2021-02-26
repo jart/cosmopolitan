@@ -16,39 +16,47 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/calls/ucontext.h"
 #include "libc/math.h"
 #include "libc/runtime/gc.h"
+#include "libc/runtime/pc.internal.h"
+#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
+double powa(double x, double y) {
+  return exp2(fmod(y * log2(x), 1)) * exp2(y);
+}
+
 TEST(powl, testLongDouble) {
+  EXPECT_TRUE(isnan(powl(-1, 1.1)));
+  EXPECT_STREQ("1e+4932", gc(xdtoal(powl(10, 4932))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(powl(10, 4933))));
+  EXPECT_STREQ("0", gc(xdtoal(powl(10, -5000))));
+  EXPECT_STREQ("1.063382396627933e+37", gc(xdtoal(powl(2, 123))));
   /* .4248496805467504836322459796959084815827285786480897 */
-  EXPECT_STARTSWITH(".4248496805467504", gc(xdtoa(powl(0.7, 2.4))));
+  EXPECT_STARTSWITH(".4248496805467504", gc(xdtoal(powl(0.7, 2.4))));
 }
 
 TEST(powl, testDouble) {
-  EXPECT_STARTSWITH(".4248496805467504", gc(xdtoa(pow(0.7, 2.4))));
+  EXPECT_STREQ("1e+308", gc(xdtoa(pow(10, 308))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(pow(10, 309))));
+  EXPECT_STARTSWITH(".42484968054675", gc(xdtoa(pow(0.7, 2.4))));
 }
 
 TEST(powl, testFloat) {
   EXPECT_STARTSWITH(".4248496", gc(xdtoa(powf(0.7f, 2.4f))));
 }
 
-static long double do_powl(void) {
-  return CONCEAL("t", powl(CONCEAL("t", 0.7), CONCEAL("t", 0.2)));
-}
-
-static double do_pow(void) {
-  return CONCEAL("x", pow(CONCEAL("x", 0.7), CONCEAL("x", 0.2)));
-}
-
-static float do_powf(void) {
-  return CONCEAL("x", powf(CONCEAL("x", 0.7f), CONCEAL("x", 0.2f)));
-}
-
 BENCH(powl, bench) {
-  EZBENCH2("powl", donothing, do_powl()); /* ~61ns */
-  EZBENCH2("pow", donothing, do_pow());   /* ~64ns */
-  EZBENCH2("powf", donothing, do_powf()); /* ~64ns */
+  double _pow(double, double) asm("pow");
+  float _powf(float, float) asm("powf");
+  long double _powl(long double, long double) asm("powl");
+  EZBENCH2("pow", donothing, _pow(.7, .2));   /* ~51ns */
+  EZBENCH2("powf", donothing, _powf(.7, .2)); /* ~52ns */
+  EZBENCH2("powl", donothing, _powl(.7, .2)); /* ~53ns */
 }

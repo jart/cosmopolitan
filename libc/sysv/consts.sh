@@ -1792,12 +1792,12 @@ syscon	misc	SCSI_IOCTL_TAGGED_DISABLE		0x5384			0			0			0			0			0
 syscon	misc	SCSI_IOCTL_TAGGED_ENABLE		0x5383			0			0			0			0			0
 syscon	misc	SCSI_IOCTL_TEST_UNIT_READY		2			0			0			0			0			0
 
-syscon	misc	CLD_CONTINUED				6			6			6			6			6			0			# unix consensus
-syscon	misc	CLD_DUMPED				3			3			3			3			3			0			# unix consensus
-syscon	misc	CLD_EXITED				1			1			1			1			1			0			# unix consensus
-syscon	misc	CLD_KILLED				2			2			2			2			2			0			# unix consensus
-syscon	misc	CLD_STOPPED				5			5			5			5			5			0			# unix consensus
-syscon	misc	CLD_TRAPPED				4			4			4			4			4			0			# unix consensus
+syscon	misc	CLD_CONTINUED				6			6			6			6			6			6			# unix consensus
+syscon	misc	CLD_DUMPED				3			3			3			3			3			3			# unix consensus
+syscon	misc	CLD_EXITED				1			1			1			1			1			1			# unix consensus
+syscon	misc	CLD_KILLED				2			2			2			2			2			2			# unix consensus
+syscon	misc	CLD_STOPPED				5			5			5			5			5			5			# unix consensus
+syscon	misc	CLD_TRAPPED				4			4			4			4			4			4			# unix consensus
 
 syscon	misc	READ_10					40			0			0			0			0			0
 syscon	misc	READ_12					168			0			0			0			0			0

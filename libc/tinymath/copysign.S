@@ -17,8 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.source	__FILE__
 
+//	Returns 𝑥 with same sign as 𝑦.
+//
+//	@param	𝑥 is double scalar in low half of %xmm0
+//	@param	𝑦 is double scalar in low half of %xmm1
+//	@return	double scalar in low half of %xmm0
 copysign:
 	.leafprologue
 	.profilable

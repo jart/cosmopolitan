@@ -1664,6 +1664,17 @@ static void OpRdmsr(struct Machine *m, uint32_t rde) {
   Write32(m->ax, 0);
 }
 
+static void OpVzeroupper(struct Machine *m, uint32_t rde) {
+}
+
+static void OpEmms(struct Machine *m, uint32_t rde) {
+  if (m->xedd->op.vexvalid) {
+    OpVzeroupper(m, rde);
+  } else {
+    m->fpu.tw = -1;
+  }
+}
+
 static const nexgen32e_f kNexgen32e[] = {
     [0x000] = OpAlubAdd,
     [0x001] = OpAluw,
@@ -2040,7 +2051,7 @@ static const nexgen32e_f kNexgen32e[] = {
     [0x174] = OpSsePcmpeqb,
     [0x175] = OpSsePcmpeqw,
     [0x176] = OpSsePcmpeqd,
-    [0x177] = OpUd,
+    [0x177] = OpEmms,
     [0x178] = OpUd,
     [0x179] = OpUd,
     [0x17A] = OpUd,

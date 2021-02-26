@@ -23,6 +23,10 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
+#define roundl(x) roundl(VEIL("t", (long double)(x)))
+#define round(x)  round(VEIL("x", (double)(x)))
+#define roundf(x) roundf(VEIL("x", (float)(x)))
+
 FIXTURE(intrin, disableHardwareExtensions) {
   memset((/*unconst*/ void *)kCpuids, 0, sizeof(kCpuids));
 }

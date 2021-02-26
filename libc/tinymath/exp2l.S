@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
-.source	__FILE__
 
 //	Returns 2^𝑥.
 //
@@ -27,17 +26,26 @@ exp2l:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
+	fxam					# isinf(x)
+	fstsw	%ax
+	mov	%ah,%al
+	and	$0x45,%ah
+	cmp	$5,%ah
+	je	1f
 	fld	%st
 	frndint
 	fsubr	%st,%st(1)
 	fxch
 	f2xm1
-	fadds	.Lone(%rip)
+	fld1
+	faddp
 	fscale
 	fstp	%st(1)
-	pop	%rbp
+0:	pop	%rbp
 	ret
+1:	test	$2,%al				# signbit(x)
+	jz	0b
+	fstp	%st
+	fldz
+	jmp	0b
 	.endfn	exp2l,globl
-
-	.rodata.cst4
-.Lone:	.float	1.0

@@ -22,21 +22,58 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-char buf[32];
+#define sinl(x) sinl(VEIL("t", (long double)(x)))
+#define sin(x)  sin(VEIL("x", (double)(x)))
+#define sinf(x) sinf(VEIL("x", (float)(x)))
 
-TEST(sinl, testLongDouble) {
-  EXPECT_STREQ(".479425538604203", gc(xdtoa(sinl(.5))));
-  EXPECT_STREQ("-.479425538604203", gc(xdtoa(sinl(-.5))));
+void SetUp(void) {
+  /* 8087 FPU Control Word
+      IM: Invalid Operation ───────────────┐
+      DM: Denormal Operand ───────────────┐│
+      ZM: Zero Divide ───────────────────┐││
+      OM: Overflow ─────────────────────┐│││
+      UM: Underflow ───────────────────┐││││
+      PM: Precision ──────────────────┐│││││
+     PC: Precision Control ────────┐  ││││││
+      {float,∅,double,long double} │  ││││││
+     RC: Rounding Control ───────┐ │  ││││││
+      {even, →-∞, →+∞, →0}       │┌┤  ││││││
+                                ┌┤││  ││││││
+                               d││││rr││││││*/
+  int x87cw = 0b0000000000000000001101100001;
+  asm volatile("fldcw\t%0" : /* no outputs */ : "m"(x87cw));
 }
 
-TEST(sinl, testDouble) {
+TEST(sinl, test) {
+  EXPECT_STREQ("NAN", gc(xdtoal(sinl(NAN))));
+  EXPECT_STREQ("-NAN", gc(xdtoal(sinl(+INFINITY))));
+  EXPECT_STREQ("-NAN", gc(xdtoal(sinl(-INFINITY))));
+  EXPECT_STREQ(".479425538604203", gc(xdtoal(sinl(.5))));
+  EXPECT_STREQ("-.479425538604203", gc(xdtoal(sinl(-.5))));
+  EXPECT_STREQ(".8414709794048734", gc(xdtoal(sinl(.99999999))));
+  /* EXPECT_STREQ("-.998836772397", gc(xdtoal(sinl(555555555555)))); */
+  /* EXPECT_STREQ("1", gc(xdtoal(SINL(5.319372648326541e+255L)))); */
+}
+
+TEST(sin, test) {
+  EXPECT_TRUE(isnan(sin(NAN)));
+  EXPECT_TRUE(isnan(sin(+INFINITY)));
+  EXPECT_TRUE(isnan(sin(-INFINITY)));
+  EXPECT_STREQ("NAN", gc(xdtoa(sin(NAN))));
+  EXPECT_STREQ(".479425538604203", gc(xdtoa(sin(.5))));
+  EXPECT_STREQ("-.479425538604203", gc(xdtoa(sin(-.5))));
   EXPECT_STREQ(".479425538604203", gc(xdtoa(sin(.5))));
   EXPECT_STREQ("-.479425538604203", gc(xdtoa(sin(-.5))));
 }
 
-TEST(sinl, testFloat) {
-  EXPECT_STARTSWITH(".4794255", gc(xdtoa(sinf(.5f))));
-  EXPECT_STARTSWITH("-.4794255", gc(xdtoa(sinf(-.5f))));
+TEST(sinf, test) {
+  EXPECT_TRUE(isnan(sinf(NAN)));
+  EXPECT_TRUE(isnan(sinf(+INFINITY)));
+  EXPECT_TRUE(isnan(sinf(-INFINITY)));
+  EXPECT_STREQ("NAN", gc(xdtoaf(sinf(NAN))));
+  EXPECT_STARTSWITH(".479426", gc(xdtoaf(sinf(.5f))));
+  EXPECT_STARTSWITH("-.479426", gc(xdtoaf(sinf(-.5f))));
+  EXPECT_STARTSWITH(".873283", gc(xdtoaf(sinf(555))));
 }
 
 BENCH(sinl, bench) {

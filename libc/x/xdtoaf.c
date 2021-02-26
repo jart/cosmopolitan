@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/x/x.h"
 #include "third_party/gdtoa/gdtoa.h"
@@ -27,6 +28,6 @@
  */
 char *xdtoaf(float d) {
   char *p = xmalloc(32);
-  g_ffmt_p(p, &d, 7, 32, 2);
+  g_ffmt_p(p, &d, FLT_DIG, 32, 2);
   return p;
 }

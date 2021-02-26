@@ -81,7 +81,7 @@ __msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
    * Allocates and clears PC-compatible memory and copies image.
    */
   SystemTable->BootServices->AllocatePages(
-      EfiConventionalMemory, AllocateAddress,
+      AllocateAddress, EfiConventionalMemory,
       MAX(2 * 1024 * 1024, 1024 * 1024 + (_end - _base)) / 4096, 0);
   SystemTable->BootServices->SetMem(0, 0x80000, 0);
   SystemTable->BootServices->CopyMem((void *)(1024 * 1024), _base,
