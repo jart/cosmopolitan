@@ -846,7 +846,7 @@ static char *AppendContentEncodingGzip(char *p) {
 static char *AppendRedirect(char *p, const char *s) {
   VERBOSEF("%s %s %.*s redirect %s", clientaddrstr, kHttpMethod[req.method],
            req.uri.b - req.uri.a, inbuf + req.uri.a, s);
-  p = AppendStatus(p, 302, "Temporary Redirect");
+  p = AppendStatus(p, 307, "Temporary Redirect");
   p = AppendHeaderName(p, "Location");
   p = STPCPY(p, s);
   return AppendCrlf(p);
@@ -942,7 +942,7 @@ void HandleRequest(size_t got) {
                  req.headers[kHttpReferer].b - req.headers[kHttpReferer].a,
                  inbuf + req.headers[kHttpReferer].a);
         if ((location = LookupRedirect(path, pathlen))) {
-          p = AppendRedirect(p, DEFAULT_PATH);
+          p = AppendRedirect(p, location);
         } else if ((a = FindFile(path, pathlen))) {
           if (IsNotModified(a)) {
             VERBOSEF("%s %s %.*s not modified", clientaddrstr,
@@ -1012,6 +1012,9 @@ void HandleRequest(size_t got) {
           } else {
             p = AppendVaryContentEncoding(p);
           }
+        } else if (!strncmp(path, "/", pathlen) ||
+                   !strncmp(path, "/index.html", pathlen)) {
+          p = AppendRedirect(p, DEFAULT_PATH);
         } else {
           WARNF("%s %s %.*s not found", clientaddrstr, kHttpMethod[req.method],
                 pathlen, path);
