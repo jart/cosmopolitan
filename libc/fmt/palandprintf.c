@@ -215,6 +215,10 @@ hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
         signbit = sizeof(intmax_t) * 8 - 1;
         break;
       case 'l':
+        if (format[1] == 'f' || format[1] == 'F') {
+          format++;
+          break;
+        }
         if (format[1] == 'l') format++;
         /* fallthrough */
       case 't': /* ptrdiff_t */

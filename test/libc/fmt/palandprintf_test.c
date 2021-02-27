@@ -421,6 +421,7 @@ TEST(sprintf, test_float) {
   EXPECT_STREQ("+42.90", Format("%+6.2f", 42.8952));
   EXPECT_STREQ("+42.9", Format("%+5.1f", 42.9252));
   EXPECT_STREQ("42.500000", Format("%f", 42.5));
+  EXPECT_STREQ("42.500000", Format("%lf", 42.5));
   EXPECT_STREQ("42.5", Format("%.1f", 42.5));
   EXPECT_STREQ("42167.000000", Format("%f", 42167.0));
   EXPECT_STREQ("-12345.987654321", Format("%.9f", -12345.987654321));
