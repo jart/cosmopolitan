@@ -486,7 +486,6 @@ static ssize_t WritevAll(int fd, struct iovec *iov, int iovlen) {
   ssize_t rc;
   size_t wrote;
   do {
-  TryAgain:
     if ((rc = writev(fd, iov, iovlen)) != -1) {
       wrote = rc;
       do {
@@ -502,7 +501,6 @@ static ssize_t WritevAll(int fd, struct iovec *iov, int iovlen) {
       } while (wrote);
     } else if (errno == EINTR) {
       if (killed) return -1;
-      goto TryAgain;
     } else {
       return -1;
     }
