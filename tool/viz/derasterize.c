@@ -101,15 +101,15 @@ int y_; /* -y HEIGHT [in flexidecimal] */
 #define FAST   1
 #define FASTER 2
 
-#define MODE BEST
+#define Mode BEST
 
-#if MODE == BEST
+#if Mode == BEST
 #define MC 9u  /* log2(#) of color combos to consider */
 #define GN 35u /* # of glyphs to consider */
-#elif MODE == FAST
+#elif Mode == FAST
 #define MC 6u
 #define GN 35u
-#elif MODE == FASTER
+#elif Mode == FASTER
 #define MC 4u
 #define GN 25u
 #endif

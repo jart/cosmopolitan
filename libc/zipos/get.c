@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/safemacros.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/limits.h"
@@ -33,12 +34,18 @@
 struct Zipos *__zipos_get(void) {
   static struct Zipos zipos;
   static bool once;
-  const char *exe;
+  const char *exe, *dir;
+  char path[PATH_MAX];
   size_t mapsize;
   uint8_t *cdir;
   void *map;
   if (!once) {
+    dir = nulltoempty(getenv("PWD")); /* suboptimal */
     exe = (const char *)getauxval(AT_EXECFN);
+    if (!fileexists(exe) && strlen(dir) + 1 + strlen(exe) + 1 <= PATH_MAX) {
+      stpcpy(stpcpy(stpcpy(path, dir), "/"), exe);
+      exe = path;
+    }
     if ((zipos.fd = open(exe, O_RDONLY)) != -1) {
       if ((mapsize = getfiledescriptorsize(zipos.fd)) != SIZE_MAX &&
           (map = mmap(NULL, mapsize, PROT_READ, MAP_SHARED, zipos.fd, 0)) !=

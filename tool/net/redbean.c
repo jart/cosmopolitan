@@ -86,6 +86,7 @@ FLAGS\n\
   -v        verbosity\n\
   -d        daemonize\n\
   -s        uniprocess\n\
+  -z        print port\n\
   -m        log messages\n\
   -c INT    cache seconds\n\
   -r /X=/Y  redirect X to Y\n\
@@ -216,6 +217,7 @@ static struct Assets {
 
 static bool killed;
 static bool notimer;
+static bool printport;
 static bool heartbeat;
 static bool daemonize;
 static bool terminated;
@@ -372,7 +374,7 @@ void GetOpts(int argc, char *argv[]) {
   serveraddr.sin_family = AF_INET;
   serveraddr.sin_port = htons(DEFAULT_PORT);
   serveraddr.sin_addr.s_addr = INADDR_ANY;
-  while ((opt = getopt(argc, argv, "hduvml:p:w:r:c:L:P:U:G:B:")) != -1) {
+  while ((opt = getopt(argc, argv, "zhduvml:p:w:r:c:L:P:U:G:B:")) != -1) {
     switch (opt) {
       case 'v':
         g_loglevel++;
@@ -385,6 +387,9 @@ void GetOpts(int argc, char *argv[]) {
         break;
       case 'm':
         logmessages = true;
+        break;
+      case 'z':
+        printport = true;
         break;
       case 'r':
         AddRedirect(optarg);
@@ -646,7 +651,7 @@ static bool OpenZip(const char *path) {
     if ((fd = open(path, O_RDONLY)) != -1 && fstat(fd, &st) != -1 &&
         st.st_size &&
         (map = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0)) &&
-        (cdir = zipfindcentraldir(zmap, zmapsize)) && IndexAssets(map, cdir)) {
+        (cdir = zipfindcentraldir(map, st.st_size)) && IndexAssets(map, cdir)) {
       ok = true;
       zmap = map;
       zbase = map;
@@ -1144,6 +1149,7 @@ static void TuneServerSocket(void) {
 }
 
 void RedBean(void) {
+  uint32_t addrsize;
   gmtoff = GetGmtOffset();
   programfile = (const char *)getauxval(AT_EXECFN);
   CHECK(OpenZip(programfile));
@@ -1159,9 +1165,15 @@ void RedBean(void) {
   TuneServerSocket();
   CHECK_NE(-1, bind(server, &serveraddr, sizeof(serveraddr)));
   CHECK_NE(-1, listen(server, 10));
+  addrsize = sizeof(serveraddr);
+  CHECK_NE(-1, getsockname(server, &serveraddr, &addrsize));
   DescribeAddress(serveraddrstr, &serveraddr);
   if (daemonize) Daemonize();
   VERBOSEF("%s listen", serveraddrstr);
+  if (printport) {
+    printf("%d\n", ntohs(serveraddr.sin_port));
+    fflush(stdout);
+  }
   heartbeat = true;
   while (!terminated) {
     if (invalidated) {

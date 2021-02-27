@@ -178,6 +178,7 @@ include test/tool/build/lib/test.mk
 include test/tool/build/test.mk
 include test/tool/viz/lib/test.mk
 include test/tool/viz/test.mk
+include test/tool/net/test.mk
 include test/tool/test.mk
 include test/dsp/core/test.mk
 include test/dsp/scale/test.mk

@@ -137,6 +137,7 @@ MATHEMATICAL =								\
 	-fwrapv
 
 DEFAULT_CPPFLAGS =							\
+	-DMODE='"$(MODE)"'						\
 	-DIMAGE_BASE_VIRTUAL=$(IMAGE_BASE_VIRTUAL)			\
 	-nostdinc							\
 	-iquote.

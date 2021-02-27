@@ -1,0 +1,5 @@
+#!/bin/sh
+exec gdb -q -nh -i=mi $1                   \
+     -ex "set confirm off"                 \
+     -ex "add-symbol-file $1.dbg 0x401000" \
+     -ex "run"
