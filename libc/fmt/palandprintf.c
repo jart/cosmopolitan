@@ -121,6 +121,7 @@ static int ppatoi(const char **str) {
 hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
   void *p;
   char qchar;
+  bool longdouble;
   long double ldbl;
   wchar_t charbuf[1];
   const char *alphabet;
@@ -209,6 +210,7 @@ hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
 
     /* evaluate length field */
     signbit = 31;
+    longdouble = false;
     switch (*format) {
       case 'j': /* intmax_t */
         format++;
@@ -224,9 +226,12 @@ hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
       case 't': /* ptrdiff_t */
       case 'z': /* size_t */
       case 'Z': /* size_t */
-      case 'L': /* long double */
         format++;
         signbit = 63;
+        break;
+      case 'L': /* long double */
+        format++;
+        longdouble = true;
         break;
       case 'h':
         format++;
@@ -280,7 +285,7 @@ hidden int palandprintf(void *fn, void *arg, const char *format, va_list va) {
 
       case 'f':
       case 'F':
-        if (signbit == 63) {
+        if (longdouble) {
           ldbl = va_arg(va, long double);
         } else {
           ldbl = va_arg(va, double);

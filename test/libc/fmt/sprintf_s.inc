@@ -80,7 +80,7 @@ TEST(SUITE(snprintf), testReprChar16) {
 }
 
 TEST(SUITE(snprintf), testReprChar32) {
-  EXPECT_STREQ("L'♥'", Format("%`'Lc", L'♥'));
+  EXPECT_STREQ("L'♥'", Format("%`'lc", L'♥'));
 }
 
 TEST(SUITE(snprintf), testReprUtf8) {
