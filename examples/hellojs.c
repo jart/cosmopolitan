@@ -42,10 +42,20 @@ int main(int argc, char *argv[]) {
   duk_context *ctx;
   showcrashreports();
   ctx = duk_create_heap_default();
-  duk_push_c_function(ctx, NativePrint, DUK_VARARGS);
-  duk_put_global_string(ctx, "NativePrint");
+
+  /* define NativeAdd() */
   duk_push_c_function(ctx, NativeAdd, DUK_VARARGS);
   duk_put_global_string(ctx, "NativeAdd");
+
+  /* define console.log() */
+  duk_push_global_object(ctx);
+  duk_push_c_function(ctx, NativePrint, DUK_VARARGS);
+  duk_push_string(ctx, "name");
+  duk_push_string(ctx, "log");
+  duk_def_prop(ctx, -3, DUK_DEFPROP_HAVE_VALUE | DUK_DEFPROP_FORCE);
+  duk_set_magic(ctx, -1, 0);
+  duk_put_prop_string(ctx, -2, "log");
+  duk_put_global_string(ctx, "console");
 
   CHECK_NE(-1, (fd = open("zip:examples/hello.js", O_RDONLY)));
   CHECK_NE(-1, fstat(fd, &st));
