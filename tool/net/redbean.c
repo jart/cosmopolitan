@@ -180,9 +180,6 @@ static const struct ContentTypeExtension {
     {"otf", "font/otf"},                  //
     {"pdf", "application/pdf"},           //
     {"png", "image/png"},                 //
-    {"png", "image/png"},                 //
-    {"png", "image/png"},                 //
-    {"png", "image/png"},                 //
     {"s", "text/plain"},                  //
     {"svg", "image/svg+xml"},             //
     {"tiff", "image/tiff"},               //
