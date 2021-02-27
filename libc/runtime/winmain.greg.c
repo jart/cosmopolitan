@@ -61,6 +61,8 @@ struct WinArgs {
   char envblock[ARG_MAX];
 };
 
+uint32_t __ntconsolemode;
+
 static noasan textwindows void MakeLongDoubleLongAgain(void) {
   /* 8087 FPU Control Word
       IM: Invalid Operation ───────────────┐
@@ -79,45 +81,32 @@ static noasan textwindows void MakeLongDoubleLongAgain(void) {
   asm volatile("fldcw\t%0" : /* no outputs */ : "m"(x87cw));
 }
 
-static noasan textwindows void NormalizeCmdExe(int version) {
-  uint32_t mode;
-  int64_t handle, hstdin, hstdout, hstderr;
-  if ((int)weakaddr("v_ntsubsystem") == kNtImageSubsystemWindowsCui &&
-      version >= 10) {
-    hstdin = GetStdHandle(pushpop(kNtStdInputHandle));
-    hstdout = GetStdHandle(pushpop(kNtStdOutputHandle));
-    hstderr = GetStdHandle(pushpop(kNtStdErrorHandle));
-    if (GetFileType((handle = hstdin)) == kNtFileTypeChar) {
-      SetConsoleCP(kNtCpUtf8);
-      GetConsoleMode(handle, &mode);
-      SetConsoleMode(handle, mode | kNtEnableProcessedInput |
-                                 kNtEnableEchoInput | kNtEnableLineInput |
-                                 kNtEnableWindowInput |
-                                 kNtEnableVirtualTerminalInput);
-    }
-    if (GetFileType((handle = hstdout)) == kNtFileTypeChar ||
-        GetFileType((handle = hstderr)) == kNtFileTypeChar) {
-      SetConsoleOutputCP(kNtCpUtf8);
-      GetConsoleMode(handle, &mode);
-      SetConsoleMode(
-          handle, mode | kNtEnableProcessedOutput | kNtEnableWrapAtEolOutput |
-                      (version >= 10 ? kNtEnableVirtualTerminalProcessing : 0));
-    }
-  }
-}
-
 static noasan textwindows wontreturn void WinMainNew(void) {
   int64_t h;
   int version;
   size_t size;
   int i, count;
   uint64_t addr;
+  int64_t inhand;
   struct WinArgs *wa;
   const char16_t *env16;
   extern char os asm("__hostos");
   os = WINDOWS; /* madness https://news.ycombinator.com/item?id=21019722 */
   version = NtGetPeb()->OSMajorVersion;
-  NormalizeCmdExe(version);
+  if ((intptr_t)v_ntsubsystem == kNtImageSubsystemWindowsCui && version >= 10) {
+    SetConsoleCP(kNtCpUtf8);
+    SetConsoleOutputCP(kNtCpUtf8);
+    inhand = GetStdHandle(pushpop(kNtStdInputHandle));
+    GetConsoleMode(inhand, &__ntconsolemode);
+    SetConsoleMode(inhand, kNtEnableProcessedInput | kNtEnableLineInput |
+                               kNtEnableEchoInput | kNtEnableMouseInput |
+                               kNtEnableQuickEditMode | kNtEnableExtendedFlags |
+                               kNtEnableAutoPosition |
+                               kNtEnableVirtualTerminalInput);
+    SetConsoleMode(GetStdHandle(pushpop(kNtStdOutputHandle)),
+                   kNtEnableProcessedOutput | kNtEnableWrapAtEolOutput |
+                       kNtEnableVirtualTerminalProcessing);
+  }
   addr = version < 10 ? 0xff00000 : 0x777000000000;
   size = ROUNDUP(STACKSIZE + sizeof(struct WinArgs), FRAMESIZE);
   MapViewOfFileExNuma((_mmi.p[0].h = CreateFileMappingNuma(

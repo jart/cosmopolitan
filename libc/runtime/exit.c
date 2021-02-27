@@ -16,12 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/pushpop.h"
 #include "libc/bits/weaken.h"
+#include "libc/dce.h"
+#include "libc/nt/console.h"
+#include "libc/nt/enum/consolemodeflags.h"
+#include "libc/nt/pedef.internal.h"
+#include "libc/nt/runtime.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
-
-extern const uintptr_t __fini_array_start[] __attribute__((__weak__));
-extern const uintptr_t __fini_array_end[] __attribute__((__weak__));
 
 /**
  * Exits process with grace.
@@ -41,6 +44,12 @@ wontreturn void exit(int exitcode) {
   }
   for (p = __fini_array_end; p > __fini_array_start;) {
     ((void (*)(void))(*--p))();
+  }
+  if (SupportsWindows() && __ntconsolemode) {
+    SetConsoleMode(GetStdHandle(pushpop(kNtStdInputHandle)), __ntconsolemode);
+    SetConsoleMode(GetStdHandle(pushpop(kNtStdOutputHandle)),
+                   kNtEnableProcessedOutput | kNtEnableWrapAtEolOutput |
+                       kNtEnableVirtualTerminalProcessing);
   }
   _Exit(exitcode);
 }

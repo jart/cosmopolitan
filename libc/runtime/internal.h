@@ -12,9 +12,10 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern hidden bool _mmap_asan_mode;
-extern hidden char **g_freebsdhint;
-extern hidden void *g_stacktop;
+extern uint32_t __ntconsolemode;
+extern const char v_ntsubsystem[] __attribute__((__weak__));
+extern const uintptr_t __fini_array_end[] __attribute__((__weak__));
+extern const uintptr_t __fini_array_start[] __attribute__((__weak__));
 
 void _init(void) hidden;
 void *__cxa_finalize(void *) hidden;
