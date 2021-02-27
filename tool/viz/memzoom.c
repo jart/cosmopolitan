@@ -318,6 +318,7 @@ static void PreventBufferbloat(void) {
 
 static bool HasPendingInput(void) {
   struct pollfd fds[1];
+  if (IsWindows()) return true; /* XXX */
   fds[0].fd = 0;
   fds[0].events = POLLIN;
   fds[0].revents = 0;
@@ -841,16 +842,19 @@ static void RangesZoom(void) {
 }
 
 static void MemZoom(void) {
+  bool ok;
+  ok = false;
   do {
     if (action & RESIZED) {
       GetTtySize();
       SetupCanvas();
       action &= ~RESIZED;
     }
-    if (HasPendingInput()) {
+    if (ok && HasPendingInput()) {
       ReadKeyboard();
-      continue;
+      if (!IsWindows()) continue; /* XXX */
     }
+    ok = true;
     if (pid) {
       RangesZoom();
     } else {

@@ -97,6 +97,7 @@ static noasan textwindows wontreturn void WinMainNew(void) {
     SetConsoleCP(kNtCpUtf8);
     SetConsoleOutputCP(kNtCpUtf8);
     inhand = GetStdHandle(pushpop(kNtStdInputHandle));
+    SetEnvironmentVariable(u"TERM", u"xterm-truecolor");
     GetConsoleMode(inhand, &__ntconsolemode);
     SetConsoleMode(inhand, kNtEnableProcessedInput | kNtEnableLineInput |
                                kNtEnableEchoInput | kNtEnableMouseInput |
