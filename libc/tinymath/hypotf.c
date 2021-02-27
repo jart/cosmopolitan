@@ -24,7 +24,6 @@
 float hypotf(float a, float b) {
   float r, t;
   if (isinf(a) || isinf(b)) return INFINITY;
-  if (isunordered(a, b)) return NAN;
   a = fabsf(a);
   b = fabsf(b);
   if (a < b) t = b, b = a, a = t;

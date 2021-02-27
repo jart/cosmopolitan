@@ -114,7 +114,7 @@ ssize_t sys_sendto_nt(struct Fd *, const struct iovec *, size_t, uint32_t,
 ssize_t sys_recvfrom_nt(struct Fd *, const struct iovec *, size_t, uint32_t,
                         void *, uint32_t *) hidden;
 
-void __winsockinit(void) hidden;
+void WinSockInit(void) hidden;
 int64_t __winsockerr(void) nocallback hidden;
 int __fixupnewsockfd(int, int) hidden;
 int64_t __winsockblock(int64_t, unsigned, int64_t) hidden;

@@ -22,8 +22,7 @@
 //
 //	@param	𝑥 is a double passed in the lower quadword of %xmm0
 //	@return	result in lower quadword of %xmm0
-log2:
-	push	%rbp
+log2:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	push	%rax

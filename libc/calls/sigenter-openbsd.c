@@ -90,8 +90,8 @@ struct ucontext_openbsd {
   int64_t sc_cookie;
 };
 
-hidden void __sigenter_openbsd(int sig, struct siginfo_openbsd *si,
-                               struct ucontext_openbsd *ctx) {
+void __sigenter_openbsd(int sig, struct siginfo_openbsd *si,
+                        struct ucontext_openbsd *ctx) {
   int rva;
   ucontext_t uc;
   struct siginfo si2;

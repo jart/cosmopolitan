@@ -145,8 +145,7 @@ typedef struct { int ax, dx; } axdx_t;
 #define offsetof(x, y)   0
 #define INITIALIZER(...) struct _dummy
 #define __far
-#define tinystrstr(...) 0
-#define BENCHLOOP(...)  0
+#define BENCHLOOP(...) 0
 
 #ifdef __hook
 #undef __hook

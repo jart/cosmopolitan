@@ -30,12 +30,12 @@
  * that spawn subprocesses can use this function to determine the path
  * at startup. Here's an example how you could use it:
  *
- *   if ((strace = commandvenv("STRACE", "strace"))) {
- *     strace = strdup(strace);
- *   } else {
- *     fprintf(stderr, "error: please install strace\n");
- *     exit(1);
- *   }
+ *     if ((strace = commandvenv("STRACE", "strace"))) {
+ *       strace = strdup(strace);
+ *     } else {
+ *       fprintf(stderr, "error: please install strace\n");
+ *       exit(1);
+ *     }
  *
  * @param var is environment variable which may be used to override
  *     PATH search, and it can force a NULL result if it's empty

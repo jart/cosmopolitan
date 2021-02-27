@@ -36,8 +36,7 @@ asm(".include \"libc/disclaimer.inc\"");
  * example, 0x2800000ul was calculated as: 1UL<<(XED_ISA_SET_I86-64) |
  * 1UL<<(XED_ISA_SET_LAHF-64).
  */
-const uint64_t xed_chip_features[XED_CHIP_LAST][3] /* clang-format off */
-_Section(".text") = {
+const uint64_t kXedChipFeatures[XED_CHIP_LAST][3] /* clang-format off */ = {
   {0,                   0,                  0,     },
   {0,                   0x02800000,         0,     },  /*I86*/
   {0,                   0x02800000,         0x02000},  /*I86FP*/

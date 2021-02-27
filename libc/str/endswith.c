@@ -29,5 +29,5 @@ bool endswith(const char *s, const char *suffix) {
   n = strlen(s);
   m = strlen(suffix);
   if (m > n) return false;
-  return memcmp(s + n - m, suffix, m) == 0;
+  return !memcmp(s + n - m, suffix, m);
 }

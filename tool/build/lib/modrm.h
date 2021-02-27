@@ -57,6 +57,7 @@ struct AddrSeg {
 
 extern const uint8_t kByteReg[32];
 
+uint32_t EncodeRde(struct XedDecodedInst *);
 int64_t ComputeAddress(const struct Machine *, uint32_t);
 struct AddrSeg LoadEffectiveAddress(const struct Machine *, uint32_t);
 void *ComputeReserveAddressRead(struct Machine *, uint32_t, size_t);

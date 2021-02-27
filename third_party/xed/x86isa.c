@@ -29,7 +29,7 @@ bool xed_isa_set_is_valid_for_chip(enum XedIsaSet isa_set, enum XedChip chip) {
   unsigned n, r;
   n = isa_set / 64;
   r = isa_set - (64 * n);
-  return !!(xed_chip_features[chip][n] & (1ul << r));
+  return !!(kXedChipFeatures[chip][n] & (1ul << r));
 }
 
 bool xed_test_chip_features(struct XedChipFeatures *p, enum XedIsaSet isa_set) {
@@ -42,9 +42,9 @@ bool xed_test_chip_features(struct XedChipFeatures *p, enum XedIsaSet isa_set) {
 void xed_get_chip_features(struct XedChipFeatures *p, enum XedChip chip) {
   if (p) {
     if (chip < XED_CHIP_LAST) {
-      p->f[0] = xed_chip_features[chip][0];
-      p->f[1] = xed_chip_features[chip][1];
-      p->f[2] = xed_chip_features[chip][2];
+      p->f[0] = kXedChipFeatures[chip][0];
+      p->f[1] = kXedChipFeatures[chip][1];
+      p->f[2] = kXedChipFeatures[chip][2];
     } else {
       p->f[0] = 0;
       p->f[1] = 0;

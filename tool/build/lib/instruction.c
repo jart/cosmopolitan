@@ -24,6 +24,7 @@
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/machine.h"
 #include "tool/build/lib/memory.h"
+#include "tool/build/lib/modrm.h"
 #include "tool/build/lib/stats.h"
 #include "tool/build/lib/throw.h"
 
@@ -45,6 +46,7 @@ static void DecodeInstruction(struct Machine *m, uint8_t *p, unsigned n) {
   struct XedDecodedInst xedd[1];
   xed_decoded_inst_zero_set_mode(xedd, m->mode);
   if (!xed_instruction_length_decode(xedd, p, n)) {
+    xedd->op.rde = EncodeRde(xedd);
     memcpy(m->xedd, xedd, sizeof(m->icache[0]));
   } else {
     HaltMachine(m, kMachineDecodeError);

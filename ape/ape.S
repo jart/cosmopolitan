@@ -44,7 +44,7 @@
 #include "libc/runtime/pc.internal.h"
 #include "libc/sysv/consts/prot.h"
 
-#define USE_SYMBOL_HACK 0
+#define USE_SYMBOL_HACK 1
 
 	.section .text,"ax",@progbits
 	.align	__SIZEOF_POINTER__
@@ -1484,12 +1484,6 @@ ape_pad_text:
 	.type	ape_pad_privileged,@object
 	.hidden	ape_pad_privileged
 ape_pad_privileged:
-	.previous
-
-	.section .ape.pad.test,"a",@progbits
-	.type	ape_pad_test,@object
-	.hidden	ape_pad_test
-ape_pad_test:
 	.previous
 
 	.section .ape.pad.rodata,"a",@progbits

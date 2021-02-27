@@ -125,8 +125,8 @@ struct ucontext_netbsd {
   struct mcontext_netbsd uc_mcontext;
 };
 
-hidden void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
-                              struct ucontext_netbsd *ctx) {
+void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
+                       struct ucontext_netbsd *ctx) {
   int rva;
   ucontext_t uc;
   struct siginfo si2;

@@ -43,21 +43,21 @@ struct siginfo_freebsd {
   union sigval_freebsd si_value;
   union {
     struct {
-      int _trapno;
+      int32_t _trapno;
     } _fault;
     struct {
-      int _timerid;
-      int _overrun;
+      int32_t _timerid;
+      int32_t _overrun;
     } _timer;
     struct {
-      int _mqd;
+      int32_t _mqd;
     } _mesgq;
     struct {
-      long _band;
+      int64_t _band;
     } _poll;
     struct {
-      long __spare1__;
-      int __spare2__[7];
+      int64_t __spare1__;
+      int32_t __spare2__[7];
     } __spare__;
   } _reason;
 };
@@ -106,7 +106,7 @@ struct mcontext_freebsd {
   int64_t mc_gsbase;
   int64_t mc_xfpustate;
   int64_t mc_xfpustate_len;
-  long mc_spare[4];
+  int64_t mc_spare[4];
 };
 
 struct ucontext_freebsd {
@@ -118,8 +118,8 @@ struct ucontext_freebsd {
   int32_t __spare__[4];
 };
 
-hidden void __sigenter_freebsd(int sig, struct siginfo_freebsd *si,
-                               struct ucontext_freebsd *ctx) {
+void __sigenter_freebsd(int sig, struct siginfo_freebsd *si,
+                        struct ucontext_freebsd *ctx) {
   int rva;
   ucontext_t uc;
   rva = __sighandrvas[sig & (NSIG - 1)];
@@ -133,28 +133,28 @@ hidden void __sigenter_freebsd(int sig, struct siginfo_freebsd *si,
       uc.uc_flags = ctx->uc_flags;
       memcpy(&uc.uc_sigmask, &ctx->uc_sigmask,
              MIN(sizeof(uc.uc_sigmask), sizeof(ctx->uc_sigmask)));
-      uc.uc_mcontext.rdi = ctx->uc_mcontext.mc_rdi;
-      uc.uc_mcontext.rsi = ctx->uc_mcontext.mc_rsi;
-      uc.uc_mcontext.rdx = ctx->uc_mcontext.mc_rdx;
-      uc.uc_mcontext.rcx = ctx->uc_mcontext.mc_rcx;
       uc.uc_mcontext.r8 = ctx->uc_mcontext.mc_r8;
       uc.uc_mcontext.r9 = ctx->uc_mcontext.mc_r9;
-      uc.uc_mcontext.rax = ctx->uc_mcontext.mc_rax;
-      uc.uc_mcontext.rbx = ctx->uc_mcontext.mc_rbx;
-      uc.uc_mcontext.rbp = ctx->uc_mcontext.mc_rbp;
       uc.uc_mcontext.r10 = ctx->uc_mcontext.mc_r10;
       uc.uc_mcontext.r11 = ctx->uc_mcontext.mc_r11;
       uc.uc_mcontext.r12 = ctx->uc_mcontext.mc_r12;
       uc.uc_mcontext.r13 = ctx->uc_mcontext.mc_r13;
       uc.uc_mcontext.r14 = ctx->uc_mcontext.mc_r14;
       uc.uc_mcontext.r15 = ctx->uc_mcontext.mc_r15;
-      uc.uc_mcontext.trapno = ctx->uc_mcontext.mc_trapno;
+      uc.uc_mcontext.rdi = ctx->uc_mcontext.mc_rdi;
+      uc.uc_mcontext.rsi = ctx->uc_mcontext.mc_rsi;
+      uc.uc_mcontext.rbp = ctx->uc_mcontext.mc_rbp;
+      uc.uc_mcontext.rbx = ctx->uc_mcontext.mc_rbx;
+      uc.uc_mcontext.rdx = ctx->uc_mcontext.mc_rdx;
+      uc.uc_mcontext.rax = ctx->uc_mcontext.mc_rax;
+      uc.uc_mcontext.rcx = ctx->uc_mcontext.mc_rcx;
+      uc.uc_mcontext.rsp = ctx->uc_mcontext.mc_rsp;
+      uc.uc_mcontext.rip = ctx->uc_mcontext.mc_rip;
+      uc.uc_mcontext.eflags = ctx->uc_mcontext.mc_flags;
       uc.uc_mcontext.fs = ctx->uc_mcontext.mc_fs;
       uc.uc_mcontext.gs = ctx->uc_mcontext.mc_gs;
-      uc.uc_mcontext.eflags = ctx->uc_mcontext.mc_flags;
       uc.uc_mcontext.err = ctx->uc_mcontext.mc_err;
-      uc.uc_mcontext.rip = ctx->uc_mcontext.mc_rip;
-      uc.uc_mcontext.rsp = ctx->uc_mcontext.mc_rsp;
+      uc.uc_mcontext.trapno = ctx->uc_mcontext.mc_trapno;
     }
     ((sigaction_f)(_base + rva))(sig, (void *)si, &uc);
     if (ctx) {

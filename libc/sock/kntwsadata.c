@@ -33,13 +33,13 @@
  */
 hidden struct NtWsaData kNtWsaData;
 
-static textwindows void __winsockfini(void) {
+static textwindows void WinSockCleanup(void) {
   WSACleanup();
 }
 
-textwindows noasan void __winsockinit(void) {
+textwindows noasan void WinSockInit(void) {
   int rc;
-  atexit(__winsockfini);
+  atexit(WinSockCleanup);
   if ((rc = WSAStartup(VERSION, &kNtWsaData)) != 0 ||
       kNtWsaData.wVersion != VERSION) {
     ExitProcess(123);

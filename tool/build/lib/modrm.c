@@ -25,6 +25,21 @@
 #include "tool/build/lib/modrm.h"
 #include "tool/build/lib/throw.h"
 
+/**
+ * Compactly represents important parts of xed ild result.
+ */
+uint32_t EncodeRde(struct XedDecodedInst *x) {
+  uint8_t kWordLog2[2][2][2] = {{{2, 3}, {1, 3}}, {{0, 0}, {0, 0}}};
+  uint32_t osz = x->op.osz ^ x->op.realmode;
+  return kWordLog2[~x->op.opcode & 1][osz][x->op.rexw] << 28 |
+         x->op.mode << 26 | kXedEamode[x->op.asz][x->op.mode] << 24 |
+         x->op.rep << 30 | x->op.mod << 22 | x->op.asz << 17 |
+         x->op.seg_ovd << 18 | x->op.rexw << 6 | osz << 5 |
+         (x->op.rex << 4 | x->op.rexb << 3 | x->op.srm) << 12 |
+         (x->op.rex << 4 | x->op.rexb << 3 | x->op.rm) << 7 |
+         (x->op.rex << 4 | x->op.rexr << 3 | x->op.reg);
+}
+
 struct AddrSeg LoadEffectiveAddress(const struct Machine *m, uint32_t rde) {
   uint8_t *s = m->ds;
   uint64_t i = m->xedd->op.disp;

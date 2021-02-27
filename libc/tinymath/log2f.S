@@ -23,8 +23,7 @@
 //
 //	@param	𝑥 is a float passed in the lower quarter of %xmm0
 //	@return	result in lower quarter of %xmm0
-log2f:
-	push	%rbp
+log2f:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	push	%rax

@@ -37,7 +37,7 @@ static char g_strsignal[4 + 8];
  * @see sigaction()
  */
 char *strsignal(int sig) {
-  if (0 <= sig && (unsigned)sig < ARRAYLEN(kStrSignals)) {
+  if (0 <= sig && sig < ARRAYLEN(kStrSignals)) {
     memcpy(g_strsignal, kSig, 4);
     memcpy(&g_strsignal[3], kStrSignals[sig], 8);
   } else {

@@ -24,7 +24,6 @@
 double hypot(double a, double b) {
   double r, t;
   if (isinf(a) || isinf(b)) return INFINITY;
-  if (isunordered(a, b)) return NAN;
   a = fabs(a);
   b = fabs(b);
   if (a < b) t = b, b = a, a = t;

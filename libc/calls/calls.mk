@@ -68,7 +68,10 @@ o/$(MODE)/libc/calls/siggy.o:				\
 		OVERRIDE_COPTS +=			\
 			-ffunction-sections
 
-o/$(MODE)/libc/calls/xnutrampoline.o			\
+o/$(MODE)/libc/calls/sigenter-freebsd.o			\
+o/$(MODE)/libc/calls/sigenter-netbsd.o			\
+o/$(MODE)/libc/calls/sigenter-openbsd.o			\
+o/$(MODE)/libc/calls/sigenter-xnu.o			\
 o/$(MODE)/libc/calls/ntcontext2linux.o:			\
 		OVERRIDE_COPTS +=			\
 			-O3

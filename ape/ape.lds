@@ -238,9 +238,8 @@ SECTIONS {
     /* Code that needs to be addressable in Real Mode */
     *(.text.real)
     KEEP(*(SORT_BY_NAME(.sort.text.real.*)))
-    /**(.rodata.real)
-    KEEP(*(SORT_BY_NAME(.sort.rodata.real.*)))*/
     HIDDEN(_ereal = .);
+    . += 1;
 
 /*END: realmode addressability guarantee */
 
@@ -273,16 +272,17 @@ SECTIONS {
     KEEP(*(SORT_BY_NAME(.sort.text.*)))
 
     KEEP(*(.ape.pad.test));
-    HIDDEN(__test_start = .);
     *(.test.unlikely)
     *(.test .test.*)
 
     /* Privileged code invulnerable to magic */
     KEEP(*(.ape.pad.privileged));
+    . += . > 0 ? 1 : 0;
     HIDDEN(__privileged_start = .);
-    HIDDEN(__test_end = .);
+    . += . > 0 ? 1 : 0;
     *(.privileged)
     HIDDEN(__privileged_end = .);
+    . += . > 0 ? 1 : 0;
 
 /*BEGIN: Read Only Data */
 
@@ -302,7 +302,7 @@ SECTIONS {
     KEEP(*(.comment))
     KEEP(*(.commentepilogue))
 #endif
- 
+
     /* Windows DLL Import Directory */
     KEEP(*(.idata.ro));
     KEEP(*(SORT_BY_NAME(.idata.ro.*)))
@@ -369,6 +369,7 @@ SECTIONS {
     *(.piro.bss)
     KEEP(*(SORT_BY_NAME(.piro.bss.sort.*)))
     HIDDEN(__piro_end = .);
+    . += . > 0 ? 1 : 0;
 /*END: Post-Initialization Read-Only */
 
     /* Statically Allocated Empty Space */
@@ -378,7 +379,7 @@ SECTIONS {
 
     KEEP(*(SORT_BY_NAME(.sort.bss.*)))
 
-    . = ALIGN(0x10000); /* for brk()/sbrk() allocation */
+    . = ALIGN(FRAMESIZE); /* for brk()/sbrk() allocation */
     HIDDEN(_end = .);
     PROVIDE_HIDDEN(end = .);
   } :Ram

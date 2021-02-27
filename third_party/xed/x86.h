@@ -487,7 +487,8 @@ forceinline void xed_set_chip_modes(struct XedDecodedInst *d,
 }
 
 extern const char kXedErrorNames[];
-extern const uint64_t xed_chip_features[XED_CHIP_LAST][3];
+extern const uint64_t kXedChipFeatures[XED_CHIP_LAST][3];
+extern const uint8_t kXedEamode[2][3];
 
 struct XedDecodedInst *xed_decoded_inst_zero_set_mode(struct XedDecodedInst *,
                                                       enum XedMachineMode);

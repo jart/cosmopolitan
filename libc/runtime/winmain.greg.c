@@ -61,10 +61,6 @@ struct WinArgs {
   char envblock[ARG_MAX];
 };
 
-static noasan textwindows void SetTrueColor(void) {
-  SetEnvironmentVariable(u"TERM", u"xterm-truecolor");
-}
-
 static noasan textwindows void MakeLongDoubleLongAgain(void) {
   /* 8087 FPU Control Word
       IM: Invalid Operation ───────────────┐
@@ -92,7 +88,6 @@ static noasan textwindows void NormalizeCmdExe(int version) {
     hstdout = GetStdHandle(pushpop(kNtStdOutputHandle));
     hstderr = GetStdHandle(pushpop(kNtStdErrorHandle));
     if (GetFileType((handle = hstdin)) == kNtFileTypeChar) {
-      /* SetTrueColor(); */
       SetConsoleCP(kNtCpUtf8);
       GetConsoleMode(handle, &mode);
       SetConsoleMode(handle, mode | kNtEnableProcessedInput |
@@ -102,7 +97,6 @@ static noasan textwindows void NormalizeCmdExe(int version) {
     }
     if (GetFileType((handle = hstdout)) == kNtFileTypeChar ||
         GetFileType((handle = hstderr)) == kNtFileTypeChar) {
-      /* SetTrueColor(); */
       SetConsoleOutputCP(kNtCpUtf8);
       GetConsoleMode(handle, &mode);
       SetConsoleMode(
@@ -135,7 +129,7 @@ static noasan textwindows wontreturn void WinMainNew(void) {
   _mmi.p[0].y = (addr >> 16) + ((size >> 16) - 1);
   _mmi.p[0].prot = PROT_READ | PROT_WRITE | PROT_EXEC;
   _mmi.p[0].flags = MAP_PRIVATE | MAP_ANONYMOUS;
-  _mmi.i = pushpop(1L);
+  _mmi.i = 1;
   wa = (struct WinArgs *)(addr + size - sizeof(struct WinArgs));
   count = GetDosArgv(GetCommandLine(), wa->argblock, ARRAYLEN(wa->argblock),
                      wa->argv, ARRAYLEN(wa->argv));
@@ -193,7 +187,7 @@ static noasan textwindows wontreturn void WinMainNew(void) {
 noasan textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
                                    const char *lpCmdLine, int nCmdShow) {
   MakeLongDoubleLongAgain();
-  if (weaken(__winsockinit)) weaken(__winsockinit)();
+  if (weaken(WinSockInit)) weaken(WinSockInit)();
   if (weaken(WinMainForked)) weaken(WinMainForked)();
   WinMainNew();
 }

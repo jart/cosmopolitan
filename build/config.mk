@@ -130,7 +130,7 @@ endif
 
 # Linux-Only Tiny Mode
 #
-#   - `make MODE=tiny`
+#   - `make MODE=tinylinux`
 #   - No checks
 #   - No asserts
 #   - No canaries
@@ -158,7 +158,7 @@ endif
 
 # Linux+BSD Tiny Mode
 #
-#   - `make MODE=tiny`
+#   - `make MODE=tinylinuxbsd`
 #   - No apple
 #   - No checks
 #   - No asserts
@@ -187,7 +187,7 @@ endif
 
 # Unix Tiny Mode
 #
-#   - `make MODE=tiny`
+#   - `make MODE=tinysysv`
 #   - No checks
 #   - No asserts
 #   - No canaries
@@ -215,7 +215,7 @@ endif
 
 # Tiny Metallic Unix Mode
 #
-#   - `make MODE=tiny`
+#   - `make MODE=tinynowin`
 #   - No checks
 #   - No asserts
 #   - No canaries

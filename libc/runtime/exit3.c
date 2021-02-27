@@ -23,6 +23,8 @@
 #include "libc/nt/thunk/msabi.h"
 #include "libc/sysv/consts/nr.h"
 
+extern void(__msabi* __imp_ExitProcess)(uint32_t);
+
 /**
  * Terminates process, ignoring destructors and atexit() handlers.
  *
@@ -41,10 +43,10 @@ privileged wontreturn void _Exit(int exitcode) {
                  : "a"(__NR_exit_group), "D"(exitcode)
                  : "memory");
   } else if (IsWindows()) {
-    extern void(__msabi * __imp_ExitProcess)(uint32_t);
     __imp_ExitProcess(exitcode & 0xff);
   }
   asm("push\t$0\n\t"
+      "push\t$0\n\t"
       "cli\n\t"
       "lidt\t(%rsp)");
   for (;;) asm("ud2");

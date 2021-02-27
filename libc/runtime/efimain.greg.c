@@ -63,7 +63,6 @@ static const EFI_GUID kEfiLoadedImageProtocol = LOADED_IMAGE_PROTOCOL;
  */
 __msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
                                   EFI_SYSTEM_TABLE *SystemTable) {
-  bool ispml5t;
   int type, x87cw;
   struct mman *mm;
   uint32_t DescVersion;

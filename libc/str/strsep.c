@@ -34,10 +34,12 @@
  * @note unlike strtok() this does empty tokens and is re-entrant
  */
 char *strsep(char **str, const char *delim) {
-  char *token = *str;
+  size_t i;
+  char *token, *next;
+  token = *str;
   if (token) {
-    size_t i = strcspn(token, delim);
-    char *next = NULL;
+    i = strcspn(token, delim);
+    next = NULL;
     if (token[i]) {
       token[i] = '\0';
       next = &token[i + 1];

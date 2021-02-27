@@ -23,7 +23,6 @@
 //
 //	@param	𝑥 is double scalar in low half of %xmm0
 //	@return	double scalar in low half of %xmm0
-log10:
-	ezlea	log10l,ax
+log10:	ezlea	log10l,ax
 	jmp	_d2ld2
 	.endfn	log10,globl

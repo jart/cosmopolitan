@@ -28,6 +28,15 @@
  * @see memmem()
  */
 char16_t *strstr16(const char16_t *haystack, const char16_t *needle) {
-  return memmem(haystack, strlen16(haystack) * sizeof(char16_t), needle,
-                strlen16(needle) * sizeof(char16_t));
+  size_t i;
+  for (;;) {
+    for (i = 0;;) {
+      if (!needle[i]) return (/*unconst*/ char16_t *)haystack;
+      if (!haystack[i]) break;
+      if (needle[i] != haystack[i]) break;
+      ++i;
+    }
+    if (!*haystack++) break;
+  }
+  return NULL;
 }

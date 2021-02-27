@@ -24,7 +24,6 @@
 long double hypotl(long double a, long double b) {
   long double r, t;
   if (isinf(a) || isinf(b)) return INFINITY;
-  if (isunordered(a, b)) return NAN;
   a = fabsl(a);
   b = fabsl(b);
   if (a < b) t = b, b = a, a = t;

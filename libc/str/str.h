@@ -179,16 +179,12 @@ compatfn wchar_t *wmemcpy(wchar_t *, const wchar_t *, size_t) memcpyesque;
 compatfn wchar_t *wmempcpy(wchar_t *, const wchar_t *, size_t) memcpyesque;
 compatfn wchar_t *wmemmove(wchar_t *, const wchar_t *, size_t) memcpyesque;
 int timingsafe_memcmp(const void *, const void *, size_t);
+void *tinymemccpy(void *, const void *, int, size_t) memcpyesque;
 void *memmem(const void *, size_t, const void *, size_t)
     paramsnonnull() nothrow nocallback nosideeffect;
 char *strerror(int) returnsnonnull nothrow nocallback;
 long a64l(const char *);
 char *l64a(long);
-
-char *tinystrstr(const char *, const char *) strlenesque;
-char16_t *tinystrstr16(const char16_t *, const char16_t *) strlenesque;
-void *tinymemmem(const void *, size_t, const void *, size_t) strlenesque;
-void *tinymemccpy(void *, const void *, int, size_t) memcpyesque;
 
 char *strntolower(char *, size_t);
 char *strtolower(char *) paramsnonnull();

@@ -219,6 +219,7 @@ static long DisAppendOpLines(struct Dis *d, struct Machine *m, int64_t addr) {
   }
   xed_decoded_inst_zero_set_mode(d->xedd, m->mode);
   xed_instruction_length_decode(d->xedd, p, n);
+  d->xedd->op.rde = EncodeRde(d->xedd);
   n = d->xedd->op.error ? 1 : d->xedd->length;
   op.addr = addr;
   op.size = n;
@@ -255,6 +256,7 @@ const char *DisGetLine(struct Dis *d, struct Machine *m, size_t i) {
   xed_instruction_length_decode(
       d->xedd, AccessRam(m, d->ops.p[i].addr, d->ops.p[i].size, r, b, true),
       d->ops.p[i].size);
+  d->xedd->op.rde = EncodeRde(d->xedd);
   d->m = m;
   d->addr = d->ops.p[i].addr;
   CHECK_LT(DisLineCode(d, d->buf) - d->buf, sizeof(d->buf));
