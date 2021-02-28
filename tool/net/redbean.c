@@ -634,33 +634,22 @@ static bool OpenZip(const char *path) {
   if (zmap) {
     LOGIFNEG1(munmap(zmap, zmapsize));
   }
-  if (!zmap && ZIP_CDIR_MAGIC(__zip_end) == kZipCdirHdrMagic) {
-    if (IndexAssets(_base, __zip_end)) {
-      ok = true;
-      zbase = _base;
-      zcdir = __zip_end;
-    } else {
-      ok = false;
-    }
-  } else {
-    fd = -1;
+  fd = -1;
+  map = MAP_FAILED;
+  if ((fd = open(path, O_RDONLY)) != -1 && fstat(fd, &st) != -1 && st.st_size &&
+      (map = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0)) &&
+      (cdir = zipfindcentraldir(map, st.st_size)) && IndexAssets(map, cdir)) {
+    ok = true;
+    zmap = map;
+    zbase = map;
+    zcdir = cdir;
     map = MAP_FAILED;
-    if ((fd = open(path, O_RDONLY)) != -1 && fstat(fd, &st) != -1 &&
-        st.st_size &&
-        (map = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0)) &&
-        (cdir = zipfindcentraldir(map, st.st_size)) && IndexAssets(map, cdir)) {
-      ok = true;
-      zmap = map;
-      zbase = map;
-      zcdir = cdir;
-      map = MAP_FAILED;
-      zmapsize = st.st_size;
-    } else {
-      ok = false;
-    }
-    if (map != MAP_FAILED) LOGIFNEG1(munmap(map, st.st_size));
-    if (fd != -1) LOGIFNEG1(close(fd));
+    zmapsize = st.st_size;
+  } else {
+    ok = false;
   }
+  if (map != MAP_FAILED) LOGIFNEG1(munmap(map, st.st_size));
+  if (fd != -1) LOGIFNEG1(close(fd));
   return ok;
 }
 

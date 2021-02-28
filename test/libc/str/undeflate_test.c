@@ -113,7 +113,7 @@ TEST(undeflate, testEmbeddedCompressedZipFile_theHardWay) {
   ASSERT_TRUE(found);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+#if 0 /* todo: don't rely on __zip_end */
 
 uint8_t *buf_;
 size_t bufsize_;
@@ -165,3 +165,5 @@ BENCH(undeflate, bench) {
   EZBENCH(donothing, Inflate());
   EZBENCH(donothing, Undeflate());
 }
+
+#endif

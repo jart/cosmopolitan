@@ -364,6 +364,11 @@ SECTIONS {
     PROVIDE_HIDDEN(edata = .);
   } :Ram
 
+  .zip : {
+    KEEP(*(SORT_BY_NAME(.zip.*)))
+    . = ALIGN(PAGESIZE);
+  }
+
   .bss . : {
     KEEP(*(SORT_BY_NAME(.piro.bss.init.*)))
     *(.piro.bss)
@@ -382,7 +387,7 @@ SECTIONS {
     . = ALIGN(FRAMESIZE); /* for brk()/sbrk() allocation */
     HIDDEN(_end = .);
     PROVIDE_HIDDEN(end = .);
-  } :Ram
+  }
 
 /*END: nt addressability guarantee */
 /*END: bsd addressability guarantee */
@@ -453,7 +458,7 @@ HIDDEN(ape_rom_rva = RVA(ape_rom_vaddr));
 HIDDEN(ape_ram_offset = ape_rom_offset + ape_rom_filesz);
 HIDDEN(ape_ram_vaddr = ADDR(.data));
 HIDDEN(ape_ram_paddr = LOADADDR(.data));
-HIDDEN(ape_ram_filesz = LOADADDR(.bss) - LOADADDR(.data));
+HIDDEN(ape_ram_filesz = SIZEOF(.data));
 HIDDEN(ape_ram_memsz = ADDR(.bss) + SIZEOF(.bss) - ape_ram_vaddr);
 HIDDEN(ape_ram_align = PAGESIZE);
 HIDDEN(ape_ram_rva = RVA(ape_ram_vaddr));
@@ -535,7 +540,7 @@ HIDDEN(v_ape_highsectors =
 ZIPCONST(v_zip_cdoffset, __zip_start - IMAGE_BASE_VIRTUAL);
 ZIPCONST(v_zip_cdirsize, __zip_end - __zip_start);
 ZIPCONST(v_zip_records, v_zip_cdirsize / kZipCdirHdrLinkableSize);
-ZIPCONST(v_zip_commentsize, _edata - __zip_end - kZipCdirHdrMinSize);
+ZIPCONST(v_zip_commentsize, 0);
 
 #if SupportsXnu()
 /* Generates deterministic ID. */

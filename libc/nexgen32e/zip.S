@@ -21,7 +21,7 @@
 #include "libc/zip.h"
 
 //	ZIP Central Directory.
-	.section .piro.data.sort.zip.3,"a",@progbits
+	.section .zip.3,"",@progbits
 	.hidden	__zip_start
 	.globl	__zip_start
 	.type	__zip_start,@object
@@ -31,7 +31,7 @@ __zip_start:
 	...
 	decentralized content
 	...
-	*/.section .piro.data.sort.zip.5,"a",@progbits
+	*/.section .zip.5,"",@progbits
 	.align	kZipCdirAlign
 __zip_end:
 	.long	kZipCdirHdrMagic	# magic

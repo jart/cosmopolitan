@@ -52,8 +52,8 @@
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/elfwriter.h"
 
-#define ZIP_LOCALFILE_SECTION ".piro.data.sort.zip.2."
-#define ZIP_DIRECTORY_SECTION ".piro.data.sort.zip.4."
+#define ZIP_LOCALFILE_SECTION ".zip.2."
+#define ZIP_DIRECTORY_SECTION ".zip.4."
 
 #define PUT8(P, V)  *P++ = V
 #define PUT16(P, V) P[0] = V & 0xff, P[1] = V >> 010 & 0xff, P += 2
@@ -218,9 +218,8 @@ void EmitZip(struct ElfWriter *elf, const char *name, size_t namesize,
 
   /* emit embedded file content w/ pkzip local file header */
   elfwriter_align(elf, kZipCdirAlign, 0);
-  elfwriter_startsection(elf,
-                         gc(xasprintf("%s%s", ZIP_LOCALFILE_SECTION, name)),
-                         SHT_PROGBITS, SHF_ALLOC | SHF_WRITE);
+  elfwriter_startsection(
+      elf, gc(xasprintf("%s%s", ZIP_LOCALFILE_SECTION, name)), SHT_PROGBITS, 0);
   if (method == kZipCompressionDeflate) {
     CHECK_EQ(Z_OK, deflateInit2(memset(&zs, 0, sizeof(zs)),
                                 Z_DEFAULT_COMPRESSION, Z_DEFLATED, -MAX_WBITS,
@@ -257,9 +256,8 @@ void EmitZip(struct ElfWriter *elf, const char *name, size_t namesize,
 
   /* emit central directory record */
   elfwriter_align(elf, kZipCdirAlign, 0);
-  elfwriter_startsection(elf,
-                         gc(xasprintf("%s%s", ZIP_DIRECTORY_SECTION, name)),
-                         SHT_PROGBITS, SHF_ALLOC | SHF_WRITE);
+  elfwriter_startsection(
+      elf, gc(xasprintf("%s%s", ZIP_DIRECTORY_SECTION, name)), SHT_PROGBITS, 0);
   EmitZipCdirHdr((cfile = elfwriter_reserve(elf, kZipCdirHdrLinkableSize)),
                  name, namesize, crc, era, gflags, method, mtime, mdate, iattrs,
                  dosmode, st->st_mode, compsize, uncompsize, commentsize);
