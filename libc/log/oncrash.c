@@ -230,7 +230,7 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
   int gdbpid, err;
   static bool once;
   err = errno;
-  if (once) abort();
+  if (once) _exit(119);
   once = true;
   /* TODO(jart): Needs translation for ucontext_t and possibly siginfo_t. */
   if (IsFreebsd() || IsOpenbsd()) ctx = NULL;

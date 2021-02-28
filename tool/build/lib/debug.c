@@ -17,10 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/elf/elf.h"
 #include "libc/log/check.h"
 #include "libc/runtime/gc.h"
+#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
@@ -35,15 +37,14 @@ void LoadDebugSymbols(struct Elf *elf) {
   const char *path;
   if (elf->ehdr && GetElfSymbolTable(elf->ehdr, elf->size, &n) && n) return;
   DCHECK_NOTNULL(elf->prog);
-  fprintf(stderr, "HI %s\n", elf->prog);
-  if ((fd = open(gc(xstrcat(elf->prog, ".dbg")), O_RDONLY)) != -1 ||
-      (fd = open(elf->prog, O_RDONLY)) != -1) {
+  if ((fd = open(xstrcat(elf->prog, ".dbg"), O_RDONLY)) != -1) {
     if (fstat(fd, &st) != -1 &&
-        (elfmap = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0)) !=
+        (elfmap = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) !=
             MAP_FAILED) {
       elf->ehdr = elfmap;
       elf->size = st.st_size;
     }
     close(fd);
   }
+  fprintf(stderr, "got here\n");
 }
