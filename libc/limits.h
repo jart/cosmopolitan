@@ -1,7 +1,16 @@
 #ifndef COSMOPOLITAN_LIBC_LIMITS_H_
 #define COSMOPOLITAN_LIBC_LIMITS_H_
 
-#define __MAX2MIN(I) (-I - 1)
+#define UCHAR_MIN 0
+#define UCHAR_MAX 255
+
+#if '\200' < 0
+#define CHAR_MIN '\200'
+#define CHAR_MAX '\177'
+#else
+#define CHAR_MIN '\0'
+#define CHAR_MAX '\377'
+#endif
 
 #define SIZEOF_SHORT       __SIZEOF_SHORT__
 #define SIZEOF_INT         __SIZEOF_INT__
@@ -34,47 +43,49 @@
 #define WCHAR_MAX     __WCHAR_MAX__
 #define INTPTR_MAX    __INTPTR_MAX__
 #define PTRDIFF_MAX   __PTRDIFF_MAX__
+#define UINTPTR_MAX   __UINTPTR_MAX__
+#define UINT8_MAX     __UINT8_MAX__
+#define UINT16_MAX    __UINT16_MAX__
+#define UINT32_MAX    __UINT32_MAX__
+#define UINT64_MAX    __UINT64_MAX__
 
-#define SCHAR_MIN     __MAX2MIN(SCHAR_MAX)
-#define SHRT_MIN      __MAX2MIN(SHRT_MAX)
-#define INT_MIN       __MAX2MIN(INT_MAX)
-#define LONG_MIN      __MAX2MIN(LONG_MAX)
-#define LLONG_MIN     __MAX2MIN(LLONG_MAX)
-#define LONG_LONG_MIN __MAX2MIN(LONG_LONG_MAX)
-#define SIZE_MIN      __MAX2MIN(SIZE_MAX)
-#define INT8_MIN      __MAX2MIN(INT8_MAX)
-#define INT16_MIN     __MAX2MIN(INT16_MAX)
-#define INT32_MIN     __MAX2MIN(INT32_MAX)
-#define INT64_MIN     __MAX2MIN(INT64_MAX)
-#define INTMAX_MIN    __MAX2MIN(INTMAX_MAX)
-#define INTPTR_MIN    __MAX2MIN(INTPTR_MAX)
-#define WINT_MIN      __MAX2MIN(WINT_MAX)
-#define WCHAR_MIN     __MAX2MIN(WCHAR_MAX)
-#define PTRDIFF_MIN   __MAX2MIN(PTRDIFF_MAX)
+#define SCHAR_MIN     (-SCHAR_MAX - 1)
+#define SHRT_MIN      (-SHRT_MAX - 1)
+#define INT_MIN       (-INT_MAX - 1)
+#define LONG_MIN      (-LONG_MAX - 1)
+#define LLONG_MIN     (-LLONG_MAX - 1)
+#define LONG_LONG_MIN (-LONG_LONG_MAX - 1)
+#define SIZE_MIN      (-SIZE_MAX - 1)
+#define INT8_MIN      (-INT8_MAX - 1)
+#define INT16_MIN     (-INT16_MAX - 1)
+#define INT32_MIN     (-INT32_MAX - 1)
+#define INT64_MIN     (-INT64_MAX - 1)
+#define INTMAX_MIN    (-INTMAX_MAX - 1)
+#define INTPTR_MIN    (-INTPTR_MAX - 1)
+#define WINT_MIN      (-WINT_MAX - 1)
+#define WCHAR_MIN     (-WCHAR_MAX - 1)
+#define PTRDIFF_MIN   (-PTRDIFF_MAX - 1)
 
-#define USHRT_MAX      (SHRT_MAX << 1 | 1)
-#define UINT_MAX       (~0U)
-#define ULONG_MAX      (~0LU)
-#define ULLONG_MAX     (~0LLU)
-#define ULONG_LONG_MAX (~0LLU)
+#define USHRT_MAX 65535
+#define UINT_MAX  0xffffffffu
+#if __SIZEOF_LONG__ == 8
+#define ULONG_MAX 0xfffffffffffffffful
+#else
+#define ULONG_MAX 0xfffffffful
+#endif
+#define ULLONG_MAX     0xffffffffffffffffull
+#define ULONG_LONG_MAX 0xffffffffffffffffull
 
-#define UINTPTR_MAX __UINTPTR_MAX__
-#define UINT8_MAX   __UINT8_MAX__
-#define UINT16_MAX  __UINT16_MAX__
-#define UINT32_MAX  __UINT32_MAX__
-#define UINT64_MAX  __UINT64_MAX__
-
-#define USHRT_MIN      ((unsigned short)0)
-#define UINT_MIN       ((unsigned)0)
-#define ULONG_MIN      ((unsigned long)0)
-#define ULLONG_MIN     ((unsigned long long)0)
-#define ULONG_LONG_MIN ((unsigned long long)0)
-#define UINT8_MIN      ((uint8_t)0)
-#define UINT16_MIN     ((uint16_t)0)
-#define UINT32_MIN     ((uint32_t)0)
-#define UINT64_MIN     ((uint64_t)0)
-#define UINTMAX_MIN    ((uintmax_t)0)
-#define UINTPTR_MIN    ((uintptr_t)0)
+#define USHRT_MIN      0
+#define UINT_MIN       0u
+#define ULONG_MIN      0ul
+#define ULLONG_MIN     0ull
+#define ULONG_LONG_MIN 0ull
+#define UINT8_MIN      0
+#define UINT16_MIN     0
+#define UINT32_MIN     0u
+#define UINT64_MIN     0ull
+#define UINTPTR_MIN    0ull
 
 #define MB_CUR_MAX 6
 #define MB_LEN_MAX 6
@@ -88,11 +99,13 @@
   (((uintmax_t)0xffffffffffffffff) << 64 | (uintmax_t)0xffffffffffffffff)
 #define INT128_MIN  INTMAX_MIN
 #define INT128_MAX  INTMAX_MAX
+#define UINTMAX_MIN ((uintmax_t)0)
 #define UINT128_MIN ((uintmax_t)0)
 #define UINT128_MAX UINTMAX_MAX
 #else
 #define INTMAX_MAX  __INT64_MAX__
 #define UINTMAX_MAX __UINT64_MAX__
+#define UINTMAX_MIN UINT64_MIN
 #endif /* GCC 4.6+ */
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
