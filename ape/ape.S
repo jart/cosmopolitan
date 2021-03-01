@@ -573,6 +573,8 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.shstub	    ape_elf_shstrndx,2		#  3e: e_shstrndx
 	.ascii	    "' >&7\n"
 	.ascii	  "exec 7<&-\n"
+	.ascii	"else\n"
+	.ascii	  "exit 1\n"
 	.ascii	"fi\n"
 	.ascii	"exec \"$0\" \"$@\"\n"		# etxtbsy tail recursion
 	.ascii	"R=$?\n"			# architecture optimistic
