@@ -70,6 +70,15 @@ GNUMAKEFLAGS += --output-sync
 .FEATURES: output-sync
 .PHONY: all o bins check test depend tags
 
+# If the output directory is a symbolic link, make sure the target directory exists.
+# This makes it easy to build on tmpfs:
+#
+#     ln -s /tmp/cosmopolitan/o o
+#     ln -s $XDG_RUNTIME_DIR/cosmopolitan/o o
+#
+output_directory_link := $(shell readlink o)
+$(if $(output_directory_link),$(shell mkdir -p $(output_directory_link)))
+
 all:	o
 o:	o/$(MODE)/ape		\
 	o/$(MODE)/dsp		\
