@@ -48,3 +48,16 @@ make -j16
 o//examples/hello.com
 find o -name \*.com | xargs ls -rShal | less
 ```
+
+## Support Vector
+
+| Platform       | Min Version | Circa |
+| :---           | ---:        | ---:  |
+| AMD            | K8 Venus    | 2005  |
+| Intel          | Core        | 2006  |
+| New Technology | Vista       | 2006  |
+| GNU/Systemd    | 2.6.18      | 2007  |
+| XNU's Not UNIX | 15.6        | 2018  |
+| FreeBSD        | 12          | 2018  |
+| OpenBSD        | 6.4         | 2018  |
+| NetBSD         | 9.1         | 2020  |
