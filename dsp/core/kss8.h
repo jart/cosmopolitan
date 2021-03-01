@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_DSP_CORE_KSS8_H_
 #define COSMOPOLITAN_DSP_CORE_KSS8_H_
 #include "libc/limits.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /**

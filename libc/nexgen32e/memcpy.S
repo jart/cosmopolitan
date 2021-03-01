@@ -28,7 +28,7 @@
 	It's so easy that even a child could use it, and they do.
 */
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 //	Copies memory.
 //

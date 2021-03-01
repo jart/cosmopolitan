@@ -22,7 +22,7 @@
 	which is about 110 GBps. */
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nexgen32e/macros.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 //	Sets memory.
 //

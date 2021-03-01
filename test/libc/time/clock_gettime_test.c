@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
 #include "libc/fmt/conv.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/gc.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/clock.h"

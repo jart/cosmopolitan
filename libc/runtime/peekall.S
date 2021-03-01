@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/relocations.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 .source	__FILE__
 
 //	Loads all pages from program image into memory.

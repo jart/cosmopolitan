@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 //	Signal mask constant w/ no signal bits set.
 	.initbss 300,_init_kSigsetEmpty

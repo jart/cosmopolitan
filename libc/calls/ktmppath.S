@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/runtime.h"
 #include "libc/dce.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 #define kTmpPathMax 80
 

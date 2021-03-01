@@ -20,7 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/fmt/conv.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/accounting.h"
 #include "libc/nt/enum/status.h"
 #include "libc/nt/enum/wait.h"

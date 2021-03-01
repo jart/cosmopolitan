@@ -1,22 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_BITS_SAFEMACROS_H_
 #define COSMOPOLITAN_LIBC_BITS_SAFEMACROS_H_
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-long min(long, long);
-long max(long, long);
-long roundup(long, long);
-long rounddown(long, long);
-bool isempty(const char *);
-const char *nulltoempty(const char *);
-const char *emptytonull(const char *);
-const char *firstnonnull(const char *, const char *);
-uint64_t(unsignedsubtract)(uint64_t, uint64_t) pureconst;
-
-#if !defined(__STRICT_ANSI__) && defined(__GNUC__) && \
-!defined(__VSCODE_INTELLISENSE__)
 
 #define min(x, y)              \
   ({                           \
@@ -78,8 +65,6 @@ uint64_t(unsignedsubtract)(uint64_t, uint64_t) pureconst;
     uint64_t UnsubB = (b);                                     \
     UnsubA >= UnsubB ? UnsubA - UnsubB : ~UnsubB + UnsubA + 1; \
   })
-
-#endif /* GNU && !ANSI */
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

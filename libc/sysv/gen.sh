@@ -46,7 +46,7 @@ errfun() {
   NAME="$1"
   ERRNO="$2"
   {
-    printf '#include "libc/macros.h"\n.text.unlikely\n\n'
+    printf '#include "libc/macros.internal.h"\n.text.unlikely\n\n'
     printf '%s:' "$NAME"
     if [ "${#NAME}" -gt 6 ]; then
       printf '\n'

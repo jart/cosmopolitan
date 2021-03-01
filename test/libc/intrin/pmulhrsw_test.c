@@ -19,7 +19,7 @@
 #include "dsp/core/q.h"
 #include "libc/intrin/pmulhrsw.h"
 #include "libc/log/check.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 #include "tool/viz/lib/formatstringtable-testlib.h"

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/mpsadbw.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/str/str.h"
 
 /**

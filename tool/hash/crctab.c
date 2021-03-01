@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/fmt/conv.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/notice.inc"
 

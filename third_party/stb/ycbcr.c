@@ -19,7 +19,7 @@
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/str/str.h"
 #include "third_party/stb/internal.h"
 

@@ -30,6 +30,6 @@ __assert_fail:
 	int3
 	push	%bp
 	mov	%sp,%bp
-	rlcall	panic
+	rlcall	__panic
 	int3
 	.endfn	__assert_fail,weak

@@ -19,7 +19,7 @@
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/intrin/repmovsb.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/kompressor.h"
 #include "libc/str/str.h"
 #include "libc/str/undeflate.h"

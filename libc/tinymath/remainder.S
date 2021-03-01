@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 .source	__FILE__
 
 //	remainder(𝑥,𝑦) means (𝑥 rem 𝑦) w/ rint()-style rounding.

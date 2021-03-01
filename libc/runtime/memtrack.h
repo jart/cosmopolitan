@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
 #include "libc/dce.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/enum/version.h"
 #include "libc/runtime/runtime.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)

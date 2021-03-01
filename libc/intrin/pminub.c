@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/pminub.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 /**
  * Returns minimum of 8-bit unsigned integers.

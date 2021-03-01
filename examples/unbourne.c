@@ -1609,7 +1609,6 @@ wontreturn static void exraise(int e) {
   INTOFF;
   exception = e;
   longjmp(handler->loc, 1);
-  panic();
 }
 
 /*

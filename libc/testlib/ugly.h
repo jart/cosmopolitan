@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_TESTLIB_UGLY_H_
 #define COSMOPOLITAN_LIBC_TESTLIB_UGLY_H_
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 #define __TEST_ARRAY(S) \

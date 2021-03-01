@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/carsort.h"
 #include "libc/str/str.h"

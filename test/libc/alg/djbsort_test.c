@@ -19,7 +19,7 @@
 #include "libc/alg/alg.h"
 #include "libc/limits.h"
 #include "libc/log/log.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/x86feature.h"

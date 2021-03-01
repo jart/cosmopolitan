@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/struct/iovec.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/consts/iov.h"
 

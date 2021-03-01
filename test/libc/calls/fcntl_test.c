@@ -19,7 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/o.h"

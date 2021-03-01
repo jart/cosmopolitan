@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/x86info.h"
 
 hidden const struct X86ProcessorModel kX86ProcessorModels[] = {

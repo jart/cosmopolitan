@@ -162,7 +162,7 @@ $(LIBC_NT_NTDLL_A_OBJS):				\
 o/libc/nt/ntdllimport.inc:				\
 		ape/relocations.h			\
 		libc/nt/ntdllimport.h			\
-		libc/macros.h				\
+		libc/macros.internal.h			\
 		libc/macros.internal.inc		\
 		libc/macros-cpp.internal.inc
 

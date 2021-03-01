@@ -21,7 +21,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/str/str.h"
 #include "tool/build/lib/demangle.h"
 #include "tool/build/lib/dis.h"

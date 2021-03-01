@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/relocations.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 //	Escapes byte for string literal.
 //

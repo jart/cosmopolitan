@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/core/core.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/winsize.h"
@@ -25,7 +25,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"

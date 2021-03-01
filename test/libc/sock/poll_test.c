@@ -19,7 +19,7 @@
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/gc.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"

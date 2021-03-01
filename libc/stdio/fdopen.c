@@ -42,7 +42,7 @@ FILE *fdopen(int fd, const char *mode) {
     f->size = BUFSIZ;
     if ((f->buf = valloc(f->size))) {
       if ((f->iomode & O_ACCMODE) != O_RDONLY) {
-        _fflushregister(f);
+        __fflush_register(f);
       }
       return f;
     }

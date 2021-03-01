@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/log/log.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "tool/build/lib/address.h"

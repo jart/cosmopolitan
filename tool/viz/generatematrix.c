@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/rand/lcg.internal.h"

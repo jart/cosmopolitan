@@ -21,7 +21,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/sysv/errfuns.h"
 
 /**

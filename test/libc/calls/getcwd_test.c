@@ -21,7 +21,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/gc.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/notice.inc"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/map.h"

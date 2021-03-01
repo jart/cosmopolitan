@@ -20,7 +20,7 @@
 #include "libc/bits/initializer.internal.h"
 #include "libc/errno.h"
 #include "libc/log/log.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"
 #include "libc/stdio/stdio.h"

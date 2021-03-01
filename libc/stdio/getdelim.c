@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/errno.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"

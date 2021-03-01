@@ -14,7 +14,7 @@ struct StdioFlush {
   FILE *handles_initmem[8];
 };
 
-extern struct StdioFlush g_fflush;
+extern struct StdioFlush __fflush hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

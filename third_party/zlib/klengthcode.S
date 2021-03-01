@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "third_party/zlib/zutil.h"
-#include "libc/macros.h"
+#include "third_party/zlib/zutil.internal.h"
+#include "libc/macros.internal.h"
 
 	.initbss 300,_init_kZlibLengthCode
 kZlibLengthCode:

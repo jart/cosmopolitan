@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/zlib/zlib.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 deflateInit:
 	mov	$Z_DEFLATED,%edx

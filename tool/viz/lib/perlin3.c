@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/bits/initializer.internal.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "tool/viz/lib/graphic.h"
 

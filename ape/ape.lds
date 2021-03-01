@@ -364,9 +364,10 @@ SECTIONS {
     PROVIDE_HIDDEN(edata = .);
   } :Ram
 
-  .zip : {
+  .zip . : {
     KEEP(*(SORT_BY_NAME(.zip.*)))
     . = ALIGN(PAGESIZE);
+    HIDDEN(_efile = .);
   }
 
   .bss . : {
@@ -540,7 +541,7 @@ HIDDEN(v_ape_highsectors =
 ZIPCONST(v_zip_cdoffset, __zip_start - IMAGE_BASE_VIRTUAL);
 ZIPCONST(v_zip_cdirsize, __zip_end - __zip_start);
 ZIPCONST(v_zip_records, v_zip_cdirsize / kZipCdirHdrLinkableSize);
-ZIPCONST(v_zip_commentsize, 0);
+ZIPCONST(v_zip_commentsize, _efile - __zip_end - kZipCdirHdrMinSize);
 
 #if SupportsXnu()
 /* Generates deterministic ID. */

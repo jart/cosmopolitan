@@ -22,7 +22,7 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/sysv/consts/iov.h"
 #include "libc/sysv/errfuns.h"
 

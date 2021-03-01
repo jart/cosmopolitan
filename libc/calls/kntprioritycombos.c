@@ -19,7 +19,7 @@
 #include "libc/bits/bits.h"
 #include "libc/calls/kntprioritycombos.internal.h"
 #include "libc/limits.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/ffs.h"
 #include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/enum/threadpriority.h"

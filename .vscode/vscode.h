@@ -79,7 +79,7 @@
 
 #define SWITCHEROO(...) 0
 
-extern unsigned g_loglevel;
+extern unsigned __log_level;
 
 typedef void * va_list;
 

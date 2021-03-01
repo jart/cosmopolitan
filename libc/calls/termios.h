@@ -3,7 +3,6 @@
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/winsize.h"
-#include "libc/macros.h"
 #include "libc/sysv/consts/termios.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -34,9 +33,9 @@ int posix_openpt(int) nodiscard;
 
 #define tcsetattr(FD, OPT, TIO) tcsetattr_dispatch(FD, OPT, TIO)
 forceinline int tcsetattr_dispatch(int fd, int opt, const struct termios *tio) {
-  if (EQUIVALENT(opt, TCSANOW)) return ioctl(fd, TCSETS, (void *)tio);
-  if (EQUIVALENT(opt, TCSADRAIN)) return ioctl(fd, TCSETSW, (void *)tio);
-  if (EQUIVALENT(opt, TCSAFLUSH)) return ioctl(fd, TCSETSF, (void *)tio);
+  if (__EQUIVALENT(opt, TCSANOW)) return ioctl(fd, TCSETS, (void *)tio);
+  if (__EQUIVALENT(opt, TCSADRAIN)) return ioctl(fd, TCSETSW, (void *)tio);
+  if (__EQUIVALENT(opt, TCSAFLUSH)) return ioctl(fd, TCSETSF, (void *)tio);
   return (tcsetattr)(fd, opt, tio);
 }
 

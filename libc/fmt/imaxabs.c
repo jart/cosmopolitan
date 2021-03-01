@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 intmax_t(imaxabs)(intmax_t x) {
   return ABS(x);

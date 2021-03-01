@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=8 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,21 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/internal.h"
-#include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/dce.h"
+#include "libc/calls/calls.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/macros.internal.h"
+.source	__FILE__
 
-STATIC_YOINK("_init_g_stderr");
-
-/**
- * Pointer to standard error stream.
- */
-FILE *stderr;
-
-hidden FILE g_stderr;
-hidden unsigned char g_stderr_buf[BUFSIZ];
-
-static textstartup void _init_g_stderr2() {
-  _fflushregister(stderr);
-}
-
-const void *const g_stderr_ctor[] initarray = {_init_g_stderr2};
+	.init.start 400,_init_stdin
+	ezlea	__stdin,ax
+	mov	O_RDONLY,%edx
+	mov	%edx,4(%rax)			#→ f.iomode
+	ezlea	__stdin_buf,cx
+	mov	%rcx,24(%rax)			#→ f.buf
+	movl	$BUFSIZ,32(%rax)		#→ f.size
+	ezlea	__freadbuf,cx
+	mov	%rcx,%rdx
+	mov	%rdx,40(%rax)			#→ f.reader
+	mov	%rax,stdin(%rip)
+	.init.end 400,_init_stdin,globl,hidden

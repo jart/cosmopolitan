@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/bits/xchg.h"
+#include "libc/bits/xchg.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/log.h"

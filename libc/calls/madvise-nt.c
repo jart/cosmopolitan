@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/enum/offerpriority.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"

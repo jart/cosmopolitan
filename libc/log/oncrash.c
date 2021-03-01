@@ -29,7 +29,7 @@
 #include "libc/log/gdb.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.h"

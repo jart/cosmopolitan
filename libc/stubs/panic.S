@@ -16,17 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 .real
 .source	__FILE__
 .code16 # ∩ .code32 ∩ .code64
 
 //	Aborts or hard blocks instruction pointer.
 //	@mode	long,legacy,real
-panic:	push	%bp
+__panic:
+	push	%bp
 	mov	%sp,%bp
 	.softicebp
 	cli
 1:	hlt
 	jmp	1b
-	.endfn	panic,weak
+	.endfn	__panic,weak

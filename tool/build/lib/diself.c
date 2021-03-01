@@ -21,7 +21,7 @@
 #include "libc/elf/struct/sym.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "tool/build/lib/dis.h"

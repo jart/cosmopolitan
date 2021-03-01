@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,6 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/internal.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/dce.h"
+#include "libc/calls/calls.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/macros.internal.h"
+.source	__FILE__
 
-hidden FILE g_stdio[3];
+	.init.start 400,_init_stdout
+	ezlea	__stdout,ax
+	push	STDOUT_FILENO
+	pop	12(%rax)			#→ f.fd
+	mov	O_WRONLY,%edx
+	mov	%edx,4(%rax)			#→ f.iomode
+	ezlea	__stdout_buf,cx
+	mov	%rcx,24(%rax)			#→ f.buf
+	movl	$BUFSIZ,32(%rax)		#→ f.size
+	ezlea	__fwritebuf,cx
+	mov	%rcx,%rdx
+	mov	%rdx,48(%rax)			#→ f.writer
+	mov	%rax,stdout(%rip)
+	.init.end 400,_init_stdout,globl,hidden

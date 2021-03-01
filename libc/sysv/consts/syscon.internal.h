@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 .macro	.syscon	group:req name:req linux:req xnu:req freebsd:req openbsd:req netbsd:req windows:req
 	yoink	_init_systemfive

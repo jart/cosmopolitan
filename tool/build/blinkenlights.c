@@ -21,7 +21,7 @@
 #include "libc/alg/arraylist2.internal.h"
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/iovec.h"
@@ -40,7 +40,7 @@
 #include "libc/log/check.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/log.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"
@@ -2773,7 +2773,7 @@ static void GetOpts(int argc, char *argv[]) {
         memset(&g_high, 0, sizeof(g_high));
         break;
       case 'v':
-        ++g_loglevel;
+        ++__log_level;
         break;
       case 'L':
         strcpy(logpath, optarg);
@@ -2790,8 +2790,8 @@ static void GetOpts(int argc, char *argv[]) {
         PrintUsage(EX_USAGE, stderr);
     }
   }
-  g_logfile = fopen(logpath, "a");
-  setvbuf(g_logfile, xmalloc(PAGESIZE), _IOLBF, PAGESIZE);
+  __log_file = fopen(logpath, "a");
+  setvbuf(__log_file, xmalloc(PAGESIZE), _IOLBF, PAGESIZE);
 }
 
 static int OpenDevTty(void) {

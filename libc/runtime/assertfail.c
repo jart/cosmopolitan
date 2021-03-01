@@ -21,7 +21,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/dce.h"
 #include "libc/log/log.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/alloca.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/nr.h"

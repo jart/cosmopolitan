@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/flock.h"
@@ -465,7 +465,7 @@ int RunRemoteTestsInParallel(char *hosts[], int count) {
 
 int main(int argc, char *argv[]) {
   showcrashreports();
-  /* g_loglevel = kLogDebug; */
+  /* __log_level = kLogDebug; */
   if (argc > 1 &&
       (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)) {
     ShowUsage(stdout, 0);

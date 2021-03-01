@@ -7,9 +7,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/emmintrin.internal.h"
 #include "libc/str/str.h"
-#include "third_party/zlib/deflate.h"
+#include "third_party/zlib/deflate.internal.h"
 #include "third_party/zlib/internal.h"
-#include "third_party/zlib/zutil.h"
+#include "third_party/zlib/zutil.internal.h"
 
 asm(".ident\t\"\\n\\n\
 zlib » sse2 fill window (zlib License)\\n\

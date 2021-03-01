@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/packssdw.h"
 #include "libc/limits.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 /**
  * Casts ints to shorts w/ saturation.

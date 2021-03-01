@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+│vi: set net ft=c ts=8 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,11 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
+#include "libc/stdio/internal.h"
+#include "libc/stdio/stdio.h"
+
+STATIC_YOINK("_init_stderr");
 
 /**
- * Subtracts unsigned integers w/ wraparound.
+ * Pointer to standard error stream.
  */
-uint64_t(unsignedsubtract)(uint64_t x, uint64_t y) {
-  return unsignedsubtract(x, y);
+FILE *stderr;
+
+hidden FILE __stderr;
+hidden unsigned char __stderr_buf[BUFSIZ];
+
+static textstartup void __stderr_init() {
+  __fflush_register(stderr);
 }
+
+const void *const __stderr_ctor[] initarray = {__stderr_init};

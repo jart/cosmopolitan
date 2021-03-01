@@ -19,7 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"

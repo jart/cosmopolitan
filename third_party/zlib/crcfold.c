@@ -11,7 +11,7 @@
 #include "libc/bits/wmmintrin.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "third_party/zlib/deflate.h"
+#include "third_party/zlib/deflate.internal.h"
 #include "third_party/zlib/internal.h"
 
 #ifndef __llvm__

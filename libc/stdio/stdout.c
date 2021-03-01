@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=8 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,24 +16,30 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/sysv/consts/o.h"
-#include "libc/dce.h"
+#include "libc/bits/pushpop.h"
 #include "libc/calls/calls.h"
-#include "libc/sysv/consts/fileno.h"
-#include "libc/macros.h"
-.source	__FILE__
+#include "libc/dce.h"
+#include "libc/stdio/internal.h"
+#include "libc/stdio/stdio.h"
 
-	.init.start 400,_init_g_stdout
-	ezlea	g_stdout,ax
-	push	STDOUT_FILENO
-	pop	12(%rax)			#→ f.fd
-	mov	O_WRONLY,%edx
-	mov	%edx,4(%rax)			#→ f.iomode
-	ezlea	g_stdout_buf,cx
-	mov	%rcx,24(%rax)			#→ f.buf
-	movl	$BUFSIZ,32(%rax)		#→ f.size
-	ezlea	__fwritebuf,cx
-	mov	%rcx,%rdx
-	mov	%rdx,48(%rax)			#→ f.writer
-	mov	%rax,stdout(%rip)
-	.init.end 400,_init_g_stdout,globl,hidden
+STATIC_YOINK("_init_stdout");
+
+/**
+ * Pointer to standard output stream.
+ */
+FILE *stdout;
+
+hidden FILE __stdout;
+hidden unsigned char __stdout_buf[BUFSIZ];
+
+static textstartup void __stdout_init() {
+  struct FILE *sf;
+  sf = stdout;
+  asm("" : "+r"(sf));
+  if (IsWindows() || ischardev(pushpop(sf->fd))) {
+    sf->bufmode = _IOLBF;
+  }
+  __fflush_register(sf);
+}
+
+const void *const __stdout_ctor[] initarray = {__stdout_init};

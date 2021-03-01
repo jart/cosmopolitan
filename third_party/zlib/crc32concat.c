@@ -6,9 +6,9 @@
 │ Use of this source code is governed by the BSD-style licenses that can       │
 │ be found in the third_party/zlib/LICENSE file.                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "third_party/zlib/deflate.h"
+#include "third_party/zlib/deflate.internal.h"
 #include "third_party/zlib/internal.h"
-#include "third_party/zlib/zutil.h"
+#include "third_party/zlib/zutil.internal.h"
 
 asm(".ident\t\"\\n\\n\
 zlib (zlib License)\\n\

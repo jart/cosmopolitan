@@ -19,7 +19,7 @@
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/log/check.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"

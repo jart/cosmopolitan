@@ -19,7 +19,7 @@
 #include "libc/bits/pushpop.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ntspawn.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/enum/processcreationflags.h"

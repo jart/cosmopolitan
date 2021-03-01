@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_IOCTL_H_
 #define COSMOPOLITAN_LIBC_CALLS_IOCTL_H_
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/sysv/consts/termios.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -18,6 +18,7 @@ int ioctl(int, uint64_t, void *);
 
 #define ioctl(FD, REQUEST, MEMORY) ioctl_dispatch(FD, REQUEST, MEMORY)
 
+#define __EQUIVALENT(X, Y) (__builtin_constant_p((X) == (Y)) && ((X) == (Y)))
 #define __IOCTL_DISPATCH(CMP, FD, REQUEST, MEMORY)                       \
   do {                                                                   \
     if (CMP(request, TIOCGWINSZ)) return ioctl_tiocgwinsz(FD, MEMORY);   \
@@ -39,7 +40,7 @@ int ioctl_tiocswinsz_nt(int, void *);
 int ioctl_default(int, uint64_t, void *);
 
 forceinline int ioctl_dispatch(int fd, uint64_t request, void *memory) {
-  __IOCTL_DISPATCH(EQUIVALENT, fd, request, memory);
+  __IOCTL_DISPATCH(__EQUIVALENT, fd, request, memory);
   return ioctl_default(fd, request, memory);
 }
 

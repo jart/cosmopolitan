@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 /**
  * Copies data between file descriptors the slow way.

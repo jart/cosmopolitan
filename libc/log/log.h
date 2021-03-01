@@ -30,7 +30,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern FILE *g_logfile;
+extern FILE *__log_file;
 
 void perror(const char *) relegated;   /* print the last system error */
 void __die(void) relegated wontreturn; /* print backtrace and abort() */
@@ -53,11 +53,11 @@ bool IsRunningUnderMake(void);
 ╚────────────────────────────────────────────────────────────────────────────│*/
 #ifndef __STRICT_ANSI__
 
-extern unsigned g_loglevel; /* log level for runtime check */
+extern unsigned __log_level; /* log level for runtime check */
 
 #define LOGGABLE(LEVEL)                                          \
   ((!__builtin_constant_p(LEVEL) || (LEVEL) <= LOGGABLELEVEL) && \
-   (LEVEL) <= g_loglevel)
+   (LEVEL) <= __log_level)
 
 #define LOGF(FMT, ...)                                               \
   do {                                                               \

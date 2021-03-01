@@ -20,7 +20,7 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/pushpop.h"
 #include "libc/calls/calls.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/fflush.internal.h"
@@ -39,8 +39,8 @@ int fflush(FILE *f) {
   int res, wrote;
   res = 0;
   if (!f) {
-    for (i = g_fflush.handles.i; i; --i) {
-      if ((f = g_fflush.handles.p[i - 1])) {
+    for (i = __fflush.handles.i; i; --i) {
+      if ((f = __fflush.handles.p[i - 1])) {
         if ((wrote = fflush(f)) != -1) {
           res += wrote;
         } else {
@@ -61,10 +61,10 @@ int fflush(FILE *f) {
   return res;
 }
 
-textstartup int _fflushregister(FILE *f) {
+textstartup int __fflush_register(FILE *f) {
   size_t i;
   struct StdioFlush *sf;
-  sf = &g_fflush;
+  sf = &__fflush;
   if (!sf->handles.p) {
     sf->handles.p = &sf->handles_initmem[0];
     pushmov(&sf->handles.n, ARRAYLEN(sf->handles_initmem));
@@ -79,10 +79,10 @@ textstartup int _fflushregister(FILE *f) {
   return append(&sf->handles, &f);
 }
 
-void _fflushunregister(FILE *f) {
+void __fflush_unregister(FILE *f) {
   size_t i;
   struct StdioFlush *sf;
-  sf = &g_fflush;
+  sf = &__fflush;
   sf = pushpop(sf);
   for (i = sf->handles.i; i; --i) {
     if (sf->handles.p[i - 1] == f) {

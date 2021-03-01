@@ -20,7 +20,7 @@
 #include "libc/runtime/internal.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/nr.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 .privileged
 
 //	Terminates program abnormally.

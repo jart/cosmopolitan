@@ -19,7 +19,7 @@
 #include "libc/alg/arraylist2.internal.h"
 #include "libc/calls/ntspawn.h"
 #include "libc/fmt/conv.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
 #include "libc/str/oldutf16.internal.h"

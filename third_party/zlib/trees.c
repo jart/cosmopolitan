@@ -7,7 +7,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "third_party/zlib/deflate.h"
+#include "third_party/zlib/deflate.internal.h"
 #include "third_party/zlib/internal.h"
 
 asm(".ident\t\"\\n\\n\
@@ -822,7 +822,9 @@ void _tr_stored_block(struct DeflateState *s, charf *buf, uint64_t stored_len,
 /**
  * Flushes bits in bit buffer to pending output (leaves at most 7 bits)
  */
-void _tr_flush_bits(struct DeflateState *s) { bi_flush(s); }
+void _tr_flush_bits(struct DeflateState *s) {
+  bi_flush(s);
+}
 
 /**
  * Sends one empty static block to give enough lookahead for inflate.

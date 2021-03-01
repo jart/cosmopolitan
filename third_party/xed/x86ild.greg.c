@@ -19,7 +19,7 @@
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/dce.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"

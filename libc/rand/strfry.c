@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/shuffle.h"
+#include "libc/alg/shuffle.internal.h"
 #include "libc/rand/rand.h"
 #include "libc/str/str.h"
 

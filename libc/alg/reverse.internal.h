@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_ALG_REVERSE_H_
 #define COSMOPOLITAN_LIBC_ALG_REVERSE_H_
-#include "libc/bits/xchg.h"
+#include "libc/bits/xchg.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /**
@@ -11,7 +11,6 @@
  * @return pointer to start of array
  * @see ARRAYLEN()
  */
-#ifndef reverse
 #define reverse(ARRAY, COUNT)              \
   ({                                       \
     autotype(&(ARRAY)[0]) Array = (ARRAY); \
@@ -27,7 +26,6 @@
     }                                      \
     Array;                                 \
   })
-#endif /* reverse */
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_ALG_REVERSE_H_ */

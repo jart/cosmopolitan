@@ -8,7 +8,7 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/bits/bits.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/fileno.h"

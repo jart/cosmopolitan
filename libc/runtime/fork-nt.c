@@ -22,7 +22,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/ntspawn.h"
 #include "libc/fmt/itoa.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/nt2sysv.h"
 #include "libc/nt/dll.h"
 #include "libc/nt/enum/filemapflags.h"

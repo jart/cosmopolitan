@@ -19,7 +19,7 @@
 #include "libc/alg/arraylist2.internal.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/bswap.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/itimerval.h"
@@ -30,7 +30,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
@@ -374,7 +374,7 @@ void GetOpts(int argc, char *argv[]) {
   while ((opt = getopt(argc, argv, "zhduvml:p:w:r:c:L:P:U:G:B:")) != -1) {
     switch (opt) {
       case 'v':
-        g_loglevel++;
+        __log_level++;
         break;
       case 'd':
         daemonize = true;

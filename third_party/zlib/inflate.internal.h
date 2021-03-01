@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_ZLIB_INFLATE_H_
 #define COSMOPOLITAN_THIRD_PARTY_ZLIB_INFLATE_H_
-#include "third_party/zlib/inftrees.h"
+#include "third_party/zlib/inftrees.internal.h"
 #include "third_party/zlib/zlib.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

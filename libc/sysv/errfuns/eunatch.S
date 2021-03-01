@@ -1,4 +1,4 @@
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 .text.unlikely
 
 eunatch:

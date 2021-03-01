@@ -20,7 +20,7 @@
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/files.h"
 #include "libc/sysv/errfuns.h"
 

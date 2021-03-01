@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 //	Returns pointer to first instance of character.
 //

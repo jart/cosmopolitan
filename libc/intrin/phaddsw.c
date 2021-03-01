@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/phaddsw.h"
 #include "libc/limits.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 /**
  * Adds adjacent shorts w/ saturation.

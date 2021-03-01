@@ -37,7 +37,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/afd.h"

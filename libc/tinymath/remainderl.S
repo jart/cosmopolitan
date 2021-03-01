@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/pc.internal.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 .source	__FILE__
 
 remainderl:

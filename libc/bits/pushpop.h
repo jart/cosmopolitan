@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_BITS_PUSHPOP_H_
 #define COSMOPOLITAN_LIBC_BITS_PUSHPOP_H_
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 #if !defined(__GNUC__) || defined(__STRICT_ANSI__)

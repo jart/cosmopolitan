@@ -43,7 +43,6 @@ void exit(int) wontreturn;
 void _exit(int) libcesque wontreturn;
 void _Exit(int) libcesque wontreturn;
 void abort(void) wontreturn noinstrument;
-void panic(void) wontreturn noinstrument privileged;
 void triplf(void) wontreturn noinstrument privileged;
 int __cxa_atexit(void *, void *, void *) libcesque;
 int atfork(void *, void *) libcesque;

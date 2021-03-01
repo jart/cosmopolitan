@@ -7,7 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 //	extern const char kWeekdayName[7][10];
 	.section .rodata,"a",@progbits

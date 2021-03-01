@@ -18,10 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/pc.internal.h"
 #include "libc/dce.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/nexgen32e/x86feature.h"
 
+	.initbss 201,_init_kCpuids
 //	Globally precomputed CPUID.
 //
 //	This module lets us check CPUID in 0.06ns rather than 51.00ns.
@@ -30,7 +31,6 @@
 //	are quite toilsome.
 //
 //	@see	www.felixcloutier.com/x86/cpuid
-	.initbss 201,_init_kCpuids
 kCpuids:.long	0,0,0,0				# EAX=0 (Basic Processor Info)
 	.long	0,0,0,0				# EAX=1 (Processor Info)
 	.long	0,0,0,0				# EAX=2

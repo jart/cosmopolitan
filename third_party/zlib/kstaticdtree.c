@@ -1,6 +1,6 @@
 #include "third_party/zlib/internal.h"
 
-const ct_data kZlibStaticDtree[D_CODES] = {
+hidden const ct_data kZlibStaticDtree[D_CODES] = {
     {{0}, {5}},  {{16}, {5}}, {{8}, {5}},  {{24}, {5}}, {{4}, {5}},
     {{20}, {5}}, {{12}, {5}}, {{28}, {5}}, {{2}, {5}},  {{18}, {5}},
     {{10}, {5}}, {{26}, {5}}, {{6}, {5}},  {{22}, {5}}, {{14}, {5}},

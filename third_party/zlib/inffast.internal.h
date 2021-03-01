@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_ZLIB_INFFAST_H_
 #define COSMOPOLITAN_THIRD_PARTY_ZLIB_INFFAST_H_
-#include "third_party/zlib/inffast.h"
+#include "third_party/zlib/inffast.internal.h"
 #include "third_party/zlib/zlib.h"
 
 /* INFLATE_FAST_MIN_INPUT: the minimum number of input bytes needed so that

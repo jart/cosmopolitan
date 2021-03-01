@@ -6,7 +6,7 @@
 │ be found in the third_party/zlib/LICENSE file.                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
-#include "third_party/zlib/zutil.h"
+#include "third_party/zlib/zutil.internal.h"
 
 asm(".ident\t\"\\n\\n\
 zlib (zlib License)\\n\
@@ -26,7 +26,9 @@ const char *const z_errmsg[10] = {
     (const char *)"",
 };
 
-const char *zlibVersion() { return ZLIB_VERSION; }
+const char *zlibVersion() {
+  return ZLIB_VERSION;
+}
 
 uLong zlibCompileFlags() {
   uLong flags;
@@ -125,4 +127,6 @@ void z_error(char *m) {
  * Exported to allow conversion of error code to string for compress()
  * and uncompress()
  */
-const char *zError(int err) { return ERR_MSG(err); }
+const char *zError(int err) {
+  return ERR_MSG(err);
+}

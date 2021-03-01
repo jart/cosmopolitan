@@ -5,10 +5,10 @@
 │ Use of this source code is governed by the BSD-style licenses that can       │
 │ be found in the third_party/zlib/LICENSE file.                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "third_party/zlib/inffast.h"
-#include "third_party/zlib/inflate.h"
-#include "third_party/zlib/inftrees.h"
-#include "third_party/zlib/zutil.h"
+#include "third_party/zlib/inffast.internal.h"
+#include "third_party/zlib/inflate.internal.h"
+#include "third_party/zlib/inftrees.internal.h"
+#include "third_party/zlib/zutil.internal.h"
 
 asm(".ident\t\"\\n\\n\
 zlib (zlib License)\\n\

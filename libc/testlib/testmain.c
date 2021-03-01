@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/x86feature.h"
@@ -55,7 +55,7 @@ static testonly void GetOpts(int argc, char *argv[]) {
         runbenchmarks_ = true;
         break;
       case 'v':
-        ++g_loglevel;
+        ++__log_level;
         break;
       case '?':
       case 'h':
@@ -70,7 +70,7 @@ static testonly void GetOpts(int argc, char *argv[]) {
  * Generic test program main function.
  */
 testonly int main(int argc, char *argv[]) {
-  g_loglevel = kLogInfo;
+  __log_level = kLogInfo;
   GetOpts(argc, argv);
   showcrashreports();
   g_testlib_shoulddebugbreak = IsDebuggerPresent(false);

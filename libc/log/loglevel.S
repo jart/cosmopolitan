@@ -17,16 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/log.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 .source	__FILE__
 
 	.bss
 	.align	4
-g_loglevel:
+__log_level:
 	.long	0
-	.endobj	g_loglevel,globl
+	.endobj	__log_level,globl
 	.previous
 
-	.init.start 200,_init_g_loglevel
-	movb	$kLogInfo,g_loglevel(%rip)
-	.init.end 200,_init_g_loglevel
+	.init.start 200,_init_log_level
+	movb	$kLogInfo,__log_level(%rip)
+	.init.end 200,_init_log_level

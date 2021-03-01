@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/reverse.h"
+#include "libc/alg/reverse.internal.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/likely.h"
 #include "libc/bits/weaken.h"
@@ -24,7 +24,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/log/log.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/hook/hook.internal.h"
 #include "libc/nt/enum/version.h"
 #include "libc/nt/runtime.h"

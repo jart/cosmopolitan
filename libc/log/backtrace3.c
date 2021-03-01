@@ -23,7 +23,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/log/backtrace.internal.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/runtime.h"

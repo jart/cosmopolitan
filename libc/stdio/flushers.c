@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,15 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.h"
-#include "libc/testlib/testlib.h"
+#include "libc/stdio/fflush.internal.h"
 
-TEST(unsignedsubtract, testMacro) {
-  EXPECT_EQ(5ul, unsignedsubtract(7ul, 2ul));
-  EXPECT_EQ(18ul, unsignedsubtract(2ul, 0xfffffffffffffff0ul));
-}
-
-TEST(unsignedsubtract, testLinked) {
-  EXPECT_EQ(5ul, (unsignedsubtract)(7ul, 2ul));
-  EXPECT_EQ(18ul, (unsignedsubtract)(2ul, 0xfffffffffffffff0ul));
-}
+struct StdioFlush __fflush;

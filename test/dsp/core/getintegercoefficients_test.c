@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/core/core.h"
 #include "dsp/core/q.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/gc.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"

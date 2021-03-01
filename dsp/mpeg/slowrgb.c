@@ -28,7 +28,7 @@
 │  SOFTWARE.                                                                   │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/mpeg/mpeg.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 asm(".ident\t\"\\n\\n\
 PL_MPEG (MIT License)\\n\

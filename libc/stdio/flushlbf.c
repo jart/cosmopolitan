@@ -25,9 +25,9 @@
  */
 void _flushlbf(void) {
   int i;
-  for (i = 0; i < g_fflush.handles.i; ++i) {
-    if (g_fflush.handles.p[i]->bufmode == _IOLBF) {
-      fflush(g_fflush.handles.p[i]);
+  for (i = 0; i < __fflush.handles.i; ++i) {
+    if (__fflush.handles.p[i]->bufmode == _IOLBF) {
+      fflush(__fflush.handles.p[i]);
     }
   }
 }

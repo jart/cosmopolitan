@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/bsr.h"
 
 size_t uint64toarray_radix16(uint64_t x, char b[hasatleast 17]) {

@@ -7,13 +7,13 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/dns/dns.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"

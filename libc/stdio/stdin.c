@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+│vi: set net ft=c ts=8 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,10 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdio/internal.h"
+#include "libc/stdio/stdio.h"
+
+STATIC_YOINK("_init_stdin");
 
 /**
- * Returns true if s is empty string or null.
+ * Pointer to standard input stream.
  */
-bool isempty(const char *s) {
-  return !s || !*s;
+FILE *stdin;
+
+hidden FILE __stdin;
+hidden unsigned char __stdin_buf[BUFSIZ];
+
+static textstartup void __stdin_init() {
+  __fflush_register(stdin);
 }
+
+const void *const __stdin_ctor[] initarray = {__stdin_init};

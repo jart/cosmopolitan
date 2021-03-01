@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/internal.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 .text.startup
 .source	__FILE__
 

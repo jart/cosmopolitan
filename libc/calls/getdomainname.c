@@ -20,7 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/utsname.h"
 #include "libc/dce.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/enum/computernameformat.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/runtime.h"

@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_STR_STRCMP8TO16I_H_
 #define COSMOPOLITAN_LIBC_STR_STRCMP8TO16I_H_
 #include "libc/fmt/conv.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
 #include "libc/str/tpdecode.internal.h"

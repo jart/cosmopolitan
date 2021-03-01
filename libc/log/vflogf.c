@@ -101,7 +101,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   bool issamesecond;
   char buf32[32], *buf32p;
   int64_t secs, nsec, dots;
-  if (!f) f = g_logfile;
+  if (!f) f = __log_file;
   if (fileno(f) == -1) return;
   t2 = nowl();
   secs = t2;

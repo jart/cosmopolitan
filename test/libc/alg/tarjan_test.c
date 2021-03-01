@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/testlib/testlib.h"
 
 STATIC_YOINK("realloc");
@@ -98,7 +98,7 @@ TEST(tarjan, testHeaders) {
       [LIBC_INTEGRAL] = "libc/integral.h",
       [LIBC_KEYWORDS] = "libc/keywords.h",
       [LIBC_DCE] = "libc/dce.h",
-      [LIBC_MACROS] = "libc/macros.h",
+      [LIBC_MACROS] = "libc/macros.internal.h",
       [LIBC_MACROS_CPP] = "libc/macros-cpp.inc",
   };
   int edges[][2] = {
@@ -117,7 +117,7 @@ TEST(tarjan, testHeaders) {
   EXPECT_STREQ("libc/integral.h", vertices[sorted[1]]);
   EXPECT_STREQ("libc/keywords.h", vertices[sorted[2]]);
   EXPECT_STREQ("libc/macros-cpp.inc", vertices[sorted[3]]);
-  EXPECT_STREQ("libc/macros.h", vertices[sorted[4]]);
+  EXPECT_STREQ("libc/macros.internal.h", vertices[sorted[4]]);
   EXPECT_STREQ("libc/bits/bits.h", vertices[sorted[5]]);
   EXPECT_STREQ("libc/str/str.h", vertices[sorted[6]]);
 }

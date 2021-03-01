@@ -12,7 +12,7 @@
 /* The three kinds of block type */
 #define STORED_BLOCK 0
 #define STATIC_TREES 1
-#define DYN_TREES 2
+#define DYN_TREES    2
 
 /* The minimum and maximum match lengths */
 #define MIN_MATCH 3
@@ -32,7 +32,7 @@ COSMOPOLITAN_C_START_
    define "local" for the non-static meaning of "static", for readability
    (compile with -Dlocal if your debugger can't find static symbols) */
 
-extern const char *const z_errmsg[10]; /* indexed by 2-zlib_error */
+extern const char *const z_errmsg[10] hidden; /* indexed by 2-zlib_error */
 /* (size given to avoid silly warnings with Visual C++) */
 
 #define ERR_MSG(err) z_errmsg[Z_NEED_DICT - (err)]

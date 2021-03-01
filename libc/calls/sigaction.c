@@ -31,7 +31,7 @@
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/limits.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"

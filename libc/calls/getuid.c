@@ -19,7 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/accounting.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"

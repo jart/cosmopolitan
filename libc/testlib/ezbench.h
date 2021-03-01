@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_TESTLIB_EZBENCH_H_
 #define COSMOPOLITAN_LIBC_TESTLIB_EZBENCH_H_
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/testlib/bench.h"
 #include "libc/testlib/testlib.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)

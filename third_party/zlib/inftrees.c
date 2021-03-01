@@ -5,8 +5,8 @@
 │ Use of this source code is governed by the BSD-style licenses that can       │
 │ be found in the third_party/zlib/LICENSE file.                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "third_party/zlib/inftrees.h"
-#include "third_party/zlib/zutil.h"
+#include "third_party/zlib/inftrees.internal.h"
+#include "third_party/zlib/zutil.internal.h"
 
 asm(".ident\t\"\\n\\n\
 inflate 1.2.11 (zlib License)\\n\

@@ -27,8 +27,8 @@
 #include "libc/alg/arraylist.internal.h"
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
-#include "libc/bits/xchg.h"
+#include "libc/bits/safemacros.internal.h"
+#include "libc/bits/xchg.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
@@ -49,7 +49,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bench.h"
@@ -491,9 +491,9 @@ static bool TrySpeaker(const char *prog, char *const *args) {
   CHECK_NE(-1, pipe2(pipefds, O_CLOEXEC));
   if (!(playpid_ = fork())) {
     dup2(pipefds[0], 0);
-    dup2(fileno(g_logfile), 1);
-    dup2(fileno(g_logfile), 2);
-    close(fileno(g_logfile));
+    dup2(fileno(__log_file), 1);
+    dup2(fileno(__log_file), 2);
+    close(fileno(__log_file));
     execv(prog, args);
     abort();
   }
@@ -1314,7 +1314,7 @@ static void GetOpts(int argc, char *argv[]) {
         yes_ = true;
         break;
       case 'v':
-        ++g_loglevel;
+        ++__log_level;
         break;
       case 'L':
         snprintf(logpath_, sizeof(logpath_), "%s", optarg);
@@ -1492,7 +1492,7 @@ int main(int argc, char *argv[]) {
     xsigaction(SIGPIPE, OnSigPipe, 0, 0, NULL);
     if (ttyraw(kTtyLfToCrLf) != -1) ttymode_ = true;
     __cxa_atexit(OnExit, NULL, NULL);
-    g_logfile = fopen(logpath_, "a");
+    __log_file = fopen(logpath_, "a");
     if (ischardev(infd_) && ischardev(outfd_)) {
       /* CHECK_NE(-1, fcntl(infd_, F_SETFL, O_NONBLOCK)); */
     } else if (infd_ != outfd_) {

@@ -19,7 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/log/check.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/runtime/gc.h"
 #include "libc/sock/sock.h"

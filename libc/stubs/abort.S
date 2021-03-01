@@ -26,6 +26,6 @@
 //	@mode	long,legacy,real
 abort:	push	%bp
 	mov	%sp,%bp
-	rlcall	panic
+	rlcall	__panic
 	int3
 	.endfn	abort,weak

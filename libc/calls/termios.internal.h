@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_TERMIOS_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_TERMIOS_INTERNAL_H_
 #ifndef __STRICT_ANSI__
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/struct/metatermios.internal.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/str/str.h"

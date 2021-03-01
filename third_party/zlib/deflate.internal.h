@@ -1,6 +1,6 @@
 #ifndef DEFLATE_H
 #define DEFLATE_H
-#include "third_party/zlib/zutil.h"
+#include "third_party/zlib/zutil.internal.h"
 
 /* define NO_GZIP when compiling if you want to disable gzip header and
    trailer creation by deflate(). NO_GZIP would be used to avoid linking
@@ -40,12 +40,12 @@
 #ifdef GZIP
 #define GZIP_STATE 57 /* gzip header -> BUSY_STATE | EXTRA_STATE */
 #endif
-#define EXTRA_STATE 69   /* gzip extra block -> NAME_STATE */
-#define NAME_STATE 73    /* gzip file name -> COMMENT_STATE */
-#define COMMENT_STATE 91 /* gzip comment -> HCRC_STATE */
-#define HCRC_STATE 103   /* gzip header CRC -> BUSY_STATE */
-#define BUSY_STATE 113   /* deflate -> FINISH_STATE */
-#define FINISH_STATE 666 /* stream complete */
+#define EXTRA_STATE   69  /* gzip extra block -> NAME_STATE */
+#define NAME_STATE    73  /* gzip file name -> COMMENT_STATE */
+#define COMMENT_STATE 91  /* gzip comment -> HCRC_STATE */
+#define HCRC_STATE    103 /* gzip header CRC -> BUSY_STATE */
+#define BUSY_STATE    113 /* deflate -> FINISH_STATE */
+#define FINISH_STATE  666 /* stream complete */
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -64,8 +64,8 @@ typedef struct ct_data_s {
 
 #define Freq fc.freq
 #define Code fc.code
-#define Dad dl.dad
-#define Len dl.len
+#define Dad  dl.dad
+#define Len  dl.len
 
 typedef struct static_tree_desc_s static_tree_desc;
 

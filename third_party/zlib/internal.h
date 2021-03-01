@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_ZLIB_INTERNAL_H_
 #define COSMOPOLITAN_THIRD_PARTY_ZLIB_INTERNAL_H_
-#include "third_party/zlib/deflate.h"
+#include "third_party/zlib/deflate.internal.h"
 
 #define Z_CRC32_SSE42_MINIMUM_LENGTH 64
 #define Z_CRC32_SSE42_CHUNKSIZE_MASK 15

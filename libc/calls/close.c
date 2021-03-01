@@ -19,7 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"

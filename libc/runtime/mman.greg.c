@@ -35,7 +35,7 @@
 #include "ape/relocations.h"
 #include "libc/elf/def.h"
 #include "libc/elf/struct/phdr.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/uart.internal.h"
 #include "libc/runtime/e820.internal.h"
 #include "libc/runtime/metalprintf.internal.h"

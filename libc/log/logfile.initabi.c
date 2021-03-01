@@ -19,6 +19,6 @@
 #include "libc/bits/initializer.internal.h"
 #include "libc/stdio/stdio.h"
 
-FILE *g_logfile;
+FILE *__log_file;
 
-INITIALIZER(401, _init_g_logfile, (g_logfile = stderr));
+INITIALIZER(401, _init_log_file, (__log_file = stderr));

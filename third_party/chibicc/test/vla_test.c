@@ -1,4 +1,4 @@
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "third_party/chibicc/test/test.h"
 
 int index1d(int xn, int p[xn], int x) {

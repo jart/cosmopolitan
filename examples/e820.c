@@ -8,7 +8,7 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/fmt/itoa.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/e820.internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/stdio/stdio.h"

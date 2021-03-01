@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/itoa.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/str/str.h"
 #include "tool/build/lib/buffer.h"
 #include "tool/build/lib/cga.h"

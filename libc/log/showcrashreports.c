@@ -24,7 +24,7 @@
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/log/ubsan.internal.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/signals.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"

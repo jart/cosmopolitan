@@ -9,7 +9,7 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/limits.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/struct/context.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
 #include "libc/nt/struct/securityattributes.h"

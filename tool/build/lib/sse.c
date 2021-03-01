@@ -92,7 +92,7 @@
 #include "libc/intrin/punpcklqdq.h"
 #include "libc/intrin/punpcklwd.h"
 #include "libc/intrin/pxor.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "tool/build/lib/case.h"
 #include "tool/build/lib/machine.h"
 #include "tool/build/lib/memory.h"

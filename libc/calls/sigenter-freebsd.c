@@ -22,7 +22,7 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/typedef/sigaction_f.h"
 #include "libc/calls/ucontext.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/str/str.h"
 
 union sigval_freebsd {

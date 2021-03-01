@@ -37,7 +37,7 @@
 int fclose(FILE *f) {
   int rc;
   if (!f) return 0;
-  _fflushunregister(f);
+  __fflush_unregister(f);
   fflush(f);
   if (!f->nofree) {
     free_s(&f->buf);

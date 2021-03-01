@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/quant.h"
 #include "libc/bits/xmmintrin.internal.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "tool/viz/lib/graphic.h"
 
 void getxtermcodes(struct TtyRgb *p, const struct Graphic *g) {

@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
 #include "libc/mem/mem.h"
-#include "third_party/zlib/zutil.h"
+#include "third_party/zlib/zutil.internal.h"
 
 void *zcalloc(void *opaque, unsigned items, unsigned size) {
   return weaken(malloc)(items * size);

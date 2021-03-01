@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/intrin/palignr.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 /**
  * Overlaps vectors.

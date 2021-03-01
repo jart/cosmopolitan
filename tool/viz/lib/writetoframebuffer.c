@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "tool/viz/lib/graphic.h"
 
 void WriteToFrameBuffer(size_t dyn, size_t dxn, unsigned char dst[dyn][dxn][4],

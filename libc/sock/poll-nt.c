@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/calls/internal.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/struct/pollfd.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"

@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/relocations.h"
 #include "ape/relocations.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 	.Lrows = 0			# w/ 2 cols
 

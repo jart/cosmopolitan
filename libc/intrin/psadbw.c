@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/psadbw.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 /**
  * Computes sum of absolute differences.

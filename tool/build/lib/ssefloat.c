@@ -24,7 +24,7 @@
 #include "libc/intrin/shufpd.h"
 #include "libc/intrin/shufps.h"
 #include "libc/log/log.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/str/str.h"
 #include "tool/build/lib/endian.h"

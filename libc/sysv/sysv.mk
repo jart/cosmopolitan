@@ -65,7 +65,7 @@ $(LIBC_SYSV_A_OBJS):					\
 
 o/libc/sysv/consts/syscon.internal.inc:			\
 		libc/sysv/consts/syscon.internal.h	\
-		libc/macros.h				\
+		libc/macros.internal.h			\
 		libc/macros-cpp.internal.inc		\
 		libc/macros.internal.inc
 

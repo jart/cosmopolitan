@@ -22,7 +22,7 @@
 #include "libc/alg/bisectcarleft.internal.h"
 #include "libc/assert.h"
 #include "libc/bits/bswap.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/elf/def.h"
@@ -32,7 +32,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/kompressor.h"
@@ -227,7 +227,7 @@ void GetOpts(struct Package *pkg, struct Packages *deps, int argc,
   while ((opt = getopt(argc, argv, "vho:d:")) != -1) {
     switch (opt) {
       case 'v':
-        g_loglevel = kLogDebug;
+        __log_level = kLogDebug;
         break;
       case 'o':
         pkg->path = concat(&pkg->strings, optarg, strlen(optarg) + 1);

@@ -23,7 +23,7 @@
 #include "dsp/tty/tty.h"
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/stat.h"
@@ -33,7 +33,7 @@
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/rand/rand.h"
@@ -159,7 +159,7 @@ static void GetOpts(int *argc, char *argv[]) {
         g_flags.blocks = kTtyBlocksUnicode;
         break;
       case 'v':
-        ++g_loglevel;
+        ++__log_level;
         break;
       case '?':
         PrintUsage(EXIT_SUCCESS, stdout);

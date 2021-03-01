@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_CHECK_H_
 #define COSMOPOLITAN_LIBC_LOG_CHECK_H_
 #include "libc/dce.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 /**
  * @fileoverview Modern assertions, courtesy of Elgoog.

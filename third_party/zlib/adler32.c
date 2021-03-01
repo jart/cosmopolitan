@@ -9,7 +9,7 @@
 #include "libc/dce.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "third_party/zlib/internal.h"
-#include "third_party/zlib/zutil.h"
+#include "third_party/zlib/zutil.internal.h"
 
 asm(".ident\t\"\\n\\n\
 zlib (zlib License)\\n\

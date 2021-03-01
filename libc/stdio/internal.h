@@ -4,13 +4,12 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern FILE g_stdio[3];
 extern unsigned char g_stdinbuf[BUFSIZ];
 extern unsigned char g_stdoutbuf[BUFSIZ];
 extern unsigned char g_stderrbuf[BUFSIZ];
 
-int _fflushregister(FILE *) hidden;
-void _fflushunregister(FILE *) hidden;
+int __fflush_register(FILE *) hidden;
+void __fflush_unregister(FILE *) hidden;
 
 int __freadbuf(FILE *) hidden;
 int __fwritebuf(FILE *) hidden;

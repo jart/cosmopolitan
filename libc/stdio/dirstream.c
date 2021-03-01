@@ -20,7 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/dce.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filetype.h"

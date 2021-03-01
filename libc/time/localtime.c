@@ -3,7 +3,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/initializer.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"

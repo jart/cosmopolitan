@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
@@ -28,7 +28,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/paths.h"
 #include "libc/runtime/gc.h"
@@ -435,7 +435,7 @@ void Daemonize(void) {
 
 int main(int argc, char *argv[]) {
   showcrashreports();
-  /* g_loglevel = kLogDebug; */
+  /* __log_level = kLogDebug; */
   GetOpts(argc, argv);
   CHECK_NE(-1, (g_devnullfd = open("/dev/null", O_RDWR)));
   defer(close_s, &g_devnullfd);

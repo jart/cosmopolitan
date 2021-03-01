@@ -19,7 +19,7 @@
 #include "dsp/core/core.h"
 #include "dsp/mpeg/mpeg.h"
 #include "libc/log/check.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/buffer.h"
 #include "libc/testlib/ezbench.h"

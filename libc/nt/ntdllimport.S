@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nt/enum/status.h"
-#include "libc/macros.h"
+#include "libc/macros.internal.h"
 
 //	@fileoverview NTDLL.DLL Non-Mandatory Importer
 //
