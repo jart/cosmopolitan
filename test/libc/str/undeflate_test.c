@@ -93,7 +93,6 @@ TEST(undeflate, testEmbeddedCompressedZipFile_theHardWay) {
   ASSERT_GE(ZIP_CDIR_RECORDS(cd), 1);
   for (i = 0, cf = map + ZIP_CDIR_OFFSET(cd); i < ZIP_CDIR_RECORDS(cd);
        ++i, cf += ZIP_CFILE_HDRSIZE(cf)) {
-    fprintf(stderr, "%.*s\n", ZIP_CFILE_NAMESIZE(cf), ZIP_CFILE_NAME(cf));
     if (strncmp("libc/testlib/hyperion.txt", ZIP_CFILE_NAME(cf),
                 ZIP_CFILE_NAMESIZE(cf)) == 0) {
       lf = map + ZIP_CFILE_OFFSET(cf);

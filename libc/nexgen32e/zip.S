@@ -25,19 +25,17 @@
 	.hidden	__zip_start
 	.globl	__zip_start
 	.type	__zip_start,@object
-	.align	kZipCdirAlign
 __zip_start:
 	.previous/*
 	...
 	decentralized content
 	...
 	*/.section .zip.5,"",@progbits
-	.align	kZipCdirAlign
 __zip_end:
 	.long	kZipCdirHdrMagic	# magic
 	.short	0			# disk
 	.short	0			# starting disk
-	.short	v_zip_records		# records on disk
+	.short	v_zip_records		# number of records on disk
 	.short	v_zip_records		# records
 	.long	v_zip_cdirsize		# size of central directory
 	.long	RVA(__zip_start)	# central directory offset

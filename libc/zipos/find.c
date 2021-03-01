@@ -29,6 +29,7 @@ ssize_t __zipos_find(struct Zipos *zipos, const struct ZiposUri *name) {
   for (i = 0, cf = ZIP_CDIR_OFFSET(zipos->cdir);
        i < ZIP_CDIR_RECORDS(zipos->cdir);
        ++i, cf += ZIP_CFILE_HDRSIZE(zipos->map + cf)) {
+    if (ZIP_CFILE_MAGIC(zipos->map + cf) != kZipCfileHdrMagic) DebugBreak();
     assert(ZIP_CFILE_MAGIC(zipos->map + cf) == kZipCfileHdrMagic);
     if (name->len == ZIP_CFILE_NAMESIZE(zipos->map + cf) &&
         memcmp(name->path, ZIP_CFILE_NAME(zipos->map + cf), name->len) == 0) {

@@ -21,6 +21,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/limits.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
@@ -36,9 +37,8 @@ struct Zipos *__zipos_get(void) {
   static bool once;
   const char *exe, *dir;
   char path[PATH_MAX];
-  size_t mapsize;
-  uint8_t *cdir;
-  void *map;
+  size_t size;
+  uint8_t *map, *base, *cdir;
   if (!once) {
     dir = nulltoempty(getenv("PWD")); /* suboptimal */
     exe = (const char *)getauxval(AT_EXECFN);
@@ -47,14 +47,23 @@ struct Zipos *__zipos_get(void) {
       exe = path;
     }
     if ((zipos.fd = open(exe, O_RDONLY)) != -1) {
-      if ((mapsize = getfiledescriptorsize(zipos.fd)) != SIZE_MAX &&
-          (map = mmap(NULL, mapsize, PROT_READ, MAP_SHARED, zipos.fd, 0)) !=
+      if ((size = getfiledescriptorsize(zipos.fd)) != SIZE_MAX &&
+          (map = mmap(NULL, size, PROT_READ, MAP_SHARED, zipos.fd, 0)) !=
               MAP_FAILED) {
-        if ((cdir = zipfindcentraldir(map, mapsize))) {
-          zipos.map = map;
+        if (endswith(exe, ".com.dbg")) {
+          if ((base = memmem(map, size, "MZqFpD", 6))) {
+            size -= base - map;
+          } else {
+            base = map;
+          }
+        } else {
+          base = map;
+        }
+        if ((cdir = zipfindcentraldir(base, size))) {
+          zipos.map = base;
           zipos.cdir = cdir;
         } else {
-          munmap(map, mapsize);
+          munmap(map, size);
         }
       }
     }

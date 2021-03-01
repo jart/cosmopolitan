@@ -60,6 +60,10 @@
 #define PUT32(P, V)                                                \
   P[0] = V & 0xff, P[1] = V >> 010 & 0xff, P[2] = V >> 020 & 0xff, \
   P[3] = V >> 030 & 0xff, P += 4
+#define PUT64(P, V)                                                       \
+  P[0] = V & 0xff, P[1] = V >> 010 & 0xff, P[2] = V >> 020 & 0xff,        \
+  P[3] = V >> 030 & 0xff, P[4] = V >> 040 & 0xff, P[5] = V >> 050 & 0xff, \
+  P[6] = V >> 060 & 0xff, P[7] = V >> 070 & 0xff, P += 8
 
 #define DOS_DATE(YEAR, MONTH_IDX1, DAY_IDX1) \
   (((YEAR)-1980) << 9 | (MONTH_IDX1) << 5 | (DAY_IDX1))
@@ -149,7 +153,7 @@ static unsigned char *EmitZipLfileHdr(unsigned char *op, const void *name,
                                       uint16_t mdate, size_t compsize,
                                       size_t uncompsize) {
   PUT32(op, kZipLfileHdrMagic);
-  PUT8(op, era);
+  PUT8(op, kZipEra1993);
   PUT8(op, kZipOsDos);
   PUT16(op, gflags);
   PUT16(op, method);
@@ -168,28 +172,60 @@ static void EmitZipCdirHdr(unsigned char *op, const void *name, size_t namesize,
                            uint16_t method, uint16_t mtime, uint16_t mdate,
                            uint16_t iattrs, uint16_t dosmode, uint16_t unixmode,
                            size_t compsize, size_t uncompsize,
-                           size_t commentsize) {
+                           size_t commentsize, struct stat *st) {
+  uint64_t mt, at, ct;
   PUT32(op, kZipCfileHdrMagic);
-  PUT8(op, kZipCosmopolitanVersion);
-  PUT8(op, kZipOsUnix);
-  PUT8(op, era);
+  PUT8(op, 20);
+  PUT8(op, kZipOsDos);
+  PUT8(op, kZipEra1993);
   PUT8(op, kZipOsDos);
   PUT16(op, gflags);
   PUT16(op, method);
   PUT16(op, mtime);
   PUT16(op, mdate);
+  /* 16 */
   PUT32(op, crc);
   PUT32(op, compsize);
   PUT32(op, uncompsize);
   PUT16(op, namesize);
+#if 0
+#define CFILE_HDR_SIZE kZipCfileHdrMinSize
   PUT16(op, 0); /* extra size */
+  /* 32 */
   PUT16(op, commentsize);
   PUT16(op, 0); /* disk */
   PUT16(op, iattrs);
   PUT16(op, dosmode);
   PUT16(op, unixmode);
   PUT32(op, 0); /* RELOCATE ME (kZipCfileOffsetOffset) */
+  /* 46 */
   memcpy(op, name, namesize);
+#else
+#define CFILE_HDR_SIZE (kZipCfileHdrMinSize + 36)
+  PUT16(op, 36); /* extra size */
+  /* 32 */
+  PUT16(op, commentsize);
+  PUT16(op, 0); /* disk */
+  PUT16(op, iattrs);
+  PUT32(op, dosmode);
+  PUT32(op, 0); /* RELOCATE ME (kZipCfileOffsetOffset) */
+  /* 46 */
+  memcpy(op, name, namesize);
+  op += namesize;
+  PUT16(op, kZipExtraNtfs);
+  PUT16(op, 32);
+  PUT32(op, 0);
+  PUT16(op, 1);
+  PUT16(op, 24);
+#define NTTIME(t) \
+  (t.tv_sec + MODERNITYSECONDS) * HECTONANOSECONDS + t.tv_nsec / 100
+  mt = NTTIME(st->st_mtim);
+  at = NTTIME(st->st_atim);
+  ct = NTTIME(st->st_ctim);
+  PUT64(op, mt);
+  PUT64(op, at);
+  PUT64(op, ct);
+#endif
 }
 
 void EmitZip(struct ElfWriter *elf, const char *name, size_t namesize,
@@ -209,7 +245,7 @@ void EmitZip(struct ElfWriter *elf, const char *name, size_t namesize,
   crc = crc32_z(0, data, uncompsize);
   GetDosLocalTime(st->st_mtim.tv_sec, &mtime, &mdate);
   gflags = IsPureAscii(name, namesize) ? 0 : kZipGflagUtf8;
-  commentsize = kZipCdirHdrLinkableSize - (kZipCfileHdrMinSize + namesize);
+  commentsize = kZipCdirHdrLinkableSize - (CFILE_HDR_SIZE + namesize);
   iattrs = IsPureAscii(data, st->st_size) ? kZipIattrAscii : kZipIattrBinary;
   dosmode = !(st->st_mode & 0200) ? kNtFileAttributeReadonly : 0;
   method = (st->st_size >= kMinCompressSize && ShouldCompress(name, namesize))
@@ -217,9 +253,10 @@ void EmitZip(struct ElfWriter *elf, const char *name, size_t namesize,
                : kZipCompressionNone;
 
   /* emit embedded file content w/ pkzip local file header */
-  elfwriter_align(elf, kZipCdirAlign, 0);
-  elfwriter_startsection(
-      elf, gc(xasprintf("%s%s", ZIP_LOCALFILE_SECTION, name)), SHT_PROGBITS, 0);
+  elfwriter_align(elf, 1, 0);
+  elfwriter_startsection(elf,
+                         gc(xasprintf("%s%s", ZIP_LOCALFILE_SECTION, name)),
+                         SHT_PROGBITS, SHF_ALLOC);
   if (method == kZipCompressionDeflate) {
     CHECK_EQ(Z_OK, deflateInit2(memset(&zs, 0, sizeof(zs)),
                                 Z_DEFAULT_COMPRESSION, Z_DEFLATED, -MAX_WBITS,
@@ -255,12 +292,13 @@ void EmitZip(struct ElfWriter *elf, const char *name, size_t namesize,
   elfwriter_finishsection(elf);
 
   /* emit central directory record */
-  elfwriter_align(elf, kZipCdirAlign, 0);
-  elfwriter_startsection(
-      elf, gc(xasprintf("%s%s", ZIP_DIRECTORY_SECTION, name)), SHT_PROGBITS, 0);
+  elfwriter_align(elf, 1, 0);
+  elfwriter_startsection(elf,
+                         gc(xasprintf("%s%s", ZIP_DIRECTORY_SECTION, name)),
+                         SHT_PROGBITS, SHF_ALLOC);
   EmitZipCdirHdr((cfile = elfwriter_reserve(elf, kZipCdirHdrLinkableSize)),
                  name, namesize, crc, era, gflags, method, mtime, mdate, iattrs,
-                 dosmode, st->st_mode, compsize, uncompsize, commentsize);
+                 dosmode, st->st_mode, compsize, uncompsize, commentsize, st);
   elfwriter_appendsym(elf, gc(xasprintf("%s%s", "zip+cdir:", name)),
                       ELF64_ST_INFO(STB_LOCAL, STT_OBJECT), STV_DEFAULT, 0,
                       kZipCdirHdrLinkableSize);

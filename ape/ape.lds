@@ -364,13 +364,18 @@ SECTIONS {
     PROVIDE_HIDDEN(edata = .);
   } :Ram
 
+/*END:   file content that's loaded by o/s */
+/*BEGIN: bss memory void */
+
   .zip . : {
     KEEP(*(SORT_BY_NAME(.zip.*)))
-    . = ALIGN(PAGESIZE);
-    HIDDEN(_efile = .);
+    HIDDEN(_ezip = .);
   }
 
-  .bss . : {
+/*END:   file content */
+/*BEGIN: bss memory that's addressable */
+
+  .bss ALIGN(__SIZEOF_POINTER__) : {
     KEEP(*(SORT_BY_NAME(.piro.bss.init.*)))
     *(.piro.bss)
     KEEP(*(SORT_BY_NAME(.piro.bss.sort.*)))
@@ -540,8 +545,9 @@ HIDDEN(v_ape_highsectors =
 #define ZIPCONST(NAME, VAL) HIDDEN(NAME = DEFINED(__zip_start) ? VAL : 0);
 ZIPCONST(v_zip_cdoffset, __zip_start - IMAGE_BASE_VIRTUAL);
 ZIPCONST(v_zip_cdirsize, __zip_end - __zip_start);
+ASSERT(v_zip_cdirsize % kZipCdirHdrLinkableSize == 0, "bad zip cdir");
 ZIPCONST(v_zip_records, v_zip_cdirsize / kZipCdirHdrLinkableSize);
-ZIPCONST(v_zip_commentsize, _efile - __zip_end - kZipCdirHdrMinSize);
+ZIPCONST(v_zip_commentsize, _ezip - __zip_end - kZipCdirHdrMinSize);
 
 #if SupportsXnu()
 /* Generates deterministic ID. */

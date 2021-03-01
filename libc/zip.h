@@ -10,7 +10,7 @@
 
 #define kZipAlign 2
 
-#define kZipCosmopolitanVersion 1
+#define kZipCosmopolitanVersion 20
 
 #define kZipOsDos         0
 #define kZipOsAmiga       1
@@ -45,7 +45,7 @@
 
 #define kZipCdirHdrMagic   0x06054b50 /* PK♣♠ "PK\5\6" */
 #define kZipCdirHdrMinSize 22
-#define kZipCdirAlign      64 /* our choice; actually 2 */
+#define kZipCdirAlign      kZipAlign
 #define kZipCdirHdrLinkableSize \
   ROUNDUP(kZipCfileHdrMinSize + PATH_MAX, kZipCdirAlign)
 

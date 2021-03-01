@@ -18,16 +18,34 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/zip.h"
 
-uint8_t *zipfindcentraldir(const uint8_t *map, size_t mapsize) {
-  const uint8_t *p, *pe;
-  for (p = map + mapsize - kZipCdirHdrMinSize,
-      pe = mapsize > 65536 + kZipCdirHdrMinSize
-               ? map + mapsize - 65536 - kZipCdirHdrMinSize
-               : map;
-       p >= pe; --p) {
-    if (ZIP_CDIR_MAGIC(p) == kZipCdirHdrMagic) {
-      return (/*unconst*/ uint8_t *)p;
-    }
+/**
+ * Locates End Of Central Directory record in ZIP file.
+ *
+ * We search backwards for the End Of Central Directory Record magnum.
+ * The ZIP spec says this can be anywhere in the last 64kb. We go all
+ * the way since .com.dbg binaries will have lots of DWARF stuff after
+ * the embedded .com binary. As such, we sanity check the other fields
+ * too to make sure the record seems legit and it's not just a random
+ * occurrence of the magnum.
+ *
+ * @param p points to file memory
+ * @param n is byte size of file
+ */
+uint8_t *zipfindcentraldir(const uint8_t *p, size_t n) {
+  size_t i;
+  if (n >= kZipCdirHdrMinSize) {
+    i = n - kZipCdirHdrMinSize;
+    do {
+      if (ZIP_CDIR_MAGIC(p + i) == kZipCdirHdrMagic &&
+          i + ZIP_CDIR_HDRSIZE(p + i) <= n &&
+          ZIP_CDIR_DISK(p + i) == ZIP_CDIR_STARTINGDISK(p + i) &&
+          ZIP_CDIR_RECORDSONDISK(p + i) == ZIP_CDIR_RECORDS(p + i) &&
+          ZIP_CDIR_RECORDS(p + i) * kZipCdirHdrMinSize <=
+              ZIP_CDIR_SIZE(p + i) &&
+          ZIP_CDIR_OFFSET(p + i) + ZIP_CDIR_SIZE(p + i) <= i) {
+        return (/*unconst*/ uint8_t *)(p + i);
+      }
+    } while (i--);
   }
   return NULL;
 }

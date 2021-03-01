@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ $MODE = dbg ]; then
+if [ "$MODE" = dbg ]; then
   exit  # TODO
 fi
 
