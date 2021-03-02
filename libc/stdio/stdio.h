@@ -100,7 +100,7 @@ int vfscanf(FILE *, const char *, va_list);
 │ cosmopolitan § standard i/o » optimizations                              ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#define getc(f)    (f->beg < f->end ? f->buf[f->beg++] : fgetc(f))
+#define getc(f)    fgetc(f)
 #define putc(c, f) fputc(c, f)
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
