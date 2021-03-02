@@ -83,7 +83,7 @@ noasan texthead uint64_t *__get_virtual(struct mman *mm, uint64_t *t,
 /**
  * Sorts, rounds, and filters BIOS memory map.
  */
-static noasan textreal void __normalize_e820(struct mman *mm) {
+static noasan texthead void __normalize_e820(struct mman *mm) {
   uint64_t a, b;
   uint64_t x, y;
   unsigned i, j, n;
@@ -113,7 +113,7 @@ static noasan textreal void __normalize_e820(struct mman *mm) {
 /**
  * Identity maps all usable physical memory to its negative address.
  */
-static noasan textreal void __invert_memory(struct mman *mm, uint64_t *pml4t) {
+static noasan texthead void __invert_memory(struct mman *mm, uint64_t *pml4t) {
   uint64_t i, j, *m, p, pe;
   for (i = 0; i < mm->e820n; ++i) {
     for (p = mm->e820[i].addr, pe = mm->e820[i].addr + mm->e820[i].size;
@@ -126,7 +126,7 @@ static noasan textreal void __invert_memory(struct mman *mm, uint64_t *pml4t) {
   }
 }
 
-noasan textreal void __setup_mman(struct mman *mm, uint64_t *pml4t) {
+noasan texthead void __setup_mman(struct mman *mm, uint64_t *pml4t) {
   __normalize_e820(mm);
   __invert_memory(mm, pml4t);
 }
