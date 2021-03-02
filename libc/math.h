@@ -147,6 +147,8 @@ double sqrt(double);
 double tan(double);
 double tanh(double);
 double trunc(double);
+double lgamma(double);
+double lgamma_r(double, int *);
 
 float acosf(float);
 float acoshf(float);
