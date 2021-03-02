@@ -25,6 +25,7 @@
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/weirdtypes.h"
+#include "libc/dce.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
@@ -85,7 +86,7 @@ FLAGS\n\
   -h        help\n\
   -v        verbosity\n\
   -d        daemonize\n\
-  -s        uniprocess\n\
+  -u        uniprocess\n\
   -z        print port\n\
   -m        log messages\n\
   -c INT    cache seconds\n\
@@ -637,7 +638,8 @@ static bool OpenZip(const char *path) {
   fd = -1;
   map = MAP_FAILED;
   if ((fd = open(path, O_RDONLY)) != -1 && fstat(fd, &st) != -1 && st.st_size &&
-      (map = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0)) &&
+      (map = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) !=
+          MAP_FAILED &&
       (cdir = zipfindcentraldir(map, st.st_size)) && IndexAssets(map, cdir)) {
     ok = true;
     zmap = map;
@@ -1136,6 +1138,7 @@ static void TuneServerSocket(void) {
 
 void RedBean(void) {
   uint32_t addrsize;
+  if (IsWindows()) uniprocess = true;
   gmtoff = GetGmtOffset();
   programfile = (const char *)getauxval(AT_EXECFN);
   CHECK(OpenZip(programfile));
