@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-.source	__FILE__
 
 //	Rounds to integer, toward zero.
 //
@@ -28,17 +27,26 @@
 //	@see	roundsd $_MM_FROUND_TO_ZERO|_MM_FROUND_NO_EXC,%xmm0,%xmm0
 trunc:	.leafprologue
 	.profilable
-	movsd	3f(%rip),%xmm1
-	movsd	2f(%rip),%xmm2
-	andpd	%xmm0,%xmm1
-	comisd	%xmm1,%xmm2
+	movsd	3f(%rip),%xmm2
+	movsd	2f(%rip),%xmm4
+	movapd	%xmm0,%xmm3
+	movapd	%xmm0,%xmm1
+	andpd	%xmm2,%xmm3
+	ucomisd	%xmm3,%xmm4
 	jbe	1f
 	cvttsd2siq %xmm0,%rax
 	pxor	%xmm0,%xmm0
+	andnpd	%xmm1,%xmm2
 	cvtsi2sdq %rax,%xmm0
+	orpd	%xmm2,%xmm0
 1:	.leafepilogue
 	.endfn	trunc,globl
 
 	.rodata.cst8
-2:	.quad	0x0010000000000000
-3:	.double	nan
+2:	.long	0x00000000
+	.long	0x43300000
+	.rodata.cst16
+3:	.long	0xffffffff
+	.long	0x7fffffff
+	.long	0x00000000
+	.long	0x00000000

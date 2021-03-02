@@ -171,7 +171,7 @@ static long double fyl2xp1(long double x, long double y) {
 }
 
 static long double fscale(long double significand, long double exponent) {
-  return scalbl(significand, exponent);
+  return scalbl(trunc(significand), exponent);
 }
 
 static long double x87remainder(long double x, long double y, uint32_t *sw,

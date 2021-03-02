@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/runtime/pc.internal.h"
 #include "libc/macros.internal.h"
 
 //	Returns 𝑥^𝑦.
@@ -24,12 +25,15 @@
 //	@param	𝑦 is the power, also pushed on stack, in reverse order
 //	@return	result of exponentiation on FPU stack in %st
 //	@note	Sun's fdlibm needs 2kLOC to do this for RISC lool
-//	@define	exp2l(fmodl(y*log2l(x),1))*exp2l(y)
+//	@define	z=y*log2(fabs(x)),copysign(trunc(exp2(fmod(z,1)))*exp2(z),x)
 powl:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	32(%rbp)
 	fldt	16(%rbp)
+	fxam
+	fstsw
+	fabs
 	fyl2x
 	fld1
 	fld	%st(1)
@@ -39,7 +43,10 @@ powl:	push	%rbp
 	fscale
 	fxch
 	fstp	%st
-	pop	%rbp
+	test	$FPU_C1>>8,%ah
+	jz	1f
+	fchs
+1:	pop	%rbp
 	ret
 	.endfn	powl,globl
 	.alias	powl,__powl_finite

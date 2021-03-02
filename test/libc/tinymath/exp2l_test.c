@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,25 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/math.h"
+#include "libc/runtime/gc.h"
+#include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
-//	Returns smallest integral not less than 𝑥.
-//
-//	@param	𝑥 is long double passed on stack
-//	@return	long double in %st
-ceill:	pushq	%rbp
-	mov	%rsp,%rbp
-	.profilable
-	sub	$16,%rsp
-	fnstcw	-2(%rbp)
-	fldt	16(%rbp)
-	movzwl	-2(%rbp),%eax
-	and	$-13,%ah
-	or	$8,%ah
-	mov	%ax,-4(%rbp)
-	fldcw	-4(%rbp)
-	frndint
-	fldcw	-2(%rbp)
-	leave
-	ret
-	.endfn	ceill,globl
+TEST(exp2l, test) {
+  EXPECT_STREQ("16", gc(xdtoal(exp2l(4))));
+  EXPECT_STREQ("16", gc(xdtoa(exp2(4))));
+  EXPECT_STREQ("16", gc(xdtoaf(exp2f(4))));
+}

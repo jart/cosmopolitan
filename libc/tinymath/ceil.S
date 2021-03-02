@@ -17,28 +17,41 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-.source	__FILE__
 
+//	Returns smallest integral not less than 𝑥.
+//
+//	@param	𝑥 is double scalar in low half of %xmm0
+//	@return	double scalar in low half of %xmm0
+//	@see	round(),rint(),nearbyint()
+//	@see vroundsd $_MM_FROUND_TO_POS_INF|_MM_FROUND_NO_EXC,%xmm0,%xmm0,%xmm0
 ceil:	.leafprologue
 	.profilable
-	movsd	nan(%rip),%xmm1
-	movsd	sig(%rip),%xmm2
-	andpd	%xmm0,%xmm1
-	comisd	%xmm1,%xmm2
+	movsd	4f(%rip),%xmm3
+	movsd	2f(%rip),%xmm4
+	movapd	%xmm0,%xmm2
+	movapd	%xmm0,%xmm1
+	andpd	%xmm3,%xmm2
+	ucomisd	%xmm2,%xmm4
 	jbe	1f
 	cvttsd2siq %xmm0,%rax
-	pxor	%xmm1,%xmm1
-	movsd	one(%rip),%xmm2
-	cvtsi2sdq %rax,%xmm1
-	cmpnlesd %xmm1,%xmm0
-	andpd	%xmm2,%xmm0
-	addsd	%xmm1,%xmm0
+	pxor	%xmm2,%xmm2
+	movsd	3f(%rip),%xmm4
+	andnpd	%xmm1,%xmm3
+	cvtsi2sdq %rax,%xmm2
+	cmpnlesd %xmm2,%xmm0
+	andpd	%xmm4,%xmm0
+	addsd	%xmm2,%xmm0
+	orpd	%xmm3,%xmm0
 1:	.leafepilogue
 	.endfn	ceil,globl
 
 	.rodata.cst8
-nan:	.double	nan
-sig:	.quad	0x0010000000000000
-one:	.double	1
-
-//	vroundsd $_MM_FROUND_TO_POS_INF|_MM_FROUND_NO_EXC,%xmm0,%xmm0,%xmm0
+2:	.long	0x00000000
+	.long	0x43300000
+3:	.long	0x00000000
+	.long	0x3ff00000
+	.rodata.cst16
+4:	.long	0xffffffff
+	.long	0x7fffffff
+	.long	0x00000000
+	.long	0x00000000

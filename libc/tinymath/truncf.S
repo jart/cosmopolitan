@@ -17,18 +17,28 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-.source	__FILE__
 
+//	Rounds to integer, toward zero.
+//
+//	@param	𝑥 is float scalar in low quarter of %xmm0
+//	@return	float scalar in low quarter of %xmm0
+//	@define	trunc(𝑥+copysign(.5,𝑥))
+//	@see	round(),rint(),nearbyint()
+//	@see	roundss $_MM_FROUND_TO_ZERO|_MM_FROUND_NO_EXC,%xmm0,%xmm0
 truncf:	.leafprologue
 	.profilable
-	movss	3f(%rip),%xmm1
-	andps	%xmm0,%xmm1
-	movss	2f(%rip),%xmm2
-	comiss	%xmm1,%xmm2
+	movss	3f(%rip),%xmm2
+	movss	2f(%rip),%xmm4
+	movaps	%xmm0,%xmm3
+	movaps	%xmm0,%xmm1
+	andps	%xmm2,%xmm3
+	ucomiss	%xmm3,%xmm4
 	jbe	1f
-	cvttss2si %xmm0,%eax
+	cvttss2sil	%xmm0,%eax
 	pxor	%xmm0,%xmm0
-	cvtsi2ss %eax,%xmm0
+	andnps	%xmm1,%xmm2
+	cvtsi2ssl	%eax,%xmm0
+	orps	%xmm2,%xmm0
 1:	.leafepilogue
 	.endfn	truncf,globl
 
@@ -36,6 +46,3 @@ truncf:	.leafprologue
 2:	.long	0x4b000000
 	.rodata.cst16
 3:	.long	0x7fffffff,0,0,0
-
-//	TODO(jart)
-//	roundss $_MM_FROUND_TO_ZERO|_MM_FROUND_NO_EXC,%xmm0,%xmm0

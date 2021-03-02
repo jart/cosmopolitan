@@ -17,34 +17,39 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-.source	__FILE__
 
+//	Returns smallest integral not less than 𝑥.
+//
+//	@param	𝑥 is float scalar in low quarter of %xmm0
+//	@return	float scalar in low quarter of %xmm0
+//	@see	round(),rint(),nearbyint()
+//	@see vroundss $_MM_FROUND_TO_POS_INF|_MM_FROUND_NO_EXC,%xmm0,%xmm0,%xmm0
 ceilf:	.leafprologue
 	.profilable
-	movss	.L3(%rip),%xmm1
-	andps	%xmm0,%xmm1
-	movss	.L2(%rip),%xmm2
-	comiss	%xmm1,%xmm2
+	movss	4f(%rip),%xmm3
+	movss	2f(%rip),%xmm4
+	movaps	%xmm0,%xmm2
+	movaps	%xmm0,%xmm1
+	andps	%xmm3,%xmm2
+	ucomiss	%xmm2,%xmm4
 	jbe	1f
-	cvttss2si %xmm0,%eax
-	pxor	%xmm1,%xmm1
-	movss	.L1(%rip),%xmm2
-	cvtsi2ss %eax,%xmm1
-	cmpnless %xmm1,%xmm0
-	andps	%xmm2,%xmm0
-	addss	%xmm1,%xmm0
+	cvttss2sil %xmm0,%eax
+	pxor	%xmm2,%xmm2
+	movss	3f(%rip),%xmm4
+	andnps	%xmm1,%xmm3
+	cvtsi2ssl %eax,%xmm2
+	cmpnless %xmm2,%xmm0
+	andps	%xmm4,%xmm0
+	addss	%xmm2,%xmm0
+	orps	%xmm3,%xmm0
 1:	.leafepilogue
 	.endfn	ceilf,globl
 
 	.rodata.cst4
-.L1:	.float	1.0
-.L2:	.long	1258291200
-
+2:	.long	0x4b000000
+3:	.long	0x3f800000
 	.rodata.cst16
-.L3:	.long	2147483647
-	.long	0
-	.long	0
-	.long	0
-
-//	TODO(jart):
-//	vroundss	$10,%xmm0,%xmm0,%xmm0
+4:	.long	0x7fffffff
+	.long	0x00000000
+	.long	0x00000000
+	.long	0x00000000

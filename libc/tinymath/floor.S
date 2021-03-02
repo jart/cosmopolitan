@@ -17,31 +17,42 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-.source	__FILE__
 
-//	vroundsd $_MM_FROUND_TO_NEG_INF|_MM_FROUND_NO_EXC,%xmm0,%xmm0,%xmm0
-
+//	Returns largest integral not greater than 𝑥.
+//
+//	@param	𝑥 is double scalar in low half of %xmm0
+//	@return	double scalar in low half of %xmm0
 floor:	.leafprologue
 	.profilable
-	movsd	4f(%rip),%xmm1
-	movsd	3f(%rip),%xmm2
-	andpd	%xmm0,%xmm1
-	comisd	%xmm1,%xmm2
+	movsd	4f(%rip),%xmm3
+	movsd	2f(%rip),%xmm4
+	movapd	%xmm0,%xmm2
+	movapd	%xmm0,%xmm1
+	andpd	%xmm3,%xmm2
+	ucomisd	%xmm2,%xmm4
 	jbe	1f
 	cvttsd2siq %xmm0,%rax
-	pxor	%xmm1,%xmm1
-	movsd	2f(%rip),%xmm2
-	cvtsi2sdq %rax,%xmm1
-	movapd	%xmm1,%xmm3
-	cmpnlesd %xmm0,%xmm3
-	movapd	%xmm3,%xmm0
-	andpd	%xmm2,%xmm0
-	subsd	%xmm0,%xmm1
-	movapd	%xmm1,%xmm0
+	pxor	%xmm2,%xmm2
+	movsd	3f(%rip),%xmm4
+	andnpd	%xmm1,%xmm3
+	cvtsi2sdq %rax,%xmm2
+	movapd	%xmm2,%xmm5
+	cmpnlesd %xmm0,%xmm5
+	movapd	%xmm5,%xmm0
+	andpd	%xmm4,%xmm0
+	subsd	%xmm0,%xmm2
+	movapd	%xmm2,%xmm0
+	orpd	%xmm3,%xmm0
 1:	.leafepilogue
 	.endfn	floor,globl
 
 	.rodata.cst8
-2:	.double	1
-3:	.quad	0x0010000000000000
-4:	.double	nan
+2:	.long	0x00000000
+	.long	0x43300000
+3:	.long	0x00000000
+	.long	0x3ff00000
+	.rodata.cst16
+4:	.long	0xffffffff
+	.long	0x7fffffff
+	.long	0x00000000
+	.long	0x00000000

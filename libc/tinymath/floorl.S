@@ -17,17 +17,23 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-.source	__FILE__
 
-floorl:	.profilable
-	fldt	8(%rsp)
-	mov	$7,%al
-	fstcw	8(%rsp)
-	mov	9(%rsp),%ah
-	mov	%al,9(%rsp)
-	fldcw	8(%rsp)
+//	Returns largest integral not greater than 𝑥.
+//
+//	@param	𝑥 is long double passed on stack
+//	@return	float scalar in low quarter of %xmm0
+floorl:	pushq	%rbp
+	mov	%rsp,%rbp
+	sub	$16,%rsp
+	fnstcw	-2(%rbp)
+	fldt	16(%rbp)
+	movzwl	-2(%rbp),%eax
+	and	$-13,%ah
+	or	$4,%ah
+	mov	%ax,-4(%rbp)
+	fldcw	-4(%rbp)
 	frndint
-	mov	%ah,9(%rsp)
-	fldcw	8(%rsp)
+	fldcw	-2(%rbp)
+	leave
 	ret
 	.endfn	floorl,globl

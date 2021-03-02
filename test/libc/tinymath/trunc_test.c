@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,49 +16,40 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/sigaction.h"
-#include "libc/calls/struct/siginfo.h"
-#include "libc/calls/ucontext.h"
 #include "libc/math.h"
 #include "libc/runtime/gc.h"
-#include "libc/runtime/pc.internal.h"
-#include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/sa.h"
-#include "libc/sysv/consts/sig.h"
-#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-TEST(powl, testLongDouble) {
-  EXPECT_STREQ("27", gc(xdtoal(powl(3, 3))));
-  EXPECT_STREQ("-27", gc(xdtoal(powl(-3, 3))));
-  EXPECT_STREQ("-1", gc(xdtoal(powl(-1, 1.1))));
-  EXPECT_STREQ("1e+4932", gc(xdtoal(powl(10, 4932))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(powl(10, 4933))));
-  EXPECT_STREQ("0", gc(xdtoal(powl(10, -5000))));
-  EXPECT_STREQ("1.063382396627933e+37", gc(xdtoal(powl(2, 123))));
-  EXPECT_STARTSWITH(".4248496805467504", gc(xdtoal(powl(0.7, 2.4))));
+TEST(trunc, test) {
+  EXPECT_STREQ("3", gc(xdtoa(trunc(3))));
+  EXPECT_STREQ("3", gc(xdtoa(trunc(3.14))));
+  EXPECT_STREQ("-3", gc(xdtoa(trunc(-3.14))));
+  EXPECT_STREQ("-0", gc(xdtoa(trunc(-0.))));
+  EXPECT_STREQ("NAN", gc(xdtoa(trunc(NAN))));
+  EXPECT_STREQ("-NAN", gc(xdtoa(trunc(-NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(trunc(INFINITY))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoa(trunc(-INFINITY))));
 }
 
-TEST(powl, testDouble) {
-  EXPECT_STREQ("27", gc(xdtoa(pow(3, 3))));
-  EXPECT_STREQ("-27", gc(xdtoa(pow(-3, 3))));
-  EXPECT_STREQ("1e+308", gc(xdtoa(pow(10, 308))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(pow(10, 309))));
-  EXPECT_STARTSWITH(".42484968054675", gc(xdtoa(pow(0.7, 2.4))));
+TEST(truncf, test) {
+  EXPECT_STREQ("3", gc(xdtoaf(truncf(3))));
+  EXPECT_STREQ("3", gc(xdtoaf(truncf(3.14))));
+  EXPECT_STREQ("-3", gc(xdtoaf(truncf(-3.14))));
+  EXPECT_STREQ("-0", gc(xdtoaf(truncf(-0.))));
+  EXPECT_STREQ("NAN", gc(xdtoaf(truncf(NAN))));
+  EXPECT_STREQ("-NAN", gc(xdtoaf(truncf(-NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(truncf(INFINITY))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoaf(truncf(-INFINITY))));
 }
 
-TEST(powl, testFloat) {
-  EXPECT_STREQ("27", gc(xdtoaf(powf(3, 3))));
-  EXPECT_STREQ("-27", gc(xdtoaf(powf(-3, 3))));
-  EXPECT_STARTSWITH(".4248496", gc(xdtoa(powf(0.7f, 2.4f))));
-}
-
-BENCH(powl, bench) {
-  double _pow(double, double) asm("pow");
-  float _powf(float, float) asm("powf");
-  long double _powl(long double, long double) asm("powl");
-  EZBENCH2("pow", donothing, _pow(.7, .2));   /* ~51ns */
-  EZBENCH2("powf", donothing, _powf(.7, .2)); /* ~52ns */
-  EZBENCH2("powl", donothing, _powl(.7, .2)); /* ~53ns */
+TEST(truncl, test) {
+  EXPECT_STREQ("3", gc(xdtoal(truncl(3))));
+  EXPECT_STREQ("3", gc(xdtoal(truncl(3.14))));
+  EXPECT_STREQ("-3", gc(xdtoal(truncl(-3.14))));
+  EXPECT_STREQ("-0", gc(xdtoal(truncl(-0.))));
+  EXPECT_STREQ("NAN", gc(xdtoal(truncl(NAN))));
+  EXPECT_STREQ("-NAN", gc(xdtoal(truncl(-NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(truncl(INFINITY))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoal(truncl(-INFINITY))));
 }
