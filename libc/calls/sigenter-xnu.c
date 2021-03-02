@@ -373,20 +373,20 @@ struct __darwin_ucontext {
   struct __darwin_mcontext64 *uc_mcontext;
 };
 
-static void xnuexceptionstate2linux(
+noasan static void xnuexceptionstate2linux(
     mcontext_t *mc, struct __darwin_x86_exception_state64 *xnues) {
   mc->trapno = xnues->__trapno;
   mc->err = xnues->__err;
 }
 
-static void linuxexceptionstate2xnu(
+noasan static void linuxexceptionstate2xnu(
     struct __darwin_x86_exception_state64 *xnues, mcontext_t *mc) {
   xnues->__trapno = mc->trapno;
   xnues->__err = mc->err;
 }
 
-static void xnuthreadstate2linux(ucontext_t *uc, mcontext_t *mc,
-                                 struct __darwin_x86_thread_state64 *xnuss) {
+noasan static void xnuthreadstate2linux(
+    ucontext_t *uc, mcontext_t *mc, struct __darwin_x86_thread_state64 *xnuss) {
   mc->rdi = xnuss->__rdi;
   mc->rsi = xnuss->__rsi;
   mc->rbp = xnuss->__rbp;
@@ -404,8 +404,8 @@ static void xnuthreadstate2linux(ucontext_t *uc, mcontext_t *mc,
   memcpy(&mc->r8, &xnuss->__r8, 8 * sizeof(int64_t));
 }
 
-static void linuxthreadstate2xnu(struct __darwin_x86_thread_state64 *xnuss,
-                                 ucontext_t *uc, mcontext_t *mc) {
+noasan static void linuxthreadstate2xnu(
+    struct __darwin_x86_thread_state64 *xnuss, ucontext_t *uc, mcontext_t *mc) {
   xnuss->__rdi = mc->rdi;
   xnuss->__rsi = mc->rsi;
   xnuss->__rbp = mc->rbp;
@@ -423,8 +423,8 @@ static void linuxthreadstate2xnu(struct __darwin_x86_thread_state64 *xnuss,
   memcpy(&xnuss->__r8, &mc->r8, 8 * sizeof(int64_t));
 }
 
-static void xnussefpustate2linux(struct FpuState *fs,
-                                 struct __darwin_x86_float_state64 *xnufs) {
+noasan static void xnussefpustate2linux(
+    struct FpuState *fs, struct __darwin_x86_float_state64 *xnufs) {
   fs->cwd = xnufs->__fpu_fcw;
   fs->swd = xnufs->__fpu_fsw;
   fs->ftw = xnufs->__fpu_ftw;
@@ -437,8 +437,8 @@ static void xnussefpustate2linux(struct FpuState *fs,
   memcpy(fs->st, &xnufs->__fpu_stmm0, (8 + 16) * sizeof(uint128_t));
 }
 
-static void linuxssefpustate2xnu(struct __darwin_x86_float_state64 *xnufs,
-                                 struct FpuState *fs) {
+noasan static void linuxssefpustate2xnu(
+    struct __darwin_x86_float_state64 *xnufs, struct FpuState *fs) {
   xnufs->__fpu_fcw = fs->cwd;
   xnufs->__fpu_fsw = fs->swd;
   xnufs->__fpu_ftw = fs->ftw;
@@ -451,9 +451,9 @@ static void linuxssefpustate2xnu(struct __darwin_x86_float_state64 *xnufs,
   memcpy(&xnufs->__fpu_stmm0, fs->st, (8 + 16) * sizeof(uint128_t));
 }
 
-void __sigenter_xnu(void *fn, int infostyle, int sig,
-                    struct __darwin_siginfo *xnuinfo,
-                    struct __darwin_ucontext *xnuctx) {
+noasan void __sigenter_xnu(void *fn, int infostyle, int sig,
+                           struct __darwin_siginfo *xnuinfo,
+                           struct __darwin_ucontext *xnuctx) {
   int rva;
   intptr_t ax;
   struct Goodies {
