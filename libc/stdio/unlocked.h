@@ -4,6 +4,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+void flockfile(FILE *);
+void funlockfile(FILE *);
+int ftrylockfile(FILE *);
 int getc_unlocked(FILE *) paramsnonnull();
 int getchar_unlocked(void);
 int putc_unlocked(int, FILE *) paramsnonnull();

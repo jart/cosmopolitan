@@ -39,4 +39,4 @@ setjmp:	lea	8(%rsp),%rax
 	xor	%eax,%eax
 	ret
 	.endfn	setjmp,globl
-	.source	__FILE__
+	.alias	setjmp,_setjmp

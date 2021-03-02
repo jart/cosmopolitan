@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,28 +16,36 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-.privileged
+#include "libc/limits.h"
+#include "libc/unicode/unicode.h"
 
-//	Loads previously saved processor state.
-//
-//	@param	rdi points to the jmp_buf
-//	@param	esi is returned by setjmp() invocation (coerced nonzero)
-//	@noreturn
-//	@assume	system five nexgen32e abi conformant
-//	@note	code built w/ microsoft abi compiler can't call this
-//	@see	gclongjmp() unwinds gc() destructors
-longjmp:mov	%esi,%eax
-	test	%eax,%eax
-	jnz	1f
-	inc	%eax
-1:	mov	(%rdi),%rsp
-	mov	8(%rdi),%rbx
-	mov	16(%rdi),%rbp
-	mov	24(%rdi),%r12
-	mov	32(%rdi),%r13
-	mov	40(%rdi),%r14
-	mov	48(%rdi),%r15
-	jmp	*56(%rdi)
-	.endfn	longjmp,globl
-	.alias	longjmp,_longjmp
+static const struct lconv kLocaleConv = {
+    .decimal_point = ".",
+    .thousands_sep = "",
+    .grouping = "",
+    .int_curr_symbol = "",
+    .currency_symbol = "",
+    .mon_decimal_point = "",
+    .mon_thousands_sep = "",
+    .mon_grouping = "",
+    .positive_sign = "",
+    .negative_sign = "",
+    .int_frac_digits = CHAR_MAX,
+    .frac_digits = CHAR_MAX,
+    .p_cs_precedes = CHAR_MAX,
+    .p_sep_by_space = CHAR_MAX,
+    .n_cs_precedes = CHAR_MAX,
+    .n_sep_by_space = CHAR_MAX,
+    .p_sign_posn = CHAR_MAX,
+    .n_sign_posn = CHAR_MAX,
+    .int_p_cs_precedes = CHAR_MAX,
+    .int_p_sep_by_space = CHAR_MAX,
+    .int_n_cs_precedes = CHAR_MAX,
+    .int_n_sep_by_space = CHAR_MAX,
+    .int_p_sign_posn = CHAR_MAX,
+    .int_n_sign_posn = CHAR_MAX,
+};
+
+struct lconv *localeconv(void) {
+  return (/* unconst */ struct lconv *)&kLocaleConv;
+}

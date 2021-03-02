@@ -37,6 +37,7 @@
     "SIZEOF_FLOAT80"
     "SIZEOF_LONG_DOUBLE"
     "SIZEOF_INTMAX"
+    "CHAR_MAX"
     "SCHAR_MAX"
     "SHRT_MAX"
     "INT_MAX"
