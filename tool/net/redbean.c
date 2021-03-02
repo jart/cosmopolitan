@@ -125,6 +125,13 @@ USAGE\n\
   for subsequent connections without interrupting active ones. If\n\
   SIGINT or SIGTERM is issued then a graceful shutdown is started\n\
   but if it's issued a second time, active connections are reset.\n\
+\n\
+  You can have redbean run as a daemon by doing the following:\n\
+\n\
+    redbean.com -vv -d -L redbean.log -P redbean.pid\n\
+    kill -HUP $(cat redbean.pid)\n\
+    kill -TERM $(cat redbean.pid)\n\
+\n\
 \n"
 
 #define HASH_LOAD_FACTOR     /* 1. / */ 4
@@ -432,23 +439,19 @@ static void Daemonize(void) {
   char ibuf[21];
   int i, fd, pid;
   for (i = 0; i < 128; ++i) close(i);
-  xsigaction(SIGHUP, OnHup, 0, 0, 0);
-  CHECK_NE(-1, (pid = fork()));
-  if (pid > 0) exit(0);
-  if (pid == -1) return;
-  CHECK_NE(-1, setsid());
-  CHECK_NE(-1, (pid = fork()));
-  if (pid > 0) _exit(0);
-  LOGIFNEG1(umask(0));
+  if ((pid = fork()) > 0) exit(0);
+  setsid();
+  if ((pid = fork()) > 0) _exit(0);
+  umask(0);
   if (pidpath) {
-    CHECK_NE(-1, (fd = open(pidpath, O_CREAT | O_EXCL | O_WRONLY, 0644)));
-    CHECK_NE(-1, write(fd, ibuf, uint64toarray_radix10(getpid(), ibuf)));
-    LOGIFNEG1(close(fd));
+    fd = open(pidpath, O_CREAT | O_EXCL | O_WRONLY, 0644);
+    write(fd, ibuf, uint64toarray_radix10(getpid(), ibuf));
+    close(fd);
   }
   if (!logpath) logpath = "/dev/null";
-  CHECK_NOTNULL(freopen("/dev/null", "r", stdin));
-  CHECK_NOTNULL(freopen(logpath, "a", stdout));
-  CHECK_NOTNULL(freopen(logpath, "a", stderr));
+  freopen("/dev/null", "r", stdin);
+  freopen(logpath, "a", stdout);
+  freopen(logpath, "a", stderr);
 }
 
 static int CompareHeaderValue(int h, const char *s) {
@@ -1139,11 +1142,12 @@ static void TuneServerSocket(void) {
 void RedBean(void) {
   uint32_t addrsize;
   if (IsWindows()) uniprocess = true;
+  if (daemonize) Daemonize();
   gmtoff = GetGmtOffset();
   programfile = (const char *)getauxval(AT_EXECFN);
   CHECK(OpenZip(programfile));
   xsigaction(SIGINT, OnTerminate, 0, 0, 0);
-  xsigaction(SIGHUP, OnTerminate, 0, 0, 0);
+  xsigaction(SIGHUP, daemonize ? OnHup : OnTerminate, 0, 0, 0);
   xsigaction(SIGTERM, OnTerminate, 0, 0, 0);
   xsigaction(SIGCHLD, SIG_IGN, 0, 0, 0);
   xsigaction(SIGPIPE, SIG_IGN, 0, 0, 0);
@@ -1157,7 +1161,6 @@ void RedBean(void) {
   addrsize = sizeof(serveraddr);
   CHECK_NE(-1, getsockname(server, &serveraddr, &addrsize));
   DescribeAddress(serveraddrstr, &serveraddr);
-  if (daemonize) Daemonize();
   VERBOSEF("%s listen", serveraddrstr);
   if (printport) {
     printf("%d\n", ntohs(serveraddr.sin_port));
