@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,23 +16,52 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/dce.h"
-#include "libc/log/backtrace.internal.h"
-#include "libc/log/log.h"
+#include "libc/math.h"
 
 /**
- * Aborts process after printing a backtrace.
- *
- * If a debugger is present then this will trigger a breakpoint.
+ * Returns 𝑥^𝑦.
  */
-relegated wontreturn void __die(void) {
-  static bool once;
-  if (cmpxchg(&once, false, true)) {
-    if (!IsTiny()) {
-      if (IsDebuggerPresent(false)) DebugBreak();
-      ShowBacktrace(2, NULL);
+long double powl(long double x, long double y) {
+  long double t, u;
+  if (!isunordered(x, y)) {
+    if (!isinf(y)) {
+      if (!isinf(x)) {
+        if (x) {
+          asm("fyl2x" : "=t"(u) : "0"(fabsl(x)), "u"(y) : "st(1)");
+          asm("fprem" : "=t"(t) : "0"(u), "u"(1.L));
+          asm("f2xm1" : "=t"(t) : "0"(t));
+          asm("fscale" : "=t"(t) : "0"(t + 1), "u"(u));
+          return copysignl(t, x);
+        } else if (y > 0) {
+          return 0;
+        } else if (!y) {
+          return 1;
+        } else if (y == truncl(y) && ((int64_t)y & 1)) {
+          return copysignl(INFINITY, x);
+        } else {
+          return INFINITY;
+        }
+      } else if (signbit(x)) {
+        if (!y) return 1;
+        x = y < 0 ? 0 : INFINITY;
+        if (y == truncl(y) && ((int64_t)y & 1)) x = -x;
+        return x;
+      } else if (y < 0) {
+        return 0;
+      } else if (y > 0) {
+        return INFINITY;
+      } else {
+        return 1;
+      }
+    } else {
+      x = fabsl(x);
+      if (x < 1) return signbit(y) ? INFINITY : 0;
+      if (x > 1) return signbit(y) ? 0 : INFINITY;
+      return 1;
     }
+  } else if (!y || x == 1) {
+    return 1;
+  } else {
+    return NAN;
   }
-  exit(77);
 }

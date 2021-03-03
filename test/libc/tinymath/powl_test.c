@@ -19,7 +19,9 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/ucontext.h"
+#include "libc/macros.internal.h"
 #include "libc/math.h"
+#include "libc/rand/rand.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/stdio/stdio.h"
@@ -29,7 +31,12 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-TEST(powl, testLongDouble) {
+int rando;
+void SetUp(void) {
+  rando = rand() & 0xffff;
+}
+
+TEST(powl, test) {
   EXPECT_STREQ("27", gc(xdtoal(powl(3, 3))));
   EXPECT_STREQ("-27", gc(xdtoal(powl(-3, 3))));
   EXPECT_STREQ("-1", gc(xdtoal(powl(-1, 1.1))));
@@ -37,21 +44,143 @@ TEST(powl, testLongDouble) {
   EXPECT_STREQ("INFINITY", gc(xdtoal(powl(10, 4933))));
   EXPECT_STREQ("0", gc(xdtoal(powl(10, -5000))));
   EXPECT_STREQ("1.063382396627933e+37", gc(xdtoal(powl(2, 123))));
-  EXPECT_STARTSWITH(".4248496805467504", gc(xdtoal(powl(0.7, 2.4))));
+  EXPECT_STARTSWITH(".4248496805467504", gc(xdtoal(powl(.7, 2.4))));
+  EXPECT_STREQ("1", gc(xdtoal(powl(1, NAN))));
+  EXPECT_STREQ("1", gc(xdtoal(powl(1, rando))));
+  EXPECT_STREQ("1", gc(xdtoal(powl(NAN, 0))));
+  EXPECT_STREQ("1", gc(xdtoal(powl(rando, 0))));
+  EXPECT_STREQ("0", gc(xdtoal(powl(0, 1))));
+  EXPECT_STREQ("0", gc(xdtoal(powl(0, 2))));
+  EXPECT_STREQ("0", gc(xdtoal(powl(0, 2.1))));
+  EXPECT_STREQ("1", gc(xdtoal(powl(-1, INFINITY))));
+  EXPECT_STREQ("1", gc(xdtoal(powl(-1, -INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(powl(1. / MAX(2, rando), -INFINITY))));
+  EXPECT_STREQ("0", gc(xdtoal(powl(1.1, -INFINITY))));
+  EXPECT_STREQ("0", gc(xdtoal(powl(MAX(2, rando), -INFINITY))));
+  EXPECT_STREQ("0", gc(xdtoal(powl(1. / MAX(2, rando), INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(powl(MAX(2, rando), INFINITY))));
+  EXPECT_STREQ("-0", gc(xdtoal(powl(-INFINITY, -1))));
+  EXPECT_STREQ("0", gc(xdtoal(powl(-INFINITY, -1.1))));
+  EXPECT_STREQ("0", gc(xdtoal(powl(-INFINITY, -2))));
+  EXPECT_STREQ("0", gc(xdtoal(powl(-INFINITY, -2.1))));
+  EXPECT_STREQ("-0", gc(xdtoal(powl(-INFINITY, -3))));
+  EXPECT_STREQ("0", gc(xdtoal(powl(-INFINITY, -3.1))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoal(powl(-INFINITY, 1))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(powl(-INFINITY, 1.1))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(powl(-INFINITY, 2))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(powl(-INFINITY, 2.1))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoal(powl(-INFINITY, 3))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(powl(-INFINITY, 3.1))));
+  EXPECT_STREQ("0", gc(xdtoal(powl(INFINITY, -1))));
+  EXPECT_STREQ("0", gc(xdtoal(powl(INFINITY, -.1))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(powl(INFINITY, 1))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(powl(INFINITY, .1))));
+  EXPECT_STREQ("1", gc(xdtoal(powl(INFINITY, 0))));
+  EXPECT_STREQ("1", gc(xdtoal(powl(INFINITY, -0.))));
+  EXPECT_STREQ("1", gc(xdtoal(powl(0, 0))));
+  EXPECT_STREQ("1", gc(xdtoal(powl(0, -0.))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(powl(0, -(MAX(rando, 1) | 1)))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoal(powl(-0., -(MAX(rando, 1) | 1)))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(powl(0, -(rando & -2)))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(powl(-0., -(rando & -2)))));
 }
 
-TEST(powl, testDouble) {
+TEST(pow, test) {
   EXPECT_STREQ("27", gc(xdtoa(pow(3, 3))));
   EXPECT_STREQ("-27", gc(xdtoa(pow(-3, 3))));
+  EXPECT_STREQ("-1", gc(xdtoa(pow(-1, 1.1))));
   EXPECT_STREQ("1e+308", gc(xdtoa(pow(10, 308))));
   EXPECT_STREQ("INFINITY", gc(xdtoa(pow(10, 309))));
-  EXPECT_STARTSWITH(".42484968054675", gc(xdtoa(pow(0.7, 2.4))));
+  EXPECT_STREQ("0", gc(xdtoa(pow(10, -5000))));
+  EXPECT_STREQ("1.06338239662793e+37", gc(xdtoa(pow(2, 123))));
+  EXPECT_STARTSWITH(".42484968054675", gc(xdtoa(pow(.7, 2.4))));
+  EXPECT_STREQ("1", gc(xdtoa(pow(1, NAN))));
+  EXPECT_STREQ("1", gc(xdtoa(pow(1, rando))));
+  EXPECT_STREQ("1", gc(xdtoa(pow(NAN, 0))));
+  EXPECT_STREQ("1", gc(xdtoa(pow(rando, 0))));
+  EXPECT_STREQ("0", gc(xdtoa(pow(0, 1))));
+  EXPECT_STREQ("0", gc(xdtoa(pow(0, 2))));
+  EXPECT_STREQ("0", gc(xdtoa(pow(0, 2.1))));
+  EXPECT_STREQ("1", gc(xdtoa(pow(-1, INFINITY))));
+  EXPECT_STREQ("1", gc(xdtoa(pow(-1, -INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(pow(1. / MAX(2, rando), -INFINITY))));
+  EXPECT_STREQ("0", gc(xdtoa(pow(1.1, -INFINITY))));
+  EXPECT_STREQ("0", gc(xdtoa(pow(MAX(2, rando), -INFINITY))));
+  EXPECT_STREQ("0", gc(xdtoa(pow(1. / MAX(2, rando), INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(pow(MAX(2, rando), INFINITY))));
+  EXPECT_STREQ("-0", gc(xdtoa(pow(-INFINITY, -1))));
+  EXPECT_STREQ("0", gc(xdtoa(pow(-INFINITY, -1.1))));
+  EXPECT_STREQ("0", gc(xdtoa(pow(-INFINITY, -2))));
+  EXPECT_STREQ("0", gc(xdtoa(pow(-INFINITY, -2.1))));
+  EXPECT_STREQ("-0", gc(xdtoa(pow(-INFINITY, -3))));
+  EXPECT_STREQ("0", gc(xdtoa(pow(-INFINITY, -3.1))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoa(pow(-INFINITY, 1))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(pow(-INFINITY, 1.1))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(pow(-INFINITY, 2))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(pow(-INFINITY, 2.1))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoa(pow(-INFINITY, 3))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(pow(-INFINITY, 3.1))));
+  EXPECT_STREQ("0", gc(xdtoa(pow(INFINITY, -1))));
+  EXPECT_STREQ("0", gc(xdtoa(pow(INFINITY, -.1))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(pow(INFINITY, 1))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(pow(INFINITY, .1))));
+  EXPECT_STREQ("1", gc(xdtoa(pow(INFINITY, 0))));
+  EXPECT_STREQ("1", gc(xdtoa(pow(INFINITY, -0.))));
+  EXPECT_STREQ("1", gc(xdtoa(pow(0, 0))));
+  EXPECT_STREQ("1", gc(xdtoa(pow(0, -0.))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(pow(0, -(MAX(rando, 1) | 1)))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoa(pow(-0., -(MAX(rando, 1) | 1)))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(pow(0, -(rando & -2)))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(pow(-0., -(rando & -2)))));
 }
 
-TEST(powl, testFloat) {
+TEST(powf, test) {
   EXPECT_STREQ("27", gc(xdtoaf(powf(3, 3))));
   EXPECT_STREQ("-27", gc(xdtoaf(powf(-3, 3))));
-  EXPECT_STARTSWITH(".4248496", gc(xdtoa(powf(0.7f, 2.4f))));
+  EXPECT_STREQ("-1", gc(xdtoaf(powf(-1, 1.1))));
+  EXPECT_STREQ("1e+38", gc(xdtoaf(powf(10, 38))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(powf(10, 39))));
+  EXPECT_STREQ("0", gc(xdtoaf(powf(10, -5000))));
+  EXPECT_STREQ("1.06338e+37", gc(xdtoaf(powf(2, 123))));
+  EXPECT_STARTSWITH(".42485", gc(xdtoaf(powf(.7, 2.4))));
+  EXPECT_STREQ("1", gc(xdtoaf(powf(1, NAN))));
+  EXPECT_STREQ("1", gc(xdtoaf(powf(1, rando))));
+  EXPECT_STREQ("1", gc(xdtoaf(powf(NAN, 0))));
+  EXPECT_STREQ("1", gc(xdtoaf(powf(rando, 0))));
+  EXPECT_STREQ("0", gc(xdtoaf(powf(0, 1))));
+  EXPECT_STREQ("0", gc(xdtoaf(powf(0, 2))));
+  EXPECT_STREQ("0", gc(xdtoaf(powf(0, 2.1))));
+  EXPECT_STREQ("1", gc(xdtoaf(powf(-1, INFINITY))));
+  EXPECT_STREQ("1", gc(xdtoaf(powf(-1, -INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(powf(1. / MAX(2, rando), -INFINITY))));
+  EXPECT_STREQ("0", gc(xdtoaf(powf(1.1, -INFINITY))));
+  EXPECT_STREQ("0", gc(xdtoaf(powf(MAX(2, rando), -INFINITY))));
+  EXPECT_STREQ("0", gc(xdtoaf(powf(1. / MAX(2, rando), INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(powf(MAX(2, rando), INFINITY))));
+  EXPECT_STREQ("-0", gc(xdtoaf(powf(-INFINITY, -1))));
+  EXPECT_STREQ("0", gc(xdtoaf(powf(-INFINITY, -1.1))));
+  EXPECT_STREQ("0", gc(xdtoaf(powf(-INFINITY, -2))));
+  EXPECT_STREQ("0", gc(xdtoaf(powf(-INFINITY, -2.1))));
+  EXPECT_STREQ("-0", gc(xdtoaf(powf(-INFINITY, -3))));
+  EXPECT_STREQ("0", gc(xdtoaf(powf(-INFINITY, -3.1))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoaf(powf(-INFINITY, 1))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(powf(-INFINITY, 1.1))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(powf(-INFINITY, 2))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(powf(-INFINITY, 2.1))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoaf(powf(-INFINITY, 3))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(powf(-INFINITY, 3.1))));
+  EXPECT_STREQ("0", gc(xdtoaf(powf(INFINITY, -1))));
+  EXPECT_STREQ("0", gc(xdtoaf(powf(INFINITY, -.1))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(powf(INFINITY, 1))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(powf(INFINITY, .1))));
+  EXPECT_STREQ("1", gc(xdtoaf(powf(INFINITY, 0))));
+  EXPECT_STREQ("1", gc(xdtoaf(powf(INFINITY, -0.))));
+  EXPECT_STREQ("1", gc(xdtoaf(powf(0, 0))));
+  EXPECT_STREQ("1", gc(xdtoaf(powf(0, -0.))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(powf(0, -(MAX(rando, 1) | 1)))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoaf(powf(-0., -(MAX(rando, 1) | 1)))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(powf(0, -(rando & -2)))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(powf(-0., -(rando & -2)))));
 }
 
 BENCH(powl, bench) {

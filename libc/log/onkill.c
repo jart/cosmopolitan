@@ -20,6 +20,8 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
@@ -33,9 +35,6 @@
  * @note This gets linked when __cxa_atexit() is linked.
  * @see also libc/oncrash.c
  */
-
-struct ucontext;
-struct siginfo;
 
 static const int sigs[] = {
     SIGHUP, /* hangup aka ctrl_close_event */

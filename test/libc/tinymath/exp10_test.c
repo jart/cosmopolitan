@@ -28,6 +28,7 @@
 TEST(exp10l, test) {
   EXPECT_STREQ("1", gc(xdtoal(exp10l(0))));
   EXPECT_STREQ("1", gc(xdtoal(exp10l(-0.))));
+  EXPECT_STREQ(".01", gc(xdtoal(exp10l(-2.))));
   EXPECT_STREQ("INFINITY", gc(xdtoal(exp10l(INFINITY))));
   EXPECT_STREQ("0", gc(xdtoal(exp10l(-INFINITY))));
   EXPECT_STREQ("NAN", gc(xdtoal(exp10l(NAN))));
@@ -38,6 +39,7 @@ TEST(exp10l, test) {
 TEST(exp10, test) {
   EXPECT_STREQ("1", gc(xdtoa(exp10(0))));
   EXPECT_STREQ("1", gc(xdtoa(exp10(-0.))));
+  EXPECT_STREQ(".01", gc(xdtoa(exp10(-2.))));
   EXPECT_STREQ("INFINITY", gc(xdtoa(exp10(INFINITY))));
   EXPECT_STREQ("0", gc(xdtoa(exp10(-INFINITY))));
   EXPECT_STREQ("NAN", gc(xdtoa(exp10(NAN))));
@@ -48,6 +50,7 @@ TEST(exp10, test) {
 TEST(exp10f, test) {
   EXPECT_STREQ("1", gc(xdtoaf(exp10f(0))));
   EXPECT_STREQ("1", gc(xdtoaf(exp10f(-0.))));
+  EXPECT_STREQ(".01", gc(xdtoaf(exp10f(-2.))));
   EXPECT_STREQ("INFINITY", gc(xdtoaf(exp10f(INFINITY))));
   EXPECT_STREQ("0", gc(xdtoaf(exp10f(-INFINITY))));
   EXPECT_STREQ("NAN", gc(xdtoaf(exp10f(NAN))));

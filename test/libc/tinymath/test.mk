@@ -29,6 +29,7 @@ TEST_LIBC_TINYMATH_DIRECTDEPS =					\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
 	LIBC_RAND						\
+	LIBC_STDIO						\
 	LIBC_RUNTIME						\
 	LIBC_STR						\
 	LIBC_STUBS						\

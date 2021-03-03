@@ -17,18 +17,23 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-.source	__FILE__
 
-truncl:	.profilable
-	sub	$24,%rsp
-	fldt	32(%rsp)
-	fnstcw	14(%rsp)
-	movzwl	14(%rsp),%eax
+//	Rounds to integer, toward zero.
+//
+//	@param	𝑥 is long double passed on stack
+//	@return	long double in %st
+truncl:	pushq	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	sub	$16,%rsp
+	fnstcw	-2(%rbp)
+	fldt	16(%rbp)
+	movzwl	-2(%rbp),%eax
 	or	$0b1100,%ah		# round to zero
-	mov	%ax,12(%rsp)
-	fldcw	12(%rsp)
+	mov	%ax,-4(%rbp)
+	fldcw	-4(%rbp)
 	frndint
-	fldcw	14(%rsp)
-	add	$24,%rsp
+	fldcw	-2(%rbp)
+	leave
 	ret
 	.endfn	truncl,globl

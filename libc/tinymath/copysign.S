@@ -36,9 +36,9 @@ copysign:
 	.rodata.cst16
 .Lnan:	.long	0xffffffff
 	.long	0x7fffffff
-	.long	0
-	.long	0
-.Lneg0:	.long	0
-	.long	-2147483648
-	.long	0
-	.long	0
+	.long	0x00000000
+	.long	0x00000000
+.Lneg0:	.long	0x00000000
+	.long	0x80000000
+	.long	0x00000000
+	.long	0x00000000

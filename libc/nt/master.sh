@@ -7698,7 +7698,7 @@ imp	'_memccpy'						_memccpy						ntdll		2198
 imp	'_memicmp'						_memicmp						ntdll		2199
 imp	'_onexit'						_onexit							KernelBase	1846
 imp	'_purecall'						_purecall						KernelBase	1847
-imp	'sys__setjmp_nt'						_setjmp							ntdll		2200
+imp	'sys__setjmp_nt'					_setjmp							ntdll		2200
 imp	'_setjmpex'						_setjmpex						ntdll		2201
 imp	'_time64'						_time64							KernelBase	1848
 imp	'_wmakepath_s'						_wmakepath_s						ntdll		2245
@@ -7707,7 +7707,7 @@ imp	'_wtoi'							_wtoi							ntdll		2247
 imp	'_wtoi64'						_wtoi64							ntdll		2248
 imp	'_wtol'							_wtol							ntdll		2249
 imp	'sys_abs_nt'						abs							ntdll		2250
-imp	'__sys_accept_nt'						accept							ws2_32		1
+imp	'__sys_accept_nt'					accept							ws2_32		1
 imp	'sys_atan_nt'						atan							ntdll		2251
 imp	'sys_atan2_nt'						atan2							ntdll		2252
 imp	'sys_atexit_nt'						atexit							KernelBase	1849
@@ -7718,12 +7718,12 @@ imp	'bDeleteLDC'						bDeleteLDC						gdi32		1949
 imp	'bInitSystemAndFontsDirectories'			bInitSystemAndFontsDirectoriesW				gdi32		1950
 imp	'bMakePathName'						bMakePathNameW						gdi32		1951
 imp	'__sys_bind_nt'						bind							ws2_32		2	3
-imp	'sys_bsearch_nt'						bsearch							ntdll		2255
+imp	'sys_bsearch_nt'					bsearch							ntdll		2255
 imp	'bsearch_s'						bsearch_s						ntdll		2256
 imp	'cGetTTFFromFOT'					cGetTTFFromFOT						gdi32		1952
 imp	'sys_ceil_nt'						ceil							ntdll		2257
 imp	'__sys_closesocket_nt'					closesocket						ws2_32		3	1
-imp	'__sys_connect_nt'						connect							ws2_32		4
+imp	'__sys_connect_nt'					connect							ws2_32		4
 imp	'sys_cos_nt'						cos							ntdll		2258
 imp	'dwLBSubclass'						dwLBSubclass						comdlg32	128
 imp	'dwOKSubclass'						dwOKSubclass						comdlg32	129
@@ -7745,7 +7745,7 @@ imp	'sys_gethostname_nt'					gethostname						ws2_32		57
 imp	'sys_getnameinfo_nt'					getnameinfo						ws2_32		192
 imp	'__sys_getpeername_nt'					getpeername						ws2_32		5	3
 imp	'sys_getprotobyname_nt'					getprotobyname						ws2_32		53
-imp	'sys_getprotobynumber_nt'					getprotobynumber					ws2_32		54
+imp	'sys_getprotobynumber_nt'				getprotobynumber					ws2_32		54
 imp	'sys_getservbyname_nt'					getservbyname						ws2_32		55
 imp	'sys_getservbyport_nt'					getservbyport						ws2_32		56
 imp	'__sys_getsockname_nt'					getsockname						ws2_32		6	3
@@ -7758,24 +7758,24 @@ imp	'__sys_ioctlsocket_nt'					ioctlsocket						ws2_32		10	3
 imp	'iswascii'						iswascii						ntdll		2273
 imp	'keybd_event'						keybd_event						user32		2580
 imp	'sys_labs_nt'						labs							ntdll		2282
-imp	'__sys_listen_nt'						listen							ws2_32		13	2
+imp	'__sys_listen_nt'					listen							ws2_32		13	2
 imp	'sys_log_nt'						log							ntdll		2283
-imp	'sys_longjmp_nt'						longjmp							ntdll		2284
+imp	'sys_longjmp_nt'					longjmp							ntdll		2284
 imp	'mouse_event'						mouse_event						user32		2583
 imp	'pGdiDevCaps'						pGdiDevCaps						gdi32		1961
 imp	'pGdiSharedHandleTable'					pGdiSharedHandleTable					gdi32		1962
 imp	'pGdiSharedMemory'					pGdiSharedMemory					gdi32		1963
 imp	'pldcGet'						pldcGet							gdi32		1964
 imp	'sys_recv_nt'						recv							ws2_32		16
-imp	'__sys_recvfrom_nt'						recvfrom						ws2_32		17
-imp	'__sys_select_nt'						select							ws2_32		18	5
+imp	'__sys_recvfrom_nt'					recvfrom						ws2_32		17
+imp	'__sys_select_nt'					select							ws2_32		18	5
 imp	'semDxTrimNotification'					semDxTrimNotification					gdi32		1965
 imp	'sys_send_nt'						send							ws2_32		19
-imp	'__sys_sendto_nt'						sendto							ws2_32		20
+imp	'__sys_sendto_nt'					sendto							ws2_32		20
 imp	'__sys_setsockopt_nt'					setsockopt						ws2_32		21	5
-imp	'__sys_shutdown_nt'						shutdown						ws2_32		22	2
+imp	'__sys_shutdown_nt'					shutdown						ws2_32		22	2
 imp	'sys_sin_nt'						sin							ntdll		2296
-imp	'__sys_socket_nt'						socket							ws2_32		23
+imp	'__sys_socket_nt'					socket							ws2_32		23
 imp	'timeBeginPeriod'					timeBeginPeriod						kernel32	1609
 imp	'timeEndPeriod'						timeEndPeriod						kernel32	1610
 imp	'timeGetDevCaps'					timeGetDevCaps						kernel32	1611
