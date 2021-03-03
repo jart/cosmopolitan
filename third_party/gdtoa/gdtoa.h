@@ -45,6 +45,7 @@ char *gdtoa(const FPI *fpi, int be, unsigned *bits, int *kindp, int mode,
             int ndigits, int *decpt, char **rve);
 void freedtoa(char *);
 
+double atof(const char *);
 float strtof(const char *, char **);
 double strtod(const char *, char **);
 int strtodg(const char *, char **, const FPI *, int *, unsigned *);

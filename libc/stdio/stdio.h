@@ -2,6 +2,9 @@
 #define COSMOPOLITAN_LIBC_STDIO_STDIO_H_
 #include "libc/fmt/pflink.h"
 #include "libc/runtime/symbolic.h"
+
+#define FILENAME_MAX PATH_MAX
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
