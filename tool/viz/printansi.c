@@ -183,13 +183,8 @@ static void GetOpts(int *argc, char *argv[]) {
   ttyquantsetup(g_flags.quant, kTtyQuantRgb, g_flags.blocks);
 }
 
-static unsigned char ChessBoard(unsigned y, unsigned x, unsigned char a,
-                                unsigned char b) {
-  return !((y ^ x) & (1u << 2)) ? a : b;
-}
-
 static unsigned char AlphaBackground(unsigned y, unsigned x) {
-  return ChessBoard(y, x, 255, 200);
+  return 255;
 }
 
 static void *Deblinterlace(long dyn, long dxn, unsigned char dst[3][dyn][dxn],
