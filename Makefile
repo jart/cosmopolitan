@@ -40,8 +40,7 @@
 #   o/dbg/examples/crashreport.com
 #   less examples/crashreport.c
 #
-#   # extremely tiny binaries (scout's honor escape hatch)
-#   # please pay the $1k for commercial license if you can
+#   # extremely tiny binaries
 #   make -j8 -O MODE=tiny				\
 #               LDFLAGS+=-s				\
 #               CPPFLAGS+=-DIM_FEELING_NAUGHTY	        \

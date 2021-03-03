@@ -50,7 +50,6 @@ TAGS ?= /usr/bin/ctags  # emacs source builds or something breaks it
 ARFLAGS = rcsD
 ZFLAGS ?=
 XARGS ?= xargs -P4 -rs8000
-NICE ?= build/actuallynice
 DOT ?= dot
 GZ ?= gzip
 CLANG = clang
