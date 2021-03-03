@@ -2,6 +2,7 @@ int main(int argc, char *argv[]) {
   int rc;
   char *s;
   FILE *f;
+  showcrashreports();
   s = strdup(argv[0]);
   s[0] = 'Z';
   f = fopen("/dev/null", "w");

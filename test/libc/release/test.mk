@@ -29,6 +29,7 @@ o/$(MODE)/test/libc/release/smoke.com.dbg:			\
 		-nostdlib					\
 		-nostdinc					\
 		-mno-red-zone					\
+		-fno-omit-frame-pointer				\
 		-Wl,-T,o/$(MODE)/ape/ape.lds			\
 		-include o/cosmopolitan.h			\
 		test/libc/release/smoke.c			\
@@ -56,6 +57,7 @@ o/$(MODE)/test/libc/release/smokecxx.com.dbg:			\
 		-nostdlib					\
 		-nostdinc					\
 		-mno-red-zone					\
+		-fno-omit-frame-pointer				\
 		-Wl,-T,o/$(MODE)/ape/ape.lds			\
 		-include o/cosmopolitan.h			\
 		test/libc/release/smokecxx.cc			\
@@ -80,6 +82,7 @@ o/$(MODE)/test/libc/release/smokeansi.com.dbg:			\
 		-nostdlib					\
 		-nostdinc					\
 		-mno-red-zone					\
+		-fno-omit-frame-pointer				\
 		-Wl,-T,o/$(MODE)/ape/ape.lds			\
 		-include o/cosmopolitan.h			\
 		test/libc/release/smoke.c			\

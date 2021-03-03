@@ -22,10 +22,11 @@ If you're doing your development work on Linux or BSD then you need just
 five files to get started:
 
 ```sh
-wget https://justine.lol/cosmopolitan/cosmopolitan-amalgamation-0.2.zip
-unzip cosmopolitan-amalgamation-0.2.zip
+wget https://justine.lol/cosmopolitan/cosmopolitan.zip
+unzip cosmopolitan.zip
 printf 'main() { printf("hello world\\n"); }\n' >hello.c
-gcc -g -O -static -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone \
+gcc -g -Og -static -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone \
+  -fno-omit-frame-pointer -pg -mnop-mcount \
   -o hello.com.dbg hello.c -fuse-ld=bfd -Wl,-T,ape.lds \
   -include cosmopolitan.h crt.o ape.o cosmopolitan.a
 objcopy -S -O binary hello.com.dbg hello.com
