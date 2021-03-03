@@ -179,9 +179,8 @@ void BeginListeningForIncomingTraffic(void) {
   for (i = 0; i < g_sockets.i; ++i) {
     int yes = 1;
     struct Socket *s = &g_sockets.p[i];
-    CHECK_NE(-1L,
-             (g_polls.p[i].fd = s->fd = socket(
-                  s->addr.sin_family, s->type | SOCK_NONBLOCK, s->protocol)));
+    CHECK_NE(-1L, (g_polls.p[i].fd = s->fd =
+                       socket(s->addr.sin_family, s->type, s->protocol)));
     CHECK_NE(-1L,
              setsockopt(s->fd, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(yes)));
     CHECK_NE(-1, bind(s->fd, &s->addr, sizeof(s->addr)));
@@ -202,8 +201,7 @@ void AcceptConnection(size_t i) {
   client.type = server->type;
   client.protocol = server->protocol;
   uint32_t addrsize = sizeof(client.addr);
-  CHECK_NE(-1L, (client.fd = accept4(server->fd, &client.addr, &addrsize,
-                                     SOCK_NONBLOCK)));
+  CHECK_NE(-1L, (client.fd = accept(server->fd, &client.addr, &addrsize)));
   LOGF("%s accepted %s", gc(DescribeSocket(server)),
        gc(DescribeSocket(&client)));
   AddSocket(&client);
