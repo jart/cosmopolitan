@@ -92,5 +92,5 @@ void ResetTlb(struct Machine *m) {
   m->tlbindex = 0;
   memset(m->tlb, 0, sizeof(m->tlb));
   m->codevirt = 0;
-  m->codehost = NULL;
+  m->codehost = 0;
 }

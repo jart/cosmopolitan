@@ -56,7 +56,7 @@ struct Machine {
   };
   struct MachineTlb {
     int64_t virt;
-    uint8_t *host;
+    uint64_t entry;
   } tlb[16];
   struct MachineReal {
     size_t i, n;

@@ -21,6 +21,7 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/pc.internal.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
 #include "tool/build/lib/endian.h"
@@ -44,50 +45,54 @@ void SetWriteAddr(struct Machine *m, int64_t addr, uint32_t size) {
   }
 }
 
-long HandlePageFault(struct Machine *m, uint64_t entry, uint64_t table,
-                     unsigned index) {
+uint64_t HandlePageFault(struct Machine *m, uint64_t entry, uint64_t table,
+                         unsigned index) {
   long page;
   if ((page = AllocateLinearPage(m)) != -1) {
     --m->memstat.reserved;
-    *(uint64_t *)(m->real.p + table + index * 8) =
-        page | entry & ~0x7ffffffffe00;
+    return (*(uint64_t *)(m->real.p + table + index * 8) =
+                page | entry & ~0x7ffffffffe00);
+  } else {
+    return 0;
   }
-  return page;
+}
+
+uint64_t FindPage(struct Machine *m, int64_t virt) {
+  uint64_t table, entry;
+  unsigned level, index, i;
+  virt &= -0x1000;
+  for (i = 0; i < ARRAYLEN(m->tlb); ++i) {
+    if (m->tlb[i].virt == virt && (m->tlb[i].entry & 1)) {
+      return m->tlb[i].entry;
+    }
+  }
+  level = 39;
+  entry = m->cr3;
+  do {
+    table = entry & PAGE_TA;
+    CHECK_LT(table, m->real.n);
+    index = (virt >> level) & 511;
+    entry = *(uint64_t *)(m->real.p + table + index * 8);
+    if (!(entry & 1)) return 0;
+  } while ((level -= 9) >= 12);
+  if ((entry & 0x0e00) &&
+      (entry = HandlePageFault(m, entry, table, index)) == -1) {
+    return 0;
+  }
+  m->tlbindex = (m->tlbindex + 1) & (ARRAYLEN(m->tlb) - 1);
+  m->tlb[m->tlbindex] = m->tlb[0];
+  m->tlb[0].virt = virt;
+  m->tlb[0].entry = entry;
+  return entry;
 }
 
 void *FindReal(struct Machine *m, int64_t virt) {
-  long page;
-  uint64_t table, entry;
+  uint64_t table, entry, page;
   unsigned skew, level, index, i;
   if ((m->mode & 3) != XED_MODE_REAL) {
     if (-0x800000000000 <= virt && virt < 0x800000000000) {
-      skew = virt & 0xfff;
-      virt &= -0x1000;
-      for (i = 0; i < ARRAYLEN(m->tlb); ++i) {
-        if (m->tlb[i].virt == virt && m->tlb[i].host) {
-          return m->tlb[i].host + skew;
-        }
-      }
-      level = 39;
-      entry = m->cr3;
-      do {
-        table = entry & 0x7ffffffff000;
-        CHECK_LT(table, m->real.n);
-        index = (virt >> level) & 511;
-        entry = *(uint64_t *)(m->real.p + table + index * 8);
-        if (!(entry & 1)) return NULL;
-      } while ((level -= 9) >= 12);
-      if (!(entry & 0x0e00)) {
-        page = entry & 0x7ffffffff000;
-        CHECK_LT(page, m->real.n);
-      } else if ((page = HandlePageFault(m, entry, table, index)) == -1) {
-        return NULL;
-      }
-      m->tlbindex = (m->tlbindex + 1) & (ARRAYLEN(m->tlb) - 1);
-      m->tlb[m->tlbindex] = m->tlb[0];
-      m->tlb[0].virt = virt;
-      m->tlb[0].host = m->real.p + page;
-      return m->real.p + page + skew;
+      if (!(entry = FindPage(m, virt))) return NULL;
+      return m->real.p + (entry & PAGE_TA) + (virt & 0xfff);
     } else {
       return NULL;
     }
