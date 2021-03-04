@@ -32,13 +32,13 @@ gcc -g -Os -static -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone \
 objcopy -S -O binary hello.com.dbg hello.com
 ```
 
-You now have a portable program! Your APE binary will assimilate itself
-as conventional residents of your platform after the first run, so it
-can be fast and efficient for subsequent executions.
+You now have a portable program. Please note that your APE binary will
+assimilate itself as a conventional resident of your platform after the
+first run, so it can be fast and efficient for subsequent executions.
 
 ```sh
 ./hello.com
-bash -c './hello.com'  # zsh/fish workaround: we upstream a patch!
+bash -c './hello.com'  # zsh/fish workaround (we upstreamed a patch)
 ```
 
 So if you intend to copy the binary to Windows or Mac then please do
