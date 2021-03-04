@@ -26,24 +26,6 @@
 #define sin(x)  sin(VEIL("x", (double)(x)))
 #define sinf(x) sinf(VEIL("x", (float)(x)))
 
-void SetUp(void) {
-  /* 8087 FPU Control Word
-      IM: Invalid Operation ───────────────┐
-      DM: Denormal Operand ───────────────┐│
-      ZM: Zero Divide ───────────────────┐││
-      OM: Overflow ─────────────────────┐│││
-      UM: Underflow ───────────────────┐││││
-      PM: Precision ──────────────────┐│││││
-     PC: Precision Control ────────┐  ││││││
-      {float,∅,double,long double} │  ││││││
-     RC: Rounding Control ───────┐ │  ││││││
-      {even, →-∞, →+∞, →0}       │┌┤  ││││││
-                                ┌┤││  ││││││
-                               d││││rr││││││*/
-  int x87cw = 0b0000000000000000001101100001;
-  asm volatile("fldcw\t%0" : /* no outputs */ : "m"(x87cw));
-}
-
 TEST(sinl, test) {
   EXPECT_STREQ("NAN", gc(xdtoal(sinl(NAN))));
   EXPECT_STREQ("-NAN", gc(xdtoal(sinl(+INFINITY))));

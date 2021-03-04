@@ -19,7 +19,7 @@ libc](https://justine.lol/cosmopolitan/index.html) website. We also have
 ## Getting Started
 
 If you're doing your development work on Linux or BSD then you need just
-five files to get started:
+five files to get started. Here's what you do on Linux:
 
 ```sh
 wget https://justine.lol/cosmopolitan/cosmopolitan.zip
@@ -30,8 +30,19 @@ gcc -g -Os -static -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone \
   -o hello.com.dbg hello.c -fuse-ld=bfd -Wl,-T,ape.lds \
   -include cosmopolitan.h crt.o ape.o cosmopolitan.a
 objcopy -S -O binary hello.com.dbg hello.com
-./hello.com
 ```
+
+You now have a portable program! Your APE binary will assimilate itself
+as conventional residents of your platform after the first run, so it
+can be fast and efficient for subsequent executions.
+
+```sh
+./hello.com
+bash -c './hello.com'  # zsh/fish workaround: we upstream a patch!
+```
+
+So if you intend to copy the binary to Windows or Mac then please do
+that before you run it, not after.
 
 If you're developing on Windows or MacOS then you need to download an
 x86_64-pc-linux-gnu toolchain beforehand. See the [Compiling on
