@@ -25,7 +25,7 @@ five files to get started:
 wget https://justine.lol/cosmopolitan/cosmopolitan.zip
 unzip cosmopolitan.zip
 printf 'main() { printf("hello world\\n"); }\n' >hello.c
-gcc -g -Og -static -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone \
+gcc -g -Os -static -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone \
   -fno-omit-frame-pointer -pg -mnop-mcount \
   -o hello.com.dbg hello.c -fuse-ld=bfd -Wl,-T,ape.lds \
   -include cosmopolitan.h crt.o ape.o cosmopolitan.a
@@ -52,13 +52,13 @@ find o -name \*.com | xargs ls -rShal | less
 
 ## Support Vector
 
-| Platform       | Min Version | Circa |
-| :---           | ---:        | ---:  |
-| AMD            | K8 Venus    | 2005  |
-| Intel          | Core        | 2006  |
-| New Technology | Vista       | 2006  |
-| GNU/Systemd    | 2.6.18      | 2007  |
-| XNU's Not UNIX | 15.6        | 2018  |
-| FreeBSD        | 12          | 2018  |
-| OpenBSD        | 6.4         | 2018  |
-| NetBSD         | 9.1         | 2020  |
+| Platform        | Min Version | Circa |
+| :---            | ---:        | ---:  |
+| AMD             | K8 Venus    | 2005  |
+| Intel           | Core        | 2006  |
+| New Technology  | Vista       | 2006  |
+| GNU/Systemd     | 2.6.18      | 2007  |
+| XNU's Not UNIX! | 15.6        | 2018  |
+| FreeBSD         | 12          | 2018  |
+| OpenBSD         | 6.4         | 2018  |
+| NetBSD          | 9.1         | 2020  |

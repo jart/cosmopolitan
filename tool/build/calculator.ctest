@@ -7,7 +7,7 @@
 81 3 // 27 = assert
 2 8 ** 256 = assert
 17 10 % 7 = assert
-17 10 mod 7 = assert
+17 10 fmod 7 = assert
 
 # FLOATING POINT
 .1 .2 + .3 - abs epsilon < assert

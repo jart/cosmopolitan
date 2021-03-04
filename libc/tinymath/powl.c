@@ -31,7 +31,11 @@ long double powl(long double x, long double y) {
           asm("fprem" : "=t"(t) : "0"(u), "u"(1.L));
           asm("f2xm1" : "=t"(t) : "0"(t));
           asm("fscale" : "=t"(t) : "0"(t + 1), "u"(u));
-          return copysignl(t, x);
+          if (signbit(x)) {
+            if (y != truncl(y)) return -NAN;
+            if (!signbit(y) || ((int64_t)y & 1)) t = -t;
+          }
+          return t;
         } else if (y > 0) {
           return 0;
         } else if (!y) {

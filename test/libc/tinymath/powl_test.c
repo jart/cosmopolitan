@@ -39,7 +39,6 @@ void SetUp(void) {
 TEST(powl, test) {
   EXPECT_STREQ("27", gc(xdtoal(powl(3, 3))));
   EXPECT_STREQ("-27", gc(xdtoal(powl(-3, 3))));
-  EXPECT_STREQ("-1", gc(xdtoal(powl(-1, 1.1))));
   EXPECT_STREQ("1e+4932", gc(xdtoal(powl(10, 4932))));
   EXPECT_STREQ("INFINITY", gc(xdtoal(powl(10, 4933))));
   EXPECT_STREQ("0", gc(xdtoal(powl(10, -5000))));
@@ -83,12 +82,15 @@ TEST(powl, test) {
   EXPECT_STREQ("-INFINITY", gc(xdtoal(powl(-0., -(MAX(rando, 1) | 1)))));
   EXPECT_STREQ("INFINITY", gc(xdtoal(powl(0, -(rando & -2)))));
   EXPECT_STREQ("INFINITY", gc(xdtoal(powl(-0., -(rando & -2)))));
+  EXPECT_TRUE(isnan(powl(-3, 1. / MAX(rando, 2))));
+  EXPECT_TRUE(isnan(powl(-3, -(1. / MAX(rando, 2)))));
+  EXPECT_STREQ("-.3333333333333333", gc(xdtoal(powl(-3, -1))));
+  EXPECT_STREQ(".1111111111111111", gc(xdtoal(powl(-3, -2))));
 }
 
 TEST(pow, test) {
   EXPECT_STREQ("27", gc(xdtoa(pow(3, 3))));
   EXPECT_STREQ("-27", gc(xdtoa(pow(-3, 3))));
-  EXPECT_STREQ("-1", gc(xdtoa(pow(-1, 1.1))));
   EXPECT_STREQ("1e+308", gc(xdtoa(pow(10, 308))));
   EXPECT_STREQ("INFINITY", gc(xdtoa(pow(10, 309))));
   EXPECT_STREQ("0", gc(xdtoa(pow(10, -5000))));
@@ -132,12 +134,13 @@ TEST(pow, test) {
   EXPECT_STREQ("-INFINITY", gc(xdtoa(pow(-0., -(MAX(rando, 1) | 1)))));
   EXPECT_STREQ("INFINITY", gc(xdtoa(pow(0, -(rando & -2)))));
   EXPECT_STREQ("INFINITY", gc(xdtoa(pow(-0., -(rando & -2)))));
+  EXPECT_STREQ("-.333333333333333", gc(xdtoa(pow(-3, -1))));
+  EXPECT_STREQ(".111111111111111", gc(xdtoa(pow(-3, -2))));
 }
 
 TEST(powf, test) {
   EXPECT_STREQ("27", gc(xdtoaf(powf(3, 3))));
   EXPECT_STREQ("-27", gc(xdtoaf(powf(-3, 3))));
-  EXPECT_STREQ("-1", gc(xdtoaf(powf(-1, 1.1))));
   EXPECT_STREQ("1e+38", gc(xdtoaf(powf(10, 38))));
   EXPECT_STREQ("INFINITY", gc(xdtoaf(powf(10, 39))));
   EXPECT_STREQ("0", gc(xdtoaf(powf(10, -5000))));
@@ -181,6 +184,8 @@ TEST(powf, test) {
   EXPECT_STREQ("-INFINITY", gc(xdtoaf(powf(-0., -(MAX(rando, 1) | 1)))));
   EXPECT_STREQ("INFINITY", gc(xdtoaf(powf(0, -(rando & -2)))));
   EXPECT_STREQ("INFINITY", gc(xdtoaf(powf(-0., -(rando & -2)))));
+  EXPECT_STREQ("-.333333", gc(xdtoaf(powf(-3, -1))));
+  EXPECT_STREQ(".111111", gc(xdtoaf(powf(-3, -2))));
 }
 
 BENCH(powl, bench) {

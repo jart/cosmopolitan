@@ -406,6 +406,7 @@ TEST(sprintf, test_float) {
 #ifndef __FINITE_MATH_ONLY__
   EXPECT_STREQ("nan", Format("%.4f", NAN));
 #endif
+  EXPECT_STREQ("-0.0000", Format("%.4f", -0.));
   EXPECT_STREQ("3.1415", Format("%.4f", 3.1415354));
   EXPECT_STREQ("30343.142", Format("%.3f", 30343.1415354));
   EXPECT_STREQ("34", Format("%.0f", 34.1415354));
