@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_FMT_PFLINK_H_
 #define COSMOPOLITAN_LIBC_FMT_PFLINK_H_
 #include "libc/dce.h"
+#include "libc/fmt/fmts.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -17,19 +18,20 @@
  * format strings are constexprs that only contain directives.
  */
 
-#define PFLINK(FMT)                                               \
-  ({                                                              \
-    if (___PFLINK(FMT, strpbrk, "cmrqs")) {                       \
-      if (___PFLINK(FMT, strchr, '#')) STATIC_YOINK("kCp437");    \
-      if (___PFLINK(FMT, strstr, "%m")) STATIC_YOINK("strerror"); \
-      if (!IsTiny() && (___PFLINK(FMT, strstr, "%*") ||           \
-                        ___PFLINK(FMT, strpbrk, "0123456789"))) { \
-        STATIC_YOINK("strnwidth");                                \
-        STATIC_YOINK("strnwidth16");                              \
-        STATIC_YOINK("wcsnwidth");                                \
-      }                                                           \
-    }                                                             \
-    FMT;                                                          \
+#define PFLINK(FMT)                                                     \
+  ({                                                                    \
+    if (___PFLINK(FMT, strpbrk, "faAeEgG")) STATIC_YOINK("__fmt_dtoa"); \
+    if (___PFLINK(FMT, strpbrk, "cmrqs")) {                             \
+      if (___PFLINK(FMT, strchr, '#')) STATIC_YOINK("kCp437");          \
+      if (___PFLINK(FMT, strstr, "%m")) STATIC_YOINK("strerror");       \
+      if (!IsTiny() && (___PFLINK(FMT, strstr, "%*") ||                 \
+                        ___PFLINK(FMT, strpbrk, "0123456789"))) {       \
+        STATIC_YOINK("strnwidth");                                      \
+        STATIC_YOINK("strnwidth16");                                    \
+        STATIC_YOINK("wcsnwidth");                                      \
+      }                                                                 \
+    }                                                                   \
+    FMT;                                                                \
   })
 
 #define SFLINK(FMT)                    \
@@ -67,6 +69,7 @@
 #define SFLINK(FMT) FMT
 #ifdef __GNUC__
 __asm__(".section .yoink\n\t"
+        "nopl\t__fmt_dtoa(%rip)\n\t"
         "nopl\tkCp437(%rip)\n\t"
         "nopl\tstrerror(%rip)\n\t"
         "nopl\tstrnwidth(%rip)\n\t"
@@ -79,6 +82,7 @@ __asm__(".section .yoink\n\t"
 #else
 static long __pflink(long x) {
   x |= kCp437[0];
+  x |= __fmt_dtoa(0, 0, 0, 0, 0, 0);
   x |= strnwidth(0, 0, 0);
   x |= strnwidth16(0, 0, 0);
   x |= wcsnwidth(0, 0, 0);

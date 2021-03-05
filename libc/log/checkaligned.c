@@ -22,9 +22,6 @@
 #include "libc/log/log.h"
 #include "libc/stdio/stdio.h"
 
-STATIC_YOINK("ntoa");
-STATIC_YOINK("stoa");
-
 void __check_fail_aligned(unsigned bytes, uint64_t ptr) {
   fflush(stderr);
   if (!IsTiny()) memsummary(fileno(stderr));

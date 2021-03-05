@@ -20,8 +20,6 @@
 #include "libc/stdio/stdio.h"
 #include "third_party/dlmalloc/dlmalloc.internal.h"
 
-STATIC_YOINK("ntoa");
-
 void malloc_stats(void) {
   struct MallocStats res = dlmalloc_stats(g_dlmalloc);
   (fprintf)(stderr, "max system bytes = %'10zu\r\n", res.maxfp);

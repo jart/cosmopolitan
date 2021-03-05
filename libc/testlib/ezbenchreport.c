@@ -21,8 +21,6 @@
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 
-STATIC_YOINK("ntoa");
-STATIC_YOINK("stoa");
 STATIC_YOINK("strnwidth");
 
 void __testlib_ezbenchreport(const char *form, uint64_t c1, uint64_t c2) {

@@ -31,13 +31,14 @@ THIRD_PARTY_DUKTAPE_A_DIRECTDEPS =				\
 	LIBC_FMT						\
 	LIBC_INTRIN						\
 	LIBC_MEM						\
+	LIBC_NEXGEN32E						\
+	LIBC_RUNTIME						\
+	LIBC_STDIO						\
 	LIBC_STR						\
 	LIBC_STUBS						\
 	LIBC_TIME						\
-	LIBC_RUNTIME						\
 	LIBC_TINYMATH						\
-	LIBC_UNICODE						\
-	LIBC_NEXGEN32E
+	LIBC_UNICODE
 
 THIRD_PARTY_DUKTAPE_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_DUKTAPE_A_DIRECTDEPS),$($(x))))

@@ -33,7 +33,7 @@ static noinstrument int vfprintfputchar(int c, struct state *st) {
 
 int(vfprintf)(FILE *f, const char *fmt, va_list va) {
   struct state st[1] = {{f, 0}};
-  if (palandprintf(vfprintfputchar, st, fmt, va) != -1) {
+  if (__fmt(vfprintfputchar, st, fmt, va) != -1) {
     return st->n;
   } else {
     return -1;

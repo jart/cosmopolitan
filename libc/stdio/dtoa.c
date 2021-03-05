@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/palandprintf.h"
+#include "libc/fmt/fmts.h"
+#include "third_party/gdtoa/gdtoa.h"
 
-int spacepad(int out(long, void *), void *arg, unsigned long n) {
-  int i, rc;
-  for (rc = i = 0; i < n; ++i) rc |= out(' ', arg);
-  return rc;
+char *__fmt_dtoa(double d0, int mode, int ndigits, int *decpt, int *sign,
+                 char **rve) {
+  return dtoa(d0, mode, ndigits, decpt, sign, rve);
 }

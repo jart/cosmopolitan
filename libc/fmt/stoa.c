@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
-#include "libc/fmt/paland.inc"
-#include "libc/fmt/palandprintf.h"
+#include "libc/fmt/fmts.h"
+#include "libc/fmt/internal.h"
 #include "libc/nexgen32e/tinystrlen.internal.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
@@ -28,12 +28,13 @@
 
 typedef int (*emit_f)(int (*)(long, void *), void *, wint_t);
 
-static noinstrument int StoaEmitByte(int f(long, void *), void *a, wint_t c) {
+static noinstrument int __fmt_stoa_byte(int f(long, void *), void *a,
+                                        wint_t c) {
   return f(c, a);
 }
 
-static noinstrument int StoaEmitWordEncodedString(int f(long, void *), void *a,
-                                                  uint64_t w) {
+static noinstrument int __fmt_stoa_word(int f(long, void *), void *a,
+                                        uint64_t w) {
   do {
     if (f(w & 0xff, a) == -1) {
       return -1;
@@ -42,31 +43,32 @@ static noinstrument int StoaEmitWordEncodedString(int f(long, void *), void *a,
   return 0;
 }
 
-static noinstrument int StoaEmitUnicode(int f(long, void *), void *a,
+static noinstrument int __fmt_stoa_wide(int f(long, void *), void *a,
                                         wint_t c) {
   if (isascii(c)) {
     return f(c, a);
   } else {
-    return StoaEmitWordEncodedString(f, a, tpenc(c));
+    return __fmt_stoa_word(f, a, tpenc(c));
   }
 }
 
-static noinstrument int StoaEmitQuoted(int f(long, void *), void *a, wint_t c) {
+static noinstrument int __fmt_stoa_bing(int f(long, void *), void *a,
+                                        wint_t c) {
+  return __fmt_stoa_wide(f, a, (*weaken(kCp437))[c]);
+}
+
+static noinstrument int __fmt_stoa_quoted(int f(long, void *), void *a,
+                                          wint_t c) {
   if (isascii(c)) {
-    return StoaEmitWordEncodedString(f, a, cescapec(c));
+    return __fmt_stoa_word(f, a, cescapec(c));
   } else {
-    return StoaEmitWordEncodedString(f, a, tpenc(c));
+    return __fmt_stoa_word(f, a, tpenc(c));
   }
 }
 
-static noinstrument int StoaEmitVisualized(int f(long, void *), void *a,
-                                           wint_t c) {
-  return StoaEmitUnicode(f, a, (*weaken(kCp437))[c]);
-}
-
-static noinstrument int StoaEmitQuote(int out(long, void *), void *arg,
-                                      unsigned flags, char ch,
-                                      unsigned char signbit) {
+static noinstrument int __fmt_stoa_quote(int out(long, void *), void *arg,
+                                         unsigned flags, char ch,
+                                         unsigned char signbit) {
   if (flags & FLAGS_REPR) {
     if (signbit == 63) {
       if (out('L', arg) == -1) return -1;
@@ -81,15 +83,16 @@ static noinstrument int StoaEmitQuote(int out(long, void *), void *arg,
 /**
  * Converts string to array.
  *
- * This function is used by palandprintf() to implement the %s and %c
- * directives. The content outputted to the array is always UTF-8, but
- * the input may be UTF-16 or UTF-32.
+ * This is used by __fmt() to implement the %s and %c directives. The
+ * content outputted to the array is always UTF-8, but the input may be
+ * UTF-16 or UTF-32.
  *
- * @see palandprintf()
+ * @see __fmt()
  */
-int stoa(int out(long, void *), void *arg, void *data, unsigned long flags,
-         unsigned long precision, unsigned long width, unsigned char signbit,
-         unsigned char qchar) {
+int __fmt_stoa(int out(long, void *), void *arg, void *data,
+               unsigned long flags, unsigned long precision,
+               unsigned long width, unsigned char signbit,
+               unsigned char qchar) {
   char *p;
   wint_t wc;
   unsigned n;
@@ -104,28 +107,28 @@ int stoa(int out(long, void *), void *arg, void *data, unsigned long flags,
     flags |= FLAGS_NOQUOTE;
     signbit = 0;
   } else {
-    if (StoaEmitQuote(out, arg, flags, qchar, signbit) == -1) return -1;
+    if (__fmt_stoa_quote(out, arg, flags, qchar, signbit) == -1) return -1;
   }
 
   ignorenul = false;
   justdobytes = false;
   if (signbit == 15 || signbit == 63) {
     if (flags & FLAGS_QUOTE) {
-      emit = StoaEmitQuoted;
+      emit = __fmt_stoa_quoted;
       ignorenul = flags & FLAGS_PRECISION;
     } else {
-      emit = StoaEmitUnicode;
+      emit = __fmt_stoa_wide;
     }
   } else if ((flags & FLAGS_HASH) && weaken(kCp437)) {
     justdobytes = true;
-    emit = StoaEmitVisualized;
+    emit = __fmt_stoa_bing;
     ignorenul = flags & FLAGS_PRECISION;
   } else if (flags & FLAGS_QUOTE) {
-    emit = StoaEmitQuoted;
+    emit = __fmt_stoa_quoted;
     ignorenul = flags & FLAGS_PRECISION;
   } else {
     justdobytes = true;
-    emit = StoaEmitByte;
+    emit = __fmt_stoa_byte;
   }
 
   if (!(flags & FLAGS_PRECISION)) precision = -1;
@@ -159,7 +162,7 @@ int stoa(int out(long, void *), void *arg, void *data, unsigned long flags,
   }
 
   if (pad && !(flags & FLAGS_LEFT)) {
-    if (spacepad(out, arg, pad) == -1) return -1;
+    if (__fmt_pad(out, arg, pad) == -1) return -1;
   }
 
   if (justdobytes) {
@@ -208,7 +211,7 @@ int stoa(int out(long, void *), void *arg, void *data, unsigned long flags,
   }
 
   if (pad && (flags & FLAGS_LEFT)) {
-    if (spacepad(out, arg, pad) == -1) return -1;
+    if (__fmt_pad(out, arg, pad) == -1) return -1;
   }
 
   if (!(flags & FLAGS_NOQUOTE) && (flags & FLAGS_REPR)) {

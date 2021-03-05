@@ -17,10 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
-#include "libc/fmt/wcslol.internal.h"
-#include "libc/limits.h"
 #include "libc/str/str.h"
 
 long wcstol(const wchar_t *s, wchar_t **end, int opt_base) {
-  return WCSLOL(s, end, opt_base, LONG_MIN, LONG_MAX);
+  return wcstoimax(s, end, opt_base);
 }

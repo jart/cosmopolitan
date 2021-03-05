@@ -26,9 +26,6 @@
 #include "libc/nt/runtime.h"
 #include "libc/str/str.h"
 
-STATIC_YOINK("ntoa");
-STATIC_YOINK("stoa");
-
 STATIC_YOINK("E2BIG");
 STATIC_YOINK("EACCES");
 STATIC_YOINK("EADDRINUSE");

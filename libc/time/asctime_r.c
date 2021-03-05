@@ -20,9 +20,6 @@
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 
-STATIC_YOINK("ntoa");
-STATIC_YOINK("stoa");
-
 static unsigned clip(unsigned index, unsigned count) {
   return index < count ? index : 0;
 }

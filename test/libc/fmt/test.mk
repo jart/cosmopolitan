@@ -29,6 +29,7 @@ TEST_LIBC_FMT_DIRECTDEPS =				\
 	LIBC_STR					\
 	LIBC_STUBS					\
 	LIBC_SYSV					\
+	LIBC_TINYMATH					\
 	LIBC_TESTLIB					\
 	LIBC_UNICODE					\
 	LIBC_X						\

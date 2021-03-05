@@ -25,8 +25,6 @@
 #include "libc/time/time.h"
 #include "libc/time/tzfile.internal.h"
 
-STATIC_YOINK("ntoa");
-
 asm(".ident\t\"\\n\\n\
 strftime (BSD-3)\\n\
 Copyright 1989 The Regents of the University of California\"");
@@ -330,13 +328,13 @@ static char *strftime_timefmt(char *p, const char *pe, const char *format,
           if (t->tm_isdst == 0)
 #ifdef USG_COMPAT
             diff = -timezone;
-#else  /* !defined USG_COMPAT */
+#else /* !defined USG_COMPAT */
             continue;
 #endif /* !defined USG_COMPAT */
           else
 #ifdef ALTZONE
             diff = -altzone;
-#else  /* !defined ALTZONE */
+#else /* !defined ALTZONE */
             continue;
 #endif /* !defined ALTZONE */
 #endif /* !defined TM_GMTOFF */

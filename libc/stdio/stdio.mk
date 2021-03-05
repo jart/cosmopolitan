@@ -37,7 +37,8 @@ LIBC_STDIO_A_DIRECTDEPS =				\
 	LIBC_STR					\
 	LIBC_STUBS					\
 	LIBC_SYSV					\
-	LIBC_SYSV_CALLS
+	LIBC_SYSV_CALLS					\
+	THIRD_PARTY_GDTOA
 
 LIBC_STDIO_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(LIBC_STDIO_A_DIRECTDEPS),$($(x))))

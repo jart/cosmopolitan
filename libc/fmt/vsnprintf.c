@@ -44,13 +44,13 @@ static noinstrument int vsnprintfputchar(unsigned char c,
  * @return number of bytes written, excluding the NUL terminator; or,
  *     if the output buffer wasn't passed, or was too short, then the
  *     number of characters that *would* have been written is returned
- * @see palandprintf() and printf() for detailed documentation
+ * @see __fmt() and printf() for detailed documentation
  * @asyncsignalsafe
  * @vforksafe
  */
 int(vsnprintf)(char *buf, size_t size, const char *fmt, va_list va) {
   struct SprintfStr str = {buf, 0, size};
-  palandprintf(vsnprintfputchar, &str, fmt, va);
+  __fmt(vsnprintfputchar, &str, fmt, va);
   if (str.n) str.p[min(str.i, str.n - 1)] = '\0';
   return str.i;
 }

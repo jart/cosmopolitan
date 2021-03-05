@@ -168,9 +168,9 @@ dtoa(double d0, int mode, int ndigits, int *decpt, int *sign, char **rve)
 		*decpt = 9999;
 #ifdef IEEE_Arith
 		if (!word1(&d) && !(word0(&d) & 0xfffff))
-			return nrv_alloc("Infinity", rve, 8 MTb);
+			return nrv_alloc("inf", rve, 8 MTb);
 #endif
-		return nrv_alloc("NaN", rve, 3 MTb);
+		return nrv_alloc("nan", rve, 3 MTb);
 		}
 #endif
 #ifdef IBM

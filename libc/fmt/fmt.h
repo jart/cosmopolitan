@@ -27,7 +27,7 @@ int vsscanf(const char *, const char *, va_list);
 int vcscanf(int (*)(void *), int (*)(int, void *), void *, const char *,
             va_list);
 int strerror_r(int, char *, size_t) nothrow nocallback;
-int palandprintf(void *, void *, const char *, va_list) hidden;
+int __fmt(void *, void *, const char *, va_list) hidden;
 char *itoa(int, char *, int) compatfn;
 char *fcvt(double, int, int *, int *);
 char *ecvt(double, int, int *, int *);

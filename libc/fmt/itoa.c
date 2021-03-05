@@ -19,13 +19,12 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 
-STATIC_YOINK("ntoa");
-
 compatfn char *itoa(int value, char *str, int radix) {
-  (sprintf)(
-      str,
-      VEIL("r",
-           radix == 16 ? "%x" : radix == 8 ? "%d" : radix == 2 ? "%b" : "%d"),
-      value);
+  (sprintf)(str,
+            VEIL("r", radix == 16  ? "%x"
+                      : radix == 8 ? "%d"
+                      : radix == 2 ? "%b"
+                                   : "%d"),
+            value);
   return str;
 }

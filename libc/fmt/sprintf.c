@@ -22,7 +22,7 @@
 /**
  * Formats string to buffer that's hopefully large enough.
  *
- * @see palandprintf() and printf() for detailed documentation
+ * @see __fmt() and printf() for detailed documentation
  * @see snprintf() for same w/ buf size param
  * @asyncsignalsafe
  * @vforksafe

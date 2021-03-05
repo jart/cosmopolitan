@@ -27,9 +27,6 @@
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 
-STATIC_YOINK("stoa");
-STATIC_YOINK("ntoa");
-
 /**
  * @fileoverview Timestamps in One True Format w/o toil.
  */

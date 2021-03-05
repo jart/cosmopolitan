@@ -24,7 +24,7 @@
  * @return number of bytes written, excluding the NUL terminator; or,
  *     if the output buffer wasn't passed, or was too short, then the
  *     number of characters that *would* have been written is returned
- * @see palandprintf() and printf() for detailed documentation
+ * @see __fmt() and printf() for detailed documentation
  * @asyncsignalsafe
  * @vforksafe
  */

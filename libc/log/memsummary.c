@@ -20,8 +20,6 @@
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 
-STATIC_YOINK("ntoa");
-
 void memsummary(int fd) {
   struct mallinfo mi;
   mi = mallinfo();

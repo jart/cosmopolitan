@@ -21,9 +21,6 @@
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 
-STATIC_YOINK("ntoa");
-STATIC_YOINK("stoa");
-
 static void onmemchunk(void *start, void *end, size_t used_bytes, void *arg) {
   (dprintf)(*(int *)arg, "%p - %p : %08zx / %08lx\r\n", start, end, used_bytes,
             (intptr_t)end - (intptr_t)start);

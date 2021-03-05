@@ -135,8 +135,8 @@ int getopt(int nargc, char *const nargv[], const char *ostr) {
   if (optopt == ':' || (oli = strchr(ostr, optopt)) == NULL) {
     if (*getopt_place == 0) ++optind;
     if (opterr && *ostr != ':') {
-      fprintf(stderr, "%s: illegal option -- %c\n", program_invocation_name,
-              optopt);
+      fprintf(stderr, "%s%s%c\n", program_invocation_name,
+              ": illegal option -- ", optopt);
     }
     return (BADCH);
   }
@@ -157,8 +157,8 @@ int getopt(int nargc, char *const nargv[], const char *ostr) {
       getopt_place = kGetoptEmsg;
       if (*ostr == ':') return (BADARG);
       if (opterr)
-        fprintf(stderr, "%s: option requires an argument -- %c\n",
-                program_invocation_name, optopt);
+        fprintf(stderr, "%s%s%c\n", program_invocation_name,
+                ": option requires an argument -- ", optopt);
       return (BADCH);
     }
     getopt_place = kGetoptEmsg;

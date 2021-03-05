@@ -16,13 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/conv.h"
-#include "libc/math.h"
+#include "libc/fmt/fmts.h"
 
-double RoundDecimalPlaces(double f, double digs, double rounder(double)) {
-  if (!(0 <= digs && digs < 15)) {
-    return f;
-  } else {
-    return rounder(f * exp10(digs)) / exp10(digs);
-  }
+int __fmt_pad(int out(long, void *), void *arg, unsigned long n) {
+  int i, rc;
+  for (rc = i = 0; i < n; ++i) rc |= out(' ', arg);
+  return rc;
 }

@@ -33,10 +33,6 @@
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/fileno.h"
 
-STATIC_YOINK("ntoa");
-STATIC_YOINK("stoa");
-STATIC_YOINK("ftoa");
-
 /**
  * Handles failure of CHECK_xx() macros.
  */

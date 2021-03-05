@@ -20,9 +20,6 @@
 #include "libc/log/log.h"
 #include "libc/runtime/memtrack.h"
 
-STATIC_YOINK("ntoa");
-STATIC_YOINK("stoa");
-
 void PrintMemoryIntervals(int fd, const struct MemoryIntervals *mm) {
   int i, frames, maptally, gaptally;
   maptally = 0;

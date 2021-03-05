@@ -37,10 +37,6 @@
 
 #define kNontrivialSize (8 * 1000 * 1000)
 
-STATIC_YOINK("ntoa");
-STATIC_YOINK("stoa");
-STATIC_YOINK("ftoa");
-
 static struct timespec vflogf_ts;
 
 static int vflogf_loglevel2char(unsigned level) {
