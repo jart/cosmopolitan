@@ -47,6 +47,10 @@ o/$(MODE)/libc/nexgen32e/tinystrncmp.ncabi.o:		\
 		OVERRIDE_CFLAGS +=			\
 			-Os
 
+o/$(MODE)/libc/nexgen32e/errno.o:			\
+		OVERRIDE_CFLAGS +=			\
+			$(NO_MAGIC)
+
 LIBC_NEXGEN32E_LIBS = $(foreach x,$(LIBC_NEXGEN32E_ARTIFACTS),$($(x)))
 LIBC_NEXGEN32E_SRCS = $(foreach x,$(LIBC_NEXGEN32E_ARTIFACTS),$($(x)_SRCS))
 LIBC_NEXGEN32E_HDRS = $(foreach x,$(LIBC_NEXGEN32E_ARTIFACTS),$($(x)_HDRS))

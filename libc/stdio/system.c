@@ -53,8 +53,7 @@ int system(const char *cmdline) {
   sigemptyset(&chldmask);
   sigaddset(&chldmask, SIGCHLD);
   sigprocmask(SIG_BLOCK, &chldmask, &savemask);
-  pid = fork();
-  if (!pid) {
+  if (!(pid = fork())) {
     sigaction(SIGINT, &saveint, NULL);
     sigaction(SIGQUIT, &savequit, NULL);
     sigprocmask(SIG_SETMASK, &savemask, NULL);

@@ -10,7 +10,12 @@
 #include "libc/errno.h"
 #include "libc/stdio/stdio.h"
 
-int main() {
-  printf("%s \n", "hello world");
+int main(int argc, char *argv[]) {
+  printf("abcdefghijklmnopqrstuvwxyz "
+         "ABCDEFGHIJKLMNOPQRSTUVWXYZ "
+         "!@#$$%%^&*(){}%%* "
+         "0123456789 "
+         "%3d\n",
+         argc);
   return errno;
 }

@@ -8,12 +8,9 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/errno.h"
-#include "libc/runtime/gc.h"
-#include "libc/calls/calls.h"
-#include "libc/sysv/consts/fileno.h"
-#include "libc/x/x.h"
+#include "libc/stdio/stdio.h"
 
 int main() {
-  dprintf(STDOUT_FILENO, "%s\n", gc(xasprintf("%'s", "(╯°□°)╯︵' ┻━┻")));
+  printf("%s \n", "hello world");
   return errno;
 }

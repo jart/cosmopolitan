@@ -16,8 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/fmt/itoa.h"
+#include "libc/macros.internal.h"
+#include "libc/nexgen32e/bsr.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/str/tpenc.h"
@@ -33,15 +37,22 @@
 void bf(int fd) {
   ssize_t rc;
   uint64_t w;
-  int c, fg, fg2;
+  struct stat st;
   size_t i, n, o;
+  int c, fg, fg2, bits;
   char ibuf[W], obuf[12 + 1 + W * 6 + 1 + W * (2 + 11) + 11 + 1];
   o = 0;
+  if (fstat(fd, &st) != -1 && S_ISREG(st.st_mode) && st.st_size) {
+    bits = bsr(roundup2pow(st.st_size));
+    bits = ROUNDUP(bits, 4);
+  } else {
+    bits = 48;
+  }
   do {
     if ((rc = read(fd, ibuf, W)) == -1) exit(2);
     if (rc) {
       n = 0;
-      n += uint64toarray_fixed16(o, obuf + n, 48);
+      n += uint64toarray_fixed16(o, obuf + n, bits);
       o += rc;
       obuf[n++] = ' ';
       for (i = 0; i < rc; ++i) {
@@ -65,21 +76,21 @@ void bf(int fd) {
         }
         if (fg2 != fg) {
           fg = fg2;
-          obuf[n++] = '\e';
+          obuf[n++] = 033;
           obuf[n++] = '[';
           obuf[n++] = '3';
           obuf[n++] = '8';
           obuf[n++] = ';';
           obuf[n++] = '5';
           obuf[n++] = ';';
-          n += int64toarray_radix10(o, obuf + n);
+          n += int64toarray_radix10(fg, obuf + n);
           obuf[n++] = 'm';
         }
         obuf[n++] = "0123456789abcdef"[c >> 4];
         obuf[n++] = "0123456789abcdef"[c & 15];
         /* obuf[n++] = ' '; */
       }
-      obuf[n++] = '\e';
+      obuf[n++] = 033;
       obuf[n++] = '[';
       obuf[n++] = '0';
       obuf[n++] = 'm';

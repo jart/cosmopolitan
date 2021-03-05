@@ -16,6 +16,24 @@
 
 /**
  * @fileoverview x86 instruction length decoder by way of hex pipe.
+ *
+ * Here's an example of how you can use it to decode a NOP stream:
+ *
+ *     $ make -j8 o//examples/x86split.com
+ *     $ echo 909090 | o//examples/x86split.com
+ *     90
+ *     90
+ *     90
+ *
+ * If there was a XOR instruction in there, it'd do this:
+ *
+ *     $ make -j8 o//examples/x86split.com
+ *     $ echo 904531FF90 | o//examples/x86split.com
+ *     90                     # NOP
+ *     4531FF                 # XOR R15D,R15D
+ *     90                     # NOP
+ *
+ * Now that you're able to split x86 instructions the rest is easy.
  */
 
 int fgethex(FILE *f) {

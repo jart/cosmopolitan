@@ -32,9 +32,9 @@ int main(int argc, char *argv[]) {
   ssize_t rc;
   size_t got, wrote;
   unsigned char buf[512];
+  struct sigaction saint = {.sa_handler = GotCtrlC};
   fprintf(stderr, "This echos stdio until Ctrl+C is pressed.\n");
-  CHECK_NE(
-      -1, sigaction(SIGINT, &(struct sigaction){.sa_handler = GotCtrlC}, NULL));
+  CHECK_NE(-1, sigaction(SIGINT, &saint, NULL));
   for (;;) {
     rc = read(0, buf, BUFSIZ);
     if (rc != -1) {

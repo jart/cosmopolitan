@@ -16,9 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/nexgen32e/nexgen32e.h"
-
-STATIC_YOINK("__errno_location"); /* needed by gdb */
+#include "libc/errno.h"
 
 /**
  * Global variable for last error.
@@ -33,3 +31,12 @@ STATIC_YOINK("__errno_location"); /* needed by gdb */
  * @see	__errno_location() stable abi
  */
 int errno;
+
+/**
+ * Returns address of errno.
+ *
+ * @note this is needed by gdb
+ */
+int *__errno_location(void) {
+  return &errno;
+}
