@@ -8,9 +8,6 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-int Printf(const char *, ...);
-int Sprintf(char *, const char *, ...);
-
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § standard i/o                                              ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/

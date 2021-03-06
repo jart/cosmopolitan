@@ -23,11 +23,22 @@
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/fmts.h"
 #include "libc/fmt/internal.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/bsr.h"
 #include "libc/runtime/internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 #include "third_party/gdtoa/gdtoa.h"
+
+#define PUT(C)               \
+  do {                       \
+    if (out(C, arg) == -1) { \
+      return -1;             \
+    }                        \
+  } while (0)
+
+static const char kSpecialFloats[2][2][4] = {{"INF", "inf"}, {"NAN", "nan"}};
 
 static int __fmt_atoi(const char **str) {
   int i;
@@ -107,11 +118,10 @@ static int __fmt_atoi(const char **str) {
 hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
   union {
     double d;
-    unsigned int u[2];
+    uint32_t u[2];
+    uint64_t q;
   } pun;
   void *p;
-  char qchar;
-  char *s, *se;
   bool longdouble;
   long double ldbl;
   wchar_t charbuf[1];
@@ -119,6 +129,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
   int (*out)(long, void *);
   unsigned char signbit, log2base;
   int c, d, k, w, i1, ui, bw, bex;
+  char *s, *q, *se, qchar, special[8];
   int sgn, alt, sign, prec, prec1, flags, width, decpt, lasterr;
 
   lasterr = errno;
@@ -128,7 +139,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
     /* %[flags][width][.prec][length] */
     if (*format != '%') {
       /* no */
-      if (out(*format, arg) == -1) return -1;
+      PUT(*format);
       format++;
       continue;
     } else {
@@ -308,6 +319,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         }
         break;
 
+      case 'F':
       case 'f':
         if (!(flags & FLAGS_PRECISION)) prec = 6;
         if (longdouble) {
@@ -317,19 +329,25 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         }
       FormatDtoa:
         if (!weaken(__fmt_dtoa)) {
-          p = "nan";
-          goto FormatString;
+          p = "?";
+          goto FormatThatThing;
         }
         s = weaken(__fmt_dtoa)(pun.d, 3, prec, &decpt, &sgn, &se);
         if (decpt == 9999) {
         Format9999:
-          prec = alt = 0;
-          flags &= ~FLAGS_PRECISION;
-          if (*s == 'N') {
-            p = s;
-            goto FormatString;
+          p = q = memset(special, 0, sizeof(special));
+          if (sgn) {
+            *q++ = '-';
+          } else if (flags & FLAGS_PLUS) {
+            *q++ = '+';
+          } else if (flags & FLAGS_SPACE) {
+            *q++ = ' ';
           }
-          decpt = strlen(s);
+          memcpy(q, kSpecialFloats[*s == 'N'][d >= 'a'], 4);
+        FormatThatThing:
+          prec = alt = 0;
+          flags &= ~(FLAGS_PRECISION | FLAGS_PLUS | FLAGS_SPACE);
+          goto FormatString;
         }
       FormatReal:
         if (sgn) sign = '-';
@@ -347,20 +365,21 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         }
         if (width > 0 && !(flags & FLAGS_LEFT)) {
           if (flags & FLAGS_ZEROPAD) {
-            if (sign) out(sign, arg);
+            if (sign) PUT(sign);
             sign = 0;
-            do out('0', arg);
+            do PUT('0');
             while (--width > 0);
-          } else
-            do out(' ', arg);
+          } else {
+            do PUT(' ');
             while (--width > 0);
+          }
         }
-        if (sign) out(sign, arg);
+        if (sign) PUT(sign);
         if (decpt <= 0) {
-          out('0', arg);
-          if (prec > 0 || alt) out('.', arg);
+          PUT('0');
+          if (prec > 0 || alt) PUT('.');
           while (decpt < 0) {
-            out('0', arg);
+            PUT('0');
             prec--;
             decpt++;
           }
@@ -371,9 +390,9 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
             } else {
               c = '0';
             }
-            out(c, arg);
+            PUT(c);
           } while (--decpt > 0);
-          if (prec > 0 || alt) out('.', arg);
+          if (prec > 0 || alt) PUT('.');
         }
         while (--prec >= 0) {
           if ((c = *s)) {
@@ -381,10 +400,10 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
           } else {
             c = '0';
           }
-          out(c, arg);
+          PUT(c);
         }
         while (--width >= 0) {
-          out(' ', arg);
+          PUT(' ');
         }
         continue;
 
@@ -398,8 +417,8 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         }
         if (prec < 0) prec = 0;
         if (!weaken(__fmt_dtoa)) {
-          p = "nan";
-          goto FormatString;
+          p = "?";
+          goto FormatThatThing;
         }
         s = weaken(__fmt_dtoa)(pun.d, prec ? 2 : 0, prec, &decpt, &sgn, &se);
         if (decpt == 9999) goto Format9999;
@@ -408,7 +427,6 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         if (!prec) {
           prec = c;
           prec1 = c + (s[1] || alt ? 5 : 4);
-          /* %.0g gives 10 rather than 1e1 */
         }
         if (decpt > -4 && decpt <= prec1) {
           if (alt) {
@@ -434,8 +452,8 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         }
         if (prec < 0) prec = 0;
         if (!weaken(__fmt_dtoa)) {
-          p = "nan";
-          goto FormatString;
+          p = "?";
+          goto FormatThatThing;
         }
         s = weaken(__fmt_dtoa)(pun.d, 2, prec + 1, &decpt, &sgn, &se);
         if (decpt == 9999) goto Format9999;
@@ -452,44 +470,44 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         }
         if (width > 0 && !(flags & FLAGS_LEFT)) {
           if (flags & FLAGS_ZEROPAD) {
-            if (sign) out(sign, arg);
+            if (sign) PUT(sign);
             sign = 0;
-            do out('0', arg);
+            do PUT('0');
             while (--width > 0);
           } else {
-            do out(' ', arg);
+            do PUT(' ');
             while (--width > 0);
           }
         }
-        if (sign) out(sign, arg);
-        out(*s++, arg);
-        if (prec || alt) out('.', arg);
+        if (sign) PUT(sign);
+        PUT(*s++);
+        if (prec || alt) PUT('.');
         while (--prec >= 0) {
           if ((c = *s)) {
             s++;
           } else {
             c = '0';
           }
-          out(c, arg);
+          PUT(c);
         }
-        out(d, arg);
+        PUT(d);
         if (decpt < 0) {
-          out('-', arg);
+          PUT('-');
           decpt = -decpt;
         } else {
-          out('+', arg);
+          PUT('+');
         }
         for (c = 2, k = 10; 10 * k <= decpt; c++, k *= 10) {
         }
         for (;;) {
           i1 = decpt / k;
-          out(i1 + '0', arg);
+          PUT(i1 + '0');
           if (--c <= 0) break;
           decpt -= i1 * k;
           decpt *= 10;
         }
         while (--width >= 0) {
-          out(' ', arg);
+          PUT(' ');
         }
         continue;
 
@@ -507,12 +525,12 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         if ((pun.u[1] & 0x7ff00000) == 0x7ff00000) {
           goto FormatDtoa;
         }
+        if (pun.u[1] & 0x80000000) {
+          sign = '-';
+          pun.u[1] &= 0x7fffffff;
+        }
         if (pun.d) {
           c = '1';
-          if (pun.u[1] & 0x80000000) {
-            sign = '-';
-            pun.u[1] &= 0x7fffffff;
-          }
           bex = (pun.u[1] >> 20) - 1023;
           pun.u[1] &= 0xfffff;
           if (bex == -1023) {
@@ -595,49 +613,52 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
           if (sign) --width;
           if (prec || alt) --width;
         }
+        if (pun.q && prec > 0) {
+          width -= ROUNDUP(bsrl(pun.q) + 1, 4) >> 2;
+        }
         if (width > 0 && !(flags & FLAGS_LEFT)) {
           if (flags & FLAGS_ZEROPAD) {
             if (sign) {
-              out(sign, arg);
+              PUT(sign);
               sign = 0;
             }
-            do out('0', arg);
+            do PUT('0');
             while (--width > 0);
           } else {
-            do out(' ', arg);
+            do PUT(' ');
             while (--width > 0);
           }
         }
-        if (sign) out(sign, arg);
-        out('0', arg);
-        out(alphabet[17], arg);
-        out(c, arg);
-        if (prec > 0 || alt) out('.', arg);
+        if (sign) PUT(sign);
+        PUT('0');
+        PUT(alphabet[17]);
+        PUT(c);
+        if (prec > 0 || alt) PUT('.');
         if (prec > 0) {
           if ((i1 = prec) > 5) i1 = 5;
           prec -= i1;
           do {
-            out(alphabet[(pun.u[1] >> 16) & 0xf], arg);
+            PUT(alphabet[(pun.u[1] >> 16) & 0xf]);
             pun.u[1] <<= 4;
           } while (--i1 > 0);
           while (prec > 0) {
             --prec;
-            out(alphabet[(pun.u[0] >> 28) & 0xf], arg);
+            PUT(alphabet[(pun.u[0] >> 28) & 0xf]);
             pun.u[0] <<= 4;
           }
         }
-        out(alphabet[16], arg);
+        PUT(alphabet[16]);
         if (bex < 0) {
-          out('-', arg);
+          PUT('-');
           bex = -bex;
         } else {
-          out('+', arg);
+          PUT('+');
         }
         for (c = 1; 10 * c <= bex; c *= 10) {
         }
         for (;;) {
           i1 = bex / c;
-          out('0' + i1, arg);
+          PUT('0' + i1);
           if (!--bw) break;
           bex -= i1 * c;
           bex *= 10;
@@ -645,11 +666,11 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         continue;
 
       case '%':
-        if (out('%', arg) == -1) return -1;
+        PUT('%');
         break;
 
       default:
-        if (out(format[-1], arg) == -1) return -1;
+        PUT(format[-1]);
         break;
     }
   }
