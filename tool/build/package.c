@@ -185,7 +185,8 @@ struct Package *LoadPackage(const char *path) {
   pkg->objects.p = (struct Object *)((intptr_t)pkg->objects.p + (intptr_t)pkg);
   pkg->symbols.p = (struct Symbol *)((intptr_t)pkg->symbols.p + (intptr_t)pkg);
   CHECK(strcmp(path, &pkg->strings.p[pkg->path]) == 0,
-        "corrupt package: %`'s pkg=%p strings=%p", path, pkg, pkg->strings.p);
+        "corrupt package: %`'s pkg=%012lx strings=%012lx", path, pkg,
+        pkg->strings.p);
   pkg->addr = pkg;
   pkg->size = st.st_size;
   return pkg;

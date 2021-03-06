@@ -144,7 +144,7 @@ static void DisCanonizeSyms(struct Dis *d) {
     d->syms.n = i;
   }
   for (i = 0; i < d->syms.i; ++i) {
-    DEBUGF("%p-%p %s", d->syms.p[i].addr,
+    DEBUGF("%012lx-%012lx %s", d->syms.p[i].addr,
            d->syms.p[i].addr + (d->syms.p[i].size ? d->syms.p[i].size - 1 : 0),
            d->syms.stab + d->syms.p[i].name);
   }

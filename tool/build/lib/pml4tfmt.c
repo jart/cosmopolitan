@@ -49,14 +49,14 @@ static void FormatStartPage(struct Pml4tFormater *pp, int64_t start) {
   pp->t = true;
   pp->start = start;
   if (pp->lines++) AppendChar(&pp->b, '\n');
-  AppendFmt(&pp->b, "%p-", start);
+  AppendFmt(&pp->b, "%012lx-", start);
 }
 
 static void FormatEndPage(struct Pml4tFormater *pp, int64_t end) {
   int64_t size;
   pp->t = false;
   size = end - pp->start;
-  AppendFmt(&pp->b, "%p %p %,ld bytes", end - 1, size, size);
+  AppendFmt(&pp->b, "%012lx %012lx %,ld bytes", end - 1, size, size);
 }
 
 static void *GetPt(struct Machine *m, uint64_t r) {

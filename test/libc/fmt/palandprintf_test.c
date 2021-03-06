@@ -482,34 +482,6 @@ TEST(sprintf, testOverflow_truncationNotSaturation) {
   EXPECT_STREQ("Test16 65535", Format("%s%hhi %hu", "Test", 10000, 0xFFFFFFFF));
 }
 
-TEST(sprintf, test_pointer) {
-  sprintf(buffer, "%p", (void *)0x1234U);
-  if (sizeof(void *) == 4U) {
-    EXPECT_STREQ("00001234", buffer);
-  } else {
-    EXPECT_STREQ("000000001234", buffer);
-  }
-  sprintf(buffer, "%p", (void *)0x12345678U);
-  if (sizeof(void *) == 4U) {
-    EXPECT_STREQ("12345678", buffer);
-  } else {
-    EXPECT_STREQ("000012345678", buffer);
-  }
-  sprintf(buffer, "%p-%p", (void *)0x12345678U, (void *)0x7EDCBA98U);
-  if (sizeof(void *) == 4U) {
-    EXPECT_STREQ("12345678-7edcba98", buffer);
-  } else {
-    EXPECT_STREQ("000012345678-00007edcba98", buffer);
-  }
-  if (sizeof(uintptr_t) == sizeof(uint64_t)) {
-    sprintf(buffer, "%p", (void *)(uintptr_t)0xFFFFFFFFU);
-    EXPECT_STREQ("0000ffffffff", buffer);
-  } else {
-    sprintf(buffer, "%p", (void *)(uintptr_t)0xFFFFFFFFU);
-    EXPECT_STREQ("ffffffff", buffer);
-  }
-}
-
 TEST(sprintf, test_unknown_flag) {
   EXPECT_STREQ("kmarco", Format("%kmarco", 42, 37));
 }
@@ -593,22 +565,6 @@ TEST(xasprintf, test) {
   void *pp;
   ASSERT_STREQ("hello 123", (pp = xasprintf("hello %d", 123)));
   free(pp);
-}
-
-TEST(xasprintf, nullPointer) {
-  ASSERT_STREQ("000000000000", gc(xasprintf("%p", NULL)));
-}
-
-TEST(xasprintf, pointer_doesntShowNonCanonicalZeroes) {
-  ASSERT_STREQ("100000000010", gc(xasprintf("%p", 0x0000100000000010)));
-  ASSERT_STREQ("0x100000000010", gc(xasprintf("%#p", 0x0000100000000010)));
-}
-
-TEST(xasprintf, nonCanonicalPointer_discardsHighBits_ratherThanSaturate) {
-  ASSERT_STREQ("100000000010", gc(xasprintf("%p", 0x1000100000000010)));
-  ASSERT_STREQ("0x100000000010", gc(xasprintf("%#p", 0x1000100000000010)));
-  ASSERT_STREQ("7fffffffffff", gc(xasprintf("%p", 0x7fffffffffff)));
-  ASSERT_STREQ("0x7fffffffffff", gc(xasprintf("%#p", 0x7fffffffffff)));
 }
 
 TEST(xasprintf, hugeNtoa) {

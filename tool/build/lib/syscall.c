@@ -530,7 +530,7 @@ static int64_t OpBrk(struct Machine *m, int64_t addr) {
 }
 
 static int OpMunmap(struct Machine *m, int64_t virt, uint64_t size) {
-  VERBOSEF("MUNMAP%s %p %,ld", GetSimulated(), virt, size);
+  VERBOSEF("MUNMAP%s %012lx %,ld", GetSimulated(), virt, size);
   return FreeVirtual(m, virt, size);
 }
 
@@ -538,8 +538,8 @@ static int64_t OpMmap(struct Machine *m, int64_t virt, size_t size, int prot,
                       int flags, int fd, int64_t offset) {
   void *tmp;
   uint64_t key;
-  VERBOSEF("MMAP%s %p %,ld %#x %#x %d %#lx", GetSimulated(), virt, size, prot,
-           flags, fd, offset);
+  VERBOSEF("MMAP%s %012lx %,ld %#x %#x %d %#lx", GetSimulated(), virt, size,
+           prot, flags, fd, offset);
   if (prot & PROT_READ) {
     key = 0x0205;
     if (prot & PROT_WRITE) key |= 2;
@@ -821,12 +821,12 @@ static ssize_t OpWrite(struct Machine *m, int fd, int64_t addr, size_t size) {
       if ((rc = m->fds.p[fd].cb->writev(m->fds.p[fd].fd, iv.p, iv.i)) != -1) {
         SetReadAddr(m, addr, rc);
       } else {
-        VERBOSEF("write(%d [%d], %p, %zu) failed: %s", fd, m->fds.p[fd].fd,
+        VERBOSEF("write(%d [%d], %012lx, %zu) failed: %s", fd, m->fds.p[fd].fd,
                  addr, size, strerror(errno));
       }
     }
   } else {
-    VERBOSEF("write(%d, %p, %zu) bad fd", fd, addr, size);
+    VERBOSEF("write(%d, %012lx, %zu) bad fd", fd, addr, size);
     rc = ebadf();
   }
   FreeIovs(&iv);

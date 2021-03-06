@@ -259,10 +259,9 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
     alphabet = "0123456789abcdef";
     switch ((d = *format++)) {
       case 'p':
-        flags |= FLAGS_ZEROPAD;
-        width = POINTER_XDIGITS;
+        flags |= FLAGS_HASH;
         log2base = 4;
-        signbit = 47;
+        signbit = 63;
         goto FormatNumber;
       case 'X':
         alphabet = "0123456789ABCDEF";

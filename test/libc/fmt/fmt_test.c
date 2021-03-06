@@ -17,14 +17,56 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
+#include "libc/limits.h"
 #include "libc/math.h"
 #include "libc/runtime/gc.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-TEST(RealFormatting, g) {
+TEST(fmt, d) {
+  EXPECT_STREQ("-123", gc(xasprintf("%d", -123)));
+  EXPECT_STREQ("-1", gc(xasprintf("%d", -1)));
+  EXPECT_STREQ("1", gc(xasprintf("%d", 1)));
+  EXPECT_STREQ("16", gc(xasprintf("%d", 16)));
+  EXPECT_STREQ("2147483647", gc(xasprintf("%d", INT_MAX)));
+  EXPECT_STREQ("-2147483648", gc(xasprintf("%d", INT_MIN)));
+  EXPECT_STREQ("      -123", gc(xasprintf("%10d", -123)));
+  EXPECT_STREQ("        -1", gc(xasprintf("%10d", -1)));
+  EXPECT_STREQ("         1", gc(xasprintf("%10d", 1)));
+  EXPECT_STREQ("        16", gc(xasprintf("%10d", 16)));
+  EXPECT_STREQ("2147483647", gc(xasprintf("%10d", INT_MAX)));
+  EXPECT_STREQ("-2147483648", gc(xasprintf("%10d", INT_MIN)));
+  EXPECT_STREQ("-000000123", gc(xasprintf("%010d", -123)));
+  EXPECT_STREQ("-000000001", gc(xasprintf("%010d", -1)));
+  EXPECT_STREQ("0000000001", gc(xasprintf("%010d", 1)));
+  EXPECT_STREQ("0000000016", gc(xasprintf("%010d", 16)));
+  EXPECT_STREQ("2147483647", gc(xasprintf("%010d", INT_MAX)));
+  EXPECT_STREQ("-2147483648", gc(xasprintf("%010d", INT_MIN)));
+  EXPECT_STREQ("-123      ", gc(xasprintf("%-10d", -123)));
+  EXPECT_STREQ("-1        ", gc(xasprintf("%-10d", -1)));
+  EXPECT_STREQ("1         ", gc(xasprintf("%-10d", 1)));
+  EXPECT_STREQ("16        ", gc(xasprintf("%-10d", 16)));
+  EXPECT_STREQ("2147483647", gc(xasprintf("%-10d", INT_MAX)));
+  EXPECT_STREQ("-2147483648", gc(xasprintf("%-10d", INT_MIN)));
+  EXPECT_STREQ("      -123", gc(xasprintf("%+10d", -123)));
+  EXPECT_STREQ("        -1", gc(xasprintf("%+10d", -1)));
+  EXPECT_STREQ("        +1", gc(xasprintf("%+10d", 1)));
+  EXPECT_STREQ("       +16", gc(xasprintf("%+10d", 16)));
+  EXPECT_STREQ("+2147483647", gc(xasprintf("%+10d", INT_MAX)));
+  EXPECT_STREQ("-2147483648", gc(xasprintf("%+10d", INT_MIN)));
+  EXPECT_STREQ("-123", gc(xasprintf("% d", -123)));
+  EXPECT_STREQ("-1", gc(xasprintf("% d", -1)));
+  EXPECT_STREQ(" 1", gc(xasprintf("% d", 1)));
+  EXPECT_STREQ(" 16", gc(xasprintf("% d", 16)));
+  EXPECT_STREQ(" 2147483647", gc(xasprintf("% d", INT_MAX)));
+  EXPECT_STREQ("-2147483648", gc(xasprintf("% d", INT_MIN)));
+}
+
+TEST(fmt, g) {
   EXPECT_STREQ("1", gc(xasprintf("%g", 1.)));
+  EXPECT_STREQ(" 1", gc(xasprintf("% g", 1.)));
+  EXPECT_STREQ("+1", gc(xasprintf("%+g", 1.)));
   EXPECT_STREQ("-1", gc(xasprintf("%g", -1.)));
   EXPECT_STREQ("10", gc(xasprintf("%g", 10.)));
   EXPECT_STREQ("10", gc(xasprintf("%.0g", 10.)));
@@ -68,7 +110,7 @@ TEST(RealFormatting, g) {
   EXPECT_STREQ(" 1.79769E+308", gc(xasprintf("%13G", __DBL_MAX__)));
 }
 
-TEST(RealFormatting, f) {
+TEST(fmt, f) {
   EXPECT_STREQ("3.141593", gc(xasprintf("%f", 0x1.921fb54442d1846ap+1)));
   EXPECT_STREQ("3.1415926535897931",
                gc(xasprintf("%.16f", 0x1.921fb54442d1846ap+1)));
@@ -133,7 +175,7 @@ TEST(RealFormatting, f) {
       gc(xasprintf("%10F", __DBL_MAX__)));
 }
 
-TEST(RealFormatting, e) {
+TEST(fmt, e) {
   EXPECT_STREQ("3.14159", gc(xasprintf("%g", 0x1.921fb54442d1846ap+1)));
   EXPECT_STREQ("3.141592653589793",
                gc(xasprintf("%.16g", 0x1.921fb54442d1846ap+1)));
@@ -173,7 +215,7 @@ TEST(RealFormatting, e) {
   EXPECT_STREQ("          +1.797693E+308", gc(xasprintf("%+24E", __DBL_MAX__)));
 }
 
-TEST(RealFormatting, a) {
+TEST(fmt, a) {
   EXPECT_STREQ("0x1.921fb54442d18p+1",
                gc(xasprintf("%a", 0x1.921fb54442d1846ap+1)));
   EXPECT_STREQ("0X1.921FB54442D18P+1",
@@ -196,4 +238,41 @@ TEST(RealFormatting, a) {
   EXPECT_STREQ(" 0X1.FFFFFFFFFFFFFP+1023", gc(xasprintf("%24A", __DBL_MAX__)));
   EXPECT_STREQ("   0X1.E9A488E8A71DEP+14", gc(xasprintf("%24A", 31337.1337)));
   EXPECT_STREQ("  -0X1.E9A488E8A71DEP+14", gc(xasprintf("%24A", -31337.1337)));
+}
+
+TEST(fmt, p) {
+  EXPECT_STREQ("0x1", gc(xasprintf("%p", 1)));
+  EXPECT_STREQ("0x10", gc(xasprintf("%p", 16)));
+  EXPECT_STREQ("0x31337", gc(xasprintf("%p", 0x31337)));
+  EXPECT_STREQ("0xffffffff", gc(xasprintf("%p", 0xffffffff)));
+  EXPECT_STREQ("0xffff800000031337", gc(xasprintf("%p", 0xffff800000031337)));
+  EXPECT_STREQ("       0x1", gc(xasprintf("%10p", 1)));
+  EXPECT_STREQ("      0x10", gc(xasprintf("%10p", 16)));
+  EXPECT_STREQ("   0x31337", gc(xasprintf("%10p", 0x31337)));
+  EXPECT_STREQ("0xffffffff", gc(xasprintf("%10p", 0xffffffff)));
+  EXPECT_STREQ("0xffff800000031337", gc(xasprintf("%10p", 0xffff800000031337)));
+  EXPECT_STREQ("0x00000001", gc(xasprintf("%010p", 1)));
+  EXPECT_STREQ("0x00000010", gc(xasprintf("%010p", 16)));
+  EXPECT_STREQ("0x00031337", gc(xasprintf("%010p", 0x31337)));
+  EXPECT_STREQ("0xffffffff", gc(xasprintf("%010p", 0xffffffff)));
+  EXPECT_STREQ("0xffff800000031337",
+               gc(xasprintf("%010p", 0xffff800000031337)));
+  EXPECT_STREQ("0x1       ", gc(xasprintf("%-10p", 1)));
+  EXPECT_STREQ("0x10      ", gc(xasprintf("%-10p", 16)));
+  EXPECT_STREQ("0x31337   ", gc(xasprintf("%-10p", 0x31337)));
+  EXPECT_STREQ("0xffffffff", gc(xasprintf("%-10p", 0xffffffff)));
+  EXPECT_STREQ("0xffff800000031337",
+               gc(xasprintf("%-10p", 0xffff800000031337)));
+  EXPECT_STREQ("       0x1", gc(xasprintf("%+10p", 1)));
+  EXPECT_STREQ("      0x10", gc(xasprintf("%+10p", 16)));
+  EXPECT_STREQ("   0x31337", gc(xasprintf("%+10p", 0x31337)));
+  EXPECT_STREQ("0xffffffff", gc(xasprintf("%+10p", 0xffffffff)));
+  EXPECT_STREQ("0xffff800000031337",
+               gc(xasprintf("%+10p", 0xffff800000031337)));
+  EXPECT_STREQ("       0x1", gc(xasprintf("% 10p", 1)));
+  EXPECT_STREQ("      0x10", gc(xasprintf("% 10p", 16)));
+  EXPECT_STREQ("   0x31337", gc(xasprintf("% 10p", 0x31337)));
+  EXPECT_STREQ("0xffffffff", gc(xasprintf("% 10p", 0xffffffff)));
+  EXPECT_STREQ("0xffff800000031337",
+               gc(xasprintf("% 10p", 0xffff800000031337)));
 }
