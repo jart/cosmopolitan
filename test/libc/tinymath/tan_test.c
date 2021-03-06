@@ -17,7 +17,25 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#include "libc/runtime/gc.h"
+#include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
-long double __powl_finite(long double x, long double y) {
-  return powl(x, y);
+TEST(tan, test) {
+  EXPECT_STREQ("0", gc(xasprintf("%.15g", tan(0.))));
+  EXPECT_STREQ("-0", gc(xasprintf("%.15g", tan(-0.))));
+  EXPECT_STREQ("0.54630248984379", gc(xasprintf("%.15g", tan(.5))));
+  EXPECT_STREQ("-0.54630248984379", gc(xasprintf("%.15g", tan(-.5))));
+  EXPECT_STREQ("1.5574077246549", gc(xasprintf("%.15g", tan(1.))));
+  EXPECT_STREQ("-1.5574077246549", gc(xasprintf("%.15g", tan(-1.))));
+  EXPECT_STREQ("14.1014199471717", gc(xasprintf("%.15g", tan(1.5))));
+  EXPECT_STREQ("-14.1014199471717", gc(xasprintf("%.15g", tan(-1.5))));
+  EXPECT_STREQ("nan", gc(xasprintf("%.15g", tan(NAN))));
+  EXPECT_STREQ("-nan", gc(xasprintf("%.15g", tan(-NAN))));
+  EXPECT_STREQ("-nan", gc(xasprintf("%.15g", tan(INFINITY))));
+  EXPECT_STREQ("-nan", gc(xasprintf("%.15g", tan(-INFINITY))));
+  EXPECT_STREQ("2.2250738585072e-308",
+               gc(xasprintf("%.15g", tan(__DBL_MIN__))));
+  /* EXPECT_STREQ("-0.0049620158744449",  */
+  /*              gc(xasprintf("%.15g", tan(__DBL_MAX__)))); */
 }

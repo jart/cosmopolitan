@@ -26,4 +26,3 @@
 powf:	ezlea	powl,ax
 	jmp	_f2ld2
 	.endfn	powf,globl
-	.alias	powf,__powf_finite

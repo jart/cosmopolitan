@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-.source	__FILE__
 
 //	Returns arc sine of 𝑥.
 //
@@ -25,27 +24,18 @@
 //	@return	result of computation on FPU stack in %st
 //	@define	atan2(𝑥,sqrt((1-𝑥)*(1+𝑥)))
 //	@domain	-1 ≤ 𝑥 ≤ 1
-//	@mode	long,legacy
-asinl:	push	%rbp
+asinl:	pushq	%rbp
 	mov	%rsp,%rbp
 	.profilable
-	fldl    16(%rbp)
-	fld     %st
-#ifdef	__FAST_MATH__
-	fmul	%st(1),%st
-	fsubrs	.Lone(%rip)
-#else
+	fldt	16(%rbp)
 	fld1
-	fsubp
-	fld1
-	fadd    %st(2)
+	fld	%st
+	fsub	%st(2)
+	fxch
+	fadd	%st(2)
 	fmulp
-#endif
 	fsqrt
-        fpatan
-	pop	%rbp
+	fpatan
+	leave
 	ret
 	.endfn	asinl,globl
-
-	.rodata.cst4
-.Lone:	.float	1.0

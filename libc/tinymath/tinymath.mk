@@ -40,6 +40,10 @@ $(LIBC_TINYMATH_A).pkg:					\
 		$(LIBC_TINYMATH_A_OBJS)			\
 		$(foreach x,$(LIBC_TINYMATH_A_DIRECTDEPS),$($(x)_A).pkg)
 
+o/$(MODE)/libc/tinymath/powfin.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-ffast-math
+
 LIBC_TINYMATH_LIBS = $(foreach x,$(LIBC_TINYMATH_ARTIFACTS),$($(x)))
 LIBC_TINYMATH_HDRS = $(foreach x,$(LIBC_TINYMATH_ARTIFACTS),$($(x)_HDRS))
 LIBC_TINYMATH_SRCS = $(foreach x,$(LIBC_TINYMATH_ARTIFACTS),$($(x)_SRCS))

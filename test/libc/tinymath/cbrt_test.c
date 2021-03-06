@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,12 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/math.h"
+#include "libc/runtime/gc.h"
+#include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
-//	Returns arc cosine of 𝑥.
-//
-//	@param	𝑥 is float scalar in low quarter of %xmm0
-//	@return	float scalar in low quarter of %xmm0
-acosf:	ezlea	acosl,ax
-	jmp	_f2ld2
-	.endfn	acosf,globl
+TEST(cbrt, test) {
+  EXPECT_STREQ("0", gc(xasprintf("%.15g", cbrt(0.))));
+  EXPECT_STREQ("-0", gc(xasprintf("%.15g", cbrt(-0.))));
+  EXPECT_STREQ("0.7937005259841", gc(xasprintf("%.15g", cbrt(.5))));
+  EXPECT_STREQ("-0.7937005259841", gc(xasprintf("%.15g", cbrt(-.5))));
+  EXPECT_STREQ("1", gc(xasprintf("%.15g", cbrt(1.))));
+  EXPECT_STREQ("-1", gc(xasprintf("%.15g", cbrt(-1.))));
+  EXPECT_STREQ("1.14471424255333", gc(xasprintf("%.15g", cbrt(1.5))));
+  EXPECT_STREQ("-1.14471424255333", gc(xasprintf("%.15g", cbrt(-1.5))));
+  EXPECT_STREQ("nan", gc(xasprintf("%.15g", cbrt(NAN))));
+  EXPECT_STREQ("-nan", gc(xasprintf("%.15g", cbrt(-NAN))));
+  EXPECT_STREQ("inf", gc(xasprintf("%.15g", cbrt(INFINITY))));
+  EXPECT_STREQ("-inf", gc(xasprintf("%.15g", cbrt(-INFINITY))));
+  EXPECT_STREQ("2.81264428523626e-103",
+               gc(xasprintf("%.15g", cbrt(__DBL_MIN__))));
+  EXPECT_STREQ("5.64380309412236e+102",
+               gc(xasprintf("%.15g", cbrt(__DBL_MAX__))));
+}

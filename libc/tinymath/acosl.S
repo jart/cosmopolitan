@@ -17,38 +17,27 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-.source	__FILE__
 
 //	Returns arc cosine of 𝑥.
 //
 //	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
 //	@return	result of computation on FPU stack in %st
-//	@define	atan2(abs(sqrt((1-𝑥)*(1+𝑥))),𝑥)
+//	@define	atan2(fabs(sqrt((1-𝑥)*(1+𝑥))),𝑥)
 //	@domain	-1 ≤ 𝑥 ≤ 1
-//	@mode	long,legacy
-acosl:	push	%rbp
+acosl:	pushq	%rbp
 	mov	%rsp,%rbp
 	.profilable
-	fldl    16(%rbp)
-	fld     %st
-#ifdef	__FAST_MATH__
-	fmul	%st(1),%st
-	fsubrs	.Lone(%rip)
-	fsqrt
-#else
+	fldt	16(%rbp)
 	fld1
-	fsubp
-	fld1
-	fadd    %st(2)
+	fld	%st
+	fsub	%st(2)
+	fxch
+	fadd	%st(2)
 	fmulp
 	fsqrt
-	fabs				# needed in downward rounding mode
-#endif
+	fabs
 	fxch
 	fpatan
-	pop	%rbp
+	leave
 	ret
 	.endfn	acosl,globl
-
-	.rodata.cst4
-.Lone:	.float	1.0
