@@ -16,10 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bigword.internal.h"
 #include "libc/str/str.h"
-#define T wchar_t
-#define N (BIGWORD / sizeof(T))
-#include "libc/nexgen32e/wmemset.inc"
-#undef T
-#undef N
+
+/**
+ * Sets wide memory.
+ * @asyncsignalsafe
+ */
+wchar_t *wmemset(wchar_t *p, wchar_t c, size_t n) {
+  size_t i;
+  for (i = 0; i < n; ++i) {
+    p[i] = c;
+  }
+  return p;
+}

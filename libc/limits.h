@@ -87,8 +87,8 @@
 #define UINT64_MIN     0ull
 #define UINTPTR_MIN    0ull
 
-#define MB_CUR_MAX 6
-#define MB_LEN_MAX 6
+#define MB_CUR_MAX 4
+#define MB_LEN_MAX 4
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 

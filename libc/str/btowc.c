@@ -35,8 +35,7 @@ Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-int wctob(wint_t c) {
-  if (c < 128U) return c;
-  if (MB_CUR_MAX == 1 && IS_CODEUNIT(c)) return (unsigned char)c;
-  return EOF;
+wint_t btowc(int c) {
+  int b = (unsigned char)c;
+  return b < 128U ? b : (MB_CUR_MAX == 1 && c != EOF) ? CODEUNIT(c) : WEOF;
 }

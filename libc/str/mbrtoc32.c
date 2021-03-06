@@ -25,9 +25,9 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/limits.h"
-#include "libc/str/mb.internal.h"
+#include "libc/macros.internal.h"
 #include "libc/str/str.h"
 
 asm(".ident\t\"\\n\\n\
@@ -35,8 +35,12 @@ Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-int wctob(wint_t c) {
-  if (c < 128U) return c;
-  if (MB_CUR_MAX == 1 && IS_CODEUNIT(c)) return (unsigned char)c;
-  return EOF;
+size_t mbrtoc32(char32_t *pc32, const char *s, size_t n, mbstate_t *ps) {
+  static unsigned internal_state;
+  if (!ps) ps = (void *)&internal_state;
+  if (!s) return mbrtoc32(0, "", 1, ps);
+  wchar_t wc;
+  size_t ret = mbrtowc(&wc, s, n, ps);
+  if (ret <= 4 && pc32) *pc32 = wc;
+  return ret;
 }

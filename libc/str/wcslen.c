@@ -28,6 +28,15 @@
  * @see memmem()
  */
 wchar_t *wcsstr(const wchar_t *haystack, const wchar_t *needle) {
-  return memmem(haystack, wcslen(haystack) * sizeof(wchar_t), needle,
-                wcslen(needle) * sizeof(wchar_t));
+  size_t i;
+  for (;;) {
+    for (i = 0;;) {
+      if (!needle[i]) return (/*unconst*/ wchar_t *)haystack;
+      if (!haystack[i]) break;
+      if (needle[i] != haystack[i]) break;
+      ++i;
+    }
+    if (!*haystack++) break;
+  }
+  return NULL;
 }

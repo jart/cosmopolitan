@@ -30,6 +30,7 @@ LIBC_STR_A_CHECKS =						\
 LIBC_STR_A_DIRECTDEPS =						\
 	LIBC_INTRIN						\
 	LIBC_STUBS						\
+	LIBC_SYSV						\
 	LIBC_NEXGEN32E
 
 LIBC_STR_A_DEPS :=						\

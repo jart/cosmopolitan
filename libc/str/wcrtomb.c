@@ -25,7 +25,7 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/limits.h"
 #include "libc/str/mb.internal.h"
 #include "libc/str/str.h"
@@ -35,8 +35,34 @@ Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-int wctob(wint_t c) {
-  if (c < 128U) return c;
-  if (MB_CUR_MAX == 1 && IS_CODEUNIT(c)) return (unsigned char)c;
-  return EOF;
+size_t wcrtomb(char *s, wchar_t wc, mbstate_t *st) {
+  if (!s) return 1;
+  if ((unsigned)wc < 0x80) {
+    *s = wc;
+    return 1;
+  } else if (MB_CUR_MAX == 1) {
+    if (!IS_CODEUNIT(wc)) {
+      errno = EILSEQ;
+      return -1;
+    }
+    *s = wc;
+    return 1;
+  } else if ((unsigned)wc < 0x800) {
+    *s++ = 0xc0 | (wc >> 6);
+    *s = 0x80 | (wc & 0x3f);
+    return 2;
+  } else if ((unsigned)wc < 0xd800 || (unsigned)wc - 0xe000 < 0x2000) {
+    *s++ = 0xe0 | (wc >> 12);
+    *s++ = 0x80 | ((wc >> 6) & 0x3f);
+    *s = 0x80 | (wc & 0x3f);
+    return 3;
+  } else if ((unsigned)wc - 0x10000 < 0x100000) {
+    *s++ = 0xf0 | (wc >> 18);
+    *s++ = 0x80 | ((wc >> 12) & 0x3f);
+    *s++ = 0x80 | ((wc >> 6) & 0x3f);
+    *s = 0x80 | (wc & 0x3f);
+    return 4;
+  }
+  errno = EILSEQ;
+  return -1;
 }

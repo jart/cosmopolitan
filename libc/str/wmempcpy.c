@@ -18,6 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
-compatfn wchar_t *wmempcpy(wchar_t *dest, const wchar_t *src, size_t count) {
+wchar_t *wmempcpy(wchar_t *dest, const wchar_t *src, size_t count) {
   return mempcpy(dest, src, count * sizeof(wchar_t));
 }

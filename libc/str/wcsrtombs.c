@@ -25,7 +25,7 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/limits.h"
 #include "libc/str/mb.internal.h"
 #include "libc/str/str.h"
@@ -35,8 +35,56 @@ Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-int wctob(wint_t c) {
-  if (c < 128U) return c;
-  if (MB_CUR_MAX == 1 && IS_CODEUNIT(c)) return (unsigned char)c;
-  return EOF;
+size_t wcsrtombs(char *s, const wchar_t **ws, size_t n, mbstate_t *st) {
+  const wchar_t *ws2;
+  char buf[4];
+  size_t N = n, l;
+  if (!s) {
+    for (n = 0, ws2 = *ws; *ws2; ws2++) {
+      if (*ws2 >= 0x80u) {
+        l = wcrtomb(buf, *ws2, 0);
+        if (!(l + 1)) return -1;
+        n += l;
+      } else
+        n++;
+    }
+    return n;
+  }
+  while (n >= 4) {
+    if (**ws - 1u >= 0x7fu) {
+      if (!**ws) {
+        *s = 0;
+        *ws = 0;
+        return N - n;
+      }
+      l = wcrtomb(s, **ws, 0);
+      if (!(l + 1)) return -1;
+      s += l;
+      n -= l;
+    } else {
+      *s++ = **ws;
+      n--;
+    }
+    (*ws)++;
+  }
+  while (n) {
+    if (**ws - 1u >= 0x7fu) {
+      if (!**ws) {
+        *s = 0;
+        *ws = 0;
+        return N - n;
+      }
+      l = wcrtomb(buf, **ws, 0);
+      if (!(l + 1)) return -1;
+      if (l > n) return N - n;
+      wcrtomb(s, **ws, 0);
+      s += l;
+      n -= l;
+    } else {
+      *s++ = **ws;
+      n--;
+    }
+    (*ws)++;
+  }
+  return N;
 }
