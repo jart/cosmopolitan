@@ -16,29 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/stdio.h"
 #include "libc/calls/calls.h"
+#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/o.h"
 
 /**
  * Turns stdio flags description string into bitmask.
  */
 int fopenflags(const char *mode) {
-  unsigned flags = 0;
+  unsigned omode, flags;
+  omode = flags = 0;
   do {
     if (*mode == 'r') {
-      flags |= O_RDONLY;
+      omode = O_RDONLY;
     } else if (*mode == 'w') {
-      flags |= O_WRONLY | O_CREAT | O_TRUNC;
+      omode = O_WRONLY;
+      flags |= O_CREAT | O_TRUNC;
     } else if (*mode == 'a') {
-      flags |= O_WRONLY | O_CREAT | O_APPEND;
+      omode = O_WRONLY;
+      flags |= O_CREAT | O_APPEND;
     } else if (*mode == '+') {
-      flags |= O_RDWR;
+      omode = O_RDWR;
     } else if (*mode == 'x') {
       flags |= O_EXCL;
     } else if (*mode == 'e') {
       flags |= O_CLOEXEC;
     }
   } while (*mode++);
-  return flags;
+  return omode | flags;
 }

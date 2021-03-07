@@ -50,9 +50,11 @@ int fflush(FILE *f) {
       }
     }
   } else if (f->fd != -1) {
-    while (!f->state && f->beg && !f->end) {
+    while (f->beg && !f->end) {
       if ((wrote = __fwritebuf(f)) != -1) {
         res += wrote;
+      } else {
+        break;
       }
     }
   } else if (f->beg && f->beg < f->size) {

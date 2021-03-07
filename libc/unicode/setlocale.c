@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
+#include "libc/str/str.h"
 #include "libc/unicode/locale.h"
 
 /**
@@ -25,5 +26,10 @@
  * Cosmopolitan only supports the C or POSIX locale.
  */
 char *setlocale(int category, const char *locale) {
-  return firstnonnull(locale, "C");
+  if (!locale) return "C";
+  if (!strcmp(locale, "C") || !strcmp(locale, "POSIX")) {
+    return locale;
+  } else {
+    return NULL;
+  }
 }

@@ -40,7 +40,7 @@ FILE *fdopen(int fd, const char *mode) {
     f->bufmode = ischardev(fd) ? _IOLBF : _IOFBF;
     f->iomode = fopenflags(mode);
     f->size = BUFSIZ;
-    if ((f->buf = valloc(f->size))) {
+    if ((f->buf = malloc(f->size))) {
       if ((f->iomode & O_ACCMODE) != O_RDONLY) {
         __fflush_register(f);
       }

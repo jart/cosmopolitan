@@ -17,25 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
-
-static noinstrument noinline int __fputc(int c, FILE *f) {
-  if (f->beg < f->size) {
-    f->buf[f->beg++] = c;
-    if (f->beg == f->size || f->bufmode == _IONBF ||
-        (f->bufmode == _IOLBF && c == '\n')) {
-      if (f->writer) {
-        if (f->writer(f) == -1) return -1;
-      } else if (f->beg == f->size) {
-        f->beg = 0;
-      }
-    }
-    return c & 0xff;
-  } else {
-    return __fseteof(f);
-  }
-}
+#include "libc/sysv/consts/o.h"
 
 /**
  * Writes byte to stream.
@@ -43,10 +28,22 @@ static noinstrument noinline int __fputc(int c, FILE *f) {
  * @see putc() if called within loop
  */
 noinstrument int fputc(int c, FILE *f) {
-  if (f->beg + 1 < f->size && f->bufmode == _IOFBF) {
-    f->buf[f->beg++] = c;
-    return c & 0xff;
+  if ((f->iomode & O_ACCMODE) != O_RDONLY) {
+    if (f->beg < f->size) {
+      f->buf[f->beg++] = c;
+      if (f->beg == f->size || f->bufmode == _IONBF ||
+          (f->bufmode == _IOLBF && c == '\n')) {
+        if (f->writer) {
+          if (f->writer(f) == -1) return -1;
+        } else if (f->beg == f->size) {
+          f->beg = 0;
+        }
+      }
+      return c & 0xff;
+    } else {
+      return __fseteof(f);
+    }
   } else {
-    return __fputc(c, f);
+    return __fseterr(f, EBADF);
   }
 }

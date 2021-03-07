@@ -25,20 +25,14 @@
  * Writes data to stream.
  *
  * @param stride specifies the size of individual items
- * @param count is the number of strides to fetch
+ * @param count is the number of strides to write
  * @return count on success, [0,count) on EOF, 0 on error or count==0
  */
 size_t fwrite(const void *data, size_t stride, size_t count, FILE *f) {
   size_t i, n;
   const unsigned char *p;
   for (n = stride * count, p = data, i = 0; i < n; ++i) {
-    if (fputc(p[i], f) == -1) {
-      if (!(i % stride)) {
-        return i / stride;
-      } else {
-        return __fseterr(f, EOVERFLOW);
-      }
-    }
+    if (fputc(p[i], f) == -1) return -1;
   }
   return count;
 }

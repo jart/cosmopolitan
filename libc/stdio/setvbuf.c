@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/popcnt.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/errfuns.h"
 
@@ -30,7 +29,6 @@
  * @return 0 on success or -1 on error
  */
 int setvbuf(FILE *f, char *buf, int mode, size_t size) {
-  if (size && popcnt(size) != 1) return einval();
   setbuffer(f, buf, size);
   f->bufmode = mode;
   return 0;

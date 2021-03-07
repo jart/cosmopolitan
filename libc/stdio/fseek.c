@@ -35,8 +35,7 @@
  * @returns new offset or -1 on error
  */
 long fseek(FILE *f, long offset, int whence) {
-  int skew;
-  int64_t newpos;
+  int64_t pos;
   if (f->fd != -1) {
     if (whence == SEEK_CUR && f->beg < f->end) {
       offset -= f->end - f->beg;
@@ -44,17 +43,17 @@ long fseek(FILE *f, long offset, int whence) {
     if (f->beg && !f->end) {
       f->writer(f);
     }
-    if ((newpos = lseek(f->fd, offset, whence)) != -1) {
+    if (lseek(f->fd, offset, whence) != -1) {
       f->state = 0;
       f->beg = 0;
       f->end = 0;
-      return newpos;
+      return 0;
     } else {
       f->state = errno == ESPIPE ? EBADF : errno;
       return -1;
     }
   } else {
-    f->beg = offset % f->size;
+    f->beg = (offset & 0xffffffff) % f->size;
     return -1;
   }
 }

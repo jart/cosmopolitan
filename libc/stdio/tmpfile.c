@@ -28,6 +28,7 @@
  */
 FILE *tmpfile(void) {
   int fd;
-  if ((fd = mkostemps("/tmp/tmp.XXXXXX", 0, 0)) == -1) return NULL;
+  char template[] = "/tmp/tmp.XXXXXX";
+  if ((fd = mkostemps(template, 0, 0)) == -1) return NULL;
   return fdopen(fd, "w+");
 }

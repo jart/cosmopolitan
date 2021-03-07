@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/popcnt.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/errfuns.h"
@@ -25,7 +24,6 @@
  * Sets buffer on stdio stream.
  */
 void setbuffer(FILE *f, char *buf, size_t size) {
-  if (size && popcnt(size) != 1) abort();
   if (buf && f->buf != (unsigned char *)buf) {
     free_s(&f->buf);
     if (!size) size = BUFSIZ;

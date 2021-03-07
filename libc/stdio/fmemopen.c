@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/popcnt.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"

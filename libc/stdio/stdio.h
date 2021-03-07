@@ -67,7 +67,6 @@ long fseek(FILE *, long, int) paramsnonnull();
 long ftell(FILE *) paramsnonnull();
 void rewind(FILE *) paramsnonnull();
 int fopenflags(const char *) paramsnonnull();
-unsigned favail(FILE *);
 void setbuf(FILE *, char *);
 void setbuffer(FILE *, char *, size_t);
 int setvbuf(FILE *, char *, int, size_t);
