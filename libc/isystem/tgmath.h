@@ -1,6 +1,8 @@
 #ifndef LIBC_ISYSTEM_TGMATH_H_
 #define LIBC_ISYSTEM_TGMATH_H_
 
+#include "libc/math.h"
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 #if __STDC_VERSION__ + 0 >= 201112
 COSMOPOLITAN_C_START_
