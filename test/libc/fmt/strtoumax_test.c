@@ -46,3 +46,8 @@ TEST(strtoumax, testMaximum) {
   EXPECT_EQ(UINTMAX_MAX,
             strtoumax("0xffffffffffffffffffffffffffffffff", NULL, 0));
 }
+
+TEST(strtoumax, testTwosBane) {
+  EXPECT_EQ(((uintmax_t)0x8000000000000000) << 64 | 0x0000000000000000,
+            strtoumax("0x80000000000000000000000000000000", NULL, 0));
+}

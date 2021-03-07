@@ -81,3 +81,11 @@ false false || ! assert
 1 -1 min -1 = assert
 1 2 min 1 = assert
 rand64 rand64 rand64 rand64 != != && assert
+
+# HEX SIGN
+ -0x80000000 -2147483648 = assert
+  0x80000000  2147483648 = assert
+  0x80000001  2147483649 = assert
+  0xffffffff  4294967295 = assert
+ 0x100000000  4294967296 = assert
+-0x100000000 -4294967296 = assert

@@ -443,7 +443,7 @@ bool ConsumeLiteral(const char *literal) {
   char *e;
   struct Value x;
   x.t = kInt;
-  x.i = strtoimax(literal, &e, 0);
+  x.i = *literal == '-' ? strtoimax(literal, &e, 0) : strtoumax(literal, &e, 0);
   if (!e || *e) {
     x.t = kFloat;
     x.f = strtod(literal, &e);
