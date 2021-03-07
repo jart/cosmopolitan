@@ -17,12 +17,19 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
+#include "libc/errno.h"
 #include "libc/limits.h"
 
 long long strtoll(const char *s, char **endptr, int optional_base) {
-  long long res;
+  intmax_t res;
   res = strtoimax(s, endptr, optional_base);
-  if (res < LONG_LONG_MIN) return LONG_LONG_MIN;
-  if (res > LONG_LONG_MAX) return LONG_LONG_MAX;
+  if (res < LONG_LONG_MIN) {
+    errno = ERANGE;
+    return LONG_LONG_MIN;
+  }
+  if (res > LONG_LONG_MAX) {
+    errno = ERANGE;
+    return LONG_LONG_MAX;
+  }
   return res;
 }
