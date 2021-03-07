@@ -26,6 +26,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
@@ -1156,7 +1157,15 @@ void RedBean(void) {
   if (setitimer(ITIMER_REAL, &kHeartbeat, NULL) == -1) notimer = true;
   CHECK_NE(-1, (server = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)));
   TuneServerSocket();
-  CHECK_NE(-1, bind(server, &serveraddr, sizeof(serveraddr)));
+  if (bind(server, &serveraddr, sizeof(serveraddr)) == -1) {
+    if (errno == EADDRINUSE) {
+      fprintf(stderr, "error: address in use\n"
+                      "try passing the -p PORT flag\n");
+    } else {
+      fprintf(stderr, "error: bind() failed: %s\n", strerror(errno));
+    }
+    exit(1);
+  }
   CHECK_NE(-1, listen(server, 10));
   addrsize = sizeof(serveraddr);
   CHECK_NE(-1, getsockname(server, &serveraddr, &addrsize));
