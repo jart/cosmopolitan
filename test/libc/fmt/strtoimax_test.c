@@ -53,9 +53,17 @@ TEST(strtoimax, testLimits) {
       strtoimax("0x7fffffffffffffffffffffffffffffff", NULL, 0));
 }
 
-TEST(strtoimax, testTwosBane) {
-  EXPECT_EQ(((uintmax_t)0x8000000000000000) << 64 | 0x0000000000000000,
-            strtoimax("0x80000000000000000000000000000000", NULL, 0));
+TEST(strtoimax, testOutsideLimit) {
+  errno = 0;
+  EXPECT_EQ(
+      ((uintmax_t)0x7fffffffffffffff) << 64 | (uintmax_t)0xffffffffffffffff,
+      strtoimax("0x80000000000000000000000000000000", NULL, 0));
+  EXPECT_EQ(ERANGE, errno);
+  errno = 0;
+  EXPECT_EQ(
+      ((uintmax_t)0x8000000000000000) << 64 | 0x0000000000000000,
+      strtoimax("-0x80000000000000000000000000000001", NULL, 0));
+  EXPECT_EQ(ERANGE, errno);
 }
 
 TEST(strtoul, neghex) {

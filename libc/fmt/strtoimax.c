@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
+#include "libc/errno.h"
 #include "libc/limits.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/str/str.h"
@@ -85,7 +86,7 @@ intmax_t strtoimax(const char *s, char **endptr, int base) {
     diglet = kBase36[*s & 0xff];
     if (!diglet || diglet > base) break;
     diglet -= 1;
-    if (!diglet || !x || (bits = bsr(diglet) + bsrmax(x)) < 127) {
+    if (!x || (bits = (diglet ? bsr(diglet) : 0) + bsrmax(x * base)) < 127) {
       s++;
       x *= base;
       x += diglet;
@@ -96,9 +97,11 @@ intmax_t strtoimax(const char *s, char **endptr, int base) {
         if (x == INTMAX_MIN) s++;
       }
       x = INTMAX_MIN;
+      errno = ERANGE;
       break;
     } else {
       x = INTMAX_MAX;
+      errno = ERANGE;
       break;
     }
   }
