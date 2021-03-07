@@ -29,9 +29,15 @@ TEST(strtoumax, testDecimal) {
 }
 TEST(strtoumax, testHex) {
   EXPECT_EQ(255, strtoumax("0xff", NULL, 0));
+  EXPECT_EQ(255, strtoumax("0xff", NULL, 16));
 }
 TEST(strtoumax, testOctal) {
   EXPECT_EQ(123, strtoumax("0173", NULL, 0));
+  EXPECT_EQ(123, strtoumax("0173", NULL, 8));
+}
+TEST(strtoumax, testBinary) {
+  EXPECT_EQ(42, strtoumax("0b101010", NULL, 0));
+  EXPECT_EQ(42, strtoumax("0b101010", NULL, 2));
 }
 
 TEST(strtoumax, testMaximum) {

@@ -77,8 +77,8 @@ intmax_t strtoimax(const char *s, char **endptr, int base) {
     }
   } else if (*s == '0') {
     ++s;
-    if (base == 2 && *s == 'b' && *s == 'B') ++s;
-    if (base == 16 && *s == 'x' && *s == 'X') ++s;
+    if (base == 2 && (*s == 'b' || *s == 'B')) ++s;
+    if (base == 16 && (*s == 'x' || *s == 'X')) ++s;
   }
 
   for (;;) {
