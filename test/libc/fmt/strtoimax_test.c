@@ -58,6 +58,12 @@ TEST(strtoimax, testTwosBane) {
             strtoimax("0x80000000000000000000000000000000", NULL, 0));
 }
 
+TEST(strtoul, neghex) {
+  errno = 0;
+  ASSERT_EQ(-16, (long) strtoul("0xfffffffffffffff0", NULL, 0));
+  EXPECT_EQ(0, errno);
+}
+
 TEST(strtol, testOutsideLimit) {
   errno = 0;
   EXPECT_EQ(0x7fffffffffffffff, strtol("0x8000000000000000", NULL, 0));
