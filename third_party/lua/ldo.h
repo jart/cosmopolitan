@@ -7,11 +7,11 @@
 #ifndef ldo_h
 #define ldo_h
 
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/lstate.h"
+#include "third_party/lua/lzio.h"
 
-#include "lobject.h"
-#include "lstate.h"
-#include "lzio.h"
-
+/* clang-format off */
 
 /*
 ** Macro to check stack size and grow stack if needed.  Parameters

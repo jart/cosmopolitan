@@ -7,23 +7,17 @@
 #define liolib_c
 #define LUA_LIB
 
-#include "lprefix.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/errno.h"
+#include "libc/stdio/temp.h"
+#include "libc/stdio/unlocked.h"
+#include "third_party/lua/lauxlib.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lualib.h"
 
-
-#include <ctype.h>
-#include <errno.h>
-#include <locale.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "lua.h"
-
-#include "lauxlib.h"
-#include "lualib.h"
-
-
-
+/* clang-format off */
 
 /*
 ** Change this macro to accept other modes for 'fopen' besides
@@ -116,8 +110,6 @@ static int l_checkmode (const char *mode) {
 #if !defined(l_fseek)		/* { */
 
 #if defined(LUA_USE_POSIX)	/* { */
-
-#include <sys/types.h>
 
 #define l_fseek(f,o,w)		fseeko(f,o,w)
 #define l_ftell(f)		ftello(f)

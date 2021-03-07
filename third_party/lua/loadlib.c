@@ -11,18 +11,12 @@
 #define loadlib_c
 #define LUA_LIB
 
-#include "lprefix.h"
+#include "third_party/lua/lauxlib.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lualib.h"
 
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "lua.h"
-
-#include "lauxlib.h"
-#include "lualib.h"
-
+/* clang-format off */
 
 /*
 ** LUA_IGMARK is a mark to ignore all before it when building the
@@ -111,7 +105,6 @@ static lua_CFunction lsys_sym (lua_State *L, void *lib, const char *sym);
 ** =========================================================================
 */
 
-#include <dlfcn.h>
 
 /*
 ** Macro to convert pointer-to-void* to pointer-to-function. This cast
@@ -154,7 +147,6 @@ static lua_CFunction lsys_sym (lua_State *L, void *lib, const char *sym) {
 ** =======================================================================
 */
 
-#include <windows.h>
 
 
 /*

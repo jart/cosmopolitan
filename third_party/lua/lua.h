@@ -5,16 +5,12 @@
 ** See Copyright Notice at the end of this file
 */
 
-
 #ifndef lua_h
 #define lua_h
 
-#include <stdarg.h>
-#include <stddef.h>
+#include "third_party/lua/luaconf.h"
 
-
-#include "luaconf.h"
-
+/* clang-format off */
 
 #define LUA_VERSION_MAJOR	"5"
 #define LUA_VERSION_MINOR	"4"

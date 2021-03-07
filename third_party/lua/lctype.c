@@ -7,14 +7,13 @@
 #define lctype_c
 #define LUA_CORE
 
-#include "lprefix.h"
+#include "third_party/lua/lctype.h"
+#include "third_party/lua/lprefix.h"
 
-
-#include "lctype.h"
+/* clang-format off */
 
 #if !LUA_USE_CTYPE	/* { */
 
-#include <limits.h>
 
 
 #if defined (LUA_UCID)		/* accept UniCode IDentifiers? */

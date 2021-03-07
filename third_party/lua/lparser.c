@@ -7,27 +7,22 @@
 #define lparser_c
 #define LUA_CORE
 
-#include "lprefix.h"
+#include "third_party/lua/lcode.h"
+#include "third_party/lua/ldebug.h"
+#include "third_party/lua/ldo.h"
+#include "third_party/lua/lfunc.h"
+#include "third_party/lua/llex.h"
+#include "third_party/lua/lmem.h"
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/lopcodes.h"
+#include "third_party/lua/lparser.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lstate.h"
+#include "third_party/lua/lstring.h"
+#include "third_party/lua/ltable.h"
+#include "third_party/lua/lua.h"
 
-
-#include <limits.h>
-#include <string.h>
-
-#include "lua.h"
-
-#include "lcode.h"
-#include "ldebug.h"
-#include "ldo.h"
-#include "lfunc.h"
-#include "llex.h"
-#include "lmem.h"
-#include "lobject.h"
-#include "lopcodes.h"
-#include "lparser.h"
-#include "lstate.h"
-#include "lstring.h"
-#include "ltable.h"
-
+/* clang-format off */
 
 
 /* maximum number of local variables per function (must be smaller

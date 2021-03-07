@@ -4,14 +4,13 @@
 ** See Copyright Notice in lua.h
 */
 
-
 #ifndef lzio_h
 #define lzio_h
 
-#include "lua.h"
+#include "third_party/lua/lmem.h"
+#include "third_party/lua/lua.h"
 
-#include "lmem.h"
-
+/* clang-format off */
 
 #define EOZ	(-1)			/* end of stream */
 

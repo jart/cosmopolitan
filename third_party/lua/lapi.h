@@ -7,10 +7,10 @@
 #ifndef lapi_h
 #define lapi_h
 
+#include "third_party/lua/llimits.h"
+#include "third_party/lua/lstate.h"
 
-#include "llimits.h"
-#include "lstate.h"
-
+/* clang-format off */
 
 /* Increments 'L->top', checking for stack overflows */
 #define api_incr_top(L)   {L->top++; api_check(L, L->top <= L->ci->top, \

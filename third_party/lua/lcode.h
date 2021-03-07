@@ -7,11 +7,12 @@
 #ifndef lcode_h
 #define lcode_h
 
-#include "llex.h"
-#include "lobject.h"
-#include "lopcodes.h"
-#include "lparser.h"
+#include "third_party/lua/llex.h"
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/lopcodes.h"
+#include "third_party/lua/lparser.h"
 
+/* clang-format off */
 
 /*
 ** Marks the end of a patch list. It is an invalid value both as an absolute

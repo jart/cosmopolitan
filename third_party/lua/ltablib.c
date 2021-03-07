@@ -7,18 +7,14 @@
 #define ltablib_c
 #define LUA_LIB
 
-#include "lprefix.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/time/time.h"
+#include "third_party/lua/lauxlib.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lualib.h"
 
-
-#include <limits.h>
-#include <stddef.h>
-#include <string.h>
-
-#include "lua.h"
-
-#include "lauxlib.h"
-#include "lualib.h"
-
+/* clang-format off */
 
 /*
 ** Operations that an object must define to mimic a table
@@ -229,8 +225,6 @@ typedef unsigned int IdxT;
 ** good choice.)
 */
 #if !defined(l_randomizePivot)		/* { */
-
-#include <time.h>
 
 /* size of 'e' measured in number of 'unsigned int's */
 #define sof(e)		(sizeof(e) / sizeof(unsigned int))

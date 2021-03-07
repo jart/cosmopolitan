@@ -7,8 +7,9 @@
 #ifndef lopcodes_h
 #define lopcodes_h
 
-#include "llimits.h"
+#include "third_party/lua/llimits.h"
 
+/* clang-format off */
 
 /*===========================================================================
   We assume that instructions are unsigned 32-bit integers.

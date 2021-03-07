@@ -7,8 +7,9 @@
 #ifndef ldebug_h
 #define ldebug_h
 
+#include "third_party/lua/lstate.h"
 
-#include "lstate.h"
+/* clang-format off */
 
 
 #define pcRel(pc, p)	(cast_int((pc) - (p)->code) - 1)

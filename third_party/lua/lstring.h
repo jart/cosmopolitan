@@ -7,10 +7,11 @@
 #ifndef lstring_h
 #define lstring_h
 
-#include "lgc.h"
-#include "lobject.h"
-#include "lstate.h"
+#include "third_party/lua/lgc.h"
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/lstate.h"
 
+/* clang-format off */
 
 /*
 ** Memory-allocation error message must be preallocated (it cannot

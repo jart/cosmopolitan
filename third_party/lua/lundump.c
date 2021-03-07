@@ -7,23 +7,18 @@
 #define lundump_c
 #define LUA_CORE
 
-#include "lprefix.h"
+#include "third_party/lua/ldebug.h"
+#include "third_party/lua/ldo.h"
+#include "third_party/lua/lfunc.h"
+#include "third_party/lua/lmem.h"
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lstring.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lundump.h"
+#include "third_party/lua/lzio.h"
 
-
-#include <limits.h>
-#include <string.h>
-
-#include "lua.h"
-
-#include "ldebug.h"
-#include "ldo.h"
-#include "lfunc.h"
-#include "lmem.h"
-#include "lobject.h"
-#include "lstring.h"
-#include "lundump.h"
-#include "lzio.h"
-
+/* clang-format off */
 
 #if !defined(luai_verifycode)
 #define luai_verifycode(L,f)  /* empty */

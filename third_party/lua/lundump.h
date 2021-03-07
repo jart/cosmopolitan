@@ -7,10 +7,11 @@
 #ifndef lundump_h
 #define lundump_h
 
-#include "llimits.h"
-#include "lobject.h"
-#include "lzio.h"
+#include "third_party/lua/llimits.h"
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/lzio.h"
 
+/* clang-format off */
 
 /* data to catch conversion errors */
 #define LUAC_DATA	"\x19\x93\r\n\x1a\n"

@@ -7,30 +7,23 @@
 #define lapi_c
 #define LUA_CORE
 
-#include "lprefix.h"
+#include "third_party/lua/lapi.h"
+#include "third_party/lua/ldebug.h"
+#include "third_party/lua/ldo.h"
+#include "third_party/lua/lfunc.h"
+#include "third_party/lua/lgc.h"
+#include "third_party/lua/lmem.h"
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lstate.h"
+#include "third_party/lua/lstring.h"
+#include "third_party/lua/ltable.h"
+#include "third_party/lua/ltm.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lundump.h"
+#include "third_party/lua/lvm.h"
 
-
-#include <limits.h>
-#include <stdarg.h>
-#include <string.h>
-
-#include "lua.h"
-
-#include "lapi.h"
-#include "ldebug.h"
-#include "ldo.h"
-#include "lfunc.h"
-#include "lgc.h"
-#include "lmem.h"
-#include "lobject.h"
-#include "lstate.h"
-#include "lstring.h"
-#include "ltable.h"
-#include "ltm.h"
-#include "lundump.h"
-#include "lvm.h"
-
-
+/* clang-format off */
 
 const char lua_ident[] =
   "$LuaVersion: " LUA_COPYRIGHT " $"

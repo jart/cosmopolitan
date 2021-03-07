@@ -7,20 +7,15 @@
 #define lmathlib_c
 #define LUA_LIB
 
-#include "lprefix.h"
+#include "libc/math.h"
+#include "libc/nt/struct/msg.h"
+#include "libc/time/time.h"
+#include "third_party/lua/lauxlib.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lualib.h"
 
-
-#include <float.h>
-#include <limits.h>
-#include <math.h>
-#include <stdlib.h>
-#include <time.h>
-
-#include "lua.h"
-
-#include "lauxlib.h"
-#include "lualib.h"
-
+/* clang-format off */
 
 #undef PI
 #define PI	(l_mathop(3.141592653589793238462643383279502884))

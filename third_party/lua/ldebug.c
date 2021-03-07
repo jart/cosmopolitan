@@ -7,27 +7,24 @@
 #define ldebug_c
 #define LUA_CORE
 
-#include "lprefix.h"
+#include "third_party/lua/lprefix.h"
 
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <string.h>
 
-#include "lua.h"
+#include "third_party/lua/lua.h"
 
-#include "lapi.h"
-#include "lcode.h"
-#include "ldebug.h"
-#include "ldo.h"
-#include "lfunc.h"
-#include "lobject.h"
-#include "lopcodes.h"
-#include "lstate.h"
-#include "lstring.h"
-#include "ltable.h"
-#include "ltm.h"
-#include "lvm.h"
+#include "third_party/lua/lapi.h"
+#include "third_party/lua/lcode.h"
+#include "third_party/lua/ldebug.h"
+#include "third_party/lua/ldo.h"
+#include "third_party/lua/lfunc.h"
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/lopcodes.h"
+#include "third_party/lua/lstate.h"
+#include "third_party/lua/lstring.h"
+#include "third_party/lua/ltable.h"
+#include "third_party/lua/ltm.h"
+#include "third_party/lua/lvm.h"
 
 
 

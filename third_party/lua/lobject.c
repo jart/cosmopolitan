@@ -7,27 +7,18 @@
 #define lobject_c
 #define LUA_CORE
 
-#include "lprefix.h"
+#include "third_party/lua/lctype.h"
+#include "third_party/lua/ldebug.h"
+#include "third_party/lua/ldo.h"
+#include "third_party/lua/lmem.h"
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lstate.h"
+#include "third_party/lua/lstring.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lvm.h"
 
-
-#include <locale.h>
-#include <math.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "lua.h"
-
-#include "lctype.h"
-#include "ldebug.h"
-#include "ldo.h"
-#include "lmem.h"
-#include "lobject.h"
-#include "lstate.h"
-#include "lstring.h"
-#include "lvm.h"
-
+/* clang-format off */
 
 /*
 ** Computes ceil(log2(x))

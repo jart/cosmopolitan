@@ -7,20 +7,16 @@
 #define lmem_c
 #define LUA_CORE
 
-#include "lprefix.h"
+#include "third_party/lua/ldebug.h"
+#include "third_party/lua/ldo.h"
+#include "third_party/lua/lgc.h"
+#include "third_party/lua/lmem.h"
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lstate.h"
+#include "third_party/lua/lua.h"
 
-
-#include <stddef.h>
-
-#include "lua.h"
-
-#include "ldebug.h"
-#include "ldo.h"
-#include "lgc.h"
-#include "lmem.h"
-#include "lobject.h"
-#include "lstate.h"
-
+/* clang-format off */
 
 #if defined(EMERGENCYGCTESTS)
 /*

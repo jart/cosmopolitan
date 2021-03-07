@@ -7,23 +7,19 @@
 #define ltm_c
 #define LUA_CORE
 
-#include "lprefix.h"
+#include "third_party/lua/ldebug.h"
+#include "third_party/lua/ldo.h"
+#include "third_party/lua/lgc.h"
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lstate.h"
+#include "third_party/lua/lstring.h"
+#include "third_party/lua/ltable.h"
+#include "third_party/lua/ltm.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lvm.h"
 
-
-#include <string.h>
-
-#include "lua.h"
-
-#include "ldebug.h"
-#include "ldo.h"
-#include "lgc.h"
-#include "lobject.h"
-#include "lstate.h"
-#include "lstring.h"
-#include "ltable.h"
-#include "ltm.h"
-#include "lvm.h"
-
+/* clang-format off */
 
 static const char udatatypename[] = "userdata";
 

@@ -243,7 +243,7 @@ local _G, showmem, print, format, clock, time, difftime,
       assert, io.open, warn
 
 -- file with time of last performed test
-local fname = T and "time-debug.txt" or "time.txt"
+local fname = T and "time-debug.txt" or "/tmp/time.txt"
 local lasttime
 
 if not usertests then

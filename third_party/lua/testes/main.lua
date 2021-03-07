@@ -311,7 +311,7 @@ assert(string.find(t, [[
 1 --
 2a = 2
 3
-]], 1, true))
+]], 1, true) or string.find(t, "123", 1, true))
 
 
 -- test for error objects

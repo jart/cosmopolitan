@@ -7,8 +7,9 @@
 #ifndef ltable_h
 #define ltable_h
 
-#include "lobject.h"
+#include "third_party/lua/lobject.h"
 
+/* clang-format off */
 
 #define gnode(t,i)	(&(t)->node[i])
 #define gval(n)		(&(n)->i_val)

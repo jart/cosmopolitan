@@ -7,17 +7,14 @@
 #define ldblib_c
 #define LUA_LIB
 
-#include "lprefix.h"
+#include "third_party/lua/lprefix.h"
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-#include "lua.h"
+#include "third_party/lua/lua.h"
 
-#include "lauxlib.h"
-#include "lualib.h"
+#include "third_party/lua/lauxlib.h"
+#include "third_party/lua/lualib.h"
 
 
 /*

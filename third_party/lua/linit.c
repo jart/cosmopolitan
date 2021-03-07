@@ -4,7 +4,6 @@
 ** See Copyright Notice in lua.h
 */
 
-
 #define linit_c
 #define LUA_LIB
 
@@ -24,16 +23,12 @@
 **  lua_pop(L, 1);  // remove PRELOAD table
 */
 
-#include "lprefix.h"
+#include "third_party/lua/lauxlib.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lualib.h"
 
-
-#include <stddef.h>
-
-#include "lua.h"
-
-#include "lualib.h"
-#include "lauxlib.h"
-
+/* clang-format off */
 
 /*
 ** these libs are loaded by lua.c and are readily available to any Lua

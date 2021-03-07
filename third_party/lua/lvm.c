@@ -7,29 +7,21 @@
 #define lvm_c
 #define LUA_CORE
 
-#include "lprefix.h"
+#include "third_party/lua/ldebug.h"
+#include "third_party/lua/ldo.h"
+#include "third_party/lua/lfunc.h"
+#include "third_party/lua/lgc.h"
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/lopcodes.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lstate.h"
+#include "third_party/lua/lstring.h"
+#include "third_party/lua/ltable.h"
+#include "third_party/lua/ltm.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lvm.h"
 
-#include <float.h>
-#include <limits.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "lua.h"
-
-#include "ldebug.h"
-#include "ldo.h"
-#include "lfunc.h"
-#include "lgc.h"
-#include "lobject.h"
-#include "lopcodes.h"
-#include "lstate.h"
-#include "lstring.h"
-#include "ltable.h"
-#include "ltm.h"
-#include "lvm.h"
-
+/* clang-format off */
 
 /*
 ** By default, use jump tables in the main interpreter loop on gcc
@@ -1127,7 +1119,7 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
   const Instruction *pc;
   int trap;
 #if LUA_USE_JUMPTABLE
-#include "ljumptab.h"
+#include "third_party/lua/ljumptab.inc"
 #endif
  startfunc:
   trap = L->hookmask;

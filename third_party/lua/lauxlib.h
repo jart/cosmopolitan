@@ -8,11 +8,10 @@
 #ifndef lauxlib_h
 #define lauxlib_h
 
+#include "libc/stdio/stdio.h"
+#include "third_party/lua/lua.h"
 
-#include <stddef.h>
-#include <stdio.h>
-
-#include "lua.h"
+/* clang-format off */
 
 
 /* global table */

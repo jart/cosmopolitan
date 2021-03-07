@@ -7,11 +7,11 @@
 #ifndef lvm_h
 #define lvm_h
 
+#include "third_party/lua/ldo.h"
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/ltm.h"
 
-#include "ldo.h"
-#include "lobject.h"
-#include "ltm.h"
-
+/* clang-format off */
 
 #if !defined(LUA_NOCVTN2S)
 #define cvt2str(o)	ttisnumber(o)

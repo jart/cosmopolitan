@@ -7,8 +7,19 @@
 #define ltable_c
 #define LUA_CORE
 
-#include "lprefix.h"
+#include "third_party/lua/ldebug.h"
+#include "third_party/lua/ldo.h"
+#include "third_party/lua/lgc.h"
+#include "third_party/lua/lmem.h"
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lstate.h"
+#include "third_party/lua/lstring.h"
+#include "third_party/lua/ltable.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lvm.h"
 
+/* clang-format off */
 
 /*
 ** Implementation of tables (aka arrays, objects, or hash tables).
@@ -22,21 +33,6 @@
 ** to it), then the colliding element is in its own main position.
 ** Hence even when the load factor reaches 100%, performance remains good.
 */
-
-#include <math.h>
-#include <limits.h>
-
-#include "lua.h"
-
-#include "ldebug.h"
-#include "ldo.h"
-#include "lgc.h"
-#include "lmem.h"
-#include "lobject.h"
-#include "lstate.h"
-#include "lstring.h"
-#include "ltable.h"
-#include "lvm.h"
 
 
 /*

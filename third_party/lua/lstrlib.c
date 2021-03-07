@@ -7,23 +7,13 @@
 #define lstrlib_c
 #define LUA_LIB
 
-#include "lprefix.h"
+#include "libc/math.h"
+#include "third_party/lua/lauxlib.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lualib.h"
 
-
-#include <ctype.h>
-#include <float.h>
-#include <limits.h>
-#include <locale.h>
-#include <math.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "lua.h"
-
-#include "lauxlib.h"
-#include "lualib.h"
+/* clang-format off */
 
 
 /*

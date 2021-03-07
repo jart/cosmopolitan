@@ -7,12 +7,13 @@
 #ifndef lstate_h
 #define lstate_h
 
-#include "lua.h"
+#include "libc/calls/calls.h"
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/ltm.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lzio.h"
 
-#include "lobject.h"
-#include "ltm.h"
-#include "lzio.h"
-
+/* clang-format off */
 
 /*
 ** Some notes about garbage-collected objects: All objects in Lua must
@@ -122,7 +123,6 @@ struct lua_longjmp;  /* defined in ldo.c */
 ** is thread safe
 */
 #if !defined(l_signalT)
-#include <signal.h>
 #define l_signalT	sig_atomic_t
 #endif
 

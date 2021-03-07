@@ -6,20 +6,16 @@
 
 #define lua_c
 
-#include "lprefix.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/sigbits.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/lua/lauxlib.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lualib.h"
 
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <signal.h>
-
-#include "lua.h"
-
-#include "lauxlib.h"
-#include "lualib.h"
-
+/* clang-format off */
 
 #if !defined(LUA_PROGNAME)
 #define LUA_PROGNAME		"lua"
@@ -384,13 +380,10 @@ static int handle_luainit (lua_State *L) {
 
 #if defined(LUA_USE_POSIX)	/* { */
 
-#include <unistd.h>
 #define lua_stdin_is_tty()	isatty(0)
 
 #elif defined(LUA_USE_WINDOWS)	/* }{ */
 
-#include <io.h>
-#include <windows.h>
 
 #define lua_stdin_is_tty()	_isatty(_fileno(stdin))
 
@@ -414,8 +407,6 @@ static int handle_luainit (lua_State *L) {
 
 #if defined(LUA_USE_READLINE)	/* { */
 
-#include <readline/readline.h>
-#include <readline/history.h>
 #define lua_initreadline(L)	((void)L, rl_readline_name="lua")
 #define lua_readline(L,b,p)	((void)L, ((b)=readline(p)) != NULL)
 #define lua_saveline(L,line)	((void)L, add_history(line))

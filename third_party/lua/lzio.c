@@ -7,18 +7,14 @@
 #define lzio_c
 #define LUA_CORE
 
-#include "lprefix.h"
+#include "third_party/lua/llimits.h"
+#include "third_party/lua/lmem.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lstate.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lzio.h"
 
-
-#include <string.h>
-
-#include "lua.h"
-
-#include "llimits.h"
-#include "lmem.h"
-#include "lstate.h"
-#include "lzio.h"
-
+/* clang-format off */
 
 int luaZ_fill (ZIO *z) {
   size_t size;

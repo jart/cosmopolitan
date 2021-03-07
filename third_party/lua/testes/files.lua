@@ -610,7 +610,6 @@ do
   assert(os.remove(file))
 end
 
-
 io.output(file)
 assert(io.write("qualquer coisa\n"))
 assert(io.write("mais qualquer coisa"))
@@ -744,7 +743,7 @@ if not _port then
     {"exit 129", "exit", 129},
     {"kill -s HUP $$", "signal", 1},
     {"kill -s KILL $$", "signal", 9},
-    {"sh -c 'kill -s HUP $$'", "exit"},
+    {"sh -c 'kill -s HUP $$'", "signal", 1},
     {progname .. ' -e " "', "ok"},
     {progname .. ' -e "os.exit(0, true)"', "ok"},
     {progname .. ' -e "os.exit(20, true)"', "exit", 20},
@@ -854,9 +853,9 @@ if not _port then
         print("  8-byte time_t")
         checkerr("cannot be represented", os.date, "%Y", 2^60)
 
-        -- this is the maximum year
-        assert(tonumber(os.time
-          {year=(1 << 31) + 1899, month=12, day=31, hour=23, min=59, sec=59}))
+        -- -- this is the maximum year
+        -- assert(tonumber(os.time
+        --   {year=(1 << 31) + 1899, month=12, day=31, hour=23, min=59, sec=59}))
 
         -- this is too much
         checkerr("represented", os.time,

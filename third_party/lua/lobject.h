@@ -4,17 +4,13 @@
 ** See Copyright Notice in lua.h
 */
 
-
 #ifndef lobject_h
 #define lobject_h
 
+#include "third_party/lua/llimits.h"
+#include "third_party/lua/lua.h"
 
-#include <stdarg.h>
-
-
-#include "llimits.h"
-#include "lua.h"
-
+/* clang-format off */
 
 /*
 ** Extra types for collectable non-values

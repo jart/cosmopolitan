@@ -7,17 +7,13 @@
 #define ldump_c
 #define LUA_CORE
 
-#include "lprefix.h"
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lstate.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lundump.h"
 
-
-#include <stddef.h>
-
-#include "lua.h"
-
-#include "lobject.h"
-#include "lstate.h"
-#include "lundump.h"
-
+/* clang-format off */
 
 typedef struct {
   lua_State *L;

@@ -7,27 +7,22 @@
 #define lstate_c
 #define LUA_CORE
 
-#include "lprefix.h"
+#include "libc/time/time.h"
+#include "third_party/lua/lapi.h"
+#include "third_party/lua/ldebug.h"
+#include "third_party/lua/ldo.h"
+#include "third_party/lua/lfunc.h"
+#include "third_party/lua/lgc.h"
+#include "third_party/lua/llex.h"
+#include "third_party/lua/lmem.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lstate.h"
+#include "third_party/lua/lstring.h"
+#include "third_party/lua/ltable.h"
+#include "third_party/lua/ltm.h"
+#include "third_party/lua/lua.h"
 
-
-#include <stddef.h>
-#include <string.h>
-
-#include "lua.h"
-
-#include "lapi.h"
-#include "ldebug.h"
-#include "ldo.h"
-#include "lfunc.h"
-#include "lgc.h"
-#include "llex.h"
-#include "lmem.h"
-#include "lstate.h"
-#include "lstring.h"
-#include "ltable.h"
-#include "ltm.h"
-
-
+/* clang-format off */
 
 /*
 ** thread state + extra space
@@ -56,8 +51,6 @@ typedef struct LG {
 ** the seed is used to randomize string hashes.
 */
 #if !defined(luai_makeseed)
-
-#include <time.h>
 
 /*
 ** Compute an initial seed with some level of randomness.

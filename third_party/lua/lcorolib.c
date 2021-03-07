@@ -7,16 +7,12 @@
 #define lcorolib_c
 #define LUA_LIB
 
-#include "lprefix.h"
+#include "third_party/lua/lauxlib.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lualib.h"
 
-
-#include <stdlib.h>
-
-#include "lua.h"
-
-#include "lauxlib.h"
-#include "lualib.h"
-
+/* clang-format off */
 
 static lua_State *getco (lua_State *L) {
   lua_State *co = lua_tothread(L, 1);

@@ -7,18 +7,12 @@
 #define lbaselib_c
 #define LUA_LIB
 
-#include "lprefix.h"
+#include "third_party/lua/lauxlib.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lualib.h"
 
-
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "lua.h"
-
-#include "lauxlib.h"
-#include "lualib.h"
+/* clang-format off */
 
 
 static int luaB_print (lua_State *L) {

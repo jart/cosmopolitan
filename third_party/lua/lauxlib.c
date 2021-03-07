@@ -7,25 +7,13 @@
 #define lauxlib_c
 #define LUA_LIB
 
-#include "lprefix.h"
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "third_party/lua/lauxlib.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lua.h"
 
-
-#include <errno.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-
-/*
-** This file uses only the official API of Lua.
-** Any function declared here could be written as an application function.
-*/
-
-#include "lua.h"
-
-#include "lauxlib.h"
-
+/* clang-format off */
 
 #if !defined(MAX_SIZET)
 /* maximum value for size_t */
@@ -263,8 +251,6 @@ LUALIB_API int luaL_fileresult (lua_State *L, int stat, const char *fname) {
 #if !defined(l_inspectstat)	/* { */
 
 #if defined(LUA_USE_POSIX)
-
-#include <sys/wait.h>
 
 /*
 ** use appropriate macros to interpret 'pclose' return status

@@ -7,11 +7,10 @@
 #ifndef llex_h
 #define llex_h
 
-#include <limits.h>
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/lzio.h"
 
-#include "lobject.h"
-#include "lzio.h"
-
+/* clang-format off */
 
 /*
 ** Single-char tokens (terminal symbols) are represented by their own

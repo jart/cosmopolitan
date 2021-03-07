@@ -7,9 +7,10 @@
 #ifndef lgc_h
 #define lgc_h
 
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/lstate.h"
 
-#include "lobject.h"
-#include "lstate.h"
+/* clang-format off */
 
 /*
 ** Collectable objects may have one of three colors: white, which means

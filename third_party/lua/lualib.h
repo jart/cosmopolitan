@@ -4,12 +4,12 @@
 ** See Copyright Notice in lua.h
 */
 
-
 #ifndef lualib_h
 #define lualib_h
 
-#include "lua.h"
+#include "third_party/lua/lua.h"
 
+/* clang-format off */
 
 /* version suffix for environment variable names */
 #define LUA_VERSUFFIX          "_" LUA_VERSION_MAJOR "_" LUA_VERSION_MINOR

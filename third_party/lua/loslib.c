@@ -7,20 +7,20 @@
 #define loslib_c
 #define LUA_LIB
 
-#include "lprefix.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/errno.h"
+#include "libc/stdio/temp.h"
+#include "libc/sysv/consts/exit.h"
+#include "libc/time/struct/tm.h"
+#include "libc/time/time.h"
+#include "libc/unicode/locale.h"
+#include "third_party/lua/lauxlib.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lualib.h"
 
-
-#include <errno.h>
-#include <locale.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-
-#include "lua.h"
-
-#include "lauxlib.h"
-#include "lualib.h"
-
+/* clang-format off */
 
 /*
 ** {==================================================================
@@ -111,8 +111,6 @@
 #if !defined(lua_tmpnam)	/* { */
 
 #if defined(LUA_USE_POSIX)	/* { */
-
-#include <unistd.h>
 
 #define LUA_TMPNAMBUFSIZE	32
 

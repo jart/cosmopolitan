@@ -7,9 +7,10 @@
 #ifndef ltm_h
 #define ltm_h
 
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/luaconf.h"
 
-#include "lobject.h"
-
+/* clang-format off */
 
 /*
 * WARNING: if you change the order of this enumeration,

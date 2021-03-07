@@ -7,19 +7,12 @@
 #define lutf8lib_c
 #define LUA_LIB
 
-#include "lprefix.h"
+#include "third_party/lua/lauxlib.h"
+#include "third_party/lua/lprefix.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lualib.h"
 
-
-#include <assert.h>
-#include <limits.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "lua.h"
-
-#include "lauxlib.h"
-#include "lualib.h"
-
+/* clang-format off */
 
 #define MAXUNICODE	0x10FFFFu
 

@@ -7,8 +7,9 @@
 #ifndef lctype_h
 #define lctype_h
 
-#include "lua.h"
+#include "third_party/lua/lua.h"
 
+/* clang-format off */
 
 /*
 ** WARNING: the functions defined here do not necessarily correspond
@@ -31,9 +32,8 @@
 
 #if !LUA_USE_CTYPE	/* { */
 
-#include <limits.h>
 
-#include "llimits.h"
+#include "third_party/lua/llimits.h"
 
 
 #define ALPHABIT	0
@@ -83,7 +83,6 @@ LUAI_DDEC(const lu_byte luai_ctype_[UCHAR_MAX + 2];)
 ** use standard C ctypes
 */
 
-#include <ctype.h>
 
 
 #define lislalpha(c)	(isalpha(c) || (c) == '_')

@@ -4,13 +4,15 @@
 ** See Copyright Notice in lua.h
 */
 
-
 #ifndef luaconf_h
 #define luaconf_h
 
-#include <limits.h>
-#include <stddef.h>
+#define LUA_USE_POSIX
+#include "libc/fmt/fmt.h"
+#include "libc/limits.h"
+#include "third_party/gdtoa/gdtoa.h"
 
+/* clang-format off */
 
 /*
 ** ===================================================================
@@ -643,7 +645,6 @@
 
 #if !defined(LUA_USE_C89) && defined(__STDC_VERSION__) && \
     __STDC_VERSION__ >= 199901L
-#include <stdint.h>
 #if defined(INTPTR_MAX)  /* even in C99 this type is optional */
 #undef LUA_KCONTEXT
 #define LUA_KCONTEXT	intptr_t
