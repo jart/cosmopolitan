@@ -51,10 +51,10 @@ uintmax_t strtoumax(const char *s, char **endptr, int base) {
     } else {
       base = 10;
     }
-  } else if (*s == '0') {
-    ++s;
-    if (base == 2 && *s == 'b' && *s == 'B') ++s;
-    if (base == 16 && *s == 'x' && *s == 'X') ++s;
+  } else if (*p == '0') {
+    ++p;
+    if (base == 2 && (*p == 'b' || *p == 'B')) ++p;
+    if (base == 16 && (*p == 'x' || *p == 'X')) ++p;
   }
 
   for (;;) {

@@ -30,10 +30,17 @@ TEST(strtoimax, testDecimal) {
 
 TEST(strtoimax, testHex) {
   EXPECT_EQ(-255, strtoimax("-0xff", NULL, 0));
+  EXPECT_EQ(255, strtoimax("0xff", NULL, 16));
 }
 
 TEST(strtoimax, testOctal) {
   EXPECT_EQ(-123, strtoimax("-0173", NULL, 0));
+  EXPECT_EQ(123, strtoimax("0173", NULL, 8));
+}
+
+TEST(strtoimax, testBinary) {
+  EXPECT_EQ(-42, strtoimax("-0b101010", NULL, 0));
+  EXPECT_EQ(42, strtoimax("0b101010", NULL, 2));
 }
 
 TEST(strtoimax, testLimits) {
