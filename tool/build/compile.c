@@ -500,7 +500,7 @@ int main(int argc, char *argv[]) {
    * log command being run
    */
   if (!strcmp(nulltoempty(getenv("V")), "0") && !IsTerminalInarticulate()) {
-    p = xasprintf("\e[F\e[K%-15s%s\r\n", firstnonnull(action, "BUILD"),
+    p = xasprintf("\r\e[K%-15s%s\r", firstnonnull(action, "BUILD"),
                   firstnonnull(target, nulltoempty(outpath)));
     n = strlen(p);
   } else {
