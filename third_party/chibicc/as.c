@@ -782,7 +782,7 @@ static void Tokenize(struct As *a, int path) {
         a->things.p[a->things.n - 1].t = TT_FLOAT;
       } else {
         APPEND(a->ints);
-        a->ints.p[a->ints.n - 1] = strtol(p, NULL, 0);
+        a->ints.p[a->ints.n - 1] = strtoul(p, NULL, 0);
         a->things.p[a->things.n - 1].i = a->ints.n - 1;
         if (p[i] == 'f' || p[i] == 'F') {
           a->things.p[a->things.n - 1].t = TT_FORWARD;

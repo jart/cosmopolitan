@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
+#include "libc/errno.h"
 #include "libc/limits.h"
 
 /**
@@ -25,5 +26,15 @@
  * @param optional_base is recommended as 0 for flexidecimal
  */
 long strtol(const char *s, char **opt_out_end, int optional_base) {
-  return strtoimax(s, opt_out_end, optional_base);
+  intmax_t res;
+  res = strtoimax(s, opt_out_end, optional_base);
+  if (res < LONG_MIN) {
+    errno = ERANGE;
+    return LONG_MIN;
+  }
+  if (res > LONG_MAX) {
+    errno = ERANGE;
+    return LONG_MAX;
+  }
+  return res;
 }

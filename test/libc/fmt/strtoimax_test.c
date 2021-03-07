@@ -19,6 +19,7 @@
 #include "libc/bits/bits.h"
 #include "libc/fmt/conv.h"
 #include "libc/testlib/testlib.h"
+#include "libc/errno.h"
 
 TEST(strtoimax, testZero) {
   EXPECT_EQ(0, strtoimax("0", NULL, 0));
@@ -57,6 +58,17 @@ TEST(strtoimax, testTwosBane) {
             strtoimax("0x80000000000000000000000000000000", NULL, 0));
 }
 
-TEST(strtol, neghex) {
-  ASSERT_EQ(-16, strtol("0xfffffffffffffff0", NULL, 0));
+TEST(strtoul, neghex) {
+  errno = 0;
+  ASSERT_EQ(-16, (long) strtoul("0xfffffffffffffff0", NULL, 0));
+  EXPECT_EQ(0, errno);
+}
+
+TEST(strtol, testOutsideLimit) {
+  errno = 0;
+  EXPECT_EQ(0x7fffffffffffffff, strtol("0x8000000000000000", NULL, 0));
+  EXPECT_EQ(ERANGE, errno);
+  errno = 0;
+  EXPECT_EQ(0x8000000000000000, strtol("-0x8000000000000001", NULL, 0));
+  EXPECT_EQ(ERANGE, errno);
 }
