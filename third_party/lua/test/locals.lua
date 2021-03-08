@@ -1,4 +1,4 @@
--- $Id: testes/locals.lua $
+-- $Id: test/locals.lua $
 -- See Copyright Notice in file all.lua
 
 print('testing local variables and environments')

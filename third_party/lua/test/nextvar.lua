@@ -1,4 +1,4 @@
--- $Id: testes/nextvar.lua $
+-- $Id: test/nextvar.lua $
 -- See Copyright Notice in file all.lua
 
 print('testing tables, next, and for')

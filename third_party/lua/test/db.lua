@@ -1,4 +1,4 @@
--- $Id: testes/db.lua $
+-- $Id: test/db.lua $
 -- See Copyright Notice in file all.lua
 
 -- testing debug library

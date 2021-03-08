@@ -1,4 +1,4 @@
--- $Id: testes/sort.lua $
+-- $Id: test/sort.lua $
 -- See Copyright Notice in file all.lua
 
 print "testing (parts of) table library"

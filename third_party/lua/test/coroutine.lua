@@ -1,4 +1,4 @@
--- $Id: testes/coroutine.lua $
+-- $Id: test/coroutine.lua $
 -- See Copyright Notice in file all.lua
 
 print "testing coroutines"

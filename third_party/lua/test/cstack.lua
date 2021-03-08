@@ -1,4 +1,4 @@
--- $Id: testes/cstack.lua $
+-- $Id: test/cstack.lua $
 -- See Copyright Notice in file all.lua
 
 

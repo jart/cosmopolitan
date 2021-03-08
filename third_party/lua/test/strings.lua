@@ -1,4 +1,4 @@
--- $Id: testes/strings.lua $
+-- $Id: test/strings.lua $
 -- See Copyright Notice in file all.lua
 
 print('testing strings and string library')

@@ -1,4 +1,4 @@
--- $Id: testes/big.lua $
+-- $Id: test/big.lua $
 -- See Copyright Notice in file all.lua
 
 if _soft then

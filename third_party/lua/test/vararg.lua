@@ -1,4 +1,4 @@
--- $Id: testes/vararg.lua $
+-- $Id: test/vararg.lua $
 -- See Copyright Notice in file all.lua
 
 print('testing vararg')

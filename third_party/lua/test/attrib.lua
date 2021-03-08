@@ -1,4 +1,4 @@
--- $Id: testes/attrib.lua $
+-- $Id: test/attrib.lua $
 -- See Copyright Notice in file all.lua
 
 print "testing require"

@@ -1,4 +1,4 @@
--- $Id: testes/goto.lua $
+-- $Id: test/goto.lua $
 -- See Copyright Notice in file all.lua
 
 collectgarbage()

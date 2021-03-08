@@ -1,4 +1,4 @@
--- $Id: testes/verybig.lua $
+-- $Id: test/verybig.lua $
 -- See Copyright Notice in file all.lua
 
 print "testing RK"

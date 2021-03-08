@@ -1,5 +1,5 @@
 # testing special comment on first line
--- $Id: testes/main.lua $
+-- $Id: test/main.lua $
 -- See Copyright Notice in file all.lua
 
 -- most (all?) tests here assume a reasonable "Unix-like" shell

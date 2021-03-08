@@ -1,4 +1,4 @@
--- $Id: testes/closure.lua $
+-- $Id: test/closure.lua $
 -- See Copyright Notice in file all.lua
 
 print "testing closures"
