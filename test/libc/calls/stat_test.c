@@ -19,7 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/nt/files.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"

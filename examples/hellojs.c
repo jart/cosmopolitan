@@ -12,7 +12,7 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "third_party/duktape/duktape.h"
 

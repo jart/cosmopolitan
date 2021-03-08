@@ -103,7 +103,7 @@
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/rand/lcg.internal.h"
 #include "libc/rand/rand.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"

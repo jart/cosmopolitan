@@ -24,7 +24,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/dt.h"

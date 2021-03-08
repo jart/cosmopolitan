@@ -38,7 +38,7 @@
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"

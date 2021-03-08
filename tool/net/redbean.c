@@ -37,7 +37,7 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/rand/rand.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"

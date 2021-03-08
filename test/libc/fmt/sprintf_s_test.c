@@ -19,7 +19,7 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/fmt/fmt.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 

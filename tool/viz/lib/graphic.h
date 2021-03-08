@@ -2,7 +2,7 @@
 #define COSMOPOLITAN_TOOL_VIZ_LIB_GRAPHIC_H_
 #include "dsp/tty/quant.h"
 #include "libc/runtime/buffer.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

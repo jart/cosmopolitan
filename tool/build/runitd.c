@@ -31,7 +31,7 @@
 #include "libc/macros.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/paths.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"

@@ -16,7 +16,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/log/check.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/x/x.h"

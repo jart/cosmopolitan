@@ -12,7 +12,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/x/x.h"
 

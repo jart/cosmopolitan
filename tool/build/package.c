@@ -37,7 +37,7 @@
 #include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/kompressor.h"
 #include "libc/nt/enum/fileflagandattributes.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"

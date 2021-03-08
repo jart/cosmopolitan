@@ -27,7 +27,7 @@
 #include "libc/calls/ucontext.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"

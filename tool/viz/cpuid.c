@@ -23,7 +23,7 @@
 #include "libc/nexgen32e/rdtscp.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nexgen32e/x86info.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"

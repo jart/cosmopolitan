@@ -21,7 +21,7 @@
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/bsr.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"

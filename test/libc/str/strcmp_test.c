@@ -23,7 +23,7 @@
 #include "libc/nexgen32e/cachesize.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/rand/rand.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"

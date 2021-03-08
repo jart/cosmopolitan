@@ -31,7 +31,7 @@
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"

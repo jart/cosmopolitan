@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_TESTLIB_H_
 #define COSMOPOLITAN_LIBC_TESTLIB_H_
 #include "libc/bits/weaken.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/testlib/ugly.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

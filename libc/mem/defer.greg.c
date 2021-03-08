@@ -21,7 +21,7 @@
 #include "libc/calls/calls.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/gc.internal.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 
 forceinline bool PointerNotOwnedByParentStackFrame(struct StackFrame *frame,

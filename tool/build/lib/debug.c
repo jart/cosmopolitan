@@ -21,7 +21,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/elf/elf.h"
 #include "libc/log/check.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"

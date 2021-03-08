@@ -32,7 +32,7 @@
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/struct/imageauxsymbolex.internal.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/stdio.h"

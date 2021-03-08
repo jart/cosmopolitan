@@ -32,7 +32,7 @@
 #include "libc/limits.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"

@@ -27,7 +27,7 @@
 #include "libc/mem/mem.h"
 #include "libc/rand/lcg.internal.h"
 #include "libc/rand/rand.h"
-#include "libc/runtime/gc.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
