@@ -18,9 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/dce.h"
 #include "libc/sysv/consts/at.h"
-#include "libc/sysv/errfuns.h"
 
 /**
  * Changes permissions on file, e.g.:

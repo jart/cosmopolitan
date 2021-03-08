@@ -6,7 +6,6 @@ o/$(MODE)/third_party:				\
 	o/$(MODE)/third_party/chibicc		\
 	o/$(MODE)/third_party/compiler_rt	\
 	o/$(MODE)/third_party/dlmalloc		\
-	o/$(MODE)/third_party/duktape		\
 	o/$(MODE)/third_party/gdtoa		\
 	o/$(MODE)/third_party/getopt		\
 	o/$(MODE)/third_party/lua		\

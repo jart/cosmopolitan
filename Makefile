@@ -131,7 +131,6 @@ include dsp/tty/tty.mk				# ├──ONLINE RUNTIME
 include libc/dns/dns.mk				# │  You can communicate with the network
 include libc/crypto/crypto.mk			# │
 include net/http/http.mk			#─┘
-include third_party/duktape/duktape.mk
 include third_party/regex/regex.mk
 include third_party/third_party.mk
 include libc/testlib/testlib.mk

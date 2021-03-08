@@ -80,7 +80,6 @@ EXAMPLES_DEPS :=						\
 
 o/$(MODE)/examples/examples.pkg:				\
 		$(EXAMPLES_OBJS)				\
-		$(THIRD_PARTY_DUKTAPE_A).pkg			\
 		$(foreach x,$(EXAMPLES_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/examples/unbourne.o:					\
@@ -97,7 +96,6 @@ o/$(MODE)/examples/%.com.dbg:					\
 
 o/$(MODE)/examples/hellojs.com.dbg:				\
 		$(EXAMPLES_DEPS)				\
-		$(THIRD_PARTY_DUKTAPE)				\
 		o/$(MODE)/examples/hellojs.o			\
 		o/$(MODE)/examples/hello.js.zip.o		\
 		o/$(MODE)/examples/examples.pkg			\
@@ -116,7 +114,6 @@ o/$(MODE)/examples/ispell.com.dbg:				\
 
 o/$(MODE)/examples/nesemu1.com.dbg:				\
 		$(EXAMPLES_DEPS)				\
-		$(THIRD_PARTY_DUKTAPE)				\
 		o/$(MODE)/examples/nesemu1.o			\
 		o/$(MODE)/usr/share/rom/mario.nes.zip.o		\
 		o/$(MODE)/usr/share/rom/zelda.nes.zip.o		\

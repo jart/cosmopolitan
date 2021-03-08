@@ -40,7 +40,7 @@ static int vdprintf_flush(struct VdprintfState *df, int n) {
   return 0;
 }
 
-static int vdprintfputchar(int c, struct VdprintfState *df) {
+static int vdprintf_putc(int c, struct VdprintfState *df) {
   df->buf[df->n++ & (ARRAYLEN(df->buf) - 1)] = c & 0xff;
   if ((df->n & (ARRAYLEN(df->buf) - 1))) {
     return 0;
@@ -58,7 +58,7 @@ int(vdprintf)(int fd, const char *fmt, va_list va) {
   struct VdprintfState df;
   df.n = 0;
   df.fd = fd;
-  if (__fmt(vdprintfputchar, &df, fmt, va) == -1) return -1;
+  if (__fmt(vdprintf_putc, &df, fmt, va) == -1) return -1;
   if (vdprintf_flush(&df, df.n & (ARRAYLEN(df.buf) - 1)) == -1) return -1;
   return df.n;
 }
