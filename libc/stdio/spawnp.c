@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,60 +17,21 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/dce.h"
-#include "libc/macros.internal.h"
-#include "libc/nt/accounting.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/auxv.h"
-
-static uint32_t KnuthMultiplicativeHash32(const void *buf, size_t size) {
-  size_t i;
-  uint32_t h;
-  const uint32_t kPhiPrime = 0x9e3779b1;
-  const unsigned char *p = (const unsigned char *)buf;
-  for (h = i = 0; i < size; i++) h = (p[i] + h) * kPhiPrime;
-  return h;
-}
-
-static textwindows noinline uint32_t GetUserNameHash(void) {
-  char16_t buf[257];
-  uint32_t size = ARRAYLEN(buf);
-  GetUserName(&buf, &size);
-  return KnuthMultiplicativeHash32(buf, size >> 1);
-}
+#include "libc/errno.h"
+#include "libc/stdio/spawn.h"
 
 /**
- * Returns real user id of process.
+ * Spawns process the POSIX way w/ PATH search.
  *
- * This never fails. On Windows, which doesn't really have this concept,
- * we return a deterministic value that's likely to work.
- *
- * @asyncsignalsafe
- * @vforksafe
+ * @param pid is non-NULL and will be set to child pid in parent
+ * @param path of executable is PATH searched unless it contains a slash
+ * @return 0 on success or error number on failure
  */
-uint32_t getuid(void) {
-  if (!IsWindows()) {
-    return sys_getuid();
-  } else {
-    return GetUserNameHash();
-  }
-}
-
-/**
- * Returns real group id of process.
- *
- * This never fails. On Windows, which doesn't really have this concept,
- * we return a deterministic value that's likely to work.
- *
- * @asyncsignalsafe
- * @vforksafe
- */
-uint32_t getgid(void) {
-  if (!IsWindows()) {
-    return sys_getgid();
-  } else {
-    return GetUserNameHash();
-  }
+int posix_spawnp(int *pid, const char *path,
+                 const posix_spawn_file_actions_t *file_actions,
+                 const posix_spawnattr_t *attrp, char *const argv[],
+                 char *const envp[]) {
+  char pathbuf[PATH_MAX];
+  if (!(path = commandv(path, pathbuf))) return errno;
+  return posix_spawn(pid, path, file_actions, attrp, argv, envp);
 }

@@ -24,6 +24,7 @@
  *
  * @return true, false, or -1 w/ errno
  * @asyncsignalsafe
+ * @vforksafe
  */
 int sigismember(const sigset_t *set, int sig) {
   unsigned i = sig - 1;

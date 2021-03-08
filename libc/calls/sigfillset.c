@@ -24,6 +24,7 @@
  *
  * @return 0 on success, or -1 w/ errno
  * @asyncsignalsafe
+ * @vforksafe
  */
 int sigfillset(sigset_t *set) {
   memset(set->__bits, -1, sizeof(set->__bits));
