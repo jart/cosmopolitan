@@ -33,11 +33,25 @@ static textwindows int sys_unlink_nt(const char16_t *path) {
 }
 
 static textwindows int sys_rmdir_nt(const char16_t *path) {
-  if (RemoveDirectory(path)) {
-    return 0;
-  } else {
-    return __winerr();
+  int e, ms;
+  for (ms = 1;; ms *= 2) {
+    if (RemoveDirectory(path)) return 0;
+    /*
+     * Files can linger, for absolutely no reason.
+     * Possibly some Windows Defender bug on Win7.
+     * Sleep for up to one second w/ expo backoff.
+     * Alternative is use Microsoft internal APIs.
+     * Never could have imagined it'd be this bad.
+     */
+    if ((e = GetLastError()) == kNtErrorDirNotEmpty && ms <= 512) {
+      Sleep(ms);
+      continue;
+    } else {
+      break;
+    }
   }
+  errno = e;
+  return -1;
 }
 
 textwindows int sys_unlinkat_nt(int dirfd, const char *path, int flags) {

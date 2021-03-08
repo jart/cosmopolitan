@@ -14,7 +14,7 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
@@ -60,17 +60,17 @@ int main(int argc, char *argv[]) {
   urislice2cstr(port, sizeof(port), u.port, url, "80");
   path = uripath(&u);
   pathstr = path.n ? url + path.i : "/";
-  msg = gc(xstrcat("GET ", pathstr,
-                   " HTTP/1.1\r\n"
-                   "Host: ",
-                   host,
-                   "\r\n"
-                   "Connection: close\r\n"
-                   "Content-Length: 0\r\n"
-                   "Accept: text/plain; */*\r\n"
-                   "Accept-Encoding: identity\r\n"
-                   "User-Agent: github.com/jart/cosmopolitan\r\n"
-                   "\r\n"));
+  msg = _gc(xstrcat("GET ", pathstr,
+                    " HTTP/1.1\r\n"
+                    "Host: ",
+                    host,
+                    "\r\n"
+                    "Connection: close\r\n"
+                    "Content-Length: 0\r\n"
+                    "Accept: text/plain; */*\r\n"
+                    "Accept-Encoding: identity\r\n"
+                    "User-Agent: github.com/jart/cosmopolitan\r\n"
+                    "\r\n"));
   msglen = strlen(msg);
   CHECK_EQ(EAI_SUCCESS, getaddrinfo(host, port, &hints, &addrs));
   for (addr = addrs; addr; addr = addr->ai_next) {

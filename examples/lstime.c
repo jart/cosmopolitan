@@ -16,7 +16,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/log/check.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/runtime/gc.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/x/x.h"
@@ -51,7 +51,7 @@ void WalkPaths(const char *dirpath) {
     if (strcmp(e->d_name, "o") == 0) continue;
     if (strcmp(e->d_name, ".git") == 0) continue;
     if (e->d_type == DT_DIR) {
-      WalkPaths(gc(path));
+      WalkPaths(_gc(path));
     } else {
       CHECK_NE(-1, lstat(path, &st), "%s", path);
       f.mt = st.st_mtim;

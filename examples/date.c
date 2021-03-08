@@ -7,7 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/runtime/gc.internal.h"
+#include "libc/runtime/gc.h"
 #include "libc/stdio/stdio.h"
 #include "libc/x/x.h"
 
@@ -16,6 +16,6 @@
  */
 
 int main(int argc, char *argv[]) {
-  puts(gc(xiso8601ts(NULL)));
+  puts(_gc(xiso8601ts(NULL)));
   return 0;
 }

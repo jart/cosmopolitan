@@ -11,7 +11,7 @@
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/log/check.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/runtime/gc.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/dt.h"
@@ -49,7 +49,7 @@ void List(const char *path) {
   if (strcmp(path, ".") == 0) {
     vpath = "";
   } else if (!endswith(path, "/")) {
-    vpath = gc(xasprintf("%s/", path));
+    vpath = _gc(xasprintf("%s/", path));
   } else {
     vpath = path;
   }

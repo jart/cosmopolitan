@@ -12,7 +12,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -73,7 +73,7 @@ void GetOpts(int argc, char *argv[]) {
 
 int cp(const char *src, const char *dst) {
   if (endswith(dst, "/") || isdirectory(dst)) {
-    dst = gc(xasprintf("%s/%s", dst, basename));
+    dst = _gc(xasprintf("%s/%s", dst, basename));
   }
   if (!force && access(dst, W_OK) == -1 && errno != ENOENT) goto OnFail;
   if (copyfile(src, dst, flags) == -1) goto OnFail;

@@ -12,7 +12,7 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/runtime/gc.h"
 #include "libc/sysv/consts/o.h"
 #include "third_party/duktape/duktape.h"
 
@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 
   CHECK_NE(-1, (fd = open("zip:examples/hello.js", O_RDONLY)));
   CHECK_NE(-1, fstat(fd, &st));
-  CHECK_NOTNULL((code = gc(calloc(1, st.st_size + 1))));
+  CHECK_NOTNULL((code = _gc(calloc(1, st.st_size + 1))));
   CHECK_EQ(st.st_size, read(fd, code, st.st_size));
   CHECK_NE(-1, close(fd));
 

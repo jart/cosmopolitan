@@ -12,7 +12,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/runtime/gc.h"
 #include "libc/stdio/stdio.h"
 #include "libc/x/x.h"
 
@@ -44,9 +44,9 @@ void PrintFileMetadata(const char *pathname, struct stat *st) {
          "hard link count", st->st_nlink, "mode / permissions", st->st_mode,
          "owner id", st->st_uid, "group id", st->st_gid,
          "device id (if special)", st->st_rdev, "block size", st->st_blksize,
-         "access time", gc(xiso8601(&st->st_atim)), "modified time",
-         gc(xiso8601(&st->st_mtim)), "c[omplicated]time",
-         gc(xiso8601(&st->st_ctim)));
+         "access time", _gc(xiso8601(&st->st_atim)), "modified time",
+         _gc(xiso8601(&st->st_mtim)), "c[omplicated]time",
+         _gc(xiso8601(&st->st_ctim)));
 }
 
 int main(int argc, char *argv[]) {
