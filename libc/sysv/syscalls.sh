@@ -278,7 +278,7 @@ scall	ioprio_get		0xfffffffffffff0fc	globl
 scall	inotify_init		0xfffffffffffff0fd	globl # wicked
 scall	inotify_add_watch	0xfffffffffffff0fe	globl
 scall	inotify_rm_watch	0xfffffffffffff0ff	globl
-scall	sys_openat		0x1d41411f321cf101	globl hidden # Linux 2.6.16+ (c. 2007)
+scall	__sys_openat		0x1d41411f321cf101	globl hidden # Linux 2.6.16+ (c. 2007)
 scall	sys_mkdirat		0x1cd13e1f021db102	globl hidden
 scall	sys_fchownat		0x1d013b1eb21d4104	globl hidden # @asyncsignalsafe
 scall	sys_utime		0xfffffffffffff084	globl hidden

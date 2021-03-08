@@ -16,12 +16,18 @@ COSMOPOLITAN_C_START_
 typedef char *posix_spawn_file_actions_t;
 typedef struct _posix_spawnattr posix_spawnattr_t;
 
+int posix_spawn(int *, const char *, const posix_spawn_file_actions_t *,
+                const posix_spawnattr_t *, char *const[], char *const[]);
+int posix_spawnp(int *, const char *, const posix_spawn_file_actions_t *,
+                 const posix_spawnattr_t *, char *const[], char *const[]);
+
 int posix_spawn_file_actions_init(posix_spawn_file_actions_t *);
 int posix_spawn_file_actions_destroy(posix_spawn_file_actions_t *);
 int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t *, int);
 int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t *, int, int);
 int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t *, int,
                                      const char *, int, unsigned);
+
 int posix_spawnattr_init(posix_spawnattr_t *);
 int posix_spawnattr_destroy(posix_spawnattr_t *);
 int posix_spawnattr_getflags(const posix_spawnattr_t *, short *);
@@ -38,10 +44,6 @@ int posix_spawnattr_getsigmask(const posix_spawnattr_t *, sigset_t *);
 int posix_spawnattr_setsigmask(posix_spawnattr_t *, const sigset_t *);
 int posix_spawnattr_getdefault(const posix_spawnattr_t *, sigset_t *);
 int posix_spawnattr_setsigdefault(posix_spawnattr_t *, const sigset_t *);
-int posix_spawn(int *, const char *, const posix_spawn_file_actions_t *,
-                const posix_spawnattr_t *, char *const[], char *const[]);
-int posix_spawnp(int *, const char *, const posix_spawn_file_actions_t *,
-                 const posix_spawnattr_t *, char *const[], char *const[]);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

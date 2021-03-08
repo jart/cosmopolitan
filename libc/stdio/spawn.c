@@ -66,8 +66,7 @@ int posix_spawn(int *pid, const char *path,
       }
     }
     if (file_actions) {
-      p = *file_actions;
-      while (*p != '\0') {
+      for (p = *file_actions; *p; p = strchr(p, ')') + 1) {
         if (!strncmp(p, "close(", 6)) {
           if (sscanf(p + 6, "%d)", &fd) != 1) _exit(127);
           if (close(fd) == -1) _exit(127);
@@ -92,7 +91,6 @@ int posix_spawn(int *pid, const char *path,
         } else {
           _exit(127);
         }
-        p = strchr(p, ')') + 1;
       }
     }
     if (attrp) {

@@ -108,6 +108,7 @@ i32 __sys_dup3(i32, i32, i32) hidden;
 i32 __sys_execve(const char *, char *const[], char *const[]) hidden;
 i32 __sys_fstat(i32, struct stat *) hidden;
 i32 __sys_fstatat(i32, const char *, struct stat *, i32) hidden;
+i32 __sys_openat(i32, const char *, i32, u32) hidden;
 i32 __sys_pipe2(i32[hasatleast 2], u32) hidden;
 i32 __sys_utimensat(i32, const char *, const struct timespec *, i32) hidden;
 i32 getdents(i32, char *, u32, i64 *) hidden;
@@ -153,7 +154,7 @@ i32 sys_mprotect(void *, u64, i32) hidden;
 i32 sys_msync(void *, u64, i32) hidden;
 i32 sys_munmap(void *, u64) hidden;
 i32 sys_nanosleep(const struct timespec *, struct timespec *) hidden;
-i32 sys_openat(i32, const char *, i32, ...) hidden;
+i32 sys_openat(i32, const char *, i32, u32) hidden;
 i32 sys_pause(void) hidden;
 i32 sys_pipe(i32[hasatleast 2]) hidden;
 i32 sys_pipe2(i32[hasatleast 2], u32) hidden;
@@ -218,6 +219,7 @@ void __sigenter_xnu(void *, i32, i32, struct __darwin_siginfo *,
 int gethostname_linux(char *, size_t) hidden;
 int gethostname_bsd(char *, size_t) hidden;
 int gethostname_nt(char *, size_t) hidden;
+size_t __iovec_size(const struct iovec *, size_t) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » windows nt » veneers                           ─╬─│┼

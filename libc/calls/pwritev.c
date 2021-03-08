@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
@@ -24,6 +25,7 @@
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/iov.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/zipos/zipos.internal.h"
 
 #define __NR_pwritev_linux 0x0128
 
@@ -35,49 +37,77 @@
  * been committed. It can also happen if we need to polyfill this system
  * call using pwrite().
  *
- * @param count is recommended to be 16 or fewer; if it exceeds IOV_MAX
- *     then the extra buffers are simply ignored
  * @return number of bytes actually sent, or -1 w/ errno
  * @asyncsignalsafe
  * @vforksafe
  */
-ssize_t pwritev(int fd, const struct iovec *iovec, int count, int64_t off) {
+ssize_t pwritev(int fd, const struct iovec *iov, int iovlen, int64_t off) {
   static bool once, demodernize;
-  int olderr;
+  int i, err;
   ssize_t rc;
-  if (!count) return 0;
-  if ((count = MIN(count, IOV_MAX)) < 0) return einval();
+  size_t sent, toto;
+
+  if (fd < 0) return einval();
+  if (iovlen < 0) return einval();
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    return weaken(__zipos_write)(
+        (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, iov, iovlen, off);
+  } else if (IsWindows()) {
+    if (fd < g_fds.n) {
+      return sys_write_nt(g_fds.p + fd, iov, iovlen, off);
+    } else {
+      return ebadf();
+    }
+  } else if (IsMetal()) {
+    return enosys();
+  }
 
   /*
    * NT, XNU, and 2007-era Linux don't support this system call.
    */
   if (!once) {
-    once = true;
-    if (IsModeDbg() || (IsLinux() && iovec->iov_len >= __NR_pwritev_linux)) {
-      /*
-       * Write size is too large to detect older kernels safely without
-       * introducing nontrivial mechanics. We'll try again later.
-       */
-      once = false;
+    err = errno;
+    rc = sys_pwritev(fd, iov, iovlen, off, off);
+    if (rc == -1 && errno == ENOSYS) {
+      errno = err;
+      once = true;
       demodernize = true;
-    } else {
-      olderr = errno;
-      rc = sys_pwritev(fd, iovec, count, off, off);
-      if (rc == -1 && errno == ENOSYS) {
-        errno = olderr;
-        demodernize = true;
-      } else if (IsLinux() &&
-                 rc == __NR_pwritev_linux /*RHEL5:CVE-2010-3301*/) {
-        demodernize = true;
+    } else if (IsLinux() && rc == __NR_pwritev_linux) {
+      if (__iovec_size(iov, iovlen) < __NR_pwritev_linux) {
+        demodernize = true; /*RHEL5:CVE-2010-3301*/
+        once = true;
       } else {
         return rc;
       }
+    } else {
+      once = true;
+      return rc;
     }
   }
 
   if (!demodernize) {
-    return sys_pwritev(fd, iovec, count, off, off);
-  } else {
-    return pwrite(fd, iovec[0].iov_base, iovec[0].iov_len, off);
+    return sys_pwritev(fd, iov, iovlen, off, off);
   }
+
+  if (!iovlen) {
+    return sys_pwrite(fd, NULL, 0, off, off);
+  }
+
+  for (toto = i = 0; i < iovlen; ++i) {
+    rc = sys_pwrite(fd, iov[i].iov_base, iov[i].iov_len, off, off);
+    if (rc == -1) {
+      if (toto && (errno == EINTR || errno == EAGAIN)) {
+        return toto;
+      } else {
+        return -1;
+      }
+    }
+    sent = rc;
+    toto += sent;
+    if (sent != iov[i].iov_len) {
+      break;
+    }
+  }
+
+  return toto;
 }

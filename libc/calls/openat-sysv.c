@@ -16,25 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/errno.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
-#include "libc/stdio/temp.h"
-#include "libc/testlib/testlib.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/o.h"
 
-char testlib_enable_tmp_setup_teardown;
+int sys_openat(int dirfd, const char *file, int flags, unsigned mode) {
+  int fd, err;
+  err = errno;
+  fd = __sys_openat(dirfd, file, flags, mode);
 
-TEST(tmpfile, test) {
-  FILE *f;
-  mkdir("doge", 0755);
-  setenv("TMPDIR", "doge", true);
-  f = tmpfile();
-  EXPECT_NE(-1, fputc('t', f));
-  EXPECT_NE(-1, fflush(f));
-  rewind(f);
-  EXPECT_EQ('t', fgetc(f));
-  EXPECT_NE(-1, fclose(f));
-  EXPECT_EQ(-1, rmdir("doge"));
-  EXPECT_EQ(ENOTEMPTY, errno);
+  /*
+   * RHEL5 doesn't support O_CLOEXEC
+   * What on earth is it doing here?
+   * It returns -530!
+   */
+  if (IsLinux() && fd == -1 && errno > 255) {
+    errno = err;
+    fd = __sys_openat(dirfd, file, flags & ~O_CLOEXEC, mode);
+    if (fd != -1 && (flags & O_CLOEXEC)) {
+      sys_fcntl(fd, F_SETFD, FD_CLOEXEC);
+    }
+  }
+
+  return fd;
 }

@@ -31,7 +31,7 @@ char *sys_getcwd_xnu(char *res, size_t size) {
   int fd;
   struct stat st[2];
   char buf[XNU_MAXPATHLEN], *ret = NULL;
-  if ((fd = sys_openat(AT_FDCWD, ".", O_RDONLY | O_DIRECTORY)) != -1) {
+  if ((fd = sys_openat(AT_FDCWD, ".", O_RDONLY | O_DIRECTORY, 0)) != -1) {
     if (sys_fstat(fd, &st[0]) != -1) {
       if (st[0].st_dev && st[0].st_ino) {
         if (sys_fcntl(fd, XNU_F_GETPATH, buf) != -1) {

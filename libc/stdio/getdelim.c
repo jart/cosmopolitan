@@ -37,7 +37,6 @@
  * @see getline(), gettok_r()
  */
 ssize_t getdelim(char **line, size_t *n, int delim, FILE *f) {
-  STATIC_YOINK("realloc");
   assert((*line && *n) || (!*line && !*n));
   ssize_t rc = -1;
   size_t i = 0;

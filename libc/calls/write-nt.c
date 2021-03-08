@@ -25,14 +25,6 @@
 #include "libc/nt/struct/overlapped.h"
 #include "libc/sysv/errfuns.h"
 
-static textwindows size_t SumIovecLen(const struct iovec *v, size_t n) {
-  size_t i, sum;
-  for (sum = i = 0; i < n; ++i) {
-    sum += v[i].iov_len;
-  }
-  return sum;
-}
-
 textwindows ssize_t sys_write_nt(struct Fd *fd, const struct iovec *iov,
                                  size_t iovlen, ssize_t opt_offset) {
   size_t i, total;
@@ -52,7 +44,7 @@ textwindows ssize_t sys_write_nt(struct Fd *fd, const struct iovec *iov,
         return __winerr();
       }
     }
-    if (!total) assert(!SumIovecLen(iov, iovlen));
+    if (!total) assert(!__iovec_size(iov, iovlen));
     return total;
   } else {
     if (WriteFile(fd->handle, NULL, 0, &wrote,

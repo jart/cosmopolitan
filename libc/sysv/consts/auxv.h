@@ -13,7 +13,10 @@ extern const long AT_ENTRY;
 extern const long AT_EUID;
 extern const long AT_EXECFD;
 extern const long AT_EXECFN;
+extern const long AT_FLAGS;
 extern const long AT_GID;
+extern const long AT_HWCAP2;
+extern const long AT_HWCAP;
 extern const long AT_ICACHEBSIZE;
 extern const long AT_NOTELF;
 extern const long AT_NO_AUTOMOUNT;
@@ -41,7 +44,10 @@ COSMOPOLITAN_C_END_
 #define AT_EUID          SYMBOLIC(AT_EUID)
 #define AT_EXECFD        SYMBOLIC(AT_EXECFD)
 #define AT_EXECFN        SYMBOLIC(AT_EXECFN)
+#define AT_FLAGS         SYMBOLIC(AT_FLAGS)
 #define AT_GID           SYMBOLIC(AT_GID)
+#define AT_HWCAP         SYMBOLIC(AT_HWCAP)
+#define AT_HWCAP2        SYMBOLIC(AT_HWCAP2)
 #define AT_ICACHEBSIZE   SYMBOLIC(AT_ICACHEBSIZE)
 #define AT_NOTELF        SYMBOLIC(AT_NOTELF)
 #define AT_NO_AUTOMOUNT  SYMBOLIC(AT_NO_AUTOMOUNT)
