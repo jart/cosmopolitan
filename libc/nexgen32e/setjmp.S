@@ -25,7 +25,7 @@
 //	@returnstwice
 //	@assume	system five nexgen32e abi conformant
 //	@note	code built w/ microsoft abi compiler can't call this
-//	@see	longjmp(), gclongjmp()
+//	@see	longjmp(), _gclongjmp()
 setjmp:	lea	8(%rsp),%rax
 	mov	%rax,(%rdi)
 	mov	%rbx,8(%rdi)

@@ -40,14 +40,14 @@ __nt2sysv:
 	pushf
 	ezlea	_base,bx
 	lea	-0x80(%rbp),%rdi
-	call	savexmm
+	call	_savexmm
 	mov	%rcx,%rdi
 	mov	%rdx,%rsi
 	mov	%r8,%rdx
 	mov	%r9,%rcx
 	call	*%rax
 	lea	-0x80(%rbp),%rdi
-	call	loadxmm
+	call	_loadxmm
 	popf
 	pop	%rsi
 	pop	%rdi

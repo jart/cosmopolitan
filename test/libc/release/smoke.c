@@ -6,7 +6,7 @@ int main(int argc, char *argv[]) {
   s = strdup(argv[0]);
   s[0] = 'Z';
   f = fopen("/dev/null", "w");
-  fprintf(f, "hello world %d %s\n", argc, s);
+  fputs(_gc(xasprintf("hello world %d %s\n", argc, s)), f);
   fclose(f);
   rc = system("exit 42");
   CHECK_NE(-1, rc);

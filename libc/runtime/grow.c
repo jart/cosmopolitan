@@ -43,8 +43,8 @@ bool __grow(void *pp, size_t *capacity, size_t itemsize, size_t extra) {
   p = (void **)pp;
   assert(itemsize);
   assert((*p && *capacity) || (!*p && !*capacity));
-  assert(!isheap(*p) || ((intptr_t)*p & 15) == 0);
-  p1 = isheap(*p) ? *p : NULL;
+  assert(!_isheap(*p) || ((intptr_t)*p & 15) == 0);
+  p1 = _isheap(*p) ? *p : NULL;
   p2 = NULL;
   n1 = *capacity;
   n2 = (*p ? n1 + (n1 >> 1) : MAX(4, INITIAL_CAPACITY / itemsize)) + extra;

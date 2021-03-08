@@ -137,18 +137,18 @@ TEST(mmap, mapPrivate_writesDontChangeFile) {
 }
 
 TEST(isheap, nullPtr) {
-  ASSERT_FALSE(isheap(NULL));
+  ASSERT_FALSE(_isheap(NULL));
 }
 
 TEST(isheap, malloc) {
-  ASSERT_TRUE(isheap(gc(malloc(1))));
+  ASSERT_TRUE(_isheap(gc(malloc(1))));
 }
 
 TEST(isheap, emptyMalloc) {
-  ASSERT_TRUE(isheap(gc(malloc(0))));
+  ASSERT_TRUE(_isheap(gc(malloc(0))));
 }
 
 TEST(isheap, mallocOffset) {
   char *p = gc(malloc(131072));
-  ASSERT_TRUE(isheap(p + 100000));
+  ASSERT_TRUE(_isheap(p + 100000));
 }

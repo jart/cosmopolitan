@@ -51,7 +51,7 @@ void testlib_benchwarmup(void) {
  * @see BENCH()
  */
 void testlib_runallbenchmarks(void) {
-  peekall();
+  _peekall();
   mlockall(MCL_CURRENT);
   nice(-1);
   __log_level = kLogWarn;

@@ -31,23 +31,9 @@ forceinline bool PointerNotOwnedByParentStackFrame(struct StackFrame *frame,
            ((intptr_t)ptr < (intptr_t)parent));
 }
 
-/**
- * Adds destructor to garbage shadow stack.
- *
- * @param frame is passed automatically by wrapper macro
- * @param fn takes one argument
- * @param arg is passed to fn(arg)
- * @return arg
- */
-void __defer(struct StackFrame *frame, void *fn, void *arg) {
+void __deferer(struct StackFrame *frame, void *fn, void *arg) {
   size_t n2;
   struct Garbage *p2;
-  struct StackFrame *f2;
-  if (!arg) return;
-  f2 = __builtin_frame_address(0);
-  assert(__garbage.n);
-  assert(f2->next == frame);
-  assert(PointerNotOwnedByParentStackFrame(f2, frame, arg));
   if (UNLIKELY(__garbage.i == __garbage.n)) {
     n2 = __garbage.n + (__garbage.n >> 1);
     p2 = malloc(n2 * sizeof(*__garbage.p));
@@ -62,4 +48,22 @@ void __defer(struct StackFrame *frame, void *fn, void *arg) {
   __garbage.p[__garbage.i].ret = frame->addr;
   __garbage.i++;
   frame->addr = (intptr_t)__gc;
+}
+
+/**
+ * Adds destructor to garbage shadow stack.
+ *
+ * @param frame is passed automatically by wrapper macro
+ * @param fn takes one argument
+ * @param arg is passed to fn(arg)
+ * @return arg
+ */
+void __defer(struct StackFrame *frame, void *fn, void *arg) {
+  struct StackFrame *f2;
+  if (!arg) return;
+  f2 = __builtin_frame_address(0);
+  assert(__garbage.n);
+  assert(f2->next == frame);
+  assert(PointerNotOwnedByParentStackFrame(f2, frame, arg));
+  __deferer(frame, fn, arg);
 }

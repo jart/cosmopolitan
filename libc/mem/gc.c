@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,26 +16,51 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-#include "libc/runtime/memtrack.h"
+#include "libc/nexgen32e/stackframe.h"
+#include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
 
 /**
- * Returns true if address isn't stack and was malloc'd or mmap'd.
+ * Frees memory when function returns.
  *
- * @assume stack addresses are always greater than heap addresses
- * @assume stack memory isn't stored beneath %rsp (-mno-red-zone)
+ * This garbage collector overwrites the return address on the stack so
+ * that the RET instruction calls a trampoline which calls free(). It's
+ * loosely analogous to Go's defer keyword rather than a true cycle gc.
+ *
+ *     const char *s = _gc(strdup("hello"));
+ *     puts(s);
+ *
+ * This macro is equivalent to:
+ *
+ *      _defer(free, ptr)
+ *
+ * @warning do not return a gc()'d pointer
+ * @warning do not realloc() with gc()'d pointer
+ * @warning be careful about static keyword due to impact of inlining
+ * @note you should use -fno-omit-frame-pointer
  */
-bool _isheap(void *p) {
-  int x, i;
-  uintptr_t rsp;
-  asm("mov\t%%rsp,%0" : "=r"(rsp));
-  if (ROUNDDOWN(rsp, STACKSIZE) == ROUNDDOWN((intptr_t)p, STACKSIZE)) {
-    return false;
-  } else {
-    if ((intptr_t)p <= (intptr_t)_end) return false;
-    x = (intptr_t)p >> 16;
-    i = FindMemoryInterval(&_mmi, x);
-    return i < _mmi.i && x >= _mmi.p[i].x && x <= _mmi.p[i].y;
-  }
+void *(_gc)(void *thing) {
+  struct StackFrame *frame;
+  frame = __builtin_frame_address(0);
+  __deferer(frame->next, _weakfree, thing);
+  return thing;
+}
+
+/**
+ * Calls fn(arg) when function returns.
+ *
+ * This garbage collector overwrites the return address on the stack so
+ * that the RET instruction calls a trampoline which calls free(). It's
+ * loosely analogous to Go's defer keyword rather than a true cycle gc.
+ *
+ * @warning do not return a gc()'d pointer
+ * @warning do not realloc() with gc()'d pointer
+ * @warning be careful about static keyword due to impact of inlining
+ * @note you should use -fno-omit-frame-pointer
+ */
+void *(_defer)(void *fn, void *arg) {
+  struct StackFrame *frame;
+  frame = __builtin_frame_address(0);
+  __deferer(frame->next, fn, arg);
+  return arg;
 }

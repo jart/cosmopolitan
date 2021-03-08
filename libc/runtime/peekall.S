@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/relocations.h"
 #include "libc/macros.internal.h"
-.source	__FILE__
 
 //	Loads all pages from program image into memory.
-peekall:.leafprologue
+_peekall:
+	.leafprologue
 	ezlea	_base,si
 	ezlea	_end,cx
 0:	mov	(%rsi),%eax
@@ -29,4 +29,4 @@ peekall:.leafprologue
 	cmp	%rcx,%rsi
 	jb	0b
 	.leafepilogue
-	.endfn	peekall,globl
+	.endfn	_peekall,globl

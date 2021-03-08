@@ -26,5 +26,7 @@ void free_s(void *v) {
   void **pp = (void **)v;
   void *p = NULL;
   lockxchg(pp, &p);
-  if (isheap(p)) weakfree(p);
+  if (_isheap(p)) {
+    _weakfree(p);
+  }
 }

@@ -34,10 +34,10 @@ static void __sys_print_nt(const void *data, size_t len) {
   int64_t hand;
   char xmm[256];
   uint32_t wrote;
-  savexmm(xmm + 128);
+  _savexmm(xmm + 128);
   hand = __imp_GetStdHandle(kNtStdErrorHandle);
   __imp_WriteFile(hand, data, len, &wrote, NULL);
-  loadxmm(xmm + 128);
+  _loadxmm(xmm + 128);
 }
 
 /**

@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,26 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/macros.internal.h"
-.real
-.source	__FILE__
-.code16 # ∩ .code32 ∩ .code64
+#include "libc/bits/weaken.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
 
-//	Hoses interrupt descriptor table and triple-faults the system.
-//
-//	@see	youtu.be/GIKfEAF2Yhw?t=67
-//	@mode	long,legacy,real
-triplf:	ud2
-	push	%bp
-	mov	%sp,%bp
-	sub	$8,%sp
-	movpp	%bp,%si
-	lea	-8(%bp),%di
-	pushpop	8,%cx
-	xor	%ax,%ax
-	rep stosb
-0:	cli
-	lidt	-8(%bp)
-	ud2
-	jmp	0b
-	.endfn	triplf,globl,protected
+/**
+ * Thunks free() if it's linked, otherwise do nothing.
+ */
+void _weakfree(void *p) {
+  if (weaken(free)) {
+    weaken(free)(p);
+  }
+}

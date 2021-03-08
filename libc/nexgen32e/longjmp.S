@@ -26,7 +26,7 @@
 //	@noreturn
 //	@assume	system five nexgen32e abi conformant
 //	@note	code built w/ microsoft abi compiler can't call this
-//	@see	gclongjmp() unwinds gc() destructors
+//	@see	_gclongjmp() unwinds _gc() destructors
 longjmp:mov	%esi,%eax
 	test	%eax,%eax
 	jnz	1f

@@ -282,11 +282,6 @@ endif
 # such as MSVC or XCode. You can run your binary objects through a tool
 # like objconv to convert them to COFF or MachO. Then use ANSI mode to
 # rollup one header file that'll enable linkage with minimal issues.
-#
-# Lastly note that in some cases, such as gc(), there simply isn't any
-# ANSI workaround available. It's only in cases like that when we'll use
-# the __asm__() header workaround, rather than simply removing it. We do
-# however try to do that much less often than mainstream C libraries.
 
 ifeq ($(MODE), ansi)
 

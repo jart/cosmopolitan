@@ -23,7 +23,7 @@
 //
 //	@param	%rdi points to &(forcealign(16) uint8_t[256])[128]
 //	@note	modern cpus have out-of-order execution engines
-loadxmm:
+_loadxmm:
 	.leafprologue
 	movaps	-0x80(%rdi),%xmm0
 	movaps	-0x70(%rdi),%xmm1
@@ -42,5 +42,4 @@ loadxmm:
 	movaps	0x60(%rdi),%xmm14
 	movaps	0x70(%rdi),%xmm15
 	.leafepilogue
-	.endfn	loadxmm,globl,hidden
-	.source	__FILE__
+	.endfn	_loadxmm,globl,hidden

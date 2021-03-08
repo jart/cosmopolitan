@@ -46,9 +46,9 @@ TEST(grow, testStackMemory_convertsToDynamic) {
   int A[] = {1, 2, 3};
   int *p = A;
   size_t capacity = ARRAYLEN(A);
-  if (!isheap(p)) {
+  if (!_isheap(p)) {
     EXPECT_TRUE(__grow(&p, &capacity, sizeof(int), 0));
-    EXPECT_TRUE(isheap(p));
+    EXPECT_TRUE(_isheap(p));
     EXPECT_GT(capacity, ARRAYLEN(A));
     EXPECT_EQ(1, p[0]);
     EXPECT_EQ(2, p[1]);
@@ -86,9 +86,9 @@ TEST(grow, testOverflow_returnsFalseAndDoesNotFree) {
   int A[] = {1, 2, 3};
   int *p = A;
   size_t capacity = ARRAYLEN(A);
-  if (!isheap(p)) {
+  if (!_isheap(p)) {
     EXPECT_FALSE(__grow(&p, &capacity, pushpop(SIZE_MAX), 0));
-    EXPECT_FALSE(isheap(p));
+    EXPECT_FALSE(_isheap(p));
     EXPECT_EQ(capacity, ARRAYLEN(A));
     EXPECT_EQ(1, p[0]);
     EXPECT_EQ(2, p[1]);

@@ -34,7 +34,7 @@ static bool IsHaltingInitialized(struct Machine *m) {
 
 void HaltMachine(struct Machine *m, int code) {
   CHECK(IsHaltingInitialized(m));
-  gclongjmp(m->onhalt, code);
+  _gclongjmp(m->onhalt, code);
 }
 
 void ThrowDivideError(struct Machine *m) {

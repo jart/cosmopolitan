@@ -29,7 +29,7 @@
 //	@assume	system five nexgen32e abi conformant
 //	@see	examples/ctrlc.c
 //	@noreturn
-gclongjmp:
+_gclongjmp:
 	.leafprologue
 	.profilable
 	.weak	__garbage
@@ -57,5 +57,4 @@ gclongjmp:
 2:	pop	%rsi
 	pop	%rdi
 	jmp	0b
-	.endfn	gclongjmp,globl
-	.source	__FILE__
+	.endfn	_gclongjmp,globl

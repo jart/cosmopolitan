@@ -1351,7 +1351,7 @@ static void OnExit(void) {
 }
 
 static void MakeLatencyLittleLessBad(void) {
-  peekall();
+  _peekall();
   LOGIFNEG1(mlockall(MCL_CURRENT));
   LOGIFNEG1(nice(-5));
 }

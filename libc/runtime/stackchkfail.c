@@ -50,21 +50,22 @@ privileged noasan void __stack_chk_fail(void) {
                  : "=S"(si), "=c"(cx)
                  : "0"(msg), "1"(len), "d"(0x3F8 /* COM1 */)
                  : "memory");
-    triplf();
+    asm("push\t$0\n\t"
+        "push\t$0\n\t"
+        "cli\n\t"
+        "lidt\t(%rsp)");
+    for (;;) asm("ud2");
   }
   if (NtGetVersion() < kNtVersionFuture) {
     do {
-      asm volatile(
-          "syscall"
-          : "=a"(ax), "=c"(cx)
-          : "0"(NtGetVersion() < kNtVersionWindows8
-                    ? 0x0029
-                    : NtGetVersion() < kNtVersionWindows81
-                          ? 0x002a
-                          : NtGetVersion() < kNtVersionWindows10 ? 0x002b
-                                                                 : 0x002c),
-            "1"(pushpop(-1L)), "d"(42)
-          : "r11", "cc", "memory");
+      asm volatile("syscall"
+                   : "=a"(ax), "=c"(cx)
+                   : "0"(NtGetVersion() < kNtVersionWindows8    ? 0x0029
+                         : NtGetVersion() < kNtVersionWindows81 ? 0x002a
+                         : NtGetVersion() < kNtVersionWindows10 ? 0x002b
+                                                                : 0x002c),
+                     "1"(pushpop(-1L)), "d"(42)
+                   : "r11", "cc", "memory");
     } while (!ax);
   }
   for (;;) {
