@@ -7,6 +7,8 @@ THIRD_PARTY_LUA_FILES := $(wildcard third_party/lua/*)
 THIRD_PARTY_LUA_SRCS = $(filter %.c,$(THIRD_PARTY_LUA_FILES))
 THIRD_PARTY_LUA_HDRS = $(filter %.h,$(THIRD_PARTY_LUA_FILES))
 THIRD_PARTY_LUA_BINS = $(THIRD_PARTY_LUA_COMS) $(THIRD_PARTY_LUA_COMS:%=%.dbg)
+THIRD_PARTY_LUA = $(THIRD_PARTY_LUA_DEPS) $(THIRD_PARTY_LUA_A)
+THIRD_PARTY_LUA_A = o/$(MODE)/third_party/lua/lua.a
 
 THIRD_PARTY_LUA_OBJS =					\
 	$(THIRD_PARTY_LUA_SRCS:%.c=o/$(MODE)/%.o)
@@ -36,14 +38,20 @@ THIRD_PARTY_LUA_DIRECTDEPS =				\
 THIRD_PARTY_LUA_DEPS :=					\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_LUA_DIRECTDEPS),$($(x))))
 
-o/$(MODE)/third_party/lua/lua.pkg:			\
+$(THIRD_PARTY_LUA_A):					\
+		third_party/lua/			\
+		$(THIRD_PARTY_LUA_A).pkg		\
+		$(filter-out %/lua.c,$(THIRD_PARTY_LUA_OBJS))
+
+$(THIRD_PARTY_LUA_A).pkg:				\
 		$(THIRD_PARTY_LUA_OBJS)			\
 		$(foreach x,$(THIRD_PARTY_LUA_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/third_party/lua/%.com.dbg:			\
+o/$(MODE)/third_party/lua/lua.com.dbg:			\
 		$(THIRD_PARTY_LUA_DEPS)			\
-		$(THIRD_PARTY_LUA_OBJS)			\
-		o/$(MODE)/third_party/lua/lua.pkg	\
+		$(THIRD_PARTY_LUA_A)			\
+		$(THIRD_PARTY_LUA_A).pkg		\
+		o/$(MODE)/third_party/lua/lua.o		\
 		$(CRT)					\
 		$(APE)
 	-@$(APELINK)

@@ -69,6 +69,7 @@ EXAMPLES_DIRECTDEPS =						\
 	THIRD_PARTY_DLMALLOC					\
 	THIRD_PARTY_GDTOA					\
 	THIRD_PARTY_GETOPT					\
+	THIRD_PARTY_LUA						\
 	THIRD_PARTY_MUSL					\
 	THIRD_PARTY_STB						\
 	THIRD_PARTY_XED						\
@@ -94,10 +95,10 @@ o/$(MODE)/examples/%.com.dbg:					\
 		$(APE)
 	@$(APELINK)
 
-o/$(MODE)/examples/hellojs.com.dbg:				\
+o/$(MODE)/examples/hellolua.com.dbg:				\
 		$(EXAMPLES_DEPS)				\
-		o/$(MODE)/examples/hellojs.o			\
-		o/$(MODE)/examples/hello.js.zip.o		\
+		o/$(MODE)/examples/hellolua.o			\
+		o/$(MODE)/examples/hellolua.lua.zip.o		\
 		o/$(MODE)/examples/examples.pkg			\
 		$(CRT)						\
 		$(APE)

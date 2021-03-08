@@ -664,6 +664,7 @@ typedef uint64_t uintmax_t;
 #pragma GCC diagnostic ignored "-Wparentheses" /* annoying tidy */
 #pragma GCC diagnostic ignored "-Wdangling-else" /* come on tidy */
 #pragma GCC diagnostic ignored "-Wformat-security" /* come on tidy */
+#pragma GCC diagnostic ignored "-Wunused-value" /* breaks macros */
 #ifndef __cplusplus
 #pragma GCC diagnostic ignored "-Wimplicit-int"
 #endif /* C++ */
