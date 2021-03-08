@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
 #include "libc/math.h"
 
 /**
@@ -27,23 +28,34 @@ long double powl(long double x, long double y) {
     if (!isinf(y)) {
       if (!isinf(x)) {
         if (x) {
-          asm("fyl2x" : "=t"(u) : "0"(fabsl(x)), "u"(y) : "st(1)");
-          asm("fprem" : "=t"(t) : "0"(u), "u"(1.L));
-          asm("f2xm1" : "=t"(t) : "0"(t));
-          asm("fscale" : "=t"(t) : "0"(t + 1), "u"(u));
-          if (signbit(x)) {
-            if (y != truncl(y)) return -NAN;
-            if (!signbit(y) || ((int64_t)y & 1)) t = -t;
+          if (y) {
+            if (x < 0 && y != truncl(y)) {
+              errno = EDOM;
+              return NAN;
+            }
+            asm("fyl2x" : "=t"(u) : "0"(fabsl(x)), "u"(y) : "st(1)");
+            asm("fprem" : "=t"(t) : "0"(u), "u"(1.L));
+            asm("f2xm1" : "=t"(t) : "0"(t));
+            asm("fscale" : "=t"(t) : "0"(t + 1), "u"(u));
+            if (signbit(x)) {
+              if (y != truncl(y)) return -NAN;
+              if ((int64_t)y & 1) t = -t;
+            }
+            return t;
+          } else {
+            return 1;
           }
-          return t;
         } else if (y > 0) {
-          return 0;
+          return y == 1 ? x : 0;
         } else if (!y) {
           return 1;
-        } else if (y == truncl(y) && ((int64_t)y & 1)) {
-          return copysignl(INFINITY, x);
         } else {
-          return INFINITY;
+          errno = ERANGE;
+          if (y == truncl(y) && ((int64_t)y & 1)) {
+            return copysignl(INFINITY, x);
+          } else {
+            return INFINITY;
+          }
         }
       } else if (signbit(x)) {
         if (!y) return 1;

@@ -58,8 +58,8 @@ syscon	errno	ESPIPE					29			29			29			29			29			25			# unix consensus & kNtErro
 syscon	errno	EROFS					30			30			30			30			30			6009			# unix consensus & kNtErrorFileReadOnly
 syscon	errno	EMLINK					31			31			31			31			31			4			# unix consensus & kNtErrorTooManyLinks
 syscon	errno	EPIPE					32			32			32			32			32			109			# unix consensus & kNtErrorBrokenPipe
-syscon	errno	EDOM					33			33			33			33			33			0			# bsd consensus
-syscon	errno	ERANGE					34			34			34			34			34			0			# bsd consensus
+syscon	errno	EDOM					33			33			33			33			33			33			# bsd consensus & fudged on NT
+syscon	errno	ERANGE					34			34			34			34			34			34			# bsd consensus & fudged on NT
 syscon	errno	EDEADLK					35			11			11			11			11			1131			# bsd consensus & kNtErrorPossibleDeadlock
 syscon	errno	ENAMETOOLONG				36			63			63			63			63			0x274f			# bsd consensus & WSAENAMETOOLONG
 syscon	errno	ENOLCK					37			77			77			77			77			0			# bsd consensus

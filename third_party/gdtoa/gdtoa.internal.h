@@ -16,14 +16,6 @@ asm(".include \"libc/disclaimer.inc\"");
 #define d_QNAN0    0x7ff80000
 #define d_QNAN1    0x0
 
-#if __NO_MATH_ERRNO__ + 0
-#define NO_ERRNO 1
-#endif
-
-#if __FINITE_MATH_ONLY__ + 0
-#define NO_INFNAN_CHECK 1
-#endif
-
 /****************************************************************
 
 The author of this software is David M. Gay.

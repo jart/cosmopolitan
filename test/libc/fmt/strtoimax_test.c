@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/testlib/testlib.h"
-#include "libc/errno.h"
 
 TEST(strtoimax, testZero) {
   EXPECT_EQ(0, strtoimax("0", NULL, 0));
@@ -60,15 +60,14 @@ TEST(strtoimax, testOutsideLimit) {
       strtoimax("0x80000000000000000000000000000000", NULL, 0));
   EXPECT_EQ(ERANGE, errno);
   errno = 0;
-  EXPECT_EQ(
-      ((uintmax_t)0x8000000000000000) << 64 | 0x0000000000000000,
-      strtoimax("-0x80000000000000000000000000000001", NULL, 0));
+  EXPECT_EQ(((uintmax_t)0x8000000000000000) << 64 | 0x0000000000000000,
+            strtoimax("-0x80000000000000000000000000000001", NULL, 0));
   EXPECT_EQ(ERANGE, errno);
 }
 
 TEST(strtoul, neghex) {
   errno = 0;
-  ASSERT_EQ(-16, (long) strtoul("0xfffffffffffffff0", NULL, 0));
+  ASSERT_EQ(-16, (long)strtoul("0xfffffffffffffff0", NULL, 0));
   EXPECT_EQ(0, errno);
 }
 
@@ -79,4 +78,10 @@ TEST(strtol, testOutsideLimit) {
   errno = 0;
   EXPECT_EQ(0x8000000000000000, strtol("-0x8000000000000001", NULL, 0));
   EXPECT_EQ(ERANGE, errno);
+  errno = 0;
+  EXPECT_EQ(0x8000000000000001, strtol("-9223372036854775807", NULL, 0));
+  EXPECT_EQ(0, errno);
+  errno = 0;
+  EXPECT_EQ(0x8000000000000000, strtol("-9223372036854775808", NULL, 0));
+  EXPECT_EQ(0, errno);
 }
