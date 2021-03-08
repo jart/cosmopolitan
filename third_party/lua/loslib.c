@@ -10,6 +10,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/temp.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/time/struct/tm.h"
@@ -114,12 +115,9 @@
 
 #define LUA_TMPNAMBUFSIZE	32
 
-#if !defined(LUA_TMPNAMTEMPLATE)
-#define LUA_TMPNAMTEMPLATE	"/tmp/lua_XXXXXX"
-#endif
-
 #define lua_tmpnam(b,e) { \
-        strcpy(b, LUA_TMPNAMTEMPLATE); \
+        strcpy(b, kTmpPath); \
+        strcat(b, "lua_XXXXXX"); \
         e = mkstemp(b); \
         if (e != -1) close(e); \
         e = (e == -1); }
