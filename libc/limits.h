@@ -12,22 +12,6 @@
 #define CHAR_MAX '\377'
 #endif
 
-#define SIZEOF_SHORT       __SIZEOF_SHORT__
-#define SIZEOF_INT         __SIZEOF_INT__
-#define SIZEOF_LONG        __SIZEOF_LONG__
-#define SIZEOF_LONG_LONG   __SIZEOF_LONG_LONG__
-#define SIZEOF_POINTER     __SIZEOF_POINTER__
-#define SIZEOF_PTRDIFF_T   __SIZEOF_PTRDIFF_T__
-#define SIZEOF_SIZE_T      __SIZEOF_SIZE_T__
-#define SIZEOF_WCHAR_T     __SIZEOF_WCHAR_T__
-#define SIZEOF_WINT_T      __SIZEOF_WINT_T__
-#define SIZEOF_FLOAT       __SIZEOF_FLOAT__
-#define SIZEOF_FLOAT128    __SIZEOF_FLOAT128__
-#define SIZEOF_DOUBLE      __SIZEOF_DOUBLE__
-#define SIZEOF_FLOAT80     __SIZEOF_FLOAT80__
-#define SIZEOF_LONG_DOUBLE __SIZEOF_LONG_DOUBLE__
-#define SIZEOF_INTMAX      __SIZEOF_INTMAX__
-
 #define SCHAR_MAX     __SCHAR_MAX__
 #define SHRT_MAX      __SHRT_MAX__
 #define INT_MAX       __INT_MAX__
