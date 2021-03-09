@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,47 +16,55 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/errno.h"
-#include "libc/limits.h"
-#include "libc/nt/errors.h"
-#include "libc/nt/runtime.h"
-#include "libc/nt/struct/overlapped.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/macros.internal.h"
+#include "libc/sock/sock.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/testlib/testlib.h"
 
-static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
-                                            size_t size, ssize_t offset) {
-  uint32_t got;
-  struct NtOverlapped overlap;
-  if (ReadFile(fd->handle, data, clampio(size), &got,
-               offset2overlap(offset, &overlap))) {
-    return got;
-  } else if (GetLastError() == kNtErrorBrokenPipe) {
-    return 0;
-  } else {
-    return __winerr();
-  }
+char testlib_enable_tmp_setup_teardown;
+
+TEST(writev, test) {
+  int fd;
+  char ba[1] = "a";
+  char bb[1] = "b";
+  char bc[2] = "cd";
+  struct iovec iov[] = {{"", 0}, {ba, 1}, {NULL, 0}, {bb, 1}, {bc, 2}};
+  ASSERT_NE(-1, (fd = open("file", O_RDWR | O_CREAT | O_TRUNC, 0644)));
+  EXPECT_EQ(4, writev(fd, iov, ARRAYLEN(iov)));
+  EXPECT_EQ(1, lseek(fd, 1, SEEK_SET));
+  EXPECT_EQ(3, readv(fd, iov, ARRAYLEN(iov)));
+  EXPECT_EQ('b', ba[0]);
+  EXPECT_EQ('c', bb[0]);
+  EXPECT_EQ('d', bc[0]);
+  EXPECT_NE(-1, close(fd));
 }
 
-textwindows ssize_t sys_read_nt(struct Fd *fd, const struct iovec *iov,
-                                size_t iovlen, ssize_t opt_offset) {
-  ssize_t rc;
-  uint32_t size;
-  size_t i, total;
-  while (iovlen && !iov[0].iov_len) iov++, iovlen--;
-  if (iovlen) {
-    for (total = i = 0; i < iovlen; ++i) {
-      if (!iov[i].iov_len) continue;
-      rc = sys_read_nt_impl(fd, iov[i].iov_base, iov[i].iov_len, opt_offset);
-      if (rc == -1) return -1;
-      total += rc;
-      if (opt_offset != -1) opt_offset += rc;
-      if (rc < iov[i].iov_len) break;
-    }
-    return total;
-  } else {
-    return sys_read_nt_impl(fd, NULL, 0, opt_offset);
-  }
+TEST(writev, big_fullCompletion) {
+  int fd;
+  char *ba = malloc(2 * 1024 * 1024);
+  char *bb = malloc(2 * 1024 * 1024);
+  char *bc = malloc(2 * 1024 * 1024);
+  struct iovec iov[] = {
+      {"", 0},                //
+      {ba, 2 * 1024 * 1024},  //
+      {NULL, 0},              //
+      {bb, 2 * 1024 * 1024},  //
+      {bc, 2 * 1024 * 1024},  //
+  };
+  ASSERT_NE(-1, (fd = open("file", O_RDWR | O_CREAT | O_TRUNC, 0644)));
+  EXPECT_EQ(6 * 1024 * 1024, writev(fd, iov, ARRAYLEN(iov)));
+  EXPECT_NE(-1, close(fd));
+}
+
+TEST(writev, empty_stillPerformsIoOperation) {
+  int fd;
+  struct iovec iov[] = {{"", 0}, {NULL, 0}};
+  ASSERT_NE(-1, touch("file", 0644));
+  ASSERT_NE(-1, (fd = open("file", O_RDONLY)));
+  EXPECT_EQ(-1, writev(fd, iov, ARRAYLEN(iov)));
+  EXPECT_EQ(-1, writev(fd, NULL, 0));
+  EXPECT_NE(-1, close(fd));
 }

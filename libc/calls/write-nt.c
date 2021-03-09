@@ -25,8 +25,22 @@
 #include "libc/nt/struct/overlapped.h"
 #include "libc/sysv/errfuns.h"
 
+static textwindows ssize_t sys_write_nt_impl(struct Fd *fd, void *data,
+                                             size_t size, ssize_t offset) {
+  uint32_t sent;
+  struct NtOverlapped overlap;
+  if (WriteFile(fd->handle, data, clampio(size), &sent,
+                offset2overlap(offset, &overlap))) {
+    /* TODO(jart): Trigger SIGPIPE on kNtErrorBrokenPipe */
+    return sent;
+  } else {
+    return __winerr();
+  }
+}
+
 textwindows ssize_t sys_write_nt(struct Fd *fd, const struct iovec *iov,
                                  size_t iovlen, ssize_t opt_offset) {
+  ssize_t rc;
   size_t i, total;
   uint32_t size, wrote;
   struct NtOverlapped overlap;
@@ -34,15 +48,11 @@ textwindows ssize_t sys_write_nt(struct Fd *fd, const struct iovec *iov,
   if (iovlen) {
     for (total = i = 0; i < iovlen; ++i) {
       if (!iov[i].iov_len) continue;
-      size = clampio(iov[0].iov_len);
-      if (WriteFile(fd->handle, iov[i].iov_base, size, &wrote,
-                    offset2overlap(opt_offset, &overlap))) {
-        total += wrote;
-        if (opt_offset != -1) opt_offset += wrote;
-        if (wrote < iov[i].iov_len) break;
-      } else {
-        return __winerr();
-      }
+      rc = sys_write_nt_impl(fd, iov[i].iov_base, iov[i].iov_len, opt_offset);
+      if (rc == -1) return -1;
+      total += rc;
+      if (opt_offset != -1) opt_offset += rc;
+      if (rc < iov[i].iov_len) break;
     }
     if (!total) assert(!__iovec_size(iov, iovlen));
     return total;
