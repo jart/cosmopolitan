@@ -1,13 +1,12 @@
 {
 	"configurations": [
 		{
-			"name": "Linux",
+			"name": "Win32",
 			"includePath": [
 				"${workspaceFolder}"
 			],
 			"cStandard": "c11",
 			"cppStandard": "c++11",
-			"compilerPath": "${workspaceFolder}/o/third_party/gcc/bin/x86_64-linux-musl-gcc",
 			"forcedInclude": ["${workspaceFolder}/.vscode/vscode.h"],
 			"defines": [
 				"libcesque=",
@@ -62,6 +61,50 @@
 				"returnsaligned(x)=",
 				"attributeallocalign(x)=",
 				"nullterminated(x)="
+			]
+		},
+		{
+			"name": "Linux",
+			"includePath": [
+				"${workspaceFolder}"
+			],
+			"cStandard": "gnu17",
+			"compilerPath": "${workspaceFolder}/o/third_party/gcc/bin/x86_64-linux-musl-gcc",
+			"compilerArgs": [
+				"-Wall",
+				"-Werror",
+				"-fdebug-prefix-map=${workspaceFolder}=",
+				"-frecord-gcc-switches",
+				"-Wa,-W",
+				"-Wa,-I.",
+				"-Wa,--noexecstack",
+				"-Wa,--nocompress-debug-sections",
+				"-Og",
+				"-g",
+				"-gdescribe-dies",
+				"-msse3",
+				"-mno-red-zone",
+				"-fno-math-errno",
+				"-fno-trapping-math",
+				"-fno-fp-int-builtin-inexact",
+				"-fno-ident",
+				"-fno-common",
+				"-fno-gnu-unique",
+				"-fstrict-aliasing",
+				"-fstrict-overflow",
+				"-fno-semantic-interposition",
+				"-mno-omit-leaf-frame-pointer",
+				"-fno-jump-tables",
+				"-nostdinc",
+				"-iquote."
+			],
+			"forcedInclude": [
+				"libc/integral/normalize.inc"
+			],
+			"defines": [
+				"COSMO",
+				"MODE=",
+				"IMAGE_BASE_VIRTUAL=0x400000"
 			]
 		}
 	],
