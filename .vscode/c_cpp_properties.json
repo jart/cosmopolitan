@@ -68,8 +68,7 @@
 			"includePath": [
 				"${workspaceFolder}"
 			],
-			"cStandard": "c11",
-			"cppStandard": "c++11",
+			"cStandard": "gnu17",
 			"compilerPath": "${workspaceFolder}/o/third_party/gcc/bin/x86_64-linux-musl-gcc",
 			"compilerArgs": [
 				"-Wall",
@@ -95,7 +94,6 @@
 				"-fstrict-overflow",
 				"-fno-semantic-interposition",
 				"-mno-omit-leaf-frame-pointer",
-				"-std=gnu2x",
 				"-fno-jump-tables",
 				"-nostdinc",
 				"-iquote."
