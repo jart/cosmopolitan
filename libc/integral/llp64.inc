@@ -55,9 +55,6 @@
 #define __CHAR16_TYPE__  short unsigned int
 #define __CHAR32_TYPE__  unsigned int
 #define __WINT_TYPE__    unsigned int
-#define __CHAR16_TYPE__  short unsigned int
-#define __WCHAR_TYPE__   int
-#define __CHAR32_TYPE__  unsigned int
 
 #define __INT_LEAST8_TYPE__   __INT8_TYPE__
 #define __UINT_LEAST8_TYPE__  __UINT8_TYPE__
