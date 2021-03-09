@@ -17,7 +17,7 @@ THIRD_PARTY_LUA_COMS =					\
 	o/$(MODE)/third_party/lua/lua.com
 
 THIRD_PARTY_LUA_CHECKS =				\
-	o/$(MODE)/third_party/lua/lua.pkg		\
+	$(THIRD_PARTY_LUA_A).pkg			\
 	$(THIRD_PARTY_LUA_HDRS:%=o/$(MODE)/%.ok)
 
 THIRD_PARTY_LUA_DIRECTDEPS =				\
