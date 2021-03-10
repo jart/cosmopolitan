@@ -91,7 +91,7 @@ ssize_t writev(int, const struct iovec *, int);
 ssize_t sendfile(int, int, int64_t *, size_t);
 int getsockopt(int, int, int, void *, uint32_t *) paramsnonnull((5));
 int setsockopt(int, int, int, const void *, uint32_t);
-int socketpair(int, int, int, int64_t[2]) paramsnonnull();
+int socketpair(int, int, int, int[2]) paramsnonnull();
 int poll(struct pollfd *, uint64_t, int32_t) paramsnonnull();
 int ppoll(struct pollfd *, uint64_t, const struct timespec *,
           const struct sigset *) paramsnonnull((1, 4));
