@@ -26,6 +26,16 @@ uint64_t rdrand(void);
 uint64_t rdseed(void);
 float randf(void);
 
+/* alias for rand()  */
+forceinline int random(void) {
+    return rand();
+}
+
+/* alias for srand() */
+forceinline void srandom(unsigned int seed) {
+    srand(seed);
+}
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_RAND_RAND_H_ */
