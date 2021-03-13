@@ -60,7 +60,9 @@ int socketpair(int family, int type, int protocol, int sv[2]) {
          *       works with type==SOCK_STREAM and not with
          *       SOCK_DGRAM (as well as SOCK_SEQPACKET)
          */
-        return sys_socketpair_nt_stream(AF_INET, SOCK_STREAM, 0, sv);
+
+        /* Force to build an AF_INET socketpair */
+        family = AF_INET;
         /* 
         errno = EAFNOSUPPORT;
         return -1;
