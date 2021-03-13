@@ -20,6 +20,7 @@
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/sock.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -43,11 +44,39 @@ int socketpair(int family, int type, int protocol, int sv[2]) {
     /* Recommend IPv6 on frontend serving infrastructure only. That's
        what Google Cloud does. It's more secure. It also means poll()
        will work on Windows, which doesn't allow mixing third layers. */
+    errno = EAFNOSUPPORT;
     return epfnosupport();
   }
   if (!IsWindows()) {
     return sys_socketpair(family, type, protocol, sv);
   } else {
-    return sys_socketpair_nt(family, type, protocol, sv);
+    /* Not all the version of Windows support AF_UNIX
+     */
+    if (family == AF_UNIX) {
+        /* TODO: Not all the version of Windows support AF_UNIX. 
+         *       we should figure out a way to detect if AF_UNIX is
+         *       supported.
+         *       Note that although AF_UNIX may be supported, it only
+         *       works with type==SOCK_STREAM and not with
+         *       SOCK_DGRAM (as well as SOCK_SEQPACKET)
+         */
+        return sys_socketpair_nt_stream(AF_INET, SOCK_STREAM, 0, sv);
+        /* 
+        errno = EAFNOSUPPORT;
+        return -1;
+        */
+    }
+    if (family != AF_INET) {
+        errno = EAFNOSUPPORT;
+        return -1;
+    }
+    if ((type == SOCK_STREAM) || (type == SOCK_SEQPACKET)) {
+        return sys_socketpair_nt_stream(family, type, protocol, sv);
+    }
+    if (type == SOCK_DGRAM) {
+        return sys_socketpair_nt_dgram(family, type, protocol, sv);
+    }
+    errno = EOPNOTSUPP;
+    return -1;
   }
 }
