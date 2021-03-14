@@ -39,7 +39,6 @@ textwindows int sys_socketpair_nt_stream(int family, int type, int proto, int sv
   struct sockaddr_in *sa = (struct sockaddr_in *)&ss;
   uint32_t ss_len;
   int spR = -1, spW = -1;
-  int opt;
   int rc = -1;
   int listensock = -1;
 
@@ -85,15 +84,6 @@ textwindows int sys_socketpair_nt_stream(int family, int type, int proto, int sv
     goto done;
   }
 
-  /* Set non-blocking */
-  opt = fcntl(spR, F_GETFL, 0);
-  if (opt == -1) {
-    goto done;
-  }
-  if(fcntl(spR, F_SETFL, opt | O_NONBLOCK) == -1) {
-    goto done;
-  }
-
   if (connect(spR, (struct sockaddr *)&ss, ss_len) < 0) {
     errno = WSAGetLastError();
     if (errno != EINPROGRESS && errno != EWOULDBLOCK) {
@@ -107,14 +97,6 @@ textwindows int sys_socketpair_nt_stream(int family, int type, int proto, int sv
     if (errno != EINPROGRESS && errno != EWOULDBLOCK) {
       goto done;
     }
-  }
-  /* Set non-blocking */
-  opt = fcntl(spW, F_GETFL, 0);
-  if (opt == -1) {
-    goto done;
-  }
-  if(fcntl(spW, F_SETFL, opt | O_NONBLOCK) == -1) {
-    goto done;
   }
 
   rc = 0; /* Success */
@@ -143,7 +125,6 @@ done:
 int sys_socketpair_nt_dgram(int family, int type, int proto, int sv[2]) {
   struct sockaddr_in sa;
   uint32_t sa_len;
-  int opt;
   int spR = -1, spW = -1;
   int rc = -1;
 
@@ -210,24 +191,6 @@ int sys_socketpair_nt_dgram(int family, int type, int proto, int sv[2]) {
   }
 
   /* Now we finally got both bi-directional sockets: RD <---> WR */
-
-  /* Finally set both sockets as non-blocking */
-  opt = fcntl(spW, F_GETFL, 0);
-  if (opt == -1) {
-    goto done;
-  }
-  if(fcntl(spW, F_SETFL, opt | O_NONBLOCK) == -1) {
-    goto done;
-  }
-
-  opt = fcntl(spR, F_GETFL, 0);
-  if (opt == -1) {
-    goto done;
-  }
-  if(fcntl(spR, F_SETFL, opt | O_NONBLOCK) == -1) {
-    goto done;
-  }
-
   rc = 0;
 
 done:
