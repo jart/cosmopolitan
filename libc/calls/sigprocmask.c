@@ -26,9 +26,10 @@
 /**
  * Changes program signal blocking state, e.g.:
  *
- *     sigset_t oldmask;
- *     sigprocmask(SIG_BLOCK, &kSigsetFull, &oldmask);
- *     sigprocmask(SIG_SETMASK, &oldmask, NULL);
+ *     sigset_t neu,old;
+ *     sigfillset(&neu);
+ *     sigprocmask(SIG_BLOCK, &neu, &old);
+ *     sigprocmask(SIG_SETMASK, &old, NULL);
  *
  * @param how can be SIG_BLOCK (U), SIG_UNBLOCK (/), SIG_SETMASK (=)
  * @param set is the new mask content (optional)

@@ -19,6 +19,7 @@
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
@@ -45,14 +46,15 @@
 privileged void __hook(void *ifunc, struct SymbolTable *symbols) {
   size_t i;
   intptr_t addr;
-  sigset_t oldmask;
   uint64_t code, mcode;
   unsigned char *p, *pe;
+  sigset_t mask, oldmask;
   const intptr_t kMcount = (intptr_t)&mcount;
   const intptr_t kProgramCodeStart = (intptr_t)&_ereal;
   const intptr_t kPrivilegedStart = (intptr_t)&__privileged_start;
   const bool kIsBinaryAligned = !(kPrivilegedStart & (PAGESIZE - 1));
-  sigprocmask(SIG_BLOCK, &kSigsetFull, &oldmask);
+  sigfillset(&mask);
+  sigprocmask(SIG_BLOCK, &mask, &oldmask);
   if (mprotect((void *)symbols->addr_base,
                kPrivilegedStart - symbols->addr_base,
                kIsBinaryAligned ? PROT_READ | PROT_WRITE

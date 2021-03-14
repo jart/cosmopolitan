@@ -1059,9 +1059,45 @@ static optimizesize void ReadKeyboard(void) {
                     break;
                   case '1':
                     switch (b[i++]) {
+                      case '1':
+                        switch (b[i++]) {
+                          case '~': /* \e[11~ is F1 */
+                            pf1_ = !pf1_;
+                            break;
+                          default:
+                            break;
+                        }
+                        break;
+                      case '2':
+                        switch (b[i++]) {
+                          case '~': /* \e[12~ is F2 */
+                            pf2_ = !pf2_;
+                            break;
+                          default:
+                            break;
+                        }
+                        break;
+                      case '3':
+                        switch (b[i++]) {
+                          case '~': /* \e[13~ is F3 */
+                            pf3_ = !pf3_;
+                            break;
+                          default:
+                            break;
+                        }
+                        break;
+                      case '4':
+                        switch (b[i++]) {
+                          case '~': /* \e[14~ is F4 */
+                            pf4_ = !pf4_;
+                            break;
+                          default:
+                            break;
+                        }
+                        break;
                       case '5':
                         switch (b[i++]) {
-                          case '~': /* \e[20~ is F5 */
+                          case '~': /* \e[15~ is F5 */
                             pf5_ = !pf5_;
                             break;
                           default:
@@ -1070,7 +1106,7 @@ static optimizesize void ReadKeyboard(void) {
                         break;
                       case '7':
                         switch (b[i++]) {
-                          case '~': /* \e[21~ is F6 */
+                          case '~': /* \e[17~ is F6 */
                             pf6_ = !pf6_;
                             break;
                           default:
@@ -1079,7 +1115,7 @@ static optimizesize void ReadKeyboard(void) {
                         break;
                       case '8':
                         switch (b[i++]) {
-                          case '~': /* \e[22~ is F7 */
+                          case '~': /* \e[18~ is F7 */
                             pf7_ = !pf7_;
                             break;
                           default:
@@ -1088,7 +1124,7 @@ static optimizesize void ReadKeyboard(void) {
                         break;
                       case '9':
                         switch (b[i++]) {
-                          case '~': /* \e[23~ is F8 */
+                          case '~': /* \e[19~ is F8 */
                             pf8_ = !pf8_;
                             break;
                           default:
@@ -1103,7 +1139,7 @@ static optimizesize void ReadKeyboard(void) {
                     switch (b[i++]) {
                       case '0':
                         switch (b[i++]) {
-                          case '~': /* \e[20~ is F10 */
+                          case '~': /* \e[20~ is F9 */
                             pf9_ = !pf9_;
                             break;
                           default:

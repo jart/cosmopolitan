@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/nexgen32e.h"
@@ -33,9 +34,10 @@ TEST(fastdiv, test) {
 }
 
 TEST(dsleep, test) {
-  sigset_t oldmask;
   long double t1, t2;
-  sigprocmask(SIG_BLOCK, &kSigsetFull, &oldmask);
+  sigset_t mask, oldmask;
+  sigfillset(&mask);
+  sigprocmask(SIG_BLOCK, &mask, &oldmask);
   sched_yield();
   t1 = dtime(CLOCK_MONOTONIC);
   dsleep(0.001L);

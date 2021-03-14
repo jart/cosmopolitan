@@ -585,7 +585,7 @@ typedef uint64_t uintmax_t;
 #endif
 
 #ifndef unreachable
-#if defined(__GNUC__) && !defined(__STRICT_ANSI)
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define unreachable __builtin_unreachable()
 #else
 #define unreachable \

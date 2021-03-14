@@ -64,10 +64,6 @@ o/$(MODE)/libc/calls/raise.o:				\
 		OVERRIDE_COPTS +=			\
 			$(NO_MAGIC)
 
-o/$(MODE)/libc/calls/siggy.o:				\
-		OVERRIDE_COPTS +=			\
-			-ffunction-sections
-
 o/$(MODE)/libc/calls/sigenter-freebsd.o			\
 o/$(MODE)/libc/calls/sigenter-netbsd.o			\
 o/$(MODE)/libc/calls/sigenter-openbsd.o			\

@@ -1105,7 +1105,7 @@ syscon	sio	SIOGIFINDEX				0x8933			0			0			0			0			0
 
 syscon	af	AF_UNSPEC				0			0			0			0			0			0			# consensus
 syscon	af	AF_UNIX					1			1			1			1			1			1			# consensus
-syscon	af	AF_LOCAL				1			1			1			1			1			0			# unix consensus
+syscon	af	AF_LOCAL				1			1			1			1			1			1			# consensus
 syscon	af	AF_FILE					1			0			0			0			0			0
 syscon	af	AF_INET					2			2			2			2			2			2			# consensus
 syscon	af	AF_AX25					3			0			0			0			0			0

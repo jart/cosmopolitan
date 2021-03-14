@@ -64,9 +64,6 @@ COSMOPOLITAN_C_START_
 
 typedef int sig_atomic_t;
 
-extern const struct sigset kSigsetFull;
-extern const struct sigset kSigsetEmpty;
-
 DIR *fdopendir(int) nodiscard;
 DIR *opendir(const char *) nodiscard;
 bool fileexists(const char *);
