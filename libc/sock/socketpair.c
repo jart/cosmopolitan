@@ -20,35 +20,23 @@
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/af.h"
-#include "libc/sysv/consts/sock.h"
-#include "libc/sysv/errfuns.h"
 
 /**
- * Creates a pair of connected sockets
+ * Creates bidirectional pipe.
  *
- * @param family can be AF_UNIX, AF_INET, etc.
- * @param type can be SOCK_STREAM (for TCP), SOCK_DGRAM (e.g. UDP), or
- *     SOCK_RAW (IP) so long as IP_HDRINCL was passed to setsockopt();
- *     and additionally, may be or'd with SOCK_NONBLOCK, SOCK_CLOEXEC
- * @param protocol can be IPPROTO_TCP, IPPROTO_UDP, or IPPROTO_ICMP
- * @param sv a vector of 2 integers to store the created sockets.
+ * @param family should be AF_UNIX or synonymously AF_LOCAL
+ * @param type may be or'd with SOCK_CLOEXEC
+ * @param sv a vector of 2 integers to store the created sockets
  * @return 0 if success, -1 in case of error
  * @error EFAULT, EPFNOSUPPORT, etc.
  * @see libc/sysv/consts.sh
  * @asyncsignalsafe
  */
 int socketpair(int family, int type, int protocol, int sv[2]) {
-  if (family == AF_UNSPEC) {
-    family = AF_UNIX;
-  } else if (family == AF_INET6) {
-    /* Recommend IPv6 on frontend serving infrastructure only. That's
-       what Google Cloud does. It's more secure. It also means poll()
-       will work on Windows, which doesn't allow mixing third layers. */
-    errno = EAFNOSUPPORT;
-    return epfnosupport();
-  }
+  if (family == AF_UNSPEC) family = AF_UNIX;
   if (!IsWindows()) {
     return sys_socketpair(family, type, protocol, sv);
+  } else {
+    return sys_socketpair_nt(family, type, protocol, sv);
   }
-  return sys_socketpair_nt(family, type, protocol, sv);
 }

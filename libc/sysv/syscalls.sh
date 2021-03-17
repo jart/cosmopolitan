@@ -88,7 +88,7 @@ scall	sys_bind		0x0680680682068031	globl hidden
 scall	sys_listen		0x06a06a06a206a032	globl hidden
 scall	__sys_getsockname	0x0200200202020033	globl hidden
 scall	__sys_getpeername	0x01f01f08d201f034	globl hidden
-scall	sys_socketpair		0x0870870872087035	globl hidden
+scall	__sys_socketpair	0x0870870872087035	globl hidden
 scall	sys_setsockopt		0x0690690692069036	globl hidden
 scall	sys_getsockopt		0x0760760762076037	globl hidden
 scall	sys_fork		0x0020020022002039	globl hidden # xnu needs eax&=~-edx bc eax always holds pid and edx is 0 for parent and 1 for child

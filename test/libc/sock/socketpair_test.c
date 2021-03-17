@@ -20,6 +20,7 @@
 #include "libc/dce.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/testlib/testlib.h"
 
@@ -57,4 +58,19 @@ TEST(socketpair, testAfUnixDgram) {
   ASSERT_NE(-1, close(fd[1]));
 }
 
+TEST(socketpair, testCloexec) {
+  int fd[2];
+  const char ping[] = "ping";
+  const char pong[] = "pong";
+  char buf[32];
 
+  ASSERT_NE(-1, socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, fd));
+  ASSERT_EQ(sizeof(ping), write(fd[0], ping, sizeof(ping)));
+  ASSERT_EQ(sizeof(ping), read(fd[1], buf, sizeof(ping)));
+  EXPECT_STREQ(ping, buf);
+  ASSERT_EQ(sizeof(pong), write(fd[1], pong, sizeof(pong)));
+  ASSERT_EQ(sizeof(pong), read(fd[0], buf, sizeof(pong)));
+  EXPECT_STREQ(pong, buf);
+  ASSERT_NE(-1, close(fd[0]));
+  ASSERT_NE(-1, close(fd[1]));
+}
