@@ -16,8 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/reverse.internal.h"
 #include "libc/calls/internal.h"
+#include "libc/errno.h"
+#include "libc/mem/mem.h"
+#include "libc/sock/internal.h"
+#include "libc/sock/yoink.inc"
+#include "libc/sysv/consts/fio.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sock.h"
+#include "libc/sysv/consts/af.h"
+
+#include "libc/alg/reverse.internal.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
@@ -25,66 +34,78 @@
 #include "libc/nt/ipc.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
-#include "libc/sysv/consts/o.h"
 
-const char kPipeNamePrefix[] = "\\\\?\\pipe\\cosmo\\";
 
-size_t UintToChar16Array(char16_t *a, uint64_t i) {
-  size_t j = 0;
-  do {
-    a[j++] = i % 10 + '0';
-    i /= 10;
-  } while (i > 0);
-  a[j] = 0;
-  reverse(a, j);
-  return j;
-}
+// {{{ sys_socketpair_nt
+int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
+    int64_t hpipe, h1, h2;
+    int reader, writer;
+    char16_t pipename[64];
+    uint32_t mode;
 
-char16_t *CreatePipeName(char16_t *a) {
-  static long x;
-  unsigned i;
-  for (i = 0; kPipeNamePrefix[i]; ++i) a[i] = kPipeNamePrefix[i];
-  i += UintToChar16Array(a + i, GetCurrentProcessId());
-  a[i++] = u'-';
-  i += UintToChar16Array(a + i, GetCurrentProcessId());
-  a[i++] = u'-';
-  i += UintToChar16Array(a + i, x++);
-  a[i] = u'\0';
-  return a;
-}
-
-textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
-  int64_t hin, hout;
-  int reader, writer;
-  char16_t pipename[64];
-  CreatePipeName(pipename);
-  if ((reader = __reservefd()) == -1) return -1;
-  if ((writer = __reservefd()) == -1) {
-    __releasefd(reader);
-    return -1;
-  }
-  if ((hin = CreateNamedPipe(pipename, kNtPipeAccessInbound,
-                             kNtPipeWait | kNtPipeReadmodeByte, 1, 65536, 65536,
-                             0, &kNtIsInheritable)) != -1) {
-    if ((hout = CreateFile(pipename, kNtGenericWrite, kNtFileShareWrite,
-                           &kNtIsInheritable, kNtOpenExisting, 0, 0)) != -1) {
-      g_fds.p[reader].kind = kFdFile;
-      g_fds.p[reader].flags = flags;
-      g_fds.p[reader].handle = hin;
-      g_fds.p[writer].kind = kFdFile;
-      g_fds.p[writer].flags = flags;
-      g_fds.p[writer].handle = hout;
-      pipefd[0] = reader;
-      pipefd[1] = writer;
-      return 0;
-    } else {
-      __winerr();
-      CloseHandle(hin);
+    // Supports only AF_UNIX
+    if (family != AF_UNIX) {
+        errno = EAFNOSUPPORT;
+        return -1;
     }
-  } else {
-    __winerr();
-  }
-  __releasefd(writer);
-  __releasefd(reader);
-  return -1;
+
+    mode = kNtPipeWait;
+    if (type == SOCK_STREAM) {
+        mode |= kNtPipeReadmodeByte | kNtPipeTypeByte;
+    } else if ((type == SOCK_DGRAM) || (type == SOCK_SEQPACKET)) {
+        mode |= kNtPipeReadmodeMessage | kNtPipeTypeMessage;
+    } else {
+        errno = EOPNOTSUPP;
+        return -1;
+    }
+
+    CreatePipeName(pipename);
+    if ((reader = __reservefd()) == -1) return -1;
+    if ((writer = __reservefd()) == -1) {
+        __releasefd(reader);
+        return -1;
+    }
+    if ((hpipe = CreateNamedPipe(pipename, 
+            kNtPipeAccessDuplex,
+            mode, 
+            1, 
+            65536, 
+            65536,
+            0, 
+            &kNtIsInheritable)) == -1) {
+        __winerr();
+        __releasefd(writer);
+        __releasefd(reader);
+        return -1;
+    }
+
+    h1 = CreateFile(pipename, 
+            kNtGenericWrite | kNtGenericRead, 
+            0,  // Not shared
+            &kNtIsInheritable, 
+            kNtOpenExisting, 0, 0);
+    if (h1 == -1) {
+        CloseHandle(hpipe);
+        __winerr();
+        __releasefd(writer);
+        __releasefd(reader);
+        return -1;
+    }
+
+    g_fds.p[reader].kind = kFdFile;
+    g_fds.p[reader].flags = 0;      // TODO
+    g_fds.p[reader].handle = hpipe;
+
+    g_fds.p[writer].kind = kFdFile;
+    g_fds.p[writer].flags = 0;      // TODO
+    g_fds.p[writer].handle = h1;
+
+    sv[0] = reader;
+    sv[1] = writer;
+    return 0;
 }
+// }}}
+
+
+
+

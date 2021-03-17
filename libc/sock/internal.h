@@ -82,6 +82,7 @@ int32_t sys_getpeername(int32_t, void *, uint32_t *) hidden;
 int32_t sys_poll(struct pollfd *, uint64_t, signed) hidden;
 int32_t sys_shutdown(int32_t, int32_t) hidden;
 int32_t sys_socket(int32_t, int32_t, int32_t) hidden;
+int32_t sys_socketpair(int32_t, int32_t, int32_t, int32_t[2]) hidden;
 int64_t sys_readv(int32_t, const struct iovec *, int32_t) hidden;
 int64_t sys_writev(int32_t, const struct iovec *, int32_t) hidden;
 ssize_t sys_recvfrom(int, void *, size_t, int, void *, uint32_t *) hidden;
@@ -104,6 +105,11 @@ int sys_bind_nt(struct Fd *, const void *, uint32_t);
 int sys_accept_nt(struct Fd *, void *, uint32_t *, int) hidden;
 int sys_closesocket_nt(struct Fd *) hidden;
 int sys_socket_nt(int, int, int) hidden;
+/*
+int sys_socketpair_nt_stream(int, int, int, int[2]) hidden;
+int sys_socketpair_nt_dgram(int, int, int, int[2]) hidden;
+*/
+int sys_socketpair_nt(int, int, int, int[2]) hidden;
 int sys_select_nt(int, fd_set *, fd_set *, fd_set *, struct timeval *) hidden;
 int sys_shutdown_nt(struct Fd *, int) hidden;
 
