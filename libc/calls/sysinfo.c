@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sysinfo.h"
@@ -41,8 +40,8 @@ int sysinfo(struct sysinfo *info) {
   } else {
     rc = sys_sysinfo_nt(info);
   }
-  info->procs = max(1, info->procs);
-  info->mem_unit = max(1, info->mem_unit);
-  info->totalram = max((8 * 1024 * 1024) / info->mem_unit, info->totalram);
+  info->procs = MAX(1, info->procs);
+  info->mem_unit = MAX(1, info->mem_unit);
+  info->totalram = MAX((8 * 1024 * 1024) / info->mem_unit, info->totalram);
   return rc;
 }

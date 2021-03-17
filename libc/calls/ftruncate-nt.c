@@ -21,15 +21,14 @@
 #include "libc/nt/files.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int sys_ftruncate_nt(int fd, uint64_t length) {
+textwindows int sys_ftruncate_nt(int64_t handle, uint64_t length) {
   bool32 ok;
   int64_t tell;
-  if (!__isfdkind(fd, kFdFile)) return ebadf();
   tell = -1;
-  if (SetFilePointerEx(g_fds.p[fd].handle, 0, &tell, kNtFileCurrent)) {
-    ok = SetFilePointerEx(g_fds.p[fd].handle, length, NULL, kNtFileBegin) &&
-         SetEndOfFile(g_fds.p[fd].handle);
-    SetFilePointerEx(g_fds.p[fd].handle, tell, NULL, kNtFileBegin);
+  if (SetFilePointerEx(handle, 0, &tell, kNtFileCurrent)) {
+    ok = SetFilePointerEx(handle, length, NULL, kNtFileBegin) &&
+         SetEndOfFile(handle);
+    SetFilePointerEx(handle, tell, NULL, kNtFileBegin);
     return ok ? 0 : __winerr();
   } else {
     return __winerr();

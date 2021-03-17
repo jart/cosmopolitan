@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Changes size of file.
@@ -31,9 +32,11 @@
  * @asyncsignalsafe
  */
 int ftruncate(int fd, int64_t length) {
+  if (fd < 0) return einval();
   if (!IsWindows()) {
     return sys_ftruncate(fd, length, length);
   } else {
-    return sys_ftruncate_nt(fd, length);
+    if (fd >= g_fds.n) return ebadf();
+    return sys_ftruncate_nt(g_fds.p[fd].handle, length);
   }
 }

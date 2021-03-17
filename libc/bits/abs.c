@@ -22,6 +22,6 @@
 /**
  * Returns absolute value of x.
  */
-int(abs)(int x) {
+int abs(int x) {
   return ABS(x);
 }

@@ -243,7 +243,7 @@ int sys_flock_nt(int, int) hidden;
 int sys_fork_nt(void) hidden;
 int sys_fstat_nt(i64, struct stat *) hidden;
 int sys_fstatat_nt(int, const char *, struct stat *, uint32_t) hidden;
-int sys_ftruncate_nt(int, u64) hidden;
+int sys_ftruncate_nt(i64, u64) hidden;
 int sys_getppid_nt(void) hidden;
 int sys_getpriority_nt(int) hidden;
 int sys_getrusage_nt(int, struct rusage *) hidden;

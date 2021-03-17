@@ -54,14 +54,8 @@ textwindows ssize_t sys_write_nt(struct Fd *fd, const struct iovec *iov,
       if (opt_offset != -1) opt_offset += rc;
       if (rc < iov[i].iov_len) break;
     }
-    if (!total) assert(!__iovec_size(iov, iovlen));
     return total;
   } else {
-    if (WriteFile(fd->handle, NULL, 0, &wrote,
-                  offset2overlap(opt_offset, &overlap))) {
-      return 0;
-    } else {
-      return __winerr();
-    }
+    return sys_write_nt_impl(fd, NULL, 0, opt_offset);
   }
 }

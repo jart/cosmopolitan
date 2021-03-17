@@ -32,9 +32,5 @@
  * @asyncsignalsafe
  */
 int wait3(int *opt_out_wstatus, int options, struct rusage *opt_out_rusage) {
-  if (!IsWindows()) {
-    return sys_wait4(-1, opt_out_wstatus, options, opt_out_rusage);
-  } else {
-    return enosys(); /* TODO(jart) */
-  }
+  return wait4(-1, opt_out_wstatus, options, opt_out_rusage);
 }
