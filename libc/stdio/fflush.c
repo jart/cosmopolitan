@@ -32,35 +32,32 @@
  * Blocks until data from stream buffer is written out.
  *
  * @param f is the stream handle
- * @return number of bytes written or -1 on error
+ * @return is 0 on success or -1 on error
  */
 int fflush(FILE *f) {
   size_t i;
-  int res, wrote;
-  res = 0;
+  int rc, wrote;
+  rc = 0;
   if (!f) {
     for (i = __fflush.handles.i; i; --i) {
       if ((f = __fflush.handles.p[i - 1])) {
-        if ((wrote = fflush(f)) != -1) {
-          res += wrote;
-        } else {
-          res = -1;
+        if ((wrote = fflush(f)) == -1) {
+          rc = -1;
           break;
         }
       }
     }
   } else if (f->fd != -1) {
     while (f->beg && !f->end) {
-      if ((wrote = __fwritebuf(f)) != -1) {
-        res += wrote;
-      } else {
+      if (__fwritebuf(f) == -1) {
+        rc = -1;
         break;
       }
     }
   } else if (f->beg && f->beg < f->size) {
     f->buf[f->beg] = 0;
   }
-  return res;
+  return rc;
 }
 
 textstartup int __fflush_register(FILE *f) {
