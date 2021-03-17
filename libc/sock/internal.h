@@ -105,8 +105,11 @@ int sys_bind_nt(struct Fd *, const void *, uint32_t);
 int sys_accept_nt(struct Fd *, void *, uint32_t *, int) hidden;
 int sys_closesocket_nt(struct Fd *) hidden;
 int sys_socket_nt(int, int, int) hidden;
+/*
 int sys_socketpair_nt_stream(int, int, int, int[2]) hidden;
 int sys_socketpair_nt_dgram(int, int, int, int[2]) hidden;
+*/
+int sys_socketpair_nt(int, int, int, int[2]) hidden;
 int sys_select_nt(int, fd_set *, fd_set *, fd_set *, struct timeval *) hidden;
 int sys_shutdown_nt(struct Fd *, int) hidden;
 

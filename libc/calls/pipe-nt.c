@@ -27,9 +27,9 @@
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/o.h"
 
-static const char kPipeNamePrefix[] = "\\\\?\\pipe\\cosmo\\";
+const char kPipeNamePrefix[] = "\\\\?\\pipe\\cosmo\\";
 
-static size_t UintToChar16Array(char16_t *a, uint64_t i) {
+size_t UintToChar16Array(char16_t *a, uint64_t i) {
   size_t j = 0;
   do {
     a[j++] = i % 10 + '0';
@@ -40,7 +40,7 @@ static size_t UintToChar16Array(char16_t *a, uint64_t i) {
   return j;
 }
 
-static char16_t *CreatePipeName(char16_t *a) {
+char16_t *CreatePipeName(char16_t *a) {
   static long x;
   unsigned i;
   for (i = 0; kPipeNamePrefix[i]; ++i) a[i] = kPipeNamePrefix[i];

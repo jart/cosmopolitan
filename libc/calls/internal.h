@@ -67,6 +67,7 @@ hidden extern int __vforked;
 hidden extern unsigned __sighandrvas[NSIG];
 hidden extern struct Fds g_fds;
 hidden extern const struct NtSecurityAttributes kNtIsInheritable;
+hidden extern const char kPipeNamePrefix[];
 
 int __reservefd(void) hidden;
 void __releasefd(int) hidden;
@@ -290,6 +291,8 @@ int __mkntpathat(int, const char *, int, char16_t[PATH_MAX]) hidden;
 unsigned __wincrash_nt(struct NtExceptionPointers *);
 ssize_t sys_readv_nt(struct Fd *, const struct iovec *, int) hidden;
 ssize_t sys_writev_nt(struct Fd *, const struct iovec *, int) hidden;
+char16_t *CreatePipeName(char16_t *) hidden;
+size_t UintToChar16Array(char16_t *, uint64_t) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » metal                                          ─╬─│┼
