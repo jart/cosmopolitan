@@ -36,12 +36,12 @@
  */
 int fflush(FILE *f) {
   size_t i;
-  int rc, wrote;
+  int rc;
   rc = 0;
   if (!f) {
     for (i = __fflush.handles.i; i; --i) {
       if ((f = __fflush.handles.p[i - 1])) {
-        if ((wrote = fflush(f)) == -1) {
+        if (fflush(f) == -1) {
           rc = -1;
           break;
         }
