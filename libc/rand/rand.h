@@ -28,6 +28,7 @@ float randf(void);
 char *initstate(unsigned, char *, size_t);
 char *setstate(char *);
 long random(void);
+void srandom(unsigned);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
