@@ -21,7 +21,7 @@
 /**
  * Turns getaddrinfo() return code into string.
  */
-const char *eai2str(int code) {
+const char *gai_strerror(int code) {
   switch (code) {
     case EAI_ADDRFAMILY:
       return "ADDRFAMILY";

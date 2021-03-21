@@ -44,7 +44,7 @@ void lookup(const char *name) {
       perror("getaddrinfo");
       exit(1);
     default:
-      fprintf(stderr, "getaddrinfo failed: %d (EAI_%s)\n", rc, eai2str(rc));
+      fprintf(stderr, "getaddrinfo failed: %d (EAI_%s)\n", rc, gai_strerror(rc));
       exit(1);
   }
   if (addrs) {
