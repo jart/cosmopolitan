@@ -71,6 +71,10 @@
 #include "libc/zipos/zipos.internal.h"
 #include "net/http/http.h"
 #include "third_party/getopt/getopt.h"
+#include "third_party/lua/lauxlib.h"
+#include "third_party/lua/ltests.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lualib.h"
 #include "third_party/zlib/zlib.h"
 
 /* TODO(jart): Implement more lenient message framing */
@@ -249,6 +253,7 @@ static const char *logpath;
 static int64_t programtime;
 static const char *programfile;
 static const char *serverheader;
+static lua_State *L;
 
 static long double nowish;
 static long double startrequest;
@@ -888,7 +893,7 @@ static bool InflateZlib(uint8_t *outbuf, size_t outsize, const uint8_t *inbuf,
   return ok;
 }
 
-static bool Inflate(uint8_t *outbuf, size_t outsize, const uint8_t *inbuf,
+static bool Inflate(void *outbuf, size_t outsize, const uint8_t *inbuf,
                     size_t insize) {
   if (IsTiny()) {
     return InflateTiny(outbuf, outsize, inbuf, insize);
@@ -902,6 +907,56 @@ static void LogRequestLatency(void) {
   LOGF("%s latency req %,16ldns conn %,16ldns", clientaddrstr,
        (long)((now - startrequest) * 1e9),
        (long)((now - startconnection) * 1e9));
+}
+
+static nodiscard char *LoadAssetAsString(struct Asset *a) {
+  char *code;
+  code = xmalloc(ZIP_CFILE_UNCOMPRESSEDSIZE(zbase + a->cf) + 1);
+  if (ZIP_CFILE_COMPRESSIONMETHOD(zbase + a->cf) == kZipCompressionDeflate) {
+    CHECK(Inflate(code, ZIP_CFILE_UNCOMPRESSEDSIZE(zbase + a->cf),
+                  ZIP_LFILE_CONTENT(zbase + ZIP_CFILE_OFFSET(zbase + a->cf)),
+                  ZIP_CFILE_COMPRESSEDSIZE(zbase + a->cf)));
+  } else {
+    memcpy(code, ZIP_LFILE_CONTENT(zbase + ZIP_CFILE_OFFSET(zbase + a->cf)),
+           ZIP_CFILE_UNCOMPRESSEDSIZE(zbase + a->cf));
+  }
+  code[ZIP_CFILE_UNCOMPRESSEDSIZE(zbase + a->cf)] = '\0';
+  return code;
+}
+
+static int LuaDate(lua_State *L) {
+  lua_pushstring(L, currentdate);
+  return 1;
+}
+
+static int LuaSend(lua_State *L) {
+  size_t size;
+  const char *data;
+  data = luaL_checklstring(L, 1, &size);
+  WritevAll(client, &(struct iovec){data, size}, 1);
+  return 0;
+}
+
+static const luaL_Reg kLuaFuncs[] = {
+    {"date", LuaDate},
+    {"send", LuaSend},
+};
+
+static void LuaInit(void) {
+  size_t i;
+  L = luaL_newstate();
+  for (i = 0; i < ARRAYLEN(kLuaFuncs); ++i) {
+    lua_pushcfunction(L, kLuaFuncs[i].func);
+    lua_setglobal(L, kLuaFuncs[i].name);
+  }
+}
+
+static void LuaRun(struct Asset *a) {
+  if (luaL_dostring(L, gc(LoadAssetAsString(a))) != LUA_OK) {
+    WARNF("%s %s", clientaddrstr, lua_tostring(L, -1));
+    lua_pop(L, 1); /* remove message */
+    terminated = true;
+  }
 }
 
 void HandleRequest(size_t got) {
@@ -939,73 +994,78 @@ void HandleRequest(size_t got) {
         if ((location = LookupRedirect(path, pathlen))) {
           p = AppendRedirect(p, location);
         } else if ((a = FindFile(path, pathlen))) {
-          if (IsNotModified(a)) {
-            VERBOSEF("%s %s %.*s not modified", clientaddrstr,
-                     kHttpMethod[req.method], pathlen, path);
-            p = AppendStatus(p, 304, "Not Modified");
+          if (pathlen >= 4 && !memcmp(path + pathlen - 4, ".lua", 4)) {
+            LuaRun(a);
+            return;
           } else {
-            lf = ZIP_CFILE_OFFSET(zbase + a->cf);
-            content = ZIP_LFILE_CONTENT(zbase + lf);
-            contentlength = ZIP_CFILE_COMPRESSEDSIZE(zbase + a->cf);
-            if (IsCompressed(a)) {
-              if (memmem(inbuf + req.headers[kHttpAcceptEncoding].a,
-                         req.headers[kHttpAcceptEncoding].b -
-                             req.headers[kHttpAcceptEncoding].a,
-                         "gzip", 4)) {
-                gzipped = true;
-                memcpy(gzip_footer + 0, zbase + a->cf + kZipCfileOffsetCrc32,
-                       4);
-                memcpy(gzip_footer + 4,
-                       zbase + a->cf + kZipCfileOffsetUncompressedsize, 4);
-                p = AppendStatus(p, 200, "OK");
-                p = AppendContentEncodingGzip(p);
-              } else if (Inflate(
-                             (content = gc(xmalloc(
-                                  ZIP_CFILE_UNCOMPRESSEDSIZE(zbase + a->cf)))),
-                             (contentlength =
-                                  ZIP_CFILE_UNCOMPRESSEDSIZE(zbase + a->cf)),
-                             ZIP_LFILE_CONTENT(zbase + lf),
-                             ZIP_CFILE_COMPRESSEDSIZE(zbase + a->cf))) {
-                p = AppendStatus(p, 200, "OK");
-              } else {
-                WARNF("%s %s %.*s internal server error", clientaddrstr,
-                      kHttpMethod[req.method], pathlen, path);
-                p = AppendStatus(p, 500, "Internal Server Error");
-                content = "Internal Server Error\r\n";
-                contentlength = -1;
-              }
-            } else if (HasHeader(kHttpRange)) {
-              if (ParseHttpRange(
-                      inbuf + req.headers[kHttpRange].a,
-                      req.headers[kHttpRange].b - req.headers[kHttpRange].a,
-                      contentlength, &rangestart, &rangelength)) {
-                p = AppendStatus(p, 206, "Partial Content");
-                p = AppendContentRange(p, rangestart, rangelength,
-                                       contentlength);
-                content = AddRange(content, rangestart, rangelength);
-                contentlength = rangelength;
-              } else {
-                WARNF("%s %s %.*s bad range %`'.*s", clientaddrstr,
-                      kHttpMethod[req.method], pathlen, path,
-                      req.headers[kHttpRange].b - req.headers[kHttpRange].a,
-                      inbuf + req.headers[kHttpRange].a);
-                p = AppendStatus(p, 416, "Range Not Satisfiable");
-                p = AppendContentRange(p, rangestart, rangelength,
-                                       contentlength);
-                content = "";
-                contentlength = 0;
-              }
+            if (IsNotModified(a)) {
+              VERBOSEF("%s %s %.*s not modified", clientaddrstr,
+                       kHttpMethod[req.method], pathlen, path);
+              p = AppendStatus(p, 304, "Not Modified");
             } else {
-              p = AppendStatus(p, 200, "OK");
+              lf = ZIP_CFILE_OFFSET(zbase + a->cf);
+              content = ZIP_LFILE_CONTENT(zbase + lf);
+              contentlength = ZIP_CFILE_COMPRESSEDSIZE(zbase + a->cf);
+              if (IsCompressed(a)) {
+                if (memmem(inbuf + req.headers[kHttpAcceptEncoding].a,
+                           req.headers[kHttpAcceptEncoding].b -
+                               req.headers[kHttpAcceptEncoding].a,
+                           "gzip", 4)) {
+                  gzipped = true;
+                  memcpy(gzip_footer + 0, zbase + a->cf + kZipCfileOffsetCrc32,
+                         4);
+                  memcpy(gzip_footer + 4,
+                         zbase + a->cf + kZipCfileOffsetUncompressedsize, 4);
+                  p = AppendStatus(p, 200, "OK");
+                  p = AppendContentEncodingGzip(p);
+                } else if (Inflate(
+                               (content = gc(xmalloc(ZIP_CFILE_UNCOMPRESSEDSIZE(
+                                    zbase + a->cf)))),
+                               (contentlength =
+                                    ZIP_CFILE_UNCOMPRESSEDSIZE(zbase + a->cf)),
+                               ZIP_LFILE_CONTENT(zbase + lf),
+                               ZIP_CFILE_COMPRESSEDSIZE(zbase + a->cf))) {
+                  p = AppendStatus(p, 200, "OK");
+                } else {
+                  WARNF("%s %s %.*s internal server error", clientaddrstr,
+                        kHttpMethod[req.method], pathlen, path);
+                  p = AppendStatus(p, 500, "Internal Server Error");
+                  content = "Internal Server Error\r\n";
+                  contentlength = -1;
+                }
+              } else if (HasHeader(kHttpRange)) {
+                if (ParseHttpRange(
+                        inbuf + req.headers[kHttpRange].a,
+                        req.headers[kHttpRange].b - req.headers[kHttpRange].a,
+                        contentlength, &rangestart, &rangelength)) {
+                  p = AppendStatus(p, 206, "Partial Content");
+                  p = AppendContentRange(p, rangestart, rangelength,
+                                         contentlength);
+                  content = AddRange(content, rangestart, rangelength);
+                  contentlength = rangelength;
+                } else {
+                  WARNF("%s %s %.*s bad range %`'.*s", clientaddrstr,
+                        kHttpMethod[req.method], pathlen, path,
+                        req.headers[kHttpRange].b - req.headers[kHttpRange].a,
+                        inbuf + req.headers[kHttpRange].a);
+                  p = AppendStatus(p, 416, "Range Not Satisfiable");
+                  p = AppendContentRange(p, rangestart, rangelength,
+                                         contentlength);
+                  content = "";
+                  contentlength = 0;
+                }
+              } else {
+                p = AppendStatus(p, 200, "OK");
+              }
             }
-          }
-          p = AppendLastModified(p, a->lastmodifiedstr);
-          p = AppendContentType(p, GetContentType(path, pathlen));
-          p = AppendCache(p);
-          if (!IsCompressed(a)) {
-            p = AppendAcceptRangesBytes(p);
-          } else {
-            p = AppendVaryContentEncoding(p);
+            p = AppendLastModified(p, a->lastmodifiedstr);
+            p = AppendContentType(p, GetContentType(path, pathlen));
+            p = AppendCache(p);
+            if (!IsCompressed(a)) {
+              p = AppendAcceptRangesBytes(p);
+            } else {
+              p = AppendVaryContentEncoding(p);
+            }
           }
         } else if (!strncmp(path, "/", pathlen) ||
                    !strncmp(path, "/index.html", pathlen)) {
@@ -1175,6 +1235,7 @@ void RedBean(void) {
     printf("%d\n", ntohs(serveraddr.sin_port));
     fflush(stdout);
   }
+  LuaInit();
   heartbeat = true;
   while (!terminated) {
     if (invalidated) {

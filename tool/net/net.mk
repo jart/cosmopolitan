@@ -40,6 +40,7 @@ TOOL_NET_DIRECTDEPS =						\
 	LIBC_X							\
 	NET_HTTP						\
 	THIRD_PARTY_GETOPT					\
+	THIRD_PARTY_LUA						\
 	THIRD_PARTY_ZLIB					\
 	TOOL_DECODE_LIB
 
@@ -65,18 +66,7 @@ o/$(MODE)/tool/net/redbean.com.dbg:				\
 		o/$(MODE)/tool/net/redbean.png.zip.o		\
 		o/$(MODE)/tool/net/redbean.css.zip.o		\
 		o/$(MODE)/tool/net/redbean.html.zip.o		\
-		o/$(MODE)/tool/net/net.pkg			\
-		$(CRT)						\
-		$(APE)
-	@$(APELINK)
-
-o/$(MODE)/tool/net/greenbean.com.dbg:				\
-		$(TOOL_NET_DEPS)				\
-		o/$(MODE)/tool/net/greenbean.o			\
-		o/$(MODE)/tool/net/redbean.ico.zip.o		\
-		o/$(MODE)/tool/net/redbean.png.zip.o		\
-		o/$(MODE)/tool/net/redbean.css.zip.o		\
-		o/$(MODE)/tool/net/redbean.html.zip.o		\
+		o/$(MODE)/tool/net/redbean.lua.zip.o		\
 		o/$(MODE)/tool/net/net.pkg			\
 		$(CRT)						\
 		$(APE)
