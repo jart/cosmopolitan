@@ -40,6 +40,13 @@
 #define LOG_UUCP SYMBOLIC(LOG_UUCP)
 #define LOG_WARNING SYMBOLIC(LOG_WARNING)
 
+/*
+ * arguments to setlogmask.
+ */
+#define	LOG_MASK(pri)	(1 << (pri))		/* mask for one priority */
+#define	LOG_UPTO(pri)	((1 << ((pri)+1)) - 1)	/* all priorities through pri */
+
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
