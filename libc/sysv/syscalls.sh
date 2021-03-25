@@ -727,7 +727,7 @@ scall	recv			0xffffff066fffffff	globl
 scall	rfork			0xffffff0fbfffffff	globl
 scall	rtprio			0xffffff0a6fffffff	globl
 scall	rtprio_thread		0xffffff1d2fffffff	globl
-scall	send			0xffffff065fffffff	globl
+#scall	send			0xffffff065fffffff	globl
 scall	setaudit		0xffffff1c2fffffff	globl
 scall	setcontext		0x134fff1a6fffffff	globl
 scall	setfib			0xffffff0affffffff	globl
