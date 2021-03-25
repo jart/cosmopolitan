@@ -22,7 +22,7 @@ dir=libc/sysv/consts
 #	The Fifth Bell System, Community Edition
 #	» catalogue of carnage
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			Windows			Commentary
 syscon	errno	ENOSYS					38			78			78			78			78			1			# bsd consensus & kNtErrorInvalidFunction
 syscon	errno	EPERM					1			1			1			1			1			12			# unix consensus & kNtErrorInvalidAccess (should be kNtErrorNotOwner but is that mutex only??)
 syscon	errno	ENOENT					2			2			2			2			2			2			# unix consensus & kNtErrorFileNotFound
