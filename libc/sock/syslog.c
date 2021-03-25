@@ -112,13 +112,9 @@ void vsyslog(int priority, const char *message, va_list ap) {
   if (!(priority & LOG_FACMASK)) priority |= log_facility;
 
   /* Build the time string */
-#if 0
   now = time(NULL);
   gmtime_r(&now, &tm);
   strftime(timebuf, sizeof(timebuf), "%b %e %T", &tm);
-#else
-  strcpy(timebuf, "3/23/2021");
-#endif
 
   pid = (log_opt & LOG_PID) ? getpid() : 0;
   /* This is a clever trick to optionally include "[<pid>]"
