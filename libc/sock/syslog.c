@@ -147,13 +147,9 @@ void vsyslog(int priority, const char *message, va_list ap) {
        * - First try to send it to syslogd
        * - If fails and LOG_CONS is provided, writes to /dev/console
        */
-      // TODO: If we use send() it will end up calling the send stubs under
-      //       sysv/calls/send.S and that will report ENOSYS (apparently that 
-      //       function serves only BSD). If we use sendto() it works as expected.
-      //       Why send() does not call the send() function defined in sock/send.c ?
-      if (sendto(log_fd, buf, l, 0, NULL, 0) < 0 && (!is_lost_conn(errno)
+      if (send(log_fd, buf, l, 0) < 0 && (!is_lost_conn(errno)
             || connect(log_fd, (void *)&log_addr, sizeof(log_addr)) < 0
-            || sendto(log_fd, buf, l, 0, NULL, 0) < 0)
+            || send(log_fd, buf, l, 0) < 0)
           && (log_opt & LOG_CONS)) {
         int fd = open("/dev/console", O_WRONLY|O_NOCTTY);
         if (fd >= 0) {
@@ -252,24 +248,22 @@ int setlogmask(int maskpri) {
  * @asyncsignalsafe
  */
 void openlog(const char *ident, int opt, int facility) {
+  size_t n;
+
   if (log_facility == -1) {
     __initlog();
   }
-  if (ident) {
-    size_t n = strnlen(ident, sizeof(log_ident) - 1);
-    memcpy(log_ident, ident, n);
-    log_ident[n] = 0;
-  } else {
-    log_ident[0] = 0;
+  if (!ident) {
+    ident = program_invocation_short_name;
   }
+  n = strnlen(ident, sizeof(log_ident) - 1);
+  memcpy(log_ident, ident, n);
+  log_ident[n] = 0;
   log_opt = opt;
   log_facility = facility;
   log_id = 0;
 
-  // TODO: If ident == NULL, retrieve the process name.
-
   if ((opt & LOG_NDELAY) && log_fd<0) __openlog();
-
 }
 
 
