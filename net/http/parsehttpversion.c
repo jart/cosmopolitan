@@ -21,6 +21,7 @@
 
 unsigned ParseHttpVersion(const char *p, size_t n) {
   unsigned x;
+  if (!n) return 9;
   if (n >= 8 && READ32LE(p) == ('H' | 'T' << 8 | 'T' << 16 | 'P' << 24)) {
     if (READ32LE(p + 4) == ('/' | '1' << 8 | '.' << 16 | '1' << 24)) {
       return 101;

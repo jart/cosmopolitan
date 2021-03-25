@@ -19,106 +19,119 @@
 #include "libc/alg/alg.h"
 #include "libc/alg/arraylist.internal.h"
 #include "libc/limits.h"
+#include "libc/macros.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/x/x.h"
 #include "net/http/http.h"
 
-enum ParseHttpRequestState {
-  METHOD,
-  URI,
-  VERSION,
-  HKEY,
-  HSEP,
-  HVAL,
-  CR1,
-  LF1,
-  LF2
-};
+#define LIMIT (SHRT_MAX - 1)
+
+enum { START, METHOD, URI, VERSION, HKEY, HSEP, HVAL, CR1, LF1, LF2 };
 
 /**
- * Parses HTTP request header.
+ * Initializes HTTP request parser.
  */
-int ParseHttpRequest(struct HttpRequest *req, const char *p, size_t n) {
-  int a, h, c, i, x;
-  enum ParseHttpRequestState t;
-  memset(req, 0, sizeof(*req));
-  a = h = 0;
-  t = METHOD;
-  if (n > SHRT_MAX - 1) n = SHRT_MAX - 1;
-  for (i = 0; i < n; ++i) {
-    c = p[i] & 0xFF;
-    switch (t) {
+void InitHttpRequest(struct HttpRequest *r) {
+  memset(r, 0, sizeof(*r));
+}
+
+/**
+ * Parses HTTP request.
+ */
+int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
+  int c;
+  for (n = MIN(n, LIMIT); r->i < n; ++r->i) {
+    c = p[r->i] & 0xff;
+    switch (r->t) {
+      case START:
+        if (c == '\r' || c == '\n') {
+          ++r->a; /* RFC7230 § 3.5 */
+          break;
+        }
+        r->t = METHOD;
+        /* fallthrough */
       case METHOD:
-        if (c == '\r' || c == '\n') break; /* RFC7230 § 3.5 */
         if (c == ' ') {
-          if (!i) return ebadmsg();
-          if ((x = GetHttpMethod(p, i)) == -1) return ebadmsg();
-          req->method = x;
-          req->uri.a = i + 1;
-          t = URI;
+          if ((r->method = GetHttpMethod(p + r->a, r->i - r->a)) != -1) {
+            r->uri.a = r->i + 1;
+            r->t = URI;
+          } else {
+            return ebadmsg();
+          }
         }
         break;
       case URI:
-        if (c == ' ') {
-          req->uri.b = i;
-          req->version.a = i + 1;
-          if (req->uri.a == req->uri.b) return ebadmsg();
-          t = VERSION;
+        if (c == ' ' || c == '\r' || c == '\n') {
+          if (r->i == r->uri.a) return ebadmsg();
+          r->uri.b = r->i;
+          if (c == ' ') {
+            r->version.a = r->i + 1;
+            r->t = VERSION;
+          } else if (c == '\r') {
+            r->t = CR1;
+          } else {
+            r->t = LF1;
+          }
         }
         break;
       case VERSION:
         if (c == '\r' || c == '\n') {
-          req->version.b = i;
-          t = c == '\r' ? CR1 : LF1;
+          r->version.b = r->i;
+          r->t = c == '\r' ? CR1 : LF1;
         }
         break;
       case CR1:
         if (c != '\n') return ebadmsg();
-        t = LF1;
+        r->t = LF1;
         break;
       case LF1:
         if (c == '\r') {
-          t = LF2;
+          r->t = LF2;
           break;
         } else if (c == '\n') {
-          return 0;
-        } else if (c == ' ' || c == '\t') { /* line folding!!! */
-          return eprotonosupport();         /* RFC7230 § 3.2.4 */
+          return ++r->i;
+        } else if (c == ':') {
+          return ebadmsg();
+        } else if (c == ' ' || c == '\t') {
+          return ebadmsg(); /* RFC7230 § 3.2.4 */
         }
-        a = i;
-        t = HKEY;
-        /* εpsilon transition */
+        r->a = r->i;
+        r->t = HKEY;
+        break;
       case HKEY:
         if (c == ':') {
-          h = GetHttpHeader(p + a, i - a);
-          t = HSEP;
+          r->h = GetHttpHeader(p + r->a, r->i - r->a);
+          r->t = HSEP;
         }
         break;
       case HSEP:
         if (c == ' ' || c == '\t') break;
-        a = i;
-        t = HVAL;
-        /* εpsilon transition */
+        r->a = r->i;
+        r->t = HVAL;
+        /* fallthrough */
       case HVAL:
         if (c == '\r' || c == '\n') {
-          if (h != -1) {
-            req->headers[h].a = a;
-            req->headers[h].b = i;
+          if (r->h != -1) {
+            r->headers[r->h].a = r->a;
+            r->headers[r->h].b = r->i;
           }
-          t = c == '\r' ? CR1 : LF1;
+          r->t = c == '\r' ? CR1 : LF1;
         }
         break;
       case LF2:
         if (c == '\n') {
-          req->length = i + 1;
-          return i + 1;
+          return ++r->i;
         }
         return ebadmsg();
       default:
         unreachable;
     }
   }
-  return 0;
+  if (r->i < LIMIT) {
+    return 0;
+  } else {
+    return ebadmsg();
+  }
 }

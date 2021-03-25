@@ -19,16 +19,18 @@
 #include "libc/str/str.h"
 #include "net/http/http.h"
 
-long ParseContentLength(const struct HttpRequest *req, const char *p) {
-  long i, r, n = 0;
-  for (i = req->headers[kHttpContentLength].a;
-       i < req->headers[kHttpContentLength].b; ++i) {
-    if (isdigit(p[i])) {
-      if (!__builtin_mul_overflow(n, 10, &r) &&
-          !__builtin_add_overflow(r, p[i] - '0', &r)) {
-        n = r;
-      }
-    }
+/**
+ * Parses Content-Length header.
+ *
+ * @return -1 on invalid or overflow, otherwise >=0 value
+ */
+ssize_t ParseContentLength(const char *s, size_t n) {
+  int i, r = 0;
+  if (!n) return -1;
+  for (i = 0; i < n; ++i) {
+    if (!isdigit(s[i])) return -1;
+    if (__builtin_mul_overflow(r, 10, &r)) return -1;
+    if (__builtin_add_overflow(r, s[i] - '0', &r)) return -1;
   }
-  return n;
+  return r;
 }

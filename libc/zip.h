@@ -69,6 +69,7 @@
 #define kZipLfileOffsetLastmodifieddate  12
 #define kZipLfileOffsetCrc32             14
 #define kZipLfileOffsetCompressedsize    18
+#define kZipLfileOffsetUncompressedsize  22
 
 #define kZipGflagUtf8 0x800
 
@@ -140,11 +141,12 @@
 #define ZIP_LFILE_CRC32(P) READ32LE((P) + kZipLfileOffsetCrc32)
 #define ZIP_LFILE_COMPRESSEDSIZE(P) \
   READ32LE((P) + kZipLfileOffsetCompressedsize)
-#define ZIP_LFILE_UNCOMPRESSEDSIZE(P) READ32LE((P) + 22)
-#define ZIP_LFILE_NAMESIZE(P)         READ16LE((P) + 26)
-#define ZIP_LFILE_EXTRASIZE(P)        READ16LE((P) + 28)
-#define ZIP_LFILE_NAME(P)             ((const char *)(&(P)[30]))
-#define ZIP_LFILE_EXTRA(P)            (&(P)[30 + ZIP_LFILE_NAMESIZE(P)])
+#define ZIP_LFILE_UNCOMPRESSEDSIZE(P) \
+  READ32LE((P) + kZipLfileOffsetUncompressedsize)
+#define ZIP_LFILE_NAMESIZE(P)  READ16LE((P) + 26)
+#define ZIP_LFILE_EXTRASIZE(P) READ16LE((P) + 28)
+#define ZIP_LFILE_NAME(P)      ((const char *)(&(P)[30]))
+#define ZIP_LFILE_EXTRA(P)     (&(P)[30 + ZIP_LFILE_NAMESIZE(P)])
 #define ZIP_LFILE_HDRSIZE(P) \
   (ZIP_LFILE_NAMESIZE(P) + ZIP_LFILE_EXTRASIZE(P) + kZipLfileHdrMinSize)
 #define ZIP_LFILE_CONTENT(P) ((P) + ZIP_LFILE_HDRSIZE(P))

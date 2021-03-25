@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,53 +16,40 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-#include "libc/str/str.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"
-#include "net/http/http.h"
+#include "libc/x/x.h"
+#include "net/http/escape.h"
+
+// url path segment dispatch
+// - 0 is -.~_@:!$&'()*+,;=0-9A-Za-z
+// - 2 is everything else which needs uppercase hex %XX
+// note that '& can break html
+// note that '() can break css urls
+// note that unicode can still be wild
+static const char kEscapeUrlPathSegment[256] = {
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,  // 0x00
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,  // 0x10
+    2, 0, 2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,  // 0x20
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2,  // 0x30
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x40
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 0,  // 0x50
+    2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x60
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 2,  // 0x70
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,  // 0x80
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,  // 0x90
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,  // 0xa0
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,  // 0xb0
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,  // 0xc0
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,  // 0xd0
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,  // 0xe0
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,  // 0xf0
+};
 
 /**
- * Formats HTTP timestamp, e.g.
+ * Escapes URL path segment.
  *
- *   Sun, 04 Oct 2020 19:50:10 GMT
- *
- * @param tm must be zulu see gmtime_r() and nowl()
- * @see ParseHttpDateTime()
+ * Please note this will URI encode the slash character. That's because
+ * segments are the labels between the slashes in a path.
  */
-char *FormatHttpDateTime(char p[hasatleast 30], struct tm *tm) {
-  unsigned i;
-  p = mempcpy(p, kWeekdayNameShort[tm->tm_wday], 3);
-  *p++ = ',';
-  *p++ = ' ';
-  i = MIN(MAX(tm->tm_mday, 0), 31);
-  *p++ = '0' + i / 10;
-  *p++ = '0' + i % 10;
-  *p++ = ' ';
-  i = MIN(MAX(tm->tm_mon, 0), 11);
-  p = mempcpy(p, kMonthNameShort[i], 3);
-  *p++ = ' ';
-  i = MIN(MAX(tm->tm_year + 1900, 0), 9999);
-  *p++ = '0' + i / 1000;
-  *p++ = '0' + i / 100 % 10;
-  *p++ = '0' + i / 10 % 10;
-  *p++ = '0' + i % 10;
-  *p++ = ' ';
-  i = MIN(MAX(tm->tm_hour, 0), 23);
-  *p++ = '0' + i / 10;
-  *p++ = '0' + i % 10;
-  *p++ = ':';
-  i = MIN(MAX(tm->tm_min, 0), 59);
-  *p++ = '0' + i / 10;
-  *p++ = '0' + i % 10;
-  *p++ = ':';
-  i = MIN(MAX(tm->tm_sec, 0), 59);
-  *p++ = '0' + i / 10;
-  *p++ = '0' + i % 10;
-  *p++ = ' ';
-  *p++ = 'G';
-  *p++ = 'M';
-  *p++ = 'T';
-  *p = '\0';
-  return p;
+struct EscapeResult EscapeUrlPathSegment(const char *data, size_t size) {
+  return EscapeUrl(data, size, kEscapeUrlPathSegment);
 }

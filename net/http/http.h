@@ -80,8 +80,8 @@ struct HttpRequestSlice {
 };
 
 struct HttpRequest {
+  int i, t, a, h;
   int method;
-  int length;
   struct HttpRequestSlice uri;
   struct HttpRequestSlice version;
   struct HttpRequestSlice scratch;
@@ -92,14 +92,16 @@ extern const char kHttpMethod[17][8];
 
 int GetHttpHeader(const char *, size_t);
 int GetHttpMethod(const char *, size_t);
+void InitHttpRequest(struct HttpRequest *);
 int ParseHttpRequest(struct HttpRequest *, const char *, size_t);
 int NegotiateHttpRequest(int, const char *, uint32_t *, char *, uint32_t *,
                          uint32_t *, bool, long double);
-long ParseContentLength(const struct HttpRequest *, const char *);
+ssize_t ParseContentLength(const char *, size_t);
 char *FormatHttpDateTime(char[hasatleast 30], struct tm *);
 bool ParseHttpRange(const char *, size_t, long, long *, long *);
 unsigned ParseHttpVersion(const char *, size_t);
 int64_t ParseHttpDateTime(const char *, size_t);
+const char *GetHttpReason(int);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

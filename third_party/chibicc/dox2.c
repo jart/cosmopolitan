@@ -350,7 +350,7 @@ static void PrintText(FILE *f, const char *s) {
         bol = false;
         break;
       case '\'':
-        fprintf(f, "&apos;");
+        fprintf(f, "&#39;");
         bol = false;
         break;
       case '`':
