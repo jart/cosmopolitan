@@ -16,10 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/errno.h"
 #include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/o.h"
 
 /**
  * Repositions open file stream.
@@ -32,28 +29,8 @@
  * @param f is a non-null stream handle
  * @param offset is the byte delta
  * @param whence can be SEET_SET, SEEK_CUR, or SEEK_END
- * @returns new offset or -1 on error
+ * @returns 0 on success or -1 on error
  */
-long fseek(FILE *f, long offset, int whence) {
-  int64_t pos;
-  if (f->fd != -1) {
-    if (whence == SEEK_CUR && f->beg < f->end) {
-      offset -= f->end - f->beg;
-    }
-    if (f->beg && !f->end) {
-      f->writer(f);
-    }
-    if (lseek(f->fd, offset, whence) != -1) {
-      f->state = 0;
-      f->beg = 0;
-      f->end = 0;
-      return 0;
-    } else {
-      f->state = errno == ESPIPE ? EBADF : errno;
-      return -1;
-    }
-  } else {
-    f->beg = (offset & 0xffffffff) % f->size;
-    return -1;
-  }
+int fseek(FILE *f, long offset, int whence) {
+  return fseeko(f, offset, whence);
 }

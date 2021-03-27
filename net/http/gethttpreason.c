@@ -91,6 +91,9 @@ static const struct HttpReason {
 
 /**
  * Returns string describing HTTP reason phrase.
+ *
+ * @see https://tools.ietf.org/html/rfc2616
+ * @see https://tools.ietf.org/html/rfc6585
  */
 const char *GetHttpReason(int code) {
   int m, l, r;

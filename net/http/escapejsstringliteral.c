@@ -27,44 +27,130 @@
  * HTML entities and forward slash are escaped too for added safety.
  *
  * We assume the UTF-8 is well-formed and can be represented as UTF-16.
- * Things that can't be decoded or encoded will be replaced with invalid
- * code-point markers. This function is agnostic to numbers that have
- * been used with malicious intent in the past under buggy software.
- * Noncanonical encodings such as overlong NUL are canonicalized as NUL.
+ * Things that can't be decoded will fall back to binary. Things that
+ * can't be encoded will use invalid codepoint markers. This function is
+ * agnostic to numbers that have been used with malicious intent in the
+ * past under buggy software. Noncanonical encodings such as overlong
+ * NUL are canonicalized as NUL.
  */
 struct EscapeResult EscapeJsStringLiteral(const char *data, size_t size) {
   char *p;
-  size_t i;
-  unsigned n;
   uint64_t w;
-  wint_t x, y;
+  unsigned i, n;
+  wint_t x, a, b;
+  const char *d, *e;
   struct EscapeResult r;
+  d = data;
+  e = data + size;
   p = r.data = xmalloc(size * 6 + 6 + 1);
-  for (i = 0; i < size;) {
-    x = data[i++] & 0xff;
-    if (x >= 0200) {
-      if (x >= 0300) {
-        n = ThomPikeLen(x);
-        x = ThomPikeByte(x);
-        while (--n) {
-          if (i < size) {
-            y = data[i++] & 0xff;
-            if (ThomPikeCont(y)) {
-              x = ThomPikeMerge(x, y);
-            } else {
-              x = 0xFFFD;
-              break;
-            }
-          } else {
-            x = 0xFFFD;
+  while (d < e) {
+    x = *d++ & 0xff;
+    if (x >= 0300) {
+      a = ThomPikeByte(x);
+      n = ThomPikeLen(x) - 1;
+      if (d + n <= e) {
+        for (i = 0;;) {
+          b = d[i] & 0xff;
+          if (!ThomPikeCont(b)) break;
+          a = ThomPikeMerge(a, b);
+          if (++i == n) {
+            x = a;
+            d += i;
             break;
           }
         }
-      } else {
-        x = 0xFFFD;
       }
     }
     switch (x) {
+      case ' ':
+      case '!':
+      case '#':
+      case '$':
+      case '%':
+      case '(':
+      case ')':
+      case '*':
+      case '+':
+      case ',':
+      case '-':
+      case '.':
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+      case ':':
+      case ';':
+      case '?':
+      case '@':
+      case 'A':
+      case 'B':
+      case 'C':
+      case 'D':
+      case 'E':
+      case 'F':
+      case 'G':
+      case 'H':
+      case 'I':
+      case 'J':
+      case 'K':
+      case 'L':
+      case 'M':
+      case 'N':
+      case 'O':
+      case 'P':
+      case 'Q':
+      case 'R':
+      case 'S':
+      case 'T':
+      case 'U':
+      case 'V':
+      case 'W':
+      case 'X':
+      case 'Y':
+      case 'Z':
+      case '[':
+      case ']':
+      case '^':
+      case '_':
+      case '`':
+      case 'a':
+      case 'b':
+      case 'c':
+      case 'd':
+      case 'e':
+      case 'f':
+      case 'g':
+      case 'h':
+      case 'i':
+      case 'j':
+      case 'k':
+      case 'l':
+      case 'm':
+      case 'n':
+      case 'o':
+      case 'p':
+      case 'q':
+      case 'r':
+      case 's':
+      case 't':
+      case 'u':
+      case 'v':
+      case 'w':
+      case 'x':
+      case 'y':
+      case 'z':
+      case '{':
+      case '|':
+      case '}':
+      case '~':
+        *p++ = x;
+        break;
       case '\t':
         p[0] = '\\';
         p[1] = 't';
@@ -105,24 +191,19 @@ struct EscapeResult EscapeJsStringLiteral(const char *data, size_t size) {
         p[1] = '\'';
         p += 2;
         break;
-      default:
-        if (0x20 <= x && x < 0x7F) {
-          *p++ = x;
-          break;
-        }
-        /* fallthrough */
       case '<':
       case '>':
       case '&':
       case '=':
+      default:
         w = EncodeUtf16(x);
         do {
           p[0] = '\\';
           p[1] = 'u';
-          p[2] = "0123456789ABCDEF"[(w & 0xF000) >> 014];
-          p[3] = "0123456789ABCDEF"[(w & 0x0F00) >> 010];
-          p[4] = "0123456789ABCDEF"[(w & 0x00F0) >> 004];
-          p[5] = "0123456789ABCDEF"[(w & 0x000F) >> 000];
+          p[2] = "0123456789abcdef"[(w & 0xF000) >> 014];
+          p[3] = "0123456789abcdef"[(w & 0x0F00) >> 010];
+          p[4] = "0123456789abcdef"[(w & 0x00F0) >> 004];
+          p[5] = "0123456789abcdef"[(w & 0x000F) >> 000];
           p += 6;
         } while ((w >>= 16));
         break;

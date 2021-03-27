@@ -1,0 +1,1 @@
+-- special script called by main redbean process on invalidate

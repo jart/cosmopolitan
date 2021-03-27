@@ -57,15 +57,21 @@ TEST(fgetwc, testUnicode_oneChar_writtenAsRawUtf8) {
   fclose(f);
 }
 
-TEST(fgetwc, testUnicode_spuriousContChars_synchronizedBeforeRead) {
+TEST(fgetwc, testUnicode_undecodableSequences_fallsBackToBinary) {
   FILE *f = fmemopen(NULL, BUFSIZ, "r+");
-  EXPECT_EQ(0x90, fputc(0x90, f));
-  EXPECT_EQ(0x90, fputc(0x90, f));
+  EXPECT_EQ(0200, fputc(0200, f));
+  EXPECT_EQ(0220, fputc(0220, f));
   EXPECT_EQ(0xF0, fputc(0xF0, f));
   EXPECT_EQ(0x90, fputc(0x90, f));
   EXPECT_EQ(0x8C, fputc(0x8C, f));
   EXPECT_EQ(0xB0, fputc(0xB0, f));
+  EXPECT_EQ(0304, fputc(0304, f));
+  EXPECT_EQ('a', fputc('a', f));
   rewind(f);
+  EXPECT_EQ(0200, fgetwc(f));
+  EXPECT_EQ(0220, fgetwc(f));
   EXPECT_EQ(L'𐌰', fgetwc(f));
+  EXPECT_EQ(0304, fgetwc(f));
+  EXPECT_EQ('a', fgetwc(f));
   fclose(f);
 }

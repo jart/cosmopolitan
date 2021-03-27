@@ -22,9 +22,17 @@
  * Writes string w/ trailing newline to stdout.
  */
 int puts(const char *s) {
-  FILE *f = stdout;
-  int rc, res;
-  if ((res = rc = fputs(s, f)) == -1) return -1;
-  if ((rc = fputc('\n', f)) == -1) return -1;
-  return res + 1;
+  FILE *f;
+  size_t n, r;
+  f = stdout;
+  if ((n = strlen(s))) {
+    r = fwrite(s, 1, n, f);
+    if (!r) return -1;
+    if (r < n) return r;
+  }
+  if (fputc('\n', f) == -1) {
+    if (feof(f)) return n;
+    return -1;
+  }
+  return n + 1;
 }

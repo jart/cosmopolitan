@@ -17,33 +17,22 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/errno.h"
-#include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/o.h"
 
 /**
  * Writes byte to stream.
- * @return c (as unsigned char) if written or -1 w/ errno
- * @see putc() if called within loop
+ *
+ * @param c is byte to buffer or write, which is masked
+ * @return c as unsigned char if written or -1 w/ errno
  */
-noinstrument int fputc(int c, FILE *f) {
-  if ((f->iomode & O_ACCMODE) != O_RDONLY) {
-    if (f->beg < f->size) {
-      f->buf[f->beg++] = c;
-      if (f->beg == f->size || f->bufmode == _IONBF ||
-          (f->bufmode == _IOLBF && c == '\n')) {
-        if (f->writer) {
-          if (f->writer(f) == -1) return -1;
-        } else if (f->beg == f->size) {
-          f->beg = 0;
-        }
-      }
-      return c & 0xff;
-    } else {
-      return __fseteof(f);
-    }
+int fputc(int c, FILE *f) {
+  unsigned char b;
+  if (c != '\n' && f->beg < f->size && f->bufmode != _IONBF) {
+    f->buf[f->beg++] = c;
+    return c & 0xff;
   } else {
-    return __fseterr(f, EBADF);
+    b = c;
+    if (!fwrite(&b, 1, 1, f)) return -1;
+    return b;
   }
 }

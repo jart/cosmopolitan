@@ -30,8 +30,5 @@
 	ezlea	__stdin_buf,cx
 	mov	%rcx,24(%rax)			#→ f.buf
 	movl	$BUFSIZ,32(%rax)		#→ f.size
-	ezlea	__freadbuf,cx
-	mov	%rcx,%rdx
-	mov	%rdx,40(%rax)			#→ f.reader
 	mov	%rax,stdin(%rip)
 	.init.end 400,_init_stdin,globl,hidden

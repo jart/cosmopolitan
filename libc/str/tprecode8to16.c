@@ -60,9 +60,10 @@ axdx_t tprecode8to16(char16_t *dst, size_t dstsize, const char *src) {
   r.ax = 0;
   r.dx = 0;
   for (;;) {
-    if (!IsTiny() && !((uintptr_t)(src + r.dx) & 15)) {
-      tprecode8to16_sse2(dst, dstsize, src, r);
-    }
+    /* TODO(jart): Why is it now so much slower refactored? */
+    /* if (!IsTiny() && !((uintptr_t)(src + r.dx) & 15)) { */
+    /*   tprecode8to16_sse2(dst, dstsize, src, r); */
+    /* } */
     x = src[r.dx++] & 0xff;
     if (ThomPikeCont(x)) continue;
     if (!isascii(x)) {

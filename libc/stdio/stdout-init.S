@@ -32,8 +32,5 @@
 	ezlea	__stdout_buf,cx
 	mov	%rcx,24(%rax)			#→ f.buf
 	movl	$BUFSIZ,32(%rax)		#→ f.size
-	ezlea	__fwritebuf,cx
-	mov	%rcx,%rdx
-	mov	%rdx,48(%rax)			#→ f.writer
 	mov	%rax,stdout(%rip)
 	.init.end 400,_init_stdout,globl,hidden

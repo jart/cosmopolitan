@@ -31,7 +31,7 @@ Content-Md5,          kHttpContentMd5
 Content-Range,        kHttpContentRange
 Content-Type,         kHttpContentType
 Date,                 kHttpDate
-Etag,                 kHttpEtag
+ETag,                 kHttpEtag
 Expires,              kHttpExpires
 From,                 kHttpFrom
 Host,                 kHttpHost
@@ -58,5 +58,10 @@ Retry-After,          kHttpRetryAfter
 Server,               kHttpServer
 Vary,                 kHttpVary
 Warning,              kHttpWarning
-Www-Authenticate,     kHttpWwwAuthenticate
+WWW-Authenticate,     kHttpWwwAuthenticate
 Last-Modified,        kHttpLastModified
+Cookie,               kHttpCookie
+Trailer,              kHttpTrailer
+TE,                   kHttpTe
+DNT,                  kHttpDnt
+Expect,               kHttpExpect

@@ -16,10 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/stdio/stdio.h"
-#include "libc/sysv/errfuns.h"
 
 /**
  * Sets buffer on stdio stream.
  */
-void setbuf(FILE *f, char *buf) { setbuffer(f, buf, BUFSIZ); }
+void setbuf(FILE *f, char *buf) {
+  setvbuf(f, buf, buf ? _IOFBF : _IONBF, BUFSIZ);
+}

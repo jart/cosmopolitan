@@ -20,6 +20,7 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/pushpop.h"
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -36,28 +37,26 @@
  */
 int fflush(FILE *f) {
   size_t i;
-  int rc;
-  rc = 0;
+  ssize_t rc;
   if (!f) {
     for (i = __fflush.handles.i; i; --i) {
       if ((f = __fflush.handles.p[i - 1])) {
-        if (fflush(f) == -1) {
-          rc = -1;
-          break;
-        }
+        if (fflush(f) == -1) return -1;
       }
     }
   } else if (f->fd != -1) {
-    while (f->beg && !f->end) {
-      if (__fwritebuf(f) == -1) {
-        rc = -1;
-        break;
+    while (f->beg && !f->end && (f->iomode & O_ACCMODE) != O_RDONLY) {
+      if ((rc = write(f->fd, f->buf, f->beg)) == -1) {
+        f->state = errno;
+        return -1;
       }
+      if (rc != f->beg) abort();
+      f->beg = 0;
     }
   } else if (f->beg && f->beg < f->size) {
     f->buf[f->beg] = 0;
   }
-  return rc;
+  return 0;
 }
 
 textstartup int __fflush_register(FILE *f) {

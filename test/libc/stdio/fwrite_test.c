@@ -17,37 +17,164 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/mem/mem.h"
+#include "libc/rand/rand.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
+#include "libc/time/time.h"
 
+/* TODO(jart): O_APPEND on Windows */
+
+#define PATH "hog"
+
+FILE *f;
+char buf[512];
 char testlib_enable_tmp_setup_teardown;
 
 TEST(fwrite, test) {
-  FILE *f;
-  char buf[512];
-
-  ASSERT_NE(NULL, (f = fopen("hog", "wb")));
+  ASSERT_NE(NULL, (f = fopen(PATH, "wb")));
   EXPECT_EQ(-1, fgetc(f));
   EXPECT_EQ(5, fwrite("hello", 1, 5, f));
   EXPECT_EQ(5, ftell(f));
   EXPECT_NE(-1, fclose(f));
-
-  ASSERT_NE(NULL, (f = fopen("hog", "r")));
-  EXPECT_EQ(-1, fwrite("hello", 1, 5, f));
+  ASSERT_NE(NULL, (f = fopen(PATH, "r")));
+  EXPECT_EQ(0, fwrite("hello", 1, 5, f));
   EXPECT_EQ(EBADF, ferror(f));
   EXPECT_NE(-1, fclose(f));
-
-  ASSERT_NE(NULL, (f = fopen("hog", "a+b")));
+  ASSERT_NE(NULL, (f = fopen(PATH, "a+b")));
   EXPECT_EQ(5, fwrite("hello", 1, 5, f));
   EXPECT_NE(-1, fclose(f));
+  if (IsWindows()) return;
+  ASSERT_NE(NULL, (f = fopen(PATH, "r")));
+  EXPECT_EQ(10, fread(buf, 1, 10, f));
+  EXPECT_TRUE(!memcmp(buf, "hellohello", 10));
+  EXPECT_NE(-1, fclose(f));
+}
 
-  /* TODO(jart): O_APPEND on Windows */
-  if (!IsWindows()) {
-    ASSERT_NE(NULL, (f = fopen("hog", "r")));
-    EXPECT_EQ(10, fread(buf, 1, 10, f));
-    EXPECT_TRUE(!memcmp(buf, "hellohello", 10));
-    EXPECT_NE(-1, fclose(f));
+TEST(fwrite, testSmallBuffer) {
+  ASSERT_NE(NULL, (f = fopen(PATH, "wb")));
+  setbuffer(f, gc(malloc(1)), 1);
+  EXPECT_EQ(-1, fgetc(f));
+  EXPECT_EQ(5, fwrite("hello", 1, 5, f));
+  EXPECT_EQ(5, ftell(f));
+  EXPECT_NE(-1, fclose(f));
+  ASSERT_NE(NULL, (f = fopen(PATH, "r")));
+  setbuffer(f, gc(malloc(1)), 1);
+  EXPECT_EQ(0, fwrite("hello", 1, 5, f));
+  EXPECT_EQ(EBADF, ferror(f));
+  EXPECT_NE(-1, fclose(f));
+  ASSERT_NE(NULL, (f = fopen(PATH, "a")));
+  setbuffer(f, gc(malloc(1)), 1);
+  EXPECT_EQ(5, fwrite("hello", 1, 5, f));
+  EXPECT_NE(-1, fclose(f));
+  if (IsWindows()) return;
+  ASSERT_NE(NULL, (f = fopen(PATH, "r")));
+  setbuffer(f, gc(malloc(1)), 1);
+  EXPECT_EQ(10, fread(buf, 1, 10, f));
+  EXPECT_TRUE(!memcmp(buf, "hellohello", 10));
+  EXPECT_NE(-1, fclose(f));
+}
+
+TEST(fwrite, testLineBuffer) {
+  ASSERT_NE(NULL, (f = fopen(PATH, "wb")));
+  setvbuf(f, NULL, _IOLBF, 64);
+  EXPECT_EQ(-1, fgetc(f));
+  EXPECT_EQ(5, fwrite("heyy\n", 1, 5, f));
+  EXPECT_EQ(0, fread(buf, 0, 0, f));
+  EXPECT_FALSE(feof(f));
+  EXPECT_EQ(0, fread(buf, 1, 10, f));
+  EXPECT_EQ(EBADF, ferror(f));
+  EXPECT_EQ(5, ftell(f));
+  EXPECT_NE(-1, fclose(f));
+  ASSERT_NE(NULL, (f = fopen(PATH, "r")));
+  setvbuf(f, NULL, _IOLBF, 64);
+  EXPECT_EQ(0, fwrite("heyy\n", 1, 5, f));
+  EXPECT_EQ(EBADF, ferror(f));
+  EXPECT_NE(-1, fclose(f));
+  ASSERT_NE(NULL, (f = fopen(PATH, "a")));
+  setvbuf(f, NULL, _IOLBF, 64);
+  EXPECT_EQ(5, fwrite("heyy\n", 1, 5, f));
+  EXPECT_NE(-1, fclose(f));
+  if (IsWindows()) return;
+  ASSERT_NE(NULL, (f = fopen(PATH, "r")));
+  setvbuf(f, NULL, _IOLBF, 64);
+  EXPECT_EQ(10, fread(buf, 1, 10, f));
+  EXPECT_TRUE(!memcmp(buf, "heyy\nheyy\n", 10));
+  EXPECT_NE(-1, fclose(f));
+}
+
+TEST(fwrite, testNoBuffer) {
+  ASSERT_NE(NULL, (f = fopen(PATH, "wb")));
+  setvbuf(f, NULL, _IONBF, 64);
+  EXPECT_EQ(-1, fgetc(f));
+  EXPECT_EQ(5, fwrite("heyy\n", 1, 5, f));
+  EXPECT_EQ(5, ftell(f));
+  EXPECT_NE(-1, fclose(f));
+  ASSERT_NE(NULL, (f = fopen(PATH, "r")));
+  setvbuf(f, NULL, _IONBF, 64);
+  EXPECT_EQ(0, fwrite("heyy\n", 1, 5, f));
+  EXPECT_EQ(EBADF, ferror(f));
+  EXPECT_NE(-1, fclose(f));
+  ASSERT_NE(NULL, (f = fopen(PATH, "a")));
+  setvbuf(f, NULL, _IONBF, 64);
+  EXPECT_EQ(5, fwrite("heyy\n", 1, 5, f));
+  EXPECT_NE(-1, fclose(f));
+  if (IsWindows()) return;
+  ASSERT_NE(NULL, (f = fopen(PATH, "r")));
+  setvbuf(f, NULL, _IONBF, 64);
+  EXPECT_EQ(10, fread(buf, 1, 10, f));
+  EXPECT_TRUE(!memcmp(buf, "heyy\nheyy\n", 10));
+  EXPECT_NE(-1, fclose(f));
+}
+
+void MeatyReadWriteTest(void) {
+  size_t n;
+  char *mem, *buf;
+  n = 8 * 1024 * 1024;
+  buf = gc(malloc(n));
+  mem = rngset(gc(malloc(n)), n, rand64, -1);
+  ASSERT_NE(NULL, (f = fopen(PATH, "wb")));
+  setbuffer(f, gc(malloc(4 * 1000 * 1000)), 4 * 1000 * 1000);
+  EXPECT_EQ(n, fwrite(mem, 1, n, f));
+  EXPECT_NE(-1, fclose(f));
+  ASSERT_NE(NULL, (f = fopen(PATH, "r")));
+  setbuffer(f, gc(malloc(4 * 1000 * 1000)), 4 * 1000 * 1000);
+  EXPECT_EQ(n, fread(buf, 1, n, f));
+  EXPECT_EQ(0, memcmp(buf, mem, n));
+  EXPECT_NE(-1, fclose(f));
+}
+
+volatile bool gotsigint;
+void OnSigInt(int sig) {
+  gotsigint = true;
+}
+
+TEST(fwrite, signalStorm) {
+  if (IsWindows()) return;
+  int pid;
+  struct sigaction oldchld, oldint;
+  struct sigaction sachld = {.sa_handler = SIG_IGN};
+  struct sigaction saint = {.sa_handler = OnSigInt};
+  EXPECT_NE(-1, sigaction(SIGINT, &saint, &oldint));
+  EXPECT_NE(-1, sigaction(SIGCHLD, &sachld, &oldchld));
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    do {
+      ASSERT_NE(-1, kill(getppid(), SIGINT));
+      usleep(1);
+    } while (!gotsigint);
+    _exit(0);
   }
+  pause();
+  MeatyReadWriteTest();
+  EXPECT_NE(-1, kill(pid, SIGINT));
+  while (wait(0) == -1 && errno == EINTR) donothing;
+  EXPECT_NE(-1, sigaction(SIGCHLD, &oldchld, NULL));
+  EXPECT_NE(-1, sigaction(SIGINT, &oldint, NULL));
 }

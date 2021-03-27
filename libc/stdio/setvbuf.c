@@ -24,12 +24,19 @@
  *
  * @param mode may be _IOFBF, _IOLBF, or _IONBF
  * @param buf may optionally be non-NULL to set the stream's underlying
- *     buffer, which the stream will own, but won't free
- * @param size must be a two power if buf is provided
+ *     buffer, which the stream will own, but won't free, otherwise the
+ *     existing buffer is used
+ * @param size is ignored if buf is NULL
  * @return 0 on success or -1 on error
  */
 int setvbuf(FILE *f, char *buf, int mode, size_t size) {
-  setbuffer(f, buf, size);
+  if (buf) {
+    if (!size) size = BUFSIZ;
+    if (!f->nofree && f->buf != buf) free_s(&f->buf);
+    f->buf = buf;
+    f->size = size;
+    f->nofree = true;
+  }
   f->bufmode = mode;
   return 0;
 }

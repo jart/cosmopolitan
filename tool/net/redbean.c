@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/arraylist2.internal.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/bswap.h"
 #include "libc/bits/safemacros.internal.h"
@@ -137,16 +136,8 @@ USAGE\n\
   You can have redbean run as a daemon by doing the following:\n\
 \n\
     redbean.com -vv -d -L redbean.log -P redbean.pid\n\
-    kill -HUP $(cat redbean.pid)\n\
     kill -TERM $(cat redbean.pid) # 1x: graceful shutdown\n\
     kill -TERM $(cat redbean.pid) # 2x: forceful shutdown\n\
-\n\
-  Each connection uses a point in time snapshot of your ZIP file.\n\
-  If your ZIP is deleted then serving continues. If it's replaced\n\
-  then issuing SIGUSR1 (or SIGHUP if daemon) will reindex the zip\n\
-  for subsequent connections without interrupting active ones. If\n\
-  Ctrl-C or SIGTERM is issued then a graceful shutdown is started\n\
-  but if it's issued a second time, active connections are reset.\n\
 \n\
   redbean imposes a 32kb limit on requests to limit the memory of\n\
   connection processes, which grow to whatever number your system\n\
@@ -328,7 +319,6 @@ static int64_t programtime;
 static size_t contentlength;
 static int64_t cacheseconds;
 static uint8_t gzip_footer[8];
-static const char *programfile;
 static const char *serverheader;
 
 static struct Buffer body;
@@ -479,11 +469,6 @@ static const char *GetContentType(const char *path, size_t n) {
   return "application/octet-stream";
 }
 
-static wontreturn void PrintUsage(FILE *f, int rc) {
-  fprintf(f, "SYNOPSIS\n\n  %s%s", program_invocation_name, USAGE);
-  exit(rc);
-}
-
 static void DescribeAddress(char buf[32], const struct sockaddr_in *addr) {
   char *p = buf;
   const uint8_t *ip4 = (const uint8_t *)&addr->sin_addr.s_addr;
@@ -497,13 +482,18 @@ static void DescribeAddress(char buf[32], const struct sockaddr_in *addr) {
 
 static void SetDefaults(void) {
   cacheseconds = -1;
-  serverheader = "redbean/0.1";
+  serverheader = "redbean/0.2";
   serveraddr.sin_family = AF_INET;
   serveraddr.sin_port = htons(DEFAULT_PORT);
   serveraddr.sin_addr.s_addr = INADDR_ANY;
   AddRedirect("/=/tool/net/redbean.html");
   AddRedirect("/index.html=/tool/net/redbean.html");
   AddRedirect("/favicon.ico=/tool/net/redbean.ico");
+}
+
+static wontreturn void PrintUsage(FILE *f, int rc) {
+  fprintf(f, "SYNOPSIS\n\n  %s%s", program_invocation_name, USAGE);
+  exit(rc);
 }
 
 static void GetOpts(int argc, char *argv[]) {
@@ -550,7 +540,7 @@ static void GetOpts(int argc, char *argv[]) {
         daemonuid = atoi(optarg);
         break;
       case 'G':
-        daemonuid = atoi(optarg);
+        daemongid = atoi(optarg);
         break;
       case 'h':
         PrintUsage(stdout, EXIT_SUCCESS);
@@ -580,6 +570,8 @@ static void Daemonize(void) {
   freopen("/dev/null", "r", stdin);
   freopen(logpath, "a", stdout);
   freopen(logpath, "a", stderr);
+  LOGIFNEG1(setuid(daemonuid));
+  LOGIFNEG1(setgid(daemongid));
 }
 
 static void OnWorkerExit(int pid, int ws) {
@@ -1551,13 +1543,19 @@ static int LuaEscapeLiteral(lua_State *L) {
   return LuaEscaper(L, EscapeJsStringLiteral);
 }
 
-static const luaL_Reg kLuaLibs[] = {
-    {"_G", luaopen_base},        //
-    {"table", luaopen_table},    //
-    {"string", luaopen_string},  //
-    {"math", luaopen_math},      //
-    {"utf8", luaopen_utf8},      //
-};
+static void LuaRun(const char *path) {
+  struct Asset *a;
+  const char *code;
+  if ((a = LocateAsset(path, strlen(path)))) {
+    code = LoadAsset(a, NULL);
+    if (luaL_dostring(L, code) != LUA_OK) {
+      WARNF("%s %s", path, lua_tostring(L, -1));
+    }
+    free(code);
+  } else {
+    DEBUGF("%s not found", path);
+  }
+}
 
 static const luaL_Reg kLuaFuncs[] = {
     {"EscapeFragment", LuaEscapeFragment},  //
@@ -1591,14 +1589,16 @@ static const luaL_Reg kLuaFuncs[] = {
 static void LuaInit(void) {
   size_t i;
   L = luaL_newstate();
-  for (i = 0; i < ARRAYLEN(kLuaLibs); ++i) {
-    luaL_requiref(L, kLuaLibs[i].name, kLuaLibs[i].func, 1);
-    lua_pop(L, 1);
-  }
+  luaL_openlibs(L);
   for (i = 0; i < ARRAYLEN(kLuaFuncs); ++i) {
     lua_pushcfunction(L, kLuaFuncs[i].func);
     lua_setglobal(L, kLuaFuncs[i].name);
   }
+  LuaRun("/tool/net/.init.lua");
+}
+
+static void LuaReload(void) {
+  LuaRun("/tool/net/.reload.lua");
 }
 
 static char *ServeLua(struct Asset *a) {
@@ -1672,12 +1672,35 @@ static char *HandleRedirect(struct Redirect *r) {
   return p;
 }
 
-static const char *DescribeClose(void) {
-  if (killed) return "killed";
-  if (meltdown) return "meltdown";
-  if (terminated) return "terminated";
-  if (connectionclose) return "connectionclose";
-  return "destroyed";
+static ssize_t SendString(const char *s) {
+  ssize_t rc;
+  for (;;) {
+    if ((rc = write(client, s, strlen(s))) != -1 || errno != EINTR) {
+      return rc;
+    }
+  }
+}
+
+static ssize_t SendContinue(void) {
+  return SendString("\
+HTTP/1.1 100 Continue\r\n\
+\r\n");
+}
+
+static ssize_t SendTimeout(void) {
+  return SendString("\
+HTTP/1.1 408 Request Timeout\r\n\
+Connection: close\r\n\
+Content-Length: 0\r\n\
+\r\n");
+}
+
+static ssize_t SendServiceUnavailable(void) {
+  return SendString("\
+HTTP/1.1 503 Service Unavailable\r\n\
+Connection: close\r\n\
+Content-Length: 0\r\n\
+\r\n");
 }
 
 static void LogClose(const char *reason) {
@@ -1686,6 +1709,14 @@ static void LogClose(const char *reason) {
   } else {
     DEBUGF("%s %s", clientaddrstr, reason);
   }
+}
+
+static const char *DescribeClose(void) {
+  if (killed) return "killed";
+  if (meltdown) return "meltdown";
+  if (terminated) return "terminated";
+  if (connectionclose) return "connectionclose";
+  return "destroyed";
 }
 
 static char *HandleMessage(size_t hdrlen) {
@@ -1703,6 +1734,10 @@ static char *HandleMessage(size_t hdrlen) {
        CompareHeaderValue(kHttpTransferEncoding, "identity"))) {
     return ServeError(501, "Not Implemented");
   }
+  if (HasHeader(kHttpExpect) &&
+      CompareHeaderValue(kHttpExpect, "100-continue")) {
+    return ServeError(417, "Expectation Failed");
+  }
   if ((cl = ParseContentLength(inbuf.p + req.headers[kHttpContentLength].a,
                                req.headers[kHttpContentLength].b -
                                    req.headers[kHttpContentLength].a)) == -1) {
@@ -1718,6 +1753,9 @@ static char *HandleMessage(size_t hdrlen) {
   need = hdrlen + cl; /* synchronization is possible */
   if (need > inbuf.n) {
     return ServeError(413, "Payload Too Large");
+  }
+  if (!CompareHeaderValue(kHttpExpect, "100-continue") && httpversion >= 101) {
+    SendContinue();
   }
   while (amtread < need) {
     if (++frags == 64) {
@@ -1838,26 +1876,6 @@ static bool HandleRequest(void) {
   return true;
 }
 
-static void SendString(const char *s) {
-  write(client, s, strlen(s));
-}
-
-static void SendTimeout(void) {
-  SendString("\
-HTTP/1.1 408 Request Timeout\r\n\
-Connection: close\r\n\
-Content-Length: 0\r\n\
-\r\n");
-}
-
-static void SendServiceUnavailable(void) {
-  SendString("\
-HTTP/1.1 503 Service Unavailable\r\n\
-Connection: close\r\n\
-Content-Length: 0\r\n\
-\r\n");
-}
-
 static void InitRequest(void) {
   frags = 0;
   content = NULL;
@@ -1968,8 +1986,7 @@ void RedBean(void) {
   if (IsWindows()) uniprocess = true;
   if (daemonize) Daemonize();
   gmtoff = GetGmtOffset();
-  programfile = (const char *)getauxval(AT_EXECFN);
-  CHECK(OpenZip(programfile));
+  CHECK(OpenZip((const char *)getauxval(AT_EXECFN)));
   xsigaction(SIGINT, OnInt, 0, 0, 0);
   xsigaction(SIGHUP, OnHup, 0, 0, 0);
   xsigaction(SIGTERM, OnTerm, 0, 0, 0);
@@ -2001,21 +2018,17 @@ void RedBean(void) {
     printf("%d\n", ntohs(serveraddr.sin_port));
     fflush(stdout);
   }
-  LuaInit();
   UpdateCurrentDate(nowl());
   inbuf.n = 64 * 1024;
   inbuf.p = xvalloc(inbuf.n);
   hdrbuf.n = 4 * 1024;
   hdrbuf.p = xvalloc(hdrbuf.n);
+  LuaInit();
   while (!terminated) {
     if (zombied) {
       ReapZombies();
     } else if (invalidated) {
-      if (OpenZip(programfile)) {
-        LOGF("%s reindexed zip", serveraddrstr);
-      } else {
-        WARNF("%s reindexing failed", serveraddrstr);
-      }
+      LuaReload();
       invalidated = false;
     } else if (heartbeat) {
       UpdateCurrentDate(nowl());

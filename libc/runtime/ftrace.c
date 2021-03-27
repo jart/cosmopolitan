@@ -53,7 +53,7 @@ static char g_buf[512];
 static const char *g_lastsymbol;
 static struct SymbolTable *g_symbols;
 
-forceinline int GetNestingLevel(struct StackFrame *frame) {
+static noasan int GetNestingLevel(struct StackFrame *frame) {
   int nesting = -2;
   while (frame) {
     ++nesting;
@@ -69,7 +69,7 @@ forceinline int GetNestingLevel(struct StackFrame *frame) {
  * prologues of other functions. We assume those functions behave
  * according to the System Five NexGen32e ABI.
  */
-privileged void ftrace(void) {
+privileged noasan void ftrace(void) {
   size_t i, j, nesting;
   const char *symbol;
   struct StackFrame *frame;

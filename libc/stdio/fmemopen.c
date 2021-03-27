@@ -32,32 +32,27 @@ FILE *fmemopen(void *buf, size_t size, const char *mode) {
   FILE *f;
   char *p;
   unsigned flags;
-
   if (size && size > 0x7ffff000) {
     einval();
     return NULL;
   }
-
   if (!(f = calloc(1, sizeof(FILE)))) {
     return NULL;
   }
-
-  if (!buf) {
+  if (buf) {
+    f->nofree = true;
+  } else {
     if (!size) size = BUFSIZ;
     if (!(buf = calloc(1, size))) {
       free(f);
       return NULL;
     }
-  } else {
-    f->nofree = true;
   }
-
   f->fd = -1;
   f->buf = buf;
-  f->size = size;
   f->end = size;
+  f->size = size;
   f->iomode = fopenflags(mode);
-
   if (f->iomode & O_APPEND) {
     if ((p = memchr(buf, '\0', size))) {
       f->beg = p - (char *)buf;
@@ -65,6 +60,5 @@ FILE *fmemopen(void *buf, size_t size, const char *mode) {
       f->beg = f->end;
     }
   }
-
   return f;
 }

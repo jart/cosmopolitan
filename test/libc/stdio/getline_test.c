@@ -20,7 +20,12 @@
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
+
+char testlib_enable_tmp_setup_teardown;
 
 TEST(getline, testEmpty) {
   FILE *f = fmemopen("", 0, "r+");
@@ -71,4 +76,42 @@ TEST(getline, testBinaryLine_countExcludesOnlyTheBonusNul) {
   EXPECT_BINEQ(u"he ♥o◙ ", line);
   fclose(f);
   free(line);
+}
+
+void WriteHyperionFile(void) {
+  FILE *f;
+  ASSERT_NE(NULL, (f = fopen("hyperion.txt", "w")));
+  EXPECT_EQ(1, fwrite(kHyperion, kHyperionSize, 1, f));
+  EXPECT_NE(-1, fclose(f));
+}
+
+void ReadHyperionLines(void) {
+  FILE *f;
+  ssize_t rc;
+  char *data = NULL;
+  size_t size = 0;
+  char *line = NULL;
+  size_t linesize = 0;
+  ASSERT_NE(NULL, (f = fopen("hyperion.txt", "r")));
+  while ((rc = getline(&line, &linesize, f)) != -1) {
+    data = xrealloc(data, size + rc);
+    memcpy(data + size, line, rc);
+    size += rc;
+  }
+  EXPECT_TRUE(feof(f));
+  ASSERT_EQ(kHyperionSize, size);
+  EXPECT_EQ(0, memcmp(kHyperion, data, size));
+  EXPECT_NE(-1, fclose(f));
+  free(line);
+  free(data);
+}
+
+TEST(getline, lotsOfLines_roundTrips) {
+  WriteHyperionFile();
+  ReadHyperionLines();
+}
+
+BENCH(getline, bench) {
+  WriteHyperionFile();
+  EZBENCH2("getline", donothing, ReadHyperionLines());
 }

@@ -16,33 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/errno.h"
 #include "libc/stdio/stdio.h"
 
 /**
  * Returns current position of stream.
  *
  * @param stream is a non-null stream handle
- * @returns current byte offset from beginning of file, or -1
+ * @returns current byte offset from beginning, or -1 w/ errno
  */
 long ftell(FILE *f) {
-  int64_t pos;
-  if (f->fd != -1) {
-    if (f->beg && !f->end) {
-      f->writer(f);
-    }
-    if ((pos = lseek(f->fd, 0, SEEK_CUR)) != -1) {
-      f->state = 0;
-      f->beg = 0;
-      f->end = 0;
-      return pos;
-    } else {
-      f->state = errno == ESPIPE ? EBADF : errno;
-      return -1;
-    }
-  } else {
-    errno = f->state;
-    return -1;
-  }
+  return ftello(f);
 }

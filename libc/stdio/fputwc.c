@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/tpenc.h"
 
@@ -30,14 +29,12 @@ wint_t fputwc(wchar_t wc, FILE *f) {
   if (wc != -1) {
     w = tpenc(wc);
     do {
-      if (fputc(w & 0xff, f) != -1) {
-        w >>= 8;
-      } else {
+      if (fputc(w, f) == -1) {
         return -1;
       }
-    } while (w);
+    } while ((w >>= 8));
     return wc;
   } else {
-    return __fseteof(f);
+    return -1;
   }
 }

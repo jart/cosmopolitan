@@ -35,8 +35,6 @@ FILE *fdopen(int fd, const char *mode) {
   FILE *f;
   if ((f = calloc(1, sizeof(FILE)))) {
     f->fd = fd;
-    f->reader = __freadbuf;
-    f->writer = __fwritebuf;
     f->bufmode = ischardev(fd) ? _IOLBF : _IOFBF;
     f->iomode = fopenflags(mode);
     f->size = BUFSIZ;

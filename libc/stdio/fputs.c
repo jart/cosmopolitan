@@ -16,9 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/errno.h"
-#include "libc/macros.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 
@@ -31,17 +28,12 @@
  *
  * @param s is a NUL-terminated string that's non-NULL
  * @param f is an open stream
- * @return strlen(s) or -1 w/ errno on error
+ * @return bytes written, or -1 w/ errno
  */
 int fputs(const char *s, FILE *f) {
-  int i, n, m;
+  size_t n, r;
   n = strlen(s);
-  for (i = 0; i < n; ++i) {
-    if (putc(s[i], f) == -1) {
-      if (ferror(f) == EINTR) continue;
-      if (feof(f)) errno = f->state = EPIPE;
-      return -1;
-    }
-  }
-  return n;
+  r = fwrite(s, 1, n, f);
+  if (!r && n) return -1;
+  return r;
 }

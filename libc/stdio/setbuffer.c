@@ -16,20 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/errfuns.h"
 
 /**
  * Sets buffer on stdio stream.
+ *
+ * @param buf may optionally be non-NULL to set the stream's underlying
+ *     buffer, which the stream will own, but won't free
+ * @param size is ignored if buf is NULL
  */
 void setbuffer(FILE *f, char *buf, size_t size) {
-  if (buf && f->buf != (unsigned char *)buf) {
-    free_s(&f->buf);
-    if (!size) size = BUFSIZ;
-    f->buf = (unsigned char *)buf;
-  }
-  if (size) {
-    f->size = size;
-  }
+  setvbuf(f, buf, buf ? _IOFBF : _IONBF, size);
 }

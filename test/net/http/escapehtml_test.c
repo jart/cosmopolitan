@@ -16,7 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 #include "net/http/escape.h"
 
@@ -38,4 +41,13 @@ TEST(escapehtml, testLargeGrowth) {
 
 TEST(escapehtml, testEmpty) {
   EXPECT_STREQ("", gc(escapehtml("")));
+}
+
+TEST(escapehtml, testAstralPlanes_doesNothing) {
+  EXPECT_STREQ("𐌰", escapehtml("𐌰"));
+}
+
+BENCH(escapehtml, bench) {
+  EZBENCH2("escapehtml", donothing,
+           free(EscapeHtml(kHyperion, kHyperionSize).data));
 }

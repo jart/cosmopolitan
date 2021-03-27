@@ -24,10 +24,10 @@
  * Reads UTF-8 content from stream into UTF-32 buffer.
  */
 wchar_t *fgetws(wchar_t *s, int size, FILE *f) {
+  wint_t c;
   wchar_t *p = s;
   if (size > 0) {
     while (--size > 0) {
-      wint_t c;
       if ((c = fgetwc(f)) == -1) {
         if (ferror(f) == EINTR) continue;
         break;

@@ -17,13 +17,20 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 /**
- * Pushes 𝑐 back to stream.
+ * Pushes byte back to stream.
  */
 int ungetc(int c, FILE *f) {
-  uint32_t i;
-  if (c == -1) return c;
-  if (f->beg) f->buf[--f->beg] = c;
-  return c;
+  if (c == -1) return -1;
+  if (f->beg) {
+    f->buf[--f->beg] = c;
+  } else if (f->end < f->size) {
+    memmove(f->buf + 1, f->buf, f->end++);
+    f->buf[0] = c;
+  } else {
+    return -1;
+  }
+  return c & 0xff;
 }

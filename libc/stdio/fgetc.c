@@ -16,22 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 
-static noinline int __fgetc(FILE *f) {
-  if (!f->reader) return __fseteof(f);
-  if (f->reader(f) == -1) return -1;
-  return f->buf[f->beg++];
-}
-
 /**
- * Reads uint8_t from stream.
+ * Reads byte from stream.
+ * @return byte in range 0..255, or -1 w/ errno
  */
 int fgetc(FILE *f) {
+  unsigned char b;
   if (f->beg < f->end) {
-    return f->buf[f->beg++];
+    return f->buf[f->beg++] & 0xff;
   } else {
-    return __fgetc(f);
+    if (!fread(&b, 1, 1, f)) return -1;
+    return b;
   }
 }

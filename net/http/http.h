@@ -70,7 +70,12 @@
 #define kHttpWarning            46
 #define kHttpWwwAuthenticate    47
 #define kHttpLastModified       48
-#define kHttpHeadersMax         49
+#define kHttpCookie             49
+#define kHttpTrailer            50
+#define kHttpTe                 51
+#define kHttpDnt                52
+#define kHttpExpect             53
+#define kHttpHeadersMax         54
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

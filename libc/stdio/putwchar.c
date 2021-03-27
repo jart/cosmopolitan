@@ -20,7 +20,8 @@
 
 /**
  * Writes wide character to stdout.
- *
  * @return wc if written or -1 w/ errno
  */
-wint_t putwchar(wchar_t wc) { return fputwc(wc, stdout); }
+wint_t putwchar(wchar_t wc) {
+  return fputwc(wc, stdout);
+}

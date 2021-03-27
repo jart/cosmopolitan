@@ -45,7 +45,7 @@ TEST(parsehoststxt, testCorrectlyTokenizesAndSorts) {
                         "203.0.113.2     cat.example. cat\n";
   struct HostsTxt *ht = calloc(1, sizeof(struct HostsTxt));
   FILE *f = fmemopen(NULL, BUFSIZ, "r+");
-  fwrite(kInput, 1, strlen(kInput), f);
+  ASSERT_EQ(1, fwrite(kInput, strlen(kInput), 1, f));
   rewind(f);
   ASSERT_EQ(0, parsehoststxt(ht, f));
   sorthoststxt(ht);

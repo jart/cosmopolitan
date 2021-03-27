@@ -16,12 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/iovec.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sock/sock.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/internal.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Reads data from stream.
@@ -31,17 +38,62 @@
  * @return count on success, [0,count) on eof, or 0 on error or count==0
  */
 size_t fread(void *buf, size_t stride, size_t count, FILE *f) {
-  int c;
-  size_t i, n;
-  unsigned char *p;
-  for (n = stride * count, p = buf, i = 0; i < n; ++i) {
-    if ((c = getc(f)) != -1) {
-      p[i] = c & 0xff;
-    } else if (!(i % stride)) {
-      return i / stride;
-    } else {
-      return __fseterr(f, EOVERFLOW);
-    }
+  char *p;
+  ssize_t rc;
+  size_t n, m;
+  struct iovec iov[2];
+  if ((f->iomode & O_ACCMODE) == O_WRONLY) {
+    f->state = errno = EBADF;
+    return 0;
   }
-  return count;
+  if (f->beg > f->end) {
+    f->state = errno = EINVAL;
+    return 0;
+  }
+  p = buf;
+  n = stride * count;
+  m = f->end - f->beg;
+  memcpy(p, f->buf + f->beg, MIN(n, m));
+  if (n < m) {
+    f->beg += n;
+    return count;
+  }
+  if (n == m) {
+    f->beg = f->end = 0;
+    return count;
+  }
+  if (f->fd == -1) {
+    f->beg = 0;
+    f->end = 0;
+    f->state = -1;
+    return m / stride;
+  }
+  iov[0].iov_base = p + m;
+  iov[0].iov_len = n - m;
+  if (f->bufmode != _IONBF && n < f->size) {
+    iov[1].iov_base = f->buf;
+    if (f->size > PUSHBACK) {
+      iov[1].iov_len = f->size - PUSHBACK;
+    } else {
+      iov[1].iov_len = f->size;
+    }
+  } else {
+    iov[1].iov_base = NULL;
+    iov[1].iov_len = 0;
+  }
+  if ((rc = readv(f->fd, iov, 2)) == -1) {
+    f->state = errno;
+    return 0;
+  }
+  n = rc;
+  f->beg = 0;
+  f->end = 0;
+  if (n > iov[0].iov_len) {
+    f->end += n - iov[0].iov_len;
+    return count;
+  } else {
+    n = (m + n) / stride;
+    if (n < count) f->state = -1;
+    return n;
+  }
 }

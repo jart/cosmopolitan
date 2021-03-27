@@ -13,19 +13,17 @@ COSMOPOLITAN_C_START_
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 typedef struct FILE {
-  uint8_t bufmode;              /* 0x00 _IOFBF, etc. (ignored if fd=-1) */
-  bool noclose;                 /* 0x01 for fake dup() */
-  uint32_t iomode;              /* 0x04 O_RDONLY, etc. (ignored if fd=-1) */
-  int32_t state;                /* 0x08 0=OK, -1=EOF, >0=errno */
-  int fd;                       /* 0x0c ≥0=fd, -1=closed|buffer */
-  uint32_t beg;                 /* 0x10 */
-  uint32_t end;                 /* 0x14 */
-  uint8_t *buf;                 /* 0x18 */
-  uint32_t size;                /* 0x20 */
-  uint32_t nofree;              /* 0x24 */
-  int (*reader)(struct FILE *); /* 0x28 */
-  int (*writer)(struct FILE *); /* 0x30 */
-  int pid;                      /* 0x34 */
+  uint8_t bufmode; /* 0x00 _IOFBF, etc. (ignored if fd=-1) */
+  bool noclose;    /* 0x01 for fake dup() */
+  uint32_t iomode; /* 0x04 O_RDONLY, etc. (ignored if fd=-1) */
+  int32_t state;   /* 0x08 0=OK, -1=EOF, >0=errno */
+  int fd;          /* 0x0c ≥0=fd, -1=closed|buffer */
+  uint32_t beg;    /* 0x10 */
+  uint32_t end;    /* 0x14 */
+  char *buf;       /* 0x18 */
+  uint32_t size;   /* 0x20 */
+  uint32_t nofree; /* 0x24 */
+  int pid;         /* 0x28 */
 } FILE;
 
 extern FILE *stdin;
@@ -46,10 +44,13 @@ int fputs(const char *, FILE *) paramsnonnull();
 int fputws(const wchar_t *, FILE *) paramsnonnull();
 char *fgets(char *, int, FILE *) paramsnonnull();
 wchar_t *fgetws(wchar_t *, int, FILE *) paramsnonnull();
+wint_t putwc(wchar_t, FILE *) paramsnonnull();
 wint_t fputwc(wchar_t, FILE *) paramsnonnull();
 wint_t putwchar(wchar_t);
 wint_t getwchar(void);
+wint_t getwc(FILE *) paramsnonnull();
 wint_t fgetwc(FILE *) paramsnonnull();
+wint_t ungetwc(wint_t, FILE *) paramsnonnull();
 int getchar(void);
 int putchar(int);
 int puts(const char *) paramsnonnull();
@@ -59,12 +60,14 @@ FILE *fopen(const char *, const char *) paramsnonnull() nodiscard;
 FILE *fdopen(int, const char *) paramsnonnull() nodiscard;
 FILE *fmemopen(void *, size_t, const char *) paramsnonnull((3)) nodiscard;
 FILE *freopen(const char *, const char *, FILE *) paramsnonnull((2, 3));
-size_t fread(void *, size_t, size_t, FILE *) paramsnonnull();
-size_t fwrite(const void *, size_t, size_t, FILE *) paramsnonnull();
+size_t fread(void *, size_t, size_t, FILE *) paramsnonnull((4));
+size_t fwrite(const void *, size_t, size_t, FILE *) paramsnonnull((4));
 int fclose(FILE *);
 int fclose_s(FILE **) paramsnonnull();
-long fseek(FILE *, long, int) paramsnonnull();
+int fseek(FILE *, long, int) paramsnonnull();
 long ftell(FILE *) paramsnonnull();
+int fseeko(FILE *, int64_t, int) paramsnonnull();
+int64_t ftello(FILE *) paramsnonnull();
 void rewind(FILE *) paramsnonnull();
 int fopenflags(const char *) paramsnonnull();
 void setbuf(FILE *, char *);
@@ -77,8 +80,6 @@ typedef uint64_t fpos_t;
 compatfn char *gets(char *) paramsnonnull();
 compatfn int fgetpos(FILE *, fpos_t *) paramsnonnull();
 compatfn int fsetpos(FILE *, const fpos_t *) paramsnonnull();
-compatfn int64_t fseeko(FILE *, long, int) paramsnonnull();
-compatfn int64_t ftello(FILE *) paramsnonnull();
 
 int system(const char *);
 int systemexec(const char *);
@@ -102,8 +103,10 @@ int vfscanf(FILE *, const char *, va_list);
 │ cosmopolitan § standard i/o » optimizations                              ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#define getc(f)    fgetc(f)
-#define putc(c, f) fputc(c, f)
+#define getc(f)     fgetc(f)
+#define getwc(f)    fgetwc(f)
+#define putc(c, f)  fputc(c, f)
+#define putwc(c, f) fputwc(c, f)
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define printf(FMT, ...)     (printf)(PFLINK(FMT), ##__VA_ARGS__)

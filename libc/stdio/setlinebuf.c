@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-.source	__FILE__
+#include "libc/calls/calls.h"
+#include "libc/stdio/stdio.h"
 
-//	Writes wide character to stream.
-//	@param	%edi is the wide character
-//	@param	%rsi is the FILE stream pointer
-//	@return	%eax is set to %edi param or -1 on error
-putwc:	jmp	fputwc
-	.endfn	putwc,globl
+/**
+ * Puts stream in line-buffering mode.
+ */
+void setlinebuf(FILE *f) {
+  setvbuf(f, NULL, _IOLBF, 0);
+}

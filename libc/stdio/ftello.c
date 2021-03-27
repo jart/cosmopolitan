@@ -16,9 +16,39 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/stdio/internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/o.h"
 
-long __fseterrno(FILE *f) {
-  return __fseterr(f, errno);
+/**
+ * Returns current position of stream.
+ *
+ * @param stream is a non-null stream handle
+ * @returns current byte offset from beginning, or -1 w/ errno
+ */
+int64_t ftello(FILE *f) {
+  ssize_t rc;
+  int64_t pos;
+  uint32_t skew;
+  if (f->fd != -1) {
+    if (f->beg && !f->end && (f->iomode & O_ACCMODE) != O_RDONLY) {
+      if ((rc = write(f->fd, f->buf, f->beg)) == -1) {
+        f->state = errno;
+        return -1;
+      }
+      if (rc != f->beg) abort();
+      f->beg = 0;
+    }
+    if ((pos = lseek(f->fd, 0, SEEK_CUR)) != -1) {
+      if (f->beg < f->end) pos -= f->end - f->beg;
+      return pos;
+    } else {
+      f->state = errno == ESPIPE ? EBADF : errno;
+      return -1;
+    }
+  } else {
+    return f->beg;
+  }
 }

@@ -16,22 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/errno.h"
-#include "libc/stdio/internal.h"
-#include "libc/str/str.h"
+#include "libc/stdio/stdio.h"
 
-int __fwritebuf(FILE *f) {
-  ssize_t wrote;
-  if ((wrote = write(f->fd, f->buf, f->beg)) == -1) {
-    if (errno == EINTR) return 0;
-    return __fseterrno(f);
-  }
-  if (wrote == f->beg) {
-    f->beg = 0;
-  } else {
-    memcpy(f->buf, f->buf + wrote, f->beg - wrote);
-    f->beg -= wrote;
-  }
-  return wrote;
+/**
+ * Reads byte from stream.
+ * @return byte in range 0..255, or -1 w/ errno
+ */
+int(getc)(FILE *f) {
+  return fgetc(f);
 }
