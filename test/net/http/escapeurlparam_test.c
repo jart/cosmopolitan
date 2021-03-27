@@ -31,7 +31,8 @@ char *escapeparam(const char *s) {
 }
 
 TEST(escapeparam, test) {
-  EXPECT_STREQ("abc+%26%3C%3E%22%27%01%02", gc(escapeparam("abc &<>\"'\1\2")));
+  EXPECT_STREQ("abc%20%26%3C%3E%22%27%01%02",
+               gc(escapeparam("abc &<>\"'\1\2")));
 }
 
 TEST(escapeparam, testLargeGrowth) {

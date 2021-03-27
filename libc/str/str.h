@@ -123,6 +123,7 @@ int wcscmp(const wchar_t *, const wchar_t *) strlenesque;
 int wcsncmp(const wchar_t *, const wchar_t *, size_t) strlenesque;
 int wmemcmp(const wchar_t *, const wchar_t *, size_t) strlenesque;
 int strcasecmp(const char *, const char *) strlenesque;
+int memcasecmp(const void *, const void *, size_t) strlenesque;
 int strcasecmp16(const char16_t *, const char16_t *) strlenesque;
 int wcscasecmp(const wchar_t *, const wchar_t *) strlenesque;
 int strncasecmp(const char *, const char *, size_t) strlenesque;

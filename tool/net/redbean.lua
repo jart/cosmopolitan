@@ -1,8 +1,7 @@
 -- redbean lua server page demo
 
 local function main()
-   -- This check is optional.
-   -- We do this by default if you don't call GetMethod().
+   -- This check is pedantic but might be good to have.
    if GetMethod() ~= 'GET' and GetMethod() ~= 'HEAD' then
       ServeError(405)
       SetHeader('Allow', 'GET, HEAD')
@@ -40,9 +39,35 @@ local function main()
       Write('<p>\n')
       Write('<em>none</em><br>\n')
       Write('ProTip: Try <a href="')
-      Write(EscapeHtml(EscapePath(GetPath()) .. '?x=hi+there&y&z&z=' .. EscapeParam('&')))
+      Write(EscapeHtml(EscapePath(GetPath()) .. '?x=hi%20there&y&z&z=' .. EscapeParam('&')))
       Write('">clicking here</a>!\n')
    end
+
+   -- Access redbean command line arguments.
+   -- These are the ones that come *after* the redbean server arguments.
+   Write('<h3>command line arguments</h3>\n')
+   if #argv > 0 then
+      Write('<ul>\n')
+      for i = 1,#argv do
+         Write('<li>')
+         Write(EscapeHtml(argv[i]))
+         Write('\n')
+      end
+      Write('</ul>\n')
+   else
+      Write('<p><em>none</em>\n')
+   end
+
+   Write('<h3>post request html form demo</h3>\n')
+   Write('<form action="/tool/net/redbean-form.lua" method="post">\n')
+   Write('<input type="text" id="firstname" name="firstname">\n')
+   Write('<label for="firstname">first name</label>\n')
+   Write('<br>\n')
+   Write('<input type="text" id="lastname" name="lastname">\n')
+   Write('<label for="lastname">last name</label>\n')
+   Write('<br>\n')
+   Write('<input type="submit" value="Submit">\n')
+   Write('</form>\n')
 end
 
 main()

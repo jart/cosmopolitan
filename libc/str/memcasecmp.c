@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,38 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/x/x.h"
-#include "net/http/escape.h"
+#include "libc/str/str.h"
 
 /**
- * Escapes URL component using generic table.
- *
- * This function is agnostic to the underlying charset.
- * Always using UTF-8 is a good idea.
- *
- * @see EscapeUrlParam
- * @see EscapeUrlFragment
- * @see EscapeUrlPathSegment
+ * Compares memory case-insensitively.
+ * @return is <0, 0, or >0 based on uint8_t comparison
  */
-struct EscapeResult EscapeUrl(const char *data, size_t size,
-                              const char xlat[hasatleast 256]) {
+int memcasecmp(const void *p, const void *q, size_t n) {
   int c;
-  char *p;
   size_t i;
-  struct EscapeResult r;
-  p = r.data = xmalloc(size * 6 + 1);
-  for (i = 0; i < size; ++i) {
-    if (!xlat[(c = data[i] & 0xff)]) {
-      *p++ = c;
-    } else {
-      p[0] = '%';
-      p[1] = "0123456789ABCDEF"[(c & 0xF0) >> 4];
-      p[2] = "0123456789ABCDEF"[(c & 0x0F) >> 0];
-      p += 3;
+  const unsigned char *a, *b;
+  if ((a = p) != (b = q)) {
+    for (i = 0; i < n; ++i) {
+      if ((c = kToLower[a[i]] - kToLower[b[i]])) {
+        return c;
+      }
     }
   }
-  r.size = p - r.data;
-  r.data = xrealloc(r.data, r.size + 1);
-  r.data[r.size] = '\0';
-  return r;
+  return 0;
 }

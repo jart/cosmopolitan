@@ -20,6 +20,7 @@
 #include "libc/alg/arraylist.internal.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
@@ -38,10 +39,18 @@ void InitHttpRequest(struct HttpRequest *r) {
 }
 
 /**
+ * Destroys HTTP request parser.
+ */
+void DestroyHttpRequest(struct HttpRequest *r) {
+  free(r->xheaders.p);
+}
+
+/**
  * Parses HTTP request.
  */
 int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
-  int c;
+  int c, h;
+  struct HttpRequestHeader *x;
   for (n = MIN(n, LIMIT); r->i < n; ++r->i) {
     c = p[r->i] & 0xff;
     switch (r->t) {
@@ -97,12 +106,12 @@ int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
         } else if (c == ' ' || c == '\t') {
           return ebadmsg(); /* RFC7230 § 3.2.4 */
         }
-        r->a = r->i;
+        r->k.a = r->i;
         r->t = HKEY;
         break;
       case HKEY:
         if (c == ':') {
-          r->h = GetHttpHeader(p + r->a, r->i - r->a);
+          r->k.b = r->i;
           r->t = HSEP;
         }
         break;
@@ -113,9 +122,16 @@ int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
         /* fallthrough */
       case HVAL:
         if (c == '\r' || c == '\n') {
-          if (r->h != -1) {
-            r->headers[r->h].a = r->a;
-            r->headers[r->h].b = r->i;
+          if ((h = GetHttpHeader(p + r->k.a, r->k.b - r->k.a)) != -1) {
+            r->headers[h].a = r->a;
+            r->headers[h].b = r->i;
+          } else if ((x = realloc(r->xheaders.p, (r->xheaders.n + 1) *
+                                                     sizeof(*r->xheaders.p)))) {
+            x[r->xheaders.n].k = r->k;
+            x[r->xheaders.n].v.a = r->a;
+            x[r->xheaders.n].v.b = r->i;
+            r->xheaders.p = x;
+            ++r->xheaders.n;
           }
           r->t = c == '\r' ? CR1 : LF1;
         }
