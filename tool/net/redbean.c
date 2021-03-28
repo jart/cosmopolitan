@@ -98,6 +98,8 @@ FLAGS\n\
   -u        uniprocess\n\
   -z        print port\n\
   -m        log messages\n\
+  -b        log message bodies\n\
+  -D DIR    serve assets from directory\n\
   -c INT    cache seconds\n\
   -r /X=/Y  redirect X to Y\n\
   -l ADDR   listen ip [default 0.0.0.0]\n\
@@ -215,6 +217,8 @@ static const struct ContentTypeExtension {
     {"js", "application/javascript"},     //
     {"json", "application/json"},         //
     {"m4a", "audio/mpeg"},                //
+    {"markdown", "text/plain"},           //
+    {"md", "text/plain"},                 //
     {"mp2", "audio/mpeg"},                //
     {"mp3", "audio/mpeg"},                //
     {"mp4", "video/mp4"},                 //
@@ -237,6 +241,11 @@ static const struct ContentTypeExtension {
 struct Buffer {
   size_t n;
   char *p;
+};
+
+struct Strings {
+  size_t n;
+  char **p;
 };
 
 struct Parser {
@@ -285,6 +294,10 @@ static struct Assets {
     uint32_t hash;
     int64_t lastmodified;
     char *lastmodifiedstr;
+    struct File {
+      char *path;
+      struct stat st;
+    } * file;
   } * p;
 } assets;
 
@@ -318,14 +331,15 @@ static unsigned httpversion;
 static uint32_t clientaddrsize;
 
 static lua_State *L;
+static size_t zsize;
 static void *content;
 static uint8_t *zdir;
 static uint8_t *zmap;
 static size_t hdrsize;
 static size_t msgsize;
 static size_t amtread;
-static size_t zsize;
 static char *luaheaderp;
+struct Strings stagedirs;
 static const char *pidpath;
 static const char *logpath;
 static int64_t programtime;
@@ -514,9 +528,27 @@ static wontreturn void PrintUsage(FILE *f, int rc) {
   exit(rc);
 }
 
+static char *RemoveTrailingSlashes(char *s) {
+  size_t n;
+  n = strlen(s);
+  while (n && (s[n - 1] == '/' || s[n - 1] == '\\')) s[--n] = '\0';
+  return s;
+}
+
+static void AddStagingDirectory(const char *dirpath) {
+  char *s;
+  s = RemoveTrailingSlashes(strdup(dirpath));
+  if (!isdirectory(s)) {
+    fprintf(stderr, "error: not a directory: %s\n", s);
+    exit(1);
+  }
+  stagedirs.p = xrealloc(stagedirs.p, ++stagedirs.n * sizeof(*stagedirs.p));
+  stagedirs.p[stagedirs.n - 1] = s;
+}
+
 static void GetOpts(int argc, char *argv[]) {
   int opt;
-  while ((opt = getopt(argc, argv, "zhduvmbl:p:w:r:c:L:P:U:G:B:")) != -1) {
+  while ((opt = getopt(argc, argv, "zhduvmbl:p:w:r:c:L:P:U:G:B:D:")) != -1) {
     switch (opt) {
       case 'v':
         __log_level++;
@@ -538,6 +570,9 @@ static void GetOpts(int argc, char *argv[]) {
         break;
       case 'r':
         AddRedirect(optarg);
+        break;
+      case 'D':
+        AddStagingDirectory(optarg);
         break;
       case 'c':
         cacheseconds = strtol(optarg, NULL, 0);
@@ -662,7 +697,9 @@ static ssize_t WritevAll(int fd, struct iovec *iov, int iovlen) {
         }
       } while (wrote);
     } else if (errno == EINTR) {
-      if (killed) return -1;
+      if (killed || (meltdown && nowl() - startread > 2)) {
+        return -1;
+      }
     } else {
       return -1;
     }
@@ -735,7 +772,8 @@ static int64_t GetLastModifiedZip(const uint8_t *cfile) {
 }
 
 static bool IsCompressed(struct Asset *a) {
-  return ZIP_LFILE_COMPRESSIONMETHOD(zmap + a->lf) == kZipCompressionDeflate;
+  return !a->file &&
+         ZIP_LFILE_COMPRESSIONMETHOD(zmap + a->lf) == kZipCompressionDeflate;
 }
 
 static bool IsNotModified(struct Asset *a) {
@@ -752,6 +790,22 @@ static char *FormatUnixHttpDateTime(char *s, int64_t t) {
   gmtime_r(&t, &tm);
   FormatHttpDateTime(s, &tm);
   return s;
+}
+
+static void *FreeLater(void *p) {
+  if (p) {
+    freelist.p = xrealloc(freelist.p, ++freelist.n * sizeof(*freelist.p));
+    freelist.p[freelist.n - 1] = p;
+  }
+  return p;
+}
+
+static void CollectGarbage(void) {
+  size_t i;
+  for (i = 0; i < freelist.n; ++i) free(freelist.p[i]);
+  freelist.n = 0;
+  free(request.params.p);
+  DestroyHttpRequest(&msg);
 }
 
 static void IndexAssets(void) {
@@ -812,7 +866,7 @@ static struct Asset *FindAsset(const char *path, size_t pathlen) {
   }
 }
 
-static struct Asset *LocateAsset(const char *path, size_t pathlen) {
+static struct Asset *LocateAssetZip(const char *path, size_t pathlen) {
   char *path2;
   struct Asset *a;
   if (pathlen && path[0] == '/') ++path, --pathlen;
@@ -830,20 +884,43 @@ static struct Asset *LocateAsset(const char *path, size_t pathlen) {
   return a;
 }
 
-static void *FreeLater(void *p) {
-  if (p) {
-    freelist.p = xrealloc(freelist.p, ++freelist.n * sizeof(*freelist.p));
-    freelist.p[freelist.n - 1] = p;
+static struct Asset *LocateAssetFile(const char *path, size_t pathlen) {
+  size_t i;
+  char *path2;
+  struct Asset *a;
+  if (stagedirs.n) {
+    a = FreeLater(xcalloc(1, sizeof(struct Asset)));
+    a->file = FreeLater(xmalloc(sizeof(struct File)));
+    for (i = 0; i < stagedirs.n; ++i) {
+      if (stat((a->file->path = FreeLater(xasprintf(
+                    "%s%.*s", stagedirs.p[i], request.path.n, request.path.p))),
+               &a->file->st) != -1 &&
+          (S_ISREG(a->file->st.st_mode) ||
+           (S_ISDIR(a->file->st.st_mode) &&
+            ((stat((a->file->path = FreeLater(
+                        xasprintf("%s%s", a->file->path, "index.lua"))),
+                   &a->file->st) != -1 &&
+              S_ISREG(a->file->st.st_mode)) ||
+             (stat((a->file->path = FreeLater(
+                        xasprintf("%s%s", a->file->path, "index.html"))),
+                   &a->file->st) != -1 &&
+              S_ISREG(a->file->st.st_mode)))))) {
+        a->lastmodifiedstr = FormatUnixHttpDateTime(
+            FreeLater(xmalloc(30)),
+            (a->lastmodified = a->file->st.st_mtim.tv_sec));
+        return a;
+      }
+    }
   }
-  return p;
+  return NULL;
 }
 
-static void CollectGarbage(void) {
-  size_t i;
-  for (i = 0; i < freelist.n; ++i) free(freelist.p[i]);
-  freelist.n = 0;
-  free(request.params.p);
-  DestroyHttpRequest(&msg);
+static struct Asset *LocateAsset(const char *path, size_t pathlen) {
+  struct Asset *a;
+  if (!(a = LocateAssetFile(path, pathlen))) {
+    a = LocateAssetZip(path, pathlen);
+  }
+  return a;
 }
 
 static void EmitParamKey(struct Parser *u, struct Params *h) {
@@ -944,25 +1021,21 @@ static void ParseFragment(struct Parser *u, struct Buffer *h) {
   u->q = u->p;
 }
 
-static bool IsForbiddenPath(struct Buffer *b) {
-  return !!memmem(b->p, b->n, "/.", 2);
-}
-
 static bool ParseRequestUri(void) {
   struct Parser u;
   u.i = 0;
-  u.c = '/';
+  u.c = 0;
   u.isform = false;
   u.islatin1 = true;
   u.data = inbuf.p + msg.uri.a;
   u.size = msg.uri.b - msg.uri.a;
   memset(&request, 0, sizeof(request));
-  if (!u.size || *u.data != '/') return false;
   u.q = u.p = FreeLater(xmalloc(u.size * 2));
-  if (u.c == '/') ParsePath(&u, &request.path);
+  ParsePath(&u, &request.path);
   if (u.c == '?') ParseParams(&u, &request.params);
   if (u.c == '#') ParseFragment(&u, &request.fragment);
-  return u.i == u.size && !IsForbiddenPath(&request.path);
+  return u.i == u.size &&
+         IsAcceptableHttpRequestPath(request.path.p, request.path.n);
 }
 
 static void ParseFormParams(void) {
@@ -1054,8 +1127,7 @@ static char *AppendExpires(char *p, int64_t t) {
   struct tm tm;
   gmtime_r(&t, &tm);
   p = AppendHeaderName(p, "Expires");
-  FormatHttpDateTime(p, &tm);
-  p += 29;
+  p = FormatHttpDateTime(p, &tm);
   return AppendCrlf(p);
 }
 
@@ -1144,6 +1216,7 @@ static void *Deflate(const void *data, size_t size, size_t *out_size) {
 static void *LoadAsset(struct Asset *a, size_t *out_size) {
   size_t size;
   uint8_t *data;
+  if (a->file) return FreeLater(xslurp(a->file->path, out_size));
   size = ZIP_LFILE_UNCOMPRESSEDSIZE(zmap + a->lf);
   data = xmalloc(size + 1);
   if (ZIP_LFILE_COMPRESSIONMETHOD(zmap + a->lf) == kZipCompressionDeflate) {
@@ -1178,8 +1251,13 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
            pathlen, path);
     p = SetStatus(304, "Not Modified");
   } else {
-    content = ZIP_LFILE_CONTENT(zmap + a->lf);
-    contentlength = ZIP_LFILE_COMPRESSEDSIZE(zmap + a->lf);
+    if (!a->file) {
+      content = ZIP_LFILE_CONTENT(zmap + a->lf);
+      contentlength = ZIP_LFILE_COMPRESSEDSIZE(zmap + a->lf);
+    } else {
+      /* TODO(jart): Use sendfile(). */
+      content = FreeLater(xslurp(a->file->path, &contentlength));
+    }
     if (IsCompressed(a)) {
       if (ClientAcceptsGzip()) {
         gzipped = true;
@@ -1283,12 +1361,13 @@ static int LuaLoadAsset(lua_State *L) {
   const char *path;
   size_t size, pathlen;
   path = luaL_checklstring(L, 1, &pathlen);
-  if (!(a = LocateAsset(path, pathlen))) {
-    return luaL_argerror(L, 1, "not found");
+  if ((a = LocateAsset(path, pathlen))) {
+    data = LoadAsset(a, &size);
+    lua_pushlstring(L, data, size);
+    free(data);
+  } else {
+    lua_pushnil(L);
   }
-  data = LoadAsset(a, &size);
-  lua_pushlstring(L, data, size);
-  free(data);
   return 1;
 }
 
@@ -1317,22 +1396,26 @@ static int LuaGetFragment(lua_State *L) {
   return 1;
 }
 
+static void LuaPushLatin1(lua_State *L, const char *s, size_t n) {
+  char *t;
+  size_t m;
+  t = DecodeLatin1(s, n, &m);
+  lua_pushlstring(L, t, m);
+  free(t);
+}
+
 static int LuaGetUri(lua_State *L) {
-  lua_pushlstring(L, inbuf.p + msg.uri.a, msg.uri.b - msg.uri.a);
+  LuaPushLatin1(L, inbuf.p + msg.uri.a, msg.uri.b - msg.uri.a);
   return 1;
 }
 
-static int LuaFormatDate(lua_State *L) {
-  int64_t t;
+static int LuaFormatHttpDateTime(lua_State *L) {
   char buf[30];
-  struct tm tm;
-  t = luaL_checkinteger(L, 1);
-  gmtime_r(&t, &tm);
-  lua_pushstring(L, FormatHttpDateTime(buf, &tm));
+  lua_pushstring(L, FormatUnixHttpDateTime(buf, luaL_checkinteger(L, 1)));
   return 1;
 }
 
-static int LuaParseDate(lua_State *L) {
+static int LuaParseHttpDateTime(lua_State *L) {
   size_t n;
   const char *s;
   s = luaL_checklstring(L, 1, &n);
@@ -1353,14 +1436,6 @@ static int LuaGetServerAddr(lua_State *L) {
 static int LuaGetPayload(lua_State *L) {
   lua_pushlstring(L, inbuf.p + hdrsize, msgsize - hdrsize);
   return 1;
-}
-
-static void LuaPushLatin1(lua_State *L, const char *s, size_t n) {
-  char *t;
-  size_t m;
-  t = DecodeLatin1(s, n, &m);
-  lua_pushlstring(L, t, m);
-  free(t);
 }
 
 static int LuaGetHeader(lua_State *L) {
@@ -1579,17 +1654,6 @@ static int LuaDecodeBase64(lua_State *L) {
   return 1;
 }
 
-static int LuaVisualizeControlCodes(lua_State *L) {
-  char *p;
-  size_t size, n;
-  const char *data;
-  data = luaL_checklstring(L, 1, &size);
-  p = VisualizeControlCodes(data, size, &n);
-  lua_pushlstring(L, p, n);
-  free(p);
-  return 1;
-}
-
 static int LuaPopcnt(lua_State *L) {
   lua_pushinteger(L, popcnt(luaL_checkinteger(L, 1)));
   return 1;
@@ -1615,6 +1679,26 @@ static int LuaBsf(lua_State *L) {
   }
 }
 
+static int LuaCrc32(lua_State *L) {
+  long i;
+  size_t n;
+  const char *p;
+  i = luaL_checkinteger(L, 1);
+  p = luaL_checklstring(L, 2, &n);
+  lua_pushinteger(L, crc32_z(i, p, n));
+  return 1;
+}
+
+static int LuaCrc32c(lua_State *L) {
+  long i;
+  size_t n;
+  const char *p;
+  i = luaL_checkinteger(L, 1);
+  p = luaL_checklstring(L, 2, &n);
+  lua_pushinteger(L, crc32c(i, p, n));
+  return 1;
+}
+
 static void LuaRun(const char *path) {
   struct Asset *a;
   const char *code;
@@ -1630,39 +1714,41 @@ static void LuaRun(const char *path) {
 }
 
 static const luaL_Reg kLuaFuncs[] = {
-    {"DecodeBase64", LuaDecodeBase64},      //
-    {"EncodeBase64", LuaEncodeBase64},      //
-    {"EscapeFragment", LuaEscapeFragment},  //
-    {"EscapeHtml", LuaEscapeHtml},          //
-    {"EscapeLiteral", LuaEscapeLiteral},    //
-    {"EscapeParam", LuaEscapeParam},        //
-    {"EscapePath", LuaEscapePath},          //
-    {"EscapeSegment", LuaEscapeSegment},    //
-    {"FormatDate", LuaFormatDate},          //
-    {"GetClientAddr", LuaGetClientAddr},    //
-    {"GetDate", LuaGetDate},                //
-    {"GetFragment", LuaGetFragment},        //
-    {"GetHeader", LuaGetHeader},            //
-    {"GetHeaders", LuaGetHeaders},          //
-    {"GetMethod", LuaGetMethod},            //
-    {"GetParam", LuaGetParam},              //
-    {"GetParams", LuaGetParams},            //
-    {"GetPath", LuaGetPath},                //
-    {"GetPayload", LuaGetPayload},          //
-    {"GetServerAddr", LuaGetServerAddr},    //
-    {"GetUri", LuaGetUri},                  //
-    {"GetVersion", LuaGetVersion},          //
-    {"HasParam", LuaHasParam},              //
-    {"LoadAsset", LuaLoadAsset},            //
-    {"ParseDate", LuaParseDate},            //
-    {"ServeAsset", LuaServeAsset},          //
-    {"ServeError", LuaServeError},          //
-    {"SetHeader", LuaSetHeader},            //
-    {"SetStatus", LuaSetStatus},            //
-    {"Write", LuaWrite},                    //
-    {"bsf", LuaBsf},                        //
-    {"bsr", LuaBsr},                        //
-    {"popcnt", LuaPopcnt},                  //
+    {"DecodeBase64", LuaDecodeBase64},              //
+    {"EncodeBase64", LuaEncodeBase64},              //
+    {"EscapeFragment", LuaEscapeFragment},          //
+    {"EscapeHtml", LuaEscapeHtml},                  //
+    {"EscapeLiteral", LuaEscapeLiteral},            //
+    {"EscapeParam", LuaEscapeParam},                //
+    {"EscapePath", LuaEscapePath},                  //
+    {"EscapeSegment", LuaEscapeSegment},            //
+    {"FormatHttpDateTime", LuaFormatHttpDateTime},  //
+    {"GetClientAddr", LuaGetClientAddr},            //
+    {"GetDate", LuaGetDate},                        //
+    {"GetFragment", LuaGetFragment},                //
+    {"GetHeader", LuaGetHeader},                    //
+    {"GetHeaders", LuaGetHeaders},                  //
+    {"GetMethod", LuaGetMethod},                    //
+    {"GetParam", LuaGetParam},                      //
+    {"GetParams", LuaGetParams},                    //
+    {"GetPath", LuaGetPath},                        //
+    {"GetPayload", LuaGetPayload},                  //
+    {"GetServerAddr", LuaGetServerAddr},            //
+    {"GetUri", LuaGetUri},                          //
+    {"GetVersion", LuaGetVersion},                  //
+    {"HasParam", LuaHasParam},                      //
+    {"LoadAsset", LuaLoadAsset},                    //
+    {"ParseHttpDateTime", LuaParseHttpDateTime},    //
+    {"ServeAsset", LuaServeAsset},                  //
+    {"ServeError", LuaServeError},                  //
+    {"SetHeader", LuaSetHeader},                    //
+    {"SetStatus", LuaSetStatus},                    //
+    {"Write", LuaWrite},                            //
+    {"bsf", LuaBsf},                                //
+    {"bsr", LuaBsr},                                //
+    {"crc32", LuaCrc32},                            //
+    {"crc32c", LuaCrc32c},                          //
+    {"popcnt", LuaPopcnt},                          //
 };
 
 static void LuaSetArgv(void) {
@@ -1723,6 +1809,7 @@ static char *ServeLua(struct Asset *a) {
 }
 
 static bool IsLua(struct Asset *a) {
+  if (a->file) return endswith(a->file->path, ".lua");
   return ZIP_LFILE_NAMESIZE(zmap + a->lf) >= 4 &&
          !memcmp(ZIP_LFILE_NAME(zmap + a->lf) +
                      ZIP_LFILE_NAMESIZE(zmap + a->lf) - 4,
@@ -1764,13 +1851,16 @@ static char *HandleRedirect(struct Redirect *r) {
 }
 
 static void LogMessage(const char *d, const char *s, size_t n) {
-  char *s2, *s3;
-  size_t n2, n3;
+  size_t n2, n3, n4;
+  char *s2, *s3, *s4;
   if (!logmessages) return;
   while (n && (s[n - 1] == '\r' || s[n - 1] == '\n')) --n;
   if ((s2 = DecodeLatin1(s, n, &n2))) {
     if ((s3 = VisualizeControlCodes(s2, n2, &n3))) {
-      LOGF("%s %s %,ld byte message\n%.*s", clientaddrstr, d, n, n3, s3);
+      if ((s4 = IndentLines(s3, n3, &n4, 1))) {
+        LOGF("%s %s %,ld byte message\n%.*s", clientaddrstr, d, n, n4, s4);
+        free(s4);
+      }
       free(s3);
     }
     free(s2);
@@ -1778,12 +1868,15 @@ static void LogMessage(const char *d, const char *s, size_t n) {
 }
 
 static void LogBody(const char *d, const char *s, size_t n) {
-  char *s2;
-  size_t n2;
+  char *s2, *s3;
+  size_t n2, n3;
   if (!n || !logbodies) return;
   while (n && (s[n - 1] == '\r' || s[n - 1] == '\n')) --n;
   if ((s2 = VisualizeControlCodes(s, n, &n2))) {
-    LOGF("%s %s %,ld byte payload\n%.*s", clientaddrstr, d, n, n2, s2);
+    if ((s3 = IndentLines(s2, n2, &n3, 1))) {
+      LOGF("%s %s %,ld byte payload\n%.*s", clientaddrstr, d, n, n3, s3);
+      free(s3);
+    }
     free(s2);
   }
 }

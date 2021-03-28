@@ -74,8 +74,8 @@ local function main()
    Write([[
      <h3>xmlhttprequest request demo</h3>
      <input id="x" value="lâtìn1">
-     <label for="x">name</label><br>
-     <button id="send">send (via http header)</button><br>
+     <label for="x">X-Custom-Header</label><br>
+     <button id="send">send</button><br>
      <div id="result"></div>
      <script>
        function OnSend() {
@@ -90,6 +90,21 @@ local function main()
        document.getElementById('send').onclick = OnSend;
      </script>
    ]])
+
+   Write('<h3>extra information</h3>\n')
+   Write('<dt>GetClientAddr()\n')
+   Write('<dd>')
+   Write(GetClientAddr())
+   Write('\n')
+   Write('<dt>GetServerAddr()\n')
+   Write('<dd>')
+   Write(GetServerAddr())
+   Write('\n')
+   Write('<dt>FormatHttpDateTime(GetDate())\n')
+   Write('<dd>')
+   Write(FormatHttpDateTime(GetDate()))
+   Write('\n')
+   Write('</dl>\n')
 end
 
 main()
