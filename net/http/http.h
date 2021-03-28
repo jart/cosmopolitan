@@ -121,6 +121,10 @@ unsigned ParseHttpVersion(const char *, size_t);
 int64_t ParseHttpDateTime(const char *, size_t);
 const char *GetHttpReason(int);
 const char *GetHttpHeaderName(int);
+char *DecodeLatin1(const char *, size_t, size_t *);
+bool IsValidHttpToken(const char *, size_t);
+char *EncodeHttpHeaderValue(const char *, size_t, size_t *);
+char *VisualizeControlCodes(const char *, size_t, size_t *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

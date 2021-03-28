@@ -49,6 +49,10 @@ void TearDown(void) {
   DestroyHttpRequest(req);
 }
 
+/* TEST(ParseHttpRequest, soLittleState) { */
+/*   ASSERT_EQ(280, sizeof(struct HttpRequest)); */
+/* } */
+
 TEST(ParseHttpRequest, testEmpty_tooShort) {
   EXPECT_EQ(0, ParseHttpRequest(req, "", 0));
 }
@@ -185,4 +189,13 @@ X-User-Agent: hi\r\n\
   ASSERT_EQ(1, req->xheaders.n);
   EXPECT_STREQ("X-User-Agent", gc(slice(m, req->xheaders.p[0].k)));
   EXPECT_STREQ("hi", gc(slice(m, req->xheaders.p[0].v)));
+}
+
+TEST(ParseHttpRequest, testHeaderValuesWithWhitespace_getsTrimmed) {
+  static const char m[] = "\
+OPTIONS * HTTP/1.0\r\n\
+User-Agent:  \t hi there \t \r\n\
+\r\n";
+  EXPECT_EQ(strlen(m), ParseHttpRequest(req, m, strlen(m)));
+  EXPECT_STREQ("hi there", gc(slice(m, req->headers[kHttpUserAgent])));
 }

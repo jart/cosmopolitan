@@ -68,6 +68,7 @@ o/$(MODE)/tool/net/redbean.com.dbg:				\
 		o/$(MODE)/tool/net/redbean.html.zip.o		\
 		o/$(MODE)/tool/net/redbean.lua.zip.o		\
 		o/$(MODE)/tool/net/redbean-form.lua.zip.o	\
+		o/$(MODE)/tool/net/redbean-xhr.lua.zip.o	\
 		o/$(MODE)/tool/net/.init.lua.zip.o		\
 		o/$(MODE)/tool/net/.reload.lua.zip.o		\
 		o/$(MODE)/tool/net/net.pkg			\

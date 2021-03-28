@@ -58,16 +58,38 @@ local function main()
       Write('<p><em>none</em>\n')
    end
 
-   Write('<h3>post request html form demo</h3>\n')
-   Write('<form action="/tool/net/redbean-form.lua" method="post">\n')
-   Write('<input type="text" id="firstname" name="firstname">\n')
-   Write('<label for="firstname">first name</label>\n')
-   Write('<br>\n')
-   Write('<input type="text" id="lastname" name="lastname">\n')
-   Write('<label for="lastname">last name</label>\n')
-   Write('<br>\n')
-   Write('<input type="submit" value="Submit">\n')
-   Write('</form>\n')
+   Write([[
+     <h3>post request html form demo</h3>
+     <form action="/tool/net/redbean-form.lua" method="post">
+     <input type="text" id="firstname" name="firstname">
+     <label for="firstname">first name</label>
+     <br>
+     <input type="text" id="lastname" name="lastname">
+     <label for="lastname">last name</label>
+     <br>
+     <input type="submit" value="Submit">
+     </form>
+   ]])
+
+   Write([[
+     <h3>xmlhttprequest request demo</h3>
+     <input id="x" value="lâtìn1">
+     <label for="x">name</label><br>
+     <button id="send">send (via http header)</button><br>
+     <div id="result"></div>
+     <script>
+       function OnSend() {
+         var r = new XMLHttpRequest();
+         r.onload = function() {
+           document.getElementById("result").innerText = this.getResponseHeader('X-Custom-Header');
+         };
+         r.open('POST', '/tool/net/redbean-xhr.lua');
+         r.setRequestHeader('X-Custom-Header', document.getElementById('x').value);
+         r.send();
+       }
+       document.getElementById('send').onclick = OnSend;
+     </script>
+   ]])
 end
 
 main()

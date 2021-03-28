@@ -244,6 +244,8 @@ struct Parser {
   int c;
   const char *data;
   int size;
+  bool isform;
+  bool islatin1;
   char *p;
   char *q;
 };
@@ -296,6 +298,7 @@ static bool heartless;
 static bool printport;
 static bool heartbeat;
 static bool daemonize;
+static bool logbodies;
 static bool terminated;
 static bool uniprocess;
 static bool invalidated;
@@ -316,12 +319,12 @@ static uint32_t clientaddrsize;
 
 static lua_State *L;
 static void *content;
-static uint8_t *zmap;
 static uint8_t *zdir;
+static uint8_t *zmap;
 static size_t hdrsize;
 static size_t msgsize;
 static size_t amtread;
-static size_t zmapsize;
+static size_t zsize;
 static char *luaheaderp;
 static const char *pidpath;
 static const char *logpath;
@@ -513,7 +516,7 @@ static wontreturn void PrintUsage(FILE *f, int rc) {
 
 static void GetOpts(int argc, char *argv[]) {
   int opt;
-  while ((opt = getopt(argc, argv, "zhduvml:p:w:r:c:L:P:U:G:B:")) != -1) {
+  while ((opt = getopt(argc, argv, "zhduvmbl:p:w:r:c:L:P:U:G:B:")) != -1) {
     switch (opt) {
       case 'v':
         __log_level++;
@@ -526,6 +529,9 @@ static void GetOpts(int argc, char *argv[]) {
         break;
       case 'm':
         logmessages = true;
+        break;
+      case 'b':
+        logbodies = true;
         break;
       case 'z':
         printport = true;
@@ -543,7 +549,7 @@ static void GetOpts(int argc, char *argv[]) {
         CHECK_EQ(1, inet_pton(AF_INET, optarg, &serveraddr.sin_addr));
         break;
       case 'B':
-        serverheader = optarg;
+        serverheader = emptytonull(EncodeHttpHeaderValue(optarg, -1, 0));
         break;
       case 'L':
         logpath = optarg;
@@ -777,13 +783,18 @@ static void IndexAssets(void) {
 
 static void OpenZip(const char *path) {
   int fd;
+  uint8_t *p;
   struct stat st;
   CHECK_NE(-1, (fd = open(path, O_RDONLY)));
   CHECK_NE(-1, fstat(fd, &st));
-  CHECK((zmapsize = st.st_size));
+  CHECK((zsize = st.st_size));
   CHECK_NE(MAP_FAILED,
-           (zmap = mmap(NULL, zmapsize, PROT_READ, MAP_SHARED, fd, 0)));
-  CHECK_NOTNULL((zdir = zipfindcentraldir(zmap, zmapsize)));
+           (zmap = mmap(NULL, zsize, PROT_READ, MAP_SHARED, fd, 0)));
+  CHECK_NOTNULL((zdir = zipfindcentraldir(zmap, zsize)));
+  if (endswith(path, ".com.dbg") && (p = memmem(zmap, zsize, "MZqFpD", 6))) {
+    zsize -= p - zmap;
+    zmap = p;
+  }
   close(fd);
 }
 
@@ -856,6 +867,11 @@ static void EmitParamVal(struct Parser *u, struct Params *h, bool t) {
   }
 }
 
+static void ParseLatin1(struct Parser *u) {
+  *u->p++ = 0300 | u->c >> 6;
+  *u->p++ = 0200 | u->c & 077;
+}
+
 static void ParseEscape(struct Parser *u) {
   int a, b;
   a = u->i < u->size ? u->data[u->i++] & 0xff : 0;
@@ -868,10 +884,12 @@ static void ParsePath(struct Parser *u, struct Buffer *h) {
     u->c = u->data[u->i++] & 0xff;
     if (u->c == '#' || u->c == '?') {
       break;
-    } else if (u->c != '%') {
-      *u->p++ = u->c;
-    } else {
+    } else if (u->c == '%') {
       ParseEscape(u);
+    } else if (u->c >= 0200 && u->islatin1) {
+      ParseLatin1(u);
+    } else {
+      *u->p++ = u->c;
     }
   }
   h->p = u->q;
@@ -879,48 +897,46 @@ static void ParsePath(struct Parser *u, struct Buffer *h) {
   u->q = u->p;
 }
 
-static void ParseParams(struct Parser *u, struct Params *h, bool isform) {
+static void ParseParams(struct Parser *u, struct Params *h) {
   bool t = false;
   while (u->i < u->size) {
-    switch ((u->c = u->data[u->i++] & 0xff)) {
-      default:
-        *u->p++ = u->c;
-        break;
-      case '+':
-        *u->p++ = isform ? ' ' : '+';
-        break;
-      case '%':
-        ParseEscape(u);
-        break;
-      case '&':
-        EmitParamVal(u, h, t);
-        t = false;
-        break;
-      case '=':
-        if (!t) {
-          if (u->p > u->q) {
-            EmitParamKey(u, h);
-            t = true;
-          }
-        } else {
-          *u->p++ = '=';
+    u->c = u->data[u->i++] & 0xff;
+    if (u->c == '#') {
+      break;
+    } else if (u->c == '%') {
+      ParseEscape(u);
+    } else if (u->c == '+') {
+      *u->p++ = u->isform ? ' ' : '+';
+    } else if (u->c == '&') {
+      EmitParamVal(u, h, t);
+      t = false;
+    } else if (u->c == '=') {
+      if (!t) {
+        if (u->p > u->q) {
+          EmitParamKey(u, h);
+          t = true;
         }
-        break;
-      case '#':
-        goto EndOfParams;
+      } else {
+        *u->p++ = '=';
+      }
+    } else if (u->c >= 0200 && u->islatin1) {
+      ParseLatin1(u);
+    } else {
+      *u->p++ = u->c;
     }
   }
-EndOfParams:
   EmitParamVal(u, h, t);
 }
 
 static void ParseFragment(struct Parser *u, struct Buffer *h) {
   while (u->i < u->size) {
     u->c = u->data[u->i++] & 0xff;
-    if (u->c != '%') {
-      *u->p++ = u->c;
-    } else {
+    if (u->c == '%') {
       ParseEscape(u);
+    } else if (u->c >= 0200 && u->islatin1) {
+      ParseLatin1(u);
+    } else {
+      *u->p++ = u->c;
     }
   }
   h->p = u->q;
@@ -936,13 +952,15 @@ static bool ParseRequestUri(void) {
   struct Parser u;
   u.i = 0;
   u.c = '/';
+  u.isform = false;
+  u.islatin1 = true;
   u.data = inbuf.p + msg.uri.a;
   u.size = msg.uri.b - msg.uri.a;
   memset(&request, 0, sizeof(request));
   if (!u.size || *u.data != '/') return false;
-  u.q = u.p = FreeLater(xmalloc(u.size));
+  u.q = u.p = FreeLater(xmalloc(u.size * 2));
   if (u.c == '/') ParsePath(&u, &request.path);
-  if (u.c == '?') ParseParams(&u, &request.params, false);
+  if (u.c == '?') ParseParams(&u, &request.params);
   if (u.c == '#') ParseFragment(&u, &request.fragment);
   return u.i == u.size && !IsForbiddenPath(&request.path);
 }
@@ -951,18 +969,20 @@ static void ParseFormParams(void) {
   struct Parser u;
   u.i = 0;
   u.c = 0;
+  u.isform = true;
+  u.islatin1 = false;
   u.data = inbuf.p + hdrsize;
   u.size = msgsize - hdrsize;
   u.q = u.p = FreeLater(xmalloc(u.size));
-  ParseParams(&u, &request.params, true);
+  ParseParams(&u, &request.params);
 }
 
 static void *AddRange(char *content, long start, long length) {
   intptr_t mend, mstart;
   if (!__builtin_add_overflow((intptr_t)content, start, &mstart) ||
       !__builtin_add_overflow(mstart, length, &mend) ||
-      ((intptr_t)zmap <= mstart && mstart <= (intptr_t)zmap + zmapsize) ||
-      ((intptr_t)zmap <= mend && mend <= (intptr_t)zmap + zmapsize)) {
+      ((intptr_t)zmap <= mstart && mstart <= (intptr_t)zmap + zsize) ||
+      ((intptr_t)zmap <= mend && mend <= (intptr_t)zmap + zsize)) {
     return (void *)mstart;
   } else {
     abort();
@@ -1002,6 +1022,7 @@ static char *SetStatus(int code, const char *reason) {
 }
 
 static char *AppendHeader(char *p, const char *k, const char *v) {
+  if (!v) return p;
   return AppendCrlf(stpcpy(AppendHeaderName(p, k), v));
 }
 
@@ -1213,43 +1234,6 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
   return p;
 }
 
-static bool IsValidFieldName(const char *s, size_t n) {
-  size_t i;
-  if (!n) return false;
-  for (i = 0; i < n; ++i) {
-    if (!(0x20 < s[i] && s[i] < 0x7F) || s[i] == ':') {
-      return false;
-    }
-  }
-  return true;
-}
-
-static bool IsValidFieldContent(const char *s, size_t n) {
-  size_t i;
-  for (i = 0; i < n; ++i) {
-    if (!(0x20 <= s[i] && s[i] < 0x7F)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-static int LuaIsValidFieldName(lua_State *L) {
-  size_t size;
-  const char *data;
-  data = luaL_checklstring(L, 1, &size);
-  lua_pushboolean(L, IsValidFieldName(data, size));
-  return 1;
-}
-
-static int LuaIsValidFieldContent(lua_State *L) {
-  size_t size;
-  const char *data;
-  data = luaL_checklstring(L, 1, &size);
-  lua_pushboolean(L, IsValidFieldContent(data, size));
-  return 1;
-}
-
 static int LuaServeAsset(lua_State *L) {
   size_t pathlen;
   struct Asset *a;
@@ -1263,6 +1247,7 @@ static int LuaServeAsset(lua_State *L) {
 }
 
 static int LuaRespond(lua_State *L, char *respond(int, const char *)) {
+  char *p;
   int code;
   size_t reasonlen;
   const char *reason;
@@ -1271,14 +1256,16 @@ static int LuaRespond(lua_State *L, char *respond(int, const char *)) {
     return luaL_argerror(L, 1, "bad status code");
   }
   if (lua_isnoneornil(L, 2)) {
-    reason = GetHttpReason(code);
+    luaheaderp = respond(code, GetHttpReason(code));
   } else {
     reason = lua_tolstring(L, 2, &reasonlen);
-    if (reasonlen > 128 || !IsValidFieldContent(reason, reasonlen)) {
+    if (reasonlen < 128 && (p = EncodeHttpHeaderValue(reason, reasonlen, 0))) {
+      luaheaderp = respond(code, p);
+      free(p);
+    } else {
       return luaL_argerror(L, 2, "invalid");
     }
   }
-  luaheaderp = respond(code, reason);
   return 0;
 }
 
@@ -1368,22 +1355,29 @@ static int LuaGetPayload(lua_State *L) {
   return 1;
 }
 
+static void LuaPushLatin1(lua_State *L, const char *s, size_t n) {
+  char *t;
+  size_t m;
+  t = DecodeLatin1(s, n, &m);
+  lua_pushlstring(L, t, m);
+  free(t);
+}
+
 static int LuaGetHeader(lua_State *L) {
   int h;
-  const char *key, *val;
-  size_t i, keylen, vallen;
+  const char *key;
+  size_t i, keylen;
   key = luaL_checklstring(L, 1, &keylen);
   if ((h = GetHttpHeader(key, keylen)) != -1) {
-    val = inbuf.p + msg.headers[h].a;
-    vallen = msg.headers[h].b - msg.headers[h].a;
-    lua_pushlstring(L, val, vallen);
+    LuaPushLatin1(L, inbuf.p + msg.headers[h].a,
+                  msg.headers[h].b - msg.headers[h].a);
     return 1;
   }
   for (i = 0; i < msg.xheaders.n; ++i) {
     if (!CompareSlicesCase(key, keylen, inbuf.p + msg.xheaders.p[i].k.a,
                            msg.xheaders.p[i].k.b - msg.xheaders.p[i].k.a)) {
-      lua_pushlstring(L, inbuf.p + msg.xheaders.p[i].v.a,
-                      msg.xheaders.p[i].v.b - msg.xheaders.p[i].v.a);
+      LuaPushLatin1(L, inbuf.p + msg.xheaders.p[i].v.a,
+                    msg.xheaders.p[i].v.b - msg.xheaders.p[i].v.a);
       return 1;
     }
   }
@@ -1393,42 +1387,47 @@ static int LuaGetHeader(lua_State *L) {
 
 static int LuaGetHeaders(lua_State *L) {
   size_t i;
+  char *name;
   lua_newtable(L);
   for (i = 0; i < kHttpHeadersMax; ++i) {
     if (msg.headers[i].b - msg.headers[i].a) {
-      lua_pushlstring(L, inbuf.p + msg.headers[i].a,
-                      msg.headers[i].b - msg.headers[i].a);
+      LuaPushLatin1(L, inbuf.p + msg.headers[i].a,
+                    msg.headers[i].b - msg.headers[i].a);
       lua_setfield(L, -2, GetHttpHeaderName(i));
     }
   }
   for (i = 0; i < msg.xheaders.n; ++i) {
-    lua_pushlstring(L, inbuf.p + msg.xheaders.p[i].v.a,
-                    msg.xheaders.p[i].v.b - msg.xheaders.p[i].v.a);
-    lua_setfield(
-        L, -2,
-        FreeLater(strndup(inbuf.p + msg.xheaders.p[i].k.a,
-                          msg.xheaders.p[i].k.b - msg.xheaders.p[i].k.a)));
+    LuaPushLatin1(L, inbuf.p + msg.xheaders.p[i].v.a,
+                  msg.xheaders.p[i].v.b - msg.xheaders.p[i].v.a);
+    lua_setfield(L, -2,
+                 (name = DecodeLatin1(
+                      inbuf.p + msg.xheaders.p[i].k.a,
+                      msg.xheaders.p[i].k.b - msg.xheaders.p[i].k.a, 0)));
+    free(name);
   }
   return 1;
 }
 
 static int LuaSetHeader(lua_State *L) {
+  int h;
   char *p;
   ssize_t rc;
-  const char *key, *val;
-  size_t i, keylen, vallen;
+  const char *key, *val, *eval;
+  size_t i, keylen, vallen, evallen;
   key = luaL_checklstring(L, 1, &keylen);
   val = luaL_checklstring(L, 2, &vallen);
-  if (!IsValidFieldName(key, keylen)) {
-    return luaL_argerror(L, 1, "invalid");
+  if ((h = GetHttpHeader(key, keylen)) == -1) {
+    if (!IsValidHttpToken(key, keylen)) {
+      return luaL_argerror(L, 1, "invalid");
+    }
   }
-  if (!IsValidFieldContent(val, vallen)) {
+  if (!(eval = EncodeHttpHeaderValue(val, vallen, &evallen))) {
     return luaL_argerror(L, 2, "invalid");
   }
   if (!luaheaderp) {
     p = SetStatus(200, "OK");
   } else {
-    while (luaheaderp - hdrbuf.p + keylen + 2 + vallen + 2 + 512 > hdrbuf.n) {
+    while (luaheaderp - hdrbuf.p + keylen + 2 + evallen + 2 + 512 > hdrbuf.n) {
       hdrbuf.n += hdrbuf.n >> 1;
       p = xrealloc(hdrbuf.p, hdrbuf.n);
       luaheaderp = p + (luaheaderp - hdrbuf.p);
@@ -1436,30 +1435,31 @@ static int LuaSetHeader(lua_State *L) {
     }
     p = luaheaderp;
   }
-  switch (GetHttpHeader(key, keylen)) {
+  switch (h) {
     case kHttpDate:
     case kHttpContentRange:
     case kHttpContentLength:
     case kHttpContentEncoding:
       return luaL_argerror(L, 1, "abstracted");
     case kHttpConnection:
-      if (vallen != 5 || memcmp(val, "close", 5)) {
+      if (evallen != 5 || memcmp(eval, "close", 5)) {
         return luaL_argerror(L, 2, "unsupported");
       }
       connectionclose = true;
       break;
     case kHttpContentType:
-      p = AppendContentType(p, val);
+      p = AppendContentType(p, eval);
       break;
     case kHttpServer:
       branded = true;
-      p = AppendHeader(p, key, val);
+      p = AppendHeader(p, "Server", eval);
       break;
     default:
-      p = AppendHeader(p, key, val);
+      p = AppendHeader(p, key, eval);
       break;
   }
   luaheaderp = p;
+  free(eval);
   return 0;
 }
 
@@ -1579,6 +1579,17 @@ static int LuaDecodeBase64(lua_State *L) {
   return 1;
 }
 
+static int LuaVisualizeControlCodes(lua_State *L) {
+  char *p;
+  size_t size, n;
+  const char *data;
+  data = luaL_checklstring(L, 1, &size);
+  p = VisualizeControlCodes(data, size, &n);
+  lua_pushlstring(L, p, n);
+  free(p);
+  return 1;
+}
+
 static int LuaPopcnt(lua_State *L) {
   lua_pushinteger(L, popcnt(luaL_checkinteger(L, 1)));
   return 1;
@@ -1619,41 +1630,39 @@ static void LuaRun(const char *path) {
 }
 
 static const luaL_Reg kLuaFuncs[] = {
-    {"DecodeBase64", LuaDecodeBase64},                //
-    {"EncodeBase64", LuaEncodeBase64},                //
-    {"EscapeFragment", LuaEscapeFragment},            //
-    {"EscapeHtml", LuaEscapeHtml},                    //
-    {"EscapeLiteral", LuaEscapeLiteral},              //
-    {"EscapeParam", LuaEscapeParam},                  //
-    {"EscapePath", LuaEscapePath},                    //
-    {"EscapeSegment", LuaEscapeSegment},              //
-    {"FormatDate", LuaFormatDate},                    //
-    {"GetClientAddr", LuaGetClientAddr},              //
-    {"GetDate", LuaGetDate},                          //
-    {"GetFragment", LuaGetFragment},                  //
-    {"GetHeader", LuaGetHeader},                      //
-    {"GetHeaders", LuaGetHeaders},                    //
-    {"GetMethod", LuaGetMethod},                      //
-    {"GetParam", LuaGetParam},                        //
-    {"GetParams", LuaGetParams},                      //
-    {"GetPath", LuaGetPath},                          //
-    {"GetPayload", LuaGetPayload},                    //
-    {"GetServerAddr", LuaGetServerAddr},              //
-    {"GetUri", LuaGetUri},                            //
-    {"GetVersion", LuaGetVersion},                    //
-    {"HasParam", LuaHasParam},                        //
-    {"IsValidFieldContent", LuaIsValidFieldContent},  //
-    {"IsValidFieldName", LuaIsValidFieldName},        //
-    {"LoadAsset", LuaLoadAsset},                      //
-    {"ParseDate", LuaParseDate},                      //
-    {"ServeAsset", LuaServeAsset},                    //
-    {"ServeError", LuaServeError},                    //
-    {"SetHeader", LuaSetHeader},                      //
-    {"SetStatus", LuaSetStatus},                      //
-    {"Write", LuaWrite},                              //
-    {"bsf", LuaBsf},                                  //
-    {"bsr", LuaBsr},                                  //
-    {"popcnt", LuaPopcnt},                            //
+    {"DecodeBase64", LuaDecodeBase64},      //
+    {"EncodeBase64", LuaEncodeBase64},      //
+    {"EscapeFragment", LuaEscapeFragment},  //
+    {"EscapeHtml", LuaEscapeHtml},          //
+    {"EscapeLiteral", LuaEscapeLiteral},    //
+    {"EscapeParam", LuaEscapeParam},        //
+    {"EscapePath", LuaEscapePath},          //
+    {"EscapeSegment", LuaEscapeSegment},    //
+    {"FormatDate", LuaFormatDate},          //
+    {"GetClientAddr", LuaGetClientAddr},    //
+    {"GetDate", LuaGetDate},                //
+    {"GetFragment", LuaGetFragment},        //
+    {"GetHeader", LuaGetHeader},            //
+    {"GetHeaders", LuaGetHeaders},          //
+    {"GetMethod", LuaGetMethod},            //
+    {"GetParam", LuaGetParam},              //
+    {"GetParams", LuaGetParams},            //
+    {"GetPath", LuaGetPath},                //
+    {"GetPayload", LuaGetPayload},          //
+    {"GetServerAddr", LuaGetServerAddr},    //
+    {"GetUri", LuaGetUri},                  //
+    {"GetVersion", LuaGetVersion},          //
+    {"HasParam", LuaHasParam},              //
+    {"LoadAsset", LuaLoadAsset},            //
+    {"ParseDate", LuaParseDate},            //
+    {"ServeAsset", LuaServeAsset},          //
+    {"ServeError", LuaServeError},          //
+    {"SetHeader", LuaSetHeader},            //
+    {"SetStatus", LuaSetStatus},            //
+    {"Write", LuaWrite},                    //
+    {"bsf", LuaBsf},                        //
+    {"bsr", LuaBsr},                        //
+    {"popcnt", LuaPopcnt},                  //
 };
 
 static void LuaSetArgv(void) {
@@ -1748,15 +1757,35 @@ static char *HandleRedirect(struct Redirect *r) {
            kHttpMethod[msg.method], request.path.n, request.path.p,
            r->location);
     p = SetStatus(307, "Temporary Redirect");
-    p = AppendHeader(p, "Location", r->location);
+    p = AppendHeader(p, "Location",
+                     FreeLater(EncodeHttpHeaderValue(r->location, -1, 0)));
   }
   return p;
 }
 
 static void LogMessage(const char *d, const char *s, size_t n) {
+  char *s2, *s3;
+  size_t n2, n3;
   if (!logmessages) return;
   while (n && (s[n - 1] == '\r' || s[n - 1] == '\n')) --n;
-  LOGF("%s %s %,ld byte message\n%.*s", clientaddrstr, d, n, n, s);
+  if ((s2 = DecodeLatin1(s, n, &n2))) {
+    if ((s3 = VisualizeControlCodes(s2, n2, &n3))) {
+      LOGF("%s %s %,ld byte message\n%.*s", clientaddrstr, d, n, n3, s3);
+      free(s3);
+    }
+    free(s2);
+  }
+}
+
+static void LogBody(const char *d, const char *s, size_t n) {
+  char *s2;
+  size_t n2;
+  if (!n || !logbodies) return;
+  while (n && (s[n - 1] == '\r' || s[n - 1] == '\n')) --n;
+  if ((s2 = VisualizeControlCodes(s, n, &n2))) {
+    LOGF("%s %s %,ld byte payload\n%.*s", clientaddrstr, d, n, n2, s2);
+    free(s2);
+  }
 }
 
 static ssize_t SendMessageString(const char *s) {
@@ -1872,6 +1901,7 @@ static char *HandleMessage(void) {
     }
   }
   msgsize = need; /* we are now synchronized */
+  LogBody("received", inbuf.p + hdrsize, msgsize - hdrsize);
   if (httpversion != 101 || IsConnectionClose()) {
     connectionclose = true;
   }

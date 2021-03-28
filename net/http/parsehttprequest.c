@@ -47,9 +47,19 @@ void DestroyHttpRequest(struct HttpRequest *r) {
 
 /**
  * Parses HTTP request.
+ *
+ * This parser is responsible for determining the length of a message
+ * and slicing the strings inside it. Performance is attained using
+ * perfect hash tables. No memory allocation is performed for normal
+ * messages. Line folding is forbidden. State persists across calls so
+ * that fragmented messages can be handled efficiently. A limitation on
+ * message size is imposed to make the header data structures smaller.
+ * All other things are permissive to the greatest extent possible.
+ * Further functions are provided for the interpretation, validation,
+ * and sanitization of various fields.
  */
 int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
-  int c, h;
+  int c, h, i;
   struct HttpRequestHeader *x;
   for (n = MIN(n, LIMIT); r->i < n; ++r->i) {
     c = p[r->i] & 0xff;
@@ -122,14 +132,16 @@ int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
         /* fallthrough */
       case HVAL:
         if (c == '\r' || c == '\n') {
+          i = r->i;
+          while (i > r->a && (p[i - 1] == ' ' || p[i - 1] == '\t')) --i;
           if ((h = GetHttpHeader(p + r->k.a, r->k.b - r->k.a)) != -1) {
             r->headers[h].a = r->a;
-            r->headers[h].b = r->i;
+            r->headers[h].b = i;
           } else if ((x = realloc(r->xheaders.p, (r->xheaders.n + 1) *
                                                      sizeof(*r->xheaders.p)))) {
             x[r->xheaders.n].k = r->k;
             x[r->xheaders.n].v.a = r->a;
-            x[r->xheaders.n].v.b = r->i;
+            x[r->xheaders.n].v.b = i;
             r->xheaders.p = x;
             ++r->xheaders.n;
           }
