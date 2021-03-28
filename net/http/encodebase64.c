@@ -16,38 +16,33 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/str.h"
+#include "libc/mem/mem.h"
+#include "net/http/base64.h"
 
-static const signed char kBase64i[256] = {
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 0x00 */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 0x10 */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0,  1,  /* 0x20 */
-    2,  3,  4,  5,  6,  7,  8,  9,  10, 11, -1, -1, -1, -1, -1, -1, /* 0x30 */
-    -1, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, /* 0x40 */
-    27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, -1, -1, -1, -1, -1, /* 0x50 */
-    -1, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, /* 0x60 */
-    53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, -1, -1, -1, -1, -1, /* 0x70 */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 0x80 */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 0x90 */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 0xA0 */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 0xB0 */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 0xC0 */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 0xD0 */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 0xE0 */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 0xF0 */
-};
+#define CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
 /**
- * Converts base64 to 32-bit integer, the posix way.
- * @see l64a() for inverse
- * @see DecodeBase64()
+ * Encodes binary to base64 ascii representation.
  */
-long a64l(const char *s) {
-  uint32_t i, v, x;
-  for (x = i = 0; i < 6; ++i) {
-    v = kBase64i[s[i] & 0xff];
-    if (v == -1) break;
-    x |= v << (i * 6);
+char *EncodeBase64(const void *data, size_t size, size_t *out_size) {
+  size_t n;
+  unsigned w;
+  char *r, *q;
+  const unsigned char *p, *pe;
+  if ((n = size) % 3) n += 3 - size % 3;
+  n /= 3, n *= 4;
+  if ((r = malloc(n + 1))) {
+    if (out_size) *out_size = n;
+    for (q = r, p = data, pe = p + size; p < pe; p += 3) {
+      w = p[0] << 020;
+      if (p + 1 < pe) w |= p[1] << 010;
+      if (p + 2 < pe) w |= p[2] << 000;
+      *q++ = CHARS[(w >> 18) & 077];
+      *q++ = CHARS[(w >> 12) & 077];
+      *q++ = p + 1 < pe ? CHARS[(w >> 6) & 077] : '=';
+      *q++ = p + 2 < pe ? CHARS[w & 077] : '=';
+    }
+    *q++ = '\0';
   }
-  return (int32_t)x;
+  return r;
 }

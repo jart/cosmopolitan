@@ -27,7 +27,7 @@
 #include "libc/x/x.h"
 #include "net/http/http.h"
 
-#define LIMIT (SHRT_MAX - 1)
+#define LIMIT (SHRT_MAX - 2)
 
 enum { START, METHOD, URI, VERSION, HKEY, HSEP, HVAL, CR1, LF1, LF2 };
 

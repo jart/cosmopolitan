@@ -19,7 +19,9 @@
 #include "libc/str/str.h"
 
 /**
- * Converts 32-bit integer to base64.
+ * Converts 32-bit integer to base64, the posix way.
+ * @see a64l() for inverse
+ * @see EncodeBase64()
  */
 char *l64a(long x) {
   static char b[7];

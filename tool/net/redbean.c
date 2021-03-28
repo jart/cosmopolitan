@@ -73,6 +73,7 @@
 #include "libc/x/x.h"
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
+#include "net/http/base64.h"
 #include "net/http/escape.h"
 #include "net/http/http.h"
 #include "third_party/getopt/getopt.h"
@@ -886,7 +887,7 @@ static void ParseParams(struct Parser *u, struct Params *h, bool isform) {
         *u->p++ = u->c;
         break;
       case '+':
-        *u->p++ = isform ? ' ' : u->c;
+        *u->p++ = isform ? ' ' : '+';
         break;
       case '%':
         ParseEscape(u);
@@ -1556,6 +1557,28 @@ static int LuaEscapeLiteral(lua_State *L) {
   return LuaEscaper(L, EscapeJsStringLiteral);
 }
 
+static int LuaEncodeBase64(lua_State *L) {
+  char *p;
+  size_t size, n;
+  const char *data;
+  data = luaL_checklstring(L, 1, &size);
+  p = EncodeBase64(data, size, &n);
+  lua_pushlstring(L, p, n);
+  free(p);
+  return 1;
+}
+
+static int LuaDecodeBase64(lua_State *L) {
+  char *p;
+  size_t size, n;
+  const char *data;
+  data = luaL_checklstring(L, 1, &size);
+  p = DecodeBase64(data, size, &n);
+  lua_pushlstring(L, p, n);
+  free(p);
+  return 1;
+}
+
 static int LuaPopcnt(lua_State *L) {
   lua_pushinteger(L, popcnt(luaL_checkinteger(L, 1)));
   return 1;
@@ -1596,6 +1619,8 @@ static void LuaRun(const char *path) {
 }
 
 static const luaL_Reg kLuaFuncs[] = {
+    {"DecodeBase64", LuaDecodeBase64},                //
+    {"EncodeBase64", LuaEncodeBase64},                //
     {"EscapeFragment", LuaEscapeFragment},            //
     {"EscapeHtml", LuaEscapeHtml},                    //
     {"EscapeLiteral", LuaEscapeLiteral},              //
@@ -2052,7 +2077,6 @@ static void TuneServerSocket(void) {
 void RedBean(void) {
   uint32_t addrsize;
   if (IsWindows()) uniprocess = true;
-  if (daemonize) Daemonize();
   gmtoff = GetGmtOffset();
   OpenZip((const char *)getauxval(AT_EXECFN));
   IndexAssets();
@@ -2079,6 +2103,7 @@ void RedBean(void) {
     }
     exit(1);
   }
+  if (daemonize) Daemonize();
   CHECK_NE(-1, listen(server, 10));
   addrsize = sizeof(serveraddr);
   CHECK_NE(-1, getsockname(server, &serveraddr, &addrsize));
