@@ -885,24 +885,22 @@ static struct Asset *LocateAssetZip(const char *path, size_t pathlen) {
 }
 
 static struct Asset *LocateAssetFile(const char *path, size_t pathlen) {
+  char *p;
   size_t i;
-  char *path2;
   struct Asset *a;
   if (stagedirs.n) {
     a = FreeLater(xcalloc(1, sizeof(struct Asset)));
     a->file = FreeLater(xmalloc(sizeof(struct File)));
     for (i = 0; i < stagedirs.n; ++i) {
-      if (stat((a->file->path = FreeLater(xasprintf(
+      if (stat((a->file->path = p = FreeLater(xasprintf(
                     "%s%.*s", stagedirs.p[i], request.path.n, request.path.p))),
                &a->file->st) != -1 &&
           (S_ISREG(a->file->st.st_mode) ||
            (S_ISDIR(a->file->st.st_mode) &&
-            ((stat((a->file->path = FreeLater(
-                        xasprintf("%s%s", a->file->path, "index.lua"))),
+            ((stat((a->file->path = FreeLater(xjoinpaths(p, "index.lua"))),
                    &a->file->st) != -1 &&
               S_ISREG(a->file->st.st_mode)) ||
-             (stat((a->file->path = FreeLater(
-                        xasprintf("%s%s", a->file->path, "index.html"))),
+             (stat((a->file->path = FreeLater(xjoinpaths(p, "index.html"))),
                    &a->file->st) != -1 &&
               S_ISREG(a->file->st.st_mode)))))) {
         a->lastmodifiedstr = FormatUnixHttpDateTime(

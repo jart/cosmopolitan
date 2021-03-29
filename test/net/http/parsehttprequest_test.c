@@ -18,10 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/errno.h"
+#include "libc/log/check.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 #include "net/http/http.h"
@@ -198,4 +200,64 @@ User-Agent:  \t hi there \t \r\n\
 \r\n";
   EXPECT_EQ(strlen(m), ParseHttpRequest(req, m, strlen(m)));
   EXPECT_STREQ("hi there", gc(slice(m, req->headers[kHttpUserAgent])));
+}
+
+void DoTiniestHttpRequest(void) {
+  static const char m[] = "\
+GET /\r\n\
+\r\n";
+  InitHttpRequest(req);
+  ParseHttpRequest(req, m, sizeof(m));
+  DestroyHttpRequest(req);
+}
+
+void DoTinyHttpRequest(void) {
+  static const char m[] = "\
+GET /\r\n\
+Accept-Encoding: gzip\r\n\
+\r\n";
+  InitHttpRequest(req);
+  ParseHttpRequest(req, m, sizeof(m));
+  DestroyHttpRequest(req);
+}
+
+void DoStandardChromeRequest(void) {
+  static const char m[] = "\
+GET /tool/net/redbean.png HTTP/1.1\r\n\
+Host: 10.10.10.124:8080\r\n\
+Connection: keep-alive\r\n\
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36\r\n\
+DNT:  \t1   \r\n\
+Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8\r\n\
+Referer: http://10.10.10.124:8080/\r\n\
+Accept-Encoding: gzip, deflate\r\n\
+Accept-Language: en-US,en;q=0.9\r\n\
+\r\n";
+  InitHttpRequest(req);
+  CHECK_EQ(sizeof(m) - 1, ParseHttpRequest(req, m, sizeof(m)));
+  DestroyHttpRequest(req);
+}
+
+void DoUnstandardChromeRequest(void) {
+  static const char m[] = "\
+GET /tool/net/redbean.png HTTP/1.1\r\n\
+X-Host: 10.10.10.124:8080\r\n\
+X-Connection: keep-alive\r\n\
+X-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36\r\n\
+X-DNT:  \t1   \r\n\
+X-Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8\r\n\
+X-Referer: http://10.10.10.124:8080/\r\n\
+X-Accept-Encoding: gzip, deflate\r\n\
+X-Accept-Language: en-US,en;q=0.9\r\n\
+\r\n";
+  InitHttpRequest(req);
+  CHECK_EQ(sizeof(m) - 1, ParseHttpRequest(req, m, sizeof(m)));
+  DestroyHttpRequest(req);
+}
+
+BENCH(ParseHttpRequest, bench) {
+  EZBENCH2("DoTiniestHttpRequest", donothing, DoTiniestHttpRequest());
+  EZBENCH2("DoTinyHttpRequest", donothing, DoTinyHttpRequest());
+  EZBENCH2("DoStandardChromeRequest", donothing, DoStandardChromeRequest());
+  EZBENCH2("DoUnstandardChromeRequest", donothing, DoUnstandardChromeRequest());
 }

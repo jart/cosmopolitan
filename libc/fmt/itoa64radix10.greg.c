@@ -30,8 +30,11 @@ noinline size_t uint64toarray_radix10(uint64_t i, char a[hasatleast 21]) {
   size_t j;
   j = 0;
   do {
-    a[j++] = i % 10 + '0';
-    i /= 10;
+    struct {
+      uint64_t q, r;
+    } x = {i / 10, i % 10};
+    a[j++] = x.r + '0';
+    i = x.q;
   } while (i > 0);
   a[j] = '\0';
   reverse(a, j);

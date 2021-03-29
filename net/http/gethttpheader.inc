@@ -1,6 +1,7 @@
 /* ANSI-C code produced by gperf version 3.1 */
 /* Command-line: gperf gethttpheader.gperf  */
 /* Computed positions: -k'3-4,10' */
+/* clang-format off */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -152,7 +153,7 @@ hash (register const char *str, register size_t len)
   return hval;
 }
 
-const struct HttpHeaderSlot *
+static const struct HttpHeaderSlot *
 LookupHttpHeader (register const char *str, register size_t len)
 {
   static const struct HttpHeaderSlot wordlist[] =

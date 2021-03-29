@@ -42,7 +42,11 @@ void InitHttpRequest(struct HttpRequest *r) {
  * Destroys HTTP request parser.
  */
 void DestroyHttpRequest(struct HttpRequest *r) {
-  free(r->xheaders.p);
+  if (r->xheaders.p) {
+    free(r->xheaders.p);
+    r->xheaders.p = NULL;
+    r->xheaders.n = 0;
+  }
 }
 
 /**
@@ -57,6 +61,8 @@ void DestroyHttpRequest(struct HttpRequest *r) {
  * All other things are permissive to the greatest extent possible.
  * Further functions are provided for the interpretation, validation,
  * and sanitization of various fields.
+ *
+ * @note we assume p points to a buffer that has >=SHRT_MAX bytes
  */
 int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
   int c, h, i;
@@ -72,27 +78,37 @@ int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
         r->t = METHOD;
         /* fallthrough */
       case METHOD:
-        if (c == ' ') {
-          if ((r->method = GetHttpMethod(p + r->a, r->i - r->a)) != -1) {
-            r->uri.a = r->i + 1;
-            r->t = URI;
-          } else {
-            return ebadmsg();
+        for (;;) {
+          if (c == ' ') {
+            if ((r->method = GetHttpMethod(p + r->a, r->i - r->a)) != -1) {
+              r->uri.a = r->i + 1;
+              r->t = URI;
+            } else {
+              return ebadmsg();
+            }
+            break;
           }
+          if (++r->i == n) break;
+          c = p[r->i] & 0xff;
         }
         break;
       case URI:
-        if (c == ' ' || c == '\r' || c == '\n') {
-          if (r->i == r->uri.a) return ebadmsg();
-          r->uri.b = r->i;
-          if (c == ' ') {
-            r->version.a = r->i + 1;
-            r->t = VERSION;
-          } else if (c == '\r') {
-            r->t = CR1;
-          } else {
-            r->t = LF1;
+        for (;;) {
+          if (c == ' ' || c == '\r' || c == '\n') {
+            if (r->i == r->uri.a) return ebadmsg();
+            r->uri.b = r->i;
+            if (c == ' ') {
+              r->version.a = r->i + 1;
+              r->t = VERSION;
+            } else if (c == '\r') {
+              r->t = CR1;
+            } else {
+              r->t = LF1;
+            }
+            break;
           }
+          if (++r->i == n) break;
+          c = p[r->i] & 0xff;
         }
         break;
       case VERSION:
@@ -120,9 +136,14 @@ int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
         r->t = HKEY;
         break;
       case HKEY:
-        if (c == ':') {
-          r->k.b = r->i;
-          r->t = HSEP;
+        for (;;) {
+          if (c == ':') {
+            r->k.b = r->i;
+            r->t = HSEP;
+            break;
+          }
+          if (++r->i == n) break;
+          c = p[r->i] & 0xff;
         }
         break;
       case HSEP:
@@ -131,21 +152,27 @@ int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
         r->t = HVAL;
         /* fallthrough */
       case HVAL:
-        if (c == '\r' || c == '\n') {
-          i = r->i;
-          while (i > r->a && (p[i - 1] == ' ' || p[i - 1] == '\t')) --i;
-          if ((h = GetHttpHeader(p + r->k.a, r->k.b - r->k.a)) != -1) {
-            r->headers[h].a = r->a;
-            r->headers[h].b = i;
-          } else if ((x = realloc(r->xheaders.p, (r->xheaders.n + 1) *
-                                                     sizeof(*r->xheaders.p)))) {
-            x[r->xheaders.n].k = r->k;
-            x[r->xheaders.n].v.a = r->a;
-            x[r->xheaders.n].v.b = i;
-            r->xheaders.p = x;
-            ++r->xheaders.n;
+        for (;;) {
+          if (c == '\r' || c == '\n') {
+            i = r->i;
+            while (i > r->a && (p[i - 1] == ' ' || p[i - 1] == '\t')) --i;
+            if ((h = GetHttpHeader(p + r->k.a, r->k.b - r->k.a)) != -1) {
+              r->headers[h].a = r->a;
+              r->headers[h].b = i;
+            } else if ((x = realloc(
+                            r->xheaders.p,
+                            (r->xheaders.n + 1) * sizeof(*r->xheaders.p)))) {
+              x[r->xheaders.n].k = r->k;
+              x[r->xheaders.n].v.a = r->a;
+              x[r->xheaders.n].v.b = i;
+              r->xheaders.p = x;
+              ++r->xheaders.n;
+            }
+            r->t = c == '\r' ? CR1 : LF1;
+            break;
           }
-          r->t = c == '\r' ? CR1 : LF1;
+          if (++r->i == n) break;
+          c = p[r->i] & 0xff;
         }
         break;
       case LF2:
