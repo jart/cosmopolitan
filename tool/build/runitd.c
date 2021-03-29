@@ -254,7 +254,7 @@ void SetDeadline(int seconds, int micros) {
 
 void HandleClient(void) {
   const size_t kMinMsgSize = 4 + 1 + 4 + 4;
-  const size_t kMaxNameSize = 32;
+  const size_t kMaxNameSize = 128;
   const size_t kMaxFileSize = 10 * 1024 * 1024;
   unsigned char *p;
   ssize_t got, wrote;
