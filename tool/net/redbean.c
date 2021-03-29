@@ -564,7 +564,7 @@ static void ProgramPort(long x) {
 }
 
 static void SetDefaults(void) {
-  ProgramBrand("redbean/0.2");
+  ProgramBrand("redbean/0.3");
   ProgramCache(-1);
   ProgramPort(DEFAULT_PORT);
   serveraddr.sin_family = AF_INET;
