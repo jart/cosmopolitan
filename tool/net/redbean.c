@@ -345,7 +345,6 @@ static size_t hdrsize;
 static size_t msgsize;
 static size_t amtread;
 static char *luaheaderp;
-struct Strings stagedirs;
 static const char *sauce;
 static const char *brand;
 static const char *pidpath;
@@ -355,6 +354,8 @@ static size_t contentlength;
 static int64_t cacheseconds;
 static uint8_t gzip_footer[8];
 static const char *serverheader;
+static struct Strings stagedirs;
+static struct Strings hidepaths;
 
 static struct Buffer logo;
 static struct Buffer inbuf;
@@ -508,7 +509,7 @@ static const char *FindContentType(uint64_t ext) {
   return NULL;
 }
 
-static const char *GetContentType(const char *path, size_t n) {
+static const char *GetContentType2(const char *path, size_t n) {
   size_t i;
   uint64_t x;
   const char *p, *r;
@@ -521,7 +522,15 @@ static const char *GetContentType(const char *path, size_t n) {
       return r;
     }
   }
-  return "application/octet-stream";
+  return NULL;
+}
+
+static const char *GetContentType(struct Asset *a, const char *path, size_t n) {
+  return firstnonnull(
+      GetContentType2(path, n),
+      firstnonnull(GetContentType2(ZIP_LFILE_NAME(zmap + a->lf),
+                                   ZIP_LFILE_NAMESIZE(zmap + a->lf)),
+                   "application/octet-stream"));
 }
 
 static void DescribeAddress(char buf[32], const struct sockaddr_in *addr) {
@@ -575,6 +584,11 @@ static char *RemoveTrailingSlashes(char *s) {
   return s;
 }
 
+static void AddString(struct Strings *l, char *s) {
+  l->p = xrealloc(l->p, ++l->n * sizeof(*l->p));
+  l->p[l->n - 1] = s;
+}
+
 static void AddStagingDirectory(const char *dirpath) {
   char *s;
   s = RemoveTrailingSlashes(strdup(dirpath));
@@ -582,8 +596,7 @@ static void AddStagingDirectory(const char *dirpath) {
     fprintf(stderr, "error: not a directory: %s\n", s);
     exit(1);
   }
-  stagedirs.p = xrealloc(stagedirs.p, ++stagedirs.n * sizeof(*stagedirs.p));
-  stagedirs.p[stagedirs.n - 1] = s;
+  AddString(&stagedirs, s);
 }
 
 static void GetOpts(int argc, char *argv[]) {
@@ -884,6 +897,11 @@ static void IndexAssets(void) {
             ZIP_CFILE_NAMESIZE(zmap + cf), ZIP_CFILE_NAME(zmap + cf));
       continue;
     }
+    if (ZIP_CFILE_NAMESIZE(zmap + cf) > 1 &&
+        ZIP_CFILE_NAME(zmap + cf)[ZIP_CFILE_NAMESIZE(zmap + cf) - 1] == '/' &&
+        !ZIP_CFILE_UNCOMPRESSEDSIZE(zmap + cf)) {
+      continue;
+    }
     hash = Hash(ZIP_CFILE_NAME(zmap + cf), ZIP_CFILE_NAMESIZE(zmap + cf));
     step = 0;
     do {
@@ -932,19 +950,22 @@ static struct Asset *FindAsset(const char *path, size_t pathlen) {
 }
 
 static struct Asset *LocateAssetZip(const char *path, size_t pathlen) {
-  char *path2;
+  char *p2, *p3, *p4;
   struct Asset *a;
   if (pathlen && path[0] == '/') ++path, --pathlen;
   if (!(a = FindAsset(path, pathlen)) &&
       (!pathlen || (pathlen && path[pathlen - 1] == '/'))) {
-    path2 = xmalloc(pathlen + 10);
-    memcpy(path2, path, pathlen);
-    memcpy(path2 + pathlen, "index.lua", 9);
-    if (!(a = FindAsset(path2, pathlen + 9))) {
-      memcpy(path2 + pathlen, "index.html", 10);
-      a = FindAsset(path2, pathlen + 10);
+    p2 = strndup(path, pathlen);
+    p3 = xjoinpaths(p2, "index.lua");
+    LOGF("find asset %s", p3);
+    if (!(a = FindAsset(p3, strlen(p3)))) {
+      p4 = xjoinpaths(p2, "index.html");
+      LOGF("find asset %s", p4);
+      a = FindAsset(p4, strlen(p4));
+      free(p4);
     }
-    free(path2);
+    free(p3);
+    free(p2);
   }
   return a;
 }
@@ -1360,7 +1381,7 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
   }
   if (httpversion >= 100) {
     p = AppendHeader(p, "Last-Modified", a->lastmodifiedstr);
-    p = AppendContentType(p, GetContentType(path, pathlen));
+    p = AppendContentType(p, GetContentType(a, path, pathlen));
     if (httpversion >= 101) {
       p = AppendCache(p, cacheseconds);
       if (!IsCompressed(a)) {
@@ -1408,6 +1429,30 @@ static char *CommitOutput(char *p) {
     contentlength = outbuf.n;
   }
   return p;
+}
+
+static char *GetAssetPath(uint32_t cf, size_t *out_size) {
+  char *p1, *p2;
+  size_t n1, n2;
+  p1 = ZIP_CFILE_NAME(zmap + cf);
+  n1 = ZIP_CFILE_NAMESIZE(zmap + cf);
+  p2 = malloc(1 + n1 + 1);
+  n2 = 1 + n1 + 1;
+  p2[0] = '/';
+  memcpy(p2 + 1, p1, n1);
+  p2[1 + n1] = '\0';
+  if (out_size) *out_size = 1 + n1;
+  return p2;
+}
+
+static bool IsHiddenPath(const char *s) {
+  size_t i;
+  for (i = 0; i < hidepaths.n; ++i) {
+    if (startswith(s, hidepaths.p[i])) {
+      return true;
+    }
+  }
+  return false;
 }
 
 static int LuaServeAsset(lua_State *L) {
@@ -1821,6 +1866,11 @@ static int LuaSetLogLevel(lua_State *L) {
   return 0;
 }
 
+static int LuaHidePath(lua_State *L) {
+  AddString(&hidepaths, strdup(luaL_checkstring(L, 1)));
+  return 0;
+}
+
 static int LuaLog(lua_State *L) {
   int level;
   lua_Debug ar;
@@ -1834,6 +1884,29 @@ static int LuaLog(lua_State *L) {
     flogf(level, module, ar.currentline, NULL, "%s", msg);
   }
   return 0;
+}
+
+static int LuaIsHiddenPath(lua_State *L) {
+  lua_pushboolean(L, IsHiddenPath(luaL_checkstring(L, 1)));
+  return 1;
+}
+
+static int LuaGetZipPaths(lua_State *L) {
+  char *path;
+  uint32_t cf;
+  size_t i, n, pathlen;
+  lua_newtable(L);
+  i = 0;
+  n = ZIP_CDIR_RECORDS(zdir);
+  CHECK_EQ(kZipCdirHdrMagic, ZIP_CDIR_MAGIC(zdir));
+  for (cf = ZIP_CDIR_OFFSET(zdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
+    CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zmap + cf));
+    path = GetAssetPath(cf, &pathlen);
+    lua_pushlstring(L, path, pathlen);
+    lua_seti(L, -2, ++i);
+    free(path);
+  }
+  return 1;
 }
 
 static void LuaRun(const char *path) {
@@ -1874,7 +1947,9 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetServerAddr", LuaGetServerAddr},            //
     {"GetUri", LuaGetUri},                          //
     {"GetVersion", LuaGetVersion},                  //
+    {"GetZipPaths", LuaGetZipPaths},                //
     {"HasParam", LuaHasParam},                      //
+    {"HidePath", LuaHidePath},                      //
     {"LoadAsset", LuaLoadAsset},                    //
     {"Log", LuaLog},                                //
     {"ParseHttpDateTime", LuaParseHttpDateTime},    //
@@ -2108,10 +2183,10 @@ static char *ServeListing(void) {
   char tb[64];
   int w, x, y;
   struct tm tm;
+  char *p, *path;
   int64_t lastmod;
   uint32_t cf, lf;
-  size_t n, n1, n2;
-  char *p, *p1, *p2;
+  size_t i, n, pathlen;
   struct EscapeResult r[3];
   AppendString("\
 <!doctype html>\n\
@@ -2128,8 +2203,11 @@ a {\n\
 img {\n\
   vertical-align: middle;\n\
 }\n\
+footer {\n\
+  font-size: 11pt;\n\
+}\n\
 </style>\n\
-<h1>\n");
+<header><h1>\n");
   if (logo.n) {
     AppendString("<img src=\"data:image/png;base64,");
     AppendData(logo.p, logo.n);
@@ -2138,50 +2216,50 @@ img {\n\
   r[0] = EscapeHtml(brand, strlen(brand));
   AppendData(r[0].data, r[0].size);
   free(r[0].data);
-  AppendString("</h1><hr><pre>\n");
+  AppendString("</h1><hr></header><pre>\n");
   w = x = 0;
   n = ZIP_CDIR_RECORDS(zdir);
   CHECK_EQ(kZipCdirHdrMagic, ZIP_CDIR_MAGIC(zdir));
   for (cf = ZIP_CDIR_OFFSET(zdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
     CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zmap + cf));
-    y = strnwidth(ZIP_CFILE_NAME(zmap + cf), ZIP_CFILE_NAMESIZE(zmap + cf), 0);
-    w = MIN(80, MAX(w, y + 2));
-    y = ZIP_CFILE_UNCOMPRESSEDSIZE(zmap + cf);
-    y = y ? llog10(y) : 1;
-    x = MIN(80, MAX(x, y + (y - 1) / 3 + 2));
+    if (!IsHiddenPath((path = GetAssetPath(cf, &pathlen)))) {
+      y = strwidth(path, 0);
+      w = MIN(80, MAX(w, y + 2));
+      y = ZIP_CFILE_UNCOMPRESSEDSIZE(zmap + cf);
+      y = y ? llog10(y) : 1;
+      x = MIN(80, MAX(x, y + (y - 1) / 3 + 2));
+    }
   }
   n = ZIP_CDIR_RECORDS(zdir);
   for (cf = ZIP_CDIR_OFFSET(zdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
     CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zmap + cf));
-    p1 = ZIP_CFILE_NAME(zmap + cf);
-    n1 = ZIP_CFILE_NAMESIZE(zmap + cf);
-    p2 = malloc(1 + n1);
-    n2 = 1 + n1;
-    *p2 = '/';
-    memcpy(p2 + 1, p1, n1);
-    r[0] = EscapeHtml(p2, n2);
-    r[1] = EscapeUrlPath(p2, n2);
-    r[2] = EscapeHtml(r[1].data, r[1].size);
-    lastmod = GetLastModifiedZip(zmap + cf);
-    localtime_r(&lastmod, &tm);
-    strftime(tb, sizeof(tb), "%Y-%m-%d %H:%M:%S", &tm);
-    if (IsCompressionMethodSupported(ZIP_CFILE_COMPRESSIONMETHOD(zmap + cf)) &&
-        IsAcceptableHttpRequestPath(p2, n2)) {
-      AppendFmt("<a href=\"%.*s\">%-*.*s</a> %s %4s %,*ld\n", r[2].size,
-                r[2].data, w, r[0].size, r[0].data, tb,
-                DescribeCompressionRatio(rb, cf), x,
-                ZIP_CFILE_UNCOMPRESSEDSIZE(zmap + cf));
-    } else {
-      AppendFmt("%-*.*s %s %4s %,*ld\n", w, r[0].size, r[0].data, tb,
-                DescribeCompressionRatio(rb, cf), x,
-                ZIP_CFILE_UNCOMPRESSEDSIZE(zmap + cf));
+    path = GetAssetPath(cf, &pathlen);
+    if (!IsHiddenPath(path)) {
+      r[0] = EscapeHtml(path, pathlen);
+      r[1] = EscapeUrlPath(path, pathlen);
+      r[2] = EscapeHtml(r[1].data, r[1].size);
+      lastmod = GetLastModifiedZip(zmap + cf);
+      localtime_r(&lastmod, &tm);
+      strftime(tb, sizeof(tb), "%Y-%m-%d %H:%M:%S", &tm);
+      if (IsCompressionMethodSupported(
+              ZIP_CFILE_COMPRESSIONMETHOD(zmap + cf)) &&
+          IsAcceptableHttpRequestPath(path, pathlen)) {
+        AppendFmt("<a href=\"%.*s\">%-*.*s</a> %s %4s %,*ld\n", r[2].size,
+                  r[2].data, w, r[0].size, r[0].data, tb,
+                  DescribeCompressionRatio(rb, cf), x,
+                  ZIP_CFILE_UNCOMPRESSEDSIZE(zmap + cf));
+      } else {
+        AppendFmt("%-*.*s %s %4s %,*ld\n", w, r[0].size, r[0].data, tb,
+                  DescribeCompressionRatio(rb, cf), x,
+                  ZIP_CFILE_UNCOMPRESSEDSIZE(zmap + cf));
+      }
+      free(r[2].data);
+      free(r[1].data);
+      free(r[0].data);
     }
-    free(r[2].data);
-    free(r[1].data);
-    free(r[0].data);
-    free(p2);
+    free(path);
   }
-  AppendString("</pre><hr><p>\n");
+  AppendString("</pre><footer><hr><p>\n");
   if (!unbranded) {
     AppendString("\
 this listing is for /\n\
@@ -2197,6 +2275,7 @@ your redbean is ");
   }
   w = shared->workers;
   AppendFmt("currently servicing %,d connection%s\n", w, w == 1 ? "" : "s");
+  AppendString("</footer>\n");
   p = SetStatus(200, "OK");
   p = AppendCache(p, 0);
   return CommitOutput(p);
