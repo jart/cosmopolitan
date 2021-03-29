@@ -29,23 +29,21 @@
  * @see xasprintf() for a better API
  */
 int(vasprintf)(char **strp, const char *fmt, va_list va) {
-  /*
-   * This implementation guarantees the smallest possible allocation,
-   * using an optimistic approach w/o changing asymptotic complexity.
-   */
-  size_t size = 32;
-  if ((*strp = malloc(size))) {
-    va_list va2;
+  int wrote;
+  char *p;
+  size_t size;
+  va_list va2;
+  if ((*strp = malloc((size = 512)))) {
     va_copy(va2, va);
-    int wrote = (vsnprintf)(*strp, size, fmt, va);
+    wrote = (vsnprintf)(*strp, size, fmt, va);
     if (wrote == -1) return -1;
-    if (wrote <= size - 1) {
+    if (wrote < size) {
+      if ((p = realloc(*strp, wrote + 1))) *strp = p;
       return wrote;
     } else {
       size = wrote + 1;
-      char *buf2 = realloc(*strp, size);
-      if (buf2) {
-        *strp = buf2;
+      if ((p = realloc(*strp, size))) {
+        *strp = p;
         wrote = (vsnprintf)(*strp, size, fmt, va2);
         assert(wrote == size - 1);
         return wrote;

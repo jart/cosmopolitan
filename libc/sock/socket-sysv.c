@@ -22,15 +22,29 @@
 #include "libc/sysv/consts/sock.h"
 
 int sys_socket(int family, int type, int protocol) {
-  int rc, olderr, modernflags;
-  olderr = errno;
-  rc = __sys_socket(family, type, protocol);
-  if ((SupportsLinux() || SupportsXnu()) &&
-      (rc == -1 && errno == EINVAL /* rhel5 behavior */) &&
-      (modernflags = (type & (SOCK_CLOEXEC | SOCK_NONBLOCK)))) {
-    errno = olderr;
-    rc = __fixupnewsockfd(__sys_socket(family, type & ~modernflags, protocol),
-                          modernflags);
+  static bool once, demodernize;
+  int sock, olderr;
+  if (!once && (type & (SOCK_CLOEXEC | SOCK_NONBLOCK))) {
+    if (IsXnu()) {
+      demodernize = true;
+      once = true;
+    } else {
+      olderr = errno;
+      if ((sock = __sys_socket(family, type, protocol)) != -1) {
+        once = true;
+        return sock;
+      } else {
+        errno = olderr;
+        demodernize = true;
+        once = true;
+      }
+    }
   }
-  return rc;
+  if (!demodernize) {
+    return __sys_socket(family, type, protocol);
+  } else {
+    return __fixupnewsockfd(
+        __sys_socket(family, type & ~(SOCK_CLOEXEC | SOCK_NONBLOCK), protocol),
+        type);
+  }
 }

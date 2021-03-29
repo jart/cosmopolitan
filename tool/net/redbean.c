@@ -34,6 +34,7 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
+#include "libc/mem/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsf.h"
 #include "libc/nexgen32e/bsr.h"
@@ -99,16 +100,18 @@ FLAGS\n\
   -z        print port\n\
   -m        log messages\n\
   -b        log message bodies\n\
+  -k        encourage keep-alive\n\
   -D DIR    serve assets from directory\n\
   -c INT    cache seconds\n\
   -r /X=/Y  redirect X to Y\n\
+  -R /X=/Y  rewrite X to Y\n\
   -l ADDR   listen ip [default 0.0.0.0]\n\
   -p PORT   listen port [default 8080]\n\
   -L PATH   log file location\n\
   -P PATH   pid file location\n\
   -U INT    daemon set user id\n\
   -G INT    daemon set group id\n\
-  -B STR    changes server header\n\
+  -B STR    changes brand\n\
 \n\
 FEATURES\n\
 \n\
@@ -149,10 +152,6 @@ USAGE\n\
   connection processes, which grow to whatever number your system\n\
   limits and tcp stack configuration allow. If fork() should fail\n\
   then redbean starts shutting idle connections down.\n\
-\n\
-  Redirects emit a 307 response unless the location exists in\n\
-  the zip directory, in which case it transparently rewrites.\n\
-\n\
 \n"
 
 #define HASH_LOAD_FACTOR /* 1. / */ 4
@@ -281,6 +280,7 @@ static struct Freelist {
 static struct Redirects {
   size_t n;
   struct Redirect {
+    int code;
     const char *path;
     size_t pathlen;
     const char *location;
@@ -301,12 +301,17 @@ static struct Assets {
   } * p;
 } assets;
 
+static struct Shared {
+  int workers;  //
+} * shared;
+
 static bool killed;
 static bool istext;
 static bool zombied;
 static bool gzipped;
 static bool branded;
 static bool meltdown;
+static bool unbranded;
 static bool heartless;
 static bool printport;
 static bool heartbeat;
@@ -319,6 +324,7 @@ static bool logmessages;
 static bool checkedmethod;
 static bool connectionclose;
 static bool keyboardinterrupt;
+static bool encouragekeepalive;
 
 static int frags;
 static int gmtoff;
@@ -340,6 +346,8 @@ static size_t msgsize;
 static size_t amtread;
 static char *luaheaderp;
 struct Strings stagedirs;
+static const char *sauce;
+static const char *brand;
 static const char *pidpath;
 static const char *logpath;
 static int64_t programtime;
@@ -348,6 +356,7 @@ static int64_t cacheseconds;
 static uint8_t gzip_footer[8];
 static const char *serverheader;
 
+static struct Buffer logo;
 static struct Buffer inbuf;
 static struct Buffer hdrbuf;
 static struct Buffer outbuf;
@@ -355,6 +364,7 @@ static struct Request request;
 
 static long double nowish;
 static long double startread;
+static long double lastmeltdown;
 static long double startrequest;
 static long double startconnection;
 static struct sockaddr_in serveraddr;
@@ -436,15 +446,17 @@ static long FindRedirect(const char *path, size_t n) {
   return -1;
 }
 
-static void AddRedirect(const char *arg) {
+static void ProgramRedirect(int code, const char *src, const char *dst) {
   long i, j;
-  const char *p;
   struct Redirect r;
-  CHECK_NOTNULL((p = strchr(arg, '=')));
-  CHECK_GT(p - arg, 0);
-  r.path = arg;
-  r.pathlen = p - arg;
-  r.location = p + 1;
+  if (code && code != 301 && code != 302 && code != 307 && code != 308) {
+    fprintf(stderr, "error: unsupported redirect code %d\n", code);
+    exit(1);
+  }
+  r.code = code;
+  r.path = strdup(src);
+  r.pathlen = strlen(src);
+  r.location = strdup(dst);
   if ((i = FindRedirect(r.path, r.pathlen)) != -1) {
     redirects.p[i] = r;
   } else {
@@ -461,6 +473,17 @@ static void AddRedirect(const char *arg) {
     redirects.p[j] = r;
     ++redirects.n;
   }
+}
+
+static void ProgramRedirectArg(int code, const char *arg) {
+  char *s;
+  const char *p;
+  if (!(p = strchr(arg, '='))) {
+    fprintf(stderr, "error: redirect arg missing '='\n");
+    exit(1);
+  }
+  ProgramRedirect(code, (s = strndup(arg, p - arg)), p + 1);
+  free(s);
 }
 
 static int CompareInts(const uint64_t x, uint64_t y) {
@@ -512,15 +535,32 @@ static void DescribeAddress(char buf[32], const struct sockaddr_in *addr) {
   *p = '\0';
 }
 
+static void ProgramBrand(const char *s) {
+  free(brand);
+  free(serverheader);
+  brand = strdup(s);
+  if (!strstr(s, "redbean")) unbranded = true;
+  if (!(serverheader = EncodeHttpHeaderValue(brand, -1, 0))) {
+    fprintf(stderr, "error: brand isn't latin1 encodable: %`'s", brand);
+    exit(1);
+  }
+}
+
+static void ProgramCache(long x) {
+  cacheseconds = x;
+}
+
+static void ProgramPort(long x) {
+  serveraddr.sin_port = htons(x);
+}
+
 static void SetDefaults(void) {
-  cacheseconds = -1;
-  serverheader = "redbean/0.2";
+  ProgramBrand("redbean/0.2");
+  ProgramCache(-1);
+  ProgramPort(DEFAULT_PORT);
   serveraddr.sin_family = AF_INET;
-  serveraddr.sin_port = htons(DEFAULT_PORT);
   serveraddr.sin_addr.s_addr = INADDR_ANY;
-  AddRedirect("/=/tool/net/redbean.html");
-  AddRedirect("/index.html=/tool/net/redbean.html");
-  AddRedirect("/favicon.ico=/tool/net/redbean.ico");
+  if (IsWindows()) uniprocess = true;
 }
 
 static wontreturn void PrintUsage(FILE *f, int rc) {
@@ -548,7 +588,7 @@ static void AddStagingDirectory(const char *dirpath) {
 
 static void GetOpts(int argc, char *argv[]) {
   int opt;
-  while ((opt = getopt(argc, argv, "zhduvmbl:p:w:r:c:L:P:U:G:B:D:")) != -1) {
+  while ((opt = getopt(argc, argv, "zhduvmbl:p:w:r:R:c:L:P:U:G:B:D:")) != -1) {
     switch (opt) {
       case 'v':
         __log_level++;
@@ -568,23 +608,29 @@ static void GetOpts(int argc, char *argv[]) {
       case 'z':
         printport = true;
         break;
+      case 'k':
+        encouragekeepalive = true;
+        break;
       case 'r':
-        AddRedirect(optarg);
+        ProgramRedirectArg(307, optarg);
+        break;
+      case 'R':
+        ProgramRedirectArg(0, optarg);
         break;
       case 'D':
         AddStagingDirectory(optarg);
         break;
       case 'c':
-        cacheseconds = strtol(optarg, NULL, 0);
+        ProgramCache(strtol(optarg, NULL, 0));
         break;
       case 'p':
-        CHECK_NE(0xFFFF, (serveraddr.sin_port = htons(parseport(optarg))));
+        ProgramPort(strtol(optarg, NULL, 0));
         break;
       case 'l':
         CHECK_EQ(1, inet_pton(AF_INET, optarg, &serveraddr.sin_addr));
         break;
       case 'B':
-        serverheader = emptytonull(EncodeHttpHeaderValue(optarg, -1, 0));
+        ProgramBrand(optarg);
         break;
       case 'L':
         logpath = optarg;
@@ -631,14 +677,18 @@ static void Daemonize(void) {
 }
 
 static void OnWorkerExit(int pid, int ws) {
+  int w;
+  w = --shared->workers;
   if (WIFEXITED(ws)) {
     if (WEXITSTATUS(ws)) {
-      WARNF("worker %d exited with %d", pid, WEXITSTATUS(ws));
+      WARNF("worker %d exited with %d (%,d workers remain)", pid,
+            WEXITSTATUS(ws), w);
     } else {
-      DEBUGF("worker %d exited", pid);
+      DEBUGF("worker %d exited (%,d workers remain)", pid, w);
     }
   } else {
-    WARNF("worker %d terminated with %s", pid, strsignal(WTERMSIG(ws)));
+    WARNF("worker %d terminated with %s (%,d workers remain)", pid,
+          strsignal(WTERMSIG(ws)), w);
   }
 }
 
@@ -651,7 +701,9 @@ static void WaitAll(void) {
       if (errno == ECHILD) break;
       if (errno == EINTR) {
         if (killed) {
-          WARNF("%s terminating harder", serveraddrstr);
+          killed = false;
+          terminated = false;
+          WARNF("%s redbean shall terminate harder", serveraddrstr);
           LOGIFNEG1(kill(0, SIGTERM));
         }
         continue;
@@ -803,9 +855,16 @@ static void *FreeLater(void *p) {
 static void CollectGarbage(void) {
   size_t i;
   for (i = 0; i < freelist.n; ++i) free(freelist.p[i]);
+  free(freelist.p);
+  freelist.p = 0;
   freelist.n = 0;
+  free(outbuf.p);
   free(request.params.p);
   DestroyHttpRequest(&msg);
+}
+
+static bool IsCompressionMethodSupported(int method) {
+  return method == kZipCompressionNone || method == kZipCompressionDeflate;
 }
 
 static void IndexAssets(void) {
@@ -819,6 +878,12 @@ static void IndexAssets(void) {
   CHECK_EQ(kZipCdirHdrMagic, ZIP_CDIR_MAGIC(zdir));
   for (cf = ZIP_CDIR_OFFSET(zdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
     CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zmap + cf));
+    if (!IsCompressionMethodSupported(ZIP_CFILE_COMPRESSIONMETHOD(zmap + cf))) {
+      WARNF("don't understand zip compression method %d used by %`'.*s",
+            ZIP_CFILE_COMPRESSIONMETHOD(zmap + cf),
+            ZIP_CFILE_NAMESIZE(zmap + cf), ZIP_CFILE_NAME(zmap + cf));
+      continue;
+    }
     hash = Hash(ZIP_CFILE_NAME(zmap + cf), ZIP_CFILE_NAMESIZE(zmap + cf));
     step = 0;
     do {
@@ -1019,7 +1084,7 @@ static void ParseFragment(struct Parser *u, struct Buffer *h) {
   u->q = u->p;
 }
 
-static bool ParseRequestUri(void) {
+static void ParseRequestUri(void) {
   struct Parser u;
   u.i = 0;
   u.c = 0;
@@ -1032,8 +1097,6 @@ static bool ParseRequestUri(void) {
   ParsePath(&u, &request.path);
   if (u.c == '?') ParseParams(&u, &request.params);
   if (u.c == '#') ParseFragment(&u, &request.fragment);
-  return u.i == u.size &&
-         IsAcceptableHttpRequestPath(request.path.p, request.path.n);
 }
 
 static void ParseFormParams(void) {
@@ -1310,6 +1373,43 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
   return p;
 }
 
+static void AppendData(const char *data, size_t size) {
+  outbuf.p = xrealloc(outbuf.p, outbuf.n + size);
+  memcpy(outbuf.p + outbuf.n, data, size);
+  outbuf.n += size;
+}
+
+static void AppendString(const char *s) {
+  AppendData(s, strlen(s));
+}
+
+static void AppendFmt(const char *fmt, ...) {
+  int size;
+  char *data;
+  va_list va;
+  data = NULL;
+  va_start(va, fmt);
+  CHECK_NE(-1, (size = vasprintf(&data, fmt, va)));
+  va_end(va);
+  AppendData(data, size);
+  free(data);
+}
+
+static char *CommitOutput(char *p) {
+  if (istext && outbuf.n >= 100 && ClientAcceptsGzip()) {
+    gzipped = true;
+    p = AppendHeader(p, "Content-Encoding", "gzip");
+    p = AppendHeader(p, "Vary", "Accept-Encoding");
+    WRITE32LE(gzip_footer + 0, crc32_z(0, outbuf.p, outbuf.n));
+    WRITE32LE(gzip_footer + 4, outbuf.n);
+    content = FreeLater(Deflate(outbuf.p, outbuf.n, &contentlength));
+  } else {
+    content = outbuf.p;
+    contentlength = outbuf.n;
+  }
+  return p;
+}
+
 static int LuaServeAsset(lua_State *L) {
   size_t pathlen;
   struct Asset *a;
@@ -1386,11 +1486,6 @@ static int LuaGetMethod(lua_State *L) {
 
 static int LuaGetPath(lua_State *L) {
   lua_pushlstring(L, request.path.p, request.path.n);
-  return 1;
-}
-
-static int LuaGetFragment(lua_State *L) {
-  lua_pushlstring(L, request.fragment.p, request.fragment.n);
   return 1;
 }
 
@@ -1588,9 +1683,7 @@ static int LuaWrite(lua_State *L) {
   size_t size;
   const char *data;
   data = luaL_checklstring(L, 1, &size);
-  outbuf.p = xrealloc(outbuf.p, outbuf.n + size);
-  memcpy(outbuf.p + outbuf.n, data, size);
-  outbuf.n += size;
+  AppendData(data, size);
   return 0;
 }
 
@@ -1697,11 +1790,58 @@ static int LuaCrc32c(lua_State *L) {
   return 1;
 }
 
+static int LuaProgramPort(lua_State *L) {
+  ProgramPort(luaL_checkinteger(L, 1));
+  return 0;
+}
+
+static int LuaProgramCache(lua_State *L) {
+  ProgramCache(luaL_checkinteger(L, 1));
+  return 0;
+}
+
+static int LuaProgramBrand(lua_State *L) {
+  ProgramBrand(luaL_checkstring(L, 1));
+  return 0;
+}
+
+static int LuaProgramRedirect(lua_State *L) {
+  ProgramRedirect(luaL_checkinteger(L, 1), luaL_checkstring(L, 2),
+                  luaL_checkstring(L, 3));
+  return 0;
+}
+
+static int LuaGetLogLevel(lua_State *L) {
+  lua_pushinteger(L, __log_level);
+  return 1;
+}
+
+static int LuaSetLogLevel(lua_State *L) {
+  __log_level = luaL_checkinteger(L, 1);
+  return 0;
+}
+
+static int LuaLog(lua_State *L) {
+  int level;
+  lua_Debug ar;
+  const char *msg, *module;
+  level = luaL_checkinteger(L, 1);
+  if (LOGGABLE(level)) {
+    msg = luaL_checkstring(L, 2);
+    lua_getstack(L, 1, &ar);
+    lua_getinfo(L, "nSl", &ar);
+    module = !strcmp(ar.name, "main") ? sauce : ar.name;
+    flogf(level, module, ar.currentline, NULL, "%s", msg);
+  }
+  return 0;
+}
+
 static void LuaRun(const char *path) {
   struct Asset *a;
   const char *code;
   if ((a = LocateAsset(path, strlen(path)))) {
     code = LoadAsset(a, NULL);
+    sauce = path + 1;
     if (luaL_dostring(L, code) != LUA_OK) {
       WARNF("%s %s", path, lua_tostring(L, -1));
     }
@@ -1723,9 +1863,9 @@ static const luaL_Reg kLuaFuncs[] = {
     {"FormatHttpDateTime", LuaFormatHttpDateTime},  //
     {"GetClientAddr", LuaGetClientAddr},            //
     {"GetDate", LuaGetDate},                        //
-    {"GetFragment", LuaGetFragment},                //
     {"GetHeader", LuaGetHeader},                    //
     {"GetHeaders", LuaGetHeaders},                  //
+    {"GetLogLevel", LuaGetLogLevel},                //
     {"GetMethod", LuaGetMethod},                    //
     {"GetParam", LuaGetParam},                      //
     {"GetParams", LuaGetParams},                    //
@@ -1736,10 +1876,16 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetVersion", LuaGetVersion},                  //
     {"HasParam", LuaHasParam},                      //
     {"LoadAsset", LuaLoadAsset},                    //
+    {"Log", LuaLog},                                //
     {"ParseHttpDateTime", LuaParseHttpDateTime},    //
+    {"ProgramBrand", LuaProgramBrand},              //
+    {"ProgramCache", LuaProgramCache},              //
+    {"ProgramPort", LuaProgramPort},                //
+    {"ProgramRedirect", LuaProgramRedirect},        //
     {"ServeAsset", LuaServeAsset},                  //
     {"ServeError", LuaServeError},                  //
     {"SetHeader", LuaSetHeader},                    //
+    {"SetLogLevel", LuaSetLogLevel},                //
     {"SetStatus", LuaSetStatus},                    //
     {"Write", LuaWrite},                            //
     {"bsf", LuaBsf},                                //
@@ -1749,7 +1895,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"popcnt", LuaPopcnt},                          //
 };
 
-static void LuaSetArgv(void) {
+static void LuaSetArgv(lua_State *L) {
   size_t i;
   lua_newtable(L);
   for (i = optind; i < __argc; ++i) {
@@ -1757,6 +1903,11 @@ static void LuaSetArgv(void) {
     lua_seti(L, -2, i - optind + 1);
   }
   lua_setglobal(L, "argv");
+}
+
+static void LuaSetConstant(lua_State *L, const char *s, long x) {
+  lua_pushinteger(L, x);
+  lua_setglobal(L, s);
 }
 
 static void LuaInit(void) {
@@ -1767,7 +1918,13 @@ static void LuaInit(void) {
     lua_pushcfunction(L, kLuaFuncs[i].func);
     lua_setglobal(L, kLuaFuncs[i].name);
   }
-  LuaSetArgv();
+  LuaSetArgv(L);
+  LuaSetConstant(L, "kLogDebug", kLogDebug);
+  LuaSetConstant(L, "kLogVerbose", kLogVerbose);
+  LuaSetConstant(L, "kLogInfo", kLogInfo);
+  LuaSetConstant(L, "kLogWarn", kLogWarn);
+  LuaSetConstant(L, "kLogError", kLogError);
+  LuaSetConstant(L, "kLogFatal", kLogFatal);
   LuaRun("/tool/net/.init.lua");
 }
 
@@ -1777,25 +1934,15 @@ static void LuaReload(void) {
 
 static char *ServeLua(struct Asset *a) {
   char *p;
-  outbuf.n = 0;
   luaheaderp = NULL;
+  sauce = FreeLater(strndup(request.path.p + 1, request.path.n - 1));
   if (luaL_dostring(L, FreeLater(LoadAsset(a, NULL))) == LUA_OK) {
     if (!(p = luaheaderp)) {
       p = SetStatus(200, "OK");
       p = AppendContentType(p, "text/html");
     }
     if (outbuf.n) {
-      if (istext && outbuf.n >= 100 && ClientAcceptsGzip()) {
-        gzipped = true;
-        p = AppendHeader(p, "Content-Encoding", "gzip");
-        p = AppendHeader(p, "Vary", "Accept-Encoding");
-        WRITE32LE(gzip_footer + 0, crc32_z(0, outbuf.p, outbuf.n));
-        WRITE32LE(gzip_footer + 4, outbuf.n);
-        content = FreeLater(Deflate(outbuf.p, outbuf.n, &contentlength));
-      } else {
-        content = outbuf.p;
-        contentlength = outbuf.n;
-      }
+      p = CommitOutput(p);
     }
     return p;
   } else {
@@ -1828,24 +1975,25 @@ static char *HandleAsset(struct Asset *a, const char *path, size_t pathlen) {
 }
 
 static char *HandleRedirect(struct Redirect *r) {
-  char *p;
   struct Asset *a;
-  if ((a = LocateAsset(r->location, strlen(r->location)))) {
-    DEBUGF("%s %s %`'.*s rewritten %`'s", clientaddrstr,
-           kHttpMethod[msg.method], request.path.n, request.path.p,
-           r->location);
-    p = HandleAsset(a, r->location, strlen(r->location));
+  if (!r->code) {
+    if ((a = LocateAsset(r->location, strlen(r->location)))) {
+      DEBUGF("%s %s %`'.*s rewritten %`'s", clientaddrstr,
+             kHttpMethod[msg.method], request.path.n, request.path.p,
+             r->location);
+      return HandleAsset(a, r->location, strlen(r->location));
+    } else {
+      return ServeError(505, "HTTP Version Not Supported");
+    }
   } else if (httpversion == 9) {
-    p = ServeError(505, "HTTP Version Not Supported");
+    return ServeError(505, "HTTP Version Not Supported");
   } else {
-    DEBUGF("%s %s %`'.*s redirecting %`'s", clientaddrstr,
-           kHttpMethod[msg.method], request.path.n, request.path.p,
+    DEBUGF("%s %s %`'.*s %d redirecting %`'s", clientaddrstr,
+           kHttpMethod[msg.method], request.path.n, request.path.p, r->code,
            r->location);
-    p = SetStatus(307, "Temporary Redirect");
-    p = AppendHeader(p, "Location",
-                     FreeLater(EncodeHttpHeaderValue(r->location, -1, 0)));
+    return AppendHeader(SetStatus(r->code, GetHttpReason(r->code)), "Location",
+                        FreeLater(EncodeHttpHeaderValue(r->location, -1, 0)));
   }
-  return p;
 }
 
 static void LogMessage(const char *d, const char *s, size_t n) {
@@ -1930,6 +2078,140 @@ static const char *DescribeClose(void) {
   return "destroyed";
 }
 
+static const char *DescribeCompressionRatio(char rb[8], uint32_t cf) {
+  long percent;
+  if (ZIP_CFILE_COMPRESSIONMETHOD(zmap + cf) == kZipCompressionNone) {
+    return "n/a";
+  } else {
+    percent = lround(100 - (double)ZIP_CFILE_COMPRESSEDSIZE(zmap + cf) /
+                               ZIP_CFILE_UNCOMPRESSEDSIZE(zmap + cf) * 100);
+    sprintf(rb, "%ld%%", MIN(999, MAX(-999, percent)));
+    return rb;
+  }
+}
+
+static void LoadLogo(void) {
+  char *p;
+  size_t n;
+  struct Asset *a;
+  const char *logopath;
+  logopath = "/tool/net/redbean.png";
+  if ((a = LocateAsset(logopath, strlen(logopath)))) {
+    p = LoadAsset(a, &n);
+    logo.p = EncodeBase64(p, n, &logo.n);
+    free(p);
+  }
+}
+
+static char *ServeListing(void) {
+  char rb[8];
+  char tb[64];
+  int w, x, y;
+  struct tm tm;
+  int64_t lastmod;
+  uint32_t cf, lf;
+  size_t n, n1, n2;
+  char *p, *p1, *p2;
+  struct EscapeResult r[3];
+  AppendString("\
+<!doctype html>\n\
+<meta charset=\"utf-8\">\n\
+<title>redbean zip listing</title>\n\
+<style>\n\
+html {\n\
+  color: #111;\n\
+  font-family: sans-serif;\n\
+}\n\
+a {\n\
+  text-decoration: none;\n\
+}\n\
+img {\n\
+  vertical-align: middle;\n\
+}\n\
+</style>\n\
+<h1>\n");
+  if (logo.n) {
+    AppendString("<img src=\"data:image/png;base64,");
+    AppendData(logo.p, logo.n);
+    AppendString("\">\n");
+  }
+  r[0] = EscapeHtml(brand, strlen(brand));
+  AppendData(r[0].data, r[0].size);
+  free(r[0].data);
+  AppendString("</h1><hr><pre>\n");
+  w = x = 0;
+  n = ZIP_CDIR_RECORDS(zdir);
+  CHECK_EQ(kZipCdirHdrMagic, ZIP_CDIR_MAGIC(zdir));
+  for (cf = ZIP_CDIR_OFFSET(zdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
+    CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zmap + cf));
+    y = strnwidth(ZIP_CFILE_NAME(zmap + cf), ZIP_CFILE_NAMESIZE(zmap + cf), 0);
+    w = MIN(80, MAX(w, y + 2));
+    y = ZIP_CFILE_UNCOMPRESSEDSIZE(zmap + cf);
+    y = y ? llog10(y) : 1;
+    x = MIN(80, MAX(x, y + (y - 1) / 3 + 2));
+  }
+  n = ZIP_CDIR_RECORDS(zdir);
+  for (cf = ZIP_CDIR_OFFSET(zdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
+    CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zmap + cf));
+    p1 = ZIP_CFILE_NAME(zmap + cf);
+    n1 = ZIP_CFILE_NAMESIZE(zmap + cf);
+    p2 = malloc(1 + n1);
+    n2 = 1 + n1;
+    *p2 = '/';
+    memcpy(p2 + 1, p1, n1);
+    r[0] = EscapeHtml(p2, n2);
+    r[1] = EscapeUrlPath(p2, n2);
+    r[2] = EscapeHtml(r[1].data, r[1].size);
+    lastmod = GetLastModifiedZip(zmap + cf);
+    localtime_r(&lastmod, &tm);
+    strftime(tb, sizeof(tb), "%Y-%m-%d %H:%M:%S", &tm);
+    if (IsCompressionMethodSupported(ZIP_CFILE_COMPRESSIONMETHOD(zmap + cf)) &&
+        IsAcceptableHttpRequestPath(p2, n2)) {
+      AppendFmt("<a href=\"%.*s\">%-*.*s</a> %s %4s %,*ld\n", r[2].size,
+                r[2].data, w, r[0].size, r[0].data, tb,
+                DescribeCompressionRatio(rb, cf), x,
+                ZIP_CFILE_UNCOMPRESSEDSIZE(zmap + cf));
+    } else {
+      AppendFmt("%-*.*s %s %4s %,*ld\n", w, r[0].size, r[0].data, tb,
+                DescribeCompressionRatio(rb, cf), x,
+                ZIP_CFILE_UNCOMPRESSEDSIZE(zmap + cf));
+    }
+    free(r[2].data);
+    free(r[1].data);
+    free(r[0].data);
+    free(p2);
+  }
+  AppendString("</pre><hr><p>\n");
+  if (!unbranded) {
+    AppendString("\
+this listing is for /\n\
+when there's no /index.lua or /index.html in your zip<br>\n\
+<a href=\"https://justine.lol/redbean/index.html\">redbean</a> is based on\n\
+<a href=\"https://github.com/jart/cosmopolitan\">cosmopolitan</a> and\n\
+<a href=\"https://justine.storage.googleapis.com/ape.html\">αcτµαlly\n\
+pδrταblε εxεcµταblε</a><br>\n\
+redbean is authored by Justine Tunney who's on\n\
+<a href=\"https://github.com/jart\">GitHub</a> and\n\
+<a href=\"https://twitter.com/JustineTunney\">Twitter</a><br>\n\
+your redbean is ");
+  }
+  w = shared->workers;
+  AppendFmt("currently servicing %,d connection%s\n", w, w == 1 ? "" : "s");
+  p = SetStatus(200, "OK");
+  p = AppendCache(p, 0);
+  return CommitOutput(p);
+}
+
+static char *ServeServerOptions(void) {
+  char *p;
+  p = SetStatus(200, "OK");
+  p = AppendHeader(p, "Accept", "*/*");
+  p = AppendHeader(p, "Accept-Charset", "utf-8");
+  p = AppendHeader(p, "Allow", "GET, HEAD, POST, PUT, DELETE, OPTIONS");
+  VERBOSEF("%s pinged our server with OPTIONS *", clientaddrstr);
+  return p;
+}
+
 static char *HandleMessage(void) {
   long r;
   ssize_t cl, rc;
@@ -1940,7 +2222,7 @@ static char *HandleMessage(void) {
   if (httpversion > 101) {
     return ServeError(505, "HTTP Version Not Supported");
   }
-  if (msg.method > kHttpPost ||
+  if (msg.method > kHttpOptions ||
       (HasHeader(kHttpTransferEncoding) &&
        !HeaderEquals(kHttpTransferEncoding, "identity"))) {
     return ServeError(501, "Not Implemented");
@@ -1954,7 +2236,7 @@ static char *HandleMessage(void) {
     if (HasHeader(kHttpContentLength)) {
       return ServeError(400, "Bad Request");
     } else if (msg.method != kHttpGet && msg.method != kHttpHead &&
-               msg.method != kHttpOptions) {
+               msg.method != kHttpDelete && msg.method != kHttpOptions) {
       return ServeError(411, "Length Required");
     } else {
       cl = 0;
@@ -1969,7 +2251,7 @@ static char *HandleMessage(void) {
   }
   while (amtread < need) {
     if (++frags == 64) {
-      LogClose("payload fragged");
+      LogClose("payload fragged!");
       return ServeError(408, "Request Timeout");
     }
     if ((rc = read(client, inbuf.p + amtread, inbuf.n - amtread)) != -1) {
@@ -1996,7 +2278,12 @@ static char *HandleMessage(void) {
   if (httpversion != 101 || IsConnectionClose()) {
     connectionclose = true;
   }
-  if (!ParseRequestUri()) {
+  ParseRequestUri();
+  if (msg.method == kHttpOptions &&
+      !CompareSlices(request.path.p, request.path.n, "*", 1)) {
+    return ServeServerOptions();
+  }
+  if (!IsAcceptableHttpRequestPath(request.path.p, request.path.n)) {
     WARNF("%s could not parse request request %`'.*s", clientaddrstr,
           msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a);
     connectionclose = true;
@@ -2013,6 +2300,8 @@ static char *HandleMessage(void) {
     return HandleAsset(a, request.path.p, request.path.n);
   } else if ((r = FindRedirect(request.path.p, request.path.n)) != -1) {
     return HandleRedirect(redirects.p + r);
+  } else if (!CompareSlices(request.path.p, request.path.n, "/", 1)) {
+    return ServeListing();
   } else {
     return ServeError(404, "Not Found");
   }
@@ -2051,6 +2340,8 @@ static bool HandleRequest(void) {
     }
     if (connectionclose) {
       p = AppendHeader(p, "Connection", "close");
+    } else if (encouragekeepalive && httpversion >= 101) {
+      p = AppendHeader(p, "Connection", "keep-alive");
     }
     actualcontentlength = contentlength;
     if (gzipped) {
@@ -2091,6 +2382,8 @@ static bool HandleRequest(void) {
 static void InitRequest(void) {
   frags = 0;
   msgsize = 0;
+  outbuf.p = 0;
+  outbuf.n = 0;
   content = NULL;
   gzipped = false;
   branded = false;
@@ -2118,7 +2411,7 @@ static void ProcessRequests(void) {
           } else if (got) {
             if (++frags == 32) {
               SendTimeout();
-              LogClose("fragged");
+              LogClose("fragged!");
               return;
             } else {
               DEBUGF("%s fragmented msg %,ld %,ld", clientaddrstr, amtread,
@@ -2151,6 +2444,13 @@ static void ProcessRequests(void) {
   }
 }
 
+static void EnterMeltdownMode(void) {
+  if (lastmeltdown && nowl() - lastmeltdown < 1) return;
+  WARNF("redbean is entering meltdown mode with %,d workers", shared->workers);
+  LOGIFNEG1(kill(0, SIGUSR2));
+  lastmeltdown = nowl();
+}
+
 static void ProcessConnection(void) {
   int pid;
   clientaddrsize = sizeof(clientaddr);
@@ -2167,11 +2467,11 @@ static void ProcessConnection(void) {
           connectionclose = false;
           break;
         case -1:
-          WARNF("redbean is entering meltdown mode");
-          LOGIFNEG1(kill(0, SIGUSR2));
+          EnterMeltdownMode();
           SendServiceUnavailable();
           /* fallthrough */
         default:
+          ++shared->workers;
           close(client);
           return;
       }
@@ -2195,12 +2495,20 @@ static void TuneServerSocket(void) {
   LOGIFNEG1(setsockopt(server, IPPROTO_TCP, TCP_QUICKACK, &yes, sizeof(yes)));
 }
 
-void RedBean(void) {
+void RedBean(int argc, char *argv[]) {
   uint32_t addrsize;
-  if (IsWindows()) uniprocess = true;
   gmtoff = GetGmtOffset();
+  CHECK_NE(MAP_FAILED,
+           (shared = mmap(NULL, ROUNDUP(sizeof(struct Shared), FRAMESIZE),
+                          PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS,
+                          -1, 0)));
   OpenZip((const char *)getauxval(AT_EXECFN));
   IndexAssets();
+  LoadLogo();
+  SetDefaults();
+  GetOpts(argc, argv);
+  LuaInit();
+  if (uniprocess) shared->workers = 1;
   xsigaction(SIGINT, OnInt, 0, 0, 0);
   xsigaction(SIGHUP, OnHup, 0, 0, 0);
   xsigaction(SIGTERM, OnTerm, 0, 0, 0);
@@ -2239,7 +2547,6 @@ void RedBean(void) {
   inbuf.p = xvalloc(inbuf.n);
   hdrbuf.n = 4 * 1024;
   hdrbuf.p = xvalloc(hdrbuf.n);
-  LuaInit();
   while (!terminated) {
     if (zombied) {
       ReapZombies();
@@ -2256,7 +2563,7 @@ void RedBean(void) {
       ProcessConnection();
     }
   }
-  VERBOSEF("%s terminated", serveraddrstr);
+  VERBOSEF("%s shutting down", serveraddrstr);
   LOGIFNEG1(close(server));
   if (!keyboardinterrupt) {
     if (!killed) {
@@ -2269,8 +2576,6 @@ void RedBean(void) {
 
 int main(int argc, char *argv[]) {
   showcrashreports();
-  SetDefaults();
-  GetOpts(argc, argv);
-  RedBean();
+  RedBean(argc, argv);
   return 0;
 }

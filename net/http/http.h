@@ -8,8 +8,8 @@
 #define kHttpPost    2
 #define kHttpPut     3
 #define kHttpDelete  4
-#define kHttpConnect 5
-#define kHttpOptions 6
+#define kHttpOptions 5
+#define kHttpConnect 6
 #define kHttpTrace   7
 #define kHttpCopy    8
 #define kHttpLock    9
@@ -89,8 +89,7 @@ struct HttpRequestSlice {
 };
 
 struct HttpRequest {
-  int i, t, a;
-  int method;
+  int i, t, a, method;
   struct HttpRequestSlice k;
   struct HttpRequestSlice uri;
   struct HttpRequestSlice version;

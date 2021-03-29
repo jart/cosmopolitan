@@ -24,8 +24,8 @@ const char kHttpMethod[17][8] = {
     "POST",     //
     "PUT",      //
     "DELETE",   //
-    "CONNECT",  //
     "OPTIONS",  //
+    "CONNECT",  //
     "TRACE",    //
     "COPY",     //
     "LOCK",     //

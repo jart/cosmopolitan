@@ -16,8 +16,8 @@ GET,         kHttpGet
 HEAD,        kHttpHead
 POST,        kHttpPost
 PUT,         kHttpPut
-CONNECT,     kHttpConnect
 OPTIONS,     kHttpOptions
+CONNECT,     kHttpConnect
 TRACE,       kHttpTrace
 COPY,        kHttpCopy
 LOCK,        kHttpLock

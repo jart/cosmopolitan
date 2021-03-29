@@ -1,6 +1,9 @@
 -- redbean lua server page demo
 
 local function main()
+   -- This is the best way to print data to the console or log file.
+   Log(kLogWarn, "hello from \e[1mlua\e[0m!")
+
    -- This check is pedantic but might be good to have.
    if GetMethod() ~= 'GET' and GetMethod() ~= 'HEAD' then
       ServeError(405)
@@ -18,6 +21,12 @@ local function main()
    Write('<!doctype html>\n')
    Write('<title>redbean</title>\n')
    Write('<h1>redbean lua server page demo</h1>\n')
+
+   -- Prevent caching.
+   -- We need this because we're doing things like putting the client's
+   -- IP address in the response so we naturally don't want that cached
+   SetHeader('Expires', FormatHttpDateTime(GetDate()))
+   SetHeader('Cache-Control', 'no-cache, must-revalidate, max-age=0')
 
    -- GetParams() returns an ordered list of Request-URI query params.
    Write('<h3>request uri parameters</h3>\n')
@@ -99,10 +108,6 @@ local function main()
    Write('<dt>GetServerAddr()\n')
    Write('<dd>')
    Write(GetServerAddr())
-   Write('\n')
-   Write('<dt>FormatHttpDateTime(GetDate())\n')
-   Write('<dd>')
-   Write(FormatHttpDateTime(GetDate()))
    Write('\n')
    Write('</dl>\n')
 end
