@@ -41,10 +41,10 @@ int bind(int fd, const void *addr, uint32_t addrsize) {
       if (!IsBsd()) {
         return sys_bind(fd, addr, addrsize);
       } else {
-        struct sockaddr_in_bsd addr2;
-        assert(sizeof(struct sockaddr_in) == sizeof(struct sockaddr_in_bsd));
-        memcpy(&addr2, addr, sizeof(struct sockaddr_in));
-        sockaddr2bsd(&addr2);
+        char addr2[sizeof(struct sockaddr_un_bsd)]; /* sockaddr_un_bsd is the largest */
+        assert(addrsize <= sizeof(addr2));
+        memcpy(&addr2, addr, addrsize);
+        sockaddr2bsd(&addr2[0]);
         return sys_bind(fd, &addr2, addrsize);
       }
     } else if (__isfdkind(fd, kFdSocket)) {

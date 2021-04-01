@@ -42,7 +42,7 @@ struct sockaddr_in {   /* Linux+NT ABI */
 
 struct sockaddr_un {
   uint16_t sun_family;  /* AF_UNIX */
-  char     sun_path[14];/* path */
+  char     sun_path[108];/* path */
 };
 
 struct sockaddr_storage {

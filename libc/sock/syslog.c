@@ -75,7 +75,12 @@ static void __openlog() {
     log_fd = RegisterEventSourceA(NULL, log_ident);
   } else {
     log_fd = socket(AF_UNIX, SOCK_DGRAM|SOCK_CLOEXEC, 0);
-    if (log_fd >= 0) connect(log_fd, (void *)&log_addr, sizeof(log_addr));
+    if (log_fd >= 0) {
+        int rc = connect(log_fd, (void *)&log_addr, sizeof(log_addr));
+        if (rc < 0) {
+            printf("ERR: connect(openlog) failed: %s (errno=%d)\n", strerror(errno), errno);
+        }
+    }
   }
 }
 
@@ -147,6 +152,8 @@ void vsyslog(int priority, const char *message, va_list ap) {
        * - First try to send it to syslogd
        * - If fails and LOG_CONS is provided, writes to /dev/console
        */
+     
+#if 0
       if (send(log_fd, buf, l, 0) < 0 && (!is_lost_conn(errno)
             || connect(log_fd, (void *)&log_addr, sizeof(log_addr)) < 0
             || send(log_fd, buf, l, 0) < 0)
@@ -157,6 +164,23 @@ void vsyslog(int priority, const char *message, va_list ap) {
           close(fd);
         }
       }
+#else
+      int rc = send(log_fd, buf, l, 0);
+      if (rc < 0) {
+        printf("ERR: send(1) failed: %s (errno=%d)\n", strerror(errno), errno);
+        if (!is_lost_conn(errno)) {
+          rc = connect(log_fd, (void *)&log_addr, sizeof(log_addr));
+          if (rc < 0) {
+            printf("ERR: connect(syslog) failed: %s (errno=%d)\n", strerror(errno), errno);
+          } else {
+            rc = send(log_fd, buf, l, 0);
+            if (rc < 0) {
+              printf("ERR: send(2) failed: %s (errno=%d)\n", strerror(errno), errno);
+            }
+          }
+        }
+      }
+#endif
     } else {
       uint16_t evtType;
       uint32_t evtID;

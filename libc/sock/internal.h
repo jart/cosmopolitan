@@ -49,7 +49,7 @@ struct msghdr_bsd {
 struct sockaddr_un_bsd {
   uint8_t sun_len; /* sockaddr len including NUL on freebsd but excluding it on openbsd/xnu */
   uint8_t sun_family;
-  char    sun_path[14];
+  char    sun_path[108];
 };
 
 struct SockFd {

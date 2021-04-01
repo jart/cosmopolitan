@@ -23,14 +23,13 @@
 #include "libc/sysv/errfuns.h"
 
 int sys_connect(int fd, const void *addr, uint32_t addrsize) {
-  if (addrsize != sizeof(struct sockaddr_in)) return einval();
   if (!IsBsd()) {
     return __sys_connect(fd, addr, addrsize);
   } else {
-    struct sockaddr_in_bsd addr2;
-    assert(sizeof(struct sockaddr_in) == sizeof(struct sockaddr_in_bsd));
-    memcpy(&addr2, addr, sizeof(struct sockaddr_in));
-    sockaddr2bsd(&addr2);
-    return sys_connect(fd, &addr2, addrsize);
+    char addr2[sizeof(struct sockaddr_un_bsd)]; /* sockaddr_un_bsd is the largest */
+    assert(addrsize <= sizeof(addr2));
+    memcpy(&addr2, addr, addrsize);
+    sockaddr2bsd(&addr2[0]);
+    return __sys_connect(fd, &addr2, addrsize);
   }
 }
