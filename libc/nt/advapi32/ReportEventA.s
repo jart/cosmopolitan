@@ -7,6 +7,6 @@ ReportEventA:
 	mov	%rsp,%rbp
 	.profilable
 	mov	__imp_ReportEventA(%rip),%rax
-	jmp	__sysv2nt8
+	jmp	__sysv2nt10
 	.endfn	ReportEventA,globl
 	.previous
