@@ -46,6 +46,12 @@ struct msghdr_bsd {
   uint32_t msg_flags; /* « different type */
 };
 
+struct sockaddr_un_bsd {
+  uint8_t sun_len; /* sockaddr len including NUL on freebsd but excluding it on openbsd/xnu */
+  uint8_t sun_family;
+  char    sun_path[108];
+};
+
 struct SockFd {
   int family;
   int type;

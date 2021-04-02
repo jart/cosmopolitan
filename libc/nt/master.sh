@@ -1214,7 +1214,7 @@ imp	'DeleteUmsThreadContext'				DeleteUmsThreadContext					kernel32	284
 imp	'DeleteVolumeMountPointA'				DeleteVolumeMountPointA					kernel32	285
 imp	'DeleteVolumeMountPoint'				DeleteVolumeMountPointW					kernel32	0		# KernelBase
 imp	'DequeueUmsCompletionListItems'				DequeueUmsCompletionListItems				kernel32	287
-imp	'DeregisterEventSource'					DeregisterEventSource					advapi32	1239
+imp	'DeregisterEventSource'					DeregisterEventSource					advapi32	1239    1
 imp	'DeregisterShellHookWindow'				DeregisterShellHookWindow				user32		1682
 imp	'DeriveCapabilitySidsFromName'				DeriveCapabilitySidsFromName				KernelBase	263
 imp	'DescribePixelFormat'					DescribePixelFormat					gdi32		1388
@@ -4652,8 +4652,8 @@ imp	'RegisterDManipHook'					RegisterDManipHook					user32		2254
 imp	'RegisterDeviceNotificationA'				RegisterDeviceNotificationA				user32		2255
 imp	'RegisterDeviceNotification'				RegisterDeviceNotificationW				user32		2256
 imp	'RegisterErrorReportingDialog'				RegisterErrorReportingDialog				user32		2257
-imp	'RegisterEventSourceA'					RegisterEventSourceA					advapi32	1686
-imp	'RegisterEventSource'					RegisterEventSourceW					advapi32	1687
+imp	'RegisterEventSourceA'					RegisterEventSourceA					advapi32	1686    2
+imp	'RegisterEventSource'					RegisterEventSourceW					advapi32	1687    2
 imp	'RegisterFrostWindow'					RegisterFrostWindow					user32		2258
 imp	'RegisterGPNotificationInternal'			RegisterGPNotificationInternal				KernelBase	1385
 imp	'RegisterGhostWindow'					RegisterGhostWindow					user32		2259
@@ -4737,8 +4737,8 @@ imp	'ReplacePartitionUnit'					ReplacePartitionUnit					kernel32	1217
 imp	'ReplaceTextA'						ReplaceTextA						comdlg32	124	1
 imp	'ReplaceText'						ReplaceTextW						comdlg32	125	1
 imp	'ReplyMessage'						ReplyMessage						user32		2288
-imp	'ReportEventA'						ReportEventA						advapi32	1704
-imp	'ReportEvent'						ReportEventW						advapi32	1705
+imp	'ReportEventA'						ReportEventA						advapi32	1704    9
+imp	'ReportEvent'						ReportEventW						advapi32	1705    9
 imp	'ReportInertia'						ReportInertia						user32		2551
 imp	'RequestDeviceWakeup'					RequestDeviceWakeup					kernel32	1218
 imp	'RequestWakeupLatency'					RequestWakeupLatency					kernel32	1219

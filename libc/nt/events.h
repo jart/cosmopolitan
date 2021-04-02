@@ -39,6 +39,19 @@ bool32 GetCursorPos(struct NtPoint *lpPoint);
 int64_t SendMessage(int64_t hWnd, uint32_t Msg, uint64_t wParam,
                     int64_t lParam);
 
+#define EVENTLOG_SUCCESS            0x00000000
+#define EVENTLOG_ERROR_TYPE         0x00000001
+#define EVENTLOG_WARNING_TYPE       0x00000002
+#define EVENTLOG_INFORMATION_TYPE   0x00000004
+#define EVENTLOG_AUDIT_SUCCESS      0x00000008
+#define EVENTLOG_AUDIT_FAILURE      0x00000010
+
+int32_t ReportEventA(int64_t handle, uint16_t wType, uint16_t wCategory,
+                     uint32_t dwEventID, const char *lpUserId, uint16_t wNumStrings,
+                     uint32_t dwDataSize, const char **lpStrings, void **lpRawData);
+int64_t RegisterEventSourceA(const char *lpUNCServerName, const char *lpSourceName);
+int32_t DeregisterEventSource(uint64_t handle);
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_EVENTS_H_ */

@@ -40,6 +40,11 @@ struct sockaddr_in {   /* Linux+NT ABI */
   uint8_t sin_zero[8];
 };
 
+struct sockaddr_un {
+  uint16_t sun_family;  /* AF_UNIX */
+  char     sun_path[108];/* path */
+};
+
 struct sockaddr_storage {
   union {
     uint16_t ss_family;

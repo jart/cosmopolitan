@@ -22,7 +22,7 @@ dir=libc/sysv/consts
 #	The Fifth Bell System, Community Edition
 #	» catalogue of carnage
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			Windows			Commentary
 syscon	errno	ENOSYS					38			78			78			78			78			1			# bsd consensus & kNtErrorInvalidFunction
 syscon	errno	EPERM					1			1			1			1			1			12			# unix consensus & kNtErrorInvalidAccess (should be kNtErrorNotOwner but is that mutex only??)
 syscon	errno	ENOENT					2			2			2			2			2			2			# unix consensus & kNtErrorFileNotFound
@@ -842,41 +842,41 @@ syscon	pr	PR_SET_PTRACER				0x59616d61		0			0			0			0			0
 
 syscon	log	LOG_EMERG				0			0			0			0			0			0			# consensus
 syscon	log	LOG_KERN				0			0			0			0			0			0			# consensus
-syscon	log	LOG_ALERT				1			1			1			1			1			0			# unix consensus
-syscon	log	LOG_PID					1			1			1			1			1			0			# unix consensus
-syscon	log	LOG_CONS				2			2			2			2			2			0			# unix consensus
-syscon	log	LOG_CRIT				2			2			2			2			2			0			# unix consensus
-syscon	log	LOG_ERR					3			3			3			3			3			0			# unix consensus
-syscon	log	LOG_ODELAY				4			4			4			4			4			0			# unix consensus
-syscon	log	LOG_WARNING				4			4			4			4			4			0			# unix consensus
-syscon	log	LOG_NOTICE				5			5			5			5			5			0			# unix consensus
-syscon	log	LOG_INFO				6			6			6			6			6			0			# unix consensus
-syscon	log	LOG_DEBUG				7			7			7			7			7			0			# unix consensus
-syscon	log	LOG_PRIMASK				7			7			7			7			7			0			# unix consensus
-syscon	log	LOG_NDELAY				8			8			8			8			8			0			# unix consensus
-syscon	log	LOG_USER				8			8			8			8			8			0			# unix consensus
-syscon	log	LOG_MAIL				0x10			0x10			0x10			0x10			0x10			0			# unix consensus
-syscon	log	LOG_NOWAIT				0x10			0x10			0x10			0x10			0x10			0			# unix consensus
-syscon	log	LOG_DAEMON				24			24			24			24			24			0			# unix consensus
-syscon	log	LOG_NFACILITIES				24			25			24			24			24			0
-syscon	log	LOG_AUTH				0x20			0x20			0x20			0x20			0x20			0			# unix consensus
-syscon	log	LOG_PERROR				0x20			0x20			0x20			0x20			0x20			0			# unix consensus
-syscon	log	LOG_SYSLOG				40			40			40			40			40			0			# unix consensus
-syscon	log	LOG_LPR					48			48			48			48			48			0			# unix consensus
-syscon	log	LOG_NEWS				56			56			56			56			56			0			# unix consensus
-syscon	log	LOG_UUCP				0x40			0x40			0x40			0x40			0x40			0			# unix consensus
-syscon	log	LOG_CRON				72			72			72			72			72			0			# unix consensus
+syscon	log	LOG_ALERT				1			1			1			1			1			1			# unix consensus
+syscon	log	LOG_PID					1			1			1			1			1			1			# unix consensus
+syscon	log	LOG_CONS				2			2			2			2			2			2			# unix consensus
+syscon	log	LOG_CRIT				2			2			2			2			2			2			# unix consensus
+syscon	log	LOG_ERR					3			3			3			3			3			3			# unix consensus
+syscon	log	LOG_ODELAY				4			4			4			4			4			4			# unix consensus
+syscon	log	LOG_WARNING				4			4			4			4			4			4			# unix consensus
+syscon	log	LOG_NOTICE				5			5			5			5			5			5			# unix consensus
+syscon	log	LOG_INFO				6			6			6			6			6			6			# unix consensus
+syscon	log	LOG_DEBUG				7			7			7			7			7			7			# unix consensus
+syscon	log	LOG_PRIMASK				7			7			7			7			7			7			# unix consensus
+syscon	log	LOG_NDELAY				8			8			8			8			8			8			# unix consensus
+syscon	log	LOG_USER				8			8			8			8			8			8			# unix consensus
+syscon	log	LOG_MAIL				0x10			0x10			0x10			0x10			0x10			0x10			# unix consensus
+syscon	log	LOG_NOWAIT				0x10			0x10			0x10			0x10			0x10			0x10			# unix consensus
+syscon	log	LOG_DAEMON				24			24			24			24			24			24			# unix consensus
+syscon	log	LOG_NFACILITIES				24			25			24			24			24			24
+syscon	log	LOG_AUTH				0x20			0x20			0x20			0x20			0x20			0x20			# unix consensus
+syscon	log	LOG_PERROR				0x20			0x20			0x20			0x20			0x20			0x20			# unix consensus
+syscon	log	LOG_SYSLOG				40			40			40			40			40			40			# unix consensus
+syscon	log	LOG_LPR					48			48			48			48			48			48			# unix consensus
+syscon	log	LOG_NEWS				56			56			56			56			56			56			# unix consensus
+syscon	log	LOG_UUCP				0x40			0x40			0x40			0x40			0x40			40			# unix consensus
+syscon	log	LOG_CRON				72			72			72			72			72			72			# unix consensus
 syscon	log	LOG_SELECT				76			0			0			0			0			0
 syscon	log	LOG_SENSE				77			0			0			0			0			0
-syscon	log	LOG_LOCAL0				0x80			0x80			0x80			0x80			0x80			0			# unix consensus
-syscon	log	LOG_LOCAL1				136			136			136			136			136			0			# unix consensus
-syscon	log	LOG_LOCAL2				144			144			144			144			144			0			# unix consensus
-syscon	log	LOG_LOCAL3				152			152			152			152			152			0			# unix consensus
-syscon	log	LOG_LOCAL4				160			160			160			160			160			0			# unix consensus
-syscon	log	LOG_LOCAL5				168			168			168			168			168			0			# unix consensus
-syscon	log	LOG_LOCAL6				176			176			176			176			176			0			# unix consensus
-syscon	log	LOG_LOCAL7				184			184			184			184			184			0			# unix consensus
-syscon	log	LOG_FACMASK				0x03f8			0x03f8			0x03f8			0x03f8			0x03f8			0			# unix consensus
+syscon	log	LOG_LOCAL0				0x80			0x80			0x80			0x80			0x80			0x80			# unix consensus
+syscon	log	LOG_LOCAL1				136			136			136			136			136			136			# unix consensus
+syscon	log	LOG_LOCAL2				144			144			144			144			144			144			# unix consensus
+syscon	log	LOG_LOCAL3				152			152			152			152			152			152			# unix consensus
+syscon	log	LOG_LOCAL4				160			160			160			160			160			160			# unix consensus
+syscon	log	LOG_LOCAL5				168			168			168			168			168			168			# unix consensus
+syscon	log	LOG_LOCAL6				176			176			176			176			176			176			# unix consensus
+syscon	log	LOG_LOCAL7				184			184			184			184			184			184			# unix consensus
+syscon	log	LOG_FACMASK				0x03f8			0x03f8			0x03f8			0x03f8			0x03f8			0x03f8			# unix consensus
 
 syscon	sg	SG_DXFER_TO_FROM_DEV			-4			0			0			0			0			0
 syscon	sg	SG_DXFER_FROM_DEV			-3			0			0			0			0			0
