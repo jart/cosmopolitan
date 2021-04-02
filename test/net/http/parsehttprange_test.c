@@ -52,6 +52,14 @@ TEST(ParseHttpRange, testOffset) {
   EXPECT_EQ(10, length);
 }
 
+TEST(ParseHttpRange, testEmptySecond) {
+  long start, length;
+  const char *s = "bytes=0-";
+  EXPECT_TRUE(ParseHttpRange(s, strlen(s), 100, &start, &length));
+  EXPECT_EQ(0, start);
+  EXPECT_EQ(100, length);
+}
+
 TEST(ParseHttpRange, testToEnd) {
   long start, length;
   const char *s = "bytes=40";
