@@ -6,18 +6,11 @@ COSMOPOLITAN_C_START_
 void __assert_fail(const char *, const char *, int) hidden wontreturn relegated;
 
 #ifdef NDEBUG
-#define __ASSERT_FAIL(EXPR, FILE, LINE)
+#define assert(EXPR) ((void)0)
 #else
-#define __ASSERT_FAIL(EXPR, FILE, LINE) __assert_fail(EXPR, FILE, LINE)
+#define assert(EXPR) \
+  ((void)((EXPR) || (__assert_fail(#EXPR, __FILE__, __LINE__), 0)))
 #endif
-
-#define assert(EXPR)                            \
-  do {                                          \
-    if (!(EXPR)) {                              \
-      __ASSERT_FAIL(#EXPR, __FILE__, __LINE__); \
-      unreachable;                              \
-    }                                           \
-  } while (0)
 
 #define static_assert _Static_assert
 
