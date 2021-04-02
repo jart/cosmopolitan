@@ -961,10 +961,8 @@ static struct Asset *LocateAssetZip(const char *path, size_t pathlen) {
       (!pathlen || (pathlen && path[pathlen - 1] == '/'))) {
     p2 = strndup(path, pathlen);
     p3 = xjoinpaths(p2, "index.lua");
-    LOGF("find asset %s", p3);
     if (!(a = FindAsset(p3, strlen(p3)))) {
       p4 = xjoinpaths(p2, "index.html");
-      LOGF("find asset %s", p4);
       a = FindAsset(p4, strlen(p4));
       free(p4);
     }
