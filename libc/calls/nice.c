@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/conv.h"
+#include "libc/macros.internal.h"
 #include "libc/sysv/consts/prio.h"
 
 static int clamp(int p) {
-  return max(-NZERO, min(NZERO - 1, p));
+  return MAX(-NZERO, MIN(NZERO - 1, p));
 }
 
 /**
@@ -34,7 +34,7 @@ static int clamp(int p) {
  */
 int nice(int delta) {
   int p;
-  if (abs(delta) >= NZERO * 2) {
+  if (ABS(delta) >= NZERO * 2) {
     p = delta;
   } else {
     delta = clamp(delta);

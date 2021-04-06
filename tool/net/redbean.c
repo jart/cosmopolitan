@@ -157,8 +157,6 @@ USAGE\n\
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define DEFAULT_PORT     8080
 
-#define AppendHeaderName(p, s) stpcpy(stpcpy(p, s), ": ")
-
 static const struct itimerval kHeartbeat = {
     {0, 500000},
     {0, 500000},
@@ -1159,14 +1157,6 @@ static void *AddRange(char *content, long start, long length) {
   }
 }
 
-static bool IsConnectionClose(void) {
-  int n;
-  char *p;
-  p = inbuf.p + msg.headers[kHttpConnection].a;
-  n = msg.headers[kHttpConnection].b - msg.headers[kHttpConnection].a;
-  return n == 5 && memcmp(p, "close", 5) == 0;
-}
-
 static char *AppendCrlf(char *p) {
   p[0] = '\r';
   p[1] = '\n';
@@ -1193,11 +1183,11 @@ static char *SetStatus(int code, const char *reason) {
 
 static char *AppendHeader(char *p, const char *k, const char *v) {
   if (!v) return p;
-  return AppendCrlf(stpcpy(AppendHeaderName(p, k), v));
+  return AppendCrlf(stpcpy(stpcpy(stpcpy(p, k), ": "), v));
 }
 
 static char *AppendContentType(char *p, const char *ct) {
-  p = AppendHeaderName(p, "Content-Type");
+  p = stpcpy(p, "Content-Type: ");
   p = stpcpy(p, ct);
   if (startswith(ct, "text/") && !strchr(ct, ';')) {
     p = stpcpy(p, "; charset=utf-8");
@@ -1223,7 +1213,7 @@ static char *ServeError(int code, const char *reason) {
 static char *AppendExpires(char *p, int64_t t) {
   struct tm tm;
   gmtime_r(&t, &tm);
-  p = AppendHeaderName(p, "Expires");
+  p = stpcpy(p, "Expires: ");
   p = FormatHttpDateTime(p, &tm);
   return AppendCrlf(p);
 }
@@ -1231,7 +1221,7 @@ static char *AppendExpires(char *p, int64_t t) {
 static char *AppendCache(char *p, int64_t seconds) {
   struct tm tm;
   if (seconds < 0) return p;
-  p = AppendHeaderName(p, "Cache-Control");
+  p = stpcpy(p, "Cache-Control: ");
   p = stpcpy(p, "max-age=");
   p += uint64toarray_radix10(seconds, p);
   if (seconds) p = stpcpy(p, ", public");
@@ -1240,7 +1230,7 @@ static char *AppendCache(char *p, int64_t seconds) {
 }
 
 static char *AppendContentLength(char *p, size_t n) {
-  p = AppendHeaderName(p, "Content-Length");
+  p = stpcpy(p, "Content-Length: ");
   p += uint64toarray_radix10(n, p);
   return AppendCrlf(p);
 }
@@ -1252,8 +1242,7 @@ static char *AppendContentRange(char *p, long rangestart, long rangelength,
   CHECK_GT(rangestart + rangelength, rangestart);
   CHECK_LE(rangestart + rangelength, contentlength);
   endrange = rangestart + rangelength - 1;
-  p = AppendHeaderName(p, "Content-Range");
-  p = stpcpy(p, "bytes ");
+  p = stpcpy(p, "Content-Range: bytes ");
   p += uint64toarray_radix10(rangestart, p);
   *p++ = '-';
   p += uint64toarray_radix10(endrange, p);
@@ -2368,7 +2357,7 @@ static char *HandleMessage(void) {
   }
   msgsize = need; /* we are now synchronized */
   LogBody("received", inbuf.p + hdrsize, msgsize - hdrsize);
-  if (httpversion != 101 || IsConnectionClose()) {
+  if (httpversion != 101 || !CompareHeader(kHttpConnection, "close")) {
     connectionclose = true;
   }
   ParseRequestUri();
