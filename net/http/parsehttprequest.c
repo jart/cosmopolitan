@@ -87,6 +87,8 @@ int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
               return ebadmsg();
             }
             break;
+          } else if (!('A' <= c && c <= 'Z')) {
+            return ebadmsg();
           }
           if (++r->i == n) break;
           c = p[r->i] & 0xff;

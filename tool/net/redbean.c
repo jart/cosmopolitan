@@ -157,8 +157,6 @@ USAGE\n\
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define DEFAULT_PORT     8080
 
-#define AppendHeaderName(p, s) stpcpy(stpcpy(p, s), ": ")
-
 static const struct itimerval kHeartbeat = {
     {0, 500000},
     {0, 500000},
@@ -463,7 +461,7 @@ static void ProgramRedirect(int code, const char *src, const char *dst) {
   } else {
     i = redirects.n;
     redirects.p = xrealloc(redirects.p, (i + 1) * sizeof(*redirects.p));
-    for (j = i; j > 0; --j) {
+    for (j = i; j; --j) {
       if (CompareSlices(r.path, r.pathlen, redirects.p[j - 1].path,
                         redirects.p[j - 1].pathlen) < 0) {
         redirects.p[j] = redirects.p[j - 1];
@@ -526,6 +524,10 @@ static const char *GetContentType2(const char *path, size_t n) {
 }
 
 static const char *GetContentType(struct Asset *a, const char *path, size_t n) {
+  const char *r;
+  if (a->file && (r = GetContentType2(a->file->path, strlen(a->file->path)))) {
+    return r;
+  }
   return firstnonnull(
       GetContentType2(path, n),
       firstnonnull(GetContentType2(ZIP_LFILE_NAME(zmap + a->lf),
@@ -957,10 +959,8 @@ static struct Asset *LocateAssetZip(const char *path, size_t pathlen) {
       (!pathlen || (pathlen && path[pathlen - 1] == '/'))) {
     p2 = strndup(path, pathlen);
     p3 = xjoinpaths(p2, "index.lua");
-    LOGF("find asset %s", p3);
     if (!(a = FindAsset(p3, strlen(p3)))) {
       p4 = xjoinpaths(p2, "index.html");
-      LOGF("find asset %s", p4);
       a = FindAsset(p4, strlen(p4));
       free(p4);
     }
@@ -1114,6 +1114,19 @@ static void ParseRequestUri(void) {
   u.data = inbuf.p + msg.uri.a;
   u.size = msg.uri.b - msg.uri.a;
   memset(&request, 0, sizeof(request));
+  if (u.size > 8 && !memcmp(u.data, "http", 4)) {
+    /*
+     * convert http://www.foo.com/index.html -> /www.foo.com/index.html
+     */
+    if (u.data[4] == ':' && u.data[5] == '/' && u.data[6] == '/') {
+      u.data += 6;
+      u.size -= 6;
+    } else if (u.data[4] == 's' && u.data[5] == ':' && u.data[6] == '/' &&
+               u.data[7] == '/') {
+      u.data += 7;
+      u.size -= 7;
+    }
+  }
   u.q = u.p = FreeLater(xmalloc(u.size * 2));
   ParsePath(&u, &request.path);
   if (u.c == '?') ParseParams(&u, &request.params);
@@ -1144,14 +1157,6 @@ static void *AddRange(char *content, long start, long length) {
   }
 }
 
-static bool IsConnectionClose(void) {
-  int n;
-  char *p;
-  p = inbuf.p + msg.headers[kHttpConnection].a;
-  n = msg.headers[kHttpConnection].b - msg.headers[kHttpConnection].a;
-  return n == 5 && memcmp(p, "close", 5) == 0;
-}
-
 static char *AppendCrlf(char *p) {
   p[0] = '\r';
   p[1] = '\n';
@@ -1178,11 +1183,11 @@ static char *SetStatus(int code, const char *reason) {
 
 static char *AppendHeader(char *p, const char *k, const char *v) {
   if (!v) return p;
-  return AppendCrlf(stpcpy(AppendHeaderName(p, k), v));
+  return AppendCrlf(stpcpy(stpcpy(stpcpy(p, k), ": "), v));
 }
 
 static char *AppendContentType(char *p, const char *ct) {
-  p = AppendHeaderName(p, "Content-Type");
+  p = stpcpy(p, "Content-Type: ");
   p = stpcpy(p, ct);
   if (startswith(ct, "text/") && !strchr(ct, ';')) {
     p = stpcpy(p, "; charset=utf-8");
@@ -1201,14 +1206,14 @@ static char *ServeError(int code, const char *reason) {
   contentlength = reasonlen + 2;
   stpcpy(stpcpy(content, reason), "\r\n");
   WARNF("%s %s %`'.*s %d %s", clientaddrstr, kHttpMethod[msg.method],
-        request.path.n, request.path.p, code, reason);
+        msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a, code, reason);
   return p;
 }
 
 static char *AppendExpires(char *p, int64_t t) {
   struct tm tm;
   gmtime_r(&t, &tm);
-  p = AppendHeaderName(p, "Expires");
+  p = stpcpy(p, "Expires: ");
   p = FormatHttpDateTime(p, &tm);
   return AppendCrlf(p);
 }
@@ -1216,7 +1221,7 @@ static char *AppendExpires(char *p, int64_t t) {
 static char *AppendCache(char *p, int64_t seconds) {
   struct tm tm;
   if (seconds < 0) return p;
-  p = AppendHeaderName(p, "Cache-Control");
+  p = stpcpy(p, "Cache-Control: ");
   p = stpcpy(p, "max-age=");
   p += uint64toarray_radix10(seconds, p);
   if (seconds) p = stpcpy(p, ", public");
@@ -1225,7 +1230,7 @@ static char *AppendCache(char *p, int64_t seconds) {
 }
 
 static char *AppendContentLength(char *p, size_t n) {
-  p = AppendHeaderName(p, "Content-Length");
+  p = stpcpy(p, "Content-Length: ");
   p += uint64toarray_radix10(n, p);
   return AppendCrlf(p);
 }
@@ -1233,11 +1238,11 @@ static char *AppendContentLength(char *p, size_t n) {
 static char *AppendContentRange(char *p, long rangestart, long rangelength,
                                 long contentlength) {
   long endrange;
-  CHECK_GE(rangestart + rangelength, rangestart);
+  CHECK_GT(rangelength, 0);
+  CHECK_GT(rangestart + rangelength, rangestart);
   CHECK_LE(rangestart + rangelength, contentlength);
-  if (__builtin_add_overflow(rangestart, rangelength, &endrange)) abort();
-  p = AppendHeaderName(p, "Content-Range");
-  p = stpcpy(p, "bytes ");
+  endrange = rangestart + rangelength - 1;
+  p = stpcpy(p, "Content-Range: bytes ");
   p += uint64toarray_radix10(rangestart, p);
   *p++ = '-';
   p += uint64toarray_radix10(endrange, p);
@@ -1361,6 +1366,7 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
       if (ParseHttpRange(inbuf.p + msg.headers[kHttpRange].a,
                          msg.headers[kHttpRange].b - msg.headers[kHttpRange].a,
                          contentlength, &rangestart, &rangelength)) {
+        LOGF("rangestart = %ld rangelength = %ld", rangestart, rangelength);
         p = SetStatus(206, "Partial Content");
         p = AppendContentRange(p, rangestart, rangelength, contentlength);
         content = AddRange(content, rangestart, rangelength);
@@ -2139,7 +2145,7 @@ Content-Length: 0\r\n\
 
 static void LogClose(const char *reason) {
   if (amtread) {
-    WARNF("%s %s with %,ld bytes unprocessed", clientaddrstr, reason);
+    WARNF("%s %s with %,ld bytes unprocessed", clientaddrstr, reason, amtread);
   } else {
     DEBUGF("%s %s", clientaddrstr, reason);
   }
@@ -2301,25 +2307,22 @@ static char *HandleMessage(void) {
   if (httpversion > 101) {
     return ServeError(505, "HTTP Version Not Supported");
   }
-  if (msg.method > kHttpOptions ||
+  if (HasHeader(kHttpExpect) && !HeaderEquals(kHttpExpect, "100-continue")) {
+    return ServeError(417, "Expectation Failed");
+  }
+  if (msg.method == kHttpConnect ||
       (HasHeader(kHttpTransferEncoding) &&
        !HeaderEquals(kHttpTransferEncoding, "identity"))) {
     return ServeError(501, "Not Implemented");
   }
-  if (HasHeader(kHttpExpect) && !HeaderEquals(kHttpExpect, "100-continue")) {
-    return ServeError(417, "Expectation Failed");
+  if (!HasHeader(kHttpContentLength) &&
+      (msg.method == kHttpPost || msg.method == kHttpPut)) {
+    return ServeError(411, "Length Required");
   }
   if ((cl = ParseContentLength(inbuf.p + msg.headers[kHttpContentLength].a,
                                msg.headers[kHttpContentLength].b -
                                    msg.headers[kHttpContentLength].a)) == -1) {
-    if (HasHeader(kHttpContentLength)) {
-      return ServeError(400, "Bad Request");
-    } else if (msg.method != kHttpGet && msg.method != kHttpHead &&
-               msg.method != kHttpDelete && msg.method != kHttpOptions) {
-      return ServeError(411, "Length Required");
-    } else {
-      cl = 0;
-    }
+    return ServeError(400, "Bad Request");
   }
   need = hdrsize + cl; /* synchronization is possible */
   if (need > inbuf.n) {
@@ -2354,7 +2357,7 @@ static char *HandleMessage(void) {
   }
   msgsize = need; /* we are now synchronized */
   LogBody("received", inbuf.p + hdrsize, msgsize - hdrsize);
-  if (httpversion != 101 || IsConnectionClose()) {
+  if (httpversion != 101 || !CompareHeader(kHttpConnection, "close")) {
     connectionclose = true;
   }
   ParseRequestUri();
@@ -2363,7 +2366,7 @@ static char *HandleMessage(void) {
     return ServeServerOptions();
   }
   if (!IsAcceptableHttpRequestPath(request.path.p, request.path.n)) {
-    WARNF("%s could not parse request request %`'.*s", clientaddrstr,
+    WARNF("%s could not parse request %`'.*s", clientaddrstr,
           msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a);
     connectionclose = true;
     return ServeError(400, "Bad Request");
@@ -2399,7 +2402,9 @@ static bool HandleRequest(void) {
     p = HandleMessage();
   } else {
     httpversion = 101;
+    connectionclose = true;
     p = ServeError(400, "Bad Request");
+    DEBUGF("%s received garbage %`'.*s", clientaddrstr, amtread, inbuf.p);
   }
   if (!msgsize) {
     amtread = 0;

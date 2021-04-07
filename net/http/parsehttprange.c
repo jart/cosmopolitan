@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/macros.internal.h"
 #include "libc/str/str.h"
 #include "net/http/http.h"
 
@@ -48,14 +49,18 @@ bool ParseHttpRange(const char *p, size_t n, long resourcelength,
     }
     if (n && *p == '-') {
       ++p, --n;
-      length = 0;
-      while (n && '0' <= *p && *p <= '9') {
-        if (__builtin_mul_overflow(length, 10, &length)) return false;
-        if (__builtin_add_overflow(length, *p - '0', &length)) return false;
-        ++p, --n;
+      if (!n) {
+        length = MAX(start, resourcelength) - start;
+      } else {
+        length = 0;
+        while (n && '0' <= *p && *p <= '9') {
+          if (__builtin_mul_overflow(length, 10, &length)) return false;
+          if (__builtin_add_overflow(length, *p - '0', &length)) return false;
+          ++p, --n;
+        }
+        if (__builtin_add_overflow(length, 1, &length)) return false;
+        if (__builtin_sub_overflow(length, start, &length)) return false;
       }
-      if (__builtin_add_overflow(length, 1, &length)) return false;
-      if (__builtin_sub_overflow(length, start, &length)) return false;
     } else if (__builtin_sub_overflow(resourcelength, start, &length)) {
       return false;
     }

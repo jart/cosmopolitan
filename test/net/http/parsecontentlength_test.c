@@ -20,7 +20,7 @@
 #include "net/http/http.h"
 
 TEST(ParseContentLength, test) {
-  EXPECT_EQ(-1, ParseContentLength("", 0));
+  EXPECT_EQ(0, ParseContentLength("", 0));
   EXPECT_EQ(-1, ParseContentLength("-1", 2));
   EXPECT_EQ(-1, ParseContentLength("-2", 2));
   EXPECT_EQ(0, ParseContentLength("0", 1));

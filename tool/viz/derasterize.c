@@ -104,7 +104,7 @@ int y_; /* -y HEIGHT [in flexidecimal] */
 #define Mode BEST
 
 #if Mode == BEST
-#define MC 9u  /* log2(#) of color combos to consider */
+#define MC 9u /* log2(#) of color combos to consider */
 #define GN 35u /* # of glyphs to consider */
 #elif Mode == FAST
 #define MC 6u
@@ -114,10 +114,10 @@ int y_; /* -y HEIGHT [in flexidecimal] */
 #define GN 25u
 #endif
 
-#define CN 3u        /* # channels (rgb) */
-#define YS 8u        /* row stride -or- block height */
-#define XS 4u        /* column stride -or- block width */
-#define GT 44u       /* total glyphs */
+#define CN 3u /* # channels (rgb) */
+#define YS 8u /* row stride -or- block height */
+#define XS 4u /* column stride -or- block width */
+#define GT 44u /* total glyphs */
 #define BN (YS * XS) /* # scalars in block/glyph plane */
 
 #define PHIPRIME 0x9E3779B1u
@@ -467,7 +467,8 @@ static int ReadAll(int fd, void *data, size_t size) {
   n = size;
   do {
     if ((rc = read(fd, p, n)) == -1) return -1;
-    assert((got = rc) || !n);
+    got = rc;
+    assert(got || !n);
     p += got;
     n -= got;
   } while (n);

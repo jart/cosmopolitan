@@ -26,7 +26,7 @@
  */
 ssize_t ParseContentLength(const char *s, size_t n) {
   int i, r = 0;
-  if (!n) return -1;
+  if (!n) return 0;
   for (i = 0; i < n; ++i) {
     if (!isdigit(s[i])) return -1;
     if (__builtin_mul_overflow(r, 10, &r)) return -1;
