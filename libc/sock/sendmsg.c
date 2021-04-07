@@ -43,7 +43,7 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
       /* An optional address is provided, convert it to the BSD form */
       char addr2[128];
       struct msghdr msg2;
-      if (sizeof(addr2) > msg->msg_namelen) return einval();
+      if (msg->msg_namelen > sizeof(addr2)) return einval();
       memcpy(&addr2[0], msg->msg_name, msg->msg_namelen);
       sockaddr2bsd(&addr2[0]);
 
