@@ -50,10 +50,19 @@ ssize_t recvfrom(int fd, void *buf, size_t size, uint32_t flags,
       sockaddr2linux(opt_out_srcaddr);
     }
     return got;
-  } else if (__isfdkind(fd, kFdSocket)) {
-    return sys_recvfrom_nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1,
-                           flags, opt_out_srcaddr, opt_inout_srcaddrsize);
   } else {
-    return ebadf();
+    if (__isfdopen(fd)) {
+      if (__isfdkind(fd, kFdSocket)) {
+        return sys_recvfrom_nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1,
+                               flags, opt_out_srcaddr, opt_inout_srcaddrsize);
+      } else if (__isfdkind(fd, kFdFile) && !opt_out_srcaddr) { /* socketpair */
+        if (flags) return einval();
+        return sys_read_nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1, -1);
+      } else {
+        return enotsock();
+      }
+    } else {
+      return ebadf();
+    }
   }
 }

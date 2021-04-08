@@ -51,16 +51,27 @@ ssize_t sendto(int fd, const void *buf, size_t size, uint32_t flags,
     if (!IsBsd() || !opt_addr) {
       return sys_sendto(fd, buf, size, flags, opt_addr, addrsize);
     } else {
-      char addr2[sizeof(struct sockaddr_un_bsd)]; /* sockaddr_un_bsd is the largest */
+      char addr2[sizeof(
+          struct sockaddr_un_bsd)]; /* sockaddr_un_bsd is the largest */
       if (addrsize > sizeof(addr2)) return einval();
       memcpy(&addr2, opt_addr, addrsize);
       sockaddr2bsd(&addr2[0]);
       return sys_sendto(fd, buf, size, flags, &addr2[0], addrsize);
     }
-  } else if (__isfdkind(fd, kFdSocket)) {
-    return sys_sendto_nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1, flags,
-                         opt_addr, addrsize);
   } else {
-    return ebadf();
+    if (__isfdopen(fd)) {
+      if (__isfdkind(fd, kFdSocket)) {
+        return sys_sendto_nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1,
+                             flags, opt_addr, addrsize);
+      } else if (__isfdkind(fd, kFdFile)) { /* e.g. socketpair() */
+        if (flags) return einval();
+        if (opt_addr) return eisconn();
+        return sys_write_nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1, -1);
+      } else {
+        return enotsock();
+      }
+    } else {
+      return ebadf();
+    }
   }
 }

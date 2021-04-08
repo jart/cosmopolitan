@@ -29,7 +29,7 @@
  * Sends a message on a socket.
  *
  * @param fd is the file descriptor returned by socket()
- * @param msg is a pointer to a struct msghdr containing all the required 
+ * @param msg is a pointer to a struct msghdr containing all the required
  *            parameters (the destination address, buffers, ...)
  * @param flags MSG_OOB, MSG_DONTROUTE, MSG_PARTIAL, MSG_NOSIGNAL, etc.
  * @return number of bytes transmitted, or -1 w/ errno
@@ -54,11 +54,19 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
     }
     /* else do the syscall */
     return sys_sendmsg(fd, msg, flags);
-  } else if (__isfdkind(fd, kFdSocket)) {
-    if (msg->msg_control != NULL) return einval();  /* Control msg not supported */
-    return sys_sendto_nt(&g_fds.p[fd], msg->msg_iov, msg->msg_iovlen, flags,
-                         msg->msg_name, msg->msg_namelen);
   } else {
-    return ebadf();
+    if (__isfdopen(fd)) {
+      if (msg->msg_control) return einval(); /* control msg not supported */
+      if (__isfdkind(fd, kFdSocket)) {
+        return sys_sendto_nt(&g_fds.p[fd], msg->msg_iov, msg->msg_iovlen, flags,
+                             msg->msg_name, msg->msg_namelen);
+      } else if (__isfdkind(fd, kFdFile)) {
+        return sys_write_nt(&g_fds.p[fd], msg->msg_iov, msg->msg_iovlen, -1);
+      } else {
+        return enotsock();
+      }
+    } else {
+      return ebadf();
+    }
   }
 }

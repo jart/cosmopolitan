@@ -38,17 +38,34 @@
  * @asyncsignalsafe
  */
 ssize_t recvmsg(int fd, struct msghdr *msg, int flags) {
+  ssize_t got;
   if (!IsWindows()) {
-    ssize_t got = sys_recvmsg(fd, msg, flags);
+    got = sys_recvmsg(fd, msg, flags);
     /* An address was provided, convert from BSD form */
     if (msg->msg_name && IsBsd() && got != -1) {
       sockaddr2linux(msg->msg_name);
     }
     return got;
-  } else if (__isfdkind(fd, kFdSocket)) {
-    return sys_recvfrom_nt(&g_fds.p[fd], msg->msg_iov, msg->msg_iovlen, flags,
-                           msg->msg_name, &msg->msg_namelen);
   } else {
-    return ebadf();
+    if (__isfdopen(fd)) {
+      if (msg->msg_control) return einval(); /* control msg not supported */
+      if (__isfdkind(fd, kFdSocket)) {
+        return sys_recvfrom_nt(&g_fds.p[fd], msg->msg_iov, msg->msg_iovlen,
+                               flags, msg->msg_name, &msg->msg_namelen);
+      } else if (__isfdkind(fd, kFdFile) && !msg->msg_name) { /* socketpair */
+        if (flags) return einval();
+        if ((got = sys_read_nt(&g_fds.p[fd], msg->msg_iov, msg->msg_iovlen,
+                               -1)) != -1) {
+          msg->msg_flags = 0;
+          return got;
+        } else {
+          return -1;
+        }
+      } else {
+        return enotsock();
+      }
+    } else {
+      return ebadf();
+    }
   }
 }
