@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021                                                               │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -23,6 +23,8 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/testlib/testlib.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/x/x.h"
 
 TEST(sendrecvmsg, testPingPong) {
   int fd[2];
@@ -46,14 +48,12 @@ TEST(sendrecvmsg, testPingPong) {
   ASSERT_NE(-1, socketpair(AF_UNIX, SOCK_STREAM, 0, fd));
   ASSERT_EQ(hwLen, sendmsg(fd[0], &msg, 0));
   
-  data[0].iov_base = malloc(20);
+  data[0].iov_base = gc(xcalloc(20, 1));
   data[0].iov_len = 20;
-  ASSERT_NE(NULL, data[0].iov_base);
   msg.msg_iovlen = 1;
   ASSERT_EQ(hwLen, recvmsg(fd[1], &msg, 0));
 
-  ASSERT_EQ(0, memcmp(&(((char *)(msg.msg_iov[0].iov_base))[0]), hello, strlen(hello)));
-  ASSERT_EQ(0, memcmp(&(((char *)(msg.msg_iov[0].iov_base))[strlen(hello)]), world, strlen(world)));
+  EXPECT_STREQ("HELLOWORLD", msg.msg_iov[0].iov_base);
 
   ASSERT_NE(-1, close(fd[0]));
   ASSERT_NE(-1, close(fd[1]));
