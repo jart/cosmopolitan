@@ -95,6 +95,8 @@ int64_t sys_writev(int32_t, const struct iovec *, int32_t) hidden;
 ssize_t sys_recvfrom(int, void *, size_t, int, void *, uint32_t *) hidden;
 ssize_t sys_sendto(int, const void *, size_t, int, const void *,
                    uint32_t) hidden;
+ssize_t sys_sendmsg(int, const struct msghdr *, int) hidden;
+ssize_t sys_recvmsg(int, struct msghdr *, int) hidden;
 int32_t sys_select(int32_t, fd_set *, fd_set *, fd_set *,
                    struct timeval *) hidden;
 int sys_setsockopt(int, int, int, const void *, uint32_t) hidden;

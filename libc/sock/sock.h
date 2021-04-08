@@ -67,7 +67,7 @@ struct pollfd {
 
 struct msghdr {            /* Linux+NT ABI */
   void *msg_name;          /* optional address */
-  int32_t msg_namelen;     /* size of msg_name */
+  uint32_t msg_namelen;    /* size of msg_name */
   struct iovec *msg_iov;   /* scatter/gather array */
   uint64_t msg_iovlen;     /* iovec count */
   void *msg_control;       /* credentials and stuff */
@@ -94,7 +94,7 @@ int getsockname(int, void *, uint32_t *) paramsnonnull();
 int getpeername(int, void *, uint32_t *) paramsnonnull();
 ssize_t send(int, const void *, size_t, int) paramsnonnull();
 ssize_t recv(int, void *, size_t, int);
-ssize_t recvmsg(int, struct msghdr *, uint32_t) paramsnonnull();
+ssize_t recvmsg(int, struct msghdr *, int) paramsnonnull();
 ssize_t recvfrom(int, void *, size_t, uint32_t, void *, uint32_t *);
 ssize_t sendmsg(int, const struct msghdr *, int) paramsnonnull();
 ssize_t readv(int, const struct iovec *, int);
