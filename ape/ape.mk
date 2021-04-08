@@ -46,5 +46,10 @@ o/ape/idata.inc:			\
 $(APE_OBJS):	$(BUILD_FILES)		\
 		ape/ape.mk
 
+o/$(MODE)/ape/ape-no-modify-self.o: ape/ape.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -DAPE_NO_MODIFY_SELF $<
+
 .PHONY: o/$(MODE)/ape
-o/$(MODE)/ape: $(APE) $(APE_CHECKS)
+o/$(MODE)/ape:	$(APE)			\
+		$(APE_CHECKS)		\
+		o/$(MODE)/ape/ape-no-modify-self.o

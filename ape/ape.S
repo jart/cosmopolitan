@@ -535,7 +535,37 @@ ape_disk:
 
 #if SupportsWindows() || SupportsMetal() || SupportsXnu()
 apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
+//	Until all operating systems can be updated to support APE,
+//	we have a beautiful, yet imperfect workaround, which is to
+//	modify the binary to follow the local system's convention.
+//	There isn't a one-size-fits-all approach for this, thus we
+//	present two choices.
+#ifndef APE_NO_MODIFY_SELF
+//	The default behavior is: to overwrite the header in place.
+//	We prefer this because it's a tiny constant one time cost.
+//	We simply printf a 64-byte header and call execve() again.
 	.ascii	"o=\"$(command -v \"$0\")\"\n"
+#else
+//	The alternative behavior is to copy to $TMPDIR and edit.
+//	This imposes a variety of caveats of its own that should
+//	be considered by the user beforehand, such as whether or
+//	not /tmp is considered trustworthy on a given system, or
+//	if the administrator chose to mount it with noexec. It's
+//	up to the user to decide what's best in those situations
+//	and also note that argv[0] and getauxval(AT_EXECFN) will
+//	change as a result of this, and lastly note we don't try
+//	to cleanup the tmp copies for the sake of efficiency. It
+//	should also be noted that if $0 has directory components
+//	then permission clashes can happen between system users,
+//	since only root is able to set the sticky bit, which can
+//	be addressed simply by overriding the TMPDIR environment
+	.ascii	"o=\"${TMPDIR:-/tmp}/$0\"\n"
+	.ascii	"if [ ! -e \"$o\" ]; then\n"
+	.ascii	  "d=\"$o\"\n"
+	.ascii	  "o=\"$o.$$\"\n"
+	.ascii	  "mkdir -p \"${o%/*}\" 2>/dev/null\n"
+	.ascii	  "cp -f \"$0\" \"$o\" || exit 120\n"
+#endif /* APE_NO_MODIFY_SELF */
 #if SupportsXnu()
 	.ascii	"if [ -d /Applications ]; then\n"
 	.ascii	  "dd if=\"$o\""
@@ -547,7 +577,7 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.shstub	    ape_macho_dd_count,2
 	.ascii	    "\" conv=notrunc 2>/dev/null\n"
 	.ascii	"el"
-#endif
+#endif /* XNU */
 	.ascii	"if exec 7<> \"$o\"; then\n"
 	.ascii	  "printf '"
 	.ascii	    "\\177ELF"			# 0x0: ⌂ELF
@@ -574,19 +604,28 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	    "' >&7\n"
 	.ascii	  "exec 7<&-\n"
 	.ascii	"else\n"
-	.ascii	  "exit 1\n"
+	.ascii	  "exit 121\n"
 	.ascii	"fi\n"
-	.ascii	"exec \"$0\" \"$@\"\n"		# etxtbsy tail recursion
-	.ascii	"R=$?\n"			# architecture optimistic
+#ifndef APE_NO_MODIFY_SELF
+	.ascii	"exec \"$0\" \"$@\"\n"		# optimistic execution
+#else
+	.ascii	  "mv -f \"$o\" \"$d\" 2>/dev/null\n"
+	.ascii	  "o=\"$d\"\n"
+	.ascii	"fi\n"
+	.ascii	"exec \"$o\" \"$@\"\n"
+#endif /* APE_NO_MODIFY_SELF */
+	.ascii	"R=$?\n"
 	.ascii	"\n"
 	.ascii	"if [ $R -eq 126 ] && [ \"$(uname -m)\" != x86_64 ]; then\n"
 	.ascii	  "if Q=\"$(command -v qemu-x86_64)\"; then\n"
-	.ascii	    "exec \"$Q\" \"$0\" \"$@\"\n"
+	.ascii	    "exec \"$Q\" \"$o\" \"$@\"\n"
 	.ascii	  "else\n"
 	.ascii	    "echo error: need qemu-x86_64 >&2\n"
 	.ascii	  "fi\n"
+#ifndef APE_NO_MODIFY_SELF
 	.ascii	"elif [ $R -eq 127 ]; then\n"	# means argv[0] was wrong
 	.ascii	"  exec \"$o\" \"$@\"\n"	# so do a path resolution
+#endif /* APE_NO_MODIFY_SELF */
 	.ascii	"fi\n"
 	.ascii	"exit $R\n"
 	.endobj	apesh
