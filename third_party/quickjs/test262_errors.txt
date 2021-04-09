@@ -1,0 +1,35 @@
+test262/test/built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js:20: Test262Error: Expected a ReferenceError but got a ReferenceError
+test262/test/built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js:20: strict mode: Test262Error: Expected a ReferenceError but got a ReferenceError
+test262/test/built-ins/RegExp/named-groups/non-unicode-property-names-valid.js:46: SyntaxError: invalid group name
+test262/test/built-ins/RegExp/named-groups/non-unicode-property-names-valid.js:46: strict mode: SyntaxError: invalid group name
+test262/test/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/detached-buffer.js:46: Test262Error:  (Testing with BigInt64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/detached-buffer.js:46: strict mode: Test262Error:  (Testing with BigInt64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/detached-buffer.js:47: Test262Error:  (Testing with Float64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/detached-buffer.js:47: strict mode: Test262Error:  (Testing with Float64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/BigInt/detached-buffer-realm.js:37: strict mode: TypeError: out-of-bound numeric index (Testing with BigInt64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/BigInt/detached-buffer.js:34: TypeError: cannot convert bigint to number (Testing with BigInt64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/BigInt/detached-buffer.js:32: strict mode: TypeError: out-of-bound numeric index (Testing with BigInt64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/BigInt/key-is-minus-zero.js:20: Test262Error: Reflect.set("new TA([42n])", "-0", 1n) must return true Expected SameValue(«false», «true») to be true (Testing with BigInt64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/BigInt/key-is-minus-zero.js:20: strict mode: Test262Error: Reflect.set("new TA([42n])", "-0", 1n) must return true Expected SameValue(«false», «true») to be true (Testing with BigInt64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/BigInt/key-is-not-integer.js:21: Test262Error: Reflect.set("new TA([42n])", "1.1", 1n) must return true Expected SameValue(«false», «true») to be true (Testing with BigInt64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/BigInt/key-is-not-integer.js:21: strict mode: Test262Error: Reflect.set("new TA([42n])", "1.1", 1n) must return true Expected SameValue(«false», «true») to be true (Testing with BigInt64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/BigInt/key-is-out-of-bounds.js:27: Test262Error: Reflect.set("new TA([42n])", "-1", 1n) must return false Expected SameValue(«false», «true») to be true (Testing with BigInt64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/BigInt/key-is-out-of-bounds.js:27: strict mode: Test262Error: Reflect.set("new TA([42n])", "-1", 1n) must return false Expected SameValue(«false», «true») to be true (Testing with BigInt64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/BigInt/tonumber-value-detached-buffer.js:24: Test262Error: Expected SameValue(«false», «true») to be true (Testing with BigInt64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/BigInt/tonumber-value-detached-buffer.js:24: strict mode: Test262Error: Expected SameValue(«false», «true») to be true (Testing with BigInt64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/detached-buffer-realm.js:37: strict mode: TypeError: out-of-bound numeric index (Testing with Float64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/detached-buffer.js:32: strict mode: TypeError: out-of-bound numeric index (Testing with Float64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/key-is-minus-zero.js:22: Test262Error: Reflect.set(sample, "-0", 1) must return true Expected SameValue(«false», «true») to be true (Testing with Float64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/key-is-minus-zero.js:22: strict mode: Test262Error: Reflect.set(sample, "-0", 1) must return true Expected SameValue(«false», «true») to be true (Testing with Float64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/key-is-not-integer.js:22: Test262Error: Reflect.set(sample, "1.1", 1) must return true Expected SameValue(«false», «true») to be true (Testing with Float64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/key-is-not-integer.js:22: strict mode: Test262Error: Reflect.set(sample, "1.1", 1) must return true Expected SameValue(«false», «true») to be true (Testing with Float64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/key-is-out-of-bounds.js:22: Test262Error: Reflect.set(sample, "-1", 1) must return true Expected SameValue(«false», «true») to be true (Testing with Float64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/key-is-out-of-bounds.js:22: strict mode: Test262Error: Reflect.set(sample, "-1", 1) must return true Expected SameValue(«false», «true») to be true (Testing with Float64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/tonumber-value-detached-buffer.js:39: Test262Error: Expected SameValue(«false», «true») to be true (Testing with Float64Array.)
+test262/test/built-ins/TypedArrayConstructors/internals/Set/tonumber-value-detached-buffer.js:39: strict mode: Test262Error: Expected SameValue(«false», «true») to be true (Testing with Float64Array.)
+test262/test/language/expressions/dynamic-import/usage-from-eval.js:26: TypeError: $DONE() not called
+test262/test/language/expressions/dynamic-import/usage-from-eval.js:26: strict mode: TypeError: $DONE() not called
+test262/test/language/expressions/optional-chaining/optional-call-preserves-this.js:21: TypeError: cannot read property 'c' of undefined
+test262/test/language/expressions/optional-chaining/optional-call-preserves-this.js:15: strict mode: TypeError: cannot read property '_b' of undefined
+test262/test/language/statements/for-of/head-lhs-async-invalid.js:14: unexpected error type: Test262: This statement should not be evaluated.
+test262/test/language/statements/for-of/head-lhs-async-invalid.js:14: strict mode: unexpected error type: Test262: This statement should not be evaluated.
