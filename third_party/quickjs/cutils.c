@@ -1,6 +1,6 @@
 /*
  * C utilities
- * 
+ *
  * Copyright (c) 2017 Fabrice Bellard
  * Copyright (c) 2018 Charlie Gordon
  *
@@ -22,12 +22,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
+#include "libc/fmt/fmt.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
+#include "third_party/quickjs/cutils.h"
 
-#include "cutils.h"
+asm(".ident\t\"\\n\\n\
+QuickJS (MIT License)\\n\
+Copyright (c) 2017-2021 Fabrice Bellard\\n\
+Copyright (c) 2017-2021 Charlie Gordon\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+/* clang-format off */
 
 void pstrcpy(char *buf, int buf_size, const char *str)
 {

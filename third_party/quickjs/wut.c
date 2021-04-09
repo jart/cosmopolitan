@@ -16,25 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/dlfcn.h"
+#include "third_party/quickjs/quickjs.h"
 
-char *dlerror(void) {
-  return "cosmopolitan doesn't support dsos";
-}
-
-void *dlopen(const char *file, int mode) {
-  return NULL;
-}
-
-void *dlsym(void *handle, const char *name) {
-  return NULL;
-}
-
-int dlclose(void *handle) {
-  return -1;
-}
-
-int dl_iterate_phdr(int callback(void *info, size_t size, void *data),
-                    void *data) {
-  return -1;
-}
+uint8_t qjsc_repl[FRAMESIZE];
+uint32_t qjsc_repl_size = FRAMESIZE;
+uint8_t qjsc_qjscalc[FRAMESIZE];
+uint32_t qjsc_qjscalc_size = FRAMESIZE;

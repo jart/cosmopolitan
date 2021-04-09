@@ -1,6 +1,6 @@
 /*
  * Unicode utilities
- * 
+ *
  * Copyright (c) 2017-2018 Fabrice Bellard
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,15 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <assert.h>
+#include "libc/assert.h"
+#include "libc/limits.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "third_party/quickjs/cutils.h"
+#include "third_party/quickjs/libunicode.h"
 
-#include "cutils.h"
-#include "libunicode.h"
-#include "libunicode-table.h"
+asm(".ident\t\"\\n\\n\
+QuickJS (MIT License)\\n\
+Copyright (c) 2017-2021 Fabrice Bellard\\n\
+Copyright (c) 2017-2021 Charlie Gordon\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+/* clang-format off */
+
+#include "third_party/quickjs/libunicode-table.inc"
 
 enum {
     RUN_TYPE_U,

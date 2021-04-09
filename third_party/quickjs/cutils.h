@@ -1,41 +1,17 @@
-/*
- * C utilities
- * 
- * Copyright (c) 2017 Fabrice Bellard
- * Copyright (c) 2018 Charlie Gordon
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-#ifndef CUTILS_H
-#define CUTILS_H
-
-#include <stdlib.h>
-#include <inttypes.h>
+#ifndef COSMOPOLITAN_THIRD_PARTY_QUICKJS_CUTILS_H_
+#define COSMOPOLITAN_THIRD_PARTY_QUICKJS_CUTILS_H_
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* set if CPU is big endian */
 #undef WORDS_BIGENDIAN
 
 #define likely(x)       __builtin_expect(!!(x), 1)
 #define unlikely(x)     __builtin_expect(!!(x), 0)
-#define force_inline inline __attribute__((always_inline))
-#define no_inline __attribute__((noinline))
-#define __maybe_unused __attribute__((unused))
+#define force_inline forceinline
+#define no_inline noinline
+#define __maybe_unused __attribute__((__unused__))
 
 #define xglue(x, y) x ## y
 #define glue(x, y) xglue(x, y)
@@ -112,25 +88,25 @@ static inline int64_t min_int64(int64_t a, int64_t b)
 }
 
 /* WARNING: undefined if a = 0 */
-static inline int clz32(unsigned int a)
+forceinline int clz32(unsigned int a)
 {
     return __builtin_clz(a);
 }
 
 /* WARNING: undefined if a = 0 */
-static inline int clz64(uint64_t a)
+forceinline int clz64(uint64_t a)
 {
     return __builtin_clzll(a);
 }
 
 /* WARNING: undefined if a = 0 */
-static inline int ctz32(unsigned int a)
+forceinline int ctz32(unsigned int a)
 {
     return __builtin_ctz(a);
 }
 
 /* WARNING: undefined if a = 0 */
-static inline int ctz64(uint64_t a)
+forceinline int ctz64(uint64_t a)
 {
     return __builtin_ctzll(a);
 }
@@ -207,18 +183,18 @@ static inline void put_u8(uint8_t *tab, uint8_t val)
     *tab = val;
 }
 
-static inline uint16_t bswap16(uint16_t x)
+forceinline uint16_t bswap16(uint16_t x)
 {
     return (x >> 8) | (x << 8);
 }
 
-static inline uint32_t bswap32(uint32_t v)
+forceinline uint32_t bswap32(uint32_t v)
 {
     return ((v & 0xff000000) >> 24) | ((v & 0x00ff0000) >>  8) |
         ((v & 0x0000ff00) <<  8) | ((v & 0x000000ff) << 24);
 }
 
-static inline uint64_t bswap64(uint64_t v)
+forceinline uint64_t bswap64(uint64_t v)
 {
     return ((v & ((uint64_t)0xff << (7 * 8))) >> (7 * 8)) | 
         ((v & ((uint64_t)0xff << (6 * 8))) >> (5 * 8)) | 
@@ -294,4 +270,7 @@ void rqsort(void *base, size_t nmemb, size_t size,
             int (*cmp)(const void *, const void *, void *),
             void *arg);
 
-#endif  /* CUTILS_H */
+/* clang-format on */
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_THIRD_PARTY_QUICKJS_CUTILS_H_ */

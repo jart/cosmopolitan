@@ -1,6 +1,6 @@
 /*
  * ECMA Test 262 Runner for QuickJS
- * 
+ *
  * Copyright (c) 2017-2021 Fabrice Bellard
  * Copyright (c) 2017-2021 Charlie Gordon
  *
@@ -22,25 +22,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <inttypes.h>
-#include <string.h>
-#include <assert.h>
-#include <ctype.h>
-#include <unistd.h>
-#include <errno.h>
-#include <time.h>
-#include <dirent.h>
-#include <ftw.h>
+#include "libc/alg/alg.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/conv.h"
+#include "libc/fmt/fmt.h"
+#include "libc/log/log.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/time/time.h"
+#include "third_party/musl/ftw.h"
+#include "third_party/quickjs/cutils.h"
+#include "third_party/quickjs/list.h"
+#include "third_party/quickjs/quickjs-libc.h"
 
-#include "cutils.h"
-#include "list.h"
-#include "quickjs-libc.h"
+asm(".ident\t\"\\n\\n\
+QuickJS (MIT License)\\n\
+Copyright (c) 2017-2021 Fabrice Bellard\\n\
+Copyright (c) 2017-2021 Charlie Gordon\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+/* clang-format off */
 
 /* enable test262 thread support to test SharedArrayBuffer and Atomics */
-#define CONFIG_AGENT
+/* #define CONFIG_AGENT */
 
 #define CMD_NAME "run-test262"
 
@@ -417,9 +421,16 @@ static JSValue js_evalScript(JSContext *ctx, JSValue this_val,
     return ret;
 }
 
-#ifdef CONFIG_AGENT
+static JSValue add_helpers1(JSContext *ctx);
 
-#include <pthread.h>
+static int64_t get_clock_ms(void)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (uint64_t)ts.tv_sec * 1000 + (ts.tv_nsec / 1000000);
+}
+
+#ifdef CONFIG_AGENT
 
 typedef struct {
     struct list_head link;
@@ -438,7 +449,6 @@ typedef struct {
     char *str;
 } AgentReport;
 
-static JSValue add_helpers1(JSContext *ctx);
 static void add_helpers(JSContext *ctx);
 
 static pthread_mutex_t agent_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -646,13 +656,6 @@ static JSValue js_agent_sleep(JSContext *ctx, JSValue this_val,
         return JS_EXCEPTION;
     usleep(duration * 1000);
     return JS_UNDEFINED;
-}
-
-static int64_t get_clock_ms(void)
-{
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return (uint64_t)ts.tv_sec * 1000 + (ts.tv_nsec / 1000000);
 }
 
 static JSValue js_agent_monotonicNow(JSContext *ctx, JSValue this_val,

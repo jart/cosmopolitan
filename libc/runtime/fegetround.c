@@ -16,25 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/dlfcn.h"
+#include "libc/runtime/fenv.h"
 
-char *dlerror(void) {
-  return "cosmopolitan doesn't support dsos";
-}
-
-void *dlopen(const char *file, int mode) {
-  return NULL;
-}
-
-void *dlsym(void *handle, const char *name) {
-  return NULL;
-}
-
-int dlclose(void *handle) {
-  return -1;
-}
-
-int dl_iterate_phdr(int callback(void *info, size_t size, void *data),
-                    void *data) {
-  return -1;
+/**
+ * Returns rounding mode.
+ *
+ * This implementation retrieves it from the x87 FPU control word.
+ *
+ * @see fesetround() for changing this
+ */
+int fegetround(void) {
+  uint16_t x87cw;
+  asm("fnstcw\t%0" : "=m"(x87cw));
+  return x87cw & 0x0c00;
 }

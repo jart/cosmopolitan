@@ -1,7 +1,6 @@
+/* clang-format off */
 /* Compressed unicode tables */
 /* Automatically generated file - do not edit */
-
-#include <stdint.h>
 
 static const uint32_t case_conv_table1[361] = {
     0x00209a30, 0x00309a00, 0x005a8173, 0x00601730,

@@ -1573,17 +1573,6 @@ syscon	misc	TCOFLUSH				1			2			2			2			2			0			# bsd consensus
 syscon	misc	TCOOFF					0			1			1			1			1			0			# bsd consensus
 syscon	misc	TCOON					1			2			2			2			2			0			# bsd consensus
 
-syscon	misc	FE_TONEAREST				0			0			0			0			0			0			# consensus
-syscon	misc	FE_DIVBYZERO				4			4			4			4			4			0			# unix consensus
-syscon	misc	FE_DOWNWARD				0x0400			0x0400			0x0400			0x0400			0x0400			0			# unix consensus
-syscon	misc	FE_INEXACT				0x20			0x20			0x20			0x20			0x20			0			# unix consensus
-syscon	misc	FE_INVALID				1			1			1			1			1			0			# unix consensus
-syscon	misc	FE_OVERFLOW				8			8			8			8			8			0			# unix consensus
-syscon	misc	FE_TOWARDZERO				0x0c00			0x0c00			0x0c00			0x0c00			0x0c00			0			# unix consensus
-syscon	misc	FE_UNDERFLOW				0x10			0x10			0x10			0x10			0x10			0			# unix consensus
-syscon	misc	FE_UPWARD				0x0800			0x0800			0x0800			0x0800			0x0800			0			# unix consensus
-syscon	misc	FE_ALL_EXCEPT				61			63			63			63			63			0			# bsd consensus
-
 syscon	misc	TYPE_DISK				0			0			0			0			0			0			# consensus
 syscon	misc	TYPE_A					1			1			1			1			1			0			# unix consensus
 syscon	misc	TYPE_E					2			2			2			2			2			0			# unix consensus
@@ -1636,18 +1625,6 @@ syscon	misc	PTHREAD_CREATE_JOINABLE			0			1			0			0			0			0
 syscon	misc	PTHREAD_MUTEX_NORMAL			0			0			0			3			3			0
 syscon	misc	PTHREAD_MUTEX_ROBUST			0			0			1			0			0			0
 syscon	misc	PTHREAD_PROCESS_PRIVATE			0			2			0			0			0			0
-
-syscon	misc	FTW_F					0			0			0			0			0			0			# consensus
-syscon	misc	FTW_D					1			1			1			1			1			0			# unix consensus
-syscon	misc	FTW_DNR					2			2			2			2			2			0			# unix consensus
-syscon	misc	FTW_MOUNT				2			2			2			2			2			0			# unix consensus
-syscon	misc	FTW_PHYS				1			1			1			1			1			0			# unix consensus
-syscon	misc	FTW_SLN					6			6			6			6			6			0			# unix consensus
-syscon	misc	FTW_CHDIR				4			8			8			8			8			0			# bsd consensus
-syscon	misc	FTW_DEPTH				8			4			4			4			4			0			# bsd consensus
-syscon	misc	FTW_DP					5			3			3			3			3			0			# bsd consensus
-syscon	misc	FTW_NS					3			4			4			4			4			0			# bsd consensus
-syscon	misc	FTW_SL					4			5			5			5			5			0			# bsd consensus
 
 syscon	misc	N_TTY					0			0			0			0			0			0			# consensus
 syscon	misc	N_6PACK					7			0			0			0			0			0
@@ -2008,14 +1985,6 @@ syscon	misc	NL_LANGMAX				0x0800			14			31			14			14			0
 syscon	misc	NL_TEXTMAX				0x7fffffff		0x0800			0x0800			255			255			0
 syscon	misc	NL_NMAX					0x7fffffff		1			1			0			0			0
 syscon	misc	NL_SETD					1			1			0			1			1			0
-
-syscon	misc	RTLD_LAZY				1			1			1			1			1			0			# unix consensus
-syscon	misc	RTLD_NOW				2			2			2			2			2			0			# unix consensus
-syscon	misc	RTLD_GLOBAL				0x0100			8			0x0100			0x0100			0x0100			0
-syscon	misc	RTLD_NODELETE				0x1000			0x80			0x1000			0			0			0
-syscon	misc	RTLD_NOLOAD				4			0x10			0x2000			0			0			0
-syscon	misc	RTLD_DI_LINKMAP				0			0			2			0			0			0
-syscon	misc	RTLD_LOCAL				0			4			0			0			0			0
 
 syscon	rusage	RUSAGE_SELF				0			0			0			0			0			0			# unix consensus & faked nt
 syscon	rusage	RUSAGE_CHILDREN				-1			-1			-1			-1			-1			99			# unix consensus & unavailable on nt

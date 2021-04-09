@@ -1,32 +1,9 @@
-/*
- * Regular Expression Engine
- * 
- * Copyright (c) 2017-2018 Fabrice Bellard
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-#ifndef LIBREGEXP_H
-#define LIBREGEXP_H
-
-#include <stddef.h>
-
-#include "libunicode.h"
+#ifndef COSMOPOLITAN_THIRD_PARTY_QUICKJS_LIBREGEXP_H_
+#define COSMOPOLITAN_THIRD_PARTY_QUICKJS_LIBREGEXP_H_
+#include "third_party/quickjs/libunicode.h"
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #define LRE_BOOL  int       /* for documentation purposes */
 
@@ -89,4 +66,7 @@ static inline int lre_js_is_ident_next(int c)
 
 #undef LRE_BOOL
 
-#endif /* LIBREGEXP_H */
+/* clang-format on */
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_THIRD_PARTY_QUICKJS_LIBREGEXP_H_ */

@@ -1,6 +1,6 @@
 /*
  * QuickJS Javascript Engine
- * 
+ *
  * Copyright (c) 2017-2021 Fabrice Bellard
  * Copyright (c) 2017-2021 Charlie Gordon
  *
@@ -22,31 +22,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <inttypes.h>
-#include <string.h>
-#include <assert.h>
-#include <sys/time.h>
-#include <time.h>
-#include <fenv.h>
-#include <math.h>
-#if defined(__APPLE__)
-#include <malloc/malloc.h>
-#elif defined(__linux__)
-#include <malloc.h>
-#elif defined(__FreeBSD__)
-#include <malloc_np.h>
-#endif
+#include "third_party/quickjs/cutils.h"
+#include "third_party/quickjs/libregexp.h"
+#include "third_party/quickjs/list.h"
+#include "third_party/quickjs/quickjs.h"
+#include "libc/assert.h"
+#include "libc/fmt/fmt.h"
+#include "libc/fmt/fmt.h"
+#include "libc/inttypes.h"
+#include "libc/mem/alloca.h"
+#include "third_party/gdtoa/gdtoa.h"
+#include "libc/fmt/conv.h"
+#include "libc/runtime/fenv.h"
+#include "libc/time/time.h"
+#include "libc/time/time.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/time/struct/tm.h"
+#include "libc/log/log.h"
+#include "third_party/quickjs/libbf.h"
 
-#include "cutils.h"
-#include "list.h"
-#include "quickjs.h"
-#include "libregexp.h"
-#ifdef CONFIG_BIGNUM
-#include "libbf.h"
-#endif
+asm(".ident\t\"\\n\\n\
+QuickJS (MIT License)\\n\
+Copyright (c) 2017-2021 Fabrice Bellard\\n\
+Copyright (c) 2017-2021 Charlie Gordon\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+/* clang-format off */
 
 #define OPTIMIZE         1
 #define SHORT_OPCODES    1
@@ -69,7 +70,7 @@
 
 /* define to include Atomics.* operations which depend on the OS
    threads */
-#if !defined(EMSCRIPTEN)
+#if !defined(EMSCRIPTEN) && defined(USE_WORKER)
 #define CONFIG_ATOMICS
 #endif
 
@@ -108,12 +109,6 @@
 
 /* test the GC by forcing it before each object allocation */
 //#define FORCE_GC_AT_MALLOC
-
-#ifdef CONFIG_ATOMICS
-#include <pthread.h>
-#include <stdatomic.h>
-#include <errno.h>
-#endif
 
 enum {
     /* classid tag        */    /* union usage   | properties */
@@ -952,7 +947,7 @@ struct JSObject {
 enum {
     __JS_ATOM_NULL = JS_ATOM_NULL,
 #define DEF(name, str) JS_ATOM_ ## name,
-#include "quickjs-atom.h"
+#include "third_party/quickjs/quickjs-atom.inc"
 #undef DEF
     JS_ATOM_END,
 };
@@ -961,14 +956,14 @@ enum {
 
 static const char js_atom_init[] =
 #define DEF(name, str) str "\0"
-#include "quickjs-atom.h"
+#include "third_party/quickjs/quickjs-atom.inc"
 #undef DEF
 ;
 
 typedef enum OPCodeFormat {
 #define FMT(f) OP_FMT_ ## f,
 #define DEF(id, size, n_pop, n_push, f)
-#include "quickjs-opcode.h"
+#include "third_party/quickjs/quickjs-opcode.inc"
 #undef DEF
 #undef FMT
 } OPCodeFormat;
@@ -977,7 +972,7 @@ enum OPCodeEnum {
 #define FMT(f)
 #define DEF(id, size, n_pop, n_push, f) OP_ ## id,
 #define def(id, size, n_pop, n_push, f)
-#include "quickjs-opcode.h"
+#include "third_party/quickjs/quickjs-opcode.inc"
 #undef def
 #undef DEF
 #undef FMT
@@ -988,7 +983,7 @@ enum OPCodeEnum {
 #define FMT(f)
 #define DEF(id, size, n_pop, n_push, f)
 #define def(id, size, n_pop, n_push, f) OP_ ## id,
-#include "quickjs-opcode.h"
+#include "third_party/quickjs/quickjs-opcode.inc"
 #undef def
 #undef DEF
 #undef FMT
@@ -1021,7 +1016,6 @@ static __exception int JS_ToArrayLengthFree(JSContext *ctx, uint32_t *plen,
                                             JSValue val, BOOL is_array_ctor);
 static JSValue JS_EvalObject(JSContext *ctx, JSValueConst this_obj,
                              JSValueConst val, int flags, int scope_idx);
-JSValue __attribute__((format(printf, 2, 3))) JS_ThrowInternalError(JSContext *ctx, const char *fmt, ...);
 static __maybe_unused void JS_DumpAtoms(JSRuntime *rt);
 static __maybe_unused void JS_DumpString(JSRuntime *rt,
                                                   const JSString *p);
@@ -1148,7 +1142,6 @@ static JSValue JS_ToBigDecimalFree(JSContext *ctx, JSValue val,
                                    BOOL allow_null_or_undefined);
 static bfdec_t *JS_ToBigDecimal(JSContext *ctx, JSValueConst val);
 #endif
-JSValue JS_ThrowOutOfMemory(JSContext *ctx);
 static JSValue JS_ThrowTypeErrorRevokedProxy(JSContext *ctx);
 static JSValue js_proxy_getPrototypeOf(JSContext *ctx, JSValueConst obj);
 static int js_proxy_setPrototypeOf(JSContext *ctx, JSValueConst obj,
@@ -5181,8 +5174,8 @@ static void free_property(JSRuntime *rt, JSProperty *pr, int prop_flags)
     }
 }
 
-static force_inline JSShapeProperty *find_own_property1(JSObject *p,
-                                                        JSAtom atom)
+force_inline JSShapeProperty *find_own_property1(JSObject *p,
+                                                 JSAtom atom)
 {
     JSShape *sh;
     JSShapeProperty *pr, *prop;
@@ -5201,9 +5194,9 @@ static force_inline JSShapeProperty *find_own_property1(JSObject *p,
     return NULL;
 }
 
-static force_inline JSShapeProperty *find_own_property(JSProperty **ppr,
-                                                       JSObject *p,
-                                                       JSAtom atom)
+force_inline JSShapeProperty *find_own_property(JSProperty **ppr,
+                                                JSObject *p,
+                                                JSAtom atom)
 {
     JSShape *sh;
     JSShapeProperty *pr, *prop;
@@ -11303,11 +11296,11 @@ static char *i64toa(char *buf_end, int64_t n, unsigned int base)
 static void js_ecvt1(double d, int n_digits, int *decpt, int *sign, char *buf,
                      int rounding_mode, char *buf1, int buf1_size)
 {
-    if (rounding_mode != FE_TONEAREST)
-        fesetround(rounding_mode);
+    /* if (rounding_mode != FE_TONEAREST) */
+    /*     fesetround(rounding_mode); */
     snprintf(buf1, buf1_size, "%+.*e", n_digits - 1, d);
-    if (rounding_mode != FE_TONEAREST)
-        fesetround(FE_TONEAREST);
+    /* if (rounding_mode != FE_TONEAREST) */
+    /*     fesetround(FE_TONEAREST); */
     *sign = (buf1[0] == '-');
     /* mantissa */
     buf[0] = buf1[1];
@@ -16223,7 +16216,7 @@ static JSValue JS_CallInternal(JSContext *caller_ctx, JSValueConst func_obj,
 #else                                                     
 #define def(id, size, n_pop, n_push, f) && case_default,
 #endif
-#include "quickjs-opcode.h"
+#include "third_party/quickjs/quickjs-opcode.inc"
         [ OP_COUNT ... 255 ] = &&case_default
     };
 #define SWITCH(pc)      goto *dispatch_table[opcode = *pc++];
@@ -20121,7 +20114,7 @@ static const JSOpCode opcode_info[OP_COUNT + (OP_TEMP_END - OP_TEMP_START)] = {
 #else
 #define DEF(id, size, n_pop, n_push, f) { size, n_pop, n_push, OP_FMT_ ## f },
 #endif
-#include "quickjs-opcode.h"
+#include "third_party/quickjs/quickjs-opcode.inc"
 #undef DEF
 #undef FMT
 };
@@ -53615,12 +53608,12 @@ static JSValue js_atomics_op(JSContext *ctx,
         a = func_name((_Atomic(uint32_t) *)ptr, v);     \
         break;
 #endif
-        OP(ADD, atomic_fetch_add)
-        OP(AND, atomic_fetch_and)
-        OP(OR, atomic_fetch_or)
-        OP(SUB, atomic_fetch_sub)
-        OP(XOR, atomic_fetch_xor)
-        OP(EXCHANGE, atomic_exchange)
+        /* OP(ADD, atomic_fetch_add) */
+        /* OP(AND, atomic_fetch_and) */
+        /* OP(OR, atomic_fetch_or) */
+        /* OP(SUB, atomic_fetch_sub) */
+        /* OP(XOR, atomic_fetch_xor) */
+        /* OP(EXCHANGE, atomic_exchange) */
 #undef OP
 
     case ATOMICS_OP_LOAD | (0 << 3):

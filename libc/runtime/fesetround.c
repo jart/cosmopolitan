@@ -16,25 +16,36 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/dlfcn.h"
+#include "libc/runtime/fenv.h"
 
-char *dlerror(void) {
-  return "cosmopolitan doesn't support dsos";
-}
+/* TODO(jart): This needs tests. */
 
-void *dlopen(const char *file, int mode) {
-  return NULL;
-}
-
-void *dlsym(void *handle, const char *name) {
-  return NULL;
-}
-
-int dlclose(void *handle) {
-  return -1;
-}
-
-int dl_iterate_phdr(int callback(void *info, size_t size, void *data),
-                    void *data) {
-  return -1;
+/**
+ * Sets rounding mode.
+ *
+ * This configures the x87 FPU as well as SSE.
+ *
+ * @param mode may be FE_TONEAREST, FE_DOWNWARD, FE_UPWARD, or FE_TOWARDZERO
+ * @return 0 on success, or -1 on error
+ */
+int fesetround(int mode) {
+  uint16_t x87cw;
+  uint32_t ssecw;
+  switch (mode) {
+    case FE_TONEAREST:
+    case FE_DOWNWARD:
+    case FE_UPWARD:
+    case FE_TOWARDZERO:
+      asm("fnstcw\t%0" : "=m"(x87cw));
+      x87cw &= ~0x0c00;
+      x87cw |= mode;
+      asm volatile("fldcw\t%0" : /* no outputs */ : "m"(x87cw));
+      asm("stmxcsr\t%0" : "=m"(ssecw));
+      ssecw &= ~(0x0c00 << 3);
+      ssecw |= (mode << 3);
+      asm volatile("ldmxcsr\t%0" : /* no outputs */ : "m"(ssecw));
+      return 0;
+    default:
+      return -1;
+  }
 }

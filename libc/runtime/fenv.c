@@ -16,25 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/dlfcn.h"
+#include "libc/runtime/fenv.h"
 
-char *dlerror(void) {
-  return "cosmopolitan doesn't support dsos";
+/* TODO: implement these functions */
+
+int feclearexcept(int mask) {
+  return 0;
 }
 
-void *dlopen(const char *file, int mode) {
-  return NULL;
+int fegetenv(fenv_t *envp) {
+  return 0;
 }
 
-void *dlsym(void *handle, const char *name) {
-  return NULL;
+int feraiseexcept(int mask) {
+  return 0;
 }
 
-int dlclose(void *handle) {
-  return -1;
+int fetestexcept(int mask) {
+  return 0;
 }
 
-int dl_iterate_phdr(int callback(void *info, size_t size, void *data),
-                    void *data) {
-  return -1;
+int fesetenv(const fenv_t *envp) {
+  return 0;
 }

@@ -1,6 +1,6 @@
 /*
  * Regular Expression Engine
- * 
+ *
  * Copyright (c) 2017-2018 Fabrice Bellard
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,15 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <inttypes.h>
-#include <string.h>
-#include <assert.h>
+#include "libc/assert.h"
+#include "libc/fmt/fmt.h"
+#include "libc/limits.h"
+#include "libc/mem/alloca.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "third_party/quickjs/cutils.h"
+#include "third_party/quickjs/libregexp.h"
 
-#include "cutils.h"
-#include "libregexp.h"
+asm(".ident\t\"\\n\\n\
+QuickJS (MIT License)\\n\
+Copyright (c) 2017-2021 Fabrice Bellard\\n\
+Copyright (c) 2017-2021 Charlie Gordon\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+/* clang-format off */
 
 /*
   TODO:
@@ -49,7 +56,7 @@
 
 typedef enum {
 #define DEF(id, size) REOP_ ## id,
-#include "libregexp-opcode.h"
+#include "third_party/quickjs/libregexp-opcode.inc"
 #undef DEF
     REOP_COUNT,
 } REOPCodeEnum;
@@ -96,7 +103,7 @@ static const REOpCode reopcode_info[REOP_COUNT] = {
 #else
 #define DEF(id, size) { size },
 #endif
-#include "libregexp-opcode.h"
+#include "third_party/quickjs/libregexp-opcode.inc"
 #undef DEF
 };
 

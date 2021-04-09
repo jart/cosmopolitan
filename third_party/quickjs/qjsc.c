@@ -1,6 +1,6 @@
 /*
  * QuickJS command line compiler
- * 
+ *
  * Copyright (c) 2018-2021 Fabrice Bellard
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,20 +21,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <inttypes.h>
-#include <string.h>
-#include <assert.h>
-#include <unistd.h>
-#include <errno.h>
-#if !defined(_WIN32)
-#include <sys/wait.h>
-#endif
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
+#include "libc/fmt/fmt.h"
+#include "libc/log/log.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/x/x.h"
+#include "third_party/gdtoa/gdtoa.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/quickjs/cutils.h"
+#include "third_party/quickjs/quickjs-libc.h"
 
-#include "cutils.h"
-#include "quickjs-libc.h"
+asm(".ident\t\"\\n\\n\
+QuickJS (MIT License)\\n\
+Copyright (c) 2017-2021 Fabrice Bellard\\n\
+Copyright (c) 2017-2021 Charlie Gordon\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+/* clang-format off */
 
 typedef struct {
     char *name;
@@ -208,7 +214,7 @@ static int js_module_dummy_init(JSContext *ctx, JSModuleDef *m)
 
 static void find_unique_cname(char *cname, size_t cname_size)
 {
-    char cname1[1024];
+    char *cname1;
     int suffix_num;
     size_t len, max_len;
     assert(cname_size >= 32);
@@ -219,13 +225,16 @@ static void find_unique_cname(char *cname, size_t cname_size)
     if (len > max_len)
         cname[max_len] = '\0';
     suffix_num = 1;
+    cname1 = NULL;
     for(;;) {
-        snprintf(cname1, sizeof(cname1), "%s_%d", cname, suffix_num);
+        free(cname1);
+        cname1 = xasprintf("%s_%d", cname, suffix_num);
         if (!namelist_find(&cname_list, cname1))
             break;
         suffix_num++;
     }
     pstrcpy(cname, cname_size, cname1);
+    free(cname1);
 }
 
 JSModuleDef *jsc_module_loader(JSContext *ctx,

@@ -1,6 +1,6 @@
 /*
  * QuickJS C library
- * 
+ *
  * Copyright (c) 2017-2021 Fabrice Bellard
  * Copyright (c) 2017-2021 Charlie Gordon
  *
@@ -22,54 +22,36 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <inttypes.h>
-#include <string.h>
-#include <assert.h>
-#include <unistd.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/time.h>
-#include <time.h>
-#include <signal.h>
-#include <limits.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#if defined(_WIN32)
-#include <windows.h>
-#include <conio.h>
-#include <utime.h>
-#else
-#include <dlfcn.h>
-#include <termios.h>
-#include <sys/ioctl.h>
-#include <sys/wait.h>
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/ioctl.h"
+#include "libc/calls/struct/winsize.h"
+#include "libc/calls/termios.h"
+#include "libc/errno.h"
+#include "libc/fmt/conv.h"
+#include "libc/fmt/fmt.h"
+#include "libc/limits.h"
+#include "libc/runtime/dlfcn.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/sock/select.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/termios.h"
+#include "libc/sysv/consts/w.h"
+#include "libc/time/time.h"
+#include "third_party/quickjs/cutils.h"
+#include "third_party/quickjs/list.h"
+#include "third_party/quickjs/quickjs-libc.h"
 
-#if defined(__APPLE__)
-typedef sig_t sighandler_t;
-#if !defined(environ)
-#include <crt_externs.h>
-#define environ (*_NSGetEnviron())
-#endif
-#endif /* __APPLE__ */
+asm(".ident\t\"\\n\\n\
+QuickJS (MIT License)\\n\
+Copyright (c) 2017-2021 Fabrice Bellard\\n\
+Copyright (c) 2017-2021 Charlie Gordon\"");
+asm(".include \"libc/disclaimer.inc\"");
 
-#endif
-
-#if !defined(_WIN32)
-/* enable the os.Worker API. IT relies on POSIX threads */
-#define USE_WORKER
-#endif
-
-#ifdef USE_WORKER
-#include <pthread.h>
-#include <stdatomic.h>
-#endif
-
-#include "cutils.h"
-#include "list.h"
-#include "quickjs-libc.h"
+/* clang-format off */
 
 /* TODO:
    - add socket calls
@@ -1463,7 +1445,9 @@ static JSClassDef js_std_file_class = {
     .finalizer = js_std_file_finalizer,
 }; 
 
-static const JSCFunctionListEntry js_std_error_props[] = {
+static JSCFunctionListEntry js_std_error_props[11];
+static textstartup void js_std_error_props_init() {
+  JSCFunctionListEntry props[] = {
     /* various errno values */
 #define DEF(x) JS_PROP_INT32_DEF(#x, x, JS_PROP_CONFIGURABLE )
     DEF(EINVAL),
@@ -1478,7 +1462,11 @@ static const JSCFunctionListEntry js_std_error_props[] = {
     DEF(EPIPE),
     DEF(EBADF),
 #undef DEF
-};
+  };
+  _Static_assert(sizeof(js_std_error_props) == sizeof(props));
+  memcpy(js_std_error_props, props, sizeof(props));
+}
+const void *const js_std_error_props_ctor[] initarray = {js_std_error_props_init};
 
 static const JSCFunctionListEntry js_std_funcs[] = {
     JS_CFUNC_DEF("exit", 1, js_std_exit ),
@@ -2816,15 +2804,14 @@ static int my_execvpe(const char *filename, char **argv, char **envp)
         
         execve(buf, argv, envp);
 
-        switch(errno) {
-        case EACCES:
-            eacces_error = TRUE;
-            break;
-        case ENOENT:
-        case ENOTDIR:
-            break;
-        default:
-            return -1;
+        if (errno == EACCES) {
+          eacces_error = TRUE;
+        } else if (errno == ENOENT) {
+          /* do nothing */
+        } else if (errno == ENOTDIR) {
+          /* do nothing */
+        } else {
+          return -1;
         }
     }
     if (eacces_error)
@@ -2958,7 +2945,7 @@ static JSValue js_os_exec(JSContext *ctx, JSValueConst this_val,
     }
     if (pid == 0) {
         /* child */
-        int fd_max = sysconf(_SC_OPEN_MAX);
+        int fd_max = 128 /* sysconf(_SC_OPEN_MAX) */;
 
         /* remap the stdin/stdout/stderr handles if necessary */
         for(i = 0; i < 3; i++) {
@@ -3577,7 +3564,9 @@ void js_std_set_worker_new_context_func(JSContext *(*func)(JSRuntime *rt))
 
 #define OS_FLAG(x) JS_PROP_INT32_DEF(#x, x, JS_PROP_CONFIGURABLE )
 
-static const JSCFunctionListEntry js_os_funcs[] = {
+static JSCFunctionListEntry js_os_funcs[68];
+static textstartup void js_os_funcs_init() {
+  JSCFunctionListEntry funcs[] = {
     JS_CFUNC_DEF("open", 2, js_os_open ),
     OS_FLAG(O_RDONLY),
     OS_FLAG(O_WRONLY),
@@ -3657,7 +3646,11 @@ static const JSCFunctionListEntry js_os_funcs[] = {
     JS_CFUNC_DEF("dup", 1, js_os_dup ),
     JS_CFUNC_DEF("dup2", 2, js_os_dup2 ),
 #endif
-};
+  };
+  _Static_assert(sizeof(js_os_funcs) == sizeof(funcs));
+  memcpy(js_os_funcs, funcs, sizeof(funcs));
+}
+const void *const js_os_funcs_ctor[] initarray = {js_os_funcs_init};
 
 static int js_os_init(JSContext *ctx, JSModuleDef *m)
 {

@@ -1,6 +1,6 @@
 /*
  * Generation of Unicode tables
- * 
+ *
  * Copyright (c) 2017-2018 Fabrice Bellard
  * Copyright (c) 2017-2018 Charlie Gordon
  *
@@ -22,16 +22,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <inttypes.h>
-#include <string.h>
-#include <assert.h>
-#include <ctype.h>
-#include <time.h>
+#include "libc/alg/alg.h"
+#include "libc/assert.h"
+#include "libc/fmt/conv.h"
+#include "libc/fmt/fmt.h"
+#include "libc/log/log.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "third_party/quickjs/cutils.h"
 
-#include "cutils.h"
+asm(".ident\t\"\\n\\n\
+QuickJS (MIT License)\\n\
+Copyright (c) 2017-2021 Fabrice Bellard\\n\
+Copyright (c) 2017-2021 Charlie Gordon\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+/* clang-format off */
 
 /* define it to be able to test unicode.c */
 //#define USE_TEST
@@ -58,7 +66,7 @@
 */
 
 #ifdef USE_TEST
-#include "libunicode.c"
+#include "third_party/quickjs/libunicode.c"
 #endif
 
 #define CHARCODE_MAX 0x10ffff
@@ -154,20 +162,20 @@ char *get_line(char *buf, int buf_size, FILE *f)
 
 typedef enum {
 #define DEF(id, str) GCAT_ ## id,
-#include "unicode_gen_def.h"
+#include "third_party/quickjs/unicode_gen_def.inc"
 #undef DEF
     GCAT_COUNT,
 } UnicodeGCEnum1;
 
 static const char *unicode_gc_name[] = {
 #define DEF(id, str) #id,
-#include "unicode_gen_def.h"
+#include "third_party/quickjs/unicode_gen_def.inc"
 #undef DEF
 };
 
 static const char *unicode_gc_short_name[] = {
 #define DEF(id, str) str,
-#include "unicode_gen_def.h"
+#include "third_party/quickjs/unicode_gen_def.inc"
 #undef DEF
 };
 
@@ -177,20 +185,20 @@ static const char *unicode_gc_short_name[] = {
 
 typedef enum {
 #define DEF(id, str) SCRIPT_ ## id,
-#include "unicode_gen_def.h"
+#include "third_party/quickjs/unicode_gen_def.inc"
 #undef DEF
     SCRIPT_COUNT,
 } UnicodeScriptEnum1;
 
 static const char *unicode_script_name[] = {
 #define DEF(id, str) #id,
-#include "unicode_gen_def.h"
+#include "third_party/quickjs/unicode_gen_def.inc"
 #undef DEF
 };
 
 const char *unicode_script_short_name[] = {
 #define DEF(id, str) str,
-#include "unicode_gen_def.h"
+#include "third_party/quickjs/unicode_gen_def.inc"
 #undef DEF
 };
 
@@ -200,20 +208,20 @@ const char *unicode_script_short_name[] = {
 
 typedef enum {
 #define DEF(id, str) PROP_ ## id,
-#include "unicode_gen_def.h"
+#include "third_party/quickjs/unicode_gen_def.inc"
 #undef DEF
     PROP_COUNT,
 } UnicodePropEnum1;
 
 static const char *unicode_prop_name[] = {
 #define DEF(id, str) #id,
-#include "unicode_gen_def.h"
+#include "third_party/quickjs/unicode_gen_def.inc"
 #undef DEF
 };
 
 static const char *unicode_prop_short_name[] = {
 #define DEF(id, str) str,
-#include "unicode_gen_def.h"
+#include "third_party/quickjs/unicode_gen_def.inc"
 #undef DEF
 };
 
@@ -3037,8 +3045,6 @@ int main(int argc, char **argv)
         fprintf(fo,
                 "/* Compressed unicode tables */\n"
                 "/* Automatically generated file - do not edit */\n"
-                "\n"
-                "#include <stdint.h>\n"
                 "\n");
         dump_case_conv_table(fo);
         compute_internal_props();
