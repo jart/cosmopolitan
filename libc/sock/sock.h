@@ -75,6 +75,60 @@ struct msghdr {            /* Linux+NT ABI */
   uint32_t msg_flags;      /* MSG_XXX */
 };
 
+
+/*
+ *  Structure used in SIOCGIFCONF request.
+ *  Used to retrieve interface configuration
+ *  for machine (useful for programs which
+ *  must know all networks accessible).
+ */
+struct ifconf {
+  int ifc_len;            /* size of buffer   */
+  union {
+    char *ifcu_buf;
+    struct ifreq *ifcu_req;
+  } ifc_ifcu;
+};
+
+/* Shortcuts to the ifconf buffer or ifreq array */
+#define ifc_buf ifc_ifcu.ifcu_buf       /* buffer address   */
+#define ifc_req ifc_ifcu.ifcu_req       /* array of structures  */
+
+#define IFHWADDRLEN	6
+#define IF_NAMESIZE	16
+#define IFNAMSIZ	IF_NAMESIZE
+struct ifreq {
+  union {
+    char ifrn_name[IFNAMSIZ];	/* Interface name, e.g. "en0".  */
+  } ifr_ifrn;
+
+  union {
+    struct sockaddr ifru_addr;
+    struct sockaddr ifru_dstaddr;
+    struct sockaddr ifru_broadaddr;
+    short int ifru_flags;
+    int ifru_ivalue;
+    int ifru_mtu;
+  } ifr_ifru;
+};
+# define ifr_name	ifr_ifrn.ifrn_name	/* interface name 	*/
+# define ifr_addr	ifr_ifru.ifru_addr	/* address		*/
+# define ifr_dstaddr	ifr_ifru.ifru_dstaddr	/* other end of p-p lnk	*/
+# define ifr_broadaddr	ifr_ifru.ifru_broadaddr	/* broadcast address	*/
+# define ifr_flags	ifr_ifru.ifru_flags	/* flags		*/
+# define ifr_metric	ifr_ifru.ifru_ivalue	/* metric		*/
+# define ifr_mtu	ifr_ifru.ifru_mtu	/* mtu			*/
+# define ifr_ifindex	ifr_ifru.ifru_ivalue    /* interface index      */
+# define ifr_bandwidth	ifr_ifru.ifru_ivalue	/* link bandwidth	*/
+# define ifr_qlen	ifr_ifru.ifru_ivalue	/* queue length		*/
+# define _IOT_ifreq	_IOT(_IOTS(char),IFNAMSIZ,_IOTS(char),16,0,0)
+# define _IOT_ifreq_short _IOT(_IOTS(char),IFNAMSIZ,_IOTS(short),1,0,0)
+# define _IOT_ifreq_int	_IOT(_IOTS(char),IFNAMSIZ,_IOTS(int),1,0,0)
+
+#define IFF_UP  (1<<0)
+
+
+
 const char *inet_ntop(int, const void *, char *, uint32_t);
 int inet_aton(const char *, struct in_addr *);
 int inet_pton(int, const char *, void *);

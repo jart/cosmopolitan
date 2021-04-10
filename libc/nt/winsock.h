@@ -85,6 +85,7 @@
 #define kNtSioTranslateHandle             0xC800000Du
 #define kNtSioUdpConnreset                0x9800000Cu
 #define kNtSioUdpNetreset                 0x9800000Fu
+#define kNtSioGetInterfaceList            0x4008747fu /* _IOR('t', 127, ULONG) */
 
 #define kNtNspNotifyImmediately 0
 #define kNtNspNotifyHwnd        1
@@ -309,6 +310,13 @@ struct NtWsaCompletion {
 struct NtFdSet {
   uint32_t fd_count;
   int64_t fd_array[64];
+};
+
+struct NtInterfaceInfo {
+  uint64_t           iiFlags;
+  struct sockaddr_in iiAddress;
+  struct sockaddr_in iiBroadcastAddress;
+  struct sockaddr_in iiNetmask;
 };
 
 /**
