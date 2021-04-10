@@ -100,6 +100,8 @@ TEST(powl, test) {
   EXPECT_TRUE(isnan(powl(-3, -(1. / MAX(rando, 2)))));
   EXPECT_STREQ("-.3333333333333333", gc(xdtoal(powl(-3, -1))));
   EXPECT_STREQ(".1111111111111111", gc(xdtoal(powl(-3, -2))));
+  EXPECT_STREQ("-0", gc(xdtoal(powl(-0., MAX(1, rando) | 1))));
+  EXPECT_STREQ("0", gc(xdtoal(powl(-0., MAX(1, rando) & ~1))));
 }
 
 TEST(pow, test) {
@@ -150,6 +152,8 @@ TEST(pow, test) {
   EXPECT_STREQ("inf", fmtd(pow(-0., -(rando & -2))));
   EXPECT_STREQ("-0.333333333333333", fmtd(pow(-3, -1)));
   EXPECT_STREQ("0.111111111111111", fmtd(pow(-3, -2)));
+  EXPECT_STREQ("-0", gc(xdtoa(pow(-0., MAX(1, rando) | 1))));
+  EXPECT_STREQ("0", gc(xdtoa(pow(-0., MAX(1, rando) & ~1))));
 }
 
 TEST(powf, test) {
@@ -200,6 +204,8 @@ TEST(powf, test) {
   EXPECT_STREQ("inf", fmtf(powf(-0., -(rando & -2))));
   EXPECT_STREQ("-0.333333", fmtf(powf(-3, -1)));
   EXPECT_STREQ("0.111111", fmtf(powf(-3, -2)));
+  EXPECT_STREQ("-0", gc(xdtoaf(powf(-0., MAX(1, rando) | 1))));
+  EXPECT_STREQ("0", gc(xdtoaf(powf(-0., MAX(1, rando) & ~1))));
 }
 
 TEST(powl, errors) {
@@ -537,6 +543,15 @@ TEST(powl, errors) {
   errno = 0;
   EXPECT_STREQ("inf", fmtd(pow(__DBL_MAX__, __DBL_MAX__)));
   /* EXPECT_EQ(ERANGE, errno); */
+  EXPECT_STREQ("1", gc(xasprintf("%.15g", pow(0., 0))));
+  EXPECT_STREQ("1", gc(xasprintf("%.15g", pow(-0., 0))));
+  EXPECT_STREQ("-0", gc(xasprintf("%.15g", pow(-0., 1))));
+  EXPECT_STREQ("-0", gc(xasprintf("%.15g", pow(-0., 11))));
+  EXPECT_STREQ("-0", gc(xasprintf("%.15g", pow(-0., 111))));
+  EXPECT_STREQ("0", gc(xasprintf("%.15g", pow(-0., 2))));
+  EXPECT_STREQ("0", gc(xasprintf("%.15g", pow(-0., 22))));
+  EXPECT_STREQ("0", gc(xasprintf("%.15g", pow(-0., 222))));
+  EXPECT_STREQ("0", gc(xasprintf("%.15g", pow(-0., 2.5))));
 }
 
 BENCH(powl, bench) {

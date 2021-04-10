@@ -22,6 +22,7 @@
  * Returns hyperbolic tangent of 𝑥.
  */
 float tanhf(float x) {
+  if (!x) return x;
   if (isinf(x)) return copysignf(1, x);
   return sinhf(x) / coshf(x);
 }

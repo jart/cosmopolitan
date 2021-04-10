@@ -729,7 +729,7 @@ strtod(CONST char *s00, char **se)
 				}
 #endif /*Sudden_Underflow*/
 #endif /*Avoid_Underflow*/
-			dval(&adj) *= ulp(&rv);
+			dval(&adj) *= ulp(&rv); /* XXX */
 			if (dsign) {
 				if (word0(&rv) == Big0 && word1(&rv) == Big1)
 					goto ovfl;

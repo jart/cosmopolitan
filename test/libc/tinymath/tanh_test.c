@@ -29,6 +29,7 @@ TEST(tanhl, test) {
   EXPECT_STREQ(".09966799462495582", gc(xdtoal(tanhl(+.1))));
   EXPECT_STREQ("-.09966799462495582", gc(xdtoal(tanhl(-.1))));
   EXPECT_STREQ("0", gc(xdtoal(tanhl(0))));
+  EXPECT_STREQ("-0", gc(xdtoal(tanhl(-0.))));
   EXPECT_TRUE(isnan(tanhl(NAN)));
   EXPECT_STREQ("1", gc(xdtoal(tanhl(INFINITY))));
   EXPECT_STREQ("-1", gc(xdtoal(tanhl(-INFINITY))));
@@ -38,6 +39,7 @@ TEST(tanh, test) {
   EXPECT_STREQ(".0996679946249559", gc(xdtoa(tanh(+.1))));
   EXPECT_STREQ("-.0996679946249559", gc(xdtoa(tanh(-.1))));
   EXPECT_STREQ("0", gc(xdtoa(tanh(0))));
+  EXPECT_STREQ("-0", gc(xdtoa(tanh(-0.))));
   EXPECT_TRUE(isnan(tanh(NAN)));
   EXPECT_STREQ("1", gc(xdtoa(tanh(INFINITY))));
   EXPECT_STREQ("-1", gc(xdtoa(tanh(-INFINITY))));
@@ -47,6 +49,7 @@ TEST(tanhf, test) {
   EXPECT_STREQ(".099668", gc(xdtoaf(tanhf(+.1))));
   EXPECT_STREQ("-.099668", gc(xdtoaf(tanhf(-.1))));
   EXPECT_STREQ("0", gc(xdtoaf(tanhf(0))));
+  EXPECT_STREQ("-0", gc(xdtoaf(tanhf(-0.))));
   EXPECT_TRUE(isnan(tanhf(NAN)));
   EXPECT_STREQ("1", gc(xdtoaf(tanhf(INFINITY))));
   EXPECT_STREQ("-1", gc(xdtoaf(tanhf(-INFINITY))));

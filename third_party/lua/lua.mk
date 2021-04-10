@@ -41,7 +41,7 @@ THIRD_PARTY_LUA_DEPS :=					\
 $(THIRD_PARTY_LUA_A):					\
 		third_party/lua/			\
 		$(THIRD_PARTY_LUA_A).pkg		\
-		$(filter-out %/lua.c,$(THIRD_PARTY_LUA_OBJS))
+		$(filter-out %/lua.o,$(THIRD_PARTY_LUA_OBJS))
 
 $(THIRD_PARTY_LUA_A).pkg:				\
 		$(THIRD_PARTY_LUA_OBJS)			\

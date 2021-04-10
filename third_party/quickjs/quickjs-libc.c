@@ -2764,61 +2764,6 @@ static char **build_envp(JSContext *ctx, JSValueConst obj)
     goto done;
 }
 
-/* execvpe is not available on non GNU systems */
-static int my_execvpe(const char *filename, char **argv, char **envp)
-{
-    char *path, *p, *p_next, *p1;
-    char buf[PATH_MAX];
-    size_t filename_len, path_len;
-    BOOL eacces_error;
-    
-    filename_len = strlen(filename);
-    if (filename_len == 0) {
-        errno = ENOENT;
-        return -1;
-    }
-    if (strchr(filename, '/'))
-        return execve(filename, argv, envp);
-    
-    path = getenv("PATH");
-    if (!path)
-        path = (char *)"/bin:/usr/bin";
-    eacces_error = FALSE;
-    p = path;
-    for(p = path; p != NULL; p = p_next) {
-        p1 = strchr(p, ':');
-        if (!p1) {
-            p_next = NULL;
-            path_len = strlen(p);
-        } else {
-            p_next = p1 + 1;
-            path_len = p1 - p;
-        }
-        /* path too long */
-        if ((path_len + 1 + filename_len + 1) > PATH_MAX)
-            continue;
-        memcpy(buf, p, path_len);
-        buf[path_len] = '/';
-        memcpy(buf + path_len + 1, filename, filename_len);
-        buf[path_len + 1 + filename_len] = '\0';
-        
-        execve(buf, argv, envp);
-
-        if (errno == EACCES) {
-          eacces_error = TRUE;
-        } else if (errno == ENOENT) {
-          /* do nothing */
-        } else if (errno == ENOTDIR) {
-          /* do nothing */
-        } else {
-          return -1;
-        }
-    }
-    if (eacces_error)
-        errno = EACCES;
-    return -1;
-}
-
 /* exec(args[, options]) -> exitcode */
 static JSValue js_os_exec(JSContext *ctx, JSValueConst this_val,
                           int argc, JSValueConst *argv)
@@ -2973,7 +2918,7 @@ static JSValue js_os_exec(JSContext *ctx, JSValueConst this_val,
         if (!file)
             file = exec_argv[0];
         if (use_path)
-            ret = my_execvpe(file, (char **)exec_argv, envp);
+            ret = execvpe(file, (char **)exec_argv, envp);
         else
             ret = execve(file, (char **)exec_argv, envp);
         _exit(127);

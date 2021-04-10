@@ -22,5 +22,5 @@
  * Returns inverse hyperbolic tangent of 𝑥.
  */
 long double atanhl(long double x) {
-  return logl((1 + x) / (1 - x)) / 2;
+  return x ? logl((1 + x) / (1 - x)) / 2 : x;
 }

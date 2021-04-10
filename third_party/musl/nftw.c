@@ -38,7 +38,13 @@ Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-#define pthread_setcancelstate(...) /* no cosmo pthreads support atm */
+/* no reason to impose windows limit
+   small enough to fit in stack frame
+   should be changed to use realloc */
+#define PATH_MAX2 2048
+
+/* no cosmo pthreads support atm */
+#define pthread_setcancelstate(...)
 
 /* clang-format off */
 
@@ -123,7 +129,7 @@ static int do_nftw(char *path, int (*fn)(const char *, const struct stat *, int,
 				 && (!de->d_name[1]
 				  || (de->d_name[1]=='.'
 				   && !de->d_name[2]))) continue;
-				if (strlen(de->d_name) >= PATH_MAX-l) {
+				if (strlen(de->d_name) >= PATH_MAX2-l) {
 					errno = ENAMETOOLONG;
 					closedir(d);
 					return -1;
@@ -149,16 +155,21 @@ static int do_nftw(char *path, int (*fn)(const char *, const struct stat *, int,
 	return 0;
 }
 
+/**
+ * Walks file tree.
+ *
+ * @see examples/walk.c for example
+ */
 int nftw(const char *path, int (*fn)(const char *, const struct stat *, int, struct FTW *), int fd_limit, int flags)
 {
 	int r, cs;
 	size_t l;
-	char pathbuf[PATH_MAX+1];
+	char pathbuf[PATH_MAX2+1];
 
 	if (fd_limit <= 0) return 0;
 
 	l = strlen(path);
-	if (l > PATH_MAX) {
+	if (l > PATH_MAX2) {
 		errno = ENAMETOOLONG;
 		return -1;
 	}

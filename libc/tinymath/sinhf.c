@@ -22,5 +22,6 @@
  * Returns hyperbolic sine of 𝑥.
  */
 float sinhf(float x) {
+  if (!x) return x;
   return (expf(x) - expf(-x)) / 2;
 }

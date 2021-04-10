@@ -931,7 +931,8 @@ void load_config(const char *filename)
     if (!f) {
         perror_exit(1, filename);
     }
-    base_name = get_basename(filename);
+    /* base_name = get_basename(filename); */
+    base_name = strdup("");
     
     while (fgets(buf, sizeof(buf), f) != NULL) {
         char *p, *q;
@@ -1672,6 +1673,8 @@ int run_test(const char *filename, int index)
             if (p) {
                 snprintf(harnessbuf, sizeof(harnessbuf), "%.*s%s",
                          (int)(p - filename), filename, "test/harness");
+            } else {
+                strcpy(harnessbuf, ""); /* XXX */
             }
             harness = harnessbuf;
         }
@@ -1946,6 +1949,8 @@ int main(int argc, char **argv)
     const char *filename;
     BOOL is_test262_harness = FALSE;
     BOOL is_module = FALSE;
+
+    showcrashreports();
 
 #if !defined(_WIN32)
     /* Date tests assume California local time */

@@ -19,16 +19,18 @@
 #include "libc/runtime/fenv.h"
 
 int __flt_rounds(void) {
-  switch (fegetround()) {
-    case FE_TOWARDZERO:
+  int x87cw;
+  asm("fnstcw\t%0" : "=m"(x87cw));
+  switch ((x87cw & 0x0c00) >> 10) {
+    case FE_TOWARDZERO >> 10:
       return 0;
-    case FE_TONEAREST:
+    case FE_TONEAREST >> 10:
       return 1;
-    case FE_UPWARD:
+    case FE_UPWARD >> 10:
       return 2;
-    case FE_DOWNWARD:
+    case FE_DOWNWARD >> 10:
       return 3;
     default:
-      return -1;
+      unreachable;
   }
 }

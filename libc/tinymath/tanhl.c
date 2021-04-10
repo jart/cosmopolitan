@@ -22,6 +22,7 @@
  * Returns hyperbolic tangent of 𝑥.
  */
 long double tanhl(long double x) {
+  if (!x) return x;
   if (isinf(x)) return copysignl(1, x);
   return sinhl(x) / coshl(x);
 }

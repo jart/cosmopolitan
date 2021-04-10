@@ -18,8 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/fenv.h"
 
-/* TODO(jart): This needs tests. */
-
 /**
  * Sets rounding mode.
  *

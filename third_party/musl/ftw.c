@@ -34,6 +34,12 @@ asm(".include \"libc/disclaimer.inc\"");
 
 /* clang-format off */
 
+/**
+ * Walks file tree.
+ *
+ * @see examples/walk.c for example
+ * @see nftw()
+ */
 int ftw(const char *path, int (*fn)(const char *, const struct stat *, int), int fd_limit)
 {
 	/* The following cast assumes that calling a function with one

@@ -11296,11 +11296,11 @@ static char *i64toa(char *buf_end, int64_t n, unsigned int base)
 static void js_ecvt1(double d, int n_digits, int *decpt, int *sign, char *buf,
                      int rounding_mode, char *buf1, int buf1_size)
 {
-    /* if (rounding_mode != FE_TONEAREST) */
-    /*     fesetround(rounding_mode); */
+    if (rounding_mode != FE_TONEAREST)
+        fesetround(rounding_mode);
     snprintf(buf1, buf1_size, "%+.*e", n_digits - 1, d);
-    /* if (rounding_mode != FE_TONEAREST) */
-    /*     fesetround(FE_TONEAREST); */
+    if (rounding_mode != FE_TONEAREST)
+        fesetround(FE_TONEAREST);
     *sign = (buf1[0] == '-');
     /* mantissa */
     buf[0] = buf1[1];
@@ -53608,12 +53608,12 @@ static JSValue js_atomics_op(JSContext *ctx,
         a = func_name((_Atomic(uint32_t) *)ptr, v);     \
         break;
 #endif
-        /* OP(ADD, atomic_fetch_add) */
-        /* OP(AND, atomic_fetch_and) */
-        /* OP(OR, atomic_fetch_or) */
-        /* OP(SUB, atomic_fetch_sub) */
-        /* OP(XOR, atomic_fetch_xor) */
-        /* OP(EXCHANGE, atomic_exchange) */
+        OP(ADD, atomic_fetch_add)
+        OP(AND, atomic_fetch_and)
+        OP(OR, atomic_fetch_or)
+        OP(SUB, atomic_fetch_sub)
+        OP(XOR, atomic_fetch_xor)
+        OP(EXCHANGE, atomic_exchange)
 #undef OP
 
     case ATOMICS_OP_LOAD | (0 << 3):

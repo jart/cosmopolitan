@@ -37,7 +37,8 @@ TEST_LIBC_TINYMATH_DIRECTDEPS =					\
 	LIBC_TESTLIB						\
 	LIBC_TINYMATH						\
 	LIBC_UNICODE						\
-	LIBC_X
+	LIBC_X							\
+	THIRD_PARTY_GDTOA
 
 TEST_LIBC_TINYMATH_DEPS :=					\
 	$(call uniq,$(foreach x,$(TEST_LIBC_TINYMATH_DIRECTDEPS),$($(x))))

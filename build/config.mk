@@ -69,6 +69,9 @@ CONFIG_CCFLAGS +=		\
 	$(BACKTRACES)		\
 	-O2
 
+TARGET_ARCH ?=			\
+	-msse3
+
 endif
 
 # Debug Mode
@@ -88,7 +91,7 @@ CONFIG_CPPFLAGS +=		\
 CONFIG_CCFLAGS +=		\
 	$(BACKTRACES)		\
 	$(FTRACE)		\
-	-O2
+	-Og
 
 CONFIG_COPTS +=			\
 	$(SECURITY_BLANKETS)	\

@@ -22,6 +22,7 @@
  * Returns hyperbolic tangent of 𝑥.
  */
 double tanh(double x) {
+  if (!x) return x;
   if (isinf(x)) return copysign(1, x);
   return sinh(x) / cosh(x);
 }
