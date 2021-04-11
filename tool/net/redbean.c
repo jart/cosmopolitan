@@ -2547,6 +2547,13 @@ static int LuaReleaseRegex(lua_State *L) {
   return 0;
 }
 
+static bool HasLuaHandler() {
+  bool r = lua_getglobal(L, "Handler") == LUA_TFUNCTION;
+  lua_pop(L, 1);
+
+  return r;
+}
+
 static void LuaRun(const char *path) {
   struct Asset *a;
   const char *code;
@@ -2686,6 +2693,29 @@ static void LuaReload(void) {
 #ifndef STATIC
   LuaRun(".reload.lua");
 #endif
+}
+
+const char *CallLuaHandler(const char *path, size_t pathlen) {
+  lua_getglobal(L, "Handler");
+
+  char *p;
+  luaheaderp = NULL;
+  sauce = FreeLater(strndup(request.path.p + 1, request.path.n - 1));
+  if(lua_pcall(L, 0, 0, 0) == LUA_OK) {
+    if (!(p = luaheaderp)) {
+      p = SetStatus(200, "OK");
+      p = AppendContentType(p, "text/html");
+    }
+    if (outbuf.n) {
+      p = CommitOutput(p);
+    }
+    return p;
+  } else {
+    WARNF("%s %s", clientaddrstr, lua_tostring(L, -1));
+    lua_pop(L, 1); /* remove message */
+    connectionclose = true;
+    return ServeError(500, "Internal Server Error");
+  }
 }
 
 static char *ServeLua(struct Asset *a) {
