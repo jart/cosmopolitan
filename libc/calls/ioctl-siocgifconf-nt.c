@@ -25,7 +25,7 @@
 #include "libc/nt/winsock.h"
 
 // TODO: Remove me
-#include "libc/stdio/stdio.h"
+//#include "libc/stdio/stdio.h"
 
 #define MAX_INTERFACES  32
 
@@ -52,10 +52,12 @@ textwindows int ioctl_siocgifconf_nt(int fd, struct ifconf *ifc) {
   }
 
   count = dwBytes / sizeof(struct NtInterfaceInfo);
+  /*
   printf("CI> SIO_GET_INTERFACE_LIST success:\n");
   for (i = 0; i < count; ++i) {
     printf("CI>\t #i: %08x\n", i, iflist[i].iiAddress.sin_addr.s_addr);
   }
+  */
   return ret;
 }
 
