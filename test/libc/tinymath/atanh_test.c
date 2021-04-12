@@ -27,6 +27,7 @@
 
 TEST(atanh, test) {
   EXPECT_STREQ("0", gc(xdtoa(atanh(0))));
+  EXPECT_STREQ("-0", gc(xdtoa(atanh(-0.))));
   EXPECT_STREQ(".549306144334055", gc(xdtoa(atanh(.5))));
   EXPECT_STREQ("-.549306144334055", gc(xdtoa(atanh(-.5))));
   EXPECT_STREQ("INFINITY", gc(xdtoa(atanh(+1))));
@@ -37,6 +38,7 @@ TEST(atanh, test) {
 
 TEST(atanhl, test) {
   EXPECT_STREQ("0", gc(xdtoal(atanhl(0))));
+  EXPECT_STREQ("-0", gc(xdtoal(atanhl(-0.))));
   EXPECT_STREQ(".5493061443340548", gc(xdtoal(atanhl(.5))));
   EXPECT_STREQ("-.5493061443340548", gc(xdtoal(atanhl(-.5))));
   EXPECT_STREQ("INFINITY", gc(xdtoal(atanhl(+1))));
@@ -47,6 +49,7 @@ TEST(atanhl, test) {
 
 TEST(atanhf, test) {
   EXPECT_STREQ("0", gc(xdtoaf(atanhf(0))));
+  EXPECT_STREQ("-0", gc(xdtoaf(atanhf(-0.))));
   EXPECT_STREQ(".549306", gc(xdtoaf(atanhf(.5))));
   EXPECT_STREQ("-.549306", gc(xdtoaf(atanhf(-.5))));
   EXPECT_STREQ("INFINITY", gc(xdtoaf(atanhf(+1))));

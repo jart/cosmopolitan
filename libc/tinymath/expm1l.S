@@ -19,7 +19,7 @@
 #include "libc/runtime/pc.internal.h"
 #include "libc/macros.internal.h"
 
-//	Returns 𝑒^x-1.
+//	Returns 𝑒^𝑥-𝟷.
 //
 //	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
 //	@return	result of exponentiation on FPU stack in %st
@@ -27,11 +27,13 @@ expm1l:	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	fldt	16(%rbp)
-	fxam					# isinf(x)
+	fxam
 	fstsw	%ax
 	mov	%ah,%al
-	and	$0x45,%ah
-	cmp	$5,%ah
+	and	$(FPU_C3|FPU_C2|FPU_C0)>>8,%ah
+	cmp	$(FPU_C3)>>8,%ah		# !x
+	je	0f
+	cmp	$(FPU_C2|FPU_C0)>>8,%ah		# isinf(x)
 	je	1f
 	fldl2e
 	fmulp	%st,%st(1)
@@ -50,7 +52,7 @@ expm1l:	push	%rbp
 	faddp	%st,%st(1)
 0:	pop	%rbp
 	ret
-1:	test	$2,%al				# signbit(x)
+1:	test	$FPU_C1>>8,%al			# signbit(x)
 	jz	0b
 	fstp	%st
 	fld1

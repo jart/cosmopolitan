@@ -22,5 +22,5 @@
  * Returns inverse hyperbolic tangent of 𝑥.
  */
 float atanhf(float x) {
-  return logf((1 + x) / (1 - x)) / 2;
+  return x ? logf((1 + x) / (1 - x)) / 2 : x;
 }

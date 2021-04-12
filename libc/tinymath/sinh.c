@@ -22,5 +22,6 @@
  * Returns hyperbolic sine of 𝑥.
  */
 double sinh(double x) {
+  if (!x) return x;
   return (exp(x) - exp(-x)) / 2;
 }

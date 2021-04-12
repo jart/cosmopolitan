@@ -1,0 +1,7 @@
+Source:
+- https://bellard.org/quickjs/quickjs-2021-03-27.tar.xz
+
+Local Changes:
+- Replace snprintf with xasprintf in find_unique_cname
+- Squash uninitialized read of harnessbuf in run-test262.c
+- Change run-test262.c to not rebase configured paths

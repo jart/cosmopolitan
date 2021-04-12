@@ -1,0 +1,734 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!-- Created by GNU Texinfo 6.1, http://www.gnu.org/software/texinfo/ -->
+<head>
+<title>Javascript Bignum Extensions</title>
+
+<meta name="description" content="Javascript Bignum Extensions">
+<meta name="keywords" content="Javascript Bignum Extensions">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link href="#SEC_Contents" rel="contents" title="Table of Contents">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+blockquote.indentedblock {margin-right: 0em}
+blockquote.smallindentedblock {margin-right: 0em; font-size: smaller}
+blockquote.smallquotation {font-size: smaller}
+div.display {margin-left: 3.2em}
+div.example {margin-left: 3.2em}
+div.lisp {margin-left: 3.2em}
+div.smalldisplay {margin-left: 3.2em}
+div.smallexample {margin-left: 3.2em}
+div.smalllisp {margin-left: 3.2em}
+kbd {font-style: oblique}
+pre.display {font-family: inherit}
+pre.format {font-family: inherit}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: inherit; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: inherit; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.nolinebreak {white-space: nowrap}
+span.roman {font-family: initial; font-weight: normal}
+span.sansserif {font-family: sans-serif; font-weight: normal}
+ul.no-bullet {list-style: none}
+-->
+</style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+</head>
+
+<body lang="en">
+<h1 class="settitle" align="center">Javascript Bignum Extensions</h1>
+
+<a name="SEC_Contents"></a>
+<h2 class="contents-heading">Table of Contents</h2>
+
+<div class="contents">
+<ul class="no-bullet">
+<li><a name="toc-Introduction" href="#Introduction">1 Introduction</a></li>
+<li><a name="toc-Operator-overloading" href="#Operator-overloading">2 Operator overloading</a></li>
+<li><a name="toc-BigInt-extensions" href="#BigInt-extensions">3 BigInt extensions</a></li>
+<li><a name="toc-BigFloat" href="#BigFloat">4 BigFloat</a>
+<ul class="no-bullet">
+  <li><a name="toc-Introduction-1" href="#Introduction-1">4.1 Introduction</a></li>
+  <li><a name="toc-Floating-point-rounding" href="#Floating-point-rounding">4.2 Floating point rounding</a></li>
+  <li><a name="toc-Operators" href="#Operators">4.3 Operators</a></li>
+  <li><a name="toc-BigFloat-literals" href="#BigFloat-literals">4.4 BigFloat literals</a></li>
+  <li><a name="toc-Builtin-Object-changes" href="#Builtin-Object-changes">4.5 Builtin Object changes</a>
+  <ul class="no-bullet">
+    <li><a name="toc-BigFloat-function" href="#BigFloat-function">4.5.1 <code>BigFloat</code> function</a></li>
+    <li><a name="toc-BigFloat_002eprototype" href="#BigFloat_002eprototype">4.5.2 <code>BigFloat.prototype</code></a></li>
+    <li><a name="toc-BigFloatEnv-constructor" href="#BigFloatEnv-constructor">4.5.3 <code>BigFloatEnv</code> constructor</a></li>
+  </ul></li>
+</ul></li>
+<li><a name="toc-BigDecimal" href="#BigDecimal">5 BigDecimal</a>
+<ul class="no-bullet">
+  <li><a name="toc-Operators-1" href="#Operators-1">5.1 Operators</a></li>
+  <li><a name="toc-BigDecimal-literals" href="#BigDecimal-literals">5.2 BigDecimal literals</a></li>
+  <li><a name="toc-Builtin-Object-changes-1" href="#Builtin-Object-changes-1">5.3 Builtin Object changes</a>
+  <ul class="no-bullet">
+    <li><a name="toc-The-BigDecimal-function_002e" href="#The-BigDecimal-function_002e">5.3.1 The <code>BigDecimal</code> function.</a></li>
+    <li><a name="toc-Properties-of-the-BigDecimal-object" href="#Properties-of-the-BigDecimal-object">5.3.2 Properties of the <code>BigDecimal</code> object</a></li>
+    <li><a name="toc-Properties-of-the-BigDecimal_002eprototype-object" href="#Properties-of-the-BigDecimal_002eprototype-object">5.3.3 Properties of the <code>BigDecimal.prototype</code> object</a></li>
+  </ul></li>
+</ul></li>
+<li><a name="toc-Math-mode" href="#Math-mode">6 Math mode</a></li>
+
+</ul>
+</div>
+
+
+<a name="Introduction"></a>
+<h2 class="chapter">1 Introduction</h2>
+
+<p>The Bignum extensions add the following features to the Javascript
+language while being 100% backward compatible:
+</p>
+<ul>
+<li> Operator overloading with a dispatch logic inspired from the proposal available at <a href="https://github.com/tc39/proposal-operator-overloading/">https://github.com/tc39/proposal-operator-overloading/</a>.
+
+</li><li> Arbitrarily large floating point numbers (<code>BigFloat</code>) in base 2 using the IEEE 754 semantics.
+
+</li><li> Arbitrarily large floating point numbers (<code>BigDecimal</code>) in base 10 based on the proposal available at
+<a href="https://github.com/littledan/proposal-bigdecimal">https://github.com/littledan/proposal-bigdecimal</a>.
+
+</li><li> <code>math</code> mode: arbitrarily large integers and floating point numbers are available by default. The integer division and power can be overloaded for example to return a fraction. The modulo operator (<code>%</code>) is defined as the Euclidian
+remainder. <code>^</code> is an alias to the power operator
+(<code>**</code>). <code>^^</code> is used as the exclusive or operator.
+
+</li></ul>
+
+<p>The extensions are independent from each other except the <code>math</code>
+mode which relies on BigFloat and operator overloading.
+</p>
+<a name="Operator-overloading"></a>
+<h2 class="chapter">2 Operator overloading</h2>
+
+<p>Operator overloading is inspired from the proposal available at
+<a href="https://github.com/tc39/proposal-operator-overloading/">https://github.com/tc39/proposal-operator-overloading/</a>. It
+implements the same dispatch logic but finds the operator sets by
+looking at the <code>Symbol.operatorSet</code> property in the objects. The
+changes were done in order to simplify the implementation.
+</p>
+<p>More precisely, the following modifications were made:
+</p>
+<ul>
+<li> <code>with operators from</code> is not supported. Operator overloading is always enabled.
+
+</li><li> The dispatch is not based on a static <code>[[OperatorSet]]</code> field in all instances. Instead, a dynamic lookup of the <code>Symbol.operatorSet</code> property is done. This property is typically added in the prototype of each object.
+
+</li><li> <code>Operators.create(...dictionaries)</code> is used to create a new OperatorSet object. The <code>Operators</code> function is supported as an helper to be closer to the TC39 proposal.
+
+</li><li> <code>[]</code> cannot be overloaded.
+
+</li><li> In math mode, the BigInt division and power operators can be overloaded with <code>Operators.updateBigIntOperators(dictionary)</code>.
+
+</li></ul>
+
+<a name="BigInt-extensions"></a>
+<h2 class="chapter">3 BigInt extensions</h2>
+
+<p>A few properties are added to the BigInt object:
+</p>
+<dl compact="compact">
+<dt><code>tdiv(a, b)</code></dt>
+<dd><p>Return <em>trunc(a/b)</em>. <code>b = 0</code> raises a RangeError
+exception.
+</p>
+</dd>
+<dt><code>fdiv(a, b)</code></dt>
+<dd><p>Return <em>\lfloor a/b \rfloor</em>. <code>b = 0</code> raises a RangeError
+exception.
+</p>
+</dd>
+<dt><code>cdiv(a, b)</code></dt>
+<dd><p>Return <em>\lceil a/b \rceil</em>. <code>b = 0</code> raises a RangeError
+exception.
+</p>
+</dd>
+<dt><code>ediv(a, b)</code></dt>
+<dd><p>Return <em>sgn(b) \lfloor a/{|b|} \rfloor</em> (Euclidian
+division). <code>b = 0</code> raises a RangeError exception.
+</p>
+</dd>
+<dt><code>tdivrem(a, b)</code></dt>
+<dt><code>fdivrem(a, b)</code></dt>
+<dt><code>cdivrem(a, b)</code></dt>
+<dt><code>edivrem(a, b)</code></dt>
+<dd><p>Return an array of two elements. The first element is the quotient,
+the second is the remainder. The same rounding is done as the
+corresponding division operation.
+</p>
+</dd>
+<dt><code>sqrt(a)</code></dt>
+<dd><p>Return <em>\lfloor \sqrt(a) \rfloor</em>. A RangeError exception is
+raised if <em>a &lt; 0</em>.
+</p>
+</dd>
+<dt><code>sqrtrem(a)</code></dt>
+<dd><p>Return an array of two elements. The first element is <em>\lfloor
+\sqrt{a} \rfloor</em>. The second element is <em>a-\lfloor \sqrt{a}
+\rfloor^2</em>. A RangeError exception is raised if <em>a &lt; 0</em>.
+</p>
+</dd>
+<dt><code>floorLog2(a)</code></dt>
+<dd><p>Return -1 if <em>a \leq 0</em> otherwise return <em>\lfloor \log2(a) \rfloor</em>.
+</p>
+</dd>
+<dt><code>ctz(a)</code></dt>
+<dd><p>Return the number of trailing zeros in the two&rsquo;s complement binary representation of a. Return -1 if <em>a=0</em>.
+</p>
+</dd>
+</dl>
+
+<a name="BigFloat"></a>
+<h2 class="chapter">4 BigFloat</h2>
+
+<a name="Introduction-1"></a>
+<h3 class="section">4.1 Introduction</h3>
+
+<p>This extension adds the <code>BigFloat</code> primitive type. The
+<code>BigFloat</code> type represents floating point numbers in base 2
+with the IEEE 754 semantics. A floating
+point number is represented as a sign, mantissa and exponent. The
+special values <code>NaN</code>, <code>+/-Infinity</code>, <code>+0</code> and <code>-0</code>
+are supported. The mantissa and exponent can have any bit length with
+an implementation specific minimum and maximum.
+</p>
+<a name="Floating-point-rounding"></a>
+<h3 class="section">4.2 Floating point rounding</h3>
+
+<p>Each floating point operation operates with infinite precision and
+then rounds the result according to the specified floating point
+environment (<code>BigFloatEnv</code> object). The status flags of the
+environment are also set according to the result of the operation.
+</p>
+<p>If no floating point environment is provided, the global floating
+point environment is used.
+</p>
+<p>The rounding mode of the global floating point environment is always
+<code>RNDN</code> (&ldquo;round to nearest with ties to even&rdquo;)<a name="DOCF1" href="#FOOT1"><sup>1</sup></a>. The status flags of the global environment cannot be
+read<a name="DOCF2" href="#FOOT2"><sup>2</sup></a>. The precision of the global environment is
+<code>BigFloatEnv.prec</code>. The number of exponent bits of the global
+environment is <code>BigFloatEnv.expBits</code>. The global environment
+subnormal flag is set to <code>true</code>.
+</p>
+<p>For example, <code>prec = 53</code> and <code> expBits = 11</code> exactly give
+the same precision as the IEEE 754 64 bit floating point format. The
+default precision is <code>prec = 113</code> and <code> expBits = 15</code> (IEEE
+754 128 bit floating point format).
+</p>
+<p>The global floating point environment can only be modified temporarily
+when calling a function (see <code>BigFloatEnv.setPrec</code>). Hence a
+function can change the global floating point environment for its
+callees but not for its caller.
+</p>
+<a name="Operators"></a>
+<h3 class="section">4.3 Operators</h3>
+
+<p>The builtin operators are extended so that a BigFloat is returned if
+at least one operand is a BigFloat. The computations are always done
+with infinite precision and rounded according to the global floating
+point environment.
+</p>
+<p><code>typeof</code> applied on a <code>BigFloat</code> returns <code>bigfloat</code>.
+</p>
+<p>BigFloat can be compared with all the other numeric types and the
+result follows the expected mathematical relations.
+</p>
+<p>However, since BigFloat and Number are different types they are never
+equal when using the strict comparison operators (e.g. <code>0.0 ===
+0.0l</code> is false).
+</p>
+<a name="BigFloat-literals"></a>
+<h3 class="section">4.4 BigFloat literals</h3>
+
+<p>BigFloat literals are floating point numbers with a trailing <code>l</code>
+suffix. BigFloat literals have an infinite precision. They are rounded
+according to the global floating point environment when they are
+evaluated.<a name="DOCF3" href="#FOOT3"><sup>3</sup></a>
+</p>
+<a name="Builtin-Object-changes"></a>
+<h3 class="section">4.5 Builtin Object changes</h3>
+
+<a name="BigFloat-function"></a>
+<h4 class="subsection">4.5.1 <code>BigFloat</code> function</h4>
+
+<p>The <code>BigFloat</code> function cannot be invoked as a constructor. When
+invoked as a function: the parameter is converted to a primitive
+type. If the result is a numeric type, it is converted to BigFloat
+without rounding. If the result is a string, it is converted to
+BigFloat using the precision of the global floating point environment.
+</p>
+<p><code>BigFloat</code> properties:
+</p>
+<dl compact="compact">
+<dt><code>LN2</code></dt>
+<dt><code>PI</code></dt>
+<dd><p>Getter. Return the value of the corresponding mathematical constant
+rounded to nearest, ties to even with the current global
+precision. The constant values are cached for small precisions.
+</p>
+</dd>
+<dt><code>MIN_VALUE</code></dt>
+<dt><code>MAX_VALUE</code></dt>
+<dt><code>EPSILON</code></dt>
+<dd><p>Getter. Return the minimum, maximum and epsilon <code>BigFloat</code> values
+(same definition as the corresponding <code>Number</code> constants).
+</p>
+</dd>
+<dt><code>fpRound(a[, e])</code></dt>
+<dd><p>Round the floating point number <code>a</code> according to the floating
+point environment <code>e</code> or the global environment if <code>e</code> is
+undefined.
+</p>
+</dd>
+<dt><code>parseFloat(a[, radix[, e]])</code></dt>
+<dd><p>Parse the string <code>a</code> as a floating point number in radix
+<code>radix</code>. The radix is 0 (default) or from 2 to 36. The radix 0
+means radix 10 unless there is a hexadecimal or binary prefix. The
+result is rounded according to the floating point environment <code>e</code>
+or the global environment if <code>e</code> is undefined.
+</p>
+</dd>
+<dt><code>isFinite(a)</code></dt>
+<dd><p>Return true if <code>a</code> is a finite bigfloat.
+</p>
+</dd>
+<dt><code>isNaN(a)</code></dt>
+<dd><p>Return true if <code>a</code> is a NaN bigfloat.
+</p>
+</dd>
+<dt><code>add(a, b[, e])</code></dt>
+<dt><code>sub(a, b[, e])</code></dt>
+<dt><code>mul(a, b[, e])</code></dt>
+<dt><code>div(a, b[, e])</code></dt>
+<dd><p>Perform the specified floating point operation and round the floating
+point number <code>a</code> according to the floating point environment
+<code>e</code> or the global environment if <code>e</code> is undefined. If
+<code>e</code> is specified, the floating point status flags are updated.
+</p>
+</dd>
+<dt><code>floor(x)</code></dt>
+<dt><code>ceil(x)</code></dt>
+<dt><code>round(x)</code></dt>
+<dt><code>trunc(x)</code></dt>
+<dd><p>Round to an integer. No additional rounding is performed.
+</p>
+</dd>
+<dt><code>abs(x)</code></dt>
+<dd><p>Return the absolute value of x. No additional rounding is performed.
+</p>
+</dd>
+<dt><code>fmod(x, y[, e])</code></dt>
+<dt><code>remainder(x, y[, e])</code></dt>
+<dd><p>Floating point remainder. The quotient is truncated to zero (fmod) or
+to the nearest integer with ties to even (remainder). <code>e</code> is an
+optional floating point environment.
+</p>
+</dd>
+<dt><code>sqrt(x[, e])</code></dt>
+<dd><p>Square root. Return a rounded floating point number. <code>e</code> is an
+optional floating point environment.
+</p>
+</dd>
+<dt><code>sin(x[, e])</code></dt>
+<dt><code>cos(x[, e])</code></dt>
+<dt><code>tan(x[, e])</code></dt>
+<dt><code>asin(x[, e])</code></dt>
+<dt><code>acos(x[, e])</code></dt>
+<dt><code>atan(x[, e])</code></dt>
+<dt><code>atan2(x, y[, e])</code></dt>
+<dt><code>exp(x[, e])</code></dt>
+<dt><code>log(x[, e])</code></dt>
+<dt><code>pow(x, y[, e])</code></dt>
+<dd><p>Transcendental operations. Return a rounded floating point
+number. <code>e</code> is an optional floating point environment.
+</p>
+</dd>
+</dl>
+
+<a name="BigFloat_002eprototype"></a>
+<h4 class="subsection">4.5.2 <code>BigFloat.prototype</code></h4>
+
+<p>The following properties are modified:
+</p>
+<dl compact="compact">
+<dt><code>valueOf()</code></dt>
+<dd><p>Return the bigfloat primitive value corresponding to <code>this</code>.
+</p>
+</dd>
+<dt><code>toString(radix)</code></dt>
+<dd>
+<p>For floating point numbers:
+</p>
+<ul>
+<li> If the radix is a power of two, the conversion is done with infinite
+precision.
+</li><li> Otherwise, the number is rounded to nearest with ties to even using
+the global precision. It is then converted to string using the minimum
+number of digits so that its conversion back to a floating point using
+the global precision and round to nearest gives the same number. 
+
+</li></ul>
+
+<p>The exponent letter is <code>e</code> for base 10, <code>p</code> for bases 2, 8,
+16 with a binary exponent and <code>@</code> for the other bases.
+</p>
+</dd>
+<dt><code>toPrecision(p, rnd_mode = BigFloatEnv.RNDNA, radix = 10)</code></dt>
+<dt><code>toFixed(p, rnd_mode = BigFloatEnv.RNDNA, radix = 10)</code></dt>
+<dt><code>toExponential(p, rnd_mode = BigFloatEnv.RNDNA, radix = 10)</code></dt>
+<dd><p>Same semantics as the corresponding <code>Number</code> functions with
+BigFloats. There is no limit on the accepted precision <code>p</code>. The
+rounding mode and radix can be optionally specified. The radix must be
+between 2 and 36.
+</p>
+</dd>
+</dl>
+
+<a name="BigFloatEnv-constructor"></a>
+<h4 class="subsection">4.5.3 <code>BigFloatEnv</code> constructor</h4>
+
+<p>The <code>BigFloatEnv([p, [,rndMode]]</code> constructor cannot be invoked as a
+function. The floating point environment contains:
+</p>
+<ul>
+<li> the mantissa precision in bits
+
+</li><li> the exponent size in bits assuming an IEEE 754 representation;
+
+</li><li> the subnormal flag (if true, subnormal floating point numbers can
+be generated by the floating point operations).
+
+</li><li> the rounding mode
+
+</li><li> the floating point status. The status flags can only be set by the floating point operations. They can be reset with <code>BigFloatEnv.prototype.clearStatus()</code> or with the various status flag setters.
+
+</li></ul>
+
+<p><code>new BigFloatEnv([p, [,rndMode]]</code> creates a new floating point
+environment. The status flags are reset. If no parameter is given the
+precision, exponent bits and subnormal flags are copied from the
+global floating point environment. Otherwise, the precision is set to
+<code>p</code>, the number of exponent bits is set to <code>expBitsMax</code> and the
+subnormal flags is set to <code>false</code>. If <code>rndMode</code> is
+<code>undefined</code>, the rounding mode is set to <code>RNDN</code>.
+</p>
+<p><code>BigFloatEnv</code> properties:
+</p>
+<dl compact="compact">
+<dt><code>prec</code></dt>
+<dd><p>Getter. Return the precision in bits of the global floating point
+environment. The initial value is <code>113</code>.
+</p>
+</dd>
+<dt><code>expBits</code></dt>
+<dd><p>Getter. Return the exponent size in bits of the global floating point
+environment assuming an IEEE 754 representation. The initial value is
+<code>15</code>.
+</p>
+</dd>
+<dt><code>setPrec(f, p[, e])</code></dt>
+<dd><p>Set the precision of the global floating point environment to <code>p</code>
+and the exponent size to <code>e</code> then call the function
+<code>f</code>. Then the Float precision and exponent size are reset to
+their precious value and the return value of <code>f</code> is returned (or
+an exception is raised if <code>f</code> raised an exception). If <code>e</code>
+is <code>undefined</code> it is set to <code>BigFloatEnv.expBitsMax</code>.
+</p>
+</dd>
+<dt><code>precMin</code></dt>
+<dd><p>Read-only integer. Return the minimum allowed precision. Must be at least 2.
+</p>
+</dd>
+<dt><code>precMax</code></dt>
+<dd><p>Read-only integer. Return the maximum allowed precision. Must be at least 113.
+</p>
+</dd>
+<dt><code>expBitsMin</code></dt>
+<dd><p>Read-only integer. Return the minimum allowed exponent size in
+bits. Must be at least 3.
+</p>
+</dd>
+<dt><code>expBitsMax</code></dt>
+<dd><p>Read-only integer. Return the maximum allowed exponent size in
+bits. Must be at least 15.
+</p>
+</dd>
+<dt><code>RNDN</code></dt>
+<dd><p>Read-only integer. Round to nearest, with ties to even rounding mode.
+</p>
+</dd>
+<dt><code>RNDZ</code></dt>
+<dd><p>Read-only integer. Round to zero rounding mode.
+</p>
+</dd>
+<dt><code>RNDD</code></dt>
+<dd><p>Read-only integer. Round to -Infinity rounding mode.
+</p>
+</dd>
+<dt><code>RNDU</code></dt>
+<dd><p>Read-only integer. Round to +Infinity rounding mode.
+</p>
+</dd>
+<dt><code>RNDNA</code></dt>
+<dd><p>Read-only integer. Round to nearest, with ties away from zero rounding mode.
+</p>
+</dd>
+<dt><code>RNDA</code></dt>
+<dd><p>Read-only integer. Round away from zero rounding mode.
+</p>
+</dd>
+<dt><code>RNDF<a name="DOCF4" href="#FOOT4"><sup>4</sup></a></code></dt>
+<dd><p>Read-only integer. Faithful rounding mode. The result is
+non-deterministically rounded to -Infinity or +Infinity. This rounding
+mode usually gives a faster and deterministic running time for the
+floating point operations.
+</p>
+</dd>
+</dl>
+
+<p><code>BigFloatEnv.prototype</code> properties:
+</p>
+<dl compact="compact">
+<dt><code>prec</code></dt>
+<dd><p>Getter and setter (Integer). Return or set the precision in bits.
+</p>
+</dd>
+<dt><code>expBits</code></dt>
+<dd><p>Getter and setter (Integer). Return or set the exponent size in bits
+assuming an IEEE 754 representation.
+</p>
+</dd>
+<dt><code>rndMode</code></dt>
+<dd><p>Getter and setter (Integer). Return or set the rounding mode.
+</p>
+</dd>
+<dt><code>subnormal</code></dt>
+<dd><p>Getter and setter (Boolean). subnormal flag. It is false when
+<code>expBits = expBitsMax</code>.
+</p>
+</dd>
+<dt><code>clearStatus()</code></dt>
+<dd><p>Clear the status flags.
+</p>
+</dd>
+<dt><code>invalidOperation</code></dt>
+<dt><code>divideByZero</code></dt>
+<dt><code>overflow</code></dt>
+<dt><code>underflow</code></dt>
+<dt><code>inexact</code></dt>
+<dd><p>Getter and setter (Boolean). Status flags.
+</p>
+</dd>
+</dl>
+
+<a name="BigDecimal"></a>
+<h2 class="chapter">5 BigDecimal</h2>
+
+<p>This extension adds the <code>BigDecimal</code> primitive type. The
+<code>BigDecimal</code> type represents floating point numbers in base
+10. It is inspired from the proposal available at
+<a href="https://github.com/littledan/proposal-bigdecimal">https://github.com/littledan/proposal-bigdecimal</a>.
+</p>
+<p>The <code>BigDecimal</code> floating point numbers are always normalized and
+finite. There is no concept of <code>-0</code>, <code>Infinity</code> or
+<code>NaN</code>. By default, all the computations are done with infinite
+precision.
+</p>
+<a name="Operators-1"></a>
+<h3 class="section">5.1 Operators</h3>
+
+<p>The following builtin operators support BigDecimal:
+</p>
+<dl compact="compact">
+<dt><code>+</code></dt>
+<dt><code>-</code></dt>
+<dt><code>*</code></dt>
+<dd><p>Both operands must be BigDecimal. The result is computed with infinite
+precision.
+</p></dd>
+<dt><code>%</code></dt>
+<dd><p>Both operands must be BigDecimal. The result is computed with infinite
+precision. A range error is throws in case of division by zero.
+</p>
+</dd>
+<dt><code>/</code></dt>
+<dd><p>Both operands must be BigDecimal. A range error is throws in case of
+division by zero or if the result cannot be represented with infinite
+precision (use <code>BigDecimal.div</code> to specify the rounding).
+</p>
+</dd>
+<dt><code>**</code></dt>
+<dd><p>Both operands must be BigDecimal. The exponent must be a positive
+integer. The result is computed with infinite precision.
+</p>
+</dd>
+<dt><code>===</code></dt>
+<dd><p>When one of the operand is a BigDecimal, return true if both operands
+are a BigDecimal and if they are equal.
+</p>
+</dd>
+<dt><code>==</code></dt>
+<dt><code>!=</code></dt>
+<dt><code>&lt;=</code></dt>
+<dt><code>&gt;=</code></dt>
+<dt><code>&lt;</code></dt>
+<dt><code>&gt;</code></dt>
+<dd>
+<p>Numerical comparison. When one of the operand is not a BigDecimal, it is
+converted to BigDecimal by using ToString(). Hence comparisons between
+Number and BigDecimal do not use the exact mathematical value of the
+Number value.
+</p>
+</dd>
+</dl>
+
+<a name="BigDecimal-literals"></a>
+<h3 class="section">5.2 BigDecimal literals</h3>
+
+<p>BigDecimal literals are decimal floating point numbers with a trailing
+<code>m</code> suffix.
+</p>
+<a name="Builtin-Object-changes-1"></a>
+<h3 class="section">5.3 Builtin Object changes</h3>
+
+<a name="The-BigDecimal-function_002e"></a>
+<h4 class="subsection">5.3.1 The <code>BigDecimal</code> function.</h4>
+
+<p>It returns <code>0m</code> if no parameter is provided. Otherwise the first
+parameter is converted to a bigdecimal by using ToString(). Hence
+Number values are not converted to their exact numerical value as
+BigDecimal.
+</p>
+<a name="Properties-of-the-BigDecimal-object"></a>
+<h4 class="subsection">5.3.2 Properties of the <code>BigDecimal</code> object</h4>
+
+<dl compact="compact">
+<dt><code>add(a, b[, e])</code></dt>
+<dt><code>sub(a, b[, e])</code></dt>
+<dt><code>mul(a, b[, e])</code></dt>
+<dt><code>div(a, b[, e])</code></dt>
+<dt><code>mod(a, b[, e])</code></dt>
+<dt><code>sqrt(a, e)</code></dt>
+<dt><code>round(a, e)</code></dt>
+<dd><p>Perform the specified floating point operation and round the floating
+point result according to the rounding object <code>e</code>. If the
+rounding object is not present, the operation is executed with
+infinite precision.
+</p>
+<p>For <code>div</code>, a <code>RangeError</code> exception is thrown in case of
+division by zero or if the result cannot be represented with infinite
+precision if no rounding object is present.
+</p>
+<p>For <code>sqrt</code>, a range error is thrown if <code>a</code> is less than
+zero.
+</p>
+<p>The rounding object must contain the following properties:
+<code>roundingMode</code> is a string specifying the rounding mode
+(<code>&quot;floor&quot;</code>, <code>&quot;ceiling&quot;</code>, <code>&quot;down&quot;</code>, <code>&quot;up&quot;</code>,
+<code>&quot;half-even&quot;</code>, <code>&quot;half-up&quot;</code>). Either
+<code>maximumSignificantDigits</code> or <code>maximumFractionDigits</code> must
+be present to specify respectively the number of significant digits
+(must be &gt;= 1) or the number of digits after the decimal point (must
+be &gt;= 0).
+</p>
+</dd>
+</dl>
+
+<a name="Properties-of-the-BigDecimal_002eprototype-object"></a>
+<h4 class="subsection">5.3.3 Properties of the <code>BigDecimal.prototype</code> object</h4>
+
+<dl compact="compact">
+<dt><code>valueOf()</code></dt>
+<dd><p>Return the bigdecimal primitive value corresponding to <code>this</code>.
+</p>
+</dd>
+<dt><code>toString()</code></dt>
+<dd><p>Convert <code>this</code> to a string with infinite precision in base 10.
+</p>
+</dd>
+<dt><code>toPrecision(p, rnd_mode = &quot;half-up&quot;)</code></dt>
+<dt><code>toFixed(p, rnd_mode = &quot;half-up&quot;)</code></dt>
+<dt><code>toExponential(p, rnd_mode = &quot;half-up&quot;)</code></dt>
+<dd><p>Convert the BigDecimal <code>this</code> to string with the specified
+precision <code>p</code>. There is no limit on the accepted precision
+<code>p</code>. The rounding mode can be optionally
+specified. <code>toPrecision</code> outputs either in decimal fixed notation
+or in decimal exponential notation with a <code>p</code> digits of
+precision.  <code>toExponential</code> outputs in decimal exponential
+notation with <code>p</code> digits after the decimal point. <code>toFixed</code>
+outputs in decimal notation with <code>p</code> digits after the decimal
+point.
+</p>
+</dd>
+</dl>
+
+<a name="Math-mode"></a>
+<h2 class="chapter">6 Math mode</h2>
+
+<p>A new <em>math mode</em> is enabled with the <code>&quot;use math&quot;</code>
+directive. It propagates the same way as the <em>strict mode</em>. It is
+designed so that arbitrarily large integers and floating point numbers
+are available by default. In order to minimize the number of changes
+in the Javascript semantics, integers are represented either as Number
+or BigInt depending on their magnitude. Floating point numbers are
+always represented as BigFloat.
+</p>
+<p>The following changes are made to the Javascript semantics:
+</p>
+<ul>
+<li> Floating point literals (i.e. number with a decimal point or an exponent) are <code>BigFloat</code> by default (i.e. a <code>l</code> suffix is implied). Hence <code>typeof 1.0 === &quot;bigfloat&quot;</code>.
+
+</li><li> Integer literals (i.e. numbers without a decimal point or an exponent) with or without the <code>n</code> suffix are <code>BigInt</code> if their value cannot be represented as a safe integer. A safe integer is defined as a integer whose absolute value is smaller or equal to <code>2**53-1</code>. Hence <code>typeof 1 === &quot;number &quot;</code>, <code>typeof 1n === &quot;number&quot;</code> but <code>typeof 9007199254740992 === &quot;bigint&quot; </code>.
+
+</li><li> All the bigint builtin operators and functions are modified so that their result is returned as a Number if it is a safe integer. Otherwise the result stays a BigInt.
+
+</li><li> The builtin operators are modified so that they return an exact result (which can be a BigInt) if their operands are safe integers. Operands between Number and BigInt are accepted provided the Number operand is a safe integer. The integer power with a negative exponent returns a BigFloat as result. The integer division returns a BigFloat as result.
+
+</li><li> The <code>^</code> operator is an alias to the power operator (<code>**</code>).
+
+</li><li> The power operator (both <code>^</code> and <code>**</code>) grammar is modified so that <code>-2^2</code> is allowed and yields <code>-4</code>.
+
+</li><li> The logical xor operator is still available with the <code>^^</code> operator.
+
+</li><li> The modulo operator (<code>%</code>) returns the Euclidian remainder (always positive) instead of the truncated remainder.
+
+</li><li> The integer division operator can be overloaded with <code>Operators.updateBigIntOperators(dictionary)</code>.
+
+</li><li> The integer power operator with a non zero negative exponent can be overloaded with <code>Operators.updateBigIntOperators(dictionary)</code>.
+
+</li></ul>
+
+<div class="footnote">
+<hr>
+<h4 class="footnotes-heading">Footnotes</h4>
+
+<h3><a name="FOOT1" href="#DOCF1">(1)</a></h3>
+<p>The
+rationale is that the rounding mode changes must always be
+explicit.</p>
+<h3><a name="FOOT2" href="#DOCF2">(2)</a></h3>
+<p>The rationale is to avoid side effects for the built-in
+operators.</p>
+<h3><a name="FOOT3" href="#DOCF3">(3)</a></h3>
+<p>Base 10 floating point literals cannot usually be
+exactly represented as base 2 floating point number. In order to
+ensure that the literal is represented accurately with the current
+precision, it must be evaluated at runtime.</p>
+<h3><a name="FOOT4" href="#DOCF4">(4)</a></h3>
+<p>Could be removed in case a deterministic behavior for floating point operations is required.</p>
+</div>
+<hr>
+
+
+
+</body>
+</html>

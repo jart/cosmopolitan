@@ -421,6 +421,11 @@ int main(int argc, char *argv[]) {
     } else if (isclang && startswith(argv[i], "--debug-prefix-map")) {
       /* llvm doesn't provide a gas interface so simulate w/ clang */
       AddArg(xasprintf("-f%s", argv[i] + 2));
+    } else if (isgcc && (!strcmp(argv[i], "-Os") || !strcmp(argv[i], "-O2") ||
+                         !strcmp(argv[i], "-O3"))) {
+      /* https://gcc.gnu.org/bugzilla/show_bug.cgi?id=97623 */
+      AddArg(argv[i]);
+      AddArg("-fno-code-hoisting");
     } else {
       AddArg(argv[i]);
     }

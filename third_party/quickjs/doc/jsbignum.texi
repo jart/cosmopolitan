@@ -1,0 +1,589 @@
+\input texinfo
+
+@iftex
+@afourpaper
+@headings double
+@end iftex
+
+@titlepage
+@afourpaper
+@sp 7
+@center @titlefont{Javascript Bignum Extensions}
+@sp 3
+@center Version 2020-01-11
+@sp 3
+@center Author: Fabrice Bellard
+@end titlepage
+
+@setfilename jsbignum.info
+@settitle Javascript Bignum Extensions
+
+@contents
+
+@chapter Introduction
+
+The Bignum extensions add the following features to the Javascript
+language while being 100% backward compatible:
+
+@itemize
+
+@item Operator overloading with a dispatch logic inspired from the proposal available at @url{https://github.com/tc39/proposal-operator-overloading/}.
+
+@item Arbitrarily large floating point numbers (@code{BigFloat}) in base 2 using the IEEE 754 semantics.
+
+@item Arbitrarily large floating point numbers (@code{BigDecimal}) in base 10 based on the proposal available at
+@url{https://github.com/littledan/proposal-bigdecimal}.
+
+@item @code{math} mode: arbitrarily large integers and floating point numbers are available by default. The integer division and power can be overloaded for example to return a fraction. The modulo operator (@code{%}) is defined as the Euclidian
+remainder. @code{^} is an alias to the power operator
+(@code{**}). @code{^^} is used as the exclusive or operator.
+
+@end itemize
+
+The extensions are independent from each other except the @code{math}
+mode which relies on BigFloat and operator overloading.
+
+@chapter Operator overloading
+
+Operator overloading is inspired from the proposal available at
+@url{https://github.com/tc39/proposal-operator-overloading/}. It
+implements the same dispatch logic but finds the operator sets by
+looking at the @code{Symbol.operatorSet} property in the objects. The
+changes were done in order to simplify the implementation.
+
+More precisely, the following modifications were made:
+
+@itemize
+
+@item @code{with operators from} is not supported. Operator overloading is always enabled.
+
+@item The dispatch is not based on a static @code{[[OperatorSet]]} field in all instances. Instead, a dynamic lookup of the @code{Symbol.operatorSet} property is done. This property is typically added in the prototype of each object.
+
+@item @code{Operators.create(...dictionaries)} is used to create a new OperatorSet object. The @code{Operators} function is supported as an helper to be closer to the TC39 proposal.
+
+@item @code{[]} cannot be overloaded.
+
+@item In math mode, the BigInt division and power operators can be overloaded with @code{Operators.updateBigIntOperators(dictionary)}.
+
+@end itemize
+
+@chapter BigInt extensions
+
+A few properties are added to the BigInt object:
+
+@table @code
+
+@item tdiv(a, b)
+Return @math{trunc(a/b)}. @code{b = 0} raises a RangeError
+exception.
+
+@item fdiv(a, b)
+Return @math{\lfloor a/b \rfloor}. @code{b = 0} raises a RangeError
+exception.
+
+@item cdiv(a, b)
+Return @math{\lceil a/b \rceil}. @code{b = 0} raises a RangeError
+exception.
+
+@item ediv(a, b)
+Return @math{sgn(b) \lfloor a/{|b|} \rfloor} (Euclidian
+division). @code{b = 0} raises a RangeError exception.
+
+@item tdivrem(a, b)
+@item fdivrem(a, b)
+@item cdivrem(a, b)
+@item edivrem(a, b)
+Return an array of two elements. The first element is the quotient,
+the second is the remainder. The same rounding is done as the
+corresponding division operation.
+
+@item sqrt(a)
+Return @math{\lfloor \sqrt(a) \rfloor}. A RangeError exception is
+raised if @math{a < 0}.
+
+@item sqrtrem(a)
+Return an array of two elements. The first element is @math{\lfloor
+\sqrt{a} \rfloor}. The second element is @math{a-\lfloor \sqrt{a}
+\rfloor^2}. A RangeError exception is raised if @math{a < 0}.
+
+@item floorLog2(a)
+Return -1 if @math{a \leq 0} otherwise return @math{\lfloor \log2(a) \rfloor}.
+
+@item ctz(a)
+Return the number of trailing zeros in the two's complement binary representation of a. Return -1 if @math{a=0}.
+
+@end table
+
+@chapter BigFloat
+
+@section Introduction
+
+This extension adds the @code{BigFloat} primitive type. The
+@code{BigFloat} type represents floating point numbers in base 2
+with the IEEE 754 semantics. A floating
+point number is represented as a sign, mantissa and exponent. The
+special values @code{NaN}, @code{+/-Infinity}, @code{+0} and @code{-0}
+are supported. The mantissa and exponent can have any bit length with
+an implementation specific minimum and maximum.
+
+@section Floating point rounding
+
+Each floating point operation operates with infinite precision and
+then rounds the result according to the specified floating point
+environment (@code{BigFloatEnv} object). The status flags of the
+environment are also set according to the result of the operation.
+
+If no floating point environment is provided, the global floating
+point environment is used.
+
+The rounding mode of the global floating point environment is always
+@code{RNDN} (``round to nearest with ties to even'')@footnote{The
+rationale is that the rounding mode changes must always be
+explicit.}. The status flags of the global environment cannot be
+read@footnote{The rationale is to avoid side effects for the built-in
+operators.}. The precision of the global environment is
+@code{BigFloatEnv.prec}. The number of exponent bits of the global
+environment is @code{BigFloatEnv.expBits}. The global environment
+subnormal flag is set to @code{true}.
+
+For example, @code{prec = 53} and @code{ expBits = 11} exactly give
+the same precision as the IEEE 754 64 bit floating point format. The
+default precision is @code{prec = 113} and @code{ expBits = 15} (IEEE
+754 128 bit floating point format).
+
+The global floating point environment can only be modified temporarily
+when calling a function (see @code{BigFloatEnv.setPrec}). Hence a
+function can change the global floating point environment for its
+callees but not for its caller.
+
+@section Operators
+
+The builtin operators are extended so that a BigFloat is returned if
+at least one operand is a BigFloat. The computations are always done
+with infinite precision and rounded according to the global floating
+point environment.
+
+@code{typeof} applied on a @code{BigFloat} returns @code{bigfloat}.
+
+BigFloat can be compared with all the other numeric types and the
+result follows the expected mathematical relations.
+
+However, since BigFloat and Number are different types they are never
+equal when using the strict comparison operators (e.g. @code{0.0 ===
+0.0l} is false).
+
+@section BigFloat literals
+
+BigFloat literals are floating point numbers with a trailing @code{l}
+suffix. BigFloat literals have an infinite precision. They are rounded
+according to the global floating point environment when they are
+evaluated.@footnote{Base 10 floating point literals cannot usually be
+exactly represented as base 2 floating point number. In order to
+ensure that the literal is represented accurately with the current
+precision, it must be evaluated at runtime.}
+
+@section Builtin Object changes
+
+@subsection @code{BigFloat} function
+
+The @code{BigFloat} function cannot be invoked as a constructor. When
+invoked as a function: the parameter is converted to a primitive
+type. If the result is a numeric type, it is converted to BigFloat
+without rounding. If the result is a string, it is converted to
+BigFloat using the precision of the global floating point environment.
+
+@code{BigFloat} properties:
+
+@table @code
+
+@item LN2
+@item PI
+Getter. Return the value of the corresponding mathematical constant
+rounded to nearest, ties to even with the current global
+precision. The constant values are cached for small precisions.
+
+@item MIN_VALUE
+@item MAX_VALUE
+@item EPSILON
+Getter. Return the minimum, maximum and epsilon @code{BigFloat} values
+(same definition as the corresponding @code{Number} constants).
+
+@item fpRound(a[, e])
+Round the floating point number @code{a} according to the floating
+point environment @code{e} or the global environment if @code{e} is
+undefined.
+
+@item parseFloat(a[, radix[, e]])
+Parse the string @code{a} as a floating point number in radix
+@code{radix}. The radix is 0 (default) or from 2 to 36. The radix 0
+means radix 10 unless there is a hexadecimal or binary prefix. The
+result is rounded according to the floating point environment @code{e}
+or the global environment if @code{e} is undefined.
+
+@item isFinite(a)
+Return true if @code{a} is a finite bigfloat.
+
+@item isNaN(a)
+Return true if @code{a} is a NaN bigfloat.
+
+@item add(a, b[, e])
+@item sub(a, b[, e])
+@item mul(a, b[, e])
+@item div(a, b[, e])
+Perform the specified floating point operation and round the floating
+point number @code{a} according to the floating point environment
+@code{e} or the global environment if @code{e} is undefined. If
+@code{e} is specified, the floating point status flags are updated.
+
+@item floor(x)
+@item ceil(x)
+@item round(x)
+@item trunc(x)
+Round to an integer. No additional rounding is performed.
+
+@item abs(x)
+Return the absolute value of x. No additional rounding is performed.
+
+@item fmod(x, y[, e])
+@item remainder(x, y[, e])
+Floating point remainder. The quotient is truncated to zero (fmod) or
+to the nearest integer with ties to even (remainder). @code{e} is an
+optional floating point environment.
+
+@item sqrt(x[, e])
+Square root. Return a rounded floating point number. @code{e} is an
+optional floating point environment.
+
+@item sin(x[, e])
+@item cos(x[, e])
+@item tan(x[, e])
+@item asin(x[, e])
+@item acos(x[, e])
+@item atan(x[, e])
+@item atan2(x, y[, e])
+@item exp(x[, e])
+@item log(x[, e])
+@item pow(x, y[, e])
+Transcendental operations. Return a rounded floating point
+number. @code{e} is an optional floating point environment.
+
+@end table
+
+@subsection @code{BigFloat.prototype}
+
+The following properties are modified:
+
+@table @code
+@item valueOf()
+Return the bigfloat primitive value corresponding to @code{this}.
+
+@item toString(radix)
+
+For floating point numbers:
+
+@itemize
+@item
+If the radix is a power of two, the conversion is done with infinite
+precision.
+@item
+Otherwise, the number is rounded to nearest with ties to even using
+the global precision. It is then converted to string using the minimum
+number of digits so that its conversion back to a floating point using
+the global precision and round to nearest gives the same number. 
+
+@end itemize
+
+The exponent letter is @code{e} for base 10, @code{p} for bases 2, 8,
+16 with a binary exponent and @code{@@} for the other bases.
+
+@item toPrecision(p, rnd_mode = BigFloatEnv.RNDNA, radix = 10)
+@item toFixed(p, rnd_mode = BigFloatEnv.RNDNA, radix = 10)
+@item toExponential(p, rnd_mode = BigFloatEnv.RNDNA, radix = 10)
+Same semantics as the corresponding @code{Number} functions with
+BigFloats. There is no limit on the accepted precision @code{p}. The
+rounding mode and radix can be optionally specified. The radix must be
+between 2 and 36.
+
+@end table
+
+@subsection @code{BigFloatEnv} constructor
+
+The @code{BigFloatEnv([p, [,rndMode]]} constructor cannot be invoked as a
+function. The floating point environment contains:
+
+@itemize
+@item the mantissa precision in bits
+
+@item the exponent size in bits assuming an IEEE 754 representation;
+
+@item the subnormal flag (if true, subnormal floating point numbers can
+be generated by the floating point operations).
+
+@item the rounding mode
+
+@item the floating point status. The status flags can only be set by the floating point operations. They can be reset with @code{BigFloatEnv.prototype.clearStatus()} or with the various status flag setters.
+
+@end itemize
+
+@code{new BigFloatEnv([p, [,rndMode]]} creates a new floating point
+environment. The status flags are reset. If no parameter is given the
+precision, exponent bits and subnormal flags are copied from the
+global floating point environment. Otherwise, the precision is set to
+@code{p}, the number of exponent bits is set to @code{expBitsMax} and the
+subnormal flags is set to @code{false}. If @code{rndMode} is
+@code{undefined}, the rounding mode is set to @code{RNDN}.
+
+@code{BigFloatEnv} properties:
+
+@table @code
+
+@item prec
+Getter. Return the precision in bits of the global floating point
+environment. The initial value is @code{113}.
+
+@item expBits
+Getter. Return the exponent size in bits of the global floating point
+environment assuming an IEEE 754 representation. The initial value is
+@code{15}.
+
+@item setPrec(f, p[, e])
+Set the precision of the global floating point environment to @code{p}
+and the exponent size to @code{e} then call the function
+@code{f}. Then the Float precision and exponent size are reset to
+their precious value and the return value of @code{f} is returned (or
+an exception is raised if @code{f} raised an exception). If @code{e}
+is @code{undefined} it is set to @code{BigFloatEnv.expBitsMax}.
+
+@item precMin
+Read-only integer. Return the minimum allowed precision. Must be at least 2.
+
+@item precMax
+Read-only integer. Return the maximum allowed precision. Must be at least 113.
+
+@item expBitsMin
+Read-only integer. Return the minimum allowed exponent size in
+bits. Must be at least 3.
+
+@item expBitsMax
+Read-only integer. Return the maximum allowed exponent size in
+bits. Must be at least 15.
+
+@item RNDN
+Read-only integer. Round to nearest, with ties to even rounding mode.
+
+@item RNDZ
+Read-only integer. Round to zero rounding mode.
+
+@item RNDD
+Read-only integer. Round to -Infinity rounding mode.
+
+@item RNDU
+Read-only integer. Round to +Infinity rounding mode.
+
+@item RNDNA
+Read-only integer. Round to nearest, with ties away from zero rounding mode.
+
+@item RNDA
+Read-only integer. Round away from zero rounding mode.
+
+@item RNDF@footnote{Could be removed in case a deterministic behavior for floating point operations is required.}
+Read-only integer. Faithful rounding mode. The result is
+non-deterministically rounded to -Infinity or +Infinity. This rounding
+mode usually gives a faster and deterministic running time for the
+floating point operations.
+
+@end table
+
+@code{BigFloatEnv.prototype} properties:
+
+@table @code
+
+@item prec
+Getter and setter (Integer). Return or set the precision in bits.
+
+@item expBits
+Getter and setter (Integer). Return or set the exponent size in bits
+assuming an IEEE 754 representation.
+
+@item rndMode
+Getter and setter (Integer). Return or set the rounding mode.
+
+@item subnormal
+Getter and setter (Boolean). subnormal flag. It is false when
+@code{expBits = expBitsMax}.
+
+@item clearStatus()
+Clear the status flags.
+
+@item invalidOperation
+@item divideByZero
+@item overflow
+@item underflow
+@item inexact
+Getter and setter (Boolean). Status flags.
+
+@end table
+
+@chapter BigDecimal
+
+This extension adds the @code{BigDecimal} primitive type. The
+@code{BigDecimal} type represents floating point numbers in base
+10. It is inspired from the proposal available at
+@url{https://github.com/littledan/proposal-bigdecimal}.
+
+The @code{BigDecimal} floating point numbers are always normalized and
+finite. There is no concept of @code{-0}, @code{Infinity} or
+@code{NaN}. By default, all the computations are done with infinite
+precision.
+
+@section Operators
+
+The following builtin operators support BigDecimal:
+
+@table @code
+
+@item +
+@item -
+@item *
+Both operands must be BigDecimal. The result is computed with infinite
+precision.
+@item %
+Both operands must be BigDecimal. The result is computed with infinite
+precision. A range error is throws in case of division by zero.
+
+@item /
+Both operands must be BigDecimal. A range error is throws in case of
+division by zero or if the result cannot be represented with infinite
+precision (use @code{BigDecimal.div} to specify the rounding).
+
+@item **
+Both operands must be BigDecimal. The exponent must be a positive
+integer. The result is computed with infinite precision.
+
+@item ===
+When one of the operand is a BigDecimal, return true if both operands
+are a BigDecimal and if they are equal.
+
+@item ==
+@item !=
+@item <=
+@item >=
+@item <
+@item >
+
+Numerical comparison. When one of the operand is not a BigDecimal, it is
+converted to BigDecimal by using ToString(). Hence comparisons between
+Number and BigDecimal do not use the exact mathematical value of the
+Number value.
+
+@end table
+
+@section BigDecimal literals
+
+BigDecimal literals are decimal floating point numbers with a trailing
+@code{m} suffix.
+
+@section Builtin Object changes
+
+@subsection The @code{BigDecimal} function.
+
+It returns @code{0m} if no parameter is provided. Otherwise the first
+parameter is converted to a bigdecimal by using ToString(). Hence
+Number values are not converted to their exact numerical value as
+BigDecimal.
+
+@subsection Properties of the @code{BigDecimal} object
+
+@table @code
+
+@item add(a, b[, e])
+@item sub(a, b[, e])
+@item mul(a, b[, e])
+@item div(a, b[, e])
+@item mod(a, b[, e])
+@item sqrt(a, e)
+@item round(a, e)
+Perform the specified floating point operation and round the floating
+point result according to the rounding object @code{e}. If the
+rounding object is not present, the operation is executed with
+infinite precision.
+
+For @code{div}, a @code{RangeError} exception is thrown in case of
+division by zero or if the result cannot be represented with infinite
+precision if no rounding object is present.
+
+For @code{sqrt}, a range error is thrown if @code{a} is less than
+zero.
+
+The rounding object must contain the following properties:
+@code{roundingMode} is a string specifying the rounding mode
+(@code{"floor"}, @code{"ceiling"}, @code{"down"}, @code{"up"},
+@code{"half-even"}, @code{"half-up"}). Either
+@code{maximumSignificantDigits} or @code{maximumFractionDigits} must
+be present to specify respectively the number of significant digits
+(must be >= 1) or the number of digits after the decimal point (must
+be >= 0).
+
+@end table
+
+@subsection Properties of the @code{BigDecimal.prototype} object
+
+@table @code
+@item valueOf()
+Return the bigdecimal primitive value corresponding to @code{this}.
+
+@item toString()
+Convert @code{this} to a string with infinite precision in base 10.
+
+@item toPrecision(p, rnd_mode = "half-up")
+@item toFixed(p, rnd_mode = "half-up")
+@item toExponential(p, rnd_mode = "half-up")
+Convert the BigDecimal @code{this} to string with the specified
+precision @code{p}. There is no limit on the accepted precision
+@code{p}. The rounding mode can be optionally
+specified. @code{toPrecision} outputs either in decimal fixed notation
+or in decimal exponential notation with a @code{p} digits of
+precision.  @code{toExponential} outputs in decimal exponential
+notation with @code{p} digits after the decimal point. @code{toFixed}
+outputs in decimal notation with @code{p} digits after the decimal
+point.
+
+@end table
+
+@chapter Math mode
+
+A new @emph{math mode} is enabled with the @code{"use math"}
+directive. It propagates the same way as the @emph{strict mode}. It is
+designed so that arbitrarily large integers and floating point numbers
+are available by default. In order to minimize the number of changes
+in the Javascript semantics, integers are represented either as Number
+or BigInt depending on their magnitude. Floating point numbers are
+always represented as BigFloat.
+
+The following changes are made to the Javascript semantics:
+
+@itemize
+
+@item Floating point literals (i.e. number with a decimal point or an exponent) are @code{BigFloat} by default (i.e. a @code{l} suffix is implied). Hence @code{typeof 1.0 === "bigfloat"}.
+
+@item Integer literals (i.e. numbers without a decimal point or an exponent) with or without the @code{n} suffix are @code{BigInt} if their value cannot be represented as a safe integer. A safe integer is defined as a integer whose absolute value is smaller or equal to @code{2**53-1}. Hence @code{typeof 1 === "number "}, @code{typeof 1n === "number"} but @code{typeof 9007199254740992 === "bigint" }.
+
+@item All the bigint builtin operators and functions are modified so that their result is returned as a Number if it is a safe integer. Otherwise the result stays a BigInt.
+
+@item The builtin operators are modified so that they return an exact result (which can be a BigInt) if their operands are safe integers. Operands between Number and BigInt are accepted provided the Number operand is a safe integer. The integer power with a negative exponent returns a BigFloat as result. The integer division returns a BigFloat as result.
+
+@item The @code{^} operator is an alias to the power operator (@code{**}).
+
+@item The power operator (both @code{^} and @code{**}) grammar is modified so that @code{-2^2} is allowed and yields @code{-4}.
+
+@item The logical xor operator is still available with the @code{^^} operator.
+
+@item The modulo operator (@code{%}) returns the Euclidian remainder (always positive) instead of the truncated remainder.
+
+@item The integer division operator can be overloaded with @code{Operators.updateBigIntOperators(dictionary)}.
+
+@item The integer power operator with a non zero negative exponent can be overloaded with @code{Operators.updateBigIntOperators(dictionary)}.
+
+@end itemize
+
+@bye

@@ -1,5 +1,6 @@
 #include "libc/math.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/fenv.h"
 #include "libc/str/str.h"
 #include "third_party/gdtoa/gdtoa.h"
 
@@ -10,11 +11,15 @@ Kudos go to Guy L. Steele, Jr. and Jon L. White\\n\
 Copyright (C) 1997, 1998, 2000 by Lucent Technologies\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-#define IEEE_Arith 1
-#define IEEE_8087  1
-#define f_QNAN     0x7fc00000
-#define d_QNAN0    0x7ff80000
-#define d_QNAN1    0x0
+#define IEEE_Arith       1
+#define IEEE_8087        1
+#define Honor_FLT_ROUNDS 1
+#define f_QNAN           0x7fc00000
+#define d_QNAN0          0x7ff80000
+#define d_QNAN1          0x0
+
+#define Check_FLT_ROUNDS 1
+#define Trust_FLT_ROUNDS 1
 
 /****************************************************************
 

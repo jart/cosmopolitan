@@ -22,5 +22,5 @@
  * Returns inverse hyperbolic tangent of 𝑥.
  */
 double atanh(double x) {
-  return log((1 + x) / (1 - x)) / 2;
+  return x ? log((1 + x) / (1 - x)) / 2 : x;
 }

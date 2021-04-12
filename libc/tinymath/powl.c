@@ -46,7 +46,11 @@ long double powl(long double x, long double y) {
             return 1;
           }
         } else if (y > 0) {
-          return y == 1 ? x : 0;
+          if (signbit(x) && y == truncl(y) && ((int64_t)y & 1)) {
+            return -0.;
+          } else {
+            return 0;
+          }
         } else if (!y) {
           return 1;
         } else {

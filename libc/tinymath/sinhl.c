@@ -22,5 +22,6 @@
  * Returns hyperbolic sine of 𝑥.
  */
 long double sinhl(long double x) {
+  if (!x) return x;
   return (expl(x) - expl(-x)) / 2;
 }
