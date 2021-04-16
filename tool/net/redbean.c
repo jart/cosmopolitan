@@ -319,6 +319,7 @@ static bool terminated;
 static bool uniprocess;
 static bool invalidated;
 static bool logmessages;
+static bool launchbrowser;
 static bool checkedmethod;
 static bool connectionclose;
 static bool keyboardinterrupt;
@@ -618,7 +619,8 @@ static void GetOpts(int argc, char *argv[]) {
         logmessages = true;
         break;
       case 'b':
-        logbodies = true;
+        launchbrowser = true;
+        // logbodies = true;
         break;
       case 'z':
         printport = true;
@@ -1461,6 +1463,22 @@ static bool IsHiddenPath(const char *s) {
   return false;
 }
 
+static void LaunchBrowser() {
+  char openbrowsercommand[255];
+  char *prog;
+  if (IsWindows()) {
+    prog = "explorer";
+  } else if (IsXnu()) {
+    prog = "open";
+  } else {
+    prog = "xdg-open";
+  }
+  snprintf(openbrowsercommand, sizeof(openbrowsercommand),
+           "%s http://127.0.0.1:%d", prog, ntohs(serveraddr.sin_port));
+  DEBUGF("Opening browser with command %s\n", openbrowsercommand);
+  system(openbrowsercommand);
+}
+
 static int LuaServeAsset(lua_State *L) {
   size_t pathlen;
   struct Asset *a;
@@ -1915,6 +1933,11 @@ static int LuaGetZipPaths(lua_State *L) {
   return 1;
 }
 
+static int LuaLaunchBrowser(lua_State *L) {
+  LaunchBrowser();
+  return 1;
+}
+
 static void LuaRun(const char *path) {
   struct Asset *a;
   const char *code;
@@ -1954,6 +1977,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetUri", LuaGetUri},                          //
     {"GetVersion", LuaGetVersion},                  //
     {"GetZipPaths", LuaGetZipPaths},                //
+    {"LaunchBrowser", LuaLaunchBrowser},            //
     {"HasParam", LuaHasParam},                      //
     {"HidePath", LuaHidePath},                      //
     {"LoadAsset", LuaLoadAsset},                    //
@@ -2579,22 +2603,6 @@ static void TuneServerSocket(void) {
   LOGIFNEG1(setsockopt(server, IPPROTO_TCP, TCP_QUICKACK, &yes, sizeof(yes)));
 }
 
-static void OpenBrowser(const char *serveraddrname) {
-  char openbrowsercommand[255];
-  char *prog;
-  if (IsWindows()) {
-    prog = "explorer";
-  } else if (IsXnu()) {
-    prog = "open";
-  } else {
-    prog = "xdg-open";
-  }
-  snprintf(openbrowsercommand, sizeof(openbrowsercommand), "%s http://%s", prog,
-           serveraddrname);
-  DEBUGF("Opening browser with command %s\n", openbrowsercommand);
-  system(openbrowsercommand);
-}
-
 void RedBean(int argc, char *argv[]) {
   uint32_t addrsize;
   gmtoff = GetGmtOffset();
@@ -2647,8 +2655,7 @@ void RedBean(int argc, char *argv[]) {
   inbuf.p = xvalloc(inbuf.n);
   hdrbuf.n = 4 * 1024;
   hdrbuf.p = xvalloc(hdrbuf.n);
-  // TODO: Maybe make this an optional argv?
-  OpenBrowser(serveraddrstr);
+  if (launchbrowser) LaunchBrowser();
   while (!terminated) {
     if (zombied) {
       ReapZombies();
