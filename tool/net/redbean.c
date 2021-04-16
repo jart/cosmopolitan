@@ -2581,13 +2581,16 @@ static void TuneServerSocket(void) {
 
 static void OpenBrowser(const char *serveraddrname) {
   char openbrowsercommand[255];
-  if (IsWindows()){
-    snprintf(openbrowsercommand, sizeof(openbrowsercommand), "explorer http://%s", serveraddrname);
+  char *prog;
+  if (IsWindows()) {
+    prog = "explorer";
   } else if (IsXnu()) {
-    snprintf(openbrowsercommand, sizeof(openbrowsercommand), "open http://%s", serveraddrname);
+    prog = "open";
   } else {
-    snprintf(openbrowsercommand, sizeof(openbrowsercommand), "xdg-open http://%s", serveraddrname);
+    prog = "xdg-open";
   }
+  snprintf(openbrowsercommand, sizeof(openbrowsercommand), "%s http://%s", prog,
+           serveraddrname);
   DEBUGF("Opening browser with command %s\n", openbrowsercommand);
   system(openbrowsercommand);
 }
