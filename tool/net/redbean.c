@@ -2579,6 +2579,19 @@ static void TuneServerSocket(void) {
   LOGIFNEG1(setsockopt(server, IPPROTO_TCP, TCP_QUICKACK, &yes, sizeof(yes)));
 }
 
+static void OpenBrowser(const char *serveraddrname) {
+  char openbrowsercommand[255];
+  if (IsWindows()){
+    snprintf(openbrowsercommand, sizeof(openbrowsercommand), "explorer http://%s", serveraddrname);
+  } else if (IsXnu()) {
+    snprintf(openbrowsercommand, sizeof(openbrowsercommand), "open http://%s", serveraddrname);
+  } else {
+    snprintf(openbrowsercommand, sizeof(openbrowsercommand), "xdg-open http://%s", serveraddrname);
+  }
+  DEBUGF("Opening browser with command %s\n", openbrowsercommand);
+  system(openbrowsercommand);
+}
+
 void RedBean(int argc, char *argv[]) {
   uint32_t addrsize;
   gmtoff = GetGmtOffset();
@@ -2631,6 +2644,8 @@ void RedBean(int argc, char *argv[]) {
   inbuf.p = xvalloc(inbuf.n);
   hdrbuf.n = 4 * 1024;
   hdrbuf.p = xvalloc(hdrbuf.n);
+  // TODO: Maybe make this an optional argv?
+  OpenBrowser(serveraddrstr);
   while (!terminated) {
     if (zombied) {
       ReapZombies();
