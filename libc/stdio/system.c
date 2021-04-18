@@ -42,7 +42,7 @@ int system(const char *cmdline) {
   struct sigaction ignore, saveint, savequit;
   if (!cmdline) {
     if (IsWindows()) return 1;
-    if (access(_PATH_BSHELL, X_OK) == 0) return 1;
+    if (!access(_PATH_BSHELL, X_OK)) return 1;
     return 0;
   }
   ignore.sa_flags = 0;
@@ -54,13 +54,13 @@ int system(const char *cmdline) {
   sigaddset(&chldmask, SIGCHLD);
   sigprocmask(SIG_BLOCK, &chldmask, &savemask);
   if (!(pid = fork())) {
-    sigaction(SIGINT, &saveint, NULL);
-    sigaction(SIGQUIT, &savequit, NULL);
-    sigprocmask(SIG_SETMASK, &savemask, NULL);
+    sigaction(SIGINT, &saveint, 0);
+    sigaction(SIGQUIT, &savequit, 0);
+    sigprocmask(SIG_SETMASK, &savemask, 0);
     systemexec(cmdline);
     _exit(127);
   } else if (pid != -1) {
-    while (wait4(pid, &wstatus, 0, NULL) == -1) {
+    while (wait4(pid, &wstatus, 0, 0) == -1) {
       if (errno != EINTR) {
         wstatus = -1;
         break;
@@ -69,8 +69,8 @@ int system(const char *cmdline) {
   } else {
     wstatus = -1;
   }
-  sigaction(SIGINT, &saveint, NULL);
-  sigaction(SIGQUIT, &savequit, NULL);
-  sigprocmask(SIG_SETMASK, &savemask, NULL);
+  sigaction(SIGINT, &saveint, 0);
+  sigaction(SIGQUIT, &savequit, 0);
+  sigprocmask(SIG_SETMASK, &savemask, 0);
   return wstatus;
 }

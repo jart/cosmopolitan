@@ -30,14 +30,10 @@
  * time. Among the more popular is CLOCK_MONOTONIC. This function has a
  * zero syscall implementation of that on modern x86.
  *
- * @param clockid can be CLOCK_REALTIME, CLOCK_MONOTONIC, etc. noting
- *     that on Linux CLOCK_MONOTONIC is redefined to use the monotonic
- *     clock that's actually monotonic lool
+ * @param clockid can be CLOCK_REALTIME, CLOCK_MONOTONIC, etc.
  * @param ts is where the result is stored
  * @return 0 on success, or -1 w/ errno
- * @error ENOSYS if clockid isn't available; in which case this function
- *     guarantees an ordinary timestamp is still stored to ts; and
- *     errno isn't restored to its original value, to detect prec. loss
+ * @error EINVAL if clockid isn't supported on this system
  * @see strftime(), gettimeofday()
  * @asyncsignalsafe
  */
@@ -46,6 +42,7 @@ int clock_gettime(int clockid, struct timespec *ts) {
   axdx_t ad;
   struct NtFileTime ft;
   if (!ts) return efault();
+  if (clockid == -1) return einval();
   if (!IsWindows()) {
     if ((rc = sys_clock_gettime(clockid, ts)) == -1 && errno == ENOSYS) {
       ad = sys_gettimeofday((struct timeval *)ts, NULL, NULL);

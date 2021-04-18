@@ -45,8 +45,8 @@ TEST(strerror, einval) {
 }
 
 TEST(strerror, symbolizingTheseNumbersAsErrorsIsHeresyInUnixStyle) {
-  EXPECT_STARTSWITH("E?", strerror(0));
-  EXPECT_STARTSWITH("E?", strerror(-1));
+  EXPECT_STARTSWITH("EUNKNOWN", strerror(0));
+  EXPECT_STARTSWITH("EUNKNOWN", strerror(-1));
 }
 
 TEST(strerror, enotconn_orLinkerIsntUsingLocaleC_orCodeIsOutOfSync) {
@@ -55,9 +55,9 @@ TEST(strerror, enotconn_orLinkerIsntUsingLocaleC_orCodeIsOutOfSync) {
 }
 
 TEST(strerror, exfull_orLinkerIsntUsingLocaleC_orCodeIsOutOfSync) {
-  if (IsLinux() && !IsTiny()) {
-    EXPECT_STARTSWITH("EXFULL", strerror(EXFULL));
+  if (!IsTiny()) {
+    EXPECT_STARTSWITH("ETXTBSY", strerror(ETXTBSY));
   } else {
-    EXPECT_STARTSWITH("E?", strerror(EXFULL));
+    EXPECT_STARTSWITH("EUNKNOWN", strerror(ETXTBSY));
   }
 }

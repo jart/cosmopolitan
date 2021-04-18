@@ -49,6 +49,8 @@ static const char kEscapeUrlPathSegment[256] = {
  *
  * Please note this will URI encode the slash character. That's because
  * segments are the labels between the slashes in a path.
+ *
+ * @param size if -1 implies strlen
  */
 struct EscapeResult EscapeUrlPathSegment(const char *data, size_t size) {
   return EscapeUrl(data, size, kEscapeUrlPathSegment);

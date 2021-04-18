@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/mem/mem.h"
 
@@ -27,5 +28,11 @@
  * @return new address or NULL w/ errno and ptr is NOT free()'d
  */
 void *reallocarray(void *ptr, size_t nmemb, size_t itemsize) {
-  return realloc(ptr, nmemb * itemsize);
+  size_t n;
+  if (!__builtin_mul_overflow(nmemb, itemsize, &n)) {
+    return realloc(ptr, n);
+  } else {
+    errno = ENOMEM;
+    return NULL;
+  }
 }

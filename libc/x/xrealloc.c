@@ -21,13 +21,23 @@
 #include "libc/x/x.h"
 
 /**
- * Relocates, extends, and/or shrinks memory──or die.
+ * Allocates/expands/shrinks/frees memory, or die.
  *
- * This API is fabulous since it categorically eliminates an extremely
- * common type of memory bug, by simply redefining it as a crash.
+ * This API enables you to do the following:
+ *
+ *     p = xrealloc(p, n)
+ *
+ * The standard behaviors for realloc() still apply:
+ *
+ * - `!p` means xmalloc (returns non-NULL)
+ * - `p && n` means resize (returns non-NULL)
+ * - `p && !n` means free (returns NULL)
+ *
+ * The complexity of resizing is guaranteed to be amortized.
  */
-void *xrealloc(void *p1, size_t newsize) {
-  void *p2 = realloc(p1, newsize);
-  if (!p2) xdie();
-  return p2;
+void *xrealloc(void *p, size_t n) {
+  void *q;
+  q = realloc(p, n);
+  if (!q && !(p && !n)) xdie();
+  return q;
 }

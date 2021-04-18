@@ -21,29 +21,24 @@
 #include "libc/testlib/testlib.h"
 
 TEST(bitreverse, test) {
+  EXPECT_EQ(0xde, BITREVERSE8(123));
   EXPECT_EQ(0xde, bitreverse8(123));
-  EXPECT_EQ(0xde, (bitreverse8)(123));
+  EXPECT_EQ(0xde00, BITREVERSE16(123));
   EXPECT_EQ(0xde00, bitreverse16(123));
-  EXPECT_EQ(0xde00, (bitreverse16)(123));
   EXPECT_EQ(0xde000000u, bitreverse32(123));
-  EXPECT_EQ(0xde000000u, (bitreverse32)(123));
   EXPECT_EQ(0xde00000000000000ul, bitreverse64(123));
-  EXPECT_EQ(0xde00000000000000ul, (bitreverse64)(123));
   EXPECT_EQ(0x482d96c305f7c697ul, bitreverse64(0xe963efa0c369b412));
-  EXPECT_EQ(0x482d96c305f7c697ul, (bitreverse64)(0xe963efa0c369b412));
 }
 
 BENCH(bitreverse, bench) {
-  EZBENCH2("bitreverse8 mac", donothing,
+  EZBENCH2("BITREVERSE8", donothing,
+           EXPROPRIATE(BITREVERSE8(CONCEAL("r", 123))));
+  EZBENCH2("bitreverse8", donothing,
            EXPROPRIATE(bitreverse8(CONCEAL("r", 123))));
-  EZBENCH2("bitreverse8 fun", donothing,
-           EXPROPRIATE((bitreverse8)(CONCEAL("r", 123))));
-  EZBENCH2("bitreverse16 mac", donothing,
-           EXPROPRIATE(bitreverse16(CONCEAL("r", 123))));
-  EZBENCH2("bitreverse16 fun", donothing,
-           EXPROPRIATE((bitreverse16)(CONCEAL("r", 123))));
-  EZBENCH2("bitreverse32 mac", donothing,
+  EZBENCH2("BITREVERSE16", donothing,
+           EXPROPRIATE(BITREVERSE16(CONCEAL("r", 123))));
+  EZBENCH2("bitreverse32", donothing,
            EXPROPRIATE(bitreverse32(CONCEAL("r", 123))));
-  EZBENCH2("bitreverse32 fun", donothing,
-           EXPROPRIATE((bitreverse32)(CONCEAL("r", (123)))));
+  EZBENCH2("bitreverse64", donothing,
+           EXPROPRIATE(bitreverse64(CONCEAL("r", 123))));
 }

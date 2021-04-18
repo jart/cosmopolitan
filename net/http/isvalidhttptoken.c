@@ -21,7 +21,7 @@
 
 // http/1.1 token dispatch
 // 0 is CTLs, SP, ()<>@,;:\"/[]?={}
-// 1 is legal ascii
+// 1 is what remains of ascii
 static const char kHttpToken[256] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x00
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x10
@@ -41,10 +41,15 @@ static const char kHttpToken[256] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0xf0
 };
 
+/**
+ * Returns true if string is ASCII without delimiters.
+ *
+ * @param n if -1 implies strlen
+ */
 bool IsValidHttpToken(const char *s, size_t n) {
   size_t i;
   if (!n) return false;
-  if (n == -1) n = strlen(s);
+  if (n == -1) n = s ? strlen(s) : 0;
   for (i = 0; i < n; ++i) {
     if (!kHttpToken[s[i] & 0xff]) {
       return false;

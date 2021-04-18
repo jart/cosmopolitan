@@ -45,12 +45,6 @@
 #define IsTrustworthy() 0
 #endif
 
-#ifdef SECURITY_BLANKETS
-#define UseSecurityBlankets() 1
-#else
-#define UseSecurityBlankets() 0
-#endif
-
 #ifdef TINY
 #define IsTiny() 1
 #else

@@ -29,13 +29,15 @@ const struct IdName kZipCompressionNames[] = {
 const struct IdName kZipExtraNames[] = {
     {kZipExtraZip64, "kZipExtraZip64"},
     {kZipExtraNtfs, "kZipExtraNtfs"},
+    {kZipExtraUnix, "kZipExtraUnix"},
     {kZipExtraExtendedTimestamp, "kZipExtraExtendedTimestamp"},
+    {kZipExtraInfoZipNewUnixExtra, "kZipExtraInfoZipNewUnixExtra"},
     {0, 0},
 };
 
 const struct IdName kZipIattrNames[] = {
     {kZipIattrBinary, "kZipIattrBinary"},
-    {kZipIattrAscii, "kZipIattrAscii"},
+    {kZipIattrText, "kZipIattrText"},
     {0, 0},
 };
 

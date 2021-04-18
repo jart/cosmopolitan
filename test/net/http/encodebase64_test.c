@@ -126,6 +126,18 @@ TEST(DecodeBase64, testInvalidSequences_skipsOverThem) {
   EXPECT_BINEQ(u"♦ ", gc(DecodeBase64("====BB==", 8, 0)));
 }
 
+TEST(DecodeBase64, testOom_returnsNullAndSetsSizeToZero) {
+  n = 31337;
+  EXPECT_EQ(NULL, DecodeBase64("hello", 0x1000000000000, &n));
+  EXPECT_EQ(0, n);
+}
+
+TEST(EncodeBase64, testOom_returnsNullAndSetsSizeToZero) {
+  n = 31337;
+  EXPECT_EQ(NULL, EncodeBase64("hello", 0x1000000000000, &n));
+  EXPECT_EQ(0, n);
+}
+
 TEST(Base64, RoundTrip) {
   for (i = 0; i < 1000; ++i) {
     n = rand() % 32;

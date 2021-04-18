@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon errno,EKEYEXPIRED,127,0,0,0,0,0
+.syscon junkerr,EKEYEXPIRED,127,0,0,0,0,0

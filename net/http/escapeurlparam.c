@@ -44,6 +44,8 @@ static const char kEscapeUrlParam[256] = {
 
 /**
  * Escapes query/form name/parameter.
+ *
+ * @param size if -1 implies strlen
  */
 struct EscapeResult EscapeUrlParam(const char *data, size_t size) {
   return EscapeUrl(data, size, kEscapeUrlParam);

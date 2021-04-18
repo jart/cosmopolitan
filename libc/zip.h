@@ -10,7 +10,7 @@
 
 #define kZipAlign 2
 
-#define kZipCosmopolitanVersion 20
+#define kZipCosmopolitanVersion kZipEra2001
 
 #define kZipOsDos         0
 #define kZipOsAmiga       1
@@ -37,8 +37,8 @@
 #define kZipEra1993 20 /* PKZIP 2.0: deflate/subdir/etc. support */
 #define kZipEra2001 45 /* PKZIP 4.5: kZipExtraZip64 support */
 
-#define kZipIattrBinary 0
-#define kZipIattrAscii  1
+#define kZipIattrBinary 0 /* first bit not set */
+#define kZipIattrText   1 /* first bit set */
 
 #define kZipCompressionNone    0
 #define kZipCompressionDeflate 8
@@ -48,6 +48,9 @@
 #define kZipCdirAlign      kZipAlign
 #define kZipCdirHdrLinkableSize \
   ROUNDUP(kZipCfileHdrMinSize + PATH_MAX, kZipCdirAlign)
+
+#define kZipCdir64HdrMagic   0x06064b50 /* PK♣♠ "PK\6\6" */
+#define kZipCdir64HdrMinSize 56
 
 #define kZipCfileHdrMagic                 0x02014b50 /* PK☺☻ "PK\1\2" */
 #define kZipCfileHdrMinSize               46
@@ -73,10 +76,12 @@
 
 #define kZipGflagUtf8 0x800
 
-#define kZipExtraHdrSize           4
-#define kZipExtraZip64             0x0001
-#define kZipExtraNtfs              0x000a
-#define kZipExtraExtendedTimestamp 0x5455
+#define kZipExtraHdrSize             4
+#define kZipExtraZip64               0x0001
+#define kZipExtraNtfs                0x000a
+#define kZipExtraUnix                0x000d
+#define kZipExtraExtendedTimestamp   0x5455
+#define kZipExtraInfoZipNewUnixExtra 0x7875
 
 #define kZipCfileMagic "PK\001\002"
 
@@ -91,15 +96,30 @@
 #define ZIP_CDIR_SIZE(P)          READ32LE((P) + 12)
 #define ZIP_CDIR_OFFSET(P)        READ32LE((P) + 16)
 #define ZIP_CDIR_COMMENTSIZE(P)   READ16LE((P) + 20)
-#define ZIP_CDIR_COMMENT(P)       (&(P)[22])
+#define ZIP_CDIR_COMMENT(P)       ((P) + 22) /* recommend stopping at nul */
 #define ZIP_CDIR_HDRSIZE(P)       (ZIP_CDIR_COMMENTSIZE(P) + kZipCdirHdrMinSize)
+
+/* zip64 end of central directory record */
+#define ZIP_CDIR64_MAGIC(P)         READ32LE(P)
+#define ZIP_CDIR64_HDRSIZE(P)       (READ64LE((P) + 4) + 12)
+#define ZIP_CDIR64_VERSIONMADE(P)   READ16LE((P) + 12)
+#define ZIP_CDIR64_VERSIONNEED(P)   READ16LE((P) + 14)
+#define ZIP_CDIR64_DISK(P)          READ32LE((P) + 16)
+#define ZIP_CDIR64_STARTINGDISK(P)  READ32LE((P) + 20)
+#define ZIP_CDIR64_RECORDSONDISK(P) READ64LE((P) + 24)
+#define ZIP_CDIR64_RECORDS(P)       READ64LE((P) + 32)
+#define ZIP_CDIR64_SIZE(P)          READ64LE((P) + 40)
+#define ZIP_CDIR64_OFFSET(P)        READ64LE((P) + 48)
+#define ZIP_CDIR64_COMMENTSIZE(P) \
+  (ZIP_CDIR64_HDRSIZE(P) >= 56 ? ZIP_CDIR64_HDRSIZE(P) - 56 : 0)
+#define ZIP_CDIR64_COMMENT(P) ((P) + 56) /* recommend stopping at nul */
 
 /* central directory file header */
 #define ZIP_CFILE_MAGIC(P)          READ32LE(P)
-#define ZIP_CFILE_VERSIONMADE(P)    ((P)[4])
-#define ZIP_CFILE_FILEATTRCOMPAT(P) ((P)[5])
-#define ZIP_CFILE_VERSIONNEED(P)    ((P)[6])
-#define ZIP_CFILE_OSNEED(P)         ((P)[7])
+#define ZIP_CFILE_VERSIONMADE(P)    (255 & (P)[4])
+#define ZIP_CFILE_FILEATTRCOMPAT(P) (255 & (P)[5])
+#define ZIP_CFILE_VERSIONNEED(P)    (255 & (P)[6])
+#define ZIP_CFILE_OSNEED(P)         (255 & (P)[7])
 #define ZIP_CFILE_GENERALFLAG(P)    READ16LE((P) + kZipCfileOffsetGeneralflag)
 #define ZIP_CFILE_COMPRESSIONMETHOD(P) \
   READ16LE((P) + kZipCfileOffsetCompressionmethod)
@@ -119,18 +139,19 @@
 #define ZIP_CFILE_EXTERNALATTRIBUTES(P) \
   READ32LE((P) + kZipCfileOffsetExternalattributes)
 #define ZIP_CFILE_OFFSET(P) READ32LE((P) + kZipCfileOffsetOffset)
-#define ZIP_CFILE_NAME(P)   ((const char *)(&(P)[46])) /* not nul-terminated */
-#define ZIP_CFILE_EXTRA(P)  (&(P)[46 + ZIP_CFILE_NAMESIZE(P)])
-#define ZIP_CFILE_COMMENT(P) \
-  (&(P)[46 + ZIP_CFILE_NAMESIZE(P) + ZIP_CFILE_EXTRASIZE(P)])
+#define ZIP_CFILE_NAME(P)   ((const char *)((P) + 46)) /* not nul-terminated */
+#define ZIP_CFILE_EXTRA(P)  ((P) + 46 + ZIP_CFILE_NAMESIZE(P))
+#define ZIP_CFILE_COMMENT(P)                         \
+  ((const char *)((P) + 46 + ZIP_CFILE_NAMESIZE(P) + \
+                  ZIP_CFILE_EXTRASIZE(P))) /* recommend stopping at nul */
 #define ZIP_CFILE_HDRSIZE(P)                                                   \
   (ZIP_CFILE_NAMESIZE(P) + ZIP_CFILE_EXTRASIZE(P) + ZIP_CFILE_COMMENTSIZE(P) + \
    kZipCfileHdrMinSize)
 
 /* local file header */
 #define ZIP_LFILE_MAGIC(P)       READ32LE(P)
-#define ZIP_LFILE_VERSIONNEED(P) ((P)[4])
-#define ZIP_LFILE_OSNEED(P)      ((P)[5])
+#define ZIP_LFILE_VERSIONNEED(P) (255 & (P)[4])
+#define ZIP_LFILE_OSNEED(P)      (255 & (P)[5])
 #define ZIP_LFILE_GENERALFLAG(P) READ16LE((P) + kZipLfileOffsetGeneralflag)
 #define ZIP_LFILE_COMPRESSIONMETHOD(P) \
   READ16LE((P) + kZipLfileOffsetCompressionmethod)
@@ -145,8 +166,8 @@
   READ32LE((P) + kZipLfileOffsetUncompressedsize)
 #define ZIP_LFILE_NAMESIZE(P)  READ16LE((P) + 26)
 #define ZIP_LFILE_EXTRASIZE(P) READ16LE((P) + 28)
-#define ZIP_LFILE_NAME(P)      ((const char *)(&(P)[30]))
-#define ZIP_LFILE_EXTRA(P)     (&(P)[30 + ZIP_LFILE_NAMESIZE(P)])
+#define ZIP_LFILE_NAME(P)      ((const char *)((P) + 30))
+#define ZIP_LFILE_EXTRA(P)     ((P) + 30 + ZIP_LFILE_NAMESIZE(P))
 #define ZIP_LFILE_HDRSIZE(P) \
   (ZIP_LFILE_NAMESIZE(P) + ZIP_LFILE_EXTRASIZE(P) + kZipLfileHdrMinSize)
 #define ZIP_LFILE_CONTENT(P) ((P) + ZIP_LFILE_HDRSIZE(P))
@@ -154,9 +175,20 @@
 
 #define ZIP_EXTRA_HEADERID(P)    READ16LE(P)
 #define ZIP_EXTRA_CONTENTSIZE(P) READ16LE((P) + 2)
-#define ZIP_EXTRA_CONTENT(P)     (&(P)[4])
+#define ZIP_EXTRA_CONTENT(P)     ((P) + 4)
 #define ZIP_EXTRA_SIZE(P)        (ZIP_EXTRA_CONTENTSIZE(P) + kZipExtraHdrSize)
 
+uint8_t *GetZipCdir(const uint8_t *, size_t);
+bool IsZipCdir32(const uint8_t *, size_t, size_t);
+bool IsZipCdir64(const uint8_t *, size_t, size_t);
+int GetZipCfileMode(const uint8_t *);
+uint64_t GetZipCdirOffset(const uint8_t *);
+uint64_t GetZipCdirRecords(const uint8_t *);
+uint64_t GetZipCfileUncompressedSize(const uint8_t *);
+uint64_t GetZipCfileCompressedSize(const uint8_t *);
+uint64_t GetZipCfileOffset(const uint8_t *);
+uint64_t GetZipLfileUncompressedSize(const uint8_t *);
+uint64_t GetZipLfileCompressedSize(const uint8_t *);
 uint8_t *zipfindcentraldir(const uint8_t *, size_t);
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

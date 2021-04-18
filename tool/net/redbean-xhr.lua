@@ -1,3 +1,8 @@
 -- redbean xhr handler demo
-SetHeader('Vary', 'X-Custom-Header')
-SetHeader('X-Custom-Header', 'hello ' .. GetHeader('x-custom-header'))
+hdr = GetHeader('x-custom-header')
+if hdr then
+   SetHeader('Vary', 'X-Custom-Header')
+   SetHeader('X-Custom-Header', 'hello ' .. hdr)
+else
+   ServeError(400)
+end

@@ -16,60 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/thompike.h"
-#include "net/http/http.h"
+#include "libc/bits/bits.h"
+#include "libc/zip.h"
 
 /**
- * Returns true if request path seems legit.
- *
- * 1. Request path must start with '/'.
- * 2. The substring "//" is disallowed.
- * 3. We won't serve hidden files (segment starts with '.').
- * 4. We won't serve paths with segments equal to "." or "..".
- *
- * It is assumed that the URI parser already took care of percent
- * escape decoding as well as ISO-8859-1 decoding. The input needs
- * to be a UTF-8 string.
+ * Returns true if zip end of central directory header seems legit.
  */
-bool IsAcceptableHttpRequestPath(const char *data, size_t size) {
-  bool t;
-  size_t i;
-  unsigned n;
-  wint_t x, y, a, b;
-  const char *p, *e;
-  if (!size || *data != '/') return false;
-  t = 0;
-  p = data;
-  e = p + size;
-  while (p < e) {
-    x = *p++ & 0xff;
-    if (x >= 0300) {
-      a = ThomPikeByte(x);
-      n = ThomPikeLen(x) - 1;
-      if (p + n <= e) {
-        for (i = 0;;) {
-          b = p[i] & 0xff;
-          if (!ThomPikeCont(b)) break;
-          a = ThomPikeMerge(a, b);
-          if (++i == n) {
-            x = a;
-            p += i;
-            break;
-          }
-        }
-      }
-    }
-    if (x == '\\') {
-      x = '/';
-    }
-    if (!t) {
-      t = true;
-    } else {
-      if ((x == '/' || x == '.') && y == '/') {
-        return false;
-      }
-    }
-    y = x;
+bool IsZipCdir32(const uint8_t *p, size_t n, size_t i) {
+  if (i > n || n - i < kZipCdirHdrMinSize) return false;
+  if (READ32LE(p + i) != kZipCdirHdrMagic) return false;
+  if (i + ZIP_CDIR_HDRSIZE(p + i) > n) return false;
+  if (ZIP_CDIR_DISK(p + i) != ZIP_CDIR_STARTINGDISK(p + i)) return false;
+  if (ZIP_CDIR_RECORDSONDISK(p + i) != ZIP_CDIR_RECORDS(p + i)) return false;
+  if (ZIP_CDIR_RECORDS(p + i) * kZipCfileHdrMinSize > ZIP_CDIR_SIZE(p + i)) {
+    return false;
+  }
+  if (ZIP_CDIR_OFFSET(p + i) + ZIP_CDIR_SIZE(p + i) > i) {
+    return false;
   }
   return true;
 }

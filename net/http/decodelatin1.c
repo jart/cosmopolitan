@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/pcmpgtb.h"
+#include "libc/intrin/pmovmskb.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "net/http/http.h"
@@ -25,14 +27,15 @@
  *
  * @param data is input value
  * @param size if -1 implies strlen
- * @param out_size if non-NULL receives output length on success
+ * @param out_size if non-NULL receives output length
  * @return allocated NUL-terminated buffer, or NULL w/ errno
  */
 char *DecodeLatin1(const char *data, size_t size, size_t *out_size) {
   int c;
+  size_t n;
   char *r, *q;
   const char *p, *e;
-  if (size == -1) size = strlen(data);
+  if (size == -1) size = data ? strlen(data) : 0;
   if ((r = malloc(size * 2 + 1))) {
     q = r;
     p = data;
@@ -46,9 +49,14 @@ char *DecodeLatin1(const char *data, size_t size, size_t *out_size) {
         *q++ = 0200 | c & 077;
       }
     }
-    if (out_size) *out_size = q - r;
+    n = q - r;
     *q++ = '\0';
-    if ((q = realloc(r, q - r))) r = q;
+    if ((q = realloc(r, n + 1))) r = q;
+  } else {
+    n = 0;
+  }
+  if (out_size) {
+    *out_size = n;
   }
   return r;
 }

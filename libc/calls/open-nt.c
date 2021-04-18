@@ -47,14 +47,11 @@ static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
                ? kNtFileShareExclusive
                : kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,
            &kNtIsInheritable,
-           (flags & O_CREAT) && (flags & O_EXCL)
-               ? kNtCreateNew
-               : (flags & O_CREAT) && (flags & O_TRUNC)
-                     ? kNtCreateAlways
-                     : (flags & O_CREAT)
-                           ? kNtOpenAlways
-                           : (flags & O_TRUNC) ? kNtTruncateExisting
-                                               : kNtOpenExisting,
+           (flags & O_CREAT) && (flags & O_EXCL)    ? kNtCreateNew
+           : (flags & O_CREAT) && (flags & O_TRUNC) ? kNtCreateAlways
+           : (flags & O_CREAT)                      ? kNtOpenAlways
+           : (flags & O_TRUNC)                      ? kNtTruncateExisting
+                                                    : kNtOpenExisting,
            /* TODO(jart): Should we just always set overlapped? */
            (/* note: content indexer demolishes unix-ey i/o performance */
             kNtFileAttributeNotContentIndexed | kNtFileAttributeNormal |

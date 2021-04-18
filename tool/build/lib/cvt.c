@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 #include "libc/math.h"
+#include "libc/str/str.h"
 #include "tool/build/lib/cvt.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/machine.h"

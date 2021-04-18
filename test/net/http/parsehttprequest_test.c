@@ -202,6 +202,35 @@ User-Agent:  \t hi there \t \r\n\
   EXPECT_STREQ("hi there", gc(slice(m, req->headers[kHttpUserAgent])));
 }
 
+TEST(ParseHttpRequest, testAbsentHost_setsSliceToZero) {
+  static const char m[] = "\
+GET / HTTP/1.1\r\n\
+\r\n";
+  EXPECT_EQ(strlen(m), ParseHttpRequest(req, m, strlen(m)));
+  EXPECT_EQ(0, req->headers[kHttpHost].a);
+  EXPECT_EQ(0, req->headers[kHttpHost].b);
+}
+
+TEST(ParseHttpRequest, testEmptyHost_setsSliceToNonzeroValue) {
+  static const char m[] = "\
+GET / HTTP/1.1\r\n\
+Host:\r\n\
+\r\n";
+  EXPECT_EQ(strlen(m), ParseHttpRequest(req, m, strlen(m)));
+  EXPECT_NE(0, req->headers[kHttpHost].a);
+  EXPECT_EQ(req->headers[kHttpHost].a, req->headers[kHttpHost].b);
+}
+
+TEST(ParseHttpRequest, testEmptyHost2_setsSliceToNonzeroValue) {
+  static const char m[] = "\
+GET / HTTP/1.1\r\n\
+Host:    \r\n\
+\r\n";
+  EXPECT_EQ(strlen(m), ParseHttpRequest(req, m, strlen(m)));
+  EXPECT_NE(0, req->headers[kHttpHost].a);
+  EXPECT_EQ(req->headers[kHttpHost].a, req->headers[kHttpHost].b);
+}
+
 void DoTiniestHttpRequest(void) {
   static const char m[] = "\
 GET /\r\n\

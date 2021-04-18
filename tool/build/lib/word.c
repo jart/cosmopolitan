@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/str/str.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/word.h"

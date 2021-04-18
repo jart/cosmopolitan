@@ -48,6 +48,8 @@ static const char kEscapeUrlPath[256] = {
  * Escapes URL path.
  *
  * This is the same as EscapeUrlPathSegment() except slash is allowed.
+ *
+ * @param size if -1 implies strlen
  */
 struct EscapeResult EscapeUrlPath(const char *data, size_t size) {
   return EscapeUrl(data, size, kEscapeUrlPath);

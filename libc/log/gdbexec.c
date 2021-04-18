@@ -28,7 +28,7 @@
 /**
  * Attachs GDB temporarilly, to do something like print a variable.
  */
-int(gdbexec)(const char *cmd) {
+privileged int(gdbexec)(const char *cmd) {
   struct StackFrame *bp;
   int pid, ttyin, ttyout;
   intptr_t continuetoaddr;

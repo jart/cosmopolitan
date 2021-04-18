@@ -907,7 +907,7 @@ extern struct MallocParams g_mparams;
 #else /* GNUC */
 #define RTCHECK(e) (e)
 #endif /* GNUC */
-#else  /* !IsTrustworthy() */
+#else /* !IsTrustworthy() */
 #define RTCHECK(e) (1)
 #endif /* !IsTrustworthy() */
 

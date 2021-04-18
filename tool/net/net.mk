@@ -63,19 +63,34 @@ o/$(MODE)/tool/net/%.com.dbg:					\
 o/$(MODE)/tool/net/redbean.com.dbg:				\
 		$(TOOL_NET_DEPS)				\
 		o/$(MODE)/tool/net/redbean.o			\
-		o/$(MODE)/tool/net/redbean.ico.zip.o		\
-		o/$(MODE)/tool/net/redbean.png.zip.o		\
-		o/$(MODE)/tool/net/redbean.css.zip.o		\
-		o/$(MODE)/tool/net/redbean.html.zip.o		\
-		o/$(MODE)/tool/net/redbean.lua.zip.o		\
-		o/$(MODE)/tool/net/redbean-form.lua.zip.o	\
-		o/$(MODE)/tool/net/redbean-xhr.lua.zip.o	\
-		o/$(MODE)/tool/net/.init.lua.zip.o		\
-		o/$(MODE)/tool/net/.reload.lua.zip.o		\
 		o/$(MODE)/tool/net/net.pkg			\
 		$(CRT)						\
 		$(APE)
 	@$(APELINK)
+
+o/$(MODE)/tool/net/redbean.com:					\
+		o/$(MODE)/tool/net/redbean.com.dbg		\
+		tool/net/favicon.ico				\
+		tool/net/redbean.png				\
+		tool/net/.init.lua				\
+		tool/net/.reload.lua
+	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
+	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.ape bs=64 count=11 conv=notrunc 2>/dev/null
+	@$(COMPILE) -AZIP -T$@ zip -qj $@ o/$(MODE)/tool/net/.ape tool/net/.init.lua tool/net/.reload.lua tool/net/favicon.ico tool/net/redbean.png
+
+o/$(MODE)/tool/net/redbean-demo.com:				\
+		o/$(MODE)/tool/net/redbean.com			\
+		tool/net/redbean.mk				\
+		tool/net/index.html				\
+		tool/net/redbean.css				\
+		tool/net/redbean.lua				\
+		tool/net/redbean-form.lua			\
+		tool/net/redbean-xhr.lua			\
+		$(TOOL_NET_HDRS)				\
+		$(TOOL_NET_SRCS)
+	@$(COMPILE) -ACP -T$@ cp $< $@
+	@$(COMPILE) -AZIP -T$@ zip -qj $@ tool/net/redbean.lua tool/net/redbean-form.lua tool/net/redbean-xhr.lua
+	@$(COMPILE) -AZIP -T$@ zip -q  $@ tool/net tool/net/index.html tool/net/redbean.css $(TOOL_NET_HDRS) $(TOOL_NET_SRCS)
 
 .PHONY: o/$(MODE)/tool/net
 o/$(MODE)/tool/net:						\

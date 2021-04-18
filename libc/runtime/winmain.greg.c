@@ -160,17 +160,15 @@ static noasan textwindows wontreturn void WinMainNew(void) {
  *    able to assume that stack addresses are located at higher
  *    addresses than heap and program memory.
  *
- * 5. Windows users are afraid of "drive-by downloads" where someone
- *    might accidentally an evil DLL to their Downloads folder which
- *    then overrides the behavior of a legitimate EXE being run from
- *    the downloads folder. Since we don't even use dynamic linking,
- *    we've cargo culted some API calls, that may harden against it.
+ * 5. Reconfigure x87 FPU so long double is actually long (80 bits).
  *
- * 6. Reconfigure x87 FPU so long double is actually long (80 bits).
- *
- * 7. Finally, we need fork. Microsoft designed Windows to prevent us
- *    from having fork() so we pass pipe handles in an environment
- *    variable literally copy all the memory.
+ * 6. Finally, we need fork. Since disagreeing with fork is axiomatic to
+ *    Microsoft's engineering culture, we need to go to great lengths to
+ *    have it anyway without breaking Microsoft's rules: using the WIN32
+ *    API (i.e. not NTDLL) to copy MAP_PRIVATE pages via a pipe. It'd go
+ *    faster if the COW pages CreateFileMappingNuma claims to have turns
+ *    out to be true. Until then we have a "PC Scale" and entirely legal
+ *    workaround that they hopefully won't block using Windows Defender.
  *
  * @param hInstance call GetModuleHandle(NULL) from main if you need it
  */

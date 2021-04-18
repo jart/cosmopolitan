@@ -16,12 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/str/str.h"
 
 static inline noasan uint64_t UncheckedAlignedRead64(unsigned char *p) {
-  return (uint64_t)p[7] << 070 | (uint64_t)p[6] << 060 | (uint64_t)p[5] << 050 |
-         (uint64_t)p[4] << 040 | (uint64_t)p[3] << 030 | (uint64_t)p[2] << 020 |
-         (uint64_t)p[1] << 010 | (uint64_t)p[0] << 000;
+  return (uint64_t)(255 & p[7]) << 070 | (uint64_t)(255 & p[6]) << 060 |
+         (uint64_t)(255 & p[5]) << 050 | (uint64_t)(255 & p[4]) << 040 |
+         (uint64_t)(255 & p[3]) << 030 | (uint64_t)(255 & p[2]) << 020 |
+         (uint64_t)(255 & p[1]) << 010 | (uint64_t)(255 & p[0]) << 000;
 }
 
 /**

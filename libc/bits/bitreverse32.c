@@ -22,10 +22,10 @@
 /**
  * Reverses bits in 32-bit word.
  */
-uint32_t(bitreverse32)(uint32_t x) {
+uint32_t bitreverse32(uint32_t x) {
   x = bswap_32(x);
-  x = ((x & 0xaaaaaaaa) >> 1) | ((x & 0x55555555) << 1);
-  x = ((x & 0xcccccccc) >> 2) | ((x & 0x33333333) << 2);
-  x = ((x & 0xf0f0f0f0) >> 4) | ((x & 0x0f0f0f0f) << 4);
+  x = (x & 0xaaaaaaaa) >> 1 | (x & 0x55555555) << 1;
+  x = (x & 0xcccccccc) >> 2 | (x & 0x33333333) << 2;
+  x = (x & 0xf0f0f0f0) >> 4 | (x & 0x0f0f0f0f) << 4;
   return x;
 }

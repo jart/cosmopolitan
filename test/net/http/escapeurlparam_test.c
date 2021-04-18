@@ -25,29 +25,29 @@
 
 char *escapeparam(const char *s) {
   struct EscapeResult r;
-  r = EscapeUrlParam(s, strlen(s));
+  r = EscapeUrlParam(s, -1);
   ASSERT_EQ(strlen(r.data), r.size);
   return r.data;
 }
 
-TEST(escapeparam, test) {
+TEST(EscapeUrlParam, test) {
   EXPECT_STREQ("abc%20%26%3C%3E%22%27%01%02",
                gc(escapeparam("abc &<>\"'\1\2")));
 }
 
-TEST(escapeparam, testLargeGrowth) {
+TEST(EscapeUrlParam, testLargeGrowth) {
   EXPECT_STREQ("%22%22%22", gc(escapeparam("\"\"\"")));
 }
 
-TEST(escapeparam, testEmpty) {
+TEST(EscapeUrlParam, testEmpty) {
   EXPECT_STREQ("", gc(escapeparam("")));
 }
 
-TEST(escapeparam, testAstralPlanes_usesUtf8HexEncoding) {
+TEST(EscapeUrlParam, testAstralPlanes_usesUtf8HexEncoding) {
   EXPECT_STREQ("%F0%90%8C%B0", escapeparam("𐌰"));
 }
 
-BENCH(escapeparam, bench) {
-  EZBENCH2("escapeparam", donothing,
+BENCH(EscapeUrlParam, bench) {
+  EZBENCH2("EscapeUrlParam", donothing,
            free(EscapeUrlParam(kHyperion, kHyperionSize).data));
 }

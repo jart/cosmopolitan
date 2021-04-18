@@ -20,6 +20,7 @@
 #include "libc/macros.internal.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "tool/build/lib/abp.h"
 #include "tool/build/lib/address.h"
 #include "tool/build/lib/alu.h"
@@ -1568,7 +1569,11 @@ static void Op1ae(struct Machine *m, uint32_t rde) {
 }
 
 static void OpSalc(struct Machine *m, uint32_t rde) {
-  Write8(m->ax, GetFlag(m->flags, FLAGS_CF));
+  if (GetFlag(m->flags, FLAGS_CF)) {
+    m->ax[0] = 255;
+  } else {
+    m->ax[0] = 0;
+  }
 }
 
 static void OpBofram(struct Machine *m, uint32_t rde) {

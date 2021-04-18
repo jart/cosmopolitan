@@ -70,6 +70,12 @@ TEST(EncodeHttpHeaderValue, testC1_isForbidden) {
   EXPECT_EQ(NULL, gc(EncodeHttpHeaderValue("\302\205", 2, 0)));
 }
 
+TEST(EncodeHttpHeaderValue, testOom_returnsNullAndSetsSizeToZero) {
+  n = 31337;
+  EXPECT_EQ(NULL, EncodeHttpHeaderValue("hello", 0x1000000000000, &n));
+  EXPECT_EQ(0, n);
+}
+
 BENCH(EncodeHttpHeaderValue, bench) {
   n = 22851;
   p = gc(malloc(n));

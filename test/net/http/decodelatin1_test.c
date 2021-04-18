@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 #include "net/http/http.h"
 
@@ -25,4 +27,15 @@ TEST(DecodeLatin1, test) {
   EXPECT_STREQ("", DecodeLatin1(NULL, 0, 0));
   EXPECT_STREQ("¥atta", DecodeLatin1("\245atta", -1, &n));
   EXPECT_EQ(6, n);
+}
+
+TEST(DecodeLatin1, testOom_returnsNullAndSetsSizeToZero) {
+  n = 31337;
+  EXPECT_EQ(NULL, DecodeLatin1("hello", 0x1000000000000, &n));
+  EXPECT_EQ(0, n);
+}
+
+BENCH(DecodeLatin1, bench) {
+  EZBENCH2("DecodeLatin1", donothing,
+           DecodeLatin1(kHyperion, kHyperionSize, 0));
 }

@@ -125,7 +125,8 @@ bool IsValidHttpToken(const char *, size_t);
 char *EncodeHttpHeaderValue(const char *, size_t, size_t *);
 char *VisualizeControlCodes(const char *, size_t, size_t *);
 char *IndentLines(const char *, size_t, size_t *, size_t);
-bool IsAcceptableHttpRequestPath(const char *, size_t);
+bool IsAcceptablePath(const char *, size_t);
+bool IsAcceptableHostPort(const char *, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

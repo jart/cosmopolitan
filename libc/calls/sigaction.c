@@ -39,6 +39,8 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
+#define SA_RESTORER 0x04000000
+
 #ifndef SWITCHEROO
 #define SWITCHEROO(S1, S2, A, B, C, D)                     \
   do {                                                     \

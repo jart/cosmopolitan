@@ -41,13 +41,18 @@ static const signed char kBase64[256] = {
 
 /**
  * Decodes base64 ascii representation to binary.
+ *
+ * @param data is input value
+ * @param size if -1 implies strlen
+ * @param out_size if non-NULL receives output length
+ * @return allocated NUL-terminated buffer, or NULL w/ errno
  */
 void *DecodeBase64(const char *data, size_t size, size_t *out_size) {
-  unsigned w;
+  size_t n;
   char *r, *q;
-  int a, b, c, d;
+  int a, b, c, d, w;
   const char *p, *pe;
-  if (size == -1) size = strlen(data);
+  if (size == -1) size = data ? strlen(data) : 0;
   if ((r = malloc(size / 4 * 3 + 1))) {
     q = r;
     p = data;
@@ -77,9 +82,14 @@ void *DecodeBase64(const char *data, size_t size, size_t *out_size) {
       if (d != -2) *q++ = (w & 0x0000FF) >> 000;
     }
   Done:
-    if (out_size) *out_size = q - r;
+    n = q - r;
     *q++ = '\0';
     if ((q = realloc(r, q - r))) r = q;
+  } else {
+    n = 0;
+  }
+  if (out_size) {
+    *out_size = n;
   }
   return r;
 }

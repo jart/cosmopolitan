@@ -25,7 +25,7 @@
  *
  * @param data is input value
  * @param size if -1 implies strlen
- * @param out_size if non-NULL receives output length on success
+ * @param out_size if non-NULL receives output length
  * @param amt is number of spaces to use
  * @return allocated NUL-terminated buffer, or NULL w/ errno
  */
@@ -33,7 +33,7 @@ char *IndentLines(const char *data, size_t size, size_t *out_size, size_t amt) {
   char *r;
   const char *p;
   size_t i, n, m, a;
-  if (size == -1) size = strlen(data);
+  if (size == -1) size = data ? strlen(data) : 0;
   r = 0;
   n = 0;
   do {
@@ -51,7 +51,9 @@ char *IndentLines(const char *data, size_t size, size_t *out_size, size_t amt) {
     data += m;
     size -= m;
   } while (p);
-  if (out_size) *out_size = n;
+  if (out_size) {
+    *out_size = n;
+  }
   r[n] = '\0';
   return r;
 }

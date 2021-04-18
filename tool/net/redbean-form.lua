@@ -63,7 +63,7 @@ local function main()
    Write('</dl>\n')
 
    Write('<p>')
-   Write('<a href="/tool/net/redbean.lua">Click here</a> ')
+   Write('<a href="redbean.lua">Click here</a> ')
    Write('to return to the previous page.\n')
 end
 

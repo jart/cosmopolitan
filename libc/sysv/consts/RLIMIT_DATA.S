@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon rlim,RLIMIT_DATA,2,2,2,2,2,127
+.syscon rlimit,RLIMIT_DATA,2,2,2,2,2,127

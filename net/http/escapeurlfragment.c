@@ -46,6 +46,8 @@ static const char kEscapeUrlFragment[256] = {
 
 /**
  * Escapes URL fragment.
+ *
+ * @param size if -1 implies strlen
  */
 struct EscapeResult EscapeUrlFragment(const char *data, size_t size) {
   return EscapeUrl(data, size, kEscapeUrlFragment);

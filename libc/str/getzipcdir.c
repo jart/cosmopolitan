@@ -16,46 +16,38 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/gc.internal.h"
-#include "libc/testlib/ezbench.h"
-#include "libc/testlib/testlib.h"
-#include "net/http/escape.h"
-#include "net/http/http.h"
+#include "libc/zip.h"
 
-TEST(IsAcceptableHttpRequestPath, test) {
-  EXPECT_TRUE(IsAcceptableHttpRequestPath("/", 1));
-  EXPECT_TRUE(IsAcceptableHttpRequestPath("/index.html", 11));
-}
-
-TEST(IsAcceptableHttpRequestPath, testDoubleSlash_notAllowed) {
-  EXPECT_FALSE(IsAcceptableHttpRequestPath("//", 2));
-  EXPECT_FALSE(IsAcceptableHttpRequestPath("/foo//bar", 9));
-}
-
-TEST(IsAcceptableHttpRequestPath, testDoesntStartWithSlash_notAllowed) {
-  EXPECT_FALSE(IsAcceptableHttpRequestPath(NULL, 0));
-  EXPECT_FALSE(IsAcceptableHttpRequestPath("*", 1));
-}
-
-TEST(IsAcceptableHttpRequestPath, testNoncanonicalDirectories_areForbidden) {
-  EXPECT_FALSE(IsAcceptableHttpRequestPath("/.", 2));
-  EXPECT_FALSE(IsAcceptableHttpRequestPath("/./", 3));
-  EXPECT_FALSE(IsAcceptableHttpRequestPath("/../", 4));
-}
-
-TEST(IsAcceptableHttpRequestPath, testNoncanonicalWindowsDirs_areForbidden) {
-  EXPECT_FALSE(IsAcceptableHttpRequestPath("\\.", 2));
-  EXPECT_FALSE(IsAcceptableHttpRequestPath("\\.\\", 3));
-  EXPECT_FALSE(IsAcceptableHttpRequestPath("\\..\\", 4));
-}
-
-TEST(IsAcceptableHttpRequestPath, testOverlongSlashDot_isDetected) {
-  EXPECT_FALSE(IsAcceptableHttpRequestPath("/\300\256", 3));
-  EXPECT_FALSE(IsAcceptableHttpRequestPath("/\300\257", 3));
-  EXPECT_FALSE(IsAcceptableHttpRequestPath("\300\256\300\256", 4));
-}
-
-BENCH(IsAcceptableHttpRequestPath, bench) {
-  EZBENCH2("IsAcceptableHttpRequestPath", donothing,
-           IsAcceptableHttpRequestPath("/index.html", 11));
+/**
+ * Locates End Of Central Directory record in ZIP file.
+ *
+ * The ZIP spec says this header can be anywhere in the last 64kb.
+ * We search it backwards for the ZIP-64 "PK♠♠" magic number. If that's
+ * not found, then we search again for the original "PK♣♠" magnum. The
+ * caller needs to check the first four bytes of the returned value to
+ * determine whether to use ZIP_CDIR_xxx() or ZIP_CDIR64_xxx() macros.
+ *
+ * @param p points to file memory
+ * @param n is byte size of file
+ * @return pointer to EOCD64 or EOCD, or NULL if not found
+ */
+uint8_t *GetZipCdir(const uint8_t *p, size_t n) {
+  size_t i, j;
+  if (n >= kZipCdirHdrMinSize) {
+    i = n - kZipCdirHdrMinSize;
+    do {
+      if (READ32LE(p + i) == kZipCdir64HdrMagic && IsZipCdir64(p, n, i)) {
+        return (/*unconst*/ uint8_t *)(p + i);
+      } else if (READ32LE(p + i) == kZipCdirHdrMagic && IsZipCdir32(p, n, i)) {
+        j = i;
+        do {
+          if (READ32LE(p + j) == kZipCdir64HdrMagic && IsZipCdir64(p, n, j)) {
+            return (/*unconst*/ uint8_t *)(p + j);
+          }
+        } while (j-- && i - j < 64 * 1024);
+        return (/*unconst*/ uint8_t *)(p + i);
+      }
+    } while (i--);
+  }
+  return NULL;
 }

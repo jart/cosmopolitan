@@ -24,15 +24,14 @@
 #include "libc/zipos/zipos.internal.h"
 
 ssize_t __zipos_find(struct Zipos *zipos, const struct ZiposUri *name) {
-  size_t i, cf;
-  assert(ZIP_CDIR_MAGIC(zipos->cdir) == kZipCdirHdrMagic);
-  for (i = 0, cf = ZIP_CDIR_OFFSET(zipos->cdir);
-       i < ZIP_CDIR_RECORDS(zipos->cdir);
-       ++i, cf += ZIP_CFILE_HDRSIZE(zipos->map + cf)) {
-    assert(ZIP_CFILE_MAGIC(zipos->map + cf) == kZipCfileHdrMagic);
-    if (name->len == ZIP_CFILE_NAMESIZE(zipos->map + cf) &&
-        memcmp(name->path, ZIP_CFILE_NAME(zipos->map + cf), name->len) == 0) {
-      return cf;
+  size_t i, n, c;
+  c = GetZipCdirOffset(zipos->cdir);
+  n = GetZipCdirRecords(zipos->cdir);
+  for (i = 0; i < n; ++i, c += ZIP_CFILE_HDRSIZE(zipos->map + c)) {
+    assert(ZIP_CFILE_MAGIC(zipos->map + c) == kZipCfileHdrMagic);
+    if (name->len == ZIP_CFILE_NAMESIZE(zipos->map + c) &&
+        memcmp(name->path, ZIP_CFILE_NAME(zipos->map + c), name->len) == 0) {
+      return c;
     }
   }
   return -1;

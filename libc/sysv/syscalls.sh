@@ -61,7 +61,7 @@ scall	sys_select		0x1a104705d205d017	globl hidden
 scall	pselect			0x1b406e20a218afff	globl
 scall	pselect6		0xfffffffffffff10e	globl
 scall	sys_sched_yield		0x15e12a14b103c018	globl hidden # swtch() on xnu
-scall	sys_mremap		0x19bffffffffff019	globl hidden
+scall	__sys_mremap		0x19bffffffffff019	globl hidden
 scall	mincore			0x04e04e04e204e01b	globl
 scall	sys_madvise		0x04b04b04b204b01c	globl hidden
 scall	shmget			0x0e71210e7210901d	globl # consider mmap
@@ -95,7 +95,7 @@ scall	sys_fork		0x0020020022002039	globl hidden # xnu needs eax&=~-edx bc eax al
 #scall	vfork			0x042042042204203a	globl        # this syscall is from the moon so we implement it by hand in libc/calls/hefty/vfork.S
 scall	sys_posix_spawn		0xfffffffff20f4fff	globl hidden # good luck figuring out how xnu defines this
 scall	__sys_execve		0x03b03b03b203b03b	globl hidden
-scall	sys_wait4		0x1c100b007200703d	globl hidden
+scall	__sys_wait4		0x1c100b007200703d	globl hidden
 scall	sys_kill		0x02507a025202503e	globl hidden # kill(pid, sig, 1) b/c xnu
 scall	sys_killpg		0xffffff092fffffff	globl hidden
 scall	clone			0xfffffffffffff038	globl
@@ -137,7 +137,7 @@ scall	sys_lchown		0x1130fe0fe216c05e	globl hidden # impl. w/ fchownat()
 scall	umask			0x03c03c03c203c05f	globl
 scall	sys_gettimeofday	0x1a20430742074060	globl hidden # xnu esi/edx=0
 scall	sys_getrlimit		0x0c20c20c220c2061	globl hidden
-scall	sys_getrusage		0x1bd0130752075062	globl hidden
+scall	__sys_getrusage		0x1bd0130752075062	globl hidden
 scall	sys_sysinfo		0xfffffffffffff063	globl hidden
 scall	sys_times		0xfffffffffffff064	globl hidden
 scall	sys_ptrace		0x01a01a01a201a065	globl hidden
@@ -190,7 +190,8 @@ scall	setfsgid		0xfffffffffffff07b	globl
 scall	capget			0xfffffffffffff07d	globl
 scall	capset			0xfffffffffffff07e	globl
 scall	sigtimedwait		0xffffff159ffff080	globl
-scall	rt_sigqueueinfo		0xfffffffffffff081	globl
+scall	sys_sigqueue		0xffffff1c8fffffff	globl
+scall	sys_sigqueueinfo	0x0f5ffffffffff081	globl # rt_sigqueueinfo on linux
 scall	personality		0xfffffffffffff087	globl
 scall	ustat			0xfffffffffffff088	globl
 scall	sysfs			0xfffffffffffff08b	globl
@@ -254,6 +255,11 @@ scall	timer_settime		0x1beffffffffff0df	globl
 scall	timer_gettime		0x1bfffffffffff0e0	globl
 scall	timer_getoverrun	0x0efffffffffff0e1	globl
 scall	timer_delete		0x0ecffffffffff0e2	globl
+scall	ktimer_create		0xffffff0ebfffffff	globl
+scall	ktimer_delete		0xffffff0ecfffffff	globl
+scall	ktimer_getoverrun	0xffffff0effffffff	globl
+scall	ktimer_gettime		0xffffff0eefffffff	globl
+scall	ktimer_settime		0xffffff0edfffffff	globl
 scall	clock_settime		0x1ac0580e9ffff0e3	globl
 scall	sys_clock_gettime	0x1ab0570e8ffff0e4	globl hidden # Linux 2.6+ (c. 2003); XNU uses magic address
 scall	clock_getres		0x1ad0590eaffff0e5	globl
@@ -690,11 +696,6 @@ scall	ksem_timedwait		0xffffff1b9fffffff	globl
 scall	ksem_trywait		0xffffff193fffffff	globl
 scall	ksem_unlink		0xffffff196fffffff	globl
 scall	ksem_wait		0xffffff192fffffff	globl
-scall	ktimer_create		0xffffff0ebfffffff	globl
-scall	ktimer_delete		0xffffff0ecfffffff	globl
-scall	ktimer_getoverrun	0xffffff0effffffff	globl
-scall	ktimer_gettime		0xffffff0eefffffff	globl
-scall	ktimer_settime		0xffffff0edfffffff	globl
 scall	lchflags		0x130fff187fffffff	globl
 scall	lchmod			0x112fff112fffffff	globl
 scall	lgetfh			0xffffff0a0fffffff	globl
@@ -734,7 +735,6 @@ scall	setfib			0xffffff0affffffff	globl
 scall	sethostid		0xffffff08ffffffff	globl
 scall	setloginclass		0xffffff20cfffffff	globl
 scall	sigblock		0xffffff06dfffffff	globl
-scall	sigqueue		0xffffff1c8fffffff	globl
 scall	sigsetmask		0xffffff06efffffff	globl
 scall	sigstack		0xffffff070fffffff	globl
 scall	sigvec			0xffffff06cfffffff	globl

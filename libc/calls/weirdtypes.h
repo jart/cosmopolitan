@@ -37,6 +37,7 @@
 #define time_t        int64_t
 #define timer_t       void*
 #define uid_t         uint32_t
+#define rlim_t        uint64_t /* int64_t on bsd */
 
 #define int_fast8_t   __INT_FAST8_TYPE__
 #define uint_fast8_t  __UINT_FAST8_TYPE__

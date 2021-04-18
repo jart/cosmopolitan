@@ -8,7 +8,7 @@ o/$(MODE)/test/libc/release/cosmopolitan.zip:			\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/ape/ape-no-modify-self.o		\
 		o/$(MODE)/cosmopolitan.a
-	@$(COMPILE) -AZIP -T$@ zip -j $@ $^
+	@$(COMPILE) -AZIP -T$@ zip -qj $@ $^
 
 o/$(MODE)/test/libc/release/smoke.com:				\
 		o/$(MODE)/test/libc/release/smoke.com.dbg

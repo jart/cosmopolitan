@@ -25,6 +25,7 @@
  * This function is agnostic to the underlying charset.
  * Always using UTF-8 is a good idea.
  *
+ * @param size if -1 implies strlen
  * @see EscapeUrlParam
  * @see EscapeUrlFragment
  * @see EscapeUrlPathSegment
@@ -35,6 +36,7 @@ struct EscapeResult EscapeUrl(const char *data, size_t size,
   char *p;
   size_t i;
   struct EscapeResult r;
+  if (size == -1) size = data ? strlen(data) : 0;
   p = r.data = xmalloc(size * 6 + 1);
   for (i = 0; i < size; ++i) {
     if (!xlat[(c = data[i] & 0xff)]) {

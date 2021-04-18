@@ -28,6 +28,12 @@ TEST(VisualizeControlCodes, test) {
   EXPECT_STREQ("hello\\u0085", VisualizeControlCodes("hello\302\205", -1, 0));
 }
 
+TEST(VisualizeControlCodes, testOom_returnsNullAndSetsSizeToZero) {
+  size_t n = 31337;
+  EXPECT_EQ(NULL, VisualizeControlCodes("hello", 0x1000000000000, &n));
+  EXPECT_EQ(0, n);
+}
+
 BENCH(VisualizeControlCodes, bench) {
   EZBENCH2("VisualizeControlCodes", donothing,
            free(VisualizeControlCodes(kHyperion, kHyperionSize, 0)));

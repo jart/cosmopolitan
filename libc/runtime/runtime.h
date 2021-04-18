@@ -55,7 +55,7 @@ int clearenv(void);
 void fpreset(void);
 int issetugid(void);
 void *mmap(void *, uint64_t, int32_t, int32_t, int32_t, int64_t);
-void *mremap(void *, uint64_t, uint64_t, int32_t, void *);
+void *mremap(void *, size_t, size_t, int, ...);
 int munmap(void *, uint64_t);
 int mprotect(void *, uint64_t, int) privileged;
 int msync(void *, size_t, int);
@@ -87,6 +87,7 @@ void _savexmm(void *);
 void _weakfree(void *);
 void free_s(void *) paramsnonnull() libcesque;
 int close_s(int *) paramsnonnull() libcesque;
+int OpenExecutable(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

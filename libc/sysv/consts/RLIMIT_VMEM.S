@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon misc,SI_LOAD_SHIFT,0x10,0,0,0,0,0
+.syscon compat,RLIMIT_VMEM,9,5,10,127,10,127

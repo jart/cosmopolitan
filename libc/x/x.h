@@ -36,7 +36,8 @@ char *xasprintf(const char *, ...) printfesque(1) paramsnonnull((1)) _XMAL;
 char *xvasprintf(const char *, va_list) _XPNN _XMAL;
 char *xgetline(struct FILE *) _XPNN mallocesque;
 void *xmalloc(size_t) attributeallocsize((1)) _XMAL;
-void *xrealloc(void *, size_t) attributeallocsize((2)) _XRET;
+void *xrealloc(void *, size_t)
+    attributeallocsize((2)) nothrow nocallback nodiscard;
 void *xcalloc(size_t, size_t) attributeallocsize((1, 2)) _XMAL;
 void *xvalloc(size_t) attributeallocsize((1)) _XMALPG;
 void *xmemalign(size_t, size_t) attributeallocalign((1))

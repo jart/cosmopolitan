@@ -17,9 +17,46 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
+#include "libc/macros.internal.h"
+#include "libc/sysv/consts/mremap.h"
 #include "libc/sysv/errfuns.h"
 
-void *mremap(void *old_address, size_t old_size, size_t new_size, int flags,
-             void *new_address) {
-  return (void *)(intptr_t)enosys();
+#define IP(X)      (intptr_t)(X)
+#define VIP(X)     (void *)IP(X)
+#define ALIGNED(p) (!(IP(p) & (FRAMESIZE - 1)))
+
+/**
+ * Relocates mapping.
+ *
+ * @param p is old address
+ * @param n is old size
+ * @param m is new size
+ * @param f should have MREMAP_MAYMOVE and may have MAP_FIXED
+ * @param q is new address
+ */
+void *mremap(void *p, size_t n, size_t m, int f, ... /* void *q */) {
+  return VIP(enosys()); /* TODO: Implement Me! */
+  void *q;
+  va_list va;
+  if (!IsWindows()) {
+    if (!n) return VIP(einval());
+    if (!m) return VIP(einval());
+    if (!ALIGNED(p)) return VIP(einval());
+    n = ROUNDUP(n, FRAMESIZE);
+    m = ROUNDUP(m, FRAMESIZE);
+    if (f & MREMAP_FIXED) {
+      va_start(va, f);
+      q = va_arg(va, void *);
+      va_end(va);
+      if (!ALIGNED(q)) return VIP(einval());
+    } else {
+      q = NULL;
+      if (!(f & MREMAP_MAYMOVE)) {
+      }
+    }
+    return VIP(enosys());
+  } else {
+    return VIP(enosys());
+  }
 }

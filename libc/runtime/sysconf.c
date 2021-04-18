@@ -16,10 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/runtime/clktck.h"
 #include "libc/runtime/sysconf.h"
 
 /**
  * Returns configuration value about system.
- * @param thing can be _SC_XXX
+ *
+ * The following parameters are supported:
+ *
+ * - `_SC_CLK_TCK` returns number of clock ticks per second
+ * - `_SC_ARG_MAX` currently always returns 32768 due to Windows
+ * - `_SC_PAGESIZE` currently always returns 65536 due to Windows
+ *
+ * You are encouraged to undiamond calls to this API as follows:
+ *
+ * - Use `CLK_TCK` instead of `getconf(_SC_CLK_TCK)`
+ * - Use `PAGESIZE` or `FRAMESIZE` instead of `getconf(_SC_PAGESIZE)`
  */
-long(sysconf)(int thing) { return __sysconf(thing); }
+long sysconf(int name) {
+  switch (name) {
+    case _SC_ARG_MAX:
+      return ARG_MAX;
+    case _SC_CLK_TCK:
+      return CLK_TCK;
+    case _SC_PAGESIZE:
+      return FRAMESIZE;
+    default:
+      return -1;
+  }
+}

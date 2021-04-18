@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,16 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/mem.h"
-#include "libc/str/str.h"
-#include "libc/testlib/testlib.h"
+#include "libc/zip.h"
 
-TEST(memcpy, testBackwardsOverlap3) {
-  volatile char *c;
-  c = malloc(3);
-  memcpy(c, "\e[C", 3);
-  memcpy(c, c + 1, VEIL("r", 3) - 1);
-  EXPECT_EQ('[', c[0]);
-  EXPECT_EQ('C', c[1]);
-  free(c);
+/**
+ * Returns uncompressed size in bytes from zip central directory header.
+ */
+uint64_t GetZipCfileUncompressedSize(const uint8_t *z) {
+  uint64_t x;
+  const uint8_t *p, *pe;
+  if ((x = ZIP_CFILE_UNCOMPRESSEDSIZE(z)) == 0xFFFFFFFF) {
+    for (p = ZIP_CFILE_EXTRA(z), pe = p + ZIP_CFILE_EXTRASIZE(z); p < pe;
+         p += ZIP_EXTRA_SIZE(p)) {
+      if (ZIP_EXTRA_HEADERID(p) == kZipExtraZip64 &&
+          0 + 8 <= ZIP_EXTRA_CONTENTSIZE(p)) {
+        return READ64LE(ZIP_EXTRA_CONTENT(p) + 0);
+      }
+    }
+  }
+  return x;
 }

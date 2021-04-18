@@ -42,9 +42,10 @@
 char *EncodeHttpHeaderValue(const char *data, size_t size, size_t *out_size) {
   bool t;
   wint_t x;
+  size_t n;
   char *r, *q;
   const char *p, *e;
-  if (size == -1) size = strlen(data);
+  if (size == -1) size = data ? strlen(data) : 0;
   if ((r = malloc(size + 1))) {
     t = 0;
     q = r;
@@ -77,9 +78,14 @@ char *EncodeHttpHeaderValue(const char *data, size_t size, size_t *out_size) {
       }
     }
     while (q > r && (q[-1] == ' ' || q[-1] == '\t')) --q;
-    if (out_size) *out_size = q - r;
+    n = q - r;
     *q++ = '\0';
     if ((q = realloc(r, q - r))) r = q;
+  } else {
+    n = 0;
+  }
+  if (out_size) {
+    *out_size = n;
   }
   return r;
 }

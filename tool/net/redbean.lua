@@ -69,7 +69,7 @@ local function main()
 
    Write([[
      <h3>post request html form demo</h3>
-     <form action="/tool/net/redbean-form.lua" method="post">
+     <form action="redbean-form.lua" method="post">
      <input type="text" id="firstname" name="firstname">
      <label for="firstname">first name</label>
      <br>
@@ -92,7 +92,7 @@ local function main()
          r.onload = function() {
            document.getElementById("result").innerText = this.getResponseHeader('X-Custom-Header');
          };
-         r.open('POST', '/tool/net/redbean-xhr.lua');
+         r.open('POST', 'redbean-xhr.lua');
          r.setRequestHeader('X-Custom-Header', document.getElementById('x').value);
          r.send();
        }

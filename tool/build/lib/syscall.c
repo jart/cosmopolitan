@@ -77,6 +77,8 @@
 #include "tool/build/lib/throw.h"
 #include "tool/build/lib/xlaterrno.h"
 
+#define SA_RESTORER 0x04000000
+
 #define AT_FDCWD_LINUX   -100
 #define TIOCGWINSZ_LINUX 0x5413
 #define TCGETS_LINUX     0x5401

@@ -5,6 +5,7 @@
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigval.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/calls/struct/timespec.h"
@@ -120,6 +121,7 @@ int getrlimit(int, struct rlimit *);
 int getrusage(int, struct rusage *);
 int kill(int, int);
 int killpg(int, int);
+int sigqueue(int, int, const union sigval);
 int link(const char *, const char *) nothrow;
 int linkat(int, const char *, int, const char *, uint32_t);
 int lstat(const char *, struct stat *);
