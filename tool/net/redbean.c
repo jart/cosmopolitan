@@ -1461,6 +1461,24 @@ static bool IsHiddenPath(const char *s) {
   return false;
 }
 
+static void LaunchBrowser() {
+  char openbrowsercommand[255];
+  char *prog;
+  if (IsWindows()) {
+    prog = "explorer";
+  } else if (IsXnu()) {
+    prog = "open";
+  } else {
+    prog = "xdg-open";
+  }
+  struct in_addr addr = serveraddr.sin_addr;
+  if (addr.s_addr == INADDR_ANY) addr.s_addr = htonl(INADDR_LOOPBACK);
+  snprintf(openbrowsercommand, sizeof(openbrowsercommand), "%s http://%s:%d",
+           prog, inet_ntoa(addr), ntohs(serveraddr.sin_port));
+  DEBUGF("Opening browser with command %s\n", openbrowsercommand);
+  system(openbrowsercommand);
+}
+
 static int LuaServeAsset(lua_State *L) {
   size_t pathlen;
   struct Asset *a;
@@ -1915,6 +1933,11 @@ static int LuaGetZipPaths(lua_State *L) {
   return 1;
 }
 
+static int LuaLaunchBrowser(lua_State *L) {
+  LaunchBrowser();
+  return 1;
+}
+
 static void LuaRun(const char *path) {
   struct Asset *a;
   const char *code;
@@ -1954,6 +1977,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetUri", LuaGetUri},                          //
     {"GetVersion", LuaGetVersion},                  //
     {"GetZipPaths", LuaGetZipPaths},                //
+    {"LaunchBrowser", LuaLaunchBrowser},            //
     {"HasParam", LuaHasParam},                      //
     {"HidePath", LuaHidePath},                      //
     {"LoadAsset", LuaLoadAsset},                    //
