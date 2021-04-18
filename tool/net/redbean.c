@@ -319,7 +319,6 @@ static bool terminated;
 static bool uniprocess;
 static bool invalidated;
 static bool logmessages;
-static bool launchbrowser;
 static bool checkedmethod;
 static bool connectionclose;
 static bool keyboardinterrupt;
@@ -619,8 +618,7 @@ static void GetOpts(int argc, char *argv[]) {
         logmessages = true;
         break;
       case 'b':
-        launchbrowser = true;
-        // logbodies = true;
+        logbodies = true;
         break;
       case 'z':
         printport = true;
@@ -1473,8 +1471,10 @@ static void LaunchBrowser() {
   } else {
     prog = "xdg-open";
   }
-  snprintf(openbrowsercommand, sizeof(openbrowsercommand),
-           "%s http://127.0.0.1:%d", prog, ntohs(serveraddr.sin_port));
+  struct in_addr addr = serveraddr.sin_addr;
+  if (addr.s_addr == INADDR_ANY) addr.s_addr = htonl(INADDR_LOOPBACK);
+  snprintf(openbrowsercommand, sizeof(openbrowsercommand), "%s http://%s:%d",
+           prog, inet_ntoa(addr), ntohs(serveraddr.sin_port));
   DEBUGF("Opening browser with command %s\n", openbrowsercommand);
   system(openbrowsercommand);
 }
@@ -2655,7 +2655,6 @@ void RedBean(int argc, char *argv[]) {
   inbuf.p = xvalloc(inbuf.n);
   hdrbuf.n = 4 * 1024;
   hdrbuf.p = xvalloc(hdrbuf.n);
-  if (launchbrowser) LaunchBrowser();
   while (!terminated) {
     if (zombied) {
       ReapZombies();
