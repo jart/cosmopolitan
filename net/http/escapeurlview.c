@@ -16,42 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/x/x.h"
-#include "net/http/escape.h"
-
-// url path segment dispatch
-// - 0 is -.~_@:!$&'()*+,;=0-9A-Za-z
-// - 1 is everything else which needs uppercase hex %XX
-// note that '& can break html
-// note that '() can break css urls
-// note that unicode can still be wild
-static const char kEscapeUrlPathSegment[256] = {
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x00
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x10
-    1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,  // 0x20
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1,  // 0x30
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x40
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,  // 0x50
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x60
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1,  // 0x70
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x80
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x90
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xa0
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xb0
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xc0
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xd0
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xe0
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xf0
-};
+#include "net/http/url.h"
 
 /**
- * Escapes URL path segment.
- *
- * Please note this will URI encode the slash character. That's because
- * segments are the labels between the slashes in a path.
- *
- * @param size if -1 implies strlen
+ * Escapes URL component using generic table w/ stpcpy() api.
  */
-struct EscapeResult EscapeUrlPathSegment(const char *data, size_t size) {
-  return EscapeUrl(data, size, kEscapeUrlPathSegment);
+char *EscapeUrlView(char *p, struct UrlView *v, const char T[256]) {
+  int c;
+  size_t i;
+  for (i = 0; i < v->n; ++i) {
+    if (!T[(c = v->p[i] & 0xFF)]) {
+      *p++ = c;
+    } else {
+      p[0] = '%';
+      p[1] = "0123456789ABCDEF"[(c & 0xF0) >> 4];
+      p[2] = "0123456789ABCDEF"[(c & 0x0F) >> 0];
+      p += 3;
+    }
+  }
+  return p;
 }

@@ -35,7 +35,7 @@ extern uint8_t __zip_end[];                         /* αpε */
 
 void mcount(void);
 unsigned long getauxval(unsigned long);
-void *mapanon(size_t) vallocesque attributeallocsize((1));
+void *mapanon(size_t) attributeallocsize((1));
 int setjmp(jmp_buf) libcesque returnstwice paramsnonnull();
 void longjmp(jmp_buf, int) libcesque wontreturn paramsnonnull();
 int _setjmp(jmp_buf) libcesque returnstwice paramsnonnull();

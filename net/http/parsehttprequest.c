@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
 #include "libc/alg/arraylist.internal.h"
+#include "libc/bits/bits.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -58,11 +59,19 @@ void DestroyHttpRequest(struct HttpRequest *r) {
  * messages. Line folding is forbidden. State persists across calls so
  * that fragmented messages can be handled efficiently. A limitation on
  * message size is imposed to make the header data structures smaller.
- * All other things are permissive to the greatest extent possible.
- * Further functions are provided for the interpretation, validation,
- * and sanitization of various fields.
+ *
+ * kHttpRepeatable defines which standard header fields are O(1) and
+ * which ones may have comma entries spilled over into xheaders. For
+ * most headers it's sufficient to simply check the static slice. If
+ * r->headers[kHttpFoo].a is zero then the header is totally absent.
+ *
+ * This parser takes about 300 nanoseconds (900 cycles) to parse a 403
+ * byte Chrome HTTP request under MODE=rel on a Core i9 which is about
+ * gigabyte per second of throughput per core.
  *
  * @note we assume p points to a buffer that has >=SHRT_MAX bytes
+ * @see HTTP/1.1 RFC2616 RFC2068
+ * @see HTTP/1.0 RFC1945
  */
 int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
   int c, h, i;
@@ -71,23 +80,21 @@ int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
     c = p[r->i] & 0xff;
     switch (r->t) {
       case START:
-        if (c == '\r' || c == '\n') {
-          ++r->a; /* RFC7230 § 3.5 */
-          break;
-        }
+        if (c == '\r' || c == '\n') break; /* RFC7230 § 3.5 */
+        if (!kHttpToken[c]) return ebadmsg();
         r->t = METHOD;
-        /* fallthrough */
+        r->a = r->i;
+        break;
       case METHOD:
         for (;;) {
           if (c == ' ') {
-            if ((r->method = GetHttpMethod(p + r->a, r->i - r->a)) != -1) {
-              r->uri.a = r->i + 1;
-              r->t = URI;
-            } else {
-              return ebadmsg();
-            }
+            r->method = GetHttpMethod(p + r->a, r->i - r->a);
+            r->xmethod.a = r->a;
+            r->xmethod.b = r->i;
+            r->a = r->i + 1;
+            r->t = URI;
             break;
-          } else if (!('A' <= c && c <= 'Z')) {
+          } else if (!kHttpToken[c]) {
             return ebadmsg();
           }
           if (++r->i == n) break;
@@ -97,17 +104,19 @@ int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
       case URI:
         for (;;) {
           if (c == ' ' || c == '\r' || c == '\n') {
-            if (r->i == r->uri.a) return ebadmsg();
+            if (r->i == r->a) return ebadmsg();
+            r->uri.a = r->a;
             r->uri.b = r->i;
             if (c == ' ') {
-              r->version.a = r->i + 1;
+              r->a = r->i + 1;
               r->t = VERSION;
-            } else if (c == '\r') {
-              r->t = CR1;
             } else {
-              r->t = LF1;
+              r->version = 9;
+              r->t = c == '\r' ? CR1 : LF1;
             }
             break;
+          } else if (c < 0x20 || (0x7F <= c && c < 0xA0)) {
+            return ebadmsg();
           }
           if (++r->i == n) break;
           c = p[r->i] & 0xff;
@@ -115,8 +124,14 @@ int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
         break;
       case VERSION:
         if (c == '\r' || c == '\n') {
-          r->version.b = r->i;
-          r->t = c == '\r' ? CR1 : LF1;
+          if (r->i - r->a == 8 &&
+              (READ64BE(p + r->a) & 0xFFFFFFFFFF00FF00) == 0x485454502F002E00 &&
+              isdigit(p[r->a + 5]) && isdigit(p[r->a + 7])) {
+            r->version = (p[r->a + 5] - '0') * 10 + (p[r->a + 7] - '0');
+            r->t = c == '\r' ? CR1 : LF1;
+          } else {
+            return ebadmsg();
+          }
         }
         break;
       case CR1:
@@ -129,9 +144,7 @@ int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
           break;
         } else if (c == '\n') {
           return ++r->i;
-        } else if (c == ':') {
-          return ebadmsg();
-        } else if (c == ' ' || c == '\t') {
+        } else if (!kHttpToken[c]) {
           return ebadmsg(); /* RFC7230 § 3.2.4 */
         }
         r->k.a = r->i;
@@ -143,6 +156,8 @@ int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
             r->k.b = r->i;
             r->t = HSEP;
             break;
+          } else if (!kHttpToken[c]) {
+            return ebadmsg();
           }
           if (++r->i == n) break;
           c = p[r->i] & 0xff;
@@ -158,7 +173,8 @@ int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
           if (c == '\r' || c == '\n') {
             i = r->i;
             while (i > r->a && (p[i - 1] == ' ' || p[i - 1] == '\t')) --i;
-            if ((h = GetHttpHeader(p + r->k.a, r->k.b - r->k.a)) != -1) {
+            if ((h = GetHttpHeader(p + r->k.a, r->k.b - r->k.a)) != -1 &&
+                (!r->headers[h].a || !kHttpRepeatable[h])) {
               r->headers[h].a = r->a;
               r->headers[h].b = i;
             } else if ((x = realloc(
@@ -172,6 +188,8 @@ int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
             }
             r->t = c == '\r' ? CR1 : LF1;
             break;
+          } else if ((c < 0x20 && c != '\t') || (0x7F <= c && c < 0xA0)) {
+            return ebadmsg();
           }
           if (++r->i == n) break;
           c = p[r->i] & 0xff;

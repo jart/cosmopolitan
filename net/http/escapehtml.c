@@ -16,17 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/str/str.h"
 #include "libc/x/x.h"
 #include "net/http/escape.h"
 
 /**
  * Escapes HTML entities.
+ *
+ * @param size if -1 implies strlen
  */
 struct EscapeResult EscapeHtml(const char *data, size_t size) {
   int c;
   char *p;
   size_t i;
   struct EscapeResult r;
+  if (size == -1) size = data ? strlen(data) : 0;
   p = r.data = xmalloc(size * 6 + 1);
   for (i = 0; i < size; ++i) {
     switch ((c = data[i])) {

@@ -21,7 +21,7 @@
 #include "net/http/http.h"
 
 /**
- * Returns true if request path seems legit.
+ * Returns true if path seems legit.
  *
  * 1. The substring "//" is disallowed.
  * 2. We won't serve hidden files (segment starts with '.').

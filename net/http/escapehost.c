@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,18 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "net/http/http.h"
+#include "net/http/escape.h"
 
-unsigned ParseHttpVersion(const char *p, size_t n) {
-  unsigned x;
-  if (!n) return 9;
-  if (n >= 8 && READ32LE(p) == ('H' | 'T' << 8 | 'T' << 16 | 'P' << 24)) {
-    if (READ32LE(p + 4) == ('/' | '1' << 8 | '.' << 16 | '1' << 24)) {
-      return 101;
-    } else if (READ32LE(p + 4) == ('/' | '1' << 8 | '.' << 16 | '0' << 24)) {
-      return 100;
-    }
-  }
-  return -1;
+/**
+ * Escapes URL host or registry name.
+ *
+ * @param size if -1 implies strlen
+ */
+struct EscapeResult EscapeHost(const char *data, size_t size) {
+  return EscapeUrl(data, size, kEscapeAuthority);
 }

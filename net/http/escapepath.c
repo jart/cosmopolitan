@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,20 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "net/http/geturischeme.inc"
-#include "net/http/uri.h"
+#include "net/http/escape.h"
 
 /**
- * Returns nonzero numeric code for resource paradigms we like.
+ * Escapes URL path.
  *
- * Lookups are case-insensitive and performed using a hash table that's
- * literally perfect.
+ * This is the same as EscapePathSegment() except slash is allowed.
+ *
+ * @param size if -1 implies strlen
  */
-enum UriScheme urischeme(struct UriSlice scheme, const char *str) {
-  const struct UriSchemeSlot *slot;
-  if ((slot = in_word_set(str + scheme.i, scheme.n))) {
-    return slot->code;
-  } else {
-    return 0;
-  }
+struct EscapeResult EscapePath(const char *data, size_t size) {
+  return EscapeUrl(data, size, kEscapePath);
 }

@@ -1,7 +1,6 @@
 /* ANSI-C code produced by gperf version 3.1 */
 /* Command-line: gperf gethttpheader.gperf  */
 /* Computed positions: -k'3-4,10' */
-/* clang-format off */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -108,13 +107,13 @@ hash (register const char *str, register size_t len)
       98, 98, 98, 98, 98, 98, 98, 98, 98, 98,
       98, 98, 98, 98, 98, 30, 98, 98, 98, 98,
       98, 98, 98, 98, 98, 98, 98, 98, 98, 98,
-      98, 98, 98, 98, 98,  5,  5, 30, 55,  0,
-      35, 30,  0, 35, 98, 40,  0, 30,  0, 20,
-      55, 98,  0,  5, 10,  5,  0,  5, 20, 30,
-      98, 98, 98, 98, 98, 98, 98,  5,  5, 30,
-      55,  0, 35, 30,  0, 35, 98, 40,  0, 30,
-       0, 20, 55, 98,  0,  5, 10,  5,  0,  5,
-      20, 30, 98, 98, 98, 98, 98, 98, 98, 98,
+      98, 98, 98, 98, 98,  5,  0, 30, 55,  0,
+       0, 10,  5, 30, 98,  0,  0, 15,  0, 15,
+      51, 98, 30, 55, 10,  5, 35, 20, 25, 10,
+      98, 98, 98, 98, 98, 98, 98,  5,  0, 30,
+      55,  0,  0, 10,  5, 30, 98,  0,  0, 15,
+       0, 15, 51, 98, 30, 55, 10,  5, 35, 20,
+      25, 10, 98, 98, 98, 98, 98, 98, 98, 98,
       98, 98, 98, 98, 98, 98, 98, 98, 98, 98,
       98, 98, 98, 98, 98, 98, 98, 98, 98, 98,
       98, 98, 98, 98, 98, 98, 98, 98, 98, 98,
@@ -153,144 +152,146 @@ hash (register const char *str, register size_t len)
   return hval;
 }
 
-static const struct HttpHeaderSlot *
+const struct HttpHeaderSlot *
 LookupHttpHeader (register const char *str, register size_t len)
 {
   static const struct HttpHeaderSlot wordlist[] =
     {
       {""}, {""},
-#line 65 "gethttpheader.gperf"
+#line 64 "gethttpheader.gperf"
       {"TE",                        kHttpTe},
 #line 18 "gethttpheader.gperf"
       {"Age",                       kHttpAge},
-      {""}, {""},
-#line 58 "gethttpheader.gperf"
-      {"Server",                    kHttpServer},
-#line 60 "gethttpheader.gperf"
-      {"Warning",                   kHttpWarning},
+#line 23 "gethttpheader.gperf"
+      {"Link",                      kHttpLink},
+      {""},
+#line 56 "gethttpheader.gperf"
+      {"Public",                    kHttpPublic},
+#line 50 "gethttpheader.gperf"
+      {"Referer",                   kHttpReferer},
 #line 54 "gethttpheader.gperf"
       {"Via",                       kHttpVia},
       {""},
 #line 24 "gethttpheader.gperf"
       {"Connection",                kHttpConnection},
-#line 56 "gethttpheader.gperf"
-      {"Public",                    kHttpPublic},
+      {""},
 #line 22 "gethttpheader.gperf"
       {"Chunked",                   kHttpChunked},
-#line 66 "gethttpheader.gperf"
+#line 65 "gethttpheader.gperf"
       {"DNT",                       kHttpDnt},
 #line 33 "gethttpheader.gperf"
       {"Date",                      kHttpDate},
-      {""}, {""}, {""}, {""},
-#line 37 "gethttpheader.gperf"
-      {"Host",                      kHttpHost},
-#line 53 "gethttpheader.gperf"
-      {"User-Agent",                kHttpUserAgent},
-#line 57 "gethttpheader.gperf"
-      {"Retry-After",               kHttpRetryAfter},
+#line 49 "gethttpheader.gperf"
+      {"Range",                     kHttpRange},
+      {""}, {""}, {""},
+#line 34 "gethttpheader.gperf"
+      {"ETag",                      kHttpEtag},
+#line 19 "gethttpheader.gperf"
+      {"Allow",                     kHttpAllow},
+#line 45 "gethttpheader.gperf"
+      {"Pragma",                    kHttpPragma},
 #line 51 "gethttpheader.gperf"
       {"Transfer-Encoding",         kHttpTransferEncoding},
       {""},
 #line 28 "gethttpheader.gperf"
       {"Content-Length",            kHttpContentLength},
-#line 19 "gethttpheader.gperf"
-      {"Allow",                     kHttpAllow},
+      {""},
 #line 26 "gethttpheader.gperf"
       {"Content-Encoding",          kHttpContentEncoding},
 #line 25 "gethttpheader.gperf"
       {"Content-Base",              kHttpContentBase},
 #line 31 "gethttpheader.gperf"
       {"Content-Range",             kHttpContentRange},
-#line 69 "gethttpheader.gperf"
+#line 68 "gethttpheader.gperf"
       {"Content-Description",       kHttpContentDescription},
-#line 23 "gethttpheader.gperf"
-      {"Close",                     kHttpClose},
+      {""},
 #line 27 "gethttpheader.gperf"
       {"Content-Language",          kHttpContentLanguage},
+#line 32 "gethttpheader.gperf"
+      {"Content-Type",              kHttpContentType},
+#line 71 "gethttpheader.gperf"
+      {"URI",                       kHttpUri},
+#line 36 "gethttpheader.gperf"
+      {"From",                      kHttpFrom},
       {""},
-#line 20 "gethttpheader.gperf"
-      {"Authorization",             kHttpAuthorization},
-#line 59 "gethttpheader.gperf"
-      {"Vary",                      kHttpVary},
-#line 49 "gethttpheader.gperf"
-      {"Range",                     kHttpRange},
 #line 14 "gethttpheader.gperf"
       {"Accept",                    kHttpAccept},
-#line 52 "gethttpheader.gperf"
-      {"Upgrade",                   kHttpUpgrade},
-#line 41 "gethttpheader.gperf"
-      {"If-Range",                  kHttpIfRange},
-#line 34 "gethttpheader.gperf"
-      {"ETag",                      kHttpEtag},
-      {""},
-#line 45 "gethttpheader.gperf"
-      {"Pragma",                    kHttpPragma},
-#line 50 "gethttpheader.gperf"
-      {"Referer",                   kHttpReferer},
-#line 55 "gethttpheader.gperf"
-      {"Location",                  kHttpLocation},
-      {""},
-#line 17 "gethttpheader.gperf"
-      {"Accept-Language",           kHttpAcceptLanguage},
+#line 60 "gethttpheader.gperf"
+      {"Warning",                   kHttpWarning},
+#line 20 "gethttpheader.gperf"
+      {"Authorization",             kHttpAuthorization},
+      {""}, {""},
 #line 29 "gethttpheader.gperf"
       {"Content-Location",          kHttpContentLocation},
-#line 64 "gethttpheader.gperf"
+#line 63 "gethttpheader.gperf"
       {"Trailer",                   kHttpTrailer},
+#line 55 "gethttpheader.gperf"
+      {"Location",                  kHttpLocation},
+#line 59 "gethttpheader.gperf"
+      {"Vary",                      kHttpVary},
+#line 17 "gethttpheader.gperf"
+      {"Accept-Language",           kHttpAcceptLanguage},
+#line 69 "gethttpheader.gperf"
+      {"Origin",                    kHttpOrigin},
+#line 52 "gethttpheader.gperf"
+      {"Upgrade",                   kHttpUpgrade},
 #line 40 "gethttpheader.gperf"
       {"If-None-Match",             kHttpIfNoneMatch},
 #line 15 "gethttpheader.gperf"
       {"Accept-Charset",            kHttpAcceptCharset},
+#line 53 "gethttpheader.gperf"
+      {"User-Agent",                kHttpUserAgent},
+#line 57 "gethttpheader.gperf"
+      {"Retry-After",               kHttpRetryAfter},
       {""},
-#line 61 "gethttpheader.gperf"
-      {"WWW-Authenticate",          kHttpWwwAuthenticate},
-#line 32 "gethttpheader.gperf"
-      {"Content-Type",              kHttpContentType},
-#line 21 "gethttpheader.gperf"
-      {"Cache-Control",             kHttpCacheControl},
-#line 36 "gethttpheader.gperf"
-      {"From",                      kHttpFrom},
-#line 71 "gethttpheader.gperf"
-      {"Upgrade-Insecure-Requests", kHttpUpgradeInsecureRequests},
+#line 38 "gethttpheader.gperf"
+      {"If-Match",                  kHttpIfMatch},
+#line 42 "gethttpheader.gperf"
+      {"If-Unmodified-Since",       kHttpIfUnmodifiedSince},
+      {""},
 #line 48 "gethttpheader.gperf"
       {"Proxy-Connection",          kHttpProxyConnection},
+#line 66 "gethttpheader.gperf"
+      {"Expect",                    kHttpExpect},
+#line 21 "gethttpheader.gperf"
+      {"Cache-Control",             kHttpCacheControl},
+#line 67 "gethttpheader.gperf"
+      {"Content-Disposition",       kHttpContentDisposition},
       {""},
+#line 43 "gethttpheader.gperf"
+      {"Keep-Alive",                kHttpKeepAlive},
+#line 39 "gethttpheader.gperf"
+      {"If-Modified-Since",         kHttpIfModifiedSince},
 #line 46 "gethttpheader.gperf"
       {"Proxy-Authenticate",        kHttpProxyAuthenticate},
 #line 47 "gethttpheader.gperf"
       {"Proxy-Authorization",       kHttpProxyAuthorization},
-      {""},
-#line 67 "gethttpheader.gperf"
-      {"Expect",                    kHttpExpect},
-#line 44 "gethttpheader.gperf"
-      {"Max-Forwards",              kHttpMaxForwards},
-#line 62 "gethttpheader.gperf"
-      {"Last-Modified",             kHttpLastModified},
-#line 68 "gethttpheader.gperf"
-      {"Content-Disposition",       kHttpContentDisposition},
-#line 43 "gethttpheader.gperf"
-      {"Keep-Alive",                kHttpKeepAlive},
-#line 63 "gethttpheader.gperf"
-      {"Cookie",                    kHttpCookie},
-      {""},
-#line 38 "gethttpheader.gperf"
-      {"If-Match",                  kHttpIfMatch},
-      {""}, {""},
 #line 70 "gethttpheader.gperf"
-      {"Origin",                    kHttpOrigin},
+      {"Upgrade-Insecure-Requests", kHttpUpgradeInsecureRequests},
+#line 61 "gethttpheader.gperf"
+      {"WWW-Authenticate",          kHttpWwwAuthenticate},
+      {""},
+#line 41 "gethttpheader.gperf"
+      {"If-Range",                  kHttpIfRange},
+#line 37 "gethttpheader.gperf"
+      {"Host",                      kHttpHost},
+      {""},
+#line 58 "gethttpheader.gperf"
+      {"Server",                    kHttpServer},
       {""}, {""}, {""},
 #line 16 "gethttpheader.gperf"
       {"Accept-Encoding",           kHttpAcceptEncoding},
 #line 30 "gethttpheader.gperf"
-      {"Content-Md5",               kHttpContentMd5},
-#line 39 "gethttpheader.gperf"
-      {"If-Modified-Since",         kHttpIfModifiedSince},
+      {"Content-MD5",               kHttpContentMd5},
+      {""},
+#line 62 "gethttpheader.gperf"
+      {"Last-Modified",             kHttpLastModified},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""},
-#line 42 "gethttpheader.gperf"
-      {"If-Unmodified-Since",       kHttpIfUnmodifiedSince},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
 #line 35 "gethttpheader.gperf"
-      {"Expires",                   kHttpExpires}
+      {"Expires",                   kHttpExpires},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 44 "gethttpheader.gperf"
+      {"Max-Forwards",              kHttpMaxForwards}
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)

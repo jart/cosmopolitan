@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,15 +16,39 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "net/http/uri.h"
+#include "libc/assert.h"
+#include "libc/str/str.h"
+#include "net/http/http.h"
 
-struct UriSlice uripath(const struct Uri *uri) {
-  if (uri->segs.i) {
-    return (struct UriSlice){
-        uri->segs.p[0].i,
-        (uri->segs.p[uri->segs.i - 1].n +
-         (uri->segs.p[uri->segs.i - 1].i - uri->segs.p[0].i))};
-  } else {
-    return (struct UriSlice){0, 0};
+/**
+ * Returns true if standard header has substring.
+ *
+ * @param m is message parsed by ParseHttpRequest
+ * @param b is buffer that ParseHttpRequest parsed
+ * @param h is known header, e.g. kHttpAcceptEncoding
+ * @param s should not contain comma
+ * @param n is byte length of s where -1 implies strlen
+ * @return true if substring present
+ */
+bool HeaderHasSubstring(struct HttpRequest *m, const char *b, int h,
+                        const char *s, size_t n) {
+  size_t i;
+  assert(0 <= h && h < kHttpHeadersMax);
+  if (n == -1) n = s ? strlen(s) : 0;
+  if (m->headers[h].a) {
+    if (memmem(b + m->headers[h].a, m->headers[h].b - m->headers[h].a, s, n)) {
+      return true;
+    }
+    if (kHttpRepeatable[h]) {
+      for (i = 0; i < m->xheaders.n; ++i) {
+        if (GetHttpHeader(b + m->xheaders.p[i].k.a,
+                          m->xheaders.p[i].k.b - m->xheaders.p[i].k.a) == h &&
+            memmem(b + m->xheaders.p[i].v.a,
+                   m->xheaders.p[i].v.b - m->xheaders.p[i].v.a, s, n)) {
+          return true;
+        }
+      }
+    }
   }
+  return false;
 }

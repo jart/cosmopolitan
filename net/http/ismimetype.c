@@ -16,41 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/x/x.h"
-#include "net/http/escape.h"
-
-// url path dispatch
-// - 0 is -.~_@:!$&'()*+,;=0-9A-Za-z/
-// - 1 is everything else which needs uppercase hex %XX
-// note that '& can break html
-// note that '() can break css urls
-// note that unicode can still be wild
-static const char kEscapeUrlPath[256] = {
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x00
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x10
-    1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x20
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1,  // 0x30
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x40
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,  // 0x50
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x60
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1,  // 0x70
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x80
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x90
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xa0
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xb0
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xc0
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xd0
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xe0
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xf0
-};
+#include "libc/str/str.h"
+#include "net/http/http.h"
 
 /**
- * Escapes URL path.
- *
- * This is the same as EscapeUrlPathSegment() except slash is allowed.
- *
- * @param size if -1 implies strlen
+ * Returns true if content-type 𝑡 has mime-type 𝑠.
  */
-struct EscapeResult EscapeUrlPath(const char *data, size_t size) {
-  return EscapeUrl(data, size, kEscapeUrlPath);
+bool IsMimeType(const char *t, size_t n, const char *s) {
+  size_t i;
+  if (n == -1) n = t ? strlen(t) : 0;
+  for (i = 0; i < n; ++i) {
+    if (!s[i]) return !kHttpToken[t[i] & 0xFF];
+    if (kToLower[s[i] & 0xFF] != kToLower[t[i] & 0xFF]) return false;
+  }
+  return !s[i];
 }

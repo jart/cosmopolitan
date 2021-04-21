@@ -1230,12 +1230,12 @@ forceinline msegmentptr segment_holding(mstate m, char *addr) {
 #define check_malloc_state(M)         do_check_malloc_state(M)
 #endif /* DEBUG */
 
-void do_check_free_chunk(mstate m, mchunkptr p) hidden;
-void do_check_inuse_chunk(mstate m, mchunkptr p) hidden;
-void do_check_top_chunk(mstate m, mchunkptr p) hidden;
-void do_check_malloced_chunk(mstate m, void *mem, size_t s) hidden;
-void do_check_mmapped_chunk(mstate m, mchunkptr p) hidden;
-void do_check_malloc_state(mstate m) hidden;
+void do_check_free_chunk(mstate, mchunkptr) hidden;
+void do_check_inuse_chunk(mstate, mchunkptr) hidden;
+void do_check_top_chunk(mstate, mchunkptr) hidden;
+void do_check_malloced_chunk(mstate, void *, size_t) hidden;
+void do_check_mmapped_chunk(mstate, mchunkptr) hidden;
+void do_check_malloc_state(mstate) hidden;
 
 /* ─────────────────────────── prototypes ──────────────────────────────── */
 

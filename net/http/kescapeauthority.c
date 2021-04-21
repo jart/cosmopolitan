@@ -16,21 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/x/x.h"
 #include "net/http/escape.h"
 
-// url fragment dispatch
-// - 0 is -/?.~_@:!$&'()*+,;=0-9A-Za-z
+// [user[:pass]@]host[:port]|reg_name dispatch
+// - 0 is -_.!~*'();&=+$,0-9A-Za-z
 // - 1 is everything else which needs uppercase hex %XX
 // note that '& can break html
 // note that '() can break css urls
 // note that unicode can still be wild
-static const char kEscapeUrlFragment[256] = {
+// note that IPv6+ can't be encoded this way
+// note that user can look deceptively like host
+const char kEscapeAuthority[256] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x00
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x10
-    1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x20
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0,  // 0x30
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x40
+    1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,  // 0x20
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1,  // 0x30
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x40
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,  // 0x50
     1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x60
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1,  // 0x70
@@ -43,12 +44,3 @@ static const char kEscapeUrlFragment[256] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xe0
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xf0
 };
-
-/**
- * Escapes URL fragment.
- *
- * @param size if -1 implies strlen
- */
-struct EscapeResult EscapeUrlFragment(const char *data, size_t size) {
-  return EscapeUrl(data, size, kEscapeUrlFragment);
-}

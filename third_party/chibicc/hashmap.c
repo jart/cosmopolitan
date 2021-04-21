@@ -26,7 +26,7 @@ static void rehash(HashMap *map) {
       nkeys++;
     }
   }
-  size_t cap = map->capacity;
+  int cap = MAX(8, map->capacity);
   while ((nkeys * 100) / cap >= LOW_WATERMARK) cap = cap * 2;
   assert(cap > 0);
   // Create a new hashmap and copy all key-values.

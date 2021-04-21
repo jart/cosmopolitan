@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,14 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/testlib/ezbench.h"
-#include "libc/testlib/testlib.h"
-#include "net/http/uri.h"
+#include "net/http/escape.h"
 
-TEST(urischeme, test) {
-  EXPECT_EQ(kUriSchemeSip, urischeme((struct UriSlice){0, 3}, "sips"));
-}
-
-BENCH(urischeme, bench) {
-  EZBENCH(donothing, urischeme((struct UriSlice){0, 3}, "sips"));
+/**
+ * Escapes URL path segment.
+ *
+ * Please note this will URI encode the slash character. That's because
+ * segments are the labels between the slashes in a path.
+ *
+ * @param size if -1 implies strlen
+ */
+struct EscapeResult EscapeSegment(const char *data, size_t size) {
+  return EscapeUrl(data, size, kEscapeSegment);
 }

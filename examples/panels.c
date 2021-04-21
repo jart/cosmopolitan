@@ -150,10 +150,8 @@ void Draw(void) {
 }
 
 int main(int argc, char *argv[]) {
-  struct sigaction sa[2] = {
-      {.sa_handler = OnShutdown},
-      {.sa_handler = OnInvalidate, .sa_flags = SA_RESTART},
-  };
+  struct sigaction sa[2] = {{.sa_handler = OnShutdown},
+                            {.sa_handler = OnInvalidate}};
   showcrashreports();
   Setup();
   Enter();

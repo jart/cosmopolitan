@@ -8,9 +8,9 @@ local function main()
    end
    SetStatus(200)
    SetHeader('Content-Type', 'text/html; charset=utf-8')
-   Write('<!doctype html>\n')
-   Write('<title>redbean</title>\n')
-   Write('<h3>POST Request HTML Form Handler Demo</h3>\n')
+   Write('<!doctype html>\r\n')
+   Write('<title>redbean</title>\r\n')
+   Write('<h3>POST Request HTML Form Handler Demo</h3>\r\n')
 
    Write('<p>')
    firstname = GetParam('firstname')
@@ -24,47 +24,47 @@ local function main()
       Write('Thank you for using redbean.')
    end
 
-   Write('<dl>\n')
+   Write('<dl>\r\n')
 
-   Write('<dt>Params\n')
-   Write('<dd>\n')
-   Write('<dl>\n')
+   Write('<dt>Params\r\n')
+   Write('<dd>\r\n')
+   Write('<dl>\r\n')
    params = GetParams()
    for i = 1,#params do
       Write('<dt>')
       Write(EscapeHtml(params[i][1]))
-      Write('\n')
+      Write('\r\n')
       if params[i][2] then
          Write('<dd>')
          Write(EscapeHtml(params[i][2]))
-         Write('\n')
+         Write('\r\n')
       end
    end
-   Write('</dl>\n')
+   Write('</dl>\r\n')
 
-   Write('<dt>Headers\n')
-   Write('<dd>\n')
-   Write('<dl>\n')
+   Write('<dt>Headers\r\n')
+   Write('<dd>\r\n')
+   Write('<dl>\r\n')
    for k,v in pairs(GetHeaders()) do
       Write('<dt>')
       Write(EscapeHtml(k))
-      Write('\n')
+      Write('\r\n')
       Write('<dd>')
       Write(EscapeHtml(v))
-      Write('\n')
+      Write('\r\n')
    end
-   Write('</dl>\n')
+   Write('</dl>\r\n')
 
-   Write('<dt>Payload\n')
+   Write('<dt>Payload\r\n')
    Write('<dd><p>')
    Write(EscapeHtml(GetPayload()))
-   Write('\n')
+   Write('\r\n')
 
-   Write('</dl>\n')
+   Write('</dl>\r\n')
 
    Write('<p>')
    Write('<a href="redbean.lua">Click here</a> ')
-   Write('to return to the previous page.\n')
+   Write('to return to the previous page.\r\n')
 end
 
 main()

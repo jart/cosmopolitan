@@ -39,22 +39,24 @@ textwindows int sys_fstat_nt(int64_t handle, struct stat *st) {
     memset(st, 0, sizeof(*st));
     switch (filetype) {
       case kNtFileTypeChar:
-        st->st_mode = S_IFCHR | 0600;
+        st->st_mode = S_IFCHR | 0644;
         break;
       case kNtFileTypePipe:
-        st->st_mode = S_IFIFO | 0600;
+        st->st_mode = S_IFIFO | 0644;
         break;
       case kNtFileTypeDisk:
         if (GetFileInformationByHandle(handle, &wst)) {
-          st->st_mode =
-              (S_IRUSR | S_IXUSR |
-               (!(wst.dwFileAttributes & kNtFileAttributeReadonly) ? S_IWUSR
-                                                                   : 0) |
-               ((wst.dwFileAttributes & kNtFileAttributeNormal) ? S_IFREG : 0) |
-               ((wst.dwFileAttributes & kNtFileFlagOpenReparsePoint) ? S_IFLNK
-                                                                     : 0) |
-               ((wst.dwFileAttributes & kNtFileAttributeDirectory) ? S_IFDIR
-                                                                   : 0));
+          st->st_mode = 0555;
+          if (!(wst.dwFileAttributes & kNtFileAttributeReadonly)) {
+            st->st_mode |= 0200;
+          }
+          if (wst.dwFileAttributes & kNtFileAttributeDirectory) {
+            st->st_mode |= S_IFDIR;
+          } else if (wst.dwFileAttributes & kNtFileFlagOpenReparsePoint) {
+            st->st_mode |= S_IFLNK;
+          } else {
+            st->st_mode |= S_IFREG;
+          }
           st->st_atim = FileTimeToTimeSpec(wst.ftLastAccessFileTime);
           st->st_mtim = FileTimeToTimeSpec(wst.ftLastWriteFileTime);
           st->st_ctim = FileTimeToTimeSpec(wst.ftCreationFileTime);

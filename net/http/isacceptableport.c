@@ -16,34 +16,41 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/x/x.h"
-#include "net/http/escape.h"
-#include "net/http/url.h"
+#include "libc/str/str.h"
+#include "net/http/http.h"
 
 /**
- * Escapes URL component using generic table.
+ * Returns true if port seems legit.
  *
- * This function is agnostic to the underlying charset.
- * Always using UTF-8 is a good idea.
+ * Here's examples of permitted inputs:
  *
- * @param size if -1 implies strlen
- * @see kEscapeAuthority
- * @see kEscapeIpLiteral
- * @see kEscapePath
- * @see kEscapePathSegment
- * @see kEscapeParam
- * @see kEscapeFragment
+ * - ""
+ * - 0
+ * - 65535
+ *
+ * Here's some examples of forbidden inputs:
+ *
+ * - -1
+ * - 65536
+ * - https
+ *
+ * @param n if -1 implies strlen
  */
-struct EscapeResult EscapeUrl(const char *data, size_t size,
-                              const char xlat[hasatleast 256]) {
-  struct UrlView v;
-  struct EscapeResult r;
-  if (size == -1) size = data ? strlen(data) : 0;
-  v.p = data;
-  v.n = size;
-  r.data = xmalloc(size * 6 + 1);
-  r.size = EscapeUrlView(r.data, &v, xlat) - r.data;
-  r.data = xrealloc(r.data, r.size + 1);
-  r.data[r.size] = '\0';
-  return r;
+bool IsAcceptablePort(const char *s, size_t n) {
+  int p, c;
+  size_t i;
+  if (n == -1) n = s ? strlen(s) : 0;
+  for (p = i = 0; i < n; ++i) {
+    c = s[i] & 255;
+    if ('0' <= c && c <= '9') {
+      p *= 10;
+      p += c - '0';
+      if (p > 65535) {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+  return true;
 }

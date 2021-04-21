@@ -24,122 +24,135 @@
 #include "libc/testlib/testlib.h"
 #include "net/http/url.h"
 
-TEST(ParseRequestUri, testEmpty) {
+TEST(ParseUrl, testEmpty) {
   struct Url h;
-  gc(ParseRequestUri(0, 0, &h));
+  gc(ParseUrl(0, 0, &h));
   gc(h.params.p);
   ASSERT_EQ(0, h.params.n);
+  ASSERT_STREQ("", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseRequestUri, testFragment) {
+TEST(ParseUrl, testFragment) {
   struct Url h;
-  gc(ParseRequestUri("#x", -1, &h));
+  gc(ParseUrl("#x", -1, &h));
   gc(h.params.p);
   ASSERT_EQ(0, h.path.n);
   ASSERT_EQ(1, h.fragment.n);
   ASSERT_BINEQ(u"x", h.fragment.p);
+  ASSERT_STREQ("#x", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseRequestUri, testFragmentAbsent_isNull) {
+TEST(ParseUrl, testFragmentAbsent_isNull) {
   struct Url h;
-  gc(ParseRequestUri("", -1, &h));
+  gc(ParseUrl("", -1, &h));
   gc(h.params.p);
   ASSERT_EQ(0, h.fragment.p);
   ASSERT_EQ(0, h.fragment.n);
+  ASSERT_STREQ("", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseRequestUri, testFragmentEmpty_isNonNull) {
+TEST(ParseUrl, testFragmentEmpty_isNonNull) {
   struct Url h;
-  gc(ParseRequestUri("#", -1, &h));
+  gc(ParseUrl("#", -1, &h)); /* python's uri parser is wrong here */
   gc(h.params.p);
   ASSERT_NE(0, h.fragment.p);
   ASSERT_EQ(0, h.fragment.n);
+  ASSERT_STREQ("#", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseRequestUri, testPathFragment) {
+TEST(ParseUrl, testPathFragment) {
   struct Url h;
-  gc(ParseRequestUri("x#y", -1, &h));
+  gc(ParseUrl("x#y", -1, &h));
   gc(h.params.p);
   ASSERT_EQ(1, h.path.n);
   ASSERT_EQ('x', h.path.p[0]);
   ASSERT_EQ(1, h.fragment.n);
   ASSERT_EQ('y', h.fragment.p[0]);
+  ASSERT_STREQ("x#y", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseRequestUri, testAbsolutePath) {
+TEST(ParseUrl, testAbsolutePath) {
   struct Url h;
-  gc(ParseRequestUri("/x/y", -1, &h));
+  gc(ParseUrl("/x/y", -1, &h));
   gc(h.params.p);
   ASSERT_EQ(4, h.path.n);
   ASSERT_BINEQ(u"/x/y", h.path.p);
+  ASSERT_STREQ("/x/y", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseRequestUri, testRelativePath1) {
+TEST(ParseUrl, testRelativePath1) {
   struct Url h;
-  gc(ParseRequestUri("x", -1, &h));
+  gc(ParseUrl("x", -1, &h));
   gc(h.params.p);
   ASSERT_EQ(1, h.path.n);
   ASSERT_EQ('x', h.path.p[0]);
+  ASSERT_STREQ("x", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseRequestUri, testOptions) {
+TEST(ParseUrl, testOptions) {
   struct Url h;
-  gc(ParseRequestUri("*", -1, &h));
+  gc(ParseUrl("*", -1, &h));
   gc(h.params.p);
   ASSERT_EQ(1, h.path.n);
   ASSERT_EQ('*', h.path.p[0]);
+  ASSERT_STREQ("*", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseRequestUri, testRelativePath2) {
+TEST(ParseUrl, testRelativePath2) {
   struct Url h;
-  gc(ParseRequestUri("x/y", -1, &h));
+  gc(ParseUrl("x/y", -1, &h));
   gc(h.params.p);
   ASSERT_EQ(3, h.path.n);
   ASSERT_BINEQ(u"x/y", h.path.p);
+  ASSERT_STREQ("x/y", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseRequestUri, testRoot) {
+TEST(ParseUrl, testRoot) {
   struct Url h;
-  gc(ParseRequestUri("/", -1, &h));
+  gc(ParseUrl("/", -1, &h));
   gc(h.params.p);
   ASSERT_EQ(1, h.path.n);
   ASSERT_EQ('/', h.path.p[0]);
+  ASSERT_STREQ("/", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseRequestUri, testSchemePath) {
+TEST(ParseUrl, testSchemePath) {
   struct Url h;
-  gc(ParseRequestUri("x:y", -1, &h));
+  gc(ParseUrl("x:y", -1, &h));
   gc(h.params.p);
   ASSERT_EQ(1, h.scheme.n);
   ASSERT_BINEQ(u"x", h.scheme.p);
   ASSERT_EQ(1, h.path.n);
   ASSERT_BINEQ(u"y", h.path.p);
+  ASSERT_STREQ("x:y", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseRequestUri, testSchemeAuthority) {
+TEST(ParseUrl, testSchemeAuthority) {
   struct Url h;
-  gc(ParseRequestUri("x://y", -1, &h));
+  gc(ParseUrl("x://y", -1, &h));
   gc(h.params.p);
   ASSERT_EQ(1, h.scheme.n);
   ASSERT_EQ('x', h.scheme.p[0]);
   ASSERT_EQ(1, h.host.n);
   ASSERT_EQ('y', h.host.p[0]);
+  ASSERT_STREQ("x://y", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseRequestUri, testParamsQuestion_doesntTurnIntoSpace) {
+TEST(ParseUrl, testParamsQuestion_doesntTurnIntoSpace) {
   struct Url h;
-  gc(ParseRequestUri("x?+", -1, &h));
+  gc(ParseUrl("x?+", -1, &h));
   gc(h.params.p);
   ASSERT_EQ(1, h.path.n);
   ASSERT_BINEQ(u"x", h.path.p);
   ASSERT_EQ(1, h.params.n);
   ASSERT_EQ(1, h.params.p[0].key.n);
   ASSERT_EQ('+', h.params.p[0].key.p[0]);
+  ASSERT_STREQ("x?%2B", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseRequestUri, testUrl) {
+TEST(ParseUrl, testUrl) {
   struct Url h;
-  gc(ParseRequestUri("a://b:B@c:C/d?e#f", -1, &h));
+  gc(ParseUrl("a://b:B@c:C/d?e#f", -1, &h));
   gc(h.params.p);
   ASSERT_EQ(1, h.scheme.n);
   ASSERT_EQ('a', h.scheme.p[0]);
@@ -156,14 +169,40 @@ TEST(ParseRequestUri, testUrl) {
   ASSERT_EQ(1, h.params.n);
   ASSERT_EQ(1, h.params.p[0].key.n);
   ASSERT_BINEQ(u"e", h.params.p[0].key.p);
-  ASSERT_EQ(SIZE_MAX, h.params.p[0].val.n);
+  ASSERT_EQ(0, h.params.p[0].val.n);
+  ASSERT_EQ(0, h.params.p[0].val.p);
   ASSERT_EQ(1, h.fragment.n);
   ASSERT_BINEQ(u"f", h.fragment.p);
+  ASSERT_STREQ("a://b:B@c:C/d?e#f", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseRequestUri, testUrlWithoutScheme) {
+TEST(ParseUrl, testEmptyQueryKeyVal_decodesToEmptyStrings) {
   struct Url h;
-  gc(ParseRequestUri("//b@c/d?e#f", -1, &h));
+  gc(ParseUrl("?=", -1, &h));
+  gc(h.params.p);
+  ASSERT_EQ(1, h.params.n);
+  ASSERT_EQ(0, h.params.p[0].key.n);
+  ASSERT_NE(0, h.params.p[0].key.p);
+  ASSERT_EQ(0, h.params.p[0].val.n);
+  ASSERT_NE(0, h.params.p[0].val.p);
+  ASSERT_STREQ("?=", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseUrl, testMultipleEquals_goesIntoValue) {
+  struct Url h;
+  gc(ParseUrl("?==", -1, &h));
+  gc(h.params.p);
+  ASSERT_EQ(1, h.params.n);
+  ASSERT_EQ(0, h.params.p[0].key.n);
+  ASSERT_NE(0, h.params.p[0].key.p);
+  ASSERT_EQ(1, h.params.p[0].val.n);
+  ASSERT_EQ('=', h.params.p[0].val.p[0]);
+  ASSERT_STREQ("?=%3D", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseUrl, testUrlWithoutScheme) {
+  struct Url h;
+  gc(ParseUrl("//b@c/d?e#f", -1, &h));
   gc(h.params.p);
   ASSERT_EQ(0, h.scheme.n);
   ASSERT_EQ(1, h.user.n);
@@ -175,14 +214,16 @@ TEST(ParseRequestUri, testUrlWithoutScheme) {
   ASSERT_EQ(1, h.params.n);
   ASSERT_EQ(1, h.params.p[0].key.n);
   ASSERT_BINEQ(u"e", h.params.p[0].key.p);
-  ASSERT_EQ(SIZE_MAX, h.params.p[0].val.n);
+  ASSERT_EQ(0, h.params.p[0].val.n);
+  ASSERT_EQ(0, h.params.p[0].val.p);
   ASSERT_EQ(1, h.fragment.n);
   ASSERT_BINEQ(u"f", h.fragment.p);
+  ASSERT_STREQ("//b@c/d?e#f", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseRequestUri, testUrlWithoutUser) {
+TEST(ParseUrl, testUrlWithoutUser) {
   struct Url h;
-  gc(ParseRequestUri("a://c/d?e#f", -1, &h));
+  gc(ParseUrl("a://c/d?e#f", -1, &h));
   gc(h.params.p);
   ASSERT_EQ(1, h.scheme.n);
   ASSERT_EQ('a', h.scheme.p[0]);
@@ -196,24 +237,159 @@ TEST(ParseRequestUri, testUrlWithoutUser) {
   ASSERT_EQ(1, h.params.n);
   ASSERT_EQ(1, h.params.p[0].key.n);
   ASSERT_EQ('e', h.params.p[0].key.p[0]);
-  ASSERT_EQ(SIZE_MAX, h.params.p[0].val.n);
+  ASSERT_EQ(0, h.params.p[0].val.n);
+  ASSERT_EQ(0, h.params.p[0].val.p);
   ASSERT_EQ(1, h.fragment.n);
   ASSERT_EQ('f', h.fragment.p[0]);
+  ASSERT_STREQ("a://c/d?e#f", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseRequestUri, testLolv6) {
+TEST(ParseUrl, testEmptyParams_absentCanBeDiscerned) {
   struct Url h;
-  gc(ParseRequestUri("//[::1]:31337", -1, &h));
+  gc(ParseUrl("", -1, &h));
+  gc(h.params.p);
+  ASSERT_EQ(0, h.params.n);
+  ASSERT_EQ(NULL, h.params.p);
+  gc(ParseUrl("?", -1, &h)); /* python's uri parser is wrong here */
+  gc(h.params.p);
+  ASSERT_EQ(0, h.params.n);
+  ASSERT_NE(NULL, h.params.p);
+}
+
+TEST(ParseUrl, testWeirdAmps_areReprodicible) {
+  struct Url h;
+  gc(ParseUrl("?&&", -1, &h));
+  gc(h.params.p);
+  ASSERT_EQ(3, h.params.n);
+  ASSERT_EQ(0, h.params.p[0].key.n);
+  ASSERT_NE(0, h.params.p[0].key.p);
+  ASSERT_EQ(0, h.params.p[0].val.n);
+  ASSERT_EQ(0, h.params.p[0].val.p);
+  ASSERT_EQ(0, h.params.p[1].key.n);
+  ASSERT_NE(0, h.params.p[1].key.p);
+  ASSERT_EQ(0, h.params.p[1].val.n);
+  ASSERT_EQ(0, h.params.p[1].val.p);
+  ASSERT_EQ(0, h.params.p[2].key.n);
+  ASSERT_NE(0, h.params.p[2].key.p);
+  ASSERT_EQ(0, h.params.p[2].val.n);
+  ASSERT_EQ(0, h.params.p[2].val.p);
+  ASSERT_STREQ("?&&", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseUrl, testOpaquePart_canLetQuestionMarkGoInPath) {
+  struct Url h; /* python's uri parser is wrong here */
+  gc(ParseUrl("s:o!$%&'()*+,-./09:;=?@AZ_az#fragged", -1, &h));
+  gc(h.params.p);
+  ASSERT_EQ(26, h.path.n);
+  ASSERT_EQ(0, memcmp(h.path.p, "o!$%&'()*+,-./09:;=?@AZ_az", 26));
+  ASSERT_EQ(0, h.params.n);
+  ASSERT_EQ(NULL, h.params.p);
+  ASSERT_STREQ("s:o!$%25&'()*+,-./09:;=%3F@AZ_az#fragged",
+               gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseUrl, testSchemePathWithoutAuthority_paramsAreAllowed) {
+  struct Url h;
+  gc(ParseUrl("s:/o!$%&'()*+,-./09:;=?@AZ_az#fragged", -1, &h));
+  gc(h.params.p);
+  ASSERT_EQ(20, h.path.n);
+  ASSERT_EQ(0, memcmp(h.path.p, "/o!$%&'()*+,-./09:;=", 20));
+  ASSERT_EQ(1, h.params.n);
+  ASSERT_STREQ("s:/o!$%25&'()*+,-./09:;=?%40AZ_az#fragged",
+               gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseUrl, testOpaquePart_permitsPercentEncoding) {
+  struct Url h;
+  gc(ParseUrl("s:%2Fo!$%&'()*+,-./09:;=?@AZ_az#fragged", -1, &h));
+  gc(h.params.p);
+  ASSERT_EQ(27, h.path.n);
+  ASSERT_EQ(0, memcmp(h.path.p, "/o!$%&'()*+,-./09:;=?@AZ_az", 27));
+  ASSERT_EQ(0, h.params.n);
+  ASSERT_STREQ("s:/o!$%25&\'()*+,-./09:;=%3F@AZ_az#fragged",
+               gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseUrl, testTelephone) {
+  struct Url h;
+  gc(ParseUrl("tel:+1-212-867-5309", -1, &h));
+  gc(h.params.p);
+  ASSERT_EQ(15, h.path.n);
+  ASSERT_BINEQ(u"+1-212-867-5309", h.path.p);
+  ASSERT_STREQ("tel:+1-212-867-5309", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseUrl, testLolv6) {
+  struct Url h;
+  gc(ParseUrl("//[::1]:31337", -1, &h));
   gc(h.params.p);
   ASSERT_EQ(3, h.host.n);
   ASSERT_BINEQ(u"::1", h.host.p);
   ASSERT_EQ(5, h.port.n);
   ASSERT_BINEQ(u"31337", h.port.p);
+  ASSERT_STREQ("//[::1]:31337", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseRequestUri, testUrlWithoutParams) {
+TEST(ParseUrl, testLolV6_withoutPort) {
   struct Url h;
-  gc(ParseRequestUri("a://b@c/d#f", -1, &h));
+  gc(ParseUrl("//[::1]", -1, &h));
+  gc(h.params.p);
+  ASSERT_STREQ("//[::1]", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseUrl, testLolv7) {
+  struct Url h;
+  gc(ParseUrl("//[vf.::1]", -1, &h));
+  gc(h.params.p);
+  ASSERT_EQ(6, h.host.n);
+  ASSERT_BINEQ(u"vf.::1", h.host.p);
+  ASSERT_EQ(0, h.port.n);
+  ASSERT_EQ(0, h.port.p);
+  ASSERT_STREQ("//[vf.::1]", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseUrl, testLolv7WithoutColon_weCantProduceLegalEncodingSadly) {
+  struct Url h;
+  gc(ParseUrl("//[v7.7.7.7]", -1, &h));
+  gc(h.params.p);
+  ASSERT_STREQ("//v7.7.7.7", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseUrl, testObviouslyIllegalIpLiteral_getsTreatedAsRegName) {
+  struct Url h;
+  gc(ParseUrl("//[vf.::1%00]", -1, &h));
+  gc(h.params.p);
+  ASSERT_STREQ("//vf.%3A%3A1%00", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseHost, test) {
+  struct Url h = {0};
+  gc(ParseHost("foo.example:80", -1, &h));
+  gc(h.params.p);
+  ASSERT_EQ(11, h.host.n);
+  ASSERT_BINEQ(u"foo.example", h.host.p);
+  ASSERT_EQ(2, h.port.n);
+  ASSERT_BINEQ(u"80", h.port.p);
+  ASSERT_STREQ("//foo.example:80", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseHost, testObviouslyIllegalIpLiteral_getsTreatedAsRegName) {
+  struct Url h = {0};
+  gc(ParseHost("[vf.::1%00]", -1, &h));
+  gc(h.params.p);
+  ASSERT_STREQ("//vf.%3A%3A1%00", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(EncodeUrl, testHostPortPlacedInHostField_ungoodIdea) {
+  struct Url h = {0};
+  h.host.n = strlen("foo.example:80");
+  h.host.p = "foo.example:80";
+  ASSERT_STREQ("//foo.example%3A80", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseUrl, testUrlWithoutParams) {
+  struct Url h;
+  gc(ParseUrl("a://b@c/d#f", -1, &h));
   gc(h.params.p);
   ASSERT_EQ(1, h.scheme.n);
   ASSERT_EQ('a', h.scheme.p[0]);
@@ -226,6 +402,7 @@ TEST(ParseRequestUri, testUrlWithoutParams) {
   ASSERT_EQ(0, h.params.n);
   ASSERT_EQ(1, h.fragment.n);
   ASSERT_EQ('f', h.fragment.p[0]);
+  ASSERT_STREQ("a://b@c/d#f", gc(EncodeUrl(&h, 0)));
 }
 
 TEST(ParseUrl, testLatin1_doesNothing) {
@@ -235,6 +412,7 @@ TEST(ParseUrl, testLatin1_doesNothing) {
   gc(h.params.p);
   ASSERT_EQ(1, h.path.n);
   ASSERT_EQ(0, memcmp("\377", h.path.p, 1));
+  ASSERT_STREQ("%FF", gc(EncodeUrl(&h, 0)));
 }
 
 TEST(ParseRequestUri, testLatin1_expandsMemoryToUtf8) {
@@ -246,40 +424,202 @@ TEST(ParseRequestUri, testLatin1_expandsMemoryToUtf8) {
   ASSERT_EQ(0, memcmp("\303\277", h.path.p, 2));
 }
 
-TEST(ParseRequestUri, testPercentShrinkingMemory) {
+TEST(ParseUrl, testPercentShrinkingMemory) {
   struct Url h;
-  gc(ParseRequestUri("%Ff", 3, &h));
+  gc(ParseUrl("%Ff", 3, &h));
   gc(h.params.p);
   ASSERT_EQ(1, h.path.n);
   ASSERT_EQ(0, memcmp("\377", h.path.p, 1));
+  ASSERT_STREQ("%FF", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseRequestUri, testBadPercent_getsIgnored) {
+TEST(ParseUrl, testEscapingWontOverrun) {
   struct Url h;
-  gc(ParseRequestUri("%FZ", 3, &h));
+  char b[1] = {'%'};
+  gc(ParseUrl(b, 1, &h));
+  gc(h.params.p);
+  ASSERT_EQ(1, h.path.n);
+  ASSERT_EQ(0, memcmp("%", h.path.p, 1));
+  ASSERT_STREQ("%25", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseUrl, testBadPercent_getsIgnored) {
+  struct Url h;
+  gc(ParseUrl("%FZ", 3, &h));
   gc(h.params.p);
   ASSERT_EQ(3, h.path.n);
   ASSERT_EQ(0, memcmp("%FZ", h.path.p, 3));
 }
 
-TEST(ParseRequestUri, testFileUrl) {
+TEST(ParseUrl, testFileUrl) {
   struct Url h;
-  gc(ParseRequestUri("file:///etc/passwd", -1, &h));
+  gc(ParseUrl("file:///etc/passwd", -1, &h));
   gc(h.params.p);
   ASSERT_EQ(4, h.scheme.n);
   ASSERT_BINEQ(u"file", h.scheme.p);
+  ASSERT_EQ(0, h.host.n);
+  ASSERT_NE(0, h.host.p);
+  ASSERT_EQ(0, h.port.n);
+  ASSERT_EQ(0, h.port.p);
   ASSERT_EQ(11, h.path.n);
   ASSERT_BINEQ(u"/etc/passwd", h.path.p);
+  ASSERT_STREQ("file:///etc/passwd", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseRequestUri, testZipUri2) {
+TEST(EncodeUrl, testModifyingParseResultAndReencoding_addsStructure) {
+  size_t n;
   struct Url h;
-  gc(ParseRequestUri("zip:etc/passwd", -1, &h));
+  gc(ParseUrl("rel", -1, &h));
+  gc(h.params.p);
+  h.host.n = 7;
+  h.host.p = "justine";
+  ASSERT_STREQ("//justine/rel", gc(EncodeUrl(&h, &n)));
+  ASSERT_EQ(13, n);
+}
+
+TEST(EncodeUrl, testTortureCharacters_doesWhatYouAskItToDoButSchemeCantEscape) {
+  size_t n;
+  struct Url h;
+  memset(&h, 0, sizeof(h));
+  h.scheme.n = 1;
+  h.scheme.p = "/";
+  h.user.n = 1;
+  h.user.p = "";
+  h.pass.n = 1;
+  h.pass.p = "";
+  h.host.n = 1;
+  h.host.p = "";
+  h.port.n = 1;
+  h.port.p = "";
+  h.path.n = 1;
+  h.path.p = "";
+  h.params = (struct UrlParams){.n = 1,
+                                .p = (struct UrlParam[]){{
+                                    .key = (struct UrlView){.n = 1, .p = ""},
+                                    .val = (struct UrlView){.n = 1, .p = ""},
+                                }}};
+  h.fragment.n = 1;
+  h.fragment.p = "";
+  ASSERT_STREQ("/://%00:%00@%00:%00/%00?%00=%00#%00", gc(EncodeUrl(&h, &n)));
+  ASSERT_EQ(35, n);
+}
+
+TEST(EncodeUrl, testUserPassPort_allDependOnHostNonAbsence) {
+  size_t n;
+  struct Url h;
+  memset(&h, 0, sizeof(h));
+  h.scheme.n = 1;
+  h.scheme.p = "/";
+  h.user.n = 1;
+  h.user.p = "";
+  h.pass.n = 1;
+  h.pass.p = "";
+  h.host.n = 0;
+  h.host.p = 0;
+  h.port.n = 1;
+  h.port.p = "";
+  h.path.n = 1;
+  h.path.p = "";
+  h.params = (struct UrlParams){.n = 1,
+                                .p = (struct UrlParam[]){{
+                                    .key = (struct UrlView){.n = 1, .p = ""},
+                                    .val = (struct UrlView){.n = 1, .p = ""},
+                                }}};
+  h.fragment.n = 1;
+  h.fragment.p = "";
+  ASSERT_STREQ("/:%00?%00=%00#%00", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(EncodeUrl, testEmptyRegName_isLegal) {
+  size_t n;
+  struct Url h;
+  memset(&h, 0, sizeof(h));
+  h.scheme.n = 1;
+  h.scheme.p = "/";
+  h.user.n = 1;
+  h.user.p = "";
+  h.pass.n = 1;
+  h.pass.p = "";
+  h.host.n = 0;
+  h.host.p = "";
+  h.port.n = 1;
+  h.port.p = "";
+  h.path.n = 1;
+  h.path.p = "";
+  h.params = (struct UrlParams){.n = 1,
+                                .p = (struct UrlParam[]){{
+                                    .key = (struct UrlView){.n = 1, .p = ""},
+                                    .val = (struct UrlView){.n = 1, .p = ""},
+                                }}};
+  h.fragment.n = 1;
+  h.fragment.p = "";
+  ASSERT_STREQ("/://%00:%00@:%00/%00?%00=%00#%00", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseUrl, testEmptyScheme_isNotPossible) {
+  struct Url h;
+  gc(ParseUrl(":", -1, &h));
+  gc(h.params.p);
+  ASSERT_EQ(0, h.scheme.n);
+  ASSERT_EQ(0, h.scheme.p);
+  ASSERT_EQ(1, h.path.n);
+  ASSERT_EQ(':', h.path.p[0]);
+  ASSERT_STREQ(":", gc(EncodeUrl(&h, 0)));
+  gc(ParseUrl("://hi", -1, &h));
+  gc(h.params.p);
+  ASSERT_EQ(0, h.scheme.n);
+  ASSERT_EQ(0, h.scheme.p);
+  ASSERT_EQ(5, h.path.n);
+  ASSERT_BINEQ(u"://hi", h.path.p);
+  ASSERT_STREQ("://hi", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseUrl, testZipUri2) {
+  struct Url h;
+  gc(ParseUrl("zip:etc/passwd", -1, &h));
   gc(h.params.p);
   ASSERT_EQ(3, h.scheme.n);
   ASSERT_BINEQ(u"zip", h.scheme.p);
   ASSERT_EQ(10, h.path.n);
   ASSERT_BINEQ(u"etc/passwd", h.path.p);
+  ASSERT_STREQ("zip:etc/passwd", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseUrl, testZipUri3) {
+  struct Url h;
+  gc(ParseUrl("zip:/etc/passwd", -1, &h));
+  gc(h.params.p);
+  ASSERT_EQ(0, h.host.n);
+  ASSERT_EQ(0, h.host.p);
+  ASSERT_EQ(3, h.scheme.n);
+  ASSERT_BINEQ(u"zip", h.scheme.p);
+  ASSERT_EQ(11, h.path.n);
+  ASSERT_BINEQ(u"/etc/passwd", h.path.p);
+  ASSERT_STREQ("zip:/etc/passwd", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseUrl, testDataUri) {
+  struct Url h;
+  gc(ParseUrl("data:image/png;base64,09AZaz+/==", -1, &h));
+  gc(h.params.p);
+  ASSERT_EQ(0, h.host.n);
+  ASSERT_EQ(0, h.host.p);
+  ASSERT_EQ(4, h.scheme.n);
+  ASSERT_BINEQ(u"data", h.scheme.p);
+  ASSERT_EQ(27, h.path.n);
+  ASSERT_BINEQ(u"image/png;base64,09AZaz+/==", h.path.p);
+  ASSERT_STREQ("data:image/png;base64,09AZaz+/==", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseUrl, testBadSchemeCharacter_parserAssumesItsPath) {
+  struct Url h;
+  gc(ParseUrl("fil\e://hi", -1, &h));
+  gc(h.params.p);
+  ASSERT_EQ(0, h.scheme.n);
+  ASSERT_EQ(0, h.scheme.p);
+  ASSERT_EQ(9, h.path.n);
+  ASSERT_BINEQ(u"fil←://hi", h.path.p);
+  ASSERT_STREQ("fil%1B://hi", gc(EncodeUrl(&h, 0)));
 }
 
 TEST(ParseParams, testEmpty) {
@@ -297,7 +637,9 @@ TEST(ParseParams, test) {
   ASSERT_EQ(1, h.p[0].key.n);
   ASSERT_EQ(1, h.p[0].val.n);
   ASSERT_EQ(1, h.p[1].key.n);
-  ASSERT_EQ(SIZE_MAX, h.p[1].val.n);
+  ASSERT_NE(0, h.p[1].key.p);
+  ASSERT_EQ(0, h.p[1].val.n);
+  ASSERT_EQ(0, h.p[1].val.p);
   ASSERT_EQ(4, h.p[2].key.n);
   ASSERT_EQ(0, h.p[2].val.n);
   EXPECT_EQ('a', h.p[0].key.p[0]);
@@ -344,14 +686,28 @@ void A(void) {
   free(h.p);
 }
 
-BENCH(url, bench) {
+BENCH(ParseUrl, bench) {
   struct Url h;
-  EZBENCH2("ParseParams", donothing, A());
-  EZBENCH2("URI a", donothing, free(ParseRequestUri("a", -1, &h)));
-  EZBENCH2("URI a://b@c/d#f", donothing,
-           free(ParseRequestUri("a://b@c/d#f", -1, &h)));
-  EZBENCH2("URI a://b@c/d?z#f", donothing, ({
-             free(ParseRequestUri("a://b@c/?zd#f", -1, &h));
+  EZBENCH2("ParseParams hyperion", donothing, A());
+  EZBENCH2("ParseUrl a", donothing, free(ParseUrl("a", -1, &h)));
+  EZBENCH2("ParseUrl a://b@c/d#f", donothing,
+           free(ParseUrl("a://b@c/d#f", -1, &h)));
+  EZBENCH2("ParseUrl a://b@c/d?z#f", donothing, ({
+             free(ParseUrl("a://b@c/?zd#f", -1, &h));
              free(h.params.p);
            }));
+}
+
+BENCH(EncodeUrl, bench) {
+  struct Url h;
+  gc(ParseUrl("a", -1, &h));
+  EZBENCH2("EncodeUrl a", donothing, free(EncodeUrl(&h, 0)));
+  gc(ParseUrl("a://b@c/d#f", -1, &h));
+  EZBENCH2("EncodeUrl a://b@c/d#f", donothing, free(EncodeUrl(&h, 0)));
+  gc(ParseUrl("a://b@c/?zd#f", -1, &h));
+  gc(h.params.p);
+  EZBENCH2("EncodeUrl a://b@c/d?z#f", donothing, free(EncodeUrl(&h, 0)));
+  gc(ParseUrl(kHyperion, kHyperionSize, &h));
+  gc(h.params.p);
+  EZBENCH2("EncodeUrl hyperion", donothing, free(EncodeUrl(&h, 0)));
 }

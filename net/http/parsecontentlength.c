@@ -19,18 +19,25 @@
 #include "libc/str/str.h"
 #include "net/http/http.h"
 
+#define MAXIMUM (1024L * 1024L * 1024L * 1024L)
+
 /**
  * Parses Content-Length header.
  *
+ * @param size is byte length and -1 implies strlen
  * @return -1 on invalid or overflow, otherwise >=0 value
  */
-ssize_t ParseContentLength(const char *s, size_t n) {
-  int i, r = 0;
-  if (!n) return 0;
-  for (i = 0; i < n; ++i) {
+int64_t ParseContentLength(const char *s, size_t n) {
+  size_t i;
+  int64_t r;
+  if (n == -1) n = s ? strlen(s) : 0;
+  if (!n) return -1;
+  for (r = i = 0; i < n; ++i) {
+    if (s[i] == ',' && i > 0) break;
     if (!isdigit(s[i])) return -1;
-    if (__builtin_mul_overflow(r, 10, &r)) return -1;
-    if (__builtin_add_overflow(r, s[i] - '0', &r)) return -1;
+    r *= 10;
+    r += s[i] - '0';
+    if (r >= MAXIMUM) return -1;
   }
   return r;
 }

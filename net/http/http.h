@@ -3,23 +3,23 @@
 #include "libc/alg/alg.h"
 #include "libc/time/struct/tm.h"
 
-#define kHttpGet     0
-#define kHttpHead    1
-#define kHttpPost    2
-#define kHttpPut     3
-#define kHttpDelete  4
-#define kHttpOptions 5
-#define kHttpConnect 6
-#define kHttpTrace   7
-#define kHttpCopy    8
-#define kHttpLock    9
-#define kHttpMerge   10
-#define kHttpMkcol   11
-#define kHttpMove    12
-#define kHttpNotify  13
-#define kHttpPatch   14
-#define kHttpReport  15
-#define kHttpUnlock  16
+#define kHttpGet     1
+#define kHttpHead    2
+#define kHttpPost    3
+#define kHttpPut     4
+#define kHttpDelete  5
+#define kHttpOptions 6
+#define kHttpConnect 7
+#define kHttpTrace   8
+#define kHttpCopy    9
+#define kHttpLock    10
+#define kHttpMerge   11
+#define kHttpMkcol   12
+#define kHttpMove    13
+#define kHttpNotify  14
+#define kHttpPatch   15
+#define kHttpReport  16
+#define kHttpUnlock  17
 
 #define kHttpAccept                  0
 #define kHttpAcceptCharset           1
@@ -30,7 +30,7 @@
 #define kHttpAuthorization           6
 #define kHttpCacheControl            7
 #define kHttpChunked                 8
-#define kHttpClose                   9
+#define kHttpLink                    9
 #define kHttpConnection              10
 #define kHttpContentBase             11
 #define kHttpContentEncoding         12
@@ -70,15 +70,15 @@
 #define kHttpWarning                 46
 #define kHttpWwwAuthenticate         47
 #define kHttpLastModified            48
-#define kHttpCookie                  49
-#define kHttpTrailer                 50
-#define kHttpTe                      51
-#define kHttpDnt                     52
-#define kHttpExpect                  53
-#define kHttpContentDisposition      54
-#define kHttpContentDescription      55
-#define kHttpOrigin                  56
-#define kHttpUpgradeInsecureRequests 57
+#define kHttpTrailer                 49
+#define kHttpTe                      50
+#define kHttpDnt                     51
+#define kHttpExpect                  52
+#define kHttpContentDisposition      53
+#define kHttpContentDescription      54
+#define kHttpOrigin                  55
+#define kHttpUpgradeInsecureRequests 56
+#define kHttpUri                     57
 #define kHttpHeadersMax              58
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -89,14 +89,17 @@ struct HttpRequestSlice {
 };
 
 struct HttpRequest {
-  int i, t, a, method;
+  int i, a;
+  unsigned char t;
+  unsigned char method;
+  unsigned char version;
   struct HttpRequestSlice k;
   struct HttpRequestSlice uri;
-  struct HttpRequestSlice version;
   struct HttpRequestSlice scratch;
   struct HttpRequestSlice headers[kHttpHeadersMax];
+  struct HttpRequestSlice xmethod;
   struct HttpRequestHeaders {
-    size_t n;
+    unsigned n;
     struct HttpRequestHeader {
       struct HttpRequestSlice k;
       struct HttpRequestSlice v;
@@ -104,19 +107,22 @@ struct HttpRequest {
   } xheaders;
 };
 
-extern const char kHttpMethod[17][8];
+extern const char kHttpToken[256];
+extern const char kHttpMethod[18][8];
+extern const bool kHttpRepeatable[kHttpHeadersMax];
 
 int GetHttpHeader(const char *, size_t);
 int GetHttpMethod(const char *, size_t);
 void InitHttpRequest(struct HttpRequest *);
 void DestroyHttpRequest(struct HttpRequest *);
 int ParseHttpRequest(struct HttpRequest *, const char *, size_t);
+bool HeaderHasSubstring(struct HttpRequest *, const char *, int, const char *,
+                        size_t);
 int NegotiateHttpRequest(int, const char *, uint32_t *, char *, uint32_t *,
                          uint32_t *, bool, long double);
-ssize_t ParseContentLength(const char *, size_t);
+int64_t ParseContentLength(const char *, size_t);
 char *FormatHttpDateTime(char[hasatleast 30], struct tm *);
 bool ParseHttpRange(const char *, size_t, long, long *, long *);
-unsigned ParseHttpVersion(const char *, size_t);
 int64_t ParseHttpDateTime(const char *, size_t);
 const char *GetHttpReason(int);
 const char *GetHttpHeaderName(int);
@@ -126,7 +132,10 @@ char *EncodeHttpHeaderValue(const char *, size_t, size_t *);
 char *VisualizeControlCodes(const char *, size_t, size_t *);
 char *IndentLines(const char *, size_t, size_t *, size_t);
 bool IsAcceptablePath(const char *, size_t);
-bool IsAcceptableHostPort(const char *, size_t);
+bool IsAcceptableHost(const char *, size_t);
+bool IsAcceptablePort(const char *, size_t);
+int64_t ParseIp(const char *, size_t);
+bool IsMimeType(const char *, size_t, const char *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "third_party/regex/regex.h"
 
@@ -28,5 +29,127 @@ TEST(regex, test) {
   EXPECT_EQ(REG_NOMATCH, regexec(&rx, "A", 0, NULL, 0));
   EXPECT_EQ(REG_NOMATCH, regexec(&rx, "→", 0, NULL, 0));
   EXPECT_EQ(REG_NOMATCH, regexec(&rx, "0", 0, NULL, 0));
+  regfree(&rx);
+}
+
+TEST(regex, testDns) {
+  regex_t rx;
+  EXPECT_EQ(REG_OK, regcomp(&rx, "^[-._0-9A-Za-z]*$", REG_EXTENDED));
+  EXPECT_EQ(REG_OK, regexec(&rx, "", 0, NULL, 0));
+  EXPECT_EQ(REG_OK, regexec(&rx, "foo.com", 0, NULL, 0));
+  EXPECT_EQ(REG_NOMATCH, regexec(&rx, "bar@example", 0, NULL, 0));
+  regfree(&rx);
+}
+
+TEST(regex, testIpBasic) {
+  regex_t rx;
+  EXPECT_EQ(REG_OK, regcomp(&rx,
+                            "^"
+                            "\\([0-9][0-9]*\\)\\."
+                            "\\([0-9][0-9]*\\)\\."
+                            "\\([0-9][0-9]*\\)\\."
+                            "\\([0-9][0-9]*\\)"
+                            "$",
+                            0));
+  const char *s = "127.0.0.1";
+  regmatch_t *m = gc(calloc(rx.re_nsub + 1, sizeof(regmatch_t)));
+  ASSERT_EQ(4, rx.re_nsub);
+  EXPECT_EQ(REG_OK, regexec(&rx, s, rx.re_nsub + 1, m, 0));
+  EXPECT_STREQ("127", gc(strndup(s + m[1].rm_so, m[1].rm_eo - m[1].rm_so)));
+  EXPECT_STREQ("0", gc(strndup(s + m[2].rm_so, m[2].rm_eo - m[2].rm_so)));
+  EXPECT_STREQ("0", gc(strndup(s + m[3].rm_so, m[3].rm_eo - m[3].rm_so)));
+  EXPECT_STREQ("1", gc(strndup(s + m[4].rm_so, m[4].rm_eo - m[4].rm_so)));
+  regfree(&rx);
+}
+
+TEST(regex, testIpExtended) {
+  regex_t rx;
+  EXPECT_EQ(REG_OK, regcomp(&rx,
+                            "^"
+                            "([0-9]{1,3})\\."
+                            "([0-9]{1,3})\\."
+                            "([0-9]{1,3})\\."
+                            "([0-9]{1,3})"
+                            "$",
+                            REG_EXTENDED));
+  const char *s = "127.0.0.1";
+  regmatch_t *m = gc(calloc(rx.re_nsub + 1, sizeof(regmatch_t)));
+  ASSERT_EQ(4, rx.re_nsub);
+  EXPECT_EQ(REG_OK, regexec(&rx, s, rx.re_nsub + 1, m, 0));
+  EXPECT_STREQ("127", gc(strndup(s + m[1].rm_so, m[1].rm_eo - m[1].rm_so)));
+  EXPECT_STREQ("0", gc(strndup(s + m[2].rm_so, m[2].rm_eo - m[2].rm_so)));
+  EXPECT_STREQ("0", gc(strndup(s + m[3].rm_so, m[3].rm_eo - m[3].rm_so)));
+  EXPECT_STREQ("1", gc(strndup(s + m[4].rm_so, m[4].rm_eo - m[4].rm_so)));
+  regfree(&rx);
+}
+
+void A(void) {
+  regex_t rx;
+  regcomp(&rx, "^[-._0-9A-Za-z]*$", REG_EXTENDED);
+  regexec(&rx, "foo.com", 0, NULL, 0);
+  regfree(&rx);
+}
+
+void B(regex_t *rx) {
+  regexec(rx, "foo.com", 0, NULL, 0);
+}
+
+void C(void) {
+  regex_t rx;
+  regcomp(&rx, "^[-._0-9A-Za-z]*$", 0);
+  regexec(&rx, "foo.com", 0, NULL, 0);
+  regfree(&rx);
+}
+
+void D(regex_t *rx, regmatch_t *m) {
+  regexec(rx, "127.0.0.1", rx->re_nsub + 1, m, 0);
+}
+
+BENCH(regex, bench) {
+  regex_t rx;
+  regmatch_t *m;
+  regcomp(&rx, "^[-._0-9A-Za-z]*$", REG_EXTENDED);
+  EZBENCH2("precompiled extended", donothing, B(&rx));
+  regfree(&rx);
+  EZBENCH2("easy api extended", donothing, A());
+  EZBENCH2("easy api basic", donothing, C());
+
+  EXPECT_EQ(REG_OK, regcomp(&rx,
+                            "^"
+                            "\\([0-9][0-9]*\\)\\."
+                            "\\([0-9][0-9]*\\)\\."
+                            "\\([0-9][0-9]*\\)\\."
+                            "\\([0-9][0-9]*\\)"
+                            "$",
+                            0));
+  m = calloc(rx.re_nsub + 1, sizeof(regmatch_t));
+  EZBENCH2("precompiled basic match", donothing, D(&rx, m));
+  free(m);
+  regfree(&rx);
+
+  EXPECT_EQ(REG_OK, regcomp(&rx,
+                            "^"
+                            "([0-9]{1,3})\\."
+                            "([0-9]{1,3})\\."
+                            "([0-9]{1,3})\\."
+                            "([0-9]{1,3})"
+                            "$",
+                            REG_EXTENDED));
+  m = calloc(rx.re_nsub + 1, sizeof(regmatch_t));
+  EZBENCH2("precompiled extended match", donothing, D(&rx, m));
+  free(m);
+  regfree(&rx);
+
+  EXPECT_EQ(REG_OK, regcomp(&rx,
+                            "^"
+                            "([0-9]{1,3})\\."
+                            "([0-9]{1,3})\\."
+                            "([0-9]{1,3})\\."
+                            "([0-9]{1,3})"
+                            "$",
+                            REG_EXTENDED | REG_NOSUB));
+  m = calloc(rx.re_nsub + 1, sizeof(regmatch_t));
+  EZBENCH2("precompiled nosub match", donothing, D(&rx, m));
+  free(m);
   regfree(&rx);
 }

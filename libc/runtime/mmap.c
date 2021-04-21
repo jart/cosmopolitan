@@ -61,7 +61,7 @@ void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   struct DirectMap dm;
   int i, x, n, m, a, b, f;
   if (!size) return VIP(einval());
-  if (size > 0x0000010000000000) return VIP(enomem());
+  if (size > 0x0000010000000000ull) return VIP(enomem());
   if (!ALIGNED(off)) return VIP(einval());
   if (!ALIGNED(addr)) return VIP(einval());
   if (!CANONICAL(addr)) return VIP(einval());

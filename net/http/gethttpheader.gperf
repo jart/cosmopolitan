@@ -20,14 +20,14 @@ Allow,                     kHttpAllow
 Authorization,             kHttpAuthorization
 Cache-Control,             kHttpCacheControl
 Chunked,                   kHttpChunked
-Close,                     kHttpClose
+Link,                      kHttpLink
 Connection,                kHttpConnection
 Content-Base,              kHttpContentBase
 Content-Encoding,          kHttpContentEncoding
 Content-Language,          kHttpContentLanguage
 Content-Length,            kHttpContentLength
 Content-Location,          kHttpContentLocation
-Content-Md5,               kHttpContentMd5
+Content-MD5,               kHttpContentMd5
 Content-Range,             kHttpContentRange
 Content-Type,              kHttpContentType
 Date,                      kHttpDate
@@ -60,7 +60,6 @@ Vary,                      kHttpVary
 Warning,                   kHttpWarning
 WWW-Authenticate,          kHttpWwwAuthenticate
 Last-Modified,             kHttpLastModified
-Cookie,                    kHttpCookie
 Trailer,                   kHttpTrailer
 TE,                        kHttpTe
 DNT,                       kHttpDnt
@@ -69,3 +68,4 @@ Content-Disposition,       kHttpContentDisposition
 Content-Description,       kHttpContentDescription
 Origin,                    kHttpOrigin
 Upgrade-Insecure-Requests, kHttpUpgradeInsecureRequests
+URI,                       kHttpUri

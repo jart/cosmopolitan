@@ -20,13 +20,16 @@
 #include "net/http/http.h"
 
 TEST(ParseContentLength, test) {
-  EXPECT_EQ(0, ParseContentLength("", 0));
+  EXPECT_EQ(-1, ParseContentLength(0, 0));
+  EXPECT_EQ(-1, ParseContentLength("", 0));
   EXPECT_EQ(-1, ParseContentLength("-1", 2));
   EXPECT_EQ(-1, ParseContentLength("-2", 2));
+  EXPECT_EQ(-1, ParseContentLength("e", -1));
+  EXPECT_EQ(-1, ParseContentLength(",", -1));
+  EXPECT_EQ(-1, ParseContentLength("\0", 1));
   EXPECT_EQ(0, ParseContentLength("0", 1));
   EXPECT_EQ(1, ParseContentLength("1", 1));
-  EXPECT_EQ(0x7fffffff, ParseContentLength("2147483647", 10));
-  EXPECT_EQ(-1, ParseContentLength("2147483648", 10));
-  EXPECT_EQ(-1, ParseContentLength("9223372036854775808", 19));
-  EXPECT_EQ(-1, ParseContentLength("88223372036854775808", 20));
+  EXPECT_EQ(42, ParseContentLength("42, 42", -1)); /* RFC7230 § 3.3.2 */
+  EXPECT_EQ(0x000000ffffffffff, ParseContentLength("1099511627775", -1));
+  EXPECT_EQ(-1, ParseContentLength("1099511627776", -1));
 }

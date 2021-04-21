@@ -5,31 +5,34 @@ COSMOPOLITAN_C_START_
 
 struct UrlView {
   size_t n;
-  char *p; /* not allocated; not nul terminated */
+  char *p;
 };
 
 struct UrlParams {
   size_t n;
-  struct Param {
+  struct UrlParam {
     struct UrlView key;
-    struct UrlView val; /* val.n may be SIZE_MAX */
+    struct UrlView val;
   } * p;
 };
 
 struct Url {
-  struct UrlView scheme;
-  struct UrlView user;
-  struct UrlView pass;
-  struct UrlView host;
-  struct UrlView port;
-  struct UrlView path;
+  struct UrlView scheme; /* must be [A-Za-z][-+.0-9A-Za-z]* or empty */
+  struct UrlView user;   /* depends on host non-absence */
+  struct UrlView pass;   /* depends on user non-absence */
+  struct UrlView host;   /* or reg_name */
+  struct UrlView port;   /* depends on host non-absence */
+  struct UrlView path;   /* or opaque_part */
   struct UrlParams params;
   struct UrlView fragment;
 };
 
+char *EncodeUrl(struct Url *, size_t *);
 char *ParseUrl(const char *, size_t, struct Url *);
 char *ParseParams(const char *, size_t, struct UrlParams *);
 char *ParseRequestUri(const char *, size_t, struct Url *);
+char *ParseHost(const char *, size_t, struct Url *);
+char *EscapeUrlView(char *, struct UrlView *, const char[256]);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

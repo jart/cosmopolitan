@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,46 +16,66 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/str/str.h"
+#include "net/http/http.h"
 
-//	Verifies buffer contains only URI characters.
-//
-//	@param	%rdi is data which should be 32-byte aligned
-//	@param	%rsi is byte length of data
-//	@return	number of kosher bytes
-//	@cost	10x faster than fastest Ragel code
-uricspn$avx:
-	.leafprologue
-	.profilable
-	vmovaps	.Luric(%rip),%xmm0
-	mov	$14,%eax
-	mov	%rsi,%rdx
-	xor	%esi,%esi
-0:	vmovdqu	(%rdi,%rsi),%xmm1
-	vmovdqu	16(%rdi,%rsi),%xmm2
-	vpcmpestri $0b00010100,%xmm1,%xmm0
-	jc	1f
-	jo	1f
-	add	$16,%rsi
-	sub	$16,%rdx
-	vpcmpestri $0b00010100,%xmm2,%xmm0
-	jc	1f
-	jo	1f
-	add	$16,%rsi
-	sub	$16,%rdx
-	jmp	0b
-1:	lea	(%rsi,%rcx),%rax
-	.leafepilogue
-	.endfn	uricspn$avx,globl,hidden
-
-	.rodata.cst16
-.Luric:	.byte	'!','!'
-	.byte	'$',';'
-	.byte	'=','='
-	.byte	'?','Z'
-	.byte	'_','_'
-	.byte	'a','z'
-	.byte	'~','~'
-	.byte	0,0
-	.endobj	.Luric
-	.previous
+/**
+ * Returns true if host seems legit.
+ *
+ * This function may be called after ParseUrl() or ParseHost() has
+ * already handled things like percent encoding. There's currently
+ * no support for IPv6 and IPv7.
+ *
+ * Here's examples of permitted inputs:
+ *
+ * - ""
+ * - 1.2.3.4
+ * - 1.2.3.4.arpa
+ * - localservice
+ * - hello.example
+ * - _hello.example
+ * - -hello.example
+ * - hi-there.example
+ *
+ * Here's some examples of forbidden inputs:
+ *
+ * - ::1
+ * - 1.2.3
+ * - 1.2.3.4.5
+ * - .hi.example
+ * - hi..example
+ *
+ * @param n if -1 implies strlen
+ */
+bool IsAcceptableHost(const char *s, size_t n) {
+  size_t i;
+  bool isip;
+  int c, b, j;
+  if (n == -1) n = s ? strlen(s) : 0;
+  if (!n) return true;
+  for (isip = true, b = j = i = 0; i < n; ++i) {
+    c = s[i] & 255;
+    if (c == '.' && (!i || s[i - 1] == '.')) {
+      return false;
+    } else if (!(isalnum(c) || c == '-' || c == '_' || c == '.')) {
+      return false;
+    }
+    if (isip) {
+      if (isdigit(c)) {
+        b *= 10;
+        b += c - '0';
+        if (b > 255) {
+          return false;
+        }
+      } else if (c == '.') {
+        b = 0;
+        ++j;
+      } else {
+        isip = false;
+      }
+    }
+  }
+  if (isip && j != 3) return false;
+  if (i && s[i - 1] == '.') return false;
+  return true;
+}

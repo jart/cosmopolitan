@@ -30,7 +30,7 @@
 #define SIG_DFL ((void *)0)
 #define SIG_IGN ((void *)1)
 
-#define MAP_FAILED ((void *)__SIZE_MAX__)
+#define MAP_FAILED ((void *)-1)
 
 #define ARCH_SET_GS 0x1001
 #define ARCH_SET_FS 0x1002

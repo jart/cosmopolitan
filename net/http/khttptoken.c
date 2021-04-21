@@ -16,34 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/x/x.h"
-#include "net/http/escape.h"
-#include "net/http/url.h"
+#include "net/http/http.h"
 
-/**
- * Escapes URL component using generic table.
- *
- * This function is agnostic to the underlying charset.
- * Always using UTF-8 is a good idea.
- *
- * @param size if -1 implies strlen
- * @see kEscapeAuthority
- * @see kEscapeIpLiteral
- * @see kEscapePath
- * @see kEscapePathSegment
- * @see kEscapeParam
- * @see kEscapeFragment
- */
-struct EscapeResult EscapeUrl(const char *data, size_t size,
-                              const char xlat[hasatleast 256]) {
-  struct UrlView v;
-  struct EscapeResult r;
-  if (size == -1) size = data ? strlen(data) : 0;
-  v.p = data;
-  v.n = size;
-  r.data = xmalloc(size * 6 + 1);
-  r.size = EscapeUrlView(r.data, &v, xlat) - r.data;
-  r.data = xrealloc(r.data, r.size + 1);
-  r.data[r.size] = '\0';
-  return r;
-}
+// http/1.1 token dispatch
+// 0 is CTLs, SP, ()<>@,;:\"/[]?={} which are illegal
+// 1 is everything else in ASCII which is legal
+// note that &" can break html
+const char kHttpToken[256] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x00
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x10
+    0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0,  // 0x20
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1,  // 0x30
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x40
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1,  // 0x50
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x60
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0,  // 0x70
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x80
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x90
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0xa0
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0xb0
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0xc0
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0xd0
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0xe0
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0xf0
+};

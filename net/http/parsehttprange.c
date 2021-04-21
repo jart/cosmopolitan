@@ -22,6 +22,15 @@
 
 /**
  * Parses HTTP Range request header.
+ *
+ * Here are some example values:
+ *
+ *     Range: bytes=0-                 (everything)
+ *     Range: bytes=0-499              (first 500 bytes)
+ *     Range: bytes=500-999            (second 500 bytes)
+ *     Range: bytes=-500               (final 500 bytes)
+ *     Range: bytes=0-0,-1             (first and last and always)
+ *     Range: bytes=500-600,601-999    (overlong but legal)
  */
 bool ParseHttpRange(const char *p, size_t n, long resourcelength,
                     long *out_start, long *out_length) {
@@ -67,10 +76,10 @@ bool ParseHttpRange(const char *p, size_t n, long resourcelength,
   }
   if (n) return false;
   if (start < 0) return false;
-  if (length < 0) return false;
-  *out_start = start;
-  *out_length = length;
+  if (length < 1) return false;
   if (__builtin_add_overflow(start, length, &ending)) return false;
   if (ending > resourcelength) return false;
+  *out_start = start;
+  *out_length = length;
   return true;
 }
