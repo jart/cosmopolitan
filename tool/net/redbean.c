@@ -2548,7 +2548,19 @@ static int LuaReleaseRegex(lua_State *L) {
 }
 
 static bool HasLuaHandler() {
-  bool r = lua_getglobal(L, "Handler") == LUA_TFUNCTION;
+  bool r = lua_getglobal(L, "OnHttpRequest") == LUA_TFUNCTION || LUA_TTABLE;
+
+  // Did we get a callable table?
+  if(lua_type(L, -1) == LUA_TTABLE) {
+    if(luaL_getmetafield(L, 1, "__call") == LUA_TNIL) {
+      r = false;
+    } else {
+      // Pop the metatable.
+      lua_pop(L, 1);    
+    }
+  }
+  
+  // Pop OnHttpRequest or Nil
   lua_pop(L, 1);
 
   return r;
@@ -2695,12 +2707,14 @@ static void LuaReload(void) {
 #endif
 }
 
-const char *CallLuaHandler(const char *path, size_t pathlen) {
-  lua_getglobal(L, "Handler");
+const char *TryLuaHandler(const char *path, size_t pathlen) {
+  if(lua_getglobal(L, "OnHttpRequest") == LUA_TNIL) {
+    return NULL;
+  }
 
   char *p;
   luaheaderp = NULL;
-  sauce = FreeLater(strndup(request.path.p + 1, request.path.n - 1));
+  sauce = FreeLater(strndup(url.path.p + 1, url.path.n - 1));
   if(lua_pcall(L, 0, 0, 0) == LUA_OK) {
     if (!(p = luaheaderp)) {
       p = SetStatus(200, "OK");
@@ -3222,7 +3236,10 @@ static char *HandleMessage(void) {
     return ServeError(400, "Bad Request");
   }
   if (url.host.n && (p = TryHost(url.host.p, url.host.n))) return p;
-  if (url.path.n == 1 && url.path.p[0] == '/') {
+  if(HasLuaHandler() && (p = TryLuaHandler(url.path.p, url.path.n))) {
+    return p;
+  }
+  else if (url.path.n == 1 && url.path.p[0] == '/') {
     if ((p = TryIndex("/", 1))) return p;
     return ServeListing();
   } else if ((p = TryPath(url.path.p, url.path.n))) {
