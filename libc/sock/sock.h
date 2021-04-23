@@ -41,8 +41,8 @@ struct sockaddr_in {   /* Linux+NT ABI */
 };
 
 struct sockaddr_un {
-  uint16_t sun_family;  /* AF_UNIX */
-  char     sun_path[108];/* path */
+  uint16_t sun_family; /* AF_UNIX */
+  char sun_path[108];  /* path */
 };
 
 struct sockaddr_storage {
@@ -53,11 +53,15 @@ struct sockaddr_storage {
   };
 };
 
-struct ip_mreq  {
-  struct in_addr imr_multiaddr;   /* IP multicast address of group */
-  struct in_addr imr_interface;   /* local IP address of interface */
+struct ip_mreq {
+  struct in_addr imr_multiaddr; /* IP multicast address of group */
+  struct in_addr imr_interface; /* local IP address of interface */
 };
 
+struct linger {     /* Linux+XNU+BSD ABI */
+  int32_t l_onoff;  /* on/off */
+  int32_t l_linger; /* seconds */
+};
 
 struct pollfd {
   int32_t fd;

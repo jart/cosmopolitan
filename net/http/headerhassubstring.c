@@ -30,8 +30,8 @@
  * @param n is byte length of s where -1 implies strlen
  * @return true if substring present
  */
-bool HeaderHasSubstring(struct HttpRequest *m, const char *b, int h,
-                        const char *s, size_t n) {
+bool HeaderHas(struct HttpRequest *m, const char *b, int h, const char *s,
+               size_t n) {
   size_t i;
   assert(0 <= h && h < kHttpHeadersMax);
   if (n == -1) n = s ? strlen(s) : 0;

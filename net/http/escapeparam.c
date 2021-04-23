@@ -21,8 +21,11 @@
 /**
  * Escapes query/form name/parameter.
  *
- * @param size if -1 implies strlen
+ * @param p is input value
+ * @param n if -1 implies strlen
+ * @param z if non-NULL receives output length
+ * @return allocated NUL-terminated buffer, or NULL w/ errno
  */
-struct EscapeResult EscapeParam(const char *data, size_t size) {
-  return EscapeUrl(data, size, kEscapeParam);
+char *EscapeParam(const char *p, size_t n, size_t *z) {
+  return EscapeUrl(p, n, z, kEscapeParam);
 }

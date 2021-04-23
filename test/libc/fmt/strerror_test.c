@@ -30,17 +30,14 @@
  */
 
 TEST(strerror, e2big) {
-  if (IsTiny()) return;
   EXPECT_STARTSWITH("E2BIG", strerror(E2BIG));
 }
 
 TEST(strerror, enosys) {
-  if (IsTiny()) return;
   EXPECT_STARTSWITH("ENOSYS", strerror(ENOSYS));
 }
 
 TEST(strerror, einval) {
-  if (IsTiny()) return;
   EXPECT_STARTSWITH("EINVAL", strerror(EINVAL));
 }
 
@@ -50,14 +47,9 @@ TEST(strerror, symbolizingTheseNumbersAsErrorsIsHeresyInUnixStyle) {
 }
 
 TEST(strerror, enotconn_orLinkerIsntUsingLocaleC_orCodeIsOutOfSync) {
-  if (IsTiny()) return;
   EXPECT_STARTSWITH("ENOTCONN", strerror(ENOTCONN));
 }
 
 TEST(strerror, exfull_orLinkerIsntUsingLocaleC_orCodeIsOutOfSync) {
-  if (!IsTiny()) {
-    EXPECT_STARTSWITH("ETXTBSY", strerror(ETXTBSY));
-  } else {
-    EXPECT_STARTSWITH("EUNKNOWN", strerror(ETXTBSY));
-  }
+  EXPECT_STARTSWITH("ETXTBSY", strerror(ETXTBSY));
 }

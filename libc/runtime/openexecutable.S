@@ -41,6 +41,8 @@ OpenExecutable:
 	pushq	MAP_PRIVATE(%rip)		# -0x30(%rbp)
 	pushq	MAP_FIXED(%rip)			# -0x38(%rbp)
 	pushq	MAP_SHARED(%rip)		# -0x40(%rbp)
+	pushq	__NR_mprotect(%rip)		# -0x48(%rbp)
+	pushq	__NR_mprotect(%rip)		# -0x50(%rbp)
 	push	%rbx				# code buffer
 	push	%r12				# data buffer
 	push	%r14				# filename
@@ -55,7 +57,7 @@ OpenExecutable:
 	mov	-0x10(%rbp),%eax		# __NR_mmap
 	xor	%edi,%edi
 	mov	$PAGESIZE,%esi
-	mov	$PROT_READ|PROT_WRITE|PROT_EXEC,%edx
+	mov	$PROT_READ|PROT_WRITE,%edx
 	mov	-0x28(%rbp),%r10d		# MAP_ANONYMOUS
 	or	-0x30(%rbp),%r10d		# MAP_PRIVATE
 	mov	$-1,%r8
@@ -94,6 +96,14 @@ OpenExecutable:
 	mov	$8f,%esi
 	mov	$9f-8f,%ecx
 	rep movsb
+
+//	Change protection.
+	mov	-0x48(%rbp),%eax		# __NR_mprotect
+	mov	%rbx,%rdi
+	mov	$PAGESIZE,%esi
+	mov	$PROT_READ|PROT_EXEC,%edx
+	syscall
+
 	jmp	*%rbx
 
 //	<LIMBO>
@@ -150,7 +160,7 @@ OpenExecutable:
 
 //	Put data back.
 	mov	$ape_ram_vaddr,%edi
-	xchg	%eax,%esi
+	mov	%r12,%rsi
 	mov	$ape_ram_filesz,%ecx
 	rep movsb
 

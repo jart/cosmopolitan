@@ -28,6 +28,30 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 
+static ssize_t WritevAll(int fd, struct iovec *iov, int iovlen) {
+  ssize_t rc;
+  size_t wrote;
+  do {
+    if ((rc = writev(fd, iov, iovlen)) != -1) {
+      wrote = rc;
+      do {
+        if (wrote >= iov->iov_len) {
+          wrote -= iov->iov_len;
+          ++iov;
+          --iovlen;
+        } else {
+          iov->iov_base = (char *)iov->iov_base + wrote;
+          iov->iov_len -= wrote;
+          wrote = 0;
+        }
+      } while (wrote);
+    } else if (errno != EINTR) {
+      return -1;
+    }
+  } while (iovlen);
+  return 0;
+}
+
 /**
  * Writes data to stream.
  *
@@ -78,12 +102,10 @@ size_t fwrite(const void *data, size_t stride, size_t count, FILE *f) {
   iov[1].iov_base = data;
   iov[1].iov_len = n;
   n += f->beg;
-  if ((rc = writev(f->fd, iov, 2)) == -1) {
+  if (WritevAll(f->fd, iov, 2) == -1) {
     f->state = errno;
     return 0;
   }
-  m = rc;
-  if (n != m) abort();
   f->beg = 0;
   return count;
 }

@@ -17,9 +17,9 @@ local function main()
    lastname = GetParam('lastname')
    if firstname and lastname then
       Write('Hello ')
-      Write(EscapeHtml(firstname))
+      Write(EscapeHtml(VisualizeControlCodes(firstname)))
       Write(' ')
-      Write(EscapeHtml(lastname))
+      Write(EscapeHtml(VisualizeControlCodes(lastname)))
       Write('!<br>')
       Write('Thank you for using redbean.')
    end
@@ -32,11 +32,11 @@ local function main()
    params = GetParams()
    for i = 1,#params do
       Write('<dt>')
-      Write(EscapeHtml(params[i][1]))
+      Write(EscapeHtml(VisualizeControlCodes(params[i][1])))
       Write('\r\n')
       if params[i][2] then
          Write('<dd>')
-         Write(EscapeHtml(params[i][2]))
+         Write(EscapeHtml(VisualizeControlCodes(params[i][2])))
          Write('\r\n')
       end
    end
@@ -57,7 +57,7 @@ local function main()
 
    Write('<dt>Payload\r\n')
    Write('<dd><p>')
-   Write(EscapeHtml(GetPayload()))
+   Write(EscapeHtml(VisualizeControlCodes(GetPayload())))
    Write('\r\n')
 
    Write('</dl>\r\n')

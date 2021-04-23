@@ -37,7 +37,6 @@
  */
 int fflush(FILE *f) {
   size_t i;
-  ssize_t rc;
   if (!f) {
     for (i = __fflush.handles.i; i; --i) {
       if ((f = __fflush.handles.p[i - 1])) {
@@ -45,14 +44,7 @@ int fflush(FILE *f) {
       }
     }
   } else if (f->fd != -1) {
-    while (f->beg && !f->end && (f->iomode & O_ACCMODE) != O_RDONLY) {
-      if ((rc = write(f->fd, f->buf, f->beg)) == -1) {
-        f->state = errno;
-        return -1;
-      }
-      if (rc != f->beg) abort();
-      f->beg = 0;
-    }
+    if (__fflush_impl(f) == -1) return -1;
   } else if (f->beg && f->beg < f->size) {
     f->buf[f->beg] = 0;
   }

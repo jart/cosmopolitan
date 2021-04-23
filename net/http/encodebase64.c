@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "net/http/base64.h"
+#include "net/http/escape.h"
 
 #define CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
@@ -30,7 +30,7 @@
  * @param out_size if non-NULL receives output length
  * @return allocated NUL-terminated buffer, or NULL w/ errno
  */
-char *EncodeBase64(const void *data, size_t size, size_t *out_size) {
+char *EncodeBase64(const char *data, size_t size, size_t *out_size) {
   size_t n;
   unsigned w;
   char *r, *q;
@@ -39,7 +39,7 @@ char *EncodeBase64(const void *data, size_t size, size_t *out_size) {
   if ((n = size) % 3) n += 3 - size % 3;
   n /= 3, n *= 4;
   if ((r = malloc(n + 1))) {
-    for (q = r, p = data, pe = p + size; p < pe; p += 3) {
+    for (q = r, p = (void *)data, pe = p + size; p < pe; p += 3) {
       w = p[0] << 020;
       if (p + 1 < pe) w |= p[1] << 010;
       if (p + 2 < pe) w |= p[2] << 000;

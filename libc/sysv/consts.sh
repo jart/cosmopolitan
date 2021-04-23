@@ -22,19 +22,19 @@ dir=libc/sysv/consts
 #	The Fifth Bell System, Community Edition
 #	» catalogue of carnage
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			Windows			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			Windows			Commentary
 syscon	errno	ENOSYS					38			78			78			78			78			1			# system call unavailable; bsd consensus; kNtErrorInvalidFunction
 syscon	errno	EPERM					1			1			1			1			1			12			# operation not permitted; unix consensus; kNtErrorInvalidAccess (should be kNtErrorNotOwner but is that mutex only??); raised by accept(2), acct(2), add_key(2), adjtimex(2), arch_prctl(2), bdflush(2), bpf(2), capget(2), chmod(2), chown(2), chroot(2), clock_getres(2), clone(2), copy_file_range(2), create_module(2), delete_module(2), epoll_ctl(2), execve(2), fallocate(2), fanotify_init(2), fcntl(2), futex(2), get_robust_list(2), getdomainname(2), getgroups(2), gethostname(2), getpriority(2), getrlimit(2), getsid(2), gettimeofday(2), idle(2), init_module(2), io_submit(2), ioctl_console(2), ioctl_ficlonerange(2), ioctl_fideduperange(2), ioctl_ns(2), ioctl_tty(2), ioperm(2), iopl(2), ioprio_set(2), kcmp(2), kexec_load(2), keyctl(2), kill(2), link(2), lookup_dcookie(2), madvise(2), mbind(2), membarrier(2), migrate_pages(2), mkdir(2), mknod(2), mlock(2), mmap(2), mount(2), move_pages(2), msgctl(2), nice(2), open(2), open_by_handle_at(2), pciconfig_read(2), perf_event_open(2), pidfd_getfd(2), pidfd_send_signal(2), pivot_root(2), prctl(2), process_vm_readv(2), ptrace(2), quotactl(2), reboot(2), rename(2), request_key(2), rmdir(2), rt_sigqueueinfo(2), sched_setaffinity(2), sched_setattr(2), sched_setparam(2), sched_setscheduler(2), semctl(2), seteuid(2), setfsgid(2), setfsuid(2), setgid(2), setns(2), setpgid(2), setresuid(2), setreuid(2), setsid(2), setuid(2), setup(2), setxattr(2), shmctl(2), shmget(2), sigaltstack(2), spu_create(2), stime(2), swapon(2), symlink(2), syslog(2), timer_create(2), timerfd_create(2), tkill(2), truncate(2), umount(2), unlink(2), unshare(2), utime(2), utimensat(2), vhangup(2), vm86(2), write(2), unix(7), ip(7)
 syscon	errno	ENOENT					2			2			2			2			2			2			# no such file or directory; unix consensus; kNtErrorFileNotFound; raised by access(2), acct(2), alloc_hugepages(2), bind(2), bpf(2), chdir(2), chmod(2), chown(2), chroot(2), clock_getres(2), delete_module(2), epoll_ctl(2), execve(2), execveat(2), fanotify_mark(2), getdents(2), inotify_add_watch(2), ioctl_fat(2), kcmp(2), keyctl(2), link(2), mkdir(2), mknod(2), mount(2), msgget(2), open(2), open_by_handle_at(2), perf_event_open(2), query_module(2), quotactl(2), readdir(2), readlink(2), rename(2), rmdir(2), semget(2), shmget(2), spu_create(2), stat(2), statfs(2), statx(2), swapon(2), symlink(2), truncate(2), umount(2), unlink(2), utime(2), utimensat(2), unix(7), ip(7)
 syscon	errno	ESRCH					3			3			3			3			3			566			# no such process; kNtErrorThreadNotInProcess (cf. kNtErrorInvalidHandle); raised by capget(2), get_robust_list(2), getpriority(2), getrlimit(2), getsid(2), ioprio_set(2), kcmp(2), kill(2), migrate_pages(2), move_pages(2), perf_event_open(2), pidfd_getfd(2), pidfd_open(2), pidfd_send_signal(2), process_vm_readv(2), ptrace(2), quotactl(2), rt_sigqueueinfo(2), sched_rr_get_interval(2), sched_setaffinity(2), sched_setattr(2), sched_setparam(2), sched_setscheduler(2), set_thread_area(2), setpgid(2), tkill(2), utimensat(2), unix(7)
-syscon	errno	EINTR					4			4			4			4			4			10004			# crucial for building real time reliable software; unix consensus; WSAEINTR; raised by accept(2), clock_nanosleep(2), close(2), connect(2), dup(2), epoll_wait(2), fallocate(2), fcntl(2), flock(2), futex(2), getrandom(2), io_getevents(2), msgop(2), nanosleep(2), open(2), pause(2), perf_event_open(2), poll(2), ptrace(2), read(2), recv(2), request_key(2), select(2), semop(2), send(2), sigsuspend(2), sigwaitinfo(2), spu_run(2), statfs(2), truncate(2), wait(2), write(2),
+syscon	errno	EINTR					4			4			4			4			4			10004			# the greatest of all errnos; crucial for building real time reliable software; unix consensus; WSAEINTR; raised by accept(2), clock_nanosleep(2), close(2), connect(2), dup(2), epoll_wait(2), fallocate(2), fcntl(2), flock(2), futex(2), getrandom(2), io_getevents(2), msgop(2), nanosleep(2), open(2), pause(2), perf_event_open(2), poll(2), ptrace(2), read(2), recv(2), request_key(2), select(2), semop(2), send(2), sigsuspend(2), sigwaitinfo(2), spu_run(2), statfs(2), truncate(2), wait(2), write(2)
 syscon	errno	EIO					5			5			5			5			5			1117			# unix consensus; kNtErrorIoDevice; raised by access(2) acct(2) chdir(2) chmod(2) chown(2) chroot(2) close(2) copy_file_range(2) execve(2) fallocate(2) fsync(2) ioperm(2) link(2) madvise(2) mbind(2) pciconfig_read(2) ptrace(2) read(2) readlink(2) sendfile(2) statfs(2) symlink(2) sync_file_range(2) truncate(2) unlink(2) write(2)
 syscon	errno	ENXIO					6			6			6			6			6			1112			# no such device or address; unix consensus; kNtErrorNoMediaInDrive; raised by lseek(2), mount(2), open(2), prctl(2)
-syscon	errno	E2BIG					7			7			7			7			7			1639			# argument list too long; unix consensus; kNtErrorInvalidCommandLine; raised by bpf(2), execve(2), getxattr(2), listxattr(2), move_pages(2), msgop(2), openat2(2), perf_event_open(2), sched_setattr(2), semop(2),
+syscon	errno	E2BIG					7			7			7			7			7			1639			# argument list too long; unix consensus; kNtErrorInvalidCommandLine; raised by bpf(2), execve(2), getxattr(2), listxattr(2), move_pages(2), msgop(2), openat2(2), perf_event_open(2), sched_setattr(2), semop(2)
 syscon	errno	ENOEXEC					8			8			8			8			8			193			# exec format error; unix consensus; kNtErrorBadExeFormat; raised by execve(2), init_module(2), kexec_load(2), uselib(2)
 syscon	errno	EBADF					9			9			9			9			9			6			# bad file descriptor; cf. EBADFD; unix consensus; kNtErrorInvalidHandle; raised by accept(2), access(2), bind(2), bpf(2), chdir(2), chmod(2), chown(2), close(2), connect(2), copy_file_range(2), dup(2), epoll_ctl(2), epoll_wait(2), execveat(2), fallocate(2), fanotify_mark(2), fcntl(2), flock(2), fsync(2), futimesat(2), getdents(2), getpeername(2), getsockname(2), getsockopt(2), init_module(2), inotify_add_watch(2), inotify_rm_watch(2), io_submit(2), ioctl(2), ioctl_console(2), ioctl_ficlonerange(2), ioctl_fideduperange(2), ioctl_getfsmap(2), kcmp(2), kexec_load(2), link(2), listen(2), llseek(2), lseek(2), madvise(2), mkdir(2), mknod(2), mmap(2), open(2), open_by_handle_at(2), perf_event_open(2), pidfd_getfd(2), pidfd_send_signal(2), posix_fadvise(2), prctl(2), read(2), readahead(2), readdir(2), readlink(2), recv(2), rename(2), select(2), send(2), sendfile(2), setns(2), shutdown(2), signalfd(2), splice(2), spu_run(2), stat(2), statfs(2), statx(2), symlink(2), sync(2), sync_file_range(2), timerfd_create(2), truncate(2), unlink(2), utimensat(2), vmsplice(2), write(2), unix(7)
 syscon	errno	ECHILD					10			10			10			10			10			128			# no child process; unix consensus; kNtErrorWaitNoChildren; raised by wait(2), waitpid(2), waitid(2), wait3(2), wait4(2)
-syscon	errno	EAGAIN					11			35			35			35			35			0x2733			# resource temporarily unavailable (e.g. too many processes, read or write with O_NONBLOCK needs polling, too much memory locked, etc.); bsd consensus; WSAEWOULDBLOCK; raised by accept(2), clone(2), connect(2), eventfd(2), fcntl(2), fork(2), futex(2), getrandom(2), io_cancel(2), io_setup(2), io_submit(2), ioctl_userfaultfd(2), keyctl(2), madvise(2), mincore(2), mlock(2), mmap(2), mremap(2), msgop(2), openat2(2), poll(2), read(2), rt_sigqueueinfo(2), select(2), semop(2), send(2), sendfile(2), setresuid(2), setreuid(2), setuid(2), signalfd(2), sigwaitinfo(2), splice(2), tee(2), timer_create(2), timerfd_create(2), tkill(2), umount(2), vmsplice(2), write(2), ip(7)
+syscon	errno	EAGAIN					11			35			35			35			35			10035			# resource temporarily unavailable (e.g. SO_RCVTIMEO expired, too many processes, too much memory locked, read or write with O_NONBLOCK needs polling, etc.); bsd consensus; WSAEWOULDBLOCK; raised by accept(2), clone(2), connect(2), eventfd(2), fcntl(2), fork(2), futex(2), getrandom(2), io_cancel(2), io_setup(2), io_submit(2), ioctl_userfaultfd(2), keyctl(2), madvise(2), mincore(2), mlock(2), mmap(2), mremap(2), msgop(2), openat2(2), poll(2), read(2), rt_sigqueueinfo(2), select(2), semop(2), send(2), sendfile(2), setresuid(2), setreuid(2), setuid(2), signalfd(2), sigwaitinfo(2), splice(2), tee(2), timer_create(2), timerfd_create(2), tkill(2), umount(2), vmsplice(2), write(2), ip(7)
 syscon	errno	ENOMEM					12			12			12			12			12			14			# we require more vespene gas; unix consensus; kNtErrorOutofmemory; raised by access(2), acct(2), add_key(2), bind(2), bpf(2), chdir(2), chmod(2), chown(2), chroot(2), clone(2), copy_file_range(2), create_module(2), epoll_create(2), epoll_ctl(2), eventfd(2), execve(2), fanotify_init(2), fanotify_mark(2), fork(2), getgroups(2), getrlimit(2), init_module(2), inotify_add_watch(2), inotify_init(2), io_setup(2), ioctl_fideduperange(2), ioctl_getfsmap(2), ioperm(2), kexec_load(2), keyctl(2), link(2), lookup_dcookie(2), madvise(2), mbind(2), memfd_create(2), mincore(2), mkdir(2), mknod(2), mlock(2), mmap(2), mount(2), mprotect(2), mremap(2), msgget(2), msgop(2), msync(2), open(2), pidfd_open(2), poll(2), process_vm_readv(2), readlink(2), recv(2), rename(2), request_key(2), rmdir(2), s390_guarded_storage(2), s390_pci_mmio_write(2), s390_runtime_instr(2), s390_sthyi(2), select(2), semget(2), semop(2), send(2), sendfile(2), set_mempolicy(2), setns(2), shmctl(2), shmget(2), shmop(2), sigaltstack(2), signalfd(2), splice(2), spu_create(2), spu_run(2), stat(2), statfs(2), statx(2), subpage_prot(2), swapon(2), symlink(2), sync_file_range(2), tee(2), timer_create(2), timerfd_create(2), umount(2), unlink(2), unshare(2), userfaultfd(2), vmsplice(2), unix(7), ip(7)
 syscon	errno	EACCES					13			13			13			13			13			5			# permission denied; unix consensus; kNtErrorAccessDenied; raised by access(2), acct(2), add_key(2), bind(2), bpf(2), chdir(2), chmod(2), chown(2), chroot(2), clock_getres(2), connect(2), execve(2), fcntl(2), futex(2), getpriority(2), inotify_add_watch(2), keyctl(2), link(2), madvise(2), mkdir(2), mknod(2), mmap(2), mount(2), move_pages(2), mprotect(2), msgctl(2), msgget(2), msgop(2), open(2), perf_event_open(2), prctl(2), ptrace(2), quotactl(2), readlink(2), rename(2), request_key(2), rmdir(2), semctl(2), semget(2), semop(2), send(2), setpgid(2), shmctl(2), shmget(2), shmop(2), socket(2), spu_create(2), stat(2), statfs(2), statx(2), symlink(2), truncate(2), unlink(2), uselib(2), utime(2), utimensat(2), ip(7)
 syscon	errno	EFAULT					14			14			14			14			14			487			# pointer passed to system call that would otherwise segfault; unix consensus; kNtErrorInvalidAddress; raised by accept(2), access(2), acct(2), add_key(2), adjtimex(2), arch_prctl(2), bdflush(2), bind(2), bpf(2), cacheflush(2), capget(2), chdir(2), chmod(2), chown(2), chroot(2), clock_getres(2), clock_nanosleep(2), connect(2), create_module(2), delete_module(2), epoll_wait(2), execve(2), fcntl(2), futex(2), get_mempolicy(2), get_robust_list(2), getcpu(2), getdents(2), getdomainname(2), getgroups(2), gethostname(2), getitimer(2), getpeername(2), getrandom(2), getresuid(2), getrlimit(2), getrusage(2), getsockname(2), getsockopt(2), gettimeofday(2), getunwind(2), init_module(2), inotify_add_watch(2), io_cancel(2), io_destroy(2), io_getevents(2), io_setup(2), io_submit(2), ioctl(2), ioctl_getfsmap(2), ioctl_userfaultfd(2), kcmp(2), keyctl(2), link(2), llseek(2), lookup_dcookie(2), mbind(2), memfd_create(2), migrate_pages(2), mincore(2), mkdir(2), mknod(2), mmap2(2), modify_ldt(2), mount(2), move_pages(2), mremap(2), msgctl(2), msgop(2), msync(2), nanosleep(2), open(2), open_by_handle_at(2), perf_event_open(2), pipe(2), poll(2), prctl(2), process_vm_readv(2), ptrace(2), query_module(2), quotactl(2), read(2), readdir(2), readlink(2), reboot(2), recv(2), rename(2), request_key(2), rmdir(2), s390_guarded_storage(2), s390_pci_mmio_write(2), s390_sthyi(2), sched_rr_get_interval(2), sched_setaffinity(2), semctl(2), semop(2), send(2), sendfile(2), set_mempolicy(2), set_thread_area(2), shmctl(2), sigaction(2), sigaltstack(2), sigpending(2), sigprocmask(2), sigsuspend(2), socketpair(2), spu_create(2), spu_run(2), stat(2), statfs(2), statx(2), stime(2), subpage_prot(2), symlink(2), sysctl(2), sysfs(2), sysinfo(2), time(2), timer_settime(2), timerfd_create(2), times(2), truncate(2), umount(2), uname(2), unlink(2), ustat(2), utimensat(2), vm86(2), write(2), unix(7)
@@ -52,7 +52,7 @@ syscon	errno	ENOTTY					25			25			25			25			25			1118			# inappropriate i/o cont
 syscon	errno	ETXTBSY					26			26			26			26			26			148			# won't open executable that's executing in write mode; try UnlockExecutable(); unix consensus; kNtErrorPathBusy; raised by access(2), copy_file_range(2), execve(2), fallocate(2), ioctl_ficlonerange(2), ioctl_fideduperange(2), mmap(2), open(2), truncate(2)
 syscon	errno	EFBIG					27			27			27			27			27			223			# file too large; unix consensus; kNtErrorFileTooLarge; raised by copy_file_range(2), fallocate(2), init_module(2), open(2), semop(2), truncate(2), write(2)
 syscon	errno	ENOSPC					28			28			28			28			28			39			# no space left on device; unix consensus; kNtErrorDiskFull; raised by copy_file_range(2), epoll_ctl(2), fallocate(2), fanotify_mark(2), fsync(2), inotify_add_watch(2), link(2), mkdir(2), mknod(2), msgget(2), open(2), perf_event_open(2), pkey_alloc(2), query_module(2), rename(2), semget(2), setxattr(2), shmget(2), spu_create(2), symlink(2), sync_file_range(2), write(2)
-syscon	errno	EDQUOT					122			69			69			69			69			0x2755			# disk quota exceeded; bsd consensus; raised by add_key(2), keyctl(2), link(2), mkdir(2), mknod(2), open(2), rename(2), request_key(2), setxattr(2), symlink(2), write(2)
+syscon	errno	EDQUOT					122			69			69			69			69			10069			# disk quota exceeded; bsd consensus; raised by add_key(2), keyctl(2), link(2), mkdir(2), mknod(2), open(2), rename(2), request_key(2), setxattr(2), symlink(2), write(2)
 syscon	errno	ESPIPE					29			29			29			29			29			25			# invalid seek; unix consensus; kNtErrorSeek; raised by fallocate(2), lseek(2), posix_fadvise(2), sendfile(2), splice(2), sync_file_range(2)
 syscon	errno	EROFS					30			30			30			30			30			6009			# read-only filesystem; unix consensus; kNtErrorFileReadOnly; raised by access(2), acct(2), bind(2), chmod(2), chown(2), link(2), mkdir(2), mknod(2), mount(2), open(2), rename(2), rmdir(2), symlink(2), truncate(2), unlink(2), utime(2), utimensat(2)
 syscon	errno	EMLINK					31			31			31			31			31			4			# too many links; unix consensus; kNtErrorTooManyLinks; raised by link(2), mkdir(2), rename(2)
@@ -60,48 +60,48 @@ syscon	errno	EPIPE					32			32			32			32			32			109			# broken pipe; unix consen
 syscon	errno	EDOM					33			33			33			33			33			33			# mathematics argument out of domain of function; bsd consensus; fudged on NT; returned by cos(3), fmod(3), log1p(3), sin(3), tan(3), tgamma(3)
 syscon	errno	ERANGE					34			34			34			34			34			34			# result too large; bsd consensus; fudged on NT; raised by getxattr(2), listxattr(2), lookup_dcookie(2), prctl(2), quotactl(2), semctl(2), semop(2), setxattr(2)
 syscon	errno	EDEADLK					35			11			11			11			11			1131			# resource deadlock avoided; bsd consensus; kNtErrorPossibleDeadlock; raised by fcntl(2), keyctl(2)
-syscon	errno	ENAMETOOLONG				36			63			63			63			63			0x274f			# filename too long; bsd consensus; WSAENAMETOOLONG; raised by access(2), acct(2), bind(2), chdir(2), chmod(2), chown(2), chroot(2), execve(2), gethostname(2), inotify_add_watch(2), link(2), lookup_dcookie(2), mkdir(2), mknod(2), mount(2), open(2), readlink(2), rename(2), rmdir(2), spu_create(2), stat(2), statfs(2), statx(2), symlink(2), truncate(2), umount(2), unlink(2), utimensat(2)
+syscon	errno	ENAMETOOLONG				36			63			63			63			63			10063			# filename too long; bsd consensus; WSAENAMETOOLONG; raised by access(2), acct(2), bind(2), chdir(2), chmod(2), chown(2), chroot(2), execve(2), gethostname(2), inotify_add_watch(2), link(2), lookup_dcookie(2), mkdir(2), mknod(2), mount(2), open(2), readlink(2), rename(2), rmdir(2), spu_create(2), stat(2), statfs(2), statx(2), symlink(2), truncate(2), umount(2), unlink(2), utimensat(2)
 syscon	errno	ENOLCK					37			77			77			77			77			0			# no locks available; bsd consensus; raised by fcntl(2), flock(2)
-syscon	errno	ENOTEMPTY				39			66			66			66			66			145			# directory not empty; bsd consensus; kNtErrorDirNotEmpty (TODO: What is WSAENOTEMPTY? 0x2752); raised by rmdir(2)
-syscon	errno	ELOOP					40			62			62			62			62			0x274e			# too many levels of symbolic links; bsd consensus; WSAELOOP; raised by access(2), acct(2), bind(2), chdir(2), chmod(2), chown(2), chroot(2), epoll_ctl(2), execve(2), execveat(2), keyctl(2), link(2), mkdir(2), mknod(2), mount(2), open(2), open_by_handle_at(2), openat2(2), readlink(2), rename(2), rmdir(2), spu_create(2), stat(2), statfs(2), statx(2), symlink(2), truncate(2), unlink(2), utimensat(2)
+syscon	errno	ENOTEMPTY				39			66			66			66			66			145			# directory not empty; bsd consensus; kNtErrorDirNotEmpty (TODO: What is WSAENOTEMPTY? 10066); raised by rmdir(2)
+syscon	errno	ELOOP					40			62			62			62			62			10062			# too many levels of symbolic links; bsd consensus; WSAELOOP; raised by access(2), acct(2), bind(2), chdir(2), chmod(2), chown(2), chroot(2), epoll_ctl(2), execve(2), execveat(2), keyctl(2), link(2), mkdir(2), mknod(2), mount(2), open(2), open_by_handle_at(2), openat2(2), readlink(2), rename(2), rmdir(2), spu_create(2), stat(2), statfs(2), statx(2), symlink(2), truncate(2), unlink(2), utimensat(2)
 syscon	errno	ENOMSG					42			91			83			90			83			0			# raised by msgop(2)
 syscon	errno	EIDRM					43			90			82			89			82			0			# identifier removed; raised by msgctl(2), msgget(2), msgop(2), semctl(2), semop(2), shmctl(2), shmget(2), shmop(2)
 syscon	errno	ETIME					62			101			60			60			92			0			# timer expired; timer expired; raised by connect(2), futex(2), keyctl(2), mq_receive(2), mq_send(2), rtime(2), sem_wait(2)
 syscon	errno	EPROTO					71			100			92			95			96			0			# raised by accept(2), connect(2), socket(2), socketpair(2)
 syscon	errno	EOVERFLOW				75			84			84			87			84			0			# raised by aio_read(2), copy_file_range(2), ctime(2), fanotify_init(2), lseek(2), mmap(2), open(2), open_by_handle_at(2), sem_post(2), sendfile(2), shmctl(2), stat(2), statfs(2), statvfs(2), time(2), timegm(2)
 syscon	errno	EILSEQ					84			92			86			84			85			0			# returned by fgetwc(3), fputwc(3), getwchar(3), putwchar(3), scanf(3), ungetwc(3)
-syscon	errno	EUSERS					87			68			68			68			68			0x2754			# too many users; bsd consensus; WSAEUSERS; raised by acct(2)
-syscon	errno	ENOTSOCK				88			38			38			38			38			0x2736			# not a socket; bsd consensus; WSAENOTSOCK; raised by accept(2), bind(2), connect(2), getpeername(2), getsockname(2), getsockopt(2), listen(2), recv(2), send(2), shutdown(2)
-syscon	errno	EDESTADDRREQ				89			39			39			39			39			0x2737			# destination address required; bsd consensus; WSAEDESTADDRREQ; raised by send(2), write(2)
-syscon	errno	EMSGSIZE				90			40			40			40			40			0x2738			# message too long; bsd consensus; WSAEMSGSIZE; raised by keyctl(2), send(2), ip(7)
-syscon	errno	EPROTOTYPE				91			41			41			41			41			0x2739			# protocol wrong type for socket; bsd consensus; WSAEPROTOTYPE; raised by connect(2), unix(7)
-syscon	errno	ENOPROTOOPT				92			42			42			42			42			0x273a			# protocol not available; bsd consensus; WSAENOPROTOOPT; raised by getsockopt(2), accept(2), ip(7)
-syscon	errno	EPROTONOSUPPORT				93			43			43			43			43			0x273b			# protocol not supported; bsd consensus; WSAEPROTONOSUPPORT; raised by socket(2), socketpair(2), unix(7)
-syscon	errno	ESOCKTNOSUPPORT				94			44			44			44			44			0x273c			# socket type not supported; bsd consensus; WSAESOCKTNOSUPPORT; raised by unix(7), ip(7)
-syscon	errno	ENOTSUP					95			45			45			91			86			0x273d			# operation not supported; raised by chmod(2), clock_getres(2), clock_nanosleep(2), getxattr(2), listxattr(2), removexattr(2), setxattr(2), timer_create(2)
-syscon	errno	EOPNOTSUPP				95			102			45			45			45			0x273d			# socket operation not supported; raised by accept(2), fallocate(2), fanotify_mark(2), ioctl_ficlonerange(2), ioctl_fideduperange(2), ioctl_getfsmap(2), keyctl(2), listen(2), mmap(2), open_by_handle_at(2), pciconfig_read(2), perf_event_open(2), prctl(2), readv(2), s390_guarded_storage(2), s390_runtime_instr(2), s390_sthyi(2), send(2), socketpair(2), unix(7), ip(7)
-syscon	errno	EPFNOSUPPORT				96			46			46			46			46			0x273e			# protocol family not supported; bsd consensus; WSAEPFNOSUPPORT
-syscon	errno	EAFNOSUPPORT				97			47			47			47			47			0x273f			# address family not supported; bsd consensus; WSAEAFNOSUPPORT; raised by connect(2), socket(2), socketpair(2), tcp(7)
-syscon	errno	EADDRINUSE				98			48			48			48			48			0x2740			# address already in use; bsd consensus; WSAEADDRINUSE; raised by bind(2), connect(2), listen(2), unix(7), ip(7)
-syscon	errno	EADDRNOTAVAIL				99			49			49			49			49			0x2741			# address not available; bsd consensus; WSAEADDRNOTAVAIL; raised by bind(2), connect(2), kexec_load(2), ip(7)
-syscon	errno	ENETDOWN				100			50			50			50			50			0x2742			# network is down; bsd consensus; WSAENETDOWN; raised by accept(2)
-syscon	errno	ENETUNREACH				101			51			51			51			51			0x2743			# host is unreachable; bsd consensus; WSAENETUNREACH; raised by accept(2), connect(2)
-syscon	errno	ENETRESET				102			52			52			52			52			0x2744			# connection reset by network; bsd consensus; WSAENETRESET
-syscon	errno	ECONNABORTED				103			53			53			53			53			0x2745			# connection reset before accept; bsd consensus; WSAECONNABORTED; raised by accept(2)
-syscon	errno	ECONNRESET				104			54			54			54			54			0x2746			# connection reset by client; bsd consensus; WSAECONNRESET; raised by send(2), unix(7)
-syscon	errno	ENOBUFS					105			55			55			55			55			0x2747			# no buffer space available; bsd consensus; WSAENOBUFS; raised by getpeername(2), getsockname(2), send(2), ip(7)
-syscon	errno	EISCONN					106			56			56			56			56			0x2748			# socket is connected; bsd consensus; WSAEISCONN; raised by connect(2), send(2), unix(7), ip(7)
-syscon	errno	ENOTCONN				107			57			57			57			57			0x2749			# socket is not connected; bsd consensus; WSAENOTCONN; raised by getpeername(2), recv(2), send(2), shutdown(2), ip(7)
-syscon	errno	ESHUTDOWN				108			58			58			58			58			0x274a			# cannot send after transport endpoint shutdown; note that shutdown write is an EPIPE; bsd consensus; WSAESHUTDOWN
-syscon	errno	ETOOMANYREFS				109			59			59			59			59			0x274b			# too many references: cannot splice; bsd consensus; WSAETOOMANYREFS; raised by sendmsg(2), unix(7)
-syscon	errno	ETIMEDOUT				110			60			60			60			60			0x274c			# connection timed out; bsd consensus; WSAETIMEDOUT; raised by connect(2), futex(2), keyctl(2), tcp(7)
-syscon	errno	ECONNREFUSED				111			61			61			61			61			0x274d			# bsd consensus; WSAECONNREFUSED; raised by connect(2), listen(2), recv(2), unix(7), udp(7)system-imposed limit on the number of threads was encountered.
-syscon	errno	EHOSTDOWN				112			64			64			64			64			0x2750			# bsd consensus; WSAEHOSTDOWN; raised by accept(2)
-syscon	errno	EHOSTUNREACH				113			65			65			65			65			0x2751			# bsd consensus; WSAEHOSTUNREACH; raised by accept(2), ip(7)
-syscon	errno	EALREADY				114			37			37			37			37			0x2735			# connection already in progress; bsd consensus; WSAEALREADY; raised by connect(2), send(2), ip(7)
-syscon	errno	EINPROGRESS				115			36			36			36			36			0x2734			# bsd consensus; WSAEINPROGRESS; raised by connect(2) w/ O_NONBLOCK
-syscon	errno	ESTALE					116			70			70			70			70			0x2756			# bsd consensus; WSAESTALE; raised by open_by_handle_at(2)
-syscon	errno	EREMOTE					66			71			71			71			71			0x2757			# bsd consensus
+syscon	errno	EUSERS					87			68			68			68			68			10068			# too many users; bsd consensus; WSAEUSERS; raised by acct(2)
+syscon	errno	ENOTSOCK				88			38			38			38			38			10038			# not a socket; bsd consensus; WSAENOTSOCK; raised by accept(2), bind(2), connect(2), getpeername(2), getsockname(2), getsockopt(2), listen(2), recv(2), send(2), shutdown(2)
+syscon	errno	EDESTADDRREQ				89			39			39			39			39			10039			# destination address required; bsd consensus; WSAEDESTADDRREQ; raised by send(2), write(2)
+syscon	errno	EMSGSIZE				90			40			40			40			40			10040			# message too long; bsd consensus; WSAEMSGSIZE; raised by keyctl(2), send(2), ip(7)
+syscon	errno	EPROTOTYPE				91			41			41			41			41			10041			# protocol wrong type for socket; bsd consensus; WSAEPROTOTYPE; raised by connect(2), unix(7)
+syscon	errno	ENOPROTOOPT				92			42			42			42			42			10042			# protocol not available; bsd consensus; WSAENOPROTOOPT; raised by getsockopt(2), accept(2), ip(7)
+syscon	errno	EPROTONOSUPPORT				93			43			43			43			43			10043			# protocol not supported; bsd consensus; WSAEPROTONOSUPPORT; raised by socket(2), socketpair(2), unix(7)
+syscon	errno	ESOCKTNOSUPPORT				94			44			44			44			44			10044			# socket type not supported; bsd consensus; WSAESOCKTNOSUPPORT; raised by unix(7), ip(7)
+syscon	errno	ENOTSUP					95			45			45			91			86			10045			# operation not supported; raised by chmod(2), clock_getres(2), clock_nanosleep(2), getxattr(2), listxattr(2), removexattr(2), setxattr(2), timer_create(2)
+syscon	errno	EOPNOTSUPP				95			102			45			45			45			10045			# socket operation not supported; raised by accept(2), fallocate(2), fanotify_mark(2), ioctl_ficlonerange(2), ioctl_fideduperange(2), ioctl_getfsmap(2), keyctl(2), listen(2), mmap(2), open_by_handle_at(2), pciconfig_read(2), perf_event_open(2), prctl(2), readv(2), s390_guarded_storage(2), s390_runtime_instr(2), s390_sthyi(2), send(2), socketpair(2), unix(7), ip(7)
+syscon	errno	EPFNOSUPPORT				96			46			46			46			46			10046			# protocol family not supported; bsd consensus; WSAEPFNOSUPPORT
+syscon	errno	EAFNOSUPPORT				97			47			47			47			47			10047			# address family not supported; bsd consensus; WSAEAFNOSUPPORT; raised by connect(2), socket(2), socketpair(2), tcp(7)
+syscon	errno	EADDRINUSE				98			48			48			48			48			10048			# address already in use; bsd consensus; WSAEADDRINUSE; raised by bind(2), connect(2), listen(2), unix(7), ip(7)
+syscon	errno	EADDRNOTAVAIL				99			49			49			49			49			10049			# address not available; bsd consensus; WSAEADDRNOTAVAIL; raised by bind(2), connect(2), kexec_load(2), ip(7)
+syscon	errno	ENETDOWN				100			50			50			50			50			10050			# network is down; bsd consensus; WSAENETDOWN; raised by accept(2)
+syscon	errno	ENETUNREACH				101			51			51			51			51			10051			# host is unreachable; bsd consensus; WSAENETUNREACH; raised by accept(2), connect(2)
+syscon	errno	ENETRESET				102			52			52			52			52			10052			# connection reset by network; bsd consensus; WSAENETRESET
+syscon	errno	ECONNABORTED				103			53			53			53			53			10053			# connection reset before accept; bsd consensus; WSAECONNABORTED; raised by accept(2)
+syscon	errno	ECONNRESET				104			54			54			54			54			10054			# connection reset by client; bsd consensus; WSAECONNRESET; raised by send(2), unix(7)
+syscon	errno	ENOBUFS					105			55			55			55			55			10055			# no buffer space available; bsd consensus; WSAENOBUFS; raised by getpeername(2), getsockname(2), send(2), ip(7)
+syscon	errno	EISCONN					106			56			56			56			56			10056			# socket is connected; bsd consensus; WSAEISCONN; raised by connect(2), send(2), unix(7), ip(7)
+syscon	errno	ENOTCONN				107			57			57			57			57			10057			# socket is not connected; bsd consensus; WSAENOTCONN; raised by getpeername(2), recv(2), send(2), shutdown(2), ip(7)
+syscon	errno	ESHUTDOWN				108			58			58			58			58			10058			# cannot send after transport endpoint shutdown; note that shutdown write is an EPIPE; bsd consensus; WSAESHUTDOWN
+syscon	errno	ETOOMANYREFS				109			59			59			59			59			10059			# too many references: cannot splice; bsd consensus; WSAETOOMANYREFS; raised by sendmsg(2), unix(7)
+syscon	errno	ETIMEDOUT				110			60			60			60			60			10060			# connection timed out; bsd consensus; WSAETIMEDOUT; raised by connect(2), futex(2), keyctl(2), tcp(7)
+syscon	errno	ECONNREFUSED				111			61			61			61			61			10061			# bsd consensus; WSAECONNREFUSED; raised by connect(2), listen(2), recv(2), unix(7), udp(7)system-imposed limit on the number of threads was encountered.
+syscon	errno	EHOSTDOWN				112			64			64			64			64			10064			# bsd consensus; WSAEHOSTDOWN; raised by accept(2)
+syscon	errno	EHOSTUNREACH				113			65			65			65			65			10065			# bsd consensus; WSAEHOSTUNREACH; raised by accept(2), ip(7)
+syscon	errno	EALREADY				114			37			37			37			37			10037			# connection already in progress; bsd consensus; WSAEALREADY; raised by connect(2), send(2), ip(7)
+syscon	errno	EINPROGRESS				115			36			36			36			36			10036			# bsd consensus; WSAEINPROGRESS; raised by connect(2) w/ O_NONBLOCK
+syscon	errno	ESTALE					116			70			70			70			70			10070			# bsd consensus; WSAESTALE; raised by open_by_handle_at(2)
+syscon	errno	EREMOTE					66			71			71			71			71			10071			# bsd consensus
 syscon	errno	EBADMSG					74			94			89			92			88			0			# raised by ioctl_getfsmap(2)
 syscon	errno	ECANCELED				125			89			85			88			87			0			# raised by timerfd_create(2)
 syscon	errno	EOWNERDEAD				130			105			96			94			97			0			# raised by pthread_cond_timedwait(3), pthread_mutex_consistent(3), pthread_mutex_getprioceiling(3), pthread_mutex_lock(3), pthread_mutex_timedlock(3), pthread_mutexattr_getrobust(3), pthread_mutexattr_setrobust(3)
@@ -154,11 +154,11 @@ syscon	junkerr	EKEYREJECTED				129			0			0			0			0			0			# bsd consensus
 syscon	junkerr	ERFKILL					132			0			0			0			0			0			# bsd consensus
 syscon	junkerr	EHWPOISON				133			0			0			0			0			0			# bsd consensus
 syscon	junkerr	EBADFD					77			9			9			9			9			6			# file descriptor in bad state; cf. EBADF; fudged on non-Linux
-syscon	compat	EWOULDBLOCK				11			35			35			35			35			0x2733			# same as EWOULDBLOCK
+syscon	compat	EWOULDBLOCK				11			35			35			35			35			10035			# same as EWOULDBLOCK
 
 #	signals
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	sig	SIGHUP					1			1			1			1			1			1			# terminal hangup or daemon reload; resumable; auto-broadcasted to process group; unix consensus & faked on nt
 syscon	sig	SIGINT					2			2			2			2			2			2			# terminal ctrl-c keystroke; resumable; auto-broadcasted to process group; unix consensus & faked on nt
 syscon	sig	SIGQUIT					3			3			3			3			3			3			# terminal ctrl-\ keystroke; resumable; unix consensus & faked on nt
@@ -200,7 +200,7 @@ syscon	compat	SIGPWR					30			30			30			30			32			30			# not implemented in most
 #																						  ┌││─────┐
 #																						  │││  │ ┌┴───dwDesiredAccess
 #																						N │││  │ │
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			T │││┌─┴┐│		Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			T │││┌─┴┐│		Commentary
 syscon	open	O_RDONLY				0			0			0			0			0			0xA0000000		# unix consensus & kNtGenericRead|kNtGenericExecute
 syscon	open	O_WRONLY				1			1			1			1			1			0x40000000		# unix consensus & kNtGenericWrite
 syscon	open	O_RDWR					2			2			2			2			2			0xE0000000		# unix consensus & kNtGenericRead|kNtGenericWrite|kNtGenericExecute
@@ -231,7 +231,7 @@ syscon	compat	O_LARGEFILE				0			0			0			0			0			0
 #	mmap() flags
 #	the revolutionary praxis of malloc()
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	compat	MAP_FILE				0			0			0			0			0			0			# consensus
 syscon	mmap	MAP_SHARED				1			1			1			1			1			1			# forced consensus & faked nt
 syscon	mmap	MAP_PRIVATE				2			2			2			2			2			2			# forced consensus & faked nt
@@ -257,7 +257,7 @@ syscon	compat	MAP_32BIT				0x40			0			0x080000		0			0			0			# iffy
 #	madvise() flags
 #	beneath the iceberg memory management
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	madv	MADV_NORMAL				0			0			0			0			0			0x00000080		# consensus & kNtFileAttributeNormal
 syscon	compat	POSIX_FADV_NORMAL			0			0			0			0			0			0x00000080		# consensus & kNtFileAttributeNormal
 syscon	compat	POSIX_MADV_NORMAL			0			0			0			0			0			0x00000080		# consensus & kNtFileAttributeNormal
@@ -289,7 +289,7 @@ syscon	fadv	POSIX_FADV_NOREUSE			5			0			5			0			5			0			# wut
 #	mmap(), mprotect(), etc.
 #	digital restrictions management for the people
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	mprot	PROT_NONE				0			0			0			0			0			0			# mmap, mprotect, unix consensus (nt needs special business logic here)
 syscon	mprot	PROT_READ				1			1			1			1			1			1			# mmap, mprotect, unix consensus
 syscon	mprot	PROT_WRITE				2			2			2			2			2			2			# mmap, mprotect, unix consensus
@@ -300,13 +300,13 @@ syscon	mprot	PROT_GROWSUP				0x02000000		0			0			0			0			0			# intended for mpro
 #	mremap() flags
 #	the revolutionary praxis of realloc()
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	mremap	MREMAP_MAYMOVE				1			1			1			1			1			1			# faked non-linux (b/c linux only)
 syscon	mremap	MREMAP_FIXED				2			2			2			2			2			2			# faked non-linux (b/c linux only)
 
 #	splice() flags
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	splice	SPLICE_F_MOVE				1			0			0			0			0			0			# can be safely ignored by polyfill; it's a hint
 syscon	splice	SPLICE_F_NONBLOCK			2			0			0			0			0			0			# can be safely ignored by polyfill, since linux says it doesn't apply to underlying FDs
 syscon	splice	SPLICE_F_MORE				4			0			0			0			0			0			# can be safely ignored by polyfill; it's a hint
@@ -314,7 +314,7 @@ syscon	splice	SPLICE_F_GIFT				8			0			0			0			0			0			# can probably be ignored
 
 #	access() flags
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	access	F_OK					0			0			0			0			0			0			# consensus
 syscon	access	X_OK					1			1			1			1			1			0xa0000000		# unix consensus and kNtGenericExecute | kNtGenericRead
 syscon	access	W_OK					2			2			2			2			2			0x40000000		# unix consensus and kNtGenericWrite
@@ -322,7 +322,7 @@ syscon	access	R_OK					4			4			4			4			4			0x80000000		# unix consensus and kNtG
 
 #	flock() flags
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	lock	LOCK_SH					1			1			1			1			1			0			# shared [unix consensus]
 syscon	lock	LOCK_EX					2			2			2			2			2			2			# exclusive [consensus!]
 syscon	lock	LOCK_NB					4			4			4			4			4			1			# non-blocking [unix consensus]
@@ -330,21 +330,21 @@ syscon	lock	LOCK_UN					8			8			8			8			8			8			# unlock [unix consensus & faked
 
 #	waitpid() / wait4() options
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	waitpid	WNOHANG					1			1			1			1			1			0			# helps you reap zombies; unix consensus
 syscon	waitpid	WUNTRACED				2			2			2			2			2			0			# unix consensus
 syscon	waitpid	WCONTINUED				8			0x10			4			8			16			0
 
 #	waitid() options
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	waitid	WEXITED					4			4			0x10			0			32			0
 syscon	waitid	WSTOPPED				2			8			2			0			2			0
 syscon	waitid	WNOWAIT					0x01000000		0x20			8			0			0x10000			0
 
 #	stat::st_mode constants
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	stat	S_IFREG					0100000			0100000			0100000			0100000			0100000			0100000			# regular file     (unix consensus; faked nt)
 syscon	stat	S_IFBLK					0060000			0060000			0060000			0060000			0060000			0060000			# block device     (unix consensus; faked nt)
 syscon	stat	S_IFCHR					0020000			0020000			0020000			0020000			0020000			0020000			# character device (unix consensus; faked nt)
@@ -374,7 +374,7 @@ syscon	stat	S_IRWXO					0000007			0000007			0000007			0000007			0000007			000000
 
 #	fcntl()
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	fcntl2	F_DUPFD					0			0			0			0			0			0			# consensus
 
 syscon	fcntl2	F_GETFD					1			1			1			1			1			1			# unix consensus & faked nt
@@ -421,7 +421,7 @@ syscon	fcntl	F_GETPIPE_SZ				0x0408			0			0			0			0			0
 
 #	openat(), fstatat(), linkat(), etc. magnums
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	at	AT_FDCWD				-100			-2			-100			-100			-100			-100			# faked nt
 syscon	at	AT_SYMLINK_FOLLOW			0x0400			0x40			0x0400			4			0x400			0
 syscon	at	AT_SYMLINK_NOFOLLOW			0x0100			0x20			0x0200			2			0x200			0			# TODO(jart): What should NT do?
@@ -434,13 +434,13 @@ syscon	at	AT_EMPTY_PATH				0x1000			0			0			0			0			0			# linux 2.6.39+; see unl
 #
 #	Unsupported flags are encoded as 0.
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	memfd	MFD_CLOEXEC				1			0			0			0			0			0
 syscon	memfd	MFD_ALLOW_SEALING			2			0			0			0			0			0
 
 #	utimensat() special values
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	utime	UTIME_NOW				0x3fffffff		0x3fffffff		-1			-2			0x3fffffff		-2			# timespec::tv_sec may be this; polyfilled xnu/nt
 syscon	utime	UTIME_OMIT				0x3ffffffe		0x3ffffffe		-2			-1			0x3ffffffe		-1			# timespec::tv_nsec may be this; polyfilled xnu/nt
 
@@ -448,7 +448,7 @@ syscon	utime	UTIME_OMIT				0x3ffffffe		0x3ffffffe		-2			-1			0x3ffffffe		-1			# 
 #
 #	Unsupported values are encoded as 0.
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	auxv	AT_EXECFD				2			0			2			0			2			0			# file descriptor of program
 syscon	auxv	AT_PHDR					3			0			3			0			3			0			# address of program headers of executable
 syscon	auxv	AT_PHENT				4			0			4			0			4			0
@@ -481,7 +481,7 @@ syscon	auxv	AT_NO_AUTOMOUNT				0x0800			0			0			0			0			0
 #
 #	Unsupported values are encoded as 127.
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	rlimit	RLIMIT_CPU				0			0			0			0			0			127			# max cpu time in seconds; see SIGXCPU; unix consensus
 syscon	rlimit	RLIMIT_FSIZE				1			1			1			1			1			127			# max file size in bytes; unix consensus
 syscon	rlimit	RLIMIT_DATA				2			2			2			2			2			127			# max mmap() / brk() / sbrk() size in bytes; unix consensus
@@ -501,7 +501,7 @@ syscon	compat	RLIMIT_VMEM				9			5			10			127			10			127			# same as RLIMIT_AS
 
 #	resource limit special values
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	rlim	RLIM_NLIMITS				16			9			15			9			12			0			# no clue why we need it
 syscon	rlim	RLIM_INFINITY				0xffffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0
 syscon	rlim	RLIM_SAVED_CUR				0xffffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0
@@ -509,7 +509,7 @@ syscon	rlim	RLIM_SAVED_MAX				0xffffffffffffffff	0x7fffffffffffffff	0x7fffffffff
 
 #	sigaction() codes
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	sigact	SA_NOCLDSTOP				1			8			8			8			8			1			# lets you set SIGCHLD handler that's only notified on exit/termination and not notified on SIGSTOP/SIGTSTP/SIGTTIN/SIGTTOU/SIGCONT lool; bsd consensus
 syscon	sigact	SA_NOCLDWAIT				2			32			32			32			32			2			# changes SIGCHLD so the zombie is gone and you can't call wait(2) anymore; similar to SIGCHLD+SIG_IGN but may still deliver the SIGCHLD; bsd consensus
 syscon	sigact	SA_SIGINFO				4			64			64			64			64			4			# asks kernel to provide ucontext_t argument, which has mutable cpu/fpu state of signalled process; and it is polyfilled by cosmopolitan; bsd consensus
@@ -525,7 +525,7 @@ syscon	compat	SA_ONESHOT				0x80000000		4			4			4			4			0x80000000		# same as SA
 #	Windows NT is polyfilled as Linux.
 #	Unsupported values are encoded as 0x80000000.
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	sicode	SI_USER					0			0x010001		0x010001		0			0			0			# sent by kill(2); openbsd defines si_code<=0 as originating from user
 syscon	sicode	SI_QUEUE				-1			0x010002		0x010002		-2			-1			-1			# sent by sigqueue(2)
 syscon	sicode	SI_TIMER				-2			0x010003		0x010003		-3			-2			-2			# sent by setitimer(2) or clock_settime(2)
@@ -575,12 +575,12 @@ syscon	sicode	POLL_HUP				6			6			6			6			6			6			# SIGIO; device disconnected; 
 
 #	sigalstack() values
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	ss	SIGSTKSZ				0x2000			0x020000		0x8800			0x7000			0x7000			0x2000
 
 #	clock_{gettime,settime} timers
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	clock	CLOCK_REALTIME				0			0			0			0			0			0			# consensus
 syscon	clock	CLOCK_MONOTONIC				1			1			4			3			3			1			# XNU/NT faked; could move backwards if NTP introduces negative leap second
 syscon	clock	CLOCK_PROCESS_CPUTIME_ID		2			-1			15			2			0x40000000		-1
@@ -593,9 +593,24 @@ syscon	clock	CLOCK_REALTIME_ALARM			8			-1			-1			-1			-1			-1			# bsd consensus
 syscon	clock	CLOCK_BOOTTIME_ALARM			9			-1			-1			-1			-1			-1			# bsd consensus
 syscon	clock	CLOCK_TAI				11			-1			-1			-1			-1			-1			# bsd consensus
 
+#	poll()
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+syscon	poll	POLLIN					1			1			1			1			1			0x300			# unix consensus
+syscon	poll	POLLPRI					2			2			2			2			2			0x0400			# unix consensus
+syscon	poll	POLLOUT					4			4			4			4			4			0x10			# unix consensus
+syscon	poll	POLLERR					8			8			8			8			8			1			# unix consensus
+syscon	poll	POLLHUP					0x10			0x10			0x10			0x10			0x10			2			# unix consensus
+syscon	poll	POLLNVAL				0x20			0x20			0x20			0x20			0x20			4			# unix consensus
+syscon	poll	POLLRDBAND				0x80			0x80			0x80			0x80			0x80			0x0200			# unix consensus
+syscon	poll	POLLRDNORM				0x40			0x40			0x40			0x40			0x40			0x0100			# unix consensus
+syscon	poll	POLLWRBAND				0x0200			0x0100			0x0100			0x0100			0x0100			0x20			# bsd consensus
+syscon	poll	POLLWRNORM				0x0100			4			4			4			4			0x10			# bsd consensus
+syscon	poll	POLLRDHUP				0x2000			0x10			0x10			0x10			0x10			2			# bsd consensus (POLLHUP on non-Linux)
+
 #	epoll
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	epoll	EPOLL_CLOEXEC				0x080000		0x01000000		0x100000		0x010000		0x010000		0x80000			# O_CLOEXEC
 syscon	epoll	EPOLL_CTL_ADD				1			1			1			1			1			1			# forced consensus, linux only natively, polyfilled elsewhere
 syscon	epoll	EPOLL_CTL_DEL				2			2			2			2			2			2			# forced consensus, linux only natively, polyfilled elsewhere
@@ -621,24 +636,24 @@ syscon	epoll	EPOLLET					0x80000000		0x80000000		0x80000000		0x80000000		0x80000
 #		*  0 we define as EINVAL
 #		* -1 we define as no-op
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	so	SO_REUSEPORT				15			0x0200			0x0200			0x0200			0x0200			4			# bsd consensus (NT calls it SO_REUSEADDR)
 syscon	so	SO_REUSEADDR				2			4			4			4			4			0			# bsd consensus (default behavior on NT)
 syscon	so	SO_KEEPALIVE				9			8			8			8			8			8			# bsd consensus
 syscon	so	SO_DONTROUTE				5			0x10			0x10			0x10			0x10			0x10			# bsd consensus
 syscon	so	SO_BROADCAST				6			0x20			0x20			0x20			0x20			0x20			# bsd consensus
-syscon	so	SO_LINGER				13			0x80			0x80			0x80			0x80			0x80			# bsd consensus
+syscon	so	SO_LINGER				13			0x80			0x80			0x80			0x80			0x80			# takes struct linger; causes close() return value to actually mean something; bsd consensus
 syscon	so	SO_DEBUG				1			1			1			1			1			1			# consensus
-syscon	so	SO_ACCEPTCONN				30			2			2			2			2			2			# bsd consensus
-syscon	so	SO_ERROR				4			0x1007			0x1007			0x1007			0x1007			0x1007			# bsd consensus
+syscon	so	SO_ACCEPTCONN				30			2			2			2			2			2			# takes int pointer and stores boolean indicating if listen() was called on fd; bsd consensus
+syscon	so	SO_ERROR				4			0x1007			0x1007			0x1007			0x1007			0x1007			# takes int pointer and stores/clears the pending error code; bsd consensus
 syscon	so	SO_OOBINLINE				10			0x0100			0x0100			0x0100			0x0100			0x0100			# bsd consensus
 syscon	so	SO_SNDBUF				7			0x1001			0x1001			0x1001			0x1001			0x1001			# bsd consensus
 syscon	so	SO_RCVBUF				8			0x1002			0x1002			0x1002			0x1002			0x1002			# bsd consensus
+syscon	so	SO_RCVTIMEO				20			0x1006			0x1006			0x1006			0x100c			0x1006			# recv timeout; takes struct timeval (overrides SA_RESTART restoring EINTR behavior on recv/send/connect/accept/etc.; bsd consensus)
+syscon	so	SO_SNDTIMEO				21			0x1005			0x1005			0x1005			0x100b			0x1005			# send timeout; takes struct timeval; bsd consensus
 syscon	so	SO_RCVLOWAT				18			0x1004			0x1004			0x1004			0x1004			0x1004			# bsd consensus
-syscon	so	SO_RCVTIMEO				20			0x1006			0x1006			0x1006			0x100c			0x1006			# overrides SA_RESTART restoring EINTR behavior on recv/send/connect/accept/etc.; bsd consensus
 syscon	so	SO_EXCLUSIVEADDRUSE			0			0			0			0			0			0xfffffffb		# hoo boy
 syscon	so	SO_SNDLOWAT				19			0x1003			0x1003			0x1003			0x1003			0x1003			# bsd consensus
-syscon	so	SO_SNDTIMEO				21			0x1005			0x1005			0x1005			0x100b			0x1005			# bsd consensus
 syscon	so	SO_TYPE					3			0x1008			0x1008			0x1008			0x1008			0x1008			# bsd consensus
 syscon	so	SO_TIMESTAMP				29			0x0400			0x0400			0x0800			0x2000			0
 syscon	so	SO_DOMAIN				39			0			0x1019			0			0			0
@@ -717,22 +732,22 @@ syscon	sol	SOL_X25					262			0			0			0			0			0
 #	@see https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt
 #	@see https://www.iana.org/assignments/tcp-parameters/tcp-parameters.txt
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
-syscon	tcp	TCP_NODELAY				1			1			1			1			1			1			# strong consensus for disabling nagle's algorithm
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+syscon	tcp	TCP_NODELAY				1			1			1			1			1			1			# strong consensus for disabling nagle's algorithm; so be sure to disable it by turning this on
+syscon	tcp	TCP_CORK				3			4			4			16			0			0			# nagle's algorithm strikes again; TCP_NOPUSH on BSD; be sure to turn it off; protip: mmap+writev vs. write+sendfile; see also /proc/sys/net/ipv4/tcp_autocorking; netbsd is 4 but not implemented
 syscon	tcp	TCP_MAXSEG				2			2			2			2			2			0			# reduces tcp segment size; see also tcp offloading
-syscon	tcp	TCP_FASTOPEN				23			261			0x0401			0			0			15                      # reduces roundtrips; for listener; Linux 3.7+ (c. 2012) / or is windows it 0x22? /proc/sys/net/ipv4/tcp_fastopen TODO(jart): MSG_FASTOPEN
-syscon	tcp	TCP_KEEPIDLE				4			0			0x100			0			0			0			# keepalives
-syscon	tcp	TCP_KEEPINTVL				5			0x101			0x200			0			0			0			# keepalives
-syscon	tcp	TCP_KEEPCNT				6			0x102			0x400			0			0			0			# keepalives
+syscon	tcp	TCP_FASTOPEN				23			0			0x0401			0			0			15                      # reduces roundtrips; for listener; Linux 3.7+ (c. 2012) / or is windows it 0x22? /proc/sys/net/ipv4/tcp_fastopen TODO(jart): MSG_FASTOPEN; XNU sources say 261 but not sure if that's true
+syscon	tcp	TCP_KEEPIDLE				4			0			0x100			0			3			0			# keepalives
+syscon	tcp	TCP_KEEPINTVL				5			0x101			0x200			0			5			0			# keepalives
+syscon	tcp	TCP_KEEPCNT				6			0x102			0x400			0			6			0			# keepalives
 syscon	tcp	TCP_SYNCNT				7			0			0			0			0			0			# how hard to syn packet the enemy
 syscon	tcp	TCP_COOKIE_TRANSACTIONS			15			0			0			0			0			0			# defense against the syn packets
 syscon	tcp	TCP_LINGER2				8			0			0			0			0			0			# orphaned fin-wait-2 lifetime cf. net.ipv4.tcp_fin_timeout see cloudflare blog
-syscon	tcp	TCP_CORK				3			0			0			0			0			0			# linux tries to automate iovec
 syscon	tcp	TCP_NOTSENT_LOWAT			25			513			0			0			0			0			# limit unset byte queue
-syscon	tcp	TCP_INFO				11			0			0x20			0			0			0			# get connection info
+syscon	tcp	TCP_INFO				11			0			0x20			0			9			0			# get connection info
 syscon	tcp	TCP_CC_INFO				26			0			0			0			0			0			# get congestion control info
 syscon	tcp	TCP_CONGESTION				13			0			0x40			0			0			0			# set traffic control
-syscon	tcp	TCP_MD5SIG				14			0			0x10			4			4			0			# what is it (rfc2385)
+syscon	tcp	TCP_MD5SIG				14			0			0x10			4			16			0			# what is it (rfc2385)
 syscon	tcp	TCP_MD5SIG_MAXKEYLEN			80			0			0			0			0			0			# what is it
 syscon	tcp	TCP_TIMESTAMP				24			0			0			0			0			0			# what is it
 syscon	tcp	TCP_USER_TIMEOUT			18			0			0			0			0			0			# what is it
@@ -748,9 +763,60 @@ syscon	tcp	TCP_REPAIR_OPTIONS			22			0			0			0			0			0			# what is it
 syscon	tcp	TCP_REPAIR_QUEUE			20			0			0			0			0			0			# what is it
 syscon	tcp	TCP_THIN_LINEAR_TIMEOUTS		16			0			0			0			0			0			# what is it
 
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+syscon	ip	IP_DEFAULT_MULTICAST_LOOP		1			1			1			1			1			1			# consensus
+syscon	ip	IP_DEFAULT_MULTICAST_TTL		1			1			1			1			1			1			# consensus
+syscon	ip	IP_PMTUDISC_DONT			0			0			0			0			0			0			# consensus
+syscon	ip	IP_HDRINCL				3			2			2			2			2			2			# bsd consensus
+syscon	ip	IP_MAX_MEMBERSHIPS			20			0x0fff			0x0fff			0x0fff			0x0fff			20			# bsd consensus
+syscon	ip	IP_OPTIONS				4			1			1			1			1			1			# bsd consensus
+syscon	ip	IP_TOS					1			3			3			3			3			8			# bsd consensus
+syscon	ip	IP_RECVTTL				12			24			65			31			23			21
+syscon	ip	IP_ADD_MEMBERSHIP			35			12			12			12			12			0			# bsd consensus
+syscon	ip	IP_DROP_MEMBERSHIP			36			13			13			13			13			0			# bsd consensus
+syscon	ip	IP_MULTICAST_IF				0x20			9			9			9			9			0			# bsd consensus
+syscon	ip	IP_MULTICAST_LOOP			34			11			11			11			11			0			# bsd consensus
+syscon	ip	IP_MULTICAST_TTL			33			10			10			10			10			0			# bsd consensus
+syscon	ip	IP_RECVOPTS				6			5			5			5			5			0			# bsd consensus
+syscon	ip	IP_RECVRETOPTS				7			6			6			6			6			0			# bsd consensus
+syscon	ip	IP_RETOPTS				7			8			8			8			8			0			# bsd consensus
+syscon	ip	IP_TTL					2			4			4			4			4			0			# bsd consensus
+syscon	ip	IP_ADD_SOURCE_MEMBERSHIP		39			70			70			0			0			15
+syscon	ip	IP_BLOCK_SOURCE				38			72			72			0			0			17
+syscon	ip	IP_DROP_SOURCE_MEMBERSHIP		40			71			71			0			0			0x10
+syscon	ip	IP_UNBLOCK_SOURCE			37			73			73			0			0			18
+syscon	ip	IP_IPSEC_POLICY				0x10			21			21			0			0			0
+syscon	ip	IP_MINTTL				21			0			66			32			24			0			# minimum ttl for packet or drop
+syscon	ip	IP_MSFILTER				41			74			74			0			0			0
+syscon	ip	IP_PKTINFO				8			26			0			0			25			19
+syscon	ip	IP_RECVTOS				13			0			68			0			0			40
+syscon	ip	IP_MTU					14			0			0			0			0			73			# bsd consensus
+syscon	ip	IP_MTU_DISCOVER				10			0			0			0			0			71			# bsd consensus
+syscon	ip	IP_RECVERR				11			0			0			0			0			75			# bsd consensus
+syscon	ip	IP_UNICAST_IF				50			0			0			0			0			31			# bsd consensus
+syscon	ip	IP_ORIGDSTADDR				20			0			27			0			0			0
+syscon	ip	IP_RECVORIGDSTADDR			20			0			27			0			0			0
+syscon	ip	IP_BIND_ADDRESS_NO_PORT			24			0			0			0			0			0
+syscon	ip	IP_CHECKSUM				23			0			0			0			0			0
+syscon	ip	IP_FREEBIND				15			0			0			0			0			0
+syscon	ip	IP_MULTICAST_ALL			49			0			0			0			0			0
+syscon	ip	IP_NODEFRAG				22			0			0			0			0			0
+syscon	ip	IP_PASSSEC				18			0			0			0			0			0
+syscon	ip	IP_PKTOPTIONS				9			0			0			0			0			0
+syscon	ip	IP_PMTUDISC				10			0			0			0			0			0
+syscon	ip	IP_PMTUDISC_DO				2			0			0			0			0			0
+syscon	ip	IP_PMTUDISC_INTERFACE			4			0			0			0			0			0
+syscon	ip	IP_PMTUDISC_OMIT			5			0			0			0			0			0
+syscon	ip	IP_PMTUDISC_PROBE			3			0			0			0			0			0
+syscon	ip	IP_PMTUDISC_WANT			1			0			0			0			0			0
+syscon	ip	IP_ROUTER_ALERT				5			0			0			0			0			0
+syscon	ip	IP_TRANSPARENT				19			0			0			0			0			0
+syscon	ip	IP_XFRM_POLICY				17			0			0			0			0			0
+syscon	ip	INET_ADDRSTRLEN				0x10			0x10			0x10			0x10			0x10			22			# unix consensus
+
 #	ptrace() codes
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	ptrace	PTRACE_TRACEME				0			0			0			0			-1			-1			# unix consensus a.k.a. PT_TRACE_ME
 syscon	ptrace	PTRACE_PEEKTEXT				1			1			1			1			-1			-1			# unix consensus a.k.a. PT_READ_I
 syscon	ptrace	PTRACE_PEEKDATA				2			2			2			2			-1			-1			# unix consensus a.k.a. PT_READ_D
@@ -1294,56 +1360,6 @@ syscon	pf	PF_VSOCK				40			0			0			0			0			0
 syscon	pf	PF_WANPIPE				25			0			0			0			0			0
 syscon	pf	PF_X25					9			0			0			0			0			0
 
-syscon	ip	IP_DEFAULT_MULTICAST_LOOP		1			1			1			1			1			1			# consensus
-syscon	ip	IP_DEFAULT_MULTICAST_TTL		1			1			1			1			1			1			# consensus
-syscon	ip	IP_PMTUDISC_DONT			0			0			0			0			0			0			# consensus
-syscon	ip	IP_HDRINCL				3			2			2			2			2			2			# bsd consensus
-syscon	ip	IP_MAX_MEMBERSHIPS			20			0x0fff			0x0fff			0x0fff			0x0fff			20			# bsd consensus
-syscon	ip	IP_OPTIONS				4			1			1			1			1			1			# bsd consensus
-syscon	ip	IP_TOS					1			3			3			3			3			8			# bsd consensus
-syscon	ip	IP_RECVTTL				12			24			65			31			31			21
-syscon	ip	IP_ADD_MEMBERSHIP			35			12			12			12			12			0			# bsd consensus
-syscon	ip	IP_DROP_MEMBERSHIP			36			13			13			13			13			0			# bsd consensus
-syscon	ip	IP_MULTICAST_IF				0x20			9			9			9			9			0			# bsd consensus
-syscon	ip	IP_MULTICAST_LOOP			34			11			11			11			11			0			# bsd consensus
-syscon	ip	IP_MULTICAST_TTL			33			10			10			10			10			0			# bsd consensus
-syscon	ip	IP_RECVOPTS				6			5			5			5			5			0			# bsd consensus
-syscon	ip	IP_RECVRETOPTS				7			6			6			6			6			0			# bsd consensus
-syscon	ip	IP_RETOPTS				7			8			8			8			8			0			# bsd consensus
-syscon	ip	IP_TTL					2			4			4			4			4			0			# bsd consensus
-syscon	ip	IP_ADD_SOURCE_MEMBERSHIP		39			70			70			0			0			15
-syscon	ip	IP_BLOCK_SOURCE				38			72			72			0			0			17
-syscon	ip	IP_DROP_SOURCE_MEMBERSHIP		40			71			71			0			0			0x10
-syscon	ip	IP_UNBLOCK_SOURCE			37			73			73			0			0			18
-syscon	ip	IP_IPSEC_POLICY				0x10			21			21			0			0			0
-syscon	ip	IP_MINTTL				21			0			66			0x20			0x20			0
-syscon	ip	IP_MSFILTER				41			74			74			0			0			0
-syscon	ip	IP_PKTINFO				8			26			0			0			0			19
-syscon	ip	IP_RECVTOS				13			0			68			0			0			40
-syscon	ip	IP_MTU					14			0			0			0			0			73			# bsd consensus
-syscon	ip	IP_MTU_DISCOVER				10			0			0			0			0			71			# bsd consensus
-syscon	ip	IP_RECVERR				11			0			0			0			0			75			# bsd consensus
-syscon	ip	IP_UNICAST_IF				50			0			0			0			0			31			# bsd consensus
-syscon	ip	IP_ORIGDSTADDR				20			0			27			0			0			0
-syscon	ip	IP_RECVORIGDSTADDR			20			0			27			0			0			0
-syscon	ip	IP_BIND_ADDRESS_NO_PORT			24			0			0			0			0			0
-syscon	ip	IP_CHECKSUM				23			0			0			0			0			0
-syscon	ip	IP_FREEBIND				15			0			0			0			0			0
-syscon	ip	IP_MULTICAST_ALL			49			0			0			0			0			0
-syscon	ip	IP_NODEFRAG				22			0			0			0			0			0
-syscon	ip	IP_PASSSEC				18			0			0			0			0			0
-syscon	ip	IP_PKTOPTIONS				9			0			0			0			0			0
-syscon	ip	IP_PMTUDISC				10			0			0			0			0			0
-syscon	ip	IP_PMTUDISC_DO				2			0			0			0			0			0
-syscon	ip	IP_PMTUDISC_INTERFACE			4			0			0			0			0			0
-syscon	ip	IP_PMTUDISC_OMIT			5			0			0			0			0			0
-syscon	ip	IP_PMTUDISC_PROBE			3			0			0			0			0			0
-syscon	ip	IP_PMTUDISC_WANT			1			0			0			0			0			0
-syscon	ip	IP_ROUTER_ALERT				5			0			0			0			0			0
-syscon	ip	IP_TRANSPARENT				19			0			0			0			0			0
-syscon	ip	IP_XFRM_POLICY				17			0			0			0			0			0
-syscon	ip	INET_ADDRSTRLEN				0x10			0x10			0x10			0x10			0x10			22			# unix consensus
-
 syscon	ipv6	IPV6_PMTUDISC_DONT			0			0			0			0			0			0			# consensus
 syscon	ipv6	IPV6_RTHDR_LOOSE			0			0			0			0			0			0			# consensus
 syscon	ipv6	IPV6_RTHDR_TYPE_0			0			0			0			0			0			0			# consensus
@@ -1405,39 +1421,6 @@ syscon	ipv6	IPV6_ORIGDSTADDR			0			0			72			0			0			0
 syscon	ipv6	IPV6_RECVORIGDSTADDR			0			0			72			0			0			0
 syscon	ipv6	INET6_ADDRSTRLEN			46			46			46			46			46			65			# unix consensus
 
-syscon	poll	POLLIN					1			1			1			1			1			0x300			# unix consensus
-syscon	poll	POLLPRI					2			2			2			2			2			0x0400			# unix consensus
-syscon	poll	POLLOUT					4			4			4			4			4			0x10			# unix consensus
-syscon	poll	POLLERR					8			8			8			8			8			1			# unix consensus
-syscon	poll	POLLHUP					0x10			0x10			0x10			0x10			0x10			2			# unix consensus
-syscon	poll	POLLNVAL				0x20			0x20			0x20			0x20			0x20			4			# unix consensus
-syscon	poll	POLLRDBAND				0x80			0x80			0x80			0x80			0x80			0x0200			# unix consensus
-syscon	poll	POLLRDNORM				0x40			0x40			0x40			0x40			0x40			0x0100			# unix consensus
-syscon	poll	POLLWRBAND				0x0200			0x0100			0x0100			0x0100			0x0100			0x20			# bsd consensus
-syscon	poll	POLLWRNORM				0x0100			4			4			4			4			0x10			# bsd consensus
-syscon	poll	POLLRDHUP				0x2000			0x10			0x10			0x10			0x10			2			# bsd consensus (POLLHUP on non-Linux)
-
-syscon	c	C_IXOTH					0000001			0000001			0000001			0000001			0000001			0			# unix consensus
-syscon	c	C_IWOTH					0000002			0000002			0000002			0000002			0000002			0			# unix consensus
-syscon	c	C_IROTH					0000004			0000004			0000004			0000004			0000004			0			# unix consensus
-syscon	c	C_IXGRP					0000010			0000010			0000010			0000010			0000010			0			# unix consensus
-syscon	c	C_IWGRP					0000020			0000020			0000020			0000020			0000020			0			# unix consensus
-syscon	c	C_IRGRP					0000040			0000040			0000040			0000040			0000040			0			# unix consensus
-syscon	c	C_IXUSR					0000100			0000100			0000100			0000100			0000100			0			# unix consensus
-syscon	c	C_IWUSR					0000200			0000200			0000200			0000200			0000200			0			# unix consensus
-syscon	c	C_IRUSR					0000400			0000400			0000400			0000400			0000400			0			# unix consensus
-syscon	c	C_ISVTX					0001000			0001000			0001000			0001000			0001000			0			# unix consensus
-syscon	c	C_ISGID					0002000			0002000			0002000			0002000			0002000			0			# unix consensus
-syscon	c	C_ISUID					0004000			0004000			0004000			0004000			0004000			0			# unix consensus
-syscon	c	C_ISFIFO				0010000			0010000			0010000			0010000			0010000			0			# unix consensus
-syscon	c	C_ISCHR					0020000			0020000			0020000			0020000			0020000			0			# unix consensus
-syscon	c	C_ISDIR					0040000			0040000			0040000			0040000			0040000			0			# unix consensus
-syscon	c	C_ISBLK					0060000			0060000			0060000			0060000			0060000			0			# unix consensus
-syscon	c	C_ISREG					0100000			0100000			0100000			0100000			0100000			0			# unix consensus
-syscon	c	C_ISCTG					0110000			0110000			0110000			0110000			0110000			0			# unix consensus
-syscon	c	C_ISLNK					0120000			0120000			0120000			0120000			0120000			0			# unix consensus
-syscon	c	C_ISSOCK				0140000			0140000			0140000			0140000			0140000			0			# unix consensus
-
 syscon	fan	FAN_CLASS_NOTIF				0			0			0			0			0			0			# consensus
 syscon	fan	FAN_ACCESS				1			0			0			0			0			0
 syscon	fan	FAN_ACCESS_PERM				0x020000		0			0			0			0			0
@@ -1484,7 +1467,7 @@ syscon	exit	EXIT_FAILURE				1			1			1			1			1			1			# consensus
 #	- Dating back to 1980 in 4.0BSD;
 #	- That won't be standardized.
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	ex	EX_OK					0			0			0			0			0			0			# consensus
 syscon	ex	EX_USAGE				64			64			64			64			64			64			# unix consensus & force NT
 syscon	ex	EX_DATAERR				65			65			65			65			65			65			# unix consensus & force NT
@@ -1506,7 +1489,7 @@ syscon	ex	EX__MAX					78			78			78			78			78			78			# unix consensus & force NT
 
 #	getdents() constants
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	dt	DT_UNKNOWN				0			0			0			0			0			0			# consensus
 syscon	dt	DT_FIFO					1			1			1			1			1			1			# unix consensus & faked nt
 syscon	dt	DT_CHR					2			2			2			2			2			2			# unix consensus & faked nt
@@ -1518,14 +1501,14 @@ syscon	dt	DT_SOCK					12			12			12			12			12			12			# unix consensus & faked nt
 
 #	msync() flags
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	ms	MS_SYNC					4			16			0			2			4			4			# faked nt
 syscon	ms	MS_ASYNC				1			1			1			1			1			1			# consensus (faked nt)
 syscon	ms	MS_INVALIDATE				2			2			2			4			2			0
 
 #	mount flags
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	mount	MS_ACTIVE				0x40000000		0			0			0			0			0
 syscon	mount	MS_BIND					0x1000			0			0			0			0			0
 syscon	mount	MS_DIRSYNC				0x80			0			0			0			0			0
@@ -1863,7 +1846,7 @@ syscon	misc	READ_TOC				67			0			0			0			0			0
 
 #	getpriority() / setpriority() magnums (a.k.a. nice)
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	prio	PRIO_PROCESS				0			0			0			0			0			0			# consensus / poly nt
 syscon	prio	PRIO_PGRP				1			1			1			1			1			1			# unix consensus / poly nt
 syscon	prio	PRIO_USER				2			2			2			2			2			2			# unix consensus / poly nt
@@ -1873,7 +1856,7 @@ syscon	prio	NZERO					20			20			20			20			20			20			# unix consensus / polyfille
 
 #	getaddrinfo() flags
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	gai	AI_PASSIVE				1			1			1			1			1			1			# consensus
 syscon	gai	AI_CANONNAME				2			2			2			2			2			2			# consensus
 syscon	gai	AI_NUMERICHOST				4			4			4			4			4			4			# consensus
@@ -2229,7 +2212,7 @@ syscon	misc	EXPR_NEST_MAX				0x20			0x20			0x20			0x20			0x20			0			# unix conse
 
 #	linux fallocate() flags
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	misc	FALLOC_FL_KEEP_SIZE			0x01			-1			-1			-1			-1			-1			# bsd consensus
 syscon	misc	FALLOC_FL_PUNCH_HOLE			0x02			-1			-1			-1			-1			-1			# bsd consensus
 syscon	misc	FALLOC_FL_NO_HIDE_STALE			0x04			-1			-1			-1			-1			-1			# bsd consensus
@@ -2378,7 +2361,7 @@ syscon	misc	ERA_T_FMT				0x020031		48			48			0			0			0
 #		≈ TCSETA   → About 12,600 results (0.32 seconds)
 #		= TIOCSETA → About  3,110 results (0.41 seconds)
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	termios	TCGETS					0x5401			0x40487413		0x402c7413		0x402c7413		0x402c7413		0			# Gets console settings; tcgetattr(tty, argp) → ioctl(tty, TCGETS, struct termios *argp); polyfilled NT
 syscon	compat	TIOCGETA				0x5401			0x40487413		0x402c7413		0x402c7413		0x402c7413		0			# Gets console settings; = tcgetattr(tty, struct termios *argp)
 #syscon	compat	TCGETA					0x5405			0			0			0			0			0			# Gets console settings; ≈ ioctl(fd, TCGETA, struct termio *argp)
@@ -2554,7 +2537,7 @@ syscon	termios	CEOL					0			255			255			255			255			0			#
 
 #	Pseudoteletypewriter Control
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	pty	TIOCPKT					0x5420			0x80047470		0x80047470		0x80047470		0x80047470		-1			# boop
 syscon	pty	TIOCPKT_DATA				0			0			0			0			0			0			# consensus
 syscon	pty	TIOCPKT_FLUSHREAD			1			1			1			1			1			1			# unix consensus
@@ -2569,7 +2552,7 @@ syscon	pty	PTMGET					0			0			0			0x40287401		0x40287401		-1			# for /dev/ptm
 
 #	Modem Control
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	modem	TIOCMGET				0x5415			0x4004746a		0x4004746a		0x4004746a		0x4004746a		-1			# get status of modem bits; ioctl(fd, TIOCMGET, int *argp)
 syscon	modem	TIOCMSET				0x5418			0x8004746d		0x8004746d		0x8004746d		0x8004746d		-1			# set status of modem bits; ioctl(fd, TIOCMSET, const int *argp)
 syscon	modem	TIOCMBIC				0x5417			0x8004746b		0x8004746b		0x8004746b		0x8004746b		-1			# clear indicated modem bits; ioctl(fd, TIOCMBIC, int *argp)
@@ -2744,7 +2727,7 @@ syscon	misc	YESSTR					0x050002		54			54			46			46			0
 
 #	System Call Numbers.
 #
-#	group	name					GNU/Systemd		XNU's Not UNIX		FreeBSD			OpenBSD			NetBSD			XENIX
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX
 syscon	nr	__NR_exit				0x003c			0x2000001          	0x0001        		0x0001          	0x001           	0xfff
 syscon	nr	__NR_exit_group				0x00e7			0x2000001          	0x0001        		0x0001          	0x001           	0xfff
 syscon	nr	__NR_read				0x0000			0x2000003		0x0003			0x0003			0x003			0xfff

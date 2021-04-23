@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "net/http/base64.h"
+#include "net/http/escape.h"
 
 static const signed char kBase64[256] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  // 0x00
@@ -47,7 +47,7 @@ static const signed char kBase64[256] = {
  * @param out_size if non-NULL receives output length
  * @return allocated NUL-terminated buffer, or NULL w/ errno
  */
-void *DecodeBase64(const char *data, size_t size, size_t *out_size) {
+char *DecodeBase64(const char *data, size_t size, size_t *out_size) {
   size_t n;
   char *r, *q;
   int a, b, c, d, w;

@@ -127,25 +127,28 @@ static bool ParseScheme(struct UrlParser *u, struct Url *h) {
 }
 
 static void ParseAuthority(struct UrlParser *u, struct Url *h) {
-  bool b = false;
+  int t = 0;
   const char *c = NULL;
   while (u->i < u->size) {
     u->c = u->data[u->i++] & 0xff;
     if (u->c == '/' || u->c == '#' || u->c == '?') {
       break;
     } else if (u->c == '[') {
-      b = true;
+      t = -1;
     } else if (u->c == ']') {
-      b = false;
-    } else if (u->c == ':' && !b) {
+      t = 0;
+    } else if (u->c == ':' && t >= 0) {
+      *u->p++ = ':';
       c = u->p;
+      ++t;
     } else if (u->c == '@') {
       if (c) {
         h->user.p = u->q;
-        h->user.n = c - u->q;
+        h->user.n = c - 1 - u->q;
         h->pass.p = c;
         h->pass.n = u->p - c;
         c = NULL;
+        t = 0;
       } else {
         h->user.p = u->q;
         h->user.n = u->p - u->q;
@@ -159,9 +162,9 @@ static void ParseAuthority(struct UrlParser *u, struct Url *h) {
       *u->p++ = u->c;
     }
   }
-  if (c) {
+  if (t == 1) {
     h->host.p = u->q;
-    h->host.n = c - u->q;
+    h->host.n = c - 1 - u->q;
     h->port.p = c;
     h->port.n = u->p - c;
     c = NULL;

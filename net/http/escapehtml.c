@@ -23,63 +23,67 @@
 /**
  * Escapes HTML entities.
  *
- * @param size if -1 implies strlen
+ * @param p is input value
+ * @param n if -1 implies strlen
+ * @param z if non-NULL receives output length
+ * @return allocated NUL-terminated buffer, or NULL w/ errno
  */
-struct EscapeResult EscapeHtml(const char *data, size_t size) {
+char *EscapeHtml(const char *p, size_t n, size_t *z) {
   int c;
-  char *p;
   size_t i;
-  struct EscapeResult r;
-  if (size == -1) size = data ? strlen(data) : 0;
-  p = r.data = xmalloc(size * 6 + 1);
-  for (i = 0; i < size; ++i) {
-    switch ((c = data[i])) {
-      case '&':
-        p[0] = '&';
-        p[1] = 'a';
-        p[2] = 'm';
-        p[3] = 'p';
-        p[4] = ';';
-        p += 5;
-        break;
-      case '<':
-        p[0] = '&';
-        p[1] = 'l';
-        p[2] = 't';
-        p[3] = ';';
-        p += 4;
-        break;
-      case '>':
-        p[0] = '&';
-        p[1] = 'g';
-        p[2] = 't';
-        p[3] = ';';
-        p += 4;
-        break;
-      case '"':
-        p[0] = '&';
-        p[1] = 'q';
-        p[2] = 'u';
-        p[3] = 'o';
-        p[4] = 't';
-        p[5] = ';';
-        p += 6;
-        break;
-      case '\'':
-        p[0] = '&';
-        p[1] = '#';
-        p[2] = '3';
-        p[3] = '9';
-        p[4] = ';';
-        p += 5;
-        break;
-      default:
-        *p++ = c;
-        break;
+  char *q, *r;
+  if (z) *z = 0;
+  if (n == -1) n = p ? strlen(p) : 0;
+  if ((q = r = malloc(n * 6 + 1))) {
+    for (i = 0; i < n; ++i) {
+      switch ((c = p[i])) {
+        case '&':
+          q[0] = '&';
+          q[1] = 'a';
+          q[2] = 'm';
+          q[3] = 'p';
+          q[4] = ';';
+          q += 5;
+          break;
+        case '<':
+          q[0] = '&';
+          q[1] = 'l';
+          q[2] = 't';
+          q[3] = ';';
+          q += 4;
+          break;
+        case '>':
+          q[0] = '&';
+          q[1] = 'g';
+          q[2] = 't';
+          q[3] = ';';
+          q += 4;
+          break;
+        case '"':
+          q[0] = '&';
+          q[1] = 'q';
+          q[2] = 'u';
+          q[3] = 'o';
+          q[4] = 't';
+          q[5] = ';';
+          q += 6;
+          break;
+        case '\'':
+          q[0] = '&';
+          q[1] = '#';
+          q[2] = '3';
+          q[3] = '9';
+          q[4] = ';';
+          q += 5;
+          break;
+        default:
+          *q++ = c;
+          break;
+      }
     }
+    if (z) *z = q - r;
+    *q++ = '\0';
+    if ((q = realloc(r, q - r))) r = q;
   }
-  r.size = p - r.data;
-  r.data = xrealloc(r.data, r.size + 1);
-  r.data[r.size] = '\0';
   return r;
 }

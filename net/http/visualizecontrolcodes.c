@@ -20,7 +20,7 @@
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "libc/str/tpenc.h"
-#include "net/http/http.h"
+#include "net/http/escape.h"
 
 /**
  * Filters out control codes from string.
@@ -28,6 +28,10 @@
  * This is useful for logging data like HTTP messages, where we don't
  * want full blown C string literal escaping, but we don't want things
  * like raw ANSI control codes from untrusted devices in our terminals.
+ *
+ * This function also canonicalizes overlong encodings. Therefore it
+ * isn't necessary to say VisualizeControlCodes(Underlong(𝑥))) since
+ * VisualizeControlCodes(𝑥) will do the same thing.
  *
  * @param data is input value
  * @param size if -1 implies strlen

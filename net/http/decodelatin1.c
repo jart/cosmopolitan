@@ -20,28 +20,35 @@
 #include "libc/intrin/pmovmskb.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "net/http/http.h"
+#include "net/http/escape.h"
 
 /**
  * Decodes ISO-8859-1 to UTF-8.
  *
- * @param data is input value
- * @param size if -1 implies strlen
- * @param out_size if non-NULL receives output length
+ * @param p is input value
+ * @param n if -1 implies strlen
+ * @param z if non-NULL receives output length
  * @return allocated NUL-terminated buffer, or NULL w/ errno
  */
-char *DecodeLatin1(const char *data, size_t size, size_t *out_size) {
+char *DecodeLatin1(const char *p, size_t n, size_t *z) {
   int c;
-  size_t n;
+  size_t i;
   char *r, *q;
-  const char *p, *e;
-  if (size == -1) size = data ? strlen(data) : 0;
-  if ((r = malloc(size * 2 + 1))) {
-    q = r;
-    p = data;
-    e = p + size;
-    while (p < e) {
-      c = *p++ & 0xff;
+  int8_t v1[16], v2[16], vz[16];
+  if (z) *z = 0;
+  if (n == -1) n = p ? strlen(p) : 0;
+  if ((q = r = malloc(n * 2 + 1))) {
+    for (i = 0; i < n;) {
+      memset(vz, 0, 16); /* 3x speedup for ASCII */
+      while (i + 16 < n) {
+        memcpy(v1, p + i, 16);
+        pcmpgtb(v2, v1, vz);
+        if (pmovmskb((void *)v2) != 0xFFFF) break;
+        memcpy(q, v1, 16);
+        q += 16;
+        i += 16;
+      }
+      c = p[i++] & 0xff;
       if (c < 0200) {
         *q++ = c;
       } else {
@@ -49,14 +56,9 @@ char *DecodeLatin1(const char *data, size_t size, size_t *out_size) {
         *q++ = 0200 | c & 077;
       }
     }
-    n = q - r;
+    if (z) *z = q - r;
     *q++ = '\0';
-    if ((q = realloc(r, n + 1))) r = q;
-  } else {
-    n = 0;
-  }
-  if (out_size) {
-    *out_size = n;
+    if ((q = realloc(r, q - r))) r = q;
   }
   return r;
 }

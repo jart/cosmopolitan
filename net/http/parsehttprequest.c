@@ -60,14 +60,24 @@ void DestroyHttpRequest(struct HttpRequest *r) {
  * that fragmented messages can be handled efficiently. A limitation on
  * message size is imposed to make the header data structures smaller.
  *
+ * This parser assumes ISO-8859-1 and guarantees no C0 or C1 control
+ * codes are present in message fields, with the exception of tab.
+ * Please note that fields like URI may use UTF-8 percent encoding. This
+ * parser doesn't care if you choose ASA X3.4-1963 or MULTICS newlines.
+ *
  * kHttpRepeatable defines which standard header fields are O(1) and
  * which ones may have comma entries spilled over into xheaders. For
  * most headers it's sufficient to simply check the static slice. If
  * r->headers[kHttpFoo].a is zero then the header is totally absent.
  *
- * This parser takes about 300 nanoseconds (900 cycles) to parse a 403
- * byte Chrome HTTP request under MODE=rel on a Core i9 which is about
- * gigabyte per second of throughput per core.
+ * This parser has linear complexity. Each character only needs to be
+ * considered a single time. That's the case even if messages are
+ * fragmented. If a message is valid but incomplete, this function will
+ * return zero so that it can be resumed as soon as more data arrives.
+ *
+ * This parser takes about 500 nanoseconds to parse a 403 byte Chrome
+ * HTTP request under MODE=rel on a Core i9 which is about three cycles
+ * per byte or a gigabyte per second of throughput per core.
  *
  * @note we assume p points to a buffer that has >=SHRT_MAX bytes
  * @see HTTP/1.1 RFC2616 RFC2068

@@ -16,22 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/runtime/gc.internal.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
-#include "net/http/http.h"
+#include "libc/x/x.h"
+#include "net/http/escape.h"
 
 TEST(VisualizeControlCodes, test) {
-  EXPECT_STREQ("hello", VisualizeControlCodes("hello", -1, 0));
-  EXPECT_STREQ("hello\r\n", VisualizeControlCodes("hello\r\n", -1, 0));
-  EXPECT_STREQ("hello␁␂␡", VisualizeControlCodes("hello\1\2\177", -1, 0));
-  EXPECT_STREQ("hello\\u0085", VisualizeControlCodes("hello\302\205", -1, 0));
+  EXPECT_STREQ("hello", gc(VisualizeControlCodes("hello", -1, 0)));
+  EXPECT_STREQ("hello\r\n", gc(VisualizeControlCodes("hello\r\n", -1, 0)));
+  EXPECT_STREQ("hello␁␂␡", gc(VisualizeControlCodes("hello\1\2\177", -1, 0)));
+  EXPECT_STREQ("hello\\u0085",
+               gc(VisualizeControlCodes("hello\302\205", -1, 0)));
 }
 
 TEST(VisualizeControlCodes, testOom_returnsNullAndSetsSizeToZero) {
   size_t n = 31337;
-  EXPECT_EQ(NULL, VisualizeControlCodes("hello", 0x1000000000000, &n));
+  EXPECT_EQ(NULL, gc(VisualizeControlCodes("hello", 0x1000000000000, &n)));
   EXPECT_EQ(0, n);
+}
+
+TEST(VisualizeControlCodes, testWeirdHttp) {
+  size_t n = 31337;
+  char *p, B[] = "\0GET /redbean.lua\n\n";
+  ASSERT_NE(0, (p = gc(VisualizeControlCodes(B, sizeof(B), &n))));
+  EXPECT_STREQ("\"␀GET /redbean.lua\\n\\n␀\"", gc(xasprintf("%`'.*s", n, p)));
 }
 
 BENCH(VisualizeControlCodes, bench) {

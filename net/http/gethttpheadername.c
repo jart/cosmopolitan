@@ -136,6 +136,20 @@ const char *GetHttpHeaderName(int h) {
       return "Upgrade-Insecure-Requests";
     case kHttpUri:
       return "URI";
+    case kHttpXCsrfToken:
+      return "X-Csrf-Token";
+    case kHttpXForwardedFor:
+      return "X-Forwarded-For";
+    case kHttpXForwardedHost:
+      return "X-Forwarded-Host";
+    case kHttpXForwardedProto:
+      return "X-Forwarded-Proto";
+    case kHttpXRequestedWith:
+      return "X-Requested-With";
+    case kHttpAccessControlRequestMethod:
+      return "Access-Control-Request-Method";
+    case kHttpAccessControlRequestHeaders:
+      return "Access-Control-Request-Headers";
     default:
       return NULL;
   }

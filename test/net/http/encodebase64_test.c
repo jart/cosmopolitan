@@ -23,7 +23,7 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
-#include "net/http/base64.h"
+#include "net/http/escape.h"
 
 size_t i, n, m;
 char *p, *q, b[32];

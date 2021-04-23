@@ -26,7 +26,10 @@
  * This function is agnostic to the underlying charset.
  * Always using UTF-8 is a good idea.
  *
- * @param size if -1 implies strlen
+ * @param p is input value
+ * @param n if -1 implies strlen
+ * @param z if non-NULL receives output length
+ * @return allocated NUL-terminated buffer, or NULL w/ errno
  * @see kEscapeAuthority
  * @see kEscapeIpLiteral
  * @see kEscapePath
@@ -34,16 +37,17 @@
  * @see kEscapeParam
  * @see kEscapeFragment
  */
-struct EscapeResult EscapeUrl(const char *data, size_t size,
-                              const char xlat[hasatleast 256]) {
+char *EscapeUrl(const char *p, size_t n, size_t *z, const char T[256]) {
+  char *r, *q;
   struct UrlView v;
-  struct EscapeResult r;
-  if (size == -1) size = data ? strlen(data) : 0;
-  v.p = data;
-  v.n = size;
-  r.data = xmalloc(size * 6 + 1);
-  r.size = EscapeUrlView(r.data, &v, xlat) - r.data;
-  r.data = xrealloc(r.data, r.size + 1);
-  r.data[r.size] = '\0';
+  if (n == -1) n = p ? strlen(p) : 0;
+  if (z) *z = 0;
+  if ((q = r = malloc(n * 6 + 1))) {
+    v.p = p, v.n = n;
+    q = EscapeUrlView(r, &v, T);
+    if (z) *z = q - r;
+    *q++ = '\0';
+    if ((q = realloc(r, q - r))) r = q;
+  }
   return r;
 }

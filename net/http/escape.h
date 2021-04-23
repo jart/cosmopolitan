@@ -1,12 +1,12 @@
 #ifndef COSMOPOLITAN_NET_HTTP_ESCAPE_H_
 #define COSMOPOLITAN_NET_HTTP_ESCAPE_H_
+
+#define kControlWs 1
+#define kControlC0 2
+#define kControlC1 4
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-struct EscapeResult {
-  char *data;
-  size_t size;
-};
 
 extern const signed char kHexToInt[256];
 extern const char kEscapeAuthority[256];
@@ -16,17 +16,27 @@ extern const char kEscapeSegment[256];
 extern const char kEscapeParam[256];
 extern const char kEscapeFragment[256];
 
-struct EscapeResult EscapeHtml(const char *, size_t);
-struct EscapeResult EscapeUrl(const char *, size_t, const char[hasatleast 256]);
-struct EscapeResult EscapeUser(const char *, size_t);
-struct EscapeResult EscapePass(const char *, size_t);
-struct EscapeResult EscapeIp(const char *, size_t);
-struct EscapeResult EscapeHost(const char *, size_t);
-struct EscapeResult EscapePath(const char *, size_t);
-struct EscapeResult EscapeParam(const char *, size_t);
-struct EscapeResult EscapeFragment(const char *, size_t);
-struct EscapeResult EscapeSegment(const char *, size_t);
-struct EscapeResult EscapeJsStringLiteral(const char *, size_t);
+char *EscapeHtml(const char *, size_t, size_t *);
+char *EscapeUrl(const char *, size_t, size_t *, const char[256]);
+char *EscapeUser(const char *, size_t, size_t *);
+char *EscapePass(const char *, size_t, size_t *);
+char *EscapeIp(const char *, size_t, size_t *);
+char *EscapeHost(const char *, size_t, size_t *);
+char *EscapePath(const char *, size_t, size_t *);
+char *EscapeParam(const char *, size_t, size_t *);
+char *EscapeFragment(const char *, size_t, size_t *);
+char *EscapeSegment(const char *, size_t, size_t *);
+char *EscapeJsStringLiteral(const char *, size_t, size_t *);
+
+bool HasControlCodes(const char *, size_t, int);
+char *Underlong(const char *, size_t, size_t *);
+char *DecodeLatin1(const char *, size_t, size_t *);
+char *EncodeLatin1(const char *, size_t, size_t *, int);
+char *EncodeHttpHeaderValue(const char *, size_t, size_t *);
+char *VisualizeControlCodes(const char *, size_t, size_t *);
+char *IndentLines(const char *, size_t, size_t *, size_t);
+char *EncodeBase64(const char *, size_t, size_t *);
+char *DecodeBase64(const char *, size_t, size_t *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

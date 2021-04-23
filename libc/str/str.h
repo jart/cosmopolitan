@@ -3,7 +3,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § characters » asa x3.4-1967                                ─╬─│┼
+│ cosmopolitan § characters » usas x3.4-1967                               ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│─╝
   fourth age telecommunications */
 

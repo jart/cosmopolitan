@@ -141,6 +141,8 @@ textstartup int ftrace_init(int argc, char *argv[]) {
     g_buf[1] = ' ';
     if ((g_symbols = OpenSymbolTable(FindDebugBinary()))) {
       __hook(ftrace_hook, g_symbols);
+    } else {
+      write(2, "error: --ftrace needs the concomitant .com.dbg binary\n", 54);
     }
   }
   return argc;

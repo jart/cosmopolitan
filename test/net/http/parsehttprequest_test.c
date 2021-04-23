@@ -242,7 +242,7 @@ Accept: text/plain\r\n\
   EXPECT_STREQ("text/plain", gc(slice(m, req->xheaders.p[0].v)));
 }
 
-TEST(HeaderHasSubstring, testHeaderSpansMultipleLines) {
+TEST(HeaderHas, testHeaderSpansMultipleLines) {
   static const char m[] = "\
 GET / HTTP/1.1\r\n\
 Accept-Encoding: deflate\r\n\
@@ -250,20 +250,20 @@ ACCEPT-ENCODING: gzip\r\n\
 ACCEPT-encoding: bzip2\r\n\
 \r\n";
   EXPECT_EQ(strlen(m), ParseHttpRequest(req, m, strlen(m)));
-  EXPECT_TRUE(HeaderHasSubstring(req, m, kHttpAcceptEncoding, "gzip", -1));
-  EXPECT_TRUE(HeaderHasSubstring(req, m, kHttpAcceptEncoding, "deflate", -1));
-  EXPECT_FALSE(HeaderHasSubstring(req, m, kHttpAcceptEncoding, "funzip", -1));
+  EXPECT_TRUE(HeaderHas(req, m, kHttpAcceptEncoding, "gzip", -1));
+  EXPECT_TRUE(HeaderHas(req, m, kHttpAcceptEncoding, "deflate", -1));
+  EXPECT_FALSE(HeaderHas(req, m, kHttpAcceptEncoding, "funzip", -1));
 }
 
-TEST(HeaderHasSubstring, testHeaderOnSameLIne) {
+TEST(HeaderHas, testHeaderOnSameLIne) {
   static const char m[] = "\
 GET / HTTP/1.1\r\n\
 Accept-Encoding: deflate, gzip, bzip2\r\n\
 \r\n";
   EXPECT_EQ(strlen(m), ParseHttpRequest(req, m, strlen(m)));
-  EXPECT_TRUE(HeaderHasSubstring(req, m, kHttpAcceptEncoding, "gzip", -1));
-  EXPECT_TRUE(HeaderHasSubstring(req, m, kHttpAcceptEncoding, "deflate", -1));
-  EXPECT_FALSE(HeaderHasSubstring(req, m, kHttpAcceptEncoding, "funzip", -1));
+  EXPECT_TRUE(HeaderHas(req, m, kHttpAcceptEncoding, "gzip", -1));
+  EXPECT_TRUE(HeaderHas(req, m, kHttpAcceptEncoding, "deflate", -1));
+  EXPECT_FALSE(HeaderHas(req, m, kHttpAcceptEncoding, "funzip", -1));
 }
 
 TEST(ParseHttpRequest, testHeaderValuesWithWhitespace_getsTrimmed) {
@@ -273,6 +273,7 @@ User-Agent:  \t hi there \t \r\n\
 \r\n";
   EXPECT_EQ(strlen(m), ParseHttpRequest(req, m, strlen(m)));
   EXPECT_STREQ("hi there", gc(slice(m, req->headers[kHttpUserAgent])));
+  EXPECT_STREQ("*", gc(slice(m, req->uri)));
 }
 
 TEST(ParseHttpRequest, testAbsentHost_setsSliceToZero) {
@@ -373,7 +374,7 @@ BENCH(ParseHttpRequest, bench) {
   EZBENCH2("DoUnstandardChromeRequest", donothing, DoUnstandardChromeRequest());
 }
 
-BENCH(HeaderHasSubstring, bench) {
+BENCH(HeaderHas, bench) {
   static const char m[] = "\
 GET / HTTP/1.1\r\n\
 X-In-Your-Way-A: a\r\n\
@@ -384,12 +385,12 @@ ACCEPT-ENCODING: gzip\r\n\
 ACCEPT-encoding: bzip2\r\n\
 \r\n";
   EXPECT_EQ(strlen(m), ParseHttpRequest(req, m, strlen(m)));
-  EZBENCH2("HeaderHasSubstring text/plain", donothing,
-           HeaderHasSubstring(req, m, kHttpAccept, "text/plain", 7));
-  EZBENCH2("HeaderHasSubstring deflate", donothing,
-           HeaderHasSubstring(req, m, kHttpAcceptEncoding, "deflate", 7));
-  EZBENCH2("HeaderHasSubstring gzip", donothing,
-           HeaderHasSubstring(req, m, kHttpAcceptEncoding, "gzip", 4));
+  EZBENCH2("HeaderHas text/plain", donothing,
+           HeaderHas(req, m, kHttpAccept, "text/plain", 7));
+  EZBENCH2("HeaderHas deflate", donothing,
+           HeaderHas(req, m, kHttpAcceptEncoding, "deflate", 7));
+  EZBENCH2("HeaderHas gzip", donothing,
+           HeaderHas(req, m, kHttpAcceptEncoding, "gzip", 4));
   EZBENCH2("IsMimeType", donothing,
            IsMimeType("text/plain; charset=utf-8", -1, "text/plain"));
 }

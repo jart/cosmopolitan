@@ -16,10 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
-#include "net/http/http.h"
+#include "net/http/escape.h"
 
 size_t n;
 
@@ -27,6 +28,30 @@ TEST(DecodeLatin1, test) {
   EXPECT_STREQ("", DecodeLatin1(NULL, 0, 0));
   EXPECT_STREQ("¥atta", DecodeLatin1("\245atta", -1, &n));
   EXPECT_EQ(6, n);
+  EXPECT_STREQ("\245atta", EncodeLatin1("¥atta", -1, &n, 0));
+  EXPECT_EQ(5, n);
+}
+
+TEST(DecodeLatin1, testAbleToImposeCharacterRestrictions) {
+  errno = 0;
+  EXPECT_EQ(0, EncodeLatin1("\200atta", -1, &n, kControlC1));
+  EXPECT_EQ(0, n);
+  EXPECT_EQ(EILSEQ, errno);
+  errno = 0;
+  EXPECT_EQ(0, EncodeLatin1("\002atta", -1, &n, kControlC0));
+  EXPECT_EQ(0, n);
+  EXPECT_EQ(EILSEQ, errno);
+}
+
+TEST(EncodeLatin1, roundTrip) {
+  int i;
+  char b[256];
+  for (i = 0; i < 256; ++i) b[i] = i;
+  char *utf8 = DecodeLatin1(b, 256, &n);
+  EXPECT_EQ(384, n);
+  char *lat1 = EncodeLatin1(utf8, n, &n, 0);
+  ASSERT_EQ(256, n);
+  EXPECT_EQ(0, memcmp(b, lat1, 256));
 }
 
 TEST(DecodeLatin1, testOom_returnsNullAndSetsSizeToZero) {
@@ -38,4 +63,6 @@ TEST(DecodeLatin1, testOom_returnsNullAndSetsSizeToZero) {
 BENCH(DecodeLatin1, bench) {
   EZBENCH2("DecodeLatin1", donothing,
            DecodeLatin1(kHyperion, kHyperionSize, 0));
+  EZBENCH2("EncodeLatin1", donothing,
+           EncodeLatin1(kHyperion, kHyperionSize, 0, 0));
 }

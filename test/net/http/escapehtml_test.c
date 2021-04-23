@@ -24,10 +24,11 @@
 #include "net/http/escape.h"
 
 char *escapehtml(const char *s) {
-  struct EscapeResult r;
-  r = EscapeHtml(s, strlen(s));
-  ASSERT_EQ(strlen(r.data), r.size);
-  return r.data;
+  char *p;
+  size_t n;
+  p = EscapeHtml(s, strlen(s), &n);
+  ASSERT_EQ(strlen(p), n);
+  return p;
 }
 
 TEST(escapehtml, test) {
@@ -49,5 +50,5 @@ TEST(escapehtml, testAstralPlanes_doesNothing) {
 
 BENCH(escapehtml, bench) {
   EZBENCH2("escapehtml", donothing,
-           free(EscapeHtml(kHyperion, kHyperionSize).data));
+           free(EscapeHtml(kHyperion, kHyperionSize, 0)));
 }

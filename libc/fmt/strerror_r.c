@@ -20,6 +20,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/fmt/itoa.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/formatmessageflags.h"
 #include "libc/nt/process.h"
@@ -165,7 +166,7 @@ const struct Error {
 
 static const char *geterrname(long x) {
   int i;
-  if (!IsTiny() && x) {
+  if (x) {
     for (i = 0; i < ARRAYLEN(kErrors); ++i) {
       if (x == *kErrors[i].x) {
         return kErrors[i].s;
@@ -180,24 +181,19 @@ static const char *geterrname(long x) {
  * @return 0 on success, or error code
  */
 int strerror_r(int err, char *buf, size_t size) {
+  char *p;
   const char *s;
-  char16_t buf16[100];
-  int winstate, sysvstate;
+  err &= 0xFFFF;
   s = geterrname(err);
-  if (!SupportsWindows()) {
-    (snprintf)(buf, size, "%s[%d]", s, err);
-  } else {
-    winstate = GetLastError();
-    sysvstate = errno;
-    if (FormatMessage(
-            kNtFormatMessageFromSystem | kNtFormatMessageIgnoreInserts, NULL,
-            err, 0, buf16, ARRAYLEN(buf16) - 1, 0) > 0) {
-      chomp16(buf16);
-    } else {
-      buf16[0] = u'\0';
-    }
-    (snprintf)(buf, size, "%s/err=%d/errno:%d/GetLastError:%d%s%hs", s, err,
-               sysvstate, winstate, buf16[0] ? " " : "", buf16);
+  p = buf;
+  if (strlen(s) + 1 + 5 + 1 + 1 <= size) {
+    p = stpcpy(p, s);
+    *p++ = '[';
+    p += uint64toarray_radix10(err, p);
+    *p++ = ']';
+  }
+  if (p - buf < size) {
+    *p++ = '\0';
   }
   return 0;
 }

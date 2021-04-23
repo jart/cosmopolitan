@@ -29,9 +29,11 @@
  *
  * It is assumed that the URI parser already took care of percent
  * escape decoding as well as ISO-8859-1 decoding. The input needs
- * to be a UTF-8 string.
+ * to be a UTF-8 string. This function takes overlong encodings into
+ * consideration, so you don't need to call Underlong() beforehand.
  *
  * @param size if -1 implies strlen
+ * @see IsReasonablePath()
  */
 bool IsAcceptablePath(const char *data, size_t size) {
   const char *p, *e;

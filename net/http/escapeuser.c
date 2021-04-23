@@ -21,8 +21,11 @@
 /**
  * Escapes URL user name.
  *
- * @param size if -1 implies strlen
+ * @param p is input value
+ * @param n if -1 implies strlen
+ * @param z if non-NULL receives output length
+ * @return allocated NUL-terminated buffer, or NULL w/ errno
  */
-struct EscapeResult EscapeUser(const char *data, size_t size) {
-  return EscapeUrl(data, size, kEscapeAuthority);
+char *EscapeUser(const char *p, size_t n, size_t *z) {
+  return EscapeUrl(p, n, z, kEscapeAuthority);
 }

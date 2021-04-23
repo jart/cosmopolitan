@@ -24,10 +24,11 @@
 #include "net/http/escape.h"
 
 char *escapejs(const char *s) {
-  struct EscapeResult r;
-  r = EscapeJsStringLiteral(s, strlen(s));
-  ASSERT_EQ(strlen(r.data), r.size);
-  return r.data;
+  char *p;
+  size_t n;
+  p = EscapeJsStringLiteral(s, strlen(s), &n);
+  ASSERT_EQ(strlen(p), n);
+  return p;
 }
 
 TEST(EscapeJsStringLiteral, test) {
@@ -53,27 +54,29 @@ TEST(EscapeJsStringLiteral, testBrokenUnicode_sparesInnocentCharacters) {
 
 void makefile1(void) {
   FILE *f;
-  struct EscapeResult r;
-  r = EscapeJsStringLiteral(kHyperion, kHyperionSize);
+  char *p;
+  size_t n;
+  p = EscapeJsStringLiteral(kHyperion, kHyperionSize, &n);
   f = fopen("/tmp/a", "wb");
-  fwrite(r.data, r.size, 1, f);
+  fwrite(p, n, 1, f);
   fclose(f);
-  free(r.data);
+  free(p);
 }
 
 void makefile2(void) {
   int fd;
-  struct EscapeResult r;
-  r = EscapeJsStringLiteral(kHyperion, kHyperionSize);
+  char *p;
+  size_t n;
+  p = EscapeJsStringLiteral(kHyperion, kHyperionSize, &n);
   fd = creat("/tmp/a", 0644);
-  write(fd, r.data, r.size);
+  write(fd, p, n);
   close(fd);
-  free(r.data);
+  free(p);
 }
 
 BENCH(EscapeJsStringLiteral, bench) {
   EZBENCH2("escapejs", donothing,
-           free(EscapeJsStringLiteral(kHyperion, kHyperionSize).data));
+           free(EscapeJsStringLiteral(kHyperion, kHyperionSize, 0)));
   EZBENCH2("makefile1", donothing, makefile1());
   EZBENCH2("makefile2", donothing, makefile2());
 }

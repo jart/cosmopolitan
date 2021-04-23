@@ -374,7 +374,7 @@ _init_systemfive_stack:					# determinism ftw!
 	mov	%rsp,%rbp
 //	𝑠𝑙𝑖𝑑𝑒
 _init_systemfive_syscall:
-	mov	__NR_msyscall,%eax			# syscall origin protect
+/*	mov	__NR_msyscall,%eax			# syscall origin protect
 	cmp	$0xfff,%ax				# openbsd is pretty cool
 	jae	_init_systemfive_done
 	push	%rdi
@@ -385,7 +385,7 @@ _init_systemfive_syscall:
 	mov	$__privileged_size,%esi
 	syscall
 	pop	%rsi
-	pop	%rdi
+	pop	%rdi*/
 //	𝑠𝑙𝑖𝑑𝑒
 #endif /* TINY */
 _init_systemfive_done:

@@ -40,12 +40,12 @@ TEST(crc32c, test) {
                                strlen(hyperion) - strlen(FANATICS)));
 }
 
-FIXTURE(crc32c, pure_) {
-  *(void **)(&crc32c) = (void *)crc32c_pure;
-}
-
-FIXTURE(crc32c, sse42_) {
-  if (X86_HAVE(SSE4_2)) {
-    *(void **)(&crc32c) = (void *)crc32c_sse42;
-  }
+TEST(crc32c_pure, test) {
+  EXPECT_EQ(0, crc32c_pure(0, "", 0));
+  EXPECT_EQ(crc32c_pure(0, "hello", 5), crc32c_pure(0, "hello", 5));
+  EXPECT_EQ(0xe3069283, crc32c_pure(0, "123456789", 9));
+  EXPECT_EQ(0x6d6eefba, crc32c_pure(0, hyperion, strlen(hyperion)));
+  EXPECT_EQ(0x6d6eefba, crc32c_pure(crc32c_pure(0, FANATICS, strlen(FANATICS)),
+                                    hyperion + strlen(FANATICS),
+                                    strlen(hyperion) - strlen(FANATICS)));
 }

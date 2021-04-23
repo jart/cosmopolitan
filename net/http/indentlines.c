@@ -18,42 +18,46 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 #include "libc/x/x.h"
-#include "net/http/http.h"
+#include "net/http/escape.h"
 
 /**
  * Inserts spaces before lines.
  *
- * @param data is input value
- * @param size if -1 implies strlen
- * @param out_size if non-NULL receives output length
- * @param amt is number of spaces to use
+ * @param p is input value
+ * @param n if -1 implies strlen
+ * @param z if non-NULL receives output length
+ * @param j is number of spaces to use
  * @return allocated NUL-terminated buffer, or NULL w/ errno
  */
-char *IndentLines(const char *data, size_t size, size_t *out_size, size_t amt) {
-  char *r;
-  const char *p;
-  size_t i, n, m, a;
-  if (size == -1) size = data ? strlen(data) : 0;
+char *IndentLines(const char *p, size_t n, size_t *z, size_t j) {
+  char *r, *q;
+  const char *l;
+  size_t i, t, m, a;
+  if (n == -1) n = p ? strlen(p) : 0;
   r = 0;
-  n = 0;
+  t = 0;
   do {
-    if ((p = memchr(data, '\n', size))) {
-      m = p + 1 - data;
-      a = *data != '\r' && *data != '\n' ? amt : 0;
+    if ((l = memchr(p, '\n', n))) {
+      m = l + 1 - p;
+      a = *p != '\r' && *p != '\n' ? j : 0;
     } else {
-      m = size;
-      a = size ? amt : 0;
+      m = n;
+      a = n ? j : 0;
     }
-    r = xrealloc(r, n + a + m + 1);
-    memset(r + n, ' ', a);
-    memcpy(r + n + a, data, m);
-    n += a + m;
-    data += m;
-    size -= m;
-  } while (p);
-  if (out_size) {
-    *out_size = n;
-  }
-  r[n] = '\0';
+    if ((q = realloc(r, t + a + m + 1))) {
+      r = q;
+    } else {
+      free(r);
+      if (z) *z = 0;
+      return 0;
+    }
+    memset(r + t, ' ', a);
+    memcpy(r + t + a, p, m);
+    t += a + m;
+    p += m;
+    n -= m;
+  } while (l);
+  if (z) *z = t;
+  r[t] = '\0';
   return r;
 }

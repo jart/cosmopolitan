@@ -22,7 +22,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "net/http/http.h"
+#include "net/http/escape.h"
 
 char *p;
 size_t n;

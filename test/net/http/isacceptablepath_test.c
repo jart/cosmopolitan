@@ -23,10 +23,12 @@
 #include "net/http/http.h"
 
 TEST(IsAcceptablePath, test) {
+  EXPECT_TRUE(IsAcceptablePath("*", 1));
   EXPECT_TRUE(IsAcceptablePath("/", 1));
   EXPECT_TRUE(IsAcceptablePath("index.html", 10));
   EXPECT_TRUE(IsAcceptablePath("/index.html", 11));
   EXPECT_TRUE(IsAcceptablePath("/index.html", -1));
+  EXPECT_TRUE(IsAcceptablePath("/redbean.png", -1));
 }
 
 TEST(IsAcceptablePath, testEmptyString_allowedIfYouLikeImplicitLeadingSlash) {
@@ -88,5 +90,6 @@ TEST(IsAcceptablePath, testOverlongSlashDot_isDetected) {
 }
 
 BENCH(IsAcceptablePath, bench) {
+  EZBENCH2("IsAcceptablePath", donothing, IsAcceptablePath("*", 1));
   EZBENCH2("IsAcceptablePath", donothing, IsAcceptablePath("/index.html", 11));
 }

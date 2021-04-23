@@ -24,10 +24,11 @@
 #include "net/http/escape.h"
 
 char *escapeparam(const char *s) {
-  struct EscapeResult r;
-  r = EscapeParam(s, -1);
-  ASSERT_EQ(strlen(r.data), r.size);
-  return r.data;
+  char *p;
+  size_t n;
+  p = EscapeParam(s, -1, &n);
+  ASSERT_EQ(strlen(p), n);
+  return p;
 }
 
 TEST(EscapeParam, test) {
@@ -49,5 +50,5 @@ TEST(EscapeParam, testAstralPlanes_usesUtf8HexEncoding) {
 
 BENCH(EscapeParam, bench) {
   EZBENCH2("EscapeParam", donothing,
-           free(EscapeParam(kHyperion, kHyperionSize).data));
+           free(EscapeParam(kHyperion, kHyperionSize, 0)));
 }

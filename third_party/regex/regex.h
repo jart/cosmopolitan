@@ -14,8 +14,8 @@ COSMOPOLITAN_C_START_
 #define REG_NEWLINE  4
 #define REG_NOSUB    8
 
-#define REG_NOTBOL 1
-#define REG_NOTEOL 2
+#define REG_NOTBOL 1 /* ^ should not match beginning of string */
+#define REG_NOTEOL 2 /* $ should not match end of string */
 
 #define REG_OK       0
 #define REG_NOMATCH  1
@@ -36,20 +36,20 @@ COSMOPOLITAN_C_START_
 
 typedef long regoff_t;
 
-struct Regex {
+struct PosixRegex {
   size_t re_nsub;
   void *__opaque, *__padding[4];
   size_t __nsub2;
   char __padding2;
 };
 
-struct RegexMatch {
+struct PosixRegexMatch {
   regoff_t rm_so;
   regoff_t rm_eo;
 };
 
-typedef struct Regex regex_t;
-typedef struct RegexMatch regmatch_t;
+typedef struct PosixRegex regex_t;
+typedef struct PosixRegexMatch regmatch_t;
 
 int regcomp(regex_t *, const char *, int);
 int regexec(const regex_t *, const char *, size_t, regmatch_t *, int);

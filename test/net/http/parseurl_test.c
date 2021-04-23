@@ -22,6 +22,7 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
+#include "net/http/http.h"
 #include "net/http/url.h"
 
 TEST(ParseUrl, testEmpty) {
@@ -160,8 +161,7 @@ TEST(ParseUrl, testUrl) {
   ASSERT_EQ('b', h.user.p[0]);
   ASSERT_EQ(1, h.pass.n);
   ASSERT_EQ('B', h.pass.p[0]);
-  ASSERT_EQ(1, h.host.n);
-  ASSERT_EQ('c', h.host.p[0]);
+  ASSERT_STREQ("c", gc(strndup(h.host.p, h.host.n)));
   ASSERT_EQ(1, h.port.n);
   ASSERT_EQ('C', h.port.p[0]);
   ASSERT_EQ(2, h.path.n);
@@ -378,6 +378,16 @@ TEST(ParseHost, testObviouslyIllegalIpLiteral_getsTreatedAsRegName) {
   gc(ParseHost("[vf.::1%00]", -1, &h));
   gc(h.params.p);
   ASSERT_STREQ("//vf.%3A%3A1%00", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseHost, testUnclosedIpv6_doesntSetPort) {
+  struct Url h = {0};
+  gc(ParseHost("2001:db8:cafe::17", -1, &h));
+  gc(h.params.p);
+  ASSERT_STREQ("2001:db8:cafe::17", gc(strndup(h.host.p, h.host.n)));
+  ASSERT_EQ(0, h.port.n);
+  ASSERT_EQ(0, h.port.p);
+  ASSERT_STREQ("//2001%3Adb8%3Acafe%3A%3A17", gc(EncodeUrl(&h, 0)));
 }
 
 TEST(EncodeUrl, testHostPortPlacedInHostField_ungoodIdea) {
@@ -696,6 +706,8 @@ BENCH(ParseUrl, bench) {
              free(ParseUrl("a://b@c/?zd#f", -1, &h));
              free(h.params.p);
            }));
+  EZBENCH2("ParseHost", donothing, free(ParseHost("127.0.0.1:34832", 15, &h)));
+  EZBENCH2("ParseIp", donothing, ParseIp("127.0.0.1", 9));
 }
 
 BENCH(EncodeUrl, bench) {

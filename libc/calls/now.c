@@ -56,7 +56,7 @@ static long double MeasureNanosPerCycle(void) {
   return avg;
 }
 
-static void InitTime(void) {
+void RefreshTime(void) {
   struct Now now;
   now.cpn = MeasureNanosPerCycle();
   now.r0 = dtime(CLOCK_REALTIME);
@@ -66,7 +66,7 @@ static void InitTime(void) {
 }
 
 long double ConvertTicksToNanos(uint64_t ticks) {
-  if (!g_now.once) InitTime();
+  if (!g_now.once) RefreshTime();
   return ticks * g_now.cpn; /* pico scale */
 }
 
@@ -80,7 +80,7 @@ long double nowl_sys(void) {
 
 long double nowl_art(void) {
   uint64_t ticks;
-  if (!g_now.once) InitTime();
+  if (!g_now.once) RefreshTime();
   ticks = unsignedsubtract(rdtsc(), g_now.k0);
   return g_now.r0 + ConvertTicksToSeconds(ticks);
 }

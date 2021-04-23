@@ -61,6 +61,7 @@ long double dtime(int);
 long double dsleep(long double);
 extern long double (*nowl)(void);
 long double ConvertTicksToNanos(uint64_t);
+void RefreshTime(void);
 
 double difftime(int64_t, int64_t) nothrow pureconst;
 

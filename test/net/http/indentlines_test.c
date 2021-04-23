@@ -21,7 +21,7 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
-#include "net/http/http.h"
+#include "net/http/escape.h"
 
 TEST(IndentLines, testEmpty) {
   char *p;
