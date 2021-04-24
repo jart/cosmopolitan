@@ -228,6 +228,7 @@ int gethostname_bsd(char *, size_t) hidden;
 int gethostname_nt(char *, size_t) hidden;
 size_t __iovec_size(const struct iovec *, size_t) hidden;
 void __rusage2linux(struct rusage *) hidden;
+ssize_t WritevUninterruptible(int, struct iovec *, int);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » windows nt » veneers                           ─╬─│┼

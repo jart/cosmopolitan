@@ -22,16 +22,29 @@
 /**
  * Computes 32-bit Castagnoli Cyclic Redundancy Check.
  *
- * @param h is the initial hash value (0 is fine)
- * @param p points to the data
- * @param n is the byte size of data
+ * @param init is the initial hash value
+ * @param data points to the data
+ * @param size is the byte size of data
  * @return eax is the new hash value
  * @note Used by ISCSI, TensorFlow, etc.
  */
-uint32_t crc32c(uint32_t h, const void *p, size_t n) {
+uint32_t crc32c(uint32_t init, const void *data, size_t size) {
+  uint64_t h;
+  const unsigned char *p, *pe;
+  p = data;
+  pe = p + size;
+  h = init ^ 0xffffffff;
   if (X86_HAVE(SSE4_2)) {
-    return crc32c_sse42(h, p, n);
+    for (; p + 8 <= pe; p += 8) {
+      asm("crc32q\t%1,%0" : "+r"(h) : "rm"(*(const uint64_t *)p));
+    }
+    while (p < pe) {
+      asm("crc32b\t%1,%0" : "+r"(h) : "rm"(*p++));
+    }
   } else {
-    return crc32c_pure(h, p, n);
+    while (p < pe) {
+      h = h >> 8 ^ kCrc32cTab[(h & 0xff) ^ *p++];
+    }
   }
+  return h ^ 0xffffffff;
 }

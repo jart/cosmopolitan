@@ -6,13 +6,14 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-int __fmt_pad(int (*)(long, void *), void *, unsigned long) hidden;
-int __fmt_stoa(int (*)(long, void *), void *, void *, unsigned long,
-               unsigned long, unsigned long, unsigned char,
-               unsigned char) hidden;
-int __fmt_ntoa(int (*)(long, void *), void *, va_list, unsigned char,
+int __fmt_pad(int (*)(const char *, void *, size_t), void *,
+              unsigned long) hidden;
+int __fmt_stoa(int (*)(const char *, void *, size_t), void *, void *,
                unsigned long, unsigned long, unsigned long, unsigned char,
-               const char *) hidden;
+               unsigned char) hidden;
+int __fmt_ntoa(int (*)(const char *, void *, size_t), void *, va_list,
+               unsigned char, unsigned long, unsigned long, unsigned long,
+               unsigned char, const char *) hidden;
 char *__fmt_dtoa(double, int, int, int *, int *, char **) hidden;
 
 COSMOPOLITAN_C_END_

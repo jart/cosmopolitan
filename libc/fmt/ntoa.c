@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/alg/reverse.internal.h"
 #include "libc/assert.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmts.h"
@@ -25,12 +26,11 @@
 
 uintmax_t __udivmodti4(uintmax_t, uintmax_t, uintmax_t *);
 
-static int __fmt_ntoa_format(int out(long, void *), void *arg, char *buf,
-                             unsigned len, bool negative, unsigned log2base,
-                             unsigned prec, unsigned width,
+static int __fmt_ntoa_format(int out(const char *, void *, size_t), void *arg,
+                             char *buf, unsigned len, bool negative,
+                             unsigned log2base, unsigned prec, unsigned width,
                              unsigned char flags) {
-  unsigned i, idx;
-  idx = 0;
+  unsigned i;
 
   /* pad leading zeros */
   if (!(flags & FLAGS_LEFT)) {
@@ -82,24 +82,21 @@ static int __fmt_ntoa_format(int out(long, void *), void *arg, char *buf,
     }
   }
 
-  /* reverse string */
-  for (i = 0U; i < len; i++) {
-    if (out(buf[len - i - 1], arg) == -1) return -1;
-    idx++;
-  }
+  reverse(buf, len);
+  if (out(buf, arg, len) == -1) return -1;
 
   /* append pad spaces up to given width */
   if (flags & FLAGS_LEFT) {
-    if (idx < width) {
-      if (__fmt_pad(out, arg, width - idx) == -1) return -1;
+    if (len < width) {
+      if (__fmt_pad(out, arg, width - len) == -1) return -1;
     }
   }
   return 0;
 }
 
-int __fmt_ntoa2(int out(long, void *), void *arg, uintmax_t value, bool neg,
-                unsigned log2base, unsigned prec, unsigned width,
-                unsigned flags, const char *alphabet) {
+int __fmt_ntoa2(int out(const char *, void *, size_t), void *arg,
+                uintmax_t value, bool neg, unsigned log2base, unsigned prec,
+                unsigned width, unsigned flags, const char *alphabet) {
   uintmax_t remainder;
   unsigned len, count, digit;
   char buf[BUFFER_SIZE];
@@ -130,7 +127,7 @@ int __fmt_ntoa2(int out(long, void *), void *arg, uintmax_t value, bool neg,
                            flags);
 }
 
-int __fmt_ntoa(int out(long, void *), void *arg, va_list va,
+int __fmt_ntoa(int out(const char *, void *, size_t), void *arg, va_list va,
                unsigned char signbit, unsigned long log2base,
                unsigned long prec, unsigned long width, unsigned char flags,
                const char *lang) {

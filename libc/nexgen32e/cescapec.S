@@ -27,6 +27,8 @@
 //	@param	dil contains byte to escape
 //	@see	libc/nexgen32e/cescapec.c
 cescapec:
+	.leafprologue
+	.profilable
 	movzbl	%dil,%edi
 	lea	-7(%rdi),%ecx
 	cmp	$85,%cl
@@ -36,28 +38,28 @@ cescapec:
 	jmp	*cescapectab(,%rcx,8)
 .Lanchorpoint:
 .LBEL:	mov	$'a',%ah
-	ret
+	.leafepilogue
 .LBS:	mov	$'b',%ah
-	ret
+	.leafepilogue
 .LHT:	mov	$'t',%ah
-	ret
+	.leafepilogue
 .LLF:	mov	$'n',%ah
-	ret
+	.leafepilogue
 .LVT:	mov	$'v',%ah
-	ret
+	.leafepilogue
 .LFF:	mov	$'f',%ah
-	ret
+	.leafepilogue
 .LCR:	mov	$'r',%ah
-	ret
+	.leafepilogue
 .LDQ:	mov	$'\"',%ah
-	ret
+	.leafepilogue
 .LSQ:	mov	$'\'',%ah
-	ret
+	.leafepilogue
 .LBSL:	mov	$'\\',%ah
-	ret
+	.leafepilogue
 #ifdef __STRICT_ANSI__
 .LQM:	mov	$'?',%ah
-	ret
+	.leafepilogue
 #else
 .LQM:
 #endif
@@ -65,7 +67,7 @@ cescapec:
 	lea	-0x20(%rax),%ecx
 	cmp	$0x5E,%ecx
 	ja	2f
-	ret
+	.leafepilogue
 2:	and	$-64,%eax
 	mov	%edi,%ecx
 	and	$56,%ecx
@@ -75,7 +77,7 @@ cescapec:
 	or	%ecx,%edi
 	lea	(%rdi,%rax,4),%eax
 	add	$'0'<<030|'0'<<020|'0'<<010|'\\',%eax
-	ret
+	.leafepilogue
 	.endfn	cescapec,globl
 
 	.initro 300,_init_cescapec

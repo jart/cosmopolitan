@@ -20,6 +20,8 @@
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 
 #define FANATICS "Fanatics"
@@ -40,12 +42,6 @@ TEST(crc32c, test) {
                                strlen(hyperion) - strlen(FANATICS)));
 }
 
-TEST(crc32c_pure, test) {
-  EXPECT_EQ(0, crc32c_pure(0, "", 0));
-  EXPECT_EQ(crc32c_pure(0, "hello", 5), crc32c_pure(0, "hello", 5));
-  EXPECT_EQ(0xe3069283, crc32c_pure(0, "123456789", 9));
-  EXPECT_EQ(0x6d6eefba, crc32c_pure(0, hyperion, strlen(hyperion)));
-  EXPECT_EQ(0x6d6eefba, crc32c_pure(crc32c_pure(0, FANATICS, strlen(FANATICS)),
-                                    hyperion + strlen(FANATICS),
-                                    strlen(hyperion) - strlen(FANATICS)));
+BENCH(crc32c, bench) {
+  EZBENCH2("crc32c", donothing, crc32c(0, kHyperion, kHyperionSize));
 }

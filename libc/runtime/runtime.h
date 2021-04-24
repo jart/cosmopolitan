@@ -88,6 +88,7 @@ void _weakfree(void *);
 void free_s(void *) paramsnonnull() libcesque;
 int close_s(int *) paramsnonnull() libcesque;
 int OpenExecutable(void);
+void ftrace_install(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

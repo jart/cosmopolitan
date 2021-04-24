@@ -37,7 +37,7 @@ TEST(IsAcceptableHost, test) {
   EXPECT_FALSE(IsAcceptableHost("hello.example\300\200", -1));
   EXPECT_FALSE(IsAcceptableHost(".", -1));
   EXPECT_FALSE(IsAcceptableHost(".e", -1));
-  EXPECT_FALSE(IsAcceptableHost("e.", -1));
+  EXPECT_TRUE(IsAcceptableHost("e.", -1));
   EXPECT_FALSE(IsAcceptableHost(".hi.example", -1));
   EXPECT_FALSE(IsAcceptableHost("hi..example", -1));
   EXPECT_TRUE(IsAcceptableHost("hi-there.example", -1));
@@ -126,4 +126,6 @@ BENCH(IsAcceptableHost, bench) {
   EZBENCH2("IsAcceptablePort 80", donothing, IsAcceptablePort("80", 2));
   EZBENCH2("ParseForwarded 80", donothing,
            ParseForwarded("203.0.113.42:31337", 20, &ip, &port));
+  EZBENCH2("IsAcceptableHost foo.example", donothing,
+           IsAcceptableHost("foo.example:31337", 17));
 }

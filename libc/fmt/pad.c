@@ -18,8 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmts.h"
 
-int __fmt_pad(int out(long, void *), void *arg, unsigned long n) {
+int __fmt_pad(int out(const char *, void *, size_t), void *arg,
+              unsigned long n) {
   int i, rc;
-  for (rc = i = 0; i < n; ++i) rc |= out(' ', arg);
+  for (rc = i = 0; i < n; ++i) rc |= out(" ", arg, 1);
   return rc;
 }

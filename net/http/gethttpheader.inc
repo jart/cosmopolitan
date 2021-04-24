@@ -1,6 +1,7 @@
 /* ANSI-C code produced by gperf version 3.1 */
 /* Command-line: gperf gethttpheader.gperf  */
 /* Computed positions: -k'3-4,10' */
+/* clang-format off */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -71,7 +72,7 @@ static unsigned char gperf_downcase[256] =
 
 #ifndef GPERF_CASE_STRNCMP
 #define GPERF_CASE_STRNCMP 1
-static int
+static inline int
 gperf_case_strncmp (register const char *s1, register const char *s2, register size_t n)
 {
   for (; n > 0;)
@@ -152,7 +153,7 @@ hash (register const char *str, register size_t len)
   return hval;
 }
 
-const struct thatispacked HttpHeaderSlot *
+static inline const struct thatispacked HttpHeaderSlot *
 LookupHttpHeader (register const char *str, register size_t len)
 {
   static const struct thatispacked HttpHeaderSlot wordlist[] =

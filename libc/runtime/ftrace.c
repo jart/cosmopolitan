@@ -106,44 +106,12 @@ privileged noasan void ftrace(void) {
   noreentry = 0;
 }
 
-/**
- * Enables plaintext function tracing if `--ftrace` flag is passed.
- *
- * The `--ftrace` CLI arg is removed before main() is called. This code
- * is intended for diagnostic purposes and assumes binaries are
- * trustworthy and stack isn't corrupted. Logging plain text allows
- * program structure to easily be visualized and hotspots identified w/
- * `sed | sort | uniq -c | sort`. A compressed trace can be made by
- * appending `--ftrace 2>&1 | gzip -4 >trace.gz` to the CLI arguments.
- *
- * @see libc/runtime/_init.S for documentation
- */
-textstartup int ftrace_init(int argc, char *argv[]) {
-  int i;
-  bool foundflag;
-  foundflag = false;
-  for (i = 1; i <= argc; ++i) {
-    if (!foundflag) {
-      if (argv[i]) {
-        if (strcmp(argv[i], "--ftrace") == 0) {
-          foundflag = true;
-        } else if (strcmp(argv[i], "----ftrace") == 0) {
-          strcpy(argv[i], "--ftrace");
-        }
-      }
-    } else {
-      argv[i - 1] = argv[i];
-    }
+textstartup void ftrace_install(void) {
+  g_buf[0] = '+';
+  g_buf[1] = ' ';
+  if ((g_symbols = OpenSymbolTable(FindDebugBinary()))) {
+    __hook(ftrace_hook, g_symbols);
+  } else {
+    write(2, "error: --ftrace needs the concomitant .com.dbg binary\n", 54);
   }
-  if (foundflag) {
-    --argc;
-    g_buf[0] = '+';
-    g_buf[1] = ' ';
-    if ((g_symbols = OpenSymbolTable(FindDebugBinary()))) {
-      __hook(ftrace_hook, g_symbols);
-    } else {
-      write(2, "error: --ftrace needs the concomitant .com.dbg binary\n", 54);
-    }
-  }
-  return argc;
 }

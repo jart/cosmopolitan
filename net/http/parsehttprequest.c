@@ -75,7 +75,7 @@ void DestroyHttpRequest(struct HttpRequest *r) {
  * fragmented. If a message is valid but incomplete, this function will
  * return zero so that it can be resumed as soon as more data arrives.
  *
- * This parser takes about 500 nanoseconds to parse a 403 byte Chrome
+ * This parser takes about 400 nanoseconds to parse a 403 byte Chrome
  * HTTP request under MODE=rel on a Core i9 which is about three cycles
  * per byte or a gigabyte per second of throughput per core.
  *

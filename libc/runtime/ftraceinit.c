@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,47 +16,41 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/pcmpeqb.h"
-#include "libc/intrin/pmovmskb.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
-static inline noasan size_t stpcpy_sse2(char *d, const char *s, size_t i) {
-  uint8_t v1[16], v2[16], vz[16];
-  for (;;) {
-    memset(vz, 0, 16);
-    memcpy(v1, s + i, 16);
-    pcmpeqb(v2, v1, vz);
-    if (!pmovmskb(v2)) {
-      memcpy(d + i, v1, 16);
-      i += 16;
-    } else {
-      break;
-    }
-  }
-  return i;
-}
-
 /**
- * Copies bytes from 𝑠 to 𝑑 until a NUL is encountered.
+ * Enables plaintext function tracing if `--ftrace` flag is passed.
  *
- * @param 𝑑 is destination memory
- * @param 𝑠 is a NUL-terminated string
- * @note 𝑑 and 𝑠 can't overlap
- * @return pointer to nul byte
- * @asyncsignalsafe
+ * The `--ftrace` CLI arg is removed before main() is called. This code
+ * is intended for diagnostic purposes and assumes binaries are
+ * trustworthy and stack isn't corrupted. Logging plain text allows
+ * program structure to easily be visualized and hotspots identified w/
+ * `sed | sort | uniq -c | sort`. A compressed trace can be made by
+ * appending `--ftrace 2>&1 | gzip -4 >trace.gz` to the CLI arguments.
+ *
+ * @see libc/runtime/_init.S for documentation
  */
-char *stpcpy(char *d, const char *s) {
-  size_t i;
-  for (i = 0; (uintptr_t)(s + i) & 15; ++i) {
-    if (!(d[i] = s[i])) {
-      return d + i;
+textstartup int ftrace_init(int argc, char *argv[]) {
+  int i;
+  bool foundflag;
+  foundflag = false;
+  for (i = 1; i <= argc; ++i) {
+    if (!foundflag) {
+      if (argv[i]) {
+        if (strcmp(argv[i], "--ftrace") == 0) {
+          foundflag = true;
+        } else if (strcmp(argv[i], "----ftrace") == 0) {
+          strcpy(argv[i], "--ftrace");
+        }
+      }
+    } else {
+      argv[i - 1] = argv[i];
     }
   }
-  i = stpcpy_sse2(d, s, i);
-  for (;;) {
-    if (!(d[i] = s[i])) {
-      return d + i;
-    }
-    ++i;
+  if (foundflag) {
+    --argc;
+    ftrace_install();
   }
+  return argc;
 }

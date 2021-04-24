@@ -70,10 +70,6 @@ long double ConvertTicksToNanos(uint64_t ticks) {
   return ticks * g_now.cpn; /* pico scale */
 }
 
-static long double ConvertTicksToSeconds(uint64_t ticks) {
-  return 1 / 1e9 * ConvertTicksToNanos(ticks);
-}
-
 long double nowl_sys(void) {
   return dtime(CLOCK_REALTIME);
 }
@@ -82,5 +78,5 @@ long double nowl_art(void) {
   uint64_t ticks;
   if (!g_now.once) RefreshTime();
   ticks = unsignedsubtract(rdtsc(), g_now.k0);
-  return g_now.r0 + ConvertTicksToSeconds(ticks);
+  return g_now.r0 + (1 / 1e9L * (ticks * g_now.cpn));
 }

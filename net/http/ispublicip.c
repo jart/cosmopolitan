@@ -20,7 +20,10 @@
 
 /**
  * Returns true if IPv4 address can come from the Internet.
+ *
+ * We intentionally omit TEST-NET here which can be used to simulate
+ * public Internet traffic using non-Internet IPs.
  */
 bool IsPublicIp(uint32_t x) {
-  return !IsLoopbackIp(x) && !IsPrivateIp(x) && !IsTestnetIp(x);
+  return !IsLoopbackIp(x) && !IsPrivateIp(x);
 }

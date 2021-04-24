@@ -262,7 +262,7 @@ local function main()
    pat = re.compile([[([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})]])
    m,a,b,c,d = pat:search(s)  -- m and rest are nil if match not found
    Write('<pre>\r\n')
-   Write([[pat = re.compile('([0-9]{1,3})\\.([0-9]{1,3})\\.([0-9]{1,3})\\.([0-9]{1,3})', re.EXTENDED)]])
+   Write([[pat = re.compile('([0-9]{1,3})\\.([0-9]{1,3})\\.([0-9]{1,3})\\.([0-9]{1,3})')]])
    Write(string.format('\r\nm,a,b,c,d = pat:search(%q)\r\n', s))
    Write('</pre>\r\n')
    Write('<dl>\r\n')

@@ -26,11 +26,11 @@
  */
 int CategorizeIp(uint32_t x) {
   int a;
-  if (IsAnonymousIp(x)) return kIpAnonymous;
-  if (IsMulticastIp(x)) return kIpMulticast;
   if (IsLoopbackIp(x)) return kIpLoopback;
   if (IsPrivateIp(x)) return kIpPrivate;
-  if (IsTestnetIp(x)) return kIpTestnet;
+  if (IsMulticastIp(x)) return kIpMulticast;
+  if (IsAnonymousIp(x)) return kIpAnonymous; /* order matters */
+  if (IsTestnetIp(x)) return kIpTestnet;     /* order matters */
   if (IsAfrinicIp(x)) return kIpAfrinic;
   if (IsLacnicIp(x)) return kIpLacnic;
   if (IsApnicIp(x)) return kIpApnic;

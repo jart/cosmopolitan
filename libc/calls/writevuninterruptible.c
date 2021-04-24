@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,28 +16,30 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/macros.internal.h"
-#include "libc/nexgen32e/x86feature.h"
-#include "libc/notice.inc"
+#include "libc/calls/internal.h"
+#include "libc/errno.h"
+#include "libc/sock/sock.h"
 
-//	Computes 32-bit Castagnoli Cyclic Redundancy Check.
-//
-//	@param	edi is the initial hash value (0 is fine)
-//	@param	rsi points to the data
-//	@param	rdx is the byte size of data
-//	@return	eax is the new hash value
-//	@note	Used by ISCSI, TensorFlow, etc.
-	.initbss 300,_init_crc32c
-crc32c:	.quad	0
-	.endobj	crc32c,globl
-	.previous
-
-	.init.start 300,_init_crc32c
-	ezlea	crc32c_pure,ax
-	ezlea	crc32c_sse42,cx
-	testb	X86_HAVE(SSE4_2)+kCpuids(%rip)
-	cmovnz	%rcx,%rax
-	stosq
-	.init.end 300,_init_crc32c
-	.source	__FILE__
+ssize_t WritevUninterruptible(int fd, struct iovec *iov, int iovlen) {
+  ssize_t rc;
+  size_t wrote;
+  do {
+    if ((rc = writev(fd, iov, iovlen)) != -1) {
+      wrote = rc;
+      do {
+        if (wrote >= iov->iov_len) {
+          wrote -= iov->iov_len;
+          ++iov;
+          --iovlen;
+        } else {
+          iov->iov_base = (char *)iov->iov_base + wrote;
+          iov->iov_len -= wrote;
+          wrote = 0;
+        }
+      } while (wrote);
+    } else if (errno != EINTR) {
+      return -1;
+    }
+  } while (iovlen);
+  return 0;
+}

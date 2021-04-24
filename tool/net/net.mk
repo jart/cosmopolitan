@@ -80,8 +80,12 @@ o/$(MODE)/tool/net/redbean.com:					\
 	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.ape bs=64 count=11 conv=notrunc 2>/dev/null
 	@$(COMPILE) -AZIP -T$@ zip -qj $@ o/$(MODE)/tool/net/.ape tool/net/.init.lua tool/net/.reload.lua tool/net/favicon.ico tool/net/redbean.png
 
+o/$(MODE)/tool/net/redbean-demo.com.dbg:			\
+		o/$(MODE)/tool/net/redbean.com.dbg
+	@$(COMPILE) -ACP -T$@ cp $< $@
+
 o/$(MODE)/tool/net/redbean-demo.com:				\
-		o/$(MODE)/tool/net/redbean.com.dbg		\
+		o/$(MODE)/tool/net/redbean-demo.com.dbg		\
 		tool/net/net.mk					\
 		tool/net/.init.lua				\
 		tool/net/.reload.lua				\
@@ -113,16 +117,6 @@ o/$(MODE)/tool/net/redbean-static.com:				\
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.ape bs=64 count=11 conv=notrunc 2>/dev/null
 	@$(COMPILE) -AZIP -T$@ zip -qj $@ o/$(MODE)/tool/net/.ape tool/net/favicon.ico tool/net/redbean.png
-
-o/$(MODE)/tool/net/redbean-bench.com.dbg:			\
-		$(TOOL_NET_DEPS)				\
-		o/$(MODE)/tool/net/redbean.o			\
-		o/$(MODE)/tool/net/index.html.zip.o		\
-		o/$(MODE)/tool/net/redbean.lua.zip.o		\
-		o/$(MODE)/tool/net/net.pkg			\
-		$(CRT)						\
-		$(APE)
-	@$(APELINK)
 
 o/$(MODE)/tool/net/redbean-static.com.dbg:			\
 		$(TOOL_NET_DEPS)				\

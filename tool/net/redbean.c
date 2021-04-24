@@ -33,6 +33,7 @@
 #include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/clktck.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/af.h"
@@ -71,7 +72,11 @@
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define DEFAULT_PORT     8080
 
+#define read(F, P, N)   readv(F, &(struct iovec){P, N}, 1)
+#define Hash(P, N)      max(1, crc32c(0, P, N));
 #define LockInc(P)      asm volatile("lock inc%z0\t%0" : "=m"(*(P)))
+#define AppendCrlf(P)   mempcpy(P, "\r\n", 2)
+#define HasHeader(H)    (!!msg.headers[H].a)
 #define HeaderData(H)   (inbuf.p + msg.headers[H].a)
 #define HeaderLength(H) (msg.headers[H].b - msg.headers[H].a)
 #define HeaderEqualCase(H, S) \
@@ -171,7 +176,7 @@ static const char kRegCode[][9] = {
 };
 
 struct Buffer {
-  size_t n;
+  size_t n, c;
   char *p;
 };
 
@@ -327,6 +332,7 @@ static bool istext;
 static bool zombied;
 static bool gzipped;
 static bool branded;
+static bool funtrace;
 static bool meltdown;
 static bool heartless;
 static bool printport;
@@ -385,6 +391,7 @@ static struct Buffer effectivepath;
 
 static struct Url url;
 static struct HttpRequest msg;
+static char slashpath[PATH_MAX];
 
 static long double startread;
 static long double lastrefresh;
@@ -399,7 +406,7 @@ static wontreturn void PrintUsage(FILE *f, int rc) {
   fprintf(f, "\
 SYNOPSIS\n\
 \n\
-  %s [-hvduzmba] [-p PORT] [-- SCRIPTARGS...]\n\
+  %s [-hvduzmbagf] [-p PORT] [-- SCRIPTARGS...]\n\
 \n\
 DESCRIPTION\n\
 \n\
@@ -415,8 +422,11 @@ FLAGS\n\
   -m        log messages\n\
   -b        log message body\n\
   -a        log resource usage\n\
-  -g        log handler latency\n\
-  -H K:V    sets http header globally [repeat]\n\
+  -g        log handler latency\n"
+#ifndef TINY
+"  -f        log worker function calls\n"
+#endif
+"  -H K:V    sets http header globally [repeat]\n\
   -D DIR    serve assets from local directory [repeat]\n\
   -t MS     tunes read and write timeouts [default 30000]\n\
   -c SEC    configures static asset cache-control headers\n\
@@ -546,8 +556,6 @@ USAGE\n\
   your redbean to follow the platform-local executable convention\n\
   then delete the /.ape file from zip.\n\
 \n\
-LEGAL\n\
-\n\
   redbean contains software licensed ISC, MIT, BSD-2, BSD-3, zlib\n\
   which makes it a permissively licensed gift to anyone who might\n\
   find it useful. The transitive closure of legalese can be found\n\
@@ -664,38 +672,53 @@ static void UseOutput(void) {
   contentlength = outbuf.n;
   outbuf.p = 0;
   outbuf.n = 0;
+  outbuf.c = 0;
 }
 
 static void DropOutput(void) {
   free(outbuf.p);
   outbuf.p = 0;
   outbuf.n = 0;
+  outbuf.c = 0;
 }
 
 static void ClearOutput(void) {
   outbuf.n = 0;
 }
 
+static void Grow(size_t n) {
+  do {
+    if (outbuf.c) {
+      outbuf.c += outbuf.c >> 1;
+    } else {
+      outbuf.c = 16 * 1024;
+    }
+  } while (n > outbuf.c);
+  outbuf.p = xrealloc(outbuf.p, outbuf.c);
+}
+
 static void AppendData(const char *data, size_t size) {
-  outbuf.p = xrealloc(outbuf.p, outbuf.n + size);
+  size_t n;
+  n = outbuf.n + size;
+  if (n > outbuf.c) Grow(n);
   memcpy(outbuf.p + outbuf.n, data, size);
-  outbuf.n += size;
+  outbuf.n = n;
 }
 
-static void AppendString(const char *s) {
-  AppendData(s, strlen(s));
-}
-
-static void AppendFmt(const char *fmt, ...) {
+static void Append(const char *fmt, ...) {
   int n;
   char *p;
-  va_list va;
+  va_list va, vb;
   va_start(va, fmt);
-  n = vasprintf(&p, fmt, va);
+  va_copy(vb, va);
+  n = vsnprintf(outbuf.p + outbuf.n, outbuf.c - outbuf.n, fmt, va);
+  if (n >= outbuf.c - outbuf.n) {
+    Grow(outbuf.n + n + 1);
+    vsnprintf(outbuf.p + outbuf.n, outbuf.c - outbuf.n, fmt, vb);
+  }
+  va_end(vb);
   va_end(va);
-  CHECK_NE(-1, n);
-  AppendData(p, n);
-  free(p);
+  outbuf.n += n;
 }
 
 static char *MergePaths(const char *p, size_t n, const char *q, size_t m,
@@ -831,10 +854,6 @@ static void DescribeAddress(char buf[32], uint32_t addr, uint16_t port) {
     p = stpcpy(p, s);
   }
   *p++ = '\0';
-}
-
-static bool HasHeader(int h) {
-  return !!msg.headers[h].a;
 }
 
 static void GetServerAddr(uint32_t *ip, uint16_t *port) {
@@ -975,7 +994,7 @@ static void ProgramHeader(const char *s) {
 
 static void GetOpts(int argc, char *argv[]) {
   int opt;
-  while ((opt = getopt(argc, argv, "azhdugvmbl:p:r:R:H:c:L:P:U:G:B:D:t:")) !=
+  while ((opt = getopt(argc, argv, "azhdugvmbfl:p:r:R:H:c:L:P:U:G:B:D:t:")) !=
          -1) {
     switch (opt) {
       case 'v':
@@ -1001,6 +1020,9 @@ static void GetOpts(int argc, char *argv[]) {
         break;
       case 'z':
         printport = true;
+        break;
+      case 'f':
+        funtrace = true;
         break;
       case 'k':
         encouragekeepalive = true;
@@ -1097,53 +1119,53 @@ static void AppendResourceReport(struct rusage *ru, const char *nl) {
   long utime, stime;
   long double ticks;
   if (ru->ru_maxrss) {
-    AppendFmt("ballooned to %,ldkb in size%s", ru->ru_maxrss, nl);
+    Append("ballooned to %,ldkb in size%s", ru->ru_maxrss, nl);
   }
   if ((utime = ru->ru_utime.tv_sec * 1000000 + ru->ru_utime.tv_usec) |
       (stime = ru->ru_stime.tv_sec * 1000000 + ru->ru_stime.tv_usec)) {
     ticks = ceill((long double)(utime + stime) / (1000000.L / CLK_TCK));
-    AppendFmt("needed %,ldµs cpu (%d%% kernel)%s", utime + stime,
-              (int)((long double)stime / (utime + stime) * 100), nl);
+    Append("needed %,ldµs cpu (%d%% kernel)%s", utime + stime,
+           (int)((long double)stime / (utime + stime) * 100), nl);
     if (ru->ru_idrss) {
-      AppendFmt("needed %,ldkb memory on average%s",
-                lroundl(ru->ru_idrss / ticks), nl);
+      Append("needed %,ldkb memory on average%s", lroundl(ru->ru_idrss / ticks),
+             nl);
     }
     if (ru->ru_isrss) {
-      AppendFmt("needed %,ldkb stack on average%s",
-                lroundl(ru->ru_isrss / ticks), nl);
+      Append("needed %,ldkb stack on average%s", lroundl(ru->ru_isrss / ticks),
+             nl);
     }
     if (ru->ru_ixrss) {
-      AppendFmt("mapped %,ldkb shared on average%s",
-                lroundl(ru->ru_ixrss / ticks), nl);
+      Append("mapped %,ldkb shared on average%s", lroundl(ru->ru_ixrss / ticks),
+             nl);
     }
   }
   if (ru->ru_minflt || ru->ru_majflt) {
-    AppendFmt("caused %,ld page faults (%d%% memcpy)%s",
-              ru->ru_minflt + ru->ru_majflt,
-              (int)((long double)ru->ru_minflt /
-                    (ru->ru_minflt + ru->ru_majflt) * 100),
-              nl);
+    Append("caused %,ld page faults (%d%% memcpy)%s",
+           ru->ru_minflt + ru->ru_majflt,
+           (int)((long double)ru->ru_minflt / (ru->ru_minflt + ru->ru_majflt) *
+                 100),
+           nl);
   }
   if (ru->ru_nvcsw + ru->ru_nivcsw > 1) {
-    AppendFmt(
+    Append(
         "%,ld context switches (%d%% consensual)%s",
         ru->ru_nvcsw + ru->ru_nivcsw,
         (int)((long double)ru->ru_nvcsw / (ru->ru_nvcsw + ru->ru_nivcsw) * 100),
         nl);
   }
   if (ru->ru_inblock || ru->ru_oublock) {
-    AppendFmt("performed %,ld read and %,ld write i/o operations%s",
-              ru->ru_inblock, ru->ru_oublock, nl);
+    Append("performed %,ld read and %,ld write i/o operations%s",
+           ru->ru_inblock, ru->ru_oublock, nl);
   }
   if (ru->ru_msgrcv || ru->ru_msgsnd) {
-    AppendFmt("received %,ld message and sent %,ld%s", ru->ru_msgrcv,
-              ru->ru_msgsnd, nl);
+    Append("received %,ld message and sent %,ld%s", ru->ru_msgrcv,
+           ru->ru_msgsnd, nl);
   }
   if (ru->ru_nsignals) {
-    AppendFmt("received %,ld signals%s", ru->ru_nsignals, nl);
+    Append("received %,ld signals%s", ru->ru_nsignals, nl);
   }
   if (ru->ru_nswap) {
-    AppendFmt("got swapped %,ld times%s", ru->ru_nswap, nl);
+    Append("got swapped %,ld times%s", ru->ru_nswap, nl);
   }
 }
 
@@ -1237,7 +1259,7 @@ static void ReapZombies(void) {
   } while (!terminated);
 }
 
-static ssize_t WritevAll(int fd, struct iovec *iov, int iovlen) {
+static inline ssize_t WritevAll(int fd, struct iovec *iov, int iovlen) {
   ssize_t rc;
   size_t wrote;
   do {
@@ -1264,13 +1286,6 @@ static ssize_t WritevAll(int fd, struct iovec *iov, int iovlen) {
     }
   } while (iovlen);
   return 0;
-}
-
-static uint32_t Hash(const void *data, size_t size) {
-  uint32_t h;
-  h = crc32c(0, data, size);
-  if (!h) h = 1;
-  return h;
 }
 
 static bool ClientAcceptsGzip(void) {
@@ -1453,21 +1468,14 @@ static struct Asset *GetAsset(const char *path, size_t pathlen) {
   struct Asset *a;
   if (!(a = GetAssetFile(path, pathlen))) {
     if (!(a = GetAssetZip(path, pathlen))) {
-      if (pathlen > 1 && path[pathlen - 1] != '/') {
-        path2 = xmalloc(pathlen + 1);
-        memcpy(mempcpy(path2, path, pathlen), "/", 1);
-        a = GetAssetZip(path2, pathlen + 1);
-        free(path2);
+      if (pathlen > 1 && path[pathlen - 1] != '/' &&
+          pathlen + 1 <= sizeof(slashpath)) {
+        memcpy(mempcpy(slashpath, path, pathlen), "/", 1);
+        a = GetAssetZip(slashpath, pathlen + 1);
       }
     }
   }
   return a;
-}
-
-static char *AppendCrlf(char *p) {
-  p[0] = '\r';
-  p[1] = '\n';
-  return p + 2;
 }
 
 static bool MustNotIncludeMessageBody(void) { /* RFC2616 § 4.4 */
@@ -1523,19 +1531,9 @@ static char *AppendCache(char *p, int64_t seconds) {
   return AppendExpires(p, (int64_t)shared->nowish + seconds);
 }
 
-static bool IsPublic(void) {
-  uint32_t ip;
-  GetRemoteAddr(&ip, 0);
-  return IsPublicIp(ip);
-}
-
 static char *AppendServer(char *p, const char *s) {
   p = stpcpy(p, "Server: ");
-  if (IsPublic()) {
-    p = mempcpy(p, s, strchrnul(s, '/') - s);
-  } else {
-    p = stpcpy(p, s);
-  }
+  p = stpcpy(p, s);
   return AppendCrlf(p);
 }
 
@@ -1658,15 +1656,15 @@ static void AppendLogo(void) {
   struct Asset *a;
   if ((a = GetAsset("/redbean.png", 12)) && (p = LoadAsset(a, &n))) {
     q = EncodeBase64(p, n, &n);
-    AppendString("<img src=\"data:image/png;base64,");
+    Append("<img src=\"data:image/png;base64,");
     AppendData(q, n);
-    AppendString("\">\r\n");
+    Append("\">\r\n");
     free(q);
     free(p);
   }
 }
 
-static ssize_t Send(struct iovec *iov, int iovlen) {
+static inline ssize_t Send(struct iovec *iov, int iovlen) {
   ssize_t rc;
   if ((rc = WritevAll(client, iov, iovlen)) == -1) {
     if (errno == ECONNRESET) {
@@ -1711,11 +1709,11 @@ static char *CommitOutput(char *p) {
 static char *ServeDefaultErrorPage(char *p, unsigned code, const char *reason) {
   p = AppendContentType(p, "text/html; charset=ISO-8859-1");
   reason = FreeLater(EscapeHtml(reason, -1, 0));
-  AppendString("\
+  Append("\
 <!doctype html>\r\n\
 <title>");
-  AppendFmt("%d %s", code, reason);
-  AppendString("\
+  Append("%d %s", code, reason);
+  Append("\
 </title>\r\n\
 <style>\r\n\
 html { color: #111; font-family: sans-serif; }\r\n\
@@ -1723,8 +1721,8 @@ img { vertical-align: middle; }\r\n\
 </style>\r\n\
 <h1>\r\n");
   AppendLogo();
-  AppendFmt("%d %s\r\n", code, reason);
-  AppendString("</h1>\r\n");
+  Append("%d %s\r\n", code, reason);
+  Append("</h1>\r\n");
   UseOutput();
   return p;
 }
@@ -1734,7 +1732,7 @@ static char *ServeErrorImpl(unsigned code, const char *reason) {
   char *p, *s;
   struct Asset *a;
   LockInc(&shared->errors);
-  DropOutput();
+  ClearOutput();
   p = SetStatus(code, reason);
   s = xasprintf("/%d.html", code);
   a = GetAsset(s, strlen(s));
@@ -1877,7 +1875,15 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
       } else {
         LockInc(&shared->openfails);
         WARNF("open(%`'s) failed %s", a->file->path, strerror(errno));
-        return ServeError(500, "Internal Server Error");
+        if (errno == ENFILE) {
+          LockInc(&shared->enfiles);
+          return ServeError(503, "Service Unavailable");
+        } else if (errno == EMFILE) {
+          LockInc(&shared->emfiles);
+          return ServeError(503, "Service Unavailable");
+        } else {
+          return ServeError(500, "Internal Server Error");
+        }
       }
     } else {
       content = "";
@@ -3320,30 +3326,27 @@ static char *HandleRedirect(struct Redirect *r) {
 static void LogMessage(const char *d, const char *s, size_t n) {
   size_t n2, n3;
   char *s2, *s3;
-  if (logmessages) {
-    while (n && (s[n - 1] == '\r' || s[n - 1] == '\n')) --n;
-    if ((s2 = DecodeLatin1(s, n, &n2))) {
-      if ((s3 = IndentLines(s2, n2, &n3, 1))) {
-        LOGF("%s %,ld byte message\n%.*s", d, n, n3, s3);
-        free(s3);
-      }
-      free(s2);
+  while (n && (s[n - 1] == '\r' || s[n - 1] == '\n')) --n;
+  if ((s2 = DecodeLatin1(s, n, &n2))) {
+    if ((s3 = IndentLines(s2, n2, &n3, 1))) {
+      LOGF("%s %,ld byte message\n%.*s", d, n, n3, s3);
+      free(s3);
     }
+    free(s2);
   }
 }
 
 static void LogBody(const char *d, const char *s, size_t n) {
   char *s2, *s3;
   size_t n2, n3;
-  if (n && logbodies) {
-    while (n && (s[n - 1] == '\r' || s[n - 1] == '\n')) --n;
-    if ((s2 = VisualizeControlCodes(s, n, &n2))) {
-      if ((s3 = IndentLines(s2, n2, &n3, 1))) {
-        LOGF("%s %,ld byte payload\n%.*s", d, n, n3, s3);
-        free(s3);
-      }
-      free(s2);
+  if (!n) return;
+  while (n && (s[n - 1] == '\r' || s[n - 1] == '\n')) --n;
+  if ((s2 = VisualizeControlCodes(s, n, &n2))) {
+    if ((s3 = IndentLines(s2, n2, &n3, 1))) {
+      LOGF("%s %,ld byte payload\n%.*s", d, n, n3, s3);
+      free(s3);
     }
+    free(s2);
   }
 }
 
@@ -3351,7 +3354,7 @@ static ssize_t SendString(const char *s) {
   size_t n;
   ssize_t rc;
   n = strlen(s);
-  LogMessage("sending", s, n);
+  if (logmessages) LogMessage("sending", s, n);
   for (;;) {
     if ((rc = write(client, s, n)) != -1 || errno != EINTR) {
       return rc;
@@ -3522,11 +3525,11 @@ static const char *MergeNames(const char *a, const char *b) {
 }
 
 static void AppendLong1(const char *a, long x) {
-  if (x) AppendFmt("%s: %ld\r\n", a, x);
+  if (x) Append("%s: %ld\r\n", a, x);
 }
 
 static void AppendLong2(const char *a, const char *b, long x) {
-  if (x) AppendFmt("%s.%s: %ld\r\n", a, b, x);
+  if (x) Append("%s.%s: %ld\r\n", a, b, x);
 }
 
 static void AppendTimeval(const char *a, struct timeval *tv) {
@@ -3681,7 +3684,7 @@ char *ServeListing(void) {
   char rb[8], tb[64], *rp[6];
   size_t i, n, pathlen, rn[6];
   if (msg.method != kHttpGet && msg.method != kHttpHead) return BadMethod();
-  AppendString("\
+  Append("\
 <!doctype html>\r\n\
 <meta charset=\"utf-8\">\r\n\
 <title>redbean zip listing</title>\r\n\
@@ -3698,7 +3701,7 @@ td { padding-right: 3em; }\r\n\
   rp[0] = EscapeHtml(brand, -1, &rn[0]);
   AppendData(rp[0], rn[0]);
   free(rp[0]);
-  AppendString("</h1><hr></header><pre>\r\n");
+  Append("</h1><hr></header><pre>\r\n");
   memset(w, 0, sizeof(w));
   n = GetZipCdirRecords(cdir);
   for (cf = GetZipCdirOffset(cdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
@@ -3733,15 +3736,15 @@ td { padding-right: 3em; }\r\n\
       if (IsCompressionMethodSupported(
               ZIP_LFILE_COMPRESSIONMETHOD(zmap + lf)) &&
           IsAcceptablePath(path, pathlen)) {
-        AppendFmt("<a href=\"%.*s\">%-*.*s</a> %s  %0*o %4s  %,*ld  %'s\r\n",
-                  rn[2], rp[2], w[0], rn[4], rp[4], tb, w[1],
-                  GetZipCfileMode(zmap + cf), DescribeCompressionRatio(rb, lf),
-                  w[2], GetZipLfileUncompressedSize(zmap + lf), rp[5]);
+        Append("<a href=\"%.*s\">%-*.*s</a> %s  %0*o %4s  %,*ld  %'s\r\n",
+               rn[2], rp[2], w[0], rn[4], rp[4], tb, w[1],
+               GetZipCfileMode(zmap + cf), DescribeCompressionRatio(rb, lf),
+               w[2], GetZipLfileUncompressedSize(zmap + lf), rp[5]);
       } else {
-        AppendFmt("%-*.*s %s  %0*o %4s  %,*ld  %'s\r\n", w[0], rn[4], rp[4], tb,
-                  w[1], GetZipCfileMode(zmap + cf),
-                  DescribeCompressionRatio(rb, lf), w[2],
-                  GetZipLfileUncompressedSize(zmap + lf), rp[5]);
+        Append("%-*.*s %s  %0*o %4s  %,*ld  %'s\r\n", w[0], rn[4], rp[4], tb,
+               w[1], GetZipCfileMode(zmap + cf),
+               DescribeCompressionRatio(rb, lf), w[2],
+               GetZipLfileUncompressedSize(zmap + lf), rp[5]);
       }
       free(rp[5]);
       free(rp[4]);
@@ -3752,38 +3755,38 @@ td { padding-right: 3em; }\r\n\
     }
     free(path);
   }
-  AppendString("</pre><footer><hr>\r\n");
-  AppendString("<table border=\"0\"><tr><td valign=\"top\">\r\n");
-  AppendString("<a href=\"/statusz\">/statusz</a> says your redbean<br>\r\n");
+  Append("</pre><footer><hr>\r\n");
+  Append("<table border=\"0\"><tr><td valign=\"top\">\r\n");
+  Append("<a href=\"/statusz\">/statusz</a> says your redbean<br>\r\n");
   AppendResourceReport(&shared->children, "<br>\r\n");
-  AppendString("<td valign=\"top\">\r\n");
+  Append("<td valign=\"top\">\r\n");
   and = "";
   x = nowl() - startserver;
   y = ldiv(x, 24L * 60 * 60);
   if (y.quot) {
-    AppendFmt("%,ld day%s ", y.quot, y.quot == 1 ? "" : "s");
+    Append("%,ld day%s ", y.quot, y.quot == 1 ? "" : "s");
     and = "and ";
   }
   y = ldiv(y.rem, 60 * 60);
   if (y.quot) {
-    AppendFmt("%,ld hour%s ", y.quot, y.quot == 1 ? "" : "s");
+    Append("%,ld hour%s ", y.quot, y.quot == 1 ? "" : "s");
     and = "and ";
   }
   y = ldiv(y.rem, 60);
   if (y.quot) {
-    AppendFmt("%,ld minute%s ", y.quot, y.quot == 1 ? "" : "s");
+    Append("%,ld minute%s ", y.quot, y.quot == 1 ? "" : "s");
     and = "and ";
   }
-  AppendFmt("%s%,ld second%s of operation<br>\r\n", and, y.rem,
-            y.rem == 1 ? "" : "s");
+  Append("%s%,ld second%s of operation<br>\r\n", and, y.rem,
+         y.rem == 1 ? "" : "s");
   x = shared->messageshandled;
-  AppendFmt("%,ld message%s handled<br>\r\n", x, x == 1 ? "" : "s");
+  Append("%,ld message%s handled<br>\r\n", x, x == 1 ? "" : "s");
   x = shared->connectionshandled;
-  AppendFmt("%,ld connection%s handled<br>\r\n", x, x == 1 ? "" : "s");
+  Append("%,ld connection%s handled<br>\r\n", x, x == 1 ? "" : "s");
   x = shared->workers;
-  AppendFmt("%,ld connection%s active<br>\r\n", x, x == 1 ? "" : "s");
-  AppendString("</table>\r\n");
-  AppendString("</footer>\r\n");
+  Append("%,ld connection%s active<br>\r\n", x, x == 1 ? "" : "s");
+  Append("</table>\r\n");
+  Append("</footer>\r\n");
   p = SetStatus(200, "OK");
   p = AppendContentType(p, "text/html");
   p = AppendCache(p, 0);
@@ -4014,7 +4017,7 @@ static char *HandleRequest(void) {
     return ServeFailure(505, "HTTP Version Not Supported");
   }
   if ((p = SynchronizeStream())) return p;
-  LogBody("received", inbuf.p + hdrsize, msgsize - hdrsize);
+  if (logbodies) LogBody("received", inbuf.p + hdrsize, msgsize - hdrsize);
   if (msg.version < 11 || HeaderEqualCase(kHttpConnection, "close")) {
     connectionclose = true;
   }
@@ -4072,10 +4075,11 @@ static bool HandleMessage(void) {
   char *p, *s;
   struct iovec iov[4];
   long actualcontentlength;
+  g_syscount = 0;
   if ((rc = ParseHttpRequest(&msg, inbuf.p, amtread)) != -1) {
     if (!rc) return false;
     hdrsize = rc;
-    LogMessage("received", inbuf.p, hdrsize);
+    if (logmessages) LogMessage("received", inbuf.p, hdrsize);
     RecordNetworkOrigin();
     p = HandleRequest();
   } else {
@@ -4091,12 +4095,12 @@ static bool HandleMessage(void) {
     LockInc(&shared->synchronizationfailures);
     DEBUGF("could not synchronize message stream");
   }
-  if (connectionclose) {
+  if (0 && connectionclose) {
     LockInc(&shared->shutdowns);
     shutdown(client, SHUT_RD);
   }
   if (msg.version >= 10) {
-    p = AppendHeader(p, "Date", shared->currentdate);
+    p = AppendCrlf(stpcpy(stpcpy(p, "Date: "), shared->currentdate));
     if (!branded) p = AppendServer(p, serverheader);
     if (extrahdrs) p = stpcpy(p, extrahdrs);
     if (connectionclose) {
@@ -4112,7 +4116,7 @@ static bool HandleMessage(void) {
     p = AppendContentLength(p, actualcontentlength);
     p = AppendCrlf(p);
     CHECK_LE(p - hdrbuf.p, hdrbuf.n);
-    LogMessage("sending", hdrbuf.p, p - hdrbuf.p);
+    if (logmessages) LogMessage("sending", hdrbuf.p, p - hdrbuf.p);
     iov[0].iov_base = hdrbuf.p;
     iov[0].iov_len = p - hdrbuf.p;
     iovlen = 1;
@@ -4137,7 +4141,7 @@ static bool HandleMessage(void) {
     iovlen = 1;
   }
   if (loglatency || LOGGABLE(kLogDebug)) {
-    flogf(kLogDebug, __FILE__, __LINE__, NULL, "%`'.*s handled in %,ldµs",
+    flogf(kLogDebug, __FILE__, __LINE__, NULL, "%`'.*s latency %,ldµs",
           msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a,
           (long)((nowl() - startrequest) * 1e6L));
   }
@@ -4150,6 +4154,7 @@ static bool HandleMessage(void) {
 static void InitRequest(void) {
   frags = 0;
   msgsize = 0;
+  outbuf.n = 0;
   content = NULL;
   gzipped = false;
   branded = false;
@@ -4272,10 +4277,13 @@ static void HandleConnection(void) {
         case 0:
           meltdown = false;
           connectionclose = false;
+          if (funtrace && !IsTiny()) {
+            ftrace_install();
+          }
           break;
         case -1:
           FATALF("%s too many processes %s", DescribeServer(), strerror(errno));
-          LockInc(&shared->forkerrors);
+          ++shared->forkerrors;
           LockInc(&shared->dropped);
           EnterMeltdownMode();
           SendServiceUnavailable();
@@ -4292,8 +4300,7 @@ static void HandleConnection(void) {
     HandleMessages();
     DEBUGF("%s closing after %,ldµs", DescribeClient(),
            (long)((nowl() - startconnection) * 1e6L));
-    if (close(client) != -1) {
-    } else {
+    if (close(client) == -1) {
       LockInc(&shared->closeerrors);
       WARNF("%s close failed", DescribeClient());
     }
@@ -4303,7 +4310,7 @@ static void HandleConnection(void) {
       CollectGarbage();
     }
   } else if (errno == EINTR || errno == EAGAIN) {
-    LockInc(&shared->acceptinterrupts);
+    ++shared->acceptinterrupts;
   } else if (errno == ENFILE) {
     LockInc(&shared->enfiles);
     WARNF("%s too many open files", DescribeServer());
@@ -4321,19 +4328,19 @@ static void HandleConnection(void) {
     WARNF("%s ran out of buffer");
     EnterMeltdownMode();
   } else if (errno == ENONET) {
-    LockInc(&shared->enonets);
+    ++shared->enonets;
     WARNF("%s network gone", DescribeServer());
     sleep(1);
   } else if (errno == ENETDOWN) {
-    LockInc(&shared->enetdowns);
+    ++shared->enetdowns;
     WARNF("%s network down", DescribeServer());
     sleep(1);
   } else if (errno == ECONNABORTED) {
-    LockInc(&shared->acceptresets);
+    ++shared->acceptresets;
     WARNF("%s connection reset before accept");
   } else if (errno == ENETUNREACH || errno == EHOSTUNREACH ||
              errno == EOPNOTSUPP || errno == ENOPROTOOPT || errno == EPROTO) {
-    LockInc(&shared->accepterrors);
+    ++shared->accepterrors;
     WARNF("%s ephemeral accept error %s", DescribeServer(), strerror(errno));
   } else {
     FATALF("%s accept error %s", DescribeServer(), strerror(errno));
@@ -4408,8 +4415,8 @@ void RedBean(int argc, char *argv[], const char *prog) {
   if (setitimer(ITIMER_REAL, &kHeartbeat, NULL) == -1) {
     heartless = true;
   }
-  CHECK_NE(-1,
-           (server = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, IPPROTO_TCP)));
+  server = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, IPPROTO_TCP);
+  CHECK_NE(-1, server);
   TuneSockets();
   if (bind(server, &serveraddr, sizeof(serveraddr)) == -1) {
     if (errno == EADDRINUSE) {
@@ -4473,7 +4480,7 @@ void RedBean(int argc, char *argv[], const char *prog) {
 
 int main(int argc, char *argv[]) {
   setenv("GDB", "", true);
-  showcrashreports();
+  if (!IsTiny()) showcrashreports();
   RedBean(argc, argv, (const char *)getauxval(AT_EXECFN));
   return 0;
 }
