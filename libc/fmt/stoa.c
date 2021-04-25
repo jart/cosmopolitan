@@ -53,10 +53,8 @@ static int __fmt_stoa_bing(out_f out, void *a, uint64_t w) {
 
 static int __fmt_stoa_quoted(out_f out, void *a, uint64_t w) {
   char buf[8];
-  if (w <= 0x7F) {
-    if (w < 0x20 || w == 0x7F) {
-      w = cescapec(w);
-    }
+  if (isascii(w)) {
+    w = cescapec(w);
   } else {
     w = tpenc(w);
   }

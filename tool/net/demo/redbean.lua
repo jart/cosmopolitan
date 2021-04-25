@@ -33,10 +33,10 @@ local function main()
    SetHeader('Expires', FormatHttpDateTime(GetDate()))
    SetHeader('Cache-Control', 'no-cache, must-revalidate, max-age=0')
 
-   -- Roundtripping information can make it safer.
-   Write('<p>Thank you for visiting ')
-   Write(EscapeHtml(EncodeUrl(ParseUrl(GetUrl()))))
-   Write('\r\n')
+   -- GetUrl() is the resolved Request-URI (TODO: Maybe change API to return a URL object?)
+   Write('<p>Thank you for visiting <code>')
+   Write(GetUrl())  -- redbean encoded this value so it doesn't need html entity escaping
+   Write('</code>\r\n')
 
    -- GetParam(NAME) is the fastest easiest way to get URL and FORM params
    -- If you want the RequestURL query params specifically in full do this
@@ -55,6 +55,12 @@ local function main()
          end
       end
       Write('</dl>\r\n')
+      Write("<p>Whatever you do, don't click on ")
+      Write('<a href="')
+      Write(EscapeHtml(EscapePath(GetPath()) .. '?magic'))
+      Write('">')
+      Write(EscapeHtml(VisualizeControlCodes(GetPath())))
+      Write('?magic</a>\r\n')
    else
       Write('<p>\r\n')
       Write('<em>none</em><br>\r\n')

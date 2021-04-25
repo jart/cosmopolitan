@@ -350,12 +350,12 @@ static bool connectionclose;
 static bool keyboardinterrupt;
 static bool encouragekeepalive;
 static bool loggednetworkorigin;
+static bool hasluaglobalhandler;
 
 static int frags;
 static int gmtoff;
 static int server;
 static int client;
-static int warmups;
 static int daemonuid;
 static int daemongid;
 static int statuscode;
@@ -375,6 +375,7 @@ static char *luaheaderp;
 static const char *brand;
 static const char *pidpath;
 static const char *logpath;
+static struct Strings loops;
 static size_t contentlength;
 static int64_t cacheseconds;
 static uint8_t gzip_footer[8];
@@ -952,6 +953,16 @@ static char *RemoveTrailingSlashes(char *s) {
 static void AddString(struct Strings *l, char *s) {
   l->p = xrealloc(l->p, ++l->n * sizeof(*l->p));
   l->p[l->n - 1] = s;
+}
+
+static bool HasString(struct Strings *l, char *s) {
+  size_t i;
+  for (i = 0; i < l->n; ++i) {
+    if (!strcmp(l->p[i], s)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 static void AddStagingDirectory(const char *dirpath) {
@@ -1977,15 +1988,527 @@ static void LaunchBrowser() {
   system(openbrowsercommand);
 }
 
+static char *BadMethod(void) {
+  LockInc(&shared->badmethods);
+  return stpcpy(ServeError(405, "Method Not Allowed"), "Allow: GET, HEAD\r\n");
+}
+
+static int GetDecimalWidth(int x) {
+  int w = x ? ceil(log10(x)) : 1;
+  return w + (w - 1) / 3;
+}
+
+static int GetOctalWidth(int x) {
+  return !x ? 1 : x < 8 ? 2 : 1 + bsr(x) / 3;
+}
+
+static const char *DescribeCompressionRatio(char rb[8], uint64_t lf) {
+  long percent;
+  if (ZIP_LFILE_COMPRESSIONMETHOD(zmap + lf) == kZipCompressionNone) {
+    return "n/a";
+  } else {
+    percent = lround(100 - (double)GetZipLfileCompressedSize(zmap + lf) /
+                               GetZipLfileUncompressedSize(zmap + lf) * 100);
+    sprintf(rb, "%ld%%", MIN(999, MAX(-999, percent)));
+    return rb;
+  }
+}
+
+static char *ServeListing(void) {
+  long x;
+  ldiv_t y;
+  int w[3];
+  struct tm tm;
+  const char *and;
+  int64_t lastmod;
+  uint64_t cf, lf;
+  struct rusage ru;
+  char *p, *q, *path;
+  char rb[8], tb[64], *rp[6];
+  size_t i, n, pathlen, rn[6];
+  LockInc(&shared->listingrequests);
+  if (msg.method != kHttpGet && msg.method != kHttpHead) return BadMethod();
+  Append("\
+<!doctype html>\r\n\
+<meta charset=\"utf-8\">\r\n\
+<title>redbean zip listing</title>\r\n\
+<style>\r\n\
+html { color: #111; font-family: sans-serif; }\r\n\
+a { text-decoration: none; }\r\n\
+a:hover { color: #00e; border-bottom: 1px solid #ccc; }\r\n\
+img { vertical-align: middle; }\r\n\
+footer { color: #555; font-size: 10pt; }\r\n\
+td { padding-right: 3em; }\r\n\
+</style>\r\n\
+<header><h1>\r\n");
+  AppendLogo();
+  rp[0] = EscapeHtml(brand, -1, &rn[0]);
+  AppendData(rp[0], rn[0]);
+  free(rp[0]);
+  Append("</h1><hr></header><pre>\r\n");
+  memset(w, 0, sizeof(w));
+  n = GetZipCdirRecords(cdir);
+  for (cf = GetZipCdirOffset(cdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
+    CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zmap + cf));
+    lf = GetZipCfileOffset(zmap + cf);
+    path = GetAssetPath(cf, &pathlen);
+    if (!IsHiddenPath(path)) {
+      w[0] = min(80, max(w[0], strwidth(path, 0) + 2));
+      w[1] = max(w[1], GetOctalWidth(GetZipCfileMode(zmap + cf)));
+      w[2] = max(w[2], GetDecimalWidth(GetZipLfileUncompressedSize(zmap + lf)));
+    }
+    free(path);
+  }
+  n = GetZipCdirRecords(cdir);
+  for (cf = GetZipCdirOffset(cdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
+    CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zmap + cf));
+    lf = GetZipCfileOffset(zmap + cf);
+    path = GetAssetPath(cf, &pathlen);
+    if (!IsHiddenPath(path)) {
+      rp[0] = VisualizeControlCodes(path, pathlen, &rn[0]);
+      rp[1] = EscapePath(path, pathlen, &rn[1]);
+      rp[2] = EscapeHtml(rp[1], rn[1], &rn[2]);
+      rp[3] = VisualizeControlCodes(ZIP_CFILE_COMMENT(zmap + cf),
+                                    strnlen(ZIP_CFILE_COMMENT(zmap + cf),
+                                            ZIP_CFILE_COMMENTSIZE(zmap + cf)),
+                                    &rn[3]);
+      rp[4] = EscapeHtml(rp[0], rn[0], &rn[4]);
+      rp[5] = EscapeHtml(rp[3], rn[3], &rn[0]);
+      lastmod = GetZipCfileLastModified(zmap + cf);
+      localtime_r(&lastmod, &tm);
+      strftime(tb, sizeof(tb), "%Y-%m-%d %H:%M:%S %Z", &tm);
+      if (IsCompressionMethodSupported(
+              ZIP_LFILE_COMPRESSIONMETHOD(zmap + lf)) &&
+          IsAcceptablePath(path, pathlen)) {
+        Append("<a href=\"%.*s\">%-*.*s</a> %s  %0*o %4s  %,*ld  %'s\r\n",
+               rn[2], rp[2], w[0], rn[4], rp[4], tb, w[1],
+               GetZipCfileMode(zmap + cf), DescribeCompressionRatio(rb, lf),
+               w[2], GetZipLfileUncompressedSize(zmap + lf), rp[5]);
+      } else {
+        Append("%-*.*s %s  %0*o %4s  %,*ld  %'s\r\n", w[0], rn[4], rp[4], tb,
+               w[1], GetZipCfileMode(zmap + cf),
+               DescribeCompressionRatio(rb, lf), w[2],
+               GetZipLfileUncompressedSize(zmap + lf), rp[5]);
+      }
+      free(rp[5]);
+      free(rp[4]);
+      free(rp[3]);
+      free(rp[2]);
+      free(rp[1]);
+      free(rp[0]);
+    }
+    free(path);
+  }
+  Append("</pre><footer><hr>\r\n");
+  Append("<table border=\"0\"><tr><td valign=\"top\">\r\n");
+  Append("<a href=\"/statusz\">/statusz</a> says your redbean<br>\r\n");
+  AppendResourceReport(&shared->children, "<br>\r\n");
+  Append("<td valign=\"top\">\r\n");
+  and = "";
+  x = nowl() - startserver;
+  y = ldiv(x, 24L * 60 * 60);
+  if (y.quot) {
+    Append("%,ld day%s ", y.quot, y.quot == 1 ? "" : "s");
+    and = "and ";
+  }
+  y = ldiv(y.rem, 60 * 60);
+  if (y.quot) {
+    Append("%,ld hour%s ", y.quot, y.quot == 1 ? "" : "s");
+    and = "and ";
+  }
+  y = ldiv(y.rem, 60);
+  if (y.quot) {
+    Append("%,ld minute%s ", y.quot, y.quot == 1 ? "" : "s");
+    and = "and ";
+  }
+  Append("%s%,ld second%s of operation<br>\r\n", and, y.rem,
+         y.rem == 1 ? "" : "s");
+  x = shared->messageshandled;
+  Append("%,ld message%s handled<br>\r\n", x, x == 1 ? "" : "s");
+  x = shared->connectionshandled;
+  Append("%,ld connection%s handled<br>\r\n", x, x == 1 ? "" : "s");
+  x = shared->workers;
+  Append("%,ld connection%s active<br>\r\n", x, x == 1 ? "" : "s");
+  Append("</table>\r\n");
+  Append("</footer>\r\n");
+  p = SetStatus(200, "OK");
+  p = AppendContentType(p, "text/html");
+  p = AppendCache(p, 0);
+  return CommitOutput(p);
+}
+
+static const char *MergeNames(const char *a, const char *b) {
+  return FreeLater(xasprintf("%s.ru_utime", a));
+}
+
+static void AppendLong1(const char *a, long x) {
+  if (x) Append("%s: %ld\r\n", a, x);
+}
+
+static void AppendLong2(const char *a, const char *b, long x) {
+  if (x) Append("%s.%s: %ld\r\n", a, b, x);
+}
+
+static void AppendTimeval(const char *a, struct timeval *tv) {
+  AppendLong2(a, "tv_sec", tv->tv_sec);
+  AppendLong2(a, "tv_usec", tv->tv_usec);
+}
+
+static void AppendRusage(const char *a, struct rusage *ru) {
+  AppendTimeval(MergeNames(a, "ru_utime"), &ru->ru_utime);
+  AppendTimeval(MergeNames(a, "ru_stime"), &ru->ru_stime);
+  AppendLong2(a, "ru_maxrss", ru->ru_maxrss);
+  AppendLong2(a, "ru_ixrss", ru->ru_ixrss);
+  AppendLong2(a, "ru_idrss", ru->ru_idrss);
+  AppendLong2(a, "ru_isrss", ru->ru_isrss);
+  AppendLong2(a, "ru_minflt", ru->ru_minflt);
+  AppendLong2(a, "ru_majflt", ru->ru_majflt);
+  AppendLong2(a, "ru_nswap", ru->ru_nswap);
+  AppendLong2(a, "ru_inblock", ru->ru_inblock);
+  AppendLong2(a, "ru_oublock", ru->ru_oublock);
+  AppendLong2(a, "ru_msgsnd", ru->ru_msgsnd);
+  AppendLong2(a, "ru_msgrcv", ru->ru_msgrcv);
+  AppendLong2(a, "ru_nsignals", ru->ru_nsignals);
+  AppendLong2(a, "ru_nvcsw", ru->ru_nvcsw);
+  AppendLong2(a, "ru_nivcsw", ru->ru_nivcsw);
+}
+
+static char *ServeStatusz(void) {
+  char *p;
+  LockInc(&shared->statuszrequests);
+  if (msg.method != kHttpGet && msg.method != kHttpHead) return BadMethod();
+  AppendLong1("pid", getpid());
+  AppendLong1("ppid", getppid());
+  AppendLong1("now", nowl());
+  AppendLong1("nowish", shared->nowish);
+  AppendLong1("heartless", heartless);
+  AppendLong1("gmtoff", gmtoff);
+  AppendLong1("CLK_TCK", CLK_TCK);
+  AppendLong1("startserver", startserver);
+  AppendLong1("lastmeltdown", shared->lastmeltdown);
+  AppendLong1("workers", shared->workers);
+  AppendLong1("assets.n", assets.n);
+  AppendLong1("accepterrors", shared->accepterrors);
+  AppendLong1("acceptinterrupts", shared->acceptinterrupts);
+  AppendLong1("acceptresets", shared->acceptresets);
+  AppendLong1("badlengths", shared->badlengths);
+  AppendLong1("badmessages", shared->badmessages);
+  AppendLong1("badmethods", shared->badmethods);
+  AppendLong1("badranges", shared->badranges);
+  AppendLong1("closeerrors", shared->closeerrors);
+  AppendLong1("compressedresponses", shared->compressedresponses);
+  AppendLong1("connectionshandled", shared->connectionshandled);
+  AppendLong1("connectsrefused", shared->connectsrefused);
+  AppendLong1("continues", shared->continues);
+  AppendLong1("decompressedresponses", shared->decompressedresponses);
+  AppendLong1("deflates", shared->deflates);
+  AppendLong1("dropped", shared->dropped);
+  AppendLong1("dynamicrequests", shared->dynamicrequests);
+  AppendLong1("emfiles", shared->emfiles);
+  AppendLong1("enetdowns", shared->enetdowns);
+  AppendLong1("enfiles", shared->enfiles);
+  AppendLong1("enobufs", shared->enobufs);
+  AppendLong1("enomems", shared->enomems);
+  AppendLong1("enonets", shared->enonets);
+  AppendLong1("errors", shared->errors);
+  AppendLong1("expectsrefused", shared->expectsrefused);
+  AppendLong1("failedchildren", shared->failedchildren);
+  AppendLong1("forbiddens", shared->forbiddens);
+  AppendLong1("forkerrors", shared->forkerrors);
+  AppendLong1("frags", shared->frags);
+  AppendLong1("fumbles", shared->fumbles);
+  AppendLong1("http09", shared->http09);
+  AppendLong1("http10", shared->http10);
+  AppendLong1("http11", shared->http11);
+  AppendLong1("http12", shared->http12);
+  AppendLong1("hugepayloads", shared->hugepayloads);
+  AppendLong1("identityresponses", shared->identityresponses);
+  AppendLong1("inflates", shared->inflates);
+  AppendLong1("listingrequests", shared->listingrequests);
+  AppendLong1("loops", shared->loops);
+  AppendLong1("mapfails", shared->mapfails);
+  AppendLong1("maps", shared->maps);
+  AppendLong1("meltdowns", shared->meltdowns);
+  AppendLong1("messageshandled", shared->messageshandled);
+  AppendLong1("missinglengths", shared->missinglengths);
+  AppendLong1("netafrinic", shared->netafrinic);
+  AppendLong1("netanonymous", shared->netanonymous);
+  AppendLong1("netapnic", shared->netapnic);
+  AppendLong1("netapple", shared->netapple);
+  AppendLong1("netarin", shared->netarin);
+  AppendLong1("netatt", shared->netatt);
+  AppendLong1("netcogent", shared->netcogent);
+  AppendLong1("netcomcast", shared->netcomcast);
+  AppendLong1("netdod", shared->netdod);
+  AppendLong1("netford", shared->netford);
+  AppendLong1("netlacnic", shared->netlacnic);
+  AppendLong1("netloopback", shared->netloopback);
+  AppendLong1("netother", shared->netother);
+  AppendLong1("netprivate", shared->netprivate);
+  AppendLong1("netprudential", shared->netprudential);
+  AppendLong1("netripe", shared->netripe);
+  AppendLong1("nettestnet", shared->nettestnet);
+  AppendLong1("netusps", shared->netusps);
+  AppendLong1("notfounds", shared->notfounds);
+  AppendLong1("notmodifieds", shared->notmodifieds);
+  AppendLong1("openfails", shared->openfails);
+  AppendLong1("partialresponses", shared->partialresponses);
+  AppendLong1("payloaddisconnects", shared->payloaddisconnects);
+  AppendLong1("pipelinedrequests", shared->pipelinedrequests);
+  AppendLong1("precompressedresponses", shared->precompressedresponses);
+  AppendLong1("readerrors", shared->readerrors);
+  AppendLong1("readinterrupts", shared->readinterrupts);
+  AppendLong1("readresets", shared->readresets);
+  AppendLong1("readtimeouts", shared->readtimeouts);
+  AppendLong1("redirects", shared->redirects);
+  AppendLong1("reloads", shared->reloads);
+  AppendLong1("rewrites", shared->rewrites);
+  AppendLong1("serveroptions", shared->serveroptions);
+  AppendLong1("shutdowns", shared->shutdowns);
+  AppendLong1("slowloris", shared->slowloris);
+  AppendLong1("slurps", shared->slurps);
+  AppendLong1("statfails", shared->statfails);
+  AppendLong1("staticrequests", shared->staticrequests);
+  AppendLong1("stats", shared->stats);
+  AppendLong1("statuszrequests", shared->statuszrequests);
+  AppendLong1("synchronizationfailures", shared->synchronizationfailures);
+  AppendLong1("terminatedchildren", shared->terminatedchildren);
+  AppendLong1("thiscorruption", shared->thiscorruption);
+  AppendLong1("transfersrefused", shared->transfersrefused);
+  AppendLong1("urisrefused", shared->urisrefused);
+  AppendLong1("verifies", shared->verifies);
+  AppendLong1("writeerrors", shared->writeerrors);
+  AppendLong1("writeinterruputs", shared->writeinterruputs);
+  AppendLong1("writeresets", shared->writeresets);
+  AppendLong1("writetimeouts", shared->writetimeouts);
+  AppendRusage("server", &shared->server);
+  AppendRusage("children", &shared->children);
+  p = SetStatus(200, "OK");
+  p = AppendContentType(p, "text/plain");
+  p = AppendCache(p, 0);
+  return CommitOutput(p);
+}
+
+static char *RedirectSlash(void) {
+  size_t n;
+  char *p, *e;
+  LockInc(&shared->redirects);
+  p = SetStatus(307, "Temporary Redirect");
+  p = stpcpy(p, "Location: ");
+  e = EscapePath(url.path.p, url.path.n, &n);
+  p = mempcpy(p, e, n);
+  p = stpcpy(p, "/\r\n");
+  free(e);
+  return p;
+}
+
+static char *RoutePath(const char *, size_t);
+static char *ServeIndex(const char *path, size_t pathlen) {
+  size_t i, n;
+  char *p, *q;
+  p = NULL;
+  for (i = 0; !p && i < ARRAYLEN(kIndexPaths); ++i) {
+    q = MergePaths(path, pathlen, kIndexPaths[i], strlen(kIndexPaths[i]), &n);
+    p = RoutePath(q, n);
+    free(q);
+  }
+  return p;
+}
+
+static bool IsLua(struct Asset *a) {
+  if (a->file) return endswith(a->file->path, ".lua");
+  return ZIP_LFILE_NAMESIZE(zmap + a->lf) >= 4 &&
+         !memcmp(ZIP_LFILE_NAME(zmap + a->lf) +
+                     ZIP_LFILE_NAMESIZE(zmap + a->lf) - 4,
+                 ".lua", 4);
+}
+
+static char *GetLuaResponse(void) {
+  char *p;
+  if (!(p = luaheaderp)) {
+    p = SetStatus(200, "OK");
+    p = AppendContentType(p, "text/html");
+  }
+  return p;
+}
+
+static char *ServeLua(struct Asset *a, const char *path, size_t pathlen) {
+  char *code;
+  effectivepath.p = path;
+  effectivepath.n = pathlen;
+  if ((code = FreeLater(LoadAsset(a, NULL)))) {
+    if (luaL_dostring(L, code) == LUA_OK) {
+      return CommitOutput(GetLuaResponse());
+    } else {
+      WARNF("%s", lua_tostring(L, -1));
+      lua_pop(L, 1);
+    }
+  }
+  return ServeError(500, "Internal Server Error");
+}
+
+static char *HandleAsset(struct Asset *a, const char *path, size_t pathlen) {
+#ifndef STATIC
+  if (IsLua(a)) {
+    LockInc(&shared->dynamicrequests);
+    return ServeLua(a, path, pathlen);
+  }
+#endif
+  if (msg.method == kHttpGet || msg.method == kHttpHead) {
+    LockInc(&shared->staticrequests);
+    return stpcpy(ServeAsset(a, path, pathlen),
+                  "X-Content-Type-Options: nosniff\r\n");
+  } else {
+    return BadMethod();
+  }
+}
+
+static char *HandleRedirect(struct Redirect *r) {
+  int code;
+  struct Asset *a;
+  if (!r->code && (a = GetAsset(r->location, strlen(r->location)))) {
+    LockInc(&shared->rewrites);
+    DEBUGF("rewriting to %`'s", r->location);
+    if (!HasString(&loops, r->location)) {
+      AddString(&loops, r->location);
+      return RoutePath(r->location, strlen(r->location));
+    } else {
+      LockInc(&shared->loops);
+      return SetStatus(508, "Loop Detected");
+    }
+  } else if (msg.version < 10) {
+    return ServeError(505, "HTTP Version Not Supported");
+  } else {
+    LockInc(&shared->redirects);
+    code = r->code;
+    if (!code) code = 307;
+    DEBUGF("%d redirecting %`'s", code, r->location);
+    return AppendHeader(SetStatus(code, GetHttpReason(code)), "Location",
+                        FreeLater(EncodeHttpHeaderValue(r->location, -1, 0)));
+  }
+}
+
+static char *HandleFolder(const char *path, size_t pathlen) {
+  char *p;
+  if (url.path.n && url.path.p[url.path.n - 1] != '/' &&
+      SlicesEqual(path, pathlen, url.path.p, url.path.n)) {
+    return RedirectSlash();
+  }
+  if ((p = ServeIndex(path, pathlen))) {
+    return p;
+  } else {
+    LockInc(&shared->forbiddens);
+    LOGF("directory %`'.*s lacks index page", pathlen, path);
+    return ServeError(403, "Forbidden");
+  }
+}
+
+static char *RoutePath(const char *path, size_t pathlen) {
+  int m;
+  long r;
+  char *p;
+  struct Asset *a;
+  DEBUGF("RoutePath(%`'.*s)", pathlen, path);
+  if ((a = GetAsset(path, pathlen))) {
+    if ((m = GetMode(a)) & 0004) {
+      if (!S_ISDIR(m)) {
+        return HandleAsset(a, path, pathlen);
+      } else {
+        return HandleFolder(path, pathlen);
+      }
+    } else {
+      LockInc(&shared->forbiddens);
+      LOGF("asset %`'.*s %#o isn't readable", pathlen, path, m);
+      return ServeError(403, "Forbidden");
+    }
+  } else if ((r = FindRedirect(path, pathlen)) != -1) {
+    return HandleRedirect(redirects.p + r);
+  } else {
+    return NULL;
+  }
+}
+
+static char *RouteHost(const char *host, size_t hostlen, const char *path,
+                       size_t pathlen) {
+  size_t hn;
+  char *hp, *p;
+  hn = 1 + hostlen + url.path.n;
+  hp = FreeLater(xmalloc(3 + 1 + hn));
+  hp[0] = '/';
+  mempcpy(mempcpy(hp + 1, host, hostlen), path, pathlen);
+  if ((p = RoutePath(hp, hn))) return p;
+  if (ParseIp(host, hostlen) == -1) {
+    if (hostlen > 4 && !memcmp(host, "www.", 4)) {
+      mempcpy(mempcpy(hp + 1, host + 4, hostlen - 4), path, pathlen);
+      if ((p = RoutePath(hp, hn - 4))) return p;
+    } else {
+      mempcpy(mempcpy(mempcpy(hp + 1, "www.", 4), host, hostlen), path,
+              pathlen);
+      if ((p = RoutePath(hp, hn + 4))) return p;
+    }
+  }
+  return NULL;
+}
+
+static char *Route(const char *host, size_t hostlen, const char *path,
+                   size_t pathlen) {
+  char *p;
+  if (hostlen && (p = RouteHost(host, hostlen, path, pathlen))) {
+    return p;
+  }
+  if (SlicesEqual(path, pathlen, "/", 1)) {
+    if ((p = ServeIndex("/", 1))) return p;
+    return ServeListing();
+  } else if ((p = RoutePath(path, pathlen))) {
+    return p;
+  } else if (SlicesEqual(path, pathlen, "/statusz", 8)) {
+    return ServeStatusz();
+  } else {
+    LockInc(&shared->notfounds);
+    return ServeError(404, "Not Found");
+  }
+}
+
 static const char *LuaCheckPath(lua_State *L, int idx, size_t *pathlen) {
   const char *path;
-  path = luaL_checklstring(L, idx, pathlen);
-  if (!IsReasonablePath(path, *pathlen)) {
-    WARNF("bad path %`'.*s", *pathlen, path);
-    luaL_argerror(L, idx, "bad path");
-    unreachable;
+  if (lua_isnoneornil(L, idx)) {
+    path = url.path.p;
+    *pathlen = url.path.n;
+  } else {
+    path = luaL_checklstring(L, idx, pathlen);
+    if (!IsReasonablePath(path, *pathlen)) {
+      WARNF("bad path %`'.*s", *pathlen, path);
+      luaL_argerror(L, idx, "bad path");
+      unreachable;
+    }
   }
   return path;
+}
+
+static const char *LuaCheckHost(lua_State *L, int idx, size_t *hostlen) {
+  const char *host;
+  if (lua_isnoneornil(L, idx)) {
+    host = url.host.p;
+    *hostlen = url.host.n;
+  } else {
+    host = luaL_checklstring(L, idx, hostlen);
+    if (!IsAcceptableHost(host, *hostlen)) {
+      WARNF("bad host %`'.*s", *hostlen, host);
+      luaL_argerror(L, idx, "bad host");
+      unreachable;
+    }
+  }
+  return host;
+}
+
+static int LuaServeListing(lua_State *L) {
+  luaheaderp = ServeListing();
+  return 0;
+}
+
+static int LuaServeStatusz(lua_State *L) {
+  luaheaderp = ServeStatusz();
+  return 0;
 }
 
 static int LuaServeAsset(lua_State *L) {
@@ -1993,16 +2516,47 @@ static int LuaServeAsset(lua_State *L) {
   struct Asset *a;
   const char *path;
   path = LuaCheckPath(L, 1, &pathlen);
-  if (!(a = GetAsset(path, pathlen))) {
-    luaL_argerror(L, 1, "not found");
-    unreachable;
+  if ((a = GetAsset(path, pathlen)) && !S_ISDIR(GetMode(a))) {
+    luaheaderp = ServeAsset(a, path, pathlen);
+    lua_pushboolean(L, true);
+  } else {
+    lua_pushboolean(L, false);
   }
-  if (S_ISDIR(GetMode(a))) {
-    luaL_argerror(L, 1, "is a directory");
-    unreachable;
-  }
-  luaheaderp = ServeAsset(a, path, pathlen);
-  return 0;
+  return 1;
+}
+
+static int LuaServeIndex(lua_State *L) {
+  size_t pathlen;
+  const char *path;
+  path = LuaCheckPath(L, 1, &pathlen);
+  lua_pushboolean(L, !!(luaheaderp = ServeIndex(path, pathlen)));
+  return 1;
+}
+
+static int LuaRoutePath(lua_State *L) {
+  size_t pathlen;
+  const char *path;
+  path = LuaCheckPath(L, 1, &pathlen);
+  lua_pushboolean(L, !!(luaheaderp = RoutePath(path, pathlen)));
+  return 1;
+}
+
+static int LuaRouteHost(lua_State *L) {
+  size_t hostlen, pathlen;
+  const char *host, *path;
+  host = LuaCheckHost(L, 1, &hostlen);
+  path = LuaCheckPath(L, 2, &pathlen);
+  lua_pushboolean(L, !!(luaheaderp = RouteHost(host, hostlen, path, pathlen)));
+  return 1;
+}
+
+static int LuaRoute(lua_State *L) {
+  size_t hostlen, pathlen;
+  const char *host, *path;
+  host = LuaCheckHost(L, 1, &hostlen);
+  path = LuaCheckPath(L, 2, &pathlen);
+  lua_pushboolean(L, !!(luaheaderp = Route(host, hostlen, path, pathlen)));
+  return 1;
 }
 
 static int LuaRespond(lua_State *L, char *respond(unsigned, const char *)) {
@@ -2141,16 +2695,12 @@ static int LuaCategorizeIp(lua_State *L) {
   return 1;
 }
 
-static void LuaPushLatin1(lua_State *L, const char *s, size_t n) {
-  char *t;
-  size_t m;
-  t = DecodeLatin1(s, n, &m);
-  lua_pushlstring(L, t, m);
-  free(t);
-}
-
 static int LuaGetUrl(lua_State *L) {
-  LuaPushLatin1(L, inbuf.p + msg.uri.a, msg.uri.b - msg.uri.a);
+  char *p;
+  size_t n;
+  p = EncodeUrl(&url, &n);
+  lua_pushlstring(L, p, n);
+  free(p);
   return 1;
 }
 
@@ -2253,6 +2803,14 @@ static int LuaGetPayload(lua_State *L) {
   return 1;
 }
 
+static void LuaPushLatin1(lua_State *L, const char *s, size_t n) {
+  char *t;
+  size_t m;
+  t = DecodeLatin1(s, n, &m);
+  lua_pushlstring(L, t, m);
+  free(t);
+}
+
 static char *FoldHeader(int h, size_t *z) {
   char *p;
   size_t i, n, m;
@@ -2330,8 +2888,8 @@ static int LuaGetHeaders(lua_State *L) {
 
 static int LuaSetHeader(lua_State *L) {
   int h;
-  char *p;
   ssize_t rc;
+  char *p, *q;
   const char *key, *val, *eval;
   size_t i, keylen, vallen, evallen;
   key = luaL_checklstring(L, 1, &keylen);
@@ -2346,16 +2904,12 @@ static int LuaSetHeader(lua_State *L) {
     luaL_argerror(L, 2, "invalid");
     unreachable;
   }
-  if (!luaheaderp) {
-    p = SetStatus(200, "OK");
-  } else {
-    while (luaheaderp - hdrbuf.p + keylen + 2 + evallen + 2 + 512 > hdrbuf.n) {
-      hdrbuf.n += hdrbuf.n >> 1;
-      p = xrealloc(hdrbuf.p, hdrbuf.n);
-      luaheaderp = p + (luaheaderp - hdrbuf.p);
-      hdrbuf.p = p;
-    }
-    p = luaheaderp;
+  p = GetLuaResponse();
+  while (p - hdrbuf.p + keylen + 2 + evallen + 2 + 512 > hdrbuf.n) {
+    hdrbuf.n += hdrbuf.n >> 1;
+    q = xrealloc(hdrbuf.p, hdrbuf.n);
+    luaheaderp = p = q + (p - hdrbuf.p);
+    hdrbuf.p = q;
   }
   switch (h) {
     case kHttpConnection:
@@ -2588,6 +3142,10 @@ static int LuaIsValidHttpToken(lua_State *L) {
 
 static int LuaIsAcceptablePath(lua_State *L) {
   return LuaIsValid(L, IsAcceptablePath);
+}
+
+static int LuaIsReasonablePath(lua_State *L) {
+  return LuaIsValid(L, IsReasonablePath);
 }
 
 static int LuaIsAcceptableHost(lua_State *L) {
@@ -3156,6 +3714,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"IsLoopbackIp", LuaIsLoopbackIp},                    //
     {"IsPrivateIp", LuaIsPrivateIp},                      //
     {"IsPublicIp", LuaIsPublicIp},                        //
+    {"IsReasonablePath", LuaIsReasonablePath},            //
     {"IsValidHttpToken", LuaIsValidHttpToken},            //
     {"LaunchBrowser", LuaLaunchBrowser},                  //
     {"LoadAsset", LuaLoadAsset},                          //
@@ -3172,8 +3731,14 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramPort", LuaProgramPort},                      //
     {"ProgramRedirect", LuaProgramRedirect},              //
     {"ProgramTimeout", LuaProgramTimeout},                //
+    {"Route", LuaRoute},                                  //
+    {"RouteHost", LuaRouteHost},                          //
+    {"RoutePath", LuaRoutePath},                          //
     {"ServeAsset", LuaServeAsset},                        //
     {"ServeError", LuaServeError},                        //
+    {"ServeIndex", LuaServeIndex},                        //
+    {"ServeListing", LuaServeListing},                    //
+    {"ServeStatusz", LuaServeStatusz},                    //
     {"SetHeader", LuaSetHeader},                          //
     {"SetLogLevel", LuaSetLogLevel},                      //
     {"SetStatus", LuaSetStatus},                          //
@@ -3226,7 +3791,10 @@ static void LuaInit(void) {
   LuaSetConstant(L, "kLogWarn", kLogWarn);
   LuaSetConstant(L, "kLogError", kLogError);
   LuaSetConstant(L, "kLogFatal", kLogFatal);
-  if (!LuaRun("/.init.lua")) {
+  if (LuaRun("/.init.lua")) {
+    hasluaglobalhandler = !!lua_getglobal(L, "OnHttpRequest");
+    lua_pop(L, 1);
+  } else {
     DEBUGF("no /.init.lua defined");
   }
 #endif
@@ -3252,75 +3820,6 @@ static void HandleHeartbeat(void) {
 #ifndef STATIC
   LuaRun("/.heartbeat.lua");
 #endif
-}
-
-static char *ServeLua(struct Asset *a, const char *path, size_t pathlen) {
-  char *p, *code;
-  luaheaderp = NULL;
-  effectivepath.p = path;
-  effectivepath.n = pathlen;
-  if ((code = FreeLater(LoadAsset(a, NULL)))) {
-    if (luaL_dostring(L, code) == LUA_OK) {
-      if (!(p = luaheaderp)) {
-        p = SetStatus(200, "OK");
-        p = AppendContentType(p, "text/html");
-      }
-      return CommitOutput(p);
-    } else {
-      WARNF("%s %s", DescribeClient(), lua_tostring(L, -1));
-      lua_pop(L, 1); /* remove message */
-      connectionclose = true;
-    }
-  }
-  return ServeError(500, "Internal Server Error");
-}
-
-static bool IsLua(struct Asset *a) {
-  if (a->file) return endswith(a->file->path, ".lua");
-  return ZIP_LFILE_NAMESIZE(zmap + a->lf) >= 4 &&
-         !memcmp(ZIP_LFILE_NAME(zmap + a->lf) +
-                     ZIP_LFILE_NAMESIZE(zmap + a->lf) - 4,
-                 ".lua", 4);
-}
-
-static char *BadMethod(void) {
-  LockInc(&shared->badmethods);
-  return stpcpy(ServeError(405, "Method Not Allowed"), "Allow: GET, HEAD\r\n");
-}
-
-static char *HandleAsset(struct Asset *a, const char *path, size_t pathlen) {
-#ifndef STATIC
-  if (IsLua(a)) {
-    LockInc(&shared->dynamicrequests);
-    return ServeLua(a, path, pathlen);
-  }
-#endif
-  if (msg.method == kHttpGet || msg.method == kHttpHead) {
-    LockInc(&shared->staticrequests);
-    return stpcpy(ServeAsset(a, path, pathlen),
-                  "X-Content-Type-Options: nosniff\r\n");
-  } else {
-    return BadMethod();
-  }
-}
-
-static char *HandleRedirect(struct Redirect *r) {
-  int code;
-  struct Asset *a;
-  if (!r->code && (a = GetAsset(r->location, strlen(r->location)))) {
-    LockInc(&shared->rewrites);
-    DEBUGF("rewriting to %`'s", r->location);
-    return HandleAsset(a, r->location, strlen(r->location));
-  } else if (msg.version < 10) {
-    return ServeError(505, "HTTP Version Not Supported");
-  } else {
-    LockInc(&shared->redirects);
-    code = r->code;
-    if (!code) code = 307;
-    DEBUGF("%d redirecting %`'s", code, r->location);
-    return AppendHeader(SetStatus(code, GetHttpReason(code)), "Location",
-                        FreeLater(EncodeHttpHeaderValue(r->location, -1, 0)));
-  }
 }
 
 static void LogMessage(const char *d, const char *s, size_t n) {
@@ -3384,41 +3883,6 @@ Content-Length: 0\r\n\
 \r\n");
 }
 
-static void SendWarmupRequests(void) {
-  int pid, i;
-  struct sockaddr_in addr;
-  static const char kWarmup[] = "\
-OPTIONS * HTTP/1.1\n\
-User-Agent: redbean/0.4\n\
-\n\
-GET /statusz HTTP/1.1\n\
-User-Agent: redbean/0.4\n\
-\n";
-  if (uniprocess) return;
-  switch (fork()) {
-    default:
-      warmups = 2;
-      ++shared->workers;
-      break;
-    case 0:
-      DEBUGF("sending warmup requests");
-      memcpy(&addr, &serveraddr, sizeof(addr));
-      if (addr.sin_addr.s_addr == htonl(INADDR_ANY)) {
-        addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-      }
-      for (i = 0; i < 2; ++i) {
-        client = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-        connect(client, &addr, sizeof(addr));
-        write(client, kWarmup, sizeof(kWarmup) - 1);
-        read(client, inbuf.p, inbuf.n);
-        close(client);
-      }
-      _exit(0);
-    case -1:
-      break;
-  }
-}
-
 static void LogClose(const char *reason) {
   if (amtread || meltdown || killed) {
     LockInc(&shared->fumbles);
@@ -3436,27 +3900,6 @@ static const char *DescribeClose(void) {
   if (terminated) return "terminated";
   if (connectionclose) return "connectionclose";
   return "destroyed";
-}
-
-static const char *DescribeCompressionRatio(char rb[8], uint64_t lf) {
-  long percent;
-  if (ZIP_LFILE_COMPRESSIONMETHOD(zmap + lf) == kZipCompressionNone) {
-    return "n/a";
-  } else {
-    percent = lround(100 - (double)GetZipLfileCompressedSize(zmap + lf) /
-                               GetZipLfileUncompressedSize(zmap + lf) * 100);
-    sprintf(rb, "%ld%%", MIN(999, MAX(-999, percent)));
-    return rb;
-  }
-}
-
-static int GetDecimalWidth(int x) {
-  int w = x ? ceil(log10(x)) : 1;
-  return w + (w - 1) / 3;
-}
-
-static int GetOctalWidth(int x) {
-  return !x ? 1 : x < 8 ? 2 : 1 + bsr(x) / 3;
 }
 
 static void RecordNetworkOrigin(void) {
@@ -3520,279 +3963,6 @@ static void RecordNetworkOrigin(void) {
   }
 }
 
-static const char *MergeNames(const char *a, const char *b) {
-  return FreeLater(xasprintf("%s.ru_utime", a));
-}
-
-static void AppendLong1(const char *a, long x) {
-  if (x) Append("%s: %ld\r\n", a, x);
-}
-
-static void AppendLong2(const char *a, const char *b, long x) {
-  if (x) Append("%s.%s: %ld\r\n", a, b, x);
-}
-
-static void AppendTimeval(const char *a, struct timeval *tv) {
-  AppendLong2(a, "tv_sec", tv->tv_sec);
-  AppendLong2(a, "tv_usec", tv->tv_usec);
-}
-
-static void AppendRusage(const char *a, struct rusage *ru) {
-  AppendTimeval(MergeNames(a, "ru_utime"), &ru->ru_utime);
-  AppendTimeval(MergeNames(a, "ru_stime"), &ru->ru_stime);
-  AppendLong2(a, "ru_maxrss", ru->ru_maxrss);
-  AppendLong2(a, "ru_ixrss", ru->ru_ixrss);
-  AppendLong2(a, "ru_idrss", ru->ru_idrss);
-  AppendLong2(a, "ru_isrss", ru->ru_isrss);
-  AppendLong2(a, "ru_minflt", ru->ru_minflt);
-  AppendLong2(a, "ru_majflt", ru->ru_majflt);
-  AppendLong2(a, "ru_nswap", ru->ru_nswap);
-  AppendLong2(a, "ru_inblock", ru->ru_inblock);
-  AppendLong2(a, "ru_oublock", ru->ru_oublock);
-  AppendLong2(a, "ru_msgsnd", ru->ru_msgsnd);
-  AppendLong2(a, "ru_msgrcv", ru->ru_msgrcv);
-  AppendLong2(a, "ru_nsignals", ru->ru_nsignals);
-  AppendLong2(a, "ru_nvcsw", ru->ru_nvcsw);
-  AppendLong2(a, "ru_nivcsw", ru->ru_nivcsw);
-}
-
-char *ServeStatusz(void) {
-  char *p;
-  if (msg.method != kHttpGet && msg.method != kHttpHead) return BadMethod();
-  AppendLong1("pid", getpid());
-  AppendLong1("ppid", getppid());
-  AppendLong1("now", nowl());
-  AppendLong1("nowish", shared->nowish);
-  AppendLong1("heartless", heartless);
-  AppendLong1("gmtoff", gmtoff);
-  AppendLong1("CLK_TCK", CLK_TCK);
-  AppendLong1("startserver", startserver);
-  AppendLong1("lastmeltdown", shared->lastmeltdown);
-  AppendLong1("workers", shared->workers);
-  AppendLong1("assets.n", assets.n);
-  AppendLong1("accepterrors", shared->accepterrors);
-  AppendLong1("acceptinterrupts", shared->acceptinterrupts);
-  AppendLong1("acceptresets", shared->acceptresets);
-  AppendLong1("badlengths", shared->badlengths);
-  AppendLong1("badmessages", shared->badmessages);
-  AppendLong1("badmethods", shared->badmethods);
-  AppendLong1("badranges", shared->badranges);
-  AppendLong1("closeerrors", shared->closeerrors);
-  AppendLong1("compressedresponses", shared->compressedresponses);
-  AppendLong1("connectionshandled", shared->connectionshandled);
-  AppendLong1("connectsrefused", shared->connectsrefused);
-  AppendLong1("continues", shared->continues);
-  AppendLong1("decompressedresponses", shared->decompressedresponses);
-  AppendLong1("deflates", shared->deflates);
-  AppendLong1("dropped", shared->dropped);
-  AppendLong1("dynamicrequests", shared->dynamicrequests);
-  AppendLong1("emfiles", shared->emfiles);
-  AppendLong1("enetdowns", shared->enetdowns);
-  AppendLong1("enfiles", shared->enfiles);
-  AppendLong1("enobufs", shared->enobufs);
-  AppendLong1("enomems", shared->enomems);
-  AppendLong1("enonets", shared->enonets);
-  AppendLong1("errors", shared->errors);
-  AppendLong1("expectsrefused", shared->expectsrefused);
-  AppendLong1("failedchildren", shared->failedchildren);
-  AppendLong1("forbiddens", shared->forbiddens);
-  AppendLong1("forkerrors", shared->forkerrors);
-  AppendLong1("frags", shared->frags);
-  AppendLong1("fumbles", shared->fumbles);
-  AppendLong1("http09", shared->http09);
-  AppendLong1("http10", shared->http10);
-  AppendLong1("http11", shared->http11);
-  AppendLong1("http12", shared->http12);
-  AppendLong1("hugepayloads", shared->hugepayloads);
-  AppendLong1("identityresponses", shared->identityresponses);
-  AppendLong1("inflates", shared->inflates);
-  AppendLong1("listingrequests", shared->listingrequests);
-  AppendLong1("loops", shared->loops);
-  AppendLong1("mapfails", shared->mapfails);
-  AppendLong1("maps", shared->maps);
-  AppendLong1("meltdowns", shared->meltdowns);
-  AppendLong1("messageshandled", shared->messageshandled);
-  AppendLong1("missinglengths", shared->missinglengths);
-  AppendLong1("netafrinic", shared->netafrinic);
-  AppendLong1("netanonymous", shared->netanonymous);
-  AppendLong1("netapnic", shared->netapnic);
-  AppendLong1("netapple", shared->netapple);
-  AppendLong1("netarin", shared->netarin);
-  AppendLong1("netatt", shared->netatt);
-  AppendLong1("netcogent", shared->netcogent);
-  AppendLong1("netcomcast", shared->netcomcast);
-  AppendLong1("netdod", shared->netdod);
-  AppendLong1("netford", shared->netford);
-  AppendLong1("netlacnic", shared->netlacnic);
-  AppendLong1("netloopback", shared->netloopback);
-  AppendLong1("netother", shared->netother);
-  AppendLong1("netprivate", shared->netprivate);
-  AppendLong1("netprudential", shared->netprudential);
-  AppendLong1("netripe", shared->netripe);
-  AppendLong1("nettestnet", shared->nettestnet);
-  AppendLong1("netusps", shared->netusps);
-  AppendLong1("notfounds", shared->notfounds);
-  AppendLong1("notmodifieds", shared->notmodifieds);
-  AppendLong1("openfails", shared->openfails);
-  AppendLong1("partialresponses", shared->partialresponses);
-  AppendLong1("payloaddisconnects", shared->payloaddisconnects);
-  AppendLong1("pipelinedrequests", shared->pipelinedrequests);
-  AppendLong1("precompressedresponses", shared->precompressedresponses);
-  AppendLong1("readerrors", shared->readerrors);
-  AppendLong1("readinterrupts", shared->readinterrupts);
-  AppendLong1("readresets", shared->readresets);
-  AppendLong1("readtimeouts", shared->readtimeouts);
-  AppendLong1("redirects", shared->redirects);
-  AppendLong1("reloads", shared->reloads);
-  AppendLong1("rewrites", shared->rewrites);
-  AppendLong1("serveroptions", shared->serveroptions);
-  AppendLong1("shutdowns", shared->shutdowns);
-  AppendLong1("slowloris", shared->slowloris);
-  AppendLong1("slurps", shared->slurps);
-  AppendLong1("statfails", shared->statfails);
-  AppendLong1("staticrequests", shared->staticrequests);
-  AppendLong1("stats", shared->stats);
-  AppendLong1("statuszrequests", shared->statuszrequests);
-  AppendLong1("synchronizationfailures", shared->synchronizationfailures);
-  AppendLong1("terminatedchildren", shared->terminatedchildren);
-  AppendLong1("thiscorruption", shared->thiscorruption);
-  AppendLong1("transfersrefused", shared->transfersrefused);
-  AppendLong1("urisrefused", shared->urisrefused);
-  AppendLong1("verifies", shared->verifies);
-  AppendLong1("writeerrors", shared->writeerrors);
-  AppendLong1("writeinterruputs", shared->writeinterruputs);
-  AppendLong1("writeresets", shared->writeresets);
-  AppendLong1("writetimeouts", shared->writetimeouts);
-  AppendRusage("server", &shared->server);
-  AppendRusage("children", &shared->children);
-  p = SetStatus(200, "OK");
-  p = AppendContentType(p, "text/plain");
-  p = AppendCache(p, 0);
-  return CommitOutput(p);
-}
-
-char *ServeListing(void) {
-  long x;
-  ldiv_t y;
-  int w[3];
-  struct tm tm;
-  const char *and;
-  int64_t lastmod;
-  uint64_t cf, lf;
-  struct rusage ru;
-  char *p, *q, *path;
-  char rb[8], tb[64], *rp[6];
-  size_t i, n, pathlen, rn[6];
-  if (msg.method != kHttpGet && msg.method != kHttpHead) return BadMethod();
-  Append("\
-<!doctype html>\r\n\
-<meta charset=\"utf-8\">\r\n\
-<title>redbean zip listing</title>\r\n\
-<style>\r\n\
-html { color: #111; font-family: sans-serif; }\r\n\
-a { text-decoration: none; }\r\n\
-a:hover { color: #00e; border-bottom: 1px solid #ccc; }\r\n\
-img { vertical-align: middle; }\r\n\
-footer { color: #555; font-size: 10pt; }\r\n\
-td { padding-right: 3em; }\r\n\
-</style>\r\n\
-<header><h1>\r\n");
-  AppendLogo();
-  rp[0] = EscapeHtml(brand, -1, &rn[0]);
-  AppendData(rp[0], rn[0]);
-  free(rp[0]);
-  Append("</h1><hr></header><pre>\r\n");
-  memset(w, 0, sizeof(w));
-  n = GetZipCdirRecords(cdir);
-  for (cf = GetZipCdirOffset(cdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
-    CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zmap + cf));
-    lf = GetZipCfileOffset(zmap + cf);
-    path = GetAssetPath(cf, &pathlen);
-    if (!IsHiddenPath(path)) {
-      w[0] = min(80, max(w[0], strwidth(path, 0) + 2));
-      w[1] = max(w[1], GetOctalWidth(GetZipCfileMode(zmap + cf)));
-      w[2] = max(w[2], GetDecimalWidth(GetZipLfileUncompressedSize(zmap + lf)));
-    }
-    free(path);
-  }
-  n = GetZipCdirRecords(cdir);
-  for (cf = GetZipCdirOffset(cdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
-    CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zmap + cf));
-    lf = GetZipCfileOffset(zmap + cf);
-    path = GetAssetPath(cf, &pathlen);
-    if (!IsHiddenPath(path)) {
-      rp[0] = VisualizeControlCodes(path, pathlen, &rn[0]);
-      rp[1] = EscapePath(path, pathlen, &rn[1]);
-      rp[2] = EscapeHtml(rp[1], rn[1], &rn[2]);
-      rp[3] = VisualizeControlCodes(ZIP_CFILE_COMMENT(zmap + cf),
-                                    strnlen(ZIP_CFILE_COMMENT(zmap + cf),
-                                            ZIP_CFILE_COMMENTSIZE(zmap + cf)),
-                                    &rn[3]);
-      rp[4] = EscapeHtml(rp[0], rn[0], &rn[4]);
-      rp[5] = EscapeHtml(rp[3], rn[3], &rn[0]);
-      lastmod = GetZipCfileLastModified(zmap + cf);
-      localtime_r(&lastmod, &tm);
-      strftime(tb, sizeof(tb), "%Y-%m-%d %H:%M:%S %Z", &tm);
-      if (IsCompressionMethodSupported(
-              ZIP_LFILE_COMPRESSIONMETHOD(zmap + lf)) &&
-          IsAcceptablePath(path, pathlen)) {
-        Append("<a href=\"%.*s\">%-*.*s</a> %s  %0*o %4s  %,*ld  %'s\r\n",
-               rn[2], rp[2], w[0], rn[4], rp[4], tb, w[1],
-               GetZipCfileMode(zmap + cf), DescribeCompressionRatio(rb, lf),
-               w[2], GetZipLfileUncompressedSize(zmap + lf), rp[5]);
-      } else {
-        Append("%-*.*s %s  %0*o %4s  %,*ld  %'s\r\n", w[0], rn[4], rp[4], tb,
-               w[1], GetZipCfileMode(zmap + cf),
-               DescribeCompressionRatio(rb, lf), w[2],
-               GetZipLfileUncompressedSize(zmap + lf), rp[5]);
-      }
-      free(rp[5]);
-      free(rp[4]);
-      free(rp[3]);
-      free(rp[2]);
-      free(rp[1]);
-      free(rp[0]);
-    }
-    free(path);
-  }
-  Append("</pre><footer><hr>\r\n");
-  Append("<table border=\"0\"><tr><td valign=\"top\">\r\n");
-  Append("<a href=\"/statusz\">/statusz</a> says your redbean<br>\r\n");
-  AppendResourceReport(&shared->children, "<br>\r\n");
-  Append("<td valign=\"top\">\r\n");
-  and = "";
-  x = nowl() - startserver;
-  y = ldiv(x, 24L * 60 * 60);
-  if (y.quot) {
-    Append("%,ld day%s ", y.quot, y.quot == 1 ? "" : "s");
-    and = "and ";
-  }
-  y = ldiv(y.rem, 60 * 60);
-  if (y.quot) {
-    Append("%,ld hour%s ", y.quot, y.quot == 1 ? "" : "s");
-    and = "and ";
-  }
-  y = ldiv(y.rem, 60);
-  if (y.quot) {
-    Append("%,ld minute%s ", y.quot, y.quot == 1 ? "" : "s");
-    and = "and ";
-  }
-  Append("%s%,ld second%s of operation<br>\r\n", and, y.rem,
-         y.rem == 1 ? "" : "s");
-  x = shared->messageshandled;
-  Append("%,ld message%s handled<br>\r\n", x, x == 1 ? "" : "s");
-  x = shared->connectionshandled;
-  Append("%,ld connection%s handled<br>\r\n", x, x == 1 ? "" : "s");
-  x = shared->workers;
-  Append("%,ld connection%s active<br>\r\n", x, x == 1 ? "" : "s");
-  Append("</table>\r\n");
-  Append("</footer>\r\n");
-  p = SetStatus(200, "OK");
-  p = AppendContentType(p, "text/html");
-  p = AppendCache(p, 0);
-  return CommitOutput(p);
-}
-
 char *ServeServerOptions(void) {
   char *p;
   p = SetStatus(200, "OK");
@@ -3805,7 +3975,6 @@ char *ServeServerOptions(void) {
 #endif
   return p;
 }
-
 static bool HasAtMostThisElement(int h, const char *s) {
   size_t i, n;
   struct HttpRequestHeader *x;
@@ -3917,91 +4086,17 @@ static void ParseRequestParameters(void) {
   FreeLater(url.params.p);
 }
 
-static char *RedirectSlash(void) {
-  size_t n;
-  char *p, *e;
-  if (url.path.n && url.path.p[url.path.n - 1] != '/') {
-    LockInc(&shared->redirects);
-    p = SetStatus(307, "Temporary Redirect");
-    p = stpcpy(p, "Location: ");
-    e = EscapePath(url.path.p, url.path.n, &n);
-    p = mempcpy(p, e, n);
-    p = stpcpy(p, "/\r\n");
-    free(e);
-    return p;
+static char *OnHttpRequest(void) {
+  effectivepath.p = url.path.p;
+  effectivepath.n = url.path.n;
+  lua_getglobal(L, "OnHttpRequest");
+  if (lua_pcall(L, 0, 0, 0) == LUA_OK) {
+    return CommitOutput(GetLuaResponse());
   } else {
-    LockInc(&shared->loops);
-    return SetStatus(508, "Loop Detected");
+    WARNF("%s", lua_tostring(L, -1));
+    lua_pop(L, 1);
+    return ServeError(500, "Internal Server Error");
   }
-}
-
-static char *TryPath(const char *, size_t);
-static char *TryIndex(const char *path, size_t pathlen) {
-  size_t i, n;
-  char *p, *q;
-  p = NULL;
-  for (i = 0; !p && i < ARRAYLEN(kIndexPaths); ++i) {
-    q = MergePaths(path, pathlen, kIndexPaths[i], strlen(kIndexPaths[i]), &n);
-    p = TryPath(q, n);
-    free(q);
-  }
-  return p;
-}
-
-static char *TryPath(const char *path, size_t pathlen) {
-  int m;
-  long r;
-  char *p;
-  struct Asset *a;
-  DEBUGF("TryPath(%`'.*s)", pathlen, path);
-  if ((a = GetAsset(path, pathlen))) {
-    if ((m = GetMode(a)) & 0004) {
-      if (S_ISDIR(m)) {
-        if (path[pathlen - 1] == '/') {
-          if ((p = TryIndex(path, pathlen))) {
-            return p;
-          } else {
-            LockInc(&shared->forbiddens);
-            LOGF("directory %`'.*s lacks index page", pathlen, path);
-            return ServeError(403, "Forbidden");
-          }
-        } else {
-          return RedirectSlash();
-        }
-      } else {
-        return HandleAsset(a, path, pathlen);
-      }
-    } else {
-      LockInc(&shared->forbiddens);
-      LOGF("asset %`'.*s %#o isn't readable", pathlen, path, m);
-      return ServeError(403, "Forbidden");
-    }
-  } else if ((r = FindRedirect(path, pathlen)) != -1) {
-    return HandleRedirect(redirects.p + r);
-  } else {
-    return NULL;
-  }
-}
-
-static char *TryHost(const char *host, size_t hostlen) {
-  size_t hn;
-  char *hp, *p;
-  hn = 1 + hostlen + url.path.n;
-  hp = FreeLater(xmalloc(3 + 1 + hn));
-  hp[0] = '/';
-  mempcpy(mempcpy(hp + 1, host, hostlen), url.path.p, url.path.n);
-  if ((p = TryPath(hp, hn))) return p;
-  if (ParseIp(host, hostlen) == -1) {
-    if (hostlen > 4 && !memcmp(host, "www.", 4)) {
-      mempcpy(mempcpy(hp + 1, host + 4, hostlen - 4), url.path.p, url.path.n);
-      if ((p = TryPath(hp, hn - 4))) return p;
-    } else {
-      mempcpy(mempcpy(mempcpy(hp + 1, "www.", 4), host, hostlen), url.path.p,
-              url.path.n);
-      if ((p = TryPath(hp, hn + 4))) return p;
-    }
-  }
-  return NULL;
 }
 
 static char *HandleRequest(void) {
@@ -4051,22 +4146,8 @@ static char *HandleRequest(void) {
        FreeLater(EncodeUrl(&url, 0)), HeaderLength(kHttpReferer),
        HeaderData(kHttpReferer), HeaderLength(kHttpUserAgent),
        HeaderData(kHttpUserAgent));
-  if (url.host.n && (p = TryHost(url.host.p, url.host.n))) {
-    return p;
-  }
-  if (SlicesEqual(url.path.p, url.path.n, "/", 1)) {
-    if ((p = TryIndex("/", 1))) return p;
-    LockInc(&shared->listingrequests);
-    return ServeListing();
-  } else if ((p = TryPath(url.path.p, url.path.n))) {
-    return p;
-  } else if (SlicesEqual(url.path.p, url.path.n, "/statusz", 8)) {
-    LockInc(&shared->statuszrequests);
-    return ServeStatusz();
-  } else {
-    LockInc(&shared->notfounds);
-    return ServeError(404, "Not Found");
-  }
+  if (hasluaglobalhandler) return OnHttpRequest();
+  return Route(url.host.p, url.host.n, url.path.p, url.path.n);
 }
 
 static bool HandleMessage(void) {
@@ -4153,11 +4234,13 @@ static bool HandleMessage(void) {
 
 static void InitRequest(void) {
   frags = 0;
+  gzipped = 0;
+  branded = 0;
+  content = 0;
   msgsize = 0;
+  loops.n = 0;
   outbuf.n = 0;
-  content = NULL;
-  gzipped = false;
-  branded = false;
+  luaheaderp = 0;
   contentlength = 0;
   InitHttpRequest(&msg);
 }
@@ -4269,9 +4352,6 @@ static void HandleConnection(void) {
     if (uniprocess) {
       pid = -1;
       connectionclose = true;
-    } else if (warmups) {
-      --warmups;
-      pid = -1;
     } else {
       switch ((pid = fork())) {
         case 0:
@@ -4445,7 +4525,6 @@ void RedBean(int argc, char *argv[], const char *prog) {
   hdrbuf.p = xvalloc(hdrbuf.n);
   inbuf.n = 64 * 1024;
   inbuf.p = xvalloc(inbuf.n);
-  SendWarmupRequests();
   while (!terminated) {
     if (zombied) {
       ReapZombies();

@@ -72,13 +72,12 @@ o/$(MODE)/tool/net/redbean.com.dbg:				\
 o/$(MODE)/tool/net/redbean.com:					\
 		o/$(MODE)/tool/net/redbean.com.dbg		\
 		tool/net/net.mk					\
-		tool/net/favicon.ico				\
-		tool/net/redbean.png				\
 		tool/net/.init.lua				\
-		tool/net/.reload.lua
+		tool/net/favicon.ico				\
+		tool/net/redbean.png
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.ape bs=64 count=11 conv=notrunc 2>/dev/null
-	@$(COMPILE) -AZIP -T$@ zip -qj $@ o/$(MODE)/tool/net/.ape tool/net/.init.lua tool/net/.reload.lua tool/net/favicon.ico tool/net/redbean.png
+	@$(COMPILE) -AZIP -T$@ zip -qj $@ o/$(MODE)/tool/net/.ape tool/net/.init.lua tool/net/favicon.ico tool/net/redbean.png
 
 o/$(MODE)/tool/net/redbean-demo.com.dbg:			\
 		o/$(MODE)/tool/net/redbean.com.dbg
@@ -87,17 +86,18 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:			\
 o/$(MODE)/tool/net/redbean-demo.com:				\
 		o/$(MODE)/tool/net/redbean-demo.com.dbg		\
 		tool/net/net.mk					\
-		tool/net/.init.lua				\
-		tool/net/.reload.lua				\
-		tool/net/404.html				\
 		tool/net/favicon.ico				\
 		tool/net/redbean.png				\
-		tool/net/index.html				\
-		tool/net/redbean.css				\
-		tool/net/redbean.lua				\
-		tool/net/redbean-form.lua			\
-		tool/net/redbean-xhr.lua			\
-		tool/net/seekable.txt				\
+		tool/net/demo/.init.lua				\
+		tool/net/demo/.reload.lua			\
+		tool/net/demo/404.html				\
+		tool/net/demo/hello.lua				\
+		tool/net/demo/index.html			\
+		tool/net/demo/redbean.css			\
+		tool/net/demo/redbean.lua			\
+		tool/net/demo/redbean-form.lua			\
+		tool/net/demo/redbean-xhr.lua			\
+		tool/net/demo/seekable.txt			\
 		tool/net/redbean.c				\
 		net/http/parsehttprequest.c			\
 		net/http/parseurl.c				\
@@ -105,18 +105,20 @@ o/$(MODE)/tool/net/redbean-demo.com:				\
 		test/net/http/parsehttprequest_test.c		\
 		test/net/http/parseurl_test.c
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.ape bs=64 count=11 conv=notrunc 2>/dev/null
-	@$(COMPILE) -AZIP -T$@ zip -qj  $@ o/$(MODE)/tool/net/.ape tool/net/.init.lua tool/net/.reload.lua tool/net/redbean.lua tool/net/404.html tool/net/favicon.ico tool/net/redbean.png tool/net/redbean-form.lua tool/net/redbean-xhr.lua
-	@$(COMPILE) -AZIP -T$@ zip -qj0 $@ tool/net/seekable.txt
-	@$(COMPILE) -AZIP -T$@ zip -q   $@ tool/net tool/net/index.html tool/net/redbean.css tool/net/redbean.c net/http/parsehttprequest.c net/http/parseurl.c net/http/encodeurl.c test/net/http/parsehttprequest_test.c test/net/http/parseurl_test.c
+	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/net/.redbean-demo
+	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.redbean-demo/.ape bs=64 count=11 conv=notrunc 2>/dev/null
+	@$(COMPILE) -AZIP -T$@ zip -qj  $@ o/$(MODE)/tool/net/.redbean-demo/.ape tool/net/demo/.init.lua tool/net/demo/.reload.lua tool/net/demo/hello.lua tool/net/demo/redbean.lua tool/net/demo/404.html tool/net/favicon.ico tool/net/redbean.png tool/net/demo/redbean-form.lua tool/net/demo/redbean-xhr.lua
+	@$(COMPILE) -AZIP -T$@ zip -qj0 $@ tool/net/demo/seekable.txt
+	@$(COMPILE) -AZIP -T$@ zip -q   $@ tool/net/ tool/net/demo/ tool/net/demo/index.html tool/net/demo/redbean.css tool/net/redbean.c net/http/parsehttprequest.c net/http/parseurl.c net/http/encodeurl.c test/net/http/parsehttprequest_test.c test/net/http/parseurl_test.c
 
 o/$(MODE)/tool/net/redbean-static.com:				\
 		o/$(MODE)/tool/net/redbean-static.com.dbg	\
 		tool/net/favicon.ico				\
 		tool/net/redbean.png
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.ape bs=64 count=11 conv=notrunc 2>/dev/null
-	@$(COMPILE) -AZIP -T$@ zip -qj $@ o/$(MODE)/tool/net/.ape tool/net/favicon.ico tool/net/redbean.png
+	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/net/.redbean-static
+	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.redbean-static/.ape bs=64 count=11 conv=notrunc 2>/dev/null
+	@$(COMPILE) -AZIP -T$@ zip -qj $@ o/$(MODE)/tool/net/.redbean-static/.ape tool/net/favicon.ico tool/net/redbean.png
 
 o/$(MODE)/tool/net/redbean-static.com.dbg:			\
 		$(TOOL_NET_DEPS)				\
