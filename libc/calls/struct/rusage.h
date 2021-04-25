@@ -8,12 +8,12 @@ struct rusage {
     struct {
       struct timeval ru_utime; /* user CPU time used */
       struct timeval ru_stime; /* system CPU time used */
-      int64_t ru_maxrss;       /* maximum resident set size */
-      int64_t ru_ixrss;        /* integral shared memory size */
-      int64_t ru_idrss;        /* integral unshared data size */
-      int64_t ru_isrss;        /* integral unshared stack size */
-      int64_t ru_minflt;       /* page reclaims (soft page faults) */
-      int64_t ru_majflt;       /* page faults (hard page faults) */
+      int64_t ru_maxrss;       /* maximum resident set size in (kb) */
+      int64_t ru_ixrss;        /* shared memory size (integral kb CLK_TCK) */
+      int64_t ru_idrss;        /* unshared data size (integral kb CLK_TCK) */
+      int64_t ru_isrss;        /* unshared stack size (integral kb CLK_TCK) */
+      int64_t ru_minflt;       /* page reclaims */
+      int64_t ru_majflt;       /* page faults */
       int64_t ru_nswap;        /* swaps */
       int64_t ru_inblock;      /* block input operations */
       int64_t ru_oublock;      /* block output operations */

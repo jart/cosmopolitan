@@ -35,7 +35,7 @@ extern uint8_t __zip_end[];                         /* αpε */
 
 void mcount(void);
 unsigned long getauxval(unsigned long);
-void *mapanon(size_t) vallocesque attributeallocsize((1));
+void *mapanon(size_t) attributeallocsize((1));
 int setjmp(jmp_buf) libcesque returnstwice paramsnonnull();
 void longjmp(jmp_buf, int) libcesque wontreturn paramsnonnull();
 int _setjmp(jmp_buf) libcesque returnstwice paramsnonnull();
@@ -55,7 +55,7 @@ int clearenv(void);
 void fpreset(void);
 int issetugid(void);
 void *mmap(void *, uint64_t, int32_t, int32_t, int32_t, int64_t);
-void *mremap(void *, uint64_t, uint64_t, int32_t, void *);
+void *mremap(void *, size_t, size_t, int, ...);
 int munmap(void *, uint64_t);
 int mprotect(void *, uint64_t, int) privileged;
 int msync(void *, size_t, int);
@@ -87,6 +87,8 @@ void _savexmm(void *);
 void _weakfree(void *);
 void free_s(void *) paramsnonnull() libcesque;
 int close_s(int *) paramsnonnull() libcesque;
+int OpenExecutable(void);
+void ftrace_install(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -30,34 +30,26 @@
  */
 
 TEST(strerror, e2big) {
-  if (IsTiny()) return;
   EXPECT_STARTSWITH("E2BIG", strerror(E2BIG));
 }
 
 TEST(strerror, enosys) {
-  if (IsTiny()) return;
   EXPECT_STARTSWITH("ENOSYS", strerror(ENOSYS));
 }
 
 TEST(strerror, einval) {
-  if (IsTiny()) return;
   EXPECT_STARTSWITH("EINVAL", strerror(EINVAL));
 }
 
 TEST(strerror, symbolizingTheseNumbersAsErrorsIsHeresyInUnixStyle) {
-  EXPECT_STARTSWITH("E?", strerror(0));
-  EXPECT_STARTSWITH("E?", strerror(-1));
+  EXPECT_STARTSWITH("EUNKNOWN", strerror(0));
+  EXPECT_STARTSWITH("EUNKNOWN", strerror(-1));
 }
 
 TEST(strerror, enotconn_orLinkerIsntUsingLocaleC_orCodeIsOutOfSync) {
-  if (IsTiny()) return;
   EXPECT_STARTSWITH("ENOTCONN", strerror(ENOTCONN));
 }
 
 TEST(strerror, exfull_orLinkerIsntUsingLocaleC_orCodeIsOutOfSync) {
-  if (IsLinux() && !IsTiny()) {
-    EXPECT_STARTSWITH("EXFULL", strerror(EXFULL));
-  } else {
-    EXPECT_STARTSWITH("E?", strerror(EXFULL));
-  }
+  EXPECT_STARTSWITH("ETXTBSY", strerror(ETXTBSY));
 }

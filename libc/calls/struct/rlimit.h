@@ -3,8 +3,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct rlimit {
-  int64_t rlim_cur;
-  int64_t rlim_max;
+  uint64_t rlim_cur; /* current (soft) limit in bytes */
+  uint64_t rlim_max; /* maximum limit in bytes */
 };
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

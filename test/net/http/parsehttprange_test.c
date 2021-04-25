@@ -20,11 +20,11 @@
 #include "libc/testlib/testlib.h"
 #include "net/http/http.h"
 
-TEST(ParseHttpRange, testEmptyHack) {
+TEST(ParseHttpRange, testEmptyHack_refusedBecauseItWontEncodeInContentRange) {
   long start, length;
   const char *s = "bytes=-0";
-  EXPECT_TRUE(ParseHttpRange(s, strlen(s), 100, &start, &length));
-  EXPECT_EQ(100, start);
+  EXPECT_FALSE(ParseHttpRange(s, strlen(s), 100, &start, &length));
+  EXPECT_EQ(0, start);
   EXPECT_EQ(0, length);
 }
 
@@ -34,6 +34,22 @@ TEST(ParseHttpRange, testEmptyRange_isntEmpty) {
   EXPECT_TRUE(ParseHttpRange(s, strlen(s), 100, &start, &length));
   EXPECT_EQ(0, start);
   EXPECT_EQ(1, length);
+}
+
+TEST(ParseHttpRange, testEmptyRangeOfOneByteFile_itWorks) {
+  long start, length;
+  const char *s = "bytes=0-0";
+  EXPECT_TRUE(ParseHttpRange(s, strlen(s), 1, &start, &length));
+  EXPECT_EQ(0, start);
+  EXPECT_EQ(1, length);
+}
+
+TEST(ParseHttpRange, testEmptyRangeOfEmptyFile_outOfRange) {
+  long start, length;
+  const char *s = "bytes=0-0";
+  EXPECT_FALSE(ParseHttpRange(s, strlen(s), 0, &start, &length));
+  EXPECT_EQ(0, start);
+  EXPECT_EQ(0, length);
 }
 
 TEST(ParseHttpRange, testInclusiveIndexing) {
@@ -81,7 +97,7 @@ TEST(ParseHttpRange, testOutOfRange) {
   const char *s = "bytes=0-100";
   EXPECT_FALSE(ParseHttpRange(s, strlen(s), 100, &start, &length));
   EXPECT_EQ(0, start);
-  EXPECT_EQ(101, length);
+  EXPECT_EQ(0, length);
 }
 
 TEST(ParseHttpRange, testInvalidRange) {
@@ -104,6 +120,14 @@ TEST(ParseHttpRange, testOverflow_duringAddition_setsErrorRange) {
   long start, length;
   const char *s = "bytes=4611686018427387904-4611686018427387915";
   EXPECT_FALSE(ParseHttpRange(s, strlen(s), 100, &start, &length));
-  EXPECT_EQ(4611686018427387904, start);
-  EXPECT_EQ(12, length);
+  EXPECT_EQ(0, start);
+  EXPECT_EQ(0, length);
+}
+
+TEST(ParseHttpRange, testMultipartRange_notImplemented) {
+  long start, length;
+  const char *s = "bytes=0-100,200-300";
+  EXPECT_FALSE(ParseHttpRange(s, strlen(s), 100, &start, &length));
+  EXPECT_EQ(0, start);
+  EXPECT_EQ(0, length);
 }

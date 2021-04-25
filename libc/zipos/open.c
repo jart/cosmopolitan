@@ -87,20 +87,20 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
   int fd;
   size_t lf;
   struct ZiposHandle *h;
-  lf = ZIP_CFILE_OFFSET(zipos->map + cf);
+  lf = GetZipCfileOffset(zipos->map + cf);
   assert(ZIP_LFILE_MAGIC(zipos->map + lf) == kZipLfileHdrMagic);
   assert(ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf) == kZipCompressionNone ||
          ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf) ==
              kZipCompressionDeflate);
   if (!(h = calloc(1, sizeof(*h)))) return -1;
   h->cfile = cf;
-  if ((h->size = ZIP_LFILE_UNCOMPRESSEDSIZE(zipos->map + lf))) {
+  if ((h->size = GetZipLfileUncompressedSize(zipos->map + lf))) {
     if (ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf)) {
-      assert(ZIP_LFILE_COMPRESSEDSIZE(zipos->map + lf));
+      assert(GetZipLfileCompressedSize(zipos->map + lf));
       if ((h->freeme = malloc(h->size)) &&
           (IsTiny() ? __zipos_inflate_tiny : __zipos_inflate_fast)(
               h, ZIP_LFILE_CONTENT(zipos->map + lf),
-              ZIP_LFILE_COMPRESSEDSIZE(zipos->map + lf)) != -1) {
+              GetZipLfileCompressedSize(zipos->map + lf)) != -1) {
         h->mem = h->freeme;
       }
     } else {

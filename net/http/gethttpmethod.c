@@ -20,13 +20,13 @@
 #include "net/http/http.h"
 
 /**
- * Returns small number for HTTP method, or -1 if not found.
+ * Returns small number for HTTP method, or 0 if not found.
  */
 int GetHttpMethod(const char *str, size_t len) {
   const struct HttpMethodSlot *slot;
   if ((slot = LookupHttpMethod(str, len))) {
     return slot->code;
   } else {
-    return -1;
+    return 0;
   }
 }

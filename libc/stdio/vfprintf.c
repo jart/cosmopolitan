@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
 #include "libc/stdio/stdio.h"
@@ -26,9 +27,17 @@ struct state {
   int n;
 };
 
-static noinstrument int vfprintfputchar(int c, struct state *st) {
-  st->n++;
-  return fputc(c, st->f);
+static int vfprintfputchar(const char *s, struct state *t, size_t n) {
+  if (n) {
+    if (n == 1 && *s != '\n' && t->f->beg < t->f->size &&
+        t->f->bufmode != _IONBF) {
+      t->f->buf[t->f->beg++] = *s;
+    } else if (!fwrite(s, 1, n, t->f)) {
+      return -1;
+    }
+    t->n += n;
+  }
+  return 0;
 }
 
 int(vfprintf)(FILE *f, const char *fmt, va_list va) {

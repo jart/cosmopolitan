@@ -59,8 +59,9 @@
  */
 void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   struct DirectMap dm;
-  int i, x, n, a, b, f;
+  int i, x, n, m, a, b, f;
   if (!size) return VIP(einval());
+  if (size > 0x0000010000000000ull) return VIP(enomem());
   if (!ALIGNED(off)) return VIP(einval());
   if (!ALIGNED(addr)) return VIP(einval());
   if (!CANONICAL(addr)) return VIP(einval());
@@ -77,6 +78,7 @@ void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
     n = ROUNDUP(size, FRAMESIZE) >> 16;
     for (i = 0; i < _mmi.i; ++i) {
       if (_mmi.p[i].y < x) continue;
+      if (__builtin_add_overflow(_mmi.p[i].y, n, &m)) return VIP(enomem());
       if (_mmi.p[i].x > x + n - 1) break;
       x = _mmi.p[i].y + 1;
     }

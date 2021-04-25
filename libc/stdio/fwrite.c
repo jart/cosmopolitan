@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
@@ -78,12 +79,10 @@ size_t fwrite(const void *data, size_t stride, size_t count, FILE *f) {
   iov[1].iov_base = data;
   iov[1].iov_len = n;
   n += f->beg;
-  if ((rc = writev(f->fd, iov, 2)) == -1) {
+  if (WritevUninterruptible(f->fd, iov, 2) == -1) {
     f->state = errno;
     return 0;
   }
-  m = rc;
-  if (n != m) abort();
   f->beg = 0;
   return count;
 }

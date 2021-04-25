@@ -47,9 +47,10 @@ struct msghdr_bsd {
 };
 
 struct sockaddr_un_bsd {
-  uint8_t sun_len; /* sockaddr len including NUL on freebsd but excluding it on openbsd/xnu */
+  uint8_t sun_len; /* sockaddr len including NUL on freebsd but excluding it on
+                      openbsd/xnu */
   uint8_t sun_family;
-  char    sun_path[108];
+  char sun_path[108];
 };
 
 struct SockFd {
@@ -121,6 +122,7 @@ int sys_socketpair_nt_dgram(int, int, int, int[2]) hidden;
 int sys_socketpair_nt(int, int, int, int[2]) hidden;
 int sys_select_nt(int, fd_set *, fd_set *, fd_set *, struct timeval *) hidden;
 int sys_shutdown_nt(struct Fd *, int) hidden;
+int sys_setsockopt_nt(struct Fd *, int, int, const void *, uint32_t) hidden;
 
 size_t __iovec2nt(struct NtIovec[hasatleast 16], const struct iovec *,
                   size_t) hidden;

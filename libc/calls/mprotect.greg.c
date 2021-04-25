@@ -39,12 +39,12 @@ privileged int mprotect(void *addr, uint64_t len, int prot) {
   int64_t rc;
   uint32_t oldprot;
   if (!IsWindows()) {
-    asm volatile(CFLAG_ASM("syscall")
+    asm volatile(CFLAG_ASM("clc\n\tsyscall")
                  : CFLAG_CONSTRAINT(cf), "=a"(rc)
                  : "1"(__NR_mprotect), "D"(addr), "S"(len), "d"(prot)
                  : "rcx", "r11", "memory", "cc");
     if (cf) {
-      rc = -rc;
+      errno = rc;
       rc = -1;
     } else if (rc > -4096ul) {
       errno = -rc;

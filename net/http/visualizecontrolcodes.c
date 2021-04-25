@@ -20,7 +20,7 @@
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "libc/str/tpenc.h"
-#include "net/http/http.h"
+#include "net/http/escape.h"
 
 /**
  * Filters out control codes from string.
@@ -29,9 +29,13 @@
  * want full blown C string literal escaping, but we don't want things
  * like raw ANSI control codes from untrusted devices in our terminals.
  *
+ * This function also canonicalizes overlong encodings. Therefore it
+ * isn't necessary to say VisualizeControlCodes(Underlong(𝑥))) since
+ * VisualizeControlCodes(𝑥) will do the same thing.
+ *
  * @param data is input value
  * @param size if -1 implies strlen
- * @param out_size if non-NULL receives output length on success
+ * @param out_size if non-NULL receives output length
  * @return allocated NUL-terminated buffer, or NULL w/ errno
  */
 char *VisualizeControlCodes(const char *data, size_t size, size_t *out_size) {
@@ -40,7 +44,7 @@ char *VisualizeControlCodes(const char *data, size_t size, size_t *out_size) {
   unsigned i, n;
   wint_t x, a, b;
   const char *p, *e;
-  if (size == -1) size = strlen(data);
+  if (size == -1) size = data ? strlen(data) : 0;
   if ((r = malloc(size * 6 + 1))) {
     q = r;
     p = data;
@@ -85,9 +89,14 @@ char *VisualizeControlCodes(const char *data, size_t size, size_t *out_size) {
         } while ((w >>= 8));
       }
     }
-    if (out_size) *out_size = q - r;
+    n = q - r;
     *q++ = '\0';
     if ((q = realloc(r, q - r))) r = q;
+  } else {
+    n = 0;
+  }
+  if (out_size) {
+    *out_size = n;
   }
   return r;
 }

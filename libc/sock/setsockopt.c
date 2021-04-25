@@ -33,15 +33,6 @@ static bool setsockopt_polyfill(int *optname) {
   return false;
 }
 
-static textwindows int sys_setsockopt_nt(struct Fd *fd, int level, int optname,
-                                     const void *optval, uint32_t optlen) {
-  if (__sys_setsockopt_nt(fd->handle, level, optname, optval, optlen) != -1) {
-    return 0;
-  } else {
-    return __winsockerr();
-  }
-}
-
 /**
  * Modifies socket settings.
  *

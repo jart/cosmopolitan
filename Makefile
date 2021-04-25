@@ -137,7 +137,6 @@ include libc/testlib/testlib.mk
 include tool/viz/lib/vizlib.mk
 include third_party/lua/lua.mk
 include third_party/quickjs/quickjs.mk
-include examples/examples.mk
 include third_party/lz4cli/lz4cli.mk
 include tool/build/lib/buildlib.mk
 include third_party/chibicc/chibicc.mk
@@ -145,6 +144,7 @@ include third_party/chibicc/test/test.mk
 include tool/build/emucrt/emucrt.mk
 include tool/build/emubin/emubin.mk
 include tool/build/build.mk
+include examples/examples.mk
 include tool/decode/lib/decodelib.mk
 include tool/decode/decode.mk
 include tool/hash/hash.mk

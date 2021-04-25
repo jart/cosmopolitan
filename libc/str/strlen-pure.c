@@ -17,20 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bits/bits.h"
 #include "libc/str/str.h"
 
 static noasan size_t strlen_pure_x64(const char *s, size_t i) {
   uint64_t w;
-  const unsigned char *p;
-  for (;;) {
-    p = (const unsigned char *)s + i;
-    w = (uint64_t)p[7] << 070 | (uint64_t)p[6] << 060 | (uint64_t)p[5] << 050 |
-        (uint64_t)p[4] << 040 | (uint64_t)p[3] << 030 | (uint64_t)p[2] << 020 |
-        (uint64_t)p[1] << 010 | (uint64_t)p[0] << 000;
+  for (;; i += 8) {
+    w = READ64LE(s + i);
     if ((w = ~w & (w - 0x0101010101010101) & 0x8080808080808080)) {
       return i + ((unsigned)__builtin_ctzll(w) >> 3);
-    } else {
-      i += 8;
     }
   }
 }

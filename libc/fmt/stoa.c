@@ -16,9 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
 #include "libc/fmt/fmts.h"
 #include "libc/fmt/internal.h"
+#include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/tinystrlen.internal.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
@@ -26,56 +29,48 @@
 #include "libc/str/utf16.h"
 #include "libc/unicode/unicode.h"
 
-typedef int (*emit_f)(int (*)(long, void *), void *, wint_t);
+typedef int (*out_f)(const char *, void *, size_t);
+typedef int (*emit_f)(out_f, void *, uint64_t);
 
-static noinstrument int __fmt_stoa_byte(int f(long, void *), void *a,
-                                        wint_t c) {
-  return f(c, a);
+static int __fmt_stoa_byte(out_f out, void *a, uint64_t c) {
+  char buf[1] = {c};
+  return out(buf, a, 1);
 }
 
-static noinstrument int __fmt_stoa_word(int f(long, void *), void *a,
-                                        uint64_t w) {
-  do {
-    if (f(w & 0xff, a) == -1) {
-      return -1;
-    }
-  } while ((w >>= 8));
-  return 0;
+static int __fmt_stoa_wide(out_f out, void *a, uint64_t w) {
+  char buf[8];
+  if (!isascii(w)) w = tpenc(w);
+  WRITE64LE(buf, w);
+  return out(buf, a, w ? (bsr(w) >> 3) + 1 : 1);
 }
 
-static noinstrument int __fmt_stoa_wide(int f(long, void *), void *a,
-                                        wint_t c) {
-  if (isascii(c)) {
-    return f(c, a);
+static int __fmt_stoa_bing(out_f out, void *a, uint64_t w) {
+  char buf[8];
+  w = tpenc((*weaken(kCp437))[w & 0xFF]);
+  WRITE64LE(buf, w);
+  return out(buf, a, w ? (bsr(w) >> 3) + 1 : 1);
+}
+
+static int __fmt_stoa_quoted(out_f out, void *a, uint64_t w) {
+  char buf[8];
+  if (isascii(w)) {
+    w = cescapec(w);
   } else {
-    return __fmt_stoa_word(f, a, tpenc(c));
+    w = tpenc(w);
   }
+  WRITE64LE(buf, w);
+  return out(buf, a, w ? (bsr(w) >> 3) + 1 : 1);
 }
 
-static noinstrument int __fmt_stoa_bing(int f(long, void *), void *a,
-                                        wint_t c) {
-  return __fmt_stoa_wide(f, a, (*weaken(kCp437))[c]);
-}
-
-static noinstrument int __fmt_stoa_quoted(int f(long, void *), void *a,
-                                          wint_t c) {
-  if (isascii(c)) {
-    return __fmt_stoa_word(f, a, cescapec(c));
-  } else {
-    return __fmt_stoa_word(f, a, tpenc(c));
-  }
-}
-
-static noinstrument int __fmt_stoa_quote(int out(long, void *), void *arg,
-                                         unsigned flags, char ch,
-                                         unsigned char signbit) {
+static int __fmt_stoa_quote(out_f out, void *arg, unsigned flags, char ch,
+                            unsigned char signbit) {
   if (flags & FLAGS_REPR) {
     if (signbit == 63) {
-      if (out('L', arg) == -1) return -1;
+      if (out("L", arg, 1) == -1) return -1;
     } else if (signbit == 15) {
-      if (out('u', arg) == -1) return -1;
+      if (out("u", arg, 1) == -1) return -1;
     }
-    if (out(ch, arg) == -1) return -1;
+    if (out(&ch, arg, 1) == -1) return -1;
   }
   return 0;
 }
@@ -89,23 +84,25 @@ static noinstrument int __fmt_stoa_quote(int out(long, void *), void *arg,
  *
  * @see __fmt()
  */
-int __fmt_stoa(int out(long, void *), void *arg, void *data,
+int __fmt_stoa(int out(const char *, void *, size_t), void *arg, void *data,
                unsigned long flags, unsigned long precision,
                unsigned long width, unsigned char signbit,
                unsigned char qchar) {
-  char *p;
   wint_t wc;
   unsigned n;
   emit_f emit;
+  char *p, buf[1];
   unsigned w, c, pad;
   bool justdobytes, ignorenul;
 
   p = data;
   if (!p) {
     p = ((flags & FLAGS_REPR) ? "NULL" : "(null)");
-    flags &= ~FLAGS_PRECISION;
-    flags |= FLAGS_NOQUOTE;
     signbit = 0;
+    flags |= FLAGS_NOQUOTE;
+    if (flags & FLAGS_PRECISION) {
+      precision = min(strlen(p), precision);
+    }
   } else {
     if (__fmt_stoa_quote(out, arg, flags, qchar, signbit) == -1) return -1;
   }
@@ -215,7 +212,8 @@ int __fmt_stoa(int out(long, void *), void *arg, void *data,
   }
 
   if (!(flags & FLAGS_NOQUOTE) && (flags & FLAGS_REPR)) {
-    if (out(qchar, arg) == -1) return -1;
+    buf[0] = qchar;
+    if (out(buf, arg, 1) == -1) return -1;
   }
 
   return 0;

@@ -19,9 +19,9 @@
 #include "libc/fmt/fmt.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
-#include "libc/sysv/errfuns.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/inaddr.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Converts internet address string to binary.
@@ -32,16 +32,23 @@
  * @return 1 on success, 0 on src malformed, or -1 w/ errno
  */
 int inet_pton(int af, const char *src, void *dst) {
-  if (af == AF_INET) {
-    unsigned char *p = (unsigned char *)dst;
-    if (sscanf(src, "%hhu.%hhu.%hhu.%hhu", &p[0], &p[1], &p[2], &p[3]) == 4) {
-      return 1;
+  uint8_t *p;
+  int b, c, j;
+  if (af != AF_INET) return eafnosupport();
+  j = 0;
+  p = dst;
+  p[0] = 0;
+  while ((c = *src++)) {
+    if (isdigit(c)) {
+      b = c - '0' + p[j] * 10;
+      p[j] = MIN(255, b);
+      if (b > 255) return 0;
+    } else if (c == '.') {
+      if (++j == 4) return 0;
+      p[j] = 0;
     } else {
-      *(uint32_t *)dst = htonl(INADDR_TESTNET3);
       return 0;
     }
-  } else {
-    *(uint32_t *)dst = htonl(INADDR_TESTNET3);
-    return eafnosupport();
   }
+  return j == 3 ? 1 : 0;
 }

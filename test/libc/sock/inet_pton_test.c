@@ -23,18 +23,46 @@
 #include "libc/testlib/testlib.h"
 
 TEST(inet_pton, testLocalhost) {
-  uint32_t addr;
-  ASSERT_EQ(1, inet_pton(AF_INET, "127.0.0.1", &addr));
-  EXPECT_EQ(htonl(INADDR_LOOPBACK), addr);
+  uint8_t addr[4] = {255, 255, 255, 255};
+  EXPECT_EQ(1, inet_pton(AF_INET, "127.0.0.1", &addr));
+  EXPECT_EQ(127, addr[0]);
+  EXPECT_EQ(0, addr[1]);
+  EXPECT_EQ(0, addr[2]);
+  EXPECT_EQ(1, addr[3]);
 }
 
-TEST(inet_pton, testBadAddresses) {
-  uint32_t addr;
-  ASSERT_EQ(0, inet_pton(AF_INET, "127.0.0", &addr));
-  ASSERT_EQ(0, inet_pton(AF_INET, "256.0.0.1", &addr));
+TEST(inet_pton, testShortAddress_doesntFillFullValue) {
+  uint8_t addr[4] = {255, 255, 255, 255};
+  EXPECT_EQ(0, inet_pton(AF_INET, "127.0.0", &addr));
+  EXPECT_EQ(127, addr[0]);
+  EXPECT_EQ(0, addr[1]);
+  EXPECT_EQ(0, addr[2]);
+  EXPECT_EQ(255, addr[3]);
 }
 
-TEST(inet_pton, testBadFamily) {
-  uint32_t addr = 666;
-  ASSERT_EQ(-1, inet_pton(666, "127.0.0.1", &addr));
+TEST(inet_pton, testOverflow_stopsParsing) {
+  uint8_t addr[4] = {255, 255, 255, 255};
+  EXPECT_EQ(0, inet_pton(AF_INET, "0.300.0", &addr));
+  EXPECT_EQ(0, addr[0]);
+  EXPECT_EQ(255, addr[1]);
+  EXPECT_EQ(255, addr[2]);
+  EXPECT_EQ(255, addr[3]);
+}
+
+TEST(inet_pton, testBadChar_stopsParsing) {
+  uint8_t addr[4] = {255, 255, 255, 255};
+  EXPECT_EQ(0, inet_pton(AF_INET, "127-.0.0", &addr));
+  EXPECT_EQ(127, addr[0]);
+  EXPECT_EQ(255, addr[1]);
+  EXPECT_EQ(255, addr[2]);
+  EXPECT_EQ(255, addr[3]);
+}
+
+TEST(inet_pton, testBadFamily_returnsNegAndChangesNothing) {
+  uint8_t addr[4] = {255, 255, 255, 255};
+  EXPECT_EQ(-1, inet_pton(666, "127.0.0.1", &addr));
+  EXPECT_EQ(255, addr[0]);
+  EXPECT_EQ(255, addr[1]);
+  EXPECT_EQ(255, addr[2]);
+  EXPECT_EQ(255, addr[3]);
 }

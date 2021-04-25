@@ -24,8 +24,8 @@
  */
 uint64_t bitreverse64(uint64_t x) {
   x = bswap_64(x);
-  x = ((x & 0xaaaaaaaaaaaaaaaa) >> 1) | ((x & 0x5555555555555555) << 1);
-  x = ((x & 0xcccccccccccccccc) >> 2) | ((x & 0x3333333333333333) << 2);
-  x = ((x & 0xf0f0f0f0f0f0f0f0) >> 4) | ((x & 0x0f0f0f0f0f0f0f0f) << 4);
+  x = (x & 0xaaaaaaaaaaaaaaaa) >> 1 | (x & 0x5555555555555555) << 1;
+  x = (x & 0xcccccccccccccccc) >> 2 | (x & 0x3333333333333333) << 2;
+  x = (x & 0xf0f0f0f0f0f0f0f0) >> 4 | (x & 0x0f0f0f0f0f0f0f0f) << 4;
   return x;
 }

@@ -53,6 +53,21 @@ $(NET_HTTP_A).pkg:				\
 		$(NET_HTTP_A_OBJS)		\
 		$(foreach x,$(NET_HTTP_A_DIRECTDEPS),$($(x)_A).pkg)
 
+o/$(MODE)/net/http/categorizeip.o		\
+o/$(MODE)/net/http/getipcategoryname.o		\
+o/$(MODE)/net/http/isafrinicip.o		\
+o/$(MODE)/net/http/isanonymousip.o		\
+o/$(MODE)/net/http/isapnicip.o			\
+o/$(MODE)/net/http/isarinip.o			\
+o/$(MODE)/net/http/isdodip.o			\
+o/$(MODE)/net/http/islacnicip.o			\
+o/$(MODE)/net/http/isloopbackip.o		\
+o/$(MODE)/net/http/ismulticastip.o		\
+o/$(MODE)/net/http/isripeip.o			\
+o/$(MODE)/net/http/istestnetip.o:		\
+		OVERRIDE_CFLAGS +=		\
+			-Os
+
 o/$(MODE)/net/http/formathttpdatetime.o:	\
 		OVERRIDE_CFLAGS +=		\
 			-O3

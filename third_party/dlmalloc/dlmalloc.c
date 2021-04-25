@@ -37,9 +37,10 @@ hidden struct MallocParams g_mparams;
  */
 static void *dlmalloc_requires_more_vespene_gas(size_t size) {
   char *p;
-  p = mapanon(size);
-  if (weaken(__asan_poison)) {
-    weaken(__asan_poison)((uintptr_t)p, size, kAsanHeapFree);
+  if ((p = mapanon(size)) != MAP_FAILED) {
+    if (weaken(__asan_poison)) {
+      weaken(__asan_poison)((uintptr_t)p, size, kAsanHeapFree);
+    }
   }
   return p;
 }
@@ -836,7 +837,7 @@ textstartup void dlmalloc_init(void) {
   if (g_mparams.magic == 0) {
     size_t magic;
     size_t psize = PAGESIZE;
-    size_t gsize = FRAMESIZE;
+    size_t gsize = DEFAULT_GRANULARITY;
     /* Sanity-check configuration:
        size_t must be unsigned and as wide as pointer type.
        ints must be at least 4 bytes.

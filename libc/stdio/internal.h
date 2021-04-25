@@ -11,6 +11,7 @@ extern char g_stdinbuf[BUFSIZ];
 extern char g_stdoutbuf[BUFSIZ];
 extern char g_stderrbuf[BUFSIZ];
 
+int __fflush_impl(FILE *) hidden;
 int __fflush_register(FILE *) hidden;
 void __fflush_unregister(FILE *) hidden;
 

@@ -29,26 +29,26 @@
  * @see xasprintf() for a better API
  */
 int(vasprintf)(char **strp, const char *fmt, va_list va) {
-  int wrote;
   char *p;
   size_t size;
-  va_list va2;
+  va_list vb;
+  int wrote, rc = -1;
   if ((*strp = malloc((size = 512)))) {
-    va_copy(va2, va);
+    va_copy(vb, va);
     wrote = (vsnprintf)(*strp, size, fmt, va);
-    if (wrote == -1) return -1;
     if (wrote < size) {
       if ((p = realloc(*strp, wrote + 1))) *strp = p;
-      return wrote;
+      rc = wrote;
     } else {
       size = wrote + 1;
       if ((p = realloc(*strp, size))) {
         *strp = p;
-        wrote = (vsnprintf)(*strp, size, fmt, va2);
+        wrote = (vsnprintf)(*strp, size, fmt, vb);
         assert(wrote == size - 1);
-        return wrote;
+        rc = wrote;
       }
     }
+    va_end(vb);
   }
-  return -1;
+  return rc;
 }

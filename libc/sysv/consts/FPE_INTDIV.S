@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon misc,FPE_INTDIV,1,7,2,1,1,0
+.syscon sicode,FPE_INTDIV,1,7,2,1,1,1

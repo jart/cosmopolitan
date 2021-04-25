@@ -865,48 +865,48 @@ ape_macho:
 	@see "The Portable Executable File Format from Top to Bottom",
 	     Randy Kath, Microsoft Developer Network Technology Group. */
 
-//	      ┌14:Uniprocessor Machine            ┌─────────────────────────┐
-//	      │┌13:DLL                            │ PE File Characteristics │
-//	      ││┌12:System                        ├─────────────────────────┤
-//	      │││┌11:If Net Run From Swap         │ r │ reserved            │
-//	      ││││┌10:If Removable Run From Swap  │ d │ deprecated          │
-//	      │││││┌9:Debug Stripped              │ D │ deprecated with     │
-//	      ││││││┌8:32bit Machine              │   │ extreme prejudice   │
-//	      │││││││  ┌5:Large Address Aware     └───┴─────────────────────┘
-//	      │││││││  │   ┌1:Executable
-//	      │││││││  │   │┌0:Relocs Stripped
-//	     d│││││││dr│Ddd││
-PEEXE =  0b0000001000100011
+//	    ┌14:Uniprocessor Machine            ┌─────────────────────────┐
+//	    │┌13:DLL                            │ PE File Characteristics │
+//	    ││┌12:System                        ├─────────────────────────┤
+//	    │││┌11:If Net Run From Swap         │ r │ reserved            │
+//	    ││││┌10:If Removable Run From Swap  │ d │ deprecated          │
+//	    │││││┌9:Debug Stripped              │ D │ deprecated with     │
+//	    ││││││┌8:32bit Machine              │   │ extreme prejudice   │
+//	    │││││││  ┌5:Large Address Aware     └───┴─────────────────────┘
+//	    │││││││  │   ┌1:Executable
+//	    │││││││  │   │┌0:Relocs Stripped
+//	   d│││││││dr│Ddd││
+PEEXE = 0b00000001000100011
 
-//	     ┌15:TERMINAL_SERVER_AWARE            ┌─────────────────────────┐
-//	     │┌14:GUARD_CF                        │ PE DLL Characteristics  │
-//	     ││┌13:WDM_DRIVER                     ├─────────────────────────┤
-//	     │││┌12:APPCONTAINER                  │ r │ reserved            │
-//	     ││││┌11:NO_BIND                      └───┴─────────────────────┘
-//	     │││││┌10:NO_SEH
-//	     ││││││┌9:NO_ISOLATION
-//	     │││││││┌8:NX_COMPAT
-//	     ││││││││┌7:FORCE_INTEGRITY
-//	     │││││││││┌6:DYNAMIC_BASE
-//	     ││││││││││┌5:HIGH_ENTROPY_VA
-//	     │││││││││││rrrrr
+//	   ┌15:TERMINAL_SERVER_AWARE            ┌─────────────────────────┐
+//	   │┌14:GUARD_CF                        │ PE DLL Characteristics  │
+//	   ││┌13:WDM_DRIVER                     ├─────────────────────────┤
+//	   │││┌12:APPCONTAINER                  │ r │ reserved            │
+//	   ││││┌11:NO_BIND                      └───┴─────────────────────┘
+//	   │││││┌10:NO_SEH
+//	   ││││││┌9:NO_ISOLATION
+//	   │││││││┌8:NX_COMPAT
+//	   ││││││││┌7:FORCE_INTEGRITY
+//	   │││││││││┌6:DYNAMIC_BASE
+//	   ││││││││││┌5:HIGH_ENTROPY_VA
+//	   │││││││││││rrrrr
 DLLSTD = 0b0000000100100000
 DLLPIE = 0b0000000001100000
 DLLEXE = DLLSTD
 
-//	     ┌31:Writeable                        ┌─────────────────────────┐
-//	     │┌30:Readable                        │ PE Section Flags        │
-//	     ││┌29:Executable                     ├─────────────────────────┤
-//	     │││┌28:Shareable                     │ o │ for object files    │
-//	     ││││┌27:Unpageable                   │ r │ reserved            │
-//	     │││││┌26:Uncacheable                 └───┴─────────────────────┘
-//	     ││││││┌25:Discardable
-//	     │││││││┌24:Contains Extended Relocations
-//	     ││││││││        ┌15:Contains Global Pointer (GP) Relative Data
-//	     ││││││││        │       ┌7:Contains Uninitialized Data
-//	     ││││││││        │       │┌6:Contains Initialized Data
-//	     ││││││││ o      │       ││┌5:Contains Code
-//	     ││││││││┌┴─┐rrrr│  ooror│││rorrr
+//	   ┌31:Writeable                        ┌─────────────────────────┐
+//	   │┌30:Readable                        │ PE Section Flags        │
+//	   ││┌29:Executable                     ├─────────────────────────┤
+//	   │││┌28:Shareable                     │ o │ for object files    │
+//	   ││││┌27:Unpageable                   │ r │ reserved            │
+//	   │││││┌26:Uncacheable                 └───┴─────────────────────┘
+//	   ││││││┌25:Discardable
+//	   │││││││┌24:Contains Extended Relocations
+//	   ││││││││        ┌15:Contains Global Pointer (GP) Relative Data
+//	   ││││││││        │       ┌7:Contains Uninitialized Data
+//	   ││││││││        │       │┌6:Contains Initialized Data
+//	   ││││││││ o      │       ││┌5:Contains Code
+//	   ││││││││┌┴─┐rrrr│  ooror│││rorrr
 PETEXT = 0b01110000000000000000000001100000
 PEDATA = 0b11000000000000000000000011000000
 PEIMPS = 0b11000000000000000000000001000000
@@ -1437,7 +1437,7 @@ long:	push	$GDT_LONG_DATA
 	.endfn	long
 
 /*  ▄▄▒▀▀▀▀▒▒▄
-█████▓▓▄░░░░  ▒▒▄░
+█████▓▓▄░░░░  ▒▒▄
 ▐█▓▓█▓▄█████▓░   ▀▒▄
  ▓█▓▓▓▓▓▓▓▓▓█▓     ░▀▒░
    ▀▀▓█▓▓▓▓▓▓█▓       ░▀▒▄▄▒▄▄▄▒▒▒▀▀▀▀▀▀▀▀▀▀▀▀▀▀▒▒▄▒

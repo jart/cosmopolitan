@@ -19,14 +19,14 @@
 #include "libc/assert.h"
 #include "libc/str/str.h"
 
-noasan static const unsigned char *strchrnul_x64(const unsigned char *p,
-                                                 uint64_t c) {
+noasan static const char *strchrnul_x64(const char *p, uint64_t c) {
   unsigned a, b;
   uint64_t w, x, y;
   for (c *= 0x0101010101010101;; p += 8) {
-    w = (uint64_t)p[7] << 070 | (uint64_t)p[6] << 060 | (uint64_t)p[5] << 050 |
-        (uint64_t)p[4] << 040 | (uint64_t)p[3] << 030 | (uint64_t)p[2] << 020 |
-        (uint64_t)p[1] << 010 | (uint64_t)p[0] << 000;
+    w = (uint64_t)(255 & p[7]) << 070 | (uint64_t)(255 & p[6]) << 060 |
+        (uint64_t)(255 & p[5]) << 050 | (uint64_t)(255 & p[4]) << 040 |
+        (uint64_t)(255 & p[3]) << 030 | (uint64_t)(255 & p[2]) << 020 |
+        (uint64_t)(255 & p[1]) << 010 | (uint64_t)(255 & p[0]) << 000;
     if ((x = ~(w ^ c) & ((w ^ c) - 0x0101010101010101) & 0x8080808080808080) |
         (y = ~w & (w - 0x0101010101010101) & 0x8080808080808080)) {
       if (x) {
@@ -59,11 +59,11 @@ noasan static const unsigned char *strchrnul_x64(const unsigned char *p,
  */
 char *strchrnul(const char *s, int c) {
   char *r;
-  for (c &= 0xff; (uintptr_t)s & 7; ++s) {
+  for (c &= 255; (uintptr_t)s & 7; ++s) {
     if ((*s & 0xff) == c) return s;
     if (!*s) return s;
   }
-  r = (char *)strchrnul_x64((const unsigned char *)s, c);
-  assert((*r & 0xff) == c || !*r);
+  r = strchrnul_x64(s, c);
+  assert((*r & 255) == c || !*r);
   return r;
 }

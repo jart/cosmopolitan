@@ -33,7 +33,7 @@
  *     <-1 signals all processes in -pid process group
  * @param sig can be:
  *      >0 can be SIGINT, SIGTERM, SIGKILL, SIGUSR1, etc.
- *      =0 is for error checking
+ *      =0 checks both if pid exists and we can signal it
  * @return 0 if something was accomplished, or -1 w/ errno
  * @asyncsignalsafe
  */

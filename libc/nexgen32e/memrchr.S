@@ -28,7 +28,8 @@
 //	@return	rax is address of last %sil in %rdi, or NULL
 //	@note	AVX2 requires Haswell (2014+) or Excavator (2015+)
 //	@asyncsignalsafe
-memrchr:.leafprologue
+memrchr:
+	.leafprologue
 	.profilable
 #if !IsTiny()
 	cmp	$32,%rdx

@@ -22,31 +22,34 @@
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/files.h"
+#include "libc/sock/sock.h"
+#include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
 struct VdprintfState {
-  int n;
-  int fd;
-  unsigned char buf[1024];
+  int n, t, fd;
+  char b[1024];
 };
 
-static int vdprintf_flush(struct VdprintfState *df, int n) {
-  int i, rc;
-  for (i = 0; i < n; i += rc) {
-    if ((rc = write(df->fd, df->buf + i, n - i)) == -1) {
-      return -1;
+static int vdprintf_putc(const char *s, struct VdprintfState *t, size_t n) {
+  struct iovec iov[2];
+  if (n) {
+    if (t->n + n < sizeof(t->b)) {
+      memcpy(t->b + t->n, s, n);
+      t->n += n;
+    } else {
+      iov[0].iov_base = t->b;
+      iov[0].iov_len = t->n;
+      iov[1].iov_base = s;
+      iov[1].iov_len = n;
+      if (WritevUninterruptible(t->fd, iov, 2) == -1) {
+        return -1;
+      }
+      t->t += t->n;
+      t->n = 0;
     }
   }
   return 0;
-}
-
-static int vdprintf_putc(int c, struct VdprintfState *df) {
-  df->buf[df->n++ & (ARRAYLEN(df->buf) - 1)] = c & 0xff;
-  if ((df->n & (ARRAYLEN(df->buf) - 1))) {
-    return 0;
-  } else {
-    return vdprintf_flush(df, ARRAYLEN(df->buf));
-  }
 }
 
 /**
@@ -55,10 +58,19 @@ static int vdprintf_putc(int c, struct VdprintfState *df) {
  * @vforksafe
  */
 int(vdprintf)(int fd, const char *fmt, va_list va) {
-  struct VdprintfState df;
-  df.n = 0;
-  df.fd = fd;
-  if (__fmt(vdprintf_putc, &df, fmt, va) == -1) return -1;
-  if (vdprintf_flush(&df, df.n & (ARRAYLEN(df.buf) - 1)) == -1) return -1;
-  return df.n;
+  struct iovec iov[1];
+  struct VdprintfState t;
+  t.n = 0;
+  t.t = 0;
+  t.fd = fd;
+  if (__fmt(vdprintf_putc, &t, fmt, va) == -1) return -1;
+  if (t.n) {
+    iov[0].iov_base = t.b;
+    iov[0].iov_len = t.n;
+    if (WritevUninterruptible(t.fd, iov, 1) == -1) {
+      return -1;
+    }
+    t.t += t.n;
+  }
+  return t.t;
 }

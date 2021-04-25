@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
+#include "libc/str/str.h"
 #include "tool/build/lib/address.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/memory.h"

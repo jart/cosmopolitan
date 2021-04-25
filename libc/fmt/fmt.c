@@ -23,6 +23,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/fmts.h"
 #include "libc/fmt/internal.h"
+#include "libc/fmt/itoa.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsr.h"
@@ -31,11 +32,12 @@
 #include "libc/sysv/errfuns.h"
 #include "third_party/gdtoa/gdtoa.h"
 
-#define PUT(C)               \
-  do {                       \
-    if (out(C, arg) == -1) { \
-      return -1;             \
-    }                        \
+#define PUT(C)                    \
+  do {                            \
+    char Buf[1] = {C};            \
+    if (out(Buf, arg, 1) == -1) { \
+      return -1;                  \
+    }                             \
   } while (0)
 
 static const char kSpecialFloats[2][2][4] = {{"INF", "inf"}, {"NAN", "nan"}};
@@ -121,14 +123,18 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
     uint32_t u[2];
     uint64_t q;
   } pun;
+  long ld;
   void *p;
+  unsigned u;
+  char ibuf[21];
   bool longdouble;
   long double ldbl;
+  unsigned long lu;
   wchar_t charbuf[1];
   const char *alphabet;
-  int (*out)(long, void *);
+  int (*out)(const char *, void *, size_t);
   unsigned char signbit, log2base;
-  int c, d, k, w, i1, ui, bw, bex;
+  int c, d, k, w, n, i1, ui, bw, bex;
   char *s, *q, *se, qchar, special[8];
   int sgn, alt, sign, prec, prec1, flags, width, decpt, lasterr;
 
@@ -136,18 +142,64 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
   out = fn ? fn : (void *)missingno;
 
   while (*format) {
-    /* %[flags][width][.prec][length] */
     if (*format != '%') {
-      /* no */
-      PUT(*format);
-      format++;
+      for (n = 1; format[n]; ++n) {
+        if (format[n] == '%') break;
+      }
+      if (out(format, arg, n) == -1) return -1;
+      format += n;
       continue;
-    } else {
-      /* yes, evaluate it */
-      format++;
     }
 
-    /* evaluate flags */
+    if (!IsTiny()) {
+      if (format[1] == 's') { /* FAST PATH: PLAIN STRING */
+        s = va_arg(va, char *);
+        if (!s) s = "(null)";
+        if (out(s, arg, strlen(s)) == -1) return -1;
+        format += 2;
+        continue;
+      } else if (format[1] == 'd') { /* FAST PATH: PLAIN INTEGER */
+        d = va_arg(va, int);
+        if (out(ibuf, arg, int64toarray_radix10(d, ibuf)) == -1) return -1;
+        format += 2;
+        continue;
+      } else if (format[1] == 'u') { /* FAST PATH: PLAIN UNSIGNED */
+        u = va_arg(va, unsigned);
+        if (out(ibuf, arg, uint64toarray_radix10(u, ibuf)) == -1) return -1;
+        format += 2;
+        continue;
+      } else if (format[1] == 'x') { /* FAST PATH: PLAIN HEX */
+        u = va_arg(va, unsigned);
+        if (out(ibuf, arg, uint64toarray_radix16(u, ibuf)) == -1) return -1;
+        format += 2;
+        continue;
+      } else if (format[1] == 'l' && format[2] == 'x') {
+        lu = va_arg(va, unsigned long); /* FAST PATH: PLAIN LONG HEX */
+        if (out(ibuf, arg, uint64toarray_radix16(lu, ibuf)) == -1) return -1;
+        format += 3;
+        continue;
+      } else if (format[1] == 'l' && format[2] == 'd') {
+        ld = va_arg(va, long); /* FAST PATH: PLAIN LONG */
+        if (out(ibuf, arg, int64toarray_radix10(ld, ibuf)) == -1) return -1;
+        format += 3;
+        continue;
+      } else if (format[1] == 'l' && format[2] == 'u') {
+        lu = va_arg(va, unsigned long); /* FAST PATH: PLAIN UNSIGNED LONG */
+        if (out(ibuf, arg, int64toarray_radix10(lu, ibuf)) == -1) return -1;
+        format += 3;
+        continue;
+      } else if (format[1] == '.' && format[2] == '*' && format[3] == 's') {
+        n = va_arg(va, unsigned); /* FAST PATH: PRECISION STRING */
+        s = va_arg(va, const char *);
+        if (!s) s = "(null)", n = MIN(6, n);
+        if (out(s, arg, n) == -1) return -1;
+        format += 4;
+        continue;
+      }
+    }
+
+    /* GENERAL PATH */
+    format++;
     sign = 0;
     flags = 0;
   getflag:

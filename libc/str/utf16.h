@@ -11,15 +11,15 @@ COSMOPOLITAN_C_START_
 #define IsUcs2(wc)         (((wc)&UTF16_MASK) != UTF16_MOAR)
 #define IsUtf16Cont(wc)    (((wc)&UTF16_MASK) == UTF16_CONT)
 #define MergeUtf16(lo, hi) ((((lo)-0xD800) << 10) + ((hi)-0xDC00) + 0x10000)
-#define EncodeUtf16(wc)                                    \
-  (__builtin_expect(((0x0000 <= (wc) && (wc) <= 0xFFFF) || \
-                     (0xE000 <= (wc) && (wc) <= 0xFFFF)),  \
-                    1)                                     \
-       ? (wc)                                              \
-       : 0x10000 <= (wc) && (wc) <= 0x10FFFF               \
-             ? (((((wc)-0x10000) >> 10) + 0xD800) |        \
-                ((((wc)-0x10000) & 1023) + 0xDC00) << 16)  \
-             : 0xFFFD)
+#define EncodeUtf16(wc)                                       \
+  (__builtin_expect(((0x0000 <= (wc) && (wc) <= 0xFFFF) ||    \
+                     (0xE000 <= (wc) && (wc) <= 0xFFFF)),     \
+                    1)                                        \
+       ? (wc)                                                 \
+   : 0x10000 <= (wc) && (wc) <= 0x10FFFF                      \
+       ? (((((wc)-0x10000) >> 10) + 0xD800) |                 \
+          (unsigned)((((wc)-0x10000) & 1023) + 0xDC00) << 16) \
+       : 0xFFFD)
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

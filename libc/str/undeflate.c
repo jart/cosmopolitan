@@ -104,7 +104,7 @@ static struct DeflateHold undeflatesymbol(struct DeflateHold hold,
   uint32_t search, key;
   left = 0;
   right = treecount;
-  search = bitreverse16(hold.word);
+  search = BITREVERSE16(hold.word);
   search <<= 16;
   search |= 0xffff;
   while (left < right) { /* TODO(jart): Make this O(1) like Zlib. */

@@ -16,7 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/safemacros.internal.h"
 #include "libc/dce.h"
+#include "libc/log/color.internal.h"
+#include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
@@ -43,17 +46,8 @@
 bool cancolor(void) {
   static bool once;
   static bool result;
-  const char *term;
   if (!once) {
-    if (!result) {
-      if ((term = getenv("TERM"))) {
-        /* anything but emacs basically */
-        result = strcmp(term, "dumb") != 0;
-      } else {
-        /* TODO(jart): Why does Mac bash login shell exec nuke TERM? */
-        result = IsXnu();
-      }
-    }
+    result = !!strcmp(nulltoempty(getenv("DONTANSIMEBRO")), "1");
     once = true;
   }
   return result;

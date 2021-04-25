@@ -23,7 +23,7 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
-#include "net/http/base64.h"
+#include "net/http/escape.h"
 
 size_t i, n, m;
 char *p, *q, b[32];
@@ -124,6 +124,18 @@ TEST(DecodeBase64, testInvalidSequences_skipsOverThem) {
   EXPECT_BINEQ(u" ", gc(DecodeBase64("B===", 4, 0)));
   EXPECT_BINEQ(u"♦ ", gc(DecodeBase64("B===BB==", 8, 0)));
   EXPECT_BINEQ(u"♦ ", gc(DecodeBase64("====BB==", 8, 0)));
+}
+
+TEST(DecodeBase64, testOom_returnsNullAndSetsSizeToZero) {
+  n = 31337;
+  EXPECT_EQ(NULL, DecodeBase64("hello", 0x1000000000000, &n));
+  EXPECT_EQ(0, n);
+}
+
+TEST(EncodeBase64, testOom_returnsNullAndSetsSizeToZero) {
+  n = 31337;
+  EXPECT_EQ(NULL, EncodeBase64("hello", 0x1000000000000, &n));
+  EXPECT_EQ(0, n);
 }
 
 TEST(Base64, RoundTrip) {

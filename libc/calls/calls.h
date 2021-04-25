@@ -5,6 +5,7 @@
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigval.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/calls/struct/timespec.h"
@@ -29,7 +30,7 @@
 #define SIG_DFL ((void *)0)
 #define SIG_IGN ((void *)1)
 
-#define MAP_FAILED ((void *)__SIZE_MAX__)
+#define MAP_FAILED ((void *)-1)
 
 #define ARCH_SET_GS 0x1001
 #define ARCH_SET_FS 0x1002
@@ -120,6 +121,7 @@ int getrlimit(int, struct rlimit *);
 int getrusage(int, struct rusage *);
 int kill(int, int);
 int killpg(int, int);
+int sigqueue(int, int, const union sigval);
 int link(const char *, const char *) nothrow;
 int linkat(int, const char *, int, const char *, uint32_t);
 int lstat(const char *, struct stat *);

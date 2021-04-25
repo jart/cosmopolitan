@@ -659,6 +659,7 @@ typedef uint64_t uintmax_t;
 #pragma GCC diagnostic ignored "-Wformat" /* forces only gnu pf */
 #pragma GCC diagnostic ignored "-Wunused-parameter" /* extreme prejudice */
 #pragma GCC diagnostic ignored "-Wunused-function" /* contradicts dce! */
+#pragma GCC diagnostic ignored "-Wunused-const-variable" /* let me dce */
 #pragma GCC diagnostic ignored "-Wunused-variable" /* belongs in tidy */
 #pragma GCC diagnostic ignored "-Wformat-extra-args" /* is also broken */
 #pragma GCC diagnostic ignored "-Wparentheses" /* annoying tidy */

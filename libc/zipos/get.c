@@ -59,7 +59,7 @@ struct Zipos *__zipos_get(void) {
         } else {
           base = map;
         }
-        if ((cdir = zipfindcentraldir(base, size))) {
+        if ((cdir = GetZipCdir(base, size))) {
           zipos.map = base;
           zipos.cdir = cdir;
         } else {

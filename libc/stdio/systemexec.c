@@ -20,19 +20,28 @@
 #include "libc/dce.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Executes system command replacing current process.
  * @vforksafe
  */
 int systemexec(const char *cmdline) {
-  char comspec[128];
-  const char *prog, *arg;
-  strcpy(comspec, kNtSystemDirectory);
-  strcat(comspec, "cmd.exe");
-  prog = !IsWindows() ? _PATH_BSHELL : comspec;
-  arg = !IsWindows() ? "-c" : "/C";
-  return execv(prog, (char *const[]){prog, arg, cmdline, NULL});
+  size_t n, m;
+  char *a, *b, *argv[4], comspec[PATH_MAX + 1];
+  if (!IsWindows()) {
+    argv[0] = _PATH_BSHELL;
+    argv[1] = "-c";
+  } else {
+    b = "cmd.exe";
+    a = kNtSystemDirectory;
+    if ((n = strlen(a)) + (m = strlen(b)) > PATH_MAX) return enametoolong();
+    memcpy(mempcpy(comspec, a, n), b, m + 1);
+    argv[0] = comspec;
+    argv[1] = "/C";
+  }
+  argv[2] = cmdline;
+  argv[3] = NULL;
+  return execv(argv[0], argv);
 }

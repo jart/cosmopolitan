@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/o.h"
 
@@ -38,14 +39,7 @@ int fseeko(FILE *f, int64_t offset, int whence) {
   ssize_t rc;
   int64_t pos;
   if (f->fd != -1) {
-    if (f->beg && !f->end && (f->iomode & O_ACCMODE) != O_RDONLY) {
-      if ((rc = write(f->fd, f->buf, f->beg)) == -1) {
-        f->state = errno;
-        return -1;
-      }
-      if (rc != f->beg) abort();
-      f->beg = 0;
-    }
+    if (__fflush_impl(f) == -1) return -1;
     if (whence == SEEK_CUR && f->beg < f->end) {
       offset -= f->end - f->beg;
     }

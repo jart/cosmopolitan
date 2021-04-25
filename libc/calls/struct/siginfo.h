@@ -6,7 +6,7 @@
 struct siginfo {
   int32_t si_signo;
   int32_t si_errno;
-  int32_t si_code;
+  int32_t si_code; /* {SICODE,SEGV,ILL,FPE,POLL}_xxx */
   union {
     struct {
       union {
@@ -20,7 +20,7 @@ struct siginfo {
         };
       };
       union {
-        union sigval si_value;
+        union sigval si_value; /* provided by third arg of sigqueue(2) */
         struct {
           int32_t si_status;
           int64_t si_utime, si_stime;

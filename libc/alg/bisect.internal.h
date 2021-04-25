@@ -6,19 +6,23 @@ COSMOPOLITAN_C_START_
 forceinline void *bisect(const void *k, const void *data, size_t n, size_t size,
                          int cmp(const void *a, const void *b, void *arg),
                          void *arg) {
-  int dir;
-  const char *p, *pos;
-  p = data;
-  while (n > 0) {
-    pos = p + size * (n / 2);
-    dir = cmp(k, pos, arg);
-    if (dir < 0) {
-      n /= 2;
-    } else if (dir > 0) {
-      p = pos + size;
-      n -= n / 2 + 1;
-    } else {
-      return (void *)pos;
+  int c;
+  const char *p;
+  ssize_t m, l, r;
+  if (n) {
+    l = 0;
+    r = n - 1;
+    p = data;
+    while (l <= r) {
+      m = (l + r) >> 1;
+      c = cmp(k, p + m * size, arg);
+      if (c > 0) {
+        l = m + 1;
+      } else if (c < 0) {
+        r = m - 1;
+      } else {
+        return p + m * size;
+      }
     }
   }
   return NULL;

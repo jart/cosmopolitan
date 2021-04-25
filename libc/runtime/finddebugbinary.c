@@ -29,40 +29,28 @@
 /**
  * Returns path of binary with the debug information, or null.
  *
- * @return path to debug binary, or -1 w/ errno
+ * @return path to debug binary, or NULL
  */
 const char *FindDebugBinary(void) {
-  unsigned i, len;
-  char buf[2][PATH_MAX];
-  static char res[PATH_MAX];
-  const char *bins[4], *pwd, *comdbg;
-  if (res[0]) return res;
-  if ((comdbg = emptytonull(getenv("COMDBG")))) return comdbg;
-  if (res[0]) return res;
-  bins[0] = program_invocation_name;
-  bins[1] = (const char *)getauxval(AT_EXECFN);
-  pwd = emptytonull(getenv("PWD"));
-  for (i = 0; i < 2; ++i) {
-    if (pwd && bins[i] && bins[i][0] != '/' && bins[i][0] != '\\' &&
-        strlen(pwd) + 1 + strlen(bins[i]) + 1 <= ARRAYLEN(buf[0])) {
-      strcpy(buf[i], pwd);
-      strcat(buf[i], "/");
-      strcat(buf[i], bins[i]);
-      bins[i + 2] = buf[i];
+  static bool once;
+  static char *res;
+  static char buf[PATH_MAX + 1];
+  char *p;
+  size_t n;
+  if (!once) {
+    if (!(res = getenv("COMDBG"))) {
+      p = (char *)getauxval(AT_EXECFN);
+      n = strlen(p);
+      if (n > 4 && !memcmp(p + n - 4, ".dbg", 4)) {
+        res = p;
+      } else if (n + 4 <= PATH_MAX) {
+        mempcpy(mempcpy(buf, p, n), ".dbg", 5);
+        if (fileexists(buf)) {
+          res = buf;
+        }
+      }
     }
+    once = true;
   }
-  for (i = 0; i < 4; ++i) {
-    if (!bins[i]) continue;
-    len = strlen(bins[i]);
-    memcpy(res, bins[i], len + 1);
-    if (!endswith(res, ".dbg") && len + 3 + 1 <= ARRAYLEN(res)) {
-      strcat(res, ".dbg");
-    }
-    if (fileexists(res)) {
-      return res;
-    }
-  }
-  res[0] = '\0';
-  errno = ENOENT;
-  return NULL;
+  return res;
 }

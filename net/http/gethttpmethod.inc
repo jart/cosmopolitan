@@ -1,6 +1,7 @@
 /* ANSI-C code produced by gperf version 3.1 */
 /* Command-line: gperf gethttpmethod.gperf  */
 /* Computed positions: -k'1-2' */
+/* clang-format off */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -71,7 +72,7 @@ static unsigned char gperf_downcase[256] =
 
 #ifndef GPERF_CASE_STRNCMP
 #define GPERF_CASE_STRNCMP 1
-static int
+static inline int
 gperf_case_strncmp (register const char *s1, register const char *s2, register size_t n)
 {
   for (; n > 0;)
@@ -131,7 +132,7 @@ hash (register const char *str, register size_t len)
   return len + asso_values[(unsigned char)str[1]] + asso_values[(unsigned char)str[0]];
 }
 
-const struct HttpMethodSlot *
+static inline const struct HttpMethodSlot *
 LookupHttpMethod (register const char *str, register size_t len)
 {
   static const struct HttpMethodSlot wordlist[] =
@@ -153,7 +154,7 @@ LookupHttpMethod (register const char *str, register size_t len)
       {""},
 #line 27 "gethttpmethod.gperf"
       {"NOTIFY",      kHttpNotify},
-#line 20 "gethttpmethod.gperf"
+#line 19 "gethttpmethod.gperf"
       {"OPTIONS",     kHttpOptions},
       {""},
 #line 22 "gethttpmethod.gperf"
@@ -162,7 +163,7 @@ LookupHttpMethod (register const char *str, register size_t len)
       {"MERGE",       kHttpMerge},
 #line 29 "gethttpmethod.gperf"
       {"REPORT",      kHttpReport},
-#line 19 "gethttpmethod.gperf"
+#line 20 "gethttpmethod.gperf"
       {"CONNECT",     kHttpConnect},
       {""},
 #line 26 "gethttpmethod.gperf"

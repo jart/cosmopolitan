@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/o.h"
 
@@ -29,18 +30,10 @@
  * @returns current byte offset from beginning, or -1 w/ errno
  */
 int64_t ftello(FILE *f) {
-  ssize_t rc;
   int64_t pos;
   uint32_t skew;
   if (f->fd != -1) {
-    if (f->beg && !f->end && (f->iomode & O_ACCMODE) != O_RDONLY) {
-      if ((rc = write(f->fd, f->buf, f->beg)) == -1) {
-        f->state = errno;
-        return -1;
-      }
-      if (rc != f->beg) abort();
-      f->beg = 0;
-    }
+    if (__fflush_impl(f) == -1) return -1;
     if ((pos = lseek(f->fd, 0, SEEK_CUR)) != -1) {
       if (f->beg < f->end) pos -= f->end - f->beg;
       return pos;

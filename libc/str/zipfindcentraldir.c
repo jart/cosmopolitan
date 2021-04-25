@@ -18,6 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/zip.h"
 
+/* TODO(jart): DELETE */
+
 /**
  * Locates End Of Central Directory record in ZIP file.
  *
@@ -36,13 +38,7 @@ uint8_t *zipfindcentraldir(const uint8_t *p, size_t n) {
   if (n >= kZipCdirHdrMinSize) {
     i = n - kZipCdirHdrMinSize;
     do {
-      if (ZIP_CDIR_MAGIC(p + i) == kZipCdirHdrMagic &&
-          i + ZIP_CDIR_HDRSIZE(p + i) <= n &&
-          ZIP_CDIR_DISK(p + i) == ZIP_CDIR_STARTINGDISK(p + i) &&
-          ZIP_CDIR_RECORDSONDISK(p + i) == ZIP_CDIR_RECORDS(p + i) &&
-          ZIP_CDIR_RECORDS(p + i) * kZipCdirHdrMinSize <=
-              ZIP_CDIR_SIZE(p + i) &&
-          ZIP_CDIR_OFFSET(p + i) + ZIP_CDIR_SIZE(p + i) <= i) {
+      if (ZIP_CDIR_MAGIC(p + i) == kZipCdirHdrMagic && IsZipCdir32(p, n, i)) {
         return (/*unconst*/ uint8_t *)(p + i);
       }
     } while (i--);

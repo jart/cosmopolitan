@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/x/x.h"
 #include "net/http/escape.h"
+#include "net/http/url.h"
 
 /**
  * Escapes URL component using generic table.
@@ -25,29 +26,28 @@
  * This function is agnostic to the underlying charset.
  * Always using UTF-8 is a good idea.
  *
- * @see EscapeUrlParam
- * @see EscapeUrlFragment
- * @see EscapeUrlPathSegment
+ * @param p is input value
+ * @param n if -1 implies strlen
+ * @param z if non-NULL receives output length
+ * @return allocated NUL-terminated buffer, or NULL w/ errno
+ * @see kEscapeAuthority
+ * @see kEscapeIpLiteral
+ * @see kEscapePath
+ * @see kEscapePathSegment
+ * @see kEscapeParam
+ * @see kEscapeFragment
  */
-struct EscapeResult EscapeUrl(const char *data, size_t size,
-                              const char xlat[hasatleast 256]) {
-  int c;
-  char *p;
-  size_t i;
-  struct EscapeResult r;
-  p = r.data = xmalloc(size * 6 + 1);
-  for (i = 0; i < size; ++i) {
-    if (!xlat[(c = data[i] & 0xff)]) {
-      *p++ = c;
-    } else {
-      p[0] = '%';
-      p[1] = "0123456789ABCDEF"[(c & 0xF0) >> 4];
-      p[2] = "0123456789ABCDEF"[(c & 0x0F) >> 0];
-      p += 3;
-    }
+char *EscapeUrl(const char *p, size_t n, size_t *z, const char T[256]) {
+  char *r, *q;
+  struct UrlView v;
+  if (n == -1) n = p ? strlen(p) : 0;
+  if (z) *z = 0;
+  if ((q = r = malloc(n * 6 + 1))) {
+    v.p = p, v.n = n;
+    q = EscapeUrlView(r, &v, T);
+    if (z) *z = q - r;
+    *q++ = '\0';
+    if ((q = realloc(r, q - r))) r = q;
   }
-  r.size = p - r.data;
-  r.data = xrealloc(r.data, r.size + 1);
-  r.data[r.size] = '\0';
   return r;
 }

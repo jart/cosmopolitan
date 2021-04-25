@@ -38,8 +38,8 @@ const char *GetHttpHeaderName(int h) {
       return "Cache-Control";
     case kHttpChunked:
       return "Chunked";
-    case kHttpClose:
-      return "Close";
+    case kHttpLink:
+      return "Link";
     case kHttpConnection:
       return "Connection";
     case kHttpContentBase:
@@ -53,7 +53,7 @@ const char *GetHttpHeaderName(int h) {
     case kHttpContentLocation:
       return "Content-Location";
     case kHttpContentMd5:
-      return "Content-Md5";
+      return "Content-MD5";
     case kHttpContentRange:
       return "Content-Range";
     case kHttpContentType:
@@ -118,8 +118,6 @@ const char *GetHttpHeaderName(int h) {
       return "WWW-Authenticate";
     case kHttpLastModified:
       return "Last-Modified";
-    case kHttpCookie:
-      return "Cookie";
     case kHttpTrailer:
       return "Trailer";
     case kHttpTe:
@@ -136,6 +134,22 @@ const char *GetHttpHeaderName(int h) {
       return "Origin";
     case kHttpUpgradeInsecureRequests:
       return "Upgrade-Insecure-Requests";
+    case kHttpUri:
+      return "URI";
+    case kHttpXCsrfToken:
+      return "X-Csrf-Token";
+    case kHttpXForwardedFor:
+      return "X-Forwarded-For";
+    case kHttpXForwardedHost:
+      return "X-Forwarded-Host";
+    case kHttpXForwardedProto:
+      return "X-Forwarded-Proto";
+    case kHttpXRequestedWith:
+      return "X-Requested-With";
+    case kHttpAccessControlRequestMethod:
+      return "Access-Control-Request-Method";
+    case kHttpAccessControlRequestHeaders:
+      return "Access-Control-Request-Headers";
     default:
       return NULL;
   }

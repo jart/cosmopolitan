@@ -25,8 +25,8 @@
 #include "libc/str/utf16.h"
 
 /* 34x speedup for ascii */
-static noasan axdx_t tprecode8to16_sse2(char16_t *dst, size_t dstsize,
-                                        const char *src, axdx_t r) {
+static inline noasan axdx_t tprecode8to16_sse2(char16_t *dst, size_t dstsize,
+                                               const char *src, axdx_t r) {
   uint8_t v1[16], v2[16], vz[16];
   memset(vz, 0, 16);
   while (r.ax + 16 < dstsize) {
@@ -54,26 +54,25 @@ static noasan axdx_t tprecode8to16_sse2(char16_t *dst, size_t dstsize,
  */
 axdx_t tprecode8to16(char16_t *dst, size_t dstsize, const char *src) {
   axdx_t r;
-  unsigned n;
-  uint64_t w;
-  wint_t x, y;
+  unsigned w;
+  int x, y, a, b, i, n;
   r.ax = 0;
   r.dx = 0;
   for (;;) {
-    /* TODO(jart): Why is it now so much slower refactored? */
-    /* if (!IsTiny() && !((uintptr_t)(src + r.dx) & 15)) { */
-    /*   tprecode8to16_sse2(dst, dstsize, src, r); */
-    /* } */
-    x = src[r.dx++] & 0xff;
-    if (ThomPikeCont(x)) continue;
-    if (!isascii(x)) {
-      n = ThomPikeLen(x);
-      x = ThomPikeByte(x);
-      while (--n) {
-        if ((y = src[r.dx++] & 0xff)) {
-          x = ThomPikeMerge(x, y);
-        } else {
-          x = 0;
+    if (!IsTiny() && !((uintptr_t)(src + r.dx) & 15)) {
+      r = tprecode8to16_sse2(dst, dstsize, src, r);
+    }
+    x = src[r.dx++] & 0377;
+    if (x >= 0300) {
+      a = ThomPikeByte(x);
+      n = ThomPikeLen(x) - 1;
+      for (i = 0;;) {
+        if (!(b = src[r.dx + i] & 0377)) break;
+        if (!ThomPikeCont(b)) break;
+        a = ThomPikeMerge(a, b);
+        if (++i == n) {
+          r.dx += i;
+          x = a;
           break;
         }
       }
@@ -81,7 +80,7 @@ axdx_t tprecode8to16(char16_t *dst, size_t dstsize, const char *src) {
     if (!x) break;
     w = EncodeUtf16(x);
     while (w && r.ax + 1 < dstsize) {
-      dst[r.ax++] = w & 0xFFFF;
+      dst[r.ax++] = w;
       w >>= 16;
     }
   }

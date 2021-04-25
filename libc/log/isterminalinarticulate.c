@@ -21,9 +21,6 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
-/**
- * Checks if we're probably running inside Emacs.
- */
 bool IsTerminalInarticulate(void) {
-  return strcmp(nulltoempty(getenv("TERM")), "dumb") == 0;
+  return !strcmp(nulltoempty(getenv("TERM")), "dumb");
 }

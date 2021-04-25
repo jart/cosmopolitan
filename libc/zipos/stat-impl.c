@@ -25,6 +25,7 @@
 #include "libc/zipos/zipos.internal.h"
 
 int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
+  size_t lf;
   if (zipos && st) {
     memset(st, 0, sizeof(*st));
     if (ZIP_CFILE_FILEATTRCOMPAT(zipos->map + cf) == kZipOsUnix) {
@@ -32,9 +33,10 @@ int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
     } else {
       st->st_mode = 0100644;
     }
-    st->st_size = ZIP_CFILE_UNCOMPRESSEDSIZE(zipos->map + cf);
+    lf = GetZipCfileOffset(zipos->map + cf);
+    st->st_size = GetZipLfileUncompressedSize(zipos->map + lf);
     st->st_blocks =
-        roundup(ZIP_CFILE_COMPRESSEDSIZE(zipos->map + cf), 512) / 512;
+        roundup(GetZipLfileCompressedSize(zipos->map + lf), 512) / 512;
     return 0;
   } else {
     return einval();

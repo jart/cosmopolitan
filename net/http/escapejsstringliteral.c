@@ -31,186 +31,192 @@
  * can't be encoded will use invalid codepoint markers. This function is
  * agnostic to numbers that have been used with malicious intent in the
  * past under buggy software. Noncanonical encodings such as overlong
- * NUL are canonicalized as NUL.
+ * NUL are canonicalized as NUL. Therefore it isn't necessary to say
+ * EscapeJsStringLiteral(Underlong(𝑥)) since EscapeJsStringLiteral(𝑥)
+ * will do the same thing.
+ *
+ * @param p is input value
+ * @param n if -1 implies strlen
+ * @param out_size if non-NULL receives output length
+ * @return allocated NUL-terminated buffer, or NULL w/ errno
  */
-struct EscapeResult EscapeJsStringLiteral(const char *data, size_t size) {
-  char *p;
+char *EscapeJsStringLiteral(const char *p, size_t n, size_t *z) {
   uint64_t w;
-  unsigned i, n;
+  char *q, *r;
+  size_t i, j, m;
   wint_t x, a, b;
-  const char *d, *e;
-  struct EscapeResult r;
-  d = data;
-  e = data + size;
-  p = r.data = xmalloc(size * 6 + 6 + 1);
-  while (d < e) {
-    x = *d++ & 0xff;
-    if (x >= 0300) {
-      a = ThomPikeByte(x);
-      n = ThomPikeLen(x) - 1;
-      if (d + n <= e) {
-        for (i = 0;;) {
-          b = d[i] & 0xff;
-          if (!ThomPikeCont(b)) break;
-          a = ThomPikeMerge(a, b);
-          if (++i == n) {
-            x = a;
-            d += i;
-            break;
+  if (z) *z = 0;
+  if (n == -1) n = p ? strlen(p) : 0;
+  if ((q = r = malloc(n * 6 + 6 + 1))) {
+    for (i = 0; i < n;) {
+      x = p[i++] & 0xff;
+      if (x >= 0300) {
+        a = ThomPikeByte(x);
+        m = ThomPikeLen(x) - 1;
+        if (i + m <= n) {
+          for (j = 0;;) {
+            b = p[i + j] & 0xff;
+            if (!ThomPikeCont(b)) break;
+            a = ThomPikeMerge(a, b);
+            if (++j == m) {
+              x = a;
+              i += j;
+              break;
+            }
           }
         }
       }
+      switch (x) {
+        case ' ':
+        case '!':
+        case '#':
+        case '$':
+        case '%':
+        case '(':
+        case ')':
+        case '*':
+        case '+':
+        case ',':
+        case '-':
+        case '.':
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+        case ':':
+        case ';':
+        case '?':
+        case '@':
+        case 'A':
+        case 'B':
+        case 'C':
+        case 'D':
+        case 'E':
+        case 'F':
+        case 'G':
+        case 'H':
+        case 'I':
+        case 'J':
+        case 'K':
+        case 'L':
+        case 'M':
+        case 'N':
+        case 'O':
+        case 'P':
+        case 'Q':
+        case 'R':
+        case 'S':
+        case 'T':
+        case 'U':
+        case 'V':
+        case 'W':
+        case 'X':
+        case 'Y':
+        case 'Z':
+        case '[':
+        case ']':
+        case '^':
+        case '_':
+        case '`':
+        case 'a':
+        case 'b':
+        case 'c':
+        case 'd':
+        case 'e':
+        case 'f':
+        case 'g':
+        case 'h':
+        case 'i':
+        case 'j':
+        case 'k':
+        case 'l':
+        case 'm':
+        case 'n':
+        case 'o':
+        case 'p':
+        case 'q':
+        case 'r':
+        case 's':
+        case 't':
+        case 'u':
+        case 'v':
+        case 'w':
+        case 'x':
+        case 'y':
+        case 'z':
+        case '{':
+        case '|':
+        case '}':
+        case '~':
+          *q++ = x;
+          break;
+        case '\t':
+          q[0] = '\\';
+          q[1] = 't';
+          q += 2;
+          break;
+        case '\n':
+          q[0] = '\\';
+          q[1] = 'n';
+          q += 2;
+          break;
+        case '\r':
+          q[0] = '\\';
+          q[1] = 'r';
+          q += 2;
+          break;
+        case '\f':
+          q[0] = '\\';
+          q[1] = 'f';
+          q += 2;
+          break;
+        case '\\':
+          q[0] = '\\';
+          q[1] = '\\';
+          q += 2;
+          break;
+        case '/':
+          q[0] = '\\';
+          q[1] = '/';
+          q += 2;
+          break;
+        case '"':
+          q[0] = '\\';
+          q[1] = '"';
+          q += 2;
+          break;
+        case '\'':
+          q[0] = '\\';
+          q[1] = '\'';
+          q += 2;
+          break;
+        case '<':
+        case '>':
+        case '&':
+        case '=':
+        default:
+          w = EncodeUtf16(x);
+          do {
+            q[0] = '\\';
+            q[1] = 'u';
+            q[2] = "0123456789abcdef"[(w & 0xF000) >> 014];
+            q[3] = "0123456789abcdef"[(w & 0x0F00) >> 010];
+            q[4] = "0123456789abcdef"[(w & 0x00F0) >> 004];
+            q[5] = "0123456789abcdef"[(w & 0x000F) >> 000];
+            q += 6;
+          } while ((w >>= 16));
+          break;
+      }
     }
-    switch (x) {
-      case ' ':
-      case '!':
-      case '#':
-      case '$':
-      case '%':
-      case '(':
-      case ')':
-      case '*':
-      case '+':
-      case ',':
-      case '-':
-      case '.':
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-      case ':':
-      case ';':
-      case '?':
-      case '@':
-      case 'A':
-      case 'B':
-      case 'C':
-      case 'D':
-      case 'E':
-      case 'F':
-      case 'G':
-      case 'H':
-      case 'I':
-      case 'J':
-      case 'K':
-      case 'L':
-      case 'M':
-      case 'N':
-      case 'O':
-      case 'P':
-      case 'Q':
-      case 'R':
-      case 'S':
-      case 'T':
-      case 'U':
-      case 'V':
-      case 'W':
-      case 'X':
-      case 'Y':
-      case 'Z':
-      case '[':
-      case ']':
-      case '^':
-      case '_':
-      case '`':
-      case 'a':
-      case 'b':
-      case 'c':
-      case 'd':
-      case 'e':
-      case 'f':
-      case 'g':
-      case 'h':
-      case 'i':
-      case 'j':
-      case 'k':
-      case 'l':
-      case 'm':
-      case 'n':
-      case 'o':
-      case 'p':
-      case 'q':
-      case 'r':
-      case 's':
-      case 't':
-      case 'u':
-      case 'v':
-      case 'w':
-      case 'x':
-      case 'y':
-      case 'z':
-      case '{':
-      case '|':
-      case '}':
-      case '~':
-        *p++ = x;
-        break;
-      case '\t':
-        p[0] = '\\';
-        p[1] = 't';
-        p += 2;
-        break;
-      case '\n':
-        p[0] = '\\';
-        p[1] = 'n';
-        p += 2;
-        break;
-      case '\r':
-        p[0] = '\\';
-        p[1] = 'r';
-        p += 2;
-        break;
-      case '\f':
-        p[0] = '\\';
-        p[1] = 'f';
-        p += 2;
-        break;
-      case '\\':
-        p[0] = '\\';
-        p[1] = '\\';
-        p += 2;
-        break;
-      case '/':
-        p[0] = '\\';
-        p[1] = '/';
-        p += 2;
-        break;
-      case '"':
-        p[0] = '\\';
-        p[1] = '"';
-        p += 2;
-        break;
-      case '\'':
-        p[0] = '\\';
-        p[1] = '\'';
-        p += 2;
-        break;
-      case '<':
-      case '>':
-      case '&':
-      case '=':
-      default:
-        w = EncodeUtf16(x);
-        do {
-          p[0] = '\\';
-          p[1] = 'u';
-          p[2] = "0123456789abcdef"[(w & 0xF000) >> 014];
-          p[3] = "0123456789abcdef"[(w & 0x0F00) >> 010];
-          p[4] = "0123456789abcdef"[(w & 0x00F0) >> 004];
-          p[5] = "0123456789abcdef"[(w & 0x000F) >> 000];
-          p += 6;
-        } while ((w >>= 16));
-        break;
-    }
+    if (z) *z = q - r;
+    *q++ = '\0';
+    if ((q = realloc(r, q - r))) r = q;
   }
-  r.size = p - r.data;
-  r.data = xrealloc(r.data, r.size + 1);
-  r.data[r.size] = '\0';
   return r;
 }

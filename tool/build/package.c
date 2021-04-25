@@ -25,6 +25,7 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/dce.h"
 #include "libc/elf/def.h"
 #include "libc/elf/elf.h"
 #include "libc/elf/struct/rela.h"
@@ -165,8 +166,8 @@ struct Packages {
 };
 
 int CompareSymbolName(const struct Symbol *a, const struct Symbol *b,
-                      const char *strs[hasatleast 2]) {
-  return strcmp(&strs[0][a->name], &strs[1][b->name]);
+                      const char *tab) {
+  return strcmp(tab + a->name, tab + b->name);
 }
 
 struct Package *LoadPackage(const char *path) {
@@ -189,6 +190,7 @@ struct Package *LoadPackage(const char *path) {
         pkg->strings.p);
   pkg->addr = pkg;
   pkg->size = st.st_size;
+  CHECK_NE(-1, mprotect(pkg, st.st_size, PROT_READ));
   return pkg;
 }
 
@@ -378,37 +380,48 @@ void LoadObjects(struct Package *pkg) {
   size_t i;
   struct Object *obj;
   for (i = 0; i < pkg->objects.i; ++i) {
-    obj = &pkg->objects.p[i];
+    obj = pkg->objects.p + i;
     OpenObject(pkg, obj, O_RDONLY, PROT_READ, MAP_SHARED);
     LoadSymbols(pkg, i);
     CloseObject(obj);
   }
-  qsort_r(&pkg->symbols.p[0], pkg->symbols.i, sizeof(pkg->symbols.p[0]),
-          (void *)CompareSymbolName,
-          (const char *[2]){pkg->strings.p, pkg->strings.p});
+  qsort_r(pkg->symbols.p, pkg->symbols.i, sizeof(*pkg->symbols.p),
+          (void *)CompareSymbolName, pkg->strings.p);
+}
+
+struct Symbol *BisectSymbol(struct Package *pkg, const char *name) {
+  int c;
+  long m, l, r;
+  l = 0;
+  r = pkg->symbols.i - 1;
+  while (l <= r) {
+    m = (l + r) >> 1;
+    c = strcmp(pkg->strings.p + pkg->symbols.p[m].name, name);
+    if (c < 0) {
+      l = m + 1;
+    } else if (c > 0) {
+      r = m - 1;
+    } else {
+      return pkg->symbols.p + m;
+    }
+  }
+  return NULL;
 }
 
 bool FindSymbol(const char *name, struct Package *pkg,
                 struct Packages *directdeps, struct Package **out_pkg,
                 struct Symbol **out_sym) {
-  size_t i;
-  struct Package *dep;
-  struct Symbol key, *sym;
-  key.name = 0;
-  if ((sym = bisect(&key, &pkg->symbols.p[0], pkg->symbols.i,
-                    sizeof(pkg->symbols.p[0]), (void *)CompareSymbolName,
-                    (const char *[2]){name, pkg->strings.p}))) {
-    if (out_pkg) *out_pkg = pkg;
+  size_t i, j;
+  struct Symbol *sym;
+  if ((sym = BisectSymbol(pkg, name))) {
     if (out_sym) *out_sym = sym;
+    if (out_pkg) *out_pkg = pkg;
     return true;
   }
   for (i = 0; i < directdeps->i; ++i) {
-    dep = directdeps->p[i];
-    if ((sym = bisect(&key, &dep->symbols.p[0], dep->symbols.i,
-                      sizeof(dep->symbols.p[0]), (void *)CompareSymbolName,
-                      (const char *[2]){name, dep->strings.p}))) {
-      if (out_pkg) *out_pkg = dep;
+    if ((sym = BisectSymbol(directdeps->p[i], name))) {
       if (out_sym) *out_sym = sym;
+      if (out_pkg) *out_pkg = directdeps->p[i];
       return true;
     }
   }
@@ -422,15 +435,15 @@ void CheckStrictDeps(struct Package *pkg, struct Packages *deps) {
   for (i = 0; i < pkg->undefs.i; ++i) {
     undef = &pkg->undefs.p[i];
     if (undef->bind == STB_WEAK) continue;
-    if (!FindSymbol(&pkg->strings.p[undef->name], pkg, deps, NULL, NULL)) {
-      fprintf(stderr, "%s: %s (%s) %s %s\n", "error",
-              &pkg->strings.p[undef->name],
-              &pkg->strings.p[pkg->objects.p[undef->object].path],
-              "not defined by direct deps of", &pkg->strings.p[pkg->path]);
+    if (!FindSymbol(pkg->strings.p + undef->name, pkg, deps, NULL, NULL)) {
+      fprintf(stderr, "%s: %`'s (%s) %s %s\n", "error",
+              pkg->strings.p + undef->name,
+              pkg->strings.p + pkg->objects.p[undef->object].path,
+              "not defined by direct deps of", pkg->strings.p + pkg->path);
       for (j = 0; j < deps->i; ++j) {
         dep = deps->p[j];
         fputc('\t', stderr);
-        fputs(&dep->strings.p[dep->path], stderr);
+        fputs(dep->strings.p + dep->path, stderr);
         fputc('\n', stderr);
       }
       exit(1);
