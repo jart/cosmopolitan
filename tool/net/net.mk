@@ -98,6 +98,7 @@ o/$(MODE)/tool/net/redbean-demo.com:				\
 		tool/net/demo/redbean-form.lua			\
 		tool/net/demo/redbean-xhr.lua			\
 		tool/net/demo/seekable.txt			\
+		tool/net/demo/virtualbean.html			\
 		tool/net/redbean.c				\
 		net/http/parsehttprequest.c			\
 		net/http/parseurl.c				\
@@ -107,9 +108,18 @@ o/$(MODE)/tool/net/redbean-demo.com:				\
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/net/.redbean-demo
 	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.redbean-demo/.ape bs=64 count=11 conv=notrunc 2>/dev/null
-	@$(COMPILE) -AZIP -T$@ zip -qj  $@ o/$(MODE)/tool/net/.redbean-demo/.ape tool/net/demo/.init.lua tool/net/demo/.reload.lua tool/net/demo/hello.lua tool/net/demo/redbean.lua tool/net/demo/404.html tool/net/favicon.ico tool/net/redbean.png tool/net/demo/redbean-form.lua tool/net/demo/redbean-xhr.lua
-	@$(COMPILE) -AZIP -T$@ zip -qj0 $@ tool/net/demo/seekable.txt
-	@$(COMPILE) -AZIP -T$@ zip -q   $@ tool/net/ tool/net/demo/ tool/net/demo/index.html tool/net/demo/redbean.css tool/net/redbean.c net/http/parsehttprequest.c net/http/parseurl.c net/http/encodeurl.c test/net/http/parsehttprequest_test.c test/net/http/parseurl_test.c
+	@$(COMPILE) -AZIP -T$@ zip -qj $@ o/$(MODE)/tool/net/.redbean-demo/.ape tool/net/demo/.init.lua tool/net/demo/.reload.lua tool/net/demo/hello.lua
+	@echo "&lt;-- check out this lua server page" | $(COMPILE) -AZIP -T$@ zip -cqj $@ tool/net/demo/redbean.lua
+	@$(COMPILE) -AZIP -T$@ zip -qj $@ tool/net/demo/404.html tool/net/favicon.ico tool/net/redbean.png tool/net/demo/redbean-form.lua tool/net/demo/redbean-xhr.lua
+	@echo Uncompressed for HTTP Range requests | $(COMPILE) -AZIP -T$@ zip -cqj0 $@ tool/net/demo/seekable.txt
+	@$(COMPILE) -AZIP -T$@ zip -q $@ tool/net/ tool/net/demo/ tool/net/demo/index.html tool/net/demo/redbean.css tool/net/redbean.c net/http/parsehttprequest.c net/http/parseurl.c net/http/encodeurl.c test/net/http/parsehttprequest_test.c test/net/http/parseurl_test.c
+	@echo "<p>This is a live instance of <a href=https://justine.lol/redbean/>redbean</a>: a tiny multiplatform webserver that <a href=https://news.ycombinator.com/item?id=26271117>went viral</a> on hacker news a few months ago. since then, we've added Lua dynamic serving, which also goes as fast as 1,000,000 requests per second on a core i9 (rather than a cheap virtual machine like this). the text you're reading now is a PKZIP End Of Central Directory comment.<p>redbean aims to be production worthy across six operating systems, using a single executable file (this demo is hosted on FreeBSD 13). redbean has been enhanced to restore the APE header after startup. It automatically generates this listing page based on your ZIP contents. If you use redbean as an application server / web development environment, then you'll find other new and useful features like function call logging so you can get that sweet sweet microsecond scale latency." | $(COMPILE) -AZIP -T$@ zip -z $@
+	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/net/virtualbean.justine.lol/
+	@$(COMPILE) -ACP -T$@ cp tool/net/redbean.png o/$(MODE)/tool/net/virtualbean.justine.lol/redbean.png
+	@$(COMPILE) -ACP -T$@ cp tool/net/demo/virtualbean.html o/$(MODE)/tool/net/virtualbean.justine.lol/index.html
+	@(cd o/$(MODE)/tool/net && zip -q redbean-demo.com virtualbean.justine.lol/)
+	@(cd o/$(MODE)/tool/net && echo 'Go to <a href=http://virtualbean.justine.lol>http://virtualbean.justine.lol</a>' | zip -cq redbean-demo.com virtualbean.justine.lol/index.html)
+	@(cd o/$(MODE)/tool/net && zip -q redbean-demo.com virtualbean.justine.lol/redbean.png)
 
 o/$(MODE)/tool/net/redbean-static.com:				\
 		o/$(MODE)/tool/net/redbean-static.com.dbg	\

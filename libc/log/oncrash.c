@@ -232,8 +232,6 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
   err = errno;
   if (once) _exit(119);
   once = true;
-  /* TODO(jart): Needs translation for ucontext_t and possibly siginfo_t. */
-  if (IsFreebsd() || IsOpenbsd()) ctx = NULL;
   rip = ctx ? ctx->uc_mcontext.rip : 0;
   if ((gdbpid = IsDebuggerPresent(true))) {
     DebugBreak();

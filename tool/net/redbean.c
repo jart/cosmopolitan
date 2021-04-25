@@ -1091,7 +1091,11 @@ static void GetOpts(int argc, char *argv[]) {
 static void Daemonize(void) {
   char ibuf[21];
   int i, fd, pid;
-  for (i = 0; i < 128; ++i) close(i);
+  for (i = 3; i < 128; ++i) {
+    if (i != server) {
+      close(i);
+    }
+  }
   if ((pid = fork()) > 0) exit(0);
   setsid();
   if ((pid = fork()) > 0) _exit(0);
@@ -1105,8 +1109,8 @@ static void Daemonize(void) {
   freopen("/dev/null", "r", stdin);
   freopen(logpath, "a", stdout);
   freopen(logpath, "a", stderr);
-  LOGIFNEG1(setuid(daemonuid));
   LOGIFNEG1(setgid(daemongid));
+  LOGIFNEG1(setuid(daemonuid));
 }
 
 static void ReportWorkerExit(int pid, int ws) {
@@ -1164,13 +1168,13 @@ static void AppendResourceReport(struct rusage *ru, const char *nl) {
         (int)((long double)ru->ru_nvcsw / (ru->ru_nvcsw + ru->ru_nivcsw) * 100),
         nl);
   }
-  if (ru->ru_inblock || ru->ru_oublock) {
-    Append("performed %,ld read and %,ld write i/o operations%s",
-           ru->ru_inblock, ru->ru_oublock, nl);
-  }
   if (ru->ru_msgrcv || ru->ru_msgsnd) {
-    Append("received %,ld message and sent %,ld%s", ru->ru_msgrcv,
-           ru->ru_msgsnd, nl);
+    Append("received %,ld message%s and sent %,ld%s", ru->ru_msgrcv,
+           ru->ru_msgrcv == 1 ? "" : "s", ru->ru_msgsnd, nl);
+  }
+  if (ru->ru_inblock || ru->ru_oublock) {
+    Append("performed %,ld read%s and %,ld write i/o operations%s",
+           ru->ru_inblock, ru->ru_inblock == 1 ? "" : "s", ru->ru_oublock, nl);
   }
   if (ru->ru_nsignals) {
     Append("received %,ld signals%s", ru->ru_nsignals, nl);
@@ -2035,17 +2039,25 @@ static char *ServeListing(void) {
 <style>\r\n\
 html { color: #111; font-family: sans-serif; }\r\n\
 a { text-decoration: none; }\r\n\
-a:hover { color: #00e; border-bottom: 1px solid #ccc; }\r\n\
+pre a:hover { color: #00e; border-bottom: 1px solid #ccc; }\r\n\
+h1 a { color: #111; }\r\n\
 img { vertical-align: middle; }\r\n\
 footer { color: #555; font-size: 10pt; }\r\n\
 td { padding-right: 3em; }\r\n\
+.eocdcomment { max-width: 800px; color: #333; font-size: 11pt; }\r\n\
 </style>\r\n\
 <header><h1>\r\n");
   AppendLogo();
   rp[0] = EscapeHtml(brand, -1, &rn[0]);
   AppendData(rp[0], rn[0]);
   free(rp[0]);
-  Append("</h1><hr></header><pre>\r\n");
+  Append("</h1>\r\n"
+         "<div class=\"eocdcomment\">%.*s</div>\r\n"
+         "<hr>\r\n"
+         "</header>\r\n"
+         "<pre>\r\n",
+         strnlen(GetZipCdirComment(cdir), GetZipCdirCommentSize(cdir)),
+         GetZipCdirComment(cdir));
   memset(w, 0, sizeof(w));
   n = GetZipCdirRecords(cdir);
   for (cf = GetZipCdirOffset(cdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
@@ -2073,7 +2085,6 @@ td { padding-right: 3em; }\r\n\
                                             ZIP_CFILE_COMMENTSIZE(zmap + cf)),
                                     &rn[3]);
       rp[4] = EscapeHtml(rp[0], rn[0], &rn[4]);
-      rp[5] = EscapeHtml(rp[3], rn[3], &rn[0]);
       lastmod = GetZipCfileLastModified(zmap + cf);
       localtime_r(&lastmod, &tm);
       strftime(tb, sizeof(tb), "%Y-%m-%d %H:%M:%S %Z", &tm);
@@ -2083,14 +2094,13 @@ td { padding-right: 3em; }\r\n\
         Append("<a href=\"%.*s\">%-*.*s</a> %s  %0*o %4s  %,*ld  %'s\r\n",
                rn[2], rp[2], w[0], rn[4], rp[4], tb, w[1],
                GetZipCfileMode(zmap + cf), DescribeCompressionRatio(rb, lf),
-               w[2], GetZipLfileUncompressedSize(zmap + lf), rp[5]);
+               w[2], GetZipLfileUncompressedSize(zmap + lf), rp[3]);
       } else {
         Append("%-*.*s %s  %0*o %4s  %,*ld  %'s\r\n", w[0], rn[4], rp[4], tb,
                w[1], GetZipCfileMode(zmap + cf),
                DescribeCompressionRatio(rb, lf), w[2],
-               GetZipLfileUncompressedSize(zmap + lf), rp[5]);
+               GetZipLfileUncompressedSize(zmap + lf), rp[3]);
       }
-      free(rp[5]);
       free(rp[4]);
       free(rp[3]);
       free(rp[2]);
@@ -2100,9 +2110,13 @@ td { padding-right: 3em; }\r\n\
     free(path);
   }
   Append("</pre><footer><hr>\r\n");
-  Append("<table border=\"0\"><tr><td valign=\"top\">\r\n");
-  Append("<a href=\"/statusz\">/statusz</a> says your redbean<br>\r\n");
-  AppendResourceReport(&shared->children, "<br>\r\n");
+  Append("<table border=\"0\"><tr>\r\n");
+  Append("<td valign=\"top\">\r\n");
+  Append("<a href=\"/statusz\">/statusz</a>\r\n");
+  if (shared->connectionshandled) {
+    Append("says your redbean<br>\r\n");
+    AppendResourceReport(&shared->children, "<br>\r\n");
+  }
   Append("<td valign=\"top\">\r\n");
   and = "";
   x = nowl() - startserver;
@@ -4507,7 +4521,6 @@ void RedBean(int argc, char *argv[], const char *prog) {
     }
     exit(1);
   }
-  if (daemonize) Daemonize();
   CHECK_NE(-1, listen(server, 10));
   addrsize = sizeof(serveraddr);
   CHECK_NE(-1, getsockname(server, &serveraddr, &addrsize));
@@ -4516,6 +4529,7 @@ void RedBean(int argc, char *argv[], const char *prog) {
     printf("%d\n", ntohs(serveraddr.sin_port));
     fflush(stdout);
   }
+  if (daemonize) Daemonize();
   UpdateCurrentDate(nowl());
   freelist.c = 8;
   freelist.p = xcalloc(freelist.c, sizeof(*freelist.p));
@@ -4558,8 +4572,10 @@ void RedBean(int argc, char *argv[], const char *prog) {
 }
 
 int main(int argc, char *argv[]) {
-  setenv("GDB", "", true);
-  if (!IsTiny()) showcrashreports();
+  if (!IsTiny()) {
+    setenv("GDB", "", true);
+    showcrashreports();
+  }
   RedBean(argc, argv, (const char *)getauxval(AT_EXECFN));
   return 0;
 }
