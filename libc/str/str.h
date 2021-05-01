@@ -156,6 +156,7 @@ char16_t *strcat16(char16_t *, const char16_t *) memcpyesque;
 wchar_t *wcscat(wchar_t *, const wchar_t *) memcpyesque;
 size_t strlcpy(char *, const char *, size_t);
 size_t strlcat(char *, const char *, size_t);
+size_t strxfrm(char *, const char *, size_t);
 char *strcpy(char *, const char *) memcpyesque;
 char16_t *strcpy16(char16_t *, const char16_t *) memcpyesque;
 wchar_t *wcscpy(wchar_t *, const wchar_t *) memcpyesque;
