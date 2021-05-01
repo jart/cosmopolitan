@@ -36,6 +36,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/ex.h"
@@ -112,9 +113,9 @@ static const struct ContentTypeExtension {
   const char *mime;
 } kContentTypeExtension[] = {
     {"7z", "application/x-7z-compressed"},     //
-    {"S", "text/plain"},                       //
     {"aac", "audio/aac"},                      //
     {"apng", "image/apng"},                    //
+    {"atom", "application/atom+xml"},          //
     {"avi", "video/x-msvideo"},                //
     {"avif", "image/avif"},                    //
     {"bmp", "image/bmp"},                      //
@@ -123,6 +124,7 @@ static const struct ContentTypeExtension {
     {"css", "text/css"},                       //
     {"csv", "text/csv"},                       //
     {"gif", "image/gif"},                      //
+    {"gz", "application/gzip"},                //
     {"h", "text/plain"},                       //
     {"htm", "text/html"},                      //
     {"html", "text/html"},                     //
@@ -152,27 +154,38 @@ static const struct ContentTypeExtension {
     {"rtf", "application/rtf"},                //
     {"s", "text/plain"},                       //
     {"sh", "application/x-sh"},                //
+    {"sqlite", "application/vnd.sqlite3"},     //
+    {"sqlite3", "application/vnd.sqlite3"},    //
     {"svg", "image/svg+xml"},                  //
     {"swf", "application/x-shockwave-flash"},  //
+    {"t38", "image/t38"},                      //
     {"tar", "application/x-tar"},              //
     {"tiff", "image/tiff"},                    //
     {"ttf", "font/ttf"},                       //
     {"txt", "text/plain"},                     //
+    {"ul", "audio/basic"},                     //
+    {"ulaw", "audio/basic"},                   //
+    {"wasm", "application/wasm"},              //
     {"wav", "audio/x-wav"},                    //
     {"weba", "audio/webm"},                    //
     {"webm", "video/webm"},                    //
     {"webp", "image/webp"},                    //
     {"woff", "font/woff"},                     //
     {"woff2", "font/woff2"},                   //
+    {"wsdl", "application/wsdl+xml"},          //
     {"xhtml", "application/xhtml+xml"},        //
     {"xls", "application/vnd.ms-excel"},       //
     {"xml", "application/xml"},                //
+    {"xsl", "application/xslt+xml"},           //
+    {"xslt", "application/xslt+xml"},          //
+    {"z", "application/zlib"},                 //
     {"zip", "application/zip"},                //
+    {"zst", "application/zstd"},               //
 };
 
-static const char kRegCode[][9] = {
-    "OK",     "NOMATCH", "BADPAT", "ECOLLATE", "ECTYPE", "EESCAPE", "ESUBREG",
-    "EBRACK", "EPAREN",  "EBRACE", "BADBR",    "ERANGE", "ESPACE",  "BADRPT",
+static const char kRegCode[][8] = {
+    "OK",     "NOMATCH", "BADPAT", "COLLATE", "ECTYPE", "EESCAPE", "ESUBREG",
+    "EBRACK", "EPAREN",  "EBRACE", "BADBR",   "ERANGE", "ESPACE",  "BADRPT",
 };
 
 struct Buffer {
@@ -359,6 +372,7 @@ static int client;
 static int daemonuid;
 static int daemongid;
 static int statuscode;
+static int maxpayloadsize;
 static int messageshandled;
 static uint32_t clientaddrsize;
 
@@ -430,6 +444,7 @@ FLAGS\n\
 "  -H K:V    sets http header globally [repeat]\n\
   -D DIR    serve assets from local directory [repeat]\n\
   -t MS     tunes read and write timeouts [default 30000]\n\
+  -M INT    tune max message payload size [default 65536]\n\
   -c SEC    configures static asset cache-control headers\n\
   -r /X=/Y  redirect X to Y [repeat]\n\
   -R /X=/Y  rewrites X to Y [repeat]\n\
@@ -820,7 +835,7 @@ static const char *FindContentType(const char *path, size_t n) {
   if ((p = memrchr(path, '.', n))) {
     for (x = 0, i = n; i-- > p + 1 - path;) {
       x <<= 8;
-      x |= path[i] & 0xFF;
+      x |= tolower(path[i] & 255);
     }
     if ((r = BisectContentType(bswap_64(x)))) {
       return r;
@@ -935,6 +950,7 @@ static void SetDefaults(void) {
   ProgramBrand("redbean/0.4");
 #endif
   __log_level = kLogWarn;
+  maxpayloadsize = 64 * 1024;
   ProgramCache(-1);
   ProgramTimeout(30 * 1000);
   ProgramPort(DEFAULT_PORT);
@@ -1005,7 +1021,7 @@ static void ProgramHeader(const char *s) {
 
 static void GetOpts(int argc, char *argv[]) {
   int opt;
-  while ((opt = getopt(argc, argv, "azhdugvmbfl:p:r:R:H:c:L:P:U:G:B:D:t:")) !=
+  while ((opt = getopt(argc, argv, "azhdugvmbfl:p:r:R:H:c:L:P:U:G:B:D:t:M:")) !=
          -1) {
     switch (opt) {
       case 'v':
@@ -1055,6 +1071,10 @@ static void GetOpts(int argc, char *argv[]) {
         break;
       case 'p':
         ProgramPort(strtol(optarg, NULL, 0));
+        break;
+      case 'M':
+        maxpayloadsize = atoi(optarg);
+        maxpayloadsize = MAX(1450, maxpayloadsize);
         break;
       case 'l':
         CHECK_EQ(1, inet_pton(AF_INET, optarg, &serveraddr.sin_addr));
@@ -3984,7 +4004,7 @@ char *ServeServerOptions(void) {
   p = stpcpy(p, "Allow: GET, HEAD, OPTIONS\r\n");
 #else
   p = stpcpy(p, "Accept: */*\r\n"
-                "Accept-Charset: utf-8\r\n"
+                "Accept-Charset: utf-8,ISO-8859-1;q=0.7,*;q=0.5\r\n"
                 "Allow: GET, HEAD, POST, PUT, DELETE, OPTIONS\r\n");
 #endif
   return p;
@@ -4537,7 +4557,7 @@ void RedBean(int argc, char *argv[], const char *prog) {
   unmaplist.p = xcalloc(unmaplist.c, sizeof(*unmaplist.p));
   hdrbuf.n = 4 * 1024;
   hdrbuf.p = xvalloc(hdrbuf.n);
-  inbuf.n = 64 * 1024;
+  inbuf.n = maxpayloadsize;
   inbuf.p = xvalloc(inbuf.n);
   while (!terminated) {
     if (zombied) {

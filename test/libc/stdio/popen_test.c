@@ -23,6 +23,7 @@
 TEST(popen, test) {
   int ws;
   FILE *f;
+  /* TODO(jart): look into popen() asan error */
   f = popen("echo hi", "r");
   ASSERT_NE(NULL, f);
   EXPECT_EQ('h', fgetc(f));

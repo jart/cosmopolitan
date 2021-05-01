@@ -185,7 +185,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         continue;
       } else if (format[1] == 'l' && format[2] == 'u') {
         lu = va_arg(va, unsigned long); /* FAST PATH: PLAIN UNSIGNED LONG */
-        if (out(ibuf, arg, int64toarray_radix10(lu, ibuf)) == -1) return -1;
+        if (out(ibuf, arg, uint64toarray_radix10(lu, ibuf)) == -1) return -1;
         format += 3;
         continue;
       } else if (format[1] == '.' && format[2] == '*' && format[3] == 's') {

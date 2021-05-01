@@ -48,6 +48,20 @@ o/$(MODE)/libc/str/memmem.o:					\
 		OVERRIDE_CPPFLAGS +=				\
 			-DSTACK_FRAME_UNLIMITED
 
+o/$(MODE)/libc/str/getzipcdir.o					\
+o/$(MODE)/libc/str/getzipcdircomment.o				\
+o/$(MODE)/libc/str/getzipcdircommentsize.o			\
+o/$(MODE)/libc/str/getzipcdiroffset.o				\
+o/$(MODE)/libc/str/getzipcdirrecords.o				\
+o/$(MODE)/libc/str/getzipcfilecompressedsize.o			\
+o/$(MODE)/libc/str/getzipcfilemode.o				\
+o/$(MODE)/libc/str/getzipcfileoffset.o				\
+o/$(MODE)/libc/str/getzipcfileuncompressedsize.o		\
+o/$(MODE)/libc/str/getziplfilecompressedsize.o			\
+o/$(MODE)/libc/str/getziplfileuncompressedsize.o:		\
+		OVERRIDE_CFLAGS +=				\
+			-Os
+
 LIBC_STR_LIBS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)))
 LIBC_STR_SRCS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_SRCS))
 LIBC_STR_HDRS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_HDRS))

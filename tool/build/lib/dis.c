@@ -111,7 +111,7 @@ static char *DisRaw(struct Dis *d, char *p) {
   for (i = 0; i < MIN(15, d->xedd->length); ++i) {
     if (i == d->xedd->op.PIVOTOP) *p++ = ' ';
     *p++ = "0123456789abcdef"[(d->xedd->bytes[i] & 0xf0) >> 4];
-    *p++ = "0123456789abcdef"[d->xedd->bytes[i] & 0x0f];
+    *p++ = "0123456789abcdef"[(d->xedd->bytes[i] & 0x0f) >> 0];
   }
   *p = '\0';
   return p;
