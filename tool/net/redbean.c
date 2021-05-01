@@ -430,7 +430,8 @@ DESCRIPTION\n\
 FLAGS\n\
 \n\
   -h        help\n\
-  -v        verbosity [repeat]\n\
+  -s        increase silence [repeat]\n\
+  -v        increase verbosity [repeat]\n\
   -d        daemonize\n\
   -u        uniprocess\n\
   -z        print port\n\
@@ -444,7 +445,7 @@ FLAGS\n\
 "  -H K:V    sets http header globally [repeat]\n\
   -D DIR    serve assets from local directory [repeat]\n\
   -t MS     tunes read and write timeouts [default 30000]\n\
-  -M INT    tune max message payload size [default 65536]\n\
+  -M INT    tunes max message payload size [default 65536]\n\
   -c SEC    configures static asset cache-control headers\n\
   -r /X=/Y  redirect X to Y [repeat]\n\
   -R /X=/Y  rewrites X to Y [repeat]\n\
@@ -949,7 +950,7 @@ static void SetDefaults(void) {
 #else
   ProgramBrand("redbean/0.4");
 #endif
-  __log_level = kLogWarn;
+  __log_level = kLogInfo;
   maxpayloadsize = 64 * 1024;
   ProgramCache(-1);
   ProgramTimeout(30 * 1000);
@@ -1021,11 +1022,14 @@ static void ProgramHeader(const char *s) {
 
 static void GetOpts(int argc, char *argv[]) {
   int opt;
-  while ((opt = getopt(argc, argv, "azhdugvmbfl:p:r:R:H:c:L:P:U:G:B:D:t:M:")) !=
-         -1) {
+  while ((opt = getopt(argc, argv,
+                       "azhdugvsmbfl:p:r:R:H:c:L:P:U:G:B:D:t:M:")) != -1) {
     switch (opt) {
       case 'v':
         __log_level++;
+        break;
+      case 's':
+        __log_level--;
         break;
       case 'd':
         daemonize = true;
@@ -4544,7 +4548,10 @@ void RedBean(int argc, char *argv[], const char *prog) {
   CHECK_NE(-1, listen(server, 10));
   addrsize = sizeof(serveraddr);
   CHECK_NE(-1, getsockname(server, &serveraddr, &addrsize));
-  VERBOSEF("LISTEN %s", DescribeServer());
+  struct in_addr addr = serveraddr.sin_addr;
+  if (addr.s_addr == INADDR_ANY) addr.s_addr = htonl(INADDR_LOOPBACK);
+  LOGF("LISTEN %s see http://%s:%d", DescribeServer(), inet_ntoa(addr),
+       ntohs(serveraddr.sin_port));
   if (printport) {
     printf("%d\n", ntohs(serveraddr.sin_port));
     fflush(stdout);
