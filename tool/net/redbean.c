@@ -130,7 +130,7 @@ static const struct ContentTypeExtension {
     {"html", "text/html"},                     //
     {"i", "text/plain"},                       //
     {"ico", "image/vnd.microsoft.icon"},       //
-    {"jar", "appliaction/java-archive"},       //
+    {"jar", "application/java-archive"},       //
     {"jpeg", "image/jpeg"},                    //
     {"jpg", "image/jpeg"},                     //
     {"js", "application/javascript"},          //
