@@ -1125,7 +1125,7 @@ static void Daemonize(void) {
   if ((pid = fork()) > 0) _exit(0);
   umask(0);
   if (pidpath) {
-    fd = open(pidpath, O_CREAT | O_EXCL | O_WRONLY, 0644);
+    fd = open(pidpath, O_CREAT | O_WRONLY, 0644);
     write(fd, ibuf, uint64toarray_radix10(getpid(), ibuf));
     close(fd);
   }
@@ -1695,7 +1695,7 @@ static void AppendLogo(void) {
   struct Asset *a;
   if ((a = GetAsset("/redbean.png", 12)) && (p = LoadAsset(a, &n))) {
     q = EncodeBase64(p, n, &n);
-    Append("<img src=\"data:image/png;base64,");
+    Append("<img alt=\"[logo]\" src=\"data:image/png;base64,");
     AppendData(q, n);
     Append("\">\r\n");
     free(q);
@@ -2951,7 +2951,7 @@ static int LuaSetHeader(lua_State *L) {
   }
   switch (h) {
     case kHttpConnection:
-      if (evallen != 5 || memcmp(eval, "close", 5)) {
+      if (evallen != 5 || memcasecmp(eval, "close", 5)) {
         luaL_argerror(L, 2, "unsupported");
         unreachable;
       }
@@ -3162,7 +3162,7 @@ static int LuaHasControlCodes(lua_State *L) {
   const char *p;
   p = luaL_checklstring(L, 1, &n);
   f = LuaCheckControlFlags(L, 2);
-  lua_pushboolean(L, HasControlCodes(p, n, f));
+  lua_pushboolean(L, HasControlCodes(p, n, f) != -1);
   return 1;
 }
 
@@ -4530,9 +4530,6 @@ void RedBean(int argc, char *argv[], const char *prog) {
   xsigaction(SIGALRM, OnAlrm, 0, 0, 0);
   xsigaction(SIGPIPE, SIG_IGN, 0, 0, 0);
   /* TODO(jart): SIGXCPU and SIGXFSZ */
-  if (setitimer(ITIMER_REAL, &kHeartbeat, NULL) == -1) {
-    heartless = true;
-  }
   server = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, IPPROTO_TCP);
   CHECK_NE(-1, server);
   TuneSockets();
@@ -4557,6 +4554,9 @@ void RedBean(int argc, char *argv[], const char *prog) {
     fflush(stdout);
   }
   if (daemonize) Daemonize();
+  if (setitimer(ITIMER_REAL, &kHeartbeat, NULL) == -1) {
+    heartless = true;
+  }
   UpdateCurrentDate(nowl());
   freelist.c = 8;
   freelist.p = xcalloc(freelist.c, sizeof(*freelist.p));

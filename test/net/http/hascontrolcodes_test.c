@@ -22,30 +22,30 @@
 #include "net/http/escape.h"
 
 TEST(HasControlCodes, test) {
-  EXPECT_FALSE(
-      HasControlCodes(kHyperion, kHyperionSize, kControlC0 | kControlC1));
-  EXPECT_TRUE(HasControlCodes("hi\1", -1, kControlC0));
-  EXPECT_FALSE(HasControlCodes("hi\1", -1, kControlC1));
-  EXPECT_FALSE(HasControlCodes("hi there", -1, 0));
-  EXPECT_TRUE(HasControlCodes("hi\tthere", -1, kControlWs));
+  EXPECT_EQ(-1, HasControlCodes(kHyperion, kHyperionSize, kControlC0));
+  EXPECT_EQ(+2, HasControlCodes("hi\1", -1, kControlC0));
+  EXPECT_EQ(-1, HasControlCodes("hi\1", -1, kControlC1));
+  EXPECT_EQ(-1, HasControlCodes("hi there", -1, 0));
+  EXPECT_NE(-1, HasControlCodes("hi\tthere", -1, kControlWs));
 }
 
 TEST(HasControlCodes, testDoesUtf8) {
-  EXPECT_FALSE(HasControlCodes(u8"→", -1, kControlC0 | kControlC1));
-  EXPECT_FALSE(HasControlCodes("\304\200", -1, kControlC0 | kControlC1));
-  EXPECT_TRUE(HasControlCodes("\300\200", -1, kControlC0 | kControlC1));
-  EXPECT_FALSE(HasControlCodes("\300\200", -1, kControlC1));
-  EXPECT_TRUE(HasControlCodes("\302\202", -1, kControlC0 | kControlC1));
-  EXPECT_TRUE(HasControlCodes("\302\202", -1, kControlC1));
-  EXPECT_FALSE(HasControlCodes("\302\202", -1, kControlC0));
+  EXPECT_EQ(-1, HasControlCodes(u8"→", -1, kControlC0 | kControlC1));
+  EXPECT_EQ(-1, HasControlCodes("\304\200", -1, kControlC0 | kControlC1));
+  EXPECT_NE(-1, HasControlCodes("\300\200", -1, kControlC0 | kControlC1));
+  EXPECT_EQ(-1, HasControlCodes("\300\200", -1, kControlC1));
+  EXPECT_NE(-1, HasControlCodes("\302\202", -1, kControlC0 | kControlC1));
+  EXPECT_NE(-1, HasControlCodes("\302\202", -1, kControlC1));
+  EXPECT_EQ(-1, HasControlCodes("\302\202", -1, kControlC0));
 }
 
 TEST(HasControlCodes, testHasLatin1FallbackBehavior) {
-  EXPECT_TRUE(HasControlCodes("\202", -1, kControlWs | kControlC1));
-  EXPECT_FALSE(HasControlCodes("\202", -1, kControlC0));
+  EXPECT_NE(-1, HasControlCodes("\202", -1, kControlWs | kControlC1));
+  EXPECT_EQ(-1, HasControlCodes("\202", -1, kControlC0));
 }
 
 BENCH(HasControlCodes, bench) {
-  EZBENCH2("HasControlCodes", donothing,
-           HasControlCodes(kHyperion, kHyperionSize, kControlWs));
+  EZBENCH2("HasControlCodes small", donothing, HasControlCodes("hello", -1, 0));
+  EZBENCH2("HasControlCodes big", donothing,
+           HasControlCodes(kHyperion, kHyperionSize, kControlC1));
 }

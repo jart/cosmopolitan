@@ -16,11 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
-#include "libc/intrin/pcmpgtb.h"
-#include "libc/intrin/pmovmskb.h"
-#include "libc/mem/mem.h"
-#include "libc/stdio/stdio.h"
+#include "libc/bits/likely.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "net/http/escape.h"
@@ -31,17 +27,21 @@
  * @param p is input value
  * @param n if -1 implies strlen
  * @param f can have kControlWs, kControlC0, kControlC1 to forbid
- * @return true if forbidden characters were found
+ * @return index of first forbidden character or -1
  * @see VisualizeControlCodes()
  */
-bool HasControlCodes(const char *p, size_t n, int f) {
-  int c;
+ssize_t HasControlCodes(const char *p, size_t n, int f) {
+  char t[256];
   wint_t x, a, b;
   size_t i, j, m;
+  memset(t, 0, sizeof(t));
+  if (f & kControlC0) memset(t + 0x00, 1, 0x20 - 0x00), t[0x7F] = 1;
+  if (f & kControlC1) memset(t + 0x80, 1, 0xA0 - 0x80);
+  t['\t'] = t['\r'] = t['\n'] = t['\v'] = !!(f & kControlWs);
   if (n == -1) n = p ? strlen(p) : 0;
   for (i = 0; i < n;) {
     x = p[i++] & 0xff;
-    if (x >= 0300) {
+    if (UNLIKELY(x >= 0300)) {
       a = ThomPikeByte(x);
       m = ThomPikeLen(x) - 1;
       if (i + m <= n) {
@@ -57,13 +57,9 @@ bool HasControlCodes(const char *p, size_t n, int f) {
         }
       }
     }
-    if (((f & kControlC1) && 0x80 <= x && x < 0xA0) ||
-        ((f & kControlC0) && (x < 32 || x == 0x7F) &&
-         !(x == '\t' || x == '\r' || x == '\n' || x == '\v')) ||
-        ((f & kControlWs) &&
-         (x == '\t' || x == '\r' || x == '\n' || x == '\v'))) {
-      return true;
+    if (x < 256 && t[x]) {
+      return i - 1;
     }
   }
-  return false;
+  return -1;
 }

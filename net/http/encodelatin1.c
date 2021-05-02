@@ -30,7 +30,7 @@
  * @param p is input value
  * @param n if -1 implies strlen
  * @param z if non-NULL receives output length
- * @param f can kControlC0, kControlC1 to forbid
+ * @param f can kControlC0, kControlC1, kControlWs to forbid
  * @return allocated NUL-terminated buffer, or NULL w/ errno
  * @error EILSEQ means UTF-8 found we can't or won't re-encode
  * @error ENOMEM means malloc() failed
@@ -38,7 +38,12 @@
 char *EncodeLatin1(const char *p, size_t n, size_t *z, int f) {
   int c;
   size_t i;
+  char t[256];
   char *r, *q;
+  memset(t, 0, sizeof(t));
+  if (f & kControlC0) memset(t + 0x00, 1, 0x20 - 0x00), t[0x7F] = 1;
+  if (f & kControlC1) memset(t + 0x80, 1, 0xA0 - 0x80);
+  t['\t'] = t['\r'] = t['\n'] = t['\v'] = !!(f & kControlWs);
   if (z) *z = 0;
   if (n == -1) n = p ? strlen(p) : 0;
   if ((q = r = malloc(n + 1))) {
@@ -51,11 +56,7 @@ char *EncodeLatin1(const char *p, size_t n, size_t *z, int f) {
           goto Invalid;
         }
       }
-      if (((f & kControlC1) && 0x80 <= c && c < 0xA0) ||
-          ((f & kControlC0) && (c < 32 || c == 0x7F) &&
-           !(c == '\t' || c == '\r' || c == '\n' || c == '\v')) ||
-          ((f & kControlWs) &&
-           (c == '\t' || c == '\r' || c == '\n' || c == '\v'))) {
+      if (t[c]) {
         goto Invalid;
       }
       *q++ = c;
