@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,64 +16,71 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/errno.h"
-#include "libc/macros.internal.h"
+#include "libc/intrin/pcmpgtb.h"
+#include "libc/intrin/pmovmskb.h"
+#include "libc/intrin/punpckhbw.h"
+#include "libc/intrin/punpcklbw.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/o.h"
+#include "libc/str/thompike.h"
+#include "libc/str/utf16.h"
+#include "libc/x/x.h"
 
 /**
- * Reads string from stream.
+ * Transcodes UTF-8 to UTF-16.
  *
- * @param s is the caller's buffer (in/out) which is extended or
- *     allocated automatically, also NUL-terminated is guaranteed
- * @param n is the capacity of s (in/out)
- * @param delim is the stop char (and NUL is implicitly too)
- * @return number of bytes read >0, including delim, excluding NUL,
- *     or -1 w/ errno on EOF or error; see ferror() and feof()
- * @note this function can't punt EINTR to caller
- * @see getline(), chomp(), gettok_r()
+ * @param p is input value
+ * @param n if -1 implies strlen
+ * @param z if non-NULL receives output length
  */
-ssize_t getdelim(char **s, size_t *n, int delim, FILE *f) {
-  char *p;
-  ssize_t rc;
-  size_t i, m;
-  if ((f->iomode & O_ACCMODE) == O_WRONLY) {
-    f->state = errno = EBADF;
-    return -1;
-  }
-  if (f->beg > f->end || f->bufmode == _IONBF) {
-    f->state = errno = EINVAL;
-    return -1;
-  }
-  if (!*s) *n = 0;
-  for (i = 0;; i += m) {
-    m = f->end - f->beg;
-    if ((p = memchr(f->buf + f->beg, delim, m))) m = p + 1 - (f->buf + f->beg);
-    if (i + m + 1 > *n && !(*s = realloc(*s, (*n = i + m + 1)))) abort();
-    memcpy(*s + i, f->buf + f->beg, m);
-    (*s)[i + m] = '\0';
-    if ((f->beg += m) == f->end) f->beg = f->end = 0;
-    if (p) {
-      return i + m;
-    } else if (f->fd == -1) {
-      break;
-    } else if ((rc = read(f->fd, f->buf, f->size)) != -1) {
-      if (!rc) break;
-      f->end = rc;
-    } else if (errno != EINTR) {
-      f->state = errno;
-      return -1;
+char16_t *utf8toutf16(const char *p, size_t n, size_t *z) {
+  size_t i;
+  wint_t x, a, b;
+  char16_t *r, *q;
+  unsigned m, j, w;
+  uint8_t v1[16], v2[16], vz[16];
+  if (z) *z = 0;
+  if (n == -1) n = p ? strlen(p) : 0;
+  if ((q = r = malloc(n * sizeof(char16_t) * 2 + sizeof(char16_t)))) {
+    for (i = 0; i < n;) {
+      if (i + 16 < n) { /* 34x ascii */
+        memset(vz, 0, 16);
+        do {
+          memcpy(v1, p + i, 16);
+          pcmpgtb((int8_t *)v2, (int8_t *)v1, (int8_t *)vz);
+          if (pmovmskb(v2) != 0xFFFF) break;
+          punpcklbw(v2, v1, vz);
+          punpckhbw(v1, v1, vz);
+          memcpy(q + 0, v2, 16);
+          memcpy(q + 8, v1, 16);
+          i += 16;
+          q += 16;
+        } while (i + 16 < n);
+      }
+      x = p[i++] & 0xff;
+      if (x >= 0300) {
+        a = ThomPikeByte(x);
+        m = ThomPikeLen(x) - 1;
+        if (i + m <= n) {
+          for (j = 0;;) {
+            b = p[i + j] & 0xff;
+            if (!ThomPikeCont(b)) break;
+            a = ThomPikeMerge(a, b);
+            if (++j == m) {
+              x = a;
+              i += j;
+              break;
+            }
+          }
+        }
+      }
+      w = EncodeUtf16(x);
+      *q++ = w;
+      if ((w >>= 16)) *q++ = w;
     }
+    if (z) *z = q - r;
+    *q++ = '\0';
+    if ((q = realloc(r, (q - r) * sizeof(char16_t)))) r = q;
   }
-  f->state = -1;
-  if (i + m) {
-    return i + m;
-  } else {
-    return -1;
-  }
+  return r;
 }

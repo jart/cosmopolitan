@@ -23,6 +23,8 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/str/internal.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 
 #define MAKESTRING(NAME, VALUE) \
@@ -74,4 +76,12 @@ TEST(strstr, test) {
   ASSERT_EQ(NULL, strstr("-Wl,--gc-sections", "stack-protector"));
   ASSERT_EQ(NULL, strstr("-Wl,--gc-sections", "sanitize"));
   ASSERT_STREQ("x", strstr("x", "x"));
+}
+
+BENCH(strstr, bench) {
+  EZBENCH2("strstr", donothing, EXPROPRIATE(strstr(kHyperion, "THE END")));
+  EZBENCH2("strstr", donothing,
+           EXPROPRIATE(strstr(
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+               "aaaaaab")));
 }

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,26 +17,24 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
-#include "libc/stdio/stdio.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/hyperion.h"
+#include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-/**
- * Reads line from stream.
- *
- * @return allocated line that needs free() and usually chomp() too,
- *     or NULL on ferror() or feof()
- * @see getdelim() for a more difficult api
- * @see chomp()
- */
-char *xgetline(FILE *f) {
-  char *p;
-  size_t n;
-  ssize_t m;
-  n = 0;
-  p = 0;
-  if ((m = getdelim(&p, &n, '\n', f)) <= 0) {
-    free(p);
-    p = 0;
-  }
-  return p;
+TEST(utf8toutf16, test) {
+  EXPECT_STREQ(u"hello☻♥", gc(utf8toutf16("hello☻♥", -1, 0)));
+  EXPECT_STREQ(u"hello☻♥hello☻♥h", gc(utf8toutf16("hello☻♥hello☻♥h", -1, 0)));
+  EXPECT_STREQ(u"hello☻♥hello☻♥hi", gc(utf8toutf16("hello☻♥hello☻♥hi", -1, 0)));
+  EXPECT_STREQ(u"hello☻♥hello☻♥hello☻♥hello☻♥hello☻♥",
+               gc(utf8toutf16("hello☻♥hello☻♥hello☻♥hello☻♥hello☻♥", -1, 0)));
+  EXPECT_STREQ(u"hello--hello--h", gc(utf8toutf16("hello--hello--h", -1, 0)));
+  EXPECT_STREQ(u"hello--hello--hi", gc(utf8toutf16("hello--hello--hi", -1, 0)));
+  EXPECT_STREQ(u"hello--hello--hello--hello--hello--",
+               gc(utf8toutf16("hello--hello--hello--hello--hello--", -1, 0)));
+}
+
+BENCH(utf8toutf16, bench) {
+  EZBENCH2("utf8toutf16", donothing,
+           free(utf8toutf16(kHyperion, kHyperionSize, 0)));
 }

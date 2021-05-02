@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/safemacros.internal.h"
 #include "libc/str/str.h"
 
 /**
@@ -29,6 +30,8 @@
  */
 char *strstr(const char *haystack, const char *needle) {
   size_t i;
+  if (!*needle) return haystack;
+  haystack = firstnonnull(strchr(haystack, *needle), haystack);
   for (;;) {
     for (i = 0;;) {
       if (!needle[i]) return (/*unconst*/ char *)haystack;
