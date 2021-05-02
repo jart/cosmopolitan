@@ -11,7 +11,7 @@ uint64_t tpenc(int32_t) pureconst;
     long Edi, Buf;             \
     asm("call\ttpenc"          \
         : "=a"(Buf), "=D"(Edi) \
-        : "1"(CODE)            \
+        : "1"((int)(CODE))     \
         : "rcx", "rdx", "cc"); \
     Buf;                       \
   })

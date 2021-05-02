@@ -269,9 +269,10 @@ static char *ParseUrlImpl(const char *data, size_t size, struct Url *h,
  * Parses URL.
  *
  * This parser is charset agnostic. Percent encoded bytes are decoded
- * for all fields. Returned values might contain things like NUL
- * characters, spaces, control codes, and non-canonical encodings.
- * Absent can be discerned from empty by checking if the pointer is set.
+ * for all fields (with the exception of scheme). Returned values might
+ * contain things like NUL characters, spaces, control codes, and
+ * non-canonical encodings. Absent can be discerned from empty by
+ * checking if the pointer is set.
  *
  * There's no failure condition for this routine. This is a permissive
  * parser. This doesn't normalize path segments like `.` or `..` so use

@@ -53,6 +53,7 @@ $(NET_HTTP_A).pkg:				\
 		$(NET_HTTP_A_OBJS)		\
 		$(foreach x,$(NET_HTTP_A_DIRECTDEPS),$($(x)_A).pkg)
 
+o/$(MODE)/net/http/gethttpheadername.o		\
 o/$(MODE)/net/http/categorizeip.o		\
 o/$(MODE)/net/http/getipcategoryname.o		\
 o/$(MODE)/net/http/isafrinicip.o		\
