@@ -241,6 +241,7 @@ static struct Assets {
 static struct Shared {
   int workers;
   long double nowish;
+  long double lastreindex;
   long double lastmeltdown;
   char currentdate[32];
   struct rusage server;
@@ -318,6 +319,7 @@ static struct Shared {
   long readresets;
   long readtimeouts;
   long redirects;
+  long reindexes;
   long reloads;
   long rewrites;
   long serveroptions;
@@ -379,13 +381,14 @@ static uint32_t clientaddrsize;
 static lua_State *L;
 static size_t zsize;
 static char *content;
-static uint8_t *cdir;
 static uint8_t *zmap;
+static uint8_t *zcdir;
 static size_t hdrsize;
 static size_t msgsize;
 static size_t amtread;
 static char *extrahdrs;
 static char *luaheaderp;
+static const char *zpath;
 static const char *brand;
 static const char *pidpath;
 static const char *logpath;
@@ -408,6 +411,7 @@ static struct Url url;
 static struct HttpRequest msg;
 static char slashpath[PATH_MAX];
 
+static struct stat zst;
 static long double startread;
 static long double lastrefresh;
 static long double startserver;
@@ -1415,12 +1419,12 @@ static void IndexAssets(void) {
   struct Asset *p;
   uint32_t i, n, m, step, hash;
   CHECK_GE(HASH_LOAD_FACTOR, 2);
-  CHECK(READ32LE(cdir) == kZipCdir64HdrMagic ||
-        READ32LE(cdir) == kZipCdirHdrMagic);
-  n = GetZipCdirRecords(cdir);
+  CHECK(READ32LE(zcdir) == kZipCdir64HdrMagic ||
+        READ32LE(zcdir) == kZipCdirHdrMagic);
+  n = GetZipCdirRecords(zcdir);
   m = roundup2pow(MAX(1, n) * HASH_LOAD_FACTOR);
   p = xcalloc(m, sizeof(struct Asset));
-  for (cf = GetZipCdirOffset(cdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
+  for (cf = GetZipCdirOffset(zcdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
     CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zmap + cf));
     lf = GetZipCfileOffset(zmap + cf);
     if (!IsCompressionMethodSupported(ZIP_LFILE_COMPRESSIONMETHOD(zmap + lf))) {
@@ -1447,17 +1451,17 @@ static void IndexAssets(void) {
   assets.n = m;
 }
 
-static void OpenZip(const char *path) {
+static void OpenZip(void) {
   int fd;
   uint8_t *p;
-  struct stat st;
-  CHECK_NE(-1, (fd = open(path, O_RDONLY)));
-  CHECK_NE(-1, fstat(fd, &st));
-  CHECK((zsize = st.st_size));
+  if (zmap) munmap(zmap, zsize);
+  CHECK_NE(-1, (fd = open(zpath, O_RDONLY)));
+  CHECK_NE(-1, fstat(fd, &zst));
+  CHECK((zsize = zst.st_size));
   CHECK_NE(MAP_FAILED,
            (zmap = mmap(NULL, zsize, PROT_READ, MAP_SHARED, fd, 0)));
-  CHECK_NOTNULL((cdir = GetZipCdir(zmap, zsize)));
-  if (endswith(path, ".com.dbg") && (p = memmem(zmap, zsize, "MZqFpD", 6))) {
+  CHECK_NOTNULL((zcdir = GetZipCdir(zmap, zsize)));
+  if (endswith(zpath, ".com.dbg") && (p = memmem(zmap, zsize, "MZqFpD", 6))) {
     zsize -= p - zmap;
     zmap = p;
   }
@@ -2080,11 +2084,11 @@ td { padding-right: 3em; }\r\n\
          "<hr>\r\n"
          "</header>\r\n"
          "<pre>\r\n",
-         strnlen(GetZipCdirComment(cdir), GetZipCdirCommentSize(cdir)),
-         GetZipCdirComment(cdir));
+         strnlen(GetZipCdirComment(zcdir), GetZipCdirCommentSize(zcdir)),
+         GetZipCdirComment(zcdir));
   memset(w, 0, sizeof(w));
-  n = GetZipCdirRecords(cdir);
-  for (cf = GetZipCdirOffset(cdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
+  n = GetZipCdirRecords(zcdir);
+  for (cf = GetZipCdirOffset(zcdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
     CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zmap + cf));
     lf = GetZipCfileOffset(zmap + cf);
     path = GetAssetPath(cf, &pathlen);
@@ -2095,8 +2099,8 @@ td { padding-right: 3em; }\r\n\
     }
     free(path);
   }
-  n = GetZipCdirRecords(cdir);
-  for (cf = GetZipCdirOffset(cdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
+  n = GetZipCdirRecords(zcdir);
+  for (cf = GetZipCdirOffset(zcdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
     CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zmap + cf));
     lf = GetZipCfileOffset(zmap + cf);
     path = GetAssetPath(cf, &pathlen);
@@ -2299,6 +2303,7 @@ static char *ServeStatusz(void) {
   AppendLong1("readresets", shared->readresets);
   AppendLong1("readtimeouts", shared->readtimeouts);
   AppendLong1("redirects", shared->redirects);
+  AppendLong1("reindexes", shared->reindexes);
   AppendLong1("reloads", shared->reloads);
   AppendLong1("rewrites", shared->rewrites);
   AppendLong1("serveroptions", shared->serveroptions);
@@ -2505,6 +2510,13 @@ static char *Route(const char *host, size_t hostlen, const char *path,
     LockInc(&shared->notfounds);
     return ServeError(404, "Not Found");
   }
+}
+
+static void Reindex(void) {
+  LockInc(&shared->reindexes);
+  LOGF("reindexing");
+  OpenZip();
+  IndexAssets();
 }
 
 static const char *LuaCheckPath(lua_State *L, int idx, size_t *pathlen) {
@@ -3446,8 +3458,8 @@ static int LuaGetZipPaths(lua_State *L) {
   size_t i, n, pathlen;
   lua_newtable(L);
   i = 0;
-  n = GetZipCdirRecords(cdir);
-  for (cf = GetZipCdirOffset(cdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
+  n = GetZipCdirRecords(zcdir);
+  for (cf = GetZipCdirOffset(zcdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
     CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zmap + cf));
     path = GetAssetPath(cf, &pathlen);
     lua_pushlstring(L, path, pathlen);
@@ -3847,13 +3859,31 @@ static void LuaReload(void) {
 }
 
 static void HandleReload(void) {
+  LockInc(&shared->reloads);
   LOGF("reloading");
+  Reindex();
   LuaReload();
+}
+
+static bool ZipCdirChanged(void) {
+  struct stat st;
+  if (!IsZipCdir32(zmap, zsize, zcdir - zmap) &&
+      !IsZipCdir64(zmap, zsize, zcdir - zmap)) {
+    return true;
+  }
+  if (stat(zpath, &st) != -1 && st.st_ino != zst.st_ino) {
+    return true;
+  }
+  return false;
 }
 
 static void HandleHeartbeat(void) {
   if (nowl() - lastrefresh > 60 * 60) RefreshTime();
   UpdateCurrentDate(nowl());
+  if (ZipCdirChanged()) {
+    shared->lastreindex = nowl();
+    kill(0, SIGUSR1);
+  }
   getrusage(RUSAGE_SELF, &shared->server);
 #ifndef STATIC
   LuaRun("/.heartbeat.lua");
@@ -4344,6 +4374,10 @@ static void HandleMessages(void) {
         LogClose(DescribeClose());
         return;
       }
+      if (invalidated) {
+        HandleReload();
+        invalidated = false;
+      }
     }
     if (msgsize == amtread) {
       amtread = 0;
@@ -4363,6 +4397,10 @@ static void HandleMessages(void) {
       }
     }
     CollectGarbage();
+    if (invalidated) {
+      HandleReload();
+      invalidated = false;
+    }
   }
 }
 
@@ -4485,7 +4523,7 @@ static void TuneSockets(void) {
   setsockopt(server, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
 }
 
-static void RestoreApe(const char *prog) {
+static void RestoreApe(void) {
   char *p;
   size_t n;
   struct Asset *a;
@@ -4493,7 +4531,7 @@ static void RestoreApe(const char *prog) {
   if (IsWindows()) return; /* TODO */
   if (IsOpenbsd()) return; /* TODO */
   if (IsNetbsd()) return;  /* TODO */
-  if (endswith(prog, ".com.dbg")) return;
+  if (endswith(zpath, ".com.dbg")) return;
   close(OpenExecutable());
   if ((a = GetAssetZip("/.ape", 5)) && (p = LoadAsset(a, &n))) {
     mprotect(ape_rom_vaddr, PAGESIZE, PROT_READ | PROT_WRITE);
@@ -4506,7 +4544,7 @@ static void RestoreApe(const char *prog) {
   }
 }
 
-void RedBean(int argc, char *argv[], const char *prog) {
+void RedBean(int argc, char *argv[]) {
   uint32_t addrsize;
   gmtoff = GetGmtOffset((lastrefresh = startserver = nowl()));
   CHECK_GT(CLK_TCK, 0);
@@ -4514,9 +4552,10 @@ void RedBean(int argc, char *argv[], const char *prog) {
            (shared = mmap(NULL, ROUNDUP(sizeof(struct Shared), FRAMESIZE),
                           PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS,
                           -1, 0)));
-  OpenZip(prog);
+  zpath = (const char *)getauxval(AT_EXECFN);
+  OpenZip();
   IndexAssets();
-  RestoreApe(prog);
+  RestoreApe();
   SetDefaults();
   GetOpts(argc, argv);
   LuaInit();
@@ -4603,6 +4642,6 @@ int main(int argc, char *argv[]) {
     setenv("GDB", "", true);
     showcrashreports();
   }
-  RedBean(argc, argv, (const char *)getauxval(AT_EXECFN));
+  RedBean(argc, argv);
   return 0;
 }
