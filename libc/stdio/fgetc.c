@@ -23,11 +23,11 @@
  * @return byte in range 0..255, or -1 w/ errno
  */
 int fgetc(FILE *f) {
-  unsigned char b;
+  unsigned char b[1];
   if (f->beg < f->end) {
     return f->buf[f->beg++] & 0xff;
   } else {
-    if (!fread(&b, 1, 1, f)) return -1;
-    return b;
+    if (!fread(b, 1, 1, f)) return -1;
+    return b[0];
   }
 }

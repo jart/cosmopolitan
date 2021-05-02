@@ -20,6 +20,11 @@
 #include "libc/macros.internal.h"
 .privileged
 
+#ifdef __FSANITIZE_ADDRESS__
+vfork:	jmp	fork			# TODO: asan and vfork don't mix?
+	.endfn	vfork,globl
+#else
+
 //	Forks process without copying page tables.
 //
 //	This is the same as fork() except it's optimized for the case
@@ -75,3 +80,5 @@ vfork.bsd:
 	jmp	0b
 	.endfn	vfork.bsd
 #endif /* BSD */
+
+#endif /* __FSANITIZE_ADDRESS__ */

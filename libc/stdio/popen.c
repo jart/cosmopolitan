@@ -33,7 +33,7 @@
  */
 FILE *popen(const char *cmdline, const char *mode) {
   FILE *f;
-  int dir, flags, pipefds[2];
+  int e, pid, dir, flags, pipefds[2];
   flags = fopenflags(mode);
   if ((flags & O_ACCMODE) == O_RDONLY) {
     dir = 0;
@@ -45,13 +45,28 @@ FILE *popen(const char *cmdline, const char *mode) {
   }
   if (pipe(pipefds) == -1) return NULL;
   fcntl(pipefds[dir], F_SETFD, FD_CLOEXEC);
-  if (!(f = fdopen(pipefds[dir], mode))) abort();
-  if ((f->pid = vfork()) == -1) abort();
-  if (!f->pid) {
-    dup2(pipefds[!dir], !dir);
-    systemexec(cmdline);
-    _exit(127);
+  if ((f = fdopen(pipefds[dir], mode))) {
+    switch ((pid = vfork())) {
+      case 0:
+        dup2(pipefds[!dir], !dir);
+        systemexec(cmdline);
+        _exit(127);
+      default:
+        f->pid = pid;
+        close(pipefds[!dir]);
+        return f;
+      case -1:
+        e = errno;
+        fclose(f);
+        close(pipefds[!dir]);
+        errno = e;
+        return NULL;
+    }
+  } else {
+    e = errno;
+    close(pipefds[0]);
+    close(pipefds[1]);
+    errno = e;
+    return NULL;
   }
-  close(pipefds[!dir]);
-  return f;
 }
