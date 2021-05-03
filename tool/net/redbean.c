@@ -3555,7 +3555,7 @@ static void LuaSetIntField(lua_State *L, const char *k, lua_Integer v) {
 }
 
 static int LuaLaunchBrowser(lua_State *L) {
-  const char *p = luaL_checkstring(L, 1);
+  const char *p = luaL_optstring(L, 1, "/");
   LaunchBrowser(p);
   return 1;
 }
