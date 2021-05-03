@@ -33,13 +33,14 @@
 ssize_t HasControlCodes(const char *p, size_t n, int f) {
   char t[256];
   wint_t x, a, b;
-  size_t i, j, m;
+  size_t i, j, m, g;
   memset(t, 0, sizeof(t));
   if (f & kControlC0) memset(t + 0x00, 1, 0x20 - 0x00), t[0x7F] = 1;
   if (f & kControlC1) memset(t + 0x80, 1, 0xA0 - 0x80);
   t['\t'] = t['\r'] = t['\n'] = t['\v'] = !!(f & kControlWs);
   if (n == -1) n = p ? strlen(p) : 0;
   for (i = 0; i < n;) {
+    g = i;
     x = p[i++] & 0xff;
     if (UNLIKELY(x >= 0300)) {
       a = ThomPikeByte(x);
@@ -58,7 +59,7 @@ ssize_t HasControlCodes(const char *p, size_t n, int f) {
       }
     }
     if (x < 256 && t[x]) {
-      return i - 1;
+      return g;
     }
   }
   return -1;

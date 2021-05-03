@@ -52,6 +52,8 @@
  *
  * Be sure to check for EINTR on your i/o calls, for best low latency.
  *
+ * Timers are not inherited across fork.
+ *
  * @param which can be ITIMER_REAL, ITIMER_VIRTUAL, etc.
  * @param newvalue specifies the interval ({0,0} means one-shot) and
  *     duration ({0,0} means disarm) in microseconds ∈ [0,999999] and

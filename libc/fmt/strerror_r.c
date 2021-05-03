@@ -27,149 +27,17 @@
 #include "libc/nt/runtime.h"
 #include "libc/str/str.h"
 
-const struct Error {
-  const long *x;
-  const char *s;
-} kErrors[] = {
-    {&ENOSYS, "ENOSYS"},
-    {&EPERM, "EPERM"},
-    {&ENOENT, "ENOENT"},
-    {&ESRCH, "ESRCH"},
-    {&EINTR, "EINTR"},
-    {&EIO, "EIO"},
-    {&ENXIO, "ENXIO"},
-    {&E2BIG, "E2BIG"},
-    {&ENOEXEC, "ENOEXEC"},
-    {&EBADF, "EBADF"},
-    {&ECHILD, "ECHILD"},
-    {&EAGAIN, "EAGAIN"},
-    {&ENOMEM, "ENOMEM"},
-    {&EACCES, "EACCES"},
-    {&EFAULT, "EFAULT"},
-    {&ENOTBLK, "ENOTBLK"},
-    {&EBUSY, "EBUSY"},
-    {&EEXIST, "EEXIST"},
-    {&EXDEV, "EXDEV"},
-    {&ENODEV, "ENODEV"},
-    {&ENOTDIR, "ENOTDIR"},
-    {&EISDIR, "EISDIR"},
-    {&EINVAL, "EINVAL"},
-    {&ENFILE, "ENFILE"},
-    {&EMFILE, "EMFILE"},
-    {&ENOTTY, "ENOTTY"},
-    {&ETXTBSY, "ETXTBSY"},
-    {&EFBIG, "EFBIG"},
-    {&ENOSPC, "ENOSPC"},
-    {&EDQUOT, "EDQUOT"},
-    {&ESPIPE, "ESPIPE"},
-    {&EROFS, "EROFS"},
-    {&EMLINK, "EMLINK"},
-    {&EPIPE, "EPIPE"},
-    {&EDOM, "EDOM"},
-    {&ERANGE, "ERANGE"},
-    {&EDEADLK, "EDEADLK"},
-    {&ENAMETOOLONG, "ENAMETOOLONG"},
-    {&ENOLCK, "ENOLCK"},
-    {&ENOTEMPTY, "ENOTEMPTY"},
-    {&ELOOP, "ELOOP"},
-    {&ENOMSG, "ENOMSG"},
-    {&EIDRM, "EIDRM"},
-    {&ETIME, "ETIME"},
-    {&EPROTO, "EPROTO"},
-    {&EOVERFLOW, "EOVERFLOW"},
-    {&EILSEQ, "EILSEQ"},
-    {&EUSERS, "EUSERS"},
-    {&ENOTSOCK, "ENOTSOCK"},
-    {&EDESTADDRREQ, "EDESTADDRREQ"},
-    {&EMSGSIZE, "EMSGSIZE"},
-    {&EPROTOTYPE, "EPROTOTYPE"},
-    {&ENOPROTOOPT, "ENOPROTOOPT"},
-    {&EPROTONOSUPPORT, "EPROTONOSUPPORT"},
-    {&ESOCKTNOSUPPORT, "ESOCKTNOSUPPORT"},
-    {&ENOTSUP, "ENOTSUP"},
-    {&EOPNOTSUPP, "EOPNOTSUPP"},
-    {&EPFNOSUPPORT, "EPFNOSUPPORT"},
-    {&EAFNOSUPPORT, "EAFNOSUPPORT"},
-    {&EADDRINUSE, "EADDRINUSE"},
-    {&EADDRNOTAVAIL, "EADDRNOTAVAIL"},
-    {&ENETDOWN, "ENETDOWN"},
-    {&ENETUNREACH, "ENETUNREACH"},
-    {&ENETRESET, "ENETRESET"},
-    {&ECONNABORTED, "ECONNABORTED"},
-    {&ECONNRESET, "ECONNRESET"},
-    {&ENOBUFS, "ENOBUFS"},
-    {&EISCONN, "EISCONN"},
-    {&ENOTCONN, "ENOTCONN"},
-    {&ESHUTDOWN, "ESHUTDOWN"},
-    {&ETOOMANYREFS, "ETOOMANYREFS"},
-    {&ETIMEDOUT, "ETIMEDOUT"},
-    {&ECONNREFUSED, "ECONNREFUSED"},
-    {&EHOSTDOWN, "EHOSTDOWN"},
-    {&EHOSTUNREACH, "EHOSTUNREACH"},
-    {&EALREADY, "EALREADY"},
-    {&EINPROGRESS, "EINPROGRESS"},
-    {&ESTALE, "ESTALE"},
-    {&EREMOTE, "EREMOTE"},
-    {&EBADMSG, "EBADMSG"},
-    {&ECANCELED, "ECANCELED"},
-    {&EOWNERDEAD, "EOWNERDEAD"},
-    {&ENOTRECOVERABLE, "ENOTRECOVERABLE"},
-    {&ENONET, "ENONET"},
-    {&ERESTART, "ERESTART"},
-    {&ECHRNG, "ECHRNG"},
-    {&EL2NSYNC, "EL2NSYNC"},
-    {&EL3HLT, "EL3HLT"},
-    {&EL3RST, "EL3RST"},
-    {&ELNRNG, "ELNRNG"},
-    {&EUNATCH, "EUNATCH"},
-    {&ENOCSI, "ENOCSI"},
-    {&EL2HLT, "EL2HLT"},
-    {&EBADE, "EBADE"},
-    {&EBADR, "EBADR"},
-    {&EXFULL, "EXFULL"},
-    {&ENOANO, "ENOANO"},
-    {&EBADRQC, "EBADRQC"},
-    {&EBADSLT, "EBADSLT"},
-    {&ENOSTR, "ENOSTR"},
-    {&ENODATA, "ENODATA"},
-    {&ENOSR, "ENOSR"},
-    {&ENOPKG, "ENOPKG"},
-    {&ENOLINK, "ENOLINK"},
-    {&EADV, "EADV"},
-    {&ESRMNT, "ESRMNT"},
-    {&ECOMM, "ECOMM"},
-    {&EMULTIHOP, "EMULTIHOP"},
-    {&EDOTDOT, "EDOTDOT"},
-    {&ENOTUNIQ, "ENOTUNIQ"},
-    {&EBADFD, "EBADFD"},
-    {&EREMCHG, "EREMCHG"},
-    {&ELIBACC, "ELIBACC"},
-    {&ELIBBAD, "ELIBBAD"},
-    {&ELIBSCN, "ELIBSCN"},
-    {&ELIBMAX, "ELIBMAX"},
-    {&ELIBEXEC, "ELIBEXEC"},
-    {&ESTRPIPE, "ESTRPIPE"},
-    {&EUCLEAN, "EUCLEAN"},
-    {&ENOTNAM, "ENOTNAM"},
-    {&ENAVAIL, "ENAVAIL"},
-    {&EISNAM, "EISNAM"},
-    {&EREMOTEIO, "EREMOTEIO"},
-    {&ENOMEDIUM, "ENOMEDIUM"},
-    {&EMEDIUMTYPE, "EMEDIUMTYPE"},
-    {&ENOKEY, "ENOKEY"},
-    {&EKEYEXPIRED, "EKEYEXPIRED"},
-    {&EKEYREVOKED, "EKEYREVOKED"},
-    {&EKEYREJECTED, "EKEYREJECTED"},
-    {&ERFKILL, "ERFKILL"},
-    {&EHWPOISON, "EHWPOISON"},
-};
+extern const struct Error {
+  int x;
+  int s;
+} kErrorNames[];
 
-static const char *geterrname(long x) {
+static const char *GetErrorName(long x) {
   int i;
   if (x) {
-    for (i = 0; i < ARRAYLEN(kErrors); ++i) {
-      if (x == *kErrors[i].x) {
-        return kErrors[i].s;
+    for (i = 0; kErrorNames[i].x; ++i) {
+      if (x == *(const long *)((uintptr_t)kErrorNames + kErrorNames[i].x)) {
+        return (const char *)((uintptr_t)kErrorNames + kErrorNames[i].s);
       }
     }
   }
@@ -184,7 +52,7 @@ int strerror_r(int err, char *buf, size_t size) {
   char *p;
   const char *s;
   err &= 0xFFFF;
-  s = geterrname(err);
+  s = GetErrorName(err);
   p = buf;
   if (strlen(s) + 1 + 5 + 1 + 1 <= size) {
     p = stpcpy(p, s);

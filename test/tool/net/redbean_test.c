@@ -28,16 +28,13 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-/* TODO(jart): Finish this */
-
 STATIC_YOINK("zip_uri_support");
 STATIC_YOINK("o/" MODE "/tool/net/redbean.com");
 char testlib_enable_tmp_setup_teardown;
 
 void SetUp(void) {
-  return;
   ssize_t n;
-  char buf[512];
+  char buf[1024];
   int fdin, fdout;
   ASSERT_NE(-1, mkdir("bin", 0755));
   ASSERT_NE(-1, (fdin = open("zip:o/" MODE "/tool/net/redbean.com", O_RDONLY)));
@@ -45,22 +42,22 @@ void SetUp(void) {
   for (;;) {
     ASSERT_NE(-1, (n = read(fdin, buf, sizeof(buf))));
     if (!n) break;
-    ASSERT_EQ(n, write(fdout, buf, sizeof(buf)));
+    ASSERT_EQ(n, write(fdout, buf, n));
   }
   close(fdout);
   close(fdin);
 }
 
 TEST(redbean, test) {
-  return;
   char portbuf[16];
   int pid, port, pipefds[2];
   sigset_t chldmask, savemask;
   sigaddset(&chldmask, SIGCHLD);
   sigprocmask(SIG_BLOCK, &chldmask, &savemask);
-  ASSERT_NE(-1, pipe2(pipefds, O_CLOEXEC));
+  ASSERT_NE(-1, pipe(pipefds));
   ASSERT_NE(-1, (pid = vfork()));
   if (!pid) {
+    close(pipefds[0]);
     dup2(pipefds[1], 1);
     sigprocmask(SIG_SETMASK, &savemask, NULL);
     execv("bin/redbean.com",
@@ -71,6 +68,7 @@ TEST(redbean, test) {
   EXPECT_NE(-1, read(pipefds[0], portbuf, sizeof(portbuf)));
   port = atoi(portbuf);
   printf("port %d\n", port);
+  fflush(stdout);
   EXPECT_NE(-1, kill(pid, SIGTERM));
   EXPECT_NE(-1, wait(0));
 }

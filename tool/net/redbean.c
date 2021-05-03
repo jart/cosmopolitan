@@ -44,6 +44,7 @@
 #include "libc/sysv/consts/inaddr.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/itimer.h"
+#include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/o.h"
@@ -1246,7 +1247,8 @@ static void ReportWorkerResources(int pid, struct rusage *ru) {
     AppendResourceReport(ru, "\n");
     if (outbuf.n) {
       if ((s = IndentLines(outbuf.p, outbuf.n - 1, 0, 1))) {
-        LOGF("resource report for pid %d\n%s", pid, s);
+        flogf(kLogInfo, __FILE__, __LINE__, NULL,
+              "resource report for pid %d\n%s", pid, s);
         free(s);
       }
       ClearOutput();
@@ -1415,7 +1417,7 @@ static bool IsCompressionMethodSupported(int method) {
 
 static void IndexAssets(void) {
   int64_t lm;
-  uint64_t cf, lf;
+  uint64_t cf;
   struct Asset *p;
   uint32_t i, n, m, step, hash;
   CHECK_GE(HASH_LOAD_FACTOR, 2);
@@ -1426,10 +1428,9 @@ static void IndexAssets(void) {
   p = xcalloc(m, sizeof(struct Asset));
   for (cf = GetZipCdirOffset(zcdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
     CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zmap + cf));
-    lf = GetZipCfileOffset(zmap + cf);
-    if (!IsCompressionMethodSupported(ZIP_LFILE_COMPRESSIONMETHOD(zmap + lf))) {
+    if (!IsCompressionMethodSupported(ZIP_CFILE_COMPRESSIONMETHOD(zmap + cf))) {
       LOGF("don't understand zip compression method %d used by %`'.*s",
-           ZIP_LFILE_COMPRESSIONMETHOD(zmap + lf),
+           ZIP_CFILE_COMPRESSIONMETHOD(zmap + cf),
            ZIP_CFILE_NAMESIZE(zmap + cf), ZIP_CFILE_NAME(zmap + cf));
       continue;
     }
@@ -1441,8 +1442,8 @@ static void IndexAssets(void) {
     } while (p[i].hash);
     lm = GetZipCfileLastModified(zmap + cf);
     p[i].hash = hash;
-    p[i].lf = lf;
     p[i].cf = cf;
+    p[i].lf = GetZipCfileOffset(zmap + cf);
     p[i].istext = !!(ZIP_CFILE_INTERNALATTRIBUTES(zmap + cf) & kZipIattrText);
     p[i].lastmodified = lm;
     p[i].lastmodifiedstr = FormatUnixHttpDateTime(xmalloc(30), lm);
@@ -1476,8 +1477,8 @@ static struct Asset *GetAssetZip(const char *path, size_t pathlen) {
     i = (hash + (step * (step + 1)) >> 1) & (assets.n - 1);
     if (!assets.p[i].hash) return NULL;
     if (hash == assets.p[i].hash &&
-        pathlen == ZIP_LFILE_NAMESIZE(zmap + assets.p[i].lf) &&
-        memcmp(path, ZIP_LFILE_NAME(zmap + assets.p[i].lf), pathlen) == 0) {
+        pathlen == ZIP_CFILE_NAMESIZE(zmap + assets.p[i].cf) &&
+        memcmp(path, ZIP_CFILE_NAME(zmap + assets.p[i].cf), pathlen) == 0) {
       return &assets.p[i];
     }
   }
@@ -2034,13 +2035,13 @@ static int GetOctalWidth(int x) {
   return !x ? 1 : x < 8 ? 2 : 1 + bsr(x) / 3;
 }
 
-static const char *DescribeCompressionRatio(char rb[8], uint64_t lf) {
+static const char *DescribeCompressionRatio(char rb[8], uint64_t cf) {
   long percent;
-  if (ZIP_LFILE_COMPRESSIONMETHOD(zmap + lf) == kZipCompressionNone) {
+  if (ZIP_CFILE_COMPRESSIONMETHOD(zmap + cf) == kZipCompressionNone) {
     return "n/a";
   } else {
-    percent = lround(100 - (double)GetZipLfileCompressedSize(zmap + lf) /
-                               GetZipLfileUncompressedSize(zmap + lf) * 100);
+    percent = lround(100 - (double)GetZipCfileCompressedSize(zmap + cf) /
+                               GetZipCfileUncompressedSize(zmap + cf) * 100);
     sprintf(rb, "%ld%%", MIN(999, MAX(-999, percent)));
     return rb;
   }
@@ -2095,7 +2096,7 @@ td { padding-right: 3em; }\r\n\
     if (!IsHiddenPath(path)) {
       w[0] = min(80, max(w[0], strwidth(path, 0) + 2));
       w[1] = max(w[1], GetOctalWidth(GetZipCfileMode(zmap + cf)));
-      w[2] = max(w[2], GetDecimalWidth(GetZipLfileUncompressedSize(zmap + lf)));
+      w[2] = max(w[2], GetDecimalWidth(GetZipCfileUncompressedSize(zmap + cf)));
     }
     free(path);
   }
@@ -2117,17 +2118,17 @@ td { padding-right: 3em; }\r\n\
       localtime_r(&lastmod, &tm);
       strftime(tb, sizeof(tb), "%Y-%m-%d %H:%M:%S %Z", &tm);
       if (IsCompressionMethodSupported(
-              ZIP_LFILE_COMPRESSIONMETHOD(zmap + lf)) &&
+              ZIP_CFILE_COMPRESSIONMETHOD(zmap + cf)) &&
           IsAcceptablePath(path, pathlen)) {
         Append("<a href=\"%.*s\">%-*.*s</a> %s  %0*o %4s  %,*ld  %'s\r\n",
                rn[2], rp[2], w[0], rn[4], rp[4], tb, w[1],
-               GetZipCfileMode(zmap + cf), DescribeCompressionRatio(rb, lf),
-               w[2], GetZipLfileUncompressedSize(zmap + lf), rp[3]);
+               GetZipCfileMode(zmap + cf), DescribeCompressionRatio(rb, cf),
+               w[2], GetZipCfileUncompressedSize(zmap + cf), rp[3]);
       } else {
         Append("%-*.*s %s  %0*o %4s  %,*ld  %'s\r\n", w[0], rn[4], rp[4], tb,
                w[1], GetZipCfileMode(zmap + cf),
-               DescribeCompressionRatio(rb, lf), w[2],
-               GetZipLfileUncompressedSize(zmap + lf), rp[3]);
+               DescribeCompressionRatio(rb, cf), w[2],
+               GetZipCfileUncompressedSize(zmap + cf), rp[3]);
       }
       free(rp[4]);
       free(rp[3]);
@@ -4592,7 +4593,11 @@ void RedBean(int argc, char *argv[]) {
     printf("%d\n", ntohs(serveraddr.sin_port));
     fflush(stdout);
   }
-  if (daemonize) Daemonize();
+  if (daemonize) {
+    Daemonize();
+  } else {
+    setpgid(getpid(), getpid());
+  }
   if (setitimer(ITIMER_REAL, &kHeartbeat, NULL) == -1) {
     heartless = true;
   }
@@ -4602,9 +4607,9 @@ void RedBean(int argc, char *argv[]) {
   unmaplist.c = 1;
   unmaplist.p = xcalloc(unmaplist.c, sizeof(*unmaplist.p));
   hdrbuf.n = 4 * 1024;
-  hdrbuf.p = xvalloc(hdrbuf.n);
+  hdrbuf.p = xmalloc(hdrbuf.n);
   inbuf.n = maxpayloadsize;
-  inbuf.p = xvalloc(inbuf.n);
+  inbuf.p = xmalloc(inbuf.n);
   while (!terminated) {
     if (zombied) {
       ReapZombies();
