@@ -22,6 +22,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/dos.h"
 #include "libc/elf/def.h"
 #include "libc/fmt/conv.h"
 #include "libc/limits.h"
@@ -54,11 +55,6 @@
 
 #define ZIP_LOCALFILE_SECTION ".zip.2."
 #define ZIP_DIRECTORY_SECTION ".zip.4."
-
-#define DOS_DATE(YEAR, MONTH_IDX1, DAY_IDX1) \
-  (((YEAR)-1980) << 9 | (MONTH_IDX1) << 5 | (DAY_IDX1))
-#define DOS_TIME(HOUR, MINUTE, SECOND) \
-  ((HOUR) << 11 | (MINUTE) << 5 | (SECOND) >> 1)
 
 char *symbol_;
 char *outpath_;

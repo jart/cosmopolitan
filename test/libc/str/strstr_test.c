@@ -46,6 +46,12 @@ TEST(strstr, test_notFound) {
   free(haystack);
 }
 
+TEST(strstr, test_notFound1) {
+  MAKESTRING(haystack, "abc123def");
+  ASSERT_EQ(NULL, strstr(haystack, gc(strdup("x"))));
+  free(haystack);
+}
+
 TEST(strstr, test_middleOfString) {
   MAKESTRING(haystack, "abc123def");
   ASSERT_STREQ(&haystack[3], strstr(haystack, gc(strdup("123"))));
@@ -80,8 +86,40 @@ TEST(strstr, test) {
 
 BENCH(strstr, bench) {
   EZBENCH2("strstr", donothing, EXPROPRIATE(strstr(kHyperion, "THE END")));
-  EZBENCH2("strstr", donothing,
+  EZBENCH2("strstr torture 1", donothing,
            EXPROPRIATE(strstr(
-               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
-               "aaaaaab")));
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+               "b")));
+  EZBENCH2("strstr torture 2", donothing,
+           EXPROPRIATE(strstr(
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+               "ab")));
+  EZBENCH2("strstr torture 4", donothing,
+           EXPROPRIATE(strstr(
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+               "aaab")));
+  EZBENCH2("strstr torture 8", donothing,
+           EXPROPRIATE(strstr(
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+               "aaaaaaab")));
+  EZBENCH2("strstr torture 16", donothing,
+           EXPROPRIATE(strstr(
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+               "aaaaaaaaaaaaaaab")));
+  EZBENCH2("strstr torture 32", donothing,
+           EXPROPRIATE(strstr(
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab")));
 }

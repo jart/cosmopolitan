@@ -20,7 +20,7 @@
 #include "libc/bits/bits.h"
 #include "libc/str/str.h"
 
-noasan static const char *strchr_x64(const char *p, uint64_t c) {
+noasan static inline const char *strchr_x64(const char *p, uint64_t c) {
   unsigned a, b;
   uint64_t w, x, y;
   for (c *= 0x0101010101010101;; p += 8) {

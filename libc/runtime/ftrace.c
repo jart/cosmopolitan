@@ -23,9 +23,13 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/repmovsb.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/rdtsc.h"
+#include "libc/nexgen32e/rdtscp.h"
 #include "libc/nexgen32e/stackframe.h"
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thunk/msabi.h"
@@ -49,6 +53,7 @@
 void ftrace_hook(void);
 
 static int noreentry;
+static uint64_t laststamp;
 static char g_buf[512];
 static const char *g_lastsymbol;
 static struct SymbolTable *g_symbols;
@@ -70,11 +75,14 @@ static noasan int GetNestingLevel(struct StackFrame *frame) {
  * according to the System Five NexGen32e ABI.
  */
 privileged noasan void ftrace(void) {
-  size_t i, j, nesting;
+  char *p;
+  uint64_t stamp;
   const char *symbol;
   struct StackFrame *frame;
+  size_t nesting, symbolsize;
   if (!cmpxchg(&noreentry, 0, 1)) return;
   if (g_symbols) {
+    stamp = rdtsc();
     frame = __builtin_frame_address(0);
     frame = frame->next;
     symbol =
@@ -84,31 +92,30 @@ privileged noasan void ftrace(void) {
                                       g_symbols->count,
                                       frame->addr - g_symbols->addr_base)]
                                   .name_rva];
-    if (symbol != g_lastsymbol &&
-        (nesting = GetNestingLevel(frame)) * 2 < ARRAYLEN(g_buf) - 4) {
-      i = 2;
-      j = 0;
-      while (nesting--) {
-        asm volatile("" : : : "memory");
-        g_buf[i++] = ' ';
-        g_buf[i++] = ' ';
+    if (symbol != g_lastsymbol) {
+      symbolsize = strlen(symbol);
+      nesting = GetNestingLevel(frame);
+      if (2 + nesting * 2 + symbolsize + 1 + 21 + 2 <= ARRAYLEN(g_buf)) {
+        p = g_buf;
+        *p++ = '+';
+        *p++ = ' ';
+        memset(p, ' ', nesting * 2);
+        p += nesting * 2;
+        p = mempcpy(p, symbol, symbolsize);
+        *p++ = ' ';
+        p += uint64toarray_radix10((stamp - laststamp) / 3.3, p);
+        *p++ = '\r';
+        *p++ = '\n';
+        write(2, g_buf, p - g_buf);
       }
-      while (i < ARRAYLEN(g_buf) - 2 && symbol[j]) {
-        asm volatile("" : : : "memory");
-        g_buf[i++] = symbol[j++];
-      }
-      g_buf[i++] = '\r';
-      g_buf[i++] = '\n';
-      write(2, g_buf, i);
     }
     g_lastsymbol = symbol;
+    laststamp = X86_HAVE(RDTSCP) ? rdtscp(0) : rdtsc();
   }
   noreentry = 0;
 }
 
 textstartup void ftrace_install(void) {
-  g_buf[0] = '+';
-  g_buf[1] = ' ';
   if ((g_symbols = OpenSymbolTable(FindDebugBinary()))) {
     __hook(ftrace_hook, g_symbols);
   } else {
