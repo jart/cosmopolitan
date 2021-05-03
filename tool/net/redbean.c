@@ -19,8 +19,10 @@
 #include "libc/bits/popcnt.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/rusage.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
@@ -33,6 +35,7 @@
 #include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/clktck.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
@@ -2003,26 +2006,61 @@ static char *GetBasicAuthorization(size_t *z) {
   }
 }
 
-static void LaunchBrowser(const char *path) {
-  char openbrowsercommand[255];
-  char *prog;
+static const char *GetSystemUrlLauncherCommand(void) {
   if (IsWindows()) {
-    prog = "explorer";
+    return "explorer";
   } else if (IsXnu()) {
-    prog = "open";
+    return "open";
   } else {
-    prog = "xdg-open";
+    return "xdg-open";
   }
-  struct in_addr addr = serveraddr.sin_addr;
-  if (addr.s_addr == INADDR_ANY) addr.s_addr = htonl(INADDR_LOOPBACK);
-  const char *pathname = path;
-  if (path == NULL) {
-    pathname = "/";
+}
+
+static void LaunchBrowser(const char *path) {
+  int pid, ws;
+  struct in_addr addr;
+  const char *u, *prog;
+  sigset_t chldmask, savemask;
+  struct sigaction ignore, saveint, savequit;
+  path = firstnonnull(path, "/");
+  addr = serveraddr.sin_addr;
+  if (!addr.s_addr) addr.s_addr = htonl(INADDR_LOOPBACK);
+  if (*path != '/') path = gc(xasprintf("/%s", path));
+  if ((prog = commandv(GetSystemUrlLauncherCommand(), gc(malloc(PATH_MAX))))) {
+    u = gc(xasprintf("http://%s:%d%s", inet_ntoa(addr),
+                     ntohs(serveraddr.sin_port), gc(EscapePath(path, -1, 0))));
+    DEBUGF("opening browser with command %s %s\n", prog, u);
+    ignore.sa_flags = 0;
+    ignore.sa_handler = SIG_IGN;
+    sigemptyset(&ignore.sa_mask);
+    sigaction(SIGINT, &ignore, &saveint);
+    sigaction(SIGQUIT, &ignore, &savequit);
+    sigemptyset(&chldmask);
+    sigaddset(&chldmask, SIGCHLD);
+    sigprocmask(SIG_BLOCK, &chldmask, &savemask);
+    CHECK_NE(-1, (pid = fork()));
+    if (!pid) {
+      setpgid(getpid(), getpid());
+      sigaction(SIGINT, &saveint, 0);
+      sigaction(SIGQUIT, &savequit, 0);
+      sigprocmask(SIG_SETMASK, &savemask, 0);
+      execv(prog, (char *const[]){prog, u, 0});
+      _exit(127);
+    }
+    while (wait4(pid, &ws, 0, 0) == -1) {
+      CHECK_EQ(EINTR, errno);
+    }
+    sigaction(SIGINT, &saveint, 0);
+    sigaction(SIGQUIT, &savequit, 0);
+    sigprocmask(SIG_SETMASK, &savemask, 0);
+    if (!(WIFEXITED(ws) && WEXITSTATUS(ws) == 0)) {
+      WARNF("%s failed with %d", GetSystemUrlLauncherCommand(),
+            WIFEXITED(ws) ? WEXITSTATUS(ws) : 128 + WEXITSTATUS(ws));
+    }
+  } else {
+    WARNF("can't launch browser because %s isn't installed",
+          GetSystemUrlLauncherCommand());
   }
-  snprintf(openbrowsercommand, sizeof(openbrowsercommand), "%s http://%s:%d%s",
-           prog, inet_ntoa(addr), ntohs(serveraddr.sin_port), pathname);
-  DEBUGF("Opening browser with command %s\n", openbrowsercommand);
-  system(openbrowsercommand);
 }
 
 static char *BadMethod(void) {
@@ -3555,8 +3593,7 @@ static void LuaSetIntField(lua_State *L, const char *k, lua_Integer v) {
 }
 
 static int LuaLaunchBrowser(lua_State *L) {
-  const char *p = luaL_optstring(L, 1, "/");
-  LaunchBrowser(p);
+  LaunchBrowser(luaL_optstring(L, 1, "/"));
   return 1;
 }
 
@@ -4530,6 +4567,7 @@ static void TuneSockets(void) {
 }
 
 static void RestoreApe(void) {
+  int fd;
   char *p;
   size_t n;
   struct Asset *a;
@@ -4538,16 +4576,14 @@ static void RestoreApe(void) {
   if (IsOpenbsd()) return; /* TODO */
   if (IsNetbsd()) return;  /* TODO */
   if (endswith(zpath, ".com.dbg")) return;
-  close(OpenExecutable());
+  fd = OpenExecutable();
   if ((a = GetAssetZip("/.ape", 5)) && (p = LoadAsset(a, &n))) {
-    mprotect(ape_rom_vaddr, PAGESIZE, PROT_READ | PROT_WRITE);
-    memcpy(ape_rom_vaddr, p, MIN(n, PAGESIZE));
-    msync(ape_rom_vaddr, PAGESIZE, MS_ASYNC);
-    mprotect(ape_rom_vaddr, PAGESIZE, PROT_NONE);
+    write(fd, p, n);
     free(p);
   } else {
-    LOGF("/.ape not found");
+    WARNF("/.ape not found");
   }
+  close(fd);
 }
 
 void RedBean(int argc, char *argv[]) {
