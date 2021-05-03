@@ -2003,7 +2003,7 @@ static char *GetBasicAuthorization(size_t *z) {
   }
 }
 
-static void LaunchBrowser() {
+static void LaunchBrowser(const char *path) {
   char openbrowsercommand[255];
   char *prog;
   if (IsWindows()) {
@@ -2015,8 +2015,12 @@ static void LaunchBrowser() {
   }
   struct in_addr addr = serveraddr.sin_addr;
   if (addr.s_addr == INADDR_ANY) addr.s_addr = htonl(INADDR_LOOPBACK);
-  snprintf(openbrowsercommand, sizeof(openbrowsercommand), "%s http://%s:%d",
-           prog, inet_ntoa(addr), ntohs(serveraddr.sin_port));
+  const char *pathname = path;
+  if (path == NULL) {
+    pathname = "/";
+  }
+  snprintf(openbrowsercommand, sizeof(openbrowsercommand), "%s http://%s:%d%s",
+           prog, inet_ntoa(addr), ntohs(serveraddr.sin_port), pathname);
   DEBUGF("Opening browser with command %s\n", openbrowsercommand);
   system(openbrowsercommand);
 }
@@ -3551,7 +3555,8 @@ static void LuaSetIntField(lua_State *L, const char *k, lua_Integer v) {
 }
 
 static int LuaLaunchBrowser(lua_State *L) {
-  LaunchBrowser();
+  const char *p = luaL_optstring(L, 1, "/");
+  LaunchBrowser(p);
   return 1;
 }
 
