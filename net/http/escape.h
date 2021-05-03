@@ -28,7 +28,7 @@ char *EscapeFragment(const char *, size_t, size_t *);
 char *EscapeSegment(const char *, size_t, size_t *);
 char *EscapeJsStringLiteral(const char *, size_t, size_t *);
 
-bool HasControlCodes(const char *, size_t, int);
+ssize_t HasControlCodes(const char *, size_t, int);
 char *Underlong(const char *, size_t, size_t *);
 char *DecodeLatin1(const char *, size_t, size_t *);
 char *EncodeLatin1(const char *, size_t, size_t *, int);

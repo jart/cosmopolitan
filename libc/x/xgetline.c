@@ -25,16 +25,18 @@
  *
  * @return allocated line that needs free() and usually chomp() too,
  *     or NULL on ferror() or feof()
- * @see getline() for a more difficult api
+ * @see getdelim() for a more difficult api
+ * @see chomp()
  */
 char *xgetline(FILE *f) {
-  char *res;
-  size_t n, got;
+  char *p;
+  size_t n;
+  ssize_t m;
   n = 0;
-  res = NULL;
-  if ((got = getdelim(&res, &n, '\n', f)) <= 0) {
-    free(res);
-    res = NULL;
+  p = 0;
+  if ((m = getdelim(&p, &n, '\n', f)) <= 0) {
+    free(p);
+    p = 0;
   }
-  return res;
+  return p;
 }

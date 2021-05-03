@@ -24,6 +24,7 @@ _peekall:
 	.leafprologue
 	ezlea	_base,si
 	ezlea	_end,cx
+	add	$0x1000,%rsi
 0:	mov	(%rsi),%eax
 	add	$PAGESIZE,%rsi
 	cmp	%rcx,%rsi

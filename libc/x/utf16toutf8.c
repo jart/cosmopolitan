@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,72 +16,76 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/conv.h"
+#include "libc/bits/bits.h"
 #include "libc/intrin/packsswb.h"
 #include "libc/intrin/pandn.h"
+#include "libc/intrin/pcmpgtb.h"
 #include "libc/intrin/pcmpgtw.h"
 #include "libc/intrin/pmovmskb.h"
+#include "libc/intrin/punpckhbw.h"
+#include "libc/intrin/punpcklbw.h"
+#include "libc/mem/mem.h"
+#include "libc/nexgen32e/bsr.h"
 #include "libc/str/str.h"
+#include "libc/str/thompike.h"
 #include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
+#include "libc/x/x.h"
 
 static const int16_t kDel16[8] = {127, 127, 127, 127, 127, 127, 127, 127};
-
-/* 10x speedup for ascii */
-static noasan axdx_t tprecode16to8_sse2(char *dst, size_t dstsize,
-                                        const char16_t *src, axdx_t r) {
-  int16_t v1[8], v2[8], v3[8], vz[8];
-  memset(vz, 0, 16);
-  while (r.ax + 8 < dstsize) {
-    memcpy(v1, src + r.dx, 16);
-    pcmpgtw(v2, v1, vz);
-    pcmpgtw(v3, v1, kDel16);
-    pandn((void *)v2, (void *)v3, (void *)v2);
-    if (pmovmskb((void *)v2) != 0xFFFF) break;
-    packsswb((void *)v1, v1, v1);
-    memcpy(dst + r.ax, v1, 8);
-    r.ax += 8;
-    r.dx += 8;
-  }
-  return r;
-}
 
 /**
  * Transcodes UTF-16 to UTF-8.
  *
- * This is a low-level function intended for the core runtime. Use
- * utf16toutf8() for a much better API that uses malloc().
- *
- * @param dst is output buffer
- * @param dstsize is bytes in dst
- * @param src is NUL-terminated UTF-16 input string
- * @return ax bytes written excluding nul
- * @return dx index of character after nul word in src
+ * @param p is input value
+ * @param n if -1 implies strlen
+ * @param z if non-NULL receives output length
  */
-axdx_t tprecode16to8(char *dst, size_t dstsize, const char16_t *src) {
-  axdx_t r;
-  uint64_t w;
+char *utf16toutf8(const char16_t *p, size_t n, size_t *z) {
+  char *r, *q;
   wint_t x, y;
-  r.ax = 0;
-  r.dx = 0;
-  for (;;) {
-    if (!IsTiny() && !((uintptr_t)(src + r.dx) & 15)) {
-      r = tprecode16to8_sse2(dst, dstsize, src, r);
+  unsigned m, j, w;
+  const char16_t *e;
+  int16_t v1[8], v2[8], v3[8], vz[8];
+  if (z) *z = 0;
+  if (n == -1) n = p ? strlen16(p) : 0;
+  if ((q = r = malloc(n * 4 + 8 + 1))) {
+    for (e = p + n; p < e;) {
+      if (p + 8 < e) { /* 17x ascii */
+        memset(vz, 0, 16);
+        do {
+          memcpy(v1, p, 16);
+          pcmpgtw(v2, v1, vz);
+          pcmpgtw(v3, v1, kDel16);
+          pandn((void *)v2, (void *)v3, (void *)v2);
+          if (pmovmskb((void *)v2) != 0xFFFF) break;
+          packsswb((void *)v1, v1, v1);
+          memcpy(q, v1, 8);
+          p += 8;
+          q += 8;
+        } while (p + 8 < e);
+      }
+      x = *p++ & 0xffff;
+      if (!IsUcs2(x)) {
+        if (p < e) {
+          y = *p++ & 0xffff;
+          x = MergeUtf16(x, y);
+        } else {
+          x = 0xFFFD;
+        }
+      }
+      if (x < 0200) {
+        *q++ = x;
+      } else {
+        w = tpenc(x);
+        WRITE64LE(q, w);
+        q += bsr(w) >> 3;
+        q += 1;
+      }
     }
-    if (!(x = src[r.dx++])) break;
-    if (IsUtf16Cont(x)) continue;
-    if (!IsUcs2(x)) {
-      if (!(y = src[r.dx++])) break;
-      x = MergeUtf16(x, y);
-    }
-    w = tpenc(x);
-    while (w && r.ax + 1 < dstsize) {
-      dst[r.ax++] = w & 0xFF;
-      w >>= 8;
-    }
-  }
-  if (r.ax < dstsize) {
-    dst[r.ax] = 0;
+    if (z) *z = q - r;
+    *q++ = '\0';
+    if ((q = realloc(r, (q - r) * 1))) r = q;
   }
   return r;
 }

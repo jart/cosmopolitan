@@ -189,13 +189,13 @@ include examples/package/build.mk
 #-φ-examples/package/new.sh
 include test/test.mk
 
-OBJS	= $(foreach x,$(PKGS),$($(x)_OBJS))
-SRCS	= $(foreach x,$(PKGS),$($(x)_SRCS))
-HDRS	= $(foreach x,$(PKGS),$($(x)_HDRS))
-INCS	= $(foreach x,$(PKGS),$($(x)_INCS))
-BINS	= $(foreach x,$(PKGS),$($(x)_BINS))
-TESTS	= $(foreach x,$(PKGS),$($(x)_TESTS))
-CHECKS	= $(foreach x,$(PKGS),$($(x)_CHECKS))
+OBJS	 = $(foreach x,$(PKGS),$($(x)_OBJS))
+SRCS	:= $(foreach x,$(PKGS),$($(x)_SRCS))
+HDRS	:= $(foreach x,$(PKGS),$($(x)_HDRS))
+INCS	 = $(foreach x,$(PKGS),$($(x)_INCS))
+BINS	 = $(foreach x,$(PKGS),$($(x)_BINS))
+TESTS	 = $(foreach x,$(PKGS),$($(x)_TESTS))
+CHECKS	 = $(foreach x,$(PKGS),$($(x)_CHECKS))
 
 bins:	$(BINS)
 check:	$(CHECKS)
@@ -206,11 +206,17 @@ tags:	TAGS HTAGS
 o/$(MODE)/.x:
 	@mkdir -p $(@D) && touch $@
 
+ifneq ($(findstring 4.,,$(MAKE_VERSION)),$(MAKE_VERSION))
 o/$(MODE)/srcs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(SRCS),$(dir $(x))))
 	$(file >$@) $(foreach x,$(SRCS),$(file >>$@,$(x)))
-
 o/$(MODE)/hdrs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS) $(INCS),$(dir $(x))))
 	$(file >$@) $(foreach x,$(HDRS) $(INCS),$(file >>$@,$(x)))
+else
+o/$(MODE)/srcs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(SRCS),$(dir $(x))))
+	$(MAKE) MODE=rel -j8 -pn bopit 2>/dev/null | sed -ne '/^SRCS/ {s/.*:= //;s/  */\n/g;p;q}' >$@
+o/$(MODE)/hdrs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS) $(INCS),$(dir $(x))))
+	$(MAKE) MODE=rel -j8 -pn bopit 2>/dev/null | sed -ne '/^HDRS/ {s/.*:= //;s/  */\n/g;p;q}' >$@
+endif
 
 o/$(MODE)/depend: o/$(MODE)/.x o/$(MODE)/srcs.txt o/$(MODE)/hdrs.txt $(SRCS) $(HDRS) $(INCS)
 	@$(COMPILE) -AMKDEPS $(MKDEPS) -o $@ -r o/$(MODE)/ o/$(MODE)/srcs.txt o/$(MODE)/hdrs.txt

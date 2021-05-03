@@ -33,10 +33,10 @@
  *     allocated automatically, also NUL-terminated is guaranteed
  * @param n is the capacity of s (in/out)
  * @param delim is the stop char (and NUL is implicitly too)
- * @return number of bytes read, including delim, excluding NUL, or -1
- *     w/ errno on EOF or error; see ferror() and feof()
+ * @return number of bytes read >0, including delim, excluding NUL,
+ *     or -1 w/ errno on EOF or error; see ferror() and feof()
  * @note this function can't punt EINTR to caller
- * @see getline(), gettok_r()
+ * @see getline(), chomp(), gettok_r()
  */
 ssize_t getdelim(char **s, size_t *n, int delim, FILE *f) {
   char *p;

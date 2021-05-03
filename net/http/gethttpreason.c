@@ -20,8 +20,8 @@
 #include "libc/macros.internal.h"
 #include "net/http/http.h"
 
-static const struct HttpReason {
-  int code;
+static const struct thatispacked HttpReason {
+  short code;
   const char *name;
 } kHttpReason[] = {
     {100, "Continue"},

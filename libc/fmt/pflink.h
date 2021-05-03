@@ -18,20 +18,20 @@
  * format strings are constexprs that only contain directives.
  */
 
-#define PFLINK(FMT)                                                     \
-  ({                                                                    \
-    if (___PFLINK(FMT, strpbrk, "faAeEgG")) STATIC_YOINK("__fmt_dtoa"); \
-    if (___PFLINK(FMT, strpbrk, "cmrqs")) {                             \
-      if (___PFLINK(FMT, strchr, '#')) STATIC_YOINK("kCp437");          \
-      if (___PFLINK(FMT, strstr, "%m")) STATIC_YOINK("strerror");       \
-      if (!IsTiny() && (___PFLINK(FMT, strstr, "%*") ||                 \
-                        ___PFLINK(FMT, strpbrk, "0123456789"))) {       \
-        STATIC_YOINK("strnwidth");                                      \
-        STATIC_YOINK("strnwidth16");                                    \
-        STATIC_YOINK("wcsnwidth");                                      \
-      }                                                                 \
-    }                                                                   \
-    FMT;                                                                \
+#define PFLINK(FMT)                                                   \
+  ({                                                                  \
+    if (___PFLINK(FMT, strpbrk, "faAeg")) STATIC_YOINK("__fmt_dtoa"); \
+    if (___PFLINK(FMT, strpbrk, "cmrqs")) {                           \
+      if (___PFLINK(FMT, strchr, '#')) STATIC_YOINK("kCp437");        \
+      if (___PFLINK(FMT, strstr, "%m")) STATIC_YOINK("strerror");     \
+      if (!IsTiny() && (___PFLINK(FMT, strstr, "%*") ||               \
+                        ___PFLINK(FMT, strpbrk, "0123456789"))) {     \
+        STATIC_YOINK("strnwidth");                                    \
+        STATIC_YOINK("strnwidth16");                                  \
+        STATIC_YOINK("wcsnwidth");                                    \
+      }                                                               \
+    }                                                                 \
+    FMT;                                                              \
   })
 
 #define SFLINK(FMT)                    \

@@ -239,7 +239,11 @@ void LoadRelationships(int argc, char *argv[]) {
   buf += PAGESIZE;
   buf[-1] = '\n';
   for (i = optind; i < argc; ++i) {
-    CHECK_NOTNULL((finpaths = fopen(argv[i], "r")));
+    if (!(finpaths = fopen(argv[i], "r"))) {
+      fprintf(stderr, "\n\e[1mERROR: %s FAILED BECAUSE %s CAUSED %m\e[0m\n\n",
+              argv[0], argv[i]);
+      exit(1);
+    }
     while (getline(&line, &linecap, finpaths) != -1) {
       src = chomp(line);
       if (ShouldSkipSource(src)) continue;

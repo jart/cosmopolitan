@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/likely.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "net/http/http.h"
@@ -45,7 +46,7 @@ bool IsAcceptablePath(const char *data, size_t size) {
   e = p + size;
   while (p < e) {
     x = *p++ & 0xff;
-    if (x >= 0300) {
+    if (UNLIKELY(x >= 0300)) {
       a = ThomPikeByte(x);
       n = ThomPikeLen(x) - 1;
       if (p + n <= e) {

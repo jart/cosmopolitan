@@ -17,16 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bits/bits.h"
 #include "libc/str/str.h"
 
-noasan static const unsigned char *strchr_x64(const unsigned char *p,
-                                              uint64_t c) {
+noasan static const char *strchr_x64(const char *p, uint64_t c) {
   unsigned a, b;
   uint64_t w, x, y;
   for (c *= 0x0101010101010101;; p += 8) {
-    w = (uint64_t)p[7] << 070 | (uint64_t)p[6] << 060 | (uint64_t)p[5] << 050 |
-        (uint64_t)p[4] << 040 | (uint64_t)p[3] << 030 | (uint64_t)p[2] << 020 |
-        (uint64_t)p[1] << 010 | (uint64_t)p[0] << 000;
+    w = READ64LE(p);
     if ((x = ~(w ^ c) & ((w ^ c) - 0x0101010101010101) & 0x8080808080808080) |
         (y = ~w & (w - 0x0101010101010101) & 0x8080808080808080)) {
       if (x) {
@@ -63,7 +61,7 @@ char *strchr(const char *s, int c) {
     if ((*s & 0xff) == c) return s;
     if (!*s) return NULL;
   }
-  r = (char *)strchr_x64((const unsigned char *)s, c);
+  r = strchr_x64(s, c);
   assert(!r || *r || !c);
   return r;
 }

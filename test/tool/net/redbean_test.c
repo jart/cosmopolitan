@@ -19,25 +19,32 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
 #include "libc/fmt/conv.h"
+#include "libc/log/check.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/inaddr.h"
+#include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/shut.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/sysv/consts/sock.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
-
-/* TODO(jart): Finish this */
+#include "third_party/regex/regex.h"
 
 STATIC_YOINK("zip_uri_support");
 STATIC_YOINK("o/" MODE "/tool/net/redbean.com");
-char testlib_enable_tmp_setup_teardown;
+char testlib_enable_tmp_setup_teardown_once;
+int port;
 
-void SetUp(void) {
-  return;
+void SetUpOnce(void) {
+  if (IsWindows()) return;
   ssize_t n;
-  char buf[512];
+  char buf[1024];
   int fdin, fdout;
   ASSERT_NE(-1, mkdir("bin", 0755));
   ASSERT_NE(-1, (fdin = open("zip:o/" MODE "/tool/net/redbean.com", O_RDONLY)));
@@ -45,32 +52,72 @@ void SetUp(void) {
   for (;;) {
     ASSERT_NE(-1, (n = read(fdin, buf, sizeof(buf))));
     if (!n) break;
-    ASSERT_EQ(n, write(fdout, buf, sizeof(buf)));
+    ASSERT_EQ(n, write(fdout, buf, n));
   }
   close(fdout);
   close(fdin);
 }
 
-TEST(redbean, test) {
-  return;
+char *SendHttpRequest(const char *s) {
+  int fd;
+  char *p;
+  size_t n;
+  ssize_t rc;
+  struct sockaddr_in addr = {AF_INET, htons(port), {htonl(INADDR_LOOPBACK)}};
+  EXPECT_NE(-1, (fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)));
+  EXPECT_NE(-1, connect(fd, &addr, sizeof(addr)));
+  n = strlen(s);
+  EXPECT_EQ(n, write(fd, s, n));
+  shutdown(fd, SHUT_WR);
+  for (p = 0, n = 0;; n += rc) {
+    p = xrealloc(p, n + 512);
+    EXPECT_NE(-1, (rc = read(fd, p + n, 512)));
+    if (rc <= 0) break;
+  }
+  p = xrealloc(p, n + 1);
+  p[n] = 0;
+  close(fd);
+  return p;
+}
+
+bool Matches(const char *regex, const char *str) {
+  bool r;
+  regex_t re;
+  CHECK_EQ(REG_OK, regcomp(&re, regex, 0));
+  r = regexec(&re, str, 0, 0, 0) == REG_OK;
+  regfree(&re);
+  return r;
+}
+
+TEST(redbean, testOptions) {
+  if (IsWindows()) return;
   char portbuf[16];
-  int pid, port, pipefds[2];
+  int pid, pipefds[2];
   sigset_t chldmask, savemask;
   sigaddset(&chldmask, SIGCHLD);
   sigprocmask(SIG_BLOCK, &chldmask, &savemask);
-  ASSERT_NE(-1, pipe2(pipefds, O_CLOEXEC));
+  ASSERT_NE(-1, pipe(pipefds));
   ASSERT_NE(-1, (pid = vfork()));
   if (!pid) {
+    close(pipefds[0]);
     dup2(pipefds[1], 1);
     sigprocmask(SIG_SETMASK, &savemask, NULL);
     execv("bin/redbean.com",
-          (char *const[]){"bin/redbean.com", "-zp0", "-l127.0.0.1", 0});
+          (char *const[]){"bin/redbean.com", "-szp0", "-l127.0.0.1", 0});
     _exit(127);
   }
   EXPECT_NE(-1, close(pipefds[1]));
   EXPECT_NE(-1, read(pipefds[0], portbuf, sizeof(portbuf)));
   port = atoi(portbuf);
-  printf("port %d\n", port);
+  EXPECT_TRUE(Matches("HTTP/1\\.1 200 OK\r\n"
+                      "Accept: \\*/\\*\r\n"
+                      "Accept-Charset: utf-8,ISO-8859-1;q=0\\.7,\\*;q=0\\.5\r\n"
+                      "Allow: GET, HEAD, POST, PUT, DELETE, OPTIONS\r\n"
+                      "Date: .*\r\n"
+                      "Server: redbean/0\\.4\r\n"
+                      "Content-Length: 0\r\n"
+                      "\r\n",
+                      gc(SendHttpRequest("OPTIONS * HTTP/1.1\n\n"))));
   EXPECT_NE(-1, kill(pid, SIGTERM));
   EXPECT_NE(-1, wait(0));
 }

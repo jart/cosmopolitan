@@ -16,36 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/mem/mem.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
-#include "net/http/escape.h"
+#include "libc/x/x.h"
 
-TEST(HasControlCodes, test) {
-  EXPECT_EQ(-1, HasControlCodes(kHyperion, kHyperionSize, kControlC0));
-  EXPECT_EQ(+2, HasControlCodes("hi\1", -1, kControlC0));
-  EXPECT_EQ(-1, HasControlCodes("hi\1", -1, kControlC1));
-  EXPECT_EQ(-1, HasControlCodes("hi there", -1, 0));
-  EXPECT_NE(-1, HasControlCodes("hi\tthere", -1, kControlWs));
+TEST(utf8toutf16, test) {
+  EXPECT_STREQ(u"hello☻♥", gc(utf8toutf16("hello☻♥", -1, 0)));
+  EXPECT_STREQ(u"hello☻♥hello☻♥h", gc(utf8toutf16("hello☻♥hello☻♥h", -1, 0)));
+  EXPECT_STREQ(u"hello☻♥hello☻♥hi", gc(utf8toutf16("hello☻♥hello☻♥hi", -1, 0)));
+  EXPECT_STREQ(u"hello☻♥hello☻♥hello☻♥hello☻♥hello☻♥",
+               gc(utf8toutf16("hello☻♥hello☻♥hello☻♥hello☻♥hello☻♥", -1, 0)));
+  EXPECT_STREQ(u"hello--hello--h", gc(utf8toutf16("hello--hello--h", -1, 0)));
+  EXPECT_STREQ(u"hello--hello--hi", gc(utf8toutf16("hello--hello--hi", -1, 0)));
+  EXPECT_STREQ(u"hello--hello--hello--hello--hello--",
+               gc(utf8toutf16("hello--hello--hello--hello--hello--", -1, 0)));
 }
 
-TEST(HasControlCodes, testDoesUtf8) {
-  EXPECT_EQ(-1, HasControlCodes(u8"→", -1, kControlC0 | kControlC1));
-  EXPECT_EQ(-1, HasControlCodes("\304\200", -1, kControlC0 | kControlC1));
-  EXPECT_NE(-1, HasControlCodes("\300\200", -1, kControlC0 | kControlC1));
-  EXPECT_EQ(-1, HasControlCodes("\300\200", -1, kControlC1));
-  EXPECT_NE(-1, HasControlCodes("\302\202", -1, kControlC0 | kControlC1));
-  EXPECT_NE(-1, HasControlCodes("\302\202", -1, kControlC1));
-  EXPECT_EQ(-1, HasControlCodes("\302\202", -1, kControlC0));
-}
-
-TEST(HasControlCodes, testHasLatin1FallbackBehavior) {
-  EXPECT_NE(-1, HasControlCodes("\202", -1, kControlWs | kControlC1));
-  EXPECT_EQ(-1, HasControlCodes("\202", -1, kControlC0));
-}
-
-BENCH(HasControlCodes, bench) {
-  EZBENCH2("HasControlCodes small", donothing, HasControlCodes("hello", -1, 0));
-  EZBENCH2("HasControlCodes big", donothing,
-           HasControlCodes(kHyperion, kHyperionSize, kControlC1));
+BENCH(utf8toutf16, bench) {
+  EZBENCH2("utf8toutf16", donothing,
+           free(utf8toutf16(kHyperion, kHyperionSize, 0)));
 }

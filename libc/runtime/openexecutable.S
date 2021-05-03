@@ -40,9 +40,7 @@ OpenExecutable:
 	pushq	MAP_ANONYMOUS(%rip)		# -0x28(%rbp)
 	pushq	MAP_PRIVATE(%rip)		# -0x30(%rbp)
 	pushq	MAP_FIXED(%rip)			# -0x38(%rbp)
-	pushq	MAP_SHARED(%rip)		# -0x40(%rbp)
-	pushq	__NR_mprotect(%rip)		# -0x48(%rbp)
-	pushq	__NR_mprotect(%rip)		# -0x50(%rbp)
+	pushq	__NR_mprotect(%rip)		# -0x40(%rbp)
 	push	%rbx				# code buffer
 	push	%r12				# data buffer
 	push	%r14				# filename
@@ -98,7 +96,7 @@ OpenExecutable:
 	rep movsb
 
 //	Change protection.
-	mov	-0x48(%rbp),%eax		# __NR_mprotect
+	mov	-0x40(%rbp),%eax		# __NR_mprotect
 	mov	%rbx,%rdi
 	mov	$PAGESIZE,%esi
 	mov	$PROT_READ|PROT_EXEC,%edx
@@ -133,7 +131,7 @@ OpenExecutable:
 	mov	$ape_rom_filesz,%esi
 	mov	$PROT_READ|PROT_EXEC,%edx
 	mov	-0x38(%rbp),%r10d		# MAP_FIXED
-	or	-0x40(%rbp),%r10d		# MAP_SHARED
+	or	-0x30(%rbp),%r10d		# MAP_PRIVATE
 	mov	%r15d,%r8d
 	mov	$ape_rom_offset,%r9d
 	push	%r9				# openbsd:pad
