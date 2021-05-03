@@ -74,6 +74,7 @@ COSMOPOLITAN_C_START_
  * and if the test succeeds it'll be removed along with any contents.
  */
 extern char testlib_enable_tmp_setup_teardown;
+extern char testlib_enable_tmp_setup_teardown_once;
 
 /**
  * User-defined test setup function.
@@ -82,6 +83,7 @@ extern char testlib_enable_tmp_setup_teardown;
  * defined by the linkage.
  */
 void SetUp(void);
+void SetUpOnce(void);
 
 /**
  * User-defined test cleanup function.
@@ -90,6 +92,7 @@ void SetUp(void);
  * defined by the linkage.
  */
 void TearDown(void);
+void TearDownOnce(void);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § testing library » assert or die                           ─╬─│┼

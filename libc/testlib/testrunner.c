@@ -29,6 +29,10 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
+static int x;
+static char cwd[PATH_MAX];
+static char tmp[PATH_MAX];
+
 void testlib_finish(void) {
   if (g_testlib_failed) {
     fprintf(stderr, "%u / %u %s\n", g_testlib_failed, g_testlib_ran,
@@ -40,6 +44,18 @@ wontreturn void testlib_abort(void) {
   testlib_finish();
   exit(MIN(255, g_testlib_failed));
   unreachable;
+}
+
+static void SetupTmpDir(void) {
+  snprintf(tmp, sizeof(tmp), "o/tmp/%s.%d.%d", program_invocation_short_name,
+           getpid(), x++);
+  CHECK_NE(-1, makedirs(tmp, 0755), "tmp=%s", tmp);
+  CHECK_NE(-1, chdir(tmp), "tmp=%s", tmp);
+}
+
+static void TearDownTmpDir(void) {
+  CHECK_NE(-1, chdir(cwd));
+  CHECK_NE(-1, rmrf(tmp));
 }
 
 /**
@@ -62,18 +78,12 @@ testonly void testlib_runtestcases(testfn_t *start, testfn_t *end,
    *
    * @see ape/ape.lds
    */
-  int x;
-  char cwd[PATH_MAX];
-  char tmp[PATH_MAX];
   const testfn_t *fn;
+  CHECK_NOTNULL(getcwd(cwd, sizeof(cwd)));
+  if (weaken(testlib_enable_tmp_setup_teardown_once)) SetupTmpDir();
+  if (weaken(SetUpOnce)) weaken(SetUpOnce)();
   for (x = 0, fn = start; fn != end; ++fn) {
-    if (weaken(testlib_enable_tmp_setup_teardown)) {
-      CHECK_NOTNULL(getcwd(cwd, sizeof(cwd)));
-      snprintf(tmp, sizeof(tmp), "o/tmp/%s.%d.%d",
-               program_invocation_short_name, getpid(), x++);
-      CHECK_NE(-1, makedirs(tmp, 0755), "tmp=%s", tmp);
-      CHECK_NE(-1, chdir(tmp), "tmp=%s", tmp);
-    }
+    if (weaken(testlib_enable_tmp_setup_teardown)) SetupTmpDir();
     if (weaken(SetUp)) weaken(SetUp)();
     errno = 0;
     SetLastError(0);
@@ -83,9 +93,8 @@ testonly void testlib_runtestcases(testfn_t *start, testfn_t *end,
     (*fn)();
     sys_getpid();
     if (weaken(TearDown)) weaken(TearDown)();
-    if (weaken(testlib_enable_tmp_setup_teardown)) {
-      CHECK_NE(-1, chdir(cwd));
-      CHECK_NE(-1, rmrf(tmp));
-    }
+    if (weaken(testlib_enable_tmp_setup_teardown)) TearDownTmpDir();
   }
+  if (weaken(TearDownOnce)) weaken(TearDownOnce)();
+  if (weaken(testlib_enable_tmp_setup_teardown_once)) TearDownTmpDir();
 }
