@@ -299,6 +299,7 @@ static bool loggednetworkorigin;
 static bool hasluaglobalhandler;
 
 static int zfd;
+static int zprot;
 static int frags;
 static int gmtoff;
 static int server;
@@ -1365,12 +1366,10 @@ static bool ZipCdirChanged(void) {
 static void OpenZip(void) {
   uint8_t *p;
   if (zmap) munmap(zmap, zsize);
-  CHECK_NE(-1, (zfd = open(zpath, O_RDONLY)));
   CHECK_NE(-1, fstat(zfd, &zst));
   CHECK((zsize = zst.st_size));
-  CHECK_NE(MAP_FAILED,
-           (zmap = mmap((void *)0x0000300000000000, zsize, PROT_READ,
-                        MAP_FIXED | MAP_SHARED, zfd, 0)));
+  CHECK_NE(MAP_FAILED, (zmap = mmap((void *)0x0000300000000000, zsize, zprot,
+                                    MAP_FIXED | MAP_SHARED, zfd, 0)));
   CHECK_NOTNULL((zcdir = GetZipCdir(zmap, zsize)));
   if (endswith(zpath, ".com.dbg") && (p = memmem(zmap, zsize, "MZqFpD", 6))) {
     zsize -= p - zmap;
@@ -2367,6 +2366,14 @@ static int LuaLoadAsset(lua_State *L) {
   return 0;
 }
 
+static void GetDosLocalTime(int64_t utcunixts, uint16_t *out_time,
+                            uint16_t *out_date) {
+  struct tm tm;
+  CHECK_NOTNULL(localtime_r(&utcunixts, &tm));
+  *out_time = DOS_TIME(tm.tm_hour, tm.tm_min, tm.tm_sec);
+  *out_date = DOS_DATE(tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday + 1);
+}
+
 static bool IsUtf8(const void *data, size_t size) {
   const unsigned char *p, *pe;
   for (p = data, pe = p + size; p + 2 <= pe; ++p) {
@@ -2391,12 +2398,125 @@ static bool IsText(const void *data, size_t size) {
   return true;
 }
 
-static void GetDosLocalTime(int64_t utcunixts, uint16_t *out_time,
-                            uint16_t *out_date) {
-  struct tm tm;
-  CHECK_NOTNULL(localtime_r(&utcunixts, &tm));
-  *out_time = DOS_TIME(tm.tm_hour, tm.tm_min, tm.tm_sec);
-  *out_date = DOS_DATE(tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday + 1);
+static int LuaStoreAsset(lua_State *L) {
+  int mode;
+  int64_t ft;
+  uint8_t era;
+  uint32_t crc;
+  long double now;
+  char *comp, *p, *q;
+  const char *path, *data, *use;
+  uint16_t gflags, iattrs, mtime, mdate, dosmode, method, disk;
+  size_t newlfileoffset, newcdiroffset, neweocdoffset, oldcdirrecords;
+  size_t pathlen, datalen, complen, uselen, oldcdirsize, moar, extralen;
+  if (IsOpenbsd() || IsNetbsd() || IsWindows()) {
+    luaL_error(L, "StoreAsset() not available on Windows/NetBSD/OpenBSD yet");
+    unreachable;
+  }
+  now = nowl();
+  path = LuaCheckPath(L, 1, &pathlen);
+  data = luaL_checklstring(L, 2, &datalen);
+  mode = luaL_optinteger(L, 3, 0644);
+  if (!(mode & S_IFMT)) mode |= S_IFREG;
+  if (pathlen > 1 && path[0] == '/') ++path, --pathlen;
+  crc = crc32_z(0, data, datalen);
+  if (datalen < 100) {
+    method = kZipCompressionNone;
+    comp = NULL;
+    use = data;
+    uselen = datalen;
+  } else {
+    comp = Deflate(data, datalen, &complen);
+    if (complen < datalen) {
+      method = kZipCompressionDeflate;
+      use = comp;
+      uselen = complen;
+    } else {
+      method = kZipCompressionNone;
+      use = data;
+      uselen = datalen;
+    }
+  }
+  disk = gflags = iattrs = 0;
+  era = method ? kZipEra1993 : kZipEra1989;
+  ft = (now + MODERNITYSECONDS) * HECTONANOSECONDS;
+  dosmode = !(mode & 0200) ? kNtFileAttributeReadonly : 0;
+  GetDosLocalTime(now, &mtime, &mdate);
+  if (IsUtf8(path, pathlen)) gflags |= kZipGflagUtf8;
+  if (IsText(data, datalen)) iattrs |= kZipIattrText;
+  CHECK_NE(-1, flock(zfd, LOCK_EX));
+  if (ZipCdirChanged()) Reindex();
+  oldcdirrecords = GetZipCdirRecords(zcdir);
+  oldcdirsize = GetZipCdirSize(zcdir);
+  extralen = 36;
+  moar = kZipLfileHdrMinSize + pathlen + datalen + oldcdirsize +
+         kZipCfileHdrMinSize + pathlen + extralen + kZipCdirHdrMinSize;
+  CHECK_NE(-1, ftruncate(zfd, zsize + moar));
+  CHECK_NE(MAP_FAILED, (zmap = mmap((void *)0x0000300000000000, zsize + moar,
+                                    PROT_READ | PROT_WRITE,
+                                    MAP_FIXED | MAP_SHARED, zfd, 0)));
+  p = q = (char *)zmap;
+  p += zsize;
+  newlfileoffset = p - q;
+  p = WRITE32LE(p, kZipLfileHdrMagic);
+  *p++ = era;
+  *p++ = kZipOsDos;
+  p = WRITE16LE(p, gflags);
+  p = WRITE16LE(p, method);
+  p = WRITE16LE(p, mtime);
+  p = WRITE16LE(p, mdate);
+  p = WRITE32LE(p, crc);
+  p = WRITE32LE(p, uselen);
+  p = WRITE32LE(p, datalen);
+  p = WRITE16LE(p, pathlen);
+  p = WRITE16LE(p, 0);
+  p = mempcpy(p, path, pathlen);
+  p = mempcpy(p, data, datalen);
+  newcdiroffset = p - q;
+  p = mempcpy(p, zmap + GetZipCdirOffset(zcdir), oldcdirsize);
+  p = WRITE32LE(p, kZipCfileHdrMagic);
+  *p++ = kZipCosmopolitanVersion;
+  *p++ = kZipOsUnix;
+  *p++ = era;
+  *p++ = kZipOsDos;
+  p = WRITE16LE(p, gflags);
+  p = WRITE16LE(p, method);
+  p = WRITE16LE(p, mtime);
+  p = WRITE16LE(p, mdate);
+  p = WRITE32LE(p, crc);
+  p = WRITE32LE(p, uselen);
+  p = WRITE32LE(p, datalen);
+  p = WRITE16LE(p, pathlen);
+  p = WRITE16LE(p, extralen);
+  p = WRITE16LE(p, 0);
+  p = WRITE16LE(p, disk);
+  p = WRITE16LE(p, iattrs);
+  p = WRITE16LE(p, dosmode);
+  p = WRITE16LE(p, mode);
+  p = WRITE32LE(p, newlfileoffset);
+  p = mempcpy(p, path, pathlen);
+  p = WRITE16LE(p, kZipExtraNtfs);
+  p = WRITE16LE(p, 32);
+  p = WRITE32LE(p, 0);
+  p = WRITE16LE(p, 1);
+  p = WRITE16LE(p, 24);
+  p = WRITE64LE(p, ft);
+  p = WRITE64LE(p, ft);
+  p = WRITE64LE(p, ft);
+  neweocdoffset = p - q;
+  p = WRITE32LE(p, kZipCdirHdrMagic);
+  p = WRITE16LE(p, 0);
+  p = WRITE16LE(p, 0);
+  p = WRITE16LE(p, oldcdirrecords + 1);
+  p = WRITE16LE(p, oldcdirrecords + 1);
+  p = WRITE32LE(p, neweocdoffset - newcdiroffset);
+  p = WRITE32LE(p, newcdiroffset);
+  p = WRITE16LE(p, 0);
+  zcdir[0] = 'J';
+  zcdir[1] = 'T';
+  CHECK_NE(-1, flock(zfd, LOCK_UN));
+  free(comp);
+  return 0;
 }
 
 static int LuaGetDate(lua_State *L) {
@@ -3524,6 +3644,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"SetHeader", LuaSetHeader},                          //
     {"SetLogLevel", LuaSetLogLevel},                      //
     {"SetStatus", LuaSetStatus},                          //
+    {"StoreAsset", LuaStoreAsset},                        //
     {"Underlong", LuaUnderlong},                          //
     {"VisualizeControlCodes", LuaVisualizeControlCodes},  //
     {"Write", LuaWrite},                                  //
@@ -4517,7 +4638,6 @@ static void TuneSockets(void) {
 }
 
 static void RestoreApe(void) {
-  int fd;
   char *p;
   size_t n;
   struct Asset *a;
@@ -4526,14 +4646,17 @@ static void RestoreApe(void) {
   if (IsOpenbsd()) return; /* TODO */
   if (IsNetbsd()) return;  /* TODO */
   if (endswith(zpath, ".com.dbg")) return;
-  fd = OpenExecutable();
+  close(zfd);
+  zfd = OpenExecutable();
   if ((a = GetAssetZip("/.ape", 5)) && (p = LoadAsset(a, &n))) {
-    write(fd, p, n);
+    write(zfd, p, n);
     free(p);
+    zprot = PROT_READ | PROT_WRITE;
+    CHECK_NE(MAP_FAILED, (zmap = mmap((void *)0x0000300000000000, zsize, zprot,
+                                      MAP_FIXED | MAP_SHARED, zfd, 0)));
   } else {
     WARNF("/.ape not found");
   }
-  close(fd);
 }
 
 void RedBean(int argc, char *argv[]) {
@@ -4544,7 +4667,9 @@ void RedBean(int argc, char *argv[]) {
            (shared = mmap(NULL, ROUNDUP(sizeof(struct Shared), FRAMESIZE),
                           PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS,
                           -1, 0)));
+  zprot = PROT_READ;
   zpath = (const char *)getauxval(AT_EXECFN);
+  CHECK_NE(-1, (zfd = open(zpath, O_RDONLY)));
   OpenZip();
   IndexAssets();
   RestoreApe();
