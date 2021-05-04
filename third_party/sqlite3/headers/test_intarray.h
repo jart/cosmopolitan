@@ -81,7 +81,7 @@
 ** implemented, it is not allowed to invoke sqlite3_intarray_create(D,N,P)
 ** more than once with the same D and N values.
 */
-#include "sqlite3.h"
+#include "third_party/sqlite3/headers/sqlite3.h"
 #ifndef SQLITE_INTARRAY_H
 #define SQLITE_INTARRAY_H
 

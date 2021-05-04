@@ -27,11 +27,11 @@
 ** continues as if nothing had happened.
 */
 #ifndef _QUOTA_H_
-#include <stdio.h>
+#include "libc/stdio/stdio.h"
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "sqlite3.h"
+#include "third_party/sqlite3/headers/sqlite3.h"
 
 /* Make this callable from C++ */
 #ifdef __cplusplus

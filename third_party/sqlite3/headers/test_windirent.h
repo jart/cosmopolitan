@@ -24,23 +24,23 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-#include "windows.h"
+#include "third_party/sqlite3/headers/windows.h"
 
 /*
 ** We need several support functions from the SQLite core.
 */
 
-#include "sqlite3.h"
+#include "third_party/sqlite3/headers/sqlite3.h"
 
 /*
 ** We need several things from the ANSI and MSVCRT headers.
 */
 
-#include <errno.h>
+#include "libc/errno.h"
 #include <io.h>
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "libc/limits.h"
+#include "libc/stdio/stdio.h"
+#include "libc/mem/mem.h"
 #include <sys/stat.h>
 #include <sys/types.h>
 

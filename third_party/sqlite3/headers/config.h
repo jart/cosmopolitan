@@ -25,7 +25,7 @@
 /* Define to 1 if the system has the type `intptr_t'. */
 #define HAVE_INTPTR_T 1
 
-/* Define to 1 if you have the <inttypes.h> header file. */
+/* Define to 1 if you have the "libc/calls/weirdtypes.h" header file. */
 #define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the `isnan' function. */
@@ -37,7 +37,7 @@
 /* Define to 1 if you have the `localtime_s' function. */
 /* #undef HAVE_LOCALTIME_S */
 
-/* Define to 1 if you have the <malloc.h> header file. */
+/* Define to 1 if you have the "libc/mem/mem.h" header file. */
 #define HAVE_MALLOC_H 1
 
 /* Define to 1 if you have the `malloc_usable_size' function. */
@@ -58,10 +58,10 @@
 /* Define to 1 if you have the pwrite64() function. */
 /* #undef HAVE_PWRITE64 */
 
-/* Define to 1 if you have the <stdint.h> header file. */
+/* Define to 1 if you have the "libc/calls/weirdtypes.h" header file. */
 #define HAVE_STDINT_H 1
 
-/* Define to 1 if you have the <stdlib.h> header file. */
+/* Define to 1 if you have the "libc/mem/mem.h" header file. */
 #define HAVE_STDLIB_H 1
 
 /* Define to 1 if you have the strchrnul() function */
@@ -70,7 +70,7 @@
 /* Define to 1 if you have the <strings.h> header file. */
 #define HAVE_STRINGS_H 1
 
-/* Define to 1 if you have the <string.h> header file. */
+/* Define to 1 if you have the "libc/str/str.h" header file. */
 #define HAVE_STRING_H 1
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
@@ -94,7 +94,7 @@
 /* Define to 1 if the system has the type `uintptr_t'. */
 #define HAVE_UINTPTR_T 1
 
-/* Define to 1 if you have the <unistd.h> header file. */
+/* Define to 1 if you have the "libc/isystem/unistd.h" header file. */
 #define HAVE_UNISTD_H 1
 
 /* Define to 1 if you have the `usleep' function. */
