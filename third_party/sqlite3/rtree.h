@@ -13,7 +13,7 @@
 ** This header file is used by programs that want to link against the
 ** RTREE library.  All it does is declare the sqlite3RtreeInit() interface.
 */
-#include "sqlite3.h"
+#include "third_party/sqlite3/sqlite3.h"
 
 #ifdef SQLITE_OMIT_VIRTUALTABLE
 #undef SQLITE_ENABLE_RTREE

@@ -15,8 +15,8 @@
 ** only within the VDBE.  Interface routines refer to a Mem using the
 ** name sqlite_value
 */
-#include "sqliteInt.h"
-#include "vdbeInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/vdbeInt.h"
 
 /* True if X is a power of two.  0 is considered a power of two here.
 ** In other words, return true if X has at most one bit set.

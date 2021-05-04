@@ -37,13 +37,13 @@
 
 /* If not building as part of the core, include sqlite3ext.h. */
 #ifndef SQLITE_CORE
-#include "sqlite3ext.h"
+#include "third_party/sqlite3/sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
 #endif
 
-#include "fts3_hash.h"
-#include "fts3_tokenizer.h"
-#include "sqlite3.h"
+#include "third_party/sqlite3/fts3_hash.h"
+#include "third_party/sqlite3/fts3_tokenizer.h"
+#include "third_party/sqlite3/sqlite3.h"
 
 /*
 ** This constant determines the maximum depth of an FTS expression tree

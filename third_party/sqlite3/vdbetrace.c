@@ -15,8 +15,8 @@
 **
 ** The Vdbe parse-tree explainer is also found here.
 */
-#include "sqliteInt.h"
-#include "vdbeInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/vdbeInt.h"
 
 #ifndef SQLITE_OMIT_TRACE
 

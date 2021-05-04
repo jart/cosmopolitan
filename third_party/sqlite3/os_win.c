@@ -12,18 +12,18 @@
 **
 ** This file contains code that is specific to Windows.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 #if SQLITE_OS_WIN /* This file is used for Windows only */
 
 /*
 ** Include code that is common to all os_*.c files
 */
-#include "os_common.h"
+#include "third_party/sqlite3/os_common.h"
 
 /*
 ** Include the header file for the Windows VFS.
 */
-#include "os_win.h"
+#include "third_party/sqlite3/os_win.h"
 
 /*
 ** Compiling and using WAL mode requires several APIs that are only
@@ -2200,7 +2200,7 @@ static void winLogIoerr(int nRetry, int lineno) {
 ** The MSVC CRT on Windows CE may not have a localtime() function.
 ** So define a substitute.
 */
-#include <time.h>
+#include "libc/time/time.h"
 struct tm *__cdecl localtime(const time_t *t) {
   static struct tm y;
   FILETIME uTm, lTm;

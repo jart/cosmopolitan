@@ -267,7 +267,7 @@
 #ifndef _SQLITE3RBU_H
 #define _SQLITE3RBU_H
 
-#include "sqlite3.h" /* Required for error code definitions */
+#include "third_party/sqlite3/sqlite3.h" /* Required for error code definitions */
 
 #ifdef __cplusplus
 extern "C" {

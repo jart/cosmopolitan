@@ -18,8 +18,8 @@
 ** in this file for details.  If in doubt, do not deviate from existing
 ** commenting and indentation practices when changing or adding code.
 */
-#include "sqliteInt.h"
-#include "vdbeInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/vdbeInt.h"
 
 /*
 ** Invoke this macro on memory cells just prior to changing the
@@ -594,7 +594,7 @@ void sqlite3VdbeRegisterDump(Vdbe *v) {
 ** hwtime.h contains inline assembler code for implementing
 ** high-performance timing routines.
 */
-#include "hwtime.h"
+#include "third_party/sqlite3/hwtime.h"
 
 #endif
 

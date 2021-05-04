@@ -32,7 +32,7 @@
 */
 #ifndef SQLITE3_H
 #define SQLITE3_H
-#include <stdarg.h> /* Needed for the definition of va_list */
+/* Needed for the definition of va_list */
 
 /*
 ** Make sure we can call this stuff from C++.
@@ -9547,7 +9547,7 @@ SQLITE_API int sqlite3_system_errno(sqlite3 *);
 ** the most recent version.
 */
 typedef struct sqlite3_snapshot {
-  unsigned char hidden[48];
+  unsigned char dummyhidden[48];
 } sqlite3_snapshot;
 
 /*

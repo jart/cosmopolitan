@@ -17,13 +17,14 @@
 ** code in fts3.c.
 */
 
-#include "fts3Int.h"
+#include "third_party/sqlite3/fts3Int.h"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "libc/alg/alg.h"
+#include "libc/assert.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 #define FTS_MAX_APPENDABLE_HEIGHT 16
 

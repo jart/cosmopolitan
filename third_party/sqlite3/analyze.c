@@ -140,7 +140,7 @@
 ** integer in the equivalent columns in sqlite_stat4.
 */
 #ifndef SQLITE_OMIT_ANALYZE
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 
 #if defined(SQLITE_ENABLE_STAT4)
 #define IsStat4 1

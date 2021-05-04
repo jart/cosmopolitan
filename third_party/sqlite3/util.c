@@ -15,11 +15,10 @@
 ** strings, and stuff like that.
 **
 */
-#include <stdarg.h>
 
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 #ifndef SQLITE_OMIT_FLOATING_POINT
-#include <math.h>
+#include "libc/math.h"
 #endif
 
 /*

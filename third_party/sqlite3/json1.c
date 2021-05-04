@@ -23,13 +23,13 @@
 */
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_JSON1)
 #if !defined(SQLITEINT_H)
-#include "sqlite3ext.h"
+#include "third_party/sqlite3/sqlite3ext.h"
 #endif
 SQLITE_EXTENSION_INIT1
-#include <assert.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
+#include "libc/assert.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
+#include "third_party/gdtoa/gdtoa.h"
 
 /* Mark a function parameter as unused, to suppress nuisance compiler
 ** warnings. */
@@ -58,7 +58,7 @@ SQLITE_EXTENSION_INIT1
 #define safe_isxdigit(x) sqlite3Isxdigit(x)
 #else
 /* Use the standard library for separate compilation */
-#include <ctype.h> /* amalgamator: keep */
+#include "libc/str/str.h" /* amalgamator: keep */
 #define safe_isdigit(x)  isdigit((unsigned char)(x))
 #define safe_isalnum(x)  isalnum((unsigned char)(x))
 #define safe_isxdigit(x) isxdigit((unsigned char)(x))
@@ -708,7 +708,7 @@ static int jsonParseAddNode(JsonParse *, u32, u32, const char *);
 ** inlined.
 */
 #if defined(__GNUC__)
-#define JSON_NOINLINE __attribute__((noinline))
+#define JSON_NOINLINE __attribute__((__noinline__))
 #elif defined(_MSC_VER) && _MSC_VER >= 1310
 #define JSON_NOINLINE __declspec(noinline)
 #else

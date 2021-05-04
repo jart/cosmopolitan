@@ -28,21 +28,18 @@
 **     provide case-independent matching.
 */
 
-#if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_ICU) || \
+#if 0 && !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_ICU) || \
     defined(SQLITE_ENABLE_ICU_COLLATIONS)
 
 /* Include ICU headers */
-#include <assert.h>
-#include <unicode/ucol.h>
-#include <unicode/uregex.h>
-#include <unicode/ustring.h>
-#include <unicode/utypes.h>
+#include "libc/assert.h"
+#include "libc/unicode/unicode.h"
 
 #ifndef SQLITE_CORE
-#include "sqlite3ext.h"
+#include "third_party/sqlite3/sqlite3ext.h"
 SQLITE_EXTENSION_INIT1
 #else
-#include "sqlite3.h"
+#include "third_party/sqlite3/sqlite3.h"
 #endif
 
 /*

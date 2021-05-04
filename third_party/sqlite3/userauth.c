@@ -23,7 +23,7 @@
 */
 #ifdef SQLITE_USER_AUTHENTICATION
 #ifndef SQLITEINT_H
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 #endif
 
 /*

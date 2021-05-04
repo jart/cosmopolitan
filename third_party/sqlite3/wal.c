@@ -246,7 +246,7 @@
 */
 #ifndef SQLITE_OMIT_WAL
 
-#include "wal.h"
+#include "third_party/sqlite3/wal.h"
 
 /*
 ** Trace output macros

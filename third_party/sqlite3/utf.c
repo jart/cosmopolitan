@@ -33,10 +33,9 @@
 **     0xfe 0xff   big-endian utf-16 follows
 **
 */
-#include <assert.h>
-
-#include "sqliteInt.h"
-#include "vdbeInt.h"
+#include "libc/assert.h"
+#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/vdbeInt.h"
 
 #if !defined(SQLITE_AMALGAMATION) && SQLITE_BYTEORDER == 0
 /*

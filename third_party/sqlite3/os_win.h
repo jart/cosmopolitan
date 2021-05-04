@@ -18,11 +18,12 @@
 /*
 ** Include the primary Windows SDK header file.
 */
-#include "windows.h"
+#include "third_party/sqlite3/windows.h"
 
 #ifdef __CYGWIN__
-#include <errno.h> /* amalgamator: dontcache */
 #include <sys/cygwin.h>
+
+#include "libc/errno.h" /* amalgamator: dontcache */
 #endif
 
 /*

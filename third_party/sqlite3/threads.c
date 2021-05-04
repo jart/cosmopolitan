@@ -25,9 +25,9 @@
 ** of multiple cores can do so, while also allowing applications to stay
 ** single-threaded if desired.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 #if SQLITE_OS_WIN
-#include "os_win.h"
+#include "third_party/sqlite3/os_win.h"
 #endif
 
 #if SQLITE_MAX_WORKER_THREADS > 0

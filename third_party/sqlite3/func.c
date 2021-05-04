@@ -13,14 +13,13 @@
 ** functions of SQLite.  (Some function, and in particular the date and
 ** time functions, are implemented separately.)
 */
-#include <assert.h>
-#include <stdlib.h>
-
-#include "sqliteInt.h"
+#include "libc/assert.h"
+#include "libc/mem/mem.h"
+#include "third_party/sqlite3/sqliteInt.h"
 #ifndef SQLITE_OMIT_FLOATING_POINT
-#include <math.h>
+#include "libc/math.h"
 #endif
-#include "vdbeInt.h"
+#include "third_party/sqlite3/vdbeInt.h"
 
 /*
 ** Return the collating function associated with a function.

@@ -1,0 +1,102 @@
+#-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
+#───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
+
+PKGS += THIRD_PARTY_SQLITE3
+
+THIRD_PARTY_SQLITE3_ARTIFACTS += THIRD_PARTY_SQLITE3_A
+THIRD_PARTY_SQLITE3 = $(THIRD_PARTY_SQLITE3_A_DEPS) $(THIRD_PARTY_SQLITE3_A) $(THIRD_PARTY_SQLITE3_COMS)
+THIRD_PARTY_SQLITE3_A = o/$(MODE)/third_party/sqlite3/libsqlite3.a
+THIRD_PARTY_SQLITE3_A_FILES := $(wildcard third_party/sqlite3/*)
+THIRD_PARTY_SQLITE3_A_HDRS = $(filter %.h,$(THIRD_PARTY_SQLITE3_A_FILES))
+THIRD_PARTY_SQLITE3_A_SRCS_C = $(filter-out %/geopoly.c,$(filter %.c,$(THIRD_PARTY_SQLITE3_A_FILES)))
+THIRD_PARTY_SQLITE3_BINS = $(THIRD_PARTY_SQLITE3_COMS) $(THIRD_PARTY_SQLITE3_COMS:%=%.dbg)
+
+THIRD_PARTY_SQLITE3_A_SRCS =					\
+	$(THIRD_PARTY_SQLITE3_A_SRCS_C)
+
+THIRD_PARTY_SQLITE3_A_OBJS =					\
+	$(THIRD_PARTY_SQLITE3_A_SRCS_C:%.c=o/$(MODE)/%.o)
+
+THIRD_PARTY_SQLITE3_COMS =					\
+	o/$(MODE)/third_party/sqlite3/sqlite3.com
+
+THIRD_PARTY_SQLITE3_A_CHECKS =					\
+	$(THIRD_PARTY_SQLITE3_A).pkg				\
+	$(THIRD_PARTY_SQLITE3_A_HDRS:%=o/$(MODE)/%.ok)
+
+THIRD_PARTY_SQLITE3_A_DIRECTDEPS =				\
+	LIBC_ALG						\
+	LIBC_BITS						\
+	LIBC_CALLS						\
+	LIBC_FMT						\
+	LIBC_INTRIN						\
+	LIBC_MEM						\
+	LIBC_NEXGEN32E						\
+	LIBC_RUNTIME						\
+	LIBC_STDIO						\
+	LIBC_STR						\
+	LIBC_STUBS						\
+	LIBC_SYSV						\
+	LIBC_SYSV_CALLS					\
+	LIBC_TIME						\
+	LIBC_TINYMATH						\
+	LIBC_UNICODE					\
+	THIRD_PARTY_GDTOA				\
+	THIRD_PARTY_MUSL				\
+	THIRD_PARTY_ZLIB				
+
+THIRD_PARTY_SQLITE3_A_DEPS :=					\
+	$(call uniq,$(foreach x,$(THIRD_PARTY_SQLITE3_A_DIRECTDEPS),$($(x))))
+
+o/$(MODE)/third_party/sqlite3/sqlite3.com.dbg:			\
+		$(THIRD_PARTY_SQLITE3_A_DEPS)			\
+		$(THIRD_PARTY_SQLITE3_A)			\
+		o/$(MODE)/third_party/sqlite3/shell.o		\
+		$(CRT)					\
+		$(APE)
+	-@$(APELINK)
+
+$(THIRD_PARTY_SQLITE3_A):					\
+		third_party/sqlite3/					\
+		$(THIRD_PARTY_SQLITE3_A).pkg			\
+		$(filter-out %/shell.o,$(THIRD_PARTY_SQLITE3_A_OBJS))
+
+$(THIRD_PARTY_SQLITE3_A).pkg:					\
+		$(filter-out %/shell.o,$(THIRD_PARTY_SQLITE3_A_OBJS)) \
+		$(foreach x,$(THIRD_PARTY_SQLITE3_A_DIRECTDEPS),$($(x)_A).pkg)
+
+$(THIRD_PARTY_SQLITE3_A_OBJS):					\
+		OVERRIDE_CFLAGS =				\
+			-DSTACK_FRAME_UNLIMITED		\
+			-DSQLITE_CORE				\
+			-DSQLITE_OS_UNIX=1  		\
+			-DBUILD_sqlite -DNDEBUG 	\
+			-DSQLITE_THREADSAFE=0 		\
+			-DSQLITE_OMIT_LOAD_EXTENSION=1 		\
+			-DSQLITE_ENABLE_MATH_FUNCTIONS 		\
+			-DSQLITE_ENABLE_FTS3 		\
+			-DSQLITE_ENABLE_FTS4 		\
+			-DSQLITE_ENABLE_FTS5 		\
+			-DSQLITE_ENABLE_JSON1 		\
+			-DSQLITE_ENABLE_GEOPOLY 	\
+			-DSQLITE_ENABLE_RTREE 		\
+			-DSQLITE_ENABLE_SESSION 	\
+			-DSQLITE_ENABLE_PREUPDATE_HOOK 		\
+			-DSQLITE_TEMP_STORE=1 		\
+			-DHAVE_READLINE=0 			\
+			-DHAVE_EDITLINE=0 			\
+			-DSQLITE_ENABLE_JSON1 		\
+			-DSQLITE_ENABLE_RTREE 		\
+			-DSQLITE_ENABLE_EXPLAIN_COMMENTS 	\
+			-DSQLITE_ENABLE_UNKNOWN_SQL_FUNCTION	\
+			-DSQLITE_ENABLE_STMTVTAB 	\
+			-DSQLITE_ENABLE_DBPAGE_VTAB	\
+			-DSQLITE_ENABLE_DBSTAT_VTAB	\
+			-DSQLITE_ENABLE_BYTECODE_VTAB 		\
+			-DSQLITE_ENABLE_OFFSET_SQL_FUNC 	\
+			-DSQLITE_ENABLE_DESERIALIZE 
+
+.PHONY: o/$(MODE)/third_party/sqlite3
+o/$(MODE)/third_party/sqlite3: 					\
+	$(THIRD_PARTY_SQLITE3_BINS)						\
+	$(THIRD_PARTY_SQLITE3_CHECKS)				

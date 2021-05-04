@@ -17,7 +17,7 @@
 */
 #ifndef SQLITE3EXT_H
 #define SQLITE3EXT_H
-#include "sqlite3.h"
+#include "third_party/sqlite3/sqlite3.h"
 
 /*
 ** The following structure holds pointers to all of the SQLite API

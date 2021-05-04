@@ -22,7 +22,7 @@
 */
 #line 58 "parse.y"
 
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 
 /*
 ** Disable all error recovery processing in the parser push-down
@@ -4652,8 +4652,8 @@ struct yyParser {
 typedef struct yyParser yyParser;
 
 #ifndef NDEBUG
-#include <assert.h>
-#include <stdio.h>
+#include "libc/assert.h"
+#include "libc/stdio/stdio.h"
 static FILE *yyTraceFILE = 0;
 static char *yyTracePrompt = 0;
 #endif /* NDEBUG */

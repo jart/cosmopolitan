@@ -57,15 +57,15 @@
     (defined(SQLITE_ENABLE_RTREE) && !defined(SQLITE_OMIT_VIRTUALTABLE))
 
 #ifndef SQLITE_CORE
-#include "sqlite3ext.h"
+#include "third_party/sqlite3/sqlite3ext.h"
 SQLITE_EXTENSION_INIT1
 #else
-#include "sqlite3.h"
+#include "third_party/sqlite3/sqlite3.h"
 #endif
 int sqlite3GetToken(const unsigned char *, int *); /* In the SQLite core */
 
 #ifndef SQLITE_AMALGAMATION
-#include "sqlite3rtree.h"
+#include "third_party/sqlite3/sqlite3rtree.h"
 typedef sqlite3_int64 i64;
 typedef sqlite3_uint64 u64;
 typedef unsigned char u8;
@@ -79,10 +79,10 @@ typedef unsigned int u32;
 #endif
 #endif
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "libc/assert.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 /*  The following macro is used to suppress compiler warnings.
  */
@@ -4313,7 +4313,7 @@ static void rtreecheck(sqlite3_context *ctx, int nArg, sqlite3_value **apArg) {
 
 /* Conditionally include the geopoly code */
 #ifdef SQLITE_ENABLE_GEOPOLY
-#include "geopoly.c"
+#include "third_party/sqlite3/geopoly.c"
 #endif
 
 /*

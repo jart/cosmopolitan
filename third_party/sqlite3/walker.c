@@ -12,10 +12,9 @@
 ** This file contains routines used for walking the parser tree for
 ** an SQL statement.
 */
-#include <stdlib.h>
-#include <string.h>
-
-#include "sqliteInt.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
+#include "third_party/sqlite3/sqliteInt.h"
 
 #if !defined(SQLITE_OMIT_WINDOWFUNC)
 /*

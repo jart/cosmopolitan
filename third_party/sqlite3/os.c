@@ -13,7 +13,7 @@
 ** This file contains OS interface code that is common to all
 ** architectures.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 
 /*
 ** If we compile with the SQLITE_TEST macro set, then the following block

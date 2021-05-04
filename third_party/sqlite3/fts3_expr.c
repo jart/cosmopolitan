@@ -15,7 +15,7 @@
 ** syntax is relatively simple, the whole tokenizer/parser system is
 ** hand-coded.
 */
-#include "fts3Int.h"
+#include "third_party/sqlite3/fts3Int.h"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
 
 /*
@@ -78,8 +78,8 @@ int sqlite3_fts3_enable_parentheses = 0;
 */
 #define SQLITE_FTS3_DEFAULT_NEAR_PARAM 10
 
-#include <assert.h>
-#include <string.h>
+#include "libc/assert.h"
+#include "libc/str/str.h"
 
 /*
 ** isNot:
@@ -1096,7 +1096,7 @@ void sqlite3Fts3ExprFree(Fts3Expr *pDel) {
 
 #ifdef SQLITE_TEST
 
-#include <stdio.h>
+#include "libc/stdio/stdio.h"
 
 /*
 ** Return a pointer to a buffer containing a text representation of the

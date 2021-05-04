@@ -19,8 +19,8 @@
 ** another is writing.
 */
 #ifndef SQLITE_OMIT_DISKIO
-#include "sqliteInt.h"
-#include "wal.h"
+#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/wal.h"
 
 /******************* NOTES ON THE DESIGN OF THE PAGER ************************
 **

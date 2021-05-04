@@ -80,17 +80,17 @@
 **
 */
 
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
-
-#include "sqlite3.h"
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "third_party/sqlite3/sqlite3.h"
 
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_RBU)
-#include "sqlite3rbu.h"
+#include "third_party/sqlite3/sqlite3rbu.h"
 
 #if defined(_WIN32_WCE)
-#include "windows.h"
+#include "third_party/sqlite3/windows.h"
 #endif
 
 /* Maximum number of prepared UPDATE statements held by this module */

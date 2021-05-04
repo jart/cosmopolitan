@@ -16,8 +16,8 @@
 ** readability and editabiliity.  This file contains utility routines for
 ** analyzing Expr objects in the WHERE clause.
 */
-#include "sqliteInt.h"
-#include "whereInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/whereInt.h"
 
 /* Forward declarations */
 static void exprAnalyze(SrcList *, WhereClause *, int);

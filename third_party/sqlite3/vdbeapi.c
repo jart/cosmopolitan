@@ -13,8 +13,8 @@
 ** This file contains code use to implement APIs that are part of the
 ** VDBE.
 */
-#include "sqliteInt.h"
-#include "vdbeInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/vdbeInt.h"
 
 #ifndef SQLITE_OMIT_DEPRECATED
 /*

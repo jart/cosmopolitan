@@ -15,7 +15,7 @@
 ** accessed by users of the library.
 */
 
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 
 /*
 ** Execute SQL code.  Return one of the SQLITE_ success/failure

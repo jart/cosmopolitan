@@ -39,7 +39,7 @@
 ** hwtime.h contains inline assembler code for implementing
 ** high-performance timing routines.
 */
-#include "hwtime.h"
+#include "third_party/sqlite3/hwtime.h"
 
 static sqlite_uint64 g_start;
 static sqlite_uint64 g_elapsed;

@@ -23,11 +23,11 @@
 **     * The FTS3 module is being built into the core of
 **       SQLite (in which case SQLITE_ENABLE_FTS3 is defined).
 */
-#include "fts3Int.h"
+#include "third_party/sqlite3/fts3Int.h"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
 
-#include <assert.h>
-#include <string.h>
+#include "libc/assert.h"
+#include "libc/str/str.h"
 
 /*
 ** Return true if the two-argument version of fts3_tokenizer()
@@ -226,11 +226,11 @@ int sqlite3Fts3InitTokenizer(
 #ifdef SQLITE_TEST
 
 #if defined(INCLUDE_SQLITE_TCL_H)
-#include "sqlite_tcl.h"
+#include "third_party/sqlite3/sqlite_tcl.h"
 #else
-#include "tcl.h"
+#include "third_party/sqlite3/tcl.h"
 #endif
-#include <string.h>
+#include "libc/str/str.h"
 
 /*
 ** Implementation of a special SQL scalar function for testing tokenizers

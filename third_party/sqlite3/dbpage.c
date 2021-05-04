@@ -31,7 +31,7 @@
 ** update fails.  Rows may not be deleted or inserted.
 */
 
-#include "sqliteInt.h" /* Requires access to internal data structures */
+#include "third_party/sqlite3/sqliteInt.h" /* Requires access to internal data structures */
 #if (defined(SQLITE_ENABLE_DBPAGE_VTAB) || defined(SQLITE_TEST)) && \
     !defined(SQLITE_OMIT_VIRTUALTABLE)
 

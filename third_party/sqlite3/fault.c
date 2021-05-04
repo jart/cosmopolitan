@@ -24,7 +24,7 @@
 ** during a hash table resize is a benign fault.
 */
 
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 
 #ifndef SQLITE_UNTESTABLE
 

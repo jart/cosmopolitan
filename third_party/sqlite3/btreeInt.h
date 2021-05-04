@@ -213,7 +213,7 @@
 **      4     Number of leaf pointers on this page
 **      *     zero or more pages numbers of leaves
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 
 /* The following value is the maximum cell size assuming a maximum page
 ** size give above.

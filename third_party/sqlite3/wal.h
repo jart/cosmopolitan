@@ -17,7 +17,7 @@
 #ifndef SQLITE_WAL_H
 #define SQLITE_WAL_H
 
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 
 /* Macros for extracting appropriate sync flags for either transaction
 ** commits (WAL_SYNC_FLAGS(X)) or for checkpoint ops (CKPT_SYNC_FLAGS(X)):

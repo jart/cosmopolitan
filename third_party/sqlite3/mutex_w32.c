@@ -11,18 +11,18 @@
 *************************************************************************
 ** This file contains the C functions that implement mutexes for Win32.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 
 #if SQLITE_OS_WIN
 /*
 ** Include code that is common to all os_*.c files
 */
-#include "os_common.h"
+#include "third_party/sqlite3/os_common.h"
 
 /*
 ** Include the header file for the Windows VFS.
 */
-#include "os_win.h"
+#include "third_party/sqlite3/os_win.h"
 #endif
 
 /*

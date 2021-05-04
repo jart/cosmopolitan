@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-#include "sqlite3.h"
+#include "third_party/sqlite3/sqlite3.h"
 
 /*
 ** CAPI3REF: Session Object Handle

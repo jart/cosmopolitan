@@ -41,7 +41,7 @@
 **                                be necessary when compiling for Delphi,
 **                                for example.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 
 /*
 ** This version of the memory allocator is the default.  It is
@@ -103,7 +103,7 @@ static malloc_zone_t *_sqliteZone_;
 ** the macro SQLITE_MALLOCSIZE to the desired function name.
 */
 #if defined(SQLITE_USE_MALLOC_H)
-#include <malloc.h>
+#include "libc/mem/mem.h"
 #if defined(SQLITE_USE_MALLOC_USABLE_SIZE)
 #if !defined(SQLITE_MALLOCSIZE)
 #define SQLITE_MALLOCSIZE(x) malloc_usable_size(x)

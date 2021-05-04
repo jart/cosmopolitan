@@ -15,9 +15,8 @@
 ** individual tokens and sends those tokens one-by-one over to the
 ** parser for analysis.
 */
-#include <stdlib.h>
-
-#include "sqliteInt.h"
+#include "libc/mem/mem.h"
+#include "third_party/sqlite3/sqliteInt.h"
 
 /* Character classes for tokenizing
 **
@@ -625,7 +624,7 @@ const unsigned char ebcdicToAscii[] = {
 ** named keywordhash.h and then included into this source file by
 ** the #include below.
 */
-#include "keywordhash.h"
+#include "third_party/sqlite3/keywordhash.h"
 
 /*
 ** If X is a character that can be used in an identifier then
