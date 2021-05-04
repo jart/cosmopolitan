@@ -1,0 +1,5 @@
+SQLite source code obtained from : https
+    :  // www.sqlite.org/2021/sqlite-preprocessed-3350500.zip
+
+       FTS1 and FTS2 are not used by SQLite,
+       so the related files were removed.
