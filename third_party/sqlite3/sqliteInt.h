@@ -14,6 +14,7 @@
 */
 #ifndef SQLITEINT_H
 #define SQLITEINT_H
+/* clang-format off */
 
 /* Special Comments:
 **
@@ -56,12 +57,12 @@
 ** compiler warnings due to subsequent content in this file and other files
 ** that are included by this file.
 */
-#include "msvc.h"
+#include "third_party/sqlite3/msvc.h"
 
 /*
 ** Special setup for VxWorks
 */
-#include "vxworks.h"
+#include "third_party/sqlite3/vxworks.h"
 
 /*
 ** These #defines should enable >2GB file support on POSIX if the
@@ -164,9 +165,9 @@
 ** disabled.
 */
 #if defined(_HAVE_MINGW_H)
-# include "mingw.h"
+#include "third_party/sqlite3/mingw.h"
 #elif defined(_HAVE__MINGW_H)
-# include "_mingw.h"
+#include "third_party/sqlite3/_mingw.h"
 #endif
 
 /*
@@ -185,18 +186,18 @@
 ** first in QNX.  Also, the _USE_32BIT_TIME_T macro must appear first for
 ** MinGW.
 */
-#include "sqlite3.h"
+#include "third_party/sqlite3/sqlite3.h"
 
 /*
 ** Include the configuration header output by 'configure' if we're using the
 ** autoconf-based build
 */
 #if defined(_HAVE_SQLITE_CONFIG_H) && !defined(SQLITECONFIG_H)
-#include "config.h"
+#include "third_party/sqlite3/config.h"
 #define SQLITECONFIG_H 1
 #endif
 
-#include "sqliteLimit.h"
+#include "third_party/sqlite3/sqliteLimit.h"
 
 /* Disable nuisance warnings on Borland compilers */
 #if defined(__BORLANDC__)
@@ -227,10 +228,10 @@
 ** Include standard header files as necessary
 */
 #ifdef HAVE_STDINT_H
-#include <stdint.h>
+#include "libc/calls/weirdtypes.h"
 #endif
 #ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
+#include "libc/calls/weirdtypes.h"
 #endif
 
 /*
@@ -268,9 +269,9 @@
 ** inlined.
 */
 #if defined(__GNUC__)
-#  define SQLITE_NOINLINE  __attribute__((noinline))
-#elif defined(_MSC_VER) && _MSC_VER>=1310
-#  define SQLITE_NOINLINE  __declspec(noinline)
+#define SQLITE_NOINLINE __attribute__((__noinline__))
+#elif defined(_MSC_VER) && _MSC_VER >= 1310
+#define SQLITE_NOINLINE __declspec(noinline)
 #else
 #  define SQLITE_NOINLINE
 #endif
@@ -583,13 +584,12 @@
 #define likely(X)    (X)
 #define unlikely(X)  (X)
 
-#include "hash.h"
-#include "parse.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <stddef.h>
+#include "libc/assert.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "third_party/sqlite3/hash.h"
+#include "third_party/sqlite3/parse.h"
 
 /*
 ** Use a macro to replace memcpy() if compiled with SQLITE_INLINE_MEMCPY.
@@ -1220,18 +1220,19 @@ typedef struct With With;
 ** just an array of integers.
 */
 typedef int VList;
+typedef u32 Pgno;
 
 /*
 ** Defer sourcing vdbe.h and btree.h until after the "u8" and
 ** "BusyHandler" typedefs. vdbe.h also requires a few of the opaque
 ** pointer types (i.e. FuncDef) defined above.
 */
-#include "pager.h"
-#include "btree.h"
-#include "vdbe.h"
-#include "pcache.h"
-#include "os.h"
-#include "mutex.h"
+#include "third_party/sqlite3/btree.h"
+#include "third_party/sqlite3/mutex.h"
+#include "third_party/sqlite3/os.h"
+#include "third_party/sqlite3/pager.h"
+#include "third_party/sqlite3/pcache.h"
+#include "third_party/sqlite3/vdbe.h"
 
 /* The SQLITE_EXTRA_DURABLE compile-time option used to set the default
 ** synchronous setting to EXTRA.  It is no longer supported.
@@ -4097,7 +4098,7 @@ int sqlite3CantopenError(int);
 */
 #if !defined(SQLITE_ASCII) || \
     (defined(SQLITE_ENABLE_FTS3) && defined(SQLITE_AMALGAMATION))
-# include <ctype.h>
+#include "libc/str/str.h"
 #endif
 
 /*

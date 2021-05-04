@@ -16,7 +16,8 @@
 ** These routines are in a separate files so that they will not be linked
 ** if they are not used.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+/* clang-format off */
 
 #ifndef SQLITE_OMIT_GET_TABLE
 

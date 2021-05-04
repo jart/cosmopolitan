@@ -13,7 +13,8 @@
 ** This header file is used by programs that want to link against the
 ** ICU extension.  All it does is declare the sqlite3IcuInit() interface.
 */
-#include "sqlite3.h"
+#include "third_party/sqlite3/sqlite3.h"
+/* clang-format off */
 
 #ifdef __cplusplus
 extern "C" {

@@ -13,7 +13,9 @@
 ** See the header comment on "btreeInt.h" for additional information.
 ** Including a description of file format and an overview of operation.
 */
-#include "btreeInt.h"
+#include "third_party/sqlite3/btreeInt.h"
+
+/* clang-format off */
 
 /*
 ** The header string that appears at the beginning of every

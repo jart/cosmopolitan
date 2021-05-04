@@ -30,7 +30,7 @@
 ** created and used by SQLite versions 3.7.9 through 3.29.0 when
 ** SQLITE_ENABLE_STAT3 defined.  The functionality of sqlite_stat3
 ** is a superset of sqlite_stat2 and is also now deprecated.  The
-** sqlite_stat4 is an enhanced version of sqlite_stat3 and is only 
+** sqlite_stat4 is an enhanced version of sqlite_stat3 and is only
 ** available when compiled with SQLITE_ENABLE_STAT4 and in SQLite
 ** versions 3.8.1 and later.  STAT4 is the only variant that is still
 ** supported.
@@ -49,7 +49,7 @@
 ** integer is the average number of rows in the index that have the same
 ** value in the first column of the index.  The third integer is the average
 ** number of rows in the index that have the same value for the first two
-** columns.  The N-th integer (for N>1) is the average number of rows in 
+** columns.  The N-th integer (for N>1) is the average number of rows in
 ** the index which have the same value for the first N-1 columns.  For
 ** a K-column index, there will be K+1 integers in the stat column.  If
 ** the index is unique, then the last integer will be 1.
@@ -59,7 +59,7 @@
 ** must be separated from the last integer by a single space.  If the
 ** "unordered" keyword is present, then the query planner assumes that
 ** the index is unordered and will not use the index for a range query.
-** 
+**
 ** If the sqlite_stat1.idx column is NULL, then the sqlite_stat1.stat
 ** column contains a single integer which is the (estimated) number of
 ** rows in the table identified by sqlite_stat1.tbl.
@@ -117,9 +117,9 @@
 ** number of entries that are strictly less than the sample.  The first
 ** integer in nLt contains the number of entries in the index where the
 ** left-most column is less than the left-most column of the sample.
-** The K-th integer in the nLt entry is the number of index entries 
+** The K-th integer in the nLt entry is the number of index entries
 ** where the first K columns are less than the first K columns of the
-** sample.  The nDLt column is like nLt except that it contains the 
+** sample.  The nDLt column is like nLt except that it contains the
 ** number of distinct entries in the index that are less than the
 ** sample.
 **
@@ -140,7 +140,8 @@
 ** integer in the equivalent columns in sqlite_stat4.
 */
 #ifndef SQLITE_OMIT_ANALYZE
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+/* clang-format off */
 
 #if defined(SQLITE_ENABLE_STAT4)
 # define IsStat4     1

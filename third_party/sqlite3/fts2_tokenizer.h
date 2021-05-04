@@ -20,6 +20,8 @@
 #ifndef _FTS2_TOKENIZER_H_
 #define _FTS2_TOKENIZER_H_
 
+/* clang-format off */
+
 /* TODO(shess) Only used for SQLITE_OK and SQLITE_DONE at this time.
 ** If tokenizers are to be allowed to call sqlite3_*() functions, then
 ** we will need a way to register the API consistently.

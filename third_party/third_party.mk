@@ -14,5 +14,6 @@ o/$(MODE)/third_party:				\
 	o/$(MODE)/third_party/quickjs		\
 	o/$(MODE)/third_party/regex		\
 	o/$(MODE)/third_party/stb		\
+	o/$(MODE)/third_party/sqlite3		\
 	o/$(MODE)/third_party/xed		\
 	o/$(MODE)/third_party/zlib

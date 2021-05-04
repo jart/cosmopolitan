@@ -11,12 +11,13 @@
 ******************************************************************************
 **
 ** This module contains code that implements a parser for fts3 query strings
-** (the right-hand argument to the MATCH operator). Because the supported 
+** (the right-hand argument to the MATCH operator). Because the supported
 ** syntax is relatively simple, the whole tokenizer/parser system is
-** hand-coded. 
+** hand-coded.
 */
-#include "fts3Int.h"
+#include "third_party/sqlite3/fts3Int.h"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
+/* clang-format off */
 
 /*
 ** By default, this module parses the legacy syntax that has been 
@@ -78,8 +79,8 @@ int sqlite3_fts3_enable_parentheses = 0;
 */
 #define SQLITE_FTS3_DEFAULT_NEAR_PARAM 10
 
-#include <string.h>
-#include <assert.h>
+#include "libc/assert.h"
+#include "libc/str/str.h"
 
 /*
 ** isNot:
@@ -1107,7 +1108,7 @@ void sqlite3Fts3ExprFree(Fts3Expr *pDel){
 
 #ifdef SQLITE_TEST
 
-#include <stdio.h>
+#include "libc/stdio/stdio.h"
 
 /*
 ** Return a pointer to a buffer containing a text representation of the

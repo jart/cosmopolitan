@@ -12,13 +12,14 @@
 **
 ** This file contains C code to implement the TreeView debugging routines.
 ** These routines print a parse tree to standard output for debugging and
-** analysis. 
+** analysis.
 **
 ** The interfaces in this file is only available when compiling
 ** with SQLITE_DEBUG.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 #ifdef SQLITE_DEBUG
+/* clang-format off */
 
 /*
 ** Add a new subitem to the tree.  The moreToFollow flag indicates that this

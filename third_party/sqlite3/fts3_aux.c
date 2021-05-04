@@ -11,11 +11,12 @@
 ******************************************************************************
 **
 */
-#include "fts3Int.h"
+/* clang-format off */
+#include "third_party/sqlite3/fts3Int.h"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
 
-#include <string.h>
-#include <assert.h>
+#include "libc/assert.h"
+#include "libc/str/str.h"
 
 typedef struct Fts3auxTable Fts3auxTable;
 typedef struct Fts3auxCursor Fts3auxCursor;

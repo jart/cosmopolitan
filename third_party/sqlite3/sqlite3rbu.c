@@ -11,7 +11,7 @@
 *************************************************************************
 **
 **
-** OVERVIEW 
+** OVERVIEW
 **
 **  The RBU extension requires that the RBU update be packaged as an
 **  SQLite database. The tables it expects to find are described in
@@ -19,34 +19,34 @@
 **  that the user wishes to write to, a corresponding data_xyz table is
 **  created in the RBU database and populated with one row for each row to
 **  update, insert or delete from the target table.
-** 
+**
 **  The update proceeds in three stages:
-** 
+**
 **  1) The database is updated. The modified database pages are written
 **     to a *-oal file. A *-oal file is just like a *-wal file, except
 **     that it is named "<database>-oal" instead of "<database>-wal".
 **     Because regular SQLite clients do not look for file named
 **     "<database>-oal", they go on using the original database in
 **     rollback mode while the *-oal file is being generated.
-** 
+**
 **     During this stage RBU does not update the database by writing
 **     directly to the target tables. Instead it creates "imposter"
 **     tables using the SQLITE_TESTCTRL_IMPOSTER interface that it uses
 **     to update each b-tree individually. All updates required by each
 **     b-tree are completed before moving on to the next, and all
 **     updates are done in sorted key order.
-** 
+**
 **  2) The "<database>-oal" file is moved to the equivalent "<database>-wal"
 **     location using a call to rename(2). Before doing this the RBU
 **     module takes an EXCLUSIVE lock on the database file, ensuring
 **     that there are no other active readers.
-** 
+**
 **     Once the EXCLUSIVE lock is released, any other database readers
 **     detect the new *-wal file and read the database in wal mode. At
 **     this point they see the new version of the database - including
 **     the updates made as part of the RBU update.
-** 
-**  3) The new *-wal file is checkpointed. This proceeds in the same way 
+**
+**  3) The new *-wal file is checkpointed. This proceeds in the same way
 **     as a regular database checkpoint, except that a single frame is
 **     checkpointed each time sqlite3rbu_step() is called. If the RBU
 **     handle is closed before the entire *-wal file is checkpointed,
@@ -55,7 +55,7 @@
 **     the future.
 **
 ** POTENTIAL PROBLEMS
-** 
+**
 **  The rename() call might not be portable. And RBU is not currently
 **  syncing the directory after renaming the file.
 **
@@ -77,20 +77,21 @@
 **  fields are collected.  This means we're probably writing a lot more
 **  data to disk when saving the state of an ongoing update to the RBU
 **  update database than is strictly necessary.
-** 
+**
 */
+/* clang-format off */
 
-#include <assert.h>
-#include <string.h>
-#include <stdio.h>
-
-#include "sqlite3.h"
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "third_party/sqlite3/sqlite3.h"
 
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_RBU)
-#include "sqlite3rbu.h"
+#include "third_party/sqlite3/sqlite3rbu.h"
 
 #if defined(_WIN32_WCE)
-#include "windows.h"
+#include "third_party/sqlite3/windows.h"
 #endif
 
 /* Maximum number of prepared UPDATE statements held by this module */

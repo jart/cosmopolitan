@@ -10,7 +10,7 @@
 **
 *************************************************************************
 ** This is the implementation of the page cache subsystem or "pager".
-** 
+**
 ** The pager is used to access a database disk file.  It implements
 ** atomic commit and rollback through the use of a journal file that
 ** is separate from the database file.  The pager also implements file
@@ -19,8 +19,9 @@
 ** another is writing.
 */
 #ifndef SQLITE_OMIT_DISKIO
-#include "sqliteInt.h"
-#include "wal.h"
+#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/wal.h"
+/* clang-format off */
 
 
 /******************* NOTES ON THE DESIGN OF THE PAGER ************************

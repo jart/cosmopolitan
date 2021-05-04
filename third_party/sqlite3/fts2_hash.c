@@ -13,7 +13,6 @@
 ** We've modified it slightly to serve as a standalone hash table
 ** implementation for the full-text indexing module.
 */
-
 /*
 ** The code in this file is only compiled if:
 **
@@ -23,6 +22,7 @@
 **     * The FTS2 module is being built into the core of
 **       SQLite (in which case SQLITE_ENABLE_FTS2 is defined).
 */
+/* clang-format off */
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS2)
 
 #include <assert.h>

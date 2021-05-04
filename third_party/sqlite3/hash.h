@@ -14,6 +14,7 @@
 */
 #ifndef SQLITE_HASH_H
 #define SQLITE_HASH_H
+/* clang-format off */
 
 /* Forward declarations of structures. */
 typedef struct Hash Hash;

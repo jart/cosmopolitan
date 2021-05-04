@@ -3,6 +3,7 @@
 ** ../tool/mkpragmatab.tcl.  To update the set of pragmas, edit
 ** that script and rerun it.
 */
+/* clang-format off */
 
 /* The various pragma types */
 #define PragTyp_ACTIVATE_EXTENSIONS            0

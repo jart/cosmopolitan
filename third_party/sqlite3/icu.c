@@ -11,9 +11,9 @@
 *************************************************************************
 ** $Id: icu.c,v 1.7 2007/12/13 21:54:11 drh Exp $
 **
-** This file implements an integration between the ICU library 
-** ("International Components for Unicode", an open-source library 
-** for handling unicode data) and SQLite. The integration uses 
+** This file implements an integration between the ICU library
+** ("International Components for Unicode", an open-source library
+** for handling unicode data) and SQLite. The integration uses
 ** ICU to provide the following to SQLite:
 **
 **   * An implementation of the SQL regexp() function (and hence REGEXP
@@ -24,27 +24,23 @@
 **
 **   * Integration of ICU and SQLite collation sequences.
 **
-**   * An implementation of the LIKE operator that uses ICU to 
+**   * An implementation of the LIKE operator that uses ICU to
 **     provide case-independent matching.
 */
+/* clang-format off */
 
-#if !defined(SQLITE_CORE)                  \
- || defined(SQLITE_ENABLE_ICU)             \
- || defined(SQLITE_ENABLE_ICU_COLLATIONS)
+#if 0 && !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_ICU) || \
+    defined(SQLITE_ENABLE_ICU_COLLATIONS)
 
 /* Include ICU headers */
-#include <unicode/utypes.h>
-#include <unicode/uregex.h>
-#include <unicode/ustring.h>
-#include <unicode/ucol.h>
-
-#include <assert.h>
+#include "libc/assert.h"
+#include "libc/unicode/unicode.h"
 
 #ifndef SQLITE_CORE
-  #include "sqlite3ext.h"
-  SQLITE_EXTENSION_INIT1
+#include "third_party/sqlite3/sqlite3ext.h"
+SQLITE_EXTENSION_INIT1
 #else
-  #include "sqlite3.h"
+#include "third_party/sqlite3/sqlite3.h"
 #endif
 
 /*

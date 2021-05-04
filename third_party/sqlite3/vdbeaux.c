@@ -10,10 +10,11 @@
 **
 *************************************************************************
 ** This file contains code used for creating, destroying, and populating
-** a VDBE (or an "sqlite3_stmt" as it is known to the outside world.) 
+** a VDBE (or an "sqlite3_stmt" as it is known to the outside world.)
 */
-#include "sqliteInt.h"
-#include "vdbeInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/vdbeInt.h"
+/* clang-format off */
 
 /* Forward references */
 static void freeEphemeralFunction(sqlite3 *db, FuncDef *pDef);

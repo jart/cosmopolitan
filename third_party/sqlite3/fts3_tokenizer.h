@@ -19,12 +19,13 @@
 */
 #ifndef _FTS3_TOKENIZER_H_
 #define _FTS3_TOKENIZER_H_
+/* clang-format off */
 
 /* TODO(shess) Only used for SQLITE_OK and SQLITE_DONE at this time.
 ** If tokenizers are to be allowed to call sqlite3_*() functions, then
 ** we will need a way to register the API consistently.
 */
-#include "sqlite3.h"
+#include "third_party/sqlite3/sqlite3.h"
 
 /*
 ** Structures used by the tokenizer interface. When a new tokenizer

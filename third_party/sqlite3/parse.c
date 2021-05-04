@@ -13,16 +13,17 @@
 *************************************************************************
 ** This file contains SQLite's SQL parser.
 **
-** The canonical source code to this file ("parse.y") is a Lemon grammar 
+** The canonical source code to this file ("parse.y") is a Lemon grammar
 ** file that specifies the input grammar and actions to take while parsing.
-** That input file is processed by Lemon to generate a C-language 
+** That input file is processed by Lemon to generate a C-language
 ** implementation of a parser for the given grammer.  You might be reading
 ** this comment as part of the translated C-code.  Edits should be made
 ** to the original parse.y sources.
 */
 #line 58 "parse.y"
+/* clang-format off */
 
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 
 /*
 ** Disable all error recovery processing in the parser push-down
@@ -1441,8 +1442,8 @@ struct yyParser {
 typedef struct yyParser yyParser;
 
 #ifndef NDEBUG
-#include <stdio.h>
-#include <assert.h>
+#include "libc/assert.h"
+#include "libc/stdio/stdio.h"
 static FILE *yyTraceFILE = 0;
 static char *yyTracePrompt = 0;
 #endif /* NDEBUG */

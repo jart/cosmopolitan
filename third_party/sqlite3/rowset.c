@@ -35,7 +35,7 @@
 ** extracts the least value from the RowSet.
 **
 ** The INSERT primitive might allocate additional memory.  Memory is
-** allocated in chunks so most INSERTs do no allocation.  There is an 
+** allocated in chunks so most INSERTs do no allocation.  There is an
 ** upper bound on the size of allocated memory.  No memory is freed
 ** until DESTROY.
 **
@@ -61,7 +61,8 @@
 ** be possible, but the feature was not used, so it was removed in order
 ** to simplify the code.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+/* clang-format off */
 
 
 /*

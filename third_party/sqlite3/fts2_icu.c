@@ -10,12 +10,13 @@
 **
 *************************************************************************
 ** This file implements a tokenizer for fts2 based on the ICU library.
-** 
+**
 ** $Id: fts2_icu.c,v 1.3 2008/12/18 05:30:26 danielk1977 Exp $
 */
-
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS2)
 #ifdef SQLITE_ENABLE_ICU
+
+/* clang-format off */
 
 #include <assert.h>
 #include <string.h>

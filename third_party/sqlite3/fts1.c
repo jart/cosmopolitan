@@ -3,6 +3,9 @@
 ** fts3 (or higher).  If you believe that your use of fts1 is safe,
 ** add -DSQLITE_ENABLE_BROKEN_FTS1=1 to your CFLAGS.
 */
+
+/* clang-format off */
+
 #if (!defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS1)) \
         && !defined(SQLITE_ENABLE_BROKEN_FTS1)
 #error fts1 has a design flaw and has been deprecated.

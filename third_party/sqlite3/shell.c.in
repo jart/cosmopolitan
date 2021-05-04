@@ -16,6 +16,7 @@
 /* This needs to come before any includes for MSVC compiler */
 #define _CRT_SECURE_NO_WARNINGS
 #endif
+/* clang-format off */
 
 /*
 ** Determine if we are dealing with WinRT, which provides only a subset of

@@ -15,6 +15,7 @@
 */
 #ifndef SQLITE_OS_SETUP_H
 #define SQLITE_OS_SETUP_H
+/* clang-format off */
 
 /*
 ** Figure out if we are dealing with Unix, Windows, or some other operating

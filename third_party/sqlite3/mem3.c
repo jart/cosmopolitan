@@ -10,12 +10,12 @@
 **
 *************************************************************************
 ** This file contains the C functions that implement a memory
-** allocation subsystem for use by SQLite. 
+** allocation subsystem for use by SQLite.
 **
 ** This version of the memory allocation subsystem omits all
 ** use of malloc(). The SQLite user supplies a block of memory
 ** before calling sqlite3_initialize() from which allocations
-** are made and returned by the xMalloc() and xRealloc() 
+** are made and returned by the xMalloc() and xRealloc()
 ** implementations. Once sqlite3_initialize() has been called,
 ** the amount of memory available to SQLite is fixed and cannot
 ** be changed.
@@ -23,7 +23,8 @@
 ** This version of the memory allocation subsystem is included
 ** in the build only if SQLITE_ENABLE_MEMSYS3 is defined.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+/* clang-format off */
 
 /*
 ** This version of the memory allocator is only built into the library

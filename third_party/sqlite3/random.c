@@ -15,7 +15,8 @@
 ** Random numbers are used by some of the database backends in order
 ** to generate random integer keys for tables or random filenames.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+/* clang-format off */
 
 
 /* All threads share a single random number generator.

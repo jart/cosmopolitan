@@ -34,6 +34,7 @@
 /* This needs to come before any includes for MSVC compiler */
 #define _CRT_SECURE_NO_WARNINGS
 #endif
+/* clang-format off */
 
 /*
 ** Determine if we are dealing with WinRT, which provides only a subset of
@@ -82,41 +83,42 @@
 # define _LARGEFILE_SOURCE 1
 #endif
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <assert.h>
-#include "sqlite3.h"
+#include "libc/assert.h"
+#include "libc/fmt/conv.h"
+#include "libc/fmt/fmt.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "third_party/sqlite3/sqlite3.h"
+
 typedef sqlite3_int64 i64;
 typedef sqlite3_uint64 u64;
 typedef unsigned char u8;
 #if SQLITE_USER_AUTHENTICATION
-# include "sqlite3userauth.h"
+#include "third_party/sqlite3/sqlite3userauth.h"
 #endif
-#include <ctype.h>
-#include <stdarg.h>
+#include "libc/str/str.h"
 
 #if !defined(_WIN32) && !defined(WIN32)
-# include <signal.h>
-# if !defined(__RTP__) && !defined(_WRS_KERNEL)
-#  include <pwd.h>
-# endif
+#include "libc/calls/sigbits.h"
+#if !defined(__RTP__) && !defined(_WRS_KERNEL)
+#include "third_party/musl/passwd.h"
+#endif
 #endif
 #if (!defined(_WIN32) && !defined(WIN32)) || defined(__MINGW32__)
-# include <unistd.h>
-# include <dirent.h>
-# define GETPID getpid
-# if defined(__MINGW32__)
-#  define DIRENT dirent
-#  ifndef S_ISLNK
-#   define S_ISLNK(mode) (0)
-#  endif
-# endif
+#include "libc/calls/calls.h"
+#include "libc/isystem/unistd.h"
+#define GETPID getpid
+#if defined(__MINGW32__)
+#define DIRENT dirent
+#ifndef S_ISLNK
+#define S_ISLNK(mode) (0)
+#endif
+#endif
 #else
 # define GETPID (int)GetCurrentProcessId
 #endif
-#include <sys/types.h>
-#include <sys/stat.h>
+#include "libc/calls/weirdtypes.h"
 
 #if HAVE_READLINE
 # include <readline/readline.h>
@@ -137,12 +139,12 @@ typedef unsigned char u8;
 
 #elif HAVE_LINENOISE
 
-# include "linenoise.h"
-# define shell_add_history(X) linenoiseHistoryAdd(X)
-# define shell_read_history(X) linenoiseHistoryLoad(X)
-# define shell_write_history(X) linenoiseHistorySave(X)
-# define shell_stifle_history(X) linenoiseHistorySetMaxLen(X)
-# define shell_readline(X) linenoise(X)
+#include "third_party/sqlite3/linenoise.h"
+#define shell_add_history(X)    linenoiseHistoryAdd(X)
+#define shell_read_history(X)   linenoiseHistoryLoad(X)
+#define shell_write_history(X)  linenoiseHistorySave(X)
+#define shell_stifle_history(X) linenoiseHistorySetMaxLen(X)
+#define shell_readline(X)       linenoise(X)
 
 #else
 
@@ -176,17 +178,14 @@ typedef unsigned char u8;
 #  define pclose _pclose
 # endif
 #else
- /* Make sure isatty() has a prototype. */
- extern int isatty(int);
+/* Make sure isatty() has a prototype. */
 
-# if !defined(__RTP__) && !defined(_WRS_KERNEL)
-  /* popen and pclose are not C89 functions and so are
-  ** sometimes omitted from the <stdio.h> header */
-   extern FILE *popen(const char*,const char*);
-   extern int pclose(FILE*);
-# else
-#  define SQLITE_OMIT_POPEN 1
-# endif
+#if !defined(__RTP__) && !defined(_WRS_KERNEL)
+/* popen and pclose are not C89 functions and so are
+** sometimes omitted from the "libc/stdio/stdio.h" header */
+#else
+#define SQLITE_OMIT_POPEN 1
+#endif
 #endif
 
 #if defined(_WIN32_WCE)
@@ -255,8 +254,8 @@ static sqlite3_int64 timeOfDay(void){
 }
 
 #if !defined(_WIN32) && !defined(WIN32) && !defined(__minux)
-#include <sys/time.h>
-#include <sys/resource.h>
+#include "libc/sysv/consts/rusage.h"
+#include "libc/time/time.h"
 
 /* VxWorks does not support getrusage() as far as we can determine */
 #if defined(_WRS_KERNEL) || defined(__RTP__)
@@ -1059,25 +1058,23 @@ static void shellAddSchemaName(
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-#include "windows.h"
+#include "third_party/sqlite3/windows.h"
 
 /*
 ** We need several support functions from the SQLite core.
 */
 
-/* #include "sqlite3.h" */
+/* #include "third_party/sqlite3/sqlite3.h" */
 
 /*
 ** We need several things from the ANSI and MSVCRT headers.
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <io.h>
-#include <limits.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include "libc/calls/weirdtypes.h"
+#include "libc/errno.h"
+#include "libc/limits.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
 
 /*
 ** We may need several defines that should have been in "sys/stat.h".
@@ -1211,7 +1208,7 @@ extern INT closedir(LPDIR dirp);
 */
 
 #if defined(_WIN32) && defined(_MSC_VER)
-/* #include "test_windirent.h" */
+/* #include "third_party/sqlite3/test_windirent.h" */
 
 /*
 ** Implementation of the POSIX getenv() function using the Win32 API.
@@ -1419,11 +1416,10 @@ INT closedir(
 ** is used.  If SIZE is included it must be one of the integers 224, 256,
 ** 384, or 512, to determine SHA3 hash variant that is computed.
 */
-/* #include "sqlite3ext.h" */
+/* #include "third_party/sqlite3/sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <assert.h>
-#include <string.h>
-#include <stdarg.h>
+#include "libc/assert.h"
+#include "libc/str/str.h"
 
 #ifndef SQLITE_AMALGAMATION
 /* typedef sqlite3_uint64 u64; */
@@ -2192,38 +2188,18 @@ int sqlite3_shathree_init(
 **   And the paths returned in the "name" column of the table are also 
 **   relative to directory $dir.
 */
-/* #include "sqlite3ext.h" */
+/* #include "third_party/sqlite3/sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#if !defined(_WIN32) && !defined(WIN32)
-#  include <unistd.h>
-#  include <dirent.h>
-#  include <utime.h>
-#  include <sys/time.h>
-#else
-#  include "windows.h"
-#  include <io.h>
-#  include <direct.h>
-/* #  include "test_windirent.h" */
-#  define dirent DIRENT
-#  ifndef chmod
-#    define chmod _chmod
-#  endif
-#  ifndef stat
-#    define stat _stat
-#  endif
-#  define mkdir(path,mode) _mkdir(path)
-#  define lstat(path,buf) stat(path,buf)
-#endif
-#include <time.h>
-#include <errno.h>
-
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/calls/sigbits.h"
+#include "libc/isystem/unistd.h"
+#include "libc/time/time.h"
+#include "libc/errno.h"
+#include "libc/time/time.h"
 
 /*
 ** Structure of the fsdir() table-valued function
@@ -3155,11 +3131,10 @@ int sqlite3_fileio_init(
 ** faster than any human can type.
 **
 */
-/* #include "sqlite3ext.h" */
+/* #include "third_party/sqlite3/sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <assert.h>
-#include <string.h>
-#include <ctype.h>
+#include "libc/assert.h"
+#include "libc/str/str.h"
 
 #ifndef SQLITE_OMIT_VIRTUALTABLE
 
@@ -3672,10 +3647,10 @@ int sqlite3_completion_init(
 ** If the file being opened is a plain database (not an appended one), then
 ** this shim is a pass-through into the default underlying VFS. (rule 3)
 **/
-/* #include "sqlite3ext.h" */
+/* #include "third_party/sqlite3/sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <string.h>
-#include <assert.h>
+#include "libc/assert.h"
+#include "libc/str/str.h"
 
 /* The append mark at the end of the database is:
 **
@@ -4319,9 +4294,9 @@ int sqlite3_appendvfs_init(
 ** This extension is used to implement the --memtrace option of the
 ** command-line shell.
 */
-#include <assert.h>
-#include <string.h>
-#include <stdio.h>
+#include "libc/assert.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 /* The original memory allocation routines */
 static sqlite3_mem_methods memtraceBase;
@@ -4436,11 +4411,10 @@ int sqlite3MemTraceDeactivate(void){
 **         is *not* limited integers that can be expressed as a
 **         64-bit machine integer.
 */
-/* #include "sqlite3ext.h" */
+/* #include "third_party/sqlite3/sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <assert.h>
-#include <string.h>
-#include <ctype.h>
+#include "libc/assert.h"
+#include "libc/str/str.h"
 
 /*
 ** Compare text in lexicographic order, except strings of digits
@@ -4518,12 +4492,11 @@ int sqlite3_uint_init(
 **
 ** The focus here is on simplicity and correctness, not performance.
 */
-/* #include "sqlite3ext.h" */
+/* #include "third_party/sqlite3/sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <assert.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdlib.h>
+#include "libc/assert.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
 
 /* Mark a function parameter as unused, to suppress nuisance compiler
 ** warnings. */
@@ -5226,10 +5199,10 @@ int sqlite3_decimal_init(
 **      FROM pow2, c WHERE pow2.x=ieee754_exponent(c.bin);
 **
 */
-/* #include "sqlite3ext.h" */
+/* #include "third_party/sqlite3/sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <assert.h>
-#include <string.h>
+#include "libc/assert.h"
+#include "libc/str/str.h"
 
 /* Mark a function parameter as unused, to suppress nuisance compiler
 ** warnings. */
@@ -5501,10 +5474,10 @@ int sqlite3_ieee_init(
 ** encourages the query planner to order joins such that the bounds of the
 ** series are well-defined.
 */
-/* #include "sqlite3ext.h" */
+/* #include "third_party/sqlite3/sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <assert.h>
-#include <string.h>
+#include "libc/assert.h"
+#include "libc/str/str.h"
 
 #ifndef SQLITE_OMIT_VIRTUALTABLE
 
@@ -5906,13 +5879,12 @@ int sqlite3_series_init(
 **    *  No support for zip64 extensions
 **    *  Only the "inflate/deflate" (zlib) compression method is supported
 */
-/* #include "sqlite3ext.h" */
+/* #include "third_party/sqlite3/sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-
-#include <zlib.h>
+#include "libc/assert.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "third_party/zlib/zlib.h"
 
 #ifndef SQLITE_OMIT_VIRTUALTABLE
 
@@ -8089,10 +8061,10 @@ int sqlite3_zipfile_init(
 ** for working with sqlar archives and used by the shell tool's built-in
 ** sqlar support.
 */
-/* #include "sqlite3ext.h" */
+/* #include "third_party/sqlite3/sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <zlib.h>
-#include <assert.h>
+#include "libc/assert.h"
+#include "third_party/zlib/zlib.h"
 
 /*
 ** Implementation of the "sqlar_compress(X)" SQL function.
@@ -8215,7 +8187,7 @@ int sqlite3_sqlar_init(
 */
 #if !defined(SQLITEEXPERT_H)
 #define SQLITEEXPERT_H 1
-/* #include "sqlite3.h" */
+/* #include "third_party/sqlite3/sqlite3.h" */
 
 typedef struct sqlite3expert sqlite3expert;
 
@@ -8384,10 +8356,10 @@ void sqlite3_expert_destroy(sqlite3expert*);
 **
 *************************************************************************
 */
-/* #include "sqlite3expert.h" */
-#include <assert.h>
-#include <string.h>
-#include <stdio.h>
+/* #include "third_party/sqlite3/sqlite3expert.h" */
+#include "libc/assert.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 #ifndef SQLITE_OMIT_VIRTUALTABLE 
 
@@ -10412,15 +10384,15 @@ void sqlite3_expert_destroy(sqlite3expert *p){
 **   It contains one entry for each b-tree pointer between a parent and
 **   child page in the database.
 */
-#if !defined(SQLITEINT_H) 
-/* #include "sqlite3ext.h" */
+#if !defined(SQLITEINT_H)
+/* #include "third_party/sqlite3/sqlite3ext.h" */
 
 /* typedef unsigned char u8; */
 
 #endif
 SQLITE_EXTENSION_INIT1
-#include <string.h>
-#include <assert.h>
+#include "libc/assert.h"
+#include "libc/str/str.h"
 
 #define DBDATA_PADDING_BYTES 100 
 
@@ -21018,6 +20990,8 @@ int SQLITE_CDECL wmain(int argc, wchar_t **wargv){
 
   setBinaryMode(stdin, 0);
   setvbuf(stderr, 0, _IONBF, 0); /* Make sure stderr is unbuffered */
+  setvbuf(stdin, (char *)NULL, _IONBF, BUFSIZ);
+  setvbuf(stdout, (char *)NULL, _IONBF, BUFSIZ);
   stdin_is_interactive = isatty(0);
   stdout_is_console = isatty(1);
 

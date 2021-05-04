@@ -1,6 +1,7 @@
 
 #if !defined(__SQLITESESSION_H_) && defined(SQLITE_ENABLE_SESSION)
 #define __SQLITESESSION_H_ 1
+/* clang-format off */
 
 /*
 ** Make sure we can call this stuff from C++.
@@ -9,7 +10,7 @@
 extern "C" {
 #endif
 
-#include "sqlite3.h"
+#include "third_party/sqlite3/sqlite3.h"
 
 /*
 ** CAPI3REF: Session Object Handle

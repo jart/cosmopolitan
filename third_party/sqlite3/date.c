@@ -10,7 +10,7 @@
 **
 *************************************************************************
 ** This file contains the C functions that implement date and time
-** functions for SQLite.  
+** functions for SQLite.
 **
 ** There is only one exported symbol in this file - the function
 ** sqlite3RegisterDateTimeFunctions() found at the bottom of the file.
@@ -19,7 +19,7 @@
 ** SQLite processes all times and dates as julian day numbers.  The
 ** dates and times are stored as the number of days since noon
 ** in Greenwich on November 24, 4714 B.C. according to the Gregorian
-** calendar system. 
+** calendar system.
 **
 ** 1970-01-01 00:00:00 is JD 2440587.5
 ** 2000-01-01 00:00:00 is JD 2451544.5
@@ -43,10 +43,14 @@
 **      Willmann-Bell, Inc
 **      Richmond, Virginia (USA)
 */
-#include "sqliteInt.h"
-#include <stdlib.h>
-#include <assert.h>
-#include <time.h>
+#include "libc/assert.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/mem/mem.h"
+#include "libc/time/struct/tm.h"
+#include "libc/time/time.h"
+#include "third_party/sqlite3/sqliteInt.h"
+
+/* clang-format off */
 
 #ifndef SQLITE_OMIT_DATETIME_FUNCS
 

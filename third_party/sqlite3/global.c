@@ -12,7 +12,8 @@
 **
 ** This file contains definitions of global variables and constants.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+/* clang-format off */
 
 /* An array to map all upper-case characters into their corresponding
 ** lower-case character. 
@@ -306,7 +307,7 @@ int sqlite3PendingByte = 0x40000000;
 u32 sqlite3SelectTrace = 0;
 u32 sqlite3WhereTrace = 0;
 
-#include "opcodes.h"
+#include "third_party/sqlite3/opcodes.h"
 /*
 ** Properties of opcodes.  The OPFLG_INITIALIZER macro is
 ** created by mkopcodeh.awk during compilation.  Data is obtained

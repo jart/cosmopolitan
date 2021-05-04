@@ -13,7 +13,6 @@
 ** This is part of an SQLite module implementing full-text search.
 ** This particular file implements the generic tokenizer interface.
 */
-
 /*
 ** The code in this file is only compiled if:
 **
@@ -25,6 +24,7 @@
 */
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS2)
 
+/* clang-format off */
 
 #include "sqlite3.h"
 #include "sqlite3ext.h"

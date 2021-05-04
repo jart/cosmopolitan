@@ -1,5 +1,5 @@
 /*
-** 2005 May 23 
+** 2005 May 23
 **
 ** The author disclaims copyright to this source code.  In place of
 ** a legal notice, here is a blessing:
@@ -13,8 +13,9 @@
 ** This file contains functions used to access the internal hash tables
 ** of user defined functions and collation sequences.
 */
+#include "third_party/sqlite3/sqliteInt.h"
 
-#include "sqliteInt.h"
+/* clang-format off */
 
 /*
 ** Invoke the 'collation needed' callback to request a collation sequence

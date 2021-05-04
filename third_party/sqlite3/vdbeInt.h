@@ -17,6 +17,7 @@
 */
 #ifndef SQLITE_VDBEINT_H
 #define SQLITE_VDBEINT_H
+/* clang-format off */
 
 /*
 ** The maximum number of times that a statement will try to reparse

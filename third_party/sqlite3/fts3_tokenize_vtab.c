@@ -25,8 +25,8 @@
 **
 **   input = <string>
 **
-** The virtual table module tokenizes this <string>, using the FTS3 
-** tokenizer specified by the arguments to the CREATE VIRTUAL TABLE 
+** The virtual table module tokenizes this <string>, using the FTS3
+** tokenizer specified by the arguments to the CREATE VIRTUAL TABLE
 ** statement and returns one row for each token in the result. With
 ** fields set as follows:
 **
@@ -38,11 +38,12 @@
 **   pos:     Token offset of token within input.
 **
 */
-#include "fts3Int.h"
+#include "third_party/sqlite3/fts3Int.h"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
+/* clang-format off */
 
-#include <string.h>
-#include <assert.h>
+#include "libc/assert.h"
+#include "libc/str/str.h"
 
 typedef struct Fts3tokTable Fts3tokTable;
 typedef struct Fts3tokCursor Fts3tokCursor;

@@ -19,7 +19,8 @@
 ** This file contains implementations of the low-level memory allocation
 ** routines specified in the sqlite3_mem_methods object.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+/* clang-format off */
 
 /*
 ** This version of the memory allocator is used only if the
@@ -37,7 +38,7 @@
 # define backtrace(A,B) 1
 # define backtrace_symbols_fd(A,B,C)
 #endif
-#include <stdio.h>
+#include "libc/stdio/stdio.h"
 
 /*
 ** Each memory allocation looks like this:

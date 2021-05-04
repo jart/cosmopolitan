@@ -10,7 +10,8 @@
 **
 *************************************************************************
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+/* clang-format off */
 
 #ifndef SQLITE_OMIT_WINDOWFUNC
 

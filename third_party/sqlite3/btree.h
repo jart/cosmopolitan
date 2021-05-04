@@ -1,20 +1,6 @@
-/*
-** 2001 September 15
-**
-** The author disclaims copyright to this source code.  In place of
-** a legal notice, here is a blessing:
-**
-**    May you do good and not evil.
-**    May you find forgiveness for yourself and forgive others.
-**    May you share freely, never taking more than you give.
-**
-*************************************************************************
-** This header file defines the interface that the sqlite B-Tree file
-** subsystem.  See comments in the source code for a detailed description
-** of what each interface routine does.
-*/
 #ifndef SQLITE_BTREE_H
 #define SQLITE_BTREE_H
+/* clang-format off */
 
 /* TODO: This definition is just included so other modules compile. It
 ** needs to be revisited.
@@ -359,7 +345,7 @@ void sqlite3BtreeCursorList(Btree*);
 #endif
 
 #ifndef SQLITE_OMIT_WAL
-  int sqlite3BtreeCheckpoint(Btree*, int, int *, int *);
+  /* int sqlite3BtreeCheckpoint(Btree*, int, int *, int *); */
 #endif
 
 int sqlite3BtreeTransferRow(BtCursor*, BtCursor*, i64);

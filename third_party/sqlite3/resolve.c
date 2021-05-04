@@ -14,7 +14,8 @@
 ** resolve all identifiers by associating them with a particular
 ** table and column.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+/* clang-format off */
 
 /*
 ** Magic table number to mean the EXCLUDED table in an UPSERT statement.

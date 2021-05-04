@@ -20,10 +20,12 @@
 ** Additional information is available on the "dbstat.html" page of the
 ** official SQLite documentation.
 */
+#include "third_party/sqlite3/sqliteInt.h" /* Requires access to internal data structures */
 
-#include "sqliteInt.h"   /* Requires access to internal data structures */
-#if (defined(SQLITE_ENABLE_DBSTAT_VTAB) || defined(SQLITE_TEST)) \
-    && !defined(SQLITE_OMIT_VIRTUALTABLE)
+/* clang-format off */
+
+#if (defined(SQLITE_ENABLE_DBSTAT_VTAB) || defined(SQLITE_TEST)) && \
+    !defined(SQLITE_OMIT_VIRTUALTABLE)
 
 /*
 ** Page paths:

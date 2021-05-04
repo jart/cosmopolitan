@@ -17,7 +17,8 @@
 */
 #ifndef SQLITE_VDBE_H
 #define SQLITE_VDBE_H
-#include <stdio.h>
+#include "libc/stdio/stdio.h"
+/* clang-format off */
 
 /*
 ** A single VDBE is an opaque structure named "Vdbe".  Only routines
@@ -166,7 +167,7 @@ typedef struct VdbeOpList VdbeOpList;
 ** The makefile scans the vdbe.c source file and creates the "opcodes.h"
 ** header file that defines a number for each opcode used by the VDBE.
 */
-#include "opcodes.h"
+#include "third_party/sqlite3/opcodes.h"
 
 /*
 ** Additional non-public SQLITE_PREPARE_* flags

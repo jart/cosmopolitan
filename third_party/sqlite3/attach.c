@@ -11,7 +11,8 @@
 *************************************************************************
 ** This file contains code used to implement the ATTACH and DETACH commands.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+/* clang-format off */
 
 #ifndef SQLITE_OMIT_ATTACH
 /*

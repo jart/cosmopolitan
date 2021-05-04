@@ -12,7 +12,6 @@
 **
 ** Implementation of the "simple" full-text-search tokenizer.
 */
-
 /*
 ** The code in this file is only compiled if:
 **
@@ -24,6 +23,7 @@
 */
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS2)
 
+/* clang-format off */
 
 #include <assert.h>
 #include <stdlib.h>

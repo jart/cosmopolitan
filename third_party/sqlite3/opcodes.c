@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Automatically generated.  Do not edit */
 /* See the tool/mkopcodec.tcl script for details. */
 #if !defined(SQLITE_OMIT_EXPLAIN) \

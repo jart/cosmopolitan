@@ -23,8 +23,9 @@
 */
 #ifdef SQLITE_USER_AUTHENTICATION
 #ifndef SQLITEINT_H
-# include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 #endif
+/* clang-format off */
 
 /*
 ** Prepare an SQL statement for use by the user authentication logic.

@@ -63,7 +63,7 @@
 **
 ** The third case is a chunk of heap memory (defaulting to 100 pages worth)
 ** that is allocated when the page cache is created.  The size of the local
-** bulk allocation can be adjusted using 
+** bulk allocation can be adjusted using
 **
 **     sqlite3_config(SQLITE_CONFIG_PAGECACHE, (void*)0, 0, N).
 **
@@ -80,7 +80,8 @@
 ** show that method (3) with N==100 provides about a 5% performance boost for
 ** common workloads.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+/* clang-format off */
 
 typedef struct PCache1 PCache1;
 typedef struct PgHdr1 PgHdr1;

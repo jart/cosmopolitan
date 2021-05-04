@@ -14,15 +14,17 @@
 */
 #ifndef SQLITE_OS_WIN_H
 #define SQLITE_OS_WIN_H
+/* clang-format off */
 
 /*
 ** Include the primary Windows SDK header file.
 */
-#include "windows.h"
+#include "third_party/sqlite3/windows.h"
 
 #ifdef __CYGWIN__
-# include <sys/cygwin.h>
-# include <errno.h> /* amalgamator: dontcache */
+#include <sys/cygwin.h>
+
+#include "libc/errno.h" /* amalgamator: dontcache */
 #endif
 
 /*

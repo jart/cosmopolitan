@@ -9,11 +9,12 @@
 **    May you share freely, never taking more than you give.
 **
 *************************************************************************
-** This file contains the implementation of the sqlite3_backup_XXX() 
+** This file contains the implementation of the sqlite3_backup_XXX()
 ** API functions and the related features.
 */
-#include "sqliteInt.h"
-#include "btreeInt.h"
+#include "third_party/sqlite3/btreeInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+/* clang-format off */
 
 /*
 ** Structure allocated for each backup operation.

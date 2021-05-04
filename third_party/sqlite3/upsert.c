@@ -12,7 +12,8 @@
 ** This file contains code to implement various aspects of UPSERT
 ** processing and handling of the Upsert object.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+/* clang-format off */
 
 #ifndef SQLITE_OMIT_UPSERT
 /*

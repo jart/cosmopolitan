@@ -13,9 +13,8 @@
 ** We've modified it slightly to serve as a standalone hash table
 ** implementation for the full-text indexing module.
 */
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
+
+/* clang-format off */
 
 /*
 ** The code in this file is only compiled if:
@@ -29,7 +28,7 @@
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS1)
 
 
-#include "fts1_hash.h"
+#include "third_party/sqlite3/fts1_hash.h"
 
 static void *malloc_and_zero(int n){
   void *p = malloc(n);

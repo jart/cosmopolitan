@@ -10,11 +10,12 @@
 **
 *************************************************************************
 */
+/* clang-format off */
 
 #ifndef _SQLITE3RTREE_H_
 #define _SQLITE3RTREE_H_
 
-#include <sqlite3.h>
+#include "third_party/sqlite3/sqlite3.h"
 
 #ifdef __cplusplus
 extern "C" {

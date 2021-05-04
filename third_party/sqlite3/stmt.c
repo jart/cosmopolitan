@@ -22,11 +22,12 @@
 */
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_STMTVTAB)
 #if !defined(SQLITEINT_H)
-#include "sqlite3ext.h"
+#include "third_party/sqlite3/sqlite3ext.h"
 #endif
 SQLITE_EXTENSION_INIT1
-#include <assert.h>
-#include <string.h>
+#include "libc/assert.h"
+#include "libc/str/str.h"
+/* clang-format off */
 
 #ifndef SQLITE_OMIT_VIRTUALTABLE
 

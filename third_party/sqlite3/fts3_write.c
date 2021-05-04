@@ -13,17 +13,19 @@
 ** This file is part of the SQLite FTS3 extension module. Specifically,
 ** this file contains code to insert, update and delete rows from FTS3
 ** tables. It also contains code to merge FTS3 b-tree segments. Some
-** of the sub-routines used to merge segments are also used by the query 
+** of the sub-routines used to merge segments are also used by the query
 ** code in fts3.c.
 */
+/* clang-format off */
 
-#include "fts3Int.h"
+#include "third_party/sqlite3/fts3Int.h"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
 
-#include <string.h>
-#include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include "libc/alg/alg.h"
+#include "libc/assert.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 #define FTS_MAX_APPENDABLE_HEIGHT 16
 

@@ -10,18 +10,19 @@
 **
 ******************************************************************************
 **
-** Interfaces to extend FTS5. Using the interfaces defined in this file, 
+** Interfaces to extend FTS5. Using the interfaces defined in this file,
 ** FTS5 may be extended with:
 **
 **     * custom tokenizers, and
 **     * custom auxiliary functions.
 */
+/* clang-format off */
 
 
 #ifndef _FTS5_H
 #define _FTS5_H
 
-#include "sqlite3.h"
+#include "third_party/sqlite3/sqlite3.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,6 +1,6 @@
 /*
 ** The "printf" code that follows dates from the 1980's.  It is in
-** the public domain. 
+** the public domain.
 **
 **************************************************************************
 **
@@ -9,7 +9,8 @@
 ** library, though the implementation here has enhancements to support
 ** SQLite.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+/* clang-format off */
 
 /*
 ** Conversion types fall into various categories as defined by the

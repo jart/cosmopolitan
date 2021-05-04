@@ -17,6 +17,8 @@
 #ifndef _FTS2_HASH_H_
 #define _FTS2_HASH_H_
 
+/* clang-format off */
+
 /* Forward declarations of structures. */
 typedef struct fts2Hash fts2Hash;
 typedef struct fts2HashElem fts2HashElem;

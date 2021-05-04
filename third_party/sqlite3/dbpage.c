@@ -13,7 +13,7 @@
 ** This file contains an implementation of the "sqlite_dbpage" virtual table.
 **
 ** The sqlite_dbpage virtual table is used to read or write whole raw
-** pages of the database file.  The pager interface is used so that 
+** pages of the database file.  The pager interface is used so that
 ** uncommitted changes and changes recorded in the WAL file are correctly
 ** retrieved.
 **
@@ -30,10 +30,12 @@
 ** value must be a BLOB which is the correct page size, otherwise the
 ** update fails.  Rows may not be deleted or inserted.
 */
+#include "third_party/sqlite3/sqliteInt.h" /* Requires access to internal data structures */
 
-#include "sqliteInt.h"   /* Requires access to internal data structures */
-#if (defined(SQLITE_ENABLE_DBPAGE_VTAB) || defined(SQLITE_TEST)) \
-    && !defined(SQLITE_OMIT_VIRTUALTABLE)
+/* clang-format off */
+
+#if (defined(SQLITE_ENABLE_DBPAGE_VTAB) || defined(SQLITE_TEST)) && \
+    !defined(SQLITE_OMIT_VIRTUALTABLE)
 
 typedef struct DbpageTable DbpageTable;
 typedef struct DbpageCursor DbpageCursor;

@@ -19,6 +19,7 @@
 */
 #ifndef _OS_COMMON_H_
 #define _OS_COMMON_H_
+/* clang-format off */
 
 /*
 ** At least two bugs have slipped in because we changed the MEMORY_DEBUG
@@ -39,7 +40,7 @@
 ** hwtime.h contains inline assembler code for implementing
 ** high-performance timing routines.
 */
-#include "hwtime.h"
+#include "third_party/sqlite3/hwtime.h"
 
 static sqlite_uint64 g_start;
 static sqlite_uint64 g_elapsed;

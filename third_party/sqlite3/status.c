@@ -13,8 +13,9 @@
 ** This module implements the sqlite3_status() interface and related
 ** functionality.
 */
-#include "sqliteInt.h"
-#include "vdbeInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/vdbeInt.h"
+/* clang-format off */
 
 /*
 ** Variables in which to record status information.

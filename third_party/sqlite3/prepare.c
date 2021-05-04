@@ -13,7 +13,8 @@
 ** interface, and routines that contribute to loading the database schema
 ** from disk.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
+/* clang-format off */
 
 /*
 ** Fill the InitData structure with an error message that indicates
