@@ -1,0 +1,8 @@
+This folder contains the single-file SQLite amalgamation sqlite3.c
+
+SQLite source code obtained from: 
+    https://github.com/sqlite/sqlite (commit f83d501, ahead of version 3.35.5)
+
+SQLite source was configured to obtain sqlite3.c and compile with cosmopolitan.
+View the superconfigure script at:
+    https://github.com/ahgamut/sqlite/tree/cosmopolitan
