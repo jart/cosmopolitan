@@ -41,19 +41,26 @@ static void EmitLatin1(struct UrlParser *u, int c) {
   u->p += 2;
 }
 
-static void EmitKey(struct UrlParser *u, struct UrlParams *h) {
-  h->p = xrealloc(h->p, ++h->n * sizeof(*h->p));
-  h->p[h->n - 1].key.p = u->q;
-  h->p[h->n - 1].key.n = u->p - u->q;
-  u->q = u->p;
+static bool EmitKey(struct UrlParser *u, struct UrlParams *h) {
+  struct UrlParam *p;
+  if ((p = realloc(h->p, ++h->n * sizeof(*h->p)))) {
+    p[h->n - 1].key.p = u->q;
+    p[h->n - 1].key.n = u->p - u->q;
+    u->q = u->p;
+    h->p = p;
+    return true;
+  } else {
+    return false;
+  }
 }
 
 static void EmitVal(struct UrlParser *u, struct UrlParams *h, bool t) {
   if (!t) {
     if (u->p > u->q || u->c != '?') {
-      EmitKey(u, h);
-      h->p[h->n - 1].val.p = NULL;
-      h->p[h->n - 1].val.n = 0;
+      if (EmitKey(u, h)) {
+        h->p[h->n - 1].val.p = NULL;
+        h->p[h->n - 1].val.n = 0;
+      }
     }
   } else {
     h->p[h->n - 1].val.p = u->q;
@@ -214,8 +221,7 @@ static void ParseQuery(struct UrlParser *u, struct UrlParams *h) {
       t = false;
     } else if (u->c == '=') {
       if (!t) {
-        EmitKey(u, h);
-        t = true;
+        t = EmitKey(u, h);
       } else {
         *u->p++ = '=';
       }
@@ -257,12 +263,14 @@ static char *ParseUrlImpl(const char *data, size_t size, struct Url *h,
   u.data = data;
   u.size = size;
   memset(h, 0, sizeof(*h));
-  u.q = u.p = m = xmalloc(latin1 ? u.size * 2 : u.size);
-  if (ParseScheme(&u, h)) ParseAuthority(&u, h);
-  if (u.c != '#' && u.c != '?') ParsePath(&u, &h->path);
-  if (u.c == '?') ParseQuery(&u, &h->params);
-  if (u.c == '#') ParseFragment(&u, &h->fragment);
-  return xrealloc(m, u.p - m);
+  if ((m = malloc(latin1 ? u.size * 2 : u.size))) {
+    u.q = u.p = m;
+    if (ParseScheme(&u, h)) ParseAuthority(&u, h);
+    if (u.c != '#' && u.c != '?') ParsePath(&u, &h->path);
+    if (u.c == '?') ParseQuery(&u, &h->params);
+    if (u.c == '#') ParseFragment(&u, &h->fragment);
+  }
+  return m;
 }
 
 /**
@@ -355,8 +363,10 @@ char *ParseParams(const char *data, size_t size, struct UrlParams *h) {
   u.isopaque = false;
   u.data = data;
   u.size = size;
-  u.q = u.p = m = xmalloc(u.size);
-  ParseQuery(&u, h);
+  if ((m = malloc(u.size))) {
+    u.q = u.p = m;
+    ParseQuery(&u, h);
+  }
   return m;
 }
 
@@ -395,7 +405,9 @@ char *ParseHost(const char *data, size_t size, struct Url *h) {
   u.isopaque = false;
   u.data = data;
   u.size = size;
-  u.q = u.p = m = xmalloc(u.size * 2);
-  ParseAuthority(&u, h);
-  return xrealloc(m, u.p - m);
+  if ((m = malloc(u.size * 2))) {
+    u.q = u.p = m;
+    ParseAuthority(&u, h);
+  }
+  return m;
 }

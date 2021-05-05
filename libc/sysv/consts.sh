@@ -160,20 +160,20 @@ syscon	compat	EWOULDBLOCK				11			35			35			35			35			10035			# same as EWOULDBL
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			XENIX			Commentary
 syscon	sig	SIGHUP					1			1			1			1			1			1			# terminal hangup or daemon reload; resumable; auto-broadcasted to process group; unix consensus & faked on nt
-syscon	sig	SIGINT					2			2			2			2			2			2			# terminal ctrl-c keystroke; resumable; auto-broadcasted to process group; unix consensus & faked on nt
+syscon	sig	SIGINT					2			2			2			2			2			2			# terminal ctrl-c keystroke; resumable; auto-broadcasted to process group; unix consensus & faked on nt; X3.159-1988
 syscon	sig	SIGQUIT					3			3			3			3			3			3			# terminal ctrl-\ keystroke; resumable; unix consensus & faked on nt
-syscon	sig	SIGILL					4			4			4			4			4			4			# illegal instruction; unresumable (unless you longjmp() or edit ucontex->rip+=ild(ucontex->rip)); unix consensus & faked on nt
+syscon	sig	SIGILL					4			4			4			4			4			4			# illegal instruction; unresumable (unless you longjmp() or edit ucontex->rip+=ild(ucontex->rip)); unix consensus & faked on nt; X3.159-1988
 syscon	sig	SIGTRAP					5			5			5			5			5			5			# int3 instruction; resumable; unix consensus & faked on nt
-syscon	sig	SIGABRT					6			6			6			6			6			6			# process aborted; resumable; unix consensus & faked on nt
+syscon	sig	SIGABRT					6			6			6			6			6			6			# process aborted; resumable; unix consensus & faked on nt; X3.159-1988
 syscon	sig	SIGBUS					7			10			10			10			10			7			# valid memory access that went beyond underlying end of file; bsd consensus
-syscon	sig	SIGFPE					8			8			8			8			8			8			# illegal math; unresumable (unless you longjmp() or edit ucontex->rip+=ild(ucontex->rip)); unix consensus & faked on nt
+syscon	sig	SIGFPE					8			8			8			8			8			8			# illegal math; unresumable (unless you longjmp() or edit ucontex->rip+=ild(ucontex->rip)); unix consensus & faked on nt; X3.159-1988
 syscon	sig	SIGKILL					9			9			9			9			9			9			# terminate with extreme prejudice; unreceivable; unix consensus & faked on nt
 syscon	sig	SIGUSR1					10			30			30			30			30			10			# do whatever you want; bsd consensus
-syscon	sig	SIGSEGV					11			11			11			11			11			11			# invalid memory access; unresumable (unless you longjmp() or edit ucontex->rip+=ild(ucontex->rip)); unix consensus & faked on nt
+syscon	sig	SIGSEGV					11			11			11			11			11			11			# invalid memory access; unresumable (unless you longjmp() or edit ucontex->rip+=ild(ucontex->rip)); unix consensus & faked on nt; X3.159-1988
 syscon	sig	SIGUSR2					12			31			31			31			31			12			# do whatever you want; bsd consensus
 syscon	sig	SIGPIPE					13			13			13			13			13			13			# write to closed file descriptor; unix consensus & faked on nt
 syscon	sig	SIGALRM					14			14			14			14			14			14			# sent by setitimer(2) or timer_settime(2); unix consensus & faked on nt
-syscon	sig	SIGTERM					15			15			15			15			15			15			# terminate; resumable; unix consensus & faked on nt
+syscon	sig	SIGTERM					15			15			15			15			15			15			# terminate; resumable; unix consensus & faked on nt; X3.159-1988
 syscon	sig	SIGCHLD					17			20			20			20			20			17			# child process exited or terminated and is now a zombie (unless this is SIG_IGN or SA_NOCLDWAIT) or child process stopped due to terminal i/o or profiling/debugging (unless you used SA_NOCLDSTOP); bsd consensus
 syscon	sig	SIGCONT					18			19			19			19			19			18			# child process resumed from profiling/debugging; bsd consensus
 syscon	sig	SIGSTOP					19			17			17			17			17			19			# child process stopped due to profiling/debugging; bsd consensus

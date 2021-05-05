@@ -26,6 +26,7 @@
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/dos.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
@@ -83,11 +84,6 @@
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define DEFAULT_PORT     8080
 
-#define DOS_DATE(YEAR, MONTH_IDX1, DAY_IDX1) \
-  (((YEAR)-1980) << 9 | (MONTH_IDX1) << 5 | (DAY_IDX1))
-#define DOS_TIME(HOUR, MINUTE, SECOND) \
-  ((HOUR) << 11 | (MINUTE) << 5 | (SECOND) >> 1)
-
 #define read(F, P, N)   readv(F, &(struct iovec){P, N}, 1)
 #define LockInc(P)      asm volatile("lock incq\t%0" : "=m"(*(P)))
 #define AppendCrlf(P)   mempcpy(P, "\r\n", 2)
@@ -132,11 +128,15 @@ static const struct ContentTypeExtension {
     {"atom", "application/atom+xml"},          //
     {"avi", "video/x-msvideo"},                //
     {"avif", "image/avif"},                    //
+    {"azw", "application/vnd.amazon.ebook"},   //
     {"bmp", "image/bmp"},                      //
+    {"bz2", "application/x-bzip2"},            //
     {"c", "text/plain"},                       //
     {"cc", "text/plain"},                      //
     {"css", "text/css"},                       //
     {"csv", "text/csv"},                       //
+    {"doc", "application/msword"},             //
+    {"epub", "application/epub+zip"},          //
     {"gif", "image/gif"},                      //
     {"gz", "application/gzip"},                //
     {"h", "text/plain"},                       //
@@ -147,11 +147,13 @@ static const struct ContentTypeExtension {
     {"jar", "application/java-archive"},       //
     {"jpeg", "image/jpeg"},                    //
     {"jpg", "image/jpeg"},                     //
-    {"js", "application/javascript"},          //
+    {"js", "text/javascript"},                 //
     {"json", "application/json"},              //
     {"m4a", "audio/mpeg"},                     //
     {"markdown", "text/plain"},                //
     {"md", "text/plain"},                      //
+    {"mid", "audio/midi"},                     //
+    {"midi", "audio/midi"},                    //
     {"mp2", "audio/mpeg"},                     //
     {"mp3", "audio/mpeg"},                     //
     {"mp4", "video/mp4"},                      //
@@ -192,8 +194,10 @@ static const struct ContentTypeExtension {
     {"xml", "application/xml"},                //
     {"xsl", "application/xslt+xml"},           //
     {"xslt", "application/xslt+xml"},          //
+    {"xz", "application/x-xz"},                //
     {"z", "application/zlib"},                 //
     {"zip", "application/zip"},                //
+    {"zst", "application/zstd"},               //
     {"zst", "application/zstd"},               //
 };
 
@@ -638,7 +642,7 @@ static void UseOutput(void) {
 }
 
 static void DropOutput(void) {
-  free(outbuf.p);
+  FreeLater(outbuf.p);
   outbuf.p = 0;
   outbuf.n = 0;
   outbuf.c = 0;
@@ -806,13 +810,16 @@ static char *DescribeServer(void) {
 }
 
 static void ProgramBrand(const char *s) {
+  char *p;
   free(brand);
   free(serverheader);
-  brand = strdup(s);
-  if (!(serverheader = EncodeHttpHeaderValue(brand, -1, 0))) {
-    fprintf(stderr, "error: brand isn't latin1 encodable: %`'s", brand);
+  if (!(p = EncodeHttpHeaderValue(s, -1, 0))) {
+    fprintf(stderr, "error: brand isn't latin1 encodable: %`'s", s);
     exit(1);
   }
+  brand = strdup(s);
+  serverheader = xasprintf("Server: %s\r\n", p);
+  free(p);
 }
 
 static void ProgramLinger(long sec) {
@@ -1194,7 +1201,7 @@ static void ReapZombies(void) {
   } while (!terminated);
 }
 
-static inline ssize_t WritevAll(int fd, struct iovec *iov, int iovlen) {
+static ssize_t WritevAll(int fd, struct iovec *iov, int iovlen) {
   ssize_t rc;
   size_t wrote;
   do {
@@ -1286,14 +1293,6 @@ forceinline int GetMode(struct Asset *a) {
   return a->file ? a->file->st.st_mode : GetZipCfileMode(zmap + a->cf);
 }
 
-forceinline bool IsNotModified(struct Asset *a) {
-  if (msg.version < 10) return false;
-  if (!HasHeader(kHttpIfModifiedSince)) return false;
-  return a->lastmodified >=
-         ParseHttpDateTime(HeaderData(kHttpIfModifiedSince),
-                           HeaderLength(kHttpIfModifiedSince));
-}
-
 static char *FormatUnixHttpDateTime(char *s, int64_t t) {
   struct tm tm;
   gmtime_r(&t, &tm);
@@ -1305,7 +1304,7 @@ forceinline bool IsCompressionMethodSupported(int method) {
   return method == kZipCompressionNone || method == kZipCompressionDeflate;
 }
 
-static unsigned Hash(const void *p, unsigned long n) {
+static inline unsigned Hash(const void *p, unsigned long n) {
   unsigned h, i;
   for (h = i = 0; i < n; i++) {
     h += ((unsigned char *)p)[i];
@@ -1466,12 +1465,6 @@ static char *AppendCache(char *p, int64_t seconds) {
   }
   p = AppendCrlf(p);
   return AppendExpires(p, (int64_t)shared->nowish + seconds);
-}
-
-static inline char *AppendServer(char *p, const char *s) {
-  p = stpcpy(p, "Server: ");
-  p = stpcpy(p, s);
-  return AppendCrlf(p);
 }
 
 static inline char *AppendContentLength(char *p, size_t n) {
@@ -3059,8 +3052,8 @@ static int LuaIsAcceptablePort(lua_State *L) {
   return LuaIsValid(L, IsAcceptablePort);
 }
 
-static int LuaCoderImpl(lua_State *L,
-                        char *Coder(const char *, size_t, size_t *)) {
+static noinline int LuaCoderImpl(lua_State *L,
+                                 char *Coder(const char *, size_t, size_t *)) {
   void *p;
   size_t n;
   p = luaL_checklstring(L, 1, &n);
@@ -3070,7 +3063,8 @@ static int LuaCoderImpl(lua_State *L,
   return 1;
 }
 
-static int LuaCoder(lua_State *L, char *Coder(const char *, size_t, size_t *)) {
+static noinline int LuaCoder(lua_State *L,
+                             char *Coder(const char *, size_t, size_t *)) {
   return LuaCoderImpl(L, Coder);
 }
 
@@ -3220,7 +3214,7 @@ static int LuaCrc32c(lua_State *L) {
   return LuaHash(L, crc32c);
 }
 
-static int LuaProgramInt(lua_State *L, void Program(long)) {
+static noinline int LuaProgramInt(lua_State *L, void Program(long)) {
   Program(luaL_checkinteger(L, 1));
   return 0;
 }
@@ -4208,7 +4202,7 @@ static inline int CompareInts(const uint64_t x, uint64_t y) {
   return x > y ? 1 : x < y ? -1 : 0;
 }
 
-static inline const char *BisectContentType(uint64_t ext) {
+static const char *BisectContentType(uint64_t ext) {
   int c, m, l, r;
   l = 0;
   r = ARRAYLEN(kContentTypeExtension) - 1;
@@ -4249,6 +4243,14 @@ static const char *GetContentType(struct Asset *a, const char *path, size_t n) {
       firstnonnull(FindContentType(ZIP_CFILE_NAME(zmap + a->cf),
                                    ZIP_CFILE_NAMESIZE(zmap + a->cf)),
                    a->istext ? "text/plain" : "application/octet-stream"));
+}
+
+static bool IsNotModified(struct Asset *a) {
+  if (msg.version < 10) return false;
+  if (!HasHeader(kHttpIfModifiedSince)) return false;
+  return a->lastmodified >=
+         ParseHttpDateTime(HeaderData(kHttpIfModifiedSince),
+                           HeaderLength(kHttpIfModifiedSince));
 }
 
 static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
@@ -4392,7 +4394,7 @@ static bool HandleMessage(void) {
   }
   if (msg.version >= 10) {
     p = AppendCrlf(stpcpy(stpcpy(p, "Date: "), shared->currentdate));
-    if (!branded) p = AppendServer(p, serverheader);
+    if (!branded) p = stpcpy(p, serverheader);
     if (extrahdrs) p = stpcpy(p, extrahdrs);
     if (connectionclose) {
       p = stpcpy(p, "Connection: close\r\n");

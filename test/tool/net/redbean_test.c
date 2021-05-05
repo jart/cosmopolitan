@@ -32,6 +32,7 @@
 #include "libc/sysv/consts/shut.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/sock.h"
+#include "libc/sysv/consts/tcp.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 #include "third_party/regex/regex.h"
@@ -58,13 +59,27 @@ void SetUpOnce(void) {
   close(fdin);
 }
 
+void Tune(int fd, int a, int b, int x) {
+  if (!b) return;
+  setsockopt(fd, a, b, &x, sizeof(x));
+}
+
+int Socket(void) {
+  int fd;
+  if ((fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) != -1) {
+    Tune(fd, IPPROTO_TCP, TCP_CORK, 0);
+    Tune(fd, IPPROTO_TCP, TCP_NODELAY, 1);
+  }
+  return fd;
+}
+
 char *SendHttpRequest(const char *s) {
   int fd;
   char *p;
   size_t n;
   ssize_t rc;
   struct sockaddr_in addr = {AF_INET, htons(port), {htonl(INADDR_LOOPBACK)}};
-  EXPECT_NE(-1, (fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)));
+  EXPECT_NE(-1, (fd = Socket()));
   EXPECT_NE(-1, connect(fd, &addr, sizeof(addr)));
   n = strlen(s);
   EXPECT_EQ(n, write(fd, s, n));
@@ -114,10 +129,52 @@ TEST(redbean, testOptions) {
                       "Accept-Charset: utf-8,ISO-8859-1;q=0\\.7,\\*;q=0\\.5\r\n"
                       "Allow: GET, HEAD, POST, PUT, DELETE, OPTIONS\r\n"
                       "Date: .*\r\n"
-                      "Server: redbean/0\\.4\r\n"
+                      "Server: redbean/.*\r\n"
                       "Content-Length: 0\r\n"
                       "\r\n",
                       gc(SendHttpRequest("OPTIONS * HTTP/1.1\n\n"))));
+  EXPECT_NE(-1, kill(pid, SIGTERM));
+  EXPECT_NE(-1, wait(0));
+}
+
+TEST(redbean, testPipeline) {
+  if (IsWindows()) return;
+  char portbuf[16];
+  int pid, pipefds[2];
+  sigset_t chldmask, savemask;
+  sigaddset(&chldmask, SIGCHLD);
+  sigprocmask(SIG_BLOCK, &chldmask, &savemask);
+  ASSERT_NE(-1, pipe(pipefds));
+  ASSERT_NE(-1, (pid = vfork()));
+  if (!pid) {
+    close(pipefds[0]);
+    dup2(pipefds[1], 1);
+    sigprocmask(SIG_SETMASK, &savemask, NULL);
+    execv("bin/redbean.com",
+          (char *const[]){"bin/redbean.com", "-szp0", "-l127.0.0.1", 0});
+    _exit(127);
+  }
+  EXPECT_NE(-1, close(pipefds[1]));
+  EXPECT_NE(-1, read(pipefds[0], portbuf, sizeof(portbuf)));
+  port = atoi(portbuf);
+  EXPECT_TRUE(Matches("HTTP/1\\.1 200 OK\r\n"
+                      "Accept: \\*/\\*\r\n"
+                      "Accept-Charset: utf-8,ISO-8859-1;q=0\\.7,\\*;q=0\\.5\r\n"
+                      "Allow: GET, HEAD, POST, PUT, DELETE, OPTIONS\r\n"
+                      "Date: .*\r\n"
+                      "Server: redbean/.*\r\n"
+                      "Content-Length: 0\r\n"
+                      "\r\n"
+                      "HTTP/1\\.1 200 OK\r\n"
+                      "Accept: \\*/\\*\r\n"
+                      "Accept-Charset: utf-8,ISO-8859-1;q=0\\.7,\\*;q=0\\.5\r\n"
+                      "Allow: GET, HEAD, POST, PUT, DELETE, OPTIONS\r\n"
+                      "Date: .*\r\n"
+                      "Server: redbean/.*\r\n"
+                      "Content-Length: 0\r\n"
+                      "\r\n",
+                      gc(SendHttpRequest("OPTIONS * HTTP/1.1\n\n"
+                                         "OPTIONS * HTTP/1.1\n\n"))));
   EXPECT_NE(-1, kill(pid, SIGTERM));
   EXPECT_NE(-1, wait(0));
 }

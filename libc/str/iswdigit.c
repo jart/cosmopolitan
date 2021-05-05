@@ -18,6 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
-int iswdigit(wint_t wc) {
-  return isdigit(wc);
+/**
+ * Returns nonzero if c is decimal digit.
+ */
+int iswdigit(wint_t c) {
+  return '0' <= c && c <= '9';
 }

@@ -1,22 +1,30 @@
+
+(defconst cosmo-c-constants-ansi
+  '("EOF"
+    "WEOF"
+    "NDEBUG"
+    "HUGE_VAL"
+    "CLK_TCK"))
+
 (defconst cosmo-c-constants-c11
- '("__func__"
-   "__VA_ARGS__"
-   "__STDC__"
-   "__STDC_HOSTED__"
-   "__STDC_VERSION__"
-   "__TIME__"
-   "__STDC_ISO_10646__"
-   "__STDC_MB_MIGHT_NEQ_WC__"
-   "__STDC_UTF_16__"
-   "__STDC_UTF_32__"
-   "__STDC_ANALYZABLE__"
-   "__STDC_IEC_559_COMPLEX__"
-   "__STDC_LIB_EXT1__"
-   "__STDC_NO_ATOMICS__"
-   "__STDC_NO_COMPLEX__"
-   "__STDC_NO_THREADS__"
-   "__STDC_NO_VLA__"
-   "__STDC_WANT_LIB_EXT1__"))
+  '("__func__"
+    "__VA_ARGS__"
+    "__STDC__"
+    "__STDC_HOSTED__"
+    "__STDC_VERSION__"
+    "__TIME__"
+    "__STDC_ISO_10646__"
+    "__STDC_MB_MIGHT_NEQ_WC__"
+    "__STDC_UTF_16__"
+    "__STDC_UTF_32__"
+    "__STDC_ANALYZABLE__"
+    "__STDC_IEC_559_COMPLEX__"
+    "__STDC_LIB_EXT1__"
+    "__STDC_NO_ATOMICS__"
+    "__STDC_NO_COMPLEX__"
+    "__STDC_NO_THREADS__"
+    "__STDC_NO_VLA__"
+    "__STDC_WANT_LIB_EXT1__"))
 
 (defconst cosmo-c-constants-limits
   '("IMAGE_BASE_VIRTUAL"
@@ -24,6 +32,7 @@
     "IMAGE_BASE_PHYSICAL"
     "CHAR_MAX"
     "SCHAR_MAX"
+    "UCHAR_MAX"
     "SHRT_MAX"
     "INT_MAX"
     "LONG_MAX"
@@ -40,6 +49,7 @@
     "INTPTR_MAX"
     "PTRDIFF_MAX"
     "SCHAR_MIN"
+    "UCHAR_MIN"
     "SHRT_MIN"
     "UINT_MIN"
     "INT_MIN"
@@ -152,7 +162,8 @@
 
 (defconst cosmo-c-constants-regex
   (concat "\\_<"
-          (regexp-opt (append cosmo-c-constants-c11
+          (regexp-opt (append cosmo-c-constants-ansi
+                              cosmo-c-constants-c11
                               cosmo-c-constants-limits
                               cosmo-c-constants-math))
           "\\_>"))

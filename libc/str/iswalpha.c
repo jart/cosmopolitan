@@ -18,6 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
-int iswalpha(wint_t wc) {
-  return isalpha(wc);
+/**
+ * Returns nonzero if c is alphabetical.
+ */
+int iswalpha(wint_t c) {
+  return iswupper(c) || iswlower(c);
 }

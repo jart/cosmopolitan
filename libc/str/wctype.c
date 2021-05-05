@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,15 +16,44 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/limits.h"
+#include "libc/bits/bits.h"
+#include "libc/macros.internal.h"
 #include "libc/str/str.h"
 
+static const char kWcTypeNames[][8] = {
+    "alnum",   //
+    "alpha",   //
+    "blank",   //
+    "cntrl",   //
+    "digit",   //
+    "graph",   //
+    "lower",   //
+    "print",   //
+    "punct",   //
+    "space",   //
+    "upper",   //
+    "xdigit",  //
+};
+
 /**
- * Returns true if c is hexadecimal digit.
+ * Returns number representing character class name.
+ *
+ * @param s can be "alnum", "alpha", "blank", "cntrl", "digit", "graph",
+ *     "lower", "print", "punct", "space", "upper", "xdigit"
+ * @return nonzero id or 0 if not found
  */
-int isxdigit(int c) {
-  return ('0' <= c && c <= '9') || ('A' <= c && c <= 'F') ||
-         ('a' <= c && c <= 'f');
+wctype_t wctype(const char *s) {
+  int i;
+  char b[8];
+  for (i = 0; i < 8; ++i) {
+    b[i] = *s ? *s++ : 0;
+  }
+  if (!*s) {
+    for (i = 0; i < ARRAYLEN(kWcTypeNames); ++i) {
+      if (READ64LE(b) == READ64LE(kWcTypeNames[i])) {
+        return i + 1;
+      }
+    }
+  }
+  return 0;
 }

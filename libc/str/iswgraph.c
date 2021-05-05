@@ -18,6 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
-int iswgraph(wint_t wc) {
-  return isgraph(wc);
+/**
+ * Returns nonzero if c is printable and not a space.
+ */
+int iswgraph(wint_t c) {
+  return iswprint(c) && !iswspace(c);
 }

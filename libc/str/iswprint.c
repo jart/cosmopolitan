@@ -18,6 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
-int iswprint(wint_t wc) {
-  return !iswcntrl(wc);
+/**
+ * Returns nonzero if c is printable.
+ */
+int iswprint(wint_t c) {
+  return !((0x00 <= c && c <= 0x1F) || (0x7F <= c && c <= 0x9F) ||
+           (0xFFF9 <= c && c <= 0xFFFB) || c == 0x2028 || c == 0x2029);
 }
