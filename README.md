@@ -44,13 +44,32 @@ bash -c './hello.com'  # zsh/fish workaround (we upstreamed a patch)
 So if you intend to copy the binary to Windows or Mac then please do
 that before you run it, not after.
 
-If you're developing on Windows or MacOS then you need to download an
+### MacOS
+
+If you're developing on MacOS you can install the GNU compiler
+collection for x86_64-elf via homebrew:
+
+```sh
+brew install x86_64-elf-gcc
+```
+
+Then in the above scripts just replace `gcc` and `objcopy` with
+`x86_64-elf-gcc` and `x86_64-elf-objcopy` to compile your APE binary.
+
+### Windows
+
+If you're developing on Windows then you need to download an
 x86_64-pc-linux-gnu toolchain beforehand. See the [Compiling on
 Windows](https://justine.lol/cosmopolitan/windows-compiling.html)
 tutorial. It's needed because the ELF object format is what makes
 universal binaries possible.
 
-Cosmopolitan can also be compiled from source on any Linux distro.
+## Source Builds
+
+Cosmopolitan can be compiled from source on any Linux distro. GNU make
+needs to be installed beforehand. This is a freestanding hermetic
+repository that bootstraps using a vendored static gcc9 executable.
+No further dependencies are required.
 
 ```sh
 wget https://justine.lol/cosmopolitan/cosmopolitan-0.3.tar.gz
