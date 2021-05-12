@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/sysv/consts/o.h"
@@ -46,9 +47,9 @@ textwindows int ioctl_siocgifconf_nt(int fd, struct ifconf *ifc) {
     return ebadf();
   }
 
-  ret = WSAIoctl(g_fds.p[fd].handle, kNtSioGetInterfaceList, NULL, 0, &iflist, sizeof(iflist), &dwBytes, NULL, NULL);
+  ret = weaken(WSAIoctl)(g_fds.p[fd].handle, kNtSioGetInterfaceList, NULL, 0, &iflist, sizeof(iflist), &dwBytes, NULL, NULL);
   if (ret == -1) {
-    return __winsockerr();
+    return weaken(__winsockerr)();
   }
 
   count = dwBytes / sizeof(struct NtInterfaceInfo);
