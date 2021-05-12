@@ -28,8 +28,12 @@ int ioctl(int, uint64_t, void *);
     if (CMP(request, TCSETS)) return ioctl_tcsets(FD, REQUEST, MEMORY);  \
     if (CMP(request, TCSETSW)) return ioctl_tcsets(FD, REQUEST, MEMORY); \
     if (CMP(request, TCSETSF)) return ioctl_tcsets(FD, REQUEST, MEMORY); \
-    if (CMP(request, SIOCGIFCONF)) return ioctl_siocgifconf(FD, REQUEST, MEMORY); \
+    if (CMP(request, SIOCGIFCONF)) return ioctl_siocgifconf(FD, MEMORY); \
   } while (0)
+
+/*
+    if (CMP(request, SIOCGIFFLAGS)) return ioctl_siocgifflags(FD, REQUEST, MEMORY); \
+*/
 
 int ioctl_tcgets(int, void *);
 int ioctl_tcgets_nt(int, void *);
@@ -39,7 +43,7 @@ int ioctl_tiocgwinsz(int, void *);
 int ioctl_tiocgwinsz_nt(int, void *);
 int ioctl_tiocswinsz(int, void *);
 int ioctl_tiocswinsz_nt(int, void *);
-int ioctl_siocgifconf(int, uint64_t, void *);
+int ioctl_siocgifconf(int, void *);
 int ioctl_default(int, uint64_t, void *);
 
 forceinline int ioctl_dispatch(int fd, uint64_t request, void *memory) {
