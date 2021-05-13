@@ -94,6 +94,7 @@ struct ifconf {
   } ifc_ifcu;
 };
 
+
 /* Shortcuts to the ifconf buffer or ifreq array */
 #define ifc_buf ifc_ifcu.ifcu_buf       /* buffer address   */
 #define ifc_req ifc_ifcu.ifcu_req       /* array of structures  */
@@ -115,9 +116,20 @@ struct ifreq {
     short           ifru_flags;
     int	            ifru_ivalue;
     int	            ifru_mtu;
-    char            ifru_map[24];   /* Unsupported, used as padding */
+    char            ifru_pad[24];   /* ifru_map, used as padding */
   } ifr_ifru;
 };
+
+struct ifreq_bsd {
+  union {
+    char ifrn_name[IFNAMSIZ];
+  } ifr_ifrn;
+
+  union {
+    char            ifru_pad[16];
+  } ifr_ifru;
+};
+
 #define ifr_name	ifr_ifrn.ifrn_name	/* interface name 	*/
 #define ifr_addr	ifr_ifru.ifru_addr	/* address		*/
 #define ifr_dstaddr	ifr_ifru.ifru_dstaddr	/* other end of p-p lnk	*/
