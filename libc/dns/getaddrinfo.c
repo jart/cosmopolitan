@@ -26,7 +26,6 @@
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
-#include "libc/sysv/consts/ai.h"
 #include "libc/sysv/consts/inaddr.h"
 #include "libc/sysv/errfuns.h"
 

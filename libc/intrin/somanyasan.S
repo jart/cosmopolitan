@@ -19,6 +19,16 @@
 #include "libc/macros.internal.h"
 .source	__FILE__
 
+	.macro	.acall fn:req
+	xor	%eax,%eax
+	mov	$1,%r10b
+	cmpxchg	%r10b,__asan_noreentry(%rip)
+	jnz	2f
+	call	\fn
+	decb	__asan_noreentry(%rip)
+2:	nop
+	.endm
+
 	.rodata.cst4
 __asan_option_detect_stack_use_after_return:
 	.long	0
@@ -32,181 +42,362 @@ __asan_noreentry:
 	.previous
 
 __asan_report_load1:
-	push	$1
-	jmp	OnReportLoad
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$1,%esi
+	.acall	__asan_report_load
+	pop	%rbp
+	ret
 	.endfn	__asan_report_load1,globl
+
 __asan_report_load2:
-	push	$2
-	jmp	OnReportLoad
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$2,%esi
+	.acall	__asan_report_load
+	pop	%rbp
+	ret
 	.endfn	__asan_report_load2,globl
+
 __asan_report_load4:
-	push	$4
-	jmp	OnReportLoad
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$4,%esi
+	.acall	__asan_report_load
+	pop	%rbp
+	ret
 	.endfn	__asan_report_load4,globl
+
 __asan_report_load8:
-	push	$8
-	jmp	OnReportLoad
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$8,%esi
+	.acall	__asan_report_load
+	pop	%rbp
+	ret
 	.endfn	__asan_report_load8,globl
+
 __asan_report_load16:
-	push	$16
-	jmp	OnReportLoad
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$16,%esi
+	.acall	__asan_report_load
+	pop	%rbp
+	ret
 	.endfn	__asan_report_load16,globl
+
 __asan_report_load32:
-	push	$32
-//	𝑠𝑙𝑖𝑑𝑒
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$32,%esi
+	.acall	__asan_report_load
+	pop	%rbp
+	ret
 	.endfn	__asan_report_load32,globl
-OnReportLoad:
-	pop	%rsi
-//	𝑠𝑙𝑖𝑑𝑒
-	.endfn	OnReportLoad
+
 __asan_report_load_n:
-	lea	__asan_report_load(%rip),%r11
-	jmp	__asan_report_noreentry
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	.acall	__asan_report_load
+	pop	%rbp
+	ret
 	.endfn	__asan_report_load_n,globl
 
 __asan_report_store1:
-	push	$1
-	jmp	ReportStore
-	.endfn	__asan_report_store1,globl
-__asan_report_store2:
-	push	$2
-	jmp	ReportStore
-	.endfn	__asan_report_store2,globl
-__asan_report_store4:
-	push	$4
-	jmp	ReportStore
-	.endfn	__asan_report_store4,globl
-__asan_report_store8:
-	push	$8
-	jmp	ReportStore
-	.endfn	__asan_report_store8,globl
-__asan_report_store16:
-	push	$16
-	jmp	ReportStore
-	.endfn	__asan_report_store16,globl
-__asan_report_store32:
-	push	$32
-//	𝑠𝑙𝑖𝑑𝑒
-	.endfn	__asan_report_store32,globl
-ReportStore:
-	pop	%rsi
-//	𝑠𝑙𝑖𝑑𝑒
-	.endfn	ReportStore
-__asan_report_store_n:
-	lea	__asan_report_store(%rip),%r11
-//	𝑠𝑙𝑖𝑑𝑒
-	.endfn	__asan_report_store_n,globl
-
-__asan_report_noreentry:
 	push	%rbp
 	mov	%rsp,%rbp
-	xor	%eax,%eax
-	mov	$1,%r10b
-	cmpxchg	%r10b,__asan_noreentry(%rip)
-	jnz	2f
-	call	*%r11
-	decb	__asan_noreentry(%rip)
-2:	pop	%rbp
+	.profilable
+	mov	$1,%esi
+	.acall	__asan_report_store
+	pop	%rbp
 	ret
-	.endfn	__asan_report_noreentry
+	.endfn	__asan_report_store1,globl
+
+__asan_report_store2:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$2,%esi
+	.acall	__asan_report_store
+	pop	%rbp
+	ret
+	.endfn	__asan_report_store2,globl
+
+__asan_report_store4:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$4,%esi
+	.acall	__asan_report_store
+	pop	%rbp
+	ret
+	.endfn	__asan_report_store4,globl
+
+__asan_report_store8:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$8,%esi
+	.acall	__asan_report_store
+	pop	%rbp
+	ret
+	.endfn	__asan_report_store8,globl
+
+__asan_report_store16:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$16,%esi
+	.acall	__asan_report_store
+	pop	%rbp
+	ret
+	.endfn	__asan_report_store16,globl
+
+__asan_report_store32:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$32,%esi
+	.acall	__asan_report_store
+	pop	%rbp
+	ret
+	.endfn	__asan_report_store32,globl
+
+__asan_report_store_n:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	.acall	__asan_report_store
+	pop	%rbp
+	ret
+	.endfn	__asan_report_store_n,globl
 
 __asan_stack_free_0:
-	push	$0
-	jmp	OnStackFree
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$0,%edx
+	call	__asan_stack_free
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_free_0,globl
+
 __asan_stack_free_1:
-	push	$1
-	jmp	OnStackFree
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$1,%edx
+	call	__asan_stack_free
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_free_1,globl
+
 __asan_stack_free_2:
-	push	$2
-	jmp	OnStackFree
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$2,%edx
+	call	__asan_stack_free
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_free_2,globl
+
 __asan_stack_free_3:
-	push	$3
-	jmp	OnStackFree
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$3,%edx
+	call	__asan_stack_free
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_free_3,globl
+
 __asan_stack_free_4:
-	push	$4
-	jmp	OnStackFree
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$4,%edx
+	call	__asan_stack_free
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_free_4,globl
+
 __asan_stack_free_5:
-	push	$5
-	jmp	OnStackFree
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$5,%edx
+	call	__asan_stack_free
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_free_5,globl
+
 __asan_stack_free_6:
-	push	$6
-	jmp	OnStackFree
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$6,%edx
+	call	__asan_stack_free
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_free_6,globl
+
 __asan_stack_free_7:
-	push	$7
-	jmp	OnStackFree
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$7,%edx
+	call	__asan_stack_free
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_free_7,globl
+
 __asan_stack_free_8:
-	push	$8
-	jmp	OnStackFree
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$8,%edx
+	call	__asan_stack_free
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_free_8,globl
+
 __asan_stack_free_9:
-	push	$9
-	jmp	OnStackFree
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$9,%edx
+	call	__asan_stack_free
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_free_9,globl
+
 __asan_stack_free_10:
-	push	$10
-//	𝑠𝑙𝑖𝑑𝑒
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$10,%edx
+	call	__asan_stack_free
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_free_10,globl
-OnStackFree:
-	pop	%rdx
-	jmp	__asan_stack_free
-	.endfn	OnStackFree
 
 __asan_stack_malloc_0:
-	push	$0
-	jmp	OnStackMalloc
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$0,%esi
+	call	__asan_stack_malloc
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_malloc_0,globl
+
 __asan_stack_malloc_1:
-	push	$1
-	jmp	OnStackMalloc
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$1,%esi
+	call	__asan_stack_malloc
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_malloc_1,globl
+
 __asan_stack_malloc_2:
-	push	$2
-	jmp	OnStackMalloc
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$2,%esi
+	call	__asan_stack_malloc
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_malloc_2,globl
+
 __asan_stack_malloc_3:
-	push	$3
-	jmp	OnStackMalloc
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$3,%esi
+	call	__asan_stack_malloc
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_malloc_3,globl
+
 __asan_stack_malloc_4:
-	push	$4
-	jmp	OnStackMalloc
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$4,%esi
+	call	__asan_stack_malloc
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_malloc_4,globl
+
 __asan_stack_malloc_5:
-	push	$5
-	jmp	OnStackMalloc
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$5,%esi
+	call	__asan_stack_malloc
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_malloc_5,globl
+
 __asan_stack_malloc_6:
-	push	$6
-	jmp	OnStackMalloc
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$6,%esi
+	call	__asan_stack_malloc
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_malloc_6,globl
+
 __asan_stack_malloc_7:
-	push	$7
-	jmp	OnStackMalloc
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$7,%esi
+	call	__asan_stack_malloc
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_malloc_7,globl
+
 __asan_stack_malloc_8:
-	push	$8
-	jmp	OnStackMalloc
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$8,%esi
+	call	__asan_stack_malloc
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_malloc_8,globl
+
 __asan_stack_malloc_9:
-	push	$9
-	jmp	OnStackMalloc
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$9,%esi
+	call	__asan_stack_malloc
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_malloc_9,globl
+
 __asan_stack_malloc_10:
-	push	$10
-//	𝑠𝑙𝑖𝑑𝑒
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	$10,%esi
+	call	__asan_stack_malloc
+	pop	%rbp
+	ret
 	.endfn	__asan_stack_malloc_10,globl
-OnStackMalloc:
-	pop	%rsi
-	jmp	__asan_stack_malloc
-	.endfn	OnStackMalloc
 
 __asan_version_mismatch_check_v8:
 	ret
@@ -242,26 +433,31 @@ __asan_load1:
 	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_load1,globl
+
 __asan_load2:
 	push	%rbp
 	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_load2,globl
+
 __asan_load4:
 	push	%rbp
 	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_load4,globl
+
 __asan_load8:
 	push	%rbp
 	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_load8,globl
+
 __asan_load16:
 	push	%rbp
 	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_load16,globl
+
 __asan_load32:
 	push	%rbp
 	mov	%rsp,%rbp
@@ -273,26 +469,31 @@ __asan_store1:
 	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_store1,globl
+
 __asan_store2:
 	push	%rbp
 	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_store2,globl
+
 __asan_store4:
 	push	%rbp
 	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_store4,globl
+
 __asan_store8:
 	push	%rbp
 	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_store8,globl
+
 __asan_store16:
 	push	%rbp
 	mov	%rsp,%rbp
 	ud2
 	.endfn	__asan_store16,globl
+
 __asan_store32:
 	push	%rbp
 	mov	%rsp,%rbp

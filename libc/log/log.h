@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_LOG_H_
 #define COSMOPOLITAN_LIBC_LOG_LOG_H_
+#include "libc/bits/likely.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/stdio/stdio.h"

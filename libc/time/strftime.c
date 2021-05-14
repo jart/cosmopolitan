@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
+#include "libc/fmt/itoa.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/time/struct/tm.h"
@@ -31,24 +32,24 @@ Copyright 1989 The Regents of the University of California\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 static char *strftime_add(char *p, const char *pe, const char *str) {
-  while (p < pe && (*p = *str++) != '\0') ++p;
+  while (p < pe && (*p = *str++)) ++p;
   return p;
 }
 
 static char *strftime_conv(char *p, const char *pe, int n, const char *format) {
-  char buf[INT_STRLEN_MAXIMUM(int) + 1];
+  char buf[22];
   (snprintf)(buf, sizeof(buf), format, n);
   return strftime_add(p, pe, buf);
 }
 
 static char *strftime_secs(char *p, const char *pe, const struct tm *t) {
-  static char buf[INT_STRLEN_MAXIMUM(int) + 1];
+  char ibuf[21];
   struct tm tmp;
   int64_t s;
   tmp = *t; /* Make a copy, mktime(3) modifies the tm struct. */
   s = mktime(&tmp);
-  (snprintf)(buf, sizeof(buf), "%ld", s);
-  return strftime_add(p, pe, buf);
+  int64toarray_radix10(s, ibuf);
+  return strftime_add(p, pe, ibuf);
 }
 
 static char *strftime_timefmt(char *p, const char *pe, const char *format,

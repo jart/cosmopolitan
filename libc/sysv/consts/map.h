@@ -21,7 +21,7 @@ extern const long MAP_NORESERVE;
 extern const long MAP_POPULATE;
 extern const long MAP_PRIVATE;
 extern const long MAP_SHARED;
-extern const long MAP_TYPE;
+extern const long MAP_CONCEAL;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
@@ -29,6 +29,7 @@ COSMOPOLITAN_C_END_
 #define MAP_FILE    0
 #define MAP_SHARED  1
 #define MAP_PRIVATE 2
+#define MAP_TYPE    15
 #define MAP_FIXED   16
 
 #define MAP_32BIT      SYMBOLIC(MAP_32BIT)
@@ -44,7 +45,7 @@ COSMOPOLITAN_C_END_
 #define MAP_NONBLOCK   SYMBOLIC(MAP_NONBLOCK)
 #define MAP_NORESERVE  SYMBOLIC(MAP_NORESERVE)
 #define MAP_POPULATE   SYMBOLIC(MAP_POPULATE)
-#define MAP_TYPE       SYMBOLIC(MAP_TYPE)
+#define MAP_CONCEAL    SYMBOLIC(MAP_CONCEAL)
 
 #define MAP_ANON   MAP_ANONYMOUS
 #define MAP_NOCORE MAP_CONCEAL

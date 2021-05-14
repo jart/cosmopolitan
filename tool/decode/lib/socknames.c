@@ -19,7 +19,6 @@
 #include "libc/dns/dns.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/af.h"
-#include "libc/sysv/consts/ai.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/sock.h"
 #include "tool/decode/lib/socknames.h"

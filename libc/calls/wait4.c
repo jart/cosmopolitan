@@ -20,6 +20,8 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/wait4.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Waits for status to change on process.
@@ -35,6 +37,16 @@
  */
 int wait4(int pid, int *opt_out_wstatus, int options,
           struct rusage *opt_out_rusage) {
+  if (IsAsan()) {
+    if (opt_out_wstatus &&
+        !__asan_is_valid(opt_out_wstatus, sizeof(*opt_out_wstatus))) {
+      return efault();
+    }
+    if (opt_out_rusage &&
+        !__asan_is_valid(opt_out_rusage, sizeof(*opt_out_rusage))) {
+      return efault();
+    }
+  }
   if (!IsWindows()) {
     return sys_wait4(pid, opt_out_wstatus, options, opt_out_rusage);
   } else {

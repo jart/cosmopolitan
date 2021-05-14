@@ -21,14 +21,14 @@
 	.macro	.errno	local:req linux:req
 	.globl	\local
 	.long	\local-kLinuxErrnos
-	.long	\linux
+	.byte	\linux
 	.endm
 
 //	Lookup table translating errnos between systems.
 //
 //	@see	libc/sysv/systemfive.S
 	.rodata
-	.align	8
+	.align	4
 kLinuxErrnos:
 	.errno	EPERM,1
 	.errno	ENOENT,2
@@ -85,47 +85,18 @@ kLinuxErrnos:
 	.errno	EAFNOSUPPORT,97
 	.errno	EADDRINUSE,98
 	.errno	EADDRNOTAVAIL,99
-	.errno	ECHRNG,44
 	.errno	EL2NSYNC,45
 	.errno	EL3HLT,46
 	.errno	EL3RST,47
 	.errno	ELNRNG,48
-	.errno	EUNATCH,49
-	.errno	ENOCSI,50
-	.errno	EL2HLT,51
-	.errno	EBADE,52
-	.errno	EBADR,53
-	.errno	EXFULL,54
-	.errno	ENOANO,55
-	.errno	EBADRQC,56
-	.errno	EBADSLT,57
-	.errno	ENOSTR,60
-	.errno	ENODATA,61
 	.errno	ETIME,62
-	.errno	ENOSR,63
 	.errno	ENONET,64
-	.errno	ENOPKG,65
 	.errno	EREMOTE,66
-	.errno	ENOLINK,67
-	.errno	EADV,68
-	.errno	ESRMNT,69
-	.errno	ECOMM,70
 	.errno	EPROTO,71
-	.errno	EMULTIHOP,72
-	.errno	EDOTDOT,73
 	.errno	EBADMSG,74
 	.errno	EOVERFLOW,75
-	.errno	ENOTUNIQ,76
-	.errno	EBADFD,77
-	.errno	EREMCHG,78
-	.errno	ELIBACC,79
-	.errno	ELIBBAD,80
-	.errno	ELIBSCN,81
-	.errno	ELIBMAX,82
-	.errno	ELIBEXEC,83
 	.errno	EILSEQ,84
 	.errno	ERESTART,85
-	.errno	ESTRPIPE,86
 	.errno	ENETDOWN,100
 	.errno	ENETUNREACH,101
 	.errno	ENETRESET,102
@@ -143,23 +114,10 @@ kLinuxErrnos:
 	.errno	EALREADY,114
 	.errno	EINPROGRESS,115
 	.errno	ESTALE,116
-	.errno	EUCLEAN,117
-	.errno	ENOTNAM,118
-	.errno	ENAVAIL,119
-	.errno	EISNAM,120
-	.errno	EREMOTEIO,121
 	.errno	EDQUOT,122
-	.errno	ENOMEDIUM,123
-	.errno	EMEDIUMTYPE,124
 	.errno	ECANCELED,125
-	.errno	ENOKEY,126
-	.errno	EKEYEXPIRED,127
-	.errno	EKEYREVOKED,128
-	.errno	EKEYREJECTED,129
 	.errno	EOWNERDEAD,130
 	.errno	ENOTRECOVERABLE,131
-	.errno	ERFKILL,132
-	.errno	EHWPOISON,133
+	.long	0
+	.byte	0
 	.endobj	kLinuxErrnos,globl
-	kLinuxErrnosLength = (.-kLinuxErrnos)/8
-	.globl	kLinuxErrnosLength

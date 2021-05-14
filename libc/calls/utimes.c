@@ -18,7 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
 
 /**
@@ -30,6 +32,11 @@
  * @see stat()
  */
 int utimes(const char *path, const struct timeval tv[2]) {
+  if (IsAsan()) {
+    if (tv && !__asan_is_valid(tv, sizeof(*tv) * 2)) {
+      return efault();
+    }
+  }
   if (!IsWindows()) {
     /*
      * we don't modernize utimes() into utimensat() because the

@@ -34,232 +34,495 @@ __ubsan_get_current_report_data:
 	.endfn	__ubsan_get_current_report_data,globl
 
 __ubsan_handle_type_mismatch_abort:
-	jmp	__ubsan_handle_type_mismatch
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	call	__ubsan_handle_type_mismatch
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_type_mismatch_abort,globl
 
 __ubsan_handle_float_cast_overflow_abort:
-	jmp	__ubsan_handle_float_cast_overflow
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	call	__ubsan_handle_float_cast_overflow
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_float_cast_overflow_abort,globl
 
-__ubsan_handle_type_mismatch_v1:
 __ubsan_handle_type_mismatch_v1_abort:
-	jmp	___ubsan_handle_type_mismatch_v1
-	.endfn	__ubsan_handle_type_mismatch_v1,globl
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	call	___ubsan_handle_type_mismatch_v1
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_type_mismatch_v1_abort,globl
 
+__ubsan_handle_type_mismatch_v1:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	call	___ubsan_handle_type_mismatch_v1
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_type_mismatch_v1,globl
+
 __ubsan_handle_add_overflow_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_add_overflow_abort,globl
-__ubsan_handle_add_overflow:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"add_overflow",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_add_overflow_abort,globl
+
+__ubsan_handle_add_overflow:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"add_overflow",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_add_overflow,globl
 
 __ubsan_handle_alignment_assumption_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_alignment_assumption_abort,globl
-__ubsan_handle_alignment_assumption:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"alignment_assumption",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_alignment_assumption_abort,globl
+
+__ubsan_handle_alignment_assumption:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"alignment_assumption",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_alignment_assumption,globl
 
 __ubsan_handle_builtin_unreachable_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_builtin_unreachable_abort,globl
-__ubsan_handle_builtin_unreachable:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"builtin_unreachable",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_builtin_unreachable_abort,globl
+
+__ubsan_handle_builtin_unreachable:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"builtin_unreachable",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_builtin_unreachable,globl
 
 __ubsan_handle_cfi_bad_type_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_cfi_bad_type_abort,globl
-__ubsan_handle_cfi_bad_type:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"cfi_bad_type",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_cfi_bad_type_abort,globl
+
+__ubsan_handle_cfi_bad_type:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"cfi_bad_type",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_cfi_bad_type,globl
 
 __ubsan_handle_cfi_check_fail_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_cfi_check_fail_abort,globl
-__ubsan_handle_cfi_check_fail:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"cfi_check_fail",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_cfi_check_fail_abort,globl
+
+__ubsan_handle_cfi_check_fail:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"cfi_check_fail",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_cfi_check_fail,globl
 
 __ubsan_handle_divrem_overflow_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_divrem_overflow_abort,globl
-__ubsan_handle_divrem_overflow:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"divrem_overflow",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_divrem_overflow_abort,globl
+
+__ubsan_handle_divrem_overflow:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"divrem_overflow",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_divrem_overflow,globl
 
 __ubsan_handle_dynamic_type_cache_miss_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_dynamic_type_cache_miss_abort,globl
-__ubsan_handle_dynamic_type_cache_miss:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"dynamic_type_cache_miss",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_dynamic_type_cache_miss_abort,globl
+
+__ubsan_handle_dynamic_type_cache_miss:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"dynamic_type_cache_miss",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_dynamic_type_cache_miss,globl
 
 __ubsan_handle_function_type_mismatch_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_function_type_mismatch_abort,globl
-__ubsan_handle_function_type_mismatch:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"function_type_mismatch",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_function_type_mismatch_abort,globl
+
+__ubsan_handle_function_type_mismatch:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"function_type_mismatch",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_function_type_mismatch,globl
 
 __ubsan_handle_implicit_conversion_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_implicit_conversion_abort,globl
-__ubsan_handle_implicit_conversion:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"implicit_conversion",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_implicit_conversion_abort,globl
+
+__ubsan_handle_implicit_conversion:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"implicit_conversion",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_implicit_conversion,globl
 
 __ubsan_handle_invalid_builtin_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_invalid_builtin_abort,globl
-__ubsan_handle_invalid_builtin:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"invalid_builtin",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_invalid_builtin_abort,globl
+
+__ubsan_handle_invalid_builtin:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"invalid_builtin",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_invalid_builtin,globl
 
 __ubsan_handle_load_invalid_value_abort:
-	nop
-//	fallthrough
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"load_invalid_value (uninitialized? bool∌[01]?)",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_load_invalid_value_abort,globl
+
 __ubsan_handle_load_invalid_value:
-	loadstr	"load_invalid_value (try checking for uninitialized variables)",si
-	jmp	__ubsan_hop
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"load_invalid_value (uninitialized? bool∌[01]?)",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_load_invalid_value,globl
 
 __ubsan_handle_missing_return_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_missing_return_abort,globl
-__ubsan_handle_missing_return:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"missing_return",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_missing_return_abort,globl
+
+__ubsan_handle_missing_return:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"missing_return",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_missing_return,globl
 
 __ubsan_handle_mul_overflow_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_mul_overflow_abort,globl
-__ubsan_handle_mul_overflow:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"mul_overflow",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_mul_overflow_abort,globl
+
+__ubsan_handle_mul_overflow:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"mul_overflow",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_mul_overflow,globl
 
 __ubsan_handle_negate_overflow_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_negate_overflow_abort,globl
-__ubsan_handle_negate_overflow:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"negate_overflow",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_negate_overflow_abort,globl
+
+__ubsan_handle_negate_overflow:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"negate_overflow",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_negate_overflow,globl
 
 __ubsan_handle_nonnull_arg_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_nonnull_arg_abort,globl
-__ubsan_handle_nonnull_arg:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"nonnull_arg",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_nonnull_arg_abort,globl
+
+__ubsan_handle_nonnull_arg:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"nonnull_arg",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_nonnull_arg,globl
 
 __ubsan_handle_nonnull_return_v1_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_nonnull_return_v1_abort,globl
-__ubsan_handle_nonnull_return_v1:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"nonnull_return_v1",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_nonnull_return_v1_abort,globl
+
+__ubsan_handle_nonnull_return_v1:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"nonnull_return_v1",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_nonnull_return_v1,globl
 
-__ubsan_hop:
-	jmp	__ubsan_abort
-	.endfn	__ubsan_hop
-
 __ubsan_handle_nullability_arg_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_nullability_arg_abort,globl
-__ubsan_handle_nullability_arg:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"nullability_arg",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_nullability_arg_abort,globl
+
+__ubsan_handle_nullability_arg:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"nullability_arg",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_nullability_arg,globl
 
 __ubsan_handle_nullability_return_v1_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_nullability_return_v1_abort,globl
-__ubsan_handle_nullability_return_v1:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"nullability_return_v1",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_nullability_return_v1_abort,globl
+
+__ubsan_handle_nullability_return_v1:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"nullability_return_v1",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_nullability_return_v1,globl
 
 __ubsan_handle_pointer_overflow_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_pointer_overflow_abort,globl
-__ubsan_handle_pointer_overflow:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"pointer_overflow",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_pointer_overflow_abort,globl
+
+__ubsan_handle_pointer_overflow:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"pointer_overflow",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_pointer_overflow,globl
 
 __ubsan_handle_shift_out_of_bounds_abort:
-	nop
-//	fallthrough
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	call	__ubsan_handle_shift_out_of_bounds
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_shift_out_of_bounds_abort,globl
-__ubsan_handle_shift_out_of_bounds:
-	loadstr	"shift_out_of_bounds",si
-	jmp	__ubsan_hop
-	.endfn	__ubsan_handle_shift_out_of_bounds,globl
 
 __ubsan_handle_sub_overflow_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_sub_overflow_abort,globl
-__ubsan_handle_sub_overflow:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"sub_overflow",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_sub_overflow_abort,globl
+
+__ubsan_handle_sub_overflow:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"sub_overflow",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_sub_overflow,globl
 
 __ubsan_handle_vla_bound_not_positive_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_vla_bound_not_positive_abort,globl
-__ubsan_handle_vla_bound_not_positive:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"vla_bound_not_positive",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_vla_bound_not_positive_abort,globl
+
+__ubsan_handle_vla_bound_not_positive:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"vla_bound_not_positive",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_vla_bound_not_positive,globl
 
 __ubsan_handle_nonnull_return_abort:
-	nop
-//	fallthrough
-	.endfn	__ubsan_handle_nonnull_return_abort,globl
-__ubsan_handle_nonnull_return:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	loadstr	"nonnull_return",si
-	jmp	__ubsan_hop
+	call	__ubsan_abort
+	pop	%rbp
+	ret
+	.endfn	__ubsan_handle_nonnull_return_abort,globl
+
+__ubsan_handle_nonnull_return:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	loadstr	"nonnull_return",si
+	call	__ubsan_abort
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_nonnull_return,globl
 
 __ubsan_handle_out_of_bounds_abort:
-	jmp	__ubsan_handle_out_of_bounds
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	call	__ubsan_handle_out_of_bounds
+	pop	%rbp
+	ret
 	.endfn	__ubsan_handle_out_of_bounds_abort,globl
-
-.previous

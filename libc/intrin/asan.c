@@ -21,6 +21,7 @@
 #include "libc/bits/likely.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/log/log.h"
@@ -116,7 +117,7 @@ struct AsanMorgue {
 
 static struct AsanMorgue __asan_morgue;
 
-static uint64_t __asan_bsrl(uint64_t x) {
+static inline int __asan_bsrl(uint64_t x) {
   return __builtin_clzll(x) ^ 63;
 }
 
@@ -137,7 +138,7 @@ static size_t __asan_strlen(const char *s) {
 static int __asan_strcmp(const char *l, const char *r) {
   size_t i = 0;
   while (l[i] == r[i] && r[i]) ++i;
-  return (l[i] & 0xff) - (r[i] & 0xff);
+  return (l[i] & 255) - (r[i] & 255);
 }
 
 static char *__asan_stpcpy(char *d, const char *s) {
@@ -168,7 +169,7 @@ static void *__asan_memset(void *p, int c, size_t n) {
   size_t i;
   uint64_t x;
   b = p;
-  x = 0x0101010101010101 * (c & 0xff);
+  x = 0x0101010101010101 * (c & 255);
   switch (n) {
     case 0:
       return p;
@@ -293,73 +294,105 @@ static void *__asan_memcpy(void *dst, const void *src, size_t n) {
   return dst;
 }
 
-static size_t __asan_int2hex(uint64_t x, char b[17], uint8_t k) {
-  int i;
-  char *p;
-  for (p = b; k > 0;) {
-    *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
-  }
-  *p = '\0';
-  return p - b;
+static char *__asan_hexcpy(char *p, uint64_t x, uint8_t k) {
+  while (k) *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
+  return p;
 }
 
-static size_t __asan_uint2str(uint64_t i, char *a) {
-  size_t j;
-  j = 0;
+static char *__asan_uint2str(char *p, uint64_t i) {
+  int j = 0;
   do {
-    a[j++] = i % 10 + '0';
+    p[j++] = i % 10 + '0';
     i /= 10;
   } while (i > 0);
-  a[j] = '\0';
-  reverse(a, j);
-  return j;
+  reverse(p, j);
+  return p + j;
 }
 
-static size_t __asan_int2str(int64_t i, char *a) {
-  if (i >= 0) return __asan_uint2str(i, a);
-  *a++ = '-';
-  return 1 + __asan_uint2str(-i, a);
+static char *__asan_intcpy(char *p, int64_t i) {
+  if (i >= 0) return __asan_uint2str(p, i);
+  *p++ = '-';
+  return __asan_uint2str(p, -i);
 }
 
-void __asan_poison(uintptr_t p, size_t n, int kind) {
-  int k;
-  char *s;
-  if (!n) return;
-  if (UNLIKELY(p & 7)) {
-    k = MIN(8 - (p & 7), n);
-    s = SHADOW(p);
-    if (*s == 0 || *s > (p & 7)) {
-      *s = p & 7;
-    }
-    n -= k;
-    p += k;
+void __asan_poison(uintptr_t p, size_t n, int t) {
+  signed char k, *s;
+  k = p & 7;
+  s = (signed char *)((p >> 3) + 0x7fff8000);
+  if (UNLIKELY(k)) {
+    if (n && (!*s || *s > k) && 8 - k >= n) *s = k;
+    ++s, n -= MIN(8 - k, n);
   }
-  __asan_memset(SHADOW(p), kind, n >> 3);
+  __asan_memset(s, t, n >> 3);
   if ((k = n & 7)) {
-    s = SHADOW(p + n);
-    if (*s < 0 || (*s > 0 && *s >= k)) {
-      *s = kind;
-    }
+    s += n >> 3;
+    if (*s < 0 || 0 < *s && *s <= k) *s = t;
   }
 }
 
 void __asan_unpoison(uintptr_t p, size_t n) {
-  int k;
-  char *s;
-  if (!n) return;
-  if (UNLIKELY(p & 7)) {
-    k = MIN(8 - (p & 7), n);
-    s = SHADOW(p);
-    *s = 0;
-    n -= k;
-    p += k;
+  signed char k, *s;
+  k = p & 7;
+  s = (signed char *)((p >> 3) + 0x7fff8000);
+  if (UNLIKELY(k)) {
+    if (n) *s = 0;
+    ++s, n -= MIN(8 - k, n);
   }
-  __asan_memset(SHADOW(p), 0, n >> 3);
+  __asan_memset(s, 0, n >> 3);
   if ((k = n & 7)) {
-    s = SHADOW(p + n);
-    if (*s && *s < k) {
-      *s = k;
+    s += n >> 3;
+    if (*s && *s < k) *s = k;
+  }
+}
+
+bool __asan_is_valid(const void *p, size_t n) {
+  signed char k, *s, *e;
+  if (n) {
+    k = (uintptr_t)p & 7;
+    s = (signed char *)(((uintptr_t)p >> 3) + 0x7fff8000);
+    if (UNLIKELY(k)) {
+      if (n && !(!*s || *s >= k + n)) return false;
+      ++s, n -= MIN(8 - k, n);
     }
+    e = s;
+    k = n & 7;
+    e += n >> 3;
+    for (; s + 8 <= e; s += 8) {
+      if ((uint64_t)(255 & s[0]) << 000 | (uint64_t)(255 & s[1]) << 010 |
+          (uint64_t)(255 & s[2]) << 020 | (uint64_t)(255 & s[3]) << 030 |
+          (uint64_t)(255 & s[4]) << 040 | (uint64_t)(255 & s[5]) << 050 |
+          (uint64_t)(255 & s[6]) << 060 | (uint64_t)(255 & s[7]) << 070) {
+        return false;
+      }
+    }
+    while (s < e) {
+      if (*s++) {
+        return false;
+      }
+    }
+    if (k) {
+      if (!(!*s || *s >= k)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+bool __asan_is_valid_iov(const struct iovec *iov, int iovlen) {
+  int i;
+  size_t size;
+  if (iovlen >= 0 &&
+      !__builtin_mul_overflow(iovlen, sizeof(struct iovec), &size) &&
+      __asan_is_valid(iov, size)) {
+    for (i = 0; i < iovlen; ++i) {
+      if (!__asan_is_valid(iov[i].iov_base, iov[i].iov_len)) {
+        return false;
+      }
+    }
+    return true;
+  } else {
+    return false;
   }
 }
 
@@ -376,7 +409,7 @@ static const char *__asan_dscribe_heap_poison(long c) {
   }
 }
 
-static const char *__asan_describe_access_poison(char *p) {
+static const char *__asan_describe_access_poison(signed char *p) {
   int c = p[0];
   if (1 <= c && c <= 7) c = p[1];
   switch (c) {
@@ -445,15 +478,10 @@ static ssize_t __asan_write_string(const char *s) {
   return __asan_write(s, __asan_strlen(s));
 }
 
-static wontreturn void __asan_abort(void) {
-  if (weaken(__die)) weaken(__die)();
-  __asan_exit(134);
-}
-
 static wontreturn void __asan_die(const char *msg) {
   __asan_write_string(msg);
   if (weaken(__die)) weaken(__die)();
-  __asan_abort();
+  __asan_exit(134);
 }
 
 static char *__asan_report_start(char *p) {
@@ -472,9 +500,9 @@ static wontreturn void __asan_report_heap_fault(void *addr, long c) {
   p = __asan_report_start(buf);
   p = __asan_stpcpy(p, __asan_dscribe_heap_poison(c));
   p = __asan_stpcpy(p, " at 0x");
-  p = __asan_mempcpy(p, ibuf, __asan_int2hex((intptr_t)addr, ibuf, 48));
+  p = __asan_hexcpy(p, (intptr_t)addr, 48);
   p = __asan_stpcpy(p, " shadow 0x");
-  p = __asan_mempcpy(p, ibuf, __asan_int2hex((intptr_t)SHADOW(addr), ibuf, 48));
+  p = __asan_hexcpy(p, (intptr_t)SHADOW(addr), 48);
   p = __asan_stpcpy(p, "\r\n");
   __asan_die(buf);
 }
@@ -485,20 +513,20 @@ static wontreturn void __asan_report_memory_fault(uint8_t *addr, int size,
   p = __asan_report_start(buf);
   p = __asan_stpcpy(p, __asan_describe_access_poison(SHADOW(addr)));
   p = __asan_stpcpy(p, " ");
-  p = __asan_mempcpy(p, ibuf, __asan_int2str(size, ibuf));
+  p = __asan_intcpy(p, size);
   p = __asan_stpcpy(p, "-byte ");
   p = __asan_stpcpy(p, kind);
   p = __asan_stpcpy(p, " at 0x");
-  p = __asan_mempcpy(p, ibuf, __asan_int2hex((intptr_t)addr, ibuf, 48));
+  p = __asan_hexcpy(p, (uintptr_t)addr, 48);
   p = __asan_stpcpy(p, " shadow 0x");
-  p = __asan_mempcpy(p, ibuf, __asan_int2hex((intptr_t)SHADOW(addr), ibuf, 48));
+  p = __asan_hexcpy(p, (uintptr_t)SHADOW(addr), 48);
   p = __asan_stpcpy(p, "\r\n");
   __asan_die(buf);
 }
 
 const void *__asan_morgue_add(void *p) {
   void *r;
-  unsigned i, j;
+  int i, j;
   for (;;) {
     i = __asan_morgue.i;
     j = (i + 1) & (ARRAYLEN(__asan_morgue.p) - 1);
@@ -511,8 +539,8 @@ const void *__asan_morgue_add(void *p) {
 }
 
 static void __asan_morgue_flush(void) {
+  int i;
   void *p;
-  unsigned i;
   for (i = 0; i < ARRAYLEN(__asan_morgue.p); ++i) {
     p = __asan_morgue.p[i];
     if (cmpxchg(__asan_morgue.p + i, p, NULL)) {
@@ -532,15 +560,16 @@ static size_t __asan_heap_size(size_t n) {
 }
 
 static void *__asan_allocate(size_t a, size_t n, int underrun, int overrun) {
-  char *p;
   size_t c;
+  char *p, *f;
   if ((p = weaken(dlmemalign)(a, __asan_heap_size(n)))) {
     c = weaken(dlmalloc_usable_size)(p);
     __asan_unpoison((uintptr_t)p, n);
     __asan_poison((uintptr_t)p - 16, 16, underrun); /* see dlmalloc design */
     __asan_poison((uintptr_t)p + n, c - n, overrun);
     __asan_memset(p, 0xF9, n);
-    WRITE64BE(p + c - sizeof(n), n);
+    f = p + c - 8;
+    WRITE64BE(f, n);
   }
   return p;
 }
@@ -548,7 +577,7 @@ static void *__asan_allocate(size_t a, size_t n, int underrun, int overrun) {
 static size_t __asan_malloc_usable_size(const void *p) {
   size_t c, n;
   if ((c = weaken(dlmalloc_usable_size)(p)) >= 8) {
-    if ((n = READ64BE((char *)p + c - sizeof(n))) <= c) {
+    if ((n = READ64BE((char *)p + c - 8)) <= c) {
       return n;
     } else {
       __asan_report_heap_fault(p, n);
@@ -561,9 +590,9 @@ static size_t __asan_malloc_usable_size(const void *p) {
 static void __asan_deallocate(char *p, long kind) {
   size_t c, n;
   if ((c = weaken(dlmalloc_usable_size)(p)) >= 8) {
-    if ((n = READ64BE((char *)p + c - sizeof(n))) <= c) {
-      WRITE64BE((char *)p + c - sizeof(n), kind);
-      __asan_poison((uintptr_t)p, n, kind);
+    if ((n = READ64BE(p + c - 8)) <= c) {
+      WRITE64BE(p + c - 8, kind);
+      __asan_poison((uintptr_t)p, c - 8, kind);
       if (weaken(dlfree)) {
         weaken(dlfree)(__asan_morgue_add(p));
       }
@@ -588,43 +617,47 @@ static void *__asan_malloc(size_t size) {
   return __asan_memalign(16, size);
 }
 
-static void *__asan_calloc(size_t nelem, size_t elsize) {
+static void *__asan_calloc(size_t n, size_t m) {
   char *p;
-  size_t n;
-  if (__builtin_mul_overflow(nelem, elsize, &n)) n = -1;
+  if (__builtin_mul_overflow(n, m, &n)) n = -1;
   if ((p = __asan_malloc(n))) __asan_memset(p, 0, n);
   return p;
 }
 
 static void *__asan_realloc(void *p, size_t n) {
-  char *p2;
+  char *q, *f;
   size_t c, m;
   if (p) {
     if (n) {
-      if ((c = weaken(dlmalloc_usable_size)(p)) < 8)
+      if ((c = weaken(dlmalloc_usable_size)(p)) >= 8) {
+        f = (char *)p + c - 8;
+        if ((m = READ64BE(f)) <= c) {
+          if (n <= m) { /* shrink */
+            __asan_poison((uintptr_t)p + n, m - n, kAsanHeapOverrun);
+            WRITE64BE(f, n);
+            q = p;
+          } else if (n <= c - 8) { /* small growth */
+            __asan_unpoison((uintptr_t)p + m, n - m);
+            WRITE64BE(f, n);
+            q = p;
+          } else if ((q = __asan_malloc(n))) { /* exponential growth */
+            __asan_memcpy(q, p, m);
+            __asan_deallocate(p, kAsanRelocated);
+          }
+        } else {
+          __asan_report_heap_fault(p, m);
+        }
+      } else {
         __asan_report_heap_fault(p, 0);
-      if ((m = READ64BE((char *)p + c - sizeof(n))) > c)
-        __asan_report_heap_fault(p, m);
-      if (n <= m) { /* shrink */
-        __asan_poison((uintptr_t)p + n, m - n, kAsanHeapOverrun);
-        WRITE64BE((char *)p + c - sizeof(n), n);
-        p2 = p;
-      } else if (n <= c - 8) { /* small growth */
-        __asan_unpoison((uintptr_t)p + m, n - m);
-        WRITE64BE((char *)p + c - sizeof(n), n);
-        p2 = p;
-      } else if ((p2 = __asan_malloc(n))) { /* exponential growth */
-        __asan_memcpy(p2, p, m);
-        __asan_deallocate(p, kAsanRelocated);
       }
     } else {
       __asan_free(p);
-      p2 = NULL;
+      q = NULL;
     }
   } else {
-    p2 = __asan_malloc(n);
+    q = __asan_malloc(n);
   }
-  return p2;
+  return q;
 }
 
 static void *__asan_valloc(size_t n) {

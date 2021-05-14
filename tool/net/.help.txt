@@ -1,0 +1,158 @@
+SYNOPSIS
+
+  redbean.com [-hvduzmbagf] [-p PORT] [-- SCRIPTARGS...]
+
+DESCRIPTION
+
+  redbean - single-file distributable web server
+
+FLAGS
+
+  -h        help
+  -s        increase silence [repeat]
+  -v        increase verbosity [repeat]
+  -d        daemonize
+  -u        uniprocess
+  -z        print port
+  -m        log messages
+  -b        log message body
+  -a        log resource usage
+  -g        log handler latency
+  -f        log worker function calls
+  -H K:V    sets http header globally [repeat]
+  -D DIR    serve assets from local directory [repeat]
+  -t MS     tunes read and write timeouts [default 30000]
+  -M INT    tunes max message payload size [default 65536]
+  -c SEC    configures static asset cache-control headers
+  -r /X=/Y  redirect X to Y [repeat]
+  -R /X=/Y  rewrites X to Y [repeat]
+  -l ADDR   listen ip [default 0.0.0.0]
+  -p PORT   listen port [default 8080]
+  -L PATH   log file location
+  -P PATH   pid file location
+  -U INT    daemon set user id
+  -G INT    daemon set group id
+
+FEATURES
+
+  - Lua v5.4
+  - HTTP v0.9
+  - HTTP v1.0
+  - HTTP v1.1
+  - Pipelining
+  - Accounting
+  - Content-Encoding
+  - Range / Content-Range
+  - Last-Modified / If-Modified-Since
+
+USAGE
+
+  This executable is also a ZIP file that contains static assets.
+  You can run redbean interactively in your terminal as follows:
+
+    ./redbean.com -vvvmbag        # starts server verbosely
+    open http://127.0.0.1:8080/   # shows zip listing page
+    CTRL-C                        # 1x: graceful shutdown
+    CTRL-C                        # 2x: forceful shutdown
+
+  You can override the default listing page by adding:
+
+    zip redbean.com index.lua     # lua server pages take priority
+    zip redbean.com index.html    # default page for directory
+
+  The listing page only applies to the root directory. However the
+  default index page applies to subdirectories too. In order for it
+  to work, there needs to be an empty directory entry in the zip.
+  That should already be the default practice of your zip editor.
+
+    wget                     \
+      --mirror               \
+      --convert-links        \
+      --adjust-extension     \
+      --page-requisites      \
+      --no-parent            \
+      --no-if-modified-since \
+      http://a.example/index.html
+    zip -r redbean.com a.example/  # default page for directory
+
+  redbean normalizes the trailing slash for you automatically:
+
+    $ printf 'GET /a.example HTTP/1.0\n\n' | nc 127.0.0.1 8080
+    HTTP/1.0 307 Temporary Redirect
+    Location: /a.example/
+
+  Virtual hosting is accomplished this way too. The Host is simply
+  prepended to the path, and if it doesn't exist, it gets removed.
+
+    $ printf 'GET / HTTP/1.1\nHost:a.example\n\n' | nc 127.0.0.1 8080
+    HTTP/1.1 200 OK
+    Link: <http://127.0.0.1/a.example/index.html>; rel="canonical"
+
+  If you mirror a lot of websites within your redbean then you can
+  actually tell your browser that redbean is your proxy server, in
+  which redbean will act as your private version of the Internet.
+
+    $ printf 'GET http://a.example HTTP/1.0\n\n' | nc 127.0.0.1 8080
+    HTTP/1.0 200 OK
+    Link: <http://127.0.0.1/a.example/index.html>; rel="canonical"
+
+  If you use a reverse proxy, then redbean recognizes the following
+  provided that the proxy forwards requests over the local network:
+
+    X-Forwarded-For: 203.0.113.42:31337
+    X-Forwarded-Host: foo.example:80
+
+  There's a text/plain statistics page called /statusz that makes
+  it easy to track and monitor the health of your redbean:
+
+    printf 'GET /statusz\n\n' | nc 127.0.0.1 8080
+
+  redbean will display an error page using the /redbean.png logo
+  by default, embedded as a bas64 data uri. You can override the
+  custom page for various errors by adding files to the zip root.
+
+    zip redbean.com 404.html      # custom not found page
+
+  Audio video content should not be compressed in your ZIP files.
+  Uncompressed assets enable browsers to send Range HTTP request.
+  On the other hand compressed assets are best for gzip encoding.
+
+    zip redbean.com index.html    # adds file
+    zip -0 redbean.com video.mp4  # adds without compression
+
+  You can have redbean run as a daemon by doing the following:
+
+    redbean.com -vv -d -L redbean.log -P redbean.pid
+    kill -TERM $(cat redbean.pid) # 1x: graceful shutdown
+    kill -TERM $(cat redbean.pid) # 2x: forceful shutdown
+
+  redbean currently has a 32kb limit on request messages and 64kb
+  including the payload. redbean will grow to whatever the system
+  limits allow. Should fork() or accept() fail redbean will react
+  by going into "meltdown mode" which closes lingering workers.
+  You can trigger this at any time using:
+
+    kill -USR2 $(cat redbean.pid)
+
+  Another failure condition is running out of disk space in which
+  case redbean reacts by truncating the log file. Lastly, redbean
+  does the best job possible reporting on resource usage when the
+  logger is in debug mode noting that NetBSD is the best at this.
+
+  Your redbean is an actually portable executable, that's able to
+  run on six different operating systems. To do that, it needs to
+  overwrite its own MZ header at startup, with ELF or Mach-O, and
+  then puts the original back once the program loads. If you want
+  your redbean to follow the platform-local executable convention
+  then delete the /.ape file from zip.
+
+  redbean contains software licensed ISC, MIT, BSD-2, BSD-3, zlib
+  which makes it a permissively licensed gift to anyone who might
+  find it useful. The transitive closure of legalese can be found
+  inside the binary. redbean also respects your privacy and won't
+  phone home because your computer is its home.
+
+SEE ALSO
+
+  https://justine.lol/redbean/index.html
+  https://news.ycombinator.com/item?id=26271117

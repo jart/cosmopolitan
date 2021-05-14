@@ -276,3 +276,8 @@ TEST(fmt, p) {
   EXPECT_STREQ("0xffff800000031337",
                gc(xasprintf("% 10p", 0xffff800000031337)));
 }
+
+/* TEST(fmt, funchar) { */
+/*   /\* TODO(jart): fix this *\/ */
+/*   ASSERT_STREQ("'\\200'", gc(xasprintf("%`'c", 0200))); */
+/* } */

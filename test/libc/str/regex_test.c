@@ -154,4 +154,17 @@ BENCH(regex, bench) {
   EZBENCH2("precompiled nosub match", donothing, D(&rx, m));
   free(m);
   regfree(&rx);
+  EXPECT_EQ(REG_OK, regcomp(&rx, "^[a-z]*$", REG_EXTENDED | REG_NOSUB));
+  m = calloc(rx.re_nsub + 1, sizeof(regmatch_t));
+  EZBENCH2("precompiled alpha", donothing,
+           regexec(&rx, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 0, 0, 0));
+  free(m);
+  regfree(&rx);
+  EXPECT_EQ(REG_OK,
+            regcomp(&rx, "^[a-z]*$", REG_EXTENDED | REG_NOSUB | REG_ICASE));
+  m = calloc(rx.re_nsub + 1, sizeof(regmatch_t));
+  EZBENCH2("precompiled alpha icase", donothing,
+           regexec(&rx, "aaaaaaaaaaaaaaaAAAAAAAAAAAAAA", 0, 0, 0));
+  free(m);
+  regfree(&rx);
 }

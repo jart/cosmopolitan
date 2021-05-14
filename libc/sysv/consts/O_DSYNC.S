@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon open,O_DSYNC,0x1000,0x400000,0,0x80,0x10000,0
+.syscon open,O_DSYNC,0x00001000,0x00400000,0,0x00000080,0x00010000,0

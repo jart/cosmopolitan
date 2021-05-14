@@ -23,11 +23,16 @@
  * Returns true if zip64 end of central directory header seems legit.
  */
 bool IsZipCdir64(const uint8_t *p, size_t n, size_t i) {
-  if (i > n || n - i < kZipCdir64HdrMinSize) return false;
+  if (i + kZipCdir64HdrMinSize > n) return false;
   if (READ32LE(p + i) != kZipCdir64HdrMagic) return false;
-  if (i + ZIP_CDIR64_HDRSIZE(p + i) > n) return false;
-  if (ZIP_CDIR64_DISK(p + i) != ZIP_CDIR64_STARTINGDISK(p + i)) return false;
-  if (ZIP_CDIR64_RECORDSONDISK(p + i) != ZIP_CDIR64_RECORDS(p + i)) {
+  if (i + ZIP_CDIR64_HDRSIZE(p + i) + kZipCdir64LocatorSize > n) {
+    return false;
+  }
+  if (ZIP_LOCATE64_MAGIC(p + i + ZIP_CDIR64_HDRSIZE(p + i)) !=
+      kZipCdir64LocatorMagic) {
+    return false;
+  }
+  if (ZIP_LOCATE64_OFFSET(p + i + ZIP_CDIR64_HDRSIZE(p + i)) != i) {
     return false;
   }
   if (ZIP_CDIR64_RECORDS(p + i) * kZipCfileHdrMinSize >

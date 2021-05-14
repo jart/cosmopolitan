@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon open,O_NDELAY,0x0800,4,4,4,4,0
+.syscon open,O_NDELAY,0x00000800,0x00000004,0x00000004,0x00000004,0x00000004,0x00000800

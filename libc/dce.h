@@ -57,6 +57,12 @@
 #define IsOptimized() 0
 #endif
 
+#ifdef __FSANITIZE_ADDRESS__
+#define IsAsan() 1
+#else
+#define IsAsan() 0
+#endif
+
 #if defined(__PIE__) || defined(__PIC__)
 #define IsPositionIndependent() 1
 #else

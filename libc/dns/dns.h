@@ -27,6 +27,15 @@
 #define EAI_INTR        -104
 #define EAI_NOTCANCELED -102
 
+/* AI_* conforms to NT ABI */
+#define AI_PASSIVE     1
+#define AI_CANONNAME   2
+#define AI_NUMERICHOST 4
+#define AI_NUMERICSERV 8
+#define AI_ALL         0x0100
+#define AI_ADDRCONFIG  0x0400
+#define AI_V4MAPPED    0x0800
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

@@ -165,6 +165,7 @@ LIBC_TESTMAIN_DIRECTDEPS =					\
 	LIBC_CALLS						\
 	LIBC_INTRIN						\
 	LIBC_LOG						\
+	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
 	LIBC_RUNTIME						\
 	LIBC_STDIO						\

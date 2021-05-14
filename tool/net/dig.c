@@ -23,7 +23,6 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
-#include "libc/sysv/consts/ai.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/sock.h"
 #include "tool/decode/lib/flagger.h"
@@ -44,7 +43,8 @@ void lookup(const char *name) {
       perror("getaddrinfo");
       exit(1);
     default:
-      fprintf(stderr, "getaddrinfo failed: %d (EAI_%s)\n", rc, gai_strerror(rc));
+      fprintf(stderr, "getaddrinfo failed: %d (EAI_%s)\n", rc,
+              gai_strerror(rc));
       exit(1);
   }
   if (addrs) {

@@ -20,7 +20,7 @@
 #include "libc/mem/mem.h"
 #include "third_party/zlib/zutil.internal.h"
 
-void *zcalloc(void *opaque, unsigned items, unsigned size) {
+void *zcalloc(void *opaque, uInt items, uInt size) {
   return weaken(malloc)(items * size);
 }
 

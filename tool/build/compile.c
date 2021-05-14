@@ -91,6 +91,9 @@ bool wantpg;
 bool wantrecord;
 bool wantubsan;
 bool touchtarget;
+bool no_sanitize_null;
+bool no_sanitize_alignment;
+bool no_sanitize_pointer_overflow;
 
 char *cmd;
 char *comdbg;
@@ -400,6 +403,12 @@ int main(int argc, char *argv[]) {
     } else if (!strcmp(argv[i], "-fno-sanitize=all")) {
       wantasan = false;
       wantubsan = false;
+    } else if (!strcmp(argv[i], "-fno-sanitize=null")) {
+      if (isgcc && ccversion >= 6) no_sanitize_null = true;
+    } else if (!strcmp(argv[i], "-fno-sanitize=alignment")) {
+      if (isgcc && ccversion >= 6) no_sanitize_alignment = true;
+    } else if (!strcmp(argv[i], "-fno-sanitize=pointer-overflow")) {
+      if (isgcc && ccversion >= 6) no_sanitize_pointer_overflow = true;
     } else if (startswith(argv[i], "-fsanitize=implicit") &&
                strstr(argv[i], "integer")) {
       if (isgcc) AddArg(argv[i]);
@@ -469,6 +478,15 @@ int main(int argc, char *argv[]) {
     if (wantubsan) {
       AddArg("-fsanitize=undefined");
       AddArg("-fno-data-sections");
+    }
+    if (no_sanitize_null) {
+      AddArg("-fno-sanitize=null");
+    }
+    if (no_sanitize_alignment) {
+      AddArg("-fno-sanitize=alignment");
+    }
+    if (no_sanitize_pointer_overflow) {
+      AddArg("-fno-sanitize=pointer-overflow");
     }
     if (wantframe) {
       AddArg("-fno-omit-frame-pointer");

@@ -24,21 +24,21 @@
 #include "net/http/url.h"
 
 struct UrlParser {
-  int i;
+  unsigned i;
   int c;
   const char *data;
-  int size;
-  bool isform;
-  bool islatin1;
-  bool isopaque;
+  size_t size;
+  char isform;
+  char islatin1;
+  char isopaque;
   char *p;
   char *q;
 };
 
-static void EmitLatin1(struct UrlParser *u, int c) {
-  u->p[0] = 0300 | c >> 6;
-  u->p[1] = 0200 | c & 077;
-  u->p += 2;
+static void EmitLatin1(char **p, int c) {
+  (*p)[0] = 0300 | c >> 6;
+  (*p)[1] = 0200 | c & 077;
+  *p += 2;
 }
 
 static bool EmitKey(struct UrlParser *u, struct UrlParams *h) {
@@ -115,16 +115,18 @@ static bool ParseScheme(struct UrlParser *u, struct Url *h) {
       ParseEscape(u);
       return false;
     } else if (u->c >= 0200 && u->islatin1) {
-      EmitLatin1(u, u->c);
+      EmitLatin1(&u->p, u->c);
       return false;
     } else {
       *u->p++ = u->c;
       if (u->i == 1) {
-        if (!isalpha(u->c)) {
+        if (!(('A' <= u->c && u->c <= 'Z') || ('a' <= u->c && u->c <= 'z'))) {
           return false;
         }
       } else {
-        if (!isalnum(u->c) && u->c != '+' && u->c != '-' && u->c != '.') {
+        if (!(('0' <= u->c && u->c <= '9') || ('A' <= u->c && u->c <= 'Z') ||
+              ('a' <= u->c && u->c <= 'z') || u->c == '+' || u->c == '-' ||
+              u->c == '.')) {
           return false;
         }
       }
@@ -134,17 +136,17 @@ static bool ParseScheme(struct UrlParser *u, struct Url *h) {
 }
 
 static void ParseAuthority(struct UrlParser *u, struct Url *h) {
-  int t = 0;
+  unsigned t = 1;
   const char *c = NULL;
   while (u->i < u->size) {
     u->c = u->data[u->i++] & 0xff;
     if (u->c == '/' || u->c == '#' || u->c == '?') {
       break;
     } else if (u->c == '[') {
-      t = -1;
-    } else if (u->c == ']') {
       t = 0;
-    } else if (u->c == ':' && t >= 0) {
+    } else if (u->c == ']') {
+      t = 1;
+    } else if (u->c == ':' && t > 0) {
       *u->p++ = ':';
       c = u->p;
       ++t;
@@ -155,7 +157,7 @@ static void ParseAuthority(struct UrlParser *u, struct Url *h) {
         h->pass.p = c;
         h->pass.n = u->p - c;
         c = NULL;
-        t = 0;
+        t = 1;
       } else {
         h->user.p = u->q;
         h->user.n = u->p - u->q;
@@ -164,12 +166,12 @@ static void ParseAuthority(struct UrlParser *u, struct Url *h) {
     } else if (u->c == '%') {
       ParseEscape(u);
     } else if (u->c >= 0200 && u->islatin1) {
-      EmitLatin1(u, u->c);
+      EmitLatin1(&u->p, u->c);
     } else {
       *u->p++ = u->c;
     }
   }
-  if (t == 1) {
+  if (t == 2) {
     h->host.p = u->q;
     h->host.n = c - 1 - u->q;
     h->port.p = c;
@@ -195,7 +197,7 @@ static void ParsePath(struct UrlParser *u, struct UrlView *h) {
     } else if (u->c == '%') {
       ParseEscape(u);
     } else if (u->c >= 0200 && u->islatin1) {
-      EmitLatin1(u, u->c);
+      EmitLatin1(&u->p, u->c);
     } else {
       *u->p++ = u->c;
     }
@@ -226,7 +228,7 @@ static void ParseQuery(struct UrlParser *u, struct UrlParams *h) {
         *u->p++ = '=';
       }
     } else if (u->c >= 0200 && u->islatin1) {
-      EmitLatin1(u, u->c);
+      EmitLatin1(&u->p, u->c);
     } else {
       *u->p++ = u->c;
     }
@@ -240,7 +242,7 @@ static void ParseFragment(struct UrlParser *u, struct UrlView *h) {
     if (u->c == '%') {
       ParseEscape(u);
     } else if (u->c >= 0200 && u->islatin1) {
-      EmitLatin1(u, u->c);
+      EmitLatin1(&u->p, u->c);
     } else {
       *u->p++ = u->c;
     }
@@ -258,8 +260,8 @@ static char *ParseUrlImpl(const char *data, size_t size, struct Url *h,
   u.i = 0;
   u.c = 0;
   u.isform = false;
-  u.islatin1 = latin1;
   u.isopaque = false;
+  u.islatin1 = latin1;
   u.data = data;
   u.size = size;
   memset(h, 0, sizeof(*h));

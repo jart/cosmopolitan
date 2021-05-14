@@ -714,8 +714,7 @@ int iswlower(wint_t c) {
     case u'ᶑ':    // LATIN SMALL D W/ HOOK AND TAIL (0x1d91)
     case u'ᶒ':    // LATIN SMALL E W/ RETROFLEX HOOK (0x1d92)
     case u'ᶓ':    // LATIN SMALL OPEN E W/ RETROFLEX HOOK (0x1d93)
-    case u'ᶔ':    // LATIN SMALL REVERSED OPEN E W/ RETROFLEX HOOK
-                  // (0x1d94)
+    case u'ᶔ':    // LATIN SMALL REVERSED OPEN E W/ RETROFLEX HOOK (0x1d94)
     case u'ᶕ':    // LATIN SMALL SCHWA W/ RETROFLEX HOOK (0x1d95)
     case u'ᶖ':    // LATIN SMALL I W/ RETROFLEX HOOK (0x1d96)
     case u'ᶗ':    // LATIN SMALL OPEN O W/ RETROFLEX HOOK (0x1d97)
@@ -1219,8 +1218,7 @@ int iswlower(wint_t c) {
     case u'ꝡ':     // LATIN SMALL VY (0xa761)
     case u'ꝣ':     // LATIN SMALL VISIGOTHIC Z (0xa763)
     case u'ꝥ':     // LATIN SMALL THORN W/ STROKE (0xa765)
-    case u'ꝧ':     // LATIN SMALL THORN W/ STROKE THROUGH DESCENDER
-                   // (0xa767)
+    case u'ꝧ':     // LATIN SMALL THORN W/ STROKE THROUGH DESCENDER (0xa767)
     case u'ꝩ':     // LATIN SMALL VEND (0xa769)
     case u'ꝫ':     // LATIN SMALL ET (0xa76b)
     case u'ꝭ':     // LATIN SMALL IS (0xa76d)

@@ -390,6 +390,13 @@ void ShowCentralDirHeader64(uint8_t *cd) {
   printf("0:");
   disassemblehex(ZIP_CDIR64_COMMENT(cd), ZIP_CDIR64_COMMENTSIZE(cd), stdout);
   printf("1:\n");
+  cd += ZIP_CDIR64_HDRSIZE(cd);
+  printf("\n/\t%s (%zu %s)\n", "zip64 end of central directory locator",
+         kZipCdir64LocatorSize, "bytes");
+  show(".ascii", format(b1, "%`'.*s", 4, cd), "magic");
+  show(".long", format(b1, "%d", READ32LE(cd + 4)), "startingdisk");
+  show(".quad", format(b1, "%lu", READ64LE(cd + 4 + 4)), "eocd64 offset");
+  show(".long", format(b1, "%d", READ32LE(cd + 4 + 4 + 8)), "totaldisks");
 }
 
 uint8_t *GetZipCdir32(const uint8_t *p, size_t n) {
@@ -406,12 +413,13 @@ uint8_t *GetZipCdir32(const uint8_t *p, size_t n) {
 }
 
 uint8_t *GetZipCdir64(const uint8_t *p, size_t n) {
-  size_t i;
-  if (n >= kZipCdir64HdrMinSize) {
-    i = n - kZipCdir64HdrMinSize;
+  uint64_t i, j;
+  if (n >= kZipCdir64LocatorSize) {
+    i = n - kZipCdir64LocatorSize;
     do {
-      if (READ32LE(p + i) == kZipCdir64HdrMagic && IsZipCdir64(p, n, i)) {
-        return (/*unconst*/ uint8_t *)(p + i);
+      if (READ32LE(p + i) == kZipCdir64LocatorMagic &&
+          (j = ZIP_LOCATE64_OFFSET(p + i)) + kZipCdir64HdrMinSize <= n) {
+        return p + j;
       }
     } while (i--);
   }
@@ -451,6 +459,7 @@ void DisassembleZip(const char *path, uint8_t *p, size_t n) {
     ShowCentralFileHeader(cf);
     pos = (cf - p) + ZIP_CFILE_HDRSIZE(cf);
   }
+  /* TODO(jart): This is absurd. */
   if (eocd32 && eocd64) {
     if (eocd32 < eocd64) {
       ShowCentralDirHeader32(eocd32);
@@ -458,8 +467,12 @@ void DisassembleZip(const char *path, uint8_t *p, size_t n) {
       ShowCentralDirHeader64(eocd64);
       AdvancePosition(p, &pos, eocd64 - p);
     } else {
+      /* pos = eocd64 - p + ZIP_CDIR_HDRSIZE(eocd64); */
+      /* AdvancePosition(p, &pos, n); */
       ShowCentralDirHeader64(eocd64);
       AdvancePosition(p, &pos, eocd64 - p);
+      /* pos = eocd32 - p + ZIP_CDIR_HDRSIZE(eocd32); */
+      /* AdvancePosition(p, &pos, n); */
       ShowCentralDirHeader32(eocd32);
       AdvancePosition(p, &pos, eocd32 - p);
     }
@@ -470,11 +483,7 @@ void DisassembleZip(const char *path, uint8_t *p, size_t n) {
     ShowCentralDirHeader64(eocd64);
     AdvancePosition(p, &pos, eocd64 - p);
   }
-  if (!eocd64 || eocd32 > eocd64) {
-    pos = eocd32 - p + ZIP_CDIR_HDRSIZE(eocd32);
-  } else {
-    pos = eocd64 - p + ZIP_CDIR_HDRSIZE(eocd64);
-  }
+  pos = n;
   AdvancePosition(p, &pos, n);
 }
 

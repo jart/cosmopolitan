@@ -21,11 +21,13 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/nt/accounting.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/memorystatusex.h"
 #include "libc/nt/systeminfo.h"
 #include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Returns amount of system ram, cores, etc.
@@ -34,6 +36,11 @@
  */
 int sysinfo(struct sysinfo *info) {
   int rc;
+  if (IsAsan()) {
+    if (info && !__asan_is_valid(info, sizeof(*info))) {
+      return efault();
+    }
+  }
   memset(info, 0, sizeof(*info));
   if (!IsWindows()) {
     rc = sys_sysinfo(info);

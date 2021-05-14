@@ -49,8 +49,10 @@
 #define kZipCdirHdrLinkableSize \
   ROUNDUP(kZipCfileHdrMinSize + PATH_MAX, kZipCdirAlign)
 
-#define kZipCdir64HdrMagic   0x06064b50 /* PK♣♠ "PK\6\6" */
-#define kZipCdir64HdrMinSize 56
+#define kZipCdir64HdrMagic     0x06064b50 /* PK♣♠ "PK\6\6" */
+#define kZipCdir64HdrMinSize   56
+#define kZipCdir64LocatorMagic 0x07064b50 /* PK♠• "PK\6\7" */
+#define kZipCdir64LocatorSize  20
 
 #define kZipCfileHdrMagic                 0x02014b50 /* PK☺☻ "PK\1\2" */
 #define kZipCfileHdrMinSize               46
@@ -112,7 +114,11 @@
 #define ZIP_CDIR64_OFFSET(P)        READ64LE((P) + 48)
 #define ZIP_CDIR64_COMMENTSIZE(P) \
   (ZIP_CDIR64_HDRSIZE(P) >= 56 ? ZIP_CDIR64_HDRSIZE(P) - 56 : 0)
-#define ZIP_CDIR64_COMMENT(P) ((P) + 56) /* recommend stopping at nul */
+#define ZIP_CDIR64_COMMENT(P)        ((P) + 56) /* recommend stopping at nul */
+#define ZIP_LOCATE64_MAGIC(P)        READ32LE(P)
+#define ZIP_LOCATE64_STARTINGDISK(P) READ32LE((P) + 4)
+#define ZIP_LOCATE64_OFFSET(P)       READ64LE((P) + 8)
+#define ZIP_LOCATE64_TOTALDISKS(P)   READ32LE((P) + 12)
 
 /* central directory file header */
 #define ZIP_CFILE_MAGIC(P)          READ32LE(P)
@@ -178,7 +184,7 @@
 #define ZIP_EXTRA_CONTENT(P)     ((P) + 4)
 #define ZIP_EXTRA_SIZE(P)        (ZIP_EXTRA_CONTENTSIZE(P) + kZipExtraHdrSize)
 
-uint8_t *GetZipCdir(const uint8_t *, size_t);
+void *GetZipCdir(const uint8_t *, size_t);
 bool IsZipCdir32(const uint8_t *, size_t, size_t);
 bool IsZipCdir64(const uint8_t *, size_t, size_t);
 int GetZipCfileMode(const uint8_t *);

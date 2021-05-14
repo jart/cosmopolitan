@@ -72,12 +72,13 @@ o/$(MODE)/tool/net/redbean.com.dbg:				\
 o/$(MODE)/tool/net/redbean.com:					\
 		o/$(MODE)/tool/net/redbean.com.dbg		\
 		tool/net/net.mk					\
+		tool/net/.help.txt				\
 		tool/net/.init.lua				\
 		tool/net/favicon.ico				\
 		tool/net/redbean.png
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.ape bs=64 count=11 conv=notrunc 2>/dev/null
-	@$(COMPILE) -AZIP -T$@ zip -qj $@ o/$(MODE)/tool/net/.ape tool/net/.init.lua tool/net/favicon.ico tool/net/redbean.png
+	@$(COMPILE) -AZIP -T$@ zip -qj $@ o/$(MODE)/tool/net/.ape tool/net/.help.txt tool/net/.init.lua tool/net/favicon.ico tool/net/redbean.png
 
 o/$(MODE)/tool/net/redbean-demo.com.dbg:			\
 		o/$(MODE)/tool/net/redbean.com.dbg
@@ -88,6 +89,7 @@ o/$(MODE)/tool/net/redbean-demo.com:				\
 		tool/net/net.mk					\
 		tool/net/favicon.ico				\
 		tool/net/redbean.png				\
+		tool/net/.help.txt				\
 		tool/net/demo/.init.lua				\
 		tool/net/demo/.reload.lua			\
 		tool/net/demo/404.html				\
@@ -108,7 +110,7 @@ o/$(MODE)/tool/net/redbean-demo.com:				\
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/net/.redbean-demo
 	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.redbean-demo/.ape bs=64 count=11 conv=notrunc 2>/dev/null
-	@$(COMPILE) -AZIP -T$@ zip -qj $@ o/$(MODE)/tool/net/.redbean-demo/.ape tool/net/demo/.init.lua tool/net/demo/.reload.lua tool/net/demo/hello.lua
+	@$(COMPILE) -AZIP -T$@ zip -qj $@ o/$(MODE)/tool/net/.redbean-demo/.ape tool/net/.help.txt tool/net/demo/.init.lua tool/net/demo/.reload.lua tool/net/demo/hello.lua
 	@echo "&lt;-- check out this lua server page" | $(COMPILE) -AZIP -T$@ zip -cqj $@ tool/net/demo/redbean.lua
 	@$(COMPILE) -AZIP -T$@ zip -qj $@ tool/net/demo/404.html tool/net/favicon.ico tool/net/redbean.png tool/net/demo/redbean-form.lua tool/net/demo/redbean-xhr.lua
 	@echo Uncompressed for HTTP Range requests | $(COMPILE) -AZIP -T$@ zip -cqj0 $@ tool/net/demo/seekable.txt

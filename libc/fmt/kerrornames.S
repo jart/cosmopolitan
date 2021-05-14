@@ -21,7 +21,7 @@
 	.macro	.e e
 	.long	\e - kErrorNames
 	.long	1f - kErrorNames
-	.section .rodata.str1.1
+	.rodata.str1.1
 1:	.string	"\e"
 	.previous
 	.endm
@@ -114,51 +114,5 @@ kErrorNames:
 	.e	ENOTRECOVERABLE
 	.e	ENONET
 	.e	ERESTART
-	.e	ECHRNG
-	.e	EL2NSYNC
-	.e	EL3HLT
-	.e	EL3RST
-	.e	ELNRNG
-	.e	EUNATCH
-	.e	ENOCSI
-	.e	EL2HLT
-	.e	EBADE
-	.e	EBADR
-	.e	EXFULL
-	.e	ENOANO
-	.e	EBADRQC
-	.e	EBADSLT
-	.e	ENOSTR
-	.e	ENODATA
-	.e	ENOSR
-	.e	ENOPKG
-	.e	ENOLINK
-	.e	EADV
-	.e	ESRMNT
-	.e	ECOMM
-	.e	EMULTIHOP
-	.e	EDOTDOT
-	.e	ENOTUNIQ
-	.e	EBADFD
-	.e	EREMCHG
-	.e	ELIBACC
-	.e	ELIBBAD
-	.e	ELIBSCN
-	.e	ELIBMAX
-	.e	ELIBEXEC
-	.e	ESTRPIPE
-	.e	EUCLEAN
-	.e	ENOTNAM
-	.e	ENAVAIL
-	.e	EISNAM
-	.e	EREMOTEIO
-	.e	ENOMEDIUM
-	.e	EMEDIUMTYPE
-	.e	ENOKEY
-	.e	EKEYEXPIRED
-	.e	EKEYREVOKED
-	.e	EKEYREJECTED
-	.e	ERFKILL
-	.e	EHWPOISON
 	.long	0
 	.endobj	kErrorNames,globl,hidden

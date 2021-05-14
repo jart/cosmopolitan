@@ -21,9 +21,9 @@
 /**
  * Locates End Of Central Directory record in ZIP file.
  *
- * The ZIP spec says this header can be anywhere in the last 64kb.
- * We search it backwards for the ZIP-64 "PK♠♠" magic number. If that's
- * not found, then we search again for the original "PK♣♠" magnum. The
+ * The ZIP spec says this header can be anywhere in the last 64kb. We
+ * search it backwards for the ZIP-64 "PK♠•" magic number. If that's not
+ * found, then we search again for the original "PK♣♠" magnum. The
  * caller needs to check the first four bytes of the returned value to
  * determine whether to use ZIP_CDIR_xxx() or ZIP_CDIR64_xxx() macros.
  *
@@ -31,23 +31,25 @@
  * @param n is byte size of file
  * @return pointer to EOCD64 or EOCD, or NULL if not found
  */
-uint8_t *GetZipCdir(const uint8_t *p, size_t n) {
+void *GetZipCdir(const uint8_t *p, size_t n) {
   size_t i, j;
-  if (n >= kZipCdirHdrMinSize) {
-    i = n - kZipCdirHdrMinSize;
-    do {
-      if (READ32LE(p + i) == kZipCdir64HdrMagic && IsZipCdir64(p, n, i)) {
-        return (/*unconst*/ uint8_t *)(p + i);
-      } else if (READ32LE(p + i) == kZipCdirHdrMagic && IsZipCdir32(p, n, i)) {
-        j = i;
-        do {
-          if (READ32LE(p + j) == kZipCdir64HdrMagic && IsZipCdir64(p, n, j)) {
-            return (/*unconst*/ uint8_t *)(p + j);
-          }
-        } while (j-- && i - j < 64 * 1024);
-        return (/*unconst*/ uint8_t *)(p + i);
-      }
-    } while (i--);
-  }
+  i = n - 4;
+  do {
+    if (READ32LE(p + i) == kZipCdir64LocatorMagic &&
+        i + kZipCdir64LocatorSize <= n &&
+        IsZipCdir64(p, n, ZIP_LOCATE64_OFFSET(p + i))) {
+      return (void *)(p + ZIP_LOCATE64_OFFSET(p + i));
+    } else if (READ32LE(p + i) == kZipCdirHdrMagic && IsZipCdir32(p, n, i)) {
+      j = i;
+      do {
+        if (READ32LE(p + j) == kZipCdir64LocatorMagic &&
+            j + kZipCdir64LocatorSize <= n &&
+            IsZipCdir64(p, n, ZIP_LOCATE64_OFFSET(p + j))) {
+          return (void *)(p + ZIP_LOCATE64_OFFSET(p + j));
+        }
+      } while (j-- && i - j < 64 * 1024);
+      return (void *)(p + i);
+    }
+  } while (i--);
   return NULL;
 }

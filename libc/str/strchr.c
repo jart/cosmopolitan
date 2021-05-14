@@ -17,14 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
 #include "libc/str/str.h"
 
-noasan static inline const char *strchr_x64(const char *p, uint64_t c) {
+static noasan inline const char *strchr_x64(const char *p, uint64_t c) {
   unsigned a, b;
   uint64_t w, x, y;
   for (c *= 0x0101010101010101;; p += 8) {
-    w = READ64LE(p);
+    w = (uint64_t)(255 & p[7]) << 070 | (uint64_t)(255 & p[6]) << 060 |
+        (uint64_t)(255 & p[5]) << 050 | (uint64_t)(255 & p[4]) << 040 |
+        (uint64_t)(255 & p[3]) << 030 | (uint64_t)(255 & p[2]) << 020 |
+        (uint64_t)(255 & p[1]) << 010 | (uint64_t)(255 & p[0]) << 000;
     if ((x = ~(w ^ c) & ((w ^ c) - 0x0101010101010101) & 0x8080808080808080) |
         (y = ~w & (w - 0x0101010101010101) & 0x8080808080808080)) {
       if (x) {
@@ -57,8 +59,8 @@ noasan static inline const char *strchr_x64(const char *p, uint64_t c) {
  */
 char *strchr(const char *s, int c) {
   char *r;
-  for (c &= 0xff; (uintptr_t)s & 7; ++s) {
-    if ((*s & 0xff) == c) return s;
+  for (c &= 255; (uintptr_t)s & 7; ++s) {
+    if ((*s & 255) == c) return s;
     if (!*s) return NULL;
   }
   r = strchr_x64(s, c);

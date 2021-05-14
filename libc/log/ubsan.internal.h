@@ -1,10 +1,14 @@
 #ifndef COSMOPOLITAN_LIBC_UBSAN_H_
 #define COSMOPOLITAN_LIBC_UBSAN_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § runtime » behavior enforcement                            ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
+
+#define kUbsanKindInt     0
+#define kUbsanKindFloat   1
+#define kUbsanKindUnknown 0xffff
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct UbsanSourceLocation {
   const char *file;
@@ -13,8 +17,8 @@ struct UbsanSourceLocation {
 };
 
 struct UbsanTypeDescriptor {
-  uint16_t kind;
-  uint16_t info;
+  uint16_t kind; /* int,float,... */
+  uint16_t info; /* if int bit 0 if signed, remaining bits are log2(sizeof*8) */
   char name[];
 };
 
@@ -91,7 +95,7 @@ struct UbsanOutOfBoundsData {
   struct UbsanTypeDescriptor *index_type;
 };
 
-struct UbsanShiftOutOfBoundsData {
+struct UbsanShiftOutOfBoundsInfo {
   struct UbsanSourceLocation location;
   struct UbsanTypeDescriptor *lhs_type;
   struct UbsanTypeDescriptor *rhs_type;

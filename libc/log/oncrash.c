@@ -133,7 +133,7 @@ relegated static void ShowGeneralRegisters(int fd, ucontext_t *ctx) {
       } else {
         memset(&st, 0, sizeof(st));
       }
-      dprintf(fd, " %s(%zu) %Lf", "ST", k, st);
+      dprintf(fd, " %s(%zu) %Lg", "ST", k, st);
       ++k;
       write(fd, "\r\n", 2);
     }

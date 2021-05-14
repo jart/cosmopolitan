@@ -18,7 +18,7 @@ void crc_fold_copy(struct DeflateState *const, unsigned char *,
                    const unsigned char *, long) hidden;
 unsigned crc_fold_512to32(struct DeflateState *const) hidden;
 void fill_window_sse(struct DeflateState *) hidden;
-void *zcalloc(void *, unsigned, unsigned) hidden;
+void *zcalloc(void *, uInt, uInt) hidden;
 void zcfree(void *, void *) hidden;
 
 COSMOPOLITAN_C_END_

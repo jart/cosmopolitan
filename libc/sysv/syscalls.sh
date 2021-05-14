@@ -112,7 +112,7 @@ scall	msgget			0x0e10e10e12103044	globl # won't polyfill for windows
 scall	msgsnd			0x0e20e20e22104045	globl # won't polyfill for windows
 scall	msgrcv			0x0e30e30e32105046	globl # won't polyfill for windows
 scall	msgctl			0x1bc1291ff2102047	globl # won't polyfill for windows
-scall	sys_fcntl		0x05c05c05c205c048	globl hidden
+scall	__sys_fcntl		0x05c05c05c205c048	globl hidden
 scall	sys_flock		0x0830830832083049	globl hidden
 scall	sys_fsync		0x05f05f05f205f04a	globl hidden
 scall	sys_fdatasync		0x0f105f22620bb04b	globl hidden # fsync() on openbsd

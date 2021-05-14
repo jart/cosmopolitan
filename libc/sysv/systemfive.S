@@ -108,13 +108,13 @@ __systemfive:
 systemfive_linux:
 	and	$0xfff,%eax
 	cmp	$0xfff,%eax
-	je	systemfive_enosys
+	je	systemfive_enosys	# never taken branches cost nothing
 	mov	%rcx,%r10		# syscall instruction clobbers %rcx
 	push	%rbp			# linux never reads args from stack
 	mov	%rsp,%rbp		# having frame will help backtraces
 	syscall				# this is known as a context switch
 	pop	%rbp			# next we check to see if it failed
-	cmp	$-4095,%rax		# system five nexgen32e abi § A.2.1
+	cmp	$-4095,%rax		# system five nexgen32e abi § a.2.1
 	jae	systemfive_error	# encodes errno as neg return value
 	ret
 	.endfn	systemfive_linux,globl,hidden
@@ -374,7 +374,7 @@ _init_systemfive_stack:					# determinism ftw!
 	mov	%rsp,%rbp
 //	𝑠𝑙𝑖𝑑𝑒
 _init_systemfive_syscall:
-/*	mov	__NR_msyscall,%eax			# syscall origin protect
+	mov	__NR_msyscall,%eax			# syscall origin protect
 	cmp	$0xfff,%ax				# openbsd is pretty cool
 	jae	_init_systemfive_done
 	push	%rdi
@@ -385,7 +385,7 @@ _init_systemfive_syscall:
 	mov	$__privileged_size,%esi
 	syscall
 	pop	%rsi
-	pop	%rdi*/
+	pop	%rdi
 //	𝑠𝑙𝑖𝑑𝑒
 #endif /* TINY */
 _init_systemfive_done:
