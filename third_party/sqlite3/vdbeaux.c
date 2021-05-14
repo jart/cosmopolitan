@@ -12,8 +12,8 @@
 ** This file contains code used for creating, destroying, and populating
 ** a VDBE (or an "sqlite3_stmt" as it is known to the outside world.)
 */
-#include "third_party/sqlite3/sqliteInt.h"
-#include "third_party/sqlite3/vdbeInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
+#include "third_party/sqlite3/vdbeInt.inc"
 /* clang-format off */
 
 /* Forward references */

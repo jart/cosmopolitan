@@ -17,8 +17,8 @@
 ** that actually generate the bulk of the WHERE loop code.  The original where.c
 ** file retains the code that does query planning and analysis.
 */
-#include "third_party/sqlite3/sqliteInt.h"
-#include "third_party/sqlite3/whereInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
+#include "third_party/sqlite3/whereInt.inc"
 /* clang-format off */
 
 #ifndef SQLITE_OMIT_EXPLAIN

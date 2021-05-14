@@ -213,7 +213,7 @@
 **      4     Number of leaf pointers on this page
 **      *     zero or more pages numbers of leaves
 */
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 
 /* clang-format off */
 

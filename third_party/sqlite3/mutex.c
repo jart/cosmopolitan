@@ -13,7 +13,7 @@
 **
 ** This file contains code that is common across all mutex implementations.
 */
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 /* clang-format off */
 
 #if defined(SQLITE_DEBUG) && !defined(SQLITE_MUTEX_OMIT)

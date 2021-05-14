@@ -12,7 +12,7 @@
 ** This file contains code used to help implement virtual tables.
 */
 #ifndef SQLITE_OMIT_VIRTUALTABLE
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 /* clang-format off */
 
 /*

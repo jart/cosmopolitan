@@ -14,7 +14,7 @@
 */
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 
 #if !defined(SQLITE_OMIT_WINDOWFUNC)
 /*

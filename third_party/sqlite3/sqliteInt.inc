@@ -57,12 +57,12 @@
 ** compiler warnings due to subsequent content in this file and other files
 ** that are included by this file.
 */
-#include "third_party/sqlite3/msvc.h"
+#include "third_party/sqlite3/msvc.inc"
 
 /*
 ** Special setup for VxWorks
 */
-#include "third_party/sqlite3/vxworks.h"
+#include "third_party/sqlite3/vxworks.inc"
 
 /*
 ** These #defines should enable >2GB file support on POSIX if the
@@ -151,26 +151,6 @@
 #endif
 
 /*
-** For MinGW, check to see if we can include the header file containing its
-** version information, among other things.  Normally, this internal MinGW
-** header file would [only] be included automatically by other MinGW header
-** files; however, the contained version information is now required by this
-** header file to work around binary compatibility issues (see below) and
-** this is the only known way to reliably obtain it.  This entire #if block
-** would be completely unnecessary if there was any other way of detecting
-** MinGW via their preprocessor (e.g. if they customized their GCC to define
-** some MinGW-specific macros).  When compiling for MinGW, either the
-** _HAVE_MINGW_H or _HAVE__MINGW_H (note the extra underscore) macro must be
-** defined; otherwise, detection of conditions specific to MinGW will be
-** disabled.
-*/
-#if defined(_HAVE_MINGW_H)
-#include "third_party/sqlite3/mingw.h"
-#elif defined(_HAVE__MINGW_H)
-#include "third_party/sqlite3/_mingw.h"
-#endif
-
-/*
 ** For MinGW version 4.x (and higher), check to see if the _USE_32BIT_TIME_T
 ** define is required to maintain binary compatibility with the MSVC runtime
 ** library in use (e.g. for Windows XP).
@@ -188,16 +168,7 @@
 */
 #include "third_party/sqlite3/sqlite3.h"
 
-/*
-** Include the configuration header output by 'configure' if we're using the
-** autoconf-based build
-*/
-#if defined(_HAVE_SQLITE_CONFIG_H) && !defined(SQLITECONFIG_H)
-#include "third_party/sqlite3/config.h"
-#define SQLITECONFIG_H 1
-#endif
-
-#include "third_party/sqlite3/sqliteLimit.h"
+#include "third_party/sqlite3/sqliteLimit.inc"
 
 /* Disable nuisance warnings on Borland compilers */
 #if defined(__BORLANDC__)
@@ -588,8 +559,8 @@
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "third_party/sqlite3/hash.h"
-#include "third_party/sqlite3/parse.h"
+#include "third_party/sqlite3/hash.inc"
+#include "third_party/sqlite3/parse.inc"
 
 /*
 ** Use a macro to replace memcpy() if compiled with SQLITE_INLINE_MEMCPY.
@@ -1227,12 +1198,12 @@ typedef u32 Pgno;
 ** "BusyHandler" typedefs. vdbe.h also requires a few of the opaque
 ** pointer types (i.e. FuncDef) defined above.
 */
-#include "third_party/sqlite3/btree.h"
-#include "third_party/sqlite3/mutex.h"
-#include "third_party/sqlite3/os.h"
-#include "third_party/sqlite3/pager.h"
-#include "third_party/sqlite3/pcache.h"
-#include "third_party/sqlite3/vdbe.h"
+#include "third_party/sqlite3/btree.inc"
+#include "third_party/sqlite3/mutex.inc"
+#include "third_party/sqlite3/os.inc"
+#include "third_party/sqlite3/pager.inc"
+#include "third_party/sqlite3/pcache.inc"
+#include "third_party/sqlite3/vdbe.inc"
 
 /* The SQLITE_EXTRA_DURABLE compile-time option used to set the default
 ** synchronous setting to EXTRA.  It is no longer supported.

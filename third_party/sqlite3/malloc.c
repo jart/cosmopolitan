@@ -14,7 +14,7 @@
 */
 /* clang-format off */
 
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 
 /*
 ** Attempt to release up to n bytes of non-essential memory currently

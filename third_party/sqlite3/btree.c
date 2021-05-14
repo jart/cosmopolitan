@@ -13,7 +13,7 @@
 ** See the header comment on "btreeInt.h" for additional information.
 ** Including a description of file format and an overview of operation.
 */
-#include "third_party/sqlite3/btreeInt.h"
+#include "third_party/sqlite3/btreeInt.inc"
 
 /* clang-format off */
 

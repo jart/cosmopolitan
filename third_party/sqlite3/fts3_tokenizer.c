@@ -24,7 +24,7 @@
 **     * The FTS3 module is being built into the core of
 **       SQLite (in which case SQLITE_ENABLE_FTS3 is defined).
 */
-#include "third_party/sqlite3/fts3Int.h"
+#include "third_party/sqlite3/fts3Int.inc"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
 
 #include "libc/assert.h"
@@ -226,12 +226,6 @@ int sqlite3Fts3InitTokenizer(
 
 
 #ifdef SQLITE_TEST
-
-#if defined(INCLUDE_SQLITE_TCL_H)
-#include "third_party/sqlite3/sqlite_tcl.h"
-#else
-#include "third_party/sqlite3/tcl.h"
-#endif
 #include "libc/str/str.h"
 
 /*

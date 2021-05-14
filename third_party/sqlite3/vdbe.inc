@@ -167,7 +167,7 @@ typedef struct VdbeOpList VdbeOpList;
 ** The makefile scans the vdbe.c source file and creates the "opcodes.h"
 ** header file that defines a number for each opcode used by the VDBE.
 */
-#include "third_party/sqlite3/opcodes.h"
+#include "third_party/sqlite3/opcodes.inc"
 
 /*
 ** Additional non-public SQLITE_PREPARE_* flags

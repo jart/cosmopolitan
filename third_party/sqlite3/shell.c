@@ -95,7 +95,7 @@ typedef sqlite3_int64 i64;
 typedef sqlite3_uint64 u64;
 typedef unsigned char u8;
 #if SQLITE_USER_AUTHENTICATION
-#include "third_party/sqlite3/sqlite3userauth.h"
+#include "third_party/sqlite3/sqlite3userauth.inc"
 #endif
 #include "libc/str/str.h"
 
@@ -139,7 +139,6 @@ typedef unsigned char u8;
 
 #elif HAVE_LINENOISE
 
-#include "third_party/sqlite3/linenoise.h"
 #define shell_add_history(X)    linenoiseHistoryAdd(X)
 #define shell_read_history(X)   linenoiseHistoryLoad(X)
 #define shell_write_history(X)  linenoiseHistorySave(X)
@@ -1058,13 +1057,9 @@ static void shellAddSchemaName(
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-#include "third_party/sqlite3/windows.h"
-
 /*
 ** We need several support functions from the SQLite core.
 */
-
-/* #include "third_party/sqlite3/sqlite3.h" */
 
 /*
 ** We need several things from the ANSI and MSVCRT headers.
@@ -1208,7 +1203,7 @@ extern INT closedir(LPDIR dirp);
 */
 
 #if defined(_WIN32) && defined(_MSC_VER)
-/* #include "third_party/sqlite3/test_windirent.h" */
+/* #include "third_party/sqlite3/test_windirent.inc" */
 
 /*
 ** Implementation of the POSIX getenv() function using the Win32 API.

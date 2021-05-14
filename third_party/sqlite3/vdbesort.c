@@ -135,8 +135,8 @@
 ** thread to merge the output of each of the others to a single PMA for
 ** the main thread to read from.
 */
-#include "third_party/sqlite3/sqliteInt.h"
-#include "third_party/sqlite3/vdbeInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
+#include "third_party/sqlite3/vdbeInt.inc"
 /* clang-format off */
 
 /* 

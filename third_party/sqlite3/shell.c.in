@@ -74,7 +74,7 @@ typedef sqlite3_int64 i64;
 typedef sqlite3_uint64 u64;
 typedef unsigned char u8;
 #if SQLITE_USER_AUTHENTICATION
-# include "sqlite3userauth.h"
+# include "sqlite3userauth.inc"
 #endif
 #include <ctype.h>
 #include <stdarg.h>
@@ -120,7 +120,7 @@ typedef unsigned char u8;
 
 #elif HAVE_LINENOISE
 
-# include "linenoise.h"
+# include "linenoise.inc"
 # define shell_add_history(X) linenoiseHistoryAdd(X)
 # define shell_read_history(X) linenoiseHistoryLoad(X)
 # define shell_write_history(X) linenoiseHistorySave(X)

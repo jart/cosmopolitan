@@ -16,7 +16,7 @@
 ** parser for analysis.
 */
 #include "libc/mem/mem.h"
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 /* clang-format off */
 
 /* Character classes for tokenizing
@@ -145,7 +145,7 @@ const unsigned char ebcdicToAscii[] = {
 ** named keywordhash.h and then included into this source file by
 ** the #include below.
 */
-#include "third_party/sqlite3/keywordhash.h"
+#include "third_party/sqlite3/keywordhash.inc"
 
 
 /*

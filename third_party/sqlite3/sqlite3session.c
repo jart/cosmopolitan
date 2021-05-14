@@ -2,11 +2,11 @@
 #if defined(SQLITE_ENABLE_SESSION) && defined(SQLITE_ENABLE_PREUPDATE_HOOK)
 #include "libc/assert.h"
 #include "libc/str/str.h"
-#include "third_party/sqlite3/sqlite3session.h"
+#include "third_party/sqlite3/sqlite3session.inc"
 
 #ifndef SQLITE_AMALGAMATION
-#include "third_party/sqlite3/sqliteInt.h"
-#include "third_party/sqlite3/vdbeInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
+#include "third_party/sqlite3/vdbeInt.inc"
 #endif
 
 typedef struct SessionTable SessionTable;

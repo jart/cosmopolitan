@@ -15,7 +15,7 @@
 ** syntax is relatively simple, the whole tokenizer/parser system is
 ** hand-coded.
 */
-#include "third_party/sqlite3/fts3Int.h"
+#include "third_party/sqlite3/fts3Int.inc"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
 /* clang-format off */
 

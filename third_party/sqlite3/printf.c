@@ -9,7 +9,7 @@
 ** library, though the implementation here has enhancements to support
 ** SQLite.
 */
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 /* clang-format off */
 
 /*

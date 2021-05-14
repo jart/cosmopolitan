@@ -43,7 +43,7 @@
 **   *  Definitions of sqlite3_vfs objects for all locking methods
 **      plus implementations of sqlite3_os_init() and sqlite3_os_end().
 */
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 #if SQLITE_OS_UNIX /* This file is used on unix only */
                    /* clang-format off */
 
@@ -102,15 +102,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
-#if !defined(SQLITE_OMIT_WAL) || SQLITE_MAX_MMAP_SIZE > 0
 #include "libc/mem/mem.h"
-#endif
-
-#if SQLITE_ENABLE_LOCKING_STYLE
-# include <sys/ioctl.h>
-# include <sys/file.h>
-# include <sys/param.h>
-#endif /* SQLITE_ENABLE_LOCKING_STYLE */
 
 /*
 ** Try to determine if gethostuuid() is available based on standard
@@ -305,7 +297,7 @@ static pid_t randomnessPid = 0;
 /*
 ** Include code that is common to all os_*.c files
 */
-#include "third_party/sqlite3/os_common.h"
+#include "third_party/sqlite3/os_common.inc"
 
 /*
 ** Define various macros that are missing from some systems.

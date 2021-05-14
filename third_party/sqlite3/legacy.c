@@ -16,7 +16,7 @@
 */
 /* clang-format off */
 
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 
 /*
 ** Execute SQL code.  Return one of the SQLITE_ success/failure

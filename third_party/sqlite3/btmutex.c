@@ -15,7 +15,7 @@
 ** big and we want to break it down some.  This packaged seemed like
 ** a good breakout.
 */
-#include "third_party/sqlite3/btreeInt.h"
+#include "third_party/sqlite3/btreeInt.inc"
 
 /* clang-format off */
 #ifndef SQLITE_OMIT_SHARED_CACHE

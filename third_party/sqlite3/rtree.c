@@ -66,7 +66,7 @@ SQLITE_EXTENSION_INIT1
 int sqlite3GetToken(const unsigned char*,int*); /* In the SQLite core */
 
 #ifndef SQLITE_AMALGAMATION
-#include "third_party/sqlite3/sqlite3rtree.h"
+#include "third_party/sqlite3/sqlite3rtree.inc"
 typedef sqlite3_int64 i64;
 typedef sqlite3_uint64 u64;
 typedef unsigned char u8;
@@ -4367,7 +4367,7 @@ static void rtreecheck(
 
 /* Conditionally include the geopoly code */
 #ifdef SQLITE_ENABLE_GEOPOLY
-#include "third_party/sqlite3/geopoly.c"
+#include "third_party/sqlite3/geopoly.inc"
 #endif
 
 /*

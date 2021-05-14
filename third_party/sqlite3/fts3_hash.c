@@ -24,13 +24,13 @@
 **     * The FTS3 module is being built into the core of
 **       SQLite (in which case SQLITE_ENABLE_FTS3 is defined).
 */
-#include "third_party/sqlite3/fts3Int.h"
+#include "third_party/sqlite3/fts3Int.inc"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
 
 #include "libc/assert.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "third_party/sqlite3/fts3_hash.h"
+#include "third_party/sqlite3/fts3_hash.inc"
 
 /*
 ** Malloc and Free functions

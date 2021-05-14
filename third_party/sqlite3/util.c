@@ -17,7 +17,7 @@
 */
 /* clang-format off */
 
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 #ifndef SQLITE_OMIT_FLOATING_POINT
 #include "libc/math.h"
 #endif

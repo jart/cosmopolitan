@@ -12,7 +12,7 @@
 */
 /* clang-format off */
 
-#include "third_party/sqlite3/fts3Int.h"
+#include "third_party/sqlite3/fts3Int.inc"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
 
 #include "libc/assert.h"

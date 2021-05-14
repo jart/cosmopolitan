@@ -34,8 +34,8 @@
 **
 */
 #include "libc/assert.h"
-#include "third_party/sqlite3/sqliteInt.h"
-#include "third_party/sqlite3/vdbeInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
+#include "third_party/sqlite3/vdbeInt.inc"
 /* clang-format off */
 
 #if !defined(SQLITE_AMALGAMATION) && SQLITE_BYTEORDER==0

@@ -14,8 +14,8 @@
 ** Most of the code in this file may be omitted by defining the
 ** SQLITE_OMIT_VACUUM macro.
 */
-#include "third_party/sqlite3/sqliteInt.h"
-#include "third_party/sqlite3/vdbeInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
+#include "third_party/sqlite3/vdbeInt.inc"
 /* clang-format off */
 
 #if !defined(SQLITE_OMIT_VACUUM) && !defined(SQLITE_OMIT_ATTACH)

@@ -18,8 +18,8 @@
 ** in this file for details.  If in doubt, do not deviate from existing
 ** commenting and indentation practices when changing or adding code.
 */
-#include "third_party/sqlite3/sqliteInt.h"
-#include "third_party/sqlite3/vdbeInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
+#include "third_party/sqlite3/vdbeInt.inc"
 /* clang-format off */
 
 /*
@@ -599,7 +599,7 @@ void sqlite3VdbeRegisterDump(Vdbe *v){
 ** hwtime.h contains inline assembler code for implementing 
 ** high-performance timing routines.
 */
-#include "third_party/sqlite3/hwtime.h"
+#include "third_party/sqlite3/hwtime.inc"
 
 #endif
 

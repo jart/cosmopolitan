@@ -11,7 +11,7 @@
 *************************************************************************
 ** This file contains code used to implement the PRAGMA command.
 */
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 /* clang-format off */
 
 #if !defined(SQLITE_ENABLE_LOCKING_STYLE)
@@ -29,7 +29,7 @@
 ** lexicographical order to facility a binary search of the pragma name.
 ** Do not edit pragma.h directly.  Edit and rerun the script in at 
 ** ../tool/mkpragmatab.tcl. */
-#include "third_party/sqlite3/pragma.h"
+#include "third_party/sqlite3/pragma.inc"
 
 /*
 ** Interpret the given string as a safety level.  Return 0 for OFF,

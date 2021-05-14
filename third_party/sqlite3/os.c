@@ -13,7 +13,7 @@
 ** This file contains OS interface code that is common to all
 ** architectures.
 */
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 /* clang-format off */
 
 /*

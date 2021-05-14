@@ -42,8 +42,8 @@
 SQLITE_EXTENSION_INIT3
 #endif
 
-#include "third_party/sqlite3/fts3_hash.h"
-#include "third_party/sqlite3/fts3_tokenizer.h"
+#include "third_party/sqlite3/fts3_hash.inc"
+#include "third_party/sqlite3/fts3_tokenizer.inc"
 #include "third_party/sqlite3/sqlite3.h"
 
 /*

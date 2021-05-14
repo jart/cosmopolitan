@@ -20,7 +20,7 @@
 ** Additional information is available on the "dbstat.html" page of the
 ** official SQLite documentation.
 */
-#include "third_party/sqlite3/sqliteInt.h" /* Requires access to internal data structures */
+#include "third_party/sqlite3/sqliteInt.inc" /* Requires access to internal data inc */
 
 /* clang-format off */
 

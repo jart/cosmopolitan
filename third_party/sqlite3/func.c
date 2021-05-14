@@ -15,11 +15,11 @@
 */
 #include "libc/assert.h"
 #include "libc/mem/mem.h"
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 #ifndef SQLITE_OMIT_FLOATING_POINT
 #include "libc/math.h"
 #endif
-#include "third_party/sqlite3/vdbeInt.h"
+#include "third_party/sqlite3/vdbeInt.inc"
 /* clang-format off */
 
 /*

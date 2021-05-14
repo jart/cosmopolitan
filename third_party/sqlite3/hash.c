@@ -13,7 +13,7 @@
 ** used in SQLite.
 */
 #include "libc/assert.h"
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 /* clang-format off */
 
 /* Turn bulk memory into a hash table object by initializing the

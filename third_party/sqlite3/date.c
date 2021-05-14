@@ -48,7 +48,7 @@
 #include "libc/mem/mem.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 
 /* clang-format off */
 

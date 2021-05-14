@@ -80,7 +80,7 @@
 ** show that method (3) with N==100 provides about a 5% performance boost for
 ** common workloads.
 */
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 /* clang-format off */
 
 typedef struct PCache1 PCache1;

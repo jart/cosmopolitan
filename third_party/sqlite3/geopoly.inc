@@ -16,11 +16,7 @@
 ** This file is #include-ed onto the end of "rtree.c" so that it has
 ** access to all of the R-Tree internals.
 */
-#include "libc/fmt/conv.h"
-#include "libc/mem/mem.h"
 #include "third_party/gdtoa/gdtoa.h"
-#include "third_party/sqlite3/rtree.h"
-#include "third_party/sqlite3/sqlite3.h"
 /* clang-format off */
 
 /* Enable -DGEOPOLY_ENABLE_DEBUG for debugging facilities */

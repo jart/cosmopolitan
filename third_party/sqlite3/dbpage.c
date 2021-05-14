@@ -30,7 +30,7 @@
 ** value must be a BLOB which is the correct page size, otherwise the
 ** update fails.  Rows may not be deleted or inserted.
 */
-#include "third_party/sqlite3/sqliteInt.h" /* Requires access to internal data structures */
+#include "third_party/sqlite3/sqliteInt.inc" /* Requires access to internal data inc */
 
 /* clang-format off */
 

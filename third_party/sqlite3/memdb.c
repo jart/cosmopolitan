@@ -16,7 +16,7 @@
 ** This file also implements interface sqlite3_serialize() and
 ** sqlite3_deserialize().
 */
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 #ifdef SQLITE_ENABLE_DESERIALIZE
 /* clang-format off */
 

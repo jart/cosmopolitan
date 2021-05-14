@@ -11,7 +11,7 @@
 ** This file contains code used by the compiler to add foreign key
 ** support to compiled SQL statements.
 */
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 
 /* clang-format off */
 

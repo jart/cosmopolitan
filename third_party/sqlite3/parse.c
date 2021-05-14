@@ -23,7 +23,7 @@
 #line 58 "parse.y"
 /* clang-format off */
 
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 
 /*
 ** Disable all error recovery processing in the parser push-down

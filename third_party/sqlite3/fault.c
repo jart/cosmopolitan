@@ -23,7 +23,7 @@
 ** hash table will continue to function normally.  So a malloc failure
 ** during a hash table resize is a benign fault.
 */
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 
 /* clang-format off */
 

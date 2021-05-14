@@ -14,17 +14,17 @@
 ** other files are for internal use by SQLite and should not be
 ** accessed by users of the library.
 */
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 /* clang-format off */
 
 #ifdef SQLITE_ENABLE_FTS3
-#include "third_party/sqlite3/fts3.h"
+#include "third_party/sqlite3/fts3.inc"
 #endif
 #ifdef SQLITE_ENABLE_RTREE
-#include "third_party/sqlite3/rtree.h"
+#include "third_party/sqlite3/rtree.inc"
 #endif
 #if defined(SQLITE_ENABLE_ICU) || defined(SQLITE_ENABLE_ICU_COLLATIONS)
-#include "third_party/sqlite3/sqliteicu.h"
+#include "third_party/sqlite3/sqliteicu.inc"
 #endif
 
 /*

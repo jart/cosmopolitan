@@ -15,8 +15,8 @@
 ** only within the VDBE.  Interface routines refer to a Mem using the
 ** name sqlite_value
 */
-#include "third_party/sqlite3/sqliteInt.h"
-#include "third_party/sqlite3/vdbeInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
+#include "third_party/sqlite3/vdbeInt.inc"
 /* clang-format off */
 
 /* True if X is a power of two.  0 is considered a power of two here.

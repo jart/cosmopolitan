@@ -14,8 +14,8 @@
 */
 /* clang-format off */
 
-#include "third_party/sqlite3/sqliteInt.h"
-#include "third_party/sqlite3/vdbeInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
+#include "third_party/sqlite3/vdbeInt.inc"
 
 #ifndef SQLITE_OMIT_INCRBLOB
 

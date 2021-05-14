@@ -12,19 +12,14 @@
 **
 ** This file contains code that is specific to Windows.
 */
-#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.inc"
 #if SQLITE_OS_WIN /* This file is used for Windows only */
 /* clang-format off */
 
 /*
 ** Include code that is common to all os_*.c files
 */
-#include "third_party/sqlite3/os_common.h"
-
-/*
-** Include the header file for the Windows VFS.
-*/
-#include "third_party/sqlite3/os_win.h"
+#include "third_party/sqlite3/os_common.inc"
 
 /*
 ** Compiling and using WAL mode requires several APIs that are only

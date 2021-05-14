@@ -1,14 +1,7 @@
+#ifndef SQLITE3_H
+#define SQLITE3_H
+/* clang-format off */
 /*
-** 2001-09-15
-**
-** The author disclaims copyright to this source code.  In place of
-** a legal notice, here is a blessing:
-**
-**    May you do good and not evil.
-**    May you find forgiveness for yourself and forgive others.
-**    May you share freely, never taking more than you give.
-**
-*************************************************************************
 ** This header file defines the interface that the SQLite library
 ** presents to client programs.  If a C-function, structure, datatype,
 ** or constant definition does not appear in this file, then it is
@@ -30,10 +23,6 @@
 ** the version number) and changes its name to "sqlite3.h" as
 ** part of the build process.
 */
-#ifndef SQLITE3_H
-#define SQLITE3_H
-/* Needed for the definition of va_list */
-/* clang-format off */
 
 /*
 ** Make sure we can call this stuff from C++.
@@ -252,35 +241,11 @@ typedef struct sqlite3 sqlite3;
 /*
 ** CAPI3REF: 64-Bit Integer Types
 ** KEYWORDS: sqlite_int64 sqlite_uint64
-**
-** Because there is no cross-platform way to specify 64-bit integer types
-** SQLite includes typedefs for 64-bit signed and unsigned integers.
-**
-** The sqlite3_int64 and sqlite3_uint64 are the preferred type definitions.
-** The sqlite_int64 and sqlite_uint64 types are supported for backwards
-** compatibility only.
-**
-** ^The sqlite3_int64 and sqlite_int64 types can store integer values
-** between -9223372036854775808 and +9223372036854775807 inclusive.  ^The
-** sqlite3_uint64 and sqlite_uint64 types can store integer values
-** between 0 and +18446744073709551615 inclusive.
 */
-#ifdef SQLITE_INT64_TYPE
-  typedef SQLITE_INT64_TYPE sqlite_int64;
-# ifdef SQLITE_UINT64_TYPE
-    typedef SQLITE_UINT64_TYPE sqlite_uint64;
-# else
-    typedef unsigned SQLITE_INT64_TYPE sqlite_uint64;
-# endif
-#elif defined(_MSC_VER) || defined(__BORLANDC__)
-  typedef __int64 sqlite_int64;
-  typedef unsigned __int64 sqlite_uint64;
-#else
-  typedef long long int sqlite_int64;
-  typedef unsigned long long int sqlite_uint64;
-#endif
-typedef sqlite_int64 sqlite3_int64;
-typedef sqlite_uint64 sqlite3_uint64;
+#define sqlite_int64 int64_t
+#define sqlite_uint64 uint64_t
+#define sqlite3_int64 int64_t
+#define sqlite3_uint64 uint64_t
 
 /*
 ** If compiling for a processor that lacks floating point support,
