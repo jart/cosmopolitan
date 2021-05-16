@@ -62,7 +62,7 @@ void *memccpy(void *dst, const void *src, int c, size_t n) {
   d = dst;
   s = src;
   c &= 255;
-  v = 0x0101010101010101 * c;
+  v = 0x0101010101010101ul * c;
   for (; (uintptr_t)(s + i) & 7; ++i) {
     if (i == n) return NULL;
     if ((d[i] = s[i]) == c) return d + i + 1;

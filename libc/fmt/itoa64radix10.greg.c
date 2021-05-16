@@ -27,14 +27,10 @@
  * @return bytes written w/o nul
  */
 noinline size_t uint64toarray_radix10(uint64_t i, char a[hasatleast 21]) {
-  size_t j;
-  j = 0;
+  size_t j = 0;
   do {
-    struct {
-      uint64_t q, r;
-    } x = {i / 10, i % 10};
-    a[j++] = x.r + '0';
-    i = x.q;
+    a[j++] = i % 10 + '0';
+    i = i / 10;
   } while (i > 0);
   a[j] = '\0';
   reverse(a, j);
@@ -49,5 +45,5 @@ noinline size_t uint64toarray_radix10(uint64_t i, char a[hasatleast 21]) {
 size_t int64toarray_radix10(int64_t i, char a[hasatleast 21]) {
   if (i >= 0) return uint64toarray_radix10(i, a);
   *a++ = '-';
-  return 1 + uint64toarray_radix10(-i, a);
+  return 1 + uint64toarray_radix10(-(uint64_t)i, a);
 }

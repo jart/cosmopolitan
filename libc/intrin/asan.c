@@ -169,7 +169,7 @@ static void *__asan_memset(void *p, int c, size_t n) {
   size_t i;
   uint64_t x;
   b = p;
-  x = 0x0101010101010101 * (c & 255);
+  x = 0x0101010101010101ul * (c & 255);
   switch (n) {
     case 0:
       return p;

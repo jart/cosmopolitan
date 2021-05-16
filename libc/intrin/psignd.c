@@ -29,7 +29,7 @@ void(psignd)(int32_t a[4], const int32_t b[4], const int32_t c[4]) {
     if (!c[i]) {
       a[i] = 0;
     } else if (c[i] < 0) {
-      a[i] = -b[i];
+      a[i] = -(uint32_t)b[i];
     } else {
       a[i] = b[i];
     }

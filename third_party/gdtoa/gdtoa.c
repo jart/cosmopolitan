@@ -241,7 +241,23 @@ gdtoa(CONST FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 		dval(&d) *= 1 << j1;
 	word0(&d) += j << Exp_shift - 2 & Exp_mask;
 #else
-	word0(&d) += (be + bbits - 1) << Exp_shift;
+        // TODO: word0(&d) += (be + bbits - 1) << Exp_shift;
+        // error: third_party/gdtoa/gdtoa.c:244: left shift of negative value -6 'int' 20 'int'
+        // 4161d8: __die at libc/log/die.c:33
+        // 463165: __ubsan_abort at libc/intrin/ubsan.c:270
+        // 4632d6: __ubsan_handle_shift_out_of_bounds at libc/intrin/ubsan.c:299
+        // 421d42: gdtoa at third_party/gdtoa/gdtoa.c:244
+        // 420449: g_dfmt_p at third_party/gdtoa/g_dfmt_p.c:105
+        // 413947: ConvertMatrixToStringTable at tool/viz/lib/formatmatrix-double.c:40
+        // 413a5f: FormatMatrixDouble at tool/viz/lib/formatmatrix-double.c:55
+        // 413b13: StringifyMatrixDouble at tool/viz/lib/formatmatrix-double.c:65
+        // 464923: GetChromaticAdaptationMatrix_testD65ToD50_soWeCanCieLab at test/dsp/core/illumination_test.c:39
+        // 4650c2: testlib_runtestcases at libc/testlib/testrunner.c:94
+        // 464676: testlib_runalltests at libc/testlib/runner.c:37
+        // 46455e: main at libc/testlib/testmain.c:84
+        // 401d30: cosmo at libc/runtime/cosmo.S:65
+        // 401173: _start at libc/crt/crt.S:67
+	word0(&d) += (unsigned)(be + bbits - 1) << Exp_shift;
 #endif
 	if (k >= 0 && k <= Ten_pmax) {
 		if (dval(&d) < tens[k])

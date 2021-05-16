@@ -170,6 +170,7 @@
            "frownedupon"
            "wontreturn"
            "noasan"
+           "noubsan"
            "initarray"
            "mayalias"
            "noinstrument"

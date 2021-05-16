@@ -83,6 +83,7 @@
 #include "libc/intrin/psrlq.h"
 #include "libc/intrin/psrlw.h"
 #include "libc/intrin/psubb.h"
+#include "libc/intrin/psubd.h"
 #include "libc/intrin/psubq.h"
 #include "libc/intrin/psubsb.h"
 #include "libc/intrin/psubsw.h"
@@ -581,7 +582,7 @@ TEST(punpckhbw, fuzz) {
 
 TEST(psubq, fuzz) {
   int i, j;
-  int64_t x[2], y[2], a[2], b[2];
+  uint64_t x[2], y[2], a[2], b[2];
   for (i = 0; i < 100; ++i) {
     RngSet(x, sizeof(x));
     RngSet(y, sizeof(y));
@@ -660,7 +661,7 @@ TEST(psradv, test) {
   for (i = 0; i < 100; ++i) {
     RngSet(x, sizeof(x));
     for (j = 0; j < 2; ++j) {
-      y[j] = Rando() % 64;
+      y[j] = Rando() % 70;
     }
     psradv(a, x, y);
     (psradv)(b, x, y);
@@ -843,7 +844,7 @@ TEST(pmullw, fuzz) {
 
 TEST(pmulld, fuzz) {
   int i, j;
-  int32_t x[4], y[4], a[4], b[4];
+  uint32_t x[4], y[4], a[4], b[4];
   for (i = 0; i < 1000; ++i) {
     RngSet(x, sizeof(x));
     RngSet(y, sizeof(y));
@@ -906,8 +907,8 @@ TEST(phaddw, fuzz) {
 
 TEST(phaddd, fuzz) {
   int i, j;
-  int32_t x[4], y[4];
-  int32_t a[4], b[4];
+  uint32_t x[4], y[4];
+  uint32_t a[4], b[4];
   for (i = 0; i < 1000; ++i) {
     RngSet(x, sizeof(x));
     RngSet(y, sizeof(y));
@@ -938,8 +939,8 @@ TEST(phsubw, fuzz) {
 
 TEST(phsubd, fuzz) {
   int i, j;
-  int32_t x[4], y[4];
-  int32_t a[4], b[4];
+  uint32_t x[4], y[4];
+  uint32_t a[4], b[4];
   for (i = 0; i < 1000; ++i) {
     RngSet(x, sizeof(x));
     RngSet(y, sizeof(y));
@@ -948,6 +949,22 @@ TEST(phsubd, fuzz) {
     ASSERT_EQ(0, memcmp(a, b, 16));
     phsubd(a, (void *)a, y);
     (phsubd)(b, (void *)b, y);
+    ASSERT_EQ(0, memcmp(a, b, 16));
+  }
+}
+
+TEST(psubd, fuzz) {
+  int i, j;
+  uint32_t x[4], y[4];
+  uint32_t a[4], b[4];
+  for (i = 0; i < 1000; ++i) {
+    RngSet(x, sizeof(x));
+    RngSet(y, sizeof(y));
+    psubd(a, x, y);
+    (psubd)(b, x, y);
+    ASSERT_EQ(0, memcmp(a, b, 16));
+    psubd(a, (void *)a, y);
+    (psubd)(b, (void *)b, y);
     ASSERT_EQ(0, memcmp(a, b, 16));
   }
 }
@@ -1157,7 +1174,7 @@ TEST(pandn, fuzz) {
 
 TEST(paddq, fuzz) {
   int i, j;
-  int64_t x[2], y[2], a[2], b[2];
+  uint64_t x[2], y[2], a[2], b[2];
   for (i = 0; i < 100; ++i) {
     for (j = 0; j < 2; ++j) x[j] = Rando();
     for (j = 0; j < 2; ++j) y[j] = Rando();
@@ -1444,6 +1461,12 @@ TEST(pabsd, fuzz) {
   int i, j;
   int32_t x[4];
   uint32_t a[4], b[4];
+  x[0] = INT_MIN;
+  pabsd((uint32_t *)x, x);
+  EXPECT_EQ(INT_MIN, x[0]);
+  x[0] = INT_MIN;
+  (pabsd)((uint32_t *)x, x);
+  EXPECT_EQ(INT_MIN, x[0]);
   for (i = 0; i < 100; ++i) {
     RngSet(x, sizeof(x));
     pabsd(a, x);
@@ -1495,6 +1518,16 @@ TEST(psignd, fuzz) {
     (psignd)(b, (void *)b, y);
     ASSERT_EQ(0, memcmp(a, b, 16));
   }
+}
+
+TEST(psignd, testBane) {
+  int32_t x[4] = {INT_MIN, INT_MIN, INT_MIN, INT_MIN};
+  int32_t y[4] = {0, 1, -1, INT_MIN};
+  psignd(x, x, y);
+  EXPECT_EQ(0, x[0]);
+  EXPECT_EQ(INT_MIN, x[1]);
+  EXPECT_EQ(INT_MIN, x[2]);
+  EXPECT_EQ(INT_MIN, x[3]);
 }
 
 TEST(paddb, fuzz) {
@@ -1574,7 +1607,12 @@ TEST(psubsw, fuzz) {
 
 TEST(paddd, fuzz) {
   int i, j;
-  int32_t x[4], y[4], a[4], b[4];
+  uint32_t x[4], y[4], a[4], b[4];
+  RngSet(x, sizeof(x));
+  RngSet(y, sizeof(y));
+  x[0] = 0x7fffffff;
+  y[0] = 0x7fffffff;
+  (paddd)(b, x, y);
   for (i = 0; i < 100; ++i) {
     RngSet(x, sizeof(x));
     RngSet(y, sizeof(y));

@@ -31,7 +31,7 @@ void *memset_pure(void *p, int c, size_t n) {
   char *b;
   uint64_t x;
   b = p;
-  x = 0x0101010101010101 * (c & 0xff);
+  x = 0x0101010101010101ul * (c & 0xff);
   switch (n) {
     case 0:
       return p;

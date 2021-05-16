@@ -23,7 +23,6 @@
 #include "libc/dce.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
-#include "libc/log/ubsan.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/signals.h"
 #include "libc/str/str.h"
@@ -31,7 +30,6 @@
 #include "libc/sysv/consts/sig.h"
 
 STATIC_YOINK("__die");
-STATIC_YOINK("__ubsan_abort");
 
 extern const unsigned char __oncrash_thunks[7][11];
 

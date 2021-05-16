@@ -27,9 +27,9 @@
  * @param 𝑐 [r/o] supplies second input vector
  * @mayalias
  */
-void(paddq)(int64_t a[2], const int64_t b[2], const int64_t c[2]) {
+void(paddq)(uint64_t a[2], const uint64_t b[2], const uint64_t c[2]) {
   unsigned i;
-  int64_t r[2];
+  uint64_t r[2];
   for (i = 0; i < 2; ++i) r[i] = b[i] + c[i];
   memcpy(a, r, 16);
 }

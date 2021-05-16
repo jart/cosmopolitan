@@ -27,9 +27,9 @@
  * @param 𝑐 [r/o] supplies second input vector
  * @mayalias
  */
-void(psubd)(int32_t a[4], const int32_t b[4], const int32_t c[4]) {
+void(psubd)(uint32_t a[4], const uint32_t b[4], const uint32_t c[4]) {
   unsigned i;
-  int32_t r[4];
+  uint32_t r[4];
   for (i = 0; i < 4; ++i) {
     r[i] = b[i] - c[i];
   }

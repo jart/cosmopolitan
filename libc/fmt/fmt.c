@@ -612,7 +612,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
           if (pun.d && prec < 13) {
             pun.u[1] |= 0x100000;
             if (prec < 5) {
-              ui = 1 << ((5 - prec) * 4 - 1);
+              ui = 1u << ((5 - prec) * 4 - 1);
               if (pun.u[1] & ui) {
                 if (pun.u[1] & ((ui - 1) | (ui << 1)) || pun.u[0]) {
                   pun.u[1] += ui;
@@ -631,7 +631,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
               }
             } else {
               i1 = (13 - prec) * 4;
-              ui = 1 << (i1 - 1);
+              ui = 1u << (i1 - 1);
               if (pun.u[0] & ui && pun.u[0] & ((ui - 1) | (ui << 1))) {
                 pun.u[0] += ui;
                 if (!(pun.u[0] >> i1)) goto BumpIt;
@@ -640,12 +640,13 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
           }
         } else {
           if ((ui = pun.u[0])) {
-            for (prec = 6; (ui = (ui << 4) & 0xffffffff); ++prec) {
-            }
+            ui = __builtin_ctz(ui);
+            prec = 6 + ((32 - ROUNDDOWN(ui, 4)) >> 2) - 1;
+          } else if ((ui = pun.u[1] & 0xfffff)) {
+            ui = __builtin_ctz(ui);
+            prec = (20 - ROUNDDOWN(ui, 4)) >> 2;
           } else {
-            for (prec = 0, ui = pun.u[1] & 0xfffff; ui;
-                 ++prec, ui = (ui << 4) & 0xfffff) {
-            }
+            prec = 0;
           }
         }
         bw = 1;

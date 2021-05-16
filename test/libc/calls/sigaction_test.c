@@ -103,10 +103,14 @@ void OnFpe(int sig, struct siginfo *si, struct ucontext *ctx) {
   ctx->uc_mcontext.rdx = 0;
 }
 
-TEST(sigaction, sigFpe_handlerCanEditProcessStateAndRecoverExecution) {
+noubsan void ubsanTrumpsSystemsEngineering(void) {
   struct sigaction saint = {.sa_sigaction = OnFpe, .sa_flags = SA_SIGINFO};
   EXPECT_NE(-1, sigaction(SIGFPE, &saint, &oldsa));
   volatile long x = 0;
   EXPECT_EQ(42, 666 / x); /* systems engineering trumps math */
   EXPECT_NE(-1, sigaction(SIGFPE, &oldsa, NULL));
+}
+
+TEST(sigaction, sigFpe_handlerCanEditProcessStateAndRecoverExecution) {
+  ubsanTrumpsSystemsEngineering();
 }

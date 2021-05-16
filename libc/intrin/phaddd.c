@@ -28,7 +28,7 @@
  * @note goes fast w/ ssse3 (intel c. 2004, amd c. 2011)
  * @mayalias
  */
-void(phaddd)(int32_t a[4], const int32_t b[4], const int32_t c[4]) {
+void(phaddd)(uint32_t a[4], const uint32_t b[4], const uint32_t c[4]) {
   int32_t t[4];
   t[0] = b[0] + b[1];
   t[1] = b[2] + b[3];

@@ -35,7 +35,7 @@ noinline size_t uint64toarray(uint64_t i, char *a, int r) {
 size_t int64toarray(int64_t i, char *a, int r) {
   if (i < 0) {
     *a++ = '-';
-    i = -i;
+    i = -(uint64_t)i;
   }
   return uint64toarray(i, a, r);
 }

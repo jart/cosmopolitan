@@ -29,10 +29,8 @@
 relegated wontreturn void __die(void) {
   static bool once;
   if (cmpxchg(&once, false, true)) {
-    if (!IsTiny()) {
-      if (IsDebuggerPresent(false)) DebugBreak();
-      ShowBacktrace(2, NULL);
-    }
+    if (IsDebuggerPresent(false)) DebugBreak();
+    ShowBacktrace(2, NULL);
   }
   exit(77);
 }

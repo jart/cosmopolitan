@@ -49,5 +49,5 @@ noinline size_t uint128toarray_radix10(uint128_t i, char *a) {
 size_t int128toarray_radix10(int128_t i, char *a) {
   if (i >= 0) return uint128toarray_radix10(i, a);
   *a++ = '-';
-  return 1 + uint128toarray_radix10(-i, a);
+  return 1 + uint128toarray_radix10(-(uint128_t)i, a);
 }
