@@ -43,7 +43,7 @@
  * @return 0 on success, or -1 w/ errno
  * @see hoststxtsort() which is the logical next step
  */
-int parsehoststxt(struct HostsTxt *ht, FILE *f) {
+int ParseHostsTxt(struct HostsTxt *ht, FILE *f) {
   char *line;
   size_t linesize;
   struct HostsTxtEntry entry;

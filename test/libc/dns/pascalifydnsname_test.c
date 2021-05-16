@@ -22,57 +22,57 @@
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-TEST(pascalifydnsname, testEmpty) {
+TEST(PascalifyDnsName, testEmpty) {
   uint8_t *buf = malloc(1);
   char *name = strdup("");
-  EXPECT_EQ(0, pascalifydnsname(buf, 1, name));
+  EXPECT_EQ(0, PascalifyDnsName(buf, 1, name));
   EXPECT_BINEQ(u" ", buf);
   free(name);
   free(buf);
 }
 
-TEST(pascalifydnsname, testOneLabel) {
+TEST(PascalifyDnsName, testOneLabel) {
   uint8_t *buf = malloc(1 + 3 + 1);
   char *name = strdup("foo");
-  EXPECT_EQ(1 + 3, pascalifydnsname(buf, 1 + 3 + 1, name));
+  EXPECT_EQ(1 + 3, PascalifyDnsName(buf, 1 + 3 + 1, name));
   EXPECT_BINEQ(u"♥foo ", buf);
   free(name);
   free(buf);
 }
 
-TEST(pascalifydnsname, testTwoLabels) {
+TEST(PascalifyDnsName, testTwoLabels) {
   uint8_t *buf = malloc(1 + 3 + 1 + 3 + 1);
   char *name = strdup("foo.bar");
-  EXPECT_EQ(1 + 3 + 1 + 3, pascalifydnsname(buf, 1 + 3 + 1 + 3 + 1, name));
+  EXPECT_EQ(1 + 3 + 1 + 3, PascalifyDnsName(buf, 1 + 3 + 1 + 3 + 1, name));
   EXPECT_BINEQ(u"♥foo♥bar ", buf);
   free(name);
   free(buf);
 }
 
-TEST(pascalifydnsname, testFqdnDot_isntIncluded) {
+TEST(PascalifyDnsName, testFqdnDot_isntIncluded) {
   uint8_t *buf = malloc(1 + 3 + 1 + 3 + 1);
   char *name = strdup("foo.bar.");
-  EXPECT_EQ(1 + 3 + 1 + 3, pascalifydnsname(buf, 1 + 3 + 1 + 3 + 1, name));
+  EXPECT_EQ(1 + 3 + 1 + 3, PascalifyDnsName(buf, 1 + 3 + 1 + 3 + 1, name));
   EXPECT_BINEQ(u"♥foo♥bar ", buf);
   free(name);
   free(buf);
 }
 
-TEST(pascalifydnsname, testTooLong) {
+TEST(PascalifyDnsName, testTooLong) {
   uint8_t *buf = malloc(1);
   char *name = malloc(1000);
   memset(name, '.', 999);
   name[999] = '\0';
-  EXPECT_EQ(-1, pascalifydnsname(buf, 1, name));
+  EXPECT_EQ(-1, PascalifyDnsName(buf, 1, name));
   EXPECT_EQ(ENAMETOOLONG, errno);
   free(name);
   free(buf);
 }
 
-TEST(pascalifydnsname, testNoSpace) {
+TEST(PascalifyDnsName, testNoSpace) {
   uint8_t *buf = malloc(1);
   char *name = strdup("foo");
-  EXPECT_EQ(-1, pascalifydnsname(buf, 1, name));
+  EXPECT_EQ(-1, PascalifyDnsName(buf, 1, name));
   EXPECT_EQ(ENOSPC, errno);
   free(name);
   free(buf);

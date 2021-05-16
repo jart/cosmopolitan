@@ -38,7 +38,7 @@
 /**
  * Queries Domain Name System for address associated with name.
  *
- * @param resolvconf can be getresolvconf()
+ * @param resolvconf can be GetResolvConf()
  * @param af can be AF_INET, AF_UNSPEC
  * @param name can be a local or fully-qualified hostname
  * @param addr should point to a struct sockaddr_in; if this function
@@ -47,65 +47,62 @@
  * @return number of matches found, or -1 w/ errno
  * @error EAFNOSUPPORT. ENETDOWN, ENAMETOOLONG, EBADMSG
  */
-int resolvedns(const struct ResolvConf *resolvconf, int af, const char *name,
+int ResolveDns(const struct ResolvConf *resolvconf, int af, const char *name,
                struct sockaddr *addr, uint32_t addrsize) {
-  size_t msgsize;
-  int res, fd, rc, rc2;
-  struct sockaddr_in *addr4;
-  struct DnsQuestion question;
+  int rc, fd, n;
+  struct DnsQuestion q;
+  struct DnsHeader h, h2;
+  struct sockaddr_in *a4;
+  uint8_t *p, *pe, msg[512];
   uint16_t rtype, rclass, rdlength;
-  uint8_t *p, *pe, *outmsg, *inmsg;
-  struct DnsHeader header, response;
   if (af != AF_INET && af != AF_UNSPEC) return eafnosupport();
   if (!resolvconf->nameservers.i) return 0;
-  memset(&header, 0, sizeof(header));
-  header.id = rand32();
-  header.bf1 = 1; /* recursion desired */
-  header.qdcount = 1;
-  question.qname = name;
-  question.qtype = DNS_TYPE_A;
-  question.qclass = DNS_CLASS_IN;
-  res = -1;
-  if ((outmsg = malloc(kMsgMax)) && (inmsg = malloc(kMsgMax)) &&
-      (rc = serializednsheader(outmsg, kMsgMax, header)) != -1 &&
-      (rc2 = serializednsquestion(outmsg + rc, kMsgMax - rc, question)) != -1) {
-    msgsize = rc + rc2;
-    if ((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) != -1 &&
-        sendto(fd, outmsg, msgsize, 0, (void *)&resolvconf->nameservers.p[0],
-               sizeof(resolvconf->nameservers.p[0])) == msgsize) {
-      if ((rc = recv(fd, inmsg, kMsgMax, 0)) != -1 &&
-          (rc2 = deserializednsheader(&response, inmsg, rc)) != -1 &&
-          response.id == header.id) {
-        res = 0;
-        if (response.ancount) {
-          p = inmsg + rc2;
-          pe = inmsg + rc;
-          while (p < pe && response.qdcount) {
-            p += strnlen((char *)p, pe - p) + 1 + 4;
-            response.qdcount--;
+  memset(&h, 0, sizeof(h));
+  rc = ebadmsg();
+  h.id = rand32();
+  h.bf1 = 1; /* recursion desired */
+  h.qdcount = 1;
+  q.qname = name;
+  q.qtype = DNS_TYPE_A;
+  q.qclass = DNS_CLASS_IN;
+  memset(msg, 0, sizeof(msg));
+  SerializeDnsHeader(msg, &h);
+  if ((n = SerializeDnsQuestion(msg + 12, 500, &q)) == -1) return -1;
+  if ((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) return -1;
+  if (sendto(fd, msg, 12 + n, 0, resolvconf->nameservers.p,
+             sizeof(*resolvconf->nameservers.p)) == 12 + n &&
+      (n = read(fd, msg, 512)) >= 12) {
+    DeserializeDnsHeader(&h2, msg);
+    if (h2.id == h.id) {
+      rc = 0;
+      if (h2.ancount) {
+        p = msg + 12;
+        pe = msg + n;
+        while (p < pe && h2.qdcount) {
+          p += strnlen((char *)p, pe - p) + 1 + 4;
+          h2.qdcount--;
+        }
+        if (p + 1 < pe) {
+          if ((p[0] & 0b11000000) == 0b11000000) { /* name pointer */
+            p += 2;
+          } else {
+            p += strnlen((char *)p, pe - p) + 1;
           }
-          if (p + 1 < pe) {
-            if ((p[0] & 0b11000000) == 0b11000000) { /* name pointer */
-              p += 2;
-            } else {
-              p += strnlen((char *)p, pe - p) + 1;
-            }
-            if (p + 2 + 2 + 4 + 2 < pe) {
-              rtype = READ16BE(p), p += 2;
-              rclass = READ16BE(p), p += 2;
-              /* ttl */ p += 4;
-              rdlength = READ16BE(p), p += 2;
-              if (p + rdlength <= pe && rdlength == 4 &&
-                  (rtype == DNS_TYPE_A && rclass == DNS_CLASS_IN)) {
-                res = 1;
-                if (addrsize) {
-                  if (addrsize >= kMinSockaddr4Size) {
-                    addr4 = (struct sockaddr_in *)addr;
-                    addr4->sin_family = AF_INET;
-                    memcpy(&addr4->sin_addr.s_addr, p, 4);
-                  } else {
-                    res = einval();
-                  }
+          if (p + 2 + 2 + 4 + 2 < pe) {
+            rtype = READ16BE(p), p += 2;
+            rclass = READ16BE(p), p += 2;
+            /* ttl */ p += 4;
+            rdlength = READ16BE(p), p += 2;
+            if (p + rdlength <= pe && rdlength == 4 &&
+                (rtype == DNS_TYPE_A && rclass == DNS_CLASS_IN)) {
+              rc = 1;
+              if (addrsize) {
+                if (addrsize >= kMinSockaddr4Size) {
+                  a4 = (struct sockaddr_in *)addr;
+                  a4->sin_family = AF_INET;
+                  memcpy(&a4->sin_addr.s_addr, p, 4);
+                } else {
+                  rc = einval();
                 }
               }
             }
@@ -113,8 +110,7 @@ int resolvedns(const struct ResolvConf *resolvconf, int af, const char *name,
         }
       }
     }
-    res |= close(fd);
   }
-  free(outmsg);
-  return res;
+  close(fd);
+  return rc;
 }

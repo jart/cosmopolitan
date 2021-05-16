@@ -14,10 +14,10 @@ struct ResolvConf {
   struct Nameservers nameservers;
 };
 
-const struct ResolvConf *getresolvconf(void) returnsnonnull;
-int parseresolvconf(struct ResolvConf *, struct FILE *) paramsnonnull();
-void freeresolvconf(struct ResolvConf **) paramsnonnull();
-int getntnameservers(struct ResolvConf *) paramsnonnull();
+const struct ResolvConf *GetResolvConf(void) returnsnonnull;
+int ParseResolvConf(struct ResolvConf *, struct FILE *) paramsnonnull();
+void FreeResolvConf(struct ResolvConf **) paramsnonnull();
+int GetNtNameServers(struct ResolvConf *) paramsnonnull();
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

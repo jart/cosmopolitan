@@ -57,9 +57,9 @@ int getaddrinfo(const char *, const char *, const struct addrinfo *,
                 struct addrinfo **) paramsnonnull((4));
 int freeaddrinfo(struct addrinfo *);
 const char *gai_strerror(int);
-int dnsnamecmp(const char *, const char *) paramsnonnull();
-int pascalifydnsname(uint8_t *, size_t, const char *) paramsnonnull();
-int resolvedns(const struct ResolvConf *, int, const char *, struct sockaddr *,
+int CompareDnsNames(const char *, const char *) paramsnonnull();
+int PascalifyDnsName(uint8_t *, size_t, const char *) paramsnonnull();
+int ResolveDns(const struct ResolvConf *, int, const char *, struct sockaddr *,
                uint32_t) paramsnonnull();
 struct addrinfo *newaddrinfo(uint16_t);
 

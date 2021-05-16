@@ -8,11 +8,13 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/calls/calls.h"
+#include "libc/dns/dns.h"
 #include "libc/fmt/conv.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ipproto.h"
@@ -28,7 +30,12 @@
  * Implemented because BusyBox's netcat doesn't detect remote close and
  * lingers in the CLOSE_WAIT wait possibly due to file descriptor leaks
  *
- * Once upon time we called this command "Telnet"
+ * Here's an example usage:
+ *
+ *     make -j8 o//examples/nc.com
+ *     printf 'GET /\r\n\r\n' | o//examples/nc.com justine.lol 80
+ *
+ * Once upon time we called this command "telnet"
  */
 
 int main(int argc, char *argv[]) {
@@ -36,15 +43,26 @@ int main(int argc, char *argv[]) {
   size_t i, got;
   char buf[1500];
   int err, toto, sock;
+  struct addrinfo *ai = NULL;
   struct linger linger = {true, 1};
-  struct sockaddr_in addr = {AF_INET};
   struct pollfd fds[2] = {{-1, POLLIN}, {-1, POLLIN}};
+  struct addrinfo hint = {AI_NUMERICSERV, AF_INET, SOCK_STREAM, IPPROTO_TCP};
 
   if (argc != 3) exit(1);
-  inet_pton(AF_INET, argv[1], &addr.sin_addr);
-  addr.sin_port = htons(atoi(argv[2]));
+  switch ((rc = getaddrinfo(argv[1], argv[2], &hint, &ai))) {
+    case EAI_SUCCESS:
+      break;
+    case EAI_SYSTEM:
+      perror("getaddrinfo");
+      exit(1);
+    default:
+      fputs("EAI_", stderr);
+      fputs(gai_strerror(rc), stderr);
+      fputs("\n", stderr);
+      exit(1);
+  }
 
-  if ((sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
+  if ((sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol)) == -1) {
     perror("socket");
     exit(1);
   }
@@ -54,7 +72,7 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  if (connect(sock, &addr, sizeof(addr)) == -1) {
+  if (connect(sock, ai->ai_addr, ai->ai_addrlen) == -1) {
     perror("connect");
     exit(1);
   }
@@ -108,5 +126,6 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
+  freeaddrinfo(ai);
   return 0;
 }

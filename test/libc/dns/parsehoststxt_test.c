@@ -29,16 +29,16 @@ static const char *ParseIp(unsigned char ip[4]) {
   return inet_ntop(AF_INET, ip, g_ipbuf, sizeof(g_ipbuf));
 }
 
-TEST(parsehoststxt, testEmpty) {
+TEST(ParseHostsTxt, testEmpty) {
   struct HostsTxt *ht = calloc(1, sizeof(struct HostsTxt));
   FILE *f = fmemopen(NULL, BUFSIZ, "r+");
-  ASSERT_EQ(0, parsehoststxt(ht, f));
+  ASSERT_EQ(0, ParseHostsTxt(ht, f));
   ASSERT_EQ(0, ht->entries.i);
-  freehoststxt(&ht);
+  FreeHostsTxt(&ht);
   fclose(f);
 }
 
-TEST(parsehoststxt, testCorrectlyTokenizesAndSorts) {
+TEST(ParseHostsTxt, testCorrectlyTokenizesAndSorts) {
   const char kInput[] = "# this is a comment\n"
                         "# IP            HOST1 HOST2\n"
                         "203.0.113.1     lol.example. lol\n"
@@ -47,8 +47,8 @@ TEST(parsehoststxt, testCorrectlyTokenizesAndSorts) {
   FILE *f = fmemopen(NULL, BUFSIZ, "r+");
   ASSERT_EQ(1, fwrite(kInput, strlen(kInput), 1, f));
   rewind(f);
-  ASSERT_EQ(0, parsehoststxt(ht, f));
-  sorthoststxt(ht);
+  ASSERT_EQ(0, ParseHostsTxt(ht, f));
+  SortHostsTxt(ht);
   ASSERT_EQ(4, ht->entries.i);
   EXPECT_STREQ("cat.example.", &ht->strings.p[ht->entries.p[0].name]);
   EXPECT_STREQ("cat.example.", &ht->strings.p[ht->entries.p[0].canon]);
@@ -62,20 +62,20 @@ TEST(parsehoststxt, testCorrectlyTokenizesAndSorts) {
   EXPECT_STREQ("lol", &ht->strings.p[ht->entries.p[3].name]);
   EXPECT_STREQ("lol.example.", &ht->strings.p[ht->entries.p[3].canon]);
   EXPECT_STREQ("203.0.113.1", ParseIp(ht->entries.p[3].ip));
-  freehoststxt(&ht);
+  FreeHostsTxt(&ht);
   fclose(f);
 }
 
-TEST(parsehoststxt, testIpv6_isIgnored) {
+TEST(ParseHostsTxt, testIpv6_isIgnored) {
   const char kInput[] = "::1             boop\n"
                         "203.0.113.2     cat     # ignore me\n";
   struct HostsTxt *ht = calloc(1, sizeof(struct HostsTxt));
   FILE *f = fmemopen(kInput, strlen(kInput), "r+");
-  ASSERT_EQ(0, parsehoststxt(ht, f));
+  ASSERT_EQ(0, ParseHostsTxt(ht, f));
   ASSERT_EQ(1, ht->entries.i);
   EXPECT_STREQ("cat", &ht->strings.p[ht->entries.p[0].name]);
   EXPECT_STREQ("cat", &ht->strings.p[ht->entries.p[0].canon]);
   EXPECT_STREQ("203.0.113.2", ParseIp(ht->entries.p[0].ip));
-  freehoststxt(&ht);
+  FreeHostsTxt(&ht);
   fclose(f);
 }

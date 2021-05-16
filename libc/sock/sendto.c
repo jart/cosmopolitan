@@ -20,6 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
@@ -47,6 +48,10 @@
  */
 ssize_t sendto(int fd, const void *buf, size_t size, uint32_t flags,
                const void *opt_addr, uint32_t addrsize) {
+  if (IsAsan() && (!__asan_is_valid(buf, size) ||
+                   (opt_addr && !__asan_is_valid(opt_addr, addrsize)))) {
+    return efault();
+  }
   if (!IsWindows()) {
     if (!IsBsd() || !opt_addr) {
       return sys_sendto(fd, buf, size, flags, opt_addr, addrsize);

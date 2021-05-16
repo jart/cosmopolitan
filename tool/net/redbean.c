@@ -202,7 +202,6 @@ static const struct ContentTypeExtension {
     {"z", "application/zlib"},                 //
     {"zip", "application/zip"},                //
     {"zst", "application/zstd"},               //
-    {"zst", "application/zstd"},               //
 };
 
 static const char kRegCode[][8] = {
@@ -1941,7 +1940,7 @@ td { padding-right: 3em; }\r\n\
 }
 
 static const char *MergeNames(const char *a, const char *b) {
-  return FreeLater(xasprintf("%s.ru_utime", a));
+  return FreeLater(xasprintf("%s.%s", a, b));
 }
 
 static void AppendLong1(const char *a, long x) {
@@ -2212,7 +2211,7 @@ static int LuaRoute(lua_State *L) {
   return 1;
 }
 
-static int LuaRespond(lua_State *L, char *respond(unsigned, const char *)) {
+static int LuaRespond(lua_State *L, char *R(unsigned, const char *)) {
   char *p;
   int code;
   size_t reasonlen;
@@ -2223,11 +2222,11 @@ static int LuaRespond(lua_State *L, char *respond(unsigned, const char *)) {
     unreachable;
   }
   if (lua_isnoneornil(L, 2)) {
-    luaheaderp = respond(code, GetHttpReason(code));
+    luaheaderp = R(code, GetHttpReason(code));
   } else {
     reason = lua_tolstring(L, 2, &reasonlen);
     if (reasonlen < 128 && (p = EncodeHttpHeaderValue(reason, reasonlen, 0))) {
-      luaheaderp = respond(code, p);
+      luaheaderp = R(code, p);
       free(p);
     } else {
       luaL_argerror(L, 2, "invalid");
@@ -2802,7 +2801,7 @@ static int LuaSetHeader(lua_State *L) {
   }
   switch (h) {
     case kHttpConnection:
-      if (evallen != 5 || memcasecmp(eval, "close", 5)) {
+      if (SlicesEqualCase(eval, evallen, "close", 5)) {
         luaL_argerror(L, 2, "unsupported");
         unreachable;
       }
@@ -3017,11 +3016,11 @@ static int LuaHasControlCodes(lua_State *L) {
   return 1;
 }
 
-static int LuaIsValid(lua_State *L, bool IsValid(const char *, size_t)) {
+static int LuaIsValid(lua_State *L, bool V(const char *, size_t)) {
   size_t size;
   const char *data;
   data = luaL_checklstring(L, 1, &size);
-  lua_pushboolean(L, IsValid(data, size));
+  lua_pushboolean(L, V(data, size));
   return 1;
 }
 

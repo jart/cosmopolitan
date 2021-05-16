@@ -31,12 +31,9 @@
 
 void lookup(const char *name) {
   int rc;
-  struct addrinfo hints = (struct addrinfo){.ai_family = AF_INET,
-                                            .ai_socktype = SOCK_STREAM,
-                                            .ai_protocol = IPPROTO_TCP,
-                                            .ai_flags = AI_NUMERICSERV};
-  struct addrinfo *addrs = NULL;
-  switch ((rc = getaddrinfo(name, "80", &hints, &addrs))) {
+  struct addrinfo *ai = NULL;
+  struct addrinfo hint = {AI_NUMERICSERV, AF_INET, SOCK_STREAM, IPPROTO_TCP};
+  switch ((rc = getaddrinfo(name, "80", &hint, &ai))) {
     case EAI_SUCCESS:
       break;
     case EAI_SYSTEM:
@@ -47,8 +44,8 @@ void lookup(const char *name) {
               gai_strerror(rc));
       exit(1);
   }
-  if (addrs) {
-    for (struct addrinfo *addr = addrs; addr; addr = addr->ai_next) {
+  if (ai) {
+    for (struct addrinfo *addr = ai; addr; addr = addr->ai_next) {
       const unsigned char *ip =
           addr->ai_family == AF_INET
               ? (const unsigned char *)&((struct sockaddr_in *)addr->ai_addr)
@@ -70,7 +67,7 @@ void lookup(const char *name) {
              ip[3]);
       printf("%-12s = %s\n", "ai_canonname", addr->ai_canonname);
     }
-    freeaddrinfo(addrs);
+    freeaddrinfo(ai);
   } else {
     fprintf(stderr, "%s: %s\n", name, "no results");
   }

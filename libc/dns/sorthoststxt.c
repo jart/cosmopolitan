@@ -22,25 +22,26 @@
 
 /**
  * Compares hostnames in HOSTS.TXT table.
- * @see dnsnamecmp(), parsehoststxt()
+ * @see CompareDnsNames(), ParseHostsTxt()
  */
 static int cmphoststxt(const struct HostsTxtEntry *e1,
                        const struct HostsTxtEntry *e2, const char *strings) {
   if (e1 == e2) return 0;
-  return dnsnamecmp(&strings[e1->name], &strings[e2->name]);
+  return CompareDnsNames(&strings[e1->name], &strings[e2->name]);
 }
 
 /**
  * Sorts entries in HOSTS.TXT table.
  *
- * This function enables resolvehoststxt() to be called so hard-coded
+ * This function enables ResolveHostsTxt() to be called so hard-coded
  * hostname lookups take logarithmic time; you can blackhole all the
  * spam you want, in your /etc/hosts file.
  *
- * The sorted order, defined by dnsnamecmp(), also makes it possible to
- * efficiently search for subdomains, once the initial sort is done.
+ * The sorted order, defined by CompareDnsNames(), also makes it
+ * possible to efficiently search for subdomains, once the initial sort
+ * is done.
  */
-void sorthoststxt(struct HostsTxt *ht) {
+void SortHostsTxt(struct HostsTxt *ht) {
   if (ht->entries.p) {
     qsort_r(ht->entries.p, ht->entries.i, sizeof(*ht->entries.p),
             (void *)cmphoststxt, ht->strings.p);

@@ -20,9 +20,9 @@
 #include "libc/runtime/runtime.h"
 
 /**
- * Frees resolv.conf data structure populated by parseresolvconf().
+ * Frees resolv.conf data structure populated by ParseResolvConf().
  */
-void freeresolvconf(struct ResolvConf **rvp) {
+void FreeResolvConf(struct ResolvConf **rvp) {
   if (*rvp) {
     free_s(&(*rvp)->nameservers.p);
     free_s(rvp);

@@ -67,13 +67,13 @@ int getaddrinfo(const char *name, const char *service,
   } else if (hints && (hints->ai_flags & AI_NUMERICHOST) == AI_NUMERICHOST) {
     freeaddrinfo(ai);
     return EAI_NONAME;
-  } else if (resolvehoststxt(gethoststxt(), AF_INET, name, ai->ai_addr,
+  } else if (ResolveHostsTxt(GetHostsTxt(), AF_INET, name, ai->ai_addr,
                              sizeof(ai->ai_addr4), &canon) > 0) {
     memcpy(ai->ai_canonname, canon, min(strlen(canon), DNS_NAME_MAX) + 1);
     *res = ai;
     return 0;
   } else {
-    rc = resolvedns(getresolvconf(), AF_INET, name, ai->ai_addr,
+    rc = ResolveDns(GetResolvConf(), AF_INET, name, ai->ai_addr,
                     sizeof(ai->ai_addr4));
     if (rc > 0) {
       *res = ai;

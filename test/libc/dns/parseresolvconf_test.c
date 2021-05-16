@@ -31,22 +31,22 @@ static const char *FormatIp(struct sockaddr_in *ip) {
   return inet_ntop(ip->sin_family, &ip->sin_addr.s_addr, g_ipbuf, 16);
 }
 
-TEST(parseresolvconf, testEmpty) {
+TEST(ParseResolvConf, testEmpty) {
   struct ResolvConf *rv = calloc(1, sizeof(struct ResolvConf));
   FILE *f = fmemopen(NULL, BUFSIZ, "r+");
-  ASSERT_EQ(0, parseresolvconf(rv, f));
+  ASSERT_EQ(0, ParseResolvConf(rv, f));
   ASSERT_EQ(0, rv->nameservers.i);
-  freeresolvconf(&rv);
+  FreeResolvConf(&rv);
   fclose(f);
 }
 
-TEST(parseresolvconf, testCorrectlyTokenizes) {
+TEST(ParseResolvConf, testCorrectlyTokenizes) {
   const char kInput[] = "# this is a comment\n"
                         "nameserver  203.0.113.2 \n"
                         " nameserver  203.0.113.1\n";
   struct ResolvConf *rv = calloc(1, sizeof(struct ResolvConf));
   FILE *f = fmemopen(kInput, strlen(kInput), "r+");
-  ASSERT_EQ(2, parseresolvconf(rv, f));
+  ASSERT_EQ(2, ParseResolvConf(rv, f));
   ASSERT_EQ(2, rv->nameservers.i);
   EXPECT_EQ(AF_INET, rv->nameservers.p[0].sin_family);
   EXPECT_EQ(DNS_PORT, ntohs(rv->nameservers.p[0].sin_port));
@@ -54,17 +54,17 @@ TEST(parseresolvconf, testCorrectlyTokenizes) {
   EXPECT_EQ(AF_INET, rv->nameservers.p[1].sin_family);
   EXPECT_EQ(DNS_PORT, ntohs(rv->nameservers.p[1].sin_port));
   EXPECT_STREQ("203.0.113.1", FormatIp(&rv->nameservers.p[1]));
-  freeresolvconf(&rv);
+  FreeResolvConf(&rv);
   fclose(f);
 }
 
-TEST(parseresolvconf, testMulticastDnsThing_getsIgnored) {
+TEST(ParseResolvConf, testMulticastDnsThing_getsIgnored) {
   const char kInput[] = "search local # boop\n";
   struct ResolvConf *rv = calloc(1, sizeof(struct ResolvConf));
   FILE *f = fmemopen(NULL, BUFSIZ, "r+");
   ASSERT_EQ(strlen(kInput), fwrite(kInput, 1, strlen(kInput), f));
-  ASSERT_EQ(0, parseresolvconf(rv, f));
+  ASSERT_EQ(0, ParseResolvConf(rv, f));
   ASSERT_EQ(0, rv->nameservers.i);
-  freeresolvconf(&rv);
+  FreeResolvConf(&rv);
   fclose(f);
 }

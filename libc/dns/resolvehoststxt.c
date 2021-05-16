@@ -27,16 +27,16 @@
 
 static int hoststxtgetcmp(const char *node, const struct HostsTxtEntry *entry,
                           const char *strings) {
-  return dnsnamecmp(node, &strings[entry->name]);
+  return CompareDnsNames(node, &strings[entry->name]);
 }
 
 /**
  * Finds address associated with name in HOSTS.TXT table.
  *
- * This function performs binary search, so sorthoststxt() must be
+ * This function performs binary search, so SortHostsTxt() must be
  * called on the table beforehand.
  *
- * @param ht can be gethoststxt()
+ * @param ht can be GetHostsTxt()
  * @param af can be AF_INET, AF_UNSPEC
  * @param name can be a local or fully-qualified hostname
  * @param addr should point to a struct sockaddr_in; if this function
@@ -46,7 +46,7 @@ static int hoststxtgetcmp(const char *node, const struct HostsTxtEntry *entry,
  * @return number of matches found, or -1 w/ errno
  * @error EAFNOSUPPORT
  */
-int resolvehoststxt(const struct HostsTxt *ht, int af, const char *name,
+int ResolveHostsTxt(const struct HostsTxt *ht, int af, const char *name,
                     struct sockaddr *addr, uint32_t addrsize,
                     const char **canon) {
   struct sockaddr_in *addr4;

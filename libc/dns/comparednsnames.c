@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.internal.h"
 #include "libc/dns/dns.h"
+#include "libc/macros.internal.h"
 #include "libc/str/str.h"
 
 forceinline void FindDnsLabel(const char *A, size_t *i, size_t *n) {
@@ -36,12 +36,15 @@ forceinline void FindDnsLabel(const char *A, size_t *i, size_t *n) {
 /**
  * Compares DNS hostnames in reverse lexicographical asciibetical order.
  * @return <0, 0, or >0
- * @see test/libc/dns/dnsnamecmp_test.c (the code that matters)
+ * @see test/libc/dns/comparednsnames_test.c (the code that matters)
  */
-int dnsnamecmp(const char *A, const char *B) {
+int CompareDnsNames(const char *A, const char *B) {
+  int res;
+  bool first;
+  size_t n, m, i, j;
   if (A == B) return 0;
-  size_t n = strlen(A);
-  size_t m = strlen(B);
+  n = strlen(A);
+  m = strlen(B);
   if (!n || !m || ((A[n - 1] == '.') ^ (B[m - 1] == '.'))) {
     if (n && m && A[n - 1] == '.' && strchr(B, '.')) {
       --m;
@@ -51,9 +54,9 @@ int dnsnamecmp(const char *A, const char *B) {
       return A[n ? n - 1 : 0] - B[m ? m - 1 : 0];
     }
   }
-  size_t i = n;
-  size_t j = m;
-  bool first = true;
+  i = n;
+  j = m;
+  first = true;
   for (;;) {
     FindDnsLabel(A, &i, &n);
     FindDnsLabel(B, &j, &m);
@@ -62,8 +65,7 @@ int dnsnamecmp(const char *A, const char *B) {
       if (!i && j) return 1;
       if (!j && i) return -1;
     }
-    int res;
-    if ((res = strncasecmp(&A[i], &B[j], min(n - i + 1, m - j + 1)))) {
+    if ((res = strncasecmp(&A[i], &B[j], MIN(n - i + 1, m - j + 1)))) {
       return res;
     }
     if (!i || !j) {
