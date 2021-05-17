@@ -19,7 +19,9 @@
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
 
-static const int (*const kWcTypeFuncs[])(wint_t) = {
+typedef int (*isw_f)(wint_t);
+
+static const isw_f kWcTypeFuncs[] = {
     iswalnum,   //
     iswalpha,   //
     iswblank,   //

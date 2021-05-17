@@ -38,7 +38,7 @@ first run, so it can be fast and efficient for subsequent executions.
 
 ```sh
 ./hello.com
-bash -c './hello.com'  # zsh/fish workaround (we upstreamed a patch)
+bash -c './hello.com'  # zsh/fish workaround (we upstreamed patches)
 ```
 
 So if you intend to copy the binary to Windows or Mac then please do
