@@ -92,6 +92,7 @@ o/$(MODE)/tool/net/redbean-demo.com:				\
 		tool/net/.help.txt				\
 		tool/net/demo/.init.lua				\
 		tool/net/demo/.reload.lua			\
+		tool/net/demo/.lua/mymodule.lua			\
 		tool/net/demo/404.html				\
 		tool/net/demo/hello.lua				\
 		tool/net/demo/index.html			\
@@ -110,7 +111,11 @@ o/$(MODE)/tool/net/redbean-demo.com:				\
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/net/.redbean-demo
 	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.redbean-demo/.ape bs=64 count=11 conv=notrunc 2>/dev/null
-	@$(COMPILE) -AZIP -T$@ zip -qj $@ o/$(MODE)/tool/net/.redbean-demo/.ape tool/net/.help.txt tool/net/demo/.init.lua tool/net/demo/.reload.lua tool/net/demo/hello.lua
+	@$(COMPILE) -AZIP -T$@ zip -qj $@ o/$(MODE)/tool/net/.redbean-demo/.ape tool/net/.help.txt tool/net/demo/.init.lua tool/net/demo/.reload.lua
+	@$(COMPILE) -ARM -T$@ rm -rf o/$(MODE)/tool/net/.lua
+	@$(COMPILE) -ACP -T$@ cp -R tool/net/demo/.lua o/$(MODE)/tool/net/
+	@(cd o/$(MODE)/tool/net && zip -qr redbean-demo.com .lua)
+	@$(COMPILE) -AZIP -T$@ zip -qj $@ tool/net/demo/hello.lua
 	@echo "&lt;-- check out this lua server page" | $(COMPILE) -AZIP -T$@ zip -cqj $@ tool/net/demo/redbean.lua
 	@$(COMPILE) -AZIP -T$@ zip -qj $@ tool/net/demo/404.html tool/net/favicon.ico tool/net/redbean.png tool/net/demo/redbean-form.lua tool/net/demo/redbean-xhr.lua
 	@echo Uncompressed for HTTP Range requests | $(COMPILE) -AZIP -T$@ zip -cqj0 $@ tool/net/demo/seekable.txt

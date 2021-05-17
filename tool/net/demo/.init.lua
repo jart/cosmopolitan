@@ -1,3 +1,5 @@
+mymodule = require "mymodule"
+
 -- /.init.lua is loaded at startup in redbean's main process
 HidePath('/usr/share/zoneinfo/')
 
