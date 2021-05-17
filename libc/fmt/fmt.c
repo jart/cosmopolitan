@@ -308,7 +308,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
     /* evaluate specifier */
     qchar = '"';
     log2base = 0;
-    alphabet = "0123456789abcdef";
+    alphabet = "0123456789abcdefpx";
     switch ((d = *format++)) {
       case 'p':
         flags |= FLAGS_HASH;
@@ -316,7 +316,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         signbit = 63;
         goto FormatNumber;
       case 'X':
-        alphabet = "0123456789ABCDEF";
+        alphabet = "0123456789ABCDEFPX";
         /* fallthrough */
       case 'x':
         log2base = 4;
@@ -548,8 +548,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         } else {
           PUT('+');
         }
-        for (c = 2, k = 10; 10 * k <= decpt; c++, k *= 10) {
-        }
+        for (c = 2, k = 10; 10 * k <= decpt; c++) k *= 10;
         for (;;) {
           i1 = decpt / k;
           PUT(i1 + '0');
@@ -657,7 +656,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
             i1 /= 10;
           }
         }
-        if ((sgn = pun.u[1] & 0x80000000)) {
+        if (pun.u[1] & 0x80000000) {
           pun.u[1] &= 0x7fffffff;
           if (pun.d || sign) sign = '-';
         }
@@ -686,18 +685,9 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         PUT(alphabet[17]);
         PUT(c);
         if (prec > 0 || alt) PUT('.');
-        if (prec > 0) {
-          if ((i1 = prec) > 5) i1 = 5;
-          prec -= i1;
-          do {
-            PUT(alphabet[(pun.u[1] >> 16) & 0xf]);
-            pun.u[1] <<= 4;
-          } while (--i1 > 0);
-          while (prec > 0) {
-            --prec;
-            PUT(alphabet[(pun.u[0] >> 28) & 0xf]);
-            pun.u[0] <<= 4;
-          }
+        while (prec-- > 0) {
+          PUT(alphabet[(pun.q >> 48) & 0xf]);
+          pun.q <<= 4;
         }
         PUT(alphabet[16]);
         if (bex < 0) {
@@ -706,8 +696,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         } else {
           PUT('+');
         }
-        for (c = 1; 10 * c <= bex; c *= 10) {
-        }
+        for (c = 1; 10 * c <= bex;) c *= 10;
         for (;;) {
           i1 = bex / c;
           PUT('0' + i1);
@@ -715,7 +704,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
           bex -= i1 * c;
           bex *= 10;
         }
-        continue;
+        break;
 
       case '%':
         PUT('%');

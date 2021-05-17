@@ -24,15 +24,10 @@
 #include "net/http/url.h"
 
 struct UrlParser {
-  unsigned i;
-  int c;
-  const char *data;
-  size_t size;
-  char isform;
-  char islatin1;
-  char isopaque;
-  char *p;
-  char *q;
+  char *p, *q;
+  const char *s;
+  unsigned c, i, n;
+  char isform, islatin1, isopaque;
 };
 
 static void EmitLatin1(char **p, int c) {
@@ -71,9 +66,8 @@ static void EmitVal(struct UrlParser *u, struct UrlParams *h, bool t) {
 
 static void ParseEscape(struct UrlParser *u) {
   int a, b, c = '%';
-  if (u->i + 2 <= u->size &&
-      ((a = kHexToInt[u->data[u->i + 0] & 0xff]) != -1 &&
-       (b = kHexToInt[u->data[u->i + 1] & 0xff]) != -1)) {
+  if (u->i + 2 <= u->n && ((a = kHexToInt[u->s[u->i + 0] & 255]) != -1 &&
+                           (b = kHexToInt[u->s[u->i + 1] & 255]) != -1)) {
     c = a << 4 | b;
     u->i += 2;
   }
@@ -81,10 +75,10 @@ static void ParseEscape(struct UrlParser *u) {
 }
 
 static bool ParseScheme(struct UrlParser *u, struct Url *h) {
-  while (u->i < u->size) {
-    u->c = u->data[u->i++] & 0xff;
+  while (u->i < u->n) {
+    u->c = u->s[u->i++] & 255;
     if (u->c == '/') {
-      if (u->i == 1 && u->i < u->size && u->data[u->i] == '/') {
+      if (u->i == 1 && u->i < u->n && u->s[u->i] == '/') {
         ++u->i;
         return true;
       } else {
@@ -95,8 +89,8 @@ static bool ParseScheme(struct UrlParser *u, struct Url *h) {
       h->scheme.p = u->q;
       h->scheme.n = u->p - u->q;
       u->q = u->p;
-      if (u->i < u->size && u->data[u->i] == '/') {
-        if (u->i + 1 < u->size && u->data[u->i + 1] == '/') {
+      if (u->i < u->n && u->s[u->i] == '/') {
+        if (u->i + 1 < u->n && u->s[u->i + 1] == '/') {
           u->i += 2;
           return true;
         } else {
@@ -138,8 +132,8 @@ static bool ParseScheme(struct UrlParser *u, struct Url *h) {
 static void ParseAuthority(struct UrlParser *u, struct Url *h) {
   unsigned t = 1;
   const char *c = NULL;
-  while (u->i < u->size) {
-    u->c = u->data[u->i++] & 0xff;
+  while (u->i < u->n) {
+    u->c = u->s[u->i++] & 255;
     if (u->c == '/' || u->c == '#' || u->c == '?') {
       break;
     } else if (u->c == '[') {
@@ -188,8 +182,8 @@ static void ParseAuthority(struct UrlParser *u, struct Url *h) {
 }
 
 static void ParsePath(struct UrlParser *u, struct UrlView *h) {
-  while (u->i < u->size) {
-    u->c = u->data[u->i++] & 0xff;
+  while (u->i < u->n) {
+    u->c = u->s[u->i++] & 255;
     if (u->c == '#') {
       break;
     } else if (u->c == '?' && !u->isopaque) {
@@ -209,9 +203,9 @@ static void ParsePath(struct UrlParser *u, struct UrlView *h) {
 
 static void ParseQuery(struct UrlParser *u, struct UrlParams *h) {
   bool t = false;
-  if (!h->p) h->p = xmalloc(0);
-  while (u->i < u->size) {
-    u->c = u->data[u->i++] & 0xff;
+  if (!h->p) h->p = malloc(0);
+  while (u->i < u->n) {
+    u->c = u->s[u->i++] & 255;
     if (u->c == '#') {
       break;
     } else if (u->c == '%') {
@@ -237,8 +231,8 @@ static void ParseQuery(struct UrlParser *u, struct UrlParams *h) {
 }
 
 static void ParseFragment(struct UrlParser *u, struct UrlView *h) {
-  while (u->i < u->size) {
-    u->c = u->data[u->i++] & 0xff;
+  while (u->i < u->n) {
+    u->c = u->s[u->i++] & 255;
     if (u->c == '%') {
       ParseEscape(u);
     } else if (u->c >= 0200 && u->islatin1) {
@@ -252,20 +246,19 @@ static void ParseFragment(struct UrlParser *u, struct UrlView *h) {
   u->q = u->p;
 }
 
-static char *ParseUrlImpl(const char *data, size_t size, struct Url *h,
-                          bool latin1) {
+static char *ParseUrlImpl(const char *s, size_t n, struct Url *h, bool latin1) {
   char *m;
   struct UrlParser u;
-  if (size == -1) size = data ? strlen(data) : 0;
+  if (n == -1) n = s ? strlen(s) : 0;
   u.i = 0;
   u.c = 0;
+  u.s = s;
+  u.n = n;
   u.isform = false;
   u.isopaque = false;
   u.islatin1 = latin1;
-  u.data = data;
-  u.size = size;
   memset(h, 0, sizeof(*h));
-  if ((m = malloc(latin1 ? u.size * 2 : u.size))) {
+  if ((m = malloc(latin1 ? u.n * 2 : u.n))) {
     u.q = u.p = m;
     if (ParseScheme(&u, h)) ParseAuthority(&u, h);
     if (u.c != '#' && u.c != '?') ParsePath(&u, &h->path);
@@ -287,7 +280,7 @@ static char *ParseUrlImpl(const char *data, size_t size, struct Url *h,
  * There's no failure condition for this routine. This is a permissive
  * parser. This doesn't normalize path segments like `.` or `..` so use
  * IsAcceptablePath() to check for those. No restrictions are imposed
- * beyond that which is strictly necessary for parsing. All the data
+ * beyond that which is strictly necessary for parsing. All the s
  * that is provided will be consumed to the one of the fields. Strict
  * conformance is enforced on some fields more than others, like scheme,
  * since it's the most non-deterministically defined field of them all.
@@ -297,18 +290,18 @@ static char *ParseUrlImpl(const char *data, size_t size, struct Url *h,
  * for the things we won't do, like tokenizing path segments into an
  * array and then nesting another array beneath each of those for
  * storing semicolon parameters. So this parser won't make SIP easy.
- * What it can do is parse HTTP URLs and most URIs like data:opaque,
+ * What it can do is parse HTTP URLs and most URIs like s:opaque,
  * better in fact than most things which claim to be URI parsers.
  *
- * @param data is value like `/hi?x=y&z` or `http://a.example/hi#x`
- * @param size is byte length and -1 implies strlen
+ * @param s is value like `/hi?x=y&z` or `http://a.example/hi#x`
+ * @param n is byte length and -1 implies strlen
  * @param h is assumed to be uninitialized
  * @return memory backing UrlView needing free (and h.params.p too)
  * @see URI Generic Syntax RFC3986 RFC2396
  * @see EncodeUrl()
  */
-char *ParseUrl(const char *data, size_t size, struct Url *h) {
-  return ParseUrlImpl(data, size, h, false);
+char *ParseUrl(const char *s, size_t n, struct Url *h) {
+  return ParseUrlImpl(s, n, h, false);
 }
 
 /**
@@ -325,13 +318,13 @@ char *ParseUrl(const char *data, size_t size, struct Url *h) {
  * necessary for parsing. This doesn't normalize path segments like `.`
  * or `..`. Use IsAcceptablePath() to check for those.
  *
- * @param data is value like `/hi?x=y&z` or `http://a.example/hi#x`
- * @param size is byte length and -1 implies strlen
+ * @param s is value like `/hi?x=y&z` or `http://a.example/hi#x`
+ * @param n is byte length and -1 implies strlen
  * @param h is assumed to be uninitialized
  * @return memory backing UrlView needing free (and h.params.p too)
  */
-char *ParseRequestUri(const char *data, size_t size, struct Url *h) {
-  return ParseUrlImpl(data, size, h, true);
+char *ParseRequestUri(const char *s, size_t n, struct Url *h) {
+  return ParseUrlImpl(s, n, h, true);
 }
 
 /**
@@ -349,23 +342,23 @@ char *ParseRequestUri(const char *data, size_t size, struct Url *h) {
  * parser that doesn't impose character restrictions beyond what is
  * necessary for parsing.
  *
- * @param data is value like `foo=bar&x=y&z`
- * @param size is byte length and -1 implies strlen
+ * @param s is value like `foo=bar&x=y&z`
+ * @param n is byte length and -1 implies strlen
  * @param h must be zeroed by caller and this appends if reused
- * @return UrlView memory with same size needing free (h.p needs free too)
+ * @return UrlView memory with same n needing free (h.p needs free too)
  */
-char *ParseParams(const char *data, size_t size, struct UrlParams *h) {
+char *ParseParams(const char *s, size_t n, struct UrlParams *h) {
   char *m;
   struct UrlParser u;
-  if (size == -1) size = data ? strlen(data) : 0;
+  if (n == -1) n = s ? strlen(s) : 0;
   u.i = 0;
+  u.s = s;
+  u.n = n;
   u.c = '?';
   u.isform = true;
   u.islatin1 = false;
   u.isopaque = false;
-  u.data = data;
-  u.size = size;
-  if ((m = malloc(u.size))) {
+  if ((m = malloc(u.n))) {
     u.q = u.p = m;
     ParseQuery(&u, h);
   }
@@ -391,23 +384,23 @@ char *ParseParams(const char *data, size_t size, struct UrlParams *h) {
  * called conditionally after ParseRequestUri() if the host is absent.
  * Fields unrelated to authority won't be impacted by this function.
  *
- * @param data is value like `127.0.0.1` or `foo.example:80`
- * @param size is byte length and -1 implies strlen
+ * @param s is value like `127.0.0.1` or `foo.example:80`
+ * @param n is byte length and -1 implies strlen
  * @param h is needs to be initialized by caller
  * @return memory backing UrlView needing free
  */
-char *ParseHost(const char *data, size_t size, struct Url *h) {
+char *ParseHost(const char *s, size_t n, struct Url *h) {
   char *m;
   struct UrlParser u;
-  if (size == -1) size = data ? strlen(data) : 0;
+  if (n == -1) n = s ? strlen(s) : 0;
   u.i = 0;
   u.c = 0;
+  u.s = s;
+  u.n = n;
   u.isform = false;
   u.islatin1 = true;
   u.isopaque = false;
-  u.data = data;
-  u.size = size;
-  if ((m = malloc(u.size * 2))) {
+  if ((m = malloc(u.n * 2))) {
     u.q = u.p = m;
     ParseAuthority(&u, h);
   }

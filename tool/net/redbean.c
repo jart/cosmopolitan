@@ -2024,8 +2024,7 @@ static char *RedirectSlash(void) {
 static char *ServeIndex(const char *path, size_t pathlen) {
   size_t i, n;
   char *p, *q;
-  p = NULL;
-  for (i = 0; !p && i < ARRAYLEN(kIndexPaths); ++i) {
+  for (p = 0, i = 0; !p && i < ARRAYLEN(kIndexPaths); ++i) {
     q = MergePaths(path, pathlen, kIndexPaths[i], strlen(kIndexPaths[i]), &n);
     p = RoutePath(q, n);
     free(q);
@@ -4093,7 +4092,7 @@ static char *HandleRequest(void) {
       !IsAcceptableHost(url.host.p, url.host.n) ||
       !IsAcceptablePort(url.port.p, url.port.n)) {
     LockInc(&shared->c.urisrefused);
-    return ServeFailure(400, "Bad Request");
+    return ServeFailure(400, "Bad URI");
   }
   LOGF("RECEIVED %s HTTP%02d %.*s %s %`'.*s %`'.*s", DescribeClient(),
        msg.version, msg.xmethod.b - msg.xmethod.a, inbuf.p + msg.xmethod.a,
