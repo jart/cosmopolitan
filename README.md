@@ -22,8 +22,8 @@ If you're doing your development work on Linux or BSD then you need just
 five files to get started. Here's what you do on Linux:
 
 ```sh
-wget https://justine.lol/cosmopolitan/cosmopolitan-amalgamation-0.3.zip
-unzip cosmopolitan-amalgamation-0.3.zip
+wget https://justine.lol/cosmopolitan/cosmopolitan-amalgamation-1.0.zip
+unzip cosmopolitan-amalgamation-1.0.zip
 printf 'main() { printf("hello world\\n"); }\n' >hello.c
 gcc -g -Os -static -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone \
   -fno-omit-frame-pointer -pg -mnop-mcount \
@@ -72,8 +72,8 @@ repository that bootstraps using a vendored static gcc9 executable.
 No further dependencies are required.
 
 ```sh
-wget https://justine.lol/cosmopolitan/cosmopolitan-0.3.tar.gz
-tar xf cosmopolitan-0.3.tar.gz  # see releases page
+wget https://justine.lol/cosmopolitan/cosmopolitan-1.0.tar.gz
+tar xf cosmopolitan-1.0.tar.gz  # see releases page
 cd cosmopolitan
 make -j16
 o//examples/hello.com
