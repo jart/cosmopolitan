@@ -3,7 +3,9 @@
 #include "libc/sock/sock.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
-#define DNS_TYPE_A 1
+#define DNS_TYPE_A   0x01
+#define DNS_TYPE_PTR 0x0c
+
 #define DNS_CLASS_IN 1
 
 #define kMinSockaddr4Size \

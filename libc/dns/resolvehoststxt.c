@@ -52,6 +52,8 @@ int ResolveHostsTxt(const struct HostsTxt *ht, int af, const char *name,
   struct sockaddr_in *addr4;
   struct HostsTxtEntry *entry;
   if (af != AF_INET && af != AF_UNSPEC) return eafnosupport();
+  if (ht->sorted_by != HOSTSTXT_SORTEDBYNAME)
+    SortHostsTxt(ht, HOSTSTXT_SORTEDBYNAME);
   if ((entry = bsearch_r(name, ht->entries.p, ht->entries.i,
                          sizeof(struct HostsTxtEntry), (void *)hoststxtgetcmp,
                          ht->strings.p))) {

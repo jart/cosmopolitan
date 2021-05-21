@@ -48,7 +48,7 @@ TEST(ParseHostsTxt, testCorrectlyTokenizesAndSorts) {
   ASSERT_EQ(1, fwrite(kInput, strlen(kInput), 1, f));
   rewind(f);
   ASSERT_EQ(0, ParseHostsTxt(ht, f));
-  SortHostsTxt(ht);
+  SortHostsTxt(ht, HOSTSTXT_SORTEDBYNAME);
   ASSERT_EQ(4, ht->entries.i);
   EXPECT_STREQ("cat.example.", &ht->strings.p[ht->entries.p[0].name]);
   EXPECT_STREQ("cat.example.", &ht->strings.p[ht->entries.p[0].canon]);

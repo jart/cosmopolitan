@@ -31,6 +31,17 @@ static int cmphoststxt(const struct HostsTxtEntry *e1,
 }
 
 /**
+ * Compares addresses in HOSTS.TXT table.
+ * @see ResolveHostsReverse()
+ */
+static int cmphostsaddr(const struct HostsTxtEntry *e1,
+                        const struct HostsTxtEntry *e2) {
+  if (e1 == e2) return 0;
+  uint32_t v1 = *((uint32_t *)e1->ip), v2 = *((uint32_t *)e2->ip);
+  return (v1 == v2 ? 0 : (v1 > v2 ? 1 : -1));
+}
+
+/**
  * Sorts entries in HOSTS.TXT table.
  *
  * This function enables ResolveHostsTxt() to be called so hard-coded
@@ -41,9 +52,16 @@ static int cmphoststxt(const struct HostsTxtEntry *e1,
  * possible to efficiently search for subdomains, once the initial sort
  * is done.
  */
-void SortHostsTxt(struct HostsTxt *ht) {
+void SortHostsTxt(struct HostsTxt *ht, int sort_by) {
   if (ht->entries.p) {
-    qsort_r(ht->entries.p, ht->entries.i, sizeof(*ht->entries.p),
-            (void *)cmphoststxt, ht->strings.p);
+    if (sort_by == HOSTSTXT_SORTEDBYNAME) {
+      qsort_r(ht->entries.p, ht->entries.i, sizeof(*ht->entries.p),
+              (void *)cmphoststxt, ht->strings.p);
+      ht->sorted_by = HOSTSTXT_SORTEDBYNAME;
+    } else {
+      qsort(ht->entries.p, ht->entries.i, sizeof(*ht->entries.p),
+            (void *)cmphostsaddr);
+      ht->sorted_by = HOSTSTXT_SORTEDBYADDR;
+    }
   }
 }

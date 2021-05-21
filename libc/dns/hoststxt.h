@@ -21,7 +21,12 @@ struct HostsTxtStrings {
   char *p;
 };
 
+#define HOSTSTXT_NOT_SORTED   0
+#define HOSTSTXT_SORTEDBYNAME 1
+#define HOSTSTXT_SORTEDBYADDR 2
+
 struct HostsTxt {
+  int sorted_by;
   struct HostsTxtEntries entries;
   struct HostsTxtStrings strings;
 };
@@ -29,10 +34,12 @@ struct HostsTxt {
 const struct HostsTxt *GetHostsTxt(void) returnsnonnull;
 void FreeHostsTxt(struct HostsTxt **) paramsnonnull();
 int ParseHostsTxt(struct HostsTxt *, FILE *) paramsnonnull();
-void SortHostsTxt(struct HostsTxt *) paramsnonnull();
+void SortHostsTxt(struct HostsTxt *, int) paramsnonnull();
 int ResolveHostsTxt(const struct HostsTxt *, int, const char *,
                     struct sockaddr *, uint32_t, const char **)
     paramsnonnull((1, 3));
+int ResolveHostsReverse(const struct HostsTxt *, int, const uint8_t *, char *,
+                        size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

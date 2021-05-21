@@ -49,7 +49,7 @@ TEST(ResolveHostsTxt, testBasicLookups) {
   struct HostsTxt *ht = calloc(1, sizeof(struct HostsTxt));
   FILE *f = fmemopen(kInput, strlen(kInput), "r+");
   ASSERT_EQ(0, ParseHostsTxt(ht, f));
-  SortHostsTxt(ht);
+  SortHostsTxt(ht, HOSTSTXT_SORTEDBYNAME);
   ASSERT_EQ(5, ht->entries.i);
   EXPECT_STREQ("127.0.0.1", EzIp4Lookup(ht, "localhost"));
   EXPECT_STREQ("203.0.113.1", EzIp4Lookup(ht, "lol"));
@@ -66,7 +66,7 @@ TEST(ResolveHostsTxt, testCanonicalize) {
   struct HostsTxt *ht = calloc(1, sizeof(struct HostsTxt));
   FILE *f = fmemopen(kInput, strlen(kInput), "r+");
   ASSERT_EQ(0, ParseHostsTxt(ht, f));
-  SortHostsTxt(ht);
+  SortHostsTxt(ht, HOSTSTXT_SORTEDBYNAME);
   ASSERT_EQ(5, ht->entries.i);
   EXPECT_STREQ("localhost", EzCanonicalize(ht, "localhost"));
   EXPECT_STREQ("lol.example.", EzCanonicalize(ht, "lol"));
