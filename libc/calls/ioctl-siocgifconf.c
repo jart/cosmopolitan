@@ -23,10 +23,6 @@
 #include "libc/sock/internal.h"
 #include "libc/sysv/consts/sio.h"
 
-
-#include "libc/stdio/stdio.h"
-#define PRINTF  weaken(printf)
-
 /* SIOCGIFCONF:
  * Takes an struct ifconf object of a given size
  * Modifies the following:
@@ -39,54 +35,92 @@
 int ioctl_siocgifconf_nt(int, struct ifconf *) hidden;
 
 static int ioctl_siocgifconf_sysv(int fd, struct ifconf *ifc) {
-  /* Same as the default for now... */
   if (IsBsd()) {
+    /* BSD uses a slightly different memory structure where:
+     * - sizeof(struct ifreq) is 32 bytes instead of 40 bytes
+     * - ifc.ifc_len is uint32_t instead of uint64_t
+     * - struct ifconf is #pragma pack(4) (instead of the default pack(8))
+     */
+    int i;
+    char *buf;      /* Temporary buffer to store ifreq */
+    char *pBsdReq;  /* Scan through buf records */
+    char *pBsdEnd;  /* End of the ifreq */
+
+    struct ifconf_bsd ifc_bsd;
+    struct ifreq_bsd *bsdReq;
+    struct ifreq *req;
+    size_t numReq = ifc->ifc_len / sizeof(struct ifreq);
+
     if (!weaken(malloc)) {
       return enomem();
-    } else {
-      /* On BSD the size of the struct ifreq is smaller (16 bytes
-       * instead of 24 bytes), so buffers need to be adjusted accordingly
-       *
-       * TODO: Since BSD requires a SMALLER buffer we don't need to 
-       *       malloc a temp buffer, insted reuse the same buffer and
-       *       safely move overlapping ifrn_name chunks
-       */
-      int i;
-      struct ifconf ifc_bsd;
-      size_t num_ifreq = ifc->ifc_len / sizeof(struct ifreq);
-
-      PRINTF("Mac version!\n");
-      ifc_bsd.ifc_len = (num_ifreq * sizeof(struct ifreq_bsd));    /* Adjust max buffer */
-      ifc_bsd.ifc_buf = weaken(malloc)(ifc_bsd.ifc_len);
-      PRINTF("numInterf Linux=%lu\n", num_ifreq);
-      PRINTF("BSD   size=%lu\n", ifc_bsd.ifc_len);
-      PRINTF("Linux size=%lu\n", ifc->ifc_len);
-      if (!ifc_bsd.ifc_buf) {
-        PRINTF("Malloc failed\n");
-        return enomem();
-      }
-      PRINTF("Calling ioctl()\n");
-      i = sys_ioctl(fd, SIOCGIFCONF, &ifc_bsd);
-      PRINTF("rc=%d\n", i);
-      if (i < 0) {
-        weaken(free)(ifc_bsd.ifc_buf);
-        return -1;
-      }
-
-      /* Number of interfaces returned */
-      num_ifreq = ifc_bsd.ifc_len / sizeof(struct ifreq_bsd);
-      for (i = 1; i < num_ifreq; ++i) {
-        /* The first interface always match the same position */
-        memcpy(ifc->ifc_req[i].ifr_name, ifc_bsd.ifc_req[i].ifr_name, IFNAMSIZ);
-      }
-      ifc->ifc_len = num_ifreq * sizeof(struct ifreq);
-      weaken(free)(ifc_bsd.ifc_buf);
-      return 0;
+    } 
+    ifc_bsd.ifc_len = numReq * sizeof(struct ifreq_bsd);
+    buf = weaken(malloc)(ifc_bsd.ifc_len);
+    if (!buf) {
+      return enomem();
     }
+    ifc_bsd.ifc_buf = buf;
+
+    if ((i = sys_ioctl(fd, SIOCGIFCONF, &ifc_bsd)) < 0) {
+      weaken(free)(buf);
+      return -1;
+    }
+
+    /* On BSD the size of the struct ifreq is different than Linux.
+     * On Linux is fixed (40 bytes), but on BSD the struct sockaddr
+     * has variable length, making the whole struct ifreq a variable
+     * sized record.
+     */
+    for (pBsdReq = buf, pBsdEnd = buf + ifc_bsd.ifc_len, req = ifc->ifc_req;
+        pBsdReq < pBsdEnd;
+        ++req) {
+      bsdReq = (struct ifreq_bsd *)pBsdReq;
+      memcpy(req->ifr_name, bsdReq->ifr_name, IFNAMSIZ);
+      memcpy(&req->ifr_addr, &bsdReq->ifr_addr, sizeof(struct sockaddr_bsd));
+      sockaddr2linux(&req->ifr_addr);
+
+      pBsdReq += IFNAMSIZ + bsdReq->ifr_addr.sa_len;
+    }
+
+    /* Adjust len */
+    ifc->ifc_len = (size_t)((char *)req - ifc->ifc_buf);
+    weaken(free)(buf);
+    return 0;
+
   } else {
-    // 100% compatible with Linux
+    /* 100% compatible with Linux */
     return sys_ioctl(fd, SIOCGIFCONF, ifc);
   }
+}
+
+static int ioctl_siocgifaddr_sysv(int fd, struct ifreq *ifr) {
+  int i;
+
+  if (IsBsd()) {
+    sockaddr2bsd(&ifr->ifr_addr);
+  }
+  if ((i = sys_ioctl(fd, SIOCGIFADDR, ifr)) < 0) {
+    return -1;
+  }
+  if (IsBsd()) {
+    sockaddr2linux(&ifr->ifr_addr);
+  }
+  return 0;
+}
+
+static int ioctl_siocgifnetmask_sysv(int fd, struct ifreq *ifr) {
+  int i;
+
+  if (IsBsd()) {
+    sockaddr2bsd(&ifr->ifr_netmask);
+  }
+  if ((i = sys_ioctl(fd, SIOCGIFNETMASK, ifr)) < 0) {
+    return -1;
+  }
+  if (IsBsd()) {
+    sockaddr2linux(&ifr->ifr_netmask);
+  }
+  return 0;
 }
 
 /**
@@ -94,11 +128,29 @@ static int ioctl_siocgifconf_sysv(int fd, struct ifconf *ifc) {
  *
  * @see ioctl(fd, SIOCGIFCONF, tio) dispatches here
  */
-int ioctl_siocgifconf(int fd, struct ifconf *ifc) {
+int ioctl_siocgifconf(int fd, void *ifc) {
   if (!IsWindows()) {
-    return ioctl_siocgifconf_sysv(fd, ifc);
+    return ioctl_siocgifconf_sysv(fd, (struct ifconf *)ifc);
   } else {
-    return ioctl_siocgifconf_nt(fd, ifc);
+    return enotsup();
+    //return ioctl_siocgifconf_nt(fd, ifc);
   }
 }
 
+int ioctl_siocgifaddr(int fd, void *ifr) {
+  if (!IsWindows()) {
+    return ioctl_siocgifaddr_sysv(fd, (struct ifreq *)ifr);
+  } else {
+    return enotsup();
+    //return ioctl_siocgifaddr_nt(fd, ifc);
+  }
+}
+
+int ioctl_siocgifnetmask(int fd, void *ifr) {
+  if (!IsWindows()) {
+    return ioctl_siocgifnetmask_sysv(fd, (struct ifreq *)ifr);
+  } else {
+    return enotsup();
+    //return ioctl_siocgifaddr_nt(fd, ifc);
+  }
+}
