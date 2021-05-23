@@ -31,6 +31,9 @@ int ioctl(int, uint64_t, void *);
     if (CMP(request, SIOCGIFCONF)) return ioctl_siocgifconf(FD, MEMORY); \
     if (CMP(request, SIOCGIFADDR)) return ioctl_siocgifaddr(FD, MEMORY); \
     if (CMP(request, SIOCGIFNETMASK)) return ioctl_siocgifnetmask(FD, MEMORY); \
+    if (CMP(request, SIOCGIFBRDADDR)) return ioctl_siocgifbrdaddr(FD, MEMORY); \
+    if (CMP(request, SIOCGIFDSTADDR)) return ioctl_siocgifdstaddr(FD, MEMORY); \
+    if (CMP(request, SIOCGIFFLAGS)) return ioctl_siocgifflags(FD, MEMORY); \
   } while (0)
 
 /*
@@ -47,7 +50,10 @@ int ioctl_tiocswinsz(int, void *);
 int ioctl_tiocswinsz_nt(int, void *);
 int ioctl_siocgifconf(int, void *);
 int ioctl_siocgifaddr(int, void *);
+int ioctl_siocgifdstaddr(int, void *);
 int ioctl_siocgifnetmask(int, void *);
+int ioctl_siocgifbrdaddr(int, void *);
+int ioctl_siocgifflags(int, void *);
 int ioctl_default(int, uint64_t, void *);
 
 forceinline int ioctl_dispatch(int fd, uint64_t request, void *memory) {

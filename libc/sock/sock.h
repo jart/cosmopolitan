@@ -108,9 +108,11 @@ struct ifreq {
   } ifr_ifrn;
 
   union {
-    struct sockaddr ifru_addr;
-    struct sockaddr ifru_netmask;
-    short           ifru_flags;
+    struct sockaddr ifru_addr;          /* SIOCGIFADDR */
+    struct sockaddr ifru_dstaddr;       /* SIOCGIFDSTADDR */
+    struct sockaddr ifru_netmask;       /* SIOCGIFNETMASK */
+    struct sockaddr ifru_broadaddr;     /* SIOCGIFBRDADDR */
+    short           ifru_flags;         /* SIOCGIFFLAGS */
     char            ifru_pad[24];   /* ifru_map is the largest, just pad */
   } ifr_ifru;
 };
@@ -118,6 +120,8 @@ struct ifreq {
 #define ifr_name	ifr_ifrn.ifrn_name	/* interface name 	*/
 #define ifr_addr	ifr_ifru.ifru_addr	/* address		*/
 #define ifr_netmask	ifr_ifru.ifru_netmask	/* netmask		*/
+#define ifr_broadaddr	ifr_ifru.ifru_broadaddr	/* broadcast address	*/
+#define ifr_dstaddr	ifr_ifru.ifru_dstaddr	/* destination address	*/
 #define ifr_flags	ifr_ifru.ifru_flags	/* flags		*/
 
 #define _IOT_ifreq	_IOT(_IOTS(char),IFNAMSIZ,_IOTS(char),16,0,0)

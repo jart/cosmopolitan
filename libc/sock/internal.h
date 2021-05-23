@@ -71,6 +71,8 @@ struct ifreq_bsd {
      */
     struct  sockaddr_bsd ifru_addr;
     struct  sockaddr_bsd ifru_netmask;
+    struct  sockaddr_bsd ifru_dstaddr;
+    struct  sockaddr_bsd ifru_broadaddr;
     short   ifru_flags;
     char    ifru_pad[16];   /* used as padding */
   } ifr_ifru;

@@ -32,7 +32,10 @@
  * The ifc_len is an input/output parameter: set it to the total size of 
  * the ifcu_buf (ifcu_req) buffer on input.
  */
+
+int ioctl_default(int, uint64_t, void *) hidden;
 int ioctl_siocgifconf_nt(int, struct ifconf *) hidden;
+int ioctl_siocgifaddr_nt(int, struct ifconf *) hidden;
 
 static int ioctl_siocgifconf_sysv(int fd, struct ifconf *ifc) {
   if (IsBsd()) {
@@ -93,32 +96,20 @@ static int ioctl_siocgifconf_sysv(int fd, struct ifconf *ifc) {
   }
 }
 
-static int ioctl_siocgifaddr_sysv(int fd, struct ifreq *ifr) {
+/* Used for all the ioctl that returns sockaddr structure that
+ * requires adjustment between Linux and BSD
+ */
+static int ioctl_siocgifaddr_sysv(int fd, uint64_t op, struct ifreq *ifr) {
   int i;
 
   if (IsBsd()) {
     sockaddr2bsd(&ifr->ifr_addr);
   }
-  if ((i = sys_ioctl(fd, SIOCGIFADDR, ifr)) < 0) {
+  if ((i = sys_ioctl(fd, op, ifr)) < 0) {
     return -1;
   }
   if (IsBsd()) {
     sockaddr2linux(&ifr->ifr_addr);
-  }
-  return 0;
-}
-
-static int ioctl_siocgifnetmask_sysv(int fd, struct ifreq *ifr) {
-  int i;
-
-  if (IsBsd()) {
-    sockaddr2bsd(&ifr->ifr_netmask);
-  }
-  if ((i = sys_ioctl(fd, SIOCGIFNETMASK, ifr)) < 0) {
-    return -1;
-  }
-  if (IsBsd()) {
-    sockaddr2linux(&ifr->ifr_netmask);
   }
   return 0;
 }
@@ -139,7 +130,7 @@ int ioctl_siocgifconf(int fd, void *ifc) {
 
 int ioctl_siocgifaddr(int fd, void *ifr) {
   if (!IsWindows()) {
-    return ioctl_siocgifaddr_sysv(fd, (struct ifreq *)ifr);
+    return ioctl_siocgifaddr_sysv(fd, SIOCGIFADDR, (struct ifreq *)ifr);
   } else {
     return enotsup();
     //return ioctl_siocgifaddr_nt(fd, ifc);
@@ -148,9 +139,37 @@ int ioctl_siocgifaddr(int fd, void *ifr) {
 
 int ioctl_siocgifnetmask(int fd, void *ifr) {
   if (!IsWindows()) {
-    return ioctl_siocgifnetmask_sysv(fd, (struct ifreq *)ifr);
+    return ioctl_siocgifaddr_sysv(fd, SIOCGIFNETMASK, (struct ifreq *)ifr);
   } else {
     return enotsup();
-    //return ioctl_siocgifaddr_nt(fd, ifc);
+    //return ioctl_siocgifnetmask_nt(fd, ifc);
+  }
+}
+
+int ioctl_siocgifbrdaddr(int fd, void *ifr) {
+  if (!IsWindows()) {
+    return ioctl_siocgifaddr_sysv(fd, SIOCGIFBRDADDR, (struct ifreq *)ifr);
+  } else {
+    return enotsup();
+    //return ioctl_siocgifbrdaddr_nt(fd, ifc);
+  }
+}
+
+int ioctl_siocgifdstaddr(int fd, void *ifr) {
+  if (!IsWindows()) {
+    return ioctl_siocgifaddr_sysv(fd, SIOCGIFDSTADDR, (struct ifreq *)ifr);
+  } else {
+    return enotsup();
+    //return ioctl_siocgifbrdaddr_nt(fd, ifc);
+  }
+}
+
+int ioctl_siocgifflags(int fd, void *ifr) {
+  if (!IsWindows()) {
+    /* Both BSD and Linux are for once compatible here... */
+    return ioctl_default(fd, SIOCGIFFLAGS, ifr);
+  } else {
+    return enotsup();
+    //return ioctl_siocgifflags_nt(fd, ifc);
   }
 }
