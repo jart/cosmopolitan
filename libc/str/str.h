@@ -165,6 +165,7 @@ char *strncpy(char *, const char *, size_t) memcpyesque;
 char *strtok(char *, const char *) paramsnonnull((2)) libcesque;
 char *strtok_r(char *, const char *, char **) paramsnonnull((2, 3));
 uint16_t *strcpyzbw(uint16_t *, const char *) memcpyesque;
+wchar_t *wcstok(wchar_t *, const wchar_t *, wchar_t **) paramsnonnull((2, 3));
 char *wstrtrunc(uint16_t *) memcpyesque;
 char *wstrntrunc(uint16_t *, size_t) memcpyesque;
 bool startswith(const char *, const char *) strlenesque;
