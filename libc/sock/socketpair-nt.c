@@ -27,7 +27,6 @@
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/errfuns.h"
 
-// {{{ sys_socketpair_nt
 textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
   int64_t hpipe, h1, h2;
   int reader, writer, oflags;
@@ -89,4 +88,3 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
   sv[1] = writer;
   return 0;
 }
-// }}}
