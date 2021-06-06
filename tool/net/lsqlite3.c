@@ -26,13 +26,17 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                *
 ************************************************************************/
 
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
+// attribution in binary form
+asm(".ident\t\"\\n\\n\
+lsqlite3 (MIT License)\\n\
+Copyright 2002-2016 Tiago Dionizio, Doug Currie\"");
+asm(".include \"libc/disclaimer.inc\"");
 
-#define LUA_LIB
-#include "lua.h"
-#include "lauxlib.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/mem/mem.h"
+
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lauxlib.h"
 
 #if LUA_VERSION_NUM > 501
 /*
@@ -56,7 +60,7 @@
 #endif
 #endif
 
-#include "sqlite3.h"
+#include "third_party/sqlite3/sqlite3.h"
 
 /* compile time features */
 #if !defined(SQLITE_OMIT_PROGRESS_CALLBACK)
@@ -1219,6 +1223,10 @@ static int db_create_collation(lua_State *L) {
     return 0;
 }
 
+// comment out `db_load_extension`, as cosmo can't resolve
+// `sqlite3_enable_load_extension`, since it's built with
+// `SQLITE_OMIT_LOAD_EXTENSION`, which disables extensions.
+#if 0
 /* Thanks to Wolfgang Oertl...
 */
 static int db_load_extension(lua_State *L) {
@@ -1246,6 +1254,7 @@ static int db_load_extension(lua_State *L) {
     sqlite3_free(errmsg);
     return 2;
 }
+#endif
 
 /*
 ** trace callback:
@@ -2238,7 +2247,9 @@ static const luaL_Reg dblib[] = {
     {"create_function",     db_create_function      },
     {"create_aggregate",    db_create_aggregate     },
     {"create_collation",    db_create_collation     },
+#if 0
     {"load_extension",      db_load_extension       },
+#endif
 
     {"trace",               db_trace                },
     {"progress_handler",    db_progress_handler     },

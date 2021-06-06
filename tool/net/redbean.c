@@ -3646,8 +3646,11 @@ static const luaL_Reg kLuaFuncs[] = {
     {"popcnt", LuaPopcnt},                                //
 };
 
+extern int luaopen_lsqlite3(lua_State *L);
+
 static const luaL_Reg kLuaLibs[] = {
     {"re", LuaRe},  //
+    {"lsqlite3", luaopen_lsqlite3},
 };
 
 static void LuaSetArgv(lua_State *L) {
