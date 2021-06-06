@@ -42,6 +42,7 @@ TOOL_NET_DIRECTDEPS =						\
 	NET_HTTP						\
 	THIRD_PARTY_GETOPT					\
 	THIRD_PARTY_LUA						\
+	THIRD_PARTY_SQLITE3					\
 	THIRD_PARTY_REGEX					\
 	THIRD_PARTY_ZLIB					\
 	TOOL_DECODE_LIB
@@ -51,6 +52,7 @@ TOOL_NET_DEPS :=						\
 
 o/$(MODE)/tool/net/net.pkg:					\
 		$(TOOL_NET_OBJS)				\
+		o/tool/net/lsqlite3.o				\
 		$(foreach x,$(TOOL_NET_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/tool/net/%.com.dbg:					\
@@ -64,6 +66,7 @@ o/$(MODE)/tool/net/%.com.dbg:					\
 o/$(MODE)/tool/net/redbean.com.dbg:				\
 		$(TOOL_NET_DEPS)				\
 		o/$(MODE)/tool/net/redbean.o			\
+		o/$(MODE)/tool/net/lsqlite3.o			\
 		o/$(MODE)/tool/net/net.pkg			\
 		$(CRT)						\
 		$(APE)
