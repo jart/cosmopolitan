@@ -52,7 +52,7 @@ TOOL_NET_DEPS :=						\
 
 o/$(MODE)/tool/net/net.pkg:					\
 		$(TOOL_NET_OBJS)				\
-		o/tool/net/lsqlite3.o				\
+		o/$(MODE)/tool/net/lsqlite3.o			\
 		$(foreach x,$(TOOL_NET_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/tool/net/%.com.dbg:					\
