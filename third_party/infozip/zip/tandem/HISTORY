@@ -1,0 +1,97 @@
+Tandem Port History
+===================
+
+Hi, I'm Dave Smith and I work at BP Oil UK, looking after their European card
+processing system since 1992.  We need to send lots of files via FTP to other
+BP machines (Novell, NT, Sun...). Sending large files was frowned upon, so the
+search for a zip product was on.
+
+We tried the GZIP product from Twinsoft Netherlands but it was complicated to
+use and it was not widely known by other arts of BP.
+
+What we really wanted was a PKZIP compatible product, as this is a widely known
+product.  By chance when surfing the web I discovered the Info-ZIP web site.
+This claimed PKZIP 2.04g compatibility and had a number of ports, was free, and
+even had source code, but unfortunately no Tandem version :-(
+
+Thus in the autumn 1996 I bit the bullet and took on the job of porting the
+code to Tandem NSK (Guardian).  This meant dusting off my circa 1985 'C'
+programming skills and firing up the Tandem 'C' compiler - not known for its
+ease of use, especially debugging 8-;  This was all on D30 by the way.
+
+To start this off I had to choose an existing port to base te Tandem one on.
+Nearest (?) was the VM-CMS/MVS port by George Petrov.  The main similarity
+being that these machines are record based, and have a similarish filing system
+to Guardian.
+
+First to be tackled was ZIP.  By the end of 1996 I had a version which compiled
+and ran (giving the program banner) - which seemed like a major acheivement at
+the time.
+
+In December 1996 I forwarded a version of ZIP to Info-ZIP which wor
+ked only on Edit files, and had no concept of directories.  Became ZIP 2.1
+
+By March 1997 I had improved ZIP so that it could cope with Unstructured files
+as well (Became ZIP 2.2).  I also had ported a version of UNZIP which could
+create Unstructured files (not Edit) - UNZIP 5.20
+
+At the start of September 1997 I sent UNZIP with Edit file support to Info-ZIP
+(incorporated into 5.32)
+
+In March 1998 I submitted file I/O improvements (SBB) for ZIP (2.3a)
+
+In August 1998 I added Tandem DEFINE processing for ZIP (2.3e).  This was a
+feature required by BP to allow them to store files with a different internal
+name than the physical file being zipped (without renaming it).
+Also added storing of proper UTC timestamps which allow for DST & timezone.
+
+Also in August I added the same file I/O improvements for UNZIP (5.33f)
+
+I then added the ability to update the unzipped files last modified and last
+open timestamps - this required help from TNSC to allow me access to the
+priviliged procedure call.  Also can give the files back to the original user
+by use of the '-X' flag.
+
+At the end of 1998 I was given the go ahead to add the zipping of Enscribe
+files.  This first version stores all Enscribe file attributes EXCEPT SQL, alt
+key and partition information.
+
+ZIP now uses its own Guardian I/O (rather than the 'C'library) for the reading
+of files to be zipped.
+
+Unstructured files use Large Transfer mode and READ (56K or 30K reads)
+Edit files use IOEdit routines
+Enscribe files use READ and SBB and add LF to the end of each record.
+
+UNZIP has the ability to update the filecode of files restored to ther original
+value (Unstructured only)
+
+
+To Do ZIP
+===========
+1. Change I/O to use NSK/Large Transfer mode in fwrite of ZIP file itself- this
+   will dramaticaly speed up updating an existing zipfile. When updating an
+   existing zipfile it copies it to a temporary file currently using only SBB.
+2. Add raw binary mode to allow storing of raw data in zip file - e.g. only to
+   be unzipped on Tandem !  This is simplest/fastest way to provide full
+   Enscribe support for Tandem platform - with no cross-platform support.
+3. Add SQL support !!
+
+To Do UNZIP
+===========
+1. Re-write the I/O routines to use NSK to recreate the original Enscribe file
+   structure.
+2. Use NSK Large Transfer mode I/O for reading/writing of ZIP file
+3. Add raw binary mode to allow restoration of Tandem file from previous raw
+   data ZIP (see above)
+4. Add SQL support !!
+
+
+
+Current Versions on Website
+===========================
+
+ZIP 2.3
+UNZIP 5.5
+
+As of February 17th 2002

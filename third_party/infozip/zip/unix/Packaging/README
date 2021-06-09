@@ -1,0 +1,44 @@
+Solaris packaging
+-----------------
+
+To generate a Solaris package for Info-ZIP zip utilities,
+first see the top level INSTALL and README files.  Do a
+"make solaris", which will automatically build two Solaris
+installable package files for the package, IZzip.
+
+   IZzip     -- Solaris installable package in directory format.
+   IZzip_$(arch).pkg -- Solaris installable package in "stream" format.
+
+   Where:  $(arch) := system architecture, currently i386, sparc, or ppc.
+                      (use "uname -p" to determine)
+
+The ".pkg" file is a single file datastream that can be compressed
+and/or ftp'd.  This is the recommended form, because all required
+files are resident in the archive, and it is easily distributed.
+
+To install, simply:
+
+    1)  copy the package to the target system's /tmp directory.
+    2)  login or su to root
+    3)  pkgadd -d /tmp/IZzip_$(arch).pkg
+    4)  add /opt/Info-ZIP/IZzip/bin to PATH
+    5)  add /opt/Info-ZIP/IZzip/man to MANPATH
+
+This works for both SPARC and x86.
+
+Ongoing maintenance:
+
+  Keep the files, "prototype" and "pkginfo.in" up to date.
+  Observe variable substitutions made by "Makefile".
+  See manpages for pkginfo(1), pkginfo(4), pkgmk(1), pkgproto(1)
+
+Variations:
+
+  If you wish the base directory to be set to something other than
+  /opt/Info-ZIP, change the setting BASEDIR in pkginfo.in and
+  re-run the make.
+
+
+-John Bush (John.Bush@East.Sun.COM)
+ July 20, 1996
+

@@ -1,0 +1,21 @@
+?tacl macro
+#frame
+#push zipfile
+#SET zipfile [#FILEINFO /SUBVOL/ A]
+
+unzip -a [zipfile] *.c  -x */*
+== Following not required
+RENAME apic     apicz
+RENAME timezonc timezonz
+
+unzip -a [zipfile] *.h -x */*
+== Following not required
+RENAME apih    apizh
+
+unzip -aj [zipfile] tandem/*.h
+
+unzip -aj [zipfile] tandem/*.c
+
+unzip -aj [zipfile] tandem/* -x tandem/*.*
+
+#unframe

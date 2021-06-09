@@ -1,0 +1,7 @@
+From: paul.kienitz@shelter.sf.ca.us (Paul Kienitz)
+> It looks like I don't have to create a tzset() kluge for Watcom to check
+> the win32 API timezone information after all -- their new 10.6 release has
+> corrected this oversight.  The TZ variable overrides the API.  So the only
+> win32-related patch I want to make for Zip is just to use USE_EF_UT_TIME
+> unconditionally.  With this in place, timezone stuff is working flawlessly
+> with or without TZ being set.

@@ -1,0 +1,14 @@
+;module-definition file for Windows Zip DLL -- used by link.exe
+
+LIBRARY ZIP32Z64 ; Library module name
+DESCRIPTION 'Windows Info-ZIP Zip DLL 3.0 by Info-ZIP, Mike White 2004'
+
+;CODE  PRELOAD FIXED
+
+;DATA  PRELOAD MOVEABLE
+
+EXPORTS
+     ZpArchive
+     ZpVersion
+     ZpInit
+

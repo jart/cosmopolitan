@@ -1,0 +1,63 @@
+Contents of the "macos" sub-archive for Zip 2.3 and later:
+
+
+MacOS:
+
+  Contents          this file
+  readme.1st        Instruction to unpack mac specific files
+  README.TXT        Dirk Haase's infos on updated MacIntosh ports of Zip/UnZip
+  HISTORY.TXT       Dirk Haase's MacOS specific ChangeLog
+
+  zipup.h           MacOS
+  osdep.h           MacOS specific configuration and declarations
+
+  ZipLib.h          used to build a static library, global to the project
+  ZipSx.h           used to build a standalone App with MW Sioux, global
+                    to the project
+  ZpPrj.hqx         Metrowerks CodeWarrior pro3 project file (BinHex)
+
+
+  source/        subdirectory containing all sources:
+                  a) Zip specific code
+    extrafld.c      contains all code related to the mac extra field
+    extrafld.h
+    macglob.h
+    macopen.c       replaces fopen() and open()
+    macopen.h
+    macos.c         Macintosh-specific routines for use with Info-ZIP's Zip
+    MatWild.c       Pattern matching function
+    recurse.c       Functions to go through the directories
+    recurse.h
+    unixlike.c      This file provides a unix like file-stat routine
+    unixlike.h
+    VolWarn.h       contains the warning message, about volumes with the
+                    same name
+    zip_rc.hqx      resource file for Macintosh unzip (BinHex)
+
+
+                  b) general utilities shared between Zip and UnZip
+    charmap.h       character mapping tables ISO 8859-1 <--> MacRoman
+    helpers.c       some helper functions
+    helpers.h
+    macstuff.c      Mac filemanager routines copied from MoreFiles 1.4.8
+    macstuff.h
+    mactime.c       replacement for broken Metrowerks RTL time functions
+    pathname.c      functions for handling MacOS HFS path- /filenames
+    pathname.h
+
+The new ZpPrj.hqx project file should be "un-BinHex'ed" into ZpPrj,
+which builds the following targets:
+        - Zip Lib (68K)   -> static library 68k
+        - Zip Lib (PPC)   -> static library PPC
+        - Zip Sioux (68K) -> MW Sioux standalone App, good for debugging
+        - Zip Sioux (PPC) -> MW Sioux standalone App, good for debugging
+
+
+The resource files and the compiler project files are in BinHex form because
+they contain Macintosh resource forks.  The resource info cannot be
+maintained when handling (e.g. repacking) the master source collection on
+non-Macintosh systems.  The BinHex form is the traditional way for
+transferring such files via non-Macintosh systems.
+It's also the safest since it uses only printable characters.  The ".hqx"
+files must be converted with StuffitExpander or BinHex 4.0 (or equivalent)
+on a Macintosh system before using them.

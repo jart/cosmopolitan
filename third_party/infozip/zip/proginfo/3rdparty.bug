@@ -1,0 +1,114 @@
+Known, current PKZIP bugs/limitations:
+-------------------------------------
+
+ - PKUNZIP 2.04g is reported to corrupt some files when compressing them with
+   the -ex option; when tested, the files fail the CRC check, and comparison
+   with the original file shows bogus data (6K in one case) embedded in the
+   middle.  PKWARE apparently characterized this as a "known problem."
+
+ - PKUNZIP 2.04g considers volume labels valid only if originated on a FAT
+   file system, but other OSes and file systems (e.g., Amiga and OS/2 HPFS)
+   support volume labels, too.
+
+ - PKUNZIP 2.04g can restore volume labels created by Zip 2.x but not by
+   PKZIP 2.04g (OS/2 DOS box only??).
+
+ - PKUNZIP 2.04g gives an error message for stored directory entries created
+   under other OSes (although it creates the directory anyway), and PKZIP -vt
+   does not report the directory attribute bit as being set, even if it is.
+
+ - PKZIP 2.04g mangles unknown extra fields (especially OS/2 extended attri-
+   butes) when adding new files to an existing zipfile [example:  Walnut Creek
+   Hobbes March 1995 CD-ROM, FILE_ID.DIZ additions].
+
+ - PKUNZIP 2.04g is unable to detect or deal with prepended junk in a zipfile,
+   reporting CRC errors in valid compressed data.
+
+ - PKUNZIP 2.04g (registered version) incorrectly updates/freshens the AV extra
+   field in authenticated archives.  The resultant extra block length and total
+   extra field length are inconsistent.
+
+ - [Windows version 2.01] Win95 long filenames (VFAT) are stored OK, but the
+   file system is always listed as ordinary DOS FAT.
+
+ - [Windows version 2.50] NT long filenames (NTFS) are stored OK, but the
+   file system is always listed as ordinary DOS FAT.
+
+ - PKZIP 2.04 for DOS encrypts using the OEM code page for 8-bit passwords,
+   while PKZIP 2.50 for Windows uses Latin-1 (ISO 8859-1).  This means an
+   archive encrypted with an 8-bit password with one of the two PKZIP versions
+   cannot be decrypted with the other version.
+
+ - PKZIP for Windows GUI (v 2.60), PKZIP for Windows command line (v 2.50) and
+   PKZIP for Unix (v 2.51) save the host's native file timestamps, but
+   only in a local extra field. Thus, timestamp-related selections (update
+   or freshen, both in extraction or archiving operations) use the DOS-format
+   localtime records in the Zip archives for comparisons. This may result
+   in wrong decisions of the program when updating archives that were
+   previously created in a different local time zone.
+
+ - PKZIP releases newer than PKZIP for DOS 2.04g (PKZIP for Windows, both
+   GUI v 2.60 and console v 2.50; PKZIP for Unix v 2.51; probably others too)
+   use different code pages for storing filenames in central (OEM Codepage)
+   and local (ANSI / ISO 8859-1 Codepage) headers. When a stored filename
+   contains extended-ASCII characters, the local and central filename fields
+   do not match. As a consequence, Info-ZIP's Zip program considers such
+   archives as being corrupt and does not allow to modify them. Beginning
+   with release 5.41, Info-ZIP's UnZip contains a workaround to list AND
+   extract such archives with the correct filenames.
+   Maybe PKWARE has implemented this "feature" to allow extraction of their
+   "made-by-PKZIP for Unix/Windows" archives using old (v5.2 and earlier)
+   versions of Info-ZIP's UnZip for Unix/WinNT ??? (UnZip versions before
+   v 5.3 assumed that all archive entries were encoded in the codepage of
+   the UnZip program's host system.)
+
+ - PKUNZIP 2.04g is reported to have problems with archives created on and/or
+   copied from Iomega ZIP drives (irony, eh?).
+
+Known, current WinZip bugs/limitations:
+--------------------------------------
+
+ - [16-bit version 6.1a] NT short filenames (FAT) are stored OK, but the
+   file system is always listed as NTFS.
+
+ - WinZip doesn't allow 8-bit passwords, which means it cannot decrypt an
+   archive created with an 8-bit password (by PKZIP or Info-ZIP's Zip).
+
+ - WinZip (at least Versions 6.3 PL1, 7.0 SR1) fails to remove old extra
+   fields when freshening existing archive entries. When updating archives
+   created by Info-ZIP's Zip that contain UT time stamp extra field blocks,
+   UnZip cannot display or restore the updated (DOS) time stamps of the
+   freshened archive members.
+
+Known, current other third-party Zip utils bugs/limitations:
+------------------------------------------------------------
+
+ - Asi's PKZip clones for Macintosh (versions 2.3 and 2.10d) are thoroughly
+   broken. They create invalid Zip archives!
+   a) For the first entry, both compressed size and uncompressed length
+      are recorded as 0, despite the fact that compressed data of non-zero
+      length has been added.
+   b) Their program creates extra fields with an (undocumented) internal
+      structure that violates the requirements of PKWARE's Zip format
+      specification document "appnote.txt": Their extra field seems to
+      contain pure data; the 4-byte block header consisting of block ID
+      and data length is missing.
+
+Possibly current PKZIP bugs:
+---------------------------
+
+ - PKZIP (2.04g?) can silently ignore read errors on network drives, storing
+   the correct CRC and compressed length but an incorrect and inconsistent
+   uncompressed length.
+
+ - PKZIP (2.04g?), when deleting files from within a zipfile on a Novell
+   drive, sometimes only zeros out the data while failing to shrink the
+   zipfile.
+
+Other limitations:
+-----------------
+
+ - PKZIP 1.x and 2.x encryption has been cracked (known-plaintext approach;
+   see http://www.cryptography.com/ for details).
+
+[many other bugs in PKZIP 1.0, 1.1, 1.93a, 2.04c and 2.04e]

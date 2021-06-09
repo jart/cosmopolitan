@@ -1,0 +1,273 @@
+;===========================================================================
+; Copyright (c) 1990-1999 Info-ZIP.  All rights reserved.
+;
+; See the accompanying file LICENSE, version 1999-Oct-05 or later
+; (the contents of which are also included in zip.h) for terms of use.
+; If, for some reason, both of these files are missing, the Info-ZIP license
+; also may be found at:  ftp://ftp.cdrom.com/pub/infozip/license.html
+;===========================================================================
+; This is a 68000 assembly language version of the Zip function
+; longest_match().  It is written for any 680x0 based computer, but at this
+; time the feature for runtime testing of CPU type is only supported for the
+; Amiga.  Hopefully a similar test for the Macintosh is possible, and for any
+; other system that supports both 68000 and 68020+ CPUs.  This is written by
+; Paul Kienitz, partially derived from a simpler version by Carsten Steger,
+; derived in turn from a 386 assembly function by Jean-loup Gailly and Kai Uwe
+; Rommel... but also based directly on the C original.
+;
+; The main difference of this from other longest_match() implementations is
+; that it includes both byte based and word based versions of the function,
+; and various symbols can be defined to select whether to use one routine or
+; the other, or to do a platform-specific test at runtime.  The symbols that
+; can be used to select behavior are as follows:
+;
+;   CPU020     if defined, use 68020 instructions always
+;   CPUTEST    if defined, check at runtime for CPU type.  Another symbol
+;               specifying the platform-specific test must be used with this.
+;               If neither of these is defined, use 68000 instructions only.
+;   AMIGA      use Amiga-specific test for 68020, if CPUTEST defined.  Also
+;               tells it to let a0/a1/d1 be clobbered by functions.
+;   ATSIGN     define entry symbols in @foo form as well as _foo, with
+;               @longest_match taking its parm in d0 instead of on the stack.
+;   WSIZE      if defined, determines the sliding window size for deflate;
+;               the default is 32K. If you have reduced WSIZE for the C code,
+;               make sure that this module is assembled with an equivalent
+;               "-dWSIZE=<whatever>" (or "-e...") switch.
+;
+; NOTE: no provision is made for 16 bit ints.  All external int variables are
+; treated as 32 bit values.  This also assumes that longest_match's result is
+; returned in D0.
+
+        IFND    CPU020
+        IFND    CPUTEST
+CPU000  equ     1
+        ENDC
+        ENDC
+
+; global variables:
+        xref    _max_chain_length   ; unsigned int
+        xref    _prev_length        ; unsigned int
+        xref    _match_start        ; unsigned int
+        xref    _strstart           ; unsigned int
+        xref    _good_match         ; signed int
+        xref    _nice_match         ; signed int
+        xref    _window             ; array of unsigned char
+        xref    _prev               ; array of unsigned short
+
+; our entry points:
+        xdef    _match_init         ; void match_init(void);
+        xdef    _longest_match      ; int longest_match(unsigned cur_match);
+        IFD     ATSIGN
+        xdef    @match_init         ; for SAS assembler
+        xdef    @longest_match      ; ditto
+        ENDC
+
+; flag variable for remembering CPU type:
+        IFD     CPUTEST
+        section cpuflag,data
+is020:  ds.w    1
+        ENDC
+
+
+        section match,code
+_match_init:
+        IFD    ATSIGN
+@match_init:
+        ENDC
+
+        IFD     CPUTEST         ; now check for platform type
+        IFD     AMIGA           ; Amiga specific test for '020 CPU:
+
+        xref    _SysBase
+
+        NOLIST
+        INCLUDE       'exec/execbase.i'
+        LIST
+
+        clr.w   is020           ; default value is 68000
+        move.l  _SysBase,a0
+        btst    #AFB_68020,AttnFlags+1(a0)
+        beq.s   cheap
+        move.w  #1,is020
+
+cheap:
+        ELSE ; !AMIGA
+
+ !!   Write an '020-detector for your system here!
+
+        ENDC ; AMIGA
+        ENDC ; CPUTEST
+        rts                ; match_init consists only of rts if CPUTEST unset
+
+
+        IFD     AMIGA
+SAVEREGS        reg     d3-d7/a2/a3/a5      ; don't protect d0/d1/a0/a1
+        ELSE
+SAVEREGS        reg     d1/d3-d7/a0-a3/a5   ; protect all but d0 return val
+        ENDC
+
+Cur_Match       equr    d0                  ; Must be in d0!
+Best_Len        equr    d1
+Scan_Start      equr    d3
+Scan_End        equr    d4
+Limit           equr    d5
+Chain_Length    equr    d6
+Scan_Test       equr    d7
+Scan            equr    a0
+Match           equr    a1
+Prev_Address    equr    a2
+Scan_Ini        equr    a3
+Match_Ini       equr    a5
+
+
+MAX_MATCH       equ     258
+MIN_MATCH       equ     3
+        IFND    WSIZE
+WSIZE           equ     32768
+        ENDC
+MAX_DIST        equ     WSIZE-MAX_MATCH-MIN_MATCH-1
+
+_longest_match:
+        move.l  4(sp),Cur_Match         ; stack arg to register
+        IFD     ATSIGN
+@longest_match:
+        ENDC
+        movem.l SAVEREGS,-(sp)
+
+; setup steps common to byte and word versions:
+        move.l  _max_chain_length,Chain_Length
+        move.l  _prev_length,Best_Len
+        lea     _prev,Prev_Address
+        lea     _window,Match_Ini
+        move.l  _strstart,Limit
+        move.l  Match_Ini,Scan_Ini
+        addq    #MIN_MATCH,Match_Ini
+        add.l   Limit,Scan_Ini
+        subi.w  #MAX_DIST,Limit
+        bhi.s   limit_ok
+        moveq   #0,Limit
+limit_ok:
+        cmp.l   _good_match,Best_Len
+        bcs.s   length_ok
+        lsr.l   #2,Chain_Length
+length_ok:
+        subq.l  #1,Chain_Length
+
+        IFD     CPUTEST
+        tst.w   is020               ; can we use '020 stuff today?
+        bne     WORD_match
+        ENDC
+
+        IFND    CPU020
+
+; for 68000 or 68010, use byte operations:
+        moveq   #0,Scan_Start       ; clear 2nd and 4th bytes, use 1st & 3rd
+        moveq   #0,Scan_End
+        moveq   #0,Scan_Test
+        move.b  (Scan_Ini),Scan_Start
+        swap    Scan_Start
+        move.b  1(Scan_Ini),Scan_Start
+        move.b  -1(Scan_Ini,Best_Len),Scan_End
+        swap    Scan_End
+        move.b  0(Scan_Ini,Best_Len),Scan_End
+        bra.s   bdo_scan
+
+blong_loop:
+        move.b  -1(Scan_Ini,Best_Len),Scan_End
+        swap    Scan_End
+        move.b  0(Scan_Ini,Best_Len),Scan_End
+
+bshort_loop:
+        add.w   Cur_Match,Cur_Match
+        move.w  0(Prev_Address,Cur_Match.l),Cur_Match
+        cmp.l   Limit,Cur_Match
+        dbls    Chain_Length,bdo_scan
+        bra     return
+
+bdo_scan:
+        move.l  Match_Ini,Match
+        add.l   Cur_Match,Match
+        move.b  -MIN_MATCH-1(Match,Best_Len),Scan_Test
+        swap    Scan_Test
+        move.b  -MIN_MATCH(Match,Best_Len),Scan_Test
+        cmp.l   Scan_Test,Scan_End
+        bne.s   bshort_loop
+        move.b  -MIN_MATCH(Match),Scan_Test
+        swap    Scan_Test
+        move.b  -MIN_MATCH+1(Match),Scan_Test
+        cmp.l   Scan_Test,Scan_Start
+        bne.s   bshort_loop
+        move.w  #(MAX_MATCH-MIN_MATCH),Scan_Test
+        lea     MIN_MATCH(Scan_Ini),Scan
+
+bscan_loop:
+        cmpm.b  (Match)+,(Scan)+
+        dbne    Scan_Test,bscan_loop
+        subq    #1,Scan
+
+        sub.l   Scan_Ini,Scan
+        cmp.l   Best_Len,Scan
+        bls.s   bshort_loop
+        move.l  Scan,Best_Len
+        move.l  Cur_Match,_match_start
+        cmp.l   _nice_match,Best_Len
+        bcs.s   blong_loop
+        IFD     CPUTEST
+        bra     return
+        ENDC
+
+        ENDC ; !CPU020
+
+        IFND    CPU000
+
+; for 68020 or higher, use word operations even on odd addresses:
+WORD_match:
+        move.w  (Scan_Ini),Scan_Start
+        move.w  -1(Scan_Ini,Best_Len),Scan_End
+        bra.s   wdo_scan
+
+wlong_loop:
+        move.w  -1(Scan_Ini,Best_Len),Scan_End
+
+wshort_loop:
+        add.w   Cur_Match,Cur_Match
+        move.w  (Prev_Address,Cur_Match.l),Cur_Match
+        cmp.l   Limit,Cur_Match
+        dbls    Chain_Length,wdo_scan
+        bra.s   return
+
+wdo_scan:
+        move.l  Match_Ini,Match
+        add.l   Cur_Match,Match
+        cmp.w   -MIN_MATCH-1(Match,Best_Len),Scan_End
+        bne.s   wshort_loop
+        cmp.w   -MIN_MATCH(Match),Scan_Start
+        bne.s   wshort_loop
+        moveq   #((MAX_MATCH-MIN_MATCH)/2),Scan_Test    ; value = 127
+        lea     MIN_MATCH(Scan_Ini),Scan
+
+wscan_loop:
+        cmpm.w  (Match)+,(Scan)+
+        dbne    Scan_Test,wscan_loop
+        subq    #2,Scan
+        move.b  -MIN_MATCH+1(Match),Scan_Test
+        cmp.b   (Scan),Scan_Test
+        bne     steven
+        addq    #1,Scan
+steven:
+        sub.l   Scan_Ini,Scan
+        cmp.l   Best_Len,Scan
+        bls.s   wshort_loop
+        move.l  Scan,Best_Len
+        move.l  Cur_Match,_match_start
+        cmp.l   _nice_match,Best_Len
+        bcs.s   wlong_loop
+
+        ENDC ; !CPU000
+
+return:
+        move.l  Best_Len,d0             ; function return value
+        movem.l (sp)+,SAVEREGS
+        rts
+
+        end

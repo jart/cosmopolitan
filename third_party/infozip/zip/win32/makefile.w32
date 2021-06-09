@@ -1,0 +1,224 @@
+# Makefile for Zip, ZipCloak, ZipNote and ZipSplit for
+# 32-bit Microsoft Visual C++
+
+# To use, do "nmake -f makefile.w32"
+
+# Add "NOASM=1" to the nmake command to disable usage of assembler sources
+# if you do not have masm 6.1X.
+
+# Optional nonstandard preprocessor flags (as -DMEDIUM_MEM or -DNO_ASM)
+# should be added to the environment via "set LOCAL_ZIP=-DFOO" or added
+# to the declaration of LOC here:
+LOC = $(LOCAL_ZIP)
+
+!IFNDEF debug
+NODEBUG=1
+!ENDIF
+
+# Uncomment the following macro to use the optimized assembler
+# routines in Zip:
+!IFDEF NOASM
+ASMOBJS =
+CRCA_O =
+CFLG_ASM = -DNO_ASM
+!ELSE
+ASMOBJS = match32.obj
+CRCA_O = crci386c.obj
+CFLG_ASM = -DASM_CRC
+!ENDIF
+
+!IFDEF USEBZ2
+LOC=$(LOC) -DBZIP2_SUPPORT
+!IFNDEF debug
+EXTLIB=$(EXTLIB) libbz2.lib
+!ELSE
+EXTLIB=$(EXTLIB) libbz2.lib
+!ENDIF
+!ENDIF
+
+!IFDEF USEZLIB
+LOC=$(LOC) -DUSE_ZLIB
+ASMOBJS=
+!IFNDEF debug
+EXTLIB=$(EXTLIB) zlib.lib
+!ELSE
+EXTLIB=$(EXTLIB) zlib.lib
+!ENDIF
+!ENDIF
+
+!IFDEF USEZLIB
+USE_MSVCRT=1
+!ELSE
+!IFDEF USEBZIP2
+USE_MSVCRT=1
+!ELSE
+USE_MSVCRT=0
+!ENDIF
+!ENDIF # USEZLIB
+
+!IF $(USE_MSVCRT) == 1
+CRTLIB=-MD
+!ELSE
+!IF "$(VS80COMNTOOLS)" == ""
+CRTLIB=-ML
+!ELSE
+# no single-threaded CRT static lib, only multi-threaded in VC8
+CRTLIB=-MT
+!ENDIF
+!ENDIF
+
+!IFDEF NODEBUG
+cdebug = -O2
+cdbgsz = -O1
+!ELSE
+cdebug = -Od
+cdbgsz = $(cdebug)
+!ENDIF
+
+# ------------- 32-bit Microsoft Visual C++ -------------
+CC=cl -nologo
+CFLAGS=-W3 $(cdebug) -DWIN32 $(CFLG_ASM) $(CRTLIB) $(LOC)
+UTILFLAGS=$(CFLAGS) -DUTIL -Fo$@
+
+# Remove "-coff" from ASFLAGS if you do not have MASM 6.11.
+
+AS=ml -nologo
+ASFLAGS=-c -coff -Cx
+
+RC=rc
+
+# If you build 16-bit executables with MS Visual C++ v1.0/1.5 and link them
+# with the /KNOWEAS switch, you can build dual-mode MS-DOS/Win32 executables
+# by passing the -stub switch to the 32-bit linker to specify the 16-bit part.
+
+LD=link -nologo
+LDFLAGS=user32.lib advapi32.lib /OPT:NOWIN98 /INCREMENTAL:NO /PDB:$*.pdb $(EXTLIB)
+SYMS=/DEBUG:full /DEBUGTYPE:CV
+!IFDEF debug
+LDFLAGS=$(LDFLAGS) $(SYMS)
+CFLAGS=$(CFLAGS) /Zi
+!ELSE
+LDFLAGS=$(LDFLAGS) /RELEASE
+!IFDEF sym
+LDFLAGS=$(LDFLAGS) $(SYMS)
+CFLAGS=$(CFLAGS) /Zi
+!ENDIF
+!ENDIF
+
+# variables
+OBJZ = zip.obj crypt.obj ttyio.obj zipfile.obj zipup.obj fileio.obj util.obj \
+ crc32.obj $(CRCA_O) globals.obj
+
+OBJI = deflate.obj trees.obj $(ASMOBJS) win32.obj win32zip.obj nt.obj win32i64.obj
+
+OBJU = zipfile_.obj fileio_.obj util_.obj crc32_.obj $(CRCA_O) globals.obj \
+ win32_.obj win32i64.obj
+OBJN = zipnote.obj $(OBJU)
+OBJC = zipcloak.obj crypt_.obj ttyio.obj $(OBJU)
+OBJS = zipsplit.obj $(OBJU)
+
+ZIP_H = zip.h ziperr.h tailor.h win32/osdep.h
+
+ZIPS = zip.exe zipnote.exe zipsplit.exe zipcloak.exe
+
+zips:   $(ZIPS)
+
+zip.obj:        zip.c $(ZIP_H) revision.h crc32.h crypt.h ttyio.h
+ $(CC) -c $(CFLAGS) $*.c
+
+zipfile.obj:    zipfile.c $(ZIP_H) crc32.h
+ $(CC) -c $(CFLAGS) $*.c
+
+zipup.obj:      zipup.c $(ZIP_H) revision.h crc32.h crypt.h win32/zipup.h
+ $(CC) -c $(CFLAGS) $*.c
+
+fileio.obj:     fileio.c $(ZIP_H) crc32.h
+ $(CC) -c $(CFLAGS) $*.c
+
+util.obj:       util.c $(ZIP_H)
+ $(CC) -c $(CFLAGS) $*.c
+
+globals.obj:    globals.c $(ZIP_H)
+ $(CC) -c $(CFLAGS) $*.c
+
+deflate.obj:    deflate.c $(ZIP_H)
+ $(CC) -c $(CFLAGS) $*.c
+
+trees.obj:      trees.c $(ZIP_H)
+ $(CC) -c $(CFLAGS) $*.c
+
+crc32.obj:      crc32.c $(ZIP_H) crc32.h
+ $(CC) -c $(CFLAGS) $*.c
+
+crypt.obj:      crypt.c $(ZIP_H) crypt.h crc32.h ttyio.h
+ $(CC) -c $(CFLAGS) $*.c
+
+ttyio.obj:      ttyio.c $(ZIP_H) crypt.h ttyio.h
+ $(CC) -c $(CFLAGS) $*.c
+
+win32i64.obj:   win32/win32i64.c $(ZIP_H)
+ $(CC) -c $(CFLAGS) -I. win32/win32i64.c
+
+win32zip.obj:   win32/win32zip.c $(ZIP_H) win32/win32zip.h win32/nt.h
+ $(CC) -c $(CFLAGS) -I. win32/win32zip.c
+
+win32.obj:      win32/win32.c $(ZIP_H) win32/win32zip.h
+ $(CC) -c $(CFLAGS) -I. win32/win32.c
+
+nt.obj:         win32/nt.c $(ZIP_H) win32/nt.h
+ $(CC) -c $(CFLAGS) -I. win32/nt.c
+
+zipcloak.obj:   zipcloak.c $(ZIP_H) revision.h crc32.h crypt.h ttyio.h
+ $(CC) -c $(CFLAGS) $*.c
+
+zipnote.obj:    zipnote.c $(ZIP_H) revision.h
+ $(CC) -c $(CFLAGS) $*.c
+
+zipsplit.obj:   zipsplit.c $(ZIP_H) revision.h
+ $(CC) -c $(CFLAGS) $*.c
+
+zipfile_.obj:   zipfile.c $(ZIP_H) crc32.h
+ $(CC) -c $(UTILFLAGS) zipfile.c
+
+fileio_.obj:    fileio.c $(ZIP_H) crc32.h
+ $(CC) -c $(UTILFLAGS) fileio.c
+
+util_.obj:      util.c $(ZIP_H)
+ $(CC) -c $(UTILFLAGS) util.c
+
+crc32_.obj:     crc32.c $(ZIP_H) crc32.h
+ $(CC) -c $(UTILFLAGS) crc32.c
+
+crypt_.obj:     crypt.c $(ZIP_H) crypt.h crc32.h ttyio.h
+ $(CC) -c $(UTILFLAGS) crypt.c
+
+win32_.obj:     win32/win32.c $(ZIP_H) win32/win32zip.h
+ $(CC) -c $(UTILFLAGS) -I. win32/win32.c
+
+crci386c.obj:   win32/crc_i386.c $(ZIP_H) crc32.h
+ $(CC) -c $(CFLAGS) -I. -Fo$@ win32/crc_i386.c
+
+crc_i386.obj:   win32/crc_i386.asm
+ $(AS) $(ASFLAGS) win32\crc_i386.asm
+
+match32.obj:    win32/match32.asm
+ $(AS) $(ASFLAGS) win32\match32.asm
+
+zip.res:        win32/zip.rc revision.h
+	$(RC) /l 0x409 /fo$@ /i win32 /d WIN32 win32/zip.rc
+
+zip.exe: $(OBJZ) $(OBJI) zip.res
+ $(LD) $(LDFLAGS) $(OBJZ) $(OBJI) zip.res
+
+zipcloak.exe: $(OBJC)
+ $(LD) $(LDFLAGS) $(OBJC)
+
+zipnote.exe: $(OBJN)
+ $(LD) $(LDFLAGS) $(OBJN)
+
+zipsplit.exe: $(OBJS)
+ $(LD) $(LDFLAGS) $(OBJS)
+
+clean:
+ -del *.obj
+ -del *.exe

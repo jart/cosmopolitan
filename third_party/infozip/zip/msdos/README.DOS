@@ -1,0 +1,132 @@
+README.DOS
+
+Some notes about the supplied MSDOS executables and their compilers:
+
+A) The 32-bit DOS executables "zip.exe" and the auxilary utilities
+   "zipnote.exe", "zipsplit.exe", "zipcloak.exe" (crypt-enabled distribution
+   only) were compiled with DJGPP v 2.03, using gcc 2.95.3 as compiler.
+   They require a DPMI server to run, e.g.: a DOS command prompt window
+   under WINDOWS 3.x or Windows 9x.  To use this program under plain DOS,
+   you should install the free (GPL'ed) DPMI server CWSDPMI.EXE.  Look
+   for "csdpmi5b.zip" under "simtelnet/gnu/djgpp/v2misc/" on the SimTelNet
+   home site "ftp.cdrom.com" or any mirror site of the SimtelNet archive.
+
+   We have decided to provide 32-bit rather than 16-bit executables of
+   the auxilary tools for the following reasons:
+   - Nowadays, it has become quite unlikely to find PC computers "in action"
+     that do not at least have an i386 CPU.
+   - the 32-bit versions do not impose additional archive handling limits
+     beyond those defined by the Zip archive format
+   - the 32-bit DJGPP executables can handle long filenames on systems running
+     Windows 95/98/Me and Windows 2K/XP.
+
+B) There are two 16-bit MSDOS executables provided in zcr2?x.zip:
+     zip16.exe     regular Zip program, requires ca. 455 KBytes of contiguous
+                   free DOS memory or more.
+     zip16-sm.exe  a variant that was compiled with the SMALL_MEM option
+                   for minimal memory consumption; requires at minimum
+                   322 KBytes of contiguous free DOS memory.
+
+   The SMALL_MEM variant requires much less space for the compression
+   buffers, but at the cost of some compression efficiency.
+   Therefore, we recommend to use the "SMALL_MEM" 16-bit "zip16-sm.exe" only
+   in case of "out of memory" problems (DOS memory is low and/or very large
+   number of archive entries), when the 32-bit program cannot be used for
+   some reason (286 or older; no DPMI server; ...).
+
+C) Hard limits of the Zip archive format:
+   Number of entries in Zip archive:            64 k (2^16 - 1 entries)
+   Compressed size of archive entry:            4 GByte (2^32 - 1 Bytes)
+   Uncompressed size of entry:                  4 GByte (2^32 - 1 Bytes)
+   Size of single-volume Zip archive:           4 GByte (2^32 - 1 Bytes)
+   Per-volume size of multi-volume archives:    4 GByte (2^32 - 1 Bytes)
+   Number of parts for multi-volume archives:   64 k (1^16 - 1 parts)
+   Total size of multi-volume archive:          256 TByte (4G * 64k)
+
+   The number of archive entries and of multivolume parts are limited by
+   the structure of the "end-of-central-directory" record, where the these
+   numbers are stored in 2-Byte fields.
+   Some Zip and/or UnZip implementations (for example Info-ZIP's) allow
+   handling of archives with more than 64k entries.  (The information
+   from "number of entries" field in the "end-of-central-directory" record
+   is not really neccessary to retrieve the contents of a Zip archive;
+   it should rather be used for consistency checks.)
+
+   Length of an archive entry name:             64 kByte (2^16 - 1)
+   Length of archive member comment:            64 kByte (2^16 - 1)
+   Total length of "extra field":               64 kByte (2^16 - 1)
+   Length of a single e.f. block:               64 kByte (2^16 - 1)
+   Length of archive comment:                   64 KByte (2^16 - 1)
+
+   Additional limitation claimed by PKWARE:
+     Size of local-header structure (fixed fields of 30 Bytes + filename
+      local extra field):                     < 64 kByte
+     Size of central-directory structure (46 Bytes + filename +
+      central extra field + member comment):  < 64 kByte
+
+D) Implementation limits of the Zip executables:
+
+ 1. Size limits caused by file I/O and compression handling:
+   Size of Zip archive:                 2 GByte (2^31 - 1 Bytes)
+   Compressed size of archive entry:    2 GByte (2^31 - 1 Bytes)
+   Uncompressed size of entry:          2 GByte (2^31 - 1 Bytes),
+                                        (could/should be 4 GBytes...)
+   Multi-volume archive creation is not supported.
+
+ 2. Limits caused by handling of archive contents lists
+
+ 2.1. Number of archive entries (freshen, update, delete)
+     a) 16-bit executable:              64k (2^16 -1) or 32k (2^15 - 1),
+                                        (unsigned vs. signed type of size_t)
+     a1) 16-bit executable:             <16k ((2^16)/4)
+         (The smaller limit a1) results from the array size limit of
+         the "qsort()" function.)
+         32-bit executables             <1G ((2^32)/4)
+         (usual system limit of the "qsort()" function on 32-bit systems)
+
+     b) stack space needed by qsort to sort list of archive entries
+
+     NOTE: In the current executables, overflows of limits a) and b) are NOT
+           checked!
+
+     c) amount of free memory to hold "central directory information" of
+        all archive entries; one entry needs:
+        96 bytes (32-bit) resp. 80 bytes (16-bit)
+        + 3 * length of entry name
+        + length of zip entry comment (when present)
+        + length of extra field(s) (when present, e.g.: UT needs 9 bytes)
+        + some bytes for book-keeping of memory allocation
+
+   Conclusion:
+     For systems with limited memory space (MSDOS, small AMIGAs, other
+     environments without virtual memory), the number of archive entries
+     is most often limited by condition c).
+     For example, with approx. 100 kBytes of free memory after loading and
+     initializing the program, a 16-bit DOS Zip cannot process more than 600
+     to 1000 (+) archive entries.  (For the 16-bit Windows DLL or the 16-bit
+     OS/2 port, limit c) is less important because Windows or OS/2 executables
+     are not restricted to the 1024k area of real mode memory.  These 16-bit
+     ports are limited by conditions a1) and b), say: at maximum approx.
+     16000 entries!)
+
+
+ 2.2. Number of "new" entries (add operation)
+     In addition to the restrictions above (2.1.), the following limits
+     caused by the handling of the "new files" list apply:
+
+     a) 16-bit executable:              <16k ((2^64)/4)
+
+     b) stack size required for "qsort" operation on "new entries" list.
+
+     NOTE: In the current executables, the overflow checks for these limits
+           are missing!
+
+     c) amount of free memory to hold the directory info list for new entries;
+        one entry needs:
+        24 bytes (32-bit) resp. 22 bytes (16-bit)
+        + 3 * length of filename
+
+
+Please report any problems to:  Zip-Bugs@lists.wku.edu
+
+Last updated:  07 July 2001

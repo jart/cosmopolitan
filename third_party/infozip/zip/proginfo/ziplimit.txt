@@ -1,0 +1,243 @@
+ziplimit.txt
+
+Zip 3 and UnZip 6 now support many of the extended limits of Zip64.
+
+A) Hard limits of the Zip archive format:
+
+   Number of entries in Zip archive:            64 k (2^16 - 1 entries)
+   Compressed size of archive entry:            4 GByte (2^32 - 1 Bytes)
+   Uncompressed size of entry:                  4 GByte (2^32 - 1 Bytes)
+   Size of single-volume Zip archive:           4 GByte (2^32 - 1 Bytes)
+   Per-volume size of multi-volume archives:    4 GByte (2^32 - 1 Bytes)
+   Number of parts for multi-volume archives:   64 k (1^16 - 1 parts)
+   Total size of multi-volume archive:          256 TByte (4G * 64k)
+
+   The number of archive entries and of multivolume parts are limited by
+   the structure of the "end-of-central-directory" record, where the these
+   numbers are stored in 2-Byte fields.
+   Some Zip and/or UnZip implementations (for example Info-ZIP's) allow
+   handling of archives with more than 64k entries.  (The information
+   from "number of entries" field in the "end-of-central-directory" record
+   is not really neccessary to retrieve the contents of a Zip archive;
+   it should rather be used for consistency checks.)
+
+   Length of an archive entry name:             64 kByte (2^16 - 1)
+   Length of archive member comment:            64 kByte (2^16 - 1)
+   Total length of "extra field":               64 kByte (2^16 - 1)
+   Length of a single e.f. block:               64 kByte (2^16 - 1)
+   Length of archive comment:                   64 KByte (2^16 - 1)
+
+   Additional limitation claimed by PKWARE:
+     Size of local-header structure (fixed fields of 30 Bytes + filename
+      local extra field):                     < 64 kByte
+     Size of central-directory structure (46 Bytes + filename +
+      central extra field + member comment):  < 64 kByte
+
+   Note:
+   In 2001, PKWARE has published version 4.5 of the Zip format specification
+   (together with the release of PKZIP for Windows 4.5).  This specification
+   defines new extra field blocks that allow to break the size limits of the
+   standard zipfile structures.  In this extended Zip format, the size limits
+   of zip entries (and the complete zip archive) have been extended to
+   (2^64 - 1) Bytes and the maximum number of archive entries to (2^32-1).
+   Zip 3.0 supports these Zip64 extensions and should be released shortly.
+   UnZip 6.0 should support these standards.
+
+B) Implementation limits of UnZip:
+
+   Note:
+   This section should be updated when UnZip 6.0 is near release.
+
+ 1. Size limits caused by file I/O and decompression handling:
+   Size of Zip archive:                 2 GByte (2^31 - 1 Bytes)
+   Compressed size of archive entry:    2 GByte (2^31 - 1 Bytes)
+
+   Note: On some systems, UnZip may support archive sizes up to 4 GByte.
+         To get this support, the target environment has to meet the following
+         requirements:
+         a) The compiler's intrinsic "long" data types must be able to hold
+            integer numbers of 2^32. In other words - the standard intrinsic
+            integer types "long" and "unsigned long" have to be wider than
+            32 bit.
+         b) The system has to supply a C runtime library that is compatible
+            with the more-than-32-bit-wide "long int" type of condition a)
+         c) The standard file positioning functions fseek(), ftell() (and/or
+            the Unix style lseek() and tell() functions) have to be capable
+            to move to absolute file offsets of up to 4 GByte from the file
+            start.
+         On 32-bit CPU hardware, you generally cannot expect that a C compiler
+         provides a "long int" type that is wider than 32-bit. So, many of the
+         most popular systems (i386, PowerPC, 680x0, et. al) are out of luck.
+         You may find environment that provide all requirements on systems
+         with 64-bit CPU hardware. Examples might be Cray number crunchers
+         or Compaq (former DEC) Alpha AXP machines.
+
+   The number of Zip archive entries is unlimited. The "number-of-entries"
+   field of the "end-of-central-dir" record is checked against the "number
+   of entries found in the central directory" modulus 64k (2^16).
+
+   Multi-volume archive extraction is not supported.
+
+   Memory requirements are mostly independent of the archive size
+   and archive contents.
+   In general, UnZip needs a fixed amount of internal buffer space
+   plus the size to hold the complete information of the currently
+   processed entry's local header. Here, a large extra field
+   (could be up to 64 kByte) may exceed the available memory
+   for MSDOS 16-bit executables (when they were compiled in small
+   or medium memory model, with a fixed 64kByte limit on data space).
+
+   The other exception where memory requirements scale with "larger"
+   archives is the "restore directory attributes" feature. Here, the
+   directory attributes info for each restored directory has to be held
+   in memory until the whole archive has been processed. So, the amount
+   of memory needed to keep this info scales with the number of restored
+   directories and may cause memory problems when a lot of directories
+   are restored in a single run.
+
+C) Implementation limits of the Zip executables:
+
+   Note:
+   This section has been updated to reflect Zip 3.0.
+
+ 1. Size limits caused by file I/O and compression handling:
+   Without Zip64 extensions:
+    Size of Zip archive:                 2 GByte (2^31 - 1 Bytes)
+    Compressed size of archive entry:    2 GByte (2^31 - 1 Bytes)
+    Uncompressed size of entry:          2 GByte (2^31 - 1 Bytes),
+                                         (could/should be 4 GBytes...)
+   Using Zip64 extensions:
+    Size of Zip archive:                 2^63 - 1 Bytes
+    Compressed size of archive entry:    2^63 - 1 Bytes
+    Uncompressed size of entry:          2^63 - 1 Bytes
+   
+   Multi-volume archive creation now supported in the form of split
+   archvies.  Currently up to 99,999 splits are supported.
+
+ 2. Limits caused by handling of archive contents lists
+
+ 2.1. Number of archive entries (freshen, update, delete)
+     a) 16-bit executable:              64k (2^16 -1) or 32k (2^15 - 1),
+                                        (unsigned vs. signed type of size_t)
+     a1) 16-bit executable:             <16k ((2^16)/4)
+         (The smaller limit a1) results from the array size limit of
+         the "qsort()" function.)
+
+         32-bit executables:            <1G ((2^32)/4)
+         (usual system limit of the "qsort()" function on 32-bit systems)
+
+     b) stack space needed by qsort to sort list of archive entries
+
+     NOTE: In the current executables, overflows of limits a) and b) are NOT
+           checked!
+
+     c) amount of free memory to hold "central directory information" of
+        all archive entries; one entry needs:
+        96 bytes (32-bit) resp. 80 bytes (16-bit)
+        + 3 * length of entry name
+        + length of zip entry comment (when present)
+        + length of extra field(s) (when present, e.g.: UT needs 9 bytes)
+        + some bytes for book-keeping of memory allocation
+
+   Conclusion:
+     For systems with limited memory space (MSDOS, small AMIGAs, other
+     environments without virtual memory), the number of archive entries
+     is most often limited by condition c).
+     For example, with approx. 100 kBytes of free memory after loading and
+     initializing the program, a 16-bit DOS Zip cannot process more than 600
+     to 1000 (+) archive entries.  (For the 16-bit Windows DLL or the 16-bit
+     OS/2 port, limit c) is less important because Windows or OS/2 executables
+     are not restricted to the 1024k area of real mode memory.  These 16-bit
+     ports are limited by conditions a1) and b), say: at maximum approx.
+     16000 entries!)
+
+
+ 2.2. Number of "new" entries (add operation)
+     In addition to the restrictions above (2.1.), the following limits
+     caused by the handling of the "new files" list apply:
+
+     a) 16-bit executable:              <16k ((2^64)/4)
+
+     b) stack size required for "qsort" operation on "new entries" list.
+
+     NOTE: In the current executables, the overflow checks for these limits
+           are missing!
+
+     c) amount of free memory to hold the directory info list for new entries;
+        one entry needs:
+        24 bytes (32-bit) resp. 22 bytes (16-bit)
+        + 3 * length of filename
+
+     NOTE: For larger systems, the actual limits may be more performance
+     issues (how long you want to wait) rather than available memory and other
+     resources.
+
+D) Some technical remarks:
+
+ 1. For executables compiled without LARGE_FILE_SUPPORT and ZIP64_SUPPORT
+    enabled, the 2GByte size limit on archive files is a consequence of
+    the portable C implementation of the Info-ZIP programs.  Zip archive
+    processing requires random access to the archive file for jumping
+    between different parts of the archive's structure.  In standard C,
+    this is done via stdio functions fseek()/ftell() resp. unix-io functions
+    lseek()/tell().  In many (most?) C implementations, these functions use
+    "signed long" variables to hold offset pointers into sequential files.
+    In most cases, this is a signed 32-bit number, which is limited to
+    ca. 2E+09.  There may be specific C runtime library implementations
+    that interpret the offset numbers as unsigned, but for us, this is not
+    reliable in the context of portable programming.
+
+    If LARGE_FILE_SUPPORT and ZIP64_SUPPORT are defined and supported by
+    the system, 64-bit off_t file offsets are supported and the above
+    larger limits are supported.  As off_t is signed, the maximum offset
+    is usually limited to 2^63 - 1.
+
+ 2. The 2GByte limit on the size of a single compressed archive member
+    is again a consequence of the implementation in C.
+    The variables used internally to count the size of the compressed
+    data stream are of type "long", which is guaranted to be at least
+    32-bit wide on all supported environments.
+
+    But, why do we use "signed" long and not "unsigned long"?
+
+    Throughout the I/O handling of the compressed data stream, the
+    sign bit of the "long" numbers is (mis-)used as a kind of overflow
+    detection. In the end, this is caused by the fact that standard C
+    lacks any overflow checking on integer arithmetics and does not
+    support access to the underlying hardware's overflow detection
+    (the status bits, especially "carry" and "overflow" of the CPU's
+    flags-register) in a system-independent manner.
+
+    So, we "misuse" the most-significant bit of the compressed data
+    size counters as carry bit for efficient overflow/underflow detection.
+    We could change the code to a different method of overflow detection,
+    by using a bunch of "sanity" comparisons (kind of "is the calculated
+    result plausible when compared with the operands"). But, this would
+    "blow up" the code of the "inner loop", with remarkable loss of
+    processing speed. Or, we could reduce the amount of consistency checks
+    of the compressed data (e.g. detection of premature end of stream) to
+    an absolute minimum, at the cost of the programs' stability when
+    processing corrupted data.
+
+    Summary: Changing the compression/decompression core routines to
+    be "unsigned safe" would require excessive recoding, with little
+    gain on maximum processable uncompressed size (a gain can only be
+    expected for hardly compressable data), but at severe costs on
+    performance, stability and maintainability.  Therefore, it is
+    quite unlikely that this will ever happen for Zip/UnZip.
+
+    With LARGE_FILE_SUPPORT and ZIP64_SUPPORT enabled and supported,
+    the above arguments still apply, but the limits are based on 64 bits
+    instead of 32 and should allow most large files and archives to be
+    processed.
+
+    Anyway, the Zip archive format is more and more showing its age...
+    The effort to lift the 2GByte limits should be better invested in
+    creating a successor for the Zip archive format and tools.  But given
+    the latest improvements to the format and the wide acceptance of zip
+    files, the format will probably be around for awhile more.
+
+Please report any problems using the web contact form at:  www.Info-ZIP.org
+
+Last updated:  26 January 2002, Christian Spieler
+               25 May 2008, Ed Gordon

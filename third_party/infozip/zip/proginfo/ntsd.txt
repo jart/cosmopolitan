@@ -1,0 +1,111 @@
+Info-ZIP portable Zip/UnZip Windows NT security descriptor support
+==================================================================
+Scott Field (sfield@microsoft.com), 8 October 1996
+
+
+This version of Info-ZIP's Win32 code allows for processing of Windows
+NT security descriptors if they were saved in the .zip file using the
+appropriate Win32 Zip running under Windows NT.  This also requires
+that the file system that Zip/UnZip operates on supports persistent
+Acl storage.  When the operating system is not Windows NT and the
+target file system does not support persistent Acl storage, no security
+descriptor processing takes place.
+
+A Windows NT security descriptor consists of any combination of the
+following components:
+
+       an owner (Sid)
+       a primary group (Sid)
+       a discretionary ACL (Dacl)
+       a system ACL (Sacl)
+       qualifiers for the preceding items
+
+By default, Zip will save all aspects of the security descriptor except
+for the Sacl.  The Sacl contains information pertaining to auditing of
+the file, and requires a security privilege be granted to the calling
+user in addition to being enabled by the calling application.  In order
+to save the Sacl during Zip, the user must specify the -! switch on the
+Zip commandline.  The user must also be granted either the SeBackupPrivilege
+"Backup files and directories" or the SeSystemSecurityPrivilege "Manage
+auditing and security log".
+
+By default, UnZip will not restore any aspects of the security descriptor.
+If the -X option is specified to UnZip, the Dacl is restored to the file.
+The other items in the security descriptor on the new file will receive
+default values.  If the -XX option is specified to UnZip, as many aspects
+of the security descriptor as possible will be restored.  If the calling
+user is granted the SeRestorePrivilege "Restore files and directories",
+all aspects of the security descriptor will be restored.  If the calling
+user is only granted the SeSystemSecurityPrivilege "Manage auditing and
+security log", only the Dacl and Sacl will be restored to the new file.
+
+Note that when operating on files that reside on remote volumes, the
+privileges specified above must be granted to the calling user on that
+remote machine.  Currently, there is no way to directly test what privileges
+are present on a remote machine, so Zip and UnZip make a remote privilege
+determination based on an indirect method.
+
+UnZip considerations
+--------------------
+
+In order for file security to be processed correctly, any directory entries
+that have a security descriptor will be processed at the end of the unzip
+cycle.  This allows for unzip to process files within the newly created
+directory regardless of the security descriptor associated with the directory
+entry.  This also prevents security inheritance problems that can occur as
+a result of creating a new directory and then creating files in that directory
+that will inherit parent directory permissions; such inherited permissions may
+prevent the security descriptor taken from the zip file from being applied
+to the new file.
+
+If directories exist which match directory/extract paths in the .zip file,
+file security is not updated on the target directory.  It is assumed that if
+the target directory already exists, then appropriate security has already
+been applied to that directory.
+
+"unzip -t" will test the integrity of stored security descriptors when
+present and the operating system is Windows NT.
+
+ZipInfo (unzip -Z) will display information on stored security descriptor
+when "unzip -Zv" is specifed.
+
+
+Potential uses
+==============
+
+The obvious use for this new support is to better support backup and restore
+operations in a Windows NT environment where NTFS file security is utilized.
+This allows individuals and organizations to archive files in a portable
+fashion and transport these files across the organization.
+
+Another potential use of this support is setup and installation.  This
+allows for distribution of Windows NT based applications that have preset
+security on files and directories.  For example, prior to creation of the
+.zip file, the user can set file security via File Manager or Explorer on
+the files to be contained in the .zip file.  In many cases, it is appropriate
+to only grant Everyone Read access to .exe and .dll files, while granting
+Administrators Full control.  Using this support in conjunction with the
+unzipsfx.exe self-extractor stub can yield a useful and powerful way to
+install software with preset security (note that -X or -XX should be
+specified on the self-extractor commandline).
+
+When creating .zip files with security which are intended for transport
+across systems, it is important to take into account the relevance of
+access control entries and the associated Sid of each entry.  For example,
+if a .zip file is created on a Windows NT workstation, and file security
+references local workstation user accounts (like an account named Fred),
+this access entry will not be relevant if the .zip file is transported to
+another machine.  Where possible, take advantage of the built-in well-known
+groups, like Administrators, Everyone, Network, Guests, etc.  These groups
+have the same meaning on any Windows NT machine.  Note that the names of
+these groups may differ depending on the language of the installed Windows
+NT, but this isn't a problem since each name has well-known ID that, upon
+restore, translates to the correct group name regardless of locale.
+
+When access control entries contain Sid entries that reference Domain
+accounts, these entries will only be relevant on systems that recognize
+the referenced domain.  Generally speaking, the only side effects of
+irrelevant access control entries is wasted space in the stored security
+descriptor and loss of complete intended access control.  Such irrelevant
+access control entries will show up as "Account Unknown" when viewing file
+security with File Manager or Explorer.

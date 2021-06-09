@@ -1,0 +1,125 @@
+# Makefile for the MVS (OS/390 Base) version of ZIP 2.3
+# Produced for C/C++ V3R2 in OS/390 1.2.0 by Ian E. Gorman, 2 Nov 1998
+# Facilities for compiling and testing were made available by
+#     OmniMark Technologies Corporation, Ottawa, Canada
+
+# NOTES
+#
+# The only tabs in this file are in the first character of each recipe
+# line, where they are required by make.
+#
+# Run this makefile in OpenMVS (OS/390 POSIX) using source files in the
+# HFS file system.  You can write the load module to either HFS file
+# system or to a PDS in the native MVS file system.  The PDS must have
+# sufficient free space to hold the load module.
+#
+# To compile to a member of a PDS:
+#   make
+# or
+#   make zip.mvs
+#
+# To compile a test version into the HFS file system:
+#   make hfs
+
+# ZIP options -- MVS, REENTRANT
+ZIPOPTS=-DMVS -DREENTRANT
+
+# directories
+
+# generic source code
+SRC=..
+SRC_P=$(SRC)/
+
+# source code for MVS
+CMSMVS=../cmsmvs
+CMSMVS_P=$(CMSMVS)/
+
+# include files
+INCLS=-I$(SRC) -I$(CMSMVS)
+
+# object files and load modules
+BLD_P=../mvs/
+
+# Other options
+
+# Suffixes (E and O must be different)
+E=
+O=.o
+
+# Need EXTENDED features for global.c and vmvms.c, so not using c89
+CC=cc
+CFLAGS=-D_OPEN_SYS $(ZIPOPTS) $(INCLS)
+
+LD=cc
+LDFLAGS=
+
+# Files
+
+# object (TEXT) files
+OBJECTS= $(BLD_P)zip$(O) $(BLD_P)trees$(O) \
+   $(BLD_P)crypt$(O)  $(BLD_P)ttyio$(O)   $(BLD_P)deflate$(O) \
+   $(BLD_P)fileio$(O) $(BLD_P)globals$(O) $(BLD_P)util$(O) \
+   $(BLD_P)crc32$(O)  $(BLD_P)zipfile$(O) \
+   $(BLD_P)zipup$(O)  $(BLD_P)cmsmvs$(O)  $(BLD_P)mvs$(O)
+
+# Header files
+HFILES= $(SRC_P)api.h $(SRC_P)crc32.h $(SRC_P)crypt.h $(SRC_P)ebcdic.h \
+    $(SRC_P)revision.h $(SRC_P)tailor.h $(SRC_P)ttyio.h \
+    $(SRC_P)zip.h $(SRC_P)ziperr.h $(CMSMVS_P)cmsmvs.h \
+    $(CMSMVS_P)cstat.h $(CMSMVS_P)mvs.h $(CMSMVS_P)zipup.h
+
+# Rules
+
+all:  $(BLD_P)zip.mvs$(E)
+hfs:  $(BLD_P)zip$(E)
+
+# link
+
+$(BLD_P)zip.mvs$(E):     $(OBJECTS)
+	$(LD) -o "//INFOZIP.LOAD(ZIP)" $(LDFLAGS) $^
+	echo "tso call \"infozip(zip)\" \"'\"\"""$$""@""\"\"'\"" > $%
+	chmod a+x $%
+
+$(BLD_P)zip$(E):     $(OBJECTS)
+	$(LD) -o $% $(LDFLAGS) $^
+
+# compile
+
+$(BLD_P)trees$(O):   $(SRC_P)trees.c        $(HFILES)
+	$(CC) -c -o $% $(CFLAGS) $(SRC_P)trees.c
+
+$(BLD_P)crypt$(O):   $(SRC_P)crypt.c        $(HFILES)
+	$(CC) -c -o $% $(CFLAGS) $(SRC_P)crypt.c
+
+$(BLD_P)ttyio$(O):   $(SRC_P)ttyio.c        $(HFILES)
+	$(CC) -c -o $% $(CFLAGS) $(SRC_P)ttyio.c
+
+$(BLD_P)deflate$(O): $(SRC_P)deflate.c      $(HFILES)
+	$(CC) -c -o $% $(CFLAGS) $(SRC_P)deflate.c
+
+$(BLD_P)fileio$(O):  $(SRC_P)fileio.c       $(HFILES)
+	$(CC) -c -o $% $(CFLAGS) $(SRC_P)fileio.c
+
+$(BLD_P)globals$(O): $(SRC_P)globals.c      $(HFILES)
+	$(CC) -c -o $% $(CFLAGS) $(SRC_P)globals.c
+
+$(BLD_P)zip$(O):     $(SRC_P)zip.c          $(HFILES)
+	$(CC) -c -o $% $(CFLAGS) $(SRC_P)zip.c
+
+$(BLD_P)util$(O):    $(SRC_P)util.c         $(HFILES)
+	$(CC) -c -o $% $(CFLAGS) $(SRC_P)util.c
+
+$(BLD_P)crc32$(O):   $(SRC_P)crc32.c        $(HFILES)
+	$(CC) -c -o $% $(CFLAGS) $(SRC_P)crc32.c
+
+$(BLD_P)zipfile$(O): $(SRC_P)zipfile.c      $(HFILES)
+	$(CC) -c -o $% $(CFLAGS) $(SRC_P)zipfile.c
+
+$(BLD_P)zipup$(O):   $(SRC_P)zipup.c        $(HFILES)
+	$(CC) -c -o $% $(CFLAGS) $(SRC_P)zipup.c
+
+$(BLD_P)cmsmvs$(O):  $(CMSMVS_P)cmsmvs.c    $(HFILES)
+	$(CC) -c -o $% $(CFLAGS) $(CMSMVS_P)cmsmvs.c
+
+$(BLD_P)mvs$(O):     $(CMSMVS_P)mvs.c       $(HFILES)
+	$(CC) -c -o $% $(CFLAGS) $(CMSMVS_P)mvs.c

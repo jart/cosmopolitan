@@ -1,0 +1,9 @@
+| zipsfx 0.1
+| Written by Darren Salt
+| Assumes that unzipsfx is on Run$Path (eg. in !Boot.Library)
+| Assumes that IfThere is available as either *command or utility
+
+If "%1" = "" Then Error 220 Syntax: zipsfx |<archive> |<SEA>
+If "%0" = "" Then Error 220 Syntax: zipsfx |<archive> |<SEA>
+Copy Run:unzipsfx %1 A~C~D~F~L~N~R~S~T~V
+Print %0 { >> %1 }

@@ -1,0 +1,9 @@
+Unfinished integration into zip 2.4 of novell port to zip 2.2.
+
+TODO:
+
+Too much novell specific stuff via ifdef into the main sourcecode,
+use atexit() and setjmp()/longjmp() constructions instead.
+
+If a function doesn't exist (e.g. isatty), just write a wrapper
+and put it in Netware.c

@@ -1,0 +1,25 @@
+Form Novell NLM 'zip'
+Name zip
+Op ScreenName 'zip'
+Op ThreadName 'zip__P '
+Op Stack = 8k
+Op Version = 1.00.3
+Op Caseexact
+Op Nod
+File BITS.OBJ
+File CRC_i386.OBJ
+File CRYPT.OBJ
+File DEFLATE.OBJ
+File FILEIO.OBJ
+File GLOBALS.OBJ
+File MKTIME.OBJ
+File NETWARE.OBJ
+File TREES.OBJ
+File TTYIO.OBJ
+File UTIL.OBJ
+File ZIP.OBJ
+File ZIPFILE.OBJ
+File ZIPUP.OBJ
+File c:\novell\ndk\nwsdk\IMPORTS\PRELUDE.OBJ
+Import @c:\novell\ndk\nwsdk\IMPORTS\ALL.IMP
+Module CLib

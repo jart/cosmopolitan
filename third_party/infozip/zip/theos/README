@@ -1,0 +1,34 @@
+This Theos port supports all the unusual features of Theos filesystem.
+
+Under Theos filesystem files are typed. Types include :
+- stream
+- relative
+- keyed
+- indexed (ISAM)
+- program (86 real mode, 16 bits protected mode, 32 bits protected mode)
+- directory
+- library (contains files of any other types librry and directory excepted).
+
+Most of the information on the type and on the structure of a file are not
+contained in the file itself but its in directory entry. For all types of
+files, directory and stream files excepted, this information is vital. If it
+is lost, the file can no longer be usable.
+
+In zip files the information is stored in an extra block with type "Th".
+
+A few years ago I ported ZIP for internal use and spreaded it a little around
+me. It was using a non portable extra block structure. Its type was "TH".
+For backward compatibility it is supported by UNZIP 5.4.0 port to Theos.
+ZIP archives created with ZIP 2.3 port MUST be unzipped with 5.4.0 or a later
+version.
+
+Also disk search sequence is supported. The disk name is not stored into
+the zip archive.
+
+Thanks to Bob Baker from Stockboy Services who spent his time to check this
+port under other conditions than mines.
+
+Jean-Michel Dubois
+IBC France / THEOS France
+jmdubois@ibcfrance.fr
+jean-michel-dubois@wanadoo.fr

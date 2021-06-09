@@ -1,0 +1,42 @@
+Contents of the "windll" sub-archive for Zip 2.2 and later:
+
+  contents       this file
+  windll16.def   definition file for 16-bit Zip DLL
+  windll32.def   definition file for 32-bit Zip DLL
+  windll.c       Contains the entry point for the DLL, "fake" printing,
+                 and password functions.
+  windll.h       header file for both 16 and 32-bit DLLs.
+  zipver.h       versioning information for resource file, and also
+                 used by WiZ application itself.
+  windll.rc      resource file for both 16 and 32-bit DLLs
+  windll.txt     simplistic explanation of how to use DLL.
+  structs.h      header file used by both the dll and by WiZ which defines
+                 several structures passed to the dll.
+  example.c      a very simplistic example of how to load the dll, and make
+                 a call into it.
+  example.h      header file for example.c
+
+  borland\dll <dir> contains 16 and 32 bit make files for the zip dlls.
+  borland\lib <dir> contains 32 bit make files for the zip32 static library
+  visualc\dll <dir> contains Visual C++ 5.0 project and make files for
+                    zip32 dll.
+  visualc\lib <dir> contains Visual C++ 5.0 project and make files for
+                    zip32 static library.
+
+The Microsoft C port has not been tested as completely as the Borland port.
+Note that Borland C++ 5.0 is full of bugs version 4.5 is recommended instead.
+If you must use Borland C++ 5.0, using the Intel optimizing compiler is
+required to avoid crashes (possibly due to a bug in the stat() function
+in the normal Borland compiler.) This does have the advantage of giving you
+a smaller code size than the 4.52 compiler.
+
+Borland C++ 5.01 has resolved many of the problems seen with 5.0, and
+can now reliably be used.
+
+Note that I have been singularly unsuccessful in getting this to compile
+and run under MSVC 1.52c.
+
+Last updated October 13, 1997
+
+Mike White
+

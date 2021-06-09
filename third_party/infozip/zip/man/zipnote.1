@@ -1,0 +1,85 @@
+.TH zipnote 1 "v3.0 of 8 May 2008"
+.SH NAME
+zipnote \- write the comments in zipfile to stdout, edit comments and rename files in zipfile
+
+.SH SYNOPSIS
+.I zipnote
+.RB [ \-w ]
+.RB [ \-b\ path ]
+.RB [ \-h ]
+.RB [ \-v ]
+.RB [ \-L ]
+zipfile
+
+.SH ARGUMENTS
+.in +13
+.ti -13
+zipfile  Zipfile to read comments from or edit.
+
+.SH OPTIONS
+.TP
+.BI \-w
+Write comments to a zipfile from stdin (see below).
+.TP
+.BI \-b\ \fRpath
+Use path for the temporary zip file.
+.TP
+.BI \-h
+Show a short help.
+.TP
+.BI \-v
+Show version information.
+.TP
+.BI \-L
+Show software license.
+
+.SH DESCRIPTION
+.I zipnote
+writes the comments in a zipfile to stdout.  This is the default mode.  A second mode
+allows updating the comments in a zipfile as well as allows changing the names
+of the files in the zipfile.  These modes are described below.
+
+.SH EXAMPLES
+To write all comments in a zipfile to stdout use for example
+.LP
+.nf
+     zipnote foo.zip > foo.tmp
+.fi
+.LP
+This writes all comments in the zipfile
+.I foo.zip
+to the file
+.I foo.tmp
+in a specific format.
+
+.LP
+If desired, this file can then be edited to change the comments and then used
+to update the zipfile.
+.LP
+.nf
+     zipnote -w foo.zip < foo.tmp
+.fi
+.LP
+The names of the files in the zipfile can also be changed in this way.  This is done by
+following lines like
+.nf
+     "@ name"
+.fi
+in the created temporary file (called
+.I foo.tmp
+here) with lines like
+.nf
+     "@=newname"
+.fi
+and then using the -w option as above.
+
+.SH BUGS
+The temporary file format is rather specific and zipnote is rather picky about it.
+It should be easier to change file names in a script.
+
+Does not yet support large (> 2 GB) or split archives.
+
+.SH SEE ALSO
+zip(1), unzip(1)
+.SH AUTHOR
+Info-ZIP

@@ -1,0 +1,382 @@
+      VMS Notes for Info-ZIP Zip 3.0 and UnZip 6.0
+      ============================================
+
+   This document describes some VMS-specific behavior and implementation
+details of the Info-ZIP Zip and UnZip programs.
+
+   Last modified: 2008-04-10.
+
+
+   Command-line Case
+   -----------------
+
+   Zip and UnZip now include code which can preserve the case of
+command-line parameters and options, which obviates quoting upper-case
+options like "-V" or "-Z".  This works on non-VAX systems with a
+sufficiently recent C RTL, and SET PROCESS /PARSE_STYLE = EXTENDED.
+(Sufficiently recent here means __CRTL_VER >= 70301000, which includes
+VMS V7.3-1 with a C Run Time Library ECO, or V7.3-2 or newer.)   This
+code uses the decc$feature_set_value() function to enable the
+DECC$ARGV_PARSE_STYLE feature.  There is a small range of C RTL versions
+where this function is unavailable, but where manually setting the
+logical name DECC$ARGV_PARSE_STYLE to "ENABLE" will work.   HELP CRTL
+leads to some additional information on these features.
+
+
+   File Name Case (ODS5)
+   ---------------------
+
+   In general, Zip 3.0 and UnZip 6.0 should handle file name case (and
+extended file names) in reasonable ways on ODS5 disks.
+
+   Zip offers a variety of "-C" (/PRESERVE_CASE) options to control how
+case is handled when adding files to an archive.  The default settings
+("-C2-", /PRESERVE_CASE = NOODS2, down-case ODS2 file names; "-C5",
+/PRESERVE_CASE = ODS5, preserve case of ODS5 file names) should be
+consistent with previous Zip versions for files on ODS2 disks, and
+reasonable for files on ODS5 disks.
+
+   UnZip should preserve case when it extracts to an ODS5 destination
+disk (unless "-2" (/ODS2) is specified).  (Note that previous UnZip
+versions, including version 5.52, did not properly preserve case for
+directories, which were always up-cased.)
+
+   The Zip and UnZip builders should work properly on ODS2 and ODS5
+disks, with old (pre-ODS5) and new (case-conscious) versions of MMS (or
+MMK).  All testing was done with SET PROCESS /CASE_LOOKUP = BLIND. 
+Various problems may be expected with /CASE_LOOKUP = SENSITIVE.
+
+   For consistency, the builders should always create product files
+(.OBJ, .EXE, .HLB, and so on) with upper-case names, whether the build
+is done on an ODS2 or ODS5 disk.  Note, however, that in a world with
+both ODS2 and ODS5 disks, and old and new Zip and UnZip versions, it's
+possible to encounter lower-case product file names.  For example, a VMS
+binary kit could be created on an ODS2 disk, and a Zip archive created
+from that (using Zip 2.x, or Zip 3.x with default settings).  Such a Zip
+archive would contain down-cased names for those product files, and
+those lower-case names would then normally be preserved when UnZip was
+used to extract that archive onto an ODS5 destination.  Normally, things
+will work regardless of such case changes, but there may be some
+untested combinations of unexpected name cases and quirky MMS (or MMK)
+behavior, where something goes wrong.  Complaints are always welcome,
+but it may not be possible to get everything to work as expected with
+every version of VMS, MMS (or MMK), Zip, and UnZip, on every file
+system.
+
+   It might help matters if _all_ VMS binary kits were produced on ODS5
+disks, and packaged using (case-preserving) Zip version 3.x, but this
+would certainly be different from the way things have been done before,
+and maintaining control over this process is essentially impossible.
+
+
+   Symbolic Links (ODS5)
+   ---------------------
+
+   VMS V8.3 offers support for symbolic links (symlinks) on ODS5 disks.
+In previous Zip and UnZip versions, the generic code for symlinks was
+disabled, and there was no VMS-specific code for symlinks.  Now, by
+default, Zip and UnZip attempt to support symlinks wherever the C
+headers and C run-time library include the functions needed for symlink
+support.  This means non-VAX systems with __CRTL_VER >= 70301000, so
+this includes VMS V7.3-1 and up, and thus symlink-capable Zip and UnZip
+programs may be built on systems which do not themselves offer symlink
+support.  (Various run-time failures may be expected if symlinks are
+encountered on pre-V8.3 systems, either in a file system or in a Zip
+archive.)
+
+   Symlink support can be disabled at build-time, if desired, by
+defining the C macro NO_SYMLINKS.  (See comments in the builder
+regarding LOCAL_UNZIP or LOCAL_ZIP, as appropriate.)  For example, using
+MMS to build UnZip:
+
+      MMS /DESCRIP = [.VMS] /MACRO = ("LOCAL_UNZIP=NO_SYMLINKS=1")
+
+or, using the command procedure to build Zip:
+
+      LOCAL_ZIP == "NO_SYMLINKS=1"
+      @ [.VMS]BUILD_ZIP.COM
+      DELETE /SYMBOL /GLOBAL LOCAL_ZIP
+
+   The Zip "-v" (/VERBOSE) report should include SYMLINK_SUPPORT in its
+list of "Zip special compilation options" if Zip was built with symlink
+support.  Currently, UnZip is less convenient, but searching the UnZip
+executable (or EXTRACT.OBJ) for "symlink" should fail if symlink support
+is missing (or succeed if it's present):
+
+      $ SEARCH /NOOUTPUT UNZIP.EXE SYMLINK      ! No symlink support.
+      %SEARCH-I-NOMATCHES, no strings matched
+or:
+      $ SEARCH /NOOUTPUT EXTRACT.OBJ SYMLINK    ! Symlink support.
+      $ SHOW SYMBOL $STATUS
+        $STATUS == "%X00000001"
+
+
+   File I/O Performance
+   --------------------
+
+   When compiled using DEC/Compaq/HP C (not GNU C or VAX C), the Zip and
+UnZip file I/O code now includes access callback functions which are
+used to try to set some RMS parameters to non-default values, with the
+intention of improving file I/O speed.  This affects reading an archive
+file in UnZip and writing one in Zip.  (Reading and writing the
+individual data files are handled in more exotic ways, making these
+parameters less important for them.)
+
+   Currently, the built-in default parameters enable read-ahead and
+write-behind, using a multi-buffer count of 2, and a multi-block count
+of 127 (the maximum).  For writing the archive, the default extend
+quantity is 16384 blocks (8MB), with truncation enabled.  This
+combination is believed to be, at worst, fairly harmless for most
+situations, and, in most cases, to provide a substantial speed
+improvement, especially with large archives.
+
+   This code allows SET RMS_DEFAULT parameters to override the built-in
+default values.  On some old VMS versions, sys$getjpi() can not provide
+the SET RMS_DEFAULT values, and in this situation, the callback function
+will not try to use its improved parameter values.  Users on such old
+VMS versions who seek improved I/O speed may wish to bypass this check,
+which requires changing the code in the get_rms_defaults() function in
+[.VMS]VMS.C.  The "-vv" (/VERBOSE = MORE) option on both programs
+enables diagnostic messages which show the operation of the callback
+function.  A message showing a failure status from sys$getjpi()
+indicates this problem.
+
+   Sample results (UnZip shown, Zip similar):
+
+   VMS VAX V5.4, VAX C.  Callback code disabled, no messages:
+      WIMP $ unzip -tvv TESTMAKE.ZIP
+      Archive:  SYS$SYSDEVICE:[UTILITY.SOURCE.ZIP.UNZIP60C]TESTMAKE.ZIP;1
+      [...]
+
+   VMS VAX V5.5-2, DEC C.  SYS$GETJPI() fails (%SYSTEM-F-BADPARAM):
+      WEAK $ unzip -tvv TESTMAKE.ZIP
+      Get RMS defaults.  getjpi sts = %x00000014.
+      Archive:  DUA1:[UTILITY.SOURCE.ZIP.UNZIP60C]TESTMAKE.ZIP;1
+      [...]
+
+   VMS VAX V7.3, DEC/Compaq C.  Callback code works:
+      WUSS $ unzip -tvv TESTMAKE.ZIP
+      Get RMS defaults.  getjpi sts = %x00000001.
+                     Default: deq =      0, mbc =   0, mbf =   0.
+      Open callback.  ID = 1, deq =  16384, mbc = 127, mbf =   2.
+      Archive:  ALP$DKA0:[UTILITY.SOURCE.ZIP.UNZIP60C]TESTMAKE.ZIP;1
+      [...]
+
+   VMSV5.5-2 is too old.  V7.3 is new enough.  Anyone with more precise
+information is invited to contribute it.
+
+   Users who find other parameter sets more beneficial, or who find
+particular problems with this set are welcome to comment.
+
+   In this version, as in previous versions, when UnZip expands a -V
+archive, it allocates the entire extent of a data file before writing
+any of its data.  In some previous versions, this could cause the
+destination disk to be locked for a considerable time (minutes), if
+highwater marking was enabled on that disk.  Now, the FAB SQO
+("sequential access only") flag (or equivalent) is set, which prevents
+this troublesome disk locking.
+
+   In some previous versions, when UnZip expanded a non-V archive, it
+did no pre-allocation, and used the default extension quantity.  This
+could slow file creation significantly for large files.  Now, space for
+extracted files is pre-allocated, and the same SQO ("sequential access
+only") flag is set, as with a -V archive.
+
+
+   Changes to the "-V" (/VMS) Option
+   ---------------------------------
+
+   The intent of the "-V" (/VMS) option was to store VMS file attributes
+in a Zip archive, allowing UnZip to extract an exact copy of a file on a
+VMS system, including all its VMS attributes.
+
+   In Zip before version 2.31, using the "-V" (/VMS) option created an
+archive which usually contained data from beyond the EOF (End-of-File)
+marker in a data file, but generally not all the disk blocks allocated
+for the file.  When extracted on a VMS system, the result was usually
+acceptable (because the data from beyond the EOF marker were usually
+ignored).  However, when extracted on a non-VMS system, the resulting
+file was usually corrupted by being NUL-padded to the next larger 16KB
+multiple in size.
+
+   Now (Zip 2.31 and later), with "-V" (/VMS), Zip truncates a data file
+at EOF, and portable-format files (Stream_LF, fixed-512) should be
+extracted properly on a non-VMS system.  On a VMS system, well-formed
+files (that is, those with no valid data beyond EOF) should also be
+restored correctly.
+
+   With the new "-VV" (/VMS = ALL) option, the archive includes all
+allocated blocks for the file (including those beyond EOF).  When
+extracted on a VMS system, the original file should be reproduced with
+as much fidelity as possible, but on a non-VMS system, most files will
+be seen as corrupt because of the data from beyond EOF.
+
+
+   Changes to Program Exit Status Values
+   -------------------------------------
+
+   Zip and UnZip exit with 32-bit VMS status values which are formed
+from their internal OS-independent status values.  In previous program
+versions, this was done by converting the internal success code (0) into
+%x00000001 (SS$_NORMAL), and converting the other internal warning and
+error codes using an artificial control/facility code, 0x7FFF (which
+includes some reserved bits), and a severity value which was determined
+according to rules specified in the VMS-specific exit function.
+Curiously, the internal status codes were left-shifted by 4 bits instead
+of 3, so all the resulting VMS message codes (bits 13:3) were even.
+
+   Zip and UnZip now have facility names and codes assigned by HP
+(UnZip: IZ_UNZIP, 1954; Zip: IZ_ZIP, 1955).  Now, by default, the
+programs exit with standard 32-bit VMS status values which differ from
+the old ones in several ways: The official facility code is used, and
+the facility-specific bit is set.  (For compatibility with older
+versions, the internal status codes are still left-shifted by 4 bits. 
+This also makes it easier to extract the internal status code from a
+hexadecimal representation of the VMS status code.)  The builders also
+create non-executable message files (UNZIP_MSG.EXE and ZIP_MSG.EXE) so
+that, after a suitable SET MESSAGE command, the program messages will be
+available from DCL.  For example:
+
+      $ SET MESSAGE dev:[dir]ZIP_MSG.EXE
+      $ ZIP FRED.ZIP no_such_file
+        zip warning: name not matched: no_such_file
+
+      zip error: Nothing to do!
+      (dev:[dir]FRED.ZIP;)
+
+      ALP $ WRITE SYS$OUTPUT F$MESSAGE( $STATUS)
+      %IZ_ZIP-W-NONE, Nothing to do
+
+The message files may be copied into SYS$MESSAGE to make them generally
+available, although this could cause some confusion if multiple versions
+of the programs are used on the system, and their error message source
+files differ.  Each different destination directory will get its own
+UNZIP_MSG.EXE or ZIP_MSG.EXE ([.ALPHA], [.ALPHAL], [.VAX], and so on),
+but all of the same-architecture files are equivalent to each other.
+That is, on an Alpha system, any of the [.ALPHA*]ZIP_MSG.EXE files could
+be used; on an IA64 system, any of the [.IA64*]ZIP_MSG.EXE files could
+be used; and on a VAX system, any of the [.VAX*]ZIP_MSG.EXE files could
+be used.  (Similar for UNZIP_MSG.EXE, of course.)
+
+   If desired, the programs may be built to use the old exit status values
+by defining a C macro with the old facility value:
+"CTL_FAC_IZ_UNZIP=0x7FFF" (UnZip) or "CTL_FAC_IZ_ZIP=0x7FFF" (Zip).
+(See comments in the builder regarding LOCAL_UNZIP or LOCAL_ZIP, as
+appropriate.)  This will maintain compatibility with older program
+versions, but will make the programs incompatible with the new error
+message files.
+
+
+   VMS File Attribute Schemes
+   --------------------------
+
+   Zip's "-V" (/VMS) option causes VMS file attributes to be stored in
+an archive.  Since Zip version 2.2 (released in 1996), Zip has, by
+default, stored VMS file attributes using a scheme ("PK") which is
+compatible with the one used by PKWARE in their PKZIP product.  Before
+that, a different scheme ("IM") was used.  UnZip versions before 5.2
+support only the older IM scheme, but since UnZip version 5.2, both
+schemes have been supported by UnZip.
+
+   The IM scheme has not been well tested recently, but it is still
+available.  Some problems were seen when the IM scheme was used with
+symbolic links on VMS V8.3.  Details on how build Zip to use the IM
+scheme instead of the PK scheme are included in comments in the main
+builder files.  Look for VMS_IM_EXTRA in [.VMS]BUILD_ZIP.COM or IM in
+[.VMS]DESCRIP.MMS.
+
+   The "special compilation options" section of a "zip -v" ("zip
+/verbose") report should show either VMS_PK_EXTRA or VMS_IM_EXTRA,
+according to how Zip was built.
+
+
+   UTC Date-Times
+   --------------
+
+   Zip archives traditionally include local (MS-DOS compatible)
+date-time information for files.  Since Zip version 2.1, it has also
+been possible to store UTC date-time information in the archive, and
+since UnZip version 5.2, UnZip has been able to use this UTC date-time
+information when extracting files.
+
+   On VMS, support in the C run-time environment for UTC became
+available with VMS V7.0.  UTC support in Zip and UnZip is automatically
+enabled at compile time, if it is available on the system where the code
+is compiled (__CRTL_VER >= 70000000).  It may be disabled at compile
+time by defining the C macro NO_EF_UT_TIME.  Details on how build Zip
+and UnZip with additional C macros defined are included in comments in
+the main builder files.  Look for LOCAL_[UN]ZIP in
+[.VMS]BUILD_[UN]ZIP.COM or in [.VMS]DESCRIP.MMS.  For example, using MMS
+to build UnZip:
+
+      MMS /DESCRIP = [.VMS] /MACRO = ("LOCAL_UNZIP=NO_EF_UT_TIME=1")
+
+or, using the command procedure to build Zip:
+
+      LOCAL_ZIP == "NO_EF_UT_TIME=1"
+      @ [.VMS]BUILD_ZIP.COM
+      DELETE /SYMBOL /GLOBAL LOCAL_ZIP
+
+   The "special compilation options" section of a "zip -v" ("zip
+/verbose") or "unzip -v" ("unzip /verbose") report should show
+USE_EF_UT_TIME if the program was built with UTC support.
+
+
+   Building with the LIST option using MMK or MMS
+   ----------------------------------------------
+
+   Currently, building with MMK or MMS using the LIST option (as in
+"/MACRO = LIST=1") may cause a failure for some old versions of the DEC
+C compiler.  The LIST option currently adds "/show = (all, nomessages)"
+to the CC command line, and some old DEC C compilers do not support the
+"nomessages" keyword.  When VAX C is used, this keyword is omitted, but
+the builder does not distinguish between the various DEC/Compaq/HP C
+versions.  The work-arounds are to use BUILD_[UN]ZIP.COM, or edit
+[.VMS]DESCRIP_SRC.MMS to remove the troublesome keyword.
+
+
+   GNU C
+   -----
+
+   Zip and UnZip have been built using GNU C (VAX) version 2.3, mostly
+for fun, but serious users are encouraged to report any interest in
+continuing this activity.  The GNU C 2.3 header files were missing some
+things, including definitions of SEEK_CUR, SEEK_END, and SEEK_SET.  The
+VMS-specific code now expects to find unixio.h and unixlib.h, which were
+absent from the GNU C 2.3 distribution.
+
+   To work around these difficulties, the Zip and UnZip kits include
+some emergency replacement unixio.h and unixlib.h files which appear to
+work for these programs, at least.  To install them, use commands like
+the following:
+
+      COPY [.VMS]UNIXIO_GCC.H GNU_CC_INCLUDE:[000000]UNIXIO.H
+      COPY [.VMS]UNIXLIB_GCC.H GNU_CC_INCLUDE:[000000]UNIXLIB.H
+      SET PROTECTION W:RE GNU_CC_INCLUDE:[000000]UNIXIO.H, UNIXLIB.H
+
+   There may be an error in the GNU C header file ATRDEF.H which can
+cause Zip to fail, when making a "-V" archive, with a spurious "could
+not open for reading" error message, followed by more bad behavior.  It
+probably also causes trouble of some kind in UnZip.  To check the
+questionable macro definition, use a command like the following:
+
+      SEARCH GNU_CC_INCLUDE:[000000]ATRDEF.H ATR$S_JOURNAL
+
+This should show something equivalent to this:
+
+      #define ATR$S_JOURNAL           0x001
+
+If you see "0x002" (or equivalent) instead of "0x001" (or equivalent),
+then this value must be corrected in the file before building Zip or
+UnZip.
+
+   You may also see several warnings from the compiler caused by other
+defects in the GNU C header files, such as:
+
+<various>: warning: passing arg 4 of `qsort' from incompatible pointer type
+
+[...]rab.h:134: warning: unnamed struct/union that defines no instances
+[...]rab.h:143: warning: unnamed struct/union that defines no instances
+
+These warnings appear to be harmless.
+

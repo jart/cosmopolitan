@@ -1,0 +1,69 @@
+.TH zipnote 1 "v3.0 of 8 May 2008"
+.SH NAME
+zipsplit \- split a zipfile into smaller zipfiles
+
+.SH SYNOPSIS
+.I zipsplit
+.RB [ \-t ]
+.RB [ \-i ]
+.RB [ \-p ]
+.RB [ \-s ]
+.RB [ \-n\ size ]
+.RB [ \-r\ room ]
+.RB [ \-b\ path ]
+.RB [ \-h ]
+.RB [ \-v ]
+.RB [ \-L ]
+zipfile
+
+.SH ARGUMENTS
+.in +13
+.ti -13
+zipfile  Zipfile to split.
+
+.SH OPTIONS
+.TP
+.BI \-t
+Report how many files it will take, but don't make them.
+.TP
+.BI \-i
+Make index (zipsplit.idx) and count its size against first zip file.
+.TP
+.BI \-n\ \fRsize
+Make zip files no larger than "size" (default = 36000).
+.TP
+.BI \-r\ \fRroom
+Leave room for "room" bytes on the first disk (default = 0).
+.TP
+.BI \-b\ \fRpath
+Use path for the output zip files.
+.TP
+.BI \-p
+Pause between output zip files.
+.TP
+.BI \-s
+Do a sequential split even if it takes more zip files.
+.TP
+.BI \-h
+Show a short help.
+.TP
+.BI \-v
+Show version information.
+.TP
+.BI \-L
+Show software license.
+
+.SH DESCRIPTION
+.I zipsplit
+reads a zipfile and splits it into smaller zipfiles.
+
+.SH EXAMPLES
+To be filled in.
+
+.SH BUGS
+Does not yet support large (> 2 GB) or split archives.
+
+.SH SEE ALSO
+zip(1), unzip(1)
+.SH AUTHOR
+Info-ZIP

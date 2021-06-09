@@ -1,0 +1,123 @@
+/* CCZIP    EXEC   Compile zip for VM/CMS                           */
+/*                 Author: George Petrov, 11 Apr 1995 (VMCOMPIL EXEC) */
+/* Modified for IBM C V3R1 by Ian E. Gorman, 2 Nov 1998
+   Facilities for compiling and testing were provided by
+      OmniMark Technologies Corporation, Ottawa, Canada
+*/
+Address Command
+Signal On Error
+
+/* Allow longnames, compile re-entrant code.
+   globals.c and cmsmvs.c require EXTENDED features */
+CCopts = 'LONGNAME RENT LANGLVL(EXTENDED) NOEXECOPS'
+
+/* ZIP options -- VM_CMS, REENTRANT */
+CCopts = CCopts 'DEFINE(VM_CMS,REENTRANT)'
+
+/* Link the load module to run in more or less than 16MB memory */
+LINKopts = 'AMODE ANY RMODE ANY RLDSAVE'
+
+/* resources needed to build */
+'GLOBAL TXTLIB  SCEELKED CMSLIB'
+'GLOBAL LOADLIB SCEERUN'
+
+/* produce the TEXT (object) files */
+linklist=''
+modname='ZIP'
+Say 'Building' modname 'MODULE...'
+Call Compile 'ZIP'
+Call Compile 'CRC32'
+Call Compile 'CRYPT'
+Call Compile 'DEFLATE'
+Call Compile 'FILEIO'
+Call Compile 'GLOBALS'
+Call Compile 'TREES'
+Call Compile 'TTYIO'
+Call Compile 'UTIL'
+Call Compile 'ZIPUP'
+Call Compile 'ZIPFILE'
+Call Compile 'CMSMVS'
+Call Compile 'CMS'
+
+Say 'Linking...'
+'EXEC CMOD' linklist '(MODNAME' modname LINKopts
+Say modname 'built successfully.'
+
+
+/*---------------------------------------------------------------------*/
+/* Build utility programs                                              */
+/*---------------------------------------------------------------------*/
+CCopts = CCopts 'DEFINE(UTIL)'
+
+
+linklist=''
+modname='ZIPNOTE'
+Say
+Say 'Building' modname 'MODULE...'
+Call Compile 'ZIPNOTE'
+Call Compile 'ZIPFILE'
+Call Compile 'FILEIO'
+Call Compile 'UTIL'
+Call Compile 'GLOBALS'
+Call Compile 'CMSMVS'
+
+Say 'Linking...'
+'EXEC CMOD' linklist '(MODNAME' modname LINKopts
+Say modname 'built successfully.'
+
+
+linklist=''
+modname='ZIPSPLIT'
+Say
+Say 'Building' modname 'MODULE...'
+Call Compile 'ZIPSPLIT'
+Call Compile 'ZIPFILE'
+Call Compile 'FILEIO'
+Call Compile 'UTIL'
+Call Compile 'GLOBALS'
+Call Compile 'CMSMVS'
+
+Say 'Linking...'
+'EXEC CMOD' linklist '(MODNAME' modname LINKopts
+Say modname 'built successfully.'
+
+
+linklist=''
+modname='ZIPCLOAK'
+Say
+Say 'Building' modname 'MODULE...'
+Call Compile 'ZIPCLOAK'
+Call Compile 'ZIPFILE'
+Call Compile 'FILEIO'
+Call Compile 'UTIL'
+Call Compile 'GLOBALS'
+Call Compile 'CRC32'
+Call Compile 'CRYPT'
+Call Compile 'TTYIO'
+Call Compile 'CMSMVS'
+
+Say 'Linking...'
+'EXEC CMOD' linklist '(MODNAME' modname LINKopts
+Say modname 'built successfully.'
+Say 'Done.'
+
+Exit rc
+
+
+
+error:
+    Say 'Error' rc 'during compilation!'
+    Say 'Error in line' sigl':'
+    Say '   'Sourceline(sigl)
+    Exit rc
+
+
+
+Compile:  Procedure Expose CCopts LINKopts linklist
+    Parse arg filename filetype filemode .
+    If filetype='' Then filetype='C'
+    linklist = linklist filename
+
+    Say 'Compiling' filename filetype filemode '...'
+    'EXEC CC' filename filetype filemode '('CCopts
+    Return rc
