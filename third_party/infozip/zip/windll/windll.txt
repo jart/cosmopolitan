@@ -1,0 +1,147 @@
+The code set out below is not intended to be compiled, but is only intended as
+a very simplistic pointer to how to load and call the dll. You will have to
+look in the files referenced below for actual, working code.
+
+There is one entry point that uses the structure shown below:
+
+typedef struct {
+LPSTR Date;             /* Date to include after */
+LPSTR szRootDir;        /* Directory to use as base for zipping */
+LPSTR szTempDir;        /* Temporary directory used during zipping */
+BOOL fTemp;             /* Use temporary directory '-b' during zipping */
+BOOL fSuffix;           /* include suffixes (not implemented in WiZ) */
+BOOL fEncrypt;          /* encrypt files */
+BOOL fSystem;           /* include system and hidden files */
+BOOL fVolume;           /* Include volume label */
+BOOL fExtra;            /* Exclude extra attributes */
+BOOL fNoDirEntries;     /* Do not add directory entries */
+BOOL fExcludeDate;      /* Exclude files earlier than specified date */
+BOOL fIncludeDate;      /* Include only files earlier than specified date */
+BOOL fVerbose;          /* Mention oddities in zip file structure */
+BOOL fQuiet;            /* Quiet operation */
+BOOL fCRLF_LF;          /* Translate CR/LF to LF */
+BOOL fLF_CRLF;          /* Translate LF to CR/LF */
+BOOL fJunkDir;          /* Junk directory names */
+BOOL fGrow;             /* Allow appending to a zip file */
+BOOL fForce;            /* Make entries using DOS names (k for Katz) */
+BOOL fMove;             /* Delete files added or updated in zip file */
+BOOL fDeleteEntries;    /* Delete files from zip file */
+BOOL fUpdate;           /* Update zip file--overwrite only if newer */
+BOOL fFreshen;          /* Freshen zip file--overwrite only */
+BOOL fJunkSFX;          /* Junk SFX prefix */
+BOOL fLatestTime;       /* Set zip file time to time of latest file in it */
+BOOL fComment;          /* Put comment in zip file */
+BOOL fOffsets;          /* Update archive offsets for SFX files */
+BOOL fPrivilege;        /* Use privileges (WIN32 only) */
+BOOL fEncryption;       /* TRUE if encryption supported, else FALSE.
+                           this is a read-only flag */
+LPSTR szSplitSize;		/* This string contains the size that you want to 
+						   split the archive into. i.e. 100 for 100 bytes,
+						   2K for 2 k bytes, where K is 1024, m for meg
+						   and g for gig. If this string is not NULL it
+						   will automatically be assumed that you wish to
+						   split an archive. */
+LPSTR szIncludeList;    /* Pointer to include file list string (for VB) */
+long IncludeListCount;  /* Count of file names in the include list array */
+char **IncludeList;     /* Pointer to include file list array. Note that the last
+                           entry in the array must be NULL */
+LPSTR szExcludeList;    /* Pointer to exclude file list (for VB) */
+long ExcludeListCount;  /* Count of file names in the include list array */
+char **ExcludeList;     /* Pointer to exclude file list array. Note that the last
+                           entry in the array must be NULL */
+int  fRecurse;          /* Recurse into subdirectories. 1 => -r, 2 => -R */
+int  fRepair;           /* Repair archive. 1 => -F, 2 => -FF */
+char fLevel;            /* Compression level (0 - 9) */
+} ZPOPT, _far *LPZPOPT;
+
+The main entry point is ZpArchive(ZCL, *Opts) where the structure shown below
+is passed to the DLL when it is called.
+
+typedef struct {
+int  argc;              = Count of files to zip
+LPSTR lpszZipFN;        = Archive file name
+char **FNV;             = file names to zip up. Think of this an argv
+LPSTR lpszAltFNL;		/* pointer to a string containing a list of file names to zip up,
+						   separated by whitespace. Intended for use only by VB users, all
+						   others should set this to NULL. */
+} ZCL, _far *LPZCL;
+
+
+For examples of how the actual calls to the dll were set up in WiZ, look in
+the file makezip.c in the WiZ source directory.
+
+For examples of how the actual loading and unloading of the dll's themselves
+was done, look in wizmain.c in the WiZ source directory. Note that WiZ looks
+specifically for a particular version number of the dll, and also expects to
+find the company name to be Info-ZIP. This is to protect from getting different
+versions of the dll loaded, with resulting unknown behavior.
+
+There is a very simplistic example of how to load and call into the dll in
+example.c and example.h. Note that this example does not implement any
+command line switches at all, and is merely intended as a guide for those
+brave enough to enter a new world.
+
+There are three additional (at the moment) entry points:
+
+ZpInit, defined as
+
+int WINAPI ZpInit(ZIPUSERFUNCTIONS far * lpZipUserFunc);
+
+where ZIPUSERFUNCTIONS is defined as below.
+
+ZpVersion, defined as
+
+ZpVer * ZpVersion(void);
+
+where ZpVer is defined as:
+
+typedef struct _ZpVer {
+    ulg structlen;          /* length of the struct being passed */
+    ulg flag;               /* bit 0: is_beta   bit 1: uses_zlib */
+    char *betalevel;        /* e.g., "g BETA" or "" */
+    char *date;             /* e.g., "4 Sep 95" (beta) or "4 September 1995" */
+    char *zlib_version;     /* e.g., "0.95" or NULL */
+    BOOL fEncryption;       /* TRUE if encryption enabled, FALSE otherwise */
+    _zip_version_type zip;
+    _zip_version_type os2dll;
+    _zip_version_type windll;
+} ZpVer;
+
+See api.c for exactly what ZpVersion does, but the short version of
+what it does is return the zip and dll versions in the ZpVer structure.
+The structure typedef's are in api.h. It will also tell you if encryption
+is enabled.
+
+The typedef's for the function pointers in the structure ZIPUSERFUNCTIONS
+are shown immediately below.
+
+typedef int (WINAPI DLLPRNT) (LPSTR, unsigned long);
+typedef int (WINAPI DLLPASSWORD) (LPSTR, int, LPCSTR, LPCSTR);
+typedef int (WINAPI DLLSPLIT) (LPSTR);
+#ifdef ZIP64_SUPPORT
+typedef int (WINAPI DLLSERVICE) (LPCSTR, __int64);
+typedef int (WINAPI DLLSERVICE_NO_INT64) (LPCSTR, unsigned long, unsigned long);
+#else
+typedef int (WINAPI DLLSERVICE) (LPCSTR, unsigned long);
+#endif
+#endif
+typedef int (WINAPI DLLCOMMENT)(LPSTR);
+
+
+typedef struct {
+DLLPRNT *print;
+DLLCOMMENT *comment;
+DLLPASSWORD *password;
+DLLSPLIT *split;		/* This MUST be set to NULL unless you want to be queried
+						   for a destination for each split archive. */
+#ifdef ZIP64_SUPPORT
+DLLSERVICE *ServiceApplication64;
+DLLSERVICE_NO_INT64 *ServiceApplication64_No_Int64;
+#else
+DLLSERVICE *ServiceApplication;
+#endif
+} ZIPUSERFUNCTIONS, far * LPZIPUSERFUNCTIONS;
+
+Last revised April 26, 2004.
+
+Mike White

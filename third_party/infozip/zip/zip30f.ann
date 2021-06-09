@@ -1,0 +1,61 @@
+Zip 3.0f
+
+We have posted Zip Beta 3.0f, September 24th 2007.  This is a beta
+release, but is more or less complete.  See the file WhatsNew for
+a list of major features implemented and what's left.
+
+The archive reading and writing code in this beta has been redone to
+support split archives.  We've extensively tested the code over the
+last year, but you should thoroughly test it yourself before relying
+on it.  Also note that Unicode support is preliminary and may change
+before release, but currently there seems agreement between Info-ZIP
+and others on how to handle storing UTF-8 paths and that approach is
+implemented in Zip 3.0.
+
+Please test this beta and let us know if we're ready to officially
+release Zip 3.0.
+
+New things in Zip 3.0f
+- Split archives - Zip now can create and indirectly update split
+  archives
+- Unicode support - Zip now stores Unicode paths that should be more
+  portable across character sets and languages and Zip now can
+  read Windows file names in most all character sets using Unicode,
+  but this support is preliminary and may change by release
+- bzip2 - bzip2 compression is now supported
+- Console writing - Messages to the console are more consistently
+  formatted
+- Streaming - Directories are now handled better when streaming
+- Date range - Can now use -t and -tt to set a date range
+- UnZip Check - Check if UnZip 6.00 or later is available for
+  testing a Zip64 archive
+- License - minor updates to the license
+- Difference mode - A new option -DF (--dif) creates an output archive that
+  includes only files changed or added since the input archive was created,
+  and might be useful for incremental backups
+- File Sync - New option -FS synchronizes the entries in an archive with the
+  files on the file system, adding, updating, and deleting entries as needed,
+  creating an updated archive that should be the same as a new archive, but
+  since existing entries are copied and not recompressed it can be faster
+- Fix options - Options -F and -FF now fix split archives
+- Copy Mode - This new mode allows selecting archive entries to copy
+  to a new archive
+- Case matching - On Windows and VMS, option -ic (ignore case) turns off
+  case-sensitive matching of command line input patterns when matching
+  entries in an archive
+- Windows OEM - With this compile option, file names are saved on
+  Windows in the local OEM character set, as some other zips do
+- Windows Archive Bit support - On Windows can now select files
+  using the Windows archive bit
+- Global dots - Can now set quiet mode, but output progress dots every
+  so many bytes read, settable from KB to TB, allowing progress to be
+  displayed for large archives without the screen scrolling
+- Empty archives - Options -i or -i@ can now output empty archives,
+  which is useful in some scripts
+- Keep extra fields option - Option -X- allows passing through extra
+  fields that Zip does not process
+- Large file encryption bug fixed - Fix for bug that very rarely
+  results in bad data being stored when deflating and encrypting
+  uncompressable large amounts of data and resulting in CRC errors
+- Show Files option - Can list the files that would be operated on
+- Delete date bug fixed - Bug when using -d with -t or -tt is fixed

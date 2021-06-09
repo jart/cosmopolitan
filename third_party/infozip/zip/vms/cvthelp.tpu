@@ -1,0 +1,182 @@
+!       TITLE   CVTHELP.TPU
+!       IDENT   01-001
+!
+!++
+! Copyright (c) 1990-2001 Info-ZIP.  All rights reserved.
+!
+! See the accompanying file LICENSE, version 2000-Apr-09 or later
+! (the contents of which are also included in zip.h) for terms of use.
+! If, for some reason, all these files are missing, the Info-ZIP license
+! also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
+!
+!++
+!
+!  Program:     CVTHELP.TPU
+!
+!  Author:      Hunter Goatley
+!
+!  Date:        January 12, 1992
+!
+!  Purpose:     Convert .HELP files to RUNOFF .RNH files.  Substitutes
+!               RUNOFF commands for tags imbedded in the .HELP file.
+!
+!  Calling sequence:
+!
+!       $ EDIT/TPU/NOJOURNAL/NODISPLAY/COMMAND=CVTHELP file.HELP
+!
+!  Modified by:
+!
+!       01-001          Hunter Goatley            7-FEB-2001 15:40
+!               Added <NEXT> for qualifier separators.
+!
+!       01-000          Hunter Goatley           12-JAN-1992 15:15
+!               Original version.
+!
+!--
+Procedure eve_convert_help
+Local   temp
+        ,x
+        ;
+
+   qualifier_level := 0;
+   hg$substitute_topic(current_buffer, "<MAIN>", ".indent-3", "1");
+   hg$substitute_topic(current_buffer, "<QUALIFIER>", ".sk;.indent-3", "");
+   hg$substitute_topic(current_buffer, "<TOPIC>", ".indent-3", "2");
+   hg$substitute_topic(current_buffer, "<SUBTOPIC>", ".indent-3", "3");
+   hg$substitute_topic(current_buffer, "<SUBSUBTOPIC>", ".indent-3", "4");
+   hg$substitute_comment(current_buffer,"<QUALIFIERS>",".indent-3;2 Qualifiers");
+   hg$substitute_comment(current_buffer,"<PARAMETER>",".indent-2");
+   hg$substitute_comment(current_buffer,"<PTEXT>",".lm+3");
+   hg$substitute_comment(current_buffer,"<TXETP>",".lm-3");
+   hg$substitute_comment(current_buffer,"<ETEXT>",".lm+4");
+   hg$substitute_comment(current_buffer,"<TXETE>",".lm-4");
+   hg$substitute_comment(current_buffer,"<INIT>",".noflags;.lm3;.rm70");
+   hg$substitute_comment(current_buffer,"<LITERAL>",".lm+4;.literal");
+   hg$substitute_comment(current_buffer,"<LARETIL>",".end literal;.lm-4");
+   hg$substitute_comment(current_buffer,"<LITERAL0>",".literal");
+   hg$substitute_comment(current_buffer,"<0LARETIL>",".end literal");
+   hg$substitute_comment(current_buffer,"<DOT1LIST>",'.list 1,"o"');
+   hg$substitute_comment(current_buffer,"<DOT0LIST>",'.list 0,"o"');
+   hg$substitute_comment(current_buffer,"<ENTRY>",".le");
+   hg$substitute_comment(current_buffer,"<TSIL>",".end list");
+   hg$substitute_comment(current_buffer,"<CENTER>",".center");
+   hg$substitute_comment(current_buffer,"<FORMAT>",".sk;.indent2");
+   hg$substitute_comment(current_buffer,"<NOTE>",".note");
+   hg$substitute_comment(current_buffer,"<ETON>",".end note");
+   hg$substitute_comment(current_buffer, LINE_BEGIN & LINE_END,".sk");
+   hg$substitute_comment(current_buffer, LINE_BEGIN & "|", "");
+   hg$substitute_comment(current_buffer,"<NEXT>",".br");
+
+EndProcedure;           ! eve_convert_help
+
+Procedure hg$substitute_comment (the_buffer, target, new)
+Local   temp
+        ,save_pos
+        ,x
+        ;
+  on_error;
+  endon_error;
+
+  save_pos := mark(none);
+  position(beginning_of(the_buffer));
+  loop
+        x := search(target, forward);
+        exitif x = 0;
+        position (x);
+        erase_character(length(x));
+        copy_text(new);
+  endloop;
+
+  position(save_pos);
+
+EndProcedure;           ! hg$substitute_comment
+
+Procedure hg$substitute_topic (the_buffer, target, new, level)
+Local   temp
+        ,save_pos
+        ,x
+        ;
+  on_error;
+  endon_error;
+
+  save_pos := mark(none);
+  position(beginning_of(the_buffer));
+  loop
+        x := search(target, forward);
+        exitif x = 0;
+        position (x);
+        erase_character(length(x));
+        move_vertical(-1);
+        if (length(current_line) = 0)
+        then copy_text("|");
+        endif;
+        move_vertical(1);
+        copy_text(".!------------------------------------------------------");
+        split_line;
+        copy_text(new);
+        move_horizontal(-current_offset);
+        move_vertical(1);
+        if level <> "" then
+                copy_text(level + " ");
+!       else
+!           if qualifier_level = 0
+!           then
+!               copy_text("2 Qualifiers");
+!               split_line; split_line;
+!               copy_text(new); split_line;
+!               qualifier_level := 1;
+!           endif;
+        endif;
+        move_horizontal(-current_offset);
+        move_vertical(1);
+        if length(current_line) = 0
+        then
+            if (target = "<MAIN>") OR (target = "<TOPIC>")
+                OR (target = "<SUBTOPIC>") or (target = "<SUBSUBTOPIC>")
+            then copy_text(".br");
+            else copy_text(".sk");
+            endif;
+        endif;
+  endloop;
+
+  position(save_pos);
+
+EndProcedure;           ! hg$substitute_topic
+
+!===============================================================================
+Procedure tpu$init_procedure
+Local   temp
+        ,orig_filespec
+        ,f
+        ;
+
+   on_error
+   endon_error;
+
+ !Prompt user for information
+
+  orig_filespec := get_info(command_line, "file_name");
+  if orig_filespec = ""
+  then
+        message("No .HELP file given");
+        quit;
+  endif;
+  f := file_parse(orig_filespec, ".HELP");              !Add .LIS ending
+
+    ! Create a buffer and window for editing
+
+  main_buf := create_buffer ("MAIN",f);
+  set (eob_text, main_buf, "[End of buffer]");
+
+  position (beginning_of(main_buf));
+
+  eve_convert_help;
+
+  f := file_parse(orig_filespec,"","",NAME);
+
+  write_file (main_buf, f+".RNH");
+
+ quit;
+EndProcedure;           !TPU$INIT_PROCEDURE
+
+tpu$init_procedure;

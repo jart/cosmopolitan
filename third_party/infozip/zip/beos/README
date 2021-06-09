@@ -1,0 +1,31 @@
+Info-ZIP's zip for BeOS
+
+KNOWN BUGS
+
+- None! (as of zip 2.21)
+
+- building on x86 BeOS generates a hell of a lot of bugs; I'm not going to
+  worry about them until Be fixes their headers though...
+
+FEATURES
+
+- stores BeOS file attributes, compressing them if possible (as of 2.21,
+  this works properly for symbolic links, too; as of 2.3, this works
+  properly for symbolic links whether you're storing them as links or not)
+
+- zip files are created with the correct file type (application/zip)
+
+- supports both Metrowerks CodeWarrior (PowerPC platform) and GNU C
+  (x86 platform), automatically picking the default compiler for each
+  architecture
+
+Please report any bugs to the Zip-Bugs mailing list; our email address is
+zip-bugs@lists.wku.edu.  If it's something BeOS-specific, you could email
+me directly.
+
+Visit the Info-ZIP web site (http://www.cdrom.com/pub/infozip/) for all the
+latest zip and unzip information, FAQs, source code and ready-to-run
+executables.
+
+- Chris Herborth (chrish@pobox.com)
+  April 2/1999

@@ -1,0 +1,95 @@
+Tandem Port of Info ZIP (zip)
+=======================
+
+History:
+1. Tidy up COMMACS/MACROS/MAKE
+2. Changes for version 5.32d affected files:
+- TANDEMC     (changes to stat() for UNZIP)
+- ZIPUPC      (changes to use REVISIOH rather than REVISEH)
+- ZIPFILEC    (don't add ".zip" to ZIP name)
+- FILEIOC     (cosmetic missing "*/")
+3. Fix to allow zipping of files called ZIP (e.g. DAVES.ZIP)
+03/08/98  2.3e   Process Tandem DEFINE names - use define name as internal name
+                 Remove BITSO from build of ZIPLIB
+                 New DOIT macro for extracting files from archive
+17/08/98  2.3e   Set USE_EF_UT_TIME to allow for timezone changes
+18/08/98  2.3e   Use define LICENSED to build object able to update timestamps
+30/11/98  2.3h   Updated mapname/chmod/in2ex, include licensing in MAKE
+21/12/98  2.3i   Add simple Enscribe file handling, consisting of:
+                 - storing Enscribe files as LF delimited text files
+                 - adding Tandem Extra Field, holding Enscribe file attributes
+                 Create ZIP file with Tandem File Code 1001
+                 Rationalised TANDEMH and TANDEMC wth UNZIP 5.40d
+12/01/99  2.3i   Correct bug stopping setting of last open timestamp
+25/01/99  2.3k   Add '-B' flag to zip Enscribe files with no record delimiters
+26/01/99  2.3k   Make CRLF the default delimiter for Structured and Text files
+01/02/99  2.3k   Use maximum size large transfer read (57344) as default, allow
+                 smaller value as option
+01/02/99  2.3k   Redefine -B flag for Edit/Enscribe files as in table below.
+                 Default (-B or -B0 or no flag) is add CR/LF
+
+                 -B<number> options at present are:
+                 Bit 0 -  Don't add delimiter (Edit/Enscribe)
+                 Bit 1 -  Use LF rather than CR/LF as delimiter (Edit/Enscribe)
+                 Bit 2 -  Space fill record to max record length (Enscribe)
+                 Bit 3 -  Trim trailing space (Edit/Enscribe)
+
+                 Bit 8 -  Force 30K (Expand) large read for Unstructured files
+
+06/02/99  2.3k   Attempt to catch Large Transfer mode failure (err 21) when
+                 attempting 56K reads, add substitute 30K reads (Expand files)
+24/03/99  2.3m   Split TANDEMC into TANDEMC/TANZIPC/TANUNZC
+24/03/99  2.3m   Added TANNSKH to allow for declarations which require
+                 structures defined in ZIPH after call to TANDEMH
+11/05/99  2.3m   Change zopen in TANZIPC to allow opening of files with
+                 missing alt keys (err 4)
+                 Assume not DST if can't resolve time (no DST table available)
+27/09/99  2.3o   Fixed bug in -B0 option causing files to be stored rather than
+                 deflated. Created TANZIPH
+29/04/02  2.4g   Fixed contention on temporary file when multiple ZIPs run
+
+A few notes about the files on this subvol
+
+COMMACS   -  used by MAKE (compiler)
+DOIT      -  macro to extract required Tandem files from archive and rename
+MACROS    -  used by MAKE (bind)
+MAKE      -  recompile ZIP code, attempts to only recompile changed code
+README    -  this file
+ZIPLIB    -  library of ZIP compiled routines, used by ZIP/ZIPNOTE etc
+ZIPL      -  ZIP object (bound using LARGE memory model)
+ZIPNOTE   -  ZIPNOTE object (bound using LARGE memory model)
+
+*C        -  Source file
+*H        -  Header files
+*O        -  Individual object files (when compiled by MAKE)
+
+Install Notes:
+==============
+Stage 1 - get ZIP object onto Tandem
+- download Tandem Zip executables archive from Web
+- using PC unzip program (e.g. pkunzip/WinZip) extract ZIP
+- copy ZIP from PC to Tandem in Binary mode s(FTP/IXF)
+- alter file code to 100
+- optionally place in $SYSTEM.SYSTEM to allow easy access from command line
+
+Stage 2 - (optional) compile source code (requires UNZIP on Tandem)
+- download ZIP source archive fwom web - contains all supported platforms
+- copy archive onto Tandem as Binary
+- extract Tandem DOIT macro ( UNZIP -j <archive> tandem/DOIT )
+- update DOIT macro to point at archive file
+- restore relevant files by running DOIT
+- NOTE that revision.h must be restored as REVISIOH
+- replace references to $T with a collector on your system
+- replace references to SUPER.DAVES with whatever user id you use
+- to compile run MAKE (compiles, accelerates, licences)
+- NOTE:  Always run the accelerated object on TNS/R systems, otherwise
+         it runs extremely slow.
+
+
+Additional Notes - LICENSE the object:
+======================================
+If you wish to be able to update the last modified time of the zip file
+(-o option) you need to add the line "#define LICENSED" to the TANDEMH file.
+If you set this option then you MUST FUP LICENSE the file as SUPER.SUPER.
+This is a Tandem restriction since we have to call a PRIV procedure to update
+the file label.  For ZIP the define is setup (default) in tandem.h

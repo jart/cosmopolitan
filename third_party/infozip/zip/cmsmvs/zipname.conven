@@ -1,0 +1,200 @@
+
+         Zip file/directories name convention under MVS
+       ---------------------------------------------------
+                           Draft 1.1
+
+
+1. Translating native file names to Zip filenames.
+
+1.1 Zipping a PDS
+
+On MVS there are directories called PDS (Partition Data Set) which have
+the following format :   name1.name2.name3(mname)
+for example:             myuserid.unzip.c(unzip)
+
+So as you see the path delimiter is '.'. Each dir name can be max 8
+chars long beginning with a number.
+
+Between '(' and ')' there is the so called member name - it is also 8
+chars long. This is the actual file name.
+
+
+1.1.1 Converting MVS PDS name to zip path/filename  (status: not implemented)
+
+The PDS name is converted to zippath as follows:
+in the zip :     name1/name2/mname.name3
+becomes on MVS:  name1.name2.name3(mname)
+
+
+1.2 Unzipping as PDS                                (status: implemented)
+
+When you unzip the file name myuserid/unzip/unzip.c the same process
+is done backwards, so you get : myuserid.unzip.c(unzip)
+
+Notice that the file extension is used as last dirname!
+
+
+1.2 Unzipping to a different PDS                    (status: implemented)
+
+You can also use -d option while unzipping for example:
+unzip mytest myuserid/unzip/unzip.c -dnewdest.test
+
+then the new name will become:
+newdest.test.myuserid.unzip.c(unzip)
+
+              Second example:
+
+unzip mytest myuserid/unzip/*.c -dnewdest.test
+
+then you get a PDS:
+newdest.test.myuserid.unzip.c(...)
+
+with all *.c files in it.
+
+
+1.3 Zipping a Sequential Dataset               (status: not implemented)
+
+  Sequential dataset is a dataset with NO members.
+Such a dataset is translated from native MVS to zip format by replacing
+the '.' (points) with '/' (backslash).
+
+Example:
+on MVS:                  name1.name2.name3
+becomes in the zip :     name1/name2/name3
+
+NOTE : The new filename in the zip has NO extension this way it can be
+       recognised as a Sequential dataset and not a PDS.
+       But this also means that all files in the zip archive that have
+       no extension will be unzipped as Sequential datasets!
+
+
+1.4 Using a DDNAMES for input.                  (status: not implemented)
+
+To use DDNAMES as input file names put a 'dd:' before the ddname:
+example: zip myzip dd:name1 dd:name2 dd:sales
+
+In the Zip archive the ddnames are saved as name.DDNAME so if you try
+the example above you will get in your zip file (when listing it) :
+
+..size .. date time .. crc .. NAME1.DDNAME
+..size .. date time .. crc .. NAME2.DDNAME
+..size .. date time .. crc .. SALES.DDNAME
+
+
+1.4 Using a DDNAMES as zip name                    (status: implemented)
+
+It is allowed to use a DDNAME as zipfile, just put dd: before it
+example: unzip dd:myzip *.c
+   this will unzip all .c files from ddname myzip
+
+example2:   ZIP DD:MYZIP DD:MANE1 MYSOURCE.C MYDOC.TEXT(ZIPPING)
+   this will zip ddname name1 file mysource.c and PDS mydoc.text(zipping)
+   into as a zip file in the ddname myzip
+
+
+2. Converting longer path names (unix like)     (status: not implemented)
+   to native MVS names.
+
+When in the zip archive there are dirnames longer that 8 chars they are
+chopped at the 8 position. For example
+        MyLongZippath/WithLongFileName.text
+is translated to:
+        MYLONGZI.TEXT(WITHLONG)
+
+Notice that all chars are converted to uppercase.
+
+
+2.1 Using special characters                     (status: implemented)
+
+Also all '_' (underscore), '+' (plus), '-' (minus), '(' and ')'
+from the file name/path in the zip archive are skipped because they
+are not valid in the MVS filenames.
+
+
+2.2 Numeric file names                        (status: not implemented)
+
+On MVS no name can begin with a number, so when a dir/file name begins with
+one, a leading letter 'N' is inserted.  For example:
+          Contents.512
+becomes:
+          CONTENTS.N512
+
+
+
+
+        Zip file/directories name convention under VM/CMS
+       ---------------------------------------------------
+
+1. Translating native file names to Zip filenames.
+
+On VM/CMS (not ESA ) there are NO directories so you got only disks
+and files.
+
+The file names are delimited with spaces. But for use with unzip/zip
+you have to use '.' points as delimiters.
+
+For example on your A disk you have file called PROFILE EXEC
+if you want to zip it type : zip myzip profile.exec
+
+If the same file is on your F disk you have to type:
+zip myzip profile.exec.f
+
+So as you can see the general format is fname.ftype.fmode
+
+In the zipfile the disk from which the file comes is not saved!
+So only the fname.ftype is saved.
+
+If you unzip and you want to give a different destination disk just use
+the -d option like:
+
+                     unzip mytest *.c -df
+
+This will unzip all *.c files to your F disk.
+
+
+2. Converting longer path names (unix like) to native VM/CMS names.
+
+When in the zip archive there are dirnames longer that 8 chars they are
+chopped at the 8 position. Also the path is removed. For example
+        Zippath/WithLongFileName.text
+is translated to:
+        WITHLONG.TEXT
+
+Notice that all chars are converted to uppercase.
+
+Also all '+' (plus), '-' (minus), '(' and ')'
+from the file name/path in the zip archive are skipped because they
+are not valid in the VM/CMS filenames.
+
+If there is no extension for the file name in the zip archive, unzip
+will add .NONAME for example:
+        mypath/dir1/testfile
+becomes:
+        TESTFILE.NONAME
+
+3. Future?
+
+There is also discussion for a new option on ZIP that you can give
+a virtual directory to be added before each file name that is zipped.
+
+For example you want to zip a few .c file and put them in the zip
+structure under the directory 'mydir/test', but you can't create dirs on
+VM/CMS so you have to the something like:
+
+ZIP myzip file1.c file2.c -dmydir/test
+
+and you get in the zip archive files:
+
+       mydir/test/file1.c
+       mydir/test/file2.c
+
+-------------------------------------------------------------------------
+
+
+NOTE: Not all of those functions are implemented in the first beta
+      release of VM/MVS UNZIP/ZIP.
+
+Every ideas/corrections/bugs will be appreciated.
+Mail to maillist:  Info-ZIP@LISTS.WKU.EDU
+
+George Petrov

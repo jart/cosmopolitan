@@ -1,0 +1,168 @@
+	Module		ZIP_CLITABLE
+	Ident		"03-001"
+
+Define	Verb		ZIP
+	Parameter	P1, Label=ZIPFILE, Prompt="Zip file"
+	Parameter	P2, Label=INFILE, VALUE(list), Prompt="Files to Zip"
+	Qualifier	DELETE, NonNegatable
+	Qualifier	FRESHEN, NonNegatable
+	Qualifier	MOVE, NonNegatable
+	Qualifier	UPDATE, NonNegatable
+	Qualifier	EXCLUDE, NonNegatable, VALUE(required,list)
+	Qualifier	INCLUDE, NonNegatable, VALUE(required,list)
+	Qualifier	EXLIST, NonNegatable, VALUE(type=$FILE,required)
+	Qualifier	INLIST, NonNegatable, VALUE(type=$FILE,required)
+	Qualifier	ADJUST_OFFSETS, NonNegatable
+	Qualifier	APPEND, NonNegatable
+	Qualifier	BATCH, NonNegatable, VALUE(type=$FILE)
+	Qualifier	BEFORE, NonNegatable, VALUE(type=$DATETIME)
+	Qualifier	COMMENTS, NonNegatable,
+			VALUE(list,type=COMMENTS_KEYWORDS)
+	Qualifier	COMPRESSION, NonNegatable, VALUE(type=COMPRESS_OPTS)
+	Qualifier	COPY_ENTRIES, NonNegatable
+	Qualifier	DESCRIPTORS, NonNegatable
+	Qualifier	DIFFERENCE, NonNegatable
+	Qualifier	DIRNAMES, Negatable, Default
+	Qualifier	DISPLAY, NonNegatable,
+			 VALUE(type=DISPLAY_KEYWORDS, required, list)
+	Qualifier	DOT_VERSION, NonNegatable
+	Qualifier	ENCRYPT, Negatable, VALUE
+	Qualifier	EXTRA_FIELDS, Negatable, VALUE(type=EXTRA_OPTS)
+	Qualifier	FILESYNC, NonNegatable
+	Qualifier	FIX_ARCHIVE, NonNegatable, VALUE(type=FIX_OPTS)
+	Qualifier	FULL_PATH, Negatable, Default
+	Qualifier	GROW, NonNegatable
+	Qualifier	HELP, NonNegatable, VALUE(type=HELP_OPTS)
+	Qualifier	JUNK, NonNegatable
+	Qualifier	KEEP_VERSION, Negatable
+	Qualifier	LATEST, NonNegatable
+	Qualifier	LEVEL, VALUE(type=$NUMBER,required)
+	Qualifier	LICENSE, NonNegatable
+	Qualifier	LOG_FILE, NonNegatable,
+			VALUE(list, required, type=LOG_OPTS)
+	Qualifier	MUST_MATCH, NonNegatable
+	Qualifier	OUTPUT, VALUE(required,type=$FILE)
+	Qualifier	PATTERN_CASE, NonNegatable, VALUE(type=PATT_CASE_OPTS)
+	Qualifier	PAUSE, Negatable
+	Qualifier	PKZIP, Negatable
+	Qualifier	PRESERVE_CASE, Negatable,
+			 VALUE(type=PRES_CASE_OPTS, list)
+	Qualifier	QUIET, NonNegatable
+	Qualifier	RECURSE, Negatable, VALUE(type=RECURSE_OPTS)
+	Qualifier	SHOW, NonNegatable,
+			 VALUE(type=SHOW_KEYWORDS, required, list)
+	Qualifier	SINCE, NonNegatable, VALUE(type=$DATETIME)
+	Qualifier	SPLIT, NonNegatable,
+			VALUE(list, required, type=SPLIT_OPTS)
+	Qualifier	STORE_TYPES, NonNegatable, VALUE(required,list)
+	Qualifier	SYMLINKS, NonNegatable
+	Qualifier	TEMP_PATH, VALUE(required,type=$FILE)
+	Qualifier	TEST, NonNegatable, VALUE(type=TEST_OPTS)
+	Qualifier	TRANSLATE_EOL, NonNegatable,
+			VALUE(type=EOL_KEYWORDS)
+	Qualifier	UNSFX, NonNegatable
+	Qualifier	VERBOSE, NonNegatable,
+			 VALUE(type=VERBOSE_OPTS, list)
+	Qualifier	VMS, NonNegatable, VALUE(type=VMS_OPTS)
+	Qualifier	WILDCARD, VALUE(type=WILDCARD_OPTS)
+	Qualifier	YYZ_ZIP, NonNegatable, Default
+	Qualifier	ZIP64, NonNegatable
+
+	Disallow	COPY_ENTRIES and (DELETE or FRESHEN or UPDATE)
+	Disallow	DELETE and (COPY_ENTRIES or FRESHEN or UPDATE)
+	Disallow	FRESHEN and (COPY_ENTRIES or DELETE or UPDATE)
+	Disallow	UPDATE and (COPY_ENTRIES or DELETE or FRESHEN)
+	Disallow	DIFFERENCE and (neg OUTPUT)
+	Disallow	DIFFERENCE and
+			 (FIX_ARCHIVE.NORMAL or FIX_ARCHIVE.FULL or
+			 COPY_ENTRIES or DELETE)
+	Disallow	APPEND and GROW
+	Disallow	FIX_ARCHIVE.NORMAL and FIX_ARCHIVE.FULL
+	Disallow	(FIX_ARCHIVE.NORMAL or FIX_ARCHIVE.FULL) and
+			 (neg OUTPUT)
+	Disallow	TRANSLATE_EOL.LF and TRANSLATE_EOL.CRLF
+	Disallow	FULL_PATH and JUNK
+	Disallow	RECURSE.PATH and RECURSE.FILENAMES
+	Disallow	(neg EXTRA_FIELDS) and
+			 (KEEP_EXISTING or EXTRA_FIELDS.NORMAL)
+
+Define	Type		PATT_CASE_OPTS
+	Keyword		BLIND
+	Keyword		SENSITIVE, DEFAULT
+
+Define	Type		COMMENTS_KEYWORDS
+	Keyword		ARCHIVE, DEFAULT
+	Keyword		FILES
+	Keyword		ZIP_FILE
+
+Define	Type		COMPRESS_OPTS
+	Keyword		BZIP2
+	Keyword		DEFLATE, DEFAULT
+	Keyword		STORE
+
+Define	Type		DISPLAY_KEYWORDS
+	Keyword		BYTES
+	Keyword		COUNTS
+	Keyword		DOTS, VALUE
+	Keyword		GLOBALDOTS
+	Keyword		USIZE
+	Keyword		VOLUME
+
+Define	Type		EOL_KEYWORDS
+	Keyword		LF, DEFAULT
+	Keyword		CRLF
+
+Define	Type		EXTRA_OPTS
+	Keyword		NORMAL, DEFAULT
+	Keyword		KEEP_EXISTING
+
+Define	Type		FIX_OPTS
+	Keyword		NORMAL, DEFAULT
+	Keyword		FULL
+
+Define	Type		HELP_OPTS
+	Keyword		NORMAL, DEFAULT
+	Keyword		EXTENDED
+
+Define	Type		LOG_OPTS
+	Keyword		APPEND, Negatable
+	Keyword		INFORMATIONAL, Negatable
+	Keyword		FILE, NonNegatable, VALUE(required, type=$FILE)
+
+Define	Type		PRES_CASE_OPTS
+	Keyword		NOODS2
+	Keyword		NOODS5
+	Keyword		ODS2
+	Keyword		ODS5
+
+Define	Type		RECURSE_OPTS
+	Keyword		PATH, DEFAULT
+	Keyword		FILENAMES
+
+Define	Type		SHOW_KEYWORDS
+	Keyword		COMMAND
+	Keyword		DEBUG
+	Keyword		FILES
+	Keyword		OPTIONS
+
+Define	Type		SPLIT_OPTS
+	Keyword		BELL, Negatable
+	Keyword		PAUSE, Negatable
+	Keyword 	SIZE, VALUE(required)
+	Keyword		VERBOSE, Negatable
+
+Define	Type		TEST_OPTS
+	Keyword		UNZIP, VALUE(required)
+
+Define	Type		VERBOSE_OPTS
+	Keyword		NORMAL, DEFAULT
+	Keyword		MORE
+	Keyword		DEBUG
+	Keyword		COMMAND
+
+Define	Type		VMS_OPTS
+	Keyword		ALL
+
+Define	Type		WILDCARD_OPTS
+	Keyword		NOSPAN
+

@@ -1,0 +1,57 @@
+#define APSTUDIO_READONLY_SYMBOLS
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include <windows.h>
+#if (defined(WIN32) && !defined(__EMX__) && !defined(__MINGW32__))
+#include <winver.h>
+#endif
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "../revision.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION Z_MAJORVER,Z_MINORVER,Z_PATCHLEVEL,0
+ PRODUCTVERSION Z_MAJORVER,Z_MINORVER,Z_PATCHLEVEL,0
+ FILEFLAGSMASK 0x3L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS VOS__WINDOWS32
+ FILETYPE VFT_DLL
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+#ifdef _UNICODE
+        BLOCK "040904B0"
+#else
+        BLOCK "040904E4"
+#endif
+        BEGIN
+            VALUE "CompanyName", IZ_COMPANY_NAME "\0"
+            VALUE "FileDescription", "Info-ZIP's Zip dll\0"
+            VALUE "FileVersion", VERSION "\0"
+            VALUE "InternalName", "Zip32z64\0"
+            VALUE "LegalCopyright", "Info-ZIP 1997 - 2008\0"
+            VALUE "OriginalFilename", "ZIP32Z64.DLL\0"
+            VALUE "ProductName", "Info-ZIP's WiZ\0"
+            VALUE "ProductVersion", VERSION "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+#ifdef _UNICODE
+        VALUE "Translation", 0x409, 1200
+#else
+        VALUE "Translation", 0x409, 1252
+#endif
+    END
+END

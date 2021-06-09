@@ -1,0 +1,563 @@
+# Makefile for Zip, ZipCloak, ZipNote and ZipSplit
+
+# Supported Make utilities:
+# - Microsoft/IBM nmake
+# - dmake 3.8 or higher
+# - GNU make, at least version 3.68
+# - NOT watcom make
+# For Microsoft and Watcom C, better use NMAKE,
+# otherwise it doesn't matter.
+
+# Supported 16-bit C Compilers (created programs run under OS/2 1.x and 2.x):
+# - Microsoft C 6.00A
+# - Watcom C/C++ 16-bit
+
+# Supported 32-bit C Compilers (created programs run under OS/2 2.x only):
+# - GNU gcc (emx kit 0.9c or newer)
+# - IBM C Set/2 or C Set++   - does not yet work with ASM code
+# - Watcom C/C++ 32-bit      - does not yet work with ASM code
+# - Borland C++              - no ASM code yet
+# - MetaWare High C/C++      - no ASM code yet
+
+# Supported Cross-Compilers for MS-DOS:
+# - Microsoft C 6.00A (16-bit)
+# - Watcom C/C++ (16- and 32-bit)
+# - GNU gcc (emx kit 0.9c or newer, 32-bit)
+
+# Supported Cross-Compilers for Win32 (WinNT/Win95):
+# - GNU gcc (emx kit 0.9c or newer, with RSXNT 1.4 or newer)
+
+# Supported Assemblers:
+# - Microsoft MASM 6.00 with Microsoft C, IBM C
+# - Watcom WASM with Watcom C/C++
+# - GNU as with GNU gcc
+
+# To use MASM 5.x instead of MASM 6.00:
+# - set AS="masm -T -Ml"
+# - set ASEOL=";"
+
+
+# To use, enter "make/nmake/dmake -f os2/makefile.os2"
+# (this makefile depends on its name being "os2/makefile.os2").
+
+# Add -DNO_ASM to CFLAGS and define OBJA to `nothing' if you do not have
+# masm or ml.
+# Add -DDYN_ALLOC to ASFLAGS if you have defined it in tailor.h or CFLAGS
+
+# Note: assembly language modules are really only supported for
+# Microsoft 16-bit and GNU gcc 32-bit compilation.
+
+# Notes on 16-bit (Microsoft C 6.00) compilation:
+
+#   The resulting programs can be used under OS/2 protected mode only.
+#   A larger stack has to be used for OS/2 because system calls
+#   use more stack than under DOS, 8k is recommended by Microsoft.
+#   Note that __STDC__ has to be defined explicitly with C 6.00 when -Ze
+#   is given, because Microsoft disables __STDC__ when their extensions
+#   are enabled. This is different from the C 5.10 behaviour.
+
+# Notes on 32-bit OS/2 compilation:
+
+#   The resulting programs can be used under OS/2 protected
+#   mode of OS/2 2.x only, not under 1.x and not under DOS.
+#   It makes no difference if __STDC__ is defined or not.
+#   Borland C++ works with DYN_ALLOC only.
+
+# Special Notes on IBM C/C++ compilation:
+
+#   The older C compiler (C Set/2) breaks, while optimizing, on deflate.c
+#   and trees.c (generates incorrect code). The newer C++ compiler (C Set++)
+#   doesn't but instead breaks on crypt.c in the initial version and up to
+#   CSD level 003. Starting with CSD level 004, it doesn't break any longer.
+
+# Notes on Watcom C/C++ compilation for DOS with the PMODE/W extender:
+#
+#   You need to add the following section to your \watcom\binb\wlsystem.lnk
+#   file and also need to copy pmodew.exe to the same directory:
+#
+#   system begin pmodew
+#       option osname='PMODE/W'
+#       libpath %WATCOM%\lib386
+#       libpath %WATCOM%\lib386\dos
+#       op stub=pmodew.exe
+#       format os2 le
+#   end
+#
+#   PMODE/W 1.16 or higher is required.
+
+
+default:
+	@echo "Enter $(MAKE) -f os2/makefile.os2 target"
+	@echo "where target is one of:"
+	@echo "   msc mscdos ibm ibmdyn ibmdebug ibmprof metaware borland"
+	@echo "   gcc gccdyn gcczlib gccdebug gccdos gccwin32 gccw32dyn"
+	@echo "   watcom watcom16 watcomdos watcom16dos pmodew"
+
+# MS C 6.00 for OS/2, 16-bit
+msc:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="cl -nologo -AL -Ocegit -Gs $(FP)" \
+	CFLAGS="-W1 -Zep -J -G2 -D__STDC__ -DOS2 -DASM_CRC" \
+	AS="ml -nologo -c -Zm -Cp" \
+	ASFLAGS="-D__LARGE__ -D__286" \
+	LDFLAGS="-F 2000 -Lp -Fe" \
+	LDFLAGS2="-link /noe /pm:vio" \
+	OUT="-Fo" \
+	OBJ=".obj" \
+	CRCA_O="crc_i86.obj" \
+	OBJA="match.obj" \
+	DEF="os2\zip.def"
+
+# MS C 6.00 for OS/2, 16-bit, debug
+mscdebug:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="cl -nologo -AL -Zi -Od $(FP)" \
+	CFLAGS="-W1 -Zep -J -G2 -D__STDC__ -DOS2 -DASM_CRC" \
+	AS="ml -nologo -c -Zim -Cp" \
+	ASFLAGS="-D__LARGE__ -D__286" \
+	LDFLAGS="-F 2000 -Lp -Fe" \
+	LDFLAGS2="-link /noe /pm:vio" \
+	OUT="-Fo" \
+	OBJ=".obj" \
+	CRCA_O="crc_i86.obj" \
+	OBJA="match.obj" \
+	DEF="os2\zip.def"
+
+# crosscompilation for MS-DOS with MS C 6.00
+mscdos:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="cl -nologo -AL -Ocegit -Gs $(FP)" \
+	CFLAGS="-W1 -Zep -J -D__STDC__ -DDOS -DASM_CRC -DDYN_ALLOC" \
+	AS="ml -nologo -c -Zm -Cp" \
+	ASFLAGS="-D__LARGE__ -DDYN_ALLOC" \
+	LDFLAGS="-F 2000 -Lr -Fe" \
+	LDFLAGS2="-link /noe /exe" \
+	OUT="-Fo" \
+	OBJ=".obj" \
+	CRCA_O="crc_i86.obj" \
+	OBJA="match.obj" \
+	OBJ2="msdos.obj" OBJU2="msdos_.obj" \
+	OSDEP_H="msdos/osdep.h" ZIPUP_H="msdos/zipup.h"
+
+
+# IBM C Set/2, statically linked runtime
+ibm:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="icc -Q -O -Gs" \
+	CFLAGS="-Sm -Sp1 -DOS2 -DNO_ASM" \
+	AS="ml -nologo -c -Zm -Cp" \
+	ASFLAGS="" \
+	LDFLAGS="-B/ST:0x50000 -Fe" \
+	LDFLAGS2="" \
+	OUT="-Fo" \
+	OBJ=".obj" \
+	OBJA="" \
+	DEF="os2/zip.def"
+
+# IBM C Set/2, dynamically linked runtime
+ibmdyn:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="icc -Q -O -Gd -Gs" \
+	CFLAGS="-Sm -Sp1 -DOS2 -DNO_ASM" \
+	AS="ml -nologo -c -Zm -Cp" \
+	ASFLAGS="" \
+	LDFLAGS="-B/ST:0x50000 -Fe" \
+	LDFLAGS2="" \
+	OUT="-Fo" \
+	OBJ=".obj" \
+	OBJA="" \
+	DEF="os2/zip.def"
+
+# IBM C Set/2, debug version
+ibmdebug:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="icc -Q -Ti" \
+	CFLAGS="-Sm -Sp1 -DOS2 -DNO_ASM -Tm" \
+	AS="ml -nologo -c -Zim -Cp" \
+	ASFLAGS="" \
+	LDFLAGS="-B/ST:0x50000 -Fe" \
+	LDFLAGS2="" \
+	OUT="-Fo" \
+	OBJ=".obj" \
+	OBJA="" \
+	DEF="os2/zip.def"
+
+# IBM C Set/2, profiling version for PROFIT
+ibmprof:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="icc -Q -O -Gs -Gh -Ti" \
+	CFLAGS="-Sm -Sp1 -DOS2 -DNO_ASM" \
+	AS="ml -nologo -c -Zm -Cp" \
+	ASFLAGS="" \
+	LDFLAGS="-B/ST:0x50000 -Fe" \
+	LDFLAGS2="profit.obj" \
+	OUT="-Fo" \
+	OBJ=".obj" \
+	OBJA="" \
+	DEF="os2/zip.def"
+
+# Watcom C/386 9.0 or higher
+watcom:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="wcl386 -bt=os2v2 -zq -Ox -s" \
+	CFLAGS="-Zp1 -DOS2 -DNO_ASM" \
+	AS="wasm -zq -bt=os2v2 -3p" \
+	ASFLAGS="" \
+	LDFLAGS="-k0x50000 -x -l=os2v2 -Fe=" \
+	LDFLAGS2="" \
+	OUT="-Fo" \
+	OBJ=".obj" \
+	OBJA="" \
+	DIRSEP="\\" \
+	AS_DIRSEP="\\"
+
+# Watcom C/286 9.0 or higher
+watcom16:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="wcl -bt=os2 -zq -ml -Ox -s" \
+	CFLAGS="-Zp1 -DOS2 -DNO_ASM" \
+	AS="wasm -zq -bt=os2 -2p -ml" \
+	ASFLAGS="" \
+	LDFLAGS="/\"option newfiles\" -k0x3000 -x -l=os2 -Fe=" \
+	LDFLAGS2="" \
+	OUT="-Fo" \
+	OBJ=".obj" \
+	OBJA="" \
+	DIRSEP="\\" \
+	AS_DIRSEP="\\"
+
+# Watcom C/386 9.0 or higher, crosscompilation for DOS, DOS4GW extender
+watcomdos:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="wcl386 -bt=dos4g -zq -Ox -s" \
+	CFLAGS="-Zp1 -DDOS -DMSDOS -DASM_CRC" \
+	AS="wasm -zq -bt=dos4g -3p" \
+	ASFLAGS="-DWATCOM_DSEG" \
+	LDFLAGS="-k0x50000 -x -l=dos4g -Fe=" \
+	LDFLAGS2="" \
+	OUT="-Fo" \
+	OBJ=".obj" \
+	CRCA_O="crc_i386.obj" \
+	OBJA="match32.obj" \
+	OBJ2="msdos.obj" \
+	OBJU2="msdos_.obj" \
+	OSDEP_H="msdos/osdep.h" \
+	ZIPUP_H="msdos/zipup.h" \
+	DIRSEP="\\" \
+	AS_DIRSEP="\\"
+
+# Watcom C/386 9.0 or higher, crosscompilation for DOS, PMODE/W extender
+pmodew:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="wcl386 -bt=dos4g -zq -Ox -s" \
+	CFLAGS="-Zp1 -DDOS -DMSDOS -DASM_CRC" \
+	AS="wasm -zq -bt=dos4g -3p" \
+	ASFLAGS="-DWATCOM_DSEG" \
+	LDFLAGS="-k0x50000 -x -l=pmodew -Fe=" \
+	LDFLAGS2="" \
+	OUT="-Fo" \
+	OBJ=".obj" \
+	CRCA_O="crc_i386.obj" \
+	OBJA="match32.obj" \
+	OBJ2="msdos.obj" \
+	OBJU2="msdos_.obj" \
+	OSDEP_H="msdos/osdep.h" \
+	ZIPUP_H="msdos/zipup.h" \
+	DIRSEP="\\" \
+	AS_DIRSEP="\\"
+
+# Watcom C/286 9.0 or higher, crosscompilation for DOS
+watcom16dos:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="wcl -bt=dos -zq -ml -Ox -s" \
+	CFLAGS="-Zp1 -DDOS -DMSDOS -DDYN_ALLOC -DNO_ASM" \
+	AS="wasm -zq -bt=dos -2 -ml" \
+	ASFLAGS="-DDYN_ALLOC" \
+	LDFLAGS="-k0x2000 -x -l=dos -Fe=" \
+	LDFLAGS2="" \
+	OUT="-Fo" \
+	OBJ=".obj" \
+	OBJA="" \
+	OBJ2="msdos.obj" \
+	OBJU2="msdos_.obj" \
+	OSDEP_H="msdos/osdep.h" \
+	ZIPUP_H="msdos/zipup.h" \
+	DIRSEP="\\" \
+	AS_DIRSEP="\\"
+
+# MetaWare High C/C++ 3.2
+metaware:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="hc -O2" \
+	CFLAGS="-D__32BIT__ -DOS2 -DNO_ASM" \
+	AS="ml -nologo -c -Zm -Cp" \
+	ASFLAGS="" \
+	LDFLAGS="-o " \
+	LDFLAGS2="" \
+	OUT="-o ./" \
+	OBJ=".obj" \
+	DEF="-Hdef=os2/zip.def"
+
+# Borland C++
+borland:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="bcc -O" \
+	CFLAGS="-w- -DOS2 -DDYN_ALLOC -DNO_ASM" \
+	AS="ml -nologo -c -Zm -Cp" \
+	ASFLAGS="" \
+	LDFLAGS="-e" \
+	LDFLAGS2="" \
+	OUT="-o" \
+	OBJ=".obj" \
+	OBJA="" \
+	DEF="-sDos2/zip.def"
+
+# emx 0.9c, gcc, OMF format, statically linked C runtime and emx
+gcc:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="gcc -Zomf -O -Wimplicit" \
+	CFLAGS="-DOS2 -DASM_CRC" \
+	AS="gcc -Zomf" \
+	ASFLAGS="-Di386" \
+	LDFLAGS="-o ./" \
+	LDFLAGS2="-Zsys -Zstack 320 -s -Zsmall-conv" \
+	OUT="-o" \
+	OBJ=".obj" \
+	CRCA_O="crc_gcc.obj" \
+	OBJA="matchgcc.obj" \
+	DEF="os2/zip.def"
+
+# emx 0.9c, gcc, OMF format, dynamically linked C runtime and emx
+gccdyn:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="gcc -Zomf -O -Wimplicit" \
+	CFLAGS="-DOS2 -DASM_CRC" \
+	AS="gcc -Zomf" \
+	ASFLAGS="-Di386" \
+	LDFLAGS="-o ./" \
+	LDFLAGS2="-Zcrtdll -Zstack 320 -s" \
+	OUT="-o" \
+	OBJ=".obj" \
+	CRCA_O="crc_gcc.obj" \
+	OBJA="matchgcc.obj" \
+	DEF="os2/zip.def"
+
+# emx 0.9c, gcc, OMF format, statically linked zlib, C runtime, and emx
+gcczlib:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="gcc -Zomf -O -Wimplicit" \
+	CFLAGS="-DOS2 -DUSE_ZLIB" \
+	AS="gcc -Zomf" \
+	ASFLAGS="-Di386 -DUSE_ZLIB" \
+	LDFLAGS="-o ./" \
+	LDFLAGS2="-L. -lzlib -Zsys -Zstack 320 -s -Zsmall-conv" \
+	OUT="-o" \
+	OBJ=".obj" \
+	CRCA_O="" \
+	OBJA="" \
+	DEF="os2/zip.def"
+
+# emx 0.9c, gcc, a.out format, with debug info for gdb
+gccdebug:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="gcc -g -Wimplicit" \
+	CFLAGS="-DOS2 -DASM_CRC" \
+	AS="gcc" \
+	ASFLAGS="-Di386" \
+	LDFLAGS="-o ./" \
+	LDFLAGS2="" \
+	OUT="-o" \
+	OBJ=".o" \
+	CRCA_O="crc_gcc.o" \
+	OBJA="matchgcc.o" \
+	DEF="os2/zip.def"
+
+# emx 0.9c, gcc, a.out format, for MS-DOS
+gccdos:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="gcc -O -Wimplicit" \
+	CFLAGS="-DDOS -DMSDOS -DASM_CRC" \
+	AS="gcc" \
+	ASFLAGS="-Di386" \
+	LDFLAGS="-o ./" \
+	LDFLAGS2="-s -Zsmall-conv" \
+	OUT="-o" \
+	OBJ=".o" \
+	CRCA_O="crc_gcc.o" \
+	OBJA="matchgcc.o" \
+	OBJ2="msdos.o" \
+	OBJU2="msdos_.o" \
+	OSDEP_H="msdos/osdep.h" \
+	ZIPUP_H="msdos/zipup.h"
+
+# emx 0.9c, gcc, RSXNT 1.4, cross-compilation for Win32
+gccwin32:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="gcc -Zwin32 -O -m486 -Wall" \
+	CFLAGS="-DWIN32 -DASM_CRC" \
+	AS="gcc -Zwin32" \
+	ASFLAGS="-Di386" \
+	LDFLAGS="-o ./" \
+	LDFLAGS2="-ladvapi32 -Zsys -Zsmall-conv -s" \
+	OUT="-o" \
+	OBJ=".o" \
+	CRCA_O="crc_gcc.o" \
+	OBJA="matchgcc.o" \
+	OBJ2="win32zip.o win32.o nt.o" \
+	OBJU2="win32_.o" \
+	OSDEP_H="win32/osdep.h" \
+	ZIPUP_H="win32/zipup.h" \
+	DEF="win32/zip.def"
+
+# emx 0.9c, gcc, RSXNT 1.4, cross-compilation for Win32, use emx C rtl DLL
+gccw32dyn:
+	$(MAKE) -f os2/makefile.os2 zips \
+	CC="gcc -Zwin32 -Zcrtdll=crtrsxnt -O -m486 -Wall" \
+	CFLAGS="-DWIN32 -DASM_CRC" \
+	AS="gcc -Zwin32" \
+	ASFLAGS="-Di386" \
+	LDFLAGS="-o ./" \
+	LDFLAGS2="-ladvapi32 -s" \
+	OUT="-o" \
+	OBJ=".o" \
+	CRCA_O="crc_gcc.o" \
+	OBJA="matchgcc.o" \
+	OBJ2="win32zip.o win32.o nt.o" \
+	OBJU2="win32_.o" \
+	OSDEP_H="win32/osdep.h" \
+	ZIPUP_H="win32/zipup.h" \
+	DEF="win32/zip.def"
+
+# VPATH = .;os2
+
+# variables
+
+#default settings for target dependent macros:
+DIRSEP = /
+AS_DIRSEP = /
+# LOCAL_OPTS =
+CCFLAGS = $(CFLAGS) $(LOCAL_OPTS)
+
+OSDEP_H = os2/osdep.h
+ZIPUP_H = os2/os2zip.h os2/zipup.h
+CRCA_O  =
+
+
+OBJZ =  zip$(OBJ) zipfile$(OBJ) zipup$(OBJ) fileio$(OBJ) util$(OBJ) \
+        crc32$(OBJ) $(CRCA_O) globals$(OBJ) \
+	deflate$(OBJ) trees$(OBJ) crypt$(OBJ) ttyio$(OBJ)
+OBJ2 =	os2zip$(OBJ) os2$(OBJ) os2acl$(OBJ)
+
+OBJU =  zipfile_$(OBJ) fileio_$(OBJ) util_$(OBJ) globals$(OBJ)
+OBJU2 = os2zip_$(OBJ)
+
+OBJN =  zipnote$(OBJ) $(OBJU) $(OBJU2)
+OBJS =  zipsplit$(OBJ) $(OBJU) $(OBJU2)
+OBJC =  zipcloak$(OBJ) crc32_$(OBJ) crypt_$(OBJ) ttyio$(OBJ) $(OBJU) $(OBJU2)
+
+ZIP_H = zip.h ziperr.h tailor.h $(OSDEP_H)
+
+# rules
+
+.SUFFIXES: .c $(OBJ)
+
+.c$(OBJ):
+	$(CC) -c -I. $(CCFLAGS) $<
+
+.asm$(OBJ):
+	$(AS) $(ASFLAGS) $< $(ASEOL)
+
+# targets
+
+zips:	zip.exe zipnote.exe zipsplit.exe zipcloak.exe
+
+zip$(OBJ):	zip.c $(ZIP_H) revision.h crc32.h crypt.h ttyio.h
+zipfile$(OBJ):	zipfile.c $(ZIP_H) crc32.h
+zipup$(OBJ):	zipup.c $(ZIP_H) revision.h crc32.h crypt.h $(ZIPUP_H)
+fileio$(OBJ):	fileio.c $(ZIP_H) crc32.h
+util$(OBJ):	util.c $(ZIP_H)
+globals$(OBJ):	globals.c $(ZIP_H)
+deflate$(OBJ):	deflate.c $(ZIP_H)
+trees$(OBJ):	trees.c $(ZIP_H)
+crc32$(OBJ):	crc32.c $(ZIP_H) crc32.h
+crypt$(OBJ):	crypt.c $(ZIP_H) crypt.h crc32.h ttyio.h
+ttyio$(OBJ):	ttyio.c $(ZIP_H) crypt.h ttyio.h
+
+os2zip$(OBJ):	os2/os2zip.c $(ZIP_H) os2/os2zip.h os2/os2acl.h
+	$(CC) -c -I. $(CCFLAGS) os2$(DIRSEP)os2zip.c
+
+os2$(OBJ):	os2/os2.c $(ZIP_H) os2/os2zip.h
+	$(CC) -c -I. $(CCFLAGS) os2$(DIRSEP)os2.c
+
+os2acl$(OBJ):	os2/os2acl.c os2/os2acl.h
+	$(CC) -c -I. $(CCFLAGS) os2$(DIRSEP)os2acl.c
+
+msdos$(OBJ):	msdos/msdos.c $(ZIP_H)
+	$(CC) -c -I. $(CCFLAGS) msdos$(DIRSEP)msdos.c
+
+win32zip$(OBJ):	win32/win32zip.c $(ZIP_H) win32/win32zip.h win32/nt.h
+	$(CC) -c -I. $(CCFLAGS) win32$(DIRSEP)win32zip.c
+
+win32$(OBJ):	win32/win32.c $(ZIP_H) win32/win32zip.h
+	$(CC) -c -I. $(CCFLAGS) win32$(DIRSEP)win32.c
+
+nt$(OBJ):	win32/nt.c win32/nt.h
+	$(CC) -c -I. $(CCFLAGS) win32$(DIRSEP)nt.c
+
+crc_i86$(OBJ):	msdos/crc_i86.asm				# 16bit only
+	$(AS) $(ASFLAGS) msdos$(AS_DIRSEP)crc_i86.asm $(ASEOL)
+
+crc_i386$(OBJ):	win32/crc_i386.asm				# 32bit, MASM
+	$(AS) $(ASFLAGS) win32$(AS_DIRSEP)crc_i386.asm $(ASEOL)
+
+crc_gcc$(OBJ):	crc_i386.S					# 32bit, GNU AS
+	$(AS) $(ASFLAGS) -x assembler-with-cpp -c -o $@ crc_i386.S
+
+match$(OBJ):	msdos/match.asm
+	$(AS) $(ASFLAGS) msdos$(AS_DIRSEP)match.asm $(ASEOL)
+
+match32$(OBJ):	win32/match32.asm
+	$(AS) $(ASFLAGS) win32$(AS_DIRSEP)match32.asm
+
+matchgcc$(OBJ):	match.S
+	$(AS) $(ASFLAGS) -x assembler-with-cpp -c -o $@ match.S
+
+zipcloak$(OBJ):	zipcloak.c $(ZIP_H) revision.h crc32.h crypt.h ttyio.h
+zipnote$(OBJ):	zipnote.c $(ZIP_H) revision.h
+zipsplit$(OBJ): zipsplit.c $(ZIP_H) revision.h
+
+zipfile_$(OBJ):	zipfile.c $(ZIP_H) crc32.h
+	$(CC) -c -I. $(CCFLAGS) -DUTIL $(OUT)$@ zipfile.c
+
+fileio_$(OBJ):	fileio.c $(ZIP_H) crc32.h
+	$(CC) -c -I. $(CCFLAGS) -DUTIL $(OUT)$@ fileio.c
+
+util_$(OBJ):	util.c $(ZIP_H) os2/os2zip.h
+	$(CC) -c -I. $(CCFLAGS) -DUTIL $(OUT)$@ util.c
+
+crc32_$(OBJ):	crc32.c $(ZIP_H) crc32.h
+	$(CC) -c -I. $(CCFLAGS) -DUTIL $(OUT)$@ crc32.c
+
+crypt_$(OBJ):	crypt.c $(ZIP_H) crypt.h crc32.h ttyio.h
+	$(CC) -c -I. $(CCFLAGS) -DUTIL $(OUT)$@ crypt.c
+
+os2zip_$(OBJ):	os2/os2zip.c $(ZIP_H) os2/os2zip.h
+	$(CC) -c -I. $(CCFLAGS) -DUTIL $(OUT)$@ os2$(DIRSEP)os2zip.c
+
+msdos_$(OBJ):	msdos/msdos.c $(ZIP_H)
+	$(CC) -c -I. $(CCFLAGS) -DUTIL $(OUT)$@ msdos$(DIRSEP)msdos.c
+
+win32_$(OBJ):	win32/win32.c $(ZIP_H) win32/win32zip.h
+	$(CC) -c -I. $(CCFLAGS) -DUTIL $(OUT)$@ win32$(DIRSEP)win32.c
+
+zip.exe: $(OBJZ) $(OBJ2) $(OBJA)
+	$(CC) $(LDFLAGS)$@ $(DEF) $(OBJZ) $(OBJ2) $(OBJA) $(LDFLAGS2)
+
+zipcloak.exe: $(OBJC)
+	$(CC) $(LDFLAGS)$@ $(DEF) $(OBJC) $(LDFLAGS2)
+
+zipnote.exe: $(OBJN)
+	$(CC) $(LDFLAGS)$@ $(DEF) $(OBJN) $(LDFLAGS2)
+
+zipsplit.exe: $(OBJS)
+	$(CC) $(LDFLAGS)$@ $(DEF) $(OBJS) $(LDFLAGS2)

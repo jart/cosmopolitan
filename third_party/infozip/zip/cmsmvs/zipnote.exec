@@ -1,0 +1,66 @@
+/***********************************************************************/
+/*                                                                     */
+/* Front-end EXEC to set up linkage to the C runtime libraries         */
+/* before executing a MODULE generated from C code.                    */
+/*                                                                     */
+/* Copy this file as an EXEC with a filename matching the C MODULE.    */
+/*                                                                     */
+/* Greg Hartwig (ghartwig@vnet.ibm.com)   7/31/97, 4/24/98.            */
+/*                                                                     */
+/***********************************************************************/
+Address Command
+Parse Arg argstring
+Parse Source . . myname .
+
+/* Set output and input character translation so brackets show up */
+'SET OUTPUT AD' 'BA'x
+'SET OUTPUT BD' 'BB'x
+'SET INPUT  BA   AD'
+'SET INPUT  BB   BD'
+
+Call CLIB
+If rc<>0 Then Do
+   Say 'The required C runtime libraries don''t appear to be available.'
+   Say myname 'can not run.'
+   Exit 12
+End
+
+/* Run the command */
+myname argstring
+Exit rc
+
+
+
+
+/* Contents of the CLIB EXEC, modified for RC checking.        */
+/* Removed TXTLIB setting.  Only LOADLIB needed for execution. */
+CLIB:
+/***************************************************/
+/*      SET UP LIBRARIES FOR LE for MVS & VM       */
+/***************************************************/
+Address COMMAND
+
+loadlib  ='EDCLINK'               /* C/370 runtime                 */
+loadlib  ='SCEERUN'               /* LE runtime                    */
+
+
+theirs=queued()                           /* old stack contentsM068*/
+ 'QUERY LOADLIB ( LIFO'                   /* old setting       M068*/
+ LoadlibList=''                           /* init list         M068*/
+rc=0
+ Do while queued()^=theirs                /* all lines from cmdM068*/
+   Parse upper pull 'LOADLIB' '=' Ltemp   /* get one line      M068*/
+   LoadlibList= Ltemp Loadliblist         /* was stacked LIFO  M068*/
+ End                                                         /*M068*/
+ If loadlibList='NONE' ,
+ Then Do
+  'GLOBAL LOADLIB' Loadlib          /* enforce what we need         */
+ End
+ Else Do
+  Do xx=1 to Words(loadlib)
+  If Find(loadliblist,word(loadlib,xx)) = 0 ,
+   then loadliblist = loadliblist word(loadlib,xx)
+  End
+  'GLOBAL LOADLIB' loadliblist       /* enforce what we need         */
+ End
+Return

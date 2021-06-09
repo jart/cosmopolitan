@@ -1,0 +1,125 @@
+# Makefile for Zip, ZipCloak, ZipNote and ZipSplit using LCC-Win32.
+# By E-Yen Tan (3 June 1998).
+# Last updated 9 February 2008 (Christian Spieler).
+
+# This compiler evaluates #include locations relative to current working dir,
+# not relative to the location of the file containing the #include directive.
+# As a consequence, a "-Iwin32" option is required to allow compilation of
+# the WIN32 specific sources.
+
+CC = lcc
+# -O caused a segmentation violation with previous versions of lcc, but
+# now the optimizer seems to be fixed.
+CCFLAGS = -Zp8 -O -DWIN32
+AS = lcc
+ASFLAGS =
+LD = lcclnk
+LDFLAGS = -s
+
+# Optional macros should be declared below.
+# LCC's Make will not read the LOCAL_ZIP environment variable.
+LOC = $(ASMFLG)
+
+# Options to select optimized assembler code for CRC32 calculation.
+#ifdef USEASM
+CRCA_O = crc_lcc.obj
+OBJA = lm32_lcc.obj
+ASMFLG = -DASM_CRC -DASMV
+#else
+#CRCA_O =
+#OBJA =
+#ASMFLG = -DNO_ASM
+#endif
+
+CFLAGS = $(CCFLAGS) $(LOC)
+
+OBJZS = win32.obj win32zip.obj nt.obj $(OBJA)
+OBJUS = win32_.obj
+
+OBJZ1 = zip.obj zipfile.obj zipup.obj fileio.obj util.obj
+OBJZ2 = crc32.obj $(CRCA_O) globals.obj
+OBJZ3 = deflate.obj trees.obj crypt.obj ttyio.obj
+OBJZ  = $(OBJZ1) $(OBJZ2) $(OBJZ3) $(OBJZS)
+
+OBJU1 = zipfile_.obj fileio_.obj util_.obj crc32_.obj globals.obj
+OBJU  = $(OBJU1) $(OBJUS)
+
+OBJN =  zipnote.obj $(OBJU)
+OBJS =  zipsplit.obj $(OBJU)
+OBJK =  zipcloak.obj crypt_.obj ttyio.obj
+OBJC =  $(OBJK) $(OBJU)
+
+ZIP_H = zip.h ziperr.h tailor.h win32/osdep.h
+
+# rules
+
+.SUFFIXES: .c .obj
+
+.c.obj:
+	$(CC) $(CFLAGS) $<
+
+.asm.obj:
+	$(AS) $(ASFLAGS) $<
+
+all:    zip.exe zipnote.exe zipsplit.exe zipcloak.exe
+
+zip.obj:      zip.c $(ZIP_H) revision.h crc32.h crypt.h ttyio.h
+zipfile.obj:  zipfile.c $(ZIP_H) crc32.h
+zipup.obj:    zipup.c $(ZIP_H) revision.h crc32.h crypt.h win32/zipup.h
+fileio.obj:   fileio.c $(ZIP_H) crc32.h
+util.obj:     util.c $(ZIP_H)
+globals.obj:  globals.c $(ZIP_H)
+deflate.obj:  deflate.c $(ZIP_H)
+trees.obj:    trees.c $(ZIP_H)
+crc32.obj:    crc32.c $(ZIP_H) crc32.h
+crypt.obj:    crypt.c $(ZIP_H) crypt.h crc32.h ttyio.h
+ttyio.obj:    ttyio.c $(ZIP_H) crypt.h ttyio.h
+
+win32.obj:    win32/win32.c $(ZIP_H) win32/win32zip.h
+	$(CC) $(CFLAGS) -Iwin32 -Fo$@ win32/win32.c
+
+win32zip.obj: win32/win32zip.c $(ZIP_H) win32/win32zip.h win32/nt.h
+	$(CC) $(CFLAGS) -Iwin32 -Fo$@ win32/win32zip.c
+
+nt.obj:       win32/nt.c $(ZIP_H) win32/nt.h
+	$(CC) $(CFLAGS) -Iwin32 -Fo$@ win32/nt.c
+
+crc_lcc.obj:	win32/crc_lcc.asm
+	$(AS) $(ASFLAGS) -Fo$@ win32/crc_lcc.asm
+
+lm32_lcc.obj:	win32/lm32_lcc.asm
+	$(AS) $(ASFLAGS) -Fo$@ win32/lm32_lcc.asm
+
+zipcloak.obj: zipcloak.c $(ZIP_H) revision.h crc32.h crypt.h ttyio.h
+zipnote.obj:  zipnote.c $(ZIP_H) revision.h
+zipsplit.obj: zipsplit.c $(ZIP_H) revision.h
+
+zipfile_.obj: zipfile.c $(ZIP_H) crc32.h
+	$(CC) $(CFLAGS) -DUTIL -Fo$@ zipfile.c
+
+fileio_.obj:  fileio.c $(ZIP_H) crc32.h
+	$(CC) $(CFLAGS) -DUTIL -Fo$@ fileio.c
+
+util_.obj:    util.c $(ZIP_H)
+	$(CC) $(CFLAGS) -DUTIL -Fo$@ util.c
+
+crc32_.obj:   crc32.c $(ZIP_H) crc32.h
+	$(CC) $(CFLAGS) -DUTIL -Fo$@ crc32.c
+
+crypt_.obj:   crypt.c $(ZIP_H) crypt.h ttyio.h
+	$(CC) $(CFLAGS) -DUTIL -Fo$@ crypt.c
+
+win32_.obj:    win32/win32.c $(ZIP_H) win32/win32zip.h
+	$(CC) $(CFLAGS) -DUTIL -Iwin32 -Fo$@ win32/win32.c
+
+zip.exe: $(OBJZ)
+	$(LD) $(LDFLAGS) -o $@ $(OBJZ)
+
+zipcloak.exe: $(OBJC)
+	$(LD) $(LDFLAGS) -o $@ $(OBJC)
+
+zipnote.exe: $(OBJN)
+	$(LD) $(LDFLAGS) -o $@ $(OBJN)
+
+zipsplit.exe: $(OBJS)
+	$(LD) $(LDFLAGS) -o $@ $(OBJS)

@@ -1,0 +1,600 @@
+IZREADME_SMS (IZREADME.SMS): Info-ZIP for SMS/QDOS,   last revised: 15-Jun-1998
+===============================================================================
+[was "InfoZIP_SMSQDOS_ReadMe" in J. Hudson's original ports, ca. 08/1995]
+
+Info-ZIP Programs
+=================
+
+Zip
+UnZip
+UnZipSFX
+fUnZip
+
+Introduction
+------------
+
+This archive is a result of frustrations with contemporary (August 95)
+versions of Zip and UnZip. While they use the same compression
+algorithms as the Info-ZIP programs, there the compatibility ends. If
+you just use Zip/UnZip only on SMS/QDOS, then perhaps this is not a
+problem (but I know for some users it still is); if you use Zip/UnZip
+to transport source code and data between diverse systems, then the
+disregard for Info-ZIP standards is inconvenient, particularly the
+fact that directories are not supported and files are always stored
+underscored.
+
+This release of Zip/UnZip offers:
+
+    o   zipfile/directory compatibility with all other supported
+        platforms
+
+    o   SMS/QDOS compatibility and back-compatible with earlier
+        versions.
+
+    o   Improved performance (Zip is typically 50% faster)
+
+    o   Command-line compatibility with Info-ZIP
+
+    o   Self-extracting archives (but not very elegantly)
+
+    o   Archives are marked as 'created by SMS/QDOS'.
+
+    o   Optional recursion into directories
+
+    o   Directory structure restored on unzip of Info-ZIP/PKZIP-
+        compatible archives.
+
+    o   Config'urable for listing and unpack formats (Info-ZIP (.) or
+        SMS/QDOS (_) and 'Press any key' timeouts. Override options
+        from command line.
+
+Info-ZIP Standards
+------------------
+
+This (rather long-winded and waffling) section discusses the
+conventions and standards used by Info-ZIP-compatible archivers and how
+"Info-ZIP for SMS/QDOS" achieves compatibility.
+
+Info-ZIP Zip/UnZip on all supported platforms (Unix, DOS, OS/2, NT,
+VAX/VMS, Amiga etc etc), works in a specific way. (Until now SMS/QDOS
+was neither 'supported' nor Info-ZIP-compliant.)
+
+    a. The zipfile directory is in (/.) (Unix) format.
+
+    b. When zips are listed, it is in 'zipfile' (Unix) format.
+
+    c. When files are added, they are defined in native format.
+
+    d. When files are added, this is shown in 'zipfile' format.
+
+    e. When files are unpacked, this is done to native format, but
+       selection is done in 'zipfile' format.
+
+Basically, the listing and stored format of a file is that of the
+destination.
+
+So, given a file structure at some arbitrary 'root' level.
+
+    Makefile
+    src (Dir)
+        afile.c
+        bfile.c
+        docs (Dir)
+             prog.txt
+    hdr (Dir)
+        cfile.h
+        dfile.h
+
+Then these would be in Unix (and Amiga) as
+
+     Makefile
+     src/afile.c
+     src/bfile.c
+     src/docs/prog.txt
+     hdr/cfile.h
+     hdr/dfile.h
+
+This is also how the zipfile directory appears.
+
+And in DOS/OS2/NT
+
+    Makefile
+    src\afile.c
+    src\docs\prog.txt
+    hdr\cfile.h         .. etc
+
+And in VMS      (we SHOUT in VMS and have a silly file system)
+
+    MAKEFILE
+    [SRC]AFILE.C
+    [SRC.DOC]PROG.TXT
+    [HDR]CFILE.H        .. etc
+                        (OK VMS purist, [.SRC] etc. Only an example)
+
+And in SMS/QDOS (quiet again, but slightly ludicrous !)
+
+    Makefile
+    src_afile_c
+    src_doc_prog_txt
+    hdr_cfile_h         .. etc
+
+The main problem regarding SMS/QDOS is not that of extensions - (after
+all, only VMS and DOS _really_ have extensions; Unix, AmigaDOS, NT and
+OS/2 (and Win95) allow multiple '.' in.long.file.names.
+
+The SMS/QDOS problem is that '_' is both a legal file name character
+and a directory separator. This creates the difficulties, as
+directories and files are somewhat different objects.
+
+It is the intention that these versions of SMS/QDOS Zip/UnZip will
+follow the Info-ZIP rules, thus providing compatibility with the other
+platforms. It is possible to zip the file structure described above on
+SMS/QDOS and unpack it on VMS and get the VMS structure as shown in the
+example (and vice-versa). [We only choose the most obtuse file
+systems for the examples].
+
+In order to achieve this, SMS/QDOS names are mapped into Unix-style
+ones when the zipfile is created and un-mapped when it is unpacked.
+There is an option to unpack in 'zipfile' format (i.e. with '.' rather
+than '_'), but there will be no option to pack to all '_'. That would
+contravene the standard.  However, a file
+
+        src_split_name_c        (which is src->split_name_c !)
+                                          src/split_name.c)
+
+where src is a hard directory, would be stored in the zip directory as
+
+      src/split_name.c
+
+It does handle '_' with a little intelligence.
+
+The default UnZip option will be to translate '.' to '_'; this is
+because there are still many QDOS/Minerva users that cannot handle '.'
+without quotes, which is immensely inconvenient. For many SMS users
+'_' is also the most natural and convenient option. It also means that
+SMS/QDOS <-> SMS/QDOS Zip - UnZip sequences are transparent.
+
+There will, however, be two ways around this in UnZip.
+
+      1. It is possible to Config the UnZip default to be '.'
+         translations (or not).
+
+      2.  The UnZip -Q1 option will toggle the default (Config'ed)
+          state.
+
+Examples:
+
+Given that we want/have
+
+     Makefile                   (Makefile)
+     src/afile.c                (src_afile_c)
+     src/bfile.c                (src_bfile_c)
+     src/docs/prog.txt          (src_docs_prog_txt)
+     hdr/cfile.h                (hdr_cfile_h)
+     hdr/dfile.h                (hdr_dfile_h)
+
+Then on SMS/QDOS we might have added the *.c files as
+
+     ex zip;'-r test *_c'
+
+(or VMS, just to do something different)
+
+    zip -r test [.src]*.c
+
+In both cases the file lists as above (left).
+
+To unpack on SMS/QDOS (just the _c/.c files)
+
+   ex unzip;'test src/*.c'
+
+   (and VMS, unzip test src/*.c)
+
+i.e. in both cases using the 'zipfile' format. As a concession to
+SMS/QDOS, you could also have:
+
+   ex unzip;'test src_*_c'
+
+        but not unzip test [.src]*.c on VMS !!!!! Sorry, dinosaurs.
+
+Both SMS/QDOS commands unpack to
+
+     src_afile_c etc, where src_ is a hard sub-directory.
+
+(and the VMS example would unpack to [.src]afile.c, (or to src\afile.c on
+DOS/NT/OS2 etc).
+
+Options & SMS/QDOS Features
+---------------------------
+
+The options supported by Zip/UnZip are basically those documented in
+the Info-ZIP documents and shown in on-line 'usage'. In particular, -r
+and -j work as intended.
+
+PLEASE NOTE: Previous SMS/QDOS zip/unzips have NOT followed these
+conventions, for example -r was not implemented and -j was reversed.
+
+A number of -Q (SMS/QDOS-specific) options (not yet in the current
+documents or usage screens) are implemented.
+
+The Zip 2.0.1 (and later) default is to add SMS/QDOS headers where
+file type = 1 (exe) or 2 (rel) or (type > 0 && != 255 and (filesize %
+64) != 0). Directories are included anyway, unless you zip -D.
+
+Where a header is added for an 'exe' file a '*' is displayed after the
+name in the zip display  (and '#' for 'rel' files).
+
+The -Q options for Zip are:
+
+    -Q1  Don't add headers for ANY files
+    -Q2  Add headers for all files
+    -Q4  Don't wait for interactive key press
+
+    (additive, so -Q5 => no headers, no wait, -Q6 all headers,
+     no wait etc)
+
+    (the default is exec/rel headers, 5 sec wait)
+
+Zip has rationalised the file header storage in zipfiles. The
+previous Zip used to store a QDOS header for each file. This was very
+wasteful, for example compressing a SMS/QDOS release of PGP in this
+way came to 730Kb, too large for a DD disk. Changing the Zip program
+just to add a header record for the single PGP exe and the zipfile
+size went down to around 690Kb.
+
+And for UnZip
+
+    -Q1 Toggle unpack format status ('.' <-> '_')
+    -Q2 Toggle listing format
+    -Q4 Don't wait for key press
+
+Files Types
+-----------
+
+The history of QDOS suffers from incompatible feature
+implementations. For example, Thor directories have file type 3, CST
+have type 4 and Level 2 have type 255. Some software writers (both
+amateur and otherwise) have used type 3 or 4 for other purposes
+(backward compatibility ?? who cares ??).
+
+In order to bypass problems cause by incompatible (inconsiderate ?)
+usage of file types, the file type denoting a directory is a
+Config'urable item. The default is set to -1 (65535 in Config terms),
+which means "determine directory type from the file header of the root
+directory". If this is appears unsuccessful on your system, the value
+can be Config'ed in the range 3-255.
+
+Zip assumes a file is a directory if:
+
+        ((type == CONFIGed_type) && (file_size % 64) == 0)
+
+If you are unfortunate enough have files of that pass this test but
+are not directories, then Zip will loop endless, as SMS/QDOS opens the
+root directory again !!! (recursion: see recursion etc).
+
+I suggest you refrain from zipping such files and contact the software
+supplier and point out the error of their ways.
+
+File Naming Issues
+------------------
+
+Zip will append a '_zip' suffix to the archive filename when the
+supplied name (i.e. excluding device/directory parts) does not
+contain a '_' or a '.'. This is broadly compatible with Info-ZIP,
+taking into account the '_' aberation.
+
+So
+        ex zip;'ram2_test ...'          >> ram2_test_zip
+
+        ex zip;'ram2_test.zip ...'      >> ram2_test.zip
+
+        ex zip;'ram2_test_rep ... '     >> ram2_test_rep
+
+        ex zip;'ram2_fdbbs.rep ... '    >> ram2_fdbbs.rep
+
+        ex zip;'ram2_test_rep.zip ...'  >> ram2_test_rep.zip
+
+This implies that if a file ram2_test.zip exists, and you do:
+
+        ex zip;'ram2_test ...'
+
+Then a new file (test_zip) is created, rather than 'test.zip' being
+updated.
+
+Zip supports extensive recursive wild-carding, again the fact that '_'
+can be a directory separator as well as part of a file name makes this
+a bit tricky, but given the example:
+
+     test1_bas
+     test2_bas
+     dir1->demo1_bas            where -> indicates a sub dir
+     dir2->demo2_bas
+
+     ex zip;'ram2_test *_bas'
+     just finds test1_bas, test2_bas
+
+     ex zip;'-r ram2_test *_bas'
+     recurses and finds all the files
+
+You might think that
+
+    ex zip;'-r ram2_test *_*_bas'
+
+would just find the files in the subdirectories--well yes, but it will
+also find very other sub-dir'ed _bas file on the disk too. This is
+a feature.
+
+The pattern matching supports Unix-style 'regex' so you could:
+
+        ex zip;'ram2_test dir?_*_bas'
+        or
+        ex zip;'ram2_test dir[12]_*_bas
+
+
+UnZip has now got a fixed -d option. This is used to specify the
+directory to unpack the zipfile into, it must follow immediately
+after the zip name.
+
+        ex unzip;'ram2_test_zip -d ram3_ *_txt'
+
+would unpack all *_txt files to ram3_ .
+
+It is not necessary to set the default directory to pack files, Zip
+will remove any device names (and store any hard directory names,
+unless you zip -j).
+
+        ex zip;'ram1_test flp1_*'
+
+                ----->
+                        adding: file.dat (deflated 50%)
+                        adding: menu.rext # (deflated xx%)
+                        adding: zip * (deflated yy%)
+                        adding: hard_one (stored 0%)
+                        adding: hard_one/stuff.bas (deflated ...)
+
+Due to the way the file-mapping is implemented, it is not supported
+over the nX_ type network device.
+
+Config Options
+--------------
+
+A limited number of SMS/QDOS specific functions can be set using the
+QJump Config program.
+
+      For Zip:
+
+      Timeout for interactive 'Press any key' prompt
+
+       65535                  Wait forever      (aka -1)
+       0                      No wait
+       n (1-32767)            Wait for 'n' clocks (1/50 sec)
+
+       Other values are unsupported. Note Config works on 'unsigned'
+       integer values (at least according to my manual).
+
+       Directory file type key.
+
+       Config will accept any value in the range 3-255, known useful
+       values are 3 (Thor), 4 (CST) and 255 (Level 2 devices). A value
+       of 65535 (aka -1) means "determine from device info".
+
+       For UnZip:
+
+       Timeout as above
+
+       Unpack mode (SMS/QOS ('_') or Info-ZIP ('.')
+
+       List format (Info-ZIP ('.') or SMS/QDOS ('_')
+
+
+When the 'Press a key' text is displayed, if you press ESC, then it
+waits until you press any other key, infinite timeout. This may be
+useful if you want (much) more time to study a listing etc.
+
+Defaults for timeout and directory type are 250 and -1 respectively.
+
+More Goodies
+------------
+
+Part of the Zip compression code is now in assembler; it runs
+noticably faster than the previous version. Compressing some arbitrary
+files with the previous Zip it took 251 seconds, with Zip 2.0.1 it
+took (a mere) 170 seconds (68008 QL).
+
+More good news is that SMS/QDOS is just another system option on top
+of standard Info-ZIP, unlike the previous ports that were much more
+SMS/QDOS specific. For example, compiling the standard source with c68
+(i.e. #define QDOS), then you get an SMS/QDOS version.
+
+Compile with Linux/gcc and get the standard Linux version. Now, here's
+the cool bit; compile with Linux/gcc and "-DQLZIP", and get a standard
+Linux Zip/UnZip with SMS/QDOS (header) extensions.
+
+so, on Linux:
+
+            zip -Q stuff.zip qtpi zip unzip
+
+the -Q tells Zip to look for XTc68/Lux68 cross-compiler data size
+blocks and produce a zipfile with SMS/QDOS headers in it (for exec
+type programs). This works for exec files produced by the XTc68/Lux68
+cross compilers and ANY SMS/QDOS files copied to a Unix or MS-DOS disk
+from an SMS/QDOS floppy using 'qltools v2.2' (or later).
+
+Self Extracting Archives
+------------------------
+
+Info-ZIP self-extracting archives (_sfx) are created in a rather
+'brute-force' way. The UnZipSFX program is prepended to a zipfile.
+
+i.e.          file_sfx = unzipsfx + file_zip
+              ex file_sfx
+
+Although the UnZipSFX program is a cut-down UnZip, it is still around
+30Kb - 50Kb, depending on platform.
+
+The success of this approach depends on how the operating system
+loader loads executable files. On most systems where the loader only
+loads the actual program part (Unix, VMS, DOS et al), the this is
+quite efficient; if you make, say, a 4Mb zipfile and prepend a 30Kb
+UnZipSFX image, then the system only loads the 30Kb program and the
+process is efficient as the zipped data part is still unpacked from
+disk. These systems also supply the running UnZipSFX program stub with
+the path name of the file it was loaded from, so the program knows
+what it has to unpack (so on Linux, for example):
+
+     cat /usr/bin/unzipsfx test.zip > test.sfx  # concatenate the files
+     chmod 755 test.sfx                         # make executable
+     test.sfx                                   # to extract, it
+                                                # 'knows' it is "test.sfx"
+
+Unfortunately, the more simplistic nature of SMS/QDOS makes this much
+more difficult and rather less efficient as: (see note 1)
+
+     a. The SMS/QDOS 'loader' loads the whole file into memory.
+
+     b. The SMS/DOS 'loader'/c68 run-time system does not return the
+        name of the file from which it was loaded.
+
+     c. You cannot so easily create a image file by concatenating two
+        files, it is also necessary to ensure the executable file
+        header is set correctly.
+
+     d. The show stopper. The data space required for the
+        self-extracting archive is required, as not easily maintained
+        during electronic transfer.
+
+
+If anyone is still interested, then the following support for UnZipSFX
+is provided.
+
+ o A program 'makesfx' will combine a stub (callstub), UnZipSFX image
+   and a zipfile to produce a sfx (self-extracting zip) file.
+
+ o A callable interface is supplied. The user calls the SFX file,
+   which creates the files necessary to do the extraction.
+
+The makesfx program concatenates the supplied files to standard
+output.
+
+So, to create a sfx of all the _c files in the default directory.
+
+ # 1st create a zipfile of the required files
+
+ ex zip;'ram1_test_zip *_c'
+
+ # Now create the sfx file (ram2_test_sfx)
+ # our UnZipSFX image is in 'win1_bin'
+ # as is the call stub.
+
+ex makesfx;'-o test_sfx -x win1_bin_unzipsfx -s win1_bin_callstub -z ram1_test_zip'
+
+The arguments to makesfx are:
+
+    -s stubfile
+    -x UnZipSFX_program
+    -z Zip_file
+    -o Output_file
+
+You can now unpack the _sfx file on any SMS/QDOS-compatible
+system.
+
+        f$ = "win2_tmp_test_sfx"
+        a = alchp(flen(\f$))
+        lbytes f$,a
+        call a
+        rechp(a)
+
+ZipInfo
+-------
+
+Given the above note concerning SMS/QDOS programs not knowing the name
+by which the program was invoked, then the usual symbolic-link-of-unzip-
+to-zipinfo trick is unavailable (presupposing there is some some SMS/QDOS
+trick to emulate symbolic links).
+
+ZipInfo functionality is only available via 'unzip -Z'. There is no
+separate ZipInfo program.
+
+Caveat ATP Users
+----------------
+
+ATP for SMS/QDOS users should pay particular attention to the
+Zip/UnZip options in their atprc and compare with Info-ZIP Zip/UnZip
+usage. Older versions of Zip/UnZip screwed up -j.
+
+
+        zip -jk
+        unzip -jo
+
+Distribution & Copyright
+------------------------
+
+This software is written by and largely copyrighted by the 'Info-ZIP'
+group whose members are noted in the accompanying documentation. This
+particular SMS/QDOS port plus 'makesfx' was written by, but is not
+copyrighted by, Jonathan R Hudson. The SMS/QDOS code in this release
+is written from scratch and is not dependent on previous SMS/QDOS
+releases, but is (largely) compatible.
+
+As a courtesy to the authors of this package, please ensure that the
+documentation is supplied when it is re-distributed.
+
+In particular, if this archive is split into Zip and UnZip components,
+ensure that this document ("IZREADME_SMS") is supplied in
+each component.
+
+SMS/QDOS version by:
+Jonathan R Hudson (jrhudson@bigfoot.com)
+
+I am grateful to Graham Goodwin for finding some most imaginative
+means of breaking the beta code.
+
+I'd also like to thank Thierry Godefroy for providing the 2.1/5.2
+source code and making the initial contact with the Info-ZIP group.
+
+And of course, many, many thanks to the Info-ZIP workers for making
+this code freely available.
+
+Note 1
+------
+
+The 'C' language FAQ ('frequently asked questions' [comp.lang.c])
+notes on the matter of obtaining the load file name of a 'C' program:
+
+16.5:   How can my program discover the complete pathname to the
+        executable file from which it was invoked?
+
+A:      argv[0] may contain all or part of the pathname, or it may
+        contain nothing.  You may be able to duplicate the command
+        language interpreter's search path logic to locate the
+        executable if the name in argv[0] is present but incomplete.
+        However, there is no guaranteed or portable solution.
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Note 2
+------
+
+NUL files for SMS2. There appears to be a conflict between SMS2/LBASIC
+compiled programs and c68 programs using nul as stdin.
+
+        EW zip,nul;'ram1_test *_bas'    # will not work
+
+                                        # This does work !
+        EW zip,#FOP_IN('nul');'ram2_test *_bas' : CLOSE
+
+Note 3
+------
+
+version number incremented to 2.0.1a and 5.12a to accomodate Erling
+Jacobsen's exit message requirements
+
+version number incremented to Zip 2.0.1b to fix bug on zipping files
+starting with leading underscore.
+
+version number incremented to UnZip 5.12b to fix UnZip problem on
+files zipped with leading './', and linked with revised (fixed) c68
+'utime' function (could corrupt level 1 files). (source code _only_ as
+IZQ004.zip).
+
+Ported Zip 2.1 and UnZip 5.2 (July 1996). Released as INZIP005.zip
+
+All later versions --- see Info-ZIP release notes and documentation.

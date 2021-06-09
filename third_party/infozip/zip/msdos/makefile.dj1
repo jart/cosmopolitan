@@ -1,0 +1,126 @@
+# Makefile for Zip, ZipCloak, ZipNote and ZipSplit for
+# djgpp 1.x
+VPATH=.;msdos
+# ------------- djgpp -------------
+CPPFLAGS=-I. -DDOS -DASM_CRC $(LOCAL_ZIP)
+ASFLAGS=$(CPPFLAGS)
+CFLAGS=-Wall -O2 -m486 $(CPPFLAGS)
+UTILFLAGS=-c -DUTIL $(CFLAGS) -o
+CC=gcc
+LD=gcc
+LDFLAGS=-s
+
+STRIP=strip
+
+# Change the STUBIFY definition to the upper version if you want to create
+# executables which can be used without any external extender file.
+# >>> NOTE: Either copy the go32 extender into your build directory, or
+# >>>       edit the STUBIFY macro and add the correct path to "go32.exe".
+#STUBIFY=coff2exe -s go32.exe
+STUBIFY=coff2exe
+
+# variables
+
+#set CRCA_O to crc_gcc.o or nothing, depending on whether ASM_CRC is defined:
+CRCA_O = crc_gcc.o
+
+OBJZ = zip.o crypt.o ttyio.o zipfile.o zipup.o fileio.o util.o \
+	crc32.o $(CRCA_O) globals.o
+OBJI = deflate.o trees.o match.o msdos.o
+OBJU = zipfile_.o fileio_.o util_.o globals.o msdos_.o
+OBJN = zipnote.o $(OBJU)
+OBJC = zipcloak.o crc32_.o crypt_.o ttyio.o $(OBJU)
+OBJS = zipsplit.o $(OBJU)
+
+ZIP_H = zip.h ziperr.h tailor.h msdos/osdep.h
+
+# rules
+
+.SUFFIXES:    # Delete make's default suffix list
+.SUFFIXES:    .exe .out .a .ln .o .c .cc .C .p .f .F .y .l .s .S .h
+
+.c.o:
+	$(CC) -c $(CFLAGS) $< -o $@
+
+zips:	zip.exe zipnote.exe zipsplit.exe zipcloak.exe
+
+zip.o:	      zip.c $(ZIP_H) revision.h crc32.h crypt.h ttyio.h
+
+zipfile.o:    zipfile.c $(ZIP_H) crc32.h
+
+zipup.o:      zipup.c $(ZIP_H) revision.h crc32.h crypt.h msdos/zipup.h
+
+fileio.o:     fileio.c $(ZIP_H)
+
+util.o:       util.c $(ZIP_H)
+
+globals.o:    globals.c $(ZIP_H)
+
+deflate.o:    deflate.c $(ZIP_H)
+
+trees.o:      trees.c $(ZIP_H)
+
+crc_gcc.o:    crc_i386.S
+	$(CC) $(ASFLAGS) -x assembler-with-cpp -c -o $@ crc_i386.S
+
+crc32.o:      crc32.c $(ZIP_H) crc32.h
+
+crypt.o:      crypt.c $(ZIP_H) crypt.h crc32.h ttyio.h
+
+ttyio.o:      ttyio.c $(ZIP_H) crypt.h ttyio.h
+
+msdos.o:      msdos/msdos.c $(ZIP_H)
+
+zipcloak.o:   zipcloak.c $(ZIP_H) revision.h crc32.h crypt.h ttyio.h
+
+zipnote.o:    zipnote.c $(ZIP_H) revision.h
+
+zipsplit.o:   zipsplit.c $(ZIP_H) revision.h
+
+zipfile_.o:   zipfile.c $(ZIP_H) crc32.h
+	$(CC) $(UTILFLAGS) $@ zipfile.c
+
+fileio_.o:    fileio.c $(ZIP_H) crc32.h
+	$(CC) $(UTILFLAGS) $@ fileio.c
+
+util_.o:      util.c $(ZIP_H)
+	$(CC) $(UTILFLAGS) $@ util.c
+
+crc32_.o:     crc32.c $(ZIP_H) crc32.h
+	$(CC) $(UTILFLAGS) $@ crc32.c
+
+crypt_.o:     crypt.c $(ZIP_H) crypt.h crc32.h ttyio.h
+	$(CC) $(UTILFLAGS) $@ crypt.c
+
+msdos_.o:     msdos/msdos.c $(ZIP_H)
+	$(CC) $(UTILFLAGS) $@ msdos/msdos.c
+
+match.o:      match.S
+	$(CC) $(ASFLAGS) -x assembler-with-cpp -c -o $@ match.S
+
+zip.exe: $(OBJZ) $(OBJI)
+	echo $(OBJZ) > zip.rsp
+	echo $(OBJI) >> zip.rsp
+	$(LD) $(LDFLAGS) -o zip @zip.rsp
+	del zip.rsp
+	$(STRIP) zip
+	$(STUBIFY) zip
+	del zip
+
+zipcloak.exe: $(OBJC)
+	$(LD) $(LDFLAGS) $(OBJC) -o zipcloak
+	$(STRIP) zipcloak
+	$(STUBIFY) zipcloak
+	del zipcloak
+
+zipnote.exe: $(OBJN)
+	$(LD) $(LDFLAGS) $(OBJN) -o zipnote
+	$(STRIP) zipnote
+	$(STUBIFY) zipnote
+	del zipnote
+
+zipsplit.exe: $(OBJS)
+	$(LD) $(LDFLAGS) $(OBJS) -o zipsplit
+	$(STRIP) zipsplit
+	$(STUBIFY) zipsplit
+	del zipsplit

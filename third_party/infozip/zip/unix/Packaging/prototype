@@ -1,0 +1,29 @@
+d none $BASEDIR 0755 root bin
+d none $PKG 0755 root bin
+d none $PKG/doc 0755 root bin
+f none $PKG/doc/BUGS=BUGS 0644 root bin
+f none $PKG/doc/CHANGES=CHANGES 0644 root bin
+f none $PKG/doc/INSTALL=INSTALL 0644 root bin
+f none $PKG/doc/LICENSE=LICENSE 0644 root bin
+f none $PKG/doc/README=README 0644 root bin
+f none $PKG/doc/TODO=TODO 0644 root bin
+f none $PKG/doc/USexport.msg=USexport.msg 0644 root bin
+f none $PKG/doc/WHATSNEW=WHATSNEW 0644 root bin
+f none $PKG/doc/WHERE=WHERE 0644 root bin
+f none $PKG/doc/zip.txt=zip.txt 0644 root bin
+d none $PKG/man 0755 root bin
+d none $PKG/man/man1 0755 root bin
+f none $PKG/man/man1/zip.1=man/zip.1 0644 root bin
+f none $PKG/man/man1/zipcloak.1=man/zipcloak.1 0644 root bin
+f none $PKG/man/man1/zipnote.1=man/zipnote.1 0644 root bin
+f none $PKG/man/man1/zipsplit.1=man/zipsplit.1 0644 root bin
+d none $PKG/bin 0755 root bin
+f none $PKG/bin/zip=zip 0755 root bin
+f none $PKG/bin/zipcloak=zipcloak 0755 root bin
+f none $PKG/bin/zipnote=zipnote 0755 root bin
+f none $PKG/bin/zipsplit=zipsplit 0755 root bin
+i README
+i pkginfo
+i prototype
+i preinstall
+i postinstall

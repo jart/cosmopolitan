@@ -1,0 +1,145 @@
+include /etc/ql.mak
+
+# Makefile for Zip, ZipNote, ZipCloak and ZipSplit
+
+MAKE = make
+SHELL = /bin/sh
+
+#
+BIND = $(CC)
+
+# probably can change this to 'install' if you have it
+INSTALL = cp
+
+# target directories - where to install executables and man pages to
+BINDIR =
+manext=1
+MANDIR =
+ZIPMANUAL = MANUAL
+
+# flags
+#   CFLAGS    flags for C compile
+#   LFLAGS1   flags after output file spec, before obj file list
+#   LFLAGS2   flags after obj file list (libraries, etc)
+CFLAGS = -O -DASMV -DASM_CRC
+LFLAGS1 = -v
+#LFLAGS2 = -lutime
+
+all: zip
+
+# object file lists
+OBJZ = zip.o zipfile.o zipup.o fileio.o util.o globals.o crypt.o qdos.o ttyio.o
+OBJI = deflate.o trees.o qfileio.o crc32.o
+OBJA = config.o crc68.o match.o
+#  crc32.o
+OBJQ = qdos_.o config.o qfileio_.o
+OBJU = zipfile_.o fileio_.o util_.o globals.o $(OBJQ)
+OBJN = zipnote.o  $(OBJU)
+OBJC = zipcloak.o $(OBJU) crc32_.o crypt_.o
+OBJS = zipsplit.o $(OBJU)
+
+
+# suffix rules
+.SUFFIXES:
+.SUFFIXES: _.o .o .c .doc .1
+.c_.o:
+	rm -f $*_.c; ln $< $*_.c
+	$(CC) $(CFLAGS) -DUTIL -c $*_.c
+	rm -f $*_.c
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+
+.1.doc:
+	nroff -man $< | col -b | uniq > $@
+
+# rules for zip, zipnote, zipcloak, zipsplit, and zip.doc.
+$(OBJZ): zip.h ziperr.h tailor.h
+$(OBJI): zip.h ziperr.h tailor.h
+$(OBJN): zip.h ziperr.h tailor.h
+$(OBJS): zip.h ziperr.h tailor.h
+$(OBJC): zip.h ziperr.h tailor.h
+zip.o zipup.o crc32.o crypt.o fileio.o zipfile.o:  crc32.h
+zipcloak.o crc32_.o crypt_.o fileio_.o zipfile_.o:  crc32.h
+zip.o zipup.o crypt.o zipup_.o zipcloak.o crypt_.o:  crypt.h
+
+qfileio.o: qdos/qfileio.c
+	cp qdos/qfileio.c qfileio.c
+	$(CC) $(CFLAGS) -c qfileio.c
+	rm -f qfileio.c
+
+qfileio_.o: qdos/qfileio.c
+	cp qdos/qfileio.c qfileio_.c
+	$(CC) $(CFLAGS) -DUTIL -c qfileio_.c
+	rm -f qfileio_.c
+
+match.o: qdos/match.s
+	cp qdos/match.s ./_match.s
+	$(AS) _match.s -o match.o
+	rm -f _match.s
+
+crc68.o: qdos/crc68.s
+	cp qdos/crc68.s ./crc68.s
+	$(AS) crc68.s -o crc68.o
+	rm -f crc68.s
+
+config.o: qdos/config.s
+	cp qdos/config.s ./config.x
+	$(CC) -c -DZIP config.x -o config.o
+	rm -f config.x
+
+ZIPS = zip$E zipnote$E zipsplit$E zipcloak$E
+
+zip.o zipup.o zipnote.o zipcloak.o zipsplit.o: revision.h
+zips: $(ZIPS)
+zipsman: $(ZIPS) $(ZIPMANUAL)
+
+qdos.o:   qdos/qdos.c
+	cp qdos/qdos.c .
+	$(CC) -c -oqdos.o qdos.c
+	rm -f qdos.c
+
+qdos_.o:  qdos/qdos.c
+	cp qdos/qdos.c ./qdos_.c
+	$(CC) -DUTIL -c -oqdos_.o qdos_.c
+	rm -f qdos_.c
+
+zip$E: $(OBJZ) $(OBJI) $(OBJA)
+	$(BIND) -o zip$E $(LFLAGS1) $(OBJZ) $(OBJI) $(OBJA) $(LFLAGS2)
+zipnote$E: $(OBJN)
+	$(BIND) -o zipnote$E $(LFLAGS1) $(OBJN) $(LFLAGS2)
+zipcloak$E: $(OBJC)
+	$(BIND) -o zipcloak$E $(LFLAGS1) $(OBJC) $(LFLAGS2)
+zipsplit$E: $(OBJS)
+	$(BIND) -o zipsplit$E $(LFLAGS1) $(OBJS) $(LFLAGS2)
+
+$(ZIPMANUAL): man/zip.1
+	nroff -man man/zip.1 | col -b | uniq > $(ZIPMANUAL)
+
+# install
+install:        $(ZIPS)
+	$(INSTALL) $(ZIPS) $(BINDIR)
+	$(INSTALL) man/zip.1 $(MANDIR)/zip.$(manext)
+
+uninstall:
+	-cd $(BINDIR); rm -f $(ZIPS)
+	-cd $(MANDIR); rm -f zip.$(manext)
+
+flags:  configure
+	sh configure flags
+
+# These symbols, when #defined using -D have these effects on compilation:
+# ZMEM          - includes C language versions of memset(), memcpy(), and
+#                 memcmp() (util.c).
+# SYSV          - use <sys/dirent.h> and the library opendir()
+# DIRENT        - use <sys/dirent.h> and getdents() instead of <sys/dir.h>
+#                 and opendir(), etc. (fileio.c).
+# NODIR         - used for 3B1, which has neither getdents() nor opendir().
+# NDIR          - use "ndir.h" instead of <sys/dir.h> (fileio.c).
+# UTIL          - select routines for utilities (note, cloak, and split).
+# PROTO         - enable function prototypes.
+# RMDIR         - remove directories using a system("rmdir ...") call.
+# CONVEX        - for Convex make target.
+# AIX           - for AIX make target.
+# LINUX         - for linux make target.
+
+# end of Makefile

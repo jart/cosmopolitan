@@ -1,0 +1,130 @@
+?tacl routine
+#FRAME
+SINK [#LOAD /keep 1/ commacs]
+SINK [#LOAD /keep 1/ macros]
+
+[#PUSH file prev memory clib OK model zip lib accel unlicensed licensed
+       options fileset nocrypt crypt
+]
+#PUSH #DEFAULTS
+
+#SET OK -1
+
+[#IF [#ARGUMENT /VALUE memory/ KEYWORD /WORDLIST LARGE SMALL/ OTHERWISE ]]
+[#IF [#ARGUMENT /VALUE model/ KEYWORD /WORDLIST NOWIDE WIDE/ OTHERWISE ]]
+[#IF [#ARGUMENT /VALUE unlicensed/ KEYWORD /WORDLIST UNLICENSED/ OTHERWISE ]]
+[#IF [#ARGUMENT /VALUE nocrypt/ KEYWORD /WORDLIST NOCRYPT/ OTHERWISE ]]
+[#IF [#ARGUMENT /VALUE fileset/ TEMPLATE FILENAME OTHERWISE ]]
+
+[#IF [#EMPTYV memory] |THEN| #SET memory LARGE]
+[#IF [#EMPTYV model] |THEN| #SET model NOWIDE]
+
+[#IF model '=' "WIDE"
+  |THEN| #SETV clib model
+  |ELSE| #SETV clib memory
+]
+
+[#IF model '=' "WIDE"
+|THEN|
+  #SET zip ZIPW
+|ELSE|
+  #SET zip ZIPL
+]
+#SET lib [zip]B
+#SET accel ZIP
+#SET options [options], [model]
+
+[#IF unlicensed '=' "UNLICENSED"
+|THEN|
+  #SET zip [zip]U
+  #SET accel [accel]U
+  #SET lib   [lib]U
+|ELSE|
+  #SET licensed LICENSED
+  #SET options [options], define [licensed]
+]
+
+[#IF nocrypt '=' "NOCRYPT"
+|THEN|
+|ELSE|
+  #SET crypt USE_CRYPT
+  #SET options [options], define [crypt]
+]
+
+[#IF [#EMPTYV fileset] |THEN| #SET fileset *C]
+
+#OUTPUT Files to compile: [fileset]
+#OUTPUT Pointer Model   : [model]
+#OUTPUT Memory Model    : [memory]
+#OUTPUT C Library       : [clib]
+#OUTPUT Axcel Object    : [accel]
+#OUTPUT Run Object      : [zip]
+#OUTPUT Library Object  : [lib]
+#OUTPUT Compile Options : [options]
+#OUTPUT
+
+#SET file [#FILENAMES /MAXIMUM 1/ [fileset]]
+[#loop |while| NOT [#EMPTYV file]
+|do|
+  #SETV prev file
+  CC [file] $T.#ZIP [options]
+  [#IF [tacl^completioncode] > 1 |THEN| #set OK 0 ]
+  #SET file [#FILENAMES /MAXIMUM 1, PREVIOUS [prev]/ [fileset]]
+]
+
+[#IF OK |THEN|
+  BBZIPLIB
+  [#IF [tacl^completioncode] > 0 |THEN| #SET OK 0]
+]
+
+#PUSH #PROCESSFILESECURITY
+VOLUME ,"NUNU"
+
+[#IF OK |THEN|
+  BBZIP [zip] [clib]
+  [#IF [tacl^completioncode] > 0 |THEN| #SET OK 0]
+]
+
+[#IF OK |THEN|
+  secure^file [accel] "UUUU" SUPER.DAVES
+  accel^file [zip] [accel]
+  [#IF [tacl^completioncode] > 0 |THEN| #SET OK 0]
+]
+
+[#IF OK
+  |THEN| #OUTPUT Successfully produced Accelerated Object [accel]
+         secure^file [accel] "UUUU" SUPER.DAVES
+         [#IF [#INTERACTIVE] |THEN|
+           [#IF licensed '=' "LICENSED" |THEN|
+             #OUTPUT [accel] will not run without being LICENSED
+             [#IF [#FILEINFO /LICENSED/ [accel]]
+             |THEN|
+               #OUTPUT [accel] already LICENSED
+             |ELSE|
+               [#IF [#MATCH Y* [#INPUT [accel] License [accel] ?]] |THEN|
+                 fup^license [accel]
+               ]
+             ]
+           ]
+         ]
+  |ELSE| #OUTPUT Failed to produce Accelerated Object [accel]
+]
+
+#OUTPUT Finished
+
+#OUTPUT Setting up additonal utilities
+== ZIPNOTE
+CC ZIPNOTEC $T.#ZIP [options]
+#SET zip ZIPNOTE
+#SET accel ZIPNOTE
+[#IF OK |THEN|
+  BBANY [zip] [clib]
+  [#IF [tacl^completioncode] > 0 |THEN| #SET OK 0]
+]
+[#IF OK |THEN|
+  secure^file [accel] "UUUU" SUPER.DAVES
+  accel^file [zip] [accel]
+  [#IF [tacl^completioncode] > 0 |THEN| #SET OK 0]
+]
+
+#UNFRAME

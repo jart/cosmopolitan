@@ -1,0 +1,5 @@
+From: harry@hal.westfalen.de (Harald Denker)
+
+The old zip ATARI port is based on TurboC which is no more
+supported (for more than 3 years). I used the GNU gcc 2.5.8 and
+MiNTlibs PL46.

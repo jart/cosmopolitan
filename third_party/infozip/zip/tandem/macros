@@ -1,0 +1,571 @@
+?section ADD^LIST routine
+[#IF [#ARGUMENT /VALUE item/ WORD/SPACE/]]
+#APPEND bin ADD * FROM [item]
+#SET itime [#FILEINFO /MODIFICATION/ [item]]
+[#IF itime > ntime |THEN| #SETV ntime itime]
+
+?section BBZIPLIB MACRO
+#FRAME
+#push bin item ntime itime libtime
+#SET ntime 0
+
+#OUTPUT Building [lib]
+#APPEND bin CLEAR
+add^list CRC32O
+add^list CRYPTO
+add^list DEFLATEO
+add^list FILEIOO
+add^list GLOBALSO
+add^list TANDEMO
+add^list TANZIPO
+add^list TREESO
+add^list TTYIOO
+add^list UTILO
+add^list ZIPFILEO
+add^list ZIPUPO
+#APPEND bin INFO UNRESOLVED *
+#APPEND bin BUILD [lib] ! , LIST * OFF
+
+#SET libtime [#FILEINFO /MODIFICATION/ [lib]]
+[#IF libtime < ntime
+|THEN|
+  #OUTPUT [lib] needs re-building
+  BIND /NAME,INV BIN/
+  [#CASE [tacl^completioncode]
+  | 0         | #OUTPUT Bound [lib] OK
+  | 1         | #OUTPUT [lib]: BIND Failed with Warnings
+  | OTHERWISE | #OUTPUT [lib]: BIND Failed with ERRORS !
+  ]
+|ELSE|
+  #OUTPUT [lib] is up to date
+]
+
+#UNFRAME
+
+?section BBZIP MACRO
+#FRAME
+#push bin ziptime build
+#SET build 0
+#OUTPUT Building %1% with %2% memory model
+#APPEND bin CLEAR
+#APPEND bin ADD * FROM ZIPO
+#APPEND bin select search ($system.system.c%2%, [lib])
+#APPEND bin select runnable object on
+#APPEND bin select list * off
+#APPEND bin set heap 20 pages
+#APPEND bin set symbols on
+#APPEND bin set saveabend on
+#APPEND bin set inspect on
+#APPEND bin info unresolved *
+#APPEND bin BUILD %1%   !
+
+#SET ziptime [#FILEINFO /MODIFICATION/ %1%]
+[#IF ziptime < [#FILEINFO /MODIFICATION/ ZIPO] |THEN|
+  #OUTPUT %1% is older than ZIPO
+  #SET build -1
+]
+[#IF ziptime < [#FILEINFO /MODIFICATION/ [lib]] |THEN|
+  #OUTPUT %1% is older than [lib]
+  #SET build -1
+]
+[#IF build
+|THEN|
+  #OUTPUT %1% is out of date, re-building
+  BIND /NAME,INV BIN/
+  [#CASE [tacl^completioncode]
+  | 0         | #OUTPUT Bound %1% OK
+  | 1         | #OUTPUT %1%: BIND Failed with Warnings
+  | OTHERWISE | #OUTPUT %1%: BIND Failed with ERRORS !
+  ]
+|ELSE|
+  #OUTPUT %1% is up to date, no re-build required
+]
+
+#UNFRAME
+
+?section BBANY MACRO
+#FRAME
+#push bin memory anytime build
+#SET build 0
+#SETMANY memory, %2% LARGE
+#OUTPUT Building %1% with [memory] memory model
+#APPEND bin CLEAR
+#APPEND bin ADD * FROM %1%O
+#APPEND bin select search ($system.system.c[memory],[lib])
+#APPEND bin select runnable object on
+#APPEND bin select list * off
+#APPEND bin set heap 20 pages
+#APPEND bin set symbols on
+#APPEND bin set saveabend on
+#APPEND bin set inspect on
+#APPEND bin info unresolved *
+#APPEND bin BUILD %1%   !
+
+#SET anytime [#FILEINFO /MODIFICATION/ %1%]
+[#IF anytime < [#FILEINFO /MODIFICATION/ %1%O] |THEN|
+  #OUTPUT %1% is older than %1%O
+  #SET build -1
+]
+[#IF anytime < [#FILEINFO /MODIFICATION/ [lib]] |THEN|
+  #OUTPUT %1% is older than [lib]
+  #SET build -1
+]
+[#IF build
+|THEN|
+  #OUTPUT %1% is out of date, re-building
+  BIND /NAME,INV BIN/
+  [#CASE [tacl^completioncode]
+  | 0         | #OUTPUT Bound %1% OK
+  | 1         | #OUTPUT %1%: BIND Failed with Warnings
+  | OTHERWISE | #OUTPUT %1%: BIND Failed with ERRORS !
+  ]
+|ELSE|
+  #OUTPUT %1% is up to date, no re-build required
+]
+
+#UNFRAME
+
+
+?section BBUNZIPLIB MACRO
+#FRAME
+#push bin item ntime itime libtime
+#SET ntime 0
+
+#OUTPUT Building [lib]
+#APPEND bin CLEAR
+add^list CRC32O
+add^list CRYPTO
+add^list ENVARGSO
+add^list EXPLODEO
+add^list EXTRACTO
+add^list FILEIOO
+add^list GLOBALSO
+add^list INFLATEO
+add^list LISTO
+add^list MATCHO
+add^list PROCESSO
+add^list TANDEMO
+add^list TANUNZO
+add^list TTYIOO
+add^list UNSHRINO
+add^list ZIPINFOO
+#APPEND bin INFO UNRESOLVED *
+#APPEND bin BUILD [lib] ! , LIST * OFF
+
+#SET libtime [#FILEINFO /MODIFICATION/ [lib]]
+[#IF libtime < ntime
+|THEN|
+  #OUTPUT [lib] needs re-building
+  BIND /NAME,INV BIN/
+  [#CASE [tacl^completioncode]
+  | 0         | #OUTPUT Bound [lib] OK
+  | 1         | #OUTPUT [lib]: BIND Failed with Warnings
+  | OTHERWISE | #OUTPUT [lib]: BIND Failed with ERRORS !
+  ]
+|ELSE|
+  #OUTPUT [lib] is up to date
+]
+
+#UNFRAME
+
+?section BBUNZIP MACRO
+#FRAME
+#push bin ziptime build
+#SET build 0
+#OUTPUT Building %1% with %2% memory model
+#APPEND bin CLEAR
+#APPEND bin ADD * FROM UNZIPO
+#APPEND bin select search ($system.system.c%2%,[lib])
+#APPEND bin select runnable object on
+#APPEND bin select list * off
+#APPEND bin set heap 20 pages
+#APPEND bin set symbols on
+#APPEND bin set saveabend on
+#APPEND bin set inspect on
+#APPEND bin info unresolved *
+#APPEND bin BUILD %1%   !
+
+#SET ziptime [#FILEINFO /MODIFICATION/ %1%]
+[#IF ziptime < [#FILEINFO /MODIFICATION/ UNZIPO] |THEN|
+  #OUTPUT %1% is older than UNZIPO
+  #SET build -1
+]
+[#IF ziptime < [#FILEINFO /MODIFICATION/ [lib]] |THEN|
+  #OUTPUT %1% is older than [lib]
+  #SET build -1
+]
+[#IF build
+|THEN|
+  #OUTPUT %1% is out of date, re-building
+  BIND /NAME,INV BIN/
+  [#CASE [tacl^completioncode]
+  | 0         | #OUTPUT Bound %1% OK
+  | 1         | #OUTPUT %1%: BIND Failed with Warnings
+  | OTHERWISE | #OUTPUT %1%: BIND Failed with ERRORS !
+  ]
+|ELSE|
+  #OUTPUT %1% is up to date, no re-build required
+]
+
+#UNFRAME
+
+?section BBSFXLIB MACRO
+#FRAME
+#push bin item ntime itime libtime
+#SET ntime 0
+
+#OUTPUT Building [lib]
+#APPEND bin CLEAR
+add^list CRC32O
+add^list EXTRACTX
+add^list FILEIOX
+add^list GLOBALSX
+add^list INFLATEX
+add^list MATCHX
+add^list PROCESSX
+add^list TANDEMX
+add^list TANUNZX
+add^list TTYIOX
+#APPEND bin INFO UNRESOLVED *
+#APPEND bin BUILD [lib] ! , LIST * OFF
+
+#SET libtime [#FILEINFO /MODIFICATION/ [lib]]
+[#IF libtime < ntime
+|THEN|
+  #OUTPUT [lib] needs re-building
+  BIND /NAME,INV BIN/
+  [#CASE [tacl^completioncode]
+  | 0         | #OUTPUT Bound [lib] OK
+  | 1         | #OUTPUT [lib]: BIND Failed with Warnings
+  | OTHERWISE | #OUTPUT [lib]: BIND Failed with ERRORS !
+  ]
+|ELSE|
+  #OUTPUT [lib] is up to date
+]
+
+#UNFRAME
+
+?section BBSFX MACRO
+#FRAME
+#push bin ziptime build
+#SET build 0
+#OUTPUT Building %1% with %2% memory model
+#APPEND bin CLEAR
+#APPEND bin ADD * FROM UNZIPX
+#APPEND bin select search ($system.system.c%2%,[lib])
+#APPEND bin select runnable object on
+#APPEND bin select list * off
+#APPEND bin set heap 20 pages
+#APPEND bin set symbols on
+#APPEND bin set saveabend on
+#APPEND bin set inspect on
+#APPEND bin info unresolved *
+#APPEND bin BUILD %1%   !
+
+#SET ziptime [#FILEINFO /MODIFICATION/ %1%]
+[#IF ziptime < [#FILEINFO /MODIFICATION/ UNZIPX] |THEN|
+  #OUTPUT %1% is older than UNZIPX
+  #SET build -1
+]
+[#IF ziptime < [#FILEINFO /MODIFICATION/ [lib]] |THEN|
+  #OUTPUT %1% is older than [lib]
+  #SET build -1
+]
+[#IF build
+|THEN|
+  #OUTPUT %1% is out of date, re-building
+  BIND /NAME,INV BIN/
+  [#CASE [tacl^completioncode]
+  | 0         | #OUTPUT Bound %1% OK
+  | 1         | #OUTPUT %1%: BIND Failed with Warnings
+  | OTHERWISE | #OUTPUT %1%: BIND Failed with ERRORS !
+  ]
+|ELSE|
+  #OUTPUT %1% is up to date, no re-build required
+]
+
+#UNFRAME
+
+?section accel^file MACRO
+#FRAME
+#PUSH buf
+[#IF [#FILEINFO /MODIFICATION/ %1%]
+   > [#FILEINFO /MODIFICATION/ %2%]
+|THEN|
+  #OUTPUT %2% is older than %1%
+  #OUTPUT Accelerating %1% to %2%
+  AXCEL /OUTV buf/ %1%,%2%
+  #OUTPUTV buf
+  [#CASE [tacl^completioncode]
+  | 0         | #OUTPUT Accelerated %2% OK
+  | 1         | #OUTPUT %2%: AXCEL Failed with Warnings
+  | OTHERWISE | #OUTPUT %2%: AXCEL Failed with ERRORS !
+  ]
+|ELSE|
+  #OUTPUT %2% is up to date
+]
+
+#UNFRAME
+
+?section fup^license ROUTINE
+#FRAME
+#PUSH #DEFAULTS filename old^user current^user
+
+[#IF [#ARGUMENT /VALUE filename/ FILENAME]]
+
+#SET old^user [#USERNAME [#PROCESSINFO /PAID/]]
+#SETV current^user old^user
+[#LOOP |WHILE| current^user '<>' "SUPER.SUPER"
+               AND NOT [#INPUTEOF]
+|DO|
+  #OUTPUT Please log on as SUPER.SUPER (CTRL-Y aborts)
+  logon SUPER.SUPER
+  #SET current^user [#USERNAME [#PROCESSINFO /PAID/]]
+  #OUTPUT
+]
+
+[#IF current^user '=' "SUPER.SUPER" |THEN|
+  #OUTPUT Licensing [filename]
+  $SYSTEM.SYSTEM.FUP LICENSE [filename]
+]
+
+[#LOOP |WHILE| current^user '<>' old^user
+               AND NOT [#INPUTEOF]
+|DO|
+  #OUTPUT Please log on as [old^user] (CTRL-Y aborts)
+  logon [old^user]
+  #SET current^user [#USERNAME [#PROCESSINFO /PAID/]]
+  #OUTPUT
+]
+
+#UNFRAME
+
+
+?section CODE routine
+#FRAME
+#PUSH delta arg
+
+#SET /TYPE delta/ DELTA
+
+[#LOOP |WHILE| [#COMPUTE [#ARGUMENT /VALUE arg/ NUMBER END] = 1 ]
+|DO|
+  #APPEND DELTA [arg]I
+]
+
+#RESULT [#DELTA /COMMANDS DELTA/]
+
+#UNFRAME
+
+
+?section TACL^COMPLETIONCODE routine
+#RESULT [_completion:completioncode]
+
+?SECTION INCREMENT routine
+#FRAME
+#PUSH increment_variable increment_value
+
+[#IF [#ARGUMENT /VALUE increment_variable/ VARIABLE]]
+[#IF [#EMPTYV [increment_variable]]|THEN|#SET [increment_variable] 0]
+[#IF [#MORE]
+  |THEN|
+    [#IF [#ARGUMENT /VALUE increment_value/ NUMBER]]
+  |ELSE|
+    #SET increment_value 1
+]
+[#IF [#ARGUMENT END]]
+
+#SET [increment_variable] [#COMPUTE [increment_variable] + [increment_value]]
+
+#UNFRAME
+
+?section ERROR^IN^FUP^OUTPUT routine
+#FRAME
+#PUSH err output last line type
+
+#SETMANY err output, 0 0
+
+[#LOOP |WHILE| NOT [#EMPTYV fup^out]
+|DO|
+   #EXTRACTV fup^out line
+   [#SETMANY type, [#CHARGET line 1 TO 7] .]
+   [#CASE [type]
+     | ERROR     | #SETMANY output err, -1 -1
+     | WARNING   | #SET output -1
+     | OTHERWISE |
+   ]
+   [#IF output |THEN|
+     #OUTPUTV last
+     #OUTPUTV line
+     #SET output 0
+     #EXTRACTV fup^out line
+   ]
+   #SETV last line
+]
+
+#RESULT [err]
+
+#UNFRAME
+
+?section SECURE^FILE routine
+#FRAME
+
+[#DEF fup^out TEXT |BODY|]
+[#DEF fup^buf TEXT |BODY|]
+
+[#DEF fup^cmd MACRO |BODY|
+  FUP /OUTV fup^out/ %*%
+  #SETV fup^buf fup^out
+  [#IF [error^in^fup^output]
+  |THEN|
+    #OUTPUT Error detected in FUP output, ABORTING !!
+    #OUTPUT ..............................................................
+    #OUTPUTV fup^buf
+    #OUTPUT ..............................................................
+    #RAISE _BREAK
+  ]
+]
+
+[#DEF display^action MACRO |BODY|
+  [#IF NOT action |THEN|
+    #OUTPUT /HOLD/ Updating [file] ...
+    #SET action -1
+    #SET count 0
+  ]
+  #OUTPUT /COLUMN 3/ ... %*%
+]
+
+[#DEF display^noaction MACRO |BODY|
+  [#IF count
+  |THEN|
+    increment count
+  |ELSE|
+    #OUTPUT
+    #SET count 1
+  ]
+  [#IF count |THEN|
+    #OUTPUT /COLUMN [count]/ [code 27]A.
+    [#IF count > 75
+    |THEN|
+      #SET count 0
+    ]
+  ]
+]
+
+[#DEF process^file TEXT |BODY|
+  #SET action 0
+  #SETMANY cur^owner cur^security cur^license cur^progid, &
+    [#FILEINFO /OWNER, SECURITY, LICENSED, PROGID/ [file]]
+
+  #SET cur^owner [#USERNAME [cur^owner]]
+
+  [#IF NOT [#EMPTYV owner]
+  |THEN|
+    [#IF owner '<>' cur^owner
+    |THEN|
+      display^action giving to [owner]  (was [cur^owner])
+      fup^cmd GIVE [file], [owner]
+      [#IF cur^progid
+      |THEN|
+        #OUTPUT /COLUMN 3/... WARNING!  Loss of PROGID flag
+        #SET cur^progid 0
+      ]
+    ]
+  ]
+  [#IF NOT [#EMPTYV security]
+  |THEN|
+    [#IF security '<>' cur^security
+    |THEN|
+      display^action securing to [security] (was [cur^security])
+      fup^cmd SECURE [file], [security]
+    ]
+  ]
+  [#IF license |THEN|
+    [#IF NOT cur^license
+    |THEN|
+      display^action licensed
+      fup^cmd LICENSE [file]
+    ]
+  ]
+  [#IF progid |THEN|
+    [#IF NOT cur^progid
+    |THEN|
+      display^action PROGID flag set
+      fup^cmd SECURE [file],, PROGID
+    ]
+  ]
+  [#IF action
+  |THEN|
+    fup^cmd INFO [file]
+  |ELSE|
+    [#IF tflag
+    |THEN|
+      display^noaction
+    |ELSE|
+      #OUTPUT  /HOLD/ Unchanged : [file]
+      [#IF cur^progid  |THEN| #OUTPUT /COLUMN 39,HOLD/ P]
+      [#IF cur^license |THEN| #OUTPUT /COLUMN 40,HOLD/ L]
+      #OUTPUTV /COLUMN 43,HOLD/ cur^security
+      #OUTPUTV /COLUMN 50,HOLD/ cur^owner
+      #OUTPUT
+    ]
+ ]
+]
+
+#PUSH arg template file security owner progid license prev action count tflag
+#PUSH cur^security cur^owner cur^license cur^progid
+
+#SETMANY license progid, 0 0
+#SET count 0
+#SET tflag 0
+
+[#LOOP |WHILE| [#MORE]
+|DO|
+  [#CASE [#ARGUMENT /VALUE arg/ FILENAME
+                                USER /USERNAME/
+                                USER
+                                SECURITY
+                                KEYWORD /WORDLIST LICENSE/
+                                KEYWORD /WORDLIST PROGID/
+                                TEMPLATE
+         ]
+  | 1 | #SETV file     arg
+  | 2 | #SETV owner    arg
+  | 3 | #SET  owner [#USERNAME [arg]]
+  | 4 | #SETV security arg
+  | 5 | #SET  license  -1
+  | 6 | #SET  progid   -1
+  | 7 | #SETV template arg
+  ]
+]
+[#IF [#ARGUMENT END]]
+
+
+[#IF [#EMPTYV template]
+|THEN|
+  #SETV template file
+|ELSE|
+  #SET tflag -1
+  #OUTPUT /HOLD/ Template : [template]
+  [#IF progid  |THEN| #OUTPUT /COLUMN 39,HOLD/ P]
+  [#IF license |THEN| #OUTPUT /COLUMN 40,HOLD/ L]
+  [#IF NOT [#EMPTYV security] |THEN| #OUTPUTV /HOLD/ "  "[security]""]
+  [#IF NOT [#EMPTYV owner]    |THEN| #OUTPUTV /HOLD/ "  [owner]"]
+  #OUTPUT
+]
+
+[#IF [#EMPTYV template]
+|THEN|
+  #OUTPUT ERROR!  No filename specified
+  #RESET FRAMES
+  #RETURN
+|ELSE|
+  #SET file [#FILENAMES /MAXIMUM 1/ [template]]
+  [#LOOP |WHILE| NOT [#EMPTYV file]
+  |DO|
+    process^file
+    #SETV prev file
+    #SET file [#FILENAMES /MAXIMUM 1, PREVIOUS [prev]/ [template]]
+  ]
+]
+
+#UNFRAME

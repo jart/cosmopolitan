@@ -1,0 +1,68 @@
+Zip's deflation algorithm is a variation of LZ77 (Lempel-Ziv 1977, see
+reference below). It finds duplicated strings in the input data.  The
+second occurrence of a string is replaced by a pointer to the previous
+string, in the form of a pair (distance, length).  Distances are
+limited to 32K bytes, and lengths are limited to 258 bytes. When a
+string does not occur anywhere in the previous 32K bytes, it is
+emitted as a sequence of literal bytes.  (In this description,
+'string' must be taken as an arbitrary sequence of bytes, and is not
+restricted to printable characters.)
+
+Literals or match lengths are compressed with one Huffman tree, and
+match distances are compressed with another tree. The trees are stored
+in a compact form at the start of each block. The blocks can have any
+size (except that the compressed data for one block must fit in
+available memory). A block is terminated when zip determines that it
+would be useful to start another block with fresh trees. (This is
+somewhat similar to compress.)
+
+Duplicated strings are found using a hash table. All input strings of
+length 3 are inserted in the hash table. A hash index is computed for
+the next 3 bytes. If the hash chain for this index is not empty, all
+strings in the chain are compared with the current input string, and
+the longest match is selected.
+
+The hash chains are searched starting with the most recent strings, to
+favor small distances and thus take advantage of the Huffman encoding.
+The hash chains are singly linked. There are no deletions from the
+hash chains, the algorithm simply discards matches that are too old.
+
+To avoid a worst-case situation, very long hash chains are arbitrarily
+truncated at a certain length, determined by a runtime option (zip -1
+to -9). So zip does not always find the longest possible match but
+generally finds a match which is long enough.
+
+zip also defers the selection of matches with a lazy evaluation
+mechanism. After a match of length N has been found, zip searches for a
+longer match at the next input byte. If a longer match is found, the
+previous match is truncated to a length of one (thus producing a single
+literal byte) and the longer match is emitted afterwards.  Otherwise,
+the original match is kept, and the next match search is attempted only
+N steps later.
+
+The lazy match evaluation is also subject to a runtime parameter. If
+the current match is long enough, zip reduces the search for a longer
+match, thus speeding up the whole process. If compression ratio is more
+important than speed, zip attempts a complete second search even if
+the first match is already long enough.
+
+The lazy match evaluation is not performed for the fastest compression
+modes (speed options -1 to -3). For these fast modes, new strings
+are inserted in the hash table only when no match was found, or
+when the match is not too long. This degrades the compression ratio
+but saves time since there are both fewer insertions and fewer searches.
+
+Jean-loup Gailly
+jloup@chorus.fr
+
+References:
+
+[LZ77] Ziv J., Lempel A., "A Universal Algorithm for Sequential Data
+Compression", IEEE Transactions on Information Theory", Vol. 23, No. 3,
+pp. 337-343.
+
+APPNOTE.TXT documentation file in PKZIP 1.93a. It is available by
+ftp in ftp.cso.uiuc.edu:/pc/exec-pc/pkz193a.exe [128.174.5.59]
+
+'Deflate' Compressed Data Format Specification:
+ftp://ftp.uu.net/pub/archiving/zip/doc/deflate-1.1.doc

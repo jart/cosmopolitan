@@ -1,0 +1,16 @@
+This port is for Mac versions before Mac OS X.  As Mac OS X is build on Unix,
+use the Unix port for Mac OS X. - 7 June 2008
+
+
+Before you start:
+
+Extract "*.hqx" and "source:*.hqx" first and read the Readme.txt.
+
+The resource file and the compiler project files are in BinHex form because
+they contain Macintosh resource forks and as such can not be simply
+stored a normal file on a non-Macintosh system.  BinHex form is the
+traditional way for transferring such files via non-Macintosh systems.
+It's also the safest since it uses only printable characters.  The ".hqx"
+files must be converted with StuffitExpander or BinHex 4.0 (or equivalent)
+on a Macintosh system before using them.
+

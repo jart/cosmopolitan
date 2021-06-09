@@ -1,0 +1,94 @@
+?section CC ROUTINE
+#FRAME
+[#PUSH file stem src obj htime file prev time stime otime
+       comp out options sup buf col locn group
+]
+
+[#IF [#ARGUMENT /VALUE file/ WORD /SPACE/ END]]
+[#IF [#EMPTYV file] |THEN|
+  #OUTPUT Syntax: CC <file> <collector> <comp-options>
+  #RESET FRAMES
+  #RETURN
+]
+
+[#IF NOT [#FILEINFO /EXISTENCE/ [file]]
+|THEN|
+  #OUTPUT [file] does not exist !
+  #RESET FRAMES
+  #RETURN
+]
+
+#PUSH #DEFAULTS vol subvol
+#SETMANY vol subvol src, [#FILEINFO /VOLUME, SUBVOL, FILE/ [file]]
+VOLUME [vol].[subvol]
+
+#SETV stem file
+#CHARDEL stem [#CHARCOUNT stem]
+#SET obj [stem]O
+#SETV stem src
+#CHARDEL stem [#CHARCOUNT stem]
+
+[#IF [#ARGUMENT /VALUE out/ DEVICE END]]
+[#IF [#EMPTYV out] |THEN| #SET out $T.#C]
+
+#SETMANY col group, [#FILEINFO /VOLUME, SUBVOL/ [out]]
+#SET locn [group].[stem]
+#SET sup [#LOOKUPPROCESS /ANCESTOR/ [col]]
+
+#SET options [#REST]
+
+== Find newest Header file
+#SET htime 0
+#SET file [#FILENAMES /MAXIMUM 1/ *H]
+[#LOOP |WHILE| NOT [#EMPTYV file]
+|DO|
+  #SET time [#FILEINFO /MODIFICATION/ [file]]
+  [#IF time > htime |THEN| #SETV htime time]
+
+  #SETV prev file
+  #SET file [#FILENAMES /MAXIMUM 1, PREVIOUS [prev]/ *H]
+]
+
+#SET stime [#FILEINFO /MODIFICATION/ [src]]
+#SET otime [#FILEINFO /MODIFICATION/ [obj]]
+
+#SET comp 0
+
+[#IF otime < htime
+|THEN|
+  #OUTPUT Header file(s) changed since object [obj] compiled
+  #SET comp -1
+]
+
+[#IF otime < stime
+|THEN|
+  #OUTPUT Source file [src] changed since object [obj] compiled
+  #SET comp -1
+]
+
+[#IF comp
+|THEN|
+  SPOOLCOM /OUTV buf/ OPEN [sup];JOB (OWNER, LOC [locn]),STATUS,DELETE !
+  #SET buf
+  #OUTPUT Compiling [src]... [options]
+  C /IN [src], OUT [out].[stem]/[obj];SYMBOLS,HIGHPIN [options]
+  [#CASE [tacl^completioncode]
+  | 0 |
+    #OUTPUT Compiled OK: [src]
+    SPOOLCOM /OUTV buf/ OPEN [sup];JOB (OWNER, LOC [locn]),STATUS,DELETE !
+    #SET _completion:completioncode 0
+  | 1 |
+    #OUTPUT [src]: Compile Warnings
+    SPOOLCOM /OUTV buf/ OPEN [sup];JOB (OWNER, LOC [locn]),STATUS
+    #OUTPUTV buf
+  |OTHERWISE|
+    #OUTPUT [src]: Compile FAILED !
+    SPOOLCOM /OUTV buf/ OPEN [sup];JOB (OWNER, LOC [locn]),STATUS
+    #OUTPUTV buf
+  ]
+|ELSE|
+  #OUTPUT Object file [obj] is up to date
+  #SET _completion:completioncode 0
+]
+
+#UNFRAME

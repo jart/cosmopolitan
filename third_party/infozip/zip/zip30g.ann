@@ -1,0 +1,33 @@
+Zip 3.0g
+
+We have posted Zip Beta 3.0g, January 30th 2008.  This is a beta
+release, but is more or less complete and is considered a release
+candidate.  See the file WhatsNew for a list of major features
+implemented and what's left.
+
+The archive reading and writing code in Zip 3.0 has been redone to
+support split archives.  We've extensively tested the code over the
+last year, but you should thoroughly test it yourself before relying
+on it.  Also note that Unicode support has been added and should comply
+with the latest AppNote, but is still new and so may need refining.
+
+Please test this beta and let us know if we're ready to officially
+release Zip 3.0.
+
+New things in Zip 3.0g
+- Add split support to VB project for Zip64.
+
+- Disable reading of Unix FIFOs unless new -FI option used to avoid an
+  archiving operation stopping when it hits an active unfed FIFO.
+
+- The [list] wildcard expression (regular expression matching of any
+  character or range of characters in list) is now disabled on DOS and
+  Windows as it has caused confusion when filenames have [ and ] in
+  them.  The new -RE option reenables it.
+
+- Add negation to many display options such as -dc and -db.
+
+- Allow -FF to read and fix archives having local entries that appear
+  after central directory entries.
+
+- Many small bug fixes.

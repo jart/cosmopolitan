@@ -1,0 +1,304 @@
+# Makefile for Zip, ZipCloak, ZipNote and ZipSplit
+# using emx 0.9c+rsxnt for Windows 95/98 and Windows NT and emx 0.9c for DOS.
+# By Kai-Uwe Rommel, Chr. Spieler, E-Yen Tan (and others).
+# Last updated 18th February 2007.
+#
+# Supported Make utilities:
+# - Microsoft/IBM nmake (e.g. from MSC 6.0 or newer)
+# - dmake 3.8 or higher
+# - GNU make, at least version 3.68 (GNUish 16-bit port, RSXNT Make 3.75,
+#   DJGPP v1.12 Make 3.71, some versions of DJGPP v2.x 32-bit Make;
+#   current DJGPP v2.01 Make 3.76.1 does NOT work)
+# - NOT watcom make
+# The "smart" Make utilities mentioned below are Christian Spieler's
+# enhanced version of GNUish 16-bit Make (3.74) and his adaption of these
+# GNU Make sources to EMX (32-bit).
+
+# Supported 32-bit C Compilers (created programs run under WinNT/Win95 only):
+# - GNU gcc (emx/rsxnt kit 0.9c or newer)
+
+# Supported Cross-Compilers for MS-DOS:
+# - GNU gcc (emx kit 0.9c or newer, 32-bit)
+
+# Supported Assemblers:
+# - GNU as with GNU gcc
+
+
+# To use, enter "make/nmake/dmake -f win32/makefile.emx"
+# (this makefile depends on its name being "win32/makefile.emx").
+
+# Add -DDYN_ALLOC to ASFLAGS if you have defined it in tailor.h or CFLAGS
+
+# Note: assembly language modules are really only supported for
+# GNU gcc 32-bit compilation.
+
+
+default:
+	@echo "Enter $(MAKE) -f win32/makefile.emx target"
+	@echo "where target is one of:"
+	@echo "   gcc gccso gccdyn gccdebug gcczl gccdos gccdoszl"
+	@echo "   -----------------------------------------------"
+	@echo "Or, specify a specific target for a partial build,"
+	@echo "This uses >gcc< setup (win32 statically linked binary)"
+
+# emx 0.9c, gcc, PE format, statically linked C runtime and rsxnt.dll
+gcc:	all
+
+# emx 0.9c, gcc, PE format, statically linked C runtime, standalone
+gccso:
+	$(MAKE) -f win32/makefile.emx all \
+	CC="gcc -Zwin32 -Zsys -O2 -m486 -Wall" \
+	CFLAGS="-DWIN32 -DASM_CRC" \
+	AS="gcc -Zwin32" \
+	ASFLAGS="-Di386" \
+	LDFLAGS="-o ./" \
+	LDFLAGS2="-ladvapi32 -s" \
+	OUT="-o" \
+	OBJ=".o" \
+	CRCA_O="crc_gcc.o" \
+	CRCAUO="crcgcc_.o" \
+	OBJA="matchgcc.o" \
+	DEF="win32/zip.def"
+
+# emx 0.9c, gcc, PE format, dynamically linked C runtime and rsxnt.dll
+gccdyn:
+	$(MAKE) -f win32/makefile.emx all \
+	CC="gcc -Zwin32 -Zcrtdll=crtrsxnt -O2 -m486 -Wall" \
+	CFLAGS="-DWIN32 -DASM_CRC" \
+	AS="gcc -Zwin32" \
+	ASFLAGS="-Di386" \
+	LDFLAGS="-o ./" \
+	LDFLAGS2="-ladvapi32 -s" \
+	OUT="-o" \
+	OBJ=".o" \
+	CRCA_O="crc_gcc.o" \
+	CRCAUO="crcgcc_.o" \
+	OBJA="matchgcc.o" \
+	DEF="win32/zip.def"
+
+# emx 0.9c, gcc, PE format, with debug info for gdb
+gccdebug:
+	$(MAKE) -f win32/makefile.emx all \
+	CC="gcc -Zwin32 -O2 -g -Wall" \
+	CFLAGS="-DWIN32 -DASM_CRC" \
+	AS="gcc -Zwin32" \
+	ASFLAGS="-Di386" \
+	LDFLAGS="-o ./" \
+	LDFLAGS2="-ladvapi32 -Zsmall-conv" \
+	OUT="-o" \
+	OBJ=".o" \
+	CRCA_O="crc_gcc.o" \
+	CRCAUO="crcgcc_.o" \
+	OBJA="matchgcc.o" \
+	DEF="win32/zip.def"
+
+# emx 0.9c, gcc, PE format,, statically linked zlib, C runtime, and rsxnt.dll
+gcczl:
+	$(MAKE) -f win32/makefile.emx all \
+	CC="gcc -Zwin32 -O2 -m486 -Wall" \
+	CFLAGS="-DWIN32 -DUSE_ZLIB" \
+	AS="gcc -Zwin32" \
+	ASFLAGS="-Di386 -DUSE_ZLIB" \
+	LDFLAGS="-o ./" \
+	LDFLAGS2="-L. -lzlib -ladvapi32 -s" \
+	OUT="-o" \
+	OBJ=".o" \
+	CRCA_O="" \
+	CRCAUO="" \
+	OBJA="" \
+	DEF="win32/zip.def"
+
+# emx 0.9c, gcc, a.out format, for MS-DOS
+gccdos:
+	$(MAKE) -f win32/makefile.emx all \
+	CC="gcc -O2 -m486 -Wall" \
+	CFLAGS="-DDOS -DMSDOS -DASM_CRC" \
+	AS="gcc" \
+	ASFLAGS="-Di386" \
+	LDFLAGS="-o ./" \
+	LDFLAGS2="-s -Zsmall-conv" \
+	OUT="-o" \
+	OBJ=".o" \
+	CRCA_O="crc_gcc.o" \
+	CRCAUO="crcgcc_.o" \
+	OBJA="matchgcc.o" \
+	OBJZS="msdos.o" \
+	OBJUS="msdos_.o" \
+	OSDEP_H="msdos/osdep.h" \
+	ZIPUP_H="msdos/zipup.h"
+
+# emx 0.9c, gcc, a.out format, for MS-DOS, using zlib
+gccdoszl:
+	$(MAKE) -f win32/makefile.emx all \
+	CC="gcc -O2 -m486 -Wall" \
+	CFLAGS="-DDOS -DMSDOS -DUSE_ZLIB" \
+	AS="gcc" \
+	ASFLAGS="-Di386 -DUSE_ZLIB" \
+	LDFLAGS="-o ./" \
+	LDFLAGS2="-L. -lzlib -s -Zsmall-conv" \
+	OUT="-o" \
+	OBJ=".o" \
+	CRCA_O="" \
+	CRCAUO="" \
+	OBJA="" \
+	OBJZS="msdos.o" \
+	OBJUS="msdos_.o" \
+	OSDEP_H="msdos/osdep.h" \
+	ZIPUP_H="msdos/zipup.h"
+
+# VPATH = .;win32
+
+# variables
+
+#default settings for target dependent macros:
+
+# the "gcc" (statically linked Win32 executables) target:
+CC=gcc -Zwin32 -O2 -m486 -Wall
+CFLAGS=-DWIN32 -DASM_CRC
+AS=gcc -Zwin32
+ASFLAGS=-Di386
+LDFLAGS=-o ./
+LDFLAGS2=-ladvapi32 -s -Zsmall-conv
+OUT=-o
+OBJ=.o
+CRCA_O=crc_gcc$(OBJ)
+CRCAUO=crcgcc_$(OBJ)
+OBJA=matchgcc$(OBJ)
+OSDEP_H=win32/osdep.h
+ZIPUP_H=win32/zipup.h
+DEF=win32/zip.def
+
+DIRSEP = /
+AS_DIRSEP = /
+RM = del
+LOCAL_OPTS = $(LOCAL_ZIP)
+CCFLAGS = $(CFLAGS) $(LOCAL_OPTS)
+
+
+OBJZ1 = zip$(OBJ) zipfile$(OBJ) zipup$(OBJ) fileio$(OBJ) util$(OBJ) \
+	crc32$(OBJ) $(CRCA_O)
+OBJZ2 = globals$(OBJ) deflate$(OBJ) trees$(OBJ) crypt$(OBJ) \
+	ttyio$(OBJ)
+OBJZS =	win32zip$(OBJ) win32$(OBJ) nt$(OBJ)
+OBJZ  = $(OBJZ1) $(OBJZ2) $(OBJZS) $(OBJA)
+
+OBJU1 = zipfile_$(OBJ) fileio_$(OBJ) util_$(OBJ) crc32_$(OBJ) $(CRCAUO) \
+	globals$(OBJ)
+OBJUS = win32_$(OBJ)
+OBJU  = $(OBJU1) $(OBJUS)
+
+OBJN  = zipnote$(OBJ) $(OBJU)
+OBJS  = zipsplit$(OBJ) $(OBJU)
+OBJC1 = zipcloak$(OBJ) crypt_$(OBJ) ttyio$(OBJ)
+OBJC  = $(OBJC1) $(OBJU)
+
+ZIP_H = zip.h ziperr.h tailor.h $(OSDEP_H)
+
+# rules
+
+.SUFFIXES: .c $(OBJ)
+
+.c$(OBJ):
+	$(CC) -c -I. $(CCFLAGS) $(OUT)$@ $<
+
+# targets
+
+all:	zip.exe zipnote.exe zipsplit.exe zipcloak.exe
+
+zip$(OBJ):	zip.c $(ZIP_H) revision.h crc32.h crypt.h ttyio.h
+zipfile$(OBJ):	zipfile.c $(ZIP_H) crc32.h
+zipup$(OBJ):	zipup.c $(ZIP_H) revision.h crc32.h crypt.h $(ZIPUP_H)
+fileio$(OBJ):	fileio.c $(ZIP_H) crc32.h
+util$(OBJ):	util.c $(ZIP_H)
+globals$(OBJ):	globals.c $(ZIP_H)
+deflate$(OBJ):	deflate.c $(ZIP_H)
+trees$(OBJ):	trees.c $(ZIP_H)
+crc32$(OBJ):	crc32.c $(ZIP_H) crc32.h
+crypt$(OBJ):	crypt.c $(ZIP_H) crypt.h crc32.h ttyio.h
+ttyio$(OBJ):	ttyio.c $(ZIP_H) crypt.h ttyio.h
+
+msdos$(OBJ):	msdos/msdos.c $(ZIP_H)
+	$(CC) -c -I. $(CCFLAGS) msdos$(DIRSEP)msdos.c
+
+win32zip$(OBJ):	win32/win32zip.c $(ZIP_H) win32/win32zip.h win32/nt.h
+	$(CC) -c -I. $(CCFLAGS) win32$(DIRSEP)win32zip.c
+
+win32$(OBJ):	win32/win32.c $(ZIP_H) win32/win32zip.h
+	$(CC) -c -I. $(CCFLAGS) win32$(DIRSEP)win32.c
+
+nt$(OBJ):	win32/nt.c $(ZIP_H) win32/nt.h
+	$(CC) -c -I. $(CCFLAGS) win32$(DIRSEP)nt.c
+
+crc_gcc$(OBJ):	crc_i386.S					# 32bit, GNU AS
+	$(AS) $(ASFLAGS) -x assembler-with-cpp -c -o $@ crc_i386.S
+
+matchgcc$(OBJ):	match.S
+	$(AS) $(ASFLAGS) -x assembler-with-cpp -c -o $@ match.S
+
+zipcloak$(OBJ):	zipcloak.c $(ZIP_H) revision.h crypt.h ttyio.h
+zipnote$(OBJ):	zipnote.c $(ZIP_H) revision.h
+zipsplit$(OBJ): zipsplit.c $(ZIP_H) revision.h
+
+zipfile_$(OBJ):	zipfile.c $(ZIP_H) crc32.h
+	$(CC) -c -I. $(CCFLAGS) -DUTIL $(OUT)$@ zipfile.c
+
+fileio_$(OBJ):	fileio.c $(ZIP_H) crc32.h
+	$(CC) -c -I. $(CCFLAGS) -DUTIL $(OUT)$@ fileio.c
+
+util_$(OBJ):	util.c $(ZIP_H)
+	$(CC) -c -I. $(CCFLAGS) -DUTIL $(OUT)$@ util.c
+
+crc32_$(OBJ):	crc32.c $(ZIP_H) crc32.h
+	$(CC) -c -I. $(CCFLAGS) -DUTIL $(OUT)$@ crc32.c
+
+crypt_$(OBJ):	crypt.c $(ZIP_H) crypt.h crc32.h ttyio.h
+	$(CC) -c -I. $(CCFLAGS) -DUTIL $(OUT)$@ crypt.c
+
+msdos_$(OBJ):	msdos/msdos.c $(ZIP_H)
+	$(CC) -c -I. $(CCFLAGS) -DUTIL $(OUT)$@ msdos$(DIRSEP)msdos.c
+
+win32_$(OBJ):	win32/win32.c $(ZIP_H) win32/win32zip.h
+	$(CC) -c -I. $(CCFLAGS) -DUTIL $(OUT)$@ win32$(DIRSEP)win32.c
+
+crcgcc_$(OBJ):	crc_i386.S					# 32bit, GNU AS
+	$(AS) $(ASFLAGS) -DUTIL -x assembler-with-cpp -c -o $@ crc_i386.S
+
+zip.exe: $(OBJZ)
+# for DUMB make utilities, uncomment the following commands:
+	-@$(RM) zip.rsp
+	@for %%f in ($(OBJZ1)) do echo %%f >> zip.rsp
+	@for %%f in ($(OBJZ2)) do echo %%f >> zip.rsp
+	@for %%f in ($(OBJZS) $(OBJA)) do echo %%f >> zip.rsp
+	$(CC) $(LDFLAGS)$@ @zip.rsp $(LDFLAGS2)
+	@$(RM) zip.rsp
+# smart make utilities (like well done ports of GNU Make) can use this:
+#	$(CC) $(LDFLAGS)$@ $(OBJZ) $(LDFLAGS2)
+
+zipcloak.exe: $(OBJC)
+# for DUMB make utilities, uncomment the following commands:
+	-@$(RM) zipcloak.rsp
+	@for %%f in ($(OBJC1)) do echo %%f >> zipcloak.rsp
+	@for %%f in ($(OBJU1)) do echo %%f >> zipcloak.rsp
+	@for %%f in ($(OBJUS)) do echo %%f >> zipcloak.rsp
+	$(CC) $(LDFLAGS)$@ @zipcloak.rsp $(LDFLAGS2)
+	@$(RM) zipcloak.rsp
+# smart make utilities (like well done ports of GNU Make) can use this:
+#	$(CC) $(LDFLAGS)$@ $(OBJC) $(LDFLAGS2)
+
+zipnote.exe: $(OBJN)
+# for DUMB make utilities, uncomment the following commands:
+	-@$(RM) zipnote.rsp
+	@for %%f in ($(OBJN)) do echo %%f >> zipnote.rsp
+	$(CC) $(LDFLAGS)$@ @zipnote.rsp $(LDFLAGS2)
+	@$(RM) zipnote.rsp
+# smart make utilities (like well done ports of GNU Make) can use this:
+#	$(CC) $(LDFLAGS)$@ $(OBJN) $(LDFLAGS2)
+
+zipsplit.exe: $(OBJS)
+# for DUMB make utilities, uncomment the following commands:
+	-@$(RM) zipsplit.rsp
+	@for %%f in ($(OBJN)) do echo %%f >> zipsplit.rsp
+	$(CC) $(LDFLAGS)$@ @zipsplit.rsp $(LDFLAGS2)
+	@$(RM) zipsplit.rsp
+# smart make utilities (like well done ports of GNU Make) can use this:
+#	$(CC) $(LDFLAGS)$@ $(OBJS) $(LDFLAGS2)

@@ -1,0 +1,112 @@
+# Makefile for Zip, ZipCloak, ZipNote and ZipSplit
+# for djgpp 2.01 and RSXNTDJ 1.3.1 under Windows 95 / Windows NT
+# Derived from makefile.os2 by E-Yen Tan. Last updated 07 Jan 2007.
+
+CC = gcc -O2 -m486 -Wall -Zwin32
+CFLAGS = -DWIN32 -DASM_CRC $(LOCAL_ZIP)
+AS = gcc
+ASFLAGS = -Di386
+LDFLAGS = -o ./
+LDFLAGS2 =
+OBJ=.o
+
+CRC32=crc_gcc
+OBJA    = matchgcc.o
+OBJZS   = win32.o win32zip.o nt.o
+OBJUS   = win32_.o
+OSDEP_H = win32/osdep.h
+
+ADVAPI32 = adv32
+ADVAPI32LIB = lib$(ADVAPI32).a
+L_ADVAPI32 = -l$(ADVAPI32)
+
+OBJZ1 = zip$(OBJ) zipfile$(OBJ) zipup$(OBJ) fileio$(OBJ) util$(OBJ) \
+	crc32$(OBJ) $(CRCA_O)
+OBJZ2 = globals$(OBJ) deflate$(OBJ) trees$(OBJ) crypt$(OBJ) \
+	ttyio$(OBJ)
+OBJZ  = $(OBJZ1) $(OBJZ2) $(OBJZS) $(OBJA)
+
+OBJU1 = zipfile_$(OBJ) fileio_$(OBJ) util_$(OBJ) crc32$(OBJ) globals$(OBJ)
+OBJU  = $(OBJU1) $(OBJUS)
+
+OBJN =  zipnote$(OBJ) $(OBJU)
+OBJS =  zipsplit$(OBJ) $(OBJU)
+OBJC =  zipcloak$(OBJ) crc32_$(OBJ) crypt_$(OBJ) ttyio$(OBJ) $(OBJU)
+
+ZIP_H = zip.h ziperr.h tailor.h $(OSDEP_H)
+
+# rules
+
+.SUFFIXES: .c $(OBJ)
+
+.c$(OBJ):
+	$(CC) -c -I. $(CFLAGS) $<
+
+.asm$(OBJ):
+	$(AS) $(ASFLAGS) $<
+
+all:    zip.exe zipnote.exe zipsplit.exe zipcloak.exe
+
+zip$(OBJ):      zip.c $(ZIP_H) revision.h crc32.h crypt.h ttyio.h
+zipfile$(OBJ):  zipfile.c $(ZIP_H) crc32.h
+zipup$(OBJ):    zipup.c $(ZIP_H) revision.h crc32.h crypt.h win32/zipup.h
+fileio$(OBJ):   fileio.c $(ZIP_H) crc32.h
+util$(OBJ):     util.c $(ZIP_H)
+globals$(OBJ):  globals.c $(ZIP_H)
+deflate$(OBJ):  deflate.c $(ZIP_H)
+trees$(OBJ):    trees.c $(ZIP_H)
+crc32$(OBJ):    crc32.c $(ZIP_H) crc32.h
+crypt$(OBJ):    crypt.c $(ZIP_H) crypt.h crc32.h ttyio.h
+ttyio$(OBJ):    ttyio.c $(ZIP_H) crypt.h ttyio.h
+
+win32zip$(OBJ): win32/win32zip.c $(ZIP_H) win32/win32zip.h win32/nt.h
+	$(CC) -c -I. $(CFLAGS) win32/win32zip.c
+
+win32$(OBJ):    win32/win32.c $(ZIP_H) win32/win32zip.h
+	$(CC) -c -I. $(CFLAGS) win32/win32.c
+
+nt$(OBJ):       win32/nt.c $(ZIP_H) win32/nt.h
+	$(CC) -c -I. $(CFLAGS) win32/nt.c
+
+crc_gcc$(OBJ):  crc_i386.S                                      # 32bit, GNU AS
+	$(AS) $(ASFLAGS) -x assembler-with-cpp -c -o$@ crc_i386.S
+
+matchgcc$(OBJ): match.S
+	$(AS) $(ASFLAGS) -x assembler-with-cpp -c -o$@ match.S
+
+zipcloak$(OBJ): zipcloak.c $(ZIP_H) revision.h crc32.h crypt.h ttyio.h
+zipnote$(OBJ):  zipnote.c $(ZIP_H) revision.h
+zipsplit$(OBJ): zipsplit.c $(ZIP_H) revision.h
+
+zipfile_$(OBJ): zipfile.c $(ZIP_H) crc32.h
+	$(CC) -c -I. $(CFLAGS) -DUTIL -o$@ zipfile.c
+
+fileio_$(OBJ):  fileio.c $(ZIP_H) crc32.h
+	$(CC) -c -I. $(CFLAGS) -DUTIL -o$@ fileio.c
+
+util_$(OBJ):    util.c $(ZIP_H) os2/os2zip.h
+	$(CC) -c -I. $(CFLAGS) -DUTIL -o$@ util.c
+
+crc32_$(OBJ):   crc32.c $(ZIP_H) crc32.h
+	$(CC) -c -I. $(CFLAGS) -DUTIL -o$@ crc32.c
+
+crypt_$(OBJ):   crypt.c $(ZIP_H) crypt.h crc32.h ttyio.h
+	$(CC) -c -I. $(CFLAGS) -DUTIL -o$@ crypt.c
+
+win32_$(OBJ):   win32/win32.c $(ZIP_H) win32/win32zip.h
+	$(CC) -c -I. $(CFLAGS) -DUTIL -o$@ win32/win32.c
+
+$(ADVAPI32LIB):
+	makelib "$(windir)/system/advapi32.dll" -o ./$@
+
+zip.exe: $(OBJZ) $(ADVAPI32LIB)
+	$(CC) $(LDFLAGS)$@ $(OBJZ) $(L_ADVAPI32) $(LDFLAGS2)
+
+zipcloak.exe: $(OBJC)
+	$(CC) $(LDFLAGS)$@ $(OBJC) $(LDFLAGS2)
+
+zipnote.exe: $(OBJN)
+	$(CC) $(LDFLAGS)$@ $(OBJN) $(LDFLAGS2)
+
+zipsplit.exe: $(OBJS)
+	$(CC) $(LDFLAGS)$@ $(OBJS) $(LDFLAGS2)

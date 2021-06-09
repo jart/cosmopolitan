@@ -1,0 +1,142 @@
+Todo list (last updated 12 June 2008).
+
+Features for next official version:
+
+- Extended attributes for Windows, Linux, and Mac OS X.
+- Win32 ACL rewrite to use backup api to create new and more useful extra
+  field (need unzip support) (Kai).
+- Allow -d@ to read in a list of names to delete (11/17/2005).
+- AES encryption (3/19/05).
+
+Features that may make the next release:
+
+- Allow reading in list of files using @filename.
+- When -R, -x, or -i pattern ends in a directory add / to the end
+      (11/5/2004 Nehal).
+- Decide if -R, -i and -x should use external rather than internal patterns.
+      Also, change pattern matching to not do ex2in() and then in2ex() if
+      appropriate.  (12/26/2005 SMS)
+- Though Unicode paths have been implemented and tested, Unicode comments
+      are not yet supported (except for comments on UTF-8 native systems which
+      are supported).
+- Verbose mode -v may still need work.
+
+- Add C# example for Zip 3.0 (need to be converted to new DLLs) - original
+      C# example added with note.
+- Path Prefix maybe, so entries added to an archive can have a directory
+      path string prepended to each path so can zip multiple drives and avoid
+      name conflicts (4/17/2006).
+- UNC paths like \\server\path (4/26/2005).
+- Support for other languages maybe.
+
+- Add About page option similar to -h2 and -v but lists Info-ZIP
+      information (could be -sa) (4/29/2006).
+- Update utilities ZipSplit, ZipNote, and ZipCloak to handle split archives.
+- Update ziperr and finish if needed.
+- Review memory allocation and fill in memory leaks if any.
+- Enhance -FF to fix common problems such as archives ftp in text mode
+      and fixing checksums so entries can be extracted if that makes
+      sense (6/17/2007).
+- Add \ to / conversion in zipsplit to fix problem in
+      1/29/2004 email.
+- Encryption bug with small stored file (12/27/2005) (fixed?).
+
+- When updating large archives with few entries being
+      updated maybe display something in large periods of
+      quiet (1/23/2006).
+- Windows OEM comments (5/17/2006).
+- Example of using MVS zip and unzip (3/30/2004) (Need one).
+- UTF-8 comments need to be implemented (6/17/2007)
+- Maybe convert ../ in archive (5/20/2006).
+- Per so many buffers dll callback (12/23/2005 Ale).
+- Allow rename stdin "-" to something else (12/27/2005 gregor).
+- Check for possible buffer overrun weaknesses while reading zip files.
+- Do Active Template Library (ATL) (4/27/2005).
+- Flush Win16 support - to be determined (Mike).
+- Way to convert file names on input, converting foo.c to dir/foo_bar.c
+      for instance (4/8/2004, 3/12/2004).
+- French WiZ (not a Zip thing actually but dependent on zip and unzip).
+- Then there is that wierd ^D being converted to \000 error reported
+      in 6/21/2003 email when Zip is outputted into a pipe on Windows ports.
+
+Old list:
+
+Main features still missing for next official version (last updated 2/11/2001):
+
+- what about the binary/text detection ? (seems done)
+- -b and -t options in help screen (covered in -h2)
+- findfirst/findnext and after that LSSTAT (performance!!)
+- use IS_EXEC from djgpp stat.h
+- use install in unix/Makefile instead of mkdir -p, look at install sh script.
+- #elif for those ports that can handle it.
+- what about zopen vs. fopen ?
+- Add zcreate or zfcreate for win32.
+- Assembler stuff in match.S (subexpressions)
+- zipping huge files (> 2G, unsigned 32bit) (done)
+- Testsuite for zip and unzip (John D. Mitchell)
+- make a version.c or version.h that includes all the compiler names
+- run utils with dmalloc().
+- what to do with zip -F and zip -FF (readzipfile2()) ? (done?)
+- profiling of the code
+- multi disk zip files (could be done)
+- zipfile modification tool (Greg)
+- Implement -- option (Thomas Klauser, wiz@danbala.tuwien.ac.at) (could be done)
+- don't add files with "Archive bit" or add files with "Archive bit"
+	(uwe.becher@metronet.de) (could be done with -AS and -AC)
+- 32 bit file attributes
+- generate output without having to seek at all (this seems to be stream output)
+- remove contractions from zip error messages, make them clearer (Steve)
+- display "[text]" for ascii files when not quiet (no -q) (Timo Salmi)
+- does zipnote accept names with version number?
+- for a WORM, zip should create temp file only when updating; new archives
+	should be created directly.
+- APPNOTE.TXT specifies "4) The entries in the central directory may
+      not necessarily be in the same order that files appear in the zipfile"
+      but readzipfile() relies on same order. (new read does not, and now
+      the read for -FF searches for central directory matches rather than
+      rely on the order)
+- on Mac, MPW C 3.3.1 requires #if (a || b)  ["#if a || b" taken as "#if a"]
+- on Unix, let -S be "include non-regular files without reading from them"
+	(as pkzip on Unix). This requires unzip support.
+- zip -l should do ebcdic->ascii translation on CMS and MVS
+- zip as subroutine (zdig/241) (some work done on this)
+- accept k and M in zipsplit
+- store / (part of file name) as ! in OS/2 (problem only with -E ?)
+- in addition to -l (LF to CR LF) and -ll (CR LF to LF) add -lc
+	(LF to CR LF but CR LF remains unchanged)
+
+Known bugs:
+
+- On VMS, zip fails reading some files with "byte record too large for
+	user's buffer". You must use the "-V" option for such files.
+	(many changes to VMS so may be fixed)
+
+- on MSDOS, zip386.exe does not like "zip -bc: foo ..."
+
+- on MSDOS, zip386.exe is sometimes much slower than zip.exe. This is
+	probably a problem with DJGPP (to be investigated).
+
+- on NT with C shell, zip should not do file name expansion again.
+
+- zip zipfile ... ignores existing zipfile if name does not have an extension
+      (except for the -A option, generally used on self-extracting files).
+      (archives should probably have extensions.  Things like archive.jar work)
+
+- For an sfx file without extension, "zip -A sfx" works but "zip sfx -A"
+	doesn't.  (because options were required first, but now both OK)
+
+- When storing files in a zipfile (-0), zip marks all of them as binary.
+
+- On VMS, some indexed files are not restored correctly after zip -V and unzip.
+	(This is now known to be a problem of UnZip. The workaround for Zip 2.2
+	and newer is to use PK-style VMS extra fields; this is now the default.
+	NOTE that UnZip 5.32 has been fixed [971019]!) (many VMS changes so
+	this may be fixed)
+
+- zip and unzip should use the same pattern matching rules, particularly
+	on MSDOS and OS/2. On OS/2, "zip foo *.*" should also match files
+	without extension.
+	Partially DONE (OS/2 "*.*" matches "*".)
+
+- there should be a way to avoid updating archive members (only addition
+	of new files allowed)
