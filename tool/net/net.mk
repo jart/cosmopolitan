@@ -52,7 +52,6 @@ TOOL_NET_DEPS :=						\
 
 o/$(MODE)/tool/net/net.pkg:					\
 		$(TOOL_NET_OBJS)				\
-		o/$(MODE)/tool/net/lsqlite3.o			\
 		$(foreach x,$(TOOL_NET_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/tool/net/%.com.dbg:					\
@@ -96,6 +95,7 @@ o/$(MODE)/tool/net/redbean-demo.com:				\
 		tool/net/demo/.init.lua				\
 		tool/net/demo/.reload.lua			\
 		tool/net/demo/.lua/mymodule.lua			\
+		tool/net/demo/sql.lua				\
 		tool/net/demo/404.html				\
 		tool/net/demo/hello.lua				\
 		tool/net/demo/index.html			\
@@ -118,7 +118,7 @@ o/$(MODE)/tool/net/redbean-demo.com:				\
 	@$(COMPILE) -ARM -T$@ rm -rf o/$(MODE)/tool/net/.lua
 	@$(COMPILE) -ACP -T$@ cp -R tool/net/demo/.lua o/$(MODE)/tool/net/
 	@(cd o/$(MODE)/tool/net && zip -qr redbean-demo.com .lua)
-	@$(COMPILE) -AZIP -T$@ zip -qj $@ tool/net/demo/hello.lua
+	@$(COMPILE) -AZIP -T$@ zip -qj $@ tool/net/demo/hello.lua tool/net/demo/sql.lua
 	@echo "&lt;-- check out this lua server page" | $(COMPILE) -AZIP -T$@ zip -cqj $@ tool/net/demo/redbean.lua
 	@$(COMPILE) -AZIP -T$@ zip -qj $@ tool/net/demo/404.html tool/net/favicon.ico tool/net/redbean.png tool/net/demo/redbean-form.lua tool/net/demo/redbean-xhr.lua
 	@echo Uncompressed for HTTP Range requests | $(COMPILE) -AZIP -T$@ zip -cqj0 $@ tool/net/demo/seekable.txt

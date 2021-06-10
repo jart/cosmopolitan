@@ -524,7 +524,9 @@ Expr *sqlite3ExprForVectorField(
   }else{
     if( pVector->op==TK_VECTOR ) pVector = pVector->x.pList->a[iField].pExpr;
     pRet = sqlite3ExprDup(pParse->db, pVector, 0);
+#ifndef SQLITE_OMIT_ALTERTABLE
     sqlite3RenameTokenRemap(pParse, pRet, pVector);
+#endif
   }
   return pRet;
 }
