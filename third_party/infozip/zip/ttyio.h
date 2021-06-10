@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   ttyio.h - Zip 3
 
@@ -16,7 +17,7 @@
 #define __ttyio_h
 
 #ifndef __crypt_h
-#  include "crypt.h"  /* ensure that encryption header file has been seen */
+#  include "third_party/infozip/zip/crypt.h"  /* ensure that encryption header file has been seen */
 #endif
 
 #if (CRYPT || (defined(UNZIP) && !defined(FUNZIP)))

@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   Copyright (c) 1990-2008 Info-ZIP.  All rights reserved.
 

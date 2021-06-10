@@ -1,4 +1,0 @@
-;module-definition file for Windows Zip DLL -- used by link.exe
-DESCRIPTION 'The world-famous zip utilities from Info-ZIP'
-
-

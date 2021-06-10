@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   zipnote.c - Zip 3
 
@@ -16,10 +17,15 @@
 #ifndef UTIL
 #define UTIL
 #endif
-#include "zip.h"
+#include "third_party/infozip/zip/zip.h"
 #define DEFCPYRT        /* main module: enable copyright string defines! */
-#include "revision.h"
-#include <signal.h>
+#include "third_party/infozip/zip/revision.h"
+#include "libc/calls/calls.h"
+#include "libc/fmt/fmt.h"
+#include "libc/fmt/conv.h"
+#include "libc/alg/alg.h"
+#include "libc/log/log.h"
+#include "libc/stdio/temp.h"
 
 /* Calculate size of static line buffer used in write (-w) mode. */
 #define WRBUFSIZ 2047

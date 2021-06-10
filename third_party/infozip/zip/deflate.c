@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   deflate.c - Zip 3
 
@@ -69,7 +70,7 @@
 
 #define __DEFLATE_C
 
-#include "zip.h"
+#include "third_party/infozip/zip/zip.h"
 
 #ifndef USE_ZLIB
 

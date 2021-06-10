@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   unix/unix.c - Zip 3
 
@@ -8,11 +9,12 @@
   If, for some reason, all these files are missing, the Info-ZIP license
   also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
 */
-#include "zip.h"
+#include "third_party/infozip/zip/zip.h"
 
 #ifndef UTIL    /* the companion #endif is a bit of ways down ... */
 
-#include <time.h>
+#include "libc/time/time.h"
+#include "libc/sysv/consts/_posix.h"
 
 #if defined(MINIX) || defined(__mpexl)
 #  ifdef S_IWRITE
@@ -26,7 +28,8 @@
 #endif
 
 #if defined(HAVE_DIRENT_H) || defined(_POSIX_VERSION)
-#  include <dirent.h>
+#include "libc/calls/calls.h"
+#include "libc/sysv/consts/dt.h"
 #else /* !HAVE_DIRENT_H */
 #  ifdef HAVE_NDIR_H
 #    include <ndir.h>
@@ -47,10 +50,10 @@
 
 /* Library functions not in (most) header files */
 
-#ifdef _POSIX_VERSION
+#if  _POSIX_VERSION
 #  include <utime.h>
 #else
-   int utime OF((char *, time_t *));
+/*   int utime OF((char *, time_t *)); */
 #endif
 
 extern char *label;
@@ -723,7 +726,7 @@ char *d;                /* directory to delete */
 #include <sys/param.h> /* for the BSD define */
 /* if we have something newer than NET/2 we'll use uname(3) */
 #if (BSD > 199103)
-#include <sys/utsname.h>
+#include "libc/calls/calls.h"
 #endif /* BSD > 199103 */
 #endif /* __{Net,Free,Open,386}BSD__ || __bsdi__ */
 

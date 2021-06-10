@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   Copyright (c) 1990-2008 Info-ZIP.  All rights reserved.
 
@@ -30,9 +31,10 @@
  */
 
 #define ZCRYPT_INTERNAL
-#include "zip.h"
-#include "crypt.h"
-#include "ttyio.h"
+#include "third_party/infozip/zip/zip.h"
+#include "third_party/infozip/zip/crypt.h"
+#include "third_party/infozip/zip/ttyio.h"
+#include "libc/rand/rand.h"
 
 #if CRYPT
 
@@ -74,7 +76,7 @@
       as a fallback to allow successful compilation in "beta state"
       environments.
     */
-#  include <time.h>     /* time() function supplies first part of crypt seed */
+#  include "libc/time/time.h"    /* time() function supplies first part of crypt seed */
    /* "last resort" source for second part of crypt seed pattern */
 #  ifndef ZCR_SEED2
 #    define ZCR_SEED2 (unsigned)3141592654L     /* use PI as default pattern */
@@ -106,7 +108,7 @@
 #  endif
 #endif
 
-#include "crc32.h"
+#include "third_party/infozip/zip/crc32.h"
 
 #ifdef IZ_CRC_BE_OPTIMIZ
    local z_uint4 near crycrctab[256];

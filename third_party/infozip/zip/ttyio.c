@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   ttyio.c - Zip 3
 
@@ -28,8 +29,8 @@
 
 #define __TTYIO_C       /* identifies this source module */
 
-#include "zip.h"
-#include "crypt.h"
+#include "third_party/infozip/zip/zip.h"
+#include "third_party/infozip/zip/crypt.h"
 
 #if (CRYPT || (defined(UNZIP) && !defined(FUNZIP)))
 /* Non-echo console/keyboard input is needed for (en/de)cryption's password
@@ -37,7 +38,7 @@
  * (The corresponding #endif is found at the end of this module.)
  */
 
-#include "ttyio.h"
+#include "third_party/infozip/zip/ttyio.h"
 
 #ifndef PUTC
 #  define PUTC putc
@@ -123,7 +124,8 @@
 #    include <ssdef.h>
 #  else /* !VMS */
 #    ifdef HAVE_TERMIOS_H
-#      include <termios.h>
+#include "libc/calls/termios.h"
+#include "libc/sysv/consts/termios.h"
 #      define sgttyb termios
 #      define sg_flags c_lflag
 #      define GTTY(f, s) tcgetattr(f, (zvoid *) s)
@@ -167,7 +169,9 @@
 #    endif /* ?HAVE_TERMIOS_H */
 #    ifndef NO_FCNTL_H
 #      ifndef UNZIP
-#        include <fcntl.h>
+#include "libc/calls/calls.h"
+#include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/f.h"
 #      endif
 #    else
        char *ttyname OF((int));

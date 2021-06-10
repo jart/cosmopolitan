@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   globals.c - Zip 3
 
@@ -18,7 +19,7 @@
 #define UTIL            /* do not declare the read_buf variable */
 #endif
 
-#include "zip.h"
+#include "third_party/infozip/zip/zip.h"
 
 
 /* Handy place to build error messages */

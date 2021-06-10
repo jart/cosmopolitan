@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   ziperr.h - Zip 3
 

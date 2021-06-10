@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   zip.c - Zip 3
 
@@ -13,8 +14,8 @@
  */
 #define __ZIP_C
 
-#include "zip.h"
-#include <time.h>       /* for tzset() declaration */
+#include "third_party/infozip/zip/zip.h"
+#include "libc/time/time.h"       /* for tzset() declaration */
 #if defined(WIN32) || defined(WINDLL)
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
@@ -24,12 +25,12 @@
 #  include "windll/windll.h"
 #endif
 #define DEFCPYRT        /* main module: enable copyright string defines! */
-#include "revision.h"
-#include "crc32.h"
-#include "crypt.h"
-#include "ttyio.h"
-#include <ctype.h>
-#include <errno.h>
+#include "third_party/infozip/zip/revision.h"
+#include "third_party/infozip/zip/crc32.h"
+#include "third_party/infozip/zip/crypt.h"
+#include "third_party/infozip/zip/ttyio.h"
+#include "libc/str/str.h"
+#include "libc/errno.h"
 #ifdef VMS
 #  include <stsdef.h>
 #  include "vms/vmsmunch.h"
@@ -49,8 +50,11 @@
 #  endif
 #endif
 
-#include <signal.h>
-#include <stdio.h>
+#include "libc/calls/calls.h"
+#include "libc/fmt/fmt.h"
+#include "libc/log/log.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
 
 #ifdef UNICODE_TEST
 # ifdef WIN32

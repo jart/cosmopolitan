@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   zipup.c - Zip 3
 
@@ -18,17 +19,20 @@
    is 8 bytes while off_t here is 4 bytes, and this makes the zlist struct
    different sizes and needless to say leads to segmentation faults.  Putting
    zip.h first seems to fix this.  8/14/04 EG */
-#include "zip.h"
-#include <ctype.h>
-#include <errno.h>
+#include "third_party/infozip/zip/zip.h"
+#include "libc/errno.h"
+#include "libc/str/str.h"
+#include "libc/log/log.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/runtime/runtime.h"
 
 #ifndef UTIL            /* This module contains no code for Zip Utilities */
 
-#include "revision.h"
-#include "crc32.h"
-#include "crypt.h"
+#include "third_party/infozip/zip/revision.h"
+#include "third_party/infozip/zip/crc32.h"
+#include "third_party/infozip/zip/crypt.h"
 #ifdef USE_ZLIB
-#  include "zlib.h"
+#  include "third_party/zlib/zlib.h"
 #endif
 #ifdef BZIP2_SUPPORT
 #  ifdef BZIP2_USEBZIP2DIR
@@ -43,7 +47,9 @@
 #endif
 
 #if defined(MMAP)
-#  include <sys/mman.h>
+#include "libc/calls/calls.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/mremap.h"
 #  ifndef PAGESIZE   /* used to be SYSV, what about pagesize on SVR3 ? */
 #    define PAGESIZE getpagesize()
 #  endif
@@ -928,7 +934,7 @@ struct zlist far *z;    /* zip entry to compress */
     zclose(ifile);
 #ifdef MMAP
   if (remain != (ulg)-1L) {
-    munmap((caddr_t) window, window_size);
+    munmap((void*) window, window_size);
     window = NULL;
   }
 #endif /*MMAP */

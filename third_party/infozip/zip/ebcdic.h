@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   ebcdic.h
 

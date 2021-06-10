@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   zipfile.c - Zip 3
 
@@ -13,19 +14,22 @@
  */
 #define __ZIPFILE_C
 
-#include "zip.h"
-#include "revision.h"
+#include "third_party/infozip/zip/zip.h"
+#include "third_party/infozip/zip/revision.h"
 #ifdef UNICODE_SUPPORT
-# include "crc32.h"
+# include "third_party/infozip/zip/crc32.h"
 #endif
 
 /* for realloc 2/6/2005 EG */
-#include <stdlib.h>
-
-#include <errno.h>
+#include "libc/mem/mem.h"
+#include "libc/alg/alg.h"
+#include "libc/errno.h"
 
 /* for toupper() */
-#include <ctype.h>
+#include "libc/str/str.h"
+#include "libc/fmt/fmt.h"
+
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 
 #ifdef VMS
 #  include "vms/vms.h"
