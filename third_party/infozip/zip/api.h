@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   api.h - Zip 3
 
@@ -12,7 +13,7 @@
 #ifndef _ZIPAPI_H
 #define _ZIPAPI_H
 
-#include "zip.h"
+#include "third_party/infozip/zip/zip.h"
 
 #ifdef WIN32
 #   ifndef PATH_MAX

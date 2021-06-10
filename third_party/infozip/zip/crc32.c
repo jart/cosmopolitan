@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   Copyright (c) 1990-2008 Info-ZIP.  All rights reserved.
 
@@ -21,7 +22,7 @@
 
 #define __CRC32_C       /* identifies this source module */
 
-#include "zip.h"
+#include "third_party/infozip/zip/zip.h"
 
 #if (!defined(USE_ZLIB) || defined(USE_OWN_CRCTAB))
 
@@ -29,7 +30,7 @@
 #  define ZCONST const
 #endif
 
-#include "crc32.h"
+#include "third_party/infozip/zip/crc32.h"
 
 /* When only the table of precomputed CRC values is needed, only the basic
    system-independent table containing 256 entries is created; any support

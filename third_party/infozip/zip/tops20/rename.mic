@@ -1,6 +1,0 @@
-@rename zipfile.c zipfil.c
-@rename globals.c global.c
-@rename deflate.c deflat.c
-@rename zipnote.c zipnot.c
-@rename zipsplit.c zipspl.c
-@kmic

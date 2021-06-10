@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   tailor.h - Zip 3
 
@@ -90,7 +91,7 @@
 #endif
 
 #ifdef UNIX
-#include "unix/osdep.h"
+#include "third_party/infozip/zip/unix/osdep.h"
 #endif
 
 #if defined(__COMPILER_KCC__) || defined(TOPS20)
@@ -216,28 +217,33 @@
 #endif /* USE_CASE_MAP */
 
 /* Define void, zvoid, and extent (size_t) */
-#include <stdio.h>
+#include "libc/stdio/stdio.h"
 
 #ifndef NO_STDDEF_H
-#  include <stddef.h>
+// #  include <stddef.h>
 #endif /* !NO_STDDEF_H */
 
 #ifndef NO_STDLIB_H
-#  include <stdlib.h>
+#  include "libc/mem/mem.h"
 #endif /* !NO_STDLIB_H */
 
 #ifndef NO_UNISTD_H
-#  include <unistd.h> /* usually defines _POSIX_VERSION */
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/o.h"
 #endif /* !NO_UNISTD_H */
 
 #ifndef NO_FCNTL_H
-#  include <fcntl.h>
+#include "libc/calls/calls.h"
+#include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/f.h"
 #endif /* !NO_FNCTL_H */
 
 #ifndef NO_STRING_H
-#  include <string.h>
+#  include "libc/str/str.h"
 #else
-#  include <strings.h>
+#  include "libc/str/str.h"
 #endif /* NO_STRING_H */
 
 #ifdef NO_VOID
@@ -331,10 +337,9 @@ IZ_IMP char *mktemp();
  */
 #ifdef UNICODE_SUPPORT
 # if defined( UNIX) || defined( VMS)
-#   include <locale.h>
+    #   include "libc/unicode/locale.h"
 # endif /* defined( UNIX) || defined( VMS) */
-# include <wchar.h>
-# include <wctype.h>
+# include "libc/str/str.h"
 #endif /* def UNICODE_SUPPORT */
 
 #ifdef _MBCS

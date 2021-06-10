@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   zipcloak.c - Zip 3
 
@@ -21,15 +22,17 @@
 #ifndef UTIL
 # define UTIL
 #endif
-#include "zip.h"
+#include "third_party/infozip/zip/zip.h"
 #define DEFCPYRT        /* main module: enable copyright string defines! */
-#include "revision.h"
-#include "crc32.h"
-#include "crypt.h"
-#include "ttyio.h"
-#include <signal.h>
+#include "third_party/infozip/zip/revision.h"
+#include "third_party/infozip/zip/crc32.h"
+#include "third_party/infozip/zip/crypt.h"
+#include "third_party/infozip/zip/ttyio.h"
+#include "libc/calls/calls.h"
+#include "libc/log/log.h"
+#include "libc/stdio/temp.h"
 #ifndef NO_STDLIB_H
-#  include <stdlib.h>
+#  include "libc/mem/mem.h"
 #endif
 
 #if CRYPT       /* defined (as TRUE or FALSE) in crypt.h */

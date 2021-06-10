@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   timezone.h - Zip 3
 

@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   util.c
 
@@ -13,9 +14,11 @@
  */
 #define __UTIL_C
 
-#include "zip.h"
-#include "ebcdic.h"
-#include <ctype.h>
+#include "third_party/infozip/zip/zip.h"
+#include "third_party/infozip/zip/ebcdic.h"
+#include "libc/str/str.h"
+#include "libc/fmt/fmt.h"
+#include "libc/fmt/conv.h"
 
 #ifdef MSDOS16
 #  include <dos.h>

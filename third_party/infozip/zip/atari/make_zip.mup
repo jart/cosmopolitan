@@ -1,7 +1,0 @@
-#rm -f *.o *.sym *.ttp
-#make370 SHELL=/bin/mupfel.ttp CC=gcc CFLAGS="-O -DATARI" E=.ttp OBJA=atari.o zips
-make370 SHELL=/bin/mupfel.ttp CC=gcc CFLAGS="-g -D__NO_INLINE__ -DATARI" E=.ttp OBJA=atari.o zip.ttp
-make370 SHELL=/bin/mupfel.ttp CC=gcc CFLAGS="-g -D__NO_INLINE__ -DATARI" E=.sym OBJA=atari.o zip.sym LFLAGS2="-B/bin/sym-"
-#make370 SHELL=/bin/mupfel.ttp CC=gcc CFLAGS="-O -DATARI" E=.ttp OBJA=atari.o -n zips > make_all.mup
-#fixstk 32K pgp.ttp
-prgflags 017 007 *.ttp

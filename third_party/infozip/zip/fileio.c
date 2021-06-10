@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   fileio.c - Zip 3
 
@@ -13,8 +14,8 @@
  */
 #define __FILEIO_C
 
-#include "zip.h"
-#include "crc32.h"
+#include "third_party/infozip/zip/zip.h"
+#include "third_party/infozip/zip/crc32.h"
 
 #ifdef MACOS
 #  include "helpers.h"
@@ -24,7 +25,12 @@
 #  include "vms/vms.h"
 #endif /* def VMS */
 
-#include <time.h>
+#include "libc/fmt/fmt.h"
+#include "libc/alg/alg.h"
+#include "libc/stdio/temp.h"
+#include "libc/time/time.h"
+#include "libc/time/struct/tm.h"
+#include "libc/limits.h"
 
 #ifdef NO_MKTIME
 time_t mktime OF((struct tm *));
@@ -33,7 +39,7 @@ time_t mktime OF((struct tm *));
 #ifdef OSF
 #define EXDEV 18   /* avoid a bug in the DEC OSF/1 header files. */
 #else
-#include <errno.h>
+#include "libc/errno.h"
 #endif
 
 #ifdef NO_ERRNO
@@ -43,7 +49,7 @@ extern int errno;
 /* -----------------------
    For long option support
    ----------------------- */
-#include <ctype.h>
+#include "libc/str/str.h"
 
 
 #if defined(VMS) || defined(TOPS20)

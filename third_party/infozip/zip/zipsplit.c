@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   zipsplit.c - Zip 3
 
@@ -16,10 +17,14 @@
 #ifndef UTIL
 #define UTIL
 #endif
-#include "zip.h"
+#include "third_party/infozip/zip/zip.h"
 #define DEFCPYRT        /* main module: enable copyright string defines! */
-#include "revision.h"
-#include <signal.h>
+#include "third_party/infozip/zip/revision.h"
+#include "libc/calls/calls.h"
+#include "libc/fmt/fmt.h"
+#include "libc/fmt/conv.h"
+#include "libc/alg/alg.h"
+#include "libc/log/log.h"
 
 #define DEFSIZ 36000L   /* Default split size (change in help() too) */
 #ifdef MSDOS

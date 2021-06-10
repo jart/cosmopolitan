@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   Copyright (c) 1990-2007 Info-ZIP.  All rights reserved.
 
@@ -140,7 +141,6 @@ void init_keys OF((__GPRO__ ZCONST char *passwd));
      int zipbare OF((struct zlist far *, ZCONST char *));
 #  else
      unsigned zfwrite OF((zvoid *, extent, extent));
-     extern char *key;
 #  endif
 #endif /* ZIP */
 

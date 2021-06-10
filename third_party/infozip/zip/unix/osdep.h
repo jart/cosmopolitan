@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   unix/osdep.h - Zip 3
 
@@ -27,8 +28,9 @@
 # define _LARGE_FILES           /* some OSes need this for 64-bit off_t */
 #endif
 
-#include <sys/types.h>
-#include <sys/stat.h>
+#include "libc/calls/weirdtypes.h"
+#include "libc/calls/calls.h"
+#include "libc/sysv/consts/s.h"
 
 /* printf format size prefix for zoff_t values */
 #ifdef LARGE_FILE_SUPPORT
