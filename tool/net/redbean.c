@@ -680,9 +680,9 @@ static void ProgramPort(long x) {
 
 static void SetDefaults(void) {
 #ifdef STATIC
-  ProgramBrand("redbean-static/1.2");
+  ProgramBrand("redbean-static/1.3");
 #else
-  ProgramBrand("redbean/1.2");
+  ProgramBrand("redbean/1.3");
 #endif
   __log_level = kLogInfo;
   maxpayloadsize = 64 * 1024;
@@ -3259,7 +3259,7 @@ static int LuaHidePath(lua_State *L) {
   size_t pathlen;
   const char *path;
   path = luaL_checklstring(L, 1, &pathlen);
-  AddString(&hidepaths, path, pathlen);
+  AddString(&hidepaths, memcpy(malloc(pathlen), path, pathlen), pathlen);
   return 0;
 }
 
