@@ -680,9 +680,9 @@ static void ProgramPort(long x) {
 
 static void SetDefaults(void) {
 #ifdef STATIC
-  ProgramBrand("redbean-static/1.0");
+  ProgramBrand("redbean-static/1.2");
 #else
-  ProgramBrand("redbean/1.0");
+  ProgramBrand("redbean/1.2");
 #endif
   __log_level = kLogInfo;
   maxpayloadsize = 64 * 1024;
