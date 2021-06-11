@@ -14,6 +14,7 @@
 ** Including a description of file format and an overview of operation.
 */
 #include "third_party/sqlite3/btreeInt.inc"
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 
 /* clang-format off */
 

@@ -4,6 +4,10 @@ if [ "$MODE" = dbg ]; then
   exit  # TODO
 fi
 
+if [ "$MODE" = opt ]; then
+  exit
+fi
+
 # smoke test userspace binary emulation
 CMD="o/$MODE/tool/build/blinkenlights.com.dbg o/$MODE/examples/hello.com"
 if OUTPUT="$($CMD)"; then
