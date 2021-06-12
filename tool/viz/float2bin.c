@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,38 +16,35 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/dce.h"
+#include "libc/stdio/stdio.h"
+#include "third_party/gdtoa/gdtoa.h"
 
-/**
- * Does things with file descriptor, via re-imagined hourglass api, e.g.
- *
- *     CHECK_NE(-1, fcntl(fd, F_SETFD, FD_CLOEXEC));
- *
- * This function implements POSIX Advisory Locks, e.g.
- *
- *     CHECK_NE(-1, fcntl(zfd, F_SETLKW, &(struct flock){F_WRLCK}));
- *     // ...
- *     CHECK_NE(-1, fcntl(zfd, F_SETLK, &(struct flock){F_UNLCK}));
- *
- * Please be warned that locks currently do nothing on Windows since
- * figuring out how to polyfill them correctly is a work in progress.
- *
- * @param cmd can be F_{GET,SET}{FD,FL}, etc.
- * @param arg can be FD_CLOEXEC, etc. depending
- * @return 0 on success, or -1 w/ errno
- * @asyncsignalsafe
- */
-int fcntl(int fd, int cmd, ...) {
-  va_list va;
-  uintptr_t arg;
-  va_start(va, cmd);
-  arg = va_arg(va, uintptr_t);
-  va_end(va);
-  if (!IsWindows()) {
-    return sys_fcntl(fd, cmd, arg);
-  } else {
-    return sys_fcntl_nt(fd, cmd, arg);
+const char kDoubleBits[] = "\
+┌sign\n\
+│ ┌exponent\n\
+│ │          ┌fraction\n\
+│ │          │\n\
+│┌┴────────┐┌┴─────────────────────────────────────────────────┐\n";
+
+const char kLongDoubleBits[] = "\
+┌sign\n\
+│ ┌exponent\n\
+│ │             ┌intpart\n\
+│ │             │ ┌fraction\n\
+│ │             │ │\n\
+│┌┴────────────┐│┌┴────────────────────────────────────────────────────────────┐\n";
+
+int main(int argc, char *argv[]) {
+  int i;
+  union {
+    double f;
+    uint64_t i;
+  } u;
+  if (argc <= 1) return 1;
+  fputs(kDoubleBits, stdout);
+  for (i = 1; i < argc; ++i) {
+    u.f = strtod(argv[i], 0);
+    printf("%064lb %.15g\n", u.i, u.f);
   }
+  return 0;
 }

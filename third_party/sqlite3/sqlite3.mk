@@ -1,5 +1,17 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
 #───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
+#
+# OVERVIEW
+#
+#   SQLite Embedded Database
+#
+# NOTES
+#
+#   Please be warned that locks currently do nothing on Windows since
+#   figuring out how to polyfill them correctly is a work in progress
+#   Further note we currently don't do that thing SQLite does for Mac
+#   file locks so your dbase will only be as reliable as Apple wanted
+#   it to be when they wrote their POSIX file locking implementation.
 
 PKGS += THIRD_PARTY_SQLITE3
 
@@ -57,6 +69,7 @@ o/$(MODE)/third_party/sqlite3/sqlite3.com.dbg:				\
 		$(THIRD_PARTY_SQLITE3_A_DEPS)				\
 		$(THIRD_PARTY_SQLITE3_SHELL_OBJS)			\
 		o/$(MODE)/third_party/sqlite3/shell.shell.o		\
+		o/$(MODE)/third_party/sqlite3/shell.pkg			\
 		$(CRT)							\
 		$(APE)
 	-@$(APELINK)
@@ -68,6 +81,10 @@ $(THIRD_PARTY_SQLITE3_A):						\
 
 $(THIRD_PARTY_SQLITE3_A).pkg:						\
 		$(THIRD_PARTY_SQLITE3_A_OBJS)				\
+		$(foreach x,$(THIRD_PARTY_SQLITE3_A_DIRECTDEPS),$($(x)_A).pkg)
+
+o/$(MODE)/third_party/sqlite3/shell.pkg:				\
+		$(THIRD_PARTY_SQLITE3_SHELL_OBJS)			\
 		$(foreach x,$(THIRD_PARTY_SQLITE3_A_DIRECTDEPS),$($(x)_A).pkg)
 
 # https://www.sqlite.org/compile.html
@@ -87,6 +104,7 @@ THIRD_PARTY_SQLITE3_FLAGS =						\
 	-DSQLITE_DEFAULT_MEMSTATUS=0					\
 	-DSQLITE_DEFAULT_WAL_SYNCHRONOUS=1				\
 	-DSQLITE_LIKE_DOESNT_MATCH_BLOBS				\
+	-DSQLITE_OMIT_UTF16						\
 	-DSQLITE_OMIT_TCL_VARIABLE					\
 	-DSQLITE_OMIT_LOAD_EXTENSION					\
 	-DSQLITE_OMIT_DEPRECATED					\
@@ -143,6 +161,7 @@ o/$(MODE)/%.shell.o: %.c
 
 THIRD_PARTY_SQLITE3_LIBS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)))
 THIRD_PARTY_SQLITE3_SRCS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)_SRCS))
+THIRD_PARTY_SQLITE3_HDRS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)_HDRS))
 THIRD_PARTY_SQLITE3_CHECKS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)_CHECKS))
 THIRD_PARTY_SQLITE3_OBJS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)_OBJS))
 $(THIRD_PARTY_SQLITE3_OBJS): third_party/sqlite3/sqlite3.mk

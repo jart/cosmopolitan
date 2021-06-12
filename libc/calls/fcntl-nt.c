@@ -19,42 +19,47 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/flock.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filelockflags.h"
 #include "libc/nt/enum/filesharemode.h"
+#include "libc/nt/enum/formatmessageflags.h"
+#include "libc/nt/errors.h"
 #include "libc/nt/files.h"
+#include "libc/nt/process.h"
+#include "libc/nt/runtime.h"
 #include "libc/nt/struct/byhandlefileinformation.h"
 #include "libc/nt/struct/overlapped.h"
+#include "libc/nt/synchronization.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
 static textwindows int sys_fcntl_nt_lock(struct Fd *f, int cmd, uintptr_t arg) {
-  uint32_t flags;
   struct flock *l;
+  uint32_t flags, err;
   struct NtOverlapped ov;
   int64_t pos, off, len, size;
   struct NtByHandleFileInformation info;
+  if (!GetFileInformationByHandle(f->handle, &info)) return __winerr();
+  if (!SetFilePointerEx(f->handle, 0, &pos, SEEK_CUR)) return __winerr();
   l = (struct flock *)arg;
   len = l->l_len;
   off = l->l_start;
-  if (!len || l->l_whence == SEEK_END) {
-    if (!GetFileInformationByHandle(f->handle, &info)) return __winerr();
-    size = (uint64_t)info.nFileSizeHigh << 32 | info.nFileSizeLow;
-  } else {
-    size = 0;
-  }
-  if (l->l_whence != SEEK_SET) {
-    if (l->l_whence == SEEK_CUR) {
-      if (!SetFilePointerEx(f->handle, 0, &pos, SEEK_CUR)) return __winerr();
+  size = (uint64_t)info.nFileSizeHigh << 32 | info.nFileSizeLow;
+  switch (l->l_whence) {
+    case SEEK_SET:
+      break;
+    case SEEK_CUR:
       off = pos + off;
-    } else if (l->l_whence == SEEK_END) {
+      break;
+    case SEEK_END:
       off = size - off;
-    } else {
+      break;
+    default:
       return einval();
-    }
   }
   if (!len) len = size - off;
   if (off < 0 || len < 0) return einval();
@@ -62,17 +67,27 @@ static textwindows int sys_fcntl_nt_lock(struct Fd *f, int cmd, uintptr_t arg) {
   if (l->l_type == F_RDLCK || l->l_type == F_WRLCK) {
     flags = 0;
     if (cmd == F_SETLK) flags |= kNtLockfileFailImmediately;
-    if (l->l_type == F_WRLCK) flags |= kNtLockfileExclusiveLock;
+    /* TODO: How can we make SQLite locks on Windows to work? */
+    /* if (l->l_type == F_WRLCK) flags |= kNtLockfileExclusiveLock; */
     if (LockFileEx(f->handle, flags, 0, len, len >> 32, &ov)) {
       return 0;
     } else {
-      return __winerr();
+      err = GetLastError();
+      if (err == kNtErrorLockViolation) err = EAGAIN;
+      errno = err;
+      return -1;
     }
   } else if (l->l_type == F_UNLCK) {
     if (UnlockFileEx(f->handle, 0, len, len >> 32, &ov)) {
       return 0;
     } else {
-      return __winerr();
+      err = GetLastError();
+      if (err == kNtErrorNotLocked) {
+        return 0;
+      } else {
+        errno = err;
+        return -1;
+      }
     }
   } else {
     return einval();
