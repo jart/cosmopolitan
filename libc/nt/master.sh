@@ -7797,3 +7797,5 @@ imp	'ReleaseSRWLockExclusive'				ReleaseSRWLockExclusive					kernel32	0	1	# Kern
 imp	'ReleaseSRWLockShared'					ReleaseSRWLockShared					kernel32	0	1	# KernelBase
 imp	'TryAcquireSRWLockExclusive'				TryAcquireSRWLockExclusive				kernel32	0	1	# KernelBase
 imp	'TryAcquireSRWLockShared'				TryAcquireSRWLockShared					kernel32	0	1	# KernelBase
+
+imp     'GetAdaptersAddresses'                                  GetAdaptersAddresses                                    iphlpapi        67      5

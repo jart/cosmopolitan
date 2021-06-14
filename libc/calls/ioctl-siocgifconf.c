@@ -35,7 +35,7 @@
 
 int ioctl_default(int, uint64_t, void *) hidden;
 int ioctl_siocgifconf_nt(int, struct ifconf *) hidden;
-int ioctl_siocgifaddr_nt(int, struct ifconf *) hidden;
+//int ioctl_siocgifaddr_nt(int, struct ifconf *) hidden;
 
 static int ioctl_siocgifconf_sysv(int fd, struct ifconf *ifc) {
   if (IsBsd()) {
@@ -123,8 +123,7 @@ int ioctl_siocgifconf(int fd, void *ifc) {
   if (!IsWindows()) {
     return ioctl_siocgifconf_sysv(fd, (struct ifconf *)ifc);
   } else {
-    return enotsup();
-    //return ioctl_siocgifconf_nt(fd, ifc);
+    return ioctl_siocgifconf_nt(fd, ifc);
   }
 }
 

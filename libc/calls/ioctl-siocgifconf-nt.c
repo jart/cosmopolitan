@@ -16,20 +16,102 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/af.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/nt/winsock.h"
+#include "libc/nt/errors.h"
 
 // TODO: Remove me
-//#include "libc/stdio/stdio.h"
+#include "libc/bits/weaken.h"
+#include "libc/stdio/stdio.h"
+#define PRINTF  weaken(printf)
 
 #define MAX_INTERFACES  32
 
+#if 1
+
+#define GAA_FLAG_SKIP_UNICAST                   0x0001
+#define GAA_FLAG_SKIP_ANYCAST                   0x0002
+#define GAA_FLAG_SKIP_MULTICAST                 0x0004
+#define GAA_FLAG_SKIP_DNS_SERVER                0x0008
+#define GAA_FLAG_INCLUDE_PREFIX                 0x0010
+#define GAA_FLAG_SKIP_FRIENDLY_NAME             0x0020
+#define GAA_FLAG_INCLUDE_WINS_INFO              0x0040
+#define GAA_FLAG_INCLUDE_GATEWAYS               0x0080
+#define GAA_FLAG_INCLUDE_ALL_INTERFACES         0x0100
+#define GAA_FLAG_INCLUDE_ALL_COMPARTMENTS       0x0200
+#define GAA_FLAG_INCLUDE_TUNNEL_BINDINGORDER    0x0400
+#define GAA_FLAG_SKIP_DNS_INFO                  0x0800
+
+typedef struct _IP_ADAPTER_ADDRESSES_XP {
+    union {
+        uint64_t Alignment;
+        struct {
+            uint32_t Length;
+            uint32_t IfIndex;
+        };
+    };
+    struct _IP_ADAPTER_ADDRESSES_XP *Next;
+    char * AdapterName;
+    void * FirstUnicastAddress;
+    void * FirstAnycastAddress;
+    void * FirstMulticastAddress;
+    void * FirstDnsServerAddress;
+    wchar_t *DnsSuffix;
+    wchar_t *Description;
+    wchar_t *FriendlyName;
+    /* Filler */
+} IP_ADAPTER_ADDRESSES_XP, *PIP_ADAPTER_ADDRESSES_XP;
+
+extern unsigned long GetAdaptersAddresses(
+        uint32_t Family, 
+        uint32_t Flags,
+        void * Reserved,
+        char *AdapterAddresses,
+        uint32_t *SizePointer);
+
+textwindows int ioctl_siocgifconf_nt(int fd, struct ifconf *ifc) {
+    uint32_t rv, size;
+    char * adapter_addresses;
+    struct _IP_ADAPTER_ADDRESSES_XP *aa;
+
+    PRINTF("FABDEBUG> ioctl(SIOCGIFCONF) for Windows... printf=%p, GetAdaptersAddresses=%p\n", weaken(printf), weaken(GetAdaptersAddresses));
+    if (!weaken(GetAdaptersAddresses)) {
+        PRINTF("FABDEBUG> NULL GetAdaptersAddresses\n");
+        return enomem();
+    }
+    rv = weaken(GetAdaptersAddresses)(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, NULL, NULL, &size);
+    if (rv != kNtErrorBufferOverflow) {
+        PRINTF("FABDEBUG> GetAdaptersAddresses failed %d\n", WSAGetLastError());
+        return ebadf();
+    }
+    PRINTF("FABDEBUG> size=%lu\n", size);
+
+    adapter_addresses = (char *)weaken(malloc)(size);
+    if (!adapter_addresses) {
+        return enomem();
+    }
+
+    rv = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, NULL, adapter_addresses, &size);
+    if (rv != kNtErrorSuccess) {
+        PRINTF("FABDEBUG> GetAdaptersAddresses failed %d\n", WSAGetLastError());
+        weaken(free)(adapter_addresses);
+        return efault();
+    }
+
+    for (aa = (struct _IP_ADAPTER_ADDRESSES_XP *)adapter_addresses; aa != NULL; aa = aa->Next) {
+        PRINTF("FABDEBUG> Adapter name = %s", aa->AdapterName);
+    }
+    weaken(free)(adapter_addresses);
+
+    return 0;
+}
+#else
 /* Reference:
  *  - Description of ioctls: https://docs.microsoft.com/en-us/windows/win32/winsock/winsock-ioctls
  *  - Structure INTERFACE_INFO: https://docs.microsoft.com/en-us/windows/win32/api/ws2ipdef/ns-ws2ipdef-interface_info
@@ -47,18 +129,19 @@ textwindows int ioctl_siocgifconf_nt(int fd, struct ifconf *ifc) {
     return ebadf();
   }
 
-  ret = weaken(WSAIoctl)(g_fds.p[fd].handle, kNtSioGetInterfaceList, NULL, 0, &iflist, sizeof(iflist), &dwBytes, NULL, NULL);
+  ret = WSAIoctl(g_fds.p[fd].handle, kNtSioGetInterfaceList, NULL, 0, &iflist, sizeof(iflist), &dwBytes, NULL, NULL);
   if (ret == -1) {
+      PRINTF("FABDEBUG> WSAIoctl failed %d\n", WSAGetLastError());
     return weaken(__winsockerr)();
   }
 
+  PRINTF("FABDEBUG> WSAIoctl success\n");
   count = dwBytes / sizeof(struct NtInterfaceInfo);
-  /*
-  printf("CI> SIO_GET_INTERFACE_LIST success:\n");
+  PRINTF("CI> SIO_GET_INTERFACE_LIST success:\n");
   for (i = 0; i < count; ++i) {
-    printf("CI>\t #i: %08x\n", i, iflist[i].iiAddress.sin_addr.s_addr);
+    PRINTF("CI>\t #i: addr=%08x, flags=%08x, bcast=%08x\n", i, iflist[i].iiAddress.sin_addr.s_addr, iflist[i].iiFlags, iflist[i].iiBroadcastAddress.sin_addr.s_addr);
   }
-  */
   return ret;
 }
 
+#endif
