@@ -22,10 +22,20 @@ int bsfl(long);
 int bsfll(long long);
 int bsfmax(uintmax_t);
 
-#ifdef __GNUC__
-#define bsf(u)   __builtin_ctz(u)
-#define bsfl(u)  __builtin_ctzl(u)
-#define bsfll(u) __builtin_ctzll(u)
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#define bsf(u)                                                  \
+  ({                                                            \
+    unsigned BiTs;                                              \
+    asm("bsf\t%0,%0" : "=r"(BiTs) : "0"((unsigned)(u)) : "cc"); \
+    BiTs;                                                       \
+  })
+#define bsfl(u)                                                      \
+  ({                                                                 \
+    unsigned long BiTs;                                              \
+    asm("bsf\t%0,%0" : "=r"(BiTs) : "0"((unsigned long)(u)) : "cc"); \
+    (unsigned)BiTs;                                                  \
+  })
+#define bsfll(u) bsfl(u)
 #endif
 
 COSMOPOLITAN_C_END_

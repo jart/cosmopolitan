@@ -13,11 +13,13 @@ LIBC_TESTLIB_A = o/$(MODE)/libc/testlib/testlib.a
 LIBC_TESTLIB_A_CHECKS = $(LIBC_TESTLIB_A).pkg
 
 LIBC_TESTLIB_A_ASSETS =						\
-	libc/testlib/hyperion.txt
+	libc/testlib/hyperion.txt				\
+	libc/testlib/blocktronics.txt
 
 LIBC_TESTLIB_A_HDRS =						\
 	libc/testlib/bench.h					\
 	libc/testlib/ezbench.h					\
+	libc/testlib/blocktronics.h				\
 	libc/testlib/hyperion.h					\
 	libc/testlib/testlib.h
 
@@ -25,6 +27,7 @@ LIBC_TESTLIB_A_SRCS_S =						\
 	libc/testlib/bench.S					\
 	libc/testlib/combo.S					\
 	libc/testlib/fixture.S					\
+	libc/testlib/blocktronics.S				\
 	libc/testlib/hyperion.S					\
 	libc/testlib/testcase.S					\
 	libc/testlib/thrashcodecache.S				\

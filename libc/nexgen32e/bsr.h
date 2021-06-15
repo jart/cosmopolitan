@@ -22,10 +22,20 @@ int bsrl(long);
 int bsrll(long long);
 int bsrmax(uintmax_t);
 
-#ifdef __GNUC__
-#define bsr(u)   ((sizeof(int) * 8 - 1) ^ __builtin_clz(u))
-#define bsrl(u)  ((sizeof(long) * 8 - 1) ^ __builtin_clzl(u))
-#define bsrll(u) ((sizeof(long long) * 8 - 1) ^ __builtin_clzll(u))
+#if defined(__GNUC__) && defined(__x86_64__) && !defined(__STRICT_ANSI__)
+#define bsr(u)                                                  \
+  ({                                                            \
+    unsigned BiTs;                                              \
+    asm("bsr\t%0,%0" : "=r"(BiTs) : "0"((unsigned)(u)) : "cc"); \
+    BiTs;                                                       \
+  })
+#define bsrl(u)                                                      \
+  ({                                                                 \
+    unsigned long BiTs;                                              \
+    asm("bsr\t%0,%0" : "=r"(BiTs) : "0"((unsigned long)(u)) : "cc"); \
+    (unsigned)BiTs;                                                  \
+  })
+#define bsrll(u) bsrl(u)
 #endif
 
 COSMOPOLITAN_C_END_
