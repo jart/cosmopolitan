@@ -23,6 +23,7 @@
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
+#include "third_party/getopt/getopt.h"
 
 /**
  * @fileoverview netcat clone
@@ -42,14 +43,37 @@ int main(int argc, char *argv[]) {
   ssize_t rc;
   size_t i, got;
   char buf[1500];
-  int err, toto, sock;
+  bool halfclose = true;
+  const char *host, *port;
+  int opt, err, toto, sock;
   struct addrinfo *ai = NULL;
   struct linger linger = {true, 1};
   struct pollfd fds[2] = {{-1, POLLIN}, {-1, POLLIN}};
   struct addrinfo hint = {AI_NUMERICSERV, AF_INET, SOCK_STREAM, IPPROTO_TCP};
 
-  if (argc != 3) exit(1);
-  switch ((rc = getaddrinfo(argv[1], argv[2], &hint, &ai))) {
+  while ((opt = getopt(argc, argv, "hH")) != -1) {
+    switch (opt) {
+      case 'H':
+        halfclose = false;
+        break;
+      case 'h':
+        fputs("Usage: ", stdout);
+        fputs(argv[0], stdout);
+        fputs(" [-hH] IP PORT\n", stdout);
+        exit(0);
+      default:
+        fprintf(stderr, "bad option %d\n", opt);
+        exit(1);
+    }
+  }
+  if (argc - optind != 2) {
+    fputs("missing args\n", stderr);
+    exit(1);
+  }
+  host = argv[optind + 0];
+  port = argv[optind + 1];
+
+  switch ((rc = getaddrinfo(host, port, &hint, &ai))) {
     case EAI_SUCCESS:
       break;
     case EAI_SYSTEM:
@@ -93,7 +117,9 @@ int main(int argc, char *argv[]) {
         exit(1);
       }
       if (!(got = rc)) {
-        shutdown(sock, SHUT_WR);
+        if (halfclose) {
+          shutdown(sock, SHUT_WR);
+        }
         fds[0].fd = -1;
       }
       for (i = 0; i < got; i += rc) {
