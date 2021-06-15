@@ -16,67 +16,45 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/testlib.h"
 #include "net/http/http.h"
 
-/**
- * Parses X-Forwarded-For.
- *
- * This header is used by reverse proxies. For example:
- *
- *     X-Forwarded-For: 203.0.113.42:31337
- *
- * The port is optional and will be set to zero if absent.
- *
- * @param s is input data
- * @param n if -1 implies strlen
- * @param ip receives ip on success if not NULL
- * @param port receives port on success if not NULL
- * @return 0 on success or -1 on failure
- * @see RFC7239's poorly designed Forwarded header
- */
-int ParseForwarded(const char *s, size_t n, uint32_t *ip, uint16_t *port) {
-  int c, t;
-  size_t i;
-  uint32_t x;
-  if (n == -1) n = s ? strlen(s) : 0;
-  if (n) {
-    t = x = i = 0;
-    do {
-      c = s[i++] & 255;
-      if (isdigit(c)) {
-        t *= 10;
-        t += c - '0';
-        if (t > 255) return -1;
-      } else if (c == '.') {
-        x <<= 8;
-        x |= t;
-        t = 0;
-      } else if (c == ':') {
-        break;
-      } else {
-        return -1;
-      }
-    } while (i < n);
-    x <<= 8;
-    x |= t;
-    t = 0;
-    if (c == ':') {
-      while (i < n) {
-        c = s[i++] & 255;
-        if (isdigit(c)) {
-          t *= 10;
-          t += c - '0';
-          if (t > 65535) return -1;
-        } else {
-          return -1;
-        }
-      }
-    }
-    if (ip) *ip = x;
-    if (port) *port = t;
-    return 0;
-  } else {
-    return -1;
-  }
+TEST(ParseForwarded, test) {
+  uint32_t ip = 7;
+  uint16_t port = 7;
+  EXPECT_EQ(-1, ParseForwarded("", -1, &ip, &port));
+  EXPECT_EQ(-1, ParseForwarded("[::1]:123", -1, &ip, &port));
+  EXPECT_EQ(-1, ParseForwarded("203.0.113.0:123123123", -1, &ip, &port));
+  EXPECT_EQ(7, ip);
+  EXPECT_EQ(7, port);
+  EXPECT_EQ(0, ParseForwarded("0.0.0.0", -1, &ip, &port));
+  EXPECT_EQ(0x00000000, ip);
+  EXPECT_EQ(0, port);
+  EXPECT_EQ(0, ParseForwarded("8.8.8.8", -1, &ip, &port));
+  EXPECT_EQ(0x08080808, ip);
+  EXPECT_EQ(0, port);
+  EXPECT_EQ(0, ParseForwarded("0.0.0.1:123", -1, &ip, &port));
+  EXPECT_EQ(0x00000001, ip);
+  EXPECT_EQ(123, port);
+  EXPECT_EQ(0, ParseForwarded("1.2.3.4:123", -1, &ip, &port));
+  EXPECT_EQ(0x01020304, ip);
+  EXPECT_EQ(123, port);
+  EXPECT_EQ(0, ParseForwarded("128.2.3.4:123", -1, &ip, &port));
+  EXPECT_EQ(0x80020304, ip);
+  EXPECT_EQ(123, port);
+  EXPECT_EQ(0, ParseForwarded("255.255.255.255:123", -1, &ip, &port));
+  EXPECT_EQ(0xFFFFFFFF, ip);
+  EXPECT_EQ(123, port);
+  EXPECT_EQ(0, ParseForwarded("203.0.113.0:123", -1, &ip, &port));
+  EXPECT_EQ(0xcb007100, ip);
+  EXPECT_EQ(123, port);
+  EXPECT_EQ(0, ParseForwarded("203.0.113.42:31337", -1, &ip, &port));
+}
+
+BENCH(ParseForwarded, bench) {
+  uint32_t ip;
+  uint16_t port;
+  EZBENCH2("ParseForwarded 80", donothing,
+           ParseForwarded("203.0.113.42:31337", 20, &ip, &port));
 }
