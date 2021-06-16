@@ -6,9 +6,7 @@ PKGS += THIRD_PARTY_MBEDTLS
 THIRD_PARTY_MBEDTLS_ARTIFACTS += THIRD_PARTY_MBEDTLS_A
 THIRD_PARTY_MBEDTLS = $(THIRD_PARTY_MBEDTLS_A_DEPS) $(THIRD_PARTY_MBEDTLS_A)
 THIRD_PARTY_MBEDTLS_A = o/$(MODE)/third_party/mbedtls/mbedtls.a
-THIRD_PARTY_MBEDTLS_A_FILES :=						\
-	$(wildcard third_party/mbedtls/library/*.*)			\
-	$(wildcard third_party/mbedtls/include/*/*.*)
+THIRD_PARTY_MBEDTLS_A_FILES := $(wildcard third_party/mbedtls/*)
 THIRD_PARTY_MBEDTLS_A_HDRS = $(filter %.h,$(THIRD_PARTY_MBEDTLS_A_FILES))
 THIRD_PARTY_MBEDTLS_A_SRCS = $(filter %.c,$(THIRD_PARTY_MBEDTLS_A_FILES))
 
