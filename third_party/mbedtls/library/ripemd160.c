@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  RIPE MD-160 implementation
  *
@@ -23,21 +25,19 @@
  *  http://ehash.iaik.tugraz.at/wiki/RIPEMD-160
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_RIPEMD160_C)
 
-#include "mbedtls/ripemd160.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/ripemd160.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
-#include <string.h>
 
 #if defined(MBEDTLS_SELF_TEST)
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
 #define mbedtls_printf printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */

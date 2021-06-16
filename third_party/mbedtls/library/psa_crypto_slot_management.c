@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  PSA crypto layer on top of Mbed TLS crypto
  */
@@ -18,24 +20,22 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
 
-#include "psa_crypto_service_integration.h"
-#include "psa/crypto.h"
+#include "third_party/mbedtls/library/psa_crypto_service_integration.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
 
-#include "psa_crypto_core.h"
-#include "psa_crypto_slot_management.h"
-#include "psa_crypto_storage.h"
+#include "third_party/mbedtls/library/psa_crypto_core.h"
+#include "third_party/mbedtls/library/psa_crypto_slot_management.h"
+#include "third_party/mbedtls/library/psa_crypto_storage.h"
 #if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-#include "psa_crypto_se.h"
+#include "third_party/mbedtls/library/psa_crypto_se.h"
 #endif
 
-#include <stdlib.h>
-#include <string.h>
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
 #define mbedtls_calloc calloc
 #define mbedtls_free   free

@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file psa/crypto_driver_common.h
  * \brief Definitions for all PSA crypto drivers
@@ -34,14 +36,11 @@
 #ifndef PSA_CRYPTO_DRIVER_COMMON_H
 #define PSA_CRYPTO_DRIVER_COMMON_H
 
-#include <stddef.h>
-#include <stdint.h>
-
 /* Include type definitions (psa_status_t, psa_algorithm_t,
  * psa_key_type_t, etc.) and macros to build and analyze values
  * of these types. */
-#include "crypto_types.h"
-#include "crypto_values.h"
+#include "third_party/mbedtls/include/psa/crypto_types.h"
+#include "third_party/mbedtls/include/psa/crypto_values.h"
 
 /** For encrypt-decrypt functions, whether the operation is an encryption
  * or a decryption. */

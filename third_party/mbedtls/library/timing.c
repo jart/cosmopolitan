@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Portable interface to the CPU cycle counter
  *
@@ -17,18 +19,19 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "libc/calls/calls.h"
+#include "libc/time/time.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_SELF_TEST) && defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
 #define mbedtls_printf     printf
 #endif
 
 #if defined(MBEDTLS_TIMING_C)
 
-#include "mbedtls/timing.h"
+#include "third_party/mbedtls/include/mbedtls/timing.h"
 
 #if !defined(MBEDTLS_TIMING_ALT)
 
@@ -44,8 +47,6 @@
 
 #if defined(_WIN32) && !defined(EFIX64) && !defined(EFI32)
 
-#include <windows.h>
-#include <process.h>
 
 struct _hr_time
 {
@@ -53,12 +54,6 @@ struct _hr_time
 };
 
 #else
-
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <signal.h>
-#include <time.h>
 
 struct _hr_time
 {

@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  ARIA implementation
  *
@@ -23,26 +25,24 @@
  * [2] https://tools.ietf.org/html/rfc5794
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_ARIA_C)
 
-#include "mbedtls/aria.h"
+#include "third_party/mbedtls/include/mbedtls/aria.h"
 
-#include <string.h>
 
 #if defined(MBEDTLS_SELF_TEST)
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
 #define mbedtls_printf printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
 #if !defined(MBEDTLS_ARIA_ALT)
 
-#include "mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
 
 #if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
     !defined(inline) && !defined(__cplusplus)

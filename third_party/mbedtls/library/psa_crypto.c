@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  PSA crypto layer on top of Mbed TLS crypto
  */
@@ -18,75 +20,72 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
 
 #if defined(MBEDTLS_PSA_CRYPTO_CONFIG)
-#include "check_crypto_config.h"
+#include "third_party/mbedtls/library/check_crypto_config.h"
 #endif
 
-#include "psa_crypto_service_integration.h"
-#include "psa/crypto.h"
+#include "third_party/mbedtls/library/psa_crypto_service_integration.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
 
-#include "psa_crypto_core.h"
-#include "psa_crypto_invasive.h"
-#include "psa_crypto_driver_wrappers.h"
-#include "psa_crypto_ecp.h"
-#include "psa_crypto_rsa.h"
-#include "psa_crypto_ecp.h"
+#include "third_party/mbedtls/library/psa_crypto_core.h"
+#include "third_party/mbedtls/library/psa_crypto_invasive.h"
+#include "third_party/mbedtls/library/psa_crypto_driver_wrappers.h"
+#include "third_party/mbedtls/library/psa_crypto_ecp.h"
+#include "third_party/mbedtls/library/psa_crypto_rsa.h"
+#include "third_party/mbedtls/library/psa_crypto_ecp.h"
 #if defined(MBEDTLS_PSA_CRYPTO_SE_C)
-#include "psa_crypto_se.h"
+#include "third_party/mbedtls/library/psa_crypto_se.h"
 #endif
-#include "psa_crypto_slot_management.h"
+#include "third_party/mbedtls/library/psa_crypto_slot_management.h"
 /* Include internal declarations that are useful for implementing persistently
  * stored keys. */
-#include "psa_crypto_storage.h"
+#include "third_party/mbedtls/library/psa_crypto_storage.h"
 
-#include "psa_crypto_random_impl.h"
+#include "third_party/mbedtls/library/psa_crypto_random_impl.h"
 
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #if !defined(MBEDTLS_PLATFORM_C)
 #define mbedtls_calloc calloc
 #define mbedtls_free   free
 #endif
 
-#include "mbedtls/aes.h"
-#include "mbedtls/arc4.h"
-#include "mbedtls/asn1.h"
-#include "mbedtls/asn1write.h"
-#include "mbedtls/bignum.h"
-#include "mbedtls/blowfish.h"
-#include "mbedtls/camellia.h"
-#include "mbedtls/chacha20.h"
-#include "mbedtls/chachapoly.h"
-#include "mbedtls/cipher.h"
-#include "mbedtls/ccm.h"
-#include "mbedtls/cmac.h"
-#include "mbedtls/des.h"
-#include "mbedtls/ecdh.h"
-#include "mbedtls/ecp.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/error.h"
-#include "mbedtls/gcm.h"
-#include "mbedtls/md2.h"
-#include "mbedtls/md4.h"
-#include "mbedtls/md5.h"
-#include "mbedtls/md.h"
-#include "mbedtls/md_internal.h"
-#include "mbedtls/pk.h"
-#include "mbedtls/pk_internal.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
-#include "mbedtls/ripemd160.h"
-#include "mbedtls/rsa.h"
-#include "mbedtls/sha1.h"
-#include "mbedtls/sha256.h"
-#include "mbedtls/sha512.h"
-#include "mbedtls/xtea.h"
+#include "third_party/mbedtls/include/mbedtls/aes.h"
+#include "third_party/mbedtls/include/mbedtls/arc4.h"
+#include "third_party/mbedtls/include/mbedtls/asn1.h"
+#include "third_party/mbedtls/include/mbedtls/asn1write.h"
+#include "third_party/mbedtls/include/mbedtls/bignum.h"
+#include "third_party/mbedtls/include/mbedtls/blowfish.h"
+#include "third_party/mbedtls/include/mbedtls/camellia.h"
+#include "third_party/mbedtls/include/mbedtls/chacha20.h"
+#include "third_party/mbedtls/include/mbedtls/chachapoly.h"
+#include "third_party/mbedtls/include/mbedtls/cipher.h"
+#include "third_party/mbedtls/include/mbedtls/ccm.h"
+#include "third_party/mbedtls/include/mbedtls/cmac.h"
+#include "third_party/mbedtls/include/mbedtls/des.h"
+#include "third_party/mbedtls/include/mbedtls/ecdh.h"
+#include "third_party/mbedtls/include/mbedtls/ecp.h"
+#include "third_party/mbedtls/include/mbedtls/entropy.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/gcm.h"
+#include "third_party/mbedtls/include/mbedtls/md2.h"
+#include "third_party/mbedtls/include/mbedtls/md4.h"
+#include "third_party/mbedtls/include/mbedtls/md5.h"
+#include "third_party/mbedtls/include/mbedtls/md.h"
+#include "third_party/mbedtls/include/mbedtls/md_internal.h"
+#include "third_party/mbedtls/include/mbedtls/pk.h"
+#include "third_party/mbedtls/include/mbedtls/pk_internal.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/ripemd160.h"
+#include "third_party/mbedtls/include/mbedtls/rsa.h"
+#include "third_party/mbedtls/include/mbedtls/sha1.h"
+#include "third_party/mbedtls/include/mbedtls/sha256.h"
+#include "third_party/mbedtls/include/mbedtls/sha512.h"
+#include "third_party/mbedtls/include/mbedtls/xtea.h"
 
 #define ARRAY_LENGTH( array ) ( sizeof( array ) / sizeof( *( array ) ) )
 
@@ -5862,7 +5861,7 @@ int mbedtls_psa_get_random( void *p_rng,
 #endif /* MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 
 #if defined(MBEDTLS_PSA_INJECT_ENTROPY)
-#include "mbedtls/entropy_poll.h"
+#include "third_party/mbedtls/include/mbedtls/entropy_poll.h"
 
 psa_status_t mbedtls_psa_inject_entropy( const uint8_t *seed,
                                          size_t seed_size )

@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  AES-NI support functions
  *
@@ -22,7 +24,8 @@
  * [CLMUL-WP] http://software.intel.com/en-us/articles/intel-carry-less-multiplication-instruction-and-its-usage-for-computing-the-gcm-mode/
  */
 
-#include "common.h"
+#include "libc/str/str.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_AESNI_C)
 
@@ -32,36 +35,14 @@
 #endif
 #endif
 
-#include "mbedtls/aesni.h"
+#include "third_party/mbedtls/include/mbedtls/aesni.h"
 
-#include <string.h>
 
 #ifndef asm
 #define asm __asm
 #endif
 
 #if defined(MBEDTLS_HAVE_X86_64)
-
-/*
- * AES-NI support detection routine
- */
-int mbedtls_aesni_has_support( unsigned int what )
-{
-    static int done = 0;
-    static unsigned int c = 0;
-
-    if( ! done )
-    {
-        asm( "movl  $1, %%eax   \n\t"
-             "cpuid             \n\t"
-             : "=c" (c)
-             :
-             : "eax", "ebx", "edx" );
-        done = 1;
-    }
-
-    return( ( c & what ) != 0 );
-}
 
 /*
  * Binutils needs to be at least 2.19 to support AES-NI instructions.

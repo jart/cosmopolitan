@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Diffie-Hellman-Merkle key exchange
  *
@@ -25,29 +27,27 @@
  *
  */
 
-#include "common.h"
+#include "libc/calls/calls.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_DHM_C)
 
-#include "mbedtls/dhm.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/dhm.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
-#include <string.h>
 
 #if defined(MBEDTLS_PEM_PARSE_C)
-#include "mbedtls/pem.h"
+#include "third_party/mbedtls/include/mbedtls/pem.h"
 #endif
 
 #if defined(MBEDTLS_ASN1_PARSE_C)
-#include "mbedtls/asn1.h"
+#include "third_party/mbedtls/include/mbedtls/asn1.h"
 #endif
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdlib.h>
-#include <stdio.h>
 #define mbedtls_printf     printf
 #define mbedtls_calloc    calloc
 #define mbedtls_free       free

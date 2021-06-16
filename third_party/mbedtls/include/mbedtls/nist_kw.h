@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file nist_kw.h
  *
@@ -36,12 +38,12 @@
 #define MBEDTLS_NIST_KW_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/cipher.h"
+#include "third_party/mbedtls/include/mbedtls/cipher.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -69,7 +71,7 @@ typedef struct {
 } mbedtls_nist_kw_context;
 
 #else  /* MBEDTLS_NIST_key wrapping_ALT */
-#include "nist_kw_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/nist_kw_alt.h" */
 #endif /* MBEDTLS_NIST_KW_ALT */
 
 /**

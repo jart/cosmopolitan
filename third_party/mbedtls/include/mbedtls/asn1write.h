@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file asn1write.h
  *
@@ -23,12 +25,12 @@
 #define MBEDTLS_ASN1_WRITE_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/asn1.h"
+#include "third_party/mbedtls/include/mbedtls/asn1.h"
 
 #define MBEDTLS_ASN1_CHK_ADD(g, f)                      \
     do                                                  \

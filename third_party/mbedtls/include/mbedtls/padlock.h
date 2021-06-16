@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file padlock.h
  *
@@ -27,12 +29,12 @@
 #define MBEDTLS_PADLOCK_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/aes.h"
+#include "third_party/mbedtls/include/mbedtls/aes.h"
 
 #define MBEDTLS_ERR_PADLOCK_DATA_MISALIGNED               -0x0030  /**< Input data should be aligned. */
 
@@ -50,7 +52,6 @@
 #define MBEDTLS_HAVE_X86
 #endif
 
-#include <stdint.h>
 
 #define MBEDTLS_PADLOCK_RNG 0x000C
 #define MBEDTLS_PADLOCK_ACE 0x00C0

@@ -156,6 +156,12 @@ o/$(MODE)/third_party/sqlite3/shell.shell.o:				\
 		OVERRIDE_CFLAGS +=					\
 			-DSTACK_FRAME_UNLIMITED
 
+$(THIRD_PARTY_SQLITE3_A_OBJS)						\
+$(THIRD_PARTY_SQLITE3_SHELL_OBJS):					\
+		OVERRIDE_CFLAGS +=					\
+			-fdata-sections					\
+			-ffunction-sections
+
 o/$(MODE)/%.shell.o: %.c
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) $(OUTPUT_OPTION) $<
 

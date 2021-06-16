@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file rsa.h
  *
@@ -29,16 +31,16 @@
 #define MBEDTLS_RSA_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/bignum.h"
-#include "mbedtls/md.h"
+#include "third_party/mbedtls/include/mbedtls/bignum.h"
+#include "third_party/mbedtls/include/mbedtls/md.h"
 
 #if defined(MBEDTLS_THREADING_C)
-#include "mbedtls/threading.h"
+#include "third_party/mbedtls/include/mbedtls/threading.h"
 #endif
 
 /*
@@ -137,7 +139,7 @@ typedef struct mbedtls_rsa_context
 mbedtls_rsa_context;
 
 #else  /* MBEDTLS_RSA_ALT */
-#include "rsa_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/rsa_alt.h" */
 #endif /* MBEDTLS_RSA_ALT */
 
 /**

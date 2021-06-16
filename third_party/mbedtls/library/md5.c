@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  RFC 1321 compliant MD5 implementation
  *
@@ -22,21 +24,19 @@
  *  http://www.ietf.org/rfc/rfc1321.txt
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_MD5_C)
 
-#include "mbedtls/md5.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/md5.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
-#include <string.h>
 
 #if defined(MBEDTLS_SELF_TEST)
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
 #define mbedtls_printf printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */

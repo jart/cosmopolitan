@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  FIPS-180-1 compliant SHA-1 implementation
  *
@@ -22,21 +24,19 @@
  *  http://www.itl.nist.gov/fipspubs/fip180-1.htm
  */
 
-#include "common.h"
+#include "libc/str/str.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_SHA1_C)
 
-#include "mbedtls/sha1.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
-
-#include <string.h>
+#include "third_party/mbedtls/include/mbedtls/sha1.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
 #if defined(MBEDTLS_SELF_TEST)
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
 #define mbedtls_printf printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */

@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file hkdf.h
  *
@@ -26,12 +28,12 @@
 #define MBEDTLS_HKDF_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/md.h"
+#include "third_party/mbedtls/include/mbedtls/md.h"
 
 /**
  *  \name HKDF Error codes

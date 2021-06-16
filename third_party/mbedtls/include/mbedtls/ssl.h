@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file ssl.h
  *
@@ -23,23 +25,23 @@
 #define MBEDTLS_SSL_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/bignum.h"
-#include "mbedtls/ecp.h"
+#include "third_party/mbedtls/include/mbedtls/bignum.h"
+#include "third_party/mbedtls/include/mbedtls/ecp.h"
 
-#include "mbedtls/ssl_ciphersuites.h"
+#include "third_party/mbedtls/include/mbedtls/ssl_ciphersuites.h"
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
-#include "mbedtls/x509_crt.h"
-#include "mbedtls/x509_crl.h"
+#include "third_party/mbedtls/include/mbedtls/x509_crt.h"
+#include "third_party/mbedtls/include/mbedtls/x509_crl.h"
 #endif
 
 #if defined(MBEDTLS_DHM_C)
-#include "mbedtls/dhm.h"
+#include "third_party/mbedtls/include/mbedtls/dhm.h"
 #endif
 
 /* Adding guard for MBEDTLS_ECDSA_C to ensure no compile errors due
@@ -48,7 +50,7 @@
  * MBEDTLS_ECDSA_C which does not seem correct.
  */
 #if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
-#include "mbedtls/ecdh.h"
+#include "third_party/mbedtls/include/mbedtls/ecdh.h"
 #endif
 
 #if defined(MBEDTLS_ZLIB_SUPPORT)
@@ -61,15 +63,15 @@
 #error "Record compression support via MBEDTLS_ZLIB_SUPPORT is deprecated and cannot be used if MBEDTLS_DEPRECATED_REMOVED is set"
 #endif
 
-#include "zlib.h"
+#include "third_party/zlib/zlib.h"
 #endif
 
 #if defined(MBEDTLS_HAVE_TIME)
-#include "mbedtls/platform_time.h"
+#include "third_party/mbedtls/include/mbedtls/platform_time.h"
 #endif
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-#include "psa/crypto.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 /*

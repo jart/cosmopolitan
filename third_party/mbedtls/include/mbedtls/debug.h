@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file debug.h
  *
@@ -23,15 +25,15 @@
 #define MBEDTLS_DEBUG_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/ssl.h"
+#include "third_party/mbedtls/include/mbedtls/ssl.h"
 
 #if defined(MBEDTLS_ECP_C)
-#include "mbedtls/ecp.h"
+#include "third_party/mbedtls/include/mbedtls/ecp.h"
 #endif
 
 #if defined(MBEDTLS_DEBUG_C)
@@ -116,7 +118,6 @@
  * This module provides debugging functions.
  */
 #if defined(__MINGW32__) || (defined(_MSC_VER) && _MSC_VER < 1800)
-   #include <inttypes.h>
    #define MBEDTLS_PRINTF_SIZET     PRIuPTR
    #define MBEDTLS_PRINTF_LONGLONG  "I64d"
 #else /* defined(__MINGW32__) || (defined(_MSC_VER) && _MSC_VER < 1800) */

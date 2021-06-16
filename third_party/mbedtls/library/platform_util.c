@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  * Common and shared functions used by multiple modules in the Mbed TLS
  * library.
@@ -26,14 +28,15 @@
 #define _POSIX_C_SOURCE 200112L
 #endif
 
-#include "common.h"
+#include "libc/time/time.h"
+#include "libc/time/struct/tm.h"
+#include "libc/str/str.h"
+#include "third_party/mbedtls/library/common.h"
 
-#include "mbedtls/platform_util.h"
-#include "mbedtls/platform.h"
-#include "mbedtls/threading.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/threading.h"
 
-#include <stddef.h>
-#include <string.h>
 
 #if !defined(MBEDTLS_PLATFORM_ZEROIZE_ALT)
 /*
@@ -74,11 +77,9 @@ void mbedtls_platform_zeroize( void *buf, size_t len )
 #endif /* MBEDTLS_PLATFORM_ZEROIZE_ALT */
 
 #if defined(MBEDTLS_HAVE_TIME_DATE) && !defined(MBEDTLS_PLATFORM_GMTIME_R_ALT)
-#include <time.h>
 #if !defined(_WIN32) && (defined(unix) || \
     defined(__unix) || defined(__unix__) || (defined(__APPLE__) && \
     defined(__MACH__)))
-#include <unistd.h>
 #endif /* !_WIN32 && (unix || __unix || __unix__ ||
         * (__APPLE__ && __MACH__)) */
 

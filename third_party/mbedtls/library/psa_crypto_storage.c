@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  PSA persistent key storage
  */
@@ -21,30 +23,27 @@
 #if defined(MBEDTLS_CONFIG_FILE)
 #include MBEDTLS_CONFIG_FILE
 #else
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #endif
 
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
 
-#include <stdlib.h>
-#include <string.h>
 
-#include "psa_crypto_service_integration.h"
-#include "psa/crypto.h"
-#include "psa_crypto_storage.h"
-#include "mbedtls/platform_util.h"
+#include "third_party/mbedtls/library/psa_crypto_service_integration.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
+#include "third_party/mbedtls/library/psa_crypto_storage.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
 
 #if defined(MBEDTLS_PSA_ITS_FILE_C)
-#include "psa_crypto_its.h"
+#include "third_party/mbedtls/library/psa_crypto_its.h"
 #else /* Native ITS implementation */
-#include "psa/error.h"
-#include "psa/internal_trusted_storage.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
+/* #include "third_party/mbedtls/include/psa/internal_trusted_storage.h" */
 #endif
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdlib.h>
 #define mbedtls_calloc   calloc
 #define mbedtls_free     free
 #endif

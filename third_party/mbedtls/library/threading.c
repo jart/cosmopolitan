@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Threading abstraction layer
  *
@@ -25,18 +27,17 @@
 #define _POSIX_C_SOURCE 200112L
 #endif
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_THREADING_C)
 
-#include "mbedtls/threading.h"
+#include "third_party/mbedtls/include/mbedtls/threading.h"
 
 #if defined(MBEDTLS_HAVE_TIME_DATE) && !defined(MBEDTLS_PLATFORM_GMTIME_R_ALT)
 
 #if !defined(_WIN32) && (defined(unix) || \
     defined(__unix) || defined(__unix__) || (defined(__APPLE__) && \
     defined(__MACH__)))
-#include <unistd.h>
 #endif /* !_WIN32 && (unix || __unix || __unix__ ||
         * (__APPLE__ && __MACH__)) */
 

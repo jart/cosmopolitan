@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  FIPS-46-3 compliant Triple-DES implementation
  *
@@ -23,20 +25,17 @@
  *  http://csrc.nist.gov/publications/fips/fips46-3/fips46-3.pdf
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_DES_C)
 
-#include "mbedtls/des.h"
-#include "mbedtls/platform_util.h"
-
-#include <string.h>
+#include "third_party/mbedtls/include/mbedtls/des.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
 
 #if defined(MBEDTLS_SELF_TEST)
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
 #define mbedtls_printf printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */

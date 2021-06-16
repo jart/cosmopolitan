@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  PSA crypto core internal interfaces
  */
@@ -22,15 +24,15 @@
 #define PSA_CRYPTO_CORE_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "psa/crypto.h"
-#include "psa/crypto_se_driver.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
+#include "third_party/mbedtls/include/psa/crypto_se_driver.h"
 
-#include <mbedtls/md_internal.h>
+#include "third_party/mbedtls/include/mbedtls/md_internal.h"
 
 /** The data structure representing a key slot, containing key material
  * and metadata for one key.

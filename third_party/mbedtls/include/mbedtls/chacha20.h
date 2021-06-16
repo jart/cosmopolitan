@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file chacha20.h
  *
@@ -33,13 +35,11 @@
 #define MBEDTLS_CHACHA20_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stdint.h>
-#include <stddef.h>
 
 #define MBEDTLS_ERR_CHACHA20_BAD_INPUT_DATA         -0x0051 /**< Invalid input parameter(s). */
 
@@ -66,7 +66,7 @@ typedef struct mbedtls_chacha20_context
 mbedtls_chacha20_context;
 
 #else  /* MBEDTLS_CHACHA20_ALT */
-#include "chacha20_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/chacha20_alt.h" */
 #endif /* MBEDTLS_CHACHA20_ALT */
 
 /**

@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file x509.h
  *
@@ -23,16 +25,16 @@
 #define MBEDTLS_X509_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/asn1.h"
-#include "mbedtls/pk.h"
+#include "third_party/mbedtls/include/mbedtls/asn1.h"
+#include "third_party/mbedtls/include/mbedtls/pk.h"
 
 #if defined(MBEDTLS_RSA_C)
-#include "mbedtls/rsa.h"
+#include "third_party/mbedtls/include/mbedtls/rsa.h"
 #endif
 
 /**

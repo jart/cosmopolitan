@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file psa/crypto_config.h
  * \brief PSA crypto configuration options (set of defines)

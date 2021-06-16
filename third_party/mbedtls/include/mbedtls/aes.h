@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file aes.h
  *
@@ -41,13 +43,11 @@
 #define MBEDTLS_AES_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stddef.h>
-#include <stdint.h>
 
 /* padlock.c and aesni.c rely on these values! */
 #define MBEDTLS_AES_ENCRYPT     1 /**< AES encryption. */
@@ -111,7 +111,7 @@ typedef struct mbedtls_aes_xts_context
 #endif /* MBEDTLS_CIPHER_MODE_XTS */
 
 #else  /* MBEDTLS_AES_ALT */
-#include "aes_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/aes_alt.h" */
 #endif /* MBEDTLS_AES_ALT */
 
 /**

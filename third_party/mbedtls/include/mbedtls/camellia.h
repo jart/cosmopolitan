@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file camellia.h
  *
@@ -23,15 +25,13 @@
 #define MBEDTLS_CAMELLIA_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stddef.h>
-#include <stdint.h>
 
-#include "mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
 
 #define MBEDTLS_CAMELLIA_ENCRYPT     1
 #define MBEDTLS_CAMELLIA_DECRYPT     0
@@ -66,7 +66,7 @@ typedef struct mbedtls_camellia_context
 mbedtls_camellia_context;
 
 #else  /* MBEDTLS_CAMELLIA_ALT */
-#include "camellia_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/camellia_alt.h" */
 #endif /* MBEDTLS_CAMELLIA_ALT */
 
 /**

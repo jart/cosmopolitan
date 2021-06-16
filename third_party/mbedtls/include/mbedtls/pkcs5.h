@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file pkcs5.h
  *
@@ -25,16 +27,14 @@
 #define MBEDTLS_PKCS5_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/asn1.h"
-#include "mbedtls/md.h"
+#include "third_party/mbedtls/include/mbedtls/asn1.h"
+#include "third_party/mbedtls/include/mbedtls/md.h"
 
-#include <stddef.h>
-#include <stdint.h>
 
 #define MBEDTLS_ERR_PKCS5_BAD_INPUT_DATA                  -0x2f80  /**< Bad input parameters to function. */
 #define MBEDTLS_ERR_PKCS5_INVALID_FORMAT                  -0x2f00  /**< Unexpected ASN.1 data. */

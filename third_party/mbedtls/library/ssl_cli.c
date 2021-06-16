@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  SSLv3/TLSv1 client-side functions
  *
@@ -17,37 +19,35 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_SSL_CLI_C)
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdlib.h>
 #define mbedtls_calloc    calloc
 #define mbedtls_free      free
 #endif
 
-#include "mbedtls/ssl.h"
-#include "mbedtls/ssl_internal.h"
-#include "mbedtls/debug.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/psa/sheesh.h"
+#include "third_party/mbedtls/include/mbedtls/ssl.h"
+#include "third_party/mbedtls/include/mbedtls/ssl_internal.h"
+#include "third_party/mbedtls/include/mbedtls/debug.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-#include "mbedtls/psa_util.h"
+#include "third_party/mbedtls/include/mbedtls/psa_util.h"
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
 
-#include <string.h>
 
-#include <stdint.h>
 
 #if defined(MBEDTLS_HAVE_TIME)
-#include "mbedtls/platform_time.h"
+#include "third_party/mbedtls/include/mbedtls/platform_time.h"
 #endif
 
 #if defined(MBEDTLS_SSL_SESSION_TICKETS)
-#include "mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
 #endif
 
 #if defined(MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED)

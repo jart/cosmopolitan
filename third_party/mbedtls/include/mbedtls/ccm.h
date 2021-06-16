@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file ccm.h
  *
@@ -48,12 +50,12 @@
 #define MBEDTLS_CCM_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/cipher.h"
+#include "third_party/mbedtls/include/mbedtls/cipher.h"
 
 #define MBEDTLS_ERR_CCM_BAD_INPUT       -0x000D /**< Bad input parameters to the function. */
 #define MBEDTLS_ERR_CCM_AUTH_FAILED     -0x000F /**< Authenticated decryption failed. */
@@ -80,7 +82,7 @@ typedef struct mbedtls_ccm_context
 mbedtls_ccm_context;
 
 #else  /* MBEDTLS_CCM_ALT */
-#include "ccm_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/ccm_alt.h" */
 #endif /* MBEDTLS_CCM_ALT */
 
 /**

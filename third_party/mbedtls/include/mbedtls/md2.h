@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file md2.h
  *
@@ -28,12 +30,11 @@
 #define MBEDTLS_MD2_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stddef.h>
 
 /* MBEDTLS_ERR_MD2_HW_ACCEL_FAILED is deprecated and should not be used. */
 #define MBEDTLS_ERR_MD2_HW_ACCEL_FAILED                   -0x002B  /**< MD2 hardware accelerator failed */
@@ -64,7 +65,7 @@ typedef struct mbedtls_md2_context
 mbedtls_md2_context;
 
 #else  /* MBEDTLS_MD2_ALT */
-#include "md2_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/md2_alt.h" */
 #endif /* MBEDTLS_MD2_ALT */
 
 /**

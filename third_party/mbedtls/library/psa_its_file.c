@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  PSA ITS simulator over stdio files.
  */
@@ -21,27 +23,24 @@
 #if defined(MBEDTLS_CONFIG_FILE)
 #include MBEDTLS_CONFIG_FILE
 #else
-#include "mbedtls/config.h"
+#include "libc/limits.h"
+#include "libc/calls/calls.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #endif
 
 #if defined(MBEDTLS_PSA_ITS_FILE_C)
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
 #define mbedtls_snprintf   snprintf
 #endif
 
 #if defined(_WIN32)
-#include <windows.h>
 #endif
 
-#include "psa_crypto_its.h"
+#include "third_party/mbedtls/library/psa_crypto_its.h"
 
-#include <limits.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
 
 #if !defined(PSA_ITS_STORAGE_PREFIX)
 #define PSA_ITS_STORAGE_PREFIX ""

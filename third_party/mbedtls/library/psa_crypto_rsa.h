@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  PSA RSA layer on top of Mbed TLS crypto
  */
@@ -21,8 +23,8 @@
 #ifndef PSA_CRYPTO_RSA_H
 #define PSA_CRYPTO_RSA_H
 
-#include <psa/crypto.h>
-#include <mbedtls/rsa.h>
+#include "third_party/mbedtls/include/psa/crypto.h"
+#include "third_party/mbedtls/include/mbedtls/rsa.h"
 
 /** Load the contents of a key buffer into an internal RSA representation
  *

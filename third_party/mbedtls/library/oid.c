@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file oid.c
  *
@@ -19,19 +21,17 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_OID_C)
 
-#include "mbedtls/oid.h"
-#include "mbedtls/rsa.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/oid.h"
+#include "third_party/mbedtls/include/mbedtls/rsa.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
-#include <stdio.h>
-#include <string.h>
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
 #define mbedtls_snprintf snprintf
 #endif

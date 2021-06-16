@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Elliptic curves over GF(p): generic functions
  *
@@ -39,7 +41,7 @@
  *     <http://eprint.iacr.org/2004/342.pdf>
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 /**
  * \brief Function level alternative implementation.
@@ -72,12 +74,11 @@
 
 #if defined(MBEDTLS_ECP_C)
 
-#include "mbedtls/ecp.h"
-#include "mbedtls/threading.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/ecp.h"
+#include "third_party/mbedtls/include/mbedtls/threading.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
-#include <string.h>
 
 #if !defined(MBEDTLS_ECP_ALT)
 
@@ -88,22 +89,20 @@
     MBEDTLS_INTERNAL_VALIDATE( cond )
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdlib.h>
-#include <stdio.h>
 #define mbedtls_printf     printf
 #define mbedtls_calloc    calloc
 #define mbedtls_free       free
 #endif
 
-#include "mbedtls/ecp_internal.h"
+#include "third_party/mbedtls/include/mbedtls/ecp_internal.h"
 
 #if !defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
 #if defined(MBEDTLS_HMAC_DRBG_C)
-#include "mbedtls/hmac_drbg.h"
+#include "third_party/mbedtls/include/mbedtls/hmac_drbg.h"
 #elif defined(MBEDTLS_CTR_DRBG_C)
-#include "mbedtls/ctr_drbg.h"
+#include "third_party/mbedtls/include/mbedtls/ctr_drbg.h"
 #else
 #error "Invalid configuration detected. Include check_config.h to ensure that the configuration is valid."
 #endif

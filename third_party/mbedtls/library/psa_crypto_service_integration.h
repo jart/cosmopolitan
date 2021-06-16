@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0
@@ -33,7 +35,7 @@
  * flag.
  */
 #define PSA_CRYPTO_SECURE 1
-#include "crypto_spe.h"
+/* #include "third_party/mbedtls/include/mbedtls/crypto_spe.h" */
 #endif // MBEDTLS_PSA_CRYPTO_SPM
 
 #endif // PSA_CRYPTO_SERVICE_INTEGRATION_H

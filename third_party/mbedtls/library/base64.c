@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  RFC 1521 base64 encoding/decoding
  *
@@ -17,20 +19,17 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_BASE64_C)
 
-#include "mbedtls/base64.h"
+#include "third_party/mbedtls/include/mbedtls/base64.h"
 
-#include <stdint.h>
 
 #if defined(MBEDTLS_SELF_TEST)
-#include <string.h>
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
 #define mbedtls_printf printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */

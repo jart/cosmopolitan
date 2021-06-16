@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Elliptic curve Diffie-Hellman
  *
@@ -24,15 +26,14 @@
  * RFC 4492
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_ECDH_C)
 
-#include "mbedtls/ecdh.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/ecdh.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
-#include <string.h>
 
 /* Parameter validation macros based on platform_util.h */
 #define ECDH_VALIDATE_RET( cond )    \

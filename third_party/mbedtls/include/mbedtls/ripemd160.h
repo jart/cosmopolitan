@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file ripemd160.h
  *
@@ -23,13 +25,11 @@
 #define MBEDTLS_RIPEMD160_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stddef.h>
-#include <stdint.h>
 
 /* MBEDTLS_ERR_RIPEMD160_HW_ACCEL_FAILED is deprecated and should not be used.
  */
@@ -55,7 +55,7 @@ typedef struct mbedtls_ripemd160_context
 mbedtls_ripemd160_context;
 
 #else  /* MBEDTLS_RIPEMD160_ALT */
-#include "ripemd160_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/ripemd160_alt.h" */
 #endif /* MBEDTLS_RIPEMD160_ALT */
 
 /**

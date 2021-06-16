@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file ssl_internal.h
  *
@@ -23,41 +25,41 @@
 #define MBEDTLS_SSL_INTERNAL_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/ssl.h"
-#include "mbedtls/cipher.h"
+#include "third_party/mbedtls/include/mbedtls/ssl.h"
+#include "third_party/mbedtls/include/mbedtls/cipher.h"
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-#include "psa/crypto.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
 #endif
 
 #if defined(MBEDTLS_MD5_C)
-#include "mbedtls/md5.h"
+#include "third_party/mbedtls/include/mbedtls/md5.h"
 #endif
 
 #if defined(MBEDTLS_SHA1_C)
-#include "mbedtls/sha1.h"
+#include "third_party/mbedtls/include/mbedtls/sha1.h"
 #endif
 
 #if defined(MBEDTLS_SHA256_C)
-#include "mbedtls/sha256.h"
+#include "third_party/mbedtls/include/mbedtls/sha256.h"
 #endif
 
 #if defined(MBEDTLS_SHA512_C)
-#include "mbedtls/sha512.h"
+#include "third_party/mbedtls/include/mbedtls/sha512.h"
 #endif
 
 #if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
-#include "mbedtls/ecjpake.h"
+#include "third_party/mbedtls/include/mbedtls/ecjpake.h"
 #endif
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-#include "psa/crypto.h"
-#include "mbedtls/psa_util.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
+#include "third_party/mbedtls/include/mbedtls/psa_util.h"
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 #if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \

@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  NIST SP800-38C compliant CCM implementation
  *
@@ -26,21 +28,18 @@
  * RFC 5116 "An Interface and Algorithms for Authenticated Encryption"
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_CCM_C)
 
-#include "mbedtls/ccm.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
-
-#include <string.h>
+#include "third_party/mbedtls/include/mbedtls/ccm.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
 #if defined(MBEDTLS_SELF_TEST) && defined(MBEDTLS_AES_C)
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
 #define mbedtls_printf printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST && MBEDTLS_AES_C */

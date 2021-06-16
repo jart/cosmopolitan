@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Version feature information
  *
@@ -17,13 +19,12 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "libc/str/str.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_VERSION_C)
 
-#include "mbedtls/version.h"
-
-#include <string.h>
+#include "third_party/mbedtls/include/mbedtls/version.h"
 
 static const char * const features[] = {
 #if defined(MBEDTLS_VERSION_FEATURES)

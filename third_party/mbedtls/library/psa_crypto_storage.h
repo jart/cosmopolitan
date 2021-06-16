@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file psa_crypto_storage.h
  *
@@ -27,11 +29,9 @@
 extern "C" {
 #endif
 
-#include "psa/crypto.h"
-#include "psa/crypto_se_driver.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
+#include "third_party/mbedtls/include/psa/crypto_se_driver.h"
 
-#include <stdint.h>
-#include <string.h>
 
 /* Limit the maximum key size in storage. This should have no effect
  * since the key size is limited in memory. */

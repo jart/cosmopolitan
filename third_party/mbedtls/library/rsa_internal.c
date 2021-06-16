@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Helper functions for the RSA module
  *
@@ -18,13 +20,13 @@
  *
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_RSA_C)
 
-#include "mbedtls/rsa.h"
-#include "mbedtls/bignum.h"
-#include "mbedtls/rsa_internal.h"
+#include "third_party/mbedtls/include/mbedtls/rsa.h"
+#include "third_party/mbedtls/include/mbedtls/bignum.h"
+#include "third_party/mbedtls/include/mbedtls/rsa_internal.h"
 
 /*
  * Compute RSA prime factors from public and private exponents

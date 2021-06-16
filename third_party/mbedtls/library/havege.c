@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  *  \brief HAVEGE: HArdware Volatile Entropy Gathering and Expansion
  *
@@ -24,16 +26,13 @@
  *  Contact: seznec(at)irisa_dot_fr - orocheco(at)irisa_dot_fr
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_HAVEGE_C)
 
-#include "mbedtls/havege.h"
-#include "mbedtls/timing.h"
-#include "mbedtls/platform_util.h"
-
-#include <stdint.h>
-#include <string.h>
+#include "third_party/mbedtls/include/mbedtls/havege.h"
+#include "third_party/mbedtls/include/mbedtls/timing.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
 
 /* ------------------------------------------------------------------------
  * On average, one iteration accesses two 8-word blocks in the havege WALK

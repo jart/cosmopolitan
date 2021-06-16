@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /** \file psa_crypto_random_impl.h
  *
  * \brief PSA crypto random generator implementation abstraction.
@@ -30,13 +32,12 @@
 #ifndef PSA_CRYPTO_RANDOM_IMPL_H
 #define PSA_CRYPTO_RANDOM_IMPL_H
 
-#include <mbedtls/psa_util.h>
+#include "third_party/mbedtls/include/mbedtls/psa_util.h"
 
 #if defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
 
-#include <string.h>
-#include <mbedtls/entropy.h> // only for error codes
-#include <psa/crypto.h>
+#include "third_party/mbedtls/include/mbedtls/entropy.h" // only for error code
+#include "third_party/mbedtls/include/psa/crypto.h"
 
 typedef mbedtls_psa_external_random_context_t mbedtls_psa_random_context_t;
 
@@ -53,17 +54,16 @@ int mbedtls_psa_get_random( void *p_rng,
 /* Choose a DRBG based on configuration and availability */
 #if defined(MBEDTLS_PSA_HMAC_DRBG_MD_TYPE)
 
-#include "mbedtls/hmac_drbg.h"
+#include "third_party/mbedtls/include/mbedtls/hmac_drbg.h"
 
 #elif defined(MBEDTLS_CTR_DRBG_C)
 
-#include "mbedtls/ctr_drbg.h"
+#include "third_party/mbedtls/include/mbedtls/ctr_drbg.h"
 
 #elif defined(MBEDTLS_HMAC_DRBG_C)
 
-#include "mbedtls/hmac_drbg.h"
+#include "third_party/mbedtls/include/mbedtls/hmac_drbg.h"
 #if defined(MBEDTLS_SHA512_C) && defined(MBEDTLS_SHA256_C)
-#include <limits.h>
 #if SIZE_MAX > 0xffffffff
 /* Looks like a 64-bit system, so prefer SHA-512. */
 #define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_MD_SHA512
@@ -83,7 +83,7 @@ int mbedtls_psa_get_random( void *p_rng,
 #error "No DRBG module available for the psa_crypto module."
 #endif
 
-#include "mbedtls/entropy.h"
+#include "third_party/mbedtls/include/mbedtls/entropy.h"
 
 /** Initialize the PSA DRBG.
  *
@@ -124,20 +124,6 @@ typedef struct
     mbedtls_psa_drbg_context_t drbg;
 } mbedtls_psa_random_context_t;
 
-/* Defined in include/mbedtls/psa_util.h so that it's visible to
- * application code. The declaration here is redundant, but included
- * as a safety net to make it more likely that a future change that
- * accidentally causes the implementation to diverge from the interface
- * will be noticed. */
-/* Do not include the declaration under MSVC because it doesn't accept it
- * ("error C2370: 'mbedtls_psa_get_random' : redefinition; different storage class").
- * Observed with Visual Studio 2013. A known bug apparently:
- * https://stackoverflow.com/questions/8146541/duplicate-external-static-declarations-not-allowed-in-visual-studio
- */
-#if !defined(_MSC_VER)
-static mbedtls_f_rng_t *const mbedtls_psa_get_random;
-#endif
-
 /** The maximum number of bytes that mbedtls_psa_get_random() is expected to
  * return.
  */
@@ -146,18 +132,6 @@ static mbedtls_f_rng_t *const mbedtls_psa_get_random;
 #elif defined(MBEDTLS_HMAC_DRBG_C)
 #define MBEDTLS_PSA_RANDOM_MAX_REQUEST MBEDTLS_HMAC_DRBG_MAX_REQUEST
 #endif
-
-/** A pointer to the PSA DRBG state.
- *
- * This variable is only intended to be used through the macro
- * #MBEDTLS_PSA_RANDOM_STATE.
- */
-/* psa_crypto.c sets this variable to a pointer to the DRBG state in the
- * global PSA crypto state. */
-/* The type `mbedtls_psa_drbg_context_t` is defined in
- * include/mbedtls/psa_util.h so that `mbedtls_psa_random_state` can be
- * declared there and be visible to application code. */
-extern mbedtls_psa_drbg_context_t *const mbedtls_psa_random_state;
 
 /** A pointer to the PSA DRBG state.
  *

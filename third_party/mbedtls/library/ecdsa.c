@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Elliptic curve DSA
  *
@@ -23,29 +25,27 @@
  * SEC1 http://www.secg.org/index.php?action=secg,docs_secg
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_ECDSA_C)
 
-#include "mbedtls/ecdsa.h"
-#include "mbedtls/asn1write.h"
+#include "third_party/mbedtls/include/mbedtls/ecdsa.h"
+#include "third_party/mbedtls/include/mbedtls/asn1write.h"
 
-#include <string.h>
 
 #if defined(MBEDTLS_ECDSA_DETERMINISTIC)
-#include "mbedtls/hmac_drbg.h"
+#include "third_party/mbedtls/include/mbedtls/hmac_drbg.h"
 #endif
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdlib.h>
 #define mbedtls_calloc    calloc
 #define mbedtls_free       free
 #endif
 
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
 /* Parameter validation macros based on platform_util.h */
 #define ECDSA_VALIDATE_RET( cond )    \

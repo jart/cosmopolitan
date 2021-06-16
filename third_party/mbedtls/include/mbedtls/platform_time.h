@@ -1,3 +1,4 @@
+/* clang-format off */
 /**
  * \file platform_time.h
  *
@@ -21,9 +22,11 @@
  */
 #ifndef MBEDTLS_PLATFORM_TIME_H
 #define MBEDTLS_PLATFORM_TIME_H
+#include "libc/time/time.h"
+#include "libc/calls/weirdtypes.h"
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
@@ -47,7 +50,6 @@ extern "C" {
 typedef MBEDTLS_PLATFORM_TIME_TYPE_MACRO mbedtls_time_t;
 #else
 /* For time_t */
-#include <time.h>
 typedef time_t mbedtls_time_t;
 #endif /* MBEDTLS_PLATFORM_TIME_TYPE_MACRO */
 

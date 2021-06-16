@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  *  FIPS-197 compliant AES implementation
  *
@@ -23,28 +24,27 @@
  *  http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
  */
 
-#include "common.h"
+#include "libc/nexgen32e/x86feature.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_AES_C)
 
-#include <string.h>
 
-#include "mbedtls/aes.h"
-#include "mbedtls/platform.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/aes.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 #if defined(MBEDTLS_PADLOCK_C)
-#include "mbedtls/padlock.h"
+#include "third_party/mbedtls/include/mbedtls/padlock.h"
 #endif
 #if defined(MBEDTLS_AESNI_C)
-#include "mbedtls/aesni.h"
+#include "third_party/mbedtls/include/mbedtls/aesni.h"
 #endif
 
 #if defined(MBEDTLS_SELF_TEST)
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
 #define mbedtls_printf printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
@@ -584,7 +584,7 @@ int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
     ctx->rk = RK = ctx->buf;
 
 #if defined(MBEDTLS_AESNI_C) && defined(MBEDTLS_HAVE_X86_64)
-    if( mbedtls_aesni_has_support( MBEDTLS_AESNI_AES ) )
+    if( X86_HAVE( AES ) )
         return( mbedtls_aesni_setkey_enc( (unsigned char *) ctx->rk, key, keybits ) );
 #endif
 
@@ -694,7 +694,7 @@ int mbedtls_aes_setkey_dec( mbedtls_aes_context *ctx, const unsigned char *key,
     ctx->nr = cty.nr;
 
 #if defined(MBEDTLS_AESNI_C) && defined(MBEDTLS_HAVE_X86_64)
-    if( mbedtls_aesni_has_support( MBEDTLS_AESNI_AES ) )
+    if( X86_HAVE( AES ) )
     {
         mbedtls_aesni_inverse_key( (unsigned char *) ctx->rk,
                            (const unsigned char *) cty.rk, ctx->nr );
@@ -1018,7 +1018,7 @@ int mbedtls_aes_crypt_ecb( mbedtls_aes_context *ctx,
                       mode == MBEDTLS_AES_DECRYPT );
 
 #if defined(MBEDTLS_AESNI_C) && defined(MBEDTLS_HAVE_X86_64)
-    if( mbedtls_aesni_has_support( MBEDTLS_AESNI_AES ) )
+    if( X86_HAVE( AES ) )
         return( mbedtls_aesni_crypt_ecb( ctx, mode, input, output ) );
 #endif
 

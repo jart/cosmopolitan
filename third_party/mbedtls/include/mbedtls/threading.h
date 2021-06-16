@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file threading.h
  *
@@ -23,12 +25,10 @@
 #define MBEDTLS_THREADING_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
-#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,7 +42,6 @@ extern "C" {
 #define MBEDTLS_ERR_THREADING_MUTEX_ERROR                 -0x001E  /**< Locking / unlocking / free failed with error code. */
 
 #if defined(MBEDTLS_THREADING_PTHREAD)
-#include <pthread.h>
 typedef struct mbedtls_threading_mutex_t
 {
     pthread_mutex_t mutex;
@@ -55,7 +54,7 @@ typedef struct mbedtls_threading_mutex_t
 
 #if defined(MBEDTLS_THREADING_ALT)
 /* You should define the mbedtls_threading_mutex_t type in your header */
-#include "threading_alt.h"
+/* #include "threading_alt.h" */
 
 /**
  * \brief           Set your alternate threading implementation function

@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file havege.h
  *
@@ -23,13 +25,11 @@
 #define MBEDTLS_HAVEGE_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stddef.h>
-#include <stdint.h>
 
 #define MBEDTLS_HAVEGE_COLLECT_SIZE 1024
 

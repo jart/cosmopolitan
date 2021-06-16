@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file ecjpake.h
  *
@@ -39,13 +41,13 @@
  * also be use outside TLS.
  */
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/ecp.h"
-#include "mbedtls/md.h"
+#include "third_party/mbedtls/include/mbedtls/ecp.h"
+#include "third_party/mbedtls/include/mbedtls/md.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -91,7 +93,7 @@ typedef struct mbedtls_ecjpake_context
 } mbedtls_ecjpake_context;
 
 #else  /* MBEDTLS_ECJPAKE_ALT */
-#include "ecjpake_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/ecjpake_alt.h" */
 #endif /* MBEDTLS_ECJPAKE_ALT */
 
 /**

@@ -16,14 +16,26 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 /* Enable definition of getaddrinfo() even when compiling with -std=c99. Must
  * be set before config.h, which pulls in glibc's features.h indirectly.
  * Harmless on other platforms. */
 #define _POSIX_C_SOURCE 200112L
-#define _XOPEN_SOURCE 600 /* sockaddr_storage */
-
-#include "common.h"
+#define _XOPEN_SOURCE   600 /* sockaddr_storage */
+#include "libc/calls/calls.h"
+#include "libc/dns/dns.h"
+#include "libc/errno.h"
+#include "libc/sock/select.h"
+#include "libc/sock/sock.h"
+#include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/ipproto.h"
+#include "libc/sysv/consts/msg.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/so.h"
+#include "libc/sysv/consts/sock.h"
+#include "libc/sysv/consts/sol.h"
+#include "third_party/mbedtls/library/common.h"
+/* clang-format off */
 
 #if defined(MBEDTLS_NET_C)
 
@@ -34,41 +46,18 @@
 #endif
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdlib.h>
 #endif
 
-#include "mbedtls/net_sockets.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/net_sockets.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
-#include <string.h>
 
 #if (defined(_WIN32) || defined(_WIN32_WCE)) && !defined(EFIX64) && \
     !defined(EFI32)
 
 #define IS_EINTR( ret ) ( ( ret ) == WSAEINTR )
-
-#if !defined(_WIN32_WINNT)
-/* Enables getaddrinfo() & Co */
-#define _WIN32_WINNT 0x0501
-#endif
-
-#include <ws2tcpip.h>
-
-#include <winsock2.h>
-#include <windows.h>
-#if (_WIN32_WINNT < 0x0501)
-#include <wspiapi.h>
-#endif
-
-#if defined(_MSC_VER)
-#if defined(_WIN32_WCE)
-#pragma comment( lib, "ws2.lib" )
-#else
-#pragma comment( lib, "ws2_32.lib" )
-#endif
-#endif /* _MSC_VER */
 
 #define read(fd,buf,len)        recv( fd, (char*)( buf ), (int)( len ), 0 )
 #define write(fd,buf,len)       send( fd, (char*)( buf ), (int)( len ), 0 )
@@ -77,17 +66,6 @@
 static int wsa_init_done = 0;
 
 #else /* ( _WIN32 || _WIN32_WCE ) && !EFIX64 && !EFI32 */
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/time.h>
-#include <unistd.h>
-#include <signal.h>
-#include <fcntl.h>
-#include <netdb.h>
-#include <errno.h>
 
 #define IS_EINTR( ret ) ( ( ret ) == EINTR )
 
@@ -101,11 +79,8 @@ static int wsa_init_done = 0;
 #define MSVC_INT_CAST
 #endif
 
-#include <stdio.h>
 
-#include <time.h>
 
-#include <stdint.h>
 
 /*
  * Prepare for using the sockets interface
@@ -290,14 +265,8 @@ static int net_would_block( const mbedtls_net_context *ctx )
         return( 0 );
     }
 
-    switch( errno = err )
-    {
-#if defined EAGAIN
-        case EAGAIN:
-#endif
-#if defined EWOULDBLOCK && EWOULDBLOCK != EAGAIN
-        case EWOULDBLOCK:
-#endif
+    errno = err;
+    if (err == EAGAIN) {
             return( 1 );
     }
     return( 0 );
@@ -410,13 +379,7 @@ int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
         }
         else
         {
-            struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *) &client_addr;
-            *ip_len = sizeof( addr6->sin6_addr.s6_addr );
-
-            if( buf_size < *ip_len )
-                return( MBEDTLS_ERR_NET_BUFFER_TOO_SMALL );
-
-            memcpy( client_ip, &addr6->sin6_addr.s6_addr, *ip_len);
+            abort();
         }
     }
 

@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  X.509 Certificate Signing Request writing
  *
@@ -22,32 +24,28 @@
  * - attributes: PKCS#9 v2.0 aka RFC 2985
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_X509_CSR_WRITE_C)
 
-#include "mbedtls/x509_csr.h"
-#include "mbedtls/asn1write.h"
-#include "mbedtls/error.h"
-#include "mbedtls/oid.h"
-#include "mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/x509_csr.h"
+#include "third_party/mbedtls/include/mbedtls/asn1write.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/oid.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-#include "psa/crypto.h"
-#include "mbedtls/psa_util.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
+#include "third_party/mbedtls/include/mbedtls/psa_util.h"
 #endif
 
-#include <string.h>
-#include <stdlib.h>
-
 #if defined(MBEDTLS_PEM_WRITE_C)
-#include "mbedtls/pem.h"
+#include "third_party/mbedtls/include/mbedtls/pem.h"
 #endif
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdlib.h>
 #define mbedtls_calloc    calloc
 #define mbedtls_free      free
 #endif

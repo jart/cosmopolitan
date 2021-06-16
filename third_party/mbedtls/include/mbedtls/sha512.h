@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file sha512.h
  * \brief This file contains SHA-384 and SHA-512 definitions and functions.
@@ -25,13 +27,11 @@
 #define MBEDTLS_SHA512_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stddef.h>
-#include <stdint.h>
 
 /* MBEDTLS_ERR_SHA512_HW_ACCEL_FAILED is deprecated and should not be used. */
 #define MBEDTLS_ERR_SHA512_HW_ACCEL_FAILED                -0x0039  /**< SHA-512 hardware accelerator failed */
@@ -65,7 +65,7 @@ typedef struct mbedtls_sha512_context
 mbedtls_sha512_context;
 
 #else  /* MBEDTLS_SHA512_ALT */
-#include "sha512_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/sha512_alt.h" */
 #endif /* MBEDTLS_SHA512_ALT */
 
 /**

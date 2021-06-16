@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Function signatures for functionality that can be provided by
  *  cryptographic accelerators.
@@ -22,8 +24,9 @@
 #ifndef PSA_CRYPTO_DRIVER_WRAPPERS_H
 #define PSA_CRYPTO_DRIVER_WRAPPERS_H
 
-#include "psa/crypto.h"
-#include "psa/crypto_driver_common.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
+#include "third_party/mbedtls/library/psa_crypto_core.h"
+#include "third_party/mbedtls/include/psa/crypto_driver_common.h"
 
 /*
  * Signature functions

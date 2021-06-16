@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file pkcs11.c
  *
@@ -21,23 +23,21 @@
  *  limitations under the License.
  */
 
-#include "mbedtls/pkcs11.h"
+#include "third_party/mbedtls/include/mbedtls/pkcs11.h"
 
 #if defined(MBEDTLS_PKCS11_C)
 
-#include "mbedtls/md.h"
-#include "mbedtls/oid.h"
-#include "mbedtls/x509_crt.h"
+#include "third_party/mbedtls/include/mbedtls/md.h"
+#include "third_party/mbedtls/include/mbedtls/oid.h"
+#include "third_party/mbedtls/include/mbedtls/x509_crt.h"
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdlib.h>
 #define mbedtls_calloc    calloc
 #define mbedtls_free       free
 #endif
 
-#include <string.h>
 
 void mbedtls_pkcs11_init( mbedtls_pkcs11_context *ctx )
 {

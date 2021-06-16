@@ -49,33 +49,27 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 #ifndef PSA_CRYPTO_STRUCT_H
 #define PSA_CRYPTO_STRUCT_H
-
+#include "third_party/mbedtls/include/mbedtls/cipher.h"
+#include "third_party/mbedtls/include/mbedtls/cmac.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/gcm.h"
+#include "third_party/mbedtls/include/mbedtls/md.h"
+#include "third_party/mbedtls/include/mbedtls/md2.h"
+#include "third_party/mbedtls/include/mbedtls/md4.h"
+#include "third_party/mbedtls/include/mbedtls/md5.h"
+#include "third_party/mbedtls/include/mbedtls/ripemd160.h"
+#include "third_party/mbedtls/include/mbedtls/sha1.h"
+#include "third_party/mbedtls/include/mbedtls/sha256.h"
+#include "third_party/mbedtls/include/mbedtls/sha512.h"
+#include "third_party/mbedtls/include/psa/crypto_sizes.h"
+#include "third_party/mbedtls/include/psa/crypto_types.h"
+#include "third_party/mbedtls/include/psa/crypto_values.h"
+/* clang-format off */
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/* Include the Mbed TLS configuration file, the way Mbed TLS does it
- * in each of its header files. */
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
-#include "mbedtls/cipher.h"
-#include "mbedtls/cmac.h"
-#include "mbedtls/gcm.h"
-#include "mbedtls/md.h"
-#include "mbedtls/md2.h"
-#include "mbedtls/md4.h"
-#include "mbedtls/md5.h"
-#include "mbedtls/ripemd160.h"
-#include "mbedtls/sha1.h"
-#include "mbedtls/sha256.h"
-#include "mbedtls/sha512.h"
 
 typedef struct {
     /** Unique ID indicating which driver got assigned to do the
@@ -443,31 +437,6 @@ static inline psa_algorithm_t psa_get_key_algorithm(
     const psa_key_attributes_t *attributes)
 {
     return( attributes->core.policy.alg );
-}
-
-/* This function is declared in crypto_extra.h, which comes after this
- * header file, but we need the function here, so repeat the declaration. */
-psa_status_t psa_set_key_domain_parameters(psa_key_attributes_t *attributes,
-                                           psa_key_type_t type,
-                                           const uint8_t *data,
-                                           size_t data_length);
-
-static inline void psa_set_key_type(psa_key_attributes_t *attributes,
-                                    psa_key_type_t type)
-{
-    if( attributes->domain_parameters == NULL )
-    {
-        /* Common case: quick path */
-        attributes->core.type = type;
-    }
-    else
-    {
-        /* Call the bigger function to free the old domain paramteres.
-         * Ignore any errors which may arise due to type requiring
-         * non-default domain parameters, since this function can't
-         * report errors. */
-        (void) psa_set_key_domain_parameters( attributes, type, NULL, 0 );
-    }
 }
 
 static inline psa_key_type_t psa_get_key_type(

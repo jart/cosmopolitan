@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,26 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/dns/dns.h"
-#include "libc/errno.h"
-#include "libc/sock/sock.h"
+#include "libc/rand/rand.h"
+#include "third_party/mbedtls/include/mbedtls/entropy_poll.h"
 
-/**
- * Opens socket client connection.
- *
- * @param ai can be obtained via getaddrinfo()
- * @return socket file descriptor, or -1 w/ errno
- */
-int socketconnect(const struct addrinfo *ai, int flags) {
-  int fd;
-  fd = socket(ai->ai_family, ai->ai_socktype | flags, ai->ai_protocol);
-  if (fd != -1) {
-    if (connect(fd, ai->ai_addr, ai->ai_addrlen) != -1 ||
-        errno == EINPROGRESS) {
-      return fd;
+int mbedtls_hardware_poll(void *wut, unsigned char *p, size_t n, size_t *olen) {
+  uint64_t x;
+  size_t i, j;
+  i = 0;
+  while (i < n) {
+    x = rand64();
+    for (j = 0; i < n && j < 8; ++i, ++j) {
+      p[i] = x;
+      x >>= 8;
     }
-    close(fd);
   }
-  return -1;
+  *olen = i;
+  return 0;
 }

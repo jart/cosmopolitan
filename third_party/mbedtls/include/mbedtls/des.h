@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file des.h
  *
@@ -28,13 +30,11 @@
 #define MBEDTLS_DES_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stddef.h>
-#include <stdint.h>
 
 #define MBEDTLS_DES_ENCRYPT     1
 #define MBEDTLS_DES_DECRYPT     0
@@ -77,7 +77,7 @@ typedef struct mbedtls_des3_context
 mbedtls_des3_context;
 
 #else  /* MBEDTLS_DES_ALT */
-#include "des_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/des_alt.h" */
 #endif /* MBEDTLS_DES_ALT */
 
 /**

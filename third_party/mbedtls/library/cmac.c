@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file cmac.c
  *
@@ -38,16 +40,15 @@
  *
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_CMAC_C)
 
-#include "mbedtls/cmac.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/cmac.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 
-#include <string.h>
 
 #if !defined(MBEDTLS_CMAC_ALT) || defined(MBEDTLS_SELF_TEST)
 

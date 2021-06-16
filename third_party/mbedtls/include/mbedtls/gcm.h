@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file gcm.h
  *
@@ -32,14 +34,13 @@
 #define MBEDTLS_GCM_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/cipher.h"
+#include "third_party/mbedtls/include/mbedtls/cipher.h"
 
-#include <stdint.h>
 
 #define MBEDTLS_GCM_ENCRYPT     1
 #define MBEDTLS_GCM_DECRYPT     0
@@ -77,7 +78,7 @@ typedef struct mbedtls_gcm_context
 mbedtls_gcm_context;
 
 #else  /* !MBEDTLS_GCM_ALT */
-#include "gcm_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/gcm_alt.h" */
 #endif /* !MBEDTLS_GCM_ALT */
 
 /**

@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file chachapoly.h
  *
@@ -33,13 +35,13 @@
 #define MBEDTLS_CHACHAPOLY_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
 /* for shared error codes */
-#include "mbedtls/poly1305.h"
+#include "third_party/mbedtls/include/mbedtls/poly1305.h"
 
 #define MBEDTLS_ERR_CHACHAPOLY_BAD_STATE            -0x0054 /**< The requested operation is not permitted in the current state. */
 #define MBEDTLS_ERR_CHACHAPOLY_AUTH_FAILED          -0x0056 /**< Authenticated decryption failed: data was not authentic. */
@@ -57,7 +59,7 @@ mbedtls_chachapoly_mode_t;
 
 #if !defined(MBEDTLS_CHACHAPOLY_ALT)
 
-#include "mbedtls/chacha20.h"
+#include "third_party/mbedtls/include/mbedtls/chacha20.h"
 
 typedef struct mbedtls_chachapoly_context
 {
@@ -71,7 +73,7 @@ typedef struct mbedtls_chachapoly_context
 mbedtls_chachapoly_context;
 
 #else /* !MBEDTLS_CHACHAPOLY_ALT */
-#include "chachapoly_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/chachapoly_alt.h" */
 #endif /* !MBEDTLS_CHACHAPOLY_ALT */
 
 /**

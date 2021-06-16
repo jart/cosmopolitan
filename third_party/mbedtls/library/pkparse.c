@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Public Key layer for parsing key files and structures
  *
@@ -17,41 +19,40 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "libc/calls/calls.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_PK_PARSE_C)
 
-#include "mbedtls/pk.h"
-#include "mbedtls/asn1.h"
-#include "mbedtls/oid.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/pk.h"
+#include "third_party/mbedtls/include/mbedtls/asn1.h"
+#include "third_party/mbedtls/include/mbedtls/oid.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
-#include <string.h>
 
 #if defined(MBEDTLS_RSA_C)
-#include "mbedtls/rsa.h"
+#include "third_party/mbedtls/include/mbedtls/rsa.h"
 #endif
 #if defined(MBEDTLS_ECP_C)
-#include "mbedtls/ecp.h"
+#include "third_party/mbedtls/include/mbedtls/ecp.h"
 #endif
 #if defined(MBEDTLS_ECDSA_C)
-#include "mbedtls/ecdsa.h"
+#include "third_party/mbedtls/include/mbedtls/ecdsa.h"
 #endif
 #if defined(MBEDTLS_PEM_PARSE_C)
-#include "mbedtls/pem.h"
+#include "third_party/mbedtls/include/mbedtls/pem.h"
 #endif
 #if defined(MBEDTLS_PKCS5_C)
-#include "mbedtls/pkcs5.h"
+#include "third_party/mbedtls/include/mbedtls/pkcs5.h"
 #endif
 #if defined(MBEDTLS_PKCS12_C)
-#include "mbedtls/pkcs12.h"
+#include "third_party/mbedtls/include/mbedtls/pkcs12.h"
 #endif
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdlib.h>
 #define mbedtls_calloc    calloc
 #define mbedtls_free       free
 #endif

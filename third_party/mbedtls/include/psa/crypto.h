@@ -1,3 +1,4 @@
+/* clang-format off */
 /**
  * \file psa/crypto.h
  * \brief Platform Security Architecture cryptography module
@@ -18,13 +19,9 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 #ifndef PSA_CRYPTO_H
 #define PSA_CRYPTO_H
-
-#include "crypto_platform.h"
-
-#include <stddef.h>
+#include "third_party/mbedtls/include/psa/crypto_platform.h"
 
 #ifdef __DOXYGEN_ONLY__
 /* This __DOXYGEN_ONLY__ block contains mock definitions for things that
@@ -45,7 +42,7 @@ extern "C" {
 
 /* The file "crypto_types.h" declares types that encode errors,
  * algorithms, key types, policies, etc. */
-#include "crypto_types.h"
+#include "third_party/mbedtls/include/psa/crypto_types.h"
 
 /** \defgroup version API version
  * @{
@@ -65,7 +62,7 @@ extern "C" {
 
 /* The file "crypto_values.h" declares macros to build and analyze values
  * of integral types defined in "crypto_types.h". */
-#include "crypto_values.h"
+#include "third_party/mbedtls/include/psa/crypto_values.h"
 
 /** \defgroup initialization Library initialization
  * @{
@@ -3764,14 +3761,14 @@ psa_status_t psa_generate_key(const psa_key_attributes_t *attributes,
 
 /* The file "crypto_sizes.h" contains definitions for size calculation
  * macros whose definitions are implementation-specific. */
-#include "crypto_sizes.h"
+#include "third_party/mbedtls/include/psa/crypto_sizes.h"
 
 /* The file "crypto_struct.h" contains definitions for
  * implementation-specific structs that are declared above. */
-#include "crypto_struct.h"
+#include "third_party/mbedtls/include/psa/crypto_struct.h"
 
 /* The file "crypto_extra.h" contains vendor-specific definitions. This
  * can include vendor-defined algorithms, extra functions, etc. */
-#include "crypto_extra.h"
+#include "third_party/mbedtls/include/psa/crypto_extra.h"
 
 #endif /* PSA_CRYPTO_H */

@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file cipher_internal.h
  *
@@ -25,15 +27,15 @@
 #define MBEDTLS_CIPHER_WRAP_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/cipher.h"
+#include "third_party/mbedtls/include/mbedtls/cipher.h"
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-#include "psa/crypto.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 #ifdef __cplusplus

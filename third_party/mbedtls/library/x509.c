@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  X.509 common functions for parsing and verification
  *
@@ -27,27 +29,24 @@
  *  http://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf
  */
 
-#include "common.h"
+#include "libc/time/struct/tm.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_X509_USE_C)
 
-#include "mbedtls/x509.h"
-#include "mbedtls/asn1.h"
-#include "mbedtls/error.h"
-#include "mbedtls/oid.h"
+#include "third_party/mbedtls/include/mbedtls/x509.h"
+#include "third_party/mbedtls/include/mbedtls/asn1.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/oid.h"
 
-#include <stdio.h>
-#include <string.h>
 
 #if defined(MBEDTLS_PEM_PARSE_C)
-#include "mbedtls/pem.h"
+#include "third_party/mbedtls/include/mbedtls/pem.h"
 #endif
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
-#include <stdlib.h>
 #define mbedtls_free      free
 #define mbedtls_calloc    calloc
 #define mbedtls_printf    printf
@@ -55,11 +54,10 @@
 #endif
 
 #if defined(MBEDTLS_HAVE_TIME)
-#include "mbedtls/platform_time.h"
+#include "third_party/mbedtls/include/mbedtls/platform_time.h"
 #endif
 #if defined(MBEDTLS_HAVE_TIME_DATE)
-#include "mbedtls/platform_util.h"
-#include <time.h>
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
 #endif
 
 #define CHECK(code) if( ( ret = ( code ) ) != 0 ){ return( ret ); }
@@ -998,8 +996,8 @@ int mbedtls_x509_time_is_future( const mbedtls_x509_time *from )
 
 #if defined(MBEDTLS_SELF_TEST)
 
-#include "mbedtls/x509_crt.h"
-#include "mbedtls/certs.h"
+#include "third_party/mbedtls/include/mbedtls/x509_crt.h"
+#include "third_party/mbedtls/include/mbedtls/certs.h"
 
 /*
  * Checkup routine

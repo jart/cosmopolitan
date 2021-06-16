@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  X.509 Certificate Signing Request (CSR) parsing
  *
@@ -27,33 +29,29 @@
  *  http://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_X509_CSR_PARSE_C)
 
-#include "mbedtls/x509_csr.h"
-#include "mbedtls/error.h"
-#include "mbedtls/oid.h"
-#include "mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/x509_csr.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/oid.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
 
-#include <string.h>
 
 #if defined(MBEDTLS_PEM_PARSE_C)
-#include "mbedtls/pem.h"
+#include "third_party/mbedtls/include/mbedtls/pem.h"
 #endif
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdlib.h>
-#include <stdio.h>
 #define mbedtls_free       free
 #define mbedtls_calloc    calloc
 #define mbedtls_snprintf   snprintf
 #endif
 
 #if defined(MBEDTLS_FS_IO) || defined(EFIX64) || defined(EFI32)
-#include <stdio.h>
 #endif
 
 /*

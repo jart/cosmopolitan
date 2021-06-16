@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  SSL session cache implementation
  *
@@ -21,22 +23,20 @@
  * to store and retrieve the session information.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_SSL_CACHE_C)
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdlib.h>
 #define mbedtls_calloc    calloc
 #define mbedtls_free      free
 #endif
 
-#include "mbedtls/ssl_cache.h"
-#include "mbedtls/ssl_internal.h"
+#include "third_party/mbedtls/include/mbedtls/ssl_cache.h"
+#include "third_party/mbedtls/include/mbedtls/ssl_internal.h"
 
-#include <string.h>
 
 void mbedtls_ssl_cache_init( mbedtls_ssl_cache_context *cache )
 {

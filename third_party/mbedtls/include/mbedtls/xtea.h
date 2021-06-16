@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file xtea.h
  *
@@ -23,13 +25,11 @@
 #define MBEDTLS_XTEA_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stddef.h>
-#include <stdint.h>
 
 #define MBEDTLS_XTEA_ENCRYPT     1
 #define MBEDTLS_XTEA_DECRYPT     0
@@ -57,7 +57,7 @@ typedef struct mbedtls_xtea_context
 mbedtls_xtea_context;
 
 #else  /* MBEDTLS_XTEA_ALT */
-#include "xtea_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/xtea_alt.h" */
 #endif /* MBEDTLS_XTEA_ALT */
 
 /**

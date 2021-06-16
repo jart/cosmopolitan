@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Entropy accumulator implementation
  *
@@ -17,7 +19,9 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "libc/calls/calls.h"
+#include "libc/stdio/stdio.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_ENTROPY_C)
 
@@ -27,32 +31,29 @@
 #warning "**** THIS BUILD IS *NOT* SUITABLE FOR PRODUCTION USE "
 #endif
 
-#include "mbedtls/entropy.h"
-#include "mbedtls/entropy_poll.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/entropy.h"
+#include "third_party/mbedtls/include/mbedtls/entropy_poll.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
-#include <string.h>
 
 #if defined(MBEDTLS_FS_IO)
-#include <stdio.h>
 #endif
 
 #if defined(MBEDTLS_ENTROPY_NV_SEED)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #endif
 
 #if defined(MBEDTLS_SELF_TEST)
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
 #define mbedtls_printf     printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
 #if defined(MBEDTLS_HAVEGE_C)
-#include "mbedtls/havege.h"
+#include "third_party/mbedtls/include/mbedtls/havege.h"
 #endif
 
 #define ENTROPY_MAX_LOOP    256     /**< Maximum amount to loop before error */

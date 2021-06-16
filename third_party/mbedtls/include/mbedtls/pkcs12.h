@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file pkcs12.h
  *
@@ -23,16 +25,15 @@
 #define MBEDTLS_PKCS12_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/md.h"
-#include "mbedtls/cipher.h"
-#include "mbedtls/asn1.h"
+#include "third_party/mbedtls/include/mbedtls/md.h"
+#include "third_party/mbedtls/include/mbedtls/cipher.h"
+#include "third_party/mbedtls/include/mbedtls/asn1.h"
 
-#include <stddef.h>
 
 #define MBEDTLS_ERR_PKCS12_BAD_INPUT_DATA                 -0x1F80  /**< Bad input parameters to function. */
 #define MBEDTLS_ERR_PKCS12_FEATURE_UNAVAILABLE            -0x1F00  /**< Feature not available, e.g. unsupported encryption scheme. */

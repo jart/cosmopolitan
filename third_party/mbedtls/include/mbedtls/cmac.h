@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file cmac.h
  *
@@ -27,12 +29,12 @@
 #define MBEDTLS_CMAC_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/cipher.h"
+#include "third_party/mbedtls/include/mbedtls/cipher.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -69,7 +71,7 @@ struct mbedtls_cmac_context_t
 };
 
 #else  /* !MBEDTLS_CMAC_ALT */
-#include "cmac_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/cmac_alt.h" */
 #endif /* !MBEDTLS_CMAC_ALT */
 
 /**

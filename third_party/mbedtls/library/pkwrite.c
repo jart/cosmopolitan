@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Public Key layer for writing key files and structures
  *
@@ -17,41 +19,39 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_PK_WRITE_C)
 
-#include "mbedtls/pk.h"
-#include "mbedtls/asn1write.h"
-#include "mbedtls/oid.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/pk.h"
+#include "third_party/mbedtls/include/mbedtls/asn1write.h"
+#include "third_party/mbedtls/include/mbedtls/oid.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
-#include <string.h>
 
 #if defined(MBEDTLS_RSA_C)
-#include "mbedtls/rsa.h"
+#include "third_party/mbedtls/include/mbedtls/rsa.h"
 #endif
 #if defined(MBEDTLS_ECP_C)
-#include "mbedtls/bignum.h"
-#include "mbedtls/ecp.h"
-#include "mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/bignum.h"
+#include "third_party/mbedtls/include/mbedtls/ecp.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
 #endif
 #if defined(MBEDTLS_ECDSA_C)
-#include "mbedtls/ecdsa.h"
+#include "third_party/mbedtls/include/mbedtls/ecdsa.h"
 #endif
 #if defined(MBEDTLS_PEM_WRITE_C)
-#include "mbedtls/pem.h"
+#include "third_party/mbedtls/include/mbedtls/pem.h"
 #endif
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-#include "psa/crypto.h"
-#include "mbedtls/psa_util.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
+#include "third_party/mbedtls/include/mbedtls/psa_util.h"
 #endif
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdlib.h>
 #define mbedtls_calloc    calloc
 #define mbedtls_free       free
 #endif
@@ -581,15 +581,19 @@ int mbedtls_pk_write_pubkey_pem( mbedtls_pk_context *key, unsigned char *buf, si
 int mbedtls_pk_write_key_pem( mbedtls_pk_context *key, unsigned char *buf, size_t size )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    unsigned char output_buf[PRV_DER_MAX_BYTES];
+    unsigned char *output_buf;
     const char *begin, *end;
     size_t olen = 0;
 
     PK_VALIDATE_RET( key != NULL );
     PK_VALIDATE_RET( buf != NULL || size == 0 );
 
-    if( ( ret = mbedtls_pk_write_key_der( key, output_buf, sizeof(output_buf) ) ) < 0 )
+    output_buf = malloc(PRV_DER_MAX_BYTES);
+
+    if( ( ret = mbedtls_pk_write_key_der( key, output_buf, PRV_DER_MAX_BYTES ) ) < 0 ) {
+        free(output_buf);
         return( ret );
+    }
 
 #if defined(MBEDTLS_RSA_C)
     if( mbedtls_pk_get_type( key ) == MBEDTLS_PK_RSA )
@@ -610,12 +614,14 @@ int mbedtls_pk_write_key_pem( mbedtls_pk_context *key, unsigned char *buf, size_
         return( MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE );
 
     if( ( ret = mbedtls_pem_write_buffer( begin, end,
-                                  output_buf + sizeof(output_buf) - ret,
+                                  output_buf + PRV_DER_MAX_BYTES - ret,
                                   ret, buf, size, &olen ) ) != 0 )
     {
+        free(output_buf);
         return( ret );
     }
 
+    free(output_buf);
     return( 0 );
 }
 #endif /* MBEDTLS_PEM_WRITE_C */

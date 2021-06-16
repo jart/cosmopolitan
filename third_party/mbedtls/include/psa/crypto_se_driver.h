@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file psa/crypto_se_driver.h
  * \brief PSA external cryptoprocessor driver module
@@ -34,7 +36,7 @@
 #ifndef PSA_CRYPTO_SE_DRIVER_H
 #define PSA_CRYPTO_SE_DRIVER_H
 
-#include "crypto_driver_common.h"
+#include "third_party/mbedtls/include/psa/crypto_driver_common.h"
 
 #ifdef __cplusplus
 extern "C" {

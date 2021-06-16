@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file md.c
  *
@@ -21,35 +23,32 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_MD_C)
 
-#include "mbedtls/md.h"
-#include "mbedtls/md_internal.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/md.h"
+#include "third_party/mbedtls/include/mbedtls/md_internal.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
-#include "mbedtls/md2.h"
-#include "mbedtls/md4.h"
-#include "mbedtls/md5.h"
-#include "mbedtls/ripemd160.h"
-#include "mbedtls/sha1.h"
-#include "mbedtls/sha256.h"
-#include "mbedtls/sha512.h"
+#include "third_party/mbedtls/include/mbedtls/md2.h"
+#include "third_party/mbedtls/include/mbedtls/md4.h"
+#include "third_party/mbedtls/include/mbedtls/md5.h"
+#include "third_party/mbedtls/include/mbedtls/ripemd160.h"
+#include "third_party/mbedtls/include/mbedtls/sha1.h"
+#include "third_party/mbedtls/include/mbedtls/sha256.h"
+#include "third_party/mbedtls/include/mbedtls/sha512.h"
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdlib.h>
 #define mbedtls_calloc    calloc
 #define mbedtls_free       free
 #endif
 
-#include <string.h>
 
 #if defined(MBEDTLS_FS_IO)
-#include <stdio.h>
 #endif
 
 #if defined(MBEDTLS_MD2_C)

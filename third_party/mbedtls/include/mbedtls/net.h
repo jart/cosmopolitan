@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file net.h
  *
@@ -22,13 +24,13 @@
  *  limitations under the License.
  */
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
-#include "mbedtls/net_sockets.h"
+#include "third_party/mbedtls/include/mbedtls/net_sockets.h"
 #if defined(MBEDTLS_DEPRECATED_WARNING)
 #warning "Deprecated header file: Superseded by mbedtls/net_sockets.h"
 #endif /* MBEDTLS_DEPRECATED_WARNING */

@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file pkcs11.h
  *
@@ -25,14 +27,14 @@
 #define MBEDTLS_PKCS11_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
 #if defined(MBEDTLS_PKCS11_C)
 
-#include "mbedtls/x509_crt.h"
+#include "third_party/mbedtls/include/mbedtls/x509_crt.h"
 
 #include <pkcs11-helper-1.0/pkcs11h-certificate.h>
 

@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file ssl_ticket.h
  *
@@ -23,7 +25,7 @@
 #define MBEDTLS_SSL_TICKET_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
@@ -34,11 +36,11 @@
  * secrecy, when MBEDTLS_HAVE_TIME is defined.
  */
 
-#include "mbedtls/ssl.h"
-#include "mbedtls/cipher.h"
+#include "third_party/mbedtls/include/mbedtls/ssl.h"
+#include "third_party/mbedtls/include/mbedtls/cipher.h"
 
 #if defined(MBEDTLS_THREADING_C)
-#include "mbedtls/threading.h"
+#include "third_party/mbedtls/include/mbedtls/threading.h"
 #endif
 
 #ifdef __cplusplus

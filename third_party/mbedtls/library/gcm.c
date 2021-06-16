@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  NIST SP800-38D compliant GCM implementation
  *
@@ -27,25 +29,25 @@
  * [MGV] 4.1, pp. 12-13, to enhance speed without using too much memory.
  */
 
-#include "common.h"
+#include "libc/str/str.h"
+#include "libc/nexgen32e/x86feature.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_GCM_C)
 
-#include "mbedtls/gcm.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/gcm.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
-#include <string.h>
 
 #if defined(MBEDTLS_AESNI_C)
-#include "mbedtls/aesni.h"
+#include "third_party/mbedtls/include/mbedtls/aesni.h"
 #endif
 
 #if defined(MBEDTLS_SELF_TEST) && defined(MBEDTLS_AES_C)
-#include "mbedtls/aes.h"
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/aes.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #if !defined(MBEDTLS_PLATFORM_C)
-#include <stdio.h>
 #define mbedtls_printf printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST && MBEDTLS_AES_C */
@@ -125,7 +127,7 @@ static int gcm_gen_table( mbedtls_gcm_context *ctx )
 
 #if defined(MBEDTLS_AESNI_C) && defined(MBEDTLS_HAVE_X86_64)
     /* With CLMUL support, we need only h, not the rest of the table */
-    if( mbedtls_aesni_has_support( MBEDTLS_AESNI_CLMUL ) )
+    if( X86_HAVE( PCLMUL ) )
         return( 0 );
 #endif
 
@@ -220,7 +222,7 @@ static void gcm_mult( mbedtls_gcm_context *ctx, const unsigned char x[16],
     uint64_t zh, zl;
 
 #if defined(MBEDTLS_AESNI_C) && defined(MBEDTLS_HAVE_X86_64)
-    if( mbedtls_aesni_has_support( MBEDTLS_AESNI_CLMUL ) ) {
+    if( X86_HAVE( PCLMUL ) ) {
         unsigned char h[16];
 
         PUT_UINT32_BE( ctx->HH[8] >> 32, h,  0 );

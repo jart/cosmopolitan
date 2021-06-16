@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  PKCS#12 Personal Information Exchange Syntax
  *
@@ -23,24 +25,23 @@
  *  ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-12/pkcs-12v1-1.asn
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_PKCS12_C)
 
-#include "mbedtls/pkcs12.h"
-#include "mbedtls/asn1.h"
-#include "mbedtls/cipher.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/pkcs12.h"
+#include "third_party/mbedtls/include/mbedtls/asn1.h"
+#include "third_party/mbedtls/include/mbedtls/cipher.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
-#include <string.h>
 
 #if defined(MBEDTLS_ARC4_C)
-#include "mbedtls/arc4.h"
+#include "third_party/mbedtls/include/mbedtls/arc4.h"
 #endif
 
 #if defined(MBEDTLS_DES_C)
-#include "mbedtls/des.h"
+#include "third_party/mbedtls/include/mbedtls/des.h"
 #endif
 
 #if defined(MBEDTLS_ASN1_PARSE_C)

@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file md5.h
  *
@@ -27,13 +29,11 @@
 #define MBEDTLS_MD5_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stddef.h>
-#include <stdint.h>
 
 /* MBEDTLS_ERR_MD5_HW_ACCEL_FAILED is deprecated and should not be used. */
 #define MBEDTLS_ERR_MD5_HW_ACCEL_FAILED                   -0x002F  /**< MD5 hardware accelerator failed */
@@ -63,7 +63,7 @@ typedef struct mbedtls_md5_context
 mbedtls_md5_context;
 
 #else  /* MBEDTLS_MD5_ALT */
-#include "md5_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/md5_alt.h" */
 #endif /* MBEDTLS_MD5_ALT */
 
 /**

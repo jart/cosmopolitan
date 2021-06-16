@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file ecp_internal.h
  *
@@ -60,7 +62,7 @@
 #define MBEDTLS_ECP_INTERNAL_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif

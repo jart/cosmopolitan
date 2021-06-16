@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file version.h
  *
@@ -27,7 +29,7 @@
 #define MBEDTLS_VERSION_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif

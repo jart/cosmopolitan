@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  An implementation of the ARCFOUR algorithm
  *
@@ -22,20 +24,18 @@
  *  http://groups.google.com/group/sci.crypt/msg/10a300c9d21afca0
  */
 
-#include "common.h"
+#include "libc/str/str.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_ARC4_C)
 
-#include "mbedtls/arc4.h"
-#include "mbedtls/platform_util.h"
-
-#include <string.h>
+#include "third_party/mbedtls/include/mbedtls/arc4.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
 
 #if defined(MBEDTLS_SELF_TEST)
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
 #define mbedtls_printf printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */

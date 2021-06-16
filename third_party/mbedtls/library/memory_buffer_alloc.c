@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Buffer-based memory allocator
  *
@@ -17,24 +19,18 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C)
-#include "mbedtls/memory_buffer_alloc.h"
+#include "third_party/mbedtls/include/mbedtls/memory_buffer_alloc.h"
 
 /* No need for the header guard as MBEDTLS_MEMORY_BUFFER_ALLOC_C
    is dependent upon MBEDTLS_PLATFORM_C */
-#include "mbedtls/platform.h"
-#include "mbedtls/platform_util.h"
-
-#include <string.h>
-
-#if defined(MBEDTLS_MEMORY_BACKTRACE)
-#include <execinfo.h>
-#endif
+#include "third_party/mbedtls/include/mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
 
 #if defined(MBEDTLS_THREADING_C)
-#include "mbedtls/threading.h"
+#include "third_party/mbedtls/include/mbedtls/threading.h"
 #endif
 
 #define MAGIC1       0xFF00AA55

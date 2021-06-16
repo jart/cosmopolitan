@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  PSA crypto support for secure element drivers
  */
@@ -22,13 +24,13 @@
 #define PSA_CRYPTO_SE_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "psa/crypto.h"
-#include "psa/crypto_se_driver.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
+#include "third_party/mbedtls/include/psa/crypto_se_driver.h"
 
 /** The maximum location value that this implementation supports
  * for a secure element.

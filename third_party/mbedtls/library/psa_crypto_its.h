@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /** \file psa_crypto_its.h
  * \brief Interface of trusted storage that crypto is built on.
  */
@@ -21,11 +23,9 @@
 #ifndef PSA_CRYPTO_ITS_H
 #define PSA_CRYPTO_ITS_H
 
-#include <stddef.h>
-#include <stdint.h>
 
-#include <psa/crypto_types.h>
-#include <psa/crypto_values.h>
+#include "third_party/mbedtls/include/psa/crypto_types.h"
+#include "third_party/mbedtls/include/psa/crypto_values.h"
 
 #ifdef __cplusplus
 extern "C" {

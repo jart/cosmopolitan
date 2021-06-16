@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file bn_mul.h
  *
@@ -37,12 +39,12 @@
 #define MBEDTLS_BN_MUL_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/bignum.h"
+#include "third_party/mbedtls/include/mbedtls/bignum.h"
 
 #if defined(MBEDTLS_HAVE_ASM)
 

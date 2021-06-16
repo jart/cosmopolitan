@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file md4.h
  *
@@ -28,13 +30,11 @@
 #define MBEDTLS_MD4_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stddef.h>
-#include <stdint.h>
 
 /* MBEDTLS_ERR_MD4_HW_ACCEL_FAILED is deprecated and should not be used. */
 #define MBEDTLS_ERR_MD4_HW_ACCEL_FAILED                   -0x002D  /**< MD4 hardware accelerator failed */
@@ -64,7 +64,7 @@ typedef struct mbedtls_md4_context
 mbedtls_md4_context;
 
 #else  /* MBEDTLS_MD4_ALT */
-#include "md4_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/md4_alt.h" */
 #endif /* MBEDTLS_MD4_ALT */
 
 /**

@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file sha256.h
  *
@@ -26,13 +28,11 @@
 #define MBEDTLS_SHA256_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stddef.h>
-#include <stdint.h>
 
 /* MBEDTLS_ERR_SHA256_HW_ACCEL_FAILED is deprecated and should not be used. */
 #define MBEDTLS_ERR_SHA256_HW_ACCEL_FAILED                -0x0037  /**< SHA-256 hardware accelerator failed */
@@ -64,7 +64,7 @@ typedef struct mbedtls_sha256_context
 mbedtls_sha256_context;
 
 #else  /* MBEDTLS_SHA256_ALT */
-#include "sha256_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/sha256_alt.h" */
 #endif /* MBEDTLS_SHA256_ALT */
 
 /**

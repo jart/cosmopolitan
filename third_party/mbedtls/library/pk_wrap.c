@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Public Key abstraction layer: wrapper functions
  *
@@ -17,49 +19,46 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
+#include "third_party/mbedtls/include/psa/sheesh.h"
 
 #if defined(MBEDTLS_PK_C)
-#include "mbedtls/pk_internal.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/pk_internal.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
 /* Even if RSA not activated, for the sake of RSA-alt */
-#include "mbedtls/rsa.h"
+#include "third_party/mbedtls/include/mbedtls/rsa.h"
 
-#include <string.h>
 
 #if defined(MBEDTLS_ECP_C)
-#include "mbedtls/ecp.h"
+#include "third_party/mbedtls/include/mbedtls/ecp.h"
 #endif
 
 #if defined(MBEDTLS_ECDSA_C)
-#include "mbedtls/ecdsa.h"
+#include "third_party/mbedtls/include/mbedtls/ecdsa.h"
 #endif
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-#include "mbedtls/asn1write.h"
+#include "third_party/mbedtls/include/mbedtls/asn1write.h"
 #endif
 
 #if defined(MBEDTLS_PK_RSA_ALT_SUPPORT)
-#include "mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
 #endif
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-#include "psa/crypto.h"
-#include "mbedtls/psa_util.h"
-#include "mbedtls/asn1.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
+#include "third_party/mbedtls/include/mbedtls/psa_util.h"
+#include "third_party/mbedtls/include/mbedtls/asn1.h"
 #endif
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdlib.h>
 #define mbedtls_calloc    calloc
 #define mbedtls_free       free
 #endif
 
-#include <limits.h>
-#include <stdint.h>
 
 #if defined(MBEDTLS_RSA_C)
 static int rsa_can_do( mbedtls_pk_type_t type )

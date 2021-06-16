@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Elliptic curves over GF(p): curve-specific data and functions
  *
@@ -17,15 +19,14 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_ECP_C)
 
-#include "mbedtls/ecp.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/ecp.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
-#include <string.h>
 
 #if !defined(MBEDTLS_ECP_ALT)
 

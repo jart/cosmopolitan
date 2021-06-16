@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file pk.h
  *
@@ -24,27 +26,27 @@
 #define MBEDTLS_PK_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/md.h"
+#include "third_party/mbedtls/include/mbedtls/md.h"
 
 #if defined(MBEDTLS_RSA_C)
-#include "mbedtls/rsa.h"
+#include "third_party/mbedtls/include/mbedtls/rsa.h"
 #endif
 
 #if defined(MBEDTLS_ECP_C)
-#include "mbedtls/ecp.h"
+#include "third_party/mbedtls/include/mbedtls/ecp.h"
 #endif
 
 #if defined(MBEDTLS_ECDSA_C)
-#include "mbedtls/ecdsa.h"
+#include "third_party/mbedtls/include/mbedtls/ecdsa.h"
 #endif
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-#include "psa/crypto.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
 #endif
 
 #if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \

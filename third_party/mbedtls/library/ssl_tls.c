@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  SSLv3/TLSv1 shared functions
  *
@@ -25,34 +27,32 @@
  *  http://www.ietf.org/rfc/rfc4346.txt
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_SSL_TLS_C)
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdlib.h>
 #define mbedtls_calloc    calloc
 #define mbedtls_free      free
 #endif
 
-#include "mbedtls/ssl.h"
-#include "mbedtls/ssl_internal.h"
-#include "mbedtls/debug.h"
-#include "mbedtls/error.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/version.h"
-
-#include <string.h>
+#include "third_party/mbedtls/include/psa/sheesh.h"
+#include "third_party/mbedtls/include/mbedtls/ssl.h"
+#include "third_party/mbedtls/include/mbedtls/ssl_internal.h"
+#include "third_party/mbedtls/include/mbedtls/debug.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/version.h"
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-#include "mbedtls/psa_util.h"
-#include "psa/crypto.h"
+#include "third_party/mbedtls/include/mbedtls/psa_util.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
 #endif
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
-#include "mbedtls/oid.h"
+#include "third_party/mbedtls/include/mbedtls/oid.h"
 #endif
 
 #if defined(MBEDTLS_SSL_PROTO_DTLS)

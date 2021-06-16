@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  VIA PadLock support functions
  *
@@ -23,13 +25,12 @@
  *  programming_guide.pdf
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_PADLOCK_C)
 
-#include "mbedtls/padlock.h"
+#include "third_party/mbedtls/include/mbedtls/padlock.h"
 
-#include <string.h>
 
 #ifndef asm
 #define asm __asm

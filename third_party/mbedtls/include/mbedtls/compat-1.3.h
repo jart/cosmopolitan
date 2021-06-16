@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file compat-1.3.h
  *
@@ -24,7 +26,7 @@
  */
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif

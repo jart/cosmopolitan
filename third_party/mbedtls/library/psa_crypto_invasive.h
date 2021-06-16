@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file psa_crypto_invasive.h
  *
@@ -31,13 +33,13 @@
 #if defined(MBEDTLS_CONFIG_FILE)
 #include MBEDTLS_CONFIG_FILE
 #else
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #endif
 
-#include "psa/crypto.h"
-#include "common.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
+#include "third_party/mbedtls/library/common.h"
 
-#include "mbedtls/entropy.h"
+#include "third_party/mbedtls/include/mbedtls/entropy.h"
 
 #if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
 /** \brief Configure entropy sources.

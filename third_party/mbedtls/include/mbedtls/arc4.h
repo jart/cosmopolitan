@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file arc4.h
  *
@@ -27,12 +29,11 @@
 #define MBEDTLS_ARC4_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stddef.h>
 
 /* MBEDTLS_ERR_ARC4_HW_ACCEL_FAILED is deprecated and should not be used. */
 #define MBEDTLS_ERR_ARC4_HW_ACCEL_FAILED                  -0x0019  /**< ARC4 hardware accelerator failed. */
@@ -61,7 +62,7 @@ typedef struct mbedtls_arc4_context
 mbedtls_arc4_context;
 
 #else  /* MBEDTLS_ARC4_ALT */
-#include "arc4_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/arc4_alt.h" */
 #endif /* MBEDTLS_ARC4_ALT */
 
 /**

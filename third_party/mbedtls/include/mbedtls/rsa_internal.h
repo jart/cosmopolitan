@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file rsa_internal.h
  *
@@ -56,12 +58,12 @@
 #define MBEDTLS_RSA_INTERNAL_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/bignum.h"
+#include "third_party/mbedtls/include/mbedtls/bignum.h"
 
 #ifdef __cplusplus
 extern "C" {

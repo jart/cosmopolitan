@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Platform-specific and custom entropy polling functions
  *
@@ -22,24 +24,24 @@
 #define _GNU_SOURCE
 #endif
 
-#include "common.h"
+#include "libc/stdio/stdio.h"
+#include "third_party/mbedtls/library/common.h"
 
-#include <string.h>
 
 #if defined(MBEDTLS_ENTROPY_C)
 
-#include "mbedtls/entropy.h"
-#include "mbedtls/entropy_poll.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/entropy.h"
+#include "third_party/mbedtls/include/mbedtls/entropy_poll.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
 #if defined(MBEDTLS_TIMING_C)
-#include "mbedtls/timing.h"
+#include "third_party/mbedtls/include/mbedtls/timing.h"
 #endif
 #if defined(MBEDTLS_HAVEGE_C)
-#include "mbedtls/havege.h"
+#include "third_party/mbedtls/include/mbedtls/havege.h"
 #endif
 #if defined(MBEDTLS_ENTROPY_NV_SEED)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #endif
 
 #if !defined(MBEDTLS_NO_PLATFORM_ENTROPY)
@@ -55,8 +57,6 @@
 #if !defined(_WIN32_WINNT)
 #define _WIN32_WINNT 0x0400
 #endif
-#include <windows.h>
-#include <wincrypt.h>
 
 int mbedtls_platform_entropy_poll( void *data, unsigned char *output, size_t len,
                            size_t *olen )
@@ -90,11 +90,8 @@ int mbedtls_platform_entropy_poll( void *data, unsigned char *output, size_t len
  * available in GNU libc and compatible libc's (eg uClibc).
  */
 #if ((defined(__linux__) && defined(__GLIBC__)) || defined(__midipix__))
-#include <unistd.h>
-#include <sys/syscall.h>
 #if defined(SYS_getrandom)
 #define HAVE_GETRANDOM
-#include <errno.h>
 
 static int getrandom_wrapper( void *buf, size_t buflen, unsigned int flags )
 {
@@ -110,11 +107,8 @@ static int getrandom_wrapper( void *buf, size_t buflen, unsigned int flags )
 #endif /* __linux__ || __midipix__ */
 
 #if defined(__FreeBSD__) || defined(__DragonFly__)
-#include <sys/param.h>
 #if (defined(__FreeBSD__) && __FreeBSD_version >= 1200000) || \
     (defined(__DragonFly__) && __DragonFly_version >= 500700)
-#include <errno.h>
-#include <sys/random.h>
 #define HAVE_GETRANDOM
 static int getrandom_wrapper( void *buf, size_t buflen, unsigned int flags )
 {
@@ -133,8 +127,6 @@ static int getrandom_wrapper( void *buf, size_t buflen, unsigned int flags )
  * Documentation: https://netbsd.gw.com/cgi-bin/man-cgi?sysctl+7
  */
 #if (defined(__FreeBSD__) || defined(__NetBSD__)) && !defined(HAVE_GETRANDOM)
-#include <sys/param.h>
-#include <sys/sysctl.h>
 #if defined(KERN_ARND)
 #define HAVE_SYSCTL_ARND
 
@@ -159,7 +151,6 @@ static int sysctl_arnd_wrapper( unsigned char *buf, size_t buflen )
 #endif /* KERN_ARND */
 #endif /* __FreeBSD__ || __NetBSD__ */
 
-#include <stdio.h>
 
 int mbedtls_platform_entropy_poll( void *data,
                            unsigned char *output, size_t len, size_t *olen )

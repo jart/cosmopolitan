@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file cipher.c
  *
@@ -21,49 +23,48 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_CIPHER_C)
 
-#include "mbedtls/cipher.h"
-#include "mbedtls/cipher_internal.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/psa/sheesh.h"
+#include "third_party/mbedtls/include/mbedtls/cipher.h"
+#include "third_party/mbedtls/include/mbedtls/cipher_internal.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
-#include <stdlib.h>
-#include <string.h>
 
 #if defined(MBEDTLS_CHACHAPOLY_C)
-#include "mbedtls/chachapoly.h"
+#include "third_party/mbedtls/include/mbedtls/chachapoly.h"
 #endif
 
 #if defined(MBEDTLS_GCM_C)
-#include "mbedtls/gcm.h"
+#include "third_party/mbedtls/include/mbedtls/gcm.h"
 #endif
 
 #if defined(MBEDTLS_CCM_C)
-#include "mbedtls/ccm.h"
+#include "third_party/mbedtls/include/mbedtls/ccm.h"
 #endif
 
 #if defined(MBEDTLS_CHACHA20_C)
-#include "mbedtls/chacha20.h"
+#include "third_party/mbedtls/include/mbedtls/chacha20.h"
 #endif
 
 #if defined(MBEDTLS_CMAC_C)
-#include "mbedtls/cmac.h"
+#include "third_party/mbedtls/include/mbedtls/cmac.h"
 #endif
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-#include "psa/crypto.h"
-#include "mbedtls/psa_util.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
+#include "third_party/mbedtls/include/mbedtls/psa_util.h"
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 #if defined(MBEDTLS_NIST_KW_C)
-#include "mbedtls/nist_kw.h"
+#include "third_party/mbedtls/include/mbedtls/nist_kw.h"
 #endif
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
 #define mbedtls_calloc calloc
 #define mbedtls_free   free

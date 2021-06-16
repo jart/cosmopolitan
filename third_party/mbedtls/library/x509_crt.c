@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  X.509 certificate parsing and verification
  *
@@ -29,53 +31,39 @@
  *  [SIRO] https://cabforum.org/wp-content/uploads/Chunghwatelecom201503cabforumV4.pdf
  */
 
-#include "common.h"
+#include "libc/limits.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/dirent.h"
+#include "libc/calls/struct/dirent.h"
+#include "libc/calls/calls.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
 
-#include "mbedtls/x509_crt.h"
-#include "mbedtls/error.h"
-#include "mbedtls/oid.h"
-#include "mbedtls/platform_util.h"
-
-#include <string.h>
+#include "third_party/mbedtls/include/mbedtls/x509_crt.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/oid.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
 
 #if defined(MBEDTLS_PEM_PARSE_C)
-#include "mbedtls/pem.h"
+#include "third_party/mbedtls/include/mbedtls/pem.h"
 #endif
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-#include "psa/crypto.h"
-#include "mbedtls/psa_util.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
+#include "third_party/mbedtls/include/mbedtls/psa_util.h"
 #endif
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
-#include <stdlib.h>
 #define mbedtls_free       free
 #define mbedtls_calloc    calloc
 #define mbedtls_snprintf   snprintf
 #endif
 
 #if defined(MBEDTLS_THREADING_C)
-#include "mbedtls/threading.h"
-#endif
-
-#if defined(_WIN32) && !defined(EFIX64) && !defined(EFI32)
-#include <windows.h>
-#else
-#include <time.h>
-#endif
-
-#if defined(MBEDTLS_FS_IO)
-#include <stdio.h>
-#if !defined(_WIN32) || defined(EFIX64) || defined(EFI32)
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#endif /* !_WIN32 || EFIX64 || EFI32 */
+#include "third_party/mbedtls/include/mbedtls/threading.h"
 #endif
 
 /*

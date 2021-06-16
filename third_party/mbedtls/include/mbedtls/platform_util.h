@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file platform_util.h
  *
@@ -24,15 +26,13 @@
 #define MBEDTLS_PLATFORM_UTIL_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stddef.h>
 #if defined(MBEDTLS_HAVE_TIME_DATE)
-#include "mbedtls/platform_time.h"
-#include <time.h>
+#include "third_party/mbedtls/include/mbedtls/platform_time.h"
 #endif /* MBEDTLS_HAVE_TIME_DATE */
 
 #ifdef __cplusplus
@@ -44,7 +44,6 @@ extern "C" {
 #if defined(MBEDTLS_CHECK_PARAMS_ASSERT)
 /* Allow the user to define MBEDTLS_PARAM_FAILED to something like assert
  * (which is what our config.h suggests). */
-#include <assert.h>
 #endif /* MBEDTLS_CHECK_PARAMS_ASSERT */
 
 #if defined(MBEDTLS_PARAM_FAILED)

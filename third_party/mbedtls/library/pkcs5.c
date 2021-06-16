@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file pkcs5.c
  *
@@ -27,25 +29,23 @@
  * http://tools.ietf.org/html/rfc6070 (Test vectors)
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_PKCS5_C)
 
-#include "mbedtls/pkcs5.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/pkcs5.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
 #if defined(MBEDTLS_ASN1_PARSE_C)
-#include "mbedtls/asn1.h"
-#include "mbedtls/cipher.h"
-#include "mbedtls/oid.h"
+#include "third_party/mbedtls/include/mbedtls/asn1.h"
+#include "third_party/mbedtls/include/mbedtls/cipher.h"
+#include "third_party/mbedtls/include/mbedtls/oid.h"
 #endif /* MBEDTLS_ASN1_PARSE_C */
 
-#include <string.h>
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
 #define mbedtls_printf printf
 #endif
 

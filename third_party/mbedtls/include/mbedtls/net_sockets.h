@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file net_sockets.h
  *
@@ -39,15 +41,13 @@
 #define MBEDTLS_NET_SOCKETS_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/ssl.h"
+#include "third_party/mbedtls/include/mbedtls/ssl.h"
 
-#include <stddef.h>
-#include <stdint.h>
 
 #define MBEDTLS_ERR_NET_SOCKET_FAILED                     -0x0042  /**< Failed to open a socket. */
 #define MBEDTLS_ERR_NET_CONNECT_FAILED                    -0x0044  /**< The connection to the given server / port failed. */

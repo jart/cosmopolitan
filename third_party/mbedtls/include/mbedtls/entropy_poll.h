@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file entropy_poll.h
  *
@@ -23,12 +25,11 @@
 #define MBEDTLS_ENTROPY_POLL_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {

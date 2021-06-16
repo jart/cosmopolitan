@@ -1,3 +1,4 @@
+/* clang-format off */
 /**
  * \file bignum.h
  *
@@ -21,18 +22,16 @@
  */
 #ifndef MBEDTLS_BIGNUM_H
 #define MBEDTLS_BIGNUM_H
+#include "libc/stdio/stdio.h"
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stddef.h>
-#include <stdint.h>
 
 #if defined(MBEDTLS_FS_IO)
-#include <stdio.h>
 #endif
 
 #define MBEDTLS_ERR_MPI_FILE_IO_ERROR                     -0x0002  /**< An error occurred while reading from or writing to a file. */

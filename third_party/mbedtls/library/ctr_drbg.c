@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  CTR_DRBG implementation based on AES-256 (NIST SP 800-90)
  *
@@ -22,25 +24,20 @@
  *  http://csrc.nist.gov/publications/nistpubs/800-90/SP800-90revised_March2007.pdf
  */
 
-#include "common.h"
+#include "libc/str/str.h"
+#include "libc/stdio/stdio.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_CTR_DRBG_C)
 
-#include "mbedtls/ctr_drbg.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
-
-#include <string.h>
-
-#if defined(MBEDTLS_FS_IO)
-#include <stdio.h>
-#endif
+#include "third_party/mbedtls/include/mbedtls/ctr_drbg.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
 #if defined(MBEDTLS_SELF_TEST)
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
 #define mbedtls_printf printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */

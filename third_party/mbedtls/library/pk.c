@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Public Key abstraction layer
  *
@@ -17,31 +19,29 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_PK_C)
-#include "mbedtls/pk.h"
-#include "mbedtls/pk_internal.h"
+#include "third_party/mbedtls/include/psa/sheesh.h"
+#include "third_party/mbedtls/include/mbedtls/pk.h"
+#include "third_party/mbedtls/include/mbedtls/pk_internal.h"
 
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
 #if defined(MBEDTLS_RSA_C)
-#include "mbedtls/rsa.h"
+#include "third_party/mbedtls/include/mbedtls/rsa.h"
 #endif
 #if defined(MBEDTLS_ECP_C)
-#include "mbedtls/ecp.h"
+#include "third_party/mbedtls/include/mbedtls/ecp.h"
 #endif
 #if defined(MBEDTLS_ECDSA_C)
-#include "mbedtls/ecdsa.h"
+#include "third_party/mbedtls/include/mbedtls/ecdsa.h"
 #endif
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-#include "mbedtls/psa_util.h"
+#include "third_party/mbedtls/include/mbedtls/psa_util.h"
 #endif
-
-#include <limits.h>
-#include <stdint.h>
 
 /* Parameter validation macros based on platform_util.h */
 #define PK_VALIDATE_RET( cond )    \

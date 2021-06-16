@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  X.509 test certificates
  *
@@ -17,9 +19,9 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
-#include "mbedtls/certs.h"
+#include "third_party/mbedtls/include/mbedtls/certs.h"
 
 #if defined(MBEDTLS_CERTS_C)
 

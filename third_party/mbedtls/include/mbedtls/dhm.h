@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file dhm.h
  *
@@ -64,11 +66,11 @@
 #define MBEDTLS_DHM_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-#include "mbedtls/bignum.h"
+#include "third_party/mbedtls/include/mbedtls/bignum.h"
 
 /*
  * DHM Error codes
@@ -114,7 +116,7 @@ typedef struct mbedtls_dhm_context
 mbedtls_dhm_context;
 
 #else /* MBEDTLS_DHM_ALT */
-#include "dhm_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/dhm_alt.h" */
 #endif /* MBEDTLS_DHM_ALT */
 
 /**

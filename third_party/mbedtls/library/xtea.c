@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  An 32-bit implementation of the XTEA algorithm
  *
@@ -17,20 +19,19 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "libc/str/str.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_XTEA_C)
 
-#include "mbedtls/xtea.h"
-#include "mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/xtea.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
 
-#include <string.h>
 
 #if defined(MBEDTLS_SELF_TEST)
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
 #define mbedtls_printf printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */

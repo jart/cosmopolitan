@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  TLS 1.3 key schedule
  *
@@ -17,16 +19,14 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
 
-#include "mbedtls/hkdf.h"
-#include "mbedtls/ssl_internal.h"
-#include "ssl_tls13_keys.h"
+#include "third_party/mbedtls/include/mbedtls/hkdf.h"
+#include "third_party/mbedtls/include/mbedtls/ssl_internal.h"
+#include "third_party/mbedtls/library/ssl_tls13_keys.h"
 
-#include <stdint.h>
-#include <string.h>
 
 #define MBEDTLS_SSL_TLS1_3_LABEL( name, string )       \
     .name = string,

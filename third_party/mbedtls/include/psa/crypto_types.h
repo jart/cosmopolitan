@@ -1,3 +1,4 @@
+/* clang-format off */
 /**
  * \file psa/crypto_types.h
  *
@@ -29,11 +30,9 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 #ifndef PSA_CRYPTO_TYPES_H
 #define PSA_CRYPTO_TYPES_H
-
-#include "crypto_platform.h"
+#include "third_party/mbedtls/include/psa/crypto_platform.h"
 
 /* If MBEDTLS_PSA_CRYPTO_C is defined, make sure MBEDTLS_PSA_CRYPTO_CLIENT
  * is defined as well to include all PSA code.
@@ -41,8 +40,6 @@
 #if defined(MBEDTLS_PSA_CRYPTO_C)
 #define MBEDTLS_PSA_CRYPTO_CLIENT
 #endif /* MBEDTLS_PSA_CRYPTO_C */
-
-#include <stdint.h>
 
 /** \defgroup error Error codes
  * @{

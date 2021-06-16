@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Elliptic curve J-PAKE
  *
@@ -22,15 +24,14 @@
  * available to members of the Thread Group http://threadgroup.org/
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_ECJPAKE_C)
 
-#include "mbedtls/ecjpake.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/ecjpake.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
-#include <string.h>
 
 #if !defined(MBEDTLS_ECJPAKE_ALT)
 
@@ -800,9 +801,8 @@ cleanup:
 #if defined(MBEDTLS_SELF_TEST)
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
 #define mbedtls_printf     printf
 #endif
 

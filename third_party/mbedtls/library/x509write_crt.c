@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  X.509 certificate writing
  *
@@ -23,21 +25,20 @@
  * - attributes: PKCS#9 v2.0 aka RFC 2985
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_X509_CRT_WRITE_C)
 
-#include "mbedtls/x509_crt.h"
-#include "mbedtls/asn1write.h"
-#include "mbedtls/error.h"
-#include "mbedtls/oid.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/sha1.h"
+#include "third_party/mbedtls/include/mbedtls/x509_crt.h"
+#include "third_party/mbedtls/include/mbedtls/asn1write.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/oid.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/sha1.h"
 
-#include <string.h>
 
 #if defined(MBEDTLS_PEM_WRITE_C)
-#include "mbedtls/pem.h"
+#include "third_party/mbedtls/include/mbedtls/pem.h"
 #endif /* MBEDTLS_PEM_WRITE_C */
 
 void mbedtls_x509write_crt_init( mbedtls_x509write_cert *ctx )

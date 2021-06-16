@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  The RSA public-key cryptosystem
  *
@@ -35,30 +37,28 @@
  *
  */
 
-#include "common.h"
+#include "libc/rand/rand.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_RSA_C)
 
-#include "mbedtls/rsa.h"
-#include "mbedtls/rsa_internal.h"
-#include "mbedtls/oid.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/rsa.h"
+#include "third_party/mbedtls/include/mbedtls/rsa_internal.h"
+#include "third_party/mbedtls/include/mbedtls/oid.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
-#include <string.h>
 
 #if defined(MBEDTLS_PKCS1_V21)
-#include "mbedtls/md.h"
+#include "third_party/mbedtls/include/mbedtls/md.h"
 #endif
 
 #if defined(MBEDTLS_PKCS1_V15) && !defined(__OpenBSD__) && !defined(__NetBSD__)
-#include <stdlib.h>
 #endif
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
 #define mbedtls_printf printf
 #define mbedtls_calloc calloc
 #define mbedtls_free   free
@@ -2560,7 +2560,7 @@ void mbedtls_rsa_free( mbedtls_rsa_context *ctx )
 
 #if defined(MBEDTLS_SELF_TEST)
 
-#include "mbedtls/sha1.h"
+#include "third_party/mbedtls/include/mbedtls/sha1.h"
 
 /*
  * Example RSA-1024 keypair, for test purposes

@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file sha1.h
  *
@@ -30,13 +32,11 @@
 #define MBEDTLS_SHA1_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stddef.h>
-#include <stdint.h>
 
 /* MBEDTLS_ERR_SHA1_HW_ACCEL_FAILED is deprecated and should not be used. */
 #define MBEDTLS_ERR_SHA1_HW_ACCEL_FAILED                  -0x0035  /**< SHA-1 hardware accelerator failed */
@@ -67,7 +67,7 @@ typedef struct mbedtls_sha1_context
 mbedtls_sha1_context;
 
 #else  /* MBEDTLS_SHA1_ALT */
-#include "sha1_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/sha1_alt.h" */
 #endif /* MBEDTLS_SHA1_ALT */
 
 /**

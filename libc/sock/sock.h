@@ -1,6 +1,8 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_SOCK_H_
 #define COSMOPOLITAN_LIBC_SOCK_SOCK_H_
 #include "libc/bits/bswap.h"
+#include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/timespec.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -22,12 +24,6 @@ COSMOPOLITAN_C_START_
 #define ntohs(u16) bswap_16(u16)
 #define htonl(u32) bswap_32(u32)
 #define ntohl(u32) bswap_32(u32)
-
-struct iovec;
-struct sigset;
-struct timespec;
-struct timeval;
-struct addrinfo;
 
 struct in_addr { /* ARPA ABI */
   /* e.g. 127|0<<8|0<<16|1<<24 or inet_pton(AF_INET, "127.0.0.1", &s_addr) */
@@ -150,7 +146,6 @@ int accept(int, void *, uint32_t *) nodiscard;
 int accept4(int, void *, uint32_t *, int) nodiscard;
 int bind(int, const void *, uint32_t);
 int connect(int, const void *, uint32_t);
-int socketconnect(const struct addrinfo *, int);
 int listen(int, int);
 int shutdown(int, int);
 int getsockname(int, void *, uint32_t *) paramsnonnull();

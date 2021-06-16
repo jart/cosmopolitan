@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file cipher_wrap.c
  *
@@ -21,65 +23,63 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_CIPHER_C)
 
-#include "mbedtls/cipher_internal.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/cipher_internal.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
 #if defined(MBEDTLS_CHACHAPOLY_C)
-#include "mbedtls/chachapoly.h"
+#include "third_party/mbedtls/include/mbedtls/chachapoly.h"
 #endif
 
 #if defined(MBEDTLS_AES_C)
-#include "mbedtls/aes.h"
+#include "third_party/mbedtls/include/mbedtls/aes.h"
 #endif
 
 #if defined(MBEDTLS_ARC4_C)
-#include "mbedtls/arc4.h"
+#include "third_party/mbedtls/include/mbedtls/arc4.h"
 #endif
 
 #if defined(MBEDTLS_CAMELLIA_C)
-#include "mbedtls/camellia.h"
+#include "third_party/mbedtls/include/mbedtls/camellia.h"
 #endif
 
 #if defined(MBEDTLS_ARIA_C)
-#include "mbedtls/aria.h"
+#include "third_party/mbedtls/include/mbedtls/aria.h"
 #endif
 
 #if defined(MBEDTLS_DES_C)
-#include "mbedtls/des.h"
+#include "third_party/mbedtls/include/mbedtls/des.h"
 #endif
 
 #if defined(MBEDTLS_BLOWFISH_C)
-#include "mbedtls/blowfish.h"
+#include "third_party/mbedtls/include/mbedtls/blowfish.h"
 #endif
 
 #if defined(MBEDTLS_CHACHA20_C)
-#include "mbedtls/chacha20.h"
+#include "third_party/mbedtls/include/mbedtls/chacha20.h"
 #endif
 
 #if defined(MBEDTLS_GCM_C)
-#include "mbedtls/gcm.h"
+#include "third_party/mbedtls/include/mbedtls/gcm.h"
 #endif
 
 #if defined(MBEDTLS_CCM_C)
-#include "mbedtls/ccm.h"
+#include "third_party/mbedtls/include/mbedtls/ccm.h"
 #endif
 
 #if defined(MBEDTLS_NIST_KW_C)
-#include "mbedtls/nist_kw.h"
+#include "third_party/mbedtls/include/mbedtls/nist_kw.h"
 #endif
 
 #if defined(MBEDTLS_CIPHER_NULL_CIPHER)
-#include <string.h>
 #endif
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdlib.h>
 #define mbedtls_calloc    calloc
 #define mbedtls_free       free
 #endif

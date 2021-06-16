@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file pk_internal.h
  *
@@ -24,12 +26,12 @@
 #define MBEDTLS_PK_WRAP_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/pk.h"
+#include "third_party/mbedtls/include/mbedtls/pk.h"
 
 struct mbedtls_pk_info_t
 {

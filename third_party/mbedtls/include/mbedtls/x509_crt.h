@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file x509_crt.h
  *
@@ -23,14 +25,14 @@
 #define MBEDTLS_X509_CRT_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/x509.h"
-#include "mbedtls/x509_crl.h"
-#include "mbedtls/bignum.h"
+#include "third_party/mbedtls/include/mbedtls/x509.h"
+#include "third_party/mbedtls/include/mbedtls/x509_crl.h"
+#include "third_party/mbedtls/include/mbedtls/bignum.h"
 
 /**
  * \addtogroup x509_module

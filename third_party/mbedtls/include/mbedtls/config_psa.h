@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file mbedtls/config_psa.h
  * \brief PSA crypto configuration options (set of defines)
@@ -31,7 +33,7 @@
 #define MBEDTLS_CONFIG_PSA_H
 
 #if defined(MBEDTLS_PSA_CRYPTO_CONFIG)
-#include "psa/crypto_config.h"
+#include "third_party/mbedtls/include/psa/crypto_config.h"
 #endif /* defined(MBEDTLS_PSA_CRYPTO_CONFIG) */
 
 #ifdef __cplusplus

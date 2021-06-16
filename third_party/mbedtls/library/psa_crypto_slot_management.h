@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  PSA crypto layer on top of Mbed TLS crypto
  */
@@ -21,9 +23,10 @@
 #ifndef PSA_CRYPTO_SLOT_MANAGEMENT_H
 #define PSA_CRYPTO_SLOT_MANAGEMENT_H
 
-#include "psa/crypto.h"
-#include "psa_crypto_core.h"
-#include "psa_crypto_se.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
+#include "third_party/mbedtls/library/psa_crypto_core.h"
+#include "libc/limits.h"
+#include "third_party/mbedtls/library/psa_crypto_se.h"
 
 /** Range of volatile key identifiers.
  *

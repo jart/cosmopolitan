@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  DTLS cookie callbacks implementation
  *
@@ -21,23 +23,22 @@
  * to store and retrieve the session information.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_SSL_COOKIE_C)
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
 #define mbedtls_calloc    calloc
 #define mbedtls_free      free
 #endif
 
-#include "mbedtls/ssl_cookie.h"
-#include "mbedtls/ssl_internal.h"
-#include "mbedtls/error.h"
-#include "mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/ssl_cookie.h"
+#include "third_party/mbedtls/include/mbedtls/ssl_internal.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
 
-#include <string.h>
 
 /*
  * If DTLS is in use, then at least one of SHA-1, SHA-256, SHA-512 is

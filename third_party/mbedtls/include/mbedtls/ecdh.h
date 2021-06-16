@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file ecdh.h
  *
@@ -33,16 +35,16 @@
 #define MBEDTLS_ECDH_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/ecp.h"
+#include "third_party/mbedtls/include/mbedtls/ecp.h"
 
 #if defined(MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED)
 #undef MBEDTLS_ECDH_LEGACY_CONTEXT
-#include "everest/everest.h"
+/* #include "everest/everest.h" */
 #endif
 
 #ifdef __cplusplus

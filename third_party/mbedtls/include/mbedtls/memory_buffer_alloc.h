@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file memory_buffer_alloc.h
  *
@@ -23,12 +25,11 @@
 #define MBEDTLS_MEMORY_BUFFER_ALLOC_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stddef.h>
 
 /**
  * \name SECTION: Module settings

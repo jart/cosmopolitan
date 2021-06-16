@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file ssl_invasive.h
  *
@@ -26,8 +28,8 @@
 #ifndef MBEDTLS_SSL_INVASIVE_H
 #define MBEDTLS_SSL_INVASIVE_H
 
-#include "common.h"
-#include "mbedtls/md.h"
+#include "third_party/mbedtls/library/common.h"
+#include "third_party/mbedtls/include/mbedtls/md.h"
 
 #if defined(MBEDTLS_TEST_HOOKS) &&              \
     defined(MBEDTLS_SSL_SOME_SUITES_USE_TLS_CBC)

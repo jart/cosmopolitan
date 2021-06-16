@@ -1,3 +1,4 @@
+/* clang-format off */
 /**
  * \file psa/crypto_values.h
  *
@@ -30,9 +31,9 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 #ifndef PSA_CRYPTO_VALUES_H
 #define PSA_CRYPTO_VALUES_H
+#include "third_party/mbedtls/include/psa/crypto_types.h"
 
 /** \defgroup error Error codes
  * @{

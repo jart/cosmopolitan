@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file ecp.h
  *
@@ -35,12 +37,12 @@
 #define MBEDTLS_ECP_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/bignum.h"
+#include "third_party/mbedtls/include/mbedtls/bignum.h"
 
 /*
  * ECP error codes
@@ -296,7 +298,7 @@ mbedtls_ecp_group;
 /* \} name SECTION: Module settings */
 
 #else  /* MBEDTLS_ECP_ALT */
-#include "ecp_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/ecp_alt.h" */
 #endif /* MBEDTLS_ECP_ALT */
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)

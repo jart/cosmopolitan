@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file aria.h
  *
@@ -30,15 +32,13 @@
 #define MBEDTLS_ARIA_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stddef.h>
-#include <stdint.h>
 
-#include "mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
 
 #define MBEDTLS_ARIA_ENCRYPT     1 /**< ARIA encryption. */
 #define MBEDTLS_ARIA_DECRYPT     0 /**< ARIA decryption. */
@@ -81,7 +81,7 @@ typedef struct mbedtls_aria_context
 mbedtls_aria_context;
 
 #else  /* MBEDTLS_ARIA_ALT */
-#include "aria_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/aria_alt.h" */
 #endif /* MBEDTLS_ARIA_ALT */
 
 /**

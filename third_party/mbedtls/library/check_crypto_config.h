@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file check_crypto_config.h
  *

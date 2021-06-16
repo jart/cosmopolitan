@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  PSA crypto support for secure element drivers
  */
@@ -18,26 +20,23 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_PSA_CRYPTO_SE_C)
 
-#include <assert.h>
-#include <stdint.h>
-#include <string.h>
 
-#include "psa/crypto_se_driver.h"
+#include "third_party/mbedtls/include/psa/crypto_se_driver.h"
 
-#include "psa_crypto_se.h"
+#include "third_party/mbedtls/library/psa_crypto_se.h"
 
 #if defined(MBEDTLS_PSA_ITS_FILE_C)
-#include "psa_crypto_its.h"
+#include "third_party/mbedtls/library/psa_crypto_its.h"
 #else /* Native ITS implementation */
-#include "psa/error.h"
-#include "psa/internal_trusted_storage.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
+/* #include "third_party/mbedtls/include/psa/internal_trusted_storage.h" */
 #endif
 
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #if !defined(MBEDTLS_PLATFORM_C)
 #define mbedtls_calloc calloc
 #define mbedtls_free   free

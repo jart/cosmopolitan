@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  PSA ECP layer on top of Mbed TLS crypto
  */
@@ -18,26 +20,24 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
 
-#include <psa/crypto.h>
-#include "psa_crypto_core.h"
-#include "psa_crypto_ecp.h"
-#include "psa_crypto_random_impl.h"
+#include "third_party/mbedtls/include/psa/crypto.h"
+#include "third_party/mbedtls/library/psa_crypto_core.h"
+#include "third_party/mbedtls/library/psa_crypto_ecp.h"
+#include "third_party/mbedtls/library/psa_crypto_random_impl.h"
 
-#include <stdlib.h>
-#include <string.h>
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #if !defined(MBEDTLS_PLATFORM_C)
 #define mbedtls_calloc calloc
 #define mbedtls_free   free
 #endif
 
-#include <mbedtls/ecdsa.h>
-#include <mbedtls/ecp.h>
-#include <mbedtls/error.h>
+#include "third_party/mbedtls/include/mbedtls/ecdsa.h"
+#include "third_party/mbedtls/include/mbedtls/ecp.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
 #if ( defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR) ||  \
       ( defined(PSA_CRYPTO_DRIVER_TEST) &&                   \

@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  * ASN.1 buffer writing functionality
  *
@@ -17,19 +19,17 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_ASN1_WRITE_C)
 
-#include "mbedtls/asn1write.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/asn1write.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
-#include <string.h>
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdlib.h>
 #define mbedtls_calloc    calloc
 #define mbedtls_free       free
 #endif

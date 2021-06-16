@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  HKDF implementation -- RFC 5869
  *
@@ -16,14 +18,14 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-#include "common.h"
+#include "libc/str/str.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_HKDF_C)
 
-#include <string.h>
-#include "mbedtls/hkdf.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/hkdf.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
 int mbedtls_hkdf( const mbedtls_md_info_t *md, const unsigned char *salt,
                   size_t salt_len, const unsigned char *ikm, size_t ikm_len,

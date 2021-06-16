@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file timing.h
  *
@@ -23,12 +25,11 @@
 #define MBEDTLS_TIMING_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -57,7 +58,7 @@ typedef struct mbedtls_timing_delay_context
 } mbedtls_timing_delay_context;
 
 #else  /* MBEDTLS_TIMING_ALT */
-#include "timing_alt.h"
+/* #include "timing_alt.h" */
 #endif /* MBEDTLS_TIMING_ALT */
 
 extern volatile int mbedtls_timing_alarmed;

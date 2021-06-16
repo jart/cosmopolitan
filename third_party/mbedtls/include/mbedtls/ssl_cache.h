@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file ssl_cache.h
  *
@@ -23,15 +25,15 @@
 #define MBEDTLS_SSL_CACHE_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/ssl.h"
+#include "third_party/mbedtls/include/mbedtls/ssl.h"
 
 #if defined(MBEDTLS_THREADING_C)
-#include "mbedtls/threading.h"
+#include "third_party/mbedtls/include/mbedtls/threading.h"
 #endif
 
 /**

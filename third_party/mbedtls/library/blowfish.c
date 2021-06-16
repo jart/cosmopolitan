@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Blowfish implementation
  *
@@ -23,14 +25,14 @@
  *
  */
 
-#include "common.h"
+#include "libc/str/str.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_BLOWFISH_C)
 
-#include "mbedtls/blowfish.h"
-#include "mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/blowfish.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
 
-#include <string.h>
 
 #if !defined(MBEDTLS_BLOWFISH_ALT)
 

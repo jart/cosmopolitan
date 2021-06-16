@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  Multi-precision integer library
  *
@@ -33,22 +35,19 @@
  *
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_BIGNUM_C)
 
-#include "mbedtls/bignum.h"
-#include "mbedtls/bn_mul.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/bignum.h"
+#include "third_party/mbedtls/include/mbedtls/bn_mul.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
-#include <string.h>
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
-#include <stdlib.h>
 #define mbedtls_printf     printf
 #define mbedtls_calloc    calloc
 #define mbedtls_free       free

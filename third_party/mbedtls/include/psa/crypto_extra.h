@@ -24,14 +24,13 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 #ifndef PSA_CRYPTO_EXTRA_H
 #define PSA_CRYPTO_EXTRA_H
-
-#include "mbedtls/platform_util.h"
-
-#include "crypto_compat.h"
-
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/psa/crypto_compat.h"
+#include "third_party/mbedtls/include/psa/crypto_struct.h"
+#include "third_party/mbedtls/include/psa/crypto_types.h"
+/* clang-format off */
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -569,7 +568,7 @@ psa_status_t psa_get_key_domain_parameters(
  */
 
 #if defined(MBEDTLS_ECP_C)
-#include <mbedtls/ecp.h>
+#include "third_party/mbedtls/include/mbedtls/ecp.h"
 
 /** Convert an ECC curve identifier from the Mbed TLS encoding to PSA.
  *

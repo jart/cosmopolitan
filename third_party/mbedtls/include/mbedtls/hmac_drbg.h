@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file hmac_drbg.h
  *
@@ -27,15 +29,15 @@
 #define MBEDTLS_HMAC_DRBG_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "mbedtls/md.h"
+#include "third_party/mbedtls/include/mbedtls/md.h"
 
 #if defined(MBEDTLS_THREADING_C)
-#include "mbedtls/threading.h"
+#include "third_party/mbedtls/include/mbedtls/threading.h"
 #endif
 
 /*

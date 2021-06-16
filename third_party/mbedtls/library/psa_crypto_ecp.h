@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  PSA ECP layer on top of Mbed TLS crypto
  */
@@ -21,8 +23,8 @@
 #ifndef PSA_CRYPTO_ECP_H
 #define PSA_CRYPTO_ECP_H
 
-#include <psa/crypto.h>
-#include <mbedtls/ecp.h>
+#include "third_party/mbedtls/include/psa/crypto.h"
+#include "third_party/mbedtls/include/mbedtls/ecp.h"
 
 /** Load the contents of a key buffer into an internal ECP representation
  *

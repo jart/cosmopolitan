@@ -1,3 +1,4 @@
+/* clang-format off */
 /**
  * \file psa/crypto_compat.h
  *
@@ -26,9 +27,10 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 #ifndef PSA_CRYPTO_COMPAT_H
 #define PSA_CRYPTO_COMPAT_H
+#include "third_party/mbedtls/include/psa/crypto_values.h"
+#include "third_party/mbedtls/include/psa/crypto_types.h"
 
 #ifdef __cplusplus
 extern "C" {

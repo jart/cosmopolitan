@@ -1,3 +1,4 @@
+/* clang-format off */
 /**
  * \file platform.h
  *
@@ -30,15 +31,17 @@
  */
 #ifndef MBEDTLS_PLATFORM_H
 #define MBEDTLS_PLATFORM_H
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/stdio.h"
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
 #if defined(MBEDTLS_HAVE_TIME)
-#include "mbedtls/platform_time.h"
+#include "third_party/mbedtls/include/mbedtls/platform_time.h"
 #endif
 
 #define MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED     -0x0070 /**< Hardware accelerator failed */
@@ -66,9 +69,6 @@ extern "C" {
 #endif
 
 #if !defined(MBEDTLS_PLATFORM_NO_STD_FUNCTIONS)
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 #if !defined(MBEDTLS_PLATFORM_STD_SNPRINTF)
 #if defined(MBEDTLS_PLATFORM_HAS_NON_CONFORMING_SNPRINTF)
 #define MBEDTLS_PLATFORM_STD_SNPRINTF   mbedtls_platform_win32_snprintf /**< The default \c snprintf function to use.  */
@@ -137,7 +137,6 @@ extern "C" {
 #define mbedtls_calloc     MBEDTLS_PLATFORM_CALLOC_MACRO
 #else
 /* For size_t */
-#include <stddef.h>
 extern void *mbedtls_calloc( size_t n, size_t size );
 extern void mbedtls_free( void *ptr );
 
@@ -163,7 +162,6 @@ int mbedtls_platform_set_calloc_free( void * (*calloc_func)( size_t, size_t ),
  */
 #if defined(MBEDTLS_PLATFORM_FPRINTF_ALT)
 /* We need FILE * */
-#include <stdio.h>
 extern int (*mbedtls_fprintf)( FILE *stream, const char *format, ... );
 
 /**
@@ -254,13 +252,11 @@ int mbedtls_platform_set_snprintf( int (*snprintf_func)( char * s, size_t n,
  *   the destination buffer is too short.
  */
 #if defined(MBEDTLS_PLATFORM_HAS_NON_CONFORMING_VSNPRINTF)
-#include <stdarg.h>
 /* For Older Windows (inc. MSYS2), we provide our own fixed implementation */
 int mbedtls_platform_win32_vsnprintf( char *s, size_t n, const char *fmt, va_list arg );
 #endif
 
 #if defined(MBEDTLS_PLATFORM_VSNPRINTF_ALT)
-#include <stdarg.h>
 extern int (*mbedtls_vsnprintf)( char * s, size_t n, const char * format, va_list arg );
 
 /**
@@ -375,7 +371,7 @@ typedef struct mbedtls_platform_context
 mbedtls_platform_context;
 
 #else
-#include "platform_alt.h"
+/* #include "third_party/mbedtls/include/mbedtls/platform_alt.h" */
 #endif /* !MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT */
 
 /**

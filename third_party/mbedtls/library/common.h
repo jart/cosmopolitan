@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file common.h
  *
@@ -26,7 +28,7 @@
 #if defined(MBEDTLS_CONFIG_FILE)
 #include MBEDTLS_CONFIG_FILE
 #else
-#include "mbedtls/config.h"
+#include "third_party/mbedtls/include/mbedtls/config.h"
 #endif
 
 /** Helper to define a function as static except when building invasive tests.

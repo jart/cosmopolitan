@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  X.509 base functions for creating certificates / CSRs
  *
@@ -17,16 +19,15 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_X509_CREATE_C)
 
-#include "mbedtls/x509.h"
-#include "mbedtls/asn1write.h"
-#include "mbedtls/error.h"
-#include "mbedtls/oid.h"
+#include "third_party/mbedtls/include/mbedtls/x509.h"
+#include "third_party/mbedtls/include/mbedtls/asn1write.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/oid.h"
 
-#include <string.h>
 
 /* Structure linking OIDs for X.509 DN AttributeTypes to their
  * string representations and default string encodings used by Mbed TLS. */

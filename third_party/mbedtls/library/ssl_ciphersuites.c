@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /**
  * \file ssl_ciphersuites.c
  *
@@ -19,20 +21,18 @@
  *  limitations under the License.
  */
 
-#include "common.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_SSL_TLS_C)
 
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdlib.h>
 #endif
 
-#include "mbedtls/ssl_ciphersuites.h"
-#include "mbedtls/ssl.h"
+#include "third_party/mbedtls/include/mbedtls/ssl_ciphersuites.h"
+#include "third_party/mbedtls/include/mbedtls/ssl.h"
 
-#include <string.h>
 
 /*
  * Ordered from most preferred to least preferred in terms of security.

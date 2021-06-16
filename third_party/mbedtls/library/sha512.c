@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  *  FIPS-180-2 compliant SHA-384/512 implementation
  *
@@ -22,13 +24,15 @@
  *  http://csrc.nist.gov/publications/fips/fips180-2/fips180-2.pdf
  */
 
-#include "common.h"
+#include "libc/str/str.h"
+#include "libc/str/str.h"
+#include "third_party/mbedtls/library/common.h"
 
 #if defined(MBEDTLS_SHA512_C)
 
-#include "mbedtls/sha512.h"
-#include "mbedtls/platform_util.h"
-#include "mbedtls/error.h"
+#include "third_party/mbedtls/include/mbedtls/sha512.h"
+#include "third_party/mbedtls/include/mbedtls/platform_util.h"
+#include "third_party/mbedtls/include/mbedtls/error.h"
 
 #if defined(_MSC_VER) || defined(__WATCOMC__)
   #define UL64(x) x##ui64
@@ -36,14 +40,11 @@
   #define UL64(x) x##ULL
 #endif
 
-#include <string.h>
 
 #if defined(MBEDTLS_SELF_TEST)
 #if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
+#include "third_party/mbedtls/include/mbedtls/platform.h"
 #else
-#include <stdio.h>
-#include <stdlib.h>
 #define mbedtls_printf printf
 #define mbedtls_calloc    calloc
 #define mbedtls_free       free
