@@ -19,11 +19,15 @@
 #include "libc/calls/internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/winsock.h"
+#include "libc/nt/iphlpapi.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/yoink.inc"
 #include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sock.h"
+
+/* ioctl(SIOCGIFCONFIG) uses GetAdaptersAddresses as weak ref */
+STATIC_YOINK("GetAdaptersAddresses");
 
 textwindows int sys_socket_nt(int family, int type, int protocol) {
   int64_t h;
@@ -42,6 +46,7 @@ textwindows int sys_socket_nt(int family, int type, int protocol) {
         return __winsockerr();
       }
     }
+
     sockfd = calloc(1, sizeof(struct SockFd));
     sockfd->family = family;
     sockfd->type = truetype;
