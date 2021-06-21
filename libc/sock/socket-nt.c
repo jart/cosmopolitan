@@ -28,6 +28,7 @@
 
 /* ioctl(SIOCGIFCONFIG) uses GetAdaptersAddresses as weak ref */
 STATIC_YOINK("GetAdaptersAddresses");
+STATIC_YOINK("WideCharToMultiByte");
 
 textwindows int sys_socket_nt(int family, int type, int protocol) {
   int64_t h;
