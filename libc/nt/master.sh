@@ -7093,7 +7093,7 @@ imp	'WerpNotifyLoadStringResource'				WerpNotifyLoadStringResource				KernelBase
 imp	'WerpNotifyLoadStringResourceWorker'			WerpNotifyLoadStringResourceWorker			kernel32	1540
 imp	'WerpNotifyUseStringResource'				WerpNotifyUseStringResource				KernelBase	1809
 imp	'WerpNotifyUseStringResourceWorker'			WerpNotifyUseStringResourceWorker			kernel32	1541
-imp	'WideCharToMultiByte'					WideCharToMultiByte					kernel32	0		# KernelBase
+imp	'WideCharToMultiByte'					WideCharToMultiByte					kernel32	1553    8
 imp	'WidenPath'						WidenPath						gdi32		1941
 imp	'Win32DeleteFile'					Win32DeleteFile						shell32		164
 imp	'WinExec'						WinExec							kernel32	1543
