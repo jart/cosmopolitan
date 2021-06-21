@@ -8,11 +8,6 @@
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/errfuns.h"
 
-static int hoststxtcmpaddr(const uint8_t *ip1, const struct HostsTxtEntry *he2) {
-  uint32_t v1 = *((uint32_t *)ip1), v2 = *((uint32_t *)he2->ip);
-  return (v1 == v2 ? 0 : (v1 > v2 ? 1 : -1));
-}
-
 /**
  * Finds name associated with address in HOSTS.TXT table.
  *
@@ -27,15 +22,21 @@ static int hoststxtcmpaddr(const uint8_t *ip1, const struct HostsTxtEntry *he2) 
  */
 int ResolveHostsReverse(const struct HostsTxt *ht, int af, const uint8_t *ip,
                         char *buf, size_t bufsize) {
-  struct HostsTxtEntry *entry;
+  struct HostsTxtEntry *entry = NULL;
+  uint32_t v1, v2;
+
   if (af != AF_INET && af != AF_UNSPEC) return eafnosupport();
-  if (!ht->entries.p) return -1;
+  if (!ht->entries.p || !buf || bufsize == 0) return -1;
 
-  if (ht->sorted_by != HOSTSTXT_SORTEDBYADDR)
-    SortHostsTxt(ht, HOSTSTXT_SORTEDBYADDR);
+  v1 = *((uint32_t *)ip);
+  for (size_t j = 0; j < ht->entries.i; j++) {
+    v2 = *((uint32_t *)ht->entries.p[j].ip);
+    if (v1 == v2) {
+      entry = &(ht->entries.p[j]);
+      break;
+    }
+  }
 
-  entry = bsearch(ip, ht->entries.p, ht->entries.i,
-                  sizeof(struct HostsTxtEntry), (void *)hoststxtcmpaddr);
   if (entry) {
     strncpy(buf, &ht->strings.p[entry->name], bufsize);
     return 1;
