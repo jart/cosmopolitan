@@ -38,6 +38,8 @@
 
 #define MAX_INTERFACES  32
 
+static int insertAdapterName(NtPIpAdapterAddresses aa);
+
 /* Reference:
  *  - Description of ioctls: https://docs.microsoft.com/en-us/windows/win32/winsock/winsock-ioctls
  *  - Structure INTERFACE_INFO: https://docs.microsoft.com/en-us/windows/win32/api/ws2ipdef/ns-ws2ipdef-interface_info
@@ -59,6 +61,7 @@
 struct HostAdapterDesc {
     char name[IFNAMSIZ];    /* Given name */
     NtIpAdapterAddresses * addresses;   /* NULL = invalid record */
+    short                  flags;       /* Holds the same value as ifr_flags */
 };
 
 NtIpAdapterAddresses * theHostAdapterAddress;
@@ -91,10 +94,13 @@ static void freeAdapterInfo(void) {
 }
 
 
-/* Sets theHostAdapterAddress. 
+/* Sets theHostAdapterAddress.
  * Returns -1 in case of failure (setting errno appropriately), 0 if success */
 static int _readAdapterAddresses(void) {
+    NtPIpAdapterAddresses aa;
     uint32_t size, rc;
+    short flags;
+    int i;
     PRINTF("FABDEBUG> _readAdapterAddresses:\n");
 
     assert(theHostAdapterAddress == NULL);
@@ -132,10 +138,46 @@ static int _readAdapterAddresses(void) {
         freeAdapterInfo();
         return efault();
     }
+
+    /* Iterate through all the adapters and populate theAdapterName */
+    for (aa = theHostAdapterAddress; aa != NULL; aa = aa->Next) {
+        i = insertAdapterName(aa);
+        if (i == -1) {
+            PRINTF("FABDEBUG> Too many adapters\n");
+            freeAdapterInfo();
+            return enomem();
+        }
+
+        /* Calculate the flags for this adapter. Flags to consider:
+         * IFF_UP
+         * IFF_BROADCAST        ** TODO: We need to validate
+         * IFF_LOOPBACK
+         * IFF_POINTOPOINT
+         * IFF_MULTICAST
+         * IFF_RUNNING          ** Same as IFF_UP for now
+         * IFF_PROMISC          ** NOT SUPPORTED, unknown how to retrieve it
+         */
+        flags = 0;
+        if (aa->OperStatus == IfOperStatusUp) flags |= IFF_UP | IFF_RUNNING;
+        if (aa->IfType == NT_IF_TYPE_PPP) flags |= IFF_POINTOPOINT;
+        //if (aa->TunnelType != TUNNEL_TYPE_NONE) flags |= IFF_POINTOPOINT;
+        if (aa->NoMulticast == 0) flags |= IFF_MULTICAST;
+        if (aa->IfType == NT_IF_TYPE_SOFTWARE_LOOPBACK) flags |= IFF_LOOPBACK;
+        if (aa->FirstPrefix != NULL) flags |= IFF_BROADCAST;
+
+        /* Broadcast - Broadcast address should be detectable though the FirstPrefix
+         * linked list
+         */
+        flags |= IFF_BROADCAST; /* Assume yes for all the interfaces */
+
+        theAdapterName[i].flags = flags;
+    }
     PRINTF("FABDEBUG> \tDone reading.\n");
     return 0;
 }
 
+
+#if 1
 
 void printUnicastAddressList(NtPIpAdapterUnicastAddress addr) {
     const char * sep = "";
@@ -147,6 +189,8 @@ void printUnicastAddressList(NtPIpAdapterUnicastAddress addr) {
         }
     }
 }
+
+#endif
 
 static int insertAdapterName(NtPIpAdapterAddresses aa) {
     char name[IFNAMSIZ];
@@ -186,6 +230,28 @@ static int insertAdapterName(NtPIpAdapterAddresses aa) {
             
 
 
+/* Returns the index in theAdapterName if found or -1 if
+ * an error occurred
+ */
+static int findOrInitAdapter(const char *name) {
+    int i;
+    if (!theHostAdapterAddress) {
+        /* Never invoked GetAdaptersAddresses */
+        if (_readAdapterAddresses() == -1) {
+            return -1;
+        }
+    }
+
+    i = findAdapterByName(name);
+    if (i == -1) {
+        PRINTF("FABDEBUG> Bad adapter\n");
+        return ebadf();
+    }
+    return i;
+}
+
+
+
 textwindows int ioctl_siocgifconf_nt(int fd, struct ifconf *ifc) {
     NtPIpAdapterAddresses aa;
     struct ifreq *ptr;
@@ -214,26 +280,24 @@ textwindows int ioctl_siocgifconf_nt(int fd, struct ifconf *ifc) {
         return -1;
     }
 
-    for (ptr = ifc->ifc_req, aa = theHostAdapterAddress; 
-            (aa != NULL) && ((char *)(ptr+1) - ifc->ifc_buf) < ifc->ifc_len; 
-            aa = aa->Next, ptr++) {
+    for (ptr = ifc->ifc_req, i=0; 
+            ((char *)(ptr+1) - ifc->ifc_buf) < ifc->ifc_len; 
+            ++i, ptr++) {
 
-        i = insertAdapterName(aa);
-        if (i == -1) {
-            PRINTF("FABDEBUG> Too many adapters\n");
-            freeAdapterInfo();
-            return enomem();
+        aa = theAdapterName[i].addresses;
+        if (!aa) {
+            break;
         }
-        strncpy(ptr->ifr_name, theAdapterName[i].name, IFNAMSIZ-1);
-        ptr->ifr_name[IFNAMSIZ-1]='\0';
+        memcpy(ptr->ifr_name, theAdapterName[i].name, IFNAMSIZ);
 
-        PRINTF("FABDEBUG> Adapter name = %s\n", ptr->ifr_name);
+        PRINTF("FABDEBUG> #%d: Adapter name = %s\n", i, ptr->ifr_name);
         if (aa->FirstUnicastAddress) {
             ptr->ifr_addr = *aa->FirstUnicastAddress->Address.lpSockaddr;   /* Windows sockaddr is compatible with Linux */
             PRINTF("FABDEBUG> \tIP=");
             printUnicastAddressList(aa->FirstUnicastAddress);
             PRINTF("\n");
         }
+
     }
     ifc->ifc_len = (char *)ptr - ifc->ifc_buf;
 
@@ -245,11 +309,10 @@ textwindows int ioctl_siocgifconf_nt(int fd, struct ifconf *ifc) {
 int ioctl_siocgifaddr_nt(int fd, struct ifreq *ifr) {
     NtPIpAdapterAddresses aa;
     int i;
-    
-    i = findAdapterByName(ifr->ifr_name);
+
+    i = findOrInitAdapter(ifr->ifr_name);
     if (i == -1) {
-        PRINTF("FABDEBUG> Bad adapter\n");
-        return ebadf();
+        return -1;
     }
 
     aa = theAdapterName[i].addresses;
@@ -261,34 +324,58 @@ int ioctl_siocgifaddr_nt(int fd, struct ifreq *ifr) {
 
 /* Performs the SIOCGIFFLAGS operation */
 int ioctl_siocgifflags_nt(int fd, struct ifreq *ifr) {
-    NtPIpAdapterAddresses aa;
     int i;
     
-    i = findAdapterByName(ifr->ifr_name);
+    i = findOrInitAdapter(ifr->ifr_name);
     if (i == -1) {
-        PRINTF("FABDEBUG> Bad adapter\n");
-        return ebadf();
+        return -1;
     }
 
-    aa = theAdapterName[i].addresses;
-    ifr->ifr_flags = 0;
-
-    /* Flags to consider:
-     * IFF_UP
-     * IFF_BROADCAST        ** TODO: We need to validate
-     * IFF_LOOPBACK
-     * IFF_POINTOPOINT
-     * IFF_RUNNING          ** Same as IFF_UP for now
-     * IFF_PROMISC          ** NOT SUPPORTED, unknown how to retrieve it
-     */
-    if (aa->OperStatus == IfOperStatusUp) ifr->ifr_flags |= IFF_UP | IFF_RUNNING;
-    if (aa->IfType == NT_IF_TYPE_PPP) ifr->ifr_flags |= IFF_POINTOPOINT;
-    //if (aa->TunnelType != TUNNEL_TYPE_NONE) ifr->ifr_flags |= IFF_POINTOPOINT;
-    if (aa->IfType == NT_IF_TYPE_SOFTWARE_LOOPBACK) ifr->ifr_flags |= IFF_LOOPBACK;
-    if (aa->FirstPrefix != NULL) ifr->ifr_flags |= IFF_BROADCAST;
+    PRINTF(">>>>CAZZO=%d - %d\n", i, theAdapterName[i].flags);
+    ifr->ifr_flags = theAdapterName[i].flags;
 
     return 0;
 }
 
+
+/* Performs the SIOCGIFNETMASK operation */
+int ioctl_siocgifnetmask_nt(int fd, struct ifreq *ifr) {
+    NtPIpAdapterAddresses aa;
+    int i;
+
+    i = findOrInitAdapter(ifr->ifr_name);
+    if (i == -1) {
+        return -1;
+    }
+
+    PRINTF("FABDEBUG>>>> NETMASK\n");
+    aa = theAdapterName[i].addresses;
+    /* According to the doc:
+     *  ... On Windows Vista and later, the linked IP_ADAPTER_PREFIX structures pointed to 
+     *  by the FirstPrefix member include three IP adapter prefixes for each IP address 
+     *  assigned to the adapter. These include the host IP address prefix, the subnet IP 
+     *  address prefix, and the subnet broadcast IP address prefix. In addition, for each 
+     *  adapter there is a multicast address prefix and a broadcast address prefix.
+     *
+     *  So, in short, for each of the assigned addresses, the IP_ADAPTER_PREFIX objects are:
+     *  #0: Host IP Address
+     *  #1: Subnet
+     *  #2: Broadcast
+     *  #3: Multicast
+     *  #4: Broadcast
+     */
+    if (aa->FirstPrefix) {
+        int count;
+        NtPIpAdapterPrefix prefix;
+        for (count=0, prefix=aa->FirstPrefix; prefix; prefix=prefix->Next, ++count) {
+            PRINTF("FABDEBUG>>>>\t%d: %s/%d\n", count, weaken(inet_ntoa)(
+                    ((struct sockaddr_in *)(prefix->Address.lpSockaddr))->sin_addr), prefix->PrefixLength);
+            if (count == 4) {
+                ifr->ifr_netmask = *prefix->Address.lpSockaddr;
+            }
+        }
+    }
+    return 0;
+}
 
 
