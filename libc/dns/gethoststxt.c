@@ -61,7 +61,6 @@ const struct HostsTxt *GetHostsTxt(void) {
   init = &g_hoststxt_init;
   if (!g_hoststxt) {
     g_hoststxt = &init->ht;
-    init->ht.sorted_by = HOSTSTXT_NOT_SORTED;
     init->ht.entries.n = pushpop(ARRAYLEN(init->entries));
     init->ht.entries.p = init->entries;
     init->ht.strings.n = pushpop(ARRAYLEN(init->strings));
@@ -75,7 +74,7 @@ const struct HostsTxt *GetHostsTxt(void) {
       /* TODO(jart): Elevate robustness. */
     }
     fclose(f);
-    SortHostsTxt(g_hoststxt, HOSTSTXT_SORTEDBYNAME);
+    SortHostsTxt(g_hoststxt);
   }
   return g_hoststxt;
 }
