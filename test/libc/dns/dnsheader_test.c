@@ -25,25 +25,23 @@
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-TEST(serializednsheader, test) {
+TEST(SerializeDnsHeader, test) {
+  uint8_t buf[12];
   struct DnsHeader header;
   memset(&header, 0, sizeof(header));
   header.id = 255;
   header.bf1 = true;
   header.qdcount = 1;
-  uint8_t *buf = malloc(12);
-  ASSERT_EQ(12, serializednsheader(buf, 12, header));
+  SerializeDnsHeader(buf, &header);
   EXPECT_BINEQ(u" λ☺  ☺      ", buf);
-  free(buf);
 }
 
-TEST(serializednsheader, fuzzSymmetry) {
-  uint8_t *buf;
-  struct DnsHeader *in, *out;
-  buf = gc(malloc(12));
-  in = rngset(gc(malloc(sizeof(struct DnsHeader))), 12, rand64, -1);
-  out = rngset(gc(malloc(sizeof(struct DnsHeader))), 12, rand64, -1);
-  ASSERT_EQ(12, serializednsheader(buf, 12, *in));
-  ASSERT_EQ(12, deserializednsheader(out, buf, 12));
-  ASSERT_EQ(0, memcmp(in, out, 12), "%#.*s\n\t%#.*s", 12, in, 12, buf);
+TEST(SerializeDnsHeader, fuzzSymmetry) {
+  uint8_t buf[12];
+  struct DnsHeader in, out;
+  rngset(&in, sizeof(in), rand64, -1);
+  rngset(&out, sizeof(out), rand64, -1);
+  SerializeDnsHeader(buf, &in);
+  DeserializeDnsHeader(&out, buf);
+  ASSERT_EQ(0, memcmp(&in, &out, 12), "%#.*s\n\t%#.*s", 12, in, 12, buf);
 }

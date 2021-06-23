@@ -29,19 +29,22 @@
  */
 void *memchr(const void *m, int c, size_t n) {
   uint64_t v, w;
-  const unsigned char *p, *pe;
+  const char *p, *pe;
   c &= 255;
-  v = 0x0101010101010101 * c;
-  for (p = (const unsigned char *)m, pe = p + n; p + 8 <= pe; p += 8) {
-    w = (uint64_t)p[7] << 070 | (uint64_t)p[6] << 060 | (uint64_t)p[5] << 050 |
-        (uint64_t)p[4] << 040 | (uint64_t)p[3] << 030 | (uint64_t)p[2] << 020 |
-        (uint64_t)p[1] << 010 | (uint64_t)p[0] << 000;
+  v = 0x0101010101010101ul * c;
+  for (p = m, pe = p + n; p + 8 <= pe; p += 8) {
+    w = (uint64_t)(255 & p[7]) << 070 | (uint64_t)(255 & p[6]) << 060 |
+        (uint64_t)(255 & p[5]) << 050 | (uint64_t)(255 & p[4]) << 040 |
+        (uint64_t)(255 & p[3]) << 030 | (uint64_t)(255 & p[2]) << 020 |
+        (uint64_t)(255 & p[1]) << 010 | (uint64_t)(255 & p[0]) << 000;
     if ((w = ~(w ^ v) & ((w ^ v) - 0x0101010101010101) & 0x8080808080808080)) {
       return p + ((unsigned)__builtin_ctzll(w) >> 3);
     }
   }
   for (; p < pe; ++p) {
-    if (*p == c) return p;
+    if ((*p & 255) == c) {
+      return p;
+    }
   }
   return NULL;
 }

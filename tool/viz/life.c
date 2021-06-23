@@ -835,6 +835,26 @@ static void OnMouse(char *p) {
   }
 }
 
+static void Rando1(void) {
+  long i, n;
+  n = (byn * bxn) >> 6;
+  for (i = 0; i < n; ++i) {
+    board[i] = rand64();
+  }
+}
+
+static void Rando2(void) {
+  long i, n;
+  n = (byn * bxn) >> 6;
+  for (i = 0; i < n; ++i) {
+    board[i] = rand();
+    board[i] <<= 31;
+    board[i] |= rand();
+    board[i] <<= 2;
+    board[i] |= rand() & 0b11;
+  }
+}
+
 static void ReadKeyboard(void) {
   char buf[32], *p = buf;
   memset(buf, 0, sizeof(buf));
@@ -860,6 +880,12 @@ static void ReadKeyboard(void) {
       break;
     case CTRL('V'):
       OnPageDown();
+      break;
+    case CTRL('R'):
+      Rando1();
+      break;
+    case CTRL('G'):
+      Rando2();
       break;
     case 'M':
       if (mousemode) {

@@ -26,8 +26,6 @@
 #define TYPE_BIT(type)      (sizeof(type) * CHAR_BIT)
 #define TYPE_SIGNED(type)   (((type)-1) < 0)
 #define TYPE_INTEGRAL(type) (((type)0.5) != 0.5)
-#define INT_STRLEN_MAXIMUM(type) \
-  ((TYPE_BIT(type) - TYPE_SIGNED(type)) * 302 / 1000 + 1 + TYPE_SIGNED(type))
 
 #define ARRAYLEN(A) \
   ((sizeof(A) / sizeof(*(A))) / ((unsigned)!(sizeof(A) % sizeof(*(A)))))

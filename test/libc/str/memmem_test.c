@@ -21,6 +21,8 @@
 #include "libc/mem/mem.h"
 #include "libc/str/internal.h"
 #include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 
 #define MakeMemory(SL) memcpy(malloc(sizeof(SL) - 1), SL, sizeof(SL) - 1)
@@ -56,6 +58,22 @@ TEST(memmem, testEndOfMemory) {
   char *needle = MakeMemory("123");
   char *haystk = MakeMemory("abc123");
   EXPECT_EQ(&haystk[3], memmem(haystk, 6, needle, 3));
+  free(haystk);
+  free(needle);
+}
+
+TEST(memmem, testOneNo) {
+  char *needle = MakeMemory("z");
+  char *haystk = MakeMemory("abc123");
+  EXPECT_EQ(0, memmem(haystk, 6, needle, 1));
+  free(haystk);
+  free(needle);
+}
+
+TEST(memmem, testOneYes) {
+  char *needle = MakeMemory("3");
+  char *haystk = MakeMemory("abc123");
+  EXPECT_EQ(&haystk[5], memmem(haystk, 6, needle, 1));
   free(haystk);
   free(needle);
 }
@@ -112,4 +130,13 @@ TEST(memmem, testEmptyHaystackAndNeedle_returnsHaystack) {
 
 TEST(memmem, testWut) {
   ASSERT_STREQ("x", memmem("x", 1, "x", 1));
+}
+
+BENCH(memmem, bench) {
+  EZBENCH2("memmem", donothing,
+           EXPROPRIATE(memmem(kHyperion, kHyperionSize, "THE END", 7)));
+  EZBENCH2("memmem", donothing,
+           EXPROPRIATE(memmem(
+               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+               62, "aaaaaab", 7)));
 }

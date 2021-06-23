@@ -1,0 +1,85 @@
+
+OS/390 is IBM's follow-on to MVS and includes a POSIX, XOPEN,
+XPG4, build environment, a Unix-style filesystem (called HFS), and
+a POSIX (Born) shell.  This port uses this environment and is a fairly
+straight-forward port of ZIP's Unix port - but uses the existing EBCDIC
+code.  This port does not work with non-HFS (traditional MVS)
+filesystems.
+
+I believe all my changes are isolated with #ifdef's.
+
+Here's some text which might be useful for an OS390 README or
+the manual.
+
+ZIP for OS390 HFS datasets
+--------------------------
+Allows you to create ZIP archives from the OS/390 OpenEdition
+command prompt.  This port uses standard Unix-style I/O routines
+and only works with HFS files.
+
+Usage
+-----
+By default, ZIP does not perform character-set translation, but has
+options to make it easy to convert text files to be compatible with
+other systems
+  zip   zipfile list         # add the files in 'list' to archive 'zipfile'
+  zip -a zipfile list        # same as above, but translate files to ASCII
+  zip -al zipfile list       # same as above, translate linefeeds to DOS style
+  zip -all zipfile list      # same as '-a', translate linefeeds to UNIX style
+
+Build process
+-------------
+Assuming GNU make is available in your path and is called "gmake" (See
+the  notes on Makefile changes below) and a C compiler is available as
+"cc",  then type
+  gmake -f unix/Makefile MAKE=gmake os390
+
+If GNU make is not available, the existing makefile can create zip, but will
+error on the other executable (zipsplit, zipcloak, zipnote) if you type
+  make -f unix/Makefile os390
+
+Overview of Changes
+-------------------
+The OS/390 port is treated as a variant of the Unix port.  EBCDIC support
+was already implemented for CMS/MVS-batch ports.  The specific changes I
+made are summarized below.
+
+unix/Makefile - zip uses a unusual _.o target which IBM's make can't handle.
+Since the Makefile has a macro called MAKE that is used for a recursive
+call to make, I changed the MACRO to call "gmake" - GNU's make - which
+can handle the _.o target.  If you don't have GNU make, you can
+workaround by manually applying symlinks from whatever.c to whatever_.c.
+Alternatively, the whatever_.o files could be explicitely added for os390.
+
+I added an os390 target with appropriate defines.
+
+zipup.c - added code (#ifdef OS390) to convert test to ASCII if -a flag
+was set.
+
+zip.c - changed logic which always used DOS-style newlines when -a was
+set to be consistent with other port (DOS newlines if -l option)
+
+zipfile.c - miscellaneous changes to force storing file names and
+descriptions in ASCII in the zip directory. This makes zip files
+portable  across all platforms. This in turn meant names did not
+need to be translated when displaying messages.
+
+zip.h - strtoasc was missing a closing parenthesis.
+
+ebcdic.h - changed translation table to be consistent with current IBM
+recommendations - exact same changes to ebcdic.h as in my unzip port.
+
+tailor.h - define huge/far/near to be empty
+
+unix/unix.c - substantial changes to deal with mode flags.  Under
+the current XOPEN standards, some of the traditional unix file mode
+bits need not be in fixed locations, but standard access macros must be
+available to access the values.  The old unix.c code just picked up these
+values and saved them as-is where unzip interpreted them.  Existing
+Unix system provided the macros for XOPEN compliance, but left the flags
+in their traditional locations.  OS/390 has a brand new filesystem which
+is XOPEN compliant without revealing the positions of these flags.
+To create the bitmask in the same format unzip expects, the macros are
+tested one-by-one to set the appropriate bits.  This same logic should
+work on any XOPEN system, but takes more instructions (I did test this
+logic on Linux).

@@ -25,6 +25,15 @@
  *
  *     CHECK_NE(-1, fcntl(fd, F_SETFD, FD_CLOEXEC));
  *
+ * This function implements POSIX Advisory Locks, e.g.
+ *
+ *     CHECK_NE(-1, fcntl(zfd, F_SETLKW, &(struct flock){F_WRLCK}));
+ *     // ...
+ *     CHECK_NE(-1, fcntl(zfd, F_SETLK, &(struct flock){F_UNLCK}));
+ *
+ * Please be warned that locks currently do nothing on Windows since
+ * figuring out how to polyfill them correctly is a work in progress.
+ *
  * @param cmd can be F_{GET,SET}{FD,FL}, etc.
  * @param arg can be FD_CLOEXEC, etc. depending
  * @return 0 on success, or -1 w/ errno
@@ -32,9 +41,9 @@
  */
 int fcntl(int fd, int cmd, ...) {
   va_list va;
-  unsigned arg;
+  uintptr_t arg;
   va_start(va, cmd);
-  arg = va_arg(va, unsigned);
+  arg = va_arg(va, uintptr_t);
   va_end(va);
   if (!IsWindows()) {
     return sys_fcntl(fd, cmd, arg);

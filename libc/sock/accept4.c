@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/errfuns.h"
@@ -36,6 +37,7 @@
 int accept4(int fd, void *out_addr, uint32_t *inout_addrsize, int flags) {
   if (!out_addr) return efault();
   if (!inout_addrsize) return efault();
+  if (IsAsan() && !__asan_is_valid(out_addr, *inout_addrsize)) return efault();
   if (!IsWindows()) {
     return sys_accept4(fd, out_addr, inout_addrsize, flags);
   } else if (__isfdkind(fd, kFdSocket)) {

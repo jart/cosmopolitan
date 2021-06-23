@@ -78,6 +78,13 @@ TEST(pmulhrsw, testLimits) {
     EXPECT_EQ(kPmulhrswTorture[i][2], A[0], "pmulhrsw(%hd,%hd)→%hd",
               kPmulhrswTorture[i][0], kPmulhrswTorture[i][1], A[0]);
   }
+  for (i = 0; i < ARRAYLEN(kPmulhrswTorture); ++i) {
+    A[0] = kPmulhrswTorture[i][0];
+    B[0] = kPmulhrswTorture[i][1];
+    (pmulhrsw)(A, A, B);
+    EXPECT_EQ(kPmulhrswTorture[i][2], A[0], "pmulhrsw(%hd,%hd)→%hd",
+              kPmulhrswTorture[i][0], kPmulhrswTorture[i][1], A[0]);
+  }
 }
 
 TEST(pmulhrsw, testFakeFloat) {

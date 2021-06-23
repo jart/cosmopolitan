@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon fcntl,F_SETLKW64,7,0,0,0,0,0
+.syscon compat,F_SETLKW64,7,9,13,9,9,7

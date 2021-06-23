@@ -22,29 +22,25 @@
 #include "libc/mem/mem.h"
 #include "libc/testlib/testlib.h"
 
-TEST(serializednsquestion, test) {
-  uint8_t *buf = malloc(1 + 3 + 1 + 3 + 1 + 4);
-  char *name = strdup("foo.bar");
+TEST(SerializeDnsQuestion, test) {
   struct DnsQuestion dq;
+  char name[] = "foo.bar";
+  uint8_t buf[1 + 3 + 1 + 3 + 1 + 4];
   dq.qname = name;
   dq.qtype = 0x0201;
   dq.qclass = 0x0102;
   EXPECT_EQ(1 + 3 + 1 + 3 + 1 + 4,
-            serializednsquestion(buf, 1 + 3 + 1 + 3 + 1 + 4, dq));
+            SerializeDnsQuestion(buf, 1 + 3 + 1 + 3 + 1 + 4, &dq));
   EXPECT_BINEQ(u"♥foo♥bar ☻☺☺☻", buf);
-  free(name);
-  free(buf);
 }
 
-TEST(serializednsquestion, testNoSpace) {
-  uint8_t *buf = malloc(1 + 3 + 1 + 3 + 1 + 3);
-  char *name = strdup("foo.bar");
+TEST(SerializeDnsQuestion, testNoSpace) {
   struct DnsQuestion dq;
+  char name[] = "foo.bar";
+  uint8_t buf[1 + 3 + 1 + 3 + 1 + 3];
   dq.qname = name;
   dq.qtype = 0x0201;
   dq.qclass = 0x0102;
-  EXPECT_EQ(-1, serializednsquestion(buf, 1 + 3 + 1 + 3 + 1 + 3, dq));
+  EXPECT_EQ(-1, SerializeDnsQuestion(buf, 1 + 3 + 1 + 3 + 1 + 3, &dq));
   EXPECT_EQ(ENOSPC, errno);
-  free(name);
-  free(buf);
 }

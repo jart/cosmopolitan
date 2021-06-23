@@ -16,10 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/likely.h"
 #include "libc/str/thompike.h"
 #include "libc/str/utf16.h"
 #include "libc/x/x.h"
 #include "net/http/escape.h"
+
+static const char kEscapeLiteral[128] = {
+    9, 9, 9, 9, 9, 9, 9, 9, 9, 1, 2, 9, 4, 3, 9, 9,  // 0x00
+    9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,  // 0x10
+    0, 0, 7, 0, 0, 0, 9, 8, 0, 0, 0, 0, 0, 0, 0, 6,  // 0x20
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 9, 9, 0,  // 0x30
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x40
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0,  // 0x50
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x60
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9,  // 0x70
+};
 
 /**
  * Escapes UTF-8 data for JavaScript or JSON string literal.
@@ -66,141 +78,51 @@ char *EscapeJsStringLiteral(const char *p, size_t n, size_t *z) {
           }
         }
       }
-      switch (x) {
-        case ' ':
-        case '!':
-        case '#':
-        case '$':
-        case '%':
-        case '(':
-        case ')':
-        case '*':
-        case '+':
-        case ',':
-        case '-':
-        case '.':
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-        case ':':
-        case ';':
-        case '?':
-        case '@':
-        case 'A':
-        case 'B':
-        case 'C':
-        case 'D':
-        case 'E':
-        case 'F':
-        case 'G':
-        case 'H':
-        case 'I':
-        case 'J':
-        case 'K':
-        case 'L':
-        case 'M':
-        case 'N':
-        case 'O':
-        case 'P':
-        case 'Q':
-        case 'R':
-        case 'S':
-        case 'T':
-        case 'U':
-        case 'V':
-        case 'W':
-        case 'X':
-        case 'Y':
-        case 'Z':
-        case '[':
-        case ']':
-        case '^':
-        case '_':
-        case '`':
-        case 'a':
-        case 'b':
-        case 'c':
-        case 'd':
-        case 'e':
-        case 'f':
-        case 'g':
-        case 'h':
-        case 'i':
-        case 'j':
-        case 'k':
-        case 'l':
-        case 'm':
-        case 'n':
-        case 'o':
-        case 'p':
-        case 'q':
-        case 'r':
-        case 's':
-        case 't':
-        case 'u':
-        case 'v':
-        case 'w':
-        case 'x':
-        case 'y':
-        case 'z':
-        case '{':
-        case '|':
-        case '}':
-        case '~':
+      switch (0 <= x && x <= 127 ? kEscapeLiteral[x] : 9) {
+        case 0:
           *q++ = x;
           break;
-        case '\t':
+        case 1:
           q[0] = '\\';
           q[1] = 't';
           q += 2;
           break;
-        case '\n':
+        case 2:
           q[0] = '\\';
           q[1] = 'n';
           q += 2;
           break;
-        case '\r':
+        case 3:
           q[0] = '\\';
           q[1] = 'r';
           q += 2;
           break;
-        case '\f':
+        case 4:
           q[0] = '\\';
           q[1] = 'f';
           q += 2;
           break;
-        case '\\':
+        case 5:
           q[0] = '\\';
           q[1] = '\\';
           q += 2;
           break;
-        case '/':
+        case 6:
           q[0] = '\\';
           q[1] = '/';
           q += 2;
           break;
-        case '"':
+        case 7:
           q[0] = '\\';
           q[1] = '"';
           q += 2;
           break;
-        case '\'':
+        case 8:
           q[0] = '\\';
           q[1] = '\'';
           q += 2;
           break;
-        case '<':
-        case '>':
-        case '&':
-        case '=':
-        default:
+        case 9:
           w = EncodeUtf16(x);
           do {
             q[0] = '\\';
@@ -212,6 +134,8 @@ char *EscapeJsStringLiteral(const char *p, size_t n, size_t *z) {
             q += 6;
           } while ((w >>= 16));
           break;
+        default:
+          unreachable;
       }
     }
     if (z) *z = q - r;

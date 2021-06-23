@@ -23,6 +23,7 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/iov.h"
 #include "libc/sysv/errfuns.h"
@@ -45,6 +46,7 @@ ssize_t preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
 
   if (fd < 0) return einval();
   if (iovlen < 0) return einval();
+  if (IsAsan() && !__asan_is_valid_iov(iov, iovlen)) return efault();
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     return weaken(__zipos_read)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, iov, iovlen, off);

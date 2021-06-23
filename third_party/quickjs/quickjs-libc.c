@@ -1463,7 +1463,7 @@ static textstartup void js_std_error_props_init() {
     DEF(EBADF),
 #undef DEF
   };
-  _Static_assert(sizeof(js_std_error_props) == sizeof(props));
+  _Static_assert(sizeof(js_std_error_props) == sizeof(props), "");
   memcpy(js_std_error_props, props, sizeof(props));
 }
 const void *const js_std_error_props_ctor[] initarray = {js_std_error_props_init};
@@ -3592,7 +3592,7 @@ static textstartup void js_os_funcs_init() {
     JS_CFUNC_DEF("dup2", 2, js_os_dup2 ),
 #endif
   };
-  _Static_assert(sizeof(js_os_funcs) == sizeof(funcs));
+  _Static_assert(sizeof(js_os_funcs) == sizeof(funcs), "");
   memcpy(js_os_funcs, funcs, sizeof(funcs));
 }
 const void *const js_os_funcs_ctor[] initarray = {js_os_funcs_init};

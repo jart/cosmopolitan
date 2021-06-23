@@ -287,6 +287,9 @@ void sincos(double, double *, double *);
 void sincosf(float, float *, float *);
 void sincosl(long double, long double *, long double *);
 
+float fsumf(const float *, size_t);
+double fsum(const double *, size_t);
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_MATH_H_ */

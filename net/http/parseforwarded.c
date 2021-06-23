@@ -26,6 +26,8 @@
  *
  *     X-Forwarded-For: 203.0.113.42:31337
  *
+ * The port is optional and will be set to zero if absent.
+ *
  * @param s is input data
  * @param n if -1 implies strlen
  * @param ip receives ip on success if not NULL
@@ -34,26 +36,32 @@
  * @see RFC7239's poorly designed Forwarded header
  */
 int ParseForwarded(const char *s, size_t n, uint32_t *ip, uint16_t *port) {
+  int c, t;
   size_t i;
   uint32_t x;
-  int c, j, t;
   if (n == -1) n = s ? strlen(s) : 0;
-  for (t = x = j = i = 0; i < n;) {
-    c = s[i++] & 255;
-    if (isdigit(c)) {
-      t *= 10;
-      t += c - '0';
-      if (t > 255) return -1;
-    } else if (c == '.') {
-      x <<= 8;
-      x |= t;
-      t = 0;
-      ++j;
-    } else if (c == ':') {
-      x <<= 8;
-      x |= t;
-      t = 0;
-      if (j != 3) return -1;
+  if (n) {
+    t = x = i = 0;
+    do {
+      c = s[i++] & 255;
+      if (isdigit(c)) {
+        t *= 10;
+        t += c - '0';
+        if (t > 255) return -1;
+      } else if (c == '.') {
+        x <<= 8;
+        x |= t;
+        t = 0;
+      } else if (c == ':') {
+        break;
+      } else {
+        return -1;
+      }
+    } while (i < n);
+    x <<= 8;
+    x |= t;
+    t = 0;
+    if (c == ':') {
       while (i < n) {
         c = s[i++] & 255;
         if (isdigit(c)) {
@@ -64,13 +72,11 @@ int ParseForwarded(const char *s, size_t n, uint32_t *ip, uint16_t *port) {
           return -1;
         }
       }
-      if (!x || !t) return -1;
-      if (ip) *ip = x;
-      if (port) *port = t;
-      return 0;
-    } else {
-      return -1;
     }
+    if (ip) *ip = x;
+    if (port) *port = t;
+    return 0;
+  } else {
+    return -1;
   }
-  return -1;
 }

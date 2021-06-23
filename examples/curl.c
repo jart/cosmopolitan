@@ -20,7 +20,6 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
-#include "libc/sysv/consts/ai.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/shut.h"
 #include "libc/sysv/consts/sock.h"

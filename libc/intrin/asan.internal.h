@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_INTRIN_ASAN_H_
 #define COSMOPOLITAN_LIBC_INTRIN_ASAN_H_
+#include "libc/calls/struct/iovec.h"
 
 #define kAsanScale              3
 #define kAsanMagic              0x7fff8000
@@ -17,10 +18,12 @@
 #define kAsanUnscoped           -12
 #define kAsanUnmapped           -13
 
-#define SHADOW(x) ((char *)(((uintptr_t)(x) >> kAsanScale) + kAsanMagic))
+#define SHADOW(x) ((signed char *)(((uintptr_t)(x) >> kAsanScale) + kAsanMagic))
 
 void __asan_map_shadow(uintptr_t, size_t);
 void __asan_poison(uintptr_t, size_t, int);
 void __asan_unpoison(uintptr_t, size_t);
+bool __asan_is_valid(const void *, size_t);
+bool __asan_is_valid_iov(const struct iovec *, int);
 
 #endif /* COSMOPOLITAN_LIBC_INTRIN_ASAN_H_ */

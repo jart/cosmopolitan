@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/psllw.h"
+#include "libc/str/str.h"
 
 /**
  * Multiplies shorts by two power.
@@ -25,13 +26,11 @@
  */
 void(psllwv)(uint16_t a[8], const uint16_t b[8], const uint64_t c[2]) {
   unsigned i;
-  if (c[0] > 15) {
-    for (i = 0; i < 8; ++i) {
-      a[i] = 0;
-    }
-  } else {
+  if (c[0] < 16) {
     for (i = 0; i < 8; ++i) {
       a[i] = b[i] << c[0];
     }
+  } else {
+    memset(a, 0, 16);
   }
 }

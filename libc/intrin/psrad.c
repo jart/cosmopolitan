@@ -26,14 +26,9 @@
  * @mayalias
  */
 void(psrad)(int32_t a[4], const int32_t b[4], unsigned char k) {
-  unsigned i, x, m;
+  unsigned i;
   if (k > 31) k = 31;
   for (i = 0; i < 4; ++i) {
-    m = 0;
-    x = b[i];
-    if (x & 0x80000000) m = ~(0xffffffffu >> k);
-    x >>= k;
-    x |= m;
-    a[i] = x;
+    a[i] = b[i] >> k;
   }
 }

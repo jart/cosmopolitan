@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -28,6 +29,7 @@
  * @asyncsignalsafe
  */
 int fstat(int fd, struct stat *st) {
+  if (IsAsan() && (!st || !__asan_is_valid(st, sizeof(*st)))) return efault();
   if (__isfdkind(fd, kFdZip)) {
     return weaken(__zipos_fstat)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, st);

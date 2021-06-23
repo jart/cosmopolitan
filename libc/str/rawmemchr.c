@@ -37,7 +37,7 @@ void *rawmemchr(const void *m, int c) {
   const unsigned char *s;
   s = m;
   c &= 255;
-  v = 0x0101010101010101 * c;
+  v = 0x0101010101010101ul * c;
   for (; (uintptr_t)s & 7; ++s) {
     if (*s == c) return s;
   }

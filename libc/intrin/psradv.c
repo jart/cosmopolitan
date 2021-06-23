@@ -25,15 +25,10 @@
  * @mayalias
  */
 void(psradv)(int32_t a[4], const int32_t b[4], const uint64_t c[2]) {
+  unsigned i;
   unsigned char k;
-  unsigned i, x, m;
   k = c[0] > 31 ? 31 : c[0];
   for (i = 0; i < 4; ++i) {
-    m = 0;
-    x = b[i];
-    if (x & 0x80000000u) m = ~(0xffffffffu >> k);
-    x >>= k;
-    x |= m;
-    a[i] = x & 0xffffffffu;
+    a[i] = b[i] >> k;
   }
 }

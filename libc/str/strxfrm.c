@@ -25,7 +25,6 @@
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-
 #include "libc/assert.h"
 #include "libc/str/str.h"
 

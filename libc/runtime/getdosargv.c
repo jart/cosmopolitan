@@ -89,14 +89,16 @@ textwindows noasan int GetDosArgv(const char16_t *cmdline, char *buf,
   argc = 0;
   st.wc = DecodeDosArgv(&st.s);
   while (st.wc) {
-    while (st.wc && isspace(st.wc)) st.wc = DecodeDosArgv(&st.s);
+    while (st.wc && (st.wc == ' ' || st.wc == '\t')) {
+      st.wc = DecodeDosArgv(&st.s);
+    }
     if (!st.wc) break;
     if (++argc < max) {
       argv[argc - 1] = st.p < st.pe ? st.p : NULL;
     }
     inquote = false;
     while (st.wc) {
-      if (!inquote && isspace(st.wc)) break;
+      if (!inquote && (st.wc == ' ' || st.wc == '\t')) break;
       if (st.wc == '"' || st.wc == '\\') {
         slashes = 0;
         quotes = 0;

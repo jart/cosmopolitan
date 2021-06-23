@@ -22,7 +22,7 @@
  * Returns parent process id.
  * @asyncsignalsafe
  */
-int32_t getppid(void) {
+int getppid(void) {
   if (!IsWindows()) {
     if (!IsNetbsd()) {
       return sys_getppid();

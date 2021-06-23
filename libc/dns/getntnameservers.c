@@ -38,41 +38,39 @@
  *     this function will append
  * @return number of nameservers appended, or -1 w/ errno
  */
-textwindows int getntnameservers(struct ResolvConf *resolv) {
+textwindows int GetNtNameServers(struct ResolvConf *resolv) {
   int rc;
   char value8[128];
   int64_t hkInterfaces;
   struct sockaddr_in nameserver;
-  char16_t value[128], ifaceuuid[64];
-  uint32_t i, keycount, valuebytes, ifaceuuidlen;
+  char16_t value[128], uuid[64];
+  uint32_t i, keycount, valuebytes, uuidlen;
   keycount = 0;
   hkInterfaces = kNtInvalidHandleValue;
   if (!RegOpenKeyEx(
           kNtHkeyLocalMachine,
           u"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces",
           0, kNtKeyRead, &hkInterfaces) &&
-      !RegQueryInfoKey(hkInterfaces, NULL, NULL, NULL, &keycount, NULL, NULL,
-                       NULL, NULL, NULL, NULL, NULL)) {
+      !RegQueryInfoKey(hkInterfaces, 0, 0, 0, &keycount, 0, 0, 0, 0, 0, 0, 0)) {
     nameserver.sin_family = AF_INET;
     nameserver.sin_port = htons(DNS_PORT);
     rc = 0;
     for (i = 0; i < keycount; ++i) {
-      ifaceuuidlen = sizeof(ifaceuuid);
-      if (!RegEnumKeyEx(hkInterfaces, i, ifaceuuid, &ifaceuuidlen, NULL, NULL,
-                        NULL, NULL) &&
-          ((!RegGetValue(hkInterfaces, ifaceuuid, u"DhcpIpAddress",
+      uuidlen = sizeof(uuid);
+      if (!RegEnumKeyEx(hkInterfaces, i, uuid, &uuidlen, 0, 0, 0, 0) &&
+          ((!RegGetValue(hkInterfaces, uuid, u"DhcpIpAddress",
                          kNtRrfRtRegSz | kNtRrfRtRegMultiSz, NULL, value,
                          ((valuebytes = sizeof(value)), &valuebytes)) &&
             valuebytes > 2 * sizeof(char16_t)) ||
-           (!RegGetValue(hkInterfaces, ifaceuuid, u"IpAddress",
+           (!RegGetValue(hkInterfaces, uuid, u"IpAddress",
                          kNtRrfRtRegSz | kNtRrfRtRegMultiSz, NULL, value,
                          ((valuebytes = sizeof(value)), &valuebytes)) &&
             valuebytes > 2 * sizeof(char16_t))) &&
-          ((!RegGetValue(hkInterfaces, ifaceuuid, u"DhcpNameServer",
+          ((!RegGetValue(hkInterfaces, uuid, u"DhcpNameServer",
                          kNtRrfRtRegSz | kNtRrfRtRegMultiSz, NULL, value,
                          ((valuebytes = sizeof(value)), &valuebytes)) &&
             valuebytes > 2 * sizeof(char16_t)) ||
-           (!RegGetValue(hkInterfaces, ifaceuuid, u"NameServer",
+           (!RegGetValue(hkInterfaces, uuid, u"NameServer",
                          kNtRrfRtRegSz | kNtRrfRtRegMultiSz, NULL, value,
                          ((valuebytes = sizeof(value)), &valuebytes)) &&
             valuebytes > 2 * sizeof(char16_t)))) {

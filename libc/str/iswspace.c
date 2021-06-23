@@ -18,6 +18,39 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
-int iswspace(wint_t wc) {
-  return isspace(wc);
+/**
+ * Returns nonzero if c is space character.
+ *
+ * We define this as invisible characters which move the cursor. That
+ * means `\t\r\n\f\v` and unicodes whose category begins with `Z` but
+ * not ogham since it's not invisible and non-breaking spaces neither
+ * since they're not invisible to emacs users.
+ */
+int iswspace(wint_t c) {
+  switch (c) {
+    case '\t':    // CHARACTER TABULATION
+    case '\n':    // LINE FEED
+    case '\f':    // FORM FEED
+    case '\v':    // LINE TABULATION
+    case '\r':    // CARRIAGE RETURN
+    case ' ':     // SPACE
+    case 0x2000:  // EN QUAD (Zs)
+    case 0x2001:  // EM QUAD (Zs)
+    case 0x2002:  // EN SPACE (Zs)
+    case 0x2003:  // EM SPACE (Zs)
+    case 0x2004:  // THREE-PER-EM SPACE (Zs)
+    case 0x2005:  // FOUR-PER-EM SPACE (Zs)
+    case 0x2006:  // SIX-PER-EM SPACE (Zs)
+    case 0x2007:  // FIGURE SPACE (Zs)
+    case 0x2008:  // PUNCTUATION SPACE (Zs)
+    case 0x2009:  // THIN SPACE (Zs)
+    case 0x200a:  // HAIR SPACE (Zs)
+    case 0x2028:  // LINE SEPARATOR (Zl)
+    case 0x2029:  // PARAGRAPH SEPARATOR (Zp)
+    case 0x205f:  // MEDIUM MATHEMATICAL SPACE (Zs)
+    case 0x3000:  // IDEOGRAPHIC SPACE (Zs)
+      return 1;
+    default:
+      return 0;
+  }
 }

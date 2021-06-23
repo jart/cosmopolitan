@@ -21,42 +21,21 @@
 #include "libc/runtime/carsort.h"
 #include "tool/build/lib/xlaterrno.h"
 
-struct LinuxErrno {
+struct thatispacked LinuxErrno {
   int32_t local;
-  int32_t linux;
+  uint8_t linux;
 };
 
-extern const char kLinuxErrnosLength[];
 extern const struct LinuxErrno kLinuxErrnos[];
-static struct LinuxErrno *errnos;
 
 /**
  * Turns local errno into Linux errno.
  */
 int XlatErrno(int local) {
-  static bool once;
-  long i, n, m, l, r;
-  n = (uintptr_t)kLinuxErrnosLength;
-  if (!once) {
-    errnos = malloc(sizeof(struct LinuxErrno) * n);
-    for (i = 0; i < n; ++i) {
-      errnos[i].local =
-          *(int *)((intptr_t)kLinuxErrnos + kLinuxErrnos[i].local);
-      errnos[i].linux = kLinuxErrnos[i].linux;
-    }
-    carsort100(n, (void *)errnos);
-    once = true;
-  }
-  l = 0;
-  r = n - 1;
-  while (l <= r) {
-    m = (l + r) / 2;
-    if (errnos[m].local < local) {
-      l = m + 1;
-    } else if (errnos[m].local > local) {
-      r = m - 1;
-    } else {
-      return errnos[m].linux;
+  int i;
+  for (i = 0; kLinuxErrnos[i].local; ++i) {
+    if (local == *(int *)((intptr_t)kLinuxErrnos + kLinuxErrnos[i].local)) {
+      return kLinuxErrnos[i].linux;
     }
   }
   return ENOSYS;

@@ -21,43 +21,37 @@
 #include "libc/sysv/errfuns.h"
 
 /**
- * Serializes DNS message header to wire.
+ * Serializes DNS message h to wire.
  *
  * @return number of bytes written (always 12) or -1 w/ errno
  * @see pascalifydnsname()
  */
-int serializednsheader(uint8_t *buf, size_t size,
-                       const struct DnsHeader header) {
-  if (size < 12) return enospc();
-  buf[0x0] = header.id >> 010u;
-  buf[0x1] = header.id >> 000u;
-  buf[0x2] = header.bf1;
-  buf[0x3] = header.bf2;
-  buf[0x4] = header.qdcount >> 010u;
-  buf[0x5] = header.qdcount >> 000u;
-  buf[0x6] = header.ancount >> 010u;
-  buf[0x7] = header.ancount >> 000u;
-  buf[0x8] = header.nscount >> 010u;
-  buf[0x9] = header.nscount >> 000u;
-  buf[0xa] = header.arcount >> 010u;
-  buf[0xb] = header.arcount >> 000u;
-  return 12;
+void SerializeDnsHeader(uint8_t p[restrict 12], const struct DnsHeader *h) {
+  p[0x0] = h->id >> 8;
+  p[0x1] = h->id;
+  p[0x2] = h->bf1;
+  p[0x3] = h->bf2;
+  p[0x4] = h->qdcount >> 8;
+  p[0x5] = h->qdcount;
+  p[0x6] = h->ancount >> 8;
+  p[0x7] = h->ancount;
+  p[0x8] = h->nscount >> 8;
+  p[0x9] = h->nscount;
+  p[0xa] = h->arcount >> 8;
+  p[0xb] = h->arcount;
 }
 
 /**
- * Serializes DNS message header to wire.
+ * Serializes DNS message h to wire.
  *
  * @return number of bytes read (always 12) or -1 w/ errno
  */
-int deserializednsheader(struct DnsHeader *header, const uint8_t *buf,
-                         size_t size) {
-  if (size < 12) return ebadmsg();
-  header->id = READ16BE(buf + 0);
-  header->bf1 = buf[2];
-  header->bf2 = buf[3];
-  header->qdcount = READ16BE(buf + 4);
-  header->ancount = READ16BE(buf + 6);
-  header->nscount = READ16BE(buf + 8);
-  header->arcount = READ16BE(buf + 10);
-  return 12;
+void DeserializeDnsHeader(struct DnsHeader *h, const uint8_t p[restrict 12]) {
+  h->id = READ16BE(p);
+  h->bf1 = p[2];
+  h->bf2 = p[3];
+  h->qdcount = READ16BE(p + 4);
+  h->ancount = READ16BE(p + 6);
+  h->nscount = READ16BE(p + 8);
+  h->arcount = READ16BE(p + 10);
 }

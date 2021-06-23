@@ -83,24 +83,29 @@ TEST(regex, testIpExtended) {
   regfree(&rx);
 }
 
+TEST(regex, testUnicodeCharacterClass) {
+  regex_t rx;
+  EXPECT_EQ(REG_OK, regcomp(&rx, "^[[:alpha:]][[:alpha:]]$", 0));
+  EXPECT_EQ(REG_OK, regexec(&rx, "𝐵𝑏", 0, 0, 0));
+  EXPECT_NE(REG_OK, regexec(&rx, "₀₁", 0, 0, 0));
+  regfree(&rx);
+}
+
 void A(void) {
   regex_t rx;
   regcomp(&rx, "^[-._0-9A-Za-z]*$", REG_EXTENDED);
   regexec(&rx, "foo.com", 0, NULL, 0);
   regfree(&rx);
 }
-
 void B(regex_t *rx) {
   regexec(rx, "foo.com", 0, NULL, 0);
 }
-
 void C(void) {
   regex_t rx;
   regcomp(&rx, "^[-._0-9A-Za-z]*$", 0);
   regexec(&rx, "foo.com", 0, NULL, 0);
   regfree(&rx);
 }
-
 void D(regex_t *rx, regmatch_t *m) {
   regexec(rx, "127.0.0.1", rx->re_nsub + 1, m, 0);
 }
@@ -113,7 +118,6 @@ BENCH(regex, bench) {
   regfree(&rx);
   EZBENCH2("easy api extended", donothing, A());
   EZBENCH2("easy api basic", donothing, C());
-
   EXPECT_EQ(REG_OK, regcomp(&rx,
                             "^"
                             "\\([0-9][0-9]*\\)\\."
@@ -126,7 +130,6 @@ BENCH(regex, bench) {
   EZBENCH2("precompiled basic match", donothing, D(&rx, m));
   free(m);
   regfree(&rx);
-
   EXPECT_EQ(REG_OK, regcomp(&rx,
                             "^"
                             "([0-9]{1,3})\\."
@@ -139,7 +142,6 @@ BENCH(regex, bench) {
   EZBENCH2("precompiled extended match", donothing, D(&rx, m));
   free(m);
   regfree(&rx);
-
   EXPECT_EQ(REG_OK, regcomp(&rx,
                             "^"
                             "([0-9]{1,3})\\."
@@ -150,6 +152,19 @@ BENCH(regex, bench) {
                             REG_EXTENDED | REG_NOSUB));
   m = calloc(rx.re_nsub + 1, sizeof(regmatch_t));
   EZBENCH2("precompiled nosub match", donothing, D(&rx, m));
+  free(m);
+  regfree(&rx);
+  EXPECT_EQ(REG_OK, regcomp(&rx, "^[a-z]*$", REG_EXTENDED | REG_NOSUB));
+  m = calloc(rx.re_nsub + 1, sizeof(regmatch_t));
+  EZBENCH2("precompiled alpha", donothing,
+           regexec(&rx, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 0, 0, 0));
+  free(m);
+  regfree(&rx);
+  EXPECT_EQ(REG_OK,
+            regcomp(&rx, "^[a-z]*$", REG_EXTENDED | REG_NOSUB | REG_ICASE));
+  m = calloc(rx.re_nsub + 1, sizeof(regmatch_t));
+  EZBENCH2("precompiled alpha icase", donothing,
+           regexec(&rx, "aaaaaaaaaaaaaaaAAAAAAAAAAAAAA", 0, 0, 0));
   free(m);
   regfree(&rx);
 }

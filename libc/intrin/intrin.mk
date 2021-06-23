@@ -41,13 +41,11 @@ $(LIBC_INTRIN_A).pkg:					\
 		$(LIBC_INTRIN_A_OBJS)			\
 		$(foreach x,$(LIBC_INTRIN_A_DIRECTDEPS),$($(x)_A).pkg)
 
-$(LIBC_INTRIN_A_OBJS):					\
+o/$(MODE)/libc/intrin/asan.o				\
+o/$(MODE)/libc/intrin/ubsan.o:				\
 		OVERRIDE_CFLAGS +=			\
-			$(NO_MAGIC)			\
-			-O3
-
-o/$(MODE)/libc/intrin/asan.o:				\
-		OVERRIDE_CFLAGS +=			\
+			-fno-sanitize=all		\
+			-fno-stack-protector		\
 			-mgeneral-regs-only		\
 			-O2
 

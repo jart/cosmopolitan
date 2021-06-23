@@ -18,9 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/macros.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 
@@ -57,6 +60,29 @@ TEST(writev, big_fullCompletion) {
   ASSERT_NE(-1, (fd = open("file", O_RDWR | O_CREAT | O_TRUNC, 0644)));
   EXPECT_EQ(6 * 1024 * 1024, writev(fd, iov, ARRAYLEN(iov)));
   EXPECT_NE(-1, close(fd));
+}
+
+TEST(writev, asanError_efaults) {
+  if (!IsAsan()) return;
+  void *malloc_(size_t) asm("malloc");
+  void free_(void *) asm("free");
+  void *p;
+  int fd;
+  p = malloc_(32);
+  EXPECT_NE(-1, (fd = open("asan", O_RDWR | O_CREAT | O_TRUNC, 0644)));
+  EXPECT_EQ(32, write(fd, p, 32));
+  EXPECT_NE(-1, lseek(fd, 0, SEEK_SET));
+  EXPECT_EQ(32, read(fd, p, 32));
+  EXPECT_EQ(-1, write(fd, p, 33));
+  EXPECT_EQ(EFAULT, errno);
+  EXPECT_EQ(-1, write(fd, p, -1));
+  EXPECT_EQ(EFAULT, errno);
+  free_(p);
+  EXPECT_EQ(-1, write(fd, p, 32));
+  EXPECT_EQ(EFAULT, errno);
+  EXPECT_EQ(-1, read(fd, p, 32));
+  EXPECT_EQ(EFAULT, errno);
+  close(fd);
 }
 
 TEST(writev, empty_stillPerformsIoOperation) {

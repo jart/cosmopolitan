@@ -9,7 +9,7 @@ struct DnsQuestion {
   uint16_t qclass;
 };
 
-int serializednsquestion(uint8_t *, size_t, struct DnsQuestion);
+int SerializeDnsQuestion(uint8_t *, size_t, const struct DnsQuestion *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -26,14 +26,9 @@
  * @mayalias
  */
 void(psraw)(int16_t a[8], const int16_t b[8], unsigned char k) {
-  unsigned i, x, m;
+  unsigned i;
   if (k > 15) k = 15;
   for (i = 0; i < 8; ++i) {
-    m = 0;
-    x = b[i];
-    if (x & 0x8000) m = ~(0xffff >> k);
-    x >>= k;
-    x |= m;
-    a[i] = x;
+    a[i] = b[i] >> k;
   }
 }

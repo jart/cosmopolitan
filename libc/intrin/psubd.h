@@ -4,7 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-void psubd(int32_t[4], const int32_t[4], const int32_t[4]);
+void psubd(uint32_t[4], const uint32_t[4], const uint32_t[4]);
 
 #define psubd(A, B, C) \
   INTRIN_SSEVEX_X_X_X_(psubd, SSE2, "psubd", INTRIN_NONCOMMUTATIVE, A, B, C)

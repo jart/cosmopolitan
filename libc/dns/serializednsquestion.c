@@ -26,11 +26,14 @@
  * @return number of bytes written
  * @see pascalifydnsname()
  */
-int serializednsquestion(uint8_t *buf, size_t size, struct DnsQuestion dq) {
+int SerializeDnsQuestion(uint8_t *buf, size_t size,
+                         const struct DnsQuestion *dq) {
   int wrote;
-  if ((wrote = pascalifydnsname(buf, size, dq.qname)) == -1) return -1;
+  if ((wrote = PascalifyDnsName(buf, size, dq->qname)) == -1) return -1;
   if (wrote + 1 + 4 > size) return enospc();
-  buf[wrote + 1] = dq.qtype >> 010, buf[wrote + 2] = dq.qtype >> 000;
-  buf[wrote + 3] = dq.qclass >> 010, buf[wrote + 4] = dq.qclass >> 000;
+  buf[wrote + 1] = dq->qtype >> 8;
+  buf[wrote + 2] = dq->qtype;
+  buf[wrote + 3] = dq->qclass >> 8;
+  buf[wrote + 4] = dq->qclass;
   return wrote + 5;
 }

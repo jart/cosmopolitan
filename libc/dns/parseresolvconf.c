@@ -41,7 +41,7 @@
  * @param f is an open stream with file content
  * @return number of nameservers appended, or -1 w/ errno
  */
-int parseresolvconf(struct ResolvConf *resolv, struct FILE *f) {
+int ParseResolvConf(struct ResolvConf *resolv, struct FILE *f) {
   /* TODO(jart): options ndots:5 */
   int rc;
   char *line;
@@ -49,7 +49,7 @@ int parseresolvconf(struct ResolvConf *resolv, struct FILE *f) {
   struct sockaddr_in nameserver;
   char *directive, *value, *tok, *comment;
   rc = 0;
-  line = NULL;
+  line = 0;
   linesize = 0;
   nameserver.sin_family = AF_INET;
   nameserver.sin_port = htons(DNS_PORT);

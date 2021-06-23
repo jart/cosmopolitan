@@ -33,7 +33,7 @@ uint32_t EncodeRde(struct XedDecodedInst *x) {
   uint32_t osz = x->op.osz ^ x->op.realmode;
   return kWordLog2[~x->op.opcode & 1][osz][x->op.rexw] << 28 |
          x->op.mode << 26 | kXedEamode[x->op.asz][x->op.mode] << 24 |
-         x->op.rep << 30 | x->op.mod << 22 | x->op.asz << 17 |
+         (uint32_t)x->op.rep << 30 | x->op.mod << 22 | x->op.asz << 17 |
          x->op.seg_ovd << 18 | x->op.rexw << 6 | osz << 5 |
          (x->op.rex << 4 | x->op.rexb << 3 | x->op.srm) << 12 |
          (x->op.rex << 4 | x->op.rexb << 3 | x->op.rm) << 7 |

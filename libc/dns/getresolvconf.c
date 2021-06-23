@@ -34,7 +34,7 @@ static struct ResolvConfInitialStaticMemory {
 /**
  * Returns singleton with DNS server address.
  */
-const struct ResolvConf *getresolvconf(void) {
+const struct ResolvConf *GetResolvConf(void) {
   int rc;
   FILE *f;
   struct ResolvConfInitialStaticMemory *init;
@@ -43,16 +43,16 @@ const struct ResolvConf *getresolvconf(void) {
     g_resolvconf = &init->rv;
     pushmov(&init->rv.nameservers.n, ARRAYLEN(init->nameservers));
     init->rv.nameservers.p = init->nameservers;
-    __cxa_atexit(freeresolvconf, &g_resolvconf, NULL);
+    __cxa_atexit(FreeResolvConf, &g_resolvconf, NULL);
     if (!IsWindows()) {
       if ((f = fopen("/etc/resolv.conf", "r"))) {
-        rc = parseresolvconf(g_resolvconf, f);
+        rc = ParseResolvConf(g_resolvconf, f);
       } else {
         rc = -1;
       }
       fclose(f);
     } else {
-      rc = getntnameservers(g_resolvconf);
+      rc = GetNtNameServers(g_resolvconf);
     }
     if (rc == -1 && !IsTiny()) {
       /* TODO(jart): Elevate robustness. */

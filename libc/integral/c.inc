@@ -584,6 +584,13 @@ typedef uint64_t uintmax_t;
 #define noasan
 #endif
 
+#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 408 || \
+    __has_attribute(__no_sanitize_undefined__)
+#define noubsan __attribute__((__no_sanitize_undefined__))
+#else
+#define noubsan
+#endif
+
 #ifndef unreachable
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define unreachable __builtin_unreachable()

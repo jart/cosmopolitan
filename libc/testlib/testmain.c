@@ -21,6 +21,7 @@
 #include "libc/calls/internal.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/x86feature.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
@@ -70,9 +71,13 @@ static testonly void GetOpts(int argc, char *argv[]) {
  * Generic test program main function.
  */
 testonly int main(int argc, char *argv[]) {
+  const char *comdbg;
   __log_level = kLogInfo;
   GetOpts(argc, argv);
   showcrashreports();
+  if ((comdbg = FindDebugBinary())) {
+    setenv("COMDBG", comdbg, true);
+  }
   g_testlib_shoulddebugbreak = IsDebuggerPresent(false);
   sys_getpid(); /* make strace easier to read */
   testlib_clearxmmregisters();

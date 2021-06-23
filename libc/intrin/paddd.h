@@ -4,7 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-void paddd(int32_t[4], const int32_t[4], const int32_t[4]);
+void paddd(uint32_t[4], const uint32_t[4], const uint32_t[4]);
 
 #define paddd(A, B, C) \
   INTRIN_SSEVEX_X_X_X_(paddd, SSE2, "paddd", INTRIN_COMMUTATIVE, A, B, C)

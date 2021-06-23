@@ -1,0 +1,29 @@
+#!/bin/sh
+#
+# Info-ZIP Zip post-installation script.
+#
+# Last revised: 2007-09-29 SMS.  Zip 3.0.
+#
+# Post installation script (simply inform installer about PATH etc)
+#
+echo ''
+echo 'Installation is complete.  Users should adjust their environment'
+echo 'variables to include these directories:'
+echo "   PATH:    ${BASEDIR}/${PKG}/bin"
+echo "   MANPATH: ${BASEDIR}/${PKG}/man"
+echo ''
+echo "Commands like the following may be added to a user's shell start-up"
+echo 'file (.cshrc, .login, .profile, ...) to do this:'
+echo ''
+echo '   For a Bourne-like shell:'
+echo "      PATH=\"\${PATH}:${BASEDIR}/${PKG}/bin\""
+echo "      MANPATH=\"\${MANPATH}:${BASEDIR}/${PKG}/man\""
+echo '      export PATH MANPATH'
+echo ''
+echo '   For a C shell:'
+echo "      setenv PATH \"\${PATH}:${BASEDIR}/${PKG}/bin\""
+echo "      setenv MANPATH \"\${MANPATH}:${BASEDIR}/${PKG}/man\""
+echo ''
+echo "See the files under ${BASEDIR}/${PKG}/doc for more information."
+echo ''
+exit 0

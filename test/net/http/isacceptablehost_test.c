@@ -89,43 +89,12 @@ TEST(ParseIp, test) {
   EXPECT_EQ(-1, ParseIp("hello..example", -1));
 }
 
-TEST(ParseForwarded, test) {
-  uint32_t ip = 7;
-  uint16_t port = 7;
-  EXPECT_EQ(-1, ParseForwarded("", -1, &ip, &port));
-  EXPECT_EQ(-1, ParseForwarded("0.0.0.0", -1, &ip, &port));
-  EXPECT_EQ(-1, ParseForwarded("8.8.8.8", -1, &ip, &port));
-  EXPECT_EQ(-1, ParseForwarded("[::1]:123", -1, &ip, &port));
-  EXPECT_EQ(7, ip);
-  EXPECT_EQ(7, port);
-  EXPECT_EQ(0, ParseForwarded("0.0.0.1:123", -1, &ip, &port));
-  EXPECT_EQ(0x00000001, ip);
-  EXPECT_EQ(123, port);
-  EXPECT_EQ(0, ParseForwarded("1.2.3.4:123", -1, &ip, &port));
-  EXPECT_EQ(0x01020304, ip);
-  EXPECT_EQ(123, port);
-  EXPECT_EQ(0, ParseForwarded("128.2.3.4:123", -1, &ip, &port));
-  EXPECT_EQ(0x80020304, ip);
-  EXPECT_EQ(123, port);
-  EXPECT_EQ(0, ParseForwarded("255.255.255.255:123", -1, &ip, &port));
-  EXPECT_EQ(0xFFFFFFFF, ip);
-  EXPECT_EQ(123, port);
-  EXPECT_EQ(0, ParseForwarded("203.0.113.0:123", -1, &ip, &port));
-  EXPECT_EQ(0xcb007100, ip);
-  EXPECT_EQ(123, port);
-  EXPECT_EQ(0, ParseForwarded("203.0.113.42:31337", -1, &ip, &port));
-  EXPECT_EQ(-1, ParseForwarded("...:123", -1, &ip, &port));
-  EXPECT_EQ(-1, ParseForwarded("203.0.113.0:123123123", -1, &ip, &port));
-}
-
 BENCH(IsAcceptableHost, bench) {
   uint32_t ip;
   uint16_t port;
   EZBENCH2("IsAcceptableHost 127.0.0.1", donothing,
            IsAcceptableHost("127.0.0.1", 9));
   EZBENCH2("IsAcceptablePort 80", donothing, IsAcceptablePort("80", 2));
-  EZBENCH2("ParseForwarded 80", donothing,
-           ParseForwarded("203.0.113.42:31337", 20, &ip, &port));
   EZBENCH2("IsAcceptableHost foo.example", donothing,
            IsAcceptableHost("foo.example:31337", 17));
 }

@@ -164,7 +164,7 @@ local function main()
       Write(EscapeHtml(VisualizeControlCodes(GetFragment())))
       Write('\r\n')
    end
-   Write('<dt>GetRemoteAddr() <small>(from Bekeley Sockets or X-Forwarded-For header)</small>\r\n')
+   Write('<dt>GetRemoteAddr() <small>(from Berkeley Sockets or X-Forwarded-For header)</small>\r\n')
    Write('<dd>')
    ip, port = GetRemoteAddr()
    Write(string.format('%s, %d', FormatIp(ip), port))

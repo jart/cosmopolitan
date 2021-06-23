@@ -1,0 +1,29 @@
+#!/bin/sh
+#
+# Info-ZIP Zip pre-installation script.
+#
+# Last revised: 2007-09-29 SMS.  Zip 3.0.
+#
+# pkgadd should set a good PATH, but just in case, ...
+PATH="/sbin:/usr/bin:${PATH}"
+export PATH
+echo ''
+echo 'Please report problems to Info-ZIP using:'
+echo ''
+echo '      http://info-zip.org/zip-bug.html'
+echo ''
+arch=`uname -p`
+if [ "arch_${arch}" != "arch_.ARCH." ]; then
+   echo "This product MUST be installed on a Solaris \".ARCH.\" system."
+   echo "This system appears to have \"${arch}\" architecture, not \".ARCH.\"."
+   echo "Please install the version for the \".ARCH.\" architecture."
+   echo 'Aborting installation...'
+   returncode=1
+else
+   echo "Installing on \".ARCH.\" architecture..."
+   returncode=0
+fi
+echo ''
+sleep 4
+exit ${returncode:-1}
+#

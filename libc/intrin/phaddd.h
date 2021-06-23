@@ -4,7 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-void phaddd(int32_t[4], const int32_t[4], const int32_t[4]);
+void phaddd(uint32_t[4], const uint32_t[4], const uint32_t[4]);
 
 #define phaddd(A, B, C) \
   INTRIN_SSEVEX_X_X_X_(phaddd, SSSE3, "phaddd", INTRIN_NONCOMMUTATIVE, A, B, C)

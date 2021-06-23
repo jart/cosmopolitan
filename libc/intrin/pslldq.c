@@ -20,7 +20,7 @@
 #include "libc/str/str.h"
 
 /**
- * Shifts vector right by n bytes w/ zero-fill.
+ * Shifts vector left by n bytes w/ zero-fill.
  *
  * @param a is input vector
  * @param b receives output
@@ -28,7 +28,9 @@
  */
 void(pslldq)(uint8_t b[16], const uint8_t a[16], unsigned long n) {
   unsigned i;
+  uint8_t t[16];
   if (n > 16) n = 16;
-  memmove(b + n, a, 16 - n);
-  memset(b, 0, n);
+  for (i = 0; i < n; ++i) t[i] = 0;
+  for (i = 0; i < 16 - n; ++i) t[n + i] = a[i];
+  memcpy(b, t, 16);
 }

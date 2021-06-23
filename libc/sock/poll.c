@@ -19,8 +19,10 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Waits for something to happen on multiple file descriptors at once.
@@ -34,9 +36,11 @@
  * @return fds[𝑖].revents flags can have:
  *     (fds[𝑖].events & POLL{IN,OUT,PRI,HUP,ERR,NVAL})
  * @asyncsignalsafe
- * @see ppoll()
  */
 int poll(struct pollfd *fds, uint64_t nfds, int32_t timeout_ms) {
+  if (IsAsan() && !__asan_is_valid(fds, nfds * sizeof(struct pollfd))) {
+    return efault();
+  }
   if (!IsWindows()) {
     return sys_poll(fds, nfds, timeout_ms);
   } else {

@@ -36,7 +36,7 @@ int sys_openat(int dirfd, const char *file, int flags, unsigned mode) {
     errno = err;
     fd = __sys_openat(dirfd, file, flags & ~O_CLOEXEC, mode);
     if (fd != -1 && (flags & O_CLOEXEC)) {
-      sys_fcntl(fd, F_SETFD, FD_CLOEXEC);
+      __sys_fcntl(fd, F_SETFD, FD_CLOEXEC);
     }
   }
 

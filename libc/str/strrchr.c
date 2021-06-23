@@ -26,4 +26,6 @@
  * @return address of last c in s, or NULL if not found
  * @asyncsignalsafe
  */
-char *(strrchr)(const char *s, int c) { return memrchr(s, c, strlen(s)); }
+char *strrchr(const char *s, int c) {
+  return memrchr(s, c, strlen(s));
+}

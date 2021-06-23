@@ -18,6 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
-int iswblank(wint_t wc) {
-  return isblank(wc);
+/**
+ * Returns nonzero if c is space or tab.
+ */
+int iswblank(wint_t c) {
+  return c == ' ' || c == '\t';
 }

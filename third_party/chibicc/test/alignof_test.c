@@ -1,4 +1,5 @@
 #include "third_party/chibicc/test/test.h"
+#
 
 int _Alignas(512) g1;
 int _Alignas(512) g2;

@@ -28,7 +28,7 @@
 int __fixupnewfd(int fd, int flags) {
   if (fd != -1) {
     if (flags & O_CLOEXEC) {
-      sys_fcntl(fd, F_SETFD, FD_CLOEXEC);
+      __sys_fcntl(fd, F_SETFD, FD_CLOEXEC);
     }
   }
   return fd;

@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.internal.h"
 #include "libc/str/str.h"
 
 /**
@@ -30,8 +29,13 @@
  */
 char *strstr(const char *haystack, const char *needle) {
   size_t i;
-  if (!*needle) return haystack;
-  haystack = firstnonnull(strchr(haystack, *needle), haystack);
+  const char *p;
+  if (!needle[0]) return haystack;
+  if (haystack == needle) return haystack;
+  p = strchr(haystack, needle[0]);
+  if (!needle[1]) return p;
+  if (p) haystack = p;
+  /* TODO: make not quadratic */
   for (;;) {
     for (i = 0;;) {
       if (!needle[i]) return (/*unconst*/ char *)haystack;

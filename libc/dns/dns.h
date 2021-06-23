@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_DNS_DNS_H_
 #define COSMOPOLITAN_LIBC_DNS_DNS_H_
+#include "libc/calls/weirdtypes.h"
 #include "libc/dns/resolvconf.h"
 #include "libc/sock/sock.h"
 
@@ -27,6 +28,15 @@
 #define EAI_INTR        -104
 #define EAI_NOTCANCELED -102
 
+/* AI_* conforms to NT ABI */
+#define AI_PASSIVE     1
+#define AI_CANONNAME   2
+#define AI_NUMERICHOST 4
+#define AI_NUMERICSERV 8
+#define AI_ALL         0x0100
+#define AI_ADDRCONFIG  0x0400
+#define AI_V4MAPPED    0x0800
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -47,11 +57,15 @@ struct addrinfo {
 int getaddrinfo(const char *, const char *, const struct addrinfo *,
                 struct addrinfo **) paramsnonnull((4));
 int freeaddrinfo(struct addrinfo *);
+int getnameinfo(const struct sockaddr *, socklen_t, char *, socklen_t, char *,
+                socklen_t, int);
 const char *gai_strerror(int);
-int dnsnamecmp(const char *, const char *) paramsnonnull();
-int pascalifydnsname(uint8_t *, size_t, const char *) paramsnonnull();
-int resolvedns(const struct ResolvConf *, int, const char *, struct sockaddr *,
+int CompareDnsNames(const char *, const char *) paramsnonnull();
+int PascalifyDnsName(uint8_t *, size_t, const char *) paramsnonnull();
+int ResolveDns(const struct ResolvConf *, int, const char *, struct sockaddr *,
                uint32_t) paramsnonnull();
+int ResolveDnsReverse(const struct ResolvConf *resolvconf, int, const char *,
+                      char *, size_t) paramsnonnull();
 struct addrinfo *newaddrinfo(uint16_t);
 
 COSMOPOLITAN_C_END_

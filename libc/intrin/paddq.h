@@ -4,7 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-void paddq(int64_t[2], const int64_t[2], const int64_t[2]);
+void paddq(uint64_t[2], const uint64_t[2], const uint64_t[2]);
 
 #define paddq(A, B, C) \
   INTRIN_SSEVEX_X_X_X_(paddq, SSE2, "paddq", INTRIN_COMMUTATIVE, A, B, C)

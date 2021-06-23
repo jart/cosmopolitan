@@ -18,6 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
-int iswxdigit(wint_t wc) {
-  return isxdigit(wc);
+/**
+ * Returns nonzero if c is ascii hex digit.
+ */
+int iswxdigit(wint_t c) {
+  return ('0' <= c && c <= '9') || ('A' <= c && c <= 'F') ||
+         ('a' <= c && c <= 'f');
 }

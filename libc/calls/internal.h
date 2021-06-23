@@ -109,6 +109,7 @@ char *sys_getcwd(char *, u64) hidden;
 char *sys_getcwd_xnu(char *, u64) hidden;
 i32 __sys_dup3(i32, i32, i32) hidden;
 i32 __sys_execve(const char *, char *const[], char *const[]) hidden;
+i32 __sys_fcntl(i32, i32, u64) hidden;
 i32 __sys_fstat(i32, struct stat *) hidden;
 i32 __sys_fstatat(i32, const char *, struct stat *, i32) hidden;
 i32 __sys_getrusage(i32, struct rusage *) hidden;
@@ -131,7 +132,7 @@ i32 sys_fchmod(i32, u32) hidden;
 i32 sys_fchmodat(i32, const char *, u32, u32) hidden;
 i32 sys_fchown(i64, u32, u32) hidden;
 i32 sys_fchownat(i32, const char *, u32, u32, u32) hidden;
-i32 sys_fcntl(i32, i32, ...) hidden;
+i32 sys_fcntl(i32, i32, u64) hidden;
 i32 sys_fdatasync(i32) hidden;
 i32 sys_flock(i32, i32) hidden;
 i32 sys_fstat(i32, struct stat *) hidden;
@@ -229,6 +230,8 @@ int gethostname_nt(char *, size_t) hidden;
 size_t __iovec_size(const struct iovec *, size_t) hidden;
 void __rusage2linux(struct rusage *) hidden;
 ssize_t WritevUninterruptible(int, struct iovec *, int);
+void flock2cosmo(uintptr_t);
+void cosmo2flock(uintptr_t);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » windows nt » veneers                           ─╬─│┼
@@ -245,7 +248,7 @@ int sys_execve_nt(const char *, char *const[], char *const[]) hidden;
 int sys_faccessat_nt(int, const char *, int, uint32_t) hidden;
 int sys_fadvise_nt(int, u64, u64, int) hidden;
 int sys_fchdir_nt(int) hidden;
-int sys_fcntl_nt(int, int, unsigned) hidden;
+int sys_fcntl_nt(int, int, uintptr_t) hidden;
 int sys_fdatasync_nt(int) hidden;
 int sys_flock_nt(int, int) hidden;
 int sys_fork_nt(void) hidden;

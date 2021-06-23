@@ -68,11 +68,6 @@ o/$(MODE)/libc/fmt/filetimetotimeval.o:		\
 		OVERRIDE_CFLAGS +=		\
 			-O3
 
-o/$(MODE)/libc/fmt/itoa64radix10.greg.o		\
-o/$(MODE)/libc/fmt/itoa128radix10.greg.o:	\
-		OVERRIDE_CFLAGS +=		\
-			-fwrapv
-
 LIBC_FMT_LIBS = $(foreach x,$(LIBC_FMT_ARTIFACTS),$($(x)))
 LIBC_FMT_SRCS = $(foreach x,$(LIBC_FMT_ARTIFACTS),$($(x)_SRCS))
 LIBC_FMT_HDRS = $(foreach x,$(LIBC_FMT_ARTIFACTS),$($(x)_HDRS))

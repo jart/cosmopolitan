@@ -25,6 +25,7 @@
 #include "libc/macros.internal.h"
 #include "libc/nt/process.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"

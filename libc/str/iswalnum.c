@@ -18,6 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
-int iswalnum(wint_t wc) {
-  return isalnum(wc);
+/**
+ * Returns nonzero if c is lower, alpha, or digit.
+ */
+int iswalnum(wint_t c) {
+  return iswdigit(c) || iswalpha(c);
 }

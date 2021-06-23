@@ -30,12 +30,22 @@
 void *memmem(const void *haystack, size_t haystacklen, const void *needle,
              size_t needlelen) {
   size_t i, j;
+  const char *p;
   if (!needlelen) return haystack;
-  for (i = 0; i < haystacklen; ++i) {
-    for (j = 0;; ++j) {
-      if (j == needlelen) return (/*unconst*/ char *)haystack + i;
-      if (i + j == haystacklen) break;
-      if (((char *)needle)[j] != ((char *)haystack)[i + j]) break;
+  if (needlelen <= haystacklen) {
+    p = memchr(haystack, *(const char *)needle, haystacklen);
+    if (needlelen == 1) return p;
+    if (p) {
+      haystacklen -= p - (const char *)haystack;
+      haystack = p;
+    }
+    /* TODO: make not quadratic */
+    for (i = 0; i < haystacklen; ++i) {
+      for (j = 0;; ++j) {
+        if (j == needlelen) return (/*unconst*/ char *)haystack + i;
+        if (i + j == haystacklen) break;
+        if (((char *)needle)[j] != ((char *)haystack)[i + j]) break;
+      }
     }
   }
   return NULL;

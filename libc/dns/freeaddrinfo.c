@@ -22,13 +22,13 @@
 /**
  * Frees addresses returned by getaddrinfo().
  */
-int freeaddrinfo(struct addrinfo *addrs) {
+int freeaddrinfo(struct addrinfo *ai) {
   struct addrinfo *next;
-  while (addrs) {
+  while (ai) {
     /* we assume ai_addr and ai_canonname are shoehorned */
-    next = addrs->ai_next;
-    free(addrs);
-    addrs = next;
+    next = ai->ai_next;
+    free(ai);
+    ai = next;
   }
   return 0;
 }

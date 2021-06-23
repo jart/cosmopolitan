@@ -62,6 +62,12 @@ o/$(MODE)/libc/str/getziplfileuncompressedsize.o:		\
 		OVERRIDE_CFLAGS +=				\
 			-Os
 
+o/$(MODE)/libc/str/iswpunct.o					\
+o/$(MODE)/libc/str/iswupper.o					\
+o/$(MODE)/libc/str/iswlower.o:					\
+		OVERRIDE_CFLAGS +=				\
+			-fno-jump-tables
+
 LIBC_STR_LIBS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)))
 LIBC_STR_SRCS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_SRCS))
 LIBC_STR_HDRS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_HDRS))

@@ -1476,7 +1476,22 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 	test	%rax,%rax
 	jz	1f
 	movb	$METAL,(%rax)
-1:	xor	%eax,%eax
+1:	push	$0
+	mov	%rsp,%rbp
+	mov	.Lenv0(%rip),%rax
+	mov	%rax,(%rbp)			# envp[0][0]
+	push	$0				# argv[0][0]
+	push	$0				# auxv[1][1]
+	push	$0				# auxv[1][0]
+	push	%rbp				# auxv[0][1]
+	push	$31				# auxv[0][0] AT_EXECFN
+	push	$0				# envp[1]
+	push	$.Lenv0				# envp[0]
+	push	$0				# argv[1]
+	push	%rbp				# argv[0]
+	push	$1				# argc
+	xor	%ebp,%ebp
+	xor	%eax,%eax
 	xor	%ecx,%ecx
 	xor	%edx,%edx
 	xor	%edi,%edi
@@ -1485,20 +1500,10 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 	xor	%r9d,%r9d
 	xor	%r10d,%r10d
 	xor	%r11d,%r11d
-	push	$0				# auxv[1][1]
-	push	$0				# auxv[1][0]
-	push	$.Larg0				# auxv[0][1]
-	push	$31				# auxv[0][0] AT_EXECFN
-	push	$0				# envp[1]
-	push	$.Lenv0				# envp[0]
-	push	$0				# argv[1]
-	push	$.Larg0				# argv[0]
-	push	$1				# argc
 	jmp	_start
 	.endfn	kernel
 
 	.rodata
-.Larg0:	.asciz	"ape.com"
 .Lenv0:	.asciz	"METAL=1"
 	.previous
 

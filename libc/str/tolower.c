@@ -19,7 +19,7 @@
 #include "libc/str/str.h"
 
 /**
- * Converts character to lower case.
+ * Converts character to ascii lower case.
  */
 int tolower(int c) {
   return 'A' <= c && c <= 'Z' ? c + ('a' - 'A') : c;

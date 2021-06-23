@@ -27,7 +27,7 @@
 
 static const char *EzIp4Lookup(const struct HostsTxt *ht, const char *name) {
   struct sockaddr_in addr4;
-  if (resolvehoststxt(ht, AF_INET, name, (void *)&addr4,
+  if (ResolveHostsTxt(ht, AF_INET, name, (void *)&addr4,
                       sizeof(struct sockaddr_in), NULL) > 0) {
     static char g_ipbuf[16];
     return inet_ntop(AF_INET, &addr4.sin_addr, g_ipbuf, sizeof(g_ipbuf));
@@ -38,18 +38,18 @@ static const char *EzIp4Lookup(const struct HostsTxt *ht, const char *name) {
 
 static const char *EzCanonicalize(const struct HostsTxt *ht, const char *name) {
   const char *res;
-  return resolvehoststxt(ht, AF_INET, name, NULL, 0, &res) > 0 ? res : NULL;
+  return ResolveHostsTxt(ht, AF_INET, name, NULL, 0, &res) > 0 ? res : NULL;
 }
 
 static const char kInput[] = "127.0.0.1	localhost\n"
                              "203.0.113.1     lol.example. lol\n"
                              "203.0.113.2     cat.example. cat\n";
 
-TEST(resolvehoststxt, testBasicLookups) {
+TEST(ResolveHostsTxt, testBasicLookups) {
   struct HostsTxt *ht = calloc(1, sizeof(struct HostsTxt));
   FILE *f = fmemopen(kInput, strlen(kInput), "r+");
-  ASSERT_EQ(0, parsehoststxt(ht, f));
-  sorthoststxt(ht);
+  ASSERT_EQ(0, ParseHostsTxt(ht, f));
+  SortHostsTxt(ht);
   ASSERT_EQ(5, ht->entries.i);
   EXPECT_STREQ("127.0.0.1", EzIp4Lookup(ht, "localhost"));
   EXPECT_STREQ("203.0.113.1", EzIp4Lookup(ht, "lol"));
@@ -58,15 +58,15 @@ TEST(resolvehoststxt, testBasicLookups) {
   EXPECT_STREQ("203.0.113.2", EzIp4Lookup(ht, "cat"));
   EXPECT_STREQ("203.0.113.2", EzIp4Lookup(ht, "cat.example."));
   EXPECT_EQ(NULL, EzIp4Lookup(ht, "boop"));
-  freehoststxt(&ht);
+  FreeHostsTxt(&ht);
   fclose(f);
 }
 
-TEST(resolvehoststxt, testCanonicalize) {
+TEST(ResolveHostsTxt, testCanonicalize) {
   struct HostsTxt *ht = calloc(1, sizeof(struct HostsTxt));
   FILE *f = fmemopen(kInput, strlen(kInput), "r+");
-  ASSERT_EQ(0, parsehoststxt(ht, f));
-  sorthoststxt(ht);
+  ASSERT_EQ(0, ParseHostsTxt(ht, f));
+  SortHostsTxt(ht);
   ASSERT_EQ(5, ht->entries.i);
   EXPECT_STREQ("localhost", EzCanonicalize(ht, "localhost"));
   EXPECT_STREQ("lol.example.", EzCanonicalize(ht, "lol"));
@@ -75,6 +75,6 @@ TEST(resolvehoststxt, testCanonicalize) {
   EXPECT_STREQ("cat.example.", EzCanonicalize(ht, "cat"));
   EXPECT_STREQ("cat.example.", EzCanonicalize(ht, "cat.example."));
   EXPECT_EQ(NULL, EzCanonicalize(ht, "boop"));
-  freehoststxt(&ht);
+  FreeHostsTxt(&ht);
   fclose(f);
 }

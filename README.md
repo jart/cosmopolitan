@@ -22,8 +22,8 @@ If you're doing your development work on Linux or BSD then you need just
 five files to get started. Here's what you do on Linux:
 
 ```sh
-wget https://justine.lol/cosmopolitan/cosmopolitan-amalgamation-0.3.zip
-unzip cosmopolitan-amalgamation-0.3.zip
+wget https://justine.lol/cosmopolitan/cosmopolitan-amalgamation-1.0.zip
+unzip cosmopolitan-amalgamation-1.0.zip
 printf 'main() { printf("hello world\\n"); }\n' >hello.c
 gcc -g -Os -static -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone \
   -fno-omit-frame-pointer -pg -mnop-mcount \
@@ -38,23 +38,42 @@ first run, so it can be fast and efficient for subsequent executions.
 
 ```sh
 ./hello.com
-bash -c './hello.com'  # zsh/fish workaround (we upstreamed a patch)
+bash -c './hello.com'  # zsh/fish workaround (we upstreamed patches)
 ```
 
 So if you intend to copy the binary to Windows or Mac then please do
 that before you run it, not after.
 
-If you're developing on Windows or MacOS then you need to download an
+### MacOS
+
+If you're developing on MacOS you can install the GNU compiler
+collection for x86_64-elf via homebrew:
+
+```sh
+brew install x86_64-elf-gcc
+```
+
+Then in the above scripts just replace `gcc` and `objcopy` with
+`x86_64-elf-gcc` and `x86_64-elf-objcopy` to compile your APE binary.
+
+### Windows
+
+If you're developing on Windows then you need to download an
 x86_64-pc-linux-gnu toolchain beforehand. See the [Compiling on
 Windows](https://justine.lol/cosmopolitan/windows-compiling.html)
 tutorial. It's needed because the ELF object format is what makes
 universal binaries possible.
 
-Cosmopolitan can also be compiled from source on any Linux distro.
+## Source Builds
+
+Cosmopolitan can be compiled from source on any Linux distro. GNU make
+needs to be installed beforehand. This is a freestanding hermetic
+repository that bootstraps using a vendored static gcc9 executable.
+No further dependencies are required.
 
 ```sh
-wget https://justine.lol/cosmopolitan/cosmopolitan-0.3.tar.gz
-tar xf cosmopolitan-0.3.tar.gz  # see releases page
+wget https://justine.lol/cosmopolitan/cosmopolitan-1.0.tar.gz
+tar xf cosmopolitan-1.0.tar.gz  # see releases page
 cd cosmopolitan
 make -j16
 o//examples/hello.com

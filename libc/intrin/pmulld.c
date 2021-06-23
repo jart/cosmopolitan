@@ -20,7 +20,7 @@
 #include "libc/str/str.h"
 
 /**
- * Multiplies 32-bit signed integers.
+ * Multiplies 32-bit integers.
  *
  * @param 𝑎 [w/o] receives result
  * @param 𝑏 [r/o] supplies first input vector
@@ -28,9 +28,9 @@
  * @see pmuludq()
  * @mayalias
  */
-void(pmulld)(int32_t a[4], const int32_t b[4], const int32_t c[4]) {
+void(pmulld)(uint32_t a[4], const uint32_t b[4], const uint32_t c[4]) {
   unsigned i;
-  int32_t r[4];
+  uint32_t r[4];
   for (i = 0; i < 4; ++i) {
     r[i] = b[i] * c[i];
   }

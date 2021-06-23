@@ -19,71 +19,32 @@
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
 
-#define ALNUM  1
-#define ALPHA  2
-#define BLANK  3
-#define CNTRL  4
-#define DIGIT  5
-#define GRAPH  6
-#define LOWER  7
-#define PRINT  8
-#define PUNCT  9
-#define SPACE  10
-#define UPPER  11
-#define XDIGIT 12
+typedef int (*isw_f)(wint_t);
 
-static const struct {
-  char name[7];
-  char type;
-} kWcTypes[] = {
-    {"alnum", ALNUM}, {"alpha", ALPHA}, {"blank", BLANK}, {"cntrl", CNTRL},
-    {"digit", DIGIT}, {"graph", GRAPH}, {"lower", LOWER}, {"print", PRINT},
-    {"punct", PUNCT}, {"space", SPACE}, {"upper", UPPER}, {"xdigit", XDIGIT},
+static const isw_f kWcTypeFuncs[] = {
+    iswalnum,   //
+    iswalpha,   //
+    iswblank,   //
+    iswcntrl,   //
+    iswdigit,   //
+    iswgraph,   //
+    iswlower,   //
+    iswprint,   //
+    iswpunct,   //
+    iswspace,   //
+    iswupper,   //
+    iswxdigit,  //
 };
 
-static int CompareStrings(const char *l, const char *r) {
-  size_t i = 0;
-  while (l[i] == r[i] && r[i]) ++i;
-  return (l[i] & 0xff) - (r[i] & 0xff);
-}
-
-wctype_t wctype(const char *name) {
-  unsigned i;
-  for (i = 0; i < ARRAYLEN(kWcTypes); ++i) {
-    if (CompareStrings(name, kWcTypes[i].name) == 0) {
-      return kWcTypes[i].type;
-    }
-  }
-  return 0;
-}
-
-int iswctype(wint_t wc, wctype_t type) {
-  switch (type) {
-    case ALNUM:
-      return iswalnum(wc);
-    case ALPHA:
-      return iswalpha(wc);
-    case BLANK:
-      return iswblank(wc);
-    case CNTRL:
-      return iswcntrl(wc);
-    case DIGIT:
-      return iswdigit(wc);
-    case GRAPH:
-      return iswgraph(wc);
-    case LOWER:
-      return iswlower(wc);
-    case PRINT:
-      return iswprint(wc);
-    case PUNCT:
-      return iswpunct(wc);
-    case SPACE:
-      return iswspace(wc);
-    case UPPER:
-      return iswupper(wc);
-    case XDIGIT:
-      return iswxdigit(wc);
-    default:
-      return 0;
+/**
+ * Returns nonzero if c has property.
+ *
+ * @param t is number returned by wctype
+ */
+int iswctype(wint_t c, wctype_t t) {
+  if (1 <= t && t <= ARRAYLEN(kWcTypeFuncs)) {
+    return kWcTypeFuncs[t - 1](c);
+  } else {
+    return 0;
   }
 }

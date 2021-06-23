@@ -30,7 +30,7 @@
  * @param name is a dotted NUL-terminated hostname string
  * @return bytes written (excluding NUL) or -1 w/ errno
  */
-int pascalifydnsname(uint8_t *buf, size_t size, const char *name) {
+int PascalifyDnsName(uint8_t *buf, size_t size, const char *name) {
   size_t i, j, k, namelen;
   if ((namelen = strlen(name)) > DNS_NAME_MAX) return enametoolong();
   i = 0;

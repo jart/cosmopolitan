@@ -59,7 +59,7 @@ static int add_to_file_actions(posix_spawn_file_actions_t *file_actions,
 int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t *file_actions,
                                       int fildes) {
   char temp[100];
-  sprintf(temp, "close(%d)", fildes);
+  (sprintf)(temp, "close(%d)", fildes);
   return add_to_file_actions(file_actions, temp);
 }
 
@@ -69,7 +69,7 @@ int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t *file_actions,
 int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t *file_actions,
                                      int fildes, int newfildes) {
   char temp[100];
-  sprintf(temp, "dup2(%d,%d)", fildes, newfildes);
+  (sprintf)(temp, "dup2(%d,%d)", fildes, newfildes);
   return add_to_file_actions(file_actions, temp);
 }
 
@@ -80,6 +80,6 @@ int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t *file_actions,
                                      int fildes, const char *path, int oflag,
                                      unsigned mode) {
   char temp[100];
-  sprintf(temp, "open(%d,%s*%o,%o)", fildes, path, oflag, mode);
+  (sprintf)(temp, "open(%d,%s*%o,%o)", fildes, path, oflag, mode);
   return add_to_file_actions(file_actions, temp);
 }

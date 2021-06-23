@@ -34,7 +34,7 @@ char *sys_getcwd_xnu(char *res, size_t size) {
   if ((fd = sys_openat(AT_FDCWD, ".", O_RDONLY | O_DIRECTORY, 0)) != -1) {
     if (sys_fstat(fd, &st[0]) != -1) {
       if (st[0].st_dev && st[0].st_ino) {
-        if (sys_fcntl(fd, XNU_F_GETPATH, buf) != -1) {
+        if (__sys_fcntl(fd, XNU_F_GETPATH, (uintptr_t)buf) != -1) {
           if (sys_fstatat(AT_FDCWD, buf, &st[1], 0) != -1) {
             if (st[0].st_dev == st[1].st_dev && st[0].st_ino == st[1].st_ino) {
               if (memccpy(res, buf, '\0', size)) {

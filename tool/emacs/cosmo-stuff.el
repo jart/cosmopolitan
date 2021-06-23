@@ -440,7 +440,10 @@
   (interactive "P")
   (setq arg (or arg 2))
   ;; -ffast-math -funsafe-math-optimizations -fsched2-use-superblocks -fjump-tables
-  (cond ((not (eq 0 (logand 8 arg)))
+  (cond ((eq arg 9)
+         (cosmo--assembly 1
+                          "V=1 OVERRIDE_COPTS='-fverbose-asm -fsanitize=undefined -fno-sanitize=null -fno-sanitize=alignment -fno-sanitize=pointer-overflow'"))
+        ((not (eq 0 (logand 8 arg)))
          (cosmo--assembly (setq arg (logand (lognot 8)))
                           "V=1 OVERRIDE_COPTS='-fverbose-asm -fsanitize=address'"))
         (t (cosmo--assembly arg "V=1 OVERRIDE_COPTS='' CPPFLAGS='-DSTACK_FRAME_UNLIMITED'"))))

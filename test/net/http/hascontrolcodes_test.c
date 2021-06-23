@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/testlib/blocktronics.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
@@ -48,4 +49,6 @@ BENCH(HasControlCodes, bench) {
   EZBENCH2("HasControlCodes small", donothing, HasControlCodes("hello", -1, 0));
   EZBENCH2("HasControlCodes big", donothing,
            HasControlCodes(kHyperion, kHyperionSize, kControlC1));
+  EZBENCH2("HasControlCodes unicode", donothing,
+           HasControlCodes(kBlocktronics, kBlocktronicsSize, kControlC1));
 }

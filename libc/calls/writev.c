@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
@@ -34,18 +35,21 @@
  * @return number of bytes actually handed off, or -1 w/ errno
  */
 ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
-  if (fd < 0) return einval();
-  if (iovlen < 0) return einval();
-  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-    return weaken(__zipos_write)(
-        (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, iov, iovlen, -1);
-  } else if (!IsWindows() && !IsMetal()) {
-    return sys_writev(fd, iov, iovlen);
-  } else if (fd >= g_fds.n) {
-    return ebadf();
-  } else if (IsMetal()) {
-    return sys_writev_metal(g_fds.p + fd, iov, iovlen);
+  if (fd >= 0 && iovlen >= 0) {
+    if (IsAsan() && !__asan_is_valid_iov(iov, iovlen)) return efault();
+    if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+      return weaken(__zipos_write)(
+          (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, iov, iovlen, -1);
+    } else if (!IsWindows() && !IsMetal()) {
+      return sys_writev(fd, iov, iovlen);
+    } else if (fd >= g_fds.n) {
+      return ebadf();
+    } else if (IsMetal()) {
+      return sys_writev_metal(g_fds.p + fd, iov, iovlen);
+    } else {
+      return sys_writev_nt(g_fds.p + fd, iov, iovlen);
+    }
   } else {
-    return sys_writev_nt(g_fds.p + fd, iov, iovlen);
+    return einval();
   }
 }

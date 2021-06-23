@@ -1,0 +1,13 @@
+PKG=IZzip
+NAME=Info-ZIP Zip Utilities
+CATEGORY=application
+VENDOR=Info-ZIP
+EMAIL=http://info-zip.org/zip-bug.html
+HOTLINE=http://info-zip.org/zip-bug.html
+DESC=Copyrighted FREEWARE.  See README, WHERE, and docs in pkg's doc dir.
+CLASSES=none
+BASEDIR=/opt/Info-ZIP
+#BASEDIR=/usr/local
+VERSION=".VERSION."
+PSTAMP=".PSTAMP."
+ARCH=".ARCH."

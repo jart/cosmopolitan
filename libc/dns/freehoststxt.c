@@ -20,9 +20,9 @@
 #include "libc/runtime/runtime.h"
 
 /**
- * Frees HOSTS.TXT data structure populated by parsehoststxt().
+ * Frees HOSTS.TXT data structure populated by ParseHostsTxt().
  */
-void freehoststxt(struct HostsTxt **ht) {
+void FreeHostsTxt(struct HostsTxt **ht) {
   if (*ht) {
     free_s(&(*ht)->entries.p);
     free_s(&(*ht)->strings.p);

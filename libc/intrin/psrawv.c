@@ -25,15 +25,10 @@
  * @mayalias
  */
 void(psrawv)(int16_t a[8], const int16_t b[8], const uint64_t c[2]) {
+  unsigned i;
   unsigned char k;
-  unsigned i, x, m;
   k = c[0] > 15 ? 15 : c[0];
   for (i = 0; i < 8; ++i) {
-    m = 0;
-    x = b[i];
-    if (x & 0x8000) m = ~(0xffffu >> k);
-    x >>= k;
-    x |= m;
-    a[i] = x & 0xffffu;
+    a[i] = b[i] >> k;
   }
 }

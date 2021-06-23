@@ -9,7 +9,13 @@ COSMOPOLITAN_C_START_
 
 #define INET_ADDRSTRLEN 22
 
-#define NI_DGRAM   0x10
+#define NI_NUMERICHOST 0x01
+#define NI_NUMERICSERV 0x02
+#define NI_NOFQDN      0x04
+#define NI_NAMEREQD    0x08
+#define NI_DGRAM       0x10
+
+#define NI_MAXHOST 0xff
 #define NI_MAXSERV 0x20
 
 #define htons(u16) bswap_16(u16)

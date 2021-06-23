@@ -29,9 +29,13 @@
  */
 void(pmulhuw)(uint16_t a[8], const uint16_t b[8], const uint16_t c[8]) {
   unsigned i;
+  uint32_t x;
   uint16_t r[8];
   for (i = 0; i < 8; ++i) {
-    r[i] = ((b[i] * c[i]) & 0xffff0000) >> 16;
+    x = b[i];
+    x *= c[i];
+    x >>= 16;
+    r[i] = x;
   }
   memcpy(a, r, 16);
 }
