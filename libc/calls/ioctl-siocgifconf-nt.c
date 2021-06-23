@@ -33,9 +33,6 @@
 #include "libc/assert.h"
 //#include "libc/nt/windows.h"        /* Needed for WideCharToMultiByte */
 
-#include "libc/stdio/stdio.h"
-#define PRINTF  weaken(printf)
-
 /* Maximum number of unicast addresses handled for each interface */
 #define MAX_UNICAST_ADDR    32
 #define MAX_NAME_CLASH      ((int)('z'-'a'))      /* Allow a..z */
@@ -100,16 +97,13 @@ struct HostAdapterInfoNode *appendHostInfo(
   struct sockaddr_in tempAddr;
   int attemptNum;
 
-  PRINTF("FABDEBUG> \t\t\tappendHostInfo:\n");
   node = weaken(calloc)(1, sizeof(*node));
   if (!node) {
-    PRINTF("FABDEBUG> \t\t\tMALLOC FAILED\n");
     errno = ENOMEM;
     return NULL;
   }
 
   memcpy(node->name, baseName, IFNAMSIZ);
-  PRINTF("FABDEBUG> \t\t\tnodeAllocated, name=%s\n", node->name);
 
   /* Are there more than a single unicast address ? */
   if (count > 0 || ((*ptrUA)->Next != NULL)) {
@@ -122,11 +116,9 @@ struct HostAdapterInfoNode *appendHostInfo(
     node->name[nameLen-2] = ':';
     node->name[nameLen-1] = '0'+count;
     node->name[nameLen] = '\0';
-    PRINTF("FABDEBUG> \t\t\tComputing multi-unicast name: '%s'\n", node->name);
   }
 
   /* Is there a name clash with other interfaces? */
-  PRINTF("FABDEBUG> \t\t\tFinding name clashes\n");
   for (attemptNum=0; attemptNum < MAX_NAME_CLASH; ++attemptNum) {
     temp = findAdapterByName(node->name);
     if (!temp) {
@@ -140,7 +132,6 @@ struct HostAdapterInfoNode *appendHostInfo(
        */
 
       size_t pos = strlen(node->name);
-      PRINTF("FABDEBUG> \t\t\t** NAME CLASH name=%s, attemptNum=%d\n", temp->name, attemptNum);
       node->name[pos] = 'a' + attemptNum;
       node->name[pos+1] = '\0';
       /* Try again */
@@ -148,12 +139,10 @@ struct HostAdapterInfoNode *appendHostInfo(
   }
   if (attemptNum == MAX_NAME_CLASH) {
     /* Cannot resolve the conflict */
-    PRINTF("FABDEBUG> \t\t\tReached max clash attempts...\n");
     weaken(free)(node);
     errno = EEXIST;
     return NULL;
   }
-  PRINTF("FABDEBUG> \t\t\tappendHostInfo: computed name='%s'\n", node->name);
 
   /* Finally we got a unique short and friendly name */
   node->unicast = *((*ptrUA)->Address.lpSockaddr);
@@ -260,7 +249,6 @@ static int createHostInfo(NtIpAdapterAddresses *firstAdapter) {
       if (baseName[i] == ' ') baseName[i] = '_';
       if (!baseName[i]) break;
     }
-    PRINTF("FABDEBUG> \tcreateHostInfo: processing Win interface with baseName='%s'\n", baseName);
     for (count = 0, ua = aa->FirstUnicastAddress, ap = aa->FirstPrefix; 
         (ua != NULL) && (count < MAX_UNICAST_ADDR); 
         ++count) {
@@ -269,7 +257,6 @@ static int createHostInfo(NtIpAdapterAddresses *firstAdapter) {
         goto err;
       }
       if (!__hostInfo) __hostInfo = node;
-      PRINTF("FABDEBUG> \t\tcreateHostInfo: added interface='%s'\n", node->name);
     }
 
     /* Note: do we need to process the remaining adapter prefix? 
@@ -288,7 +275,6 @@ err:
 static int readAdapterAddresses(void) {
   uint32_t size, rc;
   NtIpAdapterAddresses * aa = NULL;
-  PRINTF("FABDEBUG> _readAdapterAddresses:\n");
 
   assert(weaken(GetAdaptersAddresses));
 
@@ -301,15 +287,12 @@ static int readAdapterAddresses(void) {
       NULL,  /* Ptr */
       &size);
   if (rc != kNtErrorBufferOverflow) {
-    PRINTF("FABDEBUG> \tGetAdaptersAddresses failed with error %d\n", WSAGetLastError());
     ebadf();
     goto err;
   }
-  PRINTF("FABDEBUG> \tsize required=%lu, allocating...\n", size);
 
   aa = (NtIpAdapterAddresses *)weaken(malloc)(size);
   if (!aa) {
-    PRINTF("FABDEBUG> \tmalloc failed\n");
     enomem();
     goto err;
   }
@@ -322,24 +305,11 @@ static int readAdapterAddresses(void) {
       aa, 
       &size);
   if (rc != kNtErrorSuccess) {
-    PRINTF("FABDEBUG> \tGetAdaptersAddresses failed %d\n", WSAGetLastError());
     efault();
     goto err;
   }
   if (createHostInfo(aa) == -1) {
-    PRINTF("FABDEBUG> \tFailed to createHostInfo\n");
     goto err;
-  }
-
-  PRINTF("FABDEBUG> \tDone reading.\n");
-  {
-    struct HostAdapterInfoNode *foo = __hostInfo;
-    while (foo) {
-      PRINTF("FABDEBUG>>>>>>> %s - %s\n", foo->name,
-          weaken(inet_ntoa)(
-            ((struct sockaddr_in *)(&foo->unicast))->sin_addr));
-      foo = foo->next;
-    }
   }
 
   weaken(free)(aa);
@@ -371,11 +341,6 @@ textwindows int ioctl_siocgifconf_nt(int fd, struct ifconf *ifc) {
       ptr++, node = node->next) {
     memcpy(ptr->ifr_name, node->name, IFNAMSIZ);
     memcpy(&ptr->ifr_addr, &node->unicast, sizeof(struct sockaddr));
-
-    PRINTF("FABDEBUG> Adapter name = '%s'. IP=%s\n", ptr->ifr_name,
-        weaken(inet_ntoa)(((struct sockaddr_in *)(&ptr->ifr_addr))->sin_addr));
-    PRINTF("FABDEBUG>                '%s'. BR=%s\n", ptr->ifr_name,
-        weaken(inet_ntoa)(((struct sockaddr_in *)&node->broadcast)->sin_addr));
   }
   ifc->ifc_len = (char *)ptr - ifc->ifc_buf;
 

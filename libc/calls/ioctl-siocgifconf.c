@@ -32,7 +32,6 @@
  * The ifc_len is an input/output parameter: set it to the total size of 
  * the ifcu_buf (ifcu_req) buffer on input.
  */
-
 int ioctl_default(int, uint64_t, void *) hidden;
 int ioctl_siocgifconf_nt(int, struct ifconf *) hidden;
 int ioctl_siocgifaddr_nt(int, struct ifreq *) hidden;
@@ -159,7 +158,13 @@ int ioctl_siocgifdstaddr(int fd, void *ifr) {
     return ioctl_siocgifaddr_sysv(fd, SIOCGIFDSTADDR, (struct ifreq *)ifr);
   } else {
     return enotsup();
-    //return ioctl_siocgifbrdaddr_nt(fd, ifc);
+    /* Not supported - TODO: Find out how to retrieve the destination
+     * address of a PPP from the interface list returned by the
+     * GetAdaptersAddresses function
+     *
+    return ioctl_siocgifbrdaddr_nt(fd, ifc);
+
+     */
   }
 }
 
