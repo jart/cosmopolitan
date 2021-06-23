@@ -27,355 +27,407 @@
 #include "libc/nt/winsock.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/iphlpapi.h"
-#include "libc/nt/struct/ipAdapterAddress.h"
-#include "libc/nt/windows.h"        /* Needed for WideCharToMultiByte */
+#include "libc/nt/struct/ipadapteraddresses.h"
 #include "libc/bits/weaken.h"
+#include "libc/str/str.h"
 #include "libc/assert.h"
+//#include "libc/nt/windows.h"        /* Needed for WideCharToMultiByte */
 
-// TODO: Remove me
 #include "libc/stdio/stdio.h"
 #define PRINTF  weaken(printf)
 
-#define MAX_INTERFACES  32
+/* Maximum number of unicast addresses handled for each interface */
+#define MAX_UNICAST_ADDR    32
+#define MAX_NAME_CLASH      ((int)('z'-'a'))      /* Allow a..z */
 
-static int insertAdapterName(NtPIpAdapterAddresses aa);
+static int insertAdapterName(NtIpAdapterAddresses *aa);
 
-/* Reference:
- *  - Description of ioctls: https://docs.microsoft.com/en-us/windows/win32/winsock/winsock-ioctls
- *  - Structure INTERFACE_INFO: https://docs.microsoft.com/en-us/windows/win32/api/ws2ipdef/ns-ws2ipdef-interface_info
- *  - WSAIoctl man page: https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsaioctl
- *  - Using SIOCGIFCONF in Win32: https://docs.microsoft.com/en-us/windows/win32/winsock/using-unix-ioctls-in-winsock
- */
+struct HostAdapterInfoNode {
+  struct HostAdapterInfoNode * next;
+  char name[IFNAMSIZ];    /* Obtained from FriendlyName */
+  struct sockaddr unicast;
+  struct sockaddr netmask;
+  struct sockaddr broadcast;
+  short flags;
+} *__hostInfo;
 
-
-/* Design note:
- * Because the Linux struct ifreq.ifr_name has a max length of 16, this could 
- * potentially lead to ambiguouity in interfaces.
- * E.g. "Ethernet Interface 1", "Ethernet Interface 2" they are both truncated
- *      as "Ethernet Interfa"
- * Since subsequent ioctl() (e.g. SIOCGIFFLAGS) uses this name to
- * identify the speficif interface, we need to make sure that all the returned
- * names are unique and have a way to corelate to the original adapter addresses
- * record.
- */
-struct HostAdapterDesc {
-    char name[IFNAMSIZ];    /* Given name */
-    NtIpAdapterAddresses * addresses;   /* NULL = invalid record */
-    short                  flags;       /* Holds the same value as ifr_flags */
-};
-
-NtIpAdapterAddresses * theHostAdapterAddress;
-struct HostAdapterDesc theAdapterName[MAX_INTERFACES];
-
-
-/* Given a short adapter name, look into theAdapterName to see if there is
- * an adapter with the same name. Returns the index of theAdapterName
- * if found, or -1 if not found
- */
-static int findAdapterByName(const char *name) {
-    int i;
-    for (i = 0; (i < MAX_INTERFACES) && theAdapterName[i].addresses; ++i) {
-        if (!strncmp(name, theAdapterName[i].name, IFNAMSIZ)) {
-            /* Found */
-            return i;
-        }
-    }
-    /* Not found */
-    return -1;
+/* Frees all the nodes of the _hostInfo */
+static void freeHostInfo() {
+  struct HostAdapterInfoNode *next, *node = __hostInfo;
+  while(node) {
+    next = node->next;
+    weaken(free)(node);
+    node = next;
+  }
+  __hostInfo = NULL;
 }
 
-static void freeAdapterInfo(void) {
-    if (theHostAdapterAddress) {
-        /* Free any existing adapter informations */
-        weaken(free)(theHostAdapterAddress);
-        theHostAdapterAddress = NULL;
-        memset(theAdapterName, 0, sizeof(theAdapterName));
+/* Given a short adapter name, look into __hostInfo to see if there is
+ * an adapter with the same name. Returns the pointer to the HostAdapterInfoNode
+ * if found, or NULL if not found
+ */
+static struct HostAdapterInfoNode *findAdapterByName(const char *name) {
+  struct HostAdapterInfoNode *node = __hostInfo;
+  while(node) {
+    if (!strncmp(name, node->name, IFNAMSIZ)) {
+      /* Found */
+      return node;
     }
+    node=node->next;
+  }
+  /* Not found */
+  return NULL;
 }
 
+/* Creates a new HostAdapterInfoNode object, initializes it from
+ * the given adapter, unicast address and address prefixes
+ * and insert it in the __hostInfo.
+ * Increments the pointers to the unicast addresses and
+ * the address prefixes
+ * Returns NULL if an error occurred or the newly created
+ * HostAdapterInfoNode object (last in the list)
+ */
+struct HostAdapterInfoNode *appendHostInfo(
+    struct HostAdapterInfoNode *parentInfoNode,
+    const char *baseName,               /* Max length = IFNAMSIZ-1 */
+    const NtIpAdapterAddresses *aa,     /* Top level adapter object being processed */
+    NtIpAdapterUnicastAddress **ptrUA,  /* Ptr to ptr to unicast address list node */
+    NtIpAdapterPrefix **ptrAP,          /* Ptr to ptr to Adapter prefix list node */
+    int count) {                        /* count is used to create a unique name in case of alias */
 
-/* Sets theHostAdapterAddress.
- * Returns -1 in case of failure (setting errno appropriately), 0 if success */
-static int _readAdapterAddresses(void) {
-    NtPIpAdapterAddresses aa;
-    uint32_t size, rc;
+  struct HostAdapterInfoNode *temp;
+  struct HostAdapterInfoNode *node;
+  struct sockaddr_in tempAddr;
+  int attemptNum;
+
+  PRINTF("FABDEBUG> \t\t\tappendHostInfo:\n");
+  node = weaken(calloc)(1, sizeof(*node));
+  if (!node) {
+    PRINTF("FABDEBUG> \t\t\tMALLOC FAILED\n");
+    errno = ENOMEM;
+    return NULL;
+  }
+
+  memcpy(node->name, baseName, IFNAMSIZ);
+  PRINTF("FABDEBUG> \t\t\tnodeAllocated, name=%s\n", node->name);
+
+  /* Are there more than a single unicast address ? */
+  if (count > 0 || ((*ptrUA)->Next != NULL)) {
+    /* Yes, compose it using <baseName>:<count> */
+    size_t nameLen = strlen(node->name);
+    if (nameLen+2 > IFNAMSIZ-2) {
+      /* Appending the ":x" will exceed the size, need to chop the end */
+      nameLen -= 2;
+    }
+    node->name[nameLen-2] = ':';
+    node->name[nameLen-1] = '0'+count;
+    node->name[nameLen] = '\0';
+    PRINTF("FABDEBUG> \t\t\tComputing multi-unicast name: '%s'\n", node->name);
+  }
+
+  /* Is there a name clash with other interfaces? */
+  PRINTF("FABDEBUG> \t\t\tFinding name clashes\n");
+  for (attemptNum=0; attemptNum < MAX_NAME_CLASH; ++attemptNum) {
+    temp = findAdapterByName(node->name);
+    if (!temp) {
+      break;
+
+    } else {
+      /* Yes, this name has been already used, append an extra 
+       * character to resolve conflict. Note since the max length
+       * of the string now is IFNAMSIZ-2, we have just enough space for this.
+       * E.g. 'Ethernet_1' -> 'Ethernet_1a'
+       */
+
+      size_t pos = strlen(node->name);
+      PRINTF("FABDEBUG> \t\t\t** NAME CLASH name=%s, attemptNum=%d\n", temp->name, attemptNum);
+      node->name[pos] = 'a' + attemptNum;
+      node->name[pos+1] = '\0';
+      /* Try again */
+    }
+  }
+  if (attemptNum == MAX_NAME_CLASH) {
+    /* Cannot resolve the conflict */
+    PRINTF("FABDEBUG> \t\t\tReached max clash attempts...\n");
+    weaken(free)(node);
+    errno = EEXIST;
+    return NULL;
+  }
+  PRINTF("FABDEBUG> \t\t\tappendHostInfo: computed name='%s'\n", node->name);
+
+  /* Finally we got a unique short and friendly name */
+  node->unicast = *((*ptrUA)->Address.lpSockaddr);
+  if (*ptrUA == aa->FirstUnicastAddress) {
     short flags;
-    int i;
-    PRINTF("FABDEBUG> _readAdapterAddresses:\n");
-
-    assert(theHostAdapterAddress == NULL);
-    assert(weaken(GetAdaptersAddresses));
-    assert(weaken(WideCharToMultiByte));
-
-    /* Calculate the required data size
-     * Note: alternatively you can use AF_UNSPEC to also return IPv6 interfaces 
+    /* This is the first unicast address of this interface
+     * calculate the flags for this adapter. Flags to consider:
+     * IFF_UP
+     * IFF_BROADCAST        ** TODO: We need to validate
+     * IFF_LOOPBACK
+     * IFF_POINTOPOINT
+     * IFF_MULTICAST
+     * IFF_RUNNING          ** Same as IFF_UP for now
+     * IFF_PROMISC          ** NOT SUPPORTED, unknown how to retrieve it
      */
-    rc = weaken(GetAdaptersAddresses)(AF_INET,  
-             NT_GAA_FLAG_INCLUDE_PREFIX, 
-             NULL,  /* Reserved */
-             NULL,  /* Ptr */
-             &size);
-    if (rc != kNtErrorBufferOverflow) {
-        PRINTF("FABDEBUG> \tGetAdaptersAddresses failed with error %d\n", WSAGetLastError());
-        return ebadf();
-    }
-    PRINTF("FABDEBUG> \tsize required=%lu, allocating...\n", size);
-    // TODO: Do we need to access malloc/free through a weak ref?
-    theHostAdapterAddress = (NtIpAdapterAddresses *)weaken(malloc)(size);
-    if (!theHostAdapterAddress) {
-        PRINTF("FABDEBUG> \tmalloc failed\n");
-        return enomem();
-    }
+    flags = 0;
+    if (aa->OperStatus == kNtIfOperStatusUp) flags |= IFF_UP | IFF_RUNNING;
+    if (aa->IfType == kNtIfTypePpp) flags |= IFF_POINTOPOINT;
+    //if (aa->TunnelType != TUNNEL_TYPE_NONE) flags |= IFF_POINTOPOINT;
+    if (aa->NoMulticast == 0) flags |= IFF_MULTICAST;
+    if (aa->IfType == kNtIfTypeSoftwareLoopback) flags |= IFF_LOOPBACK;
+    if (aa->FirstPrefix != NULL) flags |= IFF_BROADCAST;
+    node->flags = flags;
+  } else {
+    /* Copy from previous node */
+    node->flags = parentInfoNode->flags;
+  }
 
-    /* Re-run GetAdaptersAddresses this time with a valid buffer */
-    rc = weaken(GetAdaptersAddresses)(AF_INET, 
-        NT_GAA_FLAG_INCLUDE_PREFIX, 
-        NULL, 
-        theHostAdapterAddress, 
-        &size);
-    if (rc != kNtErrorSuccess) {
-        PRINTF("FABDEBUG> GetAdaptersAddresses failed %d\n", WSAGetLastError());
-        freeAdapterInfo();
-        return efault();
-    }
+  /* Process the prefix and extract the netmask and broadcast */
+  /* According to the doc:
+   *  ... On Windows Vista and later, the linked IP_ADAPTER_PREFIX structures pointed to 
+   *  by the FirstPrefix member include three IP adapter prefixes for each IP address 
+   *  assigned to the adapter. These include the host IP address prefix, the subnet IP 
+   *  address prefix, and the subnet broadcast IP address prefix. In addition, for each 
+   *  adapter there is a multicast address prefix and a broadcast address prefix.
+   *
+   * For example, interface "Ethernet", with 2 unicast addresses:
+   *  - 192.168.1.84 
+   *  - 192.168.5.99
+   * The Prefix list has 8 elements:
+   *  #1: 192.168.1.0/24      <- Network, use the PrefixLength for netmask
+   *  #2: 192.168.1.84/32     <- Host IP
+   *  #3: 192.168.1.255/32    <- Subnet broadcast
+   *
+   *  #4: 192.168.5.0/24      <- Network
+   *  #5: 192.168.5.99/32     <- Host IP
+   *  #6: 192.168.5.255/32    <- Subnet broadcast
+   *
+   *  #7: 224.0.0.0/4         <- Multicast
+   *  #8: 255.255.255.255/32  <- Broadcast
+   */
 
-    /* Iterate through all the adapters and populate theAdapterName */
-    for (aa = theHostAdapterAddress; aa != NULL; aa = aa->Next) {
-        i = insertAdapterName(aa);
-        if (i == -1) {
-            PRINTF("FABDEBUG> Too many adapters\n");
-            freeAdapterInfo();
-            return enomem();
-        }
+  /* Netmask */
+  memset(&tempAddr, 0, sizeof(tempAddr));
+  tempAddr.sin_family = AF_INET;
+  tempAddr.sin_addr.s_addr = (uint32_t)((1LLU << (*ptrAP)->PrefixLength) - 1LLU);
+  memcpy(&node->netmask, &tempAddr, sizeof(tempAddr));
 
-        /* Calculate the flags for this adapter. Flags to consider:
-         * IFF_UP
-         * IFF_BROADCAST        ** TODO: We need to validate
-         * IFF_LOOPBACK
-         * IFF_POINTOPOINT
-         * IFF_MULTICAST
-         * IFF_RUNNING          ** Same as IFF_UP for now
-         * IFF_PROMISC          ** NOT SUPPORTED, unknown how to retrieve it
-         */
-        flags = 0;
-        if (aa->OperStatus == IfOperStatusUp) flags |= IFF_UP | IFF_RUNNING;
-        if (aa->IfType == NT_IF_TYPE_PPP) flags |= IFF_POINTOPOINT;
-        //if (aa->TunnelType != TUNNEL_TYPE_NONE) flags |= IFF_POINTOPOINT;
-        if (aa->NoMulticast == 0) flags |= IFF_MULTICAST;
-        if (aa->IfType == NT_IF_TYPE_SOFTWARE_LOOPBACK) flags |= IFF_LOOPBACK;
-        if (aa->FirstPrefix != NULL) flags |= IFF_BROADCAST;
+  *ptrAP = (*ptrAP)->Next;
+  *ptrAP = (*ptrAP)->Next;    /* Skip over Host IP */
 
-        /* Broadcast - Broadcast address should be detectable though the FirstPrefix
-         * linked list
-         */
-        flags |= IFF_BROADCAST; /* Assume yes for all the interfaces */
+  /* Broadcast */
+  node->broadcast = *((*ptrAP)->Address.lpSockaddr);
+  *ptrAP = (*ptrAP)->Next;
 
-        theAdapterName[i].flags = flags;
-    }
-    PRINTF("FABDEBUG> \tDone reading.\n");
-    return 0;
+  /* Move pointer to Unicast Address record */
+  *ptrUA = (*ptrUA)->Next;
+
+  /* Append this node to the last node (if any) */
+  if (parentInfoNode) {
+    parentInfoNode->next = node;
+  }
+
+  /* Success */
+  return node;
 }
 
+/* Returns -1 in case of failure */
+static int createHostInfo(NtIpAdapterAddresses *firstAdapter) {
+  NtIpAdapterAddresses *aa;
+  NtIpAdapterUnicastAddress *ua;
+  NtIpAdapterPrefix *ap;
+  struct HostAdapterInfoNode *node = NULL;
+  char baseName[IFNAMSIZ];
+  char name[IFNAMSIZ];
+  int count, i;
 
-#if 1
+  /* __hostInfo must be empty */
+  assert(__hostInfo == NULL);
+  assert(weaken(tprecode16to8));
 
-void printUnicastAddressList(NtPIpAdapterUnicastAddress addr) {
-    const char * sep = "";
-    for(; addr; addr=addr->Next) {
-        PRINTF("%s%s", sep, weaken(inet_ntoa)(
-                    ((struct sockaddr_in *)(addr->Address.lpSockaddr))->sin_addr));
-        if (!sep[0]) {
-            sep=", ";
-        }
+  for (aa = firstAdapter; aa; aa = aa->Next) {
+    /* Skip all the interfaces with no address and the ones that are not AF_INET */
+    if (!aa->FirstUnicastAddress || 
+        aa->FirstUnicastAddress->Address.lpSockaddr->sa_family != AF_INET) {
+      continue;
     }
+
+    /* Use max IFNAMSIZ-1 chars, leave the last char for eventual conficts */
+    tprecode16to8(baseName, IFNAMSIZ-1, aa->FriendlyName);
+    baseName[IFNAMSIZ-2] = '\0';
+    /* Replace any space with a '_' */
+    for (i = 0; i < IFNAMSIZ-2; ++i) {
+      if (baseName[i] == ' ') baseName[i] = '_';
+      if (!baseName[i]) break;
+    }
+    PRINTF("FABDEBUG> \tcreateHostInfo: processing Win interface with baseName='%s'\n", baseName);
+    for (count = 0, ua = aa->FirstUnicastAddress, ap = aa->FirstPrefix; 
+        (ua != NULL) && (count < MAX_UNICAST_ADDR); 
+        ++count) {
+      node = appendHostInfo(node, baseName, aa, &ua, &ap, count);
+      if (!node) {
+        goto err;
+      }
+      if (!__hostInfo) __hostInfo = node;
+      PRINTF("FABDEBUG> \t\tcreateHostInfo: added interface='%s'\n", node->name);
+    }
+
+    /* Note: do we need to process the remaining adapter prefix? 
+     *      ap       - points to broadcast addr
+     *      ap->Next - points to interface multicast addr
+     * Ignoring them for now
+     */
+  }
+  return 0;
+
+err:
+  freeHostInfo(__hostInfo);
+  return -1;
 }
 
-#endif
+static int readAdapterAddresses(void) {
+  uint32_t size, rc;
+  NtIpAdapterAddresses * aa = NULL;
+  PRINTF("FABDEBUG> _readAdapterAddresses:\n");
 
-static int insertAdapterName(NtPIpAdapterAddresses aa) {
-    char name[IFNAMSIZ];
-    int i;
-    int sfx;
+  assert(weaken(GetAdaptersAddresses));
 
-    memset(name, 0, sizeof(name));
-    /* On Windows, wchar_t is 16 bit, Linux is 32 bit, cannot use wcstombs() */
-    weaken(WideCharToMultiByte)(0, 0, aa->FriendlyName, -1, name, IFNAMSIZ, NULL, NULL);
+  /* Calculate the required data size
+   * Note: alternatively you can use AF_UNSPEC to also return IPv6 interfaces 
+   */
+  rc = weaken(GetAdaptersAddresses)(AF_INET,  
+      kNtGaaFlagSkipAnycast | kNtGaaFlagSkipMulticast | kNtGaaFlagSkipDnsServer | kNtGaaFlagIncludePrefix,
+      NULL,  /* Reserved */
+      NULL,  /* Ptr */
+      &size);
+  if (rc != kNtErrorBufferOverflow) {
+    PRINTF("FABDEBUG> \tGetAdaptersAddresses failed with error %d\n", WSAGetLastError());
+    ebadf();
+    goto err;
+  }
+  PRINTF("FABDEBUG> \tsize required=%lu, allocating...\n", size);
 
-    /* Ensure the name is unique */
-    for (sfx = 0; sfx < 10; ++sfx) {
-        i = findAdapterByName(name);
-        if (i != -1) {
-            /* Found a duplicate */
-            name[strlen(name)-1] = '0' + sfx;
-            continue;
-        }
-        /* Unique */
-        for (i = 0; i < MAX_INTERFACES; ++i) {
-            if (theAdapterName[i].addresses == NULL) {
-                break;
-            }
-        }
-        if (i == MAX_INTERFACES) {
-            /* Too many interfaces */
-            break;
-        }
-        strncpy(theAdapterName[i].name, name, IFNAMSIZ-1);
-        theAdapterName[i].name[IFNAMSIZ-1] = '\0';
-        theAdapterName[i].addresses = aa;
-        return i;
+  aa = (NtIpAdapterAddresses *)weaken(malloc)(size);
+  if (!aa) {
+    PRINTF("FABDEBUG> \tmalloc failed\n");
+    enomem();
+    goto err;
+  }
+
+  /* Re-run GetAdaptersAddresses this time with a valid buffer */
+  rc = weaken(GetAdaptersAddresses)(AF_INET, 
+      kNtGaaFlagSkipAnycast | kNtGaaFlagSkipMulticast | kNtGaaFlagSkipDnsServer | kNtGaaFlagIncludePrefix,
+      //kNtGaaFlagIncludePrefix,
+      NULL, 
+      aa, 
+      &size);
+  if (rc != kNtErrorSuccess) {
+    PRINTF("FABDEBUG> \tGetAdaptersAddresses failed %d\n", WSAGetLastError());
+    efault();
+    goto err;
+  }
+  if (createHostInfo(aa) == -1) {
+    PRINTF("FABDEBUG> \tFailed to createHostInfo\n");
+    goto err;
+  }
+
+  PRINTF("FABDEBUG> \tDone reading.\n");
+  {
+    struct HostAdapterInfoNode *foo = __hostInfo;
+    while (foo) {
+      PRINTF("FABDEBUG>>>>>>> %s - %s\n", foo->name,
+          weaken(inet_ntoa)(
+            ((struct sockaddr_in *)(&foo->unicast))->sin_addr));
+      foo = foo->next;
     }
-    /* Reached max of 10 duplicates */
-    return -1;
+  }
+
+  weaken(free)(aa);
+  return 0;
+
+err:
+  if (aa) {
+    weaken(free)(aa);
+  }
+  freeHostInfo();
+  return -1;
 }
-            
-
-
-/* Returns the index in theAdapterName if found or -1 if
- * an error occurred
- */
-static int findOrInitAdapter(const char *name) {
-    int i;
-    if (!theHostAdapterAddress) {
-        /* Never invoked GetAdaptersAddresses */
-        if (_readAdapterAddresses() == -1) {
-            return -1;
-        }
-    }
-
-    i = findAdapterByName(name);
-    if (i == -1) {
-        PRINTF("FABDEBUG> Bad adapter\n");
-        return ebadf();
-    }
-    return i;
-}
-
-
 
 textwindows int ioctl_siocgifconf_nt(int fd, struct ifconf *ifc) {
-    NtPIpAdapterAddresses aa;
-    struct ifreq *ptr;
-    int i;
+  NtIpAdapterAddresses *aa;
+  struct HostAdapterInfoNode *node;
+  struct ifreq *ptr;
 
-    PRINTF("---------------------------------------\n");
-    PRINTF("Sizeof() = %d\n", sizeof(NtIpAdapterAddresses));
-    PRINTF("Next = %d\n", offsetof(NtIpAdapterAddresses, Next));
-    PRINTF("AdapterName = %d\n", offsetof(NtIpAdapterAddresses, AdapterName));
-    PRINTF("FirstUnicastAddress = %d\n", offsetof(NtIpAdapterAddresses, FirstUnicastAddress));
-    PRINTF("FirstAnycastAddress = %d\n", offsetof(NtIpAdapterAddresses, FirstAnycastAddress));
-    PRINTF("FirstMulticastAddress = %d\n", offsetof(NtIpAdapterAddresses, FirstMulticastAddress));
-    PRINTF("FirstDnsServerAddress = %d\n", offsetof(NtIpAdapterAddresses, FirstDnsServerAddress));
-    PRINTF("DnsSuffix = %d\n", offsetof(NtIpAdapterAddresses, DnsSuffix));
-    PRINTF("Description = %d\n", offsetof(NtIpAdapterAddresses, Description));
-    PRINTF("FriendlyName = %d\n", offsetof(NtIpAdapterAddresses, FriendlyName));
+  if (__hostInfo) {
+    freeHostInfo();
+  }
 
-    PRINTF("OperStatus = %d\n", offsetof(NtIpAdapterAddresses, OperStatus));
-    PRINTF("Flags = %d\n", offsetof(NtIpAdapterAddresses, Flags));
-    PRINTF("---------------------------------------\n");
+  if (readAdapterAddresses() == -1) {
+    return -1;
+  }
 
-    if (theHostAdapterAddress) {
-        freeAdapterInfo();
-    }
-    if (_readAdapterAddresses() == -1) {
-        return -1;
-    }
+  for (ptr = ifc->ifc_req, node = __hostInfo;
+      (((char *)(ptr+1) - ifc->ifc_buf) < ifc->ifc_len) && node;
+      ptr++, node = node->next) {
+    memcpy(ptr->ifr_name, node->name, IFNAMSIZ);
+    memcpy(&ptr->ifr_addr, &node->unicast, sizeof(struct sockaddr));
 
-    for (ptr = ifc->ifc_req, i=0; 
-            ((char *)(ptr+1) - ifc->ifc_buf) < ifc->ifc_len; 
-            ++i, ptr++) {
+    PRINTF("FABDEBUG> Adapter name = '%s'. IP=%s\n", ptr->ifr_name,
+        weaken(inet_ntoa)(((struct sockaddr_in *)(&ptr->ifr_addr))->sin_addr));
+    PRINTF("FABDEBUG>                '%s'. BR=%s\n", ptr->ifr_name,
+        weaken(inet_ntoa)(((struct sockaddr_in *)&node->broadcast)->sin_addr));
+  }
+  ifc->ifc_len = (char *)ptr - ifc->ifc_buf;
 
-        aa = theAdapterName[i].addresses;
-        if (!aa) {
-            break;
-        }
-        memcpy(ptr->ifr_name, theAdapterName[i].name, IFNAMSIZ);
-
-        PRINTF("FABDEBUG> #%d: Adapter name = %s\n", i, ptr->ifr_name);
-        if (aa->FirstUnicastAddress) {
-            ptr->ifr_addr = *aa->FirstUnicastAddress->Address.lpSockaddr;   /* Windows sockaddr is compatible with Linux */
-            PRINTF("FABDEBUG> \tIP=");
-            printUnicastAddressList(aa->FirstUnicastAddress);
-            PRINTF("\n");
-        }
-
-    }
-    ifc->ifc_len = (char *)ptr - ifc->ifc_buf;
-
-    return 0;
-
+  return 0;
 }
 
 /* Performs the SIOCGIFADDR operation */
 int ioctl_siocgifaddr_nt(int fd, struct ifreq *ifr) {
-    NtPIpAdapterAddresses aa;
-    int i;
+  struct HostAdapterInfoNode *node;
 
-    i = findOrInitAdapter(ifr->ifr_name);
-    if (i == -1) {
-        return -1;
-    }
-
-    aa = theAdapterName[i].addresses;
-    if (aa->FirstUnicastAddress) {
-        ifr->ifr_addr = *aa->FirstUnicastAddress->Address.lpSockaddr;   /* Windows sockaddr is compatible with Linux */
-    }
-    return 0;
+  node = findAdapterByName(ifr->ifr_name);
+  if (!node) {
+    return ebadf();
+  }
+  memcpy(&ifr->ifr_addr, &node->unicast, sizeof(struct sockaddr));
+  return 0;
 }
 
 /* Performs the SIOCGIFFLAGS operation */
 int ioctl_siocgifflags_nt(int fd, struct ifreq *ifr) {
-    int i;
-    
-    i = findOrInitAdapter(ifr->ifr_name);
-    if (i == -1) {
-        return -1;
-    }
+  struct HostAdapterInfoNode *node;
 
-    PRINTF(">>>>CAZZO=%d - %d\n", i, theAdapterName[i].flags);
-    ifr->ifr_flags = theAdapterName[i].flags;
-
-    return 0;
+  node = findAdapterByName(ifr->ifr_name);
+  if (!node) {
+    return ebadf();
+  }
+  ifr->ifr_flags = node->flags;
+  return 0;
 }
 
 
 /* Performs the SIOCGIFNETMASK operation */
 int ioctl_siocgifnetmask_nt(int fd, struct ifreq *ifr) {
-    NtPIpAdapterAddresses aa;
-    int i;
+  struct HostAdapterInfoNode *node;
 
-    i = findOrInitAdapter(ifr->ifr_name);
-    if (i == -1) {
-        return -1;
-    }
-
-    PRINTF("FABDEBUG>>>> NETMASK\n");
-    aa = theAdapterName[i].addresses;
-    /* According to the doc:
-     *  ... On Windows Vista and later, the linked IP_ADAPTER_PREFIX structures pointed to 
-     *  by the FirstPrefix member include three IP adapter prefixes for each IP address 
-     *  assigned to the adapter. These include the host IP address prefix, the subnet IP 
-     *  address prefix, and the subnet broadcast IP address prefix. In addition, for each 
-     *  adapter there is a multicast address prefix and a broadcast address prefix.
-     *
-     *  So, in short, for each of the assigned addresses, the IP_ADAPTER_PREFIX objects are:
-     *  #0: Host IP Address
-     *  #1: Subnet
-     *  #2: Broadcast
-     *  #3: Multicast
-     *  #4: Broadcast
-     */
-    if (aa->FirstPrefix) {
-        int count;
-        NtPIpAdapterPrefix prefix;
-        for (count=0, prefix=aa->FirstPrefix; prefix; prefix=prefix->Next, ++count) {
-            PRINTF("FABDEBUG>>>>\t%d: %s/%d\n", count, weaken(inet_ntoa)(
-                    ((struct sockaddr_in *)(prefix->Address.lpSockaddr))->sin_addr), prefix->PrefixLength);
-            if (count == 4) {
-                ifr->ifr_netmask = *prefix->Address.lpSockaddr;
-            }
-        }
-    }
-    return 0;
+  node = findAdapterByName(ifr->ifr_name);
+  if (!node) {
+    return ebadf();
+  }
+  memcpy(&ifr->ifr_netmask, &node->netmask, sizeof(struct sockaddr));
+  return 0;
 }
 
+/* Performs the SIOCGIFBRDADDR operation */
+int ioctl_siocgifbrdaddr_nt(int fd, struct ifreq *ifr) {
+  struct HostAdapterInfoNode *node;
+
+  node = findAdapterByName(ifr->ifr_name);
+  if (!node) {
+    return ebadf();
+  }
+  memcpy(&ifr->ifr_broadaddr, &node->broadcast, sizeof(struct sockaddr));
+  return 0;
+}
 

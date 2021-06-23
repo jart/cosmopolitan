@@ -38,6 +38,7 @@ int ioctl_siocgifconf_nt(int, struct ifconf *) hidden;
 int ioctl_siocgifaddr_nt(int, struct ifreq *) hidden;
 int ioctl_siocgifflags_nt(int, struct ifreq *) hidden;
 int ioctl_siocgifnetmask_nt(int, struct ifreq *) hidden;
+int ioctl_siocgifbrdaddr_nt(int, struct ifreq *) hidden;
 
 static int ioctl_siocgifconf_sysv(int fd, struct ifconf *ifc) {
   if (IsBsd()) {
@@ -149,8 +150,7 @@ int ioctl_siocgifbrdaddr(int fd, void *ifr) {
   if (!IsWindows()) {
     return ioctl_siocgifaddr_sysv(fd, SIOCGIFBRDADDR, (struct ifreq *)ifr);
   } else {
-    return enotsup();
-    //return ioctl_siocgifbrdaddr_nt(fd, ifc);
+    return ioctl_siocgifbrdaddr_nt(fd, (struct ifreq *)ifr);
   }
 }
 

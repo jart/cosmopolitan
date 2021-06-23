@@ -26,9 +26,11 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sock.h"
 
-/* ioctl(SIOCGIFCONFIG) uses GetAdaptersAddresses as weak ref */
+/* ioctl(SIOCGIFCONFIG) for Windows need to access the following functions through 
+ * weak reference. This ensure those symbols are not stripped during final link
+ */
 STATIC_YOINK("GetAdaptersAddresses");
-STATIC_YOINK("WideCharToMultiByte");
+STATIC_YOINK("tprecode16to8");
 
 textwindows int sys_socket_nt(int family, int type, int protocol) {
   int64_t h;
