@@ -91,6 +91,17 @@ bool32 TrackPopupMenu(int64_t hMenu, uint32_t uFlags, int32_t x, int32_t y,
                       int32_t nReserved, int64_t hWnd,
                       const struct NtRect *prcRect);
 
+int WideCharToMultiByte(unsigned int CodePage,
+    uint32_t dwFlags,
+    uint16_t * lpWideCharStr,
+    int cchWideChar,
+    char * lpMultiByteStr,
+    int cbMultiByte,
+    uint16_t * lpDefaultChar,
+    int * lpUsedDefaultChar
+);
+
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_WINDOWS_H_ */

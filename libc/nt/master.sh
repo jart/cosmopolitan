@@ -7093,7 +7093,7 @@ imp	'WerpNotifyLoadStringResource'				WerpNotifyLoadStringResource				KernelBase
 imp	'WerpNotifyLoadStringResourceWorker'			WerpNotifyLoadStringResourceWorker			kernel32	1540
 imp	'WerpNotifyUseStringResource'				WerpNotifyUseStringResource				KernelBase	1809
 imp	'WerpNotifyUseStringResourceWorker'			WerpNotifyUseStringResourceWorker			kernel32	1541
-imp	'WideCharToMultiByte'					WideCharToMultiByte					kernel32	0		# KernelBase
+imp	'WideCharToMultiByte'					WideCharToMultiByte					kernel32	1553    8
 imp	'WidenPath'						WidenPath						gdi32		1941
 imp	'Win32DeleteFile'					Win32DeleteFile						shell32		164
 imp	'WinExec'						WinExec							kernel32	1543
@@ -7797,3 +7797,92 @@ imp	'ReleaseSRWLockExclusive'				ReleaseSRWLockExclusive					kernel32	0	1	# Kern
 imp	'ReleaseSRWLockShared'					ReleaseSRWLockShared					kernel32	0	1	# KernelBase
 imp	'TryAcquireSRWLockExclusive'				TryAcquireSRWLockExclusive				kernel32	0	1	# KernelBase
 imp	'TryAcquireSRWLockShared'				TryAcquireSRWLockShared					kernel32	0	1	# KernelBase
+
+imp	'AddIPAddress'						AddIPAddress						iphlpapi	0	5
+imp	'AllocateAndGetTcpExTableFromStack'			AllocateAndGetTcpExTableFromStack			iphlpapi	0	5
+imp	'AllocateAndGetUdpExTableFromStack'			AllocateAndGetUdpExTableFromStack			iphlpapi	0	5
+imp	'CancelIPChangeNotify'					CancelIPChangeNotify					iphlpapi	0	1
+imp	'CaptureInterfaceHardwareCrossTimestamp'		CaptureInterfaceHardwareCrossTimestamp			iphlpapi	0	2
+imp	'CreateIpForwardEntry'					CreateIpForwardEntry					iphlpapi	0	1
+imp	'CreateIpNetEntry'					CreateIpNetEntry					iphlpapi	0	
+imp	'CreatePersistentTcpPortReservation'			CreatePersistentTcpPortReservation			iphlpapi	0	
+imp	'CreatePersistentUdpPortReservation'			CreatePersistentUdpPortReservation			iphlpapi	0	
+imp	'CreateProxyArpEntry'					CreateProxyArpEntry					iphlpapi	0	
+imp	'DeleteIPAddress'					DeleteIPAddress						iphlpapi	0	
+imp	'DeleteIpForwardEntry'					DeleteIpForwardEntry					iphlpapi	0	
+imp	'DeleteIpNetEntry'					DeleteIpNetEntry					iphlpapi	0	
+imp	'DeletePersistentTcpPortReservation'			DeletePersistentTcpPortReservation			iphlpapi	0	
+imp	'DeletePersistentUdpPortReservation'			DeletePersistentUdpPortReservation			iphlpapi	0	
+imp	'DeleteProxyArpEntry'					DeleteProxyArpEntry					iphlpapi	0	
+imp	'DisableMediaSense'					DisableMediaSense					iphlpapi	0	
+imp	'EnableRouter'						EnableRouter						iphlpapi	0	
+imp	'FlushIpNetTable'					FlushIpNetTable						iphlpapi	0	1
+imp	'GetAdapterIndex'					GetAdapterIndex						iphlpapi	0	2
+imp	'GetAdapterOrderMap'					GetAdapterOrderMap					iphlpapi	0	0
+imp     'GetAdaptersAddresses'                                  GetAdaptersAddresses                                    iphlpapi        67      5
+imp	'GetAdaptersInfo'					GetAdaptersInfo						iphlpapi	0	2
+imp	'GetBestInterface'					GetBestInterface					iphlpapi	0	2
+imp	'GetBestInterfaceEx'					GetBestInterfaceEx					iphlpapi	0	2
+imp	'GetBestRoute'						GetBestRoute						iphlpapi	0	3
+imp	'GetExtendedTcpTable'					GetExtendedTcpTable					iphlpapi	0	
+imp	'GetExtendedUdpTable'					GetExtendedUdpTable					iphlpapi	0	
+imp	'GetFriendlyIfIndex'					GetFriendlyIfIndex					iphlpapi	0	
+imp	'GetIcmpStatistics'					GetIcmpStatistics					iphlpapi	0	
+imp	'GetIcmpStatisticsEx'					GetIcmpStatisticsEx					iphlpapi	0	
+imp	'GetIfEntry'						GetIfEntry						iphlpapi	0	
+imp	'GetIfTable'						GetIfTable						iphlpapi	0	
+imp	'GetInterfaceActiveTimestampCapabilities'		GetInterfaceActiveTimestampCapabilities			iphlpapi	0	
+imp	'GetInterfaceInfo'					GetInterfaceInfo					iphlpapi	0	
+imp	'GetInterfaceSupportedTimestampCapabilities'		GetInterfaceSupportedTimestampCapabilities		iphlpapi	0	
+imp	'GetIpAddrTable'					GetIpAddrTable						iphlpapi	0	
+imp	'GetIpErrorString'					GetIpErrorString					iphlpapi	0	
+imp	'GetIpForwardTable'					GetIpForwardTable					iphlpapi	0	
+imp	'GetIpNetTable'						GetIpNetTable						iphlpapi	0	
+imp	'GetIpStatistics'					GetIpStatistics						iphlpapi	0	
+imp	'GetIpStatisticsEx'					GetIpStatisticsEx					iphlpapi	0	
+imp	'GetNetworkParams'					GetNetworkParams					iphlpapi	0	
+imp	'GetNumberOfInterfaces'					GetNumberOfInterfaces					iphlpapi	0	1
+imp	'GetOwnerModuleFromTcp6Entry'				GetOwnerModuleFromTcp6Entry				iphlpapi	0	
+imp	'GetOwnerModuleFromTcpEntry'				GetOwnerModuleFromTcpEntry				iphlpapi	0	
+imp	'GetOwnerModuleFromUdp6Entry'				GetOwnerModuleFromUdp6Entry				iphlpapi	0	
+imp	'GetOwnerModuleFromUdpEntry'				GetOwnerModuleFromUdpEntry				iphlpapi	0	
+imp	'GetPerAdapterInfo'					GetPerAdapterInfo					iphlpapi	0	
+imp	'GetPerTcp6ConnectionEStats'				GetPerTcp6ConnectionEStats				iphlpapi	0	
+imp	'GetPerTcpConnectionEStats'				GetPerTcpConnectionEStats				iphlpapi	0	
+imp	'GetRTTAndHopCount'					GetRTTAndHopCount					iphlpapi	0	
+imp	'GetTcp6Table'						GetTcp6Table						iphlpapi	0	
+imp	'GetTcp6Table2'						GetTcp6Table2						iphlpapi	0	
+imp	'GetTcpStatistics'					GetTcpStatistics					iphlpapi	0	
+imp	'GetTcpStatisticsEx'					GetTcpStatisticsEx					iphlpapi	0	
+imp	'GetTcpStatisticsEx2'					GetTcpStatisticsEx2					iphlpapi	0	
+imp	'GetTcpTable'						GetTcpTable						iphlpapi	0	3
+imp	'GetTcpTable2'						GetTcpTable2						iphlpapi	0	3
+imp	'GetUdp6Table'						GetUdp6Table						iphlpapi	0	
+imp	'GetUdpStatistics'					GetUdpStatistics					iphlpapi	0	
+imp	'GetUdpStatisticsEx'					GetUdpStatisticsEx					iphlpapi	0	
+imp	'GetUdpStatisticsEx2'					GetUdpStatisticsEx2					iphlpapi	0	
+imp	'GetUdpTable'						GetUdpTable						iphlpapi	0	
+imp	'GetUniDirectionalAdapterInfo'				GetUniDirectionalAdapterInfo				iphlpapi	0	
+imp	'IpReleaseAddress'					IpReleaseAddress					iphlpapi	0	
+imp	'IpRenewAddress'					IpRenewAddress						iphlpapi	0	
+imp	'LookupPersistentTcpPortReservation'			LookupPersistentTcpPortReservation			iphlpapi	0	
+imp	'LookupPersistentUdpPortReservation'			LookupPersistentUdpPortReservation			iphlpapi	0	
+imp	'NhpAllocateAndGetInterfaceInfoFromStack'		NhpAllocateAndGetInterfaceInfoFromStack			iphlpapi	0	
+imp	'NotifyAddrChange'					NotifyAddrChange					iphlpapi	0	
+imp	'NotifyRouteChange'					NotifyRouteChange					iphlpapi	0	
+imp	'ParseNetworkString'					ParseNetworkString					iphlpapi	0	
+imp	'RegisterInterfaceTimestampConfigChange'		RegisterInterfaceTimestampConfigChange			iphlpapi	0	
+imp	'ResolveNeighbor'					ResolveNeighbor						iphlpapi	0	
+imp	'RestoreMediaSense'					RestoreMediaSense					iphlpapi	0	
+imp	'SendARP'						SendARP							iphlpapi	0	
+imp	'SetIfEntry'						SetIfEntry						iphlpapi	0	
+imp	'SetIpForwardEntry'					SetIpForwardEntry					iphlpapi	0	
+imp	'SetIpNetEntry'						SetIpNetEntry						iphlpapi	0	
+imp	'SetIpStatistics'					SetIpStatistics						iphlpapi	0	
+imp	'SetIpStatisticsEx'					SetIpStatisticsEx					iphlpapi	0	
+imp	'SetIpTTL'						SetIpTTL						iphlpapi	0	
+imp	'SetPerTcp6ConnectionEStats'				SetPerTcp6ConnectionEStats				iphlpapi	0	
+imp	'SetPerTcpConnectionEStats'				SetPerTcpConnectionEStats				iphlpapi	0	
+imp	'SetTcpEntry'						SetTcpEntry						iphlpapi	0	
+imp	'UnenableRouter'					UnenableRouter						iphlpapi	0	
+imp	'UnregisterInterfaceTimestampConfigChange'		UnregisterInterfaceTimestampConfigChange		iphlpapi	0	
