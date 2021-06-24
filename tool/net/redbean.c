@@ -140,6 +140,7 @@ STATIC_YOINK("usr/share/ssl/root/geotrust.pem");
 STATIC_YOINK("usr/share/ssl/root/globalsign.pem");
 STATIC_YOINK("usr/share/ssl/root/godaddy.pem");
 STATIC_YOINK("usr/share/ssl/root/google.pem");
+STATIC_YOINK("usr/share/ssl/root/isrg.pem");
 STATIC_YOINK("usr/share/ssl/root/quovadis.pem");
 STATIC_YOINK("usr/share/ssl/root/redbean.pem");
 STATIC_YOINK("usr/share/ssl/root/starfield.pem");
@@ -720,7 +721,6 @@ static bool VerifyCertificate(mbedtls_x509_crt *cert, int depth) {
 }
 
 static void UseCertificate(mbedtls_x509_crt *cert, mbedtls_pk_context *key) {
-  LogCertificate("using certificate", cert);
   if (VerifyCertificate(cert, 0)) {
     if (!dontupgradeinsecurerequests) {
       DEBUGF("enabling conditional https redirects");
@@ -1442,6 +1442,10 @@ static bool TlsSetup(void) {
           LockInc(&shared->c.sslcantciphers);
           WARNF("%s SSL can't ciphersuite", DescribeClient());
           return false;
+        case MBEDTLS_ERR_SSL_BAD_HS_PROTOCOL_VERSION:
+          LockInc(&shared->c.sslnoversion);
+          WARNF("%s SSL version mismatch", DescribeClient());
+          return false;
         case MBEDTLS_ERR_SSL_INVALID_MAC:
           LockInc(&shared->c.sslshakemacs);
           WARNF("%s SSL handshake failed bad mac", DescribeClient());
@@ -1580,7 +1584,7 @@ static struct Cert *GetKeySigningKey(void) {
   return NULL;
 }
 
-static struct Cert *GenerateEcpCertificate(struct Cert *ca) {
+static struct Cert GenerateEcpCertificate(struct Cert *ca) {
   int i, n;
   unsigned char *p;
   mbedtls_x509_crt *cert;
@@ -1616,14 +1620,12 @@ static struct Cert *GenerateEcpCertificate(struct Cert *ca) {
   mbedtls_ctr_drbg_free(&kr);
   free(p);
   CHECK_EQ(0, mbedtls_pk_check_pair(&cert->pk, key));
+  LogCertificate("generated nist elliptic curve certificate", cert);
   UseCertificate(cert, key);
-  certs.p = realloc(certs.p, ++certs.n * sizeof(*certs.p));
-  certs.p[certs.n - 1].cert = cert;
-  certs.p[certs.n - 1].key = key;
-  return certs.p + certs.n - 1;
+  return (struct Cert){cert, key};
 }
 
-static struct Cert *GenerateRsaCertificate(struct Cert *ca) {
+static struct Cert GenerateRsaCertificate(struct Cert *ca) {
   int i, n, rc;
   unsigned char *p;
   mbedtls_x509_crt *cert;
@@ -1663,17 +1665,15 @@ static struct Cert *GenerateRsaCertificate(struct Cert *ca) {
     fprintf(stderr, "error: generate key (grep -0x%04x)\n", -rc);
     exit(1);
   }
+  LogCertificate("generated rivest–shamir–adleman certificate", cert);
   UseCertificate(cert, key);
-  certs.p = realloc(certs.p, ++certs.n * sizeof(*certs.p));
-  certs.p[certs.n - 1].cert = cert;
-  certs.p[certs.n - 1].key = key;
-  return certs.p + certs.n - 1;
+  return (struct Cert){cert, key};
 }
 
 static void LoadCertificates(void) {
   size_t i;
   bool havecert;
-  struct Cert *ksk, *cert;
+  struct Cert *ksk, ecp, rsa;
   havecert = false;
   for (i = 0; i < certs.n; ++i) {
     if (certs.p[i].key && certs.p[i].cert && !certs.p[i].cert->ca_istrue &&
@@ -1682,6 +1682,7 @@ static void LoadCertificates(void) {
         !mbedtls_x509_crt_check_extended_key_usage(
             certs.p[i].cert, MBEDTLS_OID_SERVER_AUTH,
             MBEDTLS_OID_SIZE(MBEDTLS_OID_SERVER_AUTH))) {
+      LogCertificate("using certificate", certs.p[i].cert);
       UseCertificate(certs.p[i].cert, certs.p[i].key);
       havecert = true;
     }
@@ -1699,12 +1700,18 @@ static void LoadCertificates(void) {
       WARNF("generating self-signed ssl certificates");
     }
 #ifdef MBEDTLS_ECP_C
-    cert = GenerateEcpCertificate(ksk);
-    LogCertificate("generated nist elliptic curve certificate", cert->cert);
+    ecp = GenerateEcpCertificate(ksk);
 #endif
 #ifdef MBEDTLS_RSA_C
-    cert = GenerateRsaCertificate(ksk);
-    LogCertificate("generated rivest–shamir–adleman certificate", cert->cert);
+    rsa = GenerateRsaCertificate(ksk);
+#endif
+#ifdef MBEDTLS_ECP_C
+    certs.p = realloc(certs.p, ++certs.n * sizeof(*certs.p));
+    certs.p[certs.n - 1] = ecp;
+#endif
+#ifdef MBEDTLS_RSA_C
+    certs.p = realloc(certs.p, ++certs.n * sizeof(*certs.p));
+    certs.p[certs.n - 1] = rsa;
 #endif
   }
 }
@@ -4897,7 +4904,7 @@ static char *SendHttpsRedirect(void) {
       url.port.n = 2;
     }
     neu = FreeLater(EncodeUrl(&url, 0));
-    LOGF("REDIRECT %s %.*s → %.*s", DescribeClient(), old, neu);
+    LOGF("REDIRECT %s from %s → %s", DescribeClient(), old, neu);
     p = SetStatus(307, "Temporary Redirect");
     p = AppendHeader(p, "Location", neu);
     return p;
