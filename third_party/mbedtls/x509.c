@@ -1,10 +1,24 @@
-/* clang-format off */
+#include "libc/fmt/fmt.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
+#include "libc/time/struct/tm.h"
+#include "third_party/mbedtls/asn1.h"
+#include "third_party/mbedtls/certs.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/oid.h"
+#include "third_party/mbedtls/pem.h"
+#include "third_party/mbedtls/platform.h"
+#include "third_party/mbedtls/x509.h"
+#include "third_party/mbedtls/x509_crt.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /*
  *  X.509 common functions for parsing and verification
  *
@@ -34,36 +48,7 @@ asm(".include \"libc/disclaimer.inc\"");
  *  http://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf
  */
 
-#include "libc/time/struct/tm.h"
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_X509_USE_C)
-
-#include "third_party/mbedtls/x509.h"
-#include "third_party/mbedtls/asn1.h"
-#include "third_party/mbedtls/error.h"
-#include "third_party/mbedtls/oid.h"
-
-
-#if defined(MBEDTLS_PEM_PARSE_C)
-#include "third_party/mbedtls/pem.h"
-#endif
-
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_free      free
-#define mbedtls_calloc    calloc
-#define mbedtls_printf    printf
-#define mbedtls_snprintf  snprintf
-#endif
-
-#if defined(MBEDTLS_HAVE_TIME)
-#include "third_party/mbedtls/platform_time.h"
-#endif
-#if defined(MBEDTLS_HAVE_TIME_DATE)
-#include "third_party/mbedtls/platform_util.h"
-#endif
 
 #define CHECK(code) if( ( ret = ( code ) ) != 0 ){ return( ret ); }
 #define CHECK_RANGE(min, max, val)                      \
@@ -133,209 +118,6 @@ int mbedtls_x509_get_alg( unsigned char **p, const unsigned char *end,
 
     return( 0 );
 }
-
-#if defined(MBEDTLS_X509_RSASSA_PSS_SUPPORT)
-/*
- * HashAlgorithm ::= AlgorithmIdentifier
- *
- * AlgorithmIdentifier  ::=  SEQUENCE  {
- *      algorithm               OBJECT IDENTIFIER,
- *      parameters              ANY DEFINED BY algorithm OPTIONAL  }
- *
- * For HashAlgorithm, parameters MUST be NULL or absent.
- */
-static int x509_get_hash_alg( const mbedtls_x509_buf *alg, mbedtls_md_type_t *md_alg )
-{
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    unsigned char *p;
-    const unsigned char *end;
-    mbedtls_x509_buf md_oid;
-    size_t len;
-
-    /* Make sure we got a SEQUENCE and setup bounds */
-    if( alg->tag != ( MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE ) )
-        return( MBEDTLS_ERR_X509_INVALID_ALG +
-                MBEDTLS_ERR_ASN1_UNEXPECTED_TAG );
-
-    p = alg->p;
-    end = p + alg->len;
-
-    if( p >= end )
-        return( MBEDTLS_ERR_X509_INVALID_ALG +
-                MBEDTLS_ERR_ASN1_OUT_OF_DATA );
-
-    /* Parse md_oid */
-    md_oid.tag = *p;
-
-    if( ( ret = mbedtls_asn1_get_tag( &p, end, &md_oid.len, MBEDTLS_ASN1_OID ) ) != 0 )
-        return( MBEDTLS_ERR_X509_INVALID_ALG + ret );
-
-    md_oid.p = p;
-    p += md_oid.len;
-
-    /* Get md_alg from md_oid */
-    if( ( ret = mbedtls_oid_get_md_alg( &md_oid, md_alg ) ) != 0 )
-        return( MBEDTLS_ERR_X509_INVALID_ALG + ret );
-
-    /* Make sure params is absent of NULL */
-    if( p == end )
-        return( 0 );
-
-    if( ( ret = mbedtls_asn1_get_tag( &p, end, &len, MBEDTLS_ASN1_NULL ) ) != 0 || len != 0 )
-        return( MBEDTLS_ERR_X509_INVALID_ALG + ret );
-
-    if( p != end )
-        return( MBEDTLS_ERR_X509_INVALID_ALG +
-                MBEDTLS_ERR_ASN1_LENGTH_MISMATCH );
-
-    return( 0 );
-}
-
-/*
- *    RSASSA-PSS-params  ::=  SEQUENCE  {
- *       hashAlgorithm     [0] HashAlgorithm DEFAULT sha1Identifier,
- *       maskGenAlgorithm  [1] MaskGenAlgorithm DEFAULT mgf1SHA1Identifier,
- *       saltLength        [2] INTEGER DEFAULT 20,
- *       trailerField      [3] INTEGER DEFAULT 1  }
- *    -- Note that the tags in this Sequence are explicit.
- *
- * RFC 4055 (which defines use of RSASSA-PSS in PKIX) states that the value
- * of trailerField MUST be 1, and PKCS#1 v2.2 doesn't even define any other
- * option. Enfore this at parsing time.
- */
-int mbedtls_x509_get_rsassa_pss_params( const mbedtls_x509_buf *params,
-                                mbedtls_md_type_t *md_alg, mbedtls_md_type_t *mgf_md,
-                                int *salt_len )
-{
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    unsigned char *p;
-    const unsigned char *end, *end2;
-    size_t len;
-    mbedtls_x509_buf alg_id, alg_params;
-
-    /* First set everything to defaults */
-    *md_alg = MBEDTLS_MD_SHA1;
-    *mgf_md = MBEDTLS_MD_SHA1;
-    *salt_len = 20;
-
-    /* Make sure params is a SEQUENCE and setup bounds */
-    if( params->tag != ( MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE ) )
-        return( MBEDTLS_ERR_X509_INVALID_ALG +
-                MBEDTLS_ERR_ASN1_UNEXPECTED_TAG );
-
-    p = (unsigned char *) params->p;
-    end = p + params->len;
-
-    if( p == end )
-        return( 0 );
-
-    /*
-     * HashAlgorithm
-     */
-    if( ( ret = mbedtls_asn1_get_tag( &p, end, &len,
-                    MBEDTLS_ASN1_CONTEXT_SPECIFIC | MBEDTLS_ASN1_CONSTRUCTED | 0 ) ) == 0 )
-    {
-        end2 = p + len;
-
-        /* HashAlgorithm ::= AlgorithmIdentifier (without parameters) */
-        if( ( ret = mbedtls_x509_get_alg_null( &p, end2, &alg_id ) ) != 0 )
-            return( ret );
-
-        if( ( ret = mbedtls_oid_get_md_alg( &alg_id, md_alg ) ) != 0 )
-            return( MBEDTLS_ERR_X509_INVALID_ALG + ret );
-
-        if( p != end2 )
-            return( MBEDTLS_ERR_X509_INVALID_ALG +
-                    MBEDTLS_ERR_ASN1_LENGTH_MISMATCH );
-    }
-    else if( ret != MBEDTLS_ERR_ASN1_UNEXPECTED_TAG )
-        return( MBEDTLS_ERR_X509_INVALID_ALG + ret );
-
-    if( p == end )
-        return( 0 );
-
-    /*
-     * MaskGenAlgorithm
-     */
-    if( ( ret = mbedtls_asn1_get_tag( &p, end, &len,
-                    MBEDTLS_ASN1_CONTEXT_SPECIFIC | MBEDTLS_ASN1_CONSTRUCTED | 1 ) ) == 0 )
-    {
-        end2 = p + len;
-
-        /* MaskGenAlgorithm ::= AlgorithmIdentifier (params = HashAlgorithm) */
-        if( ( ret = mbedtls_x509_get_alg( &p, end2, &alg_id, &alg_params ) ) != 0 )
-            return( ret );
-
-        /* Only MFG1 is recognised for now */
-        if( MBEDTLS_OID_CMP( MBEDTLS_OID_MGF1, &alg_id ) != 0 )
-            return( MBEDTLS_ERR_X509_FEATURE_UNAVAILABLE +
-                    MBEDTLS_ERR_OID_NOT_FOUND );
-
-        /* Parse HashAlgorithm */
-        if( ( ret = x509_get_hash_alg( &alg_params, mgf_md ) ) != 0 )
-            return( ret );
-
-        if( p != end2 )
-            return( MBEDTLS_ERR_X509_INVALID_ALG +
-                    MBEDTLS_ERR_ASN1_LENGTH_MISMATCH );
-    }
-    else if( ret != MBEDTLS_ERR_ASN1_UNEXPECTED_TAG )
-        return( MBEDTLS_ERR_X509_INVALID_ALG + ret );
-
-    if( p == end )
-        return( 0 );
-
-    /*
-     * salt_len
-     */
-    if( ( ret = mbedtls_asn1_get_tag( &p, end, &len,
-                    MBEDTLS_ASN1_CONTEXT_SPECIFIC | MBEDTLS_ASN1_CONSTRUCTED | 2 ) ) == 0 )
-    {
-        end2 = p + len;
-
-        if( ( ret = mbedtls_asn1_get_int( &p, end2, salt_len ) ) != 0 )
-            return( MBEDTLS_ERR_X509_INVALID_ALG + ret );
-
-        if( p != end2 )
-            return( MBEDTLS_ERR_X509_INVALID_ALG +
-                    MBEDTLS_ERR_ASN1_LENGTH_MISMATCH );
-    }
-    else if( ret != MBEDTLS_ERR_ASN1_UNEXPECTED_TAG )
-        return( MBEDTLS_ERR_X509_INVALID_ALG + ret );
-
-    if( p == end )
-        return( 0 );
-
-    /*
-     * trailer_field (if present, must be 1)
-     */
-    if( ( ret = mbedtls_asn1_get_tag( &p, end, &len,
-                    MBEDTLS_ASN1_CONTEXT_SPECIFIC | MBEDTLS_ASN1_CONSTRUCTED | 3 ) ) == 0 )
-    {
-        int trailer_field;
-
-        end2 = p + len;
-
-        if( ( ret = mbedtls_asn1_get_int( &p, end2, &trailer_field ) ) != 0 )
-            return( MBEDTLS_ERR_X509_INVALID_ALG + ret );
-
-        if( p != end2 )
-            return( MBEDTLS_ERR_X509_INVALID_ALG +
-                    MBEDTLS_ERR_ASN1_LENGTH_MISMATCH );
-
-        if( trailer_field != 1 )
-            return( MBEDTLS_ERR_X509_INVALID_ALG );
-    }
-    else if( ret != MBEDTLS_ERR_ASN1_UNEXPECTED_TAG )
-        return( MBEDTLS_ERR_X509_INVALID_ALG + ret );
-
-    if( p != end )
-        return( MBEDTLS_ERR_X509_INVALID_ALG +
-                MBEDTLS_ERR_ASN1_LENGTH_MISMATCH );
-
-    return( 0 );
-}
-#endif /* MBEDTLS_X509_RSASSA_PSS_SUPPORT */
 
 /*
  *  AttributeTypeAndValue ::= SEQUENCE {
@@ -429,7 +211,7 @@ static int x509_get_attr_type_value( unsigned char **p,
  * this list, eg mbedtls_x509_dn_gets().
  */
 int mbedtls_x509_get_name( unsigned char **p, const unsigned char *end,
-                   mbedtls_x509_name *cur )
+                           mbedtls_x509_name *cur )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     size_t set_len;
@@ -668,35 +450,10 @@ int mbedtls_x509_get_sig_alg( const mbedtls_x509_buf *sig_oid, const mbedtls_x50
     if( ( ret = mbedtls_oid_get_sig_alg( sig_oid, md_alg, pk_alg ) ) != 0 )
         return( MBEDTLS_ERR_X509_UNKNOWN_SIG_ALG + ret );
 
-#if defined(MBEDTLS_X509_RSASSA_PSS_SUPPORT)
-    if( *pk_alg == MBEDTLS_PK_RSASSA_PSS )
-    {
-        mbedtls_pk_rsassa_pss_options *pss_opts;
-
-        pss_opts = mbedtls_calloc( 1, sizeof( mbedtls_pk_rsassa_pss_options ) );
-        if( pss_opts == NULL )
-            return( MBEDTLS_ERR_X509_ALLOC_FAILED );
-
-        ret = mbedtls_x509_get_rsassa_pss_params( sig_params,
-                                          md_alg,
-                                          &pss_opts->mgf1_hash_id,
-                                          &pss_opts->expected_salt_len );
-        if( ret != 0 )
-        {
-            mbedtls_free( pss_opts );
-            return( ret );
-        }
-
-        *sig_opts = (void *) pss_opts;
-    }
-    else
-#endif /* MBEDTLS_X509_RSASSA_PSS_SUPPORT */
-    {
-        /* Make sure parameters are absent or NULL */
-        if( ( sig_params->tag != MBEDTLS_ASN1_NULL && sig_params->tag != 0 ) ||
-              sig_params->len != 0 )
-        return( MBEDTLS_ERR_X509_INVALID_ALG );
-    }
+    /* Make sure parameters are absent or NULL */
+    if( ( sig_params->tag != MBEDTLS_ASN1_NULL && sig_params->tag != 0 ) ||
+          sig_params->len != 0 )
+    return( MBEDTLS_ERR_X509_INVALID_ALG );
 
     return( 0 );
 }
@@ -737,9 +494,16 @@ int mbedtls_x509_get_ext( unsigned char **p, const unsigned char *end,
     return( 0 );
 }
 
-/*
- * Store the name in printable form into buf; no more
- * than size characters will be written
+/**
+ * \brief          Store the certificate DN in printable form into buf;
+ *                 no more than size characters will be written.
+ *
+ * \param buf      Buffer to write to
+ * \param size     Maximum size of buffer
+ * \param dn       The X509 name to represent
+ *
+ * \return         The length of the string written (not including the
+ *                 terminated nul byte), or a negative error code.
  */
 int mbedtls_x509_dn_gets( char *buf, size_t size, const mbedtls_x509_name *dn )
 {
@@ -799,9 +563,16 @@ int mbedtls_x509_dn_gets( char *buf, size_t size, const mbedtls_x509_name *dn )
     return( (int) ( size - n ) );
 }
 
-/*
- * Store the serial in printable form into buf; no more
- * than size characters will be written
+/**
+ * \brief          Store the certificate serial in printable form into buf;
+ *                 no more than size characters will be written.
+ *
+ * \param buf      Buffer to write to
+ * \param size     Maximum size of buffer
+ * \param serial   The X509 serial to represent
+ *
+ * \return         The length of the string written (not including the
+ *                 terminated nul byte), or a negative error code.
  */
 int mbedtls_x509_serial_gets( char *buf, size_t size, const mbedtls_x509_buf *serial )
 {
@@ -852,29 +623,6 @@ int mbedtls_x509_sig_alg_gets( char *buf, size_t size, const mbedtls_x509_buf *s
     else
         ret = mbedtls_snprintf( p, n, "%s", desc );
     MBEDTLS_X509_SAFE_SNPRINTF;
-
-#if defined(MBEDTLS_X509_RSASSA_PSS_SUPPORT)
-    if( pk_alg == MBEDTLS_PK_RSASSA_PSS )
-    {
-        const mbedtls_pk_rsassa_pss_options *pss_opts;
-        const mbedtls_md_info_t *md_info, *mgf_md_info;
-
-        pss_opts = (const mbedtls_pk_rsassa_pss_options *) sig_opts;
-
-        md_info = mbedtls_md_info_from_type( md_alg );
-        mgf_md_info = mbedtls_md_info_from_type( pss_opts->mgf1_hash_id );
-
-        ret = mbedtls_snprintf( p, n, " (%s, MGF1-%s, 0x%02X)",
-                              md_info ? mbedtls_md_get_name( md_info ) : "???",
-                              mgf_md_info ? mbedtls_md_get_name( mgf_md_info ) : "???",
-                              (unsigned int) pss_opts->expected_salt_len );
-        MBEDTLS_X509_SAFE_SNPRINTF;
-    }
-#else
-    ((void) pk_alg);
-    ((void) md_alg);
-    ((void) sig_opts);
-#endif /* MBEDTLS_X509_RSASSA_PSS_SUPPORT */
 
     return( (int)( size - n ) );
 }
@@ -964,48 +712,58 @@ static int x509_check_time( const mbedtls_x509_time *before, const mbedtls_x509_
     return( 0 );
 }
 
-int mbedtls_x509_time_is_past( const mbedtls_x509_time *to )
-{
-    mbedtls_x509_time now;
-
-    if( x509_get_current_time( &now ) != 0 )
-        return( 1 );
-
-    return( x509_check_time( &now, to ) );
-}
-
-int mbedtls_x509_time_is_future( const mbedtls_x509_time *from )
-{
-    mbedtls_x509_time now;
-
-    if( x509_get_current_time( &now ) != 0 )
-        return( 1 );
-
-    return( x509_check_time( from, &now ) );
-}
-
-#else  /* MBEDTLS_HAVE_TIME_DATE */
-
-int mbedtls_x509_time_is_past( const mbedtls_x509_time *to )
-{
-    ((void) to);
-    return( 0 );
-}
-
-int mbedtls_x509_time_is_future( const mbedtls_x509_time *from )
-{
-    ((void) from);
-    return( 0 );
-}
 #endif /* MBEDTLS_HAVE_TIME_DATE */
+
+/**
+ * \brief          Check a given mbedtls_x509_time against the system time
+ *                 and tell if it's in the past.
+ *
+ * \note           Intended usage is "if( is_past( valid_to ) ) ERROR".
+ *                 Hence the return value of 1 if on internal errors.
+ *
+ * \param to       mbedtls_x509_time to check
+ *
+ * \return         1 if the given time is in the past or an error occurred,
+ *                 0 otherwise.
+ */
+int mbedtls_x509_time_is_past( const mbedtls_x509_time *to ) {
+#if defined(MBEDTLS_HAVE_TIME_DATE)
+    mbedtls_x509_time now;
+    if (x509_get_current_time(&now)) return 1;
+    return x509_check_time(&now, to);
+#else  /* MBEDTLS_HAVE_TIME_DATE */
+    return 0;
+#endif /* MBEDTLS_HAVE_TIME_DATE */
+}
+
+/**
+ * \brief          Check a given mbedtls_x509_time against the system time
+ *                 and tell if it's in the future.
+ *
+ * \note           Intended usage is "if( is_future( valid_from ) ) ERROR".
+ *                 Hence the return value of 1 if on internal errors.
+ *
+ * \param from     mbedtls_x509_time to check
+ *
+ * \return         1 if the given time is in the future or an error occurred,
+ *                 0 otherwise.
+ */
+int mbedtls_x509_time_is_future( const mbedtls_x509_time *from ) {
+#if defined(MBEDTLS_HAVE_TIME_DATE)
+    mbedtls_x509_time now;
+    if (x509_get_current_time(&now)) return 1;
+    return x509_check_time(from, &now);
+#else
+    return 0;
+#endif
+}
 
 #if defined(MBEDTLS_SELF_TEST)
 
-#include "third_party/mbedtls/x509_crt.h"
-#include "third_party/mbedtls/certs.h"
-
-/*
- * Checkup routine
+/**
+ * \brief          Checkup routine
+ *
+ * \return         0 if successful, or 1 if the test failed
  */
 int mbedtls_x509_self_test( int verbose )
 {

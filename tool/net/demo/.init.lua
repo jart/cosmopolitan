@@ -3,6 +3,7 @@ sqlite3 = require "lsqlite3"
 
 -- /.init.lua is loaded at startup in redbean's main process
 HidePath('/usr/share/zoneinfo/')
+HidePath('/usr/share/ssl/')
 
 -- open a browser tab using explorer/open/xdg-open
 -- LaunchBrowser('/tool/net/demo/index.html')

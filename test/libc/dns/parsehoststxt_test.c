@@ -48,20 +48,19 @@ TEST(ParseHostsTxt, testCorrectlyTokenizesAndSorts) {
   ASSERT_EQ(1, fwrite(kInput, strlen(kInput), 1, f));
   rewind(f);
   ASSERT_EQ(0, ParseHostsTxt(ht, f));
-  SortHostsTxt(ht);
   ASSERT_EQ(4, ht->entries.i);
-  EXPECT_STREQ("cat.example.", &ht->strings.p[ht->entries.p[0].name]);
-  EXPECT_STREQ("cat.example.", &ht->strings.p[ht->entries.p[0].canon]);
-  EXPECT_STREQ("203.0.113.2", ParseIp(ht->entries.p[0].ip));
-  EXPECT_STREQ("lol.example.", &ht->strings.p[ht->entries.p[1].name]);
+  EXPECT_STREQ("lol.example.", &ht->strings.p[ht->entries.p[0].name]);
+  EXPECT_STREQ("lol.example.", &ht->strings.p[ht->entries.p[0].canon]);
+  EXPECT_STREQ("203.0.113.1", ParseIp(ht->entries.p[0].ip));
+  EXPECT_STREQ("lol", &ht->strings.p[ht->entries.p[1].name]);
   EXPECT_STREQ("lol.example.", &ht->strings.p[ht->entries.p[1].canon]);
   EXPECT_STREQ("203.0.113.1", ParseIp(ht->entries.p[1].ip));
-  EXPECT_STREQ("cat", &ht->strings.p[ht->entries.p[2].name]);
+  EXPECT_STREQ("cat.example.", &ht->strings.p[ht->entries.p[2].name]);
   EXPECT_STREQ("cat.example.", &ht->strings.p[ht->entries.p[2].canon]);
   EXPECT_STREQ("203.0.113.2", ParseIp(ht->entries.p[2].ip));
-  EXPECT_STREQ("lol", &ht->strings.p[ht->entries.p[3].name]);
-  EXPECT_STREQ("lol.example.", &ht->strings.p[ht->entries.p[3].canon]);
-  EXPECT_STREQ("203.0.113.1", ParseIp(ht->entries.p[3].ip));
+  EXPECT_STREQ("cat", &ht->strings.p[ht->entries.p[3].name]);
+  EXPECT_STREQ("cat.example.", &ht->strings.p[ht->entries.p[3].canon]);
+  EXPECT_STREQ("203.0.113.2", ParseIp(ht->entries.p[3].ip));
   FreeHostsTxt(&ht);
   fclose(f);
 }

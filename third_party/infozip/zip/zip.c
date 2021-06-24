@@ -30,6 +30,8 @@
 #include "third_party/infozip/zip/crypt.h"
 #include "third_party/infozip/zip/ttyio.h"
 #include "libc/str/str.h"
+#include "libc/log/log.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #ifdef VMS
 #  include <stsdef.h>
@@ -2191,6 +2193,7 @@ char **argv;            /* command line tokens */
 
   char **args = NULL;  /* could be wide argv */
 
+  if (!IsTiny()) showcrashreports();
 
 #ifdef THEOS
   /* the argument expansion from the standard library is full of bugs */

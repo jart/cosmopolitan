@@ -39,6 +39,7 @@ bool32 CloseHandle(int64_t hObject) nothrow nocallback;
 intptr_t GetStdHandle(int64_t nStdHandle) nosideeffect;
 bool32 SetStdHandle(int64_t nStdHandle, int64_t hHandle);
 bool32 SetDefaultDllDirectories(unsigned dirflags);
+bool32 RtlGenRandom(void *RandomBuffer, uint32_t RandomBufferLength);
 
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/runtime.inc"

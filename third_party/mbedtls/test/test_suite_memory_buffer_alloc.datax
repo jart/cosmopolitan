@@ -1,0 +1,24 @@
+Memory buffer alloc self test
+0
+
+Memory buffer alloc - free in middle, alloc at end
+1:int:100:int:100:int:100:int:0:int:0:int:1:int:0:int:0:int:200:int:0
+
+Memory buffer alloc - free in middle, realloc
+1:int:100:int:100:int:100:int:0:int:0:int:1:int:0:int:0:int:100:int:0
+
+Memory buffer alloc - free in middle, merge, realloc
+1:int:100:int:100:int:100:int:100:int:0:int:1:int:1:int:0:int:201:int:0
+
+Memory buffer alloc - free at end, merge, realloc
+1:int:100:int:64:int:100:int:100:int:0:int:0:int:0:int:1:int:200:int:0
+
+Memory buffer alloc - Out of Memory test
+2
+
+Memory buffer: heap too small (header verification should fail)
+3
+
+Memory buffer: attempt to allocate SIZE_MAX
+4
+

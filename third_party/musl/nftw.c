@@ -103,7 +103,7 @@ static int do_nftw(char *path, int (*fn)(const char *, const struct stat *, int,
 	}
 
 	if (type == FTW_D || type == FTW_DP) {
-		dfd = open(path, O_RDONLY);
+		dfd = open(path, O_RDONLY | O_DIRECTORY);
 		err = errno;
 		if (dfd < 0 && err == EACCES) type = FTW_DNR;
 		if (!fd_limit) close(dfd);

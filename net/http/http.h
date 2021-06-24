@@ -99,27 +99,32 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-struct HttpRequestSlice {
+struct HttpSlice {
   short a, b;
 };
 
-struct HttpRequest {
-  int i, a;
+struct HttpHeader {
+  struct HttpSlice k;
+  struct HttpSlice v;
+};
+
+struct HttpHeaders {
+  unsigned n;
+  struct HttpHeader *p;
+};
+
+struct HttpMessage {
+  int i, a, status;
   unsigned char t;
   unsigned char method;
   unsigned char version;
-  struct HttpRequestSlice k;
-  struct HttpRequestSlice uri;
-  struct HttpRequestSlice scratch;
-  struct HttpRequestSlice headers[kHttpHeadersMax];
-  struct HttpRequestSlice xmethod;
-  struct HttpRequestHeaders {
-    unsigned n;
-    struct HttpRequestHeader {
-      struct HttpRequestSlice k;
-      struct HttpRequestSlice v;
-    } * p;
-  } xheaders;
+  struct HttpSlice k;
+  struct HttpSlice uri;
+  struct HttpSlice scratch;
+  struct HttpSlice message;
+  struct HttpSlice headers[kHttpHeadersMax];
+  struct HttpSlice xmethod;
+  struct HttpHeaders xheaders;
 };
 
 extern const char kHttpToken[256];
@@ -130,10 +135,13 @@ const char *GetHttpReason(int);
 const char *GetHttpHeaderName(int);
 int GetHttpHeader(const char *, size_t);
 int GetHttpMethod(const char *, size_t);
-void InitHttpRequest(struct HttpRequest *);
-void DestroyHttpRequest(struct HttpRequest *);
-int ParseHttpRequest(struct HttpRequest *, const char *, size_t);
-bool HeaderHas(struct HttpRequest *, const char *, int, const char *, size_t);
+void InitHttpRequest(struct HttpMessage *);
+void DestroyHttpRequest(struct HttpMessage *);
+int ParseHttpRequest(struct HttpMessage *, const char *, size_t);
+void InitHttpResponse(struct HttpMessage *);
+void DestroyHttpResponse(struct HttpMessage *);
+int ParseHttpResponse(struct HttpMessage *, const char *, size_t);
+bool HeaderHas(struct HttpMessage *, const char *, int, const char *, size_t);
 int64_t ParseContentLength(const char *, size_t);
 char *FormatHttpDateTime(char[hasatleast 30], struct tm *);
 bool ParseHttpRange(const char *, size_t, long, long *, long *);

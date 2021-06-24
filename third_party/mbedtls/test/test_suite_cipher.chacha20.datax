@@ -1,0 +1,112 @@
+Chacha20 RFC 7539 Test Vector #1
+depends_on:0
+8:exp:0:exp:1:hex:"0000000000000000000000000000000000000000000000000000000000000000":hex:"000000000000000000000000":hex:"76b8e0ada0f13d90405d6ae55386bd28bdd219b8a08ded1aa836efcc8b770dc7da41597c5157488d7724e03fb8d84a376a43b8f41518a11cc387b669b2ee6586":hex:"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000":hex:"":hex:"":int:0:int:0
+
+ChaCha20 Encrypt and decrypt 0 bytes
+depends_on:0
+4:exp:0:char*:"CHACHA20":int:256:int:0:exp:1
+
+ChaCha20 Encrypt and decrypt 1 bytes
+depends_on:0
+4:exp:0:char*:"CHACHA20":int:256:int:1:exp:1
+
+ChaCha20 Encrypt and decrypt 2 bytes
+depends_on:0
+4:exp:0:char*:"CHACHA20":int:256:int:2:exp:1
+
+ChaCha20 Encrypt and decrypt 7 bytes
+depends_on:0
+4:exp:0:char*:"CHACHA20":int:256:int:7:exp:1
+
+ChaCha20 Encrypt and decrypt 8 bytes
+depends_on:0
+4:exp:0:char*:"CHACHA20":int:256:int:8:exp:1
+
+ChaCha20 Encrypt and decrypt 9 bytes
+depends_on:0
+4:exp:0:char*:"CHACHA20":int:256:int:9:exp:1
+
+ChaCha20 Encrypt and decrypt 15 bytes
+depends_on:0
+4:exp:0:char*:"CHACHA20":int:256:int:15:exp:1
+
+ChaCha20 Encrypt and decrypt 16 bytes
+depends_on:0
+4:exp:0:char*:"CHACHA20":int:256:int:16:exp:1
+
+ChaCha20 Encrypt and decrypt 17 bytes
+depends_on:0
+4:exp:0:char*:"CHACHA20":int:256:int:17:exp:1
+
+ChaCha20 Encrypt and decrypt 31 bytes
+depends_on:0
+4:exp:0:char*:"CHACHA20":int:256:int:31:exp:1
+
+ChaCha20 Encrypt and decrypt 32 bytes
+depends_on:0
+4:exp:0:char*:"CHACHA20":int:256:int:32:exp:1
+
+ChaCha20 Encrypt and decrypt 33 bytes
+depends_on:0
+4:exp:0:char*:"CHACHA20":int:256:int:33:exp:1
+
+ChaCha20 Encrypt and decrypt 47 bytes
+depends_on:0
+4:exp:0:char*:"CHACHA20":int:256:int:47:exp:1
+
+ChaCha20 Encrypt and decrypt 48 bytes
+depends_on:0
+4:exp:0:char*:"CHACHA20":int:256:int:48:exp:1
+
+ChaCha20 Encrypt and decrypt 49 bytes
+depends_on:0
+4:exp:0:char*:"CHACHA20":int:256:int:49:exp:1
+
+ChaCha20 Encrypt and decrypt 0 bytes in multiple parts 1
+depends_on:0
+7:exp:0:int:256:int:0:int:0:exp:1:int:0:int:0:int:0:int:0
+
+ChaCha20 Encrypt and decrypt 1 bytes in multiple parts 1
+depends_on:0
+7:exp:0:int:256:int:1:int:0:exp:1:int:1:int:0:int:1:int:0
+
+ChaCha20 Encrypt and decrypt 1 bytes in multiple parts 2
+depends_on:0
+7:exp:0:int:256:int:0:int:1:exp:1:int:0:int:1:int:0:int:1
+
+ChaCha20 Encrypt and decrypt 16 bytes in multiple parts 1
+depends_on:0
+7:exp:0:int:256:int:16:int:0:exp:1:int:16:int:0:int:16:int:0
+
+ChaCha20 Encrypt and decrypt 16 bytes in multiple parts 2
+depends_on:0
+7:exp:0:int:256:int:0:int:16:exp:1:int:0:int:16:int:0:int:16
+
+ChaCha20 Encrypt and decrypt 16 bytes in multiple parts 3
+depends_on:0
+7:exp:0:int:256:int:1:int:15:exp:1:int:1:int:15:int:1:int:15
+
+ChaCha20 Encrypt and decrypt 16 bytes in multiple parts 4
+depends_on:0
+7:exp:0:int:256:int:15:int:1:exp:1:int:15:int:1:int:15:int:1
+
+ChaCha20 Encrypt and decrypt 22 bytes in multiple parts 1
+depends_on:0
+7:exp:0:int:256:int:15:int:7:exp:1:int:15:int:7:int:15:int:7
+
+ChaCha20 Encrypt and decrypt 22 bytes in multiple parts 2
+depends_on:0
+7:exp:0:int:256:int:7:int:15:exp:1:int:7:int:15:int:7:int:15
+
+ChaCha20 Encrypt and decrypt 22 bytes in multiple parts 3
+depends_on:0
+7:exp:0:int:256:int:16:int:6:exp:1:int:16:int:6:int:16:int:6
+
+ChaCha20 Encrypt and decrypt 22 bytes in multiple parts 4
+depends_on:0
+7:exp:0:int:256:int:6:int:16:exp:1:int:6:int:16:int:6:int:16
+
+ChaCha20 Encrypt and decrypt 32 bytes in multiple parts
+depends_on:0
+7:exp:0:int:256:int:16:int:16:exp:1:int:16:int:16:int:16:int:16
+

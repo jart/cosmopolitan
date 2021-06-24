@@ -16,15 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/typedef/sigaction_f.h"
 #include "libc/dce.h"
+#include "libc/log/check.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/signals.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
@@ -61,6 +64,7 @@ void showcrashreports(void) {
   kCrashSigs[4] = SIGTRAP; /* bad system call */
   kCrashSigs[5] = SIGABRT; /* abort() called */
   kCrashSigs[6] = SIGBUS;  /* misaligned, noncanonical ptr, etc. */
+  kCrashSigs[7] = SIGPIPE; /* write to closed thing */
   /* </SYNC-LIST>: oncrashthunks.S */
   memset(&sa, 0, sizeof(sa));
   sa.sa_flags = SA_RESETHAND;

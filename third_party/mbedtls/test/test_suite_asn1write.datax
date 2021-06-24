@@ -1,0 +1,369 @@
+ASN.1 Write NULL
+0:hex:"0500"
+
+ASN.1 Write BOOLEAN FALSE
+1:int:0:hex:"010100"
+
+ASN.1 Write BOOLEAN TRUE
+1:int:1:hex:"0101ff"
+
+ASN.1 Write int 0
+2:int:0:hex:"020100"
+
+ASN.1 Write int 1
+2:int:1:hex:"020101"
+
+ASN.1 Write int 127
+2:int:0x7f:hex:"02017f"
+
+ASN.1 Write int 128
+2:int:0x80:hex:"02020080"
+
+ASN.1 Write int 255
+2:int:0xff:hex:"020200ff"
+
+ASN.1 Write int 256
+2:int:0x100:hex:"02020100"
+
+ASN.1 Write int 32767
+2:int:0x7fff:hex:"02027fff"
+
+ASN.1 Write int 32768
+2:int:0x8000:hex:"0203008000"
+
+ASN.1 Write int 65535
+2:int:0xffff:hex:"020300ffff"
+
+ASN.1 Write int 65536
+2:int:0x10000:hex:"0203010000"
+
+ASN.1 Write int 8388607
+2:int:0x7fffff:hex:"02037fffff"
+
+ASN.1 Write int 8388608
+2:int:0x800000:hex:"020400800000"
+
+ASN.1 Write int 0x12345678
+2:int:0x12345678:hex:"020412345678"
+
+ASN.1 Write int 2147483647
+2:int:0x7fffffff:hex:"02047fffffff"
+
+ASN.1 Write enum 0
+3:int:0:hex:"0A0100"
+
+ASN.1 Write enum 1
+3:int:1:hex:"0A0101"
+
+ASN.1 Write enum 127
+3:int:0x7f:hex:"0A017f"
+
+ASN.1 Write enum 128
+3:int:0x80:hex:"0A020080"
+
+ASN.1 Write enum 255
+3:int:0xff:hex:"0A0200ff"
+
+ASN.1 Write enum 256
+3:int:0x100:hex:"0A020100"
+
+ASN.1 Write enum 32767
+3:int:0x7fff:hex:"0A027fff"
+
+ASN.1 Write enum 32768
+3:int:0x8000:hex:"0A03008000"
+
+ASN.1 Write enum 65535
+3:int:0xffff:hex:"0A0300ffff"
+
+ASN.1 Write enum 65536
+3:int:0x10000:hex:"0A03010000"
+
+ASN.1 Write enum 8388607
+3:int:0x7fffff:hex:"0A037fffff"
+
+ASN.1 Write enum 8388608
+3:int:0x800000:hex:"0A0400800000"
+
+ASN.1 Write enum 0x12345678
+3:int:0x12345678:hex:"0A0412345678"
+
+ASN.1 Write enum 2147483647
+3:int:0x7fffffff:hex:"0A047fffffff"
+
+ASN.1 Write mpi 1
+4:hex:"01":hex:"020101"
+
+ASN.1 Write mpi 0x7f
+4:hex:"7f":hex:"02017f"
+
+ASN.1 Write mpi 0x100
+4:hex:"0100":hex:"02020100"
+
+ASN.1 Write mpi, 127*8-1 bits
+4:hex:"7f7b16e05c1537de7c41cef1a0985d6a3ced98aec28e091874cbad6b5e40a5c956258f18861c28bed8ba808259339ee34b2e509c4080149474d5d5b86093f90c475a6443fc87e1a293d4151be625d652f1c32a00a018bba10c8a2ae5b2b0ee4be64e053dce9d07ec7919526c9dfcf2ec9fc3db485caa8e5a68a2cd0a427de8":hex:"027f7f7b16e05c1537de7c41cef1a0985d6a3ced98aec28e091874cbad6b5e40a5c956258f18861c28bed8ba808259339ee34b2e509c4080149474d5d5b86093f90c475a6443fc87e1a293d4151be625d652f1c32a00a018bba10c8a2ae5b2b0ee4be64e053dce9d07ec7919526c9dfcf2ec9fc3db485caa8e5a68a2cd0a427de8"
+
+ASN.1 Write mpi, 127*8+1 bits
+4:hex:"108446d68934cc1af23c4cd909884d4bd737a1890e12f5ef8bf3d807d72feffa63c0bf2633345f8b8418d144617c871a7a0277ac0150eed4b3db7f9dff21114cd0d7f282400f03c931cb00c367550e374a1ed3762a1801ca714cfc8d5aac69707ca81e0661400ed0014d97cba48f94d835dd681fc3053c51958afbf7583cf49c":hex:"028180108446d68934cc1af23c4cd909884d4bd737a1890e12f5ef8bf3d807d72feffa63c0bf2633345f8b8418d144617c871a7a0277ac0150eed4b3db7f9dff21114cd0d7f282400f03c931cb00c367550e374a1ed3762a1801ca714cfc8d5aac69707ca81e0661400ed0014d97cba48f94d835dd681fc3053c51958afbf7583cf49c"
+
+ASN.1 Write mpi, 255*8-1 bits
+4:hex:"7bd1913fcfb652896209ad3e62f5d04a8dfc71eb1698543c52200bd7bbf3c11dd9ff57c299a2f4da172b3d5bd7e29affddf8859be7d50a45537a0df15b17af603d18803fd17134847cba78d83e64bf9fee58364d6124add0541da7bad331cd35fb48186a74bc502ddb967602401c0db02b19e5d38f09e8618fa7f6a1a3f738629baffdc63d9d70d396007d943fd64ae696e5b7e88f2c6d6ec322b461dbddd36efa91d990343b66419cf4832a22dc9ad13021185a1bf007989a50ba3bfd1152b8db899482d3ed498d1b9fae243a3cdae9530d8b29fdb684f70cdc0c9b8527265312603b405e67d59d4b1d654ddc3b7fd5515acb32440dc80903c8474a2c136c":hex:"0281ff7bd1913fcfb652896209ad3e62f5d04a8dfc71eb1698543c52200bd7bbf3c11dd9ff57c299a2f4da172b3d5bd7e29affddf8859be7d50a45537a0df15b17af603d18803fd17134847cba78d83e64bf9fee58364d6124add0541da7bad331cd35fb48186a74bc502ddb967602401c0db02b19e5d38f09e8618fa7f6a1a3f738629baffdc63d9d70d396007d943fd64ae696e5b7e88f2c6d6ec322b461dbddd36efa91d990343b66419cf4832a22dc9ad13021185a1bf007989a50ba3bfd1152b8db899482d3ed498d1b9fae243a3cdae9530d8b29fdb684f70cdc0c9b8527265312603b405e67d59d4b1d654ddc3b7fd5515acb32440dc80903c8474a2c136c"
+
+ASN.1 Write mpi, 256*8-1 bits
+4:hex:"7bd1913fcfb652896209ad3e62f5d04a8dfc71eb1698543c52200bd7bbf3c11dd9ff57c299a2f4da172b3d5bd7e29affddf8859be7d50a45537a0df15b17af603d18803fd17134847cba78d83e64bf9fee58364d6124add0541da7bad331cd35fb48186a74bc502ddb967602401c0db02b19e5d38f09e8618fa7f6a1a3f738629baffdc63d9d70d396007d943fd64ae696e5b7e88f2c6d6ec322b461dbddd36efa91d990343b66419cf4832a22dc9ad13021185a1bf007989a50ba3bfd1152b8db899482d3ed498d1b9fae243a3cdae9530d8b29fdb684f70cdc0c9b8527265312603b405e67d59d4b1d654ddc3b7fd5515acb32440dc80903c8474a2c136c89":hex:"028201007bd1913fcfb652896209ad3e62f5d04a8dfc71eb1698543c52200bd7bbf3c11dd9ff57c299a2f4da172b3d5bd7e29affddf8859be7d50a45537a0df15b17af603d18803fd17134847cba78d83e64bf9fee58364d6124add0541da7bad331cd35fb48186a74bc502ddb967602401c0db02b19e5d38f09e8618fa7f6a1a3f738629baffdc63d9d70d396007d943fd64ae696e5b7e88f2c6d6ec322b461dbddd36efa91d990343b66419cf4832a22dc9ad13021185a1bf007989a50ba3bfd1152b8db899482d3ed498d1b9fae243a3cdae9530d8b29fdb684f70cdc0c9b8527265312603b405e67d59d4b1d654ddc3b7fd5515acb32440dc80903c8474a2c136c89"
+
+ASN.1 Write OCTET STRING: length=0
+5:exp:0:hex:"":hex:"0400"
+
+ASN.1 Write OCTET STRING: length=1
+5:exp:0:hex:"41":hex:"040141"
+
+ASN.1 Write OCTET STRING: length=2
+5:exp:0:hex:"4142":hex:"04024142"
+
+ASN.1 Write OCTET STRING: length=127
+5:exp:0:hex:"99a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38":hex:"047f99a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38"
+
+ASN.1 Write OCTET STRING: length=128
+5:exp:0:hex:"0199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38":hex:"0481800199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38"
+
+ASN.1 Write OCTET STRING: length=255
+5:exp:0:hex:"633ed2cb0a2915dc4438a4c063017eb336cd9571d2a0585522c5073ca22a30ca7b8c9bd167d89ba1827bc6fb5d6ef6dcc52ee6eecc47e84ee0dd18fa3ebbdb6edfc679f037160d48d46a0d7e571335b24a28c8fd29b7f4a93d013b74e522bc1f5f605096bb99d438814b77b54d6dde608417b0a0ce9a8cb507fbeb95e9926b4bb6eec725599493d4b156ef3a5fd701426456029111c20f1d03c5d8999d2c042277ef91c5114a6c06218c1ba28d41ef08e4870d0cef260cba9de16d7d11ed5889b88fb93073746ebb158a4246cdb8a4ce403a5d1d598a0d11548f22070f833c1344d15e7a1445c133d19b8295b7c071bf2227178938031249d22d21c6f8e53d":hex:"0481ff633ed2cb0a2915dc4438a4c063017eb336cd9571d2a0585522c5073ca22a30ca7b8c9bd167d89ba1827bc6fb5d6ef6dcc52ee6eecc47e84ee0dd18fa3ebbdb6edfc679f037160d48d46a0d7e571335b24a28c8fd29b7f4a93d013b74e522bc1f5f605096bb99d438814b77b54d6dde608417b0a0ce9a8cb507fbeb95e9926b4bb6eec725599493d4b156ef3a5fd701426456029111c20f1d03c5d8999d2c042277ef91c5114a6c06218c1ba28d41ef08e4870d0cef260cba9de16d7d11ed5889b88fb93073746ebb158a4246cdb8a4ce403a5d1d598a0d11548f22070f833c1344d15e7a1445c133d19b8295b7c071bf2227178938031249d22d21c6f8e53d"
+
+ASN.1 Write OCTET STRING: length=256
+5:exp:0:hex:"5a633ed2cb0a2915dc4438a4c063017eb336cd9571d2a0585522c5073ca22a30ca7b8c9bd167d89ba1827bc6fb5d6ef6dcc52ee6eecc47e84ee0dd18fa3ebbdb6edfc679f037160d48d46a0d7e571335b24a28c8fd29b7f4a93d013b74e522bc1f5f605096bb99d438814b77b54d6dde608417b0a0ce9a8cb507fbeb95e9926b4bb6eec725599493d4b156ef3a5fd701426456029111c20f1d03c5d8999d2c042277ef91c5114a6c06218c1ba28d41ef08e4870d0cef260cba9de16d7d11ed5889b88fb93073746ebb158a4246cdb8a4ce403a5d1d598a0d11548f22070f833c1344d15e7a1445c133d19b8295b7c071bf2227178938031249d22d21c6f8e53d":hex:"048201005a633ed2cb0a2915dc4438a4c063017eb336cd9571d2a0585522c5073ca22a30ca7b8c9bd167d89ba1827bc6fb5d6ef6dcc52ee6eecc47e84ee0dd18fa3ebbdb6edfc679f037160d48d46a0d7e571335b24a28c8fd29b7f4a93d013b74e522bc1f5f605096bb99d438814b77b54d6dde608417b0a0ce9a8cb507fbeb95e9926b4bb6eec725599493d4b156ef3a5fd701426456029111c20f1d03c5d8999d2c042277ef91c5114a6c06218c1ba28d41ef08e4870d0cef260cba9de16d7d11ed5889b88fb93073746ebb158a4246cdb8a4ce403a5d1d598a0d11548f22070f833c1344d15e7a1445c133d19b8295b7c071bf2227178938031249d22d21c6f8e53d"
+
+ASN.1 Write UTF8 STRING: length=0
+5:exp:1:hex:"":hex:"0c00"
+
+ASN.1 Write UTF8 STRING: length=1
+5:exp:1:hex:"41":hex:"0c0141"
+
+ASN.1 Write UTF8 STRING: length=128
+5:exp:1:hex:"0199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38":hex:"0c81800199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38"
+
+ASN.1 Write PRINTABLE STRING: length=0
+5:exp:2:hex:"":hex:"1300"
+
+ASN.1 Write PRINTABLE STRING: length=1
+5:exp:2:hex:"41":hex:"130141"
+
+ASN.1 Write PRINTABLE STRING: length=128
+5:exp:2:hex:"0199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38":hex:"1381800199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38"
+
+ASN.1 Write IA5 STRING: length=0
+5:exp:3:hex:"":hex:"1600"
+
+ASN.1 Write IA5 STRING: length=1
+5:exp:3:hex:"41":hex:"160141"
+
+ASN.1 Write IA5 STRING: length=128
+5:exp:3:hex:"0199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38":hex:"1681800199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38"
+
+ASN.1 Write tagged string: length=0
+5:exp:4:hex:"":hex:"9600"
+
+ASN.1 Write tagged string: length=1
+5:exp:4:hex:"41":hex:"960141"
+
+ASN.1 Write tagged string: length=128
+5:exp:4:hex:"0199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38":hex:"9681800199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38"
+
+ASN.1 Write OID: length=0
+5:exp:5:hex:"":hex:"0600"
+
+ASN.1 Write OID: length=1
+5:exp:5:hex:"41":hex:"060141"
+
+ASN.1 Write AlgorithmIdentifier, null parameters
+6:hex:"4f4944":int:8:hex:"300d06034f4944"
+
+ASN.1 Write AlgorithmIdentifier, parameters (8 bytes)
+6:hex:"4f4944":int:8:hex:"300d06034f4944"
+
+ASN.1 Write AlgorithmIdentifier, total length=0x7f
+6:hex:"4f4944":int:0x7a:hex:"307f06034f4944"
+
+ASN.1 Write AlgorithmIdentifier, total length=0x80
+6:hex:"4f4944":int:0x7b:hex:"30818006034f4944"
+
+ASN.1 Write AlgorithmIdentifier, total length=0xff
+6:hex:"4f4944":int:0xfa:hex:"3081ff06034f4944"
+
+ASN.1 Write AlgorithmIdentifier, total length=0x100
+6:hex:"4f4944":int:0xfb:hex:"3082010006034f4944"
+
+ASN.1 Write AlgorithmIdentifier, total length=0xffff
+6:hex:"4f4944":int:0xfffa:hex:"3082ffff06034f4944"
+
+ASN.1 Write AlgorithmIdentifier, total length=0x10000
+6:hex:"4f4944":int:0xfffb:hex:"308301000006034f4944"
+
+ASN.1 Write AlgorithmIdentifier, total length=0xffffff
+6:hex:"4f4944":int:0xfffffa:hex:"3083ffffff06034f4944"
+
+ASN.1 Write AlgorithmIdentifier, total length=0x1000000
+6:hex:"4f4944":int:0xfffffb:hex:"30840100000006034f4944"
+
+ASN.1 Write / Read Length #0 (Len = 0, short form)
+7:int:0:hex:"00":int:1:int:1
+
+ASN.1 Write / Read Length #1 (Len = 127, short form)
+7:int:127:hex:"7F":int:1:int:1
+
+ASN.1 Write / Read Length #2 (Len = 127, buffer too small)
+7:int:127:hex:"7F":int:0:exp:6
+
+ASN.1 Write / Read Length #3 (Len = 128, long form)
+7:int:128:hex:"8180":int:2:int:2
+
+ASN.1 Write / Read Length #4 (Len = 255, long form)
+7:int:255:hex:"81FF":int:2:int:2
+
+ASN.1 Write / Read Length #5 (Len = 255, buffer too small)
+7:int:255:hex:"81FF":int:1:exp:6
+
+ASN.1 Write / Read Length #6 (Len = 258, byte order)
+7:int:258:hex:"820102":int:3:int:3
+
+ASN.1 Write / Read Length #7 (Len = 65535, long form)
+7:int:65535:hex:"82FFFF":int:3:int:3
+
+ASN.1 Write / Read Length #8 (Len = 65535, buffer too small)
+7:int:65535:hex:"82FFFF":int:2:exp:6
+
+ASN.1 Write / Read Length #9 (Len = 66051, byte order)
+7:int:66051:hex:"83010203":int:4:int:4
+
+ASN.1 Write / Read Length #10 (Len = 16777215, long form)
+7:int:16777215:hex:"83FFFFFF":int:4:int:4
+
+ASN.1 Write / Read Length #11 (Len = 16777215, buffer too small)
+7:int:16777215:hex:"83FFFFFF":int:3:exp:6
+
+ASN.1 Write / Read Length #12 (Len = 16909060, byte order)
+7:int:16909060:hex:"8401020304":int:5:int:5
+
+ASN.1 Write / Read Length #12 (Len = 16909060, buffer too small)
+7:int:16909060:hex:"8401020304":int:4:exp:6
+
+ASN.1 Write Named Bitstring / Unused bits #0
+8:hex:"FF":int:8:hex:"030200FF":int:1
+
+ASN.1 Write Named Bitstring / Unused bits #1
+8:hex:"FE":int:8:hex:"030201FE":int:1
+
+ASN.1 Write Named Bitstring / Unused bits #2
+8:hex:"FC":int:7:hex:"030202FC":int:1
+
+ASN.1 Write Named Bitstring / Unused bits #3
+8:hex:"F8":int:8:hex:"030203F8":int:1
+
+ASN.1 Write Named Bitstring / Unused bits #4
+8:hex:"F0":int:6:hex:"030204F0":int:1
+
+ASN.1 Write Named Bitstring / Unused bits #5
+8:hex:"E0":int:6:hex:"030205E0":int:1
+
+ASN.1 Write Named Bitstring / Unused bits #6
+8:hex:"C0":int:8:hex:"030206C0":int:1
+
+ASN.1 Write Named Bitstring / Unused bits #7
+8:hex:"80":int:8:hex:"03020780":int:1
+
+ASN.1 Write Named Bitstring / Empty bitstring
+8:hex:"00":int:7:hex:"030100":int:1
+
+ASN.1 Write Named Bitstring / Empty bitstring (bits = 16)
+8:hex:"0000":int:16:hex:"030100":int:1
+
+ASN.1 Write Named Bitstring / Empty bitstring (bits = 24)
+8:hex:"FFFFFF":int:0:hex:"030100":int:1
+
+ASN.1 Write Named Bitstring / 15 trailing bits all unset
+8:hex:"F88000":int:24:hex:"030307F880":int:1
+
+ASN.1 Write Named Bitstring / 15 trailing bits all set
+8:hex:"F8FFFF":int:9:hex:"030307F880":int:1
+
+ASN.1 Write Bitstring / Unused bits #0
+8:hex:"FF":int:8:hex:"030200FF":int:0
+
+ASN.1 Write Bitstring / Unused bits #1
+8:hex:"FF":int:7:hex:"030201FE":int:0
+
+ASN.1 Write Bitstring / Unused bits #2
+8:hex:"FF":int:6:hex:"030202FC":int:0
+
+ASN.1 Write Bitstring / Unused bits #3
+8:hex:"FF":int:5:hex:"030203F8":int:0
+
+ASN.1 Write Bitstring / Unused bits #4
+8:hex:"FF":int:4:hex:"030204F0":int:0
+
+ASN.1 Write Bitstring / Unused bits #5
+8:hex:"FF":int:3:hex:"030205E0":int:0
+
+ASN.1 Write Bitstring / Unused bits #6
+8:hex:"FF":int:2:hex:"030206C0":int:0
+
+ASN.1 Write Bitstring / Unused bits #7
+8:hex:"FF":int:1:hex:"03020780":int:0
+
+ASN.1 Write Bitstring / 1 trailing bit (bits 15)
+8:hex:"0003":int:15:hex:"0303010002":int:0
+
+ASN.1 Write Bitstring / 0 bits
+8:hex:"":int:0:hex:"030100":int:0
+
+ASN.1 Write Bitstring / long string all bits unset except trailing bits
+8:hex:"000000000007":int:45:hex:"030703000000000000":int:0
+
+Store named data: not found
+9:hex:"414141":hex:"424242":hex:"434343":hex:"444444":hex:"7f7f7f":int:0:exp:7
+
+Store named data: empty haystack
+9:hex:"414141":hex:"424242":hex:"434343":hex:"444444":hex:"7f7f7f":int:4:exp:7
+
+Store named data: first
+9:hex:"414141":hex:"424242":hex:"434343":hex:"444444":hex:"414141":int:0:int:0
+
+Store named data: last
+9:hex:"414141":hex:"424242":hex:"434343":hex:"444444":hex:"444444":int:0:int:3
+
+Store named data: skip suffix
+9:hex:"41414141":hex:"414141":hex:"434343":hex:"444444":hex:"414141":int:0:int:1
+
+Store named data: skip prefix
+9:hex:"4141":hex:"414141":hex:"434343":hex:"444444":hex:"414141":int:0:int:1
+
+Store named data: first match
+9:hex:"414141":hex:"414141":hex:"434343":hex:"444444":hex:"414141":int:0:int:0
+
+Store named data: found, null to zero
+10:int:0:int:0
+
+Store named data: found, null to data
+10:int:0:int:9
+
+Store named data: found, data to zero
+10:int:9:int:0
+
+Store named data: found, smaller data
+10:int:9:int:2
+
+Store named data: found, same-size data
+10:int:9:int:9
+
+Store named data: found, larger data
+10:int:4:int:9
+
+Store named data: new, val_len=0
+11:int:0
+
+Store named data: new, val_len=4
+11:int:4
+
+Store named data: new, val_len=4, val=NULL
+11:exp:8
+

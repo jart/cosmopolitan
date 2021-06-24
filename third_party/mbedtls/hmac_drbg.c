@@ -1,10 +1,17 @@
-/* clang-format off */
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/hmac_drbg.h"
+#include "third_party/mbedtls/platform.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /*
  *  HMAC_DRBG implementation (NIST SP 800-90)
  *
@@ -30,40 +37,42 @@ asm(".include \"libc/disclaimer.inc\"");
  *  References below are based on rev. 1 (January 2012).
  */
 
-#include "libc/str/str.h"
-#include "libc/stdio/stdio.h"
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_HMAC_DRBG_C)
 
-#include "third_party/mbedtls/hmac_drbg.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
-
-
-#if defined(MBEDTLS_FS_IO)
-#endif
-
-#if defined(MBEDTLS_SELF_TEST)
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_printf printf
-#endif /* MBEDTLS_SELF_TEST */
-#endif /* MBEDTLS_PLATFORM_C */
-
-/*
- * HMAC_DRBG context initialization
+/**
+ * \brief               HMAC_DRBG context initialization.
+ *
+ * This function makes the context ready for mbedtls_hmac_drbg_seed(),
+ * mbedtls_hmac_drbg_seed_buf() or mbedtls_hmac_drbg_free().
+ *
+ * \note                The reseed interval is #MBEDTLS_HMAC_DRBG_RESEED_INTERVAL
+ *                      by default. Override this value by calling
+ *                      mbedtls_hmac_drbg_set_reseed_interval().
+ *
+ * \param ctx           HMAC_DRBG context to be initialized.
  */
 void mbedtls_hmac_drbg_init( mbedtls_hmac_drbg_context *ctx )
 {
     memset( ctx, 0, sizeof( mbedtls_hmac_drbg_context ) );
-
     ctx->reseed_interval = MBEDTLS_HMAC_DRBG_RESEED_INTERVAL;
 }
 
-/*
- * HMAC_DRBG update, using optional additional data (10.1.2.2)
+/**
+ * \brief               This function updates the state of the HMAC_DRBG context.
+ *
+ * \note                This function is not thread-safe. It is not safe
+ *                      to call this function if another thread might be
+ *                      concurrently obtaining random numbers from the same
+ *                      context or updating or reseeding the same context.
+ *
+ * \param ctx           The HMAC_DRBG context.
+ * \param additional    The data to update the state with.
+ *                      If this is \c NULL, there is no additional data.
+ * \param add_len       Length of \p additional in bytes.
+ *                      Unused if \p additional is \c NULL.
+ *
+ * \return              \c 0 on success, or an error from the underlying
+ *                      hash calculation.
  */
 int mbedtls_hmac_drbg_update_ret( mbedtls_hmac_drbg_context *ctx,
                                   const unsigned char *additional,
@@ -110,30 +119,32 @@ exit:
     return( ret );
 }
 
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-void mbedtls_hmac_drbg_update( mbedtls_hmac_drbg_context *ctx,
-                               const unsigned char *additional,
-                               size_t add_len )
-{
-    (void) mbedtls_hmac_drbg_update_ret( ctx, additional, add_len );
-}
-#endif /* MBEDTLS_DEPRECATED_REMOVED */
-
-/*
- * Simplified HMAC_DRBG initialisation (for use with deterministic ECDSA)
+/**
+ * \brief               Initilisation of simpified HMAC_DRBG (never reseeds).
+ *
+ * This function is meant for use in algorithms that need a pseudorandom
+ * input such as deterministic ECDSA.
+ *
+ * \param ctx           HMAC_DRBG context to be initialised.
+ * \param md_info       MD algorithm to use for HMAC_DRBG.
+ * \param data          Concatenation of the initial entropy string and
+ *                      the additional data.
+ * \param data_len      Length of \p data in bytes.
+ *
+ * \return              \c 0 if successful. or
+ * \return              #MBEDTLS_ERR_MD_BAD_INPUT_DATA if \p md_info is
+ *                      invalid.
+ * \return              #MBEDTLS_ERR_MD_ALLOC_FAILED if there was not enough
+ *                      memory to allocate context data.
  */
 int mbedtls_hmac_drbg_seed_buf( mbedtls_hmac_drbg_context *ctx,
-                        const mbedtls_md_info_t * md_info,
-                        const unsigned char *data, size_t data_len )
+                                const mbedtls_md_info_t * md_info,
+                                const unsigned char *data, size_t data_len )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
     if( ( ret = mbedtls_md_setup( &ctx->md_ctx, md_info, 1 ) ) != 0 )
         return( ret );
-
-#if defined(MBEDTLS_THREADING_C)
-    mbedtls_mutex_init( &ctx->mutex );
-#endif
 
     /*
      * Set initial working state.
@@ -232,8 +243,29 @@ exit:
     return( ret );
 }
 
-/*
- * HMAC_DRBG reseeding: 10.1.2.4 + 9.2
+/**
+ * \brief               This function reseeds the HMAC_DRBG context, that is
+ *                      extracts data from the entropy source.
+ *
+ * \note                This function is not thread-safe. It is not safe
+ *                      to call this function if another thread might be
+ *                      concurrently obtaining random numbers from the same
+ *                      context or updating or reseeding the same context.
+ *
+ * \param ctx           The HMAC_DRBG context.
+ * \param additional    Additional data to add to the state.
+ *                      If this is \c NULL, there is no additional data
+ *                      and \p len should be \c 0.
+ * \param len           The length of the additional data.
+ *                      This must be at most #MBEDTLS_HMAC_DRBG_MAX_INPUT
+ *                      and also at most
+ *                      #MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT - \p entropy_len
+ *                      where \p entropy_len is the entropy length
+ *                      (see mbedtls_hmac_drbg_set_entropy_len()).
+ *
+ * \return              \c 0 if successful.
+ * \return              #MBEDTLS_ERR_HMAC_DRBG_ENTROPY_SOURCE_FAILED
+ *                      if a call to the entropy function failed.
  */
 int mbedtls_hmac_drbg_reseed( mbedtls_hmac_drbg_context *ctx,
                       const unsigned char *additional, size_t len )
@@ -241,29 +273,76 @@ int mbedtls_hmac_drbg_reseed( mbedtls_hmac_drbg_context *ctx,
     return( hmac_drbg_reseed_core( ctx, additional, len, 0 ) );
 }
 
-/*
- * HMAC_DRBG initialisation (10.1.2.3 + 9.1)
+/**
+ * \brief               HMAC_DRBG initial seeding.
  *
- * The nonce is not passed as a separate parameter but extracted
- * from the entropy source as suggested in 8.6.7.
+ * Set the initial seed and set up the entropy source for future reseeds.
+ *
+ * A typical choice for the \p f_entropy and \p p_entropy parameters is
+ * to use the entropy module:
+ * - \p f_entropy is mbedtls_entropy_func();
+ * - \p p_entropy is an instance of ::mbedtls_entropy_context initialized
+ *   with mbedtls_entropy_init() (which registers the platform's default
+ *   entropy sources).
+ *
+ * You can provide a personalization string in addition to the
+ * entropy source, to make this instantiation as unique as possible.
+ *
+ * \note                By default, the security strength as defined by NIST is:
+ *                      - 128 bits if \p md_info is SHA-1;
+ *                      - 192 bits if \p md_info is SHA-224;
+ *                      - 256 bits if \p md_info is SHA-256, SHA-384 or SHA-512.
+ *                      Note that SHA-256 is just as efficient as SHA-224.
+ *                      The security strength can be reduced if a smaller
+ *                      entropy length is set with
+ *                      mbedtls_hmac_drbg_set_entropy_len().
+ *
+ * \note                The default entropy length is the security strength
+ *                      (converted from bits to bytes). You can override
+ *                      it by calling mbedtls_hmac_drbg_set_entropy_len().
+ *
+ * \note                During the initial seeding, this function calls
+ *                      the entropy source to obtain a nonce
+ *                      whose length is half the entropy length.
+ *
+ * \param ctx           HMAC_DRBG context to be seeded.
+ * \param md_info       MD algorithm to use for HMAC_DRBG.
+ * \param f_entropy     The entropy callback, taking as arguments the
+ *                      \p p_entropy context, the buffer to fill, and the
+ *                      length of the buffer.
+ *                      \p f_entropy is always called with a length that is
+ *                      less than or equal to the entropy length.
+ * \param p_entropy     The entropy context to pass to \p f_entropy.
+ * \param custom        The personalization string.
+ *                      This can be \c NULL, in which case the personalization
+ *                      string is empty regardless of the value of \p len.
+ * \param len           The length of the personalization string.
+ *                      This must be at most #MBEDTLS_HMAC_DRBG_MAX_INPUT
+ *                      and also at most
+ *                      #MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT - \p entropy_len * 3 / 2
+ *                      where \p entropy_len is the entropy length
+ *                      described above.
+ *
+ * \return              \c 0 if successful.
+ * \return              #MBEDTLS_ERR_MD_BAD_INPUT_DATA if \p md_info is
+ *                      invalid.
+ * \return              #MBEDTLS_ERR_MD_ALLOC_FAILED if there was not enough
+ *                      memory to allocate context data.
+ * \return              #MBEDTLS_ERR_HMAC_DRBG_ENTROPY_SOURCE_FAILED
+ *                      if the call to \p f_entropy failed.
  */
 int mbedtls_hmac_drbg_seed( mbedtls_hmac_drbg_context *ctx,
-                    const mbedtls_md_info_t * md_info,
-                    int (*f_entropy)(void *, unsigned char *, size_t),
-                    void *p_entropy,
-                    const unsigned char *custom,
-                    size_t len )
+                            const mbedtls_md_info_t * md_info,
+                            int (*f_entropy)(void *, unsigned char *, size_t),
+                            void *p_entropy,
+                            const unsigned char *custom,
+                            size_t len )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     size_t md_size;
 
     if( ( ret = mbedtls_md_setup( &ctx->md_ctx, md_info, 1 ) ) != 0 )
         return( ret );
-
-    /* The mutex is initialized iff the md context is set up. */
-#if defined(MBEDTLS_THREADING_C)
-    mbedtls_mutex_init( &ctx->mutex );
-#endif
 
     md_size = mbedtls_md_get_size( md_info );
 
@@ -302,8 +381,18 @@ int mbedtls_hmac_drbg_seed( mbedtls_hmac_drbg_context *ctx,
     return( 0 );
 }
 
-/*
- * Set prediction resistance
+/**
+ * \brief               This function turns prediction resistance on or off.
+ *                      The default value is off.
+ *
+ * \note                If enabled, entropy is gathered at the beginning of
+ *                      every call to mbedtls_hmac_drbg_random_with_add()
+ *                      or mbedtls_hmac_drbg_random().
+ *                      Only use this if your entropy source has sufficient
+ *                      throughput.
+ *
+ * \param ctx           The HMAC_DRBG context.
+ * \param resistance    #MBEDTLS_HMAC_DRBG_PR_ON or #MBEDTLS_HMAC_DRBG_PR_OFF.
  */
 void mbedtls_hmac_drbg_set_prediction_resistance( mbedtls_hmac_drbg_context *ctx,
                                           int resistance )
@@ -311,29 +400,71 @@ void mbedtls_hmac_drbg_set_prediction_resistance( mbedtls_hmac_drbg_context *ctx
     ctx->prediction_resistance = resistance;
 }
 
-/*
- * Set entropy length grabbed for seeding
+/**
+ * \brief               This function sets the amount of entropy grabbed on each
+ *                      seed or reseed.
+ *
+ * See the documentation of mbedtls_hmac_drbg_seed() for the default value.
+ *
+ * \param ctx           The HMAC_DRBG context.
+ * \param len           The amount of entropy to grab, in bytes.
  */
 void mbedtls_hmac_drbg_set_entropy_len( mbedtls_hmac_drbg_context *ctx, size_t len )
 {
     ctx->entropy_len = len;
 }
 
-/*
- * Set reseed interval
+/**
+ * \brief               Set the reseed interval.
+ *
+ * The reseed interval is the number of calls to mbedtls_hmac_drbg_random()
+ * or mbedtls_hmac_drbg_random_with_add() after which the entropy function
+ * is called again.
+ *
+ * The default value is #MBEDTLS_HMAC_DRBG_RESEED_INTERVAL.
+ *
+ * \param ctx           The HMAC_DRBG context.
+ * \param interval      The reseed interval.
  */
 void mbedtls_hmac_drbg_set_reseed_interval( mbedtls_hmac_drbg_context *ctx, int interval )
 {
     ctx->reseed_interval = interval;
 }
 
-/*
- * HMAC_DRBG random function with optional additional data:
- * 10.1.2.5 (arabic) + 9.3 (Roman)
+/**
+ * \brief   This function updates an HMAC_DRBG instance with additional
+ *          data and uses it to generate random data.
+ *
+ * This function automatically reseeds if the reseed counter is exceeded
+ * or prediction resistance is enabled.
+ *
+ * \note                This function is not thread-safe. It is not safe
+ *                      to call this function if another thread might be
+ *                      concurrently obtaining random numbers from the same
+ *                      context or updating or reseeding the same context.
+ *
+ * \param p_rng         The HMAC_DRBG context. This must be a pointer to a
+ *                      #mbedtls_hmac_drbg_context structure.
+ * \param output        The buffer to fill.
+ * \param output_len    The length of the buffer in bytes.
+ *                      This must be at most #MBEDTLS_HMAC_DRBG_MAX_REQUEST.
+ * \param additional    Additional data to update with.
+ *                      If this is \c NULL, there is no additional data
+ *                      and \p add_len should be \c 0.
+ * \param add_len       The length of the additional data.
+ *                      This must be at most #MBEDTLS_HMAC_DRBG_MAX_INPUT.
+ *
+ * \return              \c 0 if successful.
+ * \return              #MBEDTLS_ERR_HMAC_DRBG_ENTROPY_SOURCE_FAILED
+ *                      if a call to the entropy source failed.
+ * \return              #MBEDTLS_ERR_HMAC_DRBG_REQUEST_TOO_BIG if
+ *                      \p output_len > #MBEDTLS_HMAC_DRBG_MAX_REQUEST.
+ * \return              #MBEDTLS_ERR_HMAC_DRBG_INPUT_TOO_BIG if
+ *                      \p add_len > #MBEDTLS_HMAC_DRBG_MAX_INPUT.
  */
 int mbedtls_hmac_drbg_random_with_add( void *p_rng,
-                               unsigned char *output, size_t out_len,
-                               const unsigned char *additional, size_t add_len )
+                                       unsigned char *output, size_t out_len,
+                                       const unsigned char *additional, size_t add_len )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     mbedtls_hmac_drbg_context *ctx = (mbedtls_hmac_drbg_context *) p_rng;
@@ -399,49 +530,58 @@ exit:
     return( ret );
 }
 
-/*
- * HMAC_DRBG random function
+/**
+ * \brief   This function uses HMAC_DRBG to generate random data.
+ *
+ * This function automatically reseeds if the reseed counter is exceeded
+ * or prediction resistance is enabled.
+ *
+ * \param p_rng         The HMAC_DRBG context. This must be a pointer to a
+ *                      #mbedtls_hmac_drbg_context structure.
+ * \param output        The buffer to fill.
+ * \param out_len       The length of the buffer in bytes.
+ *                      This must be at most #MBEDTLS_HMAC_DRBG_MAX_REQUEST.
+ *
+ * \return              \c 0 if successful.
+ * \return              #MBEDTLS_ERR_HMAC_DRBG_ENTROPY_SOURCE_FAILED
+ *                      if a call to the entropy source failed.
+ * \return              #MBEDTLS_ERR_HMAC_DRBG_REQUEST_TOO_BIG if
+ *                      \p out_len > #MBEDTLS_HMAC_DRBG_MAX_REQUEST.
  */
 int mbedtls_hmac_drbg_random( void *p_rng, unsigned char *output, size_t out_len )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     mbedtls_hmac_drbg_context *ctx = (mbedtls_hmac_drbg_context *) p_rng;
-
-#if defined(MBEDTLS_THREADING_C)
-    if( ( ret = mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
-        return( ret );
-#endif
-
-    ret = mbedtls_hmac_drbg_random_with_add( ctx, output, out_len, NULL, 0 );
-
-#if defined(MBEDTLS_THREADING_C)
-    if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
-        return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
-#endif
-
-    return( ret );
+    return mbedtls_hmac_drbg_random_with_add( ctx, output, out_len, NULL, 0 );
 }
 
-/*
- *  This function resets HMAC_DRBG context to the state immediately
- *  after initial call of mbedtls_hmac_drbg_init().
+/**
+ * \brief               This function resets HMAC_DRBG context to the state immediately
+ *                      after initial call of mbedtls_hmac_drbg_init().
+ *
+ * \param ctx           The HMAC_DRBG context to free.
  */
 void mbedtls_hmac_drbg_free( mbedtls_hmac_drbg_context *ctx )
 {
     if( ctx == NULL )
         return;
-
-#if defined(MBEDTLS_THREADING_C)
-    /* The mutex is initialized iff the md context is set up. */
-    if( ctx->md_ctx.md_info != NULL )
-        mbedtls_mutex_free( &ctx->mutex );
-#endif
     mbedtls_md_free( &ctx->md_ctx );
     mbedtls_platform_zeroize( ctx, sizeof( mbedtls_hmac_drbg_context ) );
     ctx->reseed_interval = MBEDTLS_HMAC_DRBG_RESEED_INTERVAL;
 }
 
 #if defined(MBEDTLS_FS_IO)
+
+/**
+ * \brief               This function writes a seed file.
+ *
+ * \param ctx           The HMAC_DRBG context.
+ * \param path          The name of the file.
+ *
+ * \return              \c 0 on success.
+ * \return              #MBEDTLS_ERR_HMAC_DRBG_FILE_IO_ERROR on file error.
+ * \return              #MBEDTLS_ERR_HMAC_DRBG_ENTROPY_SOURCE_FAILED on reseed
+ *                      failure.
+ */
 int mbedtls_hmac_drbg_write_seed_file( mbedtls_hmac_drbg_context *ctx, const char *path )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
@@ -469,6 +609,20 @@ exit:
     return( ret );
 }
 
+/**
+ * \brief               This function reads and updates a seed file. The seed
+ *                      is added to this instance.
+ *
+ * \param ctx           The HMAC_DRBG context.
+ * \param path          The name of the file.
+ *
+ * \return              \c 0 on success.
+ * \return              #MBEDTLS_ERR_HMAC_DRBG_FILE_IO_ERROR on file error.
+ * \return              #MBEDTLS_ERR_HMAC_DRBG_ENTROPY_SOURCE_FAILED on
+ *                      reseed failure.
+ * \return              #MBEDTLS_ERR_HMAC_DRBG_INPUT_TOO_BIG if the existing
+ *                      seed file is too large.
+ */
 int mbedtls_hmac_drbg_update_seed_file( mbedtls_hmac_drbg_context *ctx, const char *path )
 {
     int ret = 0;
@@ -506,17 +660,8 @@ exit:
 }
 #endif /* MBEDTLS_FS_IO */
 
-
 #if defined(MBEDTLS_SELF_TEST)
-
-#if !defined(MBEDTLS_SHA1_C)
-/* Dummy checkup routine */
-int mbedtls_hmac_drbg_self_test( int verbose )
-{
-    (void) verbose;
-    return( 0 );
-}
-#else
+#if defined(MBEDTLS_SHA1_C)
 
 #define OUTPUT_LEN  80
 
@@ -569,8 +714,11 @@ static int hmac_drbg_self_test_entropy( void *data,
                         return( 1 );                        \
                     }
 
-/*
- * Checkup routine for HMAC_DRBG with SHA-1
+/**
+ * \brief               The HMAC_DRBG Checkup routine.
+ *
+ * \return              \c 0 if successful.
+ * \return              \c 1 if the test failed.
  */
 int mbedtls_hmac_drbg_self_test( int verbose )
 {
@@ -629,6 +777,7 @@ int mbedtls_hmac_drbg_self_test( int verbose )
 
     return( 0 );
 }
+
 #endif /* MBEDTLS_SHA1_C */
 #endif /* MBEDTLS_SELF_TEST */
 

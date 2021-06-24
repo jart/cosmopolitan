@@ -381,7 +381,6 @@ static char *strftime_timefmt(char *p, const char *pe, const char *format,
  */
 size_t strftime(char *s, size_t size, const char *f, const struct tm *t) {
   char *p;
-  assert(t);
   p = strftime_timefmt(s, s + size, f, t);
   if (p < s + size) {
     *p = '\0';

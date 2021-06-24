@@ -1,10 +1,14 @@
-/* clang-format off */
+#include "third_party/mbedtls/base64.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/platform.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /*
  *  RFC 1521 base64 encoding/decoding
  *
@@ -24,31 +28,9 @@ asm(".include \"libc/disclaimer.inc\"");
  *  limitations under the License.
  */
 
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_BASE64_C)
 
-#include "third_party/mbedtls/base64.h"
-
-
-#if defined(MBEDTLS_SELF_TEST)
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_printf printf
-#endif /* MBEDTLS_PLATFORM_C */
-#endif /* MBEDTLS_SELF_TEST */
-
-static const unsigned char base64_enc_map[64] =
-{
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-    'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-    'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
-    'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-    'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
-    'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-    '8', '9', '+', '/'
-};
+#define ENC "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
 static const unsigned char base64_dec_map[128] =
 {
@@ -70,27 +52,16 @@ static const unsigned char base64_dec_map[128] =
 #define BASE64_SIZE_T_MAX   ( (size_t) -1 ) /* SIZE_T_MAX is not standard */
 
 /*
- * Constant flow conditional assignment to unsigned char
- */
-static void mbedtls_base64_cond_assign_uchar( unsigned char * dest, const unsigned char * const src,
-                                       unsigned char condition )
+ * Constant flow conditional assignment to unsigned char 
+*/
+static void mbedtls_base64_cond_assign_uchar( unsigned char * dest,
+                                              const unsigned char * const src,
+                                              unsigned char condition )
 {
-    /* MSVC has a warning about unary minus on unsigned integer types,
-     * but this is well-defined and precisely what we want to do here. */
-#if defined(_MSC_VER)
-#pragma warning( push )
-#pragma warning( disable : 4146 )
-#endif
-
     /* Generate bitmask from condition, mask will either be 0xFF or 0 */
     unsigned char mask = ( condition | -condition );
     mask >>= 7;
     mask = -mask;
-
-#if defined(_MSC_VER)
-#pragma warning( pop )
-#endif
-
     *dest = ( ( *src ) & mask ) | ( ( *dest ) & ~mask );
 }
 
@@ -98,24 +69,12 @@ static void mbedtls_base64_cond_assign_uchar( unsigned char * dest, const unsign
  * Constant flow conditional assignment to uint_32
  */
 static void mbedtls_base64_cond_assign_uint32( uint32_t * dest, const uint32_t src,
-                                       uint32_t condition )
+                                               uint32_t condition )
 {
-    /* MSVC has a warning about unary minus on unsigned integer types,
-     * but this is well-defined and precisely what we want to do here. */
-#if defined(_MSC_VER)
-#pragma warning( push )
-#pragma warning( disable : 4146 )
-#endif
-
     /* Generate bitmask from condition, mask will either be 0xFFFFFFFF or 0 */
     uint32_t mask = ( condition | -condition );
     mask >>= 31;
     mask = -mask;
-
-#if defined(_MSC_VER)
-#pragma warning( pop )
-#endif
-
     *dest = ( src & mask ) | ( ( *dest ) & ~mask );
 }
 
@@ -125,23 +84,9 @@ static void mbedtls_base64_cond_assign_uint32( uint32_t * dest, const uint32_t s
 static unsigned char mbedtls_base64_eq( size_t in_a, size_t in_b )
 {
     size_t difference = in_a ^ in_b;
-
-    /* MSVC has a warning about unary minus on unsigned integer types,
-     * but this is well-defined and precisely what we want to do here. */
-#if defined(_MSC_VER)
-#pragma warning( push )
-#pragma warning( disable : 4146 )
-#endif
-
     difference |= -difference;
-
-#if defined(_MSC_VER)
-#pragma warning( pop )
-#endif
-
     /* cope with the varying size of size_t per platform */
     difference >>= ( sizeof( difference ) * 8 - 1 );
-
     return (unsigned char) ( 1 ^ difference );
 }
 
@@ -149,7 +94,8 @@ static unsigned char mbedtls_base64_eq( size_t in_a, size_t in_b )
  * Constant flow lookup into table.
  */
 static unsigned char mbedtls_base64_table_lookup( const unsigned char * const table,
-                                                 const size_t table_size, const size_t table_index )
+                                                  const size_t table_size,
+                                                  const size_t table_index )
 {
     size_t i;
     unsigned char result = 0;
@@ -162,89 +108,80 @@ static unsigned char mbedtls_base64_table_lookup( const unsigned char * const ta
     return result;
 }
 
-/*
- * Encode a buffer into base64 format
+/**
+ * \brief          Encode a buffer into base64 format
+ *
+ * \param dst      destination buffer
+ * \param dlen     size of the destination buffer
+ * \param olen     number of bytes written
+ * \param src      source buffer
+ * \param slen     amount of data to be encoded
+ *
+ * \return         0 if successful, or MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL.
+ *                 *olen is always updated to reflect the amount
+ *                 of data that has (or would have) been written.
+ *                 If that length cannot be represented, then no data is
+ *                 written to the buffer and *olen is set to the maximum
+ *                 length representable as a size_t.
+ *
+ * \note           Call this function with dlen = 0 to obtain the
+ *                 required buffer size in *olen
  */
 int mbedtls_base64_encode( unsigned char *dst, size_t dlen, size_t *olen,
-                   const unsigned char *src, size_t slen )
+                           const unsigned char *src, size_t slen )
 {
+    unsigned w;
     size_t i, n;
-    int C1, C2, C3;
-    unsigned char *p;
-
-    if( slen == 0 )
-    {
+    unsigned char *q;
+    const unsigned char *p, *pe;
+    if( !slen ) {
+        if (dlen) *dst = 0;
         *olen = 0;
-        return( 0 );
+        return 0;
     }
-
     n = slen / 3 + ( slen % 3 != 0 );
-
-    if( n > ( BASE64_SIZE_T_MAX - 1 ) / 4 )
-    {
+    if( n > ( BASE64_SIZE_T_MAX - 1 ) / 4 ) {
         *olen = BASE64_SIZE_T_MAX;
-        return( MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL );
+        return MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL;
     }
-
     n *= 4;
-
-    if( ( dlen < n + 1 ) || ( NULL == dst ) )
-    {
+    if( ( dlen < n + 1 ) || !dst ) {
         *olen = n + 1;
-        return( MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL );
+        return MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL;
     }
-
-    n = ( slen / 3 ) * 3;
-
-    for( i = 0, p = dst; i < n; i += 3 )
-    {
-        C1 = *src++;
-        C2 = *src++;
-        C3 = *src++;
-
-        *p++ = mbedtls_base64_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
-                                            ( ( C1 >> 2 ) & 0x3F ) );
-
-        *p++ = mbedtls_base64_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
-                                            ( ( ( ( C1 &  3 ) << 4 ) + ( C2 >> 4 ) ) & 0x3F ) );
-
-        *p++ = mbedtls_base64_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
-                                            ( ( ( ( C2 & 15 ) << 2 ) + ( C3 >> 6 ) ) & 0x3F ) );
-
-        *p++ = mbedtls_base64_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
-                                            ( C3 & 0x3F ) );
+    for (q = dst, p = src, pe = p + slen; p < pe; p += 3) {
+        w = p[0] << 020;
+        if (p + 1 < pe) w |= p[1] << 010;
+        if (p + 2 < pe) w |= p[2] << 000;
+        *q++ = ENC[(w >> 18) & 077];
+        *q++ = ENC[(w >> 12) & 077];
+        *q++ = p + 1 < pe ? ENC[(w >> 6) & 077] : '=';
+        *q++ = p + 2 < pe ? ENC[w & 077] : '=';
     }
-
-    if( i < slen )
-    {
-        C1 = *src++;
-        C2 = ( ( i + 1 ) < slen ) ? *src++ : 0;
-
-        *p++ = mbedtls_base64_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
-                                            ( ( C1 >> 2 ) & 0x3F ) );
-
-        *p++ = mbedtls_base64_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
-                                            ( ( ( ( C1 & 3 ) << 4 ) + ( C2 >> 4 ) ) & 0x3F ) );
-
-        if( ( i + 1 ) < slen )
-             *p++ = mbedtls_base64_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
-                                                 ( ( ( C2 & 15 ) << 2 ) & 0x3F ) );
-        else *p++ = '=';
-
-        *p++ = '=';
-    }
-
-    *olen = p - dst;
-    *p = 0;
-
-    return( 0 );
+    *olen = n;
+    *q = 0;
+    return 0;
 }
 
-/*
- * Decode a base64-formatted buffer
+/**
+ * \brief          Decode a base64-formatted buffer
+ *
+ * \param dst      destination buffer (can be NULL for checking size)
+ * \param dlen     size of the destination buffer
+ * \param olen     number of bytes written
+ * \param src      source buffer
+ * \param slen     amount of data to be decoded
+ *
+ * \return         0 if successful, MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL, or
+ *                 MBEDTLS_ERR_BASE64_INVALID_CHARACTER if the input data is
+ *                 not correct. *olen is always updated to reflect the amount
+ *                 of data that has (or would have) been written.
+ *
+ * \note           Call this function with *dst = NULL or dlen = 0 to obtain
+ *                 the required buffer size in *olen
  */
 int mbedtls_base64_decode( unsigned char *dst, size_t dlen, size_t *olen,
-                   const unsigned char *src, size_t slen )
+                           const unsigned char *src, size_t slen )
 {
     size_t i, n;
     uint32_t j, x;
@@ -352,8 +289,10 @@ static const unsigned char base64_test_enc[] =
     "JEhuVodiWr2/F9mixBcaAZTtjx4Rs9cJDLbpEG8i7hPK"
     "swcFdsn6MWwINP+Nwmw4AEPpVJevUEvRQbqVMVoLlw==";
 
-/*
- * Checkup routine
+/**
+ * \brief          Checkup routine
+ *
+ * \return         0 if successful, or 1 if the test failed
  */
 int mbedtls_base64_self_test( int verbose )
 {

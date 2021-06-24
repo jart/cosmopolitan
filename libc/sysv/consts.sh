@@ -151,6 +151,7 @@ syscon	sig	SIGIO					29			23			23			23			23			29			# bsd consensus
 syscon	sig	SIGSYS					31			12			12			12			12			31			# wut; bsd consensus
 syscon	sig	SIGRTMAX				0			0			126			0			63			0
 syscon	sig	SIGRTMIN				0			0			65			0			33			0
+syscon	sig	SIGEMT					0			7			7			7			7			0			# not implemented in most community editions of system five; consider doing this using SIGUSR1 or SIGUSR2 instead
 syscon	compat	SIGPOLL					29			23			23			23			23			29			# same as SIGIO
 syscon	compat	SIGIOT					6			6			6			6			6			6			# PDP-11 feature; same as SIGABRT
 syscon	compat	SIGPWR					30			30			30			30			32			30			# not implemented in most community editions of system five; consider doing this using SIGUSR1 or SIGUSR2 instead
@@ -170,7 +171,7 @@ syscon	open	O_APPEND				0x00000400		8			8			8			8			0x00000004		# bsd consensus 
 syscon	open	O_CREAT					0x00000040		0x00000200		0x00000200		0x00000200		0x00000200		0x00000040		# bsd consensus & NT faked as Linux
 syscon	open	O_EXCL					0x00000080		0x00000800		0x00000800		0x00000800		0x00000800		0x00000080		# bsd consensus & NT faked as Linux
 syscon	open	O_TRUNC					0x00000200		0x00000400		0x00000400		0x00000400		0x00000400		0x00000200		# bsd consensus & NT faked as Linux
-syscon	open	O_DIRECTORY				0x00010000		0x00100000		0x00020000		0x00020000		0x00200000		0x02000000		# kNtFileFlagBackupSemantics
+syscon	open	O_DIRECTORY				0x00010000		0x00100000		0x00020000		0x00020000		0x00200000		0x02000000		# useful hint on UNIX, but required on NT (see kNtFileFlagBackupSemantics)
 syscon	open	O_DIRECT				0x00004000		0			0x00010000		0			0x00080000		0x00200000		# kNtFileFlagNoBuffering>>8
 syscon	open	O_CLOEXEC				0x00080000		0x01000000		0x00100000		0x00010000		0x00400000		0x00080000		# NT faked as Linux
 syscon	open	O_TMPFILE				0x00410000		0			0			0			0			0x04000100		# Linux 3.11+ (c. 2013) & kNtFileAttributeTemporary|kNtFileFlagDeleteOnClose

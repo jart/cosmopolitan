@@ -156,6 +156,13 @@ o/$(MODE)/third_party/sqlite3/shell.shell.o:				\
 		OVERRIDE_CFLAGS +=					\
 			-DSTACK_FRAME_UNLIMITED
 
+o//third_party/sqlite3/parse.o						\
+o//third_party/sqlite3/select.o						\
+o//third_party/sqlite3/pragma.o						\
+o//third_party/sqlite3/vdbe.o:						\
+		OVERRIDE_CFLAGS +=					\
+			-Os
+
 $(THIRD_PARTY_SQLITE3_A_OBJS)						\
 $(THIRD_PARTY_SQLITE3_SHELL_OBJS):					\
 		OVERRIDE_CFLAGS +=					\

@@ -1,0 +1,280 @@
+KW AES-128 wrap  - Decrypt empty buffer
+depends_on:0:1
+6:exp:0:exp:1:exp:1
+
+KWP AES-128 wrap  - Decrypt empty buffer
+depends_on:0:1
+6:exp:2:exp:1:exp:1
+
+KW AES-128 wrap rfc 3394
+depends_on:0:1
+9:exp:0:hex:"000102030405060708090A0B0C0D0E0F":hex:"":hex:"":hex:"1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5":hex:"":char*:"":hex:"00112233445566778899AABBCCDDEEFF":int:0
+
+KW AES-192 wrap rfc 3394
+depends_on:0:1
+9:exp:3:hex:"000102030405060708090A0B0C0D0E0F1011121314151617":hex:"":hex:"":hex:"96778B25AE6CA435F92B5B97C050AED2468AB8A17AD84E5D":hex:"":char*:"":hex:"00112233445566778899AABBCCDDEEFF":int:0
+
+KW AES-256 wrap rfc 3394 [#1]
+depends_on:0:1
+9:exp:4:hex:"000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F":hex:"":hex:"":hex:"A8F9BC1612C68B3FF6E6F4FBE30E71E4769C8B80A32CB8958CD5D17D6B254DA1":hex:"":char*:"":hex:"00112233445566778899AABBCCDDEEFF0001020304050607":int:0
+
+KW AES-256 wrap rfc 3394 [#2]
+depends_on:0:1
+9:exp:4:hex:"000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F":hex:"":hex:"":hex:"64E8C3F9CE0F5BA263E9777905818A2A93C8191E7D6E8AE7":hex:"":char*:"":hex:"00112233445566778899AABBCCDDEEFF":int:0
+
+KWP AES-192 RFC 5649 #1
+depends_on:0:1
+9:exp:5:hex:"5840df6e29b02af1ab493b705bf16ea1ae8338f4dcc176a8":hex:"":hex:"":hex:"138bdeaa9b8fa7fc61f97742e72248ee5ae6ae5360d1ae6a5f54f373fa543b6a":hex:"":char*:"":hex:"c37b7e6492584340bed12207808941155068f738":int:0
+
+KWP AES-192 RFC 5649 #2
+depends_on:0:1
+9:exp:5:hex:"5840df6e29b02af1ab493b705bf16ea1ae8338f4dcc176a8":hex:"":hex:"":hex:"afbeb0f07dfbf5419200f2ccb50bb24f":hex:"":char*:"":hex:"466f7250617369":int:0
+
+KWP AES-128 1 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"A9D2D4394815D53F2799ABD7E51D2C8B":hex:"":char*:"":hex:"00":int:0
+
+KWP AES-128 2 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"36D0CA197F638BF478D022C7E543B699":hex:"":char*:"":hex:"0001":int:0
+
+KWP AES-128 3 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"DAB4EE2853E1C44C5E553E644143902B":hex:"":char*:"":hex:"000102":int:0
+
+KWP AES-128 4 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"446C037F831092B147C372616357BF7D":hex:"":char*:"":hex:"00010203":int:0
+
+KWP AES-128 5 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"9ED0AF6457B82E0DDADBD2240A303D74":hex:"":char*:"":hex:"0001020304":int:0
+
+KWP AES-128 6 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"D863A8CE0DF301A564945259B4F74E7D":hex:"":char*:"":hex:"000102030405":int:0
+
+KWP AES-128 7 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"E8387E5456242B0C30BE77FC1FF0C1FD":hex:"":char*:"":hex:"00010203040506":int:0
+
+KWP AES-128 8 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"01FF4C430CDF3D2D815B0972B23D7C35":hex:"":char*:"":hex:"0001020304050607":int:0
+
+KWP AES-128 9 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"C06E2163E0CC845B348E012AC9413DEEE40C8C3B030A3681":hex:"":char*:"":hex:"000102030405060708":int:0
+
+KWP AES-128 10 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"3DFD2F643C38B07E121C77C2CA0EF82DA742B0989B6D848E":hex:"":char*:"":hex:"00010203040506070809":int:0
+
+KWP AES-128 11 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"AFAEF390634E21E754FD09F55A4EDD918A1D23ECA9B76F2B":hex:"":char*:"":hex:"000102030405060708090A":int:0
+
+KWP AES-128 12 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"A42D14C830F64F0A73570BFA7FDF8DDDD5E3AD3065A09FB0":hex:"":char*:"":hex:"000102030405060708090A0B":int:0
+
+KWP AES-128 13 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"83F23527625FC643942279D090C1B61D10FC978B54D778CD":hex:"":char*:"":hex:"000102030405060708090A0B0C":int:0
+
+KWP AES-128 14 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"E073C30E0DAC595F9FD28A0CB9E53945B26D1E1DE4E66D04":hex:"":char*:"":hex:"000102030405060708090A0B0C0D":int:0
+
+KWP AES-128 15 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"64E3C2F7E0F7CB297C6B8C4CAF665F9F0A3F7082D2522635":hex:"":char*:"":hex:"000102030405060708090A0B0C0D0E":int:0
+
+KWP AES-128 16 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"8F5982C7D265A0A40FC81D2326429A0A65BCD1368F0E16CB":hex:"":char*:"":hex:"000102030405060708090A0B0C0D0E0F":int:0
+
+KWP AES-128 17 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"E29EC6664BCBA00986DD9845F8C4B26472BFDDF98522E537B5D23D5D2A8D02C5":hex:"":char*:"":hex:"000102030405060708090A0B0C0D0E0F10":int:0
+
+KWP AES-128 18 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"9451ABCA0B9756A183F8C9ADA834E1AD2400B693C33624E59F26C35AC1586E2B":hex:"":char*:"":hex:"000102030405060708090A0B0C0D0E0F1011":int:0
+
+KWP AES-128 19 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"F03CB49A65FD3EF8FC83C52F029A3D73667D5B84DB429C38436619ED8320D12E":hex:"":char*:"":hex:"000102030405060708090A0B0C0D0E0F101112":int:0
+
+KWP AES-128 20 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"759524B855037849812D62979A18F24D3E672C2663DEA9204BA5A639FB7DB292":hex:"":char*:"":hex:"000102030405060708090A0B0C0D0E0F10111213":int:0
+
+KWP AES-128 21 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"F352B8228FBFA0769C2E3858D7451FA603E9B751CFE780ED0F93C850C7870259":hex:"":char*:"":hex:"000102030405060708090A0B0C0D0E0F1011121314":int:0
+
+KWP AES-128 22 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"3491F4C8D916A1BC3824D1478EC746BE8C837415017ED52A1ABC30FB14DDE825":hex:"":char*:"":hex:"000102030405060708090A0B0C0D0E0F101112131415":int:0
+
+KWP AES-128 23 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"0E6E35C5B9D706C2FF2C4C6CFCF254849879D6C1CB577E0A73BB12CBC7AC9740":hex:"":char*:"":hex:"000102030405060708090A0B0C0D0E0F10111213141516":int:0
+
+KWP AES-128 24 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"E7DB580663B113B57489E1107F2DCAF7CF80629E7CE1839E1ED044ECD0299E79":hex:"":char*:"":hex:"000102030405060708090A0B0C0D0E0F1011121314151617":int:0
+
+KWP AES-128 25 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"883500DB91747BAD8C5E122ED2338F3BCB6B43064F5DA9D1303E165815EC8CC4C5BFD31AEAE1B6A3":hex:"":char*:"":hex:"000102030405060708090A0B0C0D0E0F101112131415161718":int:0
+
+KWP AES-128 26 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"24099AAAD4F19BF614ECC35DA9E3646F73AAFAA9C46975D4B56D72A332AF7EC4850B8294D94B7E1A":hex:"":char*:"":hex:"000102030405060708090A0B0C0D0E0F10111213141516171819":int:0
+
+KWP AES-128 27 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"C24F8CCE3425AC9638145A0DAC28B59368583FF3A7AAD85FBE1AEAAB5D23C0B128A1F9BC575B785A":hex:"":char*:"":hex:"000102030405060708090A0B0C0D0E0F101112131415161718191A":int:0
+
+KWP AES-128 28 byte input
+depends_on:0:1
+9:exp:2:hex:"00000000000000000000000000000000":hex:"":hex:"":hex:"EFD0BC7612331A98F2D68F86E606717197BF57E35114234C675D40E9462ACF00DE7860C0F38677F7":hex:"":char*:"":hex:"000102030405060708090A0B0C0D0E0F101112131415161718191A1B":int:0
+
+KW AES-128 wrap CAVS 17.4 COUNT 0 PLEN 16 [#1]
+depends_on:0:1
+9:exp:0:hex:"7575da3a93607cc2bfd8cec7aadfd9a6":hex:"":hex:"":hex:"031f6bd7e61e643df68594816f64caa3f56fabea2548f5fb":hex:"":char*:"":hex:"42136d3c384a3eeac95a066fd28fed3f":int:0
+
+KW AES-128 wrap CAVS 17.4 COUNT 0 PLEN 16 [#2]
+depends_on:0:1
+9:exp:0:hex:"7575da3a93607cc2bfd8cec7aadfd9a7":hex:"":hex:"":hex:"031f6bd7e61e643df68594816f64cbb3f56fabea2548f5fb":hex:"":char*:"FAIL":hex:"":int:0
+
+KW AES-128 wrap CAVS 17.4 COUNT 0 PLEN 32
+depends_on:0:1
+9:exp:0:hex:"e5d058e7f1c22c016c4e1cc9b26b9f8f":hex:"":hex:"":hex:"60b9f8ac797c56e01e9b5f84d65816a980777869f67991a0e6dc19b8cd75c9b54db4a38456bbd6f3":hex:"":char*:"":hex:"7f604e9b8d39d3c91e193fe6f196c1e3da6211a7c9a33b8873b64b138d1803e4":int:0
+
+KW AES-128 wrap CAVS 17.4 COUNT 0 PLEN 24
+depends_on:0:1
+9:exp:0:hex:"67ae4270bcdd31e8326b7e7f94c80276":hex:"":hex:"":hex:"96cec0e3272a21faa550a857957aa38ce3c1cf06f0dd9f5b5c5c422cef6c69a1":hex:"":char*:"":hex:"57e748b62fbc37ba25e904ee973d01b136cf7c1d0c8c5c87":int:0
+
+KW AES-192 wrap CAVS 17.4 COUNT 0 PLEN 16
+depends_on:0:1
+9:exp:3:hex:"a6a3f6d509811859238fc569b5664605f7a73c475a691a8f":hex:"":hex:"":hex:"57d7a4b4e85ffdcb7788b9b666cb63303dd2c5d0f11b1bbb":hex:"":char*:"":hex:"8484e414b091f8a9f72cfd13087ddec1":int:0
+
+KW AES-192 wrap CAVS 17.4 COUNT 0 PLEN 32
+depends_on:0:1
+9:exp:3:hex:"3686e50dd602f84024570f545bbf618362bef80d45472436":hex:"":hex:"":hex:"c7d5a1a5dfeb7327acbb94767d74cc2afc622ffd01f854d7d3e2b6f75ca7e8f441a0c0bad3d26ee2":hex:"":char*:"":hex:"d780d69b45483b682d311ccaaadcfa3a1cecf1f05dbe2ebc71e6d3fa979f3de8":int:0
+
+KW AES-192 wrap CAVS 17.4 COUNT 0 PLEN 24
+depends_on:0:1
+9:exp:3:hex:"0a833412e7aa1384ff26866dc9c551bf60413c17e847d317":hex:"":hex:"":hex:"3a7efd629305bf1d61360ed6ff8ec7d059e8af3e5104c29729adb55d1bb94f7e":hex:"":char*:"":hex:"f734760cc0fa3bbfb271277d4f29a48ddecda733d610fa42":int:0
+
+KW AES-256 wrap CAVS 17.4 COUNT 0 PLEN 16
+depends_on:0:1
+9:exp:4:hex:"f59782f1dceb0544a8da06b34969b9212b55ce6dcbdd0975a33f4b3f88b538da":hex:"":hex:"":hex:"2e63946ea3c090902fa1558375fdb2907742ac74e39403fc":hex:"":char*:"":hex:"73d33060b5f9f2eb5785c0703ddfa704":int:0
+
+KW AES-256 wrap CAVS 17.4 COUNT 0 PLEN 32
+depends_on:0:1
+9:exp:4:hex:"8b54e6bc3d20e823d96343dc776c0db10c51708ceecc9a38a14beb4ca5b8b221":hex:"":hex:"":hex:"b13eeb7619fab818f1519266516ceb82abc0e699a7153cf26edcb8aeb879f4c011da906841fc5956":hex:"":char*:"":hex:"d6192635c620dee3054e0963396b260af5c6f02695a5205f159541b4bc584bac":int:0
+
+KW AES-256 wrap CAVS 17.4 COUNT 0 PLEN 24
+depends_on:0:1
+9:exp:4:hex:"112ad41b4856c7254a9848d30fdd78335b039a48a8962c4d1cb78eabd5dad788":hex:"":hex:"":hex:"ba8a259a471b787dd5d540ec25d43d87200fdadc6d1f05d916584fa9f6cbf512":hex:"":char*:"":hex:"1b20bf1990b065d798e1b32264ad50a8747492ba09a04dd1":int:0
+
+KWP AES-128 wrap CAVS 17.4 COUNT 0 PLEN 1
+depends_on:0:1
+9:exp:2:hex:"6decf10a1caf8e3b80c7a4be8c9c84e8":hex:"":hex:"":hex:"01a7d657fc4a5b216f261cca4d052c2b":hex:"":char*:"":hex:"49":int:0
+
+KWP AES-128 wrap CAVS 17.4 COUNT 0 PLEN 8
+depends_on:0:1
+9:exp:2:hex:"a8e06da625a65b25cf5030826830b661":hex:"":hex:"":hex:"b6f967616dd8d772e9fea295a456dba7":hex:"":char*:"":hex:"43acff293120dd5d":int:0
+
+KWP AES-128 wrap CAVS 17.4 COUNT 0 PLEN 9
+depends_on:0:1
+9:exp:2:hex:"7865e20f3c21659ab4690b629cdf3cc4":hex:"":hex:"":hex:"41eca956d4aa047eb5cf4efe659661e74db6f8c564e23500":hex:"":char*:"":hex:"bd6843d420378dc896":int:0
+
+KWP AES-128 wrap CAVS 17.4 COUNT 0 PLEN 31
+depends_on:0:1
+9:exp:2:hex:"be96dc195ec034d616486ed70e97fe83":hex:"":hex:"":hex:"974769b3a7b4d5d32985f87fddf9990631e5610fbfb278387b58b1f48e05c77d2fb7575c5169eb0e":hex:"":char*:"":hex:"85b5437b6335ebba7635903a4493d12a77d9357a9e0dbc013456d85f1d3201":int:0
+
+KWP AES-192 wrap CAVS 17.4 COUNT 0 PLEN 1
+depends_on:0:1
+9:exp:5:hex:"9ca11078baebc1597a68ce2fe3fc79a201626575252b8860":hex:"":hex:"":hex:"866bc0ae30e290bb20a0dab31a6e7165":hex:"":char*:"":hex:"76":int:0
+
+KWP AES-192 wrap CAVS 17.4 COUNT 0 PLEN 8
+depends_on:0:1
+9:exp:5:hex:"c5029804d28341ca267c9e73afc5f963b14bb604708b43f2":hex:"":hex:"":hex:"15b98046b2a3a49b9c0831c476fc34fb":hex:"":char*:"":hex:"e6eb18a3e969ab5c":int:0
+
+KWP AES-192 wrap CAVS 17.4 COUNT 0 PLEN 9
+depends_on:0:1
+9:exp:5:hex:"9464f1af6aabad076661328bcfd15777da16a288a2660009":hex:"":hex:"":hex:"d9b257b400d808a0b0386af3be9154fc7f2fb2d7edc06201":hex:"":char*:"":hex:"431527c3a644c106bb":int:0
+
+KWP AES-192 wrap CAVS 17.4 COUNT 0 PLEN 31
+depends_on:0:1
+9:exp:5:hex:"a354ccd6dd97cf40bed840f8137e0cf2e91c00e592104765":hex:"":hex:"":hex:"f018e7c8d6dcdbd20606502b2667439d9049a9a2d5c960af8e9251466d6ff8923fb82432b299f1a4":hex:"":char*:"":hex:"22ccc034c5345550f5bc0114f2951f0fe439ec3ecd8ac1fea8889dd12bfb8e":int:0
+
+KWP AES-256 wrap CAVS 17.4 COUNT 0 PLEN 1
+depends_on:0:1
+9:exp:6:hex:"95da2700ca6fd9a52554ee2a8df1386f5b94a1a60ed8a4aef60a8d61ab5f225a":hex:"":hex:"":hex:"06ba7ae6f3248cfdcf267507fa001bc4":hex:"":char*:"":hex:"d1":int:0
+
+KWP AES-256 wrap CAVS 17.4 COUNT 0 PLEN 8
+depends_on:0:1
+9:exp:6:hex:"3517f0efa7f0c4d74f91af83ece5e7503bcc5ab82907a6e4b7ed34d87b69ab1d":hex:"":hex:"":hex:"0b06a9b635d50cda9d4210cb3a71f990":hex:"":char*:"":hex:"897e0456b289ad31":int:0
+
+KWP AES-256 wrap CAVS 17.4 COUNT 0 PLEN 9
+depends_on:0:1
+9:exp:6:hex:"70da43aac823c6dd37d1109f5b18feb4503c973288989745e2cc1cc21d9570c6":hex:"":hex:"":hex:"d67b5b2ad15c645450e23b5e7b6d682f8ae20e716d470db7":hex:"":char*:"":hex:"edf17d966ed896aee3":int:0
+
+KWP AES-256 wrap CAVS 17.4 COUNT 0 PLEN 31
+depends_on:0:1
+9:exp:6:hex:"e9bb7f44c7baafbf392ab912589a2f8db53268106eafb74689bb1833136e6113":hex:"":hex:"":hex:"15b9f06fbc765e5e3d55d6b824616f21921d2a6918ee7bf1406b524274e170b4a78333ca5ee92af5":hex:"":char*:"":hex:"ffe952604834bff899e63658f34246815c91597eb40a21729e0a8a959b61f2":int:0
+
+KW AES-128 wrap CAVS 17.4 FAIL COUNT 1 CLEN 48
+depends_on:0:1
+9:exp:0:hex:"5d4899ee66beff1bda1fc717a1ad4c50":hex:"":hex:"":hex:"bb7fd0bce778bd775e4e88d904d26a7134364c53a6c493a0":hex:"":char*:"FAIL":hex:"":int:0
+
+KW AES-128 wrap CAVS 17.4 FAIL COUNT 1 CLEN 80
+depends_on:0:1
+9:exp:0:hex:"84bc6ce7ee4fd9db512536669d0686da":hex:"":hex:"":hex:"c383db930ffd02c0073ac2cc79ec289e6866bdcc6a135a3b776aa42f14ee04f9cca06ed6c0b22901":hex:"":char*:"FAIL":hex:"":int:0
+
+KW AES-128 wrap CAVS 17.4 FAIL COUNT 3 CLEN 64
+depends_on:0:1
+9:exp:0:hex:"266b009e911bb55f9aa0661539a6fdd5":hex:"":hex:"":hex:"db9c94e7236ec56982d7ddeb9427c24580bc1fb96db98ab19340e03670045b7a":hex:"":char*:"FAIL":hex:"":int:0
+
+KW AES-192 wrap CAVS 17.4 FAIL COUNT 3 CLEN 48
+depends_on:0:1
+9:exp:3:hex:"9200a0f688d86c0b6bfd9abeff66341684a373fe3f9a3057":hex:"":hex:"":hex:"5c685c8596e374710fe327bafc45cd09190215fdcc03d010":hex:"":char*:"FAIL":hex:"":int:0
+
+KW AES-192 wrap CAVS 17.4 FAIL COUNT 1 CLEN 80
+depends_on:0:1
+9:exp:3:hex:"95c9e644559919cace6f93f545dbfe48b130808ed66d0964":hex:"":hex:"":hex:"7b8d1307e992221f6ffdcc7909d972d5f02e92187139cfd77f79345cb998bbdbabedb3ac00a6cdc4":hex:"":char*:"FAIL":hex:"":int:0
+
+KW AES-192 wrap CAVS 17.4 FAIL COUNT 2 CLEN 64
+depends_on:0:1
+9:exp:3:hex:"e218e9643d5db01b412fcaefafe5eb237d03acfad0a3abaa":hex:"":hex:"":hex:"5eee8fbf6a8ab6ba371f4581982ec61839bf28c0eb913d1f417a284dccd72580":hex:"":char*:"FAIL":hex:"":int:0
+
+KW AES-256 wrap CAVS 17.4 FAIL COUNT 4 CLEN 48
+depends_on:0:1
+9:exp:4:hex:"08c936b25b567a0aa679c29f201bf8b190327df0c2563e39cee061f149f4d91b":hex:"":hex:"":hex:"e227eb8ae9d239ccd8928adec39c28810ca9b3dc1f366444":hex:"":char*:"FAIL":hex:"":int:0
+
+KW AES-256 wrap CAVS 17.4 FAIL COUNT 3 CLEN 80
+depends_on:0:1
+9:exp:4:hex:"605b22935f1eee56ba884bc7a869febc159ac306b66fb9767a7cc6ab7068dffa":hex:"":hex:"":hex:"6607f5a64c8f9fd96dc6f9f735b06a193762cdbacfc367e410926c1bfe6dd715490adbad5b9697a6":hex:"":char*:"FAIL":hex:"":int:0
+
+KW AES-256 wrap CAVS 17.4 FAIL COUNT 3 CLEN 64
+depends_on:0:1
+9:exp:4:hex:"81c93da5baa5157bf700fd38d7d67662670778b690cfbca9fe11e06268b35605":hex:"":hex:"":hex:"875e1ca385586f83d1e23e44ca201006df04e1854e41b933fd607a7383ae1a39":hex:"":char*:"FAIL":hex:"":int:0
+
+KWP AES-128 wrap CAVS 17.4 FAIL COUNT 1 CLEN 32
+depends_on:0:1
+9:exp:2:hex:"30be7ff51227f0eef786cb7be2482510":hex:"":hex:"":hex:"7f61a0a8b2fe7803f2947d233ec3a255":hex:"":char*:"FAIL":hex:"":int:0
+
+KWP AES-192 wrap CAVS 17.4 FAIL COUNT 3 CLEN 32
+depends_on:0:1
+9:exp:5:hex:"21fb6600c1d34a74adee67612672593a86cf235421735350":hex:"":hex:"":hex:"56b45c49c3e379b18d9c38b6423db133":hex:"":char*:"FAIL":hex:"":int:0
+
+KWP AES-256 wrap CAVS 17.4 FAIL COUNT 4 CLEN 32
+depends_on:0:1
+9:exp:6:hex:"c32cb3e1e41a4b9f4de79989957866f5dd48dba38c22a6ebb80e14c84bdd9534":hex:"":hex:"":hex:"c29b05c2619a58ecc1d239e7a34273cd":hex:"":char*:"FAIL":hex:"":int:0
+

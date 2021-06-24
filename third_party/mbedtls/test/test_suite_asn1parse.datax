@@ -1,0 +1,633 @@
+Empty length
+0:hex:"04":exp:0:exp:1
+
+Incomplete length
+0:hex:"0481":exp:0:exp:1
+
+Prefixes of OCTET STRING, length=0
+0:hex:"0400":int:0:int:0
+
+Prefixes of OCTET STRING, length=0 (0 length bytes)
+0:hex:"0480":exp:2:exp:2
+
+Prefixes of OCTET STRING, length=1
+0:hex:"040141":int:0:int:0
+
+Prefixes of OCTET STRING, length=2
+0:hex:"04024142":int:0:int:0
+
+Prefixes of BOOLEAN, length=0
+0:hex:"0100":exp:2:exp:2
+
+Prefixes of BOOLEAN, length=1
+0:hex:"010100":int:0:int:0
+
+Prefixes of BOOLEAN, length=2
+0:hex:"01020000":exp:2:exp:2
+
+Prefixes of INTEGER, length=1
+0:hex:"020141":int:0:int:0
+
+Prefixes of INTEGER, length=2
+0:hex:"02024142":int:0:int:0
+
+Prefixes of INTEGER, length=5
+0:hex:"02054142434445":int:0:int:0
+
+Prefixes of empty BIT STRING
+0:hex:"0300":exp:0:exp:1
+
+Prefixes of BIT STRING, unused_bits=0, payload_length=0
+0:hex:"030100":int:0:exp:3
+
+Prefixes of BIT STRING, unused_bits=0, payload_length=1
+0:hex:"0302002a":int:0:exp:3
+
+Prefixes of BIT STRING, unused_bits=1, payload_length=1
+0:hex:"0302012a":int:0:exp:3
+
+Prefixes of empty SEQUENCE
+0:hex:"3000":int:0:int:0
+
+Prefixes of SEQUENCE of BOOLEAN, INTEGER, INTEGER
+0:hex:"300b01010102012a0203123456":int:0:int:0
+
+Prefixes of SEQUENCE of (SEQUENCE of INTEGER, INTEGER), INTEGER
+0:hex:"300b3006020141020142020161":int:0:int:0
+
+length=0 (short form)
+1:hex:"00":int:0
+
+length=0 (1 length byte)
+1:hex:"8100":int:0
+
+length=0 (2 length bytes)
+1:hex:"820000":int:0
+
+length=1 (short form)
+1:hex:"01":int:1
+
+length=1 (1 length byte)
+1:hex:"8101":int:1
+
+length=1 (2 length bytes)
+1:hex:"820001":int:1
+
+length=1 (3 length bytes)
+1:hex:"83000001":int:1
+
+length=1 (4 length bytes)
+1:hex:"8400000001":int:1
+
+length=2 (short form)
+1:hex:"02":int:2
+
+length=2 (1 length byte)
+1:hex:"8102":int:2
+
+length=2 (2 length bytes)
+1:hex:"820002":int:2
+
+length=2 (3 length bytes)
+1:hex:"83000002":int:2
+
+length=2 (4 length bytes)
+1:hex:"8400000002":int:2
+
+length=127 (short form)
+1:hex:"7f":int:127
+
+length=128 (1 length byte)
+1:hex:"8180":int:128
+
+length=128 (2 length bytes)
+1:hex:"820080":int:128
+
+length=255 (1 length byte)
+1:hex:"81ff":int:255
+
+length=255 (2 length bytes)
+1:hex:"8200ff":int:255
+
+length=256 (2 length bytes)
+1:hex:"820100":int:256
+
+length=256 (3 length bytes)
+1:hex:"83000100":int:256
+
+length=258 (2 length bytes)
+1:hex:"820102":int:258
+
+length=258 (3 length bytes)
+1:hex:"83000102":int:258
+
+length=65535 (2 length bytes)
+1:hex:"82ffff":int:65535
+
+length=65535 (3 length bytes)
+1:hex:"8300ffff":int:65535
+
+length=65535 (4 length bytes)
+1:hex:"840000ffff":int:65535
+
+length=65536 (3 length bytes)
+1:hex:"83010000":int:65536
+
+length=65536 (4 length bytes)
+1:hex:"8400010000":int:65536
+
+length=16777215 (3 length bytes)
+1:hex:"83ffffff":int:16777215
+
+length=16777215 (4 length bytes)
+1:hex:"8400ffffff":int:16777215
+
+length=16777216 (4 length bytes)
+1:hex:"8401000000":int:16777216
+
+length=16909060 (4 length bytes)
+1:hex:"8401020304":int:16909060
+
+BOOLEAN FALSE
+2:hex:"010100":int:0:int:0
+
+BOOLEAN TRUE (1)
+2:hex:"010101":int:1:int:0
+
+BOOLEAN TRUE (2)
+2:hex:"010101":int:1:int:0
+
+BOOLEAN TRUE (128)
+2:hex:"010180":int:1:int:0
+
+BOOLEAN TRUE (255)
+2:hex:"0101ff":int:1:int:0
+
+Not BOOLEAN
+2:hex:"020101":int:0:exp:4
+
+Empty INTEGER
+3:hex:"0200"
+
+INTEGER 0
+4:hex:"020100":char*:"0":int:0
+
+INTEGER 0, extra leading 0
+4:hex:"02020000":char*:"0":int:0
+
+INTEGER 1
+4:hex:"020101":char*:"1":int:0
+
+INTEGER 1, extra leading 0
+4:hex:"02020001":char*:"1":int:0
+
+INTEGER 0x7f
+4:hex:"02017f":char*:"7f":int:0
+
+INTEGER 0x80
+4:hex:"02020080":char*:"80":int:0
+
+INTEGER 0x80, extra leading 0
+4:hex:"0203000080":char*:"80":int:0
+
+INTEGER 0xff
+4:hex:"020200ff":char*:"ff":int:0
+
+INTEGER 0x7fff
+4:hex:"02027fff":char*:"7fff":int:0
+
+INTEGER 0x12345678
+4:hex:"020412345678":char*:"12345678":int:0
+
+INTEGER 0x12345678, extra leading 0
+4:hex:"02050012345678":char*:"12345678":int:0
+
+INTEGER 0x7fffffff
+4:hex:"02047fffffff":char*:"7fffffff":int:0
+
+INTEGER 0x7fffffff, extra leading 0
+4:hex:"0205007fffffff":char*:"7fffffff":int:0
+
+INTEGER 0x80000000
+4:hex:"02050080000000":char*:"80000000":int:0
+
+INTEGER 0xffffffff
+4:hex:"020500ffffffff":char*:"ffffffff":int:0
+
+INTEGER 0x100000000
+4:hex:"02050100000000":char*:"0100000000":int:0
+
+INTEGER 0x123456789abcdef0
+4:hex:"0208123456789abcdef0":char*:"123456789abcdef0":int:0
+
+INTEGER 0xfedcab9876543210
+4:hex:"020900fedcab9876543210":char*:"fedcab9876543210":int:0
+
+INTEGER 0x1fedcab9876543210
+4:hex:"020901fedcab9876543210":char*:"1fedcab9876543210":int:0
+
+INTEGER with 127 value octets
+4:hex:"027f0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd":char*:"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd":int:0
+
+INTEGER with 127 value octets (long length encoding)
+4:hex:"02817f0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd":char*:"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd":int:0
+
+INTEGER with 128 value octets
+4:hex:"0281800123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef":char*:"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef":int:0
+
+INTEGER with 128 value octets (leading 0 in length)
+4:hex:"028200800123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef":char*:"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef":int:0
+
+INTEGER -1
+4:hex:"0201ff":char*:"-1":int:0
+
+INTEGER -1, extra leading ff
+4:hex:"0202ffff":char*:"-1":int:0
+
+INTEGER -0x7f
+4:hex:"020181":char*:"-7f":int:0
+
+INTEGER -0x80
+4:hex:"020180":char*:"-80":int:0
+
+INTEGER -0x81
+4:hex:"0202ff7f":char*:"-81":int:0
+
+INTEGER -0xff
+4:hex:"0202ff01":char*:"-ff":int:0
+
+INTEGER -0x100
+4:hex:"0202ff00":char*:"-100":int:0
+
+INTEGER -0x7fffffff
+4:hex:"020480000001":char*:"-7fffffff":int:0
+
+INTEGER -0x80000000
+4:hex:"020480000000":char*:"-80000000":int:0
+
+INTEGER -0x80000001
+4:hex:"0205ff7fffffff":char*:"-80000001":int:0
+
+INTEGER -0xffffffff
+4:hex:"0205ff00000001":char*:"-ffffffff":int:0
+
+INTEGER -0x100000000
+4:hex:"0205ff00000000":char*:"-100000000":int:0
+
+INTEGER -0x123456789abcdef0
+4:hex:"0208edcba98765432110":char*:"-123456789abcdef0":int:0
+
+INTEGER -0xfedcba9876543210
+4:hex:"0209ff0123456789abcdf0":char*:"-fedcba9876543210":int:0
+
+INTEGER -0x1fedcab9876543210
+4:hex:"0209fe0123546789abcdf0":char*:"-1fedcab9876543210":int:0
+
+Not INTEGER
+4:hex:"010101":char*:"":exp:4
+
+INTEGER too large for mpi
+6
+
+ENUMERATED 0
+5:hex:"0A0100":char*:"0":int:0
+
+ENUMERATED 0, extra leading 0
+5:hex:"0A020000":char*:"0":int:0
+
+ENUMERATED 1
+5:hex:"0A0101":char*:"1":int:0
+
+ENUMERATED 1, extra leading 0
+5:hex:"0A020001":char*:"1":int:0
+
+ENUMERATED 0x7f
+5:hex:"0A017f":char*:"7f":int:0
+
+ENUMERATED 0x80
+5:hex:"0A020080":char*:"80":int:0
+
+ENUMERATED 0x80, extra leading 0
+5:hex:"0A03000080":char*:"80":int:0
+
+ENUMERATED 0xff
+5:hex:"0A0200ff":char*:"ff":int:0
+
+ENUMERATED 0x7fff
+5:hex:"0A027fff":char*:"7fff":int:0
+
+ENUMERATED 0x12345678
+5:hex:"0A0412345678":char*:"12345678":int:0
+
+ENUMERATED 0x12345678, extra leading 0
+5:hex:"0A050012345678":char*:"12345678":int:0
+
+ENUMERATED 0x7fffffff
+5:hex:"0A047fffffff":char*:"7fffffff":int:0
+
+ENUMERATED 0x7fffffff, extra leading 0
+5:hex:"0A05007fffffff":char*:"7fffffff":int:0
+
+ENUMERATED 0x80000000
+5:hex:"0A050080000000":char*:"80000000":int:0
+
+ENUMERATED 0xffffffff
+5:hex:"0A0500ffffffff":char*:"ffffffff":int:0
+
+ENUMERATED 0x100000000
+5:hex:"0A050100000000":char*:"0100000000":int:0
+
+ENUMERATED -1
+5:hex:"0A01ff":char*:"-1":int:0
+
+ENUMERATED -1, extra leading ff
+5:hex:"0A02ffff":char*:"-1":int:0
+
+ENUMERATED -0x7f
+5:hex:"0A0181":char*:"-7f":int:0
+
+ENUMERATED -0x80
+5:hex:"0A0180":char*:"-80":int:0
+
+ENUMERATED -0x81
+5:hex:"0A02ff7f":char*:"-81":int:0
+
+ENUMERATED -0xff
+5:hex:"0A02ff01":char*:"-ff":int:0
+
+ENUMERATED -0x100
+5:hex:"0A02ff00":char*:"-100":int:0
+
+ENUMERATED -0x7fffffff
+5:hex:"0A0480000001":char*:"-7fffffff":int:0
+
+ENUMERATED -0x80000000
+5:hex:"0A0480000000":char*:"-80000000":int:0
+
+ENUMERATED -0x80000001
+5:hex:"0A05ff7fffffff":char*:"-80000001":int:0
+
+ENUMERATED -0xffffffff
+5:hex:"0A05ff00000001":char*:"-ffffffff":int:0
+
+ENUMERATED -0x100000000
+5:hex:"0A05ff00000000":char*:"-100000000":int:0
+
+BIT STRING: empty
+7:hex:"0300":int:0:int:0:exp:0:exp:5
+
+BIT STRING: octets=0, unused_bits=0
+7:hex:"030100":int:0:int:0:int:0:int:0
+
+BIT STRING: octets=0, unused_bits=7
+7:hex:"030107":int:0:int:7:int:0:exp:5
+
+BIT STRING: octets=0, unused_bits=8
+7:hex:"030108":int:0:int:0:exp:2:exp:5
+
+BIT STRING: octets=1, unused_bits=0
+7:hex:"03020041":int:1:int:0:int:0:int:0
+
+BIT STRING: octets=1, unused_bits=7
+7:hex:"03020741":int:1:int:7:int:0:exp:5
+
+BIT STRING: octets=1, unused_bits=8
+7:hex:"03020841":int:1:int:8:exp:2:exp:5
+
+BIT STRING: octets=2, unused_bits=0
+7:hex:"0303004142":int:2:int:0:int:0:int:0
+
+BIT STRING: octets=2, unused_bits=7
+7:hex:"0303074142":int:2:int:7:int:0:exp:5
+
+BIT STRING: octets=2, unused_bits=8
+7:hex:"0303084142":int:2:int:8:exp:2:exp:5
+
+BIT STRING with trailing garbage, unused_bits=0
+7:hex:"030200417e":int:1:int:0:exp:3:int:0
+
+BIT STRING with trailing garbage, unused_bits=7
+7:hex:"030207417e":int:1:int:7:exp:3:exp:5
+
+BIT STRING with trailing garbage, unused_bits=8
+7:hex:"030208417e":int:1:int:8:exp:2:exp:5
+
+Not BIT STRING
+7:hex:"04020100":int:0:int:0:exp:4:exp:4
+
+SEQUENCE OF 0 OCTET STRING
+8:hex:"3000":int:0x04:char*:"":int:0
+
+SEQUENCE OF 0 OCTET STRING plus trailing garbage
+8:hex:"30007e":int:0x04:char*:"":exp:3
+
+SEQUENCE of 1 OCTET STRING truncated after tag
+8:hex:"300104":int:0x04:char*:"":exp:0
+
+SEQUENCE of 1 OCTET STRING truncated in length #1
+8:hex:"30020481":int:0x04:char*:"":exp:0
+
+SEQUENCE of 1 OCTET STRING truncated in length #2
+8:hex:"3003048201":int:0x04:char*:"":exp:0
+
+SEQUENCE of 1 OCTET STRING truncated in content #1
+8:hex:"30020401":int:0x04:char*:"":exp:0
+
+SEQUENCE of 1 OCTET STRING truncated in content #2
+8:hex:"3003040241":int:0x04:char*:"":exp:0
+
+SEQUENCE of 1 OCTET STRING truncated in content #3
+8:hex:"300404034142":int:0x04:char*:"":exp:0
+
+SEQUENCE of 1 OCTET STRING (0)
+8:hex:"30020400":int:0x04:char*:"4,0":int:0
+
+SEQUENCE of 1 OCTET STRING (1)
+8:hex:"3003040141":int:0x04:char*:"4,1":int:0
+
+SEQUENCE of 1 OCTET STRING (126)
+8:hex:"308180047e414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141":int:0x04:char*:"5,126":int:0
+
+SEQUENCE of 2 OCTET STRINGs, second truncated after tag
+8:hex:"30050402414104":int:0x04:char*:"":exp:0
+
+SEQUENCE of 2 OCTET STRINGs, second truncated in length #1
+8:hex:"3006040241410481":int:0x04:char*:"":exp:0
+
+SEQUENCE of 2 OCTET STRINGs, second truncated in length #2
+8:hex:"300704024141048201":int:0x04:char*:"":exp:0
+
+SEQUENCE of 2 OCTET STRINGs, second truncated in content #1
+8:hex:"3006040241410401":int:0x04:char*:"":exp:0
+
+SEQUENCE of 2 OCTET STRINGs, second truncated in content #2
+8:hex:"300704024141040241":int:0x04:char*:"":exp:0
+
+SEQUENCE of 2 OCTET STRINGs, second truncated in content #3
+8:hex:"30080402414104034142":int:0x04:char*:"":exp:0
+
+SEQUENCE of 2 OCTET STRINGs (2, 0)
+8:hex:"3006040241410400":int:0x04:char*:"4,2,8,0":int:0
+
+SEQUENCE of 2 OCTET STRINGs (2, 1)
+8:hex:"300704024141040142":int:0x04:char*:"4,2,8,1":int:0
+
+SEQUENCE of 2 OCTET STRINGs (0, 2)
+8:hex:"3006040004024141":int:0x04:char*:"4,0,6,2":int:0
+
+SEQUENCE of 2 OCTET STRINGs (1, 2)
+8:hex:"300704014104024242":int:0x04:char*:"4,1,7,2":int:0
+
+Not a SEQUENCE (not CONSTRUCTED)
+8:hex:"1000":int:0x04:char*:"":exp:4
+
+Not a SEQUENCE (not SEQUENCE)
+8:hex:"3100":int:0x04:char*:"":exp:4
+
+Traverse empty SEQUENCE
+9:hex:"3000":int:0:int:0:int:0:int:0:char*:"":int:0
+
+Traverse empty SEQUENCE plus trailing garbage
+9:hex:"30007e":int:0:int:0:int:0:int:0:char*:"":exp:3
+
+Traverse SEQUENCE of INTEGER: 1 INTEGER
+9:hex:"30050203123456":int:0xff:int:0x02:int:0:int:0:char*:"4,0x02,3":int:0
+
+Traverse SEQUENCE of INTEGER: 2 INTEGERs
+9:hex:"30080203123456020178":int:0xff:int:0x02:int:0:int:0:char*:"4,0x02,3,9,0x02,1":int:0
+
+Traverse SEQUENCE of INTEGER: INTEGER, NULL
+9:hex:"300702031234560500":int:0xff:int:0x02:int:0:int:0:char*:"4,0x02,3":exp:4
+
+Traverse SEQUENCE of INTEGER: NULL, INTEGER
+9:hex:"300705000203123456":int:0xff:int:0x02:int:0:int:0:char*:"":exp:4
+
+Traverse SEQUENCE of ANY: NULL, INTEGER
+9:hex:"300705000203123456":int:0:int:0:int:0:int:0:char*:"4,0x05,0,6,0x02,3":int:0
+
+Traverse SEQUENCE of ANY, skip non-INTEGER: INTEGER, NULL
+9:hex:"300702031234560500":int:0:int:0:int:0xff:int:0x02:char*:"4,0x02,3":int:0
+
+Traverse SEQUENCE of ANY, skip non-INTEGER: NULL, INTEGER
+9:hex:"300705000203123456":int:0:int:0:int:0xff:int:0x02:char*:"6,0x02,3":int:0
+
+Traverse SEQUENCE of INTEGER, skip everything
+9:hex:"30080203123456020178":int:0xff:int:0x02:int:0:int:1:char*:"":int:0
+
+Traverse SEQUENCE of {NULL, OCTET STRING}, skip NULL: OS, NULL
+9:hex:"300704031234560500":int:0xfe:int:0x04:int:0xff:int:0x04:char*:"4,0x04,3":int:0
+
+Traverse SEQUENCE of {NULL, OCTET STRING}, skip NULL: NULL, OS
+9:hex:"300705000403123456":int:0xfe:int:0x04:int:0xff:int:0x04:char*:"6,0x04,3":int:0
+
+Traverse SEQUENCE of {NULL, OCTET STRING}, skip everything
+9:hex:"300705000403123456":int:0xfe:int:0x04:int:0:int:1:char*:"":int:0
+
+Traverse SEQUENCE of INTEGER, stop at 0: NULL
+9:hex:"30020500":int:0xff:int:0x02:int:0:int:0:char*:"":exp:4
+
+Traverse SEQUENCE of INTEGER, stop at 0: INTEGER
+9:hex:"30050203123456":int:0xff:int:0x02:int:0:int:0:char*:"":exp:6
+
+Traverse SEQUENCE of INTEGER, stop at 0: INTEGER, NULL
+9:hex:"300702031234560500":int:0xff:int:0x02:int:0:int:0:char*:"":exp:6
+
+Traverse SEQUENCE of INTEGER, stop at 1: INTEGER, NULL
+9:hex:"300702031234560500":int:0xff:int:0x02:int:0:int:0:char*:"4,0x02,3":exp:4
+
+Traverse SEQUENCE of INTEGER, stop at 1: INTEGER, INTEGER
+9:hex:"30080203123456020178":int:0xff:int:0x02:int:0:int:0:char*:"4,0x02,3":exp:6
+
+AlgorithmIdentifier, no params
+10:hex:"300506034f4944":int:4:int:3:int:0:int:0:int:0:int:7:int:0
+
+AlgorithmIdentifier, no params, trailing garbage
+10:hex:"300506034f49447e":int:4:int:3:int:0:int:0:int:0:int:7:int:0
+
+AlgorithmIdentifier, null params
+10:hex:"300706034f49440500":int:4:int:3:int:0x05:int:9:int:0:int:9:int:0
+
+AlgorithmIdentifier, null params, trailing garbage
+10:hex:"300706034f494405007e":int:4:int:3:int:0x05:int:9:int:0:int:9:int:0
+
+AlgorithmIdentifier, OCTET STRING params
+10:hex:"300c06034f494404056162636465":int:4:int:3:int:0x04:int:9:int:5:int:14:int:0
+
+AlgorithmIdentifier, truncated before OID
+10:hex:"3000":int:4:int:3:int:0:int:0:int:0:int:2:exp:0
+
+AlgorithmIdentifier, truncated in OID after tag
+10:hex:"300106":int:0:int:0:int:0:int:0:int:0:int:3:exp:0
+
+AlgorithmIdentifier, truncated in OID after length
+10:hex:"30020603":int:4:int:3:int:0:int:0:int:0:int:4:exp:0
+
+AlgorithmIdentifier, truncated inside OID content
+10:hex:"300406034f49":int:4:int:3:int:0:int:0:int:0:int:6:exp:0
+
+AlgorithmIdentifier, truncated in params after tag
+10:hex:"300606034f494404":int:4:int:3:int:0x04:int:0:int:0:int:8:exp:0
+
+AlgorithmIdentifier, truncated in params after length
+10:hex:"300706034f49440405":int:4:int:3:int:0x04:int:9:int:0:int:9:exp:0
+
+AlgorithmIdentifier, truncated inside params content
+10:hex:"300806034f4944040561":int:4:int:3:int:0x04:int:9:int:5:int:10:exp:0
+
+Not an AlgorithmIdentifier (not a SEQUENCE)
+10:hex:"310506034f4944":int:0:int:0:int:0:int:0:int:0:int:0:exp:4
+
+Not an AlgorithmIdentifier (empty SEQUENCE)
+10:hex:"3000":int:0:int:0:int:0:int:0:int:0:int:0:exp:0
+
+Not an AlgorithmIdentifier (not an OID)
+10:hex:"3006050006034f4944":int:0:int:0:int:0:int:0:int:0:int:0:exp:4
+
+Not an AlgorithmIdentifier (too many elements)
+10:hex:"300f06034f494406034f494406034f4944":int:0:int:0:int:0:int:0:int:0:int:0:exp:3
+
+Find named data: not found
+11:hex:"414141":hex:"424242":hex:"434343":hex:"444444":hex:"7f7f7f":int:0:int:4
+
+Find named data: empty haystack
+11:hex:"414141":hex:"424242":hex:"434343":hex:"444444":hex:"7f7f7f":int:4:int:4
+
+Find named data: first
+11:hex:"414141":hex:"424242":hex:"434343":hex:"444444":hex:"414141":int:0:int:0
+
+Find named data: last
+11:hex:"414141":hex:"424242":hex:"434343":hex:"444444":hex:"444444":int:0:int:3
+
+Find named data: skip suffix
+11:hex:"41414141":hex:"414141":hex:"434343":hex:"444444":hex:"414141":int:0:int:1
+
+Find named data: skip prefix
+11:hex:"4141":hex:"414141":hex:"434343":hex:"444444":hex:"414141":int:0:int:1
+
+Find named data: first match
+11:hex:"414141":hex:"414141":hex:"434343":hex:"444444":hex:"414141":int:0:int:0
+
+Free named data: null pointer
+12
+
+Free named data: all null
+13:int:0:int:0:int:0
+
+Free named data: with oid
+13:int:1:int:0:int:0
+
+Free named data: with val
+13:int:0:int:1:int:0
+
+Free named data: with next
+13:int:0:int:0:int:1
+
+Free named data list (empty)
+14:int:0
+
+Free named data list (1)
+14:int:1
+
+Free named data list (2)
+14:int:2
+

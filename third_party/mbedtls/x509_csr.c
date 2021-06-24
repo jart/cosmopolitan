@@ -1,4 +1,16 @@
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/oid.h"
+#include "third_party/mbedtls/pem.h"
+#include "third_party/mbedtls/platform.h"
+#include "third_party/mbedtls/x509_csr.h"
 /* clang-format off */
+
+asm(".ident\t\"\\n\\n\
+Mbed TLS (Apache 2.0)\\n\
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
+asm(".include \"libc/disclaimer.inc\"");
 
 /*
  *  X.509 Certificate Signing Request (CSR) parsing
@@ -29,37 +41,14 @@
  *  http://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf
  */
 
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_X509_CSR_PARSE_C)
-
-#include "third_party/mbedtls/x509_csr.h"
-#include "third_party/mbedtls/error.h"
-#include "third_party/mbedtls/oid.h"
-#include "third_party/mbedtls/platform_util.h"
-
-
-#if defined(MBEDTLS_PEM_PARSE_C)
-#include "third_party/mbedtls/pem.h"
-#endif
-
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_free       free
-#define mbedtls_calloc    calloc
-#define mbedtls_snprintf   snprintf
-#endif
-
-#if defined(MBEDTLS_FS_IO) || defined(EFIX64) || defined(EFI32)
-#endif
 
 /*
  *  Version  ::=  INTEGER  {  v1(0)  }
  */
 static int x509_csr_get_version( unsigned char **p,
-                             const unsigned char *end,
-                             int *ver )
+                                 const unsigned char *end,
+                                 int *ver )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
@@ -77,11 +66,19 @@ static int x509_csr_get_version( unsigned char **p,
     return( 0 );
 }
 
-/*
- * Parse a CSR in DER format
+/**
+ * \brief          Load a Certificate Signing Request (CSR) in DER format
+ *
+ * \note           CSR attributes (if any) are currently silently ignored.
+ *
+ * \param csr      CSR context to fill
+ * \param buf      buffer holding the CRL data
+ * \param buflen   size of the buffer
+ *
+ * \return         0 if successful, or a specific X509 error code
  */
 int mbedtls_x509_csr_parse_der( mbedtls_x509_csr *csr,
-                        const unsigned char *buf, size_t buflen )
+                                const unsigned char *buf, size_t buflen )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     size_t len;
@@ -249,8 +246,17 @@ int mbedtls_x509_csr_parse_der( mbedtls_x509_csr *csr,
     return( 0 );
 }
 
-/*
- * Parse a CSR, allowing for PEM or raw DER encoding
+/**
+ * \brief          Load a Certificate Signing Request (CSR), DER or PEM format
+ *
+ * \note           See notes for \c mbedtls_x509_csr_parse_der()
+ *
+ * \param csr      CSR context to fill
+ * \param buf      buffer holding the CRL data
+ * \param buflen   size of the buffer
+ *                 (including the terminating null byte for PEM data)
+ *
+ * \return         0 if successful, or a specific X509 or PEM error code
  */
 int mbedtls_x509_csr_parse( mbedtls_x509_csr *csr, const unsigned char *buf, size_t buflen )
 {
@@ -299,35 +305,46 @@ int mbedtls_x509_csr_parse( mbedtls_x509_csr *csr, const unsigned char *buf, siz
     return( mbedtls_x509_csr_parse_der( csr, buf, buflen ) );
 }
 
-#if defined(MBEDTLS_FS_IO)
-/*
- * Load a CSR into the structure
+/**
+ * \brief          Load a Certificate Signing Request (CSR)
+ *
+ * \note           See notes for \c mbedtls_x509_csr_parse()
+ *
+ * \param csr      CSR context to fill
+ * \param path     filename to read the CSR from
+ *
+ * \return         0 if successful, or a specific X509 or PEM error code
  */
 int mbedtls_x509_csr_parse_file( mbedtls_x509_csr *csr, const char *path )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     size_t n;
     unsigned char *buf;
-
     if( ( ret = mbedtls_pk_load_file( path, &buf, &n ) ) != 0 )
         return( ret );
-
     ret = mbedtls_x509_csr_parse( csr, buf, n );
-
     mbedtls_platform_zeroize( buf, n );
     mbedtls_free( buf );
-
     return( ret );
 }
-#endif /* MBEDTLS_FS_IO */
 
 #define BEFORE_COLON    14
 #define BC              "14"
-/*
- * Return an informational string about the CSR.
+
+/**
+ * \brief          Returns an informational string about the
+ *                 CSR.
+ *
+ * \param buf      Buffer to write to
+ * \param size     Maximum size of buffer
+ * \param prefix   A line prefix
+ * \param csr      The X509 CSR to represent
+ *
+ * \return         The length of the string written (not including the
+ *                 terminated nul byte), or a negative error code.
  */
 int mbedtls_x509_csr_info( char *buf, size_t size, const char *prefix,
-                   const mbedtls_x509_csr *csr )
+                           const mbedtls_x509_csr *csr )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     size_t n;
@@ -366,16 +383,20 @@ int mbedtls_x509_csr_info( char *buf, size_t size, const char *prefix,
     return( (int) ( size - n ) );
 }
 
-/*
- * Initialize a CSR
+/**
+ * \brief          Initialize a CSR
+ *
+ * \param csr      CSR to initialize
  */
 void mbedtls_x509_csr_init( mbedtls_x509_csr *csr )
 {
     memset( csr, 0, sizeof(mbedtls_x509_csr) );
 }
 
-/*
- * Unallocate all CSR data
+/**
+ * \brief          Unallocate all CSR data
+ *
+ * \param csr      CSR to free
  */
 void mbedtls_x509_csr_free( mbedtls_x509_csr *csr )
 {
@@ -386,10 +407,6 @@ void mbedtls_x509_csr_free( mbedtls_x509_csr *csr )
         return;
 
     mbedtls_pk_free( &csr->pk );
-
-#if defined(MBEDTLS_X509_RSASSA_PSS_SUPPORT)
-    mbedtls_free( csr->sig_opts );
-#endif
 
     name_cur = csr->subject.next;
     while( name_cur != NULL )

@@ -1,5 +1,22 @@
-/* clang-format off */
+#include "third_party/mbedtls/asn1write.h"
+#include "third_party/mbedtls/bignum.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/ecdsa.h"
+#include "third_party/mbedtls/ecp.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/oid.h"
+#include "third_party/mbedtls/pem.h"
+#include "third_party/mbedtls/pk.h"
+#include "third_party/mbedtls/platform.h"
+#include "third_party/mbedtls/rsa.h"
 
+asm(".ident\t\"\\n\\n\
+Mbed TLS (Apache 2.0)\\n\
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+/* clang-format off */
 /*
  *  Public Key layer for writing key files and structures
  *
@@ -19,42 +36,7 @@
  *  limitations under the License.
  */
 
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_PK_WRITE_C)
-
-#include "third_party/mbedtls/pk.h"
-#include "third_party/mbedtls/asn1write.h"
-#include "third_party/mbedtls/oid.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
-
-
-#if defined(MBEDTLS_RSA_C)
-#include "third_party/mbedtls/rsa.h"
-#endif
-#if defined(MBEDTLS_ECP_C)
-#include "third_party/mbedtls/bignum.h"
-#include "third_party/mbedtls/ecp.h"
-#include "third_party/mbedtls/platform_util.h"
-#endif
-#if defined(MBEDTLS_ECDSA_C)
-#include "third_party/mbedtls/ecdsa.h"
-#endif
-#if defined(MBEDTLS_PEM_WRITE_C)
-#include "third_party/mbedtls/pem.h"
-#endif
-
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
-#include "third_party/mbedtls/crypto.h"
-#include "third_party/mbedtls/psa_util.h"
-#endif
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_calloc    calloc
-#define mbedtls_free       free
-#endif
 
 /* Parameter validation macros based on platform_util.h */
 #define PK_VALIDATE_RET( cond )    \
@@ -173,6 +155,16 @@ exit:
 }
 #endif /* MBEDTLS_ECP_C */
 
+/**
+ * \brief           Write a subjectPublicKey to ASN.1 data
+ *                  Note: function works backwards in data buffer
+ *
+ * \param p         reference to current position pointer
+ * \param start     start of the buffer (for bounds-checking)
+ * \param key       PK context which must contain a valid public or private key.
+ *
+ * \return          the length written or a negative error code
+ */
 int mbedtls_pk_write_pubkey( unsigned char **p, unsigned char *start,
                              const mbedtls_pk_context *key )
 {
@@ -222,6 +214,19 @@ int mbedtls_pk_write_pubkey( unsigned char **p, unsigned char *start,
     return( (int) len );
 }
 
+/**
+ * \brief           Write a public key to a SubjectPublicKeyInfo DER structure
+ *                  Note: data is written at the end of the buffer! Use the
+ *                        return value to determine where you should start
+ *                        using the buffer
+ *
+ * \param ctx       PK context which must contain a valid public or private key.
+ * \param buf       buffer to write to
+ * \param size      size of the buffer
+ *
+ * \return          length of data written if successful, or a specific
+ *                  error code
+ */
 int mbedtls_pk_write_pubkey_der( mbedtls_pk_context *key, unsigned char *buf, size_t size )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
@@ -310,6 +315,19 @@ int mbedtls_pk_write_pubkey_der( mbedtls_pk_context *key, unsigned char *buf, si
     return( (int) len );
 }
 
+/**
+ * \brief           Write a private key to a PKCS#1 or SEC1 DER structure
+ *                  Note: data is written at the end of the buffer! Use the
+ *                        return value to determine where you should start
+ *                        using the buffer
+ *
+ * \param ctx       PK context which must contain a valid private key.
+ * \param buf       buffer to write to
+ * \param size      size of the buffer
+ *
+ * \return          length of data written if successful, or a specific
+ *                  error code
+ */
 int mbedtls_pk_write_key_der( mbedtls_pk_context *key, unsigned char *buf, size_t size )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
@@ -553,6 +571,16 @@ int mbedtls_pk_write_key_der( mbedtls_pk_context *key, unsigned char *buf, size_
 #define PRV_DER_MAX_BYTES   ( RSA_PRV_DER_MAX_BYTES > ECP_PRV_DER_MAX_BYTES ? \
                               RSA_PRV_DER_MAX_BYTES : ECP_PRV_DER_MAX_BYTES )
 
+/**
+ * \brief           Write a public key to a PEM string
+ *
+ * \param ctx       PK context which must contain a valid public or private key.
+ * \param buf       Buffer to write to. The output includes a
+ *                  terminating null byte.
+ * \param size      Size of the buffer in bytes.
+ *
+ * \return          0 if successful, or a specific error code
+ */
 int mbedtls_pk_write_pubkey_pem( mbedtls_pk_context *key, unsigned char *buf, size_t size )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
@@ -578,6 +606,16 @@ int mbedtls_pk_write_pubkey_pem( mbedtls_pk_context *key, unsigned char *buf, si
     return( 0 );
 }
 
+/**
+ * \brief           Write a private key to a PKCS#1 or SEC1 PEM string
+ *
+ * \param ctx       PK context which must contain a valid private key.
+ * \param buf       Buffer to write to. The output includes a
+ *                  terminating null byte.
+ * \param size      Size of the buffer in bytes.
+ *
+ * \return          0 if successful, or a specific error code
+ */
 int mbedtls_pk_write_key_pem( mbedtls_pk_context *key, unsigned char *buf, size_t size )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;

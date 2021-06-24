@@ -27,15 +27,11 @@
  * @asyncsignalsafe
  */
 int64_t time(int64_t *opt_out_ret) {
-  int64_t rc;
+  int64_t secs;
   struct timeval tv;
-  if (gettimeofday(&tv, NULL) == -1) {
-    rc = -1;
-  } else {
-    rc = tv.tv_sec;
-  }
+  secs = nowl();
   if (opt_out_ret) {
-    *opt_out_ret = rc;
+    *opt_out_ret = secs;
   }
-  return rc;
+  return secs;
 }

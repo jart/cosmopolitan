@@ -1,10 +1,18 @@
-/* clang-format off */
+#include "libc/calls/calls.h"
+#include "third_party/mbedtls/asn1.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/dhm.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/pem.h"
+#include "third_party/mbedtls/platform.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /*
  *  Diffie-Hellman-Merkle key exchange
  *
@@ -33,31 +41,7 @@ asm(".include \"libc/disclaimer.inc\"");
  *
  */
 
-#include "libc/calls/calls.h"
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_DHM_C)
-
-#include "third_party/mbedtls/dhm.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
-
-
-#if defined(MBEDTLS_PEM_PARSE_C)
-#include "third_party/mbedtls/pem.h"
-#endif
-
-#if defined(MBEDTLS_ASN1_PARSE_C)
-#include "third_party/mbedtls/asn1.h"
-#endif
-
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_printf     printf
-#define mbedtls_calloc    calloc
-#define mbedtls_free       free
-#endif
 
 #if !defined(MBEDTLS_DHM_ALT)
 

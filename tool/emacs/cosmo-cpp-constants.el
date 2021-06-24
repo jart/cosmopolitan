@@ -16,6 +16,7 @@
     "__GNUC_PATCHLEVEL__"
     "__GNUC__"
     "__APPLE__"
+    "__MACH__"
     "__GNUG__"
     "__INCLUDE_LEVEL__"
     "__INTMAX_MAX__"

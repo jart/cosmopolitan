@@ -1,10 +1,17 @@
-/* clang-format off */
+#include "libc/bits/bits.h"
+#include "libc/str/str.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/platform.h"
+#include "third_party/mbedtls/poly1305.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /**
  * \file poly1305.c
  *
@@ -25,23 +32,8 @@ asm(".include \"libc/disclaimer.inc\"");
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-#include "libc/str/str.h"
-#include "third_party/mbedtls/common.h"
 
 #if defined(MBEDTLS_POLY1305_C)
-
-#include "third_party/mbedtls/poly1305.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
-
-
-#if defined(MBEDTLS_SELF_TEST)
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_printf printf
-#endif /* MBEDTLS_PLATFORM_C */
-#endif /* MBEDTLS_SELF_TEST */
 
 #if !defined(MBEDTLS_POLY1305_ALT)
 
@@ -58,12 +50,7 @@ asm(".include \"libc/disclaimer.inc\"");
 
 #define POLY1305_BLOCK_SIZE_BYTES ( 16U )
 
-#define BYTES_TO_U32_LE( data, offset )                           \
-    ( (uint32_t) (data)[offset]                                     \
-          | (uint32_t) ( (uint32_t) (data)[( offset ) + 1] << 8 )   \
-          | (uint32_t) ( (uint32_t) (data)[( offset ) + 2] << 16 )  \
-          | (uint32_t) ( (uint32_t) (data)[( offset ) + 3] << 24 )  \
-    )
+#define BYTES_TO_U32_LE( data, offset ) READ32LE((data) + (offset))
 
 /*
  * Our implementation is tuned for 32-bit platforms with a 64-bit multiplier.

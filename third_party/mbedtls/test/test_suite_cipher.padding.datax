@@ -1,0 +1,236 @@
+Cipher list
+0
+
+Set padding with AES-CBC
+depends_on:0:1:2
+12:exp:0:exp:1:int:0
+
+Set padding with AES-CFB
+depends_on:0:3
+12:exp:2:exp:1:exp:3
+
+Set padding with AES-CTR
+depends_on:0:4
+12:exp:4:exp:1:exp:3
+
+Set padding with CAMELLIA-CBC
+depends_on:5:1:2
+12:exp:5:exp:1:int:0
+
+Set padding with CAMELLIA-CFB
+depends_on:5:3
+12:exp:6:exp:1:exp:3
+
+Set padding with CAMELLIA-CTR
+depends_on:5:4
+12:exp:7:exp:1:exp:3
+
+Set padding with DES-CBC
+depends_on:6:1:2
+12:exp:8:exp:1:int:0
+
+Set padding with BLOWFISH-CBC
+depends_on:7:1:2
+12:exp:9:exp:1:int:0
+
+Set padding with BLOWFISH-CFB
+depends_on:7:3
+12:exp:10:exp:1:exp:3
+
+Set padding with BLOWFISH-CTR
+depends_on:7:4
+12:exp:11:exp:1:exp:3
+
+Set padding with NULL
+depends_on:8
+12:exp:12:exp:1:exp:3
+
+Set non-existent padding with AES-CBC
+depends_on:0:1
+12:exp:0:exp:13:exp:14
+
+Set non-existent padding with CAMELLIA-CBC
+depends_on:5:1
+12:exp:5:exp:13:exp:14
+
+Set non-existent padding with DES-CBC
+depends_on:6:1
+12:exp:8:exp:13:exp:14
+
+Set non-existent padding with BLOWFISH-CBC
+depends_on:7:1
+12:exp:9:exp:13:exp:14
+
+Check PKCS padding #1 (correct)
+depends_on:2
+13:exp:1:hex:"DABBAD0004040404":int:0:int:4
+
+Check PKCS padding #2 (correct)
+depends_on:2
+13:exp:1:hex:"DABBAD0001":int:0:int:4
+
+Check PKCS padding #3 (correct)
+depends_on:2
+13:exp:1:hex:"DABBAD000101":int:0:int:5
+
+Check PKCS padding #4 (correct)
+depends_on:2
+13:exp:1:hex:"030303":int:0:int:0
+
+Check PKCS padding #5 (null padding)
+depends_on:2
+13:exp:1:hex:"DABBAD0000":exp:15:int:0
+
+Check PKCS padding #6 (too few padding bytes)
+depends_on:2
+13:exp:1:hex:"DABBAD0002":exp:15:int:0
+
+Check PKCS padding #7 (non-uniform padding bytes #1)
+depends_on:2
+13:exp:1:hex:"DABBAD00030203":exp:15:int:0
+
+Check PKCS padding #7 (non-uniform padding bytes #2)
+depends_on:2
+13:exp:1:hex:"DABBAD00030103":exp:15:int:0
+
+Check PKCS padding #7 (non-uniform padding bytes #3)
+depends_on:2
+13:exp:1:hex:"DABBAD00030703":exp:15:int:0
+
+Check PKCS padding #7 (non-uniform padding bytes #4)
+depends_on:2
+13:exp:1:hex:"DABBAD00030b03":exp:15:int:0
+
+Check PKCS padding #7 (non-uniform padding bytes #5)
+depends_on:2
+13:exp:1:hex:"DABBAD00031303":exp:15:int:0
+
+Check PKCS padding #7 (non-uniform padding bytes #6)
+depends_on:2
+13:exp:1:hex:"DABBAD00032303":exp:15:int:0
+
+Check PKCS padding #7 (non-uniform padding bytes #7)
+depends_on:2
+13:exp:1:hex:"DABBAD00034203":exp:15:int:0
+
+Check PKCS padding #7 (non-uniform padding bytes #8)
+depends_on:2
+13:exp:1:hex:"DABBAD00038303":exp:15:int:0
+
+Check PKCS padding #7 (non-uniform padding bytes #9)
+depends_on:2
+13:exp:1:hex:"DABBAD00020303":exp:15:int:0
+
+Check PKCS padding #7 (non-uniform padding bytes #10)
+depends_on:2
+13:exp:1:hex:"DABBAD00010303":exp:15:int:0
+
+Check PKCS padding #7 (non-uniform padding bytes #11)
+depends_on:2
+13:exp:1:hex:"DABBAD00070303":exp:15:int:0
+
+Check PKCS padding #7 (non-uniform padding bytes #12)
+depends_on:2
+13:exp:1:hex:"DABBAD000b0303":exp:15:int:0
+
+Check PKCS padding #7 (non-uniform padding bytes #13)
+depends_on:2
+13:exp:1:hex:"DABBAD00130303":exp:15:int:0
+
+Check PKCS padding #7 (non-uniform padding bytes #14)
+depends_on:2
+13:exp:1:hex:"DABBAD00230303":exp:15:int:0
+
+Check PKCS padding #7 (non-uniform padding bytes #15)
+depends_on:2
+13:exp:1:hex:"DABBAD00420303":exp:15:int:0
+
+Check PKCS padding #7 (non-uniform padding bytes #16)
+depends_on:2
+13:exp:1:hex:"DABBAD00830303":exp:15:int:0
+
+Check PKCS padding #8 (overlong)
+depends_on:2
+13:exp:1:hex:"040404":exp:15:int:0
+
+Check one and zeros padding #1 (correct)
+depends_on:9
+13:exp:16:hex:"DABBAD0080":int:0:int:4
+
+Check one and zeros padding #2 (correct)
+depends_on:9
+13:exp:16:hex:"DABBAD008000":int:0:int:4
+
+Check one and zeros padding #3 (correct)
+depends_on:9
+13:exp:16:hex:"DABBAD00800000":int:0:int:4
+
+Check one and zeros padding #4 (correct)
+depends_on:9
+13:exp:16:hex:"DABBAD00808000":int:0:int:5
+
+Check one and zeros padding #5 (correct)
+depends_on:9
+13:exp:16:hex:"800000":int:0:int:0
+
+Check one and zeros padding #6 (missing one)
+depends_on:9
+13:exp:16:hex:"DABBAD0000":exp:15:int:4
+
+Check one and zeros padding #7 (overlong)
+depends_on:9
+13:exp:16:hex:"0000000000":exp:15:int:4
+
+Check one and zeros padding #8 (last byte 0x80 | x)
+depends_on:9
+13:exp:16:hex:"0000000082":exp:15:int:4
+
+Check zeros and len padding #1 (correct)
+depends_on:10
+13:exp:17:hex:"DABBAD0001":int:0:int:4
+
+Check zeros and len padding #2 (correct)
+depends_on:10
+13:exp:17:hex:"DABBAD000002":int:0:int:4
+
+Check zeros and len padding #3 (correct)
+depends_on:10
+13:exp:17:hex:"DABBAD000003":int:0:int:3
+
+Check zeros and len padding #4 (correct)
+depends_on:10
+13:exp:17:hex:"000003":int:0:int:0
+
+Check zeros and len padding #5 (overlong)
+depends_on:10
+13:exp:17:hex:"000004":exp:15:int:0
+
+Check zeros and len padding #6 (not enough zeros)
+depends_on:10
+13:exp:17:hex:"DABBAD000004":exp:15:int:0
+
+Check zeros padding #1 (correct)
+depends_on:11
+13:exp:18:hex:"DABBAD00":int:0:int:3
+
+Check zeros padding #2 (correct)
+depends_on:11
+13:exp:18:hex:"DABBAD0000":int:0:int:3
+
+Check zeros padding #3 (correct)
+depends_on:11
+13:exp:18:hex:"DABBAD":int:0:int:3
+
+Check zeros padding #4 (correct)
+depends_on:11
+13:exp:18:hex:"000000":int:0:int:0
+
+Check no padding #1 (correct by definition)
+13:exp:19:hex:"DABBAD00":int:0:int:4
+
+Check no padding #2 (correct by definition)
+13:exp:19:hex:"DABBAD0001":int:0:int:5
+
+Check no padding #3 (correct by definition)
+13:exp:19:hex:"":int:0:int:0
+

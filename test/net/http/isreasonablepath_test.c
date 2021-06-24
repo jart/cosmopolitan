@@ -26,6 +26,8 @@ TEST(IsReasonablePath, test) {
   EXPECT_TRUE(IsReasonablePath("/index.html", 11));
   EXPECT_TRUE(IsReasonablePath("/index.html", -1));
   EXPECT_TRUE(IsReasonablePath("/redbean.png", -1));
+  EXPECT_TRUE(IsReasonablePath("/.ca.key", -1));
+  EXPECT_TRUE(IsReasonablePath(".ca.key", -1));
 }
 
 TEST(IsReasonablePath, testEmptyString_allowedIfYouLikeImplicitLeadingSlash) {

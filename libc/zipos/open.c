@@ -94,18 +94,16 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
              kZipCompressionDeflate);
   if (!(h = calloc(1, sizeof(*h)))) return -1;
   h->cfile = cf;
-  if ((h->size = GetZipLfileUncompressedSize(zipos->map + lf))) {
-    if (ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf)) {
-      assert(GetZipLfileCompressedSize(zipos->map + lf));
-      if ((h->freeme = malloc(h->size)) &&
-          (IsTiny() ? __zipos_inflate_tiny : __zipos_inflate_fast)(
-              h, ZIP_LFILE_CONTENT(zipos->map + lf),
-              GetZipLfileCompressedSize(zipos->map + lf)) != -1) {
-        h->mem = h->freeme;
-      }
-    } else {
-      h->mem = ZIP_LFILE_CONTENT(zipos->map + lf);
+  h->size = GetZipLfileUncompressedSize(zipos->map + lf);
+  if (ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf)) {
+    if ((h->freeme = malloc(h->size)) &&
+        (IsTiny() ? __zipos_inflate_tiny : __zipos_inflate_fast)(
+            h, ZIP_LFILE_CONTENT(zipos->map + lf),
+            GetZipLfileCompressedSize(zipos->map + lf)) != -1) {
+      h->mem = h->freeme;
     }
+  } else {
+    h->mem = ZIP_LFILE_CONTENT(zipos->map + lf);
   }
   if (!IsTiny() && h->mem &&
       crc32_z(0, h->mem, h->size) != ZIP_LFILE_CRC32(zipos->map + lf)) {
@@ -138,7 +136,7 @@ int __zipos_open(const struct ZiposUri *name, unsigned flags, int mode) {
   ssize_t cf;
   sigset_t oldmask;
   struct Zipos *zipos;
-  assert((flags & O_ACCMODE) == O_RDONLY);
+  if ((flags & O_ACCMODE) != O_RDONLY) return einval();
   if ((zipos = __zipos_get())) {
     if ((cf = __zipos_find(zipos, name)) != -1) {
       fd = __zipos_load(zipos, cf, flags, mode);

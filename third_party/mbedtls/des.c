@@ -1,10 +1,17 @@
-/* clang-format off */
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/des.h"
+#include "third_party/mbedtls/endian.h"
+#include "third_party/mbedtls/platform.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /*
  *  FIPS-46-3 compliant Triple-DES implementation
  *
@@ -29,46 +36,6 @@ asm(".include \"libc/disclaimer.inc\"");
  *
  *  http://csrc.nist.gov/publications/fips/fips46-3/fips46-3.pdf
  */
-
-#include "third_party/mbedtls/common.h"
-
-#if defined(MBEDTLS_DES_C)
-
-#include "third_party/mbedtls/des.h"
-#include "third_party/mbedtls/platform_util.h"
-
-#if defined(MBEDTLS_SELF_TEST)
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_printf printf
-#endif /* MBEDTLS_PLATFORM_C */
-#endif /* MBEDTLS_SELF_TEST */
-
-#if !defined(MBEDTLS_DES_ALT)
-
-/*
- * 32-bit integer manipulation macros (big endian)
- */
-#ifndef GET_UINT32_BE
-#define GET_UINT32_BE(n,b,i)                            \
-{                                                       \
-    (n) = ( (uint32_t) (b)[(i)    ] << 24 )             \
-        | ( (uint32_t) (b)[(i) + 1] << 16 )             \
-        | ( (uint32_t) (b)[(i) + 2] <<  8 )             \
-        | ( (uint32_t) (b)[(i) + 3]       );            \
-}
-#endif
-
-#ifndef PUT_UINT32_BE
-#define PUT_UINT32_BE(n,b,i)                            \
-{                                                       \
-    (b)[(i)    ] = (unsigned char) ( (n) >> 24 );       \
-    (b)[(i) + 1] = (unsigned char) ( (n) >> 16 );       \
-    (b)[(i) + 2] = (unsigned char) ( (n) >>  8 );       \
-    (b)[(i) + 3] = (unsigned char) ( (n)       );       \
-}
-#endif
 
 /*
  * Expanded DES S-boxes
@@ -810,8 +777,6 @@ int mbedtls_des3_crypt_cbc( mbedtls_des3_context *ctx,
 }
 #endif /* MBEDTLS_CIPHER_MODE_CBC */
 
-#endif /* !MBEDTLS_DES_ALT */
-
 #if defined(MBEDTLS_SELF_TEST)
 /*
  * DES and 3DES test vectors from:
@@ -1058,5 +1023,3 @@ exit:
 }
 
 #endif /* MBEDTLS_SELF_TEST */
-
-#endif /* MBEDTLS_DES_C */

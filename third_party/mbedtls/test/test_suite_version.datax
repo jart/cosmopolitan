@@ -1,0 +1,16 @@
+Check compiletime library version
+0:char*:"2.26.0"
+
+Check runtime library version
+1:char*:"2.26.0"
+
+Check for MBEDTLS_VERSION_C
+2:char*:"MBEDTLS_VERSION_C":int:0
+
+Check for MBEDTLS_AES_C when already present
+depends_on:0
+2:char*:"MBEDTLS_AES_C":int:0
+
+Check for unknown define
+2:char*:"MBEDTLS_UNKNOWN":exp:0
+

@@ -1,0 +1,22 @@
+AES-ECB Encrypt (Invalid keylength)
+0:hex:"000000000000000000000000000000":hex:"f34481ec3cc627bacd5dc3fb08f273e6":hex:"0336763e966d92595a567cc9ce537f5e":exp:0
+
+AES-ECB Decrypt (Invalid keylength)
+1:hex:"000000000000000000000000000000":hex:"f34481ec3cc627bacd5dc3fb08f273e6":hex:"0336763e966d92595a567cc9ce537f5e":exp:0
+
+AES-256-CBC Encrypt (Invalid input length)
+2:hex:"0000000000000000000000000000000000000000000000000000000000000000":hex:"00000000000000000000000000000000":hex:"ffffffffffffffe000000000000000":hex:"":exp:1
+
+AES-256-CBC Decrypt (Invalid input length)
+3:hex:"0000000000000000000000000000000000000000000000000000000000000000":hex:"00000000000000000000000000000000":hex:"623a52fcea5d443e48d9181ab32c74":hex:"":exp:1
+
+AES - Optional Parameter Validation (MBEDTLS_CHECK_PARAMS)
+13
+
+AES - Mandatory Parameter Validation and Valid Parameters
+14
+
+AES Selftest
+depends_on:0
+15
+

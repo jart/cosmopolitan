@@ -1,5 +1,17 @@
-/* clang-format off */
+#include "libc/fmt/fmt.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/oid.h"
+#include "third_party/mbedtls/platform.h"
+#include "third_party/mbedtls/rsa.h"
 
+asm(".ident\t\"\\n\\n\
+Mbed TLS (Apache 2.0)\\n\
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+/* clang-format off */
 /**
  * \file oid.c
  *
@@ -21,20 +33,7 @@
  *  limitations under the License.
  */
 
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_OID_C)
-
-#include "third_party/mbedtls/oid.h"
-#include "third_party/mbedtls/rsa.h"
-#include "third_party/mbedtls/error.h"
-
-
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_snprintf snprintf
-#endif
 
 /*
  * Macro to automatically add the size of #define'd OIDs
@@ -622,12 +621,6 @@ static const oid_md_alg_t oid_md_alg[] =
         MBEDTLS_MD_SHA512,
     },
 #endif /* MBEDTLS_SHA512_C */
-#if defined(MBEDTLS_RIPEMD160_C)
-    {
-        { ADD_LEN( MBEDTLS_OID_DIGEST_ALG_RIPEMD160 ),       "id-ripemd160",       "RIPEMD-160" },
-        MBEDTLS_MD_RIPEMD160,
-    },
-#endif /* MBEDTLS_RIPEMD160_C */
     {
         { NULL, 0, NULL, NULL },
         MBEDTLS_MD_NONE,

@@ -1,10 +1,20 @@
-/* clang-format off */
+#include "libc/rand/rand.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/md.h"
+#include "third_party/mbedtls/oid.h"
+#include "third_party/mbedtls/platform.h"
+#include "third_party/mbedtls/rsa.h"
+#include "third_party/mbedtls/rsa_internal.h"
+#include "third_party/mbedtls/sha1.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /*
  *  The RSA public-key cryptosystem
  *
@@ -42,32 +52,7 @@ asm(".include \"libc/disclaimer.inc\"");
  *
  */
 
-#include "libc/rand/rand.h"
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_RSA_C)
-
-#include "third_party/mbedtls/rsa.h"
-#include "third_party/mbedtls/rsa_internal.h"
-#include "third_party/mbedtls/oid.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
-
-
-#if defined(MBEDTLS_PKCS1_V21)
-#include "third_party/mbedtls/md.h"
-#endif
-
-#if defined(MBEDTLS_PKCS1_V15) && !defined(__OpenBSD__) && !defined(__NetBSD__)
-#endif
-
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_printf printf
-#define mbedtls_calloc calloc
-#define mbedtls_free   free
-#endif
 
 #if !defined(MBEDTLS_RSA_ALT)
 
@@ -483,23 +468,14 @@ int mbedtls_rsa_export_crt( const mbedtls_rsa_context *ctx,
  * Initialize an RSA context
  */
 void mbedtls_rsa_init( mbedtls_rsa_context *ctx,
-               int padding,
-               int hash_id )
+                       int padding,
+                       int hash_id )
 {
     RSA_VALIDATE( ctx != NULL );
     RSA_VALIDATE( padding == MBEDTLS_RSA_PKCS_V15 ||
                   padding == MBEDTLS_RSA_PKCS_V21 );
-
     memset( ctx, 0, sizeof( mbedtls_rsa_context ) );
-
     mbedtls_rsa_set_padding( ctx, padding, hash_id );
-
-#if defined(MBEDTLS_THREADING_C)
-    /* Set ctx->ver to nonzero to indicate that the mutex has been
-     * initialized and will need to be freed. */
-    ctx->ver = 1;
-    mbedtls_mutex_init( &ctx->mutex );
-#endif
 }
 
 /*
@@ -748,11 +724,6 @@ int mbedtls_rsa_public( mbedtls_rsa_context *ctx,
 
     mbedtls_mpi_init( &T );
 
-#if defined(MBEDTLS_THREADING_C)
-    if( ( ret = mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
-        return( ret );
-#endif
-
     MBEDTLS_MPI_CHK( mbedtls_mpi_read_binary( &T, input, ctx->len ) );
 
     if( mbedtls_mpi_cmp_mpi( &T, &ctx->N ) >= 0 )
@@ -766,11 +737,6 @@ int mbedtls_rsa_public( mbedtls_rsa_context *ctx,
     MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &T, output, olen ) );
 
 cleanup:
-#if defined(MBEDTLS_THREADING_C)
-    if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
-        return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
-#endif
-
     mbedtls_mpi_free( &T );
 
     if( ret != 0 )
@@ -786,7 +752,7 @@ cleanup:
  *  Berlin Heidelberg, 1996. p. 104-113.
  */
 static int rsa_prepare_blinding( mbedtls_rsa_context *ctx,
-                 int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
+                                 int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
     int ret, count = 0;
     mbedtls_mpi R;
@@ -869,10 +835,10 @@ cleanup:
  * Do an RSA private key operation
  */
 int mbedtls_rsa_private( mbedtls_rsa_context *ctx,
-                 int (*f_rng)(void *, unsigned char *, size_t),
-                 void *p_rng,
-                 const unsigned char *input,
-                 unsigned char *output )
+                         int (*f_rng)(void *, unsigned char *, size_t),
+                         void *p_rng,
+                         const unsigned char *input,
+                         unsigned char *output )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     size_t olen;
@@ -918,11 +884,6 @@ int mbedtls_rsa_private( mbedtls_rsa_context *ctx,
     {
         return( MBEDTLS_ERR_RSA_BAD_INPUT_DATA );
     }
-
-#if defined(MBEDTLS_THREADING_C)
-    if( ( ret = mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
-        return( ret );
-#endif
 
     /* MPI Initialization */
     mbedtls_mpi_init( &T );
@@ -1061,10 +1022,6 @@ int mbedtls_rsa_private( mbedtls_rsa_context *ctx,
     MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &T, output, olen ) );
 
 cleanup:
-#if defined(MBEDTLS_THREADING_C)
-    if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
-        return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
-#endif
 
     mbedtls_mpi_free( &P1 );
     mbedtls_mpi_free( &Q1 );
@@ -1095,7 +1052,6 @@ cleanup:
     return( ret );
 }
 
-#if defined(MBEDTLS_PKCS1_V21)
 /**
  * Generate and apply the MGF1 operation (from PKCS#1 v2.1) to a buffer.
  *
@@ -1151,9 +1107,7 @@ exit:
 
     return( ret );
 }
-#endif /* MBEDTLS_PKCS1_V21 */
 
-#if defined(MBEDTLS_PKCS1_V21)
 /*
  * Implementation of the PKCS#1 v2.1 RSAES-OAEP-ENCRYPT function
  */
@@ -1240,7 +1194,6 @@ exit:
             ? mbedtls_rsa_public(  ctx, output, output )
             : mbedtls_rsa_private( ctx, f_rng, p_rng, output, output ) );
 }
-#endif /* MBEDTLS_PKCS1_V21 */
 
 #if defined(MBEDTLS_PKCS1_V15)
 /*
@@ -1350,7 +1303,6 @@ int mbedtls_rsa_pkcs1_encrypt( mbedtls_rsa_context *ctx,
     }
 }
 
-#if defined(MBEDTLS_PKCS1_V21)
 /*
  * Implementation of the PKCS#1 v2.1 RSAES-OAEP-DECRYPT function
  */
@@ -1495,7 +1447,6 @@ cleanup:
 
     return( ret );
 }
-#endif /* MBEDTLS_PKCS1_V21 */
 
 #if defined(MBEDTLS_PKCS1_V15)
 /** Turn zero-or-nonzero into zero-or-all-bits-one, without branches.
@@ -1799,7 +1750,6 @@ int mbedtls_rsa_pkcs1_decrypt( mbedtls_rsa_context *ctx,
     }
 }
 
-#if defined(MBEDTLS_PKCS1_V21)
 /*
  * Implementation of the PKCS#1 v2.1 RSASSA-PSS-SIGN function
  */
@@ -1922,7 +1872,6 @@ exit:
             ? mbedtls_rsa_public(  ctx, sig, sig )
             : mbedtls_rsa_private( ctx, f_rng, p_rng, sig, sig ) );
 }
-#endif /* MBEDTLS_PKCS1_V21 */
 
 #if defined(MBEDTLS_PKCS1_V15)
 /*
@@ -2178,7 +2127,6 @@ int mbedtls_rsa_pkcs1_sign( mbedtls_rsa_context *ctx,
     }
 }
 
-#if defined(MBEDTLS_PKCS1_V21)
 /*
  * Implementation of the PKCS#1 v2.1 RSASSA-PSS-VERIFY function
  */
@@ -2360,7 +2308,6 @@ int mbedtls_rsa_rsassa_pss_verify( mbedtls_rsa_context *ctx,
                                        sig ) );
 
 }
-#endif /* MBEDTLS_PKCS1_V21 */
 
 #if defined(MBEDTLS_PKCS1_V15)
 /*
@@ -2550,22 +2497,11 @@ void mbedtls_rsa_free( mbedtls_rsa_context *ctx )
     mbedtls_mpi_free( &ctx->DQ );
     mbedtls_mpi_free( &ctx->DP );
 #endif /* MBEDTLS_RSA_NO_CRT */
-
-#if defined(MBEDTLS_THREADING_C)
-    /* Free the mutex, but only if it hasn't been freed already. */
-    if( ctx->ver != 0 )
-    {
-        mbedtls_mutex_free( &ctx->mutex );
-        ctx->ver = 0;
-    }
-#endif
 }
 
 #endif /* !MBEDTLS_RSA_ALT */
 
 #if defined(MBEDTLS_SELF_TEST)
-
-#include "third_party/mbedtls/sha1.h"
 
 /*
  * Example RSA-1024 keypair, for test purposes

@@ -40,20 +40,7 @@
 static struct timespec vflogf_ts;
 
 static int vflogf_loglevel2char(unsigned level) {
-  switch (level) {
-    case kLogInfo:
-      return 'I';
-    case kLogDebug:
-      return 'D';
-    case kLogWarn:
-      return 'W';
-    case kLogFatal:
-      return 'F';
-    case kLogVerbose:
-      return 'V';
-    default:
-      return '?';
-  }
+  return "FEWIVDYZ"[level & 7];
 }
 
 /**

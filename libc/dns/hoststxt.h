@@ -29,7 +29,6 @@ struct HostsTxt {
 const struct HostsTxt *GetHostsTxt(void) returnsnonnull;
 void FreeHostsTxt(struct HostsTxt **) paramsnonnull();
 int ParseHostsTxt(struct HostsTxt *, FILE *) paramsnonnull();
-void SortHostsTxt(struct HostsTxt *) paramsnonnull();
 int ResolveHostsTxt(const struct HostsTxt *, int, const char *,
                     struct sockaddr *, uint32_t, const char **)
     paramsnonnull((1, 3));

@@ -1,10 +1,14 @@
-/* clang-format off */
+#include "libc/str/str.h"
+#include "third_party/mbedtls/aesni.h"
+#include "third_party/mbedtls/common.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /*
  *  AES-NI support functions
  *
@@ -29,24 +33,7 @@ asm(".include \"libc/disclaimer.inc\"");
  * [CLMUL-WP] http://software.intel.com/en-us/articles/intel-carry-less-multiplication-instruction-and-its-usage-for-computing-the-gcm-mode/
  */
 
-#include "libc/str/str.h"
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_AESNI_C)
-
-#if defined(__has_feature)
-#if __has_feature(memory_sanitizer)
-#warning "MBEDTLS_AESNI_C is known to cause spurious error reports with some memory sanitizers as they do not understand the assembly code."
-#endif
-#endif
-
-#include "third_party/mbedtls/aesni.h"
-
-
-#ifndef asm
-#define asm __asm
-#endif
-
 #if defined(MBEDTLS_HAVE_X86_64)
 
 /*
@@ -79,9 +66,9 @@ asm(".include \"libc/disclaimer.inc\"");
  * AES-NI AES-ECB block en(de)cryption
  */
 int mbedtls_aesni_crypt_ecb( mbedtls_aes_context *ctx,
-                     int mode,
-                     const unsigned char input[16],
-                     unsigned char output[16] )
+                             int mode,
+                             const unsigned char input[16],
+                             unsigned char output[16] )
 {
     asm( "movdqu    (%3), %%xmm0    \n\t" // load input
          "movdqu    (%1), %%xmm1    \n\t" // load round key 0
@@ -125,8 +112,8 @@ int mbedtls_aesni_crypt_ecb( mbedtls_aes_context *ctx,
  * Based on [CLMUL-WP] algorithms 1 (with equation 27) and 5.
  */
 void mbedtls_aesni_gcm_mult( unsigned char c[16],
-                     const unsigned char a[16],
-                     const unsigned char b[16] )
+                             const unsigned char a[16],
+                             const unsigned char b[16] )
 {
     unsigned char aa[16], bb[16], cc[16];
     size_t i;
@@ -236,7 +223,7 @@ void mbedtls_aesni_gcm_mult( unsigned char c[16],
  * Compute decryption round keys from encryption round keys
  */
 void mbedtls_aesni_inverse_key( unsigned char *invkey,
-                        const unsigned char *fwdkey, int nr )
+                                const unsigned char *fwdkey, int nr )
 {
     unsigned char *ik = invkey;
     const unsigned char *fk = fwdkey + 16 * nr;
@@ -431,8 +418,8 @@ static void aesni_setkey_enc_256( unsigned char *rk,
  * Key expansion, wrapper
  */
 int mbedtls_aesni_setkey_enc( unsigned char *rk,
-                      const unsigned char *key,
-                      size_t bits )
+                              const unsigned char *key,
+                              size_t bits )
 {
     switch( bits )
     {
@@ -446,5 +433,4 @@ int mbedtls_aesni_setkey_enc( unsigned char *rk,
 }
 
 #endif /* MBEDTLS_HAVE_X86_64 */
-
 #endif /* MBEDTLS_AESNI_C */

@@ -1,69 +1,8 @@
-/* clang-format off */
-
-/**
- * \file rsa_internal.h
- *
- * \brief Context-independent RSA helper functions
- *
- *  This module declares some RSA-related helper functions useful when
- *  implementing the RSA interface. These functions are provided in a separate
- *  compilation unit in order to make it easy for designers of alternative RSA
- *  implementations to use them in their own code, as it is conceived that the
- *  functionality they provide will be necessary for most complete
- *  implementations.
- *
- *  End-users of Mbed TLS who are not providing their own alternative RSA
- *  implementations should not use these functions directly, and should instead
- *  use only the functions declared in rsa.h.
- *
- *  The interface provided by this module will be maintained through LTS (Long
- *  Term Support) branches of Mbed TLS, but may otherwise be subject to change,
- *  and must be considered an internal interface of the library.
- *
- *  There are two classes of helper functions:
- *
- *  (1) Parameter-generating helpers. These are:
- *      - mbedtls_rsa_deduce_primes
- *      - mbedtls_rsa_deduce_private_exponent
- *      - mbedtls_rsa_deduce_crt
- *       Each of these functions takes a set of core RSA parameters and
- *       generates some other, or CRT related parameters.
- *
- *  (2) Parameter-checking helpers. These are:
- *      - mbedtls_rsa_validate_params
- *      - mbedtls_rsa_validate_crt
- *      They take a set of core or CRT related RSA parameters and check their
- *      validity.
- *
- */
-/*
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- */
-
 #ifndef MBEDTLS_RSA_INTERNAL_H
 #define MBEDTLS_RSA_INTERNAL_H
-
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "third_party/mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
 #include "third_party/mbedtls/bignum.h"
+#include "third_party/mbedtls/config.h"
+/* clang-format off */
 
 #ifdef __cplusplus
 extern "C" {

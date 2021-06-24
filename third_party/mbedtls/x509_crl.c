@@ -1,10 +1,17 @@
-/* clang-format off */
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/oid.h"
+#include "third_party/mbedtls/pem.h"
+#include "third_party/mbedtls/platform.h"
+#include "third_party/mbedtls/x509_crl.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /*
  *  X.509 Certidicate Revocation List (CRL) parsing
  *
@@ -34,34 +41,7 @@ asm(".include \"libc/disclaimer.inc\"");
  *  http://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf
  */
 
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_X509_CRL_PARSE_C)
-
-#include "third_party/mbedtls/x509_crl.h"
-#include "third_party/mbedtls/error.h"
-#include "third_party/mbedtls/oid.h"
-#include "third_party/mbedtls/platform_util.h"
-
-
-#if defined(MBEDTLS_PEM_PARSE_C)
-#include "third_party/mbedtls/pem.h"
-#endif
-
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_free       free
-#define mbedtls_calloc    calloc
-#define mbedtls_snprintf   snprintf
-#endif
-
-#if defined(_WIN32) && !defined(EFIX64) && !defined(EFI32)
-#else
-#endif
-
-#if defined(MBEDTLS_FS_IO) || defined(EFIX64) || defined(EFI32)
-#endif
 
 /*
  *  Version  ::=  INTEGER  {  v1(0), v2(1)  }
@@ -593,7 +573,6 @@ int mbedtls_x509_crl_parse( mbedtls_x509_crl *chain, const unsigned char *buf, s
         return( mbedtls_x509_crl_parse_der( chain, buf, buflen ) );
 }
 
-#if defined(MBEDTLS_FS_IO)
 /*
  * Load one or more CRLs and add them to the chained list
  */
@@ -613,7 +592,6 @@ int mbedtls_x509_crl_parse_file( mbedtls_x509_crl *chain, const char *path )
 
     return( ret );
 }
-#endif /* MBEDTLS_FS_IO */
 
 /*
  * Return an informational string about the certificate.
@@ -720,10 +698,6 @@ void mbedtls_x509_crl_free( mbedtls_x509_crl *crl )
 
     do
     {
-#if defined(MBEDTLS_X509_RSASSA_PSS_SUPPORT)
-        mbedtls_free( crl_cur->sig_opts );
-#endif
-
         name_cur = crl_cur->issuer.next;
         while( name_cur != NULL )
         {

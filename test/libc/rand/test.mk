@@ -21,15 +21,20 @@ TEST_LIBC_RAND_CHECKS =					\
 TEST_LIBC_RAND_DIRECTDEPS =				\
 	LIBC_FMT					\
 	LIBC_INTRIN					\
+	LIBC_TINYMATH					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
 	LIBC_RAND					\
 	LIBC_RUNTIME					\
+	LIBC_STDIO					\
 	LIBC_STR					\
 	LIBC_STUBS					\
+	LIBC_LOG					\
 	LIBC_SYSV					\
 	LIBC_TESTLIB					\
-	LIBC_X
+	LIBC_UNICODE					\
+	LIBC_X						\
+	THIRD_PARTY_GDTOA
 
 TEST_LIBC_RAND_DEPS :=					\
 	$(call uniq,$(foreach x,$(TEST_LIBC_RAND_DIRECTDEPS),$($(x))))

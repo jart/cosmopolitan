@@ -1,10 +1,16 @@
-/* clang-format off */
+#include "libc/str/str.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/hkdf.h"
+#include "third_party/mbedtls/platform.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /*
  *  HKDF implementation -- RFC 5869
  *
@@ -23,14 +29,6 @@ asm(".include \"libc/disclaimer.inc\"");
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-#include "libc/str/str.h"
-#include "third_party/mbedtls/common.h"
-
-#if defined(MBEDTLS_HKDF_C)
-
-#include "third_party/mbedtls/hkdf.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
 
 int mbedtls_hkdf( const mbedtls_md_info_t *md, const unsigned char *salt,
                   size_t salt_len, const unsigned char *ikm, size_t ikm_len,
@@ -192,5 +190,3 @@ exit:
 
     return( ret );
 }
-
-#endif /* MBEDTLS_HKDF_C */

@@ -1,45 +1,10 @@
-/* clang-format off */
-
-/**
- * \file ecdsa.h
- *
- * \brief This file contains ECDSA definitions and functions.
- *
- * The Elliptic Curve Digital Signature Algorithm (ECDSA) is defined in
- * <em>Standards for Efficient Cryptography Group (SECG):
- * SEC1 Elliptic Curve Cryptography</em>.
- * The use of ECDSA for TLS is defined in <em>RFC-4492: Elliptic Curve
- * Cryptography (ECC) Cipher Suites for Transport Layer Security (TLS)</em>.
- *
- */
-/*
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
-#ifndef MBEDTLS_ECDSA_H
-#define MBEDTLS_ECDSA_H
-
-#if !defined(MBEDTLS_CONFIG_FILE)
+#ifndef MBEDTLS_ECDSA_H_
+#define MBEDTLS_ECDSA_H_
 #include "third_party/mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
 #include "third_party/mbedtls/ecp.h"
 #include "third_party/mbedtls/md.h"
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /**
  * \brief           Maximum ECDSA signature size for a given curve bit size
@@ -66,10 +31,6 @@
 /** The maximal size of an ECDSA signature in Bytes. */
 #define MBEDTLS_ECDSA_MAX_LEN  MBEDTLS_ECDSA_MAX_SIG_LEN( MBEDTLS_ECP_MAX_BITS )
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * \brief           The ECDSA context structure.
  *
@@ -95,14 +56,12 @@ typedef struct mbedtls_ecdsa_restart_ver mbedtls_ecdsa_restart_ver_ctx;
  */
 typedef struct mbedtls_ecdsa_restart_sig mbedtls_ecdsa_restart_sig_ctx;
 
-#if defined(MBEDTLS_ECDSA_DETERMINISTIC)
 /**
  * \brief           Internal restart context for ecdsa_sign_det()
  *
  * \note            Opaque struct, defined in ecdsa.c
  */
 typedef struct mbedtls_ecdsa_restart_det mbedtls_ecdsa_restart_det_ctx;
-#endif
 
 /**
  * \brief           General context for resuming ECDSA operations
@@ -175,68 +134,6 @@ int mbedtls_ecdsa_sign( mbedtls_ecp_group *grp, mbedtls_mpi *r, mbedtls_mpi *s,
                 const mbedtls_mpi *d, const unsigned char *buf, size_t blen,
                 int (*f_rng)(void *, unsigned char *, size_t), void *p_rng );
 
-#if defined(MBEDTLS_ECDSA_DETERMINISTIC)
-#if ! defined(MBEDTLS_DEPRECATED_REMOVED)
-#if defined(MBEDTLS_DEPRECATED_WARNING)
-#define MBEDTLS_DEPRECATED    __attribute__((deprecated))
-#else
-#define MBEDTLS_DEPRECATED
-#endif
-/**
- * \brief           This function computes the ECDSA signature of a
- *                  previously-hashed message, deterministic version.
- *
- *                  For more information, see <em>RFC-6979: Deterministic
- *                  Usage of the Digital Signature Algorithm (DSA) and Elliptic
- *                  Curve Digital Signature Algorithm (ECDSA)</em>.
- *
- * \note            If the bitlength of the message hash is larger than the
- *                  bitlength of the group order, then the hash is truncated as
- *                  defined in <em>Standards for Efficient Cryptography Group
- *                  (SECG): SEC1 Elliptic Curve Cryptography</em>, section
- *                  4.1.3, step 5.
- *
- * \warning         Since the output of the internal RNG is always the same for
- *                  the same key and message, this limits the efficiency of
- *                  blinding and leaks information through side channels. For
- *                  secure behavior use mbedtls_ecdsa_sign_det_ext() instead.
- *
- *                  (Optimally the blinding is a random value that is different
- *                  on every execution. In this case the blinding is still
- *                  random from the attackers perspective, but is the same on
- *                  each execution. This means that this blinding does not
- *                  prevent attackers from recovering secrets by combining
- *                  several measurement traces, but may prevent some attacks
- *                  that exploit relationships between secret data.)
- *
- * \see             ecp.h
- *
- * \param grp       The context for the elliptic curve to use.
- *                  This must be initialized and have group parameters
- *                  set, for example through mbedtls_ecp_group_load().
- * \param r         The MPI context in which to store the first part
- *                  the signature. This must be initialized.
- * \param s         The MPI context in which to store the second part
- *                  the signature. This must be initialized.
- * \param d         The private signing key. This must be initialized
- *                  and setup, for example through mbedtls_ecp_gen_privkey().
- * \param buf       The hashed content to be signed. This must be a readable
- *                  buffer of length \p blen Bytes. It may be \c NULL if
- *                  \p blen is zero.
- * \param blen      The length of \p buf in Bytes.
- * \param md_alg    The hash algorithm used to hash the original data.
- *
- * \return          \c 0 on success.
- * \return          An \c MBEDTLS_ERR_ECP_XXX or \c MBEDTLS_MPI_XXX
- *                  error code on failure.
- */
-int mbedtls_ecdsa_sign_det( mbedtls_ecp_group *grp, mbedtls_mpi *r,
-                            mbedtls_mpi *s, const mbedtls_mpi *d,
-                            const unsigned char *buf, size_t blen,
-                            mbedtls_md_type_t md_alg ) MBEDTLS_DEPRECATED;
-#undef MBEDTLS_DEPRECATED
-#endif /* MBEDTLS_DEPRECATED_REMOVED */
-
 /**
  * \brief           This function computes the ECDSA signature of a
  *                  previously-hashed message, deterministic version.
@@ -282,7 +179,6 @@ int mbedtls_ecdsa_sign_det_ext( mbedtls_ecp_group *grp, mbedtls_mpi *r,
                             mbedtls_md_type_t md_alg,
                             int (*f_rng_blind)(void *, unsigned char *, size_t),
                             void *p_rng_blind );
-#endif /* MBEDTLS_ECDSA_DETERMINISTIC */
 
 /**
  * \brief           This function verifies the ECDSA signature of a
@@ -422,64 +318,6 @@ int mbedtls_ecdsa_write_signature_restartable( mbedtls_ecdsa_context *ctx,
                            int (*f_rng)(void *, unsigned char *, size_t),
                            void *p_rng,
                            mbedtls_ecdsa_restart_ctx *rs_ctx );
-
-#if defined(MBEDTLS_ECDSA_DETERMINISTIC)
-#if ! defined(MBEDTLS_DEPRECATED_REMOVED)
-#if defined(MBEDTLS_DEPRECATED_WARNING)
-#define MBEDTLS_DEPRECATED    __attribute__((deprecated))
-#else
-#define MBEDTLS_DEPRECATED
-#endif
-/**
- * \brief           This function computes an ECDSA signature and writes
- *                  it to a buffer, serialized as defined in <em>RFC-4492:
- *                  Elliptic Curve Cryptography (ECC) Cipher Suites for
- *                  Transport Layer Security (TLS)</em>.
- *
- *                  The deterministic version is defined in <em>RFC-6979:
- *                  Deterministic Usage of the Digital Signature Algorithm (DSA)
- *                  and Elliptic Curve Digital Signature Algorithm (ECDSA)</em>.
- *
- * \warning         It is not thread-safe to use the same context in
- *                  multiple threads.
- *
- * \note            If the bitlength of the message hash is larger than the
- *                  bitlength of the group order, then the hash is truncated as
- *                  defined in <em>Standards for Efficient Cryptography Group
- *                  (SECG): SEC1 Elliptic Curve Cryptography</em>, section
- *                  4.1.3, step 5.
- *
- * \see             ecp.h
- *
- * \deprecated      Superseded by mbedtls_ecdsa_write_signature() in
- *                  Mbed TLS version 2.0 and later.
- *
- * \param ctx       The ECDSA context to use. This must be initialized
- *                  and have a group and private key bound to it, for example
- *                  via mbedtls_ecdsa_genkey() or mbedtls_ecdsa_from_keypair().
- * \param hash      The message hash to be signed. This must be a readable
- *                  buffer of length \p blen Bytes.
- * \param hlen      The length of the hash \p hash in Bytes.
- * \param sig       The buffer to which to write the signature. This must be a
- *                  writable buffer of length at least twice as large as the
- *                  size of the curve used, plus 9. For example, 73 Bytes if
- *                  a 256-bit curve is used. A buffer length of
- *                  #MBEDTLS_ECDSA_MAX_LEN is always safe.
- * \param slen      The address at which to store the actual length of
- *                  the signature written. Must not be \c NULL.
- * \param md_alg    The message digest that was used to hash the message.
- *
- * \return          \c 0 on success.
- * \return          An \c MBEDTLS_ERR_ECP_XXX, \c MBEDTLS_ERR_MPI_XXX or
- *                  \c MBEDTLS_ERR_ASN1_XXX error code on failure.
- */
-int mbedtls_ecdsa_write_signature_det( mbedtls_ecdsa_context *ctx,
-                               const unsigned char *hash, size_t hlen,
-                               unsigned char *sig, size_t *slen,
-                               mbedtls_md_type_t md_alg ) MBEDTLS_DEPRECATED;
-#undef MBEDTLS_DEPRECATED
-#endif /* MBEDTLS_DEPRECATED_REMOVED */
-#endif /* MBEDTLS_ECDSA_DETERMINISTIC */
 
 /**
  * \brief           This function reads and verifies an ECDSA signature.
@@ -621,8 +459,5 @@ void mbedtls_ecdsa_restart_init( mbedtls_ecdsa_restart_ctx *ctx );
 void mbedtls_ecdsa_restart_free( mbedtls_ecdsa_restart_ctx *ctx );
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* ecdsa.h */
+COSMOPOLITAN_C_END_
+#endif /* ECDSA_H_ */

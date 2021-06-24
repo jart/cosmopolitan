@@ -1,0 +1,99 @@
+mbedtls_md2 Test vector RFC1319 #1
+0:char*:"":hex:"8350e5a3e24c153df2275c9f80692773"
+
+mbedtls_md2 Test vector RFC1319 #2
+0:char*:"a":hex:"32ec01ec4a6dac72c0ab96fb34c0b5d1"
+
+mbedtls_md2 Test vector RFC1319 #3
+0:char*:"abc":hex:"da853b0d3f88d99b30283a69e6ded6bb"
+
+mbedtls_md2 Test vector RFC1319 #4
+0:char*:"message digest":hex:"ab4f496bfb2a530b219ff33031fe06b0"
+
+mbedtls_md2 Test vector RFC1319 #5
+0:char*:"abcdefghijklmnopqrstuvwxyz":hex:"4e8ddff3650292ab5a4108c3aa47940b"
+
+mbedtls_md2 Test vector RFC1319 #6
+0:char*:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789":hex:"da33def2a42df13975352846c30338cd"
+
+mbedtls_md2 Test vector RFC1319 #7
+0:char*:"12345678901234567890123456789012345678901234567890123456789012345678901234567890":hex:"d5976f79d83d3a0dc9806c3c66f3efd8"
+
+mbedtls_md4 Test vector RFC1320 #1
+1:char*:"":hex:"31d6cfe0d16ae931b73c59d7e0c089c0"
+
+mbedtls_md4 Test vector RFC1320 #2
+1:char*:"a":hex:"bde52cb31de33e46245e05fbdbd6fb24"
+
+mbedtls_md4 Test vector RFC1320 #3
+1:char*:"abc":hex:"a448017aaf21d8525fc10ae87aa6729d"
+
+mbedtls_md4 Test vector RFC1320 #4
+1:char*:"message digest":hex:"d9130a8164549fe818874806e1c7014b"
+
+mbedtls_md4 Test vector RFC1320 #5
+1:char*:"abcdefghijklmnopqrstuvwxyz":hex:"d79e1c308aa5bbcdeea8ed63df412da9"
+
+mbedtls_md4 Test vector RFC1320 #6
+1:char*:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789":hex:"043f8582f241db351ce627e153e7f0e4"
+
+mbedtls_md4 Test vector RFC1320 #7
+1:char*:"12345678901234567890123456789012345678901234567890123456789012345678901234567890":hex:"e33b4ddc9c38f2199c3e7b164fcc0536"
+
+mbedtls_md5 Test vector RFC1321 #1
+2:char*:"":hex:"d41d8cd98f00b204e9800998ecf8427e"
+
+mbedtls_md5 Test vector RFC1321 #2
+2:char*:"a":hex:"0cc175b9c0f1b6a831c399e269772661"
+
+mbedtls_md5 Test vector RFC1321 #3
+2:char*:"abc":hex:"900150983cd24fb0d6963f7d28e17f72"
+
+mbedtls_md5 Test vector RFC1321 #4
+2:char*:"message digest":hex:"f96b697d7cb7938d525a2f31aaf161d0"
+
+mbedtls_md5 Test vector RFC1321 #5
+2:char*:"abcdefghijklmnopqrstuvwxyz":hex:"c3fcd3d76192e4007dfb496cca67e13b"
+
+mbedtls_md5 Test vector RFC1321 #6
+2:char*:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789":hex:"d174ab98d277d9f5a5611c2c9f419d9f"
+
+mbedtls_md5 Test vector RFC1321 #7
+2:char*:"12345678901234567890123456789012345678901234567890123456789012345678901234567890":hex:"57edf4a22be3c955ac49da2e2107b67a"
+
+mbedtls_ripemd160 Test vector from paper #1
+3:char*:"":hex:"9c1185a5c5e9fc54612808977ee8f548b2258d31"
+
+mbedtls_ripemd160 Test vector from paper #2
+3:char*:"a":hex:"0bdc9d2d256b3ee9daae347be6f4dc835a467ffe"
+
+mbedtls_ripemd160 Test vector from paper #3
+3:char*:"abc":hex:"8eb208f7e05d987a9b044a8e98c6b087f15a0bfc"
+
+mbedtls_ripemd160 Test vector from paper #4
+3:char*:"message digest":hex:"5d0689ef49d2fae572b881b123a85ffa21595f36"
+
+mbedtls_ripemd160 Test vector from paper #5
+3:char*:"abcdefghijklmnopqrstuvwxyz":hex:"f71c27109c692c1b56bbdceb5b9d2865b3708dbc"
+
+mbedtls_ripemd160 Test vector from paper #6
+3:char*:"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq":hex:"12a053384a9c0c88e405a06c27dcf49ada62eb2b"
+
+mbedtls_ripemd160 Test vector from paper #7
+3:char*:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789":hex:"b0e20b6e3116640286ed3a87a5713079b21f5189"
+
+mbedtls_ripemd160 Test vector from paper #8
+3:char*:"12345678901234567890123456789012345678901234567890123456789012345678901234567890":hex:"9b752e45573d4b39f4dbd3323cab82bf63326bfb"
+
+MD2 Selftest
+4
+
+MD4 Selftest
+5
+
+MD5 Selftest
+6
+
+RIPEMD160 Selftest
+7
+

@@ -1,10 +1,16 @@
-/* clang-format off */
+#include "libc/bits/bits.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/md5.h"
+#include "third_party/mbedtls/platform.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /*
  *  RFC 1321 compliant MD5 implementation
  *
@@ -29,91 +35,93 @@ asm(".include \"libc/disclaimer.inc\"");
  *  http://www.ietf.org/rfc/rfc1321.txt
  */
 
-#include "third_party/mbedtls/common.h"
-
-#if defined(MBEDTLS_MD5_C)
-
-#include "third_party/mbedtls/md5.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
-
-
-#if defined(MBEDTLS_SELF_TEST)
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_printf printf
-#endif /* MBEDTLS_PLATFORM_C */
-#endif /* MBEDTLS_SELF_TEST */
-
 #if !defined(MBEDTLS_MD5_ALT)
 
-/*
- * 32-bit integer manipulation macros (little endian)
+#define GET_UINT32_LE(n,b,i) (n) = READ32LE((b) + (i))
+#define PUT_UINT32_LE(n,b,i) WRITE32LE((b) + (i), n)
+
+/**
+ * \brief          Initialize MD5 context
+ *
+ * \param ctx      MD5 context to be initialized
+ *
+ * \warning        MD5 is considered a weak message digest and its use
+ *                 constitutes a security risk. We recommend considering
+ *                 stronger message digests instead.
  */
-#ifndef GET_UINT32_LE
-#define GET_UINT32_LE(n,b,i)                            \
-{                                                       \
-    (n) = ( (uint32_t) (b)[(i)    ]       )             \
-        | ( (uint32_t) (b)[(i) + 1] <<  8 )             \
-        | ( (uint32_t) (b)[(i) + 2] << 16 )             \
-        | ( (uint32_t) (b)[(i) + 3] << 24 );            \
-}
-#endif
-
-#ifndef PUT_UINT32_LE
-#define PUT_UINT32_LE(n,b,i)                                    \
-{                                                               \
-    (b)[(i)    ] = (unsigned char) ( ( (n)       ) & 0xFF );    \
-    (b)[(i) + 1] = (unsigned char) ( ( (n) >>  8 ) & 0xFF );    \
-    (b)[(i) + 2] = (unsigned char) ( ( (n) >> 16 ) & 0xFF );    \
-    (b)[(i) + 3] = (unsigned char) ( ( (n) >> 24 ) & 0xFF );    \
-}
-#endif
-
 void mbedtls_md5_init( mbedtls_md5_context *ctx )
 {
     memset( ctx, 0, sizeof( mbedtls_md5_context ) );
 }
 
+/**
+ * \brief          Clear MD5 context
+ *
+ * \param ctx      MD5 context to be cleared
+ *
+ * \warning        MD5 is considered a weak message digest and its use
+ *                 constitutes a security risk. We recommend considering
+ *                 stronger message digests instead.
+ */
 void mbedtls_md5_free( mbedtls_md5_context *ctx )
 {
-    if( ctx == NULL )
-        return;
-
+    if( !ctx ) return;
     mbedtls_platform_zeroize( ctx, sizeof( mbedtls_md5_context ) );
 }
 
+/**
+ * \brief          Clone (the state of) an MD5 context
+ *
+ * \param dst      The destination context
+ * \param src      The context to be cloned
+ *
+ * \warning        MD5 is considered a weak message digest and its use
+ *                 constitutes a security risk. We recommend considering
+ *                 stronger message digests instead.
+ */
 void mbedtls_md5_clone( mbedtls_md5_context *dst,
                         const mbedtls_md5_context *src )
 {
     *dst = *src;
 }
 
-/*
- * MD5 context setup
+/**
+ * \brief          MD5 context setup
+ *
+ * \param ctx      context to be initialized
+ *
+ * \return         0 if successful
+ *
+ * \warning        MD5 is considered a weak message digest and its use
+ *                 constitutes a security risk. We recommend considering
+ *                 stronger message digests instead.
  */
 int mbedtls_md5_starts_ret( mbedtls_md5_context *ctx )
 {
     ctx->total[0] = 0;
     ctx->total[1] = 0;
-
     ctx->state[0] = 0x67452301;
     ctx->state[1] = 0xEFCDAB89;
     ctx->state[2] = 0x98BADCFE;
     ctx->state[3] = 0x10325476;
-
     return( 0 );
 }
 
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-void mbedtls_md5_starts( mbedtls_md5_context *ctx )
-{
-    mbedtls_md5_starts_ret( ctx );
-}
-#endif
-
 #if !defined(MBEDTLS_MD5_PROCESS_ALT)
+
+/**
+ * \brief          MD5 process data block (internal use only)
+ *
+ * \param ctx      MD5 context
+ * \param data     buffer holding one block of data
+ *
+ * \return         0 if successful
+ *
+ * \warning        MD5 is considered a weak message digest and its use
+ *                 constitutes a security risk. We recommend considering
+ *                 stronger message digests instead.
+ *
+ */
 int mbedtls_internal_md5_process( mbedtls_md5_context *ctx,
                                   const unsigned char data[64] )
 {
@@ -249,17 +257,20 @@ int mbedtls_internal_md5_process( mbedtls_md5_context *ctx,
     return( 0 );
 }
 
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-void mbedtls_md5_process( mbedtls_md5_context *ctx,
-                          const unsigned char data[64] )
-{
-    mbedtls_internal_md5_process( ctx, data );
-}
-#endif
 #endif /* !MBEDTLS_MD5_PROCESS_ALT */
 
-/*
- * MD5 process buffer
+/**
+ * \brief          MD5 process buffer
+ *
+ * \param ctx      MD5 context
+ * \param input    buffer holding the data
+ * \param ilen     length of the input data
+ *
+ * \return         0 if successful
+ *
+ * \warning        MD5 is considered a weak message digest and its use
+ *                 constitutes a security risk. We recommend considering
+ *                 stronger message digests instead.
  */
 int mbedtls_md5_update_ret( mbedtls_md5_context *ctx,
                             const unsigned char *input,
@@ -309,17 +320,17 @@ int mbedtls_md5_update_ret( mbedtls_md5_context *ctx,
     return( 0 );
 }
 
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-void mbedtls_md5_update( mbedtls_md5_context *ctx,
-                         const unsigned char *input,
-                         size_t ilen )
-{
-    mbedtls_md5_update_ret( ctx, input, ilen );
-}
-#endif
-
-/*
- * MD5 final digest
+/**
+ * \brief          MD5 final digest
+ *
+ * \param ctx      MD5 context
+ * \param output   MD5 checksum result
+ *
+ * \return         0 if successful
+ *
+ * \warning        MD5 is considered a weak message digest and its use
+ *                 constitutes a security risk. We recommend considering
+ *                 stronger message digests instead.
  */
 int mbedtls_md5_finish_ret( mbedtls_md5_context *ctx,
                             unsigned char output[16] )
@@ -375,18 +386,20 @@ int mbedtls_md5_finish_ret( mbedtls_md5_context *ctx,
     return( 0 );
 }
 
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-void mbedtls_md5_finish( mbedtls_md5_context *ctx,
-                         unsigned char output[16] )
-{
-    mbedtls_md5_finish_ret( ctx, output );
-}
-#endif
-
 #endif /* !MBEDTLS_MD5_ALT */
 
-/*
- * output = MD5( input buffer )
+/**
+ * \brief          Output = MD5( input buffer )
+ *
+ * \param input    buffer holding the data
+ * \param ilen     length of the input data
+ * \param output   MD5 checksum result
+ *
+ * \return         0 if successful
+ *
+ * \warning        MD5 is considered a weak message digest and its use
+ *                 constitutes a security risk. We recommend considering
+ *                 stronger message digests instead.
  */
 int mbedtls_md5_ret( const unsigned char *input,
                      size_t ilen,
@@ -411,15 +424,6 @@ exit:
 
     return( ret );
 }
-
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-void mbedtls_md5( const unsigned char *input,
-                  size_t ilen,
-                  unsigned char output[16] )
-{
-    mbedtls_md5_ret( input, ilen, output );
-}
-#endif
 
 #if defined(MBEDTLS_SELF_TEST)
 /*
@@ -459,8 +463,15 @@ static const unsigned char md5_test_sum[7][16] =
       0xAC, 0x49, 0xDA, 0x2E, 0x21, 0x07, 0xB6, 0x7A }
 };
 
-/*
- * Checkup routine
+/**
+ * \brief          Checkup routine
+ *
+ * \return         0 if successful, or 1 if the test failed
+ *
+ * \warning        MD5 is considered a weak message digest and its use
+ *                 constitutes a security risk. We recommend considering
+ *                 stronger message digests instead.
+ *
  */
 int mbedtls_md5_self_test( int verbose )
 {
@@ -499,5 +510,3 @@ fail:
 }
 
 #endif /* MBEDTLS_SELF_TEST */
-
-#endif /* MBEDTLS_MD5_C */

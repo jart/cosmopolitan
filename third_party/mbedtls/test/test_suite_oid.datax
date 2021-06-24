@@ -1,0 +1,91 @@
+OID get Any Policy certificate policy
+0:hex:"551D2000":char*:"Any Policy"
+
+OID get certificate policy invalid oid
+0:hex:"5533445566":char*:""
+
+OID get certificate policy wrong oid - id-ce-authorityKeyIdentifier
+0:hex:"551D23":char*:""
+
+OID get Ext Key Usage - id-kp-serverAuth
+1:hex:"2B06010505070301":char*:"TLS Web Server Authentication"
+
+OID get Ext Key Usage - id-kp-clientAuth
+1:hex:"2B06010505070302":char*:"TLS Web Client Authentication"
+
+OID get Ext Key Usage - id-kp-codeSigning
+1:hex:"2B06010505070303":char*:"Code Signing"
+
+OID get Ext Key Usage - id-kp-emailProtection
+1:hex:"2B06010505070304":char*:"E-mail Protection"
+
+OID get Ext Key Usage - id-kp-timeStamping
+1:hex:"2B06010505070308":char*:"Time Stamping"
+
+OID get Ext Key Usage - id-kp-OCSPSigning
+1:hex:"2B06010505070309":char*:"OCSP Signing"
+
+OID get Ext Key Usage - id-kp-wisun-fan-device
+1:hex:"2B0601040182E42501":char*:"Wi-SUN Alliance Field Area Network (FAN)"
+
+OID get Ext Key Usage invalid oid
+1:hex:"5533445566":char*:""
+
+OID get Ext Key Usage wrong oid - id-ce-authorityKeyIdentifier
+1:hex:"551D23":char*:""
+
+OID get x509 extension - id-ce-basicConstraints
+2:hex:"551D13":exp:0
+
+OID get x509 extension - id-ce-keyUsage
+2:hex:"551D0F":exp:1
+
+OID get x509 extension - id-ce-extKeyUsage
+2:hex:"551D25":exp:2
+
+OID get x509 extension - id-ce-subjectAltName
+2:hex:"551D11":exp:3
+
+OID get x509 extension - id-netscape-certtype
+2:hex:"6086480186F8420101":exp:4
+
+OID get x509 extension - id-ce-certificatePolicies
+2:hex:"551D20":exp:5
+
+OID get x509 extension - invalid oid
+2:hex:"5533445566":int:0
+
+OID get x509 extension - wrong oid - id-ce
+2:hex:"551D":int:0
+
+OID hash id - id-md5
+depends_on:0
+3:hex:"2A864886f70d0205":exp:6
+
+OID hash id - id-sha1
+depends_on:1
+3:hex:"2b0e03021a":exp:7
+
+OID hash id - id-sha224
+depends_on:2
+3:hex:"608648016503040204":exp:8
+
+OID hash id - id-sha256
+depends_on:2
+3:hex:"608648016503040201":exp:9
+
+OID hash id - id-sha384
+depends_on:3
+3:hex:"608648016503040202":exp:10
+
+OID hash id - id-sha512
+depends_on:3
+3:hex:"608648016503040203":exp:11
+
+OID hash id - id-ripemd160
+depends_on:4
+3:hex:"2b24030201":exp:12
+
+OID hash id - invalid oid
+3:hex:"2B864886f70d0204":exp:13
+

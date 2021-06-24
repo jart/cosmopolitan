@@ -16,31 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/bits/bits.h"
-#include "libc/calls/calls.h"
-#include "libc/nexgen32e/x86feature.h"
 #include "libc/rand/rand.h"
 
-/**
- * Intel Secure Key Digital Random Number Generator
- * Introduced w/ Ivy Bridge c. 2013 and Excavator c. 2015
- * @see rdseed(), rand32(), rand64(), and randcpy()
- */
 uint64_t rdrand(void) {
-  char cf;
-  size_t i;
-  uint64_t res;
-  assert(X86_HAVE(RDRND));
-  for (;;) {
-    for (i = 0; i < 10; ++i) {
-      /* CF=1: Destination register valid. Quoth Intel DRNG-SIG 4.1.3 */
-      asm volatile(CFLAG_ASM("rdrand\t%1")
-                   : CFLAG_CONSTRAINT(cf), "=r"(res)
-                   : /* no inputs */
-                   : "cc");
-      if (cf) return res;
-    }
-    asm volatile("rep nop"); /* unlikely 140 cycle spin */
-  }
+  return rand64();
 }

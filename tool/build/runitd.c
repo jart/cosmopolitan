@@ -96,6 +96,8 @@
  *   - 1 byte exit status
  */
 
+#define DEATH_CLOCK_SECONDS 5
+
 #define kLogFile     "o/runitd.log"
 #define kLogMaxBytes (2 * 1000 * 1000)
 
@@ -321,7 +323,7 @@ void HandleClient(void) {
 
   /* run program, tee'ing stderr to both log and client */
   DEBUGF("spawning %s", exename);
-  SetDeadline(1, 0);
+  SetDeadline(DEATH_CLOCK_SECONDS, 0);
   ignore.sa_flags = 0;
   ignore.sa_handler = SIG_IGN;
   LOGIFNEG1(sigemptyset(&ignore.sa_mask));
@@ -342,24 +344,29 @@ void HandleClient(void) {
   }
   LOGIFNEG1(close(pipefds[1]));
   DEBUGF("communicating %s[%d]", exename, child);
-  for (;;) {
-    CHECK_NE(-1, (got = read(pipefds[0], g_buf, sizeof(g_buf))));
-    if (!got) {
-      close(pipefds[0]);
-      break;
-    }
-    fwrite(g_buf, got, 1, stderr);
-    SendOutputFragmentMessage(g_clifd, kRunitStderr, g_buf, got);
-  }
-  while (waitpid(child, &wstatus, 0) == -1) {
-    if (errno == EINTR) {
-      if (g_alarmed) {
-        WARNF("killing %s which timed out");
-        LOGIFNEG1(kill(child, SIGKILL));
+  while (!g_alarmed) {
+    if ((got = read(pipefds[0], g_buf, sizeof(g_buf))) != -1) {
+      if (!got) {
+        close(pipefds[0]);
+        break;
       }
-      continue;
+      fwrite(g_buf, got, 1, stderr);
+      SendOutputFragmentMessage(g_clifd, kRunitStderr, g_buf, got);
+    } else {
+      CHECK_EQ(EINTR, errno);
     }
-    FATALF("waitpid failed");
+  }
+  for (;;) {
+    if (g_alarmed) {
+      WARNF("killing %s which timed out");
+      LOGIFNEG1(kill(child, SIGKILL));
+      g_alarmed = false;
+    }
+    if (waitpid(child, &wstatus, 0) != -1) {
+      break;
+    } else {
+      CHECK_EQ(EINTR, errno);
+    }
   }
   if (WIFEXITED(wstatus)) {
     DEBUGF("%s exited with %d", exename, WEXITSTATUS(wstatus));

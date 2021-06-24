@@ -1,5 +1,16 @@
-/* clang-format off */
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/endian.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/nist_kw.h"
+#include "third_party/mbedtls/platform.h"
 
+asm(".ident\t\"\\n\\n\
+Mbed TLS (Apache 2.0)\\n\
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+/* clang-format off */
 /*
  *  Implementation of NIST SP 800-38F key wrapping, supporting KW and KWP modes
  *  only
@@ -28,23 +39,6 @@
  * Note: RFC 3394 defines different methodology for intermediate operations for
  * the wrapping and unwrapping operation than the definition in NIST SP 800-38F.
  */
-
-#include "third_party/mbedtls/common.h"
-
-#if defined(MBEDTLS_NIST_KW_C)
-
-#include "third_party/mbedtls/nist_kw.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
-
-
-#if defined(MBEDTLS_SELF_TEST) && defined(MBEDTLS_AES_C)
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_printf printf
-#endif /* MBEDTLS_PLATFORM_C */
-#endif /* MBEDTLS_SELF_TEST && MBEDTLS_AES_C */
 
 #if !defined(MBEDTLS_NIST_KW_ALT)
 
@@ -75,26 +69,6 @@ static inline unsigned char mbedtls_nist_kw_safer_memcmp( const void *a, const v
 static const unsigned char NIST_KW_ICV1[] = {0xA6, 0xA6, 0xA6, 0xA6, 0xA6, 0xA6, 0xA6, 0xA6};
 /*! The 32-bit default integrity check value (ICV) for KWP mode. */
 static const  unsigned char NIST_KW_ICV2[] = {0xA6, 0x59, 0x59, 0xA6};
-
-#ifndef GET_UINT32_BE
-#define GET_UINT32_BE(n,b,i)                            \
-do {                                                    \
-    (n) = ( (uint32_t) (b)[(i)    ] << 24 )             \
-        | ( (uint32_t) (b)[(i) + 1] << 16 )             \
-        | ( (uint32_t) (b)[(i) + 2] <<  8 )             \
-        | ( (uint32_t) (b)[(i) + 3]       );            \
-} while( 0 )
-#endif
-
-#ifndef PUT_UINT32_BE
-#define PUT_UINT32_BE(n,b,i)                            \
-do {                                                    \
-    (b)[(i)    ] = (unsigned char) ( (n) >> 24 );       \
-    (b)[(i) + 1] = (unsigned char) ( (n) >> 16 );       \
-    (b)[(i) + 2] = (unsigned char) ( (n) >>  8 );       \
-    (b)[(i) + 3] = (unsigned char) ( (n)       );       \
-} while( 0 )
-#endif
 
 /*
  * Initialize context
@@ -745,5 +719,3 @@ end:
 }
 
 #endif /* MBEDTLS_SELF_TEST && MBEDTLS_AES_C */
-
-#endif /* MBEDTLS_NIST_KW_C */

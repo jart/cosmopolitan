@@ -16,7 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/bits.h"
+#include "libc/bits/weaken.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/dce.h"
@@ -27,10 +30,13 @@
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/win32finddata.h"
+#include "libc/nt/synchronization.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/zip.h"
+#include "libc/zipos/zipos.internal.h"
 
 /**
  * @fileoverview Directory Streams for Linux+Mac+Windows+FreeBSD+OpenBSD.
@@ -46,14 +52,21 @@
  * Directory stream object.
  */
 struct dirstream {
+  bool iszip;
   int64_t fd;
   int64_t tell;
+  struct {
+    uint64_t offset;
+    uint64_t records;
+    uint8_t *prefix;
+    size_t prefixlen;
+  } zip;
   struct dirent ent;
   union {
     struct {
       unsigned buf_pos;
       unsigned buf_end;
-      char buf[BUFSIZ];
+      uint64_t buf[BUFSIZ / 8];
     };
     struct {
       bool isdone;
@@ -100,7 +113,9 @@ struct dirent_netbsd {
 static textwindows DIR *opendir_nt_impl(char16_t name[PATH_MAX], size_t len) {
   DIR *res;
   if (len + 2 + 1 <= PATH_MAX) {
-    if (name[len - 1] != u'\\') name[len++] = u'\\';
+    if (len > 1 && name[len - 1] != u'\\') {
+      name[len++] = u'\\';
+    }
     name[len++] = u'*';
     name[len] = u'\0';
     if ((res = calloc(1, sizeof(DIR)))) {
@@ -141,34 +156,39 @@ static textwindows noinline DIR *fdopendir_nt(int fd) {
   return NULL;
 }
 
+static textwindows uint8_t GetNtDirentType(struct NtWin32FindData *w) {
+  switch (w->dwFileType) {
+    case kNtFileTypeDisk:
+      return DT_BLK;
+    case kNtFileTypeChar:
+      return DT_CHR;
+    case kNtFileTypePipe:
+      return DT_FIFO;
+    default:
+      if (w->dwFileAttributes & kNtFileAttributeDirectory) {
+        return DT_DIR;
+      } else {
+        return DT_REG;
+      }
+  }
+}
+
 static textwindows noinline struct dirent *readdir_nt(DIR *dir) {
+  size_t i;
   if (!dir->isdone) {
     memset(&dir->ent, 0, sizeof(dir->ent));
-    dir->ent.d_ino = 0;
+    dir->ent.d_ino++;
     dir->ent.d_off = dir->tell++;
-    dir->ent.d_reclen = sizeof(dir->ent) +
-                        tprecode16to8(dir->ent.d_name, sizeof(dir->ent.d_name),
-                                      dir->windata.cFileName)
-                            .ax +
-                        1;
-    switch (dir->windata.dwFileType) {
-      case kNtFileTypeDisk:
-        dir->ent.d_type = DT_BLK;
-        break;
-      case kNtFileTypeChar:
-        dir->ent.d_type = DT_CHR;
-        break;
-      case kNtFileTypePipe:
-        dir->ent.d_type = DT_FIFO;
-        break;
-      default:
-        if (dir->windata.dwFileAttributes & kNtFileAttributeDirectory) {
-          dir->ent.d_type = DT_DIR;
-        } else {
-          dir->ent.d_type = DT_REG;
-        }
-        break;
+    dir->ent.d_reclen =
+        tprecode16to8(dir->ent.d_name, sizeof(dir->ent.d_name) - 2,
+                      dir->windata.cFileName)
+            .ax;
+    for (i = 0; i < dir->ent.d_reclen; ++i) {
+      if (dir->ent.d_name[i] == '\\') {
+        dir->ent.d_name[i] = '/';
+      }
     }
+    dir->ent.d_type = GetNtDirentType(&dir->windata);
     dir->isdone = !FindNextFile(dir->fd, &dir->windata);
     return &dir->ent;
   } else {
@@ -194,10 +214,29 @@ static textwindows noinline struct dirent *readdir_nt(DIR *dir) {
 DIR *opendir(const char *name) {
   int fd;
   DIR *res;
-  if (!IsWindows()) {
+  struct Zipos *zip;
+  struct ZiposUri zipname;
+  if (weaken(__zipos_get) && weaken(__zipos_parseuri)(name, &zipname) != -1) {
+    zip = weaken(__zipos_get)();
+    res = calloc(1, sizeof(DIR));
+    res->iszip = true;
+    res->fd = -1;
+    res->zip.offset = GetZipCdirOffset(zip->cdir);
+    res->zip.records = GetZipCdirRecords(zip->cdir);
+    res->zip.prefix = malloc(zipname.len + 2);
+    memcpy(res->zip.prefix, zipname.path, zipname.len);
+    if (zipname.len && res->zip.prefix[zipname.len - 1] != '/') {
+      res->zip.prefix[zipname.len++] = '/';
+    }
+    res->zip.prefix[zipname.len] = '\0';
+    res->zip.prefixlen = zipname.len;
+    return res;
+  } else if (!IsWindows()) {
     res = NULL;
     if ((fd = open(name, O_RDONLY | O_DIRECTORY | O_CLOEXEC)) != -1) {
-      if (!(res = fdopendir(fd))) close(fd);
+      if (!(res = fdopendir(fd))) {
+        close(fd);
+      }
     }
     return res;
   } else {
@@ -234,13 +273,44 @@ DIR *fdopendir(int fd) {
  *     differentiated by setting errno to 0 beforehand
  */
 struct dirent *readdir(DIR *dir) {
-  int rc;
+  size_t n;
   long basep;
+  int rc, mode;
+  uint8_t *s, *p;
+  struct Zipos *zip;
   struct dirent *ent;
   struct dirent_bsd *bsd;
   struct dirent_netbsd *nbsd;
   struct dirent_openbsd *obsd;
-  if (!IsWindows()) {
+  if (dir->iszip) {
+    ent = 0;
+    zip = weaken(__zipos_get)();
+    while (!ent && dir->tell < dir->zip.records) {
+      assert(ZIP_CFILE_MAGIC(zip->map + dir->zip.offset) == kZipCfileHdrMagic);
+      s = ZIP_CFILE_NAME(zip->map + dir->zip.offset);
+      n = ZIP_CFILE_NAMESIZE(zip->map + dir->zip.offset);
+      if (dir->zip.prefixlen < n &&
+          !memcmp(dir->zip.prefix, s, dir->zip.prefixlen)) {
+        s += dir->zip.prefixlen;
+        n -= dir->zip.prefixlen;
+        p = memchr(s, '/', n);
+        if (!p || p + 1 - s == n) {
+          if (p + 1 - s == n) --n;
+          mode = GetZipCfileMode(zip->map + dir->zip.offset);
+          ent = (struct dirent *)dir->buf;
+          ent->d_ino++;
+          ent->d_off = dir->zip.offset;
+          ent->d_reclen = MIN(n, 255);
+          ent->d_type = S_ISDIR(mode) ? DT_DIR : DT_REG;
+          memcpy(ent->d_name, s, ent->d_reclen);
+          ent->d_name[ent->d_reclen] = 0;
+        }
+      }
+      dir->zip.offset += ZIP_CFILE_HDRSIZE(zip->map + dir->zip.offset);
+      dir->tell++;
+    }
+    return ent;
+  } else if (!IsWindows()) {
     if (dir->buf_pos >= dir->buf_end) {
       basep = dir->tell; /* TODO(jart): what does xnu do */
       rc = getdents(dir->fd, dir->buf, sizeof(dir->buf) - 256, &basep);
@@ -249,11 +319,11 @@ struct dirent *readdir(DIR *dir) {
       dir->buf_end = rc;
     }
     if (IsLinux()) {
-      ent = (struct dirent *)(dir->buf + dir->buf_pos);
+      ent = (struct dirent *)((char *)dir->buf + dir->buf_pos);
       dir->buf_pos += ent->d_reclen;
       dir->tell = ent->d_off;
     } else if (IsOpenbsd()) {
-      obsd = (struct dirent_openbsd *)(dir->buf + dir->buf_pos);
+      obsd = (struct dirent_openbsd *)((char *)dir->buf + dir->buf_pos);
       dir->buf_pos += obsd->d_reclen;
       ent = &dir->ent;
       ent->d_ino = obsd->d_fileno;
@@ -262,7 +332,7 @@ struct dirent *readdir(DIR *dir) {
       ent->d_type = obsd->d_type;
       memcpy(ent->d_name, obsd->d_name, obsd->d_namlen + 1);
     } else if (IsNetbsd()) {
-      nbsd = (struct dirent_netbsd *)(dir->buf + dir->buf_pos);
+      nbsd = (struct dirent_netbsd *)((char *)dir->buf + dir->buf_pos);
       dir->buf_pos += nbsd->d_reclen;
       ent = &dir->ent;
       ent->d_ino = nbsd->d_fileno;
@@ -271,7 +341,7 @@ struct dirent *readdir(DIR *dir) {
       ent->d_type = nbsd->d_type;
       memcpy(ent->d_name, nbsd->d_name, MAX(256, nbsd->d_namlen + 1));
     } else {
-      bsd = (struct dirent_bsd *)(dir->buf + dir->buf_pos);
+      bsd = (struct dirent_bsd *)((char *)dir->buf + dir->buf_pos);
       dir->buf_pos += bsd->d_reclen;
       ent = &dir->ent;
       ent->d_ino = bsd->d_fileno;
@@ -293,7 +363,10 @@ struct dirent *readdir(DIR *dir) {
 int closedir(DIR *dir) {
   int rc;
   if (dir) {
-    if (!IsWindows()) {
+    if (dir->iszip) {
+      free(dir->zip.prefix);
+      rc = 0;
+    } else if (!IsWindows()) {
       rc = close(dir->fd);
     } else {
       rc = FindClose(dir->fd) ? 0 : __winerr();
@@ -316,6 +389,7 @@ long telldir(DIR *dir) {
  * Returns file descriptor associated with DIR object.
  */
 int dirfd(DIR *dir) {
+  if (dir->iszip) return eopnotsupp();
   if (IsWindows()) return eopnotsupp();
   return dir->fd;
 }

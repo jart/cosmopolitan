@@ -1,10 +1,44 @@
-/* clang-format off */
+#include "libc/fmt/fmt.h"
+#include "third_party/mbedtls/aes.h"
+#include "third_party/mbedtls/asn1.h"
+#include "third_party/mbedtls/base64.h"
+#include "third_party/mbedtls/bignum.h"
+#include "third_party/mbedtls/ccm.h"
+#include "third_party/mbedtls/chacha20.h"
+#include "third_party/mbedtls/chachapoly.h"
+#include "third_party/mbedtls/cipher.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/ctr_drbg.h"
+#include "third_party/mbedtls/des.h"
+#include "third_party/mbedtls/dhm.h"
+#include "third_party/mbedtls/ecp.h"
+#include "third_party/mbedtls/entropy.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/gcm.h"
+#include "third_party/mbedtls/hkdf.h"
+#include "third_party/mbedtls/hmac_drbg.h"
+#include "third_party/mbedtls/md.h"
+#include "third_party/mbedtls/md5.h"
+#include "third_party/mbedtls/oid.h"
+#include "third_party/mbedtls/pem.h"
+#include "third_party/mbedtls/pk.h"
+#include "third_party/mbedtls/pkcs5.h"
+#include "third_party/mbedtls/platform.h"
+#include "third_party/mbedtls/poly1305.h"
+#include "third_party/mbedtls/rsa.h"
+#include "third_party/mbedtls/sha1.h"
+#include "third_party/mbedtls/sha256.h"
+#include "third_party/mbedtls/sha512.h"
+#include "third_party/mbedtls/ssl.h"
+#include "third_party/mbedtls/x509.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /*
  *  Error message information
  *
@@ -24,196 +58,9 @@ asm(".include \"libc/disclaimer.inc\"");
  *  limitations under the License.
  */
 
-#include "third_party/mbedtls/common.h"
-
-#include "third_party/mbedtls/error.h"
-
 #if defined(MBEDTLS_ERROR_C) || defined(MBEDTLS_ERROR_STRERROR_DUMMY)
 
 #if defined(MBEDTLS_ERROR_C)
-
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_snprintf snprintf
-#endif
-
-#if defined(MBEDTLS_AES_C)
-#include "third_party/mbedtls/aes.h"
-#endif
-
-#if defined(MBEDTLS_ARC4_C)
-#include "third_party/mbedtls/arc4.h"
-#endif
-
-#if defined(MBEDTLS_ARIA_C)
-#include "third_party/mbedtls/aria.h"
-#endif
-
-#if defined(MBEDTLS_ASN1_PARSE_C)
-#include "third_party/mbedtls/asn1.h"
-#endif
-
-#if defined(MBEDTLS_BASE64_C)
-#include "third_party/mbedtls/base64.h"
-#endif
-
-#if defined(MBEDTLS_BIGNUM_C)
-#include "third_party/mbedtls/bignum.h"
-#endif
-
-#if defined(MBEDTLS_BLOWFISH_C)
-#include "third_party/mbedtls/blowfish.h"
-#endif
-
-#if defined(MBEDTLS_CAMELLIA_C)
-#include "third_party/mbedtls/camellia.h"
-#endif
-
-#if defined(MBEDTLS_CCM_C)
-#include "third_party/mbedtls/ccm.h"
-#endif
-
-#if defined(MBEDTLS_CHACHA20_C)
-#include "third_party/mbedtls/chacha20.h"
-#endif
-
-#if defined(MBEDTLS_CHACHAPOLY_C)
-#include "third_party/mbedtls/chachapoly.h"
-#endif
-
-#if defined(MBEDTLS_CIPHER_C)
-#include "third_party/mbedtls/cipher.h"
-#endif
-
-#if defined(MBEDTLS_CMAC_C)
-#include "third_party/mbedtls/cmac.h"
-#endif
-
-#if defined(MBEDTLS_CTR_DRBG_C)
-#include "third_party/mbedtls/ctr_drbg.h"
-#endif
-
-#if defined(MBEDTLS_DES_C)
-#include "third_party/mbedtls/des.h"
-#endif
-
-#if defined(MBEDTLS_DHM_C)
-#include "third_party/mbedtls/dhm.h"
-#endif
-
-#if defined(MBEDTLS_ECP_C)
-#include "third_party/mbedtls/ecp.h"
-#endif
-
-#if defined(MBEDTLS_ENTROPY_C)
-#include "third_party/mbedtls/entropy.h"
-#endif
-
-#if defined(MBEDTLS_ERROR_C)
-#include "third_party/mbedtls/error.h"
-#endif
-
-#if defined(MBEDTLS_GCM_C)
-#include "third_party/mbedtls/gcm.h"
-#endif
-
-#if defined(MBEDTLS_HKDF_C)
-#include "third_party/mbedtls/hkdf.h"
-#endif
-
-#if defined(MBEDTLS_HMAC_DRBG_C)
-#include "third_party/mbedtls/hmac_drbg.h"
-#endif
-
-#if defined(MBEDTLS_MD_C)
-#include "third_party/mbedtls/md.h"
-#endif
-
-#if defined(MBEDTLS_MD2_C)
-#include "third_party/mbedtls/md2.h"
-#endif
-
-#if defined(MBEDTLS_MD4_C)
-#include "third_party/mbedtls/md4.h"
-#endif
-
-#if defined(MBEDTLS_MD5_C)
-#include "third_party/mbedtls/md5.h"
-#endif
-
-#if defined(MBEDTLS_NET_C)
-#include "third_party/mbedtls/net_sockets.h"
-#endif
-
-#if defined(MBEDTLS_OID_C)
-#include "third_party/mbedtls/oid.h"
-#endif
-
-#if defined(MBEDTLS_PADLOCK_C)
-#include "third_party/mbedtls/padlock.h"
-#endif
-
-#if defined(MBEDTLS_PEM_PARSE_C) || defined(MBEDTLS_PEM_WRITE_C)
-#include "third_party/mbedtls/pem.h"
-#endif
-
-#if defined(MBEDTLS_PK_C)
-#include "third_party/mbedtls/pk.h"
-#endif
-
-#if defined(MBEDTLS_PKCS12_C)
-#include "third_party/mbedtls/pkcs12.h"
-#endif
-
-#if defined(MBEDTLS_PKCS5_C)
-#include "third_party/mbedtls/pkcs5.h"
-#endif
-
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#endif
-
-#if defined(MBEDTLS_POLY1305_C)
-#include "third_party/mbedtls/poly1305.h"
-#endif
-
-#if defined(MBEDTLS_RIPEMD160_C)
-#include "third_party/mbedtls/ripemd160.h"
-#endif
-
-#if defined(MBEDTLS_RSA_C)
-#include "third_party/mbedtls/rsa.h"
-#endif
-
-#if defined(MBEDTLS_SHA1_C)
-#include "third_party/mbedtls/sha1.h"
-#endif
-
-#if defined(MBEDTLS_SHA256_C)
-#include "third_party/mbedtls/sha256.h"
-#endif
-
-#if defined(MBEDTLS_SHA512_C)
-#include "third_party/mbedtls/sha512.h"
-#endif
-
-#if defined(MBEDTLS_SSL_TLS_C)
-#include "third_party/mbedtls/ssl.h"
-#endif
-
-#if defined(MBEDTLS_THREADING_C)
-#include "third_party/mbedtls/threading.h"
-#endif
-
-#if defined(MBEDTLS_X509_USE_C) || defined(MBEDTLS_X509_CREATE_C)
-#include "third_party/mbedtls/x509.h"
-#endif
-
-#if defined(MBEDTLS_XTEA_C)
-#include "third_party/mbedtls/xtea.h"
-#endif
-
 
 const char * mbedtls_high_level_strerr( int error_code )
 {
@@ -361,17 +208,6 @@ const char * mbedtls_high_level_strerr( int error_code )
         case -(MBEDTLS_ERR_PK_HW_ACCEL_FAILED):
             return( "PK - PK hardware accelerator failed" );
 #endif /* MBEDTLS_PK_C */
-
-#if defined(MBEDTLS_PKCS12_C)
-        case -(MBEDTLS_ERR_PKCS12_BAD_INPUT_DATA):
-            return( "PKCS12 - Bad input parameters to function" );
-        case -(MBEDTLS_ERR_PKCS12_FEATURE_UNAVAILABLE):
-            return( "PKCS12 - Feature not available, e.g. unsupported encryption scheme" );
-        case -(MBEDTLS_ERR_PKCS12_PBE_INVALID_FORMAT):
-            return( "PKCS12 - PBE ASN.1 data not as expected" );
-        case -(MBEDTLS_ERR_PKCS12_PASSWORD_MISMATCH):
-            return( "PKCS12 - Given private key password does not allow for correct decryption" );
-#endif /* MBEDTLS_PKCS12_C */
 
 #if defined(MBEDTLS_PKCS5_C)
         case -(MBEDTLS_ERR_PKCS5_BAD_INPUT_DATA):
@@ -605,22 +441,6 @@ const char * mbedtls_low_level_strerr( int error_code )
             return( "AES - AES hardware accelerator failed" );
 #endif /* MBEDTLS_AES_C */
 
-#if defined(MBEDTLS_ARC4_C)
-        case -(MBEDTLS_ERR_ARC4_HW_ACCEL_FAILED):
-            return( "ARC4 - ARC4 hardware accelerator failed" );
-#endif /* MBEDTLS_ARC4_C */
-
-#if defined(MBEDTLS_ARIA_C)
-        case -(MBEDTLS_ERR_ARIA_BAD_INPUT_DATA):
-            return( "ARIA - Bad input data" );
-        case -(MBEDTLS_ERR_ARIA_INVALID_INPUT_LENGTH):
-            return( "ARIA - Invalid data input length" );
-        case -(MBEDTLS_ERR_ARIA_FEATURE_UNAVAILABLE):
-            return( "ARIA - Feature not available. For example, an unsupported ARIA key size" );
-        case -(MBEDTLS_ERR_ARIA_HW_ACCEL_FAILED):
-            return( "ARIA - ARIA hardware accelerator failed" );
-#endif /* MBEDTLS_ARIA_C */
-
 #if defined(MBEDTLS_ASN1_PARSE_C)
         case -(MBEDTLS_ERR_ASN1_OUT_OF_DATA):
             return( "ASN1 - Out of data when parsing an ASN1 data structure" );
@@ -663,24 +483,6 @@ const char * mbedtls_low_level_strerr( int error_code )
         case -(MBEDTLS_ERR_MPI_ALLOC_FAILED):
             return( "BIGNUM - Memory allocation failed" );
 #endif /* MBEDTLS_BIGNUM_C */
-
-#if defined(MBEDTLS_BLOWFISH_C)
-        case -(MBEDTLS_ERR_BLOWFISH_BAD_INPUT_DATA):
-            return( "BLOWFISH - Bad input data" );
-        case -(MBEDTLS_ERR_BLOWFISH_INVALID_INPUT_LENGTH):
-            return( "BLOWFISH - Invalid data input length" );
-        case -(MBEDTLS_ERR_BLOWFISH_HW_ACCEL_FAILED):
-            return( "BLOWFISH - Blowfish hardware accelerator failed" );
-#endif /* MBEDTLS_BLOWFISH_C */
-
-#if defined(MBEDTLS_CAMELLIA_C)
-        case -(MBEDTLS_ERR_CAMELLIA_BAD_INPUT_DATA):
-            return( "CAMELLIA - Bad input data" );
-        case -(MBEDTLS_ERR_CAMELLIA_INVALID_INPUT_LENGTH):
-            return( "CAMELLIA - Invalid data input length" );
-        case -(MBEDTLS_ERR_CAMELLIA_HW_ACCEL_FAILED):
-            return( "CAMELLIA - Camellia hardware accelerator failed" );
-#endif /* MBEDTLS_CAMELLIA_C */
 
 #if defined(MBEDTLS_CCM_C)
         case -(MBEDTLS_ERR_CCM_BAD_INPUT):
@@ -775,49 +577,10 @@ const char * mbedtls_low_level_strerr( int error_code )
             return( "HMAC_DRBG - The entropy source failed" );
 #endif /* MBEDTLS_HMAC_DRBG_C */
 
-#if defined(MBEDTLS_MD2_C)
-        case -(MBEDTLS_ERR_MD2_HW_ACCEL_FAILED):
-            return( "MD2 - MD2 hardware accelerator failed" );
-#endif /* MBEDTLS_MD2_C */
-
-#if defined(MBEDTLS_MD4_C)
-        case -(MBEDTLS_ERR_MD4_HW_ACCEL_FAILED):
-            return( "MD4 - MD4 hardware accelerator failed" );
-#endif /* MBEDTLS_MD4_C */
-
 #if defined(MBEDTLS_MD5_C)
         case -(MBEDTLS_ERR_MD5_HW_ACCEL_FAILED):
             return( "MD5 - MD5 hardware accelerator failed" );
 #endif /* MBEDTLS_MD5_C */
-
-#if defined(MBEDTLS_NET_C)
-        case -(MBEDTLS_ERR_NET_SOCKET_FAILED):
-            return( "NET - Failed to open a socket" );
-        case -(MBEDTLS_ERR_NET_CONNECT_FAILED):
-            return( "NET - The connection to the given server / port failed" );
-        case -(MBEDTLS_ERR_NET_BIND_FAILED):
-            return( "NET - Binding of the socket failed" );
-        case -(MBEDTLS_ERR_NET_LISTEN_FAILED):
-            return( "NET - Could not listen on the socket" );
-        case -(MBEDTLS_ERR_NET_ACCEPT_FAILED):
-            return( "NET - Could not accept the incoming connection" );
-        case -(MBEDTLS_ERR_NET_RECV_FAILED):
-            return( "NET - Reading information from the socket failed" );
-        case -(MBEDTLS_ERR_NET_SEND_FAILED):
-            return( "NET - Sending information through the socket failed" );
-        case -(MBEDTLS_ERR_NET_CONN_RESET):
-            return( "NET - Connection was reset by peer" );
-        case -(MBEDTLS_ERR_NET_UNKNOWN_HOST):
-            return( "NET - Failed to get an IP address for the given hostname" );
-        case -(MBEDTLS_ERR_NET_BUFFER_TOO_SMALL):
-            return( "NET - Buffer is too small to hold the data" );
-        case -(MBEDTLS_ERR_NET_INVALID_CONTEXT):
-            return( "NET - The context is invalid, eg because it was free()ed" );
-        case -(MBEDTLS_ERR_NET_POLL_FAILED):
-            return( "NET - Polling the net context failed" );
-        case -(MBEDTLS_ERR_NET_BAD_INPUT_DATA):
-            return( "NET - Input invalid" );
-#endif /* MBEDTLS_NET_C */
 
 #if defined(MBEDTLS_OID_C)
         case -(MBEDTLS_ERR_OID_NOT_FOUND):
@@ -831,13 +594,6 @@ const char * mbedtls_low_level_strerr( int error_code )
             return( "PADLOCK - Input data should be aligned" );
 #endif /* MBEDTLS_PADLOCK_C */
 
-#if defined(MBEDTLS_PLATFORM_C)
-        case -(MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED):
-            return( "PLATFORM - Hardware accelerator failed" );
-        case -(MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED):
-            return( "PLATFORM - The requested feature is not supported by the platform" );
-#endif /* MBEDTLS_PLATFORM_C */
-
 #if defined(MBEDTLS_POLY1305_C)
         case -(MBEDTLS_ERR_POLY1305_BAD_INPUT_DATA):
             return( "POLY1305 - Invalid input parameter(s)" );
@@ -846,11 +602,6 @@ const char * mbedtls_low_level_strerr( int error_code )
         case -(MBEDTLS_ERR_POLY1305_HW_ACCEL_FAILED):
             return( "POLY1305 - Poly1305 hardware accelerator failed" );
 #endif /* MBEDTLS_POLY1305_C */
-
-#if defined(MBEDTLS_RIPEMD160_C)
-        case -(MBEDTLS_ERR_RIPEMD160_HW_ACCEL_FAILED):
-            return( "RIPEMD160 - RIPEMD160 hardware accelerator failed" );
-#endif /* MBEDTLS_RIPEMD160_C */
 
 #if defined(MBEDTLS_SHA1_C)
         case -(MBEDTLS_ERR_SHA1_HW_ACCEL_FAILED):
@@ -873,21 +624,6 @@ const char * mbedtls_low_level_strerr( int error_code )
             return( "SHA512 - SHA-512 input data was malformed" );
 #endif /* MBEDTLS_SHA512_C */
 
-#if defined(MBEDTLS_THREADING_C)
-        case -(MBEDTLS_ERR_THREADING_FEATURE_UNAVAILABLE):
-            return( "THREADING - The selected feature is not available" );
-        case -(MBEDTLS_ERR_THREADING_BAD_INPUT_DATA):
-            return( "THREADING - Bad input parameters to function" );
-        case -(MBEDTLS_ERR_THREADING_MUTEX_ERROR):
-            return( "THREADING - Locking / unlocking / free failed with error code" );
-#endif /* MBEDTLS_THREADING_C */
-
-#if defined(MBEDTLS_XTEA_C)
-        case -(MBEDTLS_ERR_XTEA_INVALID_INPUT_LENGTH):
-            return( "XTEA - The data input has an invalid length" );
-        case -(MBEDTLS_ERR_XTEA_HW_ACCEL_FAILED):
-            return( "XTEA - XTEA hardware accelerator failed" );
-#endif /* MBEDTLS_XTEA_C */
         /* End Auto-Generated Code. */
 
         default:

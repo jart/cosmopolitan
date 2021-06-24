@@ -1,38 +1,8 @@
-/* clang-format off */
-
- /**
- * \file md.h
- *
- * \brief This file contains the generic message-digest wrapper.
- *
- * \author Adriaan de Jong <dejong@fox-it.com>
- */
-/*
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
-#ifndef MBEDTLS_MD_H
-#define MBEDTLS_MD_H
-
-
-#if !defined(MBEDTLS_CONFIG_FILE)
+#ifndef COSMOPOLITAN_THIRD_PARTY_MBEDTLS_MD_H_
+#define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_MD_H_
 #include "third_party/mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #define MBEDTLS_ERR_MD_FEATURE_UNAVAILABLE                -0x5080  /**< The selected feature is not available. */
 #define MBEDTLS_ERR_MD_BAD_INPUT_DATA                     -0x5100  /**< Bad input parameters to function. */
@@ -41,10 +11,6 @@
 
 /* MBEDTLS_ERR_MD_HW_ACCEL_FAILED is deprecated and should not be used. */
 #define MBEDTLS_ERR_MD_HW_ACCEL_FAILED                    -0x5280  /**< MD hardware accelerator failed. */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /**
  * \brief     Supported message digests.
@@ -110,7 +76,7 @@ typedef struct mbedtls_md_context_t
  *                  message-digest enumeration #mbedtls_md_type_t.
  *                  The last entry is 0.
  */
-const int *mbedtls_md_list( void );
+const uint8_t *mbedtls_md_list( void );
 
 /**
  * \brief           This function returns the message-digest information
@@ -158,34 +124,6 @@ void mbedtls_md_init( mbedtls_md_context_t *ctx );
  *                  mbedtls_md_init().
  */
 void mbedtls_md_free( mbedtls_md_context_t *ctx );
-
-#if ! defined(MBEDTLS_DEPRECATED_REMOVED)
-#if defined(MBEDTLS_DEPRECATED_WARNING)
-#define MBEDTLS_DEPRECATED    __attribute__((deprecated))
-#else
-#define MBEDTLS_DEPRECATED
-#endif
-/**
- * \brief           This function selects the message digest algorithm to use,
- *                  and allocates internal structures.
- *
- *                  It should be called after mbedtls_md_init() or mbedtls_md_free().
- *                  Makes it necessary to call mbedtls_md_free() later.
- *
- * \deprecated      Superseded by mbedtls_md_setup() in 2.0.0
- *
- * \param ctx       The context to set up.
- * \param md_info   The information structure of the message-digest algorithm
- *                  to use.
- *
- * \return          \c 0 on success.
- * \return          #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
- *                  failure.
- * \return          #MBEDTLS_ERR_MD_ALLOC_FAILED on memory-allocation failure.
- */
-int mbedtls_md_init_ctx( mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info ) MBEDTLS_DEPRECATED;
-#undef MBEDTLS_DEPRECATED
-#endif /* MBEDTLS_DEPRECATED_REMOVED */
 
 /**
  * \brief           This function selects the message digest algorithm to use,
@@ -468,8 +406,7 @@ int mbedtls_md_hmac( const mbedtls_md_info_t *md_info, const unsigned char *key,
 /* Internal use */
 int mbedtls_md_process( mbedtls_md_context_t *ctx, const unsigned char *data );
 
-#ifdef __cplusplus
-}
-#endif
+const char *mbedtls_md_type_name(mbedtls_md_type_t);
 
-#endif /* MBEDTLS_MD_H */
+COSMOPOLITAN_C_END_
+#endif /* COSMOPOLITAN_THIRD_PARTY_MBEDTLS_MD_H_ */

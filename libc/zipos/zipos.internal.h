@@ -40,6 +40,7 @@ ssize_t __zipos_read(struct ZiposHandle *, const struct iovec *, size_t,
                      ssize_t) hidden;
 ssize_t __zipos_write(struct ZiposHandle *, const struct iovec *, size_t,
                       ssize_t) hidden;
+int64_t __zipos_lseek(struct ZiposHandle *, int64_t, unsigned) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

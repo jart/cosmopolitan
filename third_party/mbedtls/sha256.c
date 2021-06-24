@@ -1,10 +1,17 @@
-/* clang-format off */
+#include "libc/str/str.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/endian.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/platform.h"
+#include "third_party/mbedtls/sha256.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /*
  *  FIPS-180-2 compliant SHA-256 implementation
  *
@@ -29,67 +36,21 @@ asm(".include \"libc/disclaimer.inc\"");
  *  http://csrc.nist.gov/publications/fips/fips180-2/fips180-2.pdf
  */
 
-#include "libc/str/str.h"
-#include "third_party/mbedtls/common.h"
-
-#if defined(MBEDTLS_SHA256_C)
-
-#include "third_party/mbedtls/sha256.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
-
-
-#if defined(MBEDTLS_SELF_TEST)
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_printf printf
-#define mbedtls_calloc    calloc
-#define mbedtls_free       free
-#endif /* MBEDTLS_PLATFORM_C */
-#endif /* MBEDTLS_SELF_TEST */
-
 #define SHA256_VALIDATE_RET(cond)                           \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_SHA256_BAD_INPUT_DATA )
 #define SHA256_VALIDATE(cond)  MBEDTLS_INTERNAL_VALIDATE( cond )
 
 #if !defined(MBEDTLS_SHA256_ALT)
 
-/*
- * 32-bit integer manipulation macros (big endian)
- */
-#ifndef GET_UINT32_BE
-#define GET_UINT32_BE(n,b,i)                            \
-do {                                                    \
-    (n) = ( (uint32_t) (b)[(i)    ] << 24 )             \
-        | ( (uint32_t) (b)[(i) + 1] << 16 )             \
-        | ( (uint32_t) (b)[(i) + 2] <<  8 )             \
-        | ( (uint32_t) (b)[(i) + 3]       );            \
-} while( 0 )
-#endif
-
-#ifndef PUT_UINT32_BE
-#define PUT_UINT32_BE(n,b,i)                            \
-do {                                                    \
-    (b)[(i)    ] = (unsigned char) ( (n) >> 24 );       \
-    (b)[(i) + 1] = (unsigned char) ( (n) >> 16 );       \
-    (b)[(i) + 2] = (unsigned char) ( (n) >>  8 );       \
-    (b)[(i) + 3] = (unsigned char) ( (n)       );       \
-} while( 0 )
-#endif
-
 void mbedtls_sha256_init( mbedtls_sha256_context *ctx )
 {
     SHA256_VALIDATE( ctx != NULL );
-
     memset( ctx, 0, sizeof( mbedtls_sha256_context ) );
 }
 
 void mbedtls_sha256_free( mbedtls_sha256_context *ctx )
 {
-    if( ctx == NULL )
-        return;
-
+    if( ctx == NULL ) return;
     mbedtls_platform_zeroize( ctx, sizeof( mbedtls_sha256_context ) );
 }
 
@@ -98,7 +59,6 @@ void mbedtls_sha256_clone( mbedtls_sha256_context *dst,
 {
     SHA256_VALIDATE( dst != NULL );
     SHA256_VALIDATE( src != NULL );
-
     *dst = *src;
 }
 
@@ -142,14 +102,6 @@ int mbedtls_sha256_starts_ret( mbedtls_sha256_context *ctx, int is224 )
 
     return( 0 );
 }
-
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-void mbedtls_sha256_starts( mbedtls_sha256_context *ctx,
-                            int is224 )
-{
-    mbedtls_sha256_starts_ret( ctx, is224 );
-}
-#endif
 
 #if !defined(MBEDTLS_SHA256_PROCESS_ALT)
 static const uint32_t K[] =
@@ -286,13 +238,6 @@ int mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx,
     return( 0 );
 }
 
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-void mbedtls_sha256_process( mbedtls_sha256_context *ctx,
-                             const unsigned char data[64] )
-{
-    mbedtls_internal_sha256_process( ctx, data );
-}
-#endif
 #endif /* !MBEDTLS_SHA256_PROCESS_ALT */
 
 /*
@@ -347,15 +292,6 @@ int mbedtls_sha256_update_ret( mbedtls_sha256_context *ctx,
 
     return( 0 );
 }
-
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-void mbedtls_sha256_update( mbedtls_sha256_context *ctx,
-                            const unsigned char *input,
-                            size_t ilen )
-{
-    mbedtls_sha256_update_ret( ctx, input, ilen );
-}
-#endif
 
 /*
  * SHA-256 final digest
@@ -423,14 +359,6 @@ int mbedtls_sha256_finish_ret( mbedtls_sha256_context *ctx,
     return( 0 );
 }
 
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-void mbedtls_sha256_finish( mbedtls_sha256_context *ctx,
-                            unsigned char output[32] )
-{
-    mbedtls_sha256_finish_ret( ctx, output );
-}
-#endif
-
 #endif /* !MBEDTLS_SHA256_ALT */
 
 /*
@@ -464,16 +392,6 @@ exit:
 
     return( ret );
 }
-
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-void mbedtls_sha256( const unsigned char *input,
-                     size_t ilen,
-                     unsigned char output[32],
-                     int is224 )
-{
-    mbedtls_sha256_ret( input, ilen, output, is224 );
-}
-#endif
 
 #if defined(MBEDTLS_SELF_TEST)
 /*
@@ -609,5 +527,3 @@ exit:
 }
 
 #endif /* MBEDTLS_SELF_TEST */
-
-#endif /* MBEDTLS_SHA256_C */

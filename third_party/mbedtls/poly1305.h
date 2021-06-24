@@ -1,45 +1,7 @@
-/* clang-format off */
-
-/**
- * \file poly1305.h
- *
- * \brief   This file contains Poly1305 definitions and functions.
- *
- *          Poly1305 is a one-time message authenticator that can be used to
- *          authenticate messages. Poly1305-AES was created by Daniel
- *          Bernstein https://cr.yp.to/mac/poly1305-20050329.pdf The generic
- *          Poly1305 algorithm (not tied to AES) was also standardized in RFC
- *          7539.
- *
- * \author Daniel King <damaki.gh@gmail.com>
- */
-
-/*
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
 #ifndef MBEDTLS_POLY1305_H
 #define MBEDTLS_POLY1305_H
-
-#if !defined(MBEDTLS_CONFIG_FILE)
 #include "third_party/mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
+/* clang-format off */
 
 #define MBEDTLS_ERR_POLY1305_BAD_INPUT_DATA         -0x0057 /**< Invalid input parameter(s). */
 

@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_IPHLPAPI_H_
 #define COSMOPOLITAN_LIBC_NT_IPHLPAPI_H_
-
 #include "libc/nt/struct/ipadapteraddresses.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -26,17 +25,13 @@ COSMOPOLITAN_C_START_
             ▒▒░░░▒▒▒░░░▒▒░▒▒▒▓▓▒  ▒▓▓▓▒▒▒▒▒▒▒▒░░░░▒▒▒▒▒           ███
                             ░▒▓  ░▓▓▓▓▒▒▒▒▒▒▒▒░░░░▒▒▒▒▓          ▓██
 ╔────────────────────────────────────────────────────────────────▀▀▀─────────│─╗
-│ cosmopolitan § new technology » ip helper API                            ─╬─│┼
+│ cosmopolitan § new technology » ip helper api                            ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-uint32_t GetAdaptersAddresses(
-        uint32_t Family, 
-        uint32_t Flags,
-        void * Reserved,
-        NtIpAdapterAddresses *AdapterAddresses,
-        uint32_t *SizePointer);
+uint32_t GetAdaptersAddresses(uint32_t Family, uint32_t Flags, void *Reserved,
+                              NtIpAdapterAddresses *AdapterAddresses,
+                              uint32_t *SizePointer);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-
 #endif /* COSMOPOLITAN_LIBC_NT_IPHLPAPI_H_ */

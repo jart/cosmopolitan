@@ -1,46 +1,9 @@
-/* clang-format off */
-
-/**
- * \file cipher_internal.h
- *
- * \brief Cipher wrappers.
- *
- * \author Adriaan de Jong <dejong@fox-it.com>
- */
-/*
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
 #ifndef MBEDTLS_CIPHER_WRAP_H
 #define MBEDTLS_CIPHER_WRAP_H
-
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "third_party/mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
 #include "third_party/mbedtls/cipher.h"
-
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
-#include "third_party/mbedtls/crypto.h"
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "third_party/mbedtls/config.h"
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /**
  * Base cipher information. The non-mode specific functions and values.
@@ -118,35 +81,9 @@ typedef struct
     const mbedtls_cipher_info_t *info;
 } mbedtls_cipher_definition_t;
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
-typedef enum
-{
-    MBEDTLS_CIPHER_PSA_KEY_UNSET = 0,
-    MBEDTLS_CIPHER_PSA_KEY_OWNED, /* Used for PSA-based cipher contexts which */
-                                  /* use raw key material internally imported */
-                                  /* as a volatile key, and which hence need  */
-                                  /* to destroy that key when the context is  */
-                                  /* freed.                                   */
-    MBEDTLS_CIPHER_PSA_KEY_NOT_OWNED, /* Used for PSA-based cipher contexts   */
-                                      /* which use a key provided by the      */
-                                      /* user, and which hence will not be    */
-                                      /* destroyed when the context is freed. */
-} mbedtls_cipher_psa_key_ownership;
-
-typedef struct
-{
-    psa_algorithm_t alg;
-    psa_key_id_t slot;
-    mbedtls_cipher_psa_key_ownership slot_state;
-} mbedtls_cipher_context_psa;
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
-
 extern const mbedtls_cipher_definition_t mbedtls_cipher_definitions[];
 
 extern int mbedtls_cipher_supported[];
 
-#ifdef __cplusplus
-}
-#endif
-
+COSMOPOLITAN_C_END_
 #endif /* MBEDTLS_CIPHER_WRAP_H */

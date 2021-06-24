@@ -17,19 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/rand/rand.h"
+#include "libc/sysv/consts/grnd.h"
 #include "third_party/mbedtls/entropy_poll.h"
 
 int mbedtls_hardware_poll(void *wut, unsigned char *p, size_t n, size_t *olen) {
-  uint64_t x;
-  size_t i, j;
-  i = 0;
-  while (i < n) {
-    x = rand64();
-    for (j = 0; i < n && j < 8; ++i, ++j) {
-      p[i] = x;
-      x >>= 8;
-    }
-  }
-  *olen = i;
+  ssize_t rc;
+  *olen = 0;
+  if ((rc = getrandom(p, n, 0)) == -1) return -1;
+  *olen = rc;
   return 0;
 }

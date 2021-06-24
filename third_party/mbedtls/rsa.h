@@ -1,47 +1,9 @@
-/* clang-format off */
-
-/**
- * \file rsa.h
- *
- * \brief This file provides an API for the RSA public-key cryptosystem.
- *
- * The RSA public-key cryptosystem is defined in <em>Public-Key
- * Cryptography Standards (PKCS) #1 v1.5: RSA Encryption</em>
- * and <em>Public-Key Cryptography Standards (PKCS) #1 v2.1:
- * RSA Cryptography Specifications</em>.
- *
- */
-/*
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
 #ifndef MBEDTLS_RSA_H
 #define MBEDTLS_RSA_H
-
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "third_party/mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
 #include "third_party/mbedtls/bignum.h"
+#include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/md.h"
-
-#if defined(MBEDTLS_THREADING_C)
-#include "third_party/mbedtls/threading.h"
-#endif
+/* clang-format off */
 
 /*
  * RSA Error codes
@@ -131,10 +93,6 @@ typedef struct mbedtls_rsa_context
                                      as specified in md.h for use in the MGF
                                      mask generating function used in the
                                      EME-OAEP and EMSA-PSS encodings. */
-#if defined(MBEDTLS_THREADING_C)
-    /* Invariant: the mutex is initialized iff ver != 0. */
-    mbedtls_threading_mutex_t mutex;    /*!<  Thread-safety mutex. */
-#endif
 }
 mbedtls_rsa_context;
 
@@ -290,16 +248,6 @@ int mbedtls_rsa_complete( mbedtls_rsa_context *ctx );
  *                 written, with additional unused space filled leading by
  *                 zero Bytes.
  *
- *                 Possible reasons for returning
- *                 #MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED:<ul>
- *                 <li>An alternative RSA implementation is in use, which
- *                 stores the key externally, and either cannot or should
- *                 not export it into RAM.</li>
- *                 <li>A SW or HW implementation might not support a certain
- *                 deduction. For example, \p P, \p Q from \p N, \p D,
- *                 and \p E if the former are not part of the
- *                 implementation.</li></ul>
- *
  *                 If the function fails due to an unsupported operation,
  *                 the RSA context stays intact and remains usable.
  *
@@ -316,9 +264,6 @@ int mbedtls_rsa_complete( mbedtls_rsa_context *ctx );
  *                 This may be \c NULL if this field need not be exported.
  *
  * \return         \c 0 on success.
- * \return         #MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED if exporting the
- *                 requested parameters cannot be done due to missing
- *                 functionality or because of security policies.
  * \return         A non-zero return code on any other failure.
  *
  */
@@ -335,15 +280,6 @@ int mbedtls_rsa_export( const mbedtls_rsa_context *ctx,
  *                 written, with additional unused space filled leading by
  *                 zero Bytes.
  *
- *                 Possible reasons for returning
- *                 #MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED:<ul>
- *                 <li>An alternative RSA implementation is in use, which
- *                 stores the key externally, and either cannot or should
- *                 not export it into RAM.</li>
- *                 <li>A SW or HW implementation might not support a certain
- *                 deduction. For example, \p P, \p Q from \p N, \p D,
- *                 and \p E if the former are not part of the
- *                 implementation.</li></ul>
  *                 If the function fails due to an unsupported operation,
  *                 the RSA context stays intact and remains usable.
  *
@@ -368,9 +304,6 @@ int mbedtls_rsa_export( const mbedtls_rsa_context *ctx,
  * \param E_len    The size of the buffer for the public exponent.
  *
  * \return         \c 0 on success.
- * \return         #MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED if exporting the
- *                 requested parameters cannot be done due to missing
- *                 functionality or because of security policies.
  * \return         A non-zero return code on any other failure.
  */
 int mbedtls_rsa_export_raw( const mbedtls_rsa_context *ctx,
@@ -587,10 +520,6 @@ int mbedtls_rsa_private( mbedtls_rsa_context *ctx,
  *                 are likely to remove the \p mode argument and have it
  *                 implicitly set to #MBEDTLS_RSA_PUBLIC.
  *
- * \note           Alternative implementations of RSA need not support
- *                 mode being set to #MBEDTLS_RSA_PRIVATE and might instead
- *                 return #MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED.
- *
  * \param ctx      The initialized RSA context to use.
  * \param f_rng    The RNG to use. It is mandatory for PKCS#1 v2.1 padding
  *                 encoding, and for PKCS#1 v1.5 padding encoding when used
@@ -629,10 +558,6 @@ int mbedtls_rsa_pkcs1_encrypt( mbedtls_rsa_context *ctx,
  *                 in #MBEDTLS_RSA_PRIVATE mode. Future versions of the library
  *                 are likely to remove the \p mode argument and have it
  *                 implicitly set to #MBEDTLS_RSA_PUBLIC.
- *
- * \note           Alternative implementations of RSA need not support
- *                 mode being set to #MBEDTLS_RSA_PRIVATE and might instead
- *                 return #MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED.
  *
  * \param ctx      The initialized RSA context to use.
  * \param f_rng    The RNG function to use. It is needed for padding generation
@@ -673,10 +598,6 @@ int mbedtls_rsa_rsaes_pkcs1_v15_encrypt( mbedtls_rsa_context *ctx,
  *                   in #MBEDTLS_RSA_PRIVATE mode. Future versions of the library
  *                   are likely to remove the \p mode argument and have it
  *                   implicitly set to #MBEDTLS_RSA_PUBLIC.
- *
- * \note             Alternative implementations of RSA need not support
- *                   mode being set to #MBEDTLS_RSA_PRIVATE and might instead
- *                   return #MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED.
  *
  * \param ctx        The initnialized RSA context to use.
  * \param f_rng      The RNG function to use. This is needed for padding
@@ -728,10 +649,6 @@ int mbedtls_rsa_rsaes_oaep_encrypt( mbedtls_rsa_context *ctx,
  *                 are likely to remove the \p mode argument and have it
  *                 implicitly set to #MBEDTLS_RSA_PRIVATE.
  *
- * \note           Alternative implementations of RSA need not support
- *                 mode being set to #MBEDTLS_RSA_PUBLIC and might instead
- *                 return #MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED.
- *
  * \param ctx      The initialized RSA context to use.
  * \param f_rng    The RNG function. If \p mode is #MBEDTLS_RSA_PRIVATE,
  *                 this is used for blinding and should be provided; see
@@ -776,10 +693,6 @@ int mbedtls_rsa_pkcs1_decrypt( mbedtls_rsa_context *ctx,
  *                 in #MBEDTLS_RSA_PUBLIC mode. Future versions of the library
  *                 are likely to remove the \p mode argument and have it
  *                 implicitly set to #MBEDTLS_RSA_PRIVATE.
- *
- * \note           Alternative implementations of RSA need not support
- *                 mode being set to #MBEDTLS_RSA_PUBLIC and might instead
- *                 return #MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED.
  *
  * \param ctx      The initialized RSA context to use.
  * \param f_rng    The RNG function. If \p mode is #MBEDTLS_RSA_PRIVATE,
@@ -827,10 +740,6 @@ int mbedtls_rsa_rsaes_pkcs1_v15_decrypt( mbedtls_rsa_context *ctx,
  *                   in #MBEDTLS_RSA_PUBLIC mode. Future versions of the library
  *                   are likely to remove the \p mode argument and have it
  *                   implicitly set to #MBEDTLS_RSA_PRIVATE.
- *
- * \note             Alternative implementations of RSA need not support
- *                   mode being set to #MBEDTLS_RSA_PUBLIC and might instead
- *                   return #MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED.
  *
  * \param ctx        The initialized RSA context to use.
  * \param f_rng      The RNG function. If \p mode is #MBEDTLS_RSA_PRIVATE,
@@ -886,10 +795,6 @@ int mbedtls_rsa_rsaes_oaep_decrypt( mbedtls_rsa_context *ctx,
  *                 are likely to remove the \p mode argument and have it
  *                 implicitly set to #MBEDTLS_RSA_PRIVATE.
  *
- * \note           Alternative implementations of RSA need not support
- *                 mode being set to #MBEDTLS_RSA_PUBLIC and might instead
- *                 return #MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED.
- *
  * \param ctx      The initialized RSA context to use.
  * \param f_rng    The RNG function to use. If the padding mode is PKCS#1 v2.1,
  *                 this must be provided. If the padding mode is PKCS#1 v1.5 and
@@ -934,10 +839,6 @@ int mbedtls_rsa_pkcs1_sign( mbedtls_rsa_context *ctx,
  *                 in #MBEDTLS_RSA_PUBLIC mode. Future versions of the library
  *                 are likely to remove the \p mode argument and have it
  *                 implicitly set to #MBEDTLS_RSA_PRIVATE.
- *
- * \note           Alternative implementations of RSA need not support
- *                 mode being set to #MBEDTLS_RSA_PUBLIC and might instead
- *                 return #MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED.
  *
  * \param ctx      The initialized RSA context to use.
  * \param f_rng    The RNG function. If \p mode is #MBEDTLS_RSA_PRIVATE,
@@ -1000,10 +901,6 @@ int mbedtls_rsa_rsassa_pkcs1_v15_sign( mbedtls_rsa_context *ctx,
  *                 are likely to remove the \p mode argument and have it
  *                 implicitly set to #MBEDTLS_RSA_PRIVATE.
  *
- * \note           Alternative implementations of RSA need not support
- *                 mode being set to #MBEDTLS_RSA_PUBLIC and might instead
- *                 return #MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED.
- *
  * \param ctx      The initialized RSA context to use.
  * \param f_rng    The RNG function. It must not be \c NULL.
  * \param p_rng    The RNG context to be passed to \p f_rng. This may be \c NULL
@@ -1052,10 +949,6 @@ int mbedtls_rsa_rsassa_pss_sign( mbedtls_rsa_context *ctx,
  *                 are likely to remove the \p mode argument and have it
  *                 set to #MBEDTLS_RSA_PUBLIC.
  *
- * \note           Alternative implementations of RSA need not support
- *                 mode being set to #MBEDTLS_RSA_PRIVATE and might instead
- *                 return #MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED.
- *
  * \param ctx      The initialized RSA public key context to use.
  * \param f_rng    The RNG function to use. If \p mode is #MBEDTLS_RSA_PRIVATE,
  *                 this is used for blinding and should be provided; see
@@ -1097,10 +990,6 @@ int mbedtls_rsa_pkcs1_verify( mbedtls_rsa_context *ctx,
  *                 in #MBEDTLS_RSA_PRIVATE mode. Future versions of the library
  *                 are likely to remove the \p mode argument and have it
  *                 set to #MBEDTLS_RSA_PUBLIC.
- *
- * \note           Alternative implementations of RSA need not support
- *                 mode being set to #MBEDTLS_RSA_PRIVATE and might instead
- *                 return #MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED.
  *
  * \param ctx      The initialized RSA public key context to use.
  * \param f_rng    The RNG function to use. If \p mode is #MBEDTLS_RSA_PRIVATE,
@@ -1154,10 +1043,6 @@ int mbedtls_rsa_rsassa_pkcs1_v15_verify( mbedtls_rsa_context *ctx,
  *                 in #MBEDTLS_RSA_PRIVATE mode. Future versions of the library
  *                 are likely to remove the \p mode argument and have it
  *                 implicitly set to #MBEDTLS_RSA_PUBLIC.
- *
- * \note           Alternative implementations of RSA need not support
- *                 mode being set to #MBEDTLS_RSA_PRIVATE and might instead
- *                 return #MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED.
  *
  * \param ctx      The initialized RSA public key context to use.
  * \param f_rng    The RNG function to use. If \p mode is #MBEDTLS_RSA_PRIVATE,

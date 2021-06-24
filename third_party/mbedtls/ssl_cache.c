@@ -1,5 +1,15 @@
-/* clang-format off */
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/platform.h"
+#include "third_party/mbedtls/ssl_cache.h"
+#include "third_party/mbedtls/ssl_internal.h"
 
+asm(".ident\t\"\\n\\n\
+Mbed TLS (Apache 2.0)\\n\
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+/* clang-format off */
 /*
  *  SSL session cache implementation
  *
@@ -23,31 +33,13 @@
  * to store and retrieve the session information.
  */
 
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_SSL_CACHE_C)
-
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_calloc    calloc
-#define mbedtls_free      free
-#endif
-
-#include "third_party/mbedtls/ssl_cache.h"
-#include "third_party/mbedtls/ssl_internal.h"
-
 
 void mbedtls_ssl_cache_init( mbedtls_ssl_cache_context *cache )
 {
     memset( cache, 0, sizeof( mbedtls_ssl_cache_context ) );
-
     cache->timeout = MBEDTLS_SSL_CACHE_DEFAULT_TIMEOUT;
     cache->max_entries = MBEDTLS_SSL_CACHE_DEFAULT_MAX_ENTRIES;
-
-#if defined(MBEDTLS_THREADING_C)
-    mbedtls_mutex_init( &cache->mutex );
-#endif
 }
 
 int mbedtls_ssl_cache_get( void *data, mbedtls_ssl_session *session )
@@ -58,11 +50,6 @@ int mbedtls_ssl_cache_get( void *data, mbedtls_ssl_session *session )
 #endif
     mbedtls_ssl_cache_context *cache = (mbedtls_ssl_cache_context *) data;
     mbedtls_ssl_cache_entry *cur, *entry;
-
-#if defined(MBEDTLS_THREADING_C)
-    if( mbedtls_mutex_lock( &cache->mutex ) != 0 )
-        return( 1 );
-#endif
 
     cur = cache->chain;
     entry = NULL;
@@ -129,11 +116,6 @@ int mbedtls_ssl_cache_get( void *data, mbedtls_ssl_session *session )
     }
 
 exit:
-#if defined(MBEDTLS_THREADING_C)
-    if( mbedtls_mutex_unlock( &cache->mutex ) != 0 )
-        ret = 1;
-#endif
-
     return( ret );
 }
 
@@ -147,11 +129,6 @@ int mbedtls_ssl_cache_set( void *data, const mbedtls_ssl_session *session )
     mbedtls_ssl_cache_context *cache = (mbedtls_ssl_cache_context *) data;
     mbedtls_ssl_cache_entry *cur, *prv;
     int count = 0;
-
-#if defined(MBEDTLS_THREADING_C)
-    if( ( ret = mbedtls_mutex_lock( &cache->mutex ) ) != 0 )
-        return( ret );
-#endif
 
     cur = cache->chain;
     prv = NULL;
@@ -293,11 +270,6 @@ int mbedtls_ssl_cache_set( void *data, const mbedtls_ssl_session *session )
     ret = 0;
 
 exit:
-#if defined(MBEDTLS_THREADING_C)
-    if( mbedtls_mutex_unlock( &cache->mutex ) != 0 )
-        ret = 1;
-#endif
-
     return( ret );
 }
 
@@ -338,9 +310,6 @@ void mbedtls_ssl_cache_free( mbedtls_ssl_cache_context *cache )
         mbedtls_free( prv );
     }
 
-#if defined(MBEDTLS_THREADING_C)
-    mbedtls_mutex_free( &cache->mutex );
-#endif
     cache->chain = NULL;
 }
 

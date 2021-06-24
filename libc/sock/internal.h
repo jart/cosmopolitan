@@ -181,7 +181,7 @@ int sys_close_epoll(int) hidden;
  * Converts sockaddr (Linux/Windows) → sockaddr_bsd (XNU/BSD).
  */
 forceinline void sockaddr2bsd(void *saddr) {
-  uint8_t *p;
+  char *p;
   uint16_t fam;
   if (saddr) {
     p = saddr;
@@ -195,7 +195,7 @@ forceinline void sockaddr2bsd(void *saddr) {
  * Converts sockaddr_in_bsd (XNU/BSD) → sockaddr (Linux/Windows).
  */
 forceinline void sockaddr2linux(void *saddr) {
-  uint8_t *p, fam;
+  char *p, fam;
   if (saddr) {
     p = saddr;
     fam = p[1];

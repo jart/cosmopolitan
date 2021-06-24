@@ -24,11 +24,11 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_getsockopt_nt(struct Fd *fd, int level, int optname,
-                              void *out_opt_optval, uint32_t *out_optlen) {
+                                  void *out_opt_optval, uint32_t *out_optlen) {
   /* TODO(jart): Use WSAIoctl? */
   assert(fd->kind == kFdSocket);
-  if (__sys_getsockopt_nt(fd->handle, level, optname, out_opt_optval, out_optlen) !=
-      -1) {
+  if (__sys_getsockopt_nt(fd->handle, level, optname, out_opt_optval,
+                          out_optlen) != -1) {
     return 0;
   } else {
     return __winsockerr();

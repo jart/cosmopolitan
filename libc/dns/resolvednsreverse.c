@@ -68,7 +68,7 @@ int ResolveDnsReverse(const struct ResolvConf *resolvconf, int af,
   if (!resolvconf->nameservers.i) return 0;
   memset(&h, 0, sizeof(h));
   rc = ebadmsg();
-  h.id = rand32();
+  h.id = rand64();
   h.bf1 = 1; /* recursion desired */
   h.qdcount = 1;
   q.qname = name;

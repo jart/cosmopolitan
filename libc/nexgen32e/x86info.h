@@ -10,11 +10,12 @@
 #define kX86CpuExtfamilyid ((KCPUIDS(1H, EAX) >> 20) & 255)
 
 #define kX86CpuFamily \
-  (kX86CpuFamilyid + (kX86CpuFamily == 15 ? kX86CpuExtfamilyid : 0))
+  (kX86CpuFamilyid + (kX86CpuFamilyid == 15 ? kX86CpuExtfamilyid : 0))
 
-#define kX86CpuModel \
-  (kX86CpuModelid |  \
-   (kX86CpuFamily == 6 || kX86CpuFamily == 15 ? kX86CpuExtmodelid : 0) << 4)
+#define kX86CpuModel                                                       \
+  (kX86CpuModelid |                                                        \
+   (kX86CpuFamilyid == 6 || kX86CpuFamilyid == 15 ? kX86CpuExtmodelid : 0) \
+       << 4)
 
 #define kX86ProcessorModelKey                                                 \
   (kX86CpuExtfamilyid << 12 | kX86CpuFamilyid << 8 | kX86CpuExtmodelid << 4 | \

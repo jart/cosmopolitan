@@ -1,10 +1,17 @@
-/* clang-format off */
+#include "libc/bits/bits.h"
+#include "libc/stdio/stdio.h"
+#include "third_party/mbedtls/chacha20.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/platform.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /**
  * \file chacha20.c
  *
@@ -27,30 +34,9 @@ asm(".include \"libc/disclaimer.inc\"");
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_CHACHA20_C)
 
-#include "third_party/mbedtls/chacha20.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
-
-
-#if defined(MBEDTLS_SELF_TEST)
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_printf printf
-#endif /* MBEDTLS_PLATFORM_C */
-#endif /* MBEDTLS_SELF_TEST */
-
 #if !defined(MBEDTLS_CHACHA20_ALT)
-
-#if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
-    !defined(inline) && !defined(__cplusplus)
-#define inline __inline
-#endif
 
 /* Parameter validation macros */
 #define CHACHA20_VALIDATE_RET( cond )                                       \
@@ -58,12 +44,7 @@ asm(".include \"libc/disclaimer.inc\"");
 #define CHACHA20_VALIDATE( cond )                                           \
     MBEDTLS_INTERNAL_VALIDATE( cond )
 
-#define BYTES_TO_U32_LE( data, offset )                           \
-    ( (uint32_t) (data)[offset]                                   \
-      | (uint32_t) ( (uint32_t) (data)[( offset ) + 1] << 8 )     \
-      | (uint32_t) ( (uint32_t) (data)[( offset ) + 2] << 16 )    \
-      | (uint32_t) ( (uint32_t) (data)[( offset ) + 3] << 24 )    \
-    )
+#define BYTES_TO_U32_LE( data, offset ) READ32LE((data) + (offset))
 
 #define ROTL32( value, amount ) \
     ( (uint32_t) ( (value) << (amount) ) | ( (value) >> ( 32 - (amount) ) ) )

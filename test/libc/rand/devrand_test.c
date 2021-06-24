@@ -22,18 +22,12 @@
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-TEST(devrand, test) {
-  if (IsWindows()) return;
-  const size_t kSize = 8;
-  void *A = malloc(kSize);
-  void *B = malloc(kSize);
-  memset(A, 0, kSize);
-  memset(B, 0, kSize);
-  EXPECT_EQ(0, devrand(A, kSize));
-  EXPECT_EQ(0, devrand(B, kSize));
+TEST(getrandom, test) {
+  void *A = gc(calloc(1, 8));
+  void *B = gc(calloc(1, 8));
+  EXPECT_EQ(8, getrandom(A, 8, 0));
+  EXPECT_EQ(8, getrandom(B, 8, 0));
   EXPECT_BINNE(u"        ", A);
   EXPECT_BINNE(u"        ", B);
-  EXPECT_NE(0, memcmp(A, B, kSize));
-  free(B);
-  free(A);
+  EXPECT_NE(0, memcmp(A, B, 8));
 }

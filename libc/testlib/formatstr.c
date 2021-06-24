@@ -25,17 +25,21 @@
  * Turns string into code.
  */
 nodiscard testonly char *testlib_formatstr(size_t cw, const void *s, int n) {
-  switch (cw) {
-    case 1:
-      if (n == -1) n = s ? strlen(s) : 0;
-      return xasprintf("%`'.*s", n, s);
-    case 2:
-      if (n == -1) n = s ? strlen16(s) : 0;
-      return xasprintf("%`'.*hs", n, s);
-    case 4:
-      if (n == -1) n = s ? wcslen(s) : 0;
-      return xasprintf("%`'.*ls", n, s);
-    default:
-      abort();
+  if (s) {
+    switch (cw) {
+      case 1:
+        if (n == -1) n = s ? strlen(s) : 0;
+        return xasprintf("%`'.*s", n, s);
+      case 2:
+        if (n == -1) n = s ? strlen16(s) : 0;
+        return xasprintf("%`'.*hs", n, s);
+      case 4:
+        if (n == -1) n = s ? wcslen(s) : 0;
+        return xasprintf("%`'.*ls", n, s);
+      default:
+        abort();
+    }
+  } else {
+    return strdup("NULL");
   }
 }

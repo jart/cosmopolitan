@@ -1,3 +1,15 @@
+#include "third_party/mbedtls/asn1.h"
+#include "third_party/mbedtls/bignum.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/platform.h"
+
+asm(".ident\t\"\\n\\n\
+Mbed TLS (Apache 2.0)\\n\
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
+asm(".include \"libc/disclaimer.inc\"");
+
 /* clang-format off */
 /*
  *  Generic ASN.1 parsing
@@ -17,30 +29,8 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-#include "third_party/mbedtls/common.h"
-
-asm(".ident\t\"\\n\\n\
-Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
-asm(".include \"libc/disclaimer.inc\"");
 
 #if defined(MBEDTLS_ASN1_PARSE_C)
-
-#include "third_party/mbedtls/asn1.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
-
-
-#if defined(MBEDTLS_BIGNUM_C)
-#include "third_party/mbedtls/bignum.h"
-#endif
-
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_calloc    calloc
-#define mbedtls_free       free
-#endif
 
 /*
  * ASN.1 DER decoding routines

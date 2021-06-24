@@ -1,10 +1,17 @@
-/* clang-format off */
+#include "third_party/mbedtls/asn1write.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/ecdsa.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/hmac_drbg.h"
+#include "third_party/mbedtls/platform.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /*
  *  Elliptic curve DSA
  *
@@ -30,27 +37,7 @@ asm(".include \"libc/disclaimer.inc\"");
  * SEC1 http://www.secg.org/index.php?action=secg,docs_secg
  */
 
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_ECDSA_C)
-
-#include "third_party/mbedtls/ecdsa.h"
-#include "third_party/mbedtls/asn1write.h"
-
-
-#if defined(MBEDTLS_ECDSA_DETERMINISTIC)
-#include "third_party/mbedtls/hmac_drbg.h"
-#endif
-
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_calloc    calloc
-#define mbedtls_free       free
-#endif
-
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
 
 /* Parameter validation macros based on platform_util.h */
 #define ECDSA_VALIDATE_RET( cond )    \
@@ -558,23 +545,6 @@ cleanup:
  * Deterministic signature wrappers
  */
 
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-int mbedtls_ecdsa_sign_det( mbedtls_ecp_group *grp, mbedtls_mpi *r,
-                            mbedtls_mpi *s, const mbedtls_mpi *d,
-                            const unsigned char *buf, size_t blen,
-                            mbedtls_md_type_t md_alg )
-{
-    ECDSA_VALIDATE_RET( grp   != NULL );
-    ECDSA_VALIDATE_RET( r     != NULL );
-    ECDSA_VALIDATE_RET( s     != NULL );
-    ECDSA_VALIDATE_RET( d     != NULL );
-    ECDSA_VALIDATE_RET( buf   != NULL || blen == 0 );
-
-    return( ecdsa_sign_det_restartable( grp, r, s, d, buf, blen, md_alg,
-                                        NULL, NULL, NULL ) );
-}
-#endif /* MBEDTLS_DEPRECATED_REMOVED */
-
 int mbedtls_ecdsa_sign_det_ext( mbedtls_ecp_group *grp, mbedtls_mpi *r,
                                 mbedtls_mpi *s, const mbedtls_mpi *d,
                                 const unsigned char *buf, size_t blen,
@@ -815,22 +785,6 @@ int mbedtls_ecdsa_write_signature( mbedtls_ecdsa_context *ctx,
     return( mbedtls_ecdsa_write_signature_restartable(
                 ctx, md_alg, hash, hlen, sig, slen, f_rng, p_rng, NULL ) );
 }
-
-#if !defined(MBEDTLS_DEPRECATED_REMOVED) && \
-    defined(MBEDTLS_ECDSA_DETERMINISTIC)
-int mbedtls_ecdsa_write_signature_det( mbedtls_ecdsa_context *ctx,
-                               const unsigned char *hash, size_t hlen,
-                               unsigned char *sig, size_t *slen,
-                               mbedtls_md_type_t md_alg )
-{
-    ECDSA_VALIDATE_RET( ctx  != NULL );
-    ECDSA_VALIDATE_RET( hash != NULL );
-    ECDSA_VALIDATE_RET( sig  != NULL );
-    ECDSA_VALIDATE_RET( slen != NULL );
-    return( mbedtls_ecdsa_write_signature( ctx, md_alg, hash, hlen, sig, slen,
-                                   NULL, NULL ) );
-}
-#endif
 
 /*
  * Read and check signature

@@ -1,10 +1,18 @@
-/* clang-format off */
+#include "libc/bits/bits.h"
+#include "libc/nexgen32e/x86feature.h"
+#include "third_party/mbedtls/aes.h"
+#include "third_party/mbedtls/aesni.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/platform.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /*
  *  FIPS-197 compliant AES implementation
  *
@@ -31,61 +39,17 @@ asm(".include \"libc/disclaimer.inc\"");
  *  http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
  */
 
-#include "libc/nexgen32e/x86feature.h"
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_AES_C)
-
-
-#include "third_party/mbedtls/aes.h"
-#include "third_party/mbedtls/platform.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
-#if defined(MBEDTLS_PADLOCK_C)
-#include "third_party/mbedtls/padlock.h"
-#endif
-#if defined(MBEDTLS_AESNI_C)
-#include "third_party/mbedtls/aesni.h"
-#endif
-
-#if defined(MBEDTLS_SELF_TEST)
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_printf printf
-#endif /* MBEDTLS_PLATFORM_C */
-#endif /* MBEDTLS_SELF_TEST */
 
 #if !defined(MBEDTLS_AES_ALT)
 
-/* Parameter validation macros based on platform_util.h */
 #define AES_VALIDATE_RET( cond )    \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_AES_BAD_INPUT_DATA )
 #define AES_VALIDATE( cond )        \
     MBEDTLS_INTERNAL_VALIDATE( cond )
 
-/*
- * 32-bit integer manipulation macros (little endian)
- */
-#ifndef GET_UINT32_LE
-#define GET_UINT32_LE(n,b,i)                            \
-{                                                       \
-    (n) = ( (uint32_t) (b)[(i)    ]       )             \
-        | ( (uint32_t) (b)[(i) + 1] <<  8 )             \
-        | ( (uint32_t) (b)[(i) + 2] << 16 )             \
-        | ( (uint32_t) (b)[(i) + 3] << 24 );            \
-}
-#endif
-
-#ifndef PUT_UINT32_LE
-#define PUT_UINT32_LE(n,b,i)                                    \
-{                                                               \
-    (b)[(i)    ] = (unsigned char) ( ( (n)       ) & 0xFF );    \
-    (b)[(i) + 1] = (unsigned char) ( ( (n) >>  8 ) & 0xFF );    \
-    (b)[(i) + 2] = (unsigned char) ( ( (n) >> 16 ) & 0xFF );    \
-    (b)[(i) + 3] = (unsigned char) ( ( (n) >> 24 ) & 0xFF );    \
-}
-#endif
+#define GET_UINT32_LE(n,b,i) (n) = READ32LE((b) + (i))
+#define PUT_UINT32_LE(n,b,i) WRITE32LE((b) + (i), n)
 
 #if defined(MBEDTLS_PADLOCK_C) &&                      \
     ( defined(MBEDTLS_HAVE_X86) || defined(MBEDTLS_PADLOCK_ALIGN16) )
@@ -928,15 +892,6 @@ int mbedtls_internal_aes_encrypt( mbedtls_aes_context *ctx,
 }
 #endif /* !MBEDTLS_AES_ENCRYPT_ALT */
 
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-void mbedtls_aes_encrypt( mbedtls_aes_context *ctx,
-                          const unsigned char input[16],
-                          unsigned char output[16] )
-{
-    mbedtls_internal_aes_encrypt( ctx, input, output );
-}
-#endif /* !MBEDTLS_DEPRECATED_REMOVED */
-
 /*
  * AES-ECB block decryption
  */
@@ -1001,15 +956,6 @@ int mbedtls_internal_aes_decrypt( mbedtls_aes_context *ctx,
 }
 #endif /* !MBEDTLS_AES_DECRYPT_ALT */
 
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-void mbedtls_aes_decrypt( mbedtls_aes_context *ctx,
-                          const unsigned char input[16],
-                          unsigned char output[16] )
-{
-    mbedtls_internal_aes_decrypt( ctx, input, output );
-}
-#endif /* !MBEDTLS_DEPRECATED_REMOVED */
-
 /*
  * AES-ECB block encryption/decryption
  */
@@ -1052,11 +998,11 @@ int mbedtls_aes_crypt_ecb( mbedtls_aes_context *ctx,
  * AES-CBC buffer encryption/decryption
  */
 int mbedtls_aes_crypt_cbc( mbedtls_aes_context *ctx,
-                    int mode,
-                    size_t length,
-                    unsigned char iv[16],
-                    const unsigned char *input,
-                    unsigned char *output )
+                           int mode,
+                           size_t length,
+                           unsigned char iv[16],
+                           const unsigned char *input,
+                           unsigned char *output )
 {
     int i;
     unsigned char temp[16];
@@ -1122,35 +1068,6 @@ int mbedtls_aes_crypt_cbc( mbedtls_aes_context *ctx,
 
 #if defined(MBEDTLS_CIPHER_MODE_XTS)
 
-/* Endianess with 64 bits values */
-#ifndef GET_UINT64_LE
-#define GET_UINT64_LE(n,b,i)                            \
-{                                                       \
-    (n) = ( (uint64_t) (b)[(i) + 7] << 56 )             \
-        | ( (uint64_t) (b)[(i) + 6] << 48 )             \
-        | ( (uint64_t) (b)[(i) + 5] << 40 )             \
-        | ( (uint64_t) (b)[(i) + 4] << 32 )             \
-        | ( (uint64_t) (b)[(i) + 3] << 24 )             \
-        | ( (uint64_t) (b)[(i) + 2] << 16 )             \
-        | ( (uint64_t) (b)[(i) + 1] <<  8 )             \
-        | ( (uint64_t) (b)[(i)    ]       );            \
-}
-#endif
-
-#ifndef PUT_UINT64_LE
-#define PUT_UINT64_LE(n,b,i)                            \
-{                                                       \
-    (b)[(i) + 7] = (unsigned char) ( (n) >> 56 );       \
-    (b)[(i) + 6] = (unsigned char) ( (n) >> 48 );       \
-    (b)[(i) + 5] = (unsigned char) ( (n) >> 40 );       \
-    (b)[(i) + 4] = (unsigned char) ( (n) >> 32 );       \
-    (b)[(i) + 3] = (unsigned char) ( (n) >> 24 );       \
-    (b)[(i) + 2] = (unsigned char) ( (n) >> 16 );       \
-    (b)[(i) + 1] = (unsigned char) ( (n) >>  8 );       \
-    (b)[(i)    ] = (unsigned char) ( (n)       );       \
-}
-#endif
-
 typedef unsigned char mbedtls_be128[16];
 
 /*
@@ -1165,15 +1082,12 @@ static void mbedtls_gf128mul_x_ble( unsigned char r[16],
                                     const unsigned char x[16] )
 {
     uint64_t a, b, ra, rb;
-
-    GET_UINT64_LE( a, x, 0 );
-    GET_UINT64_LE( b, x, 8 );
-
+    a = READ64LE(x + 0);
+    b = READ64LE(x + 8);
     ra = ( a << 1 )  ^ 0x0087 >> ( 8 - ( ( b >> 63 ) << 3 ) );
     rb = ( a >> 63 ) | ( b << 1 );
-
-    PUT_UINT64_LE( ra, r, 0 );
-    PUT_UINT64_LE( rb, r, 8 );
+    WRITE64LE(r + 0, ra );
+    WRITE64LE(r + 8, rb );
 }
 
 /*
@@ -1840,28 +1754,13 @@ int mbedtls_aes_self_test( int verbose )
 
         if( mode == MBEDTLS_AES_DECRYPT )
         {
-            ret = mbedtls_aes_setkey_dec( &ctx, key, keybits );
+            mbedtls_aes_setkey_dec( &ctx, key, keybits );
             aes_tests = aes_test_ecb_dec[u];
         }
         else
         {
-            ret = mbedtls_aes_setkey_enc( &ctx, key, keybits );
+            mbedtls_aes_setkey_enc( &ctx, key, keybits );
             aes_tests = aes_test_ecb_enc[u];
-        }
-
-        /*
-         * AES-192 is an optional feature that may be unavailable when
-         * there is an alternative underlying implementation i.e. when
-         * MBEDTLS_AES_ALT is defined.
-         */
-        if( ret == MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED && keybits == 192 )
-        {
-            mbedtls_printf( "skipped\n" );
-            continue;
-        }
-        else if( ret != 0 )
-        {
-            goto exit;
         }
 
         for( j = 0; j < 10000; j++ )
@@ -1918,12 +1817,7 @@ int mbedtls_aes_self_test( int verbose )
          * there is an alternative underlying implementation i.e. when
          * MBEDTLS_AES_ALT is defined.
          */
-        if( ret == MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED && keybits == 192 )
-        {
-            mbedtls_printf( "skipped\n" );
-            continue;
-        }
-        else if( ret != 0 )
+        if( ret != 0 )
         {
             goto exit;
         }
@@ -1983,12 +1877,7 @@ int mbedtls_aes_self_test( int verbose )
          * there is an alternative underlying implementation i.e. when
          * MBEDTLS_AES_ALT is defined.
          */
-        if( ret == MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED && keybits == 192 )
-        {
-            mbedtls_printf( "skipped\n" );
-            continue;
-        }
-        else if( ret != 0 )
+        if( ret != 0 )
         {
             goto exit;
         }
@@ -2046,12 +1935,7 @@ int mbedtls_aes_self_test( int verbose )
          * there is an alternative underlying implementation i.e. when
          * MBEDTLS_AES_ALT is defined.
          */
-        if( ret == MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED && keybits == 192 )
-        {
-            mbedtls_printf( "skipped\n" );
-            continue;
-        }
-        else if( ret != 0 )
+        if( ret != 0 )
         {
             goto exit;
         }

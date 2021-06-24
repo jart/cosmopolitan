@@ -1,10 +1,21 @@
-/* clang-format off */
+#include "third_party/mbedtls/ccm.h"
+#include "third_party/mbedtls/chacha20.h"
+#include "third_party/mbedtls/chachapoly.h"
+#include "third_party/mbedtls/cipher.h"
+#include "third_party/mbedtls/cipher_internal.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/gcm.h"
+#include "third_party/mbedtls/nist_kw.h"
+#include "third_party/mbedtls/platform.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /**
  * \file cipher.c
  *
@@ -28,52 +39,7 @@ asm(".include \"libc/disclaimer.inc\"");
  *  limitations under the License.
  */
 
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_CIPHER_C)
-
-#include "third_party/mbedtls/sheesh.h"
-#include "third_party/mbedtls/cipher.h"
-#include "third_party/mbedtls/cipher_internal.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
-
-
-#if defined(MBEDTLS_CHACHAPOLY_C)
-#include "third_party/mbedtls/chachapoly.h"
-#endif
-
-#if defined(MBEDTLS_GCM_C)
-#include "third_party/mbedtls/gcm.h"
-#endif
-
-#if defined(MBEDTLS_CCM_C)
-#include "third_party/mbedtls/ccm.h"
-#endif
-
-#if defined(MBEDTLS_CHACHA20_C)
-#include "third_party/mbedtls/chacha20.h"
-#endif
-
-#if defined(MBEDTLS_CMAC_C)
-#include "third_party/mbedtls/cmac.h"
-#endif
-
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
-#include "third_party/mbedtls/crypto.h"
-#include "third_party/mbedtls/psa_util.h"
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
-
-#if defined(MBEDTLS_NIST_KW_C)
-#include "third_party/mbedtls/nist_kw.h"
-#endif
-
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_calloc calloc
-#define mbedtls_free   free
-#endif
 
 #define CIPHER_VALIDATE_RET( cond )    \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA )
@@ -1475,7 +1441,6 @@ static int mbedtls_cipher_aead_decrypt( mbedtls_cipher_context_t *ctx,
     return( MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE );
 }
 
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
 /*
  * Packet-oriented encryption for AEAD modes: public legacy function.
  */
@@ -1521,7 +1486,7 @@ int mbedtls_cipher_auth_decrypt( mbedtls_cipher_context_t *ctx,
                                          input, ilen, output, olen,
                                          tag, tag_len ) );
 }
-#endif /* !MBEDTLS_DEPRECATED_REMOVED */
+
 #endif /* MBEDTLS_CIPHER_MODE_AEAD */
 
 #if defined(MBEDTLS_CIPHER_MODE_AEAD) || defined(MBEDTLS_NIST_KW_C)

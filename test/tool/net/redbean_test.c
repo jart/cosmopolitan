@@ -110,9 +110,9 @@ TEST(redbean, testOptions) {
   int pid, pipefds[2];
   sigset_t chldmask, savemask;
   sigaddset(&chldmask, SIGCHLD);
-  sigprocmask(SIG_BLOCK, &chldmask, &savemask);
+  CHECK_NE(-1, sigprocmask(SIG_BLOCK, &chldmask, &savemask));
   ASSERT_NE(-1, pipe(pipefds));
-  ASSERT_NE(-1, (pid = vfork()));
+  ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     close(pipefds[0]);
     dup2(pipefds[1], 1);
@@ -135,6 +135,7 @@ TEST(redbean, testOptions) {
                       gc(SendHttpRequest("OPTIONS * HTTP/1.1\n\n"))));
   EXPECT_NE(-1, kill(pid, SIGTERM));
   EXPECT_NE(-1, wait(0));
+  CHECK_NE(-1, sigprocmask(SIG_SETMASK, &savemask, 0));
 }
 
 TEST(redbean, testPipeline) {
@@ -143,9 +144,9 @@ TEST(redbean, testPipeline) {
   int pid, pipefds[2];
   sigset_t chldmask, savemask;
   sigaddset(&chldmask, SIGCHLD);
-  sigprocmask(SIG_BLOCK, &chldmask, &savemask);
+  CHECK_NE(-1, sigprocmask(SIG_BLOCK, &chldmask, &savemask));
   ASSERT_NE(-1, pipe(pipefds));
-  ASSERT_NE(-1, (pid = vfork()));
+  ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     close(pipefds[0]);
     dup2(pipefds[1], 1);
@@ -177,4 +178,5 @@ TEST(redbean, testPipeline) {
                                          "OPTIONS * HTTP/1.1\n\n"))));
   EXPECT_NE(-1, kill(pid, SIGTERM));
   EXPECT_NE(-1, wait(0));
+  CHECK_NE(-1, sigprocmask(SIG_SETMASK, &savemask, 0));
 }

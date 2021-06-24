@@ -1,0 +1,187 @@
+Test case mbedtls_base64_encode #1 buffer just right
+0:char*:"":char*:"":int:0:int:0
+
+Test case mbedtls_base64_encode #2 buffer just right
+0:char*:"f":char*:"Zg==":int:5:int:0
+
+Test case mbedtls_base64_encode #2 buffer too small
+0:char*:"f":char*:"Zg==":int:4:exp:0
+
+Test case mbedtls_base64_encode #3 buffer just right
+0:char*:"fo":char*:"Zm8=":int:5:int:0
+
+Test case mbedtls_base64_encode #3 buffer too small
+0:char*:"fo":char*:"Zm8=":int:4:exp:0
+
+Test case mbedtls_base64_encode #4 buffer just right
+0:char*:"foo":char*:"Zm9v":int:5:int:0
+
+Test case mbedtls_base64_encode #4 buffer too small
+0:char*:"foo":char*:"Zm9v":int:4:exp:0
+
+Test case mbedtls_base64_encode #5 buffer just right
+0:char*:"foob":char*:"Zm9vYg==":int:9:int:0
+
+Test case mbedtls_base64_encode #5 buffer too small
+0:char*:"foob":char*:"Zm9vYg==":int:8:exp:0
+
+Test case mbedtls_base64_encode #6 buffer just right
+0:char*:"fooba":char*:"Zm9vYmE=":int:9:int:0
+
+Test case mbedtls_base64_encode #6 buffer too small
+0:char*:"fooba":char*:"Zm9vYmE=":int:8:exp:0
+
+Test case mbedtls_base64_encode #7 buffer just right
+0:char*:"foobar":char*:"Zm9vYmFy":int:9:int:0
+
+Test case mbedtls_base64_encode #7 buffer too small
+0:char*:"foobar":char*:"Zm9vYmFy":int:8:exp:0
+
+Test case mbedtls_base64_decode #1
+1:char*:"":char*:"":int:0
+
+Test case mbedtls_base64_decode #2
+1:char*:"Zg==":char*:"f":int:0
+
+Test case mbedtls_base64_decode #3
+1:char*:"Zm8=":char*:"fo":int:0
+
+Test case mbedtls_base64_decode #4
+1:char*:"Zm9v":char*:"foo":int:0
+
+Test case mbedtls_base64_decode #5
+1:char*:"Zm9vYg==":char*:"foob":int:0
+
+Test case mbedtls_base64_decode #6
+1:char*:"Zm9vYmE=":char*:"fooba":int:0
+
+Test case mbedtls_base64_decode #7
+1:char*:"Zm9vYmFy":char*:"foobar":int:0
+
+Base64 decode (Illegal character)
+1:char*:"zm#=":char*:"":exp:1
+
+Base64 decode (Too much equal signs)
+1:char*:"zm===":char*:"":exp:1
+
+Base64 decode (Invalid char after equal signs)
+1:char*:"zm=masd":char*:"":exp:1
+
+Base64 decode (Space inside string)
+1:char*:"zm masd":char*:"":exp:1
+
+Base64 decode "Zm9vYmFy" (no newline nor '\0' at end)
+4:hex:"5a6d3976596d4679":char*:"foobar":int:0
+
+Base64 decode "Zm9vYmFy\n" (LF at end)
+4:hex:"5a6d3976596d46790a":char*:"foobar":int:0
+
+Base64 decode "Zm9vYmFy\r\n" (CRLF at end)
+4:hex:"5a6d3976596d46790d0a":char*:"foobar":int:0
+
+Base64 decode "Zm9vYmFy\r" (CR at end)
+4:hex:"5a6d3976596d46790d":char*:"":exp:1
+
+Base64 decode "Zm9vYmFy " (SP at end)
+4:hex:"5a6d3976596d467920":char*:"foobar":int:0
+
+Base64 decode "Zm9vYmFy \n" (SP+LF at end)
+4:hex:"5a6d3976596d4679200a":char*:"foobar":int:0
+
+Base64 decode "Zm9vYmFy \r\n" (SP+CRLF at end)
+4:hex:"5a6d3976596d4679200d0a":char*:"foobar":int:0
+
+Base64 decode "Zm9vYmFy \r" (SP+CR at end)
+4:hex:"5a6d3976596d4679200d":char*:"":exp:1
+
+Base64 decode "Zm9vYmFy  " (2SP at end)
+4:hex:"5a6d3976596d46792020":char*:"foobar":int:0
+
+Base64 decode "Zm9vYmFy  \n" (2SP+LF at end)
+4:hex:"5a6d3976596d467920200a":char*:"foobar":int:0
+
+Base64 decode "Zm9vYmFy  \r\n" (2SP+CRLF at end)
+4:hex:"5a6d3976596d467920200d0a":char*:"foobar":int:0
+
+Base64 decode "Zm9vYmFy  \r" (2SP+CR at end)
+4:hex:"5a6d3976596d467920200d":char*:"":exp:1
+
+Base64 decode "Zm9vYmF\ny" (LF inside)
+4:hex:"5a6d3976596d460a79":char*:"foobar":int:0
+
+Base64 decode "Zm9vYmF\ry" (CRLF inside)
+4:hex:"5a6d3976596d460d0a79":char*:"foobar":int:0
+
+Base64 decode "Zm9vYmF\ry" (CR inside)
+4:hex:"5a6d3976596d460d79":char*:"":exp:1
+
+Base64 decode "Zm9vYmF y" (SP inside)
+4:hex:"5a6d3976596d462079":char*:"":exp:1
+
+Base64 decode "Zm9vYmF \ny" (SP+LF inside)
+4:hex:"5a6d3976596d46200a79":char*:"foobar":int:0
+
+Base64 decode "Zm9vYmF \ry" (SP+CRLF inside)
+4:hex:"5a6d3976596d46200d0a79":char*:"foobar":int:0
+
+Base64 decode "Zm9vYmF \ry" (SP+CR inside)
+4:hex:"5a6d3976596d46200d79":char*:"":exp:1
+
+Base64 decode "Zm9vYmF  y" (2SP inside)
+4:hex:"5a6d3976596d46202079":char*:"":exp:1
+
+Base64 decode "Zm9vYmF  \ny" (2SP+LF inside)
+4:hex:"5a6d3976596d4620200a79":char*:"foobar":int:0
+
+Base64 decode "Zm9vYmF  \ry" (2SP+CRLF inside)
+4:hex:"5a6d3976596d4620200d0a79":char*:"foobar":int:0
+
+Base64 decode "Zm9vYmF  \ry" (2SP+CR inside)
+4:hex:"5a6d3976596d4620200d79":char*:"":exp:1
+
+Base64 encode hex #1
+2:hex:"010203040506070809":char*:"AQIDBAUGBwgJ":int:13:int:0
+
+Base64 encode hex #2 (buffer too small)
+2:hex:"010203040506070809":char*:"AQIDBAUGBwgJ":int:12:exp:0
+
+Base64 encode hex #3
+2:hex:"0102030405060708":char*:"AQIDBAUGBwg=":int:13:int:0
+
+Base64 encode hex #4
+2:hex:"01020304050607":char*:"AQIDBAUGBw==":int:13:int:0
+
+Base64 encode hex all valid input bytes #0
+2:hex:"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff":char*:"AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==":int:345:int:0
+
+Base64 encode hex all valid input bytes #1
+2:hex:"0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff00":char*:"AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AA==":int:345:int:0
+
+Base64 encode hex all valid input bytes #2
+2:hex:"02030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff0001":char*:"AgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8AAQ==":int:345:int:0
+
+Base64 encode all valid output characters at all offsets
+2:hex:"00108310518720928b30d38f41149351559761969b71d79f8218a39259a7a29aabb2dbafc31cb3d35db7e39ebbf3dfbff800420c41461c824a2cc34e3d04524d45565d865a6dc75e7e08628e49669e8a6aaecb6ebf0c72cf4d76df8e7aefcf7effe00108310518720928b30d38f41149351559761969b71d79f8218a39259a7a29aabb2dbafc31cb3d35db7e39ebbf3dfbff800420c41461c824a2cc34e3d04524d45565d865a6dc75e7e08628e49669e8a6aaecb6ebf0c72cf4d76df8e7aefcf7efd0":char*:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/Q":int:261:int:0
+
+Base64 decode hex #1
+3:char*:"AQIDBAUGBwgJ":hex:"010203040506070809":int:9:int:0
+
+Base64 decode hex #2 (buffer too small)
+3:char*:"AQIDBAUGBwgJ":hex:"010203040506070809":int:8:exp:0
+
+Base64 decode hex #3
+3:char*:"AQIDBAUGBwg=":hex:"0102030405060708":int:8:int:0
+
+Base64 decode hex #4
+3:char*:"AQIDBAUGBw==":hex:"01020304050607":int:7:int:0
+
+Base64 decode hex #5 (buffer too small)
+3:char*:"AQIDBAUGBw==":hex:"01020304050607":int:6:exp:0
+
+Base64 decode all valid input characters at all offsets
+3:char*:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/Q":hex:"00108310518720928b30d38f41149351559761969b71d79f8218a39259a7a29aabb2dbafc31cb3d35db7e39ebbf3dfbff800420c41461c824a2cc34e3d04524d45565d865a6dc75e7e08628e49669e8a6aaecb6ebf0c72cf4d76df8e7aefcf7effe00108310518720928b30d38f41149351559761969b71d79f8218a39259a7a29aabb2dbafc31cb3d35db7e39ebbf3dfbff800420c41461c824a2cc34e3d04524d45565d865a6dc75e7e08628e49669e8a6aaecb6ebf0c72cf4d76df8e7aefcf7efd0":int:195:int:0
+
+Base64 Selftest
+depends_on:0
+5
+

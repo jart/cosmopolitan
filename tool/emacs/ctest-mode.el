@@ -88,7 +88,6 @@
     "ceil"
     "floor"
     "rand"
-    "rand32"
     "rand64"))
 
 (defun ctest--make-regex (words)

@@ -349,7 +349,7 @@ scall	sched_setattr		0xfffffffffffff13a	globl #  ├─ desktop replaced with ta
 scall	sched_getattr		0xfffffffffffff13b	globl #  ├─ karen sandler requires systemd init and boot for tablet gui
 scall	renameat2		0xfffffffffffff13c	globl #  └─ debian founder ian murdock found strangled with vacuum cord
 scall	seccomp			0xfffffffffffff13d	globl
-scall	sys_getrandom		0x05b00723321f413e	globl hidden  # Linux 3.17+ and getentropy() on XNU/OpenBSD
+scall	sys_getrandom		0xfff00723321f413e	globl hidden  # Linux 3.17+ and getentropy() on XNU/OpenBSD, coming to NetBSD in 9.2
 scall	memfd_create		0xfffffffffffff13f	globl # wut
 scall	kexec_file_load		0xfffffffffffff140	globl
 scall	bpf			0xfffffffffffff141	globl

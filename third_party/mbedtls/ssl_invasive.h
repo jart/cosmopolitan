@@ -1,38 +1,11 @@
-/* clang-format off */
-
-/**
- * \file ssl_invasive.h
- *
- * \brief SSL module: interfaces for invasive testing only.
- *
- * The interfaces in this file are intended for testing purposes only.
- * They SHOULD NOT be made available in library integrations except when
- * building the library for testing.
- */
-/*
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-#ifndef MBEDTLS_SSL_INVASIVE_H
-#define MBEDTLS_SSL_INVASIVE_H
-
+#ifndef COSMOPOLITAN_THIRD_PARTY_MBEDTLS_SSL_INVASIVE_H_
+#define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_SSL_INVASIVE_H_
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/md.h"
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_SSL_SOME_SUITES_USE_TLS_CBC)
 
-#if defined(MBEDTLS_TEST_HOOKS) &&              \
-    defined(MBEDTLS_SSL_SOME_SUITES_USE_TLS_CBC)
 /** \brief Compute the HMAC of variable-length data with constant flow.
  *
  * This function computes the HMAC of the concatenation of \p add_data and \p
@@ -67,12 +40,11 @@
  * \retval MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED
  *         The hardware accelerator failed.
  */
-int mbedtls_ssl_cf_hmac(
-        mbedtls_md_context_t *ctx,
-        const unsigned char *add_data, size_t add_data_len,
-        const unsigned char *data, size_t data_len_secret,
-        size_t min_data_len, size_t max_data_len,
-        unsigned char *output );
+int mbedtls_ssl_cf_hmac(mbedtls_md_context_t *ctx,
+                        const unsigned char *add_data, size_t add_data_len,
+                        const unsigned char *data, size_t data_len_secret,
+                        size_t min_data_len, size_t max_data_len,
+                        unsigned char *output);
 
 /** \brief Copy data from a secret position with constant flow.
  *
@@ -92,11 +64,12 @@ int mbedtls_ssl_cf_hmac(
  * \param offset_max    The maximal value of \p offset_secret.
  * \param len           The number of bytes to copy.
  */
-void mbedtls_ssl_cf_memcpy_offset( unsigned char *dst,
-                                   const unsigned char *src_base,
-                                   size_t offset_secret,
-                                   size_t offset_min, size_t offset_max,
-                                   size_t len );
-#endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_SSL_SOME_SUITES_USE_TLS_CBC */
+void mbedtls_ssl_cf_memcpy_offset(unsigned char *dst,
+                                  const unsigned char *src_base,
+                                  size_t offset_secret, size_t offset_min,
+                                  size_t offset_max, size_t len);
 
-#endif /* MBEDTLS_SSL_INVASIVE_H */
+#endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_SSL_SOME_SUITES_USE_TLS_CBC */
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_THIRD_PARTY_MBEDTLS_SSL_INVASIVE_H_ */

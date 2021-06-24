@@ -1279,7 +1279,8 @@
            "COSMOPOLITAN_C_START_"
            "COSMOPOLITAN_C_END_"
            "MACHINE_CODE_ANALYSIS_BEGIN_"
-           "MACHINE_CODE_ANALYSIS_END_"))
+           "MACHINE_CODE_ANALYSIS_END_"
+           "__VSCODE_INTELLISENSE__"))
 
         (cosmopolitan-builtin-functions
          '("DebugBreak"

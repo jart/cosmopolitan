@@ -9,9 +9,13 @@
 #endif
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/log/log.h"
+#include "libc/errno.h"
+#include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
+#include "libc/x/x.h"
 #include "third_party/musl/ftw.h"
 
 /**
@@ -42,10 +46,12 @@ static int display_info(const char *fpath, const struct stat *sb, int tflag,
 
 int main(int argc, char *argv[]) {
   int flags = 0;
+  const char *dir;
   if (argc > 2 && strchr(argv[2], 'd') != NULL) flags |= FTW_DEPTH;
   if (argc > 2 && strchr(argv[2], 'p') != NULL) flags |= FTW_PHYS;
-  if (nftw((argc < 2) ? "." : argv[1], display_info, 20, flags) == -1) {
-    perror("nftw");
+  dir = argc < 2 ? "." : argv[1];
+  if (nftw(dir, display_info, 20, flags) == -1) {
+    fprintf(stderr, "nftw() failed: %s: %s\n", strerror(errno), dir);
     exit(EXIT_FAILURE);
   }
   exit(EXIT_SUCCESS);

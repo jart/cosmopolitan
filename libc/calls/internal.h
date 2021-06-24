@@ -117,7 +117,7 @@ i32 __sys_openat(i32, const char *, i32, u32) hidden;
 i32 __sys_pipe2(i32[hasatleast 2], u32) hidden;
 i32 __sys_utimensat(i32, const char *, const struct timespec *, i32) hidden;
 i32 __sys_wait4(i32, i32 *, i32, struct rusage *) hidden;
-i32 getdents(i32, char *, u32, i64 *) hidden;
+i32 getdents(i32, void *, u32, i64 *) hidden;
 i32 sys_chdir(const char *) hidden;
 i32 sys_clock_gettime(i32, struct timespec *) hidden;
 i32 sys_close(i32) hidden;

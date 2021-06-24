@@ -22,24 +22,29 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
+#include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/flock.h"
-#include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/dns/dns.h"
+#include "libc/dns/hoststxt.h"
 #include "libc/dos.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
+#include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/fmt.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsf.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/rand/rand.h"
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/gc.internal.h"
@@ -49,21 +54,23 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/dt.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/inaddr.h"
 #include "libc/sysv/consts/ipproto.h"
-#include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/lock.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rusage.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/shut.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
@@ -81,25 +88,73 @@
 #include "third_party/lua/ltests.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lualib.h"
+#include "third_party/mbedtls/asn1.h"
+#include "third_party/mbedtls/asn1write.h"
+#include "third_party/mbedtls/config.h"
+#include "third_party/mbedtls/ctr_drbg.h"
+#include "third_party/mbedtls/debug.h"
+#include "third_party/mbedtls/ecp.h"
+#include "third_party/mbedtls/entropy.h"
+#include "third_party/mbedtls/entropy_poll.h"
+#include "third_party/mbedtls/oid.h"
+#include "third_party/mbedtls/pk.h"
+#include "third_party/mbedtls/rsa.h"
+#include "third_party/mbedtls/san.h"
+#include "third_party/mbedtls/ssl.h"
+#include "third_party/mbedtls/x509.h"
+#include "third_party/mbedtls/x509_crt.h"
 #include "third_party/regex/regex.h"
 #include "third_party/zlib/zlib.h"
 
-#define HASH_LOAD_FACTOR /* 1. / */ 4
-#define DEFAULT_PORT     8080
+/**
+ * @fileoverview redbean - single-file distributable web server
+ *
+ * redbean makes it possible to share web applications that run offline
+ * as a single-file αcτµαlly pδrταblε εxεcµταblε zip archive which
+ * contains your assets. All you need to do is download the redbean.com
+ * program below, change the filename to .zip, add your content in a zip
+ * editing tool, and then change the extension back to .com.
+ *
+ * redbean can serve 1 million+ gzip encoded responses per second on a
+ * cheap personal computer. That performance is thanks to zip and gzip
+ * using the same compression format, which enables kernelspace copies.
+ * Another reason redbean goes fast is that it's a tiny static binary,
+ * which makes fork memory paging nearly free.
+ *
+ * redbean is also easy to modify to suit your own needs. The program
+ * itself is written as a single .c file. It embeds the Lua programming
+ * language and SQLite which let you write dynamic pages.
+ */
 
-#define read(F, P, N)   readv(F, &(struct iovec){P, N}, 1)
-#define LockInc(P)      asm volatile("lock incq\t%0" : "=m"(*(P)))
-#define AppendCrlf(P)   mempcpy(P, "\r\n", 2)
-#define HasHeader(H)    (!!msg.headers[H].a)
-#define HeaderData(H)   (inbuf.p + msg.headers[H].a)
-#define HeaderLength(H) (msg.headers[H].b - msg.headers[H].a)
+#ifndef REDBEAN
+#define REDBEAN "redbean"
+#endif
+
+#ifndef UNSECURE
+STATIC_YOINK("usr/share/ssl/root/amazon.pem");
+STATIC_YOINK("usr/share/ssl/root/certum.pem");
+STATIC_YOINK("usr/share/ssl/root/comodo.pem");
+STATIC_YOINK("usr/share/ssl/root/digicert.pem");
+STATIC_YOINK("usr/share/ssl/root/dst.pem");
+STATIC_YOINK("usr/share/ssl/root/geotrust.pem");
+STATIC_YOINK("usr/share/ssl/root/globalsign.pem");
+STATIC_YOINK("usr/share/ssl/root/godaddy.pem");
+STATIC_YOINK("usr/share/ssl/root/google.pem");
+STATIC_YOINK("usr/share/ssl/root/quovadis.pem");
+STATIC_YOINK("usr/share/ssl/root/redbean.pem");
+STATIC_YOINK("usr/share/ssl/root/starfield.pem");
+STATIC_YOINK("usr/share/ssl/root/verisign.pem");
+#endif
+
+#define HASH_LOAD_FACTOR /* 1. / */ 4
+#define read(F, P, N)    readv(F, &(struct iovec){P, N}, 1)
+#define LockInc(P)       asm volatile("lock incq\t%0" : "=m"(*(P)))
+#define AppendCrlf(P)    mempcpy(P, "\r\n", 2)
+#define HasHeader(H)     (!!msg.headers[H].a)
+#define HeaderData(H)    (inbuf.p + msg.headers[H].a)
+#define HeaderLength(H)  (msg.headers[H].b - msg.headers[H].a)
 #define HeaderEqualCase(H, S) \
   SlicesEqualCase(S, strlen(S), HeaderData(H), HeaderLength(H))
-
-static const struct itimerval kHeartbeat = {
-    {0, 500000},
-    {0, 500000},
-};
 
 static const uint8_t kGzipHeader[] = {
     0x1F,        // MAGNUM
@@ -221,6 +276,24 @@ struct Strings {
   } * p;
 };
 
+static struct Ips {
+  size_t n;
+  uint32_t *p;
+} ips;
+
+static struct Ports {
+  size_t n;
+  uint16_t *p;
+} ports;
+
+static struct Servers {
+  size_t n;
+  struct Server {
+    int fd;
+    struct sockaddr_in addr;
+  } * p;
+} servers;
+
 static struct Freelist {
   size_t n, c;
   void **p;
@@ -234,6 +307,14 @@ static struct Unmaplist {
     size_t n;
   } * p;
 } unmaplist;
+
+static struct Certs {
+  size_t n;
+  struct Cert {
+    mbedtls_x509_crt *cert;
+    mbedtls_pk_context *key;
+  } * p;
+} certs;
 
 static struct Redirects {
   size_t n;
@@ -281,6 +362,18 @@ static const char kCounterNames[] =
 #undef C
     ;
 
+static mbedtls_entropy_context ent = {
+    .source_count = 1,
+    .source = {{.f_source = mbedtls_hardware_poll,
+                .threshold = MBEDTLS_ENTROPY_MIN_HARDWARE,
+                .strong = MBEDTLS_ENTROPY_SOURCE_STRONG}},
+};
+
+typedef ssize_t (*reader_f)(int, void *, size_t);
+typedef ssize_t (*writer_f)(int, struct iovec *, int);
+
+static bool usessl;
+static bool suiteb;
 static bool killed;
 static bool istext;
 static bool zombied;
@@ -288,9 +381,7 @@ static bool gzipped;
 static bool branded;
 static bool funtrace;
 static bool meltdown;
-static bool heartless;
 static bool printport;
-static bool heartbeat;
 static bool daemonize;
 static bool logrusage;
 static bool logbodies;
@@ -302,14 +393,16 @@ static bool logmessages;
 static bool checkedmethod;
 static bool connectionclose;
 static bool keyboardinterrupt;
+static bool listeningonport443;
 static bool encouragekeepalive;
 static bool loggednetworkorigin;
 static bool hasluaglobalhandler;
+static bool upgradeinsecurerequests;
+static bool dontupgradeinsecurerequests;
 
 static int zfd;
 static int frags;
 static int gmtoff;
-static int server;
 static int client;
 static int daemonuid;
 static int daemongid;
@@ -327,29 +420,38 @@ static uint8_t *zcdir;
 static size_t hdrsize;
 static size_t msgsize;
 static size_t amtread;
+static reader_f reader;
+static writer_f writer;
 static char *extrahdrs;
 static char *luaheaderp;
 static const char *zpath;
 static const char *brand;
+static char gzip_footer[8];
 static const char *pidpath;
 static const char *logpath;
+static const char *keypath;
+static const char *certpath;
+static const char *launchbrowser;
+static struct pollfd *polls;
 static struct Strings loops;
 static size_t contentlength;
 static int64_t cacheseconds;
-static uint8_t gzip_footer[8];
 static const char *serverheader;
 static struct Strings stagedirs;
 static struct Strings hidepaths;
 
 static struct Buffer inbuf;
+static struct Buffer oldin;
 static struct Buffer hdrbuf;
 static struct Buffer outbuf;
-static struct linger linger;
 static struct timeval timeout;
 static struct Buffer effectivepath;
+static mbedtls_ssl_config conf;
+static mbedtls_ssl_context ssl;
+static mbedtls_ctr_drbg_context rng;
 
 static struct Url url;
-static struct HttpRequest msg;
+static struct HttpMessage msg;
 static char slashpath[PATH_MAX];
 
 static struct stat zst;
@@ -357,9 +459,10 @@ static long double startread;
 static long double lastrefresh;
 static long double startserver;
 static long double startrequest;
+static long double lastheartbeat;
 static long double startconnection;
-static struct sockaddr_in serveraddr;
 static struct sockaddr_in clientaddr;
+static struct sockaddr_in *serveraddr;
 
 static char *Route(const char *, size_t, const char *, size_t);
 static char *RouteHost(const char *, size_t, const char *, size_t);
@@ -370,10 +473,6 @@ static char *SetStatus(unsigned, const char *);
 
 static void OnChld(void) {
   zombied = true;
-}
-
-static void OnAlrm(void) {
-  heartbeat = true;
 }
 
 static void OnUsr1(void) {
@@ -546,6 +645,246 @@ static long FindRedirect(const char *s, size_t n) {
   return -1;
 }
 
+static wontreturn void CrashCertificate(const char *name, const char *path) {
+  fprintf(stderr, "error: failed to load %s: %s\n", name, path);
+  exit(1);
+}
+
+static void LogCertificate(const char *msg, mbedtls_x509_crt *cert) {
+  char *s;
+  size_t n;
+  if (LOGGABLE(kLogDebug)) {
+    if ((s = gc(malloc((n = 15000))))) {
+      if (mbedtls_x509_crt_info(s, n, " ", cert) > 0) {
+        DEBUGF("%s\n%s", msg, chomp(s));
+      }
+    }
+  }
+}
+
+static char *FormatX509Name(mbedtls_x509_name *name) {
+  char *s = calloc(1, 1000);
+  CHECK_GT(mbedtls_x509_dn_gets(s, 1000, name), 0);
+  return s;
+}
+
+static bool IsSelfSigned(mbedtls_x509_crt *cert) {
+  return !mbedtls_x509_name_cmp(&cert->issuer, &cert->subject);
+}
+
+static mbedtls_x509_crt *GetTrustedCertificate(mbedtls_x509_name *name) {
+  size_t i;
+  for (i = 0; i < certs.n; ++i) {
+    if (certs.p[i].cert &&
+        !mbedtls_x509_name_cmp(name, &certs.p[i].cert->subject)) {
+      return certs.p[i].cert;
+    }
+  }
+  return 0;
+}
+
+static bool VerifyCertificate(mbedtls_x509_crt *cert, int depth) {
+  size_t i;
+  mbedtls_x509_crt *next;
+  if (depth < MBEDTLS_X509_MAX_INTERMEDIATE_CA) {
+    if ((next = cert->next)) {
+      if (!VerifyCertificate(next, depth + 1)) return false;
+    } else {
+      if (!(next = GetTrustedCertificate(&cert->issuer))) {
+        if (depth) {
+          WARNF("chain root %`'s isn't in your zip:usr/share/ssl/root folder",
+                gc(FormatX509Name(&cert->issuer)));
+        }
+        return false;
+      }
+      if (!IsSelfSigned(cert) && !VerifyCertificate(next, depth + 1)) {
+        return false;
+      }
+    }
+    if (!mbedtls_x509_crt_check_parent(cert, next, 1) &&
+        !mbedtls_x509_crt_check_signature(cert, next, 0) &&
+        !mbedtls_x509_time_is_past(&cert->valid_to) &&
+        !mbedtls_x509_time_is_future(&cert->valid_from)) {
+      return true;
+    } else {
+      VERBOSEF("verification failed %`'s -> %`'s",
+               gc(FormatX509Name(&cert->subject)),
+               gc(FormatX509Name(&next->subject)));
+      return false;
+    }
+  } else {
+    VERBOSEF("verification depth exceeded for %`'s",
+             gc(FormatX509Name(&cert->subject)));
+    return false;
+  }
+}
+
+static void UseCertificate(mbedtls_x509_crt *cert, mbedtls_pk_context *key) {
+  LogCertificate("using certificate", cert);
+  if (VerifyCertificate(cert, 0)) {
+    if (!dontupgradeinsecurerequests) {
+      DEBUGF("enabling conditional https redirects");
+      upgradeinsecurerequests = true;
+    }
+  }
+  CHECK_EQ(0, mbedtls_ssl_conf_own_cert(&conf, cert, key));
+}
+
+static bool ChainCertificate(mbedtls_x509_crt *cert, mbedtls_x509_crt *parent) {
+  if (!mbedtls_x509_crt_check_signature(cert, parent, 0)) {
+    DEBUGF("chaining %`'s to %`'s", gc(FormatX509Name(&cert->subject)),
+           gc(FormatX509Name(&parent->subject)));
+    cert->next = parent;
+    return true;
+  } else {
+    WARNF("signature check failed for %`'s -> %`'s",
+          gc(FormatX509Name(&cert->subject)),
+          gc(FormatX509Name(&parent->subject)));
+    return false;
+  }
+}
+
+static void InternCertificate(mbedtls_x509_crt *cert,
+                              mbedtls_x509_crt *parent) {
+  int r;
+  size_t i;
+  if (cert->next) InternCertificate(cert->next, cert);
+  if (parent) {
+    if (mbedtls_x509_crt_check_parent(cert, parent, 1)) {
+      parent->next = 0; /* unchain ca root bundles */
+    } else if ((r = mbedtls_x509_crt_check_signature(cert, parent, 0))) {
+      WARNF("invalid signature for %`'s -> %`'s (-0x%04x)",
+            gc(FormatX509Name(&cert->subject)),
+            gc(FormatX509Name(&parent->subject)), -r);
+    }
+  }
+  if (mbedtls_x509_time_is_past(&cert->valid_to)) {
+    WARNF("certificate is expired", gc(FormatX509Name(&cert->subject)));
+  } else if (mbedtls_x509_time_is_future(&cert->valid_from)) {
+    WARNF("certificate is from the future", gc(FormatX509Name(&cert->subject)));
+  }
+  for (i = 0; i < certs.n; ++i) {
+    if (!certs.p[i].cert) continue;
+    if (!mbedtls_x509_name_cmp(&cert->subject, &certs.p[i].cert->subject)) {
+      WARNF("certificate subject name %`'s is already loaded",
+            gc(FormatX509Name(&cert->subject)));
+      return;
+    }
+  }
+  for (i = 0; i < certs.n; ++i) {
+    if (!certs.p[i].cert && certs.p[i].key &&
+        !mbedtls_pk_check_pair(&cert->pk, certs.p[i].key)) {
+      certs.p[i].cert = cert;
+      return;
+    }
+  }
+  LogCertificate("loaded certificate", cert);
+  if (!cert->next && !IsSelfSigned(cert)) {
+    for (i = 0; i < certs.n; ++i) {
+      if (!certs.p[i].cert) continue;
+      if (!mbedtls_x509_crt_check_parent(cert, certs.p[i].cert, 1)) {
+        if (ChainCertificate(cert, certs.p[i].cert)) break;
+      }
+    }
+  }
+  for (i = 0; i < certs.n; ++i) {
+    if (!certs.p[i].cert) continue;
+    if (certs.p[i].cert->next) continue;
+    if (!mbedtls_x509_crt_check_parent(certs.p[i].cert, cert, 1)) {
+      ChainCertificate(certs.p[i].cert, cert);
+    }
+  }
+  certs.p = realloc(certs.p, ++certs.n * sizeof(*certs.p));
+  certs.p[certs.n - 1].cert = cert;
+  certs.p[certs.n - 1].key = 0;
+}
+
+static void ProgramCertificate(const char *p, size_t n) {
+  int rc;
+  unsigned char *waqapi;
+  mbedtls_x509_crt *cert;
+  waqapi = malloc(n + 1);
+  memcpy(waqapi, p, n);
+  waqapi[n] = 0;
+  cert = calloc(1, sizeof(mbedtls_x509_crt));
+  rc = mbedtls_x509_crt_parse(cert, waqapi, n + 1);
+  mbedtls_platform_zeroize(waqapi, n);
+  free(waqapi);
+  if (rc < 0) {
+    WARNF("failed to load certificate (grep -0x%04x)\n", rc);
+    return;
+  } else if (rc > 0) {
+    VERBOSEF("certificate bundle partially loaded");
+  }
+  InternCertificate(cert, 0);
+}
+
+static void ProgramPrivateKey(const char *p, size_t n) {
+  int rc;
+  size_t i;
+  unsigned char *waqapi;
+  mbedtls_pk_context *key;
+  waqapi = malloc(n + 1);
+  memcpy(waqapi, p, n);
+  waqapi[n] = 0;
+  key = calloc(1, sizeof(mbedtls_pk_context));
+  rc = mbedtls_pk_parse_key(key, waqapi, n + 1, 0, 0);
+  mbedtls_platform_zeroize(waqapi, n);
+  free(waqapi);
+  if (rc != 0) {
+    fprintf(stderr, "error: load key (grep -0x%04x)\n", -rc);
+    exit(1);
+  }
+  for (i = 0; i < certs.n; ++i) {
+    if (certs.p[i].cert && !certs.p[i].key &&
+        !mbedtls_pk_check_pair(&certs.p[i].cert->pk, key)) {
+      certs.p[i].key = key;
+      return;
+    }
+  }
+  VERBOSEF("loaded private key");
+  certs.p = realloc(certs.p, ++certs.n * sizeof(*certs.p));
+  certs.p[certs.n - 1].cert = 0;
+  certs.p[certs.n - 1].key = key;
+}
+
+static void ProgramFile(const char *path, void program(const char *, size_t)) {
+  char *p;
+  size_t n;
+  DEBUGF("ProgramFile(%`'s)", path);
+  if ((p = xslurp(path, &n))) {
+    program(p, n);
+    mbedtls_platform_zeroize(p, n);
+    free(p);
+  } else {
+    fprintf(stderr, "error: failed to read file: %s\n", path);
+    exit(1);
+  }
+}
+
+static void ProgramPort(long port) {
+  if (!(0 <= port && port <= 65535)) {
+    fprintf(stderr, "error: bad port: %d\n", port);
+    exit(1);
+  }
+  if (port == 443) listeningonport443 = true;
+  ports.p = realloc(ports.p, ++ports.n * sizeof(*ports.p));
+  ports.p[ports.n - 1] = port;
+}
+
+static void ProgramAddr(const char *addr) {
+  ssize_t rc;
+  struct addrinfo *ai = NULL;
+  struct addrinfo hint = {AI_NUMERICSERV, AF_INET, SOCK_STREAM, IPPROTO_TCP};
+  if ((rc = getaddrinfo(addr, "0", &hint, &ai)) != EAI_SUCCESS) {
+    fprintf(stderr, "error: bad addr: %s (EAI_%s)\n", addr, gai_strerror(rc));
+    exit(1);
+  }
+  ips.p = realloc(ips.p, ++ips.n * sizeof(*ips.p));
+  ips.p[ips.n - 1] = ntohl(ai->ai_addr4->sin_addr.s_addr);
+  freeaddrinfo(ai);
+}
+
 static void ProgramRedirect(int code, const char *sp, size_t sn, const char *dp,
                             size_t dn) {
   long i, j;
@@ -605,8 +944,8 @@ static void DescribeAddress(char buf[32], uint32_t addr, uint16_t port) {
 }
 
 static inline void GetServerAddr(uint32_t *ip, uint16_t *port) {
-  *ip = ntohl(serveraddr.sin_addr.s_addr);
-  if (port) *port = ntohs(serveraddr.sin_port);
+  *ip = ntohl(serveraddr->sin_addr.s_addr);
+  if (port) *port = ntohs(serveraddr->sin_port);
 }
 
 static inline void GetClientAddr(uint32_t *ip, uint16_t *port) {
@@ -654,11 +993,6 @@ static void ProgramBrand(const char *s) {
   free(p);
 }
 
-static void ProgramLinger(long sec) {
-  linger.l_onoff = sec > 0;
-  linger.l_linger = MAX(0, sec);
-}
-
 static void ProgramTimeout(long ms) {
   ldiv_t d;
   if (ms <= 30) {
@@ -674,30 +1008,19 @@ static void ProgramCache(long x) {
   cacheseconds = x;
 }
 
-static void ProgramPort(long x) {
-  serveraddr.sin_port = htons(x);
-}
-
 static void SetDefaults(void) {
-#ifdef STATIC
-  ProgramBrand("redbean-static/1.3");
-#else
-  ProgramBrand("redbean/1.3");
-#endif
+  ProgramBrand(REDBEAN "/1.3");
   __log_level = kLogInfo;
   maxpayloadsize = 64 * 1024;
   ProgramCache(-1);
-  ProgramTimeout(30 * 1000);
-  ProgramPort(DEFAULT_PORT);
-  serveraddr.sin_family = AF_INET;
-  serveraddr.sin_addr.s_addr = INADDR_ANY;
+  ProgramTimeout(60 * 1000);
   if (IsWindows()) uniprocess = true;
 }
 
 static void AddString(struct Strings *l, const char *s, size_t n) {
   if (++l->n > l->c) {
     l->c = l->n + (l->n >> 1);
-    l->p = xrealloc(l->p, l->c * sizeof(*l->p));
+    l->p = realloc(l->p, l->c * sizeof(*l->p));
   }
   l->p[l->n - 1].s = s;
   l->p[l->n - 1].n = n;
@@ -751,11 +1074,21 @@ static void ProgramHeader(const char *s) {
   }
 }
 
+static bool IsServerFd(int fd) {
+  size_t i;
+  for (i = 0; i < servers.n; ++i) {
+    if (servers.p[i].fd == fd) {
+      return true;
+    }
+  }
+  return false;
+}
+
 static void Daemonize(void) {
   char ibuf[21];
   int i, fd, pid;
-  for (i = 0; i < 128; ++i) {
-    if (i != server) {
+  for (i = 0; i < 256; ++i) {
+    if (!IsServerFd(i)) {
       close(i);
     }
   }
@@ -914,7 +1247,7 @@ static void WaitAll(void) {
         }
         continue;
       }
-      FATALF("%s wait error %s", DescribeServer(), strerror(errno));
+      FATALF("wait error %s", strerror(errno));
     }
   }
 }
@@ -933,7 +1266,7 @@ static void ReapZombies(void) {
     } else {
       if (errno == ECHILD) break;
       if (errno == EINTR) continue;
-      FATALF("%s wait error %s", DescribeServer(), strerror(errno));
+      FATALF("wait error %s", strerror(errno));
     }
   } while (!terminated);
 }
@@ -965,6 +1298,430 @@ static ssize_t WritevAll(int fd, struct iovec *iov, int iovlen) {
     }
   } while (iovlen);
   return 0;
+}
+
+static int TlsRecv(void *ctx, unsigned char *buf, size_t len, uint32_t tmo) {
+  int rc;
+  if (oldin.n) {
+    rc = MIN(oldin.n, len);
+    memcpy(buf, oldin.p, rc);
+    oldin.p += rc;
+    oldin.n -= rc;
+    return rc;
+  }
+  while ((rc = read(client, buf, len)) == -1) {
+    if (errno == EINTR) {
+      return MBEDTLS_ERR_SSL_WANT_READ;
+    } else if (errno == EAGAIN) {
+      return MBEDTLS_ERR_SSL_TIMEOUT;
+    } else if (errno == EPIPE || errno == ECONNRESET || errno == ENETRESET) {
+      return MBEDTLS_ERR_NET_CONN_RESET;
+    } else {
+      WARNF("%s tls read() error %s", DescribeClient(), strerror(errno));
+      return MBEDTLS_ERR_NET_RECV_FAILED;
+    }
+  }
+  return rc;
+}
+
+static void TlsDebug(void *ctx, int level, const char *file, int line,
+                     const char *message) {
+  flogf(level, file, line, 0, "TLS %s", message);
+}
+
+static int TlsSend(void *ctx, const unsigned char *buf, size_t len) {
+  int rc;
+  while ((rc = write(client, buf, len)) == -1) {
+    if (errno == EINTR) {
+      LockInc(&shared->c.writeinterruputs);
+      if (killed || (meltdown && nowl() - startread > 2)) {
+        return MBEDTLS_ERR_NET_CONN_RESET;
+      }
+    } else if (errno == EAGAIN) {
+      return MBEDTLS_ERR_SSL_TIMEOUT;
+    } else if (errno == EPIPE || errno == ECONNRESET || errno == ENETRESET) {
+      return MBEDTLS_ERR_NET_CONN_RESET;
+    } else {
+      WARNF("%s TlsSend error %s", DescribeClient(), strerror(errno));
+      return MBEDTLS_ERR_NET_SEND_FAILED;
+    }
+  }
+  return rc;
+}
+
+static ssize_t SslRead(int fd, void *buf, size_t size) {
+  int rc;
+  rc = mbedtls_ssl_read(&ssl, buf, size);
+  if (!rc) {
+    errno = ECONNRESET;
+    rc = -1;
+  } else if (rc < 0) {
+    if (rc == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
+      rc = 0;
+    } else if (rc == MBEDTLS_ERR_NET_CONN_RESET ||
+               rc == MBEDTLS_ERR_SSL_TIMEOUT) {
+      errno = ECONNRESET;
+      rc = -1;
+    } else if (rc == MBEDTLS_ERR_SSL_WANT_READ) {
+      errno = EINTR;
+      rc = -1;
+    } else {
+      WARNF("%s SslRead error -0x%04x", DescribeClient(), -rc);
+      errno = EIO;
+      rc = -1;
+    }
+  }
+  return rc;
+}
+
+static ssize_t SslWrite(int fd, struct iovec *iov, int iovlen) {
+  int i;
+  size_t n;
+  ssize_t rc;
+  const unsigned char *p;
+  for (i = 0; i < iovlen; ++i) {
+    p = iov[i].iov_base;
+    n = iov[i].iov_len;
+    while (n) {
+      if ((rc = mbedtls_ssl_write(&ssl, p, n)) > 0) {
+        p += rc;
+        n -= rc;
+      } else {
+        WARNF("%s SslWrite error -0x%04x", DescribeClient(), -rc);
+        errno = EIO;
+        return -1;
+      }
+    }
+  }
+  return 0;
+}
+
+static bool TlsSetup(void) {
+  int r;
+  oldin.p = inbuf.p;
+  oldin.n = amtread;
+  inbuf.p += amtread;
+  inbuf.n -= amtread;
+  inbuf.c = amtread;
+  amtread = 0;
+  mbedtls_ssl_setup(&ssl, &conf);
+  mbedtls_ssl_set_bio(&ssl, &client, TlsSend, 0, TlsRecv);
+  for (;;) {
+    if (!(r = mbedtls_ssl_handshake(&ssl))) {
+      LockInc(&shared->c.sslhandshakes);
+      usessl = true;
+      reader = SslRead;
+      writer = SslWrite;
+      encouragekeepalive = true;
+      VERBOSEF("%s %s %s", DescribeClient(), mbedtls_ssl_get_version(&ssl),
+               mbedtls_ssl_get_ciphersuite(&ssl));
+      return true;
+    } else if (r == MBEDTLS_ERR_SSL_WANT_READ) {
+      LockInc(&shared->c.handshakeinterrupts);
+      if (terminated || killed || (meltdown && nowl() - startread > 2)) {
+        return false;
+      }
+    } else {
+      LockInc(&shared->c.sslhandshakefails);
+      switch (r) {
+        case MBEDTLS_ERR_SSL_CONN_EOF:
+          DEBUGF("%s SSL handshake EOF", DescribeClient());
+          return false;
+        case MBEDTLS_ERR_NET_CONN_RESET:
+          DEBUGF("%s SSL handshake reset", DescribeClient());
+          return false;
+        case MBEDTLS_ERR_SSL_TIMEOUT:
+          LockInc(&shared->c.ssltimeouts);
+          DEBUGF("%s SSL handshake timeout", DescribeClient());
+          return false;
+        case MBEDTLS_ERR_SSL_NO_CIPHER_CHOSEN:
+          LockInc(&shared->c.sslnociphers);
+          WARNF("%s SSL no ciphersuites", DescribeClient());
+          return false;
+        case MBEDTLS_ERR_SSL_NO_USABLE_CIPHERSUITE:
+          LockInc(&shared->c.sslcantciphers);
+          WARNF("%s SSL can't ciphersuite", DescribeClient());
+          return false;
+        case MBEDTLS_ERR_SSL_INVALID_MAC:
+          LockInc(&shared->c.sslshakemacs);
+          WARNF("%s SSL handshake failed bad mac", DescribeClient());
+          return false;
+        case MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE:
+          switch (ssl.fatal_alert) {
+            case MBEDTLS_SSL_ALERT_MSG_CERT_UNKNOWN:
+              LockInc(&shared->c.sslunknowncert);
+              DEBUGF("%s SSL shakealert unknown cert", DescribeClient());
+              return false;
+            case MBEDTLS_SSL_ALERT_MSG_UNKNOWN_CA:
+              LockInc(&shared->c.sslunknownca);
+              DEBUGF("%s SSL shakealert unknown ca", DescribeClient());
+              return false;
+            default:
+              WARNF("%s SSL shakealert %hhu", DescribeClient(),
+                    ssl.fatal_alert);
+              return false;
+          }
+        default:
+          WARNF("%s SSL handshake failed -0x%04x", DescribeClient(), -r);
+          return false;
+      }
+    }
+  }
+}
+
+static void InitializeRng(mbedtls_ctr_drbg_context *r) {
+  volatile unsigned char b[64];
+  mbedtls_ctr_drbg_init(r);
+  CHECK(getrandom(b, 64, 0) == 64);
+  CHECK(!mbedtls_ctr_drbg_seed(r, mbedtls_entropy_func, &ent, b, 64));
+  mbedtls_platform_zeroize(b, 64);
+}
+
+static void GenerateSerial(mbedtls_x509write_cert *wcert,
+                           mbedtls_ctr_drbg_context *kr) {
+  mbedtls_mpi x;
+  mbedtls_mpi_init(&x);
+  mbedtls_mpi_fill_random(&x, 128 / 8, mbedtls_ctr_drbg_random, kr);
+  mbedtls_x509write_crt_set_serial(wcert, &x);
+  mbedtls_mpi_free(&x);
+}
+
+static void ChooseCertificateLifetime(char notbefore[16], char notafter[16]) {
+  struct tm tm;
+  int64_t past, now, future, lifetime, tolerance;
+  tolerance = 60 * 60 * 24;
+  lifetime = 60 * 60 * 24 * 365;
+  now = nowl();
+  past = now - tolerance;
+  future = now + tolerance + lifetime;
+  strftime(notbefore, 16, "%Y%m%d%H%M%S", gmtime_r(&past, &tm));
+  strftime(notafter, 16, "%Y%m%d%H%M%S", gmtime_r(&future, &tm));
+}
+
+static void ConfigureCertificate(mbedtls_x509write_cert *cw, struct Cert *ca,
+                                 int usage, int type) {
+  int r;
+  const char *s;
+  bool isduplicate;
+  size_t i, j, k, nsan;
+  struct HostsTxt *htxt;
+  struct mbedtls_san *san;
+  const mbedtls_x509_name *xname;
+  char *name, *subject, *issuer, notbefore[16], notafter[16], hbuf[256];
+  san = 0;
+  nsan = 0;
+  name = 0;
+  htxt = GetHostsTxt();
+  strcpy(hbuf, "localhost");
+  gethostname(hbuf, sizeof(hbuf));
+  for (i = 0; i < htxt->entries.i; ++i) {
+    for (j = 0; j < ips.n; ++j) {
+      if (ips.p[j] == READ32BE(htxt->entries.p[i].ip)) {
+        isduplicate = false;
+        s = htxt->strings.p + htxt->entries.p[i].name;
+        if (!name) name = s;
+        for (k = 0; k < nsan; ++k) {
+          if (san[k].tag == MBEDTLS_X509_SAN_DNS_NAME &&
+              !strcasecmp(s, san[k].val)) {
+            isduplicate = true;
+            break;
+          }
+        }
+        if (!isduplicate) {
+          san = realloc(san, ++nsan * sizeof(*san));
+          san[nsan - 1].tag = MBEDTLS_X509_SAN_DNS_NAME;
+          san[nsan - 1].val = s;
+        }
+      }
+    }
+  }
+  for (i = 0; i < ips.n; ++i) {
+    san = realloc(san, ++nsan * sizeof(*san));
+    san[nsan - 1].tag = MBEDTLS_X509_SAN_IP_ADDRESS;
+    san[nsan - 1].ip4 = ips.p[i];
+  }
+  ChooseCertificateLifetime(notbefore, notafter);
+  subject = xasprintf("CN=%s", name ? name : hbuf);
+  if (ca) {
+    issuer = calloc(1, 1000);
+    CHECK_GT(mbedtls_x509_dn_gets(issuer, 1000, &ca->cert->subject), 0);
+  } else {
+    issuer = strdup(subject);
+  }
+  if ((r = mbedtls_x509write_crt_set_subject_alternative_name(cw, san, nsan)) ||
+      (r = mbedtls_x509write_crt_set_validity(cw, notbefore, notafter)) ||
+      (r = mbedtls_x509write_crt_set_basic_constraints(cw, false, -1)) ||
+      (r = mbedtls_x509write_crt_set_subject_key_identifier(cw)) ||
+      (r = mbedtls_x509write_crt_set_authority_key_identifier(cw)) ||
+      (r = mbedtls_x509write_crt_set_key_usage(cw, usage)) ||
+      (r = mbedtls_x509write_crt_set_ext_key_usage(cw, type)) ||
+      (r = mbedtls_x509write_crt_set_subject_name(cw, subject)) ||
+      (r = mbedtls_x509write_crt_set_issuer_name(cw, issuer))) {
+    fprintf(stderr, "error: configure certificate (grep -0x%04x)\n", -r);
+    exit(1);
+  }
+  free(subject);
+  free(issuer);
+  free(san);
+}
+
+static struct Cert *GetKeySigningKey(void) {
+  size_t i;
+  for (i = 0; i < certs.n; ++i) {
+    if (!certs.p[i].key) continue;
+    if (!certs.p[i].cert) continue;
+    if (!certs.p[i].cert->ca_istrue) continue;
+    if (mbedtls_x509_crt_check_key_usage(certs.p[i].cert,
+                                         MBEDTLS_X509_KU_KEY_CERT_SIGN)) {
+      continue;
+    }
+    return certs.p + i;
+  }
+  return NULL;
+}
+
+static struct Cert *GenerateEcpCertificate(struct Cert *ca) {
+  int i, n;
+  unsigned char *p;
+  mbedtls_x509_crt *cert;
+  mbedtls_pk_context *key;
+  mbedtls_ctr_drbg_context kr;
+  mbedtls_x509write_cert wcert;
+  cert = calloc(1, sizeof(mbedtls_x509_crt));
+  key = calloc(1, sizeof(mbedtls_pk_context));
+  mbedtls_x509write_crt_init(&wcert);
+  mbedtls_x509write_crt_set_issuer_key(&wcert, ca ? ca->key : key);
+  mbedtls_x509write_crt_set_subject_key(&wcert, key);
+  mbedtls_x509write_crt_set_md_alg(
+      &wcert, suiteb ? MBEDTLS_MD_SHA384 : MBEDTLS_MD_SHA256);
+  mbedtls_x509write_crt_set_version(&wcert, MBEDTLS_X509_CRT_VERSION_3);
+  CHECK_EQ(0,
+           mbedtls_pk_setup(key, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY)));
+  InitializeRng(&kr);
+  CHECK_EQ(0, mbedtls_ecp_gen_key(
+                  suiteb ? MBEDTLS_ECP_DP_SECP384R1 : MBEDTLS_ECP_DP_SECP256R1,
+                  mbedtls_pk_ec(*key), mbedtls_ctr_drbg_random, &kr));
+  GenerateSerial(&wcert, &kr);
+  ConfigureCertificate(&wcert, ca, MBEDTLS_X509_KU_DIGITAL_SIGNATURE,
+                       MBEDTLS_X509_NS_CERT_TYPE_SSL_SERVER);
+  p = malloc((n = FRAMESIZE));
+  i = mbedtls_x509write_crt_der(&wcert, p, n, mbedtls_ctr_drbg_random, &kr);
+  if (i < 0) {
+    fprintf(stderr, "error: write ec key (grep -0x%04x)\n", -i);
+    exit(1);
+  }
+  CHECK_EQ(0, mbedtls_x509_crt_parse_der(cert, p + n - i, i));
+  if (ca) cert->next = ca->cert;
+  mbedtls_x509write_crt_free(&wcert);
+  mbedtls_ctr_drbg_free(&kr);
+  free(p);
+  CHECK_EQ(0, mbedtls_pk_check_pair(&cert->pk, key));
+  UseCertificate(cert, key);
+  certs.p = realloc(certs.p, ++certs.n * sizeof(*certs.p));
+  certs.p[certs.n - 1].cert = cert;
+  certs.p[certs.n - 1].key = key;
+  return certs.p + certs.n - 1;
+}
+
+static struct Cert *GenerateRsaCertificate(struct Cert *ca) {
+  int i, n, rc;
+  unsigned char *p;
+  mbedtls_x509_crt *cert;
+  mbedtls_pk_context *key;
+  mbedtls_ctr_drbg_context kr;
+  mbedtls_x509write_cert wcert;
+  cert = calloc(1, sizeof(mbedtls_x509_crt));
+  key = calloc(1, sizeof(mbedtls_pk_context));
+  mbedtls_x509write_crt_init(&wcert);
+  mbedtls_x509write_crt_set_issuer_key(&wcert, ca ? ca->key : key);
+  mbedtls_x509write_crt_set_subject_key(&wcert, key);
+  mbedtls_x509write_crt_set_md_alg(
+      &wcert, suiteb ? MBEDTLS_MD_SHA384 : MBEDTLS_MD_SHA256);
+  mbedtls_x509write_crt_set_version(&wcert, MBEDTLS_X509_CRT_VERSION_3);
+  CHECK_EQ(0, mbedtls_pk_setup(key, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)));
+  InitializeRng(&kr);
+  CHECK_EQ(0, mbedtls_rsa_gen_key(mbedtls_pk_rsa(*key), mbedtls_ctr_drbg_random,
+                                  &kr, suiteb ? 4096 : 2048, 65537));
+  GenerateSerial(&wcert, &kr);
+  ConfigureCertificate(
+      &wcert, ca,
+      MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_KEY_ENCIPHERMENT,
+      MBEDTLS_X509_NS_CERT_TYPE_SSL_SERVER |
+          MBEDTLS_X509_NS_CERT_TYPE_SSL_CLIENT);
+  p = malloc((n = FRAMESIZE));
+  i = mbedtls_x509write_crt_der(&wcert, p, n, mbedtls_ctr_drbg_random, &kr);
+  if (i < 0) {
+    fprintf(stderr, "error: write rsa key (grep -0x%04x)\n", -i);
+    exit(1);
+  }
+  mbedtls_x509_crt_parse_der(cert, p + n - i, i);
+  if (ca) cert->next = ca->cert;
+  mbedtls_x509write_crt_free(&wcert);
+  mbedtls_ctr_drbg_free(&kr);
+  free(p);
+  if ((rc = mbedtls_pk_check_pair(&cert->pk, key))) {
+    fprintf(stderr, "error: generate key (grep -0x%04x)\n", -rc);
+    exit(1);
+  }
+  UseCertificate(cert, key);
+  certs.p = realloc(certs.p, ++certs.n * sizeof(*certs.p));
+  certs.p[certs.n - 1].cert = cert;
+  certs.p[certs.n - 1].key = key;
+  return certs.p + certs.n - 1;
+}
+
+static void LoadCertificates(void) {
+  size_t i;
+  bool havecert;
+  struct Cert *ksk, *cert;
+  havecert = false;
+  for (i = 0; i < certs.n; ++i) {
+    if (certs.p[i].key && certs.p[i].cert && !certs.p[i].cert->ca_istrue &&
+        !mbedtls_x509_crt_check_key_usage(certs.p[i].cert,
+                                          MBEDTLS_X509_KU_DIGITAL_SIGNATURE) &&
+        !mbedtls_x509_crt_check_extended_key_usage(
+            certs.p[i].cert, MBEDTLS_OID_SERVER_AUTH,
+            MBEDTLS_OID_SIZE(MBEDTLS_OID_SERVER_AUTH))) {
+      UseCertificate(certs.p[i].cert, certs.p[i].key);
+      havecert = true;
+    }
+  }
+  if (!havecert) {
+    if ((ksk = GetKeySigningKey())) {
+      DEBUGF("generating ssl certificates using %`'s",
+             gc(FormatX509Name(&ksk->cert->subject)));
+    } else {
+      VERBOSEF("could not find non-CA SSL certificate key pair with"
+               " -addext keyUsage=digitalSignature"
+               " -addext extendedKeyUsage=serverAuth");
+      VERBOSEF("could not find CA key signing key pair with"
+               " -addext keyUsage=keyCertSign");
+      WARNF("generating self-signed ssl certificates");
+    }
+#ifdef MBEDTLS_ECP_C
+    cert = GenerateEcpCertificate(ksk);
+    LogCertificate("generated nist elliptic curve certificate", cert->cert);
+#endif
+#ifdef MBEDTLS_RSA_C
+    cert = GenerateRsaCertificate(ksk);
+    LogCertificate("generated rivest–shamir–adleman certificate", cert->cert);
+#endif
+  }
+}
+
+static void LoadSslRoots(void) {
+  DIR *d;
+  const char *dir;
+  struct dirent *e;
+  char *p, path[300];
+  dir = "zip:usr/share/ssl/root";
+  CHECK((d = opendir(dir)), "%s", dir);
+  while ((e = readdir(d))) {
+    if (e->d_type != DT_REG) continue;
+    snprintf(path, sizeof(path), "%s/%s", dir, e->d_name);
+    ProgramFile(path, ProgramCertificate);
+  }
+  closedir(d);
 }
 
 static bool ClientAcceptsGzip(void) {
@@ -1080,7 +1837,7 @@ static void IndexAssets(void) {
   uint64_t cf;
   struct Asset *p;
   uint32_t i, n, m, step, hash;
-  DEBUGF("indexing assets");
+  DEBUGF("indexing assets (inode %#lx)", zst.st_ino);
   CHECK_GE(HASH_LOAD_FACTOR, 2);
   CHECK(READ32LE(zcdir) == kZipCdir64HdrMagic ||
         READ32LE(zcdir) == kZipCdirHdrMagic);
@@ -1384,10 +2141,17 @@ static wontreturn void PrintUsage(FILE *f, int rc) {
 static void GetOpts(int argc, char *argv[]) {
   int opt;
   while ((opt = getopt(argc, argv,
-                       "azhdugvsmbfl:p:r:R:H:c:L:P:U:G:B:D:t:M:")) != -1) {
+                       "azhdugvVsmbfyl:p:r:R:H:c:L:P:U:G:BD:t:M:C:K:F:")) !=
+         -1) {
     switch (opt) {
       case 'v':
         __log_level++;
+        break;
+      case 'V':
+        mbedtls_debug_threshold++;
+        break;
+      case 'y':
+        dontupgradeinsecurerequests = true;
         break;
       case 's':
         __log_level--;
@@ -1416,6 +2180,9 @@ static void GetOpts(int argc, char *argv[]) {
       case 'f':
         funtrace = true;
         break;
+      case 'B':
+        suiteb = true;
+        break;
       case 'k':
         encouragekeepalive = true;
         break;
@@ -1442,10 +2209,7 @@ static void GetOpts(int argc, char *argv[]) {
         maxpayloadsize = MAX(1450, maxpayloadsize);
         break;
       case 'l':
-        CHECK_EQ(1, inet_pton(AF_INET, optarg, &serveraddr.sin_addr));
-        break;
-      case 'B':
-        ProgramBrand(optarg);
+        ProgramAddr(optarg);
         break;
       case 'H':
         ProgramHeader(optarg);
@@ -1462,6 +2226,14 @@ static void GetOpts(int argc, char *argv[]) {
       case 'G':
         daemongid = atoi(optarg);
         break;
+#ifndef UNSECURE
+      case 'C':
+        ProgramFile(optarg, ProgramCertificate);
+        break;
+      case 'K':
+        ProgramFile(optarg, ProgramPrivateKey);
+        break;
+#endif
       case 'h':
         PrintUsage(stdout, EXIT_SUCCESS);
       default:
@@ -1470,6 +2242,10 @@ static void GetOpts(int argc, char *argv[]) {
   }
   if (logpath) {
     CHECK_NOTNULL(freopen(logpath, "a", stderr));
+  }
+  if (!!keypath ^ !!certpath) {
+    fprintf(stderr, "error: the -C and -K flags need to be passed together\n");
+    exit(1);
   }
 }
 
@@ -1487,9 +2263,9 @@ static void AppendLogo(void) {
   }
 }
 
-static inline ssize_t Send(struct iovec *iov, int iovlen) {
+static ssize_t Send(struct iovec *iov, int iovlen) {
   ssize_t rc;
-  if ((rc = WritevAll(client, iov, iovlen)) == -1) {
+  if ((rc = writer(client, iov, iovlen)) == -1) {
     if (errno == ECONNRESET) {
       LockInc(&shared->c.writeresets);
       DEBUGF("%s write reset", DescribeClient());
@@ -1712,7 +2488,7 @@ static bool IsHiddenPath(const char *s, size_t n) {
 static char *GetBasicAuthorization(size_t *z) {
   size_t n;
   const char *p, *q;
-  struct HttpRequestSlice *g;
+  struct HttpSlice *g;
   g = msg.headers + (HasHeader(kHttpProxyAuthorization)
                          ? kHttpProxyAuthorization
                          : kHttpAuthorization);
@@ -1742,12 +2518,12 @@ static void LaunchBrowser(const char *path) {
   sigset_t chldmask, savemask;
   struct sigaction ignore, saveint, savequit;
   path = firstnonnull(path, "/");
-  addr = serveraddr.sin_addr;
+  addr = serveraddr->sin_addr;
   if (!addr.s_addr) addr.s_addr = htonl(INADDR_LOOPBACK);
   if (*path != '/') path = gc(xasprintf("/%s", path));
   if ((prog = commandv(GetSystemUrlLauncherCommand(), gc(malloc(PATH_MAX))))) {
     u = gc(xasprintf("http://%s:%d%s", inet_ntoa(addr),
-                     ntohs(serveraddr.sin_port), gc(EscapePath(path, -1, 0))));
+                     ntohs(serveraddr->sin_port), gc(EscapePath(path, -1, 0))));
     DEBUGF("opening browser with command %s %s\n", prog, u);
     ignore.sa_flags = 0;
     ignore.sa_handler = SIG_IGN;
@@ -1991,7 +2767,6 @@ static char *ServeStatusz(void) {
   AppendLong1("ppid", getppid());
   AppendLong1("now", nowl());
   AppendLong1("nowish", shared->nowish);
-  AppendLong1("heartless", heartless);
   AppendLong1("gmtoff", gmtoff);
   AppendLong1("CLK_TCK", CLK_TCK);
   AppendLong1("startserver", startserver);
@@ -2261,7 +3036,11 @@ static int LuaLoadAsset(lua_State *L) {
       lua_pushlstring(L, data, size);
       free(data);
       return 1;
+    } else {
+      DEBUGF("could not load asset: %`'.*s", pathlen, path);
     }
+  } else {
+    DEBUGF("could not find asset: %`'.*s", pathlen, path);
   }
   return 0;
 }
@@ -2298,7 +3077,7 @@ static bool IsText(const void *data, size_t size) {
   return true;
 }
 
-int LuaStoreAsset(lua_State *L) {
+static int LuaStoreAsset(lua_State *L) {
   int64_t ft;
   int i, mode;
   uint32_t crc;
@@ -2348,7 +3127,6 @@ int LuaStoreAsset(lua_State *L) {
   //////////////////////////////////////////////////////////////////////////////
   CHECK_NE(-1, fcntl(zfd, F_SETLKW, &(struct flock){F_WRLCK}));
   OpenZip(false);
-
   now = nowl();
   a = GetAsset(path, pathlen);
   mode = luaL_optinteger(L, 3, a ? GetMode(a) : 0644);
@@ -2357,7 +3135,6 @@ int LuaStoreAsset(lua_State *L) {
   dosmode = !(mode & 0200) ? kNtFileAttributeReadonly : 0;
   ft = (now + MODERNITYSECONDS) * HECTONANOSECONDS;
   GetDosLocalTime(now, &mtime, &mdate);
-
   // local file header
   if (uselen >= 0xffffffff || datalen >= 0xffffffff) {
     era = kZipEra2001;
@@ -2385,11 +3162,9 @@ int LuaStoreAsset(lua_State *L) {
   p = WRITE16LE(p, v[2].iov_len);
   v[1].iov_len = pathlen;
   v[1].iov_base = path;
-
   // file data
   v[3].iov_len = datalen;
   v[3].iov_base = data;
-
   // old central directory entries
   oldcdirsize = GetZipCdirSize(zcdir);
   oldcdiroffset = GetZipCdirOffset(zcdir);
@@ -2405,7 +3180,6 @@ int LuaStoreAsset(lua_State *L) {
     v[5].iov_base = 0;
     v[5].iov_len = 0;
   }
-
   // new central directory entry
   if (uselen >= 0xffffffff || datalen >= 0xffffffff || zsize >= 0xffffffff) {
     v[8].iov_base = p = alloca((v[8].iov_len = 2 + 2 + 8 + 8 + 8));
@@ -2450,7 +3224,6 @@ int LuaStoreAsset(lua_State *L) {
   p = WRITE32LE(p, MIN(zsize, 0xffffffff));
   v[7].iov_len = pathlen;
   v[7].iov_base = path;
-
   // zip64 end of central directory
   cdiroffset =
       zsize + v[0].iov_len + v[1].iov_len + v[2].iov_len + v[3].iov_len;
@@ -2478,7 +3251,6 @@ int LuaStoreAsset(lua_State *L) {
     v[10].iov_len = 0;
     v[10].iov_base = 0;
   }
-
   // end of central directory
   v[12].iov_base = GetZipCdirComment(zcdir);
   v[12].iov_len = GetZipCdirCommentSize(zcdir);
@@ -2491,7 +3263,6 @@ int LuaStoreAsset(lua_State *L) {
   p = WRITE32LE(p, MIN(cdirsize, 0xffffffff));
   p = WRITE32LE(p, MIN(cdiroffset, 0xffffffff));
   p = WRITE16LE(p, v[12].iov_len);
-
   CHECK_NE(-1, lseek(zfd, zbase + zsize - zmap, SEEK_SET));
   CHECK_NE(-1, WritevAll(zfd, v, 13));
   CHECK_NE(-1, fcntl(zfd, F_SETLK, &(struct flock){F_UNLCK}));
@@ -2655,7 +3426,7 @@ static int LuaGetHost(lua_State *L) {
   if (url.host.n) {
     lua_pushlstring(L, url.host.p, url.host.n);
   } else {
-    inet_ntop(AF_INET, &serveraddr.sin_addr.s_addr, b, sizeof(b));
+    inet_ntop(AF_INET, &serveraddr->sin_addr.s_addr, b, sizeof(b));
     lua_pushstring(L, b);
   }
   return 1;
@@ -2664,7 +3435,7 @@ static int LuaGetHost(lua_State *L) {
 static int LuaGetPort(lua_State *L) {
   int i, x = 0;
   for (i = 0; i < url.port.n; ++i) x = url.port.p[i] - '0' + x * 10;
-  if (!x) x = ntohs(serveraddr.sin_port);
+  if (!x) x = ntohs(serveraddr->sin_port);
   lua_pushinteger(L, x);
   return 1;
 }
@@ -2699,7 +3470,7 @@ static void LuaPushLatin1(lua_State *L, const char *s, size_t n) {
 static char *FoldHeader(int h, size_t *z) {
   char *p;
   size_t i, n, m;
-  struct HttpRequestHeader *x;
+  struct HttpHeader *x;
   n = msg.headers[h].b - msg.headers[h].a;
   p = xmalloc(n);
   memcpy(p, inbuf.p + msg.headers[h].a, n);
@@ -3208,6 +3979,11 @@ static noinline int LuaProgramInt(lua_State *L, void P(long)) {
   return 0;
 }
 
+static int LuaProgramAddr(lua_State *L) {
+  ProgramAddr(luaL_checkstring(L, 1));
+  return 0;
+}
+
 static int LuaProgramPort(lua_State *L) {
   return LuaProgramInt(L, ProgramPort);
 }
@@ -3216,16 +3992,32 @@ static int LuaProgramCache(lua_State *L) {
   return LuaProgramInt(L, ProgramCache);
 }
 
-static int LuaProgramLinger(lua_State *L) {
-  return LuaProgramInt(L, ProgramLinger);
-}
-
 static int LuaProgramTimeout(lua_State *L) {
   return LuaProgramInt(L, ProgramTimeout);
 }
 
 static int LuaProgramBrand(lua_State *L) {
   ProgramBrand(luaL_checkstring(L, 1));
+  return 0;
+}
+
+static int LuaProgramPrivateKey(lua_State *L) {
+#ifndef UNSECURE
+  size_t n;
+  const char *p;
+  p = luaL_checklstring(L, 1, &n);
+  ProgramPrivateKey(p, n);
+#endif
+  return 0;
+}
+
+static int LuaProgramCertificate(lua_State *L) {
+#ifndef UNSECURE
+  size_t n;
+  const char *p;
+  p = luaL_checklstring(L, 1, &n);
+  ProgramCertificate(p, n);
+#endif
   return 0;
 }
 
@@ -3391,8 +4183,8 @@ static void LuaSetIntField(lua_State *L, const char *k, lua_Integer v) {
 }
 
 static int LuaLaunchBrowser(lua_State *L) {
-  LaunchBrowser(luaL_optstring(L, 1, "/"));
-  return 1;
+  launchbrowser = strdup(luaL_optstring(L, 1, "/"));
+  return 0;
 }
 
 static regex_t *LuaReCompileImpl(lua_State *L, const char *p, int f) {
@@ -3615,11 +4407,13 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ParseIp", LuaParseIp},                              //
     {"ParseParams", LuaParseParams},                      //
     {"ParseUrl", LuaParseUrl},                            //
+    {"ProgramAddr", LuaProgramAddr},                      //
     {"ProgramBrand", LuaProgramBrand},                    //
     {"ProgramCache", LuaProgramCache},                    //
+    {"ProgramCertificate", LuaProgramCertificate},        //
     {"ProgramHeader", LuaProgramHeader},                  //
-    {"ProgramLinger", LuaProgramLinger},                  //
     {"ProgramPort", LuaProgramPort},                      //
+    {"ProgramPrivateKey", LuaProgramPrivateKey},          //
     {"ProgramRedirect", LuaProgramRedirect},              //
     {"ProgramTimeout", LuaProgramTimeout},                //
     {"Route", LuaRoute},                                  //
@@ -3703,6 +4497,21 @@ static void LuaReload(void) {
 #endif
 }
 
+static void NotifyClose(void) {
+#ifndef UNSECURE
+  if (usessl) {
+    DEBUGF("SSL notifying close");
+    mbedtls_ssl_close_notify(&ssl);
+  }
+#endif
+}
+
+static void ReseedRng(mbedtls_ctr_drbg_context *r, const char *s) {
+#ifndef UNSECURE
+  CHECK_EQ(0, mbedtls_ctr_drbg_reseed(r, (void *)s, strlen(s)));
+#endif
+}
+
 static const char *DescribeClose(void) {
   if (killed) return "killed";
   if (meltdown) return "meltdown";
@@ -3752,10 +4561,13 @@ static void LogBody(const char *d, const char *s, size_t n) {
 static ssize_t SendString(const char *s) {
   size_t n;
   ssize_t rc;
+  struct iovec iov;
   n = strlen(s);
+  iov.iov_base = s;
+  iov.iov_len = n;
   if (logmessages) LogMessage("sending", s, n);
   for (;;) {
-    if ((rc = write(client, s, n)) != -1 || errno != EINTR) {
+    if ((rc = writer(client, &iov, 1)) != -1 || errno != EINTR) {
       return rc;
     }
   }
@@ -3789,12 +4601,6 @@ static void EnterMeltdownMode(void) {
   LOGIFNEG1(kill(0, SIGUSR2));
   shared->lastmeltdown = nowl();
   ++shared->c.meltdowns;
-}
-
-static void EmergencyClose(int fd) {
-  struct linger nolinger = {0};
-  setsockopt(fd, SOL_SOCKET, SO_LINGER, &nolinger, sizeof(nolinger));
-  close(fd);
 }
 
 static char *HandlePayloadDisconnect(void) {
@@ -3888,12 +4694,12 @@ static char *HandlePayloadReadError(void) {
 }
 
 static void HandleForkFailure(void) {
-  FATALF("%s too many processes %s", DescribeServer(), strerror(errno));
+  FATALF("too many processes %s", strerror(errno));
   LockInc(&shared->c.forkerrors);
   LockInc(&shared->c.dropped);
   EnterMeltdownMode();
   SendServiceUnavailable();
-  EmergencyClose(client);
+  close(client);
 }
 
 static void HandleFrag(size_t got) {
@@ -3916,6 +4722,8 @@ static void HandleReload(void) {
 }
 
 static void HandleHeartbeat(void) {
+  size_t i;
+  sigset_t mask;
   if (nowl() - lastrefresh > 60 * 60) RefreshTime();
   UpdateCurrentDate(nowl());
   Reindex();
@@ -3923,6 +4731,11 @@ static void HandleHeartbeat(void) {
 #ifndef STATIC
   LuaRun("/.heartbeat.lua");
 #endif
+  for (i = 0; i < servers.n; ++i) {
+    if (polls[i].fd < 0) {
+      polls[i].fd = -polls[i].fd;
+    }
+  }
 }
 
 static char *OpenAsset(struct Asset *a) {
@@ -3996,7 +4809,7 @@ char *SynchronizeStream(void) {
     while (amtread < hdrsize + cl) {
       LockInc(&shared->c.frags);
       if (++frags == 64) HandlePayloadSlowloris();
-      if ((rc = read(client, inbuf.p + amtread, inbuf.n - amtread)) != -1) {
+      if ((rc = reader(client, inbuf.p + amtread, inbuf.n - amtread)) != -1) {
         if (!(got = rc)) return HandlePayloadDisconnect();
         amtread += got;
       } else if (errno == EINTR) {
@@ -4025,10 +4838,21 @@ static void ParseRequestParameters(void) {
     } else if (HasHeader(kHttpHost)) {
       FreeLater(
           ParseHost(HeaderData(kHttpHost), HeaderLength(kHttpHost), &url));
+    } else {
+      FreeLater(ParseHost(DescribeServer(), -1, &url));
     }
   } else if (!url.path.n) {
     url.path.p = "/";
     url.path.n = 1;
+  }
+  if (!url.scheme.n) {
+    if (usessl) {
+      url.scheme.p = "https";
+      url.scheme.n = 5;
+    } else {
+      url.scheme.p = "http";
+      url.scheme.n = 4;
+    }
   }
   if (HasHeader(kHttpContentType) &&
       IsMimeType(HeaderData(kHttpContentType), HeaderLength(kHttpContentType),
@@ -4040,7 +4864,7 @@ static void ParseRequestParameters(void) {
 
 static bool HasAtMostThisElement(int h, const char *s) {
   size_t i, n;
-  struct HttpRequestHeader *x;
+  struct HttpHeader *x;
   if (HasHeader(h)) {
     n = strlen(s);
     if (!SlicesEqualCase(s, n, inbuf.p + msg.headers[h].a,
@@ -4056,6 +4880,30 @@ static bool HasAtMostThisElement(int h, const char *s) {
     }
   }
   return true;
+}
+
+static char *SendHttpsRedirect(void) {
+  size_t n;
+  char *p, *old, *neu;
+  LockInc(&shared->c.sslupgrades);
+  if ((old = FreeLater(EncodeUrl(&url, &n))) && n < hdrbuf.n / 2) {
+    url.scheme.p = "https";
+    url.scheme.n = 5;
+    if (listeningonport443) {
+      url.port.p = 0;
+      url.port.n = 0;
+    } else if (!url.port.n) {
+      url.port.p = "80";
+      url.port.n = 2;
+    }
+    neu = FreeLater(EncodeUrl(&url, 0));
+    LOGF("REDIRECT %s %.*s → %.*s", DescribeClient(), old, neu);
+    p = SetStatus(307, "Temporary Redirect");
+    p = AppendHeader(p, "Location", neu);
+    return p;
+  } else {
+    return 0;
+  }
 }
 
 static char *HandleRequest(void) {
@@ -4088,19 +4936,25 @@ static char *HandleRequest(void) {
     return HandleTransferRefused();
   }
   ParseRequestParameters();
-  if (!url.path.n || url.path.p[0] != '/' ||
+  if (!url.host.n || !url.path.n || url.path.p[0] != '/' ||
       !IsAcceptablePath(url.path.p, url.path.n) ||
       !IsAcceptableHost(url.host.p, url.host.n) ||
       !IsAcceptablePort(url.port.p, url.port.n)) {
     LockInc(&shared->c.urisrefused);
     return ServeFailure(400, "Bad URI");
   }
+  if (HasHeader(kHttpUpgradeInsecureRequests) && !usessl &&
+      upgradeinsecurerequests && (p = SendHttpsRedirect())) {
+    return p;
+  }
   LOGF("RECEIVED %s HTTP%02d %.*s %s %`'.*s %`'.*s", DescribeClient(),
        msg.version, msg.xmethod.b - msg.xmethod.a, inbuf.p + msg.xmethod.a,
        FreeLater(EncodeUrl(&url, 0)), HeaderLength(kHttpReferer),
        HeaderData(kHttpReferer), HeaderLength(kHttpUserAgent),
        HeaderData(kHttpUserAgent));
+#ifndef STATIC
   if (hasluaglobalhandler) return LuaOnHttpRequest();
+#endif
   return Route(url.host.p, url.host.n, url.path.p, url.path.n);
 }
 
@@ -4308,6 +5162,10 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
 }
 
 static char *SetStatus(unsigned code, const char *reason) {
+  if (msg.version == 10) {
+    if (code == 307) code = 302;
+    if (code == 308) code = 301;
+  }
   statuscode = code;
   stpcpy(hdrbuf.p, "HTTP/1.0 000 ");
   hdrbuf.p[7] += msg.version & 1;
@@ -4461,9 +5319,10 @@ static void InitRequest(void) {
 }
 
 static void HandleMessages(void) {
+  bool once;
   ssize_t rc;
   size_t got;
-  for (;;) {
+  for (once = false;;) {
     InitRequest();
     startread = nowl();
     for (;;) {
@@ -4471,11 +5330,27 @@ static void HandleMessages(void) {
         startrequest = nowl();
         if (HandleMessage()) break;
       }
-      if ((rc = read(client, inbuf.p + amtread, inbuf.n - amtread)) != -1) {
+      if ((rc = reader(client, inbuf.p + amtread, inbuf.n - amtread)) != -1) {
         startrequest = nowl();
         got = rc;
         amtread += got;
         if (amtread) {
+          if (!once) {
+            once = true;
+            if (inbuf.p[0] == 22) {
+#ifdef UNSECURE
+              WARNF("%s wants SSL but redbean was compiled with -DUNSECURE",
+                    DescribeClient());
+              return;
+#else
+              if (TlsSetup()) {
+                continue;
+              } else {
+                return;
+              }
+#endif
+            }
+          }
           DEBUGF("%s read %,zd bytes", DescribeClient(), got);
           if (HandleMessage()) {
             break;
@@ -4484,6 +5359,7 @@ static void HandleMessages(void) {
           }
         }
         if (!got) {
+          NotifyClose();
           LogClose("disconnect");
           return;
         }
@@ -4492,6 +5368,7 @@ static void HandleMessages(void) {
       } else if (errno == EAGAIN) {
         LockInc(&shared->c.readtimeouts);
         if (amtread) SendTimeout();
+        NotifyClose();
         LogClose("timeout");
         return;
       } else if (errno == ECONNRESET) {
@@ -4509,6 +5386,7 @@ static void HandleMessages(void) {
           LockInc(&shared->c.dropped);
           SendServiceUnavailable();
         }
+        NotifyClose();
         LogClose(DescribeClose());
         return;
       }
@@ -4519,7 +5397,11 @@ static void HandleMessages(void) {
     }
     if (msgsize == amtread) {
       amtread = 0;
-      if (connectionclose || killed || terminated || meltdown) {
+      if (killed) {
+        LogClose(DescribeClose());
+        return;
+      } else if (connectionclose || terminated || meltdown) {
+        NotifyClose();
         LogClose(DescribeClose());
         return;
       }
@@ -4529,7 +5411,11 @@ static void HandleMessages(void) {
       DEBUGF("%,ld pipelined bytes", amtread - msgsize);
       memmove(inbuf.p, inbuf.p + msgsize, amtread - msgsize);
       amtread -= msgsize;
-      if (connectionclose || killed) {
+      if (killed) {
+        LogClose(DescribeClose());
+        return;
+      } else if (connectionclose) {
+        NotifyClose();
         LogClose(DescribeClose());
         return;
       }
@@ -4542,11 +5428,18 @@ static void HandleMessages(void) {
   }
 }
 
-static void HandleConnection(void) {
+static void CloseServerFds(void) {
+  size_t i;
+  for (i = 0; i < servers.n; ++i) {
+    close(servers.p[i].fd);
+  }
+}
+
+static void HandleConnection(size_t i) {
   int pid;
   clientaddrsize = sizeof(clientaddr);
-  if ((client = accept4(server, &clientaddr, &clientaddrsize, SOCK_CLOEXEC)) !=
-      -1) {
+  if ((client = accept4(servers.p[i].fd, &clientaddr, &clientaddrsize,
+                        SOCK_CLOEXEC)) != -1) {
     startconnection = nowl();
     messageshandled = 0;
     if (uniprocess) {
@@ -4557,6 +5450,7 @@ static void HandleConnection(void) {
         case 0:
           meltdown = false;
           connectionclose = false;
+          ReseedRng(&rng, "child");
           if (funtrace && !IsTiny()) {
             ftrace_install();
           }
@@ -4567,49 +5461,62 @@ static void HandleConnection(void) {
         default:
           ++shared->workers;
           close(client);
+          ReseedRng(&rng, "parent");
           return;
       }
     }
-    if (!pid) close(server);
+    if (!pid) CloseServerFds();
     DEBUGF("%s accepted", DescribeClient());
     HandleMessages();
     DEBUGF("%s closing after %,ldµs", DescribeClient(),
            (long)((nowl() - startconnection) * 1e6L));
-    if (close(client) == -1) {
-      LockInc(&shared->c.closeerrors);
-      WARNF("%s close failed", DescribeClient());
-    }
     if (!pid) {
       _exit(0);
     } else {
+      close(client);
+      oldin.p = 0;
+      oldin.n = 0;
+      if (inbuf.c) {
+        inbuf.p -= inbuf.c;
+        inbuf.n += inbuf.c;
+        inbuf.c = 0;
+      }
+#ifndef UNSECURE
+      if (usessl) {
+        usessl = false;
+        reader = read;
+        writer = WritevAll;
+        mbedtls_ssl_session_reset(&ssl);
+      }
+#endif
       CollectGarbage();
     }
   } else if (errno == EINTR || errno == EAGAIN) {
     LockInc(&shared->c.acceptinterrupts);
   } else if (errno == ENFILE) {
     LockInc(&shared->c.enfiles);
-    WARNF("%s too many open files", DescribeServer());
-    EnterMeltdownMode();
+    WARNF("too many open files");
+    meltdown = true;
   } else if (errno == EMFILE) {
     LockInc(&shared->c.emfiles);
-    WARNF("%s ran out of open file quota", DescribeServer());
-    EnterMeltdownMode();
+    WARNF("ran out of open file quota");
+    meltdown = true;
   } else if (errno == ENOMEM) {
     LockInc(&shared->c.enomems);
-    WARNF("%s ran out of memory");
-    EnterMeltdownMode();
+    WARNF("ran out of memory");
+    meltdown = true;
   } else if (errno == ENOBUFS) {
     LockInc(&shared->c.enobufs);
-    WARNF("%s ran out of buffer");
-    EnterMeltdownMode();
+    WARNF("ran out of buffer");
+    meltdown = true;
   } else if (errno == ENONET) {
     LockInc(&shared->c.enonets);
     WARNF("%s network gone", DescribeServer());
-    sleep(1);
+    polls[i].fd = -polls[i].fd;
   } else if (errno == ENETDOWN) {
     LockInc(&shared->c.enetdowns);
     WARNF("%s network down", DescribeServer());
-    sleep(1);
+    polls[i].fd = -polls[i].fd;
   } else if (errno == ECONNABORTED) {
     LockInc(&shared->c.acceptresets);
     WARNF("%s connection reset before accept");
@@ -4622,24 +5529,43 @@ static void HandleConnection(void) {
   }
 }
 
-static void Tune(int a, int b, int x, const char *as, const char *bs) {
-#define Tune(A, B, X) Tune(A, B, X, #A, #B)
+static void HandlePoll(void) {
+  size_t i;
+  if (poll(polls, servers.n, 500) != -1) {
+    for (i = 0; i < servers.n; ++i) {
+      if (polls[i].revents) {
+        serveraddr = &servers.p[i].addr;
+        HandleConnection(i);
+      }
+    }
+  } else if (errno == EINTR || errno == EAGAIN) {
+    LockInc(&shared->c.pollinterrupts);
+  } else if (errno == ENOMEM) {
+    LockInc(&shared->c.enomems);
+    WARNF("%s ran out of memory");
+    meltdown = true;
+  } else {
+    FATALF("poll error %s", strerror(errno));
+  }
+}
+
+static void Tune(int fd, int a, int b, int x, const char *as, const char *bs) {
+#define Tune(F, A, B, X) Tune(F, A, B, X, #A, #B)
   if (!b) return;
-  if (setsockopt(server, a, b, &x, sizeof(x)) == -1) {
+  if (setsockopt(fd, a, b, &x, sizeof(x)) == -1) {
     WARNF("setsockopt(server, %s, %s, %d) failed %s", as, bs, x,
           strerror(errno));
   }
 }
 
-static void TuneSockets(void) {
-  Tune(SOL_SOCKET, SO_REUSEADDR, 1);
-  Tune(IPPROTO_TCP, TCP_CORK, 0);
-  Tune(IPPROTO_TCP, TCP_NODELAY, 1);
-  Tune(IPPROTO_TCP, TCP_FASTOPEN, 1);
-  Tune(IPPROTO_TCP, TCP_QUICKACK, 1);
-  setsockopt(server, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger));
-  setsockopt(server, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-  setsockopt(server, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+static void TuneServer(int fd) {
+  Tune(fd, SOL_SOCKET, SO_REUSEADDR, 1);
+  Tune(fd, IPPROTO_TCP, TCP_CORK, 0);
+  Tune(fd, IPPROTO_TCP, TCP_NODELAY, 1);
+  Tune(fd, IPPROTO_TCP, TCP_FASTOPEN, 1);
+  Tune(fd, IPPROTO_TCP, TCP_QUICKACK, 1);
+  setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+  setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
 }
 
 static void RestoreApe(void) {
@@ -4661,8 +5587,82 @@ static void RestoreApe(void) {
   }
 }
 
+static void Listen(void) {
+  char ipbuf[16];
+  size_t i, j, n;
+  uint32_t ip, port, addrsize, *ifs, *ifp;
+  if (!ports.n) {
+    ProgramPort(8080);
+  }
+  if (!ips.n) {
+    if ((ifs = GetHostIps()) && *ifs) {
+      for (ifp = ifs; *ifp; ++ifp) {
+        sprintf(ipbuf, "%hhu.%hhu.%hhu.%hhu", *ifp >> 24, *ifp >> 16, *ifp >> 8,
+                *ifp);
+        ProgramAddr(ipbuf);
+      }
+    } else {
+      ProgramAddr("0.0.0.0");
+    }
+    free(ifs);
+  }
+  servers.p = malloc(ips.n * ports.n * sizeof(*servers.p));
+  for (n = i = 0; i < ips.n; ++i) {
+    for (j = 0; j < ports.n; ++j, ++n) {
+      memset(servers.p + n, 0, sizeof(*servers.p));
+      servers.p[n].addr.sin_family = AF_INET;
+      servers.p[n].addr.sin_port = htons(ports.p[j]);
+      servers.p[n].addr.sin_addr.s_addr = htonl(ips.p[i]);
+      if ((servers.p[n].fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC,
+                                    IPPROTO_TCP)) == -1) {
+        perror("socket");
+        exit(1);
+      }
+      TuneServer(servers.p[n].fd);
+      if (bind(servers.p[n].fd, &servers.p[n].addr,
+               sizeof(servers.p[n].addr)) == -1) {
+        fprintf(stderr, "error: %s: %hhu.%hhu.%hhu.%hhu:%hu\n", strerror(errno),
+                ips.p[i] >> 24, ips.p[i] >> 16, ips.p[i] >> 8, ips.p[i],
+                ports.p[j]);
+        exit(1);
+      }
+      if (listen(servers.p[n].fd, 10) == -1) {
+        perror("listen");
+        exit(1);
+      }
+      addrsize = sizeof(servers.p[n].addr);
+      if (getsockname(servers.p[n].fd, &servers.p[n].addr, &addrsize) == -1) {
+        perror("getsockname");
+        exit(1);
+      }
+      port = ntohs(servers.p[n].addr.sin_port);
+      ip = ntohl(servers.p[n].addr.sin_addr.s_addr);
+      if (ip == INADDR_ANY) ip = INADDR_LOOPBACK;
+      LOGF("LISTEN http://%hhu.%hhu.%hhu.%hhu:%d", ip >> 24, ip >> 16, ip >> 8,
+           ip, port);
+      if (printport && !ports.p[j]) {
+        printf("%d\n", port);
+        fflush(stdout);
+      }
+    }
+  }
+  servers.n = n;
+  polls = malloc(n * sizeof(*polls));
+  for (i = 0; i < n; ++i) {
+    polls[i].fd = servers.p[i].fd;
+    polls[i].events = POLLIN;
+    polls[i].revents = 0;
+  }
+}
+
 void RedBean(int argc, char *argv[]) {
-  uint32_t addrsize;
+  long double t;
+#ifndef UNSECURE
+  InitializeRng(&rng);
+  LoadSslRoots();
+#endif
+  reader = read;
+  writer = WritevAll;
   gmtoff = GetGmtOffset((lastrefresh = startserver = nowl()));
   CHECK_GT(CLK_TCK, 0);
   CHECK_NE(MAP_FAILED,
@@ -4684,39 +5684,24 @@ void RedBean(int argc, char *argv[]) {
   xsigaction(SIGCHLD, OnChld, 0, 0, 0);
   xsigaction(SIGUSR1, OnUsr1, 0, 0, 0);
   xsigaction(SIGUSR2, OnUsr2, 0, 0, 0);
-  xsigaction(SIGALRM, OnAlrm, 0, 0, 0);
   xsigaction(SIGPIPE, SIG_IGN, 0, 0, 0);
   /* TODO(jart): SIGXCPU and SIGXFSZ */
-  server = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, IPPROTO_TCP);
-  CHECK_NE(-1, server);
-  TuneSockets();
-  if (bind(server, &serveraddr, sizeof(serveraddr)) == -1) {
-    if (errno == EADDRINUSE) {
-      fprintf(stderr, "error: address in use\n"
-                      "try passing the -p PORT flag\n");
-    } else {
-      fprintf(stderr, "error: bind() failed: %s\n", strerror(errno));
-    }
-    exit(1);
-  }
-  CHECK_NE(-1, listen(server, 10));
-  addrsize = sizeof(serveraddr);
-  CHECK_NE(-1, getsockname(server, &serveraddr, &addrsize));
-  struct in_addr addr = serveraddr.sin_addr;
-  if (addr.s_addr == INADDR_ANY) addr.s_addr = htonl(INADDR_LOOPBACK);
-  LOGF("LISTEN %s see http://%s:%d", DescribeServer(), inet_ntoa(addr),
-       ntohs(serveraddr.sin_port));
-  if (printport) {
-    printf("%d\n", ntohs(serveraddr.sin_port));
-    fflush(stdout);
+  Listen();
+#ifndef UNSECURE
+  mbedtls_ssl_config_defaults(
+      &conf, MBEDTLS_SSL_IS_SERVER, MBEDTLS_SSL_TRANSPORT_STREAM,
+      suiteb ? MBEDTLS_SSL_PRESET_SUITEB : MBEDTLS_SSL_PRESET_DEFAULT);
+  mbedtls_ssl_conf_dbg(&conf, TlsDebug, 0);
+  LoadCertificates();
+  mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &rng);
+#endif
+  if (launchbrowser) {
+    LaunchBrowser(launchbrowser);
   }
   if (daemonize) {
     Daemonize();
   } else {
     setpgid(getpid(), getpid());
-  }
-  if (setitimer(ITIMER_REAL, &kHeartbeat, NULL) == -1) {
-    heartless = true;
   }
   UpdateCurrentDate(nowl());
   freelist.c = 8;
@@ -4733,18 +5718,17 @@ void RedBean(int argc, char *argv[]) {
     } else if (invalidated) {
       HandleReload();
       invalidated = false;
-    } else if (heartbeat) {
-      HandleHeartbeat();
-      heartbeat = false;
     } else if (meltdown) {
       EnterMeltdownMode();
       meltdown = false;
+    } else if ((t = nowl()) - lastheartbeat > .5) {
+      lastheartbeat = t;
+      HandleHeartbeat();
     } else {
-      if (heartless) HandleHeartbeat();
-      HandleConnection();
+      HandlePoll();
     }
   }
-  LOGIFNEG1(close(server));
+  CloseServerFds();
   if (keyboardinterrupt) {
     LOGF("received keyboard interrupt");
   } else {

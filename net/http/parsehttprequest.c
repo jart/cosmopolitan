@@ -35,14 +35,14 @@ enum { START, METHOD, URI, VERSION, HKEY, HSEP, HVAL, CR1, LF1, LF2 };
 /**
  * Initializes HTTP request parser.
  */
-void InitHttpRequest(struct HttpRequest *r) {
+void InitHttpRequest(struct HttpMessage *r) {
   memset(r, 0, sizeof(*r));
 }
 
 /**
  * Destroys HTTP request parser.
  */
-void DestroyHttpRequest(struct HttpRequest *r) {
+void DestroyHttpRequest(struct HttpMessage *r) {
   if (r->xheaders.p) {
     free(r->xheaders.p);
     r->xheaders.p = NULL;
@@ -83,9 +83,9 @@ void DestroyHttpRequest(struct HttpRequest *r) {
  * @see HTTP/1.1 RFC2616 RFC2068
  * @see HTTP/1.0 RFC1945
  */
-int ParseHttpRequest(struct HttpRequest *r, const char *p, size_t n) {
+int ParseHttpRequest(struct HttpMessage *r, const char *p, size_t n) {
   int c, h, i;
-  struct HttpRequestHeader *x;
+  struct HttpHeader *x;
   for (n = MIN(n, LIMIT); r->i < n; ++r->i) {
     c = p[r->i] & 0xff;
     switch (r->t) {

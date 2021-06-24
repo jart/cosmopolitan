@@ -16,9 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/zipos/zipos.internal.h"
 
 /**
  * Changes current position of file descriptor/handle.
@@ -30,7 +32,10 @@
  * @asyncsignalsafe
  */
 int64_t lseek(int fd, int64_t offset, unsigned whence) {
-  if (!IsWindows() && !IsOpenbsd() && !IsNetbsd()) {
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    return weaken(__zipos_lseek)(
+        (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, offset, whence);
+  } else if (!IsWindows() && !IsOpenbsd() && !IsNetbsd()) {
     return sys_lseek(fd, offset, whence, 0);
   } else if (IsOpenbsd() || IsNetbsd()) {
     return sys_lseek(fd, offset, offset, whence);

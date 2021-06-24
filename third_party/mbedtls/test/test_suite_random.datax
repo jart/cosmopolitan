@@ -1,0 +1,46 @@
+Generate random twice with CTR_DRBG
+0
+
+Generate random twice with HMAC_DRBG(SHA-1)
+depends_on:0
+1:exp:0
+
+Generate random twice with HMAC_DRBG(SHA-256)
+depends_on:1
+1:exp:1
+
+Generate random twice with HMAC_DRBG(SHA-512)
+depends_on:2
+1:exp:2
+
+Generate random twice with PSA classic wrapper
+2
+
+Generate random twice with PSA API
+3
+
+PSA classic wrapper: 0 bytes
+5:int:0
+
+PSA classic wrapper: 1 byte
+5:int:1
+
+PSA classic wrapper: 256 bytes
+5:int:256
+
+PSA classic wrapper: external RNG large
+depends_on:3
+5:int:1024
+
+PSA classic wrapper: CTR_DRBG max
+depends_on:4:5
+5:exp:3
+
+PSA classic wrapper: HMAC_DRBG max
+depends_on:4:6:7
+5:exp:4
+
+PSA classic wrapper: ECDSA signature (SECP256R1)
+depends_on:8
+6:exp:5
+

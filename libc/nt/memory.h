@@ -34,6 +34,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+void *LocalFree(void *hMem);
+
 int64_t CreateFileMappingNuma(
     int64_t opt_hFile /* -1ul is MAP_ANONYMOUS */,
     const struct NtSecurityAttributes *opt_lpFileMappingAttributes,

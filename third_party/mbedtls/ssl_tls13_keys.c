@@ -1,5 +1,15 @@
-/* clang-format off */
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/hkdf.h"
+#include "third_party/mbedtls/ssl_internal.h"
+#include "third_party/mbedtls/ssl_tls13_keys.h"
 
+asm(".ident\t\"\\n\\n\
+Mbed TLS (Apache 2.0)\\n\
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+/* clang-format off */
 /*
  *  TLS 1.3 key schedule
  *
@@ -19,14 +29,7 @@
  *  limitations under the License.
  */
 
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL)
-
-#include "third_party/mbedtls/hkdf.h"
-#include "third_party/mbedtls/ssl_internal.h"
-#include "third_party/mbedtls/ssl_tls13_keys.h"
-
 
 #define MBEDTLS_SSL_TLS1_3_LABEL( name, string )       \
     .name = string,
@@ -130,6 +133,32 @@ static void ssl_tls1_3_hkdf_encode_label(
     *dlen = total_hkdf_lbl_len;
 }
 
+/**
+ * \brief           The \c HKDF-Expand-Label function from
+ *                  the TLS 1.3 standard RFC 8446.
+ *
+ * <tt>
+ *                  HKDF-Expand-Label( Secret, Label, Context, Length ) =
+ *                       HKDF-Expand( Secret, HkdfLabel, Length )
+ * </tt>
+ *
+ * \param hash_alg  The identifier for the hash algorithm to use.
+ * \param secret    The \c Secret argument to \c HKDF-Expand-Label.
+ *                  This must be a readable buffer of length \p slen Bytes.
+ * \param slen      The length of \p secret in Bytes.
+ * \param label     The \c Label argument to \c HKDF-Expand-Label.
+ *                  This must be a readable buffer of length \p llen Bytes.
+ * \param llen      The length of \p label in Bytes.
+ * \param ctx       The \c Context argument to \c HKDF-Expand-Label.
+ *                  This must be a readable buffer of length \p clen Bytes.
+ * \param clen      The length of \p context in Bytes.
+ * \param buf       The destination buffer to hold the expanded secret.
+ *                  This must be a writable buffer of length \p blen Bytes.
+ * \param blen      The desired size of the expanded secret in Bytes.
+ *
+ * \returns         \c 0 on success.
+ * \return          A negative error code on failure.
+ */
 int mbedtls_ssl_tls1_3_hkdf_expand_label(
                      mbedtls_md_type_t hash_alg,
                      const unsigned char *secret, size_t slen,
@@ -177,7 +206,18 @@ int mbedtls_ssl_tls1_3_hkdf_expand_label(
                                  buf, blen ) );
 }
 
-/*
+/**
+ * \brief           This function is part of the TLS 1.3 key schedule.
+ *                  It extracts key and IV for the actual client/server traffic
+ *                  from the client/server traffic secrets.
+ *
+ * From RFC 8446:
+ *
+ * <tt>
+ *   [sender]_write_key = HKDF-Expand-Label(Secret, "key", "", key_length)
+ *   [sender]_write_iv  = HKDF-Expand-Label(Secret, "iv", "", iv_length)*
+ * </tt>
+ *
  * The traffic keying material is generated from the following inputs:
  *
  *  - One secret value per sender.
@@ -192,6 +232,22 @@ int mbedtls_ssl_tls1_3_hkdf_expand_label(
  * [sender] denotes the sending side and the Secret value is provided
  * by the function caller. Note that we generate server and client side
  * keys in a single function call.
+ *
+ * \param hash_alg      The identifier for the hash algorithm to be used
+ *                      for the HKDF-based expansion of the secret.
+ * \param client_secret The client traffic secret.
+ *                      This must be a readable buffer of size \p slen Bytes
+ * \param server_secret The server traffic secret.
+ *                      This must be a readable buffer of size \p slen Bytes
+ * \param slen          Length of the secrets \p client_secret and
+ *                      \p server_secret in Bytes.
+ * \param key_len       The desired length of the key to be extracted in Bytes.
+ * \param iv_len        The desired length of the IV to be extracted in Bytes.
+ * \param keys          The address of the structure holding the generated
+ *                      keys and IVs.
+ *
+ * \returns             \c 0 on success.
+ * \returns             A negative error code on failure.
  */
 int mbedtls_ssl_tls1_3_make_traffic_keys(
                      mbedtls_md_type_t hash_alg,
@@ -240,6 +296,43 @@ int mbedtls_ssl_tls1_3_make_traffic_keys(
     return( 0 );
 }
 
+/**
+ * \brief The \c Derive-Secret function from the TLS 1.3 standard RFC 8446.
+ *
+ * <tt>
+ *   Derive-Secret( Secret, Label, Messages ) =
+ *      HKDF-Expand-Label( Secret, Label,
+ *                         Hash( Messages ),
+ *                         Hash.Length ) )
+ * </tt>
+ *
+ * \param hash_alg   The identifier for the hash function used for the
+ *                   applications of HKDF.
+ * \param secret     The \c Secret argument to the \c Derive-Secret function.
+ *                   This must be a readable buffer of length \p slen Bytes.
+ * \param slen       The length of \p secret in Bytes.
+ * \param label      The \c Label argument to the \c Derive-Secret function.
+ *                   This must be a readable buffer of length \p llen Bytes.
+ * \param llen       The length of \p label in Bytes.
+ * \param ctx        The hash of the \c Messages argument to the
+ *                   \c Derive-Secret function, or the \c Messages argument
+ *                   itself, depending on \p context_already_hashed.
+ * \param clen       The length of \p hash.
+ * \param ctx_hashed This indicates whether the \p ctx contains the hash of
+ *                   the \c Messages argument in the application of the
+ *                   \c Derive-Secret function
+ *                   (value MBEDTLS_SSL_TLS1_3_CONTEXT_HASHED), or whether
+ *                   it is the content of \c Messages itself, in which case
+ *                   the function takes care of the hashing
+ *                   (value MBEDTLS_SSL_TLS1_3_CONTEXT_UNHASHED).
+ * \param dstbuf     The target buffer to write the output of
+ *                   \c Derive-Secret to. This must be a writable buffer of
+ *                   size \p buflen Bytes.
+ * \param buflen     The length of \p dstbuf in Bytes.
+ *
+ * \returns        \c 0 on success.
+ * \returns        A negative error code on failure.
+ */
 int mbedtls_ssl_tls1_3_derive_secret(
                    mbedtls_md_type_t hash_alg,
                    const unsigned char *secret, size_t slen,
@@ -284,6 +377,72 @@ int mbedtls_ssl_tls1_3_derive_secret(
                                                   dstbuf, buflen ) );
 }
 
+/**
+ * \brief Compute the next secret in the TLS 1.3 key schedule
+ *
+ * The TLS 1.3 key schedule proceeds as follows to compute
+ * the three main secrets during the handshake: The early
+ * secret for early data, the handshake secret for all
+ * other encrypted handshake messages, and the master
+ * secret for all application traffic.
+ *
+ * <tt>
+ *                    0
+ *                    |
+ *                    v
+ *     PSK ->  HKDF-Extract = Early Secret
+ *                    |
+ *                    v
+ *     Derive-Secret( ., "derived", "" )
+ *                    |
+ *                    v
+ *  (EC)DHE -> HKDF-Extract = Handshake Secret
+ *                    |
+ *                    v
+ *     Derive-Secret( ., "derived", "" )
+ *                    |
+ *                    v
+ *     0 -> HKDF-Extract = Master Secret
+ * </tt>
+ *
+ * Each of the three secrets in turn is the basis for further
+ * key derivations, such as the derivation of traffic keys and IVs;
+ * see e.g. mbedtls_ssl_tls1_3_make_traffic_keys().
+ *
+ * This function implements one step in this evolution of secrets:
+ *
+ * <tt>
+ *                old_secret
+ *                    |
+ *                    v
+ *     Derive-Secret( ., "derived", "" )
+ *                    |
+ *                    v
+ *     input -> HKDF-Extract = new_secret
+ * </tt>
+ *
+ * \param hash_alg    The identifier for the hash function used for the
+ *                    applications of HKDF.
+ * \param secret_old  The address of the buffer holding the old secret
+ *                    on function entry. If not \c NULL, this must be a
+ *                    readable buffer whose size matches the output size
+ *                    of the hash function represented by \p hash_alg.
+ *                    If \c NULL, an all \c 0 array will be used instead.
+ * \param input       The address of the buffer holding the additional
+ *                    input for the key derivation (e.g., the PSK or the
+ *                    ephemeral (EC)DH secret). If not \c NULL, this must be
+ *                    a readable buffer whose size \p input_len Bytes.
+ *                    If \c NULL, an all \c 0 array will be used instead.
+ * \param input_len   The length of \p input in Bytes.
+ * \param secret_new  The address of the buffer holding the new secret
+ *                    on function exit. This must be a writable buffer
+ *                    whose size matches the output size of the hash
+ *                    function represented by \p hash_alg.
+ *                    This may be the same as \p secret_old.
+ *
+ * \returns           \c 0 on success.
+ * \returns           A negative error code on failure.
+ */
 int mbedtls_ssl_tls1_3_evolve_secret(
                    mbedtls_md_type_t hash_alg,
                    const unsigned char *secret_old,

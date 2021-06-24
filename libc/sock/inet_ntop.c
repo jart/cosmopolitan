@@ -23,27 +23,70 @@
 /**
  * Formats internet address to string.
  *
- * @param af can be AF_INET
+ * @param af can be AF_INET or AF_INET6
  * @param src is the binary-encoded address, e.g. &addr->sin_addr
  * @param dst is the output string buffer
- * @param size is bytes in dst, which needs 16+ for IPv4
+ * @param size needs to be 16+ for IPv4 and 72+ for IPv6
  * @return dst on success or NULL w/ errno
  */
 const char *inet_ntop(int af, const void *src, char *dst, uint32_t size) {
   char *p;
-  unsigned char *ip4;
-  if (src) {
+  unsigned char *ip;
+  int i, t, a, b, c, d;
+  p = dst;
+  if ((ip = src)) {
     if (af == AF_INET) {
       if (size >= 16) {
-        p = dst;
-        ip4 = src;
-        p += uint64toarray_radix10(ip4[0], p);
+        p += uint64toarray_radix10(ip[0], p);
         *p++ = '.';
-        p += uint64toarray_radix10(ip4[1], p);
+        p += uint64toarray_radix10(ip[1], p);
         *p++ = '.';
-        p += uint64toarray_radix10(ip4[2], p);
+        p += uint64toarray_radix10(ip[2], p);
         *p++ = '.';
-        p += uint64toarray_radix10(ip4[3], p);
+        p += uint64toarray_radix10(ip[3], p);
+        *p = '\0';
+        return dst;
+      } else {
+        enospc();
+      }
+    } else if (af == AF_INET6) {
+      if (size >= 16 * 4 + 8) {
+        t = 0;
+        i = 0;
+        for (i = 0; i < 16; i += 2) {
+          switch (t) {
+            case 0:
+              if (!ip[i] && !ip[i + 1]) {
+                t = 1;
+                *p++ = ':';
+                *p++ = ':';
+                continue;
+              } else if (i) {
+                *p++ = ':';
+              }
+              break;
+            case 1:
+              if (!ip[i] && !ip[i + 1]) {
+                continue;
+              } else {
+                t = 2;
+              }
+              break;
+            case 2:
+              *p++ = ':';
+              break;
+            default:
+              unreachable;
+          }
+          a = (ip[i + 0] & 0xF0) >> 4;
+          b = (ip[i + 0] & 0x0F) >> 0;
+          c = (ip[i + 1] & 0xF0) >> 4;
+          d = (ip[i + 1] & 0x0F) >> 0;
+          if (a) *p++ = "0123456789abcdef"[a];
+          if (a || b) *p++ = "0123456789abcdef"[b];
+          if (a || b || c) *p++ = "0123456789abcdef"[c];
+          *p++ = "0123456789abcdef"[d];
+        }
         *p = '\0';
         return dst;
       } else {

@@ -1,10 +1,15 @@
-/* clang-format off */
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/ecdh.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/platform.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /*
  *  Elliptic curve Diffie-Hellman
  *
@@ -31,16 +36,8 @@ asm(".include \"libc/disclaimer.inc\"");
  * RFC 4492
  */
 
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_ECDH_C)
 
-#include "third_party/mbedtls/ecdh.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
-
-
-/* Parameter validation macros based on platform_util.h */
 #define ECDH_VALIDATE_RET( cond )    \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_ECP_BAD_INPUT_DATA )
 #define ECDH_VALIDATE( cond )        \

@@ -31,6 +31,15 @@ TEST(inet_pton, testLocalhost) {
   EXPECT_EQ(1, addr[3]);
 }
 
+TEST(inet_pton, testAny) {
+  uint8_t addr[4] = {255, 255, 255, 255};
+  EXPECT_EQ(1, inet_pton(AF_INET, "0.0.0.0", &addr));
+  EXPECT_EQ(0, addr[0]);
+  EXPECT_EQ(0, addr[1]);
+  EXPECT_EQ(0, addr[2]);
+  EXPECT_EQ(0, addr[3]);
+}
+
 TEST(inet_pton, testShortAddress_doesntFillFullValue) {
   uint8_t addr[4] = {255, 255, 255, 255};
   EXPECT_EQ(0, inet_pton(AF_INET, "127.0.0", &addr));

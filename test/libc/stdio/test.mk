@@ -36,8 +36,10 @@ TEST_LIBC_STDIO_DIRECTDEPS =				\
 	LIBC_STUBS					\
 	LIBC_SYSV					\
 	LIBC_TESTLIB					\
+	LIBC_TIME					\
 	LIBC_UNICODE					\
-	LIBC_X
+	LIBC_X						\
+	LIBC_ZIPOS
 
 TEST_LIBC_STDIO_DEPS :=					\
 	$(call uniq,$(foreach x,$(TEST_LIBC_STDIO_DIRECTDEPS),$($(x))))

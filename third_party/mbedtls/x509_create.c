@@ -1,5 +1,16 @@
-/* clang-format off */
+#include "third_party/mbedtls/asn1write.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/oid.h"
+#include "third_party/mbedtls/x509.h"
 
+asm(".ident\t\"\\n\\n\
+Mbed TLS (Apache 2.0)\\n\
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+/* clang-format off */
 /*
  *  X.509 base functions for creating certificates / CSRs
  *
@@ -19,15 +30,7 @@
  *  limitations under the License.
  */
 
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_X509_CREATE_C)
-
-#include "third_party/mbedtls/x509.h"
-#include "third_party/mbedtls/asn1write.h"
-#include "third_party/mbedtls/error.h"
-#include "third_party/mbedtls/oid.h"
-
 
 /* Structure linking OIDs for X.509 DN AttributeTypes to their
  * string representations and default string encodings used by Mbed TLS. */
@@ -207,7 +210,7 @@ exit:
  * to store the critical boolean for us
  */
 int mbedtls_x509_set_extension( mbedtls_asn1_named_data **head, const char *oid, size_t oid_len,
-                        int critical, const unsigned char *val, size_t val_len )
+                                int critical, const unsigned char *val, size_t val_len )
 {
     mbedtls_asn1_named_data *cur;
 
@@ -357,7 +360,7 @@ static int x509_write_extension( unsigned char **p, unsigned char *start,
  *     }
  */
 int mbedtls_x509_write_extensions( unsigned char **p, unsigned char *start,
-                           mbedtls_asn1_named_data *first )
+                                   mbedtls_asn1_named_data *first )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     size_t len = 0;

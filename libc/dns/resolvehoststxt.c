@@ -25,16 +25,8 @@
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/errfuns.h"
 
-static int hoststxtgetcmp(const char *node, const struct HostsTxtEntry *entry,
-                          const char *strings) {
-  return CompareDnsNames(node, &strings[entry->name]);
-}
-
 /**
  * Finds address associated with name in HOSTS.TXT table.
- *
- * This function performs binary search, so SortHostsTxt() must be
- * called on the table beforehand.
  *
  * @param ht can be GetHostsTxt()
  * @param af can be AF_INET, AF_UNSPEC
@@ -49,21 +41,22 @@ static int hoststxtgetcmp(const char *node, const struct HostsTxtEntry *entry,
 int ResolveHostsTxt(const struct HostsTxt *ht, int af, const char *name,
                     struct sockaddr *addr, uint32_t addrsize,
                     const char **canon) {
+  size_t i;
   struct sockaddr_in *addr4;
-  struct HostsTxtEntry *entry;
   if (af != AF_INET && af != AF_UNSPEC) return eafnosupport();
-  if ((entry = bsearch_r(name, ht->entries.p, ht->entries.i,
-                         sizeof(struct HostsTxtEntry), (void *)hoststxtgetcmp,
-                         ht->strings.p))) {
-    if (addr) {
-      if (addrsize < kMinSockaddr4Size) return einval();
-      addr4 = (struct sockaddr_in *)addr;
-      addr4->sin_family = AF_INET;
-      memcpy(&addr4->sin_addr.s_addr, &entry->ip[0], 4);
+  for (i = 0; i < ht->entries.i; ++i) {
+    if (!CompareDnsNames(name, ht->strings.p + ht->entries.p[i].name)) {
+      if (addr) {
+        if (addrsize < kMinSockaddr4Size) return einval();
+        addr4 = (struct sockaddr_in *)addr;
+        addr4->sin_family = AF_INET;
+        memcpy(&addr4->sin_addr.s_addr, &ht->entries.p[i].ip[0], 4);
+      }
+      if (canon) {
+        *canon = ht->strings.p + ht->entries.p[i].canon;
+      }
+      return 1;
     }
-    if (canon) *canon = &ht->strings.p[entry->canon];
-    return 1;
-  } else {
-    return 0;
   }
+  return 0;
 }

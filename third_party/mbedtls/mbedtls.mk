@@ -7,11 +7,13 @@ THIRD_PARTY_MBEDTLS_ARTIFACTS += THIRD_PARTY_MBEDTLS_A
 THIRD_PARTY_MBEDTLS = $(THIRD_PARTY_MBEDTLS_A_DEPS) $(THIRD_PARTY_MBEDTLS_A)
 THIRD_PARTY_MBEDTLS_A = o/$(MODE)/third_party/mbedtls/mbedtls.a
 THIRD_PARTY_MBEDTLS_A_FILES := $(wildcard third_party/mbedtls/*)
+THIRD_PARTY_MBEDTLS_A_CERTS := $(wildcard usr/share/ssl/root/*)
 THIRD_PARTY_MBEDTLS_A_HDRS = $(filter %.h,$(THIRD_PARTY_MBEDTLS_A_FILES))
 THIRD_PARTY_MBEDTLS_A_SRCS = $(filter %.c,$(THIRD_PARTY_MBEDTLS_A_FILES))
 
 THIRD_PARTY_MBEDTLS_A_OBJS =						\
-	$(THIRD_PARTY_MBEDTLS_A_SRCS:%.c=o/$(MODE)/%.o)
+	$(THIRD_PARTY_MBEDTLS_A_SRCS:%.c=o/$(MODE)/%.o)			\
+	$(THIRD_PARTY_MBEDTLS_A_CERTS:%=o/$(MODE)/%.zip.o)
 
 THIRD_PARTY_MBEDTLS_A_CHECKS =						\
 	$(THIRD_PARTY_MBEDTLS_A).pkg					\
@@ -19,14 +21,13 @@ THIRD_PARTY_MBEDTLS_A_CHECKS =						\
 
 THIRD_PARTY_MBEDTLS_A_DIRECTDEPS =					\
 	LIBC_CALLS							\
-	LIBC_DNS							\
 	LIBC_FMT							\
 	LIBC_INTRIN							\
 	LIBC_MEM							\
 	LIBC_NEXGEN32E							\
 	LIBC_RAND							\
 	LIBC_RUNTIME							\
-	LIBC_SOCK							\
+	LIBC_LOG							\
 	LIBC_STDIO							\
 	LIBC_STR							\
 	LIBC_SYSV							\
@@ -52,6 +53,18 @@ $(THIRD_PARTY_MBEDTLS_A_OBJS):						\
 				-fdata-sections				\
 				-ffunction-sections
 
+o/$(MODE)/third_party/mbedtls/bignum.o					\
+o/$(MODE)/third_party/mbedtls/ecp.o					\
+o/$(MODE)/third_party/mbedtls/ecp_curves.o				\
+o/$(MODE)/third_party/mbedtls/everest.o:				\
+			OVERRIDE_CFLAGS +=				\
+				-O3
+
+# tail recursion is so important because everest was written in f*
+o/$(MODE)/third_party/mbedtls/everest.o:				\
+			OVERRIDE_CFLAGS +=				\
+				-foptimize-sibling-calls
+
 THIRD_PARTY_MBEDTLS_LIBS = $(foreach x,$(THIRD_PARTY_MBEDTLS_ARTIFACTS),$($(x)))
 THIRD_PARTY_MBEDTLS_SRCS = $(foreach x,$(THIRD_PARTY_MBEDTLS_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_MBEDTLS_HDRS = $(foreach x,$(THIRD_PARTY_MBEDTLS_ARTIFACTS),$($(x)_HDRS))
@@ -61,4 +74,5 @@ $(THIRD_PARTY_MBEDTLS_A_OBJS): third_party/mbedtls/mbedtls.mk
 
 .PHONY: o/$(MODE)/third_party/mbedtls
 o/$(MODE)/third_party/mbedtls:						\
-	$(THIRD_PARTY_MBEDTLS_CHECKS)
+		o/$(MODE)/third_party/mbedtls/test			\
+		$(THIRD_PARTY_MBEDTLS_CHECKS)

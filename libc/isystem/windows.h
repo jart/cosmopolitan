@@ -246,6 +246,30 @@
 #define HUMPD         int64_t
 #define HWND          int64_t
 
+#define ADDRESS_FAMILY                uint16_t
+#define TUNNEL_TYPE                   uint32_t
+#define NET_IF_CONNECTION_TYPE        uint32_t
+#define NET_IF_COMPARTMENT_ID         uint32_t
+#define IFTYPE                        uint32_t
+#define NL_PREFIX_ORIGIN              uint32_t
+#define NL_SUFFIX_ORIGIN              uint32_t
+#define NL_DAD_STATE                  uint32_t
+#define NET_IF_NETWORK_GUID           struct NtGuid
+#define IP_PREFIX_ORIGIN              NL_PREFIX_ORIGIN
+#define IP_SUFFIX_ORIGIN              NL_SUFFIX_ORIGIN
+#define IP_DAD_STATE                  NL_DAD_STATE
+#define IP_ADAPTER_ADDRESSES          struct NtIpAdapterAddresses
+#define PIP_ADAPTER_ADDRESSES         struct NtIpAdapterAddresses*
+#define IP_ADAPTER_UNICAST_ADDRESS    struct NtIpAdapterUnicastAddressLh
+#define PIP_ADAPTER_UNICAST_ADDRESS   struct NtIpAdapterUnicastAddressLh*
+#define IP_ADAPTER_ANYCAST_ADDRESS    struct NtIpAdapterAnycastAddressXp
+#define PIP_ADAPTER_ANYCAST_ADDRESS   struct NtIpAdapterAnycastAddressXp*
+#define IP_ADAPTER_MULTICAST_ADDRESS  struct NtIpAdapterMulticastAddressXp
+#define PIP_ADAPTER_MULTICAST_ADDRESS struct NtIpAdapterMulticastAddressXp*
+#define IP_ADAPTER_DNS_SERVER_ADDRESS struct NtIpAdapterDnsServerAddressXp
+#define IP_ADAPTER_PREFIX             struct NtIpAdapterPrefixXp
+#define PIP_ADAPTER_PREFIX            struct NtIpAdapterPrefixXp*
+
 #define _GENERIC_MAPPING     NtGenericMapping
 #define GENERIC_MAPPING      struct NtGenericMapping
 #define PGENERIC_MAPPING     struct NtGenericMapping*

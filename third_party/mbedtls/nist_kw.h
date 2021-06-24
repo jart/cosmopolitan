@@ -1,49 +1,8 @@
-/* clang-format off */
-
-/**
- * \file nist_kw.h
- *
- * \brief This file provides an API for key wrapping (KW) and key wrapping with
- *        padding (KWP) as defined in NIST SP 800-38F.
- *        https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-38F.pdf
- *
- *        Key wrapping specifies a deterministic authenticated-encryption mode
- *        of operation, according to <em>NIST SP 800-38F: Recommendation for
- *        Block Cipher Modes of Operation: Methods for Key Wrapping</em>. Its
- *        purpose is to protect cryptographic keys.
- *
- *        Its equivalent is RFC 3394 for KW, and RFC 5649 for KWP.
- *        https://tools.ietf.org/html/rfc3394
- *        https://tools.ietf.org/html/rfc5649
- *
- */
-/*
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
 #ifndef MBEDTLS_NIST_KW_H
 #define MBEDTLS_NIST_KW_H
-
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "third_party/mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
 #include "third_party/mbedtls/cipher.h"
+#include "third_party/mbedtls/config.h"
+/* clang-format off */
 
 #ifdef __cplusplus
 extern "C" {

@@ -16,7 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/rand/rand.h"
+#include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 
 TEST(rand002, alwaysReturnsPositiveNumbers) {
@@ -34,11 +36,18 @@ TEST(rand003, srandSmokeTest) {
   ASSERT_EQ(1059165278, rand());
 }
 
-TEST(rand004, rand32SmokeTest) {
-  ASSERT_TRUE(rand32() != rand32() || rand32() != rand32() ||
-              rand32() != rand32() || rand32() != rand32());
-}
-
 TEST(rand005, rand64SmokeTest) {
   ASSERT_TRUE(rand64() != rand64() || rand64() != rand64());
+}
+
+TEST(rand64, test) {
+  char *p;
+  size_t i;
+  uint64_t x;
+  p = memcpy(malloc(kHyperionSize), kHyperion, kHyperionSize);
+  for (i = 0; i < kHyperionSize / 8; ++i) {
+    x = rand64();
+    WRITE64LE(p + i * 8, x);
+  }
+  free(p);
 }

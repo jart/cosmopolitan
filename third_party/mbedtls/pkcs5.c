@@ -1,10 +1,18 @@
-/* clang-format off */
+#include "third_party/mbedtls/asn1.h"
+#include "third_party/mbedtls/cipher.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/oid.h"
+#include "third_party/mbedtls/pkcs5.h"
+#include "third_party/mbedtls/platform.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /**
  * \file pkcs5.c
  *
@@ -34,25 +42,7 @@ asm(".include \"libc/disclaimer.inc\"");
  * http://tools.ietf.org/html/rfc6070 (Test vectors)
  */
 
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_PKCS5_C)
-
-#include "third_party/mbedtls/pkcs5.h"
-#include "third_party/mbedtls/error.h"
-
-#if defined(MBEDTLS_ASN1_PARSE_C)
-#include "third_party/mbedtls/asn1.h"
-#include "third_party/mbedtls/cipher.h"
-#include "third_party/mbedtls/oid.h"
-#endif /* MBEDTLS_ASN1_PARSE_C */
-
-
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_printf printf
-#endif
 
 #if defined(MBEDTLS_ASN1_PARSE_C)
 static int pkcs5_parse_pbkdf2_params( const mbedtls_asn1_buf *params,

@@ -18,7 +18,8 @@
  * format strings are constexprs that only contain directives.
  */
 
-#define PFLINK(FMT)                                                   \
+#define PFLINK(...) _PFLINK(__VA_ARGS__)
+#define _PFLINK(FMT, ...)                                             \
   ({                                                                  \
     if (___PFLINK(FMT, strpbrk, "faAeg")) STATIC_YOINK("__fmt_dtoa"); \
     if (___PFLINK(FMT, strpbrk, "cmrqs")) {                           \
@@ -34,7 +35,8 @@
     FMT;                                                              \
   })
 
-#define SFLINK(FMT)                    \
+#define SFLINK(...) _SFLINK(__VA_ARGS__)
+#define _SFLINK(FMT)                   \
   ({                                   \
     if (___PFLINK(FMT, strchr, 'm')) { \
       STATIC_YOINK("malloc");          \

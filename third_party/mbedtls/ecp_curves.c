@@ -1,10 +1,15 @@
-/* clang-format off */
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/ecp.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/platform.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /*
  *  Elliptic curves over GF(p): curve-specific data and functions
  *
@@ -24,27 +29,14 @@ asm(".include \"libc/disclaimer.inc\"");
  *  limitations under the License.
  */
 
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_ECP_C)
-
-#include "third_party/mbedtls/ecp.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
-
 
 #if !defined(MBEDTLS_ECP_ALT)
 
-/* Parameter validation macros based on platform_util.h */
 #define ECP_VALIDATE_RET( cond )    \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_ECP_BAD_INPUT_DATA )
 #define ECP_VALIDATE( cond )        \
     MBEDTLS_INTERNAL_VALIDATE( cond )
-
-#if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
-    !defined(inline) && !defined(__cplusplus)
-#define inline __inline
-#endif
 
 /*
  * Conversion macros for embedded constants:
@@ -768,8 +760,22 @@ cleanup:
 }
 #endif /* MBEDTLS_ECP_DP_CURVE448_ENABLED */
 
-/*
- * Set a group using well-known domain parameters
+/**
+ * \brief           This function sets up an ECP group context
+ *                  from a standardized set of domain parameters.
+ *
+ * \note            The index should be a value of the NamedCurve enum,
+ *                  as defined in <em>RFC-4492: Elliptic Curve Cryptography
+ *                  (ECC) Cipher Suites for Transport Layer Security (TLS)</em>,
+ *                  usually in the form of an \c MBEDTLS_ECP_DP_XXX macro.
+ *
+ * \param grp       The group context to setup. This must be initialized.
+ * \param id        The identifier of the domain parameter set to load.
+ *
+ * \return          \c 0 on success.
+ * \return          #MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE if \p id doesn't
+ *                  correspond to a known group.
+ * \return          Another negative error code on other kinds of failure.
  */
 int mbedtls_ecp_group_load( mbedtls_ecp_group *grp, mbedtls_ecp_group_id id )
 {
@@ -1011,7 +1017,7 @@ static inline void sub32( uint32_t *dst, uint32_t src, signed char *carry )
  * (see fix_negative for the motivation of C)
  */
 #define INIT( b )                                                       \
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;                                                            \
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;                    \
     signed char c = 0, cc;                                              \
     uint32_t cur;                                                       \
     size_t i = 0, bits = (b);                                           \

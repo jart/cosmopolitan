@@ -1,47 +1,15 @@
-/* clang-format off */
-
-/**
- * \file ssl_ticket.h
- *
- * \brief TLS server ticket callbacks implementation
- */
-/*
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
 #ifndef MBEDTLS_SSL_TICKET_H
 #define MBEDTLS_SSL_TICKET_H
-
-#if !defined(MBEDTLS_CONFIG_FILE)
+#include "third_party/mbedtls/cipher.h"
 #include "third_party/mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
+#include "third_party/mbedtls/ssl.h"
+/* clang-format off */
 
 /*
  * This implementation of the session ticket callbacks includes key
  * management, rotating the keys periodically in order to preserve forward
  * secrecy, when MBEDTLS_HAVE_TIME is defined.
  */
-
-#include "third_party/mbedtls/ssl.h"
-#include "third_party/mbedtls/cipher.h"
-
-#if defined(MBEDTLS_THREADING_C)
-#include "third_party/mbedtls/threading.h"
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -71,10 +39,6 @@ typedef struct mbedtls_ssl_ticket_context
     /** Callback for getting (pseudo-)random numbers                        */
     int  (*f_rng)(void *, unsigned char *, size_t);
     void *p_rng;                    /*!< context for the RNG function       */
-
-#if defined(MBEDTLS_THREADING_C)
-    mbedtls_threading_mutex_t mutex;
-#endif
 }
 mbedtls_ssl_ticket_context;
 

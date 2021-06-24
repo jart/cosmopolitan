@@ -6,28 +6,50 @@ DESCRIPTION
 
   redbean - single-file distributable web server
 
+OVERVIEW
+
+  redbean makes it possible to share web applications that run offline
+  as a single-file Actually Portable Executable PKZIP archive which
+  contains your assets. All you need to do is download the redbean.com
+  program below, change the filename to .zip, add your content in a zip
+  editing tool, and then change the extension back to .com.
+
+  redbean can serve 1 million+ gzip encoded responses per second on a
+  cheap personal computer. That performance is thanks to zip and gzip
+  using the same compression format, which enables kernelspace copies.
+  Another reason redbean goes fast is that it's a tiny static binary,
+  which makes fork memory paging nearly free.
+
+  redbean is also easy to modify to suit your own needs. The program
+  itself is written as a single .c file. It embeds the Lua programming
+  language and SQLite which let you write dynamic pages.
+
 FLAGS
 
   -h        help
-  -s        increase silence [repeat]
-  -v        increase verbosity [repeat]
   -d        daemonize
   -u        uniprocess
   -z        print port
   -m        log messages
-  -b        log message body
+  -b        log message bodies
   -a        log resource usage
   -g        log handler latency
   -f        log worker function calls
-  -H K:V    sets http header globally [repeat]
-  -D DIR    serve assets from local directory [repeat]
-  -t MS     tunes read and write timeouts [default 30000]
-  -M INT    tunes max message payload size [default 65536]
-  -c SEC    configures static asset cache-control headers
-  -r /X=/Y  redirect X to Y [repeat]
-  -R /X=/Y  rewrites X to Y [repeat]
-  -l ADDR   listen ip [default 0.0.0.0]
-  -p PORT   listen port [default 8080]
+  -B        use stronger cryptography
+  -s        increase silence                  [repeatable]
+  -v        increase verbosity                [repeatable]
+  -V        increase ssl verbosity            [repeatable]
+  -H K:V    sets http header globally         [repeatable]
+  -D DIR    overlay assets in local directory [repeatable]
+  -r /X=/Y  redirect X to Y                   [repeatable]
+  -R /X=/Y  rewrites X to Y                   [repeatable]
+  -K PATH   tls private key path              [repeatable]
+  -C PATH   tls certificate(s) path           [repeatable]
+  -t MS     tunes read and write timeouts     [def. 60000]
+  -M INT    tunes max message payload size    [def. 65536]
+  -p PORT   listen port                       [def. 8080; repeatable]
+  -l ADDR   listen addr                       [def. 0.0.0.0; repeatable]
+  -c SEC    configures static cache-control
   -L PATH   log file location
   -P PATH   pid file location
   -U INT    daemon set user id
@@ -36,14 +58,13 @@ FLAGS
 FEATURES
 
   - Lua v5.4
-  - HTTP v0.9
-  - HTTP v1.0
-  - HTTP v1.1
-  - Pipelining
-  - Accounting
-  - Content-Encoding
-  - Range / Content-Range
-  - Last-Modified / If-Modified-Since
+  - SQLite 3.35.5
+  - TLS v1.2 / v1.1 / v1.0
+  - HTTP v1.1 / v1.0 / v0.9
+  - Chromium-Zlib Compression
+  - Statusz Monitoring Statistics
+  - Self-Modifying PKZIP Object Store
+  - Linux + Windows + Mac + FreeBSD + OpenBSD + NetBSD
 
 USAGE
 
@@ -122,7 +143,7 @@ USAGE
 
   You can have redbean run as a daemon by doing the following:
 
-    redbean.com -vv -d -L redbean.log -P redbean.pid
+    sudo ./redbean.com -vvdp80 -p443 -L redbean.log -P redbean.pid
     kill -TERM $(cat redbean.pid) # 1x: graceful shutdown
     kill -TERM $(cat redbean.pid) # 2x: forceful shutdown
 
@@ -151,6 +172,32 @@ USAGE
   find it useful. The transitive closure of legalese can be found
   inside the binary. redbean also respects your privacy and won't
   phone home because your computer is its home.
+
+SECURITY
+
+  redbean uses a protocol polyglot for serving HTTP and HTTPS on
+  the same port numbers. For example, both of these are valid:
+
+    http://127.0.0.1:8080/
+    https://127.0.0.1:8080/
+
+  The easiest way to use a self-signed certificate is to provide
+  redbean with a key-signing key:
+
+    openssl req -x509 -newkey rsa:2048 \
+      -keyout .ca.key -out .ca.crt -days 6570 -nodes \
+      -subj '/C=US/ST=CA/O=Jane Doe/CN=My Root CA 1' \
+      -addext 'keyUsage = critical,cRLSign,keyCertSign'
+    sudo ./redbean.com -C ca.crt -K .ca.key -p 80 -p 443
+
+  SSL verbosity is controlled as follows for troubleshooting:
+
+    -V       log ssl errors
+    -VV      log ssl state changes too
+    -VVV     log ssl informational messages too
+    -VVVV    log ssl verbose details too
+
+  That's in addition to existing flags like -vvvm.
 
 SEE ALSO
 

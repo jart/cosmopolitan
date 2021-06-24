@@ -28,9 +28,9 @@
 #include "libc/x/x.h"
 #include "net/http/http.h"
 
-struct HttpRequest req[1];
+struct HttpMessage req[1];
 
-static char *slice(const char *m, struct HttpRequestSlice s) {
+static char *slice(const char *m, struct HttpSlice s) {
   char *p;
   p = xmalloc(s.b - s.a + 1);
   memcpy(p, m + s.a, s.b - s.a);
@@ -47,7 +47,7 @@ void TearDown(void) {
 }
 
 TEST(ParseHttpRequest, soLittleState) {
-  ASSERT_LE(sizeof(struct HttpRequest), 512);
+  ASSERT_LE(sizeof(struct HttpMessage), 512);
 }
 
 TEST(ParseHttpRequest, testEmpty_tooShort) {

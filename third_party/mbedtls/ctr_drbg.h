@@ -1,59 +1,9 @@
-/* clang-format off */
-
-/**
- * \file ctr_drbg.h
- *
- * \brief    This file contains definitions and functions for the
- *           CTR_DRBG pseudorandom generator.
- *
- * CTR_DRBG is a standardized way of building a PRNG from a block-cipher
- * in counter mode operation, as defined in <em>NIST SP 800-90A:
- * Recommendation for Random Number Generation Using Deterministic Random
- * Bit Generators</em>.
- *
- * The Mbed TLS implementation of CTR_DRBG uses AES-256 (default) or AES-128
- * (if \c MBEDTLS_CTR_DRBG_USE_128_BIT_KEY is enabled at compile time)
- * as the underlying block cipher, with a derivation function.
- *
- * The security strength as defined in NIST SP 800-90A is
- * 128 bits when AES-128 is used (\c MBEDTLS_CTR_DRBG_USE_128_BIT_KEY enabled)
- * and 256 bits otherwise, provided that #MBEDTLS_CTR_DRBG_ENTROPY_LEN is
- * kept at its default value (and not overridden in config.h) and that the
- * DRBG instance is set up with default parameters.
- * See the documentation of mbedtls_ctr_drbg_seed() for more
- * information.
- */
-/*
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
-#ifndef MBEDTLS_CTR_DRBG_H
-#define MBEDTLS_CTR_DRBG_H
-
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "third_party/mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
+#ifndef MBEDTLS_CTR_DRBG_H_
+#define MBEDTLS_CTR_DRBG_H_
 #include "third_party/mbedtls/aes.h"
-
-#if defined(MBEDTLS_THREADING_C)
-#include "third_party/mbedtls/threading.h"
-#endif
+#include "third_party/mbedtls/config.h"
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #define MBEDTLS_ERR_CTR_DRBG_ENTROPY_SOURCE_FAILED        -0x0034  /**< The entropy source failed. */
 #define MBEDTLS_ERR_CTR_DRBG_REQUEST_TOO_BIG              -0x0036  /**< The requested random buffer length is too big. */
@@ -143,10 +93,6 @@
 #define MBEDTLS_CTR_DRBG_PR_ON              1
 /**< Prediction resistance is enabled. */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #if MBEDTLS_CTR_DRBG_ENTROPY_LEN >= MBEDTLS_CTR_DRBG_KEYSIZE * 3 / 2
 /** The default length of the nonce read from the entropy source.
  *
@@ -200,33 +146,10 @@ typedef struct mbedtls_ctr_drbg_context
                                 /*!< The entropy callback function. */
 
     void *p_entropy;            /*!< The context for the entropy function. */
-
-#if defined(MBEDTLS_THREADING_C)
-    /* Invariant: the mutex is initialized if and only if f_entropy != NULL.
-     * This means that the mutex is initialized during the initial seeding
-     * in mbedtls_ctr_drbg_seed() and freed in mbedtls_ctr_drbg_free().
-     *
-     * Note that this invariant may change without notice. Do not rely on it
-     * and do not access the mutex directly in application code.
-     */
-    mbedtls_threading_mutex_t mutex;
-#endif
 }
 mbedtls_ctr_drbg_context;
 
-/**
- * \brief               This function initializes the CTR_DRBG context,
- *                      and prepares it for mbedtls_ctr_drbg_seed()
- *                      or mbedtls_ctr_drbg_free().
- *
- * \note                The reseed interval is
- *                      #MBEDTLS_CTR_DRBG_RESEED_INTERVAL by default.
- *                      You can override it by calling
- *                      mbedtls_ctr_drbg_set_reseed_interval().
- *
- * \param ctx           The CTR_DRBG context to initialize.
- */
-void mbedtls_ctr_drbg_init( mbedtls_ctr_drbg_context *ctx );
+void mbedtls_ctr_drbg_init( mbedtls_ctr_drbg_context * );
 
 /**
  * \brief               This function seeds and sets up the CTR_DRBG
@@ -273,15 +196,6 @@ void mbedtls_ctr_drbg_init( mbedtls_ctr_drbg_context *ctx );
  *   make a second call to \p f_entropy.
  */
 #endif
-#if defined(MBEDTLS_THREADING_C)
-/**
- * \note                When Mbed TLS is built with threading support,
- *                      after this function returns successfully,
- *                      it is safe to call mbedtls_ctr_drbg_random()
- *                      from multiple threads. Other operations, including
- *                      reseeding, are not thread-safe.
- */
-#endif /* MBEDTLS_THREADING_C */
 /**
  * - The \p custom string.
  *
@@ -328,10 +242,10 @@ void mbedtls_ctr_drbg_init( mbedtls_ctr_drbg_context *ctx );
  * \return              #MBEDTLS_ERR_CTR_DRBG_ENTROPY_SOURCE_FAILED on failure.
  */
 int mbedtls_ctr_drbg_seed( mbedtls_ctr_drbg_context *ctx,
-                   int (*f_entropy)(void *, unsigned char *, size_t),
-                   void *p_entropy,
-                   const unsigned char *custom,
-                   size_t len );
+                           int (*f_entropy)(void *, unsigned char *, size_t),
+                           void *p_entropy,
+                           const unsigned char *custom,
+                           size_t len );
 
 /**
  * \brief               This function resets CTR_DRBG context to the state immediately
@@ -508,16 +422,7 @@ int mbedtls_ctr_drbg_random_with_add( void *p_rng,
  *
  * This function automatically reseeds if the reseed counter is exceeded
  * or prediction resistance is enabled.
- */
-#if defined(MBEDTLS_THREADING_C)
-/**
- * \note                When Mbed TLS is built with threading support,
- *                      it is safe to call mbedtls_ctr_drbg_random()
- *                      from multiple threads. Other operations, including
- *                      reseeding, are not thread-safe.
- */
-#endif /* MBEDTLS_THREADING_C */
-/**
+ *
  * \param p_rng         The CTR_DRBG context. This must be a pointer to a
  *                      #mbedtls_ctr_drbg_context structure.
  * \param output        The buffer to fill.
@@ -531,35 +436,6 @@ int mbedtls_ctr_drbg_random( void *p_rng,
                      unsigned char *output, size_t output_len );
 
 
-#if ! defined(MBEDTLS_DEPRECATED_REMOVED)
-#if defined(MBEDTLS_DEPRECATED_WARNING)
-#define MBEDTLS_DEPRECATED    __attribute__((deprecated))
-#else
-#define MBEDTLS_DEPRECATED
-#endif
-/**
- * \brief              This function updates the state of the CTR_DRBG context.
- *
- * \deprecated         Superseded by mbedtls_ctr_drbg_update_ret()
- *                     in 2.16.0.
- *
- * \note               If \p add_len is greater than
- *                     #MBEDTLS_CTR_DRBG_MAX_SEED_INPUT, only the first
- *                     #MBEDTLS_CTR_DRBG_MAX_SEED_INPUT Bytes are used.
- *                     The remaining Bytes are silently discarded.
- *
- * \param ctx          The CTR_DRBG context.
- * \param additional   The data to update the state with.
- * \param add_len      Length of \p additional data.
- */
-MBEDTLS_DEPRECATED void mbedtls_ctr_drbg_update(
-    mbedtls_ctr_drbg_context *ctx,
-    const unsigned char *additional,
-    size_t add_len );
-#undef MBEDTLS_DEPRECATED
-#endif /* !MBEDTLS_DEPRECATED_REMOVED */
-
-#if defined(MBEDTLS_FS_IO)
 /**
  * \brief               This function writes a seed file.
  *
@@ -588,9 +464,6 @@ int mbedtls_ctr_drbg_write_seed_file( mbedtls_ctr_drbg_context *ctx, const char 
  *                      seed file is too large.
  */
 int mbedtls_ctr_drbg_update_seed_file( mbedtls_ctr_drbg_context *ctx, const char *path );
-#endif /* MBEDTLS_FS_IO */
-
-#if defined(MBEDTLS_SELF_TEST)
 
 /**
  * \brief               The CTR_DRBG checkup routine.
@@ -600,10 +473,5 @@ int mbedtls_ctr_drbg_update_seed_file( mbedtls_ctr_drbg_context *ctx, const char
  */
 int mbedtls_ctr_drbg_self_test( int verbose );
 
-#endif /* MBEDTLS_SELF_TEST */
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* ctr_drbg.h */
+COSMOPOLITAN_C_END_
+#endif /* CTR_DRBG_H_ */

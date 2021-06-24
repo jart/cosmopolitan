@@ -1,46 +1,11 @@
-/* clang-format off */
-
-/**
- * \file oid.h
- *
- * \brief Object Identifier (OID) database
- */
-/*
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
 #ifndef MBEDTLS_OID_H
 #define MBEDTLS_OID_H
-
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "third_party/mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
 #include "third_party/mbedtls/asn1.h"
-#include "third_party/mbedtls/pk.h"
-
-
-#if defined(MBEDTLS_CIPHER_C)
 #include "third_party/mbedtls/cipher.h"
-#endif
-
-#if defined(MBEDTLS_MD_C)
+#include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/md.h"
-#endif
+#include "third_party/mbedtls/pk.h"
+/* clang-format off */
 
 #define MBEDTLS_ERR_OID_NOT_FOUND                         -0x002E  /**< OID is not found. */
 #define MBEDTLS_ERR_OID_BUF_TOO_SMALL                     -0x000B  /**< output buffer is too small */
@@ -260,8 +225,6 @@
 #define MBEDTLS_OID_DIGEST_ALG_SHA384           MBEDTLS_OID_NIST_ALG "\x02\x02" /**< id-sha384 OBJECT IDENTIFIER ::= { joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistalgorithm(4) hashalgs(2) 2 } */
 
 #define MBEDTLS_OID_DIGEST_ALG_SHA512           MBEDTLS_OID_NIST_ALG "\x02\x03" /**< id-mbedtls_sha512 OBJECT IDENTIFIER ::= { joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistalgorithm(4) hashalgs(2) 3 } */
-
-#define MBEDTLS_OID_DIGEST_ALG_RIPEMD160        MBEDTLS_OID_TELETRUST "\x03\x02\x01" /**< id-ripemd160 OBJECT IDENTIFIER :: { iso(1) identified-organization(3) teletrust(36) algorithm(3) hashAlgorithm(2) ripemd160(1) } */
 
 #define MBEDTLS_OID_HMAC_SHA1                   MBEDTLS_OID_RSA_COMPANY "\x02\x07" /**< id-hmacWithSHA1 OBJECT IDENTIFIER ::= { iso(1) member-body(2) us(840) rsadsi(113549) digestAlgorithm(2) 7 } */
 
@@ -502,7 +465,6 @@ int mbedtls_oid_get_pk_alg( const mbedtls_asn1_buf *oid, mbedtls_pk_type_t *pk_a
 int mbedtls_oid_get_oid_by_pk_alg( mbedtls_pk_type_t pk_alg,
                            const char **oid, size_t *olen );
 
-#if defined(MBEDTLS_ECP_C)
 /**
  * \brief          Translate NamedCurve OID into an EC group identifier
  *
@@ -523,10 +485,8 @@ int mbedtls_oid_get_ec_grp( const mbedtls_asn1_buf *oid, mbedtls_ecp_group_id *g
  * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
  */
 int mbedtls_oid_get_oid_by_ec_grp( mbedtls_ecp_group_id grp_id,
-                           const char **oid, size_t *olen );
-#endif /* MBEDTLS_ECP_C */
+                                   const char **oid, size_t *olen );
 
-#if defined(MBEDTLS_MD_C)
 /**
  * \brief          Translate SignatureAlgorithm OID into md_type and pk_type
  *
@@ -560,7 +520,7 @@ int mbedtls_oid_get_sig_alg_desc( const mbedtls_asn1_buf *oid, const char **desc
  * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
  */
 int mbedtls_oid_get_oid_by_sig_alg( mbedtls_pk_type_t pk_alg, mbedtls_md_type_t md_alg,
-                            const char **oid, size_t *olen );
+                                    const char **oid, size_t *olen );
 
 /**
  * \brief          Translate hash algorithm OID into md_type
@@ -581,7 +541,6 @@ int mbedtls_oid_get_md_alg( const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_a
  * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
  */
 int mbedtls_oid_get_md_hmac( const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_hmac );
-#endif /* MBEDTLS_MD_C */
 
 /**
  * \brief          Translate Extended Key Usage OID into description

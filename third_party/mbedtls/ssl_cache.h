@@ -1,40 +1,8 @@
-/* clang-format off */
-
-/**
- * \file ssl_cache.h
- *
- * \brief SSL session cache implementation
- */
-/*
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
 #ifndef MBEDTLS_SSL_CACHE_H
 #define MBEDTLS_SSL_CACHE_H
-
-#if !defined(MBEDTLS_CONFIG_FILE)
 #include "third_party/mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
 #include "third_party/mbedtls/ssl.h"
-
-#if defined(MBEDTLS_THREADING_C)
-#include "third_party/mbedtls/threading.h"
-#endif
+/* clang-format off */
 
 /**
  * \name SECTION: Module settings
@@ -85,9 +53,6 @@ struct mbedtls_ssl_cache_context
     mbedtls_ssl_cache_entry *chain;     /*!< start of the chain     */
     int timeout;                /*!< cache entry timeout    */
     int max_entries;            /*!< maximum entries        */
-#if defined(MBEDTLS_THREADING_C)
-    mbedtls_threading_mutex_t mutex;    /*!< mutex                  */
-#endif
 };
 
 /**
@@ -99,8 +64,7 @@ void mbedtls_ssl_cache_init( mbedtls_ssl_cache_context *cache );
 
 /**
  * \brief          Cache get callback implementation
- *                 (Thread-safe if MBEDTLS_THREADING_C is enabled)
- *
+  *
  * \param data     SSL cache context
  * \param session  session to retrieve entry for
  */
@@ -108,7 +72,6 @@ int mbedtls_ssl_cache_get( void *data, mbedtls_ssl_session *session );
 
 /**
  * \brief          Cache set callback implementation
- *                 (Thread-safe if MBEDTLS_THREADING_C is enabled)
  *
  * \param data     SSL cache context
  * \param session  session to store entry for

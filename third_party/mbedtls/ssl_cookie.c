@@ -1,5 +1,16 @@
-/* clang-format off */
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/platform.h"
+#include "third_party/mbedtls/ssl_cookie.h"
+#include "third_party/mbedtls/ssl_internal.h"
 
+asm(".ident\t\"\\n\\n\
+Mbed TLS (Apache 2.0)\\n\
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+/* clang-format off */
 /*
  *  DTLS cookie callbacks implementation
  *
@@ -23,22 +34,7 @@
  * to store and retrieve the session information.
  */
 
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_SSL_COOKIE_C)
-
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_calloc    calloc
-#define mbedtls_free      free
-#endif
-
-#include "third_party/mbedtls/ssl_cookie.h"
-#include "third_party/mbedtls/ssl_internal.h"
-#include "third_party/mbedtls/error.h"
-#include "third_party/mbedtls/platform_util.h"
-
 
 /*
  * If DTLS is in use, then at least one of SHA-1, SHA-256, SHA-512 is
@@ -74,10 +70,6 @@ void mbedtls_ssl_cookie_init( mbedtls_ssl_cookie_ctx *ctx )
     ctx->serial = 0;
 #endif
     ctx->timeout = MBEDTLS_SSL_COOKIE_TIMEOUT;
-
-#if defined(MBEDTLS_THREADING_C)
-    mbedtls_mutex_init( &ctx->mutex );
-#endif
 }
 
 void mbedtls_ssl_cookie_set_timeout( mbedtls_ssl_cookie_ctx *ctx, unsigned long delay )
@@ -88,11 +80,6 @@ void mbedtls_ssl_cookie_set_timeout( mbedtls_ssl_cookie_ctx *ctx, unsigned long 
 void mbedtls_ssl_cookie_free( mbedtls_ssl_cookie_ctx *ctx )
 {
     mbedtls_md_free( &ctx->hmac_ctx );
-
-#if defined(MBEDTLS_THREADING_C)
-    mbedtls_mutex_free( &ctx->mutex );
-#endif
-
     mbedtls_platform_zeroize( ctx, sizeof( mbedtls_ssl_cookie_ctx ) );
 }
 
@@ -173,21 +160,8 @@ int mbedtls_ssl_cookie_write( void *p_ctx,
     (*p)[3] = (unsigned char)( t       );
     *p += 4;
 
-#if defined(MBEDTLS_THREADING_C)
-    if( ( ret = mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
-        return( MBEDTLS_ERR_SSL_INTERNAL_ERROR + ret );
-#endif
-
-    ret = ssl_cookie_hmac( &ctx->hmac_ctx, *p - 4,
-                           p, end, cli_id, cli_id_len );
-
-#if defined(MBEDTLS_THREADING_C)
-    if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
-        return( MBEDTLS_ERR_SSL_INTERNAL_ERROR +
-                MBEDTLS_ERR_THREADING_MUTEX_ERROR );
-#endif
-
-    return( ret );
+    return ssl_cookie_hmac( &ctx->hmac_ctx, *p - 4,
+                            p, end, cli_id, cli_id_len );
 }
 
 /*
@@ -209,21 +183,10 @@ int mbedtls_ssl_cookie_check( void *p_ctx,
     if( cookie_len != COOKIE_LEN )
         return( -1 );
 
-#if defined(MBEDTLS_THREADING_C)
-    if( ( ret = mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
-        return( MBEDTLS_ERR_SSL_INTERNAL_ERROR + ret );
-#endif
-
     if( ssl_cookie_hmac( &ctx->hmac_ctx, cookie,
                          &p, p + sizeof( ref_hmac ),
                          cli_id, cli_id_len ) != 0 )
         ret = -1;
-
-#if defined(MBEDTLS_THREADING_C)
-    if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
-        return( MBEDTLS_ERR_SSL_INTERNAL_ERROR +
-                MBEDTLS_ERR_THREADING_MUTEX_ERROR );
-#endif
 
     if( ret != 0 )
         return( ret );

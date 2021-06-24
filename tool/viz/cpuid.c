@@ -76,9 +76,9 @@ void showcachesizes(void) {
     printf("%-19s%s%s %u-way %,7u byte cache w/%s %,5u sets of %u byte lines "
            "shared across %u threads\n",
            gc(xasprintf("Level %u%s", CPUID4_CACHE_LEVEL,
-                        CPUID4_CACHE_TYPE == 1
-                            ? " data"
-                            : CPUID4_CACHE_TYPE == 2 ? " code" : "")),
+                        CPUID4_CACHE_TYPE == 1   ? " data"
+                        : CPUID4_CACHE_TYPE == 2 ? " code"
+                                                 : "")),
            CPUID4_IS_FULLY_ASSOCIATIVE ? " fully-associative" : "",
            CPUID4_COMPLEX_INDEXING ? " complexly-indexed" : "",
            CPUID4_WAYS_OF_ASSOCIATIVITY, CPUID4_CACHE_SIZE_IN_BYTES,
@@ -111,11 +111,14 @@ int main(int argc, char *argv[]) {
   }
 
   printf("\n");
+  SHOW(kX86CpuFamily);
+  SHOW(kX86CpuModel);
+  printf("\n");
   SHOW(kX86CpuStepping);
-  SHOW(kX86CpuModelid);
-  SHOW(kX86CpuFamilyid);
   SHOW(kX86CpuType);
+  SHOW(kX86CpuModelid);
   SHOW(kX86CpuExtmodelid);
+  SHOW(kX86CpuFamilyid);
   SHOW(kX86CpuExtfamilyid);
 
   printf("\n");

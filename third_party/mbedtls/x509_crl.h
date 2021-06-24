@@ -1,36 +1,8 @@
-/* clang-format off */
-
-/**
- * \file x509_crl.h
- *
- * \brief X.509 certificate revocation list parsing
- */
-/*
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
 #ifndef MBEDTLS_X509_CRL_H
 #define MBEDTLS_X509_CRL_H
-
-#if !defined(MBEDTLS_CONFIG_FILE)
 #include "third_party/mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
 #include "third_party/mbedtls/x509.h"
+/* clang-format off */
 
 #ifdef __cplusplus
 extern "C" {
@@ -122,7 +94,6 @@ int mbedtls_x509_crl_parse_der( mbedtls_x509_crl *chain,
  */
 int mbedtls_x509_crl_parse( mbedtls_x509_crl *chain, const unsigned char *buf, size_t buflen );
 
-#if defined(MBEDTLS_FS_IO)
 /**
  * \brief          Load one or more CRLs and append them to the chained list
  *
@@ -134,7 +105,6 @@ int mbedtls_x509_crl_parse( mbedtls_x509_crl *chain, const unsigned char *buf, s
  * \return         0 if successful, or a specific X509 or PEM error code
  */
 int mbedtls_x509_crl_parse_file( mbedtls_x509_crl *chain, const char *path );
-#endif /* MBEDTLS_FS_IO */
 
 /**
  * \brief          Returns an informational string about the CRL.

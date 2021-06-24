@@ -25,17 +25,18 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
+STATIC_YOINK("zip_uri_support");
+
 TEST(dirstream, test) {
   DIR *dir;
   struct dirent *ent;
   char *dpath, *file1, *file2;
-  dpath = gc(xasprintf("%s%s%lu", kTmpPath, "dirstream", rand32()));
+  dpath = gc(xasprintf("%s%s%lu", kTmpPath, "dirstream", rand64()));
   file1 = gc(xasprintf("%s/%s", dpath, "foo"));
   file2 = gc(xasprintf("%s/%s", dpath, "bar"));
   EXPECT_NE(-1, mkdir(dpath, 0755));
   EXPECT_NE(-1, touch(file1, 0644));
   EXPECT_NE(-1, touch(file2, 0644));
-
   EXPECT_TRUE(NULL != (dir = opendir(dpath)));
   bool hasfoo = false;
   bool hasbar = false;
@@ -46,8 +47,21 @@ TEST(dirstream, test) {
   EXPECT_TRUE(hasfoo);
   EXPECT_TRUE(hasbar);
   EXPECT_NE(-1, closedir(dir));
-
   EXPECT_NE(-1, unlink(file2));
   EXPECT_NE(-1, unlink(file1));
   EXPECT_NE(-1, rmdir(dpath));
+}
+
+TEST(dirstream, zipTest) {
+  bool foundNewYork = false;
+  DIR *d;
+  struct dirent *e;
+  const char *path = "zip:usr/share/zoneinfo/";
+  ASSERT_NE(0, _gc(xiso8601ts(NULL)));
+  ASSERT_NE(NULL, (d = opendir(path)));
+  while ((e = readdir(d))) {
+    foundNewYork |= !strcmp(e->d_name, "New_York");
+  }
+  closedir(d);
+  EXPECT_TRUE(foundNewYork);
 }

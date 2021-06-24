@@ -62,16 +62,27 @@ void AppendWide(struct Buffer *b, wint_t wc) {
 }
 
 int AppendFmt(struct Buffer *b, const char *fmt, ...) {
-  int bytes;
-  char *tmp;
-  va_list va;
-  tmp = NULL;
+  int n;
+  char *p;
+  va_list va, vb;
   va_start(va, fmt);
-  bytes = vasprintf(&tmp, fmt, va);
+  va_copy(vb, va);
+  n = vsnprintf(b->p + b->i, b->n - b->i, fmt, va);
+  if (n >= b->n - b->i) {
+    do {
+      if (b->n) {
+        b->n += b->n >> 1; /* the proper way to grow w/ amortization */
+      } else {
+        b->n = 16;
+      }
+    } while (b->i + n > b->n);
+    b->p = realloc(b->p, b->n);
+    vsnprintf(b->p + b->i, b->n - b->i, fmt, vb);
+  }
+  va_end(vb);
   va_end(va);
-  if (bytes != -1) AppendData(b, tmp, bytes);
-  free(tmp);
-  return bytes;
+  b->i += n;
+  return n;
 }
 
 /**

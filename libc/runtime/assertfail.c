@@ -89,9 +89,9 @@ relegated wontreturn noasan void __assert_fail(const char *expr,
     if (line < 1) line = 1;
     for (i = 0; line; line /= 10) linebuf[i++] = '0' + line % 10;
     while (i) *p++ = linebuf[--i];
-    p = __assert_stpcpy(p, ":");
+    p = __assert_stpcpy(p, ": assert(");
     p = __assert_stpcpy(p, expr);
-    p = __assert_stpcpy(p, "\r\n");
+    p = __assert_stpcpy(p, ")\r\n");
     __assert_write(msg, p - msg);
     if (weaken(__die)) weaken(__die)();
   }

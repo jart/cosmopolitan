@@ -1,8 +1,15 @@
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/ctr_drbg.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/platform.h"
 /* clang-format off */
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 /*
@@ -29,26 +36,17 @@ asm(".include \"libc/disclaimer.inc\"");
  *  http://csrc.nist.gov/publications/nistpubs/800-90/SP800-90revised_March2007.pdf
  */
 
-#include "libc/str/str.h"
-#include "libc/stdio/stdio.h"
-#include "third_party/mbedtls/common.h"
-
-#if defined(MBEDTLS_CTR_DRBG_C)
-
-#include "third_party/mbedtls/ctr_drbg.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
-
-#if defined(MBEDTLS_SELF_TEST)
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_printf printf
-#endif /* MBEDTLS_PLATFORM_C */
-#endif /* MBEDTLS_SELF_TEST */
-
-/*
- * CTR_DRBG context initialization
+/**
+ * \brief               This function initializes the CTR_DRBG context,
+ *                      and prepares it for mbedtls_ctr_drbg_seed()
+ *                      or mbedtls_ctr_drbg_free().
+ *
+ * \note                The reseed interval is
+ *                      #MBEDTLS_CTR_DRBG_RESEED_INTERVAL by default.
+ *                      You can override it by calling
+ *                      mbedtls_ctr_drbg_set_reseed_interval().
+ *
+ * \param ctx           The CTR_DRBG context to initialize.
  */
 void mbedtls_ctr_drbg_init( mbedtls_ctr_drbg_context *ctx )
 {
@@ -68,12 +66,6 @@ void mbedtls_ctr_drbg_free( mbedtls_ctr_drbg_context *ctx )
 {
     if( ctx == NULL )
         return;
-
-#if defined(MBEDTLS_THREADING_C)
-    /* The mutex is initialized iff f_entropy is set. */
-    if( ctx->f_entropy != NULL )
-        mbedtls_mutex_free( &ctx->mutex );
-#endif
     mbedtls_aes_free( &ctx->aes_ctx );
     mbedtls_platform_zeroize( ctx, sizeof( mbedtls_ctr_drbg_context ) );
     ctx->reseed_interval = MBEDTLS_CTR_DRBG_RESEED_INTERVAL;
@@ -337,19 +329,6 @@ exit:
     return( ret );
 }
 
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-void mbedtls_ctr_drbg_update( mbedtls_ctr_drbg_context *ctx,
-                              const unsigned char *additional,
-                              size_t add_len )
-{
-    /* MAX_INPUT would be more logical here, but we have to match
-     * block_cipher_df()'s limits since we can't propagate errors */
-    if( add_len > MBEDTLS_CTR_DRBG_MAX_SEED_INPUT )
-        add_len = MBEDTLS_CTR_DRBG_MAX_SEED_INPUT;
-    (void) mbedtls_ctr_drbg_update_ret( ctx, additional, add_len );
-}
-#endif /* MBEDTLS_DEPRECATED_REMOVED */
-
 /* CTR_DRBG_Reseed with derivation function (SP 800-90A &sect;10.2.1.4.2)
  * mbedtls_ctr_drbg_reseed(ctx, additional, len, nonce_len)
  * implements
@@ -460,11 +439,6 @@ int mbedtls_ctr_drbg_seed( mbedtls_ctr_drbg_context *ctx,
     size_t nonce_len;
 
     memset( key, 0, MBEDTLS_CTR_DRBG_KEYSIZE );
-
-    /* The mutex is initialized iff f_entropy is set. */
-#if defined(MBEDTLS_THREADING_C)
-    mbedtls_mutex_init( &ctx->mutex );
-#endif
 
     mbedtls_aes_init( &ctx->aes_ctx );
 
@@ -596,22 +570,8 @@ exit:
 int mbedtls_ctr_drbg_random( void *p_rng, unsigned char *output,
                              size_t output_len )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     mbedtls_ctr_drbg_context *ctx = (mbedtls_ctr_drbg_context *) p_rng;
-
-#if defined(MBEDTLS_THREADING_C)
-    if( ( ret = mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
-        return( ret );
-#endif
-
-    ret = mbedtls_ctr_drbg_random_with_add( ctx, output, output_len, NULL, 0 );
-
-#if defined(MBEDTLS_THREADING_C)
-    if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
-        return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
-#endif
-
-    return( ret );
+    return mbedtls_ctr_drbg_random_with_add( ctx, output, output_len, NULL, 0 );
 }
 
 #if defined(MBEDTLS_FS_IO)
@@ -898,6 +858,5 @@ int mbedtls_ctr_drbg_self_test( int verbose )
 
     return( 0 );
 }
-#endif /* MBEDTLS_SELF_TEST */
 
-#endif /* MBEDTLS_CTR_DRBG_C */
+#endif /* MBEDTLS_SELF_TEST */

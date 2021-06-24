@@ -1,5 +1,21 @@
-/* clang-format off */
+#include "libc/limits.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/debug.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/iana.h"
+#include "third_party/mbedtls/oid.h"
+#include "third_party/mbedtls/platform.h"
+#include "third_party/mbedtls/ssl.h"
+#include "third_party/mbedtls/ssl_internal.h"
+#include "third_party/mbedtls/ssl_invasive.h"
 
+asm(".ident\t\"\\n\\n\
+Mbed TLS (Apache 2.0)\\n\
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+/* clang-format off */
 /*
  *  Generic SSL/TLS messaging layer functions
  *  (record layer + retransmission state machine)
@@ -28,36 +44,7 @@
  *  http://www.ietf.org/rfc/rfc4346.txt
  */
 
-#include "libc/limits.h"
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_SSL_TLS_C)
-
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_calloc    calloc
-#define mbedtls_free      free
-#endif
-
-#include "third_party/mbedtls/ssl.h"
-#include "third_party/mbedtls/ssl_internal.h"
-#include "third_party/mbedtls/debug.h"
-#include "third_party/mbedtls/error.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/version.h"
-
-#include "third_party/mbedtls/ssl_invasive.h"
-
-
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
-#include "third_party/mbedtls/psa_util.h"
-#include "third_party/mbedtls/crypto.h"
-#endif
-
-#if defined(MBEDTLS_X509_CRT_PARSE_C)
-#include "third_party/mbedtls/oid.h"
-#endif
 
 static uint32_t ssl_get_hs_total_len( mbedtls_ssl_context const *ssl );
 
@@ -91,12 +78,55 @@ int mbedtls_ssl_check_timer( mbedtls_ssl_context *ssl )
     return( 0 );
 }
 
-#if defined(MBEDTLS_SSL_RECORD_CHECKING)
 static int ssl_parse_record_header( mbedtls_ssl_context const *ssl,
                                     unsigned char *buf,
                                     size_t len,
                                     mbedtls_record *rec );
 
+/**
+ * \brief          Check whether a buffer contains a valid and authentic record
+ *                 that has not been seen before. (DTLS only).
+ *
+ *                 This function does not change the user-visible state
+ *                 of the SSL context. Its sole purpose is to provide
+ *                 an indication of the legitimacy of an incoming record.
+ *
+ *                 This can be useful e.g. in distributed server environments
+ *                 using the DTLS Connection ID feature, in which connections
+ *                 might need to be passed between service instances on a change
+ *                 of peer address, but where such disruptive operations should
+ *                 only happen after the validity of incoming records has been
+ *                 confirmed.
+ *
+ * \param ssl      The SSL context to use.
+ * \param buf      The address of the buffer holding the record to be checked.
+ *                 This must be a read/write buffer of length \p buflen Bytes.
+ * \param buflen   The length of \p buf in Bytes.
+ *
+ * \note           This routine only checks whether the provided buffer begins
+ *                 with a valid and authentic record that has not been seen
+ *                 before, but does not check potential data following the
+ *                 initial record. In particular, it is possible to pass DTLS
+ *                 datagrams containing multiple records, in which case only
+ *                 the first record is checked.
+ *
+ * \note           This function modifies the input buffer \p buf. If you need
+ *                 to preserve the original record, you have to maintain a copy.
+ *
+ * \return         \c 0 if the record is valid and authentic and has not been
+ *                 seen before.
+ * \return         MBEDTLS_ERR_SSL_INVALID_MAC if the check completed
+ *                 successfully but the record was found to be not authentic.
+ * \return         MBEDTLS_ERR_SSL_INVALID_RECORD if the check completed
+ *                 successfully but the record was found to be invalid for
+ *                 a reason different from authenticity checking.
+ * \return         MBEDTLS_ERR_SSL_UNEXPECTED_RECORD if the check completed
+ *                 successfully but the record was found to be unexpected
+ *                 in the state of the SSL context, including replayed records.
+ * \return         Another negative error code on different kinds of failure.
+ *                 In this case, the SSL context becomes unusable and needs
+ *                 to be freed or reset before reuse.
+ */
 int mbedtls_ssl_check_record( mbedtls_ssl_context const *ssl,
                               unsigned char *buf,
                               size_t buflen )
@@ -155,7 +185,6 @@ exit:
     MBEDTLS_SSL_DEBUG_MSG( 1, ( "<= mbedtls_ssl_check_record" ) );
     return( ret );
 }
-#endif /* MBEDTLS_SSL_RECORD_CHECKING */
 
 #define SSL_DONT_FORCE_FLUSH 0
 #define SSL_FORCE_FLUSH      1
@@ -4975,16 +5004,17 @@ int mbedtls_ssl_handle_message_type( mbedtls_ssl_context *ssl )
             return( MBEDTLS_ERR_SSL_INVALID_RECORD );
         }
 
-        MBEDTLS_SSL_DEBUG_MSG( 2, ( "got an alert message, type: [%u:%u]",
-                       ssl->in_msg[0], ssl->in_msg[1] ) );
+        MBEDTLS_SSL_DEBUG_MSG( 2, ( "got an alert message, type: [%u:%s]",
+                                    ssl->in_msg[0], GetAlertDescription(ssl->in_msg[1]) ) );
 
         /*
          * Ignore non-fatal alerts, except close_notify and no_renegotiation
          */
         if( ssl->in_msg[0] == MBEDTLS_SSL_ALERT_LEVEL_FATAL )
         {
-            MBEDTLS_SSL_DEBUG_MSG( 1, ( "is a fatal alert message (msg %d)",
-                           ssl->in_msg[1] ) );
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "is a fatal alert message (%s)",
+                                        GetAlertDescription(ssl->in_msg[1]) ) );
+            ssl->fatal_alert = ssl->in_msg[1];
             return( MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE );
         }
 
@@ -5056,9 +5086,25 @@ int mbedtls_ssl_send_fatal_handshake_failure( mbedtls_ssl_context *ssl )
                   MBEDTLS_SSL_ALERT_MSG_HANDSHAKE_FAILURE ) );
 }
 
+/**
+ * \brief           Send an alert message
+ *
+ * \param ssl       SSL context
+ * \param level     The alert level of the message
+ *                  (MBEDTLS_SSL_ALERT_LEVEL_WARNING or MBEDTLS_SSL_ALERT_LEVEL_FATAL)
+ * \param message   The alert message (SSL_ALERT_MSG_*)
+ *
+ * \return          0 if successful, or a specific SSL error code.
+ *
+ * \note           If this function returns something other than 0 or
+ *                 MBEDTLS_ERR_SSL_WANT_READ/WRITE, you must stop using
+ *                 the SSL context for reading or writing, and either free it or
+ *                 call \c mbedtls_ssl_session_reset() on it before re-using it
+ *                 for a new connection; the current connection must be closed.
+ */
 int mbedtls_ssl_send_alert_message( mbedtls_ssl_context *ssl,
-                            unsigned char level,
-                            unsigned char message )
+                                    unsigned char level,
+                                    unsigned char message )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
@@ -5192,7 +5238,6 @@ static size_t ssl_transform_get_explicit_iv_len(
 {
     if( transform->minor_ver < MBEDTLS_SSL_MINOR_VERSION_2 )
         return( 0 );
-
     return( transform->ivlen - transform->fixed_ivlen );
 }
 
@@ -5223,13 +5268,11 @@ void mbedtls_ssl_update_out_pointers( mbedtls_ssl_context *ssl,
 #endif
         ssl->out_iv  = ssl->out_hdr + 5;
     }
-
     ssl->out_msg = ssl->out_iv;
     /* Adjust out_msg to make space for explicit IV, if used. */
     if( transform != NULL )
         ssl->out_msg += ssl_transform_get_explicit_iv_len( transform );
 }
-
 /* Once ssl->in_hdr as the address of the beginning of the
  * next incoming record is set, deduce the other pointers.
  *
@@ -5237,7 +5280,6 @@ void mbedtls_ssl_update_out_pointers( mbedtls_ssl_context *ssl,
  *       (entering MAC computation) in the 8 bytes before ssl->in_hdr,
  *       and the caller has to make sure there's space for this.
  */
-
 void mbedtls_ssl_update_in_pointers( mbedtls_ssl_context *ssl )
 {
     /* This function sets the pointers to match the case
@@ -5249,7 +5291,6 @@ void mbedtls_ssl_update_in_pointers( mbedtls_ssl_context *ssl )
      * will be shifted to point to the beginning of the
      * record plaintext.
      */
-
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
     if( ssl->conf->transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM )
     {
@@ -5276,7 +5317,6 @@ void mbedtls_ssl_update_in_pointers( mbedtls_ssl_context *ssl )
 #endif
         ssl->in_iv  = ssl->in_hdr + 5;
     }
-
     /* This will be adjusted at record decryption time. */
     ssl->in_msg = ssl->in_iv;
 }
@@ -5284,7 +5324,6 @@ void mbedtls_ssl_update_in_pointers( mbedtls_ssl_context *ssl )
 /*
  * Setup an SSL context
  */
-
 void mbedtls_ssl_reset_in_out_pointers( mbedtls_ssl_context *ssl )
 {
     /* Set the incoming and outgoing record pointers. */
@@ -5300,37 +5339,83 @@ void mbedtls_ssl_reset_in_out_pointers( mbedtls_ssl_context *ssl )
         ssl->out_hdr = ssl->out_buf + 8;
         ssl->in_hdr  = ssl->in_buf  + 8;
     }
-
     /* Derive other internal pointers. */
     mbedtls_ssl_update_out_pointers( ssl, NULL /* no transform enabled */ );
     mbedtls_ssl_update_in_pointers ( ssl );
 }
 
-/*
- * SSL get accessors
+/**
+ * \brief          Return the number of application data bytes
+ *                 remaining to be read from the current record.
+ *
+ * \param ssl      SSL context
+ *
+ * \return         How many bytes are available in the application
+ *                 data record read buffer.
+ *
+ * \note           When working over a datagram transport, this is
+ *                 useful to detect the current datagram's boundary
+ *                 in case \c mbedtls_ssl_read has written the maximal
+ *                 amount of data fitting into the input buffer.
+ *
  */
 size_t mbedtls_ssl_get_bytes_avail( const mbedtls_ssl_context *ssl )
 {
     return( ssl->in_offt == NULL ? 0 : ssl->in_msglen );
 }
 
+/**
+ * \brief          Check if there is data already read from the
+ *                 underlying transport but not yet processed.
+ *
+ * \param ssl      SSL context
+ *
+ * \return         0 if nothing's pending, 1 otherwise.
+ *
+ * \note           This is different in purpose and behaviour from
+ *                 \c mbedtls_ssl_get_bytes_avail in that it considers
+ *                 any kind of unprocessed data, not only unread
+ *                 application data. If \c mbedtls_ssl_get_bytes
+ *                 returns a non-zero value, this function will
+ *                 also signal pending data, but the converse does
+ *                 not hold. For example, in DTLS there might be
+ *                 further records waiting to be processed from
+ *                 the current underlying transport's datagram.
+ *
+ * \note           If this function returns 1 (data pending), this
+ *                 does not imply that a subsequent call to
+ *                 \c mbedtls_ssl_read will provide any data;
+ *                 e.g., the unprocessed data might turn out
+ *                 to be an alert or a handshake message.
+ *
+ * \note           This function is useful in the following situation:
+ *                 If the SSL/TLS module successfully returns from an
+ *                 operation - e.g. a handshake or an application record
+ *                 read - and you're awaiting incoming data next, you
+ *                 must not immediately idle on the underlying transport
+ *                 to have data ready, but you need to check the value
+ *                 of this function first. The reason is that the desired
+ *                 data might already be read but not yet processed.
+ *                 If, in contrast, a previous call to the SSL/TLS module
+ *                 returned MBEDTLS_ERR_SSL_WANT_READ, it is not necessary
+ *                 to call this function, as the latter error code entails
+ *                 that all internal data has been processed.
+ *
+ */
 int mbedtls_ssl_check_pending( const mbedtls_ssl_context *ssl )
 {
     /*
      * Case A: We're currently holding back
      * a message for further processing.
      */
-
     if( ssl->keep_current_message == 1 )
     {
         MBEDTLS_SSL_DEBUG_MSG( 3, ( "ssl_check_pending: record held back for processing" ) );
         return( 1 );
     }
-
     /*
      * Case B: Further records are pending in the current datagram.
      */
-
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
     if( ssl->conf->transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM &&
         ssl->in_left > ssl->next_record_offset )
@@ -5339,17 +5424,14 @@ int mbedtls_ssl_check_pending( const mbedtls_ssl_context *ssl )
         return( 1 );
     }
 #endif /* MBEDTLS_SSL_PROTO_DTLS */
-
     /*
      * Case C: A handshake message is being processed.
      */
-
     if( ssl->in_hslen > 0 && ssl->in_hslen < ssl->in_msglen )
     {
         MBEDTLS_SSL_DEBUG_MSG( 3, ( "ssl_check_pending: more handshake messages within current record" ) );
         return( 1 );
     }
-
     /*
      * Case D: An application data message is being processed
      */
@@ -5358,34 +5440,40 @@ int mbedtls_ssl_check_pending( const mbedtls_ssl_context *ssl )
         MBEDTLS_SSL_DEBUG_MSG( 3, ( "ssl_check_pending: application data record is being processed" ) );
         return( 1 );
     }
-
     /*
      * In all other cases, the rest of the message can be dropped.
      * As in ssl_get_next_record, this needs to be adapted if
      * we implement support for multiple alerts in single records.
      */
-
     MBEDTLS_SSL_DEBUG_MSG( 3, ( "ssl_check_pending: nothing pending" ) );
     return( 0 );
 }
 
-
+/**
+ * \brief          Return the (maximum) number of bytes added by the record
+ *                 layer: header + encryption/MAC overhead (inc. padding)
+ *
+ * \note           This function is not available (always returns an error)
+ *                 when record compression is enabled.
+ *
+ * \param ssl      SSL context
+ *
+ * \return         Current maximum record expansion in bytes, or
+ *                 MBEDTLS_ERR_SSL_FEATURE_UNAVAILABLE if compression is
+ *                 enabled, which makes expansion much less predictable
+ */
 int mbedtls_ssl_get_record_expansion( const mbedtls_ssl_context *ssl )
 {
     size_t transform_expansion = 0;
     const mbedtls_ssl_transform *transform = ssl->transform_out;
     unsigned block_size;
-
     size_t out_hdr_len = mbedtls_ssl_out_hdr_len( ssl );
-
     if( transform == NULL )
         return( (int) out_hdr_len );
-
 #if defined(MBEDTLS_ZLIB_SUPPORT)
     if( ssl->session_out->compression != MBEDTLS_SSL_COMPRESS_NULL )
         return( MBEDTLS_ERR_SSL_FEATURE_UNAVAILABLE );
 #endif
-
     switch( mbedtls_cipher_get_cipher_mode( &transform->cipher_ctx_enc ) )
     {
         case MBEDTLS_MODE_GCM:
@@ -5394,39 +5482,30 @@ int mbedtls_ssl_get_record_expansion( const mbedtls_ssl_context *ssl )
         case MBEDTLS_MODE_STREAM:
             transform_expansion = transform->minlen;
             break;
-
         case MBEDTLS_MODE_CBC:
-
             block_size = mbedtls_cipher_get_block_size(
                 &transform->cipher_ctx_enc );
-
             /* Expansion due to the addition of the MAC. */
             transform_expansion += transform->maclen;
-
             /* Expansion due to the addition of CBC padding;
              * Theoretically up to 256 bytes, but we never use
              * more than the block size of the underlying cipher. */
             transform_expansion += block_size;
-
             /* For TLS 1.1 or higher, an explicit IV is added
              * after the record header. */
 #if defined(MBEDTLS_SSL_PROTO_TLS1_1) || defined(MBEDTLS_SSL_PROTO_TLS1_2)
             if( ssl->minor_ver >= MBEDTLS_SSL_MINOR_VERSION_2 )
                 transform_expansion += block_size;
 #endif /* MBEDTLS_SSL_PROTO_TLS1_1 || MBEDTLS_SSL_PROTO_TLS1_2 */
-
             break;
-
         default:
             MBEDTLS_SSL_DEBUG_MSG( 1, ( "should never happen" ) );
             return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
     }
-
 #if defined(MBEDTLS_SSL_DTLS_CONNECTION_ID)
     if( transform->out_cid_len != 0 )
         transform_expansion += MBEDTLS_SSL_MAX_CID_EXPANSION;
 #endif /* MBEDTLS_SSL_DTLS_CONNECTION_ID */
-
     return( (int)( out_hdr_len + transform_expansion ) );
 }
 
@@ -5439,48 +5518,114 @@ static int ssl_check_ctr_renegotiate( mbedtls_ssl_context *ssl )
     size_t ep_len = mbedtls_ssl_ep_len( ssl );
     int in_ctr_cmp;
     int out_ctr_cmp;
-
     if( ssl->state != MBEDTLS_SSL_HANDSHAKE_OVER ||
         ssl->renego_status == MBEDTLS_SSL_RENEGOTIATION_PENDING ||
         ssl->conf->disable_renegotiation == MBEDTLS_SSL_RENEGOTIATION_DISABLED )
     {
         return( 0 );
     }
-
     in_ctr_cmp = memcmp( ssl->in_ctr + ep_len,
                         ssl->conf->renego_period + ep_len, 8 - ep_len );
     out_ctr_cmp = memcmp( ssl->cur_out_ctr + ep_len,
                           ssl->conf->renego_period + ep_len, 8 - ep_len );
-
     if( in_ctr_cmp <= 0 && out_ctr_cmp <= 0 )
     {
         return( 0 );
     }
-
     MBEDTLS_SSL_DEBUG_MSG( 1, ( "record counter limit reached: renegotiate" ) );
     return( mbedtls_ssl_renegotiate( ssl ) );
 }
 #endif /* MBEDTLS_SSL_RENEGOTIATION */
 
-/*
- * Receive application data decrypted from the SSL layer
+/**
+ * \brief          Read at most 'len' application data bytes
+ *
+ * \param ssl      SSL context
+ * \param buf      buffer that will hold the data
+ * \param len      maximum number of bytes to read
+ *
+ * \return         The (positive) number of bytes read if successful.
+ * \return         \c 0 if the read end of the underlying transport was closed
+ *                 without sending a CloseNotify beforehand, which might happen
+ *                 because of various reasons (internal error of an underlying
+ *                 stack, non-conformant peer not sending a CloseNotify and
+ *                 such) - in this case you must stop using the context
+ *                 (see below).
+ * \return         #MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY if the underlying
+ *                 transport is still functional, but the peer has
+ *                 acknowledged to not send anything anymore.
+ * \return         #MBEDTLS_ERR_SSL_WANT_READ or #MBEDTLS_ERR_SSL_WANT_WRITE
+ *                 if the handshake is incomplete and waiting for data to
+ *                 be available for reading from or writing to the underlying
+ *                 transport - in this case you must call this function again
+ *                 when the underlying transport is ready for the operation.
+ * \return         #MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS if an asynchronous
+ *                 operation is in progress (see
+ *                 mbedtls_ssl_conf_async_private_cb()) - in this case you
+ *                 must call this function again when the operation is ready.
+ * \return         #MBEDTLS_ERR_SSL_CRYPTO_IN_PROGRESS if a cryptographic
+ *                 operation is in progress (see mbedtls_ecp_set_max_ops()) -
+ *                 in this case you must call this function again to complete
+ *                 the handshake when you're done attending other tasks.
+ * \return         #MBEDTLS_ERR_SSL_CLIENT_RECONNECT if we're at the server
+ *                 side of a DTLS connection and the client is initiating a
+ *                 new connection using the same source port. See below.
+ * \return         Another SSL error code - in this case you must stop using
+ *                 the context (see below).
+ *
+ * \warning        If this function returns something other than
+ *                 a positive value,
+ *                 #MBEDTLS_ERR_SSL_WANT_READ,
+ *                 #MBEDTLS_ERR_SSL_WANT_WRITE,
+ *                 #MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS,
+ *                 #MBEDTLS_ERR_SSL_CRYPTO_IN_PROGRESS or
+ *                 #MBEDTLS_ERR_SSL_CLIENT_RECONNECT,
+ *                 you must stop using the SSL context for reading or writing,
+ *                 and either free it or call \c mbedtls_ssl_session_reset()
+ *                 on it before re-using it for a new connection; the current
+ *                 connection must be closed.
+ *
+ * \note           When this function returns #MBEDTLS_ERR_SSL_CLIENT_RECONNECT
+ *                 (which can only happen server-side), it means that a client
+ *                 is initiating a new connection using the same source port.
+ *                 You can either treat that as a connection close and wait
+ *                 for the client to resend a ClientHello, or directly
+ *                 continue with \c mbedtls_ssl_handshake() with the same
+ *                 context (as it has been reset internally). Either way, you
+ *                 must make sure this is seen by the application as a new
+ *                 connection: application state, if any, should be reset, and
+ *                 most importantly the identity of the client must be checked
+ *                 again. WARNING: not validating the identity of the client
+ *                 again, or not transmitting the new identity to the
+ *                 application layer, would allow authentication bypass!
+ *
+ * \note           Remarks regarding event-driven DTLS:
+ *                 - If the function returns #MBEDTLS_ERR_SSL_WANT_READ, no datagram
+ *                   from the underlying transport layer is currently being processed,
+ *                   and it is safe to idle until the timer or the underlying transport
+ *                   signal a new event.
+ *                 - This function may return MBEDTLS_ERR_SSL_WANT_READ even if data was
+ *                   initially available on the underlying transport, as this data may have
+ *                   been only e.g. duplicated messages or a renegotiation request.
+ *                   Therefore, you must be prepared to receive MBEDTLS_ERR_SSL_WANT_READ even
+ *                   when reacting to an incoming-data event from the underlying transport.
+ *                 - On success, the datagram of the underlying transport that is currently
+ *                   being processed may contain further DTLS records. You should call
+ *                   \c mbedtls_ssl_check_pending to check for remaining records.
+ *
  */
 int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     size_t n;
-
     if( ssl == NULL || ssl->conf == NULL )
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
-
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> read" ) );
-
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
     if( ssl->conf->transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM )
     {
         if( ( ret = mbedtls_ssl_flush_output( ssl ) ) != 0 )
             return( ret );
-
         if( ssl->handshake != NULL &&
             ssl->handshake->retransmit_state == MBEDTLS_SSL_RETRANS_SENDING )
         {
@@ -5489,7 +5634,6 @@ int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
         }
     }
 #endif
-
     /*
      * Check if renegotiation is necessary and/or handshake is
      * in process. If yes, perform/continue, and fall through
@@ -5501,7 +5645,6 @@ int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
      *  a handshake while waiting for the ClientHello
      *  after a renegotiation request.)
      */
-
 #if defined(MBEDTLS_SSL_RENEGOTIATION)
     ret = ssl_check_ctr_renegotiate( ssl );
     if( ret != MBEDTLS_ERR_SSL_WAITING_SERVER_HELLO_RENEGO &&
@@ -5511,7 +5654,6 @@ int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
         return( ret );
     }
 #endif
-
     if( ssl->state != MBEDTLS_SSL_HANDSHAKE_OVER )
     {
         ret = mbedtls_ssl_handshake( ssl );
@@ -5522,7 +5664,6 @@ int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
             return( ret );
         }
     }
-
     /* Loop as long as no application data record is available */
     while( ssl->in_offt == NULL )
     {
@@ -5532,16 +5673,13 @@ int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
         {
             mbedtls_ssl_set_timer( ssl, ssl->conf->read_timeout );
         }
-
         if( ( ret = mbedtls_ssl_read_record( ssl, 1 ) ) != 0 )
         {
             if( ret == MBEDTLS_ERR_SSL_CONN_EOF )
                 return( 0 );
-
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ssl_read_record", ret );
             return( ret );
         }
-
         if( ssl->in_msglen  == 0 &&
             ssl->in_msgtype == MBEDTLS_SSL_MSG_APPLICATION_DATA )
         {
@@ -5552,29 +5690,24 @@ int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
             {
                 if( ret == MBEDTLS_ERR_SSL_CONN_EOF )
                     return( 0 );
-
                 MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ssl_read_record", ret );
                 return( ret );
             }
         }
-
         if( ssl->in_msgtype == MBEDTLS_SSL_MSG_HANDSHAKE )
         {
             MBEDTLS_SSL_DEBUG_MSG( 1, ( "received handshake message" ) );
-
             /*
              * - For client-side, expect SERVER_HELLO_REQUEST.
              * - For server-side, expect CLIENT_HELLO.
              * - Fail (TLS) or silently drop record (DTLS) in other cases.
              */
-
 #if defined(MBEDTLS_SSL_CLI_C)
             if( ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT &&
                 ( ssl->in_msg[0] != MBEDTLS_SSL_HS_HELLO_REQUEST ||
                   ssl->in_hslen  != mbedtls_ssl_hs_hdr_len( ssl ) ) )
             {
                 MBEDTLS_SSL_DEBUG_MSG( 1, ( "handshake received (not HelloRequest)" ) );
-
                 /* With DTLS, drop the packet (probably from last handshake) */
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
                 if( ssl->conf->transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM )
@@ -5585,13 +5718,11 @@ int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
                 return( MBEDTLS_ERR_SSL_UNEXPECTED_MESSAGE );
             }
 #endif /* MBEDTLS_SSL_CLI_C */
-
 #if defined(MBEDTLS_SSL_SRV_C)
             if( ssl->conf->endpoint == MBEDTLS_SSL_IS_SERVER &&
                 ssl->in_msg[0] != MBEDTLS_SSL_HS_CLIENT_HELLO )
             {
                 MBEDTLS_SSL_DEBUG_MSG( 1, ( "handshake received (not ClientHello)" ) );
-
                 /* With DTLS, drop the packet (probably from last handshake) */
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
                 if( ssl->conf->transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM )
@@ -5602,7 +5733,6 @@ int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
                 return( MBEDTLS_ERR_SSL_UNEXPECTED_MESSAGE );
             }
 #endif /* MBEDTLS_SSL_SRV_C */
-
 #if defined(MBEDTLS_SSL_RENEGOTIATION)
             /* Determine whether renegotiation attempt should be accepted */
             if( ! ( ssl->conf->disable_renegotiation == MBEDTLS_SSL_RENEGOTIATION_DISABLED ||
@@ -5613,7 +5743,6 @@ int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
                 /*
                  * Accept renegotiation request
                  */
-
                 /* DTLS clients need to know renego is server-initiated */
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
                 if( ssl->conf->transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM &&
@@ -5637,9 +5766,7 @@ int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
                 /*
                  * Refuse renegotiation
                  */
-
                 MBEDTLS_SSL_DEBUG_MSG( 3, ( "refusing renegotiation, sending alert" ) );
-
 #if defined(MBEDTLS_SSL_PROTO_SSL3)
                 if( ssl->minor_ver == MBEDTLS_SSL_MINOR_VERSION_0 )
                 {
@@ -5670,7 +5797,6 @@ int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
                     return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
                 }
             }
-
             /* At this point, we don't know whether the renegotiation has been
              * completed or not. The cases to consider are the following:
              * 1) The renegotiation is complete. In this case, no new record
@@ -5705,27 +5831,22 @@ int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
             }
         }
 #endif /* MBEDTLS_SSL_RENEGOTIATION */
-
         /* Fatal and closure alerts handled by mbedtls_ssl_read_record() */
         if( ssl->in_msgtype == MBEDTLS_SSL_MSG_ALERT )
         {
             MBEDTLS_SSL_DEBUG_MSG( 2, ( "ignoring non-fatal non-closure alert" ) );
             return( MBEDTLS_ERR_SSL_WANT_READ );
         }
-
         if( ssl->in_msgtype != MBEDTLS_SSL_MSG_APPLICATION_DATA )
         {
             MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad application data message" ) );
             return( MBEDTLS_ERR_SSL_UNEXPECTED_MESSAGE );
         }
-
         ssl->in_offt = ssl->in_msg;
-
         /* We're going to return something now, cancel timer,
          * except if handshake (renegotiation) is in progress */
         if( ssl->state == MBEDTLS_SSL_HANDSHAKE_OVER )
             mbedtls_ssl_set_timer( ssl, 0 );
-
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
         /* If we requested renego but received AppData, resend HelloRequest.
          * Do it now, after setting in_offt, to avoid taking this branch
@@ -5744,17 +5865,13 @@ int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
 #endif /* MBEDTLS_SSL_SRV_C && MBEDTLS_SSL_RENEGOTIATION */
 #endif /* MBEDTLS_SSL_PROTO_DTLS */
     }
-
     n = ( len < ssl->in_msglen )
         ? len : ssl->in_msglen;
-
     memcpy( buf, ssl->in_offt, n );
     ssl->in_msglen -= n;
-
     /* Zeroising the plaintext buffer to erase unused application data
        from the memory. */
     mbedtls_platform_zeroize( ssl->in_offt, n );
-
     if( ssl->in_msglen == 0 )
     {
         /* all bytes consumed */
@@ -5766,9 +5883,7 @@ int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
         /* more data available */
         ssl->in_offt += n;
     }
-
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= read" ) );
-
     return( (int) n );
 }
 
@@ -5789,13 +5904,11 @@ static int ssl_write_real( mbedtls_ssl_context *ssl,
 {
     int ret = mbedtls_ssl_get_max_out_record_payload( ssl );
     const size_t max_len = (size_t) ret;
-
     if( ret < 0 )
     {
         MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ssl_get_max_out_record_payload", ret );
         return( ret );
     }
-
     if( len > max_len )
     {
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
@@ -5811,7 +5924,6 @@ static int ssl_write_real( mbedtls_ssl_context *ssl,
 #endif
             len = max_len;
     }
-
     if( ssl->out_left != 0 )
     {
         /*
@@ -5836,14 +5948,12 @@ static int ssl_write_real( mbedtls_ssl_context *ssl,
         ssl->out_msglen  = len;
         ssl->out_msgtype = MBEDTLS_SSL_MSG_APPLICATION_DATA;
         memcpy( ssl->out_msg, buf, len );
-
         if( ( ret = mbedtls_ssl_write_record( ssl, SSL_FORCE_FLUSH ) ) != 0 )
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ssl_write_record", ret );
             return( ret );
         }
     }
-
     return( (int) len );
 }
 
@@ -5859,7 +5969,6 @@ static int ssl_write_split( mbedtls_ssl_context *ssl,
                             const unsigned char *buf, size_t len )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-
     if( ssl->conf->cbc_record_splitting ==
             MBEDTLS_SSL_CBC_RECORD_SPLITTING_DISABLED ||
         len <= 1 ||
@@ -5869,34 +5978,85 @@ static int ssl_write_split( mbedtls_ssl_context *ssl,
     {
         return( ssl_write_real( ssl, buf, len ) );
     }
-
     if( ssl->split_done == 0 )
     {
         if( ( ret = ssl_write_real( ssl, buf, 1 ) ) <= 0 )
             return( ret );
         ssl->split_done = 1;
     }
-
     if( ( ret = ssl_write_real( ssl, buf + 1, len - 1 ) ) <= 0 )
         return( ret );
     ssl->split_done = 0;
-
     return( ret + 1 );
 }
 #endif /* MBEDTLS_SSL_CBC_RECORD_SPLITTING */
 
-/*
- * Write application data (public-facing wrapper)
+/**
+ * \brief          Try to write exactly 'len' application data bytes
+ *
+ * \warning        This function will do partial writes in some cases. If the
+ *                 return value is non-negative but less than length, the
+ *                 function must be called again with updated arguments:
+ *                 buf + ret, len - ret (if ret is the return value) until
+ *                 it returns a value equal to the last 'len' argument.
+ *
+ * \param ssl      SSL context
+ * \param buf      buffer holding the data
+ * \param len      how many bytes must be written
+ *
+ * \return         The (non-negative) number of bytes actually written if
+ *                 successful (may be less than \p len).
+ * \return         #MBEDTLS_ERR_SSL_WANT_READ or #MBEDTLS_ERR_SSL_WANT_WRITE
+ *                 if the handshake is incomplete and waiting for data to
+ *                 be available for reading from or writing to the underlying
+ *                 transport - in this case you must call this function again
+ *                 when the underlying transport is ready for the operation.
+ * \return         #MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS if an asynchronous
+ *                 operation is in progress (see
+ *                 mbedtls_ssl_conf_async_private_cb()) - in this case you
+ *                 must call this function again when the operation is ready.
+ * \return         #MBEDTLS_ERR_SSL_CRYPTO_IN_PROGRESS if a cryptographic
+ *                 operation is in progress (see mbedtls_ecp_set_max_ops()) -
+ *                 in this case you must call this function again to complete
+ *                 the handshake when you're done attending other tasks.
+ * \return         Another SSL error code - in this case you must stop using
+ *                 the context (see below).
+ *
+ * \warning        If this function returns something other than
+ *                 a non-negative value,
+ *                 #MBEDTLS_ERR_SSL_WANT_READ,
+ *                 #MBEDTLS_ERR_SSL_WANT_WRITE,
+ *                 #MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS or
+ *                 #MBEDTLS_ERR_SSL_CRYPTO_IN_PROGRESS,
+ *                 you must stop using the SSL context for reading or writing,
+ *                 and either free it or call \c mbedtls_ssl_session_reset()
+ *                 on it before re-using it for a new connection; the current
+ *                 connection must be closed.
+ *
+ * \note           When this function returns #MBEDTLS_ERR_SSL_WANT_WRITE/READ,
+ *                 it must be called later with the *same* arguments,
+ *                 until it returns a value greater that or equal to 0. When
+ *                 the function returns #MBEDTLS_ERR_SSL_WANT_WRITE there may be
+ *                 some partial data in the output buffer, however this is not
+ *                 yet sent.
+ *
+ * \note           If the requested length is greater than the maximum
+ *                 fragment length (either the built-in limit or the one set
+ *                 or negotiated with the peer), then:
+ *                 - with TLS, less bytes than requested are written.
+ *                 - with DTLS, MBEDTLS_ERR_SSL_BAD_INPUT_DATA is returned.
+ *                 \c mbedtls_ssl_get_output_max_frag_len() may be used to
+ *                 query the active maximum fragment length.
+ *
+ * \note           Attempting to write 0 bytes will result in an empty TLS
+ *                 application record being sent.
  */
 int mbedtls_ssl_write( mbedtls_ssl_context *ssl, const unsigned char *buf, size_t len )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> write" ) );
-
     if( ssl == NULL || ssl->conf == NULL )
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
-
 #if defined(MBEDTLS_SSL_RENEGOTIATION)
     if( ( ret = ssl_check_ctr_renegotiate( ssl ) ) != 0 )
     {
@@ -5904,7 +6064,6 @@ int mbedtls_ssl_write( mbedtls_ssl_context *ssl, const unsigned char *buf, size_
         return( ret );
     }
 #endif
-
     if( ssl->state != MBEDTLS_SSL_HANDSHAKE_OVER )
     {
         if( ( ret = mbedtls_ssl_handshake( ssl ) ) != 0 )
@@ -5913,33 +6072,36 @@ int mbedtls_ssl_write( mbedtls_ssl_context *ssl, const unsigned char *buf, size_
             return( ret );
         }
     }
-
 #if defined(MBEDTLS_SSL_CBC_RECORD_SPLITTING)
     ret = ssl_write_split( ssl, buf, len );
 #else
     ret = ssl_write_real( ssl, buf, len );
 #endif
-
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= write" ) );
-
     return( ret );
 }
 
-/*
- * Notify the peer that the connection is being closed
+/**
+ * \brief          Notify the peer that the connection is being closed
+ *
+ * \param ssl      SSL context
+ *
+ * \return          0 if successful, or a specific SSL error code.
+ *
+ * \note           If this function returns something other than 0 or
+ *                 MBEDTLS_ERR_SSL_WANT_READ/WRITE, you must stop using
+ *                 the SSL context for reading or writing, and either free it or
+ *                 call \c mbedtls_ssl_session_reset() on it before re-using it
+ *                 for a new connection; the current connection must be closed.
  */
 int mbedtls_ssl_close_notify( mbedtls_ssl_context *ssl )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-
     if( ssl == NULL || ssl->conf == NULL )
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
-
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> write close notify" ) );
-
     if( ssl->out_left != 0 )
         return( mbedtls_ssl_flush_output( ssl ) );
-
     if( ssl->state == MBEDTLS_SSL_HANDSHAKE_OVER )
     {
         if( ( ret = mbedtls_ssl_send_alert_message( ssl,
@@ -5950,9 +6112,7 @@ int mbedtls_ssl_close_notify( mbedtls_ssl_context *ssl )
             return( ret );
         }
     }
-
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= write close notify" ) );
-
     return( 0 );
 }
 
@@ -5960,20 +6120,16 @@ void mbedtls_ssl_transform_free( mbedtls_ssl_transform *transform )
 {
     if( transform == NULL )
         return;
-
 #if defined(MBEDTLS_ZLIB_SUPPORT)
     deflateEnd( &transform->ctx_deflate );
     inflateEnd( &transform->ctx_inflate );
 #endif
-
     mbedtls_cipher_free( &transform->cipher_ctx_enc );
     mbedtls_cipher_free( &transform->cipher_ctx_dec );
-
 #if defined(MBEDTLS_SSL_SOME_MODES_USE_MAC)
     mbedtls_md_free( &transform->md_ctx_enc );
     mbedtls_md_free( &transform->md_ctx_dec );
 #endif
-
     mbedtls_platform_zeroize( transform, sizeof( mbedtls_ssl_transform ) );
 }
 

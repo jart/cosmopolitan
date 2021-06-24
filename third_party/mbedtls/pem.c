@@ -1,4 +1,20 @@
+#include "libc/mem/mem.h"
+#include "third_party/mbedtls/aes.h"
+#include "third_party/mbedtls/base64.h"
+#include "third_party/mbedtls/cipher.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/des.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/md5.h"
+#include "third_party/mbedtls/pem.h"
+#include "third_party/mbedtls/platform.h"
 /* clang-format off */
+
+asm(".ident\t\"\\n\\n\
+Mbed TLS (Apache 2.0)\\n\
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
+asm(".include \"libc/disclaimer.inc\"");
 
 /*
  *  Privacy Enhanced Mail (PEM) decoding
@@ -18,27 +34,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_PEM_PARSE_C) || defined(MBEDTLS_PEM_WRITE_C)
-
-#include "third_party/mbedtls/pem.h"
-#include "third_party/mbedtls/base64.h"
-#include "third_party/mbedtls/des.h"
-#include "third_party/mbedtls/aes.h"
-#include "third_party/mbedtls/md5.h"
-#include "third_party/mbedtls/cipher.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
-
-
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_calloc    calloc
-#define mbedtls_free       free
-#endif
 
 #if defined(MBEDTLS_PEM_PARSE_C)
 void mbedtls_pem_init( mbedtls_pem_context *ctx )

@@ -1,53 +1,8 @@
-/* clang-format off */
-
-/**
- * \file aes.h
- *
- * \brief   This file contains AES definitions and functions.
- *
- *          The Advanced Encryption Standard (AES) specifies a FIPS-approved
- *          cryptographic algorithm that can be used to protect electronic
- *          data.
- *
- *          The AES algorithm is a symmetric block cipher that can
- *          encrypt and decrypt information. For more information, see
- *          <em>FIPS Publication 197: Advanced Encryption Standard</em> and
- *          <em>ISO/IEC 18033-2:2006: Information technology -- Security
- *          techniques -- Encryption algorithms -- Part 2: Asymmetric
- *          ciphers</em>.
- *
- *          The AES-XTS block mode is standardized by NIST SP 800-38E
- *          <https://nvlpubs.nist.gov/nistpubs/legacy/sp/nistspecialpublication800-38e.pdf>
- *          and described in detail by IEEE P1619
- *          <https://ieeexplore.ieee.org/servlet/opac?punumber=4375278>.
- */
-
-/*
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
-#ifndef MBEDTLS_AES_H
-#define MBEDTLS_AES_H
-
-#if !defined(MBEDTLS_CONFIG_FILE)
+#ifndef MBEDTLS_AES_H_
+#define MBEDTLS_AES_H_
 #include "third_party/mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* padlock.c and aesni.c rely on these values! */
 #define MBEDTLS_AES_ENCRYPT     1 /**< AES encryption. */
@@ -65,19 +20,6 @@
 
 /* MBEDTLS_ERR_AES_HW_ACCEL_FAILED is deprecated and should not be used. */
 #define MBEDTLS_ERR_AES_HW_ACCEL_FAILED                   -0x0025  /**< AES hardware accelerator failed. */
-
-#if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
-    !defined(inline) && !defined(__cplusplus)
-#define inline __inline
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#if !defined(MBEDTLS_AES_ALT)
-// Regular implementation
-//
 
 /**
  * \brief The AES context-type definition.
@@ -109,10 +51,6 @@ typedef struct mbedtls_aes_xts_context
                                         computation. */
 } mbedtls_aes_xts_context;
 #endif /* MBEDTLS_CIPHER_MODE_XTS */
-
-#else  /* MBEDTLS_AES_ALT */
-/* #include "third_party/mbedtls/aes_alt.h" */
-#endif /* MBEDTLS_AES_ALT */
 
 /**
  * \brief          This function initializes the specified AES context.
@@ -617,45 +555,6 @@ int mbedtls_internal_aes_decrypt( mbedtls_aes_context *ctx,
                                   const unsigned char input[16],
                                   unsigned char output[16] );
 
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-#if defined(MBEDTLS_DEPRECATED_WARNING)
-#define MBEDTLS_DEPRECATED      __attribute__((deprecated))
-#else
-#define MBEDTLS_DEPRECATED
-#endif
-/**
- * \brief           Deprecated internal AES block encryption function
- *                  without return value.
- *
- * \deprecated      Superseded by mbedtls_internal_aes_encrypt()
- *
- * \param ctx       The AES context to use for encryption.
- * \param input     Plaintext block.
- * \param output    Output (ciphertext) block.
- */
-MBEDTLS_DEPRECATED void mbedtls_aes_encrypt( mbedtls_aes_context *ctx,
-                                             const unsigned char input[16],
-                                             unsigned char output[16] );
-
-/**
- * \brief           Deprecated internal AES block decryption function
- *                  without return value.
- *
- * \deprecated      Superseded by mbedtls_internal_aes_decrypt()
- *
- * \param ctx       The AES context to use for decryption.
- * \param input     Ciphertext block.
- * \param output    Output (plaintext) block.
- */
-MBEDTLS_DEPRECATED void mbedtls_aes_decrypt( mbedtls_aes_context *ctx,
-                                             const unsigned char input[16],
-                                             unsigned char output[16] );
-
-#undef MBEDTLS_DEPRECATED
-#endif /* !MBEDTLS_DEPRECATED_REMOVED */
-
-
-#if defined(MBEDTLS_SELF_TEST)
 /**
  * \brief          Checkup routine.
  *
@@ -664,10 +563,5 @@ MBEDTLS_DEPRECATED void mbedtls_aes_decrypt( mbedtls_aes_context *ctx,
  */
 int mbedtls_aes_self_test( int verbose );
 
-#endif /* MBEDTLS_SELF_TEST */
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* aes.h */
+COSMOPOLITAN_C_END_
+#endif /* MBEDTLS_AES_H_ */

@@ -1,50 +1,8 @@
-/* clang-format off */
-
-/**
- * \file bn_mul.h
- *
- * \brief Multi-precision integer library
- */
-/*
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-/*
- *      Multiply source vector [s] with b, add result
- *       to destination vector [d] and set carry c.
- *
- *      Currently supports:
- *
- *         . IA-32 (386+)         . AMD64 / EM64T
- *         . IA-32 (SSE2)         . Motorola 68000
- *         . PowerPC, 32-bit      . MicroBlaze
- *         . PowerPC, 64-bit      . TriCore
- *         . SPARC v8             . ARM v3+
- *         . Alpha                . MIPS32
- *         . C, longlong          . C, generic
- */
 #ifndef MBEDTLS_BN_MUL_H
 #define MBEDTLS_BN_MUL_H
-
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "third_party/mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
 #include "third_party/mbedtls/bignum.h"
+#include "third_party/mbedtls/config.h"
+/* clang-format off */
 
 #if defined(MBEDTLS_HAVE_ASM)
 
@@ -174,10 +132,10 @@
 
 #if defined(__amd64__) || defined (__x86_64__)
 
+#if 1
 #define MULADDC_INIT                        \
     asm(                                    \
         "xorq   %%r8, %%r8\n"
-
 #define MULADDC_CORE                        \
         "movq   (%%rsi), %%rax\n"           \
         "mulq   %%rbx\n"                    \
@@ -189,12 +147,21 @@
         "addq   %%rax, (%%rdi)\n"           \
         "adcq   %%rdx, %%rcx\n"             \
         "addq   $8, %%rdi\n"
-
 #define MULADDC_STOP                        \
         : "+c" (c), "+D" (d), "+S" (s)      \
         : "b" (b)                           \
         : "rax", "rdx", "r8"                \
     );
+#else
+#define MULADDC_INIT
+#define MULADDC_STOP
+#define MULADDC_CORE                        \
+  ax = *s++;                                \
+  axdx = (uint128_t)ax * b + c;             \
+  t = *d;                                   \
+  *d++ = t + (uint64_t)axdx;                \
+  c = (t + (uint64_t)axdx < t) + (uint64_t)(axdx >> 64);
+#endif
 
 #endif /* AMD64 */
 

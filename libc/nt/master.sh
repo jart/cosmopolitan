@@ -3223,7 +3223,7 @@ imp	'LocalAlloc'						LocalAlloc						kernel32	0		# KernelBase
 imp	'LocalCompact'						LocalCompact						kernel32	970
 imp	'LocalFileTimeToFileTime'				LocalFileTimeToFileTime					kernel32	0		# KernelBase
 imp	'LocalFlags'						LocalFlags						kernel32	972
-imp	'LocalFree'						LocalFree						kernel32	0		# KernelBase
+imp	'LocalFree'						LocalFree						kernel32	0	1	# KernelBase
 imp	'LocalHandle'						LocalHandle						kernel32	974
 imp	'LocalLock'						LocalLock						kernel32	0		# KernelBase
 imp	'LocalReAlloc'						LocalReAlloc						kernel32	0		# KernelBase
@@ -5087,6 +5087,7 @@ imp	'RtlFreeThreadActivationContextStack'			RtlFreeThreadActivationContextStack	
 imp	'RtlFreeUnicodeString'					RtlFreeUnicodeString					ntdll		1000	1
 imp	'RtlFreeUserStack'					RtlFreeUserStack					ntdll		1001
 imp	'RtlGUIDFromString'					RtlGUIDFromString					ntdll		1002
+imp	'RtlGenRandom'						SystemFunction036					advapi32	0	2
 imp	'RtlGenerate8dot3Name'					RtlGenerate8dot3Name					ntdll		1003
 imp	'RtlGetAce'						RtlGetAce						ntdll		1004
 imp	'RtlGetActiveActivationContext'				RtlGetActiveActivationContext				ntdll		1005

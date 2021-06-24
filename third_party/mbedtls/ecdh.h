@@ -1,51 +1,9 @@
-/* clang-format off */
-
-/**
- * \file ecdh.h
- *
- * \brief This file contains ECDH definitions and functions.
- *
- * The Elliptic Curve Diffie-Hellman (ECDH) protocol is an anonymous
- * key agreement protocol allowing two parties to establish a shared
- * secret over an insecure channel. Each party must have an
- * elliptic-curve public–private key pair.
- *
- * For more information, see <em>NIST SP 800-56A Rev. 2: Recommendation for
- * Pair-Wise Key Establishment Schemes Using Discrete Logarithm
- * Cryptography</em>.
- */
-/*
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
 #ifndef MBEDTLS_ECDH_H
 #define MBEDTLS_ECDH_H
-
-#if !defined(MBEDTLS_CONFIG_FILE)
 #include "third_party/mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
 #include "third_party/mbedtls/ecp.h"
-
-#if defined(MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED)
-#undef MBEDTLS_ECDH_LEGACY_CONTEXT
-/* #include "everest/everest.h" */
-#endif
+#include "third_party/mbedtls/everest.h"
+/* clang-format off */
 
 #ifdef __cplusplus
 extern "C" {
@@ -134,11 +92,7 @@ typedef struct mbedtls_ecdh_context
                                   context in use is specified by the \c var
                                   field. */
 #if defined(MBEDTLS_ECP_RESTARTABLE)
-    uint8_t restart_enabled;    /*!< The flag for restartable mode. Functions of
-                                  an alternative implementation not supporting
-                                  restartable mode must return
-                                  MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED error
-                                  if this flag is set. */
+    uint8_t restart_enabled;    /*!< The flag for restartable mode. */
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 #endif /* MBEDTLS_ECDH_LEGACY_CONTEXT */
 }
@@ -425,7 +379,6 @@ int mbedtls_ecdh_calc_secret( mbedtls_ecdh_context *ctx, size_t *olen,
                       int (*f_rng)(void *, unsigned char *, size_t),
                       void *p_rng );
 
-#if defined(MBEDTLS_ECP_RESTARTABLE)
 /**
  * \brief           This function enables restartable EC computations for this
  *                  context.  (Default: disabled.)
@@ -439,7 +392,6 @@ int mbedtls_ecdh_calc_secret( mbedtls_ecdh_context *ctx, size_t *olen,
  * \param ctx       The ECDH context to use. This must be initialized.
  */
 void mbedtls_ecdh_enable_restart( mbedtls_ecdh_context *ctx );
-#endif /* MBEDTLS_ECP_RESTARTABLE */
 
 #ifdef __cplusplus
 }

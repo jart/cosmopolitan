@@ -1,10 +1,13 @@
-/* clang-format off */
+#include "third_party/mbedtls/certs.h"
+#include "third_party/mbedtls/common.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /*
  *  X.509 test certificates
  *
@@ -23,10 +26,6 @@ asm(".include \"libc/disclaimer.inc\"");
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
-#include "third_party/mbedtls/common.h"
-
-#include "third_party/mbedtls/certs.h"
 
 #if defined(MBEDTLS_CERTS_C)
 

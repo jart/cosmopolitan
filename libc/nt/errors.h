@@ -1,6 +1,8 @@
 #ifndef COSMOPOLITAN_NT_ERRORS_H_
 #define COSMOPOLITAN_NT_ERRORS_H_
 
+#define kNtNoError 0
+
 #define kNtErrorInsufficientBuffer 122
 
 #define kNtErrorSuccess 0

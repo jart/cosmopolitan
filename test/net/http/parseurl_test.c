@@ -362,6 +362,16 @@ TEST(ParseUrl, testObviouslyIllegalIpLiteral_getsTreatedAsRegName) {
   ASSERT_STREQ("//vf.%3A%3A1%00", gc(EncodeUrl(&h, 0)));
 }
 
+TEST(ParseHost, testEmpty) {
+  struct Url h = {0};
+  gc(ParseHost("", -1, &h));
+  gc(h.params.p);
+  ASSERT_EQ(0, h.host.n);
+  ASSERT_EQ(0, h.port.n);
+  ASSERT_NE(0, h.host.p);
+  ASSERT_EQ(0, h.port.p);
+}
+
 TEST(ParseHost, test) {
   struct Url h = {0};
   gc(ParseHost("foo.example:80", -1, &h));

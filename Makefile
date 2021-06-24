@@ -129,15 +129,15 @@ include libc/libc.mk				#─┘
 include libc/sock/sock.mk			#─┐
 include dsp/tty/tty.mk				# ├──ONLINE RUNTIME
 include libc/dns/dns.mk				# │  You can communicate with the network
-include libc/crypto/crypto.mk			# │
-include net/http/http.mk			#─┘
-include third_party/regex/regex.mk
+include net/http/http.mk			# │
+include third_party/regex/regex.mk		#─┘
 include third_party/third_party.mk
 include libc/testlib/testlib.mk
 include tool/viz/lib/vizlib.mk
 include third_party/lua/lua.mk
 include third_party/sqlite3/sqlite3.mk
 include third_party/mbedtls/mbedtls.mk
+include third_party/mbedtls/test/test.mk
 include third_party/quickjs/quickjs.mk
 include third_party/lz4cli/lz4cli.mk
 include third_party/infozip/infozip.mk
@@ -162,7 +162,6 @@ include test/libc/nexgen32e/test.mk
 include test/libc/runtime/test.mk
 include test/libc/sock/test.mk
 include test/libc/bits/test.mk
-include test/libc/crypto/test.mk
 include test/libc/str/test.mk
 include test/libc/unicode/test.mk
 include test/libc/calls/test.mk
@@ -237,7 +236,6 @@ loc: o/$(MODE)/tool/build/summy.com
 	$(XARGS) wc -l | grep total | awk '{print $$1}' | $<
 
 COSMOPOLITAN_OBJECTS =		\
-	LIBC_CRYPTO		\
 	LIBC_DNS		\
 	LIBC_SOCK		\
 	LIBC_NT_WS2_32		\
@@ -287,7 +285,6 @@ COSMOPOLITAN_HEADERS =		\
 	LIBC_ALG		\
 	LIBC_BITS		\
 	LIBC_CALLS		\
-	LIBC_CRYPTO		\
 	LIBC_DNS		\
 	LIBC_ELF		\
 	LIBC_FMT		\

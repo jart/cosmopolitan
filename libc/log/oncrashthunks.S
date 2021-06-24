@@ -88,4 +88,13 @@ __oncrash_sigbus:
 	ret
 	.endfn	__oncrash_sigbus,globl
 
+	.org	11*7
+__oncrash_sigpipe:
+	push	%rbp
+	mov	%rsp,%rbp
+	call	__oncrash
+	pop	%rbp
+	ret
+	.endfn	__oncrash_sigpipe,globl
+
 	.endobj	__oncrash_thunks,globl

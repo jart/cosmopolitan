@@ -1,0 +1,18 @@
+Timing: hardclock
+0
+
+Timing: get timer
+1
+
+Timing: set alarm with no delay
+2:int:0
+
+Timing: set alarm with 1s delay
+2:int:1
+
+Timing: delay 0ms
+3:int:0
+
+Timing: delay 100ms
+3:int:100
+

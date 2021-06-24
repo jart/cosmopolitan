@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "net/http/escape.h"
@@ -23,10 +24,10 @@
 static const signed char kBase64[256] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  // 0x00
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  // 0x10
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63,  // 0x20
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, 62, -1, 63,  // 0x20
     52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -2, -1, -1,  // 0x30
     -1, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,  // 0x40
-    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1,  // 0x50
+    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, 63,  // 0x50
     -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,  // 0x60
     41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1,  // 0x70
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  // 0x80
@@ -42,6 +43,11 @@ static const signed char kBase64[256] = {
 /**
  * Decodes base64 ascii representation to binary.
  *
+ * This supports the following alphabets:
+ *
+ * - ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/
+ * - ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_
+ *
  * @param data is input value
  * @param size if -1 implies strlen
  * @param out_size if non-NULL receives output length
@@ -53,7 +59,7 @@ char *DecodeBase64(const char *data, size_t size, size_t *out_size) {
   int a, b, c, d, w;
   const char *p, *pe;
   if (size == -1) size = data ? strlen(data) : 0;
-  if ((r = malloc(size / 4 * 3 + 1))) {
+  if ((r = malloc(ROUNDUP(size, 4) / 4 * 3 + 1))) {
     q = r;
     p = data;
     pe = p + size;

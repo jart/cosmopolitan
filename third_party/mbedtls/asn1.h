@@ -1,38 +1,8 @@
-/* clang-format off */
-/**
- * \file asn1.h
- *
- * \brief Generic ASN.1 parsing
- */
-/*
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
 #ifndef MBEDTLS_ASN1_H
 #define MBEDTLS_ASN1_H
-
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "third_party/mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
-
-#if defined(MBEDTLS_BIGNUM_C)
 #include "third_party/mbedtls/bignum.h"
-#endif
+#include "third_party/mbedtls/config.h"
+/* clang-format off */
 
 /**
  * \addtogroup asn1_module
@@ -546,8 +516,8 @@ int mbedtls_asn1_get_mpi( unsigned char **p,
  * \return      0 if successful or a specific ASN.1 or MPI error code.
  */
 int mbedtls_asn1_get_alg( unsigned char **p,
-                  const unsigned char *end,
-                  mbedtls_asn1_buf *alg, mbedtls_asn1_buf *params );
+                          const unsigned char *end,
+                          mbedtls_asn1_buf *alg, mbedtls_asn1_buf *params );
 
 /**
  * \brief       Retrieve an AlgorithmIdentifier ASN.1 sequence with NULL or no
@@ -565,8 +535,8 @@ int mbedtls_asn1_get_alg( unsigned char **p,
  * \return      0 if successful or a specific ASN.1 or MPI error code.
  */
 int mbedtls_asn1_get_alg_null( unsigned char **p,
-                       const unsigned char *end,
-                       mbedtls_asn1_buf *alg );
+                               const unsigned char *end,
+                               mbedtls_asn1_buf *alg );
 
 /**
  * \brief       Find a specific named_data entry in a sequence or list based on
@@ -579,7 +549,7 @@ int mbedtls_asn1_get_alg_null( unsigned char **p,
  * \return      NULL if not found, or a pointer to the existing entry.
  */
 mbedtls_asn1_named_data *mbedtls_asn1_find_named_data( mbedtls_asn1_named_data *list,
-                                       const char *oid, size_t len );
+                                                       const char *oid, size_t len );
 
 /**
  * \brief       Free a mbedtls_asn1_named_data entry

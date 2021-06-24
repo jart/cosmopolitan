@@ -1,10 +1,15 @@
-/* clang-format off */
+#include "third_party/mbedtls/ccm.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/platform.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
-Copyright The Mbed TLS Contributors\"");
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/* clang-format off */
 /*
  *  NIST SP800-38C compliant CCM implementation
  *
@@ -24,32 +29,35 @@ asm(".include \"libc/disclaimer.inc\"");
  *  limitations under the License.
  */
 
-/*
+/**
+ * \file ccm.c
+ *
+ * \brief This file provides an API for the CCM authenticated encryption
+ *        mode for block ciphers.
+ *
+ * CCM combines Counter mode encryption with CBC-MAC authentication
+ * for 128-bit block ciphers.
+ *
+ * Input to CCM includes the following elements:
+ * <ul><li>Payload - data that is both authenticated and encrypted.</li>
+ * <li>Associated data (Adata) - data that is authenticated but not
+ * encrypted, For example, a header.</li>
+ * <li>Nonce - A unique value that is assigned to the payload and the
+ * associated data.</li></ul>
+ *
  * Definition of CCM:
  * http://csrc.nist.gov/publications/nistpubs/800-38C/SP800-38C_updated-July20_2007.pdf
  * RFC 3610 "Counter with CBC-MAC (CCM)"
  *
  * Related:
  * RFC 5116 "An Interface and Algorithms for Authenticated Encryption"
+ *
+ * Definition of CCM*:
+ * IEEE 802.15.4 - IEEE Standard for Local and metropolitan area networks
+ * Integer representation is fixed most-significant-octet-first order and
+ * the representation of octets is most-significant-bit-first order. This is
+ * consistent with RFC 3610.
  */
-
-#include "third_party/mbedtls/common.h"
-
-#if defined(MBEDTLS_CCM_C)
-
-#include "third_party/mbedtls/ccm.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
-
-#if defined(MBEDTLS_SELF_TEST) && defined(MBEDTLS_AES_C)
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_printf printf
-#endif /* MBEDTLS_PLATFORM_C */
-#endif /* MBEDTLS_SELF_TEST && MBEDTLS_AES_C */
-
-#if !defined(MBEDTLS_CCM_ALT)
 
 #define CCM_VALIDATE_RET( cond ) \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_CCM_BAD_INPUT )
@@ -59,8 +67,12 @@ asm(".include \"libc/disclaimer.inc\"");
 #define CCM_ENCRYPT 0
 #define CCM_DECRYPT 1
 
-/*
- * Initialize context
+/**
+ * \brief           This function initializes the specified CCM context,
+ *                  to make references valid, and prepare the context
+ *                  for mbedtls_ccm_setkey() or mbedtls_ccm_free().
+ *
+ * \param ctx       The CCM context to initialize. This must not be \c NULL.
  */
 void mbedtls_ccm_init( mbedtls_ccm_context *ctx )
 {
@@ -68,6 +80,19 @@ void mbedtls_ccm_init( mbedtls_ccm_context *ctx )
     memset( ctx, 0, sizeof( mbedtls_ccm_context ) );
 }
 
+/**
+ * \brief           This function initializes the CCM context set in the
+ *                  \p ctx parameter and sets the encryption key.
+ *
+ * \param ctx       The CCM context to initialize. This must be an initialized
+ *                  context.
+ * \param cipher    The 128-bit block cipher to use.
+ * \param key       The encryption key. This must not be \c NULL.
+ * \param keybits   The key size in bits. This must be acceptable by the cipher.
+ *
+ * \return          \c 0 on success.
+ * \return          A CCM or cipher-specific error code on failure.
+ */
 int mbedtls_ccm_setkey( mbedtls_ccm_context *ctx,
                         mbedtls_cipher_id_t cipher,
                         const unsigned char *key,
@@ -101,8 +126,12 @@ int mbedtls_ccm_setkey( mbedtls_ccm_context *ctx,
     return( 0 );
 }
 
-/*
- * Free context
+/**
+ * \brief   This function releases and clears the specified CCM context
+ *          and underlying cipher sub-context.
+ *
+ * \param ctx       The CCM context to clear. If this is \c NULL, the function
+ *                  has no effect. Otherwise, this must be initialized.
  */
 void mbedtls_ccm_free( mbedtls_ccm_context *ctx )
 {
@@ -318,8 +347,47 @@ static int ccm_auth_crypt( mbedtls_ccm_context *ctx, int mode, size_t length,
     return( 0 );
 }
 
-/*
- * Authenticated encryption
+/**
+ * \brief           This function encrypts a buffer using CCM*.
+ *
+ * \note            The tag is written to a separate buffer. To concatenate
+ *                  the \p tag with the \p output, as done in <em>RFC-3610:
+ *                  Counter with CBC-MAC (CCM)</em>, use
+ *                  \p tag = \p output + \p length, and make sure that the
+ *                  output buffer is at least \p length + \p tag_len wide.
+ *
+ * \note            When using this function in a variable tag length context,
+ *                  the tag length has to be encoded into the \p iv passed to
+ *                  this function.
+ *
+ * \param ctx       The CCM context to use for encryption. This must be
+ *                  initialized and bound to a key.
+ * \param length    The length of the input data in Bytes.
+ * \param iv        The initialization vector (nonce). This must be a readable
+ *                  buffer of at least \p iv_len Bytes.
+ * \param iv_len    The length of the nonce in Bytes: 7, 8, 9, 10, 11, 12,
+ *                  or 13. The length L of the message length field is
+ *                  15 - \p iv_len.
+ * \param add       The additional data field. This must be a readable buffer of
+ *                  at least \p add_len Bytes.
+ * \param add_len   The length of additional data in Bytes.
+ *                  This must be less than 2^16 - 2^8.
+ * \param input     The buffer holding the input data. If \p length is greater
+ *                  than zero, \p input must be a readable buffer of at least
+ *                  that length.
+ * \param output    The buffer holding the output data. If \p length is greater
+ *                  than zero, \p output must be a writable buffer of at least
+ *                  that length.
+ * \param tag       The buffer holding the authentication field. This must be a
+ *                  writable buffer of at least \p tag_len Bytes.
+ * \param tag_len   The length of the authentication field to generate in Bytes:
+ *                  0, 4, 6, 8, 10, 12, 14 or 16.
+ *
+ * \warning         Passing \c 0 as \p tag_len means that the message is no
+ *                  longer authenticated.
+ *
+ * \return          \c 0 on success.
+ * \return          A CCM or cipher-specific error code on failure.
  */
 int mbedtls_ccm_star_encrypt_and_tag( mbedtls_ccm_context *ctx, size_t length,
                          const unsigned char *iv, size_t iv_len,
@@ -337,6 +405,42 @@ int mbedtls_ccm_star_encrypt_and_tag( mbedtls_ccm_context *ctx, size_t length,
                             add, add_len, input, output, tag, tag_len ) );
 }
 
+/**
+ * \brief           This function encrypts a buffer using CCM.
+ *
+ * \note            The tag is written to a separate buffer. To concatenate
+ *                  the \p tag with the \p output, as done in <em>RFC-3610:
+ *                  Counter with CBC-MAC (CCM)</em>, use
+ *                  \p tag = \p output + \p length, and make sure that the
+ *                  output buffer is at least \p length + \p tag_len wide.
+ *
+ * \param ctx       The CCM context to use for encryption. This must be
+ *                  initialized and bound to a key.
+ * \param length    The length of the input data in Bytes.
+ * \param iv        The initialization vector (nonce). This must be a readable
+ *                  buffer of at least \p iv_len Bytes.
+ * \param iv_len    The length of the nonce in Bytes: 7, 8, 9, 10, 11, 12,
+ *                  or 13. The length L of the message length field is
+ *                  15 - \p iv_len.
+ * \param add       The additional data field. If \p add_len is greater than
+ *                  zero, \p add must be a readable buffer of at least that
+ *                  length.
+ * \param add_len   The length of additional data in Bytes.
+ *                  This must be less than `2^16 - 2^8`.
+ * \param input     The buffer holding the input data. If \p length is greater
+ *                  than zero, \p input must be a readable buffer of at least
+ *                  that length.
+ * \param output    The buffer holding the output data. If \p length is greater
+ *                  than zero, \p output must be a writable buffer of at least
+ *                  that length.
+ * \param tag       The buffer holding the authentication field. This must be a
+ *                  writable buffer of at least \p tag_len Bytes.
+ * \param tag_len   The length of the authentication field to generate in Bytes:
+ *                  4, 6, 8, 10, 12, 14 or 16.
+ *
+ * \return          \c 0 on success.
+ * \return          A CCM or cipher-specific error code on failure.
+ */
 int mbedtls_ccm_encrypt_and_tag( mbedtls_ccm_context *ctx, size_t length,
                          const unsigned char *iv, size_t iv_len,
                          const unsigned char *add, size_t add_len,
@@ -356,8 +460,44 @@ int mbedtls_ccm_encrypt_and_tag( mbedtls_ccm_context *ctx, size_t length,
                 add_len, input, output, tag, tag_len ) );
 }
 
-/*
- * Authenticated decryption
+/**
+ * \brief           This function performs a CCM* authenticated decryption of a
+ *                  buffer.
+ *
+ * \note            When using this function in a variable tag length context,
+ *                  the tag length has to be decoded from \p iv and passed to
+ *                  this function as \p tag_len. (\p tag needs to be adjusted
+ *                  accordingly.)
+ *
+ * \param ctx       The CCM context to use for decryption. This must be
+ *                  initialized and bound to a key.
+ * \param length    The length of the input data in Bytes.
+ * \param iv        The initialization vector (nonce). This must be a readable
+ *                  buffer of at least \p iv_len Bytes.
+ * \param iv_len    The length of the nonce in Bytes: 7, 8, 9, 10, 11, 12,
+ *                  or 13. The length L of the message length field is
+ *                  15 - \p iv_len.
+ * \param add       The additional data field. This must be a readable buffer of
+ *                  at least that \p add_len Bytes.
+ * \param add_len   The length of additional data in Bytes.
+ *                  This must be less than 2^16 - 2^8.
+ * \param input     The buffer holding the input data. If \p length is greater
+ *                  than zero, \p input must be a readable buffer of at least
+ *                  that length.
+ * \param output    The buffer holding the output data. If \p length is greater
+ *                  than zero, \p output must be a writable buffer of at least
+ *                  that length.
+ * \param tag       The buffer holding the authentication field. This must be a
+ *                  readable buffer of at least \p tag_len Bytes.
+ * \param tag_len   The length of the authentication field in Bytes.
+ *                  0, 4, 6, 8, 10, 12, 14 or 16.
+ *
+ * \warning         Passing \c 0 as \p tag_len means that the message is nos
+ *                  longer authenticated.
+ *
+ * \return          \c 0 on success.
+ * \return          #MBEDTLS_ERR_CCM_AUTH_FAILED if the tag does not match.
+ * \return          A cipher-specific error code on calculation failure.
  */
 int mbedtls_ccm_star_auth_decrypt( mbedtls_ccm_context *ctx, size_t length,
                       const unsigned char *iv, size_t iv_len,
@@ -397,6 +537,37 @@ int mbedtls_ccm_star_auth_decrypt( mbedtls_ccm_context *ctx, size_t length,
     return( 0 );
 }
 
+/**
+ * \brief           This function performs a CCM authenticated decryption of a
+ *                  buffer.
+ *
+ * \param ctx       The CCM context to use for decryption. This must be
+ *                  initialized and bound to a key.
+ * \param length    The length of the input data in Bytes.
+ * \param iv        The initialization vector (nonce). This must be a readable
+ *                  buffer of at least \p iv_len Bytes.
+ * \param iv_len    The length of the nonce in Bytes: 7, 8, 9, 10, 11, 12,
+ *                  or 13. The length L of the message length field is
+ *                  15 - \p iv_len.
+ * \param add       The additional data field. This must be a readable buffer
+ *                  of at least that \p add_len Bytes..
+ * \param add_len   The length of additional data in Bytes.
+ *                  This must be less than 2^16 - 2^8.
+ * \param input     The buffer holding the input data. If \p length is greater
+ *                  than zero, \p input must be a readable buffer of at least
+ *                  that length.
+ * \param output    The buffer holding the output data. If \p length is greater
+ *                  than zero, \p output must be a writable buffer of at least
+ *                  that length.
+ * \param tag       The buffer holding the authentication field. This must be a
+ *                  readable buffer of at least \p tag_len Bytes.
+ * \param tag_len   The length of the authentication field to generate in Bytes:
+ *                  4, 6, 8, 10, 12, 14 or 16.
+ *
+ * \return          \c 0 on success. This indicates that the message is
+ * authentic. \return          #MBEDTLS_ERR_CCM_AUTH_FAILED if the tag does not
+ * match. \return          A cipher-specific error code on calculation failure.
+ */
 int mbedtls_ccm_auth_decrypt( mbedtls_ccm_context *ctx, size_t length,
                       const unsigned char *iv, size_t iv_len,
                       const unsigned char *add, size_t add_len,
@@ -416,7 +587,6 @@ int mbedtls_ccm_auth_decrypt( mbedtls_ccm_context *ctx, size_t length,
     return( mbedtls_ccm_star_auth_decrypt( ctx, length, iv, iv_len, add,
                 add_len, input, output, tag, tag_len ) );
 }
-#endif /* !MBEDTLS_CCM_ALT */
 
 #if defined(MBEDTLS_SELF_TEST) && defined(MBEDTLS_AES_C)
 /*
@@ -467,6 +637,12 @@ static const unsigned char res_test_data[NB_TESTS][CCM_SELFTEST_CT_MAX_LEN] = {
         0x48, 0x43, 0x92, 0xfb, 0xc1, 0xb0, 0x99, 0x51 }
 };
 
+/**
+ * \brief          The CCM checkup routine.
+ *
+ * \return         \c 0 on success.
+ * \return         \c 1 on failure.
+ */
 int mbedtls_ccm_self_test( int verbose )
 {
     mbedtls_ccm_context ctx;
@@ -547,5 +723,3 @@ int mbedtls_ccm_self_test( int verbose )
 }
 
 #endif /* MBEDTLS_SELF_TEST && MBEDTLS_AES_C */
-
-#endif /* MBEDTLS_CCM_C */

@@ -1,59 +1,8 @@
-/* clang-format off */
-
-/**
- * \file cipher.h
- *
- * \brief This file contains an abstraction interface for use with the cipher
- * primitives provided by the library. It provides a common interface to all of
- * the available cipher operations.
- *
- * \author Adriaan de Jong <dejong@fox-it.com>
- */
-/*
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
 #ifndef MBEDTLS_CIPHER_H
 #define MBEDTLS_CIPHER_H
-
-#if !defined(MBEDTLS_CONFIG_FILE)
 #include "third_party/mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
-#include "third_party/mbedtls/platform_util.h"
-
-#if defined(MBEDTLS_GCM_C) || defined(MBEDTLS_CCM_C) || defined(MBEDTLS_CHACHAPOLY_C)
-#define MBEDTLS_CIPHER_MODE_AEAD
-#endif
-
-#if defined(MBEDTLS_CIPHER_MODE_CBC)
-#define MBEDTLS_CIPHER_MODE_WITH_PADDING
-#endif
-
-#if defined(MBEDTLS_ARC4_C) || defined(MBEDTLS_CIPHER_NULL_CIPHER) || \
-    defined(MBEDTLS_CHACHA20_C)
-#define MBEDTLS_CIPHER_MODE_STREAM
-#endif
-
-#if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
-    !defined(inline) && !defined(__cplusplus)
-#define inline __inline
-#endif
+#include "third_party/mbedtls/platform.h"
+/* clang-format off */
 
 #define MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE  -0x6080  /**< The selected feature is not available. */
 #define MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA       -0x6100  /**< Bad input parameters. */
@@ -349,18 +298,6 @@ typedef struct mbedtls_cipher_context_t
     /** CMAC-specific context. */
     mbedtls_cmac_context_t *cmac_ctx;
 #endif
-
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
-    /** Indicates whether the cipher operations should be performed
-     *  by Mbed TLS' own crypto library or an external implementation
-     *  of the PSA Crypto API.
-     *  This is unset if the cipher context was established through
-     *  mbedtls_cipher_setup(), and set if it was established through
-     *  mbedtls_cipher_setup_psa().
-     */
-    unsigned char psa_enabled;
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
-
 } mbedtls_cipher_context_t;
 
 /**
@@ -459,33 +396,6 @@ void mbedtls_cipher_free( mbedtls_cipher_context_t *ctx );
  */
 int mbedtls_cipher_setup( mbedtls_cipher_context_t *ctx,
                           const mbedtls_cipher_info_t *cipher_info );
-
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
-/**
- * \brief               This function initializes a cipher context for
- *                      PSA-based use with the given cipher primitive.
- *
- * \note                See #MBEDTLS_USE_PSA_CRYPTO for information on PSA.
- *
- * \param ctx           The context to initialize. May not be \c NULL.
- * \param cipher_info   The cipher to use.
- * \param taglen        For AEAD ciphers, the length in bytes of the
- *                      authentication tag to use. Subsequent uses of
- *                      mbedtls_cipher_auth_encrypt() or
- *                      mbedtls_cipher_auth_decrypt() must provide
- *                      the same tag length.
- *                      For non-AEAD ciphers, the value must be \c 0.
- *
- * \return              \c 0 on success.
- * \return              #MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA on
- *                      parameter-verification failure.
- * \return              #MBEDTLS_ERR_CIPHER_ALLOC_FAILED if allocation of the
- *                      cipher-specific context fails.
- */
-int mbedtls_cipher_setup_psa( mbedtls_cipher_context_t *ctx,
-                              const mbedtls_cipher_info_t *cipher_info,
-                              size_t taglen );
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 /**
  * \brief        This function returns the block size of the given cipher.
@@ -853,17 +763,10 @@ int mbedtls_cipher_check_tag( mbedtls_cipher_context_t *ctx,
  * \return              A cipher-specific error code on failure.
  */
 int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
-                  const unsigned char *iv, size_t iv_len,
-                  const unsigned char *input, size_t ilen,
-                  unsigned char *output, size_t *olen );
+                          const unsigned char *iv, size_t iv_len,
+                          const unsigned char *input, size_t ilen,
+                          unsigned char *output, size_t *olen );
 
-#if defined(MBEDTLS_CIPHER_MODE_AEAD)
-#if ! defined(MBEDTLS_DEPRECATED_REMOVED)
-#if defined(MBEDTLS_DEPRECATED_WARNING)
-#define MBEDTLS_DEPRECATED    __attribute__((deprecated))
-#else
-#define MBEDTLS_DEPRECATED
-#endif /* MBEDTLS_DEPRECATED_WARNING */
 /**
  * \brief               The generic authenticated encryption (AEAD) function.
  *
@@ -911,12 +814,11 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
  * \return              A cipher-specific error code on failure.
  */
 int mbedtls_cipher_auth_encrypt( mbedtls_cipher_context_t *ctx,
-                         const unsigned char *iv, size_t iv_len,
-                         const unsigned char *ad, size_t ad_len,
-                         const unsigned char *input, size_t ilen,
-                         unsigned char *output, size_t *olen,
-                         unsigned char *tag, size_t tag_len )
-                         MBEDTLS_DEPRECATED;
+                                 const unsigned char *iv, size_t iv_len,
+                                 const unsigned char *ad, size_t ad_len,
+                                 const unsigned char *input, size_t ilen,
+                                 unsigned char *output, size_t *olen,
+                                 unsigned char *tag, size_t tag_len );
 
 /**
  * \brief               The generic authenticated decryption (AEAD) function.
@@ -970,15 +872,11 @@ int mbedtls_cipher_auth_encrypt( mbedtls_cipher_context_t *ctx,
  * \return              A cipher-specific error code on failure.
  */
 int mbedtls_cipher_auth_decrypt( mbedtls_cipher_context_t *ctx,
-                         const unsigned char *iv, size_t iv_len,
-                         const unsigned char *ad, size_t ad_len,
-                         const unsigned char *input, size_t ilen,
-                         unsigned char *output, size_t *olen,
-                         const unsigned char *tag, size_t tag_len )
-                         MBEDTLS_DEPRECATED;
-#undef MBEDTLS_DEPRECATED
-#endif /* MBEDTLS_DEPRECATED_REMOVED */
-#endif /* MBEDTLS_CIPHER_MODE_AEAD */
+                                 const unsigned char *iv, size_t iv_len,
+                                 const unsigned char *ad, size_t ad_len,
+                                 const unsigned char *input, size_t ilen,
+                                 unsigned char *output, size_t *olen,
+                                 const unsigned char *tag, size_t tag_len );
 
 #if defined(MBEDTLS_CIPHER_MODE_AEAD) || defined(MBEDTLS_NIST_KW_C)
 /**

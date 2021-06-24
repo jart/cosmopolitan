@@ -1,5 +1,15 @@
-/* clang-format off */
+#include "third_party/mbedtls/chachapoly.h"
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/platform.h"
 
+asm(".ident\t\"\\n\\n\
+Mbed TLS (Apache 2.0)\\n\
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+/* clang-format off */
 /**
  * \file chachapoly.c
  *
@@ -20,22 +30,8 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-#include "third_party/mbedtls/common.h"
 
 #if defined(MBEDTLS_CHACHAPOLY_C)
-
-#include "third_party/mbedtls/chachapoly.h"
-#include "third_party/mbedtls/platform_util.h"
-#include "third_party/mbedtls/error.h"
-
-
-#if defined(MBEDTLS_SELF_TEST)
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_printf printf
-#endif /* MBEDTLS_PLATFORM_C */
-#endif /* MBEDTLS_SELF_TEST */
 
 #if !defined(MBEDTLS_CHACHAPOLY_ALT)
 

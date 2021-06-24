@@ -1,47 +1,8 @@
-/* clang-format off */
-
-/**
- * \file chachapoly.h
- *
- * \brief   This file contains the AEAD-ChaCha20-Poly1305 definitions and
- *          functions.
- *
- *          ChaCha20-Poly1305 is an algorithm for Authenticated Encryption
- *          with Associated Data (AEAD) that can be used to encrypt and
- *          authenticate data. It is based on ChaCha20 and Poly1305 by Daniel
- *          Bernstein and was standardized in RFC 7539.
- *
- * \author Daniel King <damaki.gh@gmail.com>
- */
-
-/*
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
 #ifndef MBEDTLS_CHACHAPOLY_H
 #define MBEDTLS_CHACHAPOLY_H
-
-#if !defined(MBEDTLS_CONFIG_FILE)
 #include "third_party/mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
-/* for shared error codes */
 #include "third_party/mbedtls/poly1305.h"
+/* clang-format off */
 
 #define MBEDTLS_ERR_CHACHAPOLY_BAD_STATE            -0x0054 /**< The requested operation is not permitted in the current state. */
 #define MBEDTLS_ERR_CHACHAPOLY_AUTH_FAILED          -0x0056 /**< Authenticated decryption failed: data was not authentic. */

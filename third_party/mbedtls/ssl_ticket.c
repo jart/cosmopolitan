@@ -1,5 +1,16 @@
-/* clang-format off */
+#include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/platform.h"
+#include "third_party/mbedtls/ssl_internal.h"
+#include "third_party/mbedtls/ssl_ticket.h"
 
+asm(".ident\t\"\\n\\n\
+Mbed TLS (Apache 2.0)\\n\
+Copyright ARM Limited\\n\
+Copyright Mbed TLS Contributors\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+/* clang-format off */
 /*
  *  TLS server tickets callbacks implementation
  *
@@ -19,22 +30,7 @@
  *  limitations under the License.
  */
 
-#include "third_party/mbedtls/common.h"
-
 #if defined(MBEDTLS_SSL_TICKET_C)
-
-#if defined(MBEDTLS_PLATFORM_C)
-#include "third_party/mbedtls/platform.h"
-#else
-#define mbedtls_calloc    calloc
-#define mbedtls_free      free
-#endif
-
-#include "third_party/mbedtls/ssl_internal.h"
-#include "third_party/mbedtls/ssl_ticket.h"
-#include "third_party/mbedtls/error.h"
-#include "third_party/mbedtls/platform_util.h"
-
 
 /*
  * Initialze context
@@ -42,10 +38,6 @@
 void mbedtls_ssl_ticket_init( mbedtls_ssl_ticket_context *ctx )
 {
     memset( ctx, 0, sizeof( mbedtls_ssl_ticket_context ) );
-
-#if defined(MBEDTLS_THREADING_C)
-    mbedtls_mutex_init( &ctx->mutex );
-#endif
 }
 
 #define MAX_KEY_BYTES 32    /* 256 bits */
@@ -220,11 +212,6 @@ int mbedtls_ssl_ticket_write( void *p_ticket,
      * in addition to session itself, that will be checked when writing it. */
     MBEDTLS_SSL_CHK_BUF_PTR( start, end, TICKET_MIN_LEN );
 
-#if defined(MBEDTLS_THREADING_C)
-    if( ( ret = mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
-        return( ret );
-#endif
-
     if( ( ret = ssl_ticket_update_keys( ctx ) ) != 0 )
         goto cleanup;
 
@@ -268,11 +255,6 @@ int mbedtls_ssl_ticket_write( void *p_ticket,
     *tlen = TICKET_MIN_LEN + ciph_len - TICKET_AUTH_TAG_BYTES;
 
 cleanup:
-#if defined(MBEDTLS_THREADING_C)
-    if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
-        return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
-#endif
-
     return( ret );
 }
 
@@ -314,11 +296,6 @@ int mbedtls_ssl_ticket_parse( void *p_ticket,
 
     if( len < TICKET_MIN_LEN )
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
-
-#if defined(MBEDTLS_THREADING_C)
-    if( ( ret = mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
-        return( ret );
-#endif
 
     if( ( ret = ssl_ticket_update_keys( ctx ) ) != 0 )
         goto cleanup;
@@ -379,11 +356,6 @@ int mbedtls_ssl_ticket_parse( void *p_ticket,
 #endif
 
 cleanup:
-#if defined(MBEDTLS_THREADING_C)
-    if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
-        return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
-#endif
-
     return( ret );
 }
 
@@ -394,11 +366,6 @@ void mbedtls_ssl_ticket_free( mbedtls_ssl_ticket_context *ctx )
 {
     mbedtls_cipher_free( &ctx->keys[0].ctx );
     mbedtls_cipher_free( &ctx->keys[1].ctx );
-
-#if defined(MBEDTLS_THREADING_C)
-    mbedtls_mutex_free( &ctx->mutex );
-#endif
-
     mbedtls_platform_zeroize( ctx, sizeof( mbedtls_ssl_ticket_context ) );
 }
 

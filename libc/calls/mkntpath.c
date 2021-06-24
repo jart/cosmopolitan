@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/ntmagicpaths.internal.h"
+#include "libc/nt/systeminfo.h"
 #include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
 #include "libc/str/tpdecode.internal.h"
@@ -70,15 +71,30 @@ textwindows int __mkntpath2(const char *path,
    * 4. Reserve ≥10 for CreateNamedPipe "\\.\pipe\" prefix requirement
    * 5. Reserve ≥13 for mkdir() i.e. 1+8+3+1, e.g. "\\ffffffff.xxx\0"
    */
-  size_t i, n;
+  char *q;
+  char16_t *p;
+  size_t i, n, m, z;
   if (!path) return efault();
   path = FixNtMagicPath(path, flags);
-  n = tprecode8to16(path16, PATH_MAX - 16, path).ax;
-  if (n == PATH_MAX - 16 - 1) return enametoolong();
+  p = path16;
+  q = path;
+  z = PATH_MAX - 16;
+  if (q[0] == '/' && q[1] == 't' && q[2] == 'm' && q[3] == 'p' &&
+      (q[4] == '/' || !q[4])) {
+    m = GetTempPath(z, p);
+    if (!q[4]) return m;
+    q += 5;
+    p += m;
+    z -= m;
+  } else {
+    m = 0;
+  }
+  n = tprecode8to16(p, z, q).ax;
+  if (n == z - 1) return enametoolong();
   for (i = 0; i < n; ++i) {
-    if (path16[i] == '/') {
-      path16[i] = '\\';
+    if (p[i] == '/') {
+      p[i] = '\\';
     }
   }
-  return n;
+  return m + n;
 }

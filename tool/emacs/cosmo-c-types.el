@@ -165,6 +165,8 @@
         (cosmo
          '("int_least128_t"
            "int_fast128_t"
+           "mbedtls_mpi_sint"
+           "mbedtls_mpi_uint"
            "bool32"
            "int128_t"
            "uint128_t"
