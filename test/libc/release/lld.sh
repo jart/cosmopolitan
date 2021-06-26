@@ -24,4 +24,4 @@ if CLANG=$(command -v clang); then
   o/$MODE/test/libc/release/smokeclang.com.dbg || exit
 fi
 
-touch o/$MODE/test/libc/release/clang.ok
+touch o/$MODE/test/libc/release/lld.ok

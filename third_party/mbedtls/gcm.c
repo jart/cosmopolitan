@@ -96,8 +96,7 @@ static int gcm_gen_table( mbedtls_gcm_context *ctx )
 
 #if defined(MBEDTLS_AESNI_C) && defined(MBEDTLS_HAVE_X86_64)
     /* With CLMUL support, we need only h, not the rest of the table */
-    if( X86_HAVE( PCLMUL ) )
-        return( 0 );
+    if (X86_HAVE(AES) && X86_HAVE(PCLMUL)) return 0;
 #endif
 
     /* 0 corresponds to 0 in GF(2^128) */
@@ -191,7 +190,7 @@ static void gcm_mult( mbedtls_gcm_context *ctx, const unsigned char x[16],
     uint64_t zh, zl;
 
 #if defined(MBEDTLS_AESNI_C) && defined(MBEDTLS_HAVE_X86_64)
-    if( X86_HAVE( PCLMUL ) ) {
+    if (X86_HAVE(AES) && X86_HAVE(PCLMUL)) {
         unsigned char h[16];
 
         PUT_UINT32_BE( ctx->HH[8] >> 32, h,  0 );
@@ -240,11 +239,11 @@ static void gcm_mult( mbedtls_gcm_context *ctx, const unsigned char x[16],
 }
 
 int mbedtls_gcm_starts( mbedtls_gcm_context *ctx,
-                int mode,
-                const unsigned char *iv,
-                size_t iv_len,
-                const unsigned char *add,
-                size_t add_len )
+                        int mode,
+                        const unsigned char *iv,
+                        size_t iv_len,
+                        const unsigned char *add,
+                        size_t add_len )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     unsigned char work_buf[16];
@@ -327,9 +326,9 @@ int mbedtls_gcm_starts( mbedtls_gcm_context *ctx,
 }
 
 int mbedtls_gcm_update( mbedtls_gcm_context *ctx,
-                size_t length,
-                const unsigned char *input,
-                unsigned char *output )
+                        size_t length,
+                        const unsigned char *input,
+                        unsigned char *output )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     unsigned char ectr[16];
@@ -390,8 +389,8 @@ int mbedtls_gcm_update( mbedtls_gcm_context *ctx,
 }
 
 int mbedtls_gcm_finish( mbedtls_gcm_context *ctx,
-                unsigned char *tag,
-                size_t tag_len )
+                        unsigned char *tag,
+                        size_t tag_len )
 {
     unsigned char work_buf[16];
     size_t i;
@@ -431,16 +430,16 @@ int mbedtls_gcm_finish( mbedtls_gcm_context *ctx,
 }
 
 int mbedtls_gcm_crypt_and_tag( mbedtls_gcm_context *ctx,
-                       int mode,
-                       size_t length,
-                       const unsigned char *iv,
-                       size_t iv_len,
-                       const unsigned char *add,
-                       size_t add_len,
-                       const unsigned char *input,
-                       unsigned char *output,
-                       size_t tag_len,
-                       unsigned char *tag )
+                               int mode,
+                               size_t length,
+                               const unsigned char *iv,
+                               size_t iv_len,
+                               const unsigned char *add,
+                               size_t add_len,
+                               const unsigned char *input,
+                               unsigned char *output,
+                               size_t tag_len,
+                               unsigned char *tag )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
@@ -464,15 +463,15 @@ int mbedtls_gcm_crypt_and_tag( mbedtls_gcm_context *ctx,
 }
 
 int mbedtls_gcm_auth_decrypt( mbedtls_gcm_context *ctx,
-                      size_t length,
-                      const unsigned char *iv,
-                      size_t iv_len,
-                      const unsigned char *add,
-                      size_t add_len,
-                      const unsigned char *tag,
-                      size_t tag_len,
-                      const unsigned char *input,
-                      unsigned char *output )
+                              size_t length,
+                              const unsigned char *iv,
+                              size_t iv_len,
+                              const unsigned char *add,
+                              size_t add_len,
+                              const unsigned char *tag,
+                              size_t tag_len,
+                              const unsigned char *input,
+                              unsigned char *output )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     unsigned char check_tag[16];

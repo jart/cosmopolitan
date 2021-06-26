@@ -1,3 +1,6 @@
+#include "libc/dce.h"
+#include "libc/macros.internal.h"
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/endian.h"
@@ -39,6 +42,8 @@ asm(".include \"libc/disclaimer.inc\"");
 #define SHA256_VALIDATE_RET(cond)                           \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_SHA256_BAD_INPUT_DATA )
 #define SHA256_VALIDATE(cond)  MBEDTLS_INTERNAL_VALIDATE( cond )
+
+void sha256_transform_rorx(mbedtls_sha256_context *, const uint8_t *, int);
 
 #if !defined(MBEDTLS_SHA256_ALT)
 
@@ -151,7 +156,7 @@ static const uint32_t K[] =
     } while( 0 )
 
 int mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx,
-                                const unsigned char data[64] )
+                                     const unsigned char data[64] )
 {
     struct
     {
@@ -164,20 +169,22 @@ int mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx,
     SHA256_VALIDATE_RET( ctx != NULL );
     SHA256_VALIDATE_RET( (const unsigned char *)data != NULL );
 
+    if (!IsTiny() && X86_HAVE(AVX2) && X86_HAVE(BMI2)) {
+        sha256_transform_rorx(ctx, data, 1);
+        return 0;
+    }
+
     for( i = 0; i < 8; i++ )
         local.A[i] = ctx->state[i];
 
 #if defined(MBEDTLS_SHA256_SMALLER)
-    for( i = 0; i < 64; i++ )
-    {
+    for( i = 0; i < 64; i++ ) {
         if( i < 16 )
             GET_UINT32_BE( local.W[i], data, 4 * i );
         else
             R( i );
-
         P( local.A[0], local.A[1], local.A[2], local.A[3], local.A[4],
            local.A[5], local.A[6], local.A[7], local.W[i], K[i] );
-
         local.temp1 = local.A[7]; local.A[7] = local.A[6];
         local.A[6] = local.A[5]; local.A[5] = local.A[4];
         local.A[4] = local.A[3]; local.A[3] = local.A[2];
@@ -187,9 +194,7 @@ int mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx,
 #else /* MBEDTLS_SHA256_SMALLER */
     for( i = 0; i < 16; i++ )
         GET_UINT32_BE( local.W[i], data, 4 * i );
-
-    for( i = 0; i < 16; i += 8 )
-    {
+    for( i = 0; i < 16; i += 8 ) {
         P( local.A[0], local.A[1], local.A[2], local.A[3], local.A[4],
            local.A[5], local.A[6], local.A[7], local.W[i+0], K[i+0] );
         P( local.A[7], local.A[0], local.A[1], local.A[2], local.A[3],
@@ -207,9 +212,7 @@ int mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx,
         P( local.A[1], local.A[2], local.A[3], local.A[4], local.A[5],
            local.A[6], local.A[7], local.A[0], local.W[i+7], K[i+7] );
     }
-
-    for( i = 16; i < 64; i += 8 )
-    {
+    for( i = 16; i < 64; i += 8 ) {
         P( local.A[0], local.A[1], local.A[2], local.A[3], local.A[4],
            local.A[5], local.A[6], local.A[7], R(i+0), K[i+0] );
         P( local.A[7], local.A[0], local.A[1], local.A[2], local.A[3],
@@ -276,6 +279,12 @@ int mbedtls_sha256_update_ret( mbedtls_sha256_context *ctx,
         input += fill;
         ilen  -= fill;
         left = 0;
+    }
+
+    if (!IsTiny() && ilen >= 64 && X86_HAVE(AVX2) && X86_HAVE(BMI2)) {
+        sha256_transform_rorx(ctx, input, ilen / 64);
+        input += ROUNDDOWN(ilen, 64);
+        ilen  -= ROUNDDOWN(ilen, 64);
     }
 
     while( ilen >= 64 )

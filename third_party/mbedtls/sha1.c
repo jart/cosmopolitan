@@ -1,4 +1,6 @@
 #include "libc/bits/bits.h"
+#include "libc/macros.internal.h"
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/endian.h"
@@ -36,6 +38,8 @@ asm(".include \"libc/disclaimer.inc\"");
  *
  *  http://www.itl.nist.gov/fipspubs/fip180-1.htm
  */
+
+void sha1_transform_avx2(mbedtls_sha1_context *, const uint8_t *, int);
 
 #define SHA1_VALIDATE_RET(cond)                             \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_SHA1_BAD_INPUT_DATA )
@@ -144,6 +148,11 @@ int mbedtls_internal_sha1_process( mbedtls_sha1_context *ctx,
 {
     SHA1_VALIDATE_RET( ctx != NULL );
     SHA1_VALIDATE_RET( (const unsigned char *)data != NULL );
+
+    if (!IsTiny() && X86_HAVE(AVX2) && X86_HAVE(BMI) && X86_HAVE(BMI2)) {
+        sha1_transform_avx2(ctx, data, 1);
+        return 0;
+    }
 
 #ifdef MBEDTLS_SHA1_SMALLER
 #define ROL(a, b) ((a << b) | (a >> (32 - b)))
@@ -387,8 +396,8 @@ int mbedtls_sha1_update_ret( mbedtls_sha1_context *ctx,
                              size_t ilen )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    size_t fill;
     uint32_t left;
+    size_t n, fill;
 
     SHA1_VALIDATE_RET( ctx != NULL );
     SHA1_VALIDATE_RET( ilen == 0 || input != NULL );
@@ -415,6 +424,12 @@ int mbedtls_sha1_update_ret( mbedtls_sha1_context *ctx,
         input += fill;
         ilen  -= fill;
         left = 0;
+    }
+
+    if (!IsTiny() && ilen >= 64 && X86_HAVE(AVX2) && X86_HAVE(BMI) && X86_HAVE(BMI2)) {
+        sha1_transform_avx2(ctx, input, ilen / 64);
+        input += ROUNDDOWN(ilen, 64);
+        ilen  -= ROUNDDOWN(ilen, 64);
     }
 
     while( ilen >= 64 )

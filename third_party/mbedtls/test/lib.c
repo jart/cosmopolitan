@@ -1021,17 +1021,15 @@ int execute_tests(int argc, const char **argv, const char *default_filename) {
       if (unmet_dep_count > 0 || ret == DISPATCH_UNSUPPORTED_SUITE) {
         total_skipped++;
         WRITE("----");
-        if (1 == option_verbose && ret == DISPATCH_UNSUPPORTED_SUITE) {
-          WRITE("\n   Test Suite not enabled");
-        }
         if (1 == option_verbose && unmet_dep_count > 0) {
-          WRITE("\n   Unmet dependencies: ");
+          WRITE(" (unmet dependencies: ");
           for (i = 0; i < unmet_dep_count; i++) {
-            WRITE("%d ", unmet_dependencies[i]);
+            if (i) WRITE(",");
+            WRITE("%d", unmet_dependencies[i]);
           }
           if (missing_unmet_dependencies) WRITE("...");
         }
-        WRITE("\n");
+        WRITE(")\n");
         fflush(stdout);
         unmet_dep_count = 0;
         missing_unmet_dependencies = 0;

@@ -1,4 +1,6 @@
 #include "libc/literal.h"
+#include "libc/macros.internal.h"
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/endian.h"
@@ -36,6 +38,8 @@ asm(".include \"libc/disclaimer.inc\"");
  *
  *  http://csrc.nist.gov/publications/fips/fips180-2/fips180-2.pdf
  */
+
+void sha512_transform_rorx(mbedtls_sha512_context *, const uint8_t *, int);
 
 #if defined(MBEDTLS_SHA512_C)
 
@@ -224,12 +228,16 @@ int mbedtls_internal_sha512_process( mbedtls_sha512_context *ctx,
     SHA512_VALIDATE_RET( ctx != NULL );
     SHA512_VALIDATE_RET( (const unsigned char *)data != NULL );
 
+    if (!IsTiny() && X86_HAVE(AVX2)) {
+        sha512_transform_rorx(ctx, data, 1);
+        return 0;
+    }
+
 #define  SHR(x,n) ((x) >> (n))
 #define ROTR(x,n) (SHR((x),(n)) | ((x) << (64 - (n))))
 
 #define S0(x) (ROTR(x, 1) ^ ROTR(x, 8) ^  SHR(x, 7))
 #define S1(x) (ROTR(x,19) ^ ROTR(x,61) ^  SHR(x, 6))
-
 #define S2(x) (ROTR(x,28) ^ ROTR(x,34) ^ ROTR(x,39))
 #define S3(x) (ROTR(x,14) ^ ROTR(x,18) ^ ROTR(x,41))
 
@@ -263,10 +271,14 @@ int mbedtls_internal_sha512_process( mbedtls_sha512_context *ctx,
         P( local.A[0], local.A[1], local.A[2], local.A[3], local.A[4],
            local.A[5], local.A[6], local.A[7], local.W[i], K[i] );
 
-        local.temp1 = local.A[7]; local.A[7] = local.A[6];
-        local.A[6] = local.A[5]; local.A[5] = local.A[4];
-        local.A[4] = local.A[3]; local.A[3] = local.A[2];
-        local.A[2] = local.A[1]; local.A[1] = local.A[0];
+        local.temp1 = local.A[7]; 
+        local.A[7] = local.A[6];
+        local.A[6] = local.A[5]; 
+        local.A[5] = local.A[4];
+        local.A[4] = local.A[3]; 
+        local.A[3] = local.A[2];
+        local.A[2] = local.A[1]; 
+        local.A[1] = local.A[0];
         local.A[0] = local.temp1;
     }
 #else /* MBEDTLS_SHA512_SMALLER */
@@ -360,6 +372,12 @@ int mbedtls_sha512_update_ret( mbedtls_sha512_context *ctx,
         input += fill;
         ilen  -= fill;
         left = 0;
+    }
+
+    if (!IsTiny() && ilen >= 128 && X86_HAVE(AVX2)) {
+        sha512_transform_rorx(ctx, input, ilen / 128);
+        input += ROUNDDOWN(ilen, 128);
+        ilen  -= ROUNDDOWN(ilen, 128);
     }
 
     while( ilen >= 128 )
