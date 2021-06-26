@@ -1,10 +1,10 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_IP_ADAPTER_ADDRESSES_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_IP_ADAPTER_ADDRESSES_H_
+#include "libc/nt/struct/guid.h"
 #include "libc/nt/winsock.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
 
 /* Constants ----------------------------------------------------------- */
+
 #define kNtMaxAdapterAddressLength  8
 #define kNtMaxDnsSuffixStringLength 256
 #define kNtMaxDhcpv6DuidLength      130
@@ -37,245 +37,167 @@ COSMOPOLITAN_C_START_
 #define kNtIfTypeTunnel            131
 #define kNtIfTypeIeee1394          144 /* firewire */
 
-/* Enums --------------------------------------------------------------- */
-typedef enum {
-  kNtIpPrefixOriginOther,
-  kNtIpPrefixOriginManual,
-  kNtIpPrefixOriginWellKnown,
-  kNtIpPrefixOriginDhcp,
-  kNtIpPrefixOriginRouterAdvertisement,
-  kNtIpPrefixOriginUnchanged
-} NtPrefixOrigin;
+#define kNtIpAdapterDdnsEnabled             0x0001
+#define kNtIpAdapterRegisterAdapterSuffix   0x0002
+#define kNtIpAdapterDhcpv4Enabled           0x0004
+#define kNtIpAdapterReceiveOnly             0x0008
+#define kNtIpAdapterNoMulticast             0x0010
+#define kNtIpAdapterIpv6OtherStatefulConfig 0x0020
+#define kNtIpAdapterNetbiosOverTcpipEnabled 0x0040
+#define kNtIpAdapterIpv4Enabled             0x0080
+#define kNtIpAdapterIpv6Enabled             0x0100
+#define kNtIpAdapterIpv6Managed             0x0200
 
-typedef enum {
-  kNtNlsoOther,
-  kNtNlsoManual,
-  kNtNlsoWellKnown,
-  kNtNlsoDhcp,
-  kNtNlsoLinkLayerAddress,
-  kNtNlsoRandom,
-  kNtIpSuffixOriginOther,
-  kNtIpSuffixOriginManual,
-  kNtIpSuffixOriginWellKnown,
-  kNtIpSuffixOriginDhcp,
-  kNtIpSuffixOriginLinkLayerAddress,
-  kNtIpSuffixOriginRandom,
-  kNtIpSuffixOriginUnchanged
-} NtSuffixOrigin;
+#define kNtIpPrefixOriginOther               0
+#define kNtIpPrefixOriginManual              1
+#define kNtIpPrefixOriginWellKnown           2
+#define kNtIpPrefixOriginDhcp                3
+#define kNtIpPrefixOriginRouterAdvertisement 4
+#define kNtIpPrefixOriginUnchanged           16
 
-typedef enum {
-  kNtNldsInvalid,
-  kNtNldsTentative,
-  kNtNldsDuplicate,
-  kNtNldsDeprecated,
-  kNtNldsPreferred,
-  kNtIpDadStateInvalid,
-  kNtIpDadStateTentative,
-  kNtIpDadStateDuplicate,
-  kNtIpDadStateDeprecated,
-  kNtIpDadStatePreferred
-} NtDadState;
+#define kNtIpSuffixOriginOther            0
+#define kNtIpSuffixOriginManual           1
+#define kNtIpSuffixOriginWellKnown        2
+#define kNtIpSuffixOriginDhcp             3
+#define kNtIpSuffixOriginLinkLayerAddress 4
+#define kNtIpSuffixOriginRandom           5
+#define kNtIpSuffixOriginUnchanged        16
 
-typedef enum {
-  kNtIfOperStatusUp = 1,
-  kNtIfOperStatusDown,
-  kNtIfOperStatusTesting,
-  kNtIfOperStatusUnknown,
-  kNtIfOperStatusDormant,
-  kNtIfOperStatusNotPresent,
-  kNtIfOperStatusLowerLayerDown
-} NtIfOperStatus;
+#define kNtIpDadStateInvalid    0
+#define kNtIpDadStateTentative  1
+#define kNtIpDadStateDuplicate  2
+#define kNtIpDadStateDeprecated 3
+#define kNtIpDadStatePreferred  4
 
-typedef enum {
-  kNtNetIfConnectionDedicated = 1,
-  kNtNetIfConnectionPassive = 2,
-  kNtNetIfConnectionDemand = 3,
-  kNtNetIfConnectionMaximum = 4
-} NtNetIfConnectionType;
+#define kNtIfOperStatusUp             1
+#define kNtIfOperStatusDown           2
+#define kNtIfOperStatusTesting        3
+#define kNtIfOperStatusUnknown        4
+#define kNtIfOperStatusDormant        5
+#define kNtIfOperStatusNotPresent     6
+#define kNtIfOperStatusLowerLayerDown 7
 
-typedef enum {
-  kNtTunnelTypeNone = 0,
-  kNtTunnelTypeOther = 1,
-  kNtTunnelTypeDirect = 2,
-  kNtTunnelType6to4 = 11,
-  kNtTunnelTypeIsatap = 13,
-  kNtTunnelTypeTeredo = 14,
-  kNtTunnelTypeIphttps = 15
-} NtTunnelType;
+#define kNtNetIfConnectionDedicated 1
+#define kNtNetIfConnectionPassive   2
+#define kNtNetIfConnectionDemand    3
+#define kNtNetIfConnectionMaximum   4
+
+#define kNtTunnelTypeNone    0
+#define kNtTunnelTypeOther   1
+#define kNtTunnelTypeDirect  2
+#define kNtTunnelType6to4    11
+#define kNtTunnelTypeIsatap  13
+#define kNtTunnelTypeTeredo  14
+#define kNtTunnelTypeIphttps 15
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
 
 /* Inner Types --------------------------------------------------------- */
-typedef struct _NtIpAdapterUnicastAddress {
-  union {
-    uint64_t Alignment;
-    struct {
-      uint32_t Length;
-      uint32_t Flags;
-    };
-  };
-  struct _NtIpAdapterUnicastAddress *Next;
+
+struct NtIpAdapterUnicastAddress {
+  uint32_t Length;
+  uint32_t Flags;
+  struct NtIpAdapterUnicastAddress *Next;
   struct NtSocketAddress Address;
-  NtPrefixOrigin PrefixOrigin;
-  NtSuffixOrigin SuffixOrigin;
-  NtDadState DadState;
+  uint32_t PrefixOrigin; /* kNtIpPrefixOrigin... */
+  uint32_t SuffixOrigin; /* kNtIpSuffixOrigin... */
+  uint32_t DadState;     /* kNtIpDadState... */
   uint32_t ValidLifetime;
   uint32_t PreferredLifetime;
   uint32_t LeaseLifetime;
   uint8_t OnLinkPrefixLength;
-} NtIpAdapterUnicastAddress;
+};
 
-typedef struct NtIpAdapterAnycastAddress {
-  union {
-    uint64_t Alignment;
-    struct {
-      uint32_t Length;
-      uint32_t Flags;
-    };
-  };
-  struct _NtIpAdapterAnycastAddress *Next;
+struct NtIpAdapterAnycastAddress {
+  uint32_t Length;
+  uint32_t Flags;
+  struct NtIpAdapterAnycastAddress *Next;
   struct NtSocketAddress Address;
-} NtIpAdapterAnycastAddress;
+};
 
-typedef struct NtIpAdapterMulticastAddress {
-  union {
-    uint64_t Alignment;
-    struct {
-      uint32_t Length;
-      uint32_t Flags;
-    };
-  };
-  struct _NtIpAdapterMulticastAddress *Next;
+struct NtIpAdapterMulticastAddress {
+  uint32_t Length;
+  uint32_t Flags;
+  struct NtIpAdapterMulticastAddress *Next;
   struct NtSocketAddress Address;
-} NtIpAdapterMulticastAddress;
+};
 
-typedef struct _NtIpAdapterDnsServerAddress {
-  union {
-    uint64_t Alignment;
-    struct {
-      uint32_t Length;
-      uint32_t Reserved;
-    };
-  };
-  struct _NtIpAdapterDnsServerAddress *Next;
+struct NtIpAdapterDnsServerAddress {
+  uint32_t Length;
+  uint32_t Reserved;
+  struct NtIpAdapterDnsServerAddress *Next;
   struct NtSocketAddress Address;
-} NtIpAdapterDnsServerAddress;
+};
 
-typedef struct _NtIpAdapterPrefix {
-  union {
-    uint64_t Alignment;
-    struct {
-      uint32_t Length;
-      uint32_t Flags;
-    };
-  };
-  struct _NtIpAdapterPrefix *Next;
+struct NtIpAdapterPrefix {
+  uint32_t Length;
+  uint32_t Flags;
+  struct NtIpAdapterPrefix *Next;
   struct NtSocketAddress Address;
   uint32_t PrefixLength;
-} NtIpAdapterPrefix;
+};
 
-typedef struct _NtIpAdapterWinsServerAddress {
-  union {
-    uint64_t Alignment;
-    struct {
-      uint32_t Length;
-      uint32_t Reserved;
-    };
-  };
-  struct _NtIpAdapterWinsServerAddress *Next;
+struct NtIpAdapterWinsServerAddress {
+  uint32_t Length;
+  uint32_t Reserved;
+  struct NtIpAdapterWinsServerAddress *Next;
   struct NtSocketAddress Address;
-} NtIpAdapterWinsServerAddress;
+};
 
-typedef struct _NtIpAdapterGatewayAddress {
-  union {
-    uint64_t Alignment;
-    struct {
-      uint32_t Length;
-      uint32_t Reserved;
-    };
-  };
-  struct _NtIpAdapterGatewayAddress *Next;
+struct NtIpAdapterGatewayAddress {
+  uint32_t Length;
+  uint32_t Reserved;
+  struct NtIpAdapterGatewayAddress *Next;
   struct NtSocketAddress Address;
-} NtIpAdapterGatewayAddress;
+};
 
-typedef struct _NtGUID {
-  uint32_t Data1;
-  uint16_t Data2;
-  uint16_t Data3;
-  uint8_t Data4[8];
-} NtGUID;
-
-typedef union _NtNetLUID {
-  uint64_t Value;
-  struct {
-    uint64_t Reserved : 24;
-    uint64_t NetLuidIndex : 24;
-    uint64_t IfType : 16;
-  } Info;
-} NtNetLUID;
-
-typedef struct _NtIpAdapterDnsSuffix {
-  struct _NtIpAdapterDnsSuffix *Next;
+struct NtIpAdapterDnsSuffix {
+  struct NtIpAdapterDnsSuffix *Next;
   uint16_t String[kNtMaxDnsSuffixStringLength];
-} NtIpAdapterDnsSuffix;
+};
 
 /* Top level ----------------------------------------------------------- */
-typedef struct _NtIpAdapterAddresses {
-  union {
-    uint64_t Alignment;
-    struct {
-      uint32_t Length;
-      uint32_t IfIndex;
-    };
-  };
-  struct _NtIpAdapterAddresses *Next;
+
+struct NtIpAdapterAddresses {
+  uint32_t Length;
+  uint32_t IfIndex;
+  struct NtIpAdapterAddresses *Next;
   char *AdapterName;
-  NtIpAdapterUnicastAddress *FirstUnicastAddress;
-  NtIpAdapterAnycastAddress *FirstAnycastAddress;
-  NtIpAdapterMulticastAddress *FirstMulticastAddress;
-  NtIpAdapterDnsServerAddress *FirstDnsServerAddress;
+  struct NtIpAdapterUnicastAddress *FirstUnicastAddress;
+  struct NtIpAdapterAnycastAddress *FirstAnycastAddress;
+  struct NtIpAdapterMulticastAddress *FirstMulticastAddress;
+  struct NtIpAdapterDnsServerAddress *FirstDnsServerAddress;
   uint16_t *DnsSuffix;
   uint16_t *Description;
   uint16_t *FriendlyName;
   uint8_t PhysicalAddress[kNtMaxAdapterAddressLength];
   uint32_t PhysicalAddressLength;
-  union {
-    uint32_t Flags;
-    struct {
-      uint32_t DdnsEnabled : 1;
-      uint32_t RegisterAdapterSuffix : 1;
-      uint32_t Dhcpv4Enabled : 1;
-      uint32_t ReceiveOnly : 1;
-      uint32_t NoMulticast : 1;
-      uint32_t Ipv6OtherStatefulConfig : 1;
-      uint32_t NetbiosOverTcpipEnabled : 1;
-      uint32_t Ipv4Enabled : 1;
-      uint32_t Ipv6Enabled : 1;
-      uint32_t Ipv6ManagedAddressConfigurationSupported : 1;
-    };
-  };
+  uint32_t Flags; /* kNtIpAdapter... */
   uint32_t Mtu;
-  uint32_t IfType;
-  NtIfOperStatus OperStatus;
+  uint32_t IfType;     /* kNtIfType... */
+  uint32_t OperStatus; /* kNtIfOperStatus... */
   uint32_t Ipv6IfIndex;
   uint32_t ZoneIndices[16];
-  NtIpAdapterPrefix *FirstPrefix;
+  struct NtIpAdapterPrefix *FirstPrefix;
   uint64_t TransmitLinkSpeed;
   uint64_t ReceiveLinkSpeed;
-  NtIpAdapterWinsServerAddress *FirstWinsServerAddress;
-  NtIpAdapterGatewayAddress *FirstGatewayAddress;
+  struct NtIpAdapterWinsServerAddress *FirstWinsServerAddress;
+  struct NtIpAdapterGatewayAddress *FirstGatewayAddress;
   uint32_t Ipv4Metric;
   uint32_t Ipv6Metric;
-  NtNetLUID Luid;
+  uint64_t Luid; /* reserved(24bits),NetLuidIndex(24b),IfType(16b) */
   struct NtSocketAddress Dhcpv4Server;
   uint32_t CompartmentId;
-  NtGUID NetworkGuid;
-  NtNetIfConnectionType ConnectionType;
-  NtTunnelType TunnelType;
+  struct NtGuid NetworkGuid;
+  uint32_t ConnectionType; /* kNtNetIfConnection... */
+  uint32_t TunnelType;     /* kNtTunnelType... */
   struct NtSocketAddress Dhcpv6Server;
   uint8_t Dhcpv6ClientDuid[kNtMaxDhcpv6DuidLength];
   uint32_t Dhcpv6ClientDuidLength;
   uint32_t Dhcpv6Iaid;
-  NtIpAdapterDnsSuffix *FirstDnsSuffix;
-} NtIpAdapterAddresses;
+  struct NtIpAdapterDnsSuffix *FirstDnsSuffix;
+};
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

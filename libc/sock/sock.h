@@ -102,11 +102,11 @@ struct ifconf {
 #define IFHWADDRLEN 6
 #define IF_NAMESIZE 16
 #define IFNAMSIZ    IF_NAMESIZE
+
 struct ifreq {
   union {
     char ifrn_name[IFNAMSIZ]; /* Interface name, e.g. "en0".  */
   } ifr_ifrn;
-
   union {
     struct sockaddr ifru_addr;      /* SIOCGIFADDR */
     struct sockaddr ifru_dstaddr;   /* SIOCGIFDSTADDR */
@@ -127,8 +127,6 @@ struct ifreq {
 #define _IOT_ifreq       _IOT(_IOTS(char), IFNAMSIZ, _IOTS(char), 16, 0, 0)
 #define _IOT_ifreq_short _IOT(_IOTS(char), IFNAMSIZ, _IOTS(short), 1, 0, 0)
 #define _IOT_ifreq_int   _IOT(_IOTS(char), IFNAMSIZ, _IOTS(int), 1, 0, 0)
-
-#define IFF_UP (1 << 0)
 
 const char *inet_ntop(int, const void *, char *, uint32_t);
 int inet_aton(const char *, struct in_addr *);

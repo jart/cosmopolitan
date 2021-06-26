@@ -1497,14 +1497,18 @@ syscon	modem	TIOCMODG				0			0x40047403		0			0x4004746a		0x4004746a		-1			# wut
 syscon	modem	TIOCMODS				0			0x80047404		0			0x8004746d		0x8004746d		-1			# wut
 syscon	modem	TIOCMSDTRWAIT				0			0x8004745b		0x8004745b		0			0			-1			# wut
 
-syscon	iff	IFF_BROADCAST				2			2			2			2			2			2			# consensus
-syscon	iff	IFF_LOOPBACK				8			8			8			8			8			4			# unix consensus
-syscon	iff	IFF_MULTICAST				0x1000			0x8000			0x8000			0x8000			0x8000			0x10			# bsd consensus
-syscon	iff	IFF_ALLMULTI				0x0200			0x0200			0x0200			0x0200			0x0200			0			# unix consensus
-syscon	iff	IFF_DEBUG				4			4			4			4			4			0			# unix consensus
-syscon	iff	IFF_NOARP				0x80			0x80			0x80			0x80			0x80			0			# unix consensus
-syscon	iff	IFF_POINTOPOINT				0x10			0x10			0x10			0x10			0x10			0			# unix consensus
-syscon	iff	IFF_PROIFF				0x0100			0x0100			0x0100			0x0100			0x0100			0			# unix consensus
+#	ioctl(SIOCGIFFLAGS) Network Interface Flags
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	iff	IFF_UP					1			1			1			1			1			1			# unix consensus
+syscon	iff	IFF_BROADCAST				2			2			2			2			2			2			# valid broadcast address set; consensus
+syscon	iff	IFF_DEBUG				4			4			4			4			4			4			# faked nt; consensus
+syscon	iff	IFF_LOOPBACK				8			8			8			8			8			4			# is loopback device; consensus
+syscon	iff	IFF_MULTICAST				0x1000			0x8000			0x8000			0x8000			0x8000			0x1000			# supports multicast; faked nt; bsd consensus
+syscon	iff	IFF_ALLMULTI				0x0200			0x0200			0x0200			0x0200			0x0200			0x0200			# receive all multicast packets; faked nt; unix consensus
+syscon	iff	IFF_NOARP				0x80			0x80			0x80			0x80			0x80			0x80			# faked nt as linux; unix consensus
+syscon	iff	IFF_POINTOPOINT				0x10			0x10			0x10			0x10			0x10			0x10			# point-to-point; faked nt as linux; unix consensus
+syscon	iff	IFF_PROMISC				0x100			0x100			0x100			0x100			0x100			0			# in packet capture mode; unix consensus
 syscon	iff	IFF_RUNNING				0x40			0x40			0x40			0x40			0x40			0			# unix consensus
 syscon	iff	IFF_NOTRAILERS				0x20			0x20			0			0			0			0
 syscon	iff	IFF_AUTOMEDIA				0x4000			0			0			0			0			0

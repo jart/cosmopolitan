@@ -53,44 +53,7 @@ struct sockaddr_un_bsd {
   char sun_path[108];
 };
 
-/* -----------------------------------------------------------------------------------
- * ioctl SIOCGIFCONF & others:
- *
- * BSD has a different structure. All the ioctl will adjust to use
- * the ifreq with the ifreq_bsd
- */
-struct ifreq_bsd {
-  union {
-    char ifrn_name[IFNAMSIZ];
-  } ifr_ifrn;
-
-  union {
-    /* Right now we only list the structures used by the few ioctl that are
-     * supported by Cosmopolitan. Add your own definition here if you need
-     * a particular ioctl that requires polyfill for BSD
-     */
-    struct  sockaddr_bsd ifru_addr;
-    struct  sockaddr_bsd ifru_netmask;
-    struct  sockaddr_bsd ifru_dstaddr;
-    struct  sockaddr_bsd ifru_broadaddr;
-    short   ifru_flags;
-    char    ifru_pad[16];   /* used as padding */
-  } ifr_ifru;
-};
-
-#pragma pack(4)
-struct ifconf_bsd {
-  uint32_t ifc_len;            /* size of buffer   */
-  union {
-    char *ifcu_buf;
-    struct ifreq_bsd *ifcu_req;
-  } ifc_ifcu;
-};
-#pragma pack()
-
-
 /* ------------------------------------------------------------------------------------*/
-
 
 struct SockFd {
   int family;

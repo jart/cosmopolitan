@@ -25,7 +25,7 @@
  * @see RFC5246 §7.2
  */
 const char *GetAlertDescription(unsigned char x) {
-  static char buf[4];
+  static char buf[21];
   switch (x) {
     case MBEDTLS_SSL_ALERT_MSG_CLOSE_NOTIFY: /* 0 */
       return "close_notify";

@@ -29,7 +29,9 @@
 #include "libc/str/str.h"
 #include "libc/fmt/fmt.h"
 
+#if defined(__GNUC__) && !defined(__llvm__)
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 
 #ifdef VMS
 #  include "vms/vms.h"

@@ -646,11 +646,6 @@ static long FindRedirect(const char *s, size_t n) {
   return -1;
 }
 
-static wontreturn void CrashCertificate(const char *name, const char *path) {
-  fprintf(stderr, "error: failed to load %s: %s\n", name, path);
-  exit(1);
-}
-
 static void LogCertificate(const char *msg, mbedtls_x509_crt *cert) {
   char *s;
   size_t n;

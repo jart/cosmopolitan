@@ -14,7 +14,10 @@
 ** Including a description of file format and an overview of operation.
 */
 #include "third_party/sqlite3/btreeInt.inc"
+
+#if defined(__GNUC__) && !defined(__llvm__)
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 
 /* clang-format off */
 

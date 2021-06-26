@@ -33,6 +33,7 @@
 #include "libc/dns/resolvconf.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/fmt/itoa.h"
 #include "libc/mem/mem.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
@@ -56,7 +57,7 @@
 int getnameinfo(const struct sockaddr *addr, socklen_t addrlen, char *name,
                 socklen_t namelen, char *service, socklen_t servicelen,
                 int flags) {
-  char rdomain[1 + sizeof "255.255.255.255.in-addr.arpa"];
+  char *p, rdomain[1 + sizeof "255.255.255.255.in-addr.arpa"];
   char info[512];
   int rc, port;
   uint8_t *ip;
@@ -71,7 +72,11 @@ int getnameinfo(const struct sockaddr *addr, socklen_t addrlen, char *name,
     return EAI_FAMILY;
 
   ip = (uint8_t *)&(((struct sockaddr_in *)addr)->sin_addr);
-  sprintf(rdomain, "%d.%d.%d.%d.in-addr.arpa", ip[3], ip[2], ip[1], ip[0]);
+  p = rdomain;
+  p += int64toarray_radix10(ip[3], p), *p++ = '.';
+  p += int64toarray_radix10(ip[2], p), *p++ = '.';
+  p += int64toarray_radix10(ip[1], p), *p++ = '.';
+  p += int64toarray_radix10(ip[0], p), stpcpy(p, ".in-addr.arpa");
   info[0] = '\0';
   if (name != NULL && namelen != 0) {
     if ((flags & NI_NUMERICHOST) && (flags & NI_NAMEREQD)) return EAI_NONAME;

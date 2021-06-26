@@ -3,7 +3,10 @@
 #include "libc/assert.h"
 #include "libc/str/str.h"
 #include "third_party/sqlite3/sqlite3session.inc"
+
+#if defined(__GNUC__) && !defined(__llvm__)
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 
 #ifndef SQLITE_AMALGAMATION
 #include "third_party/sqlite3/sqliteInt.inc"

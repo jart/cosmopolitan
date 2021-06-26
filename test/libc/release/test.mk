@@ -125,6 +125,16 @@ o/$(MODE)/test/libc/release/clang.ok:				\
 		o/$(MODE)/cosmopolitan.a
 	@$(COMPILE) -ASHTEST -T$< $<
 
+o/$(MODE)/test/libc/release/lld.ok:				\
+		test/libc/release/lld.sh			\
+		test/libc/release/smoke.c			\
+		o/cosmopolitan.h				\
+		o/$(MODE)/ape/ape.lds				\
+		o/$(MODE)/libc/crt/crt.o			\
+		o/$(MODE)/ape/ape.o				\
+		o/$(MODE)/cosmopolitan.a
+	@$(COMPILE) -ASHTEST -T$< $<
+
 o/$(MODE)/test/libc/release/metal.ok:				\
 		test/libc/release/metal.sh			\
 		o/$(MODE)/examples/hello.com			\
@@ -148,5 +158,6 @@ o/$(MODE)/test/libc/release:					\
 		o/$(MODE)/test/libc/release/smokeansi.com	\
 		o/$(MODE)/test/libc/release/smokeansi.com.runs	\
 		o/$(MODE)/test/libc/release/clang.ok		\
+		o/$(MODE)/test/libc/release/lld.ok		\
 		o/$(MODE)/test/libc/release/emulate.ok		\
 		o/$(MODE)/test/libc/release/metal.ok

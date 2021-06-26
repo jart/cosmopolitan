@@ -59,8 +59,8 @@ static uint32_t *GetUnixIps(void) {
 
 static textwindows uint32_t *GetWindowsIps(void) {
   uint32_t i, z, n, rc, *a;
-  NtIpAdapterUnicastAddress *u;
-  NtIpAdapterAddresses *p, *ifaces;
+  struct NtIpAdapterUnicastAddress *u;
+  struct NtIpAdapterAddresses *p, *ifaces;
   i = 0;
   z = 15000;
   do {

@@ -2,6 +2,8 @@
 #-*-mode:sh;indent-tabs-mode:nil;tab-width:2;coding:utf-8-*-┐
 #───vi: set net ft=sh ts=2 sts=2 fenc=utf-8 :vi─────────────┘
 
+# TODO(jart): implement me
+
 if CLANG=$(command -v clang); then
   $CLANG                                              \
       -o o/$MODE/test/libc/release/smokeclang.com.dbg \
@@ -12,7 +14,6 @@ if CLANG=$(command -v clang); then
       -fno-pie                                        \
       -nostdlib                                       \
       -nostdinc                                       \
-      -fuse-ld=lld                                    \
       -mno-red-zone                                   \
       -Wl,-T,o/$MODE/ape/ape.lds                      \
       -include o/cosmopolitan.h                       \

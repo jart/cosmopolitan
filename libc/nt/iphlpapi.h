@@ -29,7 +29,7 @@ COSMOPOLITAN_C_START_
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 uint32_t GetAdaptersAddresses(uint32_t Family, uint32_t Flags, void *Reserved,
-                              NtIpAdapterAddresses *AdapterAddresses,
+                              struct NtIpAdapterAddresses *AdapterAddresses,
                               uint32_t *SizePointer);
 
 COSMOPOLITAN_C_END_

@@ -1433,7 +1433,7 @@ local void check_zipfile(zipname, zippath)
   int result;
 
   /* Tell picky compilers to shut up about unused variables */
-  zippath = zippath;
+  (void)zippath;
 
   if (unzip_path) {
     /* user gave us a path to some unzip (may not be UnZip) */
@@ -1798,7 +1798,7 @@ ZCONST char *zfn;
     char *prompt;
 
     /* Tell picky compilers to shut up about unused variables */
-    zfn = zfn;
+    (void)zfn;
 
     prompt = (modeflag == ZP_PW_VERIFY) ?
               "Verify password: " : "Enter password: ";
@@ -1817,7 +1817,7 @@ int size;
 ZCONST char *zfn;
 {
     /* Tell picky compilers to shut up about unused variables */
-    modeflag = modeflag; pwbuf = pwbuf; size = size; zfn = zfn;
+    (void)modeflag; (void)pwbuf; (void)size; (void)zfn;
 
     return ZE_LOGIC;    /* This function should never be called! */
 }

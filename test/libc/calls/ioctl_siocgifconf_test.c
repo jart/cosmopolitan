@@ -16,38 +16,55 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
 #include "libc/bits/bits.h"
-#include "libc/dns/consts.h"
-#include "libc/dns/dns.h"
-#include "libc/dns/hoststxt.h"
-#include "libc/fmt/fmt.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/ioctl.h"
+#include "libc/log/check.h"
+#include "libc/log/log.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/sock/sock.h"
-#include "libc/str/str.h"
+#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/af.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/sysv/consts/ipproto.h"
+#include "libc/sysv/consts/sio.h"
+#include "libc/sysv/consts/sock.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Finds name associated with address in HOSTS.TXT table.
- *
- * @param ht can be GetHostsTxt()
- * @param af can be AF_INET
- * @param ip is IP address in binary (sin_addr)
- * @param buf is buffer to store the name
- * @param bufsize is length of buf
- * @return 1 if found, 0 if not found, or -1 w/ errno
- * @error EAFNOSUPPORT
- */
-int ResolveHostsReverse(const struct HostsTxt *ht, int af, const uint8_t *ip,
-                        char *buf, size_t bufsize) {
-  size_t i;
-  if (af != AF_INET && af != AF_UNSPEC) return eafnosupport();
-  for (i = 0; i < ht->entries.i; ++i) {
-    if (READ32LE(ip) == READ32LE(ht->entries.p[i].ip)) {
-      if (memccpy(buf, ht->strings.p + ht->entries.p[i].name, '\0', bufsize)) {
-        return 1;
-      }
+TEST(ioctl_siocgifconf, test) {
+  size_t n;
+  char *data;
+  int socketfd;
+  struct ifreq *ifr;
+  struct ifconf conf;
+  char addrbuf[1024];
+  uint32_t ip, netmask;
+  bool foundloopback = false;
+  data = gc(malloc((n = 4096)));
+  ASSERT_NE(-1, (socketfd = socket(AF_INET, SOCK_DGRAM, 0)));
+  conf.ifc_buf = data;
+  conf.ifc_len = n;
+  ASSERT_NE(-1, ioctl(socketfd, SIOCGIFCONF, &conf));
+  for (ifr = (struct ifreq *)data; (char *)ifr < data + conf.ifc_len; ++ifr) {
+    if (ifr->ifr_addr.sa_family != AF_INET) continue;
+    ip = ntohl(((struct sockaddr_in *)&ifr->ifr_addr)->sin_addr.s_addr);
+    EXPECT_NE(-1, ioctl(socketfd, SIOCGIFNETMASK, ifr));
+    netmask = ntohl(((struct sockaddr_in *)&ifr->ifr_addr)->sin_addr.s_addr);
+#if 0
+    fprintf(stderr,
+            "%s %x %d\n"
+            "  ip      %hhu.%hhu.%hhu.%hhu\n"
+            "  netmask %hhu.%hhu.%hhu.%hhu\n"
+            "\n",
+            ifr->ifr_name, ip, ifr->ifr_addr.sa_family, ip >> 24, ip >> 16,
+            ip >> 8, ip, netmask >> 24, netmask >> 16, netmask >> 8, netmask);
+#endif
+    if (ip == 0x7f000001) {
+      foundloopback = true;
+      EXPECT_EQ(0xFF000000, netmask);
     }
   }
-  return 0;
+  EXPECT_TRUE(foundloopback);
+  ASSERT_NE(-1, close(socketfd));
 }

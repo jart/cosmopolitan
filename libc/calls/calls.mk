@@ -83,6 +83,12 @@ o/$(MODE)/libc/calls/mkntenvblock.o:			\
 		OVERRIDE_CPPFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED
 
+o/$(MODE)/libc/calls/ioctl-siocgifconf.o		\
+o/$(MODE)/libc/calls/ioctl-siocgifconf-nt.o:		\
+		OVERRIDE_COPTS +=			\
+			-ffunction-sections		\
+			-fdata-sections
+
 LIBC_CALLS_LIBS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)))
 LIBC_CALLS_SRCS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)_SRCS))
 LIBC_CALLS_HDRS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)_HDRS))
