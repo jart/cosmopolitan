@@ -93,7 +93,6 @@ static int ioctl_siocgifconf_sysv(int fd, struct ifconf *ifc) {
  * requires adjustment between Linux and XNU
  */
 static int ioctl_siocgifaddr_sysv(int fd, uint64_t op, struct ifreq *ifr) {
-  if (IsBsd()) sockaddr2bsd(&ifr->ifr_addr);
   if (sys_ioctl(fd, op, ifr) == -1) return -1;
   if (IsBsd()) sockaddr2linux(&ifr->ifr_addr);
   return 0;
@@ -141,11 +140,11 @@ int ioctl_siocgifdstaddr(int fd, void *ifr) {
     return ioctl_siocgifaddr_sysv(fd, SIOCGIFDSTADDR, (struct ifreq *)ifr);
   } else {
     return enotsup();
-    /* Not supported - TODO: Find out how to retrieve the destination
+    /* Not supported - Unknown how to find out how to retrieve the destination
      * address of a PPP from the interface list returned by the
      * GetAdaptersAddresses function
      *
-    return ioctl_siocgifbrdaddr_nt(fd, ifc);
+    return ioctl_siocgifdstaddr_nt(fd, ifc);
      */
   }
 }
