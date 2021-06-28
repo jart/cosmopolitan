@@ -21,11 +21,16 @@ TEST_NET_HTTP_CHECKS =						\
 
 TEST_NET_HTTP_DIRECTDEPS =					\
 	NET_HTTP						\
+	LIBC_LOG						\
 	LIBC_TESTLIB						\
 	THIRD_PARTY_MBEDTLS
 
 TEST_NET_HTTP_DEPS :=						\
 	$(call uniq,$(foreach x,$(TEST_NET_HTTP_DIRECTDEPS),$($(x))))
+
+o/$(MODE)/test/net/http/joyent_test.o:				\
+		OVERRIDE_CPPFLAGS +=				\
+			-DSTACK_FRAME_UNLIMITED
 
 o/$(MODE)/test/net/http/http.pkg:				\
 		$(TEST_NET_HTTP_OBJS)				\

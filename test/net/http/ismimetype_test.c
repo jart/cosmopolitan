@@ -16,28 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "net/http/ip.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/testlib.h"
+#include "net/http/http.h"
 
-/**
- * Returns true if IPv4 address is Globally Reachable.
- *
- * We intentionally omit TEST-NET here which can be used to simulate
- * public Internet traffic using non-Internet IPs.
- *
- * @return true 92.4499% of the time
- * @see IANA IPv4 Special-Purpose Address Registry
- */
-bool IsPublicIp(uint32_t x) {
-  return !((x & 0xffffffff) == 0x00000000 /* 0.0.0.0/32         */ ||
-           (x & 0xff000000) == 0x00000000 /* 0.0.0.0/8          */ ||
-           (x & 0xff000000) == 0x0a000000 /* 10.0.0.0/8         */ ||
-           (x & 0xff000000) == 0x7f000000 /* 127.0.0.0/8        */ ||
-           (x & 0xfff00000) == 0xac100000 /* 172.16.0.0/12      */ ||
-           (x & 0xffffff00) == 0xc0000000 /* 192.0.0.0/24       */ ||
-           (x & 0xffff0000) == 0xc0a80000 /* 192.168.0.0/16     */ ||
-           (x & 0xffff0000) == 0xa9fe0000 /* 169.254.0.0/16     */ ||
-           (x & 0xffc00000) == 0x64400000 /* 100.64.0.0/10      */ ||
-           (x & 0xfffe0000) == 0xc6120000 /* 198.18.0.0/15      */ ||
-           (x & 0xf0000000) == 0xf0000000 /* 240.0.0.0/4        */ ||
-           (x & 0xffffffff) == 0xffffffff /* 255.255.255.255/32 */);
+TEST(IsMimeType, test) {
+  ASSERT_TRUE(IsMimeType("text/plain", -1, "text/plain"));
+  ASSERT_TRUE(IsMimeType("TEXT/PLAIN", -1, "text/plain"));
+  ASSERT_TRUE(IsMimeType("TEXT/PLAIN ", -1, "text/plain"));
+  ASSERT_TRUE(IsMimeType("text/plain; charset=utf-8", -1, "text/plain"));
+  ASSERT_FALSE(IsMimeType("TEXT/PLAI ", -1, "text/plain"));
+  ASSERT_FALSE(IsMimeType("", -1, "text/plain"));
+}
+
+BENCH(IsMimeType, bench) {
+  EZBENCH2("IsMimeType", donothing,
+           IsMimeType("text/plain; charset=utf-8", -1, "text/plain"));
 }

@@ -552,7 +552,7 @@ static void UnmapLater(int f, void *p, size_t n) {
 }
 
 static void CollectGarbage(void) {
-  DestroyHttpRequest(&msg);
+  DestroyHttpMessage(&msg);
   while (freelist.n) {
     free(freelist.p[--freelist.n]);
   }
@@ -3058,8 +3058,8 @@ static void GetDosLocalTime(int64_t utcunixts, uint16_t *out_time,
 static bool IsUtf8(const void *data, size_t size) {
   const unsigned char *p, *pe;
   for (p = data, pe = p + size; p + 2 <= pe; ++p) {
-    if (*p >= 0300) {
-      if (*p >= 0200 && *p < 0300) {
+    if (p[0] >= 0300) {
+      if (p[1] >= 0200 && p[1] < 0300) {
         return true;
       } else {
         return false;
@@ -5236,7 +5236,7 @@ static bool HandleMessage(void) {
   struct iovec iov[4];
   long actualcontentlength;
   g_syscount = 0;
-  if ((rc = ParseHttpRequest(&msg, inbuf.p, amtread)) != -1) {
+  if ((rc = ParseHttpMessage(&msg, inbuf.p, amtread)) != -1) {
     if (!rc) return false;
     hdrsize = rc;
     if (logmessages) LogMessage("received", inbuf.p, hdrsize);
@@ -5317,7 +5317,7 @@ static void InitRequest(void) {
   outbuf.n = 0;
   luaheaderp = 0;
   contentlength = 0;
-  InitHttpRequest(&msg);
+  InitHttpMessage(&msg, kHttpRequest);
 }
 
 static void HandleMessages(void) {

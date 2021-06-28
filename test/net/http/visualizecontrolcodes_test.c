@@ -24,11 +24,14 @@
 #include "net/http/escape.h"
 
 TEST(VisualizeControlCodes, test) {
+  size_t n;
   EXPECT_STREQ("hello", gc(VisualizeControlCodes("hello", -1, 0)));
   EXPECT_STREQ("hello\r\n", gc(VisualizeControlCodes("hello\r\n", -1, 0)));
   EXPECT_STREQ("hello␁␂␡", gc(VisualizeControlCodes("hello\1\2\177", -1, 0)));
   EXPECT_STREQ("hello\\u0085",
                gc(VisualizeControlCodes("hello\302\205", -1, 0)));
+  EXPECT_STREQ("hi", gc(VisualizeControlCodes("hi", -1, &n)));
+  EXPECT_EQ(2, n);
 }
 
 TEST(VisualizeControlCodes, testOom_returnsNullAndSetsSizeToZero) {

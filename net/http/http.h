@@ -2,6 +2,9 @@
 #define COSMOPOLITAN_LIBC_HTTP_HTTP_H_
 #include "libc/time/struct/tm.h"
 
+#define kHttpRequest  0
+#define kHttpResponse 1
+
 #define kHttpGet     1
 #define kHttpHead    2
 #define kHttpPost    3
@@ -94,7 +97,15 @@
 #define kHttpWarning                       71
 #define kHttpWwwAuthenticate               72
 #define kHttpVia                           73
-#define kHttpHeadersMax                    74
+#define kHttpStrictTransportSecurity       74
+#define kHttpXFrameOptions                 75
+#define kHttpXContentTypeOptions           76
+#define kHttpAltSvc                        77
+#define kHttpReferrerPolicy                78
+#define kHttpXXssProtection                79
+#define kHttpAcceptRanges                  80
+#define kHttpSetCookie                     81
+#define kHttpHeadersMax                    82
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -116,6 +127,7 @@ struct HttpHeaders {
 struct HttpMessage {
   int i, a, status;
   unsigned char t;
+  unsigned char type;
   unsigned char method;
   unsigned char version;
   struct HttpSlice k;
@@ -135,12 +147,9 @@ const char *GetHttpReason(int);
 const char *GetHttpHeaderName(int);
 int GetHttpHeader(const char *, size_t);
 int GetHttpMethod(const char *, size_t);
-void InitHttpRequest(struct HttpMessage *);
-void DestroyHttpRequest(struct HttpMessage *);
-int ParseHttpRequest(struct HttpMessage *, const char *, size_t);
-void InitHttpResponse(struct HttpMessage *);
-void DestroyHttpResponse(struct HttpMessage *);
-int ParseHttpResponse(struct HttpMessage *, const char *, size_t);
+void InitHttpMessage(struct HttpMessage *, int);
+void DestroyHttpMessage(struct HttpMessage *);
+int ParseHttpMessage(struct HttpMessage *, const char *, size_t);
 bool HeaderHas(struct HttpMessage *, const char *, int, const char *, size_t);
 int64_t ParseContentLength(const char *, size_t);
 char *FormatHttpDateTime(char[hasatleast 30], struct tm *);

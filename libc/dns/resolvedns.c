@@ -27,6 +27,7 @@
 #include "libc/rand/rand.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ipproto.h"
@@ -49,12 +50,14 @@
  */
 int ResolveDns(const struct ResolvConf *resolvconf, int af, const char *name,
                struct sockaddr *addr, uint32_t addrsize) {
+  int32_t ttl;
   int rc, fd, n;
   struct DnsQuestion q;
   struct DnsHeader h, h2;
   struct sockaddr_in *a4;
   uint8_t *p, *pe, msg[512];
   uint16_t rtype, rclass, rdlength;
+  if (addrsize < kMinSockaddr4Size) return einval();
   if (af != AF_INET && af != AF_UNSPEC) return eafnosupport();
   if (!resolvconf->nameservers.i) return 0;
   memset(&h, 0, sizeof(h));
@@ -75,38 +78,31 @@ int ResolveDns(const struct ResolvConf *resolvconf, int af, const char *name,
     DeserializeDnsHeader(&h2, msg);
     if (h2.id == h.id) {
       rc = 0;
-      if (h2.ancount) {
-        p = msg + 12;
-        pe = msg + n;
-        while (p < pe && h2.qdcount) {
-          p += strnlen((char *)p, pe - p) + 1 + 4;
-          h2.qdcount--;
+      p = msg + 12;
+      pe = msg + n;
+      while (p < pe && h2.qdcount--) {
+        p += strnlen((char *)p, pe - p) + 1 + 4;
+      }
+      while (p < pe && h2.ancount--) {
+        if ((p[0] & 0xc0) == 0xc0) { /* name pointer */
+          p += 2;
+        } else {
+          p += strnlen((char *)p, pe - p) + 1;
         }
-        if (p + 1 < pe) {
-          if ((p[0] & 0b11000000) == 0b11000000) { /* name pointer */
-            p += 2;
-          } else {
-            p += strnlen((char *)p, pe - p) + 1;
+        if (p + 10 <= pe) {
+          rtype = READ16BE(p);
+          rclass = READ16BE(p + 2);
+          ttl = READ32BE(p + 4);
+          rdlength = READ16BE(p + 8);
+          if (p + 10 + rdlength <= pe && rdlength == 4 &&
+              rclass == DNS_CLASS_IN && rtype == DNS_TYPE_A) {
+            rc = 1;
+            a4 = (struct sockaddr_in *)addr;
+            a4->sin_family = AF_INET;
+            memcpy(&a4->sin_addr.s_addr, p + 10, 4);
+            break;
           }
-          if (p + 2 + 2 + 4 + 2 < pe) {
-            rtype = READ16BE(p), p += 2;
-            rclass = READ16BE(p), p += 2;
-            /* ttl */ p += 4;
-            rdlength = READ16BE(p), p += 2;
-            if (p + rdlength <= pe && rdlength == 4 &&
-                (rtype == DNS_TYPE_A && rclass == DNS_CLASS_IN)) {
-              rc = 1;
-              if (addrsize) {
-                if (addrsize >= kMinSockaddr4Size) {
-                  a4 = (struct sockaddr_in *)addr;
-                  a4->sin_family = AF_INET;
-                  memcpy(&a4->sin_addr.s_addr, p, 4);
-                } else {
-                  rc = einval();
-                }
-              }
-            }
-          }
+          p += 10 + rdlength;
         }
       }
     }

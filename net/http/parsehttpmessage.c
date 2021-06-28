@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
 #include "libc/alg/arraylist.internal.h"
+#include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
@@ -30,19 +31,34 @@
 
 #define LIMIT (SHRT_MAX - 2)
 
-enum { START, METHOD, URI, VERSION, HKEY, HSEP, HVAL, CR1, LF1, LF2 };
+enum HttpMessageState {
+  START,
+  METHOD,
+  URI,
+  VERSION,
+  STATUS,
+  MESSAGE,
+  HKEY,
+  HSEP,
+  HVAL,
+  CR1,
+  LF1,
+  LF2,
+};
 
 /**
- * Initializes HTTP request parser.
+ * Initializes HTTP message parser.
  */
-void InitHttpRequest(struct HttpMessage *r) {
+void InitHttpMessage(struct HttpMessage *r, int type) {
+  assert(type == kHttpRequest || type == kHttpResponse);
   memset(r, 0, sizeof(*r));
+  r->type = type;
 }
 
 /**
- * Destroys HTTP request parser.
+ * Destroys HTTP message parser.
  */
-void DestroyHttpRequest(struct HttpMessage *r) {
+void DestroyHttpMessage(struct HttpMessage *r) {
   if (r->xheaders.p) {
     free(r->xheaders.p);
     r->xheaders.p = NULL;
@@ -51,7 +67,7 @@ void DestroyHttpRequest(struct HttpMessage *r) {
 }
 
 /**
- * Parses HTTP request.
+ * Parses HTTP request or response.
  *
  * This parser is responsible for determining the length of a message
  * and slicing the strings inside it. Performance is attained using
@@ -83,7 +99,7 @@ void DestroyHttpRequest(struct HttpMessage *r) {
  * @see HTTP/1.1 RFC2616 RFC2068
  * @see HTTP/1.0 RFC1945
  */
-int ParseHttpRequest(struct HttpMessage *r, const char *p, size_t n) {
+int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
   int c, h, i;
   struct HttpHeader *x;
   for (n = MIN(n, LIMIT); r->i < n; ++r->i) {
@@ -92,7 +108,7 @@ int ParseHttpRequest(struct HttpMessage *r, const char *p, size_t n) {
       case START:
         if (c == '\r' || c == '\n') break; /* RFC7230 § 3.5 */
         if (!kHttpToken[c]) return ebadmsg();
-        r->t = METHOD;
+        r->t = r->type == kHttpRequest ? METHOD : VERSION;
         r->a = r->i;
         break;
       case METHOD:
@@ -133,15 +149,55 @@ int ParseHttpRequest(struct HttpMessage *r, const char *p, size_t n) {
         }
         break;
       case VERSION:
-        if (c == '\r' || c == '\n') {
+        if (c == ' ' || c == '\r' || c == '\n') {
           if (r->i - r->a == 8 &&
               (READ64BE(p + r->a) & 0xFFFFFFFFFF00FF00) == 0x485454502F002E00 &&
               isdigit(p[r->a + 5]) && isdigit(p[r->a + 7])) {
             r->version = (p[r->a + 5] - '0') * 10 + (p[r->a + 7] - '0');
-            r->t = c == '\r' ? CR1 : LF1;
+            if (r->type == kHttpRequest) {
+              r->t = c == '\r' ? CR1 : LF1;
+            } else {
+              r->t = STATUS;
+            }
           } else {
             return ebadmsg();
           }
+        }
+        break;
+      case STATUS:
+        for (;;) {
+          if (c == ' ' || c == '\r' || c == '\n') {
+            if (r->status < 100) return ebadmsg();
+            if (c == ' ') {
+              r->a = r->i + 1;
+              r->t = MESSAGE;
+            } else {
+              r->t = c == '\r' ? CR1 : LF1;
+            }
+            break;
+          } else if ('0' <= c && c <= '9') {
+            r->status *= 10;
+            r->status += c - '0';
+            if (r->status > 999) return ebadmsg();
+          } else {
+            return ebadmsg();
+          }
+          if (++r->i == n) break;
+          c = p[r->i] & 0xff;
+        }
+        break;
+      case MESSAGE:
+        for (;;) {
+          if (c == '\r' || c == '\n') {
+            r->message.a = r->a;
+            r->message.b = r->i;
+            r->t = c == '\r' ? CR1 : LF1;
+            break;
+          } else if (c < 0x20 || (0x7F <= c && c < 0xA0)) {
+            return ebadmsg();
+          }
+          if (++r->i == n) break;
+          c = p[r->i] & 0xff;
         }
         break;
       case CR1:

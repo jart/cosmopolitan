@@ -23,8 +23,8 @@
 /**
  * Returns true if standard header has substring.
  *
- * @param m is message parsed by ParseHttpRequest
- * @param b is buffer that ParseHttpRequest parsed
+ * @param m is message parsed by ParseHttpMessage
+ * @param b is buffer that ParseHttpMessage parsed
  * @param h is known header, e.g. kHttpAcceptEncoding
  * @param s should not contain comma
  * @param n is byte length of s where -1 implies strlen

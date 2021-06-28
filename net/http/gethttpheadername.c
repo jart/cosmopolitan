@@ -168,6 +168,22 @@ const char *GetHttpHeaderName(int h) {
       return "WWW-Authenticate";
     case kHttpVia:
       return "Via";
+    case kHttpStrictTransportSecurity:
+      return "Strict-Transport-Security";
+    case kHttpXFrameOptions:
+      return "X-Frame-Options";
+    case kHttpXContentTypeOptions:
+      return "X-Content-Type-Options";
+    case kHttpAltSvc:
+      return "Alt-Svc";
+    case kHttpReferrerPolicy:
+      return "Referrer-Policy";
+    case kHttpXXssProtection:
+      return "X-XSS-Protection";
+    case kHttpAcceptRanges:
+      return "Accept-Ranges";
+    case kHttpSetCookie:
+      return "Set-Cookie";
     default:
       return NULL;
   }
