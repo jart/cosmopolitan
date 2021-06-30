@@ -125,11 +125,11 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
 }
 
 static int PrintBacktrace(int fd, const struct StackFrame *bp) {
-  /* if (!IsTiny()) { */
-  if (PrintBacktraceUsingAddr2line(fd, bp) != -1) {
-    return 0;
+  if (!IsTiny()) {
+    if (PrintBacktraceUsingAddr2line(fd, bp) != -1) {
+      return 0;
+    }
   }
-  /* } */
   return PrintBacktraceUsingSymbols(fd, bp, GetSymbolTable());
 }
 

@@ -76,7 +76,6 @@ void lookup(const char *name) {
 int main(int argc, char *argv[]) {
   int i;
   showcrashreports();
-  lookup("time-a.timefreq.bldrdoc.gov");
-  /* for (i = 1; i < argc; ++i) lookup(argv[i]); */
+  for (i = 1; i < argc; ++i) lookup(argv[i]);
   return 0;
 }

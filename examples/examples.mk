@@ -86,7 +86,6 @@ o/$(MODE)/examples/examples.pkg:				\
 		$(EXAMPLES_OBJS)				\
 		$(foreach x,$(EXAMPLES_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/examples/zodiac.o					\
 o/$(MODE)/examples/unbourne.o:					\
 		OVERRIDE_CPPFLAGS +=				\
 			-DSTACK_FRAME_UNLIMITED
