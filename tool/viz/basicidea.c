@@ -1,196 +1,106 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+/*bin/echo  ' -*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;coding:utf-8 -*-┤
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
-│                                                                              │
-│ Permission to use, copy, modify, and/or distribute this software for         │
-│ any purpose with or without fee is hereby granted, provided that the         │
-│ above copyright notice and this permission notice appear in all copies.      │
-│                                                                              │
-│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
-│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
-│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
-│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
-│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
-│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
-│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
-│ PERFORMANCE OF THIS SOFTWARE.                                                │
-╚─────────────────────────────────────────────────────────────────────────────*/
-#include "dsp/core/core.h"
-#include "libc/bits/safemacros.internal.h"
+│ To the extent possible under law, Justine Tunney has waived                  │
+│ all copyright and related or neighboring rights to this file,                │
+│ as it is written in the following disclaimers:                               │
+│   • http://unlicense.org/                                                    │
+│   • http://creativecommons.org/publicdomain/zero/1.0/                        │
+╚────────────────────────────────────────────────────────────────────'>/dev/null
+  if ! [ "${0%.*}.exe" -nt "$0" ]; then
+    cc -O -o "${0%.*}.exe" "$0" || exit
+  fi
+  exec "${0%.*}.exe" "$@"
+  exit
+
+OVERVIEW
+
+  Simple Terminal Image Printer
+
+AUTHOR
+
+  Justine Tunney <jtunney@gmail.com>
+
+DESCRIPTION
+
+  This program demonstrates a straightforward technique for displaying
+  PNG/GIF/JPG/etc. files from the command line. This program supports
+  xterm256 and 24-bit color w/ UNICODE half blocks. For example:
+
+    apt install build-essential imagemagick
+    ./printimage.c lemur.png
+
+NOTES
+
+  More advanced techniques exist for (1) gaining finer detail, as well
+  as (2) reducing the number of bytes emitted; this program is here to
+  get you started. */
+
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
-#include "libc/calls/struct/winsize.h"
-#include "libc/dce.h"
 #include "libc/fmt/fmt.h"
-#include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/macros.internal.h"
-#include "libc/math.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/fileno.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/termios.h"
-#include "libc/x/x.h"
+#include "libc/unicode/locale.h"
 
-#define SQR(X)     ((X) * (X))
-#define DIST(X, Y) ((X) - (Y))
+#define SQR(X)    ((X) * (X))
+#define UNCUBE(x) x < 48 ? 0 : x < 115 ? 1 : (x - 35) / 40
+#define ORDIE(X)                   \
+  do {                             \
+    if (!(X)) perror(#X), exit(1); \
+  } while (0)
 
 static int want24bit_;
 
-const int kXtermCube[] = {0, 0137, 0207, 0257, 0327, 0377};
-
-static int rgbdist(int a, int b, int c, int x, int y, int z) {
-  return SQR(DIST(a, x)) + SQR(DIST(b, y)) + SQR(DIST(c, z));
-}
-
-static int uncube(int x) {
-  return x < 48 ? 0 : x < 115 ? 1 : (x - 35) / 40;
-}
-
-static int DivideIntRound(int x, int y) {
-  return (x + y / 2) / y;
-}
-
-static int XtermQuantizeLuma(int Y) {
-  return DivideIntRound(Y - 8, 10);
-}
-
-static int XtermDequantizeLuma(int qY) {
-  if (0 < qY && qY < 24) {
-    return (qY * 10) + 8;
-  } else if (qY > 0) {
-    return 255;
-  } else {
-    return 0;
-  }
-}
-
-static int XtermEncodeLuma(int qY) {
-  if (0 < qY && qY < 24) {
-    return qY + 232;
-  } else if (qY > 0) {
-    return 231;
-  } else {
-    return 16;
-  }
-}
-
-static int XtermQuantizeChroma(int c) {
-  return DivideIntRound(c - 55, 40);
-}
-
-static int XtermDequantizeChroma(int qc) {
-  if (0 < qc && qc < 6) {
-    return (qc * 40) + 55;
-  } else if (qc > 0) {
-    return 255;
-  } else {
-    return 0;
-  }
-}
-
-static int XtermEncodeChromaComponent(int qC) {
-  if (0 < qC && qC < 6) {
-    return qC;
-  } else if (qC > 0) {
-    return 5;
-  } else {
-    return 0;
-  }
-}
-
-static int XtermEncodeChroma(int qR, int qG, int qB) {
-  int xt;
-  xt = 16;
-  xt += XtermEncodeChromaComponent(qR) * 6 * 6;
-  xt += XtermEncodeChromaComponent(qG) * 6;
-  xt += XtermEncodeChromaComponent(qB) * 1;
-  return xt;
-}
-
 /**
- * Quantizes 24-bit sRGB to xterm256 code range [16,256).
+ * Quantizes 24-bit RGB to xterm256 code range [16,256).
  */
-static int rgb2xterm256(unsigned char R, unsigned char G, unsigned char B) {
-  double y, r, g, b, yr, yg, yb, ry, gy, by, gamma;
-  int Y, qY, cY, qRY, qGY, qBY, qR, qG, qB, cR, cG, cB, xt;
-  gamma = 2.4;
-  yr = 871024 / 4096299.;
-  yg = 8788810 / 12288897.;
-  yb = 887015 / 12288897.;
-  r = rgb2linpc(R / 255., gamma);
-  g = rgb2linpc(G / 255., gamma);
-  b = rgb2linpc(B / 255., gamma);
-  y = yr * r + yg * g + yb * b;
-  ry = (r - y) / (1 - yr + yg + yb);
-  gy = (g - y) / (1 - yg + yr + yb);
-  by = (b - y) / (1 - yb + yg + yr);
-  Y = round(rgb2stdpc(y, gamma) * 255);
-  qRY = round(rgb2stdpc(ry, gamma) * 6 + 3);
-  qGY = round(rgb2stdpc(gy, gamma) * 6 + 3);
-  qBY = round(rgb2stdpc(by, gamma) * 6 + 3);
-  qY = XtermQuantizeLuma(Y);
-  qR = XtermQuantizeChroma(qRY);
-  qG = XtermQuantizeChroma(qGY);
-  qB = XtermQuantizeChroma(qBY);
-  cY = XtermDequantizeLuma(qY);
-  cR = XtermDequantizeChroma(qRY);
-  cG = XtermDequantizeChroma(qGY);
-  cB = XtermDequantizeChroma(qBY);
-#if 0
-  LOGF("RGB(%3d,%3d,%3d)   rgb(%f,%f,%f) y=%f", R, G, B, r, g, b, y);
-  LOGF("RGB(%3d,%3d,%3d) yΔrgb(%f,%f,%f) XCUBE(%d,%d,%d)", R, G, B, ry, gy, by,
-       qRY, qGY, qBY);
-  LOGF("RGB(%3d,%3d,%3d)  cRGB(%d,%d,%d) cY=%d qY=%d Y=%d", R, G, B, cR, cG, cB,
-       cY, qY, Y);
-#endif
-  if (rgbdist(cR, cG, cB, R, G, B) <= rgbdist(cY, cY, cY, R, G, B)) {
-    xt = XtermEncodeChroma(qR, qG, qB);
+int rgb2xterm256(int r, int g, int b) {
+  unsigned char cube[] = {0, 0137, 0207, 0257, 0327, 0377};
+  int av, ir, ig, ib, il, qr, qg, qb, ql;
+  av = r * .299 + g * .587 + b * .114 + .5;
+  ql = (il = av > 238 ? 23 : (av - 3) / 10) * 10 + 8;
+  qr = cube[(ir = UNCUBE(r))];
+  qg = cube[(ig = UNCUBE(g))];
+  qb = cube[(ib = UNCUBE(b))];
+  if (SQR(qr - r) + SQR(qg - g) + SQR(qb - b) <=
+      SQR(ql - r) + SQR(ql - g) + SQR(ql - b)) {
+    return ir * 36 + ig * 6 + ib + 020;
   } else {
-    xt = XtermEncodeLuma(qY);
+    return il + 0350;
   }
-  /* LOGF("xt=%d", xt); */
-  return xt;
 }
 
 /**
  * Prints raw packed 8-bit RGB data from memory.
  */
-static void PrintImage(long yn, long xn, unsigned char RGB[yn][xn][4]) {
-  long y, x;
+void PrintImage(int yn, int xn, unsigned char rgb[yn][xn][3]) {
+  unsigned y, x;
   for (y = 0; y < yn; y += 2) {
     if (y) printf("\r\n");
     for (x = 0; x < xn; ++x) {
       if (want24bit_) {
         printf("\033[48;2;%hhu;%hhu;%hhu;38;2;%hhu;%hhu;%hhum▄",
-               RGB[y + 0][x][0], RGB[y + 0][x][1], RGB[y + 0][x][2],
-               RGB[y + 1][x][0], RGB[y + 1][x][1], RGB[y + 1][x][2]);
+               rgb[y + 0][x][0], rgb[y + 0][x][1], rgb[y + 0][x][2],
+               rgb[y + 1][x][0], rgb[y + 1][x][1], rgb[y + 1][x][2]);
       } else {
         printf(
             "\033[48;5;%hhu;38;5;%hhum▄",
-            rgb2xterm256(RGB[y + 0][x][0], RGB[y + 0][x][1], RGB[y + 0][x][2]),
-            rgb2xterm256(RGB[y + 1][x][0], RGB[y + 1][x][1], RGB[y + 1][x][2]));
+            rgb2xterm256(rgb[y + 0][x][0], rgb[y + 0][x][1], rgb[y + 0][x][2]),
+            rgb2xterm256(rgb[y + 1][x][0], rgb[y + 1][x][1], rgb[y + 1][x][2]));
       }
     }
   }
-  if (IsWindows()) {
-    printf("\033[0m\r\n");
-  } else {
-    printf("\033[0m\r");
-  }
+  printf("\033[0m\r");
 }
 
 /**
  * Determines dimensions of teletypewriter.
  */
-static void GetTermSize(unsigned *out_rows, unsigned *out_cols) {
+void GetTermSize(int *out_rows, int *out_cols) {
   struct winsize ws;
   ws.ws_row = 20;
   ws.ws_col = 80;
@@ -200,65 +110,58 @@ static void GetTermSize(unsigned *out_rows, unsigned *out_cols) {
   *out_cols = ws.ws_col;
 }
 
-static void ReadAll(int fd, void *buf, size_t n) {
-  char *p;
+void ReadAll(int fd, char *p, size_t n) {
   ssize_t rc;
   size_t got;
-  p = buf;
   do {
-    CHECK_NE(-1, (rc = read(fd, p, n)));
+    ORDIE((rc = read(fd, p, n)) != -1);
     got = rc;
-    CHECK(!(!got && n));
+    if (!got && n) {
+      fprintf(stderr, "error: expected eof\n");
+      exit(EXIT_FAILURE);
+    }
     p += got;
     n -= got;
   } while (n);
 }
 
-static void LoadImageOrDie(const char *path, size_t size, long yn, long xn,
-                           unsigned char RGB[yn][xn][4]) {
-  int pid, ws, pipefds[2];
-  char *convert, dim[64], pathbuf[PATH_MAX];
-  if (isempty((convert = getenv("CONVERT"))) &&
-      !(IsWindows() && access((convert = "\\msys64\\mingw64\\bin\\convert.exe"),
-                              X_OK) != -1) &&
-      !(convert = commandv("convert", pathbuf))) {
-    fputs("'convert' command not found\r\n"
-          "please install imagemagick\r\n",
-          stderr);
-    exit(1);
+unsigned char *LoadImageOrDie(char *path, int yn, int xn) {
+  size_t size;
+  void *rgb;
+  char dim[10 + 1 + 10 + 1 + 1];
+  int pid, wstatus, readwrite[2];
+  sprintf(dim, "%ux%u" /* jfc */ "!", xn, yn);
+  pipe(readwrite);
+  if (!(pid = fork())) {
+    close(readwrite[0]);
+    dup2(readwrite[1], STDOUT_FILENO);
+    execvp("convert", /* apt install imagemagick */
+           (char *const[]){"convert", path, "-resize", dim, "-colorspace",
+                           "RGB", "-depth", "8", "rgb:-", NULL});
+    _Exit(EXIT_FAILURE);
   }
-  sprintf(dim, "%ux%u!", xn, yn);
-  CHECK_NE(-1, pipe2(pipefds, O_CLOEXEC));
-  if (!(pid = vfork())) {
-    dup2(pipefds[1], 1);
-    execv(convert,
-          (char *const[]){"convert", path, "-resize", dim, "-colorspace", "RGB",
-                          "-depth", "8", "rgba:-", NULL});
-    abort();
-  }
-  close(pipefds[1]);
-  ReadAll(pipefds[0], RGB, size);
-  close(pipefds[0]);
-  CHECK_NE(-1, waitpid(pid, &ws, 0));
-  CHECK(WIFEXITED(ws));
-  CHECK_EQ(0, WEXITSTATUS(ws));
+  close(readwrite[1]);
+  ORDIE((rgb = malloc((size = yn * xn * 3))));
+  ReadAll(readwrite[0], rgb, size);
+  ORDIE(close(readwrite[0]) != -1);
+  ORDIE(waitpid(pid, &wstatus, 0) != -1);
+  ORDIE(WEXITSTATUS(wstatus) == 0);
+  return rgb;
 }
 
 int main(int argc, char *argv[]) {
-  int i;
   void *rgb;
-  size_t size;
-  unsigned yn, xn;
+  int i, yn, xn;
+  setlocale(LC_ALL, "C.UTF-8");
   GetTermSize(&yn, &xn);
   yn *= 2;
-  size = yn * xn * 4;
-  CHECK_NOTNULL((rgb = valloc(size)));
   for (i = 1; i < argc; ++i) {
     if (strcmp(argv[i], "-t") == 0) {
       want24bit_ = 1;
     } else {
-      LoadImageOrDie(argv[i], size, yn, xn, rgb);
+      rgb = LoadImageOrDie(argv[i], yn, xn);
       PrintImage(yn, xn, rgb);
+      free(rgb);
     }
   }
   return 0;
