@@ -7,8 +7,9 @@ o/$(MODE)/test/libc/release/cosmopolitan.zip:			\
 		o/$(MODE)/libc/crt/crt.o			\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/ape/ape-no-modify-self.o		\
-		o/$(MODE)/cosmopolitan.a
-	@$(COMPILE) -AZIP -T$@ zip -qj $@ $^
+		o/$(MODE)/cosmopolitan.a			\
+		o/$(MODE)/host/third_party/infozip/zip.com
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/host/third_party/infozip/zip.com -qj $@ o/cosmopolitan.h o/$(MODE)/ape/ape.lds o/$(MODE)/libc/crt/crt.o o/$(MODE)/ape/ape.o o/$(MODE)/ape/ape-no-modify-self.o o/$(MODE)/cosmopolitan.a
 
 o/$(MODE)/test/libc/release/smoke.com:				\
 		o/$(MODE)/test/libc/release/smoke.com.dbg
