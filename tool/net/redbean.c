@@ -1689,7 +1689,7 @@ static void LoadCertificates(void) {
                " -addext extendedKeyUsage=serverAuth");
       VERBOSEF("could not find CA key signing key pair with"
                " -addext keyUsage=keyCertSign");
-      LOGFd("generating self-signed ssl certificates");
+      LOGF("generating self-signed ssl certificates");
     }
 #ifdef MBEDTLS_ECP_C
     ecp = GenerateEcpCertificate(ksk);
