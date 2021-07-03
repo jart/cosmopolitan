@@ -26,7 +26,37 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/ent.h"
+#include "libc/dns/servicestxt.h"
+#include "libc/mem/mem.h"
 
 struct servent *getservbyname(const char *name, const char *proto) {
-  return NULL;
+  static struct servent *ptr0, se0;
+  char *localproto = proto;
+  int p;
+
+  if (!ptr0) {
+    se0.s_name = NULL;
+    se0.s_aliases = (char **)malloc(sizeof(char *) * 1);
+    if (!se0.s_aliases) return NULL;
+    se0.s_aliases[0] = NULL;
+
+    se0.s_port = 0;
+    se0.s_proto = NULL;
+    ptr0 = &se0;
+  }
+
+  p = LookupServicesByName(name, &localproto);
+  if (p == -1) return NULL;
+
+  ptr0->s_port = p;
+  if (ptr0->s_name) free(ptr0->s_name);
+  ptr0->s_name = strdup(name);
+
+  if (ptr0->s_proto) free(ptr0->s_proto);
+  ptr0->s_proto = strdup(localproto);
+
+  // localproto got alloc'd during the lookup
+  if (!proto && localproto != proto) free(localproto);
+
+  return ptr0;
 }
