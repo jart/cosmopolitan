@@ -33,8 +33,9 @@ void PrintMemoryIntervals(int fd, const struct MemoryIntervals *mm) {
     }
     frames = mm->p[i].y + 1 - mm->p[i].x;
     maptally += frames;
-    (dprintf)(fd, "%s%3u%s0x%08x,0x%08x%s%,zd%s\r\n", "mm->p[", i, "]=={",
-              mm->p[i].x, mm->p[i].y, "}; /* ", frames, " */");
+    (dprintf)(fd, "%s%3u%s0x%08x,0x%08x,%ld,%d,%d%s%,zd%s\r\n", "mm->p[", i,
+              "]=={", mm->p[i].x, mm->p[i].y, mm->p[i].h, mm->p[i].prot,
+              mm->p[i].flags, "}; /* ", frames, " */");
   }
   (dprintf)(fd, "%s%,zd%s%,zd%s\r\n\r\n", "/* ", maptally, " frames mapped w/ ",
             gaptally, " frames gapped */");
