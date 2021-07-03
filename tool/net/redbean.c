@@ -998,7 +998,7 @@ static void ProgramCache(long x) {
 }
 
 static void SetDefaults(void) {
-  ProgramBrand(REDBEAN "/1.3");
+  ProgramBrand(REDBEAN "/1.4");
   __log_level = kLogInfo;
   maxpayloadsize = 64 * 1024;
   ProgramCache(-1);
