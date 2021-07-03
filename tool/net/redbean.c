@@ -149,6 +149,7 @@ STATIC_YOINK("usr/share/ssl/root/verisign.pem");
 
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define read(F, P, N)    readv(F, &(struct iovec){P, N}, 1)
+#define write(F, P, N)   writev(F, &(struct iovec){P, N}, 1)
 #define LockInc(P)       asm volatile("lock incq\t%0" : "=m"(*(P)))
 #define AppendCrlf(P)    mempcpy(P, "\r\n", 2)
 #define HasHeader(H)     (!!msg.headers[H].a)
@@ -362,13 +363,6 @@ static const char kCounterNames[] =
 #include "tool/net/counters.inc"
 #undef C
     ;
-
-static mbedtls_entropy_context ent = {
-    .source_count = 1,
-    .source = {{.f_source = mbedtls_hardware_poll,
-                .threshold = MBEDTLS_ENTROPY_MIN_HARDWARE,
-                .strong = MBEDTLS_ENTROPY_SOURCE_STRONG}},
-};
 
 typedef ssize_t (*reader_f)(int, void *, size_t);
 typedef ssize_t (*writer_f)(int, struct iovec *, int);
@@ -1399,8 +1393,6 @@ static bool TlsSetup(void) {
   inbuf.n -= amtread;
   inbuf.c = amtread;
   amtread = 0;
-  mbedtls_ssl_setup(&ssl, &conf);
-  mbedtls_ssl_set_bio(&ssl, &client, TlsSend, 0, TlsRecv);
   for (;;) {
     if (!(r = mbedtls_ssl_handshake(&ssl))) {
       LockInc(&shared->c.sslhandshakes);
@@ -1468,11 +1460,16 @@ static bool TlsSetup(void) {
   }
 }
 
+static int GetEntropy(void *c, unsigned char *p, size_t n) {
+  CHECK_EQ(n, getrandom(p, n, 0));
+  return 0;
+}
+
 static void InitializeRng(mbedtls_ctr_drbg_context *r) {
   volatile unsigned char b[64];
   mbedtls_ctr_drbg_init(r);
   CHECK(getrandom(b, 64, 0) == 64);
-  CHECK(!mbedtls_ctr_drbg_seed(r, mbedtls_entropy_func, &ent, b, 64));
+  CHECK(!mbedtls_ctr_drbg_seed(r, GetEntropy, 0, b, 64));
   mbedtls_platform_zeroize(b, 64);
 }
 
@@ -5452,7 +5449,6 @@ static void HandleConnection(size_t i) {
         case 0:
           meltdown = false;
           connectionclose = false;
-          ReseedRng(&rng, "child");
           if (funtrace && !IsTiny()) {
             ftrace_install();
           }
@@ -5696,6 +5692,8 @@ void RedBean(int argc, char *argv[]) {
   mbedtls_ssl_conf_dbg(&conf, TlsDebug, 0);
   LoadCertificates();
   mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &rng);
+  mbedtls_ssl_setup(&ssl, &conf);
+  mbedtls_ssl_set_bio(&ssl, &client, TlsSend, 0, TlsRecv);
 #endif
   if (launchbrowser) {
     LaunchBrowser(launchbrowser);

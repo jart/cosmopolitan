@@ -54,9 +54,9 @@ static const unsigned char base64_dec_map[128] =
 /*
  * Constant flow conditional assignment to unsigned char 
 */
-static void mbedtls_base64_cond_assign_uchar( unsigned char * dest,
-                                              const unsigned char * const src,
-                                              unsigned char condition )
+forceinline void mbedtls_base64_cond_assign_uchar( unsigned char * dest,
+                                                   const unsigned char * const src,
+                                                   unsigned char condition )
 {
     /* Generate bitmask from condition, mask will either be 0xFF or 0 */
     unsigned char mask = ( condition | -condition );
@@ -68,8 +68,8 @@ static void mbedtls_base64_cond_assign_uchar( unsigned char * dest,
 /*
  * Constant flow conditional assignment to uint_32
  */
-static void mbedtls_base64_cond_assign_uint32( uint32_t * dest, const uint32_t src,
-                                               uint32_t condition )
+forceinline void mbedtls_base64_cond_assign_uint32( uint32_t * dest, const uint32_t src,
+                                                    uint32_t condition )
 {
     /* Generate bitmask from condition, mask will either be 0xFFFFFFFF or 0 */
     uint32_t mask = ( condition | -condition );
@@ -81,7 +81,7 @@ static void mbedtls_base64_cond_assign_uint32( uint32_t * dest, const uint32_t s
 /*
  * Constant flow check for equality
  */
-static unsigned char mbedtls_base64_eq( size_t in_a, size_t in_b )
+forceinline unsigned char mbedtls_base64_eq( size_t in_a, size_t in_b )
 {
     size_t difference = in_a ^ in_b;
     difference |= -difference;

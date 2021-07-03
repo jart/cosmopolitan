@@ -529,8 +529,11 @@ STACK_SIZE	= _RSP      + _RSP_SIZE
 ## arg 3 : Num blocks
 ########################################################################
 .text
-sha256_transform_rorx:
 .align 32
+sha256_transform_rorx:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	pushq	%rbx
 	pushq	%r12
 	pushq	%r13
@@ -715,6 +718,7 @@ sha256_transform_rorx:
 	popq	%r13
 	popq	%r12
 	popq	%rbx
+	pop	%rbp
 	ret
 	.endfn	sha256_transform_rorx,globl
 

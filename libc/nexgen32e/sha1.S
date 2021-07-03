@@ -640,6 +640,9 @@ BSWAP_SHUFB_CTL:
 .text
 
 sha1_transform_avx2:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
 	push	%rbx
 	push	%r12
 	push	%r13
@@ -677,5 +680,6 @@ sha1_transform_avx2:
 	pop	%r13
 	pop	%r12
 	pop	%rbx
+	pop	%rbp
 	ret
 	.endfn	sha1_transform_avx2,globl
