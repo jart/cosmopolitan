@@ -26,44 +26,40 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/ent.h"
+#include "libc/dns/servicestxt.h"
 #include "libc/mem/mem.h"
-#include "libc/sysv/consts/af.h"
 
-struct hostent *gethostbyaddr(const void *s_addr, socklen_t len, int type) {
-  static struct hostent *ptr1, he1;
-  static char h_name[DNS_NAME_MAX+1];
-  static char* h_aliases[1];
-  static char* h_addr_list[2];
-  static char h_addr_list0[4];
+struct servent *getservbyname(const char *name, const char *proto) {
+  static struct servent *ptr0, se0;
+  char *localproto = proto;
+  int p;
 
-  struct sockaddr_in addr;
+  if (!ptr0) {
+    se0.s_name = NULL;
+    se0.s_aliases = (char **)malloc(sizeof(char *) * 1);
+    if (!se0.s_aliases) return NULL;
+    se0.s_aliases[0] = NULL;
 
-  if (!ptr1) {
-    he1.h_name = h_name;
-
-    he1.h_aliases = h_aliases;
-    he1.h_aliases[0] = NULL;
-
-    he1.h_addrtype = AF_INET;
-    he1.h_length = 4;
-    he1.h_addr_list = h_addr_list;
-
-    he1.h_addr_list[0] = h_addr_list0;
-    he1.h_addr_list[1] = NULL;
-
-    ptr1 = &he1;
+    se0.s_port = 0;
+    se0.s_proto = NULL;
+    ptr0 = &se0;
   }
 
-  if (type != AF_INET || len != sizeof(uint32_t)) return NULL;
-  addr.sin_family = AF_INET;
-  addr.sin_port = 0;
-  addr.sin_addr.s_addr = *(uint32_t *)(s_addr);
-
-  if (getnameinfo((struct sockaddr *)&addr, sizeof(addr), ptr1->h_name,
-                  DNS_NAME_MAX, NULL, 0, 0))
+  p = LookupServicesByName(name, &localproto);
+  if (p == -1) {
+    // localproto got alloc'd during the lookup?
+    if (!proto && localproto != proto) free(localproto);
     return NULL;
+  }
 
-  *((uint32_t *)ptr1->h_addr_list[0]) = (addr.sin_addr.s_addr);
+  ptr0->s_port = p;
+  if (ptr0->s_name) free(ptr0->s_name);
+  ptr0->s_name = strdup(name);
 
-  return ptr1;
+  if (ptr0->s_proto) free(ptr0->s_proto);
+  ptr0->s_proto = strdup(localproto);
+
+  if (!proto && localproto != proto) free(localproto);
+
+  return ptr0;
 }

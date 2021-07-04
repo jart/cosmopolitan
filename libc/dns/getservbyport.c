@@ -26,44 +26,38 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/ent.h"
-#include "libc/mem/mem.h"
-#include "libc/sysv/consts/af.h"
+#include "libc/dns/servicestxt.h"
 
-struct hostent *gethostbyaddr(const void *s_addr, socklen_t len, int type) {
-  static struct hostent *ptr1, he1;
-  static char h_name[DNS_NAME_MAX+1];
-  static char* h_aliases[1];
-  static char* h_addr_list[2];
-  static char h_addr_list0[4];
-
-  struct sockaddr_in addr;
+struct servent *getservbyport(int port, const char *proto) {
+  static struct servent *ptr1, se1;
+  char name[DNS_NAME_MAX];
+  char *localproto = proto;
 
   if (!ptr1) {
-    he1.h_name = h_name;
+    se1.s_name = NULL;
+    se1.s_aliases = (char **)malloc(sizeof(char *) * 1);
+    if (!se1.s_aliases) return NULL;
+    se1.s_aliases[0] = NULL;
 
-    he1.h_aliases = h_aliases;
-    he1.h_aliases[0] = NULL;
-
-    he1.h_addrtype = AF_INET;
-    he1.h_length = 4;
-    he1.h_addr_list = h_addr_list;
-
-    he1.h_addr_list[0] = h_addr_list0;
-    he1.h_addr_list[1] = NULL;
-
-    ptr1 = &he1;
+    se1.s_port = 0;
+    se1.s_proto = NULL;
+    ptr1 = &se1;
   }
 
-  if (type != AF_INET || len != sizeof(uint32_t)) return NULL;
-  addr.sin_family = AF_INET;
-  addr.sin_port = 0;
-  addr.sin_addr.s_addr = *(uint32_t *)(s_addr);
-
-  if (getnameinfo((struct sockaddr *)&addr, sizeof(addr), ptr1->h_name,
-                  DNS_NAME_MAX, NULL, 0, 0))
+  if (LookupServicesByPort(port, &localproto, name, sizeof(name)) == -1) {
+    // localproto got alloc'd during the lookup?
+    if (!proto && localproto != proto) free(localproto);
     return NULL;
+  }
 
-  *((uint32_t *)ptr1->h_addr_list[0]) = (addr.sin_addr.s_addr);
+  ptr1->s_port = port;
+  if (ptr1->s_name) free(ptr1->s_name);
+  ptr1->s_name = strdup(name);
+
+  if (ptr1->s_proto) free(ptr1->s_proto);
+  ptr1->s_proto = strdup(localproto);
+
+  if (!proto && localproto != proto) free(localproto);
 
   return ptr1;
 }

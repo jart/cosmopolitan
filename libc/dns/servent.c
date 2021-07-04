@@ -26,44 +26,13 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/ent.h"
-#include "libc/mem/mem.h"
-#include "libc/sysv/consts/af.h"
 
-struct hostent *gethostbyaddr(const void *s_addr, socklen_t len, int type) {
-  static struct hostent *ptr1, he1;
-  static char h_name[DNS_NAME_MAX+1];
-  static char* h_aliases[1];
-  static char* h_addr_list[2];
-  static char h_addr_list0[4];
+struct servent *getservent(void) {
+  return NULL;
+}
 
-  struct sockaddr_in addr;
+void setservent(int stayopen) {
+}
 
-  if (!ptr1) {
-    he1.h_name = h_name;
-
-    he1.h_aliases = h_aliases;
-    he1.h_aliases[0] = NULL;
-
-    he1.h_addrtype = AF_INET;
-    he1.h_length = 4;
-    he1.h_addr_list = h_addr_list;
-
-    he1.h_addr_list[0] = h_addr_list0;
-    he1.h_addr_list[1] = NULL;
-
-    ptr1 = &he1;
-  }
-
-  if (type != AF_INET || len != sizeof(uint32_t)) return NULL;
-  addr.sin_family = AF_INET;
-  addr.sin_port = 0;
-  addr.sin_addr.s_addr = *(uint32_t *)(s_addr);
-
-  if (getnameinfo((struct sockaddr *)&addr, sizeof(addr), ptr1->h_name,
-                  DNS_NAME_MAX, NULL, 0, 0))
-    return NULL;
-
-  *((uint32_t *)ptr1->h_addr_list[0]) = (addr.sin_addr.s_addr);
-
-  return ptr1;
+void endservent(void) {
 }

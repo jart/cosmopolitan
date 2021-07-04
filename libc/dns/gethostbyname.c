@@ -27,26 +27,28 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/ent.h"
 #include "libc/mem/mem.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 
 struct hostent *gethostbyname(const char *name) {
   static struct hostent *ptr0, he0;
+  static char h_name[DNS_NAME_MAX + 1];
+  static char *h_aliases[1];
+  static char *h_addr_list[2];
+  static char h_addr_list0[4];
   struct addrinfo *result = NULL;
 
   if (!ptr0) {
-    he0.h_name = NULL;
+    he0.h_name = h_name;
 
-    he0.h_aliases = (char **)malloc(sizeof(char *) * 1);
-    if (!he0.h_aliases) return NULL;
+    he0.h_aliases = h_aliases;
     he0.h_aliases[0] = NULL;
 
     he0.h_addrtype = AF_INET;
     he0.h_length = 4;
-    he0.h_addr_list = (char **)malloc(sizeof(char *) * 2);
-    if (!he0.h_addr_list) return NULL;
+    he0.h_addr_list = h_addr_list;
 
-    he0.h_addr_list[0] = (char *)malloc(sizeof(uint32_t));
-    if (!he0.h_addr_list[0]) return NULL;
+    he0.h_addr_list[0] = h_addr_list0;
     he0.h_addr_list[1] = NULL;
 
     ptr0 = &he0;
@@ -54,12 +56,12 @@ struct hostent *gethostbyname(const char *name) {
 
   if (getaddrinfo(name, NULL, NULL, &result) || result == NULL) return NULL;
 
-  if (ptr0->h_name) free(ptr0->h_name);
-  if (result->ai_canonname) {
-    ptr0->h_name = strdup(result->ai_canonname);
-  } else {
-    ptr0->h_name = strdup(name);
-  }
+  /* if getaddrinfo is successful, result->ai_canonname is non-NULL,
+   * (see newaddrinfo) but the string can still be empty */
+  if (result->ai_canonname[0])
+    memccpy(ptr0->h_name, result->ai_canonname, '\0', DNS_NAME_MAX);
+  else
+    memccpy(ptr0->h_name, name, '\0', DNS_NAME_MAX);
 
   *((uint32_t *)ptr0->h_addr_list[0]) = (result->ai_addr4->sin_addr.s_addr);
   /* TODO: if result has ai_next, fit multiple entries for h_addr_list */
