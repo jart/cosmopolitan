@@ -44,8 +44,11 @@ struct servent *getservbyport(int port, const char *proto) {
     ptr1 = &se1;
   }
 
-  if (LookupServicesByPort(port, &localproto, name, sizeof(name)) == -1)
+  if (LookupServicesByPort(port, &localproto, name, sizeof(name)) == -1) {
+    // localproto got alloc'd during the lookup?
+    if (!proto && localproto != proto) free(localproto);
     return NULL;
+  }
 
   ptr1->s_port = port;
   if (ptr1->s_name) free(ptr1->s_name);
@@ -54,7 +57,6 @@ struct servent *getservbyport(int port, const char *proto) {
   if (ptr1->s_proto) free(ptr1->s_proto);
   ptr1->s_proto = strdup(localproto);
 
-  // localproto got alloc'd during the lookup
   if (!proto && localproto != proto) free(localproto);
 
   return ptr1;

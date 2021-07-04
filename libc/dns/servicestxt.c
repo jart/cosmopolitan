@@ -75,7 +75,7 @@ int LookupServicesByPort(const int servport, char **servproto, char *buf,
                          size_t bufsize) {
   FILE *f;
   char *line;
-  char pathbuf[512];
+  char pathbuf[PATH_MAX];
   const char *path;
   size_t linesize;
   int count, found;
@@ -138,7 +138,7 @@ int LookupServicesByPort(const int servport, char **servproto, char *buf,
 int LookupServicesByName(const char *servname, char **servproto) {
   FILE *f;
   char *line;
-  char pathbuf[512];
+  char pathbuf[PATH_MAX];
   const char *path;
   size_t linesize;
   int count, found, result;
