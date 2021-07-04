@@ -55,7 +55,7 @@ struct hostent *gethostbyname(const char *name) {
   if (getaddrinfo(name, NULL, NULL, &result) || result == NULL) return NULL;
 
   if (ptr0->h_name) free(ptr0->h_name);
-  if (result->ai_canonname) {
+  if (result->ai_canonname && strlen(result->ai_canonname) > 0) {
     ptr0->h_name = strdup(result->ai_canonname);
   } else {
     ptr0->h_name = strdup(name);
