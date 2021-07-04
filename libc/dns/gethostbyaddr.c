@@ -31,23 +31,24 @@
 
 struct hostent *gethostbyaddr(const void *s_addr, socklen_t len, int type) {
   static struct hostent *ptr1, he1;
+  static char h_name[DNS_NAME_MAX+1];
+  static char* h_aliases[1];
+  static char* h_addr_list[2];
+  static char h_addr_list0[4];
+
   struct sockaddr_in addr;
-  char name[DNS_NAME_MAX + 1];
 
   if (!ptr1) {
-    he1.h_name = NULL;
+    he1.h_name = h_name;
 
-    he1.h_aliases = (char **)malloc(sizeof(char *) * 1);
-    if (!he1.h_aliases) return NULL;
+    he1.h_aliases = h_aliases;
     he1.h_aliases[0] = NULL;
 
     he1.h_addrtype = AF_INET;
     he1.h_length = 4;
-    he1.h_addr_list = (char **)malloc(sizeof(char *) * 2);
-    if (!he1.h_addr_list) return NULL;
+    he1.h_addr_list = h_addr_list;
 
-    he1.h_addr_list[0] = (char *)malloc(sizeof(uint32_t));
-    if (!he1.h_addr_list[0]) return NULL;
+    he1.h_addr_list[0] = h_addr_list0;
     he1.h_addr_list[1] = NULL;
 
     ptr1 = &he1;
@@ -58,12 +59,10 @@ struct hostent *gethostbyaddr(const void *s_addr, socklen_t len, int type) {
   addr.sin_port = 0;
   addr.sin_addr.s_addr = *(uint32_t *)(s_addr);
 
-  if (getnameinfo((struct sockaddr *)&addr, sizeof(addr), name, sizeof(name),
-                  NULL, 0, 0))
+  if (getnameinfo((struct sockaddr *)&addr, sizeof(addr), ptr1->h_name,
+                  DNS_NAME_MAX, NULL, 0, 0))
     return NULL;
 
-  if (ptr1->h_name) free(ptr1->h_name);
-  ptr1->h_name = strdup(name);
   *((uint32_t *)ptr1->h_addr_list[0]) = (addr.sin_addr.s_addr);
 
   return ptr1;
