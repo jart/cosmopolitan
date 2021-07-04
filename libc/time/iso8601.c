@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,34 +16,39 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/dce.h"
+#include "libc/time/struct/tm.h"
+#include "libc/time/time.h"
 
 /**
- * Creates new process.
- *
- * @return 0 to child, child pid to parent, or -1 on error
- * @asyncsignalsafe
+ * Converts timestamp to ISO-8601 formatted string.
  */
-int fork(void) {
-  axdx_t ad;
-  int ax, dx;
-  if (!IsWindows()) {
-    ad = sys_fork();
-    ax = ad.ax;
-    dx = ad.dx;
-    if (IsXnu() && ax != -1) {
-      /* eax always returned with childs pid */
-      /* edx is 0 for parent and 1 for child */
-      ax &= dx - 1;
-    }
-  } else {
-    ax = sys_fork_nt();
-  }
-  if (!ax) {
-    __onfork();
-  }
-  return ax;
+char *iso8601(char p[hasatleast 20], struct tm *tm) {
+  int x;
+  x = tm->tm_year + 1900;
+  *p++ = '0' + x / 1000;
+  *p++ = '0' + x / 100 % 10;
+  *p++ = '0' + x / 10 % 10;
+  *p++ = '0' + x % 10;
+  *p++ = '-';
+  x = tm->tm_mon + 1;
+  *p++ = '0' + x / 10;
+  *p++ = '0' + x % 10;
+  *p++ = '-';
+  x = tm->tm_mday;
+  *p++ = '0' + x / 10;
+  *p++ = '0' + x % 10;
+  *p++ = 'T';
+  x = tm->tm_hour;
+  *p++ = '0' + x / 10;
+  *p++ = '0' + x % 10;
+  *p++ = ':';
+  x = tm->tm_min;
+  *p++ = '0' + x / 10;
+  *p++ = '0' + x % 10;
+  *p++ = ':';
+  x = tm->tm_sec;
+  *p++ = '0' + x / 10;
+  *p++ = '0' + x % 10;
+  *p = 0;
+  return p;
 }

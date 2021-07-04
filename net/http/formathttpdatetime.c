@@ -35,7 +35,7 @@ char *FormatHttpDateTime(char p[hasatleast 30], struct tm *tm) {
   p = mempcpy(p, kWeekdayNameShort[tm->tm_wday], 3);
   *p++ = ',';
   *p++ = ' ';
-  i = MIN(MAX(tm->tm_mday, 0), 31);
+  i = MIN(MAX(tm->tm_mday, 1), 31);
   *p++ = '0' + i / 10;
   *p++ = '0' + i % 10;
   *p++ = ' ';

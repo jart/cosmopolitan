@@ -96,7 +96,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   vflogf_ts.tv_nsec = nsec;
   if (!issamesecond) {
     localtime_r(&secs, &tm);
-    strftime(buf32, sizeof(buf32), "%Y-%m-%dT%H:%M:%S.", &tm);
+    strcpy(iso8601(buf32, &tm), ".");
     buf32p = buf32;
   } else {
     buf32p = "--------------------";

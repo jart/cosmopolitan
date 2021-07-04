@@ -52,6 +52,7 @@
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/str/undeflate.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/dt.h"
@@ -861,17 +862,29 @@ static void ProgramPort(long port) {
   ports.p[ports.n - 1] = port;
 }
 
-static void ProgramAddr(const char *addr) {
+static uint32_t ResolveIp(const char *addr) {
   ssize_t rc;
+  uint32_t ip;
   struct addrinfo *ai = NULL;
   struct addrinfo hint = {AI_NUMERICSERV, AF_INET, SOCK_STREAM, IPPROTO_TCP};
   if ((rc = getaddrinfo(addr, "0", &hint, &ai)) != EAI_SUCCESS) {
     fprintf(stderr, "error: bad addr: %s (EAI_%s)\n", addr, gai_strerror(rc));
     exit(1);
   }
-  ips.p = realloc(ips.p, ++ips.n * sizeof(*ips.p));
-  ips.p[ips.n - 1] = ntohl(ai->ai_addr4->sin_addr.s_addr);
+  ip = ntohl(ai->ai_addr4->sin_addr.s_addr);
   freeaddrinfo(ai);
+  return ip;
+}
+
+static void ProgramAddr(const char *addr) {
+  uint32_t ip;
+  if (IsTiny()) {
+    ip = ParseIp(addr, -1);
+  } else {
+    ip = ResolveIp(addr);
+  }
+  ips.p = realloc(ips.p, ++ips.n * sizeof(*ips.p));
+  ips.p[ips.n - 1] = ip;
 }
 
 static void ProgramRedirect(int code, const char *sp, size_t sn, const char *dp,
@@ -2032,35 +2045,40 @@ static char *AppendContentRange(char *p, long a, long b, long c) {
 static bool Inflate(void *dp, size_t dn, const void *sp, size_t sn) {
   int rc;
   z_stream zs;
+  struct DeflateState ds;
   LockInc(&shared->c.inflates);
-  zs.next_in = sp;
-  zs.avail_in = sn;
-  zs.total_in = sn;
-  zs.next_out = dp;
-  zs.avail_out = dn;
-  zs.total_out = dn;
-  zs.zfree = Z_NULL;
-  zs.zalloc = Z_NULL;
-  CHECK_EQ(Z_OK, inflateInit2(&zs, -MAX_WBITS));
-  switch ((rc = inflate(&zs, Z_NO_FLUSH))) {
-    case Z_STREAM_END:
-      CHECK_EQ(Z_OK, inflateEnd(&zs));
-      return true;
-    case Z_DATA_ERROR:
-      inflateEnd(&zs);
-      WARNF("Z_DATA_ERROR");
-      return false;
-    case Z_NEED_DICT:
-      inflateEnd(&zs);
-      WARNF("Z_NEED_DICT");
-      return false;
-    case Z_MEM_ERROR:
-      FATALF("Z_MEM_ERROR");
-    default:
-      FATALF("inflate()→%d dn=%ld sn=%ld "
-             "next_in=%ld avail_in=%ld next_out=%ld avail_out=%ld",
-             rc, dn, sn, (char *)zs.next_in - (char *)sp, zs.avail_in,
-             (char *)zs.next_out - (char *)dp, zs.avail_out);
+  if (IsTiny()) {
+    return undeflate(dp, dn, sp, sn, &ds) != -1;
+  } else {
+    zs.next_in = sp;
+    zs.avail_in = sn;
+    zs.total_in = sn;
+    zs.next_out = dp;
+    zs.avail_out = dn;
+    zs.total_out = dn;
+    zs.zfree = Z_NULL;
+    zs.zalloc = Z_NULL;
+    CHECK_EQ(Z_OK, inflateInit2(&zs, -MAX_WBITS));
+    switch ((rc = inflate(&zs, Z_NO_FLUSH))) {
+      case Z_STREAM_END:
+        CHECK_EQ(Z_OK, inflateEnd(&zs));
+        return true;
+      case Z_DATA_ERROR:
+        inflateEnd(&zs);
+        WARNF("Z_DATA_ERROR");
+        return false;
+      case Z_NEED_DICT:
+        inflateEnd(&zs);
+        WARNF("Z_NEED_DICT");
+        return false;
+      case Z_MEM_ERROR:
+        FATALF("Z_MEM_ERROR");
+      default:
+        FATALF("inflate()→%d dn=%ld sn=%ld "
+               "next_in=%ld avail_in=%ld next_out=%ld avail_out=%ld",
+               rc, dn, sn, (char *)zs.next_in - (char *)sp, zs.avail_in,
+               (char *)zs.next_out - (char *)dp, zs.avail_out);
+    }
   }
 }
 
@@ -2130,7 +2148,7 @@ static wontreturn void PrintUsage(FILE *f, int rc) {
   size_t n;
   const char *p;
   struct Asset *a;
-  if ((a = GetAssetZip("/.help.txt", 10)) && (p = LoadAsset(a, &n))) {
+  if ((a = GetAssetZip("/help.txt", 10)) && (p = LoadAsset(a, &n))) {
     fwrite(p, 1, n, f);
     free(p);
   }
@@ -2285,7 +2303,7 @@ static char *CommitOutput(char *p) {
   if (!contentlength) {
     if (istext && outbuf.n >= 100) {
       p = stpcpy(p, "Vary: Accept-Encoding\r\n");
-      if (ClientAcceptsGzip()) {
+      if (!IsTiny() && ClientAcceptsGzip()) {
         gzipped = true;
         crc = crc32_z(0, outbuf.p, outbuf.n);
         WRITE32LE(gzip_footer + 0, crc);
@@ -2593,7 +2611,7 @@ static char *ServeListing(void) {
   int64_t lastmod;
   struct rusage ru;
   char *p, *q, *path;
-  char rb[8], tb[64], *rp[6];
+  char rb[8], tb[20], *rp[6];
   size_t i, n, pathlen, rn[6];
   LockInc(&shared->c.listingrequests);
   if (msg.method != kHttpGet && msg.method != kHttpHead) return BadMethod();
@@ -2651,7 +2669,7 @@ td { padding-right: 3em; }\r\n\
       rp[4] = EscapeHtml(rp[0], rn[0], &rn[4]);
       lastmod = GetZipCfileLastModified(zcf);
       localtime_r(&lastmod, &tm);
-      strftime(tb, sizeof(tb), "%Y-%m-%d %H:%M:%S %Z", &tm);
+      iso8601(tb, &tm);
       if (IsCompressionMethodSupported(ZIP_CFILE_COMPRESSIONMETHOD(zcf)) &&
           IsAcceptablePath(path, pathlen)) {
         Append("<a href=\"%.*s\">%-*.*s</a> %s  %0*o %4s  %,*ld  %'s\r\n",
@@ -5140,7 +5158,7 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
       } else {
         return ServeError(500, "Internal Server Error");
       }
-    } else if (ClientAcceptsGzip() &&
+    } else if (!IsTiny() && ClientAcceptsGzip() &&
                (strlen(ct) >= 5 && !memcasecmp(ct, "text/", 5)) &&
                100 < contentlength && contentlength < 1024 * 1024 * 1024) {
       p = ServeAssetCompressed(a);
@@ -5571,6 +5589,7 @@ static void RestoreApe(void) {
   size_t n;
   struct Asset *a;
   extern char ape_rom_vaddr[] __attribute__((__weak__));
+  if (!(SUPPORT_VECTOR & (METAL | WINDOWS | XNU))) return;
   if (IsWindows()) return; /* TODO */
   if (IsOpenbsd()) return; /* TODO */
   if (IsNetbsd()) return;  /* TODO */

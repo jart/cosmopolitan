@@ -64,6 +64,7 @@ long double ConvertTicksToNanos(uint64_t);
 void RefreshTime(void);
 
 double difftime(int64_t, int64_t) nothrow pureconst;
+char *iso8601(char[hasatleast 20], struct tm *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
