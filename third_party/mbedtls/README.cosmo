@@ -45,3 +45,5 @@ LOCAL CHANGES
     its dependencies inside a zip container so the tests are able to
     run hermetically if the binary is scp'd to some machine, and (d)
     doesn't have large amounts of duplicated generated code.
+
+  - Make chacha20 26% faster.

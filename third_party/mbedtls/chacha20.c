@@ -34,9 +34,6 @@ asm(".include \"libc/disclaimer.inc\"");
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-#if defined(MBEDTLS_CHACHA20_C)
-
-#if !defined(MBEDTLS_CHACHA20_ALT)
 
 /* Parameter validation macros */
 #define CHACHA20_VALIDATE_RET( cond )                                       \
@@ -54,128 +51,118 @@ asm(".include \"libc/disclaimer.inc\"");
 #define CHACHA20_BLOCK_SIZE_BYTES ( 4U * 16U )
 
 /**
- * \brief           ChaCha20 quarter round operation.
- *
- *                  The quarter round is defined as follows (from RFC 7539):
- *                      1.  a += b; d ^= a; d <<<= 16;
- *                      2.  c += d; b ^= c; b <<<= 12;
- *                      3.  a += b; d ^= a; d <<<= 8;
- *                      4.  c += d; b ^= c; b <<<= 7;
- *
- * \param state     ChaCha20 state to modify.
- * \param a         The index of 'a' in the state.
- * \param b         The index of 'b' in the state.
- * \param c         The index of 'c' in the state.
- * \param d         The index of 'd' in the state.
- */
-static inline void chacha20_quarter_round( uint32_t state[16],
-                                           size_t a,
-                                           size_t b,
-                                           size_t c,
-                                           size_t d )
-{
-    /* a += b; d ^= a; d <<<= 16; */
-    state[a] += state[b];
-    state[d] ^= state[a];
-    state[d] = ROTL32( state[d], 16 );
-
-    /* c += d; b ^= c; b <<<= 12 */
-    state[c] += state[d];
-    state[b] ^= state[c];
-    state[b] = ROTL32( state[b], 12 );
-
-    /* a += b; d ^= a; d <<<= 8; */
-    state[a] += state[b];
-    state[d] ^= state[a];
-    state[d] = ROTL32( state[d], 8 );
-
-    /* c += d; b ^= c; b <<<= 7; */
-    state[c] += state[d];
-    state[b] ^= state[c];
-    state[b] = ROTL32( state[b], 7 );
-}
-
-/**
- * \brief           Perform the ChaCha20 inner block operation.
- *
- *                  This function performs two rounds: the column round and the
- *                  diagonal round.
- *
- * \param state     The ChaCha20 state to update.
- */
-static void chacha20_inner_block( uint32_t state[16] )
-{
-    chacha20_quarter_round( state, 0, 4, 8,  12 );
-    chacha20_quarter_round( state, 1, 5, 9,  13 );
-    chacha20_quarter_round( state, 2, 6, 10, 14 );
-    chacha20_quarter_round( state, 3, 7, 11, 15 );
-
-    chacha20_quarter_round( state, 0, 5, 10, 15 );
-    chacha20_quarter_round( state, 1, 6, 11, 12 );
-    chacha20_quarter_round( state, 2, 7, 8,  13 );
-    chacha20_quarter_round( state, 3, 4, 9,  14 );
-}
-
-/**
  * \brief               Generates a keystream block.
  *
- * \param initial_state The initial ChaCha20 state (key, nonce, counter).
- * \param keystream     Generated keystream bytes are written to this buffer.
+ * \param s             The initial ChaCha20 state (key, nonce, counter).
+ * \param k             Generated keystream bytes are written to this buffer.
  */
-static void chacha20_block( const uint32_t initial_state[16],
-                            unsigned char keystream[64] )
+static void chacha20_block( const uint32_t s[16], unsigned char k[64] )
 {
-    uint32_t working_state[16];
-    size_t i;
-
-    memcpy( working_state,
-            initial_state,
-            CHACHA20_BLOCK_SIZE_BYTES );
-
-    for( i = 0U; i < 10U; i++ )
-        chacha20_inner_block( working_state );
-
-    working_state[ 0] += initial_state[ 0];
-    working_state[ 1] += initial_state[ 1];
-    working_state[ 2] += initial_state[ 2];
-    working_state[ 3] += initial_state[ 3];
-    working_state[ 4] += initial_state[ 4];
-    working_state[ 5] += initial_state[ 5];
-    working_state[ 6] += initial_state[ 6];
-    working_state[ 7] += initial_state[ 7];
-    working_state[ 8] += initial_state[ 8];
-    working_state[ 9] += initial_state[ 9];
-    working_state[10] += initial_state[10];
-    working_state[11] += initial_state[11];
-    working_state[12] += initial_state[12];
-    working_state[13] += initial_state[13];
-    working_state[14] += initial_state[14];
-    working_state[15] += initial_state[15];
-
-    for( i = 0U; i < 16; i++ )
-    {
-        size_t offset = i * 4U;
-
-        keystream[offset     ] = (unsigned char)( working_state[i]       );
-        keystream[offset + 1U] = (unsigned char)( working_state[i] >>  8 );
-        keystream[offset + 2U] = (unsigned char)( working_state[i] >> 16 );
-        keystream[offset + 3U] = (unsigned char)( working_state[i] >> 24 );
+    int i;
+    uint8_t *p;
+    uint32_t A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P;
+    A = s[ 0];
+    B = s[ 1];
+    C = s[ 2];
+    D = s[ 3];
+    E = s[ 4];
+    F = s[ 5];
+    G = s[ 6];
+    H = s[ 7];
+    I = s[ 8];
+    J = s[ 9];
+    K = s[10];
+    L = s[11];
+    M = s[12];
+    N = s[13];
+    O = s[14];
+    P = s[15];
+    for (i = 0; i < 10; ++i) {
+        A += E; M = ROTL32(M ^ A, 16);
+        B += F; N = ROTL32(N ^ B, 16);
+        C += G; O = ROTL32(O ^ C, 16);
+        D += H; P = ROTL32(P ^ D, 16);
+        I += M; E = ROTL32(E ^ I, 12);
+        J += N; F = ROTL32(F ^ J, 12);
+        K += O; G = ROTL32(G ^ K, 12);
+        L += P; H = ROTL32(H ^ L, 12);
+        A += E; M = ROTL32(M ^ A,  8);
+        B += F; N = ROTL32(N ^ B,  8);
+        C += G; O = ROTL32(O ^ C,  8);
+        D += H; P = ROTL32(P ^ D,  8);
+        I += M; E = ROTL32(E ^ I,  7);
+        J += N; F = ROTL32(F ^ J,  7);
+        K += O; G = ROTL32(G ^ K,  7);
+        L += P; H = ROTL32(H ^ L,  7);
+        A += F; P = ROTL32(P ^ A, 16);
+        B += G; M = ROTL32(M ^ B, 16);
+        C += H; N = ROTL32(N ^ C, 16);
+        D += E; O = ROTL32(O ^ D, 16);
+        K += P; F = ROTL32(F ^ K, 12);
+        L += M; G = ROTL32(G ^ L, 12);
+        I += N; H = ROTL32(H ^ I, 12);
+        J += O; E = ROTL32(E ^ J, 12);
+        A += F; P = ROTL32(P ^ A,  8);
+        B += G; M = ROTL32(M ^ B,  8);
+        C += H; N = ROTL32(N ^ C,  8);
+        D += E; O = ROTL32(O ^ D,  8);
+        K += P; F = ROTL32(F ^ K,  7);
+        L += M; G = ROTL32(G ^ L,  7);
+        I += N; H = ROTL32(H ^ I,  7);
+        J += O; E = ROTL32(E ^ J,  7);
     }
-
-    mbedtls_platform_zeroize( working_state, sizeof( working_state ) );
+    p = k;
+    A += s[ 0]; p = WRITE32LE(p, A);
+    B += s[ 1]; p = WRITE32LE(p, B);
+    C += s[ 2]; p = WRITE32LE(p, C);
+    D += s[ 3]; p = WRITE32LE(p, D);
+    E += s[ 4]; p = WRITE32LE(p, E);
+    F += s[ 5]; p = WRITE32LE(p, F);
+    G += s[ 6]; p = WRITE32LE(p, G);
+    H += s[ 7]; p = WRITE32LE(p, H);
+    I += s[ 8]; p = WRITE32LE(p, I);
+    J += s[ 9]; p = WRITE32LE(p, J);
+    K += s[10]; p = WRITE32LE(p, K);
+    L += s[11]; p = WRITE32LE(p, L);
+    M += s[12]; p = WRITE32LE(p, M);
+    N += s[13]; p = WRITE32LE(p, N);
+    O += s[14]; p = WRITE32LE(p, O);
+    P += s[15]; p = WRITE32LE(p, P);
 }
 
+/**
+ * \brief           This function initializes the specified ChaCha20 context.
+ *
+ *                  It must be the first API called before using
+ *                  the context.
+ *
+ *                  It is usually followed by calls to
+ *                  \c mbedtls_chacha20_setkey() and
+ *                  \c mbedtls_chacha20_starts(), then one or more calls to
+ *                  to \c mbedtls_chacha20_update(), and finally to
+ *                  \c mbedtls_chacha20_free().
+ *
+ * \param ctx       The ChaCha20 context to initialize.
+ *                  This must not be \c NULL.
+ */
 void mbedtls_chacha20_init( mbedtls_chacha20_context *ctx )
 {
     CHACHA20_VALIDATE( ctx != NULL );
-
     mbedtls_platform_zeroize( ctx->state, sizeof( ctx->state ) );
     mbedtls_platform_zeroize( ctx->keystream8, sizeof( ctx->keystream8 ) );
-
     /* Initially, there's no keystream bytes available */
     ctx->keystream_bytes_used = CHACHA20_BLOCK_SIZE_BYTES;
 }
 
+/**
+ * \brief           This function releases and clears the specified
+ *                  ChaCha20 context.
+ *
+ * \param ctx       The ChaCha20 context to clear. This may be \c NULL,
+ *                  in which case this function is a no-op. If it is not
+ *                  \c NULL, it must point to an initialized context.
+ *
+ */
 void mbedtls_chacha20_free( mbedtls_chacha20_context *ctx )
 {
     if( ctx != NULL )
@@ -184,8 +171,24 @@ void mbedtls_chacha20_free( mbedtls_chacha20_context *ctx )
     }
 }
 
+/**
+ * \brief           This function sets the encryption/decryption key.
+ *
+ * \note            After using this function, you must also call
+ *                  \c mbedtls_chacha20_starts() to set a nonce before you
+ *                  start encrypting/decrypting data with
+ *                  \c mbedtls_chacha_update().
+ *
+ * \param ctx       The ChaCha20 context to which the key should be bound.
+ *                  It must be initialized.
+ * \param key       The encryption/decryption key. This must be \c 32 Bytes
+ *                  in length.
+ *
+ * \return          \c 0 on success.
+ * \return          #MBEDTLS_ERR_CHACHA20_BAD_INPUT_DATA if ctx or key is NULL.
+ */
 int mbedtls_chacha20_setkey( mbedtls_chacha20_context *ctx,
-                            const unsigned char key[32] )
+                             const unsigned char key[32] )
 {
     CHACHA20_VALIDATE_RET( ctx != NULL );
     CHACHA20_VALIDATE_RET( key != NULL );
@@ -209,6 +212,25 @@ int mbedtls_chacha20_setkey( mbedtls_chacha20_context *ctx,
     return( 0 );
 }
 
+/**
+ * \brief           This function sets the nonce and initial counter value.
+ *
+ * \note            A ChaCha20 context can be re-used with the same key by
+ *                  calling this function to change the nonce.
+ *
+ * \warning         You must never use the same nonce twice with the same key.
+ *                  This would void any confidentiality guarantees for the
+ *                  messages encrypted with the same nonce and key.
+ *
+ * \param ctx       The ChaCha20 context to which the nonce should be bound.
+ *                  It must be initialized and bound to a key.
+ * \param nonce     The nonce. This must be \c 12 Bytes in size.
+ * \param counter   The initial counter value. This is usually \c 0.
+ *
+ * \return          \c 0 on success.
+ * \return          #MBEDTLS_ERR_CHACHA20_BAD_INPUT_DATA if ctx or nonce is
+ *                  NULL.
+ */
 int mbedtls_chacha20_starts( mbedtls_chacha20_context* ctx,
                              const unsigned char nonce[12],
                              uint32_t counter )
@@ -232,10 +254,39 @@ int mbedtls_chacha20_starts( mbedtls_chacha20_context* ctx,
     return( 0 );
 }
 
+/**
+ * \brief           This function encrypts or decrypts data.
+ *
+ *                  Since ChaCha20 is a stream cipher, the same operation is
+ *                  used for encrypting and decrypting data.
+ *
+ * \note            The \p input and \p output pointers must either be equal or
+ *                  point to non-overlapping buffers.
+ *
+ * \note            \c mbedtls_chacha20_setkey() and
+ *                  \c mbedtls_chacha20_starts() must be called at least once
+ *                  to setup the context before this function can be called.
+ *
+ * \note            This function can be called multiple times in a row in
+ *                  order to encrypt of decrypt data piecewise with the same
+ *                  key and nonce.
+ *
+ * \param ctx       The ChaCha20 context to use for encryption or decryption.
+ *                  It must be initialized and bound to a key and nonce.
+ * \param size      The length of the input data in Bytes.
+ * \param input     The buffer holding the input data.
+ *                  This pointer can be \c NULL if `size == 0`.
+ * \param output    The buffer holding the output data.
+ *                  This must be able to hold \p size Bytes.
+ *                  This pointer can be \c NULL if `size == 0`.
+ *
+ * \return          \c 0 on success.
+ * \return          A negative error code on failure.
+ */
 int mbedtls_chacha20_update( mbedtls_chacha20_context *ctx,
-                              size_t size,
-                              const unsigned char *input,
-                              unsigned char *output )
+                             size_t size,
+                             const unsigned char *input,
+                             unsigned char *output )
 {
     size_t offset = 0U;
     size_t i;
@@ -297,6 +348,34 @@ int mbedtls_chacha20_update( mbedtls_chacha20_context *ctx,
     return( 0 );
 }
 
+/**
+ * \brief           This function encrypts or decrypts data with ChaCha20 and
+ *                  the given key and nonce.
+ *
+ *                  Since ChaCha20 is a stream cipher, the same operation is
+ *                  used for encrypting and decrypting data.
+ *
+ * \warning         You must never use the same (key, nonce) pair more than
+ *                  once. This would void any confidentiality guarantees for
+ *                  the messages encrypted with the same nonce and key.
+ *
+ * \note            The \p input and \p output pointers must either be equal or
+ *                  point to non-overlapping buffers.
+ *
+ * \param key       The encryption/decryption key.
+ *                  This must be \c 32 Bytes in length.
+ * \param nonce     The nonce. This must be \c 12 Bytes in size.
+ * \param counter   The initial counter value. This is usually \c 0.
+ * \param size      The length of the input data in Bytes.
+ * \param input     The buffer holding the input data.
+ *                  This pointer can be \c NULL if `size == 0`.
+ * \param output    The buffer holding the output data.
+ *                  This must be able to hold \p size Bytes.
+ *                  This pointer can be \c NULL if `size == 0`.
+ *
+ * \return          \c 0 on success.
+ * \return          A negative error code on failure.
+ */
 int mbedtls_chacha20_crypt( const unsigned char key[32],
                             const unsigned char nonce[12],
                             uint32_t counter,
@@ -328,8 +407,6 @@ cleanup:
     mbedtls_chacha20_free( &ctx );
     return( ret );
 }
-
-#endif /* !MBEDTLS_CHACHA20_ALT */
 
 #if defined(MBEDTLS_SELF_TEST)
 
@@ -515,6 +592,12 @@ static const size_t test_lengths[2] =
     }                                   \
     while( 0 )
 
+/**
+ * \brief           The ChaCha20 checkup routine.
+ *
+ * \return          \c 0 on success.
+ * \return          \c 1 on failure.
+ */
 int mbedtls_chacha20_self_test( int verbose )
 {
     unsigned char output[381];
@@ -549,5 +632,3 @@ int mbedtls_chacha20_self_test( int verbose )
 }
 
 #endif /* MBEDTLS_SELF_TEST */
-
-#endif /* !MBEDTLS_CHACHA20_C */

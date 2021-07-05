@@ -5054,11 +5054,13 @@ static char *HandleRequest(void) {
       !IsAcceptablePath(url.path.p, url.path.n) ||
       !IsAcceptableHost(url.host.p, url.host.n) ||
       !IsAcceptablePort(url.port.p, url.port.n)) {
+    free(url.params.p);
     LockInc(&shared->c.urisrefused);
     return ServeFailure(400, "Bad URI");
   }
   if (HasHeader(kHttpUpgradeInsecureRequests) && !usessl &&
       upgradeinsecurerequests && (p = SendHttpsRedirect())) {
+    free(url.params.p);
     return p;
   }
   LOGF("RECEIVED %s HTTP%02d %.*s %s %`'.*s %`'.*s", DescribeClient(),

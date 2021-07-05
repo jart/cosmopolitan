@@ -496,10 +496,6 @@ const char * mbedtls_low_level_strerr( int error_code )
 #if defined(MBEDTLS_CHACHA20_C)
         case -(MBEDTLS_ERR_CHACHA20_BAD_INPUT_DATA):
             return( "CHACHA20 - Invalid input parameter(s)" );
-        case -(MBEDTLS_ERR_CHACHA20_FEATURE_UNAVAILABLE):
-            return( "CHACHA20 - Feature not available. For example, s part of the API is not implemented" );
-        case -(MBEDTLS_ERR_CHACHA20_HW_ACCEL_FAILED):
-            return( "CHACHA20 - Chacha20 hardware accelerator failed" );
 #endif /* MBEDTLS_CHACHA20_C */
 
 #if defined(MBEDTLS_CHACHAPOLY_C)
