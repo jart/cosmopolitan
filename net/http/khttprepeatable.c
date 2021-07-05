@@ -73,7 +73,6 @@ const bool kHttpRepeatable[kHttpHeadersMax] = {
     [kHttpTrailer] = true,
     [kHttpTransferEncoding] = true,
     [kHttpUpgrade] = true,
-    [kHttpUri] = true,
     [kHttpVary] = true,
     [kHttpVia] = true,
     [kHttpWarning] = true,

@@ -273,6 +273,15 @@ ACCEPT-encoding: bzip2\r\n\
   EXPECT_FALSE(HeaderHas(req, m, kHttpAcceptEncoding, "funzip", -1));
 }
 
+TEST(HeaderHas, testEmptyHeaderName_isNotAllowed) {
+  static const char m[] = "\
+GET / HTTP/1.1\r\n\
+: boop\r\n\
+\r\n";
+  InitHttpMessage(req, kHttpRequest);
+  EXPECT_EQ(-1, ParseHttpMessage(req, m, strlen(m)));
+}
+
 TEST(HeaderHas, testHeaderOnSameLIne) {
   static const char m[] = "\
 GET / HTTP/1.1\r\n\

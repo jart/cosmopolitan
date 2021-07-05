@@ -81,7 +81,6 @@ TE,                               kHttpTe
 Trailer,                          kHttpTrailer
 Transfer-Encoding,                kHttpTransferEncoding
 Upgrade,                          kHttpUpgrade
-Uri,                              kHttpUri
 Warning,                          kHttpWarning
 WWW-Authenticate,                 kHttpWwwAuthenticate
 Via,                              kHttpVia
@@ -93,3 +92,9 @@ Referrer-Policy,                  kHttpReferrerPolicy
 X-XSS-Protection,                 kHttpXXssProtection
 Accept-Ranges,                    kHttpAcceptRanges
 Set-Cookie,                       kHttpSetCookie
+Sec-CH-UA,                        kHttpSecChUa
+Sec-CH-UA-Mobile,                 kHttpSecChUaMobile
+Sec-Fetch-Site,                   kHttpSecFetchSite
+Sec-Fetch-Mode,                   kHttpSecFetchMode
+Sec-Fetch-User,                   kHttpSecFetchUser
+Sec-Fetch-Dest,                   kHttpSecFetchDest

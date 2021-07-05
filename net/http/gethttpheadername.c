@@ -160,8 +160,6 @@ const char *GetHttpHeaderName(int h) {
       return "Transfer-Encoding";
     case kHttpUpgrade:
       return "Upgrade";
-    case kHttpUri:
-      return "Uri";
     case kHttpWarning:
       return "Warning";
     case kHttpWwwAuthenticate:
@@ -184,6 +182,18 @@ const char *GetHttpHeaderName(int h) {
       return "Accept-Ranges";
     case kHttpSetCookie:
       return "Set-Cookie";
+    case kHttpSecChUa:
+      return "Sec-CH-UA";
+    case kHttpSecChUaMobile:
+      return "Sec-CH-UA-Mobile";
+    case kHttpSecFetchSite:
+      return "Sec-Fetch-Site";
+    case kHttpSecFetchMode:
+      return "Sec-Fetch-Mode";
+    case kHttpSecFetchUser:
+      return "Sec-Fetch-User";
+    case kHttpSecFetchDest:
+      return "Sec-Fetch-Dest";
     default:
       return NULL;
   }

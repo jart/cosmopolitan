@@ -31,21 +31,6 @@
 
 #define LIMIT (SHRT_MAX - 2)
 
-enum HttpMessageState {
-  START,
-  METHOD,
-  URI,
-  VERSION,
-  STATUS,
-  MESSAGE,
-  HKEY,
-  HSEP,
-  HVAL,
-  CR1,
-  LF1,
-  LF2,
-};
-
 /**
  * Initializes HTTP message parser.
  */
@@ -78,8 +63,8 @@ void DestroyHttpMessage(struct HttpMessage *r) {
  *
  * This parser assumes ISO-8859-1 and guarantees no C0 or C1 control
  * codes are present in message fields, with the exception of tab.
- * Please note that fields like URI may use UTF-8 percent encoding. This
- * parser doesn't care if you choose ASA X3.4-1963 or MULTICS newlines.
+ * Please note that fields like kHttpStateUri may use UTF-8 percent encoding.
+ * This parser doesn't care if you choose ASA X3.4-1963 or MULTICS newlines.
  *
  * kHttpRepeatable defines which standard header fields are O(1) and
  * which ones may have comma entries spilled over into xheaders. For
@@ -105,20 +90,20 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
   for (n = MIN(n, LIMIT); r->i < n; ++r->i) {
     c = p[r->i] & 0xff;
     switch (r->t) {
-      case START:
+      case kHttpStateStart:
         if (c == '\r' || c == '\n') break; /* RFC7230 § 3.5 */
         if (!kHttpToken[c]) return ebadmsg();
-        r->t = r->type == kHttpRequest ? METHOD : VERSION;
+        r->t = r->type == kHttpRequest ? kHttpStateMethod : kHttpStateVersion;
         r->a = r->i;
         break;
-      case METHOD:
+      case kHttpStateMethod:
         for (;;) {
           if (c == ' ') {
             r->method = GetHttpMethod(p + r->a, r->i - r->a);
             r->xmethod.a = r->a;
             r->xmethod.b = r->i;
             r->a = r->i + 1;
-            r->t = URI;
+            r->t = kHttpStateUri;
             break;
           } else if (!kHttpToken[c]) {
             return ebadmsg();
@@ -127,7 +112,7 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
           c = p[r->i] & 0xff;
         }
         break;
-      case URI:
+      case kHttpStateUri:
         for (;;) {
           if (c == ' ' || c == '\r' || c == '\n') {
             if (r->i == r->a) return ebadmsg();
@@ -135,10 +120,10 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
             r->uri.b = r->i;
             if (c == ' ') {
               r->a = r->i + 1;
-              r->t = VERSION;
+              r->t = kHttpStateVersion;
             } else {
               r->version = 9;
-              r->t = c == '\r' ? CR1 : LF1;
+              r->t = c == '\r' ? kHttpStateCr : kHttpStateLf1;
             }
             break;
           } else if (c < 0x20 || (0x7F <= c && c < 0xA0)) {
@@ -148,31 +133,31 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
           c = p[r->i] & 0xff;
         }
         break;
-      case VERSION:
+      case kHttpStateVersion:
         if (c == ' ' || c == '\r' || c == '\n') {
           if (r->i - r->a == 8 &&
               (READ64BE(p + r->a) & 0xFFFFFFFFFF00FF00) == 0x485454502F002E00 &&
               isdigit(p[r->a + 5]) && isdigit(p[r->a + 7])) {
             r->version = (p[r->a + 5] - '0') * 10 + (p[r->a + 7] - '0');
             if (r->type == kHttpRequest) {
-              r->t = c == '\r' ? CR1 : LF1;
+              r->t = c == '\r' ? kHttpStateCr : kHttpStateLf1;
             } else {
-              r->t = STATUS;
+              r->t = kHttpStateStatus;
             }
           } else {
             return ebadmsg();
           }
         }
         break;
-      case STATUS:
+      case kHttpStateStatus:
         for (;;) {
           if (c == ' ' || c == '\r' || c == '\n') {
             if (r->status < 100) return ebadmsg();
             if (c == ' ') {
               r->a = r->i + 1;
-              r->t = MESSAGE;
+              r->t = kHttpStateMessage;
             } else {
-              r->t = c == '\r' ? CR1 : LF1;
+              r->t = c == '\r' ? kHttpStateCr : kHttpStateLf1;
             }
             break;
           } else if ('0' <= c && c <= '9') {
@@ -186,12 +171,12 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
           c = p[r->i] & 0xff;
         }
         break;
-      case MESSAGE:
+      case kHttpStateMessage:
         for (;;) {
           if (c == '\r' || c == '\n') {
             r->message.a = r->a;
             r->message.b = r->i;
-            r->t = c == '\r' ? CR1 : LF1;
+            r->t = c == '\r' ? kHttpStateCr : kHttpStateLf1;
             break;
           } else if (c < 0x20 || (0x7F <= c && c < 0xA0)) {
             return ebadmsg();
@@ -200,27 +185,31 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
           c = p[r->i] & 0xff;
         }
         break;
-      case CR1:
+      case kHttpStateCr:
         if (c != '\n') return ebadmsg();
-        r->t = LF1;
+        r->t = kHttpStateLf1;
         break;
-      case LF1:
+      case kHttpStateLf1:
         if (c == '\r') {
-          r->t = LF2;
+          r->t = kHttpStateLf2;
           break;
         } else if (c == '\n') {
           return ++r->i;
         } else if (!kHttpToken[c]) {
-          return ebadmsg(); /* RFC7230 § 3.2.4 */
+          /*
+           * 1. Forbid empty header name (RFC2616 §2.2)
+           * 2. Forbid line folding (RFC7230 §3.2.4)
+           */
+          return ebadmsg();
         }
         r->k.a = r->i;
-        r->t = HKEY;
+        r->t = kHttpStateName;
         break;
-      case HKEY:
+      case kHttpStateName:
         for (;;) {
           if (c == ':') {
             r->k.b = r->i;
-            r->t = HSEP;
+            r->t = kHttpStateColon;
             break;
           } else if (!kHttpToken[c]) {
             return ebadmsg();
@@ -229,12 +218,12 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
           c = p[r->i] & 0xff;
         }
         break;
-      case HSEP:
+      case kHttpStateColon:
         if (c == ' ' || c == '\t') break;
         r->a = r->i;
-        r->t = HVAL;
+        r->t = kHttpStateValue;
         /* fallthrough */
-      case HVAL:
+      case kHttpStateValue:
         for (;;) {
           if (c == '\r' || c == '\n') {
             i = r->i;
@@ -252,7 +241,7 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
               r->xheaders.p = x;
               ++r->xheaders.n;
             }
-            r->t = c == '\r' ? CR1 : LF1;
+            r->t = c == '\r' ? kHttpStateCr : kHttpStateLf1;
             break;
           } else if ((c < 0x20 && c != '\t') || (0x7F <= c && c < 0xA0)) {
             return ebadmsg();
@@ -261,7 +250,7 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
           c = p[r->i] & 0xff;
         }
         break;
-      case LF2:
+      case kHttpStateLf2:
         if (c == '\n') {
           return ++r->i;
         }

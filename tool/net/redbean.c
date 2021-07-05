@@ -432,6 +432,7 @@ static const char *certpath;
 static const char *launchbrowser;
 static struct pollfd *polls;
 static struct Strings loops;
+static size_t payloadlength;
 static size_t contentlength;
 static int64_t cacheseconds;
 static const char *serverheader;
@@ -3474,7 +3475,7 @@ static int LuaParseHttpDateTime(lua_State *L) {
 }
 
 static int LuaGetPayload(lua_State *L) {
-  lua_pushlstring(L, inbuf.p + hdrsize, msgsize - hdrsize);
+  lua_pushlstring(L, inbuf.p + hdrsize, payloadlength);
   return 1;
 }
 
@@ -4712,11 +4713,6 @@ static char *HandleVersionNotSupported(void) {
   return ServeFailure(505, "HTTP Version Not Supported");
 }
 
-static char *HandleTransferRefused(void) {
-  LockInc(&shared->c.transfersrefused);
-  return ServeFailure(501, "Not Implemented");
-}
-
 static char *HandleConnectRefused(void) {
   LockInc(&shared->c.connectsrefused);
   return ServeFailure(501, "Not Implemented");
@@ -4736,6 +4732,11 @@ static char *HandlePayloadSlowloris(void) {
   LockInc(&shared->c.slowloris);
   LogClose("payload slowloris");
   return ServeFailure(408, "Request Timeout");
+}
+
+static char *HandleTransferRefused(void) {
+  LockInc(&shared->c.transfersrefused);
+  return ServeFailure(501, "Not Implemented");
 }
 
 static char *HandleMapFailed(struct Asset *a, int fd) {
@@ -4868,44 +4869,85 @@ static char *ServeServerOptions(void) {
   return p;
 }
 
-char *SynchronizeStream(void) {
+static void SendContinueIfNeeded(void) {
+  if (msg.version >= 11 && HeaderEqualCase(kHttpExpect, "100-continue")) {
+    LockInc(&shared->c.continues);
+    SendContinue();
+  }
+}
+
+static char *ReadMore(void) {
   size_t got;
   ssize_t rc;
+  LockInc(&shared->c.frags);
+  if (++frags == 64) return HandlePayloadSlowloris();
+  if ((rc = reader(client, inbuf.p + amtread, inbuf.n - amtread)) != -1) {
+    if (!(got = rc)) return HandlePayloadDisconnect();
+    amtread += got;
+  } else if (errno == EINTR) {
+    LockInc(&shared->c.readinterrupts);
+    if (killed || ((meltdown || terminated) && nowl() - startread > 1)) {
+      return HandlePayloadDrop();
+    }
+  } else {
+    return HandlePayloadReadError();
+  }
+  return NULL;
+}
+
+static char *SynchronizeLength(void) {
+  char *p;
+  if (hdrsize + payloadlength > amtread) {
+    if (hdrsize + payloadlength > inbuf.n) return HandleHugePayload();
+    SendContinueIfNeeded();
+    while (amtread < hdrsize + payloadlength) {
+      if ((p = ReadMore())) return p;
+    }
+  }
+  msgsize = hdrsize + payloadlength;
+  return NULL;
+}
+
+static char *SynchronizeChunked(void) {
+  char *p;
+  ssize_t transferlength;
+  struct HttpUnchunker u = {0};
+  SendContinueIfNeeded();
+  while (!(transferlength = Unchunk(&u, inbuf.p + hdrsize, amtread - hdrsize,
+                                    &payloadlength))) {
+    if ((p = ReadMore())) return p;
+  }
+  if (transferlength == -1) return HandleHugePayload();
+  msgsize = hdrsize + transferlength;
+  return NULL;
+}
+
+char *SynchronizeStream(void) {
   int64_t cl;
-  if (HasHeader(kHttpContentLength)) {
+  if (HasHeader(kHttpTransferEncoding) &&
+      !SlicesEqualCase("identity", 8, HeaderData(kHttpTransferEncoding),
+                       HeaderLength(kHttpTransferEncoding))) {
+    if (SlicesEqualCase("chunked", 7, HeaderData(kHttpTransferEncoding),
+                        HeaderLength(kHttpTransferEncoding))) {
+      return SynchronizeChunked();
+    } else {
+      return HandleTransferRefused();
+    }
+  } else if (HasHeader(kHttpContentLength)) {
     if ((cl = ParseContentLength(HeaderData(kHttpContentLength),
-                                 HeaderLength(kHttpContentLength))) == -1) {
+                                 HeaderLength(kHttpContentLength))) != -1) {
+      payloadlength = cl;
+      return SynchronizeLength();
+    } else {
       return HandleBadContentLength();
     }
   } else if (msg.method == kHttpPost || msg.method == kHttpPut) {
     return HandleLengthRequired();
   } else {
-    cl = 0;
+    msgsize = hdrsize;
+    payloadlength = 0;
+    return NULL;
   }
-  if (hdrsize + cl > amtread) {
-    if (hdrsize + cl > inbuf.n) HandleHugePayload();
-    if (msg.version >= 11 && HeaderEqualCase(kHttpExpect, "100-continue")) {
-      LockInc(&shared->c.continues);
-      SendContinue();
-    }
-    while (amtread < hdrsize + cl) {
-      LockInc(&shared->c.frags);
-      if (++frags == 64) HandlePayloadSlowloris();
-      if ((rc = reader(client, inbuf.p + amtread, inbuf.n - amtread)) != -1) {
-        if (!(got = rc)) return HandlePayloadDisconnect();
-        amtread += got;
-      } else if (errno == EINTR) {
-        LockInc(&shared->c.readinterrupts);
-        if (killed || ((meltdown || terminated) && nowl() - startread > 1)) {
-          return HandlePayloadDrop();
-        }
-      } else {
-        return HandlePayloadReadError();
-      }
-    }
-  }
-  msgsize = hdrsize + cl;
-  return NULL;
 }
 
 static void ParseRequestParameters(void) {
@@ -4936,12 +4978,6 @@ static void ParseRequestParameters(void) {
       url.scheme.n = 4;
     }
   }
-  if (HasHeader(kHttpContentType) &&
-      IsMimeType(HeaderData(kHttpContentType), HeaderLength(kHttpContentType),
-                 "application/x-www-form-urlencoded")) {
-    FreeLater(ParseParams(inbuf.p + hdrsize, msgsize - hdrsize, &url.params));
-  }
-  FreeLater(url.params.p);
 }
 
 static bool HasAtMostThisElement(int h, const char *s) {
@@ -4949,8 +4985,7 @@ static bool HasAtMostThisElement(int h, const char *s) {
   struct HttpHeader *x;
   if (HasHeader(h)) {
     n = strlen(s);
-    if (!SlicesEqualCase(s, n, inbuf.p + msg.headers[h].a,
-                         msg.headers[h].b - msg.headers[h].a)) {
+    if (!SlicesEqualCase(s, n, HeaderData(h), HeaderLength(h))) {
       return false;
     }
     for (i = 0; i < msg.xheaders.n; ++i) {
@@ -5000,7 +5035,7 @@ static char *HandleRequest(void) {
     return HandleVersionNotSupported();
   }
   if ((p = SynchronizeStream())) return p;
-  if (logbodies) LogBody("received", inbuf.p + hdrsize, msgsize - hdrsize);
+  if (logbodies) LogBody("received", inbuf.p + hdrsize, payloadlength);
   if (msg.version < 11 || HeaderEqualCase(kHttpConnection, "close")) {
     connectionclose = true;
   }
@@ -5013,9 +5048,6 @@ static char *HandleRequest(void) {
   }
   if (!HasAtMostThisElement(kHttpExpect, "100-continue")) {
     return HandleExpectFailed();
-  }
-  if (!HasAtMostThisElement(kHttpTransferEncoding, "identity")) {
-    return HandleTransferRefused();
   }
   ParseRequestParameters();
   if (!url.host.n || !url.path.n || url.path.p[0] != '/' ||
@@ -5034,6 +5066,12 @@ static char *HandleRequest(void) {
        FreeLater(EncodeUrl(&url, 0)), HeaderLength(kHttpReferer),
        HeaderData(kHttpReferer), HeaderLength(kHttpUserAgent),
        HeaderData(kHttpUserAgent));
+  if (HasHeader(kHttpContentType) &&
+      IsMimeType(HeaderData(kHttpContentType), HeaderLength(kHttpContentType),
+                 "application/x-www-form-urlencoded")) {
+    FreeLater(ParseParams(inbuf.p + hdrsize, payloadlength, &url.params));
+  }
+  FreeLater(url.params.p);
 #ifndef STATIC
   if (hasluaglobalhandler) return LuaOnHttpRequest();
 #endif

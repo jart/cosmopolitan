@@ -39,6 +39,7 @@
 
 STATIC_YOINK("zip_uri_support");
 STATIC_YOINK("o/" MODE "/tool/net/redbean.com");
+
 char testlib_enable_tmp_setup_teardown_once;
 int port;
 

@@ -23,6 +23,31 @@
 #define kHttpReport  16
 #define kHttpUnlock  17
 
+#define kHttpStateStart   0
+#define kHttpStateMethod  1
+#define kHttpStateUri     2
+#define kHttpStateVersion 3
+#define kHttpStateStatus  4
+#define kHttpStateMessage 5
+#define kHttpStateName    6
+#define kHttpStateColon   7
+#define kHttpStateValue   8
+#define kHttpStateCr      9
+#define kHttpStateLf1     10
+#define kHttpStateLf2     11
+
+#define kHttpStateChunkStart   0
+#define kHttpStateChunkSize    1
+#define kHttpStateChunkExt     2
+#define kHttpStateChunkLf1     3
+#define kHttpStateChunk        4
+#define kHttpStateChunkCr2     5
+#define kHttpStateChunkLf2     6
+#define kHttpStateTrailerStart 7
+#define kHttpStateTrailer      8
+#define kHttpStateTrailerLf1   9
+#define kHttpStateTrailerLf2   10
+
 #define kHttpHost                          0
 #define kHttpCacheControl                  1
 #define kHttpConnection                    2
@@ -93,19 +118,24 @@
 #define kHttpTrailer                       67
 #define kHttpTransferEncoding              68
 #define kHttpUpgrade                       69
-#define kHttpUri                           70
-#define kHttpWarning                       71
-#define kHttpWwwAuthenticate               72
-#define kHttpVia                           73
-#define kHttpStrictTransportSecurity       74
-#define kHttpXFrameOptions                 75
-#define kHttpXContentTypeOptions           76
-#define kHttpAltSvc                        77
-#define kHttpReferrerPolicy                78
-#define kHttpXXssProtection                79
-#define kHttpAcceptRanges                  80
-#define kHttpSetCookie                     81
-#define kHttpHeadersMax                    82
+#define kHttpWarning                       70
+#define kHttpWwwAuthenticate               71
+#define kHttpVia                           72
+#define kHttpStrictTransportSecurity       73
+#define kHttpXFrameOptions                 74
+#define kHttpXContentTypeOptions           75
+#define kHttpAltSvc                        76
+#define kHttpReferrerPolicy                77
+#define kHttpXXssProtection                78
+#define kHttpAcceptRanges                  79
+#define kHttpSetCookie                     80
+#define kHttpSecChUa                       81
+#define kHttpSecChUaMobile                 82
+#define kHttpSecFetchSite                  83
+#define kHttpSecFetchMode                  84
+#define kHttpSecFetchUser                  85
+#define kHttpSecFetchDest                  86
+#define kHttpHeadersMax                    87
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -139,6 +169,13 @@ struct HttpMessage {
   struct HttpHeaders xheaders;
 };
 
+struct HttpUnchunker {
+  int t;
+  size_t i;
+  size_t j;
+  ssize_t m;
+};
+
 extern const char kHttpToken[256];
 extern const char kHttpMethod[18][8];
 extern const bool kHttpRepeatable[kHttpHeadersMax];
@@ -163,6 +200,7 @@ bool IsReasonablePath(const char *, size_t);
 int64_t ParseIp(const char *, size_t);
 int ParseForwarded(const char *, size_t, uint32_t *, uint16_t *);
 bool IsMimeType(const char *, size_t, const char *);
+ssize_t Unchunk(struct HttpUnchunker *, char *, size_t, size_t *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
