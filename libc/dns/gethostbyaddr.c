@@ -31,9 +31,9 @@
 
 struct hostent *gethostbyaddr(const void *s_addr, socklen_t len, int type) {
   static struct hostent *ptr1, he1;
-  static char h_name[DNS_NAME_MAX+1];
-  static char* h_aliases[1];
-  static char* h_addr_list[2];
+  static char h_name[DNS_NAME_MAX + 1];
+  static char *h_aliases[1];
+  static char *h_addr_list[2];
   static char h_addr_list0[4];
 
   struct sockaddr_in addr;
