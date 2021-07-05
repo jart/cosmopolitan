@@ -31,7 +31,7 @@ int mbedtls_sha1_starts_ret( mbedtls_sha1_context * );
 int mbedtls_sha1_update_ret( mbedtls_sha1_context *, const unsigned char *, size_t );
 int mbedtls_sha1_finish_ret( mbedtls_sha1_context *, unsigned char[20] );
 int mbedtls_internal_sha1_process( mbedtls_sha1_context *, const unsigned char[64] );
-int mbedtls_sha1_ret( const unsigned char *, size_t, unsigned char[20] );
+int mbedtls_sha1_ret( const void *, size_t, unsigned char[20] );
 int mbedtls_sha1_self_test( int );
 
 COSMOPOLITAN_C_END_

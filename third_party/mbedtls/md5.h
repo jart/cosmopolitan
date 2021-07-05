@@ -29,7 +29,7 @@ int mbedtls_md5_starts_ret( mbedtls_md5_context * );
 int mbedtls_md5_update_ret( mbedtls_md5_context *, const unsigned char *, size_t );
 int mbedtls_md5_finish_ret( mbedtls_md5_context *, unsigned char[16] );
 int mbedtls_internal_md5_process( mbedtls_md5_context *, const unsigned char[64] );
-int mbedtls_md5_ret( const unsigned char *, size_t, unsigned char[16] );
+int mbedtls_md5_ret( const void *, size_t, unsigned char[16] );
 int mbedtls_md5_self_test( int );
 
 COSMOPOLITAN_C_END_

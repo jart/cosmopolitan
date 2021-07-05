@@ -97,10 +97,12 @@
 #include "third_party/mbedtls/ecp.h"
 #include "third_party/mbedtls/entropy.h"
 #include "third_party/mbedtls/entropy_poll.h"
+#include "third_party/mbedtls/md5.h"
 #include "third_party/mbedtls/oid.h"
 #include "third_party/mbedtls/pk.h"
 #include "third_party/mbedtls/rsa.h"
 #include "third_party/mbedtls/san.h"
+#include "third_party/mbedtls/sha1.h"
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/mbedtls/x509.h"
 #include "third_party/mbedtls/x509_crt.h"
@@ -3905,6 +3907,63 @@ static int LuaVisualizeControlCodes(lua_State *L) {
   return LuaCoder(L, VisualizeControlCodes);
 }
 
+static int Sha224(const void *p, size_t n, uint8_t d[28]) {
+  return mbedtls_sha256_ret(p, n, d, 1);
+}
+
+static int Sha256(const void *p, size_t n, uint8_t d[32]) {
+  return mbedtls_sha256_ret(p, n, d, 0);
+}
+
+static int Sha384(const void *p, size_t n, uint8_t d[48]) {
+  return mbedtls_sha512_ret(p, n, d, 1);
+}
+
+static int Sha512(const void *p, size_t n, uint8_t d[64]) {
+  return mbedtls_sha512_ret(p, n, d, 0);
+}
+
+static noinline int LuaHasherImpl(lua_State *L, size_t k,
+                                  int H(const void *, size_t, uint8_t *)) {
+  void *p;
+  size_t n;
+  uint8_t d[64];
+  p = luaL_checklstring(L, 1, &n);
+  H(p, n, d);
+  lua_pushlstring(L, (void *)d, k);
+  mbedtls_platform_zeroize(d, sizeof(d));
+  return 1;
+}
+
+static noinline int LuaHasher(lua_State *L, size_t k,
+                              int H(const void *, size_t, uint8_t *)) {
+  return LuaHasherImpl(L, k, H);
+}
+
+static int LuaMd5(lua_State *L) {
+  return LuaHasher(L, 16, mbedtls_md5_ret);
+}
+
+static int LuaSha1(lua_State *L) {
+  return LuaHasher(L, 20, mbedtls_sha1_ret);
+}
+
+static int LuaSha224(lua_State *L) {
+  return LuaHasher(L, 28, Sha224);
+}
+
+static int LuaSha256(lua_State *L) {
+  return LuaHasher(L, 32, Sha256);
+}
+
+static int LuaSha384(lua_State *L) {
+  return LuaHasher(L, 48, Sha384);
+}
+
+static int LuaSha512(lua_State *L) {
+  return LuaHasher(L, 64, Sha512);
+}
+
 static int LuaEncodeLatin1(lua_State *L) {
   int f;
   char *p;
@@ -4448,6 +4507,12 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Underlong", LuaUnderlong},                          //
     {"VisualizeControlCodes", LuaVisualizeControlCodes},  //
     {"Write", LuaWrite},                                  //
+    {"Md5", LuaMd5},                                      //
+    {"Sha1", LuaSha1},                                    //
+    {"Sha224", LuaSha224},                                //
+    {"Sha256", LuaSha256},                                //
+    {"Sha384", LuaSha384},                                //
+    {"Sha512", LuaSha512},                                //
     {"bsf", LuaBsf},                                      //
     {"bsr", LuaBsr},                                      //
     {"crc32", LuaCrc32},                                  //

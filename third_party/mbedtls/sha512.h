@@ -33,7 +33,7 @@ int mbedtls_sha512_starts_ret( mbedtls_sha512_context *, int );
 int mbedtls_sha512_update_ret( mbedtls_sha512_context *, const unsigned char *, size_t );
 int mbedtls_sha512_finish_ret( mbedtls_sha512_context *, unsigned char[64] );
 int mbedtls_internal_sha512_process( mbedtls_sha512_context *, const unsigned char[128] );
-int mbedtls_sha512_ret( const unsigned char *, size_t, unsigned char[64], int );
+int mbedtls_sha512_ret( const void *, size_t, unsigned char[64], int );
 int mbedtls_sha512_self_test( int );
 
 COSMOPOLITAN_C_END_

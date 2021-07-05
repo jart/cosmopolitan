@@ -501,7 +501,7 @@ int mbedtls_sha512_finish_ret( mbedtls_sha512_context *ctx,
  * \return         \c 0 on success.
  * \return         A negative error code on failure.
  */
-int mbedtls_sha512_ret( const unsigned char *input,
+int mbedtls_sha512_ret( const void *input,
                         size_t ilen,
                         unsigned char output[64],
                         int is384 )

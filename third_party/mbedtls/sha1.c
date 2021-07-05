@@ -544,7 +544,7 @@ int mbedtls_sha1_finish_ret( mbedtls_sha1_context *ctx,
  * \return         A negative error code on failure.
  *
  */
-int mbedtls_sha1_ret( const unsigned char *input,
+int mbedtls_sha1_ret( const void *input,
                       size_t ilen,
                       unsigned char output[20] )
 {
