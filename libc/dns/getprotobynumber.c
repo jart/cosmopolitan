@@ -26,13 +26,22 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/ent.h"
+#include "libc/dns/prototxt.h"
 
-struct protoent *getprotoent(void) {
-  return NULL;
-}
+struct protoent *getprotobynumber(int proto) {
+  static struct protoent *ptr1, pe1;
+  static char p_name[DNS_NAME_MAX + 1];
 
-void setprotoent(int stayopen) {
-}
+  if (!ptr1) {
+    pe1.p_name = p_name;
+    if (!(pe1.p_aliases = calloc(1, sizeof(char *)))) return NULL;
+    pe1.p_proto = -1;
+    ptr1 = &pe1;
+  }
 
-void endprotoent(void) {
+  if (LookupProtoByNumber(proto, ptr1->p_name, DNS_NAME_MAX, NULL) == -1)
+    return NULL;
+
+  ptr1->p_proto = proto;
+  return ptr1;
 }
