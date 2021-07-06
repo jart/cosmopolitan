@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_MBEDTLS_PLATFORM_H_
 #define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_PLATFORM_H_
 #include "libc/assert.h"
+#include "libc/bits/likely.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
@@ -34,7 +35,7 @@ COSMOPOLITAN_C_START_
 
 #define MBEDTLS_INTERNAL_VALIDATE_RET(cond, ret) \
   do {                                           \
-    if (!(cond)) {                               \
+    if (UNLIKELY(!(cond))) {                     \
       MBEDTLS_PARAM_FAILED(cond);                \
       return ret;                                \
     }                                            \
@@ -42,7 +43,7 @@ COSMOPOLITAN_C_START_
 
 #define MBEDTLS_INTERNAL_VALIDATE(cond) \
   do {                                  \
-    if (!(cond)) {                      \
+    if (UNLIKELY(!(cond))) {            \
       MBEDTLS_PARAM_FAILED(cond);       \
       return;                           \
     }                                   \

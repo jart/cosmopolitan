@@ -469,7 +469,7 @@ int mbedtls_cipher_update_ad( mbedtls_cipher_context_t *ctx,
 #endif /* MBEDTLS_GCM_C || MBEDTLS_CHACHAPOLY_C */
 
 int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *input,
-                   size_t ilen, unsigned char *output, size_t *olen )
+                           size_t ilen, unsigned char *output, size_t *olen )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     size_t block_size;
@@ -480,16 +480,6 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
     CIPHER_VALIDATE_RET( olen != NULL );
     if( ctx->cipher_info == NULL )
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
-
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
-    if( ctx->psa_enabled == 1 )
-    {
-        /* While PSA Crypto has an API for multipart
-         * operations, we currently don't make it
-         * accessible through the cipher layer. */
-        return( MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE );
-    }
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
     *olen = 0;
     block_size = mbedtls_cipher_get_block_size( ctx );

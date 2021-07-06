@@ -93,18 +93,18 @@ forceinline unsigned char mbedtls_base64_eq( size_t in_a, size_t in_b )
 /*
  * Constant flow lookup into table.
  */
-static unsigned char mbedtls_base64_table_lookup( const unsigned char * const table,
-                                                  const size_t table_size,
-                                                  const size_t table_index )
+static inline unsigned char mbedtls_base64_table_lookup( const unsigned char * const table,
+                                                         const size_t table_size,
+                                                         const size_t table_index )
 {
+    return 0 <= table_index && table_index < table_size ? table[table_index] : 127;
+    /* come on really? */
     size_t i;
     unsigned char result = 0;
-
     for( i = 0; i < table_size; ++i )
     {
         mbedtls_base64_cond_assign_uchar( &result, &table[i], mbedtls_base64_eq( i, table_index ) );
     }
-
     return result;
 }
 

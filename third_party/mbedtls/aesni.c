@@ -1,3 +1,4 @@
+#include "libc/bits/bits.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/aesni.h"
 #include "third_party/mbedtls/common.h"
@@ -62,8 +63,18 @@ asm(".include \"libc/disclaimer.inc\"");
 #define xmm1_xmm0   "0xC1"
 #define xmm1_xmm2   "0xD1"
 
-/*
- * AES-NI AES-ECB block en(de)cryption
+/**
+ * \brief          Internal AES-NI AES-ECB block encryption and decryption
+ *
+ * \note           This function is only for internal use by other library
+ *                 functions; you must not call it directly.
+ *
+ * \param ctx      AES context
+ * \param mode     MBEDTLS_AES_ENCRYPT or MBEDTLS_AES_DECRYPT
+ * \param input    16-byte input block
+ * \param output   16-byte output block
+ *
+ * \return         0 on success (cannot fail)
  */
 int mbedtls_aesni_crypt_ecb( mbedtls_aes_context *ctx,
                              int mode,
@@ -107,62 +118,64 @@ int mbedtls_aesni_crypt_ecb( mbedtls_aes_context *ctx,
     return( 0 );
 }
 
-/*
- * GCM multiplication: c = a times b in GF(2^128)
- * Based on [CLMUL-WP] algorithms 1 (with equation 27) and 5.
+/**
+ * \brief          Internal GCM multiplication: a = a * b in GF(2^128)
+ *                 Based on [CLMUL-WP] algorithms 1 (with equation 27) and 5.
+ *
+ * \note           This function is intended for internal use.
+ *
+ * \param a        First operand (big endian)
+ * \param b        Second operand (host endian)
+ *
+ * \note           Both operands and result are bit strings interpreted as
+ *                 elements of GF(2^128) as per the GCM spec.
  */
-void mbedtls_aesni_gcm_mult( unsigned char c[16],
-                             const unsigned char a[16],
-                             const unsigned char b[16] )
+void mbedtls_aesni_gcm_mult( unsigned char a[16], const uint64_t b[2] )
 {
-    unsigned char aa[16], bb[16], cc[16];
     size_t i;
+    uint64_t aa _Vector_size(16) forcealign(16);
+    uint64_t bb _Vector_size(16) forcealign(16);
 
     /* The inputs are in big-endian order, so byte-reverse them */
-    for( i = 0; i < 16; i++ )
-    {
-        aa[i] = a[15 - i];
-        bb[i] = b[15 - i];
-    }
+    aa[0] = READ64BE(a+8);
+    aa[1] = READ64BE(a+0);
+    memcpy(&bb, b, 16);
 
-    asm( "movdqu (%0), %%xmm0               \n\t" // a1:a0
-         "movdqu (%1), %%xmm1               \n\t" // b1:b0
-
-         /*
+    asm( /*
           * Caryless multiplication xmm2:xmm1 = xmm0 * xmm1
           * using [CLMUL-WP] algorithm 1 (p. 13).
           */
-         "movdqa %%xmm1, %%xmm2             \n\t" // copy of b1:b0
-         "movdqa %%xmm1, %%xmm3             \n\t" // same
-         "movdqa %%xmm1, %%xmm4             \n\t" // same
-         PCLMULQDQ xmm0_xmm1 ",0x00         \n\t" // a0*b0 = c1:c0
-         PCLMULQDQ xmm0_xmm2 ",0x11         \n\t" // a1*b1 = d1:d0
-         PCLMULQDQ xmm0_xmm3 ",0x10         \n\t" // a0*b1 = e1:e0
-         PCLMULQDQ xmm0_xmm4 ",0x01         \n\t" // a1*b0 = f1:f0
-         "pxor %%xmm3, %%xmm4               \n\t" // e1+f1:e0+f0
-         "movdqa %%xmm4, %%xmm3             \n\t" // same
-         "psrldq $8, %%xmm4                 \n\t" // 0:e1+f1
-         "pslldq $8, %%xmm3                 \n\t" // e0+f0:0
-         "pxor %%xmm4, %%xmm2               \n\t" // d1:d0+e1+f1
-         "pxor %%xmm3, %%xmm1               \n\t" // c1+e0+f1:c0
+         "movdqa %1, %%xmm2         \n\t" // copy of b1:b0
+         "movdqa %1, %%xmm3         \n\t" // same
+         "movdqa %1, %%xmm4         \n\t" // same
+         "pclmullqlqdq %0,%1        \n\t" // a0*b0 = c1:c0
+         "pclmulhqhqdq %0,%%xmm2    \n\t" // a1*b1 = d1:d0
+         "pclmullqhqdq %0,%%xmm3    \n\t" // a0*b1 = e1:e0
+         "pclmulhqlqdq %0,%%xmm4    \n\t" // a1*b0 = f1:f0
+         "pxor %%xmm3, %%xmm4       \n\t" // e1+f1:e0+f0
+         "movdqa %%xmm4, %%xmm3     \n\t" // same
+         "psrldq $8, %%xmm4         \n\t" // 0:e1+f1
+         "pslldq $8, %%xmm3         \n\t" // e0+f0:0
+         "pxor %%xmm4, %%xmm2       \n\t" // d1:d0+e1+f1
+         "pxor %%xmm3, %1           \n\t" // c1+e0+f1:c0
 
          /*
           * Now shift the result one bit to the left,
           * taking advantage of [CLMUL-WP] eq 27 (p. 20)
           */
-         "movdqa %%xmm1, %%xmm3             \n\t" // r1:r0
-         "movdqa %%xmm2, %%xmm4             \n\t" // r3:r2
-         "psllq $1, %%xmm1                  \n\t" // r1<<1:r0<<1
-         "psllq $1, %%xmm2                  \n\t" // r3<<1:r2<<1
-         "psrlq $63, %%xmm3                 \n\t" // r1>>63:r0>>63
-         "psrlq $63, %%xmm4                 \n\t" // r3>>63:r2>>63
-         "movdqa %%xmm3, %%xmm5             \n\t" // r1>>63:r0>>63
-         "pslldq $8, %%xmm3                 \n\t" // r0>>63:0
-         "pslldq $8, %%xmm4                 \n\t" // r2>>63:0
-         "psrldq $8, %%xmm5                 \n\t" // 0:r1>>63
-         "por %%xmm3, %%xmm1                \n\t" // r1<<1|r0>>63:r0<<1
-         "por %%xmm4, %%xmm2                \n\t" // r3<<1|r2>>62:r2<<1
-         "por %%xmm5, %%xmm2                \n\t" // r3<<1|r2>>62:r2<<1|r1>>63
+         "movdqa %1, %%xmm3         \n\t" // r1:r0
+         "movdqa %%xmm2, %%xmm4     \n\t" // r3:r2
+         "psllq $1, %1              \n\t" // r1<<1:r0<<1
+         "psllq $1, %%xmm2          \n\t" // r3<<1:r2<<1
+         "psrlq $63, %%xmm3         \n\t" // r1>>63:r0>>63
+         "psrlq $63, %%xmm4         \n\t" // r3>>63:r2>>63
+         "movdqa %%xmm3, %%xmm5     \n\t" // r1>>63:r0>>63
+         "pslldq $8, %%xmm3         \n\t" // r0>>63:0
+         "pslldq $8, %%xmm4         \n\t" // r2>>63:0
+         "psrldq $8, %%xmm5         \n\t" // 0:r1>>63
+         "por %%xmm3, %1            \n\t" // r1<<1|r0>>63:r0<<1
+         "por %%xmm4, %%xmm2        \n\t" // r3<<1|r2>>62:r2<<1
+         "por %%xmm5, %%xmm2        \n\t" // r3<<1|r2>>62:r2<<1|r1>>63
 
          /*
           * Now reduce modulo the GCM polynomial x^128 + x^7 + x^2 + x + 1
@@ -170,57 +183,61 @@ void mbedtls_aesni_gcm_mult( unsigned char c[16],
           * Currently xmm2:xmm1 holds x3:x2:x1:x0 (already shifted).
           */
          /* Step 2 (1) */
-         "movdqa %%xmm1, %%xmm3             \n\t" // x1:x0
-         "movdqa %%xmm1, %%xmm4             \n\t" // same
-         "movdqa %%xmm1, %%xmm5             \n\t" // same
-         "psllq $63, %%xmm3                 \n\t" // x1<<63:x0<<63 = stuff:a
-         "psllq $62, %%xmm4                 \n\t" // x1<<62:x0<<62 = stuff:b
-         "psllq $57, %%xmm5                 \n\t" // x1<<57:x0<<57 = stuff:c
+         "movdqa %1, %%xmm3         \n\t" // x1:x0
+         "movdqa %1, %%xmm4         \n\t" // same
+         "movdqa %1, %%xmm5         \n\t" // same
+         "psllq $63, %%xmm3         \n\t" // x1<<63:x0<<63 = stuff:a
+         "psllq $62, %%xmm4         \n\t" // x1<<62:x0<<62 = stuff:b
+         "psllq $57, %%xmm5         \n\t" // x1<<57:x0<<57 = stuff:c
 
          /* Step 2 (2) */
-         "pxor %%xmm4, %%xmm3               \n\t" // stuff:a+b
-         "pxor %%xmm5, %%xmm3               \n\t" // stuff:a+b+c
-         "pslldq $8, %%xmm3                 \n\t" // a+b+c:0
-         "pxor %%xmm3, %%xmm1               \n\t" // x1+a+b+c:x0 = d:x0
+         "pxor %%xmm4, %%xmm3       \n\t" // stuff:a+b
+         "pxor %%xmm5, %%xmm3       \n\t" // stuff:a+b+c
+         "pslldq $8, %%xmm3         \n\t" // a+b+c:0
+         "pxor %%xmm3, %1           \n\t" // x1+a+b+c:x0 = d:x0
 
          /* Steps 3 and 4 */
-         "movdqa %%xmm1,%%xmm0              \n\t" // d:x0
-         "movdqa %%xmm1,%%xmm4              \n\t" // same
-         "movdqa %%xmm1,%%xmm5              \n\t" // same
-         "psrlq $1, %%xmm0                  \n\t" // e1:x0>>1 = e1:e0'
-         "psrlq $2, %%xmm4                  \n\t" // f1:x0>>2 = f1:f0'
-         "psrlq $7, %%xmm5                  \n\t" // g1:x0>>7 = g1:g0'
-         "pxor %%xmm4, %%xmm0               \n\t" // e1+f1:e0'+f0'
-         "pxor %%xmm5, %%xmm0               \n\t" // e1+f1+g1:e0'+f0'+g0'
+         "movdqa %1,%0              \n\t" // d:x0
+         "movdqa %1,%%xmm4          \n\t" // same
+         "movdqa %1,%%xmm5          \n\t" // same
+         "psrlq $1, %0              \n\t" // e1:x0>>1 = e1:e0'
+         "psrlq $2, %%xmm4          \n\t" // f1:x0>>2 = f1:f0'
+         "psrlq $7, %%xmm5          \n\t" // g1:x0>>7 = g1:g0'
+         "pxor %%xmm4, %0           \n\t" // e1+f1:e0'+f0'
+         "pxor %%xmm5, %0           \n\t" // e1+f1+g1:e0'+f0'+g0'
          // e0'+f0'+g0' is almost e0+f0+g0, ex\tcept for some missing
          // bits carried from d. Now get those\t bits back in.
-         "movdqa %%xmm1,%%xmm3              \n\t" // d:x0
-         "movdqa %%xmm1,%%xmm4              \n\t" // same
-         "movdqa %%xmm1,%%xmm5              \n\t" // same
-         "psllq $63, %%xmm3                 \n\t" // d<<63:stuff
-         "psllq $62, %%xmm4                 \n\t" // d<<62:stuff
-         "psllq $57, %%xmm5                 \n\t" // d<<57:stuff
-         "pxor %%xmm4, %%xmm3               \n\t" // d<<63+d<<62:stuff
-         "pxor %%xmm5, %%xmm3               \n\t" // missing bits of d:stuff
-         "psrldq $8, %%xmm3                 \n\t" // 0:missing bits of d
-         "pxor %%xmm3, %%xmm0               \n\t" // e1+f1+g1:e0+f0+g0
-         "pxor %%xmm1, %%xmm0               \n\t" // h1:h0
-         "pxor %%xmm2, %%xmm0               \n\t" // x3+h1:x2+h0
-
-         "movdqu %%xmm0, (%2)               \n\t" // done
-         :
-         : "r" (aa), "r" (bb), "r" (cc)
-         : "memory", "cc", "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5" );
+         "movdqa %1,%%xmm3          \n\t" // d:x0
+         "movdqa %1,%%xmm4          \n\t" // same
+         "movdqa %1,%%xmm5          \n\t" // same
+         "psllq $63, %%xmm3         \n\t" // d<<63:stuff
+         "psllq $62, %%xmm4         \n\t" // d<<62:stuff
+         "psllq $57, %%xmm5         \n\t" // d<<57:stuff
+         "pxor %%xmm4, %%xmm3       \n\t" // d<<63+d<<62:stuff
+         "pxor %%xmm5, %%xmm3       \n\t" // missing bits of d:stuff
+         "psrldq $8, %%xmm3         \n\t" // 0:missing bits of d
+         "pxor %%xmm3, %0           \n\t" // e1+f1+g1:e0+f0+g0
+         "pxor %1, %0               \n\t" // h1:h0
+         "pxor %%xmm2, %0           \n\t" // x3+h1:x2+h0
+         : "+x" (aa)
+         : "x" (bb)
+         : "xmm2", "xmm3", "xmm4", "xmm5" );
 
     /* Now byte-reverse the outputs */
-    for( i = 0; i < 16; i++ )
-        c[i] = cc[15 - i];
-
-    return;
+    WRITE64BE(a+0, aa[1]);
+    WRITE64BE(a+8, aa[0]);
 }
 
-/*
- * Compute decryption round keys from encryption round keys
+/**
+ * \brief           Internal round key inversion. This function computes
+ *                  decryption round keys from the encryption round keys.
+ *
+ * \note            This function is only for internal use by other library
+ *                  functions; you must not call it directly.
+ *
+ * \param invkey    Round keys for the equivalent inverse cipher
+ * \param fwdkey    Original round keys (for encryption)
+ * \param nr        Number of rounds (that is, number of round keys minus one)
  */
 void mbedtls_aesni_inverse_key( unsigned char *invkey,
                                 const unsigned char *fwdkey, int nr )
@@ -414,8 +431,17 @@ static void aesni_setkey_enc_256( unsigned char *rk,
          : "memory", "cc", "0" );
 }
 
-/*
- * Key expansion, wrapper
+/**
+ * \brief           Internal key expansion for encryption
+ *
+ * \note            This function is only for internal use by other library
+ *                  functions; you must not call it directly.
+ *
+ * \param rk        Destination buffer where the round keys are written
+ * \param key       Encryption key
+ * \param bits      Key size in bits (must be 128, 192 or 256)
+ *
+ * \return          0 if successful, or MBEDTLS_ERR_AES_INVALID_KEY_LENGTH
  */
 int mbedtls_aesni_setkey_enc( unsigned char *rk,
                               const unsigned char *key,
@@ -428,7 +454,6 @@ int mbedtls_aesni_setkey_enc( unsigned char *rk,
         case 256: aesni_setkey_enc_256( rk, key ); break;
         default : return( MBEDTLS_ERR_AES_INVALID_KEY_LENGTH );
     }
-
     return( 0 );
 }
 

@@ -149,7 +149,7 @@ int mbedtls_internal_sha1_process( mbedtls_sha1_context *ctx,
     SHA1_VALIDATE_RET( ctx != NULL );
     SHA1_VALIDATE_RET( (const unsigned char *)data != NULL );
 
-    if (!IsTiny() && X86_HAVE(AVX2) && X86_HAVE(BMI) && X86_HAVE(BMI2)) {
+    if (!IsTiny() && LIKELY(X86_HAVE(AVX2) && X86_HAVE(BMI) && X86_HAVE(BMI2))) {
         sha1_transform_avx2(ctx, data, 1);
         return 0;
     }

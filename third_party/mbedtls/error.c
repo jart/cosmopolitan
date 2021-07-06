@@ -551,8 +551,6 @@ const char * mbedtls_low_level_strerr( int error_code )
 #if defined(MBEDTLS_GCM_C)
         case -(MBEDTLS_ERR_GCM_AUTH_FAILED):
             return( "GCM - Authenticated decryption failed" );
-        case -(MBEDTLS_ERR_GCM_HW_ACCEL_FAILED):
-            return( "GCM - GCM hardware accelerator failed" );
         case -(MBEDTLS_ERR_GCM_BAD_INPUT):
             return( "GCM - Bad input parameters to function" );
 #endif /* MBEDTLS_GCM_C */

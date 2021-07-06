@@ -47,3 +47,7 @@ LOCAL CHANGES
     doesn't have large amounts of duplicated generated code.
 
   - Make chacha20 26% faster.
+
+  - Make base64 100x faster.
+
+  - Make gcm faster.
