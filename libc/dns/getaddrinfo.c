@@ -59,6 +59,7 @@ int getaddrinfo(const char *name, const char *service,
         (hints && (hints->ai_flags & AI_PASSIVE) == AI_PASSIVE)
             ? INADDR_ANY
             : INADDR_LOOPBACK;
+    *res = ai;
     return 0;
   }
   if (inet_pton(AF_INET, name, &ai->ai_addr4->sin_addr.s_addr) == 1) {
