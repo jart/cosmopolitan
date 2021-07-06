@@ -30,7 +30,7 @@
  * @return NUL-terminated malloc'd contents, or NULL w/ errno
  * @note this is uninterruptible
  */
-char *xslurp(const char *path, size_t *opt_out_size) {
+void *xslurp(const char *path, size_t *opt_out_size) {
   int fd;
   ssize_t rc;
   size_t i, got;

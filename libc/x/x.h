@@ -75,7 +75,7 @@ char *xiso8601ts(struct timespec *) mallocesque;
 │ cosmopolitan § eXtended apis » input / output                            ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-char *xslurp(const char *, size_t *)
+void *xslurp(const char *, size_t *)
     paramsnonnull((1)) returnspointerwithnoaliases
     returnsaligned((PAGESIZE)) nodiscard;
 int xbarf(const char *, const void *, size_t);

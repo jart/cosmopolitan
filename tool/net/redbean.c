@@ -97,6 +97,7 @@
 #include "third_party/mbedtls/ecp.h"
 #include "third_party/mbedtls/entropy.h"
 #include "third_party/mbedtls/entropy_poll.h"
+#include "third_party/mbedtls/iana.h"
 #include "third_party/mbedtls/md5.h"
 #include "third_party/mbedtls/oid.h"
 #include "third_party/mbedtls/pk.h"
@@ -1464,8 +1465,8 @@ static bool TlsSetup(void) {
               DEBUGF("%s SSL shakealert unknown ca", DescribeClient());
               return false;
             default:
-              WARNF("%s SSL shakealert %hhu", DescribeClient(),
-                    ssl.fatal_alert);
+              WARNF("%s SSL shakealert %s", DescribeClient(),
+                    GetAlertDescription(ssl.fatal_alert));
               return false;
           }
         default:
