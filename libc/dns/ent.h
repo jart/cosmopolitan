@@ -7,6 +7,19 @@ COSMOPOLITAN_C_START_
 
 extern int h_errno;
 
+struct netent {
+  char *n_name;     /* official network name */
+  char **n_aliases; /* alias list */
+  int n_addrtype;   /* net address type */
+  uint32_t n_net;   /* network number */
+};
+
+struct protoent {
+  char *p_name;     /* official protocol name */
+  char **p_aliases; /* alias list */
+  int p_proto;      /* protocol number */
+};
+
 struct hostent {
   char *h_name;       /* official name of host */
   char **h_aliases;   /* alias list */
@@ -22,6 +35,18 @@ struct servent {
   int s_port;       /* port number (in network byte order) */
   char *s_proto;    /* protocol to use */
 };
+
+struct netent *getnetent(void);
+struct netent *getnetbyname(const char *);
+struct netent *getnetbyaddr(uint32_t, int);
+void setnetent(int);
+void endnetent(void);
+
+struct protoent *getprotoent(void);
+struct protoent *getprotobyname(const char *);
+struct protoent *getprotobynumber(int);
+void setprotoent(int);
+void endprotoent(void);
 
 struct hostent *gethostent(void);
 struct hostent *gethostbyname(const char *);
