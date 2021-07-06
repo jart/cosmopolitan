@@ -375,7 +375,7 @@ SECTIONS {
 /*END:   file content */
 /*BEGIN: bss memory that's addressable */
 
-  .bss ALIGN(__SIZEOF_POINTER__) : {
+  .bss ALIGN(64) : {
     KEEP(*(SORT_BY_NAME(.piro.bss.init.*)))
     *(.piro.bss)
     KEEP(*(SORT_BY_NAME(.piro.bss.sort.*)))

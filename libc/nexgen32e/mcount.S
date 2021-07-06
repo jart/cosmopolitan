@@ -25,3 +25,4 @@
 //	cc -pg adds this to the start of global functions.
 mcount:	ret
 	.endfn	mcount,weak
+	.alias	mcount,.mcount		# freebsd weirdness?

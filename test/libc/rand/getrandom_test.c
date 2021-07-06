@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/check.h"
 #include "libc/math.h"
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/rand/lcg.internal.h"
 #include "libc/rand/rand.h"
 #include "libc/stdio/stdio.h"
@@ -175,7 +176,11 @@ uint64_t GetRandomNoRdrrnd(void) {
 
 uint64_t GetRandomNoSystem(void) {
   uint64_t x;
-  ASSERT_EQ(8, getrandom(&x, 8, GRND_NOSYSTEM));
+  if (X86_HAVE(RDRND) || X86_HAVE(RDSEED)) {
+    ASSERT_EQ(8, getrandom(&x, 8, GRND_NOSYSTEM));
+  } else {
+    ASSERT_EQ(8, getrandom(&x, 8, 0));
+  }
   return x;
 }
 

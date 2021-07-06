@@ -14,6 +14,7 @@ if CLANG=$(command -v clang); then
       -fno-pie                                        \
       -nostdlib                                       \
       -nostdinc                                       \
+      -fuse-ld=lld                                    \
       -mno-red-zone                                   \
       -Wl,-T,o/$MODE/ape/ape.lds                      \
       -include o/cosmopolitan.h                       \
