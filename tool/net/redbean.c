@@ -4380,6 +4380,15 @@ static int LuaEncodeLatin1(lua_State *L) {
   return 1;
 }
 
+static int LuaSlurp(lua_State *L) {
+  char *p;
+  size_t n;
+  p = xslurp(luaL_checkstring(L, 1), &n);
+  lua_pushlstring(L, p, n);
+  free(p);
+  return 1;
+}
+
 static int LuaIndentLines(lua_State *L) {
   void *p;
   size_t n, j;
@@ -4930,6 +4939,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Sha256", LuaSha256},                                  //
     {"Sha384", LuaSha384},                                  //
     {"Sha512", LuaSha512},                                  //
+    {"Slurp", LuaSlurp},                                    //
     {"StoreAsset", LuaStoreAsset},                          //
     {"Underlong", LuaUnderlong},                            //
     {"VisualizeControlCodes", LuaVisualizeControlCodes},    //
