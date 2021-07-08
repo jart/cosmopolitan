@@ -43,7 +43,7 @@ ssize_t Unchunk(struct HttpUnchunker *u, char *p, size_t n, size_t *l) {
         if ((h = kHexToInt[c]) != -1) {
           u->m *= 16;
           u->m += h;
-          if (u->i + u->m >= n) return ebadmsg();
+          if (u->m >= 0x0000010000000000) return ebadmsg();
           break;
         }
         u->t = kHttpStateChunkExt;

@@ -431,7 +431,7 @@ static size_t good_nonce_len( size_t entropy_len )
 int mbedtls_ctr_drbg_seed( mbedtls_ctr_drbg_context *ctx,
                            int (*f_entropy)(void *, unsigned char *, size_t),
                            void *p_entropy,
-                           const unsigned char *custom,
+                           const void *custom,
                            size_t len )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;

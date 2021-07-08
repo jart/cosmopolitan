@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dns/dns.h"
 #include "libc/str/str.h"
 #include "net/http/http.h"
 
@@ -72,6 +73,7 @@ bool IsAcceptableHost(const char *s, size_t n) {
   int c, b, j;
   if (n == -1) n = s ? strlen(s) : 0;
   if (!n) return true;
+  if (n > DNS_NAME_MAX) return false;
   for (b = j = i = 0; i < n; ++i) {
     c = s[i] & 255;
     if (isdigit(c)) {

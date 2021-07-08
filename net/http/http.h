@@ -36,6 +36,11 @@
 #define kHttpStateLf1     10
 #define kHttpStateLf2     11
 
+#define kHttpClientStateHeaders      0
+#define kHttpClientStateBody         1
+#define kHttpClientStateBodyChunked  2
+#define kHttpClientStateBodyLengthed 3
+
 #define kHttpStateChunkStart   0
 #define kHttpStateChunkSize    1
 #define kHttpStateChunkExt     2

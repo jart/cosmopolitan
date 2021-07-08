@@ -5614,7 +5614,7 @@ static int ssl_check_ctr_renegotiate( mbedtls_ssl_context *ssl )
  *                   \c mbedtls_ssl_check_pending to check for remaining records.
  *
  */
-int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
+int mbedtls_ssl_read( mbedtls_ssl_context *ssl, void *buf, size_t len )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     size_t n;
@@ -6051,7 +6051,7 @@ static int ssl_write_split( mbedtls_ssl_context *ssl,
  * \note           Attempting to write 0 bytes will result in an empty TLS
  *                 application record being sent.
  */
-int mbedtls_ssl_write( mbedtls_ssl_context *ssl, const unsigned char *buf, size_t len )
+int mbedtls_ssl_write( mbedtls_ssl_context *ssl, const void *buf, size_t len )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> write" ) );

@@ -34,8 +34,10 @@ FLAGS
   -b        log message bodies
   -a        log resource usage
   -g        log handler latency
-  -f        log worker function calls
+  -j        enable ssl client verify
+  -k        disable ssl fetch verify
   -B        use stronger cryptography
+  -f        log worker function calls
   -s        increase silence                  [repeatable]
   -v        increase verbosity                [repeatable]
   -V        increase ssl verbosity            [repeatable]
@@ -45,8 +47,8 @@ FLAGS
   -R /X=/Y  rewrites X to Y                   [repeatable]
   -K PATH   tls private key path              [repeatable]
   -C PATH   tls certificate(s) path           [repeatable]
-  -t MS     tunes read and write timeouts     [def. 60000]
   -M INT    tunes max message payload size    [def. 65536]
+  -t INT    timeout ms or keepalive sec if <0 [def. 60000]
   -p PORT   listen port                       [def. 8080; repeatable]
   -l ADDR   listen addr                       [def. 0.0.0.0; repeatable]
   -c SEC    configures static cache-control

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 #include "net/http/http.h"
 
 ssize_t EzUnchunk(char *p, size_t n, size_t *l) {

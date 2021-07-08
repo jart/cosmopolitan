@@ -244,7 +244,7 @@ void mbedtls_ctr_drbg_init( mbedtls_ctr_drbg_context * );
 int mbedtls_ctr_drbg_seed( mbedtls_ctr_drbg_context *ctx,
                            int (*f_entropy)(void *, unsigned char *, size_t),
                            void *p_entropy,
-                           const unsigned char *custom,
+                           const void *custom,
                            size_t len );
 
 /**

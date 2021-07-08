@@ -1429,7 +1429,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context * );
 int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context * );
 int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context * );
 int mbedtls_ssl_handshake_step( mbedtls_ssl_context * );
-int mbedtls_ssl_read( mbedtls_ssl_context *, unsigned char *, size_t );
+int mbedtls_ssl_read( mbedtls_ssl_context *, void *, size_t );
 int mbedtls_ssl_renegotiate( mbedtls_ssl_context * );
 int mbedtls_ssl_send_alert_message( mbedtls_ssl_context *, unsigned char, unsigned char );
 int mbedtls_ssl_session_load( mbedtls_ssl_session *, const unsigned char *, size_t );
@@ -1443,7 +1443,7 @@ int mbedtls_ssl_set_hs_own_cert( mbedtls_ssl_context *, mbedtls_x509_crt *, mbed
 int mbedtls_ssl_set_hs_psk( mbedtls_ssl_context *, const unsigned char *, size_t );
 int mbedtls_ssl_set_session( mbedtls_ssl_context *, const mbedtls_ssl_session * );
 int mbedtls_ssl_setup( mbedtls_ssl_context *, const mbedtls_ssl_config * );
-int mbedtls_ssl_write( mbedtls_ssl_context *, const unsigned char *, size_t );
+int mbedtls_ssl_write( mbedtls_ssl_context *, const void *, size_t );
 size_t mbedtls_ssl_get_bytes_avail( const mbedtls_ssl_context * );
 size_t mbedtls_ssl_get_input_max_frag_len( const mbedtls_ssl_context * );
 size_t mbedtls_ssl_get_output_max_frag_len( const mbedtls_ssl_context * );

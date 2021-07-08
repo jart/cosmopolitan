@@ -720,11 +720,13 @@ syscon	sol	SOL_X25					262			0			0			0			0			0
 syscon	tcp	TCP_NODELAY				1			1			1			1			1			1			# strong consensus for disabling nagle's algorithm; so be sure to disable it by turning this on
 syscon	tcp	TCP_CORK				3			4			4			16			0			0			# nagle's algorithm strikes again; TCP_NOPUSH on BSD; be sure to turn it off; protip: mmap+writev vs. write+sendfile; see also /proc/sys/net/ipv4/tcp_autocorking; netbsd is 4 but not implemented
 syscon	tcp	TCP_MAXSEG				2			2			2			2			2			0			# reduces tcp segment size; see also tcp offloading
-syscon	tcp	TCP_FASTOPEN				23			0			0x0401			0			0			15                      # reduces roundtrips; for listener; Linux 3.7+ (c. 2012) / or is windows it 0x22? /proc/sys/net/ipv4/tcp_fastopen TODO(jart): MSG_FASTOPEN; XNU sources say 261 but not sure if that's true
+syscon	tcp	TCP_FASTOPEN				23			0			0x0401			0			0			15			# reduces roundtrips; for listener; Linux 3.7+ (c. 2012) / or is windows it 0x22? /proc/sys/net/ipv4/tcp_fastopen TODO(jart): MSG_FASTOPEN; XNU sources say 261 but not sure if that's true
+syscon	tcp	TCP_FASTOPEN_CONNECT			30			0			0			0			0			0			# reduces roundtrips; for listener; Linux 3.7+ (c. 2012) / or is windows it 0x22? /proc/sys/net/ipv4/tcp_fastopen TODO(jart): MSG_FASTOPEN; XNU sources say 261 but not sure if that's true
 syscon	tcp	TCP_KEEPIDLE				4			0			0x100			0			3			0			# keepalives
 syscon	tcp	TCP_KEEPINTVL				5			0x101			0x200			0			5			0			# keepalives
 syscon	tcp	TCP_KEEPCNT				6			0x102			0x400			0			6			0			# keepalives
 syscon	tcp	TCP_SYNCNT				7			0			0			0			0			0			# how hard to syn packet the enemy
+syscon	tcp	TCP_ULP					31			0			0			0			0			0			# setsockopt(sock, IPPROTO_TCP, TCP_ULP, "tls", 4)
 syscon	tcp	TCP_COOKIE_TRANSACTIONS			15			0			0			0			0			0			# defense against the syn packets
 syscon	tcp	TCP_LINGER2				8			0			0			0			0			0			# orphaned fin-wait-2 lifetime cf. net.ipv4.tcp_fin_timeout see cloudflare blog
 syscon	tcp	TCP_NOTSENT_LOWAT			25			513			0			0			0			0			# limit unset byte queue

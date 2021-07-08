@@ -6,6 +6,7 @@
 #include "libc/limits.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
+#include "net/http/http.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/oid.h"
@@ -2090,7 +2091,7 @@ static const struct x509_crt_verify_string x509_crt_verify_strings[] = {
  *                 terminated nul byte), or a negative error code.
  */
 int mbedtls_x509_crt_verify_info( char *buf, size_t size, const char *prefix,
-                          uint32_t flags )
+                                  uint32_t flags )
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     const struct x509_crt_verify_string *cur;
@@ -2794,11 +2795,17 @@ static int x509_crt_check_cn( const mbedtls_x509_buf *name,
 static int x509_crt_check_san( const mbedtls_x509_buf *name,
                                const char *cn, size_t cn_len )
 {
+    int64_t ip;
     const unsigned char san_type = (unsigned char) name->tag &
                                    MBEDTLS_ASN1_TAG_VALUE_MASK;
     /* dNSName */
     if( san_type == MBEDTLS_X509_SAN_DNS_NAME )
         return( x509_crt_check_cn( name, cn, cn_len ) );
+    if( san_type == MBEDTLS_X509_SAN_IP_ADDRESS &&
+        name->len == 4 && ( ip = ParseIp( cn, cn_len ) ) != -1 &&
+        ip == READ32BE( name->p ) ) {
+        return( 0 );
+    }
     /* (We may handle other types here later.) */
     /* Unrecognized type */
     return -1;
