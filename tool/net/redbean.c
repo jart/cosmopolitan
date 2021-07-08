@@ -167,88 +167,6 @@ static const char *const kIndexPaths[] = {
     "index.html",
 };
 
-static const struct ContentTypeExtension {
-  unsigned char ext[8];
-  const char *mime;
-} kContentTypeExtension[] = {
-    {"7z", "application/x-7z-compressed"},     //
-    {"aac", "audio/aac"},                      //
-    {"apng", "image/apng"},                    //
-    {"atom", "application/atom+xml"},          //
-    {"avi", "video/x-msvideo"},                //
-    {"avif", "image/avif"},                    //
-    {"azw", "application/vnd.amazon.ebook"},   //
-    {"bmp", "image/bmp"},                      //
-    {"bz2", "application/x-bzip2"},            //
-    {"c", "text/plain"},                       //
-    {"cc", "text/plain"},                      //
-    {"css", "text/css"},                       //
-    {"csv", "text/csv"},                       //
-    {"doc", "application/msword"},             //
-    {"epub", "application/epub+zip"},          //
-    {"gif", "image/gif"},                      //
-    {"gz", "application/gzip"},                //
-    {"h", "text/plain"},                       //
-    {"htm", "text/html"},                      //
-    {"html", "text/html"},                     //
-    {"i", "text/plain"},                       //
-    {"ico", "image/vnd.microsoft.icon"},       //
-    {"jar", "application/java-archive"},       //
-    {"jpeg", "image/jpeg"},                    //
-    {"jpg", "image/jpeg"},                     //
-    {"js", "text/javascript"},                 //
-    {"json", "application/json"},              //
-    {"m4a", "audio/mpeg"},                     //
-    {"markdown", "text/plain"},                //
-    {"md", "text/plain"},                      //
-    {"mid", "audio/midi"},                     //
-    {"midi", "audio/midi"},                    //
-    {"mp2", "audio/mpeg"},                     //
-    {"mp3", "audio/mpeg"},                     //
-    {"mp4", "video/mp4"},                      //
-    {"mpeg", "video/mpeg"},                    //
-    {"mpg", "video/mpeg"},                     //
-    {"oga", "audio/ogg"},                      //
-    {"ogg", "application/ogg"},                //
-    {"ogv", "video/ogg"},                      //
-    {"ogx", "application/ogg"},                //
-    {"otf", "font/otf"},                       //
-    {"pdf", "application/pdf"},                //
-    {"png", "image/png"},                      //
-    {"rar", "application/vnd.rar"},            //
-    {"rtf", "application/rtf"},                //
-    {"s", "text/plain"},                       //
-    {"sh", "application/x-sh"},                //
-    {"sqlite", "application/vnd.sqlite3"},     //
-    {"sqlite3", "application/vnd.sqlite3"},    //
-    {"svg", "image/svg+xml"},                  //
-    {"swf", "application/x-shockwave-flash"},  //
-    {"t38", "image/t38"},                      //
-    {"tar", "application/x-tar"},              //
-    {"tiff", "image/tiff"},                    //
-    {"ttf", "font/ttf"},                       //
-    {"txt", "text/plain"},                     //
-    {"ul", "audio/basic"},                     //
-    {"ulaw", "audio/basic"},                   //
-    {"wasm", "application/wasm"},              //
-    {"wav", "audio/x-wav"},                    //
-    {"weba", "audio/webm"},                    //
-    {"webm", "video/webm"},                    //
-    {"webp", "image/webp"},                    //
-    {"woff", "font/woff"},                     //
-    {"woff2", "font/woff2"},                   //
-    {"wsdl", "application/wsdl+xml"},          //
-    {"xhtml", "application/xhtml+xml"},        //
-    {"xls", "application/vnd.ms-excel"},       //
-    {"xml", "application/xml"},                //
-    {"xsl", "application/xslt+xml"},           //
-    {"xslt", "application/xslt+xml"},          //
-    {"xz", "application/x-xz"},                //
-    {"z", "application/zlib"},                 //
-    {"zip", "application/zip"},                //
-    {"zst", "application/zstd"},               //
-};
-
 static const char kRegCode[][8] = {
     "OK",     "NOMATCH", "BADPAT", "COLLATE", "ECTYPE", "EESCAPE", "ESUBREG",
     "EBRACK", "EPAREN",  "EBRACE", "BADBR",   "ERANGE", "ESPACE",  "BADRPT",
@@ -390,9 +308,10 @@ static int zfd;
 static int frags;
 static int gmtoff;
 static int client;
-static int daemonuid;
-static int daemongid;
+static int changeuid;
+static int changegid;
 static int statuscode;
+static int oldloglevel;
 static int maxpayloadsize;
 static int messageshandled;
 static uint32_t clientaddrsize;
@@ -544,6 +463,7 @@ static void UnmapLater(int f, void *p, size_t n) {
 }
 
 static void CollectGarbage(void) {
+  __log_level = oldloglevel;
   DestroyHttpMessage(&msg);
   while (freelist.n) {
     free(freelist.p[--freelist.n]);
@@ -935,10 +855,6 @@ static void DescribeAddress(char buf[32], uint32_t addr, uint16_t port) {
   p += uint64toarray_radix10((addr & 0x0000FF00) >> 010, p), *p++ = '.';
   p += uint64toarray_radix10((addr & 0x000000FF) >> 000, p), *p++ = ':';
   p += uint64toarray_radix10(port, p);
-  if ((s = GetIpCategoryName(CategorizeIp(addr)))) {
-    *p++ = ' ';
-    p = stpcpy(p, s);
-  }
   *p++ = '\0';
 }
 
@@ -992,6 +908,14 @@ static void ProgramBrand(const char *s) {
   free(p);
 }
 
+static void ProgramUid(long x) {
+  changeuid = x;
+}
+
+static void ProgramGid(long x) {
+  changegid = x;
+}
+
 static void ProgramTimeout(long ms) {
   ldiv_t d;
   if (ms < 0) {
@@ -1041,8 +965,11 @@ static bool HasString(struct Strings *l, const char *s, size_t n) {
   return false;
 }
 
-static void AddStagingDirectory(char *s) {
-  size_t n = strlen(s);
+static void ProgramDirectory(const char *path) {
+  char *s;
+  size_t n;
+  s = strdup(path);
+  n = strlen(s);
   while (n && (s[n - 1] == '/' || s[n - 1] == '\\')) s[--n] = 0;
   if (!n || !isdirectory(s)) {
     fprintf(stderr, "error: not a directory: %`'s\n", s);
@@ -1079,6 +1006,10 @@ static void ProgramHeader(const char *s) {
   }
 }
 
+static void ProgramLogPath(const char *s) {
+  logpath = strdup(s);
+}
+
 static bool IsServerFd(int fd) {
   size_t i;
   for (i = 0; i < servers.n; ++i) {
@@ -1087,6 +1018,11 @@ static bool IsServerFd(int fd) {
     }
   }
   return false;
+}
+
+static void ChangeUser(void) {
+  if (changegid) LOGIFNEG1(setgid(changegid));
+  if (changeuid) LOGIFNEG1(setuid(changeuid));
 }
 
 static void Daemonize(void) {
@@ -1110,8 +1046,7 @@ static void Daemonize(void) {
   open("/dev/null", O_RDONLY);
   open(logpath, O_APPEND | O_WRONLY | O_CREAT, 0640);
   dup2(1, 2);
-  LOGIFNEG1(setgid(daemongid));
-  LOGIFNEG1(setuid(daemonuid));
+  ChangeUser();
 }
 
 static void ReportWorkerExit(int pid, int ws) {
@@ -2253,7 +2188,7 @@ static void GetOpts(int argc, char *argv[]) {
         ProgramRedirectArg(0, optarg);
         break;
       case 'D':
-        AddStagingDirectory(optarg);
+        ProgramDirectory(optarg);
         break;
       case 'c':
         ProgramCache(strtol(optarg, NULL, 0));
@@ -2272,16 +2207,16 @@ static void GetOpts(int argc, char *argv[]) {
         ProgramHeader(optarg);
         break;
       case 'L':
-        logpath = optarg;
+        ProgramLogPath(optarg);
         break;
       case 'P':
         pidpath = optarg;
         break;
       case 'U':
-        daemonuid = atoi(optarg);
+        ProgramUid(atoi(optarg));
         break;
       case 'G':
-        daemongid = atoi(optarg);
+        ProgramGid(atoi(optarg));
         break;
 #ifndef UNSECURE
       case 'C':
@@ -2296,9 +2231,6 @@ static void GetOpts(int argc, char *argv[]) {
       default:
         PrintUsage(stderr, EX_USAGE);
     }
-  }
-  if (logpath) {
-    CHECK_NOTNULL(freopen(logpath, "a", stderr));
   }
   if (!!keypath ^ !!certpath) {
     fprintf(stderr, "error: the -C and -K flags need to be passed together\n");
@@ -3447,6 +3379,7 @@ static int LuaPushHeaders(lua_State *L, struct HttpMessage *m, const char *b) {
 static void LogMessage(const char *d, const char *s, size_t n) {
   size_t n2, n3;
   char *s2, *s3;
+  if (!LOGGABLE(kLogInfo)) return;
   while (n && (s[n - 1] == '\r' || s[n - 1] == '\n')) --n;
   if ((s2 = DecodeLatin1(s, n, &n2))) {
     if ((s3 = IndentLines(s2, n2, &n3, 1))) {
@@ -3461,6 +3394,7 @@ static void LogBody(const char *d, const char *s, size_t n) {
   char *s2, *s3;
   size_t n2, n3;
   if (!n) return;
+  if (!LOGGABLE(kLogInfo)) return;
   while (n && (s[n - 1] == '\r' || s[n - 1] == '\n')) --n;
   if ((s2 = VisualizeControlCodes(s, n, &n2))) {
     if ((s3 = IndentLines(s2, n2, &n3, 1))) {
@@ -3618,7 +3552,9 @@ static int LuaFetch(lua_State *L) {
     luaL_error(L, "write failed: %s", strerror(errno));
     unreachable;
   }
-  if (logmessages) LogMessage("sent", request, requestlen);
+  if (logmessages) {
+    LogMessage("sent", request, requestlen);
+  }
 
   /*
    * Handle response.
@@ -3660,7 +3596,9 @@ static int LuaFetch(lua_State *L) {
         if (rc == -1) goto TransportError;
         if (rc) {
           hdrsize = rc;
-          if (logmessages) LogMessage("received", inbuf.p, hdrsize);
+          if (logmessages) {
+            LogMessage("received", inbuf.p, hdrsize);
+          }
           if (100 <= msg.status && msg.status <= 199) {
             if ((HasHeader(kHttpContentLength) &&
                  !HeaderEqualCase(kHttpContentLength, "0")) ||
@@ -4043,20 +3981,16 @@ static int LuaGetParam(lua_State *L) {
 
 static void LuaPushUrlParams(lua_State *L, struct UrlParams *h) {
   size_t i;
-  if (h->p) {
+  lua_newtable(L);
+  for (i = 0; i < h->n; ++i) {
     lua_newtable(L);
-    for (i = 0; i < h->n; ++i) {
-      lua_newtable(L);
-      lua_pushlstring(L, h->p[i].key.p, h->p[i].key.n);
-      lua_seti(L, -2, 1);
-      if (h->p[i].val.p) {
-        lua_pushlstring(L, h->p[i].val.p, h->p[i].val.n);
-        lua_seti(L, -2, 2);
-      }
-      lua_seti(L, -2, i + 1);
+    lua_pushlstring(L, h->p[i].key.p, h->p[i].key.n);
+    lua_seti(L, -2, 1);
+    if (h->p[i].val.p) {
+      lua_pushlstring(L, h->p[i].val.p, h->p[i].val.n);
+      lua_seti(L, -2, 2);
     }
-  } else {
-    lua_pushnil(L);
+    lua_seti(L, -2, i + 1);
   }
 }
 
@@ -4468,11 +4402,6 @@ static noinline int LuaProgramInt(lua_State *L, void P(long)) {
   return 0;
 }
 
-static int LuaProgramAddr(lua_State *L) {
-  ProgramAddr(luaL_checkstring(L, 1));
-  return 0;
-}
-
 static int LuaProgramPort(lua_State *L) {
   return LuaProgramInt(L, ProgramPort);
 }
@@ -4485,9 +4414,33 @@ static int LuaProgramTimeout(lua_State *L) {
   return LuaProgramInt(L, ProgramTimeout);
 }
 
-static int LuaProgramBrand(lua_State *L) {
-  ProgramBrand(luaL_checkstring(L, 1));
+static int LuaProgramUid(lua_State *L) {
+  return LuaProgramInt(L, ProgramUid);
+}
+
+static int LuaProgramGid(lua_State *L) {
+  return LuaProgramInt(L, ProgramGid);
+}
+
+static noinline int LuaProgramString(lua_State *L, void P(const char *)) {
+  P(luaL_checkstring(L, 1));
   return 0;
+}
+
+static int LuaProgramAddr(lua_State *L) {
+  return LuaProgramString(L, ProgramAddr);
+}
+
+static int LuaProgramBrand(lua_State *L) {
+  return LuaProgramString(L, ProgramBrand);
+}
+
+static int LuaProgramDirectory(lua_State *L) {
+  return LuaProgramString(L, ProgramDirectory);
+}
+
+static int LuaProgramLogPath(lua_State *L) {
+  return LuaProgramString(L, ProgramLogPath);
 }
 
 static int LuaProgramPrivateKey(lua_State *L) {
@@ -4526,7 +4479,7 @@ static int LuaProgramRedirect(lua_State *L) {
   return 0;
 }
 
-static int LuaProgramBool(lua_State *L, bool *b) {
+static noinline int LuaProgramBool(lua_State *L, bool *b) {
   *b = lua_toboolean(L, 1);
   return 0;
 }
@@ -4537,6 +4490,14 @@ static int LuaProgramSslClientVerify(lua_State *L) {
 
 static int LuaProgramSslFetchVerify(lua_State *L) {
   return LuaProgramBool(L, &sslfetchverify);
+}
+
+static int LuaProgramLogMessages(lua_State *L) {
+  return LuaProgramBool(L, &logmessages);
+}
+
+static int LuaProgramLogBodies(lua_State *L) {
+  return LuaProgramBool(L, &logbodies);
 }
 
 static int LuaGetLogLevel(lua_State *L) {
@@ -4916,13 +4877,19 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramBrand", LuaProgramBrand},                      //
     {"ProgramCache", LuaProgramCache},                      //
     {"ProgramCertificate", LuaProgramCertificate},          //
+    {"ProgramDirectory", LuaProgramDirectory},              //
+    {"ProgramGid", LuaProgramGid},                          //
     {"ProgramHeader", LuaProgramHeader},                    //
+    {"ProgramLogBodies", LuaProgramLogBodies},              //
+    {"ProgramLogMessages", LuaProgramLogMessages},          //
+    {"ProgramLogPath", LuaProgramLogPath},                  //
     {"ProgramPort", LuaProgramPort},                        //
     {"ProgramPrivateKey", LuaProgramPrivateKey},            //
     {"ProgramRedirect", LuaProgramRedirect},                //
     {"ProgramSslClientVerify", LuaProgramSslClientVerify},  //
     {"ProgramSslFetchVerify", LuaProgramSslFetchVerify},    //
     {"ProgramTimeout", LuaProgramTimeout},                  //
+    {"ProgramUid", LuaProgramUid},                          //
     {"Route", LuaRoute},                                    //
     {"RouteHost", LuaRouteHost},                            //
     {"RoutePath", LuaRoutePath},                            //
@@ -5036,7 +5003,9 @@ static ssize_t SendString(const char *s) {
   n = strlen(s);
   iov.iov_base = s;
   iov.iov_len = n;
-  if (logmessages) LogMessage("sending", s, n);
+  if (logmessages) {
+    LogMessage("sending", s, n);
+  }
   for (;;) {
     if ((rc = writer(client, &iov, 1)) != -1 || errno != EINTR) {
       return rc;
@@ -5469,6 +5438,7 @@ static char *HandleRequest(void) {
 static char *Route(const char *host, size_t hostlen, const char *path,
                    size_t pathlen) {
   char *p;
+  if (logmessages) LogMessage("received", inbuf.p, hdrsize);
   if (hostlen && (p = RouteHost(host, hostlen, path, pathlen))) {
     return p;
   }
@@ -5563,41 +5533,6 @@ static char *HandleAsset(struct Asset *a, const char *path, size_t pathlen) {
   }
 }
 
-static inline int CompareInts(const uint64_t x, uint64_t y) {
-  return x > y ? 1 : x < y ? -1 : 0;
-}
-
-static const char *BisectContentType(uint64_t ext) {
-  int c, m, l, r;
-  l = 0;
-  r = ARRAYLEN(kContentTypeExtension) - 1;
-  while (l <= r) {
-    m = (l + r) >> 1;
-    c = CompareInts(READ64BE(kContentTypeExtension[m].ext), ext);
-    if (c < 0) {
-      l = m + 1;
-    } else if (c > 0) {
-      r = m - 1;
-    } else {
-      return kContentTypeExtension[m].mime;
-    }
-  }
-  return NULL;
-}
-
-static const char *FindContentType(const char *p, size_t n) {
-  int c;
-  uint64_t w;
-  for (w = 0; n--;) {
-    c = p[n] & 255;
-    if (c == '.') return BisectContentType(bswap_64(w));
-    w <<= 8;
-    w |= c;
-    w |= 0100;
-  }
-  return NULL;
-}
-
 static const char *GetContentType(struct Asset *a, const char *path, size_t n) {
   const char *r;
   if (a->file && (r = FindContentType(a->file->path.s, a->file->path.n))) {
@@ -5688,53 +5623,6 @@ static inline bool MustNotIncludeMessageBody(void) { /* RFC2616 § 4.4 */
          statuscode == 204 || statuscode == 304;
 }
 
-static inline int GetNetworkCounterIndex(int x) {
-  switch (x) {
-    case kIpLoopback:
-      return offsetof(struct Counters, netloopback) / sizeof(long);
-    case kIpPrivate:
-      return offsetof(struct Counters, netprivate) / sizeof(long);
-    case kIpTestnet:
-      return offsetof(struct Counters, nettestnet) / sizeof(long);
-    case kIpAfrinic:
-      return offsetof(struct Counters, netafrinic) / sizeof(long);
-    case kIpLacnic:
-      return offsetof(struct Counters, netlacnic) / sizeof(long);
-    case kIpApnic:
-      return offsetof(struct Counters, netapnic) / sizeof(long);
-    case kIpArin:
-      return offsetof(struct Counters, netarin) / sizeof(long);
-    case kIpRipe:
-      return offsetof(struct Counters, netripe) / sizeof(long);
-    case kIpDod:
-      return offsetof(struct Counters, netdod) / sizeof(long);
-    case kIpAtt:
-      return offsetof(struct Counters, netatt) / sizeof(long);
-    case kIpApple:
-      return offsetof(struct Counters, netapple) / sizeof(long);
-    case kIpFord:
-      return offsetof(struct Counters, netford) / sizeof(long);
-    case kIpCogent:
-      return offsetof(struct Counters, netcogent) / sizeof(long);
-    case kIpPrudential:
-      return offsetof(struct Counters, netprudential) / sizeof(long);
-    case kIpUsps:
-      return offsetof(struct Counters, netusps) / sizeof(long);
-    case kIpComcast:
-      return offsetof(struct Counters, netcomcast) / sizeof(long);
-    case kIpAnonymous:
-      return offsetof(struct Counters, netanonymous) / sizeof(long);
-    default:
-      return offsetof(struct Counters, netother) / sizeof(long);
-  }
-}
-
-static inline void RecordNetworkOrigin(void) {
-  uint32_t ip;
-  GetRemoteAddr(&ip, 0);
-  LockInc(((long *)&shared->c) + GetNetworkCounterIndex(CategorizeIp(ip)));
-}
-
 static bool HandleMessage(void) {
   int rc;
   int iovlen;
@@ -5745,8 +5633,6 @@ static bool HandleMessage(void) {
   if ((rc = ParseHttpMessage(&msg, inbuf.p, amtread)) != -1) {
     if (!rc) return false;
     hdrsize = rc;
-    if (logmessages) LogMessage("received", inbuf.p, hdrsize);
-    RecordNetworkOrigin();
     p = HandleRequest();
   } else {
     LockInc(&shared->c.badmessages);
@@ -6205,6 +6091,11 @@ void RedBean(int argc, char *argv[]) {
     Daemonize();
   } else {
     setpgid(getpid(), getpid());
+    if (logpath) {
+      close(2);
+      open(logpath, O_APPEND | O_WRONLY | O_CREAT, 0640);
+    }
+    ChangeUser();
   }
   UpdateCurrentDate(nowl());
   freelist.c = 8;
@@ -6215,6 +6106,7 @@ void RedBean(int argc, char *argv[]) {
   hdrbuf.p = xmalloc(hdrbuf.n);
   inbuf.n = maxpayloadsize;
   inbuf.p = xmalloc(inbuf.n);
+  oldloglevel = __log_level;
   while (!terminated) {
     if (zombied) {
       ReapZombies();
