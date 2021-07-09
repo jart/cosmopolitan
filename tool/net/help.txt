@@ -201,6 +201,733 @@ SECURITY
 
   That's in addition to existing flags like -vvvm.
 
+LUA SERVER PAGES
+
+   Any files with the extension .lua will be dynamically served by redbean.
+   Here's the simplest possible example:
+
+     Write('<b>Hello World</b>')
+
+   The Lua Server Page above should be able to perform at 700,000 responses
+   per second on a Core i9, without any sort of caching. If you want a Lua
+   handler that can do 1,000,000 responses per second, then try adding the
+   following global handler to your /.init.lua file:
+
+     function OnHttpRequest()
+        Write('<b>Hello World</b>')
+     end
+
+   Here's an example of a more typical workflow for Lua Server Pages using
+   the redbean API:
+
+     SetStatus(200)
+     SetHeader('Content-Type', 'text/plain; charset=utf-8')
+     Write('<p>Hello ')
+     Write(EscapeHtml(GetParam('name')))
+
+   We didn't need the first two lines in the previous example, because
+   they're implied by redbean automatically if you don't set them. Responses
+   are also buffered until the script finishes executing. That enables
+   redbean to make HTTP as easy as possible. In the future, API capabilities
+   will be expanded to make possible things like websockets.
+
+   redbean embeds the Lua standard library. You can use packages such as io
+   to persist and share state across requests and connections, as well as the
+   StoreAsset function, and the lsqlite3 module.
+
+   Your Lua interpreter begins its life in the main process at startup in the
+   .init.lua, which is likely where you'll want to perform all your expensive
+   one-time operations like importing modules. Then, as requests roll in,
+   isolated processes are cloned from the blueprint you created.
+
+SPECIAL PATHS
+
+   /
+           redbean will generate a zip central directory listing for this
+           page, and this page only, but only if there isn't an /index.lua or
+           /index.html file defined.
+
+   /.init.lua
+           This script is run once in the main process at startup. This lets
+           you modify the state of the Lua interpreter before connection
+           processes are forked off. For example, it's a good idea to do
+           expensive one-time computations here. You can also use this file
+           to call the ProgramFOO() functions below. The init module load
+           happens after redbean's arguments and zip assets have been parsed,
+           but before calling functions like socket() and fork(). Note that
+           this path is a hidden file so that it can't be unintentionally run
+           by the network client.
+
+   /.reload.lua
+           This script is run from the main process when SIGHUP is received.
+           This only applies to redbean when running in daemon mode. Any
+           changes that are made to the Lua interpreter state will be
+           inherited by future forked connection processes. Note that this
+           path is a hidden file so that it can't be unintentionally run by
+           the network client.
+
+   /.lua/...
+           Your Lua modules go in this directory. The way it works is redbean
+           sets Lua's package.path to zip:.lua/?.lua;zip:.lua/?/init.lua by
+           default. Cosmopolitan Libc lets system calls like open read from
+           the ZIP structure, if the filename is prefixed with zip:. So this
+           works like magic.
+
+   /redbean.png
+           If it exists, it'll be used as the / listing page icon, embedded
+           as a base64 URI.
+
+   /usr/share/ssl/root
+           This directory contains your root certificate authorities. It is
+           needed so the Fetch() HTTPS client API can verify that a remote
+           certificate was signed by a third party. You can add your own
+           certificate files to this directory within the ZIP executable.
+           If you enable HTTPS client verification then redbean will check
+           that HTTPS clients (a) have a certificate and (b) it was signed.
+
+GLOBALS
+
+   argv: array[str]
+           Array of command line arguments, excluding those parsed by
+           getopt() in the C code, which stops parsing at the first
+           non-hyphenated arg. In some cases you can use the magic --
+           argument to delimit C from Lua arguments.
+
+HOOKS
+
+   OnHttpRequest
+           If this function is defined in the global scope by your /.init.lua
+           then redbean will call it at the ealiest possible moment to
+           handover control for all messages (with the exception of OPTIONS
+           *). See functions like Route which asks redbean to do its default
+           thing from the handler.
+
+FUNCTIONS
+
+   Write(data:str)
+           Appends data to HTTP response payload buffer. This is buffered
+           independently of headers.
+
+   SetStatus(code:int[,reason:str])
+           Starts an HTTP response, specifying the parameters on its first
+           line. reason is optional since redbean can fill in the appropriate
+           text for well-known magic numbers, e.g. 200, 404, etc. This method
+           will reset the response and is therefore mutually exclusive with
+           ServeAsset and ServeError. If a status setting function isn't
+           called, then the default behavior is to send 200 OK.
+
+   SetHeader(name:str,value:str)
+           Appends HTTP header to response header buffer. name is
+           case-insensitive and restricted to non-space ASCII. value is a
+           UTF-8 string that must be encodable as ISO-8859-1. Leading and
+           trailing whitespace is trimmed automatically. Overlong characters
+           are canonicalized. C0 and C1 control codes are forbidden, with the
+           exception of tab. This function automatically calls SetStatus(200,
+           "OK") if a status has not yet been set. The header buffer is
+           independent of the payload buffer. Neither are written to the wire
+           until the Lua Server Page has finished executing. This function
+           disallows the setting of certain headers such as Date and
+           Content-Range which are abstracted by the transport layer. In such
+           cases, consider calling ServeAsset.
+
+   GetParam(name:str) → value:str
+           Returns first value associated with name. name is handled in a
+           case-sensitive manner. This function checks Request-URL parameters
+           first. Then it checks application/x-www-form-urlencoded from the
+           message body, if it exists, which is common for HTML forms sending
+           POST requests. If a parameter is supplied matching name that has
+           no value, e.g. foo in ?foo&bar=value, then the returned value will
+           be nil, whereas for ?foo=&bar=value it would be "". To
+           differentiate between no-equal and absent, use the HasParam
+           function. The returned value is decoded from ISO-8859-1 (only in
+           the case of Request-URL) and we assume that percent-encoded
+           characters were supplied by the client as UTF-8 sequences, which
+           are returned exactly as the client supplied them, and may
+           therefore may contain overlong sequences, control codes, NUL
+           characters, and even numbers which have been banned by the IETF.
+           It is the responsibility of the caller to impose further
+           restrictions on validity, if they're desired.
+
+   EscapeHtml(str) → str
+           Escapes HTML entities: The set of entities is &><"' which become
+           &amp;&gt;&lt;&quot;&#39;. This function is charset agnostic and
+           will not canonicalize overlong encodings. It is assumed that a
+           UTF-8 string will be supplied. See escapehtml.c.
+
+   LaunchBrowser([path:str])
+           Launches web browser on local machine with URL to this redbean
+           server. This function may be called from your /.init.lua.
+
+   CategorizeIp(ip:uint32) → str
+           Returns a string describing an IP address. This is currently Class
+           A granular. It can tell you if traffic originated from private
+           networks, ARIN, APNIC, DOD, etc.
+
+   DecodeBase64(ascii:str) → binary:str
+           Turns ASCII into binary, in a permissive way that ignores
+           characters outside the base64 alphabet, such as whitespace. See
+           decodebase64.c.
+
+   DecodeLatin1(iso-8859-1:str) → utf-8:str
+           Turns ISO-8859-1 string into UTF-8.
+
+   EncodeBase64(binary:str) → ascii:str
+           Turns binary into ASCII. This can be used to create HTML data:
+           URIs that do things like embed a PNG file in a web page. See
+           encodebase64.c.
+
+   EncodeLatin1(utf-8:str[,flags:int]) → iso-8859-1:str
+           Turns UTF-8 into ISO-8859-1 string.
+
+   EscapeFragment(str) → str
+           Escapes URL #fragment. The allowed characters are
+           -/?.~_@:!$&'()*+,;=0-9A-Za-z and everything else gets %XX encoded.
+           Please note that '& can still break HTML and that '() can still
+           break CSS URLs. This function is charset agnostic and will not
+           canonicalize overlong encodings. It is assumed that a UTF-8 string
+           will be supplied. See kescapefragment.c.
+
+   EscapeHost(str) → str
+           Escapes URL host. See kescapeauthority.c
+
+   EscapeLiteral(str) → str
+           Escapes JavaScript or JSON string literal content. The caller is
+           responsible for adding the surrounding quotation marks. This
+           implementation \uxxxx sequences for all non-ASCII sequences. HTML
+           entities are also encoded, so the output doesn't need EscapeHtml.
+           This function assumes UTF-8 input. Overlong encodings are
+           canonicalized. Invalid input sequences are assumed to be
+           ISO-8859-1. The output is UTF-16 since that's what JavaScript
+           uses. For example, some individual codepoints such as emoji
+           characters will encode as multiple \uxxxx sequences. Ints that are
+           impossible to encode as UTF-16 are substituted with the \xFFFD
+           replacement character. See escapejsstringliteral.c.
+
+   EscapeParam(str) → str
+           Escapes URL parameter name or value. The allowed characters are
+           -.*_0-9A-Za-z and everything else gets %XX encoded. This function
+           is charset agnostic and will not canonicalize overlong encodings.
+           It is assumed that a UTF-8 string will be supplied. See
+           kescapeparam.c.
+
+   EscapePass(str) → str
+           Escapes URL password. See kescapeauthority.c.
+
+   EscapePath(str) → str
+           Escapes URL path. This is the same as EscapeSegment except slash
+           is allowed. The allowed characters are -.~_@:!$&'()*+,;=0-9A-Za-z/
+           and everything else gets %XX encoded. Please note that '& can
+           still break HTML, so the output may need EscapeHtml too. Also note
+           that '() can still break CSS URLs. This function is charset
+           agnostic and will not canonicalize overlong encodings. It is
+           assumed that a UTF-8 string will be supplied. See kescapepath.c.
+
+   EscapeSegment(str) → str
+           Escapes URL path segment. This is the same as EscapePath except
+           slash isn't allowed. The allowed characters are
+           -.~_@:!$&'()*+,;=0-9A-Za-z and everything else gets %XX encoded.
+           Please note that '& can still break HTML, so the output may need
+           EscapeHtml too. Also note that '() can still break CSS URLs. This
+           function is charset agnostic and will not canonicalize overlong
+           encodings. It is assumed that a UTF-8 string will be supplied. See
+           kescapesegment.c.
+
+   EscapeUser(str) → str
+           Escapes URL username. See kescapeauthority.c.
+
+   FormatHttpDateTime(seconds:int) → rfc1123:str
+           Converts UNIX timestamp to an RFC1123 string that looks like this:
+           Mon, 29 Mar 2021 15:37:13 GMT. See formathttpdatetime.c.
+
+   FormatIp(uint32) → str
+           Turns integer like 0x01020304 into a string like 1.2.3.4. See also
+           ParseIp for the inverse operation.
+
+   GetAssetMode(path:str) → int
+           Returns UNIX-style octal mode for ZIP asset (or local file if the
+           -D flag is used)
+
+   GetAssetSize(path:str) → int
+           Returns byte size of uncompressed contents of ZIP asset (or local
+           file if the -D flag is used)
+
+   GetComment(path:str) → str
+           Returns comment text associated with asset in the ZIP central
+           directory.
+
+   GetRemoteAddr() → ip:uint32,port:uint16
+           Returns client ip4 address and port, e.g. 0x01020304,31337 would
+           represent 1.2.3.4:31337. This is the same as GetClientAddr except
+           it will use the ip:port from the X-Forwarded-For header, only if
+           it IsPrivateIp or IsPrivateIp.
+
+   GetClientAddr() → ip:uint32,port:uint16
+           Returns client socket ip4 address and port, e.g. 0x01020304,31337
+           would represent 1.2.3.4:31337. Please consider using GetRemoteAddr
+           instead, since the latter takes into consideration reverse proxy
+           scenarios.
+
+   GetServerAddr() → ip:uint32,port:uint16
+           Returns address to which listening server socket is bound, e.g.
+           0x01020304,8080 would represent 1.2.3.4:8080. If -p 0 was supplied
+           as the listening port, then the port in this string will be
+           whatever number the operating system assigned.
+
+   GetDate() → seconds:int
+           Returns date associated with request that's used to generate the
+           Date header, which is now, give or take a second. The returned
+           value is a UNIX timestamp.
+
+   GetHeader(name:str) → value:str
+           Returns HTTP header. name is case-insensitive. The header value is
+           returned as a canonical UTF-8 string, with leading and trailing
+           whitespace trimmed, which was decoded from ISO-8859-1, which is
+           guaranteed to not have C0/C1 control sequences, with the exception
+           of the tab character. Leading and trailing whitespace is
+           automatically removed. In the event that the client suplies raw
+           UTF-8 in the HTTP message headers, the original UTF-8 sequence can
+           be losslessly restored by counter-intuitively recoding the
+           returned string back to Latin1. If the requested header is defined
+           by the RFCs as storing comma-separated values (e.g. Allow,
+           Accept-Encoding) and the field name occurs multiple times in the
+           message, then this function will fold those multiple entries into
+           a single string.
+
+   GetHeaders() → table[name:str,value:str]
+           Returns HTTP headers as dictionary mapping header key strings to
+           their UTF-8 decoded values. The ordering of headers from the
+           request message is not preserved. Whether or not the same key can
+           repeat depends on whether or not it's a standard header, and if
+           so, if it's one of the ones that the RFCs define as repeatable.
+           See khttprepeatable.c. Those headers will not be folded. Standard
+           headers which aren't on that list, will be overwritten with the
+           last-occurring one during parsing. Extended headers are always
+           passed through exactly as they're received. Please consider using
+           GetHeader API if possible since it does a better job abstracting
+           these issues.
+
+   GetLogLevel() → int
+           Returns logger verbosity level. Likely return values are kLogDebug
+           > kLogVerbose > kLogInfo > kLogWarn > kLogError > kLogFatal.
+
+   GetHost() → str
+           Returns host associated with request. This will be the Host
+           header, if it's supplied. Otherwise it's the bind address.
+
+   GetMonospaceWidth(str|char) → int
+           Returns monospace display width of string. This is useful for
+           fixed-width formatting. For example, CJK characters typically take
+           up two cells. This function takes into consideration combining
+           characters, which are discounted, as well as control codes and
+           ANSI escape sequences.
+
+   GetMethod() → str
+           Returns HTTP method. Normally this will be GET, HEAD, or POST in
+           which case redbean normalizes this value to its uppercase form.
+           Anything else that the RFC classifies as a "token" string is
+           accepted too, which might contain characters like &".
+
+   GetParams() → array[array[str]]
+           Returns name=value parameters from Request-URL and
+           application/x-www-form-urlencoded message body in the order they
+           were received. This may contain duplicates. The inner array will
+           have either one or two items, depending on whether or not the
+           equals sign was used.
+
+   GetPath() → str
+           Returns the Request-URL path. This is guaranteed to begin with
+           "/". It is further guaranteed that no "//" or "/." exists in the
+           path. The returned value is returned as a UTF-8 string which was
+           decoded from ISO-8859-1. We assume that percent-encoded characters
+           were supplied by the client as UTF-8 sequences, which are returned
+           exactly as the client supplied them, and may therefore may contain
+           overlong sequences, control codes, NUL characters, and even
+           numbers which have been banned by the IETF. redbean takes those
+           things into consideration when performing path safety checks. It
+           is the responsibility of the caller to impose further restrictions
+           on validity, if they're desired.
+
+   GetEffectivePath() → str
+           Returns path as it was resolved by the routing algorithms, which
+           might contain the virtual host prepended if used.
+
+   GetScheme() → str
+           Returns scheme from Request-URL, if any.
+
+   GetPayload() → str
+           Returns the request message payload, or empty string if there
+           isn't one.
+
+   GetUrl() → str
+           Returns the effective Request-URL as an ASCII string, where
+           illegal characters or UTF-8 is guaranteed to be percent encoded,
+           and has been normalized to include either the Host or
+           X-Forwarded-Host headers, if they exist, and possibly a scheme too
+           if redbean is being used as an HTTP proxy server. In the future
+           this API might change to return an object instead.
+
+   GetVersion() → int
+           Returns the request HTTP protocol version, which can be 9 for
+           HTTP/0.9, 10 for HTTP/1.0, or 11 for HTTP/1.1.
+
+   GetZipPaths() → array[str]
+           Returns paths of all assets in the zip central directory, prefixed
+           by a slash.
+
+   HasParam(name:str) → bool
+           Returns true if parameter with name was supplied in either the
+           Request-URL or an application/x-www-form-urlencoded message body.
+
+   HidePath(prefix:str)
+           Programs redbean / listing page to not display any paths beginning
+           with prefix. This function should only be called from /.init.lua.
+
+   IsPublicIp(uint32) → bool
+           Returns true if IP address is not a private network (10.0.0.0/8,
+           172.16.0.0/12, 192.168.0.0/16) and is not localhost (127.0.0.0/8).
+           Note: we intentionally regard TEST-NET IPs as public.
+
+   IsPrivateIp(uint32) → bool
+           Returns true if IP address is part of a private network
+           (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16).
+
+   IsLoopbackIp(uint32) → bool
+           Returns true if IP address is part of the localhost network
+           (127.0.0.0/8).
+
+   IsCompressed(path:str) → bool
+           Returns true if ZIP artifact at path is stored on disk using
+           DEFLATE compression.
+
+   IndentLines(str[,int]) → str
+           Adds spaces to beginnings of multiline string. If the int
+           parameter is not supplied then 1 space will be added.
+
+   LoadAsset(path:str) → str
+           Returns contents of file as string. The asset may be sourced from
+           either the zip (decompressed) or the local filesystem if the -D
+           flag was used. If slurping large file into memory is a concern,
+           then consider using ServeAsset which can serve directly off disk.
+
+   StoreAsset(path:str,data:str,mode:int)
+           Stores asset to executable's ZIP central directory. This currently
+           happens in an append-only fashion and is still largely in the
+           proof-of-concept stages. Currently only supported on Linux, XNU,
+           and FreeBSD.
+
+   Log(level:int,message:str)
+           Emits message string to log, if level is less than or equal to
+           GetLogLevel. If redbean is running in interactive mode, then this
+           will log to the console. If redbean is running as a daemon or the
+           -L LOGFILE flag is passed, then this will log to the file.
+           Reasonable values for level are kLogDebug > kLogVerbose > kLogInfo
+           > kLogWarn > kLogError > kLogFatal. The logger emits timestamps in
+           the local timezone with microsecond precision. If log entries are
+           emitted more frequently than once per second, then the log entry
+           will display a delta timestamp, showing how much time has elapsed
+           since the previous log entry. This behavior is useful for quickly
+           measuring how long various portions of your code take to execute.
+
+   ParseHttpDateTime(rfc1123:str) → seconds:int
+           Converts RFC1123 string that looks like this: Mon, 29 Mar 2021
+           15:37:13 GMT to a UNIX timestamp. See parsehttpdatetime.c.
+
+   ParseUrl(str) → URL
+           Parses URL, returning object having the following fields: scheme,
+           user, pass, host, port, path, params, fragment. This parser is
+           charset agnostic. Percent encoded bytes are decoded for all
+           fields. Returned values might contain things like NUL characters,
+           spaces, control codes, and non-canonical encodings. Absent can be
+           discerned from empty by checking if the pointer is set. There's no
+           failure condition for this routine. This is a permissive parser.
+           This doesn't normalize path segments like `.` or `..` so use
+           IsAcceptablePath() to check for those. No restrictions are imposed
+           beyond that which is strictly necessary for parsing. All the data
+           that is provided will be consumed to the one of the fields. Strict
+           conformance is enforced on some fields more than others, like
+           scheme, since it's the most non-deterministically defined field of
+           them all. Please note this is a URL parser, not a URI parser.
+           Which means we support everything everything the URI spec says we
+           should do except for the things we won't do, like tokenizing path
+           segments into an array and then nesting another array beneath each
+           of those for storing semicolon parameters. So this parser won't
+           make SIP easy. What it can do is parse HTTP URLs and most URIs
+           like data:opaque, better in fact than most things which claim to
+           be URI parsers.
+
+   EncodeUrl(URL) → str
+           This function is the inverse of ParseUrl. The output will always
+           be correctly formatted. The exception is if illegal characters are
+           supplied in the scheme field, since there's no way of escaping
+           those. Opaque parts are escaped as though they were paths, since
+           many URI parsers won't understand things like an unescaped
+           question mark in path.
+
+   ParseIp(str) → int
+           Converts IPv4 address string to integer, e.g. "1.2.3.4" →
+           0x01020304, or returns -1 for invalid inputs. See also FormatIp
+           for the inverse operation.
+
+   ProgramBrand(str)
+           Changes HTTP Server header, as well as the <h1> title on the /
+           listing page. The brand string needs to be a UTF-8 value that's
+           encodable as ISO-8859-1. If the brand is changed to something
+           other than redbean, then the promotional links will be removed
+           from the listing page too. This function should only be called
+           from /.init.lua.
+
+   ProgramCache(seconds:int)
+           Configures Cache-Control and Expires header generation for static
+           asset serving. A negative value will disable the headers. Zero
+           means don't cache. Greater than zero asks public proxies and
+           browsers to cache for a given number of seconds. This should only
+           be called from /.init.lua.
+
+   ProgramPort(uint16)
+           Hard-codes the port number on which to listen, which can be any
+           number in the range 1..65535, or alternatively 0 to ask the
+           operating system to choose a port, which may be revealed later on
+           by GetServerAddr or the -z flag to stdout.
+
+   ProgramRedirect(code:int,src:str,location:str)
+           Configures fallback routing for paths which would otherwise return
+           404 Not Found. If code is 0 then the path is rewritten internally
+           as an accelerated redirect. If code is 301, 302, 307, or 308 then
+           a redirect response will be sent to the client. This should only
+           be called from /.init.lua.
+
+   ProgramCertificate(pem:str)
+           Same as the -C flag if called from .init.lua, e.g.
+           ProgramCertificate(LoadAsset("/.sign.crt")) for zip loading or
+           ProgramCertificate(Slurp("/etc/letsencrypt.lol/fullchain.pem")) for
+           local file system only.
+
+   ProgramPrivateKey(pem:str)
+           Same as the -K flag if called from .init.lua, e.g.
+           ProgramPrivateKey(LoadAsset("/.sign.key")) for zip loading or
+           ProgramPrivateKey(Slurp("/etc/letsencrypt/fullchain.pem")) for
+           local file system only.
+
+   ProgramUid(int)
+           Same as the -U flag if called from .init.lua for setuid()
+
+   ProgramGid(int)
+           Same as the -U flag if called from .init.lua for setgid()
+
+   ProgramDirectory(str)
+           Same as the -D flag if called from .init.lua for overlaying local
+           file system directories. This may be called multiple times. The
+           first directory programmed is preferred. These currently do not
+           show up in the index page listing.
+
+   ProgramLogMessages(bool)
+           Same as the -m flag if called from .init.lua for logging message
+           headers only.
+
+   ProgramLogBodies(bool)
+           Same as the -b flag if called from .init.lua for logging message
+           bodies as part of POST / PUT / etc. requests.
+
+   ProgramLogPath(str)
+           Same as the -L flag if called from .init.lua for setting the log
+           file path on the local file system. It's created if it doesn't
+           exist. This is called before de-escalating the uesr / group id.
+           The file is opened in append only mode. If the disk runs out of
+           space then redbean will truncate the log file if has access to
+           change the log file after daemonizing.
+
+   Slurp(filename:str) → str
+           Reads file data from local file system.
+
+   Route([host:str,[path:str]])
+           Instructs redbean to follow the normal HTTP serving path. This
+           function is useful when writing an OnHttpRequest handler, since
+           that overrides the serving path entirely. So if the handler
+           decides it doesn't want to do anything, it can simply call this
+           function, to handover control back to the redbean core. By
+           default, the host and path arguments are supplied from the
+           resolved GetUrl value. This handler always resolves, since it will
+           generate a 404 Not Found response if redbean couldn't find an
+           appropriate endpoint.
+
+   RouteHost([host:str,[path:str]]) → bool
+           This is the same as Route except it only implements the subset of
+           request routing needed for serving virtual-hosted assets, where
+           redbean tries to prefix the path with the hostname when looking up
+           a file. This function returns true if the request was resolved. If
+           it was resolved, then your OnHttpRequest request handler can still
+           set additional headers.
+
+   RoutePath([path:str]) → bool
+           This is the same as Route except it only implements the subset of
+           request routing needed for serving assets. This function returns
+           true if the request was resolved. If it was resolved, then your
+           OnHttpRequest request handler can still set additional headers.
+
+   ServeAsset(path:str)
+           Instructs redbean to serve static asset at path. This function
+           causes what would normally happen outside a dynamic handler to
+           happen. The asset can be sourced from either the zip or local
+           filesystem if -D is used. This function is mutually exclusive with
+           SetStatus and ServeError.
+
+   ServeError(code:int[,reason:str])
+           Instructs redbean to serve a boilerplate error page. This takes
+           care of logging the error, setting the reason phrase, and adding a
+           payload. This function is mutually exclusive with SetStatus and
+           ServeAsset.
+
+   SetLogLevel(level:int)
+           Sets logger verbosity. Reasonable values for level are kLogDebug >
+           kLogVerbose > kLogInfo > kLogWarn > kLogError > kLogFatal. This is
+           reset at the end of the http request, so it can be used to disable
+           access log and message logging.
+
+   VisualizeControlCodes(str) → str
+           Replaces C0 control codes with their UNICODE pictures
+           representation. This function also canonicalizes overlong
+           encodings. C1 control codes are replaced with a JavaScript-like
+           escape sequence.
+
+   Underlong(str) → str
+           Canonicalizes overlong encodings.
+
+   bsf(x:int) → int
+           Returns position of first bit set. Passing 0 will raise an error.
+           Same as the Intel x86 instruction BSF.
+
+   bsr(x:int) → int
+           Returns binary logarithm of 𝑥. Passing 0 will raise an error. Same
+           as the Intel x86 instruction BSR.
+
+   crc32(initial:int,data:str) → int
+           Computes Phil Katz CRC-32 used by zip/zlib/gzip/etc.
+
+   crc32c(initial:int,data:str) → int
+           Computes 32-bit Castagnoli Cyclic Redundancy Check.
+
+   popcnt(x:int) → int
+           Returns number of bits set in integer.
+
+LSQLITE3 MODULE
+
+   Please refer to the LuaSQLite3 Documentation.
+
+   For example, you could put the following in your /.init.lua file:
+
+     sqlite3 = require "lsqlite3"
+     db = sqlite3.open_memory()
+     db:exec[[
+       CREATE TABLE test (
+         id INTEGER PRIMARY KEY,
+         content TEXT
+       );
+       INSERT INTO test (content) VALUES ('Hello World');
+       INSERT INTO test (content) VALUES ('Hello Lua');
+       INSERT INTO test (content) VALUES ('Hello Sqlite3');
+     ]]
+
+   Then, your Lua server pages or OnHttpRequest handler may perform SQL
+   queries by accessing the db global. The performance is good too, at about
+   400k qps.
+
+     for row in db:nrows("SELECT * FROM test") do
+        Write(row.id.." "..row.content.."<br>")
+     end
+
+   redbean supports a subset of what's defined in the upstream LuaSQLite3
+   project. Most of the unsupported APIs relate to pointers and database
+   notification hooks.
+
+   redbean also currently disables SQLite features which don't make sense for
+   production serving, such as ALTER, VACUUM, ANALYZE, etc. For that reason
+   we provide an APE build of the SQLite shell which you can use to
+   administrate your redbean database. See the sqlite3.com download above.
+
+RE MODULE
+
+   This module exposes an API for POSIX regular expressions which enable you
+   to validate input, search for substrings, extract pieces of strings, etc.
+   Here's a usage example:
+
+     # Example IPv4 Address Regular Expression (see also ParseIP)
+     p = re.compile([[^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$]])
+     m,a,b,c,d = p:search(𝑠)
+     if m then
+       print("ok", tonumber(a), tonumber(b), tonumber(c), tonumber(d))
+     else
+       print("not ok")
+     end
+
+   re.search(regex:str,text:str[,flags:int]) → [match[,group_1,...]]
+           Shortcut for re.compile plus regex_t*:search.
+
+   re.compile(regex:str[,flags:int]) → regex_t*
+           Compiles regular expression, using the POSIX extended syntax. This
+           has an O(2^𝑛) cost, so it's a good idea to do this from your
+           /.init.lua file. Flags may contain re.BASIC, re.ICASE, re.NOSUB,
+           and/or re.NEWLINE. See also regcomp() from libc.
+
+   regex_t*:search(text:str[,flags:int]) → [match[,group_1,...]]
+           Executes regular expression. This has an O(𝑛) cost. This returns
+           nothing (nil) if the pattern doesn't match anything. Otherwise it
+           pushes the matched substring and any parenthesis-captured values
+           too. Flags may contain re.NOTBOL or re.NOTEOL to indicate whether
+           or not text should be considered at the start and/or end of a
+           line.
+
+   re.BASIC
+           Use this flag if you prefer the default POSIX regex syntax. We use
+           extended regex notation by default. For example, an extended
+           regular expression for matching an IP address might look like
+           ([0-9]*)\.([0-9]*)\.([0-9]*)\.([0-9]*) whereas with basic syntax
+           it would look like \([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).
+           This flag may only be used with re.compile and re.search.
+
+   re.ICASE
+           Use this flag to make your pattern case ASCII case-insensitive.
+           This flag may only be used with re.compile and re.search.
+
+   re.NEWLINE
+           Use this flag to make your pattern case ASCII case-insensitive.
+           This means [a-z] will mean the same thing as [A-Za-z]. This flag
+           may only be used with re.compile and re.search.
+
+   re.NOSUB
+           Causes re.search to only report success and failure. This is
+           reported via the API by returning empty string for success. This
+           flag may only be used with re.compile and re.search.
+
+   re.NOTBOL
+           The first character of the string pointed to by string is not the
+           beginning of the line. This flag may only be used with re.search
+           and regex_t*:search
+
+   re.NOTEOL
+           The last character of the string pointed to by string is not the
+           end of the line. This flag may only be used with re.search and
+           regex_t*:search
+
+CONSTANTS
+
+   kLogDebug
+           Integer for debug logging level. See Log.
+
+   kLogVerbose
+           Integer for verbose logging level, which is less than kLogDebug.
+
+   kLogInfo
+           Integer for info logging level, which is less than kLogVerbose.
+
+   kLogWarn
+           Integer for warn logging level, which is less than kLogVerbose.
+
+   kLogError
+           Integer for error logging level, which is less than kLogWarn.
+
+   kLogFatal
+           Integer for fatal logging level, which is less than kLogError.
+
 SEE ALSO
 
   https://justine.lol/redbean/index.html
