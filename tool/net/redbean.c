@@ -3412,13 +3412,13 @@ static int LuaFetch(lua_State *L) {
   bool usessl;
   uint32_t ip;
   struct Url url;
-  int t, ret, sock;
+  int t, ret, sock, method;
   char *host, *port;
   struct Buffer inbuf;
   struct addrinfo *addr;
   struct HttpMessage msg;
   struct HttpUnchunker u;
-  const char *urlarg, *request;
+  const char *urlarg, *request, *body;
   size_t urlarglen, requestlen;
   size_t g, i, n, hdrsize, paylen;
   struct addrinfo hints = {.ai_family = AF_INET,
@@ -3430,6 +3430,14 @@ static int LuaFetch(lua_State *L) {
    * Get args.
    */
   urlarg = luaL_checklstring(L, 1, &urlarglen);
+  if (lua_isnoneornil(L, 2)) {
+    body = "";
+    method = kHttpGet;
+  } else {
+    size_t bodylen;
+    body = luaL_checklstring(L, 2, &bodylen);
+    method = kHttpPost;
+  }
 
   /*
    * Parse URL.
@@ -3481,12 +3489,12 @@ static int LuaFetch(lua_State *L) {
   /*
    * Create HTTP message.
    */
-  request = gc(xasprintf("GET %s HTTP/1.1\r\n"
+  request = gc(xasprintf("%s %s HTTP/1.1\r\n"
                          "Host: %s:%s\r\n"
                          "Connection: close\r\n"
                          "User-Agent: %s\r\n"
-                         "\r\n",
-                         gc(EncodeUrl(&url, 0)), host, port, brand));
+                         "\r\n%s",
+                         kHttpMethod[method], gc(EncodeUrl(&url, 0)), host, port, brand, body));
   requestlen = strlen(request);
 
   /*
@@ -3540,7 +3548,7 @@ static int LuaFetch(lua_State *L) {
   /*
    * Send HTTP Message.
    */
-  DEBUGF("client sending");
+  DEBUGF("client sending %s request", kHttpMethod[method]);
   if (usessl) {
     ret = mbedtls_ssl_write(&sslcli, request, requestlen);
     if (ret != requestlen) {
