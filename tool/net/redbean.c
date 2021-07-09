@@ -651,18 +651,19 @@ static bool ChainCertificate(mbedtls_x509_crt *cert, mbedtls_x509_crt *parent) {
   }
 }
 
-static void InternCertificate(mbedtls_x509_crt *cert,
-                              mbedtls_x509_crt *parent) {
+static void InternCertificate(mbedtls_x509_crt *cert, mbedtls_x509_crt *prev) {
   int r;
   size_t i;
   if (cert->next) InternCertificate(cert->next, cert);
-  if (parent) {
-    if (mbedtls_x509_crt_check_parent(cert, parent, 1)) {
-      parent->next = 0; /* unchain ca root bundles */
-    } else if ((r = mbedtls_x509_crt_check_signature(cert, parent, 0))) {
+  if (prev) {
+    if (mbedtls_x509_crt_check_parent(prev, cert, 1)) {
+      DEBUGF("unbundling %`'s from %`'s", gc(FormatX509Name(&prev->subject)),
+             gc(FormatX509Name(&cert->subject)));
+      prev->next = 0;
+    } else if ((r = mbedtls_x509_crt_check_signature(prev, cert, 0))) {
       WARNF("invalid signature for %`'s -> %`'s (-0x%04x)",
-            gc(FormatX509Name(&cert->subject)),
-            gc(FormatX509Name(&parent->subject)), -r);
+            gc(FormatX509Name(&prev->subject)),
+            gc(FormatX509Name(&cert->subject)), -r);
     }
   }
   if (mbedtls_x509_time_is_past(&cert->valid_to)) {
