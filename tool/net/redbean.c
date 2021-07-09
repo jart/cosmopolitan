@@ -4043,8 +4043,8 @@ static int LuaGetParam(lua_State *L) {
 
 static void LuaPushUrlParams(lua_State *L, struct UrlParams *h) {
   size_t i;
+  lua_newtable(L);
   if (h->p) {
-    lua_newtable(L);
     for (i = 0; i < h->n; ++i) {
       lua_newtable(L);
       lua_pushlstring(L, h->p[i].key.p, h->p[i].key.n);
@@ -4055,8 +4055,6 @@ static void LuaPushUrlParams(lua_State *L, struct UrlParams *h) {
       }
       lua_seti(L, -2, i + 1);
     }
-  } else {
-    lua_pushnil(L);
   }
 }
 
