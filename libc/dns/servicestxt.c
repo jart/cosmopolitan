@@ -64,7 +64,11 @@ static textwindows noinline char *GetNtServicesTxtPath(char *pathbuf,
  *      ssh		    22/tcp
  *
  * @param servport is the port number
- * @param servproto is a pointer to a string (*servproto can be NULL)
+ * @param servproto is a NULL-terminated string (eg "tcp", "udp")
+ *          (if servproto is an empty string,
+ *           if is filled with the first matching
+ *           protocol)
+ * @param servprotolen the size of servproto
  * @param buf is a buffer to store the official name of the service
  * @param bufsize is the size of buf
  * @param filepath is the location of the services file
@@ -73,8 +77,9 @@ static textwindows noinline char *GetNtServicesTxtPath(char *pathbuf,
  *
  * @note aliases are not read from the file.
  */
-int LookupServicesByPort(const int servport, char **servproto, char *buf,
-                         size_t bufsize, const char *filepath) {
+int LookupServicesByPort(const int servport, char *servproto,
+                         size_t servprotolen, char *buf, size_t bufsize,
+                         const char *filepath) {
   FILE *f;
   char *line;
   char pathbuf[PATH_MAX];
@@ -91,7 +96,7 @@ int LookupServicesByPort(const int servport, char **servproto, char *buf,
     }
   }
 
-  if (bufsize == 0 || !(f = fopen(path, "r"))) {
+  if (servprotolen == 0 || bufsize == 0 || !(f = fopen(path, "r"))) {
     return -1;
   }
   line = NULL;
@@ -104,13 +109,10 @@ int LookupServicesByPort(const int servport, char **servproto, char *buf,
     port = strtok_r(NULL, "/ \t\r\n\v", &tok);
     proto = strtok_r(NULL, " \t\r\n\v", &tok);
     if (name && port && proto && servport == atoi(port)) {
-      if (!servproto[0]) {
-        servproto[0] = strdup(proto);
+      if (!servproto[0] || strncasecmp(proto, servproto, servprotolen) == 0) {
         strncpy(buf, name, bufsize);
         found = 1;
-      } else if (strcasecmp(proto, servproto[0]) == 0) {
-        strncpy(buf, name, bufsize);
-        found = 1;
+        if (!servproto[0]) strncpy(servproto, proto, servprotolen);
       }
     }
   }
@@ -131,8 +133,13 @@ int LookupServicesByPort(const int servport, char **servproto, char *buf,
  * Opens and searches /etc/services to find port for a given name.
  *
  * @param servname is a NULL-terminated string
- * @param servproto is a pointer to a string (*servproto can be NULL)
+ * @param servproto is a NULL-terminated string (eg "tcp", "udp")
+ *          (if servproto is an empty string,
+ *           if is filled with the first matching
+ *           protocol)
+ * @param servprotolen the size of servproto
  * @param buf is a buffer to store the official name of the service
+ *          (if NULL, the official name is not stored)
  * @param bufsize is the size of buf
  * @param filepath is the location of services file
  *          (if NULL, uses /etc/services)
@@ -142,8 +149,9 @@ int LookupServicesByPort(const int servport, char **servproto, char *buf,
  * @note aliases are read from file for comparison, but not returned.
  * @see LookupServicesByPort
  */
-int LookupServicesByName(const char *servname, char **servproto, char *buf,
-                         size_t bufsize, const char *filepath) {
+int LookupServicesByName(const char *servname, char *servproto,
+                         size_t servprotolen, char *buf, size_t bufsize,
+                         const char *filepath) {
   FILE *f;
   char *line;
   char pathbuf[PATH_MAX];
@@ -160,7 +168,7 @@ int LookupServicesByName(const char *servname, char **servproto, char *buf,
     }
   }
 
-  if (bufsize == 0 || !(f = fopen(path, "r"))) {
+  if (servprotolen == 0 || !(f = fopen(path, "r"))) {
     return -1;
   }
   line = NULL;
@@ -180,15 +188,11 @@ int LookupServicesByName(const char *servname, char **servproto, char *buf,
 
       if (alias) /* alias matched with servname */
       {
-        if (!servproto[0]) {
-          servproto[0] = strdup(proto);
+        if (!servproto[0] || strncasecmp(proto, servproto, servprotolen) == 0) {
           result = atoi(port);
-          strncpy(buf, name, bufsize);
           found = 1;
-        } else if (strcasecmp(proto, servproto[0]) == 0) {
-          result = atoi(port);
-          strncpy(buf, name, bufsize);
-          found = 1;
+          if (!servproto[0]) strncpy(servproto, proto, servprotolen);
+          if (buf && bufsize != 0) strncpy(buf, name, bufsize);
         }
       }
     }

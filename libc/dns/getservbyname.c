@@ -28,33 +28,30 @@
 #include "libc/dns/ent.h"
 #include "libc/dns/servicestxt.h"
 #include "libc/mem/mem.h"
+#include "libc/str/str.h"
 
 struct servent *getservbyname(const char *name, const char *proto) {
   static struct servent *ptr0, se0;
   static char s_name[DNS_NAME_MAX + 1];
-  char *localproto = proto;
+  static char localproto[DNS_NAME_MAX + 1];
   int p;
 
   if (!ptr0) {
     se0.s_name = s_name;
     if (!(se0.s_aliases = calloc(1, sizeof(char *)))) return NULL;
     se0.s_port = 0;
-    se0.s_proto = NULL;
+    se0.s_proto = localproto;
     ptr0 = &se0;
   }
 
-  p = LookupServicesByName(name, &localproto, ptr0->s_name, DNS_NAME_MAX, NULL);
-  if (p == -1) {
-    // localproto got alloc'd during the lookup?
-    if (!proto && localproto != proto) free(localproto);
-    return NULL;
-  }
+  localproto[0] = '\0';
+  if (proto) strncpy(localproto, proto, DNS_NAME_MAX);
+
+  p = LookupServicesByName(name, ptr0->s_proto, DNS_NAME_MAX, ptr0->s_name,
+                           DNS_NAME_MAX, NULL);
+  if (p == -1) return NULL;
 
   ptr0->s_port = htons(p);
-  if (ptr0->s_proto) free(ptr0->s_proto);
-  ptr0->s_proto = strdup(localproto);
-
-  if (!proto && localproto != proto) free(localproto);
 
   return ptr0;
 }
