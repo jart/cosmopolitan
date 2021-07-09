@@ -50,7 +50,7 @@ struct servent *getservbyname(const char *name, const char *proto) {
     return NULL;
   }
 
-  ptr0->s_port = p;
+  ptr0->s_port = htons(p);
   if (ptr0->s_proto) free(ptr0->s_proto);
   ptr0->s_proto = strdup(localproto);
 

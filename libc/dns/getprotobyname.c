@@ -31,7 +31,7 @@
 struct protoent *getprotobyname(const char *name) {
   static struct protoent *ptr0, pe0;
   static char p_name[DNS_NAME_MAX + 1];
-  
+
   if (!ptr0) {
     pe0.p_name = p_name;
     if (!(pe0.p_aliases = calloc(1, sizeof(char *)))) return NULL;
@@ -44,4 +44,3 @@ struct protoent *getprotobyname(const char *name) {
 
   return ptr0;
 }
-

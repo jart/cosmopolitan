@@ -27,9 +27,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/servicestxt.h"
 
+#include "libc/calls/calls.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/ent.h"
-#include "libc/calls/calls.h"
 #include "libc/testlib/testlib.h"
 
 char testlib_enable_tmp_setup_teardown;
@@ -59,33 +59,33 @@ TEST(LookupServicesByPort, GetNameWhenPortCorrect) {
       LookupServicesByPort(965, localproto, name, sizeof(name), "services"));
   ASSERT_EQ(NULL, localproto[0]);
 
-  ASSERT_EQ(
-      -1, /* port not in network byte order */
-      LookupServicesByPort(22, localproto, name, sizeof(name), "services"));
+  ASSERT_EQ(-1, /* port in network byte order */
+            LookupServicesByPort(htons(22), localproto, name, sizeof(name),
+                                 "services"));
   ASSERT_EQ(NULL, localproto[0]);
 
   localproto[0] = proto2;
-  ASSERT_EQ(-1, /* port ok but wrong protocol */
-            LookupServicesByPort(htons(22), localproto, name, sizeof(name),
-                                 "services"));
+  ASSERT_EQ(
+      -1, /* port ok but wrong protocol */
+      LookupServicesByPort(22, localproto, name, sizeof(name), "services"));
   ASSERT_EQ(localproto[0], proto2);
 
   localproto[0] = proto1;
-  ASSERT_EQ(0, LookupServicesByPort(htons(22), localproto, name, sizeof(name),
-                                    "services"));
+  ASSERT_EQ(
+      0, LookupServicesByPort(22, localproto, name, sizeof(name), "services"));
   ASSERT_STREQ(name, "ssh");
   ASSERT_EQ(localproto[0], proto1);
 
   localproto[0] = proto2;
-  ASSERT_EQ(0, LookupServicesByPort(htons(19), localproto, name,
-                                    sizeof(name), "services"));
+  ASSERT_EQ(
+      0, LookupServicesByPort(19, localproto, name, sizeof(name), "services"));
   ASSERT_STREQ(name, "chargen");
   ASSERT_EQ(localproto[0], proto2);
 
   localproto[0] = NULL;
-  ASSERT_EQ(0, /* pick first matching protocol */
-            LookupServicesByPort(htons(19), localproto, name, sizeof(name),
-                                 "services"));
+  ASSERT_EQ(
+      0, /* pick first matching protocol */
+      LookupServicesByPort(19, localproto, name, sizeof(name), "services"));
   ASSERT_STREQ(name, "chargen");
   ASSERT_NE(NULL, localproto[0]); /* got alloc'd during the call */
   ASSERT_STREQ(localproto[0], "tcp");
@@ -111,21 +111,20 @@ TEST(LookupServicesByName, GetPortWhenNameOrAlias) {
   ASSERT_EQ(localproto[0], proto2);
 
   localproto[0] = proto1;
-  ASSERT_EQ(
-      htons(22), /* in network byte order */
-      LookupServicesByName("ssh", localproto, name, sizeof(name), "services"));
+  ASSERT_EQ(22, LookupServicesByName("ssh", localproto, name, sizeof(name),
+                                     "services"));
   ASSERT_STREQ(name, "ssh"); /* official name written to buffer */
   ASSERT_EQ(localproto[0], proto1);
 
   localproto[0] = proto2;
-  ASSERT_EQ(htons(19), /* works if alias provided */
+  ASSERT_EQ(19, /* works if alias provided */
             LookupServicesByName("ttytst", localproto, name, sizeof(name),
                                  "services"));
   ASSERT_STREQ(name, "chargen"); /* official name written to buffer */
   ASSERT_EQ(localproto[0], proto2);
 
   localproto[0] = NULL;
-  ASSERT_EQ(htons(19), /* pick first matching protocol */
+  ASSERT_EQ(19, /* pick first matching protocol */
             LookupServicesByName("source", localproto, name, sizeof(name),
                                  "services"));
   ASSERT_STREQ(name, "chargen");

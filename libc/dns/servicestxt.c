@@ -63,7 +63,7 @@ static textwindows noinline char *GetNtServicesTxtPath(char *pathbuf,
  *      fsp		    21/udp		    fspd
  *      ssh		    22/tcp
  *
- * @param servport is the port number (in network byte order)
+ * @param servport is the port number
  * @param servproto is a pointer to a string (*servproto can be NULL)
  * @param buf is a buffer to store the official name of the service
  * @param bufsize is the size of buf
@@ -103,7 +103,7 @@ int LookupServicesByPort(const int servport, char **servproto, char *buf,
     name = strtok_r(line, " \t\r\n\v", &tok);
     port = strtok_r(NULL, "/ \t\r\n\v", &tok);
     proto = strtok_r(NULL, " \t\r\n\v", &tok);
-    if (name && port && proto && servport == htons(atoi(port))) {
+    if (name && port && proto && servport == atoi(port)) {
       if (!servproto[0]) {
         servproto[0] = strdup(proto);
         strncpy(buf, name, bufsize);
@@ -137,7 +137,7 @@ int LookupServicesByPort(const int servport, char **servproto, char *buf,
  * @param filepath is the location of services file
  *          (if NULL, uses /etc/services)
  * @returns -1 on error, or
- *          positive port number (in network byte order)
+ *          positive port number
  *
  * @note aliases are read from file for comparison, but not returned.
  * @see LookupServicesByPort
@@ -182,11 +182,11 @@ int LookupServicesByName(const char *servname, char **servproto, char *buf,
       {
         if (!servproto[0]) {
           servproto[0] = strdup(proto);
-          result = htons(atoi(port));
+          result = atoi(port);
           strncpy(buf, name, bufsize);
           found = 1;
         } else if (strcasecmp(proto, servproto[0]) == 0) {
-          result = htons(atoi(port));
+          result = atoi(port);
           strncpy(buf, name, bufsize);
           found = 1;
         }
