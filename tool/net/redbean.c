@@ -2121,7 +2121,7 @@ static wontreturn void PrintUsage(FILE *f, int rc) {
   size_t n;
   const char *p;
   struct Asset *a;
-  if ((a = GetAssetZip("/help.txt", 10)) && (p = LoadAsset(a, &n))) {
+  if ((a = GetAssetZip("/help.txt", 9)) && (p = LoadAsset(a, &n))) {
     fwrite(p, 1, n, f);
     free(p);
   }
