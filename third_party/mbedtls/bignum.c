@@ -136,14 +136,19 @@ int mbedtls_mpi_grow( mbedtls_mpi *X, size_t nblimbs )
 
     if( X->n < nblimbs )
     {
-        if( ( p = (mbedtls_mpi_uint*)mbedtls_calloc( nblimbs, ciL ) ) == NULL )
+        if( ( p = (mbedtls_mpi_uint*)malloc( nblimbs*ciL ) ) == NULL )
             return( MBEDTLS_ERR_MPI_ALLOC_FAILED );
 
         if( X->p != NULL )
         {
             memcpy( p, X->p, X->n * ciL );
+            memset( p + X->n, 0, ( nblimbs - X->n ) * ciL );
             mbedtls_mpi_zeroize( X->p, X->n );
             mbedtls_free( X->p );
+        }
+        else
+        {
+            memset( p, 0, nblimbs * ciL );
         }
 
         X->n = nblimbs;

@@ -277,6 +277,32 @@ TEST(fmt, p) {
                gc(xasprintf("% 10p", 0xffff800000031337)));
 }
 
+TEST(fmt, regress) {
+  char buf[512];
+  const char *meth = "GET";
+  const char *path = "/";
+  const char *host = "10.10.10.124";
+  const char *port = "8080";
+  const char *agent = "hurl/1.o (https://github.com/jart/cosmopolitan)";
+  ASSERT_EQ(
+      strlen("GET / HTTP/1.1\r\n"
+             "Host: 10.10.10.124:8080\r\n"
+             "Connection: close\r\n"
+             "User-Agent: hurl/1.o (https://github.com/jart/cosmopolitan)\r\n"),
+      sprintf(buf,
+              "%s %s HTTP/1.1\r\n"
+              "Host: %s:%s\r\n"
+              "Connection: close\r\n"
+              "User-Agent: %s\r\n",
+              meth, path, host, port, agent));
+  ASSERT_STREQ(
+      "GET / HTTP/1.1\r\n"
+      "Host: 10.10.10.124:8080\r\n"
+      "Connection: close\r\n"
+      "User-Agent: hurl/1.o (https://github.com/jart/cosmopolitan)\r\n",
+      buf);
+}
+
 /* TEST(fmt, funchar) { */
 /*   /\* TODO(jart): fix this *\/ */
 /*   ASSERT_STREQ("'\\200'", gc(xasprintf("%`'c", 0200))); */

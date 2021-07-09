@@ -177,6 +177,12 @@ struct Buffer {
   char *p;
 };
 
+struct TlsBio {
+  int fd;
+  unsigned a, b;
+  unsigned char t[4000];
+};
+
 struct Strings {
   size_t n, c;
   struct String {
@@ -374,6 +380,7 @@ static mbedtls_ssl_config confcli;
 static mbedtls_ssl_context sslcli;
 static mbedtls_ctr_drbg_context rngcli;
 
+static struct TlsBio g_bio;
 static char slashpath[PATH_MAX];
 
 static char *Route(const char *, size_t, const char *, size_t);
@@ -1241,10 +1248,22 @@ static ssize_t WritevAll(int fd, struct iovec *iov, int iovlen) {
   return 0;
 }
 
-static int TlsRecvImpl(void *ctx, unsigned char *buf, size_t len,
-                       uint32_t tmo) {
-  int rc;
-  while ((rc = read(*(int *)ctx, buf, len)) == -1) {
+static int TlsRecvImpl(void *ctx, unsigned char *p, size_t n, uint32_t o) {
+  int r;
+  ssize_t s;
+  struct iovec v[2];
+  struct TlsBio *bio = ctx;
+  if (bio->a < bio->b) {
+    r = MIN(n, bio->b - bio->a);
+    memcpy(p, bio->t + bio->a, r);
+    if ((bio->a += r) == bio->b) bio->a = bio->b = 0;
+    return r;
+  }
+  v[0].iov_base = p;
+  v[0].iov_len = n;
+  v[1].iov_base = bio->t;
+  v[1].iov_len = sizeof(bio->t);
+  while ((r = readv(bio->fd, v, 2)) == -1) {
     if (errno == EINTR) {
       return MBEDTLS_ERR_SSL_WANT_READ;
     } else if (errno == EAGAIN) {
@@ -1256,7 +1275,8 @@ static int TlsRecvImpl(void *ctx, unsigned char *buf, size_t len,
       return MBEDTLS_ERR_NET_RECV_FAILED;
     }
   }
-  return rc;
+  if (r > n) bio->b = r - n;
+  return MIN(n, r);
 }
 
 static int TlsRecv(void *ctx, unsigned char *buf, size_t len, uint32_t tmo) {
@@ -1278,7 +1298,8 @@ static void TlsDebug(void *ctx, int level, const char *file, int line,
 
 static int TlsSend(void *ctx, const unsigned char *buf, size_t len) {
   int rc;
-  while ((rc = write(*(int *)ctx, buf, len)) == -1) {
+  struct TlsBio *bio = ctx;
+  while ((rc = write(bio->fd, buf, len)) == -1) {
     if (errno == EINTR) {
       LockInc(&shared->c.writeinterruputs);
       if (killed || (meltdown && nowl() - startread > 2)) {
@@ -1360,6 +1381,9 @@ static bool TlsSetup(void) {
   inbuf.n -= amtread;
   inbuf.c = amtread;
   amtread = 0;
+  g_bio.fd = client;
+  g_bio.a = 0;
+  g_bio.b = 0;
   for (;;) {
     if (!(r = mbedtls_ssl_handshake(&ssl))) {
       LockInc(&shared->c.sslhandshakes);
@@ -3414,6 +3438,7 @@ static int LuaFetch(lua_State *L) {
   struct Url url;
   int t, ret, sock;
   char *host, *port;
+  struct TlsBio *bio;
   struct Buffer inbuf;
   struct addrinfo *addr;
   struct HttpMessage msg;
@@ -3520,7 +3545,11 @@ static int LuaFetch(lua_State *L) {
     sslcliused = true;
     DEBUGF("client handshaking %`'s", host);
     mbedtls_ssl_set_hostname(&sslcli, host);
-    mbedtls_ssl_set_bio(&sslcli, &sock, TlsSend, 0, TlsRecvImpl);
+    bio = gc(malloc(sizeof(struct TlsBio)));
+    bio->fd = sock;
+    bio->a = 0;
+    bio->b = 0;
+    mbedtls_ssl_set_bio(&sslcli, bio, TlsSend, 0, TlsRecvImpl);
     while ((ret = mbedtls_ssl_handshake(&ssl))) {
       switch (ret) {
         case MBEDTLS_ERR_SSL_WANT_READ:
@@ -6081,9 +6110,9 @@ void RedBean(int argc, char *argv[]) {
                                           ? MBEDTLS_SSL_VERIFY_REQUIRED
                                           : MBEDTLS_SSL_VERIFY_NONE);
   mbedtls_ssl_conf_ca_chain(&confcli, GetSslRoots(), 0);
+  mbedtls_ssl_set_bio(&ssl, &g_bio, TlsSend, 0, TlsRecv);
   mbedtls_ssl_setup(&ssl, &conf);
   mbedtls_ssl_setup(&sslcli, &confcli);
-  mbedtls_ssl_set_bio(&ssl, &client, TlsSend, 0, TlsRecv);
 #endif
   if (launchbrowser) {
     LaunchBrowser(launchbrowser);

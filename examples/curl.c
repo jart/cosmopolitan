@@ -9,6 +9,7 @@
 #endif
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/dns/dns.h"
 #include "libc/errno.h"
@@ -91,14 +92,32 @@ static int Socket(int family, int type, int protocol) {
 
 static int TlsSend(void *c, const unsigned char *p, size_t n) {
   int rc;
+  VERBOSEF("begin send %zu", n);
   CHECK_NE(-1, (rc = write(*(int *)c, p, n)));
+  VERBOSEF("end   send %zu", n);
   return rc;
 }
 
-static int TlsRecv(void *c, unsigned char *p, size_t n, uint32_t t) {
-  int rc;
-  CHECK_NE(-1, (rc = read(*(int *)c, p, n)));
-  return rc;
+static int TlsRecv(void *c, unsigned char *p, size_t n, uint32_t o) {
+  int r;
+  struct iovec v[2];
+  static unsigned a, b;
+  static unsigned char t[4096];
+  if (a < b) {
+    r = MIN(n, b - a);
+    memcpy(p, t + a, r);
+    if ((a += r) == b) a = b = 0;
+    return r;
+  }
+  v[0].iov_base = p;
+  v[0].iov_len = n;
+  v[1].iov_base = t;
+  v[1].iov_len = sizeof(t);
+  VERBOSEF("begin recv %zu", n + sizeof(t) - b);
+  CHECK_NE(-1, (r = readv(*(int *)c, v, 2)));
+  VERBOSEF("end   recv %zu", r);
+  if (r > n) b = r - n;
+  return MIN(n, r);
 }
 
 static void TlsDebug(void *c, int v, const char *f, int l, const char *s) {
@@ -137,14 +156,14 @@ static int AppendFmt(struct Buffer *b, const char *fmt, ...) {
   va_start(va, fmt);
   va_copy(vb, va);
   n = vsnprintf(b->p + b->i, b->n - b->i, fmt, va);
-  if (n >= b->n - b->i) {
+  if (b->i + n + 1 > b->n) {
     do {
       if (b->n) {
         b->n += b->n >> 1;
       } else {
         b->n = 16;
       }
-    } while (b->i + n > b->n);
+    } while (b->i + n + 1 > b->n);
     b->p = realloc(b->p, b->n);
     vsnprintf(b->p + b->i, b->n - b->i, fmt, vb);
   }
@@ -174,6 +193,7 @@ int main(int argc, char *argv[]) {
       case 'q':
         break;
       case 'v':
+        ++__log_level;
         break;
       case 'I':
         method = kHttpHead;
@@ -262,6 +282,7 @@ int main(int argc, char *argv[]) {
             "Connection: close\r\n"
             "User-Agent: %s\r\n",
             kHttpMethod[method], _gc(EncodeUrl(&url, 0)), host, port, agent);
+  fprintf(stderr, "%`'.*s\n", request.i, request.p);
   for (int i = 0; i < headers.n; ++i) {
     AppendFmt(&request, "%s\r\n", headers.p[i]);
   }

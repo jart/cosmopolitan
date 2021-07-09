@@ -68,14 +68,14 @@ int AppendFmt(struct Buffer *b, const char *fmt, ...) {
   va_start(va, fmt);
   va_copy(vb, va);
   n = vsnprintf(b->p + b->i, b->n - b->i, fmt, va);
-  if (n >= b->n - b->i) {
+  if (b->i + n + 1 > b->n) {
     do {
       if (b->n) {
-        b->n += b->n >> 1; /* the proper way to grow w/ amortization */
+        b->n += b->n >> 1;
       } else {
         b->n = 16;
       }
-    } while (b->i + n > b->n);
+    } while (b->i + n + 1 > b->n);
     b->p = realloc(b->p, b->n);
     vsnprintf(b->p + b->i, b->n - b->i, fmt, vb);
   }
