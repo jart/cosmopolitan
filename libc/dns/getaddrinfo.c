@@ -21,12 +21,15 @@
 #include "libc/dns/dns.h"
 #include "libc/dns/hoststxt.h"
 #include "libc/dns/resolvconf.h"
+#include "libc/dns/servicestxt.h"
 #include "libc/fmt/conv.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/gc.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/inaddr.h"
+#include "libc/sysv/consts/sock.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -43,11 +46,26 @@ int getaddrinfo(const char *name, const char *service,
                 const struct addrinfo *hints, struct addrinfo **res) {
   int rc, port;
   const char *canon;
+  size_t protolen;
   struct addrinfo *ai;
+  char proto[32];
   port = 0;
+
   if (!name && !service) return EAI_NONAME;
-  if (service && (port = parseport(service)) == -1) return EAI_NONAME;
   if (!name && (hints->ai_flags & AI_CANONNAME)) return EAI_BADFLAGS;
+  if (service) {
+    if (hints->ai_socktype == SOCK_STREAM)
+      strncpy(proto, "tcp", sizeof(proto));
+    else if (hints->ai_socktype == SOCK_DGRAM)
+      strncpy(proto, "udp", sizeof(proto));
+    else /* ai_socktype == 0 */
+      proto[0] = '\0';
+
+    if ((port = LookupServicesByName(service, proto, sizeof(proto), NULL, 0,
+                                     NULL)) == -1) {
+      if ((port = parseport(service)) == -1) return EAI_NONAME;
+    }
+  }
   if (!(ai = newaddrinfo(port))) return EAI_MEMORY;
   if (service) ai->ai_addr4->sin_port = htons(port);
   if (hints) {

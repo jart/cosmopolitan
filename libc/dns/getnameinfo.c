@@ -31,6 +31,7 @@
 #include "libc/dns/dns.h"
 #include "libc/dns/hoststxt.h"
 #include "libc/dns/resolvconf.h"
+#include "libc/dns/servicestxt.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
@@ -58,7 +59,7 @@ int getnameinfo(const struct sockaddr *addr, socklen_t addrlen, char *name,
                 socklen_t namelen, char *service, socklen_t servicelen,
                 int flags) {
   char *p, rdomain[1 + sizeof "255.255.255.255.in-addr.arpa"];
-  char info[512];
+  char info[NI_MAXHOST + 1];
   int rc, port;
   uint8_t *ip;
   unsigned int valid_flags;
@@ -102,8 +103,10 @@ int getnameinfo(const struct sockaddr *addr, socklen_t addrlen, char *name,
   port = ntohs(((struct sockaddr_in *)addr)->sin_port);
   info[0] = '\0';
   if (service != NULL && servicelen != 0) {
-    itoa(port, info, 10);
-    /* TODO: reverse lookup on /etc/services to get name of service */
+    if ((flags & NI_NUMERICSERV) ||
+        LookupServicesByPort(port, ((flags & NI_DGRAM) ? "udp" : "tcp"), 4,
+                             info, sizeof(info), NULL) == -1)
+      itoa(port, info, 10);
     if (strlen(info) + 1 > servicelen) return EAI_OVERFLOW;
     strcpy(service, info);
   }
