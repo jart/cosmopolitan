@@ -20,7 +20,17 @@
 #include "libc/sock/sock.h"
 #include "libc/sysv/errfuns.h"
 
-int parseport(const char *service) {
-  int port = atoi(service);
-  return (0 <= port && port <= 65535) ? port : einval();
+/* parses string to port number.
+ *
+ * @param service is a NULL-terminated string
+ * @return valid port number or einval()
+ *
+ * @see strtoimax
+ */
+int parseport(const char* service) {
+  char* end;
+  int port = strtoimax(service, &end, 0);
+  if (!service || end == service || *end != '\0' || port < 0 || port > 65535)
+    return einval();
+  return port;
 }

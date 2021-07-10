@@ -25,7 +25,7 @@
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dns/servicestxt.h"
+#include "libc/dns/prototxt.h"
 
 #include "libc/bits/safemacros.internal.h"
 #include "libc/dce.h"
@@ -38,9 +38,10 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
-static textwindows noinline char *GetNtServicesTxtPath(char *pathbuf,
-                                                       uint32_t size) {
-  const char *const kWinHostsPath = "\\drivers\\etc\\services";
+static textwindows noinline char *GetNtProtocolsTxtPath(char *pathbuf,
+                                                        uint32_t size) {
+  /* protocol, not plural */
+  const char *const kWinHostsPath = "\\drivers\\etc\\protocol";
   uint32_t len = GetSystemDirectoryA(&pathbuf[0], size);
   if (len && len + strlen(kWinHostsPath) + 1 < size) {
     if (pathbuf[len] == '\\') pathbuf[len--] = '\0';
@@ -52,74 +53,59 @@ static textwindows noinline char *GetNtServicesTxtPath(char *pathbuf,
 }
 
 /**
- * Opens and searches /etc/services to find name for a given port.
+ * Opens and searches /etc/protocols to find name for a given number.
  *
- * format of /etc/services is like this:
+ * format of /etc/protocols is like this:
  *
  * # comment
- * # NAME       PORT/PROTOCOL       ALIASES
- * ftp          21/tcp
- * fsp          21/udp              fspd
- * ssh          22/tcp
+ * # NAME           PROTOCOL        ALIASES
+ * ip               0               IP
+ * icmp             1               ICMP
  *
- * @param servport is the port number
- * @param servproto is a NULL-terminated string (eg "tcp", "udp")
- *          (if servproto is an empty string,
- *           if is filled with the first matching
- *           protocol)
- * @param servprotolen the size of servproto
- * @param buf is a buffer to store the official name of the service
+ * @param protonum is the protocol number
+ * @param buf is a buffer to store the official name of the protocol
  * @param bufsize is the size of buf
- * @param filepath is the location of the services file
- *          (if NULL, uses /etc/services)
+ * @param filepath is the location of the protocols file
+ *          (if NULL, uses /etc/protocols)
  * @return 0 on success, -1 on error
  *
  * @note aliases are not read from the file.
  */
-int LookupServicesByPort(const int servport, char *servproto,
-                         size_t servprotolen, char *buf, size_t bufsize,
-                         const char *filepath) {
+int LookupProtoByNumber(const int protonum, char *buf, size_t bufsize,
+                        const char *filepath) {
   FILE *f;
   char *line;
   char pathbuf[PATH_MAX];
   const char *path;
   size_t linesize;
   int found;
-  char *name, *port, *proto, *comment, *tok;
+  char *name, *number, *comment, *tok;
 
   if (!(path = filepath)) {
-    path = "/etc/services";
+    path = "/etc/protocols";
     if (IsWindows()) {
       path =
-          firstnonnull(GetNtServicesTxtPath(pathbuf, ARRAYLEN(pathbuf)), path);
+          firstnonnull(GetNtProtocolsTxtPath(pathbuf, ARRAYLEN(pathbuf)), path);
     }
   }
 
-  if (servprotolen == 0 || bufsize == 0 || !(f = fopen(path, "r"))) {
+  if (bufsize == 0 || !(f = fopen(path, "r"))) {
     return -1;
   }
   line = NULL;
   linesize = 0;
   found = 0;
-  strcpy(buf, "");
 
   while (found == 0 && (getline(&line, &linesize, f)) != -1) {
     if ((comment = strchr(line, '#'))) *comment = '\0';
     name = strtok_r(line, " \t\r\n\v", &tok);
-    port = strtok_r(NULL, "/ \t\r\n\v", &tok);
-    proto = strtok_r(NULL, " \t\r\n\v", &tok);
-    if (name && port && proto && servport == atoi(port)) {
-      if (!servproto[0] || strncasecmp(proto, servproto, servprotolen) == 0) {
-        if (!servproto[0] && !memccpy(servproto, proto, '\0', servprotolen)) {
-          strcpy(servproto, "");
-          break;
-        }
-        if (!memccpy(buf, name, '\0', bufsize)) {
-          strcpy(buf, "");
-          break;
-        }
-        found = 1;
+    number = strtok_r(NULL, " \t\r\n\v", &tok);
+    if (name && number && protonum == atoi(number)) {
+      if (!memccpy(buf, name, '\0', bufsize)) {
+        strcpy(buf, "");
+        break;
       }
+      found = 1;
     }
   }
   free(line);
@@ -136,77 +122,62 @@ int LookupServicesByPort(const int servport, char *servproto,
 }
 
 /**
- * Opens and searches /etc/services to find port for a given name.
+ * Opens and searches /etc/protocols to find number for a given name.
  *
- * @param servname is a NULL-terminated string
- * @param servproto is a NULL-terminated string (eg "tcp", "udp")
- *          (if servproto is an empty string,
- *           if is filled with the first matching
- *           protocol)
- * @param servprotolen the size of servproto
- * @param buf is a buffer to store the official name of the service
- *          (if NULL, the official name is not stored)
+ * @param protoname is a NULL-terminated string
+ * @param buf is a buffer to store the official name of the protocol
  * @param bufsize is the size of buf
- * @param filepath is the location of services file
- *          (if NULL, uses /etc/services)
+ * @param filepath is the location of protocols file
+ *          (if NULL, uses /etc/protocols)
  * @return -1 on error, or
- *          positive port number
+ *          positive protocol number
  *
  * @note aliases are read from file for comparison, but not returned.
- * @see LookupServicesByPort
+ * @see LookupProtoByNumber
  */
-int LookupServicesByName(const char *servname, char *servproto,
-                         size_t servprotolen, char *buf, size_t bufsize,
-                         const char *filepath) {
+int LookupProtoByName(const char *protoname, char *buf, size_t bufsize,
+                      const char *filepath) {
   FILE *f;
   char *line;
   char pathbuf[PATH_MAX];
   const char *path;
   size_t linesize;
   int found, result;
-  char *name, *port, *proto, *alias, *comment, *tok;
+  char *name, *number, *alias, *comment, *tok;
 
   if (!(path = filepath)) {
-    path = "/etc/services";
+    path = "/etc/protocols";
     if (IsWindows()) {
       path =
-          firstnonnull(GetNtServicesTxtPath(pathbuf, ARRAYLEN(pathbuf)), path);
+          firstnonnull(GetNtProtocolsTxtPath(pathbuf, ARRAYLEN(pathbuf)), path);
     }
   }
 
-  if (servprotolen == 0 || !(f = fopen(path, "r"))) {
+  if (bufsize == 0 || !(f = fopen(path, "r"))) {
     return -1;
   }
   line = NULL;
   linesize = 0;
   found = 0;
   result = -1;
-  if (buf && bufsize != 0) strcpy(buf, "");
 
   while (found == 0 && (getline(&line, &linesize, f)) != -1) {
     if ((comment = strchr(line, '#'))) *comment = '\0';
     name = strtok_r(line, " \t\r\n\v", &tok);
-    port = strtok_r(NULL, "/ \t\r\n\v", &tok);
-    proto = strtok_r(NULL, " \t\r\n\v", &tok);
-    if (name && port && proto) {
+    number = strtok_r(NULL, "/ \t\r\n\v", &tok);
+    if (name && number) {
       alias = name;
-      while (alias && strcasecmp(alias, servname) != 0)
+      while (alias && strcasecmp(alias, protoname) != 0)
         alias = strtok_r(NULL, " \t\r\n\v", &tok);
 
-      if (alias) /* alias matched with servname */
+      if (alias) /* alias matched with protoname */
       {
-        if (!servproto[0] || strncasecmp(proto, servproto, servprotolen) == 0) {
-          if (!servproto[0] && !memccpy(servproto, proto, '\0', servprotolen)) {
-            strcpy(servproto, "");
-            break;
-          }
-          if (buf && bufsize != 0 && !memccpy(buf, name, '\0', bufsize)) {
-            strcpy(buf, "");
-            break;
-          }
-          result = atoi(port);
-          found = 1;
+        if (!memccpy(buf, name, '\0', bufsize)) {
+          strcpy(buf, "");
+          break;
         }
+        result = atoi(number);
+        found = 1;
       }
     }
   }

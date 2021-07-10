@@ -26,34 +26,13 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/ent.h"
-#include "libc/dns/servicestxt.h"
-#include "libc/mem/mem.h"
-#include "libc/str/str.h"
 
-struct servent *getservbyname(const char *name, const char *proto) {
-  static struct servent *ptr0, se0;
-  static char s_name[DNS_NAME_MAX + 1];
-  static char localproto[DNS_NAME_MAX + 1];
-  int p;
+struct protoent *getprotoent(void) {
+  return NULL;
+}
 
-  if (!ptr0) {
-    se0.s_name = s_name;
-    if (!(se0.s_aliases = calloc(1, sizeof(char *)))) return NULL;
-    se0.s_port = 0;
-    se0.s_proto = localproto;
-    ptr0 = &se0;
-  }
+void setprotoent(int stayopen) {
+}
 
-  if (proto) {
-    if (!memccpy(localproto, proto, '\0', DNS_NAME_MAX)) return NULL;
-  } else
-    strcpy(localproto, "");
-
-  p = LookupServicesByName(name, ptr0->s_proto, DNS_NAME_MAX, ptr0->s_name,
-                           DNS_NAME_MAX, NULL);
-  if (p == -1) return NULL;
-
-  ptr0->s_port = htons(p);
-
-  return ptr0;
+void endprotoent(void) {
 }

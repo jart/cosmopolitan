@@ -27,32 +27,31 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/ent.h"
 #include "libc/dns/servicestxt.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
 
 struct servent *getservbyport(int port, const char *proto) {
   static struct servent *ptr1, se1;
   static char s_name[DNS_NAME_MAX + 1];
-  char *localproto = proto;
+  static char localproto[DNS_NAME_MAX + 1];
 
   if (!ptr1) {
     se1.s_name = s_name;
     if (!(se1.s_aliases = calloc(1, sizeof(char *)))) return NULL;
     se1.s_port = 0;
-    se1.s_proto = NULL;
+    se1.s_proto = localproto;
     ptr1 = &se1;
   }
 
-  if (LookupServicesByPort(port, &localproto, ptr1->s_name, DNS_NAME_MAX,
-                           NULL) == -1) {
-    // localproto got alloc'd during the lookup?
-    if (!proto && localproto != proto) free(localproto);
+  if (proto) {
+    if (!memccpy(localproto, proto, '\0', DNS_NAME_MAX)) return NULL;
+  } else
+    strcpy(localproto, "");
+
+  if (LookupServicesByPort(ntohs(port), ptr1->s_proto, DNS_NAME_MAX,
+                           ptr1->s_name, DNS_NAME_MAX, NULL) == -1)
     return NULL;
-  }
 
   ptr1->s_port = port;
-  if (ptr1->s_proto) free(ptr1->s_proto);
-  ptr1->s_proto = strdup(localproto);
-
-  if (!proto && localproto != proto) free(localproto);
-
   return ptr1;
 }

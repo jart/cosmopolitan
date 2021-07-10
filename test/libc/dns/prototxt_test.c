@@ -25,35 +25,59 @@
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dns/prototxt.h"
+
+#include "libc/calls/calls.h"
+#include "libc/dns/dns.h"
 #include "libc/dns/ent.h"
-#include "libc/dns/servicestxt.h"
-#include "libc/mem/mem.h"
-#include "libc/str/str.h"
+#include "libc/testlib/testlib.h"
 
-struct servent *getservbyname(const char *name, const char *proto) {
-  static struct servent *ptr0, se0;
-  static char s_name[DNS_NAME_MAX + 1];
-  static char localproto[DNS_NAME_MAX + 1];
-  int p;
+char testlib_enable_tmp_setup_teardown;
 
-  if (!ptr0) {
-    se0.s_name = s_name;
-    if (!(se0.s_aliases = calloc(1, sizeof(char *)))) return NULL;
-    se0.s_port = 0;
-    se0.s_proto = localproto;
-    ptr0 = &se0;
-  }
+void SetUp() {
+  int fd;
+  const char* sample = "\
+# skip comment string\n\
+rspf	73	RSPF CPHB	\n\
+ggp	    3	GGP		    ";
 
-  if (proto) {
-    if (!memccpy(localproto, proto, '\0', DNS_NAME_MAX)) return NULL;
-  } else
-    strcpy(localproto, "");
+  ASSERT_NE(-1, (fd = creat("protocols", 0755)));
+  ASSERT_NE(-1, write(fd, sample, strlen(sample)));
+  ASSERT_NE(-1, close(fd));
+}
 
-  p = LookupServicesByName(name, ptr0->s_proto, DNS_NAME_MAX, ptr0->s_name,
-                           DNS_NAME_MAX, NULL);
-  if (p == -1) return NULL;
+TEST(LookupProtoByNumber, GetNameWhenNumberCorrect) {
+  char name[16]; /* sample has only names of length 3-4 */
+  strcpy(name, "");
 
-  ptr0->s_port = htons(p);
+  ASSERT_EQ(-1, /*non-existent number */
+            LookupProtoByNumber(24, name, sizeof(name), "protocols"));
 
-  return ptr0;
+  ASSERT_EQ(-1, /* sizeof(name) insufficient, memccpy failure */
+            LookupProtoByNumber(73, name, 1, "protocols"));
+  ASSERT_STREQ(name, ""); /* cleaned up after memccpy failed */
+
+  ASSERT_EQ(0, /* works with valid number */
+            LookupProtoByNumber(73, name, sizeof(name), "protocols"));
+  ASSERT_STREQ(name, "rspf"); /* official name written */
+}
+
+TEST(LookupProtoByName, GetNumberWhenNameOrAlias) {
+  char name[16]; /* sample has only names of length 3-4 */
+  strcpy(name, "");
+
+  ASSERT_EQ(-1, /* non-existent name or alias */
+            LookupProtoByName("tcp", name, sizeof(name), "protocols"));
+
+  ASSERT_EQ(-1, /* sizeof(name) insufficient, memccpy failure */
+            LookupProtoByName("ggp", name, 1, "protocols"));
+  ASSERT_STREQ(name, ""); /* cleaned up after memccpy failed */
+
+  ASSERT_EQ(3, /* works with valid name */
+            LookupProtoByName("ggp", name, sizeof(name), "protocols"));
+  ASSERT_STREQ(name, "ggp");
+
+  ASSERT_EQ(73, /* works with valid alias */
+            LookupProtoByName("CPHB", name, sizeof(name), "protocols"));
+  ASSERT_STREQ(name, "rspf"); /* official name written */
 }
