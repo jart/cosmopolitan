@@ -58,7 +58,7 @@ static const char kGregNames[17][4] forcealign(1) = {
 static const char kCpuFlags[12] forcealign(1) = "CVPRAKZSTIDO";
 static const char kFpuExceptions[6] forcealign(1) = "IDZOUP";
 static const char kCrashSigNames[8][5] forcealign(1) = {
-    "QUIT", "FPE", "ILL", "SEGV", "TRAP", "ABRT", "BUS"};
+    "QUIT", "FPE", "ILL", "SEGV", "TRAP", "ABRT", "BUS", "PIPE"};
 
 hidden int kCrashSigs[8];
 hidden struct sigaction g_oldcrashacts[8];

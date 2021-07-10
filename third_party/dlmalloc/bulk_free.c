@@ -24,7 +24,7 @@ size_t bulk_free(void *array[], size_t nelem) {
     for (a = array; a != fence; ++a) {
       void *mem = *a;
       if (mem != 0) {
-        mchunkptr p = mem2chunk(ADDRESS_DEATH_ACTION(mem));
+        mchunkptr p = mem2chunk(AddressDeathAction(mem));
         size_t psize = chunksize(p);
 #if FOOTERS
         if (get_mstate_for(p) != g_dlmalloc) {

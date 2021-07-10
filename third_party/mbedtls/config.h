@@ -643,7 +643,7 @@
  *
  * Uncomment this macro to respect client's ciphersuite order
  */
-/*#define MBEDTLS_SSL_SRV_RESPECT_CLIENT_PREFERENCE*/
+#define MBEDTLS_SSL_SRV_RESPECT_CLIENT_PREFERENCE
 
 /**
  * \def MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
@@ -661,7 +661,7 @@
  *
  * Comment this macro to disable support for ALPN.
  */
-/*#define MBEDTLS_SSL_ALPN*/
+#define MBEDTLS_SSL_ALPN
 
 #ifdef MBEDTLS_SSL_PROTO_DTLS
 /**

@@ -722,25 +722,17 @@ static const struct DisArg {
     {"Yvqp", DisYvqp},   //
 };
 
-static int CompareString8(const char a[8], const char b[8]) {
-  uint64_t x, y;
-  x = READ64BE(a);
-  y = READ64BE(b);
-  return x > y ? 1 : x < y ? -1 : 0;
-}
-
 char *DisArg(struct Dis *d, char *p, const char *s) {
-  char key[8];
-  int c, m, l, r;
+  char k[8];
+  int m, l, r;
   l = 0;
   r = ARRAYLEN(kDisArgs) - 1;
-  strncpy(key, s, 8);
+  strncpy(k, s, 8);
   while (l <= r) {
     m = (l + r) >> 1;
-    c = CompareString8(kDisArgs[m].s, key);
-    if (c < 0) {
+    if (READ64BE(kDisArgs[m].s) < READ64BE(k)) {
       l = m + 1;
-    } else if (c > 0) {
+    } else if (READ64BE(kDisArgs[m].s) > READ64BE(k)) {
       r = m - 1;
     } else {
       return kDisArgs[m].f(d, d->xedd->op.rde, p);

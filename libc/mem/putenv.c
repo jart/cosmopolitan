@@ -27,6 +27,12 @@
 
 static bool once;
 
+static void PutEnvDestroy(void) {
+  char **a;
+  for (a = environ; *a; ++a) free(*a);
+  free(environ);
+}
+
 static void PutEnvInit(void) {
   char **pin, **pout;
   pin = environ;
@@ -34,6 +40,7 @@ static void PutEnvInit(void) {
   environ = pout;
   while (*pin) *pout++ = strdup(*pin++);
   *pout = NULL;
+  atexit(PutEnvDestroy);
 }
 
 int PutEnvImpl(char *s, bool overwrite) {

@@ -30,6 +30,7 @@
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/shut.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
@@ -175,6 +176,7 @@ static int AppendFmt(struct Buffer *b, const char *fmt, ...) {
 
 int main(int argc, char *argv[]) {
   if (!NoDebug()) showcrashreports();
+  xsigaction(SIGPIPE, SIG_IGN, 0, 0, 0);
 
   /*
    * Read flags.
@@ -282,7 +284,6 @@ int main(int argc, char *argv[]) {
             "Connection: close\r\n"
             "User-Agent: %s\r\n",
             kHttpMethod[method], _gc(EncodeUrl(&url, 0)), host, port, agent);
-  fprintf(stderr, "%`'.*s\n", request.i, request.p);
   for (int i = 0; i < headers.n; ++i) {
     AppendFmt(&request, "%s\r\n", headers.p[i]);
   }
@@ -459,6 +460,7 @@ Finished:
     mbedtls_ssl_free(&ssl);
     mbedtls_ctr_drbg_free(&drbg);
     mbedtls_ssl_config_free(&conf);
+    mbedtls_ctr_drbg_free(&drbg);
   }
 
   return 0;

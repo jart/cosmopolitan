@@ -78,7 +78,6 @@ int PrintBacktraceUsingSymbols(int fd, const struct StackFrame *bp,
     } else {
       p = stpcpy(p, "UNKNOWN");
     }
-    *p++ = '\r';
     *p++ = '\n';
     if (write(fd, buf, p - buf) == -1) {
       return -1;

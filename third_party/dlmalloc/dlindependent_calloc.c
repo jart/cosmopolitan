@@ -74,14 +74,14 @@ static void **ialloc(mstate m, size_t n_elements, size_t *sizes, int opts,
     size_t array_chunk_size;
     array_chunk = chunk_plus_offset(p, contents_size);
     array_chunk_size = remainder_size - contents_size;
-    marray = ADDRESS_BIRTH_ACTION((void **)(chunk2mem(array_chunk)));
+    marray = AddressBirthAction((void **)(chunk2mem(array_chunk)));
     set_size_and_pinuse_of_inuse_chunk(m, array_chunk, array_chunk_size);
     remainder_size = contents_size;
   }
 
   /* split out elements */
   for (i = 0;; ++i) {
-    marray[i] = ADDRESS_BIRTH_ACTION(chunk2mem(p));
+    marray[i] = AddressBirthAction(chunk2mem(p));
     if (i != n_elements - 1) {
       if (element_size != 0)
         size = element_size;

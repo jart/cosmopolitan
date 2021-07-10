@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,39 +16,37 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/itoa.h"
-#include "libc/runtime/runtime.h"
+#include "libc/math.h"
+#include "libc/rand/rand.h"
 #include "libc/str/str.h"
-#include "third_party/dlmalloc/dlmalloc.internal.h"
 
-static uintptr_t lastfree_;
-
-void *AddressBirthAction(void *addr) {
-  char buf[64], *p;
-  p = buf;
-  p = stpcpy(p, __FUNCTION__);
-  p = stpcpy(p, ": 0x");
-  p += uint64toarray_radix16((uintptr_t)addr, p);
-  *p++ = '\n';
-  __print(buf, p - buf);
-  if (lastfree_ == (uintptr_t)addr) {
-    lastfree_ = 0;
+/**
+ * Returns number between 0 and 8.
+ *
+ * This gives you an idea of the density of information. Cryptographic
+ * random should be in the ballpark of 7.9 whereas plaintext will be
+ * more like 4.5.
+ *
+ * @param p is treated as binary octets
+ * @param n should be at least 1000
+ */
+double MeasureEntropy(const char *p, size_t n) {
+  size_t i;
+  double e, x;
+  long h[256];
+  e = 0;
+  if (n) {
+    memset(h, 0, sizeof(h));
+    for (i = 0; i < n; ++i) {
+      ++h[p[i] & 255];
+    }
+    for (i = 0; i < 256; i++) {
+      if (h[i]) {
+        x = h[i];
+        x /= n;
+        e += x * log2(1 / x);
+      }
+    }
   }
-  return addr;
-}
-
-void *AddressDeathAction(void *addr) {
-  char buf[64], *p;
-  p = buf;
-  p = stpcpy(p, __FUNCTION__);
-  p = stpcpy(p, ": 0x");
-  p += uint64toarray_radix16((uintptr_t)addr, p);
-  if (lastfree_ != (uintptr_t)addr) {
-    lastfree_ = (uintptr_t)addr;
-  } else {
-    p = stpcpy(p, " [OBVIOUS DOUBLE FREE]");
-  }
-  *p++ = '\n';
-  __print(buf, p - buf);
-  return addr;
+  return e;
 }

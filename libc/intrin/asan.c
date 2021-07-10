@@ -112,7 +112,7 @@ struct AsanGlobal {
 
 struct AsanMorgue {
   unsigned i;
-  void *p[16];
+  void *p[32];
 };
 
 static struct AsanMorgue __asan_morgue;

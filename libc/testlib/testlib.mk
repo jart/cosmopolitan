@@ -13,22 +13,25 @@ LIBC_TESTLIB_A = o/$(MODE)/libc/testlib/testlib.a
 LIBC_TESTLIB_A_CHECKS = $(LIBC_TESTLIB_A).pkg
 
 LIBC_TESTLIB_A_ASSETS =						\
+	libc/testlib/blocktronics.txt				\
 	libc/testlib/hyperion.txt				\
-	libc/testlib/blocktronics.txt
+	libc/testlib/moby.txt
 
 LIBC_TESTLIB_A_HDRS =						\
 	libc/testlib/bench.h					\
-	libc/testlib/ezbench.h					\
 	libc/testlib/blocktronics.h				\
+	libc/testlib/ezbench.h					\
 	libc/testlib/hyperion.h					\
+	libc/testlib/moby.h					\
 	libc/testlib/testlib.h
 
 LIBC_TESTLIB_A_SRCS_S =						\
 	libc/testlib/bench.S					\
+	libc/testlib/blocktronics.S				\
 	libc/testlib/combo.S					\
 	libc/testlib/fixture.S					\
-	libc/testlib/blocktronics.S				\
 	libc/testlib/hyperion.S					\
+	libc/testlib/moby.S					\
 	libc/testlib/testcase.S					\
 	libc/testlib/thrashcodecache.S				\
 	libc/testlib/thunks/assert_eq.S				\
@@ -44,32 +47,32 @@ LIBC_TESTLIB_A_SRCS_S =						\
 
 LIBC_TESTLIB_A_SRCS_C =						\
 	libc/testlib/almostequallongdouble.c			\
-	libc/testlib/hexequals.c				\
+	libc/testlib/benchrunner.c				\
 	libc/testlib/binequals.c				\
 	libc/testlib/clearxmmregisters.c			\
-	libc/testlib/formatbool.c				\
-	libc/testlib/formatrange.c				\
-	libc/testlib/globals.c					\
-	libc/testlib/incrementfailed.c				\
-	libc/testlib/formatfloat.c				\
+	libc/testlib/comborunner.c				\
+	libc/testlib/contains.c					\
+	libc/testlib/endswith.c					\
+	libc/testlib/ezbenchcontrol.c				\
+	libc/testlib/ezbenchreport.c				\
+	libc/testlib/fixturerunner.c				\
 	libc/testlib/formatbinaryasglyphs.c			\
 	libc/testlib/formatbinaryashex.c			\
+	libc/testlib/formatbool.c				\
+	libc/testlib/formatfloat.c				\
 	libc/testlib/formatint.c				\
+	libc/testlib/formatrange.c				\
 	libc/testlib/formatstr.c				\
+	libc/testlib/globals.c					\
+	libc/testlib/hexequals.c				\
+	libc/testlib/incrementfailed.c				\
 	libc/testlib/shoulddebugbreak.c				\
 	libc/testlib/showerror.c				\
 	libc/testlib/showerror_.c				\
-	libc/testlib/strequals.c				\
 	libc/testlib/startswith.c				\
-	libc/testlib/endswith.c					\
-	libc/testlib/contains.c					\
 	libc/testlib/strcaseequals.c				\
-	libc/testlib/benchrunner.c				\
-	libc/testlib/testrunner.c				\
-	libc/testlib/comborunner.c				\
-	libc/testlib/fixturerunner.c				\
-	libc/testlib/ezbenchreport.c				\
-	libc/testlib/ezbenchcontrol.c
+	libc/testlib/strequals.c				\
+	libc/testlib/testrunner.c
 
 LIBC_TESTLIB_A_SRCS =						\
 	$(LIBC_TESTLIB_A_SRCS_S)				\

@@ -55,8 +55,7 @@ static inline noasan uint64_t UncheckedAlignedRead64(unsigned char *p) {
 void *memccpy(void *dst, const void *src, int c, size_t n) {
   size_t i;
   uint64_t v, w;
-  unsigned char *d;
-  unsigned char *pd;
+  unsigned char *d, *q;
   const unsigned char *s;
   i = 0;
   d = dst;
@@ -72,15 +71,15 @@ void *memccpy(void *dst, const void *src, int c, size_t n) {
     if (~(w ^ v) & ((w ^ v) - 0x0101010101010101) & 0x8080808080808080) {
       break;
     } else {
-      pd = d + i;
-      pd[0] = (w >> 000) & 255;
-      pd[1] = (w >> 010) & 255;
-      pd[2] = (w >> 020) & 255;
-      pd[3] = (w >> 030) & 255;
-      pd[4] = (w >> 040) & 255;
-      pd[5] = (w >> 050) & 255;
-      pd[6] = (w >> 060) & 255;
-      pd[7] = (w >> 070) & 255;
+      q = d + i;
+      q[0] = (w & 0x00000000000000ff) >> 000;
+      q[1] = (w & 0x000000000000ff00) >> 010;
+      q[2] = (w & 0x0000000000ff0000) >> 020;
+      q[3] = (w & 0x00000000ff000000) >> 030;
+      q[4] = (w & 0x000000ff00000000) >> 040;
+      q[5] = (w & 0x0000ff0000000000) >> 050;
+      q[6] = (w & 0x00ff000000000000) >> 060;
+      q[7] = (w & 0xff00000000000000) >> 070;
     }
   }
   for (; i < n; ++i) {

@@ -192,6 +192,45 @@ SECURITY
       -addext 'keyUsage = critical,cRLSign,keyCertSign'
     sudo ./redbean.com -C ca.crt -K .ca.key -p 80 -p 443
 
+  Let's say you're migrating away from NGINX and you use Let's Encrypt.
+  In that case you'll likely want something like the following:
+
+     certbot certonly --nginx --key-type ecdsa \
+       --cert-name redbean-ecdsa -d redbean.dev -d www.redbean.dev
+     certbot certonly --nginx --key-type rsa \
+       --cert-name redbean-rsa -d redbean.dev -d www.redbean.dev
+
+  You can then program /var/www/html/.init.lua as such:
+
+     ProgramPrivateKey(Slurp('/etc/letsencrypt/live/redbean-ecdsa/privkey.pem'))
+     ProgramCertificate(Slurp('/etc/letsencrypt/live/redbean-ecdsa/fullchain.pem'))
+     ProgramPrivateKey(Slurp('/etc/letsencrypt/live/redbean-rsa/privkey.pem'))
+     ProgramCertificate(Slurp('/etc/letsencrypt/live/redbean-rsa/fullchain.pem'))
+     if IsDaemon() then
+        ProgramUid(33)  # see `vipw` to get appropriate number
+        ProgramGid(33)  # see `vigr` to get appropriate number
+        ProgramPort(80)
+        ProgramPort(443)
+        ProgramLogPath('/var/log/redbean.log')
+        ProgramPidPath('/var/run/redbean.pid')
+     end
+     function OnHttpRequest()
+        path = GetPath()
+        if path == '/favicon.ico' or
+           path == '/site.webmanifest' or
+           path == '/favicon-16x16.png' or
+           path == '/favicon-32x32.png' or
+           path == '/apple-touch-icon' then
+           SetLogLevel(kLogWarn)
+        end
+        Route()
+        SetHeader('Content-Language', 'en-US')
+     end
+
+  You'd then run redbean as follows:
+
+    redbean.com -dD /var/www/html
+
   SSL verbosity is controlled as follows for troubleshooting:
 
     -V       log ssl errors
@@ -295,12 +334,50 @@ GLOBALS
 
 HOOKS
 
-   OnHttpRequest
+   OnHttpRequest()
            If this function is defined in the global scope by your /.init.lua
            then redbean will call it at the ealiest possible moment to
            handover control for all messages (with the exception of OPTIONS
            *). See functions like Route which asks redbean to do its default
            thing from the handler.
+
+   OnClientConnection(ip:int,port:int,serverip:int,serverport:int) → bool
+           If this function is defined it'll be called from the main process
+           each time redbean accepts a new client connection. If it returns
+           true then redbean will close the connection without calling fork.
+
+   OnProcessCreate(pid:int,ip:int,port:int,serverip:int,serverport:int)
+           If this function is defined it'll be called from the main process
+           each time redbean forks a connection handler worker process. The
+           ip/port of the remote client is provided, along with the ip/port
+           of the listening interface that accepted the connection. This may
+           be used to create a server activity dashboard, in which case the
+           data provider handler should set SetHeader('Connection','Close').
+           This won't be called in unprocess mode.
+
+   OnProcessDestroy(pid:int)
+           If this function is defined it'll be called from the main process
+           each time redbean reaps a child connection process using wait4().
+           This won't be called in unprocess mode.
+
+   OnServerStart()
+           If this function is defined it'll be called from the main process
+           right before the main event loop starts.
+
+   OnServerStop()
+           If this function is defined it'll be called from the main process
+           after all the connection processes have been reaped and exit() is
+           ready to be called.
+
+   OnWorkerStart()
+           If this function is defined it'll be called from the child worker
+           process after it's been forked and before messages are handled.
+           This won't be called in unprocess mode.
+
+   OnWorkerStop()
+           If this function is defined it'll be called from the child worker
+           process once _exit() is ready to be called. This won't be called
+           in unprocess mode.
 
 FUNCTIONS
 
@@ -708,6 +785,9 @@ FUNCTIONS
            ProgramPrivateKey(Slurp("/etc/letsencrypt/fullchain.pem")) for
            local file system only.
 
+   IsDaemon() → bool
+           Returns true if -d flag was passed to redbean.
+
    ProgramUid(int)
            Same as the -U flag if called from .init.lua for setuid()
 
@@ -735,6 +815,16 @@ FUNCTIONS
            The file is opened in append only mode. If the disk runs out of
            space then redbean will truncate the log file if has access to
            change the log file after daemonizing.
+
+   ProgramPidPath(str)
+           Same as the -P flag if called from .init.lua for setting the pid
+           file path on the local file system. It's useful for reloading
+           daemonized redbean using `kill -HUP $(cat /var/run/redbean.pid)`
+           or terminating redbean with `kill $(cat /var/run/redbean.pid)`
+           which will gracefully terminate all clients. Sending the TERM
+           signal twice will cause a forceful shutdown, which might make
+           someone with a slow internet connection who's downloading big
+           files unhappy.
 
    Slurp(filename:str) → str
            Reads file data from local file system.
@@ -792,21 +882,39 @@ FUNCTIONS
    Underlong(str) → str
            Canonicalizes overlong encodings.
 
-   bsf(x:int) → int
+   Crc32(initial:int,data:str) → int
+           Computes 32-bit CRC-32 used by zip/zlib/gzip/etc.
+
+   Crc32c(initial:int,data:str) → int
+           Computes 32-bit Castagnoli Cyclic Redundancy Check.
+
+   Md5(str) → str
+           Computes MD5 checksum, returning 16 bytes of binary.
+
+   Sha1(str) → str
+           Computes SHA1 checksum, returning 20 bytes of binary.
+
+   Sha224(str) → str
+           Computes SHA224 checksum, returning 28 bytes of binary.
+
+   Sha256(str) → str
+           Computes SHA256 checksum, returning 32 bytes of binary.
+
+   Sha384(str) → str
+           Computes SHA384 checksum, returning 48 bytes of binary.
+
+   Sha512(str) → str
+           Computes SHA512 checksum, returning 64 bytes of binary.
+
+   Bsf(x:int) → int
            Returns position of first bit set. Passing 0 will raise an error.
            Same as the Intel x86 instruction BSF.
 
-   bsr(x:int) → int
+   Bsr(x:int) → int
            Returns binary logarithm of 𝑥. Passing 0 will raise an error. Same
            as the Intel x86 instruction BSR.
 
-   crc32(initial:int,data:str) → int
-           Computes Phil Katz CRC-32 used by zip/zlib/gzip/etc.
-
-   crc32c(initial:int,data:str) → int
-           Computes 32-bit Castagnoli Cyclic Redundancy Check.
-
-   popcnt(x:int) → int
+   Popcnt(x:int) → int
            Returns number of bits set in integer.
 
 LSQLITE3 MODULE
