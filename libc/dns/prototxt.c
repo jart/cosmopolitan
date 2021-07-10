@@ -57,11 +57,10 @@ static textwindows noinline char *GetNtProtocolsTxtPath(char *pathbuf,
  *
  * format of /etc/protocols is like this:
  *
- *      # comment
- *      # NAME      PROTOCOL    ALIASES
- *
- *      ip	        0	        IP
- *      icmp	    1	        ICMP
+ * # comment
+ * # NAME           PROTOCOL        ALIASES
+ * ip               0               IP
+ * icmp             1               ICMP
  *
  * @param protonum is the protocol number
  * @param buf is a buffer to store the official name of the protocol
@@ -102,7 +101,10 @@ int LookupProtoByNumber(const int protonum, char *buf, size_t bufsize,
     name = strtok_r(line, " \t\r\n\v", &tok);
     number = strtok_r(NULL, " \t\r\n\v", &tok);
     if (name && number && protonum == atoi(number)) {
-      strncpy(buf, name, bufsize);
+      if (!memccpy(buf, name, '\0', bufsize)) {
+        strcpy(buf, "");
+        break;
+      }
       found = 1;
     }
   }
@@ -170,8 +172,11 @@ int LookupProtoByName(const char *protoname, char *buf, size_t bufsize,
 
       if (alias) /* alias matched with protoname */
       {
+        if (!memccpy(buf, name, '\0', bufsize)) {
+          strcpy(buf, "");
+          break;
+        }
         result = atoi(number);
-        strncpy(buf, name, bufsize);
         found = 1;
       }
     }

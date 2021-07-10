@@ -55,11 +55,11 @@ int getaddrinfo(const char *name, const char *service,
   if (!name && (hints->ai_flags & AI_CANONNAME)) return EAI_BADFLAGS;
   if (service) {
     if (hints->ai_socktype == SOCK_STREAM)
-      strncpy(proto, "tcp", sizeof(proto));
+      strcpy(proto, "tcp");
     else if (hints->ai_socktype == SOCK_DGRAM)
-      strncpy(proto, "udp", sizeof(proto));
+      strcpy(proto, "udp");
     else /* ai_socktype == 0 */
-      proto[0] = '\0';
+      strcpy(proto, "");
 
     if ((port = LookupServicesByName(service, proto, sizeof(proto), NULL, 0,
                                      NULL)) == -1) {

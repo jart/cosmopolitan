@@ -56,12 +56,11 @@ static textwindows noinline char *GetNtServicesTxtPath(char *pathbuf,
  *
  * format of /etc/services is like this:
  *
- *      # comment
- *      # NAME      PORT/PROTOCOL   ALIASES
- *
- *      ftp		    21/tcp
- *      fsp		    21/udp		    fspd
- *      ssh		    22/tcp
+ * # comment
+ * # NAME       PORT/PROTOCOL       ALIASES
+ * ftp          21/tcp
+ * fsp          21/udp              fspd
+ * ssh          22/tcp
  *
  * @param servport is the port number
  * @param servproto is a NULL-terminated string (eg "tcp", "udp")
@@ -102,6 +101,7 @@ int LookupServicesByPort(const int servport, char *servproto,
   line = NULL;
   linesize = 0;
   found = 0;
+  strcpy(buf, "");
 
   while (found == 0 && (getline(&line, &linesize, f)) != -1) {
     if ((comment = strchr(line, '#'))) *comment = '\0';
@@ -110,9 +110,15 @@ int LookupServicesByPort(const int servport, char *servproto,
     proto = strtok_r(NULL, " \t\r\n\v", &tok);
     if (name && port && proto && servport == atoi(port)) {
       if (!servproto[0] || strncasecmp(proto, servproto, servprotolen) == 0) {
-        strncpy(buf, name, bufsize);
+        if (!servproto[0] && !memccpy(servproto, proto, '\0', servprotolen)) {
+          strcpy(servproto, "");
+          break;
+        }
+        if (!memccpy(buf, name, '\0', bufsize)) {
+          strcpy(buf, "");
+          break;
+        }
         found = 1;
-        if (!servproto[0]) strncpy(servproto, proto, servprotolen);
       }
     }
   }
@@ -175,6 +181,7 @@ int LookupServicesByName(const char *servname, char *servproto,
   linesize = 0;
   found = 0;
   result = -1;
+  if (buf && bufsize != 0) strcpy(buf, "");
 
   while (found == 0 && (getline(&line, &linesize, f)) != -1) {
     if ((comment = strchr(line, '#'))) *comment = '\0';
@@ -189,10 +196,16 @@ int LookupServicesByName(const char *servname, char *servproto,
       if (alias) /* alias matched with servname */
       {
         if (!servproto[0] || strncasecmp(proto, servproto, servprotolen) == 0) {
+          if (!servproto[0] && !memccpy(servproto, proto, '\0', servprotolen)) {
+            strcpy(servproto, "");
+            break;
+          }
+          if (buf && bufsize != 0 && !memccpy(buf, name, '\0', bufsize)) {
+            strcpy(buf, "");
+            break;
+          }
           result = atoi(port);
           found = 1;
-          if (!servproto[0]) strncpy(servproto, proto, servprotolen);
-          if (buf && bufsize != 0) strncpy(buf, name, bufsize);
         }
       }
     }

@@ -53,8 +53,8 @@ TEST(LookupServicesByPort, GetNameWhenPortCorrect) {
   char proto1[] = "tcp";
   char proto2[] = "udp";
   char* localproto;
-
-  eitherproto[0] = '\0';
+  strcpy(eitherproto, "");
+  strcpy(name, "");
 
   localproto = eitherproto;
   ASSERT_EQ(-1, /* non existent port */
@@ -79,6 +79,19 @@ TEST(LookupServicesByPort, GetNameWhenPortCorrect) {
       -1, /* protocol is non-NULL/length must be nonzero */
       LookupServicesByPort(22, localproto, 0, name, sizeof(name), "services"));
   ASSERT_STREQ(proto1, "tcp");
+
+  localproto = proto1;
+  ASSERT_EQ(-1, /* sizeof(name) insufficient, memccpy failure */
+            LookupServicesByPort(22, localproto, sizeof(proto1), name, 1,
+                                 "services"));
+  ASSERT_STREQ(proto1, "tcp");
+  ASSERT_STREQ(name, ""); /* cleaned up after memccpy failed */
+
+  localproto = eitherproto;
+  ASSERT_EQ(
+      -1, /* sizeof(proto) insufficient, memccpy failure */
+      LookupServicesByPort(22, localproto, 1, name, sizeof(name), "services"));
+  ASSERT_STREQ(eitherproto, ""); /* cleaned up after memccpy failed */
 
   localproto = proto1;
   ASSERT_EQ(0, LookupServicesByPort(22, localproto, sizeof(proto1), name,
@@ -107,7 +120,8 @@ TEST(LookupServicesByName, GetPortWhenNameOrAlias) {
   char proto1[] = "tcp";
   char proto2[] = "udp";
   char* localproto;
-  eitherproto[0] = '\0';
+  strcpy(eitherproto, "");
+  strcpy(name, "");
 
   localproto = eitherproto;
   ASSERT_EQ(-1, /* non-existent name */
@@ -128,6 +142,19 @@ TEST(LookupServicesByName, GetPortWhenNameOrAlias) {
   ASSERT_STREQ(proto2, "udp");
 
   localproto = proto1;
+  ASSERT_EQ(-1, /* sizeof(name) insufficient, memccpy failure */
+            LookupServicesByName("ssh", localproto, sizeof(proto1), name, 1,
+                                 "services"));
+  ASSERT_STREQ(proto1, "tcp");
+  ASSERT_STREQ(name, ""); /* cleaned up after memccpy failed */
+
+  localproto = eitherproto;
+  ASSERT_EQ(-1, /* sizeof(proto) insufficient, memccpy failure */
+            LookupServicesByName("ssh", localproto, 1, name, sizeof(name),
+                                 "services"));
+  ASSERT_STREQ(eitherproto, ""); /* cleaned up after memccpy failed */
+
+  localproto = proto1;
   ASSERT_EQ(22, LookupServicesByName("ssh", localproto, sizeof(proto1), name,
                                      sizeof(name), "services"));
   ASSERT_STREQ(name, "ssh"); /* official name written to buffer */
@@ -144,7 +171,6 @@ TEST(LookupServicesByName, GetPortWhenNameOrAlias) {
             LookupServicesByName("ttytst", localproto, sizeof(proto2), NULL, 0,
                                  "services"));
 
-  name[0] = '\0';
   localproto = eitherproto;
   ASSERT_EQ(19, /* pick first matching protocol */
             LookupServicesByName("source", localproto, sizeof(eitherproto),

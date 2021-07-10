@@ -44,8 +44,10 @@ struct servent *getservbyname(const char *name, const char *proto) {
     ptr0 = &se0;
   }
 
-  localproto[0] = '\0';
-  if (proto) strncpy(localproto, proto, DNS_NAME_MAX);
+  if (proto) {
+    if (!memccpy(localproto, proto, '\0', DNS_NAME_MAX)) return NULL;
+  } else
+    strcpy(localproto, "");
 
   p = LookupServicesByName(name, ptr0->s_proto, DNS_NAME_MAX, ptr0->s_name,
                            DNS_NAME_MAX, NULL);

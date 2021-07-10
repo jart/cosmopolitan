@@ -48,9 +48,14 @@ ggp	    3	GGP		    ";
 
 TEST(LookupProtoByNumber, GetNameWhenNumberCorrect) {
   char name[16]; /* sample has only names of length 3-4 */
+  strcpy(name, "");
 
   ASSERT_EQ(-1, /*non-existent number */
             LookupProtoByNumber(24, name, sizeof(name), "protocols"));
+
+  ASSERT_EQ(-1, /* sizeof(name) insufficient, memccpy failure */
+            LookupProtoByNumber(73, name, 1, "protocols"));
+  ASSERT_STREQ(name, ""); /* cleaned up after memccpy failed */
 
   ASSERT_EQ(0, /* works with valid number */
             LookupProtoByNumber(73, name, sizeof(name), "protocols"));
@@ -59,9 +64,14 @@ TEST(LookupProtoByNumber, GetNameWhenNumberCorrect) {
 
 TEST(LookupProtoByName, GetNumberWhenNameOrAlias) {
   char name[16]; /* sample has only names of length 3-4 */
+  strcpy(name, "");
 
   ASSERT_EQ(-1, /* non-existent name or alias */
             LookupProtoByName("tcp", name, sizeof(name), "protocols"));
+
+  ASSERT_EQ(-1, /* sizeof(name) insufficient, memccpy failure */
+            LookupProtoByName("ggp", name, 1, "protocols"));
+  ASSERT_STREQ(name, ""); /* cleaned up after memccpy failed */
 
   ASSERT_EQ(3, /* works with valid name */
             LookupProtoByName("ggp", name, sizeof(name), "protocols"));
