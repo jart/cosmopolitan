@@ -680,7 +680,9 @@ static void InternCertificate(mbedtls_x509_crt *cert, mbedtls_x509_crt *prev) {
   }
   for (i = 0; i < certs.n; ++i) {
     if (!certs.p[i].cert) continue;
-    if (!mbedtls_x509_name_cmp(&cert->subject, &certs.p[i].cert->subject)) {
+    if (mbedtls_pk_get_type(&cert->pk) ==
+            mbedtls_pk_get_type(&certs.p[i].cert->pk) &&
+        !mbedtls_x509_name_cmp(&cert->subject, &certs.p[i].cert->subject)) {
       WARNF("certificate subject name %`'s is already loaded",
             gc(FormatX509Name(&cert->subject)));
       return;
