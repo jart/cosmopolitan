@@ -72,7 +72,7 @@ static textwindows noinline char *GetNtServicesTxtPath(char *pathbuf,
  * @param bufsize is the size of buf
  * @param filepath is the location of the services file
  *          (if NULL, uses /etc/services)
- * @returns 0 on success, -1 on error
+ * @return 0 on success, -1 on error
  *
  * @note aliases are not read from the file.
  */
@@ -149,7 +149,7 @@ int LookupServicesByPort(const int servport, char *servproto,
  * @param bufsize is the size of buf
  * @param filepath is the location of services file
  *          (if NULL, uses /etc/services)
- * @returns -1 on error, or
+ * @return -1 on error, or
  *          positive port number
  *
  * @note aliases are read from file for comparison, but not returned.

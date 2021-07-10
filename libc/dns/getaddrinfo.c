@@ -53,7 +53,7 @@ int getaddrinfo(const char *name, const char *service,
 
   if (!name && !service) return EAI_NONAME;
   if (!name && (hints->ai_flags & AI_CANONNAME)) return EAI_BADFLAGS;
-  if (service) {
+  if (service && (port = parseport(service)) == -1) {
     if (hints->ai_socktype == SOCK_STREAM)
       strcpy(proto, "tcp");
     else if (hints->ai_socktype == SOCK_DGRAM)
@@ -62,9 +62,8 @@ int getaddrinfo(const char *name, const char *service,
       strcpy(proto, "");
 
     if ((port = LookupServicesByName(service, proto, sizeof(proto), NULL, 0,
-                                     NULL)) == -1) {
-      if ((port = parseport(service)) == -1) return EAI_NONAME;
-    }
+                                     NULL)) == -1)
+      return EAI_NONAME;
   }
   if (!(ai = newaddrinfo(port))) return EAI_MEMORY;
   if (service) ai->ai_addr4->sin_port = htons(port);

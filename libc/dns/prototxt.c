@@ -67,7 +67,7 @@ static textwindows noinline char *GetNtProtocolsTxtPath(char *pathbuf,
  * @param bufsize is the size of buf
  * @param filepath is the location of the protocols file
  *          (if NULL, uses /etc/protocols)
- * @returns 0 on success, -1 on error
+ * @return 0 on success, -1 on error
  *
  * @note aliases are not read from the file.
  */
@@ -129,7 +129,7 @@ int LookupProtoByNumber(const int protonum, char *buf, size_t bufsize,
  * @param bufsize is the size of buf
  * @param filepath is the location of protocols file
  *          (if NULL, uses /etc/protocols)
- * @returns -1 on error, or
+ * @return -1 on error, or
  *          positive protocol number
  *
  * @note aliases are read from file for comparison, but not returned.
