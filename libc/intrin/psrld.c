@@ -33,6 +33,6 @@ void(psrld)(uint32_t a[4], const uint32_t b[4], unsigned char c) {
       a[i] = b[i] >> c;
     }
   } else {
-    memset(a, 0, 16);
+    __builtin_memset(a, 0, 16);
   }
 }

@@ -35,5 +35,5 @@ void(paddusw)(uint16_t a[8], const uint16_t b[8], const uint16_t c[8]) {
   for (i = 0; i < 8; ++i) {
     r[i] = MIN(UINT16_MAX, b[i] + c[i]);
   }
-  memcpy(a, r, 16);
+  __builtin_memcpy(a, r, 16);
 }

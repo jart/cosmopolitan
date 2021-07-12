@@ -39,10 +39,6 @@
 
 static struct timespec vflogf_ts;
 
-static int vflogf_loglevel2char(unsigned level) {
-  return "FEWIVDYZ"[level & 7];
-}
-
 /**
  * Takes corrective action if logging is on the fritz.
  */
@@ -87,6 +83,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   int64_t secs, nsec, dots;
   if (!f) f = __log_file;
   if (!f) return;
+  ++ftrace;
   t2 = nowl();
   secs = t2;
   nsec = (t2 - secs) * 1e9L;
@@ -104,8 +101,8 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   prog = basename(program_invocation_name);
   bufmode = f->bufmode;
   if (bufmode == _IOLBF) f->bufmode = _IOFBF;
-  if ((fprintf)(f, "%c%s%06ld:%s:%d:%.*s:%d] ", vflogf_loglevel2char(level),
-                buf32p, rem1000000int64(div1000int64(dots)), file, line,
+  if ((fprintf)(f, "%c%s%06ld:%s:%d:%.*s:%d] ", "FEWIVDNT"[level & 7], buf32p,
+                rem1000000int64(div1000int64(dots)), file, line,
                 strchrnul(prog, '.') - prog, prog, getpid()) <= 0) {
     vflogf_onfail(f);
   }
@@ -124,4 +121,5 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
     __die();
     unreachable;
   }
+  --ftrace;
 }

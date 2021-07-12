@@ -199,6 +199,12 @@ wchar_t *wchomp(wchar_t *);
 
 bool escapedos(char16_t *, unsigned, const char16_t *, unsigned);
 
+void *memset_pure(void *, int, size_t) memcpyesque;
+void *memmove_pure(void *, const void *, size_t) memcpyesque;
+void *mempcpy_pure(void *, const void *, size_t) memcpyesque;
+size_t strlen_pure(const char *) strlenesque;
+size_t strcspn_pure(const char *, const char *) strlenesque;
+
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § strings » multibyte                                       ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
@@ -374,41 +380,20 @@ char *strsignal(int) returnsnonnull libcesque;
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § strings » address sanitizer                               ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-void *memset_pure(void *, int, size_t) memcpyesque;
-void *memmove_pure(void *, const void *, size_t) memcpyesque;
-size_t strlen_pure(const char *) strlenesque;
-size_t strcspn_pure(const char *, const char *) strlenesque;
 #if defined(__FSANITIZE_ADDRESS__)
 
-#define strcspn(STR, REJECT) strcspn_pure(STR, REJECT)
-
-#undef strlen
-#define strlen(STR) \
-  (__builtin_constant_p(STR) ? __builtin_strlen(STR) : strlen_pure(STR))
-
-#undef memset
-#define memset(DST, CHAR, SIZE)                                  \
-  (__memcpy_isgoodsize(SIZE) ? __builtin_memset(DST, CHAR, SIZE) \
-                             : memset_pure(DST, CHAR, SIZE))
-
-#undef memmove
-#define memmove(DST, SRC, SIZE)                                  \
-  (__memcpy_isgoodsize(SIZE) ? __builtin_memmove(DST, SRC, SIZE) \
-                             : memmove_pure(DST, SRC, SIZE))
-
 #undef memcpy
-#define memcpy(DST, SRC, SIZE)                                  \
-  (__memcpy_isgoodsize(SIZE) ? __builtin_memcpy(DST, SRC, SIZE) \
-                             : memmove_pure(DST, SRC, SIZE))
-
+#undef memmove
 #undef mempcpy
-#define mempcpy(DST, SRC, SIZE)                                       \
-  (__memcpy_isgoodsize(SIZE) ? __builtin_mempcpy(DST, SRC, SIZE) : ({ \
-    void *DsT = (DST);                                                \
-    size_t SiZe = (SIZE);                                             \
-    memmove_pure(DsT, SRC, SiZe);                                     \
-    (void *)((char *)DsT + SiZe);                                     \
-  }))
+#undef memset
+#undef strlen
+
+#define memcpy  memmove_pure
+#define memmove memmove_pure
+#define mempcpy mempcpy_pure
+#define memset  memset_pure
+#define strcspn strcspn_pure
+#define strlen  strlen_pure
 
 #endif /* __FSANITIZE_ADDRESS__ */
 #endif /* __GNUC__ && !__STRICT_ANSI__ */

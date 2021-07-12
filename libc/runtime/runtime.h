@@ -14,6 +14,7 @@ extern char **environ;                              /* CRT */
 extern unsigned long *__auxv;                       /* CRT */
 extern char *program_invocation_name;               /* RII */
 extern char *program_invocation_short_name;         /* RII */
+extern int ftrace;                                  /* CRT */
 extern uint64_t g_syscount;                         /* RII */
 extern const uint64_t kStartTsc;                    /* RII */
 extern const char kTmpPath[];                       /* RII */

@@ -20,7 +20,10 @@
 .privileged
 
 ftrace_hook:
-	push	%rbp
+	cmp	$0,ftrace(%rip)
+	je	1f
+	ret
+1:	push	%rbp
 	mov	%rsp,%rbp
 	and	$-16,%rsp
 	sub	$0x80,%rsp
@@ -42,7 +45,7 @@ ftrace_hook:
 	push	%r9
 	push	%r10
 	push	%r11
-	call	ftrace
+	call	ftracer
 	pop	%r11
 	pop	%r10
 	pop	%r9

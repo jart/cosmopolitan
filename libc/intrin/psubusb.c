@@ -35,5 +35,5 @@ void(psubusb)(uint8_t a[16], const uint8_t b[16], const uint8_t c[16]) {
   for (i = 0; i < 16; ++i) {
     r[i] = MIN(UINT8_MAX, MAX(UINT8_MIN, b[i] - c[i]));
   }
-  memcpy(a, r, 16);
+  __builtin_memcpy(a, r, 16);
 }

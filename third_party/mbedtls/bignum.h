@@ -13,7 +13,6 @@ COSMOPOLITAN_C_START_
 #define MBEDTLS_ERR_MPI_DIVISION_BY_ZERO                  -0x000C  /**< The input argument for division is zero, which is not allowed. */
 #define MBEDTLS_ERR_MPI_NOT_ACCEPTABLE                    -0x000E  /**< The input arguments are not acceptable. */
 #define MBEDTLS_ERR_MPI_ALLOC_FAILED                      -0x0010  /**< Memory allocation failed. */
-
 #define MBEDTLS_MPI_CHK(f)       \
     do                           \
     {                            \

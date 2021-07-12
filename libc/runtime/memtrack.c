@@ -24,12 +24,146 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
+typedef long long xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
+
+static noasan void *MoveMemoryNoAsan(void *dst, const void *src, size_t n) {
+  size_t i;
+  xmm_t v, w;
+  char *d, *r;
+  const char *s;
+  uint64_t a, b;
+  d = dst;
+  s = src;
+  switch (n) {
+    case 9 ... 15:
+      __builtin_memcpy(&a, s, 8);
+      __builtin_memcpy(&b, s + n - 8, 8);
+      __builtin_memcpy(d, &a, 8);
+      __builtin_memcpy(d + n - 8, &b, 8);
+      return d;
+    case 5 ... 7:
+      __builtin_memcpy(&a, s, 4);
+      __builtin_memcpy(&b, s + n - 4, 4);
+      __builtin_memcpy(d, &a, 4);
+      __builtin_memcpy(d + n - 4, &b, 4);
+      return d;
+    case 17 ... 32:
+      __builtin_memcpy(&v, s, 16);
+      __builtin_memcpy(&w, s + n - 16, 16);
+      __builtin_memcpy(d, &v, 16);
+      __builtin_memcpy(d + n - 16, &w, 16);
+      return d;
+    case 16:
+      __builtin_memcpy(&v, s, 16);
+      __builtin_memcpy(d, &v, 16);
+      return d;
+    case 0:
+      return d;
+    case 1:
+      *d = *s;
+      return d;
+    case 8:
+      __builtin_memcpy(&a, s, 8);
+      __builtin_memcpy(d, &a, 8);
+      return d;
+    case 4:
+      __builtin_memcpy(&a, s, 4);
+      __builtin_memcpy(d, &a, 4);
+      return d;
+    case 2:
+      __builtin_memcpy(&a, s, 2);
+      __builtin_memcpy(d, &a, 2);
+      return d;
+    case 3:
+      __builtin_memcpy(&a, s, 2);
+      __builtin_memcpy(&b, s + 1, 2);
+      __builtin_memcpy(d, &a, 2);
+      __builtin_memcpy(d + 1, &b, 2);
+      return d;
+    default:
+      r = d;
+      if (d > s) {
+        do {
+          n -= 32;
+          __builtin_memcpy(&v, s + n, 16);
+          __builtin_memcpy(&w, s + n + 16, 16);
+          __builtin_memcpy(d + n, &v, 16);
+          __builtin_memcpy(d + n + 16, &w, 16);
+        } while (n >= 32);
+      } else {
+        i = 0;
+        do {
+          __builtin_memcpy(&v, s + i, 16);
+          __builtin_memcpy(&w, s + i + 16, 16);
+          __builtin_memcpy(d + i, &v, 16);
+          __builtin_memcpy(d + i + 16, &w, 16);
+        } while ((i += 32) + 32 <= n);
+        d += i;
+        s += i;
+        n -= i;
+      }
+      switch (n) {
+        case 0:
+          return r;
+        case 17 ... 31:
+          __builtin_memcpy(&v, s, 16);
+          __builtin_memcpy(&w, s + n - 16, 16);
+          __builtin_memcpy(d, &v, 16);
+          __builtin_memcpy(d + n - 16, &w, 16);
+          return r;
+        case 9 ... 15:
+          __builtin_memcpy(&a, s, 8);
+          __builtin_memcpy(&b, s + n - 8, 8);
+          __builtin_memcpy(d, &a, 8);
+          __builtin_memcpy(d + n - 8, &b, 8);
+          return r;
+        case 5 ... 7:
+          __builtin_memcpy(&a, s, 4);
+          __builtin_memcpy(&b, s + n - 4, 4);
+          __builtin_memcpy(d, &a, 4);
+          __builtin_memcpy(d + n - 4, &b, 4);
+          return r;
+        case 16:
+          __builtin_memcpy(&v, s, 16);
+          __builtin_memcpy(d, &v, 16);
+          return r;
+        case 8:
+          __builtin_memcpy(&a, s, 8);
+          __builtin_memcpy(d, &a, 8);
+          return r;
+        case 4:
+          __builtin_memcpy(&a, s, 4);
+          __builtin_memcpy(d, &a, 4);
+          return r;
+        case 1:
+          *d = *s;
+          return r;
+        case 2:
+          __builtin_memcpy(&a, s, 2);
+          __builtin_memcpy(d, &a, 2);
+          return r;
+        case 3:
+          __builtin_memcpy(&a, s, 2);
+          __builtin_memcpy(&b, s + 1, 2);
+          __builtin_memcpy(d, &a, 2);
+          __builtin_memcpy(d + 1, &b, 2);
+          return r;
+        default:
+          unreachable;
+      }
+  }
+}
+
+#ifndef __FSANITIZE_ADDRESS__
+#define MoveMemoryNoAsan memmove
+#endif
+
 static noasan void RemoveMemoryIntervals(struct MemoryIntervals *mm, int i,
                                          int n) {
   assert(i >= 0);
   assert(i + n <= mm->i);
-  memcpy(mm->p + i, mm->p + i + n,
-         (intptr_t)(mm->p + mm->i) - (intptr_t)(mm->p + i + n));
+  MoveMemoryNoAsan(mm->p + i, mm->p + i + n,
+                   (intptr_t)(mm->p + mm->i) - (intptr_t)(mm->p + i + n));
   mm->i -= n;
 }
 
@@ -37,8 +171,8 @@ static noasan void CreateMemoryInterval(struct MemoryIntervals *mm, int i) {
   assert(i >= 0);
   assert(i <= mm->i);
   assert(mm->i < ARRAYLEN(mm->p));
-  memmove(mm->p + i + 1, mm->p + i,
-          (intptr_t)(mm->p + mm->i) - (intptr_t)(mm->p + i));
+  MoveMemoryNoAsan(mm->p + i + 1, mm->p + i,
+                   (intptr_t)(mm->p + mm->i) - (intptr_t)(mm->p + i));
   ++mm->i;
 }
 

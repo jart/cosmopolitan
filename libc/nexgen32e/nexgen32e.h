@@ -22,6 +22,9 @@ int64_t rem10000int64(int64_t) libcesque pureconst;
 int64_t rem1000000int64(int64_t) libcesque pureconst;
 int64_t rem1000000000int64(int64_t) libcesque pureconst;
 
+char sbb(uint64_t *, const uint64_t *, const uint64_t *, size_t);
+char adc(uint64_t *, const uint64_t *, const uint64_t *, size_t);
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NEXGEN32E_NEXGEN32E_H_ */

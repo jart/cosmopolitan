@@ -32,5 +32,5 @@ void(pslldq)(uint8_t b[16], const uint8_t a[16], unsigned long n) {
   if (n > 16) n = 16;
   for (i = 0; i < n; ++i) t[i] = 0;
   for (i = 0; i < 16 - n; ++i) t[n + i] = a[i];
-  memcpy(b, t, 16);
+  __builtin_memcpy(b, t, 16);
 }

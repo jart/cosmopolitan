@@ -20,7 +20,7 @@
 #include "libc/bits/bits.h"
 #include "libc/str/str.h"
 
-static noasan size_t strlen_pure_x64(const char *s, size_t i) {
+static inline noasan size_t strlen_pure_x64(const char *s, size_t i) {
   uint64_t w;
   for (;; i += 8) {
     w = READ64LE(s + i);

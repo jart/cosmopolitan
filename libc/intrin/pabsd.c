@@ -30,5 +30,5 @@ void(pabsd)(uint32_t a[4], const int32_t b[4]) {
   for (i = 0; i < 4; ++i) {
     r[i] = b[i] >= 0 ? b[i] : -(uint32_t)b[i];
   }
-  memcpy(a, r, 16);
+  __builtin_memcpy(a, r, 16);
 }

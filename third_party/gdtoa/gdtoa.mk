@@ -46,6 +46,11 @@ $(THIRD_PARTY_GDTOA_A).pkg:				\
 		$(THIRD_PARTY_GDTOA_A_OBJS)		\
 		$(foreach x,$(THIRD_PARTY_GDTOA_A_DIRECTDEPS),$($(x)_A).pkg)
 
+$(THIRD_PARTY_GDTOA_A_OBJS):				\
+		OVERRIDE_CFLAGS +=			\
+			-ffunction-sections		\
+			-fdata-sections
+
 THIRD_PARTY_GDTOA_LIBS = $(foreach x,$(THIRD_PARTY_GDTOA_ARTIFACTS),$($(x)))
 THIRD_PARTY_GDTOA_SRCS = $(foreach x,$(THIRD_PARTY_GDTOA_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_GDTOA_HDRS = $(foreach x,$(THIRD_PARTY_GDTOA_ARTIFACTS),$($(x)_HDRS))

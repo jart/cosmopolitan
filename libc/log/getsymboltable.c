@@ -30,10 +30,12 @@ struct SymbolTable *GetSymbolTable(void) {
   const char *debugbin;
   if (!once) {
     once = true;
+    ++ftrace;
     if ((debugbin = FindDebugBinary()) &&
         (singleton = OpenSymbolTable(debugbin))) {
       __cxa_atexit(CloseSymbolTable, &singleton, NULL);
     }
+    --ftrace;
   }
   return singleton;
 }

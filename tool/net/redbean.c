@@ -33,6 +33,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
+#include "libc/log/backtrace.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
@@ -92,6 +93,7 @@
 #include "third_party/lua/lualib.h"
 #include "third_party/mbedtls/asn1.h"
 #include "third_party/mbedtls/asn1write.h"
+#include "third_party/mbedtls/cipher.h"
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/ctr_drbg.h"
 #include "third_party/mbedtls/debug.h"
@@ -107,10 +109,12 @@
 #include "third_party/mbedtls/san.h"
 #include "third_party/mbedtls/sha1.h"
 #include "third_party/mbedtls/ssl.h"
+#include "third_party/mbedtls/ssl_ticket.h"
 #include "third_party/mbedtls/x509.h"
 #include "third_party/mbedtls/x509_crt.h"
 #include "third_party/regex/regex.h"
 #include "third_party/zlib/zlib.h"
+#include "tool/build/lib/case.h"
 
 /**
  * @fileoverview redbean - single-file distributable web server
@@ -184,9 +188,10 @@ struct Buffer {
 };
 
 struct TlsBio {
-  int fd;
+  int fd, c;
   unsigned a, b;
   unsigned char t[4000];
+  unsigned char u[1430];
 };
 
 struct Strings {
@@ -203,6 +208,7 @@ struct DeflateGenerator {
   size_t i;
   uint32_t c;
   z_stream s;
+  struct Asset *a;
 };
 
 static struct Ips {
@@ -392,6 +398,7 @@ static struct sockaddr_in *serveraddr;
 static mbedtls_ssl_config conf;
 static mbedtls_ssl_context ssl;
 static mbedtls_ctr_drbg_context rng;
+static mbedtls_ssl_ticket_context ssltick;
 
 static mbedtls_ssl_config confcli;
 static mbedtls_ssl_context sslcli;
@@ -439,6 +446,10 @@ static void OnHup(void) {
   } else {
     OnTerm();
   }
+}
+
+static long ParseInt(const char *s) {
+  return strtol(s, 0, 0);
 }
 
 forceinline bool SlicesEqual(const char *a, size_t n, const char *b, size_t m) {
@@ -780,6 +791,10 @@ static void ProgramPort(long port) {
   if (port == 443) listeningonport443 = true;
   ports.p = realloc(ports.p, ++ports.n * sizeof(*ports.p));
   ports.p[ports.n - 1] = port;
+}
+
+static void ProgramMaxPayloadSize(long x) {
+  maxpayloadsize = MAX(1450, x);
 }
 
 static uint32_t ResolveIp(const char *addr) {
@@ -1293,33 +1308,74 @@ static void ReapZombies(void) {
 }
 
 static ssize_t WritevAll(int fd, struct iovec *iov, int iovlen) {
+  int i;
   ssize_t rc;
-  size_t wrote, total = 0;
+  size_t wrote, total;
+  i = 0;
+  total = 0;
   do {
-    if ((rc = writev(fd, iov, iovlen)) != -1) {
+    if (i) {
+      while (i < iovlen && !iov[i].iov_len) ++i;
+      if (i == iovlen) break;
+    }
+    if ((rc = writev(fd, iov + i, iovlen - i)) != -1) {
       wrote = rc;
       total += wrote;
       do {
-        if (wrote >= iov->iov_len) {
-          wrote -= iov->iov_len;
-          ++iov;
-          --iovlen;
+        if (wrote >= iov[i].iov_len) {
+          wrote -= iov[i++].iov_len;
         } else {
-          iov->iov_base = (char *)iov->iov_base + wrote;
-          iov->iov_len -= wrote;
+          iov[i].iov_base = (char *)iov[i].iov_base + wrote;
+          iov[i].iov_len -= wrote;
           wrote = 0;
         }
       } while (wrote);
     } else if (errno == EINTR) {
       LockInc(&shared->c.writeinterruputs);
       if (killed || (meltdown && nowl() - startread > 2)) {
-        return -1;
+        return total ? total : -1;
       }
     } else {
-      return -1;
+      return total ? total : -1;
     }
-  } while (iovlen);
+  } while (i < iovlen);
   return total;
+}
+
+static int TlsFlush(struct TlsBio *bio, const unsigned char *buf, size_t len) {
+  struct iovec v[2];
+  if (len || bio->c > 0) {
+    v[0].iov_base = bio->u;
+    v[0].iov_len = MAX(0, bio->c);
+    v[1].iov_base = buf;
+    v[1].iov_len = len;
+    if (WritevAll(bio->fd, v, 2) != -1) {
+      if (bio->c > 0) bio->c = 0;
+    } else if (errno == EINTR) {
+      return MBEDTLS_ERR_NET_CONN_RESET;
+    } else if (errno == EAGAIN) {
+      return MBEDTLS_ERR_SSL_TIMEOUT;
+    } else if (errno == EPIPE || errno == ECONNRESET || errno == ENETRESET) {
+      return MBEDTLS_ERR_NET_CONN_RESET;
+    } else {
+      WARNF("TlsSend error %s", strerror(errno));
+      return MBEDTLS_ERR_NET_SEND_FAILED;
+    }
+  }
+  return 0;
+}
+
+static int TlsSend(void *ctx, const unsigned char *buf, size_t len) {
+  int rc;
+  struct iovec v[2];
+  struct TlsBio *bio = ctx;
+  if (bio->c >= 0 && bio->c + len <= sizeof(bio->u)) {
+    memcpy(bio->u + bio->c, buf, len);
+    bio->c += len;
+    return len;
+  }
+  if ((rc = TlsFlush(bio, buf, len)) < 0) return rc;
+  return len;
 }
 
 static int TlsRecvImpl(void *ctx, unsigned char *p, size_t n, uint32_t o) {
@@ -1327,6 +1383,7 @@ static int TlsRecvImpl(void *ctx, unsigned char *p, size_t n, uint32_t o) {
   ssize_t s;
   struct iovec v[2];
   struct TlsBio *bio = ctx;
+  if ((r = TlsFlush(bio, 0, 0)) < 0) return r;
   if (bio->a < bio->b) {
     r = MIN(n, bio->b - bio->a);
     memcpy(p, bio->t + bio->a, r);
@@ -1355,6 +1412,7 @@ static int TlsRecvImpl(void *ctx, unsigned char *p, size_t n, uint32_t o) {
 
 static int TlsRecv(void *ctx, unsigned char *buf, size_t len, uint32_t tmo) {
   int rc;
+  struct TlsBio *bio = ctx;
   if (oldin.n) {
     rc = MIN(oldin.n, len);
     memcpy(buf, oldin.p, rc);
@@ -1368,24 +1426,6 @@ static int TlsRecv(void *ctx, unsigned char *buf, size_t len, uint32_t tmo) {
 static void TlsDebug(void *ctx, int level, const char *file, int line,
                      const char *message) {
   flogf(level, file, line, 0, "TLS %s", message);
-}
-
-static int TlsSend(void *ctx, const unsigned char *buf, size_t len) {
-  int rc;
-  struct TlsBio *bio = ctx;
-  if ((rc = WritevAll(bio->fd, &(struct iovec){buf, len}, 1)) == -1) {
-    if (errno == EINTR) {
-      return MBEDTLS_ERR_NET_CONN_RESET;
-    } else if (errno == EAGAIN) {
-      return MBEDTLS_ERR_SSL_TIMEOUT;
-    } else if (errno == EPIPE || errno == ECONNRESET || errno == ENETRESET) {
-      return MBEDTLS_ERR_NET_CONN_RESET;
-    } else {
-      WARNF("TlsSend error %s", strerror(errno));
-      return MBEDTLS_ERR_NET_SEND_FAILED;
-    }
-  }
-  return rc;
 }
 
 static ssize_t SslRead(int fd, void *buf, size_t size) {
@@ -1444,6 +1484,22 @@ static void NotifyClose(void) {
 #endif
 }
 
+static void WipeKeySigningKeys(void) {
+  size_t i;
+  for (i = 0; i < certs.n; ++i) {
+    if (!certs.p[i].key) continue;
+    if (!certs.p[i].cert) continue;
+    if (!certs.p[i].cert->ca_istrue) continue;
+    mbedtls_pk_free(certs.p[i].key);
+    certs.p[i].key = 0;
+  }
+}
+
+static void WipeServingKeys(void) {
+  mbedtls_ssl_ticket_free(&ssltick);
+  mbedtls_ssl_key_cert_free(conf.key_cert);
+}
+
 static bool TlsSetup(void) {
   int r;
   oldin.p = inbuf.p;
@@ -1455,12 +1511,15 @@ static bool TlsSetup(void) {
   g_bio.fd = client;
   g_bio.a = 0;
   g_bio.b = 0;
+  g_bio.c = 0;
   for (;;) {
-    if (!(r = mbedtls_ssl_handshake(&ssl))) {
+    if (!(r = mbedtls_ssl_handshake(&ssl)) && TlsFlush(&g_bio, 0, 0) != -1) {
       LockInc(&shared->c.sslhandshakes);
+      g_bio.c = -1;
       usessl = true;
       reader = SslRead;
       writer = SslWrite;
+      WipeServingKeys();
       VERBOSEF("SHAKEN %s %s %s", DescribeClient(),
                mbedtls_ssl_get_ciphersuite(&ssl),
                mbedtls_ssl_get_version(&ssl));
@@ -1627,8 +1686,7 @@ static void ConfigureCertificate(mbedtls_x509write_cert *cw, struct Cert *ca,
       (r = mbedtls_x509write_crt_set_ext_key_usage(cw, type)) ||
       (r = mbedtls_x509write_crt_set_subject_name(cw, subject)) ||
       (r = mbedtls_x509write_crt_set_issuer_name(cw, issuer))) {
-    fprintf(stderr, "error: configure certificate (grep -0x%04x)\n", -r);
-    exit(1);
+    FATALF("configure certificate (grep -0x%04x)", -r);
   }
   free(subject);
   free(issuer);
@@ -1648,17 +1706,6 @@ static struct Cert *GetKeySigningKey(void) {
     return certs.p + i;
   }
   return NULL;
-}
-
-static void WipeKeySigningKeys(void) {
-  size_t i;
-  for (i = 0; i < certs.n; ++i) {
-    if (!certs.p[i].key) continue;
-    if (!certs.p[i].cert) continue;
-    if (!certs.p[i].cert->ca_istrue) continue;
-    mbedtls_pk_free(certs.p[i].key);
-    certs.p[i].key = 0;
-  }
 }
 
 static mbedtls_pk_context *InitializeKey(struct Cert *ca,
@@ -1686,10 +1733,7 @@ static struct Cert FinishCertificate(struct Cert *ca,
   mbedtls_x509_crt *cert;
   p = malloc((n = FRAMESIZE));
   i = mbedtls_x509write_crt_der(wcert, p, n, mbedtls_ctr_drbg_random, kr);
-  if (i < 0) {
-    fprintf(stderr, "error: write key (grep -0x%04x)\n", -i);
-    exit(1);
-  }
+  if (i < 0) FATALF("write key (grep -0x%04x)", -i);
   cert = calloc(1, sizeof(mbedtls_x509_crt));
   mbedtls_x509_crt_parse(cert, p + n - i, i);
   if (ca) cert->next = ca->cert;
@@ -1697,8 +1741,7 @@ static struct Cert FinishCertificate(struct Cert *ca,
   mbedtls_ctr_drbg_free(kr);
   free(p);
   if ((rc = mbedtls_pk_check_pair(&cert->pk, key))) {
-    fprintf(stderr, "error: generate key (grep -0x%04x)\n", -rc);
-    exit(1);
+    FATALF("generate key (grep -0x%04x)", -rc);
   }
   LogCertificate(
       gc(xasprintf("generated %s certificate", mbedtls_pk_get_name(&cert->pk))),
@@ -2236,101 +2279,41 @@ static wontreturn void PrintUsage(FILE *f, int rc) {
 static void GetOpts(int argc, char *argv[]) {
   int opt;
   while ((opt = getopt(argc, argv,
-                       "jkazhdugvVsmbfl:p:r:R:H:c:L:P:U:G:BD:t:M:C:K:F:")) !=
-         -1) {
+                       "jkazhdugvVsmbfB"
+                       "l:p:r:R:H:c:L:P:U:G:D:t:M:C:K:F:")) != -1) {
     switch (opt) {
-      case 'v':
-        __log_level++;
-        break;
-      case 'V':
-        mbedtls_debug_threshold++;
-        break;
-      case 's':
-        __log_level--;
-        break;
-      case 'd':
-        daemonize = true;
-        break;
-      case 'a':
-        logrusage = true;
-        break;
-      case 'u':
-        uniprocess = true;
-        break;
-      case 'g':
-        loglatency = true;
-        break;
-      case 'm':
-        logmessages = true;
-        break;
-      case 'b':
-        logbodies = true;
-        break;
-      case 'z':
-        printport = true;
-        break;
-      case 'f':
-        funtrace = true;
-        break;
-      case 'j':
-        sslclientverify = true;
-        break;
-      case 'k':
-        sslfetchverify = false;
-        break;
-      case 'B':
-        suiteb = true;
-        break;
-      case 't':
-        ProgramTimeout(strtol(optarg, NULL, 0));
-        break;
-      case 'r':
-        ProgramRedirectArg(307, optarg);
-        break;
-      case 'R':
-        ProgramRedirectArg(0, optarg);
-        break;
-      case 'D':
-        ProgramDirectory(optarg);
-        break;
-      case 'c':
-        ProgramCache(strtol(optarg, NULL, 0));
-        break;
-      case 'p':
-        ProgramPort(strtol(optarg, NULL, 0));
-        break;
-      case 'M':
-        maxpayloadsize = atoi(optarg);
-        maxpayloadsize = MAX(1450, maxpayloadsize);
-        break;
-      case 'l':
-        ProgramAddr(optarg);
-        break;
-      case 'H':
-        ProgramHeader(optarg);
-        break;
-      case 'L':
-        ProgramLogPath(optarg);
-        break;
-      case 'P':
-        ProgramPidPath(optarg);
-        break;
-      case 'U':
-        ProgramUid(atoi(optarg));
-        break;
-      case 'G':
-        ProgramGid(atoi(optarg));
-        break;
+      CASE('v', ++__log_level);
+      CASE('s', --__log_level);
+      CASE('V', ++mbedtls_debug_threshold);
+      CASE('B', suiteb = true);
+      CASE('f', funtrace = true);
+      CASE('b', logbodies = true);
+      CASE('z', printport = true);
+      CASE('d', daemonize = true);
+      CASE('a', logrusage = true);
+      CASE('u', uniprocess = true);
+      CASE('g', loglatency = true);
+      CASE('m', logmessages = true);
+      CASE('k', sslfetchverify = false);
+      CASE('j', sslclientverify = true);
+      CASE('l', ProgramAddr(optarg));
+      CASE('H', ProgramHeader(optarg));
+      CASE('L', ProgramLogPath(optarg));
+      CASE('P', ProgramPidPath(optarg));
+      CASE('D', ProgramDirectory(optarg));
+      CASE('U', ProgramUid(atoi(optarg)));
+      CASE('G', ProgramGid(atoi(optarg)));
+      CASE('p', ProgramPort(ParseInt(optarg)));
+      CASE('R', ProgramRedirectArg(0, optarg));
+      CASE('c', ProgramCache(ParseInt(optarg)));
+      CASE('r', ProgramRedirectArg(307, optarg));
+      CASE('t', ProgramTimeout(ParseInt(optarg)));
+      CASE('h', PrintUsage(stdout, EXIT_SUCCESS));
+      CASE('M', ProgramMaxPayloadSize(ParseInt(optarg)));
 #ifndef UNSECURE
-      case 'C':
-        ProgramFile(optarg, ProgramCertificate);
-        break;
-      case 'K':
-        ProgramFile(optarg, ProgramPrivateKey);
-        break;
+      CASE('C', ProgramFile(optarg, ProgramCertificate));
+      CASE('K', ProgramFile(optarg, ProgramPrivateKey));
 #endif
-      case 'h':
-        PrintUsage(stdout, EXIT_SUCCESS);
       default:
         PrintUsage(stderr, EX_USAGE);
     }
@@ -2529,9 +2512,49 @@ static char *ServeAssetCompressed(struct Asset *a) {
   return p;
 }
 
+static ssize_t InflateGenerator(struct iovec v[3]) {
+  int i, rc;
+  size_t no;
+  void *res;
+  i = 0;
+  if (!dg.t) {
+    ++dg.t;
+  } else if (dg.t == 3) {
+    return 0;
+  }
+  if (dg.t != 2) {
+    CHECK_EQ(0, dg.s.avail_in);
+    dg.s.next_in = (void *)(content + dg.i);
+    dg.s.avail_in = MIN(CHUNK, contentlength - dg.i);
+    dg.i += dg.s.avail_in;
+  }
+  dg.s.next_out = dg.b;
+  dg.s.avail_out = CHUNK;
+  rc = inflate(&dg.s, Z_NO_FLUSH);
+  if (rc != Z_OK && rc != Z_STREAM_END) FATALF("inflate()→%d", rc);
+  no = CHUNK - dg.s.avail_out;
+  if (no) {
+    v[i].iov_base = dg.b;
+    v[i].iov_len = no;
+    dg.c = crc32_z(dg.c, dg.b, no);
+    ++i;
+  }
+  if (rc == Z_OK) {
+    CHECK_GT(no, 0);
+    dg.t = dg.s.avail_out ? 1 : 2;
+  } else if (rc == Z_STREAM_END) {
+    CHECK_EQ(Z_OK, inflateEnd(&dg.s));
+    CHECK_EQ(ZIP_CFILE_CRC32(zbase + dg.a->cf), dg.c);
+    dg.t = 3;
+  }
+  return v[0].iov_len + v[1].iov_len + v[2].iov_len;
+}
+
 static char *ServeAssetDecompressed(struct Asset *a) {
-  char *buf;
+  char *p;
   size_t size;
+  uint32_t crc;
+  LockInc(&shared->c.inflates);
   LockInc(&shared->c.decompressedresponses);
   size = GetZipCfileUncompressedSize(zbase + a->cf);
   DEBUGF("ServeAssetDecompressed(%ld) -> %ld", contentlength, size);
@@ -2539,16 +2562,23 @@ static char *ServeAssetDecompressed(struct Asset *a) {
     content = 0;
     contentlength = size;
     return SetStatus(200, "OK");
+  } else if (!IsTiny()) {
+    dg.t = 0;
+    dg.i = 0;
+    dg.c = 0;
+    dg.a = a;
+    generator = InflateGenerator;
+    CHECK_EQ(Z_OK, inflateInit2(memset(&dg.s, 0, sizeof(dg.s)), -MAX_WBITS));
+    dg.b = FreeLater(malloc(CHUNK));
+    return SetStatus(200, "OK");
+  } else if ((p = FreeLater(malloc(size))) &&
+             Inflate(p, size, content, contentlength) &&
+             Verify(p, size, ZIP_CFILE_CRC32(zbase + a->cf))) {
+    content = p;
+    contentlength = size;
+    return SetStatus(200, "OK");
   } else {
-    if ((buf = FreeLater(malloc(size))) &&
-        Inflate(buf, size, content, contentlength) &&
-        Verify(buf, size, ZIP_CFILE_CRC32(zbase + a->cf))) {
-      content = buf;
-      contentlength = size;
-      return SetStatus(200, "OK");
-    } else {
-      return ServeError(500, "Internal Server Error");
-    }
+    return ServeError(500, "Internal Server Error");
   }
 }
 
@@ -3680,6 +3710,7 @@ static int LuaFetch(lua_State *L) {
     bio->fd = sock;
     bio->a = 0;
     bio->b = 0;
+    bio->c = -1;
     mbedtls_ssl_set_bio(&sslcli, bio, TlsSend, 0, TlsRecvImpl);
     while ((ret = mbedtls_ssl_handshake(&ssl))) {
       switch (ret) {
@@ -5743,7 +5774,7 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
       } else {
         return ServeError(500, "Internal Server Error");
       }
-    } else if (!IsTiny() && msg.version >= 11 && ClientAcceptsGzip() &&
+    } else if (!IsTiny() && msg.method != kHttpHead && ClientAcceptsGzip() &&
                ((contentlength >= 100 && StartsWithIgnoreCase(ct, "text/")) ||
                 (contentlength >= 1000 && MeasureEntropy(content, 1000) < 6))) {
       p = ServeAssetCompressed(a);
@@ -5782,12 +5813,109 @@ static inline bool MustNotIncludeMessageBody(void) { /* RFC2616 § 4.4 */
          statuscode == 204 || statuscode == 304;
 }
 
+static bool TransmitResponse(char *p) {
+  int iovlen;
+  struct iovec iov[4];
+  long actualcontentlength;
+  if (msg.version >= 10) {
+    actualcontentlength = contentlength;
+    if (gzipped) {
+      actualcontentlength += sizeof(kGzipHeader) + sizeof(gzip_footer);
+      p = stpcpy(p, "Content-Encoding: gzip\r\n");
+    }
+    p = AppendContentLength(p, actualcontentlength);
+    p = AppendCrlf(p);
+    CHECK_LE(p - hdrbuf.p, hdrbuf.n);
+    if (logmessages) {
+      LogMessage("sending", hdrbuf.p, p - hdrbuf.p);
+    }
+    iov[0].iov_base = hdrbuf.p;
+    iov[0].iov_len = p - hdrbuf.p;
+    iovlen = 1;
+    if (!MustNotIncludeMessageBody()) {
+      if (gzipped) {
+        iov[iovlen].iov_base = kGzipHeader;
+        iov[iovlen].iov_len = sizeof(kGzipHeader);
+        ++iovlen;
+      }
+      iov[iovlen].iov_base = content;
+      iov[iovlen].iov_len = contentlength;
+      ++iovlen;
+      if (gzipped) {
+        iov[iovlen].iov_base = gzip_footer;
+        iov[iovlen].iov_len = sizeof(gzip_footer);
+        ++iovlen;
+      }
+    }
+  } else {
+    iov[0].iov_base = content;
+    iov[0].iov_len = contentlength;
+    iovlen = 1;
+  }
+  Send(iov, iovlen);
+  LockInc(&shared->c.messageshandled);
+  ++messageshandled;
+  return true;
+}
+
+static bool StreamResponse(char *p) {
+  int rc;
+  struct iovec iov[6];
+  char *s, chunkbuf[23];
+  assert(!MustNotIncludeMessageBody());
+  if (msg.version >= 11) {
+    p = stpcpy(p, "Transfer-Encoding: chunked\r\n");
+  } else {
+    assert(connectionclose);
+  }
+  p = AppendCrlf(p);
+  CHECK_LE(p - hdrbuf.p, hdrbuf.n);
+  if (logmessages) {
+    LogMessage("sending", hdrbuf.p, p - hdrbuf.p);
+  }
+  memset(iov, 0, sizeof(iov));
+  if (msg.version >= 10) {
+    iov[0].iov_base = hdrbuf.p;
+    iov[0].iov_len = p - hdrbuf.p;
+  }
+  if (msg.version >= 11) {
+    iov[5].iov_base = "\r\n";
+    iov[5].iov_len = 2;
+  }
+  for (;;) {
+    iov[2].iov_base = 0;
+    iov[2].iov_len = 0;
+    iov[3].iov_base = 0;
+    iov[3].iov_len = 0;
+    iov[4].iov_base = 0;
+    iov[4].iov_len = 0;
+    if ((rc = generator(iov + 2)) <= 0) break;
+    if (msg.version >= 11) {
+      s = chunkbuf;
+      s += uint64toarray_radix16(rc, s);
+      s = AppendCrlf(s);
+      iov[1].iov_base = chunkbuf;
+      iov[1].iov_len = s - chunkbuf;
+    }
+    if (Send(iov, 6) == -1) break;
+    iov[0].iov_base = 0;
+    iov[0].iov_len = 0;
+  }
+  if (rc != -1) {
+    if (msg.version >= 11) {
+      iov[0].iov_base = "0\r\n\r\n";
+      iov[0].iov_len = 5;
+      Send(iov, 1);
+    }
+  } else {
+    connectionclose = true;
+  }
+  return true;
+}
+
 static bool HandleMessage(void) {
   int rc;
-  int iovlen;
-  struct iovec iov[6];
-  long actualcontentlength;
-  char *p, *s, chunkbuf[23];
+  char *p;
   g_syscount = 0;
   if ((rc = ParseHttpMessage(&msg, inbuf.p, amtread)) != -1) {
     if (!rc) return false;
@@ -5798,7 +5926,7 @@ static bool HandleMessage(void) {
     connectionclose = true;
     LOGF("%s sent garbage %`'s", DescribeClient(),
          VisualizeControlCodes(inbuf.p, MIN(128, amtread), 0));
-    p = ServeError(400, "Bad Message");
+    return true;
   }
   if (!msgsize) {
     amtread = 0;
@@ -5821,78 +5949,13 @@ static bool HandleMessage(void) {
           msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a,
           (long)((nowl() - startrequest) * 1e6L));
   }
-  if (!generator) {
-    if (msg.version >= 10) {
-      actualcontentlength = contentlength;
-      if (gzipped) {
-        actualcontentlength += sizeof(kGzipHeader) + sizeof(gzip_footer);
-        p = stpcpy(p, "Content-Encoding: gzip\r\n");
-      }
-      p = AppendContentLength(p, actualcontentlength);
-      p = AppendCrlf(p);
-      CHECK_LE(p - hdrbuf.p, hdrbuf.n);
-      if (logmessages) LogMessage("sending", hdrbuf.p, p - hdrbuf.p);
-      iov[0].iov_base = hdrbuf.p;
-      iov[0].iov_len = p - hdrbuf.p;
-      iovlen = 1;
-      if (!MustNotIncludeMessageBody()) {
-        if (gzipped) {
-          iov[iovlen].iov_base = kGzipHeader;
-          iov[iovlen].iov_len = sizeof(kGzipHeader);
-          ++iovlen;
-        }
-        iov[iovlen].iov_base = content;
-        iov[iovlen].iov_len = contentlength;
-        ++iovlen;
-        if (gzipped) {
-          iov[iovlen].iov_base = gzip_footer;
-          iov[iovlen].iov_len = sizeof(gzip_footer);
-          ++iovlen;
-        }
-      }
-    } else {
-      iov[0].iov_base = content;
-      iov[0].iov_len = contentlength;
-      iovlen = 1;
-    }
-    Send(iov, iovlen);
-  } else {
-    p = stpcpy(p, "Transfer-Encoding: chunked\r\n");
-    p = AppendCrlf(p);
-    CHECK_LE(p - hdrbuf.p, hdrbuf.n);
-    if (logmessages) LogMessage("sending", hdrbuf.p, p - hdrbuf.p);
-    iov[0].iov_base = hdrbuf.p;
-    iov[0].iov_len = p - hdrbuf.p;
-    iov[5].iov_base = "\r\n";
-    iov[5].iov_len = 2;
-    for (;;) {
-      iov[2].iov_base = 0;
-      iov[2].iov_len = 0;
-      iov[3].iov_base = 0;
-      iov[3].iov_len = 0;
-      iov[4].iov_base = 0;
-      iov[4].iov_len = 0;
-      if ((rc = generator(iov + 2)) <= 0) break;
-      s = chunkbuf;
-      s += uint64toarray_radix16(rc, s);
-      s = AppendCrlf(s);
-      iov[1].iov_base = chunkbuf;
-      iov[1].iov_len = s - chunkbuf;
-      if (Send(iov, 6) == -1) break;
-      iov[0].iov_base = 0;
-      iov[0].iov_len = 0;
-    }
-    if (rc != -1) {
-      iov[0].iov_base = "0\r\n\r\n";
-      iov[0].iov_len = 5;
-      Send(iov, 1);
-    } else {
-      connectionclose = true;
-    }
-  }
   LockInc(&shared->c.messageshandled);
   ++messageshandled;
-  return true;
+  if (!generator) {
+    return TransmitResponse(p);
+  } else {
+    return StreamResponse(p);
+  }
 }
 
 static void InitRequest(void) {
@@ -5926,22 +5989,20 @@ static void HandleMessages(void) {
         got = rc;
         amtread += got;
         if (amtread) {
+#ifndef UNSECURE
           if (!once) {
             once = true;
             if (inbuf.p[0] == 22) {
-#ifdef UNSECURE
-              WARNF("%s wants SSL but redbean was compiled with -DUNSECURE",
-                    DescribeClient());
-              return;
-#else
               if (TlsSetup()) {
                 continue;
               } else {
                 return;
               }
-#endif
+            } else {
+              WipeServingKeys();
             }
           }
+#endif
           DEBUGF("%s read %,zd bytes", DescribeClient(), got);
           if (HandleMessage()) {
             break;
@@ -6294,13 +6355,16 @@ static void TlsInit(void) {
   mbedtls_ssl_config_defaults(
       &confcli, MBEDTLS_SSL_IS_CLIENT, MBEDTLS_SSL_TRANSPORT_STREAM,
       suiteb ? MBEDTLS_SSL_PRESET_SUITEB : MBEDTLS_SSL_PRESET_DEFAULT);
+  DCHECK_EQ(0,
+            mbedtls_ssl_ticket_setup(&ssltick, mbedtls_ctr_drbg_random, &rng,
+                                     MBEDTLS_CIPHER_AES_256_GCM, 24 * 60 * 60));
+  mbedtls_ssl_conf_session_tickets_cb(&conf, mbedtls_ssl_ticket_write,
+                                      mbedtls_ssl_ticket_parse, &ssltick);
+  LoadCertificates();
   mbedtls_ssl_conf_dbg(&conf, TlsDebug, 0);
   mbedtls_ssl_conf_dbg(&confcli, TlsDebug, 0);
-  LoadCertificates();
   mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &rng);
   mbedtls_ssl_conf_rng(&confcli, mbedtls_ctr_drbg_random, &rngcli);
-  mbedtls_ssl_conf_alpn_protocols(&conf, kAlpn);
-  mbedtls_ssl_conf_alpn_protocols(&confcli, kAlpn);
   mbedtls_ssl_conf_authmode(&conf, sslclientverify ? MBEDTLS_SSL_VERIFY_REQUIRED
                                                    : MBEDTLS_SSL_VERIFY_NONE);
   mbedtls_ssl_conf_authmode(&confcli, sslfetchverify
@@ -6308,8 +6372,10 @@ static void TlsInit(void) {
                                           : MBEDTLS_SSL_VERIFY_NONE);
   mbedtls_ssl_conf_ca_chain(&confcli, (cachain = GetSslRoots()), 0);
   mbedtls_ssl_set_bio(&ssl, &g_bio, TlsSend, 0, TlsRecv);
-  mbedtls_ssl_setup(&ssl, &conf);
-  mbedtls_ssl_setup(&sslcli, &confcli);
+  DCHECK_EQ(0, mbedtls_ssl_conf_alpn_protocols(&conf, kAlpn));
+  DCHECK_EQ(0, mbedtls_ssl_conf_alpn_protocols(&confcli, kAlpn));
+  DCHECK_EQ(0, mbedtls_ssl_setup(&ssl, &conf));
+  DCHECK_EQ(0, mbedtls_ssl_setup(&sslcli, &confcli));
 #endif
 }
 
@@ -6323,6 +6389,7 @@ static void TlsDestroy(void) {
   mbedtls_ctr_drbg_free(&rngcli);
   mbedtls_ssl_config_free(&conf);
   mbedtls_ssl_config_free(&confcli);
+  mbedtls_ssl_ticket_free(&ssltick);
   for (i = 0; i < certs.n; ++i) {
     mbedtls_x509_crt_free(certs.p[i].cert);
     mbedtls_pk_free(certs.p[i].key);

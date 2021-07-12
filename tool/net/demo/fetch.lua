@@ -13,6 +13,7 @@ local function WriteForm(url)
          text-decoration: none;
        }
        h1 img {
+         border: none;
          vertical-align: middle;
        }
        input {

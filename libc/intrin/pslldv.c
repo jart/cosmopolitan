@@ -30,6 +30,6 @@ void(pslldv)(uint32_t a[4], const uint32_t b[4], const uint64_t c[2]) {
       a[i] = b[i] << c[0];
     }
   } else {
-    memset(a, 0, 16);
+    __builtin_memset(a, 0, 16);
   }
 }

@@ -40,5 +40,5 @@ void(mpsadbw)(uint16_t c[8], const uint8_t b[16], const uint8_t a[16],
       r[i] += ABS(b[(control & 4) + i + j] - a[(control & 3) * 4 + j]);
     }
   }
-  memcpy(c, r, 16);
+  __builtin_memcpy(c, r, 16);
 }

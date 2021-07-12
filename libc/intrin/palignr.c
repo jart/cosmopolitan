@@ -36,8 +36,8 @@
  */
 void(palignr)(void *c, const void *b, const void *a, unsigned long i) {
   char t[48];
-  memcpy(t, a, 16);
-  memcpy(t + 16, b, 16);
-  memset(t + 32, 0, 16);
-  memcpy(c, t + MIN(i, 32), 16);
+  __builtin_memcpy(t, a, 16);
+  __builtin_memcpy(t + 16, b, 16);
+  __builtin_memset(t + 32, 0, 16);
+  __builtin_memcpy(c, t + MIN(i, 32), 16);
 }

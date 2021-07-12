@@ -30,5 +30,5 @@ void(pshufd)(int32_t b[4], const int32_t a[4], uint8_t m) {
   t[1] = a[(m & 0b00001100) >> 2];
   t[2] = a[(m & 0b00110000) >> 4];
   t[3] = a[(m & 0b11000000) >> 6];
-  memcpy(b, t, 16);
+  __builtin_memcpy(b, t, 16);
 }

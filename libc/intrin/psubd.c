@@ -33,5 +33,5 @@ void(psubd)(uint32_t a[4], const uint32_t b[4], const uint32_t c[4]) {
   for (i = 0; i < 4; ++i) {
     r[i] = b[i] - c[i];
   }
-  memcpy(a, r, 16);
+  __builtin_memcpy(a, r, 16);
 }

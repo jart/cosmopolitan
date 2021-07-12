@@ -16,56 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/dirent.h"
-#include "libc/errno.h"
-#include "libc/log/check.h"
-#include "libc/log/log.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/dt.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/x/x.h"
-#include "net/https/https.h"
-#include "third_party/mbedtls/x509_crt.h"
 
-STATIC_YOINK("zip_uri_support");
-STATIC_YOINK("usr/share/ssl/root/amazon.pem");
-STATIC_YOINK("usr/share/ssl/root/certum.pem");
-STATIC_YOINK("usr/share/ssl/root/comodo.pem");
-STATIC_YOINK("usr/share/ssl/root/digicert.pem");
-STATIC_YOINK("usr/share/ssl/root/dst.pem");
-STATIC_YOINK("usr/share/ssl/root/geotrust.pem");
-STATIC_YOINK("usr/share/ssl/root/globalsign.pem");
-STATIC_YOINK("usr/share/ssl/root/godaddy.pem");
-STATIC_YOINK("usr/share/ssl/root/google.pem");
-STATIC_YOINK("usr/share/ssl/root/isrg.pem");
-STATIC_YOINK("usr/share/ssl/root/quovadis.pem");
-STATIC_YOINK("usr/share/ssl/root/redbean.pem");
-STATIC_YOINK("usr/share/ssl/root/starfield.pem");
-STATIC_YOINK("usr/share/ssl/root/verisign.pem");
-
-mbedtls_x509_crt *GetSslRoots(void) {
-  int fd;
-  DIR *d;
-  uint8_t *p;
-  size_t n, m;
-  struct dirent *e;
-  mbedtls_x509_crt *c;
-  char path[PATH_MAX + 1];
-  c = calloc(1, sizeof(*c));
-  m = stpcpy(path, "zip:usr/share/ssl/root/") - path;
-  if ((d = opendir(path))) {
-    while ((e = readdir(d))) {
-      if (e->d_type != DT_REG) continue;
-      if (m + (n = strlen(e->d_name)) > PATH_MAX) continue;
-      memcpy(path + m, e->d_name, n + 1);
-      CHECK((p = xslurp(path, &n)));
-      CHECK_GE(mbedtls_x509_crt_parse(c, p, n + 1), 0, "%s", path);
-      free(p);
-    }
-    closedir(d);
-  }
-  return c;
+void *mempcpy_pure(void *dst, const void *src, size_t n) {
+  memmove_pure(dst, src, n);
+  return (char *)dst + n;
 }

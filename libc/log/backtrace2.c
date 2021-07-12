@@ -135,10 +135,12 @@ static int PrintBacktrace(int fd, const struct StackFrame *bp) {
 
 void ShowBacktrace(int fd, const struct StackFrame *bp) {
   static bool noreentry;
+  ++ftrace;
   if (!bp) bp = __builtin_frame_address(0);
   if (!noreentry) {
     noreentry = true;
     PrintBacktrace(fd, bp);
-    noreentry = 0;
+    noreentry = false;
   }
+  --ftrace;
 }

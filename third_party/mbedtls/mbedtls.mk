@@ -52,10 +52,13 @@ $(THIRD_PARTY_MBEDTLS_A_OBJS):						\
 
 o/$(MODE)/third_party/mbedtls/bignum.o					\
 o/$(MODE)/third_party/mbedtls/ecp.o					\
-o/$(MODE)/third_party/mbedtls/ecp_curves.o				\
-o/$(MODE)/third_party/mbedtls/everest.o:				\
+o/$(MODE)/third_party/mbedtls/ecp_curves.o:				\
 			OVERRIDE_CFLAGS +=				\
 				-O3
+
+o/$(MODE)/third_party/mbedtls/everest.o:				\
+			OVERRIDE_CFLAGS +=				\
+				-Os
 
 # tail recursion is so important because everest was written in f*
 o/$(MODE)/third_party/mbedtls/everest.o:				\

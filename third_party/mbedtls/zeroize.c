@@ -19,9 +19,75 @@
 #include "libc/str/str.h"
 #include "third_party/mbedtls/platform.h"
 
-static void *(*const volatile memset_func)(void *, int, size_t) = memset;
-
-void mbedtls_platform_zeroize(void *buf, size_t len) {
-  MBEDTLS_INTERNAL_VALIDATE(!len || buf);
-  if (len > 0) memset_func(buf, 0, len);
+void mbedtls_platform_zeroize(void *p, size_t n) {
+  MBEDTLS_INTERNAL_VALIDATE(!n || p);
+  char *b;
+  uint64_t x;
+  x = 0;
+  b = p;
+  switch (n) {
+    case 0:
+      return;
+    case 1:
+      __builtin_memcpy(b, &x, 1);
+      return;
+    case 2:
+      __builtin_memcpy(b, &x, 2);
+      return;
+    case 3:
+      __builtin_memcpy(b, &x, 2);
+      __builtin_memcpy(b + 1, &x, 2);
+      return;
+    case 4:
+      __builtin_memcpy(b, &x, 4);
+      return;
+    case 5 ... 7:
+      __builtin_memcpy(b, &x, 4);
+      __builtin_memcpy(b + n - 4, &x, 4);
+      return;
+    case 8:
+      __builtin_memcpy(b, &x, 8);
+      return;
+    case 9 ... 16:
+      __builtin_memcpy(b, &x, 8);
+      __builtin_memcpy(b + n - 8, &x, 8);
+      return;
+    default:
+      do {
+        n -= 16;
+        __builtin_memcpy(b + n, &x, 8);
+        asm volatile("" ::: "memory");
+        __builtin_memcpy(b + n + 8, &x, 8);
+      } while (n >= 16);
+      switch (n) {
+        case 0:
+          return;
+        case 1:
+          __builtin_memcpy(b, &x, 1);
+          return;
+        case 2:
+          __builtin_memcpy(b, &x, 2);
+          return;
+        case 3:
+          __builtin_memcpy(b, &x, 2);
+          __builtin_memcpy(b + 1, &x, 2);
+          return;
+        case 4:
+          __builtin_memcpy(b, &x, 4);
+          return;
+        case 5 ... 7:
+          __builtin_memcpy(b, &x, 4);
+          __builtin_memcpy(b + n - 4, &x, 4);
+          return;
+        case 8:
+          __builtin_memcpy(b, &x, 8);
+          return;
+        case 9 ... 15:
+          __builtin_memcpy(b, &x, 8);
+          __builtin_memcpy(b + n - 8, &x, 8);
+          return;
+        default:
+          unreachable;
+      }
+  }
 }

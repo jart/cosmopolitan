@@ -20,6 +20,8 @@ NET_HTTPS_A_CHECKS =				\
 	$(NET_HTTPS_A_HDRS:%=o/$(MODE)/%.ok)
 
 NET_HTTPS_A_DIRECTDEPS =			\
+	LIBC_BITS				\
+	LIBC_CALLS				\
 	LIBC_FMT				\
 	LIBC_INTRIN				\
 	LIBC_LOG				\

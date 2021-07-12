@@ -37,5 +37,5 @@ void(pmulhuw)(uint16_t a[8], const uint16_t b[8], const uint16_t c[8]) {
     x >>= 16;
     r[i] = x;
   }
-  memcpy(a, r, 16);
+  __builtin_memcpy(a, r, 16);
 }

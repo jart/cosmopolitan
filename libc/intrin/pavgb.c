@@ -33,5 +33,5 @@ void(pavgb)(uint8_t a[16], const uint8_t b[16], const uint8_t c[16]) {
   for (i = 0; i < 16; ++i) {
     r[i] = (b[i] + c[i] + 1) >> 1;
   }
-  memcpy(a, r, 16);
+  __builtin_memcpy(a, r, 16);
 }

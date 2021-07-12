@@ -42,6 +42,7 @@
  */
 int PrintBacktraceUsingSymbols(int fd, const struct StackFrame *bp,
                                struct SymbolTable *st) {
+  int rc;
   char *p;
   size_t gi;
   intptr_t addr;
@@ -50,10 +51,11 @@ int PrintBacktraceUsingSymbols(int fd, const struct StackFrame *bp,
   char buf[256], ibuf[21];
   const struct Symbol *symbol;
   const struct StackFrame *frame;
+  ++ftrace;
   if (!bp) bp = __builtin_frame_address(0);
   garbage = weaken(__garbage);
   gi = garbage ? garbage->i : 0;
-  for (frame = bp; frame; frame = frame->next) {
+  for (rc = 0, frame = bp; frame; frame = frame->next) {
     addr = frame->addr;
     if (addr == weakaddr("__gc")) {
       do {
@@ -80,8 +82,10 @@ int PrintBacktraceUsingSymbols(int fd, const struct StackFrame *bp,
     }
     *p++ = '\n';
     if (write(fd, buf, p - buf) == -1) {
-      return -1;
+      rc = -1;
+      break;
     }
   }
-  return 0;
+  --ftrace;
+  return rc;
 }

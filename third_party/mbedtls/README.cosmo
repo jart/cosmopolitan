@@ -46,6 +46,9 @@ LOCAL CHANGES
     run hermetically if the binary is scp'd to some machine, and (d)
     doesn't have large amounts of duplicated generated code.
 
+  - Fix mbedtls_mpi_sub_abs() to not call malloc/free/memcpy since
+    it's called 11,124 times during as SSL handshake.
+
   - Make chacha20 26% faster.
 
   - Make base64 100x faster.

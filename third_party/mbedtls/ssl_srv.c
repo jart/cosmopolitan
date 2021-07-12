@@ -221,6 +221,26 @@ static int ssl_parse_renegotiation_info( mbedtls_ssl_context *ssl,
 #if defined(MBEDTLS_SSL_PROTO_TLS1_2) && \
     defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
 
+/* Add a signature-hash-pair to a signature-hash set */
+static inline void mbedtls_ssl_sig_hash_set_add( mbedtls_ssl_sig_hash_set_t *set,
+                                                 mbedtls_pk_type_t sig_alg,
+                                                 mbedtls_md_type_t md_alg )
+{
+    switch( sig_alg )
+    {
+        case MBEDTLS_PK_RSA:
+            if( set->rsa == MBEDTLS_MD_NONE )
+                set->rsa = md_alg;
+            break;
+        case MBEDTLS_PK_ECDSA:
+            if( set->ecdsa == MBEDTLS_MD_NONE )
+                set->ecdsa = md_alg;
+            break;
+        default:
+            break;
+    }
+}
+
 /*
  * Status of the implementation of signature-algorithms extension:
  *

@@ -38,7 +38,7 @@ noinline char *PosixMemmove(char *dst, const char *src, size_t n) {
   return dst;
 }
 
-TEST(memmove, overlapping) {
+TEST(MemMove, overlapping) {
   for (i = 0; i < N; i += S) {
     for (j = 0; j < N; j += S) {
       for (n = MIN(N - i, N - j) + 1; n--;) {
@@ -84,7 +84,7 @@ TEST(memmove$pure, overlapping) {
   }
 }
 
-TEST(memcpy, overlapping) {
+TEST(MemCpy, overlapping) {
   for (i = 0; i < N; i += S) {
     for (j = 0; j < N; j += S) {
       for (n = MIN(N - i, N - j) + 1; n--;) {
@@ -109,7 +109,7 @@ TEST(memcpy, overlapping) {
   }
 }
 
-TEST(memmove, overlappingDirect) {
+TEST(MemMove, overlappingDirect) {
   for (i = 0; i < N; i += S) {
     for (j = 0; j < N; j += S) {
       for (n = MIN(N - i, N - j) + 1; n--;) {

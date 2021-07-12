@@ -600,7 +600,7 @@
  * Comment this macro to disable storing the peer's certificate
  * after the handshake.
  */
-/*#define MBEDTLS_SSL_KEEP_PEER_CERTIFICATE*/
+#define MBEDTLS_SSL_KEEP_PEER_CERTIFICATE
 
 /**
  * \def MBEDTLS_SSL_CBC_RECORD_SPLITTING
@@ -772,7 +772,7 @@
  *
  * Comment this macro to disable support for SSL session tickets
  */
-/*#define MBEDTLS_SSL_SESSION_TICKETS*/
+#define MBEDTLS_SSL_SESSION_TICKETS
 
 /**
  * \def MBEDTLS_SSL_EXPORT_KEYS
@@ -1048,9 +1048,9 @@
 #define MBEDTLS_SSL_TLS_C
 #define MBEDTLS_SSL_CLI_C
 #define MBEDTLS_SSL_SRV_C
-/*#define MBEDTLS_SSL_CACHE_C*/
+#define MBEDTLS_SSL_TICKET_C
+#define MBEDTLS_SSL_CACHE_C
 /*#define MBEDTLS_SSL_COOKIE_C*/
-/*#define MBEDTLS_SSL_TICKET_C*/
 
 /**
  * \def MBEDTLS_SSL_MAX_CONTENT_LEN

@@ -34,5 +34,5 @@ void(phsubd)(uint32_t a[4], const uint32_t b[4], const uint32_t c[4]) {
   t[1] = b[2] - b[3];
   t[2] = c[0] - c[1];
   t[3] = c[2] - c[3];
-  memcpy(a, t, sizeof(t));
+  __builtin_memcpy(a, t, sizeof(t));
 }

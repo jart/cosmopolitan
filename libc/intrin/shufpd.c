@@ -28,5 +28,5 @@ void(shufpd)(double c[2], const double b[2], const double a[2], uint8_t m) {
   double t[2];
   t[0] = a[(m & 0b0000001) >> 0];
   t[1] = b[(m & 0b0000010) >> 1];
-  memcpy(c, t, 16);
+  __builtin_memcpy(c, t, 16);
 }

@@ -862,6 +862,7 @@ struct mbedtls_ssl_session
     int encrypt_then_mac;       /*!< flag for EtM activation                */
 #endif
 };
+
 /**
  * SSL/TLS configuration to be shared between mbedtls_ssl_context structures.
  */
@@ -1443,6 +1444,7 @@ int mbedtls_ssl_set_hs_own_cert( mbedtls_ssl_context *, mbedtls_x509_crt *, mbed
 int mbedtls_ssl_set_hs_psk( mbedtls_ssl_context *, const unsigned char *, size_t );
 int mbedtls_ssl_set_session( mbedtls_ssl_context *, const mbedtls_ssl_session * );
 int mbedtls_ssl_setup( mbedtls_ssl_context *, const mbedtls_ssl_config * );
+int mbedtls_ssl_tls_prf( const mbedtls_tls_prf_types , const unsigned char *, size_t, const char *, const unsigned char *, size_t, unsigned char *, size_t );
 int mbedtls_ssl_write( mbedtls_ssl_context *, const void *, size_t );
 size_t mbedtls_ssl_get_bytes_avail( const mbedtls_ssl_context * );
 size_t mbedtls_ssl_get_input_max_frag_len( const mbedtls_ssl_context * );
@@ -1494,6 +1496,8 @@ void mbedtls_ssl_config_init( mbedtls_ssl_config * );
 void mbedtls_ssl_free( mbedtls_ssl_context * );
 void mbedtls_ssl_get_dtls_srtp_negotiation_result( const mbedtls_ssl_context *, mbedtls_dtls_srtp_info * );
 void mbedtls_ssl_init( mbedtls_ssl_context * );
+void mbedtls_ssl_key_cert_free( mbedtls_ssl_key_cert * );
+void mbedtls_ssl_session_free( mbedtls_ssl_session * );
 void mbedtls_ssl_session_init( mbedtls_ssl_session * );
 void mbedtls_ssl_set_async_operation_data( mbedtls_ssl_context *, void * );
 void mbedtls_ssl_set_bio( mbedtls_ssl_context *, void *, mbedtls_ssl_send_t *, mbedtls_ssl_recv_t *, mbedtls_ssl_recv_timeout_t * );
@@ -1503,8 +1507,6 @@ void mbedtls_ssl_set_hs_ca_chain( mbedtls_ssl_context *, mbedtls_x509_crt *, mbe
 void mbedtls_ssl_set_mtu( mbedtls_ssl_context *, uint16_t );
 void mbedtls_ssl_set_timer_cb( mbedtls_ssl_context *, void *, mbedtls_ssl_set_timer_t *, mbedtls_ssl_get_timer_t * );
 void mbedtls_ssl_set_verify( mbedtls_ssl_context *, int (*)(void *, mbedtls_x509_crt *, int, uint32_t *), void * );
-void mbedtls_ssl_session_free( mbedtls_ssl_session * );
-int mbedtls_ssl_tls_prf( const mbedtls_tls_prf_types , const unsigned char *, size_t, const char *, const unsigned char *, size_t, unsigned char *, size_t );
 
 /**
  * \brief           Load reasonnable default SSL configuration values.

@@ -34,5 +34,5 @@ void(packsswb)(int8_t a[16], const int16_t b[8], const int16_t c[8]) {
   int8_t r[16];
   for (i = 0; i < 8; ++i) r[i + 0] = MIN(INT8_MAX, MAX(INT8_MIN, b[i]));
   for (i = 0; i < 8; ++i) r[i + 8] = MIN(INT8_MAX, MAX(INT8_MIN, c[i]));
-  memcpy(a, r, 16);
+  __builtin_memcpy(a, r, 16);
 }

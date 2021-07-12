@@ -1,3 +1,4 @@
+#include "libc/log/log.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/debug.h"
@@ -6640,10 +6641,9 @@ int mbedtls_ssl_renegotiate( mbedtls_ssl_context *ssl )
 #endif /* MBEDTLS_SSL_RENEGOTIATION */
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
-static void ssl_key_cert_free( mbedtls_ssl_key_cert *key_cert )
+void mbedtls_ssl_key_cert_free( mbedtls_ssl_key_cert *key_cert )
 {
     mbedtls_ssl_key_cert *cur = key_cert, *next;
-
     while( cur != NULL )
     {
         next = cur->next;
@@ -7849,7 +7849,7 @@ void mbedtls_ssl_config_free( mbedtls_ssl_config *conf )
     }
 #endif
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
-    ssl_key_cert_free( conf->key_cert );
+    mbedtls_ssl_key_cert_free( conf->key_cert );
 #endif
     mbedtls_platform_zeroize( conf, sizeof( mbedtls_ssl_config ) );
 }
@@ -7937,22 +7937,6 @@ unsigned char mbedtls_ssl_sig_from_pk_alg( mbedtls_pk_type_t type )
     }
 }
 
-mbedtls_pk_type_t mbedtls_ssl_pk_alg_from_sig( unsigned char sig )
-{
-    switch( sig ) {
-#if defined(MBEDTLS_RSA_C)
-        case MBEDTLS_SSL_SIG_RSA:
-            return( MBEDTLS_PK_RSA );
-#endif
-#if defined(MBEDTLS_ECDSA_C)
-        case MBEDTLS_SSL_SIG_ECDSA:
-            return( MBEDTLS_PK_ECDSA );
-#endif
-        default:
-            return( MBEDTLS_PK_NONE );
-    }
-}
-
 #endif /* MBEDTLS_PK_C && ( MBEDTLS_RSA_C || MBEDTLS_ECDSA_C ) */
 
 #if defined(MBEDTLS_SSL_PROTO_TLS1_2) && \
@@ -7973,26 +7957,6 @@ mbedtls_md_type_t mbedtls_ssl_sig_hash_set_find( mbedtls_ssl_sig_hash_set_t *set
     }
 }
 
-/* Add a signature-hash-pair to a signature-hash set */
-void mbedtls_ssl_sig_hash_set_add( mbedtls_ssl_sig_hash_set_t *set,
-                                   mbedtls_pk_type_t sig_alg,
-                                   mbedtls_md_type_t md_alg )
-{
-    switch( sig_alg )
-    {
-        case MBEDTLS_PK_RSA:
-            if( set->rsa == MBEDTLS_MD_NONE )
-                set->rsa = md_alg;
-            break;
-        case MBEDTLS_PK_ECDSA:
-            if( set->ecdsa == MBEDTLS_MD_NONE )
-                set->ecdsa = md_alg;
-            break;
-        default:
-            break;
-    }
-}
-
 /* Allow exactly one hash algorithm for each signature. */
 void mbedtls_ssl_sig_hash_set_const_hash( mbedtls_ssl_sig_hash_set_t *set,
                                           mbedtls_md_type_t md_alg )
@@ -8004,37 +7968,6 @@ void mbedtls_ssl_sig_hash_set_const_hash( mbedtls_ssl_sig_hash_set_t *set,
 #endif /* MBEDTLS_SSL_PROTO_TLS1_2) &&
           MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED */
 
-/*
- * Convert from MBEDTLS_SSL_HASH_XXX to MBEDTLS_MD_XXX
- */
-mbedtls_md_type_t mbedtls_ssl_md_alg_from_hash( unsigned char hash )
-{
-    switch( hash )
-    {
-#if defined(MBEDTLS_MD5_C)
-        case MBEDTLS_SSL_HASH_MD5:
-            return( MBEDTLS_MD_MD5 );
-#endif
-#if defined(MBEDTLS_SHA1_C)
-        case MBEDTLS_SSL_HASH_SHA1:
-            return( MBEDTLS_MD_SHA1 );
-#endif
-#if defined(MBEDTLS_SHA256_C)
-        case MBEDTLS_SSL_HASH_SHA224:
-            return( MBEDTLS_MD_SHA224 );
-        case MBEDTLS_SSL_HASH_SHA256:
-            return( MBEDTLS_MD_SHA256 );
-#endif
-#if defined(MBEDTLS_SHA512_C)
-        case MBEDTLS_SSL_HASH_SHA384:
-            return( MBEDTLS_MD_SHA384 );
-        case MBEDTLS_SSL_HASH_SHA512:
-            return( MBEDTLS_MD_SHA512 );
-#endif
-        default:
-            return( MBEDTLS_MD_NONE );
-    }
-}
 /*
  * Convert from MBEDTLS_MD_XXX to MBEDTLS_SSL_HASH_XXX
  */

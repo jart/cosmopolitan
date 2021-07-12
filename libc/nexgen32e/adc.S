@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,23 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/packuswb.h"
-#include "libc/limits.h"
 #include "libc/macros.internal.h"
-#include "libc/str/str.h"
 
-/**
- * Casts shorts to unsigned chars w/ saturation.
- *
- *   𝑎 ← {CLAMP[𝑏ᵢ]|𝑖∈[0,4)} ║ {CLAMP[𝑐ᵢ]|𝑖∈[4,8)}
- *
- * @see packsswb()
- * @mayalias
- */
-void(packuswb)(uint8_t a[16], const int16_t b[8], const int16_t c[8]) {
-  unsigned i;
-  uint8_t r[16];
-  for (i = 0; i < 8; ++i) r[i + 0] = MIN(UINT8_MAX, MAX(UINT8_MIN, b[i]));
-  for (i = 0; i < 8; ++i) r[i + 8] = MIN(UINT8_MAX, MAX(UINT8_MIN, c[i]));
-  __builtin_memcpy(a, r, 16);
-}
+//	Computes C = A + B
+//
+//	@param	rdi is C
+//	@param	rsi is A
+//	@param	rdx is B
+//	@param	rcx is number of additions
+//	@return	al has carry
+adc:	.leafprologue
+	test	%ecx,%ecx
+	jz	1f
+	xor	%r9d,%r9d
+0:	mov	(%rsi,%r9,8),%rax
+	adc	(%rdx,%r9,8),%rax
+	mov	%rax,(%rdi,%r9,8)
+	inc	%r9d
+	loop	0b
+1:	setb	%al
+	.leafepilogue
+	.endfn	adc,globl

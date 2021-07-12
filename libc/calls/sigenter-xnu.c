@@ -20,6 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/ucontext.h"
+#include "libc/intrin/repstosb.h"
 #include "libc/str/str.h"
 
 /**
@@ -401,7 +402,14 @@ noasan static void xnuthreadstate2linux(
   mc->fs = xnuss->__fs;
   mc->eflags = xnuss->__rflags;
   uc->uc_flags = xnuss->__rflags;
-  memcpy(&mc->r8, &xnuss->__r8, 8 * sizeof(int64_t));
+  mc->r8 = xnuss->__r8;
+  mc->r9 = xnuss->__r9;
+  mc->r10 = xnuss->__r10;
+  mc->r11 = xnuss->__r11;
+  mc->r12 = xnuss->__r12;
+  mc->r13 = xnuss->__r13;
+  mc->r14 = xnuss->__r14;
+  mc->r15 = xnuss->__r15;
 }
 
 noasan static void linuxthreadstate2xnu(
@@ -420,7 +428,21 @@ noasan static void linuxthreadstate2xnu(
   xnuss->__fs = mc->fs;
   xnuss->__rflags = mc->eflags;
   xnuss->__rflags = uc->uc_flags;
-  memcpy(&xnuss->__r8, &mc->r8, 8 * sizeof(int64_t));
+  xnuss->__r8 = mc->r8;
+  xnuss->__r9 = mc->r9;
+  xnuss->__r10 = mc->r10;
+  xnuss->__r11 = mc->r11;
+  xnuss->__r12 = mc->r12;
+  xnuss->__r13 = mc->r13;
+  xnuss->__r14 = mc->r14;
+  xnuss->__r15 = mc->r15;
+}
+
+noasan static void CopyFpXmmRegs(void *d, const void *s) {
+  size_t i;
+  for (i = 0; i < (8 + 16) * 16; i += 16) {
+    __builtin_memcpy((char *)d + i, (const char *)s + i, 16);
+  }
 }
 
 noasan static void xnussefpustate2linux(
@@ -433,8 +455,7 @@ noasan static void xnussefpustate2linux(
   fs->rdp = xnufs->__fpu_dp;
   fs->mxcsr = xnufs->__fpu_mxcsr;
   fs->mxcr_mask = xnufs->__fpu_mxcsrmask;
-  /* copy st0-st7 as well as xmm0-xmm15 */
-  memcpy(fs->st, &xnufs->__fpu_stmm0, (8 + 16) * sizeof(uint128_t));
+  CopyFpXmmRegs(fs->st, &xnufs->__fpu_stmm0);
 }
 
 noasan static void linuxssefpustate2xnu(
@@ -447,8 +468,7 @@ noasan static void linuxssefpustate2xnu(
   xnufs->__fpu_dp = fs->rdp;
   xnufs->__fpu_mxcsr = fs->mxcsr;
   xnufs->__fpu_mxcsrmask = fs->mxcr_mask;
-  /* copy st0-st7 as well as xmm0-xmm15 */
-  memcpy(&xnufs->__fpu_stmm0, fs->st, (8 + 16) * sizeof(uint128_t));
+  CopyFpXmmRegs(&xnufs->__fpu_stmm0, fs->st);
 }
 
 noasan void __sigenter_xnu(void *fn, int infostyle, int sig,
@@ -462,10 +482,9 @@ noasan void __sigenter_xnu(void *fn, int infostyle, int sig,
   } g;
   rva = __sighandrvas[sig & (NSIG - 1)];
   if (rva >= kSigactionMinRva) {
-    memset(&g, 0, sizeof(g));
+    repstosb(&g, 0, sizeof(g));
     if (xnuctx) {
-      memcpy(&g.uc.uc_sigmask, &xnuctx->uc_sigmask,
-             MIN(sizeof(g.uc.uc_sigmask), sizeof(xnuctx->uc_sigmask)));
+      g.uc.uc_sigmask.__bits[0] = xnuctx->uc_sigmask;
       g.uc.uc_stack.ss_sp = xnuctx->uc_stack.ss_sp;
       g.uc.uc_stack.ss_flags = xnuctx->uc_stack.ss_flags;
       g.uc.uc_stack.ss_size = xnuctx->uc_stack.ss_size;

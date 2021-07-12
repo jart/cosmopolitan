@@ -23,11 +23,11 @@
 static noasan size_t strcpy_sse2(char *d, const char *s, size_t i) {
   uint8_t v1[16], v2[16], vz[16];
   for (;;) {
-    memset(vz, 0, 16);
-    memcpy(v1, s + i, 16);
+    __builtin_memset(vz, 0, 16);
+    __builtin_memcpy(v1, s + i, 16);
     pcmpeqb(v2, v1, vz);
     if (!pmovmskb(v2)) {
-      memcpy(d + i, v1, 16);
+      __builtin_memcpy(d + i, v1, 16);
       i += 16;
     } else {
       break;

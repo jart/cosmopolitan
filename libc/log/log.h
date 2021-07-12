@@ -14,6 +14,7 @@
 #define kLogInfo    3
 #define kLogVerbose 4
 #define kLogDebug   5
+#define kLogNoise   6
 
 /**
  * Log level for compile-time DCE.
@@ -60,11 +61,45 @@ extern unsigned __log_level; /* log level for runtime check */
   ((!__builtin_constant_p(LEVEL) || (LEVEL) <= LOGGABLELEVEL) && \
    (LEVEL) <= __log_level)
 
+#define FATALF(FMT, ...)                                              \
+  do {                                                                \
+    ffatalf(kLogFatal, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
+    unreachable;                                                      \
+  } while (0)
+
+#define WARNF(FMT, ...)                                              \
+  do {                                                               \
+    if (LOGGABLE(kLogWarn)) {                                        \
+      flogf(kLogWarn, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
+    }                                                                \
+  } while (0)
+
 #define LOGF(FMT, ...)                                               \
   do {                                                               \
     if (LOGGABLE(kLogInfo)) {                                        \
       flogf(kLogInfo, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
     }                                                                \
+  } while (0)
+
+#define VERBOSEF(FMT, ...)                                                  \
+  do {                                                                      \
+    if (LOGGABLE(kLogVerbose)) {                                            \
+      fverbosef(kLogVerbose, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
+    }                                                                       \
+  } while (0)
+
+#define DEBUGF(FMT, ...)                                                \
+  do {                                                                  \
+    if (LOGGABLE(kLogDebug)) {                                          \
+      fdebugf(kLogDebug, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
+    }                                                                   \
+  } while (0)
+
+#define NOISEF(FMT, ...)                                                \
+  do {                                                                  \
+    if (LOGGABLE(kLogNoise)) {                                          \
+      fnoisef(kLogNoise, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
+    }                                                                   \
   } while (0)
 
 #define VFLOG(FMT, VA)                                     \
@@ -88,13 +123,6 @@ extern unsigned __log_level; /* log level for runtime check */
     }                                                   \
   } while (0)
 
-#define WARNF(FMT, ...)                                              \
-  do {                                                               \
-    if (LOGGABLE(kLogWarn)) {                                        \
-      flogf(kLogWarn, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-    }                                                                \
-  } while (0)
-
 #define VWARNF(FMT, VA)                                    \
   do {                                                     \
     if (LOGGABLE(kLogWarn)) {                              \
@@ -116,12 +144,6 @@ extern unsigned __log_level; /* log level for runtime check */
     }                                                   \
   } while (0)
 
-#define FATALF(FMT, ...)                                              \
-  do {                                                                \
-    ffatalf(kLogFatal, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-    unreachable;                                                      \
-  } while (0)
-
 #define VFATALF(FMT, VA)                                    \
   do {                                                      \
     vffatalf(kLogFatal, __FILE__, __LINE__, NULL, FMT, VA); \
@@ -138,20 +160,6 @@ extern unsigned __log_level; /* log level for runtime check */
   do {                                                   \
     vffatalf(kLogFatal, __FILE__, __LINE__, F, FMT, VA); \
     unreachable;                                         \
-  } while (0)
-
-#define DEBUGF(FMT, ...)                                                \
-  do {                                                                  \
-    if (LOGGABLE(kLogDebug)) {                                          \
-      fdebugf(kLogDebug, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-    }                                                                   \
-  } while (0)
-
-#define VERBOSEF(FMT, ...)                                                  \
-  do {                                                                      \
-    if (LOGGABLE(kLogVerbose)) {                                            \
-      fverbosef(kLogVerbose, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-    }                                                                       \
   } while (0)
 
 #define VDEBUGF(FMT, VA)                                      \
@@ -180,6 +188,20 @@ extern unsigned __log_level; /* log level for runtime check */
     if (LOGGABLE(kLogDebug)) {                             \
       vfdebugf(kLogDebug, __FILE__, __LINE__, F, FMT, VA); \
     }                                                      \
+  } while (0)
+
+#define VNOISEF(FMT, VA)                                      \
+  do {                                                        \
+    if (LOGGABLE(kLogNoise)) {                                \
+      vfnoisef(kLogNoise, __FILE__, __LINE__, NULL, FMT, VA); \
+    }                                                         \
+  } while (0)
+
+#define FNOISEF(F, FMT, ...)                                         \
+  do {                                                               \
+    if (LOGGABLE(kLogNoise)) {                                       \
+      fnoisef(kLogNoise, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
+    }                                                                \
   } while (0)
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -219,6 +241,8 @@ void fverbosef(ARGS, ...) asm("flogf") ATTR relegated libcesque;
 void vfverbosef(ARGS, va_list) asm("vflogf") ATTRV relegated libcesque;
 void fdebugf(ARGS, ...) asm("flogf") ATTR relegated libcesque;
 void vfdebugf(ARGS, va_list) asm("vflogf") ATTRV relegated libcesque;
+void fnoisef(ARGS, ...) asm("flogf") ATTR relegated libcesque;
+void vfnoisef(ARGS, va_list) asm("vflogf") ATTRV relegated libcesque;
 void ffatalf(ARGS, ...) asm("flogf") ATTR relegated wontreturn libcesque;
 void vffatalf(ARGS, va_list) asm("vflogf") ATTRV relegated wontreturn libcesque;
 #undef ARGS

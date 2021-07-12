@@ -30,6 +30,6 @@ void(psllqv)(uint64_t a[2], const uint64_t b[2], const uint64_t c[2]) {
       a[i] = b[i] << c[0];
     }
   } else {
-    memset(a, 0, 16);
+    __builtin_memset(a, 0, 16);
   }
 }

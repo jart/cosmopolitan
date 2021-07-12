@@ -30,5 +30,5 @@ void(shufps)(float c[4], const float b[4], const float a[4], uint8_t m) {
   t[1] = b[(m & 0b00001100) >> 2];
   t[2] = a[(m & 0b00110000) >> 4];
   t[3] = a[(m & 0b11000000) >> 6];
-  memcpy(c, t, 16);
+  __builtin_memcpy(c, t, 16);
 }

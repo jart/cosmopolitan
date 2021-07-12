@@ -38,5 +38,5 @@ void(phsubw)(int16_t a[8], const int16_t b[8], const int16_t c[8]) {
   t[5] = c[2] - c[3];
   t[6] = c[4] - c[5];
   t[7] = c[6] - c[7];
-  memcpy(a, t, sizeof(t));
+  __builtin_memcpy(a, t, sizeof(t));
 }

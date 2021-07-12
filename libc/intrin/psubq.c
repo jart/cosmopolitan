@@ -33,5 +33,5 @@ void(psubq)(uint64_t a[2], const uint64_t b[2], const uint64_t c[2]) {
   for (i = 0; i < 2; ++i) {
     r[i] = b[i] - c[i];
   }
-  memcpy(a, r, 16);
+  __builtin_memcpy(a, r, 16);
 }

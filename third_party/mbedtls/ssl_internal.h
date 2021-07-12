@@ -788,10 +788,6 @@ struct mbedtls_ssl_flight_item
 /* Find an entry in a signature-hash set matching a given hash algorithm. */
 mbedtls_md_type_t mbedtls_ssl_sig_hash_set_find( mbedtls_ssl_sig_hash_set_t *set,
                                                  mbedtls_pk_type_t sig_alg );
-/* Add a signature-hash-pair to a signature-hash set */
-void mbedtls_ssl_sig_hash_set_add( mbedtls_ssl_sig_hash_set_t *set,
-                                   mbedtls_pk_type_t sig_alg,
-                                   mbedtls_md_type_t md_alg );
 /* Allow exactly one hash algorithm for each signature. */
 void mbedtls_ssl_sig_hash_set_const_hash( mbedtls_ssl_sig_hash_set_t *set,
                                           mbedtls_md_type_t md_alg );
@@ -958,10 +954,8 @@ static inline int mbedtls_ssl_get_psk( const mbedtls_ssl_context *ssl,
 #if defined(MBEDTLS_PK_C)
 unsigned char mbedtls_ssl_sig_from_pk( mbedtls_pk_context * );
 unsigned char mbedtls_ssl_sig_from_pk_alg( mbedtls_pk_type_t );
-mbedtls_pk_type_t mbedtls_ssl_pk_alg_from_sig( unsigned char );
 #endif
 
-mbedtls_md_type_t mbedtls_ssl_md_alg_from_hash( unsigned char hash );
 unsigned char mbedtls_ssl_hash_from_md_alg( int md );
 int mbedtls_ssl_set_calc_verify_md( mbedtls_ssl_context *ssl, int md );
 
@@ -1173,5 +1167,53 @@ size_t mbedtls_ssl_get_current_mtu( const mbedtls_ssl_context *ssl );
 void mbedtls_ssl_buffering_free( mbedtls_ssl_context *ssl );
 void mbedtls_ssl_flight_free( mbedtls_ssl_flight_item *flight );
 #endif /* MBEDTLS_SSL_PROTO_DTLS */
+
+/*
+ * Convert from MBEDTLS_SSL_HASH_XXX to MBEDTLS_MD_XXX
+ */
+forceinline mbedtls_md_type_t mbedtls_ssl_md_alg_from_hash( unsigned char hash )
+{
+    switch( hash )
+    {
+#if defined(MBEDTLS_MD5_C)
+        case MBEDTLS_SSL_HASH_MD5:
+            return( MBEDTLS_MD_MD5 );
+#endif
+#if defined(MBEDTLS_SHA1_C)
+        case MBEDTLS_SSL_HASH_SHA1:
+            return( MBEDTLS_MD_SHA1 );
+#endif
+#if defined(MBEDTLS_SHA256_C)
+        case MBEDTLS_SSL_HASH_SHA224:
+            return( MBEDTLS_MD_SHA224 );
+        case MBEDTLS_SSL_HASH_SHA256:
+            return( MBEDTLS_MD_SHA256 );
+#endif
+#if defined(MBEDTLS_SHA512_C)
+        case MBEDTLS_SSL_HASH_SHA384:
+            return( MBEDTLS_MD_SHA384 );
+        case MBEDTLS_SSL_HASH_SHA512:
+            return( MBEDTLS_MD_SHA512 );
+#endif
+        default:
+            return( MBEDTLS_MD_NONE );
+    }
+}
+
+forceinline mbedtls_pk_type_t mbedtls_ssl_pk_alg_from_sig( unsigned char sig )
+{
+    switch( sig ) {
+#if defined(MBEDTLS_RSA_C)
+        case MBEDTLS_SSL_SIG_RSA:
+            return( MBEDTLS_PK_RSA );
+#endif
+#if defined(MBEDTLS_ECDSA_C)
+        case MBEDTLS_SSL_SIG_ECDSA:
+            return( MBEDTLS_PK_ECDSA );
+#endif
+        default:
+            return( MBEDTLS_PK_NONE );
+    }
+}
 
 #endif /* ssl_internal.h */

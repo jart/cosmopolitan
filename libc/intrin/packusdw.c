@@ -30,5 +30,5 @@ void(packusdw)(uint16_t a[8], const int32_t b[4], const int32_t c[4]) {
   uint16_t r[8];
   for (i = 0; i < 4; ++i) r[i + 0] = MIN(UINT16_MAX, MAX(UINT16_MIN, b[i]));
   for (i = 0; i < 4; ++i) r[i + 4] = MIN(UINT16_MAX, MAX(UINT16_MIN, c[i]));
-  memcpy(a, r, 16);
+  __builtin_memcpy(a, r, 16);
 }

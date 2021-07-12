@@ -1,4 +1,6 @@
+#include "libc/log/check.h"
 #include "libc/log/log.h"
+#include "libc/nexgen32e/nexgen32e.h"
 #include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/bn_mul.h"
 #include "third_party/mbedtls/common.h"
@@ -1354,7 +1356,8 @@ int mbedtls_mpi_cmp_mpi( const mbedtls_mpi *X, const mbedtls_mpi *Y )
     return( 0 );
 }
 
-/** Decide if an integer is less than the other, without branches.
+/**
+ * Decide if an integer is less than the other, without branches.
  *
  * \param x         First integer.
  * \param y         Second integer.
@@ -1559,37 +1562,6 @@ cleanup:
 }
 
 /**
- * Helper for mbedtls_mpi subtraction.
- *
- * Calculate d - s where d and s have the same size.
- * This function operates modulo (2^ciL)^n and returns the carry
- * (1 if there was a wraparound, i.e. if `d < s`, and 0 otherwise).
- *
- * \param n             Number of limbs of \p d and \p s.
- * \param[in,out] d     On input, the left operand.
- *                      On output, the result of the subtraction:
- * \param[in] s         The right operand.
- *
- * \return              1 if `d < s`.
- *                      0 if `d >= s`.
- */
-static mbedtls_mpi_uint mpi_sub_hlp( size_t n,
-                                     mbedtls_mpi_uint *d,
-                                     const mbedtls_mpi_uint *s )
-{
-    size_t i;
-    mbedtls_mpi_uint c, z;
-
-    for( i = c = 0; i < n; i++, s++, d++ )
-    {
-        z = ( *d <  c );     *d -=  c;
-        c = ( *d < *s ) + z; *d -= *s;
-    }
-
-    return( c );
-}
-
-/**
  * \brief          Perform an unsigned subtraction of MPIs: X = |A| - |B|
  *
  * \param X        The destination MPI. This must point to an initialized MPI.
@@ -1599,67 +1571,43 @@ static mbedtls_mpi_uint mpi_sub_hlp( size_t n,
  * \return         \c 0 if successful.
  * \return         #MBEDTLS_ERR_MPI_NEGATIVE_VALUE if \p B is greater than \p A.
  * \return         Another negative error code on different kinds of failure.
- *
  */
 int mbedtls_mpi_sub_abs( mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *B )
 {
-    mbedtls_mpi TB;
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    size_t n;
-    mbedtls_mpi_uint carry;
+    size_t n, m;
     MPI_VALIDATE_RET( X != NULL );
     MPI_VALIDATE_RET( A != NULL );
     MPI_VALIDATE_RET( B != NULL );
-
-    mbedtls_mpi_init( &TB );
-
-    if( X == B )
-    {
-        MBEDTLS_MPI_CHK( mbedtls_mpi_copy( &TB, B ) );
-        B = &TB;
-    }
-
-    if( X != A )
-        MBEDTLS_MPI_CHK( mbedtls_mpi_copy( X, A ) );
-
-    /*
-     * X should always be positive as a result of unsigned subtractions.
-     */
-    X->s = 1;
-
-    ret = 0;
-
+    if( X != A && !B->n )
+        return mbedtls_mpi_copy( X, A ); /* wut */
     for( n = B->n; n > 0; n-- )
         if( B->p[n - 1] != 0 )
             break;
     if( n > A->n )
-    {
-        /* B >= (2^ciL)^n > A */
-        ret = MBEDTLS_ERR_MPI_NEGATIVE_VALUE;
-        goto cleanup;
+        return MBEDTLS_ERR_MPI_NEGATIVE_VALUE; /* B >= (2^ciL)^n > A */
+    if (X != A) {
+      if (X->n < A->n)
+          X->p = realloc(X->p, A->n * 8);
+      X->n = A->n;
+      if ( ( m = A->n - n ) )
+          memcpy(X->p+n, A->p+n, m * 8);
     }
-
-    carry = mpi_sub_hlp( n, X->p, B->p );
-    if( carry != 0 )
-    {
+    /*
+     * X should always be positive as a result of unsigned subtractions.
+     */
+    X->s = 1;
+    if( sbb( X->p, A->p, B->p, n ) ){
         /* Propagate the carry to the first nonzero limb of X. */
-        for( ; n < X->n && X->p[n] == 0; n++ )
-            --X->p[n];
+        for( ; n < A->n && A->p[n] == 0; n++ )
+            /* --X->p[n]; */
+            X->p[n] = A->p[n] - 1;
         /* If we ran out of space for the carry, it means that the result
          * is negative. */
         if( n == X->n )
-        {
-            ret = MBEDTLS_ERR_MPI_NEGATIVE_VALUE;
-            goto cleanup;
-        }
+            return MBEDTLS_ERR_MPI_NEGATIVE_VALUE;
         --X->p[n];
     }
-
-cleanup:
-
-    mbedtls_mpi_free( &TB );
-
-    return( ret );
+    return( 0 );
 }
 
 /**
@@ -1946,8 +1894,8 @@ int mbedtls_mpi_mul_int( mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_uint 
  * mbedtls_mpi_uint divisor, d
  */
 static mbedtls_mpi_uint mbedtls_int_div_int( mbedtls_mpi_uint u1,
-                                             mbedtls_mpi_uint u0, 
-                                             mbedtls_mpi_uint d, 
+                                             mbedtls_mpi_uint u0,
+                                             mbedtls_mpi_uint d,
                                              mbedtls_mpi_uint *r )
 {
 #if defined(MBEDTLS_HAVE_UDBL)
@@ -2345,7 +2293,7 @@ static void mpi_montg_init( mbedtls_mpi_uint *mm, const mbedtls_mpi *N )
     *mm = ~x + 1;
 }
 
-/** 
+/**
  * Montgomery multiplication: A = A * B * R^-1 mod N  (HAC 14.36)
  *
  * \param[in,out]   A   One of the numbers to multiply.
@@ -2405,7 +2353,7 @@ static void mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
      * do the calculation without using conditional tests. */
     /* Set d to d0 + (2^biL)^n - N where d0 is the current value of d. */
     d[n] += 1;
-    d[n] -= mpi_sub_hlp( n, d, N->p );
+    d[n] -= sbb( d, d, N->p, n );
     /* If d0 < N then d < (2^biL)^n
      * so d[n] == 0 and we want to keep A as it is.
      * If d0 >= N then d >= (2^biL)^n, and d <= (2^biL)^n + N < 2 * (2^biL)^n

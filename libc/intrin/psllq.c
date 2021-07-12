@@ -32,6 +32,6 @@ void(psllq)(uint64_t a[2], const uint64_t b[2], unsigned char c) {
       a[i] = b[i] << c;
     }
   } else {
-    memset(a, 0, 16);
+    __builtin_memset(a, 0, 16);
   }
 }
