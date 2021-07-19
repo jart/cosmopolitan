@@ -30,21 +30,7 @@
 #include "net/https/https.h"
 #include "third_party/mbedtls/x509_crt.h"
 
-STATIC_YOINK("zip_uri_support");
-STATIC_YOINK("usr/share/ssl/root/amazon.pem");
-STATIC_YOINK("usr/share/ssl/root/certum.pem");
-STATIC_YOINK("usr/share/ssl/root/comodo.pem");
-STATIC_YOINK("usr/share/ssl/root/digicert.pem");
-STATIC_YOINK("usr/share/ssl/root/dst.pem");
-STATIC_YOINK("usr/share/ssl/root/geotrust.pem");
-STATIC_YOINK("usr/share/ssl/root/globalsign.pem");
-STATIC_YOINK("usr/share/ssl/root/godaddy.pem");
-STATIC_YOINK("usr/share/ssl/root/google.pem");
-STATIC_YOINK("usr/share/ssl/root/isrg.pem");
-STATIC_YOINK("usr/share/ssl/root/quovadis.pem");
-STATIC_YOINK("usr/share/ssl/root/redbean.pem");
-STATIC_YOINK("usr/share/ssl/root/starfield.pem");
-STATIC_YOINK("usr/share/ssl/root/verisign.pem");
+STATIC_YOINK("ssl_root_support");
 
 mbedtls_x509_crt *GetSslRoots(void) {
   int fd;

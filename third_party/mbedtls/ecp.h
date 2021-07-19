@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_MBEDTLS_ECP_H_
 #define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_ECP_H_
+#include "libc/log/backtrace.internal.h"
 #include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/config.h"
 COSMOPOLITAN_C_START_
@@ -350,6 +351,7 @@ int mbedtls_ecp_tls_read_point( const mbedtls_ecp_group *, mbedtls_ecp_point *, 
 int mbedtls_ecp_tls_write_group( const mbedtls_ecp_group *, size_t *, unsigned char *, size_t );
 int mbedtls_ecp_tls_write_point( const mbedtls_ecp_group *, const mbedtls_ecp_point *, int, size_t *, unsigned char *, size_t );
 int mbedtls_ecp_write_key( mbedtls_ecp_keypair *, unsigned char *, size_t );
+int mbedtls_mpi_shift_l_mod( const mbedtls_ecp_group *, mbedtls_mpi * );
 mbedtls_ecp_curve_type mbedtls_ecp_get_type( const mbedtls_ecp_group * );
 void mbedtls_ecp_group_free( mbedtls_ecp_group * );
 void mbedtls_ecp_group_init( mbedtls_ecp_group * );
@@ -360,6 +362,9 @@ void mbedtls_ecp_point_init( mbedtls_ecp_point * );
 void mbedtls_ecp_restart_free( mbedtls_ecp_restart_ctx * );
 void mbedtls_ecp_restart_init( mbedtls_ecp_restart_ctx * );
 void mbedtls_ecp_set_max_ops( unsigned );
+
+int ecp_mod_p256(mbedtls_mpi *);
+int ecp_mod_p384(mbedtls_mpi *);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_THIRD_PARTY_MBEDTLS_ECP_H_ */

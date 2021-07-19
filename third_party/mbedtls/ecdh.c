@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/ecdh.h"
 #include "third_party/mbedtls/error.h"
@@ -8,32 +25,13 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
-/*
- *  Elliptic curve Diffie-Hellman
- *
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
 
-/*
- * References:
+/**
+ * @fileoverview Elliptic curve Diffie-Hellman
  *
- * SEC1 http://www.secg.org/index.php?action=secg,docs_secg
- * RFC 4492
+ * @see SEC1 http://www.secg.org/index.php?action=secg,docs_secg
+ * @see RFC4492
  */
 
 #if defined(MBEDTLS_ECDH_C)
@@ -73,16 +71,16 @@ int mbedtls_ecdh_can_do( mbedtls_ecp_group_id gid )
  * acceptable for a public function but is OK here as we control call sites.
  */
 static int ecdh_gen_public_restartable( mbedtls_ecp_group *grp,
-                    mbedtls_mpi *d, mbedtls_ecp_point *Q,
-                    int (*f_rng)(void *, unsigned char *, size_t),
-                    void *p_rng,
-                    mbedtls_ecp_restart_ctx *rs_ctx )
+                                        mbedtls_mpi *d, mbedtls_ecp_point *Q,
+                                        int (*f_rng)(void *, unsigned char *, size_t),
+                                        void *p_rng,
+                                        mbedtls_ecp_restart_ctx *rs_ctx )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
     /* If multiplication is in progress, we already generated a privkey */
 #if defined(MBEDTLS_ECP_RESTARTABLE)
-    if( rs_ctx == NULL || rs_ctx->rsm == NULL )
+    if( !rs_ctx || !rs_ctx->rsm )
 #endif
         MBEDTLS_MPI_CHK( mbedtls_ecp_gen_privkey( grp, d, f_rng, p_rng ) );
 
@@ -97,8 +95,8 @@ cleanup:
  * Generate public key
  */
 int mbedtls_ecdh_gen_public( mbedtls_ecp_group *grp, mbedtls_mpi *d, mbedtls_ecp_point *Q,
-                     int (*f_rng)(void *, unsigned char *, size_t),
-                     void *p_rng )
+                             int (*f_rng)(void *, unsigned char *, size_t),
+                             void *p_rng )
 {
     ECDH_VALIDATE_RET( grp != NULL );
     ECDH_VALIDATE_RET( d != NULL );
@@ -119,7 +117,7 @@ static int ecdh_compute_shared_restartable( mbedtls_ecp_group *grp,
                          void *p_rng,
                          mbedtls_ecp_restart_ctx *rs_ctx )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_ecp_point P;
 
     mbedtls_ecp_point_init( &P );
@@ -184,7 +182,7 @@ void mbedtls_ecdh_init( mbedtls_ecdh_context *ctx )
     mbedtls_ecp_point_init( &ctx->Vf  );
     mbedtls_mpi_init( &ctx->_d );
 #else
-    memset( ctx, 0, sizeof( mbedtls_ecdh_context ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_ecdh_context ) );
 
     ctx->var = MBEDTLS_ECDH_VARIANT_NONE;
 #endif
@@ -197,7 +195,7 @@ void mbedtls_ecdh_init( mbedtls_ecdh_context *ctx )
 static int ecdh_setup_internal( mbedtls_ecdh_context_mbed *ctx,
                                 mbedtls_ecp_group_id grp_id )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
     ret = mbedtls_ecp_group_load( &ctx->grp, grp_id );
     if( ret != 0 )
@@ -305,7 +303,7 @@ static int ecdh_make_params_internal( mbedtls_ecdh_context_mbed *ctx,
                                       void *p_rng,
                                       int restart_enabled )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t grp_len, pt_len;
 #if defined(MBEDTLS_ECP_RESTARTABLE)
     mbedtls_ecp_restart_ctx *rs_ctx = NULL;
@@ -412,7 +410,7 @@ int mbedtls_ecdh_read_params( mbedtls_ecdh_context *ctx,
                               const unsigned char **buf,
                               const unsigned char *end )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_ecp_group_id grp_id;
     ECDH_VALIDATE_RET( ctx != NULL );
     ECDH_VALIDATE_RET( buf != NULL );
@@ -449,7 +447,7 @@ static int ecdh_get_params_internal( mbedtls_ecdh_context_mbed *ctx,
                                      const mbedtls_ecp_keypair *key,
                                      mbedtls_ecdh_side side )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
     /* If it's not our key, just import the public part as Qp */
     if( side == MBEDTLS_ECDH_THEIRS )
@@ -473,7 +471,7 @@ int mbedtls_ecdh_get_params( mbedtls_ecdh_context *ctx,
                              const mbedtls_ecp_keypair *key,
                              mbedtls_ecdh_side side )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     ECDH_VALIDATE_RET( ctx != NULL );
     ECDH_VALIDATE_RET( key != NULL );
     ECDH_VALIDATE_RET( side == MBEDTLS_ECDH_OURS ||
@@ -528,7 +526,7 @@ static int ecdh_make_public_internal( mbedtls_ecdh_context_mbed *ctx,
                                       void *p_rng,
                                       int restart_enabled )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 #if defined(MBEDTLS_ECP_RESTARTABLE)
     mbedtls_ecp_restart_ctx *rs_ctx = NULL;
 #endif
@@ -600,7 +598,7 @@ int mbedtls_ecdh_make_public( mbedtls_ecdh_context *ctx, size_t *olen,
 static int ecdh_read_public_internal( mbedtls_ecdh_context_mbed *ctx,
                                       const unsigned char *buf, size_t blen )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     const unsigned char *p = buf;
 
     if( ( ret = mbedtls_ecp_tls_read_point( &ctx->grp, &ctx->Qp, &p,
@@ -650,7 +648,7 @@ static int ecdh_calc_secret_internal( mbedtls_ecdh_context_mbed *ctx,
                                       void *p_rng,
                                       int restart_enabled )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 #if defined(MBEDTLS_ECP_RESTARTABLE)
     mbedtls_ecp_restart_ctx *rs_ctx = NULL;
 #endif

@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/ecp.h"
 #include "third_party/mbedtls/error.h"
@@ -29,7 +46,7 @@ asm(".include \"libc/disclaimer.inc\"");
  *  limitations under the License.
  */
 
-#if defined(MBEDTLS_ECP_C)
+/* #if defined(MBEDTLS_ECP_C) */
 
 #if !defined(MBEDTLS_ECP_ALT)
 
@@ -618,29 +635,23 @@ static int ecp_group_load( mbedtls_ecp_group *grp,
 #endif /* ECP_LOAD_GROUP */
 
 #if defined(MBEDTLS_ECP_NIST_OPTIM)
-/* Forward declarations */
+#define NIST_MODP( P )      grp->modp = ecp_mod_ ## P;
+#else
+#define NIST_MODP( P )
+#endif
+
+#if defined(MBEDTLS_ECP_NIST_OPTIM)
 #if defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED)
 static int ecp_mod_p192( mbedtls_mpi * );
 #endif
 #if defined(MBEDTLS_ECP_DP_SECP224R1_ENABLED)
 static int ecp_mod_p224( mbedtls_mpi * );
 #endif
-#if defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
-static int ecp_mod_p256( mbedtls_mpi * );
-#endif
-#if defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
-static int ecp_mod_p384( mbedtls_mpi * );
-#endif
 #if defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED)
 static int ecp_mod_p521( mbedtls_mpi * );
 #endif
-
-#define NIST_MODP( P )      grp->modp = ecp_mod_ ## P;
-#else
-#define NIST_MODP( P )
 #endif /* MBEDTLS_ECP_NIST_OPTIM */
 
-/* Additional forward declarations */
 #if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
 static int ecp_mod_p255( mbedtls_mpi * );
 #endif
@@ -681,7 +692,7 @@ static int ecp_mod_p256k1( mbedtls_mpi * );
  */
 static int ecp_use_curve25519( mbedtls_ecp_group *grp )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
     /* Actually ( A + 2 ) / 4 */
     MBEDTLS_MPI_CHK( mbedtls_mpi_read_string( &grp->A, 16, "01DB42" ) );
@@ -721,7 +732,7 @@ cleanup:
 static int ecp_use_curve448( mbedtls_ecp_group *grp )
 {
     mbedtls_mpi Ns;
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
     mbedtls_mpi_init( &Ns );
 
@@ -760,6 +771,8 @@ cleanup:
 }
 #endif /* MBEDTLS_ECP_DP_CURVE448_ENABLED */
 
+
+#if defined(MBEDTLS_ECP_C)
 /**
  * \brief           This function sets up an ECP group context
  *                  from a standardized set of domain parameters.
@@ -866,6 +879,7 @@ int mbedtls_ecp_group_load( mbedtls_ecp_group *grp, mbedtls_ecp_group_id id )
             return( MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE );
     }
 }
+#endif /* MBEDTLS_ECP_C */
 
 #if defined(MBEDTLS_ECP_NIST_OPTIM)
 /*
@@ -878,7 +892,6 @@ int mbedtls_ecp_group_load( mbedtls_ecp_group *grp, mbedtls_ecp_group_id id )
  * MPI remains loose, since these functions can be deactivated at will.
  */
 
-#if defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED)
 /*
  * Compared to the way things are presented in FIPS 186-3 D.2,
  * we proceed in columns, from right (least significant chunk) to left,
@@ -926,20 +939,16 @@ static inline void carry64( mbedtls_mpi_uint *dst, mbedtls_mpi_uint *carry )
  */
 static int ecp_mod_p192( mbedtls_mpi *N )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_mpi_uint c = 0;
     mbedtls_mpi_uint *p, *end;
-
     /* Make sure we have enough blocks so that A(5) is legal */
     MBEDTLS_MPI_CHK( mbedtls_mpi_grow( N, 6 * WIDTH ) );
-
     p = N->p;
     end = p + N->n;
-
     ADD( 3 ); ADD( 5 );             NEXT; // A0 += A3 + A5
     ADD( 3 ); ADD( 4 ); ADD( 5 );   NEXT; // A1 += A3 + A4 + A5
     ADD( 4 ); ADD( 5 );             LAST; // A2 += A4 + A5
-
 cleanup:
     return( ret );
 }
@@ -949,11 +958,7 @@ cleanup:
 #undef ADD
 #undef NEXT
 #undef LAST
-#endif /* MBEDTLS_ECP_DP_SECP192R1_ENABLED */
 
-#if defined(MBEDTLS_ECP_DP_SECP224R1_ENABLED) ||   \
-    defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED) ||   \
-    defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
 /*
  * The reader is advised to first understand ecp_mod_p192() since the same
  * general structure is used here, but with additional complications:
@@ -1017,7 +1022,7 @@ static inline void sub32( uint32_t *dst, uint32_t src, signed char *carry )
  * (see fix_negative for the motivation of C)
  */
 #define INIT( b )                                                       \
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;                    \
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;                    \
     signed char c = 0, cc;                                              \
     uint32_t cur;                                                       \
     size_t i = 0, bits = (b);                                           \
@@ -1053,8 +1058,7 @@ static inline void sub32( uint32_t *dst, uint32_t src, signed char *carry )
  */
 static inline int fix_negative( mbedtls_mpi *N, signed char c, mbedtls_mpi *C, size_t bits )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     /* C = - c * 2^(bits + 32) */
 #if !defined(MBEDTLS_HAVE_INT64)
     ((void) bits);
@@ -1064,24 +1068,19 @@ static inline int fix_negative( mbedtls_mpi *N, signed char c, mbedtls_mpi *C, s
     else
 #endif
         C->p[ C->n - 1 ] = (mbedtls_mpi_uint) -c;
-
     /* N = - ( C - N ) */
     MBEDTLS_MPI_CHK( mbedtls_mpi_sub_abs( N, C, N ) );
     N->s = -1;
-
 cleanup:
-
     return( ret );
 }
 
-#if defined(MBEDTLS_ECP_DP_SECP224R1_ENABLED)
 /*
  * Fast quasi-reduction modulo p224 (FIPS 186-3 D.2.2)
  */
 static int ecp_mod_p224( mbedtls_mpi *N )
 {
     INIT( 224 );
-
     SUB(  7 ); SUB( 11 );               NEXT; // A0 += -A7 - A11
     SUB(  8 ); SUB( 12 );               NEXT; // A1 += -A8 - A12
     SUB(  9 ); SUB( 13 );               NEXT; // A2 += -A9 - A13
@@ -1089,97 +1088,9 @@ static int ecp_mod_p224( mbedtls_mpi *N )
     SUB( 11 ); ADD(  8 ); ADD( 12 );    NEXT; // A4 += -A11 + A8 + A12
     SUB( 12 ); ADD(  9 ); ADD( 13 );    NEXT; // A5 += -A12 + A9 + A13
     SUB( 13 ); ADD( 10 );               LAST; // A6 += -A13 + A10
-
 cleanup:
     return( ret );
 }
-#endif /* MBEDTLS_ECP_DP_SECP224R1_ENABLED */
-
-#if defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
-/*
- * Fast quasi-reduction modulo p256 (FIPS 186-3 D.2.3)
- */
-static int ecp_mod_p256( mbedtls_mpi *N )
-{
-    INIT( 256 );
-
-    ADD(  8 ); ADD(  9 );
-    SUB( 11 ); SUB( 12 ); SUB( 13 ); SUB( 14 );             NEXT; // A0
-
-    ADD(  9 ); ADD( 10 );
-    SUB( 12 ); SUB( 13 ); SUB( 14 ); SUB( 15 );             NEXT; // A1
-
-    ADD( 10 ); ADD( 11 );
-    SUB( 13 ); SUB( 14 ); SUB( 15 );                        NEXT; // A2
-
-    ADD( 11 ); ADD( 11 ); ADD( 12 ); ADD( 12 ); ADD( 13 );
-    SUB( 15 ); SUB(  8 ); SUB(  9 );                        NEXT; // A3
-
-    ADD( 12 ); ADD( 12 ); ADD( 13 ); ADD( 13 ); ADD( 14 );
-    SUB(  9 ); SUB( 10 );                                   NEXT; // A4
-
-    ADD( 13 ); ADD( 13 ); ADD( 14 ); ADD( 14 ); ADD( 15 );
-    SUB( 10 ); SUB( 11 );                                   NEXT; // A5
-
-    ADD( 14 ); ADD( 14 ); ADD( 15 ); ADD( 15 ); ADD( 14 ); ADD( 13 );
-    SUB(  8 ); SUB(  9 );                                   NEXT; // A6
-
-    ADD( 15 ); ADD( 15 ); ADD( 15 ); ADD( 8 );
-    SUB( 10 ); SUB( 11 ); SUB( 12 ); SUB( 13 );             LAST; // A7
-
-cleanup:
-    return( ret );
-}
-#endif /* MBEDTLS_ECP_DP_SECP256R1_ENABLED */
-
-#if defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
-/*
- * Fast quasi-reduction modulo p384 (FIPS 186-3 D.2.4)
- */
-static int ecp_mod_p384( mbedtls_mpi *N )
-{
-    INIT( 384 );
-
-    ADD( 12 ); ADD( 21 ); ADD( 20 );
-    SUB( 23 );                                              NEXT; // A0
-
-    ADD( 13 ); ADD( 22 ); ADD( 23 );
-    SUB( 12 ); SUB( 20 );                                   NEXT; // A2
-
-    ADD( 14 ); ADD( 23 );
-    SUB( 13 ); SUB( 21 );                                   NEXT; // A2
-
-    ADD( 15 ); ADD( 12 ); ADD( 20 ); ADD( 21 );
-    SUB( 14 ); SUB( 22 ); SUB( 23 );                        NEXT; // A3
-
-    ADD( 21 ); ADD( 21 ); ADD( 16 ); ADD( 13 ); ADD( 12 ); ADD( 20 ); ADD( 22 );
-    SUB( 15 ); SUB( 23 ); SUB( 23 );                        NEXT; // A4
-
-    ADD( 22 ); ADD( 22 ); ADD( 17 ); ADD( 14 ); ADD( 13 ); ADD( 21 ); ADD( 23 );
-    SUB( 16 );                                              NEXT; // A5
-
-    ADD( 23 ); ADD( 23 ); ADD( 18 ); ADD( 15 ); ADD( 14 ); ADD( 22 );
-    SUB( 17 );                                              NEXT; // A6
-
-    ADD( 19 ); ADD( 16 ); ADD( 15 ); ADD( 23 );
-    SUB( 18 );                                              NEXT; // A7
-
-    ADD( 20 ); ADD( 17 ); ADD( 16 );
-    SUB( 19 );                                              NEXT; // A8
-
-    ADD( 21 ); ADD( 18 ); ADD( 17 );
-    SUB( 20 );                                              NEXT; // A9
-
-    ADD( 22 ); ADD( 19 ); ADD( 18 );
-    SUB( 21 );                                              NEXT; // A10
-
-    ADD( 23 ); ADD( 20 ); ADD( 19 );
-    SUB( 22 );                                              LAST; // A11
-
-cleanup:
-    return( ret );
-}
-#endif /* MBEDTLS_ECP_DP_SECP384R1_ENABLED */
 
 #undef A
 #undef LOAD32
@@ -1188,10 +1099,6 @@ cleanup:
 #undef INIT
 #undef NEXT
 #undef LAST
-
-#endif /* MBEDTLS_ECP_DP_SECP224R1_ENABLED ||
-          MBEDTLS_ECP_DP_SECP256R1_ENABLED ||
-          MBEDTLS_ECP_DP_SECP384R1_ENABLED */
 
 #if defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED)
 /*
@@ -1211,7 +1118,7 @@ cleanup:
  */
 static int ecp_mod_p521( mbedtls_mpi *N )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t i;
     mbedtls_mpi M;
     mbedtls_mpi_uint Mp[P521_WIDTH + 1];
@@ -1249,8 +1156,6 @@ cleanup:
 
 #endif /* MBEDTLS_ECP_NIST_OPTIM */
 
-#if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
-
 /* Size of p255 in terms of mbedtls_mpi_uint */
 #define P255_WIDTH      ( 255 / 8 / sizeof( mbedtls_mpi_uint ) + 1 )
 
@@ -1260,38 +1165,32 @@ cleanup:
  */
 static int ecp_mod_p255( mbedtls_mpi *N )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t i;
     mbedtls_mpi M;
     mbedtls_mpi_uint Mp[P255_WIDTH + 2];
-
     if( N->n < P255_WIDTH )
         return( 0 );
-
     /* M = A1 */
     M.s = 1;
     M.n = N->n - ( P255_WIDTH - 1 );
     if( M.n > P255_WIDTH + 1 )
         return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
     M.p = Mp;
-    memset( Mp, 0, sizeof Mp );
+    mbedtls_platform_zeroize( Mp, sizeof Mp );
     memcpy( Mp, N->p + P255_WIDTH - 1, M.n * sizeof( mbedtls_mpi_uint ) );
     MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &M, 255 % ( 8 * sizeof( mbedtls_mpi_uint ) ) ) );
     M.n++; /* Make room for multiplication by 19 */
-
     /* N = A0 */
     MBEDTLS_MPI_CHK( mbedtls_mpi_set_bit( N, 255, 0 ) );
     for( i = P255_WIDTH; i < N->n; i++ )
         N->p[i] = 0;
-
     /* N = A0 + 19 * A1 */
     MBEDTLS_MPI_CHK( mbedtls_mpi_mul_int( &M, &M, 19 ) );
     MBEDTLS_MPI_CHK( mbedtls_mpi_add_abs( N, N, &M ) );
-
 cleanup:
     return( ret );
 }
-#endif /* MBEDTLS_ECP_DP_CURVE25519_ENABLED */
 
 #if defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
 
@@ -1317,7 +1216,7 @@ cleanup:
  */
 static int ecp_mod_p448( mbedtls_mpi *N )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t i;
     mbedtls_mpi M, Q;
     mbedtls_mpi_uint Mp[P448_WIDTH + 1], Qp[P448_WIDTH];
@@ -1332,7 +1231,7 @@ static int ecp_mod_p448( mbedtls_mpi *N )
         /* Shouldn't be called with N larger than 2^896! */
         return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
     M.p = Mp;
-    memset( Mp, 0, sizeof( Mp ) );
+    mbedtls_platform_zeroize( Mp, sizeof( Mp ) );
     memcpy( Mp, N->p + P448_WIDTH, M.n * sizeof( mbedtls_mpi_uint ) );
 
     /* N = A0 */
@@ -1379,7 +1278,7 @@ cleanup:
 static inline int ecp_mod_koblitz( mbedtls_mpi *N, mbedtls_mpi_uint *Rp, size_t p_limbs,
                                    size_t adjust, size_t shift, mbedtls_mpi_uint mask )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t i;
     mbedtls_mpi M, R;
     mbedtls_mpi_uint Mp[P_KOBLITZ_MAX + P_KOBLITZ_R + 1];
@@ -1400,7 +1299,7 @@ static inline int ecp_mod_koblitz( mbedtls_mpi *N, mbedtls_mpi_uint *Rp, size_t 
     M.n = N->n - ( p_limbs - adjust );
     if( M.n > p_limbs + adjust )
         M.n = p_limbs + adjust;
-    memset( Mp, 0, sizeof Mp );
+    mbedtls_platform_zeroize( Mp, sizeof Mp );
     memcpy( Mp, N->p + p_limbs - adjust, M.n * sizeof( mbedtls_mpi_uint ) );
     if( shift != 0 )
         MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &M, shift ) );
@@ -1422,7 +1321,7 @@ static inline int ecp_mod_koblitz( mbedtls_mpi *N, mbedtls_mpi_uint *Rp, size_t 
     M.n = N->n - ( p_limbs - adjust );
     if( M.n > p_limbs + adjust )
         M.n = p_limbs + adjust;
-    memset( Mp, 0, sizeof Mp );
+    mbedtls_platform_zeroize( Mp, sizeof Mp );
     memcpy( Mp, N->p + p_limbs - adjust, M.n * sizeof( mbedtls_mpi_uint ) );
     if( shift != 0 )
         MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &M, shift ) );
@@ -1493,4 +1392,4 @@ static int ecp_mod_p256k1( mbedtls_mpi *N )
 
 #endif /* !MBEDTLS_ECP_ALT */
 
-#endif /* MBEDTLS_ECP_C */
+/* #endif /\* MBEDTLS_ECP_C *\/ */

@@ -49,6 +49,8 @@ LOCAL CHANGES
   - Fix mbedtls_mpi_sub_abs() to not call malloc/free/memcpy since
     it's called 11,124 times during as SSL handshake.
 
+  - Make P-256 and P-384 modulus goes 5x faster.
+
   - Make chacha20 26% faster.
 
   - Make base64 100x faster.

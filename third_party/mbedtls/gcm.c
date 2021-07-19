@@ -1,10 +1,29 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/bits/likely.h"
+#include "libc/log/log.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/aes.h"
 #include "third_party/mbedtls/aesni.h"
+#include "third_party/mbedtls/cipher.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/endian.h"
 #include "third_party/mbedtls/error.h"
@@ -69,7 +88,7 @@ asm(".include \"libc/disclaimer.inc\"");
 void mbedtls_gcm_init( mbedtls_gcm_context *ctx )
 {
     GCM_VALIDATE( ctx != NULL );
-    memset( ctx, 0, sizeof( mbedtls_gcm_context ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_gcm_context ) );
 }
 
 /*
@@ -87,7 +106,7 @@ static int gcm_gen_table( mbedtls_gcm_context *ctx )
     uint64_t vl, vh;
     unsigned char h[16];
     size_t olen = 0;
-    memset( h, 0, 16 );
+    mbedtls_platform_zeroize( h, 16 );
     if( ( ret = mbedtls_cipher_update( &ctx->cipher_ctx, h, 16, h, &olen ) ) != 0 )
         return( ret );
     vh = READ64BE( h + 0 );
@@ -146,7 +165,7 @@ int mbedtls_gcm_setkey( mbedtls_gcm_context *ctx,
                         const unsigned char *key,
                         unsigned int keybits )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     const mbedtls_cipher_info_t *cipher_info;
     GCM_VALIDATE_RET( ctx != NULL );
     GCM_VALIDATE_RET( key != NULL );
@@ -158,10 +177,11 @@ int mbedtls_gcm_setkey( mbedtls_gcm_context *ctx,
     if( cipher_info->block_size != 16 )
         return( MBEDTLS_ERR_GCM_BAD_INPUT );
     mbedtls_cipher_free( &ctx->cipher_ctx );
+    ctx->cipher = cipher;
     if( ( ret = mbedtls_cipher_setup( &ctx->cipher_ctx, cipher_info ) ) != 0 )
         return( ret );
     if( ( ret = mbedtls_cipher_setkey( &ctx->cipher_ctx, key, keybits,
-                               MBEDTLS_ENCRYPT ) ) != 0 ) {
+                                       MBEDTLS_ENCRYPT ) ) != 0 ) {
         return( ret );
     }
     if( ( ret = gcm_gen_table( ctx ) ) != 0 )
@@ -250,7 +270,7 @@ int mbedtls_gcm_starts( mbedtls_gcm_context *ctx,
     const unsigned char *p;
     size_t use_len, olen = 0;
     unsigned char work_buf[16];
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     GCM_VALIDATE_RET( ctx != NULL );
     GCM_VALIDATE_RET( iv != NULL );
     GCM_VALIDATE_RET( add_len == 0 || add != NULL );
@@ -261,8 +281,8 @@ int mbedtls_gcm_starts( mbedtls_gcm_context *ctx,
       ( (uint64_t) add_len ) >> 61 != 0 ) {
         return( MBEDTLS_ERR_GCM_BAD_INPUT );
     }
-    memset( ctx->y, 0x00, sizeof(ctx->y) );
-    memset( ctx->buf, 0x00, sizeof(ctx->buf) );
+    mbedtls_platform_zeroize( ctx->y, sizeof(ctx->y) );
+    mbedtls_platform_zeroize( ctx->buf, sizeof(ctx->buf) );
     ctx->mode = mode;
     ctx->len = 0;
     ctx->add_len = 0;
@@ -270,7 +290,7 @@ int mbedtls_gcm_starts( mbedtls_gcm_context *ctx,
         memcpy( ctx->y, iv, iv_len );
         ctx->y[15] = 1;
     } else {
-        memset( work_buf, 0x00, 16 );
+        mbedtls_platform_zeroize( work_buf, 16 );
         PUT_UINT32_BE( iv_len * 8, work_buf, 12 );
         p = iv;
         while( iv_len > 0 ) {
@@ -334,14 +354,14 @@ int mbedtls_gcm_update( mbedtls_gcm_context *ctx,
 {
     size_t i, j;
     uint64_t a, b;
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char ectr[16];
     const unsigned char *p;
     unsigned char *q, *out_p = output;
     size_t olen = 0;
-    GCM_VALIDATE_RET( ctx != NULL );
-    GCM_VALIDATE_RET( length == 0 || input != NULL );
-    GCM_VALIDATE_RET( length == 0 || output != NULL );
+    GCM_VALIDATE_RET( ctx );
+    GCM_VALIDATE_RET( !length || input );
+    GCM_VALIDATE_RET( !length || output );
     if( output > input && (size_t) ( output - input ) < length )
         return( MBEDTLS_ERR_GCM_BAD_INPUT );
     /* Total length is restricted to 2^39 - 256 bits, ie 2^36 - 2^5 bytes
@@ -529,7 +549,7 @@ int mbedtls_gcm_crypt_and_tag( mbedtls_gcm_context *ctx,
                                size_t tag_len,
                                unsigned char *tag )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     GCM_VALIDATE_RET( ctx != NULL );
     GCM_VALIDATE_RET( iv != NULL );
     GCM_VALIDATE_RET( add_len == 0 || add != NULL );
@@ -589,7 +609,7 @@ int mbedtls_gcm_auth_decrypt( mbedtls_gcm_context *ctx,
                               const unsigned char *input,
                               unsigned char *output )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char check_tag[16];
     size_t i;
     int diff;

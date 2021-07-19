@@ -181,7 +181,6 @@ DEFAULT_LDLIBS =
 
 MCA =	llvm-mca-10							\
 	-mtriple=x86_64-pc-linux-gnu					\
-	-iterations=3							\
 	-instruction-info						\
 	-iterations=3							\
 	-all-stats							\

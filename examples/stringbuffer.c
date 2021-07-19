@@ -9,47 +9,27 @@
 #endif
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
+#include "libc/log/check.h"
+#include "libc/stdio/append.internal.h"
 
 /**
  * @fileoverview Fast Growable Strings Tutorial
  */
 
-struct Buffer {
-  size_t i, n;
-  char *p;
-};
-
-int AppendFmt(struct Buffer *b, const char *fmt, ...) {
-  int n;
-  char *p;
-  va_list va, vb;
-  va_start(va, fmt);
-  va_copy(vb, va);
-  n = vsnprintf(b->p + b->i, b->n - b->i, fmt, va);
-  if (n >= b->n - b->i) {
-    do {
-      if (b->n) {
-        b->n += b->n >> 1; /* this is the important line */
-      } else {
-        b->n = 16;
-      }
-    } while (b->i + n + 1 > b->n);
-    b->p = realloc(b->p, b->n);
-    vsnprintf(b->p + b->i, b->n - b->i, fmt, vb);
-  }
-  va_end(vb);
-  va_end(va);
-  b->i += n;
-  return n;
-}
-
 int main(int argc, char *argv[]) {
-  struct Buffer b = {0};
-  AppendFmt(&b, "hello ");
-  AppendFmt(&b, " world\n");
-  AppendFmt(&b, "%d arg%s\n", argc, argc == 1 ? "" : "s");
-  AppendFmt(&b, "%s\n", "have a nice day");
-  write(1, b.p, b.i);
-  free(b.p);
+  char *b = 0;
+  appendf(&b, "hello ");  // guarantees nul terminator
+  CHECK_EQ(6, strlen(b));
+  CHECK_EQ(6, appendz(b).i);
+  appendf(&b, " world\n");
+  CHECK_EQ(13, strlen(b));
+  CHECK_EQ(13, appendz(b).i);
+  appendd(&b, "\0", 1);  // supports binary
+  CHECK_EQ(13, strlen(b));
+  CHECK_EQ(14, appendz(b).i);
+  appendf(&b, "%d arg%s\n", argc, argc == 1 ? "" : "s");
+  appendf(&b, "%s\n", "have a nice day");
+  write(1, b, appendz(b).i);
+  free(b);
   return 0;
 }

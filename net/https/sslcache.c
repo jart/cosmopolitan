@@ -19,16 +19,23 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/errno.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "net/https/sslcache.h"
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/mbedtls/x509_crt.h"
+
+#define PROT  (PROT_READ | PROT_WRITE)
+#define FLAGS MAP_SHARED
 
 static uint32_t HashSslSession(mbedtls_ssl_session *session) {
   int i;
@@ -44,16 +51,46 @@ static uint32_t HashSslSession(mbedtls_ssl_session *session) {
   return h;
 }
 
-struct SslCache *CreateSslCache(size_t bytes, int lifetime) {
-  struct SslCache *c;
+static struct SslCache *OpenSslCache(const char *path, size_t size) {
+  int fd;
+  struct stat st;
+  struct SslCache *c = NULL;
+  if (path) {
+    if ((fd = open(path, O_RDWR | O_CREAT, 0600)) != -1) {
+      CHECK_NE(-1, fstat(fd, &st));
+      if (st.st_size && st.st_size != size) {
+        WARNF("unlinking sslcache because size changed from %,zu to %,zu",
+              st.st_size, size);
+        unlink(path);
+        fd = open(path, O_RDWR | O_CREAT, 0600);
+        st.st_size = 0;
+      }
+      if (fd != -1) {
+        if (!st.st_size) CHECK_NE(-1, ftruncate(fd, size));
+        c = mmap(0, size, PROT, FLAGS, fd, 0);
+        close(fd);
+      }
+    } else {
+      WARNF("sslcache open(%`'s) failed %s", path, strerror(errno));
+    }
+  }
+  return c;
+}
+
+struct SslCache *CreateSslCache(const char *path, size_t bytes, int lifetime) {
   size_t ents, size;
+  struct SslCache *c;
+  if (!bytes) bytes = 10 * 1024 * 1024;
+  if (lifetime <= 0) lifetime = 24 * 60 * 60;
   ents = rounddown2pow(MAX(2, bytes / sizeof(struct SslCacheEntry)));
   size = sizeof(struct SslCache) + sizeof(struct SslCacheEntry) * ents;
   size = ROUNDUP(size, FRAMESIZE);
-  CHECK_NE(MAP_FAILED, (c = mmap(NULL, size, PROT_READ | PROT_WRITE,
-                                 MAP_SHARED | MAP_ANONYMOUS, -1, 0)));
-  VERBOSEF("ssl cache %,zu bytes with %,u slots", size, ents);
-  c->lifetime = lifetime > 0 ? lifetime : 24 * 60 * 60;
+  c = OpenSslCache(path, size);
+  if (!c) c = mmap(0, size, PROT, FLAGS | MAP_ANONYMOUS, -1, 0);
+  CHECK_NE(MAP_FAILED, c);
+  VERBOSEF("opened %`'s %,zu bytes with %,u slots",
+           c ? path : "anonymous shared memory", size, ents);
+  c->lifetime = lifetime;
   c->size = size;
   c->mask = ents - 1;
   return c;
@@ -72,6 +109,7 @@ int UncacheSslSession(void *data, mbedtls_ssl_session *session) {
   mbedtls_x509_crt *cert;
   struct SslCacheEntry *e;
   uint32_t i, hash, ticketlen;
+  LOGF("uncache");
   cache = data;
   hash = HashSslSession(session);
   i = hash & cache->mask;
@@ -85,12 +123,12 @@ int UncacheSslSession(void *data, mbedtls_ssl_session *session) {
       session->compression != e->session.compression ||
       session->id_len != e->session.id_len ||
       memcmp(session->id, e->session.id, e->session.id_len)) {
-    VERBOSEF("%u ssl cache collision", i);
+    VERBOSEF("%u sslcache collision", i);
     return 1;
   }
   ts = time(0);
   if (!(e->time <= ts && ts <= e->time + cache->lifetime)) {
-    DEBUGF("%u ssl cache expired", i);
+    DEBUGF("%u sslcache expired", i);
     lockcmpxchg(&e->tick, tick, 0);
     return 1;
   }
@@ -114,7 +152,7 @@ int UncacheSslSession(void *data, mbedtls_ssl_session *session) {
   DEBUGF("%u restored ssl from cache", i);
   return 0;
 Contention:
-  WARNF("%u ssl cache contention 0x%08x", i, hash);
+  WARNF("%u sslcache contention 0x%08x", i, hash);
   mbedtls_x509_crt_free(cert);
   free(ticket);
   free(cert);
@@ -159,10 +197,13 @@ int CacheSslSession(void *data, const mbedtls_ssl_session *session) {
   }
   e->hash = hash;
   e->time = time(0);
-  tick = unsignedsubtract(rdtsc(), kStartTsc);
+  tick = rdtsc();
   asm volatile("" ::: "memory");
-  if (lockcmpxchg(&e->pid, pid, 0)) {
-    DEBUGF("%u saved", i);
+  if (tick && lockcmpxchg(&e->pid, pid, 0)) {
+    DEBUGF("%u saved %s%s %`#.*s", i,
+           mbedtls_ssl_get_ciphersuite_name(session->ciphersuite),
+           session->compression ? " DEFLATE" : "", session->id_len,
+           session->id);
     e->tick = tick;
     return 0;
   } else {

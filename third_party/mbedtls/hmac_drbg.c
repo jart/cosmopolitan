@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/common.h"
@@ -53,7 +70,7 @@ asm(".include \"libc/disclaimer.inc\"");
  */
 void mbedtls_hmac_drbg_init( mbedtls_hmac_drbg_context *ctx )
 {
-    memset( ctx, 0, sizeof( mbedtls_hmac_drbg_context ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_hmac_drbg_context ) );
     ctx->reseed_interval = MBEDTLS_HMAC_DRBG_RESEED_INTERVAL;
 }
 
@@ -141,7 +158,7 @@ int mbedtls_hmac_drbg_seed_buf( mbedtls_hmac_drbg_context *ctx,
                                 const mbedtls_md_info_t * md_info,
                                 const unsigned char *data, size_t data_len )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
     if( ( ret = mbedtls_md_setup( &ctx->md_ctx, md_info, 1 ) ) != 0 )
         return( ret );
@@ -173,7 +190,7 @@ static int hmac_drbg_reseed_core( mbedtls_hmac_drbg_context *ctx,
 {
     unsigned char seed[MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT];
     size_t seedlen = 0;
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
     {
         size_t total_entropy_len;
@@ -191,7 +208,7 @@ static int hmac_drbg_reseed_core( mbedtls_hmac_drbg_context *ctx,
         }
     }
 
-    memset( seed, 0, MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT );
+    mbedtls_platform_zeroize( seed, MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT );
 
     /* IV. Gather entropy_len bytes of entropy for the seed */
     if( ( ret = ctx->f_entropy( ctx->p_entropy,
@@ -338,7 +355,7 @@ int mbedtls_hmac_drbg_seed( mbedtls_hmac_drbg_context *ctx,
                             const unsigned char *custom,
                             size_t len )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t md_size;
 
     if( ( ret = mbedtls_md_setup( &ctx->md_ctx, md_info, 1 ) ) != 0 )
@@ -466,7 +483,7 @@ int mbedtls_hmac_drbg_random_with_add( void *p_rng,
                                        unsigned char *output, size_t out_len,
                                        const unsigned char *additional, size_t add_len )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_hmac_drbg_context *ctx = (mbedtls_hmac_drbg_context *) p_rng;
     size_t md_len = mbedtls_md_get_size( ctx->md_ctx.md_info );
     size_t left = out_len;
@@ -584,7 +601,7 @@ void mbedtls_hmac_drbg_free( mbedtls_hmac_drbg_context *ctx )
  */
 int mbedtls_hmac_drbg_write_seed_file( mbedtls_hmac_drbg_context *ctx, const char *path )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     FILE *f;
     unsigned char buf[ MBEDTLS_HMAC_DRBG_MAX_INPUT ];
 

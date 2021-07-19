@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/common.h"
@@ -10,31 +27,15 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
-/*
- *  FIPS-46-3 compliant Triple-DES implementation
+
+/**
+ * @fileoverview FIPS-46-3 compliant Triple-DES implementation
  *
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
+ * DES, on which TDES is based, was originally designed by Horst Feistel
+ * at IBM in 1974, and was adopted as a standard by NIST (formerly NBS).
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-/*
- *  DES, on which TDES is based, was originally designed by Horst Feistel
- *  at IBM in 1974, and was adopted as a standard by NIST (formerly NBS).
- *
- *  http://csrc.nist.gov/publications/fips/fips46-3/fips46-3.pdf
+ * http://csrc.nist.gov/publications/fips/fips46-3/fips46-3.pdf
  */
 
 /*
@@ -276,7 +277,7 @@ static const uint32_t RHs[16] =
 
 void mbedtls_des_init( mbedtls_des_context *ctx )
 {
-    memset( ctx, 0, sizeof( mbedtls_des_context ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_des_context ) );
 }
 
 void mbedtls_des_free( mbedtls_des_context *ctx )
@@ -289,7 +290,7 @@ void mbedtls_des_free( mbedtls_des_context *ctx )
 
 void mbedtls_des3_init( mbedtls_des3_context *ctx )
 {
-    memset( ctx, 0, sizeof( mbedtls_des3_context ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_des3_context ) );
 }
 
 void mbedtls_des3_free( mbedtls_des3_context *ctx )

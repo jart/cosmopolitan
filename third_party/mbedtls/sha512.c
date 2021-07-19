@@ -1,10 +1,29 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/literal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
+#include "third_party/mbedtls/chk.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/endian.h"
 #include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/md.h"
 #include "third_party/mbedtls/platform.h"
 #include "third_party/mbedtls/sha512.h"
 
@@ -13,30 +32,14 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
-/*
- *  FIPS-180-2 compliant SHA-384/512 implementation
+
+/**
+ * @fileoverview FIPS-180-2 compliant SHA-384/512 implementation
  *
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
+ * The SHA-512 Secure Hash Standard was published by NIST in 2002.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-/*
- *  The SHA-512 Secure Hash Standard was published by NIST in 2002.
- *
- *  http://csrc.nist.gov/publications/fips/fips180-2/fips180-2.pdf
+ * @see http://csrc.nist.gov/publications/fips/fips180-2/fips180-2.pdf
  */
 
 void sha512_transform_rorx(mbedtls_sha512_context *, const uint8_t *, int);
@@ -52,32 +55,6 @@ void sha512_transform_rorx(mbedtls_sha512_context *, const uint8_t *, int);
 #define sha512_put_uint64_be    PUT_UINT64_BE
 
 /**
- * \brief          This function initializes a SHA-512 context.
- *
- * \param ctx      The SHA-512 context to initialize. This must
- *                 not be \c NULL.
- */
-void mbedtls_sha512_init( mbedtls_sha512_context *ctx )
-{
-    SHA512_VALIDATE( ctx != NULL );
-    memset( ctx, 0, sizeof( mbedtls_sha512_context ) );
-}
-
-/**
- * \brief          This function clears a SHA-512 context.
- *
- * \param ctx      The SHA-512 context to clear. This may be \c NULL,
- *                 in which case this function does nothing. If it
- *                 is not \c NULL, it must point to an initialized
- *                 SHA-512 context.
- */
-void mbedtls_sha512_free( mbedtls_sha512_context *ctx )
-{
-    if( !ctx ) return;
-    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_sha512_context ) );
-}
-
-/**
  * \brief          This function clones the state of a SHA-512 context.
  *
  * \param dst      The destination context. This must be initialized.
@@ -86,9 +63,43 @@ void mbedtls_sha512_free( mbedtls_sha512_context *ctx )
 void mbedtls_sha512_clone( mbedtls_sha512_context *dst,
                            const mbedtls_sha512_context *src )
 {
-    SHA512_VALIDATE( dst != NULL );
-    SHA512_VALIDATE( src != NULL );
+    SHA512_VALIDATE( dst );
+    SHA512_VALIDATE( src );
     *dst = *src;
+}
+
+int mbedtls_sha512_starts_384( mbedtls_sha512_context *ctx )
+{
+    SHA512_VALIDATE_RET( ctx );
+    ctx->total[0] = 0;
+    ctx->total[1] = 0;
+    ctx->state[0] = UINT64_C(0xCBBB9D5DC1059ED8);
+    ctx->state[1] = UINT64_C(0x629A292A367CD507);
+    ctx->state[2] = UINT64_C(0x9159015A3070DD17);
+    ctx->state[3] = UINT64_C(0x152FECD8F70E5939);
+    ctx->state[4] = UINT64_C(0x67332667FFC00B31);
+    ctx->state[5] = UINT64_C(0x8EB44A8768581511);
+    ctx->state[6] = UINT64_C(0xDB0C2E0D64F98FA7);
+    ctx->state[7] = UINT64_C(0x47B5481DBEFA4FA4);
+    ctx->is384 = true;
+    return( 0 );
+}
+
+int mbedtls_sha512_starts_512( mbedtls_sha512_context *ctx )
+{
+    SHA512_VALIDATE_RET( ctx );
+    ctx->total[0] = 0;
+    ctx->total[1] = 0;
+    ctx->state[0] = UINT64_C(0x6A09E667F3BCC908);
+    ctx->state[1] = UINT64_C(0xBB67AE8584CAA73B);
+    ctx->state[2] = UINT64_C(0x3C6EF372FE94F82B);
+    ctx->state[3] = UINT64_C(0xA54FF53A5F1D36F1);
+    ctx->state[4] = UINT64_C(0x510E527FADE682D1);
+    ctx->state[5] = UINT64_C(0x9B05688C2B3E6C1F);
+    ctx->state[6] = UINT64_C(0x1F83D9ABFB41BD6B);
+    ctx->state[7] = UINT64_C(0x5BE0CD19137E2179);
+    ctx->is384 = false;
+    return( 0 );
 }
 
 /**
@@ -108,50 +119,12 @@ void mbedtls_sha512_clone( mbedtls_sha512_context *dst,
  */
 int mbedtls_sha512_starts_ret( mbedtls_sha512_context *ctx, int is384 )
 {
-    SHA512_VALIDATE_RET( ctx != NULL );
-#if !defined(MBEDTLS_SHA512_NO_SHA384)
+    SHA512_VALIDATE_RET( ctx );
     SHA512_VALIDATE_RET( is384 == 0 || is384 == 1 );
-#else
-    SHA512_VALIDATE_RET( is384 == 0 );
-#endif
-
-    ctx->total[0] = 0;
-    ctx->total[1] = 0;
-
-    if( is384 == 0 )
-    {
-        /* SHA-512 */
-        ctx->state[0] = UINT64_C(0x6A09E667F3BCC908);
-        ctx->state[1] = UINT64_C(0xBB67AE8584CAA73B);
-        ctx->state[2] = UINT64_C(0x3C6EF372FE94F82B);
-        ctx->state[3] = UINT64_C(0xA54FF53A5F1D36F1);
-        ctx->state[4] = UINT64_C(0x510E527FADE682D1);
-        ctx->state[5] = UINT64_C(0x9B05688C2B3E6C1F);
-        ctx->state[6] = UINT64_C(0x1F83D9ABFB41BD6B);
-        ctx->state[7] = UINT64_C(0x5BE0CD19137E2179);
-    }
+    if( !is384 )
+        return mbedtls_sha512_starts_512( ctx );
     else
-    {
-#if defined(MBEDTLS_SHA512_NO_SHA384)
-        return( MBEDTLS_ERR_SHA512_BAD_INPUT_DATA );
-#else
-        /* SHA-384 */
-        ctx->state[0] = UINT64_C(0xCBBB9D5DC1059ED8);
-        ctx->state[1] = UINT64_C(0x629A292A367CD507);
-        ctx->state[2] = UINT64_C(0x9159015A3070DD17);
-        ctx->state[3] = UINT64_C(0x152FECD8F70E5939);
-        ctx->state[4] = UINT64_C(0x67332667FFC00B31);
-        ctx->state[5] = UINT64_C(0x8EB44A8768581511);
-        ctx->state[6] = UINT64_C(0xDB0C2E0D64F98FA7);
-        ctx->state[7] = UINT64_C(0x47B5481DBEFA4FA4);
-#endif /* MBEDTLS_SHA512_NO_SHA384 */
-    }
-
-#if !defined(MBEDTLS_SHA512_NO_SHA384)
-    ctx->is384 = is384;
-#endif
-
-    return( 0 );
+        return mbedtls_sha512_starts_384( ctx );
 }
 
 #if !defined(MBEDTLS_SHA512_PROCESS_ALT)
@@ -321,7 +294,6 @@ int mbedtls_internal_sha512_process( mbedtls_sha512_context *ctx,
 
     /* Zeroise buffers and variables to clear sensitive data from memory. */
     mbedtls_platform_zeroize( &local, sizeof( local ) );
-
     return( 0 );
 }
 
@@ -344,54 +316,41 @@ int mbedtls_sha512_update_ret( mbedtls_sha512_context *ctx,
                                const unsigned char *input,
                                size_t ilen )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t fill;
     unsigned int left;
-
     SHA512_VALIDATE_RET( ctx != NULL );
     SHA512_VALIDATE_RET( ilen == 0 || input != NULL );
-
     if( ilen == 0 )
         return( 0 );
-
     left = (unsigned int) (ctx->total[0] & 0x7F);
     fill = 128 - left;
-
     ctx->total[0] += (uint64_t) ilen;
-
     if( ctx->total[0] < (uint64_t) ilen )
         ctx->total[1]++;
-
     if( left && ilen >= fill )
     {
         memcpy( (void *) (ctx->buffer + left), input, fill );
-
         if( ( ret = mbedtls_internal_sha512_process( ctx, ctx->buffer ) ) != 0 )
             return( ret );
-
         input += fill;
         ilen  -= fill;
         left = 0;
     }
-
     if (!IsTiny() && ilen >= 128 && X86_HAVE(AVX2)) {
         sha512_transform_rorx(ctx, input, ilen / 128);
         input += ROUNDDOWN(ilen, 128);
         ilen  -= ROUNDDOWN(ilen, 128);
     }
-
     while( ilen >= 128 )
     {
         if( ( ret = mbedtls_internal_sha512_process( ctx, input ) ) != 0 )
             return( ret );
-
         input += 128;
         ilen  -= 128;
     }
-
     if( ilen > 0 )
         memcpy( (void *) (ctx->buffer + left), input, ilen );
-
     return( 0 );
 }
 
@@ -410,49 +369,39 @@ int mbedtls_sha512_update_ret( mbedtls_sha512_context *ctx,
 int mbedtls_sha512_finish_ret( mbedtls_sha512_context *ctx,
                                unsigned char output[64] )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned used;
     uint64_t high, low;
-
     SHA512_VALIDATE_RET( ctx != NULL );
     SHA512_VALIDATE_RET( (unsigned char *)output != NULL );
-
     /*
      * Add padding: 0x80 then 0x00 until 16 bytes remain for the length
      */
     used = ctx->total[0] & 0x7F;
-
     ctx->buffer[used++] = 0x80;
-
     if( used <= 112 )
     {
         /* Enough room for padding + length in current block */
-        memset( ctx->buffer + used, 0, 112 - used );
+        mbedtls_platform_zeroize( ctx->buffer + used, 112 - used );
     }
     else
     {
         /* We'll need an extra block */
-        memset( ctx->buffer + used, 0, 128 - used );
-
+        mbedtls_platform_zeroize( ctx->buffer + used, 128 - used );
         if( ( ret = mbedtls_internal_sha512_process( ctx, ctx->buffer ) ) != 0 )
             return( ret );
-
-        memset( ctx->buffer, 0, 112 );
+        mbedtls_platform_zeroize( ctx->buffer, 112 );
     }
-
     /*
      * Add message length
      */
     high = ( ctx->total[0] >> 61 )
          | ( ctx->total[1] <<  3 );
     low  = ( ctx->total[0] <<  3 );
-
     sha512_put_uint64_be( high, ctx->buffer, 112 );
     sha512_put_uint64_be( low,  ctx->buffer, 120 );
-
     if( ( ret = mbedtls_internal_sha512_process( ctx, ctx->buffer ) ) != 0 )
         return( ret );
-
     /*
      * Output final state
      */
@@ -462,7 +411,6 @@ int mbedtls_sha512_finish_ret( mbedtls_sha512_context *ctx,
     sha512_put_uint64_be( ctx->state[3], output, 24 );
     sha512_put_uint64_be( ctx->state[4], output, 32 );
     sha512_put_uint64_be( ctx->state[5], output, 40 );
-
 #if !defined(MBEDTLS_SHA512_NO_SHA384)
     if( ctx->is384 == 0 )
 #endif
@@ -470,7 +418,6 @@ int mbedtls_sha512_finish_ret( mbedtls_sha512_context *ctx,
         sha512_put_uint64_be( ctx->state[6], output, 48 );
         sha512_put_uint64_be( ctx->state[7], output, 56 );
     }
-
     return( 0 );
 }
 
@@ -506,33 +453,59 @@ int mbedtls_sha512_ret( const void *input,
                         unsigned char output[64],
                         int is384 )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_sha512_context ctx;
-
 #if !defined(MBEDTLS_SHA512_NO_SHA384)
     SHA512_VALIDATE_RET( is384 == 0 || is384 == 1 );
 #else
     SHA512_VALIDATE_RET( is384 == 0 );
 #endif
-    SHA512_VALIDATE_RET( ilen == 0 || input != NULL );
-    SHA512_VALIDATE_RET( (unsigned char *)output != NULL );
-
+    SHA512_VALIDATE_RET( ilen == 0 || input );
+    SHA512_VALIDATE_RET( (unsigned char *)output );
     mbedtls_sha512_init( &ctx );
-
-    if( ( ret = mbedtls_sha512_starts_ret( &ctx, is384 ) ) != 0 )
-        goto exit;
-
-    if( ( ret = mbedtls_sha512_update_ret( &ctx, input, ilen ) ) != 0 )
-        goto exit;
-
-    if( ( ret = mbedtls_sha512_finish_ret( &ctx, output ) ) != 0 )
-        goto exit;
-
-exit:
+    MBEDTLS_CHK( mbedtls_sha512_starts_ret( &ctx, is384 ) );
+    MBEDTLS_CHK( mbedtls_sha512_update_ret( &ctx, input, ilen ) );
+    MBEDTLS_CHK( mbedtls_sha512_finish_ret( &ctx, output ) );
+cleanup:
     mbedtls_sha512_free( &ctx );
-
     return( ret );
 }
+
+noinstrument int mbedtls_sha512_ret_384( const void *input, size_t ilen, void *output )
+{
+    return mbedtls_sha512_ret( input, ilen, output, true );
+}
+
+noinstrument int mbedtls_sha512_ret_512( const void *input, size_t ilen, void *output )
+{
+    return mbedtls_sha512_ret( input, ilen, output, false );
+}
+
+#if !defined(MBEDTLS_SHA512_NO_SHA384)
+const mbedtls_md_info_t mbedtls_sha384_info = {
+    "SHA384",
+    MBEDTLS_MD_SHA384,
+    48,
+    128,
+    (void *)mbedtls_sha512_starts_384,
+    (void *)mbedtls_sha512_update_ret,
+    (void *)mbedtls_internal_sha512_process,
+    (void *)mbedtls_sha512_finish_ret,
+    mbedtls_sha512_ret_384,
+};
+#endif
+
+const mbedtls_md_info_t mbedtls_sha512_info = {
+    "SHA512",
+    MBEDTLS_MD_SHA512,
+    64,
+    128,
+    (void *)mbedtls_sha512_starts_512,
+    (void *)mbedtls_sha512_update_ret,
+    (void *)mbedtls_internal_sha512_process,
+    (void *)mbedtls_sha512_finish_ret,
+    mbedtls_sha512_ret_512,
+};
 
 #if defined(MBEDTLS_SELF_TEST)
 
@@ -620,18 +593,14 @@ int mbedtls_sha512_self_test( int verbose )
     unsigned char *buf;
     unsigned char sha512sum[64];
     mbedtls_sha512_context ctx;
-
     buf = mbedtls_calloc( 1024, sizeof(unsigned char) );
     if( NULL == buf )
     {
         if( verbose != 0 )
             mbedtls_printf( "Buffer allocation failed\n" );
-
         return( 1 );
     }
-
     mbedtls_sha512_init( &ctx );
-
     for( i = 0; i < (int) ARRAY_LENGTH(sha512_test_sum); i++ )
     {
         j = i % 3;
@@ -640,17 +609,13 @@ int mbedtls_sha512_self_test( int verbose )
 #else
         k = 0;
 #endif
-
         if( verbose != 0 )
             mbedtls_printf( "  SHA-%d test #%d: ", 512 - k * 128, j + 1 );
-
         if( ( ret = mbedtls_sha512_starts_ret( &ctx, k ) ) != 0 )
             goto fail;
-
         if( j == 2 )
         {
             memset( buf, 'a', buflen = 1000 );
-
             for( j = 0; j < 1000; j++ )
             {
                 ret = mbedtls_sha512_update_ret( &ctx, buf, buflen );
@@ -665,33 +630,25 @@ int mbedtls_sha512_self_test( int verbose )
             if( ret != 0 )
                 goto fail;
         }
-
         if( ( ret = mbedtls_sha512_finish_ret( &ctx, sha512sum ) ) != 0 )
             goto fail;
-
         if( memcmp( sha512sum, sha512_test_sum[i], 64 - k * 16 ) != 0 )
         {
             ret = 1;
             goto fail;
         }
-
         if( verbose != 0 )
             mbedtls_printf( "passed\n" );
     }
-
     if( verbose != 0 )
         mbedtls_printf( "\n" );
-
     goto exit;
-
 fail:
     if( verbose != 0 )
         mbedtls_printf( "failed\n" );
-
 exit:
     mbedtls_sha512_free( &ctx );
     mbedtls_free( buf );
-
     return( ret );
 }
 

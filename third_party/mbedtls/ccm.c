@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/ccm.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/error.h"
@@ -8,32 +25,13 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
-/*
- *  NIST SP800-38C compliant CCM implementation
- *
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
 
 /**
- * \file ccm.c
+ * @fileoverview NIST SP800-38C compliant CCM implementation
  *
- * \brief This file provides an API for the CCM authenticated encryption
- *        mode for block ciphers.
+ * This file provides an API for the CCM authenticated encryption mode
+ * for block ciphers.
  *
  * CCM combines Counter mode encryption with CBC-MAC authentication
  * for 128-bit block ciphers.
@@ -76,8 +74,8 @@ asm(".include \"libc/disclaimer.inc\"");
  */
 void mbedtls_ccm_init( mbedtls_ccm_context *ctx )
 {
-    CCM_VALIDATE( ctx != NULL );
-    memset( ctx, 0, sizeof( mbedtls_ccm_context ) );
+    CCM_VALIDATE( ctx );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_ccm_context ) );
 }
 
 /**
@@ -98,31 +96,24 @@ int mbedtls_ccm_setkey( mbedtls_ccm_context *ctx,
                         const unsigned char *key,
                         unsigned int keybits )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     const mbedtls_cipher_info_t *cipher_info;
-
-    CCM_VALIDATE_RET( ctx != NULL );
-    CCM_VALIDATE_RET( key != NULL );
-
+    CCM_VALIDATE_RET( ctx );
+    CCM_VALIDATE_RET( key );
     cipher_info = mbedtls_cipher_info_from_values( cipher, keybits,
                                                    MBEDTLS_MODE_ECB );
     if( cipher_info == NULL )
         return( MBEDTLS_ERR_CCM_BAD_INPUT );
-
     if( cipher_info->block_size != 16 )
         return( MBEDTLS_ERR_CCM_BAD_INPUT );
-
     mbedtls_cipher_free( &ctx->cipher_ctx );
-
     if( ( ret = mbedtls_cipher_setup( &ctx->cipher_ctx, cipher_info ) ) != 0 )
         return( ret );
-
     if( ( ret = mbedtls_cipher_setkey( &ctx->cipher_ctx, key, keybits,
                                MBEDTLS_ENCRYPT ) ) != 0 )
     {
         return( ret );
     }
-
     return( 0 );
 }
 
@@ -184,7 +175,7 @@ static int ccm_auth_crypt( mbedtls_ccm_context *ctx, int mode, size_t length,
                            const unsigned char *input, unsigned char *output,
                            unsigned char *tag, size_t tag_len )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char i;
     unsigned char q;
     size_t len_left, olen;
@@ -395,12 +386,12 @@ int mbedtls_ccm_star_encrypt_and_tag( mbedtls_ccm_context *ctx, size_t length,
                          const unsigned char *input, unsigned char *output,
                          unsigned char *tag, size_t tag_len )
 {
-    CCM_VALIDATE_RET( ctx != NULL );
-    CCM_VALIDATE_RET( iv != NULL );
-    CCM_VALIDATE_RET( add_len == 0 || add != NULL );
-    CCM_VALIDATE_RET( length == 0 || input != NULL );
-    CCM_VALIDATE_RET( length == 0 || output != NULL );
-    CCM_VALIDATE_RET( tag_len == 0 || tag != NULL );
+    CCM_VALIDATE_RET( ctx );
+    CCM_VALIDATE_RET( iv );
+    CCM_VALIDATE_RET( add_len == 0 || add );
+    CCM_VALIDATE_RET( length == 0 || input );
+    CCM_VALIDATE_RET( length == 0 || output );
+    CCM_VALIDATE_RET( tag_len == 0 || tag );
     return( ccm_auth_crypt( ctx, CCM_ENCRYPT, length, iv, iv_len,
                             add, add_len, input, output, tag, tag_len ) );
 }
@@ -447,12 +438,12 @@ int mbedtls_ccm_encrypt_and_tag( mbedtls_ccm_context *ctx, size_t length,
                          const unsigned char *input, unsigned char *output,
                          unsigned char *tag, size_t tag_len )
 {
-    CCM_VALIDATE_RET( ctx != NULL );
-    CCM_VALIDATE_RET( iv != NULL );
-    CCM_VALIDATE_RET( add_len == 0 || add != NULL );
-    CCM_VALIDATE_RET( length == 0 || input != NULL );
-    CCM_VALIDATE_RET( length == 0 || output != NULL );
-    CCM_VALIDATE_RET( tag_len == 0 || tag != NULL );
+    CCM_VALIDATE_RET( ctx );
+    CCM_VALIDATE_RET( iv );
+    CCM_VALIDATE_RET( add_len == 0 || add );
+    CCM_VALIDATE_RET( length == 0 || input );
+    CCM_VALIDATE_RET( length == 0 || output );
+    CCM_VALIDATE_RET( tag_len == 0 || tag );
     if( tag_len == 0 )
         return( MBEDTLS_ERR_CCM_BAD_INPUT );
 
@@ -505,17 +496,17 @@ int mbedtls_ccm_star_auth_decrypt( mbedtls_ccm_context *ctx, size_t length,
                       const unsigned char *input, unsigned char *output,
                       const unsigned char *tag, size_t tag_len )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char check_tag[16];
     unsigned char i;
     int diff;
 
-    CCM_VALIDATE_RET( ctx != NULL );
-    CCM_VALIDATE_RET( iv != NULL );
-    CCM_VALIDATE_RET( add_len == 0 || add != NULL );
-    CCM_VALIDATE_RET( length == 0 || input != NULL );
-    CCM_VALIDATE_RET( length == 0 || output != NULL );
-    CCM_VALIDATE_RET( tag_len == 0 || tag != NULL );
+    CCM_VALIDATE_RET( ctx );
+    CCM_VALIDATE_RET( iv );
+    CCM_VALIDATE_RET( add_len == 0 || add );
+    CCM_VALIDATE_RET( length == 0 || input );
+    CCM_VALIDATE_RET( length == 0 || output );
+    CCM_VALIDATE_RET( tag_len == 0 || tag );
 
     if( ( ret = ccm_auth_crypt( ctx, CCM_DECRYPT, length,
                                 iv, iv_len, add, add_len,
@@ -569,21 +560,19 @@ int mbedtls_ccm_star_auth_decrypt( mbedtls_ccm_context *ctx, size_t length,
  * match. \return          A cipher-specific error code on calculation failure.
  */
 int mbedtls_ccm_auth_decrypt( mbedtls_ccm_context *ctx, size_t length,
-                      const unsigned char *iv, size_t iv_len,
-                      const unsigned char *add, size_t add_len,
-                      const unsigned char *input, unsigned char *output,
-                      const unsigned char *tag, size_t tag_len )
+                              const unsigned char *iv, size_t iv_len,
+                              const unsigned char *add, size_t add_len,
+                              const unsigned char *input, unsigned char *output,
+                              const unsigned char *tag, size_t tag_len )
 {
-    CCM_VALIDATE_RET( ctx != NULL );
-    CCM_VALIDATE_RET( iv != NULL );
-    CCM_VALIDATE_RET( add_len == 0 || add != NULL );
-    CCM_VALIDATE_RET( length == 0 || input != NULL );
-    CCM_VALIDATE_RET( length == 0 || output != NULL );
-    CCM_VALIDATE_RET( tag_len == 0 || tag != NULL );
-
-    if( tag_len == 0 )
+    CCM_VALIDATE_RET( ctx );
+    CCM_VALIDATE_RET( iv );
+    CCM_VALIDATE_RET( add    || !add_len );
+    CCM_VALIDATE_RET( input  || !length  );
+    CCM_VALIDATE_RET( output || !length  );
+    CCM_VALIDATE_RET( tag    || !tag_len );
+    if( !tag_len )
         return( MBEDTLS_ERR_CCM_BAD_INPUT );
-
     return( mbedtls_ccm_star_auth_decrypt( ctx, length, iv, iv_len, add,
                 add_len, input, output, tag, tag_len ) );
 }
@@ -654,7 +643,7 @@ int mbedtls_ccm_self_test( int verbose )
     unsigned char plaintext[CCM_SELFTEST_PT_MAX_LEN];
     unsigned char ciphertext[CCM_SELFTEST_CT_MAX_LEN];
     size_t i;
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
     mbedtls_ccm_init( &ctx );
 
@@ -672,8 +661,8 @@ int mbedtls_ccm_self_test( int verbose )
         if( verbose != 0 )
             mbedtls_printf( "  CCM-AES #%u: ", (unsigned int) i + 1 );
 
-        memset( plaintext, 0, CCM_SELFTEST_PT_MAX_LEN );
-        memset( ciphertext, 0, CCM_SELFTEST_CT_MAX_LEN );
+        mbedtls_platform_zeroize( plaintext, CCM_SELFTEST_PT_MAX_LEN );
+        mbedtls_platform_zeroize( ciphertext, CCM_SELFTEST_CT_MAX_LEN );
         memcpy( plaintext, msg_test_data, msg_len_test_data[i] );
 
         ret = mbedtls_ccm_encrypt_and_tag( &ctx, msg_len_test_data[i],
@@ -692,7 +681,7 @@ int mbedtls_ccm_self_test( int verbose )
 
             return( 1 );
         }
-        memset( plaintext, 0, CCM_SELFTEST_PT_MAX_LEN );
+        mbedtls_platform_zeroize( plaintext, CCM_SELFTEST_PT_MAX_LEN );
 
         ret = mbedtls_ccm_auth_decrypt( &ctx, msg_len_test_data[i],
                                         iv_test_data, iv_len_test_data[i],

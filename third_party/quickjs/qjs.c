@@ -83,7 +83,7 @@ static int eval_file(JSContext *ctx, const char *filename, int module)
     uint8_t *buf;
     int ret, eval_flags;
     size_t buf_len;
-    
+
     buf = js_load_file(ctx, &buf_len, filename);
     if (!buf) {
         perror(filename);
@@ -326,7 +326,7 @@ int main(int argc, char **argv)
     int load_jscalc;
 #endif
     size_t stack_size = 0;
-    
+
 #ifdef CONFIG_BIGNUM
     /* load jscalc runtime if invoked as 'qjscalc' */
     {
@@ -338,7 +338,7 @@ int main(int argc, char **argv)
         load_jscalc = !strcmp(exename, "qjscalc");
     }
 #endif
-    
+
     /* cannot use getopt because we want to pass the command line to
        the script */
     optind = 1;
@@ -489,7 +489,7 @@ int main(int argc, char **argv)
         JS_SetHostPromiseRejectionTracker(rt, js_std_promise_rejection_tracker,
                                           NULL);
     }
-    
+
     if (!empty_run) {
 #ifdef CONFIG_BIGNUM
         if (load_jscalc) {
@@ -513,24 +513,21 @@ int main(int argc, char **argv)
         }
 
         if (expr) {
-            if (eval_buf(ctx, expr, strlen(expr), "<cmdline>", 0))
-                goto fail;
-        } else
-        if (optind >= argc) {
-            /* interactive mode */
-            interactive = 1;
+          if (eval_buf(ctx, expr, strlen(expr), "<cmdline>", 0)) goto fail;
+        } else if (optind >= argc) {
+          /* interactive mode */
+          interactive = 1;
         } else {
-            const char *filename;
-            filename = argv[optind];
-            if (eval_file(ctx, filename, module))
-                goto fail;
+          const char *filename;
+          filename = argv[optind];
+          if (eval_file(ctx, filename, module)) goto fail;
         }
         if (interactive) {
-            js_std_eval_binary(ctx, qjsc_repl, qjsc_repl_size, 0);
+          js_std_eval_binary(ctx, qjsc_repl, qjsc_repl_size, 0);
         }
         js_std_loop(ctx);
     }
-    
+
     if (dump_memory) {
         JSMemoryUsage stats;
         JS_ComputeMemoryUsage(rt, &stats);

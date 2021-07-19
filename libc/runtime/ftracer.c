@@ -104,7 +104,6 @@ privileged noasan void ftracer(void) {
         p = mempcpy(p, symbol, symbolsize);
         *p++ = ' ';
         p += uint64toarray_radix10((stamp - laststamp) / 3.3, p);
-        *p++ = '\r';
         *p++ = '\n';
         write(2, g_buf, p - g_buf);
       }

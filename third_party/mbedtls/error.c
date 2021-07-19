@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
 #include "third_party/mbedtls/aes.h"
 #include "third_party/mbedtls/asn1.h"
@@ -544,7 +561,7 @@ const char * mbedtls_low_level_strerr( int error_code )
 #if defined(MBEDTLS_ERROR_C)
         case -(MBEDTLS_ERR_ERROR_GENERIC_ERROR):
             return( "ERROR - Generic error" );
-        case -(MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED):
+        case -(MBEDTLS_ERR_THIS_CORRUPTION):
             return( "ERROR - This is a bug in the library" );
 #endif /* MBEDTLS_ERROR_C */
 
@@ -637,7 +654,7 @@ void mbedtls_strerror( int ret, char *buf, size_t buflen )
     if( buflen == 0 )
         return;
 
-    memset( buf, 0x00, buflen );
+    mbedtls_platform_zeroize( buf, buflen );
 
     if( ret < 0 )
         ret = -ret;

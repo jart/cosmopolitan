@@ -1,6 +1,7 @@
-#ifndef MBEDTLS_ECP_INTERNAL_H
-#define MBEDTLS_ECP_INTERNAL_H
+#ifndef COSMOPOLITAN_THIRD_PARTY_MBEDTLS_ECP_INTERNAL_H_
+#define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_ECP_INTERNAL_H_
 #include "third_party/mbedtls/config.h"
+#include "third_party/mbedtls/ecp.h"
 /* clang-format off */
 
 #if defined(MBEDTLS_ECP_INTERNAL_ALT)
@@ -105,8 +106,9 @@ int mbedtls_internal_ecp_randomize_jac( const mbedtls_ecp_group *grp,
  * \return          0 if successful.
  */
 int mbedtls_internal_ecp_add_mixed( const mbedtls_ecp_group *grp,
-        mbedtls_ecp_point *R, const mbedtls_ecp_point *P,
-        const mbedtls_ecp_point *Q );
+                                    mbedtls_ecp_point *R,
+                                    const mbedtls_ecp_point *P,
+                                    const mbedtls_ecp_point *Q );
 #endif
 
 /**
@@ -178,7 +180,7 @@ int mbedtls_internal_ecp_normalize_jac_many( const mbedtls_ecp_group *grp,
  */
 #if defined(MBEDTLS_ECP_NORMALIZE_JAC_ALT)
 int mbedtls_internal_ecp_normalize_jac( const mbedtls_ecp_group *grp,
-        mbedtls_ecp_point *pt );
+                                        mbedtls_ecp_point *pt );
 #endif
 
 #endif /* MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED */
@@ -208,8 +210,9 @@ int mbedtls_internal_ecp_double_add_mxz( const mbedtls_ecp_group *grp,
  */
 #if defined(MBEDTLS_ECP_RANDOMIZE_MXZ_ALT)
 int mbedtls_internal_ecp_randomize_mxz( const mbedtls_ecp_group *grp,
-        mbedtls_ecp_point *P, int (*f_rng)(void *, unsigned char *, size_t),
-        void *p_rng );
+                                        mbedtls_ecp_point *P, 
+                                        int (*f_rng)(void *, unsigned char *, size_t),
+                                        void *p_rng );
 #endif
 
 /**
@@ -224,12 +227,36 @@ int mbedtls_internal_ecp_randomize_mxz( const mbedtls_ecp_group *grp,
  */
 #if defined(MBEDTLS_ECP_NORMALIZE_MXZ_ALT)
 int mbedtls_internal_ecp_normalize_mxz( const mbedtls_ecp_group *grp,
-        mbedtls_ecp_point *P );
+                                        mbedtls_ecp_point *P );
 #endif
 
 #endif /* MBEDTLS_ECP_MONTGOMERY_ENABLED */
 
 #endif /* MBEDTLS_ECP_INTERNAL_ALT */
 
-#endif /* ecp_internal.h */
+void secp256r1( uint64_t[8] );
+void secp384r1( uint64_t[12] );
 
+int mbedtls_p256_double_jac( const mbedtls_ecp_group *,
+                             const mbedtls_ecp_point *,
+                             mbedtls_ecp_point * );
+int mbedtls_p256_add_mixed( const mbedtls_ecp_group *,
+                            const mbedtls_ecp_point *,
+                            const mbedtls_ecp_point *,
+                            mbedtls_ecp_point * );
+int mbedtls_p256_normalize_jac( const mbedtls_ecp_group *,
+                                mbedtls_ecp_point * );
+int mbedtls_p256_normalize_jac_many( const mbedtls_ecp_group *,
+                                     mbedtls_ecp_point *[], size_t );
+
+int mbedtls_p384_double_jac( const mbedtls_ecp_group *,
+                             const mbedtls_ecp_point *,
+                             mbedtls_ecp_point * );
+int mbedtls_p384_add_mixed( const mbedtls_ecp_group *,
+                            const mbedtls_ecp_point *,
+                            const mbedtls_ecp_point *,
+                            mbedtls_ecp_point * );
+int mbedtls_p384_normalize_jac_many( const mbedtls_ecp_group *,
+                                     mbedtls_ecp_point *[], size_t );
+
+#endif /* COSMOPOLITAN_THIRD_PARTY_MBEDTLS_ECP_INTERNAL_H_ */

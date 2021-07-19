@@ -1,5 +1,23 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/profile.h"
 #include "third_party/mbedtls/rsa.h"
 #include "third_party/mbedtls/rsa_internal.h"
 
@@ -138,7 +156,7 @@ int mbedtls_rsa_deduce_primes( mbedtls_mpi const *N,
 
         /* Check if gcd(K,N) = 1 */
         MBEDTLS_MPI_CHK( mbedtls_mpi_gcd( P, &K, N ) );
-        if( mbedtls_mpi_cmp_int( P, 1 ) != 0 )
+        if( !mbedtls_mpi_is_one( P ) )
             continue;
 
         /* Go through K^T + 1, K^(2T) + 1, K^(4T) + 1, ...
@@ -151,7 +169,7 @@ int mbedtls_rsa_deduce_primes( mbedtls_mpi const *N,
         {
             /* If we reach 1 prematurely, there's no point
              * in continuing to square K */
-            if( mbedtls_mpi_cmp_int( &K, 1 ) == 0 )
+            if( mbedtls_mpi_is_one( &K ) )
                 break;
 
             MBEDTLS_MPI_CHK( mbedtls_mpi_add_int( &K, &K, 1 ) );
@@ -181,7 +199,7 @@ int mbedtls_rsa_deduce_primes( mbedtls_mpi const *N,
          * Check if that's the case and abort if not, to avoid very long,
          * yet eventually failing, computations if N,D,E were not sane.
          */
-        if( mbedtls_mpi_cmp_int( &K, 1 ) != 0 )
+        if( !mbedtls_mpi_is_one( &K ) )
         {
             break;
         }

@@ -15,6 +15,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+#include "libc/log/log.h"
 #include "third_party/mbedtls/test/test.inc"
 /*
  * *** THIS FILE WAS MACHINE GENERATED ***
@@ -428,23 +429,19 @@ void test_mbedtls_ecp_curve_info_wrapper( void ** params )
 
     test_mbedtls_ecp_curve_info( *( (int *) params[0] ), *( (int *) params[1] ), *( (int *) params[2] ), (char *) params[3] );
 }
+
 void test_ecp_check_pub( int grp_id, char * x_hex, char * y_hex, char * z_hex,
-                    int ret )
+                         int ret )
 {
     mbedtls_ecp_group grp;
     mbedtls_ecp_point P;
-
     mbedtls_ecp_group_init( &grp );
     mbedtls_ecp_point_init( &P );
-
     TEST_ASSERT( mbedtls_ecp_group_load( &grp, grp_id ) == 0 );
-
     TEST_ASSERT( mbedtls_mpi_read_string( &P.X, 16, x_hex ) == 0 );
     TEST_ASSERT( mbedtls_mpi_read_string( &P.Y, 16, y_hex ) == 0 );
     TEST_ASSERT( mbedtls_mpi_read_string( &P.Z, 16, z_hex ) == 0 );
-
     TEST_ASSERT( mbedtls_ecp_check_pubkey( &grp, &P ) == ret );
-
 exit:
     mbedtls_ecp_group_free( &grp );
     mbedtls_ecp_point_free( &P );
@@ -457,9 +454,9 @@ void test_ecp_check_pub_wrapper( void ** params )
 }
 #if defined(MBEDTLS_ECP_RESTARTABLE)
 void test_ecp_test_vect_restart( int id,
-                            char *dA_str, char *xA_str, char *yA_str,
-                            char *dB_str,  char *xZ_str, char *yZ_str,
-                            int max_ops, int min_restarts, int max_restarts )
+                                 char *dA_str, char *xA_str, char *yA_str,
+                                 char *dB_str,  char *xZ_str, char *yZ_str,
+                                 int max_ops, int min_restarts, int max_restarts )
 {
     /*
      * Test for early restart. Based on test vectors like ecp_test_vect(),
@@ -632,6 +629,7 @@ void test_ecp_muladd_restart_wrapper( void ** params )
     test_ecp_muladd_restart( *( (int *) params[0] ), (char *) params[1], (char *) params[2], (char *) params[3], (char *) params[4], (char *) params[5], (char *) params[6], *( (int *) params[7] ), *( (int *) params[8] ), *( (int *) params[9] ) );
 }
 #endif /* MBEDTLS_ECP_RESTARTABLE */
+
 void test_ecp_test_vect( int id, char * dA_str, char * xA_str, char * yA_str,
                     char * dB_str, char * xB_str, char * yB_str,
                     char * xZ_str, char * yZ_str )
@@ -867,7 +865,6 @@ exit:
 
 void test_ecp_fast_mod_wrapper( void ** params )
 {
-
     test_ecp_fast_mod( *( (int *) params[0] ), (char *) params[1] );
 }
 void test_ecp_write_binary( int id, char * x, char * y, char * z, int format,
@@ -930,10 +927,10 @@ void test_ecp_read_binary( int id, data_t * buf, char * x, char * y, char * z,
         TEST_ASSERT( mbedtls_mpi_cmp_mpi( &P.X, &X ) == 0 );
         if( mbedtls_ecp_get_type( &grp ) == MBEDTLS_ECP_TYPE_MONTGOMERY )
         {
-            TEST_ASSERT( mbedtls_mpi_cmp_int( &Y, 0 ) == 0 );
+            TEST_ASSERT( mbedtls_mpi_is_zero( &Y ) );
             TEST_ASSERT( P.Y.p == NULL );
-            TEST_ASSERT( mbedtls_mpi_cmp_int( &Z, 1 ) == 0 );
-            TEST_ASSERT( mbedtls_mpi_cmp_int( &P.Z, 1 ) == 0 );
+            TEST_ASSERT( mbedtls_mpi_is_one( &Z ) );
+            TEST_ASSERT( mbedtls_mpi_is_one( &P.Z ) );
         }
         else
         {
@@ -1132,9 +1129,10 @@ void test_mbedtls_ecp_check_privkey_wrapper( void ** params )
 
     test_mbedtls_ecp_check_privkey( *( (int *) params[0] ), (char *) params[1], *( (int *) params[2] ) );
 }
+
 void test_mbedtls_ecp_check_pub_priv( int id_pub, char * Qx_pub, char * Qy_pub,
-                                 int id, char * d, char * Qx, char * Qy,
-                                 int ret )
+                                      int id, char * d, char * Qx, char * Qy,
+                                      int ret )
 {
     mbedtls_ecp_keypair pub, prv;
 
@@ -1896,6 +1894,8 @@ int check_test( size_t func_idx )
 int main( int argc, const char *argv[] )
 {
     int ret;
+    /* ++ftrace; */
+    /* ftrace_install(); */
     mbedtls_test_platform_setup();
     ret = execute_tests( argc, argv, "zip:third_party/mbedtls/test/test_suite_ecp.datax" );
     mbedtls_test_platform_teardown();

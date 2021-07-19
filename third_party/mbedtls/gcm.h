@@ -22,6 +22,7 @@ typedef struct mbedtls_gcm_context {
     uint64_t H8[2];                       /*!< For AES-NI. */
     uint64_t HL[16];                      /*!< Precalculated HTable low. */
     uint64_t HH[16];                      /*!< Precalculated HTable high. */
+    mbedtls_cipher_id_t cipher;           /*!< The cipher being used. */
 } mbedtls_gcm_context;
 
 void mbedtls_gcm_init( mbedtls_gcm_context * );

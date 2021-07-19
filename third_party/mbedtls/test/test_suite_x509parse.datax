@@ -128,35 +128,35 @@ depends_on:0:1:2
 
 X509 CRT information, RSA Certificate Policy any
 depends_on:0:1:6
-1:char*:"zip:third_party/mbedtls/test/data/test-ca-any_policy.crt":char*:"cert. version     \: 3\nserial number     \: 00\nissuer name       \: C=NL, O=PolarSSL, CN=PolarSSL Test CA\nsubject name      \: C=NL, O=PolarSSL, CN=PolarSSL Test CA\nissued  on        \: 2019-03-21 16\:40\:59\nexpires on        \: 2029-03-21 16\:40\:59\nsigned using      \: RSA with SHA-256\nRSA key size      \: 2048 bits\nbasic constraints \: CA=true\ncertificate policies \: Any Policy\n"
+1:char*:"zip:third_party/mbedtls/test/data/test-ca-any_policy.crt":char*:"cert. version     \: 3\nserial number     \: 00\nissuer name       \: C=NL, O=PolarSSL, CN=PolarSSL Test CA\nsubject name      \: C=NL, O=PolarSSL, CN=PolarSSL Test CA\nissued  on        \: 2019-03-21 16\:40\:59\nexpires on        \: 2029-03-21 16\:40\:59\nsigned using      \: RSA with SHA-256\nRSA key size      \: 2048 bits\nbasic constraints \: CA=true\ncert policies     \: Any Policy\n"
 
 X509 CRT information, ECDSA Certificate Policy any
 depends_on:0:10:12:6
-1:char*:"zip:third_party/mbedtls/test/data/test-ca-any_policy_ec.crt":char*:"cert. version     \: 3\nserial number     \: 00\nissuer name       \: C=NL, O=PolarSSL, CN=Polarssl Test EC CA\nsubject name      \: C=NL, O=PolarSSL, CN=Polarssl Test EC CA\nissued  on        \: 2019-03-25 09\:02\:45\nexpires on        \: 2029-03-25 09\:02\:45\nsigned using      \: ECDSA with SHA256\nEC key size       \: 384 bits\nbasic constraints \: CA=true\ncertificate policies \: Any Policy\n"
+1:char*:"zip:third_party/mbedtls/test/data/test-ca-any_policy_ec.crt":char*:"cert. version     \: 3\nserial number     \: 00\nissuer name       \: C=NL, O=PolarSSL, CN=Polarssl Test EC CA\nsubject name      \: C=NL, O=PolarSSL, CN=Polarssl Test EC CA\nissued  on        \: 2019-03-25 09\:02\:45\nexpires on        \: 2029-03-25 09\:02\:45\nsigned using      \: ECDSA with SHA256\nEC key size       \: 384 bits\nbasic constraints \: CA=true\ncert policies     \: Any Policy\n"
 
 X509 CRT information, RSA Certificate Policy any with qualifier
 depends_on:0:1:6
-1:char*:"zip:third_party/mbedtls/test/data/test-ca-any_policy_with_qualifier.crt":char*:"cert. version     \: 3\nserial number     \: 00\nissuer name       \: C=NL, O=PolarSSL, CN=PolarSSL Test CA\nsubject name      \: C=NL, O=PolarSSL, CN=PolarSSL Test CA\nissued  on        \: 2019-04-28 13\:14\:31\nexpires on        \: 2029-04-28 13\:14\:31\nsigned using      \: RSA with SHA-256\nRSA key size      \: 2048 bits\nbasic constraints \: CA=true\ncertificate policies \: Any Policy\n"
+1:char*:"zip:third_party/mbedtls/test/data/test-ca-any_policy_with_qualifier.crt":char*:"cert. version     \: 3\nserial number     \: 00\nissuer name       \: C=NL, O=PolarSSL, CN=PolarSSL Test CA\nsubject name      \: C=NL, O=PolarSSL, CN=PolarSSL Test CA\nissued  on        \: 2019-04-28 13\:14\:31\nexpires on        \: 2029-04-28 13\:14\:31\nsigned using      \: RSA with SHA-256\nRSA key size      \: 2048 bits\nbasic constraints \: CA=true\ncert policies     \: Any Policy\n"
 
 X509 CRT information, ECDSA Certificate Policy any with qualifier
 depends_on:0:10:12:6
-1:char*:"zip:third_party/mbedtls/test/data/test-ca-any_policy_with_qualifier_ec.crt":char*:"cert. version     \: 3\nserial number     \: 00\nissuer name       \: C=NL, O=PolarSSL, CN=Polarssl Test EC CA\nsubject name      \: C=NL, O=PolarSSL, CN=Polarssl Test EC CA\nissued  on        \: 2019-04-28 10\:16\:05\nexpires on        \: 2029-04-28 10\:16\:05\nsigned using      \: ECDSA with SHA256\nEC key size       \: 384 bits\nbasic constraints \: CA=true\ncertificate policies \: Any Policy\n"
+1:char*:"zip:third_party/mbedtls/test/data/test-ca-any_policy_with_qualifier_ec.crt":char*:"cert. version     \: 3\nserial number     \: 00\nissuer name       \: C=NL, O=PolarSSL, CN=Polarssl Test EC CA\nsubject name      \: C=NL, O=PolarSSL, CN=Polarssl Test EC CA\nissued  on        \: 2019-04-28 10\:16\:05\nexpires on        \: 2029-04-28 10\:16\:05\nsigned using      \: ECDSA with SHA256\nEC key size       \: 384 bits\nbasic constraints \: CA=true\ncert policies     \: Any Policy\n"
 
 X509 CRT information, RSA Certificate multiple Policies
 depends_on:0:1:6
-1:char*:"zip:third_party/mbedtls/test/data/test-ca-multi_policy.crt":char*:"cert. version     \: 3\nserial number     \: 00\nissuer name       \: C=NL, O=PolarSSL, CN=PolarSSL Test CA\nsubject name      \: C=NL, O=PolarSSL, CN=PolarSSL Test CA\nissued  on        \: 2019-04-28 12\:59\:19\nexpires on        \: 2029-04-28 12\:59\:19\nsigned using      \: RSA with SHA-256\nRSA key size      \: 2048 bits\nbasic constraints \: CA=true\ncertificate policies \: ???, Any Policy\n"
+1:char*:"zip:third_party/mbedtls/test/data/test-ca-multi_policy.crt":char*:"cert. version     \: 3\nserial number     \: 00\nissuer name       \: C=NL, O=PolarSSL, CN=PolarSSL Test CA\nsubject name      \: C=NL, O=PolarSSL, CN=PolarSSL Test CA\nissued  on        \: 2019-04-28 12\:59\:19\nexpires on        \: 2029-04-28 12\:59\:19\nsigned using      \: RSA with SHA-256\nRSA key size      \: 2048 bits\nbasic constraints \: CA=true\ncert policies     \: 1.2.3.4, Any Policy\n"
 
 X509 CRT information, ECDSA Certificate multiple Policies
 depends_on:0:10:12:6
-1:char*:"zip:third_party/mbedtls/test/data/test-ca-multi_policy_ec.crt":char*:"cert. version     \: 3\nserial number     \: 00\nissuer name       \: C=NL, O=PolarSSL, CN=Polarssl Test EC CA\nsubject name      \: C=NL, O=PolarSSL, CN=Polarssl Test EC CA\nissued  on        \: 2019-04-28 12\:59\:51\nexpires on        \: 2029-04-28 12\:59\:51\nsigned using      \: ECDSA with SHA256\nEC key size       \: 384 bits\nbasic constraints \: CA=true\ncertificate policies \: ???, Any Policy\n"
+1:char*:"zip:third_party/mbedtls/test/data/test-ca-multi_policy_ec.crt":char*:"cert. version     \: 3\nserial number     \: 00\nissuer name       \: C=NL, O=PolarSSL, CN=Polarssl Test EC CA\nsubject name      \: C=NL, O=PolarSSL, CN=Polarssl Test EC CA\nissued  on        \: 2019-04-28 12\:59\:51\nexpires on        \: 2029-04-28 12\:59\:51\nsigned using      \: ECDSA with SHA256\nEC key size       \: 384 bits\nbasic constraints \: CA=true\ncert policies     \: 1.2.3.4, Any Policy\n"
 
 X509 CRT information, RSA Certificate unsupported policy
 depends_on:0:1:6
-1:char*:"zip:third_party/mbedtls/test/data/test-ca-unsupported_policy.crt":char*:"cert. version     \: 3\nserial number     \: 00\nissuer name       \: C=NL, O=PolarSSL, CN=PolarSSL Test CA\nsubject name      \: C=NL, O=PolarSSL, CN=PolarSSL Test CA\nissued  on        \: 2019-04-28 13\:00\:13\nexpires on        \: 2029-04-28 13\:00\:13\nsigned using      \: RSA with SHA-256\nRSA key size      \: 2048 bits\nbasic constraints \: CA=true\ncertificate policies \: ???\n"
+1:char*:"zip:third_party/mbedtls/test/data/test-ca-unsupported_policy.crt":char*:"cert. version     \: 3\nserial number     \: 00\nissuer name       \: C=NL, O=PolarSSL, CN=PolarSSL Test CA\nsubject name      \: C=NL, O=PolarSSL, CN=PolarSSL Test CA\nissued  on        \: 2019-04-28 13\:00\:13\nexpires on        \: 2029-04-28 13\:00\:13\nsigned using      \: RSA with SHA-256\nRSA key size      \: 2048 bits\nbasic constraints \: CA=true\ncert policies     \: 1.2.3.4\n"
 
 X509 CRT information, ECDSA Certificate unsupported policy
 depends_on:0:10:12:6
-1:char*:"zip:third_party/mbedtls/test/data/test-ca-unsupported_policy_ec.crt":char*:"cert. version     \: 3\nserial number     \: 00\nissuer name       \: C=NL, O=PolarSSL, CN=Polarssl Test EC CA\nsubject name      \: C=NL, O=PolarSSL, CN=Polarssl Test EC CA\nissued  on        \: 2019-04-28 13\:00\:19\nexpires on        \: 2029-04-28 13\:00\:19\nsigned using      \: ECDSA with SHA256\nEC key size       \: 384 bits\nbasic constraints \: CA=true\ncertificate policies \: ???\n"
+1:char*:"zip:third_party/mbedtls/test/data/test-ca-unsupported_policy_ec.crt":char*:"cert. version     \: 3\nserial number     \: 00\nissuer name       \: C=NL, O=PolarSSL, CN=Polarssl Test EC CA\nsubject name      \: C=NL, O=PolarSSL, CN=Polarssl Test EC CA\nissued  on        \: 2019-04-28 13\:00\:19\nexpires on        \: 2029-04-28 13\:00\:19\nsigned using      \: ECDSA with SHA256\nEC key size       \: 384 bits\nbasic constraints \: CA=true\ncert policies     \: 1.2.3.4\n"
 
 X509 CRT information, Key Usage + Extended Key Usage
 depends_on:0:1:6
@@ -2038,7 +2038,7 @@ depends_on:1:6
 
 X509 CRT ASN1 (Unsupported critical policy recognized by callback)
 depends_on:1:6
-15:hex:"3081b130819ba0030201028204deadbeef300d06092a864886f70d01010b0500300c310a30080600130454657374301c170c303930313031303030303030170c303931323331323335393539300c310a30080600130454657374302a300d06092a864886f70d010101050003190030160210ffffffffffffffffffffffffffffffff0202ffffa100a200a315301330110603551d20010101040730053003060101300d06092a864886f70d01010b0500030200ff":char*:"cert. version     \: 3\nserial number     \: DE\:AD\:BE\:EF\nissuer name       \: ??=Test\nsubject name      \: ??=Test\nissued  on        \: 2009-01-01 00\:00\:00\nexpires on        \: 2009-12-31 23\:59\:59\nsigned using      \: RSA with SHA-256\nRSA key size      \: 128 bits\ncertificate policies \: ???\n":int:0
+15:hex:"3081b130819ba0030201028204deadbeef300d06092a864886f70d01010b0500300c310a30080600130454657374301c170c303930313031303030303030170c303931323331323335393539300c310a30080600130454657374302a300d06092a864886f70d010101050003190030160210ffffffffffffffffffffffffffffffff0202ffffa100a200a315301330110603551d20010101040730053003060101300d06092a864886f70d01010b0500030200ff":char*:"cert. version     \: 3\nserial number     \: DE\:AD\:BE\:EF\nissuer name       \: ??=Test\nsubject name      \: ??=Test\nissued  on        \: 2009-01-01 00\:00\:00\nexpires on        \: 2009-12-31 23\:59\:59\nsigned using      \: RSA with SHA-256\nRSA key size      \: 128 bits\ncert policies     \: 0.1\n":int:0
 
 X509 CRT ASN1 (Unsupported critical policy not recognized by callback)
 depends_on:1:6
@@ -2046,11 +2046,11 @@ depends_on:1:6
 
 X509 CRT ASN1 (Unsupported non critical policy recognized by callback)
 depends_on:1:6
-15:hex:"3081b130819ba0030201028204deadbeef300d06092a864886f70d01010b0500300c310a30080600130454657374301c170c303930313031303030303030170c303931323331323335393539300c310a30080600130454657374302a300d06092a864886f70d010101050003190030160210ffffffffffffffffffffffffffffffff0202ffffa100a200a315301330110603551d20010100040730053003060101300d06092a864886f70d01010b0500030200ff":char*:"cert. version     \: 3\nserial number     \: DE\:AD\:BE\:EF\nissuer name       \: ??=Test\nsubject name      \: ??=Test\nissued  on        \: 2009-01-01 00\:00\:00\nexpires on        \: 2009-12-31 23\:59\:59\nsigned using      \: RSA with SHA-256\nRSA key size      \: 128 bits\ncertificate policies \: ???\n":int:0
+15:hex:"3081b130819ba0030201028204deadbeef300d06092a864886f70d01010b0500300c310a30080600130454657374301c170c303930313031303030303030170c303931323331323335393539300c310a30080600130454657374302a300d06092a864886f70d010101050003190030160210ffffffffffffffffffffffffffffffff0202ffffa100a200a315301330110603551d20010100040730053003060101300d06092a864886f70d01010b0500030200ff":char*:"cert. version     \: 3\nserial number     \: DE\:AD\:BE\:EF\nissuer name       \: ??=Test\nsubject name      \: ??=Test\nissued  on        \: 2009-01-01 00\:00\:00\nexpires on        \: 2009-12-31 23\:59\:59\nsigned using      \: RSA with SHA-256\nRSA key size      \: 128 bits\ncert policies     \: 0.1\n":int:0
 
 X509 CRT ASN1 (Unsupported non critical policy not recognized by callback)
 depends_on:1:6
-15:hex:"3081b130819ba0030201028204deadbeef300d06092a864886f70d01010b0500300c310a30080600130454657374301c170c303930313031303030303030170c303931323331323335393539300c310a30080600130454657374302a300d06092a864886f70d010101050003190030160210ffffffffffffffffffffffffffffffff0202ffffa100a200a315301330110603551d20010100040730053003060100300d06092a864886f70d01010b0500030200ff":char*:"cert. version     \: 3\nserial number     \: DE\:AD\:BE\:EF\nissuer name       \: ??=Test\nsubject name      \: ??=Test\nissued  on        \: 2009-01-01 00\:00\:00\nexpires on        \: 2009-12-31 23\:59\:59\nsigned using      \: RSA with SHA-256\nRSA key size      \: 128 bits\ncertificate policies \: ???\n":int:0
+15:hex:"3081b130819ba0030201028204deadbeef300d06092a864886f70d01010b0500300c310a30080600130454657374301c170c303930313031303030303030170c303931323331323335393539300c310a30080600130454657374302a300d06092a864886f70d010101050003190030160210ffffffffffffffffffffffffffffffff0202ffffa100a200a315301330110603551d20010100040730053003060100300d06092a864886f70d01010b0500030200ff":char*:"cert. version     \: 3\nserial number     \: DE\:AD\:BE\:EF\nissuer name       \: ??=Test\nsubject name      \: ??=Test\nissued  on        \: 2009-01-01 00\:00\:00\nexpires on        \: 2009-12-31 23\:59\:59\nsigned using      \: RSA with SHA-256\nRSA key size      \: 128 bits\ncert policies     \: 0.0\n":int:0
 
 X509 CRL ASN1 (Incorrect first tag)
 16:hex:"":char*:"":exp:28

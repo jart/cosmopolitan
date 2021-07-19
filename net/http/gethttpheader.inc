@@ -72,7 +72,7 @@ static unsigned char gperf_downcase[256] =
 
 #ifndef GPERF_CASE_STRNCMP
 #define GPERF_CASE_STRNCMP 1
-static int
+static inline int
 gperf_case_strncmp (register const char *s1, register const char *s2, register size_t n)
 {
   for (; n > 0;)

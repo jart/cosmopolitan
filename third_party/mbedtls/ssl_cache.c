@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/log.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/platform.h"
@@ -38,7 +55,7 @@ asm(".include \"libc/disclaimer.inc\"");
 
 void mbedtls_ssl_cache_init( mbedtls_ssl_cache_context *cache )
 {
-    memset( cache, 0, sizeof( mbedtls_ssl_cache_context ) );
+    mbedtls_platform_zeroize( cache, sizeof( mbedtls_ssl_cache_context ) );
     cache->timeout = MBEDTLS_SSL_CACHE_DEFAULT_TIMEOUT;
     cache->max_entries = MBEDTLS_SSL_CACHE_DEFAULT_MAX_ENTRIES;
 }
@@ -228,7 +245,7 @@ int mbedtls_ssl_cache_set( void *data, const mbedtls_ssl_session *session )
     if( cur->peer_cert.p != NULL )
     {
         mbedtls_free( cur->peer_cert.p );
-        memset( &cur->peer_cert, 0, sizeof(mbedtls_x509_buf) );
+        mbedtls_platform_zeroize( &cur->peer_cert, sizeof(mbedtls_x509_buf) );
     }
 #endif /* MBEDTLS_X509_CRT_PARSE_C && MBEDTLS_SSL_KEEP_PEER_CERTIFICATE */
 

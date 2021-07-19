@@ -83,7 +83,6 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   int64_t secs, nsec, dots;
   if (!f) f = __log_file;
   if (!f) return;
-  ++ftrace;
   t2 = nowl();
   secs = t2;
   nsec = (t2 - secs) * 1e9L;
@@ -121,5 +120,4 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
     __die();
     unreachable;
   }
-  --ftrace;
 }

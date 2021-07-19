@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "third_party/mbedtls/aes.h"
@@ -11,32 +28,15 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
-/*
- *  FIPS-197 compliant AES implementation
- *
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
 
-/*
- *  The AES block cipher was designed by Vincent Rijmen and Joan Daemen.
+/**
+ * @fileoverview FIPS-197 compliant AES implementation
  *
- *  http://csrc.nist.gov/encryption/aes/rijndael/Rijndael.pdf
- *  http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
+ * The AES block cipher was designed by Vincent Rijmen and Joan Daemen.
+ *
+ * @see http://csrc.nist.gov/encryption/aes/rijndael/Rijndael.pdf
+ * @see http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
  */
 
 #if defined(MBEDTLS_AES_C)
@@ -485,7 +485,7 @@ void mbedtls_aes_init( mbedtls_aes_context *ctx )
 {
     AES_VALIDATE( ctx != NULL );
 
-    memset( ctx, 0, sizeof( mbedtls_aes_context ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_aes_context ) );
 }
 
 void mbedtls_aes_free( mbedtls_aes_context *ctx )
@@ -733,7 +733,7 @@ int mbedtls_aes_xts_setkey_enc( mbedtls_aes_xts_context *ctx,
                                 const unsigned char *key,
                                 unsigned int keybits)
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     const unsigned char *key1, *key2;
     unsigned int key1bits, key2bits;
 
@@ -758,7 +758,7 @@ int mbedtls_aes_xts_setkey_dec( mbedtls_aes_xts_context *ctx,
                                 const unsigned char *key,
                                 unsigned int keybits)
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     const unsigned char *key1, *key2;
     unsigned int key1bits, key2bits;
 
@@ -1100,7 +1100,7 @@ int mbedtls_aes_crypt_xts( mbedtls_aes_xts_context *ctx,
                            const unsigned char *input,
                            unsigned char *output )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t blocks = length / 16;
     size_t leftover = length % 16;
     unsigned char tweak[16];
@@ -1349,12 +1349,12 @@ exit:
  * AES-CTR buffer encryption/decryption
  */
 int mbedtls_aes_crypt_ctr( mbedtls_aes_context *ctx,
-                       size_t length,
-                       size_t *nc_off,
-                       unsigned char nonce_counter[16],
-                       unsigned char stream_block[16],
-                       const unsigned char *input,
-                       unsigned char *output )
+                           size_t length,
+                           size_t *nc_off,
+                           unsigned char nonce_counter[16],
+                           unsigned char stream_block[16],
+                           const unsigned char *input,
+                           unsigned char *output )
 {
     int c, i;
     size_t n;
@@ -1734,7 +1734,7 @@ int mbedtls_aes_self_test( int verbose )
 #endif
     mbedtls_aes_context ctx;
 
-    memset( key, 0, 32 );
+    mbedtls_platform_zeroize( key, 32 );
     mbedtls_aes_init( &ctx );
 
     /*
@@ -1750,7 +1750,7 @@ int mbedtls_aes_self_test( int verbose )
             mbedtls_printf( "  AES-ECB-%3u (%s): ", keybits,
                             ( mode == MBEDTLS_AES_DECRYPT ) ? "dec" : "enc" );
 
-        memset( buf, 0, 16 );
+        mbedtls_platform_zeroize( buf, 16 );
 
         if( mode == MBEDTLS_AES_DECRYPT )
         {
@@ -1797,9 +1797,9 @@ int mbedtls_aes_self_test( int verbose )
             mbedtls_printf( "  AES-CBC-%3u (%s): ", keybits,
                             ( mode == MBEDTLS_AES_DECRYPT ) ? "dec" : "enc" );
 
-        memset( iv , 0, 16 );
-        memset( prv, 0, 16 );
-        memset( buf, 0, 16 );
+        mbedtls_platform_zeroize( iv , 16 );
+        mbedtls_platform_zeroize( prv, 16 );
+        mbedtls_platform_zeroize( buf, 16 );
 
         if( mode == MBEDTLS_AES_DECRYPT )
         {
@@ -2042,7 +2042,7 @@ int mbedtls_aes_self_test( int verbose )
             mbedtls_printf( "  AES-XTS-128 (%s): ",
                             ( mode == MBEDTLS_AES_DECRYPT ) ? "dec" : "enc" );
 
-        memset( key, 0, sizeof( key ) );
+        mbedtls_platform_zeroize( key, sizeof( key ) );
         memcpy( key, aes_test_xts_key[u], 32 );
         data_unit = aes_test_xts_data_unit[u];
 

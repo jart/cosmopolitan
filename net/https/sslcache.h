@@ -21,10 +21,11 @@ struct SslCache {
   } p[];
 };
 
-struct SslCache *CreateSslCache(size_t, int);
+struct SslCache *CreateSslCache(const char *, size_t, int);
 void FreeSslCache(struct SslCache *);
 int UncacheSslSession(void *, mbedtls_ssl_session *);
 int CacheSslSession(void *, const mbedtls_ssl_session *);
+char *GetSslCacheFile(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

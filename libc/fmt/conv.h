@@ -53,6 +53,7 @@ char *dirname(char *);
 char *basename(const char *) nosideeffect;
 char *basename_n(const char *, size_t) nosideeffect;
 bool isabspath(const char *) paramsnonnull() nosideeffect;
+char *stripexts(char *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § conversion » computation                                  ─╬─│┼

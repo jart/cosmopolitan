@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_NET_HTTPS_HTTPS_H_
 #define COSMOPOLITAN_NET_HTTPS_HTTPS_H_
 #include "libc/time/struct/tm.h"
+#include "third_party/mbedtls/ssl_ciphersuites.h"
 #include "third_party/mbedtls/x509_crt.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

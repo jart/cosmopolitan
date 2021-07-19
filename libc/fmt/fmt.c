@@ -191,7 +191,12 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
       } else if (format[1] == '.' && format[2] == '*' && format[3] == 's') {
         n = va_arg(va, unsigned); /* FAST PATH: PRECISION STRING */
         s = va_arg(va, const char *);
-        if (!s) s = "(null)", n = MIN(6, n);
+        if (s) {
+          n = strnlen(s, n);
+        } else {
+          s = "(null)";
+          n = MIN(6, n);
+        }
         if (out(s, arg, n) == -1) return -1;
         format += 4;
         continue;
@@ -418,10 +423,12 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
           if (flags & FLAGS_ZEROPAD) {
             if (sign) PUT(sign);
             sign = 0;
-            do PUT('0');
+            do
+              PUT('0');
             while (--width > 0);
           } else {
-            do PUT(' ');
+            do
+              PUT(' ');
             while (--width > 0);
           }
         }
@@ -523,10 +530,12 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
           if (flags & FLAGS_ZEROPAD) {
             if (sign) PUT(sign);
             sign = 0;
-            do PUT('0');
+            do
+              PUT('0');
             while (--width > 0);
           } else {
-            do PUT(' ');
+            do
+              PUT(' ');
             while (--width > 0);
           }
         }
@@ -673,10 +682,12 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
               PUT(sign);
               sign = 0;
             }
-            do PUT('0');
+            do
+              PUT('0');
             while (--width > 0);
           } else {
-            do PUT(' ');
+            do
+              PUT(' ');
             while (--width > 0);
           }
         }

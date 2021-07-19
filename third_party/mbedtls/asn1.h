@@ -175,9 +175,19 @@ mbedtls_asn1_named_data;
  *              would end beyond \p end.
  * \return      #MBEDTLS_ERR_ASN1_INVALID_LENGTH if the length is unparseable.
  */
-int mbedtls_asn1_get_len( unsigned char **p,
-                          const unsigned char *end,
-                          size_t *len );
+forceinline int mbedtls_asn1_get_len( unsigned char **p,
+                                      const unsigned char *end,
+                                      size_t *len ) {
+    int mbedtls_asn1_get_len_impl( unsigned char **, const unsigned char *, size_t * );
+    if( ( end - *p ) < 1 )
+        return( MBEDTLS_ERR_ASN1_OUT_OF_DATA );
+    if( **p & 0x80 )
+        return( mbedtls_asn1_get_len_impl( p, end, len ) );
+    *len = *(*p)++;
+    if( *len > (size_t) ( end - *p ) )
+        return( MBEDTLS_ERR_ASN1_OUT_OF_DATA );
+    return( 0 );
+}
 
 /**
  * \brief       Get the tag and length of the element.
@@ -200,9 +210,17 @@ int mbedtls_asn1_get_len( unsigned char **p,
  *              would end beyond \p end.
  * \return      #MBEDTLS_ERR_ASN1_INVALID_LENGTH if the length is unparseable.
  */
-int mbedtls_asn1_get_tag( unsigned char **p,
-                          const unsigned char *end,
-                          size_t *len, int tag );
+forceinline int mbedtls_asn1_get_tag( unsigned char **p,
+                                      const unsigned char *end,
+                                      size_t *len, int tag )
+{
+    if( ( end - *p ) < 1 )
+        return( MBEDTLS_ERR_ASN1_OUT_OF_DATA );
+    if( **p != tag )
+        return( MBEDTLS_ERR_ASN1_UNEXPECTED_TAG );
+    (*p)++;
+    return( mbedtls_asn1_get_len( p, end, len ) );
+}
 
 /**
  * \brief       Retrieve a boolean ASN.1 tag and its value.

@@ -6,6 +6,7 @@ PKGS += THIRD_PARTY_MBEDTLS_TEST
 THIRD_PARTY_MBEDTLS_TEST_FILES := $(wildcard third_party/mbedtls/test/*)
 THIRD_PARTY_MBEDTLS_TEST_SRCS = $(filter %.c,$(THIRD_PARTY_MBEDTLS_TEST_FILES))
 THIRD_PARTY_MBEDTLS_TEST_HDRS = $(filter %.h,$(THIRD_PARTY_MBEDTLS_TEST_FILES))
+THIRD_PARTY_MBEDTLS_TEST_INCS = $(filter %.inc,$(THIRD_PARTY_MBEDTLS_TEST_FILES))
 
 THIRD_PARTY_MBEDTLS_TEST_OBJS =											\
 	$(THIRD_PARTY_MBEDTLS_TEST_SRCS:%.c=o/$(MODE)/%.o)
@@ -106,6 +107,7 @@ THIRD_PARTY_MBEDTLS_TEST_DIRECTDEPS =										\
 	LIBC_TIME												\
 	LIBC_TESTLIB												\
 	LIBC_UNICODE												\
+	LIBC_X													\
 	LIBC_ZIPOS												\
 	THIRD_PARTY_COMPILER_RT											\
 	THIRD_PARTY_GDTOA											\
@@ -117,6 +119,8 @@ THIRD_PARTY_MBEDTLS_TEST_DEPS :=										\
 o/$(MODE)/third_party/mbedtls/test/test.pkg:									\
 		$(THIRD_PARTY_MBEDTLS_TEST_OBJS)								\
 		$(foreach x,$(THIRD_PARTY_MBEDTLS_TEST_DIRECTDEPS),$($(x)_A).pkg)
+
+o/$(MODE)/third_party/mbedtls/test/lib.o: third_party/mbedtls/test/lib.c
 
 o/$(MODE)/third_party/mbedtls/test/%.com.dbg:									\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\

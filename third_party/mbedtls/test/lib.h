@@ -1,5 +1,8 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_MBEDTLS_TEST_LIB_H_
 #define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_TEST_LIB_H_
+#include "libc/runtime/gc.internal.h"
+#include "libc/str/str.h"
+#include "libc/x/x.h"
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/platform.h"
 
@@ -42,7 +45,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define WRITE(...) AppendFmt(&output, __VA_ARGS__)
+#define WRITE mbedtls_test_write
 
 #define TEST_ASSERT(TEST)                           \
   do {                                              \
@@ -52,7 +55,32 @@ COSMOPOLITAN_C_START_
     }                                               \
   } while (0)
 
-#define TEST_EQUAL(expr1, expr2) TEST_ASSERT((expr1) == (expr2))
+#define TEST_ASSERT_STREQ(A, B)                                              \
+  do {                                                                       \
+    const char *StrA = (A);                                                  \
+    const char *StrB = (B);                                                  \
+    if (strcmp(StrA, StrB)) {                                                \
+      mbedtls_test_fail(                                                     \
+          xasprintf("!strcmp(%`'s,\n          %`'s)", StrA, StrB), __LINE__, \
+          __FILE__);                                                         \
+      goto exit;                                                             \
+    }                                                                        \
+  } while (0)
+
+#define TEST_EQUAL(A, B)                                                     \
+  do {                                                                       \
+    long Ax = (long)(A);                                                     \
+    long Bx = (long)(B);                                                     \
+    if (Ax != Bx) {                                                          \
+      mbedtls_test_fail(xasprintf("TEST_EQUAL(%s, %s)\n"                     \
+                                  "  Wanted: %,ld (-0x%04lx %s)\n"           \
+                                  "  Got:    %,ld (-0x%04lx %s)",            \
+                                  #A, #B, Ax, -Ax, GetTlsError(Ax), Bx, -Bx, \
+                                  GetTlsError(Bx)),                          \
+                        __LINE__, __FILE__);                                 \
+      goto exit;                                                             \
+    }                                                                        \
+  } while (0)
 
 #define ASSERT_ALLOC(pointer, length)                           \
   do {                                                          \
@@ -189,13 +217,7 @@ typedef struct {
   uint32_t v0, v1;
 } mbedtls_test_rnd_pseudo_info;
 
-struct Buffer {
-  size_t i, n;
-  char *p;
-};
-
 extern jmp_buf jmp_tmp;
-extern struct Buffer output;
 
 int mbedtls_test_platform_setup(void);
 void mbedtls_test_platform_teardown(void);
@@ -218,12 +240,13 @@ int mbedtls_test_rnd_std_rand(void *, unsigned char *, size_t);
 int mbedtls_test_rnd_zero_rand(void *, unsigned char *, size_t);
 int mbedtls_test_rnd_buffer_rand(void *, unsigned char *, size_t);
 int mbedtls_test_rnd_pseudo_rand(void *, unsigned char *, size_t);
+int mbedtls_test_write(const char *, ...);
 int execute_tests(int, const char **, const char *);
 int get_expression(int32_t, int32_t *);
 int dispatch_test(size_t, void **);
 int dep_check(int);
 int check_test(size_t);
-int AppendFmt(struct Buffer *, const char *, ...);
+char *GetTlsError(long);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

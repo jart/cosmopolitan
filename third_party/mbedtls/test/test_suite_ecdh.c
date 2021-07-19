@@ -244,9 +244,9 @@ void test_ecdh_primitive_random( int id )
 
     TEST_ASSERT( mbedtls_ecp_group_load( &grp, id ) == 0 );
 
-    TEST_ASSERT( mbedtls_ecdh_gen_public( &grp, &dA, &qA,
-                                          &mbedtls_test_rnd_pseudo_rand,
-                                          &rnd_info ) == 0 );
+    TEST_EQUAL( 0, mbedtls_ecdh_gen_public( &grp, &dA, &qA,
+                                            &mbedtls_test_rnd_pseudo_rand,
+                                            &rnd_info ) );
     TEST_ASSERT( mbedtls_ecdh_gen_public( &grp, &dB, &qB,
                                           &mbedtls_test_rnd_pseudo_rand,
                                           &rnd_info ) == 0 );
@@ -321,7 +321,7 @@ void test_ecdh_primitive_testvec( int id, data_t * rnd_buf_A, char * xA_str,
     TEST_ASSERT( mbedtls_ecdh_gen_public( &grp, &dA, &qA,
                                           mbedtls_test_rnd_buffer_rand,
                                           &rnd_info_A ) == 0 );
-    TEST_ASSERT( ! mbedtls_ecp_is_zero( &qA ) );
+    TEST_ASSERT( !mbedtls_ecp_is_zero( &qA ) );
     TEST_ASSERT( mbedtls_mpi_read_string( &check, 16, xA_str ) == 0 );
     TEST_ASSERT( mbedtls_mpi_cmp_mpi( &qA.X, &check ) == 0 );
     TEST_ASSERT( mbedtls_mpi_read_string( &check, 16, yA_str ) == 0 );
@@ -330,7 +330,7 @@ void test_ecdh_primitive_testvec( int id, data_t * rnd_buf_A, char * xA_str,
     TEST_ASSERT( mbedtls_ecdh_gen_public( &grp, &dB, &qB,
                                           mbedtls_test_rnd_buffer_rand,
                                           &rnd_info_B ) == 0 );
-    TEST_ASSERT( ! mbedtls_ecp_is_zero( &qB ) );
+    TEST_ASSERT( !mbedtls_ecp_is_zero( &qB ) );
     TEST_ASSERT( mbedtls_mpi_read_string( &check, 16, xB_str ) == 0 );
     TEST_ASSERT( mbedtls_mpi_cmp_mpi( &qB.X, &check ) == 0 );
     TEST_ASSERT( mbedtls_mpi_read_string( &check, 16, yB_str ) == 0 );

@@ -411,7 +411,6 @@ static inline unsigned int mbedtls_cipher_get_block_size(
     MBEDTLS_INTERNAL_VALIDATE_RET( ctx != NULL, 0 );
     if( ctx->cipher_info == NULL )
         return 0;
-
     return ctx->cipher_info->block_size;
 }
 
@@ -430,7 +429,6 @@ static inline mbedtls_cipher_mode_t mbedtls_cipher_get_cipher_mode(
     MBEDTLS_INTERNAL_VALIDATE_RET( ctx != NULL, MBEDTLS_MODE_NONE );
     if( ctx->cipher_info == NULL )
         return MBEDTLS_MODE_NONE;
-
     return ctx->cipher_info->mode;
 }
 

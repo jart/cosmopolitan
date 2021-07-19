@@ -44,6 +44,8 @@ int main(int argc, char *argv[]) {
   int64_t micros;
   long double t1, t2;
   int ws, pipefds[2];
+  setvbuf(stdout, malloc(BUFSIZ), _IOLBF, BUFSIZ);
+  setvbuf(stderr, malloc(BUFSIZ), _IOLBF, BUFSIZ);
   t1 = nowl();
   if (argc < 2) {
     f = stdin;
@@ -85,7 +87,7 @@ int main(int argc, char *argv[]) {
     t2 = nowl();
     micros = (t2 - t1) * 1e6;
     t1 = t2;
-    printf("%,16ld %s", micros, s);
+    printf("%16ld %s", micros, s);
     free(s);
   }
   ok = !ferror(f);

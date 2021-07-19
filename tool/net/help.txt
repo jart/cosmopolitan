@@ -231,6 +231,27 @@ SECURITY
 
     redbean.com -dD /var/www/html
 
+  You can load as many public and private keys as you want. They can be
+  specified as pem, der, concatenated ascii, bundles, or chains. If you
+  don't specify specific chains then redbean will automatically infer it
+  based on SUBJECT → ISSUER relationships. Your redbean won't serve the
+  self-signed root certificate at the end of the chain where self-signed
+  is defined as SUBJECT == ISSUER. Otherwise you can control when chains
+  terminate by setting the max length constraint to zero.
+
+  Your redbean supports SSL virtual hosting. 99.76% of TLS clients send
+  a Server Name Indicator (SNI), which is matched against DNS or IPs in
+  Subject Alternative Names (SAN) or the Common Name (CN) of subject if
+  SAN isn't used. This means you don't need to reveal your whole domain
+  portfolio to each client just to have ssl. You can just use different
+  certificates for each domain if you choose to do so.
+
+  Your redbean has been secured with algorithms so strong that, until a
+  few decades ago, it was illegal to share them with with those outside
+  the United States. By default, your redbean uses Suite C cryptography
+  since it goes a little bit faster. If you want stronger Suite B stuff
+  then you can pass the -B flag.
+
   SSL verbosity is controlled as follows for troubleshooting:
 
     -V       log ssl errors
@@ -784,6 +805,15 @@ FUNCTIONS
            ProgramPrivateKey(LoadAsset("/.sign.key")) for zip loading or
            ProgramPrivateKey(Slurp("/etc/letsencrypt/fullchain.pem")) for
            local file system only.
+
+   ProgramSslTicketLifetime(seconds:int)
+           Defaults to 86400 (24 hours). This may be set to ≤0 to disable
+           SSL tickets. It's a good idea to use these since it increases
+           handshake performance 10x and eliminates a network round trip.
+
+   EvadeDragnetSurveillance(bool)
+           If this option is programmed then redbean will not transmit a
+           Server Name Indicator (SNI) when performing Fetch() requests.
 
    IsDaemon() → bool
            Returns true if -d flag was passed to redbean.

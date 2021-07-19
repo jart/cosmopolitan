@@ -176,6 +176,7 @@ include test/libc/stdio/test.mk
 include test/libc/release/test.mk
 include test/libc/test.mk
 include test/net/http/test.mk
+include test/net/https/test.mk
 include test/net/test.mk
 include test/tool/build/lib/test.mk
 include test/tool/build/test.mk
@@ -214,15 +215,19 @@ o/$(MODE)/srcs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(SRCS),$(
 	$(file >$@) $(foreach x,$(SRCS),$(file >>$@,$(x)))
 o/$(MODE)/hdrs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS) $(INCS),$(dir $(x))))
 	$(file >$@) $(foreach x,$(HDRS) $(INCS),$(file >>$@,$(x)))
+o/$(MODE)/incs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(INCS) $(INCS),$(dir $(x))))
+	$(file >$@) $(foreach x,$(INCS) $(INCS),$(file >>$@,$(x)))
 else
 o/$(MODE)/srcs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(SRCS),$(dir $(x))))
 	$(MAKE) MODE=rel -j8 -pn bopit 2>/dev/null | sed -ne '/^SRCS/ {s/.*:= //;s/  */\n/g;p;q}' >$@
 o/$(MODE)/hdrs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS) $(INCS),$(dir $(x))))
 	$(MAKE) MODE=rel -j8 -pn bopit 2>/dev/null | sed -ne '/^HDRS/ {s/.*:= //;s/  */\n/g;p;q}' >$@
+o/$(MODE)/incs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(INCS) $(INCS),$(dir $(x))))
+	$(MAKE) MODE=rel -j8 -pn bopit 2>/dev/null | sed -ne '/^INCS/ {s/.*:= //;s/  */\n/g;p;q}' >$@
 endif
 
-o/$(MODE)/depend: o/$(MODE)/.x o/$(MODE)/srcs.txt o/$(MODE)/hdrs.txt $(SRCS) $(HDRS) $(INCS)
-	@$(COMPILE) -AMKDEPS $(MKDEPS) -o $@ -r o/$(MODE)/ o/$(MODE)/srcs.txt o/$(MODE)/hdrs.txt
+o/$(MODE)/depend: o/$(MODE)/.x o/$(MODE)/srcs.txt o/$(MODE)/hdrs.txt o/$(MODE)/incs.txt $(SRCS) $(HDRS) $(INCS)
+	@$(COMPILE) -AMKDEPS $(MKDEPS) -o $@ -r o/$(MODE)/ o/$(MODE)/srcs.txt o/$(MODE)/hdrs.txt o/$(MODE)/incs.txt
 
 TAGS:	o/$(MODE)/srcs.txt $(SRCS)
 	@rm -f $@

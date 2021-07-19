@@ -49,6 +49,13 @@ COSMOPOLITAN_C_START_
     }                                   \
   } while (0)
 
+#if IsModeDbg()
+#define MBEDTLS_ASSERT(EXPR) \
+  ((void)((EXPR) || (__assert_fail(#EXPR, __FILE__, __LINE__), 0)))
+#else
+#define MBEDTLS_ASSERT(EXPR) (void)0
+#endif
+
 typedef struct mbedtls_platform_context {
   char dummy;
 } mbedtls_platform_context;

@@ -141,6 +141,7 @@
  *   \e[?25l                             HIDE CURSOR
  *   \e[s                                SAVE CURSOR POSITION
  *   \e[u                                RESTORE CURSOR POSITION
+ *   \e[?5h ... \e[?5l                   REVERSE VIDEO EPILEPSY
  *   \e[0q                               RESET LEDS
  *   \e[1q                               TURN ON FIRST LED
  *   \e[2q                               TURN ON SECOND LED

@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/asn1.h"
 #include "third_party/mbedtls/asn1write.h"
 #include "third_party/mbedtls/common.h"
@@ -13,30 +30,16 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
-/*
- *  Public Key abstraction layer: wrapper functions
- *
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+
+/**
+ * @fileoverview Public Key abstraction layer: wrapper functions
  */
 
 #if defined(MBEDTLS_PK_C)
 
 #if defined(MBEDTLS_RSA_C)
+
 static int rsa_can_do( mbedtls_pk_type_t type )
 {
     return( type == MBEDTLS_PK_RSA ||
@@ -53,7 +56,7 @@ static int rsa_verify_wrap( void *ctx, mbedtls_md_type_t md_alg,
                    const unsigned char *hash, size_t hash_len,
                    const unsigned char *sig, size_t sig_len )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_rsa_context * rsa = (mbedtls_rsa_context *) ctx;
     size_t rsa_len = mbedtls_rsa_get_len( rsa );
 #if SIZE_MAX > UINT_MAX
@@ -202,7 +205,7 @@ static int eckey_verify_wrap( void *ctx, mbedtls_md_type_t md_alg,
                        const unsigned char *hash, size_t hash_len,
                        const unsigned char *sig, size_t sig_len )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_ecdsa_context ecdsa;
 
     mbedtls_ecdsa_init( &ecdsa );
@@ -216,11 +219,11 @@ static int eckey_verify_wrap( void *ctx, mbedtls_md_type_t md_alg,
 }
 
 static int eckey_sign_wrap( void *ctx, mbedtls_md_type_t md_alg,
-                   const unsigned char *hash, size_t hash_len,
-                   unsigned char *sig, size_t *sig_len,
-                   int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
+                            const unsigned char *hash, size_t hash_len,
+                            unsigned char *sig, size_t *sig_len,
+                            int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_ecdsa_context ecdsa;
 
     mbedtls_ecdsa_init( &ecdsa );
@@ -237,15 +240,15 @@ static int eckey_sign_wrap( void *ctx, mbedtls_md_type_t md_alg,
 #if defined(MBEDTLS_ECP_RESTARTABLE)
 /* Forward declarations */
 static int ecdsa_verify_rs_wrap( void *ctx, mbedtls_md_type_t md_alg,
-                       const unsigned char *hash, size_t hash_len,
-                       const unsigned char *sig, size_t sig_len,
-                       void *rs_ctx );
+                                 const unsigned char *hash, size_t hash_len,
+                                 const unsigned char *sig, size_t sig_len,
+                                 void *rs_ctx );
 
 static int ecdsa_sign_rs_wrap( void *ctx, mbedtls_md_type_t md_alg,
-                   const unsigned char *hash, size_t hash_len,
-                   unsigned char *sig, size_t *sig_len,
-                   int (*f_rng)(void *, unsigned char *, size_t), void *p_rng,
-                   void *rs_ctx );
+                               const unsigned char *hash, size_t hash_len,
+                               unsigned char *sig, size_t *sig_len,
+                               int (*f_rng)(void *, unsigned char *, size_t), void *p_rng,
+                               void *rs_ctx );
 
 /*
  * Restart context for ECDSA operations with ECKEY context
@@ -262,74 +265,61 @@ typedef struct
 static void *eckey_rs_alloc( void )
 {
     eckey_restart_ctx *rs_ctx;
-
     void *ctx = mbedtls_calloc( 1, sizeof( eckey_restart_ctx ) );
-
     if( ctx != NULL )
     {
         rs_ctx = ctx;
         mbedtls_ecdsa_restart_init( &rs_ctx->ecdsa_rs );
         mbedtls_ecdsa_init( &rs_ctx->ecdsa_ctx );
     }
-
     return( ctx );
 }
 
 static void eckey_rs_free( void *ctx )
 {
     eckey_restart_ctx *rs_ctx;
-
     if( ctx == NULL)
         return;
-
     rs_ctx = ctx;
     mbedtls_ecdsa_restart_free( &rs_ctx->ecdsa_rs );
     mbedtls_ecdsa_free( &rs_ctx->ecdsa_ctx );
-
     mbedtls_free( ctx );
 }
 
 static int eckey_verify_rs_wrap( void *ctx, mbedtls_md_type_t md_alg,
-                       const unsigned char *hash, size_t hash_len,
-                       const unsigned char *sig, size_t sig_len,
-                       void *rs_ctx )
+                                 const unsigned char *hash, size_t hash_len,
+                                 const unsigned char *sig, size_t sig_len,
+                                 void *rs_ctx )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     eckey_restart_ctx *rs = rs_ctx;
-
     /* Should never happen */
     if( rs == NULL )
         return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
-
     /* set up our own sub-context if needed (that is, on first run) */
     if( rs->ecdsa_ctx.grp.pbits == 0 )
         MBEDTLS_MPI_CHK( mbedtls_ecdsa_from_keypair( &rs->ecdsa_ctx, ctx ) );
-
     MBEDTLS_MPI_CHK( ecdsa_verify_rs_wrap( &rs->ecdsa_ctx,
                                            md_alg, hash, hash_len,
                                            sig, sig_len, &rs->ecdsa_rs ) );
-
 cleanup:
     return( ret );
 }
 
 static int eckey_sign_rs_wrap( void *ctx, mbedtls_md_type_t md_alg,
-                   const unsigned char *hash, size_t hash_len,
-                   unsigned char *sig, size_t *sig_len,
-                   int (*f_rng)(void *, unsigned char *, size_t), void *p_rng,
-                       void *rs_ctx )
+                               const unsigned char *hash, size_t hash_len,
+                               unsigned char *sig, size_t *sig_len,
+                               int (*f_rng)(void *, unsigned char *, size_t), 
+                               void *p_rng, void *rs_ctx )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     eckey_restart_ctx *rs = rs_ctx;
-
     /* Should never happen */
-    if( rs == NULL )
+    if( !rs )
         return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
-
     /* set up our own sub-context if needed (that is, on first run) */
     if( rs->ecdsa_ctx.grp.pbits == 0 )
         MBEDTLS_MPI_CHK( mbedtls_ecdsa_from_keypair( &rs->ecdsa_ctx, ctx ) );
-
     MBEDTLS_MPI_CHK( ecdsa_sign_rs_wrap( &rs->ecdsa_ctx, md_alg,
                                          hash, hash_len, sig, sig_len,
                                          f_rng, p_rng, &rs->ecdsa_rs ) );
@@ -438,7 +428,7 @@ static int ecdsa_verify_wrap( void *ctx, mbedtls_md_type_t md_alg,
                        const unsigned char *hash, size_t hash_len,
                        const unsigned char *sig, size_t sig_len )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     ((void) md_alg);
     ret = mbedtls_ecdsa_read_signature( (mbedtls_ecdsa_context *) ctx,
                                 hash, hash_len, sig, sig_len );
@@ -462,7 +452,7 @@ static int ecdsa_verify_rs_wrap( void *ctx, mbedtls_md_type_t md_alg,
                        const unsigned char *sig, size_t sig_len,
                        void *rs_ctx )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     ((void) md_alg);
 
     ret = mbedtls_ecdsa_read_signature_restartable(
@@ -596,7 +586,7 @@ static int rsa_alt_check_pair( const void *pub, const void *prv )
     unsigned char sig[MBEDTLS_MPI_MAX_SIZE];
     unsigned char hash[32];
     size_t sig_len = 0;
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     if( rsa_alt_get_bitlen( prv ) != rsa_get_bitlen( pub ) )
         return( MBEDTLS_ERR_RSA_KEY_CHECK_FAILED );
     memset( hash, 0x2a, sizeof( hash ) );
@@ -619,7 +609,7 @@ static void *rsa_alt_alloc_wrap( void )
 {
     void *ctx = mbedtls_calloc( 1, sizeof( mbedtls_rsa_alt_context ) );
     if( ctx != NULL )
-        memset( ctx, 0, sizeof( mbedtls_rsa_alt_context ) );
+        mbedtls_platform_zeroize( ctx, sizeof( mbedtls_rsa_alt_context ) );
     return( ctx );
 }
 

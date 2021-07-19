@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/aesni.h"
@@ -10,25 +27,6 @@ Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 /* clang-format off */
-/*
- *  AES-NI support functions
- *
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
 /*
  * [AES-WP] http://software.intel.com/en-us/articles/intel-advanced-encryption-standard-aes-instructions-set
  * [CLMUL-WP] http://software.intel.com/en-us/articles/intel-carry-less-multiplication-instruction-and-its-usage-for-computing-the-gcm-mode/
@@ -91,22 +89,22 @@ int mbedtls_aesni_crypt_ecb( mbedtls_aes_context *ctx,
 
          "1:                        \n\t" // encryption loop
          "movdqu    (%1), %%xmm1    \n\t" // load round key
-         AESENC     xmm1_xmm0      "\n\t" // do round
+         "aesenc    %%xmm1, %%xmm0  \n\t" // do round
          "add       $16, %1         \n\t" // point to next round key
          "subl      $1, %0          \n\t" // loop
          "jnz       1b              \n\t"
          "movdqu    (%1), %%xmm1    \n\t" // load round key
-         AESENCLAST xmm1_xmm0      "\n\t" // last round
+         "aesenclast %%xmm1, %%xmm0 \n\t" // last round
          "jmp       3f              \n\t"
 
          "2:                        \n\t" // decryption loop
          "movdqu    (%1), %%xmm1    \n\t"
-         AESDEC     xmm1_xmm0      "\n\t" // do round
+         "aesdec    %%xmm1, %%xmm0  \n\t" // do round
          "add       $16, %1         \n\t"
          "subl      $1, %0          \n\t"
          "jnz       2b              \n\t"
          "movdqu    (%1), %%xmm1    \n\t" // load round key
-         AESDECLAST xmm1_xmm0      "\n\t" // last round
+         "aesdeclast %%xmm1,%%xmm0  \n\t" // last round
 
          "3:                        \n\t"
          "movdqu    %%xmm0, (%4)    \n\t" // export output

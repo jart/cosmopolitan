@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/common.h"
@@ -12,28 +29,12 @@ Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-/*
- *  CTR_DRBG implementation based on AES-256 (NIST SP 800-90)
+/**
+ * @fileoverview CTR_DRBG implementation based on AES-256 (NIST SP 800-90)
  *
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
+ * The NIST SP 800-90 DRBGs are described in the following publication.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-/*
- *  The NIST SP 800-90 DRBGs are described in the following publication.
- *
- *  http://csrc.nist.gov/publications/nistpubs/800-90/SP800-90revised_March2007.pdf
+ * http://csrc.nist.gov/publications/nistpubs/800-90/SP800-90revised_March2007.pdf
  */
 
 /**
@@ -50,7 +51,7 @@ asm(".include \"libc/disclaimer.inc\"");
  */
 void mbedtls_ctr_drbg_init( mbedtls_ctr_drbg_context *ctx )
 {
-    memset( ctx, 0, sizeof( mbedtls_ctr_drbg_context ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_ctr_drbg_context ) );
     /* Indicate that the entropy nonce length is not set explicitly.
      * See mbedtls_ctr_drbg_set_nonce_len(). */
     ctx->reseed_counter = -1;
@@ -134,7 +135,7 @@ static int block_cipher_df( unsigned char *output,
     if( data_len > MBEDTLS_CTR_DRBG_MAX_SEED_INPUT )
         return( MBEDTLS_ERR_CTR_DRBG_INPUT_TOO_BIG );
 
-    memset( buf, 0, MBEDTLS_CTR_DRBG_MAX_SEED_INPUT +
+    mbedtls_platform_zeroize( buf, MBEDTLS_CTR_DRBG_MAX_SEED_INPUT +
             MBEDTLS_CTR_DRBG_BLOCKSIZE + 16 );
     mbedtls_aes_init( &aes_ctx );
 
@@ -172,7 +173,7 @@ static int block_cipher_df( unsigned char *output,
     for( j = 0; j < MBEDTLS_CTR_DRBG_SEEDLEN; j += MBEDTLS_CTR_DRBG_BLOCKSIZE )
     {
         p = buf;
-        memset( chain, 0, MBEDTLS_CTR_DRBG_BLOCKSIZE );
+        mbedtls_platform_zeroize( chain, MBEDTLS_CTR_DRBG_BLOCKSIZE );
         use_len = buf_len;
 
         while( use_len > 0 )
@@ -248,14 +249,14 @@ exit:
  *   ctx->counter = V
  */
 static int ctr_drbg_update_internal( mbedtls_ctr_drbg_context *ctx,
-                          const unsigned char data[MBEDTLS_CTR_DRBG_SEEDLEN] )
+                                     const unsigned char data[MBEDTLS_CTR_DRBG_SEEDLEN] )
 {
     unsigned char tmp[MBEDTLS_CTR_DRBG_SEEDLEN];
     unsigned char *p = tmp;
     int i, j;
     int ret = 0;
 
-    memset( tmp, 0, MBEDTLS_CTR_DRBG_SEEDLEN );
+    mbedtls_platform_zeroize( tmp, MBEDTLS_CTR_DRBG_SEEDLEN );
 
     for( j = 0; j < MBEDTLS_CTR_DRBG_SEEDLEN; j += MBEDTLS_CTR_DRBG_BLOCKSIZE )
     {
@@ -314,7 +315,7 @@ int mbedtls_ctr_drbg_update_ret( mbedtls_ctr_drbg_context *ctx,
                                  size_t add_len )
 {
     unsigned char add_input[MBEDTLS_CTR_DRBG_SEEDLEN];
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
     if( add_len == 0 )
         return( 0 );
@@ -349,7 +350,7 @@ static int mbedtls_ctr_drbg_reseed_internal( mbedtls_ctr_drbg_context *ctx,
 {
     unsigned char seed[MBEDTLS_CTR_DRBG_MAX_SEED_INPUT];
     size_t seedlen = 0;
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
     if( ctx->entropy_len > MBEDTLS_CTR_DRBG_MAX_SEED_INPUT )
         return( MBEDTLS_ERR_CTR_DRBG_INPUT_TOO_BIG );
@@ -358,7 +359,7 @@ static int mbedtls_ctr_drbg_reseed_internal( mbedtls_ctr_drbg_context *ctx,
     if( len > MBEDTLS_CTR_DRBG_MAX_SEED_INPUT - ctx->entropy_len - nonce_len )
         return( MBEDTLS_ERR_CTR_DRBG_INPUT_TOO_BIG );
 
-    memset( seed, 0, MBEDTLS_CTR_DRBG_MAX_SEED_INPUT );
+    mbedtls_platform_zeroize( seed, MBEDTLS_CTR_DRBG_MAX_SEED_INPUT );
 
     /* Gather entropy_len bytes of entropy to seed state. */
     if( 0 != ctx->f_entropy( ctx->p_entropy, seed, ctx->entropy_len ) )
@@ -399,7 +400,7 @@ exit:
 }
 
 int mbedtls_ctr_drbg_reseed( mbedtls_ctr_drbg_context *ctx,
-                             const unsigned char *additional, size_t len )
+                             const void *additional, size_t len )
 {
     return( mbedtls_ctr_drbg_reseed_internal( ctx, additional, len, 0 ) );
 }
@@ -434,11 +435,11 @@ int mbedtls_ctr_drbg_seed( mbedtls_ctr_drbg_context *ctx,
                            const void *custom,
                            size_t len )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char key[MBEDTLS_CTR_DRBG_KEYSIZE];
     size_t nonce_len;
 
-    memset( key, 0, MBEDTLS_CTR_DRBG_KEYSIZE );
+    mbedtls_platform_zeroize( key, MBEDTLS_CTR_DRBG_KEYSIZE );
 
     mbedtls_aes_init( &ctx->aes_ctx );
 
@@ -508,7 +509,7 @@ int mbedtls_ctr_drbg_random_with_add( void *p_rng,
     if( add_len > MBEDTLS_CTR_DRBG_MAX_INPUT )
         return( MBEDTLS_ERR_CTR_DRBG_INPUT_TOO_BIG );
 
-    memset( add_input, 0, MBEDTLS_CTR_DRBG_SEEDLEN );
+    mbedtls_platform_zeroize( add_input, MBEDTLS_CTR_DRBG_SEEDLEN );
 
     if( ctx->reseed_counter > ctx->reseed_interval ||
         ctx->prediction_resistance )

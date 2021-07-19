@@ -1,6 +1,7 @@
 #ifndef MBEDTLS_SHA512_H_
 #define MBEDTLS_SHA512_H_
 #include "third_party/mbedtls/config.h"
+#include "third_party/mbedtls/platform.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -26,8 +27,6 @@ typedef struct mbedtls_sha512_context
 }
 mbedtls_sha512_context;
 
-void mbedtls_sha512_init( mbedtls_sha512_context * );
-void mbedtls_sha512_free( mbedtls_sha512_context * );
 void mbedtls_sha512_clone( mbedtls_sha512_context *, const mbedtls_sha512_context * );
 int mbedtls_sha512_starts_ret( mbedtls_sha512_context *, int );
 int mbedtls_sha512_update_ret( mbedtls_sha512_context *, const unsigned char *, size_t );
@@ -35,6 +34,31 @@ int mbedtls_sha512_finish_ret( mbedtls_sha512_context *, unsigned char[64] );
 int mbedtls_internal_sha512_process( mbedtls_sha512_context *, const unsigned char[128] );
 int mbedtls_sha512_ret( const void *, size_t, unsigned char[64], int );
 int mbedtls_sha512_self_test( int );
+
+/**
+ * \brief          This function initializes a SHA-512 context.
+ *
+ * \param ctx      The SHA-512 context to initialize. This must
+ *                 not be \c NULL.
+ */
+static inline void mbedtls_sha512_init( mbedtls_sha512_context *ctx )
+{
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_sha512_context ) );
+}
+
+/**
+ * \brief          This function clears a SHA-512 context.
+ *
+ * \param ctx      The SHA-512 context to clear. This may be \c NULL,
+ *                 in which case this function does nothing. If it
+ *                 is not \c NULL, it must point to an initialized
+ *                 SHA-512 context.
+ */
+static inline void mbedtls_sha512_free( mbedtls_sha512_context *ctx )
+{
+    if( !ctx ) return;
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_sha512_context ) );
+}
 
 COSMOPOLITAN_C_END_
 #endif /* MBEDTLS_SHA512_H_ */

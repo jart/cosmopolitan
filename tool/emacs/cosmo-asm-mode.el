@@ -112,6 +112,7 @@
        "asyncsignalsafe"
        "notasyncsignalsafe"
        "isa"
+       "mayalias"
        "sideffect")
       "\\>"]))
   "Assembly docstring highlighting in Google Java Style.")

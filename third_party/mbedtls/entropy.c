@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/stdio/stdio.h"
 #include "third_party/mbedtls/common.h"
@@ -50,7 +67,7 @@ asm(".include \"libc/disclaimer.inc\"");
 void mbedtls_entropy_init( mbedtls_entropy_context *ctx )
 {
     ctx->source_count = 0;
-    memset( ctx->source, 0, sizeof( ctx->source ) );
+    mbedtls_platform_zeroize( ctx->source, sizeof( ctx->source ) );
 
     ctx->accumulator_started = 0;
 #if defined(MBEDTLS_ENTROPY_SHA512_ACCUMULATOR)
@@ -315,7 +332,7 @@ int mbedtls_entropy_func( void *data, unsigned char *output, size_t len )
     }
     while( ! thresholds_reached || strong_size < MBEDTLS_ENTROPY_BLOCK_SIZE );
 
-    memset( buf, 0, MBEDTLS_ENTROPY_BLOCK_SIZE );
+    mbedtls_platform_zeroize( buf, MBEDTLS_ENTROPY_BLOCK_SIZE );
 
 #if defined(MBEDTLS_ENTROPY_SHA512_ACCUMULATOR)
     /*
@@ -398,7 +415,7 @@ int mbedtls_entropy_update_nv_seed( mbedtls_entropy_context *ctx )
     if( mbedtls_nv_seed_write( buf, MBEDTLS_ENTROPY_BLOCK_SIZE ) < 0 )
         return( MBEDTLS_ERR_ENTROPY_FILE_IO_ERROR );
     /* Manually update the remaining stream with a separator value to diverge */
-    memset( buf, 0, MBEDTLS_ENTROPY_BLOCK_SIZE );
+    mbedtls_platform_zeroize( buf, MBEDTLS_ENTROPY_BLOCK_SIZE );
     ret = mbedtls_entropy_update_manual( ctx, buf, MBEDTLS_ENTROPY_BLOCK_SIZE );
     return( ret );
 }
@@ -581,8 +598,8 @@ int mbedtls_entropy_source_self_test( int verbose )
     if( verbose != 0 )
         mbedtls_printf( "  ENTROPY_BIAS test: " );
 
-    memset( buf0, 0x00, sizeof( buf0 ) );
-    memset( buf1, 0x00, sizeof( buf1 ) );
+    mbedtls_platform_zeroize( buf0, sizeof( buf0 ) );
+    mbedtls_platform_zeroize( buf1, sizeof( buf1 ) );
 
     if( ( ret = mbedtls_entropy_source_self_test_gather( buf0, sizeof( buf0 ) ) ) != 0 )
         goto cleanup;

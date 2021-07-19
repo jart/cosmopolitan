@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/debug.h"
 #include "third_party/mbedtls/error.h"
@@ -8,26 +25,7 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
-/*
- *  Debugging routines
- *
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
 
 char mbedtls_debug_threshold;
 
@@ -57,7 +55,7 @@ void mbedtls_debug_print_msg( const mbedtls_ssl_context *ssl, int level,
 {
     va_list argp;
     char str[DEBUG_BUF_SIZE];
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
     if( NULL == ssl              ||
         NULL == ssl->conf        ||
@@ -129,7 +127,7 @@ void mbedtls_debug_print_buf( const mbedtls_ssl_context *ssl, int level,
     debug_send_line( ssl, level, file, line, str );
 
     idx = 0;
-    memset( txt, 0, sizeof( txt ) );
+    mbedtls_platform_zeroize( txt, sizeof( txt ) );
     for( i = 0; i < len; i++ )
     {
         if( i >= 4096 )
@@ -143,7 +141,7 @@ void mbedtls_debug_print_buf( const mbedtls_ssl_context *ssl, int level,
                 debug_send_line( ssl, level, file, line, str );
 
                 idx = 0;
-                memset( txt, 0, sizeof( txt ) );
+                mbedtls_platform_zeroize( txt, sizeof( txt ) );
             }
 
             idx += mbedtls_snprintf( str + idx, sizeof( str ) - idx, "%04x: ",
@@ -273,7 +271,7 @@ static void debug_print_pk( const mbedtls_ssl_context *ssl, int level,
     mbedtls_pk_debug_item items[MBEDTLS_PK_DEBUG_MAX_ITEMS];
     char name[16];
 
-    memset( items, 0, sizeof( items ) );
+    mbedtls_platform_zeroize( items, sizeof( items ) );
 
     if( mbedtls_pk_debug( pk, items ) != 0 )
     {

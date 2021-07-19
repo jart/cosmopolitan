@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
@@ -27,6 +28,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
+#include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 
 int (*memcmpi)(const void *, const void *, size_t) = memcmp;
@@ -601,4 +603,13 @@ BENCH(bench_01_strcasecmp, bench) {
   EZBENCH2("strcasecmp_pure [long dupe]",
            longstringislong_dupe(size, data, dupe),
            EXPROPRIATE(strcasecmp_pure(VEIL("r", data), VEIL("r", dupe))));
+}
+
+BENCH(memcmp, bench) {
+  volatile char *copy = gc(strdup(kHyperion));
+  EZBENCH2("memcmp big", donothing,
+           EXPROPRIATE(memcmp(kHyperion, copy, kHyperionSize)));
+  copy = gc(strdup("tought little ship"));
+  EZBENCH2("memcmp 19", donothing,
+           EXPROPRIATE(memcmp("tought little ship", copy, 19)));
 }

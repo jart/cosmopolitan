@@ -19,75 +19,52 @@
 #include "libc/str/str.h"
 #include "third_party/mbedtls/platform.h"
 
+typedef long long xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
+
 void mbedtls_platform_zeroize(void *p, size_t n) {
-  MBEDTLS_INTERNAL_VALIDATE(!n || p);
   char *b;
   uint64_t x;
+  MBEDTLS_INTERNAL_VALIDATE(!n || p);
   x = 0;
   b = p;
   switch (n) {
     case 0:
-      return;
+      break;
     case 1:
       __builtin_memcpy(b, &x, 1);
-      return;
+      break;
     case 2:
       __builtin_memcpy(b, &x, 2);
-      return;
+      break;
     case 3:
       __builtin_memcpy(b, &x, 2);
       __builtin_memcpy(b + 1, &x, 2);
-      return;
+      break;
     case 4:
       __builtin_memcpy(b, &x, 4);
-      return;
+      break;
     case 5 ... 7:
       __builtin_memcpy(b, &x, 4);
       __builtin_memcpy(b + n - 4, &x, 4);
-      return;
+      break;
     case 8:
       __builtin_memcpy(b, &x, 8);
-      return;
-    case 9 ... 16:
+      break;
+    case 9 ... 15:
       __builtin_memcpy(b, &x, 8);
       __builtin_memcpy(b + n - 8, &x, 8);
-      return;
+      break;
+    case 16:
+      *(xmm_t *)b = (xmm_t){0};
+      break;
     default:
-      do {
-        n -= 16;
-        __builtin_memcpy(b + n, &x, 8);
-        asm volatile("" ::: "memory");
-        __builtin_memcpy(b + n + 8, &x, 8);
-      } while (n >= 16);
-      switch (n) {
-        case 0:
-          return;
-        case 1:
-          __builtin_memcpy(b, &x, 1);
-          return;
-        case 2:
-          __builtin_memcpy(b, &x, 2);
-          return;
-        case 3:
-          __builtin_memcpy(b, &x, 2);
-          __builtin_memcpy(b + 1, &x, 2);
-          return;
-        case 4:
-          __builtin_memcpy(b, &x, 4);
-          return;
-        case 5 ... 7:
-          __builtin_memcpy(b, &x, 4);
-          __builtin_memcpy(b + n - 4, &x, 4);
-          return;
-        case 8:
-          __builtin_memcpy(b, &x, 8);
-          return;
-        case 9 ... 15:
-          __builtin_memcpy(b, &x, 8);
-          __builtin_memcpy(b + n - 8, &x, 8);
-          return;
-        default:
-          unreachable;
+      while (n > 32) {
+        *(xmm_t *)(b + n - 16) = (xmm_t){0};
+        *(xmm_t *)(b + n - 32) = (xmm_t){0};
+        n -= 32;
       }
+      if (n > 16) *(xmm_t *)(b + n - 16) = (xmm_t){0};
+      *(xmm_t *)b = (xmm_t){0};
+      break;
   }
 }

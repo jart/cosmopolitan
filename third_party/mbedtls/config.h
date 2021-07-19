@@ -1,5 +1,6 @@
 #ifndef MBEDTLS_CONFIG_H_
 #define MBEDTLS_CONFIG_H_
+#include "libc/dce.h"
 
 /* protocols */
 #define MBEDTLS_SSL_PROTO_TLS1_2
@@ -46,8 +47,8 @@
 /* block modes */
 #define MBEDTLS_GCM_C
 #ifndef TINY
-/*#define MBEDTLS_CCM_C*/
 #define MBEDTLS_CIPHER_MODE_CBC
+/*#define MBEDTLS_CCM_C*/
 /*#define MBEDTLS_CIPHER_MODE_CFB*/
 /*#define MBEDTLS_CIPHER_MODE_CTR*/
 /*#define MBEDTLS_CIPHER_MODE_OFB*/
@@ -60,9 +61,9 @@
 #ifndef TINY
 #define MBEDTLS_ECP_C
 #define MBEDTLS_ECDH_C
-#define MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED
 #define MBEDTLS_ECDSA_C
 #define MBEDTLS_ECDSA_DETERMINISTIC
+#define MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED
 #define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
 /*#define MBEDTLS_DHM_C*/
@@ -113,7 +114,7 @@
 #endif
 #endif
 
-#ifndef NDEBUG
+#if IsModeDbg()
 #define MBEDTLS_CHECK_PARAMS
 #endif
 
@@ -121,11 +122,10 @@
 #define MBEDTLS_SHA1_SMALLER
 #define MBEDTLS_SHA256_SMALLER
 #define MBEDTLS_SHA512_SMALLER
+#define MBEDTLS_ECP_NIST_OPTIM
 #ifdef TINY
 #define MBEDTLS_AES_ROM_TABLES
 #define MBEDTLS_AES_FEWER_TABLES
-#else
-#define MBEDTLS_ECP_NIST_OPTIM
 #endif
 
 #define MBEDTLS_PLATFORM_C
@@ -793,7 +793,7 @@
  *
  * Comment this macro to disable support for server name indication in SSL
  */
-/*#define MBEDTLS_SSL_SERVER_NAME_INDICATION*/
+#define MBEDTLS_SSL_SERVER_NAME_INDICATION
 
 /**
  * \def MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH
@@ -1205,7 +1205,6 @@
  * \warning   SHA-1 is considered a weak message digest and its use constitutes
  *            a security risk. If possible, we recommend avoiding dependencies
  *            on it, and considering stronger message digests instead.
- *
  */
 /*#define MBEDTLS_TLS_DEFAULT_ALLOW_SHA1_IN_CERTIFICATES*/
 
@@ -1223,7 +1222,11 @@
  *            a security risk. If possible, we recommend avoiding dependencies
  *            on it, and considering stronger message digests instead.
  */
-/*#define MBEDTLS_TLS_DEFAULT_ALLOW_SHA1_IN_KEY_EXCHANGE*/
+#define MBEDTLS_TLS_DEFAULT_ALLOW_SHA1_IN_KEY_EXCHANGE
 
+#define mbedtls_t_udbl uint128_t
+#define MBEDTLS_HAVE_UDBL
+
+#include "libc/dce.h"
 #include "third_party/mbedtls/check.h"
 #endif /* MBEDTLS_CONFIG_H_ */

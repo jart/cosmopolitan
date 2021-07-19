@@ -2,4 +2,5 @@
 #───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
 
 .PHONY:			o/$(MODE)/test/net
-o/$(MODE)/test/net:	o/$(MODE)/test/net/http
+o/$(MODE)/test/net:	o/$(MODE)/test/net/http		\
+			o/$(MODE)/test/net/https

@@ -1,8 +1,27 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/log/log.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/debug.h"
 #include "third_party/mbedtls/ecp.h"
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/platform.h"
+#include "third_party/mbedtls/profile.h"
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/mbedtls/ssl_internal.h"
 
@@ -114,7 +133,7 @@ static int ssl_parse_servername_ext( mbedtls_ssl_context *ssl,
                                      const unsigned char *buf,
                                      size_t len )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t servername_list_size, hostname_len;
     const unsigned char *p;
     MBEDTLS_SSL_DEBUG_MSG( 3, ( "parse ServerName extension" ) );
@@ -445,7 +464,7 @@ static int ssl_parse_ecjpake_kkpp( mbedtls_ssl_context *ssl,
                                    const unsigned char *buf,
                                    size_t len )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
     if( mbedtls_ecjpake_check( &ssl->handshake->ecjpake_ctx ) != 0 )
     {
@@ -612,7 +631,7 @@ static int ssl_parse_session_ticket_ext( mbedtls_ssl_context *ssl,
                                          unsigned char *buf,
                                          size_t len )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_ssl_session session;
 
     mbedtls_ssl_session_init( &session );
@@ -1284,7 +1303,7 @@ static int ssl_parse_client_hello_v2( mbedtls_ssl_context *ssl )
     memcpy( ssl->session_negotiate->id, p, ssl->session_negotiate->id_len );
 
     p += sess_len;
-    memset( ssl->handshake->randbytes, 0, 64 );
+    mbedtls_platform_zeroize( ssl->handshake->randbytes, 64 );
     memcpy( ssl->handshake->randbytes + 32 - chal_len, p, chal_len );
 
     /*
@@ -1736,8 +1755,8 @@ read_record_header:
     MBEDTLS_SSL_DEBUG_BUF( 3, "client hello, session id", buf + 35, sess_len );
 
     ssl->session_negotiate->id_len = sess_len;
-    memset( ssl->session_negotiate->id, 0,
-            sizeof( ssl->session_negotiate->id ) );
+    mbedtls_platform_zeroize( ssl->session_negotiate->id, 
+                              sizeof( ssl->session_negotiate->id ) );
     memcpy( ssl->session_negotiate->id, buf + 35,
             ssl->session_negotiate->id_len );
 
@@ -2508,7 +2527,7 @@ static void ssl_write_ecjpake_kkpp_ext( mbedtls_ssl_context *ssl,
                                         unsigned char *buf,
                                         size_t *olen )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char *p = buf;
     const unsigned char *end = ssl->out_msg + MBEDTLS_SSL_OUT_CONTENT_LEN;
     size_t kkpp_len;
@@ -2658,7 +2677,7 @@ static void ssl_write_use_srtp_ext( mbedtls_ssl_context *ssl,
 #if defined(MBEDTLS_SSL_DTLS_HELLO_VERIFY)
 static int ssl_write_hello_verify_request( mbedtls_ssl_context *ssl )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char *p = ssl->out_msg + 4;
     unsigned char *cookie_len_byte;
 
@@ -2732,7 +2751,7 @@ static int ssl_write_server_hello( mbedtls_ssl_context *ssl )
 #if defined(MBEDTLS_HAVE_TIME)
     mbedtls_time_t t;
 #endif
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t olen, ext_len = 0, n;
     unsigned char *buf, *p;
 
@@ -2830,7 +2849,7 @@ static int ssl_write_server_hello( mbedtls_ssl_context *ssl )
         if( ssl->handshake->new_session_ticket != 0 )
         {
             ssl->session_negotiate->id_len = n = 0;
-            memset( ssl->session_negotiate->id, 0, 32 );
+            mbedtls_platform_zeroize( ssl->session_negotiate->id, 32 );
         }
         else
 #endif /* MBEDTLS_SSL_SESSION_TICKETS */
@@ -3161,7 +3180,7 @@ static int ssl_write_certificate_request( mbedtls_ssl_context *ssl )
     defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED)
 static int ssl_get_ecdh_params_from_cert( mbedtls_ssl_context *ssl )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
     if( ! mbedtls_pk_can_do( mbedtls_ssl_own_key( ssl ), MBEDTLS_PK_ECKEY ) )
     {
@@ -3237,7 +3256,7 @@ static int ssl_prepare_server_key_exchange( mbedtls_ssl_context *ssl,
 #if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
     {
-        int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+        int ret = MBEDTLS_ERR_THIS_CORRUPTION;
         size_t len = 0;
         ret = mbedtls_ecjpake_write_round_two(
             &ssl->handshake->ecjpake_ctx,
@@ -3273,7 +3292,7 @@ static int ssl_prepare_server_key_exchange( mbedtls_ssl_context *ssl,
 #if defined(MBEDTLS_KEY_EXCHANGE_SOME_DHE_ENABLED)
     if( mbedtls_ssl_ciphersuite_uses_dhe( ciphersuite_info ) )
     {
-        int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+        int ret = MBEDTLS_ERR_THIS_CORRUPTION;
         size_t len = 0;
         if( ssl->conf->dhm_P.p == NULL || ssl->conf->dhm_G.p == NULL )
         {
@@ -3331,7 +3350,7 @@ static int ssl_prepare_server_key_exchange( mbedtls_ssl_context *ssl,
          */
         const mbedtls_ecp_curve_info **curve = NULL;
         const mbedtls_ecp_group_id *gid;
-        int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+        int ret = MBEDTLS_ERR_THIS_CORRUPTION;
         size_t len = 0;
         /* Match our preference list against the offered curves */
         for( gid = ssl->conf->curve_list; *gid != MBEDTLS_ECP_DP_NONE; gid++ )
@@ -3380,7 +3399,7 @@ curve_matching_done:
         size_t dig_signed_len = ssl->out_msg + ssl->out_msglen - dig_signed;
         size_t hashlen = 0;
         unsigned char hash[MBEDTLS_MD_MAX_SIZE];
-        int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+        int ret = MBEDTLS_ERR_THIS_CORRUPTION;
         /*
          * 2.1: Choose hash algorithm:
          * A: For TLS 1.2, obey signature-hash-algorithm extension
@@ -3541,7 +3560,7 @@ curve_matching_done:
  * machine. */
 static int ssl_write_server_key_exchange( mbedtls_ssl_context *ssl )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t signature_len = 0;
 #if defined(MBEDTLS_KEY_EXCHANGE_SOME_NON_PFS_ENABLED)
     const mbedtls_ssl_ciphersuite_t *ciphersuite_info =
@@ -3626,7 +3645,7 @@ static int ssl_write_server_key_exchange( mbedtls_ssl_context *ssl )
 
 static int ssl_write_server_hello_done( mbedtls_ssl_context *ssl )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> write server hello done" ) );
     ssl->out_msglen  = 4;
     ssl->out_msgtype = MBEDTLS_SSL_MSG_HANDSHAKE;
@@ -3715,7 +3734,7 @@ static int ssl_decrypt_encrypted_pms( mbedtls_ssl_context *ssl,
                                       size_t *peer_pmslen,
                                       size_t peer_pmssize )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_pk_context *private_key = mbedtls_ssl_own_key( ssl );
     mbedtls_pk_context *public_key = &mbedtls_ssl_own_cert( ssl )->pk;
     size_t len = mbedtls_pk_get_len( public_key );
@@ -3798,7 +3817,7 @@ static int ssl_parse_encrypted_pms( mbedtls_ssl_context *ssl,
                                     const unsigned char *end,
                                     size_t pms_offset )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char *pms = ssl->handshake->premaster + pms_offset;
     unsigned char ver[2];
     unsigned char fake_pms[48], peer_pms[48];
@@ -3931,9 +3950,10 @@ static int ssl_parse_client_psk_identity( mbedtls_ssl_context *ssl, unsigned cha
     return( 0 );
 }
 #endif /* MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED */
+
 static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     const mbedtls_ssl_ciphersuite_t *ciphersuite_info;
     unsigned char *p, *end;
     ciphersuite_info = ssl->handshake->ciphersuite_info;
@@ -4004,8 +4024,8 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_RSA ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA )
     {
-        if( ( ret = mbedtls_ecdh_read_public( &ssl->handshake->ecdh_ctx,
-                                      p, end - p) ) != 0 )
+      if( ( ret = mbedtls_ecdh_read_public( &ssl->handshake->ecdh_ctx,
+                                            p, end - p) ) != 0 )
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ecdh_read_public", ret );
             return( MBEDTLS_ERR_SSL_BAD_HS_CLIENT_KEY_EXCHANGE_RP );
@@ -4013,10 +4033,10 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         MBEDTLS_SSL_DEBUG_ECDH( 3, &ssl->handshake->ecdh_ctx,
                                 MBEDTLS_DEBUG_ECDH_QP );
         if( ( ret = mbedtls_ecdh_calc_secret( &ssl->handshake->ecdh_ctx,
-                                      &ssl->handshake->pmslen,
-                                       ssl->handshake->premaster,
-                                       MBEDTLS_MPI_MAX_SIZE,
-                                       ssl->conf->f_rng, ssl->conf->p_rng ) ) != 0 )
+                                                      &ssl->handshake->pmslen,
+                                                      ssl->handshake->premaster,
+                                                      MBEDTLS_MPI_MAX_SIZE,
+                                                      ssl->conf->f_rng, ssl->conf->p_rng ) ) != 0 )
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ecdh_calc_secret", ret );
             return( MBEDTLS_ERR_SSL_BAD_HS_CLIENT_KEY_EXCHANGE_CS );
@@ -4184,9 +4204,9 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
     return( 0 );
 }
 
-#if !defined(MBEDTLS_KEY_EXCHANGE_CERT_REQ_ALLOWED_ENABLED)
 static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
 {
+#if !defined(MBEDTLS_KEY_EXCHANGE_CERT_REQ_ALLOWED_ENABLED)
     const mbedtls_ssl_ciphersuite_t *ciphersuite_info =
         ssl->handshake->ciphersuite_info;
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> parse certificate verify" ) );
@@ -4198,10 +4218,7 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
     }
     MBEDTLS_SSL_DEBUG_MSG( 1, ( "should never happen" ) );
     return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
-}
 #else /* !MBEDTLS_KEY_EXCHANGE_CERT_REQ_ALLOWED_ENABLED */
-static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
-{
     int ret = MBEDTLS_ERR_SSL_FEATURE_UNAVAILABLE;
     size_t i, sig_len;
     unsigned char hash[48];
@@ -4363,13 +4380,13 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
     mbedtls_ssl_update_handshake_status( ssl );
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= parse certificate verify" ) );
     return( ret );
-}
 #endif /* MBEDTLS_KEY_EXCHANGE_CERT_REQ_ALLOWED_ENABLED */
+}
 
 #if defined(MBEDTLS_SSL_SESSION_TICKETS)
 static int ssl_write_new_session_ticket( mbedtls_ssl_context *ssl )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t tlen;
     uint32_t lifetime;
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> write new session ticket" ) );
@@ -4452,6 +4469,7 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
             return( ret );
     }
 #endif /* MBEDTLS_SSL_PROTO_DTLS */
+    /* LOGF("handshake step %s", GetSslStateName(ssl->state)); */
     switch( ssl->state )
     {
         case MBEDTLS_SSL_HELLO_REQUEST:
@@ -4509,7 +4527,7 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
             ret = mbedtls_ssl_parse_change_cipher_spec( ssl );
             break;
         case MBEDTLS_SSL_CLIENT_FINISHED:
-            ret = mbedtls_ssl_parse_finished( ssl );
+          ret = mbedtls_ssl_parse_finished( ssl );
             break;
         /*
          *  ==> ( NewSessionTicket )

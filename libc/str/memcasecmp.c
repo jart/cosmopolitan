@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/str/str.h"
 
 /**
@@ -25,10 +26,23 @@
 int memcasecmp(const void *p, const void *q, size_t n) {
   int c;
   size_t i;
+  uint64_t w;
   const unsigned char *a, *b;
   if ((a = p) != (b = q)) {
     for (i = 0; i < n; ++i) {
-      if ((c = kToLower[a[i]] - kToLower[b[i]])) {
+      while (i + 8 <= n) {
+        w = READ64LE(a);
+        w ^= READ64LE(b);
+        if (w) {
+          i += (unsigned)__builtin_ctzll(w) >> 3;
+          break;
+        } else {
+          i += 8;
+        }
+      }
+      if (i == n) {
+        break;
+      } else if ((c = kToLower[a[i]] - kToLower[b[i]])) {
         return c;
       }
     }

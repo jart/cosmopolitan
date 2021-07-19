@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/ccm.h"
 #include "third_party/mbedtls/chacha20.h"
 #include "third_party/mbedtls/chachapoly.h"
@@ -14,30 +31,7 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
-/**
- * \file cipher.c
- *
- * \brief Generic cipher wrapper for mbed TLS
- *
- * \author Adriaan de Jong <dejong@fox-it.com>
- *
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
 
 #if defined(MBEDTLS_CIPHER_C)
 
@@ -136,7 +130,7 @@ const mbedtls_cipher_info_t *mbedtls_cipher_info_from_values(
 void mbedtls_cipher_init( mbedtls_cipher_context_t *ctx )
 {
     CIPHER_VALIDATE( ctx != NULL );
-    memset( ctx, 0, sizeof( mbedtls_cipher_context_t ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_cipher_context_t ) );
 }
 
 void mbedtls_cipher_free( mbedtls_cipher_context_t *ctx )
@@ -189,7 +183,7 @@ int mbedtls_cipher_setup( mbedtls_cipher_context_t *ctx,
     if( cipher_info == NULL )
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
 
-    memset( ctx, 0, sizeof( mbedtls_cipher_context_t ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_cipher_context_t ) );
 
     if( NULL == ( ctx->cipher_ctx = cipher_info->base->ctx_alloc_func() ) )
         return( MBEDTLS_ERR_CIPHER_ALLOC_FAILED );
@@ -229,7 +223,7 @@ int mbedtls_cipher_setup_psa( mbedtls_cipher_context_t *ctx,
     if( mbedtls_psa_translate_cipher_type( cipher_info->type ) == 0 )
         return( MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE );
 
-    memset( ctx, 0, sizeof( mbedtls_cipher_context_t ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_cipher_context_t ) );
 
     cipher_psa = mbedtls_calloc( 1, sizeof(mbedtls_cipher_context_psa ) );
     if( cipher_psa == NULL )
@@ -471,7 +465,7 @@ int mbedtls_cipher_update_ad( mbedtls_cipher_context_t *ctx,
 int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *input,
                            size_t ilen, unsigned char *output, size_t *olen )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t block_size;
 
     CIPHER_VALIDATE_RET( ctx != NULL );
@@ -495,8 +489,9 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
 
         *olen = ilen;
 
-        if( 0 != ( ret = ctx->cipher_info->base->ecb_func( ctx->cipher_ctx,
-                    ctx->operation, input, output ) ) )
+        if( ( ret = ctx->cipher_info->base->ecb_func( ctx->cipher_ctx,
+                                                      ctx->operation, 
+                                                      input, output ) ) )
         {
             return( ret );
         }
@@ -1085,7 +1080,7 @@ int mbedtls_cipher_check_tag( mbedtls_cipher_context_t *ctx,
                       const unsigned char *tag, size_t tag_len )
 {
     unsigned char check_tag[16];
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
     CIPHER_VALIDATE_RET( ctx != NULL );
     CIPHER_VALIDATE_RET( tag_len == 0 || tag != NULL );
@@ -1162,7 +1157,7 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
                   const unsigned char *input, size_t ilen,
                   unsigned char *output, size_t *olen )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t finish_olen;
 
     CIPHER_VALIDATE_RET( ctx != NULL );
@@ -1254,11 +1249,11 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
  * mbedtls_cipher_auth_encrypt() and mbedtls_cipher_auth_encrypt_ext().
  */
 static int mbedtls_cipher_aead_encrypt( mbedtls_cipher_context_t *ctx,
-                         const unsigned char *iv, size_t iv_len,
-                         const unsigned char *ad, size_t ad_len,
-                         const unsigned char *input, size_t ilen,
-                         unsigned char *output, size_t *olen,
-                         unsigned char *tag, size_t tag_len )
+                                        const unsigned char *iv, size_t iv_len,
+                                        const unsigned char *ad, size_t ad_len,
+                                        const unsigned char *input, size_t ilen,
+                                        unsigned char *output, size_t *olen,
+                                        unsigned char *tag, size_t tag_len )
 {
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
     if( ctx->psa_enabled == 1 )
@@ -1270,14 +1265,11 @@ static int mbedtls_cipher_aead_encrypt( mbedtls_cipher_context_t *ctx,
          * below will gracefully fail. */
         mbedtls_cipher_context_psa * const cipher_psa =
             (mbedtls_cipher_context_psa *) ctx->cipher_ctx;
-
         psa_status_t status;
-
         /* PSA Crypto API always writes the authentication tag
          * at the end of the encrypted message. */
         if( output == NULL || tag != output + ilen )
             return( MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE );
-
         status = psa_aead_encrypt( cipher_psa->slot,
                                    cipher_psa->alg,
                                    iv, iv_len,
@@ -1286,7 +1278,6 @@ static int mbedtls_cipher_aead_encrypt( mbedtls_cipher_context_t *ctx,
                                    output, ilen + tag_len, olen );
         if( status != PSA_SUCCESS )
             return( MBEDTLS_ERR_CIPHER_HW_ACCEL_FAILED );
-
         *olen -= tag_len;
         return( 0 );
     }
@@ -1376,7 +1367,7 @@ static int mbedtls_cipher_aead_decrypt( mbedtls_cipher_context_t *ctx,
 #if defined(MBEDTLS_GCM_C)
     if( MBEDTLS_MODE_GCM == ctx->cipher_info->mode )
     {
-        int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+        int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
         *olen = ilen;
         ret = mbedtls_gcm_auth_decrypt( ctx->cipher_ctx, ilen,
@@ -1392,7 +1383,7 @@ static int mbedtls_cipher_aead_decrypt( mbedtls_cipher_context_t *ctx,
 #if defined(MBEDTLS_CCM_C)
     if( MBEDTLS_MODE_CCM == ctx->cipher_info->mode )
     {
-        int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+        int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
         *olen = ilen;
         ret = mbedtls_ccm_auth_decrypt( ctx->cipher_ctx, ilen,
@@ -1408,7 +1399,7 @@ static int mbedtls_cipher_aead_decrypt( mbedtls_cipher_context_t *ctx,
 #if defined(MBEDTLS_CHACHAPOLY_C)
     if ( MBEDTLS_CIPHER_CHACHA20_POLY1305 == ctx->cipher_info->type )
     {
-        int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+        int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
         /* ChachaPoly has fixed length nonce and MAC (tag) */
         if ( ( iv_len != ctx->cipher_info->iv_size ) ||
@@ -1527,8 +1518,8 @@ int mbedtls_cipher_auth_encrypt_ext( mbedtls_cipher_context_t *ctx,
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
 
     int ret = mbedtls_cipher_aead_encrypt( ctx, iv, iv_len, ad, ad_len,
-                                       input, ilen, output, olen,
-                                       output + ilen, tag_len );
+                                           input, ilen, output, olen,
+                                           output + ilen, tag_len );
     *olen += tag_len;
     return( ret );
 #else

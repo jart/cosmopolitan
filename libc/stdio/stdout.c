@@ -36,9 +36,15 @@ static textstartup void __stdout_init() {
   struct FILE *sf;
   sf = stdout;
   asm("" : "+r"(sf));
-  if (IsWindows() || ischardev(pushpop(sf->fd))) {
-    sf->bufmode = _IOLBF;
-  }
+  /*
+   * Unlike other C libraries we don't bother calling fstat() to check
+   * if stdio is a character device and we instead choose to always line
+   * buffer it. We need it because there's no way to use the unbuffer
+   * command on a statically linked binary. This still goes fast. We
+   * value latency more than throughput, and stdio isn't the best api
+   * when the goal is throughput.
+   */
+  sf->bufmode = _IOLBF;
   __fflush_register(sf);
 }
 

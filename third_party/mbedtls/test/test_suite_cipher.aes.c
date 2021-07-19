@@ -781,7 +781,7 @@ void test_enc_dec_buf( int cipher_id, char * cipher_string, int key_len,
     /* Check and get info structures */
     cipher_info = mbedtls_cipher_info_from_type( cipher_id );
     TEST_ASSERT( NULL != cipher_info );
-    TEST_ASSERT( mbedtls_cipher_info_from_string( cipher_string ) == cipher_info );
+    TEST_EQUAL( cipher_info, mbedtls_cipher_info_from_string( cipher_string ) );
 
     /* Initialise enc and dec contexts */
     TEST_ASSERT( 0 == mbedtls_cipher_setup( &ctx_dec, cipher_info ) );

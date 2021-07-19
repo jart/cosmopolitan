@@ -39,7 +39,6 @@
 
 #if defined(MBEDTLS_HKDF_C)
 #include "third_party/mbedtls/hkdf.h"
-#include "third_party/mbedtls/md_internal.h"
 void test_test_hkdf( int md_alg, data_t *ikm, data_t *salt, data_t *info,
                 data_t *expected_okm )
 {

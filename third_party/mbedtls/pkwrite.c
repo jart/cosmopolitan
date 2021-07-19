@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/asn1write.h"
 #include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/common.h"
@@ -54,7 +71,7 @@ asm(".include \"libc/disclaimer.inc\"");
 static int pk_write_rsa_pubkey( unsigned char **p, unsigned char *start,
                                 mbedtls_rsa_context *rsa )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t len = 0;
     mbedtls_mpi T;
 
@@ -93,7 +110,7 @@ end_of_export:
 static int pk_write_ec_pubkey( unsigned char **p, unsigned char *start,
                                mbedtls_ecp_keypair *ec )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t len = 0;
     unsigned char buf[MBEDTLS_ECP_MAX_PT_LEN];
 
@@ -121,7 +138,7 @@ static int pk_write_ec_pubkey( unsigned char **p, unsigned char *start,
 static int pk_write_ec_param( unsigned char **p, unsigned char *start,
                               mbedtls_ecp_keypair *ec )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t len = 0;
     const char *oid;
     size_t oid_len;
@@ -140,7 +157,7 @@ static int pk_write_ec_param( unsigned char **p, unsigned char *start,
 static int pk_write_ec_private( unsigned char **p, unsigned char *start,
                                 mbedtls_ecp_keypair *ec )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t byte_length = ( ec->grp.pbits + 7 ) / 8;
     unsigned char tmp[MBEDTLS_ECP_MAX_BYTES];
 
@@ -168,7 +185,7 @@ exit:
 int mbedtls_pk_write_pubkey( unsigned char **p, unsigned char *start,
                              const mbedtls_pk_context *key )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t len = 0;
 
     PK_VALIDATE_RET( p != NULL );
@@ -229,7 +246,7 @@ int mbedtls_pk_write_pubkey( unsigned char **p, unsigned char *start,
  */
 int mbedtls_pk_write_pubkey_der( mbedtls_pk_context *key, unsigned char *buf, size_t size )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char *c;
     size_t len = 0, par_len = 0, oid_len;
     mbedtls_pk_type_t pk_type;
@@ -330,7 +347,7 @@ int mbedtls_pk_write_pubkey_der( mbedtls_pk_context *key, unsigned char *buf, si
  */
 int mbedtls_pk_write_key_der( mbedtls_pk_context *key, unsigned char *buf, size_t size )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char *c;
     size_t len = 0;
 
@@ -583,7 +600,7 @@ int mbedtls_pk_write_key_der( mbedtls_pk_context *key, unsigned char *buf, size_
  */
 int mbedtls_pk_write_pubkey_pem( mbedtls_pk_context *key, unsigned char *buf, size_t size )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char output_buf[PUB_DER_MAX_BYTES];
     size_t olen = 0;
 
@@ -618,7 +635,7 @@ int mbedtls_pk_write_pubkey_pem( mbedtls_pk_context *key, unsigned char *buf, si
  */
 int mbedtls_pk_write_key_pem( mbedtls_pk_context *key, unsigned char *buf, size_t size )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char *output_buf;
     const char *begin, *end;
     size_t olen = 0;

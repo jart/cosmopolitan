@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/ecdsa.h"
 #include "third_party/mbedtls/ecp.h"
@@ -12,25 +29,10 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
-/*
- *  Public Key abstraction layer
- *
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+
+/**
+ * @fileoverview Public Key abstraction layer
  */
 
 #if defined(MBEDTLS_PK_C)
@@ -48,8 +50,7 @@ asm(".include \"libc/disclaimer.inc\"");
  */
 void mbedtls_pk_init( mbedtls_pk_context *ctx )
 {
-    PK_VALIDATE( ctx != NULL );
-
+    PK_VALIDATE( ctx );
     ctx->pk_info = NULL;
     ctx->pk_ctx = NULL;
 }
@@ -69,7 +70,7 @@ void mbedtls_pk_free( mbedtls_pk_context *ctx )
 {
     if( ctx == NULL )
         return;
-    if ( ctx->pk_info != NULL )
+    if ( ctx->pk_info )
         ctx->pk_info->ctx_free_func( ctx->pk_ctx );
     mbedtls_platform_zeroize( ctx, sizeof( mbedtls_pk_context ) );
 }
@@ -83,7 +84,7 @@ void mbedtls_pk_free( mbedtls_pk_context *ctx )
  */
 void mbedtls_pk_restart_init( mbedtls_pk_restart_ctx *ctx )
 {
-    PK_VALIDATE( ctx != NULL );
+    PK_VALIDATE( ctx );
     ctx->pk_info = NULL;
     ctx->rs_ctx = NULL;
 }
@@ -154,8 +155,8 @@ const mbedtls_pk_info_t * mbedtls_pk_info_from_type( mbedtls_pk_type_t pk_type )
  */
 int mbedtls_pk_setup( mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info )
 {
-    PK_VALIDATE_RET( ctx != NULL );
-    if( info == NULL || ctx->pk_info != NULL )
+    PK_VALIDATE_RET( ctx );
+    if( info == NULL || ctx->pk_info )
         return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
 
     if( ( ctx->pk_ctx = info->ctx_alloc_func() ) == NULL )
@@ -189,8 +190,8 @@ int mbedtls_pk_setup_rsa_alt( mbedtls_pk_context *ctx, void * key,
     mbedtls_rsa_alt_context *rsa_alt;
     const mbedtls_pk_info_t *info = &mbedtls_rsa_alt_info;
 
-    PK_VALIDATE_RET( ctx != NULL );
-    if( ctx->pk_info != NULL )
+    PK_VALIDATE_RET( ctx );
+    if( ctx->pk_info )
         return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
 
     if( ( ctx->pk_ctx = info->ctx_alloc_func() ) == NULL )
@@ -252,7 +253,7 @@ static int pk_restart_setup( mbedtls_pk_restart_ctx *ctx,
                              const mbedtls_pk_info_t *info )
 {
     /* Don't do anything if already set up or invalid */
-    if( ctx == NULL || ctx->pk_info != NULL )
+    if( ctx == NULL || ctx->pk_info )
         return( 0 );
 
     /* Should never happen when we're called */
@@ -294,10 +295,10 @@ int mbedtls_pk_verify_restartable( mbedtls_pk_context *ctx,
                                    const unsigned char *sig, size_t sig_len,
                                    mbedtls_pk_restart_ctx *rs_ctx )
 {
-    PK_VALIDATE_RET( ctx != NULL );
+    PK_VALIDATE_RET( ctx );
     PK_VALIDATE_RET( ( md_alg == MBEDTLS_MD_NONE && hash_len == 0 ) ||
-                     hash != NULL );
-    PK_VALIDATE_RET( sig != NULL );
+                     hash );
+    PK_VALIDATE_RET( sig );
 
     if( ctx->pk_info == NULL ||
         pk_hashlen_helper( md_alg, &hash_len ) != 0 )
@@ -305,11 +306,11 @@ int mbedtls_pk_verify_restartable( mbedtls_pk_context *ctx,
 
 #if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
     /* optimization: use non-restartable version if restart disabled */
-    if( rs_ctx != NULL &&
+    if( rs_ctx &&
         mbedtls_ecp_restart_is_enabled() &&
-        ctx->pk_info->verify_rs_func != NULL )
+        ctx->pk_info->verify_rs_func )
     {
-        int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+        int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
         if( ( ret = pk_restart_setup( rs_ctx, ctx->pk_info ) ) != 0 )
             return( ret );
@@ -399,10 +400,10 @@ int mbedtls_pk_verify_ext( mbedtls_pk_type_t type, const void *options,
                            const unsigned char *hash, size_t hash_len,
                            const unsigned char *sig, size_t sig_len )
 {
-  PK_VALIDATE_RET( ctx != NULL );
+  PK_VALIDATE_RET( ctx );
   PK_VALIDATE_RET( ( md_alg == MBEDTLS_MD_NONE && hash_len == 0 ) ||
-                   hash != NULL );
-  PK_VALIDATE_RET( sig != NULL );
+                   hash );
+  PK_VALIDATE_RET( sig );
   if( ctx->pk_info == NULL )
     return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
   if( ! mbedtls_pk_can_do( ctx, type ) )
@@ -410,7 +411,7 @@ int mbedtls_pk_verify_ext( mbedtls_pk_type_t type, const void *options,
   if( type == MBEDTLS_PK_RSASSA_PSS )
   {
 #if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PKCS1_V21)
-        int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+        int ret = MBEDTLS_ERR_THIS_CORRUPTION;
         const mbedtls_pk_rsassa_pss_options *pss_opts;
 #if SIZE_MAX > UINT_MAX
         if( md_alg == MBEDTLS_MD_NONE && UINT_MAX < hash_len )
@@ -437,7 +438,7 @@ int mbedtls_pk_verify_ext( mbedtls_pk_type_t type, const void *options,
 #endif /* MBEDTLS_RSA_C && MBEDTLS_PKCS1_V21 */
     }
     /* General case: no options */
-    if( options != NULL )
+    if( options )
         return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
     return( mbedtls_pk_verify( ctx, md_alg, hash, hash_len, sig, sig_len ) );
 }
@@ -471,47 +472,39 @@ int mbedtls_pk_verify_ext( mbedtls_pk_type_t type, const void *options,
  *                  operations was reached: see \c mbedtls_ecp_set_max_ops().
  */
 int mbedtls_pk_sign_restartable( mbedtls_pk_context *ctx,
-             mbedtls_md_type_t md_alg,
-             const unsigned char *hash, size_t hash_len,
-             unsigned char *sig, size_t *sig_len,
-             int (*f_rng)(void *, unsigned char *, size_t), void *p_rng,
-             mbedtls_pk_restart_ctx *rs_ctx )
+                                 mbedtls_md_type_t md_alg,
+                                 const unsigned char *hash, size_t hash_len,
+                                 unsigned char *sig, size_t *sig_len,
+                                 int (*f_rng)(void *, unsigned char *, size_t), 
+                                 void *p_rng, mbedtls_pk_restart_ctx *rs_ctx )
 {
-    PK_VALIDATE_RET( ctx != NULL );
+    PK_VALIDATE_RET( ctx );
     PK_VALIDATE_RET( ( md_alg == MBEDTLS_MD_NONE && hash_len == 0 ) ||
-                     hash != NULL );
-    PK_VALIDATE_RET( sig != NULL );
-
+                     hash );
+    PK_VALIDATE_RET( sig );
     if( ctx->pk_info == NULL ||
         pk_hashlen_helper( md_alg, &hash_len ) != 0 )
         return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
-
 #if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
     /* optimization: use non-restartable version if restart disabled */
-    if( rs_ctx != NULL &&
+    if( rs_ctx &&
         mbedtls_ecp_restart_is_enabled() &&
-        ctx->pk_info->sign_rs_func != NULL )
+        ctx->pk_info->sign_rs_func )
     {
-        int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-
+        int ret = MBEDTLS_ERR_THIS_CORRUPTION;
         if( ( ret = pk_restart_setup( rs_ctx, ctx->pk_info ) ) != 0 )
             return( ret );
-
         ret = ctx->pk_info->sign_rs_func( ctx->pk_ctx, md_alg,
                 hash, hash_len, sig, sig_len, f_rng, p_rng, rs_ctx->rs_ctx );
-
         if( ret != MBEDTLS_ERR_ECP_IN_PROGRESS )
             mbedtls_pk_restart_free( rs_ctx );
-
         return( ret );
     }
 #else /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
     (void) rs_ctx;
 #endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
-
     if( ctx->pk_info->sign_func == NULL )
         return( MBEDTLS_ERR_PK_TYPE_MISMATCH );
-
     return( ctx->pk_info->sign_func( ctx->pk_ctx, md_alg, hash, hash_len,
                                      sig, sig_len, f_rng, p_rng ) );
 }
@@ -577,17 +570,14 @@ int mbedtls_pk_decrypt( mbedtls_pk_context *ctx,
                         unsigned char *output, size_t *olen, size_t osize,
                         int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
-    PK_VALIDATE_RET( ctx != NULL );
-    PK_VALIDATE_RET( input != NULL || ilen == 0 );
-    PK_VALIDATE_RET( output != NULL || osize == 0 );
-    PK_VALIDATE_RET( olen != NULL );
-
+    PK_VALIDATE_RET( ctx );
+    PK_VALIDATE_RET( input || ilen == 0 );
+    PK_VALIDATE_RET( output || osize == 0 );
+    PK_VALIDATE_RET( olen );
     if( ctx->pk_info == NULL )
         return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
-
     if( ctx->pk_info->decrypt_func == NULL )
         return( MBEDTLS_ERR_PK_TYPE_MISMATCH );
-
     return( ctx->pk_info->decrypt_func( ctx->pk_ctx, input, ilen,
                 output, olen, osize, f_rng, p_rng ) );
 }
@@ -613,17 +603,14 @@ int mbedtls_pk_encrypt( mbedtls_pk_context *ctx,
                         unsigned char *output, size_t *olen, size_t osize,
                         int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
-    PK_VALIDATE_RET( ctx != NULL );
-    PK_VALIDATE_RET( input != NULL || ilen == 0 );
-    PK_VALIDATE_RET( output != NULL || osize == 0 );
-    PK_VALIDATE_RET( olen != NULL );
-
+    PK_VALIDATE_RET( ctx );
+    PK_VALIDATE_RET( input || ilen == 0 );
+    PK_VALIDATE_RET( output || osize == 0 );
+    PK_VALIDATE_RET( olen );
     if( ctx->pk_info == NULL )
         return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
-
     if( ctx->pk_info->encrypt_func == NULL )
         return( MBEDTLS_ERR_PK_TYPE_MISMATCH );
-
     return( ctx->pk_info->encrypt_func( ctx->pk_ctx, input, ilen,
                 output, olen, osize, f_rng, p_rng ) );
 }
@@ -643,18 +630,15 @@ int mbedtls_pk_encrypt( mbedtls_pk_context *ctx,
  */
 int mbedtls_pk_check_pair( const mbedtls_pk_context *pub, const mbedtls_pk_context *prv )
 {
-    PK_VALIDATE_RET( pub != NULL );
-    PK_VALIDATE_RET( prv != NULL );
-
+    PK_VALIDATE_RET( pub );
+    PK_VALIDATE_RET( prv );
     if( pub->pk_info == NULL ||
         prv->pk_info == NULL )
     {
         return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
     }
-
     if( prv->pk_info->check_pair_func == NULL )
         return( MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE );
-
     if( prv->pk_info->type == MBEDTLS_PK_RSA_ALT )
     {
         if( pub->pk_info->type != MBEDTLS_PK_RSA )
@@ -665,7 +649,6 @@ int mbedtls_pk_check_pair( const mbedtls_pk_context *pub, const mbedtls_pk_conte
         if( pub->pk_info != prv->pk_info )
             return( MBEDTLS_ERR_PK_TYPE_MISMATCH );
     }
-
     return( prv->pk_info->check_pair_func( pub->pk_ctx, prv->pk_ctx ) );
 }
 
@@ -695,13 +678,11 @@ size_t mbedtls_pk_get_bitlen( const mbedtls_pk_context *ctx )
  */
 int mbedtls_pk_debug( const mbedtls_pk_context *ctx, mbedtls_pk_debug_item *items )
 {
-    PK_VALIDATE_RET( ctx != NULL );
+    PK_VALIDATE_RET( ctx );
     if( ctx->pk_info == NULL )
         return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
-
     if( ctx->pk_info->debug_func == NULL )
         return( MBEDTLS_ERR_PK_TYPE_MISMATCH );
-
     ctx->pk_info->debug_func( ctx->pk_ctx, items );
     return( 0 );
 }

@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/asn1write.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/error.h"
@@ -46,7 +63,7 @@ asm(".include \"libc/disclaimer.inc\"");
  */
 void mbedtls_x509write_csr_init( mbedtls_x509write_csr *ctx )
 {
-    memset( ctx, 0, sizeof( mbedtls_x509write_csr ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_x509write_csr ) );
 }
 
 /**
@@ -145,7 +162,7 @@ int mbedtls_x509write_csr_set_key_usage( mbedtls_x509write_csr *ctx, unsigned ch
 {
     unsigned char buf[4];
     unsigned char *c;
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     c = buf + 4;
     ret = mbedtls_asn1_write_named_bitstring( &c, buf, &key_usage, 8 );
     if( ret < 3 || ret > 4 )
@@ -172,7 +189,7 @@ int mbedtls_x509write_csr_set_ns_cert_type( mbedtls_x509write_csr *ctx,
 {
     unsigned char buf[4];
     unsigned char *c;
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     c = buf + 4;
     ret = mbedtls_asn1_write_named_bitstring( &c, buf, &ns_cert_type, 8 );
     if( ret < 3 || ret > 4 )
@@ -192,7 +209,7 @@ static int x509write_csr_der_internal( mbedtls_x509write_csr *ctx,
                                  int (*f_rng)(void *, unsigned char *, size_t),
                                  void *p_rng )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     const char *sig_oid;
     size_t sig_oid_len = 0;
     unsigned char *c, *c2;
@@ -300,7 +317,7 @@ static int x509write_csr_der_internal( mbedtls_x509write_csr *ctx,
             &c2, buf,
             MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE ) );
     /* Zero the unused bytes at the start of buf */
-    memset( buf, 0, c2 - buf);
+    mbedtls_platform_zeroize( buf, c2 - buf);
     return( (int) len );
 }
 
@@ -365,7 +382,7 @@ int mbedtls_x509write_csr_pem( mbedtls_x509write_csr *ctx, unsigned char *buf, s
                        int (*f_rng)(void *, unsigned char *, size_t),
                        void *p_rng )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t olen = 0;
     if( ( ret = mbedtls_x509write_csr_der( ctx, buf, size,
                                    f_rng, p_rng ) ) < 0 )

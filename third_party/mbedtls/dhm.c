@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "third_party/mbedtls/asn1.h"
 #include "third_party/mbedtls/common.h"
@@ -11,34 +28,16 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
-/*
- *  Diffie-Hellman-Merkle key exchange
- *
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
 
-/*
- *  The following sources were referenced in the design of this implementation
- *  of the Diffie-Hellman-Merkle algorithm:
+/**
+ * @fileoverview Diffie-Hellman-Merkle key exchange
  *
- *  [1] Handbook of Applied Cryptography - 1997, Chapter 12
- *      Menezes, van Oorschot and Vanstone
+ * The following sources were referenced in the design of this
+ * implementation of the Diffie-Hellman-Merkle algorithm:
  *
+ * [1] Handbook of Applied Cryptography - 1997, Chapter 12
+ *     Menezes, van Oorschot and Vanstone
  */
 
 #if defined(MBEDTLS_DHM_C)
@@ -112,7 +111,7 @@ cleanup:
 void mbedtls_dhm_init( mbedtls_dhm_context *ctx )
 {
     DHM_VALIDATE( ctx != NULL );
-    memset( ctx, 0, sizeof( mbedtls_dhm_context ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_dhm_context ) );
 }
 
 /*
@@ -122,7 +121,7 @@ int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
                              unsigned char **p,
                              const unsigned char *end )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     DHM_VALIDATE_RET( ctx != NULL );
     DHM_VALIDATE_RET( p != NULL && *p != NULL );
     DHM_VALIDATE_RET( end != NULL );
@@ -167,7 +166,7 @@ int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
         MBEDTLS_MPI_CHK( mbedtls_mpi_fill_random( &ctx->X, x_size, f_rng, p_rng ) );
 
         while( mbedtls_mpi_cmp_mpi( &ctx->X, &ctx->P ) >= 0 )
-            MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &ctx->X, 1 ) );
+            mbedtls_mpi_shift_r( &ctx->X, 1 );
 
         if( count++ > 10 )
             return( MBEDTLS_ERR_DHM_MAKE_PARAMS_FAILED );
@@ -224,7 +223,7 @@ int mbedtls_dhm_set_group( mbedtls_dhm_context *ctx,
                            const mbedtls_mpi *P,
                            const mbedtls_mpi *G )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     DHM_VALIDATE_RET( ctx != NULL );
     DHM_VALIDATE_RET( P != NULL );
     DHM_VALIDATE_RET( G != NULL );
@@ -245,7 +244,7 @@ int mbedtls_dhm_set_group( mbedtls_dhm_context *ctx,
 int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
                              const unsigned char *input, size_t ilen )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     DHM_VALIDATE_RET( ctx != NULL );
     DHM_VALIDATE_RET( input != NULL );
 
@@ -285,7 +284,7 @@ int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
         MBEDTLS_MPI_CHK( mbedtls_mpi_fill_random( &ctx->X, x_size, f_rng, p_rng ) );
 
         while( mbedtls_mpi_cmp_mpi( &ctx->X, &ctx->P ) >= 0 )
-            MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &ctx->X, 1 ) );
+            mbedtls_mpi_shift_r( &ctx->X, 1 );
 
         if( count++ > 10 )
             return( MBEDTLS_ERR_DHM_MAKE_PUBLIC_FAILED );
@@ -323,7 +322,7 @@ static int dhm_random_below( mbedtls_mpi *R, const mbedtls_mpi *M,
         MBEDTLS_MPI_CHK( mbedtls_mpi_fill_random( R, mbedtls_mpi_size( M ), f_rng, p_rng ) );
 
         while( mbedtls_mpi_cmp_mpi( R, M ) >= 0 )
-            MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( R, 1 ) );
+            mbedtls_mpi_shift_r( &R, 1 );
 
         if( count++ > 10 )
             return( MBEDTLS_ERR_MPI_NOT_ACCEPTABLE );
@@ -367,7 +366,7 @@ static int dhm_update_blinding( mbedtls_dhm_context *ctx,
      * Ok, we need blinding. Can we re-use existing values?
      * If yes, just update them by squaring them.
      */
-    if( mbedtls_mpi_cmp_int( &ctx->Vi, 1 ) != 0 )
+    if( !mbedtls_mpi_is_one( &ctx->Vi ) )
     {
         MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &ctx->Vi, &ctx->Vi, &ctx->Vi ) );
         MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( &ctx->Vi, &ctx->Vi, &ctx->P ) );
@@ -411,7 +410,7 @@ int mbedtls_dhm_calc_secret( mbedtls_dhm_context *ctx,
                              int (*f_rng)(void *, unsigned char *, size_t),
                              void *p_rng )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_mpi GYb;
     DHM_VALIDATE_RET( ctx != NULL );
     DHM_VALIDATE_RET( output != NULL );
@@ -488,7 +487,7 @@ void mbedtls_dhm_free( mbedtls_dhm_context *ctx )
 int mbedtls_dhm_parse_dhm( mbedtls_dhm_context *dhm, const unsigned char *dhmin,
                            size_t dhminlen )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t len;
     unsigned char *p, *end;
 #if defined(MBEDTLS_PEM_PARSE_C)
@@ -642,7 +641,7 @@ static int load_file( const char *path, unsigned char **buf, size_t *n )
  */
 int mbedtls_dhm_parse_dhmfile( mbedtls_dhm_context *dhm, const char *path )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t n;
     unsigned char *buf;
     DHM_VALIDATE_RET( dhm != NULL );
@@ -694,7 +693,7 @@ static const size_t mbedtls_test_dhm_params_len = sizeof( mbedtls_test_dhm_param
  */
 int mbedtls_dhm_self_test( int verbose )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_dhm_context dhm;
 
     mbedtls_dhm_init( &dhm );

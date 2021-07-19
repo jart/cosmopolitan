@@ -660,6 +660,10 @@ static void *__asan_realloc(void *p, size_t n) {
   return q;
 }
 
+static void *__asan_realloc_in_place(void *p, size_t n) {
+  return 0;
+}
+
 static void *__asan_valloc(size_t n) {
   return __asan_memalign(PAGESIZE, n);
 }
@@ -752,6 +756,7 @@ void __asan_install_malloc_hooks(void) {
   HOOK(hook_realloc, __asan_realloc);
   HOOK(hook_memalign, __asan_memalign);
   HOOK(hook_malloc_trim, __asan_malloc_trim);
+  HOOK(hook_realloc_in_place, __asan_realloc_in_place);
   HOOK(hook_malloc_usable_size, __asan_malloc_usable_size);
 }
 
@@ -847,7 +852,8 @@ textstartup void __asan_init(int argc, char **argv, char **envp,
   REQUIRE(FindMemoryInterval);
   REQUIRE(TrackMemoryInterval);
   if (weaken(hook_malloc) || weaken(hook_calloc) || weaken(hook_realloc) ||
-      weaken(hook_pvalloc) || weaken(hook_valloc) || weaken(hook_free) ||
+      weaken(hook_realloc_in_place) || weaken(hook_pvalloc) ||
+      weaken(hook_valloc) || weaken(hook_free) ||
       weaken(hook_malloc_usable_size)) {
     REQUIRE(dlmemalign);
     REQUIRE(dlmalloc_usable_size);

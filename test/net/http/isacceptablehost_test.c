@@ -57,38 +57,6 @@ TEST(IsAcceptablePort, test) {
   EXPECT_FALSE(IsAcceptablePort("http", -1));
 }
 
-TEST(ParseIp, test) {
-  EXPECT_EQ(-1, ParseIp("", -1));
-  EXPECT_EQ(0x00000000, ParseIp("0.0.0.0", -1));
-  EXPECT_EQ(0x01020304, ParseIp("1.2.3.4", -1));
-  EXPECT_EQ(0x80020304, ParseIp("128.2.3.4", -1));
-  EXPECT_EQ(0xFFFFFFFF, ParseIp("255.255.255.255", -1));
-  EXPECT_EQ(0xcb007100, ParseIp("203.0.113.0", -1));
-  EXPECT_EQ(0x00000000, ParseIp("...", -1)); /* meh */
-  EXPECT_EQ(-1, ParseIp("128.2..3.4", -1));
-  EXPECT_EQ(-1, ParseIp("1.2.3", -1));
-  EXPECT_EQ(-1, ParseIp("256.255.255.255", -1));
-  EXPECT_EQ(-1, ParseIp("1.2.3.4.5", -1));
-  EXPECT_EQ(-1, ParseIp("1.2.3.4.5.arpa", -1));
-  EXPECT_EQ(-1, ParseIp("255.255.255", -1));
-  EXPECT_EQ(-1, ParseIp("hello", -1));
-  EXPECT_EQ(-1, ParseIp("hello\177", -1));
-  EXPECT_EQ(-1, ParseIp("hello.example\300\200", -1));
-  EXPECT_EQ(-1, ParseIp(".", -1));
-  EXPECT_EQ(-1, ParseIp(".e", -1));
-  EXPECT_EQ(-1, ParseIp("e.", -1));
-  EXPECT_EQ(-1, ParseIp(".hi.example", -1));
-  EXPECT_EQ(-1, ParseIp("hi..example", -1));
-  EXPECT_EQ(-1, ParseIp("hi-there.example", -1));
-  EXPECT_EQ(-1, ParseIp("_there.example", -1));
-  EXPECT_EQ(-1, ParseIp("-there.example", -1));
-  EXPECT_EQ(-1, ParseIp("there-.example", -1));
-  EXPECT_EQ(-1, ParseIp("ther#e.example", -1));
-  EXPECT_EQ(-1, ParseIp("localhost", -1));
-  EXPECT_EQ(-1, ParseIp("hello.example", -1));
-  EXPECT_EQ(-1, ParseIp("hello..example", -1));
-}
-
 BENCH(IsAcceptableHost, bench) {
   uint32_t ip;
   uint16_t port;

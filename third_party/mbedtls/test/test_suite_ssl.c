@@ -18,6 +18,9 @@
 #include "third_party/mbedtls/test/test.inc"
 #include "third_party/mbedtls/ssl_invasive.h"
 #include "libc/testlib/testlib.h"
+#include "libc/log/log.h"
+#include "libc/rand/rand.h"
+#include "libc/bits/safemacros.internal.h"
 #include "third_party/mbedtls/test/test.inc"
 /*
  * *** THIS FILE WAS MACHINE GENERATED ***
@@ -1035,7 +1038,7 @@ int mbedtls_move_handshake_to_state( mbedtls_ssl_context *ssl,
     enum { BUFFSIZE = 1024 };
     int max_steps = 1000;
     int ret = 0;
-
+ 
     if( ssl == NULL || second_ssl == NULL )
     {
         return MBEDTLS_ERR_SSL_BAD_INPUT_DATA;
@@ -3358,8 +3361,7 @@ void test_ssl_crypt_record( int cipher_type, int hash_id,
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 
         /* Decrypt record with t_dec */
-        ret = mbedtls_ssl_decrypt_buf( &ssl, t_dec, &rec );
-        TEST_ASSERT( ret == 0 );
+        TEST_EQUAL( 0, mbedtls_ssl_decrypt_buf( &ssl, t_dec, &rec ) );
 
         /* Compare results */
         TEST_ASSERT( rec.type == rec_backup.type );
@@ -3525,7 +3527,7 @@ void test_ssl_crypt_record_small( int cipher_type, int hash_id,
 #endif /* MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL */
 
             /* Decrypt record with t_dec */
-            TEST_ASSERT( mbedtls_ssl_decrypt_buf( &ssl, t_dec, &rec ) == 0 );
+            TEST_EQUAL( 0, mbedtls_ssl_decrypt_buf( &ssl, t_dec, &rec ) );
 
             /* Compare results */
             TEST_ASSERT( rec.type == rec_backup.type );
@@ -3700,19 +3702,21 @@ void test_ssl_decrypt_non_etm_cbc( int cipher_type, int hash_id, int trunc_hmac,
     /*
      * Modify each byte of the pre-encryption record before encrypting and
      * decrypting it, expecting failure every time.
+     *
+     * We use RANDOMMNESS because this loop runs hundreds of times and this
+     * function runs hundreds of times. So it can very easily contribute to
+     * hundreds of milliseconds of latency, which we can't have in our pure
+     * testing infrastructure.
      */
-    for( i = block_size; i < buflen; i++ )
+    for( i = block_size; i < buflen; i += max( 1, rand64() & 31 ) )
     {
         mbedtls_test_set_step( i );
-
         /* Restore correct pre-encryption record */
         rec = rec_save;
         rec.buf = buf;
         memcpy( buf, buf_save, buflen );
-
         /* Corrupt one byte of the data (could be plaintext, MAC or padding) */
         rec.buf[i] ^= 0x01;
-
         /* Encrypt */
         TEST_EQUAL( 0, mbedtls_cipher_crypt( &t0.cipher_ctx_enc,
                                       t0.iv_enc, t0.ivlen,
@@ -3720,7 +3724,6 @@ void test_ssl_decrypt_non_etm_cbc( int cipher_type, int hash_id, int trunc_hmac,
                                       rec.buf + rec.data_offset, &olen ) );
         rec.data_offset -= t0.ivlen;
         rec.data_len    += t0.ivlen;
-
         /* Decrypt and expect failure */
         TEST_EQUAL( MBEDTLS_ERR_SSL_INVALID_MAC,
                     mbedtls_ssl_decrypt_buf( &ssl, &t1, &rec ) );
@@ -3737,19 +3740,21 @@ void test_ssl_decrypt_non_etm_cbc( int cipher_type, int hash_id, int trunc_hmac,
      *
      * (Start the loop with correct padding, just to double-check that record
      * saving did work, and that we're overwriting the correct bytes.)
+     *
+     * We use RANDOMMNESS because this loop runs hundreds of times and this
+     * function runs hundreds of times. So it can very easily contribute to
+     * hundreds of milliseconds of latency, which we can't have in our pure
+     * testing infrastructure.
      */
-    for( i = padlen; i <= pad_max_len; i++ )
+    for( i = padlen; i <= pad_max_len; i += max( 1, rand64() & 31 ) )
     {
         mbedtls_test_set_step( i );
-
         /* Restore correct pre-encryption record */
         rec = rec_save;
         rec.buf = buf;
         memcpy( buf, buf_save, buflen );
-
         /* Set padding bytes to new value */
         memset( buf + buflen - padlen - 1, i, padlen + 1 );
-
         /* Encrypt */
         TEST_EQUAL( 0, mbedtls_cipher_crypt( &t0.cipher_ctx_enc,
                                       t0.iv_enc, t0.ivlen,
@@ -3757,7 +3762,6 @@ void test_ssl_decrypt_non_etm_cbc( int cipher_type, int hash_id, int trunc_hmac,
                                       rec.buf + rec.data_offset, &olen ) );
         rec.data_offset -= t0.ivlen;
         rec.data_len    += t0.ivlen;
-
         /* Decrypt and expect failure except the first time */
         exp_ret = ( i == padlen ) ? 0 : MBEDTLS_ERR_SSL_INVALID_MAC;
         TEST_EQUAL( exp_ret, mbedtls_ssl_decrypt_buf( &ssl, &t1, &rec ) );
@@ -4696,7 +4700,7 @@ void test_handshake_fragmentation( int mfl, int expected_srv_hs_fragmentation, i
     options.dtls = 1;
     options.mfl = mfl;
     /* Set cipher to one using CBC so that record splitting can be tested */
-    options.cipher = "TLS-DHE-RSA-WITH-AES-256-CBC-SHA256";
+    options.cipher = "DHE-RSA-AES256-CBC-SHA256";
     options.srv_auth_mode = MBEDTLS_SSL_VERIFY_REQUIRED;
     options.srv_log_obj = &srv_pattern;
     options.cli_log_obj = &cli_pattern;

@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
 #include "third_party/mbedtls/aes.h"
 #include "third_party/mbedtls/ccm.h"
@@ -16,30 +33,8 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
-/**
- * \file cipher_wrap.c
- *
- * \brief Generic cipher wrapper for mbed TLS
- *
- * \author Adriaan de Jong <dejong@fox-it.com>
- *
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+
 #if defined(MBEDTLS_CIPHER_C)
 
 #if defined(MBEDTLS_GCM_C)
@@ -48,7 +43,7 @@ static void *gcm_ctx_alloc( void )
 {
     void *ctx = mbedtls_calloc( 1, sizeof( mbedtls_gcm_context ) );
 
-    if( ctx != NULL )
+    if( ctx )
         mbedtls_gcm_init( (mbedtls_gcm_context *) ctx );
 
     return( ctx );
@@ -67,7 +62,7 @@ static void *ccm_ctx_alloc( void )
 {
     void *ctx = mbedtls_calloc( 1, sizeof( mbedtls_ccm_context ) );
 
-    if( ctx != NULL )
+    if( ctx )
         mbedtls_ccm_init( (mbedtls_ccm_context *) ctx );
 
     return( ctx );
@@ -81,21 +76,6 @@ static void ccm_ctx_free( void *ctx )
 #endif /* MBEDTLS_CCM_C */
 
 #if defined(MBEDTLS_AES_C)
-
-static int aes_crypt_ecb_wrap( void *ctx, mbedtls_operation_t operation,
-        const unsigned char *input, unsigned char *output )
-{
-    return mbedtls_aes_crypt_ecb( (mbedtls_aes_context *) ctx, operation, input, output );
-}
-
-#if defined(MBEDTLS_CIPHER_MODE_CBC)
-static int aes_crypt_cbc_wrap( void *ctx, mbedtls_operation_t operation, size_t length,
-        unsigned char *iv, const unsigned char *input, unsigned char *output )
-{
-    return mbedtls_aes_crypt_cbc( (mbedtls_aes_context *) ctx, operation, length, iv, input,
-                          output );
-}
-#endif /* MBEDTLS_CIPHER_MODE_CBC */
 
 #if defined(MBEDTLS_CIPHER_MODE_CFB)
 static int aes_crypt_cfb128_wrap( void *ctx, mbedtls_operation_t operation,
@@ -169,7 +149,7 @@ static void * aes_ctx_alloc( void )
 {
     mbedtls_aes_context *aes = mbedtls_calloc( 1, sizeof( mbedtls_aes_context ) );
 
-    if( aes == NULL )
+    if( !aes )
         return( NULL );
 
     mbedtls_aes_init( aes );
@@ -185,9 +165,9 @@ static void aes_ctx_free( void *ctx )
 
 static const mbedtls_cipher_base_t aes_info = {
     MBEDTLS_CIPHER_ID_AES,
-    aes_crypt_ecb_wrap,
+    (void *)mbedtls_aes_crypt_ecb,
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
-    aes_crypt_cbc_wrap,
+    (void *)mbedtls_aes_crypt_cbc,
 #endif
 #if defined(MBEDTLS_CIPHER_MODE_CFB)
     aes_crypt_cfb128_wrap,
@@ -1041,7 +1021,7 @@ static int chacha20_stream_wrap( void *ctx,  size_t length,
                                  const unsigned char *input,
                                  unsigned char *output )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
     ret = mbedtls_chacha20_update( ctx, length, input, output );
     if( ret == MBEDTLS_ERR_CHACHA20_BAD_INPUT_DATA )

@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/x86feature.h"
@@ -5,6 +22,7 @@
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/endian.h"
 #include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/md.h"
 #include "third_party/mbedtls/platform.h"
 #include "third_party/mbedtls/sha1.h"
 
@@ -45,42 +63,6 @@ void sha1_transform_avx2(mbedtls_sha1_context *, const uint8_t *, int);
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_SHA1_BAD_INPUT_DATA )
 
 #define SHA1_VALIDATE(cond)  MBEDTLS_INTERNAL_VALIDATE( cond )
-
-/**
- * \brief          This function initializes a SHA-1 context.
- *
- * \warning        SHA-1 is considered a weak message digest and its use
- *                 constitutes a security risk. We recommend considering
- *                 stronger message digests instead.
- *
- * \param ctx      The SHA-1 context to initialize.
- *                 This must not be \c NULL.
- *
- */
-void mbedtls_sha1_init( mbedtls_sha1_context *ctx )
-{
-    SHA1_VALIDATE( ctx != NULL );
-    memset( ctx, 0, sizeof( mbedtls_sha1_context ) );
-}
-
-/**
- * \brief          This function clears a SHA-1 context.
- *
- * \warning        SHA-1 is considered a weak message digest and its use
- *                 constitutes a security risk. We recommend considering
- *                 stronger message digests instead.
- *
- * \param ctx      The SHA-1 context to clear. This may be \c NULL,
- *                 in which case this function does nothing. If it is
- *                 not \c NULL, it must point to an initialized
- *                 SHA-1 context.
- *
- */
-void mbedtls_sha1_free( mbedtls_sha1_context *ctx )
-{
-    if( !ctx ) return;
-    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_sha1_context ) );
-}
 
 /**
  * \brief          This function clones the state of a SHA-1 context.
@@ -395,7 +377,7 @@ int mbedtls_sha1_update_ret( mbedtls_sha1_context *ctx,
                              const unsigned char *input,
                              size_t ilen )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     uint32_t left;
     size_t n, fill;
 
@@ -466,7 +448,7 @@ int mbedtls_sha1_update_ret( mbedtls_sha1_context *ctx,
 int mbedtls_sha1_finish_ret( mbedtls_sha1_context *ctx,
                              unsigned char output[20] )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     uint32_t used;
     uint32_t high, low;
 
@@ -483,17 +465,17 @@ int mbedtls_sha1_finish_ret( mbedtls_sha1_context *ctx,
     if( used <= 56 )
     {
         /* Enough room for padding + length in current block */
-        memset( ctx->buffer + used, 0, 56 - used );
+        mbedtls_platform_zeroize( ctx->buffer + used, 56 - used );
     }
     else
     {
         /* We'll need an extra block */
-        memset( ctx->buffer + used, 0, 64 - used );
+        mbedtls_platform_zeroize( ctx->buffer + used, 64 - used );
 
         if( ( ret = mbedtls_internal_sha1_process( ctx, ctx->buffer ) ) != 0 )
             return( ret );
 
-        memset( ctx->buffer, 0, 56 );
+        mbedtls_platform_zeroize( ctx->buffer, 56 );
     }
 
     /*
@@ -548,7 +530,7 @@ int mbedtls_sha1_ret( const void *input,
                       size_t ilen,
                       unsigned char output[20] )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_sha1_context ctx;
 
     SHA1_VALIDATE_RET( ilen == 0 || input != NULL );
@@ -570,6 +552,18 @@ exit:
 
     return( ret );
 }
+
+const mbedtls_md_info_t mbedtls_sha1_info = {
+    "SHA1",
+    MBEDTLS_MD_SHA1,
+    20,
+    64,
+    (void *)mbedtls_sha1_starts_ret,
+    (void *)mbedtls_sha1_update_ret,
+    (void *)mbedtls_internal_sha1_process,
+    (void *)mbedtls_sha1_finish_ret,
+    (void *)mbedtls_sha1_ret,
+};
 
 #if defined(MBEDTLS_SELF_TEST)
 /*

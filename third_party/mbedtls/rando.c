@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/rand/rand.h"
 #include "libc/sysv/consts/grnd.h"
 #include "third_party/mbedtls/entropy_poll.h"

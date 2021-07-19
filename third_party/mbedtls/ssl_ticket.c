@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/platform.h"
@@ -37,7 +54,7 @@ asm(".include \"libc/disclaimer.inc\"");
  */
 void mbedtls_ssl_ticket_init( mbedtls_ssl_ticket_context *ctx )
 {
-    memset( ctx, 0, sizeof( mbedtls_ssl_ticket_context ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_ssl_ticket_context ) );
 }
 
 #define MAX_KEY_BYTES 32    /* 256 bits */
@@ -61,7 +78,7 @@ void mbedtls_ssl_ticket_init( mbedtls_ssl_ticket_context *ctx )
 static int ssl_ticket_gen_key( mbedtls_ssl_ticket_context *ctx,
                                unsigned char index )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char buf[MAX_KEY_BYTES];
     mbedtls_ssl_ticket_key *key = ctx->keys + index;
 
@@ -113,15 +130,34 @@ static int ssl_ticket_update_keys( mbedtls_ssl_ticket_context *ctx )
         return( 0 );
 }
 
-/*
- * Setup context for actual use
+/**
+ * \brief           Prepare context to be actually used
+ *
+ * \param ctx       Context to be set up
+ * \param f_rng     RNG callback function
+ * \param p_rng     RNG callback context
+ * \param cipher    AEAD cipher to use for ticket protection.
+ *                  Recommended value: MBEDTLS_CIPHER_AES_256_GCM.
+ * \param lifetime  Tickets lifetime in seconds
+ *                  Recommended value: 86400 (one day).
+ *
+ * \note            It is highly recommended to select a cipher that is at
+ *                  least as strong as the the strongest ciphersuite
+ *                  supported. Usually that means a 256-bit key.
+ *
+ * \note            The lifetime of the keys is twice the lifetime of tickets.
+ *                  It is recommended to pick a reasonnable lifetime so as not
+ *                  to negate the benefits of forward secrecy.
+ *
+ * \return          0 if successful,
+ *                  or a specific MBEDTLS_ERR_XXX error code
  */
 int mbedtls_ssl_ticket_setup( mbedtls_ssl_ticket_context *ctx,
     int (*f_rng)(void *, unsigned char *, size_t), void *p_rng,
     mbedtls_cipher_type_t cipher,
     uint32_t lifetime )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     const mbedtls_cipher_info_t *cipher_info;
 
     ctx->f_rng = f_rng;
@@ -194,7 +230,7 @@ int mbedtls_ssl_ticket_write( void *p_ticket,
                               size_t *tlen,
                               uint32_t *ticket_lifetime )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_ssl_ticket_context *ctx = p_ticket;
     mbedtls_ssl_ticket_key *key;
     unsigned char *key_name = start;
@@ -282,7 +318,7 @@ int mbedtls_ssl_ticket_parse( void *p_ticket,
                               unsigned char *buf,
                               size_t len )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_ssl_ticket_context *ctx = p_ticket;
     mbedtls_ssl_ticket_key *key;
     unsigned char *key_name = buf;

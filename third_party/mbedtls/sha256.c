@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/x86feature.h"
@@ -5,6 +22,7 @@
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/endian.h"
 #include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/md.h"
 #include "third_party/mbedtls/platform.h"
 #include "third_party/mbedtls/sha256.h"
 
@@ -13,30 +31,14 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
-/*
- *  FIPS-180-2 compliant SHA-256 implementation
+
+/**
+ * @fileoverview FIPS-180-2 compliant SHA-256 implementation
  *
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
+ * The SHA-256 Secure Hash Standard was published by NIST in 2002.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-/*
- *  The SHA-256 Secure Hash Standard was published by NIST in 2002.
- *
- *  http://csrc.nist.gov/publications/fips/fips180-2/fips180-2.pdf
+ * @see http://csrc.nist.gov/publications/fips/fips180-2/fips180-2.pdf
  */
 
 #define SHA256_VALIDATE_RET(cond)                           \
@@ -48,30 +50,6 @@ void sha256_transform_rorx(mbedtls_sha256_context *, const uint8_t *, int);
 #if !defined(MBEDTLS_SHA256_ALT)
 
 /**
- * \brief          This function initializes a SHA-256 context.
- *
- * \param ctx      The SHA-256 context to initialize. This must not be \c NULL.
- */
-void mbedtls_sha256_init( mbedtls_sha256_context *ctx )
-{
-    SHA256_VALIDATE( ctx != NULL );
-    memset( ctx, 0, sizeof( mbedtls_sha256_context ) );
-}
-
-/**
- * \brief          This function clears a SHA-256 context.
- *
- * \param ctx      The SHA-256 context to clear. This may be \c NULL, in which
- *                 case this function returns immediately. If it is not \c NULL,
- *                 it must point to an initialized SHA-256 context.
- */
-void mbedtls_sha256_free( mbedtls_sha256_context *ctx )
-{
-    if( ctx == NULL ) return;
-    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_sha256_context ) );
-}
-
-/**
  * \brief          This function clones the state of a SHA-256 context.
  *
  * \param dst      The destination context. This must be initialized.
@@ -80,9 +58,43 @@ void mbedtls_sha256_free( mbedtls_sha256_context *ctx )
 void mbedtls_sha256_clone( mbedtls_sha256_context *dst,
                            const mbedtls_sha256_context *src )
 {
-    SHA256_VALIDATE( dst != NULL );
-    SHA256_VALIDATE( src != NULL );
+    SHA256_VALIDATE( dst );
+    SHA256_VALIDATE( src );
     *dst = *src;
+}
+
+int mbedtls_sha256_starts_224( mbedtls_sha256_context *ctx )
+{
+    SHA256_VALIDATE_RET( ctx );
+    ctx->total[0] = 0;
+    ctx->total[1] = 0;
+    ctx->state[0] = 0xC1059ED8;
+    ctx->state[1] = 0x367CD507;
+    ctx->state[2] = 0x3070DD17;
+    ctx->state[3] = 0xF70E5939;
+    ctx->state[4] = 0xFFC00B31;
+    ctx->state[5] = 0x68581511;
+    ctx->state[6] = 0x64F98FA7;
+    ctx->state[7] = 0xBEFA4FA4;
+    ctx->is224 = true;
+    return( 0 );
+}
+
+int mbedtls_sha256_starts_256( mbedtls_sha256_context *ctx )
+{
+    SHA256_VALIDATE_RET( ctx );
+    ctx->total[0] = 0;
+    ctx->total[1] = 0;
+    ctx->state[0] = 0x6A09E667;
+    ctx->state[1] = 0xBB67AE85;
+    ctx->state[2] = 0x3C6EF372;
+    ctx->state[3] = 0xA54FF53A;
+    ctx->state[4] = 0x510E527F;
+    ctx->state[5] = 0x9B05688C;
+    ctx->state[6] = 0x1F83D9AB;
+    ctx->state[7] = 0x5BE0CD19;
+    ctx->is224 = false;
+    return( 0 );
 }
 
 /**
@@ -98,40 +110,12 @@ void mbedtls_sha256_clone( mbedtls_sha256_context *dst,
  */
 int mbedtls_sha256_starts_ret( mbedtls_sha256_context *ctx, int is224 )
 {
-    SHA256_VALIDATE_RET( ctx != NULL );
+    SHA256_VALIDATE_RET( ctx );
     SHA256_VALIDATE_RET( is224 == 0 || is224 == 1 );
-
-    ctx->total[0] = 0;
-    ctx->total[1] = 0;
-
-    if( is224 == 0 )
-    {
-        /* SHA-256 */
-        ctx->state[0] = 0x6A09E667;
-        ctx->state[1] = 0xBB67AE85;
-        ctx->state[2] = 0x3C6EF372;
-        ctx->state[3] = 0xA54FF53A;
-        ctx->state[4] = 0x510E527F;
-        ctx->state[5] = 0x9B05688C;
-        ctx->state[6] = 0x1F83D9AB;
-        ctx->state[7] = 0x5BE0CD19;
-    }
+    if( !is224 )
+        return mbedtls_sha256_starts_256( ctx );
     else
-    {
-        /* SHA-224 */
-        ctx->state[0] = 0xC1059ED8;
-        ctx->state[1] = 0x367CD507;
-        ctx->state[2] = 0x3070DD17;
-        ctx->state[3] = 0xF70E5939;
-        ctx->state[4] = 0xFFC00B31;
-        ctx->state[5] = 0x68581511;
-        ctx->state[6] = 0x64F98FA7;
-        ctx->state[7] = 0xBEFA4FA4;
-    }
-
-    ctx->is224 = is224;
-
-    return( 0 );
+        return mbedtls_sha256_starts_224( ctx );
 }
 
 #if !defined(MBEDTLS_SHA256_PROCESS_ALT)
@@ -298,7 +282,7 @@ int mbedtls_sha256_update_ret( mbedtls_sha256_context *ctx,
                                const unsigned char *input,
                                size_t ilen )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t fill;
     uint32_t left;
 
@@ -365,7 +349,7 @@ int mbedtls_sha256_update_ret( mbedtls_sha256_context *ctx,
 int mbedtls_sha256_finish_ret( mbedtls_sha256_context *ctx,
                                unsigned char output[32] )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     uint32_t used;
     uint32_t high, low;
 
@@ -382,17 +366,17 @@ int mbedtls_sha256_finish_ret( mbedtls_sha256_context *ctx,
     if( used <= 56 )
     {
         /* Enough room for padding + length in current block */
-        memset( ctx->buffer + used, 0, 56 - used );
+        mbedtls_platform_zeroize( ctx->buffer + used, 56 - used );
     }
     else
     {
         /* We'll need an extra block */
-        memset( ctx->buffer + used, 0, 64 - used );
+        mbedtls_platform_zeroize( ctx->buffer + used, 64 - used );
 
         if( ( ret = mbedtls_internal_sha256_process( ctx, ctx->buffer ) ) != 0 )
             return( ret );
 
-        memset( ctx->buffer, 0, 56 );
+        mbedtls_platform_zeroize( ctx->buffer, 56 );
     }
 
     /*
@@ -450,7 +434,7 @@ int mbedtls_sha256_ret( const void *input,
                         unsigned char output[32],
                         int is224 )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_sha256_context ctx;
 
     SHA256_VALIDATE_RET( is224 == 0 || is224 == 1 );
@@ -473,6 +457,40 @@ exit:
 
     return( ret );
 }
+
+noinstrument int mbedtls_sha256_ret_224( const void *input, size_t ilen, void *output )
+{
+    return mbedtls_sha256_ret( input, ilen, output, true );
+}
+
+noinstrument int mbedtls_sha256_ret_256( const void *input, size_t ilen, void *output )
+{
+    return mbedtls_sha256_ret( input, ilen, output, false );
+}
+
+const mbedtls_md_info_t mbedtls_sha224_info = {
+    "SHA224",
+    MBEDTLS_MD_SHA224,
+    28,
+    64,
+    (void *)mbedtls_sha256_starts_224,
+    (void *)mbedtls_sha256_update_ret,
+    (void *)mbedtls_internal_sha256_process,
+    (void *)mbedtls_sha256_finish_ret,
+    mbedtls_sha256_ret_224,
+};
+
+const mbedtls_md_info_t mbedtls_sha256_info = {
+    "SHA256",
+    MBEDTLS_MD_SHA256,
+    32,
+    64,
+    (void *)mbedtls_sha256_starts_256,
+    (void *)mbedtls_sha256_update_ret,
+    (void *)mbedtls_internal_sha256_process,
+    (void *)mbedtls_sha256_finish_ret,
+    mbedtls_sha256_ret_256,
+};
 
 #if defined(MBEDTLS_SELF_TEST)
 /*
@@ -537,40 +555,31 @@ int mbedtls_sha256_self_test( int verbose )
     unsigned char *buf;
     unsigned char sha256sum[32];
     mbedtls_sha256_context ctx;
-
     buf = mbedtls_calloc( 1024, sizeof(unsigned char) );
     if( NULL == buf )
     {
         if( verbose != 0 )
             mbedtls_printf( "Buffer allocation failed\n" );
-
         return( 1 );
     }
-
     mbedtls_sha256_init( &ctx );
-
     for( i = 0; i < 6; i++ )
     {
         j = i % 3;
         k = i < 3;
-
         if( verbose != 0 )
             mbedtls_printf( "  SHA-%d test #%d: ", 256 - k * 32, j + 1 );
-
         if( ( ret = mbedtls_sha256_starts_ret( &ctx, k ) ) != 0 )
             goto fail;
-
         if( j == 2 )
         {
             memset( buf, 'a', buflen = 1000 );
-
             for( j = 0; j < 1000; j++ )
             {
                 ret = mbedtls_sha256_update_ret( &ctx, buf, buflen );
                 if( ret != 0 )
                     goto fail;
             }
-
         }
         else
         {
@@ -579,34 +588,25 @@ int mbedtls_sha256_self_test( int verbose )
             if( ret != 0 )
                  goto fail;
         }
-
         if( ( ret = mbedtls_sha256_finish_ret( &ctx, sha256sum ) ) != 0 )
             goto fail;
-
-
         if( memcmp( sha256sum, sha256_test_sum[i], 32 - k * 4 ) != 0 )
         {
             ret = 1;
             goto fail;
         }
-
         if( verbose != 0 )
             mbedtls_printf( "passed\n" );
     }
-
     if( verbose != 0 )
         mbedtls_printf( "\n" );
-
     goto exit;
-
 fail:
     if( verbose != 0 )
         mbedtls_printf( "failed\n" );
-
 exit:
     mbedtls_sha256_free( &ctx );
     mbedtls_free( buf );
-
     return( ret );
 }
 

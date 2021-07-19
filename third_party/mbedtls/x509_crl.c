@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/oid.h"
@@ -10,35 +27,18 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
-/*
- *  X.509 Certidicate Revocation List (CRL) parsing
+
+/**
+ * @fileoverview X.509 Certidicate Revocation List (CRL) parsing
  *
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
+ * The ITU-T X.509 standard defines a certificate format for PKI.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-/*
- *  The ITU-T X.509 standard defines a certificate format for PKI.
- *
- *  http://www.ietf.org/rfc/rfc5280.txt (Certificates and CRLs)
- *  http://www.ietf.org/rfc/rfc3279.txt (Alg IDs for CRLs)
- *  http://www.ietf.org/rfc/rfc2986.txt (CSRs, aka PKCS#10)
- *
- *  http://www.itu.int/ITU-T/studygroups/com17/languages/X.680-0207.pdf
- *  http://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf
+ * @see http://www.ietf.org/rfc/rfc5280.txt (Certificates and CRLs)
+ * @see http://www.ietf.org/rfc/rfc3279.txt (Alg IDs for CRLs)
+ * @see http://www.ietf.org/rfc/rfc2986.txt (CSRs, aka PKCS#10)
+ * @see http://www.itu.int/ITU-T/studygroups/com17/languages/X.680-0207.pdf
+ * @see http://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf
  */
 
 #if defined(MBEDTLS_X509_CRL_PARSE_C)
@@ -50,7 +50,7 @@ static int x509_crl_get_version( unsigned char **p,
                              const unsigned char *end,
                              int *ver )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
     if( ( ret = mbedtls_asn1_get_int( p, end, ver ) ) != 0 )
     {
@@ -77,7 +77,7 @@ static int x509_get_crl_ext( unsigned char **p,
                              const unsigned char *end,
                              mbedtls_x509_buf *ext )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
     if( *p == end )
         return( 0 );
@@ -157,7 +157,7 @@ static int x509_get_crl_entry_ext( unsigned char **p,
                              const unsigned char *end,
                              mbedtls_x509_buf *ext )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t len = 0;
 
     /* OPTIONAL */
@@ -211,7 +211,7 @@ static int x509_get_entries( unsigned char **p,
                              const unsigned char *end,
                              mbedtls_x509_crl_entry *entry )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t entry_len;
     mbedtls_x509_crl_entry *cur_entry = entry;
 
@@ -276,7 +276,7 @@ static int x509_get_entries( unsigned char **p,
 int mbedtls_x509_crl_parse_der( mbedtls_x509_crl *chain,
                         const unsigned char *buf, size_t buflen )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t len;
     unsigned char *p = NULL, *end = NULL;
     mbedtls_x509_buf sig_params1, sig_params2, sig_oid2;
@@ -288,9 +288,9 @@ int mbedtls_x509_crl_parse_der( mbedtls_x509_crl *chain,
     if( crl == NULL || buf == NULL )
         return( MBEDTLS_ERR_X509_BAD_INPUT_DATA );
 
-    memset( &sig_params1, 0, sizeof( mbedtls_x509_buf ) );
-    memset( &sig_params2, 0, sizeof( mbedtls_x509_buf ) );
-    memset( &sig_oid2, 0, sizeof( mbedtls_x509_buf ) );
+    mbedtls_platform_zeroize( &sig_params1, sizeof( mbedtls_x509_buf ) );
+    mbedtls_platform_zeroize( &sig_params2, sizeof( mbedtls_x509_buf ) );
+    mbedtls_platform_zeroize( &sig_oid2, sizeof( mbedtls_x509_buf ) );
 
     /*
      * Add new CRL on the end of the chain if needed.
@@ -515,7 +515,7 @@ int mbedtls_x509_crl_parse_der( mbedtls_x509_crl *chain,
 int mbedtls_x509_crl_parse( mbedtls_x509_crl *chain, const unsigned char *buf, size_t buflen )
 {
 #if defined(MBEDTLS_PEM_PARSE_C)
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t use_len = 0;
     mbedtls_pem_context pem;
     int is_pem = 0;
@@ -578,7 +578,7 @@ int mbedtls_x509_crl_parse( mbedtls_x509_crl *chain, const unsigned char *buf, s
  */
 int mbedtls_x509_crl_parse_file( mbedtls_x509_crl *chain, const char *path )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t n;
     unsigned char *buf;
 
@@ -604,7 +604,7 @@ int mbedtls_x509_crl_parse_file( mbedtls_x509_crl *chain, const char *path )
 int mbedtls_x509_crl_info( char *buf, size_t size, const char *prefix,
                    const mbedtls_x509_crl *crl )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t n;
     char *p;
     const mbedtls_x509_crl_entry *entry;
@@ -678,7 +678,7 @@ int mbedtls_x509_crl_info( char *buf, size_t size, const char *prefix,
  */
 void mbedtls_x509_crl_init( mbedtls_x509_crl *crl )
 {
-    memset( crl, 0, sizeof(mbedtls_x509_crl) );
+    mbedtls_platform_zeroize( crl, sizeof(mbedtls_x509_crl) );
 }
 
 /*

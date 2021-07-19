@@ -466,12 +466,12 @@ exit:
 void test_mbedtls_mpi_write_binary_wrapper( void ** params )
 {
     data_t data2 = {(uint8_t *) params[2], *( (uint32_t *) params[3] )};
-
     test_mbedtls_mpi_write_binary( *( (int *) params[0] ), (char *) params[1], &data2, *( (int *) params[4] ), *( (int *) params[5] ) );
 }
+
 void test_mbedtls_mpi_write_binary_le( int radix_X, char * input_X,
-                                  data_t * input_A, int output_size,
-                                  int result )
+                                       data_t * input_A, int output_size,
+                                       int result )
 {
     mbedtls_mpi X;
     unsigned char buf[1000];
@@ -1115,6 +1115,7 @@ void test_mbedtls_mpi_sub_mpi_wrapper( void ** params )
 
     test_mbedtls_mpi_sub_mpi( *( (int *) params[0] ), (char *) params[1], *( (int *) params[2] ), (char *) params[3], *( (int *) params[4] ), (char *) params[5] );
 }
+
 void test_mbedtls_mpi_sub_abs( int radix_X, char * input_X, int radix_Y,
                           char * input_Y, int radix_A, char * input_A,
                           int sub_result )

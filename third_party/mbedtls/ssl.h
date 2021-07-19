@@ -167,8 +167,9 @@ COSMOPOLITAN_C_START_
 #define MBEDTLS_SSL_ARC4_ENABLED                0
 #define MBEDTLS_SSL_ARC4_DISABLED               1
 
-#define MBEDTLS_SSL_PRESET_DEFAULT              0
+#define MBEDTLS_SSL_PRESET_DEFAULT              MBEDTLS_SSL_PRESET_SUITEC
 #define MBEDTLS_SSL_PRESET_SUITEB               2
+#define MBEDTLS_SSL_PRESET_SUITEC               0
 
 #define MBEDTLS_SSL_CERT_REQ_CA_LIST_ENABLED       1
 #define MBEDTLS_SSL_CERT_REQ_CA_LIST_DISABLED      0
@@ -1545,6 +1546,8 @@ forceinline int mbedtls_ssl_config_defaults( mbedtls_ssl_config *conf,
       return MBEDTLS_ERR_SSL_FEATURE_UNAVAILABLE;
   }
 }
+
+const char *GetSslStateName(mbedtls_ssl_states );
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_THIRD_PARTY_MBEDTLS_SSL_H_ */

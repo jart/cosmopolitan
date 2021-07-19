@@ -1,4 +1,22 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/chachapoly.h"
+#include "third_party/mbedtls/chk.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/platform.h"
@@ -8,27 +26,10 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
+
 /**
- * \file chachapoly.c
- *
- * \brief ChaCha20-Poly1305 AEAD construction based on RFC 7539.
- *
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * @fileoverview ChaCha20-Poly1305 AEAD construction based on RFC 7539.
  */
 
 #if defined(MBEDTLS_CHACHAPOLY_C)
@@ -59,7 +60,7 @@ static int chachapoly_pad_aad( mbedtls_chachapoly_context *ctx )
     if( partial_block_len == 0U )
         return( 0 );
 
-    memset( zeroes, 0, sizeof( zeroes ) );
+    mbedtls_platform_zeroize( zeroes, sizeof( zeroes ) );
 
     return( mbedtls_poly1305_update( &ctx->poly1305_ctx,
                                      zeroes,
@@ -79,7 +80,7 @@ static int chachapoly_pad_ciphertext( mbedtls_chachapoly_context *ctx )
     if( partial_block_len == 0U )
         return( 0 );
 
-    memset( zeroes, 0, sizeof( zeroes ) );
+    mbedtls_platform_zeroize( zeroes, sizeof( zeroes ) );
     return( mbedtls_poly1305_update( &ctx->poly1305_ctx,
                                      zeroes,
                                      16U - partial_block_len ) );
@@ -87,7 +88,7 @@ static int chachapoly_pad_ciphertext( mbedtls_chachapoly_context *ctx )
 
 void mbedtls_chachapoly_init( mbedtls_chachapoly_context *ctx )
 {
-    CHACHAPOLY_VALIDATE( ctx != NULL );
+    CHACHAPOLY_VALIDATE( ctx );
 
     mbedtls_chacha20_init( &ctx->chacha20_ctx );
     mbedtls_poly1305_init( &ctx->poly1305_ctx );
@@ -113,12 +114,10 @@ void mbedtls_chachapoly_free( mbedtls_chachapoly_context *ctx )
 int mbedtls_chachapoly_setkey( mbedtls_chachapoly_context *ctx,
                                const unsigned char key[32] )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    CHACHAPOLY_VALIDATE_RET( ctx != NULL );
-    CHACHAPOLY_VALIDATE_RET( key != NULL );
-
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
+    CHACHAPOLY_VALIDATE_RET( ctx );
+    CHACHAPOLY_VALIDATE_RET( key );
     ret = mbedtls_chacha20_setkey( &ctx->chacha20_ctx, key );
-
     return( ret );
 }
 
@@ -126,26 +125,22 @@ int mbedtls_chachapoly_starts( mbedtls_chachapoly_context *ctx,
                                const unsigned char nonce[12],
                                mbedtls_chachapoly_mode_t mode  )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char poly1305_key[64];
-    CHACHAPOLY_VALIDATE_RET( ctx != NULL );
-    CHACHAPOLY_VALIDATE_RET( nonce != NULL );
+    CHACHAPOLY_VALIDATE_RET( ctx );
+    CHACHAPOLY_VALIDATE_RET( nonce );
 
     /* Set counter = 0, will be update to 1 when generating Poly1305 key */
-    ret = mbedtls_chacha20_starts( &ctx->chacha20_ctx, nonce, 0U );
-    if( ret != 0 )
-        goto cleanup;
+    MBEDTLS_CHK( mbedtls_chacha20_starts( &ctx->chacha20_ctx, nonce, 0U ) );
 
     /* Generate the Poly1305 key by getting the ChaCha20 keystream output with
      * counter = 0.  This is the same as encrypting a buffer of zeroes.
      * Only the first 256-bits (32 bytes) of the key is used for Poly1305.
      * The other 256 bits are discarded.
      */
-    memset( poly1305_key, 0, sizeof( poly1305_key ) );
-    ret = mbedtls_chacha20_update( &ctx->chacha20_ctx, sizeof( poly1305_key ),
-                                      poly1305_key, poly1305_key );
-    if( ret != 0 )
-        goto cleanup;
+    mbedtls_platform_zeroize( poly1305_key, sizeof( poly1305_key ) );
+    MBEDTLS_CHK( mbedtls_chacha20_update( &ctx->chacha20_ctx, sizeof( poly1305_key ),
+                                          poly1305_key, poly1305_key ) );
 
     ret = mbedtls_poly1305_starts( &ctx->poly1305_ctx, poly1305_key );
 
@@ -166,8 +161,8 @@ int mbedtls_chachapoly_update_aad( mbedtls_chachapoly_context *ctx,
                                    const unsigned char *aad,
                                    size_t aad_len )
 {
-    CHACHAPOLY_VALIDATE_RET( ctx != NULL );
-    CHACHAPOLY_VALIDATE_RET( aad_len == 0 || aad != NULL );
+    CHACHAPOLY_VALIDATE_RET( ctx );
+    CHACHAPOLY_VALIDATE_RET( aad_len == 0 || aad );
 
     if( ctx->state != CHACHAPOLY_STATE_AAD )
         return( MBEDTLS_ERR_CHACHAPOLY_BAD_STATE );
@@ -182,10 +177,10 @@ int mbedtls_chachapoly_update( mbedtls_chachapoly_context *ctx,
                                const unsigned char *input,
                                unsigned char *output )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    CHACHAPOLY_VALIDATE_RET( ctx != NULL );
-    CHACHAPOLY_VALIDATE_RET( len == 0 || input != NULL );
-    CHACHAPOLY_VALIDATE_RET( len == 0 || output != NULL );
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
+    CHACHAPOLY_VALIDATE_RET( ctx );
+    CHACHAPOLY_VALIDATE_RET( len == 0 || input );
+    CHACHAPOLY_VALIDATE_RET( len == 0 || output );
 
     if( ( ctx->state != CHACHAPOLY_STATE_AAD ) &&
         ( ctx->state != CHACHAPOLY_STATE_CIPHERTEXT ) )
@@ -231,16 +226,14 @@ int mbedtls_chachapoly_update( mbedtls_chachapoly_context *ctx,
 int mbedtls_chachapoly_finish( mbedtls_chachapoly_context *ctx,
                                unsigned char mac[16] )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char len_block[16];
-    CHACHAPOLY_VALIDATE_RET( ctx != NULL );
-    CHACHAPOLY_VALIDATE_RET( mac != NULL );
-
+    CHACHAPOLY_VALIDATE_RET( ctx );
+    CHACHAPOLY_VALIDATE_RET( mac );
     if( ctx->state == CHACHAPOLY_STATE_INIT )
     {
         return( MBEDTLS_ERR_CHACHAPOLY_BAD_STATE );
     }
-
     if( ctx->state == CHACHAPOLY_STATE_AAD )
     {
         ret = chachapoly_pad_aad( ctx );
@@ -253,9 +246,7 @@ int mbedtls_chachapoly_finish( mbedtls_chachapoly_context *ctx,
         if( ret != 0 )
             return( ret );
     }
-
     ctx->state = CHACHAPOLY_STATE_FINISHED;
-
     /* The lengths of the AAD and ciphertext are processed by
      * Poly1305 as the final 128-bit block, encoded as little-endian integers.
      */
@@ -275,13 +266,10 @@ int mbedtls_chachapoly_finish( mbedtls_chachapoly_context *ctx,
     len_block[13] = (unsigned char)( ctx->ciphertext_len >> 40 );
     len_block[14] = (unsigned char)( ctx->ciphertext_len >> 48 );
     len_block[15] = (unsigned char)( ctx->ciphertext_len >> 56 );
-
     ret = mbedtls_poly1305_update( &ctx->poly1305_ctx, len_block, 16U );
     if( ret != 0 )
         return( ret );
-
     ret = mbedtls_poly1305_finish( &ctx->poly1305_ctx, mac );
-
     return( ret );
 }
 
@@ -295,22 +283,11 @@ static int chachapoly_crypt_and_tag( mbedtls_chachapoly_context *ctx,
                                      unsigned char *output,
                                      unsigned char tag[16] )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-
-    ret = mbedtls_chachapoly_starts( ctx, nonce, mode );
-    if( ret != 0 )
-        goto cleanup;
-
-    ret = mbedtls_chachapoly_update_aad( ctx, aad, aad_len );
-    if( ret != 0 )
-        goto cleanup;
-
-    ret = mbedtls_chachapoly_update( ctx, length, input, output );
-    if( ret != 0 )
-        goto cleanup;
-
-    ret = mbedtls_chachapoly_finish( ctx, tag );
-
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
+    MBEDTLS_CHK( mbedtls_chachapoly_starts( ctx, nonce, mode ) );
+    MBEDTLS_CHK( mbedtls_chachapoly_update_aad( ctx, aad, aad_len ) );
+    MBEDTLS_CHK( mbedtls_chachapoly_update( ctx, length, input, output ) );
+    MBEDTLS_CHK( mbedtls_chachapoly_finish( ctx, tag ) );
 cleanup:
     return( ret );
 }
@@ -324,13 +301,12 @@ int mbedtls_chachapoly_encrypt_and_tag( mbedtls_chachapoly_context *ctx,
                                         unsigned char *output,
                                         unsigned char tag[16] )
 {
-    CHACHAPOLY_VALIDATE_RET( ctx   != NULL );
-    CHACHAPOLY_VALIDATE_RET( nonce != NULL );
-    CHACHAPOLY_VALIDATE_RET( tag   != NULL );
-    CHACHAPOLY_VALIDATE_RET( aad_len == 0 || aad    != NULL );
-    CHACHAPOLY_VALIDATE_RET( length  == 0 || input  != NULL );
-    CHACHAPOLY_VALIDATE_RET( length  == 0 || output != NULL );
-
+    CHACHAPOLY_VALIDATE_RET( ctx   );
+    CHACHAPOLY_VALIDATE_RET( nonce );
+    CHACHAPOLY_VALIDATE_RET( tag   );
+    CHACHAPOLY_VALIDATE_RET( aad    || !aad_len );
+    CHACHAPOLY_VALIDATE_RET( input  || !length  );
+    CHACHAPOLY_VALIDATE_RET( output || !length  );
     return( chachapoly_crypt_and_tag( ctx, MBEDTLS_CHACHAPOLY_ENCRYPT,
                                       length, nonce, aad, aad_len,
                                       input, output, tag ) );
@@ -345,34 +321,30 @@ int mbedtls_chachapoly_auth_decrypt( mbedtls_chachapoly_context *ctx,
                                      const unsigned char *input,
                                      unsigned char *output )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char check_tag[16];
     size_t i;
     int diff;
-    CHACHAPOLY_VALIDATE_RET( ctx   != NULL );
-    CHACHAPOLY_VALIDATE_RET( nonce != NULL );
-    CHACHAPOLY_VALIDATE_RET( tag   != NULL );
-    CHACHAPOLY_VALIDATE_RET( aad_len == 0 || aad    != NULL );
-    CHACHAPOLY_VALIDATE_RET( length  == 0 || input  != NULL );
-    CHACHAPOLY_VALIDATE_RET( length  == 0 || output != NULL );
-
+    CHACHAPOLY_VALIDATE_RET( ctx   );
+    CHACHAPOLY_VALIDATE_RET( nonce );
+    CHACHAPOLY_VALIDATE_RET( tag   );
+    CHACHAPOLY_VALIDATE_RET( aad_len == 0 || aad    );
+    CHACHAPOLY_VALIDATE_RET( length  == 0 || input  );
+    CHACHAPOLY_VALIDATE_RET( length  == 0 || output );
     if( ( ret = chachapoly_crypt_and_tag( ctx,
                         MBEDTLS_CHACHAPOLY_DECRYPT, length, nonce,
                         aad, aad_len, input, output, check_tag ) ) != 0 )
     {
         return( ret );
     }
-
     /* Check tag in "constant-time" */
     for( diff = 0, i = 0; i < sizeof( check_tag ); i++ )
         diff |= tag[i] ^ check_tag[i];
-
     if( diff != 0 )
     {
         mbedtls_platform_zeroize( output, length );
         return( MBEDTLS_ERR_CHACHAPOLY_AUTH_FAILED );
     }
-
     return( 0 );
 }
 
@@ -486,20 +458,16 @@ int mbedtls_chachapoly_self_test( int verbose )
 {
     mbedtls_chachapoly_context ctx;
     unsigned i;
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char output[200];
     unsigned char mac[16];
-
     for( i = 0U; i < 1U; i++ )
     {
         if( verbose != 0 )
             mbedtls_printf( "  ChaCha20-Poly1305 test %u ", i );
-
         mbedtls_chachapoly_init( &ctx );
-
         ret = mbedtls_chachapoly_setkey( &ctx, test_key[i] );
         ASSERT( 0 == ret, ( "setkey() error code: %i\n", ret ) );
-
         ret = mbedtls_chachapoly_encrypt_and_tag( &ctx,
                                                   test_input_len[i],
                                                   test_nonce[i],
@@ -508,24 +476,17 @@ int mbedtls_chachapoly_self_test( int verbose )
                                                   test_input[i],
                                                   output,
                                                   mac );
-
         ASSERT( 0 == ret, ( "crypt_and_tag() error code: %i\n", ret ) );
-
         ASSERT( 0 == memcmp( output, test_output[i], test_input_len[i] ),
                 ( "failure (wrong output)\n" ) );
-
         ASSERT( 0 == memcmp( mac, test_mac[i], 16U ),
                 ( "failure (wrong MAC)\n" ) );
-
         mbedtls_chachapoly_free( &ctx );
-
         if( verbose != 0 )
             mbedtls_printf( "passed\n" );
     }
-
     if( verbose != 0 )
         mbedtls_printf( "\n" );
-
     return( 0 );
 }
 

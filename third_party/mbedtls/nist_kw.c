@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/endian.h"
 #include "third_party/mbedtls/error.h"
@@ -75,7 +92,7 @@ static const  unsigned char NIST_KW_ICV2[] = {0xA6, 0x59, 0x59, 0xA6};
  */
 void mbedtls_nist_kw_init( mbedtls_nist_kw_context *ctx )
 {
-    memset( ctx, 0, sizeof( mbedtls_nist_kw_context ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_nist_kw_context ) );
 }
 
 int mbedtls_nist_kw_setkey( mbedtls_nist_kw_context *ctx,
@@ -84,7 +101,7 @@ int mbedtls_nist_kw_setkey( mbedtls_nist_kw_context *ctx,
                             unsigned int keybits,
                             const int is_wrap )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     const mbedtls_cipher_info_t *cipher_info;
 
     cipher_info = mbedtls_cipher_info_from_values( cipher,
@@ -275,7 +292,7 @@ cleanup:
 
     if( ret != 0)
     {
-        memset( output, 0, semiblocks * KW_SEMIBLOCK_LENGTH );
+        mbedtls_platform_zeroize( output, semiblocks * KW_SEMIBLOCK_LENGTH );
     }
     mbedtls_platform_zeroize( inbuff, KW_SEMIBLOCK_LENGTH * 2 );
     mbedtls_platform_zeroize( outbuff, KW_SEMIBLOCK_LENGTH * 2 );
@@ -341,7 +358,7 @@ static int unwrap( mbedtls_nist_kw_context *ctx,
 
 cleanup:
     if( ret != 0)
-        memset( output, 0, ( semiblocks - 1 ) * KW_SEMIBLOCK_LENGTH );
+        mbedtls_platform_zeroize( output, ( semiblocks - 1 ) * KW_SEMIBLOCK_LENGTH );
     mbedtls_platform_zeroize( inbuff, sizeof( inbuff )  );
     mbedtls_platform_zeroize( outbuff, sizeof( outbuff ) );
 
@@ -477,7 +494,7 @@ int mbedtls_nist_kw_unwrap( mbedtls_nist_kw_context *ctx,
         {
             goto cleanup;
         }
-        memset( output + Plen, 0, padlen );
+        mbedtls_platform_zeroize( output + Plen, padlen );
         *out_len = Plen;
     }
     else
@@ -489,7 +506,7 @@ int mbedtls_nist_kw_unwrap( mbedtls_nist_kw_context *ctx,
 cleanup:
     if( ret != 0 )
     {
-        memset( output, 0, *out_len );
+        mbedtls_platform_zeroize( output, *out_len );
         *out_len = 0;
     }
 

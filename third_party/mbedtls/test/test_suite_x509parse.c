@@ -465,7 +465,7 @@ void test_x509_parse_san( char * crt_file, char * result_str )
         }
     }
 
-    TEST_ASSERT( strcmp( buf, result_str ) == 0 );
+    TEST_ASSERT_STREQ( buf, result_str );
 
 exit:
 
@@ -497,7 +497,7 @@ void test_x509_cert_info( char * crt_file, char * result_str )
     TEST_ASSERT( res != -1 );
     TEST_ASSERT( res != -2 );
 
-    TEST_ASSERT( strcmp( buf, result_str ) == 0 );
+    TEST_ASSERT_STREQ( buf, result_str );
 
 exit:
     mbedtls_x509_crt_free( &crt );
@@ -527,7 +527,7 @@ void test_mbedtls_x509_crl_info( char * crl_file, char * result_str )
     TEST_ASSERT( res != -1 );
     TEST_ASSERT( res != -2 );
 
-    TEST_ASSERT( strcmp( buf, result_str ) == 0 );
+    TEST_ASSERT_STREQ( buf, result_str );
 
 exit:
     mbedtls_x509_crl_free( &crl );
@@ -580,7 +580,7 @@ void test_mbedtls_x509_csr_info( char * csr_file, char * result_str )
     TEST_ASSERT( res != -1 );
     TEST_ASSERT( res != -2 );
 
-    TEST_ASSERT( strcmp( buf, result_str ) == 0 );
+    TEST_ASSERT_STREQ( buf, result_str );
 
 exit:
     mbedtls_x509_csr_free( &csr );
@@ -605,7 +605,7 @@ void test_x509_verify_info( int flags, char * prefix, char * result_str )
 
     TEST_ASSERT( res >= 0 );
 
-    TEST_ASSERT( strcmp( buf, result_str ) == 0 );
+    TEST_ASSERT_STREQ( buf, result_str );
 exit:
     ;
 }
@@ -739,7 +739,7 @@ void test_x509_verify( char *crt_file, char *ca_file, char *crl_file,
 
     res = mbedtls_x509_crt_verify_with_profile( &crt, &ca, &crl, profile, cn_name, &flags, f_vrfy, NULL );
 
-    TEST_ASSERT( res == ( result ) );
+    TEST_EQUAL( res, result );
     TEST_ASSERT( flags == (uint32_t)( flags_result ) );
 
 #if defined(MBEDTLS_X509_TRUSTED_CERTIFICATE_CALLBACK)
@@ -879,7 +879,7 @@ void test_mbedtls_x509_dn_gets( char * crt_file, char * entity, char * result_st
     TEST_ASSERT( res != -1 );
     TEST_ASSERT( res != -2 );
 
-    TEST_ASSERT( strcmp( buf, result_str ) == 0 );
+    TEST_ASSERT_STREQ( buf, result_str );
 
 exit:
     mbedtls_x509_crt_free( &crt );
@@ -987,7 +987,7 @@ void test_x509parse_crt( data_t * buf, char * result_str, int result )
         TEST_ASSERT( res != -1 );
         TEST_ASSERT( res != -2 );
 
-        TEST_ASSERT( strcmp( (char *) output, result_str ) == 0 );
+        TEST_ASSERT_STREQ( (char *) output, result_str );
     }
 
     mbedtls_x509_crt_free( &crt );
@@ -1002,7 +1002,7 @@ void test_x509parse_crt( data_t * buf, char * result_str, int result )
         TEST_ASSERT( res != -1 );
         TEST_ASSERT( res != -2 );
 
-        TEST_ASSERT( strcmp( (char *) output, result_str ) == 0 );
+        TEST_ASSERT_STREQ( (char *) output, result_str );
     }
 
     mbedtls_x509_crt_free( &crt );
@@ -1017,7 +1017,7 @@ void test_x509parse_crt( data_t * buf, char * result_str, int result )
         TEST_ASSERT( res != -1 );
         TEST_ASSERT( res != -2 );
 
-        TEST_ASSERT( strcmp( (char *) output, result_str ) == 0 );
+        TEST_ASSERT_STREQ( (char *) output, result_str );
     }
 
     mbedtls_x509_crt_free( &crt );
@@ -1032,7 +1032,7 @@ void test_x509parse_crt( data_t * buf, char * result_str, int result )
         TEST_ASSERT( res != -1 );
         TEST_ASSERT( res != -2 );
 
-        TEST_ASSERT( strcmp( (char *) output, result_str ) == 0 );
+        TEST_ASSERT_STREQ( (char *) output, result_str );
     }
 
 exit:
@@ -1069,7 +1069,7 @@ void test_x509parse_crt_cb( data_t * buf, char * result_str, int result )
         TEST_ASSERT( res != -1 );
         TEST_ASSERT( res != -2 );
 
-        TEST_ASSERT( strcmp( (char *) output, result_str ) == 0 );
+        TEST_ASSERT_STREQ( (char *) output, result_str );
     }
 
     mbedtls_x509_crt_free( &crt );
@@ -1084,7 +1084,7 @@ void test_x509parse_crt_cb( data_t * buf, char * result_str, int result )
         TEST_ASSERT( res != -1 );
         TEST_ASSERT( res != -2 );
 
-        TEST_ASSERT( strcmp( (char *) output, result_str ) == 0 );
+        TEST_ASSERT_STREQ( (char *) output, result_str );
     }
 
 exit:
@@ -1117,7 +1117,7 @@ void test_x509parse_crl( data_t * buf, char * result_str, int result )
         TEST_ASSERT( res != -1 );
         TEST_ASSERT( res != -2 );
 
-        TEST_ASSERT( strcmp( (char *) output, result_str ) == 0 );
+        TEST_ASSERT_STREQ( (char *) output, result_str );
     }
 
 exit:

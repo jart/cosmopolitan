@@ -30,13 +30,14 @@ int64_t ParseIp(const char *s, size_t n) {
   uint32_t x;
   int b, c, j;
   if (n == -1) n = s ? strlen(s) : 0;
+  if (!n) return -1;
   for (b = x = j = i = 0; i < n; ++i) {
     c = s[i] & 255;
     if (isdigit(c)) {
       b *= 10;
       b += c - '0';
-      if (b > 255) return -1;
     } else if (c == '.') {
+      if (b > 255) return -1;
       x <<= 8;
       x |= b;
       b = 0;
@@ -47,6 +48,5 @@ int64_t ParseIp(const char *s, size_t n) {
   }
   x <<= 8;
   x |= b;
-  if (j != 3) return -1;
   return x;
 }

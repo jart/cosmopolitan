@@ -692,8 +692,8 @@ void test_cipher_special_behaviours(  )
     size_t olen = 0;
 
     mbedtls_cipher_init( &ctx );
-    memset( input, 0, sizeof( input ) );
-    memset( output, 0, sizeof( output ) );
+    mbedtls_platform_zeroize( input, sizeof( input ) );
+    mbedtls_platform_zeroize( output, sizeof( output ) );
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
     memset( iv, 0, sizeof( iv ) );
 

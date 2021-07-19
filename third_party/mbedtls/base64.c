@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/base64.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/platform.h"
@@ -7,28 +24,7 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
-/*
- *  RFC 1521 base64 encoding/decoding
- *
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
-#if defined(MBEDTLS_BASE64_C)
 
 #define ENC "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
@@ -187,7 +183,6 @@ int mbedtls_base64_decode( unsigned char *dst, size_t dlen, size_t *olen,
     uint32_t j, x;
     unsigned char *p;
     unsigned char dec_map_lookup;
-
     /* First pass: check for validity and get output length */
     for( i = n = j = 0; i < slen; i++ )
     {
@@ -198,65 +193,49 @@ int mbedtls_base64_decode( unsigned char *dst, size_t dlen, size_t *olen,
             ++i;
             ++x;
         }
-
         /* Spaces at end of buffer are OK */
         if( i == slen )
             break;
-
         if( ( slen - i ) >= 2 &&
             src[i] == '\r' && src[i + 1] == '\n' )
             continue;
-
         if( src[i] == '\n' )
             continue;
-
         /* Space inside a line is an error */
         if( x != 0 )
             return( MBEDTLS_ERR_BASE64_INVALID_CHARACTER );
-
         if( src[i] == '=' && ++j > 2 )
             return( MBEDTLS_ERR_BASE64_INVALID_CHARACTER );
-
         dec_map_lookup = mbedtls_base64_table_lookup( base64_dec_map, sizeof( base64_dec_map ), src[i] );
-
         if( src[i] > 127 || dec_map_lookup == 127 )
             return( MBEDTLS_ERR_BASE64_INVALID_CHARACTER );
-
         if( dec_map_lookup < 64 && j != 0 )
             return( MBEDTLS_ERR_BASE64_INVALID_CHARACTER );
-
         n++;
     }
-
     if( n == 0 )
     {
         *olen = 0;
         return( 0 );
     }
-
     /* The following expression is to calculate the following formula without
      * risk of integer overflow in n:
      *     n = ( ( n * 6 ) + 7 ) >> 3;
      */
     n = ( 6 * ( n >> 3 ) ) + ( ( 6 * ( n & 0x7 ) + 7 ) >> 3 );
     n -= j;
-
     if( dst == NULL || dlen < n )
     {
         *olen = n;
         return( MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL );
     }
-
    for( j = 3, n = x = 0, p = dst; i > 0; i--, src++ )
    {
         if( *src == '\r' || *src == '\n' || *src == ' ' )
             continue;
-
         dec_map_lookup = mbedtls_base64_table_lookup( base64_dec_map, sizeof( base64_dec_map ), *src );
-
         mbedtls_base64_cond_assign_uint32( &j, j - 1, mbedtls_base64_eq( dec_map_lookup, 64 ) );
         x  = ( x << 6 ) | ( dec_map_lookup & 0x3F );
-
         if( ++n == 4 )
         {
             n = 0;
@@ -265,9 +244,7 @@ int mbedtls_base64_decode( unsigned char *dst, size_t dlen, size_t *olen,
             if( j > 2 ) *p++ = (unsigned char)( x       );
         }
     }
-
     *olen = p - dst;
-
     return( 0 );
 }
 
@@ -299,41 +276,29 @@ int mbedtls_base64_self_test( int verbose )
     size_t len;
     const unsigned char *src;
     unsigned char buffer[128];
-
     if( verbose != 0 )
         mbedtls_printf( "  Base64 encoding test: " );
-
     src = base64_test_dec;
-
     if( mbedtls_base64_encode( buffer, sizeof( buffer ), &len, src, 64 ) != 0 ||
          memcmp( base64_test_enc, buffer, 88 ) != 0 )
     {
         if( verbose != 0 )
             mbedtls_printf( "failed\n" );
-
         return( 1 );
     }
-
     if( verbose != 0 )
         mbedtls_printf( "passed\n  Base64 decoding test: " );
-
     src = base64_test_enc;
-
     if( mbedtls_base64_decode( buffer, sizeof( buffer ), &len, src, 88 ) != 0 ||
          memcmp( base64_test_dec, buffer, 64 ) != 0 )
     {
         if( verbose != 0 )
             mbedtls_printf( "failed\n" );
-
         return( 1 );
     }
-
     if( verbose != 0 )
         mbedtls_printf( "passed\n\n" );
-
     return( 0 );
 }
 
 #endif /* MBEDTLS_SELF_TEST */
-
-#endif /* MBEDTLS_BASE64_C */

@@ -254,8 +254,8 @@ int mbedtls_des_crypt_cbc( mbedtls_des_context *ctx,
  * \return         0 if successful
  */
 int mbedtls_des3_crypt_ecb( mbedtls_des3_context *ctx,
-                     const unsigned char input[8],
-                     unsigned char output[8] );
+                            const unsigned char input[8],
+                            unsigned char output[8] );
 
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
 /**

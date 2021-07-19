@@ -1,6 +1,7 @@
 #ifndef MBEDTLS_SHA256_H_
 #define MBEDTLS_SHA256_H_
 #include "third_party/mbedtls/config.h"
+#include "third_party/mbedtls/platform.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -24,8 +25,6 @@ typedef struct mbedtls_sha256_context
 }
 mbedtls_sha256_context;
 
-void mbedtls_sha256_init( mbedtls_sha256_context * );
-void mbedtls_sha256_free( mbedtls_sha256_context * );
 void mbedtls_sha256_clone( mbedtls_sha256_context *, const mbedtls_sha256_context * );
 int mbedtls_sha256_starts_ret( mbedtls_sha256_context *, int );
 int mbedtls_sha256_update_ret( mbedtls_sha256_context *, const unsigned char *, size_t );
@@ -33,6 +32,29 @@ int mbedtls_sha256_finish_ret( mbedtls_sha256_context *, unsigned char[32] );
 int mbedtls_internal_sha256_process( mbedtls_sha256_context *, const unsigned char[64] );
 int mbedtls_sha256_ret( const void *, size_t, unsigned char[32], int );
 int mbedtls_sha256_self_test( int );
+
+/**
+ * \brief          This function initializes a SHA-256 context.
+ *
+ * \param ctx      The SHA-256 context to initialize. This must not be \c NULL.
+ */
+static inline void mbedtls_sha256_init( mbedtls_sha256_context *ctx )
+{
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_sha256_context ) );
+}
+
+/**
+ * \brief          This function clears a SHA-256 context.
+ *
+ * \param ctx      The SHA-256 context to clear. This may be \c NULL, in which
+ *                 case this function returns immediately. If it is not \c NULL,
+ *                 it must point to an initialized SHA-256 context.
+ */
+static inline void mbedtls_sha256_free( mbedtls_sha256_context *ctx )
+{
+    if( !ctx ) return;
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_sha256_context ) );
+}
 
 COSMOPOLITAN_C_END_
 #endif /* MBEDTLS_SHA256_H_ */

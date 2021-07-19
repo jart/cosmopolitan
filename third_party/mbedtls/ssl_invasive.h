@@ -46,7 +46,8 @@ int mbedtls_ssl_cf_hmac(mbedtls_md_context_t *ctx,
                         size_t min_data_len, size_t max_data_len,
                         unsigned char *output);
 
-/** \brief Copy data from a secret position with constant flow.
+/**
+ * \brief Copy data from a secret position with constant flow.
  *
  * This function copies \p len bytes from \p src_base + \p offset_secret to \p
  * dst, with a code flow and memory access pattern that does not depend on \p

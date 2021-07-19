@@ -22,7 +22,8 @@ TOOL_NET_COMS =							\
 	o/$(MODE)/tool/net/redbean-static.com			\
 	o/$(MODE)/tool/net/redbean-unsecure.com			\
 	o/$(MODE)/tool/net/redbean-original.com			\
-	o/$(MODE)/tool/net/echoserver.com
+	o/$(MODE)/tool/net/echoserver.com			\
+	o/$(MODE)/tool/net/wb.com
 
 TOOL_NET_DIRECTDEPS =						\
 	LIBC_ALG						\

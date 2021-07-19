@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "third_party/mbedtls/asn1.h"
 #include "third_party/mbedtls/common.h"
@@ -125,7 +142,7 @@ int mbedtls_pk_load_file( const char *path, unsigned char **buf, size_t *n )
 int mbedtls_pk_parse_keyfile( mbedtls_pk_context *ctx,
                               const char *path, const char *pwd )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t n;
     unsigned char *buf;
     PK_VALIDATE_RET( ctx != NULL );
@@ -160,7 +177,7 @@ int mbedtls_pk_parse_keyfile( mbedtls_pk_context *ctx,
  */
 int mbedtls_pk_parse_public_keyfile( mbedtls_pk_context *ctx, const char *path )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t n;
     unsigned char *buf;
     PK_VALIDATE_RET( ctx != NULL );
@@ -186,7 +203,7 @@ int mbedtls_pk_parse_public_keyfile( mbedtls_pk_context *ctx, const char *path )
 static int pk_get_ecparams( unsigned char **p, const unsigned char *end,
                             mbedtls_asn1_buf *params )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     if ( end - *p < 1 )
         return( MBEDTLS_ERR_PK_KEY_INVALID_FORMAT +
                 MBEDTLS_ERR_ASN1_OUT_OF_DATA );
@@ -235,7 +252,7 @@ static int pk_get_ecparams( unsigned char **p, const unsigned char *end,
  */
 static int pk_group_from_specified( const mbedtls_asn1_buf *params, mbedtls_ecp_group *grp )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char *p = params->p;
     const unsigned char * const end = params->p + params->len;
     const unsigned char *end_field, *end_curve;
@@ -392,7 +409,7 @@ cleanup:
 static int pk_group_id_from_specified( const mbedtls_asn1_buf *params,
                                        mbedtls_ecp_group_id *grp_id )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_ecp_group grp;
 
     mbedtls_ecp_group_init( &grp );
@@ -419,7 +436,7 @@ cleanup:
  */
 static int pk_use_ecparams( const mbedtls_asn1_buf *params, mbedtls_ecp_group *grp )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_ecp_group_id grp_id;
 
     if( params->tag == MBEDTLS_ASN1_OID )
@@ -459,7 +476,7 @@ static int pk_use_ecparams( const mbedtls_asn1_buf *params, mbedtls_ecp_group *g
 static int pk_get_ecpubkey( unsigned char **p, const unsigned char *end,
                             mbedtls_ecp_keypair *key )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
     if( ( ret = mbedtls_ecp_point_read_binary( &key->grp, &key->Q,
                     (const unsigned char *) *p, end - *p ) ) == 0 )
@@ -487,7 +504,7 @@ static int pk_get_rsapubkey( unsigned char **p,
                              const unsigned char *end,
                              mbedtls_rsa_context *rsa )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t len;
 
     if( ( ret = mbedtls_asn1_get_tag( p, end, &len,
@@ -542,10 +559,10 @@ static int pk_get_pk_alg( unsigned char **p,
                           const unsigned char *end,
                           mbedtls_pk_type_t *pk_alg, mbedtls_asn1_buf *params )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_asn1_buf alg_oid;
 
-    memset( params, 0, sizeof(mbedtls_asn1_buf) );
+    mbedtls_platform_zeroize( params, sizeof(mbedtls_asn1_buf) );
 
     if( ( ret = mbedtls_asn1_get_alg( p, end, &alg_oid, params ) ) != 0 )
         return( MBEDTLS_ERR_PK_INVALID_ALG + ret );
@@ -583,7 +600,7 @@ static int pk_get_pk_alg( unsigned char **p,
 int mbedtls_pk_parse_subpubkey( unsigned char **p, const unsigned char *end,
                                 mbedtls_pk_context *pk )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t len;
     mbedtls_asn1_buf alg_params;
     mbedtls_pk_type_t pk_alg = MBEDTLS_PK_NONE;
@@ -835,7 +852,7 @@ static int pk_parse_key_sec1_der( mbedtls_ecp_keypair *eck,
                                   const unsigned char *key,
                                   size_t keylen )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     int version, pubkey_done;
     size_t len;
     mbedtls_asn1_buf params;
@@ -1213,7 +1230,7 @@ int mbedtls_pk_parse_key( mbedtls_pk_context *pk,
                           const unsigned char *key, size_t keylen,
                           const unsigned char *pwd, size_t pwdlen )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     const mbedtls_pk_info_t *pk_info;
 #if defined(MBEDTLS_PEM_PARSE_C)
     size_t len;
@@ -1443,7 +1460,7 @@ int mbedtls_pk_parse_key( mbedtls_pk_context *pk,
 int mbedtls_pk_parse_public_key( mbedtls_pk_context *ctx,
                                  const unsigned char *key, size_t keylen )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char *p;
 #if defined(MBEDTLS_RSA_C)
     const mbedtls_pk_info_t *pk_info;

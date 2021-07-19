@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/memory_buffer_alloc.h"
 #include "third_party/mbedtls/platform.h"
@@ -299,7 +316,7 @@ static void *buffer_alloc_calloc( size_t n, size_t size )
             mbedtls_exit( 1 );
 
         ret = (unsigned char *) cur + sizeof( memory_header );
-        memset( ret, 0, original_len );
+        mbedtls_platform_zeroize( ret, original_len );
 
         return( ret );
     }
@@ -357,7 +374,7 @@ static void *buffer_alloc_calloc( size_t n, size_t size )
         mbedtls_exit( 1 );
 
     ret = (unsigned char *) cur + sizeof( memory_header );
-    memset( ret, 0, original_len );
+    mbedtls_platform_zeroize( ret, original_len );
 
     return( ret );
 }
@@ -422,7 +439,7 @@ static void buffer_alloc_free( void *ptr )
         if( hdr->next != NULL )
             hdr->next->prev = hdr;
 
-        memset( old, 0, sizeof(memory_header) );
+        mbedtls_platform_zeroize( old, sizeof(memory_header) );
     }
 
     // Regroup with block after
@@ -461,7 +478,7 @@ static void buffer_alloc_free( void *ptr )
         if( hdr->next != NULL )
             hdr->next->prev = hdr;
 
-        memset( old, 0, sizeof(memory_header) );
+        mbedtls_platform_zeroize( old, sizeof(memory_header) );
     }
 
     // Prepend to free_list if we have not merged
@@ -533,7 +550,7 @@ void mbedtls_memory_buffer_alloc_cur_get( size_t *cur_used, size_t *cur_blocks )
 
 void mbedtls_memory_buffer_alloc_init( unsigned char *buf, size_t len )
 {
-    memset( &heap, 0, sizeof( buffer_alloc_ctx ) );
+    mbedtls_platform_zeroize( &heap, sizeof( buffer_alloc_ctx ) );
     mbedtls_platform_set_calloc_free( buffer_alloc_calloc, buffer_alloc_free );
 
     if( len < sizeof( memory_header ) + MBEDTLS_MEMORY_ALIGN_MULTIPLE )
@@ -547,7 +564,7 @@ void mbedtls_memory_buffer_alloc_init( unsigned char *buf, size_t len )
              - (size_t)buf % MBEDTLS_MEMORY_ALIGN_MULTIPLE;
     }
 
-    memset( buf, 0, len );
+    mbedtls_platform_zeroize( buf, len );
 
     heap.buf = buf;
     heap.len = len;

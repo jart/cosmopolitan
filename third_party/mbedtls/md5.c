@@ -1,6 +1,24 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright The Mbed TLS Contributors                                          │
+│                                                                              │
+│ Licensed under the Apache License, Version 2.0 (the "License");              │
+│ you may not use this file except in compliance with the License.             │
+│ You may obtain a copy of the License at                                      │
+│                                                                              │
+│     http://www.apache.org/licenses/LICENSE-2.0                               │
+│                                                                              │
+│ Unless required by applicable law or agreed to in writing, software          │
+│ distributed under the License is distributed on an "AS IS" BASIS,            │
+│ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.     │
+│ See the License for the specific language governing permissions and          │
+│ limitations under the License.                                               │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/md.h"
 #include "third_party/mbedtls/md5.h"
 #include "third_party/mbedtls/platform.h"
 
@@ -39,35 +57,6 @@ asm(".include \"libc/disclaimer.inc\"");
 
 #define GET_UINT32_LE(n,b,i) (n) = READ32LE((b) + (i))
 #define PUT_UINT32_LE(n,b,i) WRITE32LE((b) + (i), n)
-
-/**
- * \brief          Initialize MD5 context
- *
- * \param ctx      MD5 context to be initialized
- *
- * \warning        MD5 is considered a weak message digest and its use
- *                 constitutes a security risk. We recommend considering
- *                 stronger message digests instead.
- */
-void mbedtls_md5_init( mbedtls_md5_context *ctx )
-{
-    memset( ctx, 0, sizeof( mbedtls_md5_context ) );
-}
-
-/**
- * \brief          Clear MD5 context
- *
- * \param ctx      MD5 context to be cleared
- *
- * \warning        MD5 is considered a weak message digest and its use
- *                 constitutes a security risk. We recommend considering
- *                 stronger message digests instead.
- */
-void mbedtls_md5_free( mbedtls_md5_context *ctx )
-{
-    if( !ctx ) return;
-    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_md5_context ) );
-}
 
 /**
  * \brief          Clone (the state of) an MD5 context
@@ -250,7 +239,7 @@ int mbedtls_md5_update_ret( mbedtls_md5_context *ctx,
                             const unsigned char *input,
                             size_t ilen )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t fill;
     uint32_t left;
 
@@ -309,7 +298,7 @@ int mbedtls_md5_update_ret( mbedtls_md5_context *ctx,
 int mbedtls_md5_finish_ret( mbedtls_md5_context *ctx,
                             unsigned char output[16] )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     uint32_t used;
     uint32_t high, low;
 
@@ -323,17 +312,17 @@ int mbedtls_md5_finish_ret( mbedtls_md5_context *ctx,
     if( used <= 56 )
     {
         /* Enough room for padding + length in current block */
-        memset( ctx->buffer + used, 0, 56 - used );
+        mbedtls_platform_zeroize( ctx->buffer + used, 56 - used );
     }
     else
     {
         /* We'll need an extra block */
-        memset( ctx->buffer + used, 0, 64 - used );
+        mbedtls_platform_zeroize( ctx->buffer + used, 64 - used );
 
         if( ( ret = mbedtls_internal_md5_process( ctx, ctx->buffer ) ) != 0 )
             return( ret );
 
-        memset( ctx->buffer, 0, 56 );
+        mbedtls_platform_zeroize( ctx->buffer, 56 );
     }
 
     /*
@@ -379,7 +368,7 @@ int mbedtls_md5_ret( const void *input,
                      size_t ilen,
                      unsigned char output[16] )
 {
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_md5_context ctx;
 
     mbedtls_md5_init( &ctx );
@@ -398,6 +387,18 @@ exit:
 
     return( ret );
 }
+
+const mbedtls_md_info_t mbedtls_md5_info = {
+    "MD5",
+    MBEDTLS_MD_MD5,
+    16,
+    64,
+    (void *)mbedtls_md5_starts_ret,
+    (void *)mbedtls_md5_update_ret,
+    (void *)mbedtls_internal_md5_process,
+    (void *)mbedtls_md5_finish_ret,
+    (void *)mbedtls_md5_ret,
+};
 
 #if defined(MBEDTLS_SELF_TEST)
 /*
