@@ -30,7 +30,7 @@ static const char *const HOOKKEY = "_HOOKKEY";
 ** checked.
 */
 static void checkstack (lua_State *L, lua_State *L1, int n) {
-  if (L != L1 && !lua_checkstack(L1, n))
+  if (l_unlikely(L != L1 && !lua_checkstack(L1, n)))
     luaL_error(L, "stack overflow");
 }
 
@@ -210,7 +210,7 @@ static int db_getlocal (lua_State *L) {
     lua_Debug ar;
     const char *name;
     int level = (int)luaL_checkinteger(L, arg + 1);
-    if (!lua_getstack(L1, level, &ar))  /* out of range? */
+    if (l_unlikely(!lua_getstack(L1, level, &ar)))  /* out of range? */
       return luaL_argerror(L, arg+1, "level out of range");
     checkstack(L, L1, 1);
     name = lua_getlocal(L1, &ar, nvar);
@@ -235,7 +235,7 @@ static int db_setlocal (lua_State *L) {
   lua_Debug ar;
   int level = (int)luaL_checkinteger(L, arg + 1);
   int nvar = (int)luaL_checkinteger(L, arg + 2);
-  if (!lua_getstack(L1, level, &ar))  /* out of range? */
+  if (l_unlikely(!lua_getstack(L1, level, &ar)))  /* out of range? */
     return luaL_argerror(L, arg+1, "level out of range");
   luaL_checkany(L, arg+3);
   lua_settop(L, arg+3);

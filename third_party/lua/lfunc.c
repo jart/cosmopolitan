@@ -150,6 +150,15 @@ static void prepcallclosemth (lua_State *L, StkId level, int status, int yy) {
 
 
 /*
+** Maximum value for deltas in 'tbclist', dependent on the type
+** of delta. (This macro assumes that an 'L' is in scope where it
+** is used.)
+*/
+#define MAXDELTA  \
+	((256ul << ((sizeof(L->stack->tbclist.delta) - 1) * 8)) - 1)
+
+
+/*
 ** Insert a variable in the list of to-be-closed variables.
 */
 void luaF_newtbcupval (lua_State *L, StkId level) {
@@ -157,13 +166,11 @@ void luaF_newtbcupval (lua_State *L, StkId level) {
   if (l_isfalse(s2v(level)))
     return;  /* false doesn't need to be closed */
   checkclosemth(L, level);  /* value must have a close method */
-  while (level - L->tbclist > USHRT_MAX) {  /* is delta too large? */
-    L->tbclist += USHRT_MAX;  /* create a dummy node at maximum delta */
-    L->tbclist->tbclist.delta = USHRT_MAX;
-    L->tbclist->tbclist.isdummy = 1;
+  while (cast_uint(level - L->tbclist) > MAXDELTA) {
+    L->tbclist += MAXDELTA;  /* create a dummy node at maximum delta */
+    L->tbclist->tbclist.delta = 0;
   }
-  level->tbclist.delta = level - L->tbclist;
-  level->tbclist.isdummy = 0;
+  level->tbclist.delta = cast(unsigned short, level - L->tbclist);
   L->tbclist = level;
 }
 
@@ -197,6 +204,19 @@ void luaF_closeupval (lua_State *L, StkId level) {
 
 
 /*
+** Remove firt element from the tbclist plus its dummy nodes.
+*/
+static void poptbclist (lua_State *L) {
+  StkId tbc = L->tbclist;
+  lua_assert(tbc->tbclist.delta > 0);  /* first element cannot be dummy */
+  tbc -= tbc->tbclist.delta;
+  while (tbc > L->stack && tbc->tbclist.delta == 0)
+    tbc -= MAXDELTA;  /* remove dummy nodes */
+  L->tbclist = tbc;
+}
+
+
+/*
 ** Close all upvalues and to-be-closed variables up to the given stack
 ** level.
 */
@@ -205,11 +225,9 @@ void luaF_close (lua_State *L, StkId level, int status, int yy) {
   luaF_closeupval(L, level);  /* first, close the upvalues */
   while (L->tbclist >= level) {  /* traverse tbc's down to that level */
     StkId tbc = L->tbclist;  /* get variable index */
-    L->tbclist -= tbc->tbclist.delta;  /* remove it from list */
-    if (!tbc->tbclist.isdummy) {  /* not a dummy entry? */
-      prepcallclosemth(L, tbc, status, yy);  /* close variable */
-      level = restorestack(L, levelrel);
-    }
+    poptbclist(L);  /* remove it from list */
+    prepcallclosemth(L, tbc, status, yy);  /* close variable */
+    level = restorestack(L, levelrel);
   }
 }
 

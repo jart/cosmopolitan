@@ -47,6 +47,8 @@ static int currentpc (CallInfo *ci) {
 ** an integer division gets the right place. When the source file has
 ** large sequences of empty/comment lines, it may need extra entries,
 ** so the original estimate needs a correction.
+** If the original estimate is -1, the initial 'if' ensures that the
+** 'while' will run at least once.
 ** The assertion that the estimate is a lower bound for the correct base
 ** is valid as long as the debug info has been generated with the same
 ** value for MAXIWTHABS or smaller. (Previous releases use a little
@@ -60,7 +62,8 @@ static int getbaseline (const Proto *f, int pc, int *basepc) {
   else {
     int i = cast_uint(pc) / MAXIWTHABS - 1;  /* get an estimate */
     /* estimate must be a lower bond of the correct base */
-    lua_assert(i < f->sizeabslineinfo && f->abslineinfo[i].pc <= pc);
+    lua_assert(i < 0 ||
+              (i < f->sizeabslineinfo && f->abslineinfo[i].pc <= pc));
     while (i + 1 < f->sizeabslineinfo && pc >= f->abslineinfo[i + 1].pc)
       i++;  /* low estimate; adjust it */
     *basepc = f->abslineinfo[i].pc;
@@ -635,14 +638,18 @@ static const char *funcnamefromcode (lua_State *L, CallInfo *ci,
 
 
 /*
-** The subtraction of two potentially unrelated pointers is
-** not ISO C, but it should not crash a program; the subsequent
-** checks are ISO C and ensure a correct result.
+** Check whether pointer 'o' points to some value in the stack
+** frame of the current function. Because 'o' may not point to a
+** value in this stack, we cannot compare it with the region
+** boundaries (undefined behaviour in ISO C).
 */
 static int isinstack (CallInfo *ci, const TValue *o) {
-  StkId base = ci->func + 1;
-  ptrdiff_t i = cast(StkId, o) - base;
-  return (0 <= i && i < (ci->top - base) && s2v(base + i) == o);
+  StkId pos;
+  for (pos = ci->func + 1; pos < ci->top; pos++) {
+    if (o == s2v(pos))
+      return 1;
+  }
+  return 0;  /* not found */
 }
 
 
@@ -723,7 +730,7 @@ l_noret luaG_opinterror (lua_State *L, const TValue *p1,
 */
 l_noret luaG_tointerror (lua_State *L, const TValue *p1, const TValue *p2) {
   lua_Integer temp;
-  if (!tointegerns(p1, &temp))
+  if (!luaV_tointegerns(p1, &temp, LUA_FLOORN2I))
     p2 = p1;
   luaG_runerror(L, "number%s has no integer representation", varinfo(L, p2));
 }

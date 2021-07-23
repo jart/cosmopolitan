@@ -676,6 +676,14 @@ end
 -- just to make sure
 assert(collectgarbage'isrunning')
 
+do    -- check that the collector is reentrant in incremental mode
+  setmetatable({}, {__gc = function ()
+    collectgarbage()
+  end})
+  collectgarbage()
+end
+
+
 collectgarbage(oldmode)
 
 print('OK')

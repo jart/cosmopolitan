@@ -155,8 +155,6 @@ int luaD_rawrunprotected (lua_State *L, Pfunc f, void *ud) {
 static void correctstack (lua_State *L, StkId oldstack, StkId newstack) {
   CallInfo *ci;
   UpVal *up;
-  if (oldstack == newstack)
-    return;  /* stack address did not change */
   L->top = (L->top - oldstack) + newstack;
   L->tbclist = (L->tbclist - oldstack) + newstack;
   for (up = L->openupval; up != NULL; up = up->u.open.next)
@@ -174,19 +172,35 @@ static void correctstack (lua_State *L, StkId oldstack, StkId newstack) {
 #define ERRORSTACKSIZE	(LUAI_MAXSTACK + 200)
 
 
+/*
+** Reallocate the stack to a new size, correcting all pointers into
+** it. (There are pointers to a stack from its upvalues, from its list
+** of call infos, plus a few individual pointers.) The reallocation is
+** done in two steps (allocation + free) because the correction must be
+** done while both addresses (the old stack and the new one) are valid.
+** (In ISO C, any pointer use after the pointer has been deallocated is
+** undefined behavior.)
+** In case of allocation error, raise an error or return false according
+** to 'raiseerror'.
+*/
 int luaD_reallocstack (lua_State *L, int newsize, int raiseerror) {
-  int lim = stacksize(L);
-  StkId newstack = luaM_reallocvector(L, L->stack,
-                      lim + EXTRA_STACK, newsize + EXTRA_STACK, StackValue);
+  int oldsize = stacksize(L);
+  int i;
+  StkId newstack = luaM_reallocvector(L, NULL, 0,
+                                      newsize + EXTRA_STACK, StackValue);
   lua_assert(newsize <= LUAI_MAXSTACK || newsize == ERRORSTACKSIZE);
-  if (unlikely(newstack == NULL)) {  /* reallocation failed? */
+  if (l_unlikely(newstack == NULL)) {  /* reallocation failed? */
     if (raiseerror)
       luaM_error(L);
     else return 0;  /* do not raise an error */
   }
-  for (; lim < newsize; lim++)
-    setnilvalue(s2v(newstack + lim + EXTRA_STACK)); /* erase new segment */
+  /* number of elements to be copied to the new stack */
+  i = ((oldsize <= newsize) ? oldsize : newsize) + EXTRA_STACK;
+  memcpy(newstack, L->stack, i * sizeof(StackValue));
+  for (; i < newsize + EXTRA_STACK; i++)
+    setnilvalue(s2v(newstack + i)); /* erase new segment */
   correctstack(L, L->stack, newstack);
+  luaM_freearray(L, L->stack, oldsize + EXTRA_STACK);
   L->stack = newstack;
   L->stack_last = L->stack + newsize;
   return 1;
@@ -199,7 +213,7 @@ int luaD_reallocstack (lua_State *L, int newsize, int raiseerror) {
 */
 int luaD_growstack (lua_State *L, int n, int raiseerror) {
   int size = stacksize(L);
-  if (unlikely(size > LUAI_MAXSTACK)) {
+  if (l_unlikely(size > LUAI_MAXSTACK)) {
     /* if stack is larger than maximum, thread is already using the
        extra space reserved for errors, that is, thread is handling
        a stack error; cannot grow further than that. */
@@ -215,7 +229,7 @@ int luaD_growstack (lua_State *L, int n, int raiseerror) {
       newsize = LUAI_MAXSTACK;
     if (newsize < needed)  /* but must respect what was asked for */
       newsize = needed;
-    if (likely(newsize <= LUAI_MAXSTACK))
+    if (l_likely(newsize <= LUAI_MAXSTACK))
       return luaD_reallocstack(L, newsize, raiseerror);
     else {  /* stack overflow */
       /* add extra size to be able to handle the error message */
@@ -371,7 +385,7 @@ static void rethook (lua_State *L, CallInfo *ci, int nres) {
 void luaD_tryfuncTM (lua_State *L, StkId func) {
   const TValue *tm = luaT_gettmbyobj(L, s2v(func), TM_CALL);
   StkId p;
-  if (unlikely(ttisnil(tm)))
+  if (l_unlikely(ttisnil(tm)))
     luaG_callerror(L, s2v(func));  /* nothing to call */
   for (p = L->top; p > func; p--)  /* open space for metamethod */
     setobjs2s(L, p, p-1);
@@ -439,7 +453,7 @@ static void moveresults (lua_State *L, StkId res, int nres, int wanted) {
 */
 void luaD_poscall (lua_State *L, CallInfo *ci, int nres) {
   int wanted = ci->nresults;
-  if (L->hookmask && !hastocloseCfunc(wanted))
+  if (l_unlikely(L->hookmask && !hastocloseCfunc(wanted)))
     rethook(L, ci, nres);
   /* move results to proper place */
   moveresults(L, ci->func, nres, wanted);
@@ -505,7 +519,7 @@ CallInfo *luaD_precall (lua_State *L, StkId func, int nresults) {
       ci->top = L->top + LUA_MINSTACK;
       ci->func = func;
       lua_assert(ci->top <= L->stack_last);
-      if (L->hookmask & LUA_MASKCALL) {
+      if (l_unlikely(L->hookmask & LUA_MASKCALL)) {
         int narg = cast_int(L->top - func) - 1;
         luaD_hook(L, LUA_HOOKCALL, -1, 1, narg);
       }
@@ -551,7 +565,7 @@ CallInfo *luaD_precall (lua_State *L, StkId func, int nresults) {
 static void ccall (lua_State *L, StkId func, int nResults, int inc) {
   CallInfo *ci;
   L->nCcalls += inc;
-  if (unlikely(getCcalls(L) >= LUAI_MAXCCALLS))
+  if (l_unlikely(getCcalls(L) >= LUAI_MAXCCALLS))
     luaE_checkcstack(L);
   if ((ci = luaD_precall(L, func, nResults)) != NULL) {  /* Lua function? */
     ci->callstatus = CIST_FRESH;  /* mark that it is a "fresh" execute */
@@ -595,7 +609,7 @@ void luaD_callnoyield (lua_State *L, StkId func, int nResults) {
 */
 static int finishpcallk (lua_State *L,  CallInfo *ci) {
   int status = getcistrecst(ci);  /* get original status */
-  if (status == LUA_OK)  /* no error? */
+  if (l_likely(status == LUA_OK))  /* no error? */
     status = LUA_YIELD;  /* was interrupted by an yield */
   else {  /* error */
     StkId func = restorestack(L, ci->u2.funcidx);
@@ -769,7 +783,7 @@ LUA_API int lua_resume (lua_State *L, lua_State *from, int nargs,
   status = luaD_rawrunprotected(L, resume, &nargs);
    /* continue running after recoverable errors */
   status = precover(L, status);
-  if (likely(!errorstatus(status)))
+  if (l_likely(!errorstatus(status)))
     lua_assert(status == L->status);  /* normal end or yield */
   else {  /* unrecoverable error */
     L->status = cast_byte(status);  /* mark thread as 'dead' */
@@ -795,7 +809,7 @@ LUA_API int lua_yieldk (lua_State *L, int nresults, lua_KContext ctx,
   lua_lock(L);
   ci = L->ci;
   api_checknelems(L, nresults);
-  if (unlikely(!yieldable(L))) {
+  if (l_unlikely(!yieldable(L))) {
     if (L != G(L)->mainthread)
       luaG_runerror(L, "attempt to yield across a C-call boundary");
     else
@@ -848,7 +862,7 @@ int luaD_closeprotected (lua_State *L, ptrdiff_t level, int status) {
     struct CloseP pcl;
     pcl.level = restorestack(L, level); pcl.status = status;
     status = luaD_rawrunprotected(L, &closepaux, &pcl);
-    if (likely(status == LUA_OK))  /* no more errors? */
+    if (l_likely(status == LUA_OK))  /* no more errors? */
       return pcl.status;
     else {  /* an error occurred; restore saved state and repeat */
       L->ci = old_ci;
@@ -871,7 +885,7 @@ int luaD_pcall (lua_State *L, Pfunc func, void *u,
   ptrdiff_t old_errfunc = L->errfunc;
   L->errfunc = ef;
   status = luaD_rawrunprotected(L, func, u);
-  if (unlikely(status != LUA_OK)) {  /* an error occurred? */
+  if (l_unlikely(status != LUA_OK)) {  /* an error occurred? */
     L->ci = old_ci;
     L->allowhook = old_allowhooks;
     status = luaD_closeprotected(L, old_top, status);

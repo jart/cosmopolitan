@@ -135,13 +135,14 @@ typedef struct TValue {
 ** Entries in a Lua stack. Field 'tbclist' forms a list of all
 ** to-be-closed variables active in this stack. Dummy entries are
 ** used when the distance between two tbc variables does not fit
-** in an unsigned short.
+** in an unsigned short. They are represented by delta==0, and
+** their real delta is always the maximum value that fits in
+** that field.
 */
 typedef union StackValue {
   TValue val;
   struct {
     TValuefields;
-    lu_byte isdummy;
     unsigned short delta;
   } tbclist;
 } StackValue;

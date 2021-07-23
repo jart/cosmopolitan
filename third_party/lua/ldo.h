@@ -23,7 +23,7 @@
 ** at every check.
 */
 #define luaD_checkstackaux(L,n,pre,pos)  \
-	if (L->stack_last - L->top <= (n)) \
+	if (l_unlikely(L->stack_last - L->top <= (n))) \
 	  { pre; luaD_growstack(L, n, 1); pos; } \
         else { condmovestack(L,pre,pos); }
 

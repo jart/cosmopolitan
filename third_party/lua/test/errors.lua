@@ -191,6 +191,13 @@ checkmessage("a = 24 // 0", "divide by zero")
 checkmessage("a = 1 % 0", "'n%0'")
 
 
+-- type error for an object which is neither in an upvalue nor a register.
+-- The following code will try to index the value 10 that is stored in
+-- the metatable, without moving it to a register.
+checkmessage("local a = setmetatable({}, {__index = 10}).x",
+             "attempt to index a number value")
+
+
 -- numeric for loops
 checkmessage("for i = {}, 10 do end", "table")
 checkmessage("for i = io.stdin, 10 do end", "FILE")
@@ -412,6 +419,14 @@ if not b then
     end
   end
 end]], 5)
+
+do
+  -- Force a negative estimate for base line. Error in instruction 2
+  -- (after VARARGPREP, GETGLOBAL), with first absolute line information
+  -- (forced by too many lines) in instruction 0.
+  local s = string.format("%s return __A.x", string.rep("\n", 300))
+  lineerror(s, 301)
+end
 
 
 if not _soft then

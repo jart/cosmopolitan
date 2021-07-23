@@ -123,7 +123,7 @@ static void checknext (LexState *ls, int c) {
 ** in line 'where' (if that is not the current line).
 */
 static void check_match (LexState *ls, int what, int who, int where) {
-  if (unlikely(!testnext(ls, what))) {
+  if (l_unlikely(!testnext(ls, what))) {
     if (where == ls->linenumber)  /* all in the same line? */
       error_expected(ls, what);  /* do not need a complex message */
     else {
@@ -512,7 +512,7 @@ static void solvegoto (LexState *ls, int g, Labeldesc *label) {
   Labellist *gl = &ls->dyd->gt;  /* list of goto's */
   Labeldesc *gt = &gl->arr[g];  /* goto to be resolved */
   lua_assert(eqstr(gt->name, label->name));
-  if (unlikely(gt->nactvar < label->nactvar))  /* enter some scope? */
+  if (l_unlikely(gt->nactvar < label->nactvar))  /* enter some scope? */
     jumpscopeerror(ls, gt);
   luaK_patchlist(ls->fs, gt->pc, label->pc);
   for (i = g; i < gl->n - 1; i++)  /* remove goto from pending list */
@@ -1430,7 +1430,7 @@ static void breakstat (LexState *ls) {
 */
 static void checkrepeated (LexState *ls, TString *name) {
   Labeldesc *lb = findlabel(ls, name);
-  if (unlikely(lb != NULL)) {  /* already defined? */
+  if (l_unlikely(lb != NULL)) {  /* already defined? */
     const char *msg = "label '%s' already defined on line %d";
     msg = luaO_pushfstring(ls->L, msg, getstr(name), lb->line);
     luaK_semerror(ls, msg);  /* error */
@@ -1515,7 +1515,7 @@ static void fixforjump (FuncState *fs, int pc, int dest, int back) {
   int offset = dest - (pc + 1);
   if (back)
     offset = -offset;
-  if (unlikely(offset > MAXARG_Bx))
+  if (l_unlikely(offset > MAXARG_Bx))
     luaX_syntaxerror(fs->ls, "control structure too long");
   SETARG_Bx(*jmp, offset);
 }

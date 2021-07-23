@@ -166,7 +166,7 @@ LUA_API int lua_gettop (lua_State *L) {
 
 LUA_API void lua_settop (lua_State *L, int idx) {
   CallInfo *ci;
-  StkId func;
+  StkId func, newtop;
   ptrdiff_t diff;  /* difference for new top */
   lua_lock(L);
   ci = L->ci;
@@ -181,12 +181,13 @@ LUA_API void lua_settop (lua_State *L, int idx) {
     api_check(L, -(idx+1) <= (L->top - (func + 1)), "invalid new top");
     diff = idx + 1;  /* will "subtract" index (as it is negative) */
   }
-#if defined(LUA_COMPAT_5_4_0)
-  if (diff < 0 && hastocloseCfunc(ci->nresults))
-    luaF_close(L, L->top + diff, CLOSEKTOP, 0);
-#endif
-  api_check(L, L->tbclist < L->top + diff, "cannot pop an unclosed slot");
-  L->top += diff;
+  api_check(L, L->tbclist < L->top, "previous pop of an unclosed slot");
+  newtop = L->top + diff;
+  if (diff < 0 && L->tbclist >= newtop) {
+    lua_assert(hastocloseCfunc(ci->nresults));
+    luaF_close(L, newtop, CLOSEKTOP, 0);
+  }
+  L->top = newtop;  /* correct top only after closing any upvalue */
   lua_unlock(L);
 }
 

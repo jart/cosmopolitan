@@ -33,6 +33,7 @@ $NAME/pm.lua  \
 $NAME/sort.lua  \
 $NAME/strings.lua  \
 $NAME/tpack.lua  \
+$NAME/tracegc.lua  \
 $NAME/utf8.lua  \
 $NAME/vararg.lua  \
 $NAME/verybig.lua  \

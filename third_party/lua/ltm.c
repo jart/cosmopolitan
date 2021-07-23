@@ -143,7 +143,7 @@ static int callbinTM (lua_State *L, const TValue *p1, const TValue *p2,
 
 void luaT_trybinTM (lua_State *L, const TValue *p1, const TValue *p2,
                     StkId res, TMS event) {
-  if (!callbinTM(L, p1, p2, res, event)) {
+  if (l_unlikely(!callbinTM(L, p1, p2, res, event))) {
     switch (event) {
       case TM_BAND: case TM_BOR: case TM_BXOR:
       case TM_SHL: case TM_SHR: case TM_BNOT: {
@@ -162,7 +162,8 @@ void luaT_trybinTM (lua_State *L, const TValue *p1, const TValue *p2,
 
 void luaT_tryconcatTM (lua_State *L) {
   StkId top = L->top;
-  if (!callbinTM(L, s2v(top - 2), s2v(top - 1), top - 2, TM_CONCAT))
+  if (l_unlikely(!callbinTM(L, s2v(top - 2), s2v(top - 1), top - 2,
+                               TM_CONCAT)))
     luaG_concaterror(L, s2v(top - 2), s2v(top - 1));
 }
 
