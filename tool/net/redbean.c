@@ -3702,15 +3702,21 @@ static int LuaFetch(lua_State *L) {
                            .ai_flags = AI_NUMERICSERV};
 
   /*
-   * Get args.
+   * Get args: url [, body | {method = "PUT", body = "..."}]
    */
   urlarg = luaL_checklstring(L, 1, &urlarglen);
-  if (lua_isnoneornil(L, 2)) {
+  if (lua_istable(L, 2)) {
+    lua_settop(L, 2); // discard any extra arguments
+    lua_getfield(L, 2, "body");
+    body = luaL_optstring(L, -1, "");
+    lua_getfield(L, 2, "method");
+    method = GetHttpMethod(luaL_optstring(L, -1, ""), lua_rawlen(L, -1));
+    lua_settop(L, 2); // drop all added elements to keep the stack balanced
+  } else if (lua_isnoneornil(L, 2)) {
     body = "";
     method = kHttpGet;
   } else {
-    size_t bodylen;
-    body = luaL_checklstring(L, 2, &bodylen);
+    body = luaL_checkstring(L, 2);
     method = kHttpPost;
   }
 
