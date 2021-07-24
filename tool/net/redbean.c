@@ -3694,8 +3694,9 @@ static int LuaFetch(lua_State *L) {
   struct HttpMessage msg;
   struct HttpUnchunker u;
   const char *urlarg, *request, *body;
-  size_t urlarglen, requestlen;
-  size_t g, i, n, hdrsize, paylen;
+  char *conlenhdr = "";
+  size_t urlarglen, requestlen, paylen, bodylen;
+  size_t g, i, n, hdrsize;
   struct addrinfo hints = {.ai_family = AF_INET,
                            .ai_socktype = SOCK_STREAM,
                            .ai_protocol = IPPROTO_TCP,
@@ -3708,17 +3709,23 @@ static int LuaFetch(lua_State *L) {
   if (lua_istable(L, 2)) {
     lua_settop(L, 2); // discard any extra arguments
     lua_getfield(L, 2, "body");
-    body = luaL_optstring(L, -1, "");
+    body = luaL_optstring(L, -1, "", &bodylen);
     lua_getfield(L, 2, "method");
     method = GetHttpMethod(luaL_optstring(L, -1, ""), lua_rawlen(L, -1));
     lua_settop(L, 2); // drop all added elements to keep the stack balanced
   } else if (lua_isnoneornil(L, 2)) {
     body = "";
+    bodylen = 0;
     method = kHttpGet;
   } else {
-    body = luaL_checkstring(L, 2);
+    body = luaL_checklstring(L, 2, &bodylen);
     method = kHttpPost;
   }
+  // provide Content-Length header unless it's zero and not expected
+  if (bodylen > 0 ||
+    !(method == kHttpGet || method == kHttpHead ||
+      method == kHttpTrace || method == kHttpDelete || method == kHttpConnect))
+    conlenhdr = gc(xasprintf("Content-Length: %s\r\n", bodylen));
 
   /*
    * Parse URL.
@@ -3774,9 +3781,11 @@ static int LuaFetch(lua_State *L) {
                          "Host: %s:%s\r\n"
                          "Connection: close\r\n"
                          "User-Agent: %s\r\n"
+                         "%s"
                          "\r\n%s",
-                         kHttpMethod[method], gc(EncodeUrl(&url, 0)), host,
-                         port, brand, body));
+                         kHttpMethod[method], gc(EncodeUrl(&url, 0)),
+                         host, port,
+                         brand, conlenhdr, body));
   requestlen = strlen(request);
 
   /*
