@@ -3686,14 +3686,14 @@ static int LuaFetch(lua_State *L) {
   bool usessl;
   uint32_t ip;
   struct Url url;
-  int t, ret, sock, method;
+  int t, ret, sock, methodidx;
   char *host, *port;
   struct TlsBio *bio;
   struct Buffer inbuf;
   struct addrinfo *addr;
   struct HttpMessage msg;
   struct HttpUnchunker u;
-  const char *urlarg, *request, *body;
+  const char *urlarg, *request, *body, *method;
   char *conlenhdr = "";
   size_t urlarglen, requestlen, paylen, bodylen;
   size_t g, i, n, hdrsize;
@@ -3709,23 +3709,25 @@ static int LuaFetch(lua_State *L) {
   if (lua_istable(L, 2)) {
     lua_settop(L, 2); // discard any extra arguments
     lua_getfield(L, 2, "body");
-    body = luaL_optstring(L, -1, "", &bodylen);
+    body = luaL_optlstring(L, -1, "", &bodylen);
     lua_getfield(L, 2, "method");
-    method = GetHttpMethod(luaL_optstring(L, -1, ""), lua_rawlen(L, -1));
+    // use GET by default if no method is provided
+    method = strtoupper(luaL_optstring(L, -1, kHttpMethod[kHttpGet]));
     lua_settop(L, 2); // drop all added elements to keep the stack balanced
   } else if (lua_isnoneornil(L, 2)) {
     body = "";
     bodylen = 0;
-    method = kHttpGet;
+    method = kHttpMethod[kHttpGet];
   } else {
     body = luaL_checklstring(L, 2, &bodylen);
-    method = kHttpPost;
+    method = kHttpMethod[kHttpPost];
   }
   // provide Content-Length header unless it's zero and not expected
+  methodidx = GetHttpMethod(method, -1);
   if (bodylen > 0 ||
-    !(method == kHttpGet || method == kHttpHead ||
-      method == kHttpTrace || method == kHttpDelete || method == kHttpConnect))
-    conlenhdr = gc(xasprintf("Content-Length: %s\r\n", bodylen));
+    !(methodidx == kHttpGet || methodidx == kHttpHead ||
+      methodidx == kHttpTrace || methodidx == kHttpDelete || methodidx == kHttpConnect))
+    conlenhdr = gc(xasprintf("Content-Length: %d\r\n", bodylen));
 
   /*
    * Parse URL.
@@ -3783,7 +3785,7 @@ static int LuaFetch(lua_State *L) {
                          "User-Agent: %s\r\n"
                          "%s"
                          "\r\n%s",
-                         kHttpMethod[method], gc(EncodeUrl(&url, 0)),
+                         method, gc(EncodeUrl(&url, 0)),
                          host, port,
                          brand, conlenhdr, body));
   requestlen = strlen(request);
@@ -3846,7 +3848,7 @@ static int LuaFetch(lua_State *L) {
   /*
    * Send HTTP Message.
    */
-  DEBUGF("client sending %s request", kHttpMethod[method]);
+  DEBUGF("client sending %s request", method);
   if (usessl) {
     ret = mbedtls_ssl_write(&sslcli, request, requestlen);
     if (ret != requestlen) {
