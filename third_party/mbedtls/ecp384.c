@@ -36,42 +36,20 @@ mbedtls_p384_isz( uint64_t p[6] )
 }
 
 static inline bool
-mbedtls_p384_gte( uint64_t p[7] )
-{
-    return( (p[6] ||
-             p[5] > 0xffffffffffffffff ||
-             (p[5] == 0xffffffffffffffff &&
-              p[4] > 0xffffffffffffffff ||
-              (p[4] == 0xffffffffffffffff &&
-               p[3] > 0xffffffffffffffff ||
-               (p[3] == 0xffffffffffffffff &&
-                p[2] > 0xfffffffffffffffe ||
-                (p[2] == 0xfffffffffffffffe &&
-                 p[1] > 0xffffffff00000000 ||
-                 (p[1] == 0xffffffff00000000 &&
-                  p[0] > 0x00000000ffffffff ||
-                  (p[0] == 0x00000000ffffffff))))))) );
-}
-
-static int
-mbedtls_p384_cmp( const uint64_t a[7],
-                  const uint64_t b[7] )
-{
-    if( a[6] < b[6] ) return -1;
-    if( a[6] > b[6] ) return  1;
-    if( a[5] < b[5] ) return -1;
-    if( a[5] > b[5] ) return  1;
-    if( a[4] < b[4] ) return -1;
-    if( a[4] > b[4] ) return  1;
-    if( a[3] < b[3] ) return -1;
-    if( a[3] > b[3] ) return  1;
-    if( a[2] < b[2] ) return -1;
-    if( a[2] > b[2] ) return  1;
-    if( a[1] < b[1] ) return -1;
-    if( a[1] > b[1] ) return  1;
-    if( a[0] < b[0] ) return -1;
-    if( a[0] > b[0] ) return  1;
-    return 0;
+mbedtls_p384_gte( uint64_t p[7] ) {
+    return( ((int64_t)p[6] > 0 ||
+             (p[5] > 0xffffffffffffffff ||
+              (p[5] == 0xffffffffffffffff &&
+               (p[4] > 0xffffffffffffffff ||
+                (p[4] == 0xffffffffffffffff &&
+                 (p[3] > 0xffffffffffffffff ||
+                  (p[3] == 0xffffffffffffffff &&
+                   (p[2] > 0xfffffffffffffffe ||
+                    (p[2] == 0xfffffffffffffffe &&
+                     (p[1] > 0xffffffff00000000 ||
+                      (p[1] == 0xffffffff00000000 &&
+                       (p[0] > 0x00000000ffffffff ||
+                        (p[0] == 0x00000000ffffffff))))))))))))) );
 }
 
 static inline void
@@ -97,11 +75,11 @@ mbedtls_p384_red( uint64_t p[7] )
     SBB( p[3], p[3], 0xffffffffffffffff, c, c );
     SBB( p[4], p[4], 0xffffffffffffffff, c, c );
     SBB( p[5], p[5], 0xffffffffffffffff, c, c );
-    SBB( p[6], p[6], 0, c, c );
+    SBB( p[6], p[6], 0,                  c, c );
 #endif
 }
 
-static noinline void
+static inline void
 mbedtls_p384_gro( uint64_t p[7] )
 {
 #if defined(__x86_64__) && !defined(__STRICT_ANSI__)
@@ -128,7 +106,7 @@ mbedtls_p384_gro( uint64_t p[7] )
 #endif
 }
 
-static void
+static inline void
 mbedtls_p384_rum( uint64_t p[7] )
 {
     while( mbedtls_p384_gte( p ) )
@@ -136,20 +114,23 @@ mbedtls_p384_rum( uint64_t p[7] )
 }
 
 static inline void
+mbedtls_p384_mod(uint64_t X[12])
+{
+    secp384r1(X);
+    if ((int64_t)X[6] < 0) {
+        do {
+            mbedtls_p384_gro(X);
+        } while ((int64_t)X[6] < 0);
+    } else {
+        while (mbedtls_p384_gte(X)) {
+            mbedtls_p384_red(X);
+        }
+    }
+}
+
+static inline void
 mbedtls_p384_sar( uint64_t p[7] )
 {
-#if defined(__x86_64__) && !defined(__STRICT_ANSI__)
-    asm("sarq\t48+%0\n\t"
-        "rcrq\t40+%0\n\t"
-        "rcrq\t32+%0\n\t"
-        "rcrq\t24+%0\n\t"
-        "rcrq\t16+%0\n\t"
-        "rcrq\t8+%0\n\t"
-        "rcrq\t%0\n\t"
-        : "+o"(*p)
-        : /* no inputs */
-        : "memory", "cc");
-#else
     p[0] = p[0] >> 1 | p[1] << 63;
     p[1] = p[1] >> 1 | p[2] << 63;
     p[2] = p[2] >> 1 | p[3] << 63;
@@ -157,24 +138,11 @@ mbedtls_p384_sar( uint64_t p[7] )
     p[4] = p[4] >> 1 | p[5] << 63;
     p[5] = p[5] >> 1 | p[6] << 63;
     p[6] = (int64_t)p[6] >> 1;
-#endif
 }
 
 static inline void
 mbedtls_p384_shl( uint64_t p[7] )
 {
-#if defined(__x86_64__) && !defined(__STRICT_ANSI__)
-    asm("shlq\t%0\n\t"
-        "rclq\t8+%0\n\t"
-        "rclq\t16+%0\n\t"
-        "rclq\t24+%0\n\t"
-        "rclq\t32+%0\n\t"
-        "rclq\t40+%0\n\t"
-        "rclq\t48+%0\n\t"
-        : "+o"(*p)
-        : /* no inputs */
-        : "memory", "cc");
-#else
     p[6] =             p[5] >> 63;
     p[5] = p[5] << 1 | p[4] >> 63;
     p[4] = p[4] << 1 | p[3] >> 63;
@@ -182,75 +150,7 @@ mbedtls_p384_shl( uint64_t p[7] )
     p[2] = p[2] << 1 | p[1] >> 63;
     p[1] = p[1] << 1 | p[0] >> 63;
     p[0] = p[0] << 1;
-#endif
     mbedtls_p384_rum( p );
-}
-
-static inline void
-mbedtls_p384_jam( uint64_t p[7] )
-{
-    secp384r1( p );
-    if( (int64_t)p[6] < 0 )
-        do
-            mbedtls_p384_gro( p );
-        while( (int64_t)p[6] < 0 );
-    else
-        mbedtls_p384_rum( p );
-}
-
-static void
-mbedtls_p384_mul_1x1( uint64_t X[12],
-                      const uint64_t A[6], size_t n,
-                      const uint64_t B[6], size_t m )
-{
-    uint128_t t;
-    t = A[0];
-    t *= B[0];
-    X[ 0] = t;
-    X[ 1] = t >> 64;
-    X[ 2] = 0;
-    X[ 3] = 0;
-    X[ 4] = 0;
-    X[ 5] = 0;
-    X[ 6] = 0;
-    X[ 7] = 0;
-    X[ 8] = 0;
-    X[ 9] = 0;
-    X[10] = 0;
-    X[11] = 0;
-}
-
-static void
-mbedtls_p384_mul_nx1( uint64_t X[12],
-                      const uint64_t A[6], size_t n,
-                      const uint64_t B[6], size_t m )
-{
-    mbedtls_mpi_mul_hlp1(n, A, X, B[0]);
-    mbedtls_platform_zeroize( X + n + m, ( 12 - n - m ) * 8 );
-    if ( n + m >= 6 )
-        mbedtls_p384_jam( X );
-}
-
-static void
-mbedtls_p384_mul_6x6( uint64_t X[12],
-                      const uint64_t A[6], size_t n,
-                      const uint64_t B[6], size_t m )
-{
-    Mul6x6Adx( X, A, B );
-    mbedtls_p384_jam( X );
-}
-
-static void
-mbedtls_p384_mul_nxm( uint64_t X[12],
-                      const uint64_t A[6], size_t n,
-                      const uint64_t B[6], size_t m )
-{
-    if (A == X) A = gc(memcpy(malloc(6 * 8), A, 6 * 8));
-    if (B == X) B = gc(memcpy(malloc(6 * 8), B, 6 * 8));
-    Mul( X, A, n, B, m );
-    mbedtls_platform_zeroize( X + n + m, (12 - n - m) * 8 );
-    if ( n + m >= 6 )
-        mbedtls_p384_jam( X );
 }
 
 static void
@@ -258,14 +158,16 @@ mbedtls_p384_mul( uint64_t X[12],
                   const uint64_t A[6], size_t n,
                   const uint64_t B[6], size_t m )
 {
-    if( n == 6 && m == 6 && X86_HAVE(ADX) && X86_HAVE(BMI2) )
-        mbedtls_p384_mul_6x6( X, A, n, B, m );
-    else if( m == 1 && n == 1 )
-        mbedtls_p384_mul_1x1( X, A, n, B, m );
-    else if( m == 1 )
-        mbedtls_p384_mul_nx1( X, A, n, B, m );
+    if( X86_HAVE(ADX) && X86_HAVE(BMI2) )
+        Mul6x6Adx( X, A, B );
     else
-        mbedtls_p384_mul_nxm( X, A, n, B, m );
+    {
+        if (A == X) A = gc(memcpy(malloc(6 * 8), A, 6 * 8));
+        if (B == X) B = gc(memcpy(malloc(6 * 8), B, 6 * 8));
+        Mul( X, A, n, B, m );
+        mbedtls_platform_zeroize( X + n + m, (12 - n - m) * 8 );
+    }
+    mbedtls_p384_mod( X );
 }
 
 static void

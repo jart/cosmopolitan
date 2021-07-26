@@ -78,7 +78,9 @@ THIRD_PARTY_MBEDTLS_TEST_COMS =											\
 	o/$(MODE)/third_party/mbedtls/test/test_suite_timing.com						\
 	o/$(MODE)/third_party/mbedtls/test/test_suite_version.com						\
 	o/$(MODE)/third_party/mbedtls/test/test_suite_x509parse.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_x509write.com
+	o/$(MODE)/third_party/mbedtls/test/test_suite_x509write.com						\
+	o/$(MODE)/third_party/mbedtls/test/secp384r1_test.com							\
+	o/$(MODE)/third_party/mbedtls/test/everest_test.com
 
 THIRD_PARTY_MBEDTLS_TEST_TESTS =										\
 	$(THIRD_PARTY_MBEDTLS_TEST_COMS:%=%.ok)
@@ -1337,6 +1339,25 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_x509write.com.dbg:						\
 		o/$(MODE)/third_party/mbedtls/test/data/server5.req.ku.sha1.zip.o				\
 		o/$(MODE)/third_party/mbedtls/test/data/test-ca.key.zip.o					\
 		o/$(MODE)/third_party/mbedtls/test/test.pkg							\
+		$(CRT)												\
+		$(APE)
+	@$(APELINK)
+
+o/$(MODE)/third_party/mbedtls/test/everest_test.com: o/$(MODE)/third_party/mbedtls/test/everest_test.com.dbg
+o/$(MODE)/third_party/mbedtls/test/everest_test.com.dbg:							\
+		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
+		o/$(MODE)/third_party/mbedtls/test/everest_test.o						\
+		o/$(MODE)/third_party/mbedtls/test/everest_unravaged.o						\
+		$(LIBC_TESTMAIN)										\
+		$(CRT)												\
+		$(APE)
+	@$(APELINK)
+
+o/$(MODE)/third_party/mbedtls/test/secp384r1_test.com: o/$(MODE)/third_party/mbedtls/test/secp384r1_test.com.dbg
+o/$(MODE)/third_party/mbedtls/test/secp384r1_test.com.dbg:							\
+		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
+		o/$(MODE)/third_party/mbedtls/test/secp384r1_test.o						\
+		$(LIBC_TESTMAIN)										\
 		$(CRT)												\
 		$(APE)
 	@$(APELINK)

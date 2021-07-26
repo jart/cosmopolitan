@@ -38,32 +38,15 @@ mbedtls_p256_isz( uint64_t p[4] )
 static inline bool
 mbedtls_p256_gte( uint64_t p[5] )
 {
-    return( (p[4] ||
-             p[3] > 0xffffffff00000001 ||
-             (p[3] == 0xffffffff00000001 &&
-              p[2] > 0x0000000000000000 ||
-              (p[2] == 0x0000000000000000 &&
-               p[1] > 0x00000000ffffffff ||
-               (p[1] == 0x00000000ffffffff &&
-                p[0] > 0xffffffffffffffff ||
-                (p[0] == 0xffffffffffffffff))))) );
-}
-
-static int
-mbedtls_p256_cmp( const uint64_t a[5],
-                  const uint64_t b[5] )
-{
-    if( a[4] < b[4] ) return -1;
-    if( a[4] > b[4] ) return  1;
-    if( a[3] < b[3] ) return -1;
-    if( a[3] > b[3] ) return  1;
-    if( a[2] < b[2] ) return -1;
-    if( a[2] > b[2] ) return  1;
-    if( a[1] < b[1] ) return -1;
-    if( a[1] > b[1] ) return  1;
-    if( a[0] < b[0] ) return -1;
-    if( a[0] > b[0] ) return  1;
-    return 0;
+    return( ((int64_t)p[4] > 0 ||
+             (p[3] > 0xffffffff00000001 ||
+              (p[3] == 0xffffffff00000001 &&
+               (p[2] > 0x0000000000000000 ||
+                (p[2] == 0x0000000000000000 &&
+                 (p[1] > 0x00000000ffffffff ||
+                  (p[1] == 0x00000000ffffffff &&
+                   (p[0] > 0xffffffffffffffff ||
+                    (p[0] == 0xffffffffffffffff))))))))) );
 }
 
 static inline void
@@ -119,125 +102,49 @@ mbedtls_p256_rum( uint64_t p[5] )
         mbedtls_p256_red( p );
 }
 
+static void
+mbedtls_p256_mod(uint64_t X[8])
+{
+    secp256r1(X);
+    if ((int64_t)X[4] < 0) {
+        do {
+            mbedtls_p256_gro(X);
+        } while ((int64_t)X[4] < 0);
+    } else {
+        while (mbedtls_p256_gte(X)) {
+            mbedtls_p256_red(X);
+        }
+    }
+}
+
 static inline void
 mbedtls_p256_sar( uint64_t p[5] )
 {
-#if defined(__x86_64__) && !defined(__STRICT_ANSI__)
-    asm("sarq\t32+%0\n\t"
-        "rcrq\t24+%0\n\t"
-        "rcrq\t16+%0\n\t"
-        "rcrq\t8+%0\n\t"
-        "rcrq\t%0\n\t"
-        : "+o"(*p)
-        : /* no inputs */
-        : "memory", "cc");
-#else
     p[0] = p[0] >> 1 | p[1] << 63;
     p[1] = p[1] >> 1 | p[2] << 63;
     p[2] = p[2] >> 1 | p[3] << 63;
     p[3] = p[3] >> 1 | p[4] << 63;
     p[4] = (int64_t)p[4] >> 1;
-#endif
 }
 
 static inline void
 mbedtls_p256_shl( uint64_t p[5] )
 {
-#if defined(__x86_64__) && !defined(__STRICT_ANSI__)
-    asm("shlq\t%0\n\t"
-        "rclq\t8+%0\n\t"
-        "rclq\t16+%0\n\t"
-        "rclq\t24+%0\n\t"
-        "rclq\t32+%0\n\t"
-        : "+o"(*p)
-        : /* no inputs */
-        : "memory", "cc");
-#else
     p[4] =             p[3] >> 63;
     p[3] = p[3] << 1 | p[2] >> 63;
     p[2] = p[2] << 1 | p[1] >> 63;
     p[1] = p[1] << 1 | p[0] >> 63;
     p[0] = p[0] << 1;
-#endif
     mbedtls_p256_rum( p );
 }
 
 static inline void
-mbedtls_p256_jam( uint64_t p[5] )
-{
-    secp256r1( p );
-    if( (int64_t)p[4] < 0 )
-        do
-            mbedtls_p256_gro( p );
-        while( (int64_t)p[4] < 0 );
-    else
-        mbedtls_p256_rum( p );
-}
-
-static void
-mbedtls_p256_mul_1x1( uint64_t X[8],
-                      const uint64_t A[4], size_t n,
-                      const uint64_t B[4], size_t m )
-{
-    uint128_t t;
-    t = A[0];
-    t *= B[0];
-    X[ 0] = t;
-    X[ 1] = t >> 64;
-    X[ 2] = 0;
-    X[ 3] = 0;
-    X[ 4] = 0;
-    X[ 5] = 0;
-    X[ 6] = 0;
-    X[ 7] = 0;
-}
-
-static void
-mbedtls_p256_mul_nx1( uint64_t X[8],
-                      const uint64_t A[4], size_t n,
-                      const uint64_t B[4], size_t m )
-{
-    mbedtls_mpi_mul_hlp1(n, A, X, B[0]);
-    mbedtls_platform_zeroize( X + n + m, ( 8 - n - m ) * 8 );
-    if ( n + m >= 4 )
-        mbedtls_p256_jam( X );
-}
-
-static void
-mbedtls_p256_mul_4x4( uint64_t X[8],
-                      const uint64_t A[4], size_t n,
-                      const uint64_t B[4], size_t m )
-{
-    Mul4x4( X, A, B );
-    mbedtls_p256_jam( X );
-}
-
-static void
-mbedtls_p256_mul_nxm( uint64_t X[8],
-                      const uint64_t A[4], size_t n,
-                      const uint64_t B[4], size_t m )
-{
-    if (A == X) A = gc(memcpy(malloc(4 * 8), A, 4 * 8));
-    if (B == X) B = gc(memcpy(malloc(4 * 8), B, 4 * 8));
-    Mul( X, A, n, B, m );
-    mbedtls_platform_zeroize( X + n + m, (8 - n - m) * 8 );
-    if ( n + m >= 4 )
-        mbedtls_p256_jam( X );
-}
-
-static void
 mbedtls_p256_mul( uint64_t X[8],
                   const uint64_t A[4], size_t n,
                   const uint64_t B[4], size_t m )
 {
-    if( n == 4 && m == 4 )
-        mbedtls_p256_mul_4x4( X, A, n, B, m );
-    else if( m == 1 && n == 1 )
-        mbedtls_p256_mul_1x1( X, A, n, B, m );
-    else if( m == 1 )
-        mbedtls_p256_mul_nx1( X, A, n, B, m );
-    else
-        mbedtls_p256_mul_nxm( X, A, n, B, m );
+    Mul4x4( X, A, B );
+    mbedtls_p256_mod( X );
 }
 
 static void

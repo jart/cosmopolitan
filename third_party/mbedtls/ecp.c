@@ -511,11 +511,14 @@ static const mbedtls_ecp_curve_info ecp_supported_curves[] =
 #if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
     { MBEDTLS_ECP_DP_CURVE25519,   29,     256,    "x25519"            },
 #endif
-#if defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
-    { MBEDTLS_ECP_DP_SECP256R1,    23,     256,    "secp256r1"         },
-#endif
 #if defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
     { MBEDTLS_ECP_DP_SECP384R1,    24,     384,    "secp384r1"         },
+#endif
+#if defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
+    { MBEDTLS_ECP_DP_CURVE448,     30,     448,    "x448"              },
+#endif
+#if defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
+    { MBEDTLS_ECP_DP_SECP256R1,    23,     256,    "secp256r1"         },
 #endif
 #if defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED)
     { MBEDTLS_ECP_DP_SECP521R1,    25,     521,    "secp521r1"         },
@@ -543,9 +546,6 @@ static const mbedtls_ecp_curve_info ecp_supported_curves[] =
 #endif
 #if defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED)
     { MBEDTLS_ECP_DP_SECP192K1,    18,     192,    "secp192k1"         },
-#endif
-#if defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
-    { MBEDTLS_ECP_DP_CURVE448,     30,     448,    "x448"              },
 #endif
     { MBEDTLS_ECP_DP_NONE,          0,     0,      NULL                },
 };

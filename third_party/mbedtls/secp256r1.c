@@ -26,7 +26,7 @@
 #define H(w) (w & 0xffffffff00000000)
 
 /**
- * Fastest quasi-reduction modulo NIST P-256.
+ * Fastest quasi-reduction modulo ℘256.
  *
  *     p  = 2²⁵⁶ - 2²²⁴ + 2¹⁹² + 2⁹⁶ - 1
  *     B  = T + 2×S₁ + 2×S₂ + S₃ + S₄ – D₁ – D₂ – D₃ – D₄ mod p

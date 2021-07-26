@@ -39,6 +39,7 @@
 #include "third_party/mbedtls/des.h"
 #include "third_party/mbedtls/dhm.h"
 #include "third_party/mbedtls/ecp.h"
+#include "third_party/mbedtls/ecp_internal.h"
 #include "third_party/mbedtls/entropy.h"
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/gcm.h"
@@ -148,17 +149,17 @@ static void P256_MPI(mbedtls_mpi *N) {
 
 static void P256_JUSTINE(mbedtls_mpi *N) {
   memcpy(N->p, rng, 8 * 8);
-  ecp_mod_p256(N);
+  secp256r1(N->p);
 }
 
 static void P384_MPI(mbedtls_mpi *N) {
-  memcpy(N->p, rng, 8 * 8);
+  memcpy(N->p, rng, 12 * 8);
   ASSERT_EQ(0, mbedtls_mpi_mod_mpi(N, N, &grp.P));
 }
 
 static void P384_JUSTINE(mbedtls_mpi *N) {
-  memcpy(N->p, rng, 8 * 8);
-  ecp_mod_p384(N);
+  memcpy(N->p, rng, 12 * 8);
+  secp384r1(N->p);
 }
 
 BENCH(p256, bench) {
@@ -166,6 +167,7 @@ BENCH(p256, bench) {
   mbedtls_ecp_group_init(&grp);
   mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1);
   mbedtls_mpi x = {1, 8, gc(calloc(8, 8))};
+  rngset(x.p, 8 * 8, rand64, -1);
   EZBENCH2("P-256 modulus MbedTLS MPI lib", donothing, P256_MPI(&x));
   EZBENCH2("P-256 modulus Justine rewrite", donothing, P256_JUSTINE(&x));
   mbedtls_ecp_group_free(&grp);
@@ -176,10 +178,10 @@ BENCH(p384, bench) {
 #ifdef MBEDTLS_ECP_C
   mbedtls_ecp_group_init(&grp);
   mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP384R1);
+  uint64_t y[12];
   mbedtls_mpi x = {1, 12, gc(calloc(12, 8))};
   EZBENCH2("P-384 modulus MbedTLS MPI lib", donothing, P384_MPI(&x));
   EZBENCH2("P-384 modulus Justine rewrite", donothing, P384_JUSTINE(&x));
-  rngset(x.p, 12 * 8, rand64, -1);
   mbedtls_ecp_group_free(&grp);
 #endif
 }
@@ -1111,4 +1113,50 @@ BENCH(cmpint, bench) {
   EZBENCH2("cmpint 2.2", donothing, mbedtls_mpi_cmp_int(&y, 1));
   EZBENCH2("cmpint 3.1", donothing, mbedtls_mpi_cmp_int(&z, 0));
   EZBENCH2("cmpint 3.2", donothing, mbedtls_mpi_cmp_int(&z, 1));
+}
+
+mbedtls_mpi_uint F1(mbedtls_mpi_uint *d, const mbedtls_mpi_uint *a,
+                    const mbedtls_mpi_uint *b, size_t n) {
+  size_t i;
+  unsigned char cf;
+  mbedtls_mpi_uint c, x;
+  cf = c = i = 0;
+  for (; i < n; ++i) SBB(d[i], a[i], b[i], c, c);
+  return c;
+}
+
+mbedtls_mpi_uint F2(mbedtls_mpi_uint *d, const mbedtls_mpi_uint *a,
+                    const mbedtls_mpi_uint *b, size_t n) {
+  size_t i;
+  unsigned char cf;
+  mbedtls_mpi_uint c, x;
+  cf = c = i = 0;
+  asm volatile("xor\t%1,%1\n\t"
+               ".align\t16\n1:\t"
+               "mov\t(%5,%3,8),%1\n\t"
+               "sbb\t(%6,%3,8),%1\n\t"
+               "mov\t%1,(%4,%3,8)\n\t"
+               "lea\t1(%3),%3\n\t"
+               "dec\t%2\n\t"
+               "jnz\t1b"
+               : "=@ccb"(cf), "=&r"(x), "+c"(n), "=r"(i)
+               : "r"(d), "r"(a), "r"(b), "3"(0)
+               : "cc", "memory");
+  return cf;
+}
+
+TEST(wut, wut) {
+  uint64_t A[8];
+  uint64_t B[8];
+  uint64_t C[8];
+  uint64_t D[8];
+  int i;
+  for (i = 0; i < 1000; ++i) {
+    rngset(A, sizeof(A), rand64, -1);
+    rngset(B, sizeof(B), rand64, -1);
+    int x = F1(C, A, B, 8);
+    int y = F2(D, A, B, 8);
+    ASSERT_EQ(x, y);
+    ASSERT_EQ(0, memcmp(C, D, sizeof(C)));
+  }
 }

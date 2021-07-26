@@ -55,7 +55,7 @@ $(THIRD_PARTY_MBEDTLS_A_OBJS):						\
 
 o/$(MODE)/third_party/mbedtls/everest.o:				\
 			OVERRIDE_CFLAGS +=				\
-				-Os
+				-O3
 
 o/$(MODE)/third_party/mbedtls/bigmul4.o					\
 o/$(MODE)/third_party/mbedtls/bigmul6.o:				\
@@ -69,11 +69,6 @@ o/$(MODE)/third_party/mbedtls/shiftright-avx.o:				\
 o/$(MODE)/third_party/mbedtls/shiftright2-avx.o:			\
 			OVERRIDE_CFLAGS +=				\
 				-O3 -mavx
-
-# tail recursion is so important because everest was written in f*
-o/$(MODE)/third_party/mbedtls/everest.o:				\
-			OVERRIDE_CFLAGS +=				\
-				-foptimize-sibling-calls
 
 THIRD_PARTY_MBEDTLS_LIBS = $(foreach x,$(THIRD_PARTY_MBEDTLS_ARTIFACTS),$($(x)))
 THIRD_PARTY_MBEDTLS_SRCS = $(foreach x,$(THIRD_PARTY_MBEDTLS_ARTIFACTS),$($(x)_SRCS))
